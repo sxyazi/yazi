@@ -30,6 +30,7 @@ cargo build --release
 
 ## TODO
 
+- Add example config for general usage, currently please see my [another repo](https://github.com/sxyazi/dotfiles/tree/main/yazi) instead
 - Integration with zoxide for fast directory navigation
 - Integration with fzf, rg for fuzzy file searching
 - Support for Überzug++ for image previews with X11/wayland environment
