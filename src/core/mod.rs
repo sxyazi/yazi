@@ -1,5 +1,6 @@
 mod adapter;
 mod event;
+pub mod external;
 mod input;
 mod manager;
 mod tasks;
