@@ -1,7 +1,7 @@
 use ratatui::{buffer::Buffer, layout::{self, Constraint, Direction, Rect}, widgets::{Block, Borders, Widget}};
 
 use super::{Folder, Preview};
-use crate::{core::{Mode, ALL_RATIO, CURRENT_RATIO, PARENT_RATIO, PREVIEW_RATIO}, ui::Ctx};
+use crate::{core::manager::{Mode, ALL_RATIO, CURRENT_RATIO, PARENT_RATIO, PREVIEW_RATIO}, ui::Ctx};
 
 pub struct Layout<'a> {
 	cx: &'a Ctx,

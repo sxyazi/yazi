@@ -1,12 +1,9 @@
-mod adapter;
+pub mod adapter;
 mod event;
 pub mod external;
-mod input;
-mod manager;
-mod tasks;
+pub mod files;
+pub mod input;
+pub mod manager;
+pub mod tasks;
 
-pub use adapter::*;
 pub use event::*;
-pub use input::*;
-pub use manager::*;
-pub use tasks::*;

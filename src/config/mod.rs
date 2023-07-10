@@ -7,7 +7,7 @@ mod pattern;
 pub mod preview;
 pub mod theme;
 
-pub use pattern::*;
+pub(crate) use pattern::*;
 
 pub static KEYMAP: Lazy<keymap::Keymap> = Lazy::new(|| keymap::Keymap::new());
 pub static MANAGER: Lazy<manager::Manager> = Lazy::new(|| manager::Manager::new());

@@ -1,14 +1,12 @@
 use std::{fs::File, io::BufReader, path::{Path, PathBuf}, sync::OnceLock};
 
-use adapter::kitty::Kitty;
 use anyhow::{anyhow, Context, Result};
 use image::imageops::FilterType;
-use ratatui::layout::Rect;
 use syntect::{easy::HighlightLines, highlighting::{Theme, ThemeSet}, parsing::SyntaxSet, util::as_24_bit_terminal_escaped};
 use tokio::{fs, task::JoinHandle};
 
-use super::{Folder, ALL_RATIO, PREVIEW_BORDER, PREVIEW_PADDING, PREVIEW_RATIO};
-use crate::{config::{PREVIEW, THEME}, core::{adapter, Precache}, emit, misc::{first_n_lines, tty_ratio, tty_size}};
+use super::{ALL_RATIO, PREVIEW_BORDER, PREVIEW_PADDING, PREVIEW_RATIO};
+use crate::{config::{PREVIEW, THEME}, core::{adapter::Kitty, files::Files, tasks::Precache}, emit, misc::{first_n_lines, tty_ratio, tty_size}};
 
 static SYNTECT_SYNTAX: OnceLock<SyntaxSet> = OnceLock::new();
 static SYNTECT_THEME: OnceLock<Theme> = OnceLock::new();
@@ -76,7 +74,7 @@ impl Preview {
 	}
 
 	pub async fn folder(path: &Path) -> Result<PreviewData> {
-		Folder::read(&path).await;
+		Files::read(&path).await;
 		Ok(PreviewData::Folder)
 	}
 

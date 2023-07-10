@@ -1,11 +1,15 @@
 use std::{collections::BTreeMap, mem, path::{Path, PathBuf}};
 
+use anyhow::Result;
+use tokio::task::JoinHandle;
+
 use super::{Folder, Mode, Preview};
-use crate::emit;
+use crate::{core::{external, files::{Files, FilesOp}, input::{Input, InputOpt}}, emit};
 
 pub struct Tab {
 	pub(super) current: Folder,
 	pub(super) parent:  Option<Folder>,
+	search:             Option<JoinHandle<Result<()>>>,
 
 	pub(super) mode: Mode,
 
@@ -18,6 +22,7 @@ impl Tab {
 		Self {
 			current: Folder::new(path),
 			parent:  path.parent().map(|p| Folder::new(p)),
+			search:  None,
 
 			mode: Default::default(),
 
@@ -123,6 +128,40 @@ impl Tab {
 	pub fn back(&mut self) -> bool { todo!() }
 
 	pub fn forward(&mut self) -> bool { todo!() }
+
+	pub fn search(&mut self, grep: bool) -> bool {
+		if let Some(handle) = self.search.take() {
+			handle.abort();
+		}
+
+		let cwd = self.current.cwd.clone();
+		let hidden = self.current.files.show_hidden;
+
+		let pos = Input::top_position();
+		self.search = Some(tokio::spawn(async move {
+			let subject = emit!(Input(InputOpt {
+				title:    "Find:".to_string(),
+				value:    "".to_string(),
+				position: pos,
+			}))
+			.await?;
+
+			let (handle, mut buf) = if grep {
+				external::rg(external::RgOpt { cwd: cwd.clone(), hidden, subject })?
+			} else {
+				external::fd(external::FdOpt { cwd: cwd.clone(), hidden, regex: false, subject })?
+			};
+
+			while let Some(chunk) = buf.recv().await {
+				if chunk.is_empty() {
+					break;
+				}
+				emit!(Files(FilesOp::Append(cwd.clone(), Files::from(chunk).await)));
+			}
+			Ok(handle.await?)
+		}));
+		false
+	}
 
 	pub fn select(&mut self, state: Option<bool>) -> bool {
 		let idx = Some(self.current.cursor());

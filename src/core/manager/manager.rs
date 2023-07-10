@@ -1,12 +1,9 @@
 use std::{collections::{BTreeSet, HashMap, HashSet}, path::PathBuf};
 
-use indexmap::IndexMap;
-use ratatui::layout::Rect;
 use tokio::fs;
-use tracing::trace;
 
-use super::{FolderItem, PreviewData, Tab, Tabs, Watcher};
-use crate::{core::{Folder, Input, InputOpt, Precache}, emit};
+use super::{PreviewData, Tab, Tabs, Watcher};
+use crate::{core::{files::{File, FilesOp}, input::{Input, InputOpt}, manager::Folder, tasks::Precache}, emit};
 
 pub struct Manager {
 	tabs:   Tabs,
@@ -169,25 +166,20 @@ impl Manager {
 		files.into_iter().map(|p| self.mimetype.get(p).cloned()).collect()
 	}
 
-	pub fn update_files(&mut self, path: PathBuf, items: IndexMap<PathBuf, FolderItem>) -> bool {
+	pub fn update_files(&mut self, op: FilesOp) -> bool {
+		let path = op.path();
 		let cwd = self.current().cwd.clone();
+
 		let hovered = self.hovered().map(|h| h.path.clone());
-
-		let mut b = if cwd == path && !self.current().in_search {
-			self.current_mut().update(items)
+		let folder = if cwd == path && !self.current().in_search {
+			self.current_mut()
 		} else if matches!(self.parent(), Some(p) if p.cwd == path) {
-			self.active_mut().parent.as_mut().unwrap().update(items)
+			self.active_mut().parent.as_mut().unwrap()
 		} else {
-			self
-				.active_mut()
-				.history
-				.entry(path.clone())
-				.or_insert_with(|| Folder::new(&path))
-				.update(items);
-
-			matches!(self.hovered(), Some(h) if h.path == path)
+			self.active_mut().history.entry(path.to_path_buf()).or_insert_with(|| Folder::new(&path))
 		};
 
+		let mut b = folder.update(op) || matches!(self.hovered(), Some(h) if h.path == path);
 		b |= self.active_mut().parent.as_mut().map_or(false, |p| p.hover(&cwd));
 		b |= hovered.as_ref().map_or(false, |h| self.current_mut().hover(h));
 
@@ -248,5 +240,5 @@ impl Manager {
 	pub fn parent(&self) -> &Option<Folder> { &self.tabs.active().parent }
 
 	#[inline]
-	pub fn hovered(&self) -> Option<&FolderItem> { self.tabs.active().current.hovered() }
+	pub fn hovered(&self) -> Option<&File> { self.tabs.active().current.hovered() }
 }

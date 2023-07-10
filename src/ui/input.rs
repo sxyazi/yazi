@@ -1,7 +1,7 @@
 use ratatui::{buffer::Buffer, layout::Rect, style::{Color, Style}, text::Line, widgets::{Block, BorderType, Borders, Clear, Paragraph, Widget}};
 
 use super::{Ctx, Term};
-use crate::core::InputMode;
+use crate::core::input::InputMode;
 
 pub struct Input<'a> {
 	cx: &'a Ctx,

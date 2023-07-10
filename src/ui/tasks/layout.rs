@@ -1,7 +1,7 @@
 use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Direction, Rect}, style::{Color, Modifier, Style}, widgets::{Block, BorderType, Borders, List, ListItem, Padding, Widget}};
 
 use super::Clear;
-use crate::{core::TASKS_PERCENT, ui::Ctx};
+use crate::{core::tasks::TASKS_PERCENT, ui::Ctx};
 
 pub struct Layout<'a> {
 	cx: &'a Ctx,

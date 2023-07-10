@@ -1,1 +1,3 @@
-pub mod kitty;
+mod kitty;
+
+pub use kitty::*;

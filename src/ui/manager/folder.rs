@@ -3,13 +3,13 @@ use ratatui::{buffer::Buffer, layout::Rect, style::{Color, Modifier, Style}, wid
 use crate::{config::THEME, core};
 
 pub struct Folder<'a> {
-	folder:       &'a core::Folder,
+	folder:       &'a core::manager::Folder,
 	is_preview:   bool,
 	is_selection: bool,
 }
 
 impl<'a> Folder<'a> {
-	pub fn new(folder: &'a core::Folder) -> Self {
+	pub fn new(folder: &'a core::manager::Folder) -> Self {
 		Self { folder, is_preview: false, is_selection: false }
 	}
 

@@ -31,5 +31,8 @@ impl<T> DelayedBuffer<T> {
 }
 
 impl<T> Drop for DelayedBuffer<T> {
-	fn drop(&mut self) { self.flush(); }
+	fn drop(&mut self) {
+		self.flush();
+		self.tx.send(vec![]).ok();
+	}
 }

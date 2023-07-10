@@ -12,7 +12,7 @@ pub struct FdOpt {
 	pub subject: String,
 }
 
-pub fn fd(opt: FdOpt) -> Result<(JoinHandle<()>, UnboundedReceiver<Vec<String>>)> {
+pub fn fd(opt: FdOpt) -> Result<(JoinHandle<()>, UnboundedReceiver<Vec<PathBuf>>)> {
 	let mut child = Command::new("fd")
 		.arg("--base-directory")
 		.arg(&opt.cwd)
@@ -30,7 +30,10 @@ pub fn fd(opt: FdOpt) -> Result<(JoinHandle<()>, UnboundedReceiver<Vec<String>>)
 
 	let handle = tokio::spawn(async move {
 		while let Ok(Some(line)) = it.next_line().await {
-			buf.push(line);
+			let path = PathBuf::from(line);
+			if path.components().count() > 1 {
+				buf.push(path);
+			}
 		}
 		child.wait().await.ok();
 	});

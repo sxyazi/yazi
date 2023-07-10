@@ -1,4 +1,4 @@
-use crate::core::{Input, Manager, Tasks};
+use crate::core::{input::Input, manager::Manager, tasks::Tasks};
 
 pub struct Ctx {
 	pub cursor: Option<(u16, u16)>,

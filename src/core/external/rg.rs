@@ -11,7 +11,7 @@ pub struct RgOpt {
 	pub subject: String,
 }
 
-pub async fn rg(opt: RgOpt) -> Result<(JoinHandle<()>, UnboundedReceiver<Vec<String>>)> {
+pub fn rg(opt: RgOpt) -> Result<(JoinHandle<()>, UnboundedReceiver<Vec<PathBuf>>)> {
 	let mut child = Command::new("rg")
 		.current_dir(&opt.cwd)
 		.args(&["--color=never", "--files-with-matches", "--smart-case"])
@@ -28,7 +28,10 @@ pub async fn rg(opt: RgOpt) -> Result<(JoinHandle<()>, UnboundedReceiver<Vec<Str
 
 	let handle = tokio::spawn(async move {
 		while let Ok(Some(line)) = it.next_line().await {
-			buf.push(line);
+			let path = PathBuf::from(line);
+			if path.components().count() > 1 {
+				buf.push(path);
+			}
 		}
 		child.wait().await.ok();
 	});

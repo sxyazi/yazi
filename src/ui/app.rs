@@ -74,8 +74,8 @@ impl App {
 			Event::Refresh => {
 				manager.refresh();
 			}
-			Event::Files(path, files) => {
-				if manager.update_files(path, files) {
+			Event::Files(op) => {
+				if manager.update_files(op) {
 					emit!(Render);
 				}
 			}

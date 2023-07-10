@@ -1,7 +1,7 @@
 use crossterm::event::KeyCode;
 
 use super::Ctx;
-use crate::{config::{keymap::{Exec, Key, Single}, KEYMAP}, core::InputMode, emit, misc::optinal_bool};
+use crate::{config::{keymap::{Exec, Key, Single}, KEYMAP}, core::input::InputMode, emit, misc::optinal_bool};
 
 pub struct Executor;
 

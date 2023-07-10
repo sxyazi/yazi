@@ -3,8 +3,7 @@ use std::{collections::BTreeSet, path::{Path, PathBuf}};
 use notify::{RecommendedWatcher, Watcher as _Watcher};
 use tokio::sync::mpsc::{self, Sender};
 
-use super::Folder;
-use crate::emit;
+use crate::core::files::Files;
 
 pub struct Watcher {
 	tx: Sender<PathBuf>,
@@ -54,7 +53,7 @@ impl Watcher {
 
 		tokio::spawn(async move {
 			while let Some(path) = rx.recv().await {
-				Folder::read(&path).await;
+				Files::read(&path).await;
 			}
 		});
 

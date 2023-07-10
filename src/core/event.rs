@@ -2,10 +2,9 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use crossterm::event::KeyEvent;
-use indexmap::IndexMap;
 use tokio::sync::{mpsc::Sender, oneshot};
 
-use super::{FolderItem, InputOpt, PreviewData};
+use super::{files::FilesOp, input::InputOpt, manager::PreviewData};
 
 static mut TX: Option<Sender<Event>> = None;
 
@@ -17,7 +16,7 @@ pub enum Event {
 	Resize(u16, u16),
 
 	Refresh,
-	Files(PathBuf, IndexMap<PathBuf, FolderItem>),
+	Files(FilesOp),
 	Hover,
 	Mimetype(PathBuf, String),
 	Preview(PathBuf, PreviewData),
@@ -67,8 +66,8 @@ macro_rules! emit {
 		$crate::core::Event::Resize($cols, $rows).emit();
 	};
 
-	(Files($path:expr, $items:expr)) => {
-		$crate::core::Event::Files($path, $items).emit();
+	(Files($op:expr)) => {
+		$crate::core::Event::Files($op).emit();
 	};
 	(Mimetype($path:expr, $mime:expr)) => {
 		$crate::core::Event::Mimetype($path, $mime).emit();

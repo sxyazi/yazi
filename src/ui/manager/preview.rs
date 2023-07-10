@@ -4,7 +4,7 @@ use ansi_to_tui::IntoText;
 use ratatui::{buffer::Buffer, layout::Rect, widgets::{Paragraph, Widget}};
 
 use super::Folder;
-use crate::{core::{kitty::Kitty, PreviewData}, ui::{Ctx, Term}};
+use crate::{core::{adapter::Kitty, manager::PreviewData}, ui::{Ctx, Term}};
 
 pub struct Preview<'a> {
 	cx: &'a Ctx,
