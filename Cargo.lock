@@ -1354,39 +1354,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ranger-rs"
-version = "0.1.0"
-dependencies = [
- "ansi-to-tui",
- "anyhow",
- "async-channel",
- "base64 0.21.2",
- "console-subscriber",
- "crossterm",
- "futures",
- "glob",
- "image",
- "indexmap 2.0.0",
- "libc",
- "md5",
- "notify",
- "once_cell",
- "parking_lot",
- "ratatui",
- "serde",
- "signal-hook-tokio",
- "syntect",
- "tokio",
- "toml",
- "tracing",
- "tracing-appender",
- "tracing-subscriber",
- "trash",
- "unicode-width",
- "xdg",
-]
-
-[[package]]
 name = "ratatui"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2384,6 +2351,39 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56c1936c4cc7a1c9ab21a1ebb602eb942ba868cbd44a99cb7cdc5892335e1c85"
 dependencies = [
  "linked-hash-map",
+]
+
+[[package]]
+name = "yazi"
+version = "0.1.0"
+dependencies = [
+ "ansi-to-tui",
+ "anyhow",
+ "async-channel",
+ "base64 0.21.2",
+ "console-subscriber",
+ "crossterm",
+ "futures",
+ "glob",
+ "image",
+ "indexmap 2.0.0",
+ "libc",
+ "md5",
+ "notify",
+ "once_cell",
+ "parking_lot",
+ "ratatui",
+ "serde",
+ "signal-hook-tokio",
+ "syntect",
+ "tokio",
+ "toml",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
+ "trash",
+ "unicode-width",
+ "xdg",
 ]
 
 [[package]]
