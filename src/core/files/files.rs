@@ -38,7 +38,7 @@ impl Files {
 				items.insert(path, file);
 			}
 		}
-		emit!(Files(FilesOp::Update(path.to_path_buf(), items)));
+		emit!(Files(FilesOp::Read(path.to_path_buf(), items)));
 	}
 
 	pub fn sort(&mut self) {
@@ -67,7 +67,7 @@ impl Files {
 		}
 	}
 
-	pub fn update(&mut self, mut items: IndexMap<PathBuf, File>) -> bool {
+	pub fn update_read(&mut self, mut items: IndexMap<PathBuf, File>) -> bool {
 		if !self.show_hidden {
 			items.retain(|_, item| !item.is_hidden);
 		}
@@ -84,17 +84,19 @@ impl Files {
 		true
 	}
 
-	pub fn append(&mut self, items: IndexMap<PathBuf, File>) -> bool {
-		for (path, mut item) in items.into_iter() {
-			if let Some(old) = self.items.get(&path) {
-				item.length = old.length;
-				item.is_selected = old.is_selected;
-			}
-			self.items.insert(path, item);
+	pub fn update_search(&mut self, items: IndexMap<PathBuf, File>) -> bool {
+		if !items.is_empty() {
+			self.items.extend(items);
+			self.sort();
+			return true;
 		}
 
-		self.sort();
-		true
+		if !self.items.is_empty() {
+			self.items.clear();
+			return true;
+		}
+
+		false
 	}
 }
 
@@ -118,16 +120,16 @@ impl Default for FilesSort {
 }
 
 pub enum FilesOp {
-	Update(PathBuf, IndexMap<PathBuf, File>),
-	Append(PathBuf, IndexMap<PathBuf, File>),
+	Read(PathBuf, IndexMap<PathBuf, File>),
+	Search(PathBuf, IndexMap<PathBuf, File>),
 }
 
 impl FilesOp {
 	#[inline]
 	pub fn path(&self) -> PathBuf {
 		match self {
-			Self::Update(path, _) => path,
-			Self::Append(path, _) => path,
+			Self::Read(path, _) => path,
+			Self::Search(path, _) => path,
 		}
 		.clone()
 	}

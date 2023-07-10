@@ -1,6 +1,7 @@
 use std::{collections::BTreeMap, mem, path::{Path, PathBuf}};
 
 use anyhow::Result;
+use indexmap::IndexMap;
 use tokio::task::JoinHandle;
 
 use super::{Folder, Mode, Preview};
@@ -146,21 +147,36 @@ impl Tab {
 			}))
 			.await?;
 
-			let (handle, mut buf) = if grep {
+			let mut rx = if grep {
 				external::rg(external::RgOpt { cwd: cwd.clone(), hidden, subject })?
 			} else {
-				external::fd(external::FdOpt { cwd: cwd.clone(), hidden, regex: false, subject })?
+				external::fd(external::FdOpt { cwd: cwd.clone(), hidden, glob: false, subject })?
 			};
 
-			while let Some(chunk) = buf.recv().await {
+			emit!(Files(FilesOp::Search(cwd.clone(), IndexMap::new())));
+			while let Some(chunk) = rx.recv().await {
 				if chunk.is_empty() {
 					break;
 				}
-				emit!(Files(FilesOp::Append(cwd.clone(), Files::from(chunk).await)));
+				emit!(Files(FilesOp::Search(cwd.clone(), Files::from(chunk).await)));
 			}
-			Ok(handle.await?)
+			Ok(())
 		}));
-		false
+		true
+	}
+
+	pub fn search_stop(&mut self) -> bool {
+		if let Some(handle) = self.search.take() {
+			handle.abort();
+		}
+		if self.current.in_search {
+			let cwd = self.current.cwd.clone();
+			let rep = self.history_new(&cwd);
+			drop(mem::replace(&mut self.current, rep));
+		}
+
+		emit!(Refresh);
+		true
 	}
 
 	pub fn select(&mut self, state: Option<bool>) -> bool {

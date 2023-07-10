@@ -95,6 +95,11 @@ impl Executor {
 				Some("hide") => Some(false),
 				_ => None,
 			}),
+			"search" => match exec.args.get(0).map(|s| s.as_str()).unwrap_or("") {
+				"rg" => cx.manager.active_mut().search(true),
+				"fd" => cx.manager.active_mut().search(false),
+				_ => cx.manager.active_mut().search_stop(),
+			},
 
 			// Tabs
 			"tab_create" => {

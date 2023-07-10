@@ -1,4 +1,4 @@
-use std::{collections::{BTreeSet, HashMap, HashSet}, path::PathBuf};
+use std::{collections::{BTreeSet, HashMap, HashSet}, mem, path::PathBuf};
 
 use tokio::fs;
 
@@ -166,20 +166,26 @@ impl Manager {
 		files.into_iter().map(|p| self.mimetype.get(p).cloned()).collect()
 	}
 
-	pub fn update_files(&mut self, op: FilesOp) -> bool {
+	pub fn update_read(&mut self, op: FilesOp) -> bool {
 		let path = op.path();
 		let cwd = self.current().cwd.clone();
 
 		let hovered = self.hovered().map(|h| h.path.clone());
-		let folder = if cwd == path && !self.current().in_search {
-			self.current_mut()
+		let mut b = if cwd == path && !self.current().in_search {
+			self.current_mut().update(op)
 		} else if matches!(self.parent(), Some(p) if p.cwd == path) {
-			self.active_mut().parent.as_mut().unwrap()
+			self.active_mut().parent.as_mut().unwrap().update(op)
 		} else {
-			self.active_mut().history.entry(path.to_path_buf()).or_insert_with(|| Folder::new(&path))
+			self
+				.active_mut()
+				.history
+				.entry(path.to_path_buf())
+				.or_insert_with(|| Folder::new(&path))
+				.update(op);
+
+			matches!(self.hovered(), Some(h) if h.path == path)
 		};
 
-		let mut b = folder.update(op) || matches!(self.hovered(), Some(h) if h.path == path);
 		b |= self.active_mut().parent.as_mut().map_or(false, |p| p.hover(&cwd));
 		b |= hovered.as_ref().map_or(false, |h| self.current_mut().hover(h));
 
@@ -187,6 +193,18 @@ impl Manager {
 			emit!(Hover);
 		}
 		b
+	}
+
+	pub fn update_search(&mut self, op: FilesOp) -> bool {
+		let path = op.path();
+		if !self.current().in_search || self.current().cwd != path {
+			let rep = mem::replace(self.current_mut(), Folder::new_search(&path));
+			if !rep.in_search {
+				self.active_mut().history.insert(path, rep);
+			}
+		}
+
+		self.current_mut().update(op)
 	}
 
 	pub fn update_mimetype(&mut self, path: PathBuf, mimetype: String) -> bool {

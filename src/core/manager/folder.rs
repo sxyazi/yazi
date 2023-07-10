@@ -1,4 +1,4 @@
-use std::{path::{Path, PathBuf}, usize};
+use std::path::{Path, PathBuf};
 
 use indexmap::map::Slice;
 use ratatui::layout::Rect;
@@ -25,8 +25,8 @@ impl Folder {
 
 	pub fn update(&mut self, op: FilesOp) -> bool {
 		let b = match op {
-			FilesOp::Update(_, items) => self.files.update(items),
-			FilesOp::Append(_, items) => self.files.append(items),
+			FilesOp::Read(_, items) => self.files.update_read(items),
+			FilesOp::Search(_, items) => self.files.update_search(items),
 		};
 		if !b {
 			return false;

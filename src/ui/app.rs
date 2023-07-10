@@ -3,7 +3,7 @@ use crossterm::event::KeyEvent;
 use tokio::sync::oneshot::{self};
 
 use super::{root::Root, Ctx, Executor, Logs, Signals, Term};
-use crate::{config::keymap::Key, core::Event, emit};
+use crate::{config::keymap::Key, core::{files::FilesOp, Event}, emit};
 
 pub struct App {
 	cx:      Ctx,
@@ -75,7 +75,11 @@ impl App {
 				manager.refresh();
 			}
 			Event::Files(op) => {
-				if manager.update_files(op) {
+				let b = match op {
+					FilesOp::Read(..) => manager.update_read(op),
+					FilesOp::Search(..) => manager.update_search(op),
+				};
+				if b {
 					emit!(Render);
 				}
 			}
