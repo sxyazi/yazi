@@ -14,8 +14,9 @@ pub struct Folder {
 	offset:  usize,
 	cursor:  usize,
 
-	sort:        FolderSort,
-	show_hidden: bool,
+	sort:          FolderSort,
+	show_hidden:   bool,
+	pub in_search: bool,
 }
 
 #[derive(Clone)]
@@ -41,6 +42,15 @@ impl Default for FolderSort {
 impl Folder {
 	pub fn new(cwd: &Path) -> Self {
 		Self { cwd: cwd.to_path_buf(), show_hidden: MANAGER.show_hidden, ..Default::default() }
+	}
+
+	pub fn new_search(cwd: &Path) -> Self {
+		Self {
+			cwd: cwd.to_path_buf(),
+			show_hidden: MANAGER.show_hidden,
+			in_search: true,
+			..Default::default()
+		}
 	}
 
 	#[inline]

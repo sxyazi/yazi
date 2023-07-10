@@ -74,34 +74,47 @@ impl Tab {
 			return false;
 		}
 
-		let current = self.history.remove(&hovered.path).unwrap_or_else(|| Folder::new(&hovered.path));
-		let parent = mem::replace(&mut self.current, current);
-
-		if self.parent.is_none() {
-			self.parent = Some(parent);
-		} else {
-			let cwd = self.parent.as_ref().unwrap().cwd.clone();
-			let pparent = mem::replace(self.parent.as_mut().unwrap(), parent);
-			self.history.insert(cwd, pparent);
+		let rep = self.history_new(&hovered.path);
+		let rep = mem::replace(&mut self.current, rep);
+		if !rep.in_search {
+			self.history.insert(rep.cwd.clone(), rep);
 		}
+
+		if let Some(rep) = self.parent.take() {
+			self.history.insert(rep.cwd.clone(), rep);
+		}
+		self.parent = Some(self.history_new(hovered.path.parent().unwrap()));
 
 		emit!(Refresh);
 		true
 	}
 
 	pub fn leave(&mut self) -> bool {
-		let parent = if let Some(p) = &self.parent {
-			p.cwd.clone()
+		let current = self
+			.current
+			.hovered()
+			.and_then(|h| h.path.parent())
+			.and_then(|p| if p == self.current.cwd { None } else { Some(p) })
+			.or_else(|| self.current.cwd.parent());
+
+		let current = if let Some(c) = current {
+			c.to_owned()
 		} else {
 			return false;
 		};
 
-		let pparent = parent.parent().map(|p| self.history.remove(p).unwrap_or_else(|| Folder::new(p)));
+		if let Some(rep) = self.parent.take() {
+			self.history.insert(rep.cwd.clone(), rep);
+		}
+		if let Some(parent) = current.parent() {
+			self.parent = Some(self.history_new(parent));
+		}
 
-		let cwd = self.current.cwd.clone();
-		let parent = mem::replace(&mut self.parent, pparent).unwrap();
-		let current = mem::replace(&mut self.current, parent);
-		self.history.insert(cwd, current);
+		let rep = self.history_new(&current);
+		let rep = mem::replace(&mut self.current, rep);
+		if !rep.in_search {
+			self.history.insert(rep.cwd.clone(), rep);
+		}
 
 		emit!(Refresh);
 		true
@@ -138,6 +151,11 @@ impl Tab {
 
 	#[inline]
 	pub fn history(&self, path: &Path) -> Option<&Folder> { self.history.get(path) }
+
+	#[inline]
+	pub fn history_new(&mut self, path: &Path) -> Folder {
+		self.history.remove(path).unwrap_or_else(|| Folder::new(path))
+	}
 
 	#[inline]
 	pub fn preview(&self) -> &Preview { &self.preview }

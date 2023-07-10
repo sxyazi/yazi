@@ -173,7 +173,7 @@ impl Manager {
 		let cwd = self.current().cwd.clone();
 		let hovered = self.hovered().map(|h| h.path.clone());
 
-		let mut b = if self.current().cwd == path {
+		let mut b = if cwd == path && !self.current().in_search {
 			self.current_mut().update(items)
 		} else if matches!(self.parent(), Some(p) if p.cwd == path) {
 			self.active_mut().parent.as_mut().unwrap().update(items)

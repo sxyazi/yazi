@@ -18,10 +18,14 @@ impl<'a> Widget for Layout<'a> {
 			.constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
 			.split(area);
 
-		let manager = &self.cx.manager;
-		Paragraph::new(readable_path(&manager.current().cwd))
-			.style(Style::default().fg(Color::Cyan))
-			.render(chunks[0], buf);
+		let current = &self.cx.manager.current();
+		let location = if current.in_search {
+			format!("{} (search)", readable_path(&current.cwd))
+		} else {
+			format!("{}", readable_path(&current.cwd))
+		};
+
+		Paragraph::new(location).style(Style::default().fg(Color::Cyan)).render(chunks[0], buf);
 
 		Tabs::new(self.cx).render(chunks[1], buf);
 	}
