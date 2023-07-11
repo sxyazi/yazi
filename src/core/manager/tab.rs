@@ -158,7 +158,7 @@ impl Tab {
 				if chunk.is_empty() {
 					break;
 				}
-				emit!(Files(FilesOp::Search(cwd.clone(), Files::from(chunk).await)));
+				emit!(Files(FilesOp::Search(cwd.clone(), Files::read(chunk).await)));
 			}
 			Ok(())
 		}));

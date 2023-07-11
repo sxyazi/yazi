@@ -38,7 +38,9 @@ impl Manager {
 				to_watch.insert(p.cwd.clone());
 			}
 			if let Some(ref h) = tab.current.hovered() {
-				to_watch.insert(h.path.clone());
+				if h.meta.is_dir() {
+					to_watch.insert(h.path.clone());
+				}
 			}
 		}
 		self.watcher.watch(to_watch);
@@ -169,8 +171,8 @@ impl Manager {
 	pub fn update_read(&mut self, op: FilesOp) -> bool {
 		let path = op.path();
 		let cwd = self.current().cwd.clone();
-
 		let hovered = self.hovered().map(|h| h.path.clone());
+
 		let mut b = if cwd == path && !self.current().in_search {
 			self.current_mut().update(op)
 		} else if matches!(self.parent(), Some(p) if p.cwd == path) {
@@ -193,6 +195,22 @@ impl Manager {
 			emit!(Hover);
 		}
 		b
+	}
+
+	pub fn update_ioerr(&mut self, op: FilesOp) -> bool {
+		let path = op.path();
+		let op = FilesOp::read_empty(&path);
+
+		if path == self.current().cwd {
+			self.current_mut().update(op);
+		} else if matches!(self.parent(), Some(p) if p.cwd == path) {
+			self.active_mut().parent.as_mut().unwrap().update(op);
+		} else {
+			return false;
+		}
+
+		self.active_mut().leave();
+		true
 	}
 
 	pub fn update_search(&mut self, op: FilesOp) -> bool {

@@ -1,10 +1,11 @@
 use std::{ops::{Deref, DerefMut}, path::{Path, PathBuf}};
 
+use anyhow::Result;
 use indexmap::IndexMap;
 use tokio::fs;
 
 use super::File;
-use crate::{config::{manager::SortBy, MANAGER}, emit};
+use crate::config::{manager::SortBy, MANAGER};
 
 #[derive(Default)]
 pub struct Files {
@@ -14,7 +15,7 @@ pub struct Files {
 }
 
 impl Files {
-	pub async fn from(paths: Vec<PathBuf>) -> IndexMap<PathBuf, File> {
+	pub async fn read(paths: Vec<PathBuf>) -> IndexMap<PathBuf, File> {
 		let mut items = IndexMap::new();
 		for path in paths {
 			if let Ok(file) = File::from(&path).await {
@@ -24,21 +25,17 @@ impl Files {
 		items
 	}
 
-	pub async fn read(path: &Path) {
-		let mut iter = match fs::read_dir(path).await {
-			Ok(it) => it,
-			Err(_) => return,
-		};
-
+	pub async fn read_dir(path: &Path) -> Result<IndexMap<PathBuf, File>> {
+		let mut it = fs::read_dir(path).await?;
 		let mut items = IndexMap::new();
-		while let Ok(Some(item)) = iter.next_entry().await {
+		while let Ok(Some(item)) = it.next_entry().await {
 			if let Ok(meta) = item.metadata().await {
 				let path = item.path();
 				let file = File::from_meta(&path, meta).await;
 				items.insert(path, file);
 			}
 		}
-		emit!(Files(FilesOp::Read(path.to_path_buf(), items)));
+		Ok(items)
 	}
 
 	pub fn sort(&mut self) {
@@ -121,6 +118,7 @@ impl Default for FilesSort {
 
 pub enum FilesOp {
 	Read(PathBuf, IndexMap<PathBuf, File>),
+	IOErr(PathBuf),
 	Search(PathBuf, IndexMap<PathBuf, File>),
 }
 
@@ -129,8 +127,12 @@ impl FilesOp {
 	pub fn path(&self) -> PathBuf {
 		match self {
 			Self::Read(path, _) => path,
+			Self::IOErr(path) => path,
 			Self::Search(path, _) => path,
 		}
 		.clone()
 	}
+
+	#[inline]
+	pub fn read_empty(path: &Path) -> Self { Self::Read(path.to_path_buf(), IndexMap::new()) }
 }

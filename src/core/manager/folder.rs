@@ -27,6 +27,7 @@ impl Folder {
 		let b = match op {
 			FilesOp::Read(_, items) => self.files.update_read(items),
 			FilesOp::Search(_, items) => self.files.update_search(items),
+			_ => unreachable!(),
 		};
 		if !b {
 			return false;

@@ -6,7 +6,7 @@ use syntect::{easy::HighlightLines, highlighting::{Theme, ThemeSet}, parsing::Sy
 use tokio::{fs, task::JoinHandle};
 
 use super::{ALL_RATIO, PREVIEW_BORDER, PREVIEW_PADDING, PREVIEW_RATIO};
-use crate::{config::{PREVIEW, THEME}, core::{adapter::Kitty, files::Files, tasks::Precache}, emit, misc::{first_n_lines, tty_ratio, tty_size}};
+use crate::{config::{PREVIEW, THEME}, core::{adapter::Kitty, files::{Files, FilesOp}, tasks::Precache}, emit, misc::{first_n_lines, tty_ratio, tty_size}};
 
 static SYNTECT_SYNTAX: OnceLock<SyntaxSet> = OnceLock::new();
 static SYNTECT_THEME: OnceLock<Theme> = OnceLock::new();
@@ -74,7 +74,11 @@ impl Preview {
 	}
 
 	pub async fn folder(path: &Path) -> Result<PreviewData> {
-		Files::read(&path).await;
+		emit!(Files(match Files::read_dir(&path).await {
+			Ok(items) => FilesOp::Read(path.to_path_buf(), items),
+			Err(_) => FilesOp::IOErr(path.to_path_buf()),
+		}));
+
 		Ok(PreviewData::Folder)
 	}
 

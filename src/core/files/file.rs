@@ -3,7 +3,7 @@ use std::{fs::Metadata, path::{Path, PathBuf}};
 use anyhow::Result;
 use tokio::fs;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct File {
 	pub name:        String,
 	pub path:        PathBuf,

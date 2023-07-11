@@ -77,6 +77,7 @@ impl App {
 			Event::Files(op) => {
 				let b = match op {
 					FilesOp::Read(..) => manager.update_read(op),
+					FilesOp::IOErr(..) => manager.update_ioerr(op),
 					FilesOp::Search(..) => manager.update_search(op),
 				};
 				if b {
