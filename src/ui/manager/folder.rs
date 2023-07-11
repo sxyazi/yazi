@@ -1,6 +1,6 @@
 use ratatui::{buffer::Buffer, layout::Rect, style::{Color, Modifier, Style}, widgets::{List, ListItem, Widget}};
 
-use crate::{config::THEME, core};
+use crate::{config::THEME, core, misc::readable_path};
 
 pub struct Folder<'a> {
 	folder:       &'a core::manager::Folder,
@@ -41,10 +41,11 @@ impl<'a> Widget for Folder<'a> {
 					.map(|x| x.display.as_ref())
 					.unwrap_or("");
 
+				let name = readable_path(&v.path, &self.folder.cwd);
 				let item = ListItem::new(if v.is_selected {
-					format!("> {} {}", icon, v.name)
+					format!("> {} {}", icon, name)
 				} else {
-					format!("{} {}", icon, v.name)
+					format!("{} {}", icon, name)
 				});
 
 				let mut style = Style::default();

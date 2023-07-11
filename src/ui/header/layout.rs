@@ -1,7 +1,7 @@
 use ratatui::{buffer::Buffer, layout::{self, Constraint, Direction, Rect}, style::{Color, Style}, widgets::{Paragraph, Widget}};
 
 use super::tabs::Tabs;
-use crate::{misc::readable_path, ui::Ctx};
+use crate::{misc::readable_home, ui::Ctx};
 
 pub struct Layout<'a> {
 	cx: &'a Ctx,
@@ -20,9 +20,9 @@ impl<'a> Widget for Layout<'a> {
 
 		let current = &self.cx.manager.current();
 		let location = if current.in_search {
-			format!("{} (search)", readable_path(&current.cwd))
+			format!("{} (search)", readable_home(&current.cwd))
 		} else {
-			format!("{}", readable_path(&current.cwd))
+			format!("{}", readable_home(&current.cwd))
 		};
 
 		Paragraph::new(location).style(Style::default().fg(Color::Cyan)).render(chunks[0], buf);

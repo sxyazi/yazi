@@ -45,7 +45,7 @@ impl Files {
 
 		let reverse = self.sort.reverse;
 		match self.sort.by {
-			SortBy::Alphabetical => self.items.sort_by(|_, a, _, b| cmp(&a.name, &b.name, reverse)),
+			SortBy::Alphabetical => self.items.sort_by(|_, a, _, b| cmp(&a.path, &b.path, reverse)),
 			SortBy::Created => self.items.sort_by(|_, a, _, b| {
 				if let (Ok(a), Ok(b)) = (a.meta.created(), b.meta.created()) {
 					return cmp(a, b, reverse);

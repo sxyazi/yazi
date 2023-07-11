@@ -31,7 +31,14 @@ pub fn absolute_path(p: &Path) -> PathBuf {
 	p.to_path_buf()
 }
 
-pub fn readable_path(p: &Path) -> String {
+pub fn readable_path(p: &Path, base: &Path) -> String {
+	if let Ok(p) = p.strip_prefix(base) {
+		return p.display().to_string();
+	}
+	p.display().to_string()
+}
+
+pub fn readable_home(p: &Path) -> String {
 	if let Ok(home) = env::var("HOME") {
 		if let Ok(p) = p.strip_prefix(home) {
 			return format!("~/{}", p.display());
