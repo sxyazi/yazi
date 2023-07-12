@@ -1,7 +1,9 @@
-use std::{collections::BTreeSet, path::{Path, PathBuf}};
+use std::{collections::BTreeSet, path::{Path, PathBuf}, sync::Arc};
 
-use notify::{event::{MetadataKind, ModifyKind}, EventKind, RecommendedWatcher, Watcher as _Watcher};
-use tokio::sync::mpsc::{self, Sender};
+use indexmap::IndexMap;
+use notify::{event::{MetadataKind, ModifyKind}, EventKind, RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
+use parking_lot::RwLock;
+use tokio::{fs, sync::mpsc::{self, Receiver, Sender}};
 
 use crate::{core::files::{Files, FilesOp}, emit};
 
@@ -9,19 +11,12 @@ pub struct Watcher {
 	tx: Sender<PathBuf>,
 
 	watcher: RecommendedWatcher,
-	watched: BTreeSet<PathBuf>,
+	watched: Arc<RwLock<IndexMap<PathBuf, Option<PathBuf>>>>,
 }
 
 impl Watcher {
-	pub fn init() -> Self {
-		let (watcher, tx) = Self::start();
-
-		Self { tx, watcher, watched: Default::default() }
-	}
-
-	fn start() -> (RecommendedWatcher, Sender<PathBuf>) {
-		let (tx, mut rx) = mpsc::channel(50);
-
+	pub(super) fn start() -> Self {
+		let (tx, rx) = mpsc::channel(50);
 		let watcher = RecommendedWatcher::new(
 			{
 				let tx = tx.clone();
@@ -69,26 +64,84 @@ impl Watcher {
 		)
 		.unwrap();
 
-		tokio::spawn(async move {
-			while let Some(path) = rx.recv().await {
-				emit!(Files(match Files::read_dir(&path).await {
+		let instance = Self { tx, watcher, watched: Default::default() };
+		tokio::spawn(Self::changed(rx, instance.watched.clone()));
+		instance
+	}
+
+	async fn changed(
+		mut rx: Receiver<PathBuf>,
+		watched: Arc<RwLock<IndexMap<PathBuf, Option<PathBuf>>>>,
+	) {
+		while let Some(path) = rx.recv().await {
+			let linked = watched
+				.read()
+				.iter()
+				.map_while(|(k, v)| v.as_ref().and_then(|v| path.strip_prefix(v).ok()).map(|v| k.join(v)))
+				.collect::<Vec<_>>();
+
+			let result = Files::read_dir(&path).await;
+			if linked.is_empty() {
+				emit!(Files(match result {
 					Ok(items) => FilesOp::Read(path, items),
 					Err(_) => FilesOp::IOErr(path),
 				}));
+				continue;
 			}
-		});
 
-		(watcher, tx)
+			for ori in linked {
+				emit!(Files(match &result {
+					Ok(items) => {
+						let files = IndexMap::from_iter(items.iter().map(|(p, f)| {
+							let p = ori.join(p.strip_prefix(&path).unwrap());
+							let f = f.clone().set_path(&p);
+							(p, f)
+						}));
+						FilesOp::Read(ori, files)
+					}
+					Err(_) => FilesOp::IOErr(ori),
+				}));
+			}
+		}
 	}
 
 	pub(super) fn watch(&mut self, to_watch: BTreeSet<PathBuf>) {
-		for p in to_watch.difference(&self.watched) {
-			self.watcher.watch(&p, notify::RecursiveMode::NonRecursive).ok();
-		}
-		for p in self.watched.difference(&to_watch) {
+		let keys = self.watched.read().keys().cloned().collect::<BTreeSet<_>>();
+		for p in keys.difference(&to_watch) {
 			self.watcher.unwatch(p).ok();
 		}
-		self.watched = to_watch;
+		for p in to_watch.difference(&keys) {
+			self.watcher.watch(&p, RecursiveMode::NonRecursive).ok();
+		}
+
+		let mut todo = Vec::new();
+		let mut watched = self.watched.write();
+		*watched = IndexMap::from_iter(to_watch.into_iter().map(|k| {
+			if let Some(v) = watched.remove(&k) {
+				(k, v)
+			} else {
+				todo.push(k.clone());
+				(k, None)
+			}
+		}));
+		watched.sort_unstable_by(|_, a, _, b| b.cmp(a));
+
+		let watched = self.watched.clone();
+		tokio::spawn(async move {
+			let mut ext = IndexMap::new();
+			for k in todo {
+				match fs::canonicalize(&k).await {
+					Ok(v) if v != k => {
+						ext.insert(k, Some(v));
+					}
+					_ => {}
+				}
+			}
+
+			let mut watched = watched.write();
+			watched.extend(ext);
+			watched.sort_unstable_by(|_, a, _, b| b.cmp(a));
+		});
 	}
 
 	pub(super) fn trigger(&self, path: &Path) {

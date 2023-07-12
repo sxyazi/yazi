@@ -10,11 +10,12 @@ static mut TX: Option<Sender<Event>> = None;
 
 pub enum Event {
 	Quit,
-	Stop(bool, oneshot::Sender<()>),
+	Stop(bool, Option<oneshot::Sender<()>>),
 	Key(KeyEvent),
 	Render(String),
 	Resize(u16, u16),
 
+	Cd(PathBuf),
 	Refresh,
 	Files(FilesOp),
 	Hover,
@@ -54,7 +55,7 @@ impl Event {
 macro_rules! emit {
 	(Stop($state:expr)) => {{
 		let (tx, rx) = tokio::sync::oneshot::channel();
-		$crate::core::Event::Stop($state, tx).wait(rx)
+		$crate::core::Event::Stop($state, Some(tx)).wait(rx)
 	}};
 	(Key($key:expr)) => {
 		$crate::core::Event::Key($key).emit();
@@ -66,6 +67,9 @@ macro_rules! emit {
 		$crate::core::Event::Resize($cols, $rows).emit();
 	};
 
+	(Cd($op:expr)) => {
+		$crate::core::Event::Cd($op).emit();
+	};
 	(Files($op:expr)) => {
 		$crate::core::Event::Files($op).emit();
 	};

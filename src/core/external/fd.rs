@@ -21,6 +21,7 @@ pub fn fd(opt: FdOpt) -> Result<UnboundedReceiver<Vec<PathBuf>>> {
 		.arg(&opt.subject)
 		.kill_on_drop(true)
 		.stdout(Stdio::piped())
+		.stderr(Stdio::piped())
 		.spawn()?;
 
 	drop(child.stderr.take());

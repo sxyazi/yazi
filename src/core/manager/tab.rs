@@ -1,11 +1,11 @@
 use std::{collections::BTreeMap, mem, path::{Path, PathBuf}};
 
-use anyhow::Result;
+use anyhow::{Error, Result};
 use indexmap::IndexMap;
 use tokio::task::JoinHandle;
 
 use super::{Folder, Mode, Preview};
-use crate::{core::{external, files::{Files, FilesOp}, input::{Input, InputOpt}}, emit};
+use crate::{core::{external::{self, FzfOpt, ZoxideOpt}, files::{Files, FilesOp}, input::{Input, InputOpt}, Event, BLOCKER}, emit, misc::Defer};
 
 pub struct Tab {
 	pub(super) current: Folder,
@@ -38,7 +38,11 @@ impl Tab {
 			return true;
 		}
 
-		self.select_all(Some(false))
+		if self.select_all(Some(false)) {
+			return true;
+		}
+
+		self.search_stop()
 	}
 
 	pub fn arrow(&mut self, step: isize) -> bool {
@@ -66,6 +70,29 @@ impl Tab {
 		}
 
 		emit!(Hover);
+		true
+	}
+
+	pub fn cd(&mut self, target: PathBuf) -> bool {
+		if self.current.cwd == target {
+			return false;
+		}
+
+		if let Some(rep) = self.parent.take() {
+			self.history.insert(rep.cwd.clone(), rep);
+		}
+
+		let rep = self.history_new(&target);
+		let rep = mem::replace(&mut self.current, rep);
+		if !rep.in_search {
+			self.history.insert(rep.cwd.clone(), rep);
+		}
+
+		if let Some(parent) = target.parent() {
+			self.parent = Some(self.history_new(parent));
+		}
+
+		emit!(Refresh);
 		true
 	}
 
@@ -141,19 +168,19 @@ impl Tab {
 		let pos = Input::top_position();
 		self.search = Some(tokio::spawn(async move {
 			let subject = emit!(Input(InputOpt {
-				title:    "Find:".to_string(),
+				title:    "Search:".to_string(),
 				value:    "".to_string(),
 				position: pos,
 			}))
 			.await?;
 
 			let mut rx = if grep {
-				external::rg(external::RgOpt { cwd: cwd.clone(), hidden, subject })?
+				external::rg(external::RgOpt { cwd: cwd.clone(), hidden, subject })
 			} else {
-				external::fd(external::FdOpt { cwd: cwd.clone(), hidden, glob: false, subject })?
-			};
+				external::fd(external::FdOpt { cwd: cwd.clone(), hidden, glob: false, subject })
+			}?;
 
-			emit!(Files(FilesOp::Search(cwd.clone(), IndexMap::new())));
+			emit!(Files(FilesOp::search_empty(&cwd)));
 			while let Some(chunk) = rx.recv().await {
 				if chunk.is_empty() {
 					break;
@@ -177,6 +204,24 @@ impl Tab {
 
 		emit!(Refresh);
 		true
+	}
+
+	pub fn jump(&self, global: bool) -> bool {
+		let cwd = self.current.cwd.clone();
+
+		tokio::spawn(async move {
+			let _guard = BLOCKER.acquire().await.unwrap();
+			let _defer = Defer::new(|| Event::Stop(false, None).emit());
+			emit!(Stop(true)).await;
+
+			let rx = if global { external::fzf(FzfOpt {}) } else { external::zoxide(ZoxideOpt { cwd }) }?;
+
+			if let Ok(target) = rx.await? {
+				emit!(Cd(target));
+			}
+			Ok::<(), Error>(())
+		});
+		false
 	}
 
 	pub fn select(&mut self, state: Option<bool>) -> bool {

@@ -1,17 +1,15 @@
 use anyhow::Result;
-use tokio::{process::Command, select, sync::{mpsc, oneshot, Semaphore}};
+use tokio::{process::Command, select, sync::{mpsc, oneshot}};
 use tracing::trace;
 
 use super::TaskOp;
-use crate::emit;
+use crate::{core::BLOCKER, emit};
 
 pub(super) struct Process {
 	rx: async_channel::Receiver<ProcessOp>,
 	tx: async_channel::Sender<ProcessOp>,
 
 	sch: mpsc::UnboundedSender<TaskOp>,
-
-	blocker: Semaphore,
 }
 
 #[derive(Debug)]
@@ -31,7 +29,7 @@ pub(super) struct ProcessOpOpen {
 impl Process {
 	pub(super) fn new(sch: mpsc::UnboundedSender<TaskOp>) -> Self {
 		let (tx, rx) = async_channel::unbounded();
-		Self { tx, rx, sch, blocker: Semaphore::new(1) }
+		Self { tx, rx, sch }
 	}
 
 	#[inline]
@@ -55,7 +53,7 @@ impl Process {
 					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
 				}
 
-				let _guard = self.blocker.acquire().await.unwrap();
+				let _guard = BLOCKER.acquire().await.unwrap();
 				emit!(Stop(true)).await;
 
 				match Command::new(&task.cmd).args(&task.args).kill_on_drop(true).spawn() {

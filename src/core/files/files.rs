@@ -116,6 +116,7 @@ impl Default for FilesSort {
 	fn default() -> Self { Self { by: MANAGER.sort_by, reverse: MANAGER.sort_reverse } }
 }
 
+#[derive(Debug)]
 pub enum FilesOp {
 	Read(PathBuf, IndexMap<PathBuf, File>),
 	IOErr(PathBuf),
@@ -135,4 +136,7 @@ impl FilesOp {
 
 	#[inline]
 	pub fn read_empty(path: &Path) -> Self { Self::Read(path.to_path_buf(), IndexMap::new()) }
+
+	#[inline]
+	pub fn search_empty(path: &Path) -> Self { Self::Search(path.to_path_buf(), IndexMap::new()) }
 }

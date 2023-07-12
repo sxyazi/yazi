@@ -19,7 +19,7 @@ impl Manager {
 			tabs:   Tabs::new(),
 			yanked: Default::default(),
 
-			watcher:  Watcher::init(),
+			watcher:  Watcher::start(),
 			mimetype: Default::default(),
 		}
 	}
@@ -215,14 +215,16 @@ impl Manager {
 
 	pub fn update_search(&mut self, op: FilesOp) -> bool {
 		let path = op.path();
-		if !self.current().in_search || self.current().cwd != path {
-			let rep = mem::replace(self.current_mut(), Folder::new_search(&path));
-			if !rep.in_search {
-				self.active_mut().history.insert(path, rep);
-			}
+		if self.current().in_search && self.current().cwd == path {
+			return self.current_mut().update(op);
 		}
 
-		self.current_mut().update(op)
+		let rep = mem::replace(self.current_mut(), Folder::new_search(&path));
+		if !rep.in_search {
+			self.active_mut().history.insert(path, rep);
+		}
+		self.current_mut().update(op);
+		true
 	}
 
 	pub fn update_mimetype(&mut self, path: PathBuf, mimetype: String) -> bool {

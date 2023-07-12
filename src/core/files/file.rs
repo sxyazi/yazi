@@ -30,4 +30,10 @@ impl File {
 		let is_hidden = path.file_name().map(|s| s.to_string_lossy().starts_with('.')).unwrap_or(false);
 		File { path: path.to_path_buf(), meta, length, is_link, is_hidden, is_selected: false }
 	}
+
+	#[inline]
+	pub fn set_path(mut self, path: &Path) -> Self {
+		self.path = path.to_path_buf();
+		self
+	}
 }

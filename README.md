@@ -11,7 +11,8 @@ Before getting started, ensure that the following dependencies are installed on 
 - jq (optional, for JSON preview)
 - ffmpegthumbnailer (optional, for video thumbnails)
 - fd (optional, for file searching)
-- rg (optional, for content searching)
+- rg (optional, for file content searching)
+- fzf (optional, for directory jumping)
 - zoxide (optional, for directory jumping)
 
 Execute the following commands to clone the project and build Yazi:
@@ -31,8 +32,8 @@ cargo build --release
 ## TODO
 
 - [ ] Add example config for general usage, currently please see my [another repo](https://github.com/sxyazi/dotfiles/tree/main/yazi) instead
-- [ ] Integration with zoxide for fast directory navigation
-- [ ] Integration with fd, rg for fuzzy file searching
+- [x] Integration with fzf, zoxide for fast directory navigation
+- [x] Integration with fd, rg for fuzzy file searching
 - [ ] Support for Überzug++ for image previews with X11/wayland environment
 - [ ] Batch renaming support
 

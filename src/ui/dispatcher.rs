@@ -100,6 +100,11 @@ impl Executor {
 				"fd" => cx.manager.active_mut().search(false),
 				_ => cx.manager.active_mut().search_stop(),
 			},
+			"jump" => match exec.args.get(0).map(|s| s.as_str()).unwrap_or("") {
+				"fzf" => cx.manager.active_mut().jump(true),
+				"zoxide" => cx.manager.active_mut().jump(false),
+				_ => false,
+			},
 
 			// Tabs
 			"tab_create" => {

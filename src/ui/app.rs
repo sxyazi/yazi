@@ -32,7 +32,7 @@ impl App {
 		Ok(())
 	}
 
-	fn dispatch_stop(&mut self, state: bool, tx: oneshot::Sender<()>) {
+	fn dispatch_stop(&mut self, state: bool, tx: Option<oneshot::Sender<()>>) {
 		if state {
 			self.signals.stop_term(true);
 			self.term = None;
@@ -41,7 +41,9 @@ impl App {
 			self.signals.stop_term(false);
 			emit!(Render);
 		}
-		tx.send(()).ok();
+		if let Some(tx) = tx {
+			tx.send(()).ok();
+		}
 	}
 
 	fn dispatch_key(&mut self, key: KeyEvent) {
@@ -71,6 +73,9 @@ impl App {
 	async fn dispatch_module(&mut self, event: Event) {
 		let manager = &mut self.cx.manager;
 		match event {
+			Event::Cd(path) => {
+				manager.active_mut().cd(path);
+			}
 			Event::Refresh => {
 				manager.refresh();
 			}
@@ -105,7 +110,7 @@ impl App {
 			}
 
 			Event::Open(files) => {
-				let mime = self.cx.manager.mimetype(&files).await;
+				let mime = manager.mimetype(&files).await;
 				let targets = files.into_iter().zip(mime).map_while(|(f, m)| m.map(|m| (f, m))).collect();
 				self.cx.tasks.file_open(targets);
 			}
