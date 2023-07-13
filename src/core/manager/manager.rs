@@ -3,7 +3,7 @@ use std::{collections::{BTreeSet, HashMap, HashSet}, mem, path::PathBuf};
 use tokio::fs;
 
 use super::{PreviewData, Tab, Tabs, Watcher};
-use crate::{core::{files::{File, FilesOp}, input::{Input, InputOpt}, manager::Folder, tasks::Precache}, emit};
+use crate::{core::{files::{File, FilesOp}, input::{Input, InputOpt, InputPos}, manager::Folder, tasks::Precache}, emit};
 
 pub struct Manager {
 	tabs:   Tabs,
@@ -92,14 +92,12 @@ impl Manager {
 	pub fn yanked(&self) -> &(bool, HashSet<PathBuf>) { &self.yanked }
 
 	pub fn create(&self) -> bool {
-		let pos = Input::top_position();
 		let cwd = self.current().cwd.clone();
-
 		tokio::spawn(async move {
 			let result = emit!(Input(InputOpt {
 				title:    "Create:".to_string(),
 				value:    "".to_string(),
-				position: pos,
+				position: InputPos::Top,
 			}))
 			.await;
 
@@ -113,35 +111,33 @@ impl Manager {
 				}
 			}
 		});
-
 		false
 	}
 
 	pub fn rename(&self) -> bool {
-		let selected = self.selected();
-		if selected.is_empty() {
-			return false;
-		}
-
-		if selected.len() > 1 {
+		if self.current().has_selected() {
 			return self.bulk_rename();
 		}
 
-		let rect = self.current().rect_current(&selected[0]).unwrap();
+		let hovered = if let Some(h) = self.hovered() {
+			h.path.clone()
+		} else {
+			return false;
+		};
+
 		tokio::spawn(async move {
 			let result = emit!(Input(InputOpt {
 				title:    "Rename:".to_string(),
-				value:    selected[0].file_name().unwrap().to_string_lossy().to_string(),
-				position: (rect.x, rect.y),
+				value:    hovered.file_name().unwrap().to_string_lossy().to_string(),
+				position: InputPos::Hovered,
 			}))
 			.await;
 
 			if let Ok(new) = result {
-				let to = selected[0].parent().unwrap().join(new);
-				fs::rename(&selected[0], to).await.ok();
+				let to = hovered.parent().unwrap().join(new);
+				fs::rename(&hovered, to).await.ok();
 			}
 		});
-
 		false
 	}
 

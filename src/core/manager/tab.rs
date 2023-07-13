@@ -5,7 +5,7 @@ use tokio::task::JoinHandle;
 use tracing::info;
 
 use super::{Folder, Mode, Preview};
-use crate::{core::{external::{self, FzfOpt, ZoxideOpt}, files::{File, Files, FilesOp}, input::{Input, InputOpt}, Event, BLOCKER}, emit, misc::Defer};
+use crate::{core::{external::{self, FzfOpt, ZoxideOpt}, files::{File, Files, FilesOp}, input::{Input, InputOpt, InputPos}, Event, BLOCKER}, emit, misc::Defer};
 
 pub struct Tab {
 	pub(super) current: Folder,
@@ -184,12 +184,11 @@ impl Tab {
 		let cwd = self.current.cwd.clone();
 		let hidden = self.current.files.show_hidden;
 
-		let pos = Input::top_position();
 		self.search = Some(tokio::spawn(async move {
 			let subject = emit!(Input(InputOpt {
 				title:    "Search:".to_string(),
 				value:    "".to_string(),
-				position: pos,
+				position: InputPos::Top,
 			}))
 			.await?;
 

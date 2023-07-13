@@ -24,7 +24,13 @@ pub struct Input {
 pub struct InputOpt {
 	pub title:    String,
 	pub value:    String,
-	pub position: (u16, u16),
+	pub position: InputPos,
+}
+
+pub enum InputPos {
+	Top,
+	Hovered,
+	Coords(u16, u16),
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -46,7 +52,10 @@ impl Input {
 	pub fn show(&mut self, opt: InputOpt, tx: Sender<Result<String>>) {
 		self.title = opt.title;
 		self.value = opt.value;
-		self.position = opt.position;
+		self.position = match opt.position {
+			InputPos::Coords(x, y) => (x, y),
+			_ => unimplemented!(),
+		};
 
 		self.mode = InputMode::Insert;
 		self.cursor = self.count();
@@ -276,7 +285,9 @@ impl Input {
 	}
 
 	#[inline]
-	pub fn top_position() -> (u16, u16) { ((tty_size().ws_col / 2).saturating_sub(25), 2) }
+	pub fn top_position() -> InputPos {
+		InputPos::Coords((tty_size().ws_col / 2).saturating_sub(25), 2)
+	}
 
 	#[inline]
 	fn count(&self) -> usize { self.value.chars().count() }

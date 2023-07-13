@@ -3,7 +3,7 @@ use crossterm::event::KeyEvent;
 use tokio::sync::oneshot::{self};
 
 use super::{root::Root, Ctx, Executor, Logs, Signals, Term};
-use crate::{config::keymap::Key, core::{files::FilesOp, Event}, emit};
+use crate::{config::keymap::Key, core::{files::FilesOp, input::{Input, InputPos}, Event}, emit};
 
 pub struct App {
 	cx:      Ctx,
@@ -104,7 +104,17 @@ impl App {
 				emit!(Render);
 			}
 
-			Event::Input(opt, tx) => {
+			Event::Input(mut opt, tx) => {
+				opt.position = match opt.position {
+					InputPos::Top => Input::top_position(),
+					InputPos::Hovered => manager
+						.hovered()
+						.and_then(|h| manager.current().rect_current(&h.path))
+						.map(|r| InputPos::Coords(r.x, r.y))
+						.unwrap_or_else(|| Input::top_position()),
+					p @ InputPos::Coords(..) => p,
+				};
+
 				self.cx.input.show(opt, tx);
 				emit!(Render);
 			}

@@ -1,9 +1,9 @@
-use std::{collections::{BTreeMap, HashSet}, path::PathBuf};
+use std::{collections::{BTreeMap, HashSet}, path::PathBuf, sync::Arc};
 
 use tracing::trace;
 
 use super::{Scheduler, TASKS_PADDING, TASKS_PERCENT};
-use crate::{config::OPEN, misc::tty_size};
+use crate::{config::OPEN, core::input::{Input, InputOpt, InputPos}, emit, misc::tty_size};
 
 #[derive(Clone, Debug)]
 pub struct Task {
@@ -43,7 +43,7 @@ pub enum TaskStage {
 }
 
 pub struct Tasks {
-	scheduler: Scheduler,
+	scheduler: Arc<Scheduler>,
 
 	pub visible:  bool,
 	pub cursor:   usize,
@@ -52,7 +52,12 @@ pub struct Tasks {
 
 impl Tasks {
 	pub fn start() -> Self {
-		Self { scheduler: Scheduler::start(), visible: false, cursor: 0, progress: (100, 0) }
+		Self {
+			scheduler: Arc::new(Scheduler::start()),
+			visible:   false,
+			cursor:    0,
+			progress:  (100, 0),
+		}
 	}
 
 	#[inline]
@@ -143,13 +148,28 @@ impl Tasks {
 	}
 
 	pub fn file_remove(&self, targets: Vec<PathBuf>, permanently: bool) -> bool {
-		for p in targets {
-			if permanently {
-				self.scheduler.file_delete(p);
-			} else {
-				self.scheduler.file_trash(p);
+		let scheduler = self.scheduler.clone();
+		tokio::spawn(async move {
+			let result = emit!(Input(InputOpt {
+				title:    "Are you sure delete these files? (Y/n)".to_string(),
+				value:    "".to_string(),
+				position: InputPos::Hovered,
+			}))
+			.await;
+
+			if let Ok(choice) = result {
+				if choice.to_lowercase() != "y" {
+					return;
+				}
+				for p in targets {
+					if permanently {
+						scheduler.file_delete(p);
+					} else {
+						scheduler.file_trash(p);
+					}
+				}
 			}
-		}
+		});
 		false
 	}
 
