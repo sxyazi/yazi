@@ -74,7 +74,7 @@ impl App {
 		let manager = &mut self.cx.manager;
 		match event {
 			Event::Cd(path) => {
-				manager.active_mut().cd(path);
+				manager.active_mut().cd(path).await;
 			}
 			Event::Refresh => {
 				manager.refresh();

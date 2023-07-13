@@ -13,6 +13,7 @@ pub struct Folder {
 	offset:    usize,
 	cursor:    usize,
 
+	pub hovered:   Option<File>,
 	pub in_search: bool,
 }
 
@@ -34,8 +35,14 @@ impl Folder {
 		}
 
 		let len = self.files.len();
-		self.cursor = self.cursor.min(len.saturating_sub(1));
 		self.offset = self.offset.min(len);
+		self.cursor = self.cursor.min(len.saturating_sub(1));
+
+		if let Some(h) = self.hovered.as_ref().map(|h| h.path()) {
+			self.hover(&h);
+		}
+		self.hovered = self.files.duplicate(self.cursor);
+
 		true
 	}
 
@@ -50,6 +57,7 @@ impl Folder {
 
 		let old = self.cursor;
 		self.cursor = (self.cursor + step).min(len - 1);
+		self.hovered = self.files.duplicate(self.cursor);
 
 		let limit = Self::limit();
 		if self.cursor >= (self.offset + limit).min(len).saturating_sub(5) {
@@ -62,6 +70,7 @@ impl Folder {
 	pub fn prev(&mut self, step: usize) -> bool {
 		let old = self.cursor;
 		self.cursor = self.cursor.saturating_sub(step);
+		self.hovered = self.files.duplicate(self.cursor);
 
 		if self.cursor < self.offset + 5 {
 			self.offset = self.offset.saturating_sub(old - self.cursor);
@@ -130,24 +139,26 @@ impl Folder {
 	}
 
 	pub fn hover(&mut self, path: &Path) -> bool {
-		if self.hovered().map(|h| h.path.as_path()) == Some(path) {
+		if matches!(self.hovered, Some(ref h) if h.path == path) {
 			return false;
 		}
 
 		let new = self.position(path).unwrap_or(self.cursor);
 		if new > self.cursor { self.next(new - self.cursor) } else { self.prev(self.cursor - new) }
 	}
+
+	pub fn hover_force(&mut self, file: File) -> bool {
+		if !self.hover(&file.path) && self.files.is_empty() {
+			self.hovered = Some(file);
+			return true;
+		}
+		false
+	}
 }
 
 impl Folder {
 	#[inline]
-	pub fn hovered(&self) -> Option<&File> { self.files.get_index(self.cursor).map(|(_, item)| item) }
-
-	#[inline]
 	pub fn cursor(&self) -> usize { self.cursor }
-
-	#[inline]
-	pub fn rel_cursor(&self) -> usize { self.cursor - self.offset }
 
 	#[inline]
 	pub fn position(&self, path: &Path) -> Option<usize> {

@@ -105,13 +105,15 @@ impl Watcher {
 		}
 	}
 
-	pub(super) fn watch(&mut self, to_watch: BTreeSet<PathBuf>) {
+	pub(super) fn watch(&mut self, mut to_watch: BTreeSet<PathBuf>) {
 		let keys = self.watched.read().keys().cloned().collect::<BTreeSet<_>>();
 		for p in keys.difference(&to_watch) {
 			self.watcher.unwatch(p).ok();
 		}
-		for p in to_watch.difference(&keys) {
-			self.watcher.watch(&p, RecursiveMode::NonRecursive).ok();
+		for p in to_watch.clone().difference(&keys) {
+			if self.watcher.watch(&p, RecursiveMode::NonRecursive).is_err() {
+				to_watch.remove(p);
+			}
 		}
 
 		let mut todo = Vec::new();

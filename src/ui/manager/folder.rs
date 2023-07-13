@@ -32,35 +32,35 @@ impl<'a> Widget for Folder<'a> {
 			.folder
 			.paginate()
 			.iter()
-			.enumerate()
-			.map(|(i, (_, v))| {
+			.map(|(k, v)| {
 				let icon = THEME
 					.icons
 					.iter()
-					.find(|x| x.name.match_path(&v.path, Some(v.meta.is_dir())))
+					.find(|x| x.name.match_path(k, Some(v.meta.is_dir())))
 					.map(|x| x.display.as_ref())
 					.unwrap_or("");
 
-				let name = readable_path(&v.path, &self.folder.cwd);
+				let name = readable_path(k, &self.folder.cwd);
 				let item = ListItem::new(if v.is_selected {
 					format!("> {} {}", icon, name)
 				} else {
 					format!("{} {}", icon, name)
 				});
+				let hovered = matches!(self.folder.hovered, Some(ref h) if h.path == *k);
 
 				let mut style = Style::default();
 				if self.is_selection {
-					if i == self.folder.rel_cursor() {
+					if hovered {
 						style = style.fg(Color::Black).bg(Color::Red);
 					} else if v.is_selected {
 						style = style.fg(Color::Red);
 					}
 				} else if self.is_preview {
-					if i == self.folder.rel_cursor() {
+					if hovered {
 						style = style.add_modifier(Modifier::UNDERLINED)
 					}
 				} else {
-					if i == self.folder.rel_cursor() {
+					if hovered {
 						style = style.fg(Color::Black).bg(Color::Yellow);
 					} else if v.is_selected {
 						style = style.fg(Color::Red);

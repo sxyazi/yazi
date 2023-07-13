@@ -37,9 +37,9 @@ impl Manager {
 			if let Some(ref p) = tab.parent {
 				to_watch.insert(p.cwd.clone());
 			}
-			if let Some(ref h) = tab.current.hovered() {
+			if let Some(ref h) = tab.current.hovered {
 				if h.meta.is_dir() {
-					to_watch.insert(h.path.clone());
+					to_watch.insert(h.path());
 				}
 			}
 		}
@@ -62,7 +62,7 @@ impl Manager {
 			self.active_mut().preview.go(&hovered.path, &mime);
 		} else {
 			tokio::spawn(async move {
-				if let Ok(mime) = Precache::mimetype(&vec![hovered.path.clone()]).await {
+				if let Ok(mime) = Precache::mimetype(&vec![hovered.path()]).await {
 					if let Some(Some(mime)) = mime.first() {
 						emit!(Mimetype(hovered.path, mime.clone()));
 					}
@@ -148,11 +148,7 @@ impl Manager {
 	fn bulk_rename(&self) -> bool { false }
 
 	pub fn selected(&self) -> Vec<PathBuf> {
-		self
-			.current()
-			.selected()
-			.or_else(|| self.hovered().map(|h| vec![h.path.clone()]))
-			.unwrap_or_default()
+		self.current().selected().or_else(|| self.hovered().map(|h| vec![h.path()])).unwrap_or_default()
 	}
 
 	pub async fn mimetype(&mut self, files: &Vec<PathBuf>) -> Vec<Option<String>> {
@@ -171,7 +167,7 @@ impl Manager {
 	pub fn update_read(&mut self, op: FilesOp) -> bool {
 		let path = op.path();
 		let cwd = self.current().cwd.clone();
-		let hovered = self.hovered().map(|h| h.path.clone());
+		let hovered = self.hovered().map(|h| h.path());
 
 		let mut b = if cwd == path && !self.current().in_search {
 			self.current_mut().update(op)
@@ -191,7 +187,7 @@ impl Manager {
 		b |= self.active_mut().parent.as_mut().map_or(false, |p| p.hover(&cwd));
 		b |= hovered.as_ref().map_or(false, |h| self.current_mut().hover(h));
 
-		if hovered != self.hovered().map(|h| h.path.clone()) {
+		if hovered != self.hovered().map(|h| h.path()) {
 			emit!(Hover);
 		}
 		b
@@ -238,8 +234,8 @@ impl Manager {
 	}
 
 	pub fn update_preview(&mut self, path: PathBuf, data: PreviewData) -> bool {
-		let hovered = if let Some(h) = self.current().hovered() {
-			h.path.clone()
+		let hovered = if let Some(ref h) = self.current().hovered {
+			h.path()
 		} else {
 			return self.active_mut().preview.reset();
 		};
@@ -275,8 +271,8 @@ impl Manager {
 	pub fn current_mut(&mut self) -> &mut Folder { &mut self.tabs.active_mut().current }
 
 	#[inline]
-	pub fn parent(&self) -> &Option<Folder> { &self.tabs.active().parent }
+	pub fn parent(&self) -> Option<&Folder> { self.tabs.active().parent.as_ref() }
 
 	#[inline]
-	pub fn hovered(&self) -> Option<&File> { self.tabs.active().current.hovered() }
+	pub fn hovered(&self) -> Option<&File> { self.tabs.active().current.hovered.as_ref() }
 }

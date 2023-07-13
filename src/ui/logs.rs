@@ -14,7 +14,7 @@ impl Logs {
 		let (handle, guard) = tracing_appender::non_blocking(appender);
 
 		// let filter = EnvFilter::from_default_env();
-		let subscriber = Registry::default().with(fmt::layer().compact().with_writer(handle));
+		let subscriber = Registry::default().with(fmt::layer().pretty().with_writer(handle));
 
 		tracing::subscriber::set_global_default(subscriber)
 			.context("setting default subscriber failed")?;

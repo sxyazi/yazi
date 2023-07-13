@@ -64,6 +64,11 @@ impl Files {
 		}
 	}
 
+	#[inline]
+	pub fn duplicate(&self, idx: usize) -> Option<File> {
+		self.items.get_index(idx).map(|(_, file)| file.clone())
+	}
+
 	pub fn update_read(&mut self, mut items: IndexMap<PathBuf, File>) -> bool {
 		if !self.show_hidden {
 			items.retain(|_, item| !item.is_hidden);

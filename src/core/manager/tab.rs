@@ -1,11 +1,11 @@
 use std::{collections::BTreeMap, mem, path::{Path, PathBuf}};
 
 use anyhow::{Error, Result};
-use indexmap::IndexMap;
 use tokio::task::JoinHandle;
+use tracing::info;
 
 use super::{Folder, Mode, Preview};
-use crate::{core::{external::{self, FzfOpt, ZoxideOpt}, files::{Files, FilesOp}, input::{Input, InputOpt}, Event, BLOCKER}, emit, misc::Defer};
+use crate::{core::{external::{self, FzfOpt, ZoxideOpt}, files::{File, Files, FilesOp}, input::{Input, InputOpt}, Event, BLOCKER}, emit, misc::Defer};
 
 pub struct Tab {
 	pub(super) current: Folder,
@@ -73,8 +73,23 @@ impl Tab {
 		true
 	}
 
-	pub fn cd(&mut self, target: PathBuf) -> bool {
+	pub async fn cd(&mut self, mut target: PathBuf) -> bool {
+		let file = if let Ok(f) = File::from(&target).await {
+			f
+		} else {
+			return false;
+		};
+
+		let mut hovered = None;
+		if !file.meta.is_dir() {
+			hovered = Some(file);
+			target = target.parent().unwrap().to_path_buf();
+		}
+
 		if self.current.cwd == target {
+			if hovered.map(|h| self.current.hover_force(h)).unwrap_or(false) {
+				emit!(Hover);
+			}
 			return false;
 		}
 
@@ -92,12 +107,15 @@ impl Tab {
 			self.parent = Some(self.history_new(parent));
 		}
 
+		if let Some(h) = hovered {
+			self.current.hover_force(h);
+		}
 		emit!(Refresh);
 		true
 	}
 
 	pub fn enter(&mut self) -> bool {
-		let hovered = if let Some(h) = self.current.hovered() {
+		let hovered = if let Some(ref h) = self.current.hovered {
 			h.clone()
 		} else {
 			return false;
@@ -125,7 +143,8 @@ impl Tab {
 	pub fn leave(&mut self) -> bool {
 		let current = self
 			.current
-			.hovered()
+			.hovered
+			.as_ref()
 			.and_then(|h| h.path.parent())
 			.and_then(|p| if p == self.current.cwd { None } else { Some(p) })
 			.or_else(|| self.current.cwd.parent());
@@ -214,7 +233,8 @@ impl Tab {
 			let _defer = Defer::new(|| Event::Stop(false, None).emit());
 			emit!(Stop(true)).await;
 
-			let rx = if global { external::fzf(FzfOpt {}) } else { external::zoxide(ZoxideOpt { cwd }) }?;
+			let rx =
+				if global { external::fzf(FzfOpt { cwd }) } else { external::zoxide(ZoxideOpt { cwd }) }?;
 
 			if let Ok(target) = rx.await? {
 				emit!(Cd(target));
