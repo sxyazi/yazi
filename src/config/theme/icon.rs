@@ -1,6 +1,6 @@
 use std::fmt;
 
-use serde::{de::Visitor, Deserializer};
+use serde::{de::{self, Visitor}, Deserializer};
 
 use crate::config::Pattern;
 
@@ -11,10 +11,6 @@ pub struct Icon {
 }
 
 impl Icon {
-	pub fn new(name: String, display: String) -> Self {
-		Self { name: Pattern::from(name.as_ref()), display }
-	}
-
 	pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<Icon>, D::Error>
 	where
 		D: Deserializer<'de>,
@@ -30,11 +26,15 @@ impl Icon {
 
 			fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
 			where
-				A: serde::de::MapAccess<'de>,
+				A: de::MapAccess<'de>,
 			{
 				let mut icons = Vec::new();
 				while let Some((key, value)) = &map.next_entry::<String, String>()? {
-					icons.push(Icon::new(key.clone(), value.clone()));
+					icons.push(Icon {
+						name:    Pattern::try_from(key.clone())
+							.map_err(|e| de::Error::custom(e.to_string()))?,
+						display: value.clone(),
+					});
 				}
 				Ok(icons)
 			}

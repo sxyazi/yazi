@@ -5,7 +5,7 @@ use xdg::BaseDirectories;
 
 use super::SortBy;
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 pub struct Manager {
 	#[serde(skip)]
 	pub cwd:   PathBuf,

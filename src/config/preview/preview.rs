@@ -3,13 +3,7 @@ use std::fs;
 use serde::Deserialize;
 use xdg::BaseDirectories;
 
-#[derive(Deserialize, Debug)]
-pub struct Manager {
-	pub sort_by:      String,
-	pub sort_reverse: bool,
-}
-
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 pub struct Preview {
 	pub tab_size: u32,
 
@@ -25,6 +19,7 @@ impl Preview {
 		}
 
 		let path = BaseDirectories::new().unwrap().get_config_file("yazi/yazi.toml");
-		toml::from_str::<Outer>(&fs::read_to_string(path).unwrap()).unwrap().preview
+		let outer: Outer = toml::from_str(&fs::read_to_string(path).unwrap()).unwrap();
+		outer.preview
 	}
 }

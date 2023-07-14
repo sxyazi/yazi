@@ -1,8 +1,9 @@
 use std::path::Path;
 
-use serde::{de::Visitor, Deserialize, Deserializer};
+use serde::Deserialize;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
+#[serde(try_from = "String")]
 pub struct Pattern {
 	inner:     glob::Pattern,
 	is_folder: bool,
@@ -16,35 +17,17 @@ impl Pattern {
 	}
 }
 
-impl From<&str> for Pattern {
-	fn from(value: &str) -> Self {
-		let is_folder = value.ends_with('/');
-		Self { inner: glob::Pattern::new(value.trim_end_matches('/')).unwrap_or_default(), is_folder }
+impl TryFrom<&str> for Pattern {
+	type Error = anyhow::Error;
+
+	fn try_from(s: &str) -> Result<Self, Self::Error> {
+		let is_folder = s.ends_with('/');
+		Ok(Self { inner: glob::Pattern::new(s.trim_end_matches('/'))?, is_folder })
 	}
 }
 
-impl<'de> Deserialize<'de> for Pattern {
-	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-	where
-		D: Deserializer<'de>,
-	{
-		struct PatternVisitor;
+impl TryFrom<String> for Pattern {
+	type Error = anyhow::Error;
 
-		impl<'de> Visitor<'de> for PatternVisitor {
-			type Value = Pattern;
-
-			fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-				formatter.write_str("a glob pattern, e.g. *.rs")
-			}
-
-			fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-			where
-				E: serde::de::Error,
-			{
-				Ok(Pattern::from(value))
-			}
-		}
-
-		deserializer.deserialize_str(PatternVisitor)
-	}
+	fn try_from(s: String) -> Result<Self, Self::Error> { Self::try_from(s.as_str()) }
 }

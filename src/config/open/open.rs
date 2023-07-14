@@ -1,29 +1,18 @@
 use std::{collections::BTreeMap, fs, path::Path};
 
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 use xdg::BaseDirectories;
 
+use super::Opener;
 use crate::config::Pattern;
 
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Opener {
-	pub cmd:    String,
-	pub args:   Vec<String>,
-	#[serde(default)]
-	pub block:  bool,
-	#[serde(skip)]
-	pub spread: bool,
-}
-
-#[derive(Deserialize, Debug)]
+#[derive(Debug)]
 pub struct Open {
-	#[serde(skip)]
 	openers: BTreeMap<String, Vec<Opener>>,
-
-	rules: Vec<OpenRule>,
+	rules:   Vec<OpenRule>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 struct OpenRule {
 	name: Option<Pattern>,
 	mime: Option<Pattern>,
@@ -32,23 +21,9 @@ struct OpenRule {
 }
 
 impl Open {
-	pub fn new() -> Open {
-		#[derive(Deserialize)]
-		struct Outer {
-			opener: BTreeMap<String, Vec<Opener>>,
-			open:   Open,
-		}
-
+	pub fn new() -> Self {
 		let path = BaseDirectories::new().unwrap().get_config_file("yazi/yazi.toml");
-		let mut outer = toml::from_str::<Outer>(&fs::read_to_string(path).unwrap()).unwrap();
-
-		for opener in outer.opener.values_mut() {
-			for one in opener.iter_mut() {
-				one.spread = one.args.iter().any(|a| a == "$*");
-			}
-		}
-
-		Self { openers: outer.opener, rules: outer.open.rules }
+		toml::from_str(&fs::read_to_string(path).unwrap()).unwrap()
 	}
 
 	pub fn opener(&self, path: &Path, mime: &str) -> Option<&Opener> {
@@ -61,5 +36,25 @@ impl Open {
 				None
 			}
 		})
+	}
+}
+
+impl<'de> Deserialize<'de> for Open {
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+	where
+		D: Deserializer<'de>,
+	{
+		#[derive(Deserialize)]
+		struct Outer {
+			opener: BTreeMap<String, Vec<Opener>>,
+			open:   OuterOpen,
+		}
+		#[derive(Deserialize)]
+		struct OuterOpen {
+			rules: Vec<OpenRule>,
+		}
+
+		let outer = Outer::deserialize(deserializer)?;
+		Ok(Self { openers: outer.opener, rules: outer.open.rules })
 	}
 }

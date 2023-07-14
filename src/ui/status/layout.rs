@@ -29,19 +29,16 @@ impl<'a> Widget for Layout<'a> {
 			)
 			.split(area);
 
-		Paragraph::new("").style(Style::default().fg(mode.color().bg_rgb())).render(chunks[0], buf);
+		Paragraph::new("").style(Style::default().fg(*mode.color().bg)).render(chunks[0], buf);
 
 		Paragraph::new(format!(" {} ", mode))
 			.style(
-				Style::default()
-					.fg(mode.color().fg_rgb())
-					.bg(mode.color().bg_rgb())
-					.add_modifier(Modifier::BOLD),
+				Style::default().fg(*mode.color().fg).bg(*mode.color().bg).add_modifier(Modifier::BOLD),
 			)
 			.render(chunks[1], buf);
 
 		Paragraph::new(" master ")
-			.style(Style::default().fg(mode.color().bg_rgb()).bg(Color::Rgb(72, 77, 102)))
+			.style(Style::default().fg(*mode.color().bg).bg(Color::Rgb(72, 77, 102)))
 			.render(chunks[2], buf);
 
 		Paragraph::new("").style(Style::default().fg(Color::Rgb(72, 77, 102))).render(chunks[3], buf);

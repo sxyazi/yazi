@@ -1,6 +1,6 @@
 use std::{collections::BTreeMap, fmt};
 
-use serde::{de::Visitor, Deserializer};
+use serde::{de::{self, Visitor}, Deserializer};
 
 #[derive(Debug, Default)]
 pub struct Exec {
@@ -44,7 +44,7 @@ impl Exec {
 
 			fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
 			where
-				A: serde::de::SeqAccess<'de>,
+				A: de::SeqAccess<'de>,
 			{
 				let mut execs = Vec::new();
 				while let Some(value) = &seq.next_element::<String>()? {
@@ -55,7 +55,7 @@ impl Exec {
 
 			fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
 			where
-				E: serde::de::Error,
+				E: de::Error,
 			{
 				Ok(value.split(';').map(Exec::from).collect())
 			}

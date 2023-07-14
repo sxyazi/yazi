@@ -12,7 +12,7 @@ pub enum Mode {
 
 impl Mode {
 	#[inline]
-	pub fn color(&self) -> &theme::Color {
+	pub fn color(&self) -> &theme::ColorDual {
 		match *self {
 			Mode::Normal => &THEME.mode.normal,
 			Mode::Select(_) => &THEME.mode.select,
