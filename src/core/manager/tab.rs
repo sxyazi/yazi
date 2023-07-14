@@ -2,10 +2,9 @@ use std::{collections::BTreeMap, mem, path::{Path, PathBuf}};
 
 use anyhow::{Error, Result};
 use tokio::task::JoinHandle;
-use tracing::info;
 
 use super::{Folder, Mode, Preview};
-use crate::{core::{external::{self, FzfOpt, ZoxideOpt}, files::{File, Files, FilesOp}, input::{Input, InputOpt, InputPos}, Event, BLOCKER}, emit, misc::Defer};
+use crate::{core::{external::{self, FzfOpt, ZoxideOpt}, files::{File, Files, FilesOp}, input::{InputOpt, InputPos}, Event, BLOCKER}, emit, misc::Defer};
 
 pub struct Tab {
 	pub(super) current: Folder,

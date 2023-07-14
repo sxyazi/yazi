@@ -1,7 +1,7 @@
 use crossterm::event::KeyCode;
 
 use super::Ctx;
-use crate::{config::{keymap::{Exec, Key, Single}, KEYMAP}, core::input::InputMode, emit, misc::optinal_bool};
+use crate::{config::{keymap::{Exec, Key, Single}, KEYMAP}, core::input::InputMode, misc::optinal_bool};
 
 pub struct Executor;
 
@@ -45,11 +45,8 @@ impl Executor {
 	fn manager(cx: &mut Ctx, exec: &Exec) -> bool {
 		match exec.cmd.as_str() {
 			"escape" => cx.manager.active_mut().escape(),
-			"quit" => {
-				emit!(Quit);
-				false
-			}
-			"close" => cx.manager.close(),
+			"quit" => cx.manager.quit(&cx.tasks),
+			"close" => cx.manager.close(&cx.tasks),
 
 			// Navigation
 			"arrow" => {

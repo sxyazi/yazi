@@ -3,7 +3,7 @@ use std::{collections::{BTreeSet, HashMap, HashSet}, mem, path::PathBuf};
 use tokio::fs;
 
 use super::{PreviewData, Tab, Tabs, Watcher};
-use crate::{core::{files::{File, FilesOp}, input::{Input, InputOpt, InputPos}, manager::Folder, tasks::Precache}, emit};
+use crate::{core::{files::{File, FilesOp}, input::{InputOpt, InputPos}, manager::Folder, tasks::{Precache, Tasks}}, emit};
 
 pub struct Manager {
 	tabs:   Tabs,
@@ -72,15 +72,6 @@ impl Manager {
 		false
 	}
 
-	pub fn close(&mut self) -> bool {
-		if self.tabs.len() > 1 {
-			return self.tabs.close(self.tabs.idx());
-		}
-
-		emit!(Quit);
-		return false;
-	}
-
 	pub fn yank(&mut self, cut: bool) -> bool {
 		self.yanked.0 = cut;
 		self.yanked.1.clear();
@@ -90,6 +81,37 @@ impl Manager {
 
 	#[inline]
 	pub fn yanked(&self) -> &(bool, HashSet<PathBuf>) { &self.yanked }
+
+	pub fn quit(&self, tasks: &Tasks) -> bool {
+		let tasks = tasks.len();
+		if tasks == 0 {
+			emit!(Quit);
+			return false;
+		}
+
+		tokio::spawn(async move {
+			let result = emit!(Input(InputOpt {
+				title:    format!("There are {} tasks running, sure to quit? (y/N)", tasks),
+				value:    "".to_string(),
+				position: InputPos::Top,
+			}))
+			.await;
+
+			if let Ok(choice) = result {
+				if choice.to_lowercase() == "y" {
+					emit!(Quit);
+				}
+			}
+		});
+		false
+	}
+
+	pub fn close(&mut self, tasks: &Tasks) -> bool {
+		if self.tabs.len() > 1 {
+			return self.tabs.close(self.tabs.idx());
+		}
+		self.quit(tasks)
+	}
 
 	pub fn create(&self) -> bool {
 		let cwd = self.current().cwd.clone();

@@ -3,7 +3,7 @@ use std::{collections::{BTreeMap, HashSet}, path::PathBuf, sync::Arc};
 use tracing::trace;
 
 use super::{Scheduler, TASKS_PADDING, TASKS_PERCENT};
-use crate::{config::OPEN, core::input::{Input, InputOpt, InputPos}, emit, misc::tty_size};
+use crate::{config::OPEN, core::input::{InputOpt, InputPos}, emit, misc::tty_size};
 
 #[derive(Clone, Debug)]
 pub struct Task {
@@ -71,7 +71,7 @@ impl Tasks {
 	}
 
 	pub fn next(&mut self) -> bool {
-		let limit = Self::limit().min(self.scheduler.running.read().len());
+		let limit = Self::limit().min(self.len());
 
 		let old = self.cursor;
 		self.cursor = limit.saturating_sub(1).min(self.cursor + 1);
@@ -151,7 +151,7 @@ impl Tasks {
 		let scheduler = self.scheduler.clone();
 		tokio::spawn(async move {
 			let result = emit!(Input(InputOpt {
-				title:    "Are you sure delete these files? (Y/n)".to_string(),
+				title:    "Are you sure delete these files? (y/N)".to_string(),
 				value:    "".to_string(),
 				position: InputPos::Hovered,
 			}))
@@ -181,4 +181,9 @@ impl Tasks {
 		self.progress = (percent, left);
 		true
 	}
+}
+
+impl Tasks {
+	#[inline]
+	pub fn len(&self) -> usize { self.scheduler.running.read().len() }
 }
