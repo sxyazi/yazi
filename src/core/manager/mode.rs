@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::config::{theme, THEME};
+use crate::config::theme::{self, ColorGroup};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum Mode {
@@ -12,11 +12,11 @@ pub enum Mode {
 
 impl Mode {
 	#[inline]
-	pub fn color(&self) -> &theme::ColorDual {
+	pub fn color<'a>(&self, group: &'a ColorGroup) -> &'a theme::Color {
 		match *self {
-			Mode::Normal => &THEME.mode.normal,
-			Mode::Select(_) => &THEME.mode.select,
-			Mode::Unselect(_) => &THEME.mode.unselect,
+			Mode::Normal => &group.normal,
+			Mode::Select(_) => &group.select,
+			Mode::Unselect(_) => &group.unselect,
 		}
 	}
 

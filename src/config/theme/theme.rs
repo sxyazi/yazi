@@ -3,27 +3,36 @@ use std::{fs, path::PathBuf};
 use serde::Deserialize;
 use xdg::BaseDirectories;
 
-use super::{ColorDual, Filetype, Icon};
+use super::{ColorGroup, Filetype, Icon, Style};
 use crate::misc::absolute_path;
 
 #[derive(Deserialize)]
-pub struct Mode {
-	pub normal:   ColorDual,
-	pub select:   ColorDual,
-	pub unselect: ColorDual,
+pub struct Tab {
+	pub active:   Style,
+	pub inactive: Style,
 }
 
 #[derive(Deserialize)]
-pub struct Tab {
-	pub active:   ColorDual,
-	pub inactive: ColorDual,
+pub struct Status {
+	pub primary:   ColorGroup,
+	pub secondary: ColorGroup,
+	pub emphasis:  ColorGroup,
+	pub body:      ColorGroup,
+	pub info:      ColorGroup,
+	pub success:   ColorGroup,
+	pub warning:   ColorGroup,
+	pub danger:    ColorGroup,
 }
 
 #[derive(Deserialize)]
 pub struct Selection {
-	pub normal:   ColorDual,
-	pub hovered:  ColorDual,
-	pub selected: ColorDual,
+	pub hovered: Style,
+}
+
+#[derive(Deserialize)]
+pub struct Marker {
+	pub selecting: Style,
+	pub selected:  Style,
 }
 
 #[derive(Deserialize)]
@@ -33,9 +42,10 @@ pub struct Syntect {
 
 #[derive(Deserialize)]
 pub struct Theme {
-	pub mode:      Mode,
 	pub tab:       Tab,
+	pub status:    Status,
 	pub selection: Selection,
+	pub marker:    Marker,
 	#[serde(deserialize_with = "Filetype::deserialize")]
 	pub filetypes: Vec<Filetype>,
 	#[serde(deserialize_with = "Icon::deserialize")]

@@ -10,7 +10,7 @@ pub struct Folder<'a> {
 
 impl<'a> Folder<'a> {
 	pub fn new(folder: &'a core::manager::Folder) -> Self {
-		Self { folder, is_preview: false, is_selection: false }
+		Self { folder, is_preview: false, is_selection: true }
 	}
 
 	#[inline]
@@ -28,11 +28,12 @@ impl<'a> Folder<'a> {
 
 impl<'a> Widget for Folder<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let items = self
-			.folder
-			.paginate()
+		let page = self.folder.paginate();
+
+		let items = page
 			.iter()
-			.map(|(k, v)| {
+			.enumerate()
+			.map(|(i, (k, v))| {
 				let icon = THEME
 					.icons
 					.iter()
@@ -40,34 +41,32 @@ impl<'a> Widget for Folder<'a> {
 					.map(|x| x.display.as_ref())
 					.unwrap_or("");
 
-				let name = readable_path(k, &self.folder.cwd);
-				let item = ListItem::new(if v.is_selected {
-					format!("> {} {}", icon, name)
-				} else {
-					format!("{} {}", icon, name)
-				});
-				let hovered = matches!(self.folder.hovered, Some(ref h) if h.path == *k);
+				if v.is_selected {
+					buf.set_style(
+						Rect { x: area.x.saturating_sub(1), y: i as u16 + 1, width: 1, height: 1 },
+						Style::default().fg(Color::Red).bg(Color::Red),
+					);
+				}
 
+				let name = if self.is_selection && v.is_selected {
+					format!("  {} {}", icon, readable_path(k, &self.folder.cwd))
+				} else {
+					format!(" {} {}", icon, readable_path(k, &self.folder.cwd))
+				};
+
+				let hovered = matches!(self.folder.hovered, Some(ref h) if h.path == *k);
 				let mut style = Style::default();
-				if self.is_selection {
-					if hovered {
-						style = style.fg(Color::Black).bg(Color::Red);
-					} else if v.is_selected {
-						style = style.fg(Color::Red);
-					}
-				} else if self.is_preview {
+				if self.is_preview {
 					if hovered {
 						style = style.add_modifier(Modifier::UNDERLINED)
 					}
 				} else {
 					if hovered {
 						style = style.fg(Color::Black).bg(Color::Yellow);
-					} else if v.is_selected {
-						style = style.fg(Color::Red);
 					}
 				}
 
-				item.style(style)
+				ListItem::new(name).style(style)
 			})
 			.collect::<Vec<_>>();
 

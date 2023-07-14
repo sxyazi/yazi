@@ -6,7 +6,7 @@ use serde::Deserialize;
 
 #[derive(Deserialize)]
 #[serde(try_from = "String")]
-pub struct Color(style::Color);
+pub struct Color(pub(super) style::Color);
 
 impl Default for Color {
 	fn default() -> Self { Self(style::Color::Reset) }
@@ -33,10 +33,15 @@ impl Deref for Color {
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
+impl Color {
+	pub fn fg(&self) -> style::Style { style::Style::new().fg(self.0) }
+
+	pub fn bg(&self) -> style::Style { style::Style::new().bg(self.0) }
+}
+
 #[derive(Deserialize)]
-pub struct ColorDual {
-	#[serde(default)]
-	pub fg: Color,
-	#[serde(default)]
-	pub bg: Color,
+pub struct ColorGroup {
+	pub normal:   Color,
+	pub select:   Color,
+	pub unselect: Color,
 }

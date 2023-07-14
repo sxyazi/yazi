@@ -1,7 +1,7 @@
-use ratatui::{buffer::Buffer, layout::{self, Constraint, Direction, Rect}, style::{Color, Modifier, Style}, widgets::{Paragraph, Widget}};
+use ratatui::{buffer::Buffer, layout::{self, Constraint, Direction, Rect}, style::Modifier, widgets::{Paragraph, Widget}};
 
 use super::Progress;
-use crate::ui::Ctx;
+use crate::{config::THEME, ui::Ctx};
 
 pub struct Layout<'a> {
 	cx: &'a Ctx,
@@ -29,19 +29,19 @@ impl<'a> Widget for Layout<'a> {
 			)
 			.split(area);
 
-		Paragraph::new("").style(Style::default().fg(*mode.color().bg)).render(chunks[0], buf);
+		let primary = mode.color(&THEME.status.primary);
+		let secondary = mode.color(&THEME.status.secondary);
+		let body = mode.color(&THEME.status.body);
+
+		Paragraph::new("").style(primary.fg()).render(chunks[0], buf);
 
 		Paragraph::new(format!(" {} ", mode))
-			.style(
-				Style::default().fg(*mode.color().fg).bg(*mode.color().bg).add_modifier(Modifier::BOLD),
-			)
+			.style(primary.bg().fg(**secondary).add_modifier(Modifier::BOLD))
 			.render(chunks[1], buf);
 
-		Paragraph::new(" master ")
-			.style(Style::default().fg(*mode.color().bg).bg(Color::Rgb(72, 77, 102)))
-			.render(chunks[2], buf);
+		Paragraph::new(" master ").style(body.bg().fg(**primary)).render(chunks[2], buf);
 
-		Paragraph::new("").style(Style::default().fg(Color::Rgb(72, 77, 102))).render(chunks[3], buf);
+		Paragraph::new("").style(body.fg()).render(chunks[3], buf);
 
 		Progress::new(self.cx).render(chunks[4], buf);
 	}
