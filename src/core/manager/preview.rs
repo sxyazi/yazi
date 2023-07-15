@@ -130,7 +130,7 @@ impl Preview {
 
 		let theme = SYNTECT_THEME.get_or_init(|| {
 			let from_file = || -> Result<Theme> {
-				let file = File::open(&THEME.syntect.theme)?;
+				let file = File::open(&THEME.preview.syntect_theme)?;
 				Ok(ThemeSet::load_from_reader(&mut BufReader::new(file))?)
 			};
 			from_file().unwrap_or_else(|_| ThemeSet::load_defaults().themes["base16-ocean.dark"].clone())

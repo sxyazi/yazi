@@ -1,6 +1,6 @@
-use ratatui::{style::{Color, Style}, widgets::{Gauge, Widget}};
+use ratatui::{buffer::Buffer, layout::Rect, text::Span, widgets::{Gauge, Widget}};
 
-use crate::ui::Ctx;
+use crate::{config::THEME, ui::Ctx};
 
 pub struct Progress<'a> {
 	cx: &'a Ctx,
@@ -11,16 +11,19 @@ impl<'a> Progress<'a> {
 }
 
 impl<'a> Widget for Progress<'a> {
-	fn render(self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
+	fn render(self, area: Rect, buf: &mut Buffer) {
 		let progress = &self.cx.tasks.progress;
 		if progress.0 >= 100 {
 			return;
 		}
 
 		Gauge::default()
-			.gauge_style(Style::default().fg(Color::Yellow))
+			.gauge_style(THEME.progress.gauge.get())
 			.percent(progress.0 as u16)
-			.label(format!("{}%, {} left", progress.0, progress.1))
+			.label(Span::styled(
+				format!("{:>3}%, {} left", progress.0, progress.1),
+				THEME.progress.label.get(),
+			))
 			.use_unicode(true)
 			.render(area, buf);
 	}

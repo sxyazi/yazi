@@ -1,16 +1,17 @@
-use ratatui::{buffer::Buffer, layout::Rect, style::{Color, Modifier, Style}, widgets::{List, ListItem, Widget}};
+use ratatui::{buffer::Buffer, layout::Rect, style::Style, widgets::{List, ListItem, Widget}};
 
-use crate::{config::THEME, core, misc::readable_path};
+use crate::{config::THEME, core::{self, files::File}, misc::readable_path, ui::Ctx};
 
 pub struct Folder<'a> {
+	cx:           &'a Ctx,
 	folder:       &'a core::manager::Folder,
 	is_preview:   bool,
 	is_selection: bool,
 }
 
 impl<'a> Folder<'a> {
-	pub fn new(folder: &'a core::manager::Folder) -> Self {
-		Self { folder, is_preview: false, is_selection: true }
+	pub fn new(cx: &'a Ctx, folder: &'a core::manager::Folder) -> Self {
+		Self { cx, folder, is_preview: false, is_selection: true }
 	}
 
 	#[inline]
@@ -23,6 +24,16 @@ impl<'a> Folder<'a> {
 	pub fn with_selection(mut self, state: bool) -> Self {
 		self.is_selection = state;
 		self
+	}
+
+	#[inline]
+	fn file_style(&self, file: &File) -> Style {
+		THEME
+			.filetypes
+			.iter()
+			.find(|x| x.matches(&file.path, self.cx.manager.mimetype(&file.path), file.meta.is_dir()))
+			.map(|x| x.style.get())
+			.unwrap_or_else(|| Style::new())
 	}
 }
 
@@ -44,29 +55,24 @@ impl<'a> Widget for Folder<'a> {
 				if v.is_selected {
 					buf.set_style(
 						Rect { x: area.x.saturating_sub(1), y: i as u16 + 1, width: 1, height: 1 },
-						Style::default().fg(Color::Red).bg(Color::Red),
+						if self.is_selection {
+							THEME.marker.selecting.get()
+						} else {
+							THEME.marker.selected.get()
+						},
 					);
 				}
 
-				let name = if self.is_selection && v.is_selected {
-					format!("  {} {}", icon, readable_path(k, &self.folder.cwd))
+				let hovered = matches!(self.folder.hovered, Some(ref h) if h.path == *k);
+				let style = if self.is_preview && hovered {
+					THEME.preview.hovered.get()
+				} else if hovered {
+					THEME.selection.hovered.get()
 				} else {
-					format!(" {} {}", icon, readable_path(k, &self.folder.cwd))
+					self.file_style(v)
 				};
 
-				let hovered = matches!(self.folder.hovered, Some(ref h) if h.path == *k);
-				let mut style = Style::default();
-				if self.is_preview {
-					if hovered {
-						style = style.add_modifier(Modifier::UNDERLINED)
-					}
-				} else {
-					if hovered {
-						style = style.fg(Color::Black).bg(Color::Yellow);
-					}
-				}
-
-				ListItem::new(name).style(style)
+				ListItem::new(format!(" {} {}", icon, readable_path(k, &self.folder.cwd))).style(style)
 			})
 			.collect::<Vec<_>>();
 

@@ -1,6 +1,6 @@
-use ratatui::{buffer::Buffer, layout::{Alignment, Rect}, style::{Color, Style}, text::{Line, Span}, widgets::{Paragraph, Widget}};
+use ratatui::{buffer::Buffer, layout::{Alignment, Rect}, text::{Line, Span}, widgets::{Paragraph, Widget}};
 
-use crate::ui::Ctx;
+use crate::{config::THEME, ui::Ctx};
 
 pub struct Tabs<'a> {
 	cx: &'a Ctx,
@@ -14,20 +14,20 @@ impl<'a> Widget for Tabs<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let tabs = self.cx.manager.tabs();
 
-		let spans = Line::from(
+		let line = Line::from(
 			tabs
 				.iter()
 				.enumerate()
 				.map(|(i, _)| {
 					if i == tabs.idx() {
-						Span::styled(format!(" {} ", i + 1), Style::default().fg(Color::Black).bg(Color::Blue))
+						Span::styled(format!(" {} ", i + 1), THEME.tab.active.get())
 					} else {
-						Span::styled(format!(" {} ", i + 1), Style::default().fg(Color::Gray).bg(Color::Black))
+						Span::styled(format!(" {} ", i + 1), THEME.tab.inactive.get())
 					}
 				})
 				.collect::<Vec<_>>(),
 		);
 
-		Paragraph::new(spans).alignment(Alignment::Right).render(area, buf);
+		Paragraph::new(line).alignment(Alignment::Right).render(area, buf);
 	}
 }

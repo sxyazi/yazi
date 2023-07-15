@@ -52,12 +52,12 @@ impl Tabs {
 
 	pub fn close(&mut self, idx: usize) -> bool {
 		let len = self.items.len();
-		if len <= 1 || idx as usize >= len {
+		if len < 2 || idx as usize >= len {
 			return false;
 		}
 
 		self.items.remove(idx);
-		if idx == self.idx {
+		if idx <= self.idx {
 			self.set_idx(self.absolute(1));
 		}
 

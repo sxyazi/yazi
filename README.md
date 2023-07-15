@@ -8,6 +8,7 @@ Yazi ("duck" in Chinese) is a terminal file manager written in Rust, based on no
 
 Before getting started, ensure that the following dependencies are installed on your system:
 
+- nerd-fonts (required, for icons)
 - jq (optional, for JSON preview)
 - ffmpegthumbnailer (optional, for video thumbnails)
 - fd (optional, for file searching)

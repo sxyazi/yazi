@@ -1,4 +1,4 @@
-use std::{collections::{BTreeSet, HashMap, HashSet}, mem, path::PathBuf};
+use std::{collections::{BTreeSet, HashMap, HashSet}, mem, path::{Path, PathBuf}};
 
 use tokio::fs;
 
@@ -169,7 +169,10 @@ impl Manager {
 		self.current().selected().or_else(|| self.hovered().map(|h| vec![h.path()])).unwrap_or_default()
 	}
 
-	pub async fn mimetype(&mut self, files: &Vec<PathBuf>) -> Vec<Option<String>> {
+	#[inline]
+	pub fn mimetype(&self, file: &Path) -> Option<String> { self.mimetype.get(file).cloned() }
+
+	pub async fn mimetypes(&mut self, files: &Vec<PathBuf>) -> Vec<Option<String>> {
 		let todo =
 			files.iter().filter(|&p| !self.mimetype.contains_key(p)).cloned().collect::<Vec<_>>();
 		if let Ok(mime) = Precache::mimetype(&todo).await {

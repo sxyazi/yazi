@@ -30,12 +30,12 @@ impl<'a> Widget for Layout<'a> {
 		// Parent
 		let block = Block::default().borders(Borders::RIGHT).padding(Padding::new(1, 0, 0, 0));
 		if let Some(ref parent) = manager.parent() {
-			Folder::new(parent).render(block.inner(chunks[0]), buf);
+			Folder::new(self.cx, parent).render(block.inner(chunks[0]), buf);
 		}
 		block.render(chunks[0], buf);
 
 		// Current
-		Folder::new(&manager.current())
+		Folder::new(self.cx, manager.current())
 			.with_selection(matches!(manager.active().mode(), Mode::Select(_)))
 			.render(chunks[1], buf);
 

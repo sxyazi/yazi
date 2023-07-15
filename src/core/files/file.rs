@@ -41,4 +41,9 @@ impl File {
 		self.path = path.to_path_buf();
 		self
 	}
+
+	#[inline]
+	pub fn name(&self) -> Option<String> {
+		self.path.file_name().map(|s| s.to_string_lossy().to_string())
+	}
 }

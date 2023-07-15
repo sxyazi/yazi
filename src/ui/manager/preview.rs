@@ -42,7 +42,7 @@ impl<'a> Widget for Preview<'a> {
 			PreviewData::None => {}
 			PreviewData::Folder => {
 				if let Some(folder) = manager.active().history(&hovered.path) {
-					Folder::new(folder).with_preview(true).render(area, buf);
+					Folder::new(self.cx, folder).with_preview(true).render(area, buf);
 				}
 			}
 			PreviewData::Text(s) => {
