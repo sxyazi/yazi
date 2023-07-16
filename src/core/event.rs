@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{collections::BTreeMap, path::PathBuf};
 
 use anyhow::Result;
 use crossterm::event::KeyEvent;
@@ -15,15 +15,19 @@ pub enum Event {
 	Render(String),
 	Resize(u16, u16),
 
+	// Manager
 	Cd(PathBuf),
 	Refresh,
 	Files(FilesOp),
+	Pages(usize),
+	Mimetype(BTreeMap<PathBuf, String>),
 	Hover,
-	Mimetype(PathBuf, String),
 	Preview(PathBuf, PreviewData),
 
+	// Input
 	Input(InputOpt, oneshot::Sender<Result<String>>),
 
+	// Tasks
 	Open(Vec<PathBuf>),
 	Progress(u8, u32),
 }
@@ -73,8 +77,11 @@ macro_rules! emit {
 	(Files($op:expr)) => {
 		$crate::core::Event::Files($op).emit();
 	};
-	(Mimetype($path:expr, $mime:expr)) => {
-		$crate::core::Event::Mimetype($path, $mime).emit();
+	(Pages($page:expr)) => {
+		$crate::core::Event::Pages($page).emit();
+	};
+	(Mimetype($mimes:expr)) => {
+		$crate::core::Event::Mimetype($mimes).emit();
 	};
 	(Preview($path:expr, $data:expr)) => {
 		$crate::core::Event::Preview($path, $data).emit();

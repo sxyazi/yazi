@@ -68,25 +68,3 @@ pub fn optinal_bool(s: &str) -> Option<bool> {
 		None
 	}
 }
-
-pub fn valid_mimetype(str: &str) -> bool {
-	let parts = str.split('/').collect::<Vec<_>>();
-	if parts.len() != 2 {
-		return false;
-	}
-
-	let b = match parts[0] {
-		"application" => true,
-		"audio" => true,
-		"example" => true,
-		"font" => true,
-		"image" => true,
-		"message" => true,
-		"model" => true,
-		"multipart" => true,
-		"text" => true,
-		"video" => true,
-		_ => false,
-	};
-	b && !parts[1].is_empty()
-}

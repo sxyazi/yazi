@@ -28,10 +28,11 @@ impl<'a> Folder<'a> {
 
 	#[inline]
 	fn file_style(&self, file: &File) -> Style {
+		let mimetype = &self.cx.manager.mimetype;
 		THEME
 			.filetypes
 			.iter()
-			.find(|x| x.matches(&file.path, self.cx.manager.mimetype(&file.path), file.meta.is_dir()))
+			.find(|x| x.matches(&file.path, mimetype.get(&file.path).cloned(), file.meta.is_dir()))
 			.map(|x| x.style.get())
 			.unwrap_or_else(|| Style::new())
 	}
@@ -39,7 +40,7 @@ impl<'a> Folder<'a> {
 
 impl<'a> Widget for Folder<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let page = self.folder.paginate();
+		let page = self.folder.window();
 
 		let items = page
 			.iter()

@@ -1,16 +1,16 @@
-use std::{collections::{BTreeSet, HashMap, HashSet}, mem, path::{Path, PathBuf}};
+use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, mem, path::PathBuf};
 
 use tokio::fs;
 
 use super::{PreviewData, Tab, Tabs, Watcher};
-use crate::{core::{files::{File, FilesOp}, input::{InputOpt, InputPos}, manager::Folder, tasks::{Precache, Tasks}}, emit};
+use crate::{core::{external::{self}, files::{File, FilesOp}, input::{InputOpt, InputPos}, manager::Folder, tasks::Tasks}, emit};
 
 pub struct Manager {
 	tabs:   Tabs,
 	yanked: (bool, HashSet<PathBuf>),
 
-	watcher:  Watcher,
-	mimetype: HashMap<PathBuf, String>,
+	watcher:      Watcher,
+	pub mimetype: HashMap<PathBuf, String>,
 }
 
 impl Manager {
@@ -62,10 +62,8 @@ impl Manager {
 			self.active_mut().preview.go(&hovered.path, &mime);
 		} else {
 			tokio::spawn(async move {
-				if let Ok(mime) = Precache::mimetype(&vec![hovered.path()]).await {
-					if let Some(Some(mime)) = mime.first() {
-						emit!(Mimetype(hovered.path, mime.clone()));
-					}
+				if let Ok(mimes) = external::file(&[hovered.path()]).await {
+					emit!(Mimetype(mimes));
 				}
 			});
 		}
@@ -169,17 +167,12 @@ impl Manager {
 		self.current().selected().or_else(|| self.hovered().map(|h| vec![h.path()])).unwrap_or_default()
 	}
 
-	#[inline]
-	pub fn mimetype(&self, file: &Path) -> Option<String> { self.mimetype.get(file).cloned() }
-
-	pub async fn mimetypes(&mut self, files: &Vec<PathBuf>) -> Vec<Option<String>> {
+	pub async fn mimetypes(&mut self, files: &[PathBuf]) -> Vec<Option<String>> {
 		let todo =
 			files.iter().filter(|&p| !self.mimetype.contains_key(p)).cloned().collect::<Vec<_>>();
-		if let Ok(mime) = Precache::mimetype(&todo).await {
-			let mut it = todo.iter().zip(mime);
-			while let Some((p, Some(m))) = it.next() {
-				self.mimetype.insert(p.clone(), m);
-			}
+
+		if let Ok(mimes) = external::file(&todo).await {
+			self.mimetype.extend(mimes);
 		}
 
 		files.into_iter().map(|p| self.mimetype.get(p).cloned()).collect()
@@ -244,12 +237,16 @@ impl Manager {
 		true
 	}
 
-	pub fn update_mimetype(&mut self, path: PathBuf, mimetype: String) -> bool {
-		if matches!(self.mimetype.get(&path), Some(m) if m == &mimetype) {
+	pub fn update_mimetype(&mut self, mut mimes: BTreeMap<PathBuf, String>, tasks: &Tasks) -> bool {
+		mimes.retain(|f, m| self.mimetype.get(f) != Some(m));
+		if mimes.is_empty() {
 			return false;
 		}
 
-		self.mimetype.insert(path, mimetype);
+		tasks.precache_image(&mimes);
+		tasks.precache_video(&mimes);
+
+		self.mimetype.extend(mimes);
 		self.preview();
 		true
 	}

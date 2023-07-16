@@ -6,7 +6,7 @@ use parking_lot::RwLock;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, time::sleep};
 use tracing::{info, trace};
 
-use super::{File, FileOpDelete, FileOpPaste, FileOpTrash, Process, ProcessOpOpen, Task, TaskOp, TaskStage};
+use super::{File, FileOpDelete, FileOpPaste, FileOpTrash, Precache, PrecacheOpMime, Process, ProcessOpOpen, Task, TaskOp, TaskStage};
 use crate::{config::open::Opener, emit, misc::unique_path};
 
 #[derive(Default)]
@@ -65,8 +65,9 @@ impl Running {
 }
 
 pub struct Scheduler {
-	file:    Arc<File>,
-	process: Arc<Process>,
+	file:     Arc<File>,
+	precache: Arc<Precache>,
+	process:  Arc<Process>,
 
 	todo:               Sender<BoxFuture<'static, ()>>,
 	pub(super) running: Arc<RwLock<Running>>,
@@ -78,14 +79,15 @@ impl Scheduler {
 		let (prog_tx, prog_rx) = mpsc::unbounded_channel();
 
 		let scheduler = Self {
-			file:    Arc::new(File::new(prog_tx.clone())),
-			process: Arc::new(Process::new(prog_tx)),
+			file:     Arc::new(File::new(prog_tx.clone())),
+			precache: Arc::new(Precache::new(prog_tx.clone())),
+			process:  Arc::new(Process::new(prog_tx)),
 
 			todo:    todo_tx,
 			running: Default::default(),
 		};
 
-		for _ in 0..3 {
+		for _ in 0..5 {
 			scheduler.schedule_micro(todo_rx.clone());
 		}
 		for _ in 0..5 {
@@ -107,6 +109,7 @@ impl Scheduler {
 
 	fn schedule_macro(&self, rx: Receiver<BoxFuture<'static, ()>>) {
 		let file = self.file.clone();
+		let precache = self.precache.clone();
 		let process = self.process.clone();
 		let running = self.running.clone();
 
@@ -127,6 +130,17 @@ impl Scheduler {
 								continue;
 							}
 							if let Err(e) = file.work(&mut task).await {
+								info!("Failed to work on task {:?}: {}", task, e);
+							} else {
+								trace!("Finished task {:?}", task);
+							}
+						}
+						Ok((id, mut task)) = precache.recv() => {
+							if !running.read().exists(id) {
+								trace!("Skipping task {:?} as it was removed", task);
+								continue;
+							}
+							if let Err(e) = precache.work(&mut task).await {
 								info!("Failed to work on task {:?}: {}", task, e);
 							} else {
 								trace!("Finished task {:?}", task);
@@ -364,5 +378,32 @@ impl Scheduler {
 			}
 			.boxed()
 		});
+	}
+
+	pub(super) fn precache_mime(&self, targets: Vec<PathBuf>) {
+		let name = format!("Mimetype");
+		let id = self.running.write().add(name);
+
+		let _ = self.todo.send_blocking({
+			let precache = self.precache.clone();
+			async move {
+				precache.mime(PrecacheOpMime { id, targets }).await.ok();
+			}
+			.boxed()
+		});
+	}
+
+	pub(super) fn precache_image(&self, targets: Vec<PathBuf>) {
+		let name = format!("Image");
+		let id = self.running.write().add(name);
+
+		self.precache.image(id, targets).ok();
+	}
+
+	pub(super) fn precache_video(&self, targets: Vec<PathBuf>) {
+		let name = format!("Video");
+		let id = self.running.write().add(name);
+
+		self.precache.video(id, targets).ok();
 	}
 }

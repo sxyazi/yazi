@@ -6,7 +6,7 @@ use syntect::{easy::HighlightLines, highlighting::{Theme, ThemeSet}, parsing::Sy
 use tokio::{fs, task::JoinHandle};
 
 use super::{ALL_RATIO, PREVIEW_BORDER, PREVIEW_PADDING, PREVIEW_RATIO};
-use crate::{config::{PREVIEW, THEME}, core::{adapter::Kitty, files::{Files, FilesOp}, tasks::Precache}, emit, misc::{first_n_lines, tty_ratio, tty_size}};
+use crate::{config::{PREVIEW, THEME}, core::{adapter::Kitty, external::{ffmpegthumbnailer, jq}, files::{Files, FilesOp}, tasks::Precache}, emit, misc::{first_n_lines, tty_ratio, tty_size, MimeKind}};
 
 static SYNTECT_SYNTAX: OnceLock<SyntaxSet> = OnceLock::new();
 static SYNTECT_THEME: OnceLock<Theme> = OnceLock::new();
@@ -43,20 +43,15 @@ impl Preview {
 			handle.abort();
 		}
 
-		let (path, mime) = (path.to_path_buf(), mime.to_string());
+		let (path, mime) = (path.to_path_buf(), mime.to_owned());
 		self.handle = Some(tokio::spawn(async move {
-			let result = if mime == "inode/directory" {
-				Self::folder(&path).await
-			} else if mime == "application/json" {
-				Self::json(&path).await.map(PreviewData::Text)
-			} else if mime.starts_with("text/") || mime.ends_with("/xml") {
-				Self::highlight(&path).await.map(PreviewData::Text)
-			} else if mime.starts_with("image/") {
-				Self::image(&path).await.map(PreviewData::Image)
-			} else if mime.starts_with("video/") {
-				Self::video(&path).await.map(PreviewData::Image)
-			} else {
-				Err(anyhow!("Unsupported mimetype: {}", mime))
+			let result = match MimeKind::new(&mime) {
+				MimeKind::Dir => Self::folder(&path).await,
+				MimeKind::JSON => Self::json(&path).await.map(PreviewData::Text),
+				MimeKind::Text => Self::highlight(&path).await.map(PreviewData::Text),
+				MimeKind::Image => Self::image(&path).await.map(PreviewData::Image),
+				MimeKind::Video => Self::video(&path).await.map(PreviewData::Image),
+				MimeKind::Others => Err(anyhow!("Unsupported mimetype: {}", mime)),
 			};
 
 			emit!(Preview(path, result.unwrap_or_default()));
@@ -84,7 +79,7 @@ impl Preview {
 
 	pub async fn image(mut path: &Path) -> Result<Vec<u8>> {
 		let cache = Precache::cache(path);
-		if cache.exists() {
+		if fs::metadata(&cache).await.is_ok() {
 			path = cache.as_path();
 		}
 
@@ -108,21 +103,16 @@ impl Preview {
 	}
 
 	pub async fn video(path: &Path) -> Result<Vec<u8>> {
-		Precache::video(path).await?;
-
 		let cache = Precache::cache(path);
+		if fs::metadata(&cache).await.is_err() {
+			ffmpegthumbnailer(path, &cache).await?;
+		}
+
 		Self::image(&cache).await
 	}
 
 	pub async fn json(path: &Path) -> Result<String> {
-		Ok(
-			Precache::json(path)
-				.await?
-				.lines()
-				.take(Self::size().1 as usize)
-				.collect::<Vec<_>>()
-				.join("\n"),
-		)
+		Ok(jq(path).await?.lines().take(Self::size().1 as usize).collect::<Vec<_>>().join("\n"))
 	}
 
 	pub async fn highlight(path: &Path) -> Result<String> {

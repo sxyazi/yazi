@@ -1,9 +1,9 @@
-use std::{collections::{BTreeMap, HashSet}, path::PathBuf, sync::Arc};
+use std::{collections::{BTreeMap, HashMap, HashSet}, path::PathBuf, sync::Arc};
 
 use tracing::trace;
 
 use super::{Scheduler, TASKS_PADDING, TASKS_PERCENT};
-use crate::{config::OPEN, core::input::{InputOpt, InputPos}, emit, misc::tty_size};
+use crate::{config::OPEN, core::{files::File, input::{InputOpt, InputPos}}, emit, misc::{tty_size, MimeKind}};
 
 #[derive(Clone, Debug)]
 pub struct Task {
@@ -170,6 +170,46 @@ impl Tasks {
 				}
 			}
 		});
+		false
+	}
+
+	#[inline]
+	pub fn precache_mime(&self, targets: Vec<&File>, mimetype: &HashMap<PathBuf, String>) -> bool {
+		let targets = targets
+			.into_iter()
+			.filter(|f| f.meta.is_file() && !mimetype.contains_key(&f.path))
+			.map(|f| f.path.clone())
+			.collect::<Vec<_>>();
+
+		if !targets.is_empty() {
+			self.scheduler.precache_mime(targets);
+		}
+		false
+	}
+
+	pub fn precache_image(&self, mimetype: &BTreeMap<PathBuf, String>) -> bool {
+		let targets = mimetype
+			.into_iter()
+			.filter(|(_, m)| MimeKind::new(m) == MimeKind::Image)
+			.map(|(p, _)| p.clone())
+			.collect::<Vec<_>>();
+
+		if !targets.is_empty() {
+			self.scheduler.precache_image(targets);
+		}
+		false
+	}
+
+	pub fn precache_video(&self, mimetype: &BTreeMap<PathBuf, String>) -> bool {
+		let targets = mimetype
+			.into_iter()
+			.filter(|(_, m)| MimeKind::new(m) == MimeKind::Video)
+			.map(|(p, _)| p.clone())
+			.collect::<Vec<_>>();
+
+		if !targets.is_empty() {
+			self.scheduler.precache_video(targets);
+		}
 		false
 	}
 

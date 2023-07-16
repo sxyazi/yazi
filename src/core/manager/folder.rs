@@ -13,6 +13,7 @@ pub struct Folder {
 	offset:    usize,
 	cursor:    usize,
 
+	pub page:      usize,
 	pub hovered:   Option<File>,
 	pub in_search: bool,
 }
@@ -23,6 +24,9 @@ impl Folder {
 	pub fn new_search(cwd: &Path) -> Self {
 		Self { cwd: cwd.to_path_buf(), in_search: true, ..Default::default() }
 	}
+
+	#[inline]
+	pub fn limit() -> usize { tty_size().ws_row.saturating_sub(DIR_PADDING) as usize }
 
 	pub fn update(&mut self, op: FilesOp) -> bool {
 		let b = match op {
@@ -37,6 +41,7 @@ impl Folder {
 		let len = self.files.len();
 		self.offset = self.offset.min(len);
 		self.cursor = self.cursor.min(len.saturating_sub(1));
+		self.set_page(true);
 
 		if let Some(h) = self.hovered.as_ref().map(|h| h.path()) {
 			self.hover(&h);
@@ -46,8 +51,17 @@ impl Folder {
 		true
 	}
 
-	#[inline]
-	pub fn limit() -> usize { tty_size().ws_row.saturating_sub(DIR_PADDING) as usize }
+	pub fn set_page(&mut self, force: bool) -> bool {
+		let limit = Self::limit();
+		let new = if limit == 0 { 0 } else { self.cursor / limit };
+		if !force && self.page == new {
+			return false;
+		}
+
+		self.page = new;
+		emit!(Pages(new));
+		true
+	}
 
 	pub fn next(&mut self, step: usize) -> bool {
 		let len = self.files.len();
@@ -58,6 +72,7 @@ impl Folder {
 		let old = self.cursor;
 		self.cursor = (self.cursor + step).min(len - 1);
 		self.hovered = self.files.duplicate(self.cursor);
+		self.set_page(false);
 
 		let limit = Self::limit();
 		if self.cursor >= (self.offset + limit).min(len).saturating_sub(5) {
@@ -71,6 +86,7 @@ impl Folder {
 		let old = self.cursor;
 		self.cursor = self.cursor.saturating_sub(step);
 		self.hovered = self.files.duplicate(self.cursor);
+		self.set_page(false);
 
 		if self.cursor < self.offset + 5 {
 			self.offset = self.offset.saturating_sub(old - self.cursor);
@@ -88,7 +104,8 @@ impl Folder {
 		false
 	}
 
-	pub fn paginate(&self) -> &Slice<PathBuf, File> {
+	#[inline]
+	pub fn window(&self) -> &Slice<PathBuf, File> {
 		let end = (self.offset + Self::limit()).min(self.files.len());
 		self.files.get_range(self.offset..end).unwrap()
 	}
@@ -127,20 +144,6 @@ impl Folder {
 		false
 	}
 
-	#[inline]
-	pub fn has_selected(&self) -> bool { self.files.iter().any(|(_, item)| item.is_selected) }
-
-	pub fn selected(&self) -> Option<Vec<PathBuf>> {
-		let v = self
-			.files
-			.iter()
-			.filter(|(_, item)| item.is_selected)
-			.map(|(path, _)| path.clone())
-			.collect::<Vec<_>>();
-
-		if v.is_empty() { None } else { Some(v) }
-	}
-
 	pub fn hover(&mut self, path: &Path) -> bool {
 		if matches!(self.hovered, Some(ref h) if h.path == path) {
 			return false;
@@ -168,7 +171,29 @@ impl Folder {
 		self.files.iter().position(|(p, _)| p == path)
 	}
 
+	pub fn paginate(&self) -> &Slice<PathBuf, File> {
+		let max = self.files.len().saturating_sub(1);
+		let limit = Self::limit();
+
+		let start = (self.page * limit).min(max);
+		let end = (start + limit).min(max);
+		self.files.get_range(start..end).unwrap()
+	}
+
 	#[inline]
+	pub fn has_selected(&self) -> bool { self.files.iter().any(|(_, item)| item.is_selected) }
+
+	pub fn selected(&self) -> Option<Vec<PathBuf>> {
+		let v = self
+			.files
+			.iter()
+			.filter(|(_, item)| item.is_selected)
+			.map(|(path, _)| path.clone())
+			.collect::<Vec<_>>();
+
+		if v.is_empty() { None } else { Some(v) }
+	}
+
 	pub fn rect_current(&self, path: &Path) -> Option<Rect> {
 		let pos = self.position(path)? - self.offset;
 		let s = tty_size();

@@ -66,6 +66,7 @@ impl App {
 	}
 
 	fn dispatch_resize(&mut self) {
+		self.cx.manager.current_mut().set_page(true);
 		self.cx.manager.preview();
 		emit!(Render);
 	}
@@ -89,13 +90,19 @@ impl App {
 					emit!(Render);
 				}
 			}
-			Event::Hover => {
-				if manager.preview() {
+			Event::Pages(page) => {
+				if manager.current().page == page {
+					let targets = self.cx.manager.current().paginate().into_iter().map(|(_, f)| f).collect();
+					self.cx.tasks.precache_mime(targets, &self.cx.manager.mimetype);
+				}
+			}
+			Event::Mimetype(mimes) => {
+				if manager.update_mimetype(mimes, &self.cx.tasks) {
 					emit!(Render);
 				}
 			}
-			Event::Mimetype(file, mime) => {
-				if manager.update_mimetype(file, mime) {
+			Event::Hover => {
+				if manager.preview() {
 					emit!(Render);
 				}
 			}
