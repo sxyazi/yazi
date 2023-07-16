@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
-use image::imageops::FilterType;
+use image::{imageops::FilterType, ImageFormat};
 use tokio::{fs, sync::mpsc};
 
 use super::TaskOp;
@@ -68,10 +68,8 @@ impl Precache {
 				};
 
 				let (w, h) = (PREVIEW.max_width, PREVIEW.max_height);
-				if img.width() <= w && img.height() <= h {
-					img.save(cache).ok();
-				} else {
-					img.resize(w, h, FilterType::Triangle).save(cache).ok();
+				if img.width() > w || img.height() > h {
+					img.resize(w, h, FilterType::Triangle).save_with_format(&cache, ImageFormat::Jpeg).ok();
 				}
 				self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
 			}

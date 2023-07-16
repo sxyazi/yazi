@@ -1,3 +1,5 @@
+use std::process::Stdio;
+
 use anyhow::Result;
 use tokio::{process::Command, select, sync::{mpsc, oneshot}};
 use tracing::trace;
@@ -44,9 +46,16 @@ impl Process {
 			ProcessOp::Open(task) => {
 				trace!("Open task: {:?}", task);
 				if !task.block {
+					let status = Command::new(&task.cmd)
+						.args(&task.args)
+						.stdout(Stdio::null())
+						.stderr(Stdio::null())
+						.kill_on_drop(true)
+						.status();
+
 					select! {
 						_ = task.cancel.closed() => {},
-						Ok(status) = Command::new(&task.cmd).args(&task.args).kill_on_drop(true).status() => {
+						Ok(status) = status => {
 							trace!("{} exited with {:?}", task.cmd, status);
 						}
 					}
