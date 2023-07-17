@@ -212,15 +212,6 @@ impl Tasks {
 		}
 		false
 	}
-
-	pub fn update_progress(&mut self, percent: u8, left: u32) -> bool {
-		if self.progress.0 == percent {
-			return false;
-		}
-
-		self.progress = (percent, left);
-		true
-	}
 }
 
 impl Tasks {

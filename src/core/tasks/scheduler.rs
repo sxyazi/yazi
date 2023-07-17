@@ -197,14 +197,14 @@ impl Scheduler {
 		});
 
 		let running = self.running.clone();
-		let mut last = 100;
+		let mut last = (100, 0);
 		tokio::spawn(async move {
 			loop {
 				sleep(Duration::from_secs(1)).await;
 				if running.read().is_empty() {
-					if last != 100 {
-						last = 100;
-						emit!(Progress(100, 0));
+					if last != (100, 0) {
+						last = (100, 0);
+						emit!(Progress(last.0, last.1));
 					}
 					continue;
 				}
@@ -218,19 +218,19 @@ impl Scheduler {
 					progress = (progress.0 + task.done, progress.1 + task.todo);
 				}
 
-				let mut new = match progress.1 {
+				let mut percent = match progress.1 {
 					0 => 100u8,
 					_ => 100.min(progress.0 * 100 / progress.1) as u8,
 				};
 
 				if tasks != 0 {
-					new = new.min(99);
+					percent = percent.min(99);
 					left = left.max(1);
 				}
 
-				if new != last {
-					last = new;
-					emit!(Progress(new, left));
+				if last != (percent, left) {
+					last = (percent, left);
+					emit!(Progress(last.0, last.1));
 				}
 			}
 		});

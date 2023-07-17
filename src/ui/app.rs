@@ -132,7 +132,7 @@ impl App {
 				self.cx.tasks.file_open(targets);
 			}
 			Event::Progress(percent, left) => {
-				self.cx.tasks.update_progress(percent, left);
+				self.cx.tasks.progress = (percent, left);
 				emit!(Render);
 			}
 
