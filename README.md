@@ -2,7 +2,7 @@
 
 Yazi ("duck" in Chinese) is a terminal file manager written in Rust, based on non-blocking async I/O. It aims to provide an efficient, user-friendly, and configurable file management experience.
 
-⚠️ Note: Yazi is currently in active development and may be unstable. The API is subject to change without prior notice. Please use it with caution in a non-production environment.
+⚠️ Note: Yazi is currently in active development and may be unstable. The API is subject to change without prior notice.
 
 ## Installation
 
@@ -10,11 +10,21 @@ Before getting started, ensure that the following dependencies are installed on 
 
 - nerd-fonts (required, for icons)
 - jq (optional, for JSON preview)
+- unar (optional, for archive preview)
 - ffmpegthumbnailer (optional, for video thumbnails)
 - fd (optional, for file searching)
 - rg (optional, for file content searching)
 - fzf (optional, for directory jumping)
 - zoxide (optional, for directory jumping)
+
+```bash
+# Arch Linux
+pacman -S ttf-nerd-fonts-symbols jq unarchiver ffmpegthumbnailer fd ripgrep fzf zoxide
+
+# macOS
+brew install jq unar ffmpegthumbnailer fd ripgrep fzf zoxide
+brew tap homebrew/cask-fonts && brew install --cask font-symbols-only-nerd-font
+```
 
 Execute the following commands to clone the project and build Yazi:
 

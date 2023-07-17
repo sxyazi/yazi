@@ -5,7 +5,7 @@ use image::{imageops::FilterType, ImageFormat};
 use tokio::{fs, sync::mpsc};
 
 use super::TaskOp;
-use crate::{config::PREVIEW, core::external::{self, ffmpegthumbnailer}, emit};
+use crate::{config::PREVIEW, core::external, emit};
 
 pub struct Precache {
 	rx: async_channel::Receiver<PrecacheOp>,
@@ -79,7 +79,7 @@ impl Precache {
 					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
 				}
 
-				ffmpegthumbnailer(&task.target, &cache).await.ok();
+				external::ffmpegthumbnailer(&task.target, &cache).await.ok();
 				self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
 			}
 		}

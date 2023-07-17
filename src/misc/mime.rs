@@ -5,6 +5,7 @@ pub enum MimeKind {
 	Text,
 	Image,
 	Video,
+	Archive,
 	Others,
 }
 
@@ -42,6 +43,15 @@ impl MimeKind {
 			Self::Image
 		} else if s.starts_with("video/") {
 			Self::Video
+		} else if s == "application/x-bzip"
+			|| s == "application/x-bzip2"
+			|| s == "application/gzip"
+			|| s == "application/vnd.rar"
+			|| s == "application/x-tar"
+			|| s == "application/zip"
+			|| s == "application/x-7z-compressed"
+		{
+			Self::Archive
 		} else {
 			Self::Others
 		}

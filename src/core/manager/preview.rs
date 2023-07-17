@@ -6,7 +6,7 @@ use syntect::{easy::HighlightLines, highlighting::{Theme, ThemeSet}, parsing::Sy
 use tokio::{fs, task::JoinHandle};
 
 use super::{ALL_RATIO, PREVIEW_BORDER, PREVIEW_PADDING, PREVIEW_RATIO};
-use crate::{config::{PREVIEW, THEME}, core::{adapter::Kitty, external::{ffmpegthumbnailer, jq}, files::{Files, FilesOp}, tasks::Precache}, emit, misc::{first_n_lines, tty_ratio, tty_size, MimeKind}};
+use crate::{config::{PREVIEW, THEME}, core::{adapter::Kitty, external, files::{Files, FilesOp}, tasks::Precache}, emit, misc::{first_n_lines, tty_ratio, tty_size, MimeKind}};
 
 static SYNTECT_SYNTAX: OnceLock<SyntaxSet> = OnceLock::new();
 static SYNTECT_THEME: OnceLock<Theme> = OnceLock::new();
@@ -51,6 +51,7 @@ impl Preview {
 				MimeKind::Text => Self::highlight(&path).await.map(PreviewData::Text),
 				MimeKind::Image => Self::image(&path).await.map(PreviewData::Image),
 				MimeKind::Video => Self::video(&path).await.map(PreviewData::Image),
+				MimeKind::Archive => Self::archive(&path).await.map(PreviewData::Text),
 				MimeKind::Others => Err(anyhow!("Unsupported mimetype: {}", mime)),
 			};
 
@@ -105,14 +106,33 @@ impl Preview {
 	pub async fn video(path: &Path) -> Result<Vec<u8>> {
 		let cache = Precache::cache(path);
 		if fs::metadata(&cache).await.is_err() {
-			ffmpegthumbnailer(path, &cache).await?;
+			external::ffmpegthumbnailer(path, &cache).await?;
 		}
 
 		Self::image(&cache).await
 	}
 
 	pub async fn json(path: &Path) -> Result<String> {
-		Ok(jq(path).await?.lines().take(Self::size().1 as usize).collect::<Vec<_>>().join("\n"))
+		Ok(
+			external::jq(path)
+				.await?
+				.lines()
+				.take(Self::size().1 as usize)
+				.collect::<Vec<_>>()
+				.join("\n"),
+		)
+	}
+
+	pub async fn archive(path: &Path) -> Result<String> {
+		Ok(
+			external::lsar(path)
+				.await?
+				.into_iter()
+				.take(Self::size().1 as usize)
+				.map(|f| f.name)
+				.collect::<Vec<_>>()
+				.join("\n"),
+		)
 	}
 
 	pub async fn highlight(path: &Path) -> Result<String> {

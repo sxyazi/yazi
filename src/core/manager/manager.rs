@@ -3,7 +3,7 @@ use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, mem, path::PathBu
 use tokio::fs;
 
 use super::{PreviewData, Tab, Tabs, Watcher};
-use crate::{core::{external::{self}, files::{File, FilesOp}, input::{InputOpt, InputPos}, manager::Folder, tasks::Tasks}, emit};
+use crate::{core::{external, files::{File, FilesOp}, input::{InputOpt, InputPos}, manager::Folder, tasks::Tasks}, emit};
 
 pub struct Manager {
 	tabs:   Tabs,
