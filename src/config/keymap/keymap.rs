@@ -1,9 +1,7 @@
-use std::fs;
-
 use serde::{Deserialize, Deserializer};
-use xdg::BaseDirectories;
 
 use super::{Exec, Key};
+use crate::config::MERGED_KEYMAP;
 
 #[derive(Debug, Deserialize)]
 pub struct Single {
@@ -45,8 +43,5 @@ impl<'de> Deserialize<'de> for Keymap {
 }
 
 impl Keymap {
-	pub fn new() -> Self {
-		let path = BaseDirectories::new().unwrap().get_config_file("yazi/keymap.toml");
-		toml::from_str(&fs::read_to_string(path).unwrap()).unwrap()
-	}
+	pub fn new() -> Self { toml::from_str(&MERGED_KEYMAP).unwrap() }
 }

@@ -1,10 +1,9 @@
-use std::{fs, path::PathBuf};
+use std::path::PathBuf;
 
 use serde::Deserialize;
-use xdg::BaseDirectories;
 
 use super::{ColorGroup, Filetype, Icon, Style};
-use crate::misc::absolute_path;
+use crate::{config::MERGED_THEME, misc::absolute_path};
 
 #[derive(Deserialize)]
 pub struct Tab {
@@ -56,7 +55,7 @@ pub struct Theme {
 	pub selection: Selection,
 	pub marker:    Marker,
 	pub preview:   Preview,
-	#[serde(deserialize_with = "Filetype::deserialize")]
+	#[serde(rename = "filetype", deserialize_with = "Filetype::deserialize")]
 	pub filetypes: Vec<Filetype>,
 	#[serde(deserialize_with = "Icon::deserialize")]
 	pub icons:     Vec<Icon>,
@@ -64,10 +63,8 @@ pub struct Theme {
 
 impl Theme {
 	pub fn new() -> Self {
-		let path = BaseDirectories::new().unwrap().get_config_file("yazi/theme.toml");
-
-		let mut parsed: Self = toml::from_str(&fs::read_to_string(path).unwrap()).unwrap();
-		parsed.preview.syntect_theme = absolute_path(&parsed.preview.syntect_theme);
-		parsed
+		let mut theme: Self = toml::from_str(&MERGED_THEME).unwrap();
+		theme.preview.syntect_theme = absolute_path(&theme.preview.syntect_theme);
+		theme
 	}
 }

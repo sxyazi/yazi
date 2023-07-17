@@ -1,7 +1,6 @@
-use std::fs;
-
 use serde::Deserialize;
-use xdg::BaseDirectories;
+
+use crate::config::MERGED_YAZI;
 
 #[derive(Debug, Deserialize)]
 pub struct Preview {
@@ -18,8 +17,7 @@ impl Preview {
 			preview: Preview,
 		}
 
-		let path = BaseDirectories::new().unwrap().get_config_file("yazi/yazi.toml");
-		let outer: Outer = toml::from_str(&fs::read_to_string(path).unwrap()).unwrap();
+		let outer: Outer = toml::from_str(&MERGED_YAZI).unwrap();
 		outer.preview
 	}
 }

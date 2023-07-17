@@ -1,10 +1,9 @@
-use std::{collections::BTreeMap, fs, path::Path};
+use std::{collections::BTreeMap, path::Path};
 
 use serde::{Deserialize, Deserializer};
-use xdg::BaseDirectories;
 
 use super::Opener;
-use crate::config::Pattern;
+use crate::config::{Pattern, MERGED_YAZI};
 
 #[derive(Debug)]
 pub struct Open {
@@ -21,10 +20,7 @@ struct OpenRule {
 }
 
 impl Open {
-	pub fn new() -> Self {
-		let path = BaseDirectories::new().unwrap().get_config_file("yazi/yazi.toml");
-		toml::from_str(&fs::read_to_string(path).unwrap()).unwrap()
-	}
+	pub fn new() -> Self { toml::from_str(&MERGED_YAZI).unwrap() }
 
 	pub fn opener(&self, path: &Path, mime: &str) -> Option<&Opener> {
 		self.rules.iter().find_map(|rule| {

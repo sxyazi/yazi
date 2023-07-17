@@ -1,0 +1,103 @@
+[manager]
+
+keymap = [
+	{ on = [ "<Esc>" ], exec = "escape"  },
+	{ on = [ "q" ], exec = "quit" },
+	{ on = [ "<C-q>" ], exec = "close" },
+
+	# Navigation
+	{ on = [ "j" ], exec = "arrow 1" },
+	{ on = [ "k" ], exec = "arrow -1" },
+
+	{ on = [ "J" ], exec = "arrow 5" },
+	{ on = [ "K" ], exec = "arrow -5" },
+
+	{ on = [ "h" ], exec = "leave" },
+	{ on = [ "l" ], exec = "enter" },
+
+	{ on = [ "H" ], exec = "back" },
+	{ on = [ "L" ], exec = "forward" },
+
+	# Selection
+	{ on = [ "<Space>" ], exec = "select --state=none" },
+	{ on = [ "v" ], exec = "visual_mode" },
+	{ on = [ "V" ], exec = "visual_mode --unselect" },
+	{ on = [ "<C-a>" ], exec = "select_all --state=true" },
+	{ on = [ "<C-r>" ], exec = "select_all --state=none" },
+
+	# Operation
+	{ on = [ "y" ], exec = "yank" },
+	{ on = [ "x" ], exec = "yank --cut" },
+	{ on = [ "p" ], exec = "paste" },
+	{ on = [ "P" ], exec = "paste --force" },
+	{ on = [ "f" ], exec = "paste --follow" },
+	{ on = [ "F" ], exec = "paste --follow --force" },
+	{ on = [ "d" ], exec = "remove" },
+	{ on = [ "D" ], exec = "remove --permanently" },
+	{ on = [ "c" ], exec = "create" },
+	{ on = [ "r" ], exec = "rename" },
+	{ on = [ "." ], exec = "hidden toggle" },
+	{ on = [ "s" ], exec = "search fd" },
+	{ on = [ "S" ], exec = "search rg" },
+	{ on = [ "<C-s>" ], exec = "search none" },
+	{ on = [ "z" ], exec = "jump zoxide" },
+	{ on = [ "Z" ], exec = "jump fzf" },
+
+	# Tabs
+	{ on = [ "t" ], exec = "tab_create --current" },
+
+	{ on = [ "1" ], exec = "tab_switch 0" },
+	{ on = [ "2" ], exec = "tab_switch 1" },
+	{ on = [ "3" ], exec = "tab_switch 2" },
+	{ on = [ "4" ], exec = "tab_switch 3" },
+	{ on = [ "5" ], exec = "tab_switch 4" },
+
+	{ on = [ "[" ], exec = "tab_switch -1 --relative" },
+	{ on = [ "]" ], exec = "tab_switch 1 --relative" },
+
+	{ on = [ "{" ], exec = "tab_swap -1" },
+	{ on = [ "}" ], exec = "tab_swap 1" },
+
+	# Tasks
+	{ on = [ "w" ], exec = "tasks_show" },
+]
+
+[tasks]
+
+keymap = [
+	{ on = [ "<Esc>" ], exec = "close" },
+	{ on = [ "w" ], exec = "close" },
+
+	{ on = [ "j" ], exec = "arrow 1" },
+	{ on = [ "k" ], exec = "arrow -1" },
+
+	{ on = [ "x" ], exec = "cancel" },
+]
+
+[input]
+
+keymap = [
+	{ on = [ "<C-q>" ], exec = "close" },
+	{ on = [ "<Enter>" ], exec = "close --submit" },
+	{ on = [ "<Esc>" ], exec = "escape" },
+	{ on = [ "<Backspace>" ], exec = "backspace" },
+
+	# Mode
+	{ on = [ "i" ], exec = "insert" },
+	{ on = [ "a" ], exec = "insert --append" },
+	{ on = [ "v" ],exec = "visual" },
+
+	{ on = [ "h" ], exec = "move -1" },
+	{ on = [ "l" ], exec = "move 1" },
+
+	{ on = [ "H" ], exec = "move -999" },
+	{ on = [ "L" ], exec = "move 999" },
+
+	{ on = [ "b" ], exec = "backward" },
+	{ on = [ "w" ], exec = "forward" },
+	{ on = [ "e" ], exec = "forward --end-of-word" },
+
+	{ on = [ "d" ], exec = "delete" },
+	{ on = [ "c" ], exec = "delete --insert" },
+	{ on = [ "x" ], exec = [ "delete", "move 1" ] }
+]

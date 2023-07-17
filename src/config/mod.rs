@@ -4,10 +4,16 @@ pub mod keymap;
 pub mod manager;
 pub mod open;
 mod pattern;
+mod preset;
 pub mod preview;
 pub mod theme;
 
 pub(crate) use pattern::*;
+pub(crate) use preset::*;
+
+static MERGED_KEYMAP: Lazy<String> = Lazy::new(|| Preset::keymap());
+static MERGED_THEME: Lazy<String> = Lazy::new(|| Preset::theme());
+static MERGED_YAZI: Lazy<String> = Lazy::new(|| Preset::yazi());
 
 pub static KEYMAP: Lazy<keymap::Keymap> = Lazy::new(|| keymap::Keymap::new());
 pub static MANAGER: Lazy<manager::Manager> = Lazy::new(|| manager::Manager::new());

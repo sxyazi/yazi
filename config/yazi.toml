@@ -1,0 +1,50 @@
+[manager]
+sort_by      = "modified"
+sort_reverse = true
+show_hidden  = false
+
+[preview]
+tab_size   = 2
+max_width  = 600
+max_height = 900
+
+[opener]
+archive = [
+	{ cmd = "unar", args = [ "$1" ] },
+]
+text = [
+	{ cmd = "vi", args = [ "$*" ], block = true },
+]
+image = [
+	{ cmd = "open", args = [ "$*" ] },
+	{ cmd = "exiftool", args = [ "$1" ], block = true },
+]
+video = [
+	{ cmd = "mpv", args = [ "$*" ] },
+	{ cmd = "mediainfo", args = [ "$1" ], block = true },
+]
+audio = [
+	{ cmd = "mpv", args = [ "$*" ] },
+	{ cmd = "mediainfo", args = [ "$1" ], block = true },
+]
+fallback = [
+	{ cmd = "open", args = [ "$*" ] },
+]
+
+[open]
+rules = [
+	{ name = "*.html", use = "fallback" },
+
+	{ mime = "text/*", use = "text" },
+	{ mime = "image/*", use = "image" },
+	{ mime = "video/*", use = "video" },
+	{ mime = "audio/*", use = "audio" },
+
+	{ mime = "application/x-bzip", use = "archive" },
+	{ mime = "application/x-bzip2", use = "archive" },
+	{ mime = "application/gzip", use = "archive" },
+	{ mime = "application/vnd.rar", use = "archive" },
+	{ mime = "application/x-tar", use = "archive" },
+	{ mime = "application/zip", use = "archive" },
+	{ mime = "application/x-7z-compressed", use = "archive" },
+]

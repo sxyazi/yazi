@@ -1,9 +1,9 @@
 use std::{env, fs, path::PathBuf};
 
 use serde::Deserialize;
-use xdg::BaseDirectories;
 
 use super::SortBy;
+use crate::config::MERGED_YAZI;
 
 #[derive(Debug, Deserialize)]
 pub struct Manager {
@@ -27,8 +27,7 @@ impl Manager {
 			manager: Manager,
 		}
 
-		let path = BaseDirectories::new().unwrap().get_config_file("yazi/yazi.toml");
-		let mut manager = toml::from_str::<Outer>(&fs::read_to_string(path).unwrap()).unwrap().manager;
+		let mut manager = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().manager;
 
 		manager.cwd = env::current_dir().unwrap_or("/".into());
 		manager.cache = "/tmp/yazi".into();
