@@ -2,6 +2,8 @@
 
 Yazi ("duck" in Chinese) is a terminal file manager written in Rust, based on non-blocking async I/O. It aims to provide an efficient, user-friendly, and configurable file management experience.
 
+https://github.com/sxyazi/yazi/assets/17523360/d221d84b-694b-4d6d-8e21-f14041332c75
+
 ⚠️ Note: Yazi is currently in active development and may be unstable. The API is subject to change without prior notice.
 
 ## Installation
