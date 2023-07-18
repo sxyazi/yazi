@@ -1,20 +1,7 @@
 use std::{collections::VecDeque, path::Path};
 
 use anyhow::Result;
-use tokio::{fs::{self, File}, io::{self, AsyncBufReadExt, BufReader}, select, sync::{mpsc, oneshot}, time};
-
-pub async fn first_n_lines(path: &Path, n: usize) -> Result<Vec<String>> {
-	let mut lines = Vec::new();
-	let mut it = BufReader::new(File::open(path).await?).lines();
-	for _ in 0..n {
-		if let Some(line) = it.next_line().await? {
-			lines.push(line);
-		} else {
-			break;
-		}
-	}
-	Ok(lines)
-}
+use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
 
 pub async fn calculate_size(path: &Path) -> u64 {
 	let mut total = 0;

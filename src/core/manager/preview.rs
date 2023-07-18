@@ -1,12 +1,12 @@
-use std::{fs::File, io::BufReader, path::{Path, PathBuf}, sync::OnceLock};
+use std::{fs::File, io::{BufRead, BufReader}, path::{Path, PathBuf}, sync::OnceLock};
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 use image::imageops::FilterType;
-use syntect::{easy::HighlightLines, highlighting::{Theme, ThemeSet}, parsing::SyntaxSet, util::as_24_bit_terminal_escaped};
+use syntect::{easy::HighlightFile, highlighting::{Theme, ThemeSet}, parsing::SyntaxSet, util::as_24_bit_terminal_escaped};
 use tokio::{fs, task::JoinHandle};
 
 use super::{ALL_RATIO, PREVIEW_BORDER, PREVIEW_PADDING, PREVIEW_RATIO};
-use crate::{config::{PREVIEW, THEME}, core::{adapter::Kitty, external, files::{Files, FilesOp}, tasks::Precache}, emit, misc::{first_n_lines, tty_ratio, tty_size, MimeKind}};
+use crate::{config::{PREVIEW, THEME}, core::{adapter::Kitty, external, files::{Files, FilesOp}, tasks::Precache}, emit, misc::{tty_ratio, tty_size, MimeKind}};
 
 static SYNTECT_SYNTAX: OnceLock<SyntaxSet> = OnceLock::new();
 static SYNTECT_THEME: OnceLock<Theme> = OnceLock::new();
@@ -137,7 +137,6 @@ impl Preview {
 
 	pub async fn highlight(path: &Path) -> Result<String> {
 		let syntax = SYNTECT_SYNTAX.get_or_init(|| SyntaxSet::load_defaults_newlines());
-
 		let theme = SYNTECT_THEME.get_or_init(|| {
 			let from_file = || -> Result<Theme> {
 				let file = File::open(&THEME.preview.syntect_theme)?;
@@ -146,22 +145,24 @@ impl Preview {
 			from_file().unwrap_or_else(|_| ThemeSet::load_defaults().themes["base16-ocean.dark"].clone())
 		});
 
-		let ext = path.extension().context("no extension found")?.to_string_lossy().to_string();
-
-		let lines = first_n_lines(path, Self::size().1 as usize).await?;
+		let path = path.to_path_buf();
+		let spaces = " ".repeat(PREVIEW.tab_size as usize);
 
 		tokio::task::spawn_blocking(move || -> Result<String> {
-			let mut buf = "".to_string();
-			if let Some(syn) = syntax.find_syntax_by_extension(&ext) {
-				let mut h = HighlightLines::new(syn, theme);
-				let tab = " ".repeat(PREVIEW.tab_size as usize);
-				for line in lines {
-					let line = line.replace('\t', &tab);
-					let ranges = h.highlight_line(&line, &syntax)?;
-					buf.push_str(&as_24_bit_terminal_escaped(&ranges, false));
-					buf.push('\n');
-				}
+			let mut h = HighlightFile::new(path, syntax, theme)?;
+			let mut line = String::new();
+			let mut buf = String::new();
+
+			let mut i = Self::size().1 as usize;
+			while i > 0 && h.reader.read_line(&mut line)? > 0 {
+				i -= 1;
+				line = line.replace('\t', &spaces);
+				let regions = h.highlight_lines.highlight_line(&line, syntax)?;
+				buf.push_str(&as_24_bit_terminal_escaped(&regions[..], false));
+				line.clear();
 			}
+
+			buf.push_str("\x1b[0m");
 			Ok(buf)
 		})
 		.await?
