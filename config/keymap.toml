@@ -26,6 +26,8 @@ keymap = [
 	{ on = [ "<C-r>" ], exec = "select_all --state=none" },
 
 	# Operation
+	{ on = [ "o" ], exec = "open" },
+	{ on = [ "O" ], exec = "open --select" },
 	{ on = [ "y" ], exec = "yank" },
 	{ on = [ "x" ], exec = "yank --cut" },
 	{ on = [ "p" ], exec = "paste" },

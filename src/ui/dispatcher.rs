@@ -70,6 +70,7 @@ impl Executor {
 			}
 
 			// Operation
+			"open" => cx.manager.open(exec.named.contains_key("select")),
 			"yank" => cx.manager.yank(exec.named.contains_key("cut")),
 			"paste" => {
 				let dest = cx.manager.current().cwd.clone();

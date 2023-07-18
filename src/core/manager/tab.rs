@@ -120,7 +120,6 @@ impl Tab {
 			return false;
 		};
 		if !hovered.meta.is_dir() {
-			emit!(Open(self.current.selected().unwrap_or(vec![hovered.path])));
 			return false;
 		}
 

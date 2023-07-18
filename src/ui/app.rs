@@ -127,9 +127,7 @@ impl App {
 			}
 
 			Event::Open(files) => {
-				let mime = manager.mimetypes(&files).await;
-				let targets = files.into_iter().zip(mime).map_while(|(f, m)| m.map(|m| (f, m))).collect();
-				self.cx.tasks.file_open(targets);
+				self.cx.tasks.file_open(files);
 			}
 			Event::Progress(percent, left) => {
 				self.cx.tasks.progress = (percent, left);

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Deserializer};
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Opener {
 	pub cmd:    String,
 	pub args:   Vec<String>,

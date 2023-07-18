@@ -1,11 +1,11 @@
-use std::{collections::BTreeMap, path::PathBuf};
+use std::{collections::BTreeMap, ffi::OsStr, path::PathBuf};
 
 use anyhow::{bail, Result};
 use tokio::process::Command;
 
 use crate::misc::MimeKind;
 
-pub async fn file(files: &[PathBuf]) -> Result<BTreeMap<PathBuf, String>> {
+pub async fn file(files: &[impl AsRef<OsStr>]) -> Result<BTreeMap<PathBuf, String>> {
 	if files.is_empty() {
 		bail!("no files to get mime types for");
 	}
@@ -23,7 +23,7 @@ pub async fn file(files: &[PathBuf]) -> Result<BTreeMap<PathBuf, String>> {
 			.into_iter()
 			.zip(output.trim().lines())
 			.filter(|(_, m)| MimeKind::valid(m))
-			.map(|(f, m)| (f.clone(), m.to_string())),
+			.map(|(f, m)| (f.as_ref().into(), m.to_string())),
 	);
 
 	if mimes.len() == 0 {

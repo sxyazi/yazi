@@ -98,9 +98,9 @@ impl Tasks {
 	pub fn file_open(&self, targets: Vec<(PathBuf, String)>) -> bool {
 		let mut openers = BTreeMap::new();
 		for target in targets {
-			if let Some(opener) = OPEN.opener(&target.0, &target.1) {
+			if let Some(opener) = OPEN.openers(&target.0, &target.1).and_then(|o| o.first().cloned()) {
 				openers
-					.entry(opener.clone())
+					.entry(opener)
 					.or_insert_with(|| vec![])
 					.push(target.0.to_string_lossy().into_owned());
 			}

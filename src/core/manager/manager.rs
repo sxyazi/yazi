@@ -62,7 +62,7 @@ impl Manager {
 			self.active_mut().preview.go(&hovered.path, &mime);
 		} else {
 			tokio::spawn(async move {
-				if let Ok(mimes) = external::file(&[hovered.path()]).await {
+				if let Ok(mimes) = external::file(&[hovered.path]).await {
 					emit!(Mimetype(mimes));
 				}
 			});
@@ -109,6 +109,36 @@ impl Manager {
 			return self.tabs.close(self.tabs.idx());
 		}
 		self.quit(tasks)
+	}
+
+	pub fn open(&mut self, select: bool) -> bool {
+		let mut selected = self
+			.selected()
+			.into_iter()
+			.map(|p| {
+				let mime = self.mimetype.get(&p).cloned();
+				(p, mime)
+			})
+			.collect::<Vec<_>>();
+
+		if selected.is_empty() {
+			return false;
+		}
+
+		tokio::spawn(async move {
+			let todo = selected.iter().filter(|(_, m)| m.is_none()).map(|(p, _)| p).collect::<Vec<_>>();
+			if let Ok(mut mimes) = external::file(&todo).await {
+				selected = selected
+					.into_iter()
+					.map(|(p, m)| {
+						let mime = m.or_else(|| mimes.remove(&p));
+						(p, mime)
+					})
+					.collect::<Vec<_>>();
+			}
+			emit!(Open(selected.into_iter().filter_map(|(p, m)| m.map(|m| (p, m))).collect::<Vec<_>>()));
+		});
+		false
 	}
 
 	pub fn create(&self) -> bool {
@@ -165,17 +195,6 @@ impl Manager {
 
 	pub fn selected(&self) -> Vec<PathBuf> {
 		self.current().selected().or_else(|| self.hovered().map(|h| vec![h.path()])).unwrap_or_default()
-	}
-
-	pub async fn mimetypes(&mut self, files: &[PathBuf]) -> Vec<Option<String>> {
-		let todo =
-			files.iter().filter(|&p| !self.mimetype.contains_key(p)).cloned().collect::<Vec<_>>();
-
-		if let Ok(mimes) = external::file(&todo).await {
-			self.mimetype.extend(mimes);
-		}
-
-		files.into_iter().map(|p| self.mimetype.get(p).cloned()).collect()
 	}
 
 	pub fn update_read(&mut self, op: FilesOp) -> bool {

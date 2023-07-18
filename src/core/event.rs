@@ -28,7 +28,7 @@ pub enum Event {
 	Input(InputOpt, oneshot::Sender<Result<String>>),
 
 	// Tasks
-	Open(Vec<PathBuf>),
+	Open(Vec<(PathBuf, String)>),
 	Progress(u8, u32),
 }
 
