@@ -3,8 +3,9 @@ use ratatui::layout::Rect;
 use tokio::sync::oneshot::Sender;
 use unicode_width::UnicodeWidthStr;
 
-use crate::misc::{tty_size, CharKind};
+use crate::{core::Position, misc::CharKind};
 
+#[derive(Default)]
 pub struct Input {
 	title:    String,
 	value:    String,
@@ -24,13 +25,7 @@ pub struct Input {
 pub struct InputOpt {
 	pub title:    String,
 	pub value:    String,
-	pub position: InputPos,
-}
-
-pub enum InputPos {
-	Top,
-	Hovered,
-	Coords(u16, u16),
+	pub position: Position,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -50,14 +45,15 @@ pub enum InputOp {
 
 impl Input {
 	pub fn show(&mut self, opt: InputOpt, tx: Sender<Result<String>>) {
+		self.close(false);
+
 		self.title = opt.title;
 		self.value = opt.value;
 		self.position = match opt.position {
-			InputPos::Coords(x, y) => (x, y),
+			Position::Coords(x, y) => (x, y),
 			_ => unimplemented!(),
 		};
 
-		self.mode = InputMode::Insert;
 		self.cursor = self.count();
 		self.offset = self.value.width().saturating_sub(50);
 		self.callback = Some(tx);
@@ -65,10 +61,12 @@ impl Input {
 	}
 
 	pub fn close(&mut self, submit: bool) -> bool {
-		self.visible = false;
 		if let Some(cb) = self.callback.take() {
 			let _ = cb.send(if submit { Ok(self.value.clone()) } else { Err(anyhow!("canceled")) });
 		}
+
+		self.mode = InputMode::Insert;
+		self.visible = false;
 		true
 	}
 
@@ -285,11 +283,6 @@ impl Input {
 	}
 
 	#[inline]
-	pub fn top_position() -> InputPos {
-		InputPos::Coords((tty_size().ws_col / 2).saturating_sub(25), 2)
-	}
-
-	#[inline]
 	fn count(&self) -> usize { self.value.chars().count() }
 
 	#[inline]
@@ -300,24 +293,5 @@ impl Input {
 			.nth(n)
 			.map(|(i, _)| i)
 			.or_else(|| if n == self.count() { Some(self.value.len()) } else { None })
-	}
-}
-
-impl Default for Input {
-	fn default() -> Self {
-		Self {
-			title:    "".to_string(),
-			value:    "".to_string(),
-			position: Default::default(),
-
-			op:     Default::default(),
-			mode:   Default::default(),
-			cursor: 0,
-			offset: 0,
-			range:  None,
-
-			visible:  false,
-			callback: None,
-		}
 	}
 }

@@ -3,7 +3,7 @@ use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, mem, path::PathBu
 use tokio::fs;
 
 use super::{PreviewData, Tab, Tabs, Watcher};
-use crate::{core::{external, files::{File, FilesOp}, input::{InputOpt, InputPos}, manager::Folder, tasks::Tasks}, emit};
+use crate::{config::OPEN, core::{external, files::{File, FilesOp}, input::InputOpt, manager::Folder, select::SelectOpt, tasks::Tasks, Position}, emit};
 
 pub struct Manager {
 	tabs:   Tabs,
@@ -71,9 +71,10 @@ impl Manager {
 	}
 
 	pub fn yank(&mut self, cut: bool) -> bool {
+		let selected = self.selected().into_iter().map(|f| f.path()).collect::<Vec<_>>();
 		self.yanked.0 = cut;
 		self.yanked.1.clear();
-		self.yanked.1.extend(self.selected());
+		self.yanked.1.extend(selected);
 		false
 	}
 
@@ -91,7 +92,7 @@ impl Manager {
 			let result = emit!(Input(InputOpt {
 				title:    format!("There are {} tasks running, sure to quit? (y/N)", tasks),
 				value:    "".to_string(),
-				position: InputPos::Top,
+				position: Position::Top,
 			}))
 			.await;
 
@@ -112,23 +113,21 @@ impl Manager {
 	}
 
 	pub fn open(&mut self, select: bool) -> bool {
-		let mut selected = self
+		let mut files = self
 			.selected()
 			.into_iter()
-			.map(|p| {
-				let mime = self.mimetype.get(&p).cloned();
-				(p, mime)
-			})
+			.filter(|f| f.meta.is_file())
+			.map(|f| (f.path(), self.mimetype.get(&f.path).cloned()))
 			.collect::<Vec<_>>();
 
-		if selected.is_empty() {
+		if files.is_empty() {
 			return false;
 		}
 
 		tokio::spawn(async move {
-			let todo = selected.iter().filter(|(_, m)| m.is_none()).map(|(p, _)| p).collect::<Vec<_>>();
+			let todo = files.iter().filter(|(_, m)| m.is_none()).map(|(p, _)| p).collect::<Vec<_>>();
 			if let Ok(mut mimes) = external::file(&todo).await {
-				selected = selected
+				files = files
 					.into_iter()
 					.map(|(p, m)| {
 						let mime = m.or_else(|| mimes.remove(&p));
@@ -136,7 +135,27 @@ impl Manager {
 					})
 					.collect::<Vec<_>>();
 			}
-			emit!(Open(selected.into_iter().filter_map(|(p, m)| m.map(|m| (p, m))).collect::<Vec<_>>()));
+
+			let files = files.into_iter().filter_map(|(p, m)| m.map(|m| (p, m))).collect::<Vec<_>>();
+			if !select {
+				emit!(Open(files, None));
+				return;
+			}
+
+			let openers = OPEN.common_openers(&files);
+			if openers.is_empty() {
+				return;
+			}
+
+			let result = emit!(Select(SelectOpt {
+				title:    "Open with:".to_string(),
+				items:    openers.iter().map(|o| o.cmd.clone()).collect(),
+				position: Position::Hovered,
+			}))
+			.await;
+			if let Ok(choice) = result {
+				emit!(Open(files, Some(openers[choice].clone())));
+			}
 		});
 		false
 	}
@@ -147,7 +166,7 @@ impl Manager {
 			let result = emit!(Input(InputOpt {
 				title:    "Create:".to_string(),
 				value:    "".to_string(),
-				position: InputPos::Top,
+				position: Position::Top,
 			}))
 			.await;
 
@@ -179,7 +198,7 @@ impl Manager {
 			let result = emit!(Input(InputOpt {
 				title:    "Rename:".to_string(),
 				value:    hovered.file_name().unwrap().to_string_lossy().to_string(),
-				position: InputPos::Hovered,
+				position: Position::Hovered,
 			}))
 			.await;
 
@@ -193,8 +212,8 @@ impl Manager {
 
 	fn bulk_rename(&self) -> bool { false }
 
-	pub fn selected(&self) -> Vec<PathBuf> {
-		self.current().selected().or_else(|| self.hovered().map(|h| vec![h.path()])).unwrap_or_default()
+	pub fn selected(&self) -> Vec<&File> {
+		self.current().selected().or_else(|| self.hovered().map(|h| vec![h])).unwrap_or_default()
 	}
 
 	pub fn update_read(&mut self, op: FilesOp) -> bool {

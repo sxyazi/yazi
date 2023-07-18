@@ -67,6 +67,7 @@ keymap = [
 [tasks]
 
 keymap = [
+	{ on = [ "<C-q>" ], exec = "close" },
 	{ on = [ "<Esc>" ], exec = "close" },
 	{ on = [ "w" ], exec = "close" },
 
@@ -74,6 +75,20 @@ keymap = [
 	{ on = [ "k" ], exec = "arrow -1" },
 
 	{ on = [ "x" ], exec = "cancel" },
+]
+
+[select]
+
+keymap = [
+	{ on = [ "<C-q>" ], exec = "close" },
+	{ on = [ "<Esc>" ], exec = "close" },
+	{ on = [ "<Enter>" ], exec = "close --submit" },
+
+	{ on = [ "j" ], exec = "arrow 1" },
+	{ on = [ "k" ], exec = "arrow -1" },
+
+	{ on = [ "J" ], exec = "arrow 5" },
+	{ on = [ "K" ], exec = "arrow -5" },
 ]
 
 [input]
@@ -87,7 +102,7 @@ keymap = [
 	# Mode
 	{ on = [ "i" ], exec = "insert" },
 	{ on = [ "a" ], exec = "insert --append" },
-	{ on = [ "v" ],exec = "visual" },
+	{ on = [ "v" ], exec = "visual" },
 
 	{ on = [ "h" ], exec = "move -1" },
 	{ on = [ "l" ], exec = "move 1" },

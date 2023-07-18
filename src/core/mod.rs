@@ -5,7 +5,10 @@ pub mod external;
 pub mod files;
 pub mod input;
 pub mod manager;
+pub mod position;
+pub mod select;
 pub mod tasks;
 
 pub use blocker::*;
 pub use event::*;
+pub use position::*;

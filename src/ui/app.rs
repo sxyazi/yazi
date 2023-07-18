@@ -3,7 +3,7 @@ use crossterm::event::KeyEvent;
 use tokio::sync::oneshot::{self};
 
 use super::{root::Root, Ctx, Executor, Logs, Signals, Term};
-use crate::{config::keymap::Key, core::{files::FilesOp, input::{Input, InputPos}, Event}, emit};
+use crate::{config::keymap::Key, core::{files::FilesOp, Event}, emit};
 
 pub struct App {
 	cx:      Ctx,
@@ -73,6 +73,7 @@ impl App {
 
 	async fn dispatch_module(&mut self, event: Event) {
 		let manager = &mut self.cx.manager;
+		let tasks = &mut self.cx.tasks;
 		match event {
 			Event::Cd(path) => {
 				manager.active_mut().cd(path).await;
@@ -93,11 +94,11 @@ impl App {
 			Event::Pages(page) => {
 				if manager.current().page == page {
 					let targets = self.cx.manager.current().paginate().into_iter().map(|(_, f)| f).collect();
-					self.cx.tasks.precache_mime(targets, &self.cx.manager.mimetype);
+					tasks.precache_mime(targets, &self.cx.manager.mimetype);
 				}
 			}
 			Event::Mimetype(mimes) => {
-				if manager.update_mimetype(mimes, &self.cx.tasks) {
+				if manager.update_mimetype(mimes, tasks) {
 					emit!(Render);
 				}
 			}
@@ -111,26 +112,26 @@ impl App {
 				emit!(Render);
 			}
 
+			Event::Select(mut opt, tx) => {
+				opt.position = self.cx.position(opt.position);
+				self.cx.select.show(opt, tx);
+				emit!(Render);
+			}
 			Event::Input(mut opt, tx) => {
-				opt.position = match opt.position {
-					InputPos::Top => Input::top_position(),
-					InputPos::Hovered => manager
-						.hovered()
-						.and_then(|h| manager.current().rect_current(&h.path))
-						.map(|r| InputPos::Coords(r.x, r.y))
-						.unwrap_or_else(|| Input::top_position()),
-					p @ InputPos::Coords(..) => p,
-				};
-
+				opt.position = self.cx.position(opt.position);
 				self.cx.input.show(opt, tx);
 				emit!(Render);
 			}
 
-			Event::Open(files) => {
-				self.cx.tasks.file_open(files);
+			Event::Open(targets, opener) => {
+				if let Some(opener) = opener {
+					tasks.file_open_with(&opener, &targets.iter().map(|(f, _)| f).collect::<Vec<_>>());
+				} else {
+					tasks.file_open(&targets);
+				}
 			}
 			Event::Progress(percent, left) => {
-				self.cx.tasks.progress = (percent, left);
+				tasks.progress = (percent, left);
 				emit!(Render);
 			}
 

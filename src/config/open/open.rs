@@ -22,10 +22,10 @@ struct OpenRule {
 impl Open {
 	pub fn new() -> Self { toml::from_str(&MERGED_YAZI).unwrap() }
 
-	pub fn openers(&self, path: &Path, mime: &str) -> Option<Vec<&Opener>> {
+	pub fn openers(&self, path: impl AsRef<Path>, mime: impl AsRef<str>) -> Option<Vec<&Opener>> {
 		self.rules.iter().find_map(|rule| {
-			if rule.name.as_ref().map_or(false, |e| e.match_path(path, Some(false)))
-				|| rule.mime.as_ref().map_or(false, |m| m.matches(mime))
+			if rule.name.as_ref().map_or(false, |e| e.match_path(&path, Some(false)))
+				|| rule.mime.as_ref().map_or(false, |m| m.matches(&mime))
 			{
 				self.openers.get(&rule.use_).map(|v| v.iter().collect())
 			} else {
@@ -34,7 +34,10 @@ impl Open {
 		})
 	}
 
-	pub fn common_openers(&self, targets: Vec<(&Path, &str)>) -> Vec<&Opener> {
+	pub fn common_openers<'a>(
+		&self,
+		targets: &[(impl AsRef<Path>, impl AsRef<str>)],
+	) -> Vec<&Opener> {
 		let grouped = targets.into_iter().filter_map(|(p, m)| self.openers(p, m)).collect::<Vec<_>>();
 		let flat = grouped.iter().flatten().cloned().collect::<BTreeSet<_>>();
 		flat.into_iter().filter(|o| grouped.iter().all(|g| g.contains(o))).collect()

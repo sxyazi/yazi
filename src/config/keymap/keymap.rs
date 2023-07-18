@@ -14,6 +14,7 @@ pub struct Single {
 pub struct Keymap {
 	pub manager: Vec<Single>,
 	pub tasks:   Vec<Single>,
+	pub select:  Vec<Single>,
 	pub input:   Vec<Single>,
 }
 
@@ -26,6 +27,7 @@ impl<'de> Deserialize<'de> for Keymap {
 		struct Shadow {
 			manager: Inner,
 			tasks:   Inner,
+			select:  Inner,
 			input:   Inner,
 		}
 		#[derive(Deserialize)]
@@ -37,6 +39,7 @@ impl<'de> Deserialize<'de> for Keymap {
 		Ok(Self {
 			manager: shadow.manager.keymap,
 			tasks:   shadow.tasks.keymap,
+			select:  shadow.select.keymap,
 			input:   shadow.input.keymap,
 		})
 	}

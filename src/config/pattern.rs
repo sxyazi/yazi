@@ -10,10 +10,10 @@ pub struct Pattern {
 }
 
 impl Pattern {
-	pub fn matches(&self, str: &str) -> bool { self.inner.matches(str) }
+	pub fn matches(&self, str: impl AsRef<str>) -> bool { self.inner.matches(str.as_ref()) }
 
-	pub fn match_path(&self, path: &Path, is_folder: Option<bool>) -> bool {
-		is_folder.map_or(true, |f| f == self.is_folder) && self.inner.matches_path(path)
+	pub fn match_path(&self, path: impl AsRef<Path>, is_folder: Option<bool>) -> bool {
+		is_folder.map_or(true, |f| f == self.is_folder) && self.inner.matches_path(path.as_ref())
 	}
 }
 

@@ -21,8 +21,8 @@ impl<'a> Widget for Input<'a> {
 			.block(
 				Block::default()
 					.borders(Borders::ALL)
-					.border_style(Style::default().fg(Color::Blue))
 					.border_type(BorderType::Rounded)
+					.border_style(Style::default().fg(Color::Blue))
 					.title({
 						let mut line = Line::from(input.title());
 						line.patch_style(Style::default().fg(Color::White));

@@ -40,9 +40,9 @@ impl<'a> Folder<'a> {
 
 impl<'a> Widget for Folder<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let page = self.folder.window();
+		let window = self.folder.window();
 
-		let items = page
+		let items = window
 			.iter()
 			.enumerate()
 			.map(|(i, (k, v))| {

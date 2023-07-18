@@ -1,9 +1,9 @@
-use std::{collections::{BTreeMap, HashMap, HashSet}, path::PathBuf, sync::Arc};
+use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, path::{Path, PathBuf}, sync::Arc};
 
 use tracing::trace;
 
 use super::{Scheduler, TASKS_PADDING, TASKS_PERCENT};
-use crate::{config::OPEN, core::{files::File, input::{InputOpt, InputPos}}, emit, misc::{tty_size, MimeKind}};
+use crate::{config::{open::Opener, OPEN}, core::{files::File, input::InputOpt, Position}, emit, misc::{tty_size, MimeKind}};
 
 #[derive(Clone, Debug)]
 pub struct Task {
@@ -95,26 +95,28 @@ impl Tasks {
 		id.map(|id| self.scheduler.cancel(id)).unwrap_or(false)
 	}
 
-	pub fn file_open(&self, targets: Vec<(PathBuf, String)>) -> bool {
+	pub fn file_open(&self, targets: &[(impl AsRef<Path>, impl AsRef<str>)]) -> bool {
 		let mut openers = BTreeMap::new();
-		for target in targets {
-			if let Some(opener) = OPEN.openers(&target.0, &target.1).and_then(|o| o.first().cloned()) {
-				openers
-					.entry(opener)
-					.or_insert_with(|| vec![])
-					.push(target.0.to_string_lossy().into_owned());
+		for (path, mime) in targets {
+			if let Some(opener) = OPEN.openers(path, mime).and_then(|o| o.first().cloned()) {
+				openers.entry(opener).or_insert_with(|| vec![]).push(path.as_ref());
 			}
 		}
 		for (opener, args) in openers {
-			if opener.spread {
-				self.scheduler.process_open(&opener, &args);
-				continue;
-			}
-			for target in args {
-				self.scheduler.process_open(&opener, &[target]);
-			}
+			self.file_open_with(opener, &args);
 		}
 		false
+	}
+
+	pub fn file_open_with(&self, opener: &Opener, args: &[impl AsRef<OsStr>]) -> bool {
+		if opener.spread {
+			self.scheduler.process_open(&opener, args);
+			return false;
+		}
+		for target in args {
+			self.scheduler.process_open(&opener, &[target]);
+		}
+		return false;
 	}
 
 	pub fn file_cut(&self, src: &HashSet<PathBuf>, dest: PathBuf, force: bool) -> bool {
@@ -153,7 +155,7 @@ impl Tasks {
 			let result = emit!(Input(InputOpt {
 				title:    "Are you sure delete these files? (y/N)".to_string(),
 				value:    "".to_string(),
-				position: InputPos::Hovered,
+				position: Position::Hovered,
 			}))
 			.await;
 

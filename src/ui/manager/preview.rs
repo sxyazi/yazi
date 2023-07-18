@@ -16,7 +16,7 @@ impl<'a> Preview<'a> {
 
 impl<'a> Widget for Preview<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		if self.cx.input.visible || self.cx.tasks.visible {
+		if self.cx.input.visible || self.cx.select.visible || self.cx.tasks.visible {
 			stdout().write(Kitty::image_hide()).ok();
 			return;
 		}

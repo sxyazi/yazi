@@ -4,7 +4,7 @@ use anyhow::{Error, Result};
 use tokio::task::JoinHandle;
 
 use super::{Folder, Mode, Preview};
-use crate::{core::{external::{self, FzfOpt, ZoxideOpt}, files::{File, Files, FilesOp}, input::{InputOpt, InputPos}, Event, BLOCKER}, emit, misc::Defer};
+use crate::{core::{external::{self, FzfOpt, ZoxideOpt}, files::{File, Files, FilesOp}, input::InputOpt, Event, Position, BLOCKER}, emit, misc::Defer};
 
 pub struct Tab {
 	pub(super) current: Folder,
@@ -186,7 +186,7 @@ impl Tab {
 			let subject = emit!(Input(InputOpt {
 				title:    "Search:".to_string(),
 				value:    "".to_string(),
-				position: InputPos::Top,
+				position: Position::Top,
 			}))
 			.await?;
 

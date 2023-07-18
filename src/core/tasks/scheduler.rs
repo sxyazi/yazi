@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, path::PathBuf, sync::Arc, time::Duration};
+use std::{collections::BTreeMap, ffi::{OsStr, OsString}, path::PathBuf, sync::Arc, time::Duration};
 
 use async_channel::{Receiver, Sender};
 use futures::{future::BoxFuture, FutureExt};
@@ -334,24 +334,25 @@ impl Scheduler {
 		});
 	}
 
-	pub(super) fn process_open(&self, opener: &Opener, args: &[String]) {
-		let args = opener
+	pub(super) fn process_open(&self, opener: &Opener, args: &[impl AsRef<OsStr>]) {
+		let args: Vec<OsString> = opener
 			.args
 			.iter()
 			.map_while(|a| {
 				if !a.starts_with('$') {
-					return Some(vec![a.clone()]);
+					return Some(vec![a.into()]);
 				}
 				if a == "$*" {
-					return Some(args.to_vec());
+					return Some(args.iter().map(Into::into).collect());
 				}
-				a[1..].parse().ok().and_then(|n: usize| args.get(n)).map(|a| vec![a.clone()])
+				a[1..].parse().ok().and_then(|n: usize| args.get(n)).map(|a| vec![a.into()])
 			})
 			.flatten()
-			.collect::<Vec<_>>();
+			.collect();
 
 		let mut running = self.running.write();
-		let id = running.add(format!("Exec `{} {}`", opener.cmd, args.join(" ")));
+		let name = format!("Exec `{} {}`", opener.cmd, args.join(" ".as_ref()).to_string_lossy());
+		let id = running.add(name);
 
 		let (cancel_tx, mut cancel_rx) = oneshot::channel();
 		running.hooks.insert(id, {

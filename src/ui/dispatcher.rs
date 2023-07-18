@@ -8,6 +8,8 @@ pub struct Executor;
 impl Executor {
 	pub fn handle(cx: &mut Ctx, key: Key) -> bool {
 		let layer = if cx.input.visible {
+			3
+		} else if cx.select.visible {
 			2
 		} else if cx.tasks.visible {
 			1
@@ -17,7 +19,7 @@ impl Executor {
 
 		let mut render = false;
 		let mut matched = false;
-		let keymap = [&KEYMAP.manager, &KEYMAP.tasks, &KEYMAP.input][layer];
+		let keymap = [&KEYMAP.manager, &KEYMAP.tasks, &KEYMAP.select, &KEYMAP.input][layer];
 
 		for Single { on, exec } in keymap {
 			if on.len() < 1 || on[0] != key {
@@ -31,12 +33,14 @@ impl Executor {
 				} else if layer == 1 {
 					render = Self::tasks(cx, e) || render;
 				} else if layer == 2 {
+					render = Self::select(cx, e) || render;
+				} else if layer == 3 {
 					render = Self::input(cx, Some(e), key.code) || render;
 				}
 			}
 		}
 
-		if layer == 2 && !matched {
+		if layer == 3 && !matched {
 			render = Self::input(cx, None, key.code);
 		}
 		render
@@ -84,7 +88,8 @@ impl Executor {
 				}
 			}
 			"remove" => {
-				cx.tasks.file_remove(cx.manager.selected(), exec.named.contains_key("permanently"))
+				let targets = cx.manager.selected().into_iter().map(|p| p.path()).collect();
+				cx.tasks.file_remove(targets, exec.named.contains_key("permanently"))
 			}
 			"create" => cx.manager.create(),
 			"rename" => cx.manager.rename(),
@@ -144,6 +149,19 @@ impl Executor {
 			}
 
 			"cancel" => cx.tasks.cancel(),
+			_ => false,
+		}
+	}
+
+	fn select(cx: &mut Ctx, exec: &Exec) -> bool {
+		match exec.cmd.as_str() {
+			"close" => cx.select.close(exec.named.contains_key("submit")),
+
+			"arrow" => {
+				let step: isize = exec.args.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
+				if step > 0 { cx.select.next(step as usize) } else { cx.select.prev(step.abs() as usize) }
+			}
+
 			_ => false,
 		}
 	}

@@ -4,7 +4,8 @@ use anyhow::Result;
 use crossterm::event::KeyEvent;
 use tokio::sync::{mpsc::Sender, oneshot};
 
-use super::{files::FilesOp, input::InputOpt, manager::PreviewData};
+use super::{files::FilesOp, input::InputOpt, manager::PreviewData, select::SelectOpt};
+use crate::config::open::Opener;
 
 static mut TX: Option<Sender<Event>> = None;
 
@@ -25,10 +26,11 @@ pub enum Event {
 	Preview(PathBuf, PreviewData),
 
 	// Input
+	Select(SelectOpt, oneshot::Sender<Result<usize>>),
 	Input(InputOpt, oneshot::Sender<Result<String>>),
 
 	// Tasks
-	Open(Vec<(PathBuf, String)>),
+	Open(Vec<(PathBuf, String)>, Option<Opener>),
 	Progress(u8, u32),
 }
 
@@ -87,13 +89,17 @@ macro_rules! emit {
 		$crate::core::Event::Preview($path, $data).emit();
 	};
 
+	(Select($opt:expr)) => {{
+		let (tx, rx) = tokio::sync::oneshot::channel();
+		$crate::core::Event::Select($opt, tx).wait(rx)
+	}};
 	(Input($opt:expr)) => {{
 		let (tx, rx) = tokio::sync::oneshot::channel();
 		$crate::core::Event::Input($opt, tx).wait(rx)
 	}};
 
-	(Open($files:expr)) => {
-		$crate::core::Event::Open($files).emit();
+	(Open($targets:expr, $opener:expr)) => {
+		$crate::core::Event::Open($targets, $opener).emit();
 	};
 	(Progress($percent:expr, $tasks:expr)) => {
 		$crate::core::Event::Progress($percent, $tasks).emit();

@@ -1,4 +1,4 @@
-use std::process::Stdio;
+use std::{ffi::OsString, process::Stdio};
 
 use anyhow::Result;
 use tokio::{process::Command, select, sync::{mpsc, oneshot}};
@@ -23,7 +23,7 @@ pub(super) enum ProcessOp {
 pub(super) struct ProcessOpOpen {
 	pub id:     usize,
 	pub cmd:    String,
-	pub args:   Vec<String>,
+	pub args:   Vec<OsString>,
 	pub block:  bool,
 	pub cancel: oneshot::Sender<()>,
 }

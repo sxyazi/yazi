@@ -1,6 +1,6 @@
 use ratatui::{buffer::Buffer, layout::{Constraint, Direction, Layout, Rect}, widgets::Widget};
 
-use super::{header, manager, status, tasks, Ctx, Input};
+use super::{header, manager, status, tasks, Ctx, Input, Select};
 
 pub struct Root<'a> {
 	cx: &'a mut Ctx,
@@ -23,6 +23,10 @@ impl<'a> Widget for Root<'a> {
 
 		if self.cx.tasks.visible {
 			tasks::Layout::new(self.cx).render(area, buf);
+		}
+
+		if self.cx.select.visible {
+			Select::new(self.cx).render(area, buf);
 		}
 
 		if self.cx.input.visible {
