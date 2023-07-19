@@ -178,18 +178,21 @@ impl Executor {
 			return false;
 		};
 
+		match exec.cmd.as_str() {
+			"close" => return cx.input.close(exec.named.contains_key("submit")),
+			"escape" => return cx.input.escape(),
+
+			"move" => {
+				let step = exec.args.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
+				return cx.input.move_(step);
+			}
+			_ => {}
+		}
+
 		match cx.input.mode() {
 			InputMode::Normal => match exec.cmd.as_str() {
-				"close" => cx.input.close(exec.named.contains_key("submit")),
-				"escape" => cx.input.escape(),
-
 				"insert" => cx.input.insert(exec.named.contains_key("append")),
 				"visual" => cx.input.visual(),
-
-				"move" => {
-					let step = exec.args.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
-					cx.input.move_(step)
-				}
 
 				"backward" => cx.input.backward(),
 				"forward" => cx.input.forward(exec.named.contains_key("end-of-word")),
@@ -197,8 +200,6 @@ impl Executor {
 				_ => false,
 			},
 			InputMode::Insert => match exec.cmd.as_str() {
-				"close" => cx.input.close(exec.named.contains_key("submit")),
-				"escape" => cx.input.escape(),
 				"backspace" => cx.input.backspace(),
 				_ => {
 					if let KeyCode::Char(c) = code {

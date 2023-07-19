@@ -6,17 +6,22 @@ keymap = [
 	{ on = [ "<C-q>" ], exec = "close" },
 
 	# Navigation
-	{ on = [ "j" ], exec = "arrow 1" },
 	{ on = [ "k" ], exec = "arrow -1" },
+	{ on = [ "j" ], exec = "arrow 1" },
 
-	{ on = [ "J" ], exec = "arrow 5" },
 	{ on = [ "K" ], exec = "arrow -5" },
+	{ on = [ "J" ], exec = "arrow 5" },
 
 	{ on = [ "h" ], exec = "leave" },
 	{ on = [ "l" ], exec = "enter" },
 
 	{ on = [ "H" ], exec = "back" },
 	{ on = [ "L" ], exec = "forward" },
+
+	{ on = [ "<Up>" ], exec = "arrow -1" },
+	{ on = [ "<Down>" ], exec = "arrow 1" },
+	{ on = [ "<Left>" ], exec = "leave" },
+	{ on = [ "<Right>" ], exec = "enter" },
 
 	# Selection
 	{ on = [ "<Space>" ], exec = "select --state=none" },
@@ -71,8 +76,11 @@ keymap = [
 	{ on = [ "<Esc>" ], exec = "close" },
 	{ on = [ "w" ], exec = "close" },
 
-	{ on = [ "j" ], exec = "arrow 1" },
 	{ on = [ "k" ], exec = "arrow -1" },
+	{ on = [ "j" ], exec = "arrow 1" },
+
+	{ on = [ "<Up>" ], exec = "arrow -1" },
+	{ on = [ "<Down>" ], exec = "arrow 1" },
 
 	{ on = [ "x" ], exec = "cancel" },
 ]
@@ -84,11 +92,14 @@ keymap = [
 	{ on = [ "<Esc>" ], exec = "close" },
 	{ on = [ "<Enter>" ], exec = "close --submit" },
 
-	{ on = [ "j" ], exec = "arrow 1" },
 	{ on = [ "k" ], exec = "arrow -1" },
+	{ on = [ "j" ], exec = "arrow 1" },
 
-	{ on = [ "J" ], exec = "arrow 5" },
 	{ on = [ "K" ], exec = "arrow -5" },
+	{ on = [ "J" ], exec = "arrow 5" },
+
+	{ on = [ "<Up>" ], exec = "arrow -1" },
+	{ on = [ "<Down>" ], exec = "arrow 1" },
 ]
 
 [input]
@@ -109,6 +120,9 @@ keymap = [
 
 	{ on = [ "H" ], exec = "move -999" },
 	{ on = [ "L" ], exec = "move 999" },
+
+	{ on = [ "<Left>" ], exec = "move -1" },
+	{ on = [ "<Right>" ], exec = "move 1" },
 
 	{ on = [ "b" ], exec = "backward" },
 	{ on = [ "w" ], exec = "forward" },
