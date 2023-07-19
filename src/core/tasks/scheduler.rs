@@ -382,7 +382,7 @@ impl Scheduler {
 	}
 
 	pub(super) fn precache_mime(&self, targets: Vec<PathBuf>) {
-		let name = format!("Mimetype");
+		let name = format!("Preload mimetype for {} files", targets.len());
 		let id = self.running.write().add(name);
 
 		let _ = self.todo.send_blocking({
@@ -395,14 +395,14 @@ impl Scheduler {
 	}
 
 	pub(super) fn precache_image(&self, targets: Vec<PathBuf>) {
-		let name = format!("Image");
+		let name = format!("Precache of {} image files", targets.len());
 		let id = self.running.write().add(name);
 
 		self.precache.image(id, targets).ok();
 	}
 
 	pub(super) fn precache_video(&self, targets: Vec<PathBuf>) {
-		let name = format!("Video");
+		let name = format!("Precache of {} video files", targets.len());
 		let id = self.running.write().add(name);
 
 		self.precache.video(id, targets).ok();

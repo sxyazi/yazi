@@ -2,13 +2,13 @@ use anyhow::Result;
 use crossterm::event::{Event as CrosstermEvent, EventStream};
 use futures::StreamExt;
 use libc::{SIGHUP, SIGINT, SIGQUIT, SIGTERM};
-use tokio::{select, sync::{mpsc::{self, Receiver, Sender}, oneshot}, task::JoinHandle};
+use tokio::{select, sync::{mpsc::{self, UnboundedReceiver, UnboundedSender}, oneshot}, task::JoinHandle};
 
 use crate::core::Event;
 
 pub struct Signals {
-	pub tx: Sender<Event>,
-	pub rx: Receiver<Event>,
+	pub tx: UnboundedSender<Event>,
+	pub rx: UnboundedReceiver<Event>,
 
 	term_stop_tx: Option<oneshot::Sender<()>>,
 	term_stop_rx: Option<oneshot::Receiver<()>>,
@@ -16,7 +16,7 @@ pub struct Signals {
 
 impl Signals {
 	pub fn start() -> Result<Self> {
-		let (tx, rx) = mpsc::channel(500);
+		let (tx, rx) = mpsc::unbounded_channel();
 		let (term_tx, term_rx) = oneshot::channel();
 
 		let mut signals =
@@ -37,7 +37,7 @@ impl Signals {
 			while let Some(signal) = signals.next().await {
 				match signal {
 					SIGHUP | SIGTERM | SIGINT | SIGQUIT => {
-						if tx.send(Event::Quit).await.is_err() {
+						if tx.send(Event::Quit).is_err() {
 							break;
 						}
 					}
@@ -63,7 +63,7 @@ impl Signals {
 							CrosstermEvent::Resize(cols, rows) => Event::Resize(cols, rows),
 							_ => continue,
 						};
-						if tx.send(event).await.is_err() {
+						if tx.send(event).is_err() {
 							break;
 						}
 					}

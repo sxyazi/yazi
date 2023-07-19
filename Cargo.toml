@@ -33,7 +33,7 @@ trash              = "^3"
 unicode-width      = "^0"
 xdg                = "^2"
 
-# [profile.release]
-# strip = true
-# lto   = true
-# panic = "abort"
+[profile.release]
+strip = true
+lto   = true
+panic = "abort"

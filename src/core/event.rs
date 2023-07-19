@@ -2,12 +2,12 @@ use std::{collections::BTreeMap, path::PathBuf};
 
 use anyhow::Result;
 use crossterm::event::KeyEvent;
-use tokio::sync::{mpsc::Sender, oneshot};
+use tokio::sync::{mpsc::UnboundedSender, oneshot};
 
 use super::{files::FilesOp, input::InputOpt, manager::PreviewData, select::SelectOpt};
 use crate::config::open::Opener;
 
-static mut TX: Option<Sender<Event>> = None;
+static mut TX: Option<UnboundedSender<Event>> = None;
 
 pub enum Event {
 	Quit,
@@ -36,7 +36,7 @@ pub enum Event {
 
 impl Event {
 	#[inline]
-	pub fn init(tx: Sender<Event>) {
+	pub fn init(tx: UnboundedSender<Event>) {
 		unsafe {
 			TX.replace(tx);
 		}
@@ -45,14 +45,12 @@ impl Event {
 	#[inline]
 	pub fn emit(self) {
 		let tx = unsafe { TX.as_ref().unwrap() };
-		tokio::spawn(async {
-			tx.send(self).await.ok();
-		});
+		tx.send(self).ok();
 	}
 
 	pub async fn wait<T>(self, rx: oneshot::Receiver<T>) -> T {
 		let tx = unsafe { TX.as_ref().unwrap() };
-		tx.send(self).await.ok();
+		tx.send(self).ok();
 		rx.await.unwrap()
 	}
 }
