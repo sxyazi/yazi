@@ -6,7 +6,7 @@
 - quit: Exit the process.
 - close: Close the current tab; if it is the last tab, then exit the process.
 
-Navigation
+### Navigation
 
 - arrow
 
@@ -17,7 +17,7 @@ Navigation
 - back: Go back to the previous directory.
 - forward: Go forward to the next directory.
 
-Selection
+### Selection
 
 - select
 
@@ -35,7 +35,7 @@ Selection
   - `--state=false`: Deselect all files.
   - `--state=none`: Default, toggle the selection state of all files.
 
-Operation
+### Operation
 
 - open: Open the selected files.
 
@@ -54,8 +54,7 @@ Operation
 
   - `--permanently`: Permanently delete the file.
 
-- create: Create a file or directory (append `/` at the end of the filename for directory).
-
+- create: Create a file or directory (ends with `/` for directory).
 - rename: Rename a file or directory.
 - hidden: Set the visibility of hidden files.
 
@@ -74,7 +73,7 @@ Operation
   - `fzf`: Jump to a directory, or reveal a file using fzf.
   - `zoxide`: Jump to a directory using zoxide.
 
-Tabs
+### Tabs
 
 - tab_create
 
@@ -88,24 +87,62 @@ Tabs
 - tab_switch
 
   - `n`: Switch to the tab at position n, starting from 0.
-  - `relative`: Switch to the tab at a position relative to the current tab. The value of n can be negative when using this parameter.
+  - `--relative`: Switch to the tab at a position relative to the current tab. The value of n can be negative when using this parameter.
 
 - tab_swap
 
   - `n`: Swap the current tab with the tab at position n, where negative values move the tab forward, and positive values move it backward.
 
-Tasks
+### Tasks
 
 - tasks_show: Display the task manager.
 
 ## tasks
 
-TODO
+- close: Hide the task manager.
+- arrow:
+  - `-1`: Move the cursor up 1 line.
+  - `1`: Move the cursor down 1 line.
+- cancel: Cancel the task.
 
 ## select
 
-TODO
+- close: Cancel selection.
+  - `--submit`: Submit the selection.
+- arrow
+  - `n`: Move the cursor up or down n lines. Negative value for up, positive value for down.
 
 ## input
 
-TODO
+### Normal mode
+
+- close: Cancel input.
+
+  - `--submit`: Submit the input.
+
+- escape: Cancel visual mode and enter normal mode.
+- insert: Enter insert mode.
+
+  - `--append`: Insert after the cursor.
+
+- visual: Enter visual mode.
+- move: Move the cursor left or right.
+
+  - `n`: Move the cursor n characters left or right. Negative value for left, positive value for right.
+
+- backward: Move to the beginning of the previous word.
+- forward: Move to the beginning of the next word.
+
+  - `--end-of-word`: Move to the end of the next word.
+
+- delete: Delete the selected characters.
+  - `--insert`: Delete and enter insert mode.
+
+### Insert mode
+
+- close: Cancel input.
+
+  - `--submit`: Submit the input.
+
+- escape: Cancel insert mode and enter normal mode.
+- backspace: Delete the character before the cursor.
