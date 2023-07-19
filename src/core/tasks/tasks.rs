@@ -90,9 +90,14 @@ impl Tasks {
 		running.values().take(Self::limit()).cloned().collect::<Vec<_>>()
 	}
 
-	pub fn cancel(&self) -> bool {
+	pub fn cancel(&mut self) -> bool {
 		let id = self.scheduler.running.read().values().skip(self.cursor).next().map(|t| t.id);
-		id.map(|id| self.scheduler.cancel(id)).unwrap_or(false)
+		if !id.map(|id| self.scheduler.cancel(id)).unwrap_or(false) {
+			return false;
+		}
+
+		self.next();
+		true
 	}
 
 	pub fn file_open(&self, targets: &[(impl AsRef<Path>, impl AsRef<str>)]) -> bool {

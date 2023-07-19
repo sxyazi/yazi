@@ -24,7 +24,6 @@ impl<'a> Widget for Progress<'a> {
 				format!("{:>3}%, {} left", progress.0, progress.1),
 				THEME.progress.label.get(),
 			))
-			.use_unicode(true)
 			.render(area, buf);
 	}
 }

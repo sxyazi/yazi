@@ -4,7 +4,6 @@ use anyhow::Result;
 use futures::{future::BoxFuture, FutureExt};
 use tokio::{fs, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::{info, trace};
-use trash::{macos::{DeleteMethod, TrashContextExtMacos}, TrashContext};
 
 use super::TaskOp;
 use crate::misc::{calculate_size, copy_with_progress};
@@ -142,6 +141,7 @@ impl File {
 			FileOp::Trash(task) => {
 				#[cfg(target_os = "macos")]
 				{
+					use trash::{macos::{DeleteMethod, TrashContextExtMacos}, TrashContext};
 					let mut ctx = TrashContext::default();
 					ctx.set_delete_method(DeleteMethod::NsFileManager);
 					ctx.delete(&task.target)?;

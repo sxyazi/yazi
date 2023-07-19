@@ -172,11 +172,11 @@ impl Folder {
 	}
 
 	pub fn paginate(&self) -> &Slice<PathBuf, File> {
-		let max = self.files.len().saturating_sub(1);
+		let len = self.files.len();
 		let limit = Self::limit();
 
-		let start = (self.page * limit).min(max);
-		let end = (start + limit).min(max);
+		let start = (self.page * limit).min(len.saturating_sub(1));
+		let end = (start + limit).min(len);
 		self.files.get_range(start..end).unwrap()
 	}
 

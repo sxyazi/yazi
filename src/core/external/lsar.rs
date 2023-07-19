@@ -4,7 +4,6 @@ use anyhow::{bail, Result};
 use serde::Deserialize;
 use serde_json::Value;
 use tokio::process::Command;
-use tracing::info;
 
 #[derive(Debug)]
 pub enum LsarAttr {
@@ -45,7 +44,6 @@ pub async fn lsar(path: &Path) -> Result<Vec<LsarFile>> {
 	}
 
 	let output = String::from_utf8_lossy(&output.stdout);
-	info!("lsar output: {}", output);
 	let contents = serde_json::from_str::<Outer>(output.trim())?.contents;
 
 	let mut files = Vec::with_capacity(contents.len());

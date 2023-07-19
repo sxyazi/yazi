@@ -170,9 +170,11 @@ impl Tab {
 		true
 	}
 
-	pub fn back(&mut self) -> bool { todo!() }
+	// TODO
+	pub fn back(&mut self) -> bool { false }
 
-	pub fn forward(&mut self) -> bool { todo!() }
+	// TODO
+	pub fn forward(&mut self) -> bool { false }
 
 	pub fn search(&mut self, grep: bool) -> bool {
 		if let Some(handle) = self.search.take() {
