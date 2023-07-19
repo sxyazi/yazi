@@ -42,11 +42,14 @@ cargo build --release
 ./target/release/yazi
 ```
 
+If you want to use your own config, copy the [config folder](https://github.com/sxyazi/yazi/tree/main/config) to `~/.config/yazi`, and modify it as you like.
+
 ## TODO
 
 - [x] Add example config for general usage, currently please see my [another repo](https://github.com/sxyazi/dotfiles/tree/main/yazi) instead
 - [x] Integration with fzf, zoxide for fast directory navigation
 - [x] Integration with fd, rg for fuzzy file searching
+- [ ] Documentation of commands and options
 - [ ] Support for Überzug++ for image previews with X11/wayland environment
 - [ ] Batch renaming support
 

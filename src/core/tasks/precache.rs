@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use anyhow::Result;
+use anyhow::{Error, Result};
 use image::{imageops::FilterType, ImageFormat};
 use tokio::{fs, sync::mpsc};
 
@@ -60,17 +60,19 @@ impl Precache {
 					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
 				}
 
-				let img = fs::read(&task.target).await.map(|b| image::load_from_memory(&b));
-				let img = if let Ok(Ok(img)) = img {
-					img
-				} else {
-					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
-				};
+				let img = fs::read(&task.target).await;
+				tokio::task::spawn_blocking(move || {
+					let img = image::load_from_memory(&img?)?;
+					let (w, h) = (PREVIEW.max_width, PREVIEW.max_height);
 
-				let (w, h) = (PREVIEW.max_width, PREVIEW.max_height);
-				if img.width() > w || img.height() > h {
-					img.resize(w, h, FilterType::Triangle).save_with_format(&cache, ImageFormat::Jpeg).ok();
-				}
+					if img.width() > w || img.height() > h {
+						img.resize(w, h, FilterType::Triangle).save_with_format(&cache, ImageFormat::Jpeg).ok();
+					}
+					Ok::<(), Error>(())
+				})
+				.await
+				.ok();
+
 				self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
 			}
 			PrecacheOp::Video(task) => {

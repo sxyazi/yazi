@@ -91,9 +91,9 @@ impl Preview {
 			(w.min(PREVIEW.max_width), h.min(PREVIEW.max_height))
 		};
 
-		let file = fs::read(path).await?;
+		let img = fs::read(path).await?;
 		tokio::task::spawn_blocking(move || -> Result<Vec<u8>> {
-			let img = image::load_from_memory(&file)?;
+			let img = image::load_from_memory(&img)?;
 			Kitty::image_show(if img.width() > w || img.height() > h {
 				img.resize(w, h, FilterType::Triangle)
 			} else {
