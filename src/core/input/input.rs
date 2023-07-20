@@ -39,8 +39,19 @@ pub enum InputMode {
 pub enum InputOp {
 	#[default]
 	None,
-	Delete(bool),
-	Yank,
+	Delete(bool, bool),
+	Yank(bool),
+}
+
+impl InputOp {
+	#[inline]
+	fn set_include(&mut self) {
+		match self {
+			Self::Delete(_, ref mut b) => *b = true,
+			Self::Yank(ref mut b) => *b = true,
+			_ => (),
+		}
+	}
 }
 
 impl Input {
@@ -109,7 +120,6 @@ impl Input {
 
 	pub fn move_(&mut self, step: isize) -> bool {
 		let old = self.cursor;
-		let mut include = false;
 
 		if step <= 0 {
 			self.cursor = self.cursor.saturating_sub(step.abs() as usize);
@@ -118,7 +128,7 @@ impl Input {
 			self.cursor += step as usize;
 
 			if self.cursor >= count {
-				include = true;
+				self.op.set_include();
 				self.cursor = if self.mode == InputMode::Insert { count } else { count.saturating_sub(1) };
 			}
 		}
@@ -131,7 +141,7 @@ impl Input {
 			}
 		}
 
-		self.handle_op(include) || self.cursor != old
+		self.handle_op() || self.cursor != old
 	}
 
 	#[inline]
@@ -141,7 +151,7 @@ impl Input {
 
 	pub fn backward(&mut self) -> bool {
 		if self.cursor == 0 {
-			return self.handle_op(false);
+			return self.handle_op();
 		}
 
 		let idx = self.idx(self.cursor).unwrap_or(self.value.len());
@@ -163,7 +173,10 @@ impl Input {
 
 	pub fn forward(&mut self, end: bool) -> bool {
 		if self.value.is_empty() {
-			return self.handle_op(false);
+			return self.handle_op();
+		}
+		if end {
+			self.op.set_include();
 		}
 
 		let mut it = self.value.chars().skip(self.cursor).enumerate();
@@ -209,15 +222,15 @@ impl Input {
 	pub fn delete(&mut self, insert: bool) -> bool {
 		match self.op {
 			InputOp::None => {
-				self.op = InputOp::Delete(insert);
+				self.op = InputOp::Delete(insert, false);
 				if self.range.is_some() {
-					return self.handle_op(true);
+					return self.handle_op();
 				}
 
 				self.range = Some((self.cursor, self.cursor));
 				false
 			}
-			InputOp::Delete(_) => {
+			InputOp::Delete(..) => {
 				self.move_(-(self.value.len() as isize));
 				self.value.clear();
 
@@ -231,14 +244,14 @@ impl Input {
 		}
 	}
 
-	fn handle_op(&mut self, include: bool) -> bool {
+	fn handle_op(&mut self) -> bool {
 		if let Some(ref mut range) = self.range {
 			*range = (range.0.min(self.cursor), range.0.max(self.cursor));
 		}
 
 		match self.op {
 			InputOp::None => return false,
-			InputOp::Delete(insert) => {
+			InputOp::Delete(insert, include) => {
 				let range = self.range.take().unwrap();
 				if !self.value.is_empty() {
 					let (start, end) = (self.idx(range.0), self.idx(range.1 + include as usize));
@@ -252,7 +265,7 @@ impl Input {
 					InputMode::Normal
 				};
 			}
-			InputOp::Yank => {}
+			InputOp::Yank(include) => {}
 		}
 
 		self.op = InputOp::None;
