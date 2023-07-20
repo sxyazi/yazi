@@ -11,6 +11,16 @@ pub struct Key {
 	pub alt:   bool,
 }
 
+impl Key {
+	#[inline]
+	pub fn plain(&self) -> Option<char> {
+		match self.code {
+			KeyCode::Char(c) if !self.ctrl && !self.alt => Some(c),
+			_ => None,
+		}
+	}
+}
+
 impl Default for Key {
 	fn default() -> Self { Self { code: KeyCode::Null, shift: false, ctrl: false, alt: false } }
 }

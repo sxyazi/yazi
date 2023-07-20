@@ -1,3 +1,5 @@
+#![feature(if_let_guard)]
+
 use ui::App;
 
 mod config;

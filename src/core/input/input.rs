@@ -65,6 +65,9 @@ impl Input {
 			let _ = cb.send(if submit { Ok(self.value.clone()) } else { Err(anyhow!("canceled")) });
 		}
 
+		self.op = InputOp::None;
+		self.range = None;
+
 		self.mode = InputMode::Insert;
 		self.visible = false;
 		true
@@ -129,6 +132,11 @@ impl Input {
 		}
 
 		self.handle_op(include) || self.cursor != old
+	}
+
+	#[inline]
+	pub fn move_in_operating(&mut self, step: isize) -> bool {
+		if self.op == InputOp::None { false } else { self.move_(step) }
 	}
 
 	pub fn backward(&mut self) -> bool {
@@ -280,6 +288,37 @@ impl Input {
 
 		let area = self.area();
 		(area.x + width + 1, area.y + 1)
+	}
+
+	pub fn range(&self) -> Option<Rect> {
+		if let Some((start, end)) = self.range {
+			let end = self
+				.value
+				.chars()
+				.skip(start)
+				.enumerate()
+				.take_while(|(i, _)| *i < end)
+				.map(|(_, c)| c)
+				.collect::<String>()
+				.width() as u16;
+
+			let start = self
+				.value
+				.chars()
+				.enumerate()
+				.take_while(|(i, _)| *i < start)
+				.map(|(_, c)| c)
+				.collect::<String>()
+				.width() as u16;
+
+			return Some(Rect {
+				x:      self.position.0 + 1 + start,
+				y:      self.position.1 + 3,
+				width:  end,
+				height: 1,
+			});
+		}
+		None
 	}
 
 	#[inline]

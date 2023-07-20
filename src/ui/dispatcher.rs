@@ -35,13 +35,13 @@ impl Executor {
 				} else if layer == 2 {
 					render = Self::select(cx, e) || render;
 				} else if layer == 3 {
-					render = Self::input(cx, Some(e), key.code) || render;
+					render = Self::input(cx, Some(e), &key) || render;
 				}
 			}
 		}
 
 		if layer == 3 && !matched {
-			render = Self::input(cx, None, key.code);
+			render = Self::input(cx, None, &key);
 		}
 		render
 	}
@@ -166,27 +166,34 @@ impl Executor {
 		}
 	}
 
-	fn input(cx: &mut Ctx, exec: Option<&Exec>, code: KeyCode) -> bool {
+	fn input(cx: &mut Ctx, exec: Option<&Exec>, key: &Key) -> bool {
 		let exec = if let Some(e) = exec {
 			e
 		} else {
 			if cx.input.mode() == InputMode::Insert {
-				if let KeyCode::Char(c) = code {
+				if let KeyCode::Char(c) = key.code {
 					return cx.input.type_(c);
 				}
 			}
 			return false;
 		};
 
-		match exec.cmd.as_str() {
-			"close" => return cx.input.close(exec.named.contains_key("submit")),
-			"escape" => return cx.input.escape(),
+		if cx.input.mode() != InputMode::Insert || key.plain().is_none() {
+			match exec.cmd.as_str() {
+				"close" => return cx.input.close(exec.named.contains_key("submit")),
+				"escape" => return cx.input.escape(),
 
-			"move" => {
-				let step = exec.args.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
-				return cx.input.move_(step);
+				"move" => {
+					let step = exec.args.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
+					let in_operating = exec.named.contains_key("in-operating");
+					return if in_operating {
+						cx.input.move_in_operating(step)
+					} else {
+						cx.input.move_(step)
+					};
+				}
+				_ => {}
 			}
-			_ => {}
 		}
 
 		match cx.input.mode() {
@@ -200,13 +207,10 @@ impl Executor {
 				_ => false,
 			},
 			InputMode::Insert => match exec.cmd.as_str() {
+				_ if let Some(c) = key.plain() => cx.input.type_(c),
+
 				"backspace" => cx.input.backspace(),
-				_ => {
-					if let KeyCode::Char(c) = code {
-						return cx.input.type_(c);
-					}
-					false
-				}
+				_ => false
 			},
 		}
 	}

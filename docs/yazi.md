@@ -44,8 +44,9 @@ Available parameters are as follows:
 
 - cmd: The program to open the selected files
 - args: Arguments to be passed
-  - `$n`: The n-th selected item
-  - `$*`: All selected files
+  - `"$n"`: The N-th selected file
+  - `"$*"`: All selected files
+  - `"foo"`: Literal string to be passed
 - block: Open in a blocking manner. After setting this, Yazi will hide into a secondary screen and display the program on the main screen until it exits. During this time, it can receive I/O signals, which is useful for interactive programs.
 
 ## open

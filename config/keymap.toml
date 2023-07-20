@@ -130,5 +130,5 @@ keymap = [
 
 	{ on = [ "d" ], exec = "delete" },
 	{ on = [ "c" ], exec = "delete --insert" },
-	{ on = [ "x" ], exec = [ "delete", "move 1" ] }
+	{ on = [ "x" ], exec = [ "delete", "move 1 --in-operating" ] }
 ]

@@ -114,22 +114,23 @@
 
 ## input
 
-### Normal mode
-
 - close: Cancel input.
 
   - `--submit`: Submit the input.
 
 - escape: Cancel visual mode and enter normal mode.
+- move: Move the cursor left or right.
+
+  - `n`: Move the cursor n characters left or right. Negative value for left, positive value for right.
+  - `--in-operating`: Move the cursor only if its currently waiting for an operation.
+
+### Normal mode
+
 - insert: Enter insert mode.
 
   - `--append`: Insert after the cursor.
 
 - visual: Enter visual mode.
-- move: Move the cursor left or right.
-
-  - `n`: Move the cursor n characters left or right. Negative value for left, positive value for right.
-
 - backward: Move to the beginning of the previous word.
 - forward: Move to the beginning of the next word.
 
