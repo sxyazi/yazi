@@ -3,7 +3,7 @@ use ratatui::layout::Rect;
 use tokio::sync::oneshot::Sender;
 use unicode_width::UnicodeWidthStr;
 
-use crate::{core::Position, misc::CharKind};
+use crate::{core::{external, Position}, misc::CharKind};
 
 #[derive(Default)]
 pub struct Input {
@@ -12,7 +12,7 @@ pub struct Input {
 	position: (u16, u16),
 
 	op:    InputOp,
-	range: Option<(usize, usize)>,
+	start: Option<usize>,
 
 	mode:     InputMode,
 	offset:   usize,
@@ -35,23 +35,17 @@ pub enum InputMode {
 	Insert,
 }
 
+impl InputMode {
+	#[inline]
+	fn delta(&self) -> usize { (*self != InputMode::Insert) as usize }
+}
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum InputOp {
 	#[default]
 	None,
-	Delete(bool, bool),
-	Yank(bool),
-}
-
-impl InputOp {
-	#[inline]
-	fn set_include(&mut self) {
-		match self {
-			Self::Delete(_, ref mut b) => *b = true,
-			Self::Yank(ref mut b) => *b = true,
-			_ => (),
-		}
-	}
+	Delete(bool),
+	Yank,
 }
 
 impl Input {
@@ -77,7 +71,7 @@ impl Input {
 		}
 
 		self.op = InputOp::None;
-		self.range = None;
+		self.start = None;
 
 		self.mode = InputMode::Insert;
 		self.visible = false;
@@ -87,7 +81,8 @@ impl Input {
 	pub fn escape(&mut self) -> bool {
 		match self.mode {
 			InputMode::Normal => {
-				self.range = None;
+				self.op = InputOp::None;
+				self.start = None;
 			}
 			InputMode::Insert => {
 				self.mode = InputMode::Normal;
@@ -102,6 +97,8 @@ impl Input {
 			return false;
 		}
 
+		self.op = InputOp::None;
+		self.start = None;
 		self.mode = InputMode::Insert;
 		if append {
 			self.move_(1);
@@ -112,36 +109,30 @@ impl Input {
 	pub fn visual(&mut self) -> bool {
 		if self.mode != InputMode::Normal {
 			return false;
+		} else if self.value.is_empty() {
+			return false;
 		}
 
-		self.range = Some((self.cursor, self.cursor));
+		self.start = Some(self.cursor);
 		true
 	}
 
 	pub fn move_(&mut self, step: isize) -> bool {
-		let old = self.cursor;
+		let b = self.handle_op(
+			if step <= 0 {
+				self.cursor.saturating_sub(step.abs() as usize)
+			} else {
+				self.count().min(self.cursor + step as usize)
+			},
+			false,
+		);
 
-		if step <= 0 {
-			self.cursor = self.cursor.saturating_sub(step.abs() as usize);
-		} else {
-			let count = self.count();
-			self.cursor += step as usize;
-
-			if self.cursor >= count {
-				self.op.set_include();
-				self.cursor = if self.mode == InputMode::Insert { count } else { count.saturating_sub(1) };
-			}
+		if self.cursor < self.offset {
+			self.offset = self.cursor;
+		} else if self.cursor > self.offset + 50 {
+			self.offset = self.cursor.saturating_sub(50);
 		}
-
-		if self.cursor != old {
-			if self.cursor < self.offset {
-				self.offset = self.cursor;
-			} else if self.cursor > self.offset + 50 {
-				self.offset = self.cursor.saturating_sub(50);
-			}
-		}
-
-		self.handle_op() || self.cursor != old
+		b
 	}
 
 	#[inline]
@@ -151,7 +142,7 @@ impl Input {
 
 	pub fn backward(&mut self) -> bool {
 		if self.cursor == 0 {
-			return self.handle_op();
+			return self.move_(0);
 		}
 
 		let idx = self.idx(self.cursor).unwrap_or(self.value.len());
@@ -173,10 +164,7 @@ impl Input {
 
 	pub fn forward(&mut self, end: bool) -> bool {
 		if self.value.is_empty() {
-			return self.handle_op();
-		}
-		if end {
-			self.op.set_include();
+			return self.move_(0);
 		}
 
 		let mut it = self.value.chars().skip(self.cursor).enumerate();
@@ -188,7 +176,9 @@ impl Input {
 			} else {
 				c != CharKind::Space && c != prev
 			};
-			if b {
+			if b && self.op != InputOp::None {
+				return self.move_(i as isize);
+			} else if b {
 				return self.move_(if end { i - 1 } else { i } as isize);
 			}
 			prev = c;
@@ -222,21 +212,17 @@ impl Input {
 	pub fn delete(&mut self, insert: bool) -> bool {
 		match self.op {
 			InputOp::None => {
-				self.op = InputOp::Delete(insert, false);
-				if self.range.is_some() {
-					return self.handle_op();
+				self.op = InputOp::Delete(insert);
+				if self.start.is_some() {
+					return self.handle_op(self.cursor, true).then(|| self.move_(0)).is_some();
 				}
 
-				self.range = Some((self.cursor, self.cursor));
+				self.start = Some(self.cursor);
 				false
 			}
 			InputOp::Delete(..) => {
 				self.move_(-(self.value.len() as isize));
 				self.value.clear();
-
-				self.op = InputOp::None;
-				self.range = None;
-
 				self.mode = if insert { InputMode::Insert } else { InputMode::Normal };
 				true
 			}
@@ -244,32 +230,81 @@ impl Input {
 		}
 	}
 
-	fn handle_op(&mut self) -> bool {
-		if let Some(ref mut range) = self.range {
-			*range = (range.0.min(self.cursor), range.0.max(self.cursor));
+	pub fn yank(&mut self) -> bool {
+		match self.op {
+			InputOp::None => {
+				self.op = InputOp::Yank;
+				if self.start.is_some() {
+					return self.handle_op(self.cursor, true).then(|| self.move_(0)).is_some();
+				}
+
+				self.start = Some(self.cursor);
+				false
+			}
+			InputOp::Yank => {
+				self.start = Some(0);
+				self.move_(self.value.len() as isize);
+				false
+			}
+			_ => false,
+		}
+	}
+
+	pub fn paste(&mut self, before: bool) -> bool {
+		if self.start.is_some() {
+			self.op = InputOp::Delete(false);
+			self.handle_op(self.cursor, true);
 		}
 
-		match self.op {
-			InputOp::None => return false,
-			InputOp::Delete(insert, include) => {
-				let range = self.range.take().unwrap();
-				if !self.value.is_empty() {
-					let (start, end) = (self.idx(range.0), self.idx(range.1 + include as usize));
-					self.value.drain(start.unwrap()..end.unwrap());
-				}
-				self.mode = if insert {
-					self.cursor = range.0.min(self.count());
-					InputMode::Insert
-				} else {
-					self.cursor = range.0.min(self.count().saturating_sub(1));
-					InputMode::Normal
-				};
-			}
-			InputOp::Yank(include) => {}
+		let str =
+			futures::executor::block_on(async { external::clipboard_get().await }).unwrap_or_default();
+		if str.is_empty() {
+			return false;
 		}
+
+		self.insert(!before);
+		for c in str.chars() {
+			self.type_(c);
+		}
+		self.escape();
+		true
+	}
+
+	fn handle_op(&mut self, cursor: usize, include: bool) -> bool {
+		let old = self.cursor;
+		let range = if self.op == InputOp::None { None } else { self.range(cursor, include) };
+
+		let b = match self.op {
+			InputOp::None => {
+				self.cursor = cursor;
+				false
+			}
+			InputOp::Delete(insert) => {
+				let range = range.unwrap();
+				let old_mode = self.mode;
+
+				let (start, end) = (self.idx(range.0), self.idx(range.1));
+				self.value.drain(start.unwrap()..end.unwrap());
+				self.mode = if insert { InputMode::Insert } else { InputMode::Normal };
+				self.cursor = range.0;
+
+				start != end || self.mode != old_mode
+			}
+			InputOp::Yank => {
+				let range = range.unwrap();
+				let (start, end) = (self.idx(range.0), self.idx(range.1));
+				let yanked = &self.value[start.unwrap()..end.unwrap()];
+
+				futures::executor::block_on(async {
+					external::clipboard_set(yanked).await.ok();
+				});
+				start != end
+			}
+		};
 
 		self.op = InputOp::None;
-		true
+		self.cursor = self.count().saturating_sub(self.mode.delta()).min(self.cursor);
+		b || self.cursor != old
 	}
 }
 
@@ -303,35 +338,22 @@ impl Input {
 		(area.x + width + 1, area.y + 1)
 	}
 
-	pub fn range(&self) -> Option<Rect> {
-		if let Some((start, end)) = self.range {
-			let end = self
-				.value
-				.chars()
-				.skip(start)
-				.enumerate()
-				.take_while(|(i, _)| *i < end)
-				.map(|(_, c)| c)
-				.collect::<String>()
-				.width() as u16;
-
-			let start = self
-				.value
-				.chars()
-				.enumerate()
-				.take_while(|(i, _)| *i < start)
-				.map(|(_, c)| c)
-				.collect::<String>()
-				.width() as u16;
-
-			return Some(Rect {
-				x:      self.position.0 + 1 + start,
-				y:      self.position.1 + 3,
-				width:  end,
-				height: 1,
-			});
+	pub fn selected(&self) -> Option<Rect> {
+		if self.start.is_none() {
+			return None;
 		}
-		None
+
+		let start = self.start.unwrap();
+		let (start, end) =
+			if start < self.cursor { (start, self.cursor) } else { (self.cursor + 1, start + 1) };
+		let (start, end) = (self.idx(start).unwrap(), self.idx(end).unwrap());
+
+		Some(Rect {
+			x:      self.position.0 + 1 + self.value[..start].width() as u16,
+			y:      self.position.1 + 3,
+			width:  self.value[start..end].width() as u16,
+			height: 1,
+		})
 	}
 
 	#[inline]
@@ -345,5 +367,14 @@ impl Input {
 			.nth(n)
 			.map(|(i, _)| i)
 			.or_else(|| if n == self.count() { Some(self.value.len()) } else { None })
+	}
+
+	#[inline]
+	fn range(&mut self, cursor: usize, include: bool) -> Option<(usize, usize)> {
+		self
+			.start
+			.take()
+			.map(|s| if s <= cursor { (s, cursor) } else { (cursor, s) })
+			.map(|(s, e)| (s, e + include as usize))
 	}
 }

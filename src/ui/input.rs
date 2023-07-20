@@ -32,8 +32,8 @@ impl<'a> Widget for Input<'a> {
 			.style(Style::default().fg(Color::White))
 			.render(area, buf);
 
-		if let Some(range) = input.range() {
-			buf.set_style(range, Style::default().bg(Color::Rgb(72, 77, 102)))
+		if let Some(selected) = input.selected() {
+			buf.set_style(selected, Style::default().bg(Color::Rgb(72, 77, 102)))
 		}
 
 		let _ = match input.mode() {

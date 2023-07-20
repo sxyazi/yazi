@@ -137,7 +137,13 @@
   - `--end-of-word`: Move to the end of the next word.
 
 - delete: Delete the selected characters.
+
   - `--insert`: Delete and enter insert mode.
+
+- yank: Copy the selected characters.
+- paste: Paste the copied characters after the cursor.
+
+  - `--before`: Paste the copied characters before the cursor.
 
 ### Insert mode
 

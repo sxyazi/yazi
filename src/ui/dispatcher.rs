@@ -1,5 +1,3 @@
-use crossterm::event::KeyCode;
-
 use super::Ctx;
 use crate::{config::{keymap::{Exec, Key, Single}, KEYMAP}, core::input::InputMode, misc::optinal_bool};
 
@@ -35,7 +33,12 @@ impl Executor {
 				} else if layer == 2 {
 					render = Self::select(cx, e) || render;
 				} else if layer == 3 {
-					render = Self::input(cx, Some(e), &key) || render;
+					if cx.input.mode() != InputMode::Insert || key.plain().is_none() {
+						render = Self::input(cx, Some(e), &key) || render;
+					} else {
+						render = Self::input(cx, None, &key) || render;
+						break;
+					}
 				}
 			}
 		}
@@ -43,6 +46,7 @@ impl Executor {
 		if layer == 3 && !matched {
 			render = Self::input(cx, None, &key);
 		}
+
 		render
 	}
 
@@ -171,29 +175,23 @@ impl Executor {
 			e
 		} else {
 			if cx.input.mode() == InputMode::Insert {
-				if let KeyCode::Char(c) = key.code {
+				if let Some(c) = key.plain() {
 					return cx.input.type_(c);
 				}
 			}
 			return false;
 		};
 
-		if cx.input.mode() != InputMode::Insert || key.plain().is_none() {
-			match exec.cmd.as_str() {
-				"close" => return cx.input.close(exec.named.contains_key("submit")),
-				"escape" => return cx.input.escape(),
+		match exec.cmd.as_str() {
+			"close" => return cx.input.close(exec.named.contains_key("submit")),
+			"escape" => return cx.input.escape(),
 
-				"move" => {
-					let step = exec.args.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
-					let in_operating = exec.named.contains_key("in-operating");
-					return if in_operating {
-						cx.input.move_in_operating(step)
-					} else {
-						cx.input.move_(step)
-					};
-				}
-				_ => {}
+			"move" => {
+				let step = exec.args.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
+				let in_operating = exec.named.contains_key("in-operating");
+				return if in_operating { cx.input.move_in_operating(step) } else { cx.input.move_(step) };
 			}
+			_ => {}
 		}
 
 		match cx.input.mode() {
@@ -204,13 +202,14 @@ impl Executor {
 				"backward" => cx.input.backward(),
 				"forward" => cx.input.forward(exec.named.contains_key("end-of-word")),
 				"delete" => cx.input.delete(exec.named.contains_key("insert")),
+
+				"yank" => cx.input.yank(),
+				"paste" => cx.input.paste(exec.named.contains_key("before")),
 				_ => false,
 			},
 			InputMode::Insert => match exec.cmd.as_str() {
-				_ if let Some(c) = key.plain() => cx.input.type_(c),
-
 				"backspace" => cx.input.backspace(),
-				_ => false
+				_ => false,
 			},
 		}
 	}
