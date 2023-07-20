@@ -29,12 +29,14 @@ paru -S yazi jq unarchiver ffmpegthumbnailer fd ripgrep fzf zoxide
 
 ### macOS
 
+Install the dependencies with Homebrew:
+
 ```bash
 brew install jq unar ffmpegthumbnailer fd ripgrep fzf zoxide
 brew tap homebrew/cask-fonts && brew install --cask font-symbols-only-nerd-font
 ```
 
-### Cargo
+And download the latest release [from here](https://github.com/sxyazi/yazi/releases). Or you can install Yazi with cargo:
 
 ```bash
 cargo install --git https://github.com/sxyazi/yazi.git
