@@ -19,14 +19,28 @@ Before getting started, ensure that the following dependencies are installed on 
 - fzf (optional, for directory jumping)
 - zoxide (optional, for directory jumping)
 
-```bash
-# Arch Linux
-pacman -S ttf-nerd-fonts-symbols jq unarchiver ffmpegthumbnailer fd ripgrep fzf zoxide
+### Arch Linux
 
-# macOS
+Install with paru or your favorite AUR helper:
+
+```bash
+paru -S yazi jq unarchiver ffmpegthumbnailer fd ripgrep fzf zoxide
+```
+
+### macOS
+
+```bash
 brew install jq unar ffmpegthumbnailer fd ripgrep fzf zoxide
 brew tap homebrew/cask-fonts && brew install --cask font-symbols-only-nerd-font
 ```
+
+### Cargo
+
+```bash
+cargo install --git https://github.com/sxyazi/yazi.git
+```
+
+### Build from source
 
 Execute the following commands to clone the project and build Yazi:
 
@@ -36,10 +50,16 @@ cd yazi
 cargo build --release
 ```
 
-## Usage
+Then, you can run:
 
 ```bash
 ./target/release/yazi
+```
+
+## Usage
+
+```bash
+yazi
 ```
 
 If you want to use your own config, copy the [config folder](https://github.com/sxyazi/yazi/tree/main/config) to `~/.config/yazi`, and modify it as you like.
