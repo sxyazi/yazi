@@ -1,23 +1,24 @@
 use anyhow::{anyhow, Result};
 use ratatui::layout::Rect;
 use tokio::sync::oneshot::Sender;
-use unicode_width::UnicodeWidthStr;
+use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 
+use super::InputSnap;
 use crate::{core::{external, Position}, misc::CharKind};
 
 #[derive(Default)]
 pub struct Input {
-	title:    String,
-	value:    String,
-	position: (u16, u16),
+	title:            String,
+	pub(crate) value: String,
+	position:         (u16, u16),
 
-	op:    InputOp,
-	start: Option<usize>,
+	pub(crate) op:    InputOp,
+	pub(crate) start: Option<usize>,
 
-	mode:     InputMode,
-	offset:   usize,
-	cursor:   usize,
-	callback: Option<Sender<Result<String>>>,
+	pub(crate) mode:   InputMode,
+	pub(crate) offset: usize,
+	pub(crate) cursor: usize,
+	callback:          Option<Sender<Result<String>>>,
 
 	pub visible: bool,
 }
@@ -60,7 +61,7 @@ impl Input {
 		};
 
 		self.cursor = self.count();
-		self.offset = self.value.width().saturating_sub(50);
+		self.offset = self.cursor.saturating_sub(50 - 2 /* Border width */);
 		self.callback = Some(tx);
 		self.visible = true;
 	}
@@ -129,8 +130,8 @@ impl Input {
 
 		if self.cursor < self.offset {
 			self.offset = self.cursor;
-		} else if self.cursor > self.offset + 50 {
-			self.offset = self.cursor.saturating_sub(50);
+		} else if self.cursor >= self.offset + 50 - 2 {
+			self.offset = self.cursor.saturating_sub(50 - 2 - self.mode.delta());
 		}
 		b
 	}
@@ -271,24 +272,20 @@ impl Input {
 	}
 
 	fn handle_op(&mut self, cursor: usize, include: bool) -> bool {
-		let old = self.cursor;
+		let snap = self.snap();
 		let range = if self.op == InputOp::None { None } else { self.range(cursor, include) };
 
-		let b = match self.op {
+		match self.op {
 			InputOp::None => {
 				self.cursor = cursor;
-				false
 			}
 			InputOp::Delete(insert) => {
 				let range = range.unwrap();
-				let old_mode = self.mode;
-
 				let (start, end) = (self.idx(range.0), self.idx(range.1));
+
 				self.value.drain(start.unwrap()..end.unwrap());
 				self.mode = if insert { InputMode::Insert } else { InputMode::Normal };
 				self.cursor = range.0;
-
-				start != end || self.mode != old_mode
 			}
 			InputOp::Yank => {
 				let range = range.unwrap();
@@ -298,13 +295,12 @@ impl Input {
 				futures::executor::block_on(async {
 					external::clipboard_set(yanked).await.ok();
 				});
-				start != end
 			}
 		};
 
 		self.op = InputOp::None;
 		self.cursor = self.count().saturating_sub(self.mode.delta()).min(self.cursor);
-		b || self.cursor != old
+		snap != self.snap()
 	}
 }
 
@@ -313,7 +309,13 @@ impl Input {
 	pub fn title(&self) -> String { self.title.clone() }
 
 	#[inline]
-	pub fn value(&self) -> String { self.value.clone() }
+	pub fn value(&self) -> &str {
+		let win = self.window();
+		&self.value[self.idx(win.0).unwrap()..self.idx(win.1).unwrap()]
+	}
+
+	#[inline]
+	pub fn mode(&self) -> InputMode { self.mode }
 
 	#[inline]
 	pub fn area(&self) -> Rect {
@@ -321,20 +323,10 @@ impl Input {
 	}
 
 	#[inline]
-	pub fn mode(&self) -> InputMode { self.mode }
-
-	#[inline]
 	pub fn cursor(&self) -> (u16, u16) {
-		let width = self
-			.value
-			.chars()
-			.enumerate()
-			.take_while(|(i, _)| *i < self.cursor)
-			.map(|(_, c)| c)
-			.collect::<String>()
-			.width() as u16;
-
 		let area = self.area();
+		let width = self.value[self.offset..self.idx(self.cursor).unwrap()].width() as u16;
+
 		(area.x + width + 1, area.y + 1)
 	}
 
@@ -346,10 +338,14 @@ impl Input {
 		let start = self.start.unwrap();
 		let (start, end) =
 			if start < self.cursor { (start, self.cursor) } else { (self.cursor + 1, start + 1) };
+
+		let win = self.window();
+		let (start, end) = (start.max(win.0), end.min(win.1));
 		let (start, end) = (self.idx(start).unwrap(), self.idx(end).unwrap());
 
+		let offset = self.idx(self.offset).unwrap();
 		Some(Rect {
-			x:      self.position.0 + 1 + self.value[..start].width() as u16,
+			x:      self.position.0 + 1 + self.value[offset..start].width() as u16,
 			y:      self.position.1 + 3,
 			width:  self.value[start..end].width() as u16,
 			height: 1,
@@ -377,4 +373,23 @@ impl Input {
 			.map(|s| if s <= cursor { (s, cursor) } else { (cursor, s) })
 			.map(|(s, e)| (s, e + include as usize))
 	}
+
+	#[inline]
+	fn window(&self) -> (usize, usize) {
+		let mut len = 0;
+		let v = self
+			.value
+			.chars()
+			.enumerate()
+			.skip(self.offset)
+			.map_while(|(i, c)| {
+				len += c.width().unwrap_or(0);
+				if len > 50 - 2/*Border width*/ { None } else { Some(i) }
+			})
+			.collect::<Vec<_>>();
+		(v.first().copied().unwrap_or(0), v.last().map(|l| l + 1).unwrap_or(0))
+	}
+
+	#[inline]
+	fn snap(&self) -> InputSnap { InputSnap::from(self) }
 }
