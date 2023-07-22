@@ -270,7 +270,7 @@ impl Tab {
             return false;
         };
 
-		hovered.meta.is_dir()
+        hovered.meta.is_dir()
     }
 }
 
