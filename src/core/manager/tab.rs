@@ -269,6 +269,7 @@ impl Tab {
         } else {
             return false;
         };
+
         if hovered.meta.is_dir() {
             return false;
         }
