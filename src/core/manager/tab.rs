@@ -262,6 +262,18 @@ impl Tab {
 		};
 		true
 	}
+
+    pub fn current_is_file(&self) -> bool{
+        let hovered = if let Some(ref h) = self.current.hovered {
+            h.clone()
+        } else {
+            return false;
+        };
+        if hovered.meta.is_dir() {
+            return false;
+        }
+        true
+    }
 }
 
 impl Tab {

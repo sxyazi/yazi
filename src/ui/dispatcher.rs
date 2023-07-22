@@ -62,7 +62,12 @@ impl Executor {
 				cx.manager.active_mut().arrow(step)
 			}
 			"leave" => cx.manager.active_mut().leave(),
-			"enter" => cx.manager.active_mut().enter(),
+			"enter" =>{
+				if cx.manager.active().current_is_file() {
+					return cx.manager.open(exec.named.contains_key("select"))
+				}
+                cx.manager.active_mut().enter()
+            },
 			"back" => cx.manager.active_mut().back(),
 			"forward" => cx.manager.active_mut().forward(),
 

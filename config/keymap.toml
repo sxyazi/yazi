@@ -22,6 +22,7 @@ keymap = [
 	{ on = [ "<Down>" ], exec = "arrow 1" },
 	{ on = [ "<Left>" ], exec = "leave" },
 	{ on = [ "<Right>" ], exec = "enter" },
+	{ on = [ "<C-Right>" ], exec = "enter --select" },
 
 	# Selection
 	{ on = [ "<Space>" ], exec = "select --state=none" },
