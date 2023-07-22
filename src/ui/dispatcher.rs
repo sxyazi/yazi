@@ -210,6 +210,9 @@ impl Executor {
 
 				"yank" => cx.input.yank(),
 				"paste" => cx.input.paste(exec.named.contains_key("before")),
+
+				"undo" => cx.input.undo(),
+				"redo" => cx.input.redo(),
 				_ => false,
 			},
 			InputMode::Insert => match exec.cmd.as_str() {

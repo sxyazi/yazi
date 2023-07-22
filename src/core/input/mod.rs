@@ -1,5 +1,7 @@
 mod input;
 mod snap;
+mod snaps;
 
 pub use input::*;
-pub use snap::*;
+use snap::*;
+use snaps::*;
