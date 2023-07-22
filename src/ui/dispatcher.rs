@@ -78,7 +78,12 @@ impl Executor {
 			}
 
 			// Operation
-			"open" => cx.manager.open(exec.named.contains_key("select")),
+			"open" => {
+				if cx.manager.active().current_is_dir() {
+					return cx.manager.active_mut().enter();
+				}
+				cx.manager.open(exec.named.contains_key("select"))
+			},
 			"yank" => cx.manager.yank(exec.named.contains_key("cut")),
 			"paste" => {
 				let dest = cx.manager.current().cwd.clone();
