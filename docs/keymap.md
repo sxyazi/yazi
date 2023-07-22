@@ -145,6 +145,9 @@
 
   - `--before`: Paste the copied characters before the cursor.
 
+- undo: Undo the last operation.
+- redo: Redo the last operation.
+
 ### Insert mode
 
 - close: Cancel input.

@@ -1,4 +1,4 @@
-use super::{InputMode, InputSnap};
+use super::InputSnap;
 
 #[derive(Default, PartialEq, Eq)]
 pub(super) struct InputSnaps {

@@ -21,8 +21,8 @@ keymap = [
 	{ on = [ "<Up>" ], exec = "arrow -1" },
 	{ on = [ "<Down>" ], exec = "arrow 1" },
 	{ on = [ "<Left>" ], exec = "leave" },
-	{ on = [ "<Right>" ], exec = "open" },
-	{ on = [ "<C-Right>" ], exec = "open --select" },
+	{ on = [ "<Right>" ], exec = "enter" },
+	{ on = [ "<Enter>" ], exec = "open" },
 
 	# Selection
 	{ on = [ "<Space>" ], exec = "select --state=none" },
@@ -135,5 +135,8 @@ keymap = [
 
 	{ on = [ "y" ], exec = [ "yank" ] },
 	{ on = [ "p" ], exec = [ "paste" ] },
-	{ on = [ "P" ], exec = [ "paste --before" ] }
+	{ on = [ "P" ], exec = [ "paste --before" ] },
+
+	{ on = [ "u" ], exec = [ "undo" ] },
+	{ on = [ "<C-r>" ], exec = [ "redo" ] },
 ]

@@ -113,8 +113,12 @@ impl Manager {
 	}
 
 	pub fn open(&mut self, select: bool) -> bool {
-		let mut files = self
-			.selected()
+		let files = self.selected();
+		if files.len() == 1 && files[0].meta.is_dir() {
+			return self.active_mut().enter();
+		}
+
+		let mut files = files
 			.into_iter()
 			.filter(|f| f.meta.is_file())
 			.map(|f| (f.path(), self.mimetype.get(&f.path).cloned()))
