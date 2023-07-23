@@ -18,20 +18,25 @@ pub(super) struct InputSnap {
 
 impl InputSnap {
 	pub(super) fn new(value: String) -> Self {
-		let cursor = value.chars().count();
-		let offset =
-			cursor.saturating_sub(Self::find_window(&value.chars().rev().collect::<String>(), 0).end);
-
-		Self {
+		let mut snap = Self {
 			value,
 
 			op: Default::default(),
 			start: Default::default(),
 
 			mode: Default::default(),
-			offset,
-			cursor,
-		}
+			offset: usize::MAX,
+			cursor: usize::MAX,
+		};
+		snap.reset();
+		snap
+	}
+
+	#[inline]
+	pub(super) fn reset(&mut self) {
+		self.cursor = self.cursor.min(self.value.chars().count().saturating_sub(self.mode.delta()));
+		self.offset =
+			self.offset.min(self.cursor.saturating_sub(Self::find_window(&self.rev(), 0).end));
 	}
 
 	pub(super) fn insert(&mut self) -> bool {
@@ -79,6 +84,9 @@ impl InputSnap {
 		let (s, e) = (self.idx(range.start), self.idx(range.end));
 		&self.value[s.unwrap()..e.unwrap()]
 	}
+
+	#[inline]
+	pub(super) fn rev(&self) -> String { self.value.chars().rev().collect::<String>() }
 
 	#[inline]
 	pub(super) fn range(&mut self, cursor: usize, include: bool) -> Option<Range<usize>> {

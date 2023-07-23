@@ -12,6 +12,7 @@ static mut TX: Option<UnboundedSender<Event>> = None;
 pub enum Event {
 	Quit,
 	Key(KeyEvent),
+	Paste(String),
 	Render(String),
 	Resize(u16, u16),
 	Stop(bool, Option<oneshot::Sender<()>>),

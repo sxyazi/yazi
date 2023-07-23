@@ -60,6 +60,7 @@ impl Signals {
 					Some(Ok(event)) = reader.next() => {
 						let event = match event {
 							CrosstermEvent::Key(key) => Event::Key(key),
+							CrosstermEvent::Paste(str) => Event::Paste(str),
 							CrosstermEvent::Resize(cols, rows) => Event::Resize(cols, rows),
 							_ => continue,
 						};
