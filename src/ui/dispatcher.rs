@@ -69,12 +69,12 @@ impl Executor {
 			// Selection
 			"select" => {
 				let state = exec.named.get("state").cloned().unwrap_or("none".to_string());
-				cx.manager.active_mut().select(optinal_bool(&state))
+				cx.manager.active_mut().select(optional_bool(&state))
 			}
-			"visual_mode" => cx.manager.active_mut().visual_mode(exec.named.contains_key("unselect")),
+			"visual_mode" => cx.manager.active_mut().visual_mode(exec.named.contains_key("unset")),
 			"select_all" => {
 				let state = exec.named.get("state").cloned().unwrap_or("none".to_string());
-				cx.manager.active_mut().select_all(optinal_bool(&state))
+				cx.manager.active_mut().select_all(optional_bool(&state))
 			}
 
 			// Operation

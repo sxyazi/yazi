@@ -41,7 +41,7 @@ impl Color {
 
 #[derive(Deserialize)]
 pub struct ColorGroup {
-	pub normal:   Color,
-	pub select:   Color,
-	pub unselect: Color,
+	pub normal: Color,
+	pub select: Color,
+	pub unset:  Color,
 }

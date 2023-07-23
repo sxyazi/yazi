@@ -59,7 +59,7 @@ pub async fn unique_path(mut p: PathBuf) -> PathBuf {
 }
 
 #[inline]
-pub fn optinal_bool(s: &str) -> Option<bool> {
+pub fn optional_bool(s: &str) -> Option<bool> {
 	if s == "true" {
 		Some(true)
 	} else if s == "false" {

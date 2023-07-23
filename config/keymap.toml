@@ -27,7 +27,7 @@ keymap = [
 	# Selection
 	{ on = [ "<Space>" ], exec = "select --state=none" },
 	{ on = [ "v" ], exec = "visual_mode" },
-	{ on = [ "V" ], exec = "visual_mode --unselect" },
+	{ on = [ "V" ], exec = "visual_mode --unset" },
 	{ on = [ "<C-a>" ], exec = "select_all --state=true" },
 	{ on = [ "<C-r>" ], exec = "select_all --state=none" },
 

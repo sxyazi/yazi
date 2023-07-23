@@ -32,7 +32,7 @@ impl Tab {
 	}
 
 	pub fn escape(&mut self) -> bool {
-		if matches!(self.mode, Mode::Select(_) | Mode::Unselect(_)) {
+		if matches!(self.mode, Mode::Select(_) | Mode::Unset(_)) {
 			self.mode = Mode::Normal;
 			return true;
 		}
@@ -250,11 +250,11 @@ impl Tab {
 
 	pub fn select_all(&mut self, state: Option<bool>) -> bool { self.current.select(None, state) }
 
-	pub fn visual_mode(&mut self, unsel: bool) -> bool {
+	pub fn visual_mode(&mut self, unset: bool) -> bool {
 		let idx = self.current.cursor();
 
-		if unsel {
-			self.mode = Mode::Unselect(idx);
+		if unset {
+			self.mode = Mode::Unset(idx);
 			self.current.select(Some(idx), Some(false));
 		} else {
 			self.mode = Mode::Select(idx);

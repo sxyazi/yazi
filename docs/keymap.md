@@ -27,7 +27,7 @@
 
 - visual_mode: Enter visual mode (selection mode).
 
-  - `--unselect`: Enter visual mode (deselect mode).
+  - `--unset`: Enter visual mode (unset mode).
 
 - select_all
 

@@ -11,7 +11,7 @@ use crate::{config::open::Opener, emit, misc::unique_path};
 
 #[derive(Default)]
 pub(super) struct Running {
-	incer: usize,
+	incr: usize,
 
 	hooks: BTreeMap<usize, Box<dyn (FnOnce(bool) -> BoxFuture<'static, ()>) + Send + Sync>>,
 	all:   BTreeMap<usize, Task>,
@@ -19,9 +19,9 @@ pub(super) struct Running {
 
 impl Running {
 	fn add(&mut self, name: String) -> usize {
-		self.incer += 1;
-		self.all.insert(self.incer, Task::new(self.incer, name));
-		self.incer
+		self.incr += 1;
+		self.all.insert(self.incr, Task::new(self.incr, name));
+		self.incr
 	}
 
 	#[inline]

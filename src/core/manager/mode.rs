@@ -7,7 +7,7 @@ pub enum Mode {
 	#[default]
 	Normal,
 	Select(usize),
-	Unselect(usize),
+	Unset(usize),
 }
 
 impl Mode {
@@ -16,7 +16,7 @@ impl Mode {
 		match *self {
 			Mode::Normal => &group.normal,
 			Mode::Select(_) => &group.select,
-			Mode::Unselect(_) => &group.unselect,
+			Mode::Unset(_) => &group.unset,
 		}
 	}
 
@@ -25,7 +25,7 @@ impl Mode {
 		match self {
 			Mode::Normal => None,
 			Mode::Select(n) => Some(*n),
-			Mode::Unselect(n) => Some(*n),
+			Mode::Unset(n) => Some(*n),
 		}
 	}
 }
@@ -35,7 +35,7 @@ impl Display for Mode {
 		match *self {
 			Mode::Normal => write!(f, "NORMAL"),
 			Mode::Select(_) => write!(f, "SELECT"),
-			Mode::Unselect(_) => write!(f, "UN-SEL"),
+			Mode::Unset(_) => write!(f, "UN-SET"),
 		}
 	}
 }
