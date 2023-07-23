@@ -1,52 +1,49 @@
+use std::path::PathBuf;
+
 use super::Ctx;
-use crate::{config::{keymap::{Exec, Key, Single}, KEYMAP}, core::input::InputMode, misc::optional_bool};
+use crate::{config::{keymap::{Control, Exec, Key, KeymapLayer}, KEYMAP}, core::input::InputMode, emit, misc::optional_bool};
 
 pub struct Executor;
 
 impl Executor {
 	pub fn handle(cx: &mut Ctx, key: Key) -> bool {
-		let layer = if cx.input.visible {
-			3
-		} else if cx.select.visible {
-			2
-		} else if cx.tasks.visible {
-			1
-		} else {
-			0
-		};
+		let layer = cx.layer();
+		if layer == KeymapLayer::Which {
+			return cx.which.press(key);
+		}
 
-		let mut render = false;
-		let mut matched = false;
-		let keymap = [&KEYMAP.manager, &KEYMAP.tasks, &KEYMAP.select, &KEYMAP.input][layer];
+		if layer == KeymapLayer::Input && cx.input.mode() == InputMode::Insert {
+			if let Some(c) = key.plain() {
+				return cx.input.type_(c);
+			}
+		}
 
-		for Single { on, exec } in keymap {
-			if on.len() < 1 || on[0] != key {
+		for Control { on, exec } in KEYMAP.get(layer) {
+			if on.is_empty() || on[0] != key {
 				continue;
 			}
 
-			matched = true;
-			for e in exec {
-				if layer == 0 {
-					render = Self::manager(cx, e) || render;
-				} else if layer == 1 {
-					render = Self::tasks(cx, e) || render;
-				} else if layer == 2 {
-					render = Self::select(cx, e) || render;
-				} else if layer == 3 {
-					if cx.input.mode() != InputMode::Insert || key.plain().is_none() {
-						render = Self::input(cx, Some(e), &key) || render;
-					} else {
-						render = Self::input(cx, None, &key) || render;
-						break;
-					}
-				}
-			}
+			return if on.len() > 1 {
+				cx.which.show(&key, layer)
+			} else {
+				Self::dispatch(cx, exec, layer)
+			};
 		}
+		false
+	}
 
-		if layer == 3 && !matched {
-			render = Self::input(cx, None, &key);
+	#[inline]
+	pub fn dispatch(cx: &mut Ctx, exec: &Vec<Exec>, layer: KeymapLayer) -> bool {
+		let mut render = false;
+		for e in exec {
+			render |= match layer {
+				KeymapLayer::Manager => Self::manager(cx, e),
+				KeymapLayer::Tasks => Self::tasks(cx, e),
+				KeymapLayer::Select => Self::select(cx, e),
+				KeymapLayer::Input => Self::input(cx, e),
+				KeymapLayer::Which => unreachable!(),
+			};
 		}
-
 		render
 	}
 
@@ -65,6 +62,11 @@ impl Executor {
 			"enter" => cx.manager.active_mut().enter(),
 			"back" => cx.manager.active_mut().back(),
 			"forward" => cx.manager.active_mut().forward(),
+			"cd" => {
+				let path = exec.args.get(0).map(|s| PathBuf::from(s)).unwrap_or_default();
+				emit!(Cd(path));
+				false
+			}
 
 			// Selection
 			"select" => {
@@ -170,18 +172,7 @@ impl Executor {
 		}
 	}
 
-	fn input(cx: &mut Ctx, exec: Option<&Exec>, key: &Key) -> bool {
-		let exec = if let Some(e) = exec {
-			e
-		} else {
-			if cx.input.mode() == InputMode::Insert {
-				if let Some(c) = key.plain() {
-					return cx.input.type_(c);
-				}
-			}
-			return false;
-		};
-
+	fn input(cx: &mut Ctx, exec: &Exec) -> bool {
 		match exec.cmd.as_str() {
 			"close" => return cx.input.close(exec.named.contains_key("submit")),
 			"escape" => return cx.input.escape(),

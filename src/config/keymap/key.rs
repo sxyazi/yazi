@@ -102,3 +102,62 @@ impl TryFrom<String> for Key {
 		Ok(key)
 	}
 }
+
+impl ToString for Key {
+	fn to_string(&self) -> String {
+		if let Some(c) = self.plain() {
+			let c = if self.shift { c.to_ascii_uppercase() } else { c };
+			return if c == ' ' { "<Space>".to_string() } else { c.to_string() };
+		}
+
+		let mut s = "<".to_string();
+		if self.ctrl {
+			s += "C-";
+		}
+		if self.alt {
+			s += "A-";
+		}
+		if self.shift && !matches!(self.code, KeyCode::Char(_)) {
+			s += "S-";
+		}
+
+		let code = match self.code {
+			KeyCode::Char(' ') => "Space",
+			KeyCode::Backspace => "Backspace",
+			KeyCode::Enter => "Enter",
+			KeyCode::Left => "Left",
+			KeyCode::Right => "Right",
+			KeyCode::Up => "Up",
+			KeyCode::Down => "Down",
+			KeyCode::Home => "Home",
+			KeyCode::End => "End",
+			KeyCode::PageUp => "PageUp",
+			KeyCode::PageDown => "PageDown",
+			KeyCode::Tab => "Tab",
+			KeyCode::Delete => "Delete",
+			KeyCode::Insert => "Insert",
+			KeyCode::F(1) => "F1",
+			KeyCode::F(2) => "F2",
+			KeyCode::F(3) => "F3",
+			KeyCode::F(4) => "F4",
+			KeyCode::F(5) => "F5",
+			KeyCode::F(6) => "F6",
+			KeyCode::F(7) => "F7",
+			KeyCode::F(8) => "F8",
+			KeyCode::F(9) => "F9",
+			KeyCode::F(10) => "F10",
+			KeyCode::F(11) => "F11",
+			KeyCode::F(12) => "F12",
+			KeyCode::Esc => "Esc",
+
+			KeyCode::Char(c) if c == ' ' => "Space",
+			KeyCode::Char(c) => {
+				s.push(if self.shift { c.to_ascii_uppercase() } else { c });
+				""
+			}
+			_ => "Unknown",
+		};
+
+		s + code + ">"
+	}
+}

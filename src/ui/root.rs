@@ -1,6 +1,6 @@
 use ratatui::{buffer::Buffer, layout::{Constraint, Direction, Layout, Rect}, widgets::Widget};
 
-use super::{header, manager, status, tasks, Ctx, Input, Select};
+use super::{header, manager, status, tasks, which::Which, Ctx, Input, Select};
 
 pub struct Root<'a> {
 	cx: &'a mut Ctx,
@@ -34,6 +34,10 @@ impl<'a> Widget for Root<'a> {
 			self.cx.cursor = Some(self.cx.input.cursor());
 		} else {
 			self.cx.cursor = None;
+		}
+
+		if self.cx.which.visible {
+			Which::new(self.cx).render(area, buf);
 		}
 	}
 }

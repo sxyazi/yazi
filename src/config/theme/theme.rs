@@ -64,7 +64,8 @@ pub struct Theme {
 impl Theme {
 	pub fn new() -> Self {
 		let mut theme: Self = toml::from_str(&MERGED_THEME).unwrap();
-		theme.preview.syntect_theme = absolute_path(&theme.preview.syntect_theme);
+		theme.preview.syntect_theme =
+			futures::executor::block_on(absolute_path(&theme.preview.syntect_theme));
 		theme
 	}
 }

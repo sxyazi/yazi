@@ -8,6 +8,7 @@ pub mod manager;
 pub mod position;
 pub mod select;
 pub mod tasks;
+pub mod which;
 
 pub use blocker::*;
 pub use event::*;

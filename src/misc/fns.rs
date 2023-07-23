@@ -2,7 +2,8 @@ use std::{env, path::{Path, PathBuf}};
 
 use tokio::fs;
 
-pub fn absolute_path(p: &Path) -> PathBuf {
+pub async fn absolute_path(p: impl AsRef<Path>) -> PathBuf {
+	let p = p.as_ref();
 	if p.starts_with("~") {
 		if let Ok(home) = env::var("HOME") {
 			let mut expanded = PathBuf::new();
@@ -11,7 +12,7 @@ pub fn absolute_path(p: &Path) -> PathBuf {
 			return expanded;
 		}
 	}
-	p.to_path_buf()
+	fs::canonicalize(p).await.unwrap_or_else(|_| p.to_path_buf())
 }
 
 pub fn readable_path(p: &Path, base: &Path) -> String {

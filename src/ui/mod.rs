@@ -11,6 +11,7 @@ mod signals;
 mod status;
 mod tasks;
 mod term;
+mod which;
 
 pub use app::*;
 pub use context::*;

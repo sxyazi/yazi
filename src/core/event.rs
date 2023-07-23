@@ -5,16 +5,17 @@ use crossterm::event::KeyEvent;
 use tokio::sync::{mpsc::UnboundedSender, oneshot};
 
 use super::{files::FilesOp, input::InputOpt, manager::PreviewData, select::SelectOpt};
-use crate::config::open::Opener;
+use crate::config::{keymap::{Control, KeymapLayer}, open::Opener};
 
 static mut TX: Option<UnboundedSender<Event>> = None;
 
 pub enum Event {
 	Quit,
-	Stop(bool, Option<oneshot::Sender<()>>),
 	Key(KeyEvent),
 	Render(String),
 	Resize(u16, u16),
+	Stop(bool, Option<oneshot::Sender<()>>),
+	Ctrl(Control, KeymapLayer),
 
 	// Manager
 	Cd(PathBuf),
@@ -57,10 +58,6 @@ impl Event {
 
 #[macro_export]
 macro_rules! emit {
-	(Stop($state:expr)) => {{
-		let (tx, rx) = tokio::sync::oneshot::channel();
-		$crate::core::Event::Stop($state, Some(tx)).wait(rx)
-	}};
 	(Key($key:expr)) => {
 		$crate::core::Event::Key($key).emit();
 	};
@@ -69,6 +66,13 @@ macro_rules! emit {
 	};
 	(Resize($cols:expr, $rows:expr)) => {
 		$crate::core::Event::Resize($cols, $rows).emit();
+	};
+	(Stop($state:expr)) => {{
+		let (tx, rx) = tokio::sync::oneshot::channel();
+		$crate::core::Event::Stop($state, Some(tx)).wait(rx)
+	}};
+	(Ctrl($exec:expr, $layer:expr)) => {
+		$crate::core::Event::Ctrl($exec, $layer).emit();
 	};
 
 	(Cd($op:expr)) => {
