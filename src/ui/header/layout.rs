@@ -13,7 +13,7 @@ impl<'a> Layout<'a> {
 
 impl<'a> Widget for Layout<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let chunks = layout::Layout::default()
+		let chunks = layout::Layout::new()
 			.direction(Direction::Horizontal)
 			.constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
 			.split(area);
@@ -25,7 +25,7 @@ impl<'a> Widget for Layout<'a> {
 			format!("{}", readable_home(&current.cwd))
 		};
 
-		Paragraph::new(location).style(Style::default().fg(Color::Cyan)).render(chunks[0], buf);
+		Paragraph::new(location).style(Style::new().fg(Color::Cyan)).render(chunks[0], buf);
 
 		Tabs::new(self.cx).render(chunks[1], buf);
 	}

@@ -11,7 +11,7 @@ impl<'a> Layout<'a> {
 	pub fn new(cx: &'a Ctx) -> Self { Self { cx } }
 
 	pub fn area(area: Rect) -> Rect {
-		let chunk = layout::Layout::default()
+		let chunk = layout::Layout::new()
 			.direction(Direction::Vertical)
 			.constraints(
 				[
@@ -23,7 +23,7 @@ impl<'a> Layout<'a> {
 			)
 			.split(area)[1];
 
-		let chunk = layout::Layout::default()
+		let chunk = layout::Layout::new()
 			.direction(Direction::Horizontal)
 			.constraints(
 				[
@@ -44,13 +44,13 @@ impl<'a> Widget for Layout<'a> {
 		let area = Self::area(area);
 
 		Clear.render(area, buf);
-		let block = Block::default()
+		let block = Block::new()
 			.title("Tasks")
 			.title_alignment(Alignment::Center)
 			.padding(Padding::new(0, 0, 1, 1))
 			.borders(Borders::ALL)
 			.border_type(BorderType::Rounded)
-			.border_style(Style::default().fg(Color::Rgb(128, 174, 250)));
+			.border_style(Style::new().fg(Color::Rgb(128, 174, 250)));
 		block.clone().render(area, buf);
 
 		let tasks = &self.cx.tasks;
@@ -61,7 +61,7 @@ impl<'a> Widget for Layout<'a> {
 			.map(|(i, v)| {
 				let mut item = ListItem::new(v.name.clone());
 				if i == tasks.cursor {
-					item = item.style(Style::default().add_modifier(Modifier::UNDERLINED));
+					item = item.style(Style::new().add_modifier(Modifier::UNDERLINED));
 				}
 				item
 			})

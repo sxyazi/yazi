@@ -1,4 +1,4 @@
-use ratatui::{layout, prelude::{Buffer, Constraint, Direction, Rect}, widgets::{Clear, Widget}};
+use ratatui::{layout, prelude::{Buffer, Constraint, Direction, Rect}, style::{Color, Style}, widgets::{Block, Clear, Widget}};
 
 use super::Side;
 use crate::ui::Ctx;
@@ -32,7 +32,7 @@ impl Widget for Which<'_> {
 			height,
 		};
 
-		let chunks = layout::Layout::default()
+		let chunks = layout::Layout::new()
 			.direction(Direction::Horizontal)
 			.constraints(
 				[Constraint::Ratio(1, 3), Constraint::Ratio(1, 3), Constraint::Ratio(1, 3)].as_ref(),
@@ -40,6 +40,7 @@ impl Widget for Which<'_> {
 			.split(area);
 
 		Clear.render(area, buf);
+		Block::new().style(Style::new().bg(Color::Rgb(47, 51, 73))).render(area, buf);
 		Side::new(which.times, cands.0).render(chunks[0], buf);
 		Side::new(which.times, cands.1).render(chunks[1], buf);
 		Side::new(which.times, cands.2).render(chunks[2], buf);

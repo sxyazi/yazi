@@ -60,7 +60,7 @@ impl Watcher {
 					}
 				}
 			},
-			notify::Config::default(),
+			Default::default(),
 		)
 		.unwrap();
 

@@ -19,21 +19,21 @@ impl<'a> Widget for Input<'a> {
 		Clear.render(area, buf);
 		Paragraph::new(input.value())
 			.block(
-				Block::default()
+				Block::new()
 					.borders(Borders::ALL)
 					.border_type(BorderType::Rounded)
-					.border_style(Style::default().fg(Color::Blue))
+					.border_style(Style::new().fg(Color::Blue))
 					.title({
 						let mut line = Line::from(input.title());
-						line.patch_style(Style::default().fg(Color::White));
+						line.patch_style(Style::new().fg(Color::White));
 						line
 					}),
 			)
-			.style(Style::default().fg(Color::White))
+			.style(Style::new().fg(Color::White))
 			.render(area, buf);
 
 		if let Some(selected) = input.selected() {
-			buf.set_style(selected, Style::default().bg(Color::Rgb(72, 77, 102)))
+			buf.set_style(selected, Style::new().bg(Color::Rgb(72, 77, 102)))
 		}
 
 		let _ = match input.mode() {

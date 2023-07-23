@@ -12,7 +12,7 @@ impl<'a> Root<'a> {
 
 impl<'a> Widget for Root<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let chunks = Layout::default()
+		let chunks = Layout::new()
 			.direction(Direction::Vertical)
 			.constraints([Constraint::Length(1), Constraint::Min(0), Constraint::Length(1)].as_ref())
 			.split(area);

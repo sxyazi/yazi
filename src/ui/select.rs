@@ -24,18 +24,18 @@ impl<'a> Widget for Select<'a> {
 					return ListItem::new(format!("  {}", v));
 				}
 
-				ListItem::new(format!(" {}", v)).style(Style::default().fg(Color::Magenta))
+				ListItem::new(format!(" {}", v)).style(Style::new().fg(Color::Magenta))
 			})
 			.collect::<Vec<_>>();
 
 		Clear.render(area, buf);
 		List::new(items)
 			.block(
-				Block::default()
+				Block::new()
 					.title(select.title())
 					.borders(Borders::ALL)
 					.border_type(BorderType::Rounded)
-					.border_style(Style::default().fg(Color::Blue)),
+					.border_style(Style::new().fg(Color::Blue)),
 			)
 			.render(area, buf);
 	}
