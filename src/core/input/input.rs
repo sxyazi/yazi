@@ -97,19 +97,25 @@ impl Input {
 	}
 
 	#[inline]
-	pub fn visual(&mut self) -> bool {
-		self.snap_mut().visual();
-		self.escape()
-	}
+	pub fn visual(&mut self) -> bool { self.snap_mut().visual() }
 
 	#[inline]
 	pub fn undo(&mut self) -> bool {
-		self.snaps.undo();
-		self.escape()
+		if !self.snaps.undo() {
+			return false;
+		}
+		self.escape();
+		true
 	}
 
 	#[inline]
-	pub fn redo(&mut self) -> bool { self.snaps.redo() }
+	pub fn redo(&mut self) -> bool {
+		if !self.snaps.redo() {
+			return false;
+		}
+		self.escape();
+		true
+	}
 
 	pub fn move_(&mut self, step: isize) -> bool {
 		let snap = self.snap();

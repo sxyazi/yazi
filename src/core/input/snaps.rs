@@ -1,3 +1,5 @@
+use std::mem;
+
 use super::InputSnap;
 
 #[derive(Default, PartialEq, Eq)]
@@ -37,7 +39,8 @@ impl InputSnaps {
 	}
 
 	pub(super) fn tag(&mut self) -> bool {
-		if self.current.value == self.versions[self.idx].value {
+		self.catch();
+		if self.versions[self.idx].value == self.current.value {
 			return false;
 		}
 
@@ -45,6 +48,13 @@ impl InputSnaps {
 		self.versions.push(self.current().clone());
 		self.idx += 1;
 		true
+	}
+
+	#[inline]
+	pub(super) fn catch(&mut self) {
+		let value = mem::replace(&mut self.versions[self.idx].value, String::new());
+		self.versions[self.idx] = self.current.clone();
+		self.versions[self.idx].value = value;
 	}
 }
 
