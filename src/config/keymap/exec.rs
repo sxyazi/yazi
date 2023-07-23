@@ -2,7 +2,7 @@ use std::{collections::BTreeMap, fmt};
 
 use serde::{de::{self, Visitor}, Deserializer};
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Exec {
 	pub cmd:   String,
 	pub args:  Vec<String>,

@@ -3,8 +3,8 @@ use serde::{Deserialize, Deserializer};
 use super::{Exec, Key};
 use crate::config::MERGED_KEYMAP;
 
-#[derive(Debug, Deserialize)]
-pub struct Single {
+#[derive(Clone, Debug, Deserialize)]
+pub struct Control {
 	pub on:   Vec<Key>,
 	#[serde(deserialize_with = "Exec::deserialize")]
 	pub exec: Vec<Exec>,
@@ -12,10 +12,19 @@ pub struct Single {
 
 #[derive(Debug)]
 pub struct Keymap {
-	pub manager: Vec<Single>,
-	pub tasks:   Vec<Single>,
-	pub select:  Vec<Single>,
-	pub input:   Vec<Single>,
+	pub manager: Vec<Control>,
+	pub tasks:   Vec<Control>,
+	pub select:  Vec<Control>,
+	pub input:   Vec<Control>,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+pub enum KeymapLayer {
+	Manager,
+	Tasks,
+	Select,
+	Input,
+	Which,
 }
 
 impl<'de> Deserialize<'de> for Keymap {
@@ -32,7 +41,7 @@ impl<'de> Deserialize<'de> for Keymap {
 		}
 		#[derive(Deserialize)]
 		struct Inner {
-			keymap: Vec<Single>,
+			keymap: Vec<Control>,
 		}
 
 		let shadow = Shadow::deserialize(deserializer)?;
@@ -47,4 +56,15 @@ impl<'de> Deserialize<'de> for Keymap {
 
 impl Keymap {
 	pub fn new() -> Self { toml::from_str(&MERGED_KEYMAP).unwrap() }
+
+	#[inline]
+	pub fn get(&self, layer: KeymapLayer) -> &Vec<Control> {
+		match layer {
+			KeymapLayer::Manager => &self.manager,
+			KeymapLayer::Tasks => &self.tasks,
+			KeymapLayer::Select => &self.select,
+			KeymapLayer::Input => &self.input,
+			KeymapLayer::Which => unreachable!(),
+		}
+	}
 }

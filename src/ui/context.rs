@@ -1,9 +1,10 @@
-use crate::{core::{input::Input, manager::Manager, select::Select, tasks::Tasks, Position}, misc::tty_size};
+use crate::{config::keymap::KeymapLayer, core::{input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which, Position}, misc::tty_size};
 
 pub struct Ctx {
 	pub cursor: Option<(u16, u16)>,
 
 	pub manager: Manager,
+	pub which:   Which,
 	pub select:  Select,
 	pub input:   Input,
 	pub tasks:   Tasks,
@@ -15,9 +16,25 @@ impl Ctx {
 			cursor: None,
 
 			manager: Manager::new(),
-			select:  Select::default(),
-			input:   Input::default(),
+			which:   Default::default(),
+			select:  Default::default(),
+			input:   Default::default(),
 			tasks:   Tasks::start(),
+		}
+	}
+
+	#[inline]
+	pub fn layer(&self) -> KeymapLayer {
+		if self.which.visible {
+			KeymapLayer::Which
+		} else if self.input.visible {
+			KeymapLayer::Input
+		} else if self.select.visible {
+			KeymapLayer::Select
+		} else if self.tasks.visible {
+			KeymapLayer::Tasks
+		} else {
+			KeymapLayer::Manager
 		}
 	}
 

@@ -3,7 +3,7 @@ use crossterm::event::KeyEvent;
 use tokio::sync::oneshot::{self};
 
 use super::{root::Root, Ctx, Executor, Logs, Signals, Term};
-use crate::{config::keymap::Key, core::{files::FilesOp, Event}, emit};
+use crate::{config::keymap::{Control, Key, KeymapLayer}, core::{files::FilesOp, Event}, emit};
 
 pub struct App {
 	cx:      Ctx,
@@ -22,28 +22,15 @@ impl App {
 		while let Some(event) = app.signals.rx.recv().await {
 			match event {
 				Event::Quit => break,
-				Event::Stop(state, tx) => app.dispatch_stop(state, tx),
 				Event::Key(key) => app.dispatch_key(key),
 				Event::Render(_) => app.dispatch_render(),
 				Event::Resize(..) => app.dispatch_resize(),
+				Event::Stop(state, tx) => app.dispatch_stop(state, tx),
+				Event::Ctrl(ctrl, layer) => app.dispatch_ctrl(ctrl, layer),
 				event => app.dispatch_module(event).await,
 			}
 		}
 		Ok(())
-	}
-
-	fn dispatch_stop(&mut self, state: bool, tx: Option<oneshot::Sender<()>>) {
-		if state {
-			self.signals.stop_term(true);
-			self.term = None;
-		} else {
-			self.term = Some(Term::start().unwrap());
-			self.signals.stop_term(false);
-			emit!(Render);
-		}
-		if let Some(tx) = tx {
-			tx.send(()).ok();
-		}
 	}
 
 	fn dispatch_key(&mut self, key: KeyEvent) {
@@ -69,6 +56,27 @@ impl App {
 		self.cx.manager.current_mut().set_page(true);
 		self.cx.manager.preview();
 		emit!(Render);
+	}
+
+	fn dispatch_stop(&mut self, state: bool, tx: Option<oneshot::Sender<()>>) {
+		if state {
+			self.signals.stop_term(true);
+			self.term = None;
+		} else {
+			self.term = Some(Term::start().unwrap());
+			self.signals.stop_term(false);
+			emit!(Render);
+		}
+		if let Some(tx) = tx {
+			tx.send(()).ok();
+		}
+	}
+
+	#[inline]
+	fn dispatch_ctrl(&mut self, ctrl: Control, layer: KeymapLayer) {
+		if Executor::dispatch(&mut self.cx, &ctrl.exec, layer) {
+			emit!(Render);
+		}
 	}
 
 	async fn dispatch_module(&mut self, event: Event) {
