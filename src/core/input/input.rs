@@ -34,7 +34,7 @@ pub enum InputMode {
 
 impl InputMode {
 	#[inline]
-	fn delta(&self) -> usize { (*self != InputMode::Insert) as usize }
+	pub(super) fn delta(&self) -> usize { (*self != InputMode::Insert) as usize }
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -199,24 +199,26 @@ impl Input {
 		self.move_(snap.len() as isize)
 	}
 
+	#[inline]
 	pub fn type_(&mut self, c: char) -> bool {
+		let mut bits = [0; 4];
+		self.type_str(c.encode_utf8(&mut bits))
+	}
+
+	pub fn type_str(&mut self, s: &str) -> bool {
 		let snap = self.snap_mut();
 		if snap.cursor < 1 {
-			snap.value.insert(0, c);
-		} else if snap.cursor == snap.count() {
-			snap.value.push(c);
+			snap.value.insert_str(0, s);
 		} else {
-			snap.value.insert(snap.idx(snap.cursor).unwrap(), c);
+			snap.value.insert_str(snap.idx(snap.cursor).unwrap(), s);
 		}
-		self.move_(1)
+		self.move_(s.chars().count() as isize)
 	}
 
 	pub fn backspace(&mut self) -> bool {
 		let snap = self.snap_mut();
 		if snap.cursor < 1 {
 			return false;
-		} else if snap.cursor == snap.count() {
-			snap.value.pop();
 		} else {
 			snap.value.remove(snap.idx(snap.cursor - 1).unwrap());
 		}

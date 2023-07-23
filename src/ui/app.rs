@@ -3,7 +3,7 @@ use crossterm::event::KeyEvent;
 use tokio::sync::oneshot::{self};
 
 use super::{root::Root, Ctx, Executor, Logs, Signals, Term};
-use crate::{config::keymap::{Control, Key, KeymapLayer}, core::{files::FilesOp, Event}, emit, misc::absolute_path};
+use crate::{config::keymap::{Control, Key, KeymapLayer}, core::{files::FilesOp, input::InputMode, Event}, emit, misc::absolute_path};
 
 pub struct App {
 	cx:      Ctx,
@@ -23,6 +23,7 @@ impl App {
 			match event {
 				Event::Quit => break,
 				Event::Key(key) => app.dispatch_key(key),
+				Event::Paste(str) => app.dispatch_paste(str),
 				Event::Render(_) => app.dispatch_render(),
 				Event::Resize(..) => app.dispatch_resize(),
 				Event::Stop(state, tx) => app.dispatch_stop(state, tx),
@@ -37,6 +38,15 @@ impl App {
 		let key = Key::from(key);
 		if Executor::handle(&mut self.cx, key) {
 			emit!(Render);
+		}
+	}
+
+	fn dispatch_paste(&mut self, str: String) {
+		if self.cx.layer() == KeymapLayer::Input {
+			let input = &mut self.cx.input;
+			if input.mode() == InputMode::Insert && input.type_str(&str) {
+				emit!(Render);
+			}
 		}
 	}
 
