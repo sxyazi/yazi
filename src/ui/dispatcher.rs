@@ -1,5 +1,7 @@
+use std::path::PathBuf;
+
 use super::Ctx;
-use crate::{config::{keymap::{Control, Exec, Key, KeymapLayer}, KEYMAP}, core::input::InputMode, misc::optional_bool};
+use crate::{config::{keymap::{Control, Exec, Key, KeymapLayer}, KEYMAP}, core::input::InputMode, emit, misc::optional_bool};
 
 pub struct Executor;
 
@@ -60,6 +62,11 @@ impl Executor {
 			"enter" => cx.manager.active_mut().enter(),
 			"back" => cx.manager.active_mut().back(),
 			"forward" => cx.manager.active_mut().forward(),
+			"cd" => {
+				let path = exec.args.get(0).map(|s| PathBuf::from(s)).unwrap_or_default();
+				emit!(Cd(path));
+				false
+			}
 
 			// Selection
 			"select" => {

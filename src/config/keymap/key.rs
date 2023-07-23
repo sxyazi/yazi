@@ -106,7 +106,8 @@ impl TryFrom<String> for Key {
 impl ToString for Key {
 	fn to_string(&self) -> String {
 		if let Some(c) = self.plain() {
-			return if self.shift { c.to_ascii_uppercase() } else { c }.to_string();
+			let c = if self.shift { c.to_ascii_uppercase() } else { c };
+			return if c == ' ' { "<Space>".to_string() } else { c.to_string() };
 		}
 
 		let mut s = "<".to_string();
@@ -149,6 +150,7 @@ impl ToString for Key {
 			KeyCode::F(12) => "F12",
 			KeyCode::Esc => "Esc",
 
+			KeyCode::Char(c) if c == ' ' => "Space",
 			KeyCode::Char(c) => {
 				s.push(if self.shift { c.to_ascii_uppercase() } else { c });
 				""

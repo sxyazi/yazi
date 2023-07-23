@@ -28,6 +28,25 @@ impl From<&str> for Exec {
 	}
 }
 
+impl ToString for Exec {
+	fn to_string(&self) -> String {
+		let mut s = self.cmd.clone();
+		for arg in &self.args {
+			s.push(' ');
+			s.push_str(arg);
+		}
+		for (name, value) in &self.named {
+			s.push_str(" --");
+			s.push_str(name);
+			if !value.is_empty() {
+				s.push('=');
+				s.push_str(value);
+			}
+		}
+		s
+	}
+}
+
 impl Exec {
 	pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<Exec>, D::Error>
 	where

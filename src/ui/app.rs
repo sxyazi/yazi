@@ -3,7 +3,7 @@ use crossterm::event::KeyEvent;
 use tokio::sync::oneshot::{self};
 
 use super::{root::Root, Ctx, Executor, Logs, Signals, Term};
-use crate::{config::keymap::{Control, Key, KeymapLayer}, core::{files::FilesOp, Event}, emit};
+use crate::{config::keymap::{Control, Key, KeymapLayer}, core::{files::FilesOp, Event}, emit, misc::absolute_path};
 
 pub struct App {
 	cx:      Ctx,
@@ -84,7 +84,7 @@ impl App {
 		let tasks = &mut self.cx.tasks;
 		match event {
 			Event::Cd(path) => {
-				manager.active_mut().cd(path).await;
+				manager.active_mut().cd(absolute_path(path).await).await;
 			}
 			Event::Refresh => {
 				manager.refresh();

@@ -1,4 +1,4 @@
-use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, mem, path::PathBuf};
+use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, mem, path::PathBuf};
 
 use tokio::fs;
 
@@ -25,6 +25,8 @@ impl Manager {
 	}
 
 	pub fn refresh(&mut self) {
+		env::set_current_dir(&self.current().cwd).ok();
+
 		self.watcher.trigger(&self.current().cwd);
 		if let Some(p) = self.parent() {
 			self.watcher.trigger(&p.cwd);

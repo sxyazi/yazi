@@ -41,6 +41,9 @@ impl Which {
 		} else if self.cands.len() == 1 {
 			self.visible = false;
 			emit!(Ctrl(self.cands.remove(0), self.layer));
+		} else if let Some(i) = self.cands.iter().position(|c| c.on.len() == self.times + 1) {
+			emit!(Ctrl(self.cands.remove(i), self.layer));
+			self.visible = false;
 		}
 
 		self.times += 1;
