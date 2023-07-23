@@ -1,5 +1,5 @@
 use super::Ctx;
-use crate::{config::{keymap::{Exec, Key, Single}, KEYMAP}, core::input::InputMode, misc::optinal_bool};
+use crate::{config::{keymap::{Exec, Key, Single}, KEYMAP}, core::input::InputMode, misc::optional_bool};
 
 pub struct Executor;
 
