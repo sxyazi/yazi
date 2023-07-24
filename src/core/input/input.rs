@@ -5,7 +5,7 @@ use ratatui::layout::Rect;
 use tokio::sync::oneshot::Sender;
 use unicode_width::UnicodeWidthStr;
 
-use super::{InputSnap, InputSnaps};
+use super::{mode::InputMode, op::InputOp, InputSnap, InputSnaps};
 use crate::{core::{external, Position}, misc::CharKind};
 
 #[derive(Default)]
@@ -23,26 +23,6 @@ pub struct InputOpt {
 	pub title:    String,
 	pub value:    String,
 	pub position: Position,
-}
-
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum InputMode {
-	Normal,
-	#[default]
-	Insert,
-}
-
-impl InputMode {
-	#[inline]
-	pub(super) fn delta(&self) -> usize { (*self != InputMode::Insert) as usize }
-}
-
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum InputOp {
-	#[default]
-	None,
-	Delete(bool),
-	Yank,
 }
 
 impl Input {
@@ -73,9 +53,11 @@ impl Input {
 	pub fn escape(&mut self) -> bool {
 		let snap = self.snap_mut();
 		match snap.mode {
+			InputMode::Normal if snap.op == InputOp::None => {
+				self.close(false);
+			}
 			InputMode::Normal => {
 				snap.op = InputOp::None;
-				snap.start = None;
 			}
 			InputMode::Insert => {
 				snap.mode = InputMode::Normal;
@@ -104,7 +86,9 @@ impl Input {
 		if !self.snaps.undo() {
 			return false;
 		}
-		self.escape();
+		if self.snap().mode == InputMode::Insert {
+			self.escape();
+		}
 		true
 	}
 
@@ -113,7 +97,6 @@ impl Input {
 		if !self.snaps.redo() {
 			return false;
 		}
-		self.escape();
 		true
 	}
 
@@ -188,7 +171,7 @@ impl Input {
 			} else {
 				c != CharKind::Space && c != prev
 			};
-			if b && snap.op != InputOp::None {
+			if b && !matches!(snap.op, InputOp::None | InputOp::Select(_)) {
 				return self.move_(i as isize);
 			} else if b {
 				return self.move_(if end { i - 1 } else { i } as isize);
@@ -228,15 +211,12 @@ impl Input {
 	pub fn delete(&mut self, insert: bool) -> bool {
 		match self.snap().op {
 			InputOp::None => {
-				if self.snap().start.is_some() {
-					self.snap_mut().op = InputOp::Delete(insert);
-					return self.handle_op(self.snap().cursor, true).then(|| self.move_(0)).is_some();
-				}
-
-				let snap = self.snap_mut();
-				snap.op = InputOp::Delete(insert);
-				snap.start = Some(snap.cursor);
+				self.snap_mut().op = InputOp::Delete(insert, self.snap().cursor);
 				false
+			}
+			InputOp::Select(start) => {
+				self.snap_mut().op = InputOp::Delete(insert, start);
+				return self.handle_op(self.snap().cursor, true).then(|| self.move_(0)).is_some();
 			}
 			InputOp::Delete(..) => {
 				self.move_(-(self.snap().len() as isize));
@@ -251,18 +231,15 @@ impl Input {
 	pub fn yank(&mut self) -> bool {
 		match self.snap().op {
 			InputOp::None => {
-				if self.snap().start.is_some() {
-					self.snap_mut().op = InputOp::Yank;
-					return self.handle_op(self.snap().cursor, true).then(|| self.move_(0)).is_some();
-				}
-
-				let snap = self.snap_mut();
-				snap.op = InputOp::Yank;
-				snap.start = Some(snap.cursor);
+				self.snap_mut().op = InputOp::Yank(self.snap().cursor);
 				false
 			}
-			InputOp::Yank => {
-				self.snap_mut().start = Some(0);
+			InputOp::Select(start) => {
+				self.snap_mut().op = InputOp::Yank(start);
+				return self.handle_op(self.snap().cursor, true).then(|| self.move_(0)).is_some();
+			}
+			InputOp::Yank(_) => {
+				self.snap_mut().op = InputOp::Yank(0);
 				self.move_(self.snap().len() as isize);
 				false
 			}
@@ -271,8 +248,8 @@ impl Input {
 	}
 
 	pub fn paste(&mut self, before: bool) -> bool {
-		if self.snap().start.is_some() {
-			self.snap_mut().op = InputOp::Delete(false);
+		if let Some(start) = self.snap().op.start() {
+			self.snap_mut().op = InputOp::Delete(false, start);
 			self.handle_op(self.snap().cursor, true);
 		}
 
@@ -293,38 +270,37 @@ impl Input {
 	fn handle_op(&mut self, cursor: usize, include: bool) -> bool {
 		let old = self.snap().clone();
 		let snap = self.snap_mut();
-		let range = if snap.op == InputOp::None { None } else { snap.range(cursor, include) };
 
 		match snap.op {
-			InputOp::None => {
+			InputOp::None | InputOp::Select(_) => {
 				snap.cursor = cursor;
 			}
-			InputOp::Delete(insert) => {
-				let range = range.unwrap();
+			InputOp::Delete(insert, _) => {
+				let range = snap.op.range(cursor, include).unwrap();
 				let Range { start, end } = snap.idx(range.start)..snap.idx(range.end);
 
 				snap.value.drain(start.unwrap()..end.unwrap());
+				snap.op = InputOp::None;
 				snap.mode = if insert { InputMode::Insert } else { InputMode::Normal };
 				snap.cursor = range.start;
 			}
-			InputOp::Yank => {
-				let range = range.unwrap();
+			InputOp::Yank(_) => {
+				let range = snap.op.range(cursor, include).unwrap();
 				let Range { start, end } = snap.idx(range.start)..snap.idx(range.end);
 				let yanked = &snap.value[start.unwrap()..end.unwrap()];
 
+				snap.op = InputOp::None;
 				futures::executor::block_on(async {
 					external::clipboard_set(yanked).await.ok();
 				});
 			}
 		};
 
-		snap.op = InputOp::None;
 		snap.cursor = snap.count().saturating_sub(snap.mode.delta()).min(snap.cursor);
 		if *snap == old {
 			return false;
 		}
-
-		if old.op != InputOp::None {
+		if !matches!(old.op, InputOp::None | InputOp::Select(_)) {
 			self.snaps.tag();
 		}
 		true
@@ -358,11 +334,12 @@ impl Input {
 
 	pub fn selected(&self) -> Option<Rect> {
 		let snap = self.snap();
-		if snap.start.is_none() {
+		let start = if let Some(s) = snap.op.start() {
+			s
+		} else {
 			return None;
-		}
+		};
 
-		let start = snap.start.unwrap();
 		let (start, end) =
 			if start < snap.cursor { (start, snap.cursor) } else { (snap.cursor + 1, start + 1) };
 
