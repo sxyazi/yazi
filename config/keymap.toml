@@ -127,8 +127,8 @@ keymap = [
 
 	{ on = [ "0" ], exec = "move -999" },
 	{ on = [ "$" ], exec = "move 999" },
-	{ on = [ "I" ], exec = "move -999", "insert" },
-	{ on = [ "A" ], exec = "move 999", "insert --append" },
+	{ on = [ "I" ], exec = [ "move -999", "insert" ] },
+	{ on = [ "A" ], exec = [ "move 999", "insert --append" ] },
 
 	{ on = [ "<Left>" ], exec = "move -1" },
 	{ on = [ "<Right>" ], exec = "move 1" },
