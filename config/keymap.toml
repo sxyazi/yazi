@@ -125,8 +125,10 @@ keymap = [
 	{ on = [ "h" ], exec = "move -1" },
 	{ on = [ "l" ], exec = "move 1" },
 
-	{ on = [ "H" ], exec = "move -999" },
-	{ on = [ "L" ], exec = "move 999" },
+	{ on = [ "0" ], exec = "move -999" },
+	{ on = [ "$" ], exec = "move 999" },
+	{ on = [ "I" ], exec = [ "move -999", "insert" ] },
+	{ on = [ "A" ], exec = [ "move 999", "insert --append" ] },
 
 	{ on = [ "<Left>" ], exec = "move -1" },
 	{ on = [ "<Right>" ], exec = "move 1" },
@@ -135,9 +137,9 @@ keymap = [
 	{ on = [ "w" ], exec = "forward" },
 	{ on = [ "e" ], exec = "forward --end-of-word" },
 
-	{ on = [ "d" ], exec = "delete" },
-	{ on = [ "c" ], exec = "delete --insert" },
-	{ on = [ "x" ], exec = [ "delete", "move 1 --in-operating" ] },
+	{ on = [ "d" ], exec = "delete --cut" },
+	{ on = [ "c" ], exec = "delete --cut --insert" },
+	{ on = [ "x" ], exec = [ "delete --cut", "move 1 --in-operating" ] },
 
 	{ on = [ "y" ], exec = [ "yank" ] },
 	{ on = [ "p" ], exec = [ "paste" ] },

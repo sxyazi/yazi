@@ -8,8 +8,7 @@ use super::{InputMode, InputOp};
 pub(super) struct InputSnap {
 	pub(super) value: String,
 
-	pub(super) op:    InputOp,
-	pub(super) start: Option<usize>,
+	pub(super) op: InputOp,
 
 	pub(super) mode:   InputMode,
 	pub(super) offset: usize,
@@ -22,7 +21,6 @@ impl InputSnap {
 			value,
 
 			op: Default::default(),
-			start: Default::default(),
 
 			mode: Default::default(),
 			offset: usize::MAX,
@@ -45,7 +43,6 @@ impl InputSnap {
 		}
 
 		self.op = InputOp::None;
-		self.start = None;
 		self.mode = InputMode::Insert;
 		true
 	}
@@ -57,7 +54,7 @@ impl InputSnap {
 			return false;
 		}
 
-		self.start = Some(self.cursor);
+		self.op = InputOp::Select(self.cursor);
 		true
 	}
 }
@@ -87,15 +84,6 @@ impl InputSnap {
 
 	#[inline]
 	pub(super) fn rev(&self) -> String { self.value.chars().rev().collect::<String>() }
-
-	#[inline]
-	pub(super) fn range(&mut self, cursor: usize, include: bool) -> Option<Range<usize>> {
-		self
-			.start
-			.take()
-			.map(|s| if s <= cursor { (s, cursor) } else { (cursor, s) })
-			.map(|(s, e)| s..e + include as usize)
-	}
 
 	#[inline]
 	pub(super) fn window(&self) -> Range<usize> { Self::find_window(&self.value, self.offset) }

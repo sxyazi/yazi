@@ -192,7 +192,9 @@ impl Executor {
 
 				"backward" => cx.input.backward(),
 				"forward" => cx.input.forward(exec.named.contains_key("end-of-word")),
-				"delete" => cx.input.delete(exec.named.contains_key("insert")),
+				"delete" => {
+					cx.input.delete(exec.named.contains_key("cut"), exec.named.contains_key("insert"))
+				}
 
 				"yank" => cx.input.yank(),
 				"paste" => cx.input.paste(exec.named.contains_key("before")),

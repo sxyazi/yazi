@@ -141,6 +141,7 @@
 
 - delete: Delete the selected characters.
 
+  - `--cut`: Cut the selected characters into the clipboard, instead of only deleting them.
   - `--insert`: Delete and enter insert mode.
 
 - yank: Copy the selected characters.
