@@ -5,7 +5,8 @@ pub enum InputOp {
 	#[default]
 	None,
 	Select(usize),
-	Delete(bool, usize),
+	// cut, insert, start
+	Delete(bool, bool, usize),
 	Yank(usize),
 }
 
@@ -15,7 +16,7 @@ impl InputOp {
 		match self {
 			InputOp::None => None,
 			InputOp::Select(s) => Some(*s),
-			InputOp::Delete(_, s) => Some(*s),
+			InputOp::Delete(.., s) => Some(*s),
 			InputOp::Yank(s) => Some(*s),
 		}
 	}

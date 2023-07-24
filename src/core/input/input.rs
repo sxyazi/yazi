@@ -208,21 +208,19 @@ impl Input {
 		self.move_(-1)
 	}
 
-	pub fn delete(&mut self, insert: bool) -> bool {
+	pub fn delete(&mut self, cut: bool, insert: bool) -> bool {
 		match self.snap().op {
 			InputOp::None => {
-				self.snap_mut().op = InputOp::Delete(insert, self.snap().cursor);
+				self.snap_mut().op = InputOp::Delete(cut, insert, self.snap().cursor);
 				false
 			}
 			InputOp::Select(start) => {
-				self.snap_mut().op = InputOp::Delete(insert, start);
+				self.snap_mut().op = InputOp::Delete(cut, insert, start);
 				return self.handle_op(self.snap().cursor, true).then(|| self.move_(0)).is_some();
 			}
 			InputOp::Delete(..) => {
-				self.move_(-(self.snap().len() as isize));
-				self.snap_mut().value.clear();
-				self.snap_mut().mode = if insert { InputMode::Insert } else { InputMode::Normal };
-				true
+				self.snap_mut().op = InputOp::Delete(cut, insert, 0);
+				return self.move_(self.snap().len() as isize);
 			}
 			_ => false,
 		}
@@ -249,7 +247,7 @@ impl Input {
 
 	pub fn paste(&mut self, before: bool) -> bool {
 		if let Some(start) = self.snap().op.start() {
-			self.snap_mut().op = InputOp::Delete(false, start);
+			self.snap_mut().op = InputOp::Delete(false, false, start);
 			self.handle_op(self.snap().cursor, true);
 		}
 
@@ -275,11 +273,15 @@ impl Input {
 			InputOp::None | InputOp::Select(_) => {
 				snap.cursor = cursor;
 			}
-			InputOp::Delete(insert, _) => {
+			InputOp::Delete(cut, insert, _) => {
 				let range = snap.op.range(cursor, include).unwrap();
 				let Range { start, end } = snap.idx(range.start)..snap.idx(range.end);
 
-				snap.value.drain(start.unwrap()..end.unwrap());
+				let drain = snap.value.drain(start.unwrap()..end.unwrap()).collect::<String>();
+				if cut {
+					futures::executor::block_on(async { external::clipboard_set(&drain).await.ok() });
+				}
+
 				snap.op = InputOp::None;
 				snap.mode = if insert { InputMode::Insert } else { InputMode::Normal };
 				snap.cursor = range.start;
@@ -290,9 +292,7 @@ impl Input {
 				let yanked = &snap.value[start.unwrap()..end.unwrap()];
 
 				snap.op = InputOp::None;
-				futures::executor::block_on(async {
-					external::clipboard_set(yanked).await.ok();
-				});
+				futures::executor::block_on(async { external::clipboard_set(yanked).await.ok() });
 			}
 		};
 
