@@ -16,6 +16,9 @@
 - enter: Enter the child directory.
 - back: Go back to the previous directory.
 - forward: Go forward to the next directory.
+- cd: Change the current directory.
+
+  - `path`: the path to change to.
 
 ### Selection
 

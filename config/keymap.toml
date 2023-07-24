@@ -68,6 +68,12 @@ keymap = [
 
 	# Tasks
 	{ on = [ "w" ], exec = "tasks_show" },
+
+	# Goto
+	{ on = [ "g", "h" ], exec = "cd ~" },
+	{ on = [ "g", "c" ], exec = "cd ~/.config" },
+	{ on = [ "g", "d" ], exec = "cd ~/Downloads" },
+	{ on = [ "g", "t" ], exec = "cd /tmp" },
 ]
 
 [tasks]
