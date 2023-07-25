@@ -23,7 +23,7 @@ impl Which {
 		self.cands = KEYMAP
 			.get(layer)
 			.into_iter()
-			.filter(|s| !s.on.is_empty() && s.on[0] == *key)
+			.filter(|s| s.on.len() > 1 && s.on[0] == *key)
 			.cloned()
 			.collect();
 		self.visible = true;

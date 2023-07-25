@@ -31,6 +31,7 @@ impl Folder {
 	pub fn update(&mut self, op: FilesOp) -> bool {
 		let b = match op {
 			FilesOp::Read(_, items) => self.files.update_read(items),
+			FilesOp::Sort(_, items) => self.files.update_sort(items),
 			FilesOp::Search(_, items) => self.files.update_search(items),
 			_ => unreachable!(),
 		};

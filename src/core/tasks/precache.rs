@@ -1,11 +1,11 @@
-use std::path::{Path, PathBuf};
+use std::{collections::BTreeMap, path::{Path, PathBuf}, sync::Arc};
 
 use anyhow::{Error, Result};
 use image::{imageops::FilterType, ImageFormat};
 use tokio::{fs, sync::mpsc};
 
 use super::TaskOp;
-use crate::{config::PREVIEW, core::external, emit};
+use crate::{config::PREVIEW, core::{external, files::{File, FilesOp}}, emit, misc::{calculate_size, Throttle}};
 
 pub struct Precache {
 	rx: async_channel::Receiver<PrecacheOp>,
@@ -18,6 +18,13 @@ pub struct Precache {
 pub(super) enum PrecacheOp {
 	Image(PrecacheOpImage),
 	Video(PrecacheOpVideo),
+}
+
+#[derive(Debug)]
+pub(super) struct PrecacheOpSize {
+	pub id:       usize,
+	pub target:   PathBuf,
+	pub throttle: Arc<Throttle<(PathBuf, File)>>,
 }
 
 #[derive(Debug)]
@@ -88,6 +95,7 @@ impl Precache {
 		Ok(())
 	}
 
+	#[inline]
 	fn done(&self, id: usize) -> Result<()> { Ok(self.sch.send(TaskOp::Done(id))?) }
 
 	pub(super) async fn mime(&self, task: PrecacheOpMime) -> Result<()> {
@@ -95,6 +103,22 @@ impl Precache {
 		if let Ok(mimes) = external::file(&task.targets).await {
 			emit!(Mimetype(mimes));
 		}
+
+		self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
+		self.done(task.id)
+	}
+
+	pub(super) async fn size(&self, task: PrecacheOpSize) -> Result<()> {
+		self.sch.send(TaskOp::New(task.id, 0))?;
+
+		let length = Some(calculate_size(&task.target).await);
+		if let Ok(mut file) = File::from(&task.target).await {
+			file.length = length;
+			task.throttle.done((task.target, file), |buf| {
+				let parent = buf[0].0.parent().unwrap().to_path_buf();
+				emit!(Files(FilesOp::Sort(parent, BTreeMap::from_iter(buf))));
+			});
+		};
 
 		self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
 		self.done(task.id)

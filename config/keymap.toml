@@ -25,7 +25,7 @@ keymap = [
 	{ on = [ "<Enter>" ], exec = "open" },
 
 	# Selection
-	{ on = [ "<Space>" ], exec = "select --state=none" },
+	{ on = [ "<Space>" ], exec = [ "select --state=none", "arrow 1" ] },
 	{ on = [ "v" ], exec = "visual_mode" },
 	{ on = [ "V" ], exec = "visual_mode --unset" },
 	{ on = [ "<C-a>" ], exec = "select_all --state=true" },
@@ -33,13 +33,11 @@ keymap = [
 
 	# Operation
 	{ on = [ "o" ], exec = "open" },
-	{ on = [ "O" ], exec = "open --select" },
+	{ on = [ "O" ], exec = "open --interactive" },
 	{ on = [ "y" ], exec = "yank" },
 	{ on = [ "x" ], exec = "yank --cut" },
 	{ on = [ "p" ], exec = "paste" },
 	{ on = [ "P" ], exec = "paste --force" },
-	{ on = [ "f" ], exec = "paste --follow" },
-	{ on = [ "F" ], exec = "paste --follow --force" },
 	{ on = [ "d" ], exec = "remove" },
 	{ on = [ "D" ], exec = "remove --permanently" },
 	{ on = [ "c" ], exec = "create" },
@@ -50,6 +48,16 @@ keymap = [
 	{ on = [ "<C-s>" ], exec = "search none" },
 	{ on = [ "z" ], exec = "jump zoxide" },
 	{ on = [ "Z" ], exec = "jump fzf" },
+
+	# Sorting
+	{ on = [ ",", "a" ], exec = "sort alphabetical" },
+	{ on = [ ",", "A" ], exec = "sort alphabetical --reverse" },
+	{ on = [ ",", "c" ], exec = "sort created --reverse" },
+	{ on = [ ",", "C" ], exec = "sort created" },
+	{ on = [ ",", "m" ], exec = "sort modified --reverse" },
+	{ on = [ ",", "M" ], exec = "sort modified" },
+	{ on = [ ",", "s" ], exec = "sort size --reverse" },
+	{ on = [ ",", "S" ], exec = "sort size" },
 
 	# Tabs
 	{ on = [ "t" ], exec = "tab_create --current" },
@@ -122,6 +130,7 @@ keymap = [
 	{ on = [ "a" ], exec = "insert --append" },
 	{ on = [ "v" ], exec = "visual" },
 
+	# Navigation
 	{ on = [ "h" ], exec = "move -1" },
 	{ on = [ "l" ], exec = "move 1" },
 
@@ -137,14 +146,17 @@ keymap = [
 	{ on = [ "w" ], exec = "forward" },
 	{ on = [ "e" ], exec = "forward --end-of-word" },
 
+	# Deletion
 	{ on = [ "d" ], exec = "delete --cut" },
 	{ on = [ "c" ], exec = "delete --cut --insert" },
 	{ on = [ "x" ], exec = [ "delete --cut", "move 1 --in-operating" ] },
 
+	# Copy/Paste
 	{ on = [ "y" ], exec = [ "yank" ] },
 	{ on = [ "p" ], exec = [ "paste" ] },
 	{ on = [ "P" ], exec = [ "paste --before" ] },
 
+	# Undo/Redo
 	{ on = [ "u" ], exec = [ "undo" ] },
 	{ on = [ "<C-r>" ], exec = [ "redo" ] },
 ]

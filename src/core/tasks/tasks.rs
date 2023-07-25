@@ -3,7 +3,7 @@ use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, path::{Path, Pa
 use tracing::trace;
 
 use super::{Scheduler, TASKS_PADDING, TASKS_PERCENT};
-use crate::{config::{open::Opener, OPEN}, core::{files::File, input::InputOpt, Position}, emit, misc::{tty_size, MimeKind}};
+use crate::{config::{manager::SortBy, open::Opener, OPEN}, core::{files::{File, Files}, input::InputOpt, Position}, emit, misc::{tty_size, MimeKind}};
 
 #[derive(Clone, Debug)]
 pub struct Task {
@@ -177,6 +177,25 @@ impl Tasks {
 				}
 			}
 		});
+		false
+	}
+
+	#[inline]
+	pub fn precache_size(&self, targets: &Files) -> bool {
+		if targets.sort.by != SortBy::Size {
+			return false;
+		}
+
+		let targets = targets
+			.iter()
+			.filter(|(_, f)| f.meta.is_dir() && f.length.is_none())
+			.map(|(p, _)| p.clone())
+			.collect::<Vec<_>>();
+
+		if !targets.is_empty() {
+			self.scheduler.precache_size(targets);
+		}
+
 		false
 	}
 

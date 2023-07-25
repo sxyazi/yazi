@@ -6,8 +6,8 @@ use parking_lot::RwLock;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, time::sleep};
 use tracing::{info, trace};
 
-use super::{File, FileOpDelete, FileOpPaste, FileOpTrash, Precache, PrecacheOpMime, Process, ProcessOpOpen, Task, TaskOp, TaskStage};
-use crate::{config::open::Opener, emit, misc::unique_path};
+use super::{File, FileOpDelete, FileOpPaste, FileOpTrash, Precache, PrecacheOpMime, PrecacheOpSize, Process, ProcessOpOpen, Task, TaskOp, TaskStage};
+use crate::{config::open::Opener, emit, misc::{unique_path, Throttle}};
 
 #[derive(Default)]
 pub(super) struct Running {
@@ -379,6 +379,24 @@ impl Scheduler {
 			}
 			.boxed()
 		});
+	}
+
+	pub(super) fn precache_size(&self, targets: Vec<PathBuf>) {
+		let throttle = Arc::new(Throttle::new(targets.len(), Duration::from_millis(300)));
+
+		for target in targets {
+			let name = format!("Calculate the size of {:?}", target);
+			let id = self.running.write().add(name);
+
+			let _ = self.todo.send_blocking({
+				let precache = self.precache.clone();
+				let throttle = throttle.clone();
+				async move {
+					precache.size(PrecacheOpSize { id, target, throttle }).await.ok();
+				}
+				.boxed()
+			});
+		}
 	}
 
 	pub(super) fn precache_mime(&self, targets: Vec<PathBuf>) {

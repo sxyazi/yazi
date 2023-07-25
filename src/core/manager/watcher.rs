@@ -1,4 +1,4 @@
-use std::{collections::BTreeSet, path::{Path, PathBuf}, sync::Arc};
+use std::{collections::{BTreeMap, BTreeSet}, path::{Path, PathBuf}, sync::Arc};
 
 use indexmap::IndexMap;
 use notify::{event::{MetadataKind, ModifyKind}, EventKind, RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
@@ -92,7 +92,7 @@ impl Watcher {
 			for ori in linked {
 				emit!(Files(match &result {
 					Ok(items) => {
-						let files = IndexMap::from_iter(items.iter().map(|(p, f)| {
+						let files = BTreeMap::from_iter(items.iter().map(|(p, f)| {
 							let p = ori.join(p.strip_prefix(&path).unwrap());
 							let f = f.clone().set_path(&p);
 							(p, f)

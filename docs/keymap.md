@@ -42,7 +42,7 @@
 
 - open: Open the selected files.
 
-  - `--select`: Open the selected files with an interactive ui to choose the opening method.
+  - `--interactive`: Open the selected files with an interactive ui to choose the opening method.
 
 - yank: Copy the selected files.
 
