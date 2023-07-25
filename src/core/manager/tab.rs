@@ -7,11 +7,11 @@ use super::{Folder, Mode, Preview};
 use crate::{core::{external::{self, FzfOpt, ZoxideOpt}, files::{File, Files, FilesOp}, input::InputOpt, Event, Position, BLOCKER}, emit, misc::Defer};
 
 pub struct Tab {
+	pub(super) mode:    Mode,
 	pub(super) current: Folder,
 	pub(super) parent:  Option<Folder>,
-	search:             Option<JoinHandle<Result<()>>>,
 
-	pub(super) mode: Mode,
+	search: Option<JoinHandle<Result<()>>>,
 
 	pub(super) history: BTreeMap<PathBuf, Folder>,
 	pub(super) preview: Preview,
@@ -20,11 +20,11 @@ pub struct Tab {
 impl Tab {
 	pub fn new(path: &Path) -> Self {
 		Self {
+			mode:    Default::default(),
 			current: Folder::new(path),
 			parent:  path.parent().map(|p| Folder::new(p)),
-			search:  None,
 
-			mode: Default::default(),
+			search: None,
 
 			history: Default::default(),
 			preview: Preview::new(),

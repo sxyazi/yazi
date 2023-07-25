@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use super::Ctx;
-use crate::{config::{keymap::{Control, Exec, Key, KeymapLayer}, KEYMAP}, core::input::InputMode, emit, misc::optional_bool};
+use crate::{config::{keymap::{Control, Exec, Key, KeymapLayer}, manager::SortBy, KEYMAP}, core::{files::FilesSort, input::InputMode}, emit, misc::optional_bool};
 
 pub struct Executor;
 
@@ -80,7 +80,7 @@ impl Executor {
 			}
 
 			// Operation
-			"open" => cx.manager.open(exec.named.contains_key("select")),
+			"open" => cx.manager.open(exec.named.contains_key("interactive")),
 			"yank" => cx.manager.yank(exec.named.contains_key("cut")),
 			"paste" => {
 				let dest = cx.manager.current().cwd.clone();
@@ -114,6 +114,17 @@ impl Executor {
 				"zoxide" => cx.manager.active_mut().jump(false),
 				_ => false,
 			},
+
+			// Sorting
+			"sort" => {
+				let b = cx.manager.current_mut().files.set_sort(FilesSort {
+					by:      SortBy::try_from(exec.args.get(0).cloned().unwrap_or_default())
+						.unwrap_or_default(),
+					reverse: exec.named.contains_key("reverse"),
+				});
+				cx.tasks.precache_size(&cx.manager.current().files);
+				b
+			}
 
 			// Tabs
 			"tab_create" => {

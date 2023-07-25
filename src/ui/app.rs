@@ -100,13 +100,18 @@ impl App {
 				manager.refresh();
 			}
 			Event::Files(op) => {
+				let calc = matches!(op, FilesOp::Read(..) | FilesOp::Search(..));
 				let b = match op {
 					FilesOp::Read(..) => manager.update_read(op),
-					FilesOp::IOErr(..) => manager.update_ioerr(op),
+					FilesOp::Sort(..) => manager.update_read(op),
 					FilesOp::Search(..) => manager.update_search(op),
+					FilesOp::IOErr(..) => manager.update_ioerr(op),
 				};
 				if b {
 					emit!(Render);
+				}
+				if calc {
+					tasks.precache_size(&manager.current().files);
 				}
 			}
 			Event::Pages(page) => {

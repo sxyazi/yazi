@@ -114,7 +114,7 @@ impl Manager {
 		self.quit(tasks)
 	}
 
-	pub fn open(&mut self, select: bool) -> bool {
+	pub fn open(&mut self, interactive: bool) -> bool {
 		let files = self.selected();
 		if files.len() == 1 && files[0].meta.is_dir() {
 			return self.active_mut().enter();
@@ -143,7 +143,7 @@ impl Manager {
 			}
 
 			let files = files.into_iter().filter_map(|(p, m)| m.map(|m| (p, m))).collect::<Vec<_>>();
-			if !select {
+			if !interactive {
 				emit!(Open(files, None));
 				return;
 			}
@@ -251,6 +251,20 @@ impl Manager {
 		b
 	}
 
+	pub fn update_search(&mut self, op: FilesOp) -> bool {
+		let path = op.path();
+		if self.current().in_search && self.current().cwd == path {
+			return self.current_mut().update(op);
+		}
+
+		let rep = mem::replace(self.current_mut(), Folder::new_search(&path));
+		if !rep.in_search {
+			self.active_mut().history.insert(path, rep);
+		}
+		self.current_mut().update(op);
+		true
+	}
+
 	pub fn update_ioerr(&mut self, op: FilesOp) -> bool {
 		let path = op.path();
 		let op = FilesOp::read_empty(&path);
@@ -264,20 +278,6 @@ impl Manager {
 		}
 
 		self.active_mut().leave();
-		true
-	}
-
-	pub fn update_search(&mut self, op: FilesOp) -> bool {
-		let path = op.path();
-		if self.current().in_search && self.current().cwd == path {
-			return self.current_mut().update(op);
-		}
-
-		let rep = mem::replace(self.current_mut(), Folder::new_search(&path));
-		if !rep.in_search {
-			self.active_mut().history.insert(path, rep);
-		}
-		self.current_mut().update(op);
 		true
 	}
 
