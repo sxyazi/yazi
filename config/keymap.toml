@@ -83,7 +83,7 @@ keymap = [
 	{ on = [ "g", "h" ], exec = "cd ~" },
 	{ on = [ "g", "c" ], exec = "cd ~/.config" },
 	{ on = [ "g", "d" ], exec = "cd ~/Downloads" },
-	{ on = [ "m", "g" ], exec = "cd /tmp" },
+	{ on = [ "g", "t" ], exec = "cd /tmp" },
 ]
 
 [tasks]
