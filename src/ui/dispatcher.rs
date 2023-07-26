@@ -114,6 +114,7 @@ impl Executor {
 				"zoxide" => cx.manager.active_mut().jump(false),
 				_ => false,
 			},
+			"command"=> cx.manager.command(),
 
 			// Sorting
 			"sort" => {

@@ -1,6 +1,8 @@
 use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, mem, path::PathBuf};
+use std::process::Stdio;
 
 use tokio::fs;
+use tokio::process::Command;
 
 use super::{PreviewData, Tab, Tabs, Watcher};
 use crate::{config::OPEN, core::{external, files::{File, FilesOp}, input::InputOpt, manager::Folder, select::SelectOpt, tasks::Tasks, Position}, emit};
@@ -214,6 +216,34 @@ impl Manager {
 			}
 		});
 		false
+	}
+
+	pub fn command(&self) -> bool {
+		let cwd = self.tabs.active().current.cwd.clone();
+
+		tokio::spawn(async move {
+			let result = emit!(Input(InputOpt {
+				title:    "Command:".to_string(),
+				value:    "".to_string(),
+				position: Position::Top,
+			}))
+				.await;
+
+			if let Ok(command) = result {
+				Command::new("sh")
+					.current_dir(&cwd)
+					.arg("-c")
+					.arg(command)
+					.kill_on_drop(false)
+					.stdout(Stdio::piped())
+					.stderr(Stdio::piped())
+					.spawn()
+					.ok();
+
+			}
+		});
+
+		return false
 	}
 
 	fn bulk_rename(&self) -> bool { false }

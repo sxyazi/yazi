@@ -48,6 +48,8 @@ keymap = [
 	{ on = [ "<C-s>" ], exec = "search none" },
 	{ on = [ "z" ], exec = "jump zoxide" },
 	{ on = [ "Z" ], exec = "jump fzf" },
+	{ on = [ ";" ], exec = "command" },
+	{ on = [ ":" ], exec = "command" },
 
 	# Sorting
 	{ on = [ ",", "a" ], exec = "sort alphabetical" },
@@ -81,7 +83,7 @@ keymap = [
 	{ on = [ "g", "h" ], exec = "cd ~" },
 	{ on = [ "g", "c" ], exec = "cd ~/.config" },
 	{ on = [ "g", "d" ], exec = "cd ~/Downloads" },
-	{ on = [ "g", "t" ], exec = "cd /tmp" },
+	{ on = [ "m", "g" ], exec = "cd /tmp" },
 ]
 
 [tasks]
