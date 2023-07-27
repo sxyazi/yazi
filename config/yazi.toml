@@ -9,11 +9,15 @@ max_width  = 600
 max_height = 900
 
 [opener]
+folder = [
+	{ cmd = "open", args = [ "-R", "$*" ] },
+	{ cmd = "code", args = [ "$*" ] },
+]
 archive = [
 	{ cmd = "unar", args = [ "$1" ] },
 ]
 text = [
-	{ cmd = "vi", args = [ "$*" ], block = true },
+	{ cmd = "vim", args = [ "$*" ], block = true },
 ]
 image = [
 	{ cmd = "open", args = [ "$*" ] },
@@ -29,10 +33,12 @@ audio = [
 ]
 fallback = [
 	{ cmd = "open", args = [ "$*" ] },
+	{ cmd = "open", args = [ "-R", "$*" ] },
 ]
 
 [open]
 rules = [
+	{ name = "*/", use = "folder" },
 	{ name = "*.html", use = "fallback" },
 
 	{ mime = "text/*", use = "text" },

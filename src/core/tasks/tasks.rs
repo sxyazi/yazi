@@ -161,10 +161,9 @@ impl Tasks {
 				title:    "Are you sure delete these files? (y/N)".to_string(),
 				value:    "".to_string(),
 				position: Position::Hovered,
-			}))
-			.await;
+			}));
 
-			if let Ok(choice) = result {
+			if let Ok(choice) = result.await {
 				if choice.to_lowercase() != "y" {
 					return;
 				}

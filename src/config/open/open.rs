@@ -3,7 +3,7 @@ use std::{collections::{BTreeMap, BTreeSet}, path::Path};
 use serde::{Deserialize, Deserializer};
 
 use super::Opener;
-use crate::config::{Pattern, MERGED_YAZI};
+use crate::{config::{Pattern, MERGED_YAZI}, misc::MIME_DIR};
 
 #[derive(Debug)]
 pub struct Open {
@@ -22,9 +22,13 @@ struct OpenRule {
 impl Open {
 	pub fn new() -> Self { toml::from_str(&MERGED_YAZI).unwrap() }
 
-	pub fn openers(&self, path: impl AsRef<Path>, mime: impl AsRef<str>) -> Option<Vec<&Opener>> {
+	pub fn openers<P, M>(&self, path: P, mime: M) -> Option<Vec<&Opener>>
+	where
+		P: AsRef<Path>,
+		M: AsRef<str>,
+	{
 		self.rules.iter().find_map(|rule| {
-			if rule.name.as_ref().map_or(false, |e| e.match_path(&path, Some(false)))
+			if rule.name.as_ref().map_or(false, |e| e.match_path(&path, Some(mime.as_ref() == MIME_DIR)))
 				|| rule.mime.as_ref().map_or(false, |m| m.matches(&mime))
 			{
 				self.openers.get(&rule.use_).map(|v| v.iter().collect())
