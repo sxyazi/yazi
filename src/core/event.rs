@@ -4,7 +4,7 @@ use anyhow::Result;
 use crossterm::event::KeyEvent;
 use tokio::sync::{mpsc::UnboundedSender, oneshot};
 
-use super::{files::FilesOp, input::InputOpt, manager::PreviewData, select::SelectOpt};
+use super::{files::{File, FilesOp}, input::InputOpt, manager::PreviewData, select::SelectOpt};
 use crate::config::{keymap::{Control, KeymapLayer}, open::Opener};
 
 static mut TX: Option<UnboundedSender<Event>> = None;
@@ -24,7 +24,7 @@ pub enum Event {
 	Files(FilesOp),
 	Pages(usize),
 	Mimetype(BTreeMap<PathBuf, String>),
-	Hover,
+	Hover(Option<File>),
 	Preview(PathBuf, PreviewData),
 
 	// Input
@@ -87,6 +87,12 @@ macro_rules! emit {
 	};
 	(Mimetype($mimes:expr)) => {
 		$crate::core::Event::Mimetype($mimes).emit();
+	};
+	(Hover) => {
+		$crate::core::Event::Hover(None).emit();
+	};
+	(Hover($file:expr)) => {
+		$crate::core::Event::Hover(Some($file)).emit();
 	};
 	(Preview($path:expr, $data:expr)) => {
 		$crate::core::Event::Preview($path, $data).emit();

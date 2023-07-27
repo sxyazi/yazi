@@ -146,19 +146,16 @@ impl Folder {
 	}
 
 	pub fn hover(&mut self, path: &Path) -> bool {
-		if matches!(self.hovered, Some(ref h) if h.path == path) {
-			return false;
-		}
-
 		let new = self.position(path).unwrap_or(self.cursor);
 		if new > self.cursor { self.next(new - self.cursor) } else { self.prev(self.cursor - new) }
 	}
 
 	pub fn hover_force(&mut self, file: File) -> bool {
-		if !self.hover(&file.path) && self.files.is_empty() {
-			self.hovered = Some(file);
+		if self.hover(&file.path) {
 			return true;
 		}
+
+		self.hovered = Some(file);
 		false
 	}
 }
