@@ -180,19 +180,19 @@ impl Manager {
 
 			if let Ok(name) = result.await {
 				let path = cwd.join(&name);
+				let hovered = path.components().take(cwd.components().count() + 1).collect::<PathBuf>();
+
 				if name.ends_with('/') {
-					fs::create_dir_all(&path).await?;
+					fs::create_dir_all(path).await?;
 				} else {
-					fs::create_dir_all(path.parent().unwrap()).await?;
-					fs::File::create(&path).await.ok();
+					fs::create_dir_all(path.parent().unwrap()).await.ok();
+					fs::File::create(path).await?;
 				}
 
-				let path = path.components().take(cwd.components().count() + 1).collect::<PathBuf>();
-				if let Ok(file) = File::from(&path).await {
+				if let Ok(file) = File::from(&hovered).await {
 					emit!(Hover(file));
+					emit!(Refresh);
 				}
-
-				emit!(Refresh);
 			}
 			Ok::<(), Error>(())
 		});
