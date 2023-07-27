@@ -1,7 +1,8 @@
-use std::{collections::BTreeMap, path::{Path, PathBuf}, sync::Arc};
+use std::{collections::{BTreeMap, BTreeSet}, path::{Path, PathBuf}, sync::Arc};
 
 use anyhow::{Error, Result};
 use image::{imageops::FilterType, ImageFormat};
+use parking_lot::Mutex;
 use tokio::{fs, sync::mpsc};
 
 use super::TaskOp;
@@ -12,6 +13,8 @@ pub struct Precache {
 	tx: async_channel::Sender<PrecacheOp>,
 
 	sch: mpsc::UnboundedSender<TaskOp>,
+
+	pub(super) size_handing: Mutex<BTreeSet<PathBuf>>,
 }
 
 #[derive(Debug)]
@@ -48,7 +51,7 @@ pub(super) struct PrecacheOpVideo {
 impl Precache {
 	pub(super) fn new(sch: mpsc::UnboundedSender<TaskOp>) -> Self {
 		let (tx, rx) = async_channel::unbounded();
-		Self { tx, rx, sch }
+		Self { tx, rx, sch, size_handing: Default::default() }
 	}
 
 	#[inline]
@@ -115,9 +118,16 @@ impl Precache {
 		if let Ok(mut file) = File::from(&task.target).await {
 			file.length = length;
 			task.throttle.done((task.target, file), |buf| {
+				let mut handing = self.size_handing.lock();
+				for (path, _) in &buf {
+					handing.remove(path);
+				}
+
 				let parent = buf[0].0.parent().unwrap().to_path_buf();
 				emit!(Files(FilesOp::Sort(parent, BTreeMap::from_iter(buf))));
 			});
+		} else {
+			self.size_handing.lock().remove(&task.target);
 		};
 
 		self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
