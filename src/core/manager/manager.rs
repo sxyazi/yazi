@@ -3,7 +3,7 @@ use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, mem, path::P
 use tokio::fs;
 
 use super::{PreviewData, Tab, Tabs, Watcher};
-use crate::{config::OPEN, core::{external, files::{File, FilesOp}, input::InputOpt, manager::Folder, select::SelectOpt, tasks::Tasks, Position}, emit};
+use crate::{config::OPEN, core::{external, files::{File, FilesOp}, input::InputOpt, manager::Folder, select::SelectOpt, tasks::Tasks, Position}, emit, misc::MIME_DIR};
 
 pub struct Manager {
 	tabs:   Tabs,
@@ -56,7 +56,7 @@ impl Manager {
 		};
 
 		if hovered.meta.is_dir() {
-			self.active_mut().preview.go(&hovered.path, "inode/directory");
+			self.active_mut().preview.go(&hovered.path, MIME_DIR);
 			if self.active().history(&hovered.path).is_some() {
 				emit!(Preview(hovered.path, PreviewData::Folder));
 			}
@@ -95,10 +95,9 @@ impl Manager {
 				title:    format!("There are {} tasks running, sure to quit? (y/N)", tasks),
 				value:    "".to_string(),
 				position: Position::Top,
-			}))
-			.await;
+			}));
 
-			if let Ok(choice) = result {
+			if let Ok(choice) = result.await {
 				if choice.to_lowercase() == "y" {
 					emit!(Quit);
 				}
@@ -115,15 +114,19 @@ impl Manager {
 	}
 
 	pub fn open(&mut self, interactive: bool) -> bool {
-		let files = self.selected();
-		if files.len() == 1 && files[0].meta.is_dir() {
-			return self.active_mut().enter();
-		}
-
-		let mut files = files
+		let mut files = self
+			.selected()
 			.into_iter()
-			.filter(|f| f.meta.is_file())
-			.map(|f| (f.path(), self.mimetype.get(&f.path).cloned()))
+			.map(|f| {
+				(
+					f.path(),
+					if f.meta.is_dir() {
+						Some(MIME_DIR.to_owned())
+					} else {
+						self.mimetype.get(&f.path).cloned()
+					},
+				)
+			})
 			.collect::<Vec<_>>();
 
 		if files.is_empty() {
@@ -157,9 +160,8 @@ impl Manager {
 				title:    "Open with:".to_string(),
 				items:    openers.iter().map(|o| o.cmd.clone()).collect(),
 				position: Position::Hovered,
-			}))
-			.await;
-			if let Ok(choice) = result {
+			}));
+			if let Ok(choice) = result.await {
 				emit!(Open(files, Some(openers[choice].clone())));
 			}
 		});
@@ -173,10 +175,9 @@ impl Manager {
 				title:    "Create:".to_string(),
 				value:    "".to_string(),
 				position: Position::Top,
-			}))
-			.await;
+			}));
 
-			if let Ok(name) = result {
+			if let Ok(name) = result.await {
 				let path = cwd.join(&name);
 				if name.ends_with('/') {
 					fs::create_dir_all(path).await.ok();
@@ -205,10 +206,9 @@ impl Manager {
 				title:    "Rename:".to_string(),
 				value:    hovered.file_name().unwrap().to_string_lossy().to_string(),
 				position: Position::Hovered,
-			}))
-			.await;
+			}));
 
-			if let Ok(new) = result {
+			if let Ok(new) = result.await {
 				let to = hovered.parent().unwrap().join(new);
 				fs::rename(&hovered, to).await.ok();
 			}

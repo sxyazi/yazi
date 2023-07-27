@@ -1,3 +1,5 @@
+pub const MIME_DIR: &str = "inode/directory";
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum MimeKind {
 	Dir,
@@ -33,7 +35,7 @@ impl MimeKind {
 	}
 
 	pub fn new(s: &str) -> Self {
-		if s == "inode/directory" {
+		if s == MIME_DIR {
 			Self::Dir
 		} else if s == "application/json" {
 			Self::JSON
