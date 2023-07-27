@@ -1,5 +1,6 @@
 use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, mem, path::PathBuf};
 
+use anyhow::Error;
 use tokio::fs;
 
 use super::{PreviewData, Tab, Tabs, Watcher};
@@ -179,13 +180,21 @@ impl Manager {
 
 			if let Ok(name) = result.await {
 				let path = cwd.join(&name);
+				let hovered = path.components().take(cwd.components().count() + 1).collect::<PathBuf>();
+
 				if name.ends_with('/') {
-					fs::create_dir_all(path).await.ok();
+					fs::create_dir_all(path).await?;
 				} else {
 					fs::create_dir_all(path.parent().unwrap()).await.ok();
-					fs::File::create(path).await.ok();
+					fs::File::create(path).await?;
+				}
+
+				if let Ok(file) = File::from(&hovered).await {
+					emit!(Hover(file));
+					emit!(Refresh);
 				}
 			}
+			Ok::<(), Error>(())
 		});
 		false
 	}

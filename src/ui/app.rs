@@ -125,8 +125,10 @@ impl App {
 					emit!(Render);
 				}
 			}
-			Event::Hover => {
-				if manager.preview() {
+			Event::Hover(file) => {
+				let mut b = file.map(|f| manager.current_mut().hover_force(f)).unwrap_or(false);
+				b |= manager.preview();
+				if b {
 					emit!(Render);
 				}
 			}
