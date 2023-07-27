@@ -383,11 +383,17 @@ impl Scheduler {
 
 	pub(super) fn precache_size(&self, targets: Vec<PathBuf>) {
 		let throttle = Arc::new(Throttle::new(targets.len(), Duration::from_millis(300)));
+		let mut handing = self.precache.size_handing.lock();
+		let mut running = self.running.write();
 
 		for target in targets {
-			let name = format!("Calculate the size of {:?}", target);
-			let id = self.running.write().add(name);
+			if !handing.contains(&target) {
+				handing.insert(target.clone());
+			} else {
+				continue;
+			}
 
+			let id = running.add(format!("Calculate the size of {:?}", target));
 			let _ = self.todo.send_blocking({
 				let precache = self.precache.clone();
 				let throttle = throttle.clone();
