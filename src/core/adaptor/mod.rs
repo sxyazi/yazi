@@ -1,5 +1,5 @@
 mod adaptor;
-mod preview;
+mod kitty;
+mod ueberzug;
 
 pub use adaptor::*;
-pub use preview::*;

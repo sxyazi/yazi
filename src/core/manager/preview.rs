@@ -6,7 +6,7 @@ use syntect::{easy::HighlightFile, highlighting::{Theme, ThemeSet}, parsing::Syn
 use tokio::{fs, task::JoinHandle};
 
 use super::{ALL_RATIO, PREVIEW_BORDER, PREVIEW_PADDING, PREVIEW_RATIO};
-use crate::{config::{PREVIEW, THEME}, core::{adapter::Adapter, external, files::{Files, FilesOp}, tasks::Precache}, emit, misc::{tty_size, MimeKind}};
+use crate::{config::{PREVIEW, THEME}, core::{adaptor::Adaptor, external, files::{Files, FilesOp}, tasks::Precache}, emit, misc::{tty_size, MimeKind}};
 
 static SYNTECT_SYNTAX: OnceLock<SyntaxSet> = OnceLock::new();
 static SYNTECT_THEME: OnceLock<Theme> = OnceLock::new();
@@ -16,7 +16,7 @@ pub struct Preview {
 	pub data: PreviewData,
 
 	handle:  Option<JoinHandle<()>>,
-	adaptor: Arc<Adapter>,
+	adaptor: Arc<Adaptor>,
 }
 
 #[derive(Debug, Default)]
@@ -33,7 +33,7 @@ impl Preview {
 			path:    Default::default(),
 			data:    Default::default(),
 			handle:  Default::default(),
-			adaptor: Arc::new(Adapter::new()),
+			adaptor: Arc::new(Adaptor::new()),
 		}
 	}
 
@@ -84,7 +84,7 @@ impl Preview {
 		Ok(PreviewData::Folder)
 	}
 
-	pub async fn image(adaptor: Arc<Adapter>, mut path: &Path) -> Result<PreviewData> {
+	pub async fn image(adaptor: Arc<Adaptor>, mut path: &Path) -> Result<PreviewData> {
 		let cache = Precache::cache(path);
 		if fs::metadata(&cache).await.is_ok() {
 			path = cache.as_path();
@@ -100,7 +100,7 @@ impl Preview {
 		Ok(PreviewData::None)
 	}
 
-	pub async fn video(adaptor: Arc<Adapter>, path: &Path) -> Result<PreviewData> {
+	pub async fn video(adaptor: Arc<Adaptor>, path: &Path) -> Result<PreviewData> {
 		let cache = Precache::cache(path);
 		if fs::metadata(&cache).await.is_err() {
 			external::ffmpegthumbnailer(path, &cache).await?;

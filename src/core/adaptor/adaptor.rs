@@ -5,27 +5,27 @@ use ratatui::prelude::Rect;
 use tokio::sync::mpsc::UnboundedSender;
 
 use super::{kitty::Kitty, ueberzug::Ueberzug};
-use crate::config::{preview::PreviewAdapter, PREVIEW};
+use crate::config::{preview::PreviewAdaptor, PREVIEW};
 
-pub struct Adapter {
+pub struct Adaptor {
 	ueberzug: Option<UnboundedSender<Option<(PathBuf, Rect)>>>,
 }
 
-impl Adapter {
+impl Adaptor {
 	pub fn new() -> Self {
-		let mut adapter = Self { ueberzug: None };
+		let mut adaptor = Self { ueberzug: None };
 
-		if PREVIEW.adapter == PreviewAdapter::Ueberzug {
-			adapter.ueberzug = Ueberzug::init().ok();
+		if PREVIEW.adaptor == PreviewAdaptor::Ueberzug {
+			adaptor.ueberzug = Ueberzug::init().ok();
 		}
 
-		adapter
+		adaptor
 	}
 
 	pub async fn image_show(&self, path: &Path, rect: Rect) -> Result<()> {
-		match PREVIEW.adapter {
-			PreviewAdapter::Kitty => Kitty::image_show(path, rect).await,
-			PreviewAdapter::Ueberzug => {
+		match PREVIEW.adaptor {
+			PreviewAdaptor::Kitty => Kitty::image_show(path, rect).await,
+			PreviewAdaptor::Ueberzug => {
 				if let Some(tx) = &self.ueberzug {
 					tx.send(Some((path.to_path_buf(), rect))).ok();
 				}
@@ -35,9 +35,9 @@ impl Adapter {
 	}
 
 	pub fn image_hide(&self) {
-		match PREVIEW.adapter {
-			PreviewAdapter::Kitty => Kitty::image_hide(),
-			PreviewAdapter::Ueberzug => {
+		match PREVIEW.adaptor {
+			PreviewAdaptor::Kitty => Kitty::image_hide(),
+			PreviewAdaptor::Ueberzug => {
 				if let Some(tx) = &self.ueberzug {
 					tx.send(None).ok();
 				}
