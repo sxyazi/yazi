@@ -1,21 +1,22 @@
-use std::{fs::File, io::{BufRead, BufReader}, path::{Path, PathBuf}, sync::OnceLock};
+use std::{fs::File, io::{BufRead, BufReader}, path::{Path, PathBuf}, sync::{Arc, OnceLock}};
 
 use anyhow::{anyhow, Result};
-use image::imageops::FilterType;
+use ratatui::prelude::Rect;
 use syntect::{easy::HighlightFile, highlighting::{Theme, ThemeSet}, parsing::SyntaxSet, util::as_24_bit_terminal_escaped};
 use tokio::{fs, task::JoinHandle};
 
 use super::{ALL_RATIO, PREVIEW_BORDER, PREVIEW_PADDING, PREVIEW_RATIO};
-use crate::{config::{PREVIEW, THEME}, core::{adapter::Kitty, external, files::{Files, FilesOp}, tasks::Precache}, emit, misc::{tty_ratio, tty_size, MimeKind}};
+use crate::{config::{PREVIEW, THEME}, core::{adapter::Adapter, external, files::{Files, FilesOp}, tasks::Precache}, emit, misc::{tty_size, MimeKind}};
 
 static SYNTECT_SYNTAX: OnceLock<SyntaxSet> = OnceLock::new();
 static SYNTECT_THEME: OnceLock<Theme> = OnceLock::new();
 
-#[derive(Debug)]
 pub struct Preview {
 	pub path: PathBuf,
 	pub data: PreviewData,
-	handle:   Option<JoinHandle<()>>,
+
+	handle:  Option<JoinHandle<()>>,
+	adaptor: Arc<Adapter>,
 }
 
 #[derive(Debug, Default)]
@@ -24,12 +25,16 @@ pub enum PreviewData {
 	None,
 	Folder,
 	Text(String),
-	Image(Vec<u8>),
 }
 
 impl Preview {
 	pub fn new() -> Self {
-		Self { path: Default::default(), data: Default::default(), handle: Default::default() }
+		Self {
+			path:    Default::default(),
+			data:    Default::default(),
+			handle:  Default::default(),
+			adaptor: Arc::new(Adapter::new()),
+		}
 	}
 
 	fn size() -> (u16, u16) {
@@ -43,14 +48,15 @@ impl Preview {
 			handle.abort();
 		}
 
+		let adaptor = self.adaptor.clone();
 		let (path, mime) = (path.to_path_buf(), mime.to_owned());
 		self.handle = Some(tokio::spawn(async move {
 			let result = match MimeKind::new(&mime) {
 				MimeKind::Dir => Self::folder(&path).await,
 				MimeKind::JSON => Self::json(&path).await.map(PreviewData::Text),
 				MimeKind::Text => Self::highlight(&path).await.map(PreviewData::Text),
-				MimeKind::Image => Self::image(&path).await.map(PreviewData::Image),
-				MimeKind::Video => Self::video(&path).await.map(PreviewData::Image),
+				MimeKind::Image => Self::image(adaptor, &path).await,
+				MimeKind::Video => Self::video(adaptor, &path).await,
 				MimeKind::Archive => Self::archive(&path).await.map(PreviewData::Text),
 				MimeKind::Others => Err(anyhow!("Unsupported mimetype: {}", mime)),
 			};
@@ -78,38 +84,29 @@ impl Preview {
 		Ok(PreviewData::Folder)
 	}
 
-	pub async fn image(mut path: &Path) -> Result<Vec<u8>> {
+	pub async fn image(adaptor: Arc<Adapter>, mut path: &Path) -> Result<PreviewData> {
 		let cache = Precache::cache(path);
 		if fs::metadata(&cache).await.is_ok() {
 			path = cache.as_path();
 		}
 
-		let (w, h) = {
-			let r = tty_ratio();
-			let (w, h) = Self::size();
-			let (w, h) = ((w as f64 * r.0) as u32, (h as f64 * r.1) as u32);
-			(w.min(PREVIEW.max_width), h.min(PREVIEW.max_height))
-		};
-
-		let img = fs::read(path).await?;
-		tokio::task::spawn_blocking(move || -> Result<Vec<u8>> {
-			let img = image::load_from_memory(&img)?;
-			Kitty::image_show(if img.width() > w || img.height() > h {
-				img.resize(w, h, FilterType::Triangle)
-			} else {
-				img
-			})
-		})
-		.await?
+		// TODO: image
+		adaptor.image_show(path, Rect {
+			x:      todo!(),
+			y:      todo!(),
+			width:  todo!(),
+			height: todo!(),
+		});
+		Ok(PreviewData::None)
 	}
 
-	pub async fn video(path: &Path) -> Result<Vec<u8>> {
+	pub async fn video(adaptor: Arc<Adapter>, path: &Path) -> Result<PreviewData> {
 		let cache = Precache::cache(path);
 		if fs::metadata(&cache).await.is_err() {
 			external::ffmpegthumbnailer(path, &cache).await?;
 		}
 
-		Self::image(&cache).await
+		Self::image(adaptor, &cache).await
 	}
 
 	pub async fn json(path: &Path) -> Result<String> {

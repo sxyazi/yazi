@@ -1,13 +1,43 @@
-use std::io::Write;
+use std::{io::Write, path::Path};
 
 use anyhow::Result;
 use base64::{engine::general_purpose, Engine};
-use image::DynamicImage;
+use image::{imageops::FilterType, DynamicImage};
+use ratatui::prelude::Rect;
+use tokio::{fs, io::AsyncWriteExt};
+
+use crate::{config::PREVIEW, misc::tty_ratio, ui::Term};
 
 pub struct Kitty;
 
 impl Kitty {
-	pub fn image_show(img: DynamicImage) -> Result<Vec<u8>> {
+	pub async fn image_show(path: &Path, rect: Rect) -> Result<()> {
+		let (w, h) = {
+			let r = tty_ratio();
+			let (w, h) = ((rect.width as f64 * r.0) as u32, (rect.height as f64 * r.1) as u32);
+			(w.min(PREVIEW.max_width), h.min(PREVIEW.max_height))
+		};
+
+		let img = fs::read(path).await?;
+		let b = tokio::task::spawn_blocking(move || -> Result<Vec<u8>> {
+			let img = image::load_from_memory(&img)?;
+			Self::encode(if img.width() > w || img.height() > h {
+				img.resize(w, h, FilterType::Triangle)
+			} else {
+				img
+			})
+		})
+		.await??;
+
+		Term::move_to(rect.x, rect.y).ok();
+		tokio::io::stdout().write_all(&b).await.ok();
+		Ok(())
+	}
+
+	#[inline]
+	pub fn image_hide() { std::io::stdout().write_all(b"\x1b_Ga=d\x1b\\").ok(); }
+
+	fn encode(img: DynamicImage) -> Result<Vec<u8>> {
 		fn output(raw: Vec<u8>, format: u8, size: (u32, u32)) -> Result<Vec<u8>> {
 			let b64 = general_purpose::STANDARD.encode(raw).chars().collect::<Vec<_>>();
 
@@ -43,7 +73,4 @@ impl Kitty {
 			v => output(v.to_rgb8().into_raw(), 24, size),
 		}
 	}
-
-	#[inline]
-	pub fn image_hide() -> &'static [u8; 8] { b"\x1b_Ga=d\x1b\\" }
 }

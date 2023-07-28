@@ -1,3 +1,5 @@
+mod adapter;
 mod kitty;
+mod ueberzug;
 
-pub use kitty::*;
+pub use adapter::*;

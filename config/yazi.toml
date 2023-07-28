@@ -4,6 +4,7 @@ sort_reverse = true
 show_hidden  = false
 
 [preview]
+adapter    = "kitty"
 tab_size   = 2
 max_width  = 600
 max_height = 900
