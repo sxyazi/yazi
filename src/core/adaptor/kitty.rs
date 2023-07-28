@@ -35,7 +35,7 @@ impl Kitty {
 	}
 
 	#[inline]
-	pub fn image_hide() { std::io::stdout().write_all(b"\x1b_Ga=d\x1b\\").ok(); }
+	pub fn image_hide() { std::io::stdout().write_all(b"\x1b\\\x1b_Ga=d\x1b\\").ok(); }
 
 	fn encode(img: DynamicImage) -> Result<Vec<u8>> {
 		fn output(raw: Vec<u8>, format: u8, size: (u32, u32)) -> Result<Vec<u8>> {
@@ -46,7 +46,7 @@ impl Kitty {
 			if let Some(first) = it.next() {
 				write!(
 					buf,
-					"\x1b_Ga=d\x1b\\\x1b_Ga=T,f={},s={},v={},m={};{}\x1b\\",
+					"\x1b\\\x1b_Ga=d\x1b\\\x1b_Ga=T,f={},s={},v={},m={};{}\x1b\\",
 					format,
 					size.0,
 					size.1,

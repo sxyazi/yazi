@@ -22,4 +22,4 @@ pub const ALL_RATIO: u32 = PARENT_RATIO + CURRENT_RATIO + PREVIEW_RATIO;
 pub const DIR_PADDING: u16 = 2;
 
 pub const PREVIEW_BORDER: u16 = 2;
-pub const PREVIEW_PADDING: u16 = 2;
+pub const PREVIEW_MARGIN: u16 = 2;

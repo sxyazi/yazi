@@ -5,7 +5,7 @@ use ratatui::prelude::Rect;
 use syntect::{easy::HighlightFile, highlighting::{Theme, ThemeSet}, parsing::SyntaxSet, util::as_24_bit_terminal_escaped};
 use tokio::{fs, task::JoinHandle};
 
-use super::{ALL_RATIO, PREVIEW_BORDER, PREVIEW_PADDING, PREVIEW_RATIO};
+use super::{ALL_RATIO, CURRENT_RATIO, PARENT_RATIO, PREVIEW_BORDER, PREVIEW_MARGIN, PREVIEW_RATIO};
 use crate::{config::{PREVIEW, THEME}, core::{adaptor::Adaptor, external, files::{Files, FilesOp}, tasks::Precache}, emit, misc::{tty_size, MimeKind}};
 
 static SYNTECT_SYNTAX: OnceLock<SyntaxSet> = OnceLock::new();
@@ -30,26 +30,34 @@ pub enum PreviewData {
 impl Preview {
 	pub fn new() -> Self {
 		Self {
-			path:    Default::default(),
-			data:    Default::default(),
+			path: Default::default(),
+			data: Default::default(),
+
 			handle:  Default::default(),
 			adaptor: Arc::new(Adaptor::new()),
 		}
 	}
 
-	fn size() -> (u16, u16) {
+	fn rect() -> Rect {
 		let s = tty_size();
-		let col = (s.ws_col as u32 * PREVIEW_RATIO / ALL_RATIO) as u16;
-		(col.saturating_sub(PREVIEW_BORDER), s.ws_row.saturating_sub(PREVIEW_PADDING))
+
+		let x = (s.ws_col as u32 * (PARENT_RATIO + CURRENT_RATIO) / ALL_RATIO) as u16;
+		let width = (s.ws_col as u32 * PREVIEW_RATIO / ALL_RATIO) as u16;
+
+		Rect {
+			x:      x.saturating_add(PREVIEW_BORDER / 2),
+			y:      PREVIEW_MARGIN / 2,
+			width:  width.saturating_sub(PREVIEW_BORDER),
+			height: s.ws_row.saturating_sub(PREVIEW_MARGIN),
+		}
 	}
 
 	pub fn go(&mut self, path: &Path, mime: &str) {
-		if let Some(handle) = self.handle.take() {
-			handle.abort();
-		}
+		self.reset();
 
 		let adaptor = self.adaptor.clone();
 		let (path, mime) = (path.to_path_buf(), mime.to_owned());
+
 		self.handle = Some(tokio::spawn(async move {
 			let result = match MimeKind::new(&mime) {
 				MimeKind::Dir => Self::folder(&path).await,
@@ -66,6 +74,9 @@ impl Preview {
 	}
 
 	pub fn reset(&mut self) -> bool {
+		self.handle.take().map(|h| h.abort());
+		self.adaptor.image_hide();
+
 		if self.path == PathBuf::default() {
 			return false;
 		}
@@ -90,13 +101,7 @@ impl Preview {
 			path = cache.as_path();
 		}
 
-		// TODO: image
-		adaptor.image_show(path, Rect {
-			x:      todo!(),
-			y:      todo!(),
-			width:  todo!(),
-			height: todo!(),
-		});
+		adaptor.image_show(path, Self::rect()).await?;
 		Ok(PreviewData::None)
 	}
 
@@ -114,7 +119,7 @@ impl Preview {
 			external::jq(path)
 				.await?
 				.lines()
-				.take(Self::size().1 as usize)
+				.take(Self::rect().height as usize)
 				.collect::<Vec<_>>()
 				.join("\n"),
 		)
@@ -125,7 +130,7 @@ impl Preview {
 			external::lsar(path)
 				.await?
 				.into_iter()
-				.take(Self::size().1 as usize)
+				.take(Self::rect().height as usize)
 				.map(|f| f.name)
 				.collect::<Vec<_>>()
 				.join("\n"),
@@ -150,7 +155,7 @@ impl Preview {
 			let mut line = String::new();
 			let mut buf = String::new();
 
-			let mut i = Self::size().1 as usize;
+			let mut i = Self::rect().height as usize;
 			while i > 0 && h.reader.read_line(&mut line)? > 0 {
 				i -= 1;
 				line = line.replace('\t', &spaces);
