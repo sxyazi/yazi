@@ -1,36 +1,29 @@
 use std::{path::PathBuf, process::Stdio};
 
-use anyhow::{Ok, Result};
+use anyhow::Result;
 use ratatui::prelude::Rect;
-use tokio::{io::AsyncWriteExt, process::{Child, Command}, select, sync::mpsc::{self, UnboundedSender}};
+use tokio::{io::AsyncWriteExt, process::{Child, Command}, sync::mpsc::{self, UnboundedSender}};
 
-pub struct Ueberzug;
+use crate::config::PREVIEW;
+
+pub(super) struct Ueberzug;
 
 impl Ueberzug {
-	pub fn init() -> Result<UnboundedSender<Option<(PathBuf, Rect)>>> {
-		let mut child = Some(Self::create_demon()?);
+	pub(super) fn init() -> Result<UnboundedSender<Option<(PathBuf, Rect)>>> {
+		let mut child = Self::create_demon().ok();
 		let (tx, mut rx) = mpsc::unbounded_channel();
 
 		tokio::spawn(async move {
-			loop {
-				if let Some(c) = &mut child {
-					select! {
-						_ = c.wait() => child = None,
-						data = rx.recv() => {
-							if let Some(img) = data {
-								Self::send_command(c, img).await.ok();
-							} else {
-								break;
-							}
-						},
-					}
-				} else if let Some(img) = rx.recv().await {
+			while let Some(img) = rx.recv().await {
+				let exit = child.as_mut().and_then(|c| c.try_wait().ok());
+				if exit != Some(None) {
+					child = None;
+				}
+				if child.is_none() {
 					child = Self::create_demon().ok();
-					if let Some(c) = &mut child {
-						Self::send_command(c, img).await.ok();
-					}
-				} else {
-					break;
+				}
+				if let Some(c) = &mut child {
+					Self::send_command(c, img).await.ok();
 				}
 			}
 		});
@@ -41,21 +34,31 @@ impl Ueberzug {
 	fn create_demon() -> Result<Child> {
 		Ok(
 			Command::new("ueberzug")
-			.args(["layer", "-s", "--use-escape-codes"])
-			.kill_on_drop(true)
-			.stdin(Stdio::piped())
-			// .stdout(Stdio::piped())
-			.stderr(Stdio::null())
-			.spawn()?,
+				.args(["layer", "-so", &PREVIEW.adaptor.to_string()])
+				.kill_on_drop(true)
+				.stdin(Stdio::piped())
+				.stderr(Stdio::null())
+				.spawn()?,
 		)
 	}
 
 	async fn send_command(child: &mut Child, img: Option<(PathBuf, Rect)>) -> Result<()> {
 		let stdin = child.stdin.as_mut().unwrap();
 		if let Some((path, rect)) = img {
-			stdin.write_all(br#"{"action":"add","identifier":"preview","max_height":0,"max_width":0,"path":"/Users/ika/Downloads/photo_2023-06-28 07.23.33.jpeg","x":0,"y":0}\n"#).await?;
+			let cmd = format!(
+				r#"{{"action":"add","identifier":"yazi","x":{},"y":{},"max_width":{},"max_height":{},"path":"{}"}}{}"#,
+				rect.x,
+				rect.y,
+				rect.width,
+				rect.height,
+				path.to_string_lossy(),
+				"\n"
+			);
+			stdin.write_all(cmd.as_bytes()).await?;
 		} else {
-			stdin.write_all(br#"{"action":"remove","identifier":"preview"}\n"#).await?;
+			stdin
+				.write_all(format!(r#"{{"action":"remove","identifier":"yazi"}}{}"#, "\n").as_bytes())
+				.await?;
 		}
 		Ok(())
 	}

@@ -4,7 +4,7 @@ use anyhow::Result;
 use ratatui::prelude::Rect;
 use tokio::sync::mpsc::UnboundedSender;
 
-use super::{kitty::Kitty, ueberzug::Ueberzug};
+use super::{iterm2::Iterm2, kitty::Kitty, ueberzug::Ueberzug};
 use crate::config::{preview::PreviewAdaptor, PREVIEW};
 
 pub struct Adaptor {
@@ -15,7 +15,7 @@ impl Adaptor {
 	pub fn new() -> Self {
 		let mut adaptor = Self { ueberzug: None };
 
-		if PREVIEW.adaptor == PreviewAdaptor::Ueberzug {
+		if PREVIEW.adaptor.needs_ueberzug() {
 			adaptor.ueberzug = Ueberzug::init().ok();
 		}
 
@@ -25,7 +25,8 @@ impl Adaptor {
 	pub async fn image_show(&self, path: &Path, rect: Rect) -> Result<()> {
 		match PREVIEW.adaptor {
 			PreviewAdaptor::Kitty => Kitty::image_show(path, rect).await,
-			PreviewAdaptor::Ueberzug => {
+			PreviewAdaptor::Iterm2 => Iterm2::image_show(path, rect).await,
+			_ => {
 				if let Some(tx) = &self.ueberzug {
 					tx.send(Some((path.to_path_buf(), rect))).ok();
 				}
@@ -37,7 +38,8 @@ impl Adaptor {
 	pub fn image_hide(&self) {
 		match PREVIEW.adaptor {
 			PreviewAdaptor::Kitty => Kitty::image_hide(),
-			PreviewAdaptor::Ueberzug => {
+			PreviewAdaptor::Iterm2 => {}
+			_ => {
 				if let Some(tx) = &self.ueberzug {
 					tx.send(None).ok();
 				}
