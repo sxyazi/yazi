@@ -1,33 +1,33 @@
-use std::path::{Path, PathBuf};
+use std::{path::{Path, PathBuf}, sync::atomic::{AtomicBool, Ordering}};
 
 use anyhow::Result;
+use once_cell::sync::Lazy;
 use ratatui::prelude::Rect;
 use tokio::sync::mpsc::UnboundedSender;
 
 use super::{iterm2::Iterm2, kitty::Kitty, ueberzug::Ueberzug};
 use crate::config::{preview::PreviewAdaptor, PREVIEW};
 
-pub struct Adaptor {
-	ueberzug: Option<UnboundedSender<Option<(PathBuf, Rect)>>>,
-}
+static IMAGE_SHOWN: AtomicBool = AtomicBool::new(false);
+
+static UEBERZUG: Lazy<Option<UnboundedSender<Option<(PathBuf, Rect)>>>> =
+	Lazy::new(|| if PREVIEW.adaptor.needs_ueberzug() { Ueberzug::init().ok() } else { None });
+
+pub struct Adaptor;
 
 impl Adaptor {
-	pub fn new() -> Self {
-		let mut adaptor = Self { ueberzug: None };
+	pub fn init() { Lazy::force(&UEBERZUG); }
 
-		if PREVIEW.adaptor.needs_ueberzug() {
-			adaptor.ueberzug = Ueberzug::init().ok();
+	pub async fn image_show(path: &Path, rect: Rect) -> Result<()> {
+		if IMAGE_SHOWN.swap(true, Ordering::Relaxed) {
+			Self::image_hide(rect);
 		}
 
-		adaptor
-	}
-
-	pub async fn image_show(&self, path: &Path, rect: Rect) -> Result<()> {
 		match PREVIEW.adaptor {
 			PreviewAdaptor::Kitty => Kitty::image_show(path, rect).await,
 			PreviewAdaptor::Iterm2 => Iterm2::image_show(path, rect).await,
 			_ => {
-				if let Some(tx) = &self.ueberzug {
+				if let Some(tx) = &*UEBERZUG {
 					tx.send(Some((path.to_path_buf(), rect))).ok();
 				}
 				Ok(())
@@ -35,12 +35,16 @@ impl Adaptor {
 		}
 	}
 
-	pub fn image_hide(&self) {
+	pub fn image_hide(rect: Rect) {
+		if !IMAGE_SHOWN.swap(false, Ordering::Relaxed) {
+			return;
+		}
+
 		match PREVIEW.adaptor {
 			PreviewAdaptor::Kitty => Kitty::image_hide(),
-			PreviewAdaptor::Iterm2 => {}
+			PreviewAdaptor::Iterm2 => Iterm2::image_hide(rect),
 			_ => {
-				if let Some(tx) = &self.ueberzug {
+				if let Some(tx) = &*UEBERZUG {
 					tx.send(None).ok();
 				}
 			}

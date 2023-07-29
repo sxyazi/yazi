@@ -2,7 +2,7 @@ use ansi_to_tui::IntoText;
 use ratatui::{buffer::Buffer, layout::Rect, widgets::{Clear, Paragraph, Widget}};
 
 use super::Folder;
-use crate::{core::manager::PreviewData, ui::Ctx};
+use crate::{core::manager::{PreviewData, PREVIEW_BORDER}, ui::Ctx};
 
 pub struct Preview<'a> {
 	cx: &'a Ctx,
@@ -14,7 +14,15 @@ impl<'a> Preview<'a> {
 
 impl<'a> Widget for Preview<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		Clear.render(Rect { x: area.x, y: area.y, width: area.width + 1, height: area.height }, buf);
+		Clear.render(
+			Rect {
+				x:      area.x,
+				y:      area.y,
+				width:  area.width + PREVIEW_BORDER / 2,
+				height: area.height,
+			},
+			buf,
+		);
 
 		// TODO: image
 		// if self.cx.input.visible || self.cx.select.visible || self.cx.tasks.visible {

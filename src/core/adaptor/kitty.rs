@@ -25,7 +25,7 @@ impl Kitty {
 	pub(super) fn image_hide() { std::io::stdout().write_all(b"\x1b\\\x1b_Ga=d\x1b\\").ok(); }
 
 	async fn encode(img: DynamicImage) -> Result<Vec<u8>> {
-		fn output(raw: Vec<u8>, format: u8, size: (u32, u32)) -> Result<Vec<u8>> {
+		fn output(raw: &[u8], format: u8, size: (u32, u32)) -> Result<Vec<u8>> {
 			let b64 = general_purpose::STANDARD.encode(raw).chars().collect::<Vec<_>>();
 
 			let mut it = b64.chunks(4096).peekable();
@@ -55,9 +55,9 @@ impl Kitty {
 
 		let size = (img.width(), img.height());
 		tokio::task::spawn_blocking(move || match img {
-			DynamicImage::ImageRgb8(v) => output(v.into_raw(), 24, size),
-			DynamicImage::ImageRgba8(v) => output(v.into_raw(), 32, size),
-			v => output(v.to_rgb8().into_raw(), 24, size),
+			DynamicImage::ImageRgb8(v) => output(v.as_raw(), 24, size),
+			DynamicImage::ImageRgba8(v) => output(v.as_raw(), 32, size),
+			v => output(v.to_rgb8().as_raw(), 24, size),
 		})
 		.await?
 	}

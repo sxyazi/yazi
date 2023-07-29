@@ -14,7 +14,7 @@ impl Ueberzug {
 		let (tx, mut rx) = mpsc::unbounded_channel();
 
 		tokio::spawn(async move {
-			while let Some(img) = rx.recv().await {
+			while let Some(cmd) = rx.recv().await {
 				let exit = child.as_mut().and_then(|c| c.try_wait().ok());
 				if exit != Some(None) {
 					child = None;
@@ -23,7 +23,7 @@ impl Ueberzug {
 					child = Self::create_demon().ok();
 				}
 				if let Some(c) = &mut child {
-					Self::send_command(c, img).await.ok();
+					Self::send_command(c, cmd).await.ok();
 				}
 			}
 		});
@@ -42,10 +42,10 @@ impl Ueberzug {
 		)
 	}
 
-	async fn send_command(child: &mut Child, img: Option<(PathBuf, Rect)>) -> Result<()> {
+	async fn send_command(child: &mut Child, cmd: Option<(PathBuf, Rect)>) -> Result<()> {
 		let stdin = child.stdin.as_mut().unwrap();
-		if let Some((path, rect)) = img {
-			let cmd = format!(
+		if let Some((path, rect)) = cmd {
+			let s = format!(
 				r#"{{"action":"add","identifier":"yazi","x":{},"y":{},"max_width":{},"max_height":{},"path":"{}"}}{}"#,
 				rect.x,
 				rect.y,
@@ -54,7 +54,7 @@ impl Ueberzug {
 				path.to_string_lossy(),
 				"\n"
 			);
-			stdin.write_all(cmd.as_bytes()).await?;
+			stdin.write_all(s.as_bytes()).await?;
 		} else {
 			stdin
 				.write_all(format!(r#"{{"action":"remove","identifier":"yazi"}}{}"#, "\n").as_bytes())

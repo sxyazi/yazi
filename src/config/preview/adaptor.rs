@@ -14,11 +14,20 @@ pub enum PreviewAdaptor {
 
 impl Default for PreviewAdaptor {
 	fn default() -> Self {
+		if env::var("KITTY_WINDOW_ID").is_ok() {
+			return Self::Kitty;
+		}
+		if env::var("KONSOLE_VERSION").is_ok() {
+			return Self::Kitty;
+		}
 		match env::var("TERM").unwrap_or_default().as_str() {
-			"wezterm" => return Self::Kitty,
 			"xterm-kitty" => return Self::Kitty,
-			"iterm2" => return Self::Iterm2,
+			"wezterm" => return Self::Kitty,
 			"foot" => return Self::Sixel,
+			_ => {}
+		}
+		match env::var("TERM_PROGRAM").unwrap_or_default().as_str() {
+			"iTerm.app" => return Self::Iterm2,
 			_ => {}
 		}
 		match env::var("XDG_SESSION_TYPE").unwrap_or_default().as_str() {

@@ -1,4 +1,4 @@
-use std::{fs::File, io::{BufRead, BufReader}, path::{Path, PathBuf}, sync::{Arc, OnceLock}};
+use std::{fs::File, io::{BufRead, BufReader}, path::{Path, PathBuf}, sync::OnceLock};
 
 use anyhow::{anyhow, Result};
 use ratatui::prelude::Rect;
@@ -15,8 +15,7 @@ pub struct Preview {
 	pub path: PathBuf,
 	pub data: PreviewData,
 
-	handle:  Option<JoinHandle<()>>,
-	adaptor: Arc<Adaptor>,
+	handle: Option<JoinHandle<()>>,
 }
 
 #[derive(Debug, Default)]
@@ -33,8 +32,7 @@ impl Preview {
 			path: Default::default(),
 			data: Default::default(),
 
-			handle:  Default::default(),
-			adaptor: Arc::new(Adaptor::new()),
+			handle: Default::default(),
 		}
 	}
 
@@ -55,16 +53,14 @@ impl Preview {
 	pub fn go(&mut self, path: &Path, mime: &str) {
 		self.reset();
 
-		let adaptor = self.adaptor.clone();
 		let (path, mime) = (path.to_path_buf(), mime.to_owned());
-
 		self.handle = Some(tokio::spawn(async move {
 			let result = match MimeKind::new(&mime) {
 				MimeKind::Dir => Self::folder(&path).await,
 				MimeKind::JSON => Self::json(&path).await.map(PreviewData::Text),
 				MimeKind::Text => Self::highlight(&path).await.map(PreviewData::Text),
-				MimeKind::Image => Self::image(adaptor, &path).await,
-				MimeKind::Video => Self::video(adaptor, &path).await,
+				MimeKind::Image => Self::image(&path).await,
+				MimeKind::Video => Self::video(&path).await,
 				MimeKind::Archive => Self::archive(&path).await.map(PreviewData::Text),
 				MimeKind::Others => Err(anyhow!("Unsupported mimetype: {}", mime)),
 			};
@@ -75,7 +71,7 @@ impl Preview {
 
 	pub fn reset(&mut self) -> bool {
 		self.handle.take().map(|h| h.abort());
-		self.adaptor.image_hide();
+		Adaptor::image_hide(Self::rect());
 
 		if self.path == PathBuf::default() {
 			return false;
@@ -95,23 +91,23 @@ impl Preview {
 		Ok(PreviewData::Folder)
 	}
 
-	pub async fn image(adaptor: Arc<Adaptor>, mut path: &Path) -> Result<PreviewData> {
+	pub async fn image(mut path: &Path) -> Result<PreviewData> {
 		let cache = Precache::cache(path);
 		if fs::metadata(&cache).await.is_ok() {
 			path = cache.as_path();
 		}
 
-		adaptor.image_show(path, Self::rect()).await?;
+		Adaptor::image_show(path, Self::rect()).await?;
 		Ok(PreviewData::None)
 	}
 
-	pub async fn video(adaptor: Arc<Adaptor>, path: &Path) -> Result<PreviewData> {
+	pub async fn video(path: &Path) -> Result<PreviewData> {
 		let cache = Precache::cache(path);
 		if fs::metadata(&cache).await.is_err() {
 			external::ffmpegthumbnailer(path, &cache).await?;
 		}
 
-		Self::image(adaptor, &cache).await
+		Self::image(&cache).await
 	}
 
 	pub async fn json(path: &Path) -> Result<String> {
