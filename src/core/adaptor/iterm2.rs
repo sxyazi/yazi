@@ -1,10 +1,9 @@
-use std::{io::Write, path::Path};
+use std::{io::{stdout, Write}, path::Path};
 
 use anyhow::Result;
 use base64::{engine::general_purpose, Engine};
 use image::{codecs::jpeg::JpegEncoder, DynamicImage};
 use ratatui::prelude::Rect;
-use tokio::io::AsyncWriteExt;
 
 use super::image::Image;
 use crate::ui::Term;
@@ -17,7 +16,7 @@ impl Iterm2 {
 		let b = Self::encode(img).await?;
 
 		Term::move_to(rect.x, rect.y).ok();
-		tokio::io::stdout().write_all(&b).await.ok();
+		stdout().write_all(&b).ok();
 		Ok(())
 	}
 
@@ -26,7 +25,7 @@ impl Iterm2 {
 		let s = " ".repeat(rect.width as usize);
 		for y in rect.top()..=rect.bottom() {
 			Term::move_to(rect.x, y).ok();
-			std::io::stdout().write_all(s.as_bytes()).ok();
+			stdout().write_all(s.as_bytes()).ok();
 		}
 	}
 

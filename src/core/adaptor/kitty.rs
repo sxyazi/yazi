@@ -1,10 +1,9 @@
-use std::{io::Write, path::Path};
+use std::{io::{stdout, Write}, path::Path};
 
 use anyhow::Result;
 use base64::{engine::general_purpose, Engine};
 use image::DynamicImage;
 use ratatui::prelude::Rect;
-use tokio::io::AsyncWriteExt;
 
 use super::image::Image;
 use crate::ui::Term;
@@ -17,12 +16,12 @@ impl Kitty {
 		let b = Self::encode(img).await?;
 
 		Term::move_to(rect.x, rect.y).ok();
-		tokio::io::stdout().write_all(&b).await.ok();
+		stdout().write_all(&b).ok();
 		Ok(())
 	}
 
 	#[inline]
-	pub(super) fn image_hide() { std::io::stdout().write_all(b"\x1b\\\x1b_Ga=d\x1b\\").ok(); }
+	pub(super) fn image_hide() { stdout().write_all(b"\x1b\\\x1b_Ga=d\x1b\\").ok(); }
 
 	async fn encode(img: DynamicImage) -> Result<Vec<u8>> {
 		fn output(raw: &[u8], format: u8, size: (u32, u32)) -> Result<Vec<u8>> {
