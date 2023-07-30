@@ -1,5 +1,3 @@
-use core::adaptor;
-
 use ui::App;
 
 mod config;
@@ -13,7 +11,7 @@ async fn main() -> anyhow::Result<()> {
 
 	config::init();
 
-	adaptor::Adaptor::init();
+	core::adaptor::Adaptor::init();
 
 	App::run().await
 }

@@ -42,6 +42,23 @@ And download the latest release [from here](https://github.com/sxyazi/yazi/relea
 cargo install --git https://github.com/sxyazi/yazi.git
 ```
 
+### Nix
+
+Nix users can install Yazi from [the NUR](https://github.com/nix-community/nur-combined/blob/master/repos/xyenon/pkgs/yazi/default.nix):
+
+```bash
+nix-env -iA nur.repos.xyenon.yazi
+```
+
+Or add the following to your configuration:
+
+```nix
+# configuration.nix
+environment.systemPackages = with pkgs; [
+  nur.repos.xyenon.yazi
+];
+```
+
 ### Build from source
 
 Execute the following commands to clone the project and build Yazi:
@@ -68,16 +85,16 @@ If you want to use your own config, copy the [config folder](https://github.com/
 
 ## Image Preview
 
-| Platform    | Protocol                                                                         | Support               |
-| ----------- | -------------------------------------------------------------------------------- | --------------------- |
-| Kitty       | [Terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) | ✅ Built-in           |
-| WezTerm     | [Terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) | ✅ Built-in           |
-| Konsole     | [Terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) | ✅ Built-in           |
-| iTerm2      | [Inline Images Protocol](https://iterm2.com/documentation-images.html)           | ✅ Built-in           |
-| Hyper       | Sixel                                                                            | ☑️ Überzug++ required |
-| foot        | Sixel                                                                            | ☑️ Überzug++ required |
-| X11/Wayland | Window system protocol                                                           | ☑️ Überzug++ required |
-| Fallback    | [Chafa](https://hpjansson.org/chafa/)                                            | ☑️ Überzug++ required |
+| Platform      | Protocol                                                                         | Support               |
+| ------------- | -------------------------------------------------------------------------------- | --------------------- |
+| Kitty         | [Terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) | ✅ Built-in           |
+| WezTerm       | [Terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) | ✅ Built-in           |
+| Konsole       | [Terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) | ✅ Built-in           |
+| iTerm2        | [Inline Images Protocol](https://iterm2.com/documentation-images.html)           | ✅ Built-in           |
+| Hyper         | Sixel                                                                            | ☑️ Überzug++ required |
+| foot          | Sixel                                                                            | ☑️ Überzug++ required |
+| X11 / Wayland | Window system protocol                                                           | ☑️ Überzug++ required |
+| Fallback      | [Chafa](https://hpjansson.org/chafa/)                                            | ☑️ Überzug++ required |
 
 Yazi automatically selects the appropriate preview method for you, based on the priority from top to bottom.
 That's relying on the `$TERM`, `$TERM_PROGRAM`, and `$XDG_SESSION_TYPE` variables, make sure you don't overwrite them by mistake!
