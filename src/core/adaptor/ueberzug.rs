@@ -9,7 +9,7 @@ use crate::config::PREVIEW;
 pub(super) struct Ueberzug;
 
 impl Ueberzug {
-	pub(super) fn init() -> Result<UnboundedSender<Option<(PathBuf, Rect)>>> {
+	pub(super) fn start() -> Result<UnboundedSender<Option<(PathBuf, Rect)>>> {
 		let mut child = Self::create_demon().ok();
 		let (tx, mut rx) = mpsc::unbounded_channel();
 

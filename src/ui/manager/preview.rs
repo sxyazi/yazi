@@ -24,10 +24,6 @@ impl<'a> Widget for Preview<'a> {
 			buf,
 		);
 
-		// TODO: image
-		// if self.cx.input.visible || self.cx.select.visible || self.cx.tasks.visible {
-		// }
-
 		let manager = &self.cx.manager;
 		let hovered = if let Some(h) = manager.hovered() {
 			h.path()
@@ -36,7 +32,7 @@ impl<'a> Widget for Preview<'a> {
 		};
 
 		let preview = manager.active().preview();
-		if preview.path != hovered {
+		if !preview.same_path(&hovered) {
 			return;
 		}
 
@@ -51,6 +47,7 @@ impl<'a> Widget for Preview<'a> {
 				let p = Paragraph::new(s.as_bytes().into_text().unwrap());
 				p.render(area, buf);
 			}
+			PreviewData::Image => {}
 		}
 	}
 }

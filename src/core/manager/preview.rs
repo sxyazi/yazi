@@ -1,4 +1,4 @@
-use std::{fs::File, io::{BufRead, BufReader}, path::{Path, PathBuf}, sync::OnceLock};
+use std::{fs::File, io::{BufRead, BufReader}, mem, path::{Path, PathBuf}, sync::OnceLock};
 
 use anyhow::{anyhow, Result};
 use ratatui::prelude::Rect;
@@ -11,8 +11,9 @@ use crate::{config::{PREVIEW, THEME}, core::{adaptor::Adaptor, external, files::
 static SYNTECT_SYNTAX: OnceLock<SyntaxSet> = OnceLock::new();
 static SYNTECT_THEME: OnceLock<Theme> = OnceLock::new();
 
+#[derive(Default)]
 pub struct Preview {
-	pub path: PathBuf,
+	pub lock: Option<(PathBuf, String)>,
 	pub data: PreviewData,
 
 	handle: Option<JoinHandle<()>>,
@@ -24,18 +25,10 @@ pub enum PreviewData {
 	None,
 	Folder,
 	Text(String),
+	Image,
 }
 
 impl Preview {
-	pub fn new() -> Self {
-		Self {
-			path: Default::default(),
-			data: Default::default(),
-
-			handle: Default::default(),
-		}
-	}
-
 	fn rect() -> Rect {
 		let s = tty_size();
 
@@ -50,12 +43,19 @@ impl Preview {
 		}
 	}
 
-	pub fn go(&mut self, path: &Path, mime: &str) {
-		self.reset();
+	pub fn go(&mut self, path: &Path, mime: &str, show_image: bool) {
+		let kind = MimeKind::new(&mime);
+		if !show_image && matches!(kind, MimeKind::Image | MimeKind::Video) {
+			return;
+		} else if self.same(path, mime) {
+			return;
+		} else {
+			self.reset();
+		}
 
 		let (path, mime) = (path.to_path_buf(), mime.to_owned());
 		self.handle = Some(tokio::spawn(async move {
-			let result = match MimeKind::new(&mime) {
+			let result = match kind {
 				MimeKind::Dir => Self::folder(&path).await,
 				MimeKind::JSON => Self::json(&path).await.map(PreviewData::Text),
 				MimeKind::Text => Self::highlight(&path).await.map(PreviewData::Text),
@@ -65,7 +65,7 @@ impl Preview {
 				MimeKind::Others => Err(anyhow!("Unsupported mimetype: {}", mime)),
 			};
 
-			emit!(Preview(path, result.unwrap_or_default()));
+			emit!(Preview(path, mime, result.unwrap_or_default()));
 		}));
 	}
 
@@ -73,13 +73,22 @@ impl Preview {
 		self.handle.take().map(|h| h.abort());
 		Adaptor::image_hide(Self::rect());
 
-		if self.path == PathBuf::default() {
-			return false;
-		}
+		self.lock = None;
+		!matches!(
+			mem::replace(&mut self.data, PreviewData::None),
+			PreviewData::None | PreviewData::Image
+		)
+	}
 
-		self.path = Default::default();
-		self.data = Default::default();
-		true
+	pub fn reset_image(&mut self) -> bool {
+		self.handle.take().map(|h| h.abort());
+		Adaptor::image_hide(Self::rect());
+
+		if matches!(self.data, PreviewData::Image) {
+			self.lock = None;
+			self.data = PreviewData::None;
+		}
+		false
 	}
 
 	pub async fn folder(path: &Path) -> Result<PreviewData> {
@@ -98,7 +107,7 @@ impl Preview {
 		}
 
 		Adaptor::image_show(path, Self::rect()).await?;
-		Ok(PreviewData::None)
+		Ok(PreviewData::Image)
 	}
 
 	pub async fn video(path: &Path) -> Result<PreviewData> {
@@ -164,5 +173,17 @@ impl Preview {
 			Ok(buf)
 		})
 		.await?
+	}
+}
+
+impl Preview {
+	#[inline]
+	pub fn same(&self, path: &Path, mime: &str) -> bool {
+		self.lock.as_ref().map(|(p, m)| p == path && m == mime).unwrap_or(false)
+	}
+
+	#[inline]
+	pub fn same_path(&self, path: &Path) -> bool {
+		self.lock.as_ref().map(|(p, _)| p == path).unwrap_or(false)
 	}
 }

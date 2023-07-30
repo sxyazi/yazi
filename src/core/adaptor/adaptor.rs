@@ -11,7 +11,7 @@ use crate::config::{preview::PreviewAdaptor, PREVIEW};
 static IMAGE_SHOWN: AtomicBool = AtomicBool::new(false);
 
 static UEBERZUG: Lazy<Option<UnboundedSender<Option<(PathBuf, Rect)>>>> =
-	Lazy::new(|| if PREVIEW.adaptor.needs_ueberzug() { Ueberzug::init().ok() } else { None });
+	Lazy::new(|| if PREVIEW.adaptor.needs_ueberzug() { Ueberzug::start().ok() } else { None });
 
 pub struct Adaptor;
 

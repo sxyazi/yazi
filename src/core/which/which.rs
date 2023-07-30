@@ -26,7 +26,7 @@ impl Which {
 			.filter(|s| s.on.len() > 1 && s.on[0] == *key)
 			.cloned()
 			.collect();
-		self.visible = true;
+		self.switch(true);
 		true
 	}
 
@@ -37,16 +37,22 @@ impl Which {
 			.collect();
 
 		if self.cands.is_empty() {
-			self.visible = false;
+			self.switch(false);
 		} else if self.cands.len() == 1 {
-			self.visible = false;
+			self.switch(false);
 			emit!(Ctrl(self.cands.remove(0), self.layer));
 		} else if let Some(i) = self.cands.iter().position(|c| c.on.len() == self.times + 1) {
+			self.switch(false);
 			emit!(Ctrl(self.cands.remove(i), self.layer));
-			self.visible = false;
 		}
 
 		self.times += 1;
 		return true;
+	}
+
+	#[inline]
+	fn switch(&mut self, state: bool) {
+		self.visible = state;
+		emit!(Hover); // Show/hide preview for images
 	}
 }

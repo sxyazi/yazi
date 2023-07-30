@@ -91,7 +91,7 @@ it will automatically use the "Window system protocol" to display images -- this
 - [x] Integration with fzf, zoxide for fast directory navigation
 - [x] Integration with fd, rg for fuzzy file searching
 - [x] Documentation of commands and options
-- [ ] Support for Überzug++ for image previews with X11/wayland environment
+- [x] Support for Überzug++ for image previews with X11/wayland environment
 - [ ] Batch renaming support
 
 ## License

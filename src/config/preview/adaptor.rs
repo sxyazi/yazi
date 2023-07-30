@@ -6,9 +6,9 @@ pub enum PreviewAdaptor {
 	Iterm2,
 
 	// Supported by Überzug++
+	Sixel,
 	X11,
 	Wayland,
-	Sixel,
 	Chafa,
 }
 
@@ -43,9 +43,9 @@ impl ToString for PreviewAdaptor {
 		match self {
 			PreviewAdaptor::Kitty => "kitty",
 			PreviewAdaptor::Iterm2 => "iterm2",
+			PreviewAdaptor::Sixel => "sixel",
 			PreviewAdaptor::X11 => "x11",
 			PreviewAdaptor::Wayland => "wayland",
-			PreviewAdaptor::Sixel => "sixel",
 			PreviewAdaptor::Chafa => "chafa",
 		}
 		.to_string()
