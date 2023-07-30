@@ -1,21 +1,22 @@
-use std::{fs::File, io::{BufRead, BufReader}, path::{Path, PathBuf}, sync::OnceLock};
+use std::{fs::File, io::{BufRead, BufReader}, mem, path::{Path, PathBuf}, sync::OnceLock};
 
 use anyhow::{anyhow, Result};
-use image::imageops::FilterType;
+use ratatui::prelude::Rect;
 use syntect::{easy::HighlightFile, highlighting::{Theme, ThemeSet}, parsing::SyntaxSet, util::as_24_bit_terminal_escaped};
 use tokio::{fs, task::JoinHandle};
 
-use super::{ALL_RATIO, PREVIEW_BORDER, PREVIEW_PADDING, PREVIEW_RATIO};
-use crate::{config::{PREVIEW, THEME}, core::{adapter::Kitty, external, files::{Files, FilesOp}, tasks::Precache}, emit, misc::{tty_ratio, tty_size, MimeKind}};
+use super::{ALL_RATIO, CURRENT_RATIO, PARENT_RATIO, PREVIEW_BORDER, PREVIEW_MARGIN, PREVIEW_RATIO};
+use crate::{config::{PREVIEW, THEME}, core::{adaptor::Adaptor, external, files::{Files, FilesOp}, tasks::Precache}, emit, misc::{tty_size, MimeKind}};
 
 static SYNTECT_SYNTAX: OnceLock<SyntaxSet> = OnceLock::new();
 static SYNTECT_THEME: OnceLock<Theme> = OnceLock::new();
 
-#[derive(Debug)]
+#[derive(Default)]
 pub struct Preview {
-	pub path: PathBuf,
+	pub lock: Option<(PathBuf, String)>,
 	pub data: PreviewData,
-	handle:   Option<JoinHandle<()>>,
+
+	handle: Option<JoinHandle<()>>,
 }
 
 #[derive(Debug, Default)]
@@ -24,49 +25,70 @@ pub enum PreviewData {
 	None,
 	Folder,
 	Text(String),
-	Image(Vec<u8>),
+	Image,
 }
 
 impl Preview {
-	pub fn new() -> Self {
-		Self { path: Default::default(), data: Default::default(), handle: Default::default() }
-	}
-
-	fn size() -> (u16, u16) {
+	fn rect() -> Rect {
 		let s = tty_size();
-		let col = (s.ws_col as u32 * PREVIEW_RATIO / ALL_RATIO) as u16;
-		(col.saturating_sub(PREVIEW_BORDER), s.ws_row.saturating_sub(PREVIEW_PADDING))
+
+		let x = (s.ws_col as u32 * (PARENT_RATIO + CURRENT_RATIO) / ALL_RATIO) as u16;
+		let width = (s.ws_col as u32 * PREVIEW_RATIO / ALL_RATIO) as u16;
+
+		Rect {
+			x:      x.saturating_add(PREVIEW_BORDER / 2),
+			y:      PREVIEW_MARGIN / 2,
+			width:  width.saturating_sub(PREVIEW_BORDER),
+			height: s.ws_row.saturating_sub(PREVIEW_MARGIN),
+		}
 	}
 
-	pub fn go(&mut self, path: &Path, mime: &str) {
-		if let Some(handle) = self.handle.take() {
-			handle.abort();
+	pub fn go(&mut self, path: &Path, mime: &str, show_image: bool) {
+		let kind = MimeKind::new(&mime);
+		if !show_image && matches!(kind, MimeKind::Image | MimeKind::Video) {
+			return;
+		} else if self.same(path, mime) {
+			return;
+		} else {
+			self.reset();
 		}
 
 		let (path, mime) = (path.to_path_buf(), mime.to_owned());
 		self.handle = Some(tokio::spawn(async move {
-			let result = match MimeKind::new(&mime) {
+			let result = match kind {
 				MimeKind::Dir => Self::folder(&path).await,
 				MimeKind::JSON => Self::json(&path).await.map(PreviewData::Text),
 				MimeKind::Text => Self::highlight(&path).await.map(PreviewData::Text),
-				MimeKind::Image => Self::image(&path).await.map(PreviewData::Image),
-				MimeKind::Video => Self::video(&path).await.map(PreviewData::Image),
+				MimeKind::Image => Self::image(&path).await,
+				MimeKind::Video => Self::video(&path).await,
 				MimeKind::Archive => Self::archive(&path).await.map(PreviewData::Text),
 				MimeKind::Others => Err(anyhow!("Unsupported mimetype: {}", mime)),
 			};
 
-			emit!(Preview(path, result.unwrap_or_default()));
+			emit!(Preview(path, mime, result.unwrap_or_default()));
 		}));
 	}
 
 	pub fn reset(&mut self) -> bool {
-		if self.path == PathBuf::default() {
-			return false;
-		}
+		self.handle.take().map(|h| h.abort());
+		Adaptor::image_hide(Self::rect());
 
-		self.path = Default::default();
-		self.data = Default::default();
-		true
+		self.lock = None;
+		!matches!(
+			mem::replace(&mut self.data, PreviewData::None),
+			PreviewData::None | PreviewData::Image
+		)
+	}
+
+	pub fn reset_image(&mut self) -> bool {
+		self.handle.take().map(|h| h.abort());
+		Adaptor::image_hide(Self::rect());
+
+		if matches!(self.data, PreviewData::Image) {
+			self.lock = None;
+			self.data = PreviewData::None;
+		}
+		false
 	}
 
 	pub async fn folder(path: &Path) -> Result<PreviewData> {
@@ -78,32 +100,17 @@ impl Preview {
 		Ok(PreviewData::Folder)
 	}
 
-	pub async fn image(mut path: &Path) -> Result<Vec<u8>> {
+	pub async fn image(mut path: &Path) -> Result<PreviewData> {
 		let cache = Precache::cache(path);
 		if fs::metadata(&cache).await.is_ok() {
 			path = cache.as_path();
 		}
 
-		let (w, h) = {
-			let r = tty_ratio();
-			let (w, h) = Self::size();
-			let (w, h) = ((w as f64 * r.0) as u32, (h as f64 * r.1) as u32);
-			(w.min(PREVIEW.max_width), h.min(PREVIEW.max_height))
-		};
-
-		let img = fs::read(path).await?;
-		tokio::task::spawn_blocking(move || -> Result<Vec<u8>> {
-			let img = image::load_from_memory(&img)?;
-			Kitty::image_show(if img.width() > w || img.height() > h {
-				img.resize(w, h, FilterType::Triangle)
-			} else {
-				img
-			})
-		})
-		.await?
+		Adaptor::image_show(path, Self::rect()).await?;
+		Ok(PreviewData::Image)
 	}
 
-	pub async fn video(path: &Path) -> Result<Vec<u8>> {
+	pub async fn video(path: &Path) -> Result<PreviewData> {
 		let cache = Precache::cache(path);
 		if fs::metadata(&cache).await.is_err() {
 			external::ffmpegthumbnailer(path, &cache).await?;
@@ -117,7 +124,7 @@ impl Preview {
 			external::jq(path)
 				.await?
 				.lines()
-				.take(Self::size().1 as usize)
+				.take(Self::rect().height as usize)
 				.collect::<Vec<_>>()
 				.join("\n"),
 		)
@@ -128,7 +135,7 @@ impl Preview {
 			external::lsar(path)
 				.await?
 				.into_iter()
-				.take(Self::size().1 as usize)
+				.take(Self::rect().height as usize)
 				.map(|f| f.name)
 				.collect::<Vec<_>>()
 				.join("\n"),
@@ -153,7 +160,7 @@ impl Preview {
 			let mut line = String::new();
 			let mut buf = String::new();
 
-			let mut i = Self::size().1 as usize;
+			let mut i = Self::rect().height as usize;
 			while i > 0 && h.reader.read_line(&mut line)? > 0 {
 				i -= 1;
 				line = line.replace('\t', &spaces);
@@ -166,5 +173,17 @@ impl Preview {
 			Ok(buf)
 		})
 		.await?
+	}
+}
+
+impl Preview {
+	#[inline]
+	pub fn same(&self, path: &Path, mime: &str) -> bool {
+		self.lock.as_ref().map(|(p, m)| p == path && m == mime).unwrap_or(false)
+	}
+
+	#[inline]
+	pub fn same_path(&self, path: &Path) -> bool {
+		self.lock.as_ref().map(|(p, _)| p == path).unwrap_or(false)
 	}
 }

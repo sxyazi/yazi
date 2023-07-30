@@ -49,20 +49,24 @@ impl Manager {
 		self.watcher.watch(to_watch);
 	}
 
-	pub fn preview(&mut self) -> bool {
+	pub fn preview(&mut self, show_image: bool) -> bool {
 		let hovered = if let Some(h) = self.hovered() {
 			h.clone()
 		} else {
 			return self.active_mut().preview.reset();
 		};
 
+		if !show_image {
+			self.active_mut().preview.reset_image();
+		}
+
 		if hovered.meta.is_dir() {
-			self.active_mut().preview.go(&hovered.path, MIME_DIR);
+			self.active_mut().preview.go(&hovered.path, MIME_DIR, show_image);
 			if self.active().history(&hovered.path).is_some() {
-				emit!(Preview(hovered.path, PreviewData::Folder));
+				emit!(Preview(hovered.path, MIME_DIR.to_owned(), PreviewData::Folder));
 			}
 		} else if let Some(mime) = self.mimetype.get(&hovered.path).cloned() {
-			self.active_mut().preview.go(&hovered.path, &mime);
+			self.active_mut().preview.go(&hovered.path, &mime, show_image);
 		} else {
 			tokio::spawn(async move {
 				if let Ok(mimes) = external::file(&[hovered.path]).await {
@@ -300,11 +304,10 @@ impl Manager {
 		tasks.precache_video(&mimes);
 
 		self.mimetype.extend(mimes);
-		self.preview();
 		true
 	}
 
-	pub fn update_preview(&mut self, path: PathBuf, data: PreviewData) -> bool {
+	pub fn update_preview(&mut self, path: PathBuf, mime: String, data: PreviewData) -> bool {
 		let hovered = if let Some(ref h) = self.current().hovered {
 			h.path()
 		} else {
@@ -316,7 +319,7 @@ impl Manager {
 		}
 
 		let preview = &mut self.active_mut().preview;
-		preview.path = path;
+		preview.lock = Some((path, mime));
 		preview.data = data;
 		true
 	}

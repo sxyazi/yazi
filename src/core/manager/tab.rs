@@ -27,7 +27,7 @@ impl Tab {
 			search: None,
 
 			history: Default::default(),
-			preview: Preview::new(),
+			preview: Default::default(),
 		}
 	}
 

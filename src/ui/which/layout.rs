@@ -4,11 +4,11 @@ use super::Side;
 use crate::ui::Ctx;
 
 pub struct Which<'a> {
-	cx: &'a mut Ctx,
+	cx: &'a Ctx,
 }
 
 impl<'a> Which<'a> {
-	pub fn new(cx: &'a mut Ctx) -> Self { Self { cx } }
+	pub fn new(cx: &'a Ctx) -> Self { Self { cx } }
 }
 
 impl Widget for Which<'_> {

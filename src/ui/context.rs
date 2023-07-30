@@ -1,8 +1,6 @@
 use crate::{config::keymap::KeymapLayer, core::{input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which, Position}, misc::tty_size};
 
 pub struct Ctx {
-	pub cursor: Option<(u16, u16)>,
-
 	pub manager: Manager,
 	pub which:   Which,
 	pub select:  Select,
@@ -13,14 +11,20 @@ pub struct Ctx {
 impl Ctx {
 	pub fn new() -> Self {
 		Self {
-			cursor: None,
-
 			manager: Manager::new(),
 			which:   Default::default(),
 			select:  Default::default(),
 			input:   Default::default(),
 			tasks:   Tasks::start(),
 		}
+	}
+
+	#[inline]
+	pub fn cursor(&self) -> Option<(u16, u16)> {
+		if self.input.visible {
+			return Some(self.input.cursor());
+		}
+		None
 	}
 
 	#[inline]
@@ -35,6 +39,15 @@ impl Ctx {
 			KeymapLayer::Tasks
 		} else {
 			KeymapLayer::Manager
+		}
+	}
+
+	#[inline]
+	pub fn image_layer(&self) -> bool {
+		match self.layer() {
+			KeymapLayer::Which => false,
+			KeymapLayer::Tasks => false,
+			_ => true,
 		}
 	}
 

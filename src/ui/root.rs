@@ -3,11 +3,11 @@ use ratatui::{buffer::Buffer, layout::{Constraint, Direction, Layout, Rect}, wid
 use super::{header, manager, status, tasks, which::Which, Ctx, Input, Select};
 
 pub struct Root<'a> {
-	cx: &'a mut Ctx,
+	cx: &'a Ctx,
 }
 
 impl<'a> Root<'a> {
-	pub fn new(cx: &'a mut Ctx) -> Self { Self { cx } }
+	pub fn new(cx: &'a Ctx) -> Self { Self { cx } }
 }
 
 impl<'a> Widget for Root<'a> {
@@ -31,9 +31,6 @@ impl<'a> Widget for Root<'a> {
 
 		if self.cx.input.visible {
 			Input::new(self.cx).render(area, buf);
-			self.cx.cursor = Some(self.cx.input.cursor());
-		} else {
-			self.cx.cursor = None;
 		}
 
 		if self.cx.which.visible {

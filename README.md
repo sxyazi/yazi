@@ -36,7 +36,7 @@ brew install jq unar ffmpegthumbnailer fd ripgrep fzf zoxide
 brew tap homebrew/cask-fonts && brew install --cask font-symbols-only-nerd-font
 ```
 
-And download the latest release [from here](https://github.com/sxyazi/yazi/releases). Or you can install Yazi with cargo:
+And download the latest release [from here](https://github.com/sxyazi/yazi/releases). Or you can install Yazi via cargo:
 
 ```bash
 cargo install --git https://github.com/sxyazi/yazi.git
@@ -66,13 +66,32 @@ yazi
 
 If you want to use your own config, copy the [config folder](https://github.com/sxyazi/yazi/tree/main/config) to `~/.config/yazi`, and modify it as you like.
 
+## Image Preview
+
+| Platform    | Protocol                                                                         | Support               |
+| ----------- | -------------------------------------------------------------------------------- | --------------------- |
+| Kitty       | [Terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) | ✅ Built-in           |
+| WezTerm     | [Terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) | ✅ Built-in           |
+| Konsole     | [Terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) | ✅ Built-in           |
+| iTerm2      | [Inline Images Protocol](https://iterm2.com/documentation-images.html)           | ✅ Built-in           |
+| Hyper       | Sixel                                                                            | ☑️ Überzug++ required |
+| foot        | Sixel                                                                            | ☑️ Überzug++ required |
+| X11/Wayland | Window system protocol                                                           | ☑️ Überzug++ required |
+| Fallback    | [Chafa](https://hpjansson.org/chafa/)                                            | ☑️ Überzug++ required |
+
+Yazi automatically selects the appropriate preview method for you, based on the priority from top to bottom.
+That's relying on the `$TERM`, `$TERM_PROGRAM`, and `$XDG_SESSION_TYPE` variables, make sure you don't overwrite them by mistake!
+
+For instance, if your terminal is Alacritty, which doesn't support displaying images itself, but you are running on an X11/Wayland environment,
+it will automatically use the "Window system protocol" to display images -- this requires you to have [Überzug++](https://github.com/jstkdng/ueberzugpp) installed.
+
 ## TODO
 
 - [x] Add example config for general usage, currently please see my [another repo](https://github.com/sxyazi/dotfiles/tree/main/yazi) instead
 - [x] Integration with fzf, zoxide for fast directory navigation
 - [x] Integration with fd, rg for fuzzy file searching
 - [x] Documentation of commands and options
-- [ ] Support for Überzug++ for image previews with X11/wayland environment
+- [x] Support for Überzug++ for image previews with X11/wayland environment
 - [ ] Batch renaming support
 
 ## License

@@ -1,9 +1,12 @@
 use serde::Deserialize;
 
+use super::PreviewAdaptor;
 use crate::config::MERGED_YAZI;
 
 #[derive(Debug, Deserialize)]
 pub struct Preview {
+	#[serde(skip)]
+	pub adaptor:  PreviewAdaptor,
 	pub tab_size: u32,
 
 	pub max_width:  u32,

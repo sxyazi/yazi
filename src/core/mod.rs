@@ -1,4 +1,4 @@
-pub mod adapter;
+pub mod adaptor;
 mod blocker;
 mod event;
 pub mod external;

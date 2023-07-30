@@ -55,7 +55,7 @@ impl App {
 			let _ = term.draw(|f| {
 				f.render_widget(Root::new(&mut self.cx), f.size());
 
-				if let Some((x, y)) = self.cx.cursor {
+				if let Some((x, y)) = self.cx.cursor() {
 					f.set_cursor(x, y);
 				}
 			});
@@ -64,7 +64,7 @@ impl App {
 
 	fn dispatch_resize(&mut self) {
 		self.cx.manager.current_mut().set_page(true);
-		self.cx.manager.preview();
+		self.cx.manager.preview(self.cx.image_layer());
 		emit!(Render);
 	}
 
@@ -123,17 +123,17 @@ impl App {
 			Event::Mimetype(mimes) => {
 				if manager.update_mimetype(mimes, tasks) {
 					emit!(Render);
+					self.cx.manager.preview(self.cx.image_layer());
 				}
 			}
 			Event::Hover(file) => {
-				let mut b = file.map(|f| manager.current_mut().hover_force(f)).unwrap_or(false);
-				b |= manager.preview();
-				if b {
+				if file.map(|f| manager.current_mut().hover_force(f)).unwrap_or(false) {
 					emit!(Render);
 				}
+				self.cx.manager.preview(self.cx.image_layer());
 			}
-			Event::Preview(file, data) => {
-				manager.update_preview(file, data);
+			Event::Preview(path, mime, data) => {
+				manager.update_preview(path, mime, data);
 				emit!(Render);
 			}
 
