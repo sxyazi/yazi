@@ -59,6 +59,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3b13c32d80ecc7ab747b80c3784bce54ee8a7a0cc4fbda9bf4cda2cf6fe90854"
 
 [[package]]
+name = "app"
+version = "0.1.0"
+dependencies = [
+ "ansi-to-tui",
+ "anyhow",
+ "config",
+ "core",
+ "crossterm",
+ "futures",
+ "libc",
+ "ratatui",
+ "shared",
+ "signal-hook-tokio",
+ "tokio",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "async-channel"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -255,6 +275,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "config"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "crossterm",
+ "futures",
+ "glob",
+ "once_cell",
+ "ratatui",
+ "serde",
+ "shared",
+ "toml",
+ "xdg",
+]
+
+[[package]]
 name = "console-api"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -288,6 +324,35 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-channel",
+ "base64 0.21.2",
+ "config",
+ "console-subscriber",
+ "crossterm",
+ "futures",
+ "image",
+ "indexmap 2.0.0",
+ "libc",
+ "md5",
+ "notify",
+ "once_cell",
+ "parking_lot",
+ "ratatui",
+ "serde",
+ "serde_json",
+ "shared",
+ "syntect",
+ "tokio",
+ "tracing",
+ "trash",
+ "unicode-width",
 ]
 
 [[package]]
@@ -1550,6 +1615,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "shared"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "crossterm",
+ "libc",
+ "parking_lot",
+ "ratatui",
+ "tokio",
+]
+
+[[package]]
 name = "signal-hook"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2340,9 +2417,9 @@ checksum = "1a515f5799fe4961cb532f983ce2b23082366b898e52ffbce459c86f67c8378a"
 
 [[package]]
 name = "winnow"
-version = "0.5.1"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25b5872fa2e10bd067ae946f927e726d7d603eaeb6e02fa6a350e0722d2b8c11"
+checksum = "8bd122eb777186e60c3fdf765a58ac76e41c582f1f535fbf3314434c6b58f3f7"
 dependencies = [
  "memchr",
 ]
@@ -2360,40 +2437,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56c1936c4cc7a1c9ab21a1ebb602eb942ba868cbd44a99cb7cdc5892335e1c85"
 dependencies = [
  "linked-hash-map",
-]
-
-[[package]]
-name = "yazi"
-version = "0.1.2"
-dependencies = [
- "ansi-to-tui",
- "anyhow",
- "async-channel",
- "base64 0.21.2",
- "console-subscriber",
- "crossterm",
- "futures",
- "glob",
- "image",
- "indexmap 2.0.0",
- "libc",
- "md5",
- "notify",
- "once_cell",
- "parking_lot",
- "ratatui",
- "serde",
- "serde_json",
- "signal-hook-tokio",
- "syntect",
- "tokio",
- "toml",
- "tracing",
- "tracing-appender",
- "tracing-subscriber",
- "trash",
- "unicode-width",
- "xdg",
 ]
 
 [[package]]
