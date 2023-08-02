@@ -22,12 +22,12 @@ impl Default for PreviewAdaptor {
 		}
 		match env::var("TERM").unwrap_or_default().as_str() {
 			"xterm-kitty" => return Self::Kitty,
-			"wezterm" => return Self::Kitty,
 			"foot" => return Self::Sixel,
 			_ => {}
 		}
 		match env::var("TERM_PROGRAM").unwrap_or_default().as_str() {
 			"iTerm.app" => return Self::Iterm2,
+			"WezTerm" => return Self::Kitty,
 			"Hyper" => return Self::Sixel,
 			_ => {}
 		}

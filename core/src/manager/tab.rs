@@ -221,6 +221,7 @@ impl Tab {
 			drop(mem::replace(&mut self.current, rep));
 		}
 
+		self.preview_reset_image();
 		emit!(Refresh);
 		true
 	}
@@ -279,4 +280,7 @@ impl Tab {
 
 	#[inline]
 	pub fn preview(&self) -> &Preview { &self.preview }
+
+	#[inline]
+	pub fn preview_reset_image(&mut self) -> bool { self.preview.reset_image() }
 }

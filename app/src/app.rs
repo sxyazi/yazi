@@ -67,6 +67,7 @@ impl App {
 
 	fn dispatch_resize(&mut self) {
 		self.cx.manager.current_mut().set_page(true);
+		self.cx.manager.active_mut().preview_reset_image();
 		self.cx.manager.preview(self.cx.image_layer());
 		emit!(Render);
 	}
