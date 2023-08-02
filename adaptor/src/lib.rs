@@ -6,7 +6,7 @@ mod sixel;
 mod ueberzug;
 
 pub use adaptor::*;
-pub use image::*;
+pub use crate::image::*;
 pub(self) use iterm2::*;
 pub(self) use kitty::*;
 pub(self) use sixel::*;
