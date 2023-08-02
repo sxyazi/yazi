@@ -73,13 +73,15 @@ impl App {
 	}
 
 	fn dispatch_stop(&mut self, state: bool, tx: Option<oneshot::Sender<()>>) {
+		self.cx.manager.active_mut().preview_reset_image();
 		if state {
 			self.signals.stop_term(true);
 			self.term = None;
 		} else {
 			self.term = Some(Term::start().unwrap());
 			self.signals.stop_term(false);
-			emit!(Render);
+			self.cx.manager.preview(self.cx.image_layer());
+			emit!(Hover);
 		}
 		if let Some(tx) = tx {
 			tx.send(()).ok();
