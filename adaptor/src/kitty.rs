@@ -12,7 +12,7 @@ pub(super) struct Kitty;
 
 impl Kitty {
 	pub(super) async fn image_show(path: &Path, rect: Rect) -> Result<()> {
-		let img = Image::resize(path, (rect.width, rect.height)).await?;
+		let img = Image::crop(path, (rect.width, rect.height)).await?;
 		let b = Self::encode(img).await?;
 
 		Term::move_to(rect.x, rect.y).ok();

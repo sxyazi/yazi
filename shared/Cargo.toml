@@ -4,10 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-
 anyhow      = "^1"
+crossterm   = "^0"
 libc        = "^0"
-tokio       = { version = "^1", features = [ "parking_lot" ] }
 parking_lot = "^0"
-crossterm   = { version = "^0" }
 ratatui  		 = { version = "^0" }
+tokio       = { version = "^1", features = [ "parking_lot" ] }

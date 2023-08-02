@@ -22,7 +22,7 @@ impl App {
 		let signals = Signals::start()?;
 		let mut app = Self { cx: Ctx::new(), term: Some(term), signals };
 
-		while let Some(event) = app.signals.rx.recv().await {
+		while let Some(event) = app.signals.recv().await {
 			match event {
 				Event::Quit => break,
 				Event::Key(key) => app.dispatch_key(key),

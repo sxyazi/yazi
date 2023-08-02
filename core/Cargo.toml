@@ -4,28 +4,24 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-config = { path = "../config" }
-shared = { path = "../shared" }
+adaptor = { path = "../adaptor" }
+config  = { path = "../config" }
+shared  = { path = "../shared" }
 
 # External dependencies
-serde              = { version = "^1" }
-anyhow             = "^1"
-async-channel      = "^1"
-base64             = "^0"
-console-subscriber = "^0"
-crossterm          = { version = "^0" }
-futures            = "^0"
-image              = "^0"
-indexmap           = "^2"
-libc               = "^0"
-md5                = "^0"
-notify             = { version = "^6", default-features = false, features = [ "macos_fsevent" ] }
-parking_lot        = "^0"
-ratatui            = "^0"
-serde_json         = "^1"
-syntect            = "^5"
-tokio              = { version = "^1", features = [ "parking_lot", "macros", "rt-multi-thread", "sync", "fs", "process", "io-std", "io-util" ] }
-trash              = "^3"
-unicode-width      = "^0"
-once_cell          = "^1"
-tracing            = "^0"
+anyhow        = "^1"
+async-channel = "^1"
+crossterm     = "^0"
+futures       = "^0"
+indexmap      = "^2"
+notify        = { version = "^6", default-features = false, features = [ "macos_fsevent" ] }
+once_cell     = "^1"
+parking_lot   = "^0"
+ratatui       = "^0"
+serde         = "^1"
+serde_json    = "^1"
+syntect       = "^5"
+tokio         = { version = "^1", features = [ "parking_lot", "macros", "rt-multi-thread", "sync", "time", "fs", "process", "io-util" ] }
+tracing       = "^0"
+trash         = "^3"
+unicode-width = "^0"

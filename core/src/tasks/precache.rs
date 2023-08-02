@@ -1,8 +1,7 @@
-use std::{collections::{BTreeMap, BTreeSet}, path::{Path, PathBuf}, sync::Arc};
+use std::{collections::{BTreeMap, BTreeSet}, path::PathBuf, sync::Arc};
 
-use anyhow::{Error, Result};
-use config::PREVIEW;
-use image::{imageops::FilterType, ImageFormat};
+use adaptor::Image;
+use anyhow::Result;
 use parking_lot::Mutex;
 use shared::{calculate_size, Throttle};
 use tokio::{fs, sync::mpsc};
@@ -67,28 +66,11 @@ impl Precache {
 	pub(super) async fn work(&self, task: &mut PrecacheOp) -> Result<()> {
 		match task {
 			PrecacheOp::Image(task) => {
-				let cache = Self::cache(&task.target);
-				if fs::metadata(&cache).await.is_ok() {
-					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
-				}
-
-				let img = fs::read(&task.target).await;
-				tokio::task::spawn_blocking(move || {
-					let img = image::load_from_memory(&img?)?;
-					let (w, h) = (PREVIEW.max_width, PREVIEW.max_height);
-
-					if img.width() > w || img.height() > h {
-						img.resize(w, h, FilterType::Triangle).save_with_format(&cache, ImageFormat::Jpeg).ok();
-					}
-					Ok::<(), Error>(())
-				})
-				.await
-				.ok();
-
+				Image::precache(&task.target).await.ok();
 				self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
 			}
 			PrecacheOp::Video(task) => {
-				let cache = Self::cache(&task.target);
+				let cache = Image::cache(&task.target);
 				if fs::metadata(&cache).await.is_ok() {
 					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
 				}
@@ -150,10 +132,5 @@ impl Precache {
 			self.tx.send_blocking(PrecacheOp::Video(PrecacheOpVideo { id, target }))?;
 		}
 		self.done(id)
-	}
-
-	#[inline]
-	pub fn cache(path: &Path) -> PathBuf {
-		format!("/tmp/yazi/{:x}", md5::compute(path.to_string_lossy().as_bytes())).into()
 	}
 }

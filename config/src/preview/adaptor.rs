@@ -4,9 +4,9 @@ use std::env;
 pub enum PreviewAdaptor {
 	Kitty,
 	Iterm2,
+	Sixel,
 
 	// Supported by Überzug++
-	Sixel,
 	X11,
 	Wayland,
 	Chafa,
@@ -59,6 +59,7 @@ impl PreviewAdaptor {
 		match self {
 			PreviewAdaptor::Kitty => false,
 			PreviewAdaptor::Iterm2 => false,
+			PreviewAdaptor::Sixel => false,
 			_ => true,
 		}
 	}

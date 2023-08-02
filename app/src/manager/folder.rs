@@ -6,7 +6,7 @@ use shared::readable_path;
 
 use crate::Ctx;
 
-pub struct Folder<'a> {
+pub(super) struct Folder<'a> {
 	cx:           &'a Ctx,
 	folder:       &'a core::manager::Folder,
 	is_preview:   bool,

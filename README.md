@@ -91,8 +91,8 @@ If you want to use your own config, copy the [config folder](https://github.com/
 | WezTerm       | [Terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) | ✅ Built-in           |
 | Konsole       | [Terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) | ✅ Built-in           |
 | iTerm2        | [Inline Images Protocol](https://iterm2.com/documentation-images.html)           | ✅ Built-in           |
-| Hyper         | Sixel                                                                            | ☑️ Überzug++ required |
-| foot          | Sixel                                                                            | ☑️ Überzug++ required |
+| Hyper         | Sixel                                                                            | ✅ Built-in           |
+| foot          | Sixel                                                                            | ✅ Built-in           |
 | X11 / Wayland | Window system protocol                                                           | ☑️ Überzug++ required |
 | Fallback      | [Chafa](https://hpjansson.org/chafa/)                                            | ☑️ Überzug++ required |
 

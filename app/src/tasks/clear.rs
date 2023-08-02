@@ -1,6 +1,6 @@
 use ratatui::{buffer::Buffer, layout::Rect, widgets::{self, Widget}};
 
-pub struct Clear;
+pub(super) struct Clear;
 
 impl Widget for Clear {
 	fn render(self, mut area: Rect, buf: &mut Buffer) {

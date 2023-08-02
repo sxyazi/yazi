@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members  = [
+	"adaptor",
 	"app",
 	"config",
 	"core",
@@ -8,6 +9,6 @@ members  = [
 ]
 
 [profile.release]
-strip = true
 lto   = true
+strip = true
 panic = "abort"

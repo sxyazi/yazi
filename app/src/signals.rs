@@ -7,8 +7,8 @@ use libc::{SIGHUP, SIGINT, SIGQUIT, SIGTERM};
 use tokio::{select, sync::{mpsc::{self, UnboundedReceiver, UnboundedSender}, oneshot}, task::JoinHandle};
 
 pub(super) struct Signals {
-	pub tx: UnboundedSender<Event>,
-	pub rx: UnboundedReceiver<Event>,
+	tx: UnboundedSender<Event>,
+	rx: UnboundedReceiver<Event>,
 
 	term_stop_tx: Option<oneshot::Sender<()>>,
 	term_stop_rx: Option<oneshot::Receiver<()>>,
@@ -27,6 +27,23 @@ impl Signals {
 
 		Event::init(tx);
 		Ok(signals)
+	}
+
+	#[inline]
+	pub(super) async fn recv(&mut self) -> Option<Event> { self.rx.recv().await }
+
+	pub(super) fn stop_term(&mut self, state: bool) {
+		if state == self.term_stop_tx.is_none() {
+			return;
+		}
+
+		if let Some(tx) = self.term_stop_tx.take() {
+			tx.send(()).ok();
+		} else {
+			let (tx, rx) = oneshot::channel();
+			(self.term_stop_tx, self.term_stop_rx) = (Some(tx), Some(rx));
+			self.spawn_crossterm_task();
+		}
 	}
 
 	fn spawn_system_task(&self) -> Result<JoinHandle<()>> {
@@ -71,19 +88,5 @@ impl Signals {
 				}
 			}
 		})
-	}
-
-	pub(super) fn stop_term(&mut self, state: bool) {
-		if state == self.term_stop_tx.is_none() {
-			return;
-		}
-
-		if let Some(tx) = self.term_stop_tx.take() {
-			tx.send(()).ok();
-		} else {
-			let (tx, rx) = oneshot::channel();
-			(self.term_stop_tx, self.term_stop_rx) = (Some(tx), Some(rx));
-			self.spawn_crossterm_task();
-		}
 	}
 }

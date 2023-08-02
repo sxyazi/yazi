@@ -25,7 +25,7 @@ async fn main() -> anyhow::Result<()> {
 
 	config::init();
 
-	core::adaptor::Adaptor::init();
+	adaptor::Adaptor::init();
 
 	App::run().await
 }

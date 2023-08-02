@@ -1,5 +1,6 @@
 use std::{fs::File, io::{BufRead, BufReader}, mem, path::{Path, PathBuf}, sync::OnceLock};
 
+use adaptor::{Adaptor, Image};
 use anyhow::{anyhow, Result};
 use config::{PREVIEW, THEME};
 use ratatui::prelude::Rect;
@@ -8,7 +9,7 @@ use syntect::{easy::HighlightFile, highlighting::{Theme, ThemeSet}, parsing::Syn
 use tokio::{fs, task::JoinHandle};
 
 use super::{ALL_RATIO, CURRENT_RATIO, PARENT_RATIO, PREVIEW_BORDER, PREVIEW_MARGIN, PREVIEW_RATIO};
-use crate::{adaptor::Adaptor, emit, external, files::{Files, FilesOp}, tasks::Precache};
+use crate::{emit, external, files::{Files, FilesOp}};
 
 static SYNTECT_SYNTAX: OnceLock<SyntaxSet> = OnceLock::new();
 static SYNTECT_THEME: OnceLock<Theme> = OnceLock::new();
@@ -102,18 +103,13 @@ impl Preview {
 		Ok(PreviewData::Folder)
 	}
 
-	pub async fn image(mut path: &Path) -> Result<PreviewData> {
-		let cache = Precache::cache(path);
-		if fs::metadata(&cache).await.is_ok() {
-			path = cache.as_path();
-		}
-
+	pub async fn image(path: &Path) -> Result<PreviewData> {
 		Adaptor::image_show(path, Self::rect()).await?;
 		Ok(PreviewData::Image)
 	}
 
 	pub async fn video(path: &Path) -> Result<PreviewData> {
-		let cache = Precache::cache(path);
+		let cache = Image::cache(path);
 		if fs::metadata(&cache).await.is_err() {
 			external::ffmpegthumbnailer(path, &cache).await?;
 		}
