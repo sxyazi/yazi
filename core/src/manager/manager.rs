@@ -59,7 +59,7 @@ impl Manager {
 		};
 
 		if !show_image {
-			self.active_mut().preview.reset_image();
+			self.active_mut().preview_reset_image();
 		}
 
 		if hovered.meta.is_dir() {

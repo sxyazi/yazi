@@ -14,9 +14,8 @@ pub struct Tabs {
 
 impl Tabs {
 	pub fn new() -> Self {
-		let tabs = Self { idx: 0, items: vec![Tab::new(&MANAGER.cwd)] };
-
-		emit!(Refresh);
+		let mut tabs = Self { idx: usize::MAX, items: vec![Tab::new(&MANAGER.cwd)] };
+		tabs.set_idx(0);
 		tabs
 	}
 
@@ -78,6 +77,7 @@ impl Tabs {
 	#[inline]
 	fn set_idx(&mut self, idx: usize) {
 		self.idx = idx;
+		self.active_mut().preview_reset_image();
 		emit!(Refresh);
 	}
 }
