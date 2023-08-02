@@ -81,7 +81,7 @@ Then, you can run:
 yazi
 ```
 
-If you want to use your own config, copy the [config folder](https://github.com/sxyazi/yazi/tree/main/config) to `~/.config/yazi`, and modify it as you like.
+If you want to use your own config, copy the [config folder](https://github.com/sxyazi/yazi/tree/main/config/preset) to `~/.config/yazi`, and modify it as you like.
 
 ## Image Preview
 
