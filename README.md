@@ -27,6 +27,8 @@ Install with paru or your favorite AUR helper:
 paru -S yazi jq unarchiver ffmpegthumbnailer fd ripgrep fzf zoxide
 ```
 
+Or, you can replace `yazi` with `yazi-bin` package if you want pre-built binary instead of compiling by yourself.
+
 ### macOS
 
 Install the dependencies with Homebrew:
