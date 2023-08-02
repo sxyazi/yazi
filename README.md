@@ -90,9 +90,9 @@ If you want to use your own config, copy the [config folder](https://github.com/
 | Kitty         | [Terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) | ✅ Built-in           |
 | WezTerm       | [Terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) | ✅ Built-in           |
 | Konsole       | [Terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) | ✅ Built-in           |
-| iTerm2        | [Inline Images Protocol](https://iterm2.com/documentation-images.html)           | ✅ Built-in           |
-| Hyper         | Sixel                                                                            | ✅ Built-in           |
-| foot          | Sixel                                                                            | ✅ Built-in           |
+| iTerm2        | [Inline images protocol](https://iterm2.com/documentation-images.html)           | ✅ Built-in           |
+| Hyper         | [Sixel graphics format](https://www.vt100.net/docs/vt3xx-gp/chapter14.html)      | ✅ Built-in           |
+| foot          | [Sixel graphics format](https://www.vt100.net/docs/vt3xx-gp/chapter14.html)      | ✅ Built-in           |
 | X11 / Wayland | Window system protocol                                                           | ☑️ Überzug++ required |
 | Fallback      | [Chafa](https://hpjansson.org/chafa/)                                            | ☑️ Überzug++ required |
 
