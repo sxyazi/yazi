@@ -38,7 +38,7 @@ impl Process {
 					child.wait().await.ok();
 				}
 				Err(e) => {
-					trace!("Failed to spawn {}: {}", task.cmd, e);
+					trace!("Failed to spawn {}: {e}", task.cmd);
 				}
 			}
 

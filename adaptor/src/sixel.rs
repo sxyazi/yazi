@@ -69,18 +69,18 @@ impl Sixel {
 					}
 
 					if repeat > 1 {
-						write!(buf, "#{}!{}{}", last, repeat, c)?;
+						write!(buf, "#{last}!{repeat}{c}")?;
 					} else {
-						write!(buf, "#{}{}", last, c)?;
+						write!(buf, "#{last}{c}")?;
 					}
 
 					(last, repeat) = (idx, 1);
 				}
 
 				if repeat > 1 {
-					write!(buf, "#{}!{}{}", last, repeat, c)?;
+					write!(buf, "#{last}!{repeat}{c}")?;
 				} else {
-					write!(buf, "#{}{}", last, c)?;
+					write!(buf, "#{last}{c}")?;
 				}
 
 				write!(buf, "$")?;

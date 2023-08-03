@@ -65,7 +65,7 @@ impl Preview {
 				MimeKind::Image => Self::image(&path).await,
 				MimeKind::Video => Self::video(&path).await,
 				MimeKind::Archive => Self::archive(&path).await.map(PreviewData::Text),
-				MimeKind::Others => Err(anyhow!("Unsupported mimetype: {}", mime)),
+				MimeKind::Others => Err(anyhow!("Unsupported mimetype: {mime}")),
 			};
 
 			emit!(Preview(path, mime, result.unwrap_or_default()));

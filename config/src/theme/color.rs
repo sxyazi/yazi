@@ -17,7 +17,7 @@ impl TryFrom<String> for Color {
 
 	fn try_from(s: String) -> Result<Self, Self::Error> {
 		if s.len() < 7 {
-			bail!("Invalid color: {}", s);
+			bail!("Invalid color: {s}");
 		}
 		Ok(Self(style::Color::Rgb(
 			u8::from_str_radix(&s[1..3], 16)?,

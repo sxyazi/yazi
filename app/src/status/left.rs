@@ -27,7 +27,7 @@ impl<'a> Widget for Left<'a> {
 		// Mode
 		spans.push(Span::styled("", primary.fg()));
 		spans.push(Span::styled(
-			format!(" {} ", mode),
+			format!(" {mode} "),
 			primary.bg().fg(**secondary).add_modifier(Modifier::BOLD),
 		));
 

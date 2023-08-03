@@ -99,7 +99,7 @@ impl Manager {
 
 		tokio::spawn(async move {
 			let result = emit!(Input(InputOpt {
-				title:    format!("There are {} tasks running, sure to quit? (y/N)", tasks),
+				title:    format!("There are {tasks} tasks running, sure to quit? (y/N)"),
 				value:    "".to_string(),
 				position: Position::Top,
 			}));

@@ -77,7 +77,7 @@ impl<'a> Widget for Folder<'a> {
 					self.file_style(v)
 				};
 
-				ListItem::new(format!(" {} {}", icon, readable_path(k, &self.folder.cwd))).style(style)
+				ListItem::new(format!(" {icon} {}", readable_path(k, &self.folder.cwd))).style(style)
 			})
 			.collect::<Vec<_>>();
 

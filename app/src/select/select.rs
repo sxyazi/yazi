@@ -21,10 +21,10 @@ impl<'a> Widget for Select<'a> {
 			.enumerate()
 			.map(|(i, v)| {
 				if i != select.rel_cursor() {
-					return ListItem::new(format!("  {}", v));
+					return ListItem::new(format!("  {v}"));
 				}
 
-				ListItem::new(format!(" {}", v)).style(Style::new().fg(Color::Magenta))
+				ListItem::new(format!(" {v}")).style(Style::new().fg(Color::Magenta))
 			})
 			.collect::<Vec<_>>();
 

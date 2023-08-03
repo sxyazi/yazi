@@ -90,7 +90,7 @@ impl File {
 							break;
 						}
 						Ok(n) => {
-							self.log(task.id, format!("Paste task advanced {}: {:?}", n, task))?;
+							self.log(task.id, format!("Paste task advanced {n}: {:?}", task))?;
 							self.sch.send(TaskOp::Adv(task.id, 0, n))?
 						}
 						Err(e) if e.kind() == NotFound => {
@@ -132,7 +132,7 @@ impl File {
 			FileOp::Delete(task) => {
 				if let Err(e) = fs::remove_file(&task.target).await {
 					if e.kind() != NotFound && fs::symlink_metadata(&task.target).await.is_ok() {
-						self.log(task.id, format!("Delete task failed: {:?}, {}", task, e))?;
+						self.log(task.id, format!("Delete task failed: {:?}, {e}", task))?;
 						Err(e)?
 					}
 				}
@@ -192,7 +192,7 @@ impl File {
 			let dest = root.join(src.components().skip(skip).collect::<PathBuf>());
 			match fs::create_dir(&dest).await {
 				Err(e) if e.kind() != AlreadyExists => {
-					self.log(task.id, format!("Create dir failed: {:?}, {}", dest, e))?;
+					self.log(task.id, format!("Create dir failed: {:?}, {e}", dest))?;
 					continue;
 				}
 				_ => {}
@@ -201,7 +201,7 @@ impl File {
 			let mut it = match fs::read_dir(&src).await {
 				Ok(it) => it,
 				Err(e) => {
-					self.log(task.id, format!("Read dir failed: {:?}, {}", src, e))?;
+					self.log(task.id, format!("Read dir failed: {:?}, {e}", src))?;
 					continue;
 				}
 			};

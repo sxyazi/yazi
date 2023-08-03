@@ -92,7 +92,7 @@ impl TryFrom<String> for Key {
 				c if it.peek().is_none() => {
 					key.code = KeyCode::Char(c.chars().next().unwrap());
 				}
-				k => bail!("unknown key: {}", k),
+				k => bail!("unknown key: {k}"),
 			}
 		}
 

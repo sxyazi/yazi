@@ -20,7 +20,7 @@ impl TryFrom<String> for SortBy {
 			"created" => Self::Created,
 			"modified" => Self::Modified,
 			"size" => Self::Size,
-			_ => bail!("invalid sort_by value: {}", s),
+			_ => bail!("invalid sort_by value: {s}"),
 		})
 	}
 }

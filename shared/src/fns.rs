@@ -53,7 +53,7 @@ pub async fn unique_path(mut p: PathBuf) -> PathBuf {
 	while fs::symlink_metadata(&p).await.is_ok() {
 		i += 1;
 		let mut name = name.clone();
-		name.push(format!("_{}", i));
+		name.push(format!("_{i}"));
 		p.set_file_name(name);
 	}
 	p

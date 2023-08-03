@@ -3,7 +3,7 @@ use config::LOG;
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::{fmt, prelude::__tracing_subscriber_SubscriberExt, Registry};
 
-pub(super) struct Logs {}
+pub(super) struct Logs;
 
 impl Logs {
 	pub(super) fn init() -> Result<WorkerGuard> {

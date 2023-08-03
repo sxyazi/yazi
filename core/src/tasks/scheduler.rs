@@ -76,7 +76,7 @@ impl Scheduler {
 							continue;
 						}
 						if let Err(e) = file.work(&mut op).await {
-							info!("Failed to work on task {:?}: {}", op, e);
+							info!("Failed to work on task {:?}: {e}", op);
 						} else {
 							trace!("Finished task {:?}", op);
 						}
@@ -87,7 +87,7 @@ impl Scheduler {
 							continue;
 						}
 						if let Err(e) = precache.work(&mut op).await {
-							info!("Failed to work on task {:?}: {}", op, e);
+							info!("Failed to work on task {:?}: {e}", op);
 						} else {
 							trace!("Finished task {:?}", op);
 						}
