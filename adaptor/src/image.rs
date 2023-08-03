@@ -26,16 +26,10 @@ impl Image {
 			})
 		});
 
-		Ok(img.await??)
+		img.await?
 	}
 
-	pub async fn precache(path: &Path) -> Result<()> {
-		let cache = Self::cache(path);
-		if fs::metadata(&cache).await.is_ok() {
-			return Ok(());
-		}
-
-		let img = fs::read(&path).await?;
+	pub async fn precache(img: Vec<u8>, cache: PathBuf) -> Result<()> {
 		let result = tokio::task::spawn_blocking(move || {
 			let img = image::load_from_memory(&img)?;
 			let (w, h) = (PREVIEW.max_width, PREVIEW.max_height);
@@ -46,7 +40,7 @@ impl Image {
 			Ok::<(), Error>(())
 		});
 
-		Ok(result.await??)
+		result.await?
 	}
 
 	#[inline]

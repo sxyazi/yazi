@@ -265,6 +265,19 @@ impl Tasks {
 		}
 		false
 	}
+
+	pub fn precache_pdf(&self, mimetype: &BTreeMap<PathBuf, String>) -> bool {
+		let targets = mimetype
+			.into_iter()
+			.filter(|(_, m)| MimeKind::new(m) == MimeKind::PDF)
+			.map(|(p, _)| p.clone())
+			.collect::<Vec<_>>();
+
+		if !targets.is_empty() {
+			self.scheduler.precache_pdf(targets);
+		}
+		false
+	}
 }
 
 impl Tasks {

@@ -304,6 +304,7 @@ impl Manager {
 
 		tasks.precache_image(&mimes);
 		tasks.precache_video(&mimes);
+		tasks.precache_pdf(&mimes);
 
 		self.mimetype.extend(mimes);
 		true

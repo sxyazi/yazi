@@ -4,10 +4,10 @@ use anyhow::{bail, Result};
 use config::PREVIEW;
 use tokio::process::Command;
 
-pub async fn ffmpegthumbnailer(path: &Path, dest: &Path) -> Result<()> {
+pub async fn ffmpegthumbnailer(src: &Path, dest: &Path) -> Result<()> {
 	let output = Command::new("ffmpegthumbnailer")
 		.arg("-i")
-		.arg(path)
+		.arg(src)
 		.arg("-o")
 		.arg(dest)
 		.args(["-q", "6", "-c", "jpeg", "-s", &PREVIEW.max_width.to_string()])

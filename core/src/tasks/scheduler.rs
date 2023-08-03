@@ -375,4 +375,11 @@ impl Scheduler {
 
 		self.precache.video(id, targets).ok();
 	}
+
+	pub(super) fn precache_pdf(&self, targets: Vec<PathBuf>) {
+		let name = format!("Precache of {} PDF files", targets.len());
+		let id = self.running.write().add(name);
+
+		self.precache.pdf(id, targets).ok();
+	}
 }

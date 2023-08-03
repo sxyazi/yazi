@@ -2,13 +2,16 @@ pub const MIME_DIR: &str = "inode/directory";
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum MimeKind {
+	Archive,
 	Dir,
-	JSON,
-	Text,
+
 	Image,
 	Video,
-    Pdf,
-	Archive,
+
+	JSON,
+	PDF,
+	Text,
+
 	Others,
 }
 
@@ -28,7 +31,6 @@ impl MimeKind {
 			"message" => true,
 			"model" => true,
 			"multipart" => true,
-            "pdf" => true,
 			"text" => true,
 			"video" => true,
 			_ => false,
@@ -39,16 +41,16 @@ impl MimeKind {
 	pub fn new(s: &str) -> Self {
 		if s == MIME_DIR {
 			Self::Dir
-		} else if s == "application/json" {
-			Self::JSON
-		} else if s == "application/pdf" {
-			Self::Pdf
 		} else if s.starts_with("text/") || s.ends_with("/xml") {
 			Self::Text
 		} else if s.starts_with("image/") {
 			Self::Image
 		} else if s.starts_with("video/") {
 			Self::Video
+		} else if s == "application/json" {
+			Self::JSON
+		} else if s == "application/pdf" {
+			Self::PDF
 		} else if s == "application/x-bzip"
 			|| s == "application/x-bzip2"
 			|| s == "application/gzip"

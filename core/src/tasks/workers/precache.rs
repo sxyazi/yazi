@@ -21,6 +21,7 @@ pub(crate) struct Precache {
 pub(crate) enum PrecacheOp {
 	Image(PrecacheOpImage),
 	Video(PrecacheOpVideo),
+	PDF(PrecacheOpPDF),
 }
 
 #[derive(Debug)]
@@ -48,6 +49,12 @@ pub(crate) struct PrecacheOpVideo {
 	pub target: PathBuf,
 }
 
+#[derive(Debug)]
+pub(crate) struct PrecacheOpPDF {
+	pub id:     usize,
+	pub target: PathBuf,
+}
+
 impl Precache {
 	pub(crate) fn new(sch: mpsc::UnboundedSender<TaskOp>) -> Self {
 		let (tx, rx) = async_channel::unbounded();
@@ -59,13 +66,20 @@ impl Precache {
 		Ok(match self.rx.recv().await? {
 			PrecacheOp::Image(t) => (t.id, PrecacheOp::Image(t)),
 			PrecacheOp::Video(t) => (t.id, PrecacheOp::Video(t)),
+			PrecacheOp::PDF(t) => (t.id, PrecacheOp::PDF(t)),
 		})
 	}
 
 	pub(crate) async fn work(&self, task: &mut PrecacheOp) -> Result<()> {
 		match task {
 			PrecacheOp::Image(task) => {
-				Image::precache(&task.target).await.ok();
+				let cache = Image::cache(&task.target);
+				if fs::metadata(&cache).await.is_ok() {
+					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
+				}
+				if let Ok(img) = fs::read(&task.target).await {
+					Image::precache(img, cache).await.ok();
+				}
 				self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
 			}
 			PrecacheOp::Video(task) => {
@@ -75,6 +89,15 @@ impl Precache {
 				}
 
 				external::ffmpegthumbnailer(&task.target, &cache).await.ok();
+				self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
+			}
+			PrecacheOp::PDF(task) => {
+				let cache = Image::cache(&task.target);
+				if fs::metadata(&cache).await.is_ok() {
+					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
+				}
+
+				external::pdftoppm(&task.target, &cache).await.ok();
 				self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
 			}
 		}
@@ -129,6 +152,14 @@ impl Precache {
 		for target in targets {
 			self.sch.send(TaskOp::New(id, 0))?;
 			self.tx.send_blocking(PrecacheOp::Video(PrecacheOpVideo { id, target }))?;
+		}
+		self.done(id)
+	}
+
+	pub(crate) fn pdf(&self, id: usize, targets: Vec<PathBuf>) -> Result<()> {
+		for target in targets {
+			self.sch.send(TaskOp::New(id, 0))?;
+			self.tx.send_blocking(PrecacheOp::PDF(PrecacheOpPDF { id, target }))?;
 		}
 		self.done(id)
 	}
