@@ -4,7 +4,7 @@ use anyhow::Result;
 use futures::{future::BoxFuture, FutureExt};
 use shared::{calculate_size, copy_with_progress};
 use tokio::{fs, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
-use tracing::{info, trace};
+use tracing::trace;
 
 use crate::tasks::TaskOp;
 
@@ -72,8 +72,8 @@ impl File {
 		})
 	}
 
-	pub(crate) async fn work(&self, task: &mut FileOp) -> Result<()> {
-		match task {
+	pub(crate) async fn work(&self, op: &mut FileOp) -> Result<()> {
+		match op {
 			FileOp::Paste(task) => {
 				match fs::remove_file(&task.to).await {
 					Err(e) if e.kind() != NotFound => Err(e)?,
@@ -90,7 +90,7 @@ impl File {
 							break;
 						}
 						Ok(n) => {
-							trace!("Paste task advanced {}: {:?}", n, task);
+							self.log(task.id, format!("Paste task advanced {}: {:?}", n, task))?;
 							self.sch.send(TaskOp::Adv(task.id, 0, n))?
 						}
 						Err(e) if e.kind() == NotFound => {
@@ -100,7 +100,7 @@ impl File {
 						// Operation not permitted (os error 1)
 						// Attribute not found (os error 93)
 						Err(e) if task.retry < 3 && matches!(e.raw_os_error(), Some(1) | Some(93)) => {
-							trace!("Paste task retry: {:?}", task);
+							self.log(task.id, format!("Paste task retry: {:?}", task))?;
 							task.retry += 1;
 							return Ok(self.tx.send(FileOp::Paste(task.clone())).await?);
 						}
@@ -113,7 +113,7 @@ impl File {
 				let src = match fs::read_link(&task.from).await {
 					Ok(src) => src,
 					Err(e) if e.kind() == NotFound => {
-						trace!("Link task partially done: {:?}", task);
+						self.log(task.id, format!("Link task partially done: {:?}", task))?;
 						return Ok(self.sch.send(TaskOp::Adv(task.id, 1, task.length))?);
 					}
 					Err(e) => Err(e)?,
@@ -132,7 +132,7 @@ impl File {
 			FileOp::Delete(task) => {
 				if let Err(e) = fs::remove_file(&task.target).await {
 					if e.kind() != NotFound && fs::symlink_metadata(&task.target).await.is_ok() {
-						info!("Delete task failed: {:?}, {}", task, e);
+						self.log(task.id, format!("Delete task failed: {:?}, {}", task, e))?;
 						Err(e)?
 					}
 				}
@@ -155,6 +155,9 @@ impl File {
 		}
 		Ok(())
 	}
+
+	#[inline]
+	fn log(&self, id: usize, line: String) -> Result<()> { Ok(self.sch.send(TaskOp::Log(id, line))?) }
 
 	#[inline]
 	fn done(&self, id: usize) -> Result<()> { Ok(self.sch.send(TaskOp::Done(id))?) }
@@ -189,7 +192,7 @@ impl File {
 			let dest = root.join(src.components().skip(skip).collect::<PathBuf>());
 			match fs::create_dir(&dest).await {
 				Err(e) if e.kind() != AlreadyExists => {
-					info!("Create dir failed: {:?}, {}", dest, e);
+					self.log(task.id, format!("Create dir failed: {:?}, {}", dest, e))?;
 					continue;
 				}
 				_ => {}
@@ -198,7 +201,7 @@ impl File {
 			let mut it = match fs::read_dir(&src).await {
 				Ok(it) => it,
 				Err(e) => {
-					info!("Read dir failed: {:?}, {}", src, e);
+					self.log(task.id, format!("Read dir failed: {:?}, {}", src, e))?;
 					continue;
 				}
 			};

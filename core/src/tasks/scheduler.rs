@@ -70,26 +70,26 @@ impl Scheduler {
 					Ok(fut) = rx.recv() => {
 						fut.await;
 					}
-					Ok((id, mut task)) = file.recv() => {
+					Ok((id, mut op)) = file.recv() => {
 						if !running.read().exists(id) {
-							trace!("Skipping task {:?} as it was removed", task);
+							trace!("Skipping task {:?} as it was removed", op);
 							continue;
 						}
-						if let Err(e) = file.work(&mut task).await {
-							info!("Failed to work on task {:?}: {}", task, e);
+						if let Err(e) = file.work(&mut op).await {
+							info!("Failed to work on task {:?}: {}", op, e);
 						} else {
-							trace!("Finished task {:?}", task);
+							trace!("Finished task {:?}", op);
 						}
 					}
-					Ok((id, mut task)) = precache.recv() => {
+					Ok((id, mut op)) = precache.recv() => {
 						if !running.read().exists(id) {
-							trace!("Skipping task {:?} as it was removed", task);
+							trace!("Skipping task {:?} as it was removed", op);
 							continue;
 						}
-						if let Err(e) = precache.work(&mut task).await {
-							info!("Failed to work on task {:?}: {}", task, e);
+						if let Err(e) = precache.work(&mut op).await {
+							info!("Failed to work on task {:?}: {}", op, e);
 						} else {
-							trace!("Finished task {:?}", task);
+							trace!("Finished task {:?}", op);
 						}
 					}
 				}
@@ -102,12 +102,18 @@ impl Scheduler {
 		let running = self.running.clone();
 
 		tokio::spawn(async move {
-			while let Some(task) = rx.recv().await {
-				match task {
+			while let Some(op) = rx.recv().await {
+				match op {
 					TaskOp::New(id, size) => {
 						if let Some(task) = running.write().get(id) {
 							task.found += 1;
 							task.todo += size;
+						}
+					}
+					TaskOp::Log(id, line) => {
+						if let Some(task) = running.write().get(id) {
+							task.logs.push_str(&line);
+							task.logs.push('\n');
 						}
 					}
 					TaskOp::Adv(id, processed, size) => {
@@ -303,7 +309,7 @@ impl Scheduler {
 			})
 		});
 
-		let _ = self.todo.send_blocking({
+		tokio::spawn({
 			let process = self.process.clone();
 			let opener = opener.clone();
 			async move {
@@ -312,7 +318,6 @@ impl Scheduler {
 					.await
 					.ok();
 			}
-			.boxed()
 		});
 	}
 

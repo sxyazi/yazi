@@ -12,6 +12,7 @@ pub struct Task {
 	pub id:    usize,
 	pub name:  String,
 	pub stage: TaskStage,
+	pub logs:  String,
 
 	pub found:     u32,
 	pub processed: u32,
@@ -22,7 +23,16 @@ pub struct Task {
 
 impl Task {
 	pub fn new(id: usize, name: String) -> Self {
-		Self { id, name, stage: Default::default(), found: 0, processed: 0, todo: 0, done: 0 }
+		Self {
+			id,
+			name,
+			stage: Default::default(),
+			logs: Default::default(),
+			found: 0,
+			processed: 0,
+			todo: 0,
+			done: 0,
+		}
 	}
 }
 
@@ -30,6 +40,8 @@ impl Task {
 pub enum TaskOp {
 	// task_id, size
 	New(usize, u64),
+	// task_id, line
+	Log(usize, String),
 	// task_id, processed, size
 	Adv(usize, u32, u64),
 	// task_id
