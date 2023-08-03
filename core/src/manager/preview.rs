@@ -63,6 +63,7 @@ impl Preview {
 				MimeKind::JSON => Self::json(&path).await.map(PreviewData::Text),
 				MimeKind::Text => Self::highlight(&path).await.map(PreviewData::Text),
 				MimeKind::Image => Self::image(&path).await,
+				MimeKind::Pdf => Self::pdf(&path).await,
 				MimeKind::Video => Self::video(&path).await,
 				MimeKind::Archive => Self::archive(&path).await.map(PreviewData::Text),
 				MimeKind::Others => Err(anyhow!("Unsupported mimetype: {mime}")),
@@ -115,6 +116,19 @@ impl Preview {
 		}
 
 		Self::image(&cache).await
+	}
+
+    pub async fn pdf(path: &Path) -> Result<PreviewData> {
+		let cache = Image::cache(path);
+		if fs::metadata(&cache).await.is_err() {
+			external::pdftoppm(path, &cache).await?;
+		}
+
+        let mut dest = cache.into_os_string();
+        dest.push(".png");
+
+        let dest = Path::new(&dest);
+		Self::image(dest).await
 	}
 
 	pub async fn json(path: &Path) -> Result<String> {

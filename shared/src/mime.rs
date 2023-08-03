@@ -7,6 +7,7 @@ pub enum MimeKind {
 	Text,
 	Image,
 	Video,
+    Pdf,
 	Archive,
 	Others,
 }
@@ -27,6 +28,7 @@ impl MimeKind {
 			"message" => true,
 			"model" => true,
 			"multipart" => true,
+            "pdf" => true,
 			"text" => true,
 			"video" => true,
 			_ => false,
@@ -39,6 +41,8 @@ impl MimeKind {
 			Self::Dir
 		} else if s == "application/json" {
 			Self::JSON
+		} else if s == "application/pdf" {
+			Self::Pdf
 		} else if s.starts_with("text/") || s.ends_with("/xml") {
 			Self::Text
 		} else if s.starts_with("image/") {
