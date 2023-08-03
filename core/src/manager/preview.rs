@@ -63,6 +63,7 @@ impl Preview {
 				MimeKind::JSON => Self::json(&path).await.map(PreviewData::Text),
 				MimeKind::Text => Self::highlight(&path).await.map(PreviewData::Text),
 				MimeKind::Image => Self::image(&path).await,
+				MimeKind::Pdf => Self::pdf(&path).await.map(PreviewData::Text),
 				MimeKind::Video => Self::video(&path).await,
 				MimeKind::Archive => Self::archive(&path).await.map(PreviewData::Text),
 				MimeKind::Others => Err(anyhow!("Unsupported mimetype: {}", mime)),
@@ -120,6 +121,17 @@ impl Preview {
 	pub async fn json(path: &Path) -> Result<String> {
 		Ok(
 			external::jq(path)
+				.await?
+				.lines()
+				.take(Self::rect().height as usize)
+				.collect::<Vec<_>>()
+				.join("\n"),
+		)
+	}
+
+    pub async fn pdf(path: &Path) -> Result<String> {
+		Ok(
+			external::pdftotext(path)
 				.await?
 				.lines()
 				.take(Self::rect().height as usize)
