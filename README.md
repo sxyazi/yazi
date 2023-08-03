@@ -11,9 +11,10 @@ https://github.com/sxyazi/yazi/assets/17523360/740a41f4-3d24-4287-952c-3aec51520
 Before getting started, ensure that the following dependencies are installed on your system:
 
 - nerd-fonts (required, for icons)
-- jq (optional, for JSON preview)
-- unar (optional, for archive preview)
 - ffmpegthumbnailer (optional, for video thumbnails)
+- unar (optional, for archive preview)
+- jq (optional, for JSON preview)
+- poppler (optional, for PDF preview)
 - fd (optional, for file searching)
 - rg (optional, for file content searching)
 - fzf (optional, for directory jumping)
@@ -24,7 +25,7 @@ Before getting started, ensure that the following dependencies are installed on 
 Install with paru or your favorite AUR helper:
 
 ```bash
-paru -S yazi jq unarchiver ffmpegthumbnailer fd ripgrep fzf zoxide
+paru -S yazi ffmpegthumbnailer unarchiver jq poppler fd ripgrep fzf zoxide
 ```
 
 Or, you can replace `yazi` with `yazi-bin` package if you want pre-built binary instead of compiling by yourself.
@@ -34,7 +35,7 @@ Or, you can replace `yazi` with `yazi-bin` package if you want pre-built binary 
 Install the dependencies with Homebrew:
 
 ```bash
-brew install jq unar ffmpegthumbnailer fd ripgrep fzf zoxide
+brew install ffmpegthumbnailer unar jq poppler fd ripgrep fzf zoxide
 brew tap homebrew/cask-fonts && brew install --cask font-symbols-only-nerd-font
 ```
 
