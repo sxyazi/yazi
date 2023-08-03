@@ -21,7 +21,15 @@ impl Running {
 	}
 
 	#[inline]
-	pub(super) fn get(&mut self, id: usize) -> Option<&mut Task> { self.all.get_mut(&id) }
+	pub(super) fn get(&self, id: usize) -> Option<&Task> { self.all.get(&id) }
+
+	#[inline]
+	pub(super) fn get_mut(&mut self, id: usize) -> Option<&mut Task> { self.all.get_mut(&id) }
+
+	#[inline]
+	pub(super) fn get_id(&self, idx: usize) -> Option<usize> {
+		self.values().skip(idx).next().map(|t| t.id)
+	}
 
 	#[inline]
 	pub(super) fn len(&self) -> usize { self.all.len() }
@@ -40,7 +48,7 @@ impl Running {
 		id: usize,
 		stage: TaskStage,
 	) -> Option<BoxFuture<'static, ()>> {
-		if let Some(task) = self.get(id) {
+		if let Some(task) = self.get_mut(id) {
 			if stage > task.stage {
 				task.stage = stage;
 			}

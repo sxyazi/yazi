@@ -168,6 +168,8 @@ impl Executor {
 				if step > 0 { cx.tasks.next() } else { cx.tasks.prev() }
 			}
 
+			"inspect" => cx.tasks.inspect(),
+
 			"cancel" => cx.tasks.cancel(),
 			_ => false,
 		}

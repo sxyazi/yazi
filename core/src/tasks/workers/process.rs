@@ -66,7 +66,13 @@ impl Process {
 					self.log(task.id, line)?;
 				}
 				Ok(status) = child.wait() => {
-					self.log(task.id, format!("Exited with {:?}", status))?;
+					self.log(task.id, match status.code() {
+						Some(code) => format!("Exited with status code: {code}"),
+						None => "Process terminated by signal".to_string(),
+					})?;
+					if !status.success() {
+						return Ok(());
+					}
 					break;
 				}
 			}

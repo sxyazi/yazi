@@ -105,20 +105,24 @@ impl Scheduler {
 			while let Some(op) = rx.recv().await {
 				match op {
 					TaskOp::New(id, size) => {
-						if let Some(task) = running.write().get(id) {
+						if let Some(task) = running.write().get_mut(id) {
 							task.found += 1;
 							task.todo += size;
 						}
 					}
 					TaskOp::Log(id, line) => {
-						if let Some(task) = running.write().get(id) {
+						if let Some(task) = running.write().get_mut(id) {
 							task.logs.push_str(&line);
 							task.logs.push('\n');
+
+							if let Some(logger) = &task.logger {
+								logger.send(line).ok();
+							}
 						}
 					}
 					TaskOp::Adv(id, processed, size) => {
 						let mut running = running.write();
-						if let Some(task) = running.get(id) {
+						if let Some(task) = running.get_mut(id) {
 							task.processed += processed;
 							task.done += size;
 						}

@@ -110,6 +110,7 @@ keymap = [
 	{ on = [ "<Up>" ], exec = "arrow -1" },
 	{ on = [ "<Down>" ], exec = "arrow 1" },
 
+	{ on = [ "<Enter>" ], exec = "inspect" },
 	{ on = [ "x" ], exec = "cancel" },
 ]
 
