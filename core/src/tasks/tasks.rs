@@ -1,48 +1,13 @@
-use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, path::{Path, PathBuf}, sync::Arc};
+use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, io::{stdout, Write}, path::{Path, PathBuf}, sync::Arc};
 
 use config::{manager::SortBy, open::Opener, OPEN};
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use shared::{tty_size, MimeKind};
+use tokio::{io::AsyncReadExt, select, sync::mpsc, time};
 use tracing::trace;
 
-use super::{Scheduler, TASKS_PADDING, TASKS_PERCENT};
-use crate::{emit, files::{File, Files}, input::InputOpt, Position};
-
-#[derive(Clone, Debug)]
-pub struct Task {
-	pub id:    usize,
-	pub name:  String,
-	pub stage: TaskStage,
-
-	pub found:     u32,
-	pub processed: u32,
-
-	pub todo: u64,
-	pub done: u64,
-}
-
-impl Task {
-	pub fn new(id: usize, name: String) -> Self {
-		Self { id, name, stage: Default::default(), found: 0, processed: 0, todo: 0, done: 0 }
-	}
-}
-
-#[derive(Debug)]
-pub enum TaskOp {
-	// task_id, size
-	New(usize, u64),
-	// task_id, processed, size
-	Adv(usize, u32, u64),
-	// task_id
-	Done(usize),
-}
-
-#[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd)]
-pub enum TaskStage {
-	#[default]
-	Pending,
-	Dispatched,
-	Hooked,
-}
+use super::{task::TaskSummary, Scheduler, TASKS_PADDING, TASKS_PERCENT};
+use crate::{emit, files::{File, Files}, input::InputOpt, Position, BLOCKER};
 
 pub struct Tasks {
 	scheduler: Arc<Scheduler>,
@@ -88,13 +53,73 @@ impl Tasks {
 		old != self.cursor
 	}
 
-	pub fn paginate(&self) -> Vec<Task> {
+	pub fn paginate(&self) -> Vec<TaskSummary> {
 		let running = self.scheduler.running.read();
-		running.values().take(Self::limit()).cloned().collect::<Vec<_>>()
+		running.values().take(Self::limit()).map(|t| t.into()).collect()
+	}
+
+	pub fn inspect(&self) -> bool {
+		let id = if let Some(id) = self.scheduler.running.read().get_id(self.cursor) {
+			id
+		} else {
+			return false;
+		};
+
+		let scheduler = self.scheduler.clone();
+		tokio::spawn(async move {
+			let _guard = BLOCKER.acquire().await.unwrap();
+			let (tx, mut rx) = mpsc::unbounded_channel();
+
+			let buffered = {
+				let mut running = scheduler.running.write();
+				let task = if let Some(task) = running.get_mut(id) { task } else { return };
+
+				task.logger = Some(tx);
+				task.logs.clone()
+			};
+
+			emit!(Stop(true)).await;
+			stdout().write_all("\n".repeat(tty_size().ws_row as usize).as_bytes()).ok();
+			stdout().write_all(buffered.as_bytes()).ok();
+			enable_raw_mode().ok();
+
+			let mut stdin = tokio::io::stdin();
+			let mut quit = [0; 1];
+			loop {
+				select! {
+					Some(line) = rx.recv() => {
+						stdout().write_all(line.as_bytes()).ok();
+						stdout().write_all(b"\r\n").ok();
+					}
+					_ = time::sleep(time::Duration::from_millis(100)) => {
+						if scheduler.running.read().get(id).is_none() {
+							stdout().write_all(b"Task finished, press `q` to quit\r\n").ok();
+							break;
+						}
+					},
+					Ok(_) = stdin.read(&mut quit) => {
+						if quit[0] == b'q' {
+							break;
+						}
+					}
+				}
+			}
+
+			if let Some(task) = scheduler.running.write().get_mut(id) {
+				task.logger = None;
+			}
+			while quit[0] != b'q' {
+				stdin.read(&mut quit).await.ok();
+			}
+
+			disable_raw_mode().ok();
+			emit!(Stop(false)).await;
+		});
+		false
 	}
 
 	pub fn cancel(&mut self) -> bool {
-		let id = self.scheduler.running.read().values().skip(self.cursor).next().map(|t| t.id);
+		let id = self.scheduler.running.read().get_id(self.cursor);
 		if !id.map(|id| self.scheduler.cancel(id)).unwrap_or(false) {
 			return false;
 		}

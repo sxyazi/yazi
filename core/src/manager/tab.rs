@@ -216,14 +216,14 @@ impl Tab {
 			handle.abort();
 		}
 		if self.current.in_search {
+			self.preview_reset_image();
+
 			let cwd = self.current.cwd.clone();
 			let rep = self.history_new(&cwd);
 			drop(mem::replace(&mut self.current, rep));
+			emit!(Refresh);
 		}
-
-		self.preview_reset_image();
-		emit!(Refresh);
-		true
+		false
 	}
 
 	pub fn jump(&self, global: bool) -> bool {

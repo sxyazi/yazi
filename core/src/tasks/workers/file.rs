@@ -4,11 +4,11 @@ use anyhow::Result;
 use futures::{future::BoxFuture, FutureExt};
 use shared::{calculate_size, copy_with_progress};
 use tokio::{fs, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
-use tracing::{info, trace};
+use tracing::trace;
 
-use super::TaskOp;
+use crate::tasks::TaskOp;
 
-pub(super) struct File {
+pub(crate) struct File {
 	rx: async_channel::Receiver<FileOp>,
 	tx: async_channel::Sender<FileOp>,
 
@@ -16,7 +16,7 @@ pub(super) struct File {
 }
 
 #[derive(Debug)]
-pub(super) enum FileOp {
+pub(crate) enum FileOp {
 	Paste(FileOpPaste),
 	Link(FileOpLink),
 	Delete(FileOpDelete),
@@ -24,7 +24,7 @@ pub(super) enum FileOp {
 }
 
 #[derive(Clone, Debug)]
-pub(super) struct FileOpPaste {
+pub(crate) struct FileOpPaste {
 	pub id:     usize,
 	pub from:   PathBuf,
 	pub to:     PathBuf,
@@ -34,7 +34,7 @@ pub(super) struct FileOpPaste {
 }
 
 #[derive(Clone, Debug)]
-pub(super) struct FileOpLink {
+pub(crate) struct FileOpLink {
 	pub id:     usize,
 	pub from:   PathBuf,
 	pub to:     PathBuf,
@@ -43,27 +43,27 @@ pub(super) struct FileOpLink {
 }
 
 #[derive(Clone, Debug)]
-pub(super) struct FileOpDelete {
+pub(crate) struct FileOpDelete {
 	pub id:     usize,
 	pub target: PathBuf,
 	pub length: u64,
 }
 
 #[derive(Clone, Debug)]
-pub(super) struct FileOpTrash {
+pub(crate) struct FileOpTrash {
 	pub id:     usize,
 	pub target: PathBuf,
 	pub length: u64,
 }
 
 impl File {
-	pub(super) fn new(sch: mpsc::UnboundedSender<TaskOp>) -> Self {
+	pub(crate) fn new(sch: mpsc::UnboundedSender<TaskOp>) -> Self {
 		let (tx, rx) = async_channel::unbounded();
 		Self { tx, rx, sch }
 	}
 
 	#[inline]
-	pub(super) async fn recv(&self) -> Result<(usize, FileOp)> {
+	pub(crate) async fn recv(&self) -> Result<(usize, FileOp)> {
 		Ok(match self.rx.recv().await? {
 			FileOp::Paste(t) => (t.id, FileOp::Paste(t)),
 			FileOp::Link(t) => (t.id, FileOp::Link(t)),
@@ -72,8 +72,8 @@ impl File {
 		})
 	}
 
-	pub(super) async fn work(&self, task: &mut FileOp) -> Result<()> {
-		match task {
+	pub(crate) async fn work(&self, op: &mut FileOp) -> Result<()> {
+		match op {
 			FileOp::Paste(task) => {
 				match fs::remove_file(&task.to).await {
 					Err(e) if e.kind() != NotFound => Err(e)?,
@@ -90,7 +90,7 @@ impl File {
 							break;
 						}
 						Ok(n) => {
-							trace!("Paste task advanced {}: {:?}", n, task);
+							self.log(task.id, format!("Paste task advanced {}: {:?}", n, task))?;
 							self.sch.send(TaskOp::Adv(task.id, 0, n))?
 						}
 						Err(e) if e.kind() == NotFound => {
@@ -100,7 +100,7 @@ impl File {
 						// Operation not permitted (os error 1)
 						// Attribute not found (os error 93)
 						Err(e) if task.retry < 3 && matches!(e.raw_os_error(), Some(1) | Some(93)) => {
-							trace!("Paste task retry: {:?}", task);
+							self.log(task.id, format!("Paste task retry: {:?}", task))?;
 							task.retry += 1;
 							return Ok(self.tx.send(FileOp::Paste(task.clone())).await?);
 						}
@@ -113,7 +113,7 @@ impl File {
 				let src = match fs::read_link(&task.from).await {
 					Ok(src) => src,
 					Err(e) if e.kind() == NotFound => {
-						trace!("Link task partially done: {:?}", task);
+						self.log(task.id, format!("Link task partially done: {:?}", task))?;
 						return Ok(self.sch.send(TaskOp::Adv(task.id, 1, task.length))?);
 					}
 					Err(e) => Err(e)?,
@@ -132,7 +132,7 @@ impl File {
 			FileOp::Delete(task) => {
 				if let Err(e) = fs::remove_file(&task.target).await {
 					if e.kind() != NotFound && fs::symlink_metadata(&task.target).await.is_ok() {
-						info!("Delete task failed: {:?}, {}", task, e);
+						self.log(task.id, format!("Delete task failed: {:?}, {}", task, e))?;
 						Err(e)?
 					}
 				}
@@ -156,9 +156,13 @@ impl File {
 		Ok(())
 	}
 
+	#[inline]
+	fn log(&self, id: usize, line: String) -> Result<()> { Ok(self.sch.send(TaskOp::Log(id, line))?) }
+
+	#[inline]
 	fn done(&self, id: usize) -> Result<()> { Ok(self.sch.send(TaskOp::Done(id))?) }
 
-	pub(super) async fn paste(&self, mut task: FileOpPaste) -> Result<()> {
+	pub(crate) async fn paste(&self, mut task: FileOpPaste) -> Result<()> {
 		if task.cut {
 			match fs::rename(&task.from, &task.to).await {
 				Ok(_) => return self.done(task.id),
@@ -188,7 +192,7 @@ impl File {
 			let dest = root.join(src.components().skip(skip).collect::<PathBuf>());
 			match fs::create_dir(&dest).await {
 				Err(e) if e.kind() != AlreadyExists => {
-					info!("Create dir failed: {:?}, {}", dest, e);
+					self.log(task.id, format!("Create dir failed: {:?}, {}", dest, e))?;
 					continue;
 				}
 				_ => {}
@@ -197,7 +201,7 @@ impl File {
 			let mut it = match fs::read_dir(&src).await {
 				Ok(it) => it,
 				Err(e) => {
-					info!("Read dir failed: {:?}, {}", src, e);
+					self.log(task.id, format!("Read dir failed: {:?}, {}", src, e))?;
 					continue;
 				}
 			};
@@ -231,7 +235,7 @@ impl File {
 		self.done(task.id)
 	}
 
-	pub(super) async fn delete(&self, mut task: FileOpDelete) -> Result<()> {
+	pub(crate) async fn delete(&self, mut task: FileOpDelete) -> Result<()> {
 		let meta = fs::symlink_metadata(&task.target).await?;
 		if !meta.is_dir() {
 			let id = task.id;
@@ -268,7 +272,7 @@ impl File {
 		self.done(task.id)
 	}
 
-	pub(super) async fn trash(&self, mut task: FileOpTrash) -> Result<()> {
+	pub(crate) async fn trash(&self, mut task: FileOpTrash) -> Result<()> {
 		let id = task.id;
 		task.length = calculate_size(&task.target).await;
 
@@ -286,7 +290,7 @@ impl File {
 		if meta.is_ok() { meta } else { fs::symlink_metadata(path).await }
 	}
 
-	pub(super) fn remove_empty_dirs(dir: &Path) -> BoxFuture<()> {
+	pub(crate) fn remove_empty_dirs(dir: &Path) -> BoxFuture<()> {
 		trace!("Remove empty dirs: {:?}", dir);
 		async move {
 			let mut it = match fs::read_dir(dir).await {

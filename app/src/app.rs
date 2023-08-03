@@ -81,6 +81,7 @@ impl App {
 			self.term = Some(Term::start().unwrap());
 			self.signals.stop_term(false);
 			self.cx.manager.preview(self.cx.image_layer());
+			emit!(Render);
 			emit!(Hover);
 		}
 		if let Some(tx) = tx {

@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, ffi::{OsStr, OsString}, path::PathBuf, sync::Arc, time::Duration};
+use std::{ffi::{OsStr, OsString}, path::PathBuf, sync::Arc, time::Duration};
 
 use async_channel::{Receiver, Sender};
 use config::open::Opener;
@@ -8,63 +8,8 @@ use shared::{unique_path, Throttle};
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, time::sleep};
 use tracing::{info, trace};
 
-use super::{File, FileOpDelete, FileOpPaste, FileOpTrash, Precache, PrecacheOpMime, PrecacheOpSize, Process, ProcessOpOpen, Task, TaskOp, TaskStage};
+use super::{workers::{File, FileOpDelete, FileOpPaste, FileOpTrash, Precache, PrecacheOpMime, PrecacheOpSize, Process, ProcessOpOpen}, Running, TaskOp, TaskStage};
 use crate::emit;
-
-#[derive(Default)]
-pub(super) struct Running {
-	incr: usize,
-
-	hooks: BTreeMap<usize, Box<dyn (FnOnce(bool) -> BoxFuture<'static, ()>) + Send + Sync>>,
-	all:   BTreeMap<usize, Task>,
-}
-
-impl Running {
-	fn add(&mut self, name: String) -> usize {
-		self.incr += 1;
-		self.all.insert(self.incr, Task::new(self.incr, name));
-		self.incr
-	}
-
-	#[inline]
-	fn get(&mut self, id: usize) -> Option<&mut Task> { self.all.get_mut(&id) }
-
-	#[inline]
-	pub(super) fn len(&self) -> usize { self.all.len() }
-
-	#[inline]
-	fn exists(&self, id: usize) -> bool { self.all.contains_key(&id) }
-
-	#[inline]
-	pub(super) fn values(&self) -> impl Iterator<Item = &Task> { self.all.values() }
-
-	#[inline]
-	fn is_empty(&self) -> bool { self.all.is_empty() }
-
-	fn try_remove(&mut self, id: usize, stage: TaskStage) -> Option<BoxFuture<'static, ()>> {
-		if let Some(task) = self.get(id) {
-			if stage > task.stage {
-				task.stage = stage;
-			}
-
-			match task.stage {
-				TaskStage::Pending => return None,
-				TaskStage::Dispatched => {
-					if task.processed < task.found {
-						return None;
-					}
-					if let Some(hook) = self.hooks.remove(&id) {
-						return Some(hook(false));
-					}
-				}
-				TaskStage::Hooked => {}
-			}
-
-			self.all.remove(&id);
-		}
-		None
-	}
-}
 
 pub struct Scheduler {
 	file:     Arc<File>,
@@ -112,7 +57,6 @@ impl Scheduler {
 	fn schedule_macro(&self, rx: Receiver<BoxFuture<'static, ()>>) {
 		let file = self.file.clone();
 		let precache = self.precache.clone();
-		let process = self.process.clone();
 		let running = self.running.clone();
 
 		tokio::spawn(async move {
@@ -123,42 +67,31 @@ impl Scheduler {
 				}
 
 				select! {
-						Ok(fut) = rx.recv() => {
-							fut.await;
+					Ok(fut) = rx.recv() => {
+						fut.await;
+					}
+					Ok((id, mut op)) = file.recv() => {
+						if !running.read().exists(id) {
+							trace!("Skipping task {:?} as it was removed", op);
+							continue;
 						}
-						Ok((id, mut task)) = file.recv() => {
-							if !running.read().exists(id) {
-								trace!("Skipping task {:?} as it was removed", task);
-								continue;
-							}
-							if let Err(e) = file.work(&mut task).await {
-								info!("Failed to work on task {:?}: {}", task, e);
-							} else {
-								trace!("Finished task {:?}", task);
-							}
+						if let Err(e) = file.work(&mut op).await {
+							info!("Failed to work on task {:?}: {}", op, e);
+						} else {
+							trace!("Finished task {:?}", op);
 						}
-						Ok((id, mut task)) = precache.recv() => {
-							if !running.read().exists(id) {
-								trace!("Skipping task {:?} as it was removed", task);
-								continue;
-							}
-							if let Err(e) = precache.work(&mut task).await {
-								info!("Failed to work on task {:?}: {}", task, e);
-							} else {
-								trace!("Finished task {:?}", task);
-							}
+					}
+					Ok((id, mut op)) = precache.recv() => {
+						if !running.read().exists(id) {
+							trace!("Skipping task {:?} as it was removed", op);
+							continue;
 						}
-						Ok((id, mut task)) = process.recv() => {
-							if !running.read().exists(id) {
-								trace!("Skipping task {:?} as it was removed", task);
-								continue;
-							}
-							if let Err(e) = process.work(&mut task).await {
-								info!("Failed to work on task {:?}: {}", task, e);
-							} else {
-								trace!("Finished task {:?}", task);
-							}
+						if let Err(e) = precache.work(&mut op).await {
+							info!("Failed to work on task {:?}: {}", op, e);
+						} else {
+							trace!("Finished task {:?}", op);
 						}
+					}
 				}
 			}
 		});
@@ -169,17 +102,27 @@ impl Scheduler {
 		let running = self.running.clone();
 
 		tokio::spawn(async move {
-			while let Some(task) = rx.recv().await {
-				match task {
+			while let Some(op) = rx.recv().await {
+				match op {
 					TaskOp::New(id, size) => {
-						if let Some(task) = running.write().get(id) {
+						if let Some(task) = running.write().get_mut(id) {
 							task.found += 1;
 							task.todo += size;
 						}
 					}
+					TaskOp::Log(id, line) => {
+						if let Some(task) = running.write().get_mut(id) {
+							task.logs.push_str(&line);
+							task.logs.push('\n');
+
+							if let Some(logger) = &task.logger {
+								logger.send(line).ok();
+							}
+						}
+					}
 					TaskOp::Adv(id, processed, size) => {
 						let mut running = running.write();
-						if let Some(task) = running.get(id) {
+						if let Some(task) = running.get_mut(id) {
 							task.processed += processed;
 							task.done += size;
 						}
@@ -370,7 +313,7 @@ impl Scheduler {
 			})
 		});
 
-		let _ = self.todo.send_blocking({
+		tokio::spawn({
 			let process = self.process.clone();
 			let opener = opener.clone();
 			async move {
@@ -379,7 +322,6 @@ impl Scheduler {
 					.await
 					.ok();
 			}
-			.boxed()
 		});
 	}
 
