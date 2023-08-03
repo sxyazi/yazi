@@ -5,7 +5,7 @@ mod kitty;
 mod sixel;
 mod ueberzug;
 
-pub use adaptor::*;
+pub use crate::adaptor::*;
 pub use crate::image::*;
 pub(self) use iterm2::*;
 pub(self) use kitty::*;

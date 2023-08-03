@@ -104,6 +104,11 @@ That's relying on the `$TERM`, `$TERM_PROGRAM`, and `$XDG_SESSION_TYPE` variable
 For instance, if your terminal is Alacritty, which doesn't support displaying images itself, but you are running on an X11/Wayland environment,
 it will automatically use the "Window system protocol" to display images -- this requires you to have [Überzug++](https://github.com/jstkdng/ueberzugpp) installed.
 
+## Discussion
+
+- Discord Server (English mainly): https://discord.gg/qfADduSdJu
+- Telegram Group (Chinese mainly): https://t.me/yazi_rs
+
 ## TODO
 
 - [x] Add example config for general usage, currently please see my [another repo](https://github.com/sxyazi/dotfiles/tree/main/yazi) instead
