@@ -77,6 +77,8 @@ impl Process {
 				}
 			}
 		}
+
+		self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
 		self.done(task.id)
 	}
 }
