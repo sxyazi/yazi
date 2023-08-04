@@ -1,7 +1,7 @@
-use std::{fs::File, io::{BufRead, BufReader}, mem, path::{Path, PathBuf}, sync::OnceLock};
+use std::{fs::File, io::{BufRead, BufReader}, mem, path::{Path, PathBuf}, sync::{atomic::{AtomicUsize, Ordering}, Arc, OnceLock}};
 
 use adaptor::{Adaptor, Image};
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use config::{PREVIEW, THEME};
 use ratatui::prelude::Rect;
 use shared::{tty_size, MimeKind};
@@ -19,6 +19,7 @@ pub struct Preview {
 	pub lock: Option<(PathBuf, String)>,
 	pub data: PreviewData,
 
+	incr:   Arc<AtomicUsize>,
 	handle: Option<JoinHandle<()>>,
 }
 
@@ -57,6 +58,8 @@ impl Preview {
 		}
 
 		let (path, mime) = (path.to_path_buf(), mime.to_owned());
+		let incr = self.incr.clone();
+
 		self.handle = Some(tokio::spawn(async move {
 			let result = match kind {
 				MimeKind::Archive => Self::archive(&path).await.map(PreviewData::Text),
@@ -65,7 +68,7 @@ impl Preview {
 				MimeKind::Video => Self::video(&path).await,
 				MimeKind::JSON => Self::json(&path).await.map(PreviewData::Text),
 				MimeKind::PDF => Self::pdf(&path).await,
-				MimeKind::Text => Self::highlight(&path).await.map(PreviewData::Text),
+				MimeKind::Text => Self::highlight(&path, incr).await.map(PreviewData::Text),
 				MimeKind::Others => Err(anyhow!("Unsupported mimetype: {mime}")),
 			};
 
@@ -75,6 +78,7 @@ impl Preview {
 
 	pub fn reset(&mut self) -> bool {
 		self.handle.take().map(|h| h.abort());
+		self.incr.fetch_add(1, Ordering::Relaxed);
 		Adaptor::image_hide(Self::rect());
 
 		self.lock = None;
@@ -86,6 +90,7 @@ impl Preview {
 
 	pub fn reset_image(&mut self) -> bool {
 		self.handle.take().map(|h| h.abort());
+		self.incr.fetch_add(1, Ordering::Relaxed);
 		Adaptor::image_hide(Self::rect());
 
 		if matches!(self.data, PreviewData::Image) {
@@ -150,7 +155,8 @@ impl Preview {
 		)
 	}
 
-	pub async fn highlight(path: &Path) -> Result<String> {
+	pub async fn highlight(path: &Path, incr: Arc<AtomicUsize>) -> Result<String> {
+		let tick = incr.load(Ordering::Relaxed);
 		let syntax = SYNTECT_SYNTAX.get_or_init(|| SyntaxSet::load_defaults_newlines());
 		let theme = SYNTECT_THEME.get_or_init(|| {
 			let from_file = || -> Result<Theme> {
@@ -170,6 +176,10 @@ impl Preview {
 
 			let mut i = Self::rect().height as usize;
 			while i > 0 && h.reader.read_line(&mut line)? > 0 {
+				if tick != incr.load(Ordering::Relaxed) {
+					bail!("Preview cancelled");
+				}
+
 				i -= 1;
 				line = line.replace('\t', &spaces);
 				let regions = h.highlight_lines.highlight_line(&line, syntax)?;
