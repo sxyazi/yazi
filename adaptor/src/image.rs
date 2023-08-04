@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{Error, Result};
 use config::PREVIEW;
 use image::{imageops::FilterType, DynamicImage, ImageFormat};
+use md5::{Digest, Md5};
 use shared::tty_ratio;
 use tokio::fs;
 
@@ -45,6 +46,7 @@ impl Image {
 
 	#[inline]
 	pub fn cache(path: &Path) -> PathBuf {
-		format!("/tmp/yazi/{:x}", md5::compute(path.to_string_lossy().as_bytes())).into()
+		format!("/tmp/yazi/{:x}", Md5::new_with_prefix(path.to_string_lossy().as_bytes()).finalize())
+			.into()
 	}
 }
