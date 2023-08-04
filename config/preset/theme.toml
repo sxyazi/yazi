@@ -54,14 +54,17 @@ rules = [
 
 [icons]
 
-"Desktop/"   = ""
-"Documents/" = ""
-"Downloads/" = ""
-"Music/"     = ""
-"Pictures/"  = ""
-"Public/"    = ""
-"Videos/"    = ""
-".config/"   = ""
+"Desktop/"     = ""
+"Documents/"   = ""
+"Downloads/"   = ""
+"Pictures/"    = ""
+"Music/"       = ""
+"Movies/"      = ""
+"Videos/"      = ""
+"Public/"      = ""
+"Library/"     = ""
+"Development/" = ""
+".config/"     = ""
 
 # Git
 ".git/"          = ""
