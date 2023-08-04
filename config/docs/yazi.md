@@ -32,7 +32,7 @@ Configure available openers, for example:
 ```toml
 [opener]
 archive = [
-	{ cmd = "unar", args = [ "$1" ] },
+	{ cmd = "unar", args = [ "$0" ] },
 ]
 text = [
 	{ cmd = "nvim", args = [ "$*" ], block = true },

@@ -14,22 +14,22 @@ folder = [
 	{ cmd = "vim", args = [ "$*" ] },
 ]
 archive = [
-	{ cmd = "unar", args = [ "$1" ] },
+	{ cmd = "unar", args = [ "$0" ] },
 ]
 text = [
 	{ cmd = "vim", args = [ "$*" ], block = true },
 ]
 image = [
 	{ cmd = "open", args = [ "$*" ] },
-	{ cmd = "exiftool", args = [ "$1" ], block = true },
+	{ cmd = "exiftool", args = [ "$0" ], block = true },
 ]
 video = [
 	{ cmd = "mpv", args = [ "$*" ] },
-	{ cmd = "mediainfo", args = [ "$1" ], block = true },
+	{ cmd = "mediainfo", args = [ "$0" ], block = true },
 ]
 audio = [
 	{ cmd = "mpv", args = [ "$*" ] },
-	{ cmd = "mediainfo", args = [ "$1" ], block = true },
+	{ cmd = "mediainfo", args = [ "$0" ], block = true },
 ]
 fallback = [
 	{ cmd = "open", args = [ "$*" ] },
