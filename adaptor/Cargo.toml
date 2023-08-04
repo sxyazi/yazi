@@ -12,10 +12,10 @@ anyhow      = "^1"
 base64      = "^0"
 color_quant = "^1"
 image       = "^0"
-md5         = "^0"
+md-5        = "^0"
 once_cell   = "^1"
 ratatui     = "^0"
-tokio       = { version = "^1", features = [ "parking_lot" ] }
+tokio       = { version = "^1", features = ["parking_lot"] }
 
 # Logging
 tracing = "^0"
