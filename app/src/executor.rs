@@ -102,6 +102,7 @@ impl Executor {
 			}
 			"create" => cx.manager.create(),
 			"rename" => cx.manager.rename(),
+			"shell" => cx.manager.shell(exec.named.contains_key("block")),
 			"hidden" => cx.manager.current_mut().hidden(match exec.args.get(0).map(|s| s.as_str()) {
 				Some("show") => Some(true),
 				Some("hide") => Some(false),

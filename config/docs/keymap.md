@@ -42,7 +42,7 @@
 
 - open: Open the selected files.
 
-  - `--interactive`: Open the selected files with an interactive ui to choose the opening method.
+  - `--interactive`: Open the selected files with an interactive UI to choose the opening method.
 
 - yank: Copy the selected files.
 
@@ -59,6 +59,10 @@
 
 - create: Create a file or directory (ends with `/` for directory).
 - rename: Rename a file or directory.
+- shell: Run a shell command.
+
+  - `--block`: Block the UI until the command finishes.
+
 - hidden: Set the visibility of hidden files.
 
   - `show`: Show hidden files.

@@ -41,9 +41,10 @@ impl Process {
 					trace!("Failed to spawn {}: {e}", task.cmd);
 				}
 			}
-
 			emit!(Stop(false)).await;
-			return Ok(());
+
+			self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
+			return self.done(task.id);
 		}
 
 		self.sch.send(TaskOp::New(task.id, 0))?;
