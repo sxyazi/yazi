@@ -272,6 +272,7 @@ dependencies = [
  "tracing",
  "trash",
  "unicode-width",
+ "yazi-prebuild",
 ]
 
 [[package]]
@@ -2024,6 +2025,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56c1936c4cc7a1c9ab21a1ebb602eb942ba868cbd44a99cb7cdc5892335e1c85"
 dependencies = [
  "linked-hash-map",
+]
+
+[[package]]
+name = "yazi-prebuild"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "81ddff73fa26e54bd54c652fda6c42ef86519b71f09265ef358a061f7bb92c8e"
+dependencies = [
+ "anyhow",
+ "syntect",
+ "walkdir",
 ]
 
 [[package]]

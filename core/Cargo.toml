@@ -25,3 +25,4 @@ tokio         = { version = "^1", features = [ "parking_lot", "macros", "rt-mult
 tracing       = "^0"
 trash         = "^3"
 unicode-width = "^0"
+yazi-prebuild = "^0"

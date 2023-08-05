@@ -5,7 +5,7 @@ use anyhow::{anyhow, bail, Result};
 use config::{PREVIEW, THEME};
 use ratatui::prelude::Rect;
 use shared::{tty_size, MimeKind};
-use syntect::{easy::HighlightFile, highlighting::{Theme, ThemeSet}, parsing::SyntaxSet, util::as_24_bit_terminal_escaped};
+use syntect::{dumps::from_uncompressed_data, easy::HighlightFile, highlighting::{Theme, ThemeSet}, parsing::SyntaxSet, util::as_24_bit_terminal_escaped};
 use tokio::{fs, task::JoinHandle};
 
 use super::{ALL_RATIO, CURRENT_RATIO, PARENT_RATIO, PREVIEW_BORDER, PREVIEW_MARGIN, PREVIEW_RATIO};
@@ -157,7 +157,8 @@ impl Preview {
 
 	pub async fn highlight(path: &Path, incr: Arc<AtomicUsize>) -> Result<String> {
 		let tick = incr.load(Ordering::Relaxed);
-		let syntax = SYNTECT_SYNTAX.get_or_init(|| SyntaxSet::load_defaults_newlines());
+		let syntax =
+			SYNTECT_SYNTAX.get_or_init(|| from_uncompressed_data(yazi_prebuild::syntaxes()).unwrap());
 		let theme = SYNTECT_THEME.get_or_init(|| {
 			let from_file = || -> Result<Theme> {
 				let file = File::open(&THEME.preview.syntect_theme)?;
