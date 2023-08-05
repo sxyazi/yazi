@@ -134,7 +134,7 @@ impl Preview {
 
 	pub async fn json(path: &Path) -> Result<String> {
 		Ok(
-			external::jq(path)
+			external::jq(path, Self::rect().height as usize)
 				.await?
 				.lines()
 				.take(Self::rect().height as usize)
