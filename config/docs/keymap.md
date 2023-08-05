@@ -59,6 +59,10 @@
 
 - create: Create a file or directory (ends with `/` for directory).
 - rename: Rename a file or directory.
+- shell: Run a shell command.
+
+  - `--block`: Block the ui until the command finishes.
+
 - hidden: Set the visibility of hidden files.
 
   - `show`: Show hidden files.

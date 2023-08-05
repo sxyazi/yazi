@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, path::PathBuf};
+use std::{collections::BTreeMap, ffi::OsString, path::PathBuf};
 
 use anyhow::Result;
 use config::{keymap::{Control, KeymapLayer}, open::Opener};
@@ -32,7 +32,7 @@ pub enum Event {
 	Input(InputOpt, oneshot::Sender<Result<String>>),
 
 	// Tasks
-	Open(Vec<(PathBuf, String)>, Option<Opener>),
+	Open(Vec<(OsString, String)>, Option<Opener>),
 	Progress(u8, u32),
 }
 

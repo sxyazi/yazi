@@ -45,6 +45,8 @@ keymap = [
 	{ on = [ "D" ], exec = "remove --permanently" },
 	{ on = [ "a" ], exec = "create" },
 	{ on = [ "r" ], exec = "rename" },
+	{ on = [ ";" ], exec = "shell" },
+	{ on = [ ":" ], exec = "shell --block" },
 	{ on = [ "." ], exec = "hidden toggle" },
 	{ on = [ "s" ], exec = "search fd" },
 	{ on = [ "S" ], exec = "search rg" },

@@ -1,7 +1,7 @@
 use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, mem, path::PathBuf};
 
 use anyhow::Error;
-use config::OPEN;
+use config::{open::Opener, OPEN};
 use shared::MIME_DIR;
 use tokio::fs;
 
@@ -126,7 +126,7 @@ impl Manager {
 			.into_iter()
 			.map(|f| {
 				(
-					f.path(),
+					f.path().into_os_string(),
 					if f.meta.is_dir() {
 						Some(MIME_DIR.to_owned())
 					} else {
@@ -146,7 +146,7 @@ impl Manager {
 				files = files
 					.into_iter()
 					.map(|(p, m)| {
-						let mime = m.or_else(|| mimes.remove(&p));
+						let mime = m.or_else(|| mimes.remove(&PathBuf::from(&p)));
 						(p, mime)
 					})
 					.collect::<Vec<_>>();
@@ -231,10 +231,30 @@ impl Manager {
 		false
 	}
 
-	fn bulk_rename(&self) -> bool { false }
+	pub fn bulk_rename(&self) -> bool { false }
 
-	pub fn selected(&self) -> Vec<&File> {
-		self.current().selected().or_else(|| self.hovered().map(|h| vec![h])).unwrap_or_default()
+	pub fn shell(&self, block: bool) -> bool {
+		tokio::spawn(async move {
+			let result = emit!(Input(InputOpt {
+				title:    "Shell:".to_string(),
+				value:    "".to_string(),
+				position: Position::Top,
+			}));
+
+			if let Ok(cmd) = result.await {
+				emit!(Open(
+					vec![(cmd.into(), "".to_string())],
+					Some(Opener {
+						cmd: "sh".to_string(),
+						args: vec!["-c".to_string(), "$0".to_string()],
+						block,
+						spread: false,
+					})
+				));
+			}
+		});
+
+		false
 	}
 
 	pub fn update_read(&mut self, op: FilesOp) -> bool {
@@ -352,4 +372,9 @@ impl Manager {
 
 	#[inline]
 	pub fn hovered(&self) -> Option<&File> { self.tabs.active().current.hovered.as_ref() }
+
+	#[inline]
+	pub fn selected(&self) -> Vec<&File> {
+		self.current().selected().or_else(|| self.hovered().map(|h| vec![h])).unwrap_or_default()
+	}
 }
