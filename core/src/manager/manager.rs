@@ -98,11 +98,8 @@ impl Manager {
 		}
 
 		tokio::spawn(async move {
-			let result = emit!(Input(InputOpt {
-				title:    format!("There are {tasks} tasks running, sure to quit? (y/N)"),
-				value:    "".to_string(),
-				position: Position::Top,
-			}));
+			let result =
+				emit!(Input(InputOpt::top("There are {tasks} tasks running, sure to quit? (y/N)")));
 
 			if let Ok(choice) = result.await {
 				if choice.to_lowercase() == "y" {
@@ -178,11 +175,7 @@ impl Manager {
 	pub fn create(&self) -> bool {
 		let cwd = self.current().cwd.clone();
 		tokio::spawn(async move {
-			let result = emit!(Input(InputOpt {
-				title:    "Create:".to_string(),
-				value:    "".to_string(),
-				position: Position::Top,
-			}));
+			let result = emit!(Input(InputOpt::top("Create:")));
 
 			if let Ok(name) = result.await {
 				let path = cwd.join(&name);
@@ -217,11 +210,9 @@ impl Manager {
 		};
 
 		tokio::spawn(async move {
-			let result = emit!(Input(InputOpt {
-				title:    "Rename:".to_string(),
-				value:    hovered.file_name().unwrap().to_string_lossy().to_string(),
-				position: Position::Hovered,
-			}));
+			let result = emit!(Input(
+				InputOpt::hovered("Rename:").with_value(hovered.file_name().unwrap().to_string_lossy())
+			));
 
 			if let Ok(new) = result.await {
 				let to = hovered.parent().unwrap().join(new);
@@ -235,11 +226,7 @@ impl Manager {
 
 	pub fn shell(&self, block: bool) -> bool {
 		tokio::spawn(async move {
-			let result = emit!(Input(InputOpt {
-				title:    "Shell:".to_string(),
-				value:    "".to_string(),
-				position: Position::Top,
-			}));
+			let result = emit!(Input(InputOpt::top("Shell:").with_highlight()));
 
 			if let Ok(cmd) = result.await {
 				emit!(Open(

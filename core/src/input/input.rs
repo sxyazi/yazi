@@ -6,39 +6,37 @@ use shared::CharKind;
 use tokio::sync::oneshot::Sender;
 use unicode_width::UnicodeWidthStr;
 
-use super::{mode::InputMode, op::InputOp, InputSnap, InputSnaps};
+use super::{mode::InputMode, op::InputOp, InputOpt, InputSnap, InputSnaps};
 use crate::{external, Position};
 
 #[derive(Default)]
 pub struct Input {
-	snaps: InputSnaps,
+	snaps:       InputSnaps,
+	pub visible: bool,
 
 	title:    String,
 	position: (u16, u16),
 	callback: Option<Sender<Result<String>>>,
 
-	pub visible: bool,
-}
-
-pub struct InputOpt {
-	pub title:    String,
-	pub value:    String,
-	pub position: Position,
+	// Shell
+	pub(super) highlight: bool,
 }
 
 impl Input {
 	pub fn show(&mut self, opt: InputOpt, tx: Sender<Result<String>>) {
 		self.close(false);
 		self.snaps.reset(opt.value);
+		self.visible = true;
 
 		self.title = opt.title;
 		self.position = match opt.position {
 			Position::Coords(x, y) => (x, y),
-			_ => unimplemented!(),
+			_ => unreachable!(),
 		};
-
 		self.callback = Some(tx);
-		self.visible = true;
+
+		// Shell
+		self.highlight = opt.highlight;
 	}
 
 	pub fn close(&mut self, submit: bool) -> bool {

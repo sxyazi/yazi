@@ -1,18 +1,15 @@
-use std::{fs::File, io::{BufRead, BufReader}, mem, path::{Path, PathBuf}, sync::{atomic::{AtomicUsize, Ordering}, Arc, OnceLock}};
+use std::{io::BufRead, mem, path::{Path, PathBuf}, sync::{atomic::{AtomicUsize, Ordering}, Arc}};
 
 use adaptor::{Adaptor, Image};
 use anyhow::{anyhow, bail, Result};
-use config::{PREVIEW, THEME};
+use config::PREVIEW;
 use ratatui::prelude::Rect;
 use shared::{tty_size, MimeKind};
-use syntect::{dumps::from_uncompressed_data, easy::HighlightFile, highlighting::{Theme, ThemeSet}, parsing::SyntaxSet, util::as_24_bit_terminal_escaped};
+use syntect::{easy::HighlightFile, util::as_24_bit_terminal_escaped};
 use tokio::{fs, task::JoinHandle};
 
 use super::{ALL_RATIO, CURRENT_RATIO, PARENT_RATIO, PREVIEW_BORDER, PREVIEW_MARGIN, PREVIEW_RATIO};
-use crate::{emit, external, files::{Files, FilesOp}};
-
-static SYNTECT_SYNTAX: OnceLock<SyntaxSet> = OnceLock::new();
-static SYNTECT_THEME: OnceLock<Theme> = OnceLock::new();
+use crate::{emit, external, files::{Files, FilesOp}, highlighter};
 
 #[derive(Default)]
 pub struct Preview {
@@ -157,21 +154,12 @@ impl Preview {
 
 	pub async fn highlight(path: &Path, incr: Arc<AtomicUsize>) -> Result<String> {
 		let tick = incr.load(Ordering::Relaxed);
-		let syntax =
-			SYNTECT_SYNTAX.get_or_init(|| from_uncompressed_data(yazi_prebuild::syntaxes()).unwrap());
-		let theme = SYNTECT_THEME.get_or_init(|| {
-			let from_file = || -> Result<Theme> {
-				let file = File::open(&THEME.preview.syntect_theme)?;
-				Ok(ThemeSet::load_from_reader(&mut BufReader::new(file))?)
-			};
-			from_file().unwrap_or_else(|_| ThemeSet::load_defaults().themes["base16-ocean.dark"].clone())
-		});
-
 		let path = path.to_path_buf();
 		let spaces = " ".repeat(PREVIEW.tab_size as usize);
 
+		let (syntaxes, theme) = highlighter();
 		tokio::task::spawn_blocking(move || -> Result<String> {
-			let mut h = HighlightFile::new(path, syntax, theme)?;
+			let mut h = HighlightFile::new(path, syntaxes, theme)?;
 			let mut line = String::new();
 			let mut buf = String::new();
 
@@ -183,8 +171,8 @@ impl Preview {
 
 				i -= 1;
 				line = line.replace('\t', &spaces);
-				let regions = h.highlight_lines.highlight_line(&line, syntax)?;
-				buf.push_str(&as_24_bit_terminal_escaped(&regions[..], false));
+				let regions = h.highlight_lines.highlight_line(&line, syntaxes)?;
+				buf.push_str(&as_24_bit_terminal_escaped(&regions, false));
 				line.clear();
 			}
 

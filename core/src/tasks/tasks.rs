@@ -7,7 +7,7 @@ use tokio::{io::AsyncReadExt, select, sync::mpsc, time};
 use tracing::trace;
 
 use super::{task::TaskSummary, Scheduler, TASKS_PADDING, TASKS_PERCENT};
-use crate::{emit, files::{File, Files}, input::InputOpt, Position, BLOCKER};
+use crate::{emit, files::{File, Files}, input::InputOpt, BLOCKER};
 
 pub struct Tasks {
 	scheduler: Arc<Scheduler>,
@@ -185,11 +185,7 @@ impl Tasks {
 	pub fn file_remove(&self, targets: Vec<PathBuf>, permanently: bool) -> bool {
 		let scheduler = self.scheduler.clone();
 		tokio::spawn(async move {
-			let result = emit!(Input(InputOpt {
-				title:    "Are you sure delete these files? (y/N)".to_string(),
-				value:    "".to_string(),
-				position: Position::Hovered,
-			}));
+			let result = emit!(Input(InputOpt::hovered("Are you sure delete these files? (y/N)")));
 
 			if let Ok(choice) = result.await {
 				if choice.to_lowercase() != "y" {
