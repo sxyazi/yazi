@@ -5,7 +5,7 @@ use shared::Defer;
 use tokio::task::JoinHandle;
 
 use super::{Folder, Mode, Preview};
-use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, files::{File, Files, FilesOp}, input::InputOpt, Event, Position, BLOCKER};
+use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, files::{File, Files, FilesOp}, input::InputOpt, Event, BLOCKER};
 
 pub struct Tab {
 	pub(super) mode:    Mode,
@@ -186,12 +186,7 @@ impl Tab {
 		let hidden = self.current.files.show_hidden;
 
 		self.search = Some(tokio::spawn(async move {
-			let subject = emit!(Input(InputOpt {
-				title:    "Search:".to_string(),
-				value:    "".to_string(),
-				position: Position::Top,
-			}))
-			.await?;
+			let subject = emit!(Input(InputOpt::top("Search:"))).await?;
 
 			let mut rx = if grep {
 				external::rg(external::RgOpt { cwd: cwd.clone(), hidden, subject })

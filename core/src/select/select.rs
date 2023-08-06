@@ -33,7 +33,7 @@ impl Select {
 		self.items = opt.items;
 		self.position = match opt.position {
 			Position::Coords(x, y) => (x, y),
-			_ => unimplemented!(),
+			_ => unreachable!(),
 		};
 		self.callback = Some(tx);
 		self.visible = true;

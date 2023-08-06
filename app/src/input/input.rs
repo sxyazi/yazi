@@ -1,6 +1,7 @@
 use core::input::InputMode;
 
-use ratatui::{buffer::Buffer, layout::Rect, style::{Color, Style}, text::Line, widgets::{Block, BorderType, Borders, Clear, Paragraph, Widget}};
+use ansi_to_tui::IntoText;
+use ratatui::{buffer::Buffer, layout::Rect, style::{Color, Style}, text::{Line, Text}, widgets::{Block, BorderType, Borders, Clear, Paragraph, Widget}};
 use shared::Term;
 
 use crate::Ctx;
@@ -18,8 +19,14 @@ impl<'a> Widget for Input<'a> {
 		let input = &self.cx.input;
 		let area = input.area();
 
+		let value = if let Ok(v) = input.value_pretty() {
+			v.into_text().unwrap()
+		} else {
+			Text::from(input.value())
+		};
+
 		Clear.render(area, buf);
-		Paragraph::new(input.value())
+		Paragraph::new(value)
 			.block(
 				Block::new()
 					.borders(Borders::ALL)
