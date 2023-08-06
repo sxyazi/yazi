@@ -99,7 +99,7 @@ impl Manager {
 
 		tokio::spawn(async move {
 			let result =
-				emit!(Input(InputOpt::top("There are {tasks} tasks running, sure to quit? (y/N)")));
+				emit!(Input(InputOpt::top(format!("There are {tasks} tasks running, sure to quit? (y/N)"))));
 
 			if let Ok(choice) = result.await {
 				if choice.to_lowercase() == "y" {
