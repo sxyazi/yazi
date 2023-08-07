@@ -46,7 +46,8 @@ impl<'a> Right<'a> {
 		let percent = if cursor == 0 || length == 0 { 0 } else { (cursor + 1) * 100 / length };
 
 		vec![
-			Span::styled(" ", body.fg()),
+			Span::raw(" "),
+			Span::styled(&THEME.status.section_separator.left, body.fg()),
 			Span::styled(
 				if percent == 0 { "  Top ".to_string() } else { format!(" {:>3}% ", percent) },
 				body.bg().fg(**primary),
@@ -55,7 +56,7 @@ impl<'a> Right<'a> {
 				format!(" {:>2}/{:<2} ", (cursor + 1).min(length), length),
 				primary.bg().fg(**secondary),
 			),
-			Span::styled("", primary.fg()),
+			Span::styled(&THEME.status.section_separator.right, primary.fg()),
 		]
 	}
 }

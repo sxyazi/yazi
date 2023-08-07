@@ -14,15 +14,22 @@ pub struct Tab {
 
 #[derive(Deserialize)]
 pub struct Status {
-	pub primary:   ColorGroup,
-	pub secondary: ColorGroup,
-	pub tertiary:  ColorGroup,
-	pub body:      ColorGroup,
-	pub emphasis:  ColorGroup,
-	pub info:      ColorGroup,
-	pub success:   ColorGroup,
-	pub warning:   ColorGroup,
-	pub danger:    ColorGroup,
+	pub primary:           ColorGroup,
+	pub secondary:         ColorGroup,
+	pub tertiary:          ColorGroup,
+	pub body:              ColorGroup,
+	pub emphasis:          ColorGroup,
+	pub info:              ColorGroup,
+	pub success:           ColorGroup,
+	pub warning:           ColorGroup,
+	pub danger:            ColorGroup,
+	pub section_separator: SectionSeparator,
+}
+
+#[derive(Deserialize)]
+pub struct SectionSeparator {
+	pub left:  String,
+	pub right: String,
 }
 
 #[derive(Deserialize)]
