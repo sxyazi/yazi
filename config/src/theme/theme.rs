@@ -23,11 +23,11 @@ pub struct Status {
 	pub success:   ColorGroup,
 	pub warning:   ColorGroup,
 	pub danger:    ColorGroup,
-	pub separator: SectionSeparator,
+	pub separator: StatusSeparator,
 }
 
 #[derive(Deserialize)]
-pub struct SectionSeparator {
+pub struct StatusSeparator {
 	pub opening: String,
 	pub closing: String,
 }
