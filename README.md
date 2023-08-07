@@ -62,6 +62,8 @@ environment.systemPackages = with pkgs; [
 ];
 ```
 
+If you prefer to use the most recent code, use `nur.repos.xyenon.yazi-unstable` instead.
+
 ### Build from source
 
 Execute the following commands to clone the project and build Yazi:
