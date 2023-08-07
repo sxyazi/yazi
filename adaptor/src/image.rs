@@ -1,4 +1,4 @@
-use std::{path::{Path, PathBuf}, sync::Arc};
+use std::{env, path::{Path, PathBuf}, sync::Arc};
 
 use anyhow::Result;
 use config::PREVIEW;
@@ -57,7 +57,8 @@ impl Image {
 
 	#[inline]
 	pub fn cache(path: &Path) -> PathBuf {
-		format!("/tmp/yazi/{:x}", Md5::new_with_prefix(path.to_string_lossy().as_bytes()).finalize())
-			.into()
+		env::temp_dir()
+			.join("yazi")
+			.join(format!("{:x}", Md5::new_with_prefix(path.to_string_lossy().as_bytes()).finalize()))
 	}
 }
