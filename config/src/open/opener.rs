@@ -2,10 +2,11 @@ use serde::{Deserialize, Deserializer};
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Opener {
-	pub cmd:    String,
-	pub args:   Vec<String>,
-	pub block:  bool,
-	pub spread: bool,
+	pub display_name: Option<String>,
+	pub cmd:          String,
+	pub args:         Vec<String>,
+	pub block:        bool,
+	pub spread:       bool,
 }
 
 impl<'de> Deserialize<'de> for Opener {
@@ -15,17 +16,24 @@ impl<'de> Deserialize<'de> for Opener {
 	{
 		#[derive(Deserialize)]
 		pub struct Shadow {
-			pub cmd:    String,
-			pub args:   Vec<String>,
+			pub display_name: Option<String>,
+			pub cmd:          String,
+			pub args:         Vec<String>,
 			#[serde(default)]
-			pub block:  bool,
+			pub block:        bool,
 			#[serde(skip)]
-			pub spread: bool,
+			pub spread:       bool,
 		}
 
 		let shadow = Shadow::deserialize(deserializer)?;
 
 		let spread = shadow.args.contains(&"$*".to_string());
-		Ok(Self { cmd: shadow.cmd, args: shadow.args, block: shadow.block, spread })
+		Ok(Self {
+			display_name: shadow.display_name,
+			cmd:          shadow.cmd,
+			args:         shadow.args,
+			block:        shadow.block,
+			spread
+		})
 	}
 }

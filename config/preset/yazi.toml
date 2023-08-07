@@ -33,7 +33,7 @@ audio = [
 ]
 fallback = [
 	{ cmd = "open", args = [ "$*" ] },
-	{ cmd = "open", args = [ "-R", "$*" ] },
+	{ display_name = "open in Finder", cmd = "open", args = [ "-R", "$*" ] },
 ]
 
 [open]

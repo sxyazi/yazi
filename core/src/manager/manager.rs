@@ -163,7 +163,12 @@ impl Manager {
 
 			let result = emit!(Select(SelectOpt {
 				title:    "Open with:".to_string(),
-				items:    openers.iter().map(|o| o.cmd.clone()).collect(),
+				items:    openers.iter().map(|o| {
+					return if let Some(display_name) = &o.display_name {
+						display_name.clone()
+					} else {
+						format!("{} {}", o.cmd, o.args.join(" "))
+					}}).collect(),
 				position: Position::Hovered,
 			}));
 			if let Ok(choice) = result.await {
@@ -233,6 +238,7 @@ impl Manager {
 				emit!(Open(
 					vec![(cmd.into(), "".to_string())],
 					Some(Opener {
+						display_name: None,
 						cmd: "sh".to_string(),
 						args: vec!["-c".to_string(), "$0".to_string()],
 						block,
