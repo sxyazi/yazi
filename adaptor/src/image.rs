@@ -1,6 +1,6 @@
-use std::path::{Path, PathBuf};
+use std::{path::{Path, PathBuf}, sync::Arc};
 
-use anyhow::{Error, Result};
+use anyhow::Result;
 use config::PREVIEW;
 use image::{imageops::FilterType, DynamicImage, ImageFormat};
 use md5::{Digest, Md5};
@@ -30,18 +30,29 @@ impl Image {
 		img.await?
 	}
 
-	pub async fn precache(img: Vec<u8>, cache: PathBuf) -> Result<()> {
+	pub async fn precache(img: Arc<Vec<u8>>, cache: impl AsRef<Path>) -> Result<bool> {
+		let cache = cache.as_ref().to_owned();
 		let result = tokio::task::spawn_blocking(move || {
 			let img = image::load_from_memory(&img)?;
 			let (w, h) = (PREVIEW.max_width, PREVIEW.max_height);
 
-			if img.width() > w || img.height() > h {
-				img.resize(w, h, FilterType::Triangle).save_with_format(cache, ImageFormat::Jpeg)?;
+			if img.width() <= w && img.height() <= h {
+				return Ok(false);
 			}
-			Ok::<(), Error>(())
+
+			img.resize(w, h, FilterType::Triangle).save_with_format(cache, ImageFormat::Jpeg)?;
+			Ok(true)
 		});
 
 		result.await?
+	}
+
+	#[inline]
+	pub async fn precache_anyway(img: Arc<Vec<u8>>, cache: impl AsRef<Path>) -> Result<()> {
+		Ok(match Self::precache(img.clone(), &cache).await {
+			Ok(true) => (),
+			_ => fs::write(cache, &*img).await?,
+		})
 	}
 
 	#[inline]
