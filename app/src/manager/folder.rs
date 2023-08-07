@@ -15,7 +15,7 @@ pub(super) struct Folder<'a> {
 
 impl<'a> Folder<'a> {
 	pub(super) fn new(cx: &'a Ctx, folder: &'a core::manager::Folder) -> Self {
-		Self { cx, folder, is_preview: false, is_selection: true }
+		Self { cx, folder, is_preview: false, is_selection: false }
 	}
 
 	#[inline]
@@ -45,6 +45,7 @@ impl<'a> Folder<'a> {
 impl<'a> Widget for Folder<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let window = self.folder.window();
+		let mode = self.cx.manager.active().mode();
 
 		let items = window
 			.iter()
@@ -57,7 +58,9 @@ impl<'a> Widget for Folder<'a> {
 					.map(|x| x.display.as_ref())
 					.unwrap_or("");
 
-				if v.is_selected {
+				if (!self.is_selection && v.is_selected)
+					|| (self.is_selection && mode.pending(i, v.is_selected))
+				{
 					buf.set_style(
 						Rect { x: area.x.saturating_sub(1), y: i as u16 + 1, width: 1, height: 1 },
 						if self.is_selection {

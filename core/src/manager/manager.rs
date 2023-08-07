@@ -98,8 +98,9 @@ impl Manager {
 		}
 
 		tokio::spawn(async move {
-			let result =
-				emit!(Input(InputOpt::top(format!("There are {tasks} tasks running, sure to quit? (y/N)"))));
+			let result = emit!(Input(InputOpt::top(format!(
+				"There are {tasks} tasks running, sure to quit? (y/N)"
+			))));
 
 			if let Ok(choice) = result.await {
 				if choice.to_lowercase() == "y" {
@@ -199,7 +200,7 @@ impl Manager {
 	}
 
 	pub fn rename(&self) -> bool {
-		if self.current().has_selected() {
+		if self.in_selecting() {
 			return self.bulk_rename();
 		}
 
@@ -360,8 +361,26 @@ impl Manager {
 	#[inline]
 	pub fn hovered(&self) -> Option<&File> { self.tabs.active().current.hovered.as_ref() }
 
-	#[inline]
 	pub fn selected(&self) -> Vec<&File> {
-		self.current().selected().or_else(|| self.hovered().map(|h| vec![h])).unwrap_or_default()
+		let mode = &self.active().mode;
+		let files = &self.current().files;
+
+		let selected: Vec<_> = if !mode.is_visual() {
+			files.iter().filter(|(_, f)| f.is_selected).map(|(_, f)| f).collect()
+		} else {
+			files
+				.iter()
+				.enumerate()
+				.filter(|(i, (_, f))| mode.pending(*i, f.is_selected))
+				.map(|(_, (_, f))| f)
+				.collect()
+		};
+
+		if selected.is_empty() { self.hovered().map(|h| vec![h]).unwrap_or_default() } else { selected }
+	}
+
+	#[inline]
+	pub fn in_selecting(&self) -> bool {
+		self.active().mode.is_visual() || self.current().has_selected()
 	}
 }

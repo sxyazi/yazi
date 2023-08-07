@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, mem, path::{Path, PathBuf}};
+use std::{collections::{BTreeMap, BTreeSet}, mem, path::{Path, PathBuf}};
 
 use anyhow::{Error, Result};
 use shared::Defer;
@@ -33,7 +33,12 @@ impl Tab {
 	}
 
 	pub fn escape(&mut self) -> bool {
-		if matches!(self.mode, Mode::Select(_) | Mode::Unset(_)) {
+		if let Some((_, indices)) = self.mode.visual() {
+			let b = matches!(self.mode, Mode::Select(..));
+			for idx in indices.iter() {
+				self.current.select(Some(*idx), Some(b));
+			}
+
 			self.mode = Mode::Normal;
 			return true;
 		}
@@ -46,7 +51,6 @@ impl Tab {
 	}
 
 	pub fn arrow(&mut self, step: isize) -> bool {
-		let before = self.current.cursor();
 		let ok = if step > 0 {
 			self.current.next(step as usize)
 		} else {
@@ -57,15 +61,12 @@ impl Tab {
 		}
 
 		// Visual selection
-		if let Some(start) = self.mode.start() {
+		if let Some((start, items)) = self.mode.visual_mut() {
 			let after = self.current.cursor();
-			if (after > before && before < start) || (after < before && before > start) {
-				for i in before.min(start)..=start.max(before) {
-					self.current.select(Some(i), Some(false));
-				}
-			}
+
+			items.clear();
 			for i in start.min(after)..=after.max(start) {
-				self.current.select(Some(i), Some(true));
+				items.insert(i);
 			}
 		}
 
@@ -251,11 +252,9 @@ impl Tab {
 		let idx = self.current.cursor();
 
 		if unset {
-			self.mode = Mode::Unset(idx);
-			self.current.select(Some(idx), Some(false));
+			self.mode = Mode::Unset(idx, BTreeSet::from([idx]));
 		} else {
-			self.mode = Mode::Select(idx);
-			self.current.select(Some(idx), Some(true));
+			self.mode = Mode::Select(idx, BTreeSet::from([idx]));
 		};
 		true
 	}

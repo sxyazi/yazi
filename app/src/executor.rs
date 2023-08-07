@@ -76,11 +76,11 @@ impl Executor {
 				let state = exec.named.get("state").cloned().unwrap_or("none".to_string());
 				cx.manager.active_mut().select(optional_bool(&state))
 			}
-			"visual_mode" => cx.manager.active_mut().visual_mode(exec.named.contains_key("unset")),
 			"select_all" => {
 				let state = exec.named.get("state").cloned().unwrap_or("none".to_string());
 				cx.manager.active_mut().select_all(optional_bool(&state))
 			}
+			"visual_mode" => cx.manager.active_mut().visual_mode(exec.named.contains_key("unset")),
 
 			// Operation
 			"open" => cx.manager.open(exec.named.contains_key("interactive")),

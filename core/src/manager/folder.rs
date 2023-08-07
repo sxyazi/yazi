@@ -180,12 +180,7 @@ impl Folder {
 	}
 
 	#[inline]
-	pub fn has_selected(&self) -> bool { self.files.iter().any(|(_, item)| item.is_selected) }
-
-	pub fn selected(&self) -> Option<Vec<&File>> {
-		let v = self.files.iter().filter(|(_, f)| f.is_selected).map(|(_, f)| f).collect::<Vec<_>>();
-		if v.is_empty() { None } else { Some(v) }
-	}
+	pub fn has_selected(&self) -> bool { self.files.iter().any(|(_, f)| f.is_selected) }
 
 	pub fn rect_current(&self, path: &Path) -> Option<Rect> {
 		let pos = self.position(path)? - self.offset;
