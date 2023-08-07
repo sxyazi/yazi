@@ -22,10 +22,12 @@ impl<'a> Widget for Left<'a> {
 		let secondary = mode.color(&THEME.status.secondary);
 		let body = mode.color(&THEME.status.body);
 
-		let mut spans = vec![];
+		// Separator
+		let separator = &THEME.status.separator;
 
 		// Mode
-		spans.push(Span::styled("", primary.fg()));
+		let mut spans = vec![];
+		spans.push(Span::styled(&separator.opening, primary.fg()));
 		spans.push(Span::styled(
 			format!(" {mode} "),
 			primary.bg().fg(**secondary).add_modifier(Modifier::BOLD),
@@ -35,7 +37,7 @@ impl<'a> Widget for Left<'a> {
 			// Length
 			if let Some(len) = h.length {
 				spans.push(Span::styled(format!(" {} ", readable_size(len)), body.bg().fg(**primary)));
-				spans.push(Span::styled("", body.fg()));
+				spans.push(Span::styled(&separator.closing, body.fg()));
 			}
 
 			// Filename
