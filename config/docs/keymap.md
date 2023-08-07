@@ -28,15 +28,15 @@
   - `--state=false`: Deselect the current file.
   - `--state=none`: Default, toggle the selection state of the current file.
 
-- visual_mode: Enter visual mode (selection mode).
-
-  - `--unset`: Enter visual mode (unset mode).
-
 - select_all
 
   - `--state=true`: Select all files.
   - `--state=false`: Deselect all files.
   - `--state=none`: Default, toggle the selection state of all files.
+
+- visual_mode: Enter visual mode (selection mode).
+
+  - `--unset`: Enter visual mode (unset mode).
 
 ### Operation
 

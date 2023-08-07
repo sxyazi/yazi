@@ -1,4 +1,4 @@
-use std::{fs::Metadata, path::{Path, PathBuf}};
+use std::{borrow::Cow, fs::Metadata, path::{Path, PathBuf}};
 
 use anyhow::Result;
 use tokio::fs;
@@ -43,7 +43,5 @@ impl File {
 	}
 
 	#[inline]
-	pub fn name(&self) -> Option<String> {
-		self.path.file_name().map(|s| s.to_string_lossy().to_string())
-	}
+	pub fn name(&self) -> Option<Cow<str>> { self.path.file_name().map(|s| s.to_string_lossy()) }
 }

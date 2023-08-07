@@ -47,7 +47,7 @@ impl TryFrom<String> for Key {
 		}
 
 		let mut key = Self::default();
-		if !s.starts_with("<") || !s.ends_with(">") {
+		if !s.starts_with('<') || !s.ends_with('>') {
 			let c = s.chars().next().unwrap();
 			key.code = KeyCode::Char(c);
 			key.shift = c.is_ascii_uppercase();

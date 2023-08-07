@@ -1,4 +1,4 @@
-use core::manager::{Mode, ALL_RATIO, CURRENT_RATIO, PARENT_RATIO, PREVIEW_RATIO};
+use core::manager::{ALL_RATIO, CURRENT_RATIO, PARENT_RATIO, PREVIEW_RATIO};
 
 use ratatui::{buffer::Buffer, layout::{self, Constraint, Direction, Rect}, widgets::{Block, Borders, Padding, Widget}};
 
@@ -38,7 +38,7 @@ impl<'a> Widget for Layout<'a> {
 
 		// Current
 		Folder::new(self.cx, manager.current())
-			.with_selection(matches!(manager.active().mode(), Mode::Select(_)))
+			.with_selection(manager.active().mode().is_visual())
 			.render(chunks[1], buf);
 
 		// Preview
