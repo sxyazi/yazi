@@ -30,7 +30,7 @@ impl Manager {
 		let mut manager = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().manager;
 
 		manager.cwd = env::current_dir().unwrap_or("/".into());
-		manager.cache = "/tmp/yazi".into();
+		manager.cache = env::temp_dir().join("yazi");
 		if !manager.cache.is_dir() {
 			fs::create_dir(&manager.cache).unwrap();
 		}
