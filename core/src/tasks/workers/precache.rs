@@ -78,7 +78,7 @@ impl Precache {
 					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
 				}
 				if let Ok(img) = fs::read(&task.target).await {
-					Image::precache(img, cache).await.ok();
+					Image::precache(img.into(), cache).await.ok();
 				}
 				self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
 			}
