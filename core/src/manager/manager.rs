@@ -163,7 +163,7 @@ impl Manager {
 
 			let result = emit!(Select(SelectOpt {
 				title:    "Open with:".to_string(),
-				items:    openers.iter().map(|o| o.cmd.clone()).collect(),
+				items:    openers.iter().map(|o| o.display_name.clone()).collect(),
 				position: Position::Hovered,
 			}));
 			if let Ok(choice) = result.await {
@@ -236,6 +236,7 @@ impl Manager {
 						cmd: "sh".to_string(),
 						args: vec!["-c".to_string(), "$0".to_string()],
 						block,
+						display_name: Default::default(),
 						spread: false,
 					})
 				));

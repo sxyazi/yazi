@@ -10,30 +10,30 @@ max_height = 900
 
 [opener]
 folder = [
-	{ cmd = "open", args = [ "-R", "$*" ] },
+	{ cmd = "open", args = [ "-R", "$*" ], display_name = "Reveal in Finder" },
 	{ cmd = "vim", args = [ "$*" ] },
 ]
 archive = [
-	{ cmd = "unar", args = [ "$0" ] },
+	{ cmd = "unar", args = [ "$0" ], display_name = "Extract here" },
 ]
 text = [
 	{ cmd = "vim", args = [ "$*" ], block = true },
 ]
 image = [
-	{ cmd = "open", args = [ "$*" ] },
-	{ cmd = "exiftool", args = [ "$0" ], block = true },
+	{ cmd = "open", args = [ "$*" ], display_name = "Open" },
+	{ cmd = "exiftool", args = [ "$0" ], block = true, display_name = "Show EXIF" },
 ]
 video = [
 	{ cmd = "mpv", args = [ "$*" ] },
-	{ cmd = "mediainfo", args = [ "$0" ], block = true },
+	{ cmd = "mediainfo", args = [ "$0" ], block = true, display_name = "Show media info" },
 ]
 audio = [
 	{ cmd = "mpv", args = [ "$*" ] },
-	{ cmd = "mediainfo", args = [ "$0" ], block = true },
+	{ cmd = "mediainfo", args = [ "$0" ], block = true, display_name = "Show media info" },
 ]
 fallback = [
-	{ cmd = "open", args = [ "$*" ] },
-	{ cmd = "open", args = [ "-R", "$*" ] },
+	{ cmd = "open", args = [ "$*" ], display_name = "Open" },
+	{  cmd = "open", args = [ "-R", "$*" ], display_name = "Reveal in Finder" },
 ]
 
 [open]
