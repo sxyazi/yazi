@@ -23,3 +23,7 @@ tokio             = { version = "^1", features = [ "parking_lot" ] }
 tracing            = "^0"
 tracing-appender   = "^0"
 tracing-subscriber = "^0"
+
+[[bin]]
+name = "yazi"
+path = "src/main.rs"
