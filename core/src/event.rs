@@ -3,11 +3,12 @@ use std::{collections::BTreeMap, ffi::OsString, path::PathBuf};
 use anyhow::Result;
 use config::{keymap::{Control, KeymapLayer}, open::Opener};
 use crossterm::event::KeyEvent;
+use once_cell::sync::OnceCell;
 use tokio::sync::{mpsc::UnboundedSender, oneshot};
 
 use super::{files::{File, FilesOp}, input::InputOpt, manager::PreviewData, select::SelectOpt};
 
-static mut TX: Option<UnboundedSender<Event>> = None;
+static TX: OnceCell<UnboundedSender<Event>> = OnceCell::new();
 
 pub enum Event {
 	Quit,
@@ -39,19 +40,17 @@ pub enum Event {
 impl Event {
 	#[inline]
 	pub fn init(tx: UnboundedSender<Event>) {
-		unsafe {
-			TX.replace(tx);
-		}
+		TX.set(tx).unwrap();
 	}
 
 	#[inline]
 	pub fn emit(self) {
-		let tx = unsafe { TX.as_ref().unwrap() };
+		let tx = TX.get().unwrap();
 		tx.send(self).ok();
 	}
 
 	pub async fn wait<T>(self, rx: oneshot::Receiver<T>) -> T {
-		let tx = unsafe { TX.as_ref().unwrap() };
+		let tx = TX.get().unwrap();
 		tx.send(self).ok();
 		rx.await.unwrap()
 	}
