@@ -2,6 +2,8 @@ pub const MIME_DIR: &str = "inode/directory";
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum MimeKind {
+	Empty,
+
 	Archive,
 	Dir,
 
@@ -17,6 +19,10 @@ pub enum MimeKind {
 
 impl MimeKind {
 	pub fn valid(s: &str) -> bool {
+		if s == "inode/x-empty" {
+			return true;
+		}
+
 		let parts = s.split('/').collect::<Vec<_>>();
 		if parts.len() != 2 {
 			return false;
@@ -47,6 +53,8 @@ impl MimeKind {
 			Self::Image
 		} else if s.starts_with("video/") {
 			Self::Video
+		} else if s == "inode/x-empty" {
+			Self::Empty
 		} else if s == "application/json" {
 			Self::JSON
 		} else if s == "application/pdf" {
