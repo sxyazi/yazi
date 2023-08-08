@@ -59,6 +59,7 @@ impl Preview {
 
 		self.handle = Some(tokio::spawn(async move {
 			let result = match kind {
+				MimeKind::Empty => Ok(PreviewData::None),
 				MimeKind::Archive => Self::archive(&path).await.map(PreviewData::Text),
 				MimeKind::Dir => Self::folder(&path).await,
 				MimeKind::Image => Self::image(&path).await,
