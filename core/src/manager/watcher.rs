@@ -56,7 +56,7 @@ impl Watcher {
 							tx.blocking_send(path).ok();
 							tx.blocking_send(parent).ok();
 						}
-						_ => return,
+						_ => (),
 					}
 				}
 			},
@@ -111,7 +111,7 @@ impl Watcher {
 			self.watcher.unwatch(p).ok();
 		}
 		for p in to_watch.clone().difference(&keys) {
-			if self.watcher.watch(&p, RecursiveMode::NonRecursive).is_err() {
+			if self.watcher.watch(p, RecursiveMode::NonRecursive).is_err() {
 				to_watch.remove(p);
 			}
 		}

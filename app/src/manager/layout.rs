@@ -31,7 +31,7 @@ impl<'a> Widget for Layout<'a> {
 
 		// Parent
 		let block = Block::new().borders(Borders::RIGHT).padding(Padding::new(1, 0, 0, 0));
-		if let Some(ref parent) = manager.parent() {
+		if let Some(parent) = manager.parent() {
 			Folder::new(self.cx, parent).render(block.inner(chunks[0]), buf);
 		}
 		block.render(chunks[0], buf);

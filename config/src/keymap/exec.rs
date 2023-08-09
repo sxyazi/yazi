@@ -13,11 +13,11 @@ impl From<&str> for Exec {
 	fn from(value: &str) -> Self {
 		let mut exec = Self::default();
 		for x in value.split_whitespace() {
-			if x.starts_with("--") {
-				let mut it = x[2..].splitn(2, '=');
-				let name = it.next().unwrap();
+			if let Some(kv) = x.strip_prefix("--") {
+				let mut it = kv.splitn(2, '=');
+				let key = it.next().unwrap();
 				let value = it.next().unwrap_or("");
-				exec.named.insert(name.to_string(), value.to_string());
+				exec.named.insert(key.to_string(), value.to_string());
 			} else if exec.cmd.is_empty() {
 				exec.cmd = x.to_string();
 			} else {

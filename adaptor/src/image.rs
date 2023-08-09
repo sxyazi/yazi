@@ -1,7 +1,7 @@
 use std::{path::{Path, PathBuf}, sync::Arc};
 
 use anyhow::Result;
-use config::{MANAGER, PREVIEW};
+use config::{BOOT, PREVIEW};
 use image::{imageops::FilterType, DynamicImage, ImageFormat};
 use md5::{Digest, Md5};
 use shared::tty_ratio;
@@ -57,8 +57,8 @@ impl Image {
 
 	#[inline]
 	pub fn cache(path: &Path) -> PathBuf {
-		MANAGER
-			.cache
+		BOOT
+			.cache_dir
 			.join(format!("{:x}", Md5::new_with_prefix(path.to_string_lossy().as_bytes()).finalize()))
 	}
 }

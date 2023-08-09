@@ -46,16 +46,16 @@ impl Task {
 	}
 }
 
-impl Into<TaskSummary> for &Task {
-	fn into(self) -> TaskSummary {
+impl From<&Task> for TaskSummary {
+	fn from(task: &Task) -> Self {
 		TaskSummary {
-			name: self.name.clone(),
+			name: task.name.clone(),
 
-			found:     self.found,
-			processed: self.processed,
+			found:     task.found,
+			processed: task.processed,
 
-			todo: self.todo,
-			done: self.done,
+			todo: task.todo,
+			done: task.done,
 		}
 	}
 }

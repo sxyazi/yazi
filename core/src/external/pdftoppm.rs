@@ -15,5 +15,5 @@ pub async fn pdftoppm(src: &Path, dest: impl AsRef<Path>) -> Result<()> {
 	if !output.status.success() {
 		bail!("failed to generate PDF thumbnail: {}", String::from_utf8_lossy(&output.stderr));
 	}
-	Ok(Image::precache_anyway(output.stdout.into(), dest).await?)
+	Image::precache_anyway(output.stdout.into(), dest).await
 }

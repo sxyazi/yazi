@@ -1,17 +1,14 @@
-use std::path::PathBuf;
-
-use serde::{de, Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer};
 
 use crate::MERGED_YAZI;
 
 #[derive(Debug)]
 pub struct Log {
 	pub enabled: bool,
-	pub root:    PathBuf,
 }
 
-impl Log {
-	pub fn new() -> Self { toml::from_str(&MERGED_YAZI).unwrap() }
+impl Default for Log {
+	fn default() -> Self { toml::from_str(&MERGED_YAZI).unwrap() }
 }
 
 impl<'de> Deserialize<'de> for Log {
@@ -30,13 +27,6 @@ impl<'de> Deserialize<'de> for Log {
 
 		let outer = Outer::deserialize(deserializer)?;
 
-		let root = xdg::BaseDirectories::with_prefix("yazi")
-			.map_err(|e| de::Error::custom(e.to_string()))?
-			.get_state_home();
-		if !root.is_dir() {
-			std::fs::create_dir_all(&root).map_err(|e| de::Error::custom(e.to_string()))?;
-		}
-
-		Ok(Self { enabled: outer.log.enabled, root })
+		Ok(Self { enabled: outer.log.enabled })
 	}
 }

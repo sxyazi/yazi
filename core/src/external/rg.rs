@@ -13,7 +13,7 @@ pub struct RgOpt {
 pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<Vec<PathBuf>>> {
 	let mut child = Command::new("rg")
 		.current_dir(&opt.cwd)
-		.args(&["--color=never", "--files-with-matches", "--smart-case"])
+		.args(["--color=never", "--files-with-matches", "--smart-case"])
 		.arg(if opt.hidden { "--hidden" } else { "--no-hidden" })
 		.arg(&opt.subject)
 		.kill_on_drop(true)

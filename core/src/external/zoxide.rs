@@ -9,7 +9,7 @@ pub struct ZoxideOpt {
 
 pub fn zoxide(opt: ZoxideOpt) -> Result<Receiver<Result<PathBuf>>> {
 	let child = Command::new("zoxide")
-		.args(&["query", "-i", "--exclude"])
+		.args(["query", "-i", "--exclude"])
 		.arg(opt.cwd)
 		.kill_on_drop(true)
 		.stdout(Stdio::piped())

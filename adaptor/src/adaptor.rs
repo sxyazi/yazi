@@ -11,6 +11,7 @@ use crate::{Image, Sixel};
 
 static IMAGE_SHOWN: AtomicBool = AtomicBool::new(false);
 
+#[allow(clippy::type_complexity)]
 static UEBERZUG: Lazy<Option<UnboundedSender<Option<(PathBuf, Rect)>>>> =
 	Lazy::new(|| if PREVIEW.adaptor.needs_ueberzug() { Ueberzug::start().ok() } else { None });
 

@@ -38,7 +38,7 @@ impl<'a> Folder<'a> {
 			.iter()
 			.find(|x| x.matches(&file.path, mimetype.get(&file.path).cloned(), file.meta.is_dir()))
 			.map(|x| x.style.get())
-			.unwrap_or_else(|| Style::new())
+			.unwrap_or_else(Style::new)
 	}
 }
 

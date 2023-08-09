@@ -22,18 +22,14 @@ impl Which {
 	pub fn show(&mut self, key: &Key, layer: KeymapLayer) -> bool {
 		self.layer = layer;
 		self.times = 1;
-		self.cands = KEYMAP
-			.get(layer)
-			.into_iter()
-			.filter(|s| s.on.len() > 1 && s.on[0] == *key)
-			.cloned()
-			.collect();
+		self.cands =
+			KEYMAP.get(layer).iter().filter(|s| s.on.len() > 1 && s.on[0] == *key).cloned().collect();
 		self.switch(true);
 		true
 	}
 
 	pub fn press(&mut self, key: Key) -> bool {
-		self.cands = mem::replace(&mut self.cands, Vec::new())
+		self.cands = mem::take(&mut self.cands)
 			.into_iter()
 			.filter(|s| s.on.len() > self.times && s.on[self.times] == key)
 			.collect();
@@ -49,7 +45,7 @@ impl Which {
 		}
 
 		self.times += 1;
-		return true;
+		true
 	}
 
 	#[inline]

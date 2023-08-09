@@ -28,12 +28,13 @@ impl Default for PreviewAdaptor {
 		match env::var("TERM_PROGRAM").unwrap_or_default().as_str() {
 			"iTerm.app" => return Self::Iterm2,
 			"WezTerm" => return Self::Kitty,
+			"vscode" => return Self::Sixel,
 			"Hyper" => return Self::Sixel,
 			_ => {}
 		}
 		match env::var("XDG_SESSION_TYPE").unwrap_or_default().as_str() {
-			"x11" => return Self::X11,
-			"wayland" => return Self::Wayland,
+			"x11" => Self::X11,
+			"wayland" => Self::Wayland,
 			_ => Self::Chafa,
 		}
 	}
@@ -56,11 +57,6 @@ impl ToString for PreviewAdaptor {
 impl PreviewAdaptor {
 	#[inline]
 	pub fn needs_ueberzug(&self) -> bool {
-		match self {
-			PreviewAdaptor::Kitty => false,
-			PreviewAdaptor::Iterm2 => false,
-			PreviewAdaptor::Sixel => false,
-			_ => true,
-		}
+		!matches!(self, PreviewAdaptor::Kitty | PreviewAdaptor::Iterm2 | PreviewAdaptor::Sixel)
 	}
 }

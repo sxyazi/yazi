@@ -13,8 +13,8 @@ pub struct Preview {
 	pub max_height: u32,
 }
 
-impl Preview {
-	pub fn new() -> Self {
+impl Default for Preview {
+	fn default() -> Self {
 		#[derive(Deserialize)]
 		struct Outer {
 			preview: Preview,

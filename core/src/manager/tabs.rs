@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use config::MANAGER;
+use config::BOOT;
 
 use super::Tab;
 use crate::emit;
@@ -13,8 +13,8 @@ pub struct Tabs {
 }
 
 impl Tabs {
-	pub fn new() -> Self {
-		let mut tabs = Self { idx: usize::MAX, items: vec![Tab::new(&MANAGER.cwd)] };
+	pub fn make() -> Self {
+		let mut tabs = Self { idx: usize::MAX, items: vec![Tab::new(&BOOT.cwd)] };
 		tabs.set_idx(0);
 		tabs
 	}
@@ -53,7 +53,7 @@ impl Tabs {
 
 	pub fn close(&mut self, idx: usize) -> bool {
 		let len = self.items.len();
-		if len < 2 || idx as usize >= len {
+		if len < 2 || idx >= len {
 			return false;
 		}
 
@@ -70,7 +70,7 @@ impl Tabs {
 		if rel > 0 {
 			(self.idx + rel as usize).min(self.items.len() - 1)
 		} else {
-			self.idx.saturating_sub(rel.abs() as usize)
+			self.idx.saturating_sub(rel.unsigned_abs())
 		}
 	}
 

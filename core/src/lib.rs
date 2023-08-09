@@ -1,3 +1,10 @@
+#![allow(
+	clippy::if_same_then_else,
+	clippy::len_without_is_empty,
+	clippy::module_inception,
+	clippy::option_map_unit_fn
+)]
+
 mod blocker;
 mod event;
 pub mod external;

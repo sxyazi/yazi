@@ -47,7 +47,7 @@ impl<T> Throttle<T> {
 	where
 		F: FnOnce(Vec<T>),
 	{
-		let mut buf = mem::replace(&mut *self.buf.lock(), Vec::new());
+		let mut buf = mem::take(&mut *self.buf.lock());
 		buf.push(data);
 		f(buf)
 	}
