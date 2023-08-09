@@ -1,4 +1,4 @@
-use core::{emit, files::FilesSort, input::InputMode};
+use core::{files::FilesSort, input::InputMode};
 use std::path::PathBuf;
 
 use config::{keymap::{Control, Exec, Key, KeymapLayer}, manager::SortBy, KEYMAP};
@@ -67,8 +67,8 @@ impl Executor {
 			"forward" => cx.manager.active_mut().forward(),
 			"cd" => {
 				let path = exec.args.get(0).map(PathBuf::from).unwrap_or_default();
-				emit!(Cd(path));
-				false
+				let interactive = exec.named.contains_key("interactive");
+				cx.manager.active_mut().cd_interactive(interactive, path)
 			}
 
 			// Selection
