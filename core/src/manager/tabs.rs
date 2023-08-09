@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use config::MANAGER;
+use config::BOOT;
 
 use super::Tab;
 use crate::emit;
@@ -14,7 +14,7 @@ pub struct Tabs {
 
 impl Tabs {
 	pub fn make() -> Self {
-		let mut tabs = Self { idx: usize::MAX, items: vec![Tab::new(&MANAGER.cwd)] };
+		let mut tabs = Self { idx: usize::MAX, items: vec![Tab::new(&BOOT.cwd)] };
 		tabs.set_idx(0);
 		tabs
 	}
