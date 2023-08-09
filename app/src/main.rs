@@ -1,3 +1,5 @@
+#![allow(clippy::module_inception)]
+
 mod app;
 mod context;
 mod executor;
@@ -12,12 +14,12 @@ mod status;
 mod tasks;
 mod which;
 
-pub(self) use app::*;
-pub(self) use context::*;
-pub(self) use executor::*;
-pub(self) use logs::*;
-pub(self) use root::*;
-pub(self) use signals::*;
+use app::*;
+use context::*;
+use executor::*;
+use logs::*;
+use root::*;
+use signals::*;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

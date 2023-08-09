@@ -55,7 +55,7 @@ impl Sixel {
 			}
 
 			for y in 0..img.height() {
-				let c = (b'?' + (1 << (y % 6))) as u8 as char;
+				let c = (b'?' + (1 << (y % 6))) as char;
 
 				let mut last = 0;
 				let mut repeat = 0usize;

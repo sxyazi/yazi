@@ -19,13 +19,13 @@ pub async fn file(files: &[impl AsRef<OsStr>]) -> Result<BTreeMap<PathBuf, Strin
 	let output = String::from_utf8_lossy(&output.stdout);
 	let mimes = BTreeMap::from_iter(
 		files
-			.into_iter()
+			.iter()
 			.zip(output.trim().lines())
 			.filter(|(_, m)| MimeKind::valid(m))
 			.map(|(f, m)| (f.as_ref().into(), m.to_string())),
 	);
 
-	if mimes.len() == 0 {
+	if mimes.is_empty() {
 		bail!("failed to get mime types");
 	}
 	Ok(mimes)

@@ -28,19 +28,8 @@ impl MimeKind {
 			return false;
 		}
 
-		let b = match parts[0] {
-			"application" => true,
-			"audio" => true,
-			"example" => true,
-			"font" => true,
-			"image" => true,
-			"message" => true,
-			"model" => true,
-			"multipart" => true,
-			"text" => true,
-			"video" => true,
-			_ => false,
-		};
+		#[rustfmt::skip]
+		let b = matches!(parts[0], "application" | "audio" | "example" | "font" | "image" | "message" | "model" | "multipart" | "text" | "video");
 		b && !parts[1].is_empty()
 	}
 

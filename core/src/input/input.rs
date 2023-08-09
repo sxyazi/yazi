@@ -103,7 +103,7 @@ impl Input {
 		let snap = self.snap();
 		let b = self.handle_op(
 			if step <= 0 {
-				snap.cursor.saturating_sub(step.abs() as usize)
+				snap.cursor.saturating_sub(step.unsigned_abs())
 			} else {
 				snap.count().min(snap.cursor + step as usize)
 			},
@@ -333,11 +333,7 @@ impl Input {
 
 	pub fn selected(&self) -> Option<Rect> {
 		let snap = self.snap();
-		let start = if let Some(s) = snap.op.start() {
-			s
-		} else {
-			return None;
-		};
+		let start = snap.op.start()?;
 
 		let (start, end) =
 			if start < snap.cursor { (start, snap.cursor) } else { (snap.cursor + 1, start + 1) };

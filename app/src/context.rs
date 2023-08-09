@@ -47,11 +47,7 @@ impl Ctx {
 
 	#[inline]
 	pub(super) fn image_layer(&self) -> bool {
-		match self.layer() {
-			KeymapLayer::Which => false,
-			KeymapLayer::Tasks => false,
-			_ => true,
-		}
+		!matches!(self.layer(), KeymapLayer::Which | KeymapLayer::Tasks)
 	}
 
 	pub(super) fn position(&self, pos: Position) -> Position {

@@ -69,8 +69,8 @@ pub struct Theme {
 	pub icons:     Vec<Icon>,
 }
 
-impl Theme {
-	pub fn new() -> Self {
+impl Default for Theme {
+	fn default() -> Self {
 		let mut theme: Self = toml::from_str(&MERGED_THEME).unwrap();
 		theme.preview.syntect_theme =
 			futures::executor::block_on(absolute_path(&theme.preview.syntect_theme));

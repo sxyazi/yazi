@@ -34,7 +34,7 @@ impl<'a> Right<'a> {
 			.collect()
 	}
 
-	fn position<'b>(&self) -> Vec<Span> {
+	fn position(&self) -> Vec<Span> {
 		// Colors
 		let mode = self.cx.manager.active().mode();
 		let primary = mode.color(&THEME.status.primary);

@@ -23,7 +23,7 @@ impl Tab {
 		Self {
 			mode:    Default::default(),
 			current: Folder::new(path),
-			parent:  path.parent().map(|p| Folder::new(p)),
+			parent:  path.parent().map(Folder::new),
 
 			search: None,
 
@@ -54,7 +54,7 @@ impl Tab {
 		let ok = if step > 0 {
 			self.current.next(step as usize)
 		} else {
-			self.current.prev(step.abs() as usize)
+			self.current.prev(step.unsigned_abs())
 		};
 		if !ok {
 			return false;

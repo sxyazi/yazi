@@ -56,7 +56,7 @@ impl App {
 	fn dispatch_render(&mut self) {
 		if let Some(term) = &mut self.term {
 			let _ = term.draw(|f| {
-				f.render_widget(Root::new(&mut self.cx), f.size());
+				f.render_widget(Root::new(&self.cx), f.size());
 
 				if let Some((x, y)) = self.cx.cursor() {
 					f.set_cursor(x, y);

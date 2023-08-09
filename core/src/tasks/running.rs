@@ -27,9 +27,7 @@ impl Running {
 	pub(super) fn get_mut(&mut self, id: usize) -> Option<&mut Task> { self.all.get_mut(&id) }
 
 	#[inline]
-	pub(super) fn get_id(&self, idx: usize) -> Option<usize> {
-		self.values().skip(idx).next().map(|t| t.id)
-	}
+	pub(super) fn get_id(&self, idx: usize) -> Option<usize> { self.values().nth(idx).map(|t| t.id) }
 
 	#[inline]
 	pub(super) fn len(&self) -> usize { self.all.len() }

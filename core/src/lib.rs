@@ -1,3 +1,5 @@
+#![allow(clippy::module_inception)]
+
 mod blocker;
 mod event;
 pub mod external;

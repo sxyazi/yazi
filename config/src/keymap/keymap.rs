@@ -54,9 +54,11 @@ impl<'de> Deserialize<'de> for Keymap {
 	}
 }
 
-impl Keymap {
-	pub fn new() -> Self { toml::from_str(&MERGED_KEYMAP).unwrap() }
+impl Default for Keymap {
+	fn default() -> Self { toml::from_str(&MERGED_KEYMAP).unwrap() }
+}
 
+impl Keymap {
 	#[inline]
 	pub fn get(&self, layer: KeymapLayer) -> &Vec<Control> {
 		match layer {
