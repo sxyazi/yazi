@@ -10,17 +10,19 @@ https://github.com/sxyazi/yazi/assets/17523360/740a41f4-3d24-4287-952c-3aec51520
 
 Before getting started, ensure that the following dependencies are installed on your system:
 
-- nerd-fonts (required, for icons)
-- ffmpegthumbnailer (optional, for video thumbnails)
-- unar (optional, for archive preview)
-- jq (optional, for JSON preview)
-- poppler (optional, for PDF preview)
-- fd (optional, for file searching)
-- rg (optional, for file content searching)
-- fzf (optional, for directory jumping)
-- zoxide (optional, for directory jumping)
+- nerd-fonts (_required_, for icons)
+- ffmpegthumbnailer (_optional_, for video thumbnails)
+- unar (_optional_, for archive preview)
+- jq (_optional_, for JSON preview)
+- poppler (_optional_, for PDF preview)
+- fd (_optional_, for file searching)
+- rg (_optional_, for file content searching)
+- fzf (_optional_, for directory jumping)
+- zoxide (_optional_, for directory jumping)
 
-### Arch Linux
+<details>
+
+<summary>Arch Linux</summary>
 
 Install with paru or your favorite AUR helper:
 
@@ -30,7 +32,11 @@ paru -S yazi ffmpegthumbnailer unarchiver jq poppler fd ripgrep fzf zoxide
 
 Or, you can replace `yazi` with `yazi-bin` package if you want pre-built binary instead of compiling by yourself.
 
-### macOS
+</details>
+
+<details>
+
+<summary>macOS</summary>
 
 Install the dependencies with Homebrew:
 
@@ -45,7 +51,11 @@ And download the latest release [from here](https://github.com/sxyazi/yazi/relea
 cargo install --git https://github.com/sxyazi/yazi.git
 ```
 
-### Nix
+</details>
+
+<details>
+
+<summary>Nix</summary>
 
 Nix users can install Yazi from [the NUR](https://github.com/nix-community/nur-combined/blob/master/repos/xyenon/pkgs/yazi/default.nix):
 
@@ -64,7 +74,11 @@ environment.systemPackages = with pkgs; [
 
 If you prefer to use the most recent code, use `nur.repos.xyenon.yazi-unstable` instead.
 
-### Build from source
+</details>
+
+<details>
+
+<summary>Build from source</summary>
 
 Execute the following commands to clone the project and build Yazi:
 
@@ -80,6 +94,8 @@ Then, you can run:
 ./target/release/yazi
 ```
 
+</details>
+
 ## Usage
 
 ```bash
@@ -88,7 +104,7 @@ yazi
 
 If you want to use your own config, copy the [config folder](https://github.com/sxyazi/yazi/tree/main/config/preset) to `~/.config/yazi`, and modify it as you like.
 
-There is a wrapper of yazi that provides the ability to change the current shell's working directory when yazi exited, feel free to use it:
+There is a wrapper of yazi, that provides the ability to change the current working directory when yazi exiting, feel free to use it:
 
 ```bash
 function ya() {
@@ -100,6 +116,11 @@ function ya() {
 	rm -f -- "$tmp"
 }
 ```
+
+## Discussion
+
+- Discord Server (English mainly): https://discord.gg/qfADduSdJu
+- Telegram Group (Chinese mainly): https://t.me/yazi_rs
 
 ## Image Preview
 
@@ -119,11 +140,6 @@ That's relying on the `$TERM`, `$TERM_PROGRAM`, and `$XDG_SESSION_TYPE` variable
 
 For instance, if your terminal is Alacritty, which doesn't support displaying images itself, but you are running on an X11/Wayland environment,
 it will automatically use the "Window system protocol" to display images -- this requires you to have [Überzug++](https://github.com/jstkdng/ueberzugpp) installed.
-
-## Discussion
-
-- Discord Server (English mainly): https://discord.gg/qfADduSdJu
-- Telegram Group (Chinese mainly): https://t.me/yazi_rs
 
 ## TODO
 
