@@ -1,4 +1,4 @@
-use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, mem, path::PathBuf};
+use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, mem, path::{Path, PathBuf}};
 
 use anyhow::Error;
 use config::{open::Opener, OPEN};
@@ -28,9 +28,9 @@ impl Manager {
 	}
 
 	pub fn refresh(&mut self) {
-		env::set_current_dir(&self.current().cwd).ok();
+		env::set_current_dir(self.cwd()).ok();
 
-		self.watcher.trigger(&self.current().cwd);
+		self.watcher.trigger(self.cwd());
 		if let Some(p) = self.parent() {
 			self.watcher.trigger(&p.cwd);
 		}
@@ -174,7 +174,7 @@ impl Manager {
 	}
 
 	pub fn create(&self) -> bool {
-		let cwd = self.current().cwd.clone();
+		let cwd = self.cwd().to_owned();
 		tokio::spawn(async move {
 			let result = emit!(Input(InputOpt::top("Create:")));
 
@@ -248,7 +248,7 @@ impl Manager {
 
 	pub fn update_read(&mut self, op: FilesOp) -> bool {
 		let path = op.path();
-		let cwd = self.current().cwd.clone();
+		let cwd = self.cwd().to_owned();
 		let hovered = self.hovered().map(|h| h.path());
 
 		let mut b = if cwd == path && !self.current().in_search {
@@ -277,7 +277,7 @@ impl Manager {
 
 	pub fn update_search(&mut self, op: FilesOp) -> bool {
 		let path = op.path();
-		if self.current().in_search && self.current().cwd == path {
+		if self.current().in_search && self.cwd() == path {
 			return self.current_mut().update(op);
 		}
 
@@ -293,7 +293,7 @@ impl Manager {
 		let path = op.path();
 		let op = FilesOp::read_empty(&path);
 
-		if path == self.current().cwd {
+		if path == self.cwd() {
 			self.current_mut().update(op);
 		} else if matches!(self.parent(), Some(p) if p.cwd == path) {
 			self.active_mut().parent.as_mut().unwrap().update(op);
@@ -338,6 +338,9 @@ impl Manager {
 }
 
 impl Manager {
+	#[inline]
+	pub fn cwd(&self) -> &Path { &self.current().cwd }
+
 	#[inline]
 	pub fn tabs(&self) -> &Tabs { &self.tabs }
 

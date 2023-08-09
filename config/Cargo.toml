@@ -8,6 +8,7 @@ shared = { path = "../shared" }
 
 # External dependencies
 anyhow    = "^1"
+clap      = { version = "^4", features = [ "derive" ] }
 crossterm = "^0"
 futures   = "^0"
 glob      = "^0"
