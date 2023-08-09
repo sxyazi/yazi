@@ -1,7 +1,8 @@
 use core::{emit, files::FilesOp, input::InputMode, Event};
+use std::os::unix::prelude::OsStrExt;
 
 use anyhow::{Ok, Result};
-use config::keymap::{Control, Key, KeymapLayer};
+use config::{keymap::{Control, Key, KeymapLayer}, BOOT};
 use crossterm::event::KeyEvent;
 use shared::{absolute_path, Term};
 use tokio::sync::oneshot;
@@ -24,7 +25,10 @@ impl App {
 
 		while let Some(event) = app.signals.recv().await {
 			match event {
-				Event::Quit => break,
+				Event::Quit => {
+					app.dispatch_quit();
+					break;
+				}
 				Event::Key(key) => app.dispatch_key(key),
 				Event::Paste(str) => app.dispatch_paste(str),
 				Event::Render(_) => app.dispatch_render(),
@@ -35,6 +39,13 @@ impl App {
 			}
 		}
 		Ok(())
+	}
+
+	fn dispatch_quit(&mut self) {
+		if let Some(p) = &BOOT.cwd_file {
+			let cwd = self.cx.manager.cwd().as_os_str();
+			std::fs::write(p, cwd.as_bytes()).ok();
+		}
 	}
 
 	fn dispatch_key(&mut self, key: KeyEvent) {

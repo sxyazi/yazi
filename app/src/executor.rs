@@ -86,7 +86,7 @@ impl Executor {
 			"open" => cx.manager.open(exec.named.contains_key("interactive")),
 			"yank" => cx.manager.yank(exec.named.contains_key("cut")),
 			"paste" => {
-				let dest = cx.manager.current().cwd.clone();
+				let dest = cx.manager.cwd().to_owned();
 				let (cut, src) = cx.manager.yanked();
 
 				let force = exec.named.contains_key("force");
@@ -133,7 +133,7 @@ impl Executor {
 			// Tabs
 			"tab_create" => {
 				let path = if exec.named.contains_key("current") {
-					cx.manager.current().cwd.clone()
+					cx.manager.cwd().to_owned()
 				} else {
 					exec.args.get(0).map(|p| p.into()).unwrap_or("/".into())
 				};
