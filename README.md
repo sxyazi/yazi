@@ -88,6 +88,19 @@ yazi
 
 If you want to use your own config, copy the [config folder](https://github.com/sxyazi/yazi/tree/main/config/preset) to `~/.config/yazi`, and modify it as you like.
 
+There is a wrapper of yazi that provides the ability to change the current shell's working directory when yazi exited, feel free to use it:
+
+```bash
+function ya() {
+	tmp="$(mktemp -t "yazi-cwd")"
+	yazi --cwd-file="$tmp"
+	if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+		cd -- "$cwd"
+	fi
+	rm -f -- "$tmp"
+}
+```
+
 ## Image Preview
 
 | Platform      | Protocol                                                                         | Support               |
