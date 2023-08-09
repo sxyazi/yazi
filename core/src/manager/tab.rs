@@ -270,6 +270,10 @@ impl Tab {
 		};
 		true
 	}
+
+	pub fn current_name(&self) -> &str {
+		self.current.cwd.file_name().and_then(|name| name.to_str()).unwrap_or_default()
+	}
 }
 
 impl Tab {

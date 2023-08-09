@@ -19,11 +19,18 @@ impl<'a> Widget for Tabs<'a> {
 			tabs
 				.iter()
 				.enumerate()
-				.map(|(i, _)| {
+				.map(|(i, tab)| {
+					let mut text = format!(" {} ", i + 1);
+					if THEME.tab.max_width > 0 {
+						text
+							.push_str(&tab.current_name().chars().take(THEME.tab.max_width).collect::<String>());
+						text.push(' ');
+					}
+
 					if i == tabs.idx() {
-						Span::styled(format!(" {} ", i + 1), THEME.tab.active.get())
+						Span::styled(text, THEME.tab.active.get())
 					} else {
-						Span::styled(format!(" {} ", i + 1), THEME.tab.inactive.get())
+						Span::styled(text, THEME.tab.inactive.get())
 					}
 				})
 				.collect::<Vec<_>>(),
