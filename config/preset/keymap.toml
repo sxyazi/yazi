@@ -97,6 +97,7 @@ keymap = [
 	{ on = [ "g", "c" ], exec = "cd ~/.config" },
 	{ on = [ "g", "d" ], exec = "cd ~/Downloads" },
 	{ on = [ "g", "t" ], exec = "cd /tmp" },
+	{ on = [ "g", "<Space>" ], exec = "cd --interactive" },
 ]
 
 [tasks]
