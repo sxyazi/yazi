@@ -1,3 +1,5 @@
+#![allow(clippy::unit_arg)]
+
 mod adaptor;
 mod image;
 mod iterm2;

@@ -13,7 +13,7 @@ pub struct Tabs {
 }
 
 impl Tabs {
-	pub fn new() -> Self {
+	pub fn make() -> Self {
 		let mut tabs = Self { idx: usize::MAX, items: vec![Tab::new(&MANAGER.cwd)] };
 		tabs.set_idx(0);
 		tabs

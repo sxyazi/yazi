@@ -47,7 +47,6 @@ impl InputSnap {
 		true
 	}
 
-	#[allow(clippy::if_same_then_else)]
 	pub fn visual(&mut self) -> bool {
 		if self.mode != InputMode::Normal {
 			return false;

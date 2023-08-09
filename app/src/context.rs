@@ -14,7 +14,7 @@ pub struct Ctx {
 impl Ctx {
 	pub(super) fn new() -> Self {
 		Self {
-			manager: Manager::new(),
+			manager: Manager::make(),
 			which:   Default::default(),
 			select:  Default::default(),
 			input:   Default::default(),

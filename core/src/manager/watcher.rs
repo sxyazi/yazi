@@ -56,7 +56,7 @@ impl Watcher {
 							tx.blocking_send(path).ok();
 							tx.blocking_send(parent).ok();
 						}
-						_ => return,
+						_ => (),
 					}
 				}
 			},

@@ -44,7 +44,6 @@ impl Preview {
 		}
 	}
 
-	#[allow(clippy::if_same_then_else)]
 	pub fn go(&mut self, path: &Path, mime: &str, show_image: bool) {
 		let kind = MimeKind::new(mime);
 		if !show_image && matches!(kind, MimeKind::Image | MimeKind::Video) {
@@ -75,7 +74,6 @@ impl Preview {
 		}));
 	}
 
-	#[allow(clippy::option_map_unit_fn)]
 	pub fn reset(&mut self) -> bool {
 		self.handle.take().map(|h| h.abort());
 		self.incr.fetch_add(1, Ordering::Relaxed);
@@ -88,7 +86,6 @@ impl Preview {
 		)
 	}
 
-	#[allow(clippy::option_map_unit_fn)]
 	pub fn reset_image(&mut self) -> bool {
 		self.handle.take().map(|h| h.abort());
 		self.incr.fetch_add(1, Ordering::Relaxed);

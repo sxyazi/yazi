@@ -38,6 +38,7 @@ impl Tasks {
 		true
 	}
 
+	#[allow(clippy::should_implement_trait)]
 	pub fn next(&mut self) -> bool {
 		let limit = Self::limit().min(self.len());
 
