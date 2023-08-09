@@ -14,9 +14,7 @@ ansi-to-tui       = "^3"
 anyhow            = "^1"
 crossterm         = { version = "^0", features = [ "event-stream" ] }
 futures           = "^0"
-libc              = "^0"
 ratatui        		 = "^0"
-signal-hook-tokio = { version = "^0", features = [ "futures-v0_3" ] }
 tokio             = { version = "^1", features = [ "parking_lot" ] }
 unicode-width     = "^0"
 
@@ -24,6 +22,10 @@ unicode-width     = "^0"
 tracing            = "^0"
 tracing-appender   = "^0"
 tracing-subscriber = "^0"
+
+[target.'cfg(not(target_os = "windows"))'.dependencies]
+libc              = "^0"
+signal-hook-tokio = { version = "^0", features = [ "futures-v0_3" ] }
 
 [[bin]]
 name = "yazi"

@@ -91,6 +91,10 @@ pub fn copy_with_progress(from: &Path, to: &Path) -> mpsc::Receiver<Result<u64, 
 	rx
 }
 
+#[cfg(target_os = "windows")]
+pub fn file_mode(_: u32) -> String { String::new() }
+
+#[cfg(not(target_os = "windows"))]
 // Convert a file mode to a string representation
 #[allow(clippy::collapsible_else_if)]
 pub fn file_mode(mode: u32) -> String {

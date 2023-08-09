@@ -1,16 +1,10 @@
-use libc::{ioctl, winsize, STDOUT_FILENO, TIOCGWINSZ};
-
-#[inline]
-pub fn tty_size() -> winsize {
-	unsafe {
-		let s: winsize = std::mem::zeroed();
-		ioctl(STDOUT_FILENO, TIOCGWINSZ, &s);
-		s
-	}
-}
+use crossterm::terminal::window_size;
 
 #[inline]
 pub fn tty_ratio() -> (f64, f64) {
-	let s = tty_size();
-	(f64::from(s.ws_xpixel) / f64::from(s.ws_col), f64::from(s.ws_ypixel) / f64::from(s.ws_row))
+	if let Ok(ws) = window_size() {
+		(f64::from(ws.width) / f64::from(ws.columns), f64::from(ws.height) / f64::from(ws.rows))
+	} else {
+		(1f64, 1f64)
+	}
 }

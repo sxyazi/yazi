@@ -3,6 +3,7 @@
 use shared::RoCell;
 
 mod boot;
+mod dir;
 pub mod keymap;
 mod log;
 pub mod manager;

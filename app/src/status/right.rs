@@ -1,8 +1,5 @@
-use std::os::unix::prelude::PermissionsExt;
-
 use config::THEME;
 use ratatui::{buffer::Buffer, layout::{Alignment, Rect}, text::{Line, Span}, widgets::{Paragraph, Widget}};
-use shared::file_mode;
 
 use super::Progress;
 use crate::Ctx;
@@ -70,8 +67,10 @@ impl Widget for Right<'_> {
 		let mut spans = vec![];
 
 		// Permissions
+		#[cfg(not(target_os = "windows"))]
 		if let Some(h) = &manager.hovered {
-			spans.extend(self.permissions(&file_mode(h.meta.permissions().mode())))
+			use std::os::unix::prelude::PermissionsExt;
+			spans.extend(self.permissions(&shared::file_mode(h.meta.permissions().mode())))
 		}
 
 		// Position

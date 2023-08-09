@@ -1,5 +1,4 @@
 use core::{emit, files::FilesOp, input::InputMode, Event};
-use std::{ffi::OsString, os::unix::prelude::OsStrExt};
 
 use anyhow::{Ok, Result};
 use config::{keymap::{Control, Key, KeymapLayer}, BOOT};
@@ -43,6 +42,7 @@ impl App {
 
 	fn dispatch_quit(&mut self) {
 		if let Some(p) = &BOOT.cwd_file {
+			use std::os::unix::prelude::OsStrExt;
 			let cwd = self.cx.manager.cwd().as_os_str();
 			std::fs::write(p, cwd.as_bytes()).ok();
 		}

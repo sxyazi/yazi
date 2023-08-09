@@ -125,7 +125,16 @@ impl File {
 
 				match fs::remove_file(&task.to).await {
 					Err(e) if e.kind() != NotFound => Err(e)?,
-					_ => fs::symlink(src, &task.to).await?,
+					_ => {
+						#[cfg(target_os = "windows")]
+						{
+							fs::symlink_file(src, &task.to).await?
+						}
+						#[cfg(not(target_os = "windows"))]
+						{
+							fs::symlink(src, &task.to).await?
+						}
+					}
 				}
 
 				if task.cut {

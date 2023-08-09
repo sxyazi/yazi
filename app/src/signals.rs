@@ -1,9 +1,8 @@
 use core::Event;
 
 use anyhow::Result;
-use crossterm::event::{Event as CrosstermEvent, EventStream};
+use crossterm::event::{Event as CrosstermEvent, EventStream, KeyEvent, KeyEventKind};
 use futures::StreamExt;
-use libc::{SIGHUP, SIGINT, SIGQUIT, SIGTERM};
 use tokio::{select, sync::{mpsc::{self, UnboundedReceiver, UnboundedSender}, oneshot}, task::JoinHandle};
 
 pub(super) struct Signals {
@@ -46,7 +45,13 @@ impl Signals {
 		}
 	}
 
+	#[cfg(target_os = "windows")]
+	fn spawn_system_task(&self) -> Result<()> { Ok(()) }
+
+	#[cfg(not(target_os = "windows"))]
 	fn spawn_system_task(&self) -> Result<JoinHandle<()>> {
+		use libc::{SIGHUP, SIGINT, SIGQUIT, SIGTERM};
+
 		let tx = self.tx.clone();
 		let mut signals = signal_hook_tokio::Signals::new([SIGHUP, SIGTERM, SIGINT, SIGQUIT])?;
 
@@ -76,7 +81,9 @@ impl Signals {
 					_ = &mut stop_rx => break,
 					Some(Ok(event)) = reader.next() => {
 						let event = match event {
-							CrosstermEvent::Key(key) => Event::Key(key),
+							// We need to check key event kind;
+							// otherwise event will be dispatched twice.
+							CrosstermEvent::Key(key @ KeyEvent { kind: KeyEventKind::Press, .. }) => Event::Key(key),
 							CrosstermEvent::Paste(str) => Event::Paste(str),
 							CrosstermEvent::Resize(cols, rows) => Event::Resize(cols, rows),
 							_ => continue,
