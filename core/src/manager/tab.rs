@@ -74,24 +74,6 @@ impl Tab {
 		true
 	}
 
-	pub fn cd_interactive(&mut self, interactive: bool, target: PathBuf) -> bool {
-		if interactive {
-			tokio::spawn(async move {
-				let result = emit!(Input(InputOpt::top("Path:").with_value(target.to_string_lossy())));
-
-				if let Ok(path) = result.await {
-					let path = PathBuf::from(path);
-					emit!(Cd(path));
-				}
-				Ok::<(), Error>(())
-			});
-		}
-		else {
-			emit!(Cd(target));
-		}
-		false
-	}
-
 	pub async fn cd(&mut self, mut target: PathBuf) -> bool {
 		let file = if let Ok(f) = File::from(&target).await {
 			f
@@ -131,6 +113,18 @@ impl Tab {
 		}
 		emit!(Refresh);
 		true
+	}
+
+	pub fn cd_interactive(&mut self, target: PathBuf) -> bool {
+		tokio::spawn(async move {
+			let result =
+				emit!(Input(InputOpt::top("Change directory:").with_value(target.to_string_lossy())));
+
+			if let Ok(target) = result.await {
+				emit!(Cd(PathBuf::from(target)));
+			}
+		});
+		false
 	}
 
 	pub fn enter(&mut self) -> bool {
