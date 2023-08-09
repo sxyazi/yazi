@@ -17,9 +17,9 @@ pub struct Manager {
 }
 
 impl Manager {
-	pub fn new() -> Self {
+	pub fn make() -> Self {
 		Self {
-			tabs:   Tabs::new(),
+			tabs:   Tabs::make(),
 			yanked: Default::default(),
 
 			watcher:  Watcher::start(),

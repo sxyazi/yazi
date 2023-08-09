@@ -38,6 +38,7 @@ impl Tasks {
 		true
 	}
 
+	#[allow(clippy::should_implement_trait)]
 	pub fn next(&mut self) -> bool {
 		let limit = Self::limit().min(self.len());
 
@@ -132,7 +133,7 @@ impl Tasks {
 		let mut openers = BTreeMap::new();
 		for (path, mime) in targets {
 			if let Some(opener) = OPEN.openers(path, mime).and_then(|o| o.first().cloned()) {
-				openers.entry(opener).or_insert_with(|| vec![]).push(path.as_ref());
+				openers.entry(opener).or_insert_with(Vec::new).push(path.as_ref());
 			}
 		}
 		for (opener, args) in openers {
@@ -143,13 +144,13 @@ impl Tasks {
 
 	pub fn file_open_with(&self, opener: &Opener, args: &[impl AsRef<OsStr>]) -> bool {
 		if opener.spread {
-			self.scheduler.process_open(&opener, args);
+			self.scheduler.process_open(opener, args);
 			return false;
 		}
 		for target in args {
-			self.scheduler.process_open(&opener, &[target]);
+			self.scheduler.process_open(opener, &[target]);
 		}
-		return false;
+		false
 	}
 
 	pub fn file_cut(&self, src: &HashSet<PathBuf>, dest: PathBuf, force: bool) -> bool {
@@ -238,7 +239,7 @@ impl Tasks {
 
 	pub fn precache_image(&self, mimetype: &BTreeMap<PathBuf, String>) -> bool {
 		let targets = mimetype
-			.into_iter()
+			.iter()
 			.filter(|(_, m)| MimeKind::new(m) == MimeKind::Image)
 			.map(|(p, _)| p.clone())
 			.collect::<Vec<_>>();
@@ -251,7 +252,7 @@ impl Tasks {
 
 	pub fn precache_video(&self, mimetype: &BTreeMap<PathBuf, String>) -> bool {
 		let targets = mimetype
-			.into_iter()
+			.iter()
 			.filter(|(_, m)| MimeKind::new(m) == MimeKind::Video)
 			.map(|(p, _)| p.clone())
 			.collect::<Vec<_>>();
@@ -264,7 +265,7 @@ impl Tasks {
 
 	pub fn precache_pdf(&self, mimetype: &BTreeMap<PathBuf, String>) -> bool {
 		let targets = mimetype
-			.into_iter()
+			.iter()
 			.filter(|(_, m)| MimeKind::new(m) == MimeKind::PDF)
 			.map(|(p, _)| p.clone())
 			.collect::<Vec<_>>();

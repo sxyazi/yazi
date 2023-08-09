@@ -10,8 +10,8 @@ pub struct Log {
 	pub root:    PathBuf,
 }
 
-impl Log {
-	pub fn new() -> Self { toml::from_str(&MERGED_YAZI).unwrap() }
+impl Default for Log {
+	fn default() -> Self { toml::from_str(&MERGED_YAZI).unwrap() }
 }
 
 impl<'de> Deserialize<'de> for Log {

@@ -45,7 +45,7 @@ impl Preview {
 	}
 
 	pub fn go(&mut self, path: &Path, mime: &str, show_image: bool) {
-		let kind = MimeKind::new(&mime);
+		let kind = MimeKind::new(mime);
 		if !show_image && matches!(kind, MimeKind::Image | MimeKind::Video) {
 			return;
 		} else if self.same(path, mime) {
@@ -99,7 +99,7 @@ impl Preview {
 	}
 
 	pub async fn folder(path: &Path) -> Result<PreviewData> {
-		emit!(Files(match Files::read_dir(&path).await {
+		emit!(Files(match Files::read_dir(path).await {
 			Ok(items) => FilesOp::Read(path.to_path_buf(), items),
 			Err(_) => FilesOp::IOErr(path.to_path_buf()),
 		}));

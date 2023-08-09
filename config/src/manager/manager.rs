@@ -20,8 +20,8 @@ pub struct Manager {
 	pub show_hidden: bool,
 }
 
-impl Manager {
-	pub fn new() -> Self {
+impl Default for Manager {
+	fn default() -> Self {
 		#[derive(Deserialize)]
 		struct Outer {
 			manager: Manager,

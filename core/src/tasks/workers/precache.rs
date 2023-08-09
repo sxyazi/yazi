@@ -21,7 +21,7 @@ pub(crate) struct Precache {
 pub(crate) enum PrecacheOp {
 	Image(PrecacheOpImage),
 	Video(PrecacheOpVideo),
-	PDF(PrecacheOpPDF),
+	Pdf(PrecacheOpPDF),
 }
 
 #[derive(Debug)]
@@ -66,7 +66,7 @@ impl Precache {
 		Ok(match self.rx.recv().await? {
 			PrecacheOp::Image(t) => (t.id, PrecacheOp::Image(t)),
 			PrecacheOp::Video(t) => (t.id, PrecacheOp::Video(t)),
-			PrecacheOp::PDF(t) => (t.id, PrecacheOp::PDF(t)),
+			PrecacheOp::Pdf(t) => (t.id, PrecacheOp::Pdf(t)),
 		})
 	}
 
@@ -91,7 +91,7 @@ impl Precache {
 				external::ffmpegthumbnailer(&task.target, &cache).await.ok();
 				self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
 			}
-			PrecacheOp::PDF(task) => {
+			PrecacheOp::Pdf(task) => {
 				let cache = Image::cache(&task.target);
 				if fs::metadata(&cache).await.is_ok() {
 					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
@@ -159,7 +159,7 @@ impl Precache {
 	pub(crate) fn pdf(&self, id: usize, targets: Vec<PathBuf>) -> Result<()> {
 		for target in targets {
 			self.sch.send(TaskOp::New(id, 0))?;
-			self.tx.send_blocking(PrecacheOp::PDF(PrecacheOpPDF { id, target }))?;
+			self.tx.send_blocking(PrecacheOp::Pdf(PrecacheOpPDF { id, target }))?;
 		}
 		self.done(id)
 	}

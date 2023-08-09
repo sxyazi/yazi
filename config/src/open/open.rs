@@ -20,9 +20,11 @@ struct OpenRule {
 	use_: String,
 }
 
-impl Open {
-	pub fn new() -> Self { toml::from_str(&MERGED_YAZI).unwrap() }
+impl Default for Open {
+	fn default() -> Self { toml::from_str(&MERGED_YAZI).unwrap() }
+}
 
+impl Open {
 	pub fn openers<P, M>(&self, path: P, mime: M) -> Option<Vec<&Opener>>
 	where
 		P: AsRef<Path>,
@@ -39,11 +41,8 @@ impl Open {
 		})
 	}
 
-	pub fn common_openers<'a>(
-		&self,
-		targets: &[(impl AsRef<Path>, impl AsRef<str>)],
-	) -> Vec<&Opener> {
-		let grouped = targets.into_iter().filter_map(|(p, m)| self.openers(p, m)).collect::<Vec<_>>();
+	pub fn common_openers(&self, targets: &[(impl AsRef<Path>, impl AsRef<str>)]) -> Vec<&Opener> {
+		let grouped = targets.iter().filter_map(|(p, m)| self.openers(p, m)).collect::<Vec<_>>();
 		let flat = grouped.iter().flatten().cloned().collect::<BTreeSet<_>>();
 		flat.into_iter().filter(|o| grouped.iter().all(|g| g.contains(o))).collect()
 	}

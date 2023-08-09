@@ -66,7 +66,7 @@ impl Executor {
 			"back" => cx.manager.active_mut().back(),
 			"forward" => cx.manager.active_mut().forward(),
 			"cd" => {
-				let path = exec.args.get(0).map(|s| PathBuf::from(s)).unwrap_or_default();
+				let path = exec.args.get(0).map(PathBuf::from).unwrap_or_default();
 				emit!(Cd(path));
 				false
 			}
@@ -182,7 +182,7 @@ impl Executor {
 
 			"arrow" => {
 				let step: isize = exec.args.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
-				if step > 0 { cx.select.next(step as usize) } else { cx.select.prev(step.abs() as usize) }
+				if step > 0 { cx.select.next(step as usize) } else { cx.select.prev(step.unsigned_abs()) }
 			}
 
 			_ => false,

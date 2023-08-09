@@ -1,3 +1,5 @@
+#![allow(clippy::unit_arg)]
+
 mod adaptor;
 mod image;
 mod iterm2;
@@ -5,9 +7,9 @@ mod kitty;
 mod sixel;
 mod ueberzug;
 
-pub use crate::adaptor::*;
-pub use crate::image::*;
-pub(self) use iterm2::*;
-pub(self) use kitty::*;
-pub(self) use sixel::*;
-pub(self) use ueberzug::*;
+use iterm2::*;
+use kitty::*;
+use sixel::*;
+use ueberzug::*;
+
+pub use crate::{adaptor::*, image::*};

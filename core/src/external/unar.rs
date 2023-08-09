@@ -5,8 +5,8 @@ use tokio::{io::{AsyncReadExt, BufReader}, process::Command};
 
 pub async fn unar_head(path: &Path, target: &Path) -> Result<Vec<u8>> {
 	let mut child = Command::new("unar")
-		.args(&[path, target])
-		.args(&["-o", "-"])
+		.args([path, target])
+		.args(["-o", "-"])
 		.stdout(Stdio::piped())
 		.stderr(Stdio::null())
 		.kill_on_drop(true)

@@ -122,7 +122,6 @@ impl ToString for Key {
 		}
 
 		let code = match self.code {
-			KeyCode::Char(' ') => "Space",
 			KeyCode::Backspace => "Backspace",
 			KeyCode::Enter => "Enter",
 			KeyCode::Left => "Left",
@@ -150,7 +149,7 @@ impl ToString for Key {
 			KeyCode::F(12) => "F12",
 			KeyCode::Esc => "Esc",
 
-			KeyCode::Char(c) if c == ' ' => "Space",
+			KeyCode::Char(' ') => "Space",
 			KeyCode::Char(c) => {
 				s.push(if self.shift { c.to_ascii_uppercase() } else { c });
 				""

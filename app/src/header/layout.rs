@@ -23,7 +23,7 @@ impl<'a> Widget for Layout<'a> {
 		let location = if current.in_search {
 			format!("{} (search)", readable_home(&current.cwd))
 		} else {
-			format!("{}", readable_home(&current.cwd))
+			readable_home(&current.cwd)
 		};
 
 		Paragraph::new(location).style(Style::new().fg(Color::Cyan)).render(chunks[0], buf);

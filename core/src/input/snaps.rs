@@ -52,7 +52,7 @@ impl InputSnaps {
 
 	#[inline]
 	pub(super) fn catch(&mut self) {
-		let value = mem::replace(&mut self.versions[self.idx].value, String::new());
+		let value = mem::take(&mut self.versions[self.idx].value);
 		self.versions[self.idx] = self.current.clone();
 		self.versions[self.idx].value = value;
 		self.versions[self.idx].reset();
