@@ -3,6 +3,7 @@
 use once_cell::sync::Lazy;
 
 mod boot;
+mod exec_new;
 pub mod keymap;
 mod log;
 pub mod manager;
