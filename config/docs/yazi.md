@@ -32,18 +32,17 @@ Configure available openers, for example:
 ```toml
 [opener]
 archive = [
-	{ cmd = "unar", args = [ "$0" ] },
+	{ exec = "unar $0" },
 ]
 text = [
-	{ cmd = "nvim", args = [ "$*" ], block = true },
+	{ exec = "nvim $*", block = true },
 ]
 # ...
 ```
 
 Available parameters are as follows:
 
-- cmd: The program to open the selected files
-- args: Arguments to be passed
+- exec: The command to open the selected files, with the following variables available:
   - `"$n"`: The N-th selected file
   - `"$*"`: All selected files
   - `"foo"`: Literal string to be passed
