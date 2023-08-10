@@ -23,12 +23,13 @@ impl<'a> Widget for Tabs<'a> {
 				.iter()
 				.enumerate()
 				.map(|(i, tab)| {
-					let mut text = format!(" {} ", i + 1);
+					let mut text = format!("{}", i + 1);
 					if let Some(dir_name) = tab.current_name() {
+						text.push(' ');
 						text.push_str(dir_name);
 					}
 
-					let threshold = THEME.tab.max_width.max(3) - 1;
+					let threshold = THEME.tab.max_width.max(1);
 					let truncated = text.chars().try_fold(String::with_capacity(threshold), |mut text, c| {
 						if text.width() > threshold {
 							ControlFlow::Break(text)
@@ -37,18 +38,15 @@ impl<'a> Widget for Tabs<'a> {
 							ControlFlow::Continue(text)
 						}
 					});
-					let mut text = match truncated {
+					let text = match truncated {
 						ControlFlow::Break(text) => text,
 						ControlFlow::Continue(text) => text,
 					};
-					if !text.ends_with(' ') {
-						text.push(' ');
-					}
 
 					if i == tabs.idx() {
-						Span::styled(text, THEME.tab.active.get())
+						Span::styled(format!(" {text} "), THEME.tab.active.get())
 					} else {
-						Span::styled(text, THEME.tab.inactive.get())
+						Span::styled(format!(" {text} "), THEME.tab.inactive.get())
 					}
 				})
 				.collect::<Vec<_>>(),
