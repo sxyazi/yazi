@@ -18,6 +18,7 @@ libc              = "^0"
 ratatui        		 = "^0"
 signal-hook-tokio = { version = "^0", features = [ "futures-v0_3" ] }
 tokio             = { version = "^1", features = [ "parking_lot" ] }
+unicode-width     = "^0"
 
 # Logging
 tracing            = "^0"

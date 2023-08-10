@@ -1,5 +1,8 @@
+use std::ops::ControlFlow;
+
 use config::THEME;
 use ratatui::{buffer::Buffer, layout::{Alignment, Rect}, text::{Line, Span}, widgets::{Paragraph, Widget}};
+use unicode_width::UnicodeWidthStr;
 
 use crate::Ctx;
 
@@ -21,9 +24,24 @@ impl<'a> Widget for Tabs<'a> {
 				.enumerate()
 				.map(|(i, tab)| {
 					let mut text = format!(" {} ", i + 1);
-					if THEME.tab.max_width > 0 {
-						text
-							.push_str(&tab.current_name().chars().take(THEME.tab.max_width).collect::<String>());
+					if let Some(dir_name) = tab.current_name() {
+						text.push_str(dir_name);
+					}
+
+					let threshold = THEME.tab.max_width.max(3) - 1;
+					let truncated = text.chars().try_fold(String::with_capacity(threshold), |mut text, c| {
+						if text.width() > threshold {
+							ControlFlow::Break(text)
+						} else {
+							text.push(c);
+							ControlFlow::Continue(text)
+						}
+					});
+					let mut text = match truncated {
+						ControlFlow::Break(text) => text,
+						ControlFlow::Continue(text) => text,
+					};
+					if !text.ends_with(' ') {
 						text.push(' ');
 					}
 
