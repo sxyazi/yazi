@@ -8,8 +8,9 @@ use crate::MERGED_THEME;
 
 #[derive(Deserialize)]
 pub struct Tab {
-	pub active:   Style,
-	pub inactive: Style,
+	pub active:    Style,
+	pub inactive:  Style,
+	pub max_width: usize,
 }
 
 #[derive(Deserialize)]

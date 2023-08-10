@@ -270,6 +270,15 @@ impl Tab {
 		};
 		true
 	}
+
+	pub fn current_name(&self) -> Option<&str> {
+		self
+			.current
+			.cwd
+			.file_name()
+			.and_then(|name| name.to_str())
+			.or_else(|| self.current.cwd.to_str())
+	}
 }
 
 impl Tab {
