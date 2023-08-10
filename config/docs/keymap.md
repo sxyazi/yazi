@@ -19,6 +19,7 @@
 - cd: Change the current directory.
 
   - `path`: the path to change to.
+  - `--interactive`: Use an interactive UI to input the path.
 
 ### Selection
 
