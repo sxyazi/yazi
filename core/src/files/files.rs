@@ -7,11 +7,20 @@ use tokio::fs;
 
 use super::File;
 
-#[derive(Default)]
 pub struct Files {
 	items:           IndexMap<PathBuf, File>,
 	pub sort:        FilesSort,
 	pub show_hidden: bool,
+}
+
+impl Default for Files {
+	fn default() -> Self {
+		Self {
+			items:       Default::default(),
+			sort:        Default::default(),
+			show_hidden: MANAGER.show_hidden,
+		}
+	}
 }
 
 impl Files {
