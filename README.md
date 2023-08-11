@@ -108,7 +108,7 @@ There is a wrapper of yazi, that provides the ability to change the current work
 
 ```bash
 function ya() {
-	tmp="$(mktemp -t "yazi-cwd")"
+	tmp="$(mktemp -t "yazi-cwd.XXXXX")"
 	yazi --cwd-file="$tmp"
 	if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
 		cd -- "$cwd"
