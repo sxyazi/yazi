@@ -43,9 +43,9 @@ text = [
 Available parameters are as follows:
 
 - exec: The command to open the selected files, with the following variables available:
-  - `"$n"`: The N-th selected file
-  - `"$*"`: All selected files
-  - `"foo"`: Literal string to be passed
+  - `$n`: The N-th selected file
+  - `$*`: All selected files
+  - `foo`: Literal string to be passed
 - block: Open in a blocking manner. After setting this, Yazi will hide into a secondary screen and display the program on the main screen until it exits. During this time, it can receive I/O signals, which is useful for interactive programs.
 
 ## open
