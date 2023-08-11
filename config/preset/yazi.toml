@@ -21,15 +21,15 @@ text = [
 ]
 image = [
 	{ exec = "open $*", display_name = "Open" },
-	{ exec = "exiftool $0", block = true, display_name = "Show EXIF" },
+	{ exec = "sh -c 'exiftool $0; echo \"\n\nPress enter to exit\"; read'", block = true, display_name = "Show EXIF" },
 ]
 video = [
 	{ exec = "mpv $*" },
-	{ exec = "mediainfo $0", block = true, display_name = "Show media info" },
+	{ exec = "sh -c 'mediainfo $0; echo \"\n\nPress enter to exit\"; read'", block = true, display_name = "Show media info" },
 ]
 audio = [
 	{ exec = "mpv $*" },
-	{ exec = "mediainfo $0", block = true, display_name = "Show media info" },
+	{ exec = "sh -c 'mediainfo $0; echo \"\n\nPress enter to exit\"; read'", block = true, display_name = "Show media info" },
 ]
 fallback = [
 	{ exec = "open $*", display_name = "Open" },
