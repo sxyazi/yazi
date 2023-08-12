@@ -14,6 +14,11 @@
   - `true`: Reverse order
   - `false`: Normal order
 
+- sort_dir_first: Display files in reverse order
+
+  - `true`: Directory at first
+  - `false`: Sort According to `sort_by`
+
 - show_hidden: Show hidden files
 
   - `true`: Show

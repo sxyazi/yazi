@@ -2,6 +2,7 @@
 sort_by      = "modified"
 sort_reverse = true
 show_hidden  = false
+sort_dir_first = true
 
 [preview]
 tab_size   = 2

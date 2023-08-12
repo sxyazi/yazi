@@ -116,29 +116,40 @@ impl Files {
 			return false;
 		}
 
-		fn cmp<T: Ord>(a: T, b: T, reverse: bool) -> std::cmp::Ordering {
-			if reverse { b.cmp(&a) } else { a.cmp(&b) }
-		}
-
-		let reverse = self.sort.reverse;
 		match self.sort.by {
-			SortBy::Alphabetical => self.items.sort_by(|_, a, _, b| cmp(&a.path, &b.path, reverse)),
+			SortBy::Alphabetical => self.items.sort_by(|_, a, _, b| (&a.path).cmp(&b.path)),
 			SortBy::Created => self.items.sort_by(|_, a, _, b| {
 				if let (Ok(a), Ok(b)) = (a.meta.created(), b.meta.created()) {
-					return cmp(a, b, reverse);
+					return (&a).cmp(&b);
 				}
 				std::cmp::Ordering::Equal
 			}),
 			SortBy::Modified => self.items.sort_by(|_, a, _, b| {
 				if let (Ok(a), Ok(b)) = (a.meta.modified(), b.meta.modified()) {
-					return cmp(a, b, reverse);
+					return (&a).cmp(&b);
 				}
 				std::cmp::Ordering::Equal
 			}),
 			SortBy::Size => {
-				self.items.sort_by(|_, a, _, b| cmp(a.length.unwrap_or(0), b.length.unwrap_or(0), reverse))
+				self.items.sort_by(|_, a, _, b| (a.length.unwrap_or(0)).cmp(&b.length.unwrap_or(0)))
 			}
 		}
+
+		if self.sort.dir_first {
+			self.items.sort_by(|_, a, _, b| {
+				if a.meta.is_dir() && !b.meta.is_dir() {
+					return std::cmp::Ordering::Less;
+				} else if !a.meta.is_dir() && b.meta.is_dir() {
+					return std::cmp::Ordering::Greater;
+				}
+				std::cmp::Ordering::Equal
+			});
+		}
+
+		if self.sort.reverse {
+			self.items.reverse();
+		}
+
 		true
 	}
 }
@@ -155,12 +166,19 @@ impl DerefMut for Files {
 
 #[derive(PartialEq)]
 pub struct FilesSort {
-	pub by:      SortBy,
-	pub reverse: bool,
+	pub by:        SortBy,
+	pub reverse:   bool,
+	pub dir_first: bool,
 }
 
 impl Default for FilesSort {
-	fn default() -> Self { Self { by: MANAGER.sort_by, reverse: MANAGER.sort_reverse } }
+	fn default() -> Self {
+		Self {
+			by:        MANAGER.sort_by,
+			reverse:   MANAGER.sort_reverse,
+			dir_first: MANAGER.sort_dir_first,
+		}
+	}
 }
 
 #[derive(Debug)]

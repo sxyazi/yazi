@@ -8,6 +8,7 @@ pub struct Manager {
 	// Sorting
 	pub sort_by:      SortBy,
 	pub sort_reverse: bool,
+	pub sort_dir_first: bool,
 
 	// Display
 	pub show_hidden: bool,
