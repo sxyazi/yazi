@@ -62,7 +62,9 @@
 - rename: Rename a file or directory.
 - shell: Run a shell command.
 
+  - `exec`: Optional, command template to be run.
   - `--block`: Block the UI until the command finishes.
+  - `--confirm`: When the template is provided, run it directly, no input UI was shown.
 
 - hidden: Set the visibility of hidden files.
 
