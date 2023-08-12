@@ -116,38 +116,63 @@ impl Files {
 			return false;
 		}
 
+		fn cmp_dir(a: &File, b: &File, dir_first: bool) -> Option<std::cmp::Ordering> {
+			if !dir_first {
+				return None;
+			}
+			if a.meta.is_dir() && !b.meta.is_dir() {
+				return Some(std::cmp::Ordering::Less);
+			} else if !a.meta.is_dir() && b.meta.is_dir() {
+				return Some(std::cmp::Ordering::Greater);
+			}
+			None
+		}
+
+		fn cmp<T>(
+			a: &File,
+			b: &File,
+			dir_first: bool,
+			reverse: bool,
+			inner_cmp: T,
+		) -> std::cmp::Ordering
+		where
+			T: Fn(&File, &File) -> std::cmp::Ordering,
+		{
+			let res = match cmp_dir(a, b, dir_first) {
+				Some(expr) => expr,
+				None => inner_cmp(a, b),
+			};
+			if reverse { res.reverse() } else { res }
+		}
+
+		let dir_first = self.sort.dir_first;
+		let reverse = self.sort.reverse;
+
 		match self.sort.by {
-			SortBy::Alphabetical => self.items.sort_by(|_, a, _, b| (&a.path).cmp(&b.path)),
+			SortBy::Alphabetical => self.items.sort_by(|_, a, _, b| {
+				cmp(a, b, dir_first, reverse, |a: &File, b: &File| a.path.cmp(&b.path))
+			}),
 			SortBy::Created => self.items.sort_by(|_, a, _, b| {
-				if let (Ok(a), Ok(b)) = (a.meta.created(), b.meta.created()) {
-					return (&a).cmp(&b);
-				}
-				std::cmp::Ordering::Equal
+				cmp(a, b, dir_first, reverse, |a: &File, b: &File| {
+					if let (Ok(a), Ok(b)) = (a.meta.created(), b.meta.created()) {
+						return (&a).cmp(&b);
+					}
+					std::cmp::Ordering::Equal
+				})
 			}),
 			SortBy::Modified => self.items.sort_by(|_, a, _, b| {
-				if let (Ok(a), Ok(b)) = (a.meta.modified(), b.meta.modified()) {
-					return (&a).cmp(&b);
-				}
-				std::cmp::Ordering::Equal
+				cmp(a, b, dir_first, reverse, |a: &File, b: &File| {
+					if let (Ok(a), Ok(b)) = (a.meta.modified(), b.meta.modified()) {
+						return (&a).cmp(&b);
+					}
+					std::cmp::Ordering::Equal
+				})
 			}),
-			SortBy::Size => {
-				self.items.sort_by(|_, a, _, b| (a.length.unwrap_or(0)).cmp(&b.length.unwrap_or(0)))
-			}
-		}
-
-		if self.sort.dir_first {
-			self.items.sort_by(|_, a, _, b| {
-				if a.meta.is_dir() && !b.meta.is_dir() {
-					return std::cmp::Ordering::Less;
-				} else if !a.meta.is_dir() && b.meta.is_dir() {
-					return std::cmp::Ordering::Greater;
-				}
-				std::cmp::Ordering::Equal
-			});
-		}
-
-		if self.sort.reverse {
-			self.items.reverse();
+			SortBy::Size => self.items.sort_by(|_, a, _, b| {
+				cmp(a, b, dir_first, reverse, |a: &File, b: &File| {
+					(a.length.unwrap_or(0)).cmp(&b.length.unwrap_or(0))
+				})
+			}),
 		}
 
 		true
