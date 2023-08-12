@@ -225,16 +225,21 @@ impl Manager {
 
 	pub fn bulk_rename(&self) -> bool { false }
 
-	pub fn shell(&self, block: bool) -> bool {
-		tokio::spawn(async move {
-			let result = emit!(Input(InputOpt::top("Shell:").with_highlight()));
+	pub fn shell(&self, block: bool, arg: &str) -> bool {
+		let mut command = arg.to_string();
 
-			if let Ok(exec) = result.await {
-				emit!(Open(
-					Default::default(),
-					Some(Opener { exec, block, display_name: Default::default(), spread: true })
-				));
+		tokio::spawn(async move {
+			if command.is_empty() {
+				let result = emit!(Input(InputOpt::top("Shell:").with_highlight()));
+				if let Ok(exec) = result.await {
+					command = exec;
+				}
 			}
+
+			emit!(Open(
+				Default::default(),
+				Some(Opener { exec: command, block, display_name: Default::default(), spread: true })
+			));
 		});
 
 		false
