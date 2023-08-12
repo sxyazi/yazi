@@ -38,7 +38,7 @@ impl<'de> Deserialize<'de> for Opener {
 			}
 
 			println!(
-				"WARNING: `cmd` and `args` are deprecated in favor of `exec` in Yazi v0.1.5, see https://github.com/sxyazi/yazi/pull/45"
+				"WARNING: `cmd` and `args` will be deprecated in favor of `exec` in Yazi v0.1.5, see https://github.com/sxyazi/yazi/pull/45"
 			);
 
 			// Replace the $0 to $1, $1 to $2, and so on
