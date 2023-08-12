@@ -1,8 +1,8 @@
 [manager]
-sort_by      = "modified"
+sort_by        = "modified"
+sort_reverse   = true
 sort_dir_first = true
-sort_reverse = true
-show_hidden  = false
+show_hidden    = false
 
 [preview]
 tab_size   = 2

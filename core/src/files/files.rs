@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, ops::{Deref, DerefMut}, path::{Path, PathBuf}};
+use std::{cmp::Ordering, collections::BTreeMap, ops::{Deref, DerefMut}, path::{Path, PathBuf}};
 
 use anyhow::Result;
 use config::{manager::SortBy, MANAGER};
@@ -116,65 +116,43 @@ impl Files {
 			return false;
 		}
 
-		fn cmp_dir(a: &File, b: &File, dir_first: bool) -> Option<std::cmp::Ordering> {
-			if !dir_first {
-				return None;
+		#[inline]
+		#[allow(clippy::collapsible_else_if)]
+		fn cmp<T: Ord>(a: T, b: T, reverse: bool, promote: Ordering) -> Ordering {
+			if promote != Ordering::Equal {
+				promote
+			} else {
+				if reverse { b.cmp(&a) } else { a.cmp(&b) }
 			}
-			if a.meta.is_dir() && !b.meta.is_dir() {
-				return Some(std::cmp::Ordering::Less);
-			} else if !a.meta.is_dir() && b.meta.is_dir() {
-				return Some(std::cmp::Ordering::Greater);
-			}
-			None
 		}
 
-		fn cmp<T>(
-			a: &File,
-			b: &File,
-			dir_first: bool,
-			reverse: bool,
-			inner_cmp: T,
-		) -> std::cmp::Ordering
-		where
-			T: Fn(&File, &File) -> std::cmp::Ordering,
-		{
-			let res = match cmp_dir(a, b, dir_first) {
-				Some(expr) => expr,
-				None => inner_cmp(a, b),
-			};
-			if reverse { res.reverse() } else { res }
+		#[inline]
+		fn promote(a: &File, b: &File, dir_first: bool) -> Ordering {
+			if dir_first { b.meta.is_dir().cmp(&a.meta.is_dir()) } else { Ordering::Equal }
 		}
 
-		let dir_first = self.sort.dir_first;
 		let reverse = self.sort.reverse;
-
+		let dir_first = self.sort.dir_first;
 		match self.sort.by {
-			SortBy::Alphabetical => self.items.sort_by(|_, a, _, b| {
-				cmp(a, b, dir_first, reverse, |a: &File, b: &File| a.path.cmp(&b.path))
-			}),
+			SortBy::Alphabetical => {
+				self.items.sort_by(|_, a, _, b| cmp(&a.path, &b.path, reverse, promote(a, b, dir_first)))
+			}
 			SortBy::Created => self.items.sort_by(|_, a, _, b| {
-				cmp(a, b, dir_first, reverse, |a: &File, b: &File| {
-					if let (Ok(a), Ok(b)) = (a.meta.created(), b.meta.created()) {
-						return (&a).cmp(&b);
-					}
-					std::cmp::Ordering::Equal
-				})
+				if let (Ok(aa), Ok(bb)) = (a.meta.created(), b.meta.created()) {
+					return cmp(aa, bb, reverse, promote(a, b, dir_first));
+				}
+				Ordering::Equal
 			}),
 			SortBy::Modified => self.items.sort_by(|_, a, _, b| {
-				cmp(a, b, dir_first, reverse, |a: &File, b: &File| {
-					if let (Ok(a), Ok(b)) = (a.meta.modified(), b.meta.modified()) {
-						return (&a).cmp(&b);
-					}
-					std::cmp::Ordering::Equal
-				})
+				if let (Ok(aa), Ok(bb)) = (a.meta.modified(), b.meta.modified()) {
+					return cmp(aa, bb, reverse, promote(a, b, dir_first));
+				}
+				Ordering::Equal
 			}),
 			SortBy::Size => self.items.sort_by(|_, a, _, b| {
-				cmp(a, b, dir_first, reverse, |a: &File, b: &File| {
-					(a.length.unwrap_or(0)).cmp(&b.length.unwrap_or(0))
-				})
+				cmp(a.length.unwrap_or(0), b.length.unwrap_or(0), reverse, promote(a, b, dir_first))
 			}),
 		}
-
 		true
 	}
 }

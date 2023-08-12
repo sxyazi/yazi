@@ -9,15 +9,15 @@
   - `"modified"`: Sort by last modified time
   - `"size"`: Sort by file size
 
-- sort_dir_first: Display files in reverse order
-
-  - `true`: Directory at first
-  - `false`: Sort According to `sort_by` only
-
 - sort_reverse: Display files in reverse order
 
   - `true`: Reverse order
   - `false`: Normal order
+
+- sort_dir_first: Display directories first
+
+  - `true`: Directories first
+  - `false`: Respects `sort_by` and `sort_reverse` only
 
 - show_hidden: Show hidden files
 

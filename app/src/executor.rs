@@ -126,10 +126,10 @@ impl Executor {
 			// Sorting
 			"sort" => {
 				let b = cx.manager.current_mut().files.set_sort(FilesSort {
-					by:      SortBy::try_from(exec.args.get(0).cloned().unwrap_or_default())
+					by:        SortBy::try_from(exec.args.get(0).cloned().unwrap_or_default())
 						.unwrap_or_default(),
-					reverse: exec.named.contains_key("reverse"),
-                    dir_first: exec.named.contains_key("dir_first")
+					reverse:   exec.named.contains_key("reverse"),
+					dir_first: exec.named.contains_key("dir_first"),
 				});
 				cx.tasks.precache_size(&cx.manager.current().files);
 				b
