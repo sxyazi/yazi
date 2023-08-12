@@ -2,8 +2,7 @@ use serde::{Deserialize, Deserializer};
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Opener {
-	pub cmd:          String,
-	pub args:         Vec<String>,
+	pub exec:         String,
 	pub block:        bool,
 	pub display_name: String,
 	pub spread:       bool,
@@ -16,20 +15,59 @@ impl<'de> Deserialize<'de> for Opener {
 	{
 		#[derive(Deserialize)]
 		pub struct Shadow {
-			pub cmd:          String,
-			pub args:         Vec<String>,
+			// TODO: Deprecate this field in v0.1.5
+			pub cmd:  Option<String>,
+			// TODO: Deprecate this field in v0.1.5
+			pub args: Option<Vec<String>>,
+
+			pub exec:         Option<String>,
 			#[serde(default)]
 			pub block:        bool,
 			pub display_name: Option<String>,
-			#[serde(skip)]
-			pub spread:       bool,
 		}
 
-		let shadow = Shadow::deserialize(deserializer)?;
+		let mut shadow = Shadow::deserialize(deserializer)?;
 
-		let display_name = if let Some(s) = shadow.display_name { s } else { shadow.cmd.clone() };
-		let spread = shadow.args.contains(&"$*".to_string());
+		// -- TODO: Deprecate this in v0.1.5
+		if shadow.exec.is_none() {
+			if shadow.cmd.is_none() {
+				return Err(serde::de::Error::missing_field("exec"));
+			}
+			if shadow.args.is_none() {
+				return Err(serde::de::Error::missing_field("args"));
+			}
+			// Replace the $0 to $1, $1 to $2, and so on
+			shadow.args = Some(
+				shadow
+					.args
+					.unwrap()
+					.into_iter()
+					.map(|s| {
+						if !s.starts_with('$') {
+							return shell_words::quote(&s).into();
+						}
+						if let Ok(idx) = s[1..].parse::<usize>() {
+							return format!("${}", idx + 1);
+						}
+						s
+					})
+					.collect(),
+			);
+			shadow.exec = Some(format!("{} {}", shadow.cmd.unwrap(), shadow.args.unwrap().join(" ")));
+		}
+		let exec = shadow.exec.unwrap();
+		// TODO: Deprecate this in v0.1.5 --
 
-		Ok(Self { cmd: shadow.cmd, args: shadow.args, block: shadow.block, display_name, spread })
+		if exec.is_empty() {
+			return Err(serde::de::Error::custom("`exec` cannot be empty"));
+		}
+		let display_name = if let Some(s) = shadow.display_name {
+			s
+		} else {
+			exec.split_whitespace().next().unwrap().to_string()
+		};
+
+		let spread = exec.contains("$*") || exec.contains("$@");
+		Ok(Self { exec, block: shadow.block, display_name, spread })
 	}
 }

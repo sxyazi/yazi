@@ -133,7 +133,7 @@ impl Tasks {
 		let mut openers = BTreeMap::new();
 		for (path, mime) in targets {
 			if let Some(opener) = OPEN.openers(path, mime).and_then(|o| o.first().cloned()) {
-				openers.entry(opener).or_insert_with(Vec::new).push(path.as_ref());
+				openers.entry(opener).or_insert_with(Vec::new).push(path.as_ref().as_os_str());
 			}
 		}
 		for (opener, args) in openers {

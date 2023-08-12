@@ -168,7 +168,7 @@ impl App {
 
 			Event::Open(targets, opener) => {
 				if let Some(opener) = opener {
-					tasks.file_open_with(&opener, &targets.iter().map(|(f, _)| f).collect::<Vec<_>>());
+					tasks.file_open_with(&opener, &targets.into_iter().map(|(f, _)| f).collect::<Vec<_>>());
 				} else {
 					tasks.file_open(&targets);
 				}

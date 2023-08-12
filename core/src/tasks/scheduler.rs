@@ -1,4 +1,4 @@
-use std::{ffi::{OsStr, OsString}, path::PathBuf, sync::Arc, time::Duration};
+use std::{ffi::OsStr, path::PathBuf, sync::Arc, time::Duration};
 
 use async_channel::{Receiver, Sender};
 use config::open::Opener;
@@ -280,23 +280,12 @@ impl Scheduler {
 	}
 
 	pub(super) fn process_open(&self, opener: &Opener, args: &[impl AsRef<OsStr>]) {
-		let args: Vec<OsString> = opener
-			.args
-			.iter()
-			.map_while(|a| {
-				if !a.starts_with('$') {
-					return Some(vec![a.into()]);
-				}
-				if a == "$*" {
-					return Some(args.iter().map(Into::into).collect());
-				}
-				a[1..].parse().ok().and_then(|n: usize| args.get(n)).map(|a| vec![a.into()])
-			})
-			.flatten()
-			.collect();
-
 		let mut running = self.running.write();
-		let name = format!("Exec `{} {}`", opener.cmd, args.join(" ".as_ref()).to_string_lossy());
+		let name = format!(
+			"Exec `{}` with `{}`",
+			opener.exec,
+			args.iter().map(|a| a.as_ref()).collect::<Vec<_>>().join(" ".as_ref()).to_string_lossy()
+		);
 		let id = running.add(name);
 
 		let (cancel_tx, mut cancel_rx) = oneshot::channel();
@@ -313,12 +302,19 @@ impl Scheduler {
 			})
 		});
 
+		let args = args.into_iter().map(|a| a.as_ref().to_os_string()).collect::<Vec<_>>();
 		tokio::spawn({
 			let process = self.process.clone();
 			let opener = opener.clone();
 			async move {
 				process
-					.open(ProcessOpOpen { id, cmd: opener.cmd, args, block: opener.block, cancel: cancel_tx })
+					.open(ProcessOpOpen {
+						id,
+						cmd: opener.exec.into(),
+						args,
+						block: opener.block,
+						cancel: cancel_tx,
+					})
 					.await
 					.ok();
 			}
