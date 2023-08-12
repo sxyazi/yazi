@@ -476,3 +476,19 @@ impl Manager {
 		self.active().mode.is_visual() || self.current().has_selected()
 	}
 }
+
+fn parse_new_names(text: &str, count: usize) -> anyhow::Result<IndexSet<&str>> {
+	// NOTE: call `size_hint` on `str::Split` always returns 0
+	let new_names: Vec<_> = text.split('\n').collect();
+	if new_names.len() != count {
+		anyhow::bail!("the number of new names doesn't match the number of old names");
+	}
+
+	let mut names = IndexSet::with_capacity(count);
+	for name in new_names {
+		if !names.insert(name) {
+			anyhow::bail!("there are more than one new entries named {name:?}");
+		}
+	}
+	Ok(names)
+}
