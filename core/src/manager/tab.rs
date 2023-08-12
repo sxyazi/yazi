@@ -115,6 +115,18 @@ impl Tab {
 		true
 	}
 
+	pub fn cd_interactive(&mut self, target: PathBuf) -> bool {
+		tokio::spawn(async move {
+			let result =
+				emit!(Input(InputOpt::top("Change directory:").with_value(target.to_string_lossy())));
+
+			if let Ok(target) = result.await {
+				emit!(Cd(PathBuf::from(target)));
+			}
+		});
+		false
+	}
+
 	pub fn enter(&mut self) -> bool {
 		let hovered = if let Some(ref h) = self.current.hovered {
 			h.clone()
@@ -257,6 +269,15 @@ impl Tab {
 			self.mode = Mode::Select(idx, BTreeSet::from([idx]));
 		};
 		true
+	}
+
+	pub fn current_name(&self) -> Option<&str> {
+		self
+			.current
+			.cwd
+			.file_name()
+			.and_then(|name| name.to_str())
+			.or_else(|| self.current.cwd.to_str())
 	}
 }
 

@@ -67,8 +67,12 @@ impl Executor {
 			"forward" => cx.manager.active_mut().forward(),
 			"cd" => {
 				let path = exec.args.get(0).map(PathBuf::from).unwrap_or_default();
-				emit!(Cd(path));
-				false
+				if exec.named.contains_key("interactive") {
+					cx.manager.active_mut().cd_interactive(path)
+				} else {
+					emit!(Cd(path));
+					false
+				}
 			}
 
 			// Selection

@@ -1,6 +1,7 @@
 [tab]
-active   = { fg = "#1E2031", bg = "#80AEFA" }
-inactive = { fg = "#C8D3F8", bg = "#484D66" }
+active    = { fg = "#1E2031", bg = "#80AEFA" }
+inactive  = { fg = "#C8D3F8", bg = "#484D66" }
+max_width = 1
 
 [status]
 primary	  = { normal = "#80AEFA", select = "#CD9EFC", unset = "#FFA577" }
