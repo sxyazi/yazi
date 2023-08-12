@@ -7,6 +7,7 @@ mod jq;
 mod lsar;
 mod pdftoppm;
 mod rg;
+mod shell;
 mod unar;
 mod zoxide;
 
@@ -19,5 +20,6 @@ pub use jq::*;
 pub use lsar::*;
 pub use pdftoppm::*;
 pub use rg::*;
+pub use shell::*;
 pub use unar::*;
 pub use zoxide::*;

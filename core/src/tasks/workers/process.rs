@@ -1,10 +1,10 @@
-use std::{ffi::OsString, process::Stdio};
+use std::ffi::OsString;
 
 use anyhow::Result;
-use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command, select, sync::{mpsc, oneshot}};
+use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::{mpsc, oneshot}};
 use tracing::trace;
 
-use crate::{emit, tasks::TaskOp, BLOCKER};
+use crate::{emit, external::{self, ShellOpt}, tasks::TaskOp, BLOCKER};
 
 pub(crate) struct Process {
 	sch: mpsc::UnboundedSender<TaskOp>,
@@ -13,7 +13,7 @@ pub(crate) struct Process {
 #[derive(Debug)]
 pub(crate) struct ProcessOpOpen {
 	pub id:     usize,
-	pub cmd:    String,
+	pub cmd:    OsString,
 	pub args:   Vec<OsString>,
 	pub block:  bool,
 	pub cancel: oneshot::Sender<()>,
@@ -33,12 +33,12 @@ impl Process {
 			let _guard = BLOCKER.acquire().await.unwrap();
 			emit!(Stop(true)).await;
 
-			match Command::new(&task.cmd).args(&task.args).kill_on_drop(true).spawn() {
+			match external::shell(ShellOpt { cmd: task.cmd, args: task.args, piped: false }) {
 				Ok(mut child) => {
 					child.wait().await.ok();
 				}
 				Err(e) => {
-					trace!("Failed to spawn {}: {e}", task.cmd);
+					trace!("Failed to spawn process: {e}");
 				}
 			}
 			emit!(Stop(false)).await;
@@ -48,12 +48,7 @@ impl Process {
 		}
 
 		self.sch.send(TaskOp::New(task.id, 0))?;
-		let mut child = Command::new(&task.cmd)
-			.args(&task.args)
-			.stdout(Stdio::piped())
-			.stderr(Stdio::piped())
-			.kill_on_drop(true)
-			.spawn()?;
+		let mut child = external::shell(ShellOpt { cmd: task.cmd, args: task.args, piped: true })?;
 
 		let mut stdout = BufReader::new(child.stdout.take().unwrap()).lines();
 		let mut stderr = BufReader::new(child.stderr.take().unwrap()).lines();
