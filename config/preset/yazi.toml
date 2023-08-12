@@ -10,30 +10,30 @@ max_height = 900
 
 [opener]
 folder = [
-	{ cmd = "open", args = [ "-R", "$*" ], display_name = "Reveal in Finder" },
-	{ cmd = "vim", args = [ "$*" ] },
+	{ exec = "open -R $*", display_name = "Reveal in Finder" },
+	{ exec = "vim $*" },
 ]
 archive = [
-	{ cmd = "unar", args = [ "$0" ], display_name = "Extract here" },
+	{ exec = "unar $1", display_name = "Extract here" },
 ]
 text = [
-	{ cmd = "vim", args = [ "$*" ], block = true },
+	{ exec = "vim $*", block = true },
 ]
 image = [
-	{ cmd = "open", args = [ "$*" ], display_name = "Open" },
-	{ cmd = "exiftool", args = [ "$0" ], block = true, display_name = "Show EXIF" },
+	{ exec = "open $*", display_name = "Open" },
+	{ exec = "exiftool $1; echo '\n\nPress enter to exit'; read", block = true, display_name = "Show EXIF" },
 ]
 video = [
-	{ cmd = "mpv", args = [ "$*" ] },
-	{ cmd = "mediainfo", args = [ "$0" ], block = true, display_name = "Show media info" },
+	{ exec = "mpv $*" },
+	{ exec = "mediainfo $1; echo '\n\nPress enter to exit'; read", block = true, display_name = "Show media info" },
 ]
 audio = [
-	{ cmd = "mpv", args = [ "$*" ] },
-	{ cmd = "mediainfo", args = [ "$0" ], block = true, display_name = "Show media info" },
+	{ exec = "mpv $*" },
+	{ exec = "mediainfo $1; echo '\n\nPress enter to exit'; read", block = true, display_name = "Show media info" },
 ]
 fallback = [
-	{ cmd = "open", args = [ "$*" ], display_name = "Open" },
-	{  cmd = "open", args = [ "-R", "$*" ], display_name = "Reveal in Finder" },
+	{ exec = "open $*", display_name = "Open" },
+	{ exec = "open -R $*", display_name = "Reveal in Finder" },
 ]
 
 [open]

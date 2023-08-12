@@ -1,49 +1,49 @@
-use std::{collections::BTreeMap, fmt};
+use std::{collections::BTreeMap, fmt::{self, Debug}};
 
+use anyhow::bail;
 use serde::{de::{self, Visitor}, Deserializer};
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct Exec {
 	pub cmd:   String,
 	pub args:  Vec<String>,
 	pub named: BTreeMap<String, String>,
 }
 
-impl From<&str> for Exec {
-	fn from(value: &str) -> Self {
-		let mut exec = Self::default();
-		for x in value.split_whitespace() {
-			if let Some(kv) = x.strip_prefix("--") {
-				let mut it = kv.splitn(2, '=');
-				let key = it.next().unwrap();
-				let value = it.next().unwrap_or("");
-				exec.named.insert(key.to_string(), value.to_string());
-			} else if exec.cmd.is_empty() {
-				exec.cmd = x.to_string();
+impl TryFrom<&str> for Exec {
+	type Error = anyhow::Error;
+
+	fn try_from(s: &str) -> Result<Self, Self::Error> {
+		let s = shell_words::split(s)?;
+		if s.is_empty() {
+			bail!("`exec` cannot be empty");
+		}
+
+		let mut exec = Self { cmd: s[0].clone(), args: Vec::new(), named: BTreeMap::new() };
+		for arg in s.into_iter().skip(1) {
+			if arg.starts_with("--") {
+				let mut arg = arg.splitn(2, '=');
+				let key = arg.next().unwrap().trim_start_matches('-');
+				let val = arg.next().unwrap_or("").to_string();
+				exec.named.insert(key.to_string(), val);
 			} else {
-				exec.args.push(x.to_string());
+				exec.args.push(arg);
 			}
 		}
-		exec
+		Ok(exec)
 	}
 }
 
 impl ToString for Exec {
 	fn to_string(&self) -> String {
-		let mut s = self.cmd.clone();
-		for arg in &self.args {
-			s.push(' ');
-			s.push_str(arg);
+		let mut s = Vec::with_capacity(self.args.len() + self.named.len() + 1);
+		s.push(self.cmd.clone());
+		s.extend(self.args.iter().cloned());
+		for (key, val) in self.named.iter() {
+			s.push(format!("--{}={}", key, val));
 		}
-		for (name, value) in &self.named {
-			s.push_str(" --");
-			s.push_str(name);
-			if !value.is_empty() {
-				s.push('=');
-				s.push_str(value);
-			}
-		}
-		s
+
+		shell_words::join(s)
 	}
 }
 
@@ -58,7 +58,7 @@ impl Exec {
 			type Value = Vec<Exec>;
 
 			fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-				formatter.write_str("a command string, e.g. tab_switch 0")
+				formatter.write_str("a exec string, e.g. tab_switch 0")
 			}
 
 			fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
@@ -67,7 +67,7 @@ impl Exec {
 			{
 				let mut execs = Vec::new();
 				while let Some(value) = &seq.next_element::<String>()? {
-					execs.push(Exec::from(value.as_str()));
+					execs.push(Exec::try_from(value.as_str()).map_err(de::Error::custom)?);
 				}
 				Ok(execs)
 			}
@@ -76,7 +76,7 @@ impl Exec {
 			where
 				E: de::Error,
 			{
-				Ok(value.split(';').map(Exec::from).collect())
+				Ok(vec![Exec::try_from(value).map_err(de::Error::custom)?])
 			}
 		}
 

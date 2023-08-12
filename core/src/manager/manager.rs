@@ -229,16 +229,10 @@ impl Manager {
 		tokio::spawn(async move {
 			let result = emit!(Input(InputOpt::top("Shell:").with_highlight()));
 
-			if let Ok(cmd) = result.await {
+			if let Ok(exec) = result.await {
 				emit!(Open(
-					vec![(cmd.into(), "".to_string())],
-					Some(Opener {
-						cmd: "sh".to_string(),
-						args: vec!["-c".to_string(), "$0".to_string()],
-						block,
-						display_name: Default::default(),
-						spread: false,
-					})
+					Default::default(),
+					Some(Opener { exec, block, display_name: Default::default(), spread: true })
 				));
 			}
 		});
