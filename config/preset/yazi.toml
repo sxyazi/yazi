@@ -11,30 +11,30 @@ max_height = 900
 
 [opener]
 folder = [
-	{ exec = "open -R $*", display_name = "Reveal in Finder" },
-	{ exec = "vim $*" },
+	{ exec = 'open -R "$@"', display_name = "Reveal in Finder" },
+	{ exec = 'vim "$@"' },
 ]
 archive = [
-	{ exec = "unar $1", display_name = "Extract here" },
+	{ exec = 'unar "$1"', display_name = "Extract here" },
 ]
 text = [
-	{ exec = "vim $*", block = true },
+	{ exec = 'vim "$@"', block = true },
 ]
 image = [
-	{ exec = "open $*", display_name = "Open" },
-	{ exec = "exiftool $1; echo '\n\nPress enter to exit'; read", block = true, display_name = "Show EXIF" },
+	{ exec = 'open "$@"', display_name = "Open" },
+	{ exec = '''exiftool "$1"; echo "Press enter to exit"; read''', block = true, display_name = "Show EXIF" },
 ]
 video = [
-	{ exec = "mpv $*" },
-	{ exec = "mediainfo $1; echo '\n\nPress enter to exit'; read", block = true, display_name = "Show media info" },
+	{ exec = 'mpv "$@"' },
+	{ exec = '''mediainfo "$1"; echo "Press enter to exit"; read''', block = true, display_name = "Show media info" },
 ]
 audio = [
-	{ exec = "mpv $*" },
-	{ exec = "mediainfo $1; echo '\n\nPress enter to exit'; read", block = true, display_name = "Show media info" },
+	{ exec = 'mpv "$@"' },
+	{ exec = '''mediainfo "$1"; echo "Press enter to exit"; read''', block = true, display_name = "Show media info" },
 ]
 fallback = [
-	{ exec = "open $*", display_name = "Open" },
-	{ exec = "open -R $*", display_name = "Reveal in Finder" },
+	{ exec = 'open "$@"', display_name = "Open" },
+	{ exec = 'open -R "$@"', display_name = "Reveal in Finder" },
 ]
 
 [open]
@@ -46,6 +46,8 @@ rules = [
 	{ mime = "image/*", use = "image" },
 	{ mime = "video/*", use = "video" },
 	{ mime = "audio/*", use = "audio" },
+	{ mime = "inode/x-empty", use = "text" },
+	{ mime = "application/json", use = "text" },
 
 	{ mime = "application/x-bzip", use = "archive" },
 	{ mime = "application/x-bzip2", use = "archive" },
