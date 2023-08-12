@@ -302,7 +302,7 @@ impl Scheduler {
 			})
 		});
 
-		let args = args.into_iter().map(|a| a.as_ref().to_os_string()).collect::<Vec<_>>();
+		let args = args.iter().map(|a| a.as_ref().to_os_string()).collect::<Vec<_>>();
 		tokio::spawn({
 			let process = self.process.clone();
 			let opener = opener.clone();
