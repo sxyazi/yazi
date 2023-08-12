@@ -12,7 +12,7 @@
 - sort_dir_first: Display files in reverse order
 
   - `true`: Directory at first
-  - `false`: Sort According to `sort_by`
+  - `false`: Sort According to `sort_by` only
 
 - sort_reverse: Display files in reverse order
 
