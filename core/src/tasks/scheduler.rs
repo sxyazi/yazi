@@ -280,12 +280,13 @@ impl Scheduler {
 	}
 
 	pub(super) fn process_open(&self, opener: &Opener, args: &[impl AsRef<OsStr>]) {
+		let name = {
+			let s = format!("Execute `{}`", opener.exec);
+			let args = args.iter().map(|a| a.as_ref().to_string_lossy()).collect::<Vec<_>>().join(" ");
+			if args.is_empty() { s } else { format!("{} with `{}`", s, args) }
+		};
+
 		let mut running = self.running.write();
-		let name = format!(
-			"Exec `{}` with `{}`",
-			opener.exec,
-			args.iter().map(|a| a.as_ref()).collect::<Vec<_>>().join(" ".as_ref()).to_string_lossy()
-		);
 		let id = running.add(name);
 
 		let (cancel_tx, mut cancel_rx) = oneshot::channel();
