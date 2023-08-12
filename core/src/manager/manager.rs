@@ -1,9 +1,11 @@
-use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, mem, path::{Path, PathBuf}};
+use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, mem, path::{Path, PathBuf}, process::exit};
 
 use anyhow::Error;
 use config::{open::Opener, OPEN};
-use shared::MIME_DIR;
-use tokio::fs;
+use indexmap::IndexSet;
+use shared::{temp_path, MIME_DIR};
+use tokio::{fs::{self, OpenOptions}, io::{AsyncReadExt, AsyncWriteExt, BufReader, BufWriter}};
+use tracing::{debug, error};
 
 use super::{PreviewData, Tab, Tabs, Watcher};
 use crate::{emit, external, files::{File, FilesOp}, input::InputOpt, manager::Folder, select::SelectOpt, tasks::Tasks};
@@ -222,7 +224,56 @@ impl Manager {
 		false
 	}
 
-	pub fn bulk_rename(&self) -> bool { false }
+	pub fn bulk_rename(&self) -> bool {
+		let selected: Vec<_> = self.selected().iter().map(|&f| f.path.clone()).collect();
+
+		tokio::spawn(async move {
+			let files: Vec<_> =
+				selected.iter().map(|p| p.file_name().unwrap().to_string_lossy()).collect();
+			let rename_file_path = temp_path(Some("txt"));
+
+			{
+				let mut rename_file =
+					match OpenOptions::new().write(true).create_new(true).open(&rename_file_path).await {
+						Ok(f) => BufWriter::new(f),
+						Err(e) => {
+							error!("failed to open rename buffer: {e}");
+							return;
+						}
+					};
+
+				if let Err(e) = rename_file.write_all(files.join("\n").as_bytes()).await {
+					error!("failed to write content to rename buffer: {e}");
+					return;
+				}
+				let _ = rename_file.flush().await;
+			}
+
+			emit!(Open(vec![(rename_file_path.as_os_str().to_owned(), "text/plain".to_owned())], None));
+
+			let mut buf = String::new();
+			{
+				let mut rename_file = match tokio::fs::File::open(&rename_file_path).await {
+					Ok(f) => BufReader::new(f),
+					Err(e) => {
+						error!("failed to read rename buffer: {e}");
+						return;
+					}
+				};
+				let _ = rename_file.read_to_string(&mut buf).await;
+			}
+			let new_names = match parse_new_names(&buf, selected.len()) {
+				Ok(names) => names,
+				Err(e) => {
+					println!("yazi: {e}");
+					return;
+				}
+			};
+			println!("new names: {new_names:?}");
+		});
+
+		false
+	}
 
 	pub fn shell(&self, exec: &str, block: bool, confirm: bool) -> bool {
 		let mut exec = exec.to_owned();
@@ -385,4 +436,20 @@ impl Manager {
 	pub fn in_selecting(&self) -> bool {
 		self.active().mode.is_visual() || self.current().has_selected()
 	}
+}
+
+fn parse_new_names(text: &str, count: usize) -> anyhow::Result<IndexSet<&str>> {
+	// NOTE: call `size_hint` on `str::Split` always returns 0
+	let new_names: Vec<_> = text.split('\n').collect();
+	if new_names.len() != count {
+		anyhow::bail!("the number of new names doesn't match the number of old names");
+	}
+
+	let mut names = IndexSet::with_capacity(count);
+	for name in new_names {
+		if !names.insert(name) {
+			anyhow::bail!("there are more than one new entries named {name:?}");
+		}
+	}
+	Ok(names)
 }

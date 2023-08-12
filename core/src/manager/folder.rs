@@ -115,12 +115,11 @@ impl Folder {
 	pub fn select(&mut self, idx: Option<usize>, state: Option<bool>) -> bool {
 		let len = self.files.len();
 		let mut apply = |idx: usize, state: Option<bool>| -> bool {
-			if state.is_none() {
+			let Some(state) = state else {
 				self.files[idx].is_selected = !self.files[idx].is_selected;
 				return true;
-			}
+			};
 
-			let state = state.unwrap();
 			if state != self.files[idx].is_selected {
 				self.files[idx].is_selected = state;
 				return true;
