@@ -155,13 +155,11 @@ impl App {
 				emit!(Render);
 			}
 
-			Event::Select(mut opt, tx) => {
-				opt.position = self.cx.position(opt.position);
+			Event::Select(opt, tx) => {
 				self.cx.select.show(opt, tx);
 				emit!(Render);
 			}
-			Event::Input(mut opt, tx) => {
-				opt.position = self.cx.position(opt.position);
+			Event::Input(opt, tx) => {
 				self.cx.input.show(opt, tx);
 				emit!(Render);
 			}

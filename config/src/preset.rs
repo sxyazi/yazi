@@ -31,7 +31,7 @@ impl Preset {
 
 	fn merge_str(user: &str, base: &str) -> String {
 		let path = BaseDirectories::new().unwrap().get_config_file(user);
-		let mut user = fs::read_to_string(path).unwrap_or("".to_string()).parse::<Table>().unwrap();
+		let mut user = fs::read_to_string(path).unwrap_or_default().parse::<Table>().unwrap();
 
 		let base = base.parse::<Table>().unwrap();
 		Self::merge(&mut user, &base, 2);
