@@ -2,12 +2,12 @@ use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, io::{stdout, Wr
 
 use config::{manager::SortBy, open::Opener, OPEN};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
-use shared::{tty_size, MimeKind};
+use shared::{tty_size, Defer, MimeKind};
 use tokio::{io::AsyncReadExt, select, sync::mpsc, time};
 use tracing::trace;
 
 use super::{task::TaskSummary, Scheduler, TASKS_PADDING, TASKS_PERCENT};
-use crate::{emit, files::{File, Files}, input::InputOpt, BLOCKER};
+use crate::{emit, files::{File, Files}, input::InputOpt, Event, BLOCKER};
 
 pub struct Tasks {
 	scheduler: Arc<Scheduler>,
@@ -80,6 +80,11 @@ impl Tasks {
 			};
 
 			emit!(Stop(true)).await;
+			let _defer = Defer::new(|| {
+				disable_raw_mode().ok();
+				Event::Stop(false, None).emit()
+			});
+
 			stdout().write_all("\n".repeat(tty_size().ws_row as usize).as_bytes()).ok();
 			stdout().write_all(buffered.as_bytes()).ok();
 			enable_raw_mode().ok();
@@ -112,9 +117,6 @@ impl Tasks {
 			while quit[0] != b'q' {
 				stdin.read(&mut quit).await.ok();
 			}
-
-			disable_raw_mode().ok();
-			emit!(Stop(false)).await;
 		});
 		false
 	}
@@ -132,7 +134,7 @@ impl Tasks {
 	pub fn file_open(&self, targets: &[(impl AsRef<Path>, impl AsRef<str>)]) -> bool {
 		let mut openers = BTreeMap::new();
 		for (path, mime) in targets {
-			if let Some(opener) = OPEN.openers(path, mime).and_then(|o| o.first().cloned()) {
+			if let Some(opener) = OPEN.openers(path, mime).and_then(|o| o.first()) {
 				openers.entry(opener).or_insert_with(Vec::new).push(path.as_ref().as_os_str());
 			}
 		}

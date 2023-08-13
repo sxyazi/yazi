@@ -1,6 +1,7 @@
-use std::{env, fs, path::PathBuf};
+use std::{env, fs, path::{Path, PathBuf}, time::{self, SystemTime}};
 
 use clap::Parser;
+use md5::{Digest, Md5};
 
 #[derive(Debug)]
 pub struct Boot {
@@ -35,5 +36,20 @@ impl Default for Boot {
 		}
 
 		boot
+	}
+}
+
+impl Boot {
+	#[inline]
+	pub fn cache(&self, path: &Path) -> PathBuf {
+		self
+			.cache_dir
+			.join(format!("{:x}", Md5::new_with_prefix(path.to_string_lossy().as_bytes()).finalize()))
+	}
+
+	#[inline]
+	pub fn tmpfile(&self) -> PathBuf {
+		let nanos = SystemTime::now().duration_since(time::UNIX_EPOCH).unwrap().as_nanos();
+		self.cache_dir.join(format!("{:x}", Md5::new_with_prefix(nanos.to_le_bytes()).finalize()))
 	}
 }

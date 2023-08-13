@@ -1,8 +1,8 @@
 use std::{io::BufRead, mem, path::{Path, PathBuf}, sync::{atomic::{AtomicUsize, Ordering}, Arc}};
 
-use adaptor::{Adaptor, Image};
+use adaptor::Adaptor;
 use anyhow::{anyhow, bail, Result};
-use config::PREVIEW;
+use config::{BOOT, PREVIEW};
 use ratatui::prelude::Rect;
 use shared::{tty_size, MimeKind};
 use syntect::{easy::HighlightFile, util::as_24_bit_terminal_escaped};
@@ -113,7 +113,7 @@ impl Preview {
 	}
 
 	pub async fn video(path: &Path) -> Result<PreviewData> {
-		let cache = Image::cache(path);
+		let cache = BOOT.cache(path);
 		if fs::metadata(&cache).await.is_err() {
 			external::ffmpegthumbnailer(path, &cache).await?;
 		}
@@ -122,7 +122,7 @@ impl Preview {
 	}
 
 	pub async fn pdf(path: &Path) -> Result<PreviewData> {
-		let cache = Image::cache(path);
+		let cache = BOOT.cache(path);
 		if fs::metadata(&cache).await.is_err() {
 			external::pdftoppm(path, &cache).await?;
 		}

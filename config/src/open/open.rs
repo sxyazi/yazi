@@ -1,5 +1,6 @@
-use std::{collections::{BTreeMap, BTreeSet}, path::Path};
+use std::{collections::BTreeMap, path::Path};
 
+use indexmap::IndexSet;
 use serde::{Deserialize, Deserializer};
 use shared::MIME_DIR;
 
@@ -8,7 +9,7 @@ use crate::{Pattern, MERGED_YAZI};
 
 #[derive(Debug)]
 pub struct Open {
-	openers: BTreeMap<String, Vec<Opener>>,
+	openers: BTreeMap<String, IndexSet<Opener>>,
 	rules:   Vec<OpenRule>,
 }
 
@@ -25,26 +26,36 @@ impl Default for Open {
 }
 
 impl Open {
-	pub fn openers<P, M>(&self, path: P, mime: M) -> Option<Vec<&Opener>>
+	pub fn openers<P, M>(&self, path: P, mime: M) -> Option<&IndexSet<Opener>>
 	where
 		P: AsRef<Path>,
 		M: AsRef<str>,
 	{
 		self.rules.iter().find_map(|rule| {
-			if rule.name.as_ref().map_or(false, |e| e.match_path(&path, Some(mime.as_ref() == MIME_DIR)))
-				|| rule.mime.as_ref().map_or(false, |m| m.matches(&mime))
+			let is_folder = Some(mime.as_ref() == MIME_DIR);
+			if rule.mime.as_ref().map_or(false, |m| m.matches(&mime))
+				|| rule.name.as_ref().map_or(false, |n| n.match_path(&path, is_folder))
 			{
-				self.openers.get(&rule.use_).map(|v| v.iter().collect())
+				self.openers.get(&rule.use_)
 			} else {
 				None
 			}
 		})
 	}
 
+	#[inline]
+	pub fn block_opener<P, M>(&self, path: P, mime: M) -> Option<&Opener>
+	where
+		P: AsRef<Path>,
+		M: AsRef<str>,
+	{
+		self.openers(path, mime).and_then(|o| o.iter().find(|o| o.block))
+	}
+
 	pub fn common_openers(&self, targets: &[(impl AsRef<Path>, impl AsRef<str>)]) -> Vec<&Opener> {
 		let grouped = targets.iter().filter_map(|(p, m)| self.openers(p, m)).collect::<Vec<_>>();
-		let flat = grouped.iter().flatten().cloned().collect::<BTreeSet<_>>();
-		flat.into_iter().filter(|o| grouped.iter().all(|g| g.contains(o))).collect()
+		let flat = grouped.iter().flat_map(|&g| g).collect::<IndexSet<_>>();
+		flat.into_iter().filter(|&o| grouped.iter().all(|g| g.contains(o))).collect()
 	}
 }
 
@@ -64,6 +75,7 @@ impl<'de> Deserialize<'de> for Open {
 		}
 
 		let outer = Outer::deserialize(deserializer)?;
-		Ok(Self { openers: outer.opener, rules: outer.open.rules })
+		let openers = outer.opener.into_iter().map(|(k, v)| (k, IndexSet::from_iter(v))).collect();
+		Ok(Self { openers, rules: outer.open.rules })
 	}
 }

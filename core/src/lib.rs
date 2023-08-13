@@ -2,7 +2,8 @@
 	clippy::if_same_then_else,
 	clippy::len_without_is_empty,
 	clippy::module_inception,
-	clippy::option_map_unit_fn
+	clippy::option_map_unit_fn,
+	clippy::unit_arg
 )]
 
 mod blocker;

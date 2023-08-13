@@ -348,6 +348,8 @@ dependencies = [
  "crossterm 0.27.0",
  "futures",
  "glob",
+ "indexmap 2.0.0",
+ "md-5",
  "once_cell",
  "ratatui",
  "regex",

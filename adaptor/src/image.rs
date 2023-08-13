@@ -1,9 +1,8 @@
-use std::{path::{Path, PathBuf}, sync::Arc};
+use std::{path::Path, sync::Arc};
 
 use anyhow::Result;
-use config::{BOOT, PREVIEW};
+use config::PREVIEW;
 use image::{imageops::FilterType, DynamicImage, ImageFormat};
-use md5::{Digest, Md5};
 use shared::tty_ratio;
 use tokio::fs;
 
@@ -53,12 +52,5 @@ impl Image {
 			Ok(true) => (),
 			_ => fs::write(cache, &*img).await?,
 		})
-	}
-
-	#[inline]
-	pub fn cache(path: &Path) -> PathBuf {
-		BOOT
-			.cache_dir
-			.join(format!("{:x}", Md5::new_with_prefix(path.to_string_lossy().as_bytes()).finalize()))
 	}
 }

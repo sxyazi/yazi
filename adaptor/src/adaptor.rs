@@ -1,13 +1,13 @@
 use std::{path::{Path, PathBuf}, sync::atomic::{AtomicBool, Ordering}};
 
 use anyhow::Result;
-use config::{preview::PreviewAdaptor, PREVIEW};
+use config::{preview::PreviewAdaptor, BOOT, PREVIEW};
 use once_cell::sync::Lazy;
 use ratatui::prelude::Rect;
 use tokio::{fs, sync::mpsc::UnboundedSender};
 
 use super::{Iterm2, Kitty, Ueberzug};
-use crate::{Image, Sixel};
+use crate::Sixel;
 
 static IMAGE_SHOWN: AtomicBool = AtomicBool::new(false);
 
@@ -25,7 +25,7 @@ impl Adaptor {
 			Self::image_hide(rect);
 		}
 
-		let cache = Image::cache(path);
+		let cache = BOOT.cache(path);
 		if fs::metadata(&cache).await.is_ok() {
 			path = cache.as_path();
 		}
