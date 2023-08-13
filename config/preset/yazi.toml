@@ -40,7 +40,6 @@ fallback = [
 [open]
 rules = [
 	{ name = "*/", use = "folder" },
-	{ name = "*.html", use = "fallback" },
 
 	{ mime = "text/*", use = "text" },
 	{ mime = "image/*", use = "image" },
@@ -56,6 +55,8 @@ rules = [
 	{ mime = "application/x-tar", use = "archive" },
 	{ mime = "application/zip", use = "archive" },
 	{ mime = "application/x-7z-compressed", use = "archive" },
+
+	{ mime = "*", use = "fallback" },
 ]
 
 [log]
