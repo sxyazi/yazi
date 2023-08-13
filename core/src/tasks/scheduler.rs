@@ -1,7 +1,7 @@
 use std::{ffi::OsStr, path::PathBuf, sync::Arc, time::Duration};
 
 use async_channel::{Receiver, Sender};
-use config::open::Opener;
+use config::{open::Opener, TASKS};
 use futures::{future::BoxFuture, FutureExt};
 use parking_lot::RwLock;
 use shared::{unique_path, Throttle};
@@ -34,10 +34,10 @@ impl Scheduler {
 			running: Default::default(),
 		};
 
-		for _ in 0..5 {
+		for _ in 0..TASKS.micro_workers {
 			scheduler.schedule_micro(todo_rx.clone());
 		}
-		for _ in 0..5 {
+		for _ in 0..TASKS.macro_workers {
 			scheduler.schedule_macro(todo_rx.clone());
 		}
 		scheduler.progress(prog_rx);
@@ -77,8 +77,6 @@ impl Scheduler {
 						}
 						if let Err(e) = file.work(&mut op).await {
 							info!("Failed to work on task {:?}: {e}", op);
-						} else {
-							trace!("Finished task {:?}", op);
 						}
 					}
 					Ok((id, mut op)) = precache.recv() => {
@@ -88,8 +86,6 @@ impl Scheduler {
 						}
 						if let Err(e) = precache.work(&mut op).await {
 							info!("Failed to work on task {:?}: {e}", op);
-						} else {
-							trace!("Finished task {:?}", op);
 						}
 					}
 				}

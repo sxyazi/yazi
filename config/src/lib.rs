@@ -10,6 +10,7 @@ pub mod open;
 mod pattern;
 mod preset;
 pub mod preview;
+pub mod tasks;
 pub mod theme;
 
 pub(crate) use pattern::*;
@@ -25,6 +26,7 @@ pub static LOG: Lazy<log::Log> = Lazy::new(Default::default);
 pub static MANAGER: Lazy<manager::Manager> = Lazy::new(Default::default);
 pub static OPEN: Lazy<open::Open> = Lazy::new(Default::default);
 pub static PREVIEW: Lazy<preview::Preview> = Lazy::new(Default::default);
+pub static TASKS: Lazy<tasks::Tasks> = Lazy::new(Default::default);
 pub static THEME: Lazy<theme::Theme> = Lazy::new(Default::default);
 
 pub fn init() {
@@ -34,5 +36,6 @@ pub fn init() {
 	Lazy::force(&MANAGER);
 	Lazy::force(&OPEN);
 	Lazy::force(&PREVIEW);
+	Lazy::force(&TASKS);
 	Lazy::force(&THEME);
 }
