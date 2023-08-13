@@ -13,7 +13,7 @@ impl<'a> Select<'a> {
 impl<'a> Widget for Select<'a> {
 	fn render(self, _: Rect, buf: &mut Buffer) {
 		let select = &self.cx.select;
-		let area = select.area();
+		let area = self.cx.area(&select.position);
 
 		let items = select
 			.window()

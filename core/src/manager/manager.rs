@@ -6,7 +6,7 @@ use shared::MIME_DIR;
 use tokio::fs;
 
 use super::{PreviewData, Tab, Tabs, Watcher};
-use crate::{emit, external, files::{File, FilesOp}, input::InputOpt, manager::Folder, select::SelectOpt, tasks::Tasks, Position};
+use crate::{emit, external, files::{File, FilesOp}, input::InputOpt, manager::Folder, select::SelectOpt, tasks::Tasks};
 
 pub struct Manager {
 	tabs:   Tabs,
@@ -161,11 +161,10 @@ impl Manager {
 				return;
 			}
 
-			let result = emit!(Select(SelectOpt {
-				title:    "Open with:".to_string(),
-				items:    openers.iter().map(|o| o.display_name.clone()).collect(),
-				position: Position::Hovered,
-			}));
+			let result = emit!(Select(SelectOpt::hovered(
+				"Open with:",
+				openers.iter().map(|o| o.display_name.clone()).collect()
+			)));
 			if let Ok(choice) = result.await {
 				emit!(Open(files, Some(openers[choice].clone())));
 			}

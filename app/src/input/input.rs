@@ -1,4 +1,5 @@
 use core::input::InputMode;
+use std::ops::Range;
 
 use ansi_to_tui::IntoText;
 use ratatui::{buffer::Buffer, layout::Rect, style::{Color, Style}, text::{Line, Text}, widgets::{Block, BorderType, Borders, Clear, Paragraph, Widget}};
@@ -17,7 +18,7 @@ impl<'a> Input<'a> {
 impl<'a> Widget for Input<'a> {
 	fn render(self, _: Rect, buf: &mut Buffer) {
 		let input = &self.cx.input;
-		let area = input.area();
+		let area = self.cx.area(&input.position);
 
 		let value = if let Ok(v) = input.value_pretty() {
 			v.into_text().unwrap()
@@ -41,8 +42,11 @@ impl<'a> Widget for Input<'a> {
 			.style(Style::new().fg(Color::White))
 			.render(area, buf);
 
-		if let Some(selected) = input.selected() {
-			buf.set_style(selected, Style::new().bg(Color::Rgb(72, 77, 102)))
+		if let Some(Range { start, end }) = input.selected() {
+			buf.set_style(
+				Rect { x: area.x + 1 + start, y: area.y + 1, width: end - start, height: 1 },
+				Style::new().bg(Color::Rgb(72, 77, 102)),
+			)
 		}
 
 		let _ = match input.mode() {

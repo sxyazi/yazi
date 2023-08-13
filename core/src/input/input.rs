@@ -1,7 +1,6 @@
 use std::ops::Range;
 
 use anyhow::{anyhow, Result};
-use ratatui::layout::Rect;
 use shared::CharKind;
 use tokio::sync::oneshot::Sender;
 use unicode_width::UnicodeWidthStr;
@@ -14,9 +13,9 @@ pub struct Input {
 	snaps:       InputSnaps,
 	pub visible: bool,
 
-	title:    String,
-	position: (u16, u16),
-	callback: Option<Sender<Result<String>>>,
+	title:        String,
+	pub position: Position,
+	callback:     Option<Sender<Result<String>>>,
 
 	// Shell
 	pub(super) highlight: bool,
@@ -29,10 +28,7 @@ impl Input {
 		self.visible = true;
 
 		self.title = opt.title;
-		self.position = match opt.position {
-			Position::Coords(x, y) => (x, y),
-			_ => unreachable!(),
-		};
+		self.position = opt.position;
 		self.callback = Some(tx);
 
 		// Shell
@@ -317,21 +313,12 @@ impl Input {
 	pub fn mode(&self) -> InputMode { self.snap().mode }
 
 	#[inline]
-	pub fn area(&self) -> Rect {
-		// TODO: hardcode
-		Rect { x: self.position.0, y: self.position.1 + 2, width: 50, height: 3 }
-	}
-
-	#[inline]
-	pub fn cursor(&self) -> (u16, u16) {
+	pub fn cursor(&self) -> u16 {
 		let snap = self.snap();
-		let width = snap.slice(snap.offset..snap.cursor).width() as u16;
-
-		let area = self.area();
-		(area.x + width + 1, area.y + 1)
+		snap.slice(snap.offset..snap.cursor).width() as u16
 	}
 
-	pub fn selected(&self) -> Option<Rect> {
+	pub fn selected(&self) -> Option<Range<u16>> {
 		let snap = self.snap();
 		let start = snap.op.start()?;
 
@@ -341,12 +328,8 @@ impl Input {
 		let win = snap.window();
 		let Range { start, end } = start.max(win.start)..end.min(win.end);
 
-		Some(Rect {
-			x:      self.position.0 + 1 + snap.slice(snap.offset..start).width() as u16,
-			y:      self.position.1 + 3,
-			width:  snap.slice(start..end).width() as u16,
-			height: 1,
-		})
+		let s = snap.slice(snap.offset..start).width() as u16;
+		Some(s..s + snap.slice(start..end).width() as u16)
 	}
 
 	#[inline]

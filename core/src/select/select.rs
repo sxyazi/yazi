@@ -1,16 +1,15 @@
 use anyhow::{anyhow, Result};
-use ratatui::prelude::Rect;
 use shared::tty_size;
 use tokio::sync::oneshot::Sender;
 
-use super::SELECT_PADDING;
+use super::{SelectOpt, SELECT_PADDING};
 use crate::Position;
 
 #[derive(Default)]
 pub struct Select {
-	title:    String,
-	items:    Vec<String>,
-	position: (u16, u16),
+	title:        String,
+	items:        Vec<String>,
+	pub position: Position,
 
 	offset:   usize,
 	cursor:   usize,
@@ -19,22 +18,14 @@ pub struct Select {
 	pub visible: bool,
 }
 
-pub struct SelectOpt {
-	pub title:    String,
-	pub items:    Vec<String>,
-	pub position: Position,
-}
-
 impl Select {
 	pub fn show(&mut self, opt: SelectOpt, tx: Sender<Result<usize>>) {
 		self.close(false);
 
 		self.title = opt.title;
 		self.items = opt.items;
-		self.position = match opt.position {
-			Position::Coords(x, y) => (x, y),
-			_ => unreachable!(),
-		};
+		self.position = opt.position;
+
 		self.callback = Some(tx);
 		self.visible = true;
 	}
@@ -96,14 +87,4 @@ impl Select {
 
 	#[inline]
 	pub fn rel_cursor(&self) -> usize { self.cursor - self.offset }
-
-	#[inline]
-	pub fn area(&self) -> Rect {
-		Rect {
-			x:      self.position.0,
-			y:      self.position.1 + 2,
-			width:  50,
-			height: self.limit() as u16 + SELECT_PADDING,
-		}
-	}
 }
