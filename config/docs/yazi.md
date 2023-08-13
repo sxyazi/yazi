@@ -73,3 +73,9 @@ Available rule parameters are as follows:
 - name: Glob expression for matching the file name
 - mime: Glob expression for matching the MIME type
 - use: Opener name corresponding to the names in the opener section.
+
+## tasks
+
+- micro_workers: Maximum number of concurrent micro-tasks
+- macro_workers: Maximum number of concurrent macro-tasks
+- bizarre_retry: Maximum number of retries when a bizarre failure occurs

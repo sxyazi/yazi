@@ -1,6 +1,7 @@
 use std::{collections::VecDeque, fs::Metadata, path::{Path, PathBuf}};
 
 use anyhow::Result;
+use config::TASKS;
 use futures::{future::BoxFuture, FutureExt};
 use shared::{calculate_size, copy_with_progress};
 use tokio::{fs, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
@@ -99,7 +100,10 @@ impl File {
 						}
 						// Operation not permitted (os error 1)
 						// Attribute not found (os error 93)
-						Err(e) if task.retry < 3 && matches!(e.raw_os_error(), Some(1) | Some(93)) => {
+						Err(e)
+							if task.retry < TASKS.bizarre_retry
+								&& matches!(e.raw_os_error(), Some(1) | Some(93)) =>
+						{
 							self.log(task.id, format!("Paste task retry: {:?}", task))?;
 							task.retry += 1;
 							return Ok(self.tx.send(FileOp::Paste(task.clone())).await?);
@@ -224,10 +228,8 @@ impl File {
 				self.sch.send(TaskOp::New(task.id, meta.len()))?;
 
 				if meta.is_file() {
-					trace!("Paste: {:?} -> {:?}", task.from, task.to);
 					self.tx.send(FileOp::Paste(task.clone())).await?;
 				} else if meta.is_symlink() {
-					trace!("Link: {:?} -> {:?}", task.from, task.to);
 					self.tx.send(FileOp::Link(task.to_link(meta.len()))).await?;
 				}
 			}
@@ -291,7 +293,6 @@ impl File {
 	}
 
 	pub(crate) fn remove_empty_dirs(dir: &Path) -> BoxFuture<()> {
-		trace!("Remove empty dirs: {:?}", dir);
 		async move {
 			let mut it = match fs::read_dir(dir).await {
 				Ok(it) => it,

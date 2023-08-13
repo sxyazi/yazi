@@ -59,5 +59,10 @@ rules = [
 	{ mime = "*", use = "fallback" },
 ]
 
+[tasks]
+micro_workers = 5
+macro_workers = 10
+bizarre_retry = 5
+
 [log]
 enabled = false
