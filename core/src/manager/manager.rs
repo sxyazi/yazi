@@ -2,7 +2,6 @@ use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, ffi::OsStr, 
 
 use anyhow::{bail, Error, Result};
 use config::{open::Opener, BOOT, OPEN};
-use crossterm::{execute, terminal::{Clear, ClearType}};
 use shared::{in_same_root, Defer, Term, MIME_DIR};
 use tokio::{fs::{self, OpenOptions}, io::{AsyncReadExt, AsyncWriteExt}};
 
