@@ -1,7 +1,7 @@
-use std::{io::{stdout, Stdout}, ops::{Deref, DerefMut}};
+use std::{io::{stdout, Stdout, Write}, ops::{Deref, DerefMut}};
 
 use anyhow::Result;
-use crossterm::{cursor::{MoveTo, SetCursorStyle}, event::{DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, terminal::{disable_raw_mode, enable_raw_mode, supports_keyboard_enhancement, EnterAlternateScreen, LeaveAlternateScreen}};
+use crossterm::{cursor::{MoveTo, SetCursorStyle}, event::{DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, terminal::{disable_raw_mode, enable_raw_mode, supports_keyboard_enhancement, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen}};
 use ratatui::{backend::CrosstermBackend, Terminal};
 
 pub struct Term {
@@ -30,6 +30,13 @@ impl Term {
 		term.hide_cursor()?;
 		term.clear()?;
 		Ok(term)
+	}
+
+	pub fn clear() -> Result<()> {
+		execute!(stdout(), Clear(ClearType::All))?;
+		println!();
+		stdout().flush()?;
+		Ok(())
 	}
 
 	pub fn move_to(x: u16, y: u16) -> Result<()> { Ok(execute!(stdout(), MoveTo(x, y))?) }

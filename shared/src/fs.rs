@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, path::Path};
+use std::{collections::VecDeque, path::{Path, PathBuf}};
 
 use anyhow::Result;
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
@@ -148,4 +148,15 @@ pub fn file_mode(mode: u32) -> String {
 	});
 
 	s
+}
+
+// Note: files must contain at least one file path
+pub fn in_same_root(files: &[PathBuf]) -> Option<PathBuf> {
+	if files.is_empty() {
+		return None;
+	}
+
+	let mut files = files.iter();
+	let parent = files.next().map(|f| f.parent().unwrap_or(f).to_path_buf()).unwrap();
+	if files.all(|f| f.parent().unwrap_or(f) == parent) { Some(parent) } else { None }
 }
