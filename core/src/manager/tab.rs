@@ -75,9 +75,7 @@ impl Tab {
 	}
 
 	pub async fn cd(&mut self, mut target: PathBuf) -> bool {
-		let file = if let Ok(f) = File::from(&target).await {
-			f
-		} else {
+		let Ok(file) = File::from(&target).await else {
 			return false;
 		};
 
@@ -128,9 +126,7 @@ impl Tab {
 	}
 
 	pub fn enter(&mut self) -> bool {
-		let hovered = if let Some(ref h) = self.current.hovered {
-			h.clone()
-		} else {
+		let Some(hovered) = self.current.hovered.clone() else {
 			return false;
 		};
 		if !hovered.meta.is_dir() {
@@ -161,9 +157,7 @@ impl Tab {
 			.and_then(|p| if p == self.current.cwd { None } else { Some(p) })
 			.or_else(|| self.current.cwd.parent());
 
-		let current = if let Some(c) = current {
-			c.to_owned()
-		} else {
+		let Some(current) = current.map(Path::to_path_buf) else {
 			return false;
 		};
 

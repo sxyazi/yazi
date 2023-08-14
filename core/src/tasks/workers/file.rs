@@ -212,9 +212,7 @@ impl File {
 
 			while let Ok(Some(entry)) = it.next_entry().await {
 				let src = entry.path();
-				let meta = if let Ok(meta) = Self::metadata(&src, task.follow).await {
-					meta
-				} else {
+				let Ok(meta) = Self::metadata(&src, task.follow).await else {
 					continue;
 				};
 

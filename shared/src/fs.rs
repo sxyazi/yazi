@@ -7,9 +7,7 @@ pub async fn calculate_size(path: &Path) -> u64 {
 	let mut total = 0;
 	let mut stack = VecDeque::from([path.to_path_buf()]);
 	while let Some(path) = stack.pop_front() {
-		let meta = if let Ok(meta) = fs::symlink_metadata(&path).await {
-			meta
-		} else {
+		let Ok(meta) = fs::symlink_metadata(&path).await else {
 			continue;
 		};
 
@@ -18,16 +16,12 @@ pub async fn calculate_size(path: &Path) -> u64 {
 			continue;
 		}
 
-		let mut it = if let Ok(it) = fs::read_dir(path).await {
-			it
-		} else {
+		let Ok(mut it) = fs::read_dir(path).await else {
 			continue;
 		};
 
 		while let Ok(Some(entry)) = it.next_entry().await {
-			let meta = if let Ok(m) = entry.metadata().await {
-				m
-			} else {
+			let Ok(meta) = entry.metadata().await else {
 				continue;
 			};
 

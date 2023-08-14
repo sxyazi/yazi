@@ -27,7 +27,7 @@ impl Default for Key {
 
 impl From<KeyEvent> for Key {
 	fn from(value: KeyEvent) -> Self {
-		let shift = if let KeyCode::Char(c) = value.code { c.is_ascii_uppercase() } else { false };
+		let shift = matches!(value.code, KeyCode::Char(c) if c.is_ascii_uppercase());
 
 		Self {
 			code:  value.code,

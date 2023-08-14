@@ -60,9 +60,7 @@ impl Tasks {
 	}
 
 	pub fn inspect(&self) -> bool {
-		let id = if let Some(id) = self.scheduler.running.read().get_id(self.cursor) {
-			id
-		} else {
+		let Some(id) = self.scheduler.running.read().get_id(self.cursor) else {
 			return false;
 		};
 
@@ -73,7 +71,7 @@ impl Tasks {
 
 			let buffered = {
 				let mut running = scheduler.running.write();
-				let task = if let Some(task) = running.get_mut(id) { task } else { return };
+				let Some(task) = running.get_mut(id) else { return };
 
 				task.logger = Some(tx);
 				task.logs.clone()

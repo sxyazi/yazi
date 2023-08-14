@@ -4,12 +4,9 @@ use tokio::fs;
 
 pub async fn absolute_path(p: impl AsRef<Path>) -> PathBuf {
 	let p = p.as_ref();
-	if p.starts_with("~") {
-		if let Ok(home) = env::var("HOME") {
-			let mut expanded = PathBuf::new();
-			expanded.push(home);
-			expanded.push(p.strip_prefix("~").unwrap());
-			return expanded;
+	if let Ok(p) = p.strip_prefix("~") {
+		if let Some(home) = env::var_os("HOME") {
+			return PathBuf::from_iter([&home, p.as_os_str()]);
 		}
 	}
 	fs::canonicalize(p).await.unwrap_or_else(|_| p.to_path_buf())
@@ -43,9 +40,7 @@ pub fn readable_size(size: u64) -> String {
 }
 
 pub async fn unique_path(mut p: PathBuf) -> PathBuf {
-	let name = if let Some(name) = p.file_name() {
-		name.to_os_string()
-	} else {
+	let Some(name) = p.file_name().map(|n| n.to_os_string()) else {
 		return p;
 	};
 

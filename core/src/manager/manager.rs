@@ -52,9 +52,7 @@ impl Manager {
 	}
 
 	pub fn preview(&mut self, show_image: bool) -> bool {
-		let hovered = if let Some(h) = self.hovered() {
-			h.clone()
-		} else {
+		let Some(hovered) = self.hovered().cloned() else {
 			return self.active_mut().preview.reset();
 		};
 
@@ -203,9 +201,7 @@ impl Manager {
 			return self.bulk_rename();
 		}
 
-		let hovered = if let Some(h) = self.hovered() {
-			h.path.clone()
-		} else {
+		let Some(hovered) = self.hovered().map(|h| h.path()) else {
 			return false;
 		};
 
@@ -412,13 +408,11 @@ impl Manager {
 	}
 
 	pub fn update_preview(&mut self, path: PathBuf, mime: String, data: PreviewData) -> bool {
-		let hovered = if let Some(ref h) = self.current().hovered {
-			h.path()
-		} else {
+		let Some(hovered) = self.hovered().map(|h| &h.path) else {
 			return self.active_mut().preview.reset();
 		};
 
-		if hovered != path {
+		if path != *hovered {
 			return false;
 		}
 
