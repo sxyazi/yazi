@@ -1,4 +1,4 @@
-use std::{env, fs, path::{Path, PathBuf}, time::{self, SystemTime}};
+use std::{env, fs, os::unix::prelude::OsStrExt, path::{Path, PathBuf}, time::{self, SystemTime}};
 
 use clap::Parser;
 use md5::{Digest, Md5};
@@ -44,7 +44,7 @@ impl Boot {
 	pub fn cache(&self, path: &Path) -> PathBuf {
 		self
 			.cache_dir
-			.join(format!("{:x}", Md5::new_with_prefix(path.to_string_lossy().as_bytes()).finalize()))
+			.join(format!("{:x}", Md5::new_with_prefix(path.as_os_str().as_bytes()).finalize()))
 	}
 
 	#[inline]

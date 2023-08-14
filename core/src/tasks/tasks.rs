@@ -2,8 +2,8 @@ use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, io::{stdout, Wr
 
 use config::{manager::SortBy, open::Opener, OPEN};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
-use shared::{tty_size, Defer, MimeKind};
-use tokio::{io::AsyncReadExt, select, sync::mpsc, time};
+use shared::{tty_size, Defer, MimeKind, Term};
+use tokio::{io::{stdin, AsyncReadExt}, select, sync::mpsc, time};
 use tracing::trace;
 
 use super::{task::TaskSummary, Scheduler, TASKS_PADDING, TASKS_PERCENT};
@@ -85,17 +85,18 @@ impl Tasks {
 				Event::Stop(false, None).emit();
 			});
 
-			stdout().write_all("\n".repeat(tty_size().ws_row as usize).as_bytes()).ok();
+			Term::clear(&mut stdout()).ok();
 			stdout().write_all(buffered.as_bytes()).ok();
 			enable_raw_mode().ok();
 
-			let mut stdin = tokio::io::stdin();
-			let mut quit = [0; 1];
+			let mut stdin = stdin();
+			let mut quit = [0; 10];
 			loop {
 				select! {
 					Some(line) = rx.recv() => {
-						stdout().write_all(line.as_bytes()).ok();
-						stdout().write_all(b"\r\n").ok();
+						let mut stdout = stdout().lock();
+						stdout.write_all(line.as_bytes()).ok();
+						stdout.write_all(b"\r\n").ok();
 					}
 					_ = time::sleep(time::Duration::from_millis(100)) => {
 						if scheduler.running.read().get(id).is_none() {

@@ -22,7 +22,7 @@ impl Adaptor {
 
 	pub async fn image_show(mut path: &Path, rect: Rect) -> Result<()> {
 		if IMAGE_SHOWN.swap(true, Ordering::Relaxed) {
-			Self::image_hide(rect);
+			Self::image_hide(rect).ok();
 		}
 
 		let cache = BOOT.cache(path);
@@ -34,29 +34,24 @@ impl Adaptor {
 			PreviewAdaptor::Kitty => Kitty::image_show(path, rect).await,
 			PreviewAdaptor::Iterm2 => Iterm2::image_show(path, rect).await,
 			PreviewAdaptor::Sixel => Sixel::image_show(path, rect).await,
-			_ => {
-				if let Some(tx) = &*UEBERZUG {
-					tx.send(Some((path.to_path_buf(), rect))).ok();
-				}
-				Ok(())
-			}
+			_ => Ok(if let Some(tx) = &*UEBERZUG {
+				tx.send(Some((path.to_path_buf(), rect)))?;
+			}),
 		}
 	}
 
-	pub fn image_hide(rect: Rect) {
+	pub fn image_hide(rect: Rect) -> Result<()> {
 		if !IMAGE_SHOWN.swap(false, Ordering::Relaxed) {
-			return;
+			return Ok(());
 		}
 
 		match PREVIEW.adaptor {
 			PreviewAdaptor::Kitty => Kitty::image_hide(),
 			PreviewAdaptor::Iterm2 => Iterm2::image_hide(rect),
 			PreviewAdaptor::Sixel => Sixel::image_hide(rect),
-			_ => {
-				if let Some(tx) = &*UEBERZUG {
-					tx.send(None).ok();
-				}
-			}
+			_ => Ok(if let Some(tx) = &*UEBERZUG {
+				tx.send(None)?;
+			}),
 		}
 	}
 }

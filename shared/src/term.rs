@@ -32,17 +32,22 @@ impl Term {
 		Ok(term)
 	}
 
-	pub fn clear() -> Result<()> {
-		execute!(stdout(), Clear(ClearType::All))?;
-		println!();
-		stdout().flush()?;
-		Ok(())
+	#[inline]
+	pub fn clear(stdout: &mut impl Write) -> Result<()> {
+		execute!(stdout, Clear(ClearType::All))?;
+		writeln!(stdout)?;
+		Ok(stdout.flush()?)
 	}
 
-	pub fn move_to(x: u16, y: u16) -> Result<()> { Ok(execute!(stdout(), MoveTo(x, y))?) }
+	#[inline]
+	pub fn move_to(stdout: &mut impl Write, x: u16, y: u16) -> Result<()> {
+		Ok(execute!(stdout, MoveTo(x, y))?)
+	}
 
+	#[inline]
 	pub fn set_cursor_block() -> Result<()> { Ok(execute!(stdout(), SetCursorStyle::BlinkingBlock)?) }
 
+	#[inline]
 	pub fn set_cursor_bar() -> Result<()> { Ok(execute!(stdout(), SetCursorStyle::BlinkingBar)?) }
 }
 

@@ -77,7 +77,7 @@ impl Preview {
 	pub fn reset(&mut self) -> bool {
 		self.handle.take().map(|h| h.abort());
 		self.incr.fetch_add(1, Ordering::Relaxed);
-		Adaptor::image_hide(Self::rect());
+		Adaptor::image_hide(Self::rect()).ok();
 
 		self.lock = None;
 		!matches!(
@@ -89,7 +89,7 @@ impl Preview {
 	pub fn reset_image(&mut self) -> bool {
 		self.handle.take().map(|h| h.abort());
 		self.incr.fetch_add(1, Ordering::Relaxed);
-		Adaptor::image_hide(Self::rect());
+		Adaptor::image_hide(Self::rect()).ok();
 
 		if matches!(self.data, PreviewData::Image) {
 			self.lock = None;
