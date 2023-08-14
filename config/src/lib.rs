@@ -12,6 +12,7 @@ mod preset;
 pub mod preview;
 pub mod tasks;
 pub mod theme;
+mod validation;
 
 pub(crate) use pattern::*;
 pub(crate) use preset::*;

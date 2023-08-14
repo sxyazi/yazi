@@ -20,4 +20,5 @@ regex       = "^1"
 serde       = { version = "^1", features = [ "derive" ] }
 shell-words = "^1"
 toml        = { version = "^0", features = [ "preserve_order" ] }
+validator   = { version = "^0", features = [ "derive" ] }
 xdg         = "^2"
