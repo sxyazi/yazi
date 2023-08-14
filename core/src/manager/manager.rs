@@ -6,7 +6,7 @@ use shared::{max_common_root, Defer, Term, MIME_DIR};
 use tokio::{fs::{self, OpenOptions}, io::{AsyncReadExt, AsyncWriteExt}};
 
 use super::{PreviewData, Tab, Tabs, Watcher};
-use crate::{emit, external, files::{File, FilesOp}, input::InputOpt, manager::Folder, select::SelectOpt, tasks::Tasks};
+use crate::{emit, external::{self, ShellOpt}, files::{File, FilesOp}, input::InputOpt, manager::Folder, select::SelectOpt, tasks::Tasks, Event, BLOCKER};
 
 pub struct Manager {
 	tabs:   Tabs,
