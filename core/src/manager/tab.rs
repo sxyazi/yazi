@@ -264,20 +264,22 @@ impl Tab {
 		};
 		true
 	}
-
-	pub fn current_name(&self) -> Option<&str> {
-		self
-			.current
-			.cwd
-			.file_name()
-			.and_then(|name| name.to_str())
-			.or_else(|| self.current.cwd.to_str())
-	}
 }
 
 impl Tab {
 	#[inline]
 	pub fn mode(&self) -> &Mode { &self.mode }
+
+	#[inline]
+	pub fn name(&self) -> &str {
+		self
+			.current
+			.cwd
+			.file_name()
+			.and_then(|n| n.to_str())
+			.or_else(|| self.current.cwd.to_str())
+			.unwrap_or_default()
+	}
 
 	#[inline]
 	pub fn history(&self, path: &Path) -> Option<&Folder> { self.history.get(path) }
