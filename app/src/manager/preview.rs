@@ -27,21 +27,19 @@ impl<'a> Widget for Preview<'a> {
 		);
 
 		let manager = &self.cx.manager;
-		let hovered = if let Some(h) = manager.hovered() {
-			h.path()
-		} else {
+		let Some(hovered) = manager.hovered().map(|h| &h.path) else {
 			return;
 		};
 
 		let preview = manager.active().preview();
-		if !preview.same_path(&hovered) {
+		if !preview.same_path(hovered) {
 			return;
 		}
 
 		match &preview.data {
 			PreviewData::None => {}
 			PreviewData::Folder => {
-				if let Some(folder) = manager.active().history(&hovered) {
+				if let Some(folder) = manager.active().history(hovered) {
 					Folder::new(self.cx, folder).with_preview(true).render(area, buf);
 				}
 			}

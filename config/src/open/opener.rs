@@ -66,11 +66,9 @@ impl<'de> Deserialize<'de> for Opener {
 		if exec.is_empty() {
 			return Err(serde::de::Error::custom("`exec` cannot be empty"));
 		}
-		let display_name = if let Some(s) = shadow.display_name {
-			s
-		} else {
-			exec.split_whitespace().next().unwrap().to_string()
-		};
+
+		let display_name =
+			shadow.display_name.unwrap_or_else(|| exec.split_whitespace().next().unwrap().to_string());
 
 		let spread = exec.contains("$*") || exec.contains("$@");
 		Ok(Self { exec, block: shadow.block, display_name, spread })

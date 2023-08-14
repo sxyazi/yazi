@@ -8,9 +8,7 @@ pub(crate) struct Preset;
 impl Preset {
 	fn merge(a: &mut Table, b: &Table, max: u8) {
 		for (k, v) in b {
-			let a = if let Some(a) = a.get_mut(k) {
-				a
-			} else {
+			let Some(a) = a.get_mut(k) else {
 				a.insert(k.clone(), v.clone());
 				continue;
 			};

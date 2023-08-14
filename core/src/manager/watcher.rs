@@ -21,14 +21,11 @@ impl Watcher {
 			{
 				let tx = tx.clone();
 				move |res: Result<notify::Event, notify::Error>| {
-					if res.is_err() {
+					let Ok(event) = res else {
 						return;
-					}
+					};
 
-					let event = res.unwrap();
-					let path = if let Some(first) = event.paths.first() {
-						first.clone()
-					} else {
+					let Some(path) = event.paths.first().cloned() else {
 						return;
 					};
 
@@ -61,10 +58,9 @@ impl Watcher {
 				}
 			},
 			Default::default(),
-		)
-		.unwrap();
+		);
 
-		let instance = Self { tx, watcher, watched: Default::default() };
+		let instance = Self { tx, watcher: watcher.unwrap(), watched: Default::default() };
 		tokio::spawn(Self::changed(rx, instance.watched.clone()));
 		instance
 	}
