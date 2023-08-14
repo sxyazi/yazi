@@ -2,15 +2,17 @@ use std::path::PathBuf;
 
 use serde::Deserialize;
 use shared::absolute_path;
+use validator::Validate;
 
 use super::{ColorGroup, Filetype, Icon, Style};
-use crate::MERGED_THEME;
+use crate::{validation::check_validation, MERGED_THEME};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Validate)]
 pub struct Tab {
 	pub active:    Style,
 	pub inactive:  Style,
-	pub max_width: usize,
+	#[validate(range(min = 1, message = "Must be greater than 0"))]
+	pub max_width: u8,
 }
 
 #[derive(Deserialize)]
@@ -73,8 +75,12 @@ pub struct Theme {
 impl Default for Theme {
 	fn default() -> Self {
 		let mut theme: Self = toml::from_str(&MERGED_THEME).unwrap();
+
+		check_validation(theme.tab.validate());
+
 		theme.preview.syntect_theme =
 			futures::executor::block_on(absolute_path(&theme.preview.syntect_theme));
+
 		theme
 	}
 }

@@ -1,11 +1,15 @@
 use serde::Deserialize;
+use validator::Validate;
 
-use crate::MERGED_YAZI;
+use crate::{validation::check_validation, MERGED_YAZI};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Validate)]
 pub struct Tasks {
+	#[validate(range(min = 3, message = "Cannot be less than 3"))]
 	pub micro_workers: u8,
+	#[validate(range(min = 5, message = "Cannot be less than 5"))]
 	pub macro_workers: u8,
+	#[validate(range(min = 3, message = "Cannot be less than 3"))]
 	pub bizarre_retry: u8,
 }
 
@@ -17,9 +21,7 @@ impl Default for Tasks {
 		}
 
 		let tasks = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().tasks;
-		if tasks.micro_workers <= 2 || tasks.macro_workers <= 2 {
-			panic!("micro_workers, and macro_workers must be greater than 2");
-		}
+		check_validation(tasks.validate());
 
 		tasks
 	}
