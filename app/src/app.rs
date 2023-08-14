@@ -35,7 +35,7 @@ impl App {
 				Event::Resize(..) => app.dispatch_resize(),
 				Event::Stop(state, tx) => app.dispatch_stop(state, tx),
 				Event::Ctrl(ctrl, layer) => app.dispatch_ctrl(ctrl, layer),
-				event => app.dispatch_module(event).await,
+				event => app.dispatch_module(event),
 			}
 		}
 		Ok(())
@@ -107,12 +107,14 @@ impl App {
 		}
 	}
 
-	async fn dispatch_module(&mut self, event: Event) {
+	fn dispatch_module(&mut self, event: Event) {
 		let manager = &mut self.cx.manager;
 		let tasks = &mut self.cx.tasks;
 		match event {
 			Event::Cd(path) => {
-				manager.active_mut().cd(absolute_path(path).await).await;
+				futures::executor::block_on(async {
+					manager.active_mut().cd(absolute_path(path).await).await;
+				});
 			}
 			Event::Refresh => {
 				manager.refresh();
