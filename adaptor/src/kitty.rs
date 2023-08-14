@@ -15,13 +15,13 @@ impl Kitty {
 		let img = Image::crop(path, (rect.width, rect.height)).await?;
 		let b = Self::encode(img).await?;
 
-		Term::move_to(rect.x, rect.y).ok();
-		stdout().write_all(&b).ok();
-		Ok(())
+		let mut stdout = stdout().lock();
+		Term::move_to(&mut stdout, rect.x, rect.y)?;
+		Ok(stdout.write_all(&b)?)
 	}
 
 	#[inline]
-	pub(super) fn image_hide() { stdout().write_all(b"\x1b\\\x1b_Ga=d\x1b\\").ok(); }
+	pub(super) fn image_hide() -> Result<()> { Ok(stdout().write_all(b"\x1b\\\x1b_Ga=d\x1b\\")?) }
 
 	async fn encode(img: DynamicImage) -> Result<Vec<u8>> {
 		fn output(raw: &[u8], format: u8, size: (u32, u32)) -> Result<Vec<u8>> {

@@ -1,4 +1,4 @@
-use std::{io::{stdout, Write}, path::Path};
+use std::{io::{stdout, BufWriter, Write}, path::Path};
 
 use anyhow::Result;
 use base64::{engine::general_purpose, Engine};
@@ -15,18 +15,21 @@ impl Iterm2 {
 		let img = Image::crop(path, (rect.width, rect.height)).await?;
 		let b = Self::encode(img).await?;
 
-		Term::move_to(rect.x, rect.y).ok();
-		stdout().write_all(&b).ok();
-		Ok(())
+		let mut stdout = stdout().lock();
+		Term::move_to(&mut stdout, rect.x, rect.y)?;
+		Ok(stdout.write_all(&b)?)
 	}
 
 	#[inline]
-	pub(super) fn image_hide(rect: Rect) {
+	pub(super) fn image_hide(rect: Rect) -> Result<()> {
 		let s = " ".repeat(rect.width as usize);
+		let mut stdout = BufWriter::new(stdout().lock());
+
 		for y in rect.top()..=rect.bottom() {
-			Term::move_to(rect.x, y).ok();
-			stdout().write_all(s.as_bytes()).ok();
+			Term::move_to(&mut stdout, rect.x, y)?;
+			stdout.write_all(s.as_bytes())?;
 		}
+		Ok(())
 	}
 
 	async fn encode(img: DynamicImage) -> Result<Vec<u8>> {

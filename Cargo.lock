@@ -11,7 +11,6 @@ dependencies = [
  "color_quant",
  "config",
  "image",
- "md-5",
  "once_cell",
  "ratatui",
  "shared",

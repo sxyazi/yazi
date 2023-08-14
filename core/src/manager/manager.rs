@@ -262,7 +262,7 @@ impl Manager {
 	}
 
 	async fn bulk_rename_do(root: PathBuf, old: Vec<PathBuf>, new: Vec<PathBuf>) -> Result<()> {
-		Term::clear()?;
+		Term::clear(&mut stdout())?;
 		if old.len() != new.len() {
 			println!("Number of old and new differ, press ENTER to exit");
 			stdin().read_exact(&mut [0]).await?;
@@ -303,7 +303,7 @@ impl Manager {
 			return Ok(());
 		}
 
-		Term::clear()?;
+		Term::clear(&mut stdout())?;
 		{
 			let mut stdout = BufWriter::new(stdout().lock());
 			writeln!(stdout, "Failed to rename:")?;
