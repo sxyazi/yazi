@@ -82,7 +82,7 @@ impl Tasks {
 			emit!(Stop(true)).await;
 			let _defer = Defer::new(|| {
 				disable_raw_mode().ok();
-				Event::Stop(false, None).emit()
+				Event::Stop(false, None).emit();
 			});
 
 			stdout().write_all("\n".repeat(tty_size().ws_row as usize).as_bytes()).ok();

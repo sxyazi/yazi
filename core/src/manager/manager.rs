@@ -1,12 +1,12 @@
-use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, mem, path::{Path, PathBuf}};
+use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, ffi::OsStr, io::{stdout, Write}, mem, os::unix::prelude::OsStrExt, path::{Path, PathBuf}};
 
-use anyhow::Error;
-use config::{open::Opener, OPEN};
-use shared::MIME_DIR;
-use tokio::fs;
+use anyhow::{bail, Error, Result};
+use config::{open::Opener, BOOT, OPEN};
+use shared::{max_common_root, Defer, Term, MIME_DIR};
+use tokio::{fs::{self, OpenOptions}, io::{AsyncReadExt, AsyncWriteExt}};
 
 use super::{PreviewData, Tab, Tabs, Watcher};
-use crate::{emit, external, files::{File, FilesOp}, input::InputOpt, manager::Folder, select::SelectOpt, tasks::Tasks};
+use crate::{emit, external::{self, ShellOpt}, files::{File, FilesOp}, input::InputOpt, manager::Folder, select::SelectOpt, tasks::Tasks, Event, BLOCKER};
 
 pub struct Manager {
 	tabs:   Tabs,
@@ -222,7 +222,97 @@ impl Manager {
 		false
 	}
 
-	pub fn bulk_rename(&self) -> bool { false }
+	pub fn bulk_rename(&self) -> bool {
+		let mut old: Vec<_> = self.selected().iter().map(|&f| f.path()).collect();
+
+		let root = max_common_root(&old);
+		old = old.into_iter().map(|p| p.strip_prefix(&root).unwrap().to_owned()).collect();
+
+		let tmp = BOOT.tmpfile("bulk");
+		tokio::spawn(async move {
+			let Some(opener) = OPEN.block_opener("bulk.txt", "text/plain") else {
+				bail!("No opener for bulk rename");
+			};
+
+			{
+				let b = old.iter().map(|o| o.as_os_str()).collect::<Vec<_>>().join(OsStr::new("\n"));
+				let mut f = OpenOptions::new().write(true).create_new(true).open(&tmp).await?;
+				f.write_all(b.as_bytes()).await?;
+			}
+
+			let _guard = BLOCKER.acquire().await.unwrap();
+			let _defer = Defer::new(|| {
+				Event::Stop(false, None).emit();
+				tokio::spawn(fs::remove_file(tmp.clone()))
+			});
+			emit!(Stop(true)).await;
+
+			let mut child = external::shell(ShellOpt {
+				cmd:   (*opener.exec).into(),
+				args:  vec![tmp.to_owned().into()],
+				piped: false,
+			})?;
+			child.wait().await?;
+
+			let new: Vec<_> = fs::read_to_string(&tmp).await?.lines().map(|l| l.into()).collect();
+			Self::bulk_rename_do(root, old, new).await
+		});
+
+		false
+	}
+
+	async fn bulk_rename_do(root: PathBuf, old: Vec<PathBuf>, new: Vec<PathBuf>) -> Result<()> {
+		Term::clear()?;
+		if old.len() != new.len() {
+			println!("Number of old and new differ, press ENTER to exit");
+			tokio::io::stdin().read_exact(&mut [0]).await?;
+			return Ok(());
+		}
+
+		let mut todo = Vec::with_capacity(old.len());
+		for (o, n) in old.into_iter().zip(new) {
+			if n != o {
+				stdout().write_all(o.as_os_str().as_bytes())?;
+				stdout().write_all(b" -> ")?;
+				stdout().write_all(n.as_os_str().as_bytes())?;
+				stdout().write_all(b"\n")?;
+				todo.push((root.join(o), root.join(n)));
+			}
+		}
+		if todo.is_empty() {
+			return Ok(());
+		} else {
+			print!("Continue to rename? (y/N): ");
+			stdout().flush()?;
+		}
+
+		let mut buf = [0];
+		tokio::io::stdin().read_exact(&mut buf).await?;
+		if buf[0] != b'y' && buf[0] != b'Y' {
+			return Ok(());
+		}
+
+		let mut failed = Vec::new();
+		for (o, n) in todo {
+			if let Err(e) = fs::rename(&o, &n).await {
+				failed.push((o, n, e));
+			}
+		}
+
+		if !failed.is_empty() {
+			Term::clear()?;
+			println!("Failed to rename:");
+			for (o, n, e) in failed {
+				stdout().write_all(o.as_os_str().as_bytes())?;
+				stdout().write_all(b" -> ")?;
+				stdout().write_all(n.as_os_str().as_bytes())?;
+				stdout().write_fmt(format_args!(": {e}\n"))?;
+			}
+			println!("\nPress ENTER to exit");
+			tokio::io::stdin().read_exact(&mut [0]).await?;
+		}
+		Ok(())
+	}
 
 	pub fn shell(&self, exec: &str, block: bool, confirm: bool) -> bool {
 		let mut exec = exec.to_owned();

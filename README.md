@@ -143,12 +143,7 @@ it will automatically use the "Window system protocol" to display images -- this
 
 ## TODO
 
-- [x] Add example config for general usage, currently please see my [another repo](https://github.com/sxyazi/dotfiles/tree/main/yazi) instead
-- [x] Integration with fzf, zoxide for fast directory navigation
-- [x] Integration with fd, rg for fuzzy file searching
-- [x] Documentation of commands and options
-- [x] Support for Überzug++ for image previews with X11/wayland environment
-- [ ] Batch renaming support
+See [Feature requests](https://github.com/sxyazi/yazi/issues/51) for more details.
 
 ## License
 
