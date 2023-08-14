@@ -2,7 +2,7 @@ use std::ops::ControlFlow;
 
 use config::THEME;
 use ratatui::{buffer::Buffer, layout::{Alignment, Rect}, text::{Line, Span}, widgets::{Paragraph, Widget}};
-use unicode_width::UnicodeWidthStr;
+use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 
 use crate::Ctx;
 
@@ -12,6 +12,25 @@ pub(super) struct Tabs<'a> {
 
 impl<'a> Tabs<'a> {
 	pub(super) fn new(cx: &'a Ctx) -> Self { Self { cx } }
+
+	fn truncate(&self, name: &str) -> String {
+		let mut width = 0;
+		let flow =
+			name.chars().try_fold(String::with_capacity(THEME.tab.max_width as usize), |mut s, c| {
+				width += c.width().unwrap_or(0);
+				if s.width() < THEME.tab.max_width as usize {
+					s.push(c);
+					ControlFlow::Continue(s)
+				} else {
+					ControlFlow::Break(s)
+				}
+			});
+
+		match flow {
+			ControlFlow::Break(s) => s,
+			ControlFlow::Continue(s) => s,
+		}
+	}
 }
 
 impl<'a> Widget for Tabs<'a> {
@@ -24,24 +43,11 @@ impl<'a> Widget for Tabs<'a> {
 				.enumerate()
 				.map(|(i, tab)| {
 					let mut text = format!("{}", i + 1);
-					if let Some(dir_name) = tab.current_name() {
+					if THEME.tab.max_width >= 3 {
 						text.push(' ');
-						text.push_str(dir_name);
+						text.push_str(tab.name());
+						text = self.truncate(&text);
 					}
-
-					let threshold = THEME.tab.max_width.max(1);
-					let truncated = text.chars().try_fold(String::with_capacity(threshold), |mut text, c| {
-						if text.width() > threshold {
-							ControlFlow::Break(text)
-						} else {
-							text.push(c);
-							ControlFlow::Continue(text)
-						}
-					});
-					let text = match truncated {
-						ControlFlow::Break(text) => text,
-						ControlFlow::Continue(text) => text,
-					};
 
 					if i == tabs.idx() {
 						Span::styled(format!(" {text} "), THEME.tab.active.get())
