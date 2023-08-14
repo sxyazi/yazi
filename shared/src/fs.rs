@@ -158,7 +158,7 @@ pub fn max_common_root(files: &[PathBuf]) -> PathBuf {
 		return PathBuf::new();
 	}
 
-	let mut it = files.iter().map(|p| p.components());
+	let mut it = files.iter().map(|p| p.parent().unwrap_or(Path::new("")).components());
 	let mut root = it.next().unwrap().collect::<PathBuf>();
 	for components in it {
 		let mut new_root = PathBuf::new();
@@ -177,12 +177,14 @@ pub fn max_common_root(files: &[PathBuf]) -> PathBuf {
 fn test_max_common_root() {
 	assert_eq!(max_common_root(&[]).as_os_str(), "");
 	assert_eq!(max_common_root(&["".into()]).as_os_str(), "");
-	assert_eq!(max_common_root(&["/a/b".into()]).as_os_str(), "/a/b");
+	assert_eq!(max_common_root(&["a".into()]).as_os_str(), "");
+	assert_eq!(max_common_root(&["/a".into()]).as_os_str(), "/");
+	assert_eq!(max_common_root(&["/a/b".into()]).as_os_str(), "/a");
 	assert_eq!(max_common_root(&["/a/b/c".into(), "/a/b/d".into()]).as_os_str(), "/a/b");
 	assert_eq!(max_common_root(&["/aa/bb/cc".into(), "/aa/dd/ee".into()]).as_os_str(), "/aa");
 	assert_eq!(
 		max_common_root(&["/aa/bb/cc".into(), "/aa/bb/cc/dd/ee".into(), "/aa/bb/cc/ff".into()])
 			.as_os_str(),
-		"/aa/bb/cc"
+		"/aa/bb"
 	);
 }

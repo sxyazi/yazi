@@ -1,9 +1,9 @@
-use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, ffi::OsStr, io::{stdout, Write}, mem, os::unix::prelude::OsStrExt, path::{Path, PathBuf}};
+use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, ffi::OsStr, io::{stdout, BufWriter, Write}, mem, os::unix::prelude::OsStrExt, path::{Path, PathBuf}};
 
-use anyhow::{bail, Error, Result};
+use anyhow::{anyhow, bail, Error, Result};
 use config::{open::Opener, BOOT, OPEN};
 use shared::{max_common_root, Defer, Term, MIME_DIR};
-use tokio::{fs::{self, OpenOptions}, io::{AsyncReadExt, AsyncWriteExt}};
+use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 
 use super::{PreviewData, Tab, Tabs, Watcher};
 use crate::{emit, external::{self, ShellOpt}, files::{File, FilesOp}, input::InputOpt, manager::Folder, select::SelectOpt, tasks::Tasks, Event, BLOCKER};
@@ -226,7 +226,7 @@ impl Manager {
 		let mut old: Vec<_> = self.selected().iter().map(|&f| f.path()).collect();
 
 		let root = max_common_root(&old);
-		old = old.into_iter().map(|p| p.strip_prefix(&root).unwrap().to_owned()).collect();
+		old.iter_mut().for_each(|p| *p = p.strip_prefix(&root).unwrap().to_owned());
 
 		let tmp = BOOT.tmpfile("bulk");
 		tokio::spawn(async move {
@@ -265,52 +265,56 @@ impl Manager {
 		Term::clear()?;
 		if old.len() != new.len() {
 			println!("Number of old and new differ, press ENTER to exit");
-			tokio::io::stdin().read_exact(&mut [0]).await?;
+			stdin().read_exact(&mut [0]).await?;
 			return Ok(());
 		}
 
-		let mut todo = Vec::with_capacity(old.len());
-		for (o, n) in old.into_iter().zip(new) {
-			if n != o {
-				stdout().write_all(o.as_os_str().as_bytes())?;
-				stdout().write_all(b" -> ")?;
-				stdout().write_all(n.as_os_str().as_bytes())?;
-				stdout().write_all(b"\n")?;
-				todo.push((root.join(o), root.join(n)));
-			}
-		}
+		let todo: Vec<_> = old.into_iter().zip(new).filter(|(o, n)| o != n).collect();
 		if todo.is_empty() {
 			return Ok(());
-		} else {
-			print!("Continue to rename? (y/N): ");
-			stdout().flush()?;
 		}
 
-		let mut buf = [0];
-		tokio::io::stdin().read_exact(&mut buf).await?;
+		{
+			let mut stdout = BufWriter::new(stdout().lock());
+			for (o, n) in &todo {
+				writeln!(stdout, "{} -> {}", o.display(), n.display())?;
+			}
+			write!(stdout, "Continue to rename? (y/N): ")?;
+			stdout.flush()?;
+		}
+
+		let mut buf = [0; 10];
+		stdin().read(&mut buf).await.ok();
 		if buf[0] != b'y' && buf[0] != b'Y' {
 			return Ok(());
 		}
 
 		let mut failed = Vec::new();
 		for (o, n) in todo {
-			if let Err(e) = fs::rename(&o, &n).await {
-				failed.push((o, n, e));
+			if fs::metadata(&n).await.is_ok() {
+				failed.push((o, n, anyhow!("Destination already exists")));
+				continue;
 			}
+			if let Err(e) = fs::rename(root.join(&o), root.join(&n)).await {
+				failed.push((o, n, e.into()));
+			}
+		}
+		if failed.is_empty() {
+			return Ok(());
 		}
 
-		if !failed.is_empty() {
-			Term::clear()?;
-			println!("Failed to rename:");
+		Term::clear()?;
+		{
+			let mut stdout = BufWriter::new(stdout().lock());
+			writeln!(stdout, "Failed to rename:")?;
 			for (o, n, e) in failed {
-				stdout().write_all(o.as_os_str().as_bytes())?;
-				stdout().write_all(b" -> ")?;
-				stdout().write_all(n.as_os_str().as_bytes())?;
-				stdout().write_fmt(format_args!(": {e}\n"))?;
+				writeln!(stdout, "{} -> {}: {e}", o.display(), n.display())?;
 			}
-			println!("\nPress ENTER to exit");
-			tokio::io::stdin().read_exact(&mut [0]).await?;
+			writeln!(stdout, "\nPress ENTER to exit")?;
+			stdout.flush()?;
 		}
+
+		stdin().read_exact(&mut [0]).await?;
 		Ok(())
 	}
 
