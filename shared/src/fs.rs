@@ -150,13 +150,39 @@ pub fn file_mode(mode: u32) -> String {
 	s
 }
 
-// Note: files must contain at least one file path
-pub fn in_same_root(files: &[PathBuf]) -> Option<PathBuf> {
+// Find the max common root of a list of files
+// e.g. /a/b/c, /a/b/d       -> /a/b
+//      /aa/bb/cc, /aa/dd/ee -> /aa
+pub fn max_common_root(files: &[PathBuf]) -> PathBuf {
 	if files.is_empty() {
-		return None;
+		return PathBuf::new();
 	}
 
-	let mut files = files.iter();
-	let parent = files.next().map(|f| f.parent().unwrap_or(f).to_path_buf()).unwrap();
-	if files.all(|f| f.parent().unwrap_or(f) == parent) { Some(parent) } else { None }
+	let mut it = files.iter().map(|p| p.components());
+	let mut root = it.next().unwrap().collect::<PathBuf>();
+	for components in it {
+		let mut new_root = PathBuf::new();
+		for (a, b) in root.components().zip(components) {
+			if a != b {
+				break;
+			}
+			new_root.push(a);
+		}
+		root = new_root;
+	}
+	root
+}
+
+#[test]
+fn test_max_common_root() {
+	assert_eq!(max_common_root(&[]).as_os_str(), "");
+	assert_eq!(max_common_root(&["".into()]).as_os_str(), "");
+	assert_eq!(max_common_root(&["/a/b".into()]).as_os_str(), "/a/b");
+	assert_eq!(max_common_root(&["/a/b/c".into(), "/a/b/d".into()]).as_os_str(), "/a/b");
+	assert_eq!(max_common_root(&["/aa/bb/cc".into(), "/aa/dd/ee".into()]).as_os_str(), "/aa");
+	assert_eq!(
+		max_common_root(&["/aa/bb/cc".into(), "/aa/bb/cc/dd/ee".into(), "/aa/bb/cc/ff".into()])
+			.as_os_str(),
+		"/aa/bb/cc"
+	);
 }

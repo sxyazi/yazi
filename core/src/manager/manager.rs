@@ -2,7 +2,7 @@ use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, ffi::OsStr, 
 
 use anyhow::{bail, Error, Result};
 use config::{open::Opener, BOOT, OPEN};
-use shared::{in_same_root, Defer, Term, MIME_DIR};
+use shared::{max_common_root, Defer, Term, MIME_DIR};
 use tokio::{fs::{self, OpenOptions}, io::{AsyncReadExt, AsyncWriteExt}};
 
 use super::{PreviewData, Tab, Tabs, Watcher};
@@ -224,18 +224,13 @@ impl Manager {
 
 	pub fn bulk_rename(&self) -> bool {
 		let mut old: Vec<_> = self.selected().iter().map(|&f| f.path()).collect();
-		if old.is_empty() {
-			return false;
-		}
 
-		let root = in_same_root(&old);
-		if let Some(ref root) = root {
-			old = old.into_iter().map(|p| p.strip_prefix(root).unwrap().to_owned()).collect();
-		}
+		let root = max_common_root(&old);
+		old = old.into_iter().map(|p| p.strip_prefix(&root).unwrap().to_owned()).collect();
 
-		let tmp = BOOT.tmpfile();
+		let tmp = BOOT.tmpfile("bulk");
 		tokio::spawn(async move {
-			let Some(opener) = OPEN.block_opener("bulk-rename.txt", "text/plain") else {
+			let Some(opener) = OPEN.block_opener("bulk.txt", "text/plain") else {
 				bail!("No opener for bulk rename");
 			};
 
@@ -246,7 +241,10 @@ impl Manager {
 			}
 
 			let _guard = BLOCKER.acquire().await.unwrap();
-			let _defer = Defer::new(|| Event::Stop(false, None).emit());
+			let _defer = Defer::new(|| {
+				Event::Stop(false, None).emit();
+				tokio::spawn(fs::remove_file(tmp.clone()))
+			});
 			emit!(Stop(true)).await;
 
 			let mut child = external::shell(ShellOpt {
@@ -256,18 +254,14 @@ impl Manager {
 			})?;
 			child.wait().await?;
 
-			let new: Vec<_> = fs::read_to_string(tmp).await?.lines().map(|l| l.into()).collect();
+			let new: Vec<_> = fs::read_to_string(&tmp).await?.lines().map(|l| l.into()).collect();
 			Self::bulk_rename_do(root, old, new).await
 		});
 
 		false
 	}
 
-	async fn bulk_rename_do(
-		root: Option<PathBuf>,
-		old: Vec<PathBuf>,
-		new: Vec<PathBuf>,
-	) -> Result<()> {
+	async fn bulk_rename_do(root: PathBuf, old: Vec<PathBuf>, new: Vec<PathBuf>) -> Result<()> {
 		Term::clear()?;
 		if old.len() != new.len() {
 			println!("Number of old and new differ, press ENTER to exit");
@@ -282,7 +276,7 @@ impl Manager {
 				stdout().write_all(b" -> ")?;
 				stdout().write_all(n.as_os_str().as_bytes())?;
 				stdout().write_all(b"\n")?;
-				todo.push(if let Some(ref root) = root { (root.join(o), root.join(n)) } else { (o, n) });
+				todo.push((root.join(o), root.join(n)));
 			}
 		}
 		if todo.is_empty() {
