@@ -1,4 +1,4 @@
-use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, ffi::OsStr, io::{stdout, Write}, mem, os::unix::prelude::OsStrExt, path::{Path, PathBuf}};
+use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, ffi::OsStr, io::{stdout, BufWriter, Write}, mem, os::unix::prelude::OsStrExt, path::{Path, PathBuf}};
 
 use anyhow::{bail, Error, Result};
 use config::{open::Opener, BOOT, OPEN};
@@ -281,9 +281,15 @@ impl Manager {
 		}
 		if todo.is_empty() {
 			return Ok(());
-		} else {
-			print!("Continue to rename? (y/N): ");
-			stdout().flush()?;
+		}
+		// NOTE: it's worth using two iterations for finer-grained stdout control
+		{
+			let mut stdout = BufWriter::new(stdout().lock());
+			for (o, n) in &todo {
+				writeln!(stdout, "{o:?} -> {n:?}")?;
+			}
+			write!(stdout, "Continue to rename? (y/N): ")?;
+			stdout.flush()?;
 		}
 
 		let mut buf = [0];
@@ -294,23 +300,26 @@ impl Manager {
 
 		let mut failed = Vec::new();
 		for (o, n) in todo {
+			let (o, n) = root.as_ref().map(|root| (root.join(&o), root.join(&n))).unwrap_or((o, n));
 			if let Err(e) = fs::rename(&o, &n).await {
 				failed.push((o, n, e));
 			}
 		}
 
-		if !failed.is_empty() {
-			Term::clear()?;
-			println!("Failed to rename:");
-			for (o, n, e) in failed {
-				stdout().write_all(o.as_os_str().as_bytes())?;
-				stdout().write_all(b" -> ")?;
-				stdout().write_all(n.as_os_str().as_bytes())?;
-				stdout().write_fmt(format_args!(": {e}\n"))?;
+		{
+			let mut stdout = BufWriter::new(stdout().lock());
+			if !failed.is_empty() {
+				Term::clear()?;
+				writeln!(stdout, "Failed to rename:")?;
+				for (o, n, e) in failed {
+					writeln!(stdout, "{o:?} -> {n:?}: {e}")?;
+				}
+				write!(stdout, "\nPress ENTER to exit")?;
+				stdout.flush()?;
 			}
-			println!("\nPress ENTER to exit");
-			tokio::io::stdin().read_exact(&mut [0]).await?;
 		}
+		tokio::io::stdin().read_exact(&mut [0]).await?;
+
 		Ok(())
 	}
 
