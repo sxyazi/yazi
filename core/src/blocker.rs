@@ -1,4 +1,6 @@
-use once_cell::sync::Lazy;
+use shared::RoCell;
 use tokio::sync::Semaphore;
 
-pub static BLOCKER: Lazy<Semaphore> = Lazy::new(|| Semaphore::new(1));
+pub static BLOCKER: RoCell<Semaphore> = RoCell::new();
+
+pub(super) fn init_blocker() { BLOCKER.init(Semaphore::new(1)) }

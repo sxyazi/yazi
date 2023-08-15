@@ -2,24 +2,22 @@ use std::{path::{Path, PathBuf}, sync::atomic::{AtomicBool, Ordering}};
 
 use anyhow::Result;
 use config::{preview::PreviewAdaptor, BOOT, PREVIEW};
-use once_cell::sync::Lazy;
 use ratatui::prelude::Rect;
+use shared::RoCell;
 use tokio::{fs, sync::mpsc::UnboundedSender};
 
-use super::{Iterm2, Kitty, Ueberzug};
+use super::{Iterm2, Kitty};
 use crate::Sixel;
 
 static IMAGE_SHOWN: AtomicBool = AtomicBool::new(false);
 
 #[allow(clippy::type_complexity)]
-static UEBERZUG: Lazy<Option<UnboundedSender<Option<(PathBuf, Rect)>>>> =
-	Lazy::new(|| if PREVIEW.adaptor.needs_ueberzug() { Ueberzug::start().ok() } else { None });
+pub(super) static UEBERZUG: RoCell<Option<UnboundedSender<Option<(PathBuf, Rect)>>>> =
+	RoCell::new();
 
 pub struct Adaptor;
 
 impl Adaptor {
-	pub fn init() { Lazy::force(&UEBERZUG); }
-
 	pub async fn image_show(mut path: &Path, rect: Rect) -> Result<()> {
 		if IMAGE_SHOWN.swap(true, Ordering::Relaxed) {
 			Self::image_hide(rect).ok();

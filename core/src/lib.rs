@@ -22,3 +22,5 @@ pub use blocker::*;
 pub use event::*;
 pub use highlighter::*;
 pub use position::*;
+
+pub fn init() { init_blocker(); }

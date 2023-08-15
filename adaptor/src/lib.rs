@@ -13,3 +13,11 @@ use sixel::*;
 use ueberzug::*;
 
 pub use crate::{adaptor::*, image::*};
+
+pub fn init() {
+	UEBERZUG.init(if config::PREVIEW.adaptor.needs_ueberzug() {
+		Ueberzug::start().ok()
+	} else {
+		None
+	});
+}

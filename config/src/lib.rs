@@ -1,6 +1,6 @@
 #![allow(clippy::module_inception)]
 
-use once_cell::sync::Lazy;
+use shared::RoCell;
 
 mod boot;
 pub mod keymap;
@@ -17,26 +17,30 @@ mod validation;
 pub(crate) use pattern::*;
 pub(crate) use preset::*;
 
-static MERGED_KEYMAP: Lazy<String> = Lazy::new(Preset::keymap);
-static MERGED_THEME: Lazy<String> = Lazy::new(Preset::theme);
-static MERGED_YAZI: Lazy<String> = Lazy::new(Preset::yazi);
+static MERGED_KEYMAP: RoCell<String> = RoCell::new();
+static MERGED_THEME: RoCell<String> = RoCell::new();
+static MERGED_YAZI: RoCell<String> = RoCell::new();
 
-pub static BOOT: Lazy<boot::Boot> = Lazy::new(Default::default);
-pub static KEYMAP: Lazy<keymap::Keymap> = Lazy::new(Default::default);
-pub static LOG: Lazy<log::Log> = Lazy::new(Default::default);
-pub static MANAGER: Lazy<manager::Manager> = Lazy::new(Default::default);
-pub static OPEN: Lazy<open::Open> = Lazy::new(Default::default);
-pub static PREVIEW: Lazy<preview::Preview> = Lazy::new(Default::default);
-pub static TASKS: Lazy<tasks::Tasks> = Lazy::new(Default::default);
-pub static THEME: Lazy<theme::Theme> = Lazy::new(Default::default);
+pub static BOOT: RoCell<boot::Boot> = RoCell::new();
+pub static KEYMAP: RoCell<keymap::Keymap> = RoCell::new();
+pub static LOG: RoCell<log::Log> = RoCell::new();
+pub static MANAGER: RoCell<manager::Manager> = RoCell::new();
+pub static OPEN: RoCell<open::Open> = RoCell::new();
+pub static PREVIEW: RoCell<preview::Preview> = RoCell::new();
+pub static TASKS: RoCell<tasks::Tasks> = RoCell::new();
+pub static THEME: RoCell<theme::Theme> = RoCell::new();
 
 pub fn init() {
-	Lazy::force(&BOOT);
-	Lazy::force(&KEYMAP);
-	Lazy::force(&LOG);
-	Lazy::force(&MANAGER);
-	Lazy::force(&OPEN);
-	Lazy::force(&PREVIEW);
-	Lazy::force(&TASKS);
-	Lazy::force(&THEME);
+	MERGED_KEYMAP.with(Preset::keymap);
+	MERGED_THEME.with(Preset::theme);
+	MERGED_YAZI.with(Preset::yazi);
+
+	BOOT.with(Default::default);
+	KEYMAP.with(Default::default);
+	LOG.with(Default::default);
+	MANAGER.with(Default::default);
+	OPEN.with(Default::default);
+	PREVIEW.with(Default::default);
+	TASKS.with(Default::default);
+	THEME.with(Default::default);
 }
