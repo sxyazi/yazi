@@ -295,7 +295,6 @@ dependencies = [
  "anstream",
  "anstyle",
  "clap_lex",
- "once_cell",
  "strsim",
 ]
 
