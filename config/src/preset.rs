@@ -1,7 +1,8 @@
 use std::fs;
 
 use toml::Table;
-use xdg::BaseDirectories;
+
+use crate::xdg::Xdg;
 
 pub(crate) struct Preset;
 
@@ -28,7 +29,7 @@ impl Preset {
 	}
 
 	fn merge_str(user: &str, base: &str) -> String {
-		let path = BaseDirectories::new().unwrap().get_config_file(user);
+		let path = Xdg::config_dir().unwrap().join(user);
 		let mut user = fs::read_to_string(path).unwrap_or_default().parse::<Table>().unwrap();
 
 		let base = base.parse::<Table>().unwrap();
@@ -38,16 +39,16 @@ impl Preset {
 
 	#[inline]
 	pub(crate) fn keymap() -> String {
-		Self::merge_str("yazi/keymap.toml", include_str!("../preset/keymap.toml"))
+		Self::merge_str("keymap.toml", include_str!("../preset/keymap.toml"))
 	}
 
 	#[inline]
 	pub(crate) fn theme() -> String {
-		Self::merge_str("yazi/theme.toml", include_str!("../preset/theme.toml"))
+		Self::merge_str("theme.toml", include_str!("../preset/theme.toml"))
 	}
 
 	#[inline]
 	pub(crate) fn yazi() -> String {
-		Self::merge_str("yazi/yazi.toml", include_str!("../preset/yazi.toml"))
+		Self::merge_str("yazi.toml", include_str!("../preset/yazi.toml"))
 	}
 }

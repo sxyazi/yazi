@@ -1,7 +1,7 @@
 use std::{io::{stdout, Stdout, Write}, ops::{Deref, DerefMut}};
 
 use anyhow::Result;
-use crossterm::{cursor::{MoveTo, SetCursorStyle}, event::{DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, terminal::{disable_raw_mode, enable_raw_mode, supports_keyboard_enhancement, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen}};
+use crossterm::{cursor::{MoveTo, SetCursorStyle}, event::{DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, terminal::{disable_raw_mode, enable_raw_mode, supports_keyboard_enhancement, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, WindowSize}};
 use ratatui::{backend::CrosstermBackend, Terminal};
 
 pub struct Term {
@@ -30,6 +30,21 @@ impl Term {
 		term.hide_cursor()?;
 		term.clear()?;
 		Ok(term)
+	}
+
+	#[inline]
+	pub fn size() -> WindowSize {
+		if let Ok(s) = crossterm::terminal::window_size() {
+			return s;
+		};
+		// TODO
+		WindowSize { rows: 1, columns: 1, width: 0, height: 0 }
+	}
+
+	#[inline]
+	pub fn ratio() -> (f64, f64) {
+		let s = Self::size();
+		(f64::from(s.width) / f64::from(s.columns), f64::from(s.height) / f64::from(s.rows))
 	}
 
 	#[inline]

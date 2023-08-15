@@ -3,7 +3,6 @@
 use shared::RoCell;
 
 mod boot;
-mod dir;
 pub mod keymap;
 mod log;
 pub mod manager;
@@ -14,9 +13,11 @@ pub mod preview;
 pub mod tasks;
 pub mod theme;
 mod validation;
+mod xdg;
 
 pub(crate) use pattern::*;
 pub(crate) use preset::*;
+pub(crate) use xdg::*;
 
 static MERGED_KEYMAP: RoCell<String> = RoCell::new();
 static MERGED_THEME: RoCell<String> = RoCell::new();

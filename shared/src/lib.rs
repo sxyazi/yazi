@@ -7,7 +7,6 @@ mod mime;
 mod ro_cell;
 mod term;
 mod throttle;
-mod tty;
 
 pub use buffer::*;
 pub use chars::*;
@@ -18,4 +17,3 @@ pub use mime::*;
 pub use ro_cell::*;
 pub use term::*;
 pub use throttle::*;
-pub use tty::*;

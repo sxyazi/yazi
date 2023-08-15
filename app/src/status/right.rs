@@ -11,6 +11,7 @@ pub(super) struct Right<'a> {
 impl<'a> Right<'a> {
 	pub(super) fn new(cx: &'a Ctx) -> Self { Self { cx } }
 
+	#[cfg(not(target_os = "windows"))]
 	fn permissions(&self, s: &str) -> Vec<Span> {
 		// Colors
 		let mode = self.cx.manager.active().mode();

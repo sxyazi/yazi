@@ -1,8 +1,8 @@
 use std::path::{Path, PathBuf};
 
-use crossterm::terminal::size;
 use indexmap::map::Slice;
 use ratatui::layout::Rect;
+use shared::Term;
 
 use super::{ALL_RATIO, CURRENT_RATIO, DIR_PADDING, PARENT_RATIO};
 use crate::{emit, files::{File, Files, FilesOp}};
@@ -27,7 +27,7 @@ impl Folder {
 	}
 
 	#[inline]
-	pub fn limit() -> usize { size().unwrap_or_default().1.saturating_sub(DIR_PADDING) as usize }
+	pub fn limit() -> usize { Term::size().rows.saturating_sub(DIR_PADDING) as usize }
 
 	pub fn update(&mut self, op: FilesOp) -> bool {
 		let b = match op {
@@ -183,12 +183,12 @@ impl Folder {
 
 	pub fn rect_current(&self, path: &Path) -> Option<Rect> {
 		let pos = self.position(path)? - self.offset;
-		let s = size().unwrap_or_default();
+		let s = Term::size();
 
 		Some(Rect {
-			x:      (s.0 as u32 * PARENT_RATIO / ALL_RATIO) as u16,
+			x:      (s.columns as u32 * PARENT_RATIO / ALL_RATIO) as u16,
 			y:      pos as u16,
-			width:  (s.0 as u32 * CURRENT_RATIO / ALL_RATIO) as u16,
+			width:  (s.columns as u32 * CURRENT_RATIO / ALL_RATIO) as u16,
 			height: 1,
 		})
 	}

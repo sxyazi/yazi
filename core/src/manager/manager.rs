@@ -1,4 +1,4 @@
-use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, ffi::OsStr, io::{stdout, BufWriter, Write}, mem, os::unix::prelude::OsStrExt, path::{Path, PathBuf}};
+use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, ffi::OsStr, io::{stdout, BufWriter, Write}, mem, path::{Path, PathBuf}};
 
 use anyhow::{anyhow, bail, Error, Result};
 use config::{open::Opener, BOOT, OPEN};
@@ -231,9 +231,17 @@ impl Manager {
 			};
 
 			{
-				let b = old.iter().map(|o| o.as_os_str()).collect::<Vec<_>>().join(OsStr::new("\n"));
+				let s = old.iter().map(|o| o.as_os_str()).collect::<Vec<_>>().join(OsStr::new("\n"));
 				let mut f = OpenOptions::new().write(true).create_new(true).open(&tmp).await?;
-				f.write_all(b.as_bytes()).await?;
+				#[cfg(target_os = "windows")]
+				{
+					f.write_all(s.to_string_lossy().as_bytes()).await?;
+				}
+				#[cfg(not(target_os = "windows"))]
+				{
+					use std::os::unix::ffi::OsStrExt;
+					f.write_all(s.as_bytes()).await?;
+				}
 			}
 
 			let _guard = BLOCKER.acquire().await.unwrap();
