@@ -15,7 +15,6 @@ crossterm     = "^0"
 futures       = "^0"
 indexmap      = "^2"
 notify        = { version = "^6", default-features = false, features = [ "macos_fsevent" ] }
-once_cell     = "^1"
 parking_lot   = "^0"
 ratatui       = "^0"
 serde         = "^1"
