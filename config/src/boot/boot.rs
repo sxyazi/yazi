@@ -1,6 +1,6 @@
 use std::{env, fs, os::unix::prelude::OsStrExt, path::{Path, PathBuf}, time::{self, SystemTime}};
 
-use clap::Parser;
+use clap::{command, Parser};
 use md5::{Digest, Md5};
 
 #[derive(Debug)]
@@ -12,6 +12,8 @@ pub struct Boot {
 }
 
 #[derive(Debug, Parser)]
+#[command(name = "yazi")]
+#[command(version = "0.1.3")]
 struct Args {
 	/// Write the cwd on exit to this file
 	#[arg(long)]
