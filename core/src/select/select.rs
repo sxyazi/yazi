@@ -76,9 +76,7 @@ impl Select {
 	}
 
 	#[inline]
-	pub fn limit(&self) -> usize {
-		self.items.len().min(tty_size().ws_row.saturating_sub(SELECT_PADDING).min(5) as usize)
-	}
+	pub fn limit(&self) -> usize { self.items.len().min(5) }
 }
 
 impl Select {
