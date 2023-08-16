@@ -10,20 +10,22 @@ pub struct SelectOpt {
 
 impl SelectOpt {
 	pub fn top(title: &str, items: Vec<String>) -> Self {
+		let height = 2 + items.len().min(/* TODO: hardcode */ 5) as u16;
 		Self {
 			title: title.to_owned(),
 			items,
-			position: Position::Top(/* TODO: hardcode */ Rect { x: 0, y: 2, width: 50, height: 3 }),
+			position: Position::Top(/* TODO: hardcode */ Rect { x: 0, y: 2, width: 50, height }),
 		}
 	}
 
 	pub fn hovered(title: &str, items: Vec<String>) -> Self {
+		let height = 2 + items.len().min(/* TODO: hardcode */ 5) as u16;
 		Self {
 			title: title.to_owned(),
 			items,
 			position: Position::Hovered(
 				// TODO: hardcode
-				Rect { x: 0, y: 1, width: 50, height: 3 },
+				Rect { x: 0, y: 1, width: 50, height },
 			),
 		}
 	}
