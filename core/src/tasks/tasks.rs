@@ -187,7 +187,12 @@ impl Tasks {
 	pub fn file_remove(&self, targets: Vec<PathBuf>, permanently: bool) -> bool {
 		let scheduler = self.scheduler.clone();
 		tokio::spawn(async move {
-			let result = emit!(Input(InputOpt::hovered("Are you sure delete these files? (y/N)")));
+			let question = if permanently {
+				"Are you sure to delete selected file(s) permanently?"
+			} else {
+				"Are you sure to move selected file(s) to trash bin?"
+			};
+			let result = emit!(Input(InputOpt::hovered(format!("{question} (y/N)"))));
 
 			if let Ok(choice) = result.await {
 				if choice.to_lowercase() != "y" {
