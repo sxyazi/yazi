@@ -1,4 +1,4 @@
-use std::{io::{stdout, Stdout, Write}, ops::{Deref, DerefMut}};
+use std::{io::{stdout, Stdout, Write}, mem, ops::{Deref, DerefMut}};
 
 use anyhow::Result;
 use crossterm::{cursor::{MoveTo, SetCursorStyle}, event::{DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, terminal::{disable_raw_mode, enable_raw_mode, supports_keyboard_enhancement, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, WindowSize}};
@@ -32,13 +32,26 @@ impl Term {
 		Ok(term)
 	}
 
-	#[inline]
 	pub fn size() -> WindowSize {
+		let mut size = WindowSize { rows: 0, columns: 0, width: 0, height: 0 };
 		if let Ok(s) = crossterm::terminal::window_size() {
-			return s;
-		};
-		// TODO
-		WindowSize { rows: 1, columns: 1, width: 0, height: 0 }
+			let _ = mem::replace(&mut size, s);
+		}
+
+		if size.rows == 0 || size.columns == 0 {
+			if let Ok(s) = crossterm::terminal::size() {
+				size.columns = s.0;
+				size.rows = s.1;
+			}
+		}
+
+		// TODO: Use `CSI 14 t` to get the actual size of the terminal
+		if size.width == 0 || size.height == 0 {
+			size.width = 300;
+			size.height = 300;
+		}
+
+		size
 	}
 
 	#[inline]
