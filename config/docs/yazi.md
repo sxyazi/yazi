@@ -24,6 +24,11 @@
   - `true`: Show
   - `false`: Do not show
 
+- show_symlink: Show the path of the symlink file point to, after the filename
+
+  - `true`: Show
+  - `false`: Do not show
+
 ## preview
 
 - tab_size: Tab width

@@ -1,6 +1,6 @@
 use core::files::File;
 
-use config::THEME;
+use config::{MANAGER, THEME};
 use ratatui::{buffer::Buffer, layout::Rect, style::Style, widgets::{List, ListItem, Widget}};
 use shared::readable_path;
 
@@ -80,7 +80,14 @@ impl<'a> Widget for Folder<'a> {
 					self.file_style(v)
 				};
 
-				ListItem::new(format!(" {icon} {}", readable_path(k, &self.folder.cwd))).style(style)
+				let mut path = format!(" {icon} {}", readable_path(k, &self.folder.cwd));
+				if let Some(ref link_to) = v.link_to {
+					if MANAGER.show_symlink {
+						path.push_str(&format!(" -> {}", link_to.display()));
+					}
+				}
+
+				ListItem::new(path).style(style)
 			})
 			.collect::<Vec<_>>();
 
