@@ -1,8 +1,7 @@
 use anyhow::{anyhow, Result};
-use shared::tty_size;
 use tokio::sync::oneshot::Sender;
 
-use super::{SelectOpt, SELECT_PADDING};
+use super::SelectOpt;
 use crate::Position;
 
 #[derive(Default)]
