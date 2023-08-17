@@ -1,5 +1,5 @@
 use core::{emit, files::FilesOp, input::InputMode, Event};
-use std::os::unix::prelude::OsStrExt;
+use std::{ffi::OsString, os::unix::prelude::OsStrExt};
 
 use anyhow::{Ok, Result};
 use config::{keymap::{Control, Key, KeymapLayer}, BOOT};
@@ -167,6 +167,17 @@ impl App {
 			}
 
 			Event::Open(targets, opener) => {
+				if let Some(p) = &BOOT.chooser_file {
+					let paths = targets.into_iter().fold(OsString::new(), |mut s, (p, _)| {
+						s.push(p);
+						s.push("\n");
+						s
+					});
+
+					std::fs::write(p, paths.as_bytes()).ok();
+					return emit!(Quit);
+				}
+
 				if let Some(opener) = opener {
 					tasks.file_open_with(&opener, &targets.into_iter().map(|(f, _)| f).collect::<Vec<_>>());
 				} else {

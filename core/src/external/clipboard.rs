@@ -28,4 +28,3 @@ pub async fn clipboard_set(s: &str) -> Result<()> {
 
 	bail!("failed to set clipboard")
 }
-
