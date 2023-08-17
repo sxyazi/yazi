@@ -11,7 +11,8 @@ pub struct Manager {
 	pub sort_dir_first: bool,
 
 	// Display
-	pub show_hidden: bool,
+	pub show_hidden:  bool,
+	pub show_symlink: bool,
 }
 
 impl Default for Manager {
