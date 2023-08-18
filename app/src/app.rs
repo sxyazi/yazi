@@ -1,4 +1,5 @@
 use core::{emit, files::FilesOp, input::InputMode, Event};
+use std::ffi::OsString;
 
 use anyhow::{Ok, Result};
 use config::{keymap::{Control, Key, KeymapLayer}, BOOT};
@@ -182,7 +183,15 @@ impl App {
 						s
 					});
 
-					std::fs::write(p, paths.as_bytes()).ok();
+					#[cfg(target_os = "windows")]
+					{
+						std::fs::write(p, paths.to_string_lossy().as_bytes()).ok();
+					}
+					#[cfg(not(target_os = "windows"))]
+					{
+						use std::os::unix::ffi::OsStrExt;
+						std::fs::write(p, paths.as_bytes()).ok();
+					}
 					return emit!(Quit);
 				}
 

@@ -45,7 +45,7 @@ impl Default for Boot {
 		let boot = Self {
 			cwd:       cwd.unwrap_or("/".into()),
 			cache_dir: env::temp_dir().join("yazi"),
-			state_dir: xdg::BaseDirectories::with_prefix("yazi").unwrap().get_state_home(),
+			state_dir: Xdg::state_dir().unwrap(),
 
 			cwd_file:     args.cwd_file,
 			chooser_file: args.chooser_file,
