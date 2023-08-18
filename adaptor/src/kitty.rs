@@ -1,4 +1,7 @@
-use std::{io::{stdout, Write}, path::Path};
+use std::{
+	io::{stdout, Write},
+	path::Path,
+};
 
 use anyhow::Result;
 use base64::{engine::general_purpose, Engine};
@@ -15,13 +18,14 @@ impl Kitty {
 		let img = Image::crop(path, (rect.width, rect.height)).await?;
 		let b = Self::encode(img).await?;
 
-		let mut stdout = stdout().lock();
-		Term::move_to(&mut stdout, rect.x, rect.y)?;
-		Ok(stdout.write_all(&b)?)
+		Self::image_hide()?;
+		Term::move_lock(stdout().lock(), (rect.x, rect.y), |stdout| Ok(stdout.write_all(&b)?))
 	}
 
 	#[inline]
-	pub(super) fn image_hide() -> Result<()> { Ok(stdout().write_all(b"\x1b\\\x1b_Ga=d\x1b\\")?) }
+	pub(super) fn image_hide() -> Result<()> {
+		Ok(stdout().write_all(b"\x1b\\\x1b_Ga=d\x1b\\")?)
+	}
 
 	async fn encode(img: DynamicImage) -> Result<Vec<u8>> {
 		fn output(raw: &[u8], format: u8, size: (u32, u32)) -> Result<Vec<u8>> {

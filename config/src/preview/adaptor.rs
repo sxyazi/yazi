@@ -27,7 +27,7 @@ impl Default for PreviewAdaptor {
 		}
 		match env::var("TERM_PROGRAM").unwrap_or_default().as_str() {
 			"iTerm.app" => return Self::Iterm2,
-			"WezTerm" => return Self::Kitty,
+			"WezTerm" => return if cfg!(windows) { Self::Iterm2 } else { Self::Kitty },
 			"vscode" => return Self::Sixel,
 			"Hyper" => return Self::Sixel,
 			_ => {}

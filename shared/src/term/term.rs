@@ -1,7 +1,21 @@
-use std::{io::{stdout, Stdout, Write}, mem, ops::{Deref, DerefMut}};
+use std::{
+	io::{stdout, Stdout, Write},
+	mem,
+	ops::{Deref, DerefMut},
+};
 
 use anyhow::Result;
-use crossterm::{cursor::{MoveTo, SetCursorStyle}, event::{DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, terminal::{disable_raw_mode, enable_raw_mode, supports_keyboard_enhancement, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, WindowSize}};
+use crossterm::{
+	event::{
+		DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange,
+		KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags,
+	},
+	execute, queue,
+	terminal::{
+		disable_raw_mode, enable_raw_mode, supports_keyboard_enhancement, Clear, ClearType,
+		EnterAlternateScreen, LeaveAlternateScreen, WindowSize,
+	},
+};
 use ratatui::{backend::CrosstermBackend, Terminal};
 
 pub struct Term {
@@ -47,8 +61,8 @@ impl Term {
 
 		// TODO: Use `CSI 14 t` to get the actual size of the terminal
 		if size.width == 0 || size.height == 0 {
-			size.width = 300;
-			size.height = 300;
+			size.width = 1000;
+			size.height = 1000;
 		}
 
 		size
@@ -62,21 +76,10 @@ impl Term {
 
 	#[inline]
 	pub fn clear(stdout: &mut impl Write) -> Result<()> {
-		execute!(stdout, Clear(ClearType::All))?;
+		queue!(stdout, Clear(ClearType::All))?;
 		writeln!(stdout)?;
 		Ok(stdout.flush()?)
 	}
-
-	#[inline]
-	pub fn move_to(stdout: &mut impl Write, x: u16, y: u16) -> Result<()> {
-		Ok(execute!(stdout, MoveTo(x, y))?)
-	}
-
-	#[inline]
-	pub fn set_cursor_block() -> Result<()> { Ok(execute!(stdout(), SetCursorStyle::BlinkingBlock)?) }
-
-	#[inline]
-	pub fn set_cursor_bar() -> Result<()> { Ok(execute!(stdout(), SetCursorStyle::BlinkingBar)?) }
 }
 
 impl Drop for Term {
@@ -99,9 +102,13 @@ impl Drop for Term {
 impl Deref for Term {
 	type Target = Terminal<CrosstermBackend<Stdout>>;
 
-	fn deref(&self) -> &Self::Target { &self.inner }
+	fn deref(&self) -> &Self::Target {
+		&self.inner
+	}
 }
 
 impl DerefMut for Term {
-	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.inner }
+	fn deref_mut(&mut self) -> &mut Self::Target {
+		&mut self.inner
+	}
 }
