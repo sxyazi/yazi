@@ -46,6 +46,8 @@ pub async fn clipboard_set(s: impl AsRef<OsStr>) -> Result<()> {
 		if stdin.write_all(s.as_ref().as_bytes()).await.is_err() {
 			continue;
 		}
+		drop(stdin);
+
 		if child.wait().await.map(|s| s.success()).unwrap_or_default() {
 			return Ok(());
 		}
