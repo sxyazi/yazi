@@ -252,7 +252,7 @@ impl Input {
 		}
 
 		self.insert(!before);
-		for c in s.chars() {
+		for c in s.to_string_lossy().chars() {
 			self.type_(c);
 		}
 		self.escape();

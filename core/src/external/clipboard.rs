@@ -1,13 +1,22 @@
-use std::{ffi::OsStr, os::unix::prelude::OsStrExt, process::Stdio};
+use std::{ffi::{OsStr, OsString}, os::unix::prelude::{OsStrExt, OsStringExt}, process::Stdio};
 
 use anyhow::{bail, Result};
 use tokio::{io::AsyncWriteExt, process::Command};
 
-pub async fn clipboard_get() -> Result<String> {
-	for cmd in &["pbpaste", "wl-paste"] {
-		let output = Command::new(cmd).kill_on_drop(true).output().await?;
+pub async fn clipboard_get() -> Result<OsString> {
+	let all = [
+		("pbpaste", vec![]),
+		("wl-paste", vec![]),
+		("xclip", vec!["-o", "-selection", "clipboard"]),
+		("xsel", vec!["-ob"]),
+	];
+
+	for (cmd, args) in all {
+		let Ok(output) = Command::new(cmd).args(args).kill_on_drop(true).output().await else {
+			continue;
+		};
 		if output.status.success() {
-			return Ok(String::from_utf8_lossy(&output.stdout).to_string());
+			return Ok(OsString::from_vec(output.stdout));
 		}
 	}
 
@@ -15,13 +24,31 @@ pub async fn clipboard_get() -> Result<String> {
 }
 
 pub async fn clipboard_set(s: impl AsRef<OsStr>) -> Result<()> {
-	for cmd in &["pbcopy", "wl-copy"] {
-		let mut child =
-			Command::new(cmd).stdin(Stdio::piped()).stdout(Stdio::null()).kill_on_drop(true).spawn()?;
-		if let Some(mut stdin) = child.stdin.take() {
-			stdin.write_all(s.as_ref().as_bytes()).await?;
+	let all = [
+		("pbcopy", vec![]),
+		("wl-copy", vec![]),
+		("xclip", vec!["-selection", "clipboard"]),
+		("xsel", vec!["-ib"]),
+	];
+
+	for (cmd, args) in all {
+		let Ok(mut child) = Command::new(cmd)
+			.args(args)
+			.stdin(Stdio::piped())
+			.stdout(Stdio::null())
+			.kill_on_drop(true)
+			.spawn()
+		else {
+			continue;
+		};
+
+		let mut stdin = child.stdin.take().unwrap();
+		if stdin.write_all(s.as_ref().as_bytes()).await.is_err() {
+			continue;
 		}
-		if child.wait().await?.success() {
+		drop(stdin);
+
+		if child.wait().await.map(|s| s.success()).unwrap_or_default() {
 			return Ok(());
 		}
 	}
