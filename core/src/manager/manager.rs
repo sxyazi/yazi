@@ -1,4 +1,4 @@
-use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, ffi::{OsStr, OsString}, io::{stdout, BufWriter, Write}, mem, path::{Path, PathBuf}};
+use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, ffi::OsStr, io::{stdout, BufWriter, Write}, mem, path::{Path, PathBuf}};
 
 use anyhow::{anyhow, bail, Error, Result};
 use config::{BOOT, OPEN};
@@ -194,7 +194,7 @@ impl Manager {
 	}
 
 	pub fn rename(&self) -> bool {
-		if self.in_selecting() {
+		if self.active().in_selecting() {
 			return self.bulk_rename();
 		}
 
@@ -319,26 +319,6 @@ impl Manager {
 		Ok(())
 	}
 
-	pub fn copy(&self, type_: &str) -> bool {
-		let mut s = OsString::new();
-		let mut it = self.selected().into_iter().peekable();
-		while let Some(f) = it.next() {
-			s.push(match type_ {
-				"path" => f.path.as_os_str(),
-				"dirname" => f.path.parent().map_or(OsStr::new(""), |p| p.as_os_str()),
-				"filename" => f.path.file_name().unwrap_or(OsStr::new("")),
-				"name_without_ext" => f.path.file_stem().unwrap_or(OsStr::new("")),
-				_ => return false,
-			});
-			if it.peek().is_some() {
-				s.push("\n");
-			}
-		}
-
-		futures::executor::block_on(external::clipboard_set(s)).ok();
-		false
-	}
-
 	pub fn update_read(&mut self, op: FilesOp) -> bool {
 		let path = op.path();
 		let cwd = self.cwd().to_owned();
@@ -457,28 +437,8 @@ impl Manager {
 	pub fn hovered(&self) -> Option<&File> { self.tabs.active().current.hovered.as_ref() }
 
 	#[inline]
-	pub fn yanked(&self) -> &(bool, HashSet<PathBuf>) { &self.yanked }
-
-	pub fn selected(&self) -> Vec<&File> {
-		let mode = &self.active().mode;
-		let files = &self.current().files;
-
-		let selected: Vec<_> = if !mode.is_visual() {
-			files.iter().filter(|(_, f)| f.is_selected).map(|(_, f)| f).collect()
-		} else {
-			files
-				.iter()
-				.enumerate()
-				.filter(|(i, (_, f))| mode.pending(*i, f.is_selected))
-				.map(|(_, (_, f))| f)
-				.collect()
-		};
-
-		if selected.is_empty() { self.hovered().map(|h| vec![h]).unwrap_or_default() } else { selected }
-	}
+	pub fn selected(&self) -> Vec<&File> { self.tabs.active().selected() }
 
 	#[inline]
-	pub fn in_selecting(&self) -> bool {
-		self.active().mode.is_visual() || self.current().has_selected()
-	}
+	pub fn yanked(&self) -> &(bool, HashSet<PathBuf>) { &self.yanked }
 }
