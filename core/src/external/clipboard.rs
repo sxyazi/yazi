@@ -1,4 +1,4 @@
-use std::process::Stdio;
+use std::{ffi::OsStr, os::unix::prelude::OsStrExt, process::Stdio};
 
 use anyhow::{bail, Result};
 use tokio::{io::AsyncWriteExt, process::Command};
@@ -14,12 +14,12 @@ pub async fn clipboard_get() -> Result<String> {
 	bail!("failed to get clipboard")
 }
 
-pub async fn clipboard_set(s: &str) -> Result<()> {
+pub async fn clipboard_set(s: impl AsRef<OsStr>) -> Result<()> {
 	for cmd in &["pbcopy", "wl-copy"] {
 		let mut child =
 			Command::new(cmd).stdin(Stdio::piped()).stdout(Stdio::null()).kill_on_drop(true).spawn()?;
 		if let Some(mut stdin) = child.stdin.take() {
-			stdin.write_all(s.as_bytes()).await?;
+			stdin.write_all(s.as_ref().as_bytes()).await?;
 		}
 		if child.wait().await?.success() {
 			return Ok(());
