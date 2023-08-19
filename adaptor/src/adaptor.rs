@@ -24,6 +24,10 @@ impl Adaptor {
 			path = cache.as_path();
 		}
 
+		if IMAGE_SHOWN.swap(true, Ordering::Relaxed) {
+			Self::image_hide(rect).ok();
+		}
+
 		match PREVIEW.adaptor {
 			PreviewAdaptor::Kitty => Kitty::image_show(path, rect).await,
 			PreviewAdaptor::Iterm2 => Iterm2::image_show(path, rect).await,
@@ -31,9 +35,7 @@ impl Adaptor {
 			_ => Ok(if let Some(tx) = &*UEBERZUG {
 				tx.send(Some((path.to_path_buf(), rect)))?;
 			}),
-		}?;
-
-		Ok(IMAGE_SHOWN.store(true, Ordering::Relaxed))
+		}
 	}
 
 	pub fn image_hide(rect: Rect) -> Result<()> {
