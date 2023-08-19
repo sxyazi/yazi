@@ -1,7 +1,7 @@
 use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, ffi::OsStr, io::{stdout, BufWriter, Write}, mem, path::{Path, PathBuf}};
 
 use anyhow::{anyhow, bail, Error, Result};
-use config::{open::Opener, BOOT, OPEN};
+use config::{BOOT, OPEN};
 use shared::{max_common_root, Defer, Term, MIME_DIR};
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 
@@ -84,9 +84,6 @@ impl Manager {
 		self.yanked.1.extend(selected);
 		false
 	}
-
-	#[inline]
-	pub fn yanked(&self) -> &(bool, HashSet<PathBuf>) { &self.yanked }
 
 	pub fn quit(&self, tasks: &Tasks) -> bool {
 		let tasks = tasks.len();
@@ -322,25 +319,7 @@ impl Manager {
 		Ok(())
 	}
 
-	pub fn shell(&self, exec: &str, block: bool, confirm: bool) -> bool {
-		let mut exec = exec.to_owned();
-		tokio::spawn(async move {
-			if !confirm || exec.is_empty() {
-				let result = emit!(Input(InputOpt::top("Shell:").with_value(&exec).with_highlight()));
-				match result.await {
-					Ok(e) => exec = e,
-					Err(_) => return,
-				}
-			}
-
-			emit!(Open(
-				Default::default(),
-				Some(Opener { exec, block, display_name: Default::default(), spread: true })
-			));
-		});
-
-		false
-	}
+	pub fn copy(&self) -> bool { false }
 
 	pub fn update_read(&mut self, op: FilesOp) -> bool {
 		let path = op.path();
@@ -458,6 +437,9 @@ impl Manager {
 
 	#[inline]
 	pub fn hovered(&self) -> Option<&File> { self.tabs.active().current.hovered.as_ref() }
+
+	#[inline]
+	pub fn yanked(&self) -> &(bool, HashSet<PathBuf>) { &self.yanked }
 
 	pub fn selected(&self) -> Vec<&File> {
 		let mode = &self.active().mode;

@@ -18,6 +18,7 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 				.arg(opt.cmd)
 				.arg("") // $0 is the command name
 				.args(opt.args)
+				.stdin(if opt.piped { Stdio::piped() } else { Stdio::inherit() })
 				.stdout(if opt.piped { Stdio::piped() } else { Stdio::inherit() })
 				.stderr(if opt.piped { Stdio::piped() } else { Stdio::inherit() })
 				.kill_on_drop(true)
@@ -32,6 +33,7 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 				.arg("/C")
 				.arg(opt.cmd)
 				.args(opt.args)
+				.stdin(if opt.piped { Stdio::piped() } else { Stdio::inherit() })
 				.stdout(if opt.piped { Stdio::piped() } else { Stdio::inherit() })
 				.stderr(if opt.piped { Stdio::piped() } else { Stdio::inherit() })
 				.kill_on_drop(true)

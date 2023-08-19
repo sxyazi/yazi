@@ -1,6 +1,7 @@
 use std::{collections::{BTreeMap, BTreeSet}, mem, path::{Path, PathBuf}};
 
 use anyhow::{Error, Result};
+use config::open::Opener;
 use shared::Defer;
 use tokio::task::JoinHandle;
 
@@ -244,6 +245,26 @@ impl Tab {
 			}
 			Ok::<(), Error>(())
 		});
+		false
+	}
+
+	pub fn shell(&self, exec: &str, block: bool, confirm: bool) -> bool {
+		let mut exec = exec.to_owned();
+		tokio::spawn(async move {
+			if !confirm || exec.is_empty() {
+				let result = emit!(Input(InputOpt::top("Shell:").with_value(&exec).with_highlight()));
+				match result.await {
+					Ok(e) => exec = e,
+					Err(_) => return,
+				}
+			}
+
+			emit!(Open(
+				Default::default(),
+				Some(Opener { exec, block, display_name: Default::default(), spread: true })
+			));
+		});
+
 		false
 	}
 
