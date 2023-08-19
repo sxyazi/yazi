@@ -1,5 +1,5 @@
 use core::{emit, files::FilesOp, input::InputMode, Event};
-use std::{ffi::OsString, os::unix::prelude::OsStrExt};
+use std::ffi::OsString;
 
 use anyhow::{Ok, Result};
 use config::{keymap::{Control, Key, KeymapLayer}, BOOT};
@@ -44,7 +44,16 @@ impl App {
 	fn dispatch_quit(&mut self) {
 		if let Some(p) = &BOOT.cwd_file {
 			let cwd = self.cx.manager.cwd().as_os_str();
-			std::fs::write(p, cwd.as_bytes()).ok();
+
+			#[cfg(target_os = "windows")]
+			{
+				std::fs::write(p, cwd.to_string_lossy().as_bytes()).ok();
+			}
+			#[cfg(not(target_os = "windows"))]
+			{
+				use std::os::unix::ffi::OsStrExt;
+				std::fs::write(p, cwd.as_bytes()).ok();
+			}
 		}
 	}
 
@@ -174,7 +183,15 @@ impl App {
 						s
 					});
 
-					std::fs::write(p, paths.as_bytes()).ok();
+					#[cfg(target_os = "windows")]
+					{
+						std::fs::write(p, paths.to_string_lossy().as_bytes()).ok();
+					}
+					#[cfg(not(target_os = "windows"))]
+					{
+						use std::os::unix::ffi::OsStrExt;
+						std::fs::write(p, paths.as_bytes()).ok();
+					}
 					return emit!(Quit);
 				}
 

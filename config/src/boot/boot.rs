@@ -1,8 +1,10 @@
-use std::{env, fs, os::unix::prelude::OsStrExt, path::{Path, PathBuf}, time::{self, SystemTime}};
+use std::{env, fs, path::{Path, PathBuf}, time::{self, SystemTime}};
 
 use clap::{command, Parser};
 use md5::{Digest, Md5};
 use shared::absolute_path;
+
+use crate::Xdg;
 
 #[derive(Debug)]
 pub struct Boot {
@@ -43,7 +45,7 @@ impl Default for Boot {
 		let boot = Self {
 			cwd:       cwd.unwrap_or("/".into()),
 			cache_dir: env::temp_dir().join("yazi"),
-			state_dir: xdg::BaseDirectories::with_prefix("yazi").unwrap().get_state_home(),
+			state_dir: Xdg::state_dir().unwrap(),
 
 			cwd_file:     args.cwd_file,
 			chooser_file: args.chooser_file,
@@ -63,9 +65,16 @@ impl Default for Boot {
 impl Boot {
 	#[inline]
 	pub fn cache(&self, path: &Path) -> PathBuf {
-		self
-			.cache_dir
-			.join(format!("{:x}", Md5::new_with_prefix(path.as_os_str().as_bytes()).finalize()))
+		#[cfg(target_os = "windows")]
+		let h = Md5::new_with_prefix(path.to_string_lossy().as_bytes());
+
+		#[cfg(not(target_os = "windows"))]
+		let h = {
+			use std::os::unix::ffi::OsStrExt;
+			Md5::new_with_prefix(path.as_os_str().as_bytes())
+		};
+
+		self.cache_dir.join(format!("{:x}", h.finalize()))
 	}
 
 	#[inline]

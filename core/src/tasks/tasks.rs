@@ -2,7 +2,7 @@ use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, io::{stdout, Wr
 
 use config::{manager::SortBy, open::Opener, OPEN};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
-use shared::{tty_size, Defer, MimeKind, Term};
+use shared::{Defer, MimeKind, Term};
 use tokio::{io::{stdin, AsyncReadExt}, select, sync::mpsc, time};
 use tracing::trace;
 
@@ -29,7 +29,7 @@ impl Tasks {
 
 	#[inline]
 	pub fn limit() -> usize {
-		(tty_size().ws_row * TASKS_PERCENT / 100).saturating_sub(TASKS_PADDING) as usize
+		(Term::size().rows * TASKS_PERCENT / 100).saturating_sub(TASKS_PADDING) as usize
 	}
 
 	pub fn toggle(&mut self) -> bool {

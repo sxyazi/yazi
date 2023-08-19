@@ -1,9 +1,9 @@
 use core::{input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which, Position};
 
 use config::keymap::KeymapLayer;
-use libc::winsize;
+use crossterm::terminal::WindowSize;
 use ratatui::prelude::Rect;
-use shared::tty_size;
+use shared::Term;
 
 pub struct Ctx {
 	pub manager: Manager,
@@ -25,14 +25,14 @@ impl Ctx {
 	}
 
 	pub(super) fn area(&self, pos: &Position) -> Rect {
-		let winsize { ws_row, ws_col, .. } = tty_size();
+		let WindowSize { columns, rows, .. } = Term::size();
 
 		let (x, y) = match pos {
 			Position::None => return Rect::default(),
 			Position::Top(Rect { mut x, mut y, width, height }) => {
-				x = x.min(ws_col.saturating_sub(*width));
-				y = y.min(ws_row.saturating_sub(*height));
-				((tty_size().ws_col / 2).saturating_sub(width / 2) + x, y)
+				x = x.min(columns.saturating_sub(*width));
+				y = y.min(rows.saturating_sub(*height));
+				((columns / 2).saturating_sub(width / 2) + x, y)
 			}
 			Position::Hovered(rect @ Rect { mut x, y, width, height }) => {
 				let Some(r) =
@@ -41,8 +41,8 @@ impl Ctx {
 					return self.area(&Position::Top(*rect));
 				};
 
-				x = x.min(ws_col.saturating_sub(*width));
-				if y + height + r.y + r.height > ws_row {
+				x = x.min(columns.saturating_sub(*width));
+				if y + height + r.y + r.height > rows {
 					(x + r.x, r.y.saturating_sub(height.saturating_sub(1)))
 				} else {
 					(x + r.x, y + r.y + r.height)
@@ -51,7 +51,7 @@ impl Ctx {
 		};
 
 		let (w, h) = pos.dimension().unwrap();
-		Rect { x, y, width: w.min(ws_col.saturating_sub(x)), height: h.min(ws_row.saturating_sub(y)) }
+		Rect { x, y, width: w.min(columns.saturating_sub(x)), height: h.min(rows.saturating_sub(y)) }
 	}
 
 	#[inline]

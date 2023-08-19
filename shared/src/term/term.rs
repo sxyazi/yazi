@@ -1,7 +1,7 @@
-use std::{io::{stdout, Stdout, Write}, ops::{Deref, DerefMut}};
+use std::{io::{stdout, Stdout, Write}, mem, ops::{Deref, DerefMut}};
 
 use anyhow::Result;
-use crossterm::{cursor::{MoveTo, SetCursorStyle}, event::{DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, terminal::{disable_raw_mode, enable_raw_mode, supports_keyboard_enhancement, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen}};
+use crossterm::{event::{DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, terminal::{disable_raw_mode, enable_raw_mode, supports_keyboard_enhancement, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, WindowSize}};
 use ratatui::{backend::CrosstermBackend, Terminal};
 
 pub struct Term {
@@ -32,23 +32,40 @@ impl Term {
 		Ok(term)
 	}
 
+	pub fn size() -> WindowSize {
+		let mut size = WindowSize { rows: 0, columns: 0, width: 0, height: 0 };
+		if let Ok(s) = crossterm::terminal::window_size() {
+			let _ = mem::replace(&mut size, s);
+		}
+
+		if size.rows == 0 || size.columns == 0 {
+			if let Ok(s) = crossterm::terminal::size() {
+				size.columns = s.0;
+				size.rows = s.1;
+			}
+		}
+
+		// TODO: Use `CSI 14 t` to get the actual size of the terminal
+		// if size.width == 0 || size.height == 0 {}
+
+		size
+	}
+
+	#[inline]
+	pub fn ratio() -> Option<(f64, f64)> {
+		let s = Self::size();
+		if s.width == 0 || s.height == 0 {
+			return None;
+		}
+		Some((f64::from(s.width) / f64::from(s.columns), f64::from(s.height) / f64::from(s.rows)))
+	}
+
 	#[inline]
 	pub fn clear(stdout: &mut impl Write) -> Result<()> {
-		execute!(stdout, Clear(ClearType::All))?;
+		queue!(stdout, Clear(ClearType::All))?;
 		writeln!(stdout)?;
 		Ok(stdout.flush()?)
 	}
-
-	#[inline]
-	pub fn move_to(stdout: &mut impl Write, x: u16, y: u16) -> Result<()> {
-		Ok(execute!(stdout, MoveTo(x, y))?)
-	}
-
-	#[inline]
-	pub fn set_cursor_block() -> Result<()> { Ok(execute!(stdout(), SetCursorStyle::BlinkingBlock)?) }
-
-	#[inline]
-	pub fn set_cursor_bar() -> Result<()> { Ok(execute!(stdout(), SetCursorStyle::BlinkingBar)?) }
 }
 
 impl Drop for Term {

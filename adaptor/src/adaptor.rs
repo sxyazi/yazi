@@ -19,10 +19,6 @@ pub struct Adaptor;
 
 impl Adaptor {
 	pub async fn image_show(mut path: &Path, rect: Rect) -> Result<()> {
-		if IMAGE_SHOWN.swap(true, Ordering::Relaxed) {
-			Self::image_hide(rect).ok();
-		}
-
 		let cache = BOOT.cache(path);
 		if fs::metadata(&cache).await.is_ok() {
 			path = cache.as_path();
@@ -35,7 +31,9 @@ impl Adaptor {
 			_ => Ok(if let Some(tx) = &*UEBERZUG {
 				tx.send(Some((path.to_path_buf(), rect)))?;
 			}),
-		}
+		}?;
+
+		Ok(IMAGE_SHOWN.store(true, Ordering::Relaxed))
 	}
 
 	pub fn image_hide(rect: Rect) -> Result<()> {

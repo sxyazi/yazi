@@ -15,21 +15,19 @@ impl Iterm2 {
 		let img = Image::crop(path, (rect.width, rect.height)).await?;
 		let b = Self::encode(img).await?;
 
-		let mut stdout = stdout().lock();
-		Term::move_to(&mut stdout, rect.x, rect.y)?;
-		Ok(stdout.write_all(&b)?)
+		Self::image_hide(rect)?;
+		Term::move_lock(stdout().lock(), (rect.x, rect.y), |stdout| Ok(stdout.write_all(&b)?))
 	}
 
-	#[inline]
 	pub(super) fn image_hide(rect: Rect) -> Result<()> {
-		let s = " ".repeat(rect.width as usize);
-		let mut stdout = BufWriter::new(stdout().lock());
-
-		for y in rect.top()..=rect.bottom() {
-			Term::move_to(&mut stdout, rect.x, y)?;
-			stdout.write_all(s.as_bytes())?;
-		}
-		Ok(())
+		let stdout = BufWriter::new(stdout().lock());
+		Term::move_lock(stdout, (0, 0), |stdout| {
+			for y in rect.top()..rect.bottom() {
+				Term::move_to(stdout, rect.x, y)?;
+				Term::kill_to_end(stdout)?;
+			}
+			Ok(())
+		})
 	}
 
 	async fn encode(img: DynamicImage) -> Result<Vec<u8>> {

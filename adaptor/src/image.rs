@@ -3,18 +3,19 @@ use std::{path::Path, sync::Arc};
 use anyhow::Result;
 use config::PREVIEW;
 use image::{imageops::FilterType, DynamicImage, ImageFormat};
-use shared::tty_ratio;
+use shared::Term;
 use tokio::fs;
 
 pub struct Image;
 
 impl Image {
 	pub(super) async fn crop(path: &Path, size: (u16, u16)) -> Result<DynamicImage> {
-		let (w, h) = {
-			let r = tty_ratio();
-			let (w, h) = ((size.0 as f64 * r.0) as u32, (size.1 as f64 * r.1) as u32);
-			(w.min(PREVIEW.max_width), h.min(PREVIEW.max_height))
-		};
+		let (w, h) = Term::ratio()
+			.map(|(w, h)| {
+				let (w, h) = ((size.0 as f64 * w) as u32, (size.1 as f64 * h) as u32);
+				(w.min(PREVIEW.max_width), h.min(PREVIEW.max_height))
+			})
+			.unwrap_or((PREVIEW.max_width, PREVIEW.max_height));
 
 		let img = fs::read(path).await?;
 		let img = tokio::task::spawn_blocking(move || -> Result<DynamicImage> {

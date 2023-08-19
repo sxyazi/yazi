@@ -15,9 +15,8 @@ impl Kitty {
 		let img = Image::crop(path, (rect.width, rect.height)).await?;
 		let b = Self::encode(img).await?;
 
-		let mut stdout = stdout().lock();
-		Term::move_to(&mut stdout, rect.x, rect.y)?;
-		Ok(stdout.write_all(&b)?)
+		Self::image_hide()?;
+		Term::move_lock(stdout().lock(), (rect.x, rect.y), |stdout| Ok(stdout.write_all(&b)?))
 	}
 
 	#[inline]
@@ -32,7 +31,7 @@ impl Kitty {
 			if let Some(first) = it.next() {
 				write!(
 					buf,
-					"\x1b\\\x1b_Ga=d\x1b\\\x1b_Ga=T,f={},s={},v={},m={};{}\x1b\\",
+					"\x1b_Ga=T,f={},s={},v={},m={};{}\x1b\\",
 					format,
 					size.0,
 					size.1,
