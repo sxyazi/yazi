@@ -1,11 +1,7 @@
 use std::io::{stdout, Write};
 
 use anyhow::Result;
-use crossterm::{
-	cursor::{MoveTo, RestorePosition, SavePosition, SetCursorStyle},
-	execute, queue,
-	terminal::{Clear, ClearType},
-};
+use crossterm::{cursor::{MoveTo, RestorePosition, SavePosition, SetCursorStyle}, execute, queue, terminal::{Clear, ClearType}};
 
 use crate::Term;
 
@@ -46,12 +42,8 @@ impl Term {
 	}
 
 	#[inline]
-	pub fn set_cursor_block() -> Result<()> {
-		Ok(execute!(stdout(), SetCursorStyle::BlinkingBlock)?)
-	}
+	pub fn set_cursor_block() -> Result<()> { Ok(execute!(stdout(), SetCursorStyle::BlinkingBlock)?) }
 
 	#[inline]
-	pub fn set_cursor_bar() -> Result<()> {
-		Ok(execute!(stdout(), SetCursorStyle::BlinkingBar)?)
-	}
+	pub fn set_cursor_bar() -> Result<()> { Ok(execute!(stdout(), SetCursorStyle::BlinkingBar)?) }
 }

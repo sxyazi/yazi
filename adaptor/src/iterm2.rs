@@ -1,7 +1,4 @@
-use std::{
-	io::{stdout, BufWriter, Write},
-	path::Path,
-};
+use std::{io::{stdout, BufWriter, Write}, path::Path};
 
 use anyhow::Result;
 use base64::{engine::general_purpose, Engine};

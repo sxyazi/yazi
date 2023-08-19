@@ -1,7 +1,4 @@
-use std::{
-	io::{stdout, BufWriter, Write},
-	path::Path,
-};
+use std::{io::{stdout, BufWriter, Write}, path::Path};
 
 use anyhow::{bail, Result};
 use color_quant::NeuQuant;

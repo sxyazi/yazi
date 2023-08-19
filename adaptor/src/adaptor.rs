@@ -1,7 +1,4 @@
-use std::{
-	path::{Path, PathBuf},
-	sync::atomic::{AtomicBool, Ordering},
-};
+use std::{path::{Path, PathBuf}, sync::atomic::{AtomicBool, Ordering}};
 
 use anyhow::Result;
 use config::{preview::PreviewAdaptor, BOOT, PREVIEW};
