@@ -25,7 +25,7 @@ impl Ctx {
 	}
 
 	pub(super) fn area(&self, pos: &Position) -> Rect {
-		let WindowSize { rows, columns, .. } = Term::size();
+		let WindowSize { columns, rows, .. } = Term::size();
 
 		let (x, y) = match pos {
 			Position::None => return Rect::default(),

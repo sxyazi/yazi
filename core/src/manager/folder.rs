@@ -1,5 +1,6 @@
 use std::path::{Path, PathBuf};
 
+use crossterm::terminal::WindowSize;
 use indexmap::map::Slice;
 use ratatui::layout::Rect;
 use shared::Term;
@@ -183,12 +184,12 @@ impl Folder {
 
 	pub fn rect_current(&self, path: &Path) -> Option<Rect> {
 		let pos = self.position(path)? - self.offset;
-		let s = Term::size();
+		let WindowSize { columns, .. } = Term::size();
 
 		Some(Rect {
-			x:      (s.columns as u32 * PARENT_RATIO / ALL_RATIO) as u16,
+			x:      (columns as u32 * PARENT_RATIO / ALL_RATIO) as u16,
 			y:      pos as u16,
-			width:  (s.columns as u32 * CURRENT_RATIO / ALL_RATIO) as u16,
+			width:  (columns as u32 * CURRENT_RATIO / ALL_RATIO) as u16,
 			height: 1,
 		})
 	}

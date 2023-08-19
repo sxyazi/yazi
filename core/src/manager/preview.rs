@@ -3,6 +3,7 @@ use std::{io::BufRead, mem, path::{Path, PathBuf}, sync::{atomic::{AtomicUsize, 
 use adaptor::Adaptor;
 use anyhow::{anyhow, bail, Result};
 use config::{BOOT, PREVIEW};
+use crossterm::terminal::WindowSize;
 use ratatui::prelude::Rect;
 use shared::{MimeKind, Term};
 use syntect::{easy::HighlightFile, util::as_24_bit_terminal_escaped};
@@ -31,16 +32,16 @@ pub enum PreviewData {
 
 impl Preview {
 	fn rect() -> Rect {
-		let s = Term::size();
+		let WindowSize { columns, rows, .. } = Term::size();
 
-		let x = (s.columns as u32 * (PARENT_RATIO + CURRENT_RATIO) / ALL_RATIO) as u16;
-		let width = (s.columns as u32 * PREVIEW_RATIO / ALL_RATIO) as u16;
+		let x = (columns as u32 * (PARENT_RATIO + CURRENT_RATIO) / ALL_RATIO) as u16;
+		let width = (columns as u32 * PREVIEW_RATIO / ALL_RATIO) as u16;
 
 		Rect {
 			x:      x.saturating_add(PREVIEW_BORDER / 2),
 			y:      PREVIEW_MARGIN / 2,
 			width:  width.saturating_sub(PREVIEW_BORDER),
-			height: s.rows.saturating_sub(PREVIEW_MARGIN),
+			height: rows.saturating_sub(PREVIEW_MARGIN),
 		}
 	}
 

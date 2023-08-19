@@ -1,21 +1,7 @@
-use std::{
-	io::{stdout, Stdout, Write},
-	mem,
-	ops::{Deref, DerefMut},
-};
+use std::{io::{stdout, Stdout, Write}, mem, ops::{Deref, DerefMut}};
 
 use anyhow::Result;
-use crossterm::{
-	event::{
-		DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange,
-		KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags,
-	},
-	execute, queue,
-	terminal::{
-		disable_raw_mode, enable_raw_mode, supports_keyboard_enhancement, Clear, ClearType,
-		EnterAlternateScreen, LeaveAlternateScreen, WindowSize,
-	},
-};
+use crossterm::{event::{DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, terminal::{disable_raw_mode, enable_raw_mode, supports_keyboard_enhancement, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, WindowSize}};
 use ratatui::{backend::CrosstermBackend, Terminal};
 
 pub struct Term {
@@ -60,18 +46,18 @@ impl Term {
 		}
 
 		// TODO: Use `CSI 14 t` to get the actual size of the terminal
-		if size.width == 0 || size.height == 0 {
-			size.width = 1000;
-			size.height = 1000;
-		}
+		// if size.width == 0 || size.height == 0 {}
 
 		size
 	}
 
 	#[inline]
-	pub fn ratio() -> (f64, f64) {
+	pub fn ratio() -> Option<(f64, f64)> {
 		let s = Self::size();
-		(f64::from(s.width) / f64::from(s.columns), f64::from(s.height) / f64::from(s.rows))
+		if s.width == 0 || s.height == 0 {
+			return None;
+		}
+		Some((f64::from(s.width) / f64::from(s.columns), f64::from(s.height) / f64::from(s.rows)))
 	}
 
 	#[inline]
@@ -102,13 +88,9 @@ impl Drop for Term {
 impl Deref for Term {
 	type Target = Terminal<CrosstermBackend<Stdout>>;
 
-	fn deref(&self) -> &Self::Target {
-		&self.inner
-	}
+	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
 impl DerefMut for Term {
-	fn deref_mut(&mut self) -> &mut Self::Target {
-		&mut self.inner
-	}
+	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.inner }
 }
