@@ -60,6 +60,13 @@
 
 - create: Create a file or directory (ends with `/` for directory).
 - rename: Rename a file or directory.
+- copy: Copy the path of files or directories that are selected or hovered on.
+
+  - `path`: Copy the full absolute path.
+  - `dirname`: Copy the path of the parent directory.
+  - `filename`: Copy the name of the file.
+  - `name_without_ext`: Copy the name of the file without the extension.
+
 - shell: Run a shell command.
 
   - `exec`: Optional, command template to be run.
