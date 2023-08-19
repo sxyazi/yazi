@@ -1,4 +1,4 @@
-use std::{collections::{BTreeMap, BTreeSet}, mem, path::{Path, PathBuf}};
+use std::{collections::{BTreeMap, BTreeSet}, ffi::{OsStr, OsString}, mem, path::{Path, PathBuf}};
 
 use anyhow::{Error, Result};
 use config::open::Opener;
@@ -185,6 +185,44 @@ impl Tab {
 	// TODO
 	pub fn forward(&mut self) -> bool { false }
 
+	pub fn select(&mut self, state: Option<bool>) -> bool {
+		let idx = Some(self.current.cursor());
+		self.current.select(idx, state)
+	}
+
+	pub fn select_all(&mut self, state: Option<bool>) -> bool { self.current.select(None, state) }
+
+	pub fn visual_mode(&mut self, unset: bool) -> bool {
+		let idx = self.current.cursor();
+
+		if unset {
+			self.mode = Mode::Unset(idx, BTreeSet::from([idx]));
+		} else {
+			self.mode = Mode::Select(idx, BTreeSet::from([idx]));
+		};
+		true
+	}
+
+	pub fn copy(&self, type_: &str) -> bool {
+		let mut s = OsString::new();
+		let mut it = self.selected().into_iter().peekable();
+		while let Some(f) = it.next() {
+			s.push(match type_ {
+				"path" => f.path.as_os_str(),
+				"dirname" => f.path.parent().map_or(OsStr::new(""), |p| p.as_os_str()),
+				"filename" => f.path.file_name().unwrap_or(OsStr::new("")),
+				"name_without_ext" => f.path.file_stem().unwrap_or(OsStr::new("")),
+				_ => return false,
+			});
+			if it.peek().is_some() {
+				s.push("\n");
+			}
+		}
+
+		futures::executor::block_on(external::clipboard_set(s)).ok();
+		false
+	}
+
 	pub fn search(&mut self, grep: bool) -> bool {
 		if let Some(handle) = self.search.take() {
 			handle.abort();
@@ -249,6 +287,12 @@ impl Tab {
 	}
 
 	pub fn shell(&self, exec: &str, block: bool, confirm: bool) -> bool {
+		let selected: Vec<_> = self
+			.selected()
+			.into_iter()
+			.map(|f| (f.path.as_os_str().to_owned(), Default::default()))
+			.collect();
+
 		let mut exec = exec.to_owned();
 		tokio::spawn(async move {
 			if !confirm || exec.is_empty() {
@@ -260,30 +304,12 @@ impl Tab {
 			}
 
 			emit!(Open(
-				Default::default(),
+				selected,
 				Some(Opener { exec, block, display_name: Default::default(), spread: true })
 			));
 		});
 
 		false
-	}
-
-	pub fn select(&mut self, state: Option<bool>) -> bool {
-		let idx = Some(self.current.cursor());
-		self.current.select(idx, state)
-	}
-
-	pub fn select_all(&mut self, state: Option<bool>) -> bool { self.current.select(None, state) }
-
-	pub fn visual_mode(&mut self, unset: bool) -> bool {
-		let idx = self.current.cursor();
-
-		if unset {
-			self.mode = Mode::Unset(idx, BTreeSet::from([idx]));
-		} else {
-			self.mode = Mode::Select(idx, BTreeSet::from([idx]));
-		};
-		true
 	}
 }
 
@@ -301,6 +327,31 @@ impl Tab {
 			.or_else(|| self.current.cwd.to_str())
 			.unwrap_or_default()
 	}
+
+	pub fn selected(&self) -> Vec<&File> {
+		let mode = self.mode();
+		let files = &self.current.files;
+
+		let selected: Vec<_> = if !mode.is_visual() {
+			files.iter().filter(|(_, f)| f.is_selected).map(|(_, f)| f).collect()
+		} else {
+			files
+				.iter()
+				.enumerate()
+				.filter(|(i, (_, f))| mode.pending(*i, f.is_selected))
+				.map(|(_, (_, f))| f)
+				.collect()
+		};
+
+		if selected.is_empty() {
+			self.current.hovered.as_ref().map(|h| vec![h]).unwrap_or_default()
+		} else {
+			selected
+		}
+	}
+
+	#[inline]
+	pub fn in_selecting(&self) -> bool { self.mode().is_visual() || self.current.has_selected() }
 
 	#[inline]
 	pub fn history(&self, path: &Path) -> Option<&Folder> { self.history.get(path) }
