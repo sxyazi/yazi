@@ -246,14 +246,13 @@ impl Input {
 			self.handle_op(self.snap().cursor, true);
 		}
 
-		let str =
-			futures::executor::block_on(async { external::clipboard_get().await }).unwrap_or_default();
-		if str.is_empty() {
+		let s = futures::executor::block_on(external::clipboard_get()).unwrap_or_default();
+		if s.is_empty() {
 			return false;
 		}
 
 		self.insert(!before);
-		for c in str.chars() {
+		for c in s.chars() {
 			self.type_(c);
 		}
 		self.escape();
@@ -274,7 +273,7 @@ impl Input {
 
 				let drain = snap.value.drain(start.unwrap()..end.unwrap()).collect::<String>();
 				if cut {
-					futures::executor::block_on(async { external::clipboard_set(&drain).await.ok() });
+					futures::executor::block_on(external::clipboard_set(&drain)).ok();
 				}
 
 				snap.op = InputOp::None;
@@ -287,7 +286,7 @@ impl Input {
 				let yanked = &snap.value[start.unwrap()..end.unwrap()];
 
 				snap.op = InputOp::None;
-				futures::executor::block_on(async { external::clipboard_set(yanked).await.ok() });
+				futures::executor::block_on(external::clipboard_set(yanked)).ok();
 			}
 		};
 

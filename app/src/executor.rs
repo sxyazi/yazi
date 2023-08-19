@@ -106,7 +106,7 @@ impl Executor {
 			}
 			"create" => cx.manager.create(),
 			"rename" => cx.manager.rename(),
-			"copy" => cx.manager.copy(),
+			"copy" => cx.manager.copy(exec.args.get(0).map(|s| s.as_str()).unwrap_or("")),
 			"shell" => cx.manager.active().shell(
 				exec.args.get(0).map(|e| e.as_str()).unwrap_or(""),
 				exec.named.contains_key("block"),
