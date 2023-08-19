@@ -1,4 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::{
+	path::{Path, PathBuf},
+	sync::atomic::{AtomicBool, Ordering},
+};
 
 use anyhow::Result;
 use config::{preview::PreviewAdaptor, BOOT, PREVIEW};
@@ -8,6 +11,8 @@ use tokio::{fs, sync::mpsc::UnboundedSender};
 
 use super::{Iterm2, Kitty};
 use crate::Sixel;
+
+static IMAGE_SHOWN: AtomicBool = AtomicBool::new(false);
 
 #[allow(clippy::type_complexity)]
 pub(super) static UEBERZUG: RoCell<Option<UnboundedSender<Option<(PathBuf, Rect)>>>> =
@@ -29,11 +34,15 @@ impl Adaptor {
 			_ => Ok(if let Some(tx) = &*UEBERZUG {
 				tx.send(Some((path.to_path_buf(), rect)))?;
 			}),
-		}
+		}?;
+
+		Ok(IMAGE_SHOWN.store(true, Ordering::Relaxed))
 	}
 
 	pub fn image_hide(rect: Rect) -> Result<()> {
-		return Ok(());
+		if !IMAGE_SHOWN.swap(false, Ordering::Relaxed) {
+			return Ok(());
+		}
 
 		match PREVIEW.adaptor {
 			PreviewAdaptor::Kitty => Kitty::image_hide(),

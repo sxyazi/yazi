@@ -36,7 +36,7 @@ impl Kitty {
 			if let Some(first) = it.next() {
 				write!(
 					buf,
-					"\x1b\\\x1b_Ga=d\x1b\\\x1b_Ga=T,f={},s={},v={},m={};{}\x1b\\",
+					"\x1b_Ga=T,f={},s={},v={},m={};{}\x1b\\",
 					format,
 					size.0,
 					size.1,
