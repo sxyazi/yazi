@@ -2,14 +2,11 @@ use std::{io::BufRead, mem, path::{Path, PathBuf}, sync::{atomic::{AtomicUsize, 
 
 use adaptor::Adaptor;
 use anyhow::{anyhow, bail, Result};
-use config::{BOOT, PREVIEW};
-use crossterm::terminal::WindowSize;
-use ratatui::prelude::Rect;
-use shared::{MimeKind, Term};
+use config::{BOOT, MANAGER, PREVIEW};
+use shared::MimeKind;
 use syntect::{easy::HighlightFile, util::as_24_bit_terminal_escaped};
 use tokio::{fs, task::JoinHandle};
 
-use super::{ALL_RATIO, CURRENT_RATIO, PARENT_RATIO, PREVIEW_BORDER, PREVIEW_MARGIN, PREVIEW_RATIO};
 use crate::{emit, external, files::{Files, FilesOp}, highlighter};
 
 #[derive(Default)]
@@ -31,20 +28,6 @@ pub enum PreviewData {
 }
 
 impl Preview {
-	fn rect() -> Rect {
-		let WindowSize { columns, rows, .. } = Term::size();
-
-		let x = (columns as u32 * (PARENT_RATIO + CURRENT_RATIO) / ALL_RATIO) as u16;
-		let width = (columns as u32 * PREVIEW_RATIO / ALL_RATIO) as u16;
-
-		Rect {
-			x:      x.saturating_add(PREVIEW_BORDER / 2),
-			y:      PREVIEW_MARGIN / 2,
-			width:  width.saturating_sub(PREVIEW_BORDER),
-			height: rows.saturating_sub(PREVIEW_MARGIN),
-		}
-	}
-
 	pub fn go(&mut self, path: &Path, mime: &str, show_image: bool) {
 		let kind = MimeKind::new(mime);
 		if !show_image && matches!(kind, MimeKind::Image | MimeKind::Video) {
@@ -78,7 +61,7 @@ impl Preview {
 	pub fn reset(&mut self) -> bool {
 		self.handle.take().map(|h| h.abort());
 		self.incr.fetch_add(1, Ordering::Relaxed);
-		Adaptor::image_hide(Self::rect()).ok();
+		Adaptor::image_hide(MANAGER.layout.preview_rect()).ok();
 
 		self.lock = None;
 		!matches!(
@@ -90,7 +73,7 @@ impl Preview {
 	pub fn reset_image(&mut self) -> bool {
 		self.handle.take().map(|h| h.abort());
 		self.incr.fetch_add(1, Ordering::Relaxed);
-		Adaptor::image_hide(Self::rect()).ok();
+		Adaptor::image_hide(MANAGER.layout.preview_rect()).ok();
 
 		if matches!(self.data, PreviewData::Image) {
 			self.lock = None;
@@ -109,7 +92,7 @@ impl Preview {
 	}
 
 	pub async fn image(path: &Path) -> Result<PreviewData> {
-		Adaptor::image_show(path, Self::rect()).await?;
+		Adaptor::image_show(path, MANAGER.layout.preview_rect()).await?;
 		Ok(PreviewData::Image)
 	}
 
@@ -132,14 +115,7 @@ impl Preview {
 	}
 
 	pub async fn json(path: &Path) -> Result<String> {
-		Ok(
-			external::jq(path, Self::rect().height as usize)
-				.await?
-				.lines()
-				.take(Self::rect().height as usize)
-				.collect::<Vec<_>>()
-				.join("\n"),
-		)
+		external::jq(path, MANAGER.layout.preview_height()).await
 	}
 
 	pub async fn archive(path: &Path) -> Result<String> {
@@ -147,7 +123,7 @@ impl Preview {
 			external::lsar(path)
 				.await?
 				.into_iter()
-				.take(Self::rect().height as usize)
+				.take(MANAGER.layout.preview_height())
 				.map(|f| f.name)
 				.collect::<Vec<_>>()
 				.join("\n"),
@@ -165,7 +141,7 @@ impl Preview {
 			let mut line = String::new();
 			let mut buf = String::new();
 
-			let mut i = Self::rect().height as usize;
+			let mut i = MANAGER.layout.preview_height();
 			while i > 0 && h.reader.read_line(&mut line)? > 0 {
 				if tick != incr.load(Ordering::Relaxed) {
 					bail!("Preview cancelled");

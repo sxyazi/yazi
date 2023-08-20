@@ -1,10 +1,12 @@
 use serde::Deserialize;
 
-use super::SortBy;
+use super::{ManagerLayout, SortBy};
 use crate::MERGED_YAZI;
 
 #[derive(Debug, Deserialize)]
 pub struct Manager {
+	pub layout: ManagerLayout,
+
 	// Sorting
 	pub sort_by:        SortBy,
 	pub sort_reverse:   bool,

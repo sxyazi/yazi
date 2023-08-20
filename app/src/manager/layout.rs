@@ -1,5 +1,4 @@
-use core::manager::{ALL_RATIO, CURRENT_RATIO, PARENT_RATIO, PREVIEW_RATIO};
-
+use config::MANAGER;
 use ratatui::{buffer::Buffer, layout::{self, Constraint, Direction, Rect}, widgets::{Block, Borders, Padding, Widget}};
 
 use super::{Folder, Preview};
@@ -15,15 +14,16 @@ impl<'a> Layout<'a> {
 
 impl<'a> Widget for Layout<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
+		let layout = &MANAGER.layout;
 		let manager = &self.cx.manager;
 
 		let chunks = layout::Layout::new()
 			.direction(Direction::Horizontal)
 			.constraints(
 				[
-					Constraint::Ratio(PARENT_RATIO, ALL_RATIO),
-					Constraint::Ratio(CURRENT_RATIO, ALL_RATIO),
-					Constraint::Ratio(PREVIEW_RATIO, ALL_RATIO),
+					Constraint::Ratio(layout.parent, layout.all),
+					Constraint::Ratio(layout.current, layout.all),
+					Constraint::Ratio(layout.preview, layout.all),
 				]
 				.as_ref(),
 			)
