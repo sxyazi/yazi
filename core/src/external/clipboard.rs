@@ -1,9 +1,14 @@
-use std::{ffi::{OsStr, OsString}, os::unix::prelude::{OsStrExt, OsStringExt}, process::Stdio};
+use std::ffi::OsString;
 
-use anyhow::{bail, Result};
-use tokio::{io::AsyncWriteExt, process::Command};
+use anyhow::Result;
 
+#[cfg(not(target_os = "windows"))]
 pub async fn clipboard_get() -> Result<OsString> {
+	use std::os::unix::prelude::OsStringExt;
+
+	use anyhow::bail;
+	use tokio::process::Command;
+
 	let all = [
 		("pbpaste", vec![]),
 		("wl-paste", vec![]),
@@ -23,7 +28,22 @@ pub async fn clipboard_get() -> Result<OsString> {
 	bail!("failed to get clipboard")
 }
 
-pub async fn clipboard_set(s: impl AsRef<OsStr>) -> Result<()> {
+#[cfg(target_os = "windows")]
+pub async fn clipboard_get() -> Result<OsString> {
+	use anyhow::anyhow;
+	use clipboard_win::{formats, get_clipboard};
+
+	let result = tokio::task::spawn_blocking(|| get_clipboard::<String, _>(formats::Unicode));
+	Ok(result.await?.map_err(|_| anyhow!("failed to get clipboard"))?.into())
+}
+
+#[cfg(not(target_os = "windows"))]
+pub async fn clipboard_set(s: impl AsRef<std::ffi::OsStr>) -> Result<()> {
+	use std::{os::unix::prelude::OsStrExt, process::Stdio};
+
+	use anyhow::bail;
+	use tokio::{io::AsyncWriteExt, process::Command};
+
 	let all = [
 		("pbcopy", vec![]),
 		("wl-copy", vec![]),
@@ -54,4 +74,16 @@ pub async fn clipboard_set(s: impl AsRef<OsStr>) -> Result<()> {
 	}
 
 	bail!("failed to set clipboard")
+}
+
+#[cfg(target_os = "windows")]
+pub async fn clipboard_set(s: impl AsRef<std::ffi::OsStr>) -> Result<()> {
+	use anyhow::anyhow;
+	use clipboard_win::{formats, set_clipboard};
+
+	let s = s.as_ref().to_owned();
+	let result =
+		tokio::task::spawn_blocking(move || set_clipboard(formats::Unicode, s.to_string_lossy()));
+
+	Ok(result.await?.map_err(|_| anyhow!("failed to set clipboard"))?)
 }
