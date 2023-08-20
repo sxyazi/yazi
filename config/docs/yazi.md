@@ -2,6 +2,10 @@
 
 ## manager
 
+- layout: Manager layout by ratio, 3-element array
+
+  - `[1, 4, 3]`: 1/8 width for parent, 4/8 width for current, 3/8 width for preview
+
 - sort_by: File sorting method
 
   - `"alphabetical"`: Sort alphabetically

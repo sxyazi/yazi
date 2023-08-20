@@ -13,13 +13,3 @@ pub use preview::*;
 pub use tab::*;
 pub use tabs::*;
 pub use watcher::*;
-
-pub const PARENT_RATIO: u32 = 1;
-pub const CURRENT_RATIO: u32 = 4;
-pub const PREVIEW_RATIO: u32 = 3;
-pub const ALL_RATIO: u32 = PARENT_RATIO + CURRENT_RATIO + PREVIEW_RATIO;
-
-pub const DIR_PADDING: u16 = 2;
-
-pub const PREVIEW_BORDER: u16 = 2;
-pub const PREVIEW_MARGIN: u16 = 2;

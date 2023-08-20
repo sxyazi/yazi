@@ -169,11 +169,11 @@ keymap = [
 	{ on = [ "x" ], exec = [ "delete --cut", "move 1 --in-operating" ] },
 
 	# Yank/Paste
-	{ on = [ "y" ], exec = [ "yank" ] },
-	{ on = [ "p" ], exec = [ "paste" ] },
-	{ on = [ "P" ], exec = [ "paste --before" ] },
+	{ on = [ "y" ], exec = "yank" },
+	{ on = [ "p" ], exec = "paste" },
+	{ on = [ "P" ], exec = "paste --before" },
 
 	# Undo/Redo
-	{ on = [ "u" ], exec = [ "undo" ] },
-	{ on = [ "<C-r>" ], exec = [ "redo" ] },
+	{ on = [ "u" ], exec = "undo" },
+	{ on = [ "<C-r>" ], exec = "redo" },
 ]

@@ -1,7 +1,7 @@
-use core::manager::{PreviewData, PREVIEW_BORDER};
+use core::manager::PreviewData;
 
 use ansi_to_tui::IntoText;
-use ratatui::{buffer::Buffer, layout::Rect, widgets::{Clear, Paragraph, Widget}};
+use ratatui::{buffer::Buffer, layout::Rect, widgets::{Paragraph, Widget}};
 
 use super::Folder;
 use crate::Ctx;
@@ -16,16 +16,6 @@ impl<'a> Preview<'a> {
 
 impl<'a> Widget for Preview<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		Clear.render(
-			Rect {
-				x:      area.x,
-				y:      area.y,
-				width:  area.width + PREVIEW_BORDER / 2,
-				height: area.height,
-			},
-			buf,
-		);
-
 		let manager = &self.cx.manager;
 		let Some(hovered) = manager.hovered().map(|h| &h.path) else {
 			return;

@@ -1,11 +1,9 @@
 use std::path::{Path, PathBuf};
 
-use crossterm::terminal::WindowSize;
+use config::MANAGER;
 use indexmap::map::Slice;
 use ratatui::layout::Rect;
-use shared::Term;
 
-use super::{ALL_RATIO, CURRENT_RATIO, DIR_PADDING, PARENT_RATIO};
 use crate::{emit, files::{File, Files, FilesOp}};
 
 #[derive(Default)]
@@ -26,9 +24,6 @@ impl Folder {
 	pub fn new_search(cwd: &Path) -> Self {
 		Self { cwd: cwd.to_path_buf(), in_search: true, ..Default::default() }
 	}
-
-	#[inline]
-	pub fn limit() -> usize { Term::size().rows.saturating_sub(DIR_PADDING) as usize }
 
 	pub fn update(&mut self, op: FilesOp) -> bool {
 		let b = match op {
@@ -55,7 +50,7 @@ impl Folder {
 	}
 
 	pub fn set_page(&mut self, force: bool) -> bool {
-		let limit = Self::limit();
+		let limit = MANAGER.layout.folder_height();
 		let new = if limit == 0 { 0 } else { self.cursor / limit };
 		if !force && self.page == new {
 			return false;
@@ -77,7 +72,7 @@ impl Folder {
 		self.hovered = self.files.duplicate(self.cursor);
 		self.set_page(false);
 
-		let limit = Self::limit();
+		let limit = MANAGER.layout.folder_height();
 		if self.cursor >= (self.offset + limit).min(len).saturating_sub(5) {
 			self.offset = len.saturating_sub(limit).min(self.offset + self.cursor - old);
 		}
@@ -109,7 +104,7 @@ impl Folder {
 
 	#[inline]
 	pub fn window(&self) -> &Slice<PathBuf, File> {
-		let end = (self.offset + Self::limit()).min(self.files.len());
+		let end = (self.offset + MANAGER.layout.folder_height()).min(self.files.len());
 		self.files.get_range(self.offset..end).unwrap()
 	}
 
@@ -172,7 +167,7 @@ impl Folder {
 
 	pub fn paginate(&self) -> &Slice<PathBuf, File> {
 		let len = self.files.len();
-		let limit = Self::limit();
+		let limit = MANAGER.layout.folder_height();
 
 		let start = (self.page * limit).min(len.saturating_sub(1));
 		let end = (start + limit).min(len);
@@ -183,14 +178,11 @@ impl Folder {
 	pub fn has_selected(&self) -> bool { self.files.iter().any(|(_, f)| f.is_selected) }
 
 	pub fn rect_current(&self, path: &Path) -> Option<Rect> {
-		let pos = self.position(path)? - self.offset;
-		let WindowSize { columns, .. } = Term::size();
+		let y = self.position(path)? - self.offset;
 
-		Some(Rect {
-			x:      (columns as u32 * PARENT_RATIO / ALL_RATIO) as u16,
-			y:      pos as u16,
-			width:  (columns as u32 * CURRENT_RATIO / ALL_RATIO) as u16,
-			height: 1,
-		})
+		let mut rect = MANAGER.layout.folder_rect();
+		rect.y = rect.y.saturating_sub(1) + y as u16;
+		rect.height = 1;
+		Some(rect)
 	}
 }
