@@ -40,7 +40,7 @@ impl Iterm2 {
 			let mut buf = vec![];
 			write!(
 				buf,
-				"\x1b]1337;File=inline=1;size={};width={}px;height={}px:{}\x07",
+				"\x1b]1337;File=inline=1;size={};width={}px;height={}px;doNotMoveCursor=1:{}\x07",
 				jpg.len(),
 				size.0,
 				size.1,
