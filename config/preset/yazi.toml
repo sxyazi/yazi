@@ -56,7 +56,7 @@ rules = [
 	{ mime = "application/x-bzip2", use = "archive" },
 	{ mime = "application/x-tar", use = "archive" },
 	{ mime = "application/x-7z-compressed", use = "archive" },
-	{ mime = "application/x-rar",use = "archive" },
+	{ mime = "application/x-rar", use = "archive" },
 
 	{ mime = "*", use = "fallback" },
 ]
