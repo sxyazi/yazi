@@ -1,22 +1,25 @@
-use std::{collections::{BTreeMap, BTreeSet}, path::{Path, PathBuf}, sync::Arc};
+use std::{collections::{BTreeMap, BTreeSet}, path::{Path, PathBuf}, sync::Arc, time::Duration};
 
+use futures::StreamExt;
 use indexmap::IndexMap;
 use notify::{event::{MetadataKind, ModifyKind}, EventKind, RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
 use parking_lot::RwLock;
-use tokio::{fs, sync::mpsc::{self, Receiver, Sender}};
+use shared::StreamBuf;
+use tokio::{fs, sync::mpsc};
+use tokio_stream::wrappers::UnboundedReceiverStream;
 
-use crate::{emit, files::{Files, FilesOp}};
+use crate::{emit, external, files::{Files, FilesOp}};
 
 pub struct Watcher {
-	tx: Sender<PathBuf>,
-
 	watcher: RecommendedWatcher,
 	watched: Arc<RwLock<IndexMap<PathBuf, Option<PathBuf>>>>,
 }
 
 impl Watcher {
 	pub(super) fn start() -> Self {
-		let (tx, rx) = mpsc::channel(50);
+		let (tx, rx) = mpsc::unbounded_channel();
+		let rx = StreamBuf::new(UnboundedReceiverStream::new(rx), Duration::from_millis(300));
+
 		let watcher = RecommendedWatcher::new(
 			{
 				let tx = tx.clone();
@@ -32,10 +35,11 @@ impl Watcher {
 					let parent = path.parent().unwrap_or(&path).to_path_buf();
 					match event.kind {
 						EventKind::Create(_) => {
-							tx.blocking_send(parent).ok();
+							tx.send(parent).ok();
 						}
 						EventKind::Modify(kind) => {
 							match kind {
+								ModifyKind::Data(_) => {}
 								ModifyKind::Metadata(kind) => match kind {
 									MetadataKind::Permissions => {}
 									MetadataKind::Ownership => {}
@@ -46,12 +50,12 @@ impl Watcher {
 								_ => return,
 							};
 
-							tx.blocking_send(path).ok();
-							tx.blocking_send(parent).ok();
+							tx.send(path).ok();
+							tx.send(parent).ok();
 						}
 						EventKind::Remove(_) => {
-							tx.blocking_send(path).ok();
-							tx.blocking_send(parent).ok();
+							tx.send(path).ok();
+							tx.send(parent).ok();
 						}
 						_ => (),
 					}
@@ -60,45 +64,9 @@ impl Watcher {
 			Default::default(),
 		);
 
-		let instance = Self { tx, watcher: watcher.unwrap(), watched: Default::default() };
+		let instance = Self { watcher: watcher.unwrap(), watched: Default::default() };
 		tokio::spawn(Self::changed(rx, instance.watched.clone()));
 		instance
-	}
-
-	async fn changed(
-		mut rx: Receiver<PathBuf>,
-		watched: Arc<RwLock<IndexMap<PathBuf, Option<PathBuf>>>>,
-	) {
-		while let Some(path) = rx.recv().await {
-			let linked = watched
-				.read()
-				.iter()
-				.map_while(|(k, v)| v.as_ref().and_then(|v| path.strip_prefix(v).ok()).map(|v| k.join(v)))
-				.collect::<Vec<_>>();
-
-			let result = Files::read_dir(&path).await;
-			if linked.is_empty() {
-				emit!(Files(match result {
-					Ok(items) => FilesOp::Read(path, items),
-					Err(_) => FilesOp::IOErr(path),
-				}));
-				continue;
-			}
-
-			for ori in linked {
-				emit!(Files(match &result {
-					Ok(items) => {
-						let files = BTreeMap::from_iter(items.iter().map(|(p, f)| {
-							let p = ori.join(p.strip_prefix(&path).unwrap());
-							let f = f.clone().set_path(&p);
-							(p, f)
-						}));
-						FilesOp::Read(ori, files)
-					}
-					Err(_) => FilesOp::IOErr(ori),
-				}));
-			}
-		}
 	}
 
 	pub(super) fn watch(&mut self, mut to_watch: BTreeSet<PathBuf>) {
@@ -142,11 +110,75 @@ impl Watcher {
 		});
 	}
 
-	pub(super) fn trigger(&self, path: &Path) {
-		let tx = self.tx.clone();
-		let path = path.to_path_buf();
+	pub(super) fn trigger_dirs(&self, dirs: &[&Path]) {
+		let watched = self.watched.clone();
+		let dirs = dirs.iter().map(|p| p.to_path_buf()).collect::<Vec<_>>();
 		tokio::spawn(async move {
-			tx.send(path).await.ok();
+			for dir in dirs {
+				Self::dir_changed(&dir, watched.clone()).await;
+			}
 		});
+	}
+
+	async fn changed(
+		mut rx: StreamBuf<UnboundedReceiverStream<PathBuf>>,
+		watched: Arc<RwLock<IndexMap<PathBuf, Option<PathBuf>>>>,
+	) {
+		while let Some(paths) = rx.next().await {
+			let (mut files, mut dirs): (Vec<_>, Vec<_>) = Default::default();
+			for path in paths.into_iter().collect::<BTreeSet<_>>() {
+				if fs::symlink_metadata(&path).await.map(|m| !m.is_dir()).unwrap_or(false) {
+					files.push(path);
+				} else {
+					dirs.push(path);
+				}
+			}
+
+			Self::file_changed(files.iter().map(AsRef::as_ref).collect()).await;
+			for file in files {
+				emit!(Files(FilesOp::IOErr(file)));
+			}
+
+			for dir in dirs {
+				Self::dir_changed(&dir, watched.clone()).await;
+			}
+		}
+	}
+
+	async fn file_changed(paths: Vec<&Path>) {
+		if let Ok(mimes) = external::file(&paths).await {
+			emit!(Mimetype(mimes));
+		}
+	}
+
+	async fn dir_changed(path: &Path, watched: Arc<RwLock<IndexMap<PathBuf, Option<PathBuf>>>>) {
+		let linked = watched
+			.read()
+			.iter()
+			.map_while(|(k, v)| v.as_ref().and_then(|v| path.strip_prefix(v).ok()).map(|v| k.join(v)))
+			.collect::<Vec<_>>();
+
+		let result = Files::read_dir(path).await;
+		if linked.is_empty() {
+			emit!(Files(match result {
+				Ok(items) => FilesOp::Read(path.into(), items),
+				Err(_) => FilesOp::IOErr(path.into()),
+			}));
+			return;
+		}
+
+		for ori in linked {
+			emit!(Files(match &result {
+				Ok(items) => {
+					let files = BTreeMap::from_iter(items.iter().map(|(p, f)| {
+						let p = ori.join(p.strip_prefix(path).unwrap());
+						let f = f.clone().set_path(&p);
+						(p, f)
+					}));
+					FilesOp::Read(ori, files)
+				}
+				Err(_) => FilesOp::IOErr(ori),
+			}));
+		}
 	}
 }

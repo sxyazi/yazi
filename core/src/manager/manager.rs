@@ -30,9 +30,10 @@ impl Manager {
 	pub fn refresh(&mut self) {
 		env::set_current_dir(self.cwd()).ok();
 
-		self.watcher.trigger(self.cwd());
-		if let Some(p) = self.parent() {
-			self.watcher.trigger(&p.cwd);
+		if let Some(f) = self.parent() {
+			self.watcher.trigger_dirs(&[self.cwd(), &f.cwd]);
+		} else {
+			self.watcher.trigger_dirs(&[self.cwd()]);
 		}
 		emit!(Hover);
 
