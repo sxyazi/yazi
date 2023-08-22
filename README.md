@@ -38,18 +38,26 @@ Or, you can replace `yazi` with `yazi-bin` package if you want pre-built binary 
 
 <summary>macOS</summary>
 
-Install the dependencies with Homebrew:
+Install Yazi and its dependencies with Homebrew:
 
 ```bash
-brew install ffmpegthumbnailer unar jq poppler fd ripgrep fzf zoxide
+brew install yazi ffmpegthumbnailer unar jq poppler fd ripgrep fzf zoxide
 brew tap homebrew/cask-fonts && brew install --cask font-symbols-only-nerd-font
 ```
 
-And download the latest release [from here](https://github.com/sxyazi/yazi/releases). Or you can install Yazi via cargo:
+Or you can install Yazi via cargo:
 
 ```bash
 cargo install --git https://github.com/sxyazi/yazi.git
 ```
+
+If you prefer to use the most recent code, use `--HEAD` flag:
+
+```bash
+brew install yazi --HEAD
+```
+
+You may take longer to install due to bottles are not available.
 
 </details>
 
