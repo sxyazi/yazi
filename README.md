@@ -10,7 +10,7 @@ https://github.com/sxyazi/yazi/assets/17523360/740a41f4-3d24-4287-952c-3aec51520
 
 Before getting started, ensure that the following dependencies are installed on your system:
 
-- nerd-fonts (_required_, for icons)
+- nerd-fonts (_required_)
 - ffmpegthumbnailer (_optional_, for video thumbnails)
 - unar (_optional_, for archive preview)
 - jq (_optional_, for JSON preview)
@@ -45,19 +45,17 @@ brew install yazi ffmpegthumbnailer unar jq poppler fd ripgrep fzf zoxide
 brew tap homebrew/cask-fonts && brew install --cask font-symbols-only-nerd-font
 ```
 
-Or you can install Yazi via cargo:
-
-```bash
-cargo install --git https://github.com/sxyazi/yazi.git
-```
-
 If you prefer to use the most recent code, use `--HEAD` flag:
 
 ```bash
 brew install yazi --HEAD
 ```
 
-You may take longer to install due to bottles are not available.
+Or you can install Yazi via cargo:
+
+```bash
+cargo install --git https://github.com/sxyazi/yazi.git
+```
 
 </details>
 
