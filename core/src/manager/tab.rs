@@ -2,6 +2,7 @@ use std::{collections::{BTreeMap, BTreeSet}, ffi::{OsStr, OsString}, mem, path::
 
 use anyhow::{Error, Result};
 use config::open::Opener;
+use futures::StreamExt;
 use shared::Defer;
 use tokio::task::JoinHandle;
 
@@ -241,10 +242,7 @@ impl Tab {
 			}?;
 
 			emit!(Files(FilesOp::search_empty(&cwd)));
-			while let Some(chunk) = rx.recv().await {
-				if chunk.is_empty() {
-					break;
-				}
+			while let Some(chunk) = rx.next().await {
 				emit!(Files(FilesOp::Search(cwd.clone(), Files::read(chunk).await)));
 			}
 			Ok(())

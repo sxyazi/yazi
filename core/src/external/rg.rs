@@ -1,8 +1,9 @@
 use std::{path::PathBuf, process::Stdio, time::Duration};
 
 use anyhow::Result;
-use shared::DelayedBuffer;
-use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command, sync::mpsc::UnboundedReceiver};
+use shared::StreamBuf;
+use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command, sync::mpsc};
+use tokio_stream::wrappers::UnboundedReceiverStream;
 
 pub struct RgOpt {
 	pub cwd:     PathBuf,
@@ -10,7 +11,7 @@ pub struct RgOpt {
 	pub subject: String,
 }
 
-pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<Vec<PathBuf>>> {
+pub fn rg(opt: RgOpt) -> Result<StreamBuf<UnboundedReceiverStream<PathBuf>>> {
 	let mut child = Command::new("rg")
 		.current_dir(&opt.cwd)
 		.args(["--color=never", "--files-with-matches", "--smart-case"])
@@ -24,11 +25,12 @@ pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<Vec<PathBuf>>> {
 	drop(child.stderr.take());
 
 	let mut it = BufReader::new(child.stdout.take().unwrap()).lines();
-	let (mut buf, rx) = DelayedBuffer::new(Duration::from_millis(100));
+	let (tx, rx) = mpsc::unbounded_channel();
+	let rx = StreamBuf::new(UnboundedReceiverStream::new(rx), Duration::from_millis(300));
 
 	tokio::spawn(async move {
 		while let Ok(Some(line)) = it.next_line().await {
-			buf.push(opt.cwd.join(line));
+			tx.send(opt.cwd.join(line)).ok();
 		}
 		child.wait().await.ok();
 	});

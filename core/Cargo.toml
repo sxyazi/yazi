@@ -21,6 +21,7 @@ serde         = "^1"
 serde_json    = "^1"
 syntect       = "^5"
 tokio         = { version = "^1", features = [ "parking_lot", "macros", "rt-multi-thread", "sync", "time", "fs", "process", "io-std", "io-util" ] }
+tokio-stream  = "^0"
 tracing       = "^0"
 trash         = "^3"
 unicode-width = "^0"
