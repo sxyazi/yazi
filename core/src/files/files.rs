@@ -1,4 +1,9 @@
-use std::{cmp::Ordering, collections::BTreeMap, ops::{Deref, DerefMut}, path::{Path, PathBuf}};
+use std::{
+	cmp::Ordering,
+	collections::BTreeMap,
+	ops::{Deref, DerefMut},
+	path::{Path, PathBuf},
+};
 
 use anyhow::Result;
 use config::{manager::SortBy, MANAGER};
@@ -8,18 +13,14 @@ use tokio::fs;
 use super::File;
 
 pub struct Files {
-	items:           IndexMap<PathBuf, File>,
-	pub sort:        FilesSort,
+	items: IndexMap<PathBuf, File>,
+	pub sort: FilesSort,
 	pub show_hidden: bool,
 }
 
 impl Default for Files {
 	fn default() -> Self {
-		Self {
-			items:       Default::default(),
-			sort:        Default::default(),
-			show_hidden: MANAGER.show_hidden,
-		}
+		Self { items: Default::default(), sort: Default::default(), show_hidden: MANAGER.show_hidden }
 	}
 }
 
@@ -122,13 +123,21 @@ impl Files {
 			if promote != Ordering::Equal {
 				promote
 			} else {
-				if reverse { b.cmp(&a) } else { a.cmp(&b) }
+				if reverse {
+					b.cmp(&a)
+				} else {
+					a.cmp(&b)
+				}
 			}
 		}
 
 		#[inline]
 		fn promote(a: &File, b: &File, dir_first: bool) -> Ordering {
-			if dir_first { b.meta.is_dir().cmp(&a.meta.is_dir()) } else { Ordering::Equal }
+			if dir_first {
+				b.meta.is_dir().cmp(&a.meta.is_dir())
+			} else {
+				Ordering::Equal
+			}
 		}
 
 		let reverse = self.sort.reverse;
@@ -149,6 +158,9 @@ impl Files {
 				}
 				Ordering::Equal
 			}),
+			SortBy::Natural => {
+				self.items.sort_by(|_, a, _, b| cmp(&a.path, &b.path, reverse, promote(a, b, dir_first)))
+			}
 			SortBy::Size => self.items.sort_by(|_, a, _, b| {
 				cmp(a.length.unwrap_or(0), b.length.unwrap_or(0), reverse, promote(a, b, dir_first))
 			}),
@@ -160,27 +172,27 @@ impl Files {
 impl Deref for Files {
 	type Target = IndexMap<PathBuf, File>;
 
-	fn deref(&self) -> &Self::Target { &self.items }
+	fn deref(&self) -> &Self::Target {
+		&self.items
+	}
 }
 
 impl DerefMut for Files {
-	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.items }
+	fn deref_mut(&mut self) -> &mut Self::Target {
+		&mut self.items
+	}
 }
 
 #[derive(PartialEq)]
 pub struct FilesSort {
-	pub by:        SortBy,
-	pub reverse:   bool,
+	pub by: SortBy,
+	pub reverse: bool,
 	pub dir_first: bool,
 }
 
 impl Default for FilesSort {
 	fn default() -> Self {
-		Self {
-			by:        MANAGER.sort_by,
-			reverse:   MANAGER.sort_reverse,
-			dir_first: MANAGER.sort_dir_first,
-		}
+		Self { by: MANAGER.sort_by, reverse: MANAGER.sort_reverse, dir_first: MANAGER.sort_dir_first }
 	}
 }
 
@@ -205,8 +217,12 @@ impl FilesOp {
 	}
 
 	#[inline]
-	pub fn read_empty(path: &Path) -> Self { Self::Read(path.to_path_buf(), BTreeMap::new()) }
+	pub fn read_empty(path: &Path) -> Self {
+		Self::Read(path.to_path_buf(), BTreeMap::new())
+	}
 
 	#[inline]
-	pub fn search_empty(path: &Path) -> Self { Self::Search(path.to_path_buf(), BTreeMap::new()) }
+	pub fn search_empty(path: &Path) -> Self {
+		Self::Search(path.to_path_buf(), BTreeMap::new())
+	}
 }

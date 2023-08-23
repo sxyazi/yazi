@@ -11,6 +11,7 @@
   - `"alphabetical"`: Sort alphabetically
   - `"created"`: Sort by creation time
   - `"modified"`: Sort by last modified time
+  - `"natural"`: Sort naturally
   - `"size"`: Sort by file size
 
 - sort_reverse: Display files in reverse order
