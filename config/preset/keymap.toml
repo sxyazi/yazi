@@ -176,5 +176,5 @@ keymap = [
 
 	# Undo/Redo
 	{ on = [ "u" ], exec = "undo" },
-	{ on = [ "U" ], exec = "redo" },
+	{ on = [ "<C-r>" ], exec = "redo" },
 ]
