@@ -3,6 +3,7 @@
 keymap = [
 	{ on = [ "<Esc>" ], exec = "escape"  },
 	{ on = [ "q" ], exec = "quit" },
+	# close current tab and exit if it is last tab
 	{ on = [ "<C-q>" ], exec = "close" },
 
 	# Navigation
@@ -63,12 +64,12 @@ keymap = [
 	# Sorting
 	{ on = [ ",", "a" ], exec = "sort alphabetical" },
 	{ on = [ ",", "A" ], exec = "sort alphabetical --reverse" },
-	{ on = [ ",", "c" ], exec = "sort created --reverse" },
-	{ on = [ ",", "C" ], exec = "sort created" },
-	{ on = [ ",", "m" ], exec = "sort modified --reverse" },
-	{ on = [ ",", "M" ], exec = "sort modified" },
-	{ on = [ ",", "s" ], exec = "sort size --reverse" },
-	{ on = [ ",", "S" ], exec = "sort size" },
+	{ on = [ ",", "c" ], exec = "sort created" },
+	{ on = [ ",", "C" ], exec = "sort created --reverse" },
+	{ on = [ ",", "m" ], exec = "sort modified" },
+	{ on = [ ",", "M" ], exec = "sort modified --reverse" },
+	{ on = [ ",", "s" ], exec = "sort size" },
+	{ on = [ ",", "S" ], exec = "sort size --reverse" },
 
 	# Tabs
 	{ on = [ "t" ], exec = "tab_create --current" },
