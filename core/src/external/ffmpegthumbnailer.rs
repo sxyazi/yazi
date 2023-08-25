@@ -1,13 +1,13 @@
 use std::path::Path;
 
 use config::PREVIEW;
-use shared::PagedError;
+use shared::PeekError;
 use tokio::process::Command;
 
-pub async fn ffmpegthumbnailer(src: &Path, dest: &Path, skip: usize) -> Result<(), PagedError> {
+pub async fn ffmpegthumbnailer(src: &Path, dest: &Path, skip: usize) -> Result<(), PeekError> {
 	let percentage = 5 + skip;
-	if percentage >= 100 {
-		return Err(PagedError::Exceed(94));
+	if percentage > 95 {
+		return Err(PeekError::Exceed(95 - 5));
 	}
 
 	let output = Command::new("ffmpegthumbnailer")

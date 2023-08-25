@@ -2,10 +2,10 @@ use std::{path::Path, process::Stdio};
 
 use anyhow::Result;
 use config::PREVIEW;
-use shared::PagedError;
+use shared::PeekError;
 use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command};
 
-pub async fn jq(path: &Path, skip: usize, limit: usize) -> Result<String, PagedError> {
+pub async fn jq(path: &Path, skip: usize, limit: usize) -> Result<String, PeekError> {
 	let mut child = Command::new("jq")
 		.args(["-C", "--indent", &PREVIEW.tab_size.to_string(), "."])
 		.arg(path)
@@ -30,7 +30,7 @@ pub async fn jq(path: &Path, skip: usize, limit: usize) -> Result<String, PagedE
 	}
 
 	if skip > 0 && i < skip + limit {
-		Err(PagedError::Exceed(i.saturating_sub(limit)))
+		Err(PeekError::Exceed(i.saturating_sub(limit)))
 	} else {
 		Ok(lines)
 	}

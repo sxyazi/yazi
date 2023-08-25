@@ -2,7 +2,7 @@ use std::{mem, path::{Path, PathBuf}, sync::atomic::Ordering};
 
 use adaptor::Adaptor;
 use config::MANAGER;
-use shared::{MimeKind, PagedError};
+use shared::{MimeKind, PeekError};
 use tokio::task::JoinHandle;
 
 use super::{provider::INCR, Provider};
@@ -51,7 +51,6 @@ impl Preview {
 
 		self.handle.take().map(|h| h.abort());
 		INCR.fetch_add(1, Ordering::Relaxed);
-		Adaptor::image_hide(MANAGER.layout.preview_rect()).ok();
 
 		self.skip = skip;
 		self.handle = Some(tokio::spawn(async move {
@@ -59,7 +58,7 @@ impl Preview {
 				Ok(result) => {
 					emit!(Preview(path, mime, result));
 				}
-				Err(PagedError::Exceed(max)) => {
+				Err(PeekError::Exceed(max)) => {
 					emit!(Peek(path, max));
 				}
 				_ => {}

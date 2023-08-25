@@ -90,8 +90,8 @@ impl Tab {
 		};
 
 		let path = self.preview.lock.as_ref().unwrap().0.clone();
-		if let Some(dir) = self.history(&path) {
-			let max = dir.files.len().saturating_sub(MANAGER.layout.preview_height());
+		if let Some(folder) = self.history(&path) {
+			let max = folder.files.len().saturating_sub(MANAGER.layout.preview_height());
 			if new > max {
 				emit!(Peek(path, max));
 				return false;

@@ -1,4 +1,4 @@
-use std::{env, fs, path::{Path, PathBuf}, time::{self, SystemTime}};
+use std::{env, fs, path::{Path, PathBuf}, process, time::{self, SystemTime}};
 
 use clap::{command, Parser};
 use md5::{Digest, Md5};
@@ -30,6 +30,10 @@ struct Args {
 	/// Write the selected files on open emitted by the chooser mode
 	#[arg(long)]
 	chooser_file: Option<PathBuf>,
+
+	/// Clear the cache directory
+	#[arg(long, action)]
+	clear_cache: bool,
 }
 
 impl Default for Boot {
@@ -56,6 +60,12 @@ impl Default for Boot {
 		}
 		if !boot.state_dir.is_dir() {
 			fs::create_dir_all(&boot.state_dir).unwrap();
+		}
+
+		if args.clear_cache {
+			println!("Clearing cache directory: {:?}", boot.cache_dir);
+			fs::remove_dir_all(&boot.cache_dir).unwrap();
+			process::exit(0);
 		}
 
 		boot

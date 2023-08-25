@@ -3,7 +3,7 @@ use std::path::Path;
 use anyhow::anyhow;
 use serde::Deserialize;
 use serde_json::Value;
-use shared::PagedError;
+use shared::PeekError;
 use tokio::process::Command;
 
 #[derive(Debug)]
@@ -31,7 +31,7 @@ pub struct LsarFile {
 }
 
 #[allow(clippy::manual_map)]
-pub async fn lsar(path: &Path, skip: usize, limit: usize) -> Result<Vec<LsarFile>, PagedError> {
+pub async fn lsar(path: &Path, skip: usize, limit: usize) -> Result<Vec<LsarFile>, PeekError> {
 	let output =
 		Command::new("lsar").args(["-j", "-jss"]).arg(path).kill_on_drop(true).output().await?;
 
@@ -74,7 +74,7 @@ pub async fn lsar(path: &Path, skip: usize, limit: usize) -> Result<Vec<LsarFile
 	}
 
 	if skip > 0 && files.len() < limit {
-		Err(PagedError::Exceed(i.saturating_sub(limit)))
+		Err(PeekError::Exceed(i.saturating_sub(limit)))
 	} else {
 		Ok(files)
 	}
