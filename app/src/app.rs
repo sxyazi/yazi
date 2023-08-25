@@ -88,6 +88,7 @@ impl App {
 	fn dispatch_resize(&mut self) {
 		self.cx.manager.current_mut().set_page(true);
 		self.cx.manager.active_mut().preview_reset_image();
+		// TODO: use peek
 		self.cx.manager.preview(self.cx.image_layer());
 		emit!(Render);
 	}
@@ -100,6 +101,7 @@ impl App {
 		} else {
 			self.term = Some(Term::start().unwrap());
 			self.signals.stop_term(false);
+			// TODO: use peek
 			self.cx.manager.preview(self.cx.image_layer());
 			emit!(Render);
 			emit!(Hover);
@@ -164,6 +166,9 @@ impl App {
 			Event::Preview(path, mime, data) => {
 				manager.update_preview(path, mime, data);
 				emit!(Render);
+			}
+			Event::Peek(path, skip) => {
+				manager.update_peek(path, skip);
 			}
 
 			Event::Select(opt, tx) => {

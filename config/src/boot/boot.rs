@@ -64,17 +64,10 @@ impl Default for Boot {
 
 impl Boot {
 	#[inline]
-	pub fn cache(&self, path: &Path) -> PathBuf {
-		#[cfg(target_os = "windows")]
-		let h = Md5::new_with_prefix(path.to_string_lossy().as_bytes());
-
-		#[cfg(not(target_os = "windows"))]
-		let h = {
-			use std::os::unix::ffi::OsStrExt;
-			Md5::new_with_prefix(path.as_os_str().as_bytes())
-		};
-
-		self.cache_dir.join(format!("{:x}", h.finalize()))
+	pub fn cache(&self, path: &Path, skip: usize) -> PathBuf {
+		self
+			.cache_dir
+			.join(format!("{:x}", Md5::new_with_prefix(format!("{:?}///{}", path, skip)).finalize()))
 	}
 
 	#[inline]

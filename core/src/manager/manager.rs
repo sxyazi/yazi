@@ -63,8 +63,8 @@ impl Manager {
 
 		if hovered.meta.is_dir() {
 			self.active_mut().preview.go(&hovered.path, MIME_DIR, show_image);
-			if self.active().history(&hovered.path).is_some() {
-				emit!(Preview(hovered.path, MIME_DIR.to_owned(), PreviewData::Folder));
+			if let Some(offset) = self.active().history(&hovered.path).map(|f| f.offset()) {
+				emit!(Peek(hovered.path, offset));
 			}
 		} else if let Some(mime) = self.mimetype.get(&hovered.path).cloned() {
 			self.active_mut().preview.go(&hovered.path, &mime, show_image);
@@ -406,6 +406,26 @@ impl Manager {
 		preview.lock = Some((path, mime));
 		preview.data = data;
 		true
+	}
+
+	pub fn update_peek(&mut self, path: PathBuf, skip: usize) -> bool {
+		if !matches!(self.hovered(), Some(f) if f.path == path) {
+			return false;
+		}
+
+		if self.active().preview.lock.is_some() {
+			self.active_mut().preview.peek(skip);
+			return false;
+		}
+
+		if self.active().history(&path).is_some() {
+			let preview = &mut self.active_mut().preview;
+			preview.lock = Some((path, MIME_DIR.to_string()));
+			preview.data = PreviewData::Folder;
+		}
+
+		self.active_mut().preview.peek(skip);
+		false
 	}
 }
 

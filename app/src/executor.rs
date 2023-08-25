@@ -61,6 +61,10 @@ impl Executor {
 				let step = exec.args.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
 				cx.manager.active_mut().arrow(step)
 			}
+			"peek" => {
+				let step = exec.args.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
+				cx.manager.active_mut().peek(step)
+			}
 			"leave" => cx.manager.active_mut().leave(),
 			"enter" => cx.manager.active_mut().enter(),
 			"back" => cx.manager.active_mut().back(),

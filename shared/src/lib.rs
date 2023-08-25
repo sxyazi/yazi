@@ -2,6 +2,7 @@
 
 mod chars;
 mod defer;
+mod errors;
 mod fns;
 mod fs;
 mod mime;
@@ -13,6 +14,7 @@ mod time;
 
 pub use chars::*;
 pub use defer::*;
+pub use errors::*;
 pub use fns::*;
 pub use fs::*;
 pub use mime::*;

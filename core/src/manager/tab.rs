@@ -1,9 +1,9 @@
 use std::{collections::{BTreeMap, BTreeSet}, ffi::{OsStr, OsString}, mem, path::{Path, PathBuf}};
 
 use anyhow::{Error, Result};
-use config::open::Opener;
+use config::{open::Opener, MANAGER};
 use futures::StreamExt;
-use shared::Defer;
+use shared::{Defer, MIME_DIR};
 use tokio::task::JoinHandle;
 
 use super::{Folder, Mode, Preview};
@@ -74,6 +74,32 @@ impl Tab {
 
 		emit!(Hover);
 		true
+	}
+
+	pub fn peek(&mut self, step: isize) -> bool {
+		let size = self.preview.peek_step(step);
+		let old = self.preview.skip();
+		let new = if step < 0 { old.saturating_sub(size) } else { old + size };
+		if new == old {
+			return false;
+		}
+
+		if !matches!(&self.preview.lock, Some((_, m)) if m == MIME_DIR) {
+			self.preview.peek(new);
+			return false;
+		};
+
+		let path = self.preview.lock.as_ref().unwrap().0.clone();
+		if let Some(dir) = self.history(&path) {
+			let max = dir.files.len().saturating_sub(MANAGER.layout.preview_height());
+			if new > max {
+				emit!(Peek(path, max));
+				return false;
+			}
+		}
+
+		self.preview.peek(new);
+		false
 	}
 
 	pub async fn cd(&mut self, mut target: PathBuf) -> bool {

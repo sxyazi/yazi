@@ -27,6 +27,7 @@ pub enum Event {
 	Mimetype(BTreeMap<PathBuf, String>),
 	Hover(Option<File>),
 	Preview(PathBuf, String, PreviewData),
+	Peek(PathBuf, usize),
 
 	// Input
 	Select(SelectOpt, oneshot::Sender<Result<usize>>),
@@ -89,6 +90,9 @@ macro_rules! emit {
 	};
 	(Preview($path:expr, $mime:expr, $data:expr)) => {
 		$crate::Event::Preview($path, $mime, $data).emit();
+	};
+	(Peek($path:expr, $skip:expr)) => {
+		$crate::Event::Peek($path, $skip).emit();
 	};
 
 	(Select($opt:expr)) => {{

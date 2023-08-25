@@ -108,6 +108,13 @@ impl Folder {
 		self.files.get_range(self.offset..end).unwrap()
 	}
 
+	#[inline]
+	pub fn window_for(&self, offset: usize) -> &Slice<PathBuf, File> {
+		let start = offset.min(self.files.len().saturating_sub(1));
+		let end = (offset + MANAGER.layout.folder_height()).min(self.files.len());
+		self.files.get_range(start..end).unwrap()
+	}
+
 	pub fn select(&mut self, idx: Option<usize>, state: Option<bool>) -> bool {
 		let len = self.files.len();
 		let mut apply = |idx: usize, state: Option<bool>| -> bool {
@@ -157,6 +164,9 @@ impl Folder {
 }
 
 impl Folder {
+	#[inline]
+	pub fn offset(&self) -> usize { self.offset }
+
 	#[inline]
 	pub fn cursor(&self) -> usize { self.cursor }
 

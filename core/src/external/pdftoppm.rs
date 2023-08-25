@@ -1,19 +1,29 @@
 use std::path::Path;
 
 use adaptor::Image;
-use anyhow::{bail, Result};
+use regex::Regex;
+use shared::PagedError;
 use tokio::process::Command;
 
-pub async fn pdftoppm(src: &Path, dest: impl AsRef<Path>) -> Result<()> {
+pub async fn pdftoppm(src: &Path, dest: impl AsRef<Path>, skip: usize) -> Result<(), PagedError> {
 	let output = Command::new("pdftoppm")
-		.args(["-singlefile", "-jpeg", "-jpegopt", "quality=75"])
+		.args(["-singlefile", "-jpeg", "-jpegopt", "quality=75", "-f"])
+		.arg((skip + 1).to_string())
 		.arg(src)
 		.kill_on_drop(true)
 		.output()
 		.await?;
 
 	if !output.status.success() {
-		bail!("failed to generate PDF thumbnail: {}", String::from_utf8_lossy(&output.stderr));
+		let s = String::from_utf8_lossy(&output.stderr);
+		let pages: usize = Regex::new(r"the last page \((\d+)\)")
+			.unwrap()
+			.captures(&s)
+			.map(|cap| cap[1].parse().unwrap())
+			.unwrap_or(0);
+
+		return if pages > 0 { Err(PagedError::Exceed(pages - 1)) } else { Err(s.to_string().into()) };
 	}
-	Image::precache_anyway(output.stdout.into(), dest).await
+
+	Ok(Image::precache_anyway(output.stdout.into(), dest).await?)
 }

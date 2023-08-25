@@ -74,7 +74,7 @@ impl Precache {
 	pub(crate) async fn work(&self, task: &mut PrecacheOp) -> Result<()> {
 		match task {
 			PrecacheOp::Image(task) => {
-				let cache = BOOT.cache(&task.target);
+				let cache = BOOT.cache(&task.target, 0);
 				if fs::metadata(&cache).await.is_ok() {
 					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
 				}
@@ -84,21 +84,21 @@ impl Precache {
 				self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
 			}
 			PrecacheOp::Video(task) => {
-				let cache = BOOT.cache(&task.target);
+				let cache = BOOT.cache(&task.target, 0);
 				if fs::metadata(&cache).await.is_ok() {
 					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
 				}
 
-				external::ffmpegthumbnailer(&task.target, &cache).await.ok();
+				external::ffmpegthumbnailer(&task.target, &cache, 0).await.ok();
 				self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
 			}
 			PrecacheOp::Pdf(task) => {
-				let cache = BOOT.cache(&task.target);
+				let cache = BOOT.cache(&task.target, 0);
 				if fs::metadata(&cache).await.is_ok() {
 					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
 				}
 
-				external::pdftoppm(&task.target, &cache).await.ok();
+				external::pdftoppm(&task.target, &cache, 0).await.ok();
 				self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
 			}
 		}
