@@ -19,6 +19,9 @@ keymap = [
 	{ on = [ "H" ], exec = "back" },
 	{ on = [ "L" ], exec = "forward" },
 
+	{ on = [ "<C-k>" ], exec = "peek -5" },
+	{ on = [ "<C-j>" ], exec = "peek 5" },
+
 	{ on = [ "<Up>" ], exec = "arrow -1" },
 	{ on = [ "<Down>" ], exec = "arrow 1" },
 	{ on = [ "<Left>" ], exec = "leave" },

@@ -106,27 +106,28 @@ impl Provider {
 			let mut buf = String::new();
 
 			let mut i = 0;
-			let mut limit = MANAGER.layout.preview_height();
-			while limit > 0 && h.reader.read_line(&mut line)? > 0 {
+			let limit = MANAGER.layout.preview_height();
+			while h.reader.read_line(&mut line)? > 0 {
 				if tick != INCR.load(Ordering::Relaxed) {
 					return Err("Preview cancelled".into());
 				}
 
 				i += 1;
-				if i <= skip {
+				if i > skip + limit {
+					break;
+				} else if i <= skip {
 					line.clear();
 					continue;
 				}
 
-				limit -= 1;
 				line = line.replace('\t', &spaces);
 				let regions = h.highlight_lines.highlight_line(&line, syntaxes).map_err(|e| anyhow!(e))?;
 				buf.push_str(&as_24_bit_terminal_escaped(&regions, false));
 				line.clear();
 			}
 
-			if buf.is_empty() {
-				return Err(PagedError::Exceed(i));
+			if skip > 0 && i < skip + limit {
+				return Err(PagedError::Exceed(i.saturating_sub(limit)));
 			}
 
 			buf.push_str("\x1b[0m");
