@@ -62,14 +62,16 @@ keymap = [
 	{ on = [ "c", "n" ], exec = "copy name_without_ext" },
 
 	# Sorting
-	{ on = [ ",", "a" ], exec = "sort alphabetical" },
-	{ on = [ ",", "A" ], exec = "sort alphabetical --reverse" },
-	{ on = [ ",", "c" ], exec = "sort created" },
-	{ on = [ ",", "C" ], exec = "sort created --reverse" },
-	{ on = [ ",", "m" ], exec = "sort modified" },
-	{ on = [ ",", "M" ], exec = "sort modified --reverse" },
-	{ on = [ ",", "s" ], exec = "sort size" },
-	{ on = [ ",", "S" ], exec = "sort size --reverse" },
+	{ on = [ ",", "a" ], exec = "sort alphabetical --dir_first" },
+	{ on = [ ",", "A" ], exec = "sort alphabetical --reverse --dir_first" },
+	{ on = [ ",", "c" ], exec = "sort created --dir_first" },
+	{ on = [ ",", "C" ], exec = "sort created --reverse --dir_first" },
+	{ on = [ ",", "m" ], exec = "sort modified --dir_first" },
+	{ on = [ ",", "M" ], exec = "sort modified --reverse --dir_first" },
+	{ on = [ ",", "n" ], exec = "sort natural --dir_first" },
+	{ on = [ ",", "N" ], exec = "sort natural --reverse --dir_first" },
+	{ on = [ ",", "s" ], exec = "sort size --dir_first" },
+	{ on = [ ",", "S" ], exec = "sort size --reverse --dir_first" },
 
 	# Tabs
 	{ on = [ "t" ], exec = "tab_create --current" },

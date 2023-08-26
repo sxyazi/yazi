@@ -381,6 +381,7 @@ dependencies = [
  "crossterm 0.27.0",
  "futures",
  "indexmap 2.0.0",
+ "natord",
  "notify",
  "parking_lot",
  "ratatui",
@@ -1132,6 +1133,12 @@ checksum = "6a51313c5820b0b02bd422f4b44776fbf47961755c74ce64afc73bfad10226c3"
 dependencies = [
  "getrandom",
 ]
+
+[[package]]
+name = "natord"
+version = "1.0.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "308d96db8debc727c3fd9744aac51751243420e46edf401010908da7f8d5e57c"
 
 [[package]]
 name = "nom"
