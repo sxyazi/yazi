@@ -8,9 +8,10 @@
 
 - sort_by: File sorting method
 
-  - `"alphabetical"`: Sort alphabetically
+  - `"alphabetical"`: Sort alphabetically, e.g. `1.md` < `10.md` < `2.md`
   - `"created"`: Sort by creation time
   - `"modified"`: Sort by last modified time
+  - `"natural"`: Sort naturally, e.g. `1.md` < `2.md` < `10.md`
   - `"size"`: Sort by file size
 
 - sort_reverse: Display files in reverse order

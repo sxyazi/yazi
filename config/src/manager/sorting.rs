@@ -8,6 +8,7 @@ pub enum SortBy {
 	Alphabetical,
 	Created,
 	Modified,
+	Natural,
 	Size,
 }
 
@@ -19,6 +20,7 @@ impl TryFrom<String> for SortBy {
 			"alphabetical" => Self::Alphabetical,
 			"created" => Self::Created,
 			"modified" => Self::Modified,
+			"natural" => Self::Natural,
 			"size" => Self::Size,
 			_ => bail!("invalid sort_by value: {s}"),
 		})

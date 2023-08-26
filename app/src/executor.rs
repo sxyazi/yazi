@@ -1,4 +1,4 @@
-use core::{emit, files::FilesSort, input::InputMode};
+use core::{emit, files::FilesSorter, input::InputMode};
 use std::path::PathBuf;
 
 use config::{keymap::{Control, Exec, Key, KeymapLayer}, manager::SortBy, KEYMAP};
@@ -130,7 +130,7 @@ impl Executor {
 
 			// Sorting
 			"sort" => {
-				let b = cx.manager.current_mut().files.set_sort(FilesSort {
+				let b = cx.manager.current_mut().files.set_sorter(FilesSorter {
 					by:        SortBy::try_from(exec.args.get(0).cloned().unwrap_or_default())
 						.unwrap_or_default(),
 					reverse:   exec.named.contains_key("reverse"),
