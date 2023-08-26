@@ -5,7 +5,7 @@ use config::{BOOT, OPEN};
 use shared::{max_common_root, Defer, Term, MIME_DIR};
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 
-use super::{PreviewData, Tab, Tabs, Watcher};
+use super::{Tab, Tabs, Watcher};
 use crate::{emit, external::{self, ShellOpt}, files::{File, FilesOp}, input::InputOpt, manager::Folder, select::SelectOpt, tasks::Tasks, Event, BLOCKER};
 
 pub struct Manager {
@@ -52,7 +52,7 @@ impl Manager {
 		self.watcher.watch(to_watch);
 	}
 
-	pub fn preview(&mut self, show_image: bool) -> bool {
+	pub fn peek(&mut self, sequent: bool, show_image: bool) -> bool {
 		let Some(hovered) = self.hovered().cloned() else {
 			return self.active_mut().preview.reset();
 		};
@@ -61,19 +61,23 @@ impl Manager {
 			self.active_mut().preview_reset_image();
 		}
 
-		if hovered.meta.is_dir() {
-			self.active_mut().preview.go(&hovered.path, MIME_DIR, show_image);
-			if let Some(offset) = self.active().history(&hovered.path).map(|f| f.offset()) {
-				emit!(Peek(hovered.path, offset));
-			}
-		} else if let Some(mime) = self.mimetype.get(&hovered.path).cloned() {
-			self.active_mut().preview.go(&hovered.path, &mime, show_image);
+		let mime = if hovered.meta.is_dir() {
+			MIME_DIR.to_owned()
+		} else if let Some(m) = self.mimetype.get(&hovered.path).cloned() {
+			m
 		} else {
 			tokio::spawn(async move {
 				if let Ok(mimes) = external::file(&[hovered.path]).await {
 					emit!(Mimetype(mimes));
 				}
 			});
+			return false;
+		};
+
+		if sequent {
+			self.active_mut().preview.sequent(&hovered.path, &mime, show_image);
+		} else {
+			self.active_mut().preview.go(&hovered.path, &mime, show_image);
 		}
 		false
 	}
@@ -393,39 +397,16 @@ impl Manager {
 		true
 	}
 
-	pub fn update_preview(&mut self, path: PathBuf, mime: String, data: PreviewData) -> bool {
-		let Some(hovered) = self.hovered().map(|h| &h.path) else {
-			return self.active_mut().preview.reset();
+	pub fn update_hover(&mut self, file: Option<File>) -> bool {
+		let b = file.map(|f| self.current_mut().hover_force(f)).unwrap_or(false);
+		let Some(hovered) = self.hovered() else {
+			return b;
 		};
 
-		if path != *hovered {
-			return false;
+		if hovered.meta.is_dir() {
+			self.watcher.trigger_dirs(&[&hovered.path]);
 		}
-
-		let preview = &mut self.active_mut().preview;
-		preview.lock = Some((path, mime));
-		preview.data = data;
-		true
-	}
-
-	pub fn update_peek(&mut self, path: PathBuf, skip: usize) -> bool {
-		if !matches!(self.hovered(), Some(f) if f.path == path) {
-			return false;
-		}
-
-		if self.active().preview.lock.is_some() {
-			self.active_mut().preview.peek(skip);
-			return false;
-		}
-
-		if self.active().history(&path).is_some() {
-			let preview = &mut self.active_mut().preview;
-			preview.lock = Some((path, MIME_DIR.to_string()));
-			preview.data = PreviewData::Folder;
-		}
-
-		self.active_mut().preview.peek(skip);
-		false
+		b
 	}
 }
 

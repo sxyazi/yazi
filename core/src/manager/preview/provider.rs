@@ -21,7 +21,7 @@ impl Provider {
 		skip: usize,
 	) -> Result<PreviewData, PeekError> {
 		match kind {
-			MimeKind::Empty => Ok(PreviewData::None),
+			MimeKind::Empty => Err("Empty file".into()),
 			MimeKind::Archive => Provider::archive(path, skip).await.map(PreviewData::Text),
 			MimeKind::Dir => Provider::folder(path).await,
 			MimeKind::Image => Provider::image(path).await,

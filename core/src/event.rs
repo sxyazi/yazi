@@ -6,7 +6,8 @@ use crossterm::event::KeyEvent;
 use shared::RoCell;
 use tokio::sync::{mpsc::UnboundedSender, oneshot};
 
-use super::{files::{File, FilesOp}, input::InputOpt, manager::PreviewData, select::SelectOpt};
+use super::{files::{File, FilesOp}, input::InputOpt, select::SelectOpt};
+use crate::manager::PreviewLock;
 
 static TX: RoCell<UnboundedSender<Event>> = RoCell::new();
 
@@ -26,8 +27,8 @@ pub enum Event {
 	Pages(usize),
 	Mimetype(BTreeMap<PathBuf, String>),
 	Hover(Option<File>),
-	Preview(PathBuf, String, PreviewData),
-	Peek(PathBuf, usize),
+	Peek(usize, Option<PathBuf>),
+	Preview(PreviewLock),
 
 	// Input
 	Select(SelectOpt, oneshot::Sender<Result<usize>>),
@@ -88,11 +89,14 @@ macro_rules! emit {
 	(Hover($file:expr)) => {
 		$crate::Event::Hover(Some($file)).emit();
 	};
-	(Preview($path:expr, $mime:expr, $data:expr)) => {
-		$crate::Event::Preview($path, $mime, $data).emit();
+	(Peek) => {
+		$crate::Event::Peek(0, None).emit();
 	};
-	(Peek($path:expr, $skip:expr)) => {
-		$crate::Event::Peek($path, $skip).emit();
+	(Peek($skip:expr, $path:expr)) => {
+		$crate::Event::Peek($skip, Some($path)).emit();
+	};
+	(Preview($lock:expr)) => {
+		$crate::Event::Preview($lock).emit();
 	};
 
 	(Select($opt:expr)) => {{

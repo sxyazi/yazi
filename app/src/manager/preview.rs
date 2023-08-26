@@ -26,8 +26,7 @@ impl<'a> Widget for Preview<'a> {
 			return;
 		}
 
-		match &preview.data {
-			PreviewData::None => {}
+		match &preview.lock.as_ref().unwrap().data {
 			PreviewData::Folder => {
 				if let Some(folder) = manager.active().history(hovered) {
 					Folder::new(self.cx, folder).with_preview(true).render(area, buf);

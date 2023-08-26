@@ -3,10 +3,10 @@ use std::{collections::{BTreeMap, BTreeSet}, ffi::{OsStr, OsString}, mem, path::
 use anyhow::{Error, Result};
 use config::{open::Opener, MANAGER};
 use futures::StreamExt;
-use shared::{Defer, MIME_DIR};
+use shared::Defer;
 use tokio::task::JoinHandle;
 
-use super::{Folder, Mode, Preview};
+use super::{Folder, Mode, Preview, PreviewLock};
 use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, files::{File, Files, FilesOp}, input::InputOpt, Event, BLOCKER};
 
 pub struct Tab {
@@ -74,32 +74,6 @@ impl Tab {
 
 		emit!(Hover);
 		true
-	}
-
-	pub fn peek(&mut self, step: isize) -> bool {
-		let size = self.preview.peek_step(step);
-		let old = self.preview.skip();
-		let new = if step < 0 { old.saturating_sub(size) } else { old + size };
-		if new == old {
-			return false;
-		}
-
-		if !matches!(&self.preview.lock, Some((_, m)) if m == MIME_DIR) {
-			self.preview.peek(new);
-			return false;
-		};
-
-		let path = self.preview.lock.as_ref().unwrap().0.clone();
-		if let Some(folder) = self.history(&path) {
-			let max = folder.files.len().saturating_sub(MANAGER.layout.preview_height());
-			if new > max {
-				emit!(Peek(path, max));
-				return false;
-			}
-		}
-
-		self.preview.peek(new);
-		false
 	}
 
 	pub async fn cd(&mut self, mut target: PathBuf) -> bool {
@@ -335,6 +309,42 @@ impl Tab {
 
 		false
 	}
+
+	pub fn update_peek(&mut self, step: isize, path: Option<PathBuf>) {
+		let Some(ref hovered) = self.current.hovered else {
+			return;
+		};
+
+		if path.as_ref().map(|p| *p != hovered.path).unwrap_or(false) {
+			return;
+		} else if !self.preview.lock.as_ref().map(|l| l.path == hovered.path).unwrap_or(false) {
+			return;
+		} else if !self.preview.arrow(step, path.is_some()) {
+			return;
+		} else if !hovered.meta.is_dir() {
+			return;
+		}
+
+		if let Some(folder) = self.history(&hovered.path) {
+			let max = folder.files.len().saturating_sub(MANAGER.layout.preview_height());
+			if self.preview.skip() > max {
+				self.preview.arrow(max as isize, true);
+			}
+		}
+	}
+
+	pub fn update_preview(&mut self, lock: PreviewLock) -> bool {
+		let Some(hovered) = self.current.hovered.as_ref().map(|h| &h.path) else {
+			return self.preview.reset();
+		};
+
+		if lock.path != *hovered {
+			return false;
+		}
+
+		self.preview.lock = Some(lock);
+		true
+	}
 }
 
 impl Tab {
@@ -387,6 +397,9 @@ impl Tab {
 
 	#[inline]
 	pub fn preview(&self) -> &Preview { &self.preview }
+
+	#[inline]
+	pub fn preview_reset(&mut self) -> bool { self.preview.reset() }
 
 	#[inline]
 	pub fn preview_reset_image(&mut self) -> bool { self.preview.reset_image() }
