@@ -1,12 +1,12 @@
 use std::{collections::{BTreeMap, BTreeSet}, ffi::{OsStr, OsString}, mem, path::{Path, PathBuf}};
 
 use anyhow::{Error, Result};
-use config::open::Opener;
+use config::{open::Opener, MANAGER};
 use futures::StreamExt;
-use shared::Defer;
+use shared::{Defer, MIME_DIR};
 use tokio::task::JoinHandle;
 
-use super::{Folder, Mode, Preview};
+use super::{Folder, Mode, Preview, PreviewLock};
 use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, files::{File, Files, FilesOp}, input::InputOpt, Event, BLOCKER};
 
 pub struct Tab {
@@ -309,6 +309,41 @@ impl Tab {
 
 		false
 	}
+
+	pub fn update_peek(&mut self, step: isize, path: Option<PathBuf>) {
+		let Some(ref hovered) = self.current.hovered else {
+			return;
+		};
+
+		if path.as_ref().map(|p| *p != hovered.path).unwrap_or(false) {
+			return;
+		} else if !self.preview.arrow(step, path.is_some()) {
+			return;
+		} else if !matches!(&self.preview.lock, Some(l) if l.mime == MIME_DIR) {
+			return;
+		}
+
+		let path = &self.preview.lock.as_ref().unwrap().path;
+		if let Some(folder) = self.history(path) {
+			let max = folder.files.len().saturating_sub(MANAGER.layout.preview_height());
+			if self.preview.skip() > max {
+				self.preview.arrow(max as isize, true);
+			}
+		}
+	}
+
+	pub fn update_preview(&mut self, lock: PreviewLock) -> bool {
+		let Some(hovered) = self.current.hovered.as_ref().map(|h| &h.path) else {
+			return self.preview.reset();
+		};
+
+		if lock.path != *hovered {
+			return false;
+		}
+
+		self.preview.lock = Some(lock);
+		true
+	}
 }
 
 impl Tab {
@@ -361,6 +396,9 @@ impl Tab {
 
 	#[inline]
 	pub fn preview(&self) -> &Preview { &self.preview }
+
+	#[inline]
+	pub fn preview_reset(&mut self) -> bool { self.preview.reset() }
 
 	#[inline]
 	pub fn preview_reset_image(&mut self) -> bool { self.preview.reset_image() }

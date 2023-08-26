@@ -44,8 +44,14 @@ impl<'a> Folder<'a> {
 
 impl<'a> Widget for Folder<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let window = self.folder.window();
-		let mode = self.cx.manager.active().mode();
+		let active = self.cx.manager.active();
+		let mode = active.mode();
+
+		let window = if self.is_preview {
+			self.folder.window_for(active.preview().skip())
+		} else {
+			self.folder.window()
+		};
 
 		let items = window
 			.iter()

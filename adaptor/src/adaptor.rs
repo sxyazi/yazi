@@ -19,7 +19,7 @@ pub struct Adaptor;
 
 impl Adaptor {
 	pub async fn image_show(mut path: &Path, rect: Rect) -> Result<()> {
-		let cache = BOOT.cache(path);
+		let cache = BOOT.cache(path, 0);
 		if fs::metadata(&cache).await.is_ok() {
 			path = cache.as_path();
 		}

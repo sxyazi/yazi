@@ -1,10 +1,11 @@
 use std::{path::Path, process::Stdio};
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use config::PREVIEW;
+use shared::PeekError;
 use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command};
 
-pub async fn jq(path: &Path, mut lines: usize) -> Result<String> {
+pub async fn jq(path: &Path, skip: usize, limit: usize) -> Result<String, PeekError> {
 	let mut child = Command::new("jq")
 		.args(["-C", "--indent", &PREVIEW.tab_size.to_string(), "."])
 		.arg(path)
@@ -13,20 +14,24 @@ pub async fn jq(path: &Path, mut lines: usize) -> Result<String> {
 		.kill_on_drop(true)
 		.spawn()?;
 
+	let mut i = 0;
 	let mut it = BufReader::new(child.stdout.take().unwrap()).lines();
-	let mut output = String::new();
+	let mut lines = String::new();
 	while let Ok(Some(line)) = it.next_line().await {
-		if lines < 1 {
+		i += 1;
+		if i > skip + limit {
 			break;
+		} else if i <= skip {
+			continue;
 		}
 
-		output.push_str(&line);
-		output.push('\n');
-		lines -= 1;
+		lines.push_str(&line);
+		lines.push('\n');
 	}
 
-	if output.is_empty() {
-		bail!("failed to get head of jq");
+	if skip > 0 && i < skip + limit {
+		Err(PeekError::Exceed(i.saturating_sub(limit)))
+	} else {
+		Ok(lines)
 	}
-	Ok(output)
 }

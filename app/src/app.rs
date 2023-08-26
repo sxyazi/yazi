@@ -87,8 +87,8 @@ impl App {
 
 	fn dispatch_resize(&mut self) {
 		self.cx.manager.current_mut().set_page(true);
-		self.cx.manager.active_mut().preview_reset_image();
-		self.cx.manager.preview(self.cx.image_layer());
+		self.cx.manager.active_mut().preview_reset();
+		self.cx.manager.peek(true, self.cx.image_layer());
 		emit!(Render);
 	}
 
@@ -100,7 +100,6 @@ impl App {
 		} else {
 			self.term = Some(Term::start().unwrap());
 			self.signals.stop_term(false);
-			self.cx.manager.preview(self.cx.image_layer());
 			emit!(Render);
 			emit!(Hover);
 		}
@@ -152,18 +151,24 @@ impl App {
 			Event::Mimetype(mimes) => {
 				if manager.update_mimetype(mimes, tasks) {
 					emit!(Render);
-					self.cx.manager.preview(self.cx.image_layer());
+					emit!(Peek);
 				}
 			}
 			Event::Hover(file) => {
-				if file.map(|f| manager.current_mut().hover_force(f)).unwrap_or(false) {
+				if manager.update_hover(file) {
 					emit!(Render);
 				}
-				self.cx.manager.preview(self.cx.image_layer());
+				emit!(Peek);
 			}
-			Event::Preview(path, mime, data) => {
-				manager.update_preview(path, mime, data);
-				emit!(Render);
+			Event::Peek(skip, sequent) => {
+				let b = sequent.is_some();
+				manager.active_mut().update_peek(skip as isize, sequent);
+				self.cx.manager.peek(b, self.cx.image_layer());
+			}
+			Event::Preview(lock) => {
+				if manager.active_mut().update_preview(lock) {
+					emit!(Render);
+				}
 			}
 
 			Event::Select(opt, tx) => {

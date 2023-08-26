@@ -1,4 +1,4 @@
-use std::{env, fs, path::{Path, PathBuf}, time::{self, SystemTime}};
+use std::{env, fs, path::{Path, PathBuf}, process, time::{self, SystemTime}};
 
 use clap::{command, Parser};
 use md5::{Digest, Md5};
@@ -30,6 +30,10 @@ struct Args {
 	/// Write the selected files on open emitted by the chooser mode
 	#[arg(long)]
 	chooser_file: Option<PathBuf>,
+
+	/// Clear the cache directory
+	#[arg(long, action)]
+	clear_cache: bool,
 }
 
 impl Default for Boot {
@@ -58,23 +62,22 @@ impl Default for Boot {
 			fs::create_dir_all(&boot.state_dir).unwrap();
 		}
 
+		if args.clear_cache {
+			println!("Clearing cache directory: {:?}", boot.cache_dir);
+			fs::remove_dir_all(&boot.cache_dir).unwrap();
+			process::exit(0);
+		}
+
 		boot
 	}
 }
 
 impl Boot {
 	#[inline]
-	pub fn cache(&self, path: &Path) -> PathBuf {
-		#[cfg(target_os = "windows")]
-		let h = Md5::new_with_prefix(path.to_string_lossy().as_bytes());
-
-		#[cfg(not(target_os = "windows"))]
-		let h = {
-			use std::os::unix::ffi::OsStrExt;
-			Md5::new_with_prefix(path.as_os_str().as_bytes())
-		};
-
-		self.cache_dir.join(format!("{:x}", h.finalize()))
+	pub fn cache(&self, path: &Path, skip: usize) -> PathBuf {
+		self
+			.cache_dir
+			.join(format!("{:x}", Md5::new_with_prefix(format!("{:?}///{}", path, skip)).finalize()))
 	}
 
 	#[inline]

@@ -18,21 +18,6 @@ pub enum MimeKind {
 }
 
 impl MimeKind {
-	pub fn valid(s: &str) -> bool {
-		if s == "inode/x-empty" {
-			return true;
-		}
-
-		let parts = s.split('/').collect::<Vec<_>>();
-		if parts.len() != 2 {
-			return false;
-		}
-
-		#[rustfmt::skip]
-		let b = matches!(parts[0], "application" | "audio" | "example" | "font" | "image" | "message" | "model" | "multipart" | "text" | "video");
-		b && !parts[1].is_empty()
-	}
-
 	pub fn new(s: &str) -> Self {
 		if s == MIME_DIR {
 			Self::Dir
@@ -60,5 +45,24 @@ impl MimeKind {
 		} else {
 			Self::Others
 		}
+	}
+
+	pub fn valid(s: &str) -> bool {
+		if s == "inode/x-empty" {
+			return true;
+		}
+
+		let parts = s.split('/').collect::<Vec<_>>();
+		if parts.len() != 2 {
+			return false;
+		}
+
+		#[rustfmt::skip]
+		let b = matches!(parts[0], "application" | "audio" | "example" | "font" | "image" | "message" | "model" | "multipart" | "text" | "video");
+		b && !parts[1].is_empty()
+	}
+
+	pub fn show_as_image(&self) -> bool {
+		matches!(self, MimeKind::Image | MimeKind::Video | MimeKind::PDF)
 	}
 }

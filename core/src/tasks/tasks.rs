@@ -34,7 +34,7 @@ impl Tasks {
 
 	pub fn toggle(&mut self) -> bool {
 		self.visible = !self.visible;
-		emit!(Hover); // Show/hide preview for images
+		emit!(Peek); // Show/hide preview for images
 		true
 	}
 

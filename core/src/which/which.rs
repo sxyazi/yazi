@@ -51,6 +51,6 @@ impl Which {
 	#[inline]
 	fn switch(&mut self, state: bool) {
 		self.visible = state;
-		emit!(Hover); // Show/hide preview for images
+		emit!(Peek); // Show/hide preview for images
 	}
 }

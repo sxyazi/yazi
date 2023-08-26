@@ -1,8 +1,9 @@
 use std::path::Path;
 
-use anyhow::{bail, Result};
+use anyhow::anyhow;
 use serde::Deserialize;
 use serde_json::Value;
+use shared::PeekError;
 use tokio::process::Command;
 
 #[derive(Debug)]
@@ -29,12 +30,13 @@ pub struct LsarFile {
 	pub attributes: Option<LsarAttr>,
 }
 
-pub async fn lsar(path: &Path) -> Result<Vec<LsarFile>> {
+#[allow(clippy::manual_map)]
+pub async fn lsar(path: &Path, skip: usize, limit: usize) -> Result<Vec<LsarFile>, PeekError> {
 	let output =
 		Command::new("lsar").args(["-j", "-jss"]).arg(path).kill_on_drop(true).output().await?;
 
 	if !output.status.success() {
-		bail!("failed to get json: {}", String::from_utf8_lossy(&output.stderr));
+		return Err(String::from_utf8_lossy(&output.stderr).to_string().into());
 	}
 
 	#[derive(Deserialize)]
@@ -44,20 +46,36 @@ pub async fn lsar(path: &Path) -> Result<Vec<LsarFile>> {
 	}
 
 	let output = String::from_utf8_lossy(&output.stdout);
-	let contents = serde_json::from_str::<Outer>(output.trim())?.contents;
+	let contents = serde_json::from_str::<Outer>(output.trim()).map_err(|e| anyhow!(e))?.contents;
 
-	let mut files = Vec::with_capacity(contents.len());
+	let mut i = 0;
+	let mut files = Vec::with_capacity(limit);
 	for content in contents {
-		let mut file = serde_json::from_value::<LsarFile>(content.clone())?;
-		if let Some(p) = content.get("XADPosixPermissions").and_then(|p| p.as_u64()) {
-			file.attributes = Some(LsarAttr::Posix(p as u16));
-		} else if let Some(a) = content.get("XADWindowsFileAttributes").and_then(|a| a.as_u64()) {
-			file.attributes = Some(LsarAttr::Windows(a as u16));
-		} else if let Some(a) = content.get("XADDOSFileAttributes").and_then(|a| a.as_u64()) {
-			file.attributes = Some(LsarAttr::Dos(a as u8));
+		i += 1;
+		if i > skip + limit {
+			break;
+		} else if i <= skip {
+			continue;
 		}
 
+		let attributes = if let Some(p) = content.get("XADPosixPermissions").and_then(|p| p.as_u64()) {
+			Some(LsarAttr::Posix(p as u16))
+		} else if let Some(a) = content.get("XADWindowsFileAttributes").and_then(|a| a.as_u64()) {
+			Some(LsarAttr::Windows(a as u16))
+		} else if let Some(a) = content.get("XADDOSFileAttributes").and_then(|a| a.as_u64()) {
+			Some(LsarAttr::Dos(a as u8))
+		} else {
+			None
+		};
+
+		let mut file = serde_json::from_value::<LsarFile>(content).map_err(|e| anyhow!(e))?;
+		file.attributes = attributes;
 		files.push(file);
 	}
-	Ok(files)
+
+	if skip > 0 && files.len() < limit {
+		Err(PeekError::Exceed(i.saturating_sub(limit)))
+	} else {
+		Ok(files)
+	}
 }
