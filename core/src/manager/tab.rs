@@ -3,7 +3,7 @@ use std::{collections::{BTreeMap, BTreeSet}, ffi::{OsStr, OsString}, mem, path::
 use anyhow::{Error, Result};
 use config::{open::Opener, MANAGER};
 use futures::StreamExt;
-use shared::Defer;
+use shared::{Defer, MIME_DIR};
 use tokio::task::JoinHandle;
 
 use super::{Folder, Mode, Preview, PreviewLock};
@@ -317,15 +317,14 @@ impl Tab {
 
 		if path.as_ref().map(|p| *p != hovered.path).unwrap_or(false) {
 			return;
-		} else if !self.preview.lock.as_ref().map(|l| l.path == hovered.path).unwrap_or(false) {
-			return;
 		} else if !self.preview.arrow(step, path.is_some()) {
 			return;
-		} else if !hovered.meta.is_dir() {
+		} else if !matches!(&self.preview.lock, Some(l) if l.mime == MIME_DIR) {
 			return;
 		}
 
-		if let Some(folder) = self.history(&hovered.path) {
+		let path = &self.preview.lock.as_ref().unwrap().path;
+		if let Some(folder) = self.history(path) {
 			let max = folder.files.len().saturating_sub(MANAGER.layout.preview_height());
 			if self.preview.skip() > max {
 				self.preview.arrow(max as isize, true);
