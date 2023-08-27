@@ -84,19 +84,32 @@ impl Files {
 			return self.select(path, state);
 		}
 
-		let mut applied = false;
-		for item in self.iter() {
-			todo!();
-			// applied |= self.select(&item.path, state);
+		match state {
+			Some(true) => {
+				self.selected = self.iter().map(|f| f.path()).collect();
+			}
+			Some(false) => {
+				self.selected.clear();
+			}
+			None => {
+				for item in &self.items {
+					if self.selected.contains(&item.path) {
+						self.selected.remove(&item.path);
+					} else {
+						self.selected.insert(item.path());
+					}
+				}
+			}
 		}
-		applied
+		!self.items.is_empty()
 	}
 
 	pub fn select_index(&mut self, indices: &BTreeSet<usize>, state: Option<bool>) -> bool {
 		let mut applied = false;
-		for item in self.pick(indices) {
-			todo!();
-			// applied |= self.select(&item.path, state);
+		let paths: Vec<_> = self.pick(indices).iter().map(|f| f.path()).collect();
+
+		for path in paths {
+			applied |= self.select(&path, state);
 		}
 		applied
 	}
