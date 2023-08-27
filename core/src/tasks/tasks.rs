@@ -227,9 +227,9 @@ impl Tasks {
 	}
 
 	#[inline]
-	pub fn precache_mime(&self, targets: Vec<&File>, mimetype: &HashMap<PathBuf, String>) -> bool {
+	pub fn precache_mime(&self, targets: &[File], mimetype: &HashMap<PathBuf, String>) -> bool {
 		let targets = targets
-			.into_iter()
+			.iter()
 			.filter(|f| f.meta.is_file() && !mimetype.contains_key(&f.path))
 			.map(|f| f.path.clone())
 			.collect::<Vec<_>>();

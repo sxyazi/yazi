@@ -93,25 +93,23 @@ impl Folder {
 	}
 
 	pub fn hidden(&mut self, show: Option<bool>) -> bool {
-		if show.is_none() || self.files.show_hidden != show.unwrap() {
-			self.files.show_hidden = !self.files.show_hidden;
+		if self.files.set_show_hidden(show) {
 			emit!(Refresh);
 		}
-
 		false
 	}
 
 	#[inline]
-	pub fn window(&self) -> Vec<&File> {
+	pub fn window(&self) -> &[File] {
 		let end = (self.offset + MANAGER.layout.folder_height()).min(self.files.len());
-		self.files.range(self.offset..end)
+		&self.files[self.offset..end]
 	}
 
 	#[inline]
-	pub fn window_for(&self, offset: usize) -> Vec<&File> {
+	pub fn window_for(&self, offset: usize) -> &[File] {
 		let start = offset.min(self.files.len().saturating_sub(1));
 		let end = (offset + MANAGER.layout.folder_height()).min(self.files.len());
-		self.files.range(start..end)
+		&self.files[start..end]
 	}
 
 	pub fn hover(&mut self, path: &Path) -> bool {
@@ -136,13 +134,13 @@ impl Folder {
 	#[inline]
 	pub fn cursor(&self) -> usize { self.cursor }
 
-	pub fn paginate(&self) -> Vec<&File> {
+	pub fn paginate(&self) -> &[File] {
 		let len = self.files.len();
 		let limit = MANAGER.layout.folder_height();
 
 		let start = (self.page * limit).min(len.saturating_sub(1));
 		let end = (start + limit).min(len);
-		self.files.range(start..end)
+		&self.files[start..end]
 	}
 
 	pub fn rect_current(&self, path: &Path) -> Option<Rect> {

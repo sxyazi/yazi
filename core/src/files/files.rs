@@ -1,28 +1,27 @@
-use std::{collections::{BTreeMap, BTreeSet}, ops::Range, path::{Path, PathBuf}};
+use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref, path::{Path, PathBuf}};
 
 use anyhow::Result;
 use config::MANAGER;
 use tokio::fs;
 
-use super::{File, FilesSorter, NonHiddenFiles};
+use super::{File, FilesSorter};
 
 pub struct Files {
 	items:  Vec<File>,
-	length: usize,
+	hidden: Vec<File>,
 
 	sizes:    BTreeMap<PathBuf, u64>,
 	selected: BTreeSet<PathBuf>,
 
-	pub sorter:      FilesSorter,
-	// TODO: XXX
-	pub show_hidden: bool,
+	pub sorter:  FilesSorter,
+	show_hidden: bool,
 }
 
 impl Default for Files {
 	fn default() -> Self {
 		Self {
 			items:  Default::default(),
-			length: Default::default(),
+			hidden: Default::default(),
 
 			sizes:    Default::default(),
 			selected: Default::default(),
@@ -31,6 +30,12 @@ impl Default for Files {
 			show_hidden: MANAGER.show_hidden,
 		}
 	}
+}
+
+impl Deref for Files {
+	type Target = Vec<File>;
+
+	fn deref(&self) -> &Self::Target { &self.items }
 }
 
 impl Files {
@@ -54,7 +59,9 @@ impl Files {
 		}
 		Ok(items)
 	}
+}
 
+impl Files {
 	#[inline]
 	pub fn select(&mut self, path: &Path, state: Option<bool>) -> bool {
 		let old = self.selected.contains(path);
@@ -104,21 +111,31 @@ impl Files {
 	}
 
 	#[inline]
-	pub fn set_show_hidden(&mut self, state: bool) -> bool {
-		if self.show_hidden == state {
+	pub fn set_show_hidden(&mut self, state: Option<bool>) -> bool {
+		let state = state.unwrap_or(!self.show_hidden);
+		if state == self.show_hidden {
+			return false;
+		} else if state && self.hidden.is_empty() {
 			return false;
 		}
 
-		self.length =
-			if state { self.items.len() } else { self.items.iter().filter(|f| !f.is_hidden).count() };
+		if state {
+			self.items.append(&mut self.hidden);
+			self.sorter.sort(&mut self.items);
+		} else {
+			let items = mem::take(&mut self.items);
+			(self.hidden, self.items) = items.into_iter().partition(|f| f.is_hidden);
+		}
+
 		self.show_hidden = state;
 		true
 	}
 
 	pub fn update_read(&mut self, mut items: Vec<File>) -> bool {
+		if !self.show_hidden {
+			(self.hidden, items) = items.into_iter().partition(|f| f.is_hidden);
+		}
 		self.sorter.sort(&mut items);
-		self.length =
-			if self.show_hidden { items.len() } else { items.iter().filter(|f| !f.is_hidden).count() };
 		self.items = items;
 		true
 	}
@@ -131,15 +148,16 @@ impl Files {
 
 	pub fn update_search(&mut self, items: Vec<File>) -> bool {
 		if !items.is_empty() {
-			self.length = items.len();
+			let (hidden, items): (Vec<_>, Vec<_>) = items.into_iter().partition(|f| f.is_hidden);
 			self.items.extend(items);
+			self.hidden.extend(hidden);
 			self.sorter.sort(&mut self.items);
 			return true;
 		}
 
 		if !self.items.is_empty() {
-			self.length = 0;
 			self.items.clear();
+			self.hidden.clear();
 			return true;
 		}
 
@@ -148,23 +166,7 @@ impl Files {
 }
 
 impl Files {
-	#[inline]
-	pub fn len(&self) -> usize { self.length }
-
-	#[inline]
-	pub fn iter<'a>(&'a self) -> Box<dyn Iterator<Item = &'a File> + 'a> {
-		if self.show_hidden {
-			return Box::new(self.items.iter());
-		}
-		Box::new(NonHiddenFiles::new(&self.items, self.length))
-	}
-
-	#[inline]
-	pub fn range(&self, range: Range<usize>) -> Vec<&File> {
-		self.iter().skip(range.start).take(range.end - range.start).collect()
-	}
-
-	pub fn pick<'a>(&'a self, indices: &BTreeSet<usize>) -> Vec<&'a File> {
+	pub fn pick(&self, indices: &BTreeSet<usize>) -> Vec<&File> {
 		let mut items = Vec::with_capacity(indices.len());
 		for (i, item) in self.iter().enumerate() {
 			if indices.contains(&i) {
@@ -185,7 +187,9 @@ impl Files {
 			return Default::default();
 		}
 
-		let mut items = Vec::with_capacity(self.selected.len() + pending.len());
+		let mut items =
+			Vec::with_capacity(self.selected.len() + if !unset { pending.len() } else { 0 });
+
 		for (i, item) in self.iter().enumerate() {
 			let b = self.selected.contains(&item.path);
 			if !unset && (b || pending.contains(&i)) {
@@ -207,4 +211,9 @@ impl Files {
 		}
 		self.iter().any(|f| self.selected.contains(&f.path))
 	}
+}
+
+impl Files {
+	#[inline]
+	pub fn show_hidden(&self) -> bool { self.show_hidden }
 }

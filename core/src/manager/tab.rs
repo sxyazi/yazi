@@ -230,7 +230,7 @@ impl Tab {
 		}
 
 		let cwd = self.current.cwd.clone();
-		let hidden = self.current.files.show_hidden;
+		let hidden = self.current.files.show_hidden();
 
 		self.search = Some(tokio::spawn(async move {
 			let subject = emit!(Input(InputOpt::top("Search:"))).await?;
