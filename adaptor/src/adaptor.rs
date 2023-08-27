@@ -24,9 +24,8 @@ impl Adaptor {
 			path = cache.as_path();
 		}
 
-		if IMAGE_SHOWN.swap(true, Ordering::Relaxed) {
-			Self::image_hide(rect).ok();
-		}
+		Self::image_hide(rect).ok();
+		IMAGE_SHOWN.store(true, Ordering::Relaxed);
 
 		match PREVIEW.adaptor {
 			PreviewAdaptor::Kitty => Kitty::image_show(path, rect).await,
