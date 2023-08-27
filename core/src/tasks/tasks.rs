@@ -216,11 +216,8 @@ impl Tasks {
 			return false;
 		}
 
-		let targets = targets
-			.iter()
-			.filter(|(_, f)| f.meta.is_dir() && f.length.is_none())
-			.map(|(p, _)| p.clone())
-			.collect::<Vec<_>>();
+		let targets: Vec<_> =
+			targets.iter().filter(|f| f.meta.is_dir() && f.length.is_none()).map(|f| f.path()).collect();
 
 		if !targets.is_empty() {
 			self.scheduler.precache_size(targets);

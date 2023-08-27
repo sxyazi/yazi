@@ -1,4 +1,4 @@
-use std::{collections::{BTreeMap, BTreeSet}, path::{Path, PathBuf}, sync::Arc, time::Duration};
+use std::{collections::BTreeSet, path::{Path, PathBuf}, sync::Arc, time::Duration};
 
 use futures::StreamExt;
 use indexmap::IndexMap;
@@ -170,11 +170,11 @@ impl Watcher {
 		for ori in linked {
 			emit!(Files(match &result {
 				Ok(items) => {
-					let files = BTreeMap::from_iter(items.iter().map(|(p, f)| {
-						let p = ori.join(p.strip_prefix(path).unwrap());
-						let f = f.clone().set_path(&p);
-						(p, f)
-					}));
+					let mut files = Vec::with_capacity(items.len());
+					for item in items {
+						let file = item.clone().set_path(ori.join(item.path.strip_prefix(path).unwrap()));
+						files.push(file);
+					}
 					FilesOp::Read(ori, files)
 				}
 				Err(_) => FilesOp::IOErr(ori),

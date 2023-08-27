@@ -1,7 +1,6 @@
-use std::{cmp::Ordering, path::PathBuf};
+use std::cmp::Ordering;
 
 use config::{manager::SortBy, MANAGER};
-use indexmap::IndexMap;
 
 use super::File;
 
@@ -23,41 +22,41 @@ impl Default for FilesSorter {
 }
 
 impl FilesSorter {
-	pub(super) fn sort(&self, items: &mut IndexMap<PathBuf, File>) -> bool {
+	pub(super) fn sort(&self, items: &mut Vec<File>) -> bool {
 		if items.is_empty() {
 			return false;
 		}
 
 		match self.by {
 			SortBy::Alphabetical => {
-				items.sort_unstable_by(|_, a, _, b| self.cmp(&a.path, &b.path, self.promote(a, b)))
+				items.sort_unstable_by(|a, b| self.cmp(&a.path, &b.path, self.promote(a, b)))
 			}
-			SortBy::Created => items.sort_unstable_by(|_, a, _, b| {
+			SortBy::Created => items.sort_unstable_by(|a, b| {
 				if let (Ok(aa), Ok(bb)) = (a.meta.created(), b.meta.created()) {
 					return self.cmp(aa, bb, self.promote(a, b));
 				}
 				Ordering::Equal
 			}),
-			SortBy::Modified => items.sort_unstable_by(|_, a, _, b| {
+			SortBy::Modified => items.sort_unstable_by(|a, b| {
 				if let (Ok(aa), Ok(bb)) = (a.meta.modified(), b.meta.modified()) {
 					return self.cmp(aa, bb, self.promote(a, b));
 				}
 				Ordering::Equal
 			}),
 			SortBy::Natural => self.sort_naturally(items),
-			SortBy::Size => items.sort_unstable_by(|_, a, _, b| {
+			SortBy::Size => items.sort_unstable_by(|a, b| {
 				self.cmp(a.length.unwrap_or(0), b.length.unwrap_or(0), self.promote(a, b))
 			}),
 		}
 		true
 	}
 
-	fn sort_naturally(&self, items: &mut IndexMap<PathBuf, File>) {
+	fn sort_naturally(&self, items: &mut Vec<File>) {
 		let mut indices = Vec::with_capacity(items.len());
 		let mut entities = Vec::with_capacity(items.len());
-		for (i, (path, file)) in items.into_iter().enumerate() {
+		for (i, file) in items.into_iter().enumerate() {
 			indices.push(i);
-			entities.push((path.to_string_lossy(), file));
+			entities.push((file.path.to_string_lossy(), &*file));
 		}
 
 		indices.sort_unstable_by(|&a, &b| {
@@ -71,12 +70,7 @@ impl FilesSorter {
 			}
 		});
 
-		let mut new = IndexMap::with_capacity(indices.len());
-		for i in indices {
-			let file = entities[i].1.clone();
-			new.insert(file.path(), file);
-		}
-		*items = new;
+		items.sort_unstable_by_key(|_| indices.pop().unwrap());
 	}
 
 	#[inline]

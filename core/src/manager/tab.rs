@@ -1,4 +1,4 @@
-use std::{collections::{BTreeMap, BTreeSet}, ffi::{OsStr, OsString}, mem, path::{Path, PathBuf}};
+use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}, ffi::{OsStr, OsString}, mem, path::{Path, PathBuf}};
 
 use anyhow::{Error, Result};
 use config::{open::Opener, MANAGER};
@@ -36,11 +36,7 @@ impl Tab {
 
 	pub fn escape(&mut self) -> bool {
 		if let Some((_, indices)) = self.mode.visual() {
-			let b = matches!(self.mode, Mode::Select(..));
-			for idx in indices.iter() {
-				self.current.select(Some(*idx), Some(b));
-			}
-
+			self.current.files.select_index(indices, Some(self.mode.is_select()));
 			self.mode = Mode::Normal;
 			return true;
 		}
@@ -187,11 +183,15 @@ impl Tab {
 	pub fn forward(&mut self) -> bool { false }
 
 	pub fn select(&mut self, state: Option<bool>) -> bool {
-		let idx = Some(self.current.cursor());
-		self.current.select(idx, state)
+		if let Some(ref hovered) = self.current.hovered {
+			return self.current.files.select(&hovered.path, state);
+		}
+		false
 	}
 
-	pub fn select_all(&mut self, state: Option<bool>) -> bool { self.current.select(None, state) }
+	pub fn select_all(&mut self, state: Option<bool>) -> bool {
+		self.current.files.select_many(None, state)
+	}
 
 	pub fn visual_mode(&mut self, unset: bool) -> bool {
 		let idx = self.current.cursor();
@@ -243,7 +243,7 @@ impl Tab {
 
 			emit!(Files(FilesOp::search_empty(&cwd)));
 			while let Some(chunk) = rx.next().await {
-				emit!(Files(FilesOp::Search(cwd.clone(), Files::read(chunk).await)));
+				emit!(Files(FilesOp::Search(cwd.clone(), Files::read(&chunk).await)));
 			}
 			Ok(())
 		}));
@@ -363,19 +363,9 @@ impl Tab {
 
 	pub fn selected(&self) -> Vec<&File> {
 		let mode = self.mode();
-		let files = &self.current.files;
+		let pending = mode.visual().map(|(_, p)| Cow::Borrowed(p)).unwrap_or_default();
 
-		let selected: Vec<_> = if !mode.is_visual() {
-			files.iter().filter(|(_, f)| f.is_selected).map(|(_, f)| f).collect()
-		} else {
-			files
-				.iter()
-				.enumerate()
-				.filter(|(i, (_, f))| mode.pending(*i, f.is_selected))
-				.map(|(_, (_, f))| f)
-				.collect()
-		};
-
+		let selected = self.current.files.selected(&pending, mode.is_unset());
 		if selected.is_empty() {
 			self.current.hovered.as_ref().map(|h| vec![h]).unwrap_or_default()
 		} else {
@@ -384,7 +374,9 @@ impl Tab {
 	}
 
 	#[inline]
-	pub fn in_selecting(&self) -> bool { self.mode().is_visual() || self.current.has_selected() }
+	pub fn in_selecting(&self) -> bool {
+		self.mode().is_visual() || self.current.files.has_selected()
+	}
 
 	#[inline]
 	pub fn history(&self, path: &Path) -> Option<&Folder> { self.history.get(path) }

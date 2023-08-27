@@ -5,13 +5,12 @@ use tokio::fs;
 
 #[derive(Clone, Debug)]
 pub struct File {
-	pub path:        PathBuf,
-	pub meta:        Metadata,
-	pub length:      Option<u64>,
-	pub link_to:     Option<PathBuf>,
-	pub is_link:     bool,
-	pub is_hidden:   bool,
-	pub is_selected: bool,
+	pub path:      PathBuf,
+	pub meta:      Metadata,
+	pub length:    Option<u64>,
+	pub link_to:   Option<PathBuf>,
+	pub is_link:   bool,
+	pub is_hidden: bool,
 }
 
 impl File {
@@ -32,7 +31,7 @@ impl File {
 
 		let length = if meta.is_dir() { None } else { Some(meta.len()) };
 		let is_hidden = path.file_name().map(|s| s.to_string_lossy().starts_with('.')).unwrap_or(false);
-		File { path: path.to_path_buf(), meta, length, link_to, is_link, is_hidden, is_selected: false }
+		File { path: path.to_path_buf(), meta, length, link_to, is_link, is_hidden }
 	}
 }
 
@@ -41,8 +40,8 @@ impl File {
 	pub fn path(&self) -> PathBuf { self.path.clone() }
 
 	#[inline]
-	pub fn set_path(mut self, path: &Path) -> Self {
-		self.path = path.to_path_buf();
+	pub fn set_path(mut self, path: PathBuf) -> Self {
+		self.path = path;
 		self
 	}
 

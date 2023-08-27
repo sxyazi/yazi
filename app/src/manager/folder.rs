@@ -56,16 +56,17 @@ impl<'a> Widget for Folder<'a> {
 		let items = window
 			.iter()
 			.enumerate()
-			.map(|(i, (k, v))| {
+			.map(|(i, f)| {
 				let icon = THEME
 					.icons
 					.iter()
-					.find(|x| x.name.match_path(k, Some(v.meta.is_dir())))
+					.find(|x| x.name.match_path(&f.path, Some(f.meta.is_dir())))
 					.map(|x| x.display.as_ref())
 					.unwrap_or("");
 
-				if (!self.is_selection && v.is_selected)
-					|| (self.is_selection && mode.pending(i, v.is_selected))
+				let is_selected = self.folder.files.is_selected(&f.path);
+				if (!self.is_selection && is_selected)
+					|| (self.is_selection && mode.pending(i, is_selected))
 				{
 					buf.set_style(
 						Rect { x: area.x.saturating_sub(1), y: i as u16 + 1, width: 1, height: 1 },
@@ -77,17 +78,17 @@ impl<'a> Widget for Folder<'a> {
 					);
 				}
 
-				let hovered = matches!(self.folder.hovered, Some(ref h) if h.path == *k);
+				let hovered = matches!(self.folder.hovered, Some(ref h) if h.path == f.path);
 				let style = if self.is_preview && hovered {
 					THEME.preview.hovered.get()
 				} else if hovered {
 					THEME.selection.hovered.get()
 				} else {
-					self.file_style(v)
+					self.file_style(f)
 				};
 
-				let mut path = format!(" {icon} {}", readable_path(k, &self.folder.cwd));
-				if let Some(ref link_to) = v.link_to {
+				let mut path = format!(" {icon} {}", readable_path(&f.path, &self.folder.cwd));
+				if let Some(ref link_to) = f.link_to {
 					if MANAGER.show_symlink {
 						path.push_str(&format!(" -> {}", link_to.display()));
 					}
