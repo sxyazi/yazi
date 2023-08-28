@@ -30,6 +30,8 @@ impl Manager {
 	pub fn refresh(&mut self) {
 		env::set_current_dir(self.cwd()).ok();
 
+		self.active_mut().apply_show_hidden();
+
 		if let Some(f) = self.parent() {
 			self.watcher.trigger_dirs(&[self.cwd(), &f.cwd]);
 		} else {

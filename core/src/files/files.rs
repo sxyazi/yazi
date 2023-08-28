@@ -1,7 +1,6 @@
 use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref, path::{Path, PathBuf}};
 
 use anyhow::Result;
-use config::MANAGER;
 use tokio::fs;
 
 use super::{File, FilesSorter};
@@ -27,7 +26,7 @@ impl Default for Files {
 			selected: Default::default(),
 
 			sorter:      Default::default(),
-			show_hidden: MANAGER.show_hidden,
+			show_hidden: true,
 		}
 	}
 }
@@ -211,11 +210,7 @@ impl Files {
 
 	// --- Show hidden
 	#[inline]
-	pub fn show_hidden(&self) -> bool { self.show_hidden }
-
-	#[inline]
-	pub fn set_show_hidden(&mut self, state: Option<bool>) -> bool {
-		let state = state.unwrap_or(!self.show_hidden);
+	pub fn set_show_hidden(&mut self, state: bool) -> bool {
 		if state == self.show_hidden {
 			return false;
 		} else if state && self.hidden.is_empty() {

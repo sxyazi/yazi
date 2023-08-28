@@ -14,10 +14,11 @@ pub struct Tab {
 	pub(super) current: Folder,
 	pub(super) parent:  Option<Folder>,
 
-	search: Option<JoinHandle<Result<()>>>,
-
 	pub(super) history: BTreeMap<PathBuf, Folder>,
 	pub(super) preview: Preview,
+
+	search:                 Option<JoinHandle<Result<()>>>,
+	pub(super) show_hidden: bool,
 }
 
 impl Tab {
@@ -27,10 +28,11 @@ impl Tab {
 			current: Folder::new(path),
 			parent:  path.parent().map(Folder::new),
 
-			search: None,
-
 			history: Default::default(),
 			preview: Default::default(),
+
+			search:      None,
+			show_hidden: true,
 		}
 	}
 
@@ -230,7 +232,7 @@ impl Tab {
 		}
 
 		let cwd = self.current.cwd.clone();
-		let hidden = self.current.files.show_hidden();
+		let hidden = self.show_hidden;
 
 		self.search = Some(tokio::spawn(async move {
 			let subject = emit!(Input(InputOpt::top("Search:"))).await?;
@@ -347,9 +349,16 @@ impl Tab {
 }
 
 impl Tab {
+	// --- Mode
 	#[inline]
 	pub fn mode(&self) -> &Mode { &self.mode }
 
+	#[inline]
+	pub fn in_selecting(&self) -> bool {
+		self.mode().is_visual() || self.current.files.has_selected()
+	}
+
+	// --- Current
 	#[inline]
 	pub fn name(&self) -> &str {
 		self
@@ -373,11 +382,7 @@ impl Tab {
 		}
 	}
 
-	#[inline]
-	pub fn in_selecting(&self) -> bool {
-		self.mode().is_visual() || self.current.files.has_selected()
-	}
-
+	// --- History
 	#[inline]
 	pub fn history(&self, path: &Path) -> Option<&Folder> { self.history.get(path) }
 
@@ -386,6 +391,7 @@ impl Tab {
 		self.history.remove(path).unwrap_or_else(|| Folder::new(path))
 	}
 
+	// --- Preview
 	#[inline]
 	pub fn preview(&self) -> &Preview { &self.preview }
 
@@ -394,4 +400,38 @@ impl Tab {
 
 	#[inline]
 	pub fn preview_reset_image(&mut self) -> bool { self.preview.reset_image() }
+
+	// --- Show hidden
+	pub fn set_show_hidden(&mut self, state: Option<bool>) -> bool {
+		let state = state.unwrap_or(!self.show_hidden);
+		if state == self.show_hidden {
+			return false;
+		}
+
+		self.show_hidden = state;
+		self.apply_show_hidden();
+		true
+	}
+
+	pub fn apply_show_hidden(&mut self) -> bool {
+		let state = self.show_hidden;
+
+		let mut applied = false;
+		applied |= self.current.files.set_show_hidden(state);
+
+		if let Some(parent) = self.parent.as_mut() {
+			applied |= parent.files.set_show_hidden(state);
+		}
+
+		applied |= match self.current.hovered {
+			Some(ref hovered) if hovered.is_dir() => self
+				.history
+				.get_mut(hovered.path())
+				.map(|f| f.files.set_show_hidden(state))
+				.unwrap_or(false),
+			_ => false,
+		};
+
+		applied
+	}
 }

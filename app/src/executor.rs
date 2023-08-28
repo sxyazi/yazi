@@ -117,11 +117,13 @@ impl Executor {
 				exec.named.contains_key("block"),
 				exec.named.contains_key("confirm"),
 			),
-			"hidden" => cx.manager.current_mut().hidden(match exec.args.get(0).map(|s| s.as_str()) {
-				Some("show") => Some(true),
-				Some("hide") => Some(false),
-				_ => None,
-			}),
+			"hidden" => {
+				cx.manager.active_mut().set_show_hidden(match exec.args.get(0).map(|s| s.as_str()) {
+					Some("show") => Some(true),
+					Some("hide") => Some(false),
+					_ => None,
+				})
+			}
 			"search" => match exec.args.get(0).map(|s| s.as_str()).unwrap_or("") {
 				"rg" => cx.manager.active_mut().search(true),
 				"fd" => cx.manager.active_mut().search(false),

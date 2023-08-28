@@ -92,13 +92,6 @@ impl Folder {
 		old != self.cursor
 	}
 
-	pub fn hidden(&mut self, show: Option<bool>) -> bool {
-		if self.files.set_show_hidden(show) {
-			emit!(Refresh);
-		}
-		false
-	}
-
 	#[inline]
 	pub fn window(&self) -> &[File] {
 		let end = (self.offset + MANAGER.layout.folder_height()).min(self.files.len());
