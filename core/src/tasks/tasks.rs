@@ -231,7 +231,7 @@ impl Tasks {
 		let targets: Vec<_> = targets
 			.iter()
 			.filter(|f| f.is_file() && !mimetype.contains_key(f.path()))
-			.map(|f| f.path().clone())
+			.map(|f| f.path_owned())
 			.collect();
 
 		if !targets.is_empty() {

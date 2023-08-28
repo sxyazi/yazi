@@ -1,4 +1,4 @@
-use std::{borrow::Cow, fs::Metadata, path::{Path, PathBuf}};
+use std::{borrow::Cow, ffi::OsStr, fs::Metadata, path::{Path, PathBuf}};
 
 use anyhow::Result;
 use tokio::fs;
@@ -44,7 +44,24 @@ impl File {
 	pub fn set_path(&mut self, path: PathBuf) { self.path = path; }
 
 	#[inline]
-	pub fn name(&self) -> Option<Cow<str>> { self.path.file_name().map(|s| s.to_string_lossy()) }
+	pub fn path_owned(&self) -> PathBuf { self.path.clone() }
+
+	#[inline]
+	pub fn path_os_str(&self) -> &OsStr { self.path.as_os_str() }
+
+	#[inline]
+	pub fn name(&self) -> Option<&OsStr> { self.path.file_name() }
+
+	#[inline]
+	pub fn name_display(&self) -> Option<Cow<str>> {
+		self.path.file_name().map(|s| s.to_string_lossy())
+	}
+
+	#[inline]
+	pub fn stem(&self) -> Option<&OsStr> { self.path.file_stem() }
+
+	#[inline]
+	pub fn parent(&self) -> Option<&Path> { self.path.parent() }
 
 	// --- Meta
 	#[inline]

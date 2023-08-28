@@ -84,7 +84,7 @@ impl Manager {
 
 	pub fn yank(&mut self, cut: bool) -> bool {
 		self.yanked.0 = cut;
-		self.yanked.1 = self.selected().into_iter().map(|f| f.path().clone()).collect();
+		self.yanked.1 = self.selected().into_iter().map(|f| f.path_owned()).collect();
 		false
 	}
 
@@ -122,7 +122,7 @@ impl Manager {
 			.into_iter()
 			.map(|f| {
 				(
-					f.path().as_os_str().to_owned(),
+					f.path_os_str().to_owned(),
 					if f.is_dir() { Some(MIME_DIR.to_owned()) } else { self.mimetype.get(f.path()).cloned() },
 				)
 			})
@@ -197,7 +197,7 @@ impl Manager {
 			return self.bulk_rename();
 		}
 
-		let Some(hovered) = self.hovered().map(|h| h.path().clone()) else {
+		let Some(hovered) = self.hovered().map(|h| h.path_owned()) else {
 			return false;
 		};
 
@@ -321,7 +321,7 @@ impl Manager {
 	pub fn update_read(&mut self, op: FilesOp) -> bool {
 		let path = op.path();
 		let cwd = self.cwd().to_owned();
-		let hovered = self.hovered().map(|h| h.path().clone());
+		let hovered = self.hovered().map(|h| h.path_owned());
 
 		let mut b = if cwd == path && !self.current().in_search {
 			self.current_mut().update(op)

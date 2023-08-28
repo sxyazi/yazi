@@ -106,7 +106,7 @@ impl Executor {
 				}
 			}
 			"remove" => {
-				let targets = cx.manager.selected().into_iter().map(|f| f.path().clone()).collect();
+				let targets = cx.manager.selected().into_iter().map(|f| f.path_owned()).collect();
 				cx.tasks.file_remove(targets, exec.named.contains_key("permanently"))
 			}
 			"create" => cx.manager.create(),

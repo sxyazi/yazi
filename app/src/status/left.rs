@@ -41,7 +41,7 @@ impl<'a> Widget for Left<'a> {
 			}
 
 			// Filename
-			spans.push(Span::raw(format!(" {} ", h.name().unwrap())));
+			spans.push(Span::raw(format!(" {} ", h.name_display().unwrap())));
 		}
 
 		Paragraph::new(Line::from(spans)).render(area, buf);
