@@ -14,13 +14,13 @@ max_height = 900
 [opener]
 folder = [
 	{ exec = 'open -R "$@"', display_name = "Reveal in Finder" },
-	{ exec = 'vim "$@"' },
+	{ exec = '$EDITOR "$@"' },
 ]
 archive = [
 	{ exec = 'unar "$1"', display_name = "Extract here" },
 ]
 text = [
-	{ exec = 'vim "$@"', block = true },
+	{ exec = '$EDITOR "$@"', block = true },
 ]
 image = [
 	{ exec = 'open "$@"', display_name = "Open" },
