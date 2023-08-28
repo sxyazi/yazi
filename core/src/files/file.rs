@@ -5,12 +5,12 @@ use tokio::fs;
 
 #[derive(Clone, Debug)]
 pub struct File {
-	pub(super) path: PathBuf,
-	pub(super) meta: Metadata,
-	pub length:      Option<u64>,
-	pub link_to:     Option<PathBuf>,
-	pub is_link:     bool,
-	pub is_hidden:   bool,
+	pub(super) path:   PathBuf,
+	pub(super) meta:   Metadata,
+	pub(super) length: Option<u64>,
+	pub link_to:       Option<PathBuf>,
+	pub is_link:       bool,
+	pub is_hidden:     bool,
 }
 
 impl File {
@@ -55,4 +55,8 @@ impl File {
 
 	#[inline]
 	pub fn is_dir(&self) -> bool { self.meta.is_dir() }
+
+	// --- Length
+	#[inline]
+	pub fn length(&self) -> Option<u64> { self.length }
 }

@@ -35,7 +35,7 @@ impl<'a> Widget for Left<'a> {
 
 		if let Some(h) = &manager.hovered {
 			// Length
-			if let Some(len) = h.length {
+			if let Some(len) = h.length() {
 				spans.push(Span::styled(format!(" {} ", readable_size(len)), body.bg().fg(**primary)));
 				spans.push(Span::styled(&separator.closing, body.fg()));
 			}

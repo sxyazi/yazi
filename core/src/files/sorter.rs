@@ -45,7 +45,7 @@ impl FilesSorter {
 			}),
 			SortBy::Natural => self.sort_naturally(items),
 			SortBy::Size => items.sort_unstable_by(|a, b| {
-				self.cmp(a.length.unwrap_or(0), b.length.unwrap_or(0), self.promote(a, b))
+				self.cmp(a.length().unwrap_or(0), b.length().unwrap_or(0), self.promote(a, b))
 			}),
 		}
 		true
