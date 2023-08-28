@@ -6,7 +6,7 @@ use tokio::fs;
 #[derive(Clone, Debug)]
 pub struct File {
 	pub(super) path: PathBuf,
-	pub meta:        Metadata,
+	pub(super) meta: Metadata,
 	pub length:      Option<u64>,
 	pub link_to:     Option<PathBuf>,
 	pub is_link:     bool,
@@ -36,6 +36,7 @@ impl File {
 }
 
 impl File {
+	// --- Path
 	#[inline]
 	pub fn path(&self) -> &PathBuf { &self.path }
 
@@ -44,4 +45,14 @@ impl File {
 
 	#[inline]
 	pub fn name(&self) -> Option<Cow<str>> { self.path.file_name().map(|s| s.to_string_lossy()) }
+
+	// --- Meta
+	#[inline]
+	pub fn meta(&self) -> &Metadata { &self.meta }
+
+	#[inline]
+	pub fn is_file(&self) -> bool { self.meta.is_file() }
+
+	#[inline]
+	pub fn is_dir(&self) -> bool { self.meta.is_dir() }
 }

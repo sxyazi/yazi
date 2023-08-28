@@ -78,7 +78,7 @@ impl Tab {
 		};
 
 		let mut hovered = None;
-		if !file.meta.is_dir() {
+		if !file.is_dir() {
 			hovered = Some(file);
 			target = target.parent().unwrap().to_path_buf();
 		}
@@ -127,7 +127,7 @@ impl Tab {
 		let Some(hovered) = self.current.hovered.clone() else {
 			return false;
 		};
-		if !hovered.meta.is_dir() {
+		if !hovered.is_dir() {
 			return false;
 		}
 

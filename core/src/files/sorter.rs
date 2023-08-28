@@ -54,9 +54,9 @@ impl FilesSorter {
 	fn sort_naturally(&self, items: &mut Vec<File>) {
 		let mut indices = Vec::with_capacity(items.len());
 		let mut entities = Vec::with_capacity(items.len());
-		for (i, file) in items.into_iter().enumerate() {
+		for (i, file) in items.iter().enumerate() {
 			indices.push(i);
-			entities.push((file.path.to_string_lossy(), &*file));
+			entities.push((file.path.to_string_lossy(), file));
 		}
 
 		indices.sort_unstable_by(|&a, &b| {
@@ -85,6 +85,6 @@ impl FilesSorter {
 
 	#[inline]
 	fn promote(&self, a: &File, b: &File) -> Ordering {
-		if self.dir_first { b.meta.is_dir().cmp(&a.meta.is_dir()) } else { Ordering::Equal }
+		if self.dir_first { b.is_dir().cmp(&a.is_dir()) } else { Ordering::Equal }
 	}
 }

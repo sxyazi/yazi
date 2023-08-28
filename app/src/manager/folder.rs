@@ -36,7 +36,7 @@ impl<'a> Folder<'a> {
 		THEME
 			.filetypes
 			.iter()
-			.find(|x| x.matches(file.path(), mimetype.get(file.path()), file.meta.is_dir()))
+			.find(|x| x.matches(file.path(), mimetype.get(file.path()), file.is_dir()))
 			.map(|x| x.style.get())
 			.unwrap_or_else(Style::new)
 	}
@@ -60,7 +60,7 @@ impl<'a> Widget for Folder<'a> {
 				let icon = THEME
 					.icons
 					.iter()
-					.find(|x| x.name.match_path(f.path(), Some(f.meta.is_dir())))
+					.find(|x| x.name.match_path(f.path(), Some(f.is_dir())))
 					.map(|x| x.display.as_ref())
 					.unwrap_or("");
 

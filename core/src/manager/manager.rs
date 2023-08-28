@@ -41,7 +41,7 @@ impl Manager {
 		for tab in self.tabs.iter() {
 			to_watch.insert(&tab.current.cwd);
 			if let Some(ref h) = tab.current.hovered {
-				if h.meta.is_dir() {
+				if h.is_dir() {
 					to_watch.insert(h.path());
 				}
 			}
@@ -61,7 +61,7 @@ impl Manager {
 			self.active_mut().preview_reset_image();
 		}
 
-		let mime = if hovered.meta.is_dir() {
+		let mime = if hovered.is_dir() {
 			MIME_DIR.to_owned()
 		} else if let Some(m) = self.mimetype.get(hovered.path()).cloned() {
 			m
@@ -123,11 +123,7 @@ impl Manager {
 			.map(|f| {
 				(
 					f.path().as_os_str().to_owned(),
-					if f.meta.is_dir() {
-						Some(MIME_DIR.to_owned())
-					} else {
-						self.mimetype.get(f.path()).cloned()
-					},
+					if f.is_dir() { Some(MIME_DIR.to_owned()) } else { self.mimetype.get(f.path()).cloned() },
 				)
 			})
 			.collect();
@@ -401,7 +397,7 @@ impl Manager {
 			return b;
 		};
 
-		if hovered.meta.is_dir() {
+		if hovered.is_dir() {
 			self.watcher.trigger_dirs(&[hovered.path()]);
 		}
 		b

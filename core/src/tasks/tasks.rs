@@ -217,7 +217,7 @@ impl Tasks {
 		}
 
 		let targets: Vec<_> =
-			targets.iter().filter(|f| f.meta.is_dir() && f.length.is_none()).map(|f| f.path()).collect();
+			targets.iter().filter(|f| f.is_dir() && f.length.is_none()).map(|f| f.path()).collect();
 
 		if !targets.is_empty() {
 			self.scheduler.precache_size(targets);
@@ -230,7 +230,7 @@ impl Tasks {
 	pub fn precache_mime(&self, targets: &[File], mimetype: &HashMap<PathBuf, String>) -> bool {
 		let targets: Vec<_> = targets
 			.iter()
-			.filter(|f| f.meta.is_file() && !mimetype.contains_key(f.path()))
+			.filter(|f| f.is_file() && !mimetype.contains_key(f.path()))
 			.map(|f| f.path().clone())
 			.collect();
 
