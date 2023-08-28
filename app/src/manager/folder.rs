@@ -88,7 +88,7 @@ impl<'a> Widget for Folder<'a> {
 				};
 
 				let mut path = format!(" {icon} {}", readable_path(f.path(), &self.folder.cwd));
-				if let Some(ref link_to) = f.link_to {
+				if let Some(link_to) = f.link_to() {
 					if MANAGER.show_symlink {
 						path.push_str(&format!(" -> {}", link_to.display()));
 					}

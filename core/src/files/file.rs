@@ -5,12 +5,12 @@ use tokio::fs;
 
 #[derive(Clone, Debug)]
 pub struct File {
-	pub(super) path:   PathBuf,
-	pub(super) meta:   Metadata,
-	pub(super) length: Option<u64>,
-	pub link_to:       Option<PathBuf>,
-	pub is_link:       bool,
-	pub is_hidden:     bool,
+	pub(super) path:      PathBuf,
+	pub(super) meta:      Metadata,
+	pub(super) length:    Option<u64>,
+	pub(super) link_to:   Option<PathBuf>,
+	pub(super) is_link:   bool,
+	pub(super) is_hidden: bool,
 }
 
 impl File {
@@ -59,4 +59,8 @@ impl File {
 	// --- Length
 	#[inline]
 	pub fn length(&self) -> Option<u64> { self.length }
+
+	// --- Link to
+	#[inline]
+	pub fn link_to(&self) -> Option<&PathBuf> { self.link_to.as_ref() }
 }
