@@ -212,7 +212,7 @@ impl Tasks {
 
 	#[inline]
 	pub fn precache_size(&self, targets: &Files) -> bool {
-		if targets.sorter.by != SortBy::Size {
+		if targets.sorter().by != SortBy::Size {
 			return false;
 		}
 

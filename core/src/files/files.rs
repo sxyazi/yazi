@@ -13,7 +13,7 @@ pub struct Files {
 	sizes:    BTreeMap<PathBuf, u64>,
 	selected: BTreeSet<PathBuf>,
 
-	pub sorter:  FilesSorter,
+	sorter:      FilesSorter,
 	show_hidden: bool,
 }
 
@@ -114,36 +114,6 @@ impl Files {
 		applied
 	}
 
-	#[inline]
-	pub fn set_sorter(&mut self, sorter: FilesSorter) -> bool {
-		if self.sorter == sorter {
-			return false;
-		}
-		self.sorter = sorter;
-		self.sorter.sort(&mut self.items)
-	}
-
-	#[inline]
-	pub fn set_show_hidden(&mut self, state: Option<bool>) -> bool {
-		let state = state.unwrap_or(!self.show_hidden);
-		if state == self.show_hidden {
-			return false;
-		} else if state && self.hidden.is_empty() {
-			return false;
-		}
-
-		if state {
-			self.items.append(&mut self.hidden);
-			self.sorter.sort(&mut self.items);
-		} else {
-			let items = mem::take(&mut self.items);
-			(self.hidden, self.items) = items.into_iter().partition(|f| f.is_hidden);
-		}
-
-		self.show_hidden = state;
-		true
-	}
-
 	pub fn update_read(&mut self, mut items: Vec<File>) -> bool {
 		if !self.show_hidden {
 			(self.hidden, items) = items.into_iter().partition(|f| f.is_hidden);
@@ -179,6 +149,7 @@ impl Files {
 }
 
 impl Files {
+	// --- Items
 	pub fn pick(&self, indices: &BTreeSet<usize>) -> Vec<&File> {
 		let mut items = Vec::with_capacity(indices.len());
 		for (i, item) in self.iter().enumerate() {
@@ -195,6 +166,7 @@ impl Files {
 	#[inline]
 	pub fn duplicate(&self, idx: usize) -> Option<File> { self.items.get(idx).cloned() }
 
+	// --- Selected
 	pub fn selected(&self, pending: &BTreeSet<usize>, unset: bool) -> Vec<&File> {
 		if self.selected.is_empty() && (unset || pending.is_empty()) {
 			return Default::default();
@@ -224,9 +196,41 @@ impl Files {
 		}
 		self.iter().any(|f| self.selected.contains(&f.path))
 	}
-}
 
-impl Files {
+	// --- Sorter
+	pub fn sorter(&self) -> &FilesSorter { &self.sorter }
+
+	#[inline]
+	pub fn set_sorter(&mut self, sorter: FilesSorter) -> bool {
+		if self.sorter == sorter {
+			return false;
+		}
+		self.sorter = sorter;
+		self.sorter.sort(&mut self.items)
+	}
+
+	// --- Show hidden
 	#[inline]
 	pub fn show_hidden(&self) -> bool { self.show_hidden }
+
+	#[inline]
+	pub fn set_show_hidden(&mut self, state: Option<bool>) -> bool {
+		let state = state.unwrap_or(!self.show_hidden);
+		if state == self.show_hidden {
+			return false;
+		} else if state && self.hidden.is_empty() {
+			return false;
+		}
+
+		if state {
+			self.items.append(&mut self.hidden);
+			self.sorter.sort(&mut self.items);
+		} else {
+			let items = mem::take(&mut self.items);
+			(self.hidden, self.items) = items.into_iter().partition(|f| f.is_hidden);
+		}
+
+		self.show_hidden = state;
+		true
+	}
 }
