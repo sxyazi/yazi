@@ -63,10 +63,14 @@ cargo install --git https://github.com/sxyazi/yazi.git
 
 <summary>Nix</summary>
 
-Nix users can install Yazi from [the NUR](https://github.com/nix-community/nur-combined/blob/master/repos/xyenon/pkgs/yazi/default.nix):
+The [Nix package of Yazi](https://search.nixos.org/packages?channel=unstable&show=yazi) is available. Nix users can install Yazi via:
 
 ```bash
-nix-env -iA nur.repos.xyenon.yazi
+# On NixOS:
+nix-env -iA nixos.yazi
+
+# On Non NixOS:
+nix-env -iA nixpkgs.yazi
 ```
 
 Or add the following to your configuration:
@@ -74,11 +78,12 @@ Or add the following to your configuration:
 ```nix
 # configuration.nix
 environment.systemPackages = with pkgs; [
-  nur.repos.xyenon.yazi
+	yazi
 ];
 ```
 
-If you prefer to use the most recent code, use `nur.repos.xyenon.yazi-unstable` instead.
+You can also manage Yazi's configuration using the
+[home-manager](https://nix-community.github.io/home-manager/options.html#opt-programs.yazi.enable).
 
 </details>
 
@@ -108,8 +113,6 @@ Then, you can run:
 yazi
 ```
 
-If you want to use your own config, copy the [config folder](https://github.com/sxyazi/yazi/tree/main/config/preset) to `~/.config/yazi`, and modify it as you like.
-
 There is a wrapper of yazi, that provides the ability to change the current working directory when yazi exiting, feel free to use it:
 
 ```bash
@@ -122,6 +125,12 @@ function ya() {
 	rm -f -- "$tmp"
 }
 ```
+
+## Configuration
+
+If you want to use your own config, copy the [config folder](./config/preset) to `~/.config/yazi`, and modify it as you like.
+
+[The documentation of all available options](./config/docs)
 
 ## Discussion
 
