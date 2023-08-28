@@ -40,7 +40,7 @@ impl Folder {
 		self.cursor = self.cursor.min(len.saturating_sub(1));
 		self.set_page(true);
 
-		if let Some(h) = self.hovered.as_ref().map(|h| h.path()) {
+		if let Some(h) = self.hovered.as_ref().map(|h| h.path().clone()) {
 			self.hover(&h);
 		}
 		self.hovered = self.files.duplicate(self.cursor);

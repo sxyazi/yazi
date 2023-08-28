@@ -148,12 +148,12 @@ pub fn file_mode(mode: u32) -> String {
 // Find the max common root of a list of files
 // e.g. /a/b/c, /a/b/d       -> /a/b
 //      /aa/bb/cc, /aa/dd/ee -> /aa
-pub fn max_common_root(files: &[PathBuf]) -> PathBuf {
+pub fn max_common_root(files: &[impl AsRef<Path>]) -> PathBuf {
 	if files.is_empty() {
 		return PathBuf::new();
 	}
 
-	let mut it = files.iter().map(|p| p.parent().unwrap_or(Path::new("")).components());
+	let mut it = files.iter().map(|p| p.as_ref().parent().unwrap_or(Path::new("")).components());
 	let mut root = it.next().unwrap().collect::<PathBuf>();
 	for components in it {
 		let mut new_root = PathBuf::new();

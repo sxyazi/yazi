@@ -69,44 +69,55 @@ impl Watcher {
 		instance
 	}
 
-	pub(super) fn watch(&mut self, mut to_watch: BTreeSet<PathBuf>) {
-		let keys = self.watched.read().keys().cloned().collect::<BTreeSet<_>>();
-		for p in keys.difference(&to_watch) {
-			self.watcher.unwatch(p).ok();
+	pub(super) fn watch(&mut self, mut watched: BTreeSet<&PathBuf>) {
+		let (to_unwatch, to_watch): (BTreeSet<_>, BTreeSet<_>) = {
+			let guard = self.watched.read();
+			let keys = guard.keys().collect::<BTreeSet<_>>();
+			(
+				keys.difference(&watched).map(|&x| x.clone()).collect(),
+				watched.difference(&keys).map(|&x| x.clone()).collect(),
+			)
+		};
+
+		for p in to_unwatch {
+			self.watcher.unwatch(&p).ok();
 		}
-		for p in to_watch.clone().difference(&keys) {
-			if self.watcher.watch(p, RecursiveMode::NonRecursive).is_err() {
-				to_watch.remove(p);
+		for p in to_watch {
+			if self.watcher.watch(&p, RecursiveMode::NonRecursive).is_err() {
+				watched.remove(&p);
 			}
 		}
 
-		let mut todo = Vec::new();
-		let mut watched = self.watched.write();
-		*watched = IndexMap::from_iter(to_watch.into_iter().map(|k| {
-			if let Some(v) = watched.remove(&k) {
-				(k, v)
-			} else {
-				todo.push(k.clone());
-				(k, None)
-			}
-		}));
-		watched.sort_unstable_by(|_, a, _, b| b.cmp(a));
+		let mut to_resolve = Vec::new();
+		let mut guard = self.watched.write();
+		*guard = watched
+			.into_iter()
+			.map(|k| {
+				if let Some((k, v)) = guard.remove_entry(k) {
+					(k, v)
+				} else {
+					to_resolve.push(k.clone());
+					(k.clone(), None)
+				}
+			})
+			.collect();
+		guard.sort_unstable_by(|_, a, _, b| b.cmp(a));
 
-		let watched = self.watched.clone();
+		let lock = self.watched.clone();
 		tokio::spawn(async move {
 			let mut ext = IndexMap::new();
-			for k in todo {
+			for k in to_resolve {
 				match fs::canonicalize(&k).await {
-					Ok(v) if v != k => {
+					Ok(v) if v != *k => {
 						ext.insert(k, Some(v));
 					}
 					_ => {}
 				}
 			}
 
-			let mut watched = watched.write();
-			watched.extend(ext);
-			watched.sort_unstable_by(|_, a, _, b| b.cmp(a));
+			let mut guard = lock.write();
+			guard.extend(ext);
+			guard.sort_unstable_by(|_, a, _, b| b.cmp(a));
 		});
 	}
 

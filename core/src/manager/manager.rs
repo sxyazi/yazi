@@ -39,14 +39,14 @@ impl Manager {
 
 		let mut to_watch = BTreeSet::new();
 		for tab in self.tabs.iter() {
-			to_watch.insert(tab.current.cwd.clone());
-			if let Some(ref p) = tab.parent {
-				to_watch.insert(p.cwd.clone());
-			}
+			to_watch.insert(&tab.current.cwd);
 			if let Some(ref h) = tab.current.hovered {
 				if h.meta.is_dir() {
 					to_watch.insert(h.path());
 				}
+			}
+			if let Some(ref p) = tab.parent {
+				to_watch.insert(&p.cwd);
 			}
 		}
 		self.watcher.watch(to_watch);
@@ -83,10 +83,8 @@ impl Manager {
 	}
 
 	pub fn yank(&mut self, cut: bool) -> bool {
-		let selected = self.selected().into_iter().map(|f| f.path()).collect::<Vec<_>>();
 		self.yanked.0 = cut;
-		self.yanked.1.clear();
-		self.yanked.1.extend(selected);
+		self.yanked.1 = self.selected().into_iter().map(|f| f.path().clone()).collect();
 		false
 	}
 
@@ -124,7 +122,7 @@ impl Manager {
 			.into_iter()
 			.map(|f| {
 				(
-					f.path().into_os_string(),
+					f.path().as_os_str().to_owned(),
 					if f.meta.is_dir() {
 						Some(MIME_DIR.to_owned())
 					} else {
@@ -203,7 +201,7 @@ impl Manager {
 			return self.bulk_rename();
 		}
 
-		let Some(hovered) = self.hovered().map(|h| h.path()) else {
+		let Some(hovered) = self.hovered().map(|h| h.path().clone()) else {
 			return false;
 		};
 
@@ -221,10 +219,10 @@ impl Manager {
 	}
 
 	pub fn bulk_rename(&self) -> bool {
-		let mut old: Vec<_> = self.selected().iter().map(|&f| f.path()).collect();
+		let old: Vec<_> = self.selected().into_iter().map(|f| f.path()).collect();
 
 		let root = max_common_root(&old);
-		old.iter_mut().for_each(|p| *p = p.strip_prefix(&root).unwrap().to_owned());
+		let old: Vec<_> = old.into_iter().map(|p| p.strip_prefix(&root).unwrap().to_owned()).collect();
 
 		let tmp = BOOT.tmpfile("bulk");
 		tokio::spawn(async move {
@@ -327,7 +325,7 @@ impl Manager {
 	pub fn update_read(&mut self, op: FilesOp) -> bool {
 		let path = op.path();
 		let cwd = self.cwd().to_owned();
-		let hovered = self.hovered().map(|h| h.path());
+		let hovered = self.hovered().map(|h| h.path().clone());
 
 		let mut b = if cwd == path && !self.current().in_search {
 			self.current_mut().update(op)
@@ -347,7 +345,7 @@ impl Manager {
 		b |= self.active_mut().parent.as_mut().map_or(false, |p| p.hover(&cwd));
 		b |= hovered.as_ref().map_or(false, |h| self.current_mut().hover(h));
 
-		if hovered != self.hovered().map(|h| h.path()) {
+		if hovered.as_ref() != self.hovered().map(|h| h.path()) {
 			emit!(Hover);
 		}
 		b

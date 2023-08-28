@@ -86,7 +86,7 @@ impl Files {
 
 		match state {
 			Some(true) => {
-				self.selected = self.iter().map(|f| f.path()).collect();
+				self.selected = self.iter().map(|f| f.path().clone()).collect();
 			}
 			Some(false) => {
 				self.selected.clear();
@@ -96,7 +96,7 @@ impl Files {
 					if self.selected.contains(&item.path) {
 						self.selected.remove(&item.path);
 					} else {
-						self.selected.insert(item.path());
+						self.selected.insert(item.path().clone());
 					}
 				}
 			}
@@ -106,7 +106,7 @@ impl Files {
 
 	pub fn select_index(&mut self, indices: &BTreeSet<usize>, state: Option<bool>) -> bool {
 		let mut applied = false;
-		let paths: Vec<_> = self.pick(indices).iter().map(|f| f.path()).collect();
+		let paths: Vec<_> = self.pick(indices).iter().map(|f| f.path().clone()).collect();
 
 		for path in paths {
 			applied |= self.select(&path, state);

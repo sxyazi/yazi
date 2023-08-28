@@ -37,7 +37,7 @@ impl File {
 
 impl File {
 	#[inline]
-	pub fn path(&self) -> PathBuf { self.path.clone() }
+	pub fn path(&self) -> &PathBuf { &self.path }
 
 	#[inline]
 	pub fn set_path(mut self, path: PathBuf) -> Self {
