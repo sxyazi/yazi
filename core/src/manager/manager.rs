@@ -63,11 +63,11 @@ impl Manager {
 
 		let mime = if hovered.meta.is_dir() {
 			MIME_DIR.to_owned()
-		} else if let Some(m) = self.mimetype.get(&hovered.path).cloned() {
+		} else if let Some(m) = self.mimetype.get(hovered.path()).cloned() {
 			m
 		} else {
 			tokio::spawn(async move {
-				if let Ok(mimes) = external::file(&[hovered.path]).await {
+				if let Ok(mimes) = external::file(&[hovered.path()]).await {
 					emit!(Mimetype(mimes));
 				}
 			});
@@ -75,9 +75,9 @@ impl Manager {
 		};
 
 		if sequent {
-			self.active_mut().preview.sequent(&hovered.path, &mime, show_image);
+			self.active_mut().preview.sequent(hovered.path(), &mime, show_image);
 		} else {
-			self.active_mut().preview.go(&hovered.path, &mime, show_image);
+			self.active_mut().preview.go(hovered.path(), &mime, show_image);
 		}
 		false
 	}
@@ -117,7 +117,7 @@ impl Manager {
 	}
 
 	pub fn open(&mut self, interactive: bool) -> bool {
-		let mut files = self
+		let mut files: Vec<_> = self
 			.selected()
 			.into_iter()
 			.map(|f| {
@@ -126,11 +126,11 @@ impl Manager {
 					if f.meta.is_dir() {
 						Some(MIME_DIR.to_owned())
 					} else {
-						self.mimetype.get(&f.path).cloned()
+						self.mimetype.get(f.path()).cloned()
 					},
 				)
 			})
-			.collect::<Vec<_>>();
+			.collect();
 
 		if files.is_empty() {
 			return false;
@@ -339,7 +339,7 @@ impl Manager {
 				.or_insert_with(|| Folder::new(&path))
 				.update(op);
 
-			matches!(self.hovered(), Some(h) if h.path == path)
+			matches!(self.hovered(), Some(h) if h.path() == &path)
 		};
 
 		b |= self.active_mut().parent.as_mut().map_or(false, |p| p.hover(&cwd));
@@ -402,7 +402,7 @@ impl Manager {
 		};
 
 		if hovered.meta.is_dir() {
-			self.watcher.trigger_dirs(&[&hovered.path]);
+			self.watcher.trigger_dirs(&[hovered.path()]);
 		}
 		b
 	}

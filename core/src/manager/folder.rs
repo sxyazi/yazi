@@ -118,7 +118,7 @@ impl Folder {
 	}
 
 	pub fn hover_force(&mut self, file: File) -> bool {
-		if self.hover(&file.path) {
+		if self.hover(file.path()) {
 			return true;
 		}
 

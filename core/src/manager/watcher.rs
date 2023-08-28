@@ -183,7 +183,8 @@ impl Watcher {
 				Ok(items) => {
 					let mut files = Vec::with_capacity(items.len());
 					for item in items {
-						let file = item.clone().set_path(ori.join(item.path.strip_prefix(path).unwrap()));
+						let mut file = item.clone();
+						file.set_path(ori.join(item.path().strip_prefix(path).unwrap()));
 						files.push(file);
 					}
 					FilesOp::Read(ori, files)

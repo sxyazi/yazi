@@ -131,7 +131,7 @@ impl Tab {
 			return false;
 		}
 
-		let rep = self.history_new(&hovered.path);
+		let rep = self.history_new(hovered.path());
 		let rep = mem::replace(&mut self.current, rep);
 		if !rep.in_search {
 			self.history.insert(rep.cwd.clone(), rep);
@@ -140,7 +140,7 @@ impl Tab {
 		if let Some(rep) = self.parent.take() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
-		self.parent = Some(self.history_new(hovered.path.parent().unwrap()));
+		self.parent = Some(self.history_new(hovered.path().parent().unwrap()));
 
 		emit!(Refresh);
 		true
@@ -151,7 +151,7 @@ impl Tab {
 			.current
 			.hovered
 			.as_ref()
-			.and_then(|h| h.path.parent())
+			.and_then(|h| h.path().parent())
 			.and_then(|p| if p == self.current.cwd { None } else { Some(p) })
 			.or_else(|| self.current.cwd.parent());
 
@@ -184,7 +184,7 @@ impl Tab {
 
 	pub fn select(&mut self, state: Option<bool>) -> bool {
 		if let Some(ref hovered) = self.current.hovered {
-			return self.current.files.select(&hovered.path, state);
+			return self.current.files.select(hovered.path(), state);
 		}
 		false
 	}
@@ -209,10 +209,10 @@ impl Tab {
 		let mut it = self.selected().into_iter().peekable();
 		while let Some(f) = it.next() {
 			s.push(match type_ {
-				"path" => f.path.as_os_str(),
-				"dirname" => f.path.parent().map_or(OsStr::new(""), |p| p.as_os_str()),
-				"filename" => f.path.file_name().unwrap_or(OsStr::new("")),
-				"name_without_ext" => f.path.file_stem().unwrap_or(OsStr::new("")),
+				"path" => f.path().as_os_str(),
+				"dirname" => f.path().parent().map_or(OsStr::new(""), |p| p.as_os_str()),
+				"filename" => f.path().file_name().unwrap_or(OsStr::new("")),
+				"name_without_ext" => f.path().file_stem().unwrap_or(OsStr::new("")),
 				_ => return false,
 			});
 			if it.peek().is_some() {
@@ -288,7 +288,7 @@ impl Tab {
 		let selected: Vec<_> = self
 			.selected()
 			.into_iter()
-			.map(|f| (f.path.as_os_str().to_owned(), Default::default()))
+			.map(|f| (f.path().as_os_str().to_owned(), Default::default()))
 			.collect();
 
 		let mut exec = exec.to_owned();
@@ -315,7 +315,7 @@ impl Tab {
 			return;
 		};
 
-		if path.as_ref().map(|p| *p != hovered.path).unwrap_or(false) {
+		if path.as_ref().map(|p| p != hovered.path()).unwrap_or(false) {
 			return;
 		} else if !self.preview.arrow(step, path.is_some()) {
 			return;
@@ -333,7 +333,7 @@ impl Tab {
 	}
 
 	pub fn update_preview(&mut self, lock: PreviewLock) -> bool {
-		let Some(hovered) = self.current.hovered.as_ref().map(|h| &h.path) else {
+		let Some(hovered) = self.current.hovered.as_ref().map(|h| h.path()) else {
 			return self.preview.reset();
 		};
 

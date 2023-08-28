@@ -36,7 +36,7 @@ impl Ctx {
 			}
 			Position::Hovered(rect @ Rect { mut x, y, width, height }) => {
 				let Some(r) =
-					self.manager.hovered().and_then(|h| self.manager.current().rect_current(&h.path))
+					self.manager.hovered().and_then(|h| self.manager.current().rect_current(h.path()))
 				else {
 					return self.area(&Position::Top(*rect));
 				};

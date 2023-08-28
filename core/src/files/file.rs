@@ -5,12 +5,12 @@ use tokio::fs;
 
 #[derive(Clone, Debug)]
 pub struct File {
-	pub path:      PathBuf,
-	pub meta:      Metadata,
-	pub length:    Option<u64>,
-	pub link_to:   Option<PathBuf>,
-	pub is_link:   bool,
-	pub is_hidden: bool,
+	pub(super) path: PathBuf,
+	pub meta:        Metadata,
+	pub length:      Option<u64>,
+	pub link_to:     Option<PathBuf>,
+	pub is_link:     bool,
+	pub is_hidden:   bool,
 }
 
 impl File {
@@ -40,10 +40,7 @@ impl File {
 	pub fn path(&self) -> &PathBuf { &self.path }
 
 	#[inline]
-	pub fn set_path(mut self, path: PathBuf) -> Self {
-		self.path = path;
-		self
-	}
+	pub fn set_path(&mut self, path: PathBuf) { self.path = path; }
 
 	#[inline]
 	pub fn name(&self) -> Option<Cow<str>> { self.path.file_name().map(|s| s.to_string_lossy()) }
