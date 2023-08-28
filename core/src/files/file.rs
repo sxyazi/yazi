@@ -15,12 +15,12 @@ pub struct File {
 
 impl File {
 	#[inline]
-	pub async fn from(path: &Path) -> Result<File> {
+	pub async fn from(path: &Path) -> Result<Self> {
 		let meta = fs::metadata(path).await?;
 		Ok(Self::from_meta(path, meta).await)
 	}
 
-	pub async fn from_meta(path: &Path, mut meta: Metadata) -> File {
+	pub async fn from_meta(path: &Path, mut meta: Metadata) -> Self {
 		let is_link = meta.is_symlink();
 		let mut link_to = None;
 
@@ -31,7 +31,7 @@ impl File {
 
 		let length = if meta.is_dir() { None } else { Some(meta.len()) };
 		let is_hidden = path.file_name().map(|s| s.to_string_lossy().starts_with('.')).unwrap_or(false);
-		File { path: path.to_path_buf(), meta, length, link_to, is_link, is_hidden }
+		Self { path: path.to_path_buf(), meta, length, link_to, is_link, is_hidden }
 	}
 }
 

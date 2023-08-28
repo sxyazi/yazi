@@ -1,4 +1,4 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, mem, path::PathBuf};
 
 use config::{manager::SortBy, MANAGER};
 
@@ -70,7 +70,20 @@ impl FilesSorter {
 			}
 		});
 
-		items.sort_unstable_by_key(|_| indices.pop().unwrap());
+		let dummy = File {
+			path:      PathBuf::new(),
+			meta:      items[0].meta.clone(),
+			length:    None,
+			link_to:   None,
+			is_link:   false,
+			is_hidden: false,
+		};
+
+		let mut new = Vec::with_capacity(indices.len());
+		for i in indices {
+			new.push(mem::replace(&mut items[i], dummy.clone()));
+		}
+		*items = new;
 	}
 
 	#[inline]
