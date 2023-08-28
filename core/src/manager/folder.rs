@@ -40,11 +40,8 @@ impl Folder {
 		self.cursor = self.cursor.min(len.saturating_sub(1));
 		self.set_page(true);
 
-		if let Some(h) = self.hovered.as_ref().map(|h| h.path_owned()) {
-			self.hover(&h);
-		}
+		self.hover_repos();
 		self.hovered = self.files.duplicate(self.cursor);
-
 		true
 	}
 
@@ -108,6 +105,11 @@ impl Folder {
 	pub fn hover(&mut self, path: &Path) -> bool {
 		let new = self.files.position(path).unwrap_or(self.cursor);
 		if new > self.cursor { self.next(new - self.cursor) } else { self.prev(self.cursor - new) }
+	}
+
+	#[inline]
+	pub fn hover_repos(&mut self) -> bool {
+		self.hover(&self.hovered.as_ref().map(|h| h.path_owned()).unwrap_or_default())
 	}
 
 	pub fn hover_force(&mut self, file: File) -> bool {

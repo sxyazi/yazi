@@ -137,7 +137,7 @@ impl Executor {
 
 			// Sorting
 			"sort" => {
-				let b = cx.manager.current_mut().files.set_sorter(FilesSorter {
+				let b = cx.manager.active_mut().set_sorter(FilesSorter {
 					by:        SortBy::try_from(exec.args.get(0).cloned().unwrap_or_default())
 						.unwrap_or_default(),
 					reverse:   exec.named.contains_key("reverse"),

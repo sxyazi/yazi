@@ -7,7 +7,7 @@ use shared::{Defer, MIME_DIR};
 use tokio::task::JoinHandle;
 
 use super::{Folder, Mode, Preview, PreviewLock};
-use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, files::{File, Files, FilesOp}, input::InputOpt, Event, BLOCKER};
+use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, files::{File, Files, FilesOp, FilesSorter}, input::InputOpt, Event, BLOCKER};
 
 pub struct Tab {
 	pub(super) mode:    Mode,
@@ -401,6 +401,16 @@ impl Tab {
 	#[inline]
 	pub fn preview_reset_image(&mut self) -> bool { self.preview.reset_image() }
 
+	// --- Sorter
+	pub fn set_sorter(&mut self, sorter: FilesSorter) -> bool {
+		if !self.current.files.set_sorter(sorter) {
+			return false;
+		}
+
+		self.current.hover_repos();
+		true
+	}
+
 	// --- Show hidden
 	pub fn set_show_hidden(&mut self, state: Option<bool>) -> bool {
 		let state = state.unwrap_or(!self.show_hidden);
@@ -424,14 +434,13 @@ impl Tab {
 		}
 
 		applied |= match self.current.hovered {
-			Some(ref hovered) if hovered.is_dir() => self
-				.history
-				.get_mut(hovered.path())
-				.map(|f| f.files.set_show_hidden(state))
-				.unwrap_or(false),
+			Some(ref h) if h.is_dir() => {
+				self.history.get_mut(h.path()).map(|f| f.files.set_show_hidden(state)).unwrap_or(false)
+			}
 			_ => false,
 		};
 
+		self.current.hover_repos();
 		applied
 	}
 }

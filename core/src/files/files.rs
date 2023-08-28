@@ -1,6 +1,7 @@
 use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref, path::{Path, PathBuf}};
 
 use anyhow::Result;
+use config::manager::SortBy;
 use tokio::fs;
 
 use super::{File, FilesSorter};
@@ -124,15 +125,22 @@ impl Files {
 
 	pub fn update_size(&mut self, items: BTreeMap<PathBuf, u64>) -> bool {
 		self.sizes.extend(items);
-		self.sorter.sort(&mut self.items);
+		if self.sorter.by == SortBy::Size {
+			self.sorter.sort(&mut self.items);
+		}
 		true
 	}
 
 	pub fn update_search(&mut self, items: Vec<File>) -> bool {
 		if !items.is_empty() {
-			let (hidden, items): (Vec<_>, Vec<_>) = items.into_iter().partition(|f| f.is_hidden);
-			self.items.extend(items);
-			self.hidden.extend(hidden);
+			if self.show_hidden {
+				self.items.extend(items);
+			} else {
+				let (hidden, items): (Vec<_>, Vec<_>) = items.into_iter().partition(|f| f.is_hidden);
+				self.items.extend(items);
+				self.hidden.extend(hidden);
+			}
+
 			self.sorter.sort(&mut self.items);
 			return true;
 		}
