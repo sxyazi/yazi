@@ -170,16 +170,24 @@ pub fn max_common_root(files: &[impl AsRef<Path>]) -> PathBuf {
 
 #[test]
 fn test_max_common_root() {
-	assert_eq!(max_common_root(&[]).as_os_str(), "");
-	assert_eq!(max_common_root(&["".into()]).as_os_str(), "");
-	assert_eq!(max_common_root(&["a".into()]).as_os_str(), "");
-	assert_eq!(max_common_root(&["/a".into()]).as_os_str(), "/");
-	assert_eq!(max_common_root(&["/a/b".into()]).as_os_str(), "/a");
-	assert_eq!(max_common_root(&["/a/b/c".into(), "/a/b/d".into()]).as_os_str(), "/a/b");
-	assert_eq!(max_common_root(&["/aa/bb/cc".into(), "/aa/dd/ee".into()]).as_os_str(), "/aa");
+	assert_eq!(max_common_root(&[] as &[PathBuf]).as_os_str(), "");
+	assert_eq!(max_common_root(&["".into()] as &[PathBuf]).as_os_str(), "");
+	assert_eq!(max_common_root(&["a".into()] as &[PathBuf]).as_os_str(), "");
+	assert_eq!(max_common_root(&["/a".into()] as &[PathBuf]).as_os_str(), "/");
+	assert_eq!(max_common_root(&["/a/b".into()] as &[PathBuf]).as_os_str(), "/a");
 	assert_eq!(
-		max_common_root(&["/aa/bb/cc".into(), "/aa/bb/cc/dd/ee".into(), "/aa/bb/cc/ff".into()])
-			.as_os_str(),
+		max_common_root(&["/a/b/c".into(), "/a/b/d".into()] as &[PathBuf]).as_os_str(),
+		"/a/b"
+	);
+	assert_eq!(
+		max_common_root(&["/aa/bb/cc".into(), "/aa/dd/ee".into()] as &[PathBuf]).as_os_str(),
+		"/aa"
+	);
+	assert_eq!(
+		max_common_root(
+			&["/aa/bb/cc".into(), "/aa/bb/cc/dd/ee".into(), "/aa/bb/cc/ff".into()] as &[PathBuf]
+		)
+		.as_os_str(),
 		"/aa/bb"
 	);
 }
