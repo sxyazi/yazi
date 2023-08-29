@@ -66,7 +66,7 @@ impl<'a> Widget for Folder<'a> {
 
 				let is_selected = self.folder.files.is_selected(f.path());
 				if (!self.is_selection && is_selected)
-					|| (self.is_selection && mode.pending(i, is_selected))
+					|| (self.is_selection && mode.pending(self.folder.offset() + i, is_selected))
 				{
 					buf.set_style(
 						Rect { x: area.x.saturating_sub(1), y: i as u16 + 1, width: 1, height: 1 },

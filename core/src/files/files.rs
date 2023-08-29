@@ -79,11 +79,7 @@ impl Files {
 		true
 	}
 
-	pub fn select_many(&mut self, path: Option<&Path>, state: Option<bool>) -> bool {
-		if let Some(path) = path {
-			return self.select(path, state);
-		}
-
+	pub fn select_all(&mut self, state: Option<bool>) -> bool {
 		match state {
 			Some(true) => {
 				self.selected = self.iter().map(|f| f.path_owned()).collect();
@@ -176,18 +172,26 @@ impl Files {
 	// --- Selected
 	pub fn selected(&self, pending: &BTreeSet<usize>, unset: bool) -> Vec<&File> {
 		if self.selected.is_empty() && (unset || pending.is_empty()) {
-			return Default::default();
+			return Vec::new();
 		}
 
-		let mut items =
-			Vec::with_capacity(self.selected.len() + if !unset { pending.len() } else { 0 });
+		let selected: BTreeSet<_> = self.selected.iter().collect();
+		let pending: BTreeSet<_> =
+			pending.iter().filter_map(|&i| self.items.get(i)).map(|f| &f.path).collect();
 
-		for (i, item) in self.iter().enumerate() {
-			let b = self.selected.contains(&item.path);
-			if !unset && (b || pending.contains(&i)) {
+		let selected: BTreeSet<_> = if unset {
+			selected.difference(&pending).cloned().collect()
+		} else {
+			selected.union(&pending).cloned().collect()
+		};
+
+		let mut items = Vec::with_capacity(selected.len());
+		for item in &self.items {
+			if selected.contains(&item.path) {
 				items.push(item);
-			} else if unset && b && !pending.contains(&i) {
-				items.push(item);
+			}
+			if items.len() == selected.len() {
+				break;
 			}
 		}
 		items

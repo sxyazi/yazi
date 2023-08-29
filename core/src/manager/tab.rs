@@ -191,9 +191,7 @@ impl Tab {
 		false
 	}
 
-	pub fn select_all(&mut self, state: Option<bool>) -> bool {
-		self.current.files.select_many(None, state)
-	}
+	pub fn select_all(&mut self, state: Option<bool>) -> bool { self.current.files.select_all(state) }
 
 	pub fn visual_mode(&mut self, unset: bool) -> bool {
 		let idx = self.current.cursor();
