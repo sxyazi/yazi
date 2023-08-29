@@ -1,110 +1,149 @@
-use std::{collections::BTreeMap, ops::{Deref, DerefMut}, path::{Path, PathBuf}};
+use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref, path::{Path, PathBuf}};
 
 use anyhow::Result;
-use config::MANAGER;
-use indexmap::IndexMap;
+use config::manager::SortBy;
 use tokio::fs;
 
 use super::{File, FilesSorter};
 
 pub struct Files {
-	items:           IndexMap<PathBuf, File>,
-	pub sorter:      FilesSorter,
-	pub show_hidden: bool,
+	items:  Vec<File>,
+	hidden: Vec<File>,
+
+	sizes:    BTreeMap<PathBuf, u64>,
+	selected: BTreeSet<PathBuf>,
+
+	sorter:      FilesSorter,
+	show_hidden: bool,
 }
 
 impl Default for Files {
 	fn default() -> Self {
 		Self {
-			items:       Default::default(),
+			items:  Default::default(),
+			hidden: Default::default(),
+
+			sizes:    Default::default(),
+			selected: Default::default(),
+
 			sorter:      Default::default(),
-			show_hidden: MANAGER.show_hidden,
+			show_hidden: true,
 		}
 	}
 }
 
+impl Deref for Files {
+	type Target = Vec<File>;
+
+	fn deref(&self) -> &Self::Target { &self.items }
+}
+
 impl Files {
-	pub async fn read(paths: Vec<PathBuf>) -> BTreeMap<PathBuf, File> {
-		let mut items = BTreeMap::new();
+	pub async fn read(paths: &[impl AsRef<Path>]) -> Vec<File> {
+		let mut items = Vec::with_capacity(paths.len());
 		for path in paths {
-			if let Ok(file) = File::from(&path).await {
-				items.insert(path, file);
+			if let Ok(file) = File::from(path.as_ref()).await {
+				items.push(file);
 			}
 		}
 		items
 	}
 
-	pub async fn read_dir(path: &Path) -> Result<BTreeMap<PathBuf, File>> {
+	pub async fn read_dir(path: &Path) -> Result<Vec<File>> {
 		let mut it = fs::read_dir(path).await?;
-		let mut items = BTreeMap::new();
+		let mut items = Vec::new();
 		while let Ok(Some(item)) = it.next_entry().await {
 			if let Ok(meta) = item.metadata().await {
-				let path = item.path();
-				let file = File::from_meta(&path, meta).await;
-				items.insert(path, file);
+				items.push(File::from_meta(&item.path(), meta).await);
 			}
 		}
 		Ok(items)
 	}
+}
 
+impl Files {
 	#[inline]
-	pub fn duplicate(&self, idx: usize) -> Option<File> {
-		self.items.get_index(idx).map(|(_, file)| file.clone())
-	}
+	pub fn select(&mut self, path: &Path, state: Option<bool>) -> bool {
+		let old = self.selected.contains(path);
+		let new = if let Some(new) = state { new } else { !old };
 
-	#[inline]
-	pub fn set_sorter(&mut self, sort: FilesSorter) -> bool {
-		if self.sorter == sort {
+		if new == old {
 			return false;
 		}
-		self.sorter = sort;
-		self.sorter.sort(&mut self.items)
+
+		if new {
+			self.selected.insert(path.to_owned());
+		} else {
+			self.selected.remove(path);
+		}
+		true
 	}
 
-	pub fn update_read(&mut self, mut items: BTreeMap<PathBuf, File>) -> bool {
-		if !self.show_hidden {
-			items.retain(|_, item| !item.is_hidden);
-		}
-
-		for (path, item) in &mut items {
-			if let Some(old) = self.items.get(path) {
-				item.is_selected = old.is_selected;
-
-				// Calculate the size of directories is expensive, so we keep the old value,
-				// before a new value is calculated and comes to.
-				if item.meta.is_dir() {
-					item.length = old.length;
+	pub fn select_all(&mut self, state: Option<bool>) -> bool {
+		match state {
+			Some(true) => {
+				self.selected = self.iter().map(|f| f.path_owned()).collect();
+			}
+			Some(false) => {
+				self.selected.clear();
+			}
+			None => {
+				for item in &self.items {
+					if self.selected.contains(&item.path) {
+						self.selected.remove(&item.path);
+					} else {
+						self.selected.insert(item.path_owned());
+					}
 				}
 			}
 		}
-
-		self.items.clear();
-		self.items.extend(items);
-		self.sorter.sort(&mut self.items);
-		true
+		!self.items.is_empty()
 	}
 
-	pub fn update_sort(&mut self, mut items: BTreeMap<PathBuf, File>) -> bool {
-		for (path, item) in &mut items {
-			if let Some(old) = self.items.get(path) {
-				item.is_selected = old.is_selected;
-			}
+	pub fn select_index(&mut self, indices: &BTreeSet<usize>, state: Option<bool>) -> bool {
+		let mut applied = false;
+		let paths: Vec<_> = self.pick(indices).iter().map(|f| f.path_owned()).collect();
+
+		for path in paths {
+			applied |= self.select(&path, state);
 		}
+		applied
+	}
 
-		self.items.extend(items);
-		self.sorter.sort(&mut self.items);
+	pub fn update_read(&mut self, mut items: Vec<File>) -> bool {
+		if !self.show_hidden {
+			(self.hidden, items) = items.into_iter().partition(|f| f.is_hidden);
+		}
+		self.sorter.sort(&mut items);
+		self.items = items;
 		true
 	}
 
-	pub fn update_search(&mut self, items: BTreeMap<PathBuf, File>) -> bool {
+	pub fn update_size(&mut self, items: BTreeMap<PathBuf, u64>) -> bool {
+		self.sizes.extend(items);
+		if self.sorter.by == SortBy::Size {
+			self.sorter.sort(&mut self.items);
+		}
+		true
+	}
+
+	pub fn update_search(&mut self, items: Vec<File>) -> bool {
 		if !items.is_empty() {
-			self.items.extend(items);
+			if self.show_hidden {
+				self.items.extend(items);
+			} else {
+				let (hidden, items): (Vec<_>, Vec<_>) = items.into_iter().partition(|f| f.is_hidden);
+				self.items.extend(items);
+				self.hidden.extend(hidden);
+			}
+
 			self.sorter.sort(&mut self.items);
 			return true;
 		}
 
 		if !self.items.is_empty() {
 			self.items.clear();
+			self.hidden.clear();
 			return true;
 		}
 
@@ -112,39 +151,93 @@ impl Files {
 	}
 }
 
-impl Deref for Files {
-	type Target = IndexMap<PathBuf, File>;
-
-	fn deref(&self) -> &Self::Target { &self.items }
-}
-
-impl DerefMut for Files {
-	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.items }
-}
-
-#[derive(Debug)]
-pub enum FilesOp {
-	Read(PathBuf, BTreeMap<PathBuf, File>),
-	Sort(PathBuf, BTreeMap<PathBuf, File>),
-	Search(PathBuf, BTreeMap<PathBuf, File>),
-	IOErr(PathBuf),
-}
-
-impl FilesOp {
-	#[inline]
-	pub fn path(&self) -> PathBuf {
-		match self {
-			Self::Read(path, _) => path,
-			Self::Sort(path, _) => path,
-			Self::Search(path, _) => path,
-			Self::IOErr(path) => path,
+impl Files {
+	// --- Items
+	pub fn pick(&self, indices: &BTreeSet<usize>) -> Vec<&File> {
+		let mut items = Vec::with_capacity(indices.len());
+		for (i, item) in self.iter().enumerate() {
+			if indices.contains(&i) {
+				items.push(item);
+			}
 		}
-		.clone()
+		items
 	}
 
 	#[inline]
-	pub fn read_empty(path: &Path) -> Self { Self::Read(path.to_path_buf(), BTreeMap::new()) }
+	pub fn position(&self, path: &Path) -> Option<usize> { self.iter().position(|f| f.path == path) }
 
 	#[inline]
-	pub fn search_empty(path: &Path) -> Self { Self::Search(path.to_path_buf(), BTreeMap::new()) }
+	pub fn duplicate(&self, idx: usize) -> Option<File> { self.items.get(idx).cloned() }
+
+	// --- Selected
+	pub fn selected(&self, pending: &BTreeSet<usize>, unset: bool) -> Vec<&File> {
+		if self.selected.is_empty() && (unset || pending.is_empty()) {
+			return Vec::new();
+		}
+
+		let selected: BTreeSet<_> = self.selected.iter().collect();
+		let pending: BTreeSet<_> =
+			pending.iter().filter_map(|&i| self.items.get(i)).map(|f| &f.path).collect();
+
+		let selected: BTreeSet<_> = if unset {
+			selected.difference(&pending).cloned().collect()
+		} else {
+			selected.union(&pending).cloned().collect()
+		};
+
+		let mut items = Vec::with_capacity(selected.len());
+		for item in &self.items {
+			if selected.contains(&item.path) {
+				items.push(item);
+			}
+			if items.len() == selected.len() {
+				break;
+			}
+		}
+		items
+	}
+
+	#[inline]
+	pub fn is_selected(&self, path: &Path) -> bool { self.selected.contains(path) }
+
+	#[inline]
+	pub fn has_selected(&self) -> bool {
+		if self.selected.is_empty() {
+			return false;
+		}
+		self.iter().any(|f| self.selected.contains(&f.path))
+	}
+
+	// --- Sorter
+	pub fn sorter(&self) -> &FilesSorter { &self.sorter }
+
+	#[inline]
+	pub fn set_sorter(&mut self, sorter: FilesSorter) -> bool {
+		if self.sorter == sorter {
+			return false;
+		}
+		self.sorter = sorter;
+		self.sorter.sort(&mut self.items)
+	}
+
+	// --- Show hidden
+	#[inline]
+	pub fn set_show_hidden(&mut self, state: bool) -> bool {
+		if state == self.show_hidden {
+			return false;
+		} else if state && self.hidden.is_empty() {
+			return false;
+		}
+
+		if state {
+			self.items.append(&mut self.hidden);
+			self.sorter.sort(&mut self.items);
+		} else {
+			let items = mem::take(&mut self.items);
+			(self.hidden, self.items) = items.into_iter().partition(|f| f.is_hidden);
+		}
+
+		self.show_hidden = state;
+		true
+	}
 }

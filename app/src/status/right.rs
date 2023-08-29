@@ -71,7 +71,7 @@ impl Widget for Right<'_> {
 		#[cfg(not(target_os = "windows"))]
 		if let Some(h) = &manager.hovered {
 			use std::os::unix::prelude::PermissionsExt;
-			spans.extend(self.permissions(&shared::file_mode(h.meta.permissions().mode())))
+			spans.extend(self.permissions(&shared::file_mode(h.meta().permissions().mode())))
 		}
 
 		// Position

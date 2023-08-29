@@ -212,15 +212,12 @@ impl Tasks {
 
 	#[inline]
 	pub fn precache_size(&self, targets: &Files) -> bool {
-		if targets.sorter.by != SortBy::Size {
+		if targets.sorter().by != SortBy::Size {
 			return false;
 		}
 
-		let targets = targets
-			.iter()
-			.filter(|(_, f)| f.meta.is_dir() && f.length.is_none())
-			.map(|(p, _)| p.clone())
-			.collect::<Vec<_>>();
+		let targets: Vec<_> =
+			targets.iter().filter(|f| f.is_dir() && f.length().is_none()).map(|f| f.path()).collect();
 
 		if !targets.is_empty() {
 			self.scheduler.precache_size(targets);
@@ -230,12 +227,12 @@ impl Tasks {
 	}
 
 	#[inline]
-	pub fn precache_mime(&self, targets: Vec<&File>, mimetype: &HashMap<PathBuf, String>) -> bool {
-		let targets = targets
-			.into_iter()
-			.filter(|f| f.meta.is_file() && !mimetype.contains_key(&f.path))
-			.map(|f| f.path.clone())
-			.collect::<Vec<_>>();
+	pub fn precache_mime(&self, targets: &[File], mimetype: &HashMap<PathBuf, String>) -> bool {
+		let targets: Vec<_> = targets
+			.iter()
+			.filter(|f| f.is_file() && !mimetype.contains_key(f.path()))
+			.map(|f| f.path_owned())
+			.collect();
 
 		if !targets.is_empty() {
 			self.scheduler.precache_mime(targets);

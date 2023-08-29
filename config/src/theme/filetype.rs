@@ -12,12 +12,12 @@ pub struct Filetype {
 }
 
 impl Filetype {
-	pub fn matches(&self, path: &Path, mime: Option<String>, is_dir: bool) -> bool {
+	pub fn matches(&self, path: &Path, mime: Option<impl AsRef<str>>, is_dir: bool) -> bool {
 		if self.name.as_ref().map_or(false, |e| e.match_path(path, Some(is_dir))) {
 			return true;
 		}
 		if let Some(mime) = mime {
-			return self.mime.as_ref().map_or(false, |m| m.matches(&mime));
+			return self.mime.as_ref().map_or(false, |m| m.matches(mime));
 		}
 		false
 	}

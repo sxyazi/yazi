@@ -7,7 +7,7 @@ use parking_lot::Mutex;
 use shared::{calculate_size, Throttle};
 use tokio::{fs, sync::mpsc};
 
-use crate::{emit, external, files::{File, FilesOp}, tasks::TaskOp};
+use crate::{emit, external, files::FilesOp, tasks::TaskOp};
 
 pub(crate) struct Precache {
 	rx: async_channel::Receiver<PrecacheOp>,
@@ -29,7 +29,7 @@ pub(crate) enum PrecacheOp {
 pub(crate) struct PrecacheOpSize {
 	pub id:       usize,
 	pub target:   PathBuf,
-	pub throttle: Arc<Throttle<(PathBuf, File)>>,
+	pub throttle: Arc<Throttle<(PathBuf, u64)>>,
 }
 
 #[derive(Debug)]
@@ -121,21 +121,16 @@ impl Precache {
 	pub(crate) async fn size(&self, task: PrecacheOpSize) -> Result<()> {
 		self.sch.send(TaskOp::New(task.id, 0))?;
 
-		let length = Some(calculate_size(&task.target).await);
-		if let Ok(mut file) = File::from(&task.target).await {
-			file.length = length;
-			task.throttle.done((task.target, file), |buf| {
-				let mut handing = self.size_handing.lock();
-				for (path, _) in &buf {
-					handing.remove(path);
-				}
+		let length = calculate_size(&task.target).await;
+		task.throttle.done((task.target, length), |buf| {
+			let mut handing = self.size_handing.lock();
+			for (path, _) in &buf {
+				handing.remove(path);
+			}
 
-				let parent = buf[0].0.parent().unwrap().to_path_buf();
-				emit!(Files(FilesOp::Sort(parent, BTreeMap::from_iter(buf))));
-			});
-		} else {
-			self.size_handing.lock().remove(&task.target);
-		};
+			let parent = buf[0].0.parent().unwrap().to_path_buf();
+			emit!(Files(FilesOp::Size(parent, BTreeMap::from_iter(buf))));
+		});
 
 		self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
 		self.done(task.id)

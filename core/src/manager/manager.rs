@@ -30,6 +30,8 @@ impl Manager {
 	pub fn refresh(&mut self) {
 		env::set_current_dir(self.cwd()).ok();
 
+		self.active_mut().apply_show_hidden();
+
 		if let Some(f) = self.parent() {
 			self.watcher.trigger_dirs(&[self.cwd(), &f.cwd]);
 		} else {
@@ -39,14 +41,14 @@ impl Manager {
 
 		let mut to_watch = BTreeSet::new();
 		for tab in self.tabs.iter() {
-			to_watch.insert(tab.current.cwd.clone());
-			if let Some(ref p) = tab.parent {
-				to_watch.insert(p.cwd.clone());
-			}
+			to_watch.insert(&tab.current.cwd);
 			if let Some(ref h) = tab.current.hovered {
-				if h.meta.is_dir() {
+				if h.is_dir() {
 					to_watch.insert(h.path());
 				}
+			}
+			if let Some(ref p) = tab.parent {
+				to_watch.insert(&p.cwd);
 			}
 		}
 		self.watcher.watch(to_watch);
@@ -61,13 +63,13 @@ impl Manager {
 			self.active_mut().preview_reset_image();
 		}
 
-		let mime = if hovered.meta.is_dir() {
+		let mime = if hovered.is_dir() {
 			MIME_DIR.to_owned()
-		} else if let Some(m) = self.mimetype.get(&hovered.path).cloned() {
+		} else if let Some(m) = self.mimetype.get(hovered.path()).cloned() {
 			m
 		} else {
 			tokio::spawn(async move {
-				if let Ok(mimes) = external::file(&[hovered.path]).await {
+				if let Ok(mimes) = external::file(&[hovered.path()]).await {
 					emit!(Mimetype(mimes));
 				}
 			});
@@ -75,18 +77,16 @@ impl Manager {
 		};
 
 		if sequent {
-			self.active_mut().preview.sequent(&hovered.path, &mime, show_image);
+			self.active_mut().preview.sequent(hovered.path(), &mime, show_image);
 		} else {
-			self.active_mut().preview.go(&hovered.path, &mime, show_image);
+			self.active_mut().preview.go(hovered.path(), &mime, show_image);
 		}
 		false
 	}
 
 	pub fn yank(&mut self, cut: bool) -> bool {
-		let selected = self.selected().into_iter().map(|f| f.path()).collect::<Vec<_>>();
 		self.yanked.0 = cut;
-		self.yanked.1.clear();
-		self.yanked.1.extend(selected);
+		self.yanked.1 = self.selected().into_iter().map(|f| f.path_owned()).collect();
 		false
 	}
 
@@ -119,20 +119,16 @@ impl Manager {
 	}
 
 	pub fn open(&mut self, interactive: bool) -> bool {
-		let mut files = self
+		let mut files: Vec<_> = self
 			.selected()
 			.into_iter()
 			.map(|f| {
 				(
-					f.path().into_os_string(),
-					if f.meta.is_dir() {
-						Some(MIME_DIR.to_owned())
-					} else {
-						self.mimetype.get(&f.path).cloned()
-					},
+					f.path_os_str().to_owned(),
+					if f.is_dir() { Some(MIME_DIR.to_owned()) } else { self.mimetype.get(f.path()).cloned() },
 				)
 			})
-			.collect::<Vec<_>>();
+			.collect();
 
 		if files.is_empty() {
 			return false;
@@ -203,7 +199,7 @@ impl Manager {
 			return self.bulk_rename();
 		}
 
-		let Some(hovered) = self.hovered().map(|h| h.path()) else {
+		let Some(hovered) = self.hovered().map(|h| h.path_owned()) else {
 			return false;
 		};
 
@@ -221,10 +217,10 @@ impl Manager {
 	}
 
 	pub fn bulk_rename(&self) -> bool {
-		let mut old: Vec<_> = self.selected().iter().map(|&f| f.path()).collect();
+		let old: Vec<_> = self.selected().into_iter().map(|f| f.path()).collect();
 
 		let root = max_common_root(&old);
-		old.iter_mut().for_each(|p| *p = p.strip_prefix(&root).unwrap().to_owned());
+		let old: Vec<_> = old.into_iter().map(|p| p.strip_prefix(&root).unwrap().to_owned()).collect();
 
 		let tmp = BOOT.tmpfile("bulk");
 		tokio::spawn(async move {
@@ -327,7 +323,7 @@ impl Manager {
 	pub fn update_read(&mut self, op: FilesOp) -> bool {
 		let path = op.path();
 		let cwd = self.cwd().to_owned();
-		let hovered = self.hovered().map(|h| h.path());
+		let hovered = self.hovered().map(|h| h.path_owned());
 
 		let mut b = if cwd == path && !self.current().in_search {
 			self.current_mut().update(op)
@@ -341,13 +337,13 @@ impl Manager {
 				.or_insert_with(|| Folder::new(&path))
 				.update(op);
 
-			matches!(self.hovered(), Some(h) if h.path == path)
+			matches!(self.hovered(), Some(h) if h.path() == &path)
 		};
 
 		b |= self.active_mut().parent.as_mut().map_or(false, |p| p.hover(&cwd));
 		b |= hovered.as_ref().map_or(false, |h| self.current_mut().hover(h));
 
-		if hovered != self.hovered().map(|h| h.path()) {
+		if hovered.as_ref() != self.hovered().map(|h| h.path()) {
 			emit!(Hover);
 		}
 		b
@@ -403,8 +399,8 @@ impl Manager {
 			return b;
 		};
 
-		if hovered.meta.is_dir() {
-			self.watcher.trigger_dirs(&[&hovered.path]);
+		if hovered.is_dir() {
+			self.watcher.trigger_dirs(&[hovered.path()]);
 		}
 		b
 	}

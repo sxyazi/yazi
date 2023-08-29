@@ -1,7 +1,6 @@
 use std::path::{Path, PathBuf};
 
 use config::MANAGER;
-use indexmap::map::Slice;
 use ratatui::layout::Rect;
 
 use crate::{emit, files::{File, Files, FilesOp}};
@@ -28,7 +27,7 @@ impl Folder {
 	pub fn update(&mut self, op: FilesOp) -> bool {
 		let b = match op {
 			FilesOp::Read(_, items) => self.files.update_read(items),
-			FilesOp::Sort(_, items) => self.files.update_sort(items),
+			FilesOp::Size(_, items) => self.files.update_size(items),
 			FilesOp::Search(_, items) => self.files.update_search(items),
 			_ => unreachable!(),
 		};
@@ -41,11 +40,8 @@ impl Folder {
 		self.cursor = self.cursor.min(len.saturating_sub(1));
 		self.set_page(true);
 
-		if let Some(h) = self.hovered.as_ref().map(|h| h.path()) {
-			self.hover(&h);
-		}
+		self.hover_repos();
 		self.hovered = self.files.duplicate(self.cursor);
-
 		true
 	}
 
@@ -93,68 +89,31 @@ impl Folder {
 		old != self.cursor
 	}
 
-	pub fn hidden(&mut self, show: Option<bool>) -> bool {
-		if show.is_none() || self.files.show_hidden != show.unwrap() {
-			self.files.show_hidden = !self.files.show_hidden;
-			emit!(Refresh);
-		}
-
-		false
-	}
-
 	#[inline]
-	pub fn window(&self) -> &Slice<PathBuf, File> {
+	pub fn window(&self) -> &[File] {
 		let end = (self.offset + MANAGER.layout.folder_height()).min(self.files.len());
-		self.files.get_range(self.offset..end).unwrap()
+		&self.files[self.offset..end]
 	}
 
 	#[inline]
-	pub fn window_for(&self, offset: usize) -> &Slice<PathBuf, File> {
+	pub fn window_for(&self, offset: usize) -> &[File] {
 		let start = offset.min(self.files.len().saturating_sub(1));
 		let end = (offset + MANAGER.layout.folder_height()).min(self.files.len());
-		self.files.get_range(start..end).unwrap()
-	}
-
-	pub fn select(&mut self, idx: Option<usize>, state: Option<bool>) -> bool {
-		let len = self.files.len();
-		let mut apply = |idx: usize, state: Option<bool>| -> bool {
-			let Some(state) = state else {
-				self.files[idx].is_selected = !self.files[idx].is_selected;
-				return true;
-			};
-
-			if state != self.files[idx].is_selected {
-				self.files[idx].is_selected = state;
-				return true;
-			}
-
-			false
-		};
-
-		if let Some(idx) = idx {
-			if idx < len {
-				return apply(idx, state);
-			}
-		} else {
-			let mut applied = false;
-			for i in 0..len {
-				if apply(i, state) {
-					applied = true;
-				}
-			}
-			return applied;
-		}
-
-		false
+		&self.files[start..end]
 	}
 
 	pub fn hover(&mut self, path: &Path) -> bool {
-		let new = self.position(path).unwrap_or(self.cursor);
+		let new = self.files.position(path).unwrap_or(self.cursor);
 		if new > self.cursor { self.next(new - self.cursor) } else { self.prev(self.cursor - new) }
 	}
 
+	#[inline]
+	pub fn hover_repos(&mut self) -> bool {
+		self.hover(&self.hovered.as_ref().map(|h| h.path_owned()).unwrap_or_default())
+	}
+
 	pub fn hover_force(&mut self, file: File) -> bool {
-		if self.hover(&file.path) {
+		if self.hover(file.path()) {
 			return true;
 		}
 
@@ -170,25 +129,17 @@ impl Folder {
 	#[inline]
 	pub fn cursor(&self) -> usize { self.cursor }
 
-	#[inline]
-	pub fn position(&self, path: &Path) -> Option<usize> {
-		self.files.iter().position(|(p, _)| p == path)
-	}
-
-	pub fn paginate(&self) -> &Slice<PathBuf, File> {
+	pub fn paginate(&self) -> &[File] {
 		let len = self.files.len();
 		let limit = MANAGER.layout.folder_height();
 
 		let start = (self.page * limit).min(len.saturating_sub(1));
 		let end = (start + limit).min(len);
-		self.files.get_range(start..end).unwrap()
+		&self.files[start..end]
 	}
 
-	#[inline]
-	pub fn has_selected(&self) -> bool { self.files.iter().any(|(_, f)| f.is_selected) }
-
 	pub fn rect_current(&self, path: &Path) -> Option<Rect> {
-		let y = self.position(path)? - self.offset;
+		let y = self.files.position(path)? - self.offset;
 
 		let mut rect = MANAGER.layout.folder_rect();
 		rect.y = rect.y.saturating_sub(1) + y as u16;

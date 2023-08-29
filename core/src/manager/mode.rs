@@ -50,6 +50,12 @@ impl Mode {
 
 impl Mode {
 	#[inline]
+	pub fn is_select(&self) -> bool { matches!(self, Mode::Select(..)) }
+
+	#[inline]
+	pub fn is_unset(&self) -> bool { matches!(self, Mode::Unset(..)) }
+
+	#[inline]
 	pub fn is_visual(&self) -> bool { matches!(self, Mode::Select(..) | Mode::Unset(..)) }
 }
 

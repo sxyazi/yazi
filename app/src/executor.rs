@@ -106,7 +106,7 @@ impl Executor {
 				}
 			}
 			"remove" => {
-				let targets = cx.manager.selected().into_iter().map(|p| p.path()).collect();
+				let targets = cx.manager.selected().into_iter().map(|f| f.path_owned()).collect();
 				cx.tasks.file_remove(targets, exec.named.contains_key("permanently"))
 			}
 			"create" => cx.manager.create(),
@@ -117,11 +117,13 @@ impl Executor {
 				exec.named.contains_key("block"),
 				exec.named.contains_key("confirm"),
 			),
-			"hidden" => cx.manager.current_mut().hidden(match exec.args.get(0).map(|s| s.as_str()) {
-				Some("show") => Some(true),
-				Some("hide") => Some(false),
-				_ => None,
-			}),
+			"hidden" => {
+				cx.manager.active_mut().set_show_hidden(match exec.args.get(0).map(|s| s.as_str()) {
+					Some("show") => Some(true),
+					Some("hide") => Some(false),
+					_ => None,
+				})
+			}
 			"search" => match exec.args.get(0).map(|s| s.as_str()).unwrap_or("") {
 				"rg" => cx.manager.active_mut().search(true),
 				"fd" => cx.manager.active_mut().search(false),
@@ -135,7 +137,7 @@ impl Executor {
 
 			// Sorting
 			"sort" => {
-				let b = cx.manager.current_mut().files.set_sorter(FilesSorter {
+				let b = cx.manager.active_mut().set_sorter(FilesSorter {
 					by:        SortBy::try_from(exec.args.get(0).cloned().unwrap_or_default())
 						.unwrap_or_default(),
 					reverse:   exec.named.contains_key("reverse"),

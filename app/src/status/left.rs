@@ -35,13 +35,13 @@ impl<'a> Widget for Left<'a> {
 
 		if let Some(h) = &manager.hovered {
 			// Length
-			if let Some(len) = h.length {
+			if let Some(len) = h.length() {
 				spans.push(Span::styled(format!(" {} ", readable_size(len)), body.bg().fg(**primary)));
 				spans.push(Span::styled(&separator.closing, body.fg()));
 			}
 
 			// Filename
-			spans.push(Span::raw(format!(" {} ", h.name().unwrap())));
+			spans.push(Span::raw(format!(" {} ", h.name_display().unwrap())));
 		}
 
 		Paragraph::new(Line::from(spans)).render(area, buf);

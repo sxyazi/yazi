@@ -131,7 +131,7 @@ impl App {
 				let calc = matches!(op, FilesOp::Read(..) | FilesOp::Search(..));
 				let b = match op {
 					FilesOp::Read(..) => manager.update_read(op),
-					FilesOp::Sort(..) => manager.update_read(op),
+					FilesOp::Size(..) => manager.update_read(op),
 					FilesOp::Search(..) => manager.update_search(op),
 					FilesOp::IOErr(..) => manager.update_ioerr(op),
 				};
@@ -144,7 +144,7 @@ impl App {
 			}
 			Event::Pages(page) => {
 				if manager.current().page == page {
-					let targets = self.cx.manager.current().paginate().into_iter().map(|(_, f)| f).collect();
+					let targets = self.cx.manager.current().paginate();
 					tasks.precache_mime(targets, &self.cx.manager.mimetype);
 				}
 			}

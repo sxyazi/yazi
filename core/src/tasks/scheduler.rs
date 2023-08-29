@@ -318,13 +318,13 @@ impl Scheduler {
 		});
 	}
 
-	pub(super) fn precache_size(&self, targets: Vec<PathBuf>) {
+	pub(super) fn precache_size(&self, targets: Vec<&PathBuf>) {
 		let throttle = Arc::new(Throttle::new(targets.len(), Duration::from_millis(300)));
 		let mut handing = self.precache.size_handing.lock();
 		let mut running = self.running.write();
 
 		for target in targets {
-			if !handing.contains(&target) {
+			if !handing.contains(target) {
 				handing.insert(target.clone());
 			} else {
 				continue;
@@ -333,6 +333,7 @@ impl Scheduler {
 			let id = running.add(format!("Calculate the size of {:?}", target));
 			let _ = self.todo.send_blocking({
 				let precache = self.precache.clone();
+				let target = target.clone();
 				let throttle = throttle.clone();
 				async move {
 					precache.size(PrecacheOpSize { id, target, throttle }).await.ok();
