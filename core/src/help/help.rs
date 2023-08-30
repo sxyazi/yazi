@@ -50,9 +50,9 @@ impl Help {
 
 	#[inline]
 	pub fn arrow(&mut self, step: isize) -> bool {
-		let len = self.bindings.len();
-		self.offset = self.offset.min(len);
-		self.cursor = self.cursor.min(len.saturating_sub(1));
+		let max = self.bindings.len().saturating_sub(1);
+		self.offset = self.offset.min(max);
+		self.cursor = self.cursor.min(max);
 
 		if step > 0 { self.next(step as usize) } else { self.prev(step.unsigned_abs()) }
 	}
