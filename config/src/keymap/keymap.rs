@@ -1,14 +1,7 @@
 use serde::{Deserialize, Deserializer};
 
-use super::{Exec, Key};
+use super::Control;
 use crate::MERGED_KEYMAP;
-
-#[derive(Clone, Debug, Deserialize)]
-pub struct Control {
-	pub on:   Vec<Key>,
-	#[serde(deserialize_with = "Exec::deserialize")]
-	pub exec: Vec<Exec>,
-}
 
 #[derive(Debug)]
 pub struct Keymap {

@@ -3,14 +3,14 @@
 keymap = [
 	{ on = [ "<Esc>" ], exec = "escape", desc = "Exit visual mode, clear selected, or cancel search" },
 	{ on = [ "q" ],     exec = "quit",   desc = "Exit the process" },
-	{ on = [ "<C-q>" ], exec = "close",  desc = "Close the current tab, or quit if it's last tab" },
+	{ on = [ "<C-q>" ], exec = "close",  desc = "Close the current tab, or quit if it is last tab" },
 
 	# Navigation
 	{ on = [ "k" ], exec = "arrow -1", desc = "Move cursor up" },
 	{ on = [ "j" ], exec = "arrow 1",  desc = "Move cursor down" },
 
 	{ on = [ "K" ], exec = "arrow -5", desc = "Move cursor up 5 lines" },
-	{ on = [ "J" ], exec = "arrow 5",  desc = "Move cursor down 5 line" },
+	{ on = [ "J" ], exec = "arrow 5",  desc = "Move cursor down 5 lines" },
 
 	{ on = [ "h" ], exec = "leave", desc = "Go back to the parent directory" },
 	{ on = [ "l" ], exec = "enter", desc = "Enter the child directory" },
@@ -54,11 +54,11 @@ keymap = [
 	{ on = [ "s" ],         exec = "search fd",              desc = "Search files by content using ripgrep" },
 	{ on = [ "S" ],         exec = "search rg",              desc = "Search files by name using fd" },
 	{ on = [ "<C-s>" ],     exec = "search none",            desc = "Cancel the ongoing search" },
-	{ on = [ "z" ],         exec = "jump zoxide",            desc = "Jump to a directory, or reveal a file using fzf" },
-	{ on = [ "Z" ],         exec = "jump fzf",               desc = "Jump to a directory using zoxide" },
+	{ on = [ "z" ],         exec = "jump zoxide",            desc = "Jump to a directory using zoxide" },
+	{ on = [ "Z" ],         exec = "jump fzf",               desc = "Jump to a directory, or reveal a file using fzf" },
 
 	# Copy
-	{ on = [ "c", "c" ], exec = "copy path",             desc = "Copy the full absolute path" },
+	{ on = [ "c", "c" ], exec = "copy path",             desc = "Copy the absolute path" },
 	{ on = [ "c", "d" ], exec = "copy dirname",          desc = "Copy the path of the parent directory" },
 	{ on = [ "c", "f" ], exec = "copy filename",         desc = "Copy the name of the file" },
 	{ on = [ "c", "n" ], exec = "copy name_without_ext", desc = "Copy the name of the file without the extension" },

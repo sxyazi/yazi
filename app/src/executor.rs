@@ -21,7 +21,7 @@ impl Executor {
 			}
 		}
 
-		for Control { on, exec } in KEYMAP.get(layer) {
+		for Control { on, exec, .. } in KEYMAP.get(layer) {
 			if on.is_empty() || on[0] != key {
 				continue;
 			}
