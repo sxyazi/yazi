@@ -35,9 +35,9 @@ keymap = [
 
 	# Operation
 	{ on = [ "o" ],         exec = "open",                   desc = "Open the selected files" },
-	{ on = [ "O" ],         exec = "open --interactive",     desc = "Open the selected files with an interactive UI to choose the opening method" },
+	{ on = [ "O" ],         exec = "open --interactive",     desc = "Open the selected files interactively" },
 	{ on = [ "<Enter>" ],   exec = "open",                   desc = "Open the selected files" },
-	{ on = [ "<C-Enter>" ], exec = "open --interactive",     desc = "Open the selected files with an interactive UI to choose the opening method" },  # It's cool if you're using a terminal that supports CSI u
+	{ on = [ "<C-Enter>" ], exec = "open --interactive",     desc = "Open the selected files interactively" },  # It's cool if you're using a terminal that supports CSI u
 	{ on = [ "y" ],         exec = "yank",                   desc = "Copy the selected files" },
 	{ on = [ "x" ],         exec = "yank --cut",             desc = "Cut the selected files" },
 	{ on = [ "p" ],         exec = "paste",                  desc = "Paste the files" },

@@ -17,9 +17,15 @@ impl Widget for Bindings<'_> {
 			return;
 		}
 
-		let col1 = bindings.iter().map(|c| ListItem::new(c.on())).collect::<Vec<_>>();
+		let col1 = bindings
+			.iter()
+			.map(|c| ListItem::new(c.on()).style(Style::new().fg(Color::Yellow)))
+			.collect::<Vec<_>>();
 
-		let col2 = bindings.iter().map(|c| ListItem::new(c.exec())).collect::<Vec<_>>();
+		let col2 = bindings
+			.iter()
+			.map(|c| ListItem::new(c.exec()).style(Style::new().fg(Color::Cyan)))
+			.collect::<Vec<_>>();
 
 		let col3 = bindings
 			.iter()
@@ -34,7 +40,7 @@ impl Widget for Bindings<'_> {
 		let cursor = self.cx.help.rel_cursor() as u16;
 		buf.set_style(
 			Rect { x: area.x, y: area.y + cursor, width: area.width, height: 1 },
-			Style::new().bg(Color::Blue).fg(Color::Black).bold(),
+			Style::new().bg(Color::Black).bold(),
 		);
 
 		List::new(col1).render(chunks[0], buf);
