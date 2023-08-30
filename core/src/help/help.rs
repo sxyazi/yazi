@@ -1,13 +1,19 @@
-use config::{keymap::{Control, KeymapLayer}, KEYMAP};
+use config::{keymap::{Control, Key, KeymapLayer}, KEYMAP};
 use shared::Term;
+use unicode_width::UnicodeWidthStr;
 
 use super::HELP_MARGIN;
-use crate::emit;
+use crate::{emit, input::Input};
 
 #[derive(Default)]
 pub struct Help {
-	pub visible: bool,
-	bindings:    Vec<Control>,
+	visible:  bool,
+	layer:    KeymapLayer,
+	bindings: Vec<Control>,
+
+	// Filter
+	keyword:   Option<String>,
+	in_filter: Option<Input>,
 
 	offset: usize,
 	cursor: usize,
@@ -19,16 +25,35 @@ impl Help {
 
 	pub fn toggle(&mut self, layer: KeymapLayer) -> bool {
 		self.visible = !self.visible;
-		self.bindings = if self.visible { KEYMAP.get(layer).clone() } else { Vec::new() };
+		self.layer = layer;
+
+		self.keyword = Some(String::new());
+		self.in_filter = None;
+		self.filter_apply();
+
+		self.offset = 0;
+		self.cursor = 0;
 
 		emit!(Peek); // Show/hide preview for images
 		true
 	}
 
-	pub fn escape(&mut self) -> bool { todo!() }
+	pub fn escape(&mut self) -> bool {
+		if self.in_filter.is_some() {
+			self.in_filter = None;
+			self.filter_apply();
+			true
+		} else {
+			self.toggle(self.layer)
+		}
+	}
 
 	#[inline]
 	pub fn arrow(&mut self, step: isize) -> bool {
+		let len = self.bindings.len();
+		self.offset = self.offset.min(len);
+		self.cursor = self.cursor.min(len.saturating_sub(1));
+
 		if step > 0 { self.next(step as usize) } else { self.prev(step.unsigned_abs()) }
 	}
 
@@ -60,17 +85,86 @@ impl Help {
 		old != self.cursor
 	}
 
+	pub fn filter(&mut self) -> bool {
+		self.in_filter = Some(Default::default());
+		self.filter_apply();
+		true
+	}
+
+	fn filter_apply(&mut self) -> bool {
+		let kw = self.in_filter.as_ref().map(|i| i.value()).filter(|v| !v.is_empty());
+		if self.keyword.as_deref() == kw {
+			return false;
+		}
+
+		if let Some(kw) = kw {
+			self.bindings = KEYMAP.get(self.layer).iter().filter(|&c| c.contains(kw)).cloned().collect();
+		} else {
+			self.bindings = KEYMAP.get(self.layer).clone();
+		}
+
+		self.keyword = kw.map(|s| s.to_owned());
+		self.arrow(0);
+		true
+	}
+
+	pub fn type_(&mut self, key: &Key) -> bool {
+		let Some(input) = &mut self.in_filter else {
+			return false;
+		};
+
+		if key.is_enter() {
+			self.in_filter = None;
+			return true;
+		}
+
+		if input.type_(key) {
+			return self.filter_apply();
+		}
+
+		false
+	}
+}
+
+impl Help {
+	// --- Visible
+	#[inline]
+	pub fn visible(&self) -> bool { self.visible }
+
+	// --- Layer
+	#[inline]
+	pub fn layer(&self) -> KeymapLayer { self.layer }
+
+	// --- Keyword
+	#[inline]
+	pub fn keyword(&self) -> Option<String> {
+		self
+			.in_filter
+			.as_ref()
+			.map(|i| i.value())
+			.or(self.keyword.as_deref())
+			.map(|s| format!("/{}", s))
+	}
+
+	// --- Bindings
 	#[inline]
 	pub fn window(&self) -> &[Control] {
 		let end = (self.offset + Self::limit()).min(self.bindings.len());
 		&self.bindings[self.offset..end]
 	}
 
-	pub fn filter(&mut self) -> bool { todo!() }
-}
-
-impl Help {
 	// --- Cursor
+	#[inline]
+	pub fn cursor(&self) -> Option<(u16, u16)> {
+		if !self.visible || self.in_filter.is_none() {
+			return None;
+		}
+		if let Some(kw) = self.keyword() {
+			return Some((kw.width() as u16, Term::size().rows));
+		}
+		None
+	}
+
 	#[inline]
 	pub fn rel_cursor(&self) -> usize { self.cursor - self.offset }
 }

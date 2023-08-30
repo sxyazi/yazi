@@ -197,7 +197,6 @@
   - `--submit`: Submit the input.
 
 - escape: Cancel insert mode and enter normal mode.
-- backspace: Delete the character before the cursor.
 
 ## Help
 

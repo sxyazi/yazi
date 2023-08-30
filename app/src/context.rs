@@ -62,6 +62,9 @@ impl Ctx {
 			let Rect { x, y, .. } = self.area(&self.input.position);
 			return Some((x + 1 + self.input.cursor(), y + 1));
 		}
+		if let Some((x, y)) = self.help.cursor() {
+			return Some((x, y));
+		}
 		None
 	}
 
@@ -69,7 +72,7 @@ impl Ctx {
 	pub(super) fn layer(&self) -> KeymapLayer {
 		if self.which.visible {
 			KeymapLayer::Which
-		} else if self.help.visible {
+		} else if self.help.visible() {
 			KeymapLayer::Help
 		} else if self.input.visible {
 			KeymapLayer::Input

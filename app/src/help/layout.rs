@@ -19,8 +19,10 @@ impl<'a> Widget for Layout<'a> {
 			.split(area);
 
 		Clear.render(area, buf);
-		Paragraph::new("manager.help")
-			.style(Style::new().fg(Color::Rgb(35, 39, 59)).bg(Color::Rgb(200, 211, 248)))
+
+		let help = &self.cx.help;
+		Paragraph::new(help.keyword().unwrap_or_else(|| format!("{}.help", help.layer())))
+			.style(Style::new().fg(Color::Black).bg(Color::White))
 			.render(chunks[1], buf);
 
 		Bindings::new(self.cx).render(chunks[0], buf);

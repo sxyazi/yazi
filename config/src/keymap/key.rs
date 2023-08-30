@@ -19,6 +19,11 @@ impl Key {
 			_ => None,
 		}
 	}
+
+	#[inline]
+	pub fn is_enter(&self) -> bool {
+		matches!(self, Key { code: KeyCode::Enter, shift: false, ctrl: false, alt: false })
+	}
 }
 
 impl Default for Key {

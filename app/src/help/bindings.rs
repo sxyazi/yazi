@@ -17,35 +17,18 @@ impl Widget for Bindings<'_> {
 			return;
 		}
 
-		let col1 = bindings
-			.iter()
-			.map(|c| {
-				let item = ListItem::new(c.on.iter().map(ToString::to_string).collect::<String>());
-				item
-			})
-			.collect::<Vec<_>>();
+		let col1 = bindings.iter().map(|c| ListItem::new(c.on())).collect::<Vec<_>>();
 
-		let col2 = bindings
-			.iter()
-			.map(|c| {
-				let item = ListItem::new(c.exec());
-				item
-			})
-			.collect::<Vec<_>>();
+		let col2 = bindings.iter().map(|c| ListItem::new(c.exec())).collect::<Vec<_>>();
 
 		let col3 = bindings
 			.iter()
-			.map(|c| {
-				let item = ListItem::new(if let Some(ref desc) = c.desc { desc } else { "-" });
-				item
-			})
+			.map(|c| ListItem::new(if let Some(ref desc) = c.desc { desc } else { "-" }))
 			.collect::<Vec<_>>();
 
 		let chunks = layout::Layout::new()
 			.direction(Direction::Horizontal)
-			.constraints(
-				[Constraint::Ratio(1, 9), Constraint::Ratio(4, 9), Constraint::Ratio(4, 9)].as_ref(),
-			)
+			.constraints([Constraint::Ratio(2, 10), Constraint::Ratio(3, 10), Constraint::Ratio(5, 10)])
 			.split(area);
 
 		let cursor = self.cx.help.rel_cursor() as u16;

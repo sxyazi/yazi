@@ -15,10 +15,12 @@ impl Executor {
 			return cx.which.press(key);
 		}
 
-		if layer == KeymapLayer::Input && cx.input.mode() == InputMode::Insert {
-			if let Some(c) = key.plain() {
-				return cx.input.type_(c);
-			}
+		if layer == KeymapLayer::Input && cx.input.type_(&key) {
+			return true;
+		}
+
+		if layer == KeymapLayer::Help && cx.help.type_(&key) {
+			return true;
 		}
 
 		for Control { on, exec, .. } in KEYMAP.get(layer) {
@@ -245,10 +247,7 @@ impl Executor {
 				"help" => cx.help.toggle(cx.layer()),
 				_ => false,
 			},
-			InputMode::Insert => match exec.cmd.as_str() {
-				"backspace" => cx.input.backspace(),
-				_ => false,
-			},
+			InputMode::Insert => false,
 		}
 	}
 

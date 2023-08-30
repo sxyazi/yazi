@@ -111,8 +111,8 @@ keymap = [
 [tasks]
 
 keymap = [
-	{ on = [ "<C-q>" ], exec = "close", desc = "Hide the task manager" },
 	{ on = [ "<Esc>" ], exec = "close", desc = "Hide the task manager" },
+	{ on = [ "<C-q>" ], exec = "close", desc = "Hide the task manager" },
 	{ on = [ "w" ],     exec = "close", desc = "Hide the task manager" },
 
 	{ on = [ "k" ], exec = "arrow -1", desc = "Move cursor up" },
@@ -152,7 +152,6 @@ keymap = [
 	{ on = [ "<C-q>" ],       exec = "close",          desc = "Cancel input" },
 	{ on = [ "<Enter>" ],     exec = "close --submit", desc = "Submit the input" },
 	{ on = [ "<Esc>" ],       exec = "escape",         desc = "Go back the normal mode, or cancel input" },
-	{ on = [ "<Backspace>" ], exec = "backspace",      desc = "Delete the character before the cursor" },
 
 	# Mode
 	{ on = [ "i" ], exec = "insert",          desc = "Enter insert mode" },
@@ -196,8 +195,9 @@ keymap = [
 [help]
 
 keymap = [
-	{ on = [ "<C-q>" ], exec = "close",  desc = "Hide the help" },
 	{ on = [ "<Esc>" ], exec = "escape", desc = "Clear the filter, or hide the help" },
+	{ on = [ "q" ],     exec = "close",  desc = "Exit the process" },
+	{ on = [ "<C-q>" ], exec = "close",  desc = "Hide the help" },
 
 	# Navigation
 	{ on = [ "k" ], exec = "arrow -1", desc = "Move cursor up" },

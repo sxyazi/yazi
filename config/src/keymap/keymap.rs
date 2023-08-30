@@ -1,3 +1,5 @@
+use std::fmt::{self, Display};
+
 use serde::{Deserialize, Deserializer};
 
 use super::Control;
@@ -10,16 +12,6 @@ pub struct Keymap {
 	pub select:  Vec<Control>,
 	pub input:   Vec<Control>,
 	pub help:    Vec<Control>,
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub enum KeymapLayer {
-	Manager,
-	Tasks,
-	Select,
-	Input,
-	Help,
-	Which,
 }
 
 impl<'de> Deserialize<'de> for Keymap {
@@ -65,6 +57,30 @@ impl Keymap {
 			KeymapLayer::Input => &self.input,
 			KeymapLayer::Help => &self.help,
 			KeymapLayer::Which => unreachable!(),
+		}
+	}
+}
+
+#[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Copy)]
+pub enum KeymapLayer {
+	#[default]
+	Manager,
+	Tasks,
+	Select,
+	Input,
+	Help,
+	Which,
+}
+
+impl Display for KeymapLayer {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		match self {
+			KeymapLayer::Manager => write!(f, "manager"),
+			KeymapLayer::Tasks => write!(f, "tasks"),
+			KeymapLayer::Select => write!(f, "select"),
+			KeymapLayer::Input => write!(f, "input"),
+			KeymapLayer::Help => write!(f, "help"),
+			KeymapLayer::Which => write!(f, "which"),
 		}
 	}
 }

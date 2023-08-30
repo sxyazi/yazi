@@ -14,6 +14,9 @@ pub struct Control {
 
 impl Control {
 	#[inline]
+	pub fn on(&self) -> String { self.on.iter().map(ToString::to_string).collect() }
+
+	#[inline]
 	pub fn exec(&self) -> String {
 		self.exec.iter().map(|e| e.to_string()).collect::<Vec<_>>().join("; ")
 	}
@@ -21,5 +24,12 @@ impl Control {
 	#[inline]
 	pub fn desc_or_exec(&self) -> Cow<str> {
 		if let Some(ref s) = self.desc { Cow::Borrowed(s) } else { self.exec().into() }
+	}
+
+	#[inline]
+	pub fn contains(&self, s: &str) -> bool {
+		self.desc.as_ref().map(|d| d.contains(s)).unwrap_or(false)
+			|| self.exec().contains(s)
+			|| self.on().contains(s)
 	}
 }
