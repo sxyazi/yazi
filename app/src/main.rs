@@ -4,6 +4,7 @@ mod app;
 mod context;
 mod executor;
 mod header;
+mod help;
 mod input;
 mod logs;
 mod manager;

@@ -16,6 +16,7 @@ pub struct Keymap {
 	pub tasks:   Vec<Control>,
 	pub select:  Vec<Control>,
 	pub input:   Vec<Control>,
+	pub help:    Vec<Control>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
@@ -24,6 +25,7 @@ pub enum KeymapLayer {
 	Tasks,
 	Select,
 	Input,
+	Help,
 	Which,
 }
 
@@ -38,6 +40,7 @@ impl<'de> Deserialize<'de> for Keymap {
 			tasks:   Inner,
 			select:  Inner,
 			input:   Inner,
+			help:    Inner,
 		}
 		#[derive(Deserialize)]
 		struct Inner {
@@ -50,6 +53,7 @@ impl<'de> Deserialize<'de> for Keymap {
 			tasks:   shadow.tasks.keymap,
 			select:  shadow.select.keymap,
 			input:   shadow.input.keymap,
+			help:    shadow.help.keymap,
 		})
 	}
 }
@@ -66,6 +70,7 @@ impl Keymap {
 			KeymapLayer::Tasks => &self.tasks,
 			KeymapLayer::Select => &self.select,
 			KeymapLayer::Input => &self.input,
+			KeymapLayer::Help => &self.help,
 			KeymapLayer::Which => unreachable!(),
 		}
 	}

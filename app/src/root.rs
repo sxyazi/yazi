@@ -1,6 +1,7 @@
 use ratatui::{buffer::Buffer, layout::{Constraint, Direction, Layout, Rect}, widgets::Widget};
 
 use super::{header, input, manager, select, status, tasks, which, Ctx};
+use crate::help;
 
 pub(super) struct Root<'a> {
 	cx: &'a Ctx,
@@ -31,6 +32,10 @@ impl<'a> Widget for Root<'a> {
 
 		if self.cx.input.visible {
 			input::Input::new(self.cx).render(area, buf);
+		}
+
+		if self.cx.help.visible {
+			help::Layout::new(self.cx).render(area, buf);
 		}
 
 		if self.cx.which.visible {

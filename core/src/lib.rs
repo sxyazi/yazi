@@ -10,6 +10,7 @@ mod blocker;
 mod event;
 pub mod external;
 pub mod files;
+pub mod help;
 mod highlighter;
 pub mod input;
 pub mod manager;
