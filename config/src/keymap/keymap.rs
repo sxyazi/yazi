@@ -1,14 +1,9 @@
+use std::fmt::{self, Display};
+
 use serde::{Deserialize, Deserializer};
 
-use super::{Exec, Key};
+use super::Control;
 use crate::MERGED_KEYMAP;
-
-#[derive(Clone, Debug, Deserialize)]
-pub struct Control {
-	pub on:   Vec<Key>,
-	#[serde(deserialize_with = "Exec::deserialize")]
-	pub exec: Vec<Exec>,
-}
 
 #[derive(Debug)]
 pub struct Keymap {
@@ -16,15 +11,7 @@ pub struct Keymap {
 	pub tasks:   Vec<Control>,
 	pub select:  Vec<Control>,
 	pub input:   Vec<Control>,
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub enum KeymapLayer {
-	Manager,
-	Tasks,
-	Select,
-	Input,
-	Which,
+	pub help:    Vec<Control>,
 }
 
 impl<'de> Deserialize<'de> for Keymap {
@@ -38,6 +25,7 @@ impl<'de> Deserialize<'de> for Keymap {
 			tasks:   Inner,
 			select:  Inner,
 			input:   Inner,
+			help:    Inner,
 		}
 		#[derive(Deserialize)]
 		struct Inner {
@@ -50,6 +38,7 @@ impl<'de> Deserialize<'de> for Keymap {
 			tasks:   shadow.tasks.keymap,
 			select:  shadow.select.keymap,
 			input:   shadow.input.keymap,
+			help:    shadow.help.keymap,
 		})
 	}
 }
@@ -66,7 +55,32 @@ impl Keymap {
 			KeymapLayer::Tasks => &self.tasks,
 			KeymapLayer::Select => &self.select,
 			KeymapLayer::Input => &self.input,
+			KeymapLayer::Help => &self.help,
 			KeymapLayer::Which => unreachable!(),
+		}
+	}
+}
+
+#[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Copy)]
+pub enum KeymapLayer {
+	#[default]
+	Manager,
+	Tasks,
+	Select,
+	Input,
+	Help,
+	Which,
+}
+
+impl Display for KeymapLayer {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		match self {
+			KeymapLayer::Manager => write!(f, "manager"),
+			KeymapLayer::Tasks => write!(f, "tasks"),
+			KeymapLayer::Select => write!(f, "select"),
+			KeymapLayer::Input => write!(f, "input"),
+			KeymapLayer::Help => write!(f, "help"),
+			KeymapLayer::Which => write!(f, "which"),
 		}
 	}
 }

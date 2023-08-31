@@ -15,13 +15,15 @@ impl Executor {
 			return cx.which.press(key);
 		}
 
-		if layer == KeymapLayer::Input && cx.input.mode() == InputMode::Insert {
-			if let Some(c) = key.plain() {
-				return cx.input.type_(c);
-			}
+		if layer == KeymapLayer::Input && cx.input.type_(&key) {
+			return true;
 		}
 
-		for Control { on, exec } in KEYMAP.get(layer) {
+		if layer == KeymapLayer::Help && cx.help.type_(&key) {
+			return true;
+		}
+
+		for Control { on, exec, .. } in KEYMAP.get(layer) {
 			if on.is_empty() || on[0] != key {
 				continue;
 			}
@@ -44,6 +46,7 @@ impl Executor {
 				KeymapLayer::Tasks => Self::tasks(cx, e),
 				KeymapLayer::Select => Self::select(cx, e),
 				KeymapLayer::Input => Self::input(cx, e),
+				KeymapLayer::Help => Self::help(cx, e),
 				KeymapLayer::Which => unreachable!(),
 			};
 		}
@@ -173,6 +176,9 @@ impl Executor {
 			// Tasks
 			"tasks_show" => cx.tasks.toggle(),
 
+			// Help
+			"help" => cx.help.toggle(cx.layer()),
+
 			_ => false,
 		}
 	}
@@ -187,8 +193,9 @@ impl Executor {
 			}
 
 			"inspect" => cx.tasks.inspect(),
-
 			"cancel" => cx.tasks.cancel(),
+
+			"help" => cx.help.toggle(cx.layer()),
 			_ => false,
 		}
 	}
@@ -202,6 +209,7 @@ impl Executor {
 				if step > 0 { cx.select.next(step as usize) } else { cx.select.prev(step.unsigned_abs()) }
 			}
 
+			"help" => cx.help.toggle(cx.layer()),
 			_ => false,
 		}
 	}
@@ -235,12 +243,27 @@ impl Executor {
 
 				"undo" => cx.input.undo(),
 				"redo" => cx.input.redo(),
+
+				"help" => cx.help.toggle(cx.layer()),
 				_ => false,
 			},
-			InputMode::Insert => match exec.cmd.as_str() {
-				"backspace" => cx.input.backspace(),
-				_ => false,
-			},
+			InputMode::Insert => false,
+		}
+	}
+
+	fn help(cx: &mut Ctx, exec: &Exec) -> bool {
+		match exec.cmd.as_str() {
+			"close" => cx.help.toggle(cx.layer()),
+			"escape" => cx.help.escape(),
+
+			"arrow" => {
+				let step = exec.args.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
+				cx.help.arrow(step)
+			}
+
+			"filter" => cx.help.filter(),
+
+			_ => false,
 		}
 	}
 }

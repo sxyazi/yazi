@@ -33,8 +33,7 @@ impl Widget for Side<'_> {
 				spans.push(Span::styled("  ".to_string(), Style::new().fg(Color::DarkGray)));
 
 				// Exec
-				let exec = c.exec.iter().map(ToString::to_string).collect::<Vec<_>>().join("; ");
-				spans.push(Span::styled(exec, Style::new().fg(Color::Magenta)));
+				spans.push(Span::styled(c.desc_or_exec(), Style::new().fg(Color::Magenta)));
 
 				ListItem::new(Line::from(spans))
 			})

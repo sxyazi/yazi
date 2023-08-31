@@ -16,6 +16,10 @@
 - enter: Enter the child directory.
 - back: Go back to the previous directory.
 - forward: Go forward to the next directory.
+- peek
+
+  - `n`: Peek up or down at file contents in the preview. Use negative values to peek up and positive values to peek down.
+
 - cd: Change the current directory.
 
   - `path`: the path to change to.
@@ -54,15 +58,15 @@
   - `--force`: Overwrite the destination file if it exists.
   - `--follow`: Copy the file pointed to by a symbolic link, rather than the link itself. Only valid during copying.
 
-- remove: Move the file to the trash/recycle bin.
+- remove: Move the files to the trash/recycle bin.
 
-  - `--permanently`: Permanently delete the file.
+  - `--permanently`: Permanently delete the files.
 
-- create: Create a file or directory (ends with `/` for directory).
+- create: Create a file or directory (ends with `/` for directories).
 - rename: Rename a file or directory.
 - copy: Copy the path of files or directories that are selected or hovered on.
 
-  - `path`: Copy the full absolute path.
+  - `path`: Copy the absolute path.
   - `dirname`: Copy the path of the parent directory.
   - `filename`: Copy the name of the file.
   - `name_without_ext`: Copy the name of the file without the extension.
@@ -90,12 +94,23 @@
   - `fzf`: Jump to a directory, or reveal a file using fzf.
   - `zoxide`: Jump to a directory using zoxide.
 
+- sort
+
+  - `by`
+    - `"alphabetical"`: Sort alphabetically, e.g. `1.md` < `10.md` < `2.md`
+    - `"created"`: Sort by creation time.
+    - `"modified"`: Sort by last modified time.
+    - `"natural"`: Sort naturally, e.g. `1.md` < `2.md` < `10.md`
+    - `"size"`: Sort by file size.
+  - `--reverse`: Display files in reverse order.
+  - `--dir_first`: Display directories first.
+
 ### Tabs
 
 - tab_create
 
   - `path`: Create a new tab using the specified path.
-  - `--current`: Create a new tab based on the current directory.
+  - `--current`: Create a new tab using the current path.
 
 - tab_close
 
@@ -112,7 +127,11 @@
 
 ### Tasks
 
-- tasks_show: Display the task manager.
+- tasks_show: Show the task manager.
+
+### Help
+
+- help: Open the help menu.
 
 ## tasks
 
@@ -120,7 +139,9 @@
 - arrow:
   - `-1`: Move the cursor up 1 line.
   - `1`: Move the cursor down 1 line.
+- inspect: Inspect the task.
 - cancel: Cancel the task.
+- help: Open the help menu.
 
 ## select
 
@@ -128,6 +149,7 @@
   - `--submit`: Submit the selection.
 - arrow
   - `n`: Move the cursor up or down n lines. Negative value for up, positive value for down.
+- help: Open the help menu.
 
 ## input
 
@@ -135,7 +157,7 @@
 
   - `--submit`: Submit the input.
 
-- escape: Cancel visual mode and enter normal mode.
+- escape: Go back the normal mode, or cancel input.
 - move: Move the cursor left or right.
 
   - `n`: Move the cursor n characters left or right. Negative value for left, positive value for right.
@@ -155,7 +177,7 @@
 
 - delete: Delete the selected characters.
 
-  - `--cut`: Cut the selected characters into the clipboard, instead of only deleting them.
+  - `--cut`: Cut the selected characters into clipboard, instead of only deleting them.
   - `--insert`: Delete and enter insert mode.
 
 - yank: Copy the selected characters.
@@ -166,6 +188,8 @@
 - undo: Undo the last operation.
 - redo: Redo the last operation.
 
+- help: Open the help menu.
+
 ### Insert mode
 
 - close: Cancel input.
@@ -173,4 +197,11 @@
   - `--submit`: Submit the input.
 
 - escape: Cancel insert mode and enter normal mode.
-- backspace: Delete the character before the cursor.
+
+## Help
+
+- close: Hide the help menu.
+- escape: Clear the filter, or hide the help menu.
+- arrow
+  - `n`: Move the cursor up or down n lines. Negative value for up, positive value for down.
+- filter: Apply a filter for the help items.

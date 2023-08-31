@@ -35,9 +35,9 @@ impl Folder {
 			return false;
 		}
 
-		let len = self.files.len();
-		self.offset = self.offset.min(len);
-		self.cursor = self.cursor.min(len.saturating_sub(1));
+		let max = self.files.len().saturating_sub(1);
+		self.offset = self.offset.min(max);
+		self.cursor = self.cursor.min(max);
 		self.set_page(true);
 
 		self.hover_repos();

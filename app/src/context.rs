@@ -1,4 +1,4 @@
-use core::{input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which, Position};
+use core::{help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which, Position};
 
 use config::keymap::KeymapLayer;
 use crossterm::terminal::WindowSize;
@@ -8,8 +8,9 @@ use shared::Term;
 pub struct Ctx {
 	pub manager: Manager,
 	pub which:   Which,
-	pub select:  Select,
+	pub help:    Help,
 	pub input:   Input,
+	pub select:  Select,
 	pub tasks:   Tasks,
 }
 
@@ -18,8 +19,9 @@ impl Ctx {
 		Self {
 			manager: Manager::make(),
 			which:   Default::default(),
-			select:  Default::default(),
+			help:    Default::default(),
 			input:   Default::default(),
+			select:  Default::default(),
 			tasks:   Tasks::start(),
 		}
 	}
@@ -60,6 +62,9 @@ impl Ctx {
 			let Rect { x, y, .. } = self.area(&self.input.position);
 			return Some((x + 1 + self.input.cursor(), y + 1));
 		}
+		if let Some((x, y)) = self.help.cursor() {
+			return Some((x, y));
+		}
 		None
 	}
 
@@ -67,6 +72,8 @@ impl Ctx {
 	pub(super) fn layer(&self) -> KeymapLayer {
 		if self.which.visible {
 			KeymapLayer::Which
+		} else if self.help.visible() {
+			KeymapLayer::Help
 		} else if self.input.visible {
 			KeymapLayer::Input
 		} else if self.select.visible {
@@ -80,6 +87,6 @@ impl Ctx {
 
 	#[inline]
 	pub(super) fn image_layer(&self) -> bool {
-		!matches!(self.layer(), KeymapLayer::Which | KeymapLayer::Tasks)
+		!matches!(self.layer(), KeymapLayer::Which | KeymapLayer::Help | KeymapLayer::Tasks)
 	}
 }

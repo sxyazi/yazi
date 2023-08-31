@@ -1,6 +1,8 @@
 use std::ops::Range;
 
 use anyhow::{anyhow, Result};
+use config::keymap::Key;
+use crossterm::event::KeyCode;
 use shared::CharKind;
 use tokio::sync::oneshot::Sender;
 use unicode_width::UnicodeWidthStr;
@@ -177,8 +179,23 @@ impl Input {
 		self.move_(snap.len() as isize)
 	}
 
+	pub fn type_(&mut self, key: &Key) -> bool {
+		if self.mode() != InputMode::Insert {
+			return false;
+		}
+
+		if let Some(c) = key.plain() {
+			return self.type_char(c);
+		}
+
+		match key {
+			Key { code: KeyCode::Backspace, shift: false, ctrl: false, alt: false } => self.backspace(),
+			_ => false,
+		}
+	}
+
 	#[inline]
-	pub fn type_(&mut self, c: char) -> bool {
+	pub fn type_char(&mut self, c: char) -> bool {
 		let mut bits = [0; 4];
 		self.type_str(c.encode_utf8(&mut bits))
 	}
@@ -253,7 +270,7 @@ impl Input {
 
 		self.insert(!before);
 		for c in s.to_string_lossy().chars() {
-			self.type_(c);
+			self.type_char(c);
 		}
 		self.escape();
 		true

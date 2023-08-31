@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, fmt::{self, Debug}};
+use std::{collections::BTreeMap, fmt::{self, Debug, Display}};
 
 use anyhow::bail;
 use serde::{de::{self, Visitor}, Deserializer};
@@ -34,16 +34,19 @@ impl TryFrom<&str> for Exec {
 	}
 }
 
-impl ToString for Exec {
-	fn to_string(&self) -> String {
-		let mut s = Vec::with_capacity(self.args.len() + self.named.len() + 1);
-		s.push(self.cmd.clone());
-		s.extend(self.args.iter().cloned());
-		for (key, val) in self.named.iter() {
-			s.push(format!("--{}={}", key, val));
+impl Display for Exec {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "{}", self.cmd)?;
+		if !self.args.is_empty() {
+			write!(f, " {}", self.args.join(" "))?;
 		}
-
-		shell_words::join(s)
+		for (k, v) in &self.named {
+			write!(f, " --{k}")?;
+			if !v.is_empty() {
+				write!(f, "={v}")?;
+			}
+		}
+		Ok(())
 	}
 }
 
