@@ -38,11 +38,8 @@ impl Default for Boot {
 	fn default() -> Self {
 		let args = Args::parse();
 
-		let cwd = args
-			.cwd
-			.map(|p| futures::executor::block_on(absolute_path(p)))
-			.filter(|p| p.is_dir())
-			.or_else(|| env::current_dir().ok());
+		let cwd =
+			args.cwd.map(absolute_path).filter(|p| p.is_dir()).or_else(|| env::current_dir().ok());
 
 		let boot = Self {
 			cwd:       cwd.unwrap_or("/".into()),

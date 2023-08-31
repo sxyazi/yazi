@@ -121,7 +121,7 @@ impl App {
 		match event {
 			Event::Cd(path) => {
 				futures::executor::block_on(async {
-					manager.active_mut().cd(absolute_path(path).await).await;
+					manager.active_mut().cd(absolute_path(path)).await;
 				});
 			}
 			Event::Refresh => {
