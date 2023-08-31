@@ -147,6 +147,7 @@ If you want to use your own config, copy the [config folder](./config/preset) to
 | iTerm2        | [Inline images protocol](https://iterm2.com/documentation-images.html)           | ✅ Built-in           |
 | Hyper         | [Sixel graphics format](https://www.vt100.net/docs/vt3xx-gp/chapter14.html)      | ✅ Built-in           |
 | foot          | [Sixel graphics format](https://www.vt100.net/docs/vt3xx-gp/chapter14.html)      | ✅ Built-in           |
+| Black Box     | [Sixel graphics format](https://www.vt100.net/docs/vt3xx-gp/chapter14.html)      | ✅ Built-in           |
 | X11 / Wayland | Window system protocol                                                           | ☑️ Überzug++ required |
 | Fallback      | [Chafa](https://hpjansson.org/chafa/)                                            | ☑️ Überzug++ required |
 
