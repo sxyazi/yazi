@@ -2,7 +2,7 @@ use std::{io::BufRead, path::Path, sync::atomic::{AtomicUsize, Ordering}};
 
 use adaptor::Adaptor;
 use anyhow::anyhow;
-use config::{BOOT, MANAGER, PREVIEW};
+use config::{MANAGER, PREVIEW};
 use shared::{MimeKind, PeekError};
 use syntect::{easy::HighlightFile, util::as_24_bit_terminal_escaped};
 use tokio::fs;
@@ -62,7 +62,7 @@ impl Provider {
 	}
 
 	pub(super) async fn video(path: &Path, skip: usize) -> Result<PreviewData, PeekError> {
-		let cache = BOOT.cache(path, skip);
+		let cache = PREVIEW.cache(path, skip);
 		if fs::metadata(&cache).await.is_err() {
 			external::ffmpegthumbnailer(path, &cache, skip).await?;
 		}
@@ -71,7 +71,7 @@ impl Provider {
 	}
 
 	pub(super) async fn pdf(path: &Path, skip: usize) -> Result<PreviewData, PeekError> {
-		let cache = BOOT.cache(path, skip);
+		let cache = PREVIEW.cache(path, skip);
 		if fs::metadata(&cache).await.is_err() {
 			external::pdftoppm(path, &cache, skip).await?;
 		}

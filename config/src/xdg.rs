@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{env, path::PathBuf};
 
 pub(super) struct Xdg;
 
@@ -12,7 +12,7 @@ impl Xdg {
 		{
 			std::env::var_os("XDG_CONFIG_HOME")
 				.map(PathBuf::from)
-				.and_then(|p| p.is_absolute().then_some(p))
+				.filter(|p| p.is_absolute())
 				.or_else(|| dirs::home_dir().map(|h| h.join(".config")))
 				.map(|p| p.join("yazi"))
 		}
@@ -27,9 +27,12 @@ impl Xdg {
 		{
 			std::env::var_os("XDG_STATE_HOME")
 				.map(PathBuf::from)
-				.and_then(|p| p.is_absolute().then_some(p))
+				.filter(|p| p.is_absolute())
 				.or_else(|| dirs::home_dir().map(|h| h.join(".local/state")))
 				.map(|p| p.join("yazi"))
 		}
 	}
+
+	#[inline]
+	pub(super) fn cache_dir() -> PathBuf { env::temp_dir().join("yazi") }
 }

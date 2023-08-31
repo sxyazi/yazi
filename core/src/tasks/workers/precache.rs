@@ -2,7 +2,7 @@ use std::{collections::{BTreeMap, BTreeSet}, path::PathBuf, sync::Arc};
 
 use adaptor::Image;
 use anyhow::Result;
-use config::BOOT;
+use config::PREVIEW;
 use parking_lot::Mutex;
 use shared::{calculate_size, Throttle};
 use tokio::{fs, sync::mpsc};
@@ -74,7 +74,7 @@ impl Precache {
 	pub(crate) async fn work(&self, task: &mut PrecacheOp) -> Result<()> {
 		match task {
 			PrecacheOp::Image(task) => {
-				let cache = BOOT.cache(&task.target, 0);
+				let cache = PREVIEW.cache(&task.target, 0);
 				if fs::metadata(&cache).await.is_ok() {
 					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
 				}
@@ -84,7 +84,7 @@ impl Precache {
 				self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
 			}
 			PrecacheOp::Video(task) => {
-				let cache = BOOT.cache(&task.target, 0);
+				let cache = PREVIEW.cache(&task.target, 0);
 				if fs::metadata(&cache).await.is_ok() {
 					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
 				}
@@ -93,7 +93,7 @@ impl Precache {
 				self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
 			}
 			PrecacheOp::Pdf(task) => {
-				let cache = BOOT.cache(&task.target, 0);
+				let cache = PREVIEW.cache(&task.target, 0);
 				if fs::metadata(&cache).await.is_ok() {
 					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
 				}

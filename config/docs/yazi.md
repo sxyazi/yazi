@@ -39,6 +39,7 @@
 - tab_size: Tab width
 - max_width: Maximum preview width for images and videos
 - max_height: Maximum preview height for images and videos
+- cache_dir: The system cache directory is used by default, and the cached files will go away on a reboot automatically. If you want to make it more persistent, you can specify the cache directory manually as an absolute path.
 
 ## opener
 
