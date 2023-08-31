@@ -2,6 +2,7 @@ use std::{path::{Path, PathBuf}, time::{self, SystemTime}};
 
 use md5::{Digest, Md5};
 use serde::Deserialize;
+use shared::absolute_path;
 
 use super::PreviewAdaptor;
 use crate::{xdg::Xdg, MERGED_YAZI};
@@ -35,7 +36,7 @@ impl Default for Preview {
 		let preview = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().preview;
 
 		let cache_dir =
-			preview.cache_dir.filter(|p| !p.is_empty()).map_or_else(Xdg::cache_dir, PathBuf::from);
+			preview.cache_dir.filter(|p| !p.is_empty()).map_or_else(Xdg::cache_dir, absolute_path);
 
 		Preview {
 			adaptor: Default::default(),

@@ -2,14 +2,14 @@ use std::{env, path::{Path, PathBuf}};
 
 use tokio::fs;
 
-pub async fn absolute_path(p: impl AsRef<Path>) -> PathBuf {
+pub fn absolute_path(p: impl AsRef<Path>) -> PathBuf {
 	let p = p.as_ref();
 	if let Ok(p) = p.strip_prefix("~") {
 		if let Some(home) = env::var_os("HOME") {
 			return PathBuf::from_iter([&home, p.as_os_str()]);
 		}
 	}
-	fs::canonicalize(p).await.unwrap_or_else(|_| p.to_path_buf())
+	std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf())
 }
 
 pub fn readable_path(p: &Path, base: &Path) -> String {

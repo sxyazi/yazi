@@ -78,8 +78,7 @@ impl Default for Theme {
 
 		check_validation(theme.tab.validate());
 
-		theme.preview.syntect_theme =
-			futures::executor::block_on(absolute_path(&theme.preview.syntect_theme));
+		theme.preview.syntect_theme = absolute_path(&theme.preview.syntect_theme);
 
 		theme
 	}
