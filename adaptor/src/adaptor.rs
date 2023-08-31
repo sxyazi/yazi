@@ -1,7 +1,7 @@
 use std::{path::{Path, PathBuf}, sync::atomic::{AtomicBool, Ordering}};
 
 use anyhow::Result;
-use config::{preview::PreviewAdaptor, BOOT, PREVIEW};
+use config::{preview::PreviewAdaptor, PREVIEW};
 use ratatui::prelude::Rect;
 use shared::RoCell;
 use tokio::{fs, sync::mpsc::UnboundedSender};
@@ -19,7 +19,7 @@ pub struct Adaptor;
 
 impl Adaptor {
 	pub async fn image_show(mut path: &Path, rect: Rect) -> Result<()> {
-		let cache = BOOT.cache(path, 0);
+		let cache = PREVIEW.cache(path, 0);
 		if fs::metadata(&cache).await.is_ok() {
 			path = cache.as_path();
 		}

@@ -10,6 +10,7 @@ show_symlink   = true
 tab_size   = 2
 max_width  = 600
 max_height = 900
+cache_dir  = ""
 
 [opener]
 folder = [

@@ -1,7 +1,7 @@
 use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, ffi::OsStr, io::{stdout, BufWriter, Write}, mem, path::{Path, PathBuf}};
 
 use anyhow::{anyhow, bail, Error, Result};
-use config::{BOOT, OPEN};
+use config::{OPEN, PREVIEW};
 use shared::{max_common_root, Defer, Term, MIME_DIR};
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 
@@ -222,7 +222,7 @@ impl Manager {
 		let root = max_common_root(&old);
 		let old: Vec<_> = old.into_iter().map(|p| p.strip_prefix(&root).unwrap().to_owned()).collect();
 
-		let tmp = BOOT.tmpfile("bulk");
+		let tmp = PREVIEW.tmpfile("bulk");
 		tokio::spawn(async move {
 			let Some(opener) = OPEN.block_opener("bulk.txt", "text/plain") else {
 				bail!("No opener for bulk rename");
