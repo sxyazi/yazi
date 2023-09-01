@@ -16,7 +16,7 @@ pub struct Boot {
 
 #[derive(Debug, Parser)]
 #[command(name = "yazi")]
-#[command(version = "0.1.3")]
+#[command(version = "0.1.4")]
 struct Args {
 	// -- TODO: Deprecate this in v0.1.5
 	/// Set the current working directory
