@@ -6,11 +6,9 @@ https://github.com/sxyazi/yazi/assets/17523360/740a41f4-3d24-4287-952c-3aec51520
 
 ⚠️ Note: Yazi is currently in active development and may be unstable. The API is subject to change without prior notice.
 
-## Installation
+## Prerequisites
 
-Before getting started, ensure that the following dependencies are installed on your system:
-
-- nerd-fonts (_required_)
+- nerd-fonts ([_optional_](https://github.com/sxyazi/yazi/wiki/I-don't-like-nerd%E2%80%90fonts!))
 - ffmpegthumbnailer (_optional_, for video thumbnails)
 - unar (_optional_, for archive preview)
 - jq (_optional_, for JSON preview)
@@ -19,6 +17,8 @@ Before getting started, ensure that the following dependencies are installed on 
 - rg (_optional_, for file content searching)
 - fzf (_optional_, for directory jumping)
 - zoxide (_optional_, for directory jumping)
+
+## Installation
 
 <details>
 
@@ -84,6 +84,14 @@ environment.systemPackages = with pkgs; [
 
 You can also manage Yazi's configuration using the
 [home-manager](https://nix-community.github.io/home-manager/options.html#opt-programs.yazi.enable).
+
+</details>
+
+<details>
+
+<summary>Windows</summary>
+
+See [Windows Installation Guide](https://github.com/sxyazi/yazi/wiki/Windows-Installation-Guide).
 
 </details>
 
