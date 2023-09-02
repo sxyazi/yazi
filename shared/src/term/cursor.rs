@@ -24,8 +24,16 @@ impl Term {
 	{
 		#[cfg(target_os = "windows")]
 		{
+			use std::{thread, time::Duration};
+
 			use crossterm::cursor::{Hide, Show};
 			queue!(&mut stdout, SavePosition, MoveTo(x, y), Show)?;
+
+			// I really don't want to add this,
+			// but on Windows the cursor position will not synchronize in time occasionally
+			stdout.flush()?;
+			thread::sleep(Duration::from_millis(1));
+
 			let result = cb(&mut stdout);
 			queue!(&mut stdout, Hide, RestorePosition)?;
 			stdout.flush()?;
