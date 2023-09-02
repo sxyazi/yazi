@@ -20,7 +20,12 @@ impl Kitty {
 	}
 
 	#[inline]
-	pub(super) fn image_hide() -> Result<()> { Ok(stdout().write_all(b"\x1b\\\x1b_Ga=d\x1b\\")?) }
+	pub(super) fn image_hide() -> Result<()> {
+		let mut stdout = stdout().lock();
+		stdout.write_all(b"\x1b_Ga=d,d=A\x1b\\")?;
+		stdout.flush()?;
+		Ok(())
+	}
 
 	async fn encode(img: DynamicImage) -> Result<Vec<u8>> {
 		fn output(raw: &[u8], format: u8, size: (u32, u32)) -> Result<Vec<u8>> {
