@@ -121,12 +121,12 @@ impl Tasks {
 	}
 
 	pub fn cancel(&mut self) -> bool {
-		let id = self.scheduler.running.read().get_id(self.cursor);
-		if !id.map(|id| self.scheduler.cancel(id)).unwrap_or(false) {
+		let running = self.scheduler.running.read();
+		if !running.get_id(self.cursor).map(|id| self.scheduler.cancel(id)).unwrap_or(false) {
 			return false;
 		}
 
-		self.next();
+		self.cursor = self.cursor.min(running.len().saturating_sub(1));
 		true
 	}
 
