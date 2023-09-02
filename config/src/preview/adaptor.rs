@@ -31,6 +31,7 @@ impl Default for PreviewAdaptor {
 			"BlackBox" => return Self::Sixel,
 			"vscode" => return Self::Sixel,
 			"Hyper" => return Self::Sixel,
+			"mintty" => return Self::Iterm2,
 			_ => {}
 		}
 		match env::var("XDG_SESSION_TYPE").unwrap_or_default().as_str() {
