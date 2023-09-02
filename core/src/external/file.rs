@@ -1,8 +1,10 @@
 use std::{collections::BTreeMap, ffi::OsStr, path::PathBuf};
 
 use anyhow::{bail, Result};
+use futures::TryFutureExt;
 use shared::MimeKind;
 use tokio::process::Command;
+use tracing::error;
 
 pub async fn file(files: &[impl AsRef<OsStr>]) -> Result<BTreeMap<PathBuf, String>> {
 	if files.is_empty() {
@@ -14,6 +16,7 @@ pub async fn file(files: &[impl AsRef<OsStr>]) -> Result<BTreeMap<PathBuf, Strin
 		.args(files)
 		.kill_on_drop(true)
 		.output()
+		.inspect_err(|e| error!("failed to execute `file`: {}", e))
 		.await?;
 
 	let output = String::from_utf8_lossy(&output.stdout);
@@ -26,6 +29,7 @@ pub async fn file(files: &[impl AsRef<OsStr>]) -> Result<BTreeMap<PathBuf, Strin
 	);
 
 	if mimes.is_empty() {
+		error!("failed to get mime types: {:?}", files.iter().map(AsRef::as_ref).collect::<Vec<_>>());
 		bail!("failed to get mime types");
 	}
 	Ok(mimes)
