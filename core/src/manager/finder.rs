@@ -39,7 +39,6 @@ impl Finder {
 		if self.version == files.version() {
 			return false;
 		}
-
 		self.matched.clear();
 
 		let mut i = 0u8;

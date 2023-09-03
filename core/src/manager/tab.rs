@@ -232,6 +232,36 @@ impl Tab {
 		false
 	}
 
+	pub fn find(&mut self, query: Option<&str>, prev: bool) -> bool {
+		if let Some(query) = query {
+			self.finder = Finder::new(query).ok();
+			return self.find_arrow(prev);
+		}
+
+		tokio::spawn(async move {
+			if let Ok(s) = emit!(Input(InputOpt::top("Find:"))).await {
+				emit!(Call(
+					Exec::call("find", vec![s]).with_bool("previous", prev).vec(),
+					KeymapLayer::Manager
+				));
+			}
+		});
+		false
+	}
+
+	pub fn find_arrow(&mut self, prev: bool) -> bool {
+		let Some(finder) = &mut self.finder else {
+			return false;
+		};
+
+		let mut b = finder.catchup(&self.current.files);
+		if let Some(step) = finder.arrow(&self.current.files, self.current.cursor(), prev) {
+			b |= self.arrow(step);
+		}
+
+		b
+	}
+
 	pub fn search(&mut self, grep: bool) -> bool {
 		if let Some(handle) = self.search.take() {
 			handle.abort();
