@@ -86,3 +86,15 @@ impl Exec {
 		deserializer.deserialize_any(ExecVisitor)
 	}
 }
+
+impl Exec {
+	#[inline]
+	pub fn call(cwd: &str, args: Vec<String>) -> Vec<Self> {
+		vec![Exec { cmd: cwd.to_owned(), args, named: Default::default() }]
+	}
+
+	#[inline]
+	pub fn call_named(cwd: &str, named: BTreeMap<String, String>) -> Vec<Self> {
+		vec![Exec { cmd: cwd.to_owned(), args: Default::default(), named }]
+	}
+}

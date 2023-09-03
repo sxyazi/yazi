@@ -38,10 +38,10 @@ impl Which {
 			self.switch(false);
 		} else if self.cands.len() == 1 {
 			self.switch(false);
-			emit!(Ctrl(self.cands.remove(0), self.layer));
+			emit!(Call(self.cands[0].to_call(), self.layer));
 		} else if let Some(i) = self.cands.iter().position(|c| c.on.len() == self.times + 1) {
 			self.switch(false);
-			emit!(Ctrl(self.cands.remove(i), self.layer));
+			emit!(Call(self.cands[i].to_call(), self.layer));
 		}
 
 		self.times += 1;

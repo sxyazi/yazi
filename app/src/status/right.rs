@@ -65,7 +65,7 @@ impl<'a> Right<'a> {
 impl Widget for Right<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let manager = self.cx.manager.current();
-		let mut spans = vec![];
+		let mut spans = Vec::with_capacity(20);
 
 		// Permissions
 		#[cfg(not(target_os = "windows"))]

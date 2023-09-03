@@ -37,7 +37,7 @@ impl Executor {
 	}
 
 	#[inline]
-	pub(super) fn dispatch(cx: &mut Ctx, exec: &Vec<Exec>, layer: KeymapLayer) -> bool {
+	pub(super) fn dispatch(cx: &mut Ctx, exec: &[Exec], layer: KeymapLayer) -> bool {
 		let mut render = false;
 		for e in exec {
 			render |= match layer {
@@ -137,6 +137,14 @@ impl Executor {
 				"zoxide" => cx.manager.active_mut().jump(false),
 				_ => false,
 			},
+
+			// Find
+			"find" => {
+				let query = exec.args.get(0).map(|s| s.as_str());
+				let prev = exec.named.contains_key("previous");
+				cx.manager.active_mut().find(query, prev)
+			}
+			"find_arrow" => cx.manager.active_mut().find_arrow(exec.named.contains_key("previous")),
 
 			// Sorting
 			"sort" => {

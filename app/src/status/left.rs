@@ -26,7 +26,7 @@ impl<'a> Widget for Left<'a> {
 		let separator = &THEME.status.separator;
 
 		// Mode
-		let mut spans = vec![];
+		let mut spans = Vec::with_capacity(5);
 		spans.push(Span::styled(&separator.opening, primary.fg()));
 		spans.push(Span::styled(
 			format!(" {mode} "),
