@@ -2,11 +2,12 @@ use std::{path::{Path, PathBuf}, sync::atomic::Ordering};
 
 use adaptor::Adaptor;
 use config::MANAGER;
-use shared::{MimeKind, PeekError};
+use shared::{MimeKind, PeekError, MIME_DIR};
 use tokio::task::JoinHandle;
 
+
 use super::{Provider, INCR};
-use crate::emit;
+use crate::{emit, files::{Files, FilesOp}};
 
 #[derive(Default)]
 pub struct Preview {
@@ -39,8 +40,8 @@ impl Preview {
 			return;
 		}
 
-		self.reset();
-		if !self.same_path(path) {
+		self.reset(|_| true);
+		if !self.same_mime(path, mime) {
 			self.skip = 0;
 		}
 
@@ -55,6 +56,47 @@ impl Preview {
 				}
 				_ => {}
 			}
+		}));
+	}
+
+	pub fn folder(&mut self, path: &Path, files: Option<usize>, sequent: bool) {
+		if let Some(files) = files {
+			self.skip = self.skip.min(files.saturating_sub(MANAGER.layout.preview_height()));
+		}
+
+		if self.same(path, MIME_DIR) {
+			return;
+		} else if !self.same_mime(path, MIME_DIR) {
+			self.skip = 0;
+		}
+
+		self.reset(|_| true);
+		if files.is_some() || sequent {
+			emit!(Preview(PreviewLock {
+				path: path.to_path_buf(),
+				mime: MIME_DIR.to_owned(),
+				skip: self.skip,
+				data: PreviewData::Folder,
+			}));
+		}
+
+		if sequent {
+			return;
+		}
+
+		let (path, skip) = (path.to_path_buf(), self.skip);
+		self.handle = Some(tokio::spawn(async move {
+			emit!(Files(match Files::read_dir(&path).await {
+				Ok(items) => FilesOp::Read(path.clone(), items),
+				Err(_) => FilesOp::IOErr(path.clone()),
+			}));
+
+			emit!(Preview(PreviewLock {
+				path,
+				mime: MIME_DIR.to_owned(),
+				skip,
+				data: PreviewData::Folder,
+			}));
 		}));
 	}
 
@@ -84,37 +126,32 @@ impl Preview {
 	}
 
 	#[inline]
-	pub fn arrow(&mut self, step: isize, absolute: bool) -> bool {
-		let old = self.skip;
-		if absolute {
-			self.skip = step.unsigned_abs();
-		} else if let Some(kind) = self.lock.as_ref().map(|l| MimeKind::new(&l.mime)) {
-			let size = Provider::step_size(kind, step.unsigned_abs());
-			self.skip = if step < 0 { old.saturating_sub(size) } else { old + size };
-		}
+	pub fn arrow(&mut self, step: isize) -> bool {
+		let Some(kind) = self.lock.as_ref().map(|l| MimeKind::new(&l.mime)) else {
+			return false;
+		};
 
+		let old = self.skip;
+		let size = Provider::step_size(kind, step.unsigned_abs());
+
+		self.skip = if step < 0 { old.saturating_sub(size) } else { old + size };
 		self.skip != old
 	}
 
-	pub fn reset(&mut self) -> bool {
+	pub fn reset<F: FnOnce(&PreviewLock) -> bool>(&mut self, f: F) -> bool {
 		self.handle.take().map(|h| h.abort());
 		INCR.fetch_add(1, Ordering::Relaxed);
 		Adaptor::image_hide(MANAGER.layout.preview_rect()).ok();
 
-		let b = matches!(&self.lock, Some(l) if !l.is_image());
-		self.lock = None;
-		b
-	}
+		let Some(ref lock) = self.lock else {
+			return false;
+		};
 
-	pub fn reset_image(&mut self) -> bool {
-		self.handle.take().map(|h| h.abort());
-		INCR.fetch_add(1, Ordering::Relaxed);
-		Adaptor::image_hide(MANAGER.layout.preview_rect()).ok();
-
-		if matches!(&self.lock, Some(l) if l.is_image()) {
+		let b = !lock.is_image();
+		if f(lock) {
 			self.lock = None;
 		}
-		false
+		b
 	}
 }
 
@@ -129,6 +166,14 @@ impl Preview {
 	pub fn same(&self, path: &Path, mime: &str) -> bool {
 		if let Some(ref lock) = self.lock {
 			return lock.path == path && lock.mime == mime && lock.skip == self.skip;
+		}
+		false
+	}
+
+	#[inline]
+	pub fn same_mime(&self, path: &Path, mime: &str) -> bool {
+		if let Some(ref lock) = self.lock {
+			return lock.path == path && lock.mime == mime;
 		}
 		false
 	}

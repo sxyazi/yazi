@@ -9,26 +9,22 @@ use crate::{emit, files::{File, Files, FilesOp}};
 pub struct Folder {
 	pub cwd:   PathBuf,
 	pub files: Files,
-	offset:    usize,
-	cursor:    usize,
 
-	pub page:      usize,
-	pub hovered:   Option<File>,
-	pub in_search: bool,
+	offset: usize,
+	cursor: usize,
+
+	pub page:    usize,
+	pub hovered: Option<File>,
 }
 
 impl Folder {
+	#[inline]
 	pub fn new(cwd: &Path) -> Self { Self { cwd: cwd.to_path_buf(), ..Default::default() } }
-
-	pub fn new_search(cwd: &Path) -> Self {
-		Self { cwd: cwd.to_path_buf(), in_search: true, ..Default::default() }
-	}
 
 	pub fn update(&mut self, op: FilesOp) -> bool {
 		let b = match op {
 			FilesOp::Read(_, items) => self.files.update_read(items),
 			FilesOp::Size(_, items) => self.files.update_size(items),
-			FilesOp::Search(_, items) => self.files.update_search(items),
 			_ => unreachable!(),
 		};
 		if !b {

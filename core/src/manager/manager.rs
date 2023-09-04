@@ -56,18 +56,21 @@ impl Manager {
 
 	pub fn peek(&mut self, sequent: bool, show_image: bool) -> bool {
 		let Some(hovered) = self.hovered().cloned() else {
-			return self.active_mut().preview.reset();
+			return self.active_mut().preview_reset();
 		};
 
+		let path = hovered.path();
 		if !show_image {
 			self.active_mut().preview_reset_image();
 		}
 
-		let mime = if hovered.is_dir() {
-			MIME_DIR.to_owned()
-		} else if let Some(m) = self.mimetype.get(hovered.path()).cloned() {
-			m
-		} else {
+		if hovered.is_dir() {
+			let len = self.active().history(path).map(|f| f.files.len());
+			self.active_mut().preview.folder(path, len, sequent);
+			return false;
+		}
+
+		let Some(mime) = self.mimetype.get(path).cloned() else {
 			tokio::spawn(async move {
 				if let Ok(mimes) = external::file(&[hovered.path()]).await {
 					emit!(Mimetype(mimes));
@@ -77,9 +80,9 @@ impl Manager {
 		};
 
 		if sequent {
-			self.active_mut().preview.sequent(hovered.path(), &mime, show_image);
+			self.active_mut().preview.sequent(path, &mime, show_image);
 		} else {
-			self.active_mut().preview.go(hovered.path(), &mime, show_image);
+			self.active_mut().preview.go(path, &mime, show_image);
 		}
 		false
 	}
@@ -393,16 +396,9 @@ impl Manager {
 		true
 	}
 
+	#[inline]
 	pub fn update_hover(&mut self, file: Option<File>) -> bool {
-		let b = file.map(|f| self.current_mut().hover_force(f)).unwrap_or(false);
-		let Some(hovered) = self.hovered() else {
-			return b;
-		};
-
-		if hovered.is_dir() {
-			self.watcher.trigger_dirs(&[hovered.path()]);
-		}
-		b
+		file.map(|f| self.current_mut().hover_force(f)) == Some(true)
 	}
 }
 

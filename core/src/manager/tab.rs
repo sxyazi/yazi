@@ -1,9 +1,9 @@
 use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}, ffi::{OsStr, OsString}, mem, path::{Path, PathBuf}};
 
 use anyhow::{Error, Result};
-use config::{open::Opener, MANAGER};
+use config::open::Opener;
 use futures::StreamExt;
-use shared::{Defer, MIME_DIR};
+use shared::Defer;
 use tokio::task::JoinHandle;
 
 use super::{Folder, Mode, Preview, PreviewLock};
@@ -86,7 +86,7 @@ impl Tab {
 		}
 
 		if self.current.cwd == target {
-			if hovered.map(|h| self.current.hover_force(h)).unwrap_or(false) {
+			if hovered.map(|h| self.current.hover_force(h)) == Some(true) {
 				emit!(Hover);
 			}
 			return false;
@@ -241,9 +241,9 @@ impl Tab {
 				external::fd(external::FdOpt { cwd: cwd.clone(), hidden, glob: false, subject })
 			}?;
 
-			emit!(Files(FilesOp::search_empty(&cwd)));
+			emit!(Files(FilesOp::clear(&cwd)));
 			while let Some(chunk) = rx.next().await {
-				emit!(Files(FilesOp::Search(cwd.clone(), Files::read(&chunk).await)));
+				emit!(Files(FilesOp::Read(cwd.clone(), Files::read(&chunk).await)));
 			}
 			Ok(())
 		}));
@@ -310,31 +310,21 @@ impl Tab {
 		false
 	}
 
-	pub fn update_peek(&mut self, step: isize, path: Option<PathBuf>) {
+	pub fn update_peek(&mut self, step: isize, path: Option<PathBuf>) -> bool {
 		let Some(ref hovered) = self.current.hovered else {
-			return;
+			return false;
 		};
 
-		if path.as_ref().map(|p| p != hovered.path()).unwrap_or(false) {
-			return;
-		} else if !self.preview.arrow(step, path.is_some()) {
-			return;
-		} else if !matches!(&self.preview.lock, Some(l) if l.mime == MIME_DIR) {
-			return;
+		if path.as_ref().map(|p| p != hovered.path()) == Some(true) {
+			return false;
 		}
 
-		let path = &self.preview.lock.as_ref().unwrap().path;
-		if let Some(folder) = self.history(path) {
-			let max = folder.files.len().saturating_sub(MANAGER.layout.preview_height());
-			if self.preview.skip() > max {
-				self.preview.arrow(max as isize, true);
-			}
-		}
+		self.preview.arrow(step)
 	}
 
 	pub fn update_preview(&mut self, lock: PreviewLock) -> bool {
 		let Some(hovered) = self.current.hovered.as_ref().map(|h| h.path()) else {
-			return self.preview.reset();
+			return self.preview_reset();
 		};
 
 		if lock.path != *hovered {
@@ -394,10 +384,10 @@ impl Tab {
 	pub fn preview(&self) -> &Preview { &self.preview }
 
 	#[inline]
-	pub fn preview_reset(&mut self) -> bool { self.preview.reset() }
+	pub fn preview_reset(&mut self) -> bool { self.preview.reset(|_| true) }
 
 	#[inline]
-	pub fn preview_reset_image(&mut self) -> bool { self.preview.reset_image() }
+	pub fn preview_reset_image(&mut self) -> bool { self.preview.reset(|l| l.is_image()) }
 
 	// --- Sorter
 	pub fn set_sorter(&mut self, sorter: FilesSorter) -> bool {
@@ -433,7 +423,7 @@ impl Tab {
 
 		applied |= match self.current.hovered {
 			Some(ref h) if h.is_dir() => {
-				self.history.get_mut(h.path()).map(|f| f.files.set_show_hidden(state)).unwrap_or(false)
+				self.history.get_mut(h.path()).map(|f| f.files.set_show_hidden(state)) == Some(true)
 			}
 			_ => false,
 		};

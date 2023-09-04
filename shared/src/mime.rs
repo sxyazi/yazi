@@ -5,7 +5,6 @@ pub enum MimeKind {
 	Empty,
 
 	Archive,
-	Dir,
 
 	Image,
 	Video,
@@ -19,9 +18,7 @@ pub enum MimeKind {
 
 impl MimeKind {
 	pub fn new(s: &str) -> Self {
-		if s == MIME_DIR {
-			Self::Dir
-		} else if s.starts_with("text/") || s.ends_with("/xml") {
+		if s.starts_with("text/") || s.ends_with("/xml") {
 			Self::Text
 		} else if s.starts_with("image/") {
 			Self::Image

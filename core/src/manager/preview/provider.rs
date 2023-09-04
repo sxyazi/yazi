@@ -7,8 +7,9 @@ use shared::{MimeKind, PeekError};
 use syntect::{easy::HighlightFile, util::as_24_bit_terminal_escaped};
 use tokio::fs;
 
+
 use super::PreviewData;
-use crate::{emit, external, files::{Files, FilesOp}, highlighter};
+use crate::{external, highlighter};
 
 pub(super) struct Provider;
 
@@ -23,7 +24,6 @@ impl Provider {
 		match kind {
 			MimeKind::Empty => Err("Empty file".into()),
 			MimeKind::Archive => Provider::archive(path, skip).await.map(PreviewData::Text),
-			MimeKind::Dir => Provider::folder(path).await,
 			MimeKind::Image => Provider::image(path).await,
 			MimeKind::Video => Provider::video(path, skip).await,
 			MimeKind::JSON => Provider::json(path, skip).await.map(PreviewData::Text),
@@ -37,23 +37,13 @@ impl Provider {
 		match kind {
 			MimeKind::Empty => 0,
 			MimeKind::Archive => step * MANAGER.layout.preview_height() / 10,
-			MimeKind::Dir => step * MANAGER.layout.preview_height() / 10,
 			MimeKind::Image => 0,
 			MimeKind::Video => step,
 			MimeKind::JSON => step * MANAGER.layout.preview_height() / 10,
 			MimeKind::PDF => 1,
 			MimeKind::Text => step * MANAGER.layout.preview_height() / 10,
-			MimeKind::Others => 0,
+			MimeKind::Others => step * MANAGER.layout.preview_height() / 10,
 		}
-	}
-
-	pub(super) async fn folder(path: &Path) -> Result<PreviewData, PeekError> {
-		emit!(Files(match Files::read_dir(path).await {
-			Ok(items) => FilesOp::Read(path.to_path_buf(), items),
-			Err(_) => FilesOp::IOErr(path.to_path_buf()),
-		}));
-
-		Ok(PreviewData::Folder)
 	}
 
 	pub(super) async fn image(path: &Path) -> Result<PreviewData, PeekError> {

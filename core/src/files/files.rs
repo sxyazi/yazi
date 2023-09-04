@@ -127,6 +127,7 @@ impl Files {
 		true
 	}
 
+	// TODO: remove this
 	pub fn update_search(&mut self, items: Vec<File>) -> bool {
 		if !items.is_empty() {
 			if self.show_hidden {
