@@ -128,7 +128,7 @@ impl Precache {
 				handing.remove(path);
 			}
 
-			let parent = buf[0].0.parent().unwrap().into();
+			let parent = buf[0].0.parent_url().unwrap();
 			emit!(Files(FilesOp::Size(parent, BTreeMap::from_iter(buf))));
 		});
 

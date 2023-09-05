@@ -62,7 +62,17 @@ impl AsRef<OsStr> for Url {
 
 impl Url {
 	#[inline]
+	pub fn new(url: impl Into<Url>, ctx: &Url) -> Self {
+		let mut url: Self = url.into();
+		url.scheme = ctx.scheme;
+		url
+	}
+
+	#[inline]
 	pub fn is_search(&self) -> bool { self.scheme == UrlScheme::Search }
+
+	#[inline]
+	pub fn set_path(&mut self, path: PathBuf) { self.path = path; }
 
 	#[inline]
 	pub fn strip_prefix(&self, base: impl AsRef<Path>) -> Option<&Path> {
@@ -74,11 +84,9 @@ impl Url {
 
 	#[inline]
 	pub fn parent_url(&self) -> Option<Url> {
-		self.path.parent().map(|p| Self { path: p.to_path_buf(), ..*self })
+		self.path.parent().map(|p| Self::new(p.to_path_buf(), self))
 	}
 
 	#[inline]
-	pub fn __join(&self, path: impl AsRef<Path>) -> Url {
-		Url { path: self.path.join(path), ..*self }
-	}
+	pub fn __join(&self, path: impl AsRef<Path>) -> Self { Self::new(self.path.join(path), self) }
 }

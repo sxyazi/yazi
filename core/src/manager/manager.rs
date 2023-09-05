@@ -189,7 +189,7 @@ impl Manager {
 					fs::File::create(path).await?;
 				}
 
-				if let Ok(file) = File::from(hovered.into()).await {
+				if let Ok(file) = File::from(Url::new(hovered, &cwd)).await {
 					emit!(Hover(file));
 					emit!(Refresh);
 				}

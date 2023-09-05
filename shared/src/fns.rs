@@ -14,6 +14,12 @@ pub fn absolute_path(p: impl AsRef<Path>) -> PathBuf {
 	std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf())
 }
 
+#[inline]
+pub fn absolute_url(mut u: Url) -> Url {
+	u.set_path(absolute_path(&u));
+	u
+}
+
 pub fn readable_path(p: &Path, base: &Path) -> String {
 	if let Ok(p) = p.strip_prefix(base) {
 		return p.display().to_string();

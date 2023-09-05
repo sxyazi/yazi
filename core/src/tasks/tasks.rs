@@ -235,11 +235,11 @@ impl Tasks {
 	}
 
 	pub fn precache_image(&self, mimetype: &BTreeMap<Url, String>) -> bool {
-		let targets = mimetype
+		let targets: Vec<_> = mimetype
 			.iter()
 			.filter(|(_, m)| MimeKind::new(m) == MimeKind::Image)
-			.map(|(p, _)| p.clone())
-			.collect::<Vec<_>>();
+			.map(|(u, _)| u.clone())
+			.collect();
 
 		if !targets.is_empty() {
 			self.scheduler.precache_image(targets);
@@ -248,11 +248,11 @@ impl Tasks {
 	}
 
 	pub fn precache_video(&self, mimetype: &BTreeMap<Url, String>) -> bool {
-		let targets = mimetype
+		let targets: Vec<_> = mimetype
 			.iter()
 			.filter(|(_, m)| MimeKind::new(m) == MimeKind::Video)
-			.map(|(p, _)| p.clone())
-			.collect::<Vec<_>>();
+			.map(|(u, _)| u.clone())
+			.collect();
 
 		if !targets.is_empty() {
 			self.scheduler.precache_video(targets);
@@ -261,11 +261,11 @@ impl Tasks {
 	}
 
 	pub fn precache_pdf(&self, mimetype: &BTreeMap<Url, String>) -> bool {
-		let targets = mimetype
+		let targets: Vec<_> = mimetype
 			.iter()
 			.filter(|(_, m)| MimeKind::new(m) == MimeKind::PDF)
-			.map(|(p, _)| p.clone())
-			.collect::<Vec<_>>();
+			.map(|(u, _)| u.clone())
+			.collect();
 
 		if !targets.is_empty() {
 			self.scheduler.precache_pdf(targets);

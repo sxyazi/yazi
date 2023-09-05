@@ -23,15 +23,17 @@ pub struct Tab {
 
 impl From<Url> for Tab {
 	fn from(url: Url) -> Self {
+		let parent = url.parent_url().map(Folder::from);
+
 		Self {
-			mode:    Default::default(),
-			current: Folder::from(&url),
-			parent:  url.parent_url().map(Folder::from),
+			mode: Default::default(),
+			current: Folder::from(url),
+			parent,
 
 			history: Default::default(),
 			preview: Default::default(),
 
-			search:      None,
+			search: None,
 			show_hidden: true,
 		}
 	}
@@ -88,7 +90,7 @@ impl Tab {
 		let mut hovered = None;
 		if !file.is_dir() {
 			hovered = Some(file);
-			target = target.parent().unwrap().into();
+			target = target.parent_url().unwrap();
 		}
 
 		if self.current.cwd == target {
@@ -124,8 +126,8 @@ impl Tab {
 			let result =
 				emit!(Input(InputOpt::top("Change directory:").with_value(target.to_string_lossy())));
 
-			if let Ok(target) = result.await {
-				emit!(Cd(target.into()));
+			if let Ok(s) = result.await {
+				emit!(Cd(Url::new(s, &target)));
 			}
 		});
 		false

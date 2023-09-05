@@ -1,4 +1,4 @@
-use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref, path::Path};
+use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref};
 
 use anyhow::Result;
 use config::manager::SortBy;
@@ -40,22 +40,22 @@ impl Deref for Files {
 }
 
 impl Files {
-	pub async fn read(paths: Vec<Url>) -> Vec<File> {
-		let mut items = Vec::with_capacity(paths.len());
-		for path in paths {
-			if let Ok(file) = File::from(path).await {
+	pub async fn read(urls: Vec<Url>) -> Vec<File> {
+		let mut items = Vec::with_capacity(urls.len());
+		for url in urls {
+			if let Ok(file) = File::from(url).await {
 				items.push(file);
 			}
 		}
 		items
 	}
 
-	pub async fn read_dir(path: &Path) -> Result<Vec<File>> {
-		let mut it = fs::read_dir(path).await?;
+	pub async fn read_dir(url: &Url) -> Result<Vec<File>> {
+		let mut it = fs::read_dir(url).await?;
 		let mut items = Vec::new();
 		while let Ok(Some(item)) = it.next_entry().await {
 			if let Ok(meta) = item.metadata().await {
-				items.push(File::from_meta(item.path().into(), meta).await);
+				items.push(File::from_meta(Url::new(item.path(), url), meta).await);
 			}
 		}
 		Ok(items)

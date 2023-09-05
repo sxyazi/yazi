@@ -73,11 +73,11 @@ impl Executor {
 			"back" => cx.manager.active_mut().back(),
 			"forward" => cx.manager.active_mut().forward(),
 			"cd" => {
-				let path = exec.args.get(0).map(Into::into).unwrap_or_default();
+				let url = exec.args.get(0).map(Into::into).unwrap_or_default();
 				if exec.named.contains_key("interactive") {
-					cx.manager.active_mut().cd_interactive(path)
+					cx.manager.active_mut().cd_interactive(url)
 				} else {
-					emit!(Cd(path));
+					emit!(Cd(url));
 					false
 				}
 			}

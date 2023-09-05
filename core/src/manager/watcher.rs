@@ -35,7 +35,7 @@ impl Watcher {
 					let parent = path.parent_url().unwrap_or_else(|| path.clone());
 					match event.kind {
 						EventKind::Create(_) => {
-							tx.send(parent.into()).ok();
+							tx.send(parent).ok();
 						}
 						EventKind::Modify(kind) => {
 							match kind {
@@ -79,12 +79,12 @@ impl Watcher {
 			)
 		};
 
-		for p in to_unwatch {
-			self.watcher.unwatch(&p).ok();
+		for u in to_unwatch {
+			self.watcher.unwatch(&u).ok();
 		}
-		for p in to_watch {
-			if self.watcher.watch(&p, RecursiveMode::NonRecursive).is_err() {
-				watched.remove(&p);
+		for u in to_watch {
+			if self.watcher.watch(&u, RecursiveMode::NonRecursive).is_err() {
+				watched.remove(&u);
 			}
 		}
 
@@ -109,7 +109,7 @@ impl Watcher {
 			for k in to_resolve {
 				match fs::canonicalize(&k).await {
 					Ok(v) if v != *k => {
-						ext.insert(k, Some(v.into()));
+						ext.insert(k, Some(Url::from(v)));
 					}
 					_ => {}
 				}
@@ -123,7 +123,7 @@ impl Watcher {
 
 	pub(super) fn trigger_dirs(&self, dirs: &[&Url]) {
 		let watched = self.watched.clone();
-		let dirs = dirs.iter().map(|&u| u.clone()).collect::<Vec<_>>();
+		let dirs: Vec<_> = dirs.iter().map(|&u| u.clone()).collect();
 		tokio::spawn(async move {
 			for dir in dirs {
 				Self::dir_changed(&dir, watched.clone()).await;

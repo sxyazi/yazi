@@ -29,7 +29,7 @@ impl FilesSorter {
 
 		match self.by {
 			SortBy::Alphabetical => {
-				items.sort_unstable_by(|a, b| self.cmp(&a.url, &b.url, self.promote(a, b)))
+				items.sort_unstable_by(|a, b| self.cmp(&*a.url, &*b.url, self.promote(a, b)))
 			}
 			SortBy::Created => items.sort_unstable_by(|a, b| {
 				if let (Ok(aa), Ok(bb)) = (a.meta.created(), b.meta.created()) {
