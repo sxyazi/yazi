@@ -56,7 +56,7 @@ impl Tasks {
 
 	pub fn paginate(&self) -> Vec<TaskSummary> {
 		let running = self.scheduler.running.read();
-		running.values().take(Self::limit()).map(|t| t.into()).collect()
+		running.values().take(Self::limit()).map(Into::into).collect()
 	}
 
 	pub fn inspect(&self) -> bool {

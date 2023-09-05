@@ -261,7 +261,7 @@ impl Manager {
 			})?;
 			child.wait().await?;
 
-			let new: Vec<_> = fs::read_to_string(&tmp).await?.lines().map(|l| l.into()).collect();
+			let new: Vec<_> = fs::read_to_string(&tmp).await?.lines().map(PathBuf::from).collect();
 			Self::bulk_rename_do(root, old, new).await
 		});
 
