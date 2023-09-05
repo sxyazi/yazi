@@ -49,7 +49,9 @@ rules = [
 	{ mime = "video/*", use = "video" },
 	{ mime = "audio/*", use = "audio" },
 	{ mime = "inode/x-empty", use = "text" },
+
 	{ mime = "application/json", use = "text" },
+	{ mime = "*/javascript", use = "text" },
 
 	{ mime = "application/zip", use = "archive" },
 	{ mime = "application/gzip", use = "archive" },
