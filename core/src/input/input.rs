@@ -3,7 +3,7 @@ use std::ops::Range;
 use anyhow::{anyhow, Result};
 use config::keymap::Key;
 use crossterm::event::KeyCode;
-use shared::CharKind;
+use shared::{CharKind, Term};
 use tokio::sync::oneshot::Sender;
 use unicode_width::UnicodeWidthStr;
 
@@ -43,6 +43,7 @@ impl Input {
 				cb.send(if submit { Ok(self.snap_mut().value.clone()) } else { Err(anyhow!("canceled")) });
 		}
 
+		let _ = Term::set_cursor_block();
 		self.visible = false;
 		true
 	}
