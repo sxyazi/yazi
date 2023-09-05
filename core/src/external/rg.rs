@@ -30,7 +30,7 @@ pub fn rg(opt: RgOpt) -> Result<StreamBuf<UnboundedReceiverStream<Url>>> {
 
 	tokio::spawn(async move {
 		while let Ok(Some(line)) = it.next_line().await {
-			tx.send(opt.cwd.__join(line)).ok();
+			tx.send(opt.cwd.join(line)).ok();
 		}
 		child.wait().await.ok();
 	});

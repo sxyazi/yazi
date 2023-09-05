@@ -69,10 +69,7 @@ impl Url {
 	}
 
 	#[inline]
-	pub fn is_search(&self) -> bool { self.scheme == UrlScheme::Search }
-
-	#[inline]
-	pub fn set_path(&mut self, path: PathBuf) { self.path = path; }
+	pub fn join(&self, path: impl AsRef<Path>) -> Self { Self::new(self.path.join(path), self) }
 
 	#[inline]
 	pub fn strip_prefix(&self, base: impl AsRef<Path>) -> Option<&Path> {
@@ -81,12 +78,23 @@ impl Url {
 
 	#[inline]
 	pub fn into_os_string(self) -> OsString { self.path.into_os_string() }
+}
+
+impl Url {
+	// --- Scheme
+	#[inline]
+	pub fn is_none(&self) -> bool { self.scheme == UrlScheme::None }
 
 	#[inline]
-	pub fn parent_url(&self) -> Option<Url> {
-		self.path.parent().map(|p| Self::new(p.to_path_buf(), self))
-	}
+	pub fn is_search(&self) -> bool { self.scheme == UrlScheme::Search }
 
 	#[inline]
-	pub fn __join(&self, path: impl AsRef<Path>) -> Self { Self::new(self.path.join(path), self) }
+	pub fn is_archive(&self) -> bool { self.scheme == UrlScheme::Archive }
+
+	// --- Path
+	#[inline]
+	pub fn set_path(&mut self, path: PathBuf) { self.path = path; }
+
+	#[inline]
+	pub fn parent_url(&self) -> Option<Url> { self.path.parent().map(|p| Self::new(p, self)) }
 }

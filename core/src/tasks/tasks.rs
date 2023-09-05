@@ -156,7 +156,7 @@ impl Tasks {
 
 	pub fn file_cut(&self, src: &HashSet<Url>, dest: Url, force: bool) -> bool {
 		for p in src {
-			let to = dest.__join(p.file_name().unwrap());
+			let to = dest.join(p.file_name().unwrap());
 			if force && *p == to {
 				trace!("file_cut: same file, skipping {:?}", to);
 			} else {
@@ -168,7 +168,7 @@ impl Tasks {
 
 	pub fn file_copy(&self, src: &HashSet<Url>, dest: Url, force: bool, follow: bool) -> bool {
 		for p in src {
-			let to = dest.__join(p.file_name().unwrap());
+			let to = dest.join(p.file_name().unwrap());
 			if force && *p == to {
 				trace!("file_copy: same file, skipping {:?}", to);
 			} else {

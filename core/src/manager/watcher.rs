@@ -166,7 +166,7 @@ impl Watcher {
 		let linked = watched
 			.read()
 			.iter()
-			.map_while(|(k, v)| v.as_ref().and_then(|v| url.strip_prefix(v)).map(|v| k.__join(v)))
+			.map_while(|(k, v)| v.as_ref().and_then(|v| url.strip_prefix(v)).map(|v| k.join(v)))
 			.collect::<Vec<_>>();
 
 		let result = Files::read_dir(url).await;
@@ -184,7 +184,7 @@ impl Watcher {
 					let mut files = Vec::with_capacity(items.len());
 					for item in items {
 						let mut file = item.clone();
-						file.set_url(ori.__join(item.url().strip_prefix(url).unwrap()));
+						file.set_url(ori.join(item.url().strip_prefix(url).unwrap()));
 						files.push(file);
 					}
 					FilesOp::Read(ori, files)

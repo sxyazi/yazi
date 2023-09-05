@@ -202,7 +202,7 @@ impl File {
 		let mut dirs = VecDeque::from([task.from]);
 
 		while let Some(src) = dirs.pop_front() {
-			let dest = root.__join(src.components().skip(skip).collect::<PathBuf>());
+			let dest = root.join(src.components().skip(skip).collect::<PathBuf>());
 			match fs::create_dir(&dest).await {
 				Err(e) if e.kind() != AlreadyExists => {
 					self.log(task.id, format!("Create dir failed: {:?}, {e}", dest))?;
@@ -230,7 +230,7 @@ impl File {
 					continue;
 				}
 
-				task.to = dest.__join(src.file_name().unwrap());
+				task.to = dest.join(src.file_name().unwrap());
 				task.from = src;
 				self.sch.send(TaskOp::New(task.id, meta.len()))?;
 
