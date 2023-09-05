@@ -4,7 +4,7 @@ use std::ffi::OsString;
 use anyhow::{Ok, Result};
 use config::{keymap::{Control, Key, KeymapLayer}, BOOT};
 use crossterm::event::KeyEvent;
-use shared::{absolute_path, Term};
+use shared::{absolute_url, Term};
 use tokio::sync::oneshot;
 
 use crate::{Ctx, Executor, Logs, Root, Signals};
@@ -119,26 +119,25 @@ impl App {
 		let manager = &mut self.cx.manager;
 		let tasks = &mut self.cx.tasks;
 		match event {
-			Event::Cd(path) => {
+			Event::Cd(url) => {
 				futures::executor::block_on(async {
-					manager.active_mut().cd(absolute_path(path)).await;
+					manager.active_mut().cd(absolute_url(url)).await;
 				});
 			}
 			Event::Refresh => {
 				manager.refresh();
 			}
 			Event::Files(op) => {
-				let calc = matches!(op, FilesOp::Read(..) | FilesOp::Search(..));
+				let read = matches!(op, FilesOp::Read(..));
 				let b = match op {
 					FilesOp::Read(..) => manager.update_read(op),
 					FilesOp::Size(..) => manager.update_read(op),
-					FilesOp::Search(..) => manager.update_search(op),
 					FilesOp::IOErr(..) => manager.update_ioerr(op),
 				};
 				if b {
 					emit!(Render);
 				}
-				if calc {
+				if read {
 					tasks.precache_size(&manager.current().files);
 				}
 			}

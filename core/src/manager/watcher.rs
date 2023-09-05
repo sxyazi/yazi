@@ -1,10 +1,10 @@
-use std::{collections::BTreeSet, path::{Path, PathBuf}, sync::Arc, time::Duration};
+use std::{collections::BTreeSet, sync::Arc, time::Duration};
 
 use futures::StreamExt;
 use indexmap::IndexMap;
 use notify::{event::{MetadataKind, ModifyKind}, EventKind, RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
 use parking_lot::RwLock;
-use shared::StreamBuf;
+use shared::{StreamBuf, Url};
 use tokio::{fs, sync::mpsc};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 
@@ -12,7 +12,7 @@ use crate::{emit, external, files::{Files, FilesOp}};
 
 pub struct Watcher {
 	watcher: RecommendedWatcher,
-	watched: Arc<RwLock<IndexMap<PathBuf, Option<PathBuf>>>>,
+	watched: Arc<RwLock<IndexMap<Url, Option<Url>>>>,
 }
 
 impl Watcher {
@@ -28,11 +28,11 @@ impl Watcher {
 						return;
 					};
 
-					let Some(path) = event.paths.first().cloned() else {
+					let Some(path) = event.paths.first().map(Url::from) else {
 						return;
 					};
 
-					let parent = path.parent().unwrap_or(&path).to_path_buf();
+					let parent = path.parent_url().unwrap_or_else(|| path.clone());
 					match event.kind {
 						EventKind::Create(_) => {
 							tx.send(parent).ok();
@@ -69,7 +69,7 @@ impl Watcher {
 		instance
 	}
 
-	pub(super) fn watch(&mut self, mut watched: BTreeSet<&PathBuf>) {
+	pub(super) fn watch(&mut self, mut watched: BTreeSet<&Url>) {
 		let (to_unwatch, to_watch): (BTreeSet<_>, BTreeSet<_>) = {
 			let guard = self.watched.read();
 			let keys = guard.keys().collect::<BTreeSet<_>>();
@@ -79,12 +79,12 @@ impl Watcher {
 			)
 		};
 
-		for p in to_unwatch {
-			self.watcher.unwatch(&p).ok();
+		for u in to_unwatch {
+			self.watcher.unwatch(&u).ok();
 		}
-		for p in to_watch {
-			if self.watcher.watch(&p, RecursiveMode::NonRecursive).is_err() {
-				watched.remove(&p);
+		for u in to_watch {
+			if self.watcher.watch(&u, RecursiveMode::NonRecursive).is_err() {
+				watched.remove(&u);
 			}
 		}
 
@@ -109,7 +109,7 @@ impl Watcher {
 			for k in to_resolve {
 				match fs::canonicalize(&k).await {
 					Ok(v) if v != *k => {
-						ext.insert(k, Some(v));
+						ext.insert(k, Some(Url::from(v)));
 					}
 					_ => {}
 				}
@@ -121,9 +121,9 @@ impl Watcher {
 		});
 	}
 
-	pub(super) fn trigger_dirs(&self, dirs: &[&Path]) {
+	pub(super) fn trigger_dirs(&self, dirs: &[&Url]) {
 		let watched = self.watched.clone();
-		let dirs = dirs.iter().map(|p| p.to_path_buf()).collect::<Vec<_>>();
+		let dirs: Vec<_> = dirs.iter().map(|&u| u.clone()).collect();
 		tokio::spawn(async move {
 			for dir in dirs {
 				Self::dir_changed(&dir, watched.clone()).await;
@@ -132,8 +132,8 @@ impl Watcher {
 	}
 
 	async fn changed(
-		mut rx: StreamBuf<UnboundedReceiverStream<PathBuf>>,
-		watched: Arc<RwLock<IndexMap<PathBuf, Option<PathBuf>>>>,
+		mut rx: StreamBuf<UnboundedReceiverStream<Url>>,
+		watched: Arc<RwLock<IndexMap<Url, Option<Url>>>>,
 	) {
 		while let Some(paths) = rx.next().await {
 			let (mut files, mut dirs): (Vec<_>, Vec<_>) = Default::default();
@@ -145,7 +145,7 @@ impl Watcher {
 				}
 			}
 
-			Self::file_changed(files.iter().map(AsRef::as_ref).collect()).await;
+			Self::file_changed(files.iter().collect()).await;
 			for file in files {
 				emit!(Files(FilesOp::IOErr(file)));
 			}
@@ -156,24 +156,24 @@ impl Watcher {
 		}
 	}
 
-	async fn file_changed(paths: Vec<&Path>) {
-		if let Ok(mimes) = external::file(&paths).await {
+	async fn file_changed(urls: Vec<&Url>) {
+		if let Ok(mimes) = external::file(&urls).await {
 			emit!(Mimetype(mimes));
 		}
 	}
 
-	async fn dir_changed(path: &Path, watched: Arc<RwLock<IndexMap<PathBuf, Option<PathBuf>>>>) {
+	async fn dir_changed(url: &Url, watched: Arc<RwLock<IndexMap<Url, Option<Url>>>>) {
 		let linked = watched
 			.read()
 			.iter()
-			.map_while(|(k, v)| v.as_ref().and_then(|v| path.strip_prefix(v).ok()).map(|v| k.join(v)))
+			.map_while(|(k, v)| v.as_ref().and_then(|v| url.strip_prefix(v)).map(|v| k.join(v)))
 			.collect::<Vec<_>>();
 
-		let result = Files::read_dir(path).await;
+		let result = Files::read_dir(url).await;
 		if linked.is_empty() {
 			emit!(Files(match result {
-				Ok(items) => FilesOp::Read(path.into(), items),
-				Err(_) => FilesOp::IOErr(path.into()),
+				Ok(items) => FilesOp::Read(url.clone(), items),
+				Err(_) => FilesOp::IOErr(url.clone()),
 			}));
 			return;
 		}
@@ -184,7 +184,7 @@ impl Watcher {
 					let mut files = Vec::with_capacity(items.len());
 					for item in items {
 						let mut file = item.clone();
-						file.set_path(ori.join(item.path().strip_prefix(path).unwrap()));
+						file.set_url(ori.join(item.url().strip_prefix(url).unwrap()));
 						files.push(file);
 					}
 					FilesOp::Read(ori, files)

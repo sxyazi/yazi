@@ -36,7 +36,7 @@ impl<'a> Folder<'a> {
 		THEME
 			.filetypes
 			.iter()
-			.find(|x| x.matches(file.path(), mimetype.get(file.path()), file.is_dir()))
+			.find(|x| x.matches(file.url(), mimetype.get(file.url()), file.is_dir()))
 			.map(|x| x.style.get())
 			.unwrap_or_else(Style::new)
 	}
@@ -60,11 +60,11 @@ impl<'a> Widget for Folder<'a> {
 				let icon = THEME
 					.icons
 					.iter()
-					.find(|x| x.name.match_path(f.path(), Some(f.is_dir())))
+					.find(|x| x.name.match_path(f.url(), Some(f.is_dir())))
 					.map(|x| x.display.as_ref())
 					.unwrap_or("");
 
-				let is_selected = self.folder.files.is_selected(f.path());
+				let is_selected = self.folder.files.is_selected(f.url());
 				if (!self.is_selection && is_selected)
 					|| (self.is_selection && mode.pending(self.folder.offset() + i, is_selected))
 				{
@@ -78,7 +78,7 @@ impl<'a> Widget for Folder<'a> {
 					);
 				}
 
-				let hovered = matches!(self.folder.hovered, Some(ref h) if h.path() == f.path());
+				let hovered = matches!(self.folder.hovered, Some(ref h) if h.url() == f.url());
 				let style = if self.is_preview && hovered {
 					THEME.preview.hovered.get()
 				} else if hovered {
@@ -87,7 +87,7 @@ impl<'a> Widget for Folder<'a> {
 					self.file_style(f)
 				};
 
-				let mut path = format!(" {icon} {}", readable_path(f.path(), &self.folder.cwd));
+				let mut path = format!(" {icon} {}", readable_path(f.url(), &self.folder.cwd));
 				if let Some(link_to) = f.link_to() {
 					if MANAGER.show_symlink {
 						path.push_str(&format!(" -> {}", link_to.display()));

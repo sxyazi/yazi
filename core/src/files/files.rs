@@ -1,7 +1,8 @@
-use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref, path::{Path, PathBuf}};
+use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref};
 
 use anyhow::Result;
 use config::manager::SortBy;
+use shared::Url;
 use tokio::fs;
 
 use super::{File, FilesSorter};
@@ -10,8 +11,8 @@ pub struct Files {
 	items:  Vec<File>,
 	hidden: Vec<File>,
 
-	sizes:    BTreeMap<PathBuf, u64>,
-	selected: BTreeSet<PathBuf>,
+	sizes:    BTreeMap<Url, u64>,
+	selected: BTreeSet<Url>,
 
 	sorter:      FilesSorter,
 	show_hidden: bool,
@@ -39,22 +40,22 @@ impl Deref for Files {
 }
 
 impl Files {
-	pub async fn read(paths: &[impl AsRef<Path>]) -> Vec<File> {
-		let mut items = Vec::with_capacity(paths.len());
-		for path in paths {
-			if let Ok(file) = File::from(path.as_ref()).await {
+	pub async fn read(urls: Vec<Url>) -> Vec<File> {
+		let mut items = Vec::with_capacity(urls.len());
+		for url in urls {
+			if let Ok(file) = File::from(url).await {
 				items.push(file);
 			}
 		}
 		items
 	}
 
-	pub async fn read_dir(path: &Path) -> Result<Vec<File>> {
-		let mut it = fs::read_dir(path).await?;
+	pub async fn read_dir(url: &Url) -> Result<Vec<File>> {
+		let mut it = fs::read_dir(url).await?;
 		let mut items = Vec::new();
 		while let Ok(Some(item)) = it.next_entry().await {
 			if let Ok(meta) = item.metadata().await {
-				items.push(File::from_meta(&item.path(), meta).await);
+				items.push(File::from_meta(Url::new(item.path(), url), meta).await);
 			}
 		}
 		Ok(items)
@@ -63,8 +64,8 @@ impl Files {
 
 impl Files {
 	#[inline]
-	pub fn select(&mut self, path: &Path, state: Option<bool>) -> bool {
-		let old = self.selected.contains(path);
+	pub fn select(&mut self, url: &Url, state: Option<bool>) -> bool {
+		let old = self.selected.contains(url);
 		let new = if let Some(new) = state { new } else { !old };
 
 		if new == old {
@@ -72,9 +73,9 @@ impl Files {
 		}
 
 		if new {
-			self.selected.insert(path.to_owned());
+			self.selected.insert(url.to_owned());
 		} else {
-			self.selected.remove(path);
+			self.selected.remove(url);
 		}
 		true
 	}
@@ -82,17 +83,17 @@ impl Files {
 	pub fn select_all(&mut self, state: Option<bool>) -> bool {
 		match state {
 			Some(true) => {
-				self.selected = self.iter().map(|f| f.path_owned()).collect();
+				self.selected = self.iter().map(|f| f.url_owned()).collect();
 			}
 			Some(false) => {
 				self.selected.clear();
 			}
 			None => {
 				for item in &self.items {
-					if self.selected.contains(&item.path) {
-						self.selected.remove(&item.path);
+					if self.selected.contains(&item.url) {
+						self.selected.remove(&item.url);
 					} else {
-						self.selected.insert(item.path_owned());
+						self.selected.insert(item.url_owned());
 					}
 				}
 			}
@@ -102,7 +103,7 @@ impl Files {
 
 	pub fn select_index(&mut self, indices: &BTreeSet<usize>, state: Option<bool>) -> bool {
 		let mut applied = false;
-		let paths: Vec<_> = self.pick(indices).iter().map(|f| f.path_owned()).collect();
+		let paths: Vec<_> = self.pick(indices).iter().map(|f| f.url_owned()).collect();
 
 		for path in paths {
 			applied |= self.select(&path, state);
@@ -119,7 +120,7 @@ impl Files {
 		true
 	}
 
-	pub fn update_size(&mut self, items: BTreeMap<PathBuf, u64>) -> bool {
+	pub fn update_size(&mut self, items: BTreeMap<Url, u64>) -> bool {
 		self.sizes.extend(items);
 		if self.sorter.by == SortBy::Size {
 			self.sorter.sort(&mut self.items);
@@ -127,6 +128,7 @@ impl Files {
 		true
 	}
 
+	// TODO: remove this
 	pub fn update_search(&mut self, items: Vec<File>) -> bool {
 		if !items.is_empty() {
 			if self.show_hidden {
@@ -164,7 +166,7 @@ impl Files {
 	}
 
 	#[inline]
-	pub fn position(&self, path: &Path) -> Option<usize> { self.iter().position(|f| f.path == path) }
+	pub fn position(&self, url: &Url) -> Option<usize> { self.iter().position(|f| f.url == *url) }
 
 	#[inline]
 	pub fn duplicate(&self, idx: usize) -> Option<File> { self.items.get(idx).cloned() }
@@ -177,7 +179,7 @@ impl Files {
 
 		let selected: BTreeSet<_> = self.selected.iter().collect();
 		let pending: BTreeSet<_> =
-			pending.iter().filter_map(|&i| self.items.get(i)).map(|f| &f.path).collect();
+			pending.iter().filter_map(|&i| self.items.get(i)).map(|f| &f.url).collect();
 
 		let selected: BTreeSet<_> = if unset {
 			selected.difference(&pending).cloned().collect()
@@ -187,7 +189,7 @@ impl Files {
 
 		let mut items = Vec::with_capacity(selected.len());
 		for item in &self.items {
-			if selected.contains(&item.path) {
+			if selected.contains(&item.url) {
 				items.push(item);
 			}
 			if items.len() == selected.len() {
@@ -198,14 +200,14 @@ impl Files {
 	}
 
 	#[inline]
-	pub fn is_selected(&self, path: &Path) -> bool { self.selected.contains(path) }
+	pub fn is_selected(&self, url: &Url) -> bool { self.selected.contains(url) }
 
 	#[inline]
 	pub fn has_selected(&self) -> bool {
 		if self.selected.is_empty() {
 			return false;
 		}
-		self.iter().any(|f| self.selected.contains(&f.path))
+		self.iter().any(|f| self.selected.contains(&f.url))
 	}
 
 	// --- Sorter

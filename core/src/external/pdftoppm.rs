@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{path::Path, sync::Arc};
 
 use adaptor::Image;
 use regex::Regex;
@@ -25,5 +25,5 @@ pub async fn pdftoppm(src: &Path, dest: impl AsRef<Path>, skip: usize) -> Result
 		return if pages > 0 { Err(PeekError::Exceed(pages - 1)) } else { Err(s.to_string().into()) };
 	}
 
-	Ok(Image::precache_anyway(output.stdout.into(), dest).await?)
+	Ok(Image::precache_anyway(Arc::new(output.stdout), dest).await?)
 }

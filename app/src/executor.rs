@@ -1,8 +1,7 @@
 use core::{emit, files::FilesSorter, input::InputMode};
-use std::path::PathBuf;
 
 use config::{keymap::{Control, Exec, Key, KeymapLayer}, manager::SortBy, KEYMAP};
-use shared::optional_bool;
+use shared::{optional_bool, Url};
 
 use super::Ctx;
 
@@ -74,11 +73,11 @@ impl Executor {
 			"back" => cx.manager.active_mut().back(),
 			"forward" => cx.manager.active_mut().forward(),
 			"cd" => {
-				let path = exec.args.get(0).map(PathBuf::from).unwrap_or_default();
+				let url = exec.args.get(0).map(Url::from).unwrap_or_default();
 				if exec.named.contains_key("interactive") {
-					cx.manager.active_mut().cd_interactive(path)
+					cx.manager.active_mut().cd_interactive(url)
 				} else {
-					emit!(Cd(path));
+					emit!(Cd(url));
 					false
 				}
 			}
@@ -109,7 +108,7 @@ impl Executor {
 				}
 			}
 			"remove" => {
-				let targets = cx.manager.selected().into_iter().map(|f| f.path_owned()).collect();
+				let targets = cx.manager.selected().into_iter().map(|f| f.url_owned()).collect();
 				cx.tasks.file_remove(targets, exec.named.contains_key("permanently"))
 			}
 			"create" => cx.manager.create(),
@@ -155,7 +154,7 @@ impl Executor {
 				let path = if exec.named.contains_key("current") {
 					cx.manager.cwd().to_owned()
 				} else {
-					exec.args.get(0).map(|p| p.into()).unwrap_or("/".into())
+					exec.args.get(0).map(Url::from).unwrap_or_else(|| Url::from("/"))
 				};
 				cx.manager.tabs_mut().create(&path)
 			}

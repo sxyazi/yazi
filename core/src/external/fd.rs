@@ -1,18 +1,18 @@
-use std::{path::PathBuf, process::Stdio, time::Duration};
+use std::{process::Stdio, time::Duration};
 
 use anyhow::Result;
-use shared::StreamBuf;
+use shared::{StreamBuf, Url};
 use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command, sync::mpsc};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 
 pub struct FdOpt {
-	pub cwd:     PathBuf,
+	pub cwd:     Url,
 	pub hidden:  bool,
 	pub glob:    bool,
 	pub subject: String,
 }
 
-pub fn fd(opt: FdOpt) -> Result<StreamBuf<UnboundedReceiverStream<PathBuf>>> {
+pub fn fd(opt: FdOpt) -> Result<StreamBuf<UnboundedReceiverStream<Url>>> {
 	let mut child = Command::new("fd")
 		.arg("--base-directory")
 		.arg(&opt.cwd)

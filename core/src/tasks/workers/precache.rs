@@ -1,10 +1,10 @@
-use std::{collections::{BTreeMap, BTreeSet}, path::PathBuf, sync::Arc};
+use std::{collections::{BTreeMap, BTreeSet}, sync::Arc};
 
 use adaptor::Image;
 use anyhow::Result;
 use config::PREVIEW;
 use parking_lot::Mutex;
-use shared::{calculate_size, Throttle};
+use shared::{calculate_size, Throttle, Url};
 use tokio::{fs, sync::mpsc};
 
 use crate::{emit, external, files::FilesOp, tasks::TaskOp};
@@ -15,7 +15,7 @@ pub(crate) struct Precache {
 
 	sch: mpsc::UnboundedSender<TaskOp>,
 
-	pub(crate) size_handing: Mutex<BTreeSet<PathBuf>>,
+	pub(crate) size_handing: Mutex<BTreeSet<Url>>,
 }
 
 #[derive(Debug)]
@@ -28,32 +28,32 @@ pub(crate) enum PrecacheOp {
 #[derive(Debug)]
 pub(crate) struct PrecacheOpSize {
 	pub id:       usize,
-	pub target:   PathBuf,
-	pub throttle: Arc<Throttle<(PathBuf, u64)>>,
+	pub target:   Url,
+	pub throttle: Arc<Throttle<(Url, u64)>>,
 }
 
 #[derive(Debug)]
 pub(crate) struct PrecacheOpMime {
 	pub id:      usize,
-	pub targets: Vec<PathBuf>,
+	pub targets: Vec<Url>,
 }
 
 #[derive(Debug)]
 pub(crate) struct PrecacheOpImage {
 	pub id:     usize,
-	pub target: PathBuf,
+	pub target: Url,
 }
 
 #[derive(Debug)]
 pub(crate) struct PrecacheOpVideo {
 	pub id:     usize,
-	pub target: PathBuf,
+	pub target: Url,
 }
 
 #[derive(Debug)]
 pub(crate) struct PrecacheOpPDF {
 	pub id:     usize,
-	pub target: PathBuf,
+	pub target: Url,
 }
 
 impl Precache {
@@ -79,7 +79,7 @@ impl Precache {
 					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
 				}
 				if let Ok(img) = fs::read(&task.target).await {
-					Image::precache(img.into(), cache).await.ok();
+					Image::precache(Arc::new(img), cache).await.ok();
 				}
 				self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
 			}
@@ -128,7 +128,7 @@ impl Precache {
 				handing.remove(path);
 			}
 
-			let parent = buf[0].0.parent().unwrap().to_path_buf();
+			let parent = buf[0].0.parent_url().unwrap();
 			emit!(Files(FilesOp::Size(parent, BTreeMap::from_iter(buf))));
 		});
 
@@ -136,7 +136,7 @@ impl Precache {
 		self.done(task.id)
 	}
 
-	pub(crate) fn image(&self, id: usize, targets: Vec<PathBuf>) -> Result<()> {
+	pub(crate) fn image(&self, id: usize, targets: Vec<Url>) -> Result<()> {
 		for target in targets {
 			self.sch.send(TaskOp::New(id, 0))?;
 			self.tx.send_blocking(PrecacheOp::Image(PrecacheOpImage { id, target }))?;
@@ -144,7 +144,7 @@ impl Precache {
 		self.done(id)
 	}
 
-	pub(crate) fn video(&self, id: usize, targets: Vec<PathBuf>) -> Result<()> {
+	pub(crate) fn video(&self, id: usize, targets: Vec<Url>) -> Result<()> {
 		for target in targets {
 			self.sch.send(TaskOp::New(id, 0))?;
 			self.tx.send_blocking(PrecacheOp::Video(PrecacheOpVideo { id, target }))?;
@@ -152,7 +152,7 @@ impl Precache {
 		self.done(id)
 	}
 
-	pub(crate) fn pdf(&self, id: usize, targets: Vec<PathBuf>) -> Result<()> {
+	pub(crate) fn pdf(&self, id: usize, targets: Vec<Url>) -> Result<()> {
 		for target in targets {
 			self.sch.send(TaskOp::New(id, 0))?;
 			self.tx.send_blocking(PrecacheOp::Pdf(PrecacheOpPDF { id, target }))?;

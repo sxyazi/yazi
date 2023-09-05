@@ -1,34 +1,34 @@
-use std::path::{Path, PathBuf};
-
 use config::MANAGER;
 use ratatui::layout::Rect;
+use shared::Url;
 
 use crate::{emit, files::{File, Files, FilesOp}};
 
 #[derive(Default)]
 pub struct Folder {
-	pub cwd:   PathBuf,
+	pub cwd:   Url,
 	pub files: Files,
-	offset:    usize,
-	cursor:    usize,
 
-	pub page:      usize,
-	pub hovered:   Option<File>,
-	pub in_search: bool,
+	offset: usize,
+	cursor: usize,
+
+	pub page:    usize,
+	pub hovered: Option<File>,
+}
+
+impl From<Url> for Folder {
+	fn from(cwd: Url) -> Self { Self { cwd, ..Default::default() } }
+}
+
+impl From<&Url> for Folder {
+	fn from(cwd: &Url) -> Self { Self::from(cwd.clone()) }
 }
 
 impl Folder {
-	pub fn new(cwd: &Path) -> Self { Self { cwd: cwd.to_path_buf(), ..Default::default() } }
-
-	pub fn new_search(cwd: &Path) -> Self {
-		Self { cwd: cwd.to_path_buf(), in_search: true, ..Default::default() }
-	}
-
 	pub fn update(&mut self, op: FilesOp) -> bool {
 		let b = match op {
 			FilesOp::Read(_, items) => self.files.update_read(items),
 			FilesOp::Size(_, items) => self.files.update_size(items),
-			FilesOp::Search(_, items) => self.files.update_search(items),
 			_ => unreachable!(),
 		};
 		if !b {
@@ -102,18 +102,18 @@ impl Folder {
 		&self.files[start..end]
 	}
 
-	pub fn hover(&mut self, path: &Path) -> bool {
-		let new = self.files.position(path).unwrap_or(self.cursor);
+	pub fn hover(&mut self, url: &Url) -> bool {
+		let new = self.files.position(url).unwrap_or(self.cursor);
 		if new > self.cursor { self.next(new - self.cursor) } else { self.prev(self.cursor - new) }
 	}
 
 	#[inline]
 	pub fn hover_repos(&mut self) -> bool {
-		self.hover(&self.hovered.as_ref().map(|h| h.path_owned()).unwrap_or_default())
+		self.hover(&self.hovered.as_ref().map(|h| h.url_owned()).unwrap_or_default())
 	}
 
 	pub fn hover_force(&mut self, file: File) -> bool {
-		if self.hover(file.path()) {
+		if self.hover(file.url()) {
 			return true;
 		}
 
@@ -138,8 +138,8 @@ impl Folder {
 		&self.files[start..end]
 	}
 
-	pub fn rect_current(&self, path: &Path) -> Option<Rect> {
-		let y = self.files.position(path)? - self.offset;
+	pub fn rect_current(&self, url: &Url) -> Option<Rect> {
+		let y = self.files.position(url)? - self.offset;
 
 		let mut rect = MANAGER.layout.folder_rect();
 		rect.y = rect.y.saturating_sub(1) + y as u16;

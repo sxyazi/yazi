@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, mem, path::PathBuf};
+use std::{cmp::Ordering, mem};
 
 use config::{manager::SortBy, MANAGER};
 
@@ -29,7 +29,7 @@ impl FilesSorter {
 
 		match self.by {
 			SortBy::Alphabetical => {
-				items.sort_unstable_by(|a, b| self.cmp(&a.path, &b.path, self.promote(a, b)))
+				items.sort_unstable_by(|a, b| self.cmp(&*a.url, &*b.url, self.promote(a, b)))
 			}
 			SortBy::Created => items.sort_unstable_by(|a, b| {
 				if let (Ok(aa), Ok(bb)) = (a.meta.created(), b.meta.created()) {
@@ -56,7 +56,7 @@ impl FilesSorter {
 		let mut entities = Vec::with_capacity(items.len());
 		for (i, file) in items.iter().enumerate() {
 			indices.push(i);
-			entities.push((file.path.to_string_lossy(), file));
+			entities.push((file.url.to_string_lossy(), file));
 		}
 
 		indices.sort_unstable_by(|&a, &b| {
@@ -71,7 +71,7 @@ impl FilesSorter {
 		});
 
 		let dummy = File {
-			path:      PathBuf::new(),
+			url:       Default::default(),
 			meta:      items[0].meta.clone(),
 			length:    None,
 			link_to:   None,

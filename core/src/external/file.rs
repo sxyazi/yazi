@@ -1,12 +1,12 @@
-use std::{collections::BTreeMap, ffi::OsStr, path::PathBuf};
+use std::collections::BTreeMap;
 
 use anyhow::{bail, Result};
 use futures::TryFutureExt;
-use shared::MimeKind;
+use shared::{MimeKind, Url};
 use tokio::process::Command;
 use tracing::error;
 
-pub async fn file(files: &[impl AsRef<OsStr>]) -> Result<BTreeMap<PathBuf, String>> {
+async fn _file(files: &[&Url]) -> Result<BTreeMap<Url, String>> {
 	if files.is_empty() {
 		bail!("no files to get mime types for");
 	}
@@ -25,12 +25,16 @@ pub async fn file(files: &[impl AsRef<OsStr>]) -> Result<BTreeMap<PathBuf, Strin
 			.iter()
 			.zip(output.trim().lines())
 			.filter(|(_, m)| MimeKind::valid(m))
-			.map(|(f, m)| (f.as_ref().into(), m.to_string())),
+			.map(|(&f, m)| (f.clone(), m.to_string())),
 	);
 
 	if mimes.is_empty() {
-		error!("failed to get mime types: {:?}", files.iter().map(AsRef::as_ref).collect::<Vec<_>>());
+		error!("failed to get mime types: {:?}", files);
 		bail!("failed to get mime types");
 	}
 	Ok(mimes)
+}
+
+pub async fn file(files: &[impl AsRef<Url>]) -> Result<BTreeMap<Url, String>> {
+	_file(&files.iter().map(AsRef::as_ref).collect::<Vec<_>>()).await
 }

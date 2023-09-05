@@ -2,6 +2,8 @@ use std::{env, path::{Path, PathBuf}};
 
 use tokio::fs;
 
+use crate::Url;
+
 pub fn absolute_path(p: impl AsRef<Path>) -> PathBuf {
 	let p = p.as_ref();
 	if let Ok(p) = p.strip_prefix("~") {
@@ -10,6 +12,12 @@ pub fn absolute_path(p: impl AsRef<Path>) -> PathBuf {
 		}
 	}
 	std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf())
+}
+
+#[inline]
+pub fn absolute_url(mut u: Url) -> Url {
+	u.set_path(absolute_path(&u));
+	u
 }
 
 pub fn readable_path(p: &Path, base: &Path) -> String {
@@ -39,7 +47,7 @@ pub fn readable_size(size: u64) -> String {
 	format!("{:.1} {}", size, units[i])
 }
 
-pub async fn unique_path(mut p: PathBuf) -> PathBuf {
+pub async fn unique_path(mut p: Url) -> Url {
 	let Some(name) = p.file_name().map(|n| n.to_os_string()) else {
 		return p;
 	};

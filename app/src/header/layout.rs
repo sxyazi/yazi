@@ -20,7 +20,7 @@ impl<'a> Widget for Layout<'a> {
 			.split(area);
 
 		let current = &self.cx.manager.current();
-		let location = if current.in_search {
+		let location = if current.cwd.is_search() {
 			format!("{} (search)", readable_home(&current.cwd))
 		} else {
 			readable_home(&current.cwd)

@@ -1,11 +1,12 @@
-use std::{borrow::Cow, ffi::OsStr, fs::Metadata, path::{Path, PathBuf}};
+use std::{borrow::Cow, ffi::OsStr, fs::Metadata, path::PathBuf};
 
 use anyhow::Result;
+use shared::Url;
 use tokio::fs;
 
 #[derive(Clone, Debug)]
 pub struct File {
-	pub(super) path:      PathBuf,
+	pub(super) url:       Url,
 	pub(super) meta:      Metadata,
 	pub(super) length:    Option<u64>,
 	pub(super) link_to:   Option<PathBuf>,
@@ -15,53 +16,53 @@ pub struct File {
 
 impl File {
 	#[inline]
-	pub async fn from(path: &Path) -> Result<Self> {
-		let meta = fs::metadata(path).await?;
-		Ok(Self::from_meta(path, meta).await)
+	pub async fn from(url: Url) -> Result<Self> {
+		let meta = fs::metadata(&url).await?;
+		Ok(Self::from_meta(url, meta).await)
 	}
 
-	pub async fn from_meta(path: &Path, mut meta: Metadata) -> Self {
+	pub async fn from_meta(url: Url, mut meta: Metadata) -> Self {
 		let is_link = meta.is_symlink();
 		let mut link_to = None;
 
 		if is_link {
-			meta = fs::metadata(&path).await.unwrap_or(meta);
-			link_to = fs::read_link(&path).await.ok();
+			meta = fs::metadata(&url).await.unwrap_or(meta);
+			link_to = fs::read_link(&url).await.ok();
 		}
 
 		let length = if meta.is_dir() { None } else { Some(meta.len()) };
-		let is_hidden = path.file_name().map(|s| s.to_string_lossy().starts_with('.')).unwrap_or(false);
-		Self { path: path.to_path_buf(), meta, length, link_to, is_link, is_hidden }
+		let is_hidden = url.file_name().map(|s| s.to_string_lossy().starts_with('.')).unwrap_or(false);
+		Self { url, meta, length, link_to, is_link, is_hidden }
 	}
 }
 
 impl File {
 	// --- Path
 	#[inline]
-	pub fn path(&self) -> &PathBuf { &self.path }
+	pub fn url(&self) -> &Url { &self.url }
 
 	#[inline]
-	pub fn set_path(&mut self, path: PathBuf) { self.path = path; }
+	pub fn set_url(&mut self, url: Url) { self.url = url; }
 
 	#[inline]
-	pub fn path_owned(&self) -> PathBuf { self.path.clone() }
+	pub fn url_owned(&self) -> Url { self.url.clone() }
 
 	#[inline]
-	pub fn path_os_str(&self) -> &OsStr { self.path.as_os_str() }
+	pub fn url_os_str(&self) -> &OsStr { self.url.as_os_str() }
 
 	#[inline]
-	pub fn name(&self) -> Option<&OsStr> { self.path.file_name() }
+	pub fn name(&self) -> Option<&OsStr> { self.url.file_name() }
 
 	#[inline]
 	pub fn name_display(&self) -> Option<Cow<str>> {
-		self.path.file_name().map(|s| s.to_string_lossy())
+		self.url.file_name().map(|s| s.to_string_lossy())
 	}
 
 	#[inline]
-	pub fn stem(&self) -> Option<&OsStr> { self.path.file_stem() }
+	pub fn stem(&self) -> Option<&OsStr> { self.url.file_stem() }
 
 	#[inline]
-	pub fn parent(&self) -> Option<&Path> { self.path.parent() }
+	pub fn parent(&self) -> Option<Url> { self.url.parent_url() }
 
 	// --- Meta
 	#[inline]
