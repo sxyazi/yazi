@@ -11,6 +11,7 @@ mod stream;
 mod term;
 mod throttle;
 mod time;
+mod url;
 
 pub use chars::*;
 pub use defer::*;
@@ -23,3 +24,4 @@ pub use stream::*;
 pub use term::*;
 pub use throttle::*;
 pub use time::*;
+pub use url::*;

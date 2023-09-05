@@ -1,13 +1,14 @@
-use std::{path::PathBuf, process::Stdio};
+use std::process::Stdio;
 
 use anyhow::Result;
+use shared::Url;
 use tokio::{process::Command, sync::oneshot::{self, Receiver}};
 
 pub struct FzfOpt {
-	pub cwd: PathBuf,
+	pub cwd: Url,
 }
 
-pub fn fzf(opt: FzfOpt) -> Result<Receiver<Result<PathBuf>>> {
+pub fn fzf(opt: FzfOpt) -> Result<Receiver<Result<Url>>> {
 	let child =
 		Command::new("fzf").current_dir(&opt.cwd).kill_on_drop(true).stdout(Stdio::piped()).spawn()?;
 
@@ -16,7 +17,7 @@ pub fn fzf(opt: FzfOpt) -> Result<Receiver<Result<PathBuf>>> {
 		if let Ok(output) = child.wait_with_output().await {
 			let selected = String::from_utf8_lossy(&output.stdout).trim().to_string();
 			if !selected.is_empty() {
-				tx.send(Ok(opt.cwd.join(selected))).ok();
+				tx.send(Ok(opt.cwd.__join(selected))).ok();
 				return;
 			}
 		}

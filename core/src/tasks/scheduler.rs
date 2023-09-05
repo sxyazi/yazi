@@ -1,10 +1,10 @@
-use std::{ffi::OsStr, path::PathBuf, sync::Arc, time::Duration};
+use std::{ffi::OsStr, sync::Arc, time::Duration};
 
 use async_channel::{Receiver, Sender};
 use config::{open::Opener, TASKS};
 use futures::{future::BoxFuture, FutureExt};
 use parking_lot::RwLock;
-use shared::{unique_path, Throttle};
+use shared::{unique_path, Throttle, Url};
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, time::sleep};
 use tracing::{info, trace};
 
@@ -187,7 +187,7 @@ impl Scheduler {
 		b
 	}
 
-	pub(super) fn file_cut(&self, from: PathBuf, mut to: PathBuf, force: bool) {
+	pub(super) fn file_cut(&self, from: Url, mut to: Url, force: bool) {
 		let mut running = self.running.write();
 		let id = running.add(format!("Cut {:?} to {:?}", from, to));
 
@@ -218,7 +218,7 @@ impl Scheduler {
 		});
 	}
 
-	pub(super) fn file_copy(&self, from: PathBuf, mut to: PathBuf, force: bool, follow: bool) {
+	pub(super) fn file_copy(&self, from: Url, mut to: Url, force: bool, follow: bool) {
 		let name = format!("Copy {:?} to {:?}", from, to);
 		let id = self.running.write().add(name);
 
@@ -234,7 +234,7 @@ impl Scheduler {
 		});
 	}
 
-	pub(super) fn file_delete(&self, target: PathBuf) {
+	pub(super) fn file_delete(&self, target: Url) {
 		let mut running = self.running.write();
 		let id = running.add(format!("Delete {:?}", target));
 
@@ -262,7 +262,7 @@ impl Scheduler {
 		});
 	}
 
-	pub(super) fn file_trash(&self, target: PathBuf) {
+	pub(super) fn file_trash(&self, target: Url) {
 		let name = format!("Trash {:?}", target);
 		let id = self.running.write().add(name);
 
@@ -318,7 +318,7 @@ impl Scheduler {
 		});
 	}
 
-	pub(super) fn precache_size(&self, targets: Vec<&PathBuf>) {
+	pub(super) fn precache_size(&self, targets: Vec<&Url>) {
 		let throttle = Arc::new(Throttle::new(targets.len(), Duration::from_millis(300)));
 		let mut handing = self.precache.size_handing.lock();
 		let mut running = self.running.write();
@@ -343,7 +343,7 @@ impl Scheduler {
 		}
 	}
 
-	pub(super) fn precache_mime(&self, targets: Vec<PathBuf>) {
+	pub(super) fn precache_mime(&self, targets: Vec<Url>) {
 		let name = format!("Preload mimetype for {} files", targets.len());
 		let id = self.running.write().add(name);
 
@@ -356,21 +356,21 @@ impl Scheduler {
 		});
 	}
 
-	pub(super) fn precache_image(&self, targets: Vec<PathBuf>) {
+	pub(super) fn precache_image(&self, targets: Vec<Url>) {
 		let name = format!("Precache of {} image files", targets.len());
 		let id = self.running.write().add(name);
 
 		self.precache.image(id, targets).ok();
 	}
 
-	pub(super) fn precache_video(&self, targets: Vec<PathBuf>) {
+	pub(super) fn precache_video(&self, targets: Vec<Url>) {
 		let name = format!("Precache of {} video files", targets.len());
 		let id = self.running.write().add(name);
 
 		self.precache.video(id, targets).ok();
 	}
 
-	pub(super) fn precache_pdf(&self, targets: Vec<PathBuf>) {
+	pub(super) fn precache_pdf(&self, targets: Vec<Url>) {
 		let name = format!("Precache of {} PDF files", targets.len());
 		let id = self.running.write().add(name);
 

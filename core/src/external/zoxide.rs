@@ -1,13 +1,14 @@
-use std::{path::PathBuf, process::Stdio};
+use std::process::Stdio;
 
 use anyhow::Result;
+use shared::Url;
 use tokio::{process::Command, sync::oneshot::{self, Receiver}};
 
 pub struct ZoxideOpt {
-	pub cwd: PathBuf,
+	pub cwd: Url,
 }
 
-pub fn zoxide(opt: ZoxideOpt) -> Result<Receiver<Result<PathBuf>>> {
+pub fn zoxide(opt: ZoxideOpt) -> Result<Receiver<Result<Url>>> {
 	let child = Command::new("zoxide")
 		.args(["query", "-i", "--exclude"])
 		.arg(opt.cwd)

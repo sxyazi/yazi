@@ -1,8 +1,8 @@
-use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, ffi::OsStr, io::{stdout, BufWriter, Write}, mem, path::{Path, PathBuf}};
+use std::{collections::{BTreeMap, BTreeSet, HashMap, HashSet}, env, ffi::OsStr, io::{stdout, BufWriter, Write}, path::PathBuf};
 
 use anyhow::{anyhow, bail, Error, Result};
 use config::{OPEN, PREVIEW};
-use shared::{max_common_root, Defer, Term, MIME_DIR};
+use shared::{max_common_root, Defer, Term, Url, MIME_DIR};
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 
 use super::{Tab, Tabs, Watcher};
@@ -10,10 +10,10 @@ use crate::{emit, external::{self, ShellOpt}, files::{File, FilesOp}, input::Inp
 
 pub struct Manager {
 	tabs:   Tabs,
-	yanked: (bool, HashSet<PathBuf>),
+	yanked: (bool, HashSet<Url>),
 
 	watcher:      Watcher,
-	pub mimetype: HashMap<PathBuf, String>,
+	pub mimetype: HashMap<Url, String>,
 }
 
 impl Manager {
@@ -44,7 +44,7 @@ impl Manager {
 			to_watch.insert(&tab.current.cwd);
 			if let Some(ref h) = tab.current.hovered {
 				if h.is_dir() {
-					to_watch.insert(h.path());
+					to_watch.insert(h.url());
 				}
 			}
 			if let Some(ref p) = tab.parent {
@@ -59,20 +59,20 @@ impl Manager {
 			return self.active_mut().preview_reset();
 		};
 
-		let path = hovered.path();
+		let url = hovered.url();
 		if !show_image {
 			self.active_mut().preview_reset_image();
 		}
 
 		if hovered.is_dir() {
-			let len = self.active().history(path).map(|f| f.files.len());
-			self.active_mut().preview.folder(path, len, sequent);
+			let len = self.active().history(url).map(|f| f.files.len());
+			self.active_mut().preview.folder(url, len, sequent);
 			return false;
 		}
 
-		let Some(mime) = self.mimetype.get(path).cloned() else {
+		let Some(mime) = self.mimetype.get(url).cloned() else {
 			tokio::spawn(async move {
-				if let Ok(mimes) = external::file(&[hovered.path()]).await {
+				if let Ok(mimes) = external::file(&[hovered.url()]).await {
 					emit!(Mimetype(mimes));
 				}
 			});
@@ -80,16 +80,16 @@ impl Manager {
 		};
 
 		if sequent {
-			self.active_mut().preview.sequent(path, &mime, show_image);
+			self.active_mut().preview.sequent(url, &mime, show_image);
 		} else {
-			self.active_mut().preview.go(path, &mime, show_image);
+			self.active_mut().preview.go(url, &mime, show_image);
 		}
 		false
 	}
 
 	pub fn yank(&mut self, cut: bool) -> bool {
 		self.yanked.0 = cut;
-		self.yanked.1 = self.selected().into_iter().map(|f| f.path_owned()).collect();
+		self.yanked.1 = self.selected().into_iter().map(|f| f.url_owned()).collect();
 		false
 	}
 
@@ -127,8 +127,8 @@ impl Manager {
 			.into_iter()
 			.map(|f| {
 				(
-					f.path_os_str().to_owned(),
-					if f.is_dir() { Some(MIME_DIR.to_owned()) } else { self.mimetype.get(f.path()).cloned() },
+					f.url_owned(),
+					if f.is_dir() { Some(MIME_DIR.to_owned()) } else { self.mimetype.get(f.url()).cloned() },
 				)
 			})
 			.collect();
@@ -138,18 +138,20 @@ impl Manager {
 		}
 
 		tokio::spawn(async move {
-			let todo = files.iter().filter(|(_, m)| m.is_none()).map(|(p, _)| p).collect::<Vec<_>>();
+			let todo: Vec<_> = files.iter().filter(|(_, m)| m.is_none()).map(|(u, _)| u).collect();
 			if let Ok(mut mimes) = external::file(&todo).await {
 				files = files
 					.into_iter()
-					.map(|(p, m)| {
-						let mime = m.or_else(|| mimes.remove(&PathBuf::from(&p)));
-						(p, mime)
+					.map(|(u, m)| {
+						let mime = m.or_else(|| mimes.remove(&u));
+						(u, mime)
 					})
-					.collect::<Vec<_>>();
+					.collect();
 			}
 
-			let files = files.into_iter().filter_map(|(p, m)| m.map(|m| (p, m))).collect::<Vec<_>>();
+			let files: Vec<_> =
+				files.into_iter().filter_map(|(u, m)| m.map(|m| (u.into_os_string(), m))).collect();
+
 			if !interactive {
 				emit!(Open(files, None));
 				return;
@@ -187,7 +189,7 @@ impl Manager {
 					fs::File::create(path).await?;
 				}
 
-				if let Ok(file) = File::from(&hovered).await {
+				if let Ok(file) = File::from(hovered.into()).await {
 					emit!(Hover(file));
 					emit!(Refresh);
 				}
@@ -202,7 +204,7 @@ impl Manager {
 			return self.bulk_rename();
 		}
 
-		let Some(hovered) = self.hovered().map(|h| h.path_owned()) else {
+		let Some(hovered) = self.hovered().map(|h| h.url_owned()) else {
 			return false;
 		};
 
@@ -220,7 +222,7 @@ impl Manager {
 	}
 
 	pub fn bulk_rename(&self) -> bool {
-		let old: Vec<_> = self.selected().into_iter().map(|f| f.path()).collect();
+		let old: Vec<_> = self.selected().into_iter().map(|f| f.url()).collect();
 
 		let root = max_common_root(&old);
 		let old: Vec<_> = old.into_iter().map(|p| p.strip_prefix(&root).unwrap().to_owned()).collect();
@@ -324,55 +326,36 @@ impl Manager {
 	}
 
 	pub fn update_read(&mut self, op: FilesOp) -> bool {
-		let path = op.path();
+		let url = op.url();
 		let cwd = self.cwd().to_owned();
-		let hovered = self.hovered().map(|h| h.path_owned());
+		let hovered = self.hovered().map(|h| h.url_owned());
 
-		let mut b = if cwd == path && !self.current().in_search {
+		let mut b = if cwd == url && !cwd.is_search() {
 			self.current_mut().update(op)
-		} else if matches!(self.parent(), Some(p) if p.cwd == path) {
+		} else if matches!(self.parent(), Some(p) if p.cwd == url) {
 			self.active_mut().parent.as_mut().unwrap().update(op)
 		} else {
-			self
-				.active_mut()
-				.history
-				.entry(path.to_path_buf())
-				.or_insert_with(|| Folder::new(&path))
-				.update(op);
+			self.active_mut().history.entry(url.clone()).or_insert_with(|| Folder::from(&url)).update(op);
 
-			matches!(self.hovered(), Some(h) if h.path() == &path)
+			matches!(self.hovered(), Some(h) if *h.url() == url)
 		};
 
 		b |= self.active_mut().parent.as_mut().map_or(false, |p| p.hover(&cwd));
 		b |= hovered.as_ref().map_or(false, |h| self.current_mut().hover(h));
 
-		if hovered.as_ref() != self.hovered().map(|h| h.path()) {
+		if hovered.as_ref() != self.hovered().map(|h| h.url()) {
 			emit!(Hover);
 		}
 		b
 	}
 
-	pub fn update_search(&mut self, op: FilesOp) -> bool {
-		let path = op.path();
-		if self.current().in_search && self.cwd() == path {
-			return self.current_mut().update(op);
-		}
-
-		let rep = mem::replace(self.current_mut(), Folder::new_search(&path));
-		if !rep.in_search {
-			self.active_mut().history.insert(path, rep);
-		}
-		self.current_mut().update(op);
-		true
-	}
-
 	pub fn update_ioerr(&mut self, op: FilesOp) -> bool {
-		let path = op.path();
-		let op = FilesOp::read_empty(&path);
+		let url = op.url();
+		let op = FilesOp::clear(&url);
 
-		if path == self.cwd() {
+		if url == *self.cwd() {
 			self.current_mut().update(op);
-		} else if matches!(self.parent(), Some(p) if p.cwd == path) {
+		} else if matches!(self.parent(), Some(p) if p.cwd == url) {
 			self.active_mut().parent.as_mut().unwrap().update(op);
 		} else {
 			return false;
@@ -382,7 +365,7 @@ impl Manager {
 		true
 	}
 
-	pub fn update_mimetype(&mut self, mut mimes: BTreeMap<PathBuf, String>, tasks: &Tasks) -> bool {
+	pub fn update_mimetype(&mut self, mut mimes: BTreeMap<Url, String>, tasks: &Tasks) -> bool {
 		mimes.retain(|f, m| self.mimetype.get(f) != Some(m));
 		if mimes.is_empty() {
 			return false;
@@ -404,7 +387,7 @@ impl Manager {
 
 impl Manager {
 	#[inline]
-	pub fn cwd(&self) -> &Path { &self.current().cwd }
+	pub fn cwd(&self) -> &Url { &self.current().cwd }
 
 	#[inline]
 	pub fn tabs(&self) -> &Tabs { &self.tabs }
@@ -434,5 +417,5 @@ impl Manager {
 	pub fn selected(&self) -> Vec<&File> { self.tabs.active().selected() }
 
 	#[inline]
-	pub fn yanked(&self) -> &(bool, HashSet<PathBuf>) { &self.yanked }
+	pub fn yanked(&self) -> &(bool, HashSet<Url>) { &self.yanked }
 }

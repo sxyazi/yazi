@@ -1,8 +1,8 @@
-use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, io::{stdout, Write}, path::{Path, PathBuf}, sync::Arc};
+use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, io::{stdout, Write}, path::Path, sync::Arc};
 
 use config::{manager::SortBy, open::Opener, OPEN};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
-use shared::{Defer, MimeKind, Term};
+use shared::{Defer, MimeKind, Term, Url};
 use tokio::{io::{stdin, AsyncReadExt}, select, sync::mpsc, time};
 use tracing::trace;
 
@@ -154,9 +154,9 @@ impl Tasks {
 		false
 	}
 
-	pub fn file_cut(&self, src: &HashSet<PathBuf>, dest: PathBuf, force: bool) -> bool {
+	pub fn file_cut(&self, src: &HashSet<Url>, dest: Url, force: bool) -> bool {
 		for p in src {
-			let to = dest.join(p.file_name().unwrap());
+			let to = dest.__join(p.file_name().unwrap());
 			if force && *p == to {
 				trace!("file_cut: same file, skipping {:?}", to);
 			} else {
@@ -166,15 +166,9 @@ impl Tasks {
 		false
 	}
 
-	pub fn file_copy(
-		&self,
-		src: &HashSet<PathBuf>,
-		dest: PathBuf,
-		force: bool,
-		follow: bool,
-	) -> bool {
+	pub fn file_copy(&self, src: &HashSet<Url>, dest: Url, force: bool, follow: bool) -> bool {
 		for p in src {
-			let to = dest.join(p.file_name().unwrap());
+			let to = dest.__join(p.file_name().unwrap());
 			if force && *p == to {
 				trace!("file_copy: same file, skipping {:?}", to);
 			} else {
@@ -184,7 +178,7 @@ impl Tasks {
 		false
 	}
 
-	pub fn file_remove(&self, targets: Vec<PathBuf>, permanently: bool) -> bool {
+	pub fn file_remove(&self, targets: Vec<Url>, permanently: bool) -> bool {
 		let scheduler = self.scheduler.clone();
 		tokio::spawn(async move {
 			let s = if targets.len() > 1 { 's' } else { ' ' };
@@ -217,7 +211,7 @@ impl Tasks {
 		}
 
 		let targets: Vec<_> =
-			targets.iter().filter(|f| f.is_dir() && f.length().is_none()).map(|f| f.path()).collect();
+			targets.iter().filter(|f| f.is_dir() && f.length().is_none()).map(|f| f.url()).collect();
 
 		if !targets.is_empty() {
 			self.scheduler.precache_size(targets);
@@ -227,11 +221,11 @@ impl Tasks {
 	}
 
 	#[inline]
-	pub fn precache_mime(&self, targets: &[File], mimetype: &HashMap<PathBuf, String>) -> bool {
+	pub fn precache_mime(&self, targets: &[File], mimetype: &HashMap<Url, String>) -> bool {
 		let targets: Vec<_> = targets
 			.iter()
-			.filter(|f| f.is_file() && !mimetype.contains_key(f.path()))
-			.map(|f| f.path_owned())
+			.filter(|f| f.is_file() && !mimetype.contains_key(f.url()))
+			.map(|f| f.url_owned())
 			.collect();
 
 		if !targets.is_empty() {
@@ -240,7 +234,7 @@ impl Tasks {
 		false
 	}
 
-	pub fn precache_image(&self, mimetype: &BTreeMap<PathBuf, String>) -> bool {
+	pub fn precache_image(&self, mimetype: &BTreeMap<Url, String>) -> bool {
 		let targets = mimetype
 			.iter()
 			.filter(|(_, m)| MimeKind::new(m) == MimeKind::Image)
@@ -253,7 +247,7 @@ impl Tasks {
 		false
 	}
 
-	pub fn precache_video(&self, mimetype: &BTreeMap<PathBuf, String>) -> bool {
+	pub fn precache_video(&self, mimetype: &BTreeMap<Url, String>) -> bool {
 		let targets = mimetype
 			.iter()
 			.filter(|(_, m)| MimeKind::new(m) == MimeKind::Video)
@@ -266,7 +260,7 @@ impl Tasks {
 		false
 	}
 
-	pub fn precache_pdf(&self, mimetype: &BTreeMap<PathBuf, String>) -> bool {
+	pub fn precache_pdf(&self, mimetype: &BTreeMap<Url, String>) -> bool {
 		let targets = mimetype
 			.iter()
 			.filter(|(_, m)| MimeKind::new(m) == MimeKind::PDF)

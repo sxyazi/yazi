@@ -1,25 +1,27 @@
-use std::{collections::BTreeMap, path::{Path, PathBuf}};
+use std::collections::BTreeMap;
+
+use shared::Url;
 
 use super::File;
 
 #[derive(Debug)]
 pub enum FilesOp {
-	Read(PathBuf, Vec<File>),
-	Size(PathBuf, BTreeMap<PathBuf, u64>),
-	IOErr(PathBuf),
+	Read(Url, Vec<File>),
+	Size(Url, BTreeMap<Url, u64>),
+	IOErr(Url),
 }
 
 impl FilesOp {
 	#[inline]
-	pub fn path(&self) -> PathBuf {
+	pub fn url(&self) -> Url {
 		match self {
-			Self::Read(path, _) => path,
-			Self::Size(path, _) => path,
-			Self::IOErr(path) => path,
+			Self::Read(url, _) => url,
+			Self::Size(url, _) => url,
+			Self::IOErr(url) => url,
 		}
 		.clone()
 	}
 
 	#[inline]
-	pub fn clear(path: &Path) -> Self { Self::Read(path.to_path_buf(), Vec::new()) }
+	pub fn clear(url: &Url) -> Self { Self::Read(url.clone(), Vec::new()) }
 }

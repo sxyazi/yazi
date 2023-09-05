@@ -1,9 +1,9 @@
-use std::{collections::BTreeMap, ffi::OsString, path::PathBuf};
+use std::{collections::BTreeMap, ffi::OsString};
 
 use anyhow::Result;
 use config::{keymap::{Control, KeymapLayer}, open::Opener};
 use crossterm::event::KeyEvent;
-use shared::RoCell;
+use shared::{RoCell, Url};
 use tokio::sync::{mpsc::UnboundedSender, oneshot};
 
 use super::{files::{File, FilesOp}, input::InputOpt, select::SelectOpt};
@@ -21,13 +21,13 @@ pub enum Event {
 	Ctrl(Control, KeymapLayer),
 
 	// Manager
-	Cd(PathBuf),
+	Cd(Url),
 	Refresh,
 	Files(FilesOp),
 	Pages(usize),
-	Mimetype(BTreeMap<PathBuf, String>),
+	Mimetype(BTreeMap<Url, String>),
 	Hover(Option<File>),
-	Peek(usize, Option<PathBuf>),
+	Peek(usize, Option<Url>),
 	Preview(PreviewLock),
 
 	// Input
@@ -92,8 +92,8 @@ macro_rules! emit {
 	(Peek) => {
 		$crate::Event::Peek(0, None).emit();
 	};
-	(Peek($skip:expr, $path:expr)) => {
-		$crate::Event::Peek($skip, Some($path)).emit();
+	(Peek($skip:expr, $url:expr)) => {
+		$crate::Event::Peek($skip, Some($url)).emit();
 	};
 	(Preview($lock:expr)) => {
 		$crate::Event::Preview($lock).emit();

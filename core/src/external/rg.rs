@@ -1,17 +1,17 @@
-use std::{path::PathBuf, process::Stdio, time::Duration};
+use std::{process::Stdio, time::Duration};
 
 use anyhow::Result;
-use shared::StreamBuf;
+use shared::{StreamBuf, Url};
 use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command, sync::mpsc};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 
 pub struct RgOpt {
-	pub cwd:     PathBuf,
+	pub cwd:     Url,
 	pub hidden:  bool,
 	pub subject: String,
 }
 
-pub fn rg(opt: RgOpt) -> Result<StreamBuf<UnboundedReceiverStream<PathBuf>>> {
+pub fn rg(opt: RgOpt) -> Result<StreamBuf<UnboundedReceiverStream<Url>>> {
 	let mut child = Command::new("rg")
 		.current_dir(&opt.cwd)
 		.args(["--color=never", "--files-with-matches", "--smart-case"])
@@ -30,7 +30,7 @@ pub fn rg(opt: RgOpt) -> Result<StreamBuf<UnboundedReceiverStream<PathBuf>>> {
 
 	tokio::spawn(async move {
 		while let Ok(Some(line)) = it.next_line().await {
-			tx.send(opt.cwd.join(line)).ok();
+			tx.send(opt.cwd.__join(line)).ok();
 		}
 		child.wait().await.ok();
 	});

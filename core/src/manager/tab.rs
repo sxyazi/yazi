@@ -1,9 +1,9 @@
-use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}, ffi::{OsStr, OsString}, mem, path::{Path, PathBuf}};
+use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}, ffi::{OsStr, OsString}, mem};
 
 use anyhow::{Error, Result};
 use config::open::Opener;
 use futures::StreamExt;
-use shared::Defer;
+use shared::{Defer, Url};
 use tokio::task::JoinHandle;
 
 use super::{Folder, Mode, Preview, PreviewLock};
@@ -14,19 +14,19 @@ pub struct Tab {
 	pub(super) current: Folder,
 	pub(super) parent:  Option<Folder>,
 
-	pub(super) history: BTreeMap<PathBuf, Folder>,
+	pub(super) history: BTreeMap<Url, Folder>,
 	pub(super) preview: Preview,
 
 	search:                 Option<JoinHandle<Result<()>>>,
 	pub(super) show_hidden: bool,
 }
 
-impl Tab {
-	pub fn new(path: &Path) -> Self {
+impl From<Url> for Tab {
+	fn from(url: Url) -> Self {
 		Self {
 			mode:    Default::default(),
-			current: Folder::new(path),
-			parent:  path.parent().map(Folder::new),
+			current: Folder::from(&url),
+			parent:  url.parent_url().map(Folder::from),
 
 			history: Default::default(),
 			preview: Default::default(),
@@ -35,7 +35,13 @@ impl Tab {
 			show_hidden: true,
 		}
 	}
+}
 
+impl From<&Url> for Tab {
+	fn from(url: &Url) -> Self { Self::from(url.clone()) }
+}
+
+impl Tab {
 	pub fn escape(&mut self) -> bool {
 		if let Some((_, indices)) = self.mode.visual() {
 			self.current.files.select_index(indices, Some(self.mode.is_select()));
@@ -74,15 +80,15 @@ impl Tab {
 		true
 	}
 
-	pub async fn cd(&mut self, mut target: PathBuf) -> bool {
-		let Ok(file) = File::from(&target).await else {
+	pub async fn cd(&mut self, mut target: Url) -> bool {
+		let Ok(file) = File::from(target.clone()).await else {
 			return false;
 		};
 
 		let mut hovered = None;
 		if !file.is_dir() {
 			hovered = Some(file);
-			target = target.parent().unwrap().to_path_buf();
+			target = target.parent().unwrap().into();
 		}
 
 		if self.current.cwd == target {
@@ -98,12 +104,12 @@ impl Tab {
 
 		let rep = self.history_new(&target);
 		let rep = mem::replace(&mut self.current, rep);
-		if !rep.in_search {
+		if !rep.cwd.is_search() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 
-		if let Some(parent) = target.parent() {
-			self.parent = Some(self.history_new(parent));
+		if let Some(parent) = target.parent_url() {
+			self.parent = Some(self.history_new(&parent));
 		}
 
 		if let Some(h) = hovered {
@@ -113,13 +119,13 @@ impl Tab {
 		true
 	}
 
-	pub fn cd_interactive(&mut self, target: PathBuf) -> bool {
+	pub fn cd_interactive(&mut self, target: Url) -> bool {
 		tokio::spawn(async move {
 			let result =
 				emit!(Input(InputOpt::top("Change directory:").with_value(target.to_string_lossy())));
 
 			if let Ok(target) = result.await {
-				emit!(Cd(PathBuf::from(target)));
+				emit!(Cd(target.into()));
 			}
 		});
 		false
@@ -133,16 +139,16 @@ impl Tab {
 			return false;
 		}
 
-		let rep = self.history_new(hovered.path());
+		let rep = self.history_new(hovered.url());
 		let rep = mem::replace(&mut self.current, rep);
-		if !rep.in_search {
+		if !rep.cwd.is_search() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 
 		if let Some(rep) = self.parent.take() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
-		self.parent = Some(self.history_new(hovered.parent().unwrap()));
+		self.parent = Some(self.history_new(&hovered.parent().unwrap()));
 
 		emit!(Refresh);
 		true
@@ -154,23 +160,23 @@ impl Tab {
 			.hovered
 			.as_ref()
 			.and_then(|h| h.parent())
-			.and_then(|p| if p == self.current.cwd { None } else { Some(p) })
-			.or_else(|| self.current.cwd.parent());
+			.filter(|p| *p != self.current.cwd)
+			.or_else(|| self.current.cwd.parent_url());
 
-		let Some(current) = current.map(Path::to_path_buf) else {
+		let Some(current) = current else {
 			return false;
 		};
 
 		if let Some(rep) = self.parent.take() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
-		if let Some(parent) = current.parent() {
-			self.parent = Some(self.history_new(parent));
+		if let Some(parent) = current.parent_url() {
+			self.parent = Some(self.history_new(&parent));
 		}
 
 		let rep = self.history_new(&current);
 		let rep = mem::replace(&mut self.current, rep);
-		if !rep.in_search {
+		if !rep.cwd.is_search() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 
@@ -186,7 +192,7 @@ impl Tab {
 
 	pub fn select(&mut self, state: Option<bool>) -> bool {
 		if let Some(ref hovered) = self.current.hovered {
-			return self.current.files.select(hovered.path(), state);
+			return self.current.files.select(hovered.url(), state);
 		}
 		false
 	}
@@ -209,8 +215,8 @@ impl Tab {
 		let mut it = self.selected().into_iter().peekable();
 		while let Some(f) = it.next() {
 			s.push(match type_ {
-				"path" => f.path_os_str(),
-				"dirname" => f.parent().map_or(OsStr::new(""), |p| p.as_os_str()),
+				"path" => f.url_os_str(),
+				"dirname" => f.url().parent().map_or(OsStr::new(""), |p| p.as_os_str()),
 				"filename" => f.name().unwrap_or(OsStr::new("")),
 				"name_without_ext" => f.stem().unwrap_or(OsStr::new("")),
 				_ => return false,
@@ -243,7 +249,7 @@ impl Tab {
 
 			emit!(Files(FilesOp::clear(&cwd)));
 			while let Some(chunk) = rx.next().await {
-				emit!(Files(FilesOp::Read(cwd.clone(), Files::read(&chunk).await)));
+				emit!(Files(FilesOp::Read(cwd.clone(), Files::read(chunk).await)));
 			}
 			Ok(())
 		}));
@@ -254,7 +260,7 @@ impl Tab {
 		if let Some(handle) = self.search.take() {
 			handle.abort();
 		}
-		if self.current.in_search {
+		if self.current.cwd.is_search() {
 			self.preview_reset_image();
 
 			let cwd = self.current.cwd.clone();
@@ -288,7 +294,7 @@ impl Tab {
 		let selected: Vec<_> = self
 			.selected()
 			.into_iter()
-			.map(|f| (f.path_os_str().to_owned(), Default::default()))
+			.map(|f| (f.url_os_str().to_owned(), Default::default()))
 			.collect();
 
 		let mut exec = exec.to_owned();
@@ -310,12 +316,12 @@ impl Tab {
 		false
 	}
 
-	pub fn update_peek(&mut self, step: isize, path: Option<PathBuf>) -> bool {
+	pub fn update_peek(&mut self, step: isize, url: Option<Url>) -> bool {
 		let Some(ref hovered) = self.current.hovered else {
 			return false;
 		};
 
-		if path.as_ref().map(|p| p != hovered.path()) == Some(true) {
+		if url.as_ref().map(|p| p != hovered.url()) == Some(true) {
 			return false;
 		}
 
@@ -323,11 +329,11 @@ impl Tab {
 	}
 
 	pub fn update_preview(&mut self, lock: PreviewLock) -> bool {
-		let Some(hovered) = self.current.hovered.as_ref().map(|h| h.path()) else {
+		let Some(hovered) = self.current.hovered.as_ref().map(|h| h.url()) else {
 			return self.preview_reset();
 		};
 
-		if lock.path != *hovered {
+		if lock.url != *hovered {
 			return false;
 		}
 
@@ -372,11 +378,11 @@ impl Tab {
 
 	// --- History
 	#[inline]
-	pub fn history(&self, path: &Path) -> Option<&Folder> { self.history.get(path) }
+	pub fn history(&self, url: &Url) -> Option<&Folder> { self.history.get(url) }
 
 	#[inline]
-	pub fn history_new(&mut self, path: &Path) -> Folder {
-		self.history.remove(path).unwrap_or_else(|| Folder::new(path))
+	pub fn history_new(&mut self, url: &Url) -> Folder {
+		self.history.remove(url).unwrap_or_else(|| Folder::from(url))
 	}
 
 	// --- Preview
@@ -423,7 +429,7 @@ impl Tab {
 
 		applied |= match self.current.hovered {
 			Some(ref h) if h.is_dir() => {
-				self.history.get_mut(h.path()).map(|f| f.files.set_show_hidden(state)) == Some(true)
+				self.history.get_mut(h.url()).map(|f| f.files.set_show_hidden(state)) == Some(true)
 			}
 			_ => false,
 		};

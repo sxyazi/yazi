@@ -3,7 +3,7 @@ use std::{collections::VecDeque, fs::Metadata, path::{Path, PathBuf}};
 use anyhow::Result;
 use config::TASKS;
 use futures::{future::BoxFuture, FutureExt};
-use shared::{calculate_size, copy_with_progress};
+use shared::{calculate_size, copy_with_progress, Url};
 use tokio::{fs, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::trace;
 
@@ -27,8 +27,8 @@ pub(crate) enum FileOp {
 #[derive(Clone, Debug)]
 pub(crate) struct FileOpPaste {
 	pub id:     usize,
-	pub from:   PathBuf,
-	pub to:     PathBuf,
+	pub from:   Url,
+	pub to:     Url,
 	pub cut:    bool,
 	pub follow: bool,
 	pub retry:  u8,
@@ -37,8 +37,8 @@ pub(crate) struct FileOpPaste {
 #[derive(Clone, Debug)]
 pub(crate) struct FileOpLink {
 	pub id:     usize,
-	pub from:   PathBuf,
-	pub to:     PathBuf,
+	pub from:   Url,
+	pub to:     Url,
 	pub cut:    bool,
 	pub length: u64,
 }
@@ -46,14 +46,14 @@ pub(crate) struct FileOpLink {
 #[derive(Clone, Debug)]
 pub(crate) struct FileOpDelete {
 	pub id:     usize,
-	pub target: PathBuf,
+	pub target: Url,
 	pub length: u64,
 }
 
 #[derive(Clone, Debug)]
 pub(crate) struct FileOpTrash {
 	pub id:     usize,
-	pub target: PathBuf,
+	pub target: Url,
 	pub length: u64,
 }
 
@@ -202,7 +202,7 @@ impl File {
 		let mut dirs = VecDeque::from([task.from]);
 
 		while let Some(src) = dirs.pop_front() {
-			let dest = root.join(src.components().skip(skip).collect::<PathBuf>());
+			let dest = root.__join(src.components().skip(skip).collect::<PathBuf>());
 			match fs::create_dir(&dest).await {
 				Err(e) if e.kind() != AlreadyExists => {
 					self.log(task.id, format!("Create dir failed: {:?}, {e}", dest))?;
@@ -220,7 +220,7 @@ impl File {
 			};
 
 			while let Ok(Some(entry)) = it.next_entry().await {
-				let src = entry.path();
+				let src = Url::from(entry.path());
 				let Ok(meta) = Self::metadata(&src, task.follow).await else {
 					continue;
 				};
@@ -230,7 +230,7 @@ impl File {
 					continue;
 				}
 
-				task.to = dest.join(src.file_name().unwrap());
+				task.to = dest.__join(src.file_name().unwrap());
 				task.from = src;
 				self.sch.send(TaskOp::New(task.id, meta.len()))?;
 
@@ -268,11 +268,11 @@ impl File {
 				};
 
 				if meta.is_dir() {
-					dirs.push_front(entry.path());
+					dirs.push_front(entry.path().into());
 					continue;
 				}
 
-				task.target = entry.path();
+				task.target = entry.path().into();
 				task.length = meta.len();
 				self.sch.send(TaskOp::New(task.id, meta.len()))?;
 				self.tx.send(FileOp::Delete(task.clone())).await?;

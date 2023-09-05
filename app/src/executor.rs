@@ -1,5 +1,4 @@
 use core::{emit, files::FilesSorter, input::InputMode};
-use std::path::PathBuf;
 
 use config::{keymap::{Control, Exec, Key, KeymapLayer}, manager::SortBy, KEYMAP};
 use shared::optional_bool;
@@ -74,7 +73,7 @@ impl Executor {
 			"back" => cx.manager.active_mut().back(),
 			"forward" => cx.manager.active_mut().forward(),
 			"cd" => {
-				let path = exec.args.get(0).map(PathBuf::from).unwrap_or_default();
+				let path = exec.args.get(0).map(Into::into).unwrap_or_default();
 				if exec.named.contains_key("interactive") {
 					cx.manager.active_mut().cd_interactive(path)
 				} else {
@@ -109,7 +108,7 @@ impl Executor {
 				}
 			}
 			"remove" => {
-				let targets = cx.manager.selected().into_iter().map(|f| f.path_owned()).collect();
+				let targets = cx.manager.selected().into_iter().map(|f| f.url_owned()).collect();
 				cx.tasks.file_remove(targets, exec.named.contains_key("permanently"))
 			}
 			"create" => cx.manager.create(),

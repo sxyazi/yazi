@@ -1,10 +1,9 @@
-use std::{path::{Path, PathBuf}, sync::atomic::Ordering};
+use std::sync::atomic::Ordering;
 
 use adaptor::Adaptor;
 use config::MANAGER;
-use shared::{MimeKind, PeekError, MIME_DIR};
+use shared::{MimeKind, PeekError, Url, MIME_DIR};
 use tokio::task::JoinHandle;
-
 
 use super::{Provider, INCR};
 use crate::{emit, files::{Files, FilesOp}};
@@ -18,7 +17,7 @@ pub struct Preview {
 }
 
 pub struct PreviewLock {
-	pub path: PathBuf,
+	pub url:  Url,
 	pub mime: String,
 	pub skip: usize,
 	pub data: PreviewData,
@@ -32,48 +31,48 @@ pub enum PreviewData {
 }
 
 impl Preview {
-	pub fn go(&mut self, path: &Path, mime: &str, show_image: bool) {
+	pub fn go(&mut self, url: &Url, mime: &str, show_image: bool) {
 		let kind = MimeKind::new(mime);
 		if !show_image && kind.show_as_image() {
 			return;
-		} else if self.same(path, mime) {
+		} else if self.same(url, mime) {
 			return;
 		}
 
 		self.reset(|_| true);
-		if !self.same_mime(path, mime) {
+		if !self.same_mime(url, mime) {
 			self.skip = 0;
 		}
 
-		let (path, mime, skip) = (path.to_path_buf(), mime.to_owned(), self.skip);
+		let (url, mime, skip) = (url.clone(), mime.to_owned(), self.skip);
 		self.handle = Some(tokio::spawn(async move {
-			match Provider::auto(kind, &path, skip).await {
+			match Provider::auto(kind, &url, skip).await {
 				Ok(data) => {
-					emit!(Preview(PreviewLock { path, mime, skip, data }));
+					emit!(Preview(PreviewLock { url, mime, skip, data }));
 				}
 				Err(PeekError::Exceed(max)) => {
-					emit!(Peek(max, path));
+					emit!(Peek(max, url));
 				}
 				_ => {}
 			}
 		}));
 	}
 
-	pub fn folder(&mut self, path: &Path, files: Option<usize>, sequent: bool) {
+	pub fn folder(&mut self, url: &Url, files: Option<usize>, sequent: bool) {
 		if let Some(files) = files {
 			self.skip = self.skip.min(files.saturating_sub(MANAGER.layout.preview_height()));
 		}
 
-		if self.same(path, MIME_DIR) {
+		if self.same(url, MIME_DIR) {
 			return;
-		} else if !self.same_mime(path, MIME_DIR) {
+		} else if !self.same_mime(url, MIME_DIR) {
 			self.skip = 0;
 		}
 
 		self.reset(|_| true);
 		if files.is_some() || sequent {
 			emit!(Preview(PreviewLock {
-				path: path.to_path_buf(),
+				url:  url.clone(),
 				mime: MIME_DIR.to_owned(),
 				skip: self.skip,
 				data: PreviewData::Folder,
@@ -84,15 +83,15 @@ impl Preview {
 			return;
 		}
 
-		let (path, skip) = (path.to_path_buf(), self.skip);
+		let (url, skip) = (url.clone(), self.skip);
 		self.handle = Some(tokio::spawn(async move {
-			emit!(Files(match Files::read_dir(&path).await {
-				Ok(items) => FilesOp::Read(path.clone(), items),
-				Err(_) => FilesOp::IOErr(path.clone()),
+			emit!(Files(match Files::read_dir(&url).await {
+				Ok(items) => FilesOp::Read(url.clone(), items),
+				Err(_) => FilesOp::IOErr(url.clone()),
 			}));
 
 			emit!(Preview(PreviewLock {
-				path,
+				url,
 				mime: MIME_DIR.to_owned(),
 				skip,
 				data: PreviewData::Folder,
@@ -100,25 +99,25 @@ impl Preview {
 		}));
 	}
 
-	pub fn sequent(&mut self, path: &Path, mime: &str, show_image: bool) {
+	pub fn sequent(&mut self, url: &Url, mime: &str, show_image: bool) {
 		let kind = MimeKind::new(mime);
 		if !show_image && kind.show_as_image() {
 			return;
-		} else if self.same(path, mime) {
+		} else if self.same(url, mime) {
 			return;
 		}
 
 		self.handle.take().map(|h| h.abort());
 		INCR.fetch_add(1, Ordering::Relaxed);
 
-		let (path, mime, skip) = (path.to_path_buf(), mime.to_owned(), self.skip);
+		let (url, mime, skip) = (url.clone(), mime.to_owned(), self.skip);
 		self.handle = Some(tokio::spawn(async move {
-			match Provider::auto(kind, &path, skip).await {
+			match Provider::auto(kind, &url, skip).await {
 				Ok(data) => {
-					emit!(Preview(PreviewLock { path, mime, skip, data }));
+					emit!(Preview(PreviewLock { url, mime, skip, data }));
 				}
 				Err(PeekError::Exceed(max)) => {
-					emit!(Peek(max, path));
+					emit!(Peek(max, url));
 				}
 				_ => {}
 			}
@@ -163,25 +162,25 @@ impl Preview {
 	pub fn skip(&self) -> usize { self.skip }
 
 	#[inline]
-	pub fn same(&self, path: &Path, mime: &str) -> bool {
+	pub fn same(&self, url: &Url, mime: &str) -> bool {
 		if let Some(ref lock) = self.lock {
-			return lock.path == path && lock.mime == mime && lock.skip == self.skip;
+			return lock.url == *url && lock.mime == mime && lock.skip == self.skip;
 		}
 		false
 	}
 
 	#[inline]
-	pub fn same_mime(&self, path: &Path, mime: &str) -> bool {
+	pub fn same_mime(&self, url: &Url, mime: &str) -> bool {
 		if let Some(ref lock) = self.lock {
-			return lock.path == path && lock.mime == mime;
+			return lock.url == *url && lock.mime == mime;
 		}
 		false
 	}
 
 	#[inline]
-	pub fn same_path(&self, path: &Path) -> bool {
+	pub fn same_path(&self, url: &Url) -> bool {
 		if let Some(ref lock) = self.lock {
-			return lock.path == path;
+			return lock.url == *url;
 		}
 		false
 	}
