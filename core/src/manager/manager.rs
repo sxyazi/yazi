@@ -351,7 +351,7 @@ impl Manager {
 
 	pub fn update_ioerr(&mut self, op: FilesOp) -> bool {
 		let url = op.url();
-		let op = FilesOp::clear(&url);
+		let op = FilesOp::Full(url.clone(), Vec::new());
 
 		if url == *self.cwd() {
 			self.current_mut().update(op);

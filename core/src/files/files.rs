@@ -1,15 +1,16 @@
-use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref, time::Duration};
+use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref, sync::atomic::Ordering};
 
 use anyhow::Result;
 use config::manager::SortBy;
 use shared::Url;
-use tokio::{fs, select, sync::mpsc::{self, UnboundedReceiver}, time::sleep};
+use tokio::{fs, select, sync::mpsc::{self, UnboundedReceiver}};
 
-use super::{File, FilesSorter};
+use super::{File, FilesSorter, FILES_VERSION};
 
 pub struct Files {
-	items:  Vec<File>,
-	hidden: Vec<File>,
+	items:   Vec<File>,
+	hidden:  Vec<File>,
+	version: u64,
 
 	sizes:    BTreeMap<Url, u64>,
 	selected: BTreeSet<Url>,
@@ -21,8 +22,9 @@ pub struct Files {
 impl Default for Files {
 	fn default() -> Self {
 		Self {
-			items:  Default::default(),
-			hidden: Default::default(),
+			items:   Default::default(),
+			hidden:  Default::default(),
+			version: Default::default(),
 
 			sizes:    Default::default(),
 			selected: Default::default(),
@@ -108,8 +110,22 @@ impl Files {
 		applied
 	}
 
-	pub fn update_read(&mut self, items: Vec<File>) -> bool {
+	pub fn update_full(&mut self, mut items: Vec<File>) -> bool {
+		if !self.show_hidden {
+			(self.hidden, items) = items.into_iter().partition(|f| f.is_hidden);
+		}
+		self.sorter.sort(&mut items);
+		self.items = items;
+		self.version = FILES_VERSION.fetch_add(1, Ordering::Relaxed);
+		true
+	}
+
+	pub fn update_part(&mut self, version: u64, items: Vec<File>) -> bool {
 		if !items.is_empty() {
+			if version != self.version {
+				return false;
+			}
+
 			if self.show_hidden {
 				self.items.extend(items);
 			} else {
@@ -122,6 +138,7 @@ impl Files {
 			return true;
 		}
 
+		self.version = version;
 		if !self.items.is_empty() {
 			self.items.clear();
 			self.hidden.clear();

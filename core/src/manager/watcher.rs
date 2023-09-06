@@ -174,9 +174,6 @@ impl Watcher {
 			return;
 		};
 
-		let rx = UnboundedReceiverStream::new(rx).chunks_timeout(10000, Duration::from_millis(500));
-		pin!(rx);
-
 		let linked_files = |files: &[File], ori: &Url| -> Vec<File> {
 			let mut new = Vec::with_capacity(files.len());
 			for file in files {
@@ -187,20 +184,11 @@ impl Watcher {
 			new
 		};
 
-		let mut first = true;
-		while let Some(chunk) = rx.next().await {
-			if first {
-				emit!(Files(FilesOp::clear(url)));
-				for ori in &linked {
-					emit!(Files(FilesOp::clear(ori)));
-				}
-				first = false;
-			}
-
-			for ori in &linked {
-				emit!(Files(FilesOp::Read(ori.clone(), linked_files(&chunk, ori))));
-			}
-			emit!(Files(FilesOp::Read(url.clone(), chunk)));
+		let files: Vec<_> = UnboundedReceiverStream::new(rx).collect().await;
+		for ori in linked {
+			let files = linked_files(&files, &ori);
+			emit!(Files(FilesOp::Full(ori, files)));
 		}
+		emit!(Files(FilesOp::Full(url.clone(), files)));
 	}
 }

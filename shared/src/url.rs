@@ -86,6 +86,13 @@ impl Url {
 	pub fn is_none(&self) -> bool { self.scheme == UrlScheme::None }
 
 	#[inline]
+	pub fn to_none(&self) -> Self {
+		let mut url = self.clone();
+		url.scheme = UrlScheme::None;
+		url
+	}
+
+	#[inline]
 	pub fn is_search(&self) -> bool { self.scheme == UrlScheme::Search }
 
 	#[inline]

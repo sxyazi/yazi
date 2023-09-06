@@ -89,17 +89,17 @@ impl Preview {
 				return;
 			};
 
+			if files.is_some() {
+				emit!(Files(FilesOp::Full(url, UnboundedReceiverStream::new(rx).collect().await)));
+				return;
+			}
+
 			let rx = UnboundedReceiverStream::new(rx).chunks_timeout(10000, Duration::from_millis(500));
 			pin!(rx);
 
-			let mut first = false;
+			let version = FilesOp::prepare(&url);
 			while let Some(chunk) = rx.next().await {
-				if first {
-					emit!(Files(FilesOp::clear(&url)));
-					first = false;
-				}
-
-				emit!(Files(FilesOp::Read(url.clone(), chunk)));
+				emit!(Files(FilesOp::Part(url.clone(), version, chunk)));
 			}
 		}));
 	}

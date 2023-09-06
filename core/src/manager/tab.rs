@@ -252,9 +252,9 @@ impl Tab {
 			let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(300));
 			pin!(rx);
 
-			emit!(Files(FilesOp::clear(&cwd)));
+			let version = FilesOp::prepare(&cwd);
 			while let Some(chunk) = rx.next().await {
-				emit!(Files(FilesOp::Read(cwd.clone(), chunk)));
+				emit!(Files(FilesOp::Part(cwd.clone(), version, chunk)));
 			}
 			Ok(())
 		}));
@@ -268,8 +268,7 @@ impl Tab {
 		if self.current.cwd.is_search() {
 			self.preview_reset_image();
 
-			let cwd = self.current.cwd.clone();
-			let rep = self.history_new(&cwd);
+			let rep = self.history_new(&self.current.cwd.to_none());
 			drop(mem::replace(&mut self.current, rep));
 			emit!(Refresh);
 		}
