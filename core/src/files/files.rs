@@ -1,9 +1,9 @@
-use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref};
+use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref, time::Duration};
 
 use anyhow::Result;
 use config::manager::SortBy;
 use shared::Url;
-use tokio::fs;
+use tokio::{fs, select, sync::mpsc::{self, UnboundedReceiver}, time::sleep};
 
 use super::{File, FilesSorter};
 
@@ -40,25 +40,22 @@ impl Deref for Files {
 }
 
 impl Files {
-	pub async fn read(urls: Vec<Url>) -> Vec<File> {
-		let mut items = Vec::with_capacity(urls.len());
-		for url in urls {
-			if let Ok(file) = File::from(url).await {
-				items.push(file);
-			}
-		}
-		items
-	}
-
-	pub async fn read_dir(url: &Url) -> Result<Vec<File>> {
+	pub async fn from_dir(url: &Url) -> Result<UnboundedReceiver<File>> {
 		let mut it = fs::read_dir(url).await?;
-		let mut items = Vec::new();
-		while let Ok(Some(item)) = it.next_entry().await {
-			if let Ok(meta) = item.metadata().await {
-				items.push(File::from_meta(Url::new(item.path(), url), meta).await);
+		let (tx, rx) = mpsc::unbounded_channel();
+
+		let url = url.clone();
+		tokio::spawn(async move {
+			while let Ok(Some(item)) = it.next_entry().await {
+				select! {
+					_ = tx.closed() => break,
+					Ok(meta) = item.metadata() => {
+						tx.send(File::from_meta(Url::new(item.path(), &url), meta).await).ok();
+					}
+				}
 			}
-		}
-		Ok(items)
+		});
+		Ok(rx)
 	}
 }
 
@@ -111,25 +108,7 @@ impl Files {
 		applied
 	}
 
-	pub fn update_read(&mut self, mut items: Vec<File>) -> bool {
-		if !self.show_hidden {
-			(self.hidden, items) = items.into_iter().partition(|f| f.is_hidden);
-		}
-		self.sorter.sort(&mut items);
-		self.items = items;
-		true
-	}
-
-	pub fn update_size(&mut self, items: BTreeMap<Url, u64>) -> bool {
-		self.sizes.extend(items);
-		if self.sorter.by == SortBy::Size {
-			self.sorter.sort(&mut self.items);
-		}
-		true
-	}
-
-	// TODO: remove this
-	pub fn update_search(&mut self, items: Vec<File>) -> bool {
+	pub fn update_read(&mut self, items: Vec<File>) -> bool {
 		if !items.is_empty() {
 			if self.show_hidden {
 				self.items.extend(items);
@@ -148,8 +127,15 @@ impl Files {
 			self.hidden.clear();
 			return true;
 		}
-
 		false
+	}
+
+	pub fn update_size(&mut self, items: BTreeMap<Url, u64>) -> bool {
+		self.sizes.extend(items);
+		if self.sorter.by == SortBy::Size {
+			self.sorter.sort(&mut self.items);
+		}
+		true
 	}
 }
 

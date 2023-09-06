@@ -1,9 +1,10 @@
-use std::{process::Stdio, time::Duration};
+use std::process::Stdio;
 
 use anyhow::Result;
-use shared::{StreamBuf, Url};
-use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command, sync::mpsc};
-use tokio_stream::wrappers::UnboundedReceiverStream;
+use shared::Url;
+use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command, sync::mpsc::{self, UnboundedReceiver}};
+
+use crate::files::File;
 
 pub struct RgOpt {
 	pub cwd:     Url,
@@ -11,7 +12,7 @@ pub struct RgOpt {
 	pub subject: String,
 }
 
-pub fn rg(opt: RgOpt) -> Result<StreamBuf<UnboundedReceiverStream<Url>>> {
+pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {
 	let mut child = Command::new("rg")
 		.current_dir(&opt.cwd)
 		.args(["--color=never", "--files-with-matches", "--smart-case"])
@@ -26,11 +27,12 @@ pub fn rg(opt: RgOpt) -> Result<StreamBuf<UnboundedReceiverStream<Url>>> {
 
 	let mut it = BufReader::new(child.stdout.take().unwrap()).lines();
 	let (tx, rx) = mpsc::unbounded_channel();
-	let rx = StreamBuf::new(UnboundedReceiverStream::new(rx), Duration::from_millis(300));
 
 	tokio::spawn(async move {
 		while let Ok(Some(line)) = it.next_line().await {
-			tx.send(opt.cwd.join(line)).ok();
+			if let Ok(file) = File::from(opt.cwd.join(line)).await {
+				tx.send(file).ok();
+			}
 		}
 		child.wait().await.ok();
 	});

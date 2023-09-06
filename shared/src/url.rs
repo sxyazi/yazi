@@ -89,6 +89,13 @@ impl Url {
 	pub fn is_search(&self) -> bool { self.scheme == UrlScheme::Search }
 
 	#[inline]
+	pub fn to_search(&self) -> Self {
+		let mut url = self.clone();
+		url.scheme = UrlScheme::Search;
+		url
+	}
+
+	#[inline]
 	pub fn is_archive(&self) -> bool { self.scheme == UrlScheme::Archive }
 
 	// --- Path

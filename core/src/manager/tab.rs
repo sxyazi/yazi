@@ -1,13 +1,13 @@
-use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}, ffi::{OsStr, OsString}, mem};
+use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}, ffi::{OsStr, OsString}, mem, time::Duration};
 
 use anyhow::{Error, Result};
 use config::open::Opener;
-use futures::StreamExt;
 use shared::{Defer, Url};
-use tokio::task::JoinHandle;
+use tokio::{pin, task::JoinHandle};
+use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 
 use super::{Folder, Mode, Preview, PreviewLock};
-use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, files::{File, Files, FilesOp, FilesSorter}, input::InputOpt, Event, BLOCKER};
+use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, files::{File, FilesOp, FilesSorter}, input::InputOpt, Event, BLOCKER};
 
 pub struct Tab {
 	pub(super) mode:    Mode,
@@ -237,21 +237,24 @@ impl Tab {
 			handle.abort();
 		}
 
-		let cwd = self.current.cwd.clone();
+		let cwd = self.current.cwd.to_search();
 		let hidden = self.show_hidden;
 
 		self.search = Some(tokio::spawn(async move {
 			let subject = emit!(Input(InputOpt::top("Search:"))).await?;
 
-			let mut rx = if grep {
+			let rx = if grep {
 				external::rg(external::RgOpt { cwd: cwd.clone(), hidden, subject })
 			} else {
 				external::fd(external::FdOpt { cwd: cwd.clone(), hidden, glob: false, subject })
 			}?;
 
+			let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(300));
+			pin!(rx);
+
 			emit!(Files(FilesOp::clear(&cwd)));
 			while let Some(chunk) = rx.next().await {
-				emit!(Files(FilesOp::Read(cwd.clone(), Files::read(chunk).await)));
+				emit!(Files(FilesOp::Read(cwd.clone(), chunk)));
 			}
 			Ok(())
 		}));

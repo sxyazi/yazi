@@ -330,7 +330,7 @@ impl Manager {
 		let cwd = self.cwd().to_owned();
 		let hovered = self.hovered().map(|h| h.url_owned());
 
-		let mut b = if cwd == url && !cwd.is_search() {
+		let mut b = if cwd == url {
 			self.current_mut().update(op)
 		} else if matches!(self.parent(), Some(p) if p.cwd == url) {
 			self.active_mut().parent.as_mut().unwrap().update(op)
