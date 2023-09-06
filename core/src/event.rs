@@ -71,8 +71,8 @@ macro_rules! emit {
 		$crate::Event::Ctrl($exec, $layer).emit();
 	};
 
-	(Cd($op:expr)) => {
-		$crate::Event::Cd($op).emit();
+	(Cd($url:expr)) => {
+		$crate::Event::Cd($url).emit();
 	};
 	(Files($op:expr)) => {
 		$crate::Event::Files($op).emit();

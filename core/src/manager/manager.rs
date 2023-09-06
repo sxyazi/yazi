@@ -189,7 +189,7 @@ impl Manager {
 					fs::File::create(path).await?;
 				}
 
-				if let Ok(file) = File::from(Url::new(hovered, &cwd)).await {
+				if let Ok(file) = File::from(Url::from(hovered)).await {
 					emit!(Hover(file));
 					emit!(Refresh);
 				}
@@ -326,18 +326,18 @@ impl Manager {
 	}
 
 	pub fn update_read(&mut self, op: FilesOp) -> bool {
-		let url = op.url();
+		let url = op.url().clone();
 		let cwd = self.cwd().to_owned();
 		let hovered = self.hovered().map(|h| h.url_owned());
 
-		let mut b = if cwd == url && !cwd.is_search() {
+		let mut b = if cwd == url {
 			self.current_mut().update(op)
 		} else if matches!(self.parent(), Some(p) if p.cwd == url) {
 			self.active_mut().parent.as_mut().unwrap().update(op)
 		} else {
 			self.active_mut().history.entry(url.clone()).or_insert_with(|| Folder::from(&url)).update(op);
 
-			matches!(self.hovered(), Some(h) if *h.url() == url)
+			matches!(self.hovered(), Some(h) if h.url() == &url)
 		};
 
 		b |= self.active_mut().parent.as_mut().map_or(false, |p| p.hover(&cwd));
@@ -351,11 +351,11 @@ impl Manager {
 
 	pub fn update_ioerr(&mut self, op: FilesOp) -> bool {
 		let url = op.url();
-		let op = FilesOp::clear(&url);
+		let op = FilesOp::Full(url.clone(), Vec::new());
 
-		if url == *self.cwd() {
+		if url == self.cwd() {
 			self.current_mut().update(op);
-		} else if matches!(self.parent(), Some(p) if p.cwd == url) {
+		} else if matches!(self.parent(), Some(p) if &p.cwd == url) {
 			self.active_mut().parent.as_mut().unwrap().update(op);
 		} else {
 			return false;

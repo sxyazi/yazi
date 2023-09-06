@@ -1,15 +1,16 @@
-use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref};
+use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref, sync::atomic::Ordering};
 
 use anyhow::Result;
 use config::manager::SortBy;
 use shared::Url;
-use tokio::fs;
+use tokio::{fs, select, sync::mpsc::{self, UnboundedReceiver}};
 
-use super::{File, FilesSorter};
+use super::{File, FilesSorter, FILES_VERSION};
 
 pub struct Files {
-	items:  Vec<File>,
-	hidden: Vec<File>,
+	items:   Vec<File>,
+	hidden:  Vec<File>,
+	version: u64,
 
 	sizes:    BTreeMap<Url, u64>,
 	selected: BTreeSet<Url>,
@@ -21,8 +22,9 @@ pub struct Files {
 impl Default for Files {
 	fn default() -> Self {
 		Self {
-			items:  Default::default(),
-			hidden: Default::default(),
+			items:   Default::default(),
+			hidden:  Default::default(),
+			version: Default::default(),
 
 			sizes:    Default::default(),
 			selected: Default::default(),
@@ -40,25 +42,21 @@ impl Deref for Files {
 }
 
 impl Files {
-	pub async fn read(urls: Vec<Url>) -> Vec<File> {
-		let mut items = Vec::with_capacity(urls.len());
-		for url in urls {
-			if let Ok(file) = File::from(url).await {
-				items.push(file);
-			}
-		}
-		items
-	}
-
-	pub async fn read_dir(url: &Url) -> Result<Vec<File>> {
+	pub async fn from_dir(url: &Url) -> Result<UnboundedReceiver<File>> {
 		let mut it = fs::read_dir(url).await?;
-		let mut items = Vec::new();
-		while let Ok(Some(item)) = it.next_entry().await {
-			if let Ok(meta) = item.metadata().await {
-				items.push(File::from_meta(Url::new(item.path(), url), meta).await);
+		let (tx, rx) = mpsc::unbounded_channel();
+
+		tokio::spawn(async move {
+			while let Ok(Some(item)) = it.next_entry().await {
+				select! {
+					_ = tx.closed() => break,
+					Ok(meta) = item.metadata() => {
+						tx.send(File::from_meta(Url::from(item.path()), meta).await).ok();
+					}
+				}
 			}
-		}
-		Ok(items)
+		});
+		Ok(rx)
 	}
 }
 
@@ -83,10 +81,23 @@ impl Files {
 	pub fn select_all(&mut self, state: Option<bool>) -> bool {
 		match state {
 			Some(true) => {
+				let b = if self.selected.len() < self.items.len() {
+					true
+				} else {
+					self.items.iter().any(|f| !self.selected.contains(&f.url))
+				};
+
 				self.selected = self.iter().map(|f| f.url_owned()).collect();
+				b
 			}
 			Some(false) => {
+				if self.selected.is_empty() {
+					return false;
+				}
+
+				let b = self.items.iter().any(|f| self.selected.contains(&f.url));
 				self.selected.clear();
+				b
 			}
 			None => {
 				for item in &self.items {
@@ -96,9 +107,9 @@ impl Files {
 						self.selected.insert(item.url_owned());
 					}
 				}
+				!self.items.is_empty()
 			}
 		}
-		!self.items.is_empty()
 	}
 
 	pub fn select_index(&mut self, indices: &BTreeSet<usize>, state: Option<bool>) -> bool {
@@ -111,26 +122,22 @@ impl Files {
 		applied
 	}
 
-	pub fn update_read(&mut self, mut items: Vec<File>) -> bool {
+	pub fn update_full(&mut self, mut items: Vec<File>) -> bool {
 		if !self.show_hidden {
 			(self.hidden, items) = items.into_iter().partition(|f| f.is_hidden);
 		}
 		self.sorter.sort(&mut items);
 		self.items = items;
+		self.version = FILES_VERSION.fetch_add(1, Ordering::Relaxed);
 		true
 	}
 
-	pub fn update_size(&mut self, items: BTreeMap<Url, u64>) -> bool {
-		self.sizes.extend(items);
-		if self.sorter.by == SortBy::Size {
-			self.sorter.sort(&mut self.items);
-		}
-		true
-	}
-
-	// TODO: remove this
-	pub fn update_search(&mut self, items: Vec<File>) -> bool {
+	pub fn update_part(&mut self, version: u64, items: Vec<File>) -> bool {
 		if !items.is_empty() {
+			if version != self.version {
+				return false;
+			}
+
 			if self.show_hidden {
 				self.items.extend(items);
 			} else {
@@ -143,13 +150,21 @@ impl Files {
 			return true;
 		}
 
+		self.version = version;
 		if !self.items.is_empty() {
 			self.items.clear();
 			self.hidden.clear();
 			return true;
 		}
-
 		false
+	}
+
+	pub fn update_size(&mut self, items: BTreeMap<Url, u64>) -> bool {
+		self.sizes.extend(items);
+		if self.sorter.by == SortBy::Size {
+			self.sorter.sort(&mut self.items);
+		}
+		true
 	}
 }
 
@@ -166,7 +181,7 @@ impl Files {
 	}
 
 	#[inline]
-	pub fn position(&self, url: &Url) -> Option<usize> { self.iter().position(|f| f.url == *url) }
+	pub fn position(&self, url: &Url) -> Option<usize> { self.iter().position(|f| &f.url == url) }
 
 	#[inline]
 	pub fn duplicate(&self, idx: usize) -> Option<File> { self.items.get(idx).cloned() }

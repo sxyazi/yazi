@@ -128,16 +128,17 @@ impl App {
 				manager.refresh();
 			}
 			Event::Files(op) => {
-				let read = matches!(op, FilesOp::Read(..));
+				let calc = matches!(op, FilesOp::Full(..) | FilesOp::Part(..));
 				let b = match op {
-					FilesOp::Read(..) => manager.update_read(op),
+					FilesOp::Full(..) => manager.update_read(op),
+					FilesOp::Part(..) => manager.update_read(op),
 					FilesOp::Size(..) => manager.update_read(op),
 					FilesOp::IOErr(..) => manager.update_ioerr(op),
 				};
 				if b {
 					emit!(Render);
 				}
-				if read {
+				if calc {
 					tasks.precache_size(&manager.current().files);
 				}
 			}

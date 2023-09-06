@@ -1,13 +1,13 @@
-use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}, ffi::{OsStr, OsString}, mem};
+use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}, ffi::{OsStr, OsString}, mem, time::Duration};
 
 use anyhow::{Error, Result};
 use config::open::Opener;
-use futures::StreamExt;
 use shared::{Defer, Url};
-use tokio::task::JoinHandle;
+use tokio::{pin, task::JoinHandle};
+use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 
 use super::{Folder, Mode, Preview, PreviewLock};
-use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, files::{File, Files, FilesOp, FilesSorter}, input::InputOpt, Event, BLOCKER};
+use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, files::{File, FilesOp, FilesSorter}, input::InputOpt, Event, BLOCKER};
 
 pub struct Tab {
 	pub(super) mode:    Mode,
@@ -106,7 +106,7 @@ impl Tab {
 
 		let rep = self.history_new(&target);
 		let rep = mem::replace(&mut self.current, rep);
-		if !rep.cwd.is_search() {
+		if rep.cwd.is_regular() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 
@@ -127,7 +127,7 @@ impl Tab {
 				emit!(Input(InputOpt::top("Change directory:").with_value(target.to_string_lossy())));
 
 			if let Ok(s) = result.await {
-				emit!(Cd(Url::new(s, &target)));
+				emit!(Cd(Url::from(s)));
 			}
 		});
 		false
@@ -143,7 +143,7 @@ impl Tab {
 
 		let rep = self.history_new(hovered.url());
 		let rep = mem::replace(&mut self.current, rep);
-		if !rep.cwd.is_search() {
+		if rep.cwd.is_regular() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 
@@ -178,7 +178,7 @@ impl Tab {
 
 		let rep = self.history_new(&current);
 		let rep = mem::replace(&mut self.current, rep);
-		if !rep.cwd.is_search() {
+		if rep.cwd.is_regular() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 
@@ -237,21 +237,29 @@ impl Tab {
 			handle.abort();
 		}
 
-		let cwd = self.current.cwd.clone();
+		let cwd = self.current.cwd.to_search();
 		let hidden = self.show_hidden;
 
 		self.search = Some(tokio::spawn(async move {
 			let subject = emit!(Input(InputOpt::top("Search:"))).await?;
 
-			let mut rx = if grep {
+			let rx = if grep {
 				external::rg(external::RgOpt { cwd: cwd.clone(), hidden, subject })
 			} else {
 				external::fd(external::FdOpt { cwd: cwd.clone(), hidden, glob: false, subject })
 			}?;
 
-			emit!(Files(FilesOp::clear(&cwd)));
+			let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(300));
+			pin!(rx);
+
+			let version = FilesOp::prepare(&cwd);
+			let mut first = true;
 			while let Some(chunk) = rx.next().await {
-				emit!(Files(FilesOp::Read(cwd.clone(), Files::read(chunk).await)));
+				if first {
+					emit!(Cd(cwd.clone()));
+					first = false;
+				}
+				emit!(Files(FilesOp::Part(cwd.clone(), version, chunk)));
 			}
 			Ok(())
 		}));
@@ -265,8 +273,7 @@ impl Tab {
 		if self.current.cwd.is_search() {
 			self.preview_reset_image();
 
-			let cwd = self.current.cwd.clone();
-			let rep = self.history_new(&cwd);
+			let rep = self.history_new(&self.current.cwd.to_regular());
 			drop(mem::replace(&mut self.current, rep));
 			emit!(Refresh);
 		}

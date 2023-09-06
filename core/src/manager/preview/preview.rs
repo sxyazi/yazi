@@ -1,9 +1,10 @@
-use std::sync::atomic::Ordering;
+use std::{sync::atomic::Ordering, time::Duration};
 
 use adaptor::Adaptor;
 use config::MANAGER;
 use shared::{MimeKind, PeekError, Url, MIME_DIR};
-use tokio::task::JoinHandle;
+use tokio::{pin, task::JoinHandle};
+use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 
 use super::{Provider, INCR};
 use crate::{emit, files::{Files, FilesOp}};
@@ -70,32 +71,36 @@ impl Preview {
 		}
 
 		self.reset(|_| true);
-		if files.is_some() || sequent {
-			emit!(Preview(PreviewLock {
-				url:  url.clone(),
-				mime: MIME_DIR.to_owned(),
-				skip: self.skip,
-				data: PreviewData::Folder,
-			}));
-		}
+		emit!(Preview(PreviewLock {
+			url:  url.clone(),
+			mime: MIME_DIR.to_owned(),
+			skip: self.skip,
+			data: PreviewData::Folder,
+		}));
 
 		if sequent {
 			return;
 		}
 
-		let (url, skip) = (url.clone(), self.skip);
+		let url = url.clone();
 		self.handle = Some(tokio::spawn(async move {
-			emit!(Files(match Files::read_dir(&url).await {
-				Ok(items) => FilesOp::Read(url.clone(), items),
-				Err(_) => FilesOp::IOErr(url.clone()),
-			}));
+			let Ok(rx) = Files::from_dir(&url).await else {
+				emit!(Files(FilesOp::IOErr(url)));
+				return;
+			};
 
-			emit!(Preview(PreviewLock {
-				url,
-				mime: MIME_DIR.to_owned(),
-				skip,
-				data: PreviewData::Folder,
-			}));
+			if files.is_some() {
+				emit!(Files(FilesOp::Full(url, UnboundedReceiverStream::new(rx).collect().await)));
+				return;
+			}
+
+			let rx = UnboundedReceiverStream::new(rx).chunks_timeout(10000, Duration::from_millis(500));
+			pin!(rx);
+
+			let version = FilesOp::prepare(&url);
+			while let Some(chunk) = rx.next().await {
+				emit!(Files(FilesOp::Part(url.clone(), version, chunk)));
+			}
 		}));
 	}
 
@@ -164,7 +169,7 @@ impl Preview {
 	#[inline]
 	pub fn same(&self, url: &Url, mime: &str) -> bool {
 		if let Some(ref lock) = self.lock {
-			return lock.url == *url && lock.mime == mime && lock.skip == self.skip;
+			return &lock.url == url && lock.mime == mime && lock.skip == self.skip;
 		}
 		false
 	}
@@ -172,7 +177,7 @@ impl Preview {
 	#[inline]
 	pub fn same_mime(&self, url: &Url, mime: &str) -> bool {
 		if let Some(ref lock) = self.lock {
-			return lock.url == *url && lock.mime == mime;
+			return &lock.url == url && lock.mime == mime;
 		}
 		false
 	}
@@ -180,7 +185,7 @@ impl Preview {
 	#[inline]
 	pub fn same_path(&self, url: &Url) -> bool {
 		if let Some(ref lock) = self.lock {
-			return lock.url == *url;
+			return &lock.url == url;
 		}
 		false
 	}
