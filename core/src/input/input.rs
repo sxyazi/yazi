@@ -3,7 +3,7 @@ use std::ops::Range;
 use anyhow::{anyhow, Result};
 use config::keymap::Key;
 use crossterm::event::KeyCode;
-use shared::{CharKind, Term};
+use shared::CharKind;
 use tokio::sync::oneshot::Sender;
 use unicode_width::UnicodeWidthStr;
 
