@@ -256,7 +256,7 @@ impl File {
 
 		let mut dirs = VecDeque::from([task.target]);
 		while let Some(target) = dirs.pop_front() {
-			let mut it = match fs::read_dir(&target).await {
+			let mut it = match fs::read_dir(target).await {
 				Ok(it) => it,
 				Err(_) => continue,
 			};
@@ -268,11 +268,11 @@ impl File {
 				};
 
 				if meta.is_dir() {
-					dirs.push_front(Url::new(entry.path(), &target));
+					dirs.push_front(Url::from(entry.path()));
 					continue;
 				}
 
-				task.target = Url::new(entry.path(), &target);
+				task.target = Url::from(entry.path());
 				task.length = meta.len();
 				self.sch.send(TaskOp::New(task.id, meta.len()))?;
 				self.tx.send(FileOp::Delete(task.clone())).await?;

@@ -46,13 +46,12 @@ impl Files {
 		let mut it = fs::read_dir(url).await?;
 		let (tx, rx) = mpsc::unbounded_channel();
 
-		let url = url.clone();
 		tokio::spawn(async move {
 			while let Ok(Some(item)) = it.next_entry().await {
 				select! {
 					_ = tx.closed() => break,
 					Ok(meta) = item.metadata() => {
-						tx.send(File::from_meta(Url::new(item.path(), &url), meta).await).ok();
+						tx.send(File::from_meta(Url::from(item.path()), meta).await).ok();
 					}
 				}
 			}
@@ -82,10 +81,23 @@ impl Files {
 	pub fn select_all(&mut self, state: Option<bool>) -> bool {
 		match state {
 			Some(true) => {
+				let b = if self.selected.len() < self.items.len() {
+					true
+				} else {
+					self.items.iter().any(|f| !self.selected.contains(&f.url))
+				};
+
 				self.selected = self.iter().map(|f| f.url_owned()).collect();
+				b
 			}
 			Some(false) => {
+				if self.selected.is_empty() {
+					return false;
+				}
+
+				let b = self.items.iter().any(|f| self.selected.contains(&f.url));
 				self.selected.clear();
+				b
 			}
 			None => {
 				for item in &self.items {
@@ -95,9 +107,9 @@ impl Files {
 						self.selected.insert(item.url_owned());
 					}
 				}
+				!self.items.is_empty()
 			}
 		}
-		!self.items.is_empty()
 	}
 
 	pub fn select_index(&mut self, indices: &BTreeSet<usize>, state: Option<bool>) -> bool {
@@ -169,7 +181,7 @@ impl Files {
 	}
 
 	#[inline]
-	pub fn position(&self, url: &Url) -> Option<usize> { self.iter().position(|f| f.url == *url) }
+	pub fn position(&self, url: &Url) -> Option<usize> { self.iter().position(|f| &f.url == url) }
 
 	#[inline]
 	pub fn duplicate(&self, idx: usize) -> Option<File> { self.items.get(idx).cloned() }

@@ -67,6 +67,7 @@ impl Watcher {
 	}
 
 	pub(super) fn watch(&mut self, mut watched: BTreeSet<&Url>) {
+		watched.retain(|&u| u.is_regular());
 		let (to_unwatch, to_watch): (BTreeSet<_>, BTreeSet<_>) = {
 			let guard = self.watched.read();
 			let keys = guard.keys().collect::<BTreeSet<_>>();
@@ -119,8 +120,12 @@ impl Watcher {
 	}
 
 	pub(super) fn trigger_dirs(&self, dirs: &[&Url]) {
+		let dirs: Vec<_> = dirs.iter().filter(|&u| u.is_regular()).map(|&u| u.clone()).collect();
+		if dirs.is_empty() {
+			return;
+		}
+
 		let watched = self.watched.clone();
-		let dirs: Vec<_> = dirs.iter().map(|&u| u.clone()).collect();
 		tokio::spawn(async move {
 			for dir in dirs {
 				Self::dir_changed(&dir, watched.clone()).await;

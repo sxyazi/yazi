@@ -157,7 +157,7 @@ impl Tasks {
 	pub fn file_cut(&self, src: &HashSet<Url>, dest: Url, force: bool) -> bool {
 		for p in src {
 			let to = dest.join(p.file_name().unwrap());
-			if force && *p == to {
+			if force && p == &to {
 				trace!("file_cut: same file, skipping {:?}", to);
 			} else {
 				self.scheduler.file_cut(p.clone(), to, force);
@@ -169,7 +169,7 @@ impl Tasks {
 	pub fn file_copy(&self, src: &HashSet<Url>, dest: Url, force: bool, follow: bool) -> bool {
 		for p in src {
 			let to = dest.join(p.file_name().unwrap());
-			if force && *p == to {
+			if force && p == &to {
 				trace!("file_copy: same file, skipping {:?}", to);
 			} else {
 				self.scheduler.file_copy(p.clone(), to, force, follow);

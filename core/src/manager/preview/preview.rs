@@ -169,7 +169,7 @@ impl Preview {
 	#[inline]
 	pub fn same(&self, url: &Url, mime: &str) -> bool {
 		if let Some(ref lock) = self.lock {
-			return lock.url == *url && lock.mime == mime && lock.skip == self.skip;
+			return &lock.url == url && lock.mime == mime && lock.skip == self.skip;
 		}
 		false
 	}
@@ -177,7 +177,7 @@ impl Preview {
 	#[inline]
 	pub fn same_mime(&self, url: &Url, mime: &str) -> bool {
 		if let Some(ref lock) = self.lock {
-			return lock.url == *url && lock.mime == mime;
+			return &lock.url == url && lock.mime == mime;
 		}
 		false
 	}
@@ -185,7 +185,7 @@ impl Preview {
 	#[inline]
 	pub fn same_path(&self, url: &Url) -> bool {
 		if let Some(ref lock) = self.lock {
-			return lock.url == *url;
+			return &lock.url == url;
 		}
 		false
 	}

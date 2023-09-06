@@ -17,12 +17,11 @@ pub fn zoxide(opt: ZoxideOpt) -> Result<Receiver<Result<Url>>> {
 		.spawn()?;
 
 	let (tx, rx) = oneshot::channel();
-	let cwd = opt.cwd.clone();
 	tokio::spawn(async move {
 		if let Ok(output) = child.wait_with_output().await {
 			let selected = String::from_utf8_lossy(&output.stdout).trim().to_string();
 			if !selected.is_empty() {
-				tx.send(Ok(Url::new(selected, &cwd))).ok();
+				tx.send(Ok(Url::from(selected))).ok();
 				return;
 			}
 		}

@@ -17,14 +17,13 @@ pub enum FilesOp {
 
 impl FilesOp {
 	#[inline]
-	pub fn url(&self) -> Url {
+	pub fn url(&self) -> &Url {
 		match self {
 			Self::Full(url, _) => url,
 			Self::Part(url, ..) => url,
 			Self::Size(url, _) => url,
 			Self::IOErr(url) => url,
 		}
-		.clone()
 	}
 
 	#[inline]

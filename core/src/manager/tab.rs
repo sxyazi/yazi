@@ -106,7 +106,7 @@ impl Tab {
 
 		let rep = self.history_new(&target);
 		let rep = mem::replace(&mut self.current, rep);
-		if !rep.cwd.is_search() {
+		if rep.cwd.is_regular() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 
@@ -127,7 +127,7 @@ impl Tab {
 				emit!(Input(InputOpt::top("Change directory:").with_value(target.to_string_lossy())));
 
 			if let Ok(s) = result.await {
-				emit!(Cd(Url::new(s, &target)));
+				emit!(Cd(Url::from(s)));
 			}
 		});
 		false
@@ -143,7 +143,7 @@ impl Tab {
 
 		let rep = self.history_new(hovered.url());
 		let rep = mem::replace(&mut self.current, rep);
-		if !rep.cwd.is_search() {
+		if rep.cwd.is_regular() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 
@@ -178,7 +178,7 @@ impl Tab {
 
 		let rep = self.history_new(&current);
 		let rep = mem::replace(&mut self.current, rep);
-		if !rep.cwd.is_search() {
+		if rep.cwd.is_regular() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 
@@ -253,7 +253,12 @@ impl Tab {
 			pin!(rx);
 
 			let version = FilesOp::prepare(&cwd);
+			let mut first = true;
 			while let Some(chunk) = rx.next().await {
+				if first {
+					emit!(Cd(cwd.clone()));
+					first = false;
+				}
 				emit!(Files(FilesOp::Part(cwd.clone(), version, chunk)));
 			}
 			Ok(())
@@ -268,7 +273,7 @@ impl Tab {
 		if self.current.cwd.is_search() {
 			self.preview_reset_image();
 
-			let rep = self.history_new(&self.current.cwd.to_none());
+			let rep = self.history_new(&self.current.cwd.to_regular());
 			drop(mem::replace(&mut self.current, rep));
 			emit!(Refresh);
 		}

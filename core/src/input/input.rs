@@ -308,7 +308,7 @@ impl Input {
 		};
 
 		snap.cursor = snap.count().saturating_sub(snap.mode.delta()).min(snap.cursor);
-		if *snap == old {
+		if snap == &old {
 			return false;
 		}
 		if !matches!(old.op, InputOp::None | InputOp::Select(_)) {

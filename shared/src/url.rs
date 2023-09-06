@@ -9,7 +9,7 @@ pub struct Url {
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum UrlScheme {
 	#[default]
-	None,
+	Regular,
 	Search,
 	Archive,
 }
@@ -62,14 +62,26 @@ impl AsRef<OsStr> for Url {
 
 impl Url {
 	#[inline]
-	pub fn new(url: impl Into<Url>, ctx: &Url) -> Self {
-		let mut url: Self = url.into();
-		url.scheme = ctx.scheme;
-		url
+	pub fn join(&self, path: impl AsRef<Path>) -> Self {
+		let url = Self::from(self.path.join(path));
+		match self.scheme {
+			UrlScheme::Regular => url,
+			UrlScheme::Search => url,
+			UrlScheme::Archive => url.into_archive(),
+		}
 	}
 
 	#[inline]
-	pub fn join(&self, path: impl AsRef<Path>) -> Self { Self::new(self.path.join(path), self) }
+	pub fn parent_url(&self) -> Option<Url> {
+		self.path.parent().map(|p| {
+			let url = Self::from(p);
+			match self.scheme {
+				UrlScheme::Regular => url,
+				UrlScheme::Search => url,
+				UrlScheme::Archive => url,
+			}
+		})
+	}
 
 	#[inline]
 	pub fn strip_prefix(&self, base: impl AsRef<Path>) -> Option<&Path> {
@@ -83,32 +95,42 @@ impl Url {
 impl Url {
 	// --- Scheme
 	#[inline]
-	pub fn is_none(&self) -> bool { self.scheme == UrlScheme::None }
+	pub fn is_regular(&self) -> bool { self.scheme == UrlScheme::Regular }
 
 	#[inline]
-	pub fn to_none(&self) -> Self {
-		let mut url = self.clone();
-		url.scheme = UrlScheme::None;
-		url
+	pub fn to_regular(&self) -> Self { self.clone().into_regular() }
+
+	#[inline]
+	pub fn into_regular(mut self) -> Self {
+		self.scheme = UrlScheme::Regular;
+		self
 	}
 
 	#[inline]
 	pub fn is_search(&self) -> bool { self.scheme == UrlScheme::Search }
 
 	#[inline]
-	pub fn to_search(&self) -> Self {
-		let mut url = self.clone();
-		url.scheme = UrlScheme::Search;
-		url
+	pub fn to_search(&self) -> Self { self.clone().into_search() }
+
+	#[inline]
+	pub fn into_search(mut self) -> Self {
+		self.scheme = UrlScheme::Search;
+		self
 	}
 
 	#[inline]
 	pub fn is_archive(&self) -> bool { self.scheme == UrlScheme::Archive }
 
+	#[inline]
+	pub fn to_archive(&self) -> Self { self.clone().into_archive() }
+
+	#[inline]
+	pub fn into_archive(mut self) -> Self {
+		self.scheme = UrlScheme::Archive;
+		self
+	}
+
 	// --- Path
 	#[inline]
 	pub fn set_path(&mut self, path: PathBuf) { self.path = path; }
-
-	#[inline]
-	pub fn parent_url(&self) -> Option<Url> { self.path.parent().map(|p| Self::new(p, self)) }
 }
