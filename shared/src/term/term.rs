@@ -77,6 +77,7 @@ impl Drop for Term {
 
 			execute!(stdout(), DisableFocusChange, DisableBracketedPaste, LeaveAlternateScreen)?;
 
+			Self::set_cursor_default()?;
 			self.show_cursor()?;
 			Ok(disable_raw_mode()?)
 		};

@@ -43,7 +43,6 @@ impl Input {
 				cb.send(if submit { Ok(self.snap_mut().value.clone()) } else { Err(anyhow!("canceled")) });
 		}
 
-		let _ = Term::set_cursor_default();
 		self.visible = false;
 		true
 	}
