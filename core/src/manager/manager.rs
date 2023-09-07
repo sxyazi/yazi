@@ -136,7 +136,7 @@ impl Manager {
 			.map(|f| {
 				(
 					f.url_owned(),
-					if f.is_dir() { Some(MIME_DIR.to_owned()) } else { self.mimetype.get(f.url()).cloned() },
+					f.is_dir().then(|| MIME_DIR.to_owned()).or_else(|| self.mimetype.get(f.url()).cloned()),
 				)
 			})
 			.collect();
