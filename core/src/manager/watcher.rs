@@ -147,7 +147,7 @@ impl Watcher {
 				}
 			}
 
-			Self::file_changed(files.iter().collect()).await;
+			Self::file_changed(&files, watched.clone()).await;
 			for file in files {
 				emit!(Files(FilesOp::IOErr(file)));
 			}
@@ -158,17 +158,34 @@ impl Watcher {
 		}
 	}
 
-	async fn file_changed(urls: Vec<&Url>) {
-		if let Ok(mimes) = external::file(&urls).await {
-			emit!(Mimetype(mimes));
-		}
+	async fn file_changed(urls: &[Url], watched: Arc<RwLock<IndexMap<Url, Option<Url>>>>) {
+		let Ok(mut mimes) = external::file(urls).await else {
+			return;
+		};
+
+		let linked: Vec<_> = watched
+			.read()
+			.iter()
+			.filter_map(|(k, v)| v.as_ref().map(|v| (k, v)))
+			.fold(Vec::new(), |mut aac, (k, v)| {
+				mimes
+					.iter()
+					.filter(|(f, _)| f.parent().map(|p| p == **v) == Some(true))
+					.for_each(|(f, m)| aac.push((k.join(f.file_name().unwrap()), m.clone())));
+				aac
+			});
+
+		mimes.extend(linked);
+		emit!(Mimetype(mimes));
 	}
 
 	async fn dir_changed(url: &Url, watched: Arc<RwLock<IndexMap<Url, Option<Url>>>>) {
 		let linked: Vec<_> = watched
 			.read()
 			.iter()
-			.map_while(|(k, v)| v.as_ref().and_then(|v| url.strip_prefix(v)).map(|v| k.join(v)))
+			.filter_map(|(k, v)| v.as_ref().map(|v| (k, v)))
+			.filter(|(_, v)| *v == url)
+			.map(|(k, _)| k.clone())
 			.collect();
 
 		let Ok(rx) = Files::from_dir(url).await else {

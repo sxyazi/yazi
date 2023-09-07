@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ffi::OsStr, fs::Metadata, path::PathBuf};
+use std::{borrow::Cow, ffi::OsStr, fs::Metadata};
 
 use anyhow::Result;
 use shared::Url;
@@ -9,7 +9,7 @@ pub struct File {
 	pub(super) url:       Url,
 	pub(super) meta:      Metadata,
 	pub(super) length:    Option<u64>,
-	pub(super) link_to:   Option<PathBuf>,
+	pub(super) link_to:   Option<Url>,
 	pub(super) is_link:   bool,
 	pub(super) is_hidden: bool,
 }
@@ -27,7 +27,7 @@ impl File {
 
 		if is_link {
 			meta = fs::metadata(&url).await.unwrap_or(meta);
-			link_to = fs::read_link(&url).await.ok();
+			link_to = fs::read_link(&url).await.map(Url::from).ok();
 		}
 
 		let length = if meta.is_dir() { None } else { Some(meta.len()) };
@@ -37,7 +37,7 @@ impl File {
 }
 
 impl File {
-	// --- Path
+	// --- Url
 	#[inline]
 	pub fn url(&self) -> &Url { &self.url }
 
@@ -80,5 +80,5 @@ impl File {
 
 	// --- Link to
 	#[inline]
-	pub fn link_to(&self) -> Option<&PathBuf> { self.link_to.as_ref() }
+	pub fn link_to(&self) -> Option<&Url> { self.link_to.as_ref() }
 }
