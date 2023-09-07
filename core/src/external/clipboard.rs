@@ -56,6 +56,7 @@ pub async fn clipboard_set(s: impl AsRef<std::ffi::OsStr>) -> Result<()> {
 			.args(args)
 			.stdin(Stdio::piped())
 			.stdout(Stdio::null())
+			.stderr(Stdio::null())
 			.kill_on_drop(true)
 			.spawn()
 		else {
