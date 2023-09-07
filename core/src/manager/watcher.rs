@@ -99,7 +99,6 @@ impl Watcher {
 				}
 			})
 			.collect();
-		guard.sort_unstable_by(|_, a, _, b| b.cmp(a));
 
 		let lock = self.watched.clone();
 		tokio::spawn(async move {
@@ -113,9 +112,7 @@ impl Watcher {
 				}
 			}
 
-			let mut guard = lock.write();
-			guard.extend(ext);
-			guard.sort_unstable_by(|_, a, _, b| b.cmp(a));
+			lock.write().extend(ext);
 		});
 	}
 
