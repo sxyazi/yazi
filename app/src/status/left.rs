@@ -14,7 +14,7 @@ impl<'a> Left<'a> {
 
 impl<'a> Widget for Left<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let manager = self.cx.manager.current();
+		let folder = self.cx.manager.current();
 		let mode = self.cx.manager.active().mode();
 
 		// Colors
@@ -33,10 +33,14 @@ impl<'a> Widget for Left<'a> {
 			primary.bg().fg(**secondary).add_modifier(Modifier::BOLD),
 		));
 
-		if let Some(h) = &manager.hovered {
+		if let Some(h) = &folder.hovered {
 			// Length
-			if let Some(len) = h.length() {
-				spans.push(Span::styled(format!(" {} ", readable_size(len)), body.bg().fg(**primary)));
+			{
+				let size = if h.is_dir() { folder.files.size(h.url()) } else { None };
+				spans.push(Span::styled(
+					format!(" {} ", readable_size(size.unwrap_or(h.length()))),
+					body.bg().fg(**primary),
+				));
 				spans.push(Span::styled(&separator.closing, body.fg()));
 			}
 

@@ -210,8 +210,11 @@ impl Tasks {
 			return false;
 		}
 
-		let targets: Vec<_> =
-			targets.iter().filter(|f| f.is_dir() && f.length().is_none()).map(|f| f.url()).collect();
+		let targets: Vec<_> = targets
+			.iter()
+			.filter(|f| f.is_dir() && targets.size(f.url()).is_none())
+			.map(|f| f.url())
+			.collect();
 
 		if !targets.is_empty() {
 			self.scheduler.precache_size(targets);

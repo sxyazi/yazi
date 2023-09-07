@@ -1,6 +1,7 @@
-use std::{cmp::Ordering, mem};
+use std::{cmp::Ordering, collections::BTreeMap, mem};
 
 use config::{manager::SortBy, MANAGER};
+use shared::Url;
 
 use super::File;
 
@@ -22,7 +23,7 @@ impl Default for FilesSorter {
 }
 
 impl FilesSorter {
-	pub(super) fn sort(&self, items: &mut Vec<File>) -> bool {
+	pub(super) fn sort(&self, items: &mut Vec<File>, sizes: &BTreeMap<Url, u64>) -> bool {
 		if items.is_empty() {
 			return false;
 		}
@@ -45,7 +46,9 @@ impl FilesSorter {
 			}),
 			SortBy::Natural => self.sort_naturally(items),
 			SortBy::Size => items.sort_unstable_by(|a, b| {
-				self.cmp(a.length().unwrap_or(0), b.length().unwrap_or(0), self.promote(a, b))
+				let aa = if a.is_dir() { sizes.get(a.url()).copied() } else { None };
+				let bb = if b.is_dir() { sizes.get(b.url()).copied() } else { None };
+				self.cmp(aa.unwrap_or(a.length), bb.unwrap_or(b.length), self.promote(a, b))
 			}),
 		}
 		true
@@ -73,7 +76,7 @@ impl FilesSorter {
 		let dummy = File {
 			url:       Default::default(),
 			meta:      items[0].meta.clone(),
-			length:    None,
+			length:    0,
 			link_to:   None,
 			is_link:   false,
 			is_hidden: false,
