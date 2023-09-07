@@ -126,7 +126,7 @@ impl Files {
 		if !self.show_hidden {
 			(self.hidden, items) = items.into_iter().partition(|f| f.is_hidden);
 		}
-		self.sorter.sort(&mut items);
+		self.sorter.sort(&mut items, &self.sizes);
 		self.items = items;
 		self.version = FILES_VERSION.fetch_add(1, Ordering::Relaxed);
 		true
@@ -146,7 +146,7 @@ impl Files {
 				self.hidden.extend(hidden);
 			}
 
-			self.sorter.sort(&mut self.items);
+			self.sorter.sort(&mut self.items, &self.sizes);
 			return true;
 		}
 
@@ -162,7 +162,7 @@ impl Files {
 	pub fn update_size(&mut self, items: BTreeMap<Url, u64>) -> bool {
 		self.sizes.extend(items);
 		if self.sorter.by == SortBy::Size {
-			self.sorter.sort(&mut self.items);
+			self.sorter.sort(&mut self.items, &self.sizes);
 		}
 		true
 	}
@@ -185,6 +185,10 @@ impl Files {
 
 	#[inline]
 	pub fn duplicate(&self, idx: usize) -> Option<File> { self.items.get(idx).cloned() }
+
+	// --- Size
+	#[inline]
+	pub fn size(&self, url: &Url) -> Option<u64> { self.sizes.get(url).copied() }
 
 	// --- Selected
 	pub fn selected(&self, pending: &BTreeSet<usize>, unset: bool) -> Vec<&File> {
@@ -234,7 +238,7 @@ impl Files {
 			return false;
 		}
 		self.sorter = sorter;
-		self.sorter.sort(&mut self.items)
+		self.sorter.sort(&mut self.items, &self.sizes)
 	}
 
 	// --- Show hidden
@@ -248,7 +252,7 @@ impl Files {
 
 		if state {
 			self.items.append(&mut self.hidden);
-			self.sorter.sort(&mut self.items);
+			self.sorter.sort(&mut self.items, &self.sizes);
 		} else {
 			let items = mem::take(&mut self.items);
 			(self.hidden, self.items) = items.into_iter().partition(|f| f.is_hidden);

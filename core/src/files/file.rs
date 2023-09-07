@@ -8,7 +8,7 @@ use tokio::fs;
 pub struct File {
 	pub(super) url:       Url,
 	pub(super) meta:      Metadata,
-	pub(super) length:    Option<u64>,
+	pub(super) length:    u64,
 	pub(super) link_to:   Option<Url>,
 	pub(super) is_link:   bool,
 	pub(super) is_hidden: bool,
@@ -30,7 +30,7 @@ impl File {
 			link_to = fs::read_link(&url).await.map(Url::from).ok();
 		}
 
-		let length = if meta.is_dir() { None } else { Some(meta.len()) };
+		let length = meta.len();
 		let is_hidden = url.file_name().map(|s| s.to_string_lossy().starts_with('.')).unwrap_or(false);
 		Self { url, meta, length, link_to, is_link, is_hidden }
 	}
@@ -76,7 +76,7 @@ impl File {
 
 	// --- Length
 	#[inline]
-	pub fn length(&self) -> Option<u64> { self.length }
+	pub fn length(&self) -> u64 { self.length }
 
 	// --- Link to
 	#[inline]
