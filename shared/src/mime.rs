@@ -30,13 +30,13 @@ impl MimeKind {
 			Self::JSON
 		} else if s == "application/pdf" {
 			Self::PDF
-		} else if s == "application/x-bzip"
-			|| s == "application/x-bzip2"
+		} else if s == "application/zip"
 			|| s == "application/gzip"
-			|| s == "application/vnd.rar"
 			|| s == "application/x-tar"
-			|| s == "application/zip"
+			|| s == "application/x-bzip"
+			|| s == "application/x-bzip2"
 			|| s == "application/x-7z-compressed"
+			|| s == "application/x-rar"
 		{
 			Self::Archive
 		} else {

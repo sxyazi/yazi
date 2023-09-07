@@ -43,9 +43,9 @@ rules = [
 	# Archives
 	{ mime = "application/zip", fg = "#CD9EFC" },
 	{ mime = "application/gzip", fg = "#CD9EFC" },
+	{ mime = "application/x-tar", fg = "#CD9EFC" },
 	{ mime = "application/x-bzip", fg = "#CD9EFC" },
 	{ mime = "application/x-bzip2", fg = "#CD9EFC" },
-	{ mime = "application/x-tar", fg = "#CD9EFC" },
 	{ mime = "application/x-7z-compressed", fg = "#CD9EFC" },
 	{ mime = "application/x-rar", fg = "#CD9EFC" },
 
