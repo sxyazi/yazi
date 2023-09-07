@@ -121,6 +121,14 @@ impl Manager {
 		self.quit(tasks)
 	}
 
+	pub fn suspend(&mut self) -> bool {
+		tokio::spawn(async move {
+			emit!(Stop(true)).await;
+			unsafe { libc::raise(libc::SIGTSTP) };
+		});
+		false
+	}
+
 	pub fn open(&mut self, interactive: bool) -> bool {
 		let mut files: Vec<_> = self
 			.selected()

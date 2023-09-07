@@ -50,18 +50,26 @@ impl Signals {
 
 	#[cfg(not(target_os = "windows"))]
 	fn spawn_system_task(&self) -> Result<JoinHandle<()>> {
-		use libc::{SIGHUP, SIGINT, SIGQUIT, SIGTERM};
+		use libc::{SIGCONT, SIGHUP, SIGINT, SIGQUIT, SIGTERM};
 
 		let tx = self.tx.clone();
-		let mut signals = signal_hook_tokio::Signals::new([SIGHUP, SIGTERM, SIGINT, SIGQUIT])?;
+		let mut signals = signal_hook_tokio::Signals::new([
+			// Terminating signals
+			SIGHUP, SIGTERM, SIGQUIT, SIGINT, //
+			// Job control signals
+			SIGCONT,
+		])?;
 
 		Ok(tokio::spawn(async move {
 			while let Some(signal) = signals.next().await {
 				match signal {
-					SIGHUP | SIGTERM | SIGINT | SIGQUIT => {
+					SIGHUP | SIGTERM | SIGQUIT | SIGINT => {
 						if tx.send(Event::Quit).is_err() {
 							break;
 						}
+					}
+					SIGCONT => {
+						tx.send(Event::Stop(false, None)).ok();
 					}
 					_ => {}
 				}

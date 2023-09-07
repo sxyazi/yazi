@@ -378,6 +378,7 @@ dependencies = [
  "crossterm",
  "futures",
  "indexmap 2.0.0",
+ "libc",
  "natord",
  "notify",
  "parking_lot",
