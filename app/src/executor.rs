@@ -57,6 +57,7 @@ impl Executor {
 			"escape" => cx.manager.active_mut().escape(),
 			"quit" => cx.manager.quit(&cx.tasks),
 			"close" => cx.manager.close(&cx.tasks),
+			"suspend" => cx.manager.suspend(),
 
 			// Navigation
 			"arrow" => {
