@@ -422,28 +422,29 @@ impl Tab {
 		}
 
 		self.show_hidden = state;
-		self.apply_show_hidden();
+		self.apply_show_hidden(false);
 		true
 	}
 
-	pub fn apply_show_hidden(&mut self) -> bool {
+	pub fn apply_show_hidden(&mut self, only_hovered: bool) -> bool {
 		let state = self.show_hidden;
-
-		let mut applied = false;
-		applied |= self.current.files.set_show_hidden(state);
-
-		if let Some(parent) = self.parent.as_mut() {
-			applied |= parent.files.set_show_hidden(state);
-		}
-
-		applied |= match self.current.hovered {
+		let mut b = match self.current.hovered {
 			Some(ref h) if h.is_dir() => {
 				self.history.get_mut(h.url()).map(|f| f.files.set_show_hidden(state)) == Some(true)
 			}
 			_ => false,
 		};
 
+		if only_hovered {
+			return b;
+		}
+
+		b |= self.current.files.set_show_hidden(state);
+		if let Some(parent) = self.parent.as_mut() {
+			b |= parent.files.set_show_hidden(state);
+		}
+
 		self.current.hover_repos();
-		applied
+		b
 	}
 }

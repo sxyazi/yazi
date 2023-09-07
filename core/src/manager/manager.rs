@@ -30,7 +30,7 @@ impl Manager {
 	pub fn refresh(&mut self) {
 		env::set_current_dir(self.cwd()).ok();
 
-		self.active_mut().apply_show_hidden();
+		self.active_mut().apply_show_hidden(false);
 
 		if let Some(f) = self.parent() {
 			self.watcher.trigger_dirs(&[self.cwd(), &f.cwd]);
@@ -342,10 +342,13 @@ impl Manager {
 			self.current_mut().update(op)
 		} else if matches!(self.parent(), Some(p) if p.cwd == url) {
 			self.active_mut().parent.as_mut().unwrap().update(op)
+		} else if matches!(self.hovered(), Some(h) if h.url() == &url) {
+			self.active_mut().history.entry(url.clone()).or_insert_with(|| Folder::from(&url));
+			self.active_mut().apply_show_hidden(true);
+			self.active_mut().history.get_mut(&url).unwrap().update(op)
 		} else {
 			self.active_mut().history.entry(url.clone()).or_insert_with(|| Folder::from(&url)).update(op);
-
-			matches!(self.hovered(), Some(h) if h.url() == &url)
+			false
 		};
 
 		b |= self.active_mut().parent.as_mut().map_or(false, |p| p.hover(&cwd));
