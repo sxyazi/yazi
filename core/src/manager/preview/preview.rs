@@ -129,7 +129,6 @@ impl Preview {
 		}));
 	}
 
-	#[inline]
 	pub fn arrow(&mut self, step: isize) -> bool {
 		let Some(kind) = self.lock.as_ref().map(|l| MimeKind::new(&l.mime)) else {
 			return false;
@@ -140,6 +139,15 @@ impl Preview {
 
 		self.skip = if step < 0 { old.saturating_sub(size) } else { old + size };
 		self.skip != old
+	}
+
+	pub fn arrow_max(&mut self, max: usize) -> bool {
+		if self.skip > max {
+			self.skip = max;
+			return true;
+		}
+
+		false
 	}
 
 	pub fn reset<F: FnOnce(&PreviewLock) -> bool>(&mut self, f: F) -> bool {

@@ -325,16 +325,16 @@ impl Tab {
 		false
 	}
 
-	pub fn update_peek(&mut self, step: isize, url: Option<Url>) -> bool {
+	pub fn update_peek(&mut self, max: usize, url: Url) -> bool {
 		let Some(ref hovered) = self.current.hovered else {
 			return false;
 		};
 
-		if url.as_ref().map(|p| p != hovered.url()) == Some(true) {
+		if &url != hovered.url() {
 			return false;
 		}
 
-		self.preview.arrow(step)
+		self.preview.arrow_max(max)
 	}
 
 	pub fn update_preview(&mut self, lock: PreviewLock) -> bool {
@@ -403,6 +403,9 @@ impl Tab {
 
 	#[inline]
 	pub fn preview_reset_image(&mut self) -> bool { self.preview.reset(|l| l.is_image()) }
+
+	#[inline]
+	pub fn preview_arrow(&mut self, step: isize) -> bool { self.preview.arrow(step) }
 
 	// --- Sorter
 	pub fn set_sorter(&mut self, sorter: FilesSorter) -> bool {

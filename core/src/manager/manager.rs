@@ -71,11 +71,6 @@ impl Manager {
 		}
 
 		let Some(mime) = self.mimetype.get(url).cloned() else {
-			tokio::spawn(async move {
-				if let Ok(mimes) = external::file(&[hovered.url()]).await {
-					emit!(Mimetype(mimes));
-				}
-			});
 			return false;
 		};
 

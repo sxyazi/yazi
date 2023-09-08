@@ -160,10 +160,13 @@ impl App {
 				}
 				emit!(Peek);
 			}
-			Event::Peek(skip, sequent) => {
-				let b = sequent.is_some();
-				manager.active_mut().update_peek(skip as isize, sequent);
-				self.cx.manager.peek(b, self.cx.image_layer());
+			Event::Peek(sequent) => {
+				if let Some((max, url)) = sequent {
+					manager.active_mut().update_peek(max, url);
+					self.cx.manager.peek(true, self.cx.image_layer());
+				} else {
+					self.cx.manager.peek(false, self.cx.image_layer());
+				}
 			}
 			Event::Preview(lock) => {
 				if manager.active_mut().update_preview(lock) {
