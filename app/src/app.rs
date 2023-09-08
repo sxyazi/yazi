@@ -4,7 +4,7 @@ use std::ffi::OsString;
 use anyhow::{Ok, Result};
 use config::{keymap::{Control, Key, KeymapLayer}, BOOT};
 use crossterm::event::KeyEvent;
-use shared::{absolute_url, Term};
+use shared::{expand_url, Term};
 use tokio::sync::oneshot;
 
 use crate::{Ctx, Executor, Logs, Root, Signals};
@@ -121,7 +121,7 @@ impl App {
 		match event {
 			Event::Cd(url) => {
 				futures::executor::block_on(async {
-					manager.active_mut().cd(absolute_url(url)).await;
+					manager.active_mut().cd(expand_url(url)).await;
 				});
 			}
 			Event::Refresh => {

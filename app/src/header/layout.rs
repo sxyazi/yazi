@@ -1,5 +1,5 @@
 use ratatui::{layout, prelude::{Buffer, Constraint, Direction, Rect}, style::{Color, Style}, widgets::{Paragraph, Widget}};
-use shared::readable_home;
+use shared::readable_path;
 
 use super::Tabs;
 use crate::Ctx;
@@ -21,9 +21,9 @@ impl<'a> Widget for Layout<'a> {
 
 		let current = &self.cx.manager.current();
 		let location = if current.cwd.is_search() {
-			format!("{} (search)", readable_home(&current.cwd))
+			format!("{} (search)", readable_path(&current.cwd))
 		} else {
-			readable_home(&current.cwd)
+			readable_path(&current.cwd)
 		};
 
 		Paragraph::new(location).style(Style::new().fg(Color::Cyan)).render(chunks[0], buf);

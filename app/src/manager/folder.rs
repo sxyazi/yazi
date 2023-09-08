@@ -2,7 +2,7 @@ use core::files::File;
 
 use config::{MANAGER, THEME};
 use ratatui::{buffer::Buffer, layout::Rect, style::Style, widgets::{List, ListItem, Widget}};
-use shared::readable_path;
+use shared::short_path;
 
 use crate::Ctx;
 
@@ -87,7 +87,7 @@ impl<'a> Widget for Folder<'a> {
 					self.file_style(f)
 				};
 
-				let mut path = format!(" {icon} {}", readable_path(f.url(), &self.folder.cwd));
+				let mut path = format!(" {icon} {}", short_path(f.url(), &self.folder.cwd));
 				if let Some(link_to) = f.link_to() {
 					if MANAGER.show_symlink {
 						path.push_str(&format!(" -> {}", link_to.display()));
