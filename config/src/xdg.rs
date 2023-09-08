@@ -1,13 +1,13 @@
 use std::{env, path::PathBuf};
 
-use shared::absolute_path;
+use shared::expand_path;
 
 pub(super) struct Xdg;
 
 impl Xdg {
 	pub(super) fn config_dir() -> Option<PathBuf> {
 		if let Some(s) = env::var_os("YAZI_CONFIG_HOME").filter(|s| !s.is_empty()) {
-			return Some(absolute_path(s));
+			return Some(expand_path(s));
 		}
 
 		#[cfg(target_os = "windows")]

@@ -4,30 +4,30 @@ use tokio::fs;
 
 use crate::Url;
 
-pub fn absolute_path(p: impl AsRef<Path>) -> PathBuf {
+pub fn expand_path(p: impl AsRef<Path>) -> PathBuf {
 	let p = p.as_ref();
 	if let Ok(p) = p.strip_prefix("~") {
 		if let Some(home) = env::var_os("HOME") {
 			return PathBuf::from_iter([&home, p.as_os_str()]);
 		}
 	}
-	std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf())
+	p.to_path_buf()
 }
 
 #[inline]
-pub fn absolute_url(mut u: Url) -> Url {
-	u.set_path(absolute_path(&u));
+pub fn expand_url(mut u: Url) -> Url {
+	u.set_path(expand_path(&u));
 	u
 }
 
-pub fn readable_path(p: &Path, base: &Path) -> String {
+pub fn short_path(p: &Path, base: &Path) -> String {
 	if let Ok(p) = p.strip_prefix(base) {
 		return p.display().to_string();
 	}
 	p.display().to_string()
 }
 
-pub fn readable_home(p: &Path) -> String {
+pub fn readable_path(p: &Path) -> String {
 	if let Ok(home) = env::var("HOME") {
 		if let Ok(p) = p.strip_prefix(home) {
 			return format!("~/{}", p.display());

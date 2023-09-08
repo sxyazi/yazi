@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use serde::Deserialize;
-use shared::absolute_path;
+use shared::expand_path;
 use validator::Validate;
 
 use super::{ColorGroup, Filetype, Icon, Style};
@@ -78,7 +78,7 @@ impl Default for Theme {
 
 		check_validation(theme.tab.validate());
 
-		theme.preview.syntect_theme = absolute_path(&theme.preview.syntect_theme);
+		theme.preview.syntect_theme = expand_path(&theme.preview.syntect_theme);
 
 		theme
 	}

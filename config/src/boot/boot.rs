@@ -1,7 +1,7 @@
 use std::{env, fs, path::PathBuf, process};
 
 use clap::{command, Parser};
-use shared::absolute_path;
+use shared::expand_path;
 
 use crate::{Xdg, PREVIEW};
 
@@ -38,8 +38,7 @@ impl Default for Boot {
 	fn default() -> Self {
 		let args = Args::parse();
 
-		let cwd =
-			args.cwd.map(absolute_path).filter(|p| p.is_dir()).or_else(|| env::current_dir().ok());
+		let cwd = args.cwd.map(expand_path).filter(|p| p.is_dir()).or_else(|| env::current_dir().ok());
 
 		let boot = Self {
 			cwd:       cwd.unwrap_or("/".into()),
