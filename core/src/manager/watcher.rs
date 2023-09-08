@@ -134,13 +134,13 @@ impl Watcher {
 		let rx = UnboundedReceiverStream::new(rx).chunks_timeout(100, Duration::from_millis(200));
 		pin!(rx);
 
-		while let Some(paths) = rx.next().await {
+		while let Some(urls) = rx.next().await {
 			let (mut files, mut dirs): (Vec<_>, Vec<_>) = Default::default();
-			for path in paths.into_iter().collect::<BTreeSet<_>>() {
-				if fs::symlink_metadata(&path).await.map(|m| !m.is_dir()).unwrap_or(false) {
-					files.push(path);
+			for url in urls.into_iter().collect::<BTreeSet<_>>() {
+				if fs::metadata(&url).await.map(|m| !m.is_dir()).unwrap_or(false) {
+					files.push(url);
 				} else {
-					dirs.push(path);
+					dirs.push(url);
 				}
 			}
 
