@@ -96,12 +96,12 @@ impl Manager {
 		}
 
 		tokio::spawn(async move {
-			let result = emit!(Input(InputOpt::top(format!(
+			let mut result = emit!(Input(InputOpt::top(format!(
 				"There are {tasks} tasks running, sure to quit? (y/N)"
 			))));
 
-			if let Ok(choice) = result.await {
-				if choice.to_lowercase() == "y" {
+			if let Some(Ok(choice)) = result.recv().await {
+				if choice == "y" || choice == "Y" {
 					emit!(Quit);
 				}
 			}
@@ -179,9 +179,9 @@ impl Manager {
 	pub fn create(&self) -> bool {
 		let cwd = self.cwd().to_owned();
 		tokio::spawn(async move {
-			let result = emit!(Input(InputOpt::top("Create:")));
+			let mut result = emit!(Input(InputOpt::top("Create:")));
 
-			if let Ok(name) = result.await {
+			if let Some(Ok(name)) = result.recv().await {
 				let path = cwd.join(&name);
 				let hovered = path.components().take(cwd.components().count() + 1).collect::<PathBuf>();
 
@@ -212,11 +212,11 @@ impl Manager {
 		};
 
 		tokio::spawn(async move {
-			let result = emit!(Input(
+			let mut result = emit!(Input(
 				InputOpt::hovered("Rename:").with_value(hovered.file_name().unwrap().to_string_lossy())
 			));
 
-			if let Ok(new) = result.await {
+			if let Some(Ok(new)) = result.recv().await {
 				let to = hovered.parent().unwrap().join(new);
 				fs::rename(&hovered, to).await.ok();
 			}

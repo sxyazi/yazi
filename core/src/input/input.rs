@@ -1,10 +1,9 @@
 use std::ops::Range;
 
-use anyhow::{anyhow, Result};
 use config::keymap::Key;
 use crossterm::event::KeyCode;
-use shared::CharKind;
-use tokio::sync::oneshot::Sender;
+use shared::{CharKind, InputError};
+use tokio::sync::mpsc::UnboundedSender;
 use unicode_width::UnicodeWidthStr;
 
 use super::{mode::InputMode, op::InputOp, InputOpt, InputSnap, InputSnaps};
@@ -17,21 +16,27 @@ pub struct Input {
 
 	title:        String,
 	pub position: Position,
-	callback:     Option<Sender<Result<String>>>,
+
+	// Typing
+	callback: Option<UnboundedSender<Result<String, InputError>>>,
+	realtime: bool,
 
 	// Shell
 	pub(super) highlight: bool,
 }
 
 impl Input {
-	pub fn show(&mut self, opt: InputOpt, tx: Sender<Result<String>>) {
+	pub fn show(&mut self, opt: InputOpt, tx: UnboundedSender<Result<String, InputError>>) {
 		self.close(false);
 		self.snaps.reset(opt.value);
 		self.visible = true;
 
 		self.title = opt.title;
 		self.position = opt.position;
+
+		// Typing
 		self.callback = Some(tx);
+		self.realtime = opt.realtime;
 
 		// Shell
 		self.highlight = opt.highlight;
@@ -39,8 +44,8 @@ impl Input {
 
 	pub fn close(&mut self, submit: bool) -> bool {
 		if let Some(cb) = self.callback.take() {
-			let _ =
-				cb.send(if submit { Ok(self.snap_mut().value.clone()) } else { Err(anyhow!("canceled")) });
+			let value = self.snap_mut().value.clone();
+			let _ = cb.send(if submit { Ok(value) } else { Err(InputError::Canceled(value)) });
 		}
 
 		self.visible = false;
@@ -201,22 +206,26 @@ impl Input {
 	}
 
 	pub fn type_str(&mut self, s: &str) -> bool {
-		let snap = self.snap_mut();
+		let snap = self.snaps.current_mut();
 		if snap.cursor < 1 {
 			snap.value.insert_str(0, s);
 		} else {
 			snap.value.insert_str(snap.idx(snap.cursor).unwrap(), s);
 		}
+
+		self.flush_value();
 		self.move_(s.chars().count() as isize)
 	}
 
 	pub fn backspace(&mut self) -> bool {
-		let snap = self.snap_mut();
+		let snap = self.snaps.current_mut();
 		if snap.cursor < 1 {
 			return false;
 		} else {
 			snap.value.remove(snap.idx(snap.cursor - 1).unwrap());
 		}
+
+		self.flush_value();
 		self.move_(-1)
 	}
 
@@ -278,7 +287,7 @@ impl Input {
 
 	fn handle_op(&mut self, cursor: usize, include: bool) -> bool {
 		let old = self.snap().clone();
-		let snap = self.snap_mut();
+		let snap = self.snaps.current_mut();
 
 		match snap.op {
 			InputOp::None | InputOp::Select(_) => {
@@ -296,6 +305,10 @@ impl Input {
 				snap.op = InputOp::None;
 				snap.mode = if insert { InputMode::Insert } else { InputMode::Normal };
 				snap.cursor = range.start;
+
+				if self.realtime {
+					self.callback.as_ref().unwrap().send(Err(InputError::Typed(snap.value.clone()))).ok();
+				}
 			}
 			InputOp::Yank(_) => {
 				let range = snap.op.range(cursor, include).unwrap();
@@ -315,6 +328,14 @@ impl Input {
 			self.snaps.tag();
 		}
 		true
+	}
+
+	#[inline]
+	fn flush_value(&self) {
+		if self.realtime {
+			let value = self.snap().value.clone();
+			self.callback.as_ref().unwrap().send(Err(InputError::Typed(value))).ok();
+		}
 	}
 }
 
