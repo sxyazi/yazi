@@ -1,7 +1,7 @@
 use core::files::File;
 
 use config::{MANAGER, THEME};
-use ratatui::{buffer::Buffer, layout::Rect, style::Style, widgets::{List, ListItem, Widget}};
+use ratatui::{buffer::Buffer, layout::Rect, style::{Color, Modifier, Style}, text::{Line, Span}, widgets::{List, ListItem, Widget}};
 use shared::short_path;
 
 use crate::Ctx;
@@ -44,7 +44,7 @@ impl<'a> Folder<'a> {
 		THEME
 			.icons
 			.iter()
-			.find(|x| x.name.match_path(file.path(), Some(file.is_dir())))
+			.find(|x| x.name.match_path(file.url(), Some(file.is_dir())))
 			.map(|x| x.display.as_ref())
 			.unwrap_or("")
 	}
@@ -72,11 +72,11 @@ impl<'a> Widget for Folder<'a> {
 			self.folder.window()
 		};
 
-		let items = window
+		let items: Vec<_> = window
 			.iter()
 			.enumerate()
 			.map(|(i, f)| {
-				let is_selected = self.folder.files.is_selected(f.path());
+				let is_selected = self.folder.files.is_selected(f.url());
 				if (!self.is_selection && is_selected)
 					|| (self.is_selection && mode.pending(self.folder.offset() + i, is_selected))
 				{
@@ -102,7 +102,7 @@ impl<'a> Widget for Folder<'a> {
 				let mut spans = Vec::with_capacity(10);
 
 				spans.push(Span::raw(format!(" {} ", Self::icon(f))));
-				spans.push(Span::raw(readable_path(f.path(), &self.folder.cwd)));
+				spans.push(Span::raw(short_path(f.url(), &self.folder.cwd)));
 
 				if let Some(link_to) = f.link_to() {
 					if MANAGER.show_symlink {
@@ -113,7 +113,7 @@ impl<'a> Widget for Folder<'a> {
 				if let Some(idx) = active
 					.finder()
 					.filter(|_| hovered && self.is_find)
-					.and_then(|finder| finder.matched_idx(f.path()))
+					.and_then(|finder| finder.matched_idx(f.url()))
 				{
 					let len = active.finder().unwrap().matched().len();
 					let style = Style::new().fg(Color::Rgb(255, 255, 50)).add_modifier(Modifier::ITALIC);
@@ -129,7 +129,7 @@ impl<'a> Widget for Folder<'a> {
 
 				ListItem::new(Line::from(spans)).style(style)
 			})
-			.collect::<Vec<_>>();
+			.collect();
 
 		List::new(items).render(area, buf);
 	}

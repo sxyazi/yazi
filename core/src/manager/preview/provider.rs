@@ -7,7 +7,6 @@ use shared::{MimeKind, PeekError};
 use syntect::{easy::HighlightFile, util::as_24_bit_terminal_escaped};
 use tokio::fs;
 
-
 use super::PreviewData;
 use crate::{external, highlighter};
 
@@ -85,7 +84,7 @@ impl Provider {
 	}
 
 	pub(super) async fn highlight(path: &Path, skip: usize) -> Result<String, PeekError> {
-		let tick = INCR.load(Ordering::Relaxed);
+		let ticket = INCR.load(Ordering::Relaxed);
 		let path = path.to_path_buf();
 		let spaces = " ".repeat(PREVIEW.tab_size as usize);
 
@@ -98,7 +97,7 @@ impl Provider {
 			let mut i = 0;
 			let limit = MANAGER.layout.preview_height();
 			while h.reader.read_line(&mut line)? > 0 {
-				if tick != INCR.load(Ordering::Relaxed) {
+				if ticket != INCR.load(Ordering::Relaxed) {
 					return Err("Highlighting cancelled".into());
 				}
 

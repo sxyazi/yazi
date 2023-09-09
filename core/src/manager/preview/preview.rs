@@ -97,9 +97,9 @@ impl Preview {
 			let rx = UnboundedReceiverStream::new(rx).chunks_timeout(10000, Duration::from_millis(500));
 			pin!(rx);
 
-			let version = FilesOp::prepare(&url);
+			let ticket = FilesOp::prepare(&url);
 			while let Some(chunk) = rx.next().await {
-				emit!(Files(FilesOp::Part(url.clone(), version, chunk)));
+				emit!(Files(FilesOp::Part(url.clone(), ticket, chunk)));
 			}
 		}));
 	}

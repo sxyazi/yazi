@@ -6,7 +6,7 @@ use shared::{Defer, Url};
 use tokio::{pin, task::JoinHandle};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 
-use super::{Folder, Mode, Preview, PreviewLock};
+use super::{Finder, Folder, Mode, Preview, PreviewLock};
 use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, files::{File, FilesOp, FilesSorter}, input::InputOpt, Event, BLOCKER};
 
 pub struct Tab {
@@ -17,6 +17,7 @@ pub struct Tab {
 	pub(super) history: BTreeMap<Url, Folder>,
 	pub(super) preview: Preview,
 
+	finder:                 Option<Finder>,
 	search:                 Option<JoinHandle<Result<()>>>,
 	pub(super) show_hidden: bool,
 }
@@ -33,6 +34,7 @@ impl From<Url> for Tab {
 			history: Default::default(),
 			preview: Default::default(),
 
+			finder: None,
 			search: None,
 			show_hidden: true,
 		}
@@ -45,6 +47,11 @@ impl From<&Url> for Tab {
 
 impl Tab {
 	pub fn escape(&mut self) -> bool {
+		if self.finder.is_some() {
+			self.finder = None;
+			return true;
+		}
+
 		if let Some((_, indices)) = self.mode.visual() {
 			self.current.files.select_index(indices, Some(self.mode.is_select()));
 			self.mode = Mode::Normal;
@@ -284,14 +291,14 @@ impl Tab {
 			let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(300));
 			pin!(rx);
 
-			let version = FilesOp::prepare(&cwd);
+			let ticket = FilesOp::prepare(&cwd);
 			let mut first = true;
 			while let Some(chunk) = rx.next().await {
 				if first {
 					emit!(Cd(cwd.clone()));
 					first = false;
 				}
-				emit!(Files(FilesOp::Part(cwd.clone(), version, chunk)));
+				emit!(Files(FilesOp::Part(cwd.clone(), ticket, chunk)));
 			}
 			Ok(())
 		}));
@@ -438,6 +445,10 @@ impl Tab {
 
 	#[inline]
 	pub fn preview_arrow(&mut self, step: isize) -> bool { self.preview.arrow(step) }
+
+	// --- Finder
+	#[inline]
+	pub fn finder(&self) -> Option<&Finder> { self.finder.as_ref() }
 
 	// --- Sorter
 	pub fn set_sorter(&mut self, sorter: FilesSorter) -> bool {

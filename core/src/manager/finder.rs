@@ -1,14 +1,15 @@
-use std::{collections::BTreeMap, ffi::OsStr, path::{Path, PathBuf}};
+use std::{collections::BTreeMap, ffi::OsStr};
 
 use anyhow::Result;
 use regex::bytes::Regex;
+use shared::Url;
 
 use crate::files::Files;
 
 pub struct Finder {
 	query:   Regex,
-	matched: BTreeMap<PathBuf, u8>,
-	version: usize,
+	matched: BTreeMap<Url, u8>,
+	version: u64,
 }
 
 impl Finder {
@@ -47,7 +48,7 @@ impl Finder {
 				continue;
 			}
 
-			self.matched.insert(file.path_owned(), i);
+			self.matched.insert(file.url_owned(), i);
 			if self.matched.len() > 99 {
 				break;
 			}
@@ -75,14 +76,14 @@ impl Finder {
 
 impl Finder {
 	#[inline]
-	pub fn matched(&self) -> &BTreeMap<PathBuf, u8> { &self.matched }
+	pub fn matched(&self) -> &BTreeMap<Url, u8> { &self.matched }
 
 	#[inline]
-	pub fn matched_idx(&self, path: &Path) -> Option<u8> {
-		if let Some((_, &idx)) = self.matched.iter().find(|(p, _)| *p == path) {
+	pub fn matched_idx(&self, url: &Url) -> Option<u8> {
+		if let Some((_, &idx)) = self.matched.iter().find(|(u, _)| *u == url) {
 			return Some(idx);
 		}
-		if path.file_name().map(|n| self.is_match(n)) == Some(true) {
+		if url.file_name().map(|n| self.is_match(n)) == Some(true) {
 			return Some(100);
 		}
 		None
