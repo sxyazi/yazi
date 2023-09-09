@@ -1,6 +1,6 @@
 use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}, ffi::{OsStr, OsString}, mem, time::Duration};
 
-use anyhow::{Error, Result};
+use anyhow::{bail, Error, Result};
 use config::open::Opener;
 use shared::{Defer, Url};
 use tokio::{pin, task::JoinHandle};
@@ -123,10 +123,10 @@ impl Tab {
 
 	pub fn cd_interactive(&mut self, target: Url) -> bool {
 		tokio::spawn(async move {
-			let result =
+			let mut result =
 				emit!(Input(InputOpt::top("Change directory:").with_value(target.to_string_lossy())));
 
-			if let Ok(s) = result.await {
+			if let Some(Ok(s)) = result.recv().await {
 				emit!(Cd(Url::from(s)));
 			}
 		});
@@ -241,7 +241,9 @@ impl Tab {
 		let hidden = self.show_hidden;
 
 		self.search = Some(tokio::spawn(async move {
-			let subject = emit!(Input(InputOpt::top("Search:"))).await?;
+			let Some(Ok(subject)) = emit!(Input(InputOpt::top("Search:"))).recv().await else {
+				bail!("canceled")
+			};
 
 			let rx = if grep {
 				external::rg(external::RgOpt { cwd: cwd.clone(), hidden, subject })
@@ -309,10 +311,10 @@ impl Tab {
 		let mut exec = exec.to_owned();
 		tokio::spawn(async move {
 			if !confirm || exec.is_empty() {
-				let result = emit!(Input(InputOpt::top("Shell:").with_value(&exec).with_highlight()));
-				match result.await {
-					Ok(e) => exec = e,
-					Err(_) => return,
+				let mut result = emit!(Input(InputOpt::top("Shell:").with_value(&exec).with_highlight()));
+				match result.recv().await {
+					Some(Ok(e)) => exec = e,
+					_ => return,
 				}
 			}
 

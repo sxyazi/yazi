@@ -3,8 +3,8 @@ use std::{collections::BTreeMap, ffi::OsString};
 use anyhow::Result;
 use config::{keymap::{Control, KeymapLayer}, open::Opener};
 use crossterm::event::KeyEvent;
-use shared::{RoCell, Url};
-use tokio::sync::{mpsc::UnboundedSender, oneshot};
+use shared::{InputError, RoCell, Url};
+use tokio::sync::{mpsc::{self, UnboundedSender}, oneshot};
 
 use super::{files::{File, FilesOp}, input::InputOpt, select::SelectOpt};
 use crate::manager::PreviewLock;
@@ -32,7 +32,7 @@ pub enum Event {
 
 	// Input
 	Select(SelectOpt, oneshot::Sender<Result<usize>>),
-	Input(InputOpt, oneshot::Sender<Result<String>>),
+	Input(InputOpt, mpsc::UnboundedSender<Result<String, InputError>>),
 
 	// Tasks
 	Open(Vec<(OsString, String)>, Option<Opener>),
@@ -104,8 +104,9 @@ macro_rules! emit {
 		$crate::Event::Select($opt, tx).wait(rx)
 	}};
 	(Input($opt:expr)) => {{
-		let (tx, rx) = tokio::sync::oneshot::channel();
-		$crate::Event::Input($opt, tx).wait(rx)
+		let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+		$crate::Event::Input($opt, tx).emit();
+		rx
 	}};
 
 	(Open($targets:expr, $opener:expr)) => {
