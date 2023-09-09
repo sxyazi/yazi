@@ -29,6 +29,7 @@ pub async fn jq(path: &Path, skip: usize, limit: usize) -> Result<String, PeekEr
 		lines.push('\n');
 	}
 
+	child.start_kill().ok();
 	if skip > 0 && i < skip + limit {
 		Err(PeekError::Exceed(i.saturating_sub(limit)))
 	} else {
