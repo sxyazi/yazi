@@ -1,7 +1,7 @@
 use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}, ffi::{OsStr, OsString}, mem, time::Duration};
 
 use anyhow::{bail, Error, Result};
-use config::open::Opener;
+use config::{keymap::{Exec, KeymapLayer}, open::Opener};
 use shared::{Defer, Url};
 use tokio::{pin, task::JoinHandle};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
@@ -246,7 +246,7 @@ impl Tab {
 		}
 
 		tokio::spawn(async move {
-			if let Ok(s) = emit!(Input(InputOpt::top("Find:"))).await {
+			if let Some(Ok(s)) = emit!(Input(InputOpt::top("Find:"))).recv().await {
 				emit!(Call(
 					Exec::call("find", vec![s]).with_bool("previous", prev).vec(),
 					KeymapLayer::Manager
