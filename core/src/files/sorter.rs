@@ -5,7 +5,7 @@ use shared::Url;
 
 use super::File;
 
-#[derive(PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct FilesSorter {
 	pub by:        SortBy,
 	pub reverse:   bool,
