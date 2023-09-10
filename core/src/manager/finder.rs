@@ -24,15 +24,51 @@ impl Finder {
 				.take(cursor)
 				.rev()
 				.enumerate()
-				.find(|(_, f)| f.name().map_or(false, |n| self.is_match(n)))
+				.find(|(_, f)| f.name().map_or(false, |n| self.matches(n)))
 				.map(|(i, _)| -(i as isize) - 1)
 		} else {
 			files
 				.iter()
 				.skip(cursor + 1)
 				.enumerate()
-				.find(|(_, f)| f.name().map_or(false, |n| self.is_match(n)))
+				.find(|(_, f)| f.name().map_or(false, |n| self.matches(n)))
 				.map(|(i, _)| i as isize + 1)
+		}
+	}
+
+	pub(super) fn ring(&self, files: &Files, cursor: usize, prev: bool) -> Option<isize> {
+		if prev {
+			files
+				.iter()
+				.take(cursor + 1)
+				.rev()
+				.enumerate()
+				.find(|(_, f)| f.name().map_or(false, |n| self.matches(n)))
+				.map(|(i, _)| -(i as isize))
+				.or_else(|| {
+					files
+						.iter()
+						.skip(cursor + 1)
+						.enumerate()
+						.find(|(_, f)| f.name().map_or(false, |n| self.matches(n)))
+						.map(|(i, _)| i as isize + 1)
+				})
+		} else {
+			files
+				.iter()
+				.skip(cursor)
+				.enumerate()
+				.find(|(_, f)| f.name().map_or(false, |n| self.matches(n)))
+				.map(|(i, _)| i as isize)
+				.or_else(|| {
+					files
+						.iter()
+						.take(cursor)
+						.rev()
+						.enumerate()
+						.find(|(_, f)| f.name().map_or(false, |n| self.matches(n)))
+						.map(|(i, _)| -(i as isize) - 1)
+				})
 		}
 	}
 
@@ -44,7 +80,7 @@ impl Finder {
 
 		let mut i = 0u8;
 		for file in files.iter() {
-			if file.name().map(|n| self.is_match(n)) != Some(true) {
+			if file.name().map(|n| self.matches(n)) != Some(true) {
 				continue;
 			}
 
@@ -61,7 +97,7 @@ impl Finder {
 	}
 
 	#[inline]
-	fn is_match(&self, name: &OsStr) -> bool {
+	fn matches(&self, name: &OsStr) -> bool {
 		#[cfg(target_os = "windows")]
 		{
 			self.query.is_match(name.to_string_lossy().as_bytes())
@@ -79,11 +115,14 @@ impl Finder {
 	pub fn matched(&self) -> &BTreeMap<Url, u8> { &self.matched }
 
 	#[inline]
+	pub fn has_matched(&self) -> bool { !self.matched.is_empty() }
+
+	#[inline]
 	pub fn matched_idx(&self, url: &Url) -> Option<u8> {
 		if let Some((_, &idx)) = self.matched.iter().find(|(u, _)| *u == url) {
 			return Some(idx);
 		}
-		if url.file_name().map(|n| self.is_match(n)) == Some(true) {
+		if url.file_name().map(|n| self.matches(n)) == Some(true) {
 			return Some(100);
 		}
 		None

@@ -2,7 +2,7 @@ use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}, ffi::{OsStr, OsString}
 
 use anyhow::{bail, Error, Result};
 use config::{keymap::{Exec, KeymapLayer}, open::Opener};
-use shared::{Defer, Url};
+use shared::{Debounce, Defer, InputError, Url};
 use tokio::{pin, task::JoinHandle};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 
@@ -241,12 +241,25 @@ impl Tab {
 
 	pub fn find(&mut self, query: Option<&str>, prev: bool) -> bool {
 		if let Some(query) = query {
-			self.finder = Finder::new(query).ok();
-			return self.find_arrow(prev);
+			let Ok(finder) = Finder::new(query) else {
+				return false;
+			};
+
+			if let Some(step) = finder.ring(&self.current.files, self.current.cursor(), prev) {
+				self.arrow(step);
+			}
+
+			self.finder = Some(finder);
+			return true;
 		}
 
 		tokio::spawn(async move {
-			if let Some(Ok(s)) = emit!(Input(InputOpt::top("Find:"))).recv().await {
+			let rx = emit!(Input(InputOpt::top("Find:").with_realtime()));
+
+			let rx = Debounce::new(UnboundedReceiverStream::new(rx), Duration::from_millis(50));
+			pin!(rx);
+
+			while let Some(Ok(s)) | Some(Err(InputError::Typed(s))) = rx.next().await {
 				emit!(Call(
 					Exec::call("find", vec![s]).with_bool("previous", prev).vec(),
 					KeymapLayer::Manager

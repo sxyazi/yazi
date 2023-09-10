@@ -112,7 +112,7 @@ impl<'a> Widget for Folder<'a> {
 
 				if let Some(idx) = active
 					.finder()
-					.filter(|_| hovered && self.is_find)
+					.filter(|&f| hovered && self.is_find && f.has_matched())
 					.and_then(|finder| finder.matched_idx(f.url()))
 				{
 					let len = active.finder().unwrap().matched().len();
