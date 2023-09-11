@@ -13,7 +13,7 @@ Yazi ("duck" in Chinese) is a terminal file manager written in Rust, based on no
 - 🎨 Theme System, Custom Layouts, Trash Bin, CSI u
 - ... and more!
 
-https://github.com/sxyazi/yazi/assets/17523360/740a41f4-3d24-4287-952c-3aec51520a32
+https://github.com/sxyazi/yazi/assets/17523360/d5d8427b-e0f3-4552-ae1a-553ba1a7d57e
 
 ⚠️ Note: Yazi is currently in active development and may be unstable. The API is subject to change without prior notice.
 
