@@ -1,12 +1,12 @@
 use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}, ffi::{OsStr, OsString}, mem, time::Duration};
 
 use anyhow::{bail, Error, Result};
-use config::open::Opener;
-use shared::{Defer, Url};
+use config::{keymap::{Exec, KeymapLayer}, open::Opener};
+use shared::{Debounce, Defer, InputError, Url};
 use tokio::{pin, task::JoinHandle};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 
-use super::{Folder, Mode, Preview, PreviewLock};
+use super::{Finder, Folder, Mode, Preview, PreviewLock};
 use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, files::{File, FilesOp, FilesSorter}, input::InputOpt, Event, BLOCKER};
 
 pub struct Tab {
@@ -17,6 +17,7 @@ pub struct Tab {
 	pub(super) history: BTreeMap<Url, Folder>,
 	pub(super) preview: Preview,
 
+	finder:                 Option<Finder>,
 	search:                 Option<JoinHandle<Result<()>>>,
 	pub(super) show_hidden: bool,
 }
@@ -33,6 +34,7 @@ impl From<Url> for Tab {
 			history: Default::default(),
 			preview: Default::default(),
 
+			finder: None,
 			search: None,
 			show_hidden: true,
 		}
@@ -45,6 +47,11 @@ impl From<&Url> for Tab {
 
 impl Tab {
 	pub fn escape(&mut self) -> bool {
+		if self.finder.is_some() {
+			self.finder = None;
+			return true;
+		}
+
 		if let Some((_, indices)) = self.mode.visual() {
 			self.current.files.select_index(indices, Some(self.mode.is_select()));
 			self.mode = Mode::Normal;
@@ -232,6 +239,49 @@ impl Tab {
 		false
 	}
 
+	pub fn find(&mut self, query: Option<&str>, prev: bool) -> bool {
+		if let Some(query) = query {
+			let Ok(finder) = Finder::new(query) else {
+				return false;
+			};
+
+			if let Some(step) = finder.ring(&self.current.files, self.current.cursor(), prev) {
+				self.arrow(step);
+			}
+
+			self.finder = Some(finder);
+			return true;
+		}
+
+		tokio::spawn(async move {
+			let rx = emit!(Input(InputOpt::top("Find:").with_realtime()));
+
+			let rx = Debounce::new(UnboundedReceiverStream::new(rx), Duration::from_millis(50));
+			pin!(rx);
+
+			while let Some(Ok(s)) | Some(Err(InputError::Typed(s))) = rx.next().await {
+				emit!(Call(
+					Exec::call("find", vec![s]).with_bool("previous", prev).vec(),
+					KeymapLayer::Manager
+				));
+			}
+		});
+		false
+	}
+
+	pub fn find_arrow(&mut self, prev: bool) -> bool {
+		let Some(finder) = &mut self.finder else {
+			return false;
+		};
+
+		let mut b = finder.catchup(&self.current.files);
+		if let Some(step) = finder.arrow(&self.current.files, self.current.cursor(), prev) {
+			b |= self.arrow(step);
+		}
+
+		b
+	}
+
 	pub fn search(&mut self, grep: bool) -> bool {
 		if let Some(handle) = self.search.take() {
 			handle.abort();
@@ -254,14 +304,14 @@ impl Tab {
 			let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(300));
 			pin!(rx);
 
-			let version = FilesOp::prepare(&cwd);
+			let ticket = FilesOp::prepare(&cwd);
 			let mut first = true;
 			while let Some(chunk) = rx.next().await {
 				if first {
 					emit!(Cd(cwd.clone()));
 					first = false;
 				}
-				emit!(Files(FilesOp::Part(cwd.clone(), version, chunk)));
+				emit!(Files(FilesOp::Part(cwd.clone(), ticket, chunk)));
 			}
 			Ok(())
 		}));
@@ -408,6 +458,10 @@ impl Tab {
 
 	#[inline]
 	pub fn preview_arrow(&mut self, step: isize) -> bool { self.preview.arrow(step) }
+
+	// --- Finder
+	#[inline]
+	pub fn finder(&self) -> Option<&Finder> { self.finder.as_ref() }
 
 	// --- Sorter
 	pub fn set_sorter(&mut self, sorter: FilesSorter) -> bool {

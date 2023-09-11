@@ -39,6 +39,7 @@ impl<'a> Widget for Layout<'a> {
 		// Current
 		Folder::new(self.cx, manager.current())
 			.with_selection(manager.active().mode().is_visual())
+			.with_find(manager.active().finder().is_some())
 			.render(chunks[1], buf);
 
 		// Preview

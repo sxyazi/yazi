@@ -2,7 +2,7 @@ use core::{emit, files::FilesOp, input::InputMode, Event};
 use std::ffi::OsString;
 
 use anyhow::{Ok, Result};
-use config::{keymap::{Control, Key, KeymapLayer}, BOOT};
+use config::{keymap::{Exec, Key, KeymapLayer}, BOOT};
 use crossterm::event::KeyEvent;
 use shared::{expand_url, Term};
 use tokio::sync::oneshot;
@@ -34,7 +34,7 @@ impl App {
 				Event::Render(_) => app.dispatch_render(),
 				Event::Resize(..) => app.dispatch_resize(),
 				Event::Stop(state, tx) => app.dispatch_stop(state, tx),
-				Event::Ctrl(ctrl, layer) => app.dispatch_ctrl(ctrl, layer),
+				Event::Call(exec, layer) => app.dispatch_call(exec, layer),
 				event => app.dispatch_module(event),
 			}
 		}
@@ -109,8 +109,8 @@ impl App {
 	}
 
 	#[inline]
-	fn dispatch_ctrl(&mut self, ctrl: Control, layer: KeymapLayer) {
-		if Executor::dispatch(&mut self.cx, &ctrl.exec, layer) {
+	fn dispatch_call(&mut self, exec: Vec<Exec>, layer: KeymapLayer) {
+		if Executor::dispatch(&mut self.cx, &exec, layer) {
 			emit!(Render);
 		}
 	}

@@ -28,7 +28,7 @@ impl Folder {
 	pub fn update(&mut self, op: FilesOp) -> bool {
 		let b = match op {
 			FilesOp::Full(_, items) => self.files.update_full(items),
-			FilesOp::Part(_, version, items) => self.files.update_part(version, items),
+			FilesOp::Part(_, ticket, items) => self.files.update_part(ticket, items),
 			FilesOp::Size(_, items) => self.files.update_size(items),
 			_ => unreachable!(),
 		};

@@ -5,11 +5,12 @@ use config::manager::SortBy;
 use shared::Url;
 use tokio::{fs, select, sync::mpsc::{self, UnboundedReceiver}};
 
-use super::{File, FilesSorter, FILES_VERSION};
+use super::{File, FilesSorter, FILES_TICKET};
 
 pub struct Files {
 	items:   Vec<File>,
 	hidden:  Vec<File>,
+	ticket:  u64,
 	version: u64,
 
 	sizes:    BTreeMap<Url, u64>,
@@ -24,6 +25,7 @@ impl Default for Files {
 		Self {
 			items:   Default::default(),
 			hidden:  Default::default(),
+			ticket:  Default::default(),
 			version: Default::default(),
 
 			sizes:    Default::default(),
@@ -126,15 +128,16 @@ impl Files {
 		if !self.show_hidden {
 			(self.hidden, items) = items.into_iter().partition(|f| f.is_hidden);
 		}
+		self.ticket = FILES_TICKET.fetch_add(1, Ordering::Relaxed);
 		self.sorter.sort(&mut items, &self.sizes);
 		self.items = items;
-		self.version = FILES_VERSION.fetch_add(1, Ordering::Relaxed);
+		self.version += 1;
 		true
 	}
 
 	pub fn update_part(&mut self, version: u64, items: Vec<File>) -> bool {
 		if !items.is_empty() {
-			if version != self.version {
+			if version != self.ticket {
 				return false;
 			}
 
@@ -147,22 +150,26 @@ impl Files {
 			}
 
 			self.sorter.sort(&mut self.items, &self.sizes);
+			self.version += 1;
 			return true;
 		}
 
-		self.version = version;
-		if !self.items.is_empty() {
-			self.items.clear();
-			self.hidden.clear();
-			return true;
+		self.ticket = version;
+		if self.items.is_empty() && self.hidden.is_empty() {
+			return false;
 		}
-		false
+
+		self.items.clear();
+		self.hidden.clear();
+		self.version += 1;
+		true
 	}
 
 	pub fn update_size(&mut self, items: BTreeMap<Url, u64>) -> bool {
 		self.sizes.extend(items);
 		if self.sorter.by == SortBy::Size {
 			self.sorter.sort(&mut self.items, &self.sizes);
+			self.version += 1;
 		}
 		true
 	}
@@ -186,7 +193,11 @@ impl Files {
 	#[inline]
 	pub fn duplicate(&self, idx: usize) -> Option<File> { self.items.get(idx).cloned() }
 
-	// --- Size
+	// --- Version
+	#[inline]
+	pub fn version(&self) -> u64 { self.version }
+
+	// --- Sizes
 	#[inline]
 	pub fn size(&self, url: &Url) -> Option<u64> { self.sizes.get(url).copied() }
 
@@ -230,6 +241,7 @@ impl Files {
 	}
 
 	// --- Sorter
+	#[inline]
 	pub fn sorter(&self) -> &FilesSorter { &self.sorter }
 
 	#[inline]
@@ -238,6 +250,7 @@ impl Files {
 			return false;
 		}
 		self.sorter = sorter;
+		self.version += 1;
 		self.sorter.sort(&mut self.items, &self.sizes)
 	}
 
@@ -259,6 +272,7 @@ impl Files {
 		}
 
 		self.show_hidden = state;
+		self.version += 1;
 		true
 	}
 }

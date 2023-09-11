@@ -64,6 +64,12 @@ keymap = [
 	{ on = [ "c", "f" ], exec = "copy filename",         desc = "Copy the name of the file" },
 	{ on = [ "c", "n" ], exec = "copy name_without_ext", desc = "Copy the name of the file without the extension" },
 
+	# Find
+	{ on = [ "/" ], exec = "find" },
+	{ on = [ "?" ], exec = "find --previous" },
+	{ on = [ "-" ], exec = "find_arrow" },
+	{ on = [ "=" ], exec = "find_arrow --previous" },
+
 	# Sorting
 	{ on = [ ",", "a" ], exec = "sort alphabetical --dir_first",           desc = "Sort alphabetically, directories first" },
 	{ on = [ ",", "A" ], exec = "sort alphabetical --reverse --dir_first", desc = "Sort alphabetically, directories first (reverse)" },
@@ -106,7 +112,7 @@ keymap = [
 	{ on = [ "g", "<Space>" ], exec = "cd --interactive", desc = "Go to a directory interactively" },
 
 	# Help
-	{ on = [ "?" ], exec = "help", desc = "Open help" },
+	{ on = [ "~" ], exec = "help", desc = "Open help" },
 ]
 
 [tasks]
@@ -125,7 +131,7 @@ keymap = [
 	{ on = [ "<Enter>" ], exec = "inspect", desc = "Inspect the task" },
 	{ on = [ "x" ],       exec = "cancel",  desc = "Cancel the task" },
 
-	{ on = [ "?" ], exec = "help", desc = "Open help" }
+	{ on = [ "~" ], exec = "help", desc = "Open help" }
 ]
 
 [select]
@@ -144,7 +150,7 @@ keymap = [
 	{ on = [ "<Up>" ],   exec = "arrow -1", desc = "Move cursor up" },
 	{ on = [ "<Down>" ], exec = "arrow 1",  desc = "Move cursor down" },
 
-	{ on = [ "?" ], exec = "help", desc = "Open help" }
+	{ on = [ "~" ], exec = "help", desc = "Open help" }
 ]
 
 [input]
@@ -190,7 +196,7 @@ keymap = [
 	{ on = [ "<C-r>" ], exec = "redo", desc = "Redo the last operation" },
 
 	# Help
-	{ on = [ "?" ], exec = "help", desc = "Open help" }
+	{ on = [ "~" ], exec = "help", desc = "Open help" }
 ]
 
 [help]

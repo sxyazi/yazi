@@ -14,6 +14,11 @@ pub struct Control {
 
 impl Control {
 	#[inline]
+	pub fn to_call(&self) -> Vec<Exec> { self.exec.clone() }
+}
+
+impl Control {
+	#[inline]
 	pub fn on(&self) -> String { self.on.iter().map(ToString::to_string).collect() }
 
 	#[inline]
@@ -28,7 +33,7 @@ impl Control {
 
 	#[inline]
 	pub fn contains(&self, s: &str) -> bool {
-		self.desc.as_ref().map(|d| d.contains(s)).unwrap_or(false)
+		self.desc.as_ref().map(|d| d.contains(s)) == Some(true)
 			|| self.exec().contains(s)
 			|| self.on().contains(s)
 	}

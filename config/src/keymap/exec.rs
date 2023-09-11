@@ -86,3 +86,26 @@ impl Exec {
 		deserializer.deserialize_any(ExecVisitor)
 	}
 }
+
+impl Exec {
+	#[inline]
+	pub fn call(cwd: &str, args: Vec<String>) -> Self {
+		Exec { cmd: cwd.to_owned(), args, named: Default::default() }
+	}
+
+	#[inline]
+	pub fn call_named(cwd: &str, named: BTreeMap<String, String>) -> Self {
+		Exec { cmd: cwd.to_owned(), args: Default::default(), named }
+	}
+
+	#[inline]
+	pub fn vec(self) -> Vec<Self> { vec![self] }
+
+	#[inline]
+	pub fn with_bool(mut self, name: &str, state: bool) -> Self {
+		if state {
+			self.named.insert(name.to_string(), "".to_string());
+		}
+		self
+	}
+}

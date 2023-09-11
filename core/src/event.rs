@@ -1,7 +1,7 @@
 use std::{collections::BTreeMap, ffi::OsString};
 
 use anyhow::Result;
-use config::{keymap::{Control, KeymapLayer}, open::Opener};
+use config::{keymap::{Exec, KeymapLayer}, open::Opener};
 use crossterm::event::KeyEvent;
 use shared::{InputError, RoCell, Url};
 use tokio::sync::{mpsc::{self, UnboundedSender}, oneshot};
@@ -18,7 +18,7 @@ pub enum Event {
 	Render(String),
 	Resize(u16, u16),
 	Stop(bool, Option<oneshot::Sender<()>>),
-	Ctrl(Control, KeymapLayer),
+	Call(Vec<Exec>, KeymapLayer),
 
 	// Manager
 	Cd(Url),
@@ -67,8 +67,8 @@ macro_rules! emit {
 		let (tx, rx) = tokio::sync::oneshot::channel();
 		$crate::Event::Stop($state, Some(tx)).wait(rx)
 	}};
-	(Ctrl($exec:expr, $layer:expr)) => {
-		$crate::Event::Ctrl($exec, $layer).emit();
+	(Call($exec:expr, $layer:expr)) => {
+		$crate::Event::Call($exec, $layer).emit();
 	};
 
 	(Cd($url:expr)) => {

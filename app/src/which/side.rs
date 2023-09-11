@@ -16,7 +16,7 @@ impl Widget for Side<'_> {
 			.cands
 			.into_iter()
 			.map(|c| {
-				let mut spans = vec![];
+				let mut spans = Vec::with_capacity(10);
 
 				// Keys
 				let keys = c.on[self.times..].iter().map(ToString::to_string).collect::<Vec<_>>();

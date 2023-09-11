@@ -5,7 +5,7 @@ use shared::Url;
 use super::File;
 use crate::emit;
 
-pub(super) static FILES_VERSION: AtomicU64 = AtomicU64::new(0);
+pub(super) static FILES_TICKET: AtomicU64 = AtomicU64::new(0);
 
 #[derive(Debug)]
 pub enum FilesOp {
@@ -28,8 +28,8 @@ impl FilesOp {
 
 	#[inline]
 	pub fn prepare(url: &Url) -> u64 {
-		let version = FILES_VERSION.fetch_add(1, Ordering::Relaxed);
-		emit!(Files(Self::Part(url.clone(), version, Vec::new())));
-		version
+		let ticket = FILES_TICKET.fetch_add(1, Ordering::Relaxed);
+		emit!(Files(Self::Part(url.clone(), ticket, Vec::new())));
+		ticket
 	}
 }

@@ -1,7 +1,7 @@
 use core::files::File;
 
 use config::{MANAGER, THEME};
-use ratatui::{buffer::Buffer, layout::Rect, style::Style, widgets::{List, ListItem, Widget}};
+use ratatui::{buffer::Buffer, layout::Rect, style::{Color, Modifier, Style}, text::{Line, Span}, widgets::{List, ListItem, Widget}};
 use shared::short_path;
 
 use crate::Ctx;
@@ -11,11 +11,12 @@ pub(super) struct Folder<'a> {
 	folder:       &'a core::manager::Folder,
 	is_preview:   bool,
 	is_selection: bool,
+	is_find:      bool,
 }
 
 impl<'a> Folder<'a> {
 	pub(super) fn new(cx: &'a Ctx, folder: &'a core::manager::Folder) -> Self {
-		Self { cx, folder, is_preview: false, is_selection: false }
+		Self { cx, folder, is_preview: false, is_selection: false, is_find: false }
 	}
 
 	#[inline]
@@ -28,6 +29,24 @@ impl<'a> Folder<'a> {
 	pub(super) fn with_selection(mut self, state: bool) -> Self {
 		self.is_selection = state;
 		self
+	}
+
+	#[inline]
+	pub(super) fn with_find(mut self, state: bool) -> Self {
+		self.is_find = state;
+		self
+	}
+}
+
+impl<'a> Folder<'a> {
+	#[inline]
+	fn icon(file: &File) -> &'static str {
+		THEME
+			.icons
+			.iter()
+			.find(|x| x.name.match_path(file.url(), Some(file.is_dir())))
+			.map(|x| x.display.as_ref())
+			.unwrap_or("")
 	}
 
 	#[inline]
@@ -53,17 +72,10 @@ impl<'a> Widget for Folder<'a> {
 			self.folder.window()
 		};
 
-		let items = window
+		let items: Vec<_> = window
 			.iter()
 			.enumerate()
 			.map(|(i, f)| {
-				let icon = THEME
-					.icons
-					.iter()
-					.find(|x| x.name.match_path(f.url(), Some(f.is_dir())))
-					.map(|x| x.display.as_ref())
-					.unwrap_or("");
-
 				let is_selected = self.folder.files.is_selected(f.url());
 				if (!self.is_selection && is_selected)
 					|| (self.is_selection && mode.pending(self.folder.offset() + i, is_selected))
@@ -87,16 +99,37 @@ impl<'a> Widget for Folder<'a> {
 					self.file_style(f)
 				};
 
-				let mut path = format!(" {icon} {}", short_path(f.url(), &self.folder.cwd));
+				let mut spans = Vec::with_capacity(10);
+
+				spans.push(Span::raw(format!(" {} ", Self::icon(f))));
+				spans.push(Span::raw(short_path(f.url(), &self.folder.cwd)));
+
 				if let Some(link_to) = f.link_to() {
 					if MANAGER.show_symlink {
-						path.push_str(&format!(" -> {}", link_to.display()));
+						spans.push(Span::raw(format!(" -> {}", link_to.display())));
 					}
 				}
 
-				ListItem::new(path).style(style)
+				if let Some(idx) = active
+					.finder()
+					.filter(|&f| hovered && self.is_find && f.has_matched())
+					.and_then(|finder| finder.matched_idx(f.url()))
+				{
+					let len = active.finder().unwrap().matched().len();
+					let style = Style::new().fg(Color::Rgb(255, 255, 50)).add_modifier(Modifier::ITALIC);
+					spans.push(Span::styled(
+						format!(
+							"  [{}/{}]",
+							if idx > 99 { ">99".to_string() } else { (idx + 1).to_string() },
+							if len > 99 { ">99".to_string() } else { len.to_string() }
+						),
+						style,
+					));
+				}
+
+				ListItem::new(Line::from(spans)).style(style)
 			})
-			.collect::<Vec<_>>();
+			.collect();
 
 		List::new(items).render(area, buf);
 	}
