@@ -65,8 +65,8 @@ impl Manager {
 		}
 
 		if hovered.is_dir() {
-			let len = self.active().history(url).map(|f| f.files.len());
-			self.active_mut().preview.folder(url, len, sequent);
+			let position = self.active().history(url).map(|f| (f.offset(), f.files.len()));
+			self.active_mut().preview.folder(url, position, sequent);
 			return false;
 		}
 

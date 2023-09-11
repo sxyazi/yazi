@@ -59,15 +59,15 @@ impl Preview {
 		}));
 	}
 
-	pub fn folder(&mut self, url: &Url, files: Option<usize>, sequent: bool) {
-		if let Some(files) = files {
-			self.skip = self.skip.min(files.saturating_sub(MANAGER.layout.preview_height()));
+	pub fn folder(&mut self, url: &Url, position: Option<(usize, usize)>, sequent: bool) {
+		if let Some((_, len)) = position {
+			self.skip = self.skip.min(len.saturating_sub(MANAGER.layout.preview_height()));
 		}
 
 		if self.same(url, MIME_DIR) {
 			return;
 		} else if !self.same_mime(url, MIME_DIR) {
-			self.skip = 0;
+			self.skip = position.map(|(offset, _)| offset).unwrap_or(0);
 		}
 
 		self.reset(|_| true);
@@ -89,7 +89,7 @@ impl Preview {
 				return;
 			};
 
-			if files.is_some() {
+			if position.is_some() {
 				emit!(Files(FilesOp::Full(url, UnboundedReceiverStream::new(rx).collect().await)));
 				return;
 			}
@@ -159,10 +159,12 @@ impl Preview {
 			return false;
 		};
 
-		let b = !lock.is_image();
-		if f(lock) {
-			self.lock = None;
+		if !f(lock) {
+			return false;
 		}
+
+		let b = !lock.is_image();
+		self.lock = None;
 		b
 	}
 }
