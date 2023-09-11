@@ -1,7 +1,7 @@
 use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref, sync::atomic::Ordering};
 
 use anyhow::Result;
-use config::manager::SortBy;
+use config::{manager::SortBy, MANAGER};
 use shared::Url;
 use tokio::{fs, select, sync::mpsc::{self, UnboundedReceiver}};
 
@@ -32,7 +32,7 @@ impl Default for Files {
 			selected: Default::default(),
 
 			sorter:      Default::default(),
-			show_hidden: true,
+			show_hidden: MANAGER.show_hidden,
 		}
 	}
 }
@@ -244,7 +244,6 @@ impl Files {
 	#[inline]
 	pub fn sorter(&self) -> &FilesSorter { &self.sorter }
 
-	#[inline]
 	pub fn set_sorter(&mut self, sorter: FilesSorter) -> bool {
 		if self.sorter == sorter {
 			return false;
@@ -255,7 +254,6 @@ impl Files {
 	}
 
 	// --- Show hidden
-	#[inline]
 	pub fn set_show_hidden(&mut self, state: bool) -> bool {
 		if state == self.show_hidden {
 			return false;

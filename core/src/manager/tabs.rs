@@ -1,4 +1,4 @@
-use config::{BOOT, MANAGER};
+use config::BOOT;
 use shared::Url;
 
 use super::Tab;
@@ -13,10 +13,7 @@ pub struct Tabs {
 
 impl Tabs {
 	pub fn make() -> Self {
-		let mut tab = Tab::from(Url::from(&BOOT.cwd));
-		tab.set_show_hidden(Some(MANAGER.show_hidden));
-
-		let mut tabs = Self { idx: usize::MAX, items: vec![tab] };
+		let mut tabs = Self { idx: usize::MAX, items: vec![Tab::from(Url::from(&BOOT.cwd))] };
 		tabs.set_idx(0);
 		tabs
 	}
@@ -28,6 +25,7 @@ impl Tabs {
 
 		let mut tab = Tab::from(url);
 		tab.set_show_hidden(Some(self.active().show_hidden));
+		tab.set_sorter(self.active().sorter);
 
 		self.items.insert(self.idx + 1, tab);
 		self.set_idx(self.idx + 1);

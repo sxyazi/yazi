@@ -1,7 +1,7 @@
 use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}, ffi::{OsStr, OsString}, mem, time::Duration};
 
 use anyhow::{bail, Error, Result};
-use config::{keymap::{Exec, KeymapLayer}, open::Opener};
+use config::{keymap::{Exec, KeymapLayer}, open::Opener, MANAGER};
 use shared::{Debounce, Defer, InputError, Url};
 use tokio::{pin, task::JoinHandle};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
@@ -19,6 +19,7 @@ pub struct Tab {
 
 	finder:                 Option<Finder>,
 	search:                 Option<JoinHandle<Result<()>>>,
+	pub(super) sorter:      FilesSorter,
 	pub(super) show_hidden: bool,
 }
 
@@ -36,7 +37,8 @@ impl From<Url> for Tab {
 
 			finder: None,
 			search: None,
-			show_hidden: true,
+			sorter: Default::default(),
+			show_hidden: MANAGER.show_hidden,
 		}
 	}
 }
@@ -465,12 +467,12 @@ impl Tab {
 
 	// --- Sorter
 	pub fn set_sorter(&mut self, sorter: FilesSorter) -> bool {
-		if !self.current.files.set_sorter(sorter) {
+		if sorter == self.sorter {
 			return false;
 		}
 
-		self.current.hover_repos();
-		true
+		self.sorter = sorter;
+		self.apply_files_attrs(false)
 	}
 
 	// --- Show hidden
@@ -481,26 +483,32 @@ impl Tab {
 		}
 
 		self.show_hidden = state;
-		self.apply_show_hidden(false);
-		true
+		self.apply_files_attrs(false)
 	}
 
-	pub fn apply_show_hidden(&mut self, only_hovered: bool) -> bool {
-		let state = self.show_hidden;
-		let mut b = match self.current.hovered {
-			Some(ref h) if h.is_dir() => {
-				self.history.get_mut(h.url()).map(|f| f.files.set_show_hidden(state)) == Some(true)
-			}
-			_ => false,
-		};
+	pub fn apply_files_attrs(&mut self, only_hovered: bool) -> bool {
+		let mut b = false;
+		if let Some(f) = self
+			.current
+			.hovered
+			.as_ref()
+			.filter(|h| h.is_dir())
+			.and_then(|h| self.history.get_mut(h.url()))
+		{
+			b |= f.files.set_show_hidden(self.show_hidden);
+			b |= f.files.set_sorter(self.sorter);
+		}
 
 		if only_hovered {
 			return b;
 		}
 
-		b |= self.current.files.set_show_hidden(state);
+		b |= self.current.files.set_show_hidden(self.show_hidden);
+		b |= self.current.files.set_sorter(self.sorter);
+
 		if let Some(parent) = self.parent.as_mut() {
-			b |= parent.files.set_show_hidden(state);
+			b |= parent.files.set_show_hidden(self.show_hidden);
+			b |= parent.files.set_sorter(self.sorter);
 		}
 
 		self.current.hover_repos();
