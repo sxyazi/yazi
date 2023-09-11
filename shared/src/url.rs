@@ -1,12 +1,12 @@
-use std::{ffi::{OsStr, OsString}, ops::{Deref, DerefMut}, path::{Path, PathBuf}};
+use std::{ffi::{OsStr, OsString}, fmt::{Debug, Formatter}, ops::{Deref, DerefMut}, path::{Path, PathBuf}};
 
-#[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Url {
 	scheme: UrlScheme,
 	path:   PathBuf,
 }
 
-#[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum UrlScheme {
 	#[default]
 	Regular,
@@ -22,6 +22,10 @@ impl Deref for Url {
 
 impl DerefMut for Url {
 	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.path }
+}
+
+impl Debug for Url {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { write!(f, "{}", self.path.display()) }
 }
 
 impl From<PathBuf> for Url {
