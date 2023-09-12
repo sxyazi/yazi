@@ -161,9 +161,10 @@ keymap = [
 	{ on = [ "<Esc>" ],       exec = "escape",         desc = "Go back the normal mode, or cancel input" },
 
 	# Mode
-	{ on = [ "i" ], exec = "insert",          desc = "Enter insert mode" },
-	{ on = [ "a" ], exec = "insert --append", desc = "Enter append mode" },
-	{ on = [ "v" ], exec = "visual",          desc = "Enter visual mode" },
+	{ on = [ "i" ], exec = "insert",                              desc = "Enter insert mode" },
+	{ on = [ "a" ], exec = "insert --append",                     desc = "Enter append mode" },
+	{ on = [ "v" ], exec = "visual",                              desc = "Enter visual mode" },
+	{ on = [ "V" ], exec = [ "move -999", "visual", "move 999" ], desc = "Enter visual mode and select all" },
 
 	# Navigation
 	{ on = [ "h" ], exec = "move -1", desc = "Move cursor left" },
@@ -183,7 +184,9 @@ keymap = [
 
 	# Deletion
 	{ on = [ "d" ], exec = "delete --cut",                              desc = "Cut the selected characters" },
+	{ on = [ "D" ], exec = [ "delete --cut", "move 999" ],              desc = "Cut until the EOL" },
 	{ on = [ "c" ], exec = "delete --cut --insert",                     desc = "Cut the selected characters, and enter insert mode" },
+	{ on = [ "C" ], exec = [ "delete --cut --insert", "move 999" ],     desc = "Cut until the EOL, and enter insert mode" },
 	{ on = [ "x" ], exec = [ "delete --cut", "move 1 --in-operating" ], desc = "Cut the current character" },
 
 	# Yank/Paste
