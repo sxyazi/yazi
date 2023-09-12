@@ -39,8 +39,10 @@ impl ManagerLayout {
 	pub fn preview_rect(&self) -> Rect {
 		let WindowSize { columns, rows, .. } = Term::size();
 
-		let x = (columns as u32 * (self.parent + self.current) / self.all) as u16;
-		let width = (columns as u32 * self.preview / self.all) as u16;
+		let width = (columns as u32 * self.preview) as f64 / self.all as f64;
+		let width = if width.fract() > 0.5 { width.ceil() as u16 } else { width.floor() as u16 };
+
+		let x = columns.saturating_sub(width);
 
 		Rect {
 			x:      x.saturating_add(PREVIEW_BORDER / 2),
