@@ -289,7 +289,7 @@ impl Tab {
 			handle.abort();
 		}
 
-		let cwd = self.current.cwd.to_search();
+		let mut cwd = self.current.cwd.clone();
 		let hidden = self.show_hidden;
 
 		self.search = Some(tokio::spawn(async move {
@@ -297,6 +297,7 @@ impl Tab {
 				bail!("canceled")
 			};
 
+			cwd = cwd.into_search(subject.clone());
 			let rx = if grep {
 				external::rg(external::RgOpt { cwd: cwd.clone(), hidden, subject })
 			} else {

@@ -4,6 +4,7 @@ use std::{ffi::{OsStr, OsString}, fmt::{Debug, Formatter}, ops::{Deref, DerefMut
 pub struct Url {
 	scheme: UrlScheme,
 	path:   PathBuf,
+	frag:   Option<String>,
 }
 
 #[derive(Clone, Copy, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -114,11 +115,12 @@ impl Url {
 	pub fn is_search(&self) -> bool { self.scheme == UrlScheme::Search }
 
 	#[inline]
-	pub fn to_search(&self) -> Self { self.clone().into_search() }
+	pub fn to_search(&self, frag: String) -> Self { self.clone().into_search(frag) }
 
 	#[inline]
-	pub fn into_search(mut self) -> Self {
+	pub fn into_search(mut self, frag: String) -> Self {
 		self.scheme = UrlScheme::Search;
+		self.frag = Some(frag);
 		self
 	}
 
@@ -137,4 +139,8 @@ impl Url {
 	// --- Path
 	#[inline]
 	pub fn set_path(&mut self, path: PathBuf) { self.path = path; }
+
+	// --- Frag
+	#[inline]
+	pub fn frag(&self) -> Option<&str> { self.frag.as_deref() }
 }

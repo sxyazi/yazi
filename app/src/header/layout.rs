@@ -19,11 +19,11 @@ impl<'a> Widget for Layout<'a> {
 			.constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
 			.split(area);
 
-		let current = &self.cx.manager.current();
-		let location = if current.cwd.is_search() {
-			format!("{} (search)", readable_path(&current.cwd))
+		let cwd = &self.cx.manager.current().cwd;
+		let location = if cwd.is_search() {
+			format!("{} (search: {})", readable_path(cwd), cwd.frag().unwrap())
 		} else {
-			readable_path(&current.cwd)
+			readable_path(cwd)
 		};
 
 		Paragraph::new(location).style(Style::new().fg(Color::Cyan)).render(chunks[0], buf);
