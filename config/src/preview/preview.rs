@@ -4,13 +4,10 @@ use md5::{Digest, Md5};
 use serde::Deserialize;
 use shared::expand_path;
 
-use super::PreviewAdaptor;
 use crate::{xdg::Xdg, MERGED_YAZI};
 
 #[derive(Debug)]
 pub struct Preview {
-	pub adaptor: PreviewAdaptor,
-
 	pub tab_size:   u32,
 	pub max_width:  u32,
 	pub max_height: u32,
@@ -39,8 +36,6 @@ impl Default for Preview {
 			preview.cache_dir.filter(|p| !p.is_empty()).map_or_else(Xdg::cache_dir, expand_path);
 
 		Preview {
-			adaptor: Default::default(),
-
 			tab_size: preview.tab_size,
 			max_width: preview.max_width,
 			max_height: preview.max_height,

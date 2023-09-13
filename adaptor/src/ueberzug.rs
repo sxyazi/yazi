@@ -1,15 +1,16 @@
 use std::{path::PathBuf, process::Stdio};
 
 use anyhow::Result;
-use config::PREVIEW;
 use ratatui::prelude::Rect;
 use tokio::{io::AsyncWriteExt, process::{Child, Command}, sync::mpsc::{self, UnboundedSender}};
+
+use crate::Adaptor;
 
 pub(super) struct Ueberzug;
 
 impl Ueberzug {
-	pub(super) fn start() -> Result<UnboundedSender<Option<(PathBuf, Rect)>>> {
-		let mut child = Self::create_demon().ok();
+	pub(super) fn start(adaptor: Adaptor) -> Result<UnboundedSender<Option<(PathBuf, Rect)>>> {
+		let mut child = Self::create_demon(adaptor).ok();
 		let (tx, mut rx) = mpsc::unbounded_channel();
 
 		tokio::spawn(async move {
@@ -19,7 +20,7 @@ impl Ueberzug {
 					child = None;
 				}
 				if child.is_none() {
-					child = Self::create_demon().ok();
+					child = Self::create_demon(adaptor).ok();
 				}
 				if let Some(c) = &mut child {
 					Self::send_command(c, cmd).await.ok();
@@ -30,10 +31,10 @@ impl Ueberzug {
 		Ok(tx)
 	}
 
-	fn create_demon() -> Result<Child> {
+	fn create_demon(adaptor: Adaptor) -> Result<Child> {
 		Ok(
 			Command::new("ueberzug")
-				.args(["layer", "-so", &PREVIEW.adaptor.to_string()])
+				.args(["layer", "-so", &adaptor.to_string()])
 				.kill_on_drop(true)
 				.stdin(Stdio::piped())
 				.stderr(Stdio::null())

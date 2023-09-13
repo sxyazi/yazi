@@ -7,6 +7,7 @@ use ratatui::prelude::Rect;
 use shared::Term;
 
 use super::image::Image;
+use crate::{CLOSE, ESCAPE, START};
 
 pub(super) struct Kitty;
 
@@ -22,7 +23,7 @@ impl Kitty {
 	#[inline]
 	pub(super) fn image_hide() -> Result<()> {
 		let mut stdout = stdout().lock();
-		stdout.write_all(b"\x1b_Ga=d,d=A\x1b\\")?;
+		stdout.write_all(format!("{}_Ga=d,d=A{}\\{}", START, ESCAPE, CLOSE).as_bytes())?;
 		stdout.flush()?;
 		Ok(())
 	}
@@ -36,23 +37,31 @@ impl Kitty {
 			if let Some(first) = it.next() {
 				write!(
 					buf,
-					"\x1b_Ga=T,f={},s={},v={},m={};{}\x1b\\",
+					"{}_Ga=T,f={},s={},v={},m={};{}{}\\{}",
+					START,
 					format,
 					size.0,
 					size.1,
 					it.peek().is_some() as u8,
 					first.iter().collect::<String>(),
+					ESCAPE,
+					CLOSE
 				)?;
 			}
 
 			while let Some(chunk) = it.next() {
 				write!(
 					buf,
-					"\x1b_Gm={};{}\x1b\\",
+					"{}_Gm={};{}{}\\{}",
+					START,
 					it.peek().is_some() as u8,
-					chunk.iter().collect::<String>()
+					chunk.iter().collect::<String>(),
+					ESCAPE,
+					CLOSE
 				)?;
 			}
+
+			buf.write_all(CLOSE.as_bytes())?;
 			Ok(buf)
 		}
 

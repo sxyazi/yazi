@@ -1,6 +1,6 @@
 use std::{io::BufRead, path::Path, sync::atomic::{AtomicUsize, Ordering}};
 
-use adaptor::Adaptor;
+use adaptor::ADAPTOR;
 use anyhow::anyhow;
 use config::{MANAGER, PREVIEW};
 use shared::{MimeKind, PeekError};
@@ -46,7 +46,7 @@ impl Provider {
 	}
 
 	pub(super) async fn image(path: &Path) -> Result<PreviewData, PeekError> {
-		Adaptor::image_show(path, MANAGER.layout.preview_rect()).await?;
+		ADAPTOR.image_show(path, MANAGER.layout.preview_rect()).await?;
 		Ok(PreviewData::Image)
 	}
 

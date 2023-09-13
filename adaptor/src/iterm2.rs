@@ -7,6 +7,7 @@ use ratatui::prelude::Rect;
 use shared::Term;
 
 use super::image::Image;
+use crate::{CLOSE, START};
 
 pub(super) struct Iterm2;
 
@@ -40,11 +41,13 @@ impl Iterm2 {
 			let mut buf = vec![];
 			write!(
 				buf,
-				"\x1b]1337;File=inline=1;size={};width={}px;height={}px;doNotMoveCursor=1:{}\x07",
+				"{}]1337;File=inline=1;size={};width={}px;height={}px;doNotMoveCursor=1:{}\x07{}",
+				START,
 				jpg.len(),
 				size.0,
 				size.1,
-				general_purpose::STANDARD.encode(&jpg)
+				general_purpose::STANDARD.encode(&jpg),
+				CLOSE
 			)?;
 			Ok(buf)
 		})

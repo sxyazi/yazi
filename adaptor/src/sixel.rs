@@ -6,7 +6,7 @@ use image::DynamicImage;
 use ratatui::prelude::Rect;
 use shared::Term;
 
-use crate::Image;
+use crate::{Image, CLOSE, ESCAPE, START};
 
 pub(super) struct Sixel;
 
@@ -41,7 +41,7 @@ impl Sixel {
 			let nq = NeuQuant::new(10, 256 - alpha as usize, &img);
 
 			let mut buf: Vec<u8> = Vec::with_capacity(1 << 16);
-			write!(buf, "\x1bP0;1;8q\"1;1;{};{}", img.width(), img.height())?;
+			write!(buf, "{}P0;1;8q\"1;1;{};{}", START, img.width(), img.height())?;
 
 			// Palette
 			for (i, c) in nq.color_map_rgba().chunks(4).enumerate() {
@@ -90,7 +90,7 @@ impl Sixel {
 				}
 			}
 
-			write!(buf, "\x1b\\")?;
+			write!(buf, "{}\\{}", ESCAPE, CLOSE)?;
 			Ok(buf)
 		})
 		.await?
