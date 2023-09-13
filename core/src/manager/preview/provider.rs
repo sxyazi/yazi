@@ -1,8 +1,4 @@
-use std::{
-	io::BufRead,
-	path::Path,
-	sync::atomic::{AtomicUsize, Ordering},
-};
+use std::{io::BufRead, path::Path, sync::atomic::{AtomicUsize, Ordering}};
 
 use adaptor::ADAPTOR;
 use anyhow::anyhow;
