@@ -29,6 +29,6 @@ pub fn init() {
 	CLOSE.init(if *TMUX { "\x1b\\" } else { "" });
 	ESCAPE.init(if *TMUX { "\x1b\x1b" } else { "\x1b" });
 
-	ADAPTOR.with(Default::default);
+	ADAPTOR.init(Adaptor::detect());
 	ADAPTOR.start();
 }

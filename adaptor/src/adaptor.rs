@@ -1,15 +1,17 @@
 use std::{env, path::{Path, PathBuf}, sync::atomic::{AtomicBool, Ordering}};
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use config::PREVIEW;
 use ratatui::prelude::Rect;
 use shared::RoCell;
 use tokio::{fs, sync::mpsc::UnboundedSender};
 
 use super::{Iterm2, Kitty};
-use crate::{ueberzug::Ueberzug, Sixel};
+use crate::{ueberzug::Ueberzug, Sixel, TMUX};
 
 static IMAGE_SHOWN: AtomicBool = AtomicBool::new(false);
+
+#[allow(clippy::type_complexity)]
 static UEBERZUG: RoCell<Option<UnboundedSender<Option<(PathBuf, Rect)>>>> = RoCell::new();
 
 #[derive(Clone, Copy)]
@@ -24,8 +26,8 @@ pub enum Adaptor {
 	Chafa,
 }
 
-impl Default for Adaptor {
-	fn default() -> Self {
+impl Adaptor {
+	pub(super) fn detect() -> Self {
 		let vars = [
 			("KITTY_WINDOW_ID", Self::Kitty),
 			("KONSOLE_VERSION", Self::Kitty),
@@ -37,7 +39,8 @@ impl Default for Adaptor {
 			return var.1;
 		}
 
-		match env::var("TERM_PROGRAM").unwrap_or_default().as_str() {
+		let (term, program) = Self::term_program();
+		match program.as_str() {
 			"iTerm.app" => return Self::Iterm2,
 			"WezTerm" => return cfg!(windows).then_some(Self::Iterm2).unwrap_or(Self::Kitty),
 			"BlackBox" => return Self::Sixel,
@@ -46,7 +49,7 @@ impl Default for Adaptor {
 			"mintty" => return Self::Iterm2,
 			_ => {}
 		}
-		match env::var("TERM").unwrap_or_default().as_str() {
+		match term.as_str() {
 			"xterm-kitty" => return Self::Kitty,
 			"foot" => return Self::Sixel,
 			_ => {}
@@ -57,17 +60,38 @@ impl Default for Adaptor {
 			_ => Self::Chafa,
 		}
 	}
+
+	pub(super) fn term_program() -> (String, String) {
+		fn tmux_env(name: &str) -> Result<String> {
+			let output = std::process::Command::new("tmux").args(["show-environment", name]).output()?;
+
+			String::from_utf8(output.stdout)?
+				.trim()
+				.strip_prefix(&format!("{}=", name))
+				.map_or_else(|| Err(anyhow!("")), |s| Ok(s.to_string()))
+		}
+
+		let mut term = env::var("TERM").unwrap_or_default();
+		let mut program = env::var("TERM_PROGRAM").unwrap_or_default();
+
+		if *TMUX {
+			term = tmux_env("TERM").unwrap_or(term);
+			program = tmux_env("TERM_PROGRAM").unwrap_or(program);
+		}
+
+		(term, program)
+	}
 }
 
 impl ToString for Adaptor {
 	fn to_string(&self) -> String {
 		match self {
-			Adaptor::Kitty => "kitty",
-			Adaptor::Iterm2 => "iterm2",
-			Adaptor::Sixel => "sixel",
-			Adaptor::X11 => "x11",
-			Adaptor::Wayland => "wayland",
-			Adaptor::Chafa => "chafa",
+			Self::Kitty => "kitty",
+			Self::Iterm2 => "iterm2",
+			Self::Sixel => "sixel",
+			Self::X11 => "x11",
+			Self::Wayland => "wayland",
+			Self::Chafa => "chafa",
 		}
 		.to_string()
 	}
@@ -88,9 +112,9 @@ impl Adaptor {
 		IMAGE_SHOWN.store(true, Ordering::Relaxed);
 
 		match self {
-			Adaptor::Kitty => Kitty::image_show(path, rect).await,
-			Adaptor::Iterm2 => Iterm2::image_show(path, rect).await,
-			Adaptor::Sixel => Sixel::image_show(path, rect).await,
+			Self::Kitty => Kitty::image_show(path, rect).await,
+			Self::Iterm2 => Iterm2::image_show(path, rect).await,
+			Self::Sixel => Sixel::image_show(path, rect).await,
 			_ => Ok(if let Some(tx) = &*UEBERZUG {
 				tx.send(Some((path.to_path_buf(), rect)))?;
 			}),
@@ -103,9 +127,9 @@ impl Adaptor {
 		}
 
 		match self {
-			Adaptor::Kitty => Kitty::image_hide(),
-			Adaptor::Iterm2 => Iterm2::image_hide(rect),
-			Adaptor::Sixel => Sixel::image_hide(rect),
+			Self::Kitty => Kitty::image_hide(),
+			Self::Iterm2 => Iterm2::image_hide(rect),
+			Self::Sixel => Sixel::image_hide(rect),
 			_ => Ok(if let Some(tx) = &*UEBERZUG {
 				tx.send(None)?;
 			}),
@@ -114,6 +138,6 @@ impl Adaptor {
 
 	#[inline]
 	pub(super) fn needs_ueberzug(self) -> bool {
-		!matches!(self, Adaptor::Kitty | Adaptor::Iterm2 | Adaptor::Sixel)
+		!matches!(self, Self::Kitty | Self::Iterm2 | Self::Sixel)
 	}
 }
