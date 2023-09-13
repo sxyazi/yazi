@@ -30,10 +30,7 @@ impl Provider {
 			MimeKind::Archive => Provider::archive(path, skip).await.map(PreviewData::Text),
 			MimeKind::Image => Provider::image(path).await,
 			MimeKind::Video => Provider::video(path, skip).await,
-			MimeKind::JSON => Provider::json(path, skip)
-				.or_else(|_| Provider::highlight(path, skip))
-				.await
-				.map(PreviewData::Text),
+			MimeKind::JSON => Provider::json(path, skip).await.map(PreviewData::Text),
 			MimeKind::PDF => Provider::pdf(path, skip).await,
 			MimeKind::Text => Provider::highlight(path, skip).await.map(PreviewData::Text),
 			MimeKind::Others => Err("Unsupported mimetype".into()),
@@ -77,7 +74,9 @@ impl Provider {
 	}
 
 	pub(super) async fn json(path: &Path, skip: usize) -> Result<String, PeekError> {
-		external::jq(path, skip, MANAGER.layout.preview_height()).await
+		external::jq(path, skip, MANAGER.layout.preview_height())
+			.or_else(|_| Provider::highlight(path, skip))
+			.await
 	}
 
 	pub(super) async fn archive(path: &Path, skip: usize) -> Result<String, PeekError> {
