@@ -1,6 +1,6 @@
 use std::{sync::atomic::Ordering, time::Duration};
 
-use adaptor::Adaptor;
+use adaptor::ADAPTOR;
 use config::MANAGER;
 use shared::{MimeKind, PeekError, Url, MIME_DIR};
 use tokio::{pin, task::JoinHandle};
@@ -153,7 +153,7 @@ impl Preview {
 	pub fn reset<F: FnOnce(&PreviewLock) -> bool>(&mut self, f: F) -> bool {
 		self.handle.take().map(|h| h.abort());
 		INCR.fetch_add(1, Ordering::Relaxed);
-		Adaptor::image_hide(MANAGER.layout.preview_rect()).ok();
+		ADAPTOR.image_hide(MANAGER.layout.preview_rect()).ok();
 
 		let Some(ref lock) = self.lock else {
 			return false;
