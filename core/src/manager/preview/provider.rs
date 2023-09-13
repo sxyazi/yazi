@@ -3,6 +3,7 @@ use std::{io::BufRead, path::Path, sync::atomic::{AtomicUsize, Ordering}};
 use adaptor::ADAPTOR;
 use anyhow::anyhow;
 use config::{MANAGER, PREVIEW};
+use futures::TryFutureExt;
 use shared::{MimeKind, PeekError};
 use syntect::{easy::HighlightFile, util::as_24_bit_terminal_escaped};
 use tokio::fs;
@@ -69,7 +70,9 @@ impl Provider {
 	}
 
 	pub(super) async fn json(path: &Path, skip: usize) -> Result<String, PeekError> {
-		external::jq(path, skip, MANAGER.layout.preview_height()).await
+		external::jq(path, skip, MANAGER.layout.preview_height())
+			.or_else(|_| Provider::highlight(path, skip))
+			.await
 	}
 
 	pub(super) async fn archive(path: &Path, skip: usize) -> Result<String, PeekError> {
