@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, collections::BTreeMap, mem};
+use std::{cmp::Ordering, collections::BTreeMap, mem, ops::Deref};
 
 use config::{manager::SortBy, MANAGER};
 use shared::Url;
@@ -7,17 +7,19 @@ use super::File;
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct FilesSorter {
-	pub by:        SortBy,
-	pub reverse:   bool,
-	pub dir_first: bool,
+	pub by:          SortBy,
+	pub reverse:     bool,
+	pub dir_first:   bool,
+	pub ignore_case: bool,
 }
 
 impl Default for FilesSorter {
 	fn default() -> Self {
 		Self {
-			by:        MANAGER.sort_by,
-			reverse:   MANAGER.sort_reverse,
-			dir_first: MANAGER.sort_dir_first,
+			by:          MANAGER.sort_by,
+			reverse:     MANAGER.sort_reverse,
+			dir_first:   MANAGER.sort_dir_first,
+			ignore_case: MANAGER.sort_ignore_case,
 		}
 	}
 }
@@ -29,9 +31,17 @@ impl FilesSorter {
 		}
 
 		match self.by {
-			SortBy::Alphabetical => {
-				items.sort_unstable_by(|a, b| self.cmp(&*a.url, &*b.url, self.promote(a, b)))
-			}
+			SortBy::Alphabetical => items.sort_unstable_by(|a, b| {
+				if self.ignore_case {
+					self.cmp(
+						a.url.deref().as_os_str().to_ascii_lowercase(),
+						b.url.deref().as_os_str().to_ascii_lowercase(),
+						self.promote(a, b),
+					)
+				} else {
+					self.cmp(&*a.url, &*b.url, self.promote(a, b))
+				}
+			}),
 			SortBy::Created => items.sort_unstable_by(|a, b| {
 				if let (Ok(aa), Ok(bb)) = (a.meta.created(), b.meta.created()) {
 					return self.cmp(aa, bb, self.promote(a, b));
@@ -65,12 +75,16 @@ impl FilesSorter {
 		indices.sort_unstable_by(|&a, &b| {
 			let promote = self.promote(entities[a].1, entities[b].1);
 			if promote != Ordering::Equal {
-				promote
-			} else if self.reverse {
-				natord::compare(&entities[b].0, &entities[a].0)
+				return promote;
+			}
+
+			let ordering = if self.ignore_case {
+				natord::compare_ignore_case(&entities[a].0, &entities[b].0)
 			} else {
 				natord::compare(&entities[a].0, &entities[b].0)
-			}
+			};
+
+			if self.reverse { ordering.reverse() } else { ordering }
 		});
 
 		let dummy = File {

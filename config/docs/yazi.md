@@ -24,6 +24,11 @@
   - `true`: Directories first
   - `false`: Respects `sort_by` and `sort_reverse` only
 
+- sort_ignore_case: Ignore case while sorting
+
+  - `true`: Ignore case
+  - `false`: Uppercase has precedence over lowercase
+
 - show_hidden: Show hidden files
 
   - `true`: Show

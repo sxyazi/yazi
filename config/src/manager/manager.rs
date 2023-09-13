@@ -8,9 +8,10 @@ pub struct Manager {
 	pub layout: ManagerLayout,
 
 	// Sorting
-	pub sort_by:        SortBy,
-	pub sort_reverse:   bool,
-	pub sort_dir_first: bool,
+	pub sort_by:          SortBy,
+	pub sort_reverse:     bool,
+	pub sort_dir_first:   bool,
+	pub sort_ignore_case: bool,
 
 	// Display
 	pub show_hidden:  bool,
