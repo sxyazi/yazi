@@ -81,6 +81,8 @@ rules = [
 
 	# { mime = "application/json", use = "text" },
 	{ name = "*.json", use = "text" },
+
+	{ name = "*.html", use = [ "browser", "text" ] },
 ]
 ```
 
