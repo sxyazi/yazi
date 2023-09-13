@@ -1,8 +1,13 @@
-use std::{io::BufRead, path::Path, sync::atomic::{AtomicUsize, Ordering}};
+use std::{
+	io::BufRead,
+	path::Path,
+	sync::atomic::{AtomicUsize, Ordering},
+};
 
 use adaptor::ADAPTOR;
 use anyhow::anyhow;
 use config::{MANAGER, PREVIEW};
+use futures::TryFutureExt;
 use shared::{MimeKind, PeekError};
 use syntect::{easy::HighlightFile, util::as_24_bit_terminal_escaped};
 use tokio::fs;
@@ -25,7 +30,10 @@ impl Provider {
 			MimeKind::Archive => Provider::archive(path, skip).await.map(PreviewData::Text),
 			MimeKind::Image => Provider::image(path).await,
 			MimeKind::Video => Provider::video(path, skip).await,
-			MimeKind::JSON => Provider::json(path, skip).await.map(PreviewData::Text),
+			MimeKind::JSON => Provider::json(path, skip)
+				.or_else(|_| Provider::highlight(path, skip))
+				.await
+				.map(PreviewData::Text),
 			MimeKind::PDF => Provider::pdf(path, skip).await,
 			MimeKind::Text => Provider::highlight(path, skip).await.map(PreviewData::Text),
 			MimeKind::Others => Err("Unsupported mimetype".into()),
