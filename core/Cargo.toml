@@ -29,6 +29,7 @@ tracing       = "^0"
 trash         = "^3"
 unicode-width = "^0"
 yazi-prebuild = "^0"
+mime_guess = "2.0.4"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 clipboard-win = "^4"

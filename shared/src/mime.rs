@@ -18,7 +18,7 @@ pub enum MimeKind {
 
 impl MimeKind {
 	pub fn new(s: &str) -> Self {
-		if s.starts_with("text/") || s.ends_with("/xml") || s.ends_with("/javascript") {
+		if s.starts_with("text/") || s.ends_with("/xml") || s.ends_with("/javascript") || s.ends_with("/x-sh") {
 			Self::Text
 		} else if s.starts_with("image/") {
 			Self::Image

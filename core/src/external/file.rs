@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use anyhow::{bail, Result};
 use futures::TryFutureExt;
 use shared::{MimeKind, Url};
-use tokio::process::Command;
+use tokio::{fs, io::AsyncReadExt, process::Command};
 use tracing::error;
 
 async fn _file(files: &[&Url]) -> Result<BTreeMap<Url, String>> {
@@ -36,5 +36,41 @@ async fn _file(files: &[&Url]) -> Result<BTreeMap<Url, String>> {
 }
 
 pub async fn file(files: &[impl AsRef<Url>]) -> Result<BTreeMap<Url, String>> {
-	_file(&files.iter().map(AsRef::as_ref).collect::<Vec<_>>()).await
+	let _files = &files.iter().map(AsRef::as_ref).collect::<Vec<_>>();
+	_file(_files).or_else(move |_| fallback(_files)).await
+}
+
+async fn fallback(files: &[&Url]) -> Result<BTreeMap<Url, String>> {
+	let mut mimes = BTreeMap::new();
+	for &file in files {
+		if let Ok(mime) = guess_mime(file).await {
+			mimes.insert(file.clone(), mime);
+		}
+	}
+
+	if mimes.is_empty() {
+		error!("failed to get mime types: {:?}", files);
+		bail!("failed to get mime types");
+	}
+
+	Ok(mimes)
+}
+
+async fn guess_mime(file: impl AsRef<Url>) -> Result<String> {
+	// First, try to guess mime type from file extenstion.
+	// If fail, either return "text/plain" or "application/octet-stream" by
+	// trying to convert 1kb of data to utf8 string
+	let file = file.as_ref();
+	match mime_guess::from_path(file).first() {
+		Some(mime) => Ok(mime.to_string()),
+		None => {
+			let mut buf = [0; 1024];
+			let num_bytes = fs::File::open(file).await?.read(&mut buf).await?;
+			if String::from_utf8(buf[..num_bytes].to_vec()).is_ok() {
+				Ok(String::from("text/plain"))
+			} else {
+				Ok(String::from("application/octet-stream"))
+			}
+		}
+	}
 }
