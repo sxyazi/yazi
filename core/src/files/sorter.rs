@@ -7,19 +7,19 @@ use super::File;
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct FilesSorter {
-	pub by:          SortBy,
-	pub reverse:     bool,
-	pub dir_first:   bool,
-	pub ignore_case: bool,
+	pub by:        SortBy,
+	pub sensitive: bool,
+	pub reverse:   bool,
+	pub dir_first: bool,
 }
 
 impl Default for FilesSorter {
 	fn default() -> Self {
 		Self {
-			by:          MANAGER.sort_by,
-			reverse:     MANAGER.sort_reverse,
-			dir_first:   MANAGER.sort_dir_first,
-			ignore_case: MANAGER.sort_ignore_case,
+			by:        MANAGER.sort_by,
+			sensitive: MANAGER.sort_sensitive,
+			reverse:   MANAGER.sort_reverse,
+			dir_first: MANAGER.sort_dir_first,
 		}
 	}
 }
@@ -32,7 +32,7 @@ impl FilesSorter {
 
 		match self.by {
 			SortBy::Alphabetical => items.sort_unstable_by(|a, b| {
-				if self.ignore_case {
+				if self.sensitive {
 					self.cmp(
 						a.url.deref().as_os_str().to_ascii_lowercase(),
 						b.url.deref().as_os_str().to_ascii_lowercase(),
@@ -78,7 +78,7 @@ impl FilesSorter {
 				return promote;
 			}
 
-			let ordering = if self.ignore_case {
+			let ordering = if self.sensitive {
 				natord::compare_ignore_case(&entities[a].0, &entities[b].0)
 			} else {
 				natord::compare(&entities[a].0, &entities[b].0)

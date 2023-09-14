@@ -149,11 +149,11 @@ impl Executor {
 			// Sorting
 			"sort" => {
 				let b = cx.manager.active_mut().set_sorter(FilesSorter {
-					by:          SortBy::try_from(exec.args.get(0).cloned().unwrap_or_default())
+					by:        SortBy::try_from(exec.args.get(0).cloned().unwrap_or_default())
 						.unwrap_or_default(),
-					reverse:     exec.named.contains_key("reverse"),
-					dir_first:   exec.named.contains_key("dir_first"),
-					ignore_case: exec.named.contains_key("ignore_case"),
+					sensitive: exec.named.contains_key("sensitive"),
+					reverse:   exec.named.contains_key("reverse"),
+					dir_first: exec.named.contains_key("dir_first"),
 				});
 				cx.tasks.precache_size(&cx.manager.current().files);
 				b
