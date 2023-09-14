@@ -33,14 +33,14 @@ impl FilesSorter {
 		match self.by {
 			SortBy::Alphabetical => items.sort_unstable_by(|a, b| {
 				if self.sensitive {
-					self.cmp(
-						a.url.deref().as_os_str().to_ascii_lowercase(),
-						b.url.deref().as_os_str().to_ascii_lowercase(),
-						self.promote(a, b),
-					)
-				} else {
-					self.cmp(&*a.url, &*b.url, self.promote(a, b))
+					return self.cmp(&*a.url, &*b.url, self.promote(a, b));
 				}
+
+				self.cmp(
+					a.url.as_os_str().to_ascii_lowercase(),
+					b.url.as_os_str().to_ascii_lowercase(),
+					self.promote(a, b),
+				)
 			}),
 			SortBy::Created => items.sort_unstable_by(|a, b| {
 				if let (Ok(aa), Ok(bb)) = (a.meta.created(), b.meta.created()) {
