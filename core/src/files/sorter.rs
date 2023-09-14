@@ -79,9 +79,9 @@ impl FilesSorter {
 			}
 
 			let ordering = if self.sensitive {
-				natord::compare_ignore_case(&entities[a].0, &entities[b].0)
-			} else {
 				natord::compare(&entities[a].0, &entities[b].0)
+			} else {
+				natord::compare_ignore_case(&entities[a].0, &entities[b].0)
 			};
 
 			if self.reverse { ordering.reverse() } else { ordering }
