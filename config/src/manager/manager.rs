@@ -9,6 +9,7 @@ pub struct Manager {
 
 	// Sorting
 	pub sort_by:        SortBy,
+	pub sort_sensitive: bool,
 	pub sort_reverse:   bool,
 	pub sort_dir_first: bool,
 

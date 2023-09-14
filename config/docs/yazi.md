@@ -14,6 +14,11 @@
   - `"natural"`: Sort naturally, e.g. `1.md` < `2.md` < `10.md`
   - `"size"`: Sort by file size
 
+- sort_sensitive: Sort case-sensitively
+
+  - `true`: Case-sensitive
+  - `false`: Case-insensitive
+
 - sort_reverse: Display files in reverse order
 
   - `true`: Reverse order
