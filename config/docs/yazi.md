@@ -81,8 +81,8 @@ rules = [
 
 Available rule parameters are as follows:
 
-- name: Glob expression for matching the file name
-- mime: Glob expression for matching the MIME type
+- name: Glob expression for matching the file name. Case insensitive by default, add `\s` to the beginning to make it sensitive.
+- mime: Glob expression for matching the MIME type. Case insensitive by default, add `\s` to the beginning to make it sensitive.
 - use: Opener name corresponding to the names in the opener section.
 
 ## tasks
