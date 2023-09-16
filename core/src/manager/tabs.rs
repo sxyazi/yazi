@@ -33,7 +33,11 @@ impl Tabs {
 	}
 
 	pub fn switch(&mut self, idx: isize, rel: bool) -> bool {
-		let idx = if rel { self.absolute(idx) } else { idx as usize };
+		let idx = if rel {
+			(self.idx as isize + idx).rem_euclid(self.items.len() as isize) as usize
+		} else {
+			idx as usize
+		};
 
 		if idx == self.idx || idx >= self.items.len() {
 			return false;
