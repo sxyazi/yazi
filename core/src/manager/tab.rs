@@ -222,7 +222,7 @@ impl Tab {
 		let mut it = self.selected().into_iter().peekable();
 		while let Some(f) = it.next() {
 			s.push(match type_ {
-				"path" => f.url_os_str(),
+				"path" => f.url().as_os_str(),
 				"dirname" => f.url().parent().map_or(OsStr::new(""), |p| p.as_os_str()),
 				"filename" => f.name().unwrap_or(OsStr::new("")),
 				"name_without_ext" => f.stem().unwrap_or(OsStr::new("")),
@@ -356,7 +356,7 @@ impl Tab {
 		let selected: Vec<_> = self
 			.selected()
 			.into_iter()
-			.map(|f| (f.url_os_str().to_owned(), Default::default()))
+			.map(|f| (f.url().as_os_str().to_owned(), Default::default()))
 			.collect();
 
 		let mut exec = exec.to_owned();

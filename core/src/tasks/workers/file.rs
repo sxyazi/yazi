@@ -20,6 +20,7 @@ pub(crate) struct File {
 pub(crate) enum FileOp {
 	Paste(FileOpPaste),
 	Link(FileOpLink),
+	Symlink(FileOpSymlink),
 	Delete(FileOpDelete),
 	Trash(FileOpTrash),
 }
@@ -41,6 +42,13 @@ pub(crate) struct FileOpLink {
 	pub to:     Url,
 	pub cut:    bool,
 	pub length: u64,
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct FileOpSymlink {
+	pub id:   usize,
+	pub from: Url,
+	pub to:   Url,
 }
 
 #[derive(Clone, Debug)]
@@ -68,6 +76,7 @@ impl File {
 		Ok(match self.rx.recv().await? {
 			FileOp::Paste(t) => (t.id, FileOp::Paste(t)),
 			FileOp::Link(t) => (t.id, FileOp::Link(t)),
+			FileOp::Symlink(t) => (t.id, FileOp::Symlink(t)),
 			FileOp::Delete(t) => (t.id, FileOp::Delete(t)),
 			FileOp::Trash(t) => (t.id, FileOp::Trash(t)),
 		})
@@ -113,6 +122,17 @@ impl File {
 				}
 				self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
 			}
+			FileOp::Symlink(task) => {
+				#[cfg(unix)]
+				{
+					fs::symlink(&task.from, &task.to).await?;
+					self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
+				}
+				#[cfg(target_os = "windows")]
+				{
+					todo!()
+				}
+			}
 			FileOp::Link(task) => {
 				let src = match fs::read_link(&task.from).await {
 					Ok(src) => src,
@@ -126,13 +146,13 @@ impl File {
 				match fs::remove_file(&task.to).await {
 					Err(e) if e.kind() != NotFound => Err(e)?,
 					_ => {
+						#[cfg(unix)]
+						{
+							fs::symlink(src, &task.to).await?
+						}
 						#[cfg(target_os = "windows")]
 						{
 							fs::symlink_file(src, &task.to).await?
-						}
-						#[cfg(not(target_os = "windows"))]
-						{
-							fs::symlink(src, &task.to).await?
 						}
 					}
 				}
@@ -205,7 +225,7 @@ impl File {
 			let dest = root.join(src.components().skip(skip).collect::<PathBuf>());
 			match fs::create_dir(&dest).await {
 				Err(e) if e.kind() != AlreadyExists => {
-					self.log(task.id, format!("Create dir failed: {:?}, {e}", dest))?;
+					self.log(task.id, format!("Create dir failed: {dest:?}, {e}"))?;
 					continue;
 				}
 				_ => {}
@@ -214,7 +234,7 @@ impl File {
 			let mut it = match fs::read_dir(&src).await {
 				Ok(it) => it,
 				Err(e) => {
-					self.log(task.id, format!("Read dir failed: {:?}, {e}", src))?;
+					self.log(task.id, format!("Read dir failed: {src:?}, {e}"))?;
 					continue;
 				}
 			};
@@ -242,6 +262,13 @@ impl File {
 			}
 		}
 		self.done(task.id)
+	}
+
+	pub(crate) async fn symlink(&self, task: FileOpSymlink) -> Result<()> {
+		let id = task.id;
+		self.sch.send(TaskOp::New(id, 0))?;
+		self.tx.send(FileOp::Symlink(task)).await?;
+		self.done(id)
 	}
 
 	pub(crate) async fn delete(&self, mut task: FileOpDelete) -> Result<()> {

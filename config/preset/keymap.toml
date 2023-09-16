@@ -49,10 +49,12 @@ keymap = [
 	{ on = [ "<C-Enter>" ], exec = "open --interactive",     desc = "Open the selected files interactively" },  # It's cool if you're using a terminal that supports CSI u
 	{ on = [ "y" ],         exec = "yank",                   desc = "Copy the selected files" },
 	{ on = [ "x" ],         exec = "yank --cut",             desc = "Cut the selected files" },
-	{ on = [ "p" ],         exec = "paste",                  desc = "Paste the files" },
+	{ on = [ "p" , "p" ],   exec = "paste",                  desc = "Paste the files" },
 	{ on = [ "P" ],         exec = "paste --force",          desc = "Paste the files (overwrite if the destination exists)" },
 	{ on = [ "k" ],         exec = "paste --follow",         desc = "Paste the files (follow the symlinks)" },
 	{ on = [ "K" ],         exec = "paste --follow --force", desc = "Paste the files (overwrite + follow)" },
+	{ on = [ "p", "l" ],    exec = "symlink",                desc = "Symlink the absolute path of files" },
+	{ on = [ "p", "L" ],    exec = "symlink --relative",     desc = "Symlink the relative path of files" },
 	{ on = [ "d" ],         exec = "remove",                 desc = "Move the files to the trash" },
 	{ on = [ "D" ],         exec = "remove --permanently",   desc = "Permanently delete the files" },
 	{ on = [ "a" ],         exec = "create",                 desc = "Create a file or directory (ends with / for directories)" },

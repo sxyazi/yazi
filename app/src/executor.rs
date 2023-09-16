@@ -108,6 +108,17 @@ impl Executor {
 					cx.tasks.file_copy(src, dest, force, exec.named.contains_key("follow"))
 				}
 			}
+			"symlink" => {
+				let dest = cx.manager.cwd().to_owned();
+				let (_, src) = cx.manager.yanked();
+
+				cx.tasks.file_symlink(
+					src,
+					dest,
+					exec.named.contains_key("force"),
+					exec.named.contains_key("relative"),
+				)
+			}
 			"remove" => {
 				let targets = cx.manager.selected().into_iter().map(|f| f.url_owned()).collect();
 				let force = exec.named.contains_key("force");

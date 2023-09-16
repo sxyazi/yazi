@@ -89,7 +89,7 @@ impl Files {
 					self.items.iter().any(|f| !self.selected.contains(&f.url))
 				};
 
-				self.selected = self.iter().map(|f| f.url_owned()).collect();
+				self.selected = self.iter().map(|f| f.url().to_owned()).collect();
 				b
 			}
 			Some(false) => {
@@ -106,7 +106,7 @@ impl Files {
 					if self.selected.contains(&item.url) {
 						self.selected.remove(&item.url);
 					} else {
-						self.selected.insert(item.url_owned());
+						self.selected.insert(item.url().to_owned());
 					}
 				}
 				!self.items.is_empty()
@@ -116,7 +116,7 @@ impl Files {
 
 	pub fn select_index(&mut self, indices: &BTreeSet<usize>, state: Option<bool>) -> bool {
 		let mut applied = false;
-		let paths: Vec<_> = self.pick(indices).iter().map(|f| f.url_owned()).collect();
+		let paths: Vec<_> = self.pick(indices).iter().map(|f| f.url().to_owned()).collect();
 
 		for path in paths {
 			applied |= self.select(&path, state);
