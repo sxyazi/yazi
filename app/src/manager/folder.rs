@@ -1,10 +1,8 @@
-use core::files::File;
+use core::{files::File, Ctx};
 
 use config::{MANAGER, THEME};
 use ratatui::{buffer::Buffer, layout::Rect, style::{Color, Modifier, Style}, text::{Line, Span}, widgets::{List, ListItem, Widget}};
 use shared::short_path;
-
-use crate::Ctx;
 
 pub(super) struct Folder<'a> {
 	cx:           &'a Ctx,

@@ -1,7 +1,8 @@
+use core::Ctx;
+
 use ratatui::{buffer::Buffer, layout::{self, Rect}, prelude::{Constraint, Direction}, style::{Color, Style}, widgets::{Clear, Paragraph, Widget}};
 
 use super::Bindings;
-use crate::Ctx;
 
 pub(crate) struct Layout<'a> {
 	cx: &'a Ctx,

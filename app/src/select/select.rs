@@ -1,6 +1,6 @@
-use ratatui::{buffer::Buffer, layout::Rect, style::{Color, Style}, widgets::{Block, BorderType, Borders, Clear, List, ListItem, Widget}};
+use core::Ctx;
 
-use crate::Ctx;
+use ratatui::{buffer::Buffer, layout::Rect, style::{Color, Style}, widgets::{Block, BorderType, Borders, Clear, List, ListItem, Widget}};
 
 pub(crate) struct Select<'a> {
 	cx: &'a Ctx,

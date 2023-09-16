@@ -1,10 +1,9 @@
+use core::Ctx;
 use std::ops::ControlFlow;
 
 use config::THEME;
 use ratatui::{buffer::Buffer, layout::{Alignment, Rect}, text::{Line, Span}, widgets::{Paragraph, Widget}};
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
-
-use crate::Ctx;
 
 pub(super) struct Tabs<'a> {
 	cx: &'a Ctx,

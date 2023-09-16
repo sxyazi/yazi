@@ -1,4 +1,4 @@
-use core::{emit, files::FilesOp, input::InputMode, Event};
+use core::{emit, files::FilesOp, input::InputMode, Ctx, Event};
 use std::ffi::OsString;
 
 use anyhow::{Ok, Result};
@@ -7,7 +7,7 @@ use crossterm::event::KeyEvent;
 use shared::{expand_url, Term};
 use tokio::sync::oneshot;
 
-use crate::{Ctx, Executor, Logs, Root, Signals};
+use crate::{Executor, Logs, Root, Signals};
 
 pub(super) struct App {
 	cx:      Ctx,
@@ -21,7 +21,7 @@ impl App {
 		let term = Term::start()?;
 
 		let signals = Signals::start()?;
-		let mut app = Self { cx: Ctx::new(), term: Some(term), signals };
+		let mut app = Self { cx: Ctx::make(), term: Some(term), signals };
 
 		while let Some(event) = app.signals.recv().await {
 			match event {

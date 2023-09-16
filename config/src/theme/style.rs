@@ -1,14 +1,16 @@
 use ratatui::style::{self, Modifier};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use super::Color;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct Style {
 	pub fg:        Option<Color>,
 	pub bg:        Option<Color>,
-	pub bold:      Option<bool>,
-	pub underline: Option<bool>,
+	#[serde(default)]
+	pub bold:      bool,
+	#[serde(default)]
+	pub underline: bool,
 }
 
 impl Style {
@@ -16,24 +18,16 @@ impl Style {
 		let mut style = style::Style::new();
 
 		if let Some(fg) = &self.fg {
-			style = style.fg(fg.0);
+			style = style.fg(fg.into());
 		}
 		if let Some(bg) = &self.bg {
-			style = style.bg(bg.0);
+			style = style.bg(bg.into());
 		}
-		if let Some(bold) = self.bold {
-			if bold {
-				style = style.add_modifier(Modifier::BOLD);
-			} else {
-				style = style.remove_modifier(Modifier::BOLD);
-			}
+		if self.bold {
+			style = style.add_modifier(Modifier::BOLD);
 		}
-		if let Some(underline) = self.underline {
-			if underline {
-				style = style.add_modifier(Modifier::UNDERLINED);
-			} else {
-				style = style.remove_modifier(Modifier::UNDERLINED);
-			}
+		if self.underline {
+			style = style.add_modifier(Modifier::UNDERLINED);
 		}
 		style
 	}

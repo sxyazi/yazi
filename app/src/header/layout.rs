@@ -1,8 +1,9 @@
+use core::Ctx;
+
 use ratatui::{layout, prelude::{Buffer, Constraint, Direction, Rect}, style::{Color, Style}, widgets::{Paragraph, Widget}};
 use shared::readable_path;
 
 use super::Tabs;
-use crate::Ctx;
 
 pub(crate) struct Layout<'a> {
 	cx: &'a Ctx,

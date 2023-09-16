@@ -1,10 +1,9 @@
-use core::manager::PreviewData;
+use core::{manager::PreviewData, Ctx};
 
 use ansi_to_tui::IntoText;
 use ratatui::{buffer::Buffer, layout::Rect, widgets::{Paragraph, Widget}};
 
 use super::Folder;
-use crate::Ctx;
 
 pub(super) struct Preview<'a> {
 	cx: &'a Ctx,

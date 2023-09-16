@@ -1,7 +1,7 @@
+use core::Ctx;
+
 use config::THEME;
 use ratatui::{buffer::Buffer, layout::Rect, text::Span, widgets::{Gauge, Widget}};
-
-use crate::Ctx;
 
 pub(super) struct Progress<'a> {
 	cx: &'a Ctx,
@@ -19,11 +19,11 @@ impl<'a> Widget for Progress<'a> {
 		}
 
 		Gauge::default()
-			.gauge_style(THEME.progress.gauge.get())
+			.gauge_style(THEME.status.progress_gauge.get())
 			.percent(progress.0 as u16)
 			.label(Span::styled(
 				format!("{:>3}%, {} left", progress.0, progress.1),
-				THEME.progress.label.get(),
+				THEME.status.progress_label.get(),
 			))
 			.render(area, buf);
 	}

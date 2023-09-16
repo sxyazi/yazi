@@ -1,6 +1,6 @@
-use ratatui::{layout::{self, Constraint}, prelude::{Buffer, Direction, Rect}, style::{Color, Style, Stylize}, widgets::{List, ListItem, Widget}};
+use core::Ctx;
 
-use crate::context::Ctx;
+use ratatui::{layout::{self, Constraint}, prelude::{Buffer, Direction, Rect}, style::{Color, Style, Stylize}, widgets::{List, ListItem, Widget}};
 
 pub(super) struct Bindings<'a> {
 	cx: &'a Ctx,

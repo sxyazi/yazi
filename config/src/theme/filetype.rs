@@ -38,8 +38,10 @@ impl Filetype {
 			mime:      Option<Pattern>,
 			fg:        Option<Color>,
 			bg:        Option<Color>,
-			bold:      Option<bool>,
-			underline: Option<bool>,
+			#[serde(default)]
+			bold:      bool,
+			#[serde(default)]
+			underline: bool,
 		}
 
 		Ok(

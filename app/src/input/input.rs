@@ -1,11 +1,9 @@
-use core::input::InputMode;
+use core::{input::InputMode, Ctx};
 use std::ops::Range;
 
 use ansi_to_tui::IntoText;
 use ratatui::{buffer::Buffer, layout::Rect, style::{Color, Style}, text::{Line, Text}, widgets::{Block, BorderType, Borders, Clear, Paragraph, Widget}};
 use shared::Term;
-
-use crate::Ctx;
 
 pub(crate) struct Input<'a> {
 	cx: &'a Ctx,

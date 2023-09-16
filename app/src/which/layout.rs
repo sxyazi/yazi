@@ -1,7 +1,8 @@
+use core::Ctx;
+
 use ratatui::{layout, prelude::{Buffer, Constraint, Direction, Rect}, style::{Color, Style}, widgets::{Block, Clear, Widget}};
 
 use super::Side;
-use crate::Ctx;
 
 pub(crate) struct Which<'a> {
 	cx: &'a Ctx,

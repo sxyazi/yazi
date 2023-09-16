@@ -3,8 +3,6 @@ use core::{emit, files::FilesSorter, input::InputMode, manager::FinderCase};
 use config::{keymap::{Control, Exec, Key, KeymapLayer}, manager::SortBy, KEYMAP};
 use shared::{optional_bool, Url};
 
-use super::Ctx;
-
 pub(super) struct Executor;
 
 impl Executor {

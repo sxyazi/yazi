@@ -4,20 +4,18 @@ inactive  = { fg = "#C8D3F8", bg = "#484D66" }
 max_width = 1
 
 [status]
-primary	  = { normal = "#80AEFA", select = "#CD9EFC", unset = "#FFA577" }
-secondary = { normal = "#1E2031", select = "#23273B", unset = "#23273B" }
-tertiary  = { normal = "#6D738F", select = "#6D738F", unset = "#6D738F" }
-body      = { normal = "#484D66", select = "#484D66", unset = "#484D66" }
-emphasis  = { normal = "#C8D3F8", select = "#C8D3F8", unset = "#C8D3F8" }
-info      = { normal = "#7AD9E5", select = "#7AD9E5", unset = "#7AD9E5" }
-success   = { normal = "#97DC8D", select = "#97DC8D", unset = "#97DC8D" }
-warning   = { normal = "#F3D398", select = "#F3D398", unset = "#F3D398" }
-danger    = { normal = "#FA7F94", select = "#FA7F94", unset = "#FA7F94" }
+plain     = { fg = "#FFFFFF" }
+fancy     = { bg = "#45475D" }
 separator = { opening = "", closing = "" }
 
-[progress]
-gauge = { fg = "#FFA577", bg = "#484D66" }
-label = { fg = "#FFFFFF", bold = true }
+# Mode
+mode_normal = { fg = "#181827", bg = "#7DB5FF", bold = true }
+mode_select = { fg = "#1E1E30", bg = "#D2A4FE", bold = true }
+mode_unset  = { fg = "#1E1E30", bg = "#FFAF80", bold = true }
+
+# Progress
+progress_label = { fg = "#FFFFFF", bold = true }
+progress_gauge = { fg = "#FFA577", bg = "#484D66" }
 
 [selection]
 hovered = { fg = "#1E2031", bg = "#80AEFA" }

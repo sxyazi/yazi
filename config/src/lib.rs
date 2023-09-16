@@ -2,6 +2,7 @@
 
 use shared::RoCell;
 
+mod bindings;
 mod boot;
 pub mod keymap;
 mod log;
