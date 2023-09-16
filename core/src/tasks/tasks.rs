@@ -133,12 +133,8 @@ impl Tasks {
 
 	pub fn file_open(&self, targets: &[(impl AsRef<Path>, impl AsRef<str>)]) -> bool {
 		let mut openers = BTreeMap::new();
-		let valid_openers = targets
-			.iter()
-			.filter_map(|(path, mime)| OPEN.openers(path, mime).map(|o| (path, o)))
-			.collect::<Vec<_>>();
-		for (path, opener) in &valid_openers {
-			if let Some(opener) = opener.first() {
+		for (path, mime) in targets {
+			if let Some(opener) = OPEN.openers(path, mime).and_then(|o| o.first().copied()) {
 				openers.entry(opener).or_insert_with(Vec::new).push(path.as_ref().as_os_str());
 			}
 		}
