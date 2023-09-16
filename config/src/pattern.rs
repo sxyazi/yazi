@@ -1,18 +1,26 @@
 use std::path::Path;
 
+use glob::MatchOptions;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 #[serde(try_from = "String")]
 pub struct Pattern {
 	inner:     glob::Pattern,
+	sensitive: bool,
 	is_folder: bool,
 	full_path: bool,
 }
 
 impl Pattern {
 	#[inline]
-	pub fn matches(&self, str: impl AsRef<str>) -> bool { self.inner.matches(str.as_ref()) }
+	pub fn matches(&self, str: impl AsRef<str>) -> bool {
+		self.inner.matches_with(str.as_ref(), MatchOptions {
+			case_sensitive:              self.sensitive,
+			require_literal_separator:   false,
+			require_literal_leading_dot: false,
+		})
+	}
 
 	#[inline]
 	pub fn match_path(&self, path: impl AsRef<Path>, is_folder: Option<bool>) -> bool {
@@ -20,7 +28,7 @@ impl Pattern {
 		let s = if self.full_path {
 			path.to_str()
 		} else {
-			path.file_name().and_then(|n| n.to_str()).or(path.to_str())
+			path.file_name().and_then(|n| n.to_str()).or_else(|| path.to_str())
 		};
 		is_folder.map_or(true, |f| f == self.is_folder) && s.map_or(false, |s| self.matches(s))
 	}
@@ -30,11 +38,13 @@ impl TryFrom<&str> for Pattern {
 	type Error = anyhow::Error;
 
 	fn try_from(s: &str) -> Result<Self, Self::Error> {
-		let new = s.trim_end_matches('/');
+		let a = s.trim_start_matches("\\s");
+		let b = a.trim_end_matches('/');
 		Ok(Self {
-			inner:     glob::Pattern::new(new)?,
-			is_folder: new.len() < s.len(),
-			full_path: new.contains('/'),
+			inner:     glob::Pattern::new(b)?,
+			sensitive: a.len() < s.len(),
+			is_folder: b.len() < a.len(),
+			full_path: b.contains('/'),
 		})
 	}
 }
