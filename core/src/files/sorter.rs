@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, collections::BTreeMap, mem, ops::Deref};
+use std::{cmp::Ordering, collections::BTreeMap, mem};
 
 use config::{manager::SortBy, MANAGER};
 use shared::Url;
