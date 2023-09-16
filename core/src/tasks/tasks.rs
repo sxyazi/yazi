@@ -134,7 +134,7 @@ impl Tasks {
 	pub fn file_open(&self, targets: &[(impl AsRef<Path>, impl AsRef<str>)]) -> bool {
 		let mut openers = BTreeMap::new();
 		for (path, mime) in targets {
-			if let Some(opener) = OPEN.openers(path, mime).and_then(|o| o.first()) {
+			if let Some(opener) = OPEN.openers(path, mime).and_then(|o| o.first().copied()) {
 				openers.entry(opener).or_insert_with(Vec::new).push(path.as_ref().as_os_str());
 			}
 		}

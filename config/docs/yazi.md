@@ -81,6 +81,9 @@ rules = [
 
 	# { mime = "application/json", use = "text" },
 	{ name = "*.json", use = "text" },
+
+	# Multiple openers for a single rule
+	{ name = "*.html", use = [ "browser", "text" ] },
 ]
 ```
 
