@@ -151,6 +151,7 @@ impl Executor {
 				let b = cx.manager.active_mut().set_sorter(FilesSorter {
 					by:        SortBy::try_from(exec.args.get(0).cloned().unwrap_or_default())
 						.unwrap_or_default(),
+					sensitive: exec.named.contains_key("sensitive"),
 					reverse:   exec.named.contains_key("reverse"),
 					dir_first: exec.named.contains_key("dir_first"),
 				});

@@ -14,6 +14,11 @@
   - `"natural"`: Sort naturally, e.g. `1.md` < `2.md` < `10.md`
   - `"size"`: Sort by file size
 
+- sort_sensitive: Sort case-sensitively
+
+  - `true`: Case-sensitive
+  - `false`: Case-insensitive
+
 - sort_reverse: Display files in reverse order
 
   - `true`: Reverse order
@@ -81,8 +86,8 @@ rules = [
 
 Available rule parameters are as follows:
 
-- name: Glob expression for matching the file name
-- mime: Glob expression for matching the MIME type
+- name: Glob expression for matching the file name. Case insensitive by default, add `\s` to the beginning to make it sensitive.
+- mime: Glob expression for matching the MIME type. Case insensitive by default, add `\s` to the beginning to make it sensitive.
 - use: Opener name corresponding to the names in the opener section.
 
 ## tasks
