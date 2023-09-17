@@ -27,6 +27,9 @@ keymap = [
 	{ on = [ "<Left>" ],  exec = "leave",    desc = "Go back to the parent directory" },
 	{ on = [ "<Right>" ], exec = "enter",    desc = "Enter the child directory" },
 
+	{ on = [ "g", "g" ], exec = "arrow -99999999", desc = "Move cursor to the top" },
+	{ on = [ "G" ],      exec = "arrow 99999999",  desc = "Move cursor to the bottom" },
+
 	# Selection
 	{ on = [ "<Space>" ], exec = [ "select --state=none", "arrow 1" ], desc = "Toggle the current selection state" },
 	{ on = [ "v" ],       exec = "visual_mode",                        desc = "Enter visual mode (selection mode)" },
