@@ -109,13 +109,11 @@ impl Executor {
 				}
 			}
 			"link" => {
-				let dest = cx.manager.cwd().to_owned();
 				let (cut, src) = cx.manager.yanked();
-
 				!cut
 					&& cx.tasks.file_link(
 						src,
-						dest,
+						cx.manager.cwd().to_owned(),
 						exec.named.contains_key("relative"),
 						exec.named.contains_key("force"),
 					)

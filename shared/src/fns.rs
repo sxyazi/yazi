@@ -131,18 +131,11 @@ mod tests {
 	#[cfg(unix)]
 	#[test]
 	fn test_path_relative_to() {
-		let foo = "/foo";
-		let bar = "/foo/bar";
-		let baz = "/foo/bar/baz";
-		let qux = "/foo/bar/qux";
-		let aha = "/foo/aha/bar";
-
-		assert_path_relate_to_root(bar, baz, "../"); // self reflection
-		assert_path_relate_to_root(baz, bar, "baz"); // child entry
-		assert_path_relate_to_root(qux, baz, "../qux"); // sibling entry
-		assert_path_relate_to_root(baz, qux, "../baz"); // sibling entry
-		assert_path_relate_to_root(foo, baz, "../../"); // ancestor entry
-		assert_path_relate_to_root(aha, baz, "../../aha/bar"); // ancestor's child entry
+		assert_path_relate_to_root("/a/b", "/a/b/c", "../");
+		assert_path_relate_to_root("/a/b/c", "/a/b", "c");
+		assert_path_relate_to_root("/a/b/c", "/a/b/d", "../c");
+		assert_path_relate_to_root("/a", "/a/b/c", "../../");
+		assert_path_relate_to_root("/a/a/b", "/a/b/b", "../../b/b");
 	}
 
 	fn assert_path_relate_to_root(path: &str, root: &str, res: &str) {
