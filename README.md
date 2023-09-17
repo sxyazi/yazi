@@ -37,13 +37,25 @@ https://github.com/sxyazi/yazi/assets/17523360/d5d8427b-e0f3-4552-ae1a-553ba1a7d
 
 <summary>Arch Linux</summary>
 
-Install with paru or your favorite AUR helper:
+- Install with paru or your favorite AUR helper:
 
 ```bash
 paru -S yazi ffmpegthumbnailer unarchiver jq poppler fd ripgrep fzf zoxide
 ```
 
 Or, you can replace `yazi` with `yazi-bin` package if you want pre-built binary instead of compiling by yourself.
+
+- If you are using ```archlinuxcn``` repository, you can install with the following command:
+
+```bash
+sudo pacman -S yazi ffmpegthumbnailer unarchiver jq poppler fd ripgrep fzf zoxide
+```
+
+- Otherwise, if you want to use the latest git version, you can install with the following command:
+
+```bash
+sudo pacman -S yazi-git ffmpegthumbnailer unarchiver jq poppler fd ripgrep fzf zoxide
+```
 
 </details>
 
