@@ -48,7 +48,7 @@ impl Event {
 
 	pub async fn wait<T>(self, rx: oneshot::Receiver<T>) -> T {
 		TX.send(self).ok();
-		rx.await.unwrap()
+		rx.await.unwrap_or_else(|_| std::process::exit(0))
 	}
 }
 
