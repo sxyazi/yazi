@@ -11,7 +11,10 @@ pub fn expand_path(p: impl AsRef<Path>) -> PathBuf {
 			return PathBuf::from_iter([&home, p.as_os_str()]);
 		}
 	}
-	p.to_path_buf()
+	if p.is_absolute() {
+		return p.to_path_buf();
+	}
+	env::current_dir().map_or_else(|_| p.to_path_buf(), |c| c.join(p))
 }
 
 #[inline]

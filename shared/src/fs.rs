@@ -99,6 +99,8 @@ pub fn file_mode(mode: u32) -> String {
 
 	#[cfg(target_os = "macos")]
 	let m = mode as u16;
+	#[cfg(target_os = "freebsd")]
+	let m = mode as u16;
 	#[cfg(target_os = "linux")]
 	let m = mode;
 

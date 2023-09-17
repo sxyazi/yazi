@@ -5,7 +5,7 @@ use serde::{Deserialize, Deserializer};
 use shared::MIME_DIR;
 
 use super::Opener;
-use crate::{Pattern, MERGED_YAZI};
+use crate::{open::OpenRule, MERGED_YAZI};
 
 #[derive(Debug)]
 pub struct Open {
@@ -13,20 +13,12 @@ pub struct Open {
 	rules:   Vec<OpenRule>,
 }
 
-#[derive(Debug, Deserialize)]
-struct OpenRule {
-	name: Option<Pattern>,
-	mime: Option<Pattern>,
-	#[serde(rename = "use")]
-	use_: String,
-}
-
 impl Default for Open {
 	fn default() -> Self { toml::from_str(&MERGED_YAZI).unwrap() }
 }
 
 impl Open {
-	pub fn openers<P, M>(&self, path: P, mime: M) -> Option<&IndexSet<Opener>>
+	pub fn openers<P, M>(&self, path: P, mime: M) -> Option<IndexSet<&Opener>>
 	where
 		P: AsRef<Path>,
 		M: AsRef<str>,
@@ -36,7 +28,14 @@ impl Open {
 			if rule.mime.as_ref().map_or(false, |m| m.matches(&mime))
 				|| rule.name.as_ref().map_or(false, |n| n.match_path(&path, is_folder))
 			{
-				self.openers.get(&rule.use_)
+				let openers = rule
+					.use_
+					.iter()
+					.filter_map(|use_| self.openers.get(use_))
+					.flatten()
+					.collect::<IndexSet<_>>();
+
+				if openers.is_empty() { None } else { Some(openers) }
 			} else {
 				None
 			}
@@ -49,12 +48,12 @@ impl Open {
 		P: AsRef<Path>,
 		M: AsRef<str>,
 	{
-		self.openers(path, mime).and_then(|o| o.iter().find(|o| o.block))
+		self.openers(path, mime).and_then(|o| o.into_iter().find(|o| o.block))
 	}
 
 	pub fn common_openers(&self, targets: &[(impl AsRef<Path>, impl AsRef<str>)]) -> Vec<&Opener> {
-		let grouped = targets.iter().filter_map(|(p, m)| self.openers(p, m)).collect::<Vec<_>>();
-		let flat = grouped.iter().flat_map(|&g| g).collect::<IndexSet<_>>();
+		let grouped: Vec<_> = targets.iter().filter_map(|(p, m)| self.openers(p, m)).collect();
+		let flat: IndexSet<_> = grouped.iter().flatten().copied().collect();
 		flat.into_iter().filter(|&o| grouped.iter().all(|g| g.contains(o))).collect()
 	}
 }
