@@ -110,7 +110,9 @@ impl Executor {
 			}
 			"remove" => {
 				let targets = cx.manager.selected().into_iter().map(|f| f.url_owned()).collect();
-				cx.tasks.file_remove(targets, exec.named.contains_key("permanently"))
+				let force = exec.named.contains_key("force");
+				let permanently = exec.named.contains_key("permanently");
+				cx.tasks.file_remove(targets, force, permanently)
 			}
 			"create" => cx.manager.create(),
 			"rename" => cx.manager.rename(),

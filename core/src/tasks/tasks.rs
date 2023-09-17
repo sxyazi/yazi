@@ -156,30 +156,41 @@ impl Tasks {
 	}
 
 	pub fn file_cut(&self, src: &HashSet<Url>, dest: Url, force: bool) -> bool {
-		for p in src {
-			let to = dest.join(p.file_name().unwrap());
-			if force && p == &to {
+		for u in src {
+			let to = dest.join(u.file_name().unwrap());
+			if force && u == &to {
 				trace!("file_cut: same file, skipping {:?}", to);
 			} else {
-				self.scheduler.file_cut(p.clone(), to, force);
+				self.scheduler.file_cut(u.clone(), to, force);
 			}
 		}
 		false
 	}
 
 	pub fn file_copy(&self, src: &HashSet<Url>, dest: Url, force: bool, follow: bool) -> bool {
-		for p in src {
-			let to = dest.join(p.file_name().unwrap());
-			if force && p == &to {
+		for u in src {
+			let to = dest.join(u.file_name().unwrap());
+			if force && u == &to {
 				trace!("file_copy: same file, skipping {:?}", to);
 			} else {
-				self.scheduler.file_copy(p.clone(), to, force, follow);
+				self.scheduler.file_copy(u.clone(), to, force, follow);
 			}
 		}
 		false
 	}
 
-	pub fn file_remove(&self, targets: Vec<Url>, permanently: bool) -> bool {
+	pub fn file_remove(&self, targets: Vec<Url>, force: bool, permanently: bool) -> bool {
+		if force {
+			for u in targets {
+				if permanently {
+					self.scheduler.file_delete(u);
+				} else {
+					self.scheduler.file_trash(u);
+				}
+			}
+			return false;
+		}
+
 		let scheduler = self.scheduler.clone();
 		tokio::spawn(async move {
 			let s = if targets.len() > 1 { "s" } else { "" };
@@ -193,11 +204,11 @@ impl Tasks {
 				if choice != "y" && choice != "Y" {
 					return;
 				}
-				for p in targets {
+				for u in targets {
 					if permanently {
-						scheduler.file_delete(p);
+						scheduler.file_delete(u);
 					} else {
-						scheduler.file_trash(p);
+						scheduler.file_trash(u);
 					}
 				}
 			}
