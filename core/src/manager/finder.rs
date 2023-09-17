@@ -84,7 +84,7 @@ impl Finder {
 				continue;
 			}
 
-			self.matched.insert(file.url().to_owned(), i);
+			self.matched.insert(file.url_owned(), i);
 			if self.matched.len() > 99 {
 				break;
 			}

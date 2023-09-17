@@ -114,7 +114,7 @@ impl Folder {
 
 	#[inline]
 	pub fn hover_repos(&mut self) -> bool {
-		self.hover(&self.hovered.as_ref().map(|h| h.url().to_owned()).unwrap_or_default())
+		self.hover(&self.hovered.as_ref().map(|h| h.url_owned()).unwrap_or_default())
 	}
 
 	pub fn hover_force(&mut self, file: File) -> bool {
