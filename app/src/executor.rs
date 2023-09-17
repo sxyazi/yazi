@@ -110,7 +110,12 @@ impl Executor {
 			}
 			"symlink" => {
 				let dest = cx.manager.cwd().to_owned();
-				let (_, src) = cx.manager.yanked();
+				let (cut, src) = cx.manager.yanked();
+
+				// Cut doesn't conform to the convention for creating symlinks
+				if *cut {
+					return false;
+				}
 
 				cx.tasks.file_symlink(
 					src,
