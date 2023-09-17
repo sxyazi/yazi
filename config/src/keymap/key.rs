@@ -5,10 +5,10 @@ use serde::Deserialize;
 #[derive(Clone, Debug, Deserialize, Eq)]
 #[serde(try_from = "String")]
 pub struct Key {
-	pub code: KeyCode,
+	pub code:  KeyCode,
 	pub shift: bool,
-	pub ctrl: bool,
-	pub alt: bool,
+	pub ctrl:  bool,
+	pub alt:   bool,
 }
 
 impl PartialEq for Key {
@@ -43,18 +43,16 @@ impl Key {
 }
 
 impl Default for Key {
-	fn default() -> Self {
-		Self { code: KeyCode::Null, shift: false, ctrl: false, alt: false }
-	}
+	fn default() -> Self { Self { code: KeyCode::Null, shift: false, ctrl: false, alt: false } }
 }
 
 impl From<KeyEvent> for Key {
 	fn from(value: KeyEvent) -> Self {
 		Self {
-			code: value.code,
+			code:  value.code,
 			shift: value.modifiers.contains(KeyModifiers::SHIFT),
-			ctrl: value.modifiers.contains(KeyModifiers::CONTROL),
-			alt: value.modifiers.contains(KeyModifiers::ALT),
+			ctrl:  value.modifiers.contains(KeyModifiers::CONTROL),
+			alt:   value.modifiers.contains(KeyModifiers::ALT),
 		}
 	}
 }
