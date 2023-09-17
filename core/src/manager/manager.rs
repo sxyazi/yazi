@@ -362,14 +362,13 @@ impl Manager {
 
 		if url == self.cwd() {
 			self.current_mut().update(op);
+			self.active_mut().leave();
+			true
 		} else if matches!(self.parent(), Some(p) if &p.cwd == url) {
-			self.active_mut().parent.as_mut().unwrap().update(op);
+			self.active_mut().parent.as_mut().unwrap().update(op)
 		} else {
-			return false;
+			false
 		}
-
-		self.active_mut().leave();
-		true
 	}
 
 	pub fn update_mimetype(&mut self, mut mimes: BTreeMap<Url, String>, tasks: &Tasks) -> bool {
