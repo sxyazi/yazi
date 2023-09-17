@@ -152,16 +152,19 @@ impl File {
 				self.sch.send(TaskOp::Adv(task.id, 1, task.length))?
 			}
 			FileOp::Trash(task) => {
-				#[cfg(target_os = "macos")]
+				#[cfg(feature = "trash_bin")]
 				{
-					use trash::{macos::{DeleteMethod, TrashContextExtMacos}, TrashContext};
-					let mut ctx = TrashContext::default();
-					ctx.set_delete_method(DeleteMethod::NsFileManager);
-					ctx.delete(&task.target)?;
-				}
-				#[cfg(not(target_os = "macos"))]
-				{
-					trash::delete(&task.target)?;
+					#[cfg(target_os = "macos")]
+					{
+						use trash::{macos::{DeleteMethod, TrashContextExtMacos}, TrashContext};
+						let mut ctx = TrashContext::default();
+						ctx.set_delete_method(DeleteMethod::NsFileManager);
+						ctx.delete(&task.target)?;
+					}
+					#[cfg(not(target_os = "macos"))]
+					{
+						trash::delete(&task.target)?;
+					}
 				}
 				self.sch.send(TaskOp::Adv(task.id, 1, task.length))?;
 			}
