@@ -20,7 +20,6 @@ pub(crate) struct File {
 pub(crate) enum FileOp {
 	Paste(FileOpPaste),
 	Link(FileOpLink),
-	Symlink(FileOpSymlink),
 	Delete(FileOpDelete),
 	Trash(FileOpTrash),
 }
@@ -42,13 +41,6 @@ pub(crate) struct FileOpLink {
 	pub to:     Url,
 	pub cut:    bool,
 	pub length: u64,
-}
-
-#[derive(Clone, Debug)]
-pub(crate) struct FileOpSymlink {
-	pub id:   usize,
-	pub from: Url,
-	pub to:   Url,
 }
 
 #[derive(Clone, Debug)]
@@ -76,7 +68,6 @@ impl File {
 		Ok(match self.rx.recv().await? {
 			FileOp::Paste(t) => (t.id, FileOp::Paste(t)),
 			FileOp::Link(t) => (t.id, FileOp::Link(t)),
-			FileOp::Symlink(t) => (t.id, FileOp::Symlink(t)),
 			FileOp::Delete(t) => (t.id, FileOp::Delete(t)),
 			FileOp::Trash(t) => (t.id, FileOp::Trash(t)),
 		})
@@ -121,17 +112,6 @@ impl File {
 					}
 				}
 				self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
-			}
-			FileOp::Symlink(task) => {
-				#[cfg(unix)]
-				{
-					fs::symlink(&task.from, &task.to).await?;
-					self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
-				}
-				#[cfg(target_os = "windows")]
-				{
-					todo!()
-				}
 			}
 			FileOp::Link(task) => {
 				let src = match fs::read_link(&task.from).await {
@@ -264,10 +244,10 @@ impl File {
 		self.done(task.id)
 	}
 
-	pub(crate) async fn symlink(&self, task: FileOpSymlink) -> Result<()> {
+	pub(crate) async fn link(&self, task: FileOpLink) -> Result<()> {
 		let id = task.id;
 		self.sch.send(TaskOp::New(id, 0))?;
-		self.tx.send(FileOp::Symlink(task)).await?;
+		self.tx.send(FileOp::Link(task)).await?;
 		self.done(id)
 	}
 

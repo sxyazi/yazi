@@ -108,21 +108,17 @@ impl Executor {
 					cx.tasks.file_copy(src, dest, force, exec.named.contains_key("follow"))
 				}
 			}
-			"symlink" => {
+			"link" => {
 				let dest = cx.manager.cwd().to_owned();
 				let (cut, src) = cx.manager.yanked();
 
-				// Cut doesn't conform to the convention for creating symlinks
-				if *cut {
-					return false;
-				}
-
-				cx.tasks.file_symlink(
-					src,
-					dest,
-					exec.named.contains_key("force"),
-					exec.named.contains_key("relative"),
-				)
+				!cut
+					&& cx.tasks.file_link(
+						src,
+						dest,
+						exec.named.contains_key("relative"),
+						exec.named.contains_key("force"),
+					)
 			}
 			"remove" => {
 				let targets = cx.manager.selected().into_iter().map(|f| f.url_owned()).collect();

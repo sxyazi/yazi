@@ -8,7 +8,7 @@ use shared::{unique_path, Throttle, Url};
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, time::sleep};
 use tracing::{info, trace};
 
-use super::{workers::{File, FileOpDelete, FileOpPaste, FileOpSymlink, FileOpTrash, Precache, PrecacheOpMime, PrecacheOpSize, Process, ProcessOpOpen}, Running, TaskOp, TaskStage};
+use super::{workers::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash, Precache, PrecacheOpMime, PrecacheOpSize, Process, ProcessOpOpen}, Running, TaskOp, TaskStage};
 use crate::emit;
 
 pub struct Scheduler {
@@ -234,8 +234,8 @@ impl Scheduler {
 		});
 	}
 
-	pub(super) fn file_symlink(&self, from: Url, mut to: Url, force: bool) {
-		let name = format!("Symlink {from:?} to {to:?}");
+	pub(super) fn file_link(&self, from: Url, mut to: Url, force: bool) {
+		let name = format!("Link {from:?} to {to:?}");
 		let id = self.running.write().add(name);
 
 		let _ = self.todo.send_blocking({
@@ -244,7 +244,7 @@ impl Scheduler {
 				if !force {
 					to = unique_path(to).await;
 				}
-				file.symlink(FileOpSymlink { id, from, to }).await.ok();
+				file.link(FileOpLink { id, from, to }).await.ok();
 			}
 			.boxed()
 		});
