@@ -29,6 +29,7 @@ pub enum Adaptor {
 impl Adaptor {
 	pub(super) fn detect() -> Self {
 		let vars = [
+			("ZELLIJ_SESSION_NAME", Self::Sixel),
 			("KITTY_WINDOW_ID", Self::Kitty),
 			("KONSOLE_VERSION", Self::Kitty),
 			("ITERM_SESSION_ID", Self::Iterm2),

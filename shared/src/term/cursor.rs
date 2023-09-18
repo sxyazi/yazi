@@ -56,5 +56,7 @@ impl Term {
 	pub fn set_cursor_bar() -> Result<()> { Ok(execute!(stdout(), SetCursorStyle::BlinkingBar)?) }
 
 	#[inline]
-	pub fn set_cursor_default() -> Result<()> { Ok(execute!(stdout(), SetCursorStyle::DefaultUserShape)?) }
+	pub fn set_cursor_default() -> Result<()> {
+		Ok(execute!(stdout(), SetCursorStyle::DefaultUserShape)?)
+	}
 }
