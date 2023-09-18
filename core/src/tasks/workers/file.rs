@@ -140,7 +140,7 @@ impl File {
 						{
 							fs::symlink(src, &task.to).await?
 						}
-						#[cfg(target_os = "windows")]
+						#[cfg(windows)]
 						{
 							if meta.is_dir() {
 								fs::symlink_dir(src, &task.to).await?
