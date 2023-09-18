@@ -105,7 +105,7 @@ impl Executor {
 				if *cut {
 					cx.tasks.file_cut(src, dest, force)
 				} else {
-					cx.tasks.file_copy(src, dest, force, exec.named.contains_key("follow"))
+					cx.tasks.file_copy(src, dest, force)
 				}
 			}
 			"link" => {

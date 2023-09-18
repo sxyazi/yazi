@@ -218,7 +218,7 @@ impl Scheduler {
 		});
 	}
 
-	pub(super) fn file_copy(&self, from: Url, mut to: Url, force: bool, follow: bool) {
+	pub(super) fn file_copy(&self, from: Url, mut to: Url, force: bool) {
 		let name = format!("Copy {:?} to {:?}", from, to);
 		let id = self.running.write().add(name);
 
@@ -228,13 +228,13 @@ impl Scheduler {
 				if !force {
 					to = unique_path(to).await;
 				}
-				file.paste(FileOpPaste { id, from, to, cut: false, follow, retry: 0 }).await.ok();
+				file.paste(FileOpPaste { id, from, to, cut: false, follow: true, retry: 0 }).await.ok();
 			}
 			.boxed()
 		});
 	}
 
-	pub(super) fn file_link(&self, from: Url, mut to: Url, force: bool) {
+	pub(super) fn file_link(&self, from: Url, mut to: Url, force: bool, relative: bool) {
 		let name = format!("Link {from:?} to {to:?}");
 		let id = self.running.write().add(name);
 
@@ -244,7 +244,10 @@ impl Scheduler {
 				if !force {
 					to = unique_path(to).await;
 				}
-				file.link(FileOpLink { id, from, to }).await.ok();
+				file
+					.link(FileOpLink { id, from, to, meta: None, resolve: false, relative, delete: false })
+					.await
+					.ok();
 			}
 			.boxed()
 		});
