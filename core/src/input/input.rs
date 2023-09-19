@@ -195,6 +195,9 @@ impl Input {
 
 		match key {
 			Key { code: KeyCode::Backspace, shift: false, ctrl: false, alt: false } => self.backspace(),
+			Key { code: KeyCode::Char('w'), shift: false, ctrl: true, alt: false } => {
+				self.backspace_word()
+			}
 			_ => false,
 		}
 	}
@@ -215,6 +218,98 @@ impl Input {
 
 		self.flush_value();
 		self.move_(s.chars().count() as isize)
+	}
+
+	/// Borrowed this function from Gitui
+	///
+	/// Get the position of the first character of the next word, or, if there
+	/// isn't a next word, the `msg.len()`.
+	/// Returns None when the cursor is already at `msg.len()`.
+	///
+	/// A Word is continuous sequence of alphanumeric characters.
+	fn next_word_position(&self) -> Option<usize> {
+		let snap = self.snaps.current();
+		if snap.cursor >= snap.value.len() {
+			return None;
+		}
+
+		let mut was_in_word = self.at_alphanumeric(snap.cursor);
+
+		let mut index = snap.cursor.saturating_add(1);
+		while index < snap.value.len() {
+			if !snap.value.is_char_boundary(index) {
+				index += 1;
+				continue;
+			}
+
+			let is_in_word = self.at_alphanumeric(index);
+			if !was_in_word && is_in_word {
+				break;
+			}
+			was_in_word = is_in_word;
+			index += 1;
+		}
+		Some(index)
+	}
+
+	/// Borrowed this function from Gitui
+	///
+	/// Get the position of the first character of the previous word, or, if there
+	/// isn't a previous word, returns `0`.
+	/// Returns None when the cursor is already at `0`.
+	///
+	/// A Word is continuous sequence of alphanumeric characters.
+	fn previous_word_position(&self) -> Option<usize> {
+		let snap = self.snaps.current();
+		if snap.cursor < 1 {
+			return None;
+		}
+
+		let mut was_in_word = false;
+
+		let mut last_pos = snap.cursor;
+		let mut index = snap.cursor;
+		while index > 0 {
+			index -= 1;
+			if !snap.value.is_char_boundary(index) {
+				continue;
+			}
+
+			let is_in_word = self.at_alphanumeric(index);
+			if was_in_word && !is_in_word {
+				return Some(last_pos);
+			}
+
+			last_pos = index;
+			was_in_word = is_in_word;
+		}
+		Some(0)
+	}
+
+	/// Helper for `next/previous_word_position`.
+	fn at_alphanumeric(&self, i: usize) -> bool {
+		self.snaps.current().value[i..].chars().next().map_or(false, char::is_alphanumeric)
+	}
+
+	fn move_to(&mut self, index: usize) -> bool {
+		// For now, just reuse move
+		if let Ok(ind) = isize::try_from(index) {
+			if let Ok(cur) = isize::try_from(self.snaps.current().cursor) {
+				let offset = ind - cur;
+				return self.move_(offset);
+			}
+		}
+		false
+	}
+
+	pub fn backspace_word(&mut self) -> bool {
+		if let Some(pos) = self.previous_word_position() {
+			let snap = self.snaps.current_mut();
+			snap.value.replace_range(pos..snap.cursor, "");
+			self.flush_value();
+			return self.move_to(pos);
+		}
+		true
 	}
 
 	pub fn backspace(&mut self) -> bool {
