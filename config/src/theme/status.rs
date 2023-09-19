@@ -16,6 +16,12 @@ pub struct Status {
 	// Progress
 	pub progress_label: Style,
 	pub progress_gauge: Style,
+
+	// Permissions
+	pub permissions_t: Style,
+	pub permissions_r: Style,
+	pub permissions_w: Style,
+	pub permissions_x: Style,
 }
 
 #[derive(Deserialize, Serialize)]

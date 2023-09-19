@@ -17,6 +17,12 @@ mode_unset  = { fg = "#1E1E30", bg = "#FFAF80", bold = true }
 progress_label = { fg = "#FFFFFF", bold = true }
 progress_gauge = { fg = "#FFA577", bg = "#484D66" }
 
+# Permissions
+permissions_t = { fg = "#6D738F" }
+permissions_r = { fg = "#F3D398" }
+permissions_w = { fg = "#FA7F94" }
+permissions_x = { fg = "#7AD9E5" }
+
 [selection]
 hovered = { fg = "#1E2031", bg = "#80AEFA" }
 

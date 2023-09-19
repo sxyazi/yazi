@@ -1,3 +1,3 @@
-yazi = yazi or {}
+utils = utils or {}
 
-function yazi.basename(str) return string.gsub(str, "(.*[/\\])(.*)", "%2") end
+function utils.basename(str) return string.gsub(str, "(.*[/\\])(.*)", "%2") end

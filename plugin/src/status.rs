@@ -41,4 +41,25 @@ impl Status {
 			size.call::<_, String>(())
 		})
 	}
+
+	pub fn permissions(cx: &Ctx) -> Result<String> {
+		Self::scoped(cx, || {
+			let size: Function = LUA.globals().get("permissions")?;
+			size.call::<_, String>(())
+		})
+	}
+
+	pub fn percentage(cx: &Ctx) -> Result<String> {
+		Self::scoped(cx, || {
+			let size: Function = LUA.globals().get("percentage")?;
+			size.call::<_, String>(())
+		})
+	}
+
+	pub fn position(cx: &Ctx) -> Result<String> {
+		Self::scoped(cx, || {
+			let size: Function = LUA.globals().get("position")?;
+			size.call::<_, String>(())
+		})
+	}
 }

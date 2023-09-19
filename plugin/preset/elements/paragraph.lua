@@ -14,7 +14,7 @@ function Paragraph:from(lines) return self:new(table.unpack(lines)) end
 function Paragraph:to_string()
 	local s = ""
 	for _, line in ipairs(self.lines) do
-		s = s .. line:to_string():gsub("\0", "\\\0") .. "\0"
+		s = s .. line:to_string():gsub("\r", "\\\r") .. "\r"
 	end
 	return s.sub(s, 1, -2)
 end

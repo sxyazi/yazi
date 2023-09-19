@@ -81,4 +81,8 @@ impl File {
 
 	#[inline]
 	pub fn is_link(&self) -> bool { self.is_link }
+
+	// -- Is hidden
+	#[inline]
+	pub fn is_hidden(&self) -> bool { self.is_hidden }
 }

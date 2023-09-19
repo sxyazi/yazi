@@ -47,5 +47,36 @@ impl<'a> Widget for Layout<'a> {
 		}
 
 		Paragraph::new(Line::from(spans)).render(chunks[0], buf);
+
+		// Right
+		let mut spans = vec![];
+
+		let x = plugin::Status::permissions(self.cx);
+		if x.is_err() {
+			info!("Error: {:?}", x);
+			return;
+		}
+		if let Ok(name) = x {
+			spans.extend(Parser::line(&name).spans);
+		}
+
+		let x = plugin::Status::percentage(self.cx);
+		if x.is_err() {
+			info!("Error: {:?}", x);
+			return;
+		}
+		if let Ok(name) = x {
+			spans.extend(Parser::line(&name).spans);
+		}
+
+		let x = plugin::Status::position(self.cx);
+		if x.is_err() {
+			info!("Error: {:?}", x);
+			return;
+		}
+		if let Ok(name) = x {
+			spans.extend(Parser::line(&name).spans);
+		}
+		Paragraph::new(Line::from(spans)).render(chunks[1], buf);
 	}
 }

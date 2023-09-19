@@ -54,6 +54,25 @@ impl Parser {
 		let mut lines: Vec<String> = vec![String::new()];
 
 		for c in s.chars() {
+			if c == '\r' && last == '\\' {
+				let last = lines.last_mut().unwrap();
+				last.pop();
+				last.push(c);
+			} else if c == '\r' {
+				lines.push(String::new());
+			} else {
+				lines.last_mut().unwrap().push(c);
+			}
+			last = c;
+		}
+		Paragraph::new(lines.into_iter().map(|s| Self::line(&s)).collect::<Vec<_>>())
+	}
+
+	pub fn layout(s: &str) -> Paragraph {
+		let mut last = '\0';
+		let mut lines: Vec<String> = vec![String::new()];
+
+		for c in s.chars() {
 			if c == '\0' && last == '\\' {
 				let last = lines.last_mut().unwrap();
 				last.pop();
