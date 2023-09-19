@@ -19,6 +19,25 @@ https://github.com/sxyazi/yazi/assets/17523360/d5d8427b-e0f3-4552-ae1a-553ba1a7d
 
 ⚠️ Note: Yazi is currently in active development and may be unstable. The API is subject to change without prior notice.
 
+## Table of contents
+
+* [Prerequisites](#prerequisites)
+* [Installation](#installation)
+* [Usage](#usage)
+	* [Navigation](#navigation)
+	* [Selection](#selection)
+	* [File/directory operations](#filedirectory-operations)
+	* [Copying paths](#copying-paths)
+	* [Finding files/directories](#finding-filesdirectories)
+	* [Sorting](#sorting)
+	* [Further usage](#further-usage)
+* [Changing working directory when exiting yazi](#changing-working-directory-when-exiting-yazi)
+* [Configuration](#configuration)
+* [Discussion](#discussion)
+* [Image Preview](#image-preview)
+* [TODO](#todo)
+* [License](#license)
+
 ## Prerequisites
 
 - nerd-fonts ([_optional_](https://github.com/sxyazi/yazi/wiki/I-don't-like-nerd%E2%80%90fonts!))
@@ -140,11 +159,127 @@ Then, you can run:
 
 ## Usage
 
+To open yazi simply run the `yazi` command in your terminal:
+
 ```bash
 yazi
 ```
 
-There is a wrapper of yazi, that provides the ability to change the current working directory when yazi exiting, feel free to use it:
+To quit press the `q` key and press `~` to open the help menu.
+
+### Navigation
+
+To navigate between files and directories you can use the arrow keys `←`, `↑`, `↓` and `→` or vi-like commands such as `h`, `j`, `k`, `l` as following:
+
+| Key binding | Alternate key | Action |
+| ----------- | ------------- | ------ |
+| ↑ | j | Move the cursor up |
+| ↓ | k | Move the cursor down |
+| → | l | Change into highlighted directory |
+| ← | h | Change into parent directory |
+
+Further navigation commands can be found in the table below.
+
+| Key binding | Action |
+| ----------- | ------ |
+| K | Move the cursor up 5 lines |
+| J | Move the cursor down 5 lines |
+| g | Move cursor to the top |
+| G | Move cursor to the bottom |
+
+### Selection
+
+To select files and directories, the following commands are available.
+
+| Key binding | Action |
+| ----------- | ------ |
+| \<Space\> | Toggle selection of highlighted file/directory |
+| v | Enter visual mode (selection mode) |
+| V | Enter visual mode (unset mode) |
+| \<Ctrl+a\> | Select all files |
+| \<Ctrl+r\> | Inverse selection of all files |
+| \<Esc\> | Cancel selection |
+
+### File/directory operations
+
+To interact with selected files/directories use any of the commands below.
+
+| Key binding | Action |
+| ----------- | ------ |
+| o | Open the selected files |
+| O | Open the selected files interactively |
+| \<Enter\> | Open the selected files |
+| \<Ctrl+Enter\> | Open the selected files interactively |  # It's cool if you're using a terminal that supports CSI u
+| y | Copy the selected files |
+| x | Cut the selected files |
+| p | Paste the files |
+| P | Paste the files (overwrite if the destination exists) |
+| k | Paste the files (follow the symlinks) |
+| K | Paste the files (overwrite + follow) |
+| d | Move the files to the trash |
+| D | Permanently delete the files |
+| a | Create a file or directory (end with "/" for directories) |
+| r | Rename a file or directory |
+| ; | Run a shell command |
+| : | Run a shell command (block the UI until the command finishes) |
+| . | Toggle the visibility of hidden files |
+| s | Search files by name using fd |
+| S | Search files by content using ripgrep |
+| \<Ctrl+s\> | Cancel the ongoing search |
+| z | Jump to a directory using zoxide |
+| Z | Jump to a directory, or reveal a file using fzf |
+
+### Copying paths
+
+To copy paths, use any of the following commands below.
+
+*Observation: `c ⇒ d` indicates pressing the `c` key followed by pressing the `d` key.*
+
+| Key binding | Action |
+| ----------- | ------ |
+| c ⇒ c | Copy absolute path |
+| c ⇒ d | Copy the path of the parent directory |
+| c ⇒ f | Copy the name of the file |
+| c ⇒ n | Copy the name of the file without the extension |
+
+
+### Finding files/directories
+
+| Key binding | Action |
+| ----------- | ------ |
+| / | Forward search file/dir in current directory |
+| ? | Backward search file/dir in current director |
+| - | Jump to next occurrence |
+| = | Jump to previous  occurrence |
+
+### Sorting
+
+To sort files/directories use the following commands.
+
+*Observation: `, ⇒ a` indicates pressing the `,` key followed by pressing the `a` key.*
+
+
+| Key binding | Action |
+| ----------- | ------ |
+| , ⇒ a | Sort alphabetically, directories first |
+| , ⇒ A | Sort alphabetically, directories first (reverse) |
+| , ⇒ c | Sort by creation time, directories first |
+| , ⇒ C | Sort by creation time, directories first (reverse) |
+| , ⇒ m | Sort by modified time, directories first |
+| , ⇒ M | Sort by modified time, directories first (reverse) |
+| , ⇒ n | Sort naturally, directories first |
+| , ⇒ N | Sort naturally, directories first (reverse) |
+| , ⇒ s | Sort by size, directories first |
+| , ⇒ S | Sort by size, directories first (reverse) |
+
+
+### Further usage
+
+To see all key bindings, check the [config/preset/keymap.toml](config/preset/keymap.toml) file.
+
+## Changing working directory when exiting yazi
+
+There is a wrapper of yazi, that provides the ability to change the current working directory when exiting yazi, feel free to use it:
 
 ```bash
 function ya() {
