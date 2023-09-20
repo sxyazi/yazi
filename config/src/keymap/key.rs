@@ -2,29 +2,13 @@ use anyhow::bail;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use serde::Deserialize;
 
-#[derive(Clone, Debug, Deserialize, Eq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Hash)]
 #[serde(try_from = "String")]
 pub struct Key {
-	pub code: KeyCode,
+	pub code:  KeyCode,
 	pub shift: bool,
-	pub ctrl: bool,
-	pub alt: bool,
-}
-
-impl PartialEq for Key {
-	fn eq(&self, other: &Self) -> bool {
-		match (self.code, other.code) {
-			(KeyCode::Char(_), KeyCode::Char(_)) => {
-				self.code == other.code && self.ctrl == other.ctrl && self.alt == other.alt
-			}
-			_ => {
-				self.code == other.code
-					&& self.shift == other.shift
-					&& self.ctrl == other.ctrl
-					&& self.alt == other.alt
-			}
-		}
-	}
+	pub ctrl:  bool,
+	pub alt:   bool,
 }
 
 impl Key {
@@ -43,18 +27,18 @@ impl Key {
 }
 
 impl Default for Key {
-	fn default() -> Self {
-		Self { code: KeyCode::Null, shift: false, ctrl: false, alt: false }
-	}
+	fn default() -> Self { Self { code: KeyCode::Null, shift: false, ctrl: false, alt: false } }
 }
 
 impl From<KeyEvent> for Key {
 	fn from(value: KeyEvent) -> Self {
+		let shift = matches!(value.code, KeyCode::Char(c) if c.is_ascii_uppercase());
+
 		Self {
-			code: value.code,
-			shift: value.modifiers.contains(KeyModifiers::SHIFT),
-			ctrl: value.modifiers.contains(KeyModifiers::CONTROL),
-			alt: value.modifiers.contains(KeyModifiers::ALT),
+			code:  value.code,
+			shift: shift || value.modifiers.contains(KeyModifiers::SHIFT),
+			ctrl:  value.modifiers.contains(KeyModifiers::CONTROL),
+			alt:   value.modifiers.contains(KeyModifiers::ALT),
 		}
 	}
 }
@@ -71,6 +55,7 @@ impl TryFrom<String> for Key {
 		if !s.starts_with('<') || !s.ends_with('>') {
 			let c = s.chars().next().unwrap();
 			key.code = KeyCode::Char(c);
+			key.shift = c.is_ascii_uppercase();
 			return Ok(key);
 		}
 
