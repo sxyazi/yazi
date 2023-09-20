@@ -33,12 +33,12 @@ impl Default for Key {
 impl From<KeyEvent> for Key {
 	fn from(value: KeyEvent) -> Self {
 		// For alphabet:
-		//   Unix    :  <S-a> => Char("A") + Shift
-		//   Windows :  <S-a> => Char("A") + Shift
+		//   Unix    :  <S-a> => Char("A") + SHIFT
+		//   Windows :  <S-a> => Char("A") + SHIFT
 		//
 		// For non-alphabet:
 		//   Unix    :  <S-`> => Char("~") + NULL
-		//   Windows :  <S-`> => Char("`") + Shift
+		//   Windows :  <S-`> => Char("~") + SHIFT
 		//
 		// So we detect `Char("`") + Shift`, and change it to `Char("~") + NULL`
 		// for consistent behavior between OSs.
