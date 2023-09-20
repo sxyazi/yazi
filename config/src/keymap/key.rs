@@ -40,7 +40,7 @@ impl From<KeyEvent> for Key {
 		//   Unix    :  <S-`> => Char("~") + NULL
 		//   Windows :  <S-`> => Char("~") + SHIFT
 		//
-		// So we detect `Char("`") + Shift`, and change it to `Char("~") + NULL`
+		// So we detect `Char("~") + SHIFT`, and change it to `Char("~") + NULL`
 		// for consistent behavior between OSs.
 
 		let shift = match (value.code, value.modifiers) {
