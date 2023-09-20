@@ -44,8 +44,7 @@ impl From<KeyEvent> for Key {
 		// for consistent behavior between OSs.
 
 		let shift = match (value.code, value.modifiers) {
-			(KeyCode::Char(c), _) if c.is_ascii_uppercase() => true,
-			(KeyCode::Char(_), m) if m.contains(KeyModifiers::SHIFT) => false,
+			(KeyCode::Char(c), _) => c.is_ascii_uppercase(),
 			(_, m) => m.contains(KeyModifiers::SHIFT),
 		};
 
