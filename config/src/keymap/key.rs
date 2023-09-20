@@ -32,13 +32,27 @@ impl Default for Key {
 
 impl From<KeyEvent> for Key {
 	fn from(value: KeyEvent) -> Self {
-		let shift = matches!(value.code, KeyCode::Char(c) if c.is_ascii_uppercase());
+		// For alphabet:
+		//   Unix    :  <S-a> => Char("A") + SHIFT
+		//   Windows :  <S-a> => Char("A") + SHIFT
+		//
+		// For non-alphabet:
+		//   Unix    :  <S-`> => Char("~") + NULL
+		//   Windows :  <S-`> => Char("~") + SHIFT
+		//
+		// So we detect `Char("~") + SHIFT`, and change it to `Char("~") + NULL`
+		// for consistent behavior between OSs.
+
+		let shift = match (value.code, value.modifiers) {
+			(KeyCode::Char(c), _) => c.is_ascii_uppercase(),
+			(_, m) => m.contains(KeyModifiers::SHIFT),
+		};
 
 		Self {
-			code:  value.code,
-			shift: shift || value.modifiers.contains(KeyModifiers::SHIFT),
-			ctrl:  value.modifiers.contains(KeyModifiers::CONTROL),
-			alt:   value.modifiers.contains(KeyModifiers::ALT),
+			code: value.code,
+			shift,
+			ctrl: value.modifiers.contains(KeyModifiers::CONTROL),
+			alt: value.modifiers.contains(KeyModifiers::ALT),
 		}
 	}
 }
