@@ -60,6 +60,7 @@
 
 - remove: Move the files to the trash/recycle bin.
 
+  - `--force`: Don't show the confirmation dialog, and trash/delete the files directly.
   - `--permanently`: Permanently delete the files.
 
 - create: Create a file or directory (ends with `/` for directories).
