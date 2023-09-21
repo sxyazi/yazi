@@ -58,4 +58,4 @@ See [Feature requests](https://github.com/sxyazi/yazi/issues/51) for more detail
 
 ## License
 
-Yazi is MIT licensed.
+Yazi is MIT licensed. For more information check the [LICENSE](LICENSE) file.
