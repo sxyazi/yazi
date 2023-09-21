@@ -2,7 +2,7 @@
 
 Yazi ("duck" in Chinese) is a terminal file manager written in Rust, based on non-blocking async I/O. It aims to provide an efficient, user-friendly, and customizable file management experience.
 
-💫 A new article explaining its internal workings: [Why Yazi Fast?](https://github.com/sxyazi/yazi/issues/143)
+💫 A new article explaining its internal workings: [Why is Yazi Fast?](https://github.com/sxyazi/yazi/issues/143)
 
 - 🚀 **Full Asynchronous Support**: All I/O operations are asynchronous, CPU tasks are spread across multiple threads, making the most of available resources.
 - 💪 **Powerful Async Task Scheduling and Management**: Provides real-time progress updates, task cancellation, and internal task priority assignment.
@@ -15,153 +15,14 @@ Yazi ("duck" in Chinese) is a terminal file manager written in Rust, based on no
 - 🎨 Theme System, Custom Layouts, Trash Bin, CSI u
 - ... and more!
 
-https://github.com/sxyazi/yazi/assets/17523360/d5d8427b-e0f3-4552-ae1a-553ba1a7d57e
+https://github.com/sxyazi/yazi/assets/17523360/0ba95b83-4784-44cd-9735-5e63d1153538
 
 ⚠️ Note: Yazi is currently in active development and may be unstable. The API is subject to change without prior notice.
 
-## Prerequisites
+## Documentation
 
-- nerd-fonts ([_optional_](https://github.com/sxyazi/yazi/wiki/I-don't-like-nerd%E2%80%90fonts!))
-- ffmpegthumbnailer (_optional_, for video thumbnails)
-- unar (_optional_, for archive preview)
-- jq (_optional_, for JSON preview)
-- poppler (_optional_, for PDF preview)
-- fd (_optional_, for file searching)
-- rg (_optional_, for file content searching)
-- fzf (_optional_, for directory jumping)
-- zoxide (_optional_, for directory jumping)
-
-## Installation
-
-<details>
-
-<summary>Arch Linux</summary>
-
-Install Yazi from [AUR](https://aur.archlinux.org/packages/yazi/) or [Arch Linux CN](https://github.com/archlinuxcn/repo/):
-
-```bash
-paru -S yazi ffmpegthumbnailer unarchiver jq poppler fd ripgrep fzf zoxide
-```
-
-You can install `yazi-bin` from [AUR](https://aur.archlinux.org/packages/yazi/) if you perfer pre-built binaries:
-
-```bash
-paru -S yazi-bin ffmpegthumbnailer unarchiver jq poppler fd ripgrep fzf zoxide
-```
-
-If you want to use the latest git version, you can install with the following command:
-
-```bash
-paru -S yazi-git ffmpegthumbnailer unarchiver jq poppler fd ripgrep fzf zoxide
-```
-
-</details>
-
-<details>
-
-<summary>macOS</summary>
-
-Install Yazi and its dependencies with Homebrew:
-
-```bash
-brew install yazi ffmpegthumbnailer unar jq poppler fd ripgrep fzf zoxide
-brew tap homebrew/cask-fonts && brew install --cask font-symbols-only-nerd-font
-```
-
-If you prefer to use the most recent code, use `--HEAD` flag:
-
-```bash
-brew install yazi --HEAD
-```
-
-Or you can install Yazi via cargo:
-
-```bash
-cargo install --git https://github.com/sxyazi/yazi.git
-```
-
-</details>
-
-<details>
-
-<summary>Nix</summary>
-
-The [Nix package of Yazi](https://search.nixos.org/packages?channel=unstable&show=yazi) is available. Nix users can install Yazi via:
-
-```bash
-# On NixOS:
-nix-env -iA nixos.yazi
-
-# On Non NixOS:
-nix-env -iA nixpkgs.yazi
-```
-
-Or add the following to your configuration:
-
-```nix
-# configuration.nix
-environment.systemPackages = with pkgs; [
-	yazi
-];
-```
-
-You can also manage Yazi's configuration using the
-[home-manager](https://nix-community.github.io/home-manager/options.html#opt-programs.yazi.enable).
-
-</details>
-
-<details>
-
-<summary>Windows</summary>
-
-See [Windows Installation Guide](https://github.com/sxyazi/yazi/wiki/Windows-Installation-Guide).
-
-</details>
-
-<details>
-
-<summary>Build from source</summary>
-
-Execute the following commands to clone the project and build Yazi:
-
-```bash
-git clone https://github.com/sxyazi/yazi.git
-cd yazi
-cargo build --release
-```
-
-Then, you can run:
-
-```bash
-./target/release/yazi
-```
-
-</details>
-
-## Usage
-
-```bash
-yazi
-```
-
-There is a wrapper of yazi, that provides the ability to change the current working directory when yazi exiting, feel free to use it:
-
-```bash
-function ya() {
-	tmp="$(mktemp -t "yazi-cwd.XXXXX")"
-	yazi --cwd-file="$tmp"
-	if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-		cd -- "$cwd"
-	fi
-	rm -f -- "$tmp"
-}
-```
-
-## Configuration
-
-If you want to use your own config, copy the [config folder](./config/preset) to `~/.config/yazi`, and modify it as you like.
-
-[The documentation of all available options](./config/docs)
+- Usage: https://yazi-rs.github.io/docs/usage/installation
+- Showcase: https://yazi-rs.github.io/docs/showcase
 
 ## Discussion
 
