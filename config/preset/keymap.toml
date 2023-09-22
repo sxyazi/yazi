@@ -74,16 +74,16 @@ keymap = [
 	{ on = [ "=" ], exec = "find_arrow --previous" },
 
 	# Sorting
-	{ on = [ ",", "a" ], exec = "sort alphabetical --dir_first",           desc = "Sort alphabetically, directories first" },
-	{ on = [ ",", "A" ], exec = "sort alphabetical --reverse --dir_first", desc = "Sort alphabetically, directories first (reverse)" },
-	{ on = [ ",", "c" ], exec = "sort created --dir_first",                desc = "Sort by creation time, directories first" },
-	{ on = [ ",", "C" ], exec = "sort created --reverse --dir_first",      desc = "Sort by creation time, directories first (reverse)" },
-	{ on = [ ",", "m" ], exec = "sort modified --dir_first",               desc = "Sort by modified time, directories first" },
-	{ on = [ ",", "M" ], exec = "sort modified --reverse --dir_first",     desc = "Sort by modified time, directories first (reverse)" },
-	{ on = [ ",", "n" ], exec = "sort natural --dir_first",                desc = "Sort naturally, directories first" },
-	{ on = [ ",", "N" ], exec = "sort natural --reverse --dir_first",      desc = "Sort naturally, directories first (reverse)" },
-	{ on = [ ",", "s" ], exec = "sort size --dir_first",                   desc = "Sort by size, directories first" },
-	{ on = [ ",", "S" ], exec = "sort size --reverse --dir_first",         desc = "Sort by size, directories first (reverse)" },
+	{ on = [ ",", "a" ], exec = "sort alphabetical --dir_first",           desc = "Sort alphabetically" },
+	{ on = [ ",", "A" ], exec = "sort alphabetical --reverse --dir_first", desc = "Sort alphabetically (reverse)" },
+	{ on = [ ",", "c" ], exec = "sort created --dir_first",                desc = "Sort by creation time" },
+	{ on = [ ",", "C" ], exec = "sort created --reverse --dir_first",      desc = "Sort by creation time (reverse)" },
+	{ on = [ ",", "m" ], exec = "sort modified --dir_first",               desc = "Sort by modified time" },
+	{ on = [ ",", "M" ], exec = "sort modified --reverse --dir_first",     desc = "Sort by modified time (reverse)" },
+	{ on = [ ",", "n" ], exec = "sort natural --dir_first",                desc = "Sort naturally" },
+	{ on = [ ",", "N" ], exec = "sort natural --reverse --dir_first",      desc = "Sort naturally (reverse)" },
+	{ on = [ ",", "s" ], exec = "sort size --dir_first",                   desc = "Sort by size" },
+	{ on = [ ",", "S" ], exec = "sort size --reverse --dir_first",         desc = "Sort by size (reverse)" },
 
 	# Tabs
 	{ on = [ "t" ], exec = "tab_create --current", desc = "Create a new tab using the current path" },
