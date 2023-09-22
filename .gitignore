@@ -1,3 +1,6 @@
 target/
 
 .DS_Store
+result
+result-*
+.devenv*
