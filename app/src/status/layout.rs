@@ -1,9 +1,9 @@
 use core::Ctx;
 
-use ratatui::{buffer::Buffer, layout::{self, Constraint, Direction, Rect}, text::Line, widgets::{Paragraph, Widget}};
+use ratatui::{buffer::Buffer, layout::{self, Constraint, Direction, Rect}, widgets::Widget};
 use tracing::info;
 
-use crate::Parser;
+use crate::parser::Parser;
 
 pub(crate) struct Layout<'a> {
 	cx: &'a Ctx,
@@ -20,63 +20,14 @@ impl<'a> Widget for Layout<'a> {
 			.constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
 			.split(area);
 
-		// Left::new(self.cx).render(chunks[0], buf);
-		// Right::new(self.cx).render(chunks[1], buf);
-
-		let mut spans = vec![];
-		if let Ok(mode) = plugin::Status::mode(self.cx) {
-			spans.extend(Parser::line(&mode).spans);
-		}
-
-		let x = plugin::Status::size(self.cx);
+		let x = plugin::Status::layout(self.cx, area);
 		if x.is_err() {
-			info!("Error: {:?}", x);
+			info!("{:?}", x);
 			return;
 		}
-		if let Ok(size) = x {
-			spans.extend(Parser::line(&size).spans);
-		}
 
-		let x = plugin::Status::name(self.cx);
-		if x.is_err() {
-			info!("Error: {:?}", x);
-			return;
+		if let Ok(s) = x {
+			Parser::render(&s, buf);
 		}
-		if let Ok(name) = x {
-			spans.extend(Parser::line(&name).spans);
-		}
-
-		Paragraph::new(Line::from(spans)).render(chunks[0], buf);
-
-		// Right
-		let mut spans = vec![];
-
-		let x = plugin::Status::permissions(self.cx);
-		if x.is_err() {
-			info!("Error: {:?}", x);
-			return;
-		}
-		if let Ok(name) = x {
-			spans.extend(Parser::line(&name).spans);
-		}
-
-		let x = plugin::Status::percentage(self.cx);
-		if x.is_err() {
-			info!("Error: {:?}", x);
-			return;
-		}
-		if let Ok(name) = x {
-			spans.extend(Parser::line(&name).spans);
-		}
-
-		let x = plugin::Status::position(self.cx);
-		if x.is_err() {
-			info!("Error: {:?}", x);
-			return;
-		}
-		if let Ok(name) = x {
-			spans.extend(Parser::line(&name).spans);
-		}
-		Paragraph::new(Line::from(spans)).render(chunks[1], buf);
 	}
 }

@@ -12,3 +12,4 @@ shared = { path = "../shared" }
 anyhow  = "^1"
 mlua    = { version = "^0", features = [ "lua54", "serialize" ] }
 tracing = "^0"
+ratatui = "^0"

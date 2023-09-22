@@ -1,15 +1,16 @@
+use anyhow::Result;
 use config::theme::Color;
-use ratatui::{style::{Modifier, Style}, text::{Line, Span}, widgets::Paragraph};
+use ratatui::{prelude::{Buffer, Rect}, style::{Modifier, Style}, text::{Line, Span}, widgets::{Paragraph, Widget}};
 
 pub struct Parser;
 
 impl Parser {
-	pub fn span(s: &str) -> Span<'static> {
+	fn span(s: &str) -> Span<'static> {
 		let Some((args, content)) = s.split_once(';') else {
 			return Span::raw(s.to_string());
 		};
 
-		let args = args.split(',').collect::<Vec<_>>();
+		let args: Vec<_> = args.split(',').collect();
 		if args.len() != 4 {
 			return Span::raw(s.to_string());
 		}
@@ -30,7 +31,7 @@ impl Parser {
 		Span::styled(content.to_string(), style)
 	}
 
-	pub fn line(s: &str) -> Line<'static> {
+	fn line(s: &str) -> Line<'static> {
 		let mut last = '\0';
 		let mut spans: Vec<String> = vec![String::new()];
 
@@ -49,7 +50,7 @@ impl Parser {
 		Line::from(spans.into_iter().map(|s| Self::span(&s)).collect::<Vec<_>>())
 	}
 
-	pub fn paragraph(s: &str) -> Paragraph {
+	fn paragraph(s: &str) -> Paragraph {
 		let mut last = '\0';
 		let mut lines: Vec<String> = vec![String::new()];
 
@@ -68,22 +69,49 @@ impl Parser {
 		Paragraph::new(lines.into_iter().map(|s| Self::line(&s)).collect::<Vec<_>>())
 	}
 
-	pub fn layout(s: &str) -> Paragraph {
+	fn area(args: Vec<&str>) -> Result<Rect> {
+		Ok(Rect {
+			x:      args[0].parse()?,
+			y:      args[1].parse()?,
+			width:  args[2].parse()?,
+			height: args[3].parse()?,
+		})
+	}
+
+	pub fn render(s: &str, buf: &mut Buffer) {
+		let Some(s) = s.strip_prefix('R') else {
+			return;
+		};
+
 		let mut last = '\0';
-		let mut lines: Vec<String> = vec![String::new()];
+		let mut paragraphs: Vec<String> = vec![String::new()];
 
 		for c in s.chars() {
 			if c == '\0' && last == '\\' {
-				let last = lines.last_mut().unwrap();
+				let last = paragraphs.last_mut().unwrap();
 				last.pop();
 				last.push(c);
 			} else if c == '\0' {
-				lines.push(String::new());
+				paragraphs.push(String::new());
 			} else {
-				lines.last_mut().unwrap().push(c);
+				paragraphs.last_mut().unwrap().push(c);
 			}
 			last = c;
 		}
-		Paragraph::new(lines.into_iter().map(|s| Self::line(&s)).collect::<Vec<_>>())
+
+		for paragraph in paragraphs {
+			let Some((args, content)) = paragraph.split_once(';') else {
+				continue;
+			};
+
+			let args: Vec<_> = args.split(',').collect();
+			if args.len() != 4 {
+				continue;
+			}
+
+			if let Ok(area) = Self::area(args) {
+				Self::paragraph(content).render(area, buf);
+			}
+		}
 	}
 }
