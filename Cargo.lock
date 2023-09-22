@@ -326,6 +326,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cmdexpand"
+version = "0.1.0"
+source = "git+https://github.com/ndtoan96/cmdexpand.git?tag=v0.1.0#be905e223c7ed5f52655fb4096c842f2f587f0d7"
+dependencies = [
+ "nom",
+ "thiserror",
+]
+
+[[package]]
 name = "color_quant"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -374,6 +383,7 @@ dependencies = [
  "anyhow",
  "async-channel",
  "clipboard-win",
+ "cmdexpand",
  "config",
  "crossterm",
  "futures",

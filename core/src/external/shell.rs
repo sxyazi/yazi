@@ -43,16 +43,22 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 			.spawn()?,
 	);
 
-	#[cfg(windows)]
-	return Ok(
-		Command::new("cmd")
-			.stdin(opt.stdio())
-			.stdout(opt.stdio())
-			.stderr(opt.stdio())
-			.arg("/C")
-			.arg(opt.cmd)
-			.args(opt.args)
-			.kill_on_drop(true)
-			.spawn()?,
-	);
+	#[cfg(target_os = "windows")]
+	{
+		let args: Vec<String> = opt.args.iter().map(|s| s.to_string_lossy().to_string()).collect();
+		let cmd = cmdexpand::Expander::new(&opt.cmd.to_string_lossy().to_string())
+			.disable_context(true)
+			.add_args(&args)
+			.expand()?;
+		Ok(
+			Command::new("cmd")
+				.arg("/C")
+				.arg(cmd)
+				.stdin(if opt.piped { Stdio::piped() } else { Stdio::inherit() })
+				.stdout(if opt.piped { Stdio::piped() } else { Stdio::inherit() })
+				.stderr(if opt.piped { Stdio::piped() } else { Stdio::inherit() })
+				.kill_on_drop(true)
+				.spawn()?,
+		)
+	}
 }
