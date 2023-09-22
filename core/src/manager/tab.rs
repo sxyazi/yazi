@@ -256,7 +256,9 @@ impl Tab {
 		}
 
 		tokio::spawn(async move {
-			let rx = emit!(Input(InputOpt::top("Find:").with_realtime()));
+			let rx = emit!(Input(
+				InputOpt::top(if prev { "Find previous:" } else { "Find next:" }).with_realtime()
+			));
 
 			let rx = Debounce::new(UnboundedReceiverStream::new(rx), Duration::from_millis(50));
 			pin!(rx);
