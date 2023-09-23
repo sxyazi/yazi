@@ -1,9 +1,9 @@
 use core::Ctx;
 
-use mlua::{Function, Result};
+use mlua::{Result, Table, TableExt};
 use ratatui::layout;
 
-use crate::{bindings, Rect, LUA};
+use crate::{bindings, Rect, GLOBALS, LUA};
 
 pub struct Status;
 
@@ -16,16 +16,16 @@ impl Status {
 			let cx = LUA.create_table()?;
 			cx.set("manager", manager)?;
 			cx.set("tasks", tasks)?;
-			LUA.globals().set("cx", cx)?;
+			GLOBALS.set("cx", cx)?;
 
 			f()
 		})
 	}
 
-	pub fn layout(cx: &Ctx, area: layout::Rect) -> Result<String> {
+	pub fn render(cx: &Ctx, area: layout::Rect) -> Result<String> {
 		Self::scope(cx, || {
-			let layout: Function = LUA.globals().get("layout")?;
-			layout.call::<_, String>(Rect::from(area))
+			let status: Table = GLOBALS.get("Status")?;
+			status.call_method::<_, String>("render", Rect::from(area))
 		})
 	}
 }

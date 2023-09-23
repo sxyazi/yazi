@@ -1,57 +1,46 @@
-function layout(area)
-	local chunks = yazi
-		.Layout()
-		:direction(false)
-		:constraints({ yazi.Constraint.Percentage(50), yazi.Constraint.Percentage(50) })
-		:split(area)
+Status = {}
 
-	return yazi.Paragraph.render(
-		yazi.Paragraph(mode(), size(), name()):area(chunks[1]),
-		yazi.Paragraph(permissions(), percentage(), position()):area(chunks[2])
-	)
-end
-
-function mode()
+function Status.mode()
 	local mode = cx.manager.mode:upper()
 	if mode == "UNSET" then
 		mode = "UN-SET"
 	end
 
-	return yazi.Line(
-		yazi.Span(THEME.status.separator.opening):fg(THEME.status.mode_normal.bg),
-		yazi.Span(" " .. mode .. " "):style(THEME.status.mode_normal)
+	return ui.Line(
+		ui.Span(THEME.status.separator.opening):fg(THEME.status.mode_normal.bg),
+		ui.Span(" " .. mode .. " "):style(THEME.status.mode_normal)
 	)
 end
 
-function size()
+function Status.size()
 	local hovered = cx.manager.current_hovered
 	if hovered == nil then
-		return yazi.Span("")
+		return ui.Span("")
 	end
 
-	return yazi.Line(
-		yazi.Span(" " .. hovered.length .. " "):fg(THEME.status.mode_normal.bg):bg(THEME.status.fancy.bg),
-		yazi.Span(THEME.status.separator.closing):fg(THEME.status.fancy.bg)
+	return ui.Line(
+		ui.Span(" " .. hovered.length .. " "):fg(THEME.status.mode_normal.bg):bg(THEME.status.fancy.bg),
+		ui.Span(THEME.status.separator.closing):fg(THEME.status.fancy.bg)
 	)
 end
 
-function name()
+function Status.name()
 	local hovered = cx.manager.current_hovered
 	if hovered == nil then
-		return yazi.Span("")
+		return ui.Span("")
 	end
 
-	return yazi.Span(" " .. utils.basename(hovered.url))
+	return ui.Span(" " .. utils.basename(hovered.url))
 end
 
-function permissions()
+function Status.permissions()
 	local hovered = cx.manager.current_hovered
 	if hovered == nil then
-		return yazi.Span("")
+		return ui.Span("")
 	end
 
 	if hovered.permissions == nil then
-		return yazi.Span("")
+		return ui.Span("")
 	end
 
 	local spans = {}
@@ -65,12 +54,12 @@ function permissions()
 		elseif c == "x" or c == "s" or c == "S" or c == "t" or c == "T" then
 			style = THEME.status.permissions_x
 		end
-		spans[i] = yazi.Span(c):style(style)
+		spans[i] = ui.Span(c):style(style)
 	end
-	return yazi.Line:from(spans)
+	return ui.Line:from(spans)
 end
 
-function percentage()
+function Status.percentage()
 	local percent = 0
 	local cursor = cx.manager.current_cursor
 	local length = cx.manager.current_length
@@ -84,14 +73,28 @@ function percentage()
 		percent = string.format(" %3d%% ", percent)
 	end
 
-	return yazi.Line(
-		yazi.Span(THEME.status.separator.opening):fg(THEME.status.fancy.bg),
-		yazi.Span(percent):fg(THEME.status.mode_normal.bg):bg(THEME.status.fancy.bg)
+	return ui.Line(
+		ui.Span(THEME.status.separator.opening):fg(THEME.status.fancy.bg),
+		ui.Span(percent):fg(THEME.status.mode_normal.bg):bg(THEME.status.fancy.bg)
 	)
 end
 
-function position()
+function Status.position()
 	local cursor = cx.manager.current_cursor
 	local length = cx.manager.current_length
-	return yazi.Span(string.format(" %d/%d ", cursor + 1, length))
+	return ui.Span(string.format(" %d/%d ", cursor + 1, length))
+end
+
+function Status:render(area)
+	local chunks = ui.Layout()
+		:direction(ui.Direction.HORIZONTAL)
+		:constraints({ ui.Constraint.Percentage(50), ui.Constraint.Percentage(50) })
+		:split(area)
+
+	local left = ui.Line(self.mode(), self.size(), self.name())
+	local right = ui.Line(self.permissions(), self.percentage(), self.position())
+	return ui.Paragraph.render(
+		ui.Paragraph(left):area(chunks[1]),
+		ui.Paragraph(right):align(ui.Alignment.RIGHT):area(chunks[2])
+	)
 end

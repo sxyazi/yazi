@@ -1,11 +1,12 @@
 use anyhow::Result;
 use config::THEME;
-use mlua::{Lua, LuaSerdeExt};
+use mlua::{Lua, LuaSerdeExt, SerializeOptions, Table};
 use shared::RoCell;
 
 use crate::layout;
 
 pub(crate) static LUA: RoCell<Lua> = RoCell::new();
+pub(crate) static GLOBALS: RoCell<Table> = RoCell::new();
 
 pub fn init() {
 	fn inner() -> Result<()> {
@@ -24,11 +25,16 @@ pub fn init() {
 		lua.load(include_str!("../preset/components/status.lua")).exec()?;
 
 		// Initialize
-		lua.globals().set("THEME", lua.to_value(&*THEME)?)?;
 		LUA.init(lua);
+		GLOBALS.init(LUA.globals());
 
+		// Install
 		layout::Layout::install()?;
 		layout::Constraint::install()?;
+
+		let options =
+			SerializeOptions::new().serialize_none_to_null(false).serialize_unit_to_null(false);
+		GLOBALS.set("THEME", LUA.to_value_with(&*THEME, options)?)?;
 
 		Ok(())
 	}

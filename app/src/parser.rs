@@ -1,6 +1,6 @@
 use anyhow::Result;
 use config::theme::Color;
-use ratatui::{prelude::{Buffer, Rect}, style::{Modifier, Style}, text::{Line, Span}, widgets::{Paragraph, Widget}};
+use ratatui::{prelude::{Alignment, Buffer, Rect}, style::{Modifier, Style}, text::{Line, Span}, widgets::{Paragraph, Widget}};
 
 pub struct Parser;
 
@@ -69,7 +69,7 @@ impl Parser {
 		Paragraph::new(lines.into_iter().map(|s| Self::line(&s)).collect::<Vec<_>>())
 	}
 
-	fn area(args: Vec<&str>) -> Result<Rect> {
+	fn area(args: &[&str]) -> Result<Rect> {
 		Ok(Rect {
 			x:      args[0].parse()?,
 			y:      args[1].parse()?,
@@ -105,13 +105,24 @@ impl Parser {
 			};
 
 			let args: Vec<_> = args.split(',').collect();
-			if args.len() != 4 {
+			if args.len() != 5 {
 				continue;
 			}
 
-			if let Ok(area) = Self::area(args) {
-				Self::paragraph(content).render(area, buf);
+			let Ok(area) = Self::area(&args) else {
+				continue;
+			};
+
+			let mut paragraph = Self::paragraph(content);
+			if let Ok(align) = args[4].parse::<u8>() {
+				paragraph = paragraph.alignment(match align {
+					1 => Alignment::Center,
+					2 => Alignment::Right,
+					_ => Alignment::Left,
+				});
 			}
+
+			paragraph.render(area, buf);
 		}
 	}
 }

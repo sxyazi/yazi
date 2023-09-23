@@ -1,7 +1,7 @@
 use mlua::{AnyUserData, FromLua, Lua, Table, UserData, UserDataMethods, Value};
 use ratatui::layout;
 
-use crate::LUA;
+use crate::{GLOBALS, LUA};
 
 // --- Rect
 #[derive(Clone, Copy)]
@@ -39,8 +39,7 @@ pub struct Constraint(layout::Constraint);
 
 impl Constraint {
 	pub(super) fn install() -> mlua::Result<()> {
-		let globals = LUA.globals();
-		let yazi = globals.get::<_, Table>("yazi")?;
+		let ui: Table = GLOBALS.get("ui")?;
 
 		let constraint = LUA.create_table()?;
 		constraint.set(
@@ -61,7 +60,7 @@ impl Constraint {
 		constraint
 			.set("Min", LUA.create_function(|_, n: u16| Ok(Constraint(layout::Constraint::Min(n))))?)?;
 
-		yazi.set("Constraint", constraint)
+		ui.set("Constraint", constraint)
 	}
 }
 
@@ -90,10 +89,13 @@ pub struct Layout {
 
 impl Layout {
 	pub(super) fn install() -> mlua::Result<()> {
-		let globals = LUA.globals();
+		let ui: Table = GLOBALS.get("ui")?;
+		ui.set("Layout", LUA.create_function(|_, ()| Ok(Self::default()))?)?;
 
-		let yazi = globals.get::<_, Table>("yazi")?;
-		yazi.set("Layout", LUA.create_function(|_, ()| Ok(Self::default()))?)
+		let direction = LUA.create_table()?;
+		direction.set("HORIZONTAL", false)?;
+		direction.set("VERTICAL", true)?;
+		ui.set("Direction", direction)
 	}
 }
 
@@ -160,9 +162,9 @@ impl UserData for Layout {
 
 			let mut layout = layout::Layout::new()
 				.direction(if me.direction {
-					layout::Direction::Horizontal
-				} else {
 					layout::Direction::Vertical
+				} else {
+					layout::Direction::Horizontal
 				})
 				.constraints(me.constraints.as_slice());
 

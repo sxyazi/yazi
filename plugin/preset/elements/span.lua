@@ -120,5 +120,5 @@ setmetatable(Span, {
 	__tostring = function(self) return self:to_string() end,
 })
 
-yazi = yazi or {}
-yazi.Span = Span
+ui = ui or {}
+ui.Span = Span

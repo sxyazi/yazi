@@ -13,8 +13,15 @@ function Line:from(spans) return self:new(table.unpack(spans)) end
 
 function Line:to_string()
 	local s = ""
-	for _, span in ipairs(self.spans) do
-		s = s .. span:to_string():gsub("\n", "\\\n") .. "\n"
+	for _, el in ipairs(self.spans) do
+		local mt = getmetatable(el)
+		if mt == ui.Line then
+			for _, span in ipairs(el.spans) do
+				s = s .. span:to_string():gsub("\n", "\\\n") .. "\n"
+			end
+		else
+			s = s .. el:to_string():gsub("\n", "\\\n") .. "\n"
+		end
 	end
 	return s.sub(s, 1, -2)
 end
@@ -24,5 +31,5 @@ setmetatable(Line, {
 	__tostring = function(self) return self:to_string() end,
 })
 
-yazi = yazi or {}
-yazi.Line = Line
+ui = ui or {}
+ui.Line = Line

@@ -1,7 +1,13 @@
 local Paragraph = {}
+local Alignment = {
+	LEFT = 0,
+	CENTER = 1,
+	RIGHT = 2,
+}
 
 function Paragraph:new(...)
 	local o = {
+		alignment = 0,
 		position = nil,
 		lines = { ... },
 	}
@@ -11,6 +17,11 @@ function Paragraph:new(...)
 end
 
 function Paragraph:from(lines) return self:new(table.unpack(lines)) end
+
+function Paragraph:align(align)
+	self.alignment = align
+	return self
+end
 
 function Paragraph:area(rect)
 	self.position = rect
@@ -25,8 +36,6 @@ function Paragraph:to_string()
 	return s.sub(s, 1, -2)
 end
 
-function Paragraph:aaa() return self:to_string() end
-
 function Paragraph.render(...)
 	local s = "R"
 	for _, paragraph in ipairs { ... } do
@@ -38,6 +47,8 @@ function Paragraph.render(...)
 			.. paragraph.position.width
 			.. ","
 			.. paragraph.position.height
+			.. ","
+			.. paragraph.alignment
 			.. ";"
 			.. paragraph:to_string():gsub("\0", "\\\0")
 			.. "\0"
@@ -50,5 +61,6 @@ setmetatable(Paragraph, {
 	__tostring = function(self) return self:to_string() end,
 })
 
-yazi = yazi or {}
-yazi.Paragraph = Paragraph
+ui = ui or {}
+ui.Paragraph = Paragraph
+ui.Alignment = Alignment

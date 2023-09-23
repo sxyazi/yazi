@@ -18,7 +18,6 @@ mod which;
 use app::*;
 use executor::*;
 use logs::*;
-use parser::*;
 use root::*;
 use signals::*;
 

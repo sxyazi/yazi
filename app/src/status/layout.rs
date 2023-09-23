@@ -1,6 +1,6 @@
 use core::Ctx;
 
-use ratatui::{buffer::Buffer, layout::{self, Constraint, Direction, Rect}, widgets::Widget};
+use ratatui::{buffer::Buffer, prelude::Rect, widgets::Widget};
 use tracing::info;
 
 use crate::parser::Parser;
@@ -15,12 +15,7 @@ impl<'a> Layout<'a> {
 
 impl<'a> Widget for Layout<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let chunks = layout::Layout::new()
-			.direction(Direction::Horizontal)
-			.constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
-			.split(area);
-
-		let x = plugin::Status::layout(self.cx, area);
+		let x = plugin::Status::render(self.cx, area);
 		if x.is_err() {
 			info!("{:?}", x);
 			return;
