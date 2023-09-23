@@ -45,6 +45,7 @@ impl From<KeyEvent> for Key {
 
 		let shift = match (value.code, value.modifiers) {
 			(KeyCode::Char(c), _) => c.is_ascii_uppercase(),
+			(KeyCode::BackTab, _) => false,
 			(_, m) => m.contains(KeyModifiers::SHIFT),
 		};
 
@@ -92,6 +93,7 @@ impl TryFrom<String> for Key {
 				"PageUp" => key.code = KeyCode::PageUp,
 				"PageDown" => key.code = KeyCode::PageDown,
 				"Tab" => key.code = KeyCode::Tab,
+				"BackTab" => key.code = KeyCode::BackTab,
 				"Delete" => key.code = KeyCode::Delete,
 				"Insert" => key.code = KeyCode::Insert,
 				"F1" => key.code = KeyCode::F(1),
@@ -152,6 +154,7 @@ impl ToString for Key {
 			KeyCode::PageUp => "PageUp",
 			KeyCode::PageDown => "PageDown",
 			KeyCode::Tab => "Tab",
+			KeyCode::BackTab => "BackTab",
 			KeyCode::Delete => "Delete",
 			KeyCode::Insert => "Insert",
 			KeyCode::F(1) => "F1",
