@@ -16,6 +16,7 @@ pub(crate) struct ProcessOpOpen {
 	pub cmd:    OsString,
 	pub args:   Vec<OsString>,
 	pub block:  bool,
+	pub orphan: bool,
 	pub cancel: oneshot::Sender<()>,
 }
 
@@ -29,11 +30,12 @@ impl Process {
 	fn done(&self, id: usize) -> Result<()> { Ok(self.sch.send(TaskOp::Done(id))?) }
 
 	pub(crate) async fn open(&self, mut task: ProcessOpOpen) -> Result<()> {
+		let opt = ShellOpt { cmd: task.cmd, args: task.args, piped: true, orphan: task.orphan };
 		if task.block {
 			let _guard = BLOCKER.acquire().await.unwrap();
 			emit!(Stop(true)).await;
 
-			match external::shell(ShellOpt { cmd: task.cmd, args: task.args, piped: false }) {
+			match external::shell(ShellOpt { piped: false, ..opt }) {
 				Ok(mut child) => {
 					child.wait().await.ok();
 				}
@@ -48,13 +50,16 @@ impl Process {
 		}
 
 		self.sch.send(TaskOp::New(task.id, 0))?;
-		let mut child = external::shell(ShellOpt { cmd: task.cmd, args: task.args, piped: true })?;
+		let mut child = external::shell(opt)?;
 
 		let mut stdout = BufReader::new(child.stdout.take().unwrap()).lines();
 		let mut stderr = BufReader::new(child.stderr.take().unwrap()).lines();
 		loop {
 			select! {
-				_ = task.cancel.closed() => break,
+				_ = task.cancel.closed() => {
+					child.start_kill().ok();
+					break;
+				}
 				Ok(Some(line)) = stdout.next_line() => {
 					self.log(task.id, line)?;
 				}

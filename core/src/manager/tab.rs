@@ -379,7 +379,7 @@ impl Tab {
 
 			emit!(Open(
 				selected,
-				Some(Opener { exec, block, display_name: Default::default(), spread: true })
+				Some(Opener { exec, block, orphan: false, display_name: Default::default(), spread: true })
 			));
 		});
 
