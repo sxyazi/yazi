@@ -106,8 +106,45 @@ mod cmdexpand {
 		Ok(expanded)
 	}
 
-	fn escaped_char(input: &str) -> IResult<&str, &str> {
-		recognize(pair(char('\\'), anychar))(input)
+	fn expand_text<T>(text: &str, args: &[T]) -> Result<String>
+	where
+		T: AsRef<str>,
+	{
+		let quote = if text.starts_with("\"") {
+			Quote::DoubleQuote
+		} else if text.starts_with("'") {
+			Quote::SingleQuote
+		} else {
+			Quote::NoQuote
+		};
+
+		let parts = parse_text(text)?;
+		let mut expanded = String::new();
+		for part in parts {
+			match part {
+				TextPart::NormalText(s) => expanded.push_str(s),
+				TextPart::PercentNumber(i) => {
+					if i > 0 {
+						let replace_text = args
+							.get(i - 1)
+							.map(|content| preprocess(content.as_ref(), quote))
+							.unwrap_or_default();
+						expanded.push_str(&replace_text);
+					} else {
+						// Does not support %0, replace it with ""
+					}
+				}
+				TextPart::PercentStar => {
+					for (i, arg) in args.iter().enumerate() {
+						expanded.push_str(&preprocess(arg.as_ref(), quote));
+						if i + 1 < args.len() {
+							expanded.push_str(" ");
+						}
+					}
+				}
+			}
+		}
+		Ok(expanded)
 	}
 
 	fn parse_cmd(cmd: &str) -> Result<Vec<CommandPart>> {
@@ -145,48 +182,11 @@ mod cmdexpand {
 		Ok(parts)
 	}
 
-	fn expand_text<T>(text: &str, args: &[T]) -> Result<String>
-	where
-		T: AsRef<str>,
-	{
-		let quote = if text.starts_with("\"") {
-			Quote::DoubleQuote
-		} else if text.starts_with("'") {
-			Quote::SingleQuote
-		} else {
-			Quote::NoQuote
-		};
-
-		let parts = parse_text(text)?;
-		let mut expanded = String::new();
-		for part in parts {
-			match part {
-				TextPart::NormalText(s) => expanded.push_str(s),
-				TextPart::PercentNumber(i) => {
-					if i > 0 {
-						let replace_text = args
-							.get(i - 1)
-							.map(|content| preprocess(content.as_ref(), quote))
-							.unwrap_or_default();
-						expanded.push_str(&replace_text);
-					} else {
-						// Not sure what to do with %0
-					}
-				}
-				TextPart::PercentStar => {
-					for (i, arg) in args.iter().enumerate() {
-						expanded.push_str(&preprocess(arg.as_ref(), quote));
-						if i + 1 < args.len() {
-							expanded.push_str(" ");
-						}
-					}
-				}
-			}
-		}
-		Ok(expanded)
-	}
-
 	fn parse_text(text: &str) -> Result<Vec<TextPart>> {
+		fn escaped_char(input: &str) -> IResult<&str, &str> {
+			recognize(pair(char('\\'), anychar))(input)
+		}
+
 		fn normal_text(input: &str) -> IResult<&str, TextPart> {
 			let (input, output) = recognize(many1(alt((escaped_char, is_not("\\%")))))(input)?;
 			Ok((input, TextPart::NormalText(output)))
@@ -208,6 +208,8 @@ mod cmdexpand {
 		Ok(parts)
 	}
 
+	// Preprocess the content inside %x before replacing it in the command text
+	// to make sure white space and quote inside %x does not mess up the command.
 	fn preprocess(content: &str, quote: Quote) -> String {
 		let inner_space = content.chars().any(|c| c.is_whitespace());
 		match (quote, inner_space) {
