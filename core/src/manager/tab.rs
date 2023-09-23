@@ -366,7 +366,11 @@ impl Tab {
 		let mut exec = exec.to_owned();
 		tokio::spawn(async move {
 			if !confirm || exec.is_empty() {
-				let mut result = emit!(Input(InputOpt::top("Shell:").with_value(&exec).with_highlight()));
+				let mut result = emit!(Input(
+					InputOpt::top(if block { "Shell (block):" } else { "Shell:" })
+						.with_value(&exec)
+						.with_highlight()
+				));
 				match result.recv().await {
 					Some(Ok(e)) => exec = e,
 					_ => return,
