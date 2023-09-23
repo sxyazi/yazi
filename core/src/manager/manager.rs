@@ -187,7 +187,7 @@ impl Manager {
 
 			let path = cwd.join(&name);
 			if !force && fs::symlink_metadata(&path).await.is_ok() {
-				match emit!(Input(InputOpt::top("Overwrite an existing file?"))).recv().await {
+				match emit!(Input(InputOpt::top("Overwrite an existing file? (y/N)"))).recv().await {
 					Some(Ok(c)) if c == "y" || c == "Y" => (),
 					_ => return Ok(()),
 				}
@@ -234,7 +234,7 @@ impl Manager {
 				return;
 			}
 
-			let mut result = emit!(Input(InputOpt::hovered("Overwrite an existing file?")));
+			let mut result = emit!(Input(InputOpt::hovered("Overwrite an existing file? (y/N)")));
 			if let Some(Ok(choice)) = result.recv().await {
 				if choice == "y" || choice == "Y" {
 					fs::rename(&hovered, new).await.ok();
