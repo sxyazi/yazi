@@ -30,7 +30,7 @@ yazi-prebuild = "^0"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 clipboard-win = "^4"
-cmdexpand     = {git = "https://github.com/ndtoan96/cmdexpand.git", tag = "v0.1.0"}
+nom           = "^7"
 
 [target.'cfg(not(target_os = "netbsd"))'.dependencies]
 trash = "^3"
