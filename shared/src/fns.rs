@@ -1,4 +1,4 @@
-use std::{borrow::Cow, env, path::{Component, Path, PathBuf}};
+use std::{env, ffi::OsStr, path::{Component, Path, PathBuf}};
 
 use tokio::fs;
 
@@ -21,6 +21,22 @@ pub fn expand_path(p: impl AsRef<Path>) -> PathBuf {
 pub fn expand_url(mut u: Url) -> Url {
 	u.set_path(expand_path(&u));
 	u
+}
+
+pub struct PathParts<'a> {
+	pub path:     &'a Path,
+	pub filename: &'a OsStr,
+}
+
+pub fn short_path_parts<'a>(p: &'a Path, base: &Path) -> Option<PathParts<'a>> {
+	let p = p.strip_prefix(base).unwrap_or(p);
+	let mut parts = p.components();
+	let filename = parts.next_back().and_then(|p| match p {
+		Component::Normal(p) => Some(p),
+		_ => None,
+	})?;
+	let rest = parts.as_path();
+	Some(PathParts { path: rest, filename })
 }
 
 pub fn short_path(p: &Path, base: &Path) -> String {

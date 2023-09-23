@@ -2,7 +2,7 @@ use config::MANAGER;
 use ratatui::{buffer::Buffer, layout::{self, Constraint, Direction, Rect}, widgets::{Block, Borders, Padding, Widget}};
 
 use super::{Folder, Preview};
-use crate::Ctx;
+use crate::{manager::folder::FolderLocation, Ctx};
 
 pub(crate) struct Layout<'a> {
 	cx: &'a Ctx,
@@ -32,12 +32,12 @@ impl<'a> Widget for Layout<'a> {
 		// Parent
 		let block = Block::new().borders(Borders::RIGHT).padding(Padding::new(1, 0, 0, 0));
 		if let Some(parent) = manager.parent() {
-			Folder::new(self.cx, parent).render(block.inner(chunks[0]), buf);
+			Folder::new(self.cx, parent, FolderLocation::Parent).render(block.inner(chunks[0]), buf);
 		}
 		block.render(chunks[0], buf);
 
 		// Current
-		Folder::new(self.cx, manager.current())
+		Folder::new(self.cx, manager.current(), FolderLocation::Current)
 			.with_selection(manager.active().mode().is_visual())
 			.with_find(manager.active().finder().is_some())
 			.render(chunks[1], buf);

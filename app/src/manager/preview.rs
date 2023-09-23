@@ -4,7 +4,7 @@ use ansi_to_tui::IntoText;
 use ratatui::{buffer::Buffer, layout::Rect, widgets::{Paragraph, Widget}};
 
 use super::Folder;
-use crate::Ctx;
+use crate::{manager::folder::FolderLocation, Ctx};
 
 pub(super) struct Preview<'a> {
 	cx: &'a Ctx,
@@ -29,7 +29,7 @@ impl<'a> Widget for Preview<'a> {
 		match &preview.lock.as_ref().unwrap().data {
 			PreviewData::Folder => {
 				if let Some(folder) = manager.active().history(hovered) {
-					Folder::new(self.cx, folder).with_preview(true).render(area, buf);
+					Folder::new(self.cx, folder, FolderLocation::Preview).render(area, buf);
 				}
 			}
 			PreviewData::Text(s) => {

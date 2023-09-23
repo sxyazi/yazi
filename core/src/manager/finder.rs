@@ -108,6 +108,29 @@ impl Finder {
 			self.query.is_match(name.as_bytes())
 		}
 	}
+
+	/// Try to render the highlight range for the given name.
+	///
+	/// # Returns
+	/// (prefix, highlight, suffix)
+	pub fn try_render_highlight(&self, name: &OsStr) -> Option<(String, String, String)> {
+		let name_bytes;
+		#[cfg(target_os = "windows")]
+		{
+			name_bytes = name.to_string_lossy().as_bytes();
+		}
+		#[cfg(not(target_os = "windows"))]
+		{
+			use std::os::unix::ffi::OsStrExt;
+			name_bytes = name.as_bytes();
+		}
+		let range = self.query.find(name_bytes).map(|m| m.range())?;
+		Some((
+			String::from_utf8_lossy(&name_bytes[..range.start]).into_owned(),
+			String::from_utf8_lossy(&name_bytes[range.start..range.end]).into_owned(),
+			String::from_utf8_lossy(&name_bytes[range.end..]).into_owned(),
+		))
+	}
 }
 
 impl Finder {

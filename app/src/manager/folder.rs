@@ -2,27 +2,32 @@ use core::files::File;
 
 use config::{MANAGER, THEME};
 use ratatui::{buffer::Buffer, layout::Rect, style::{Color, Modifier, Style}, text::{Line, Span}, widgets::{List, ListItem, Widget}};
-use shared::short_path;
+use shared::{short_path, short_path_parts, PathParts};
 
 use crate::Ctx;
 
 pub(super) struct Folder<'a> {
 	cx:           &'a Ctx,
 	folder:       &'a core::manager::Folder,
-	is_preview:   bool,
+	location:     FolderLocation,
 	is_selection: bool,
 	is_find:      bool,
 }
 
-impl<'a> Folder<'a> {
-	pub(super) fn new(cx: &'a Ctx, folder: &'a core::manager::Folder) -> Self {
-		Self { cx, folder, is_preview: false, is_selection: false, is_find: false }
-	}
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub(super) enum FolderLocation {
+	Parent,
+	Current,
+	Preview,
+}
 
-	#[inline]
-	pub(super) fn with_preview(mut self, state: bool) -> Self {
-		self.is_preview = state;
-		self
+impl<'a> Folder<'a> {
+	pub(super) fn new(
+		cx: &'a Ctx,
+		folder: &'a core::manager::Folder,
+		location: FolderLocation,
+	) -> Self {
+		Self { cx, folder, location, is_selection: false, is_find: false }
 	}
 
 	#[inline]
@@ -66,7 +71,10 @@ impl<'a> Widget for Folder<'a> {
 		let active = self.cx.manager.active();
 		let mode = active.mode();
 
-		let window = if self.is_preview {
+		// TODO to be configured by THEME?
+		let find_style = Style::new().fg(Color::Rgb(255, 255, 50)).add_modifier(Modifier::ITALIC);
+
+		let window = if self.location == FolderLocation::Preview {
 			self.folder.window_for(active.preview().skip())
 		} else {
 			self.folder.window()
@@ -91,7 +99,7 @@ impl<'a> Widget for Folder<'a> {
 				}
 
 				let hovered = matches!(self.folder.hovered, Some(ref h) if h.url() == f.url());
-				let style = if self.is_preview && hovered {
+				let style = if self.location == FolderLocation::Preview && hovered {
 					THEME.preview.hovered.get()
 				} else if hovered {
 					THEME.selection.hovered.get()
@@ -102,7 +110,24 @@ impl<'a> Widget for Folder<'a> {
 				let mut spans = Vec::with_capacity(10);
 
 				spans.push(Span::raw(format!(" {} ", Self::icon(f))));
-				spans.push(Span::raw(short_path(f.url(), &self.folder.cwd)));
+				if let Some((path, (n_prefix, n_hl, n_suffix))) =
+					// If this is the current folder,
+					(self.location == FolderLocation::Current).then_some(()).and_then(|_| {
+							// ... and we are now finding something,
+							let finder = active.finder()?;
+							// ... and we can get the short path parts,
+							let PathParts { path, filename } = short_path_parts(f.url(), &self.folder.cwd)?;
+							// ... and we can get the highlight range,
+							Some((path, finder.try_render_highlight(filename)?))
+						}) {
+					// ... then render the highlighted short path.
+					spans.push(Span::raw(path.join(n_prefix).display().to_string()));
+					spans.push(Span::styled(n_hl, find_style));
+					spans.push(Span::raw(n_suffix));
+				} else {
+					// Otherwise, just render the short path.
+					spans.push(Span::raw(short_path(f.url(), &self.folder.cwd)));
+				}
 
 				if let Some(link_to) = f.link_to() {
 					if MANAGER.show_symlink {
@@ -110,21 +135,22 @@ impl<'a> Widget for Folder<'a> {
 					}
 				}
 
-				if let Some(idx) = active
-					.finder()
-					.filter(|&f| hovered && self.is_find && f.has_matched())
-					.and_then(|finder| finder.matched_idx(f.url()))
-				{
-					let len = active.finder().unwrap().matched().len();
-					let style = Style::new().fg(Color::Rgb(255, 255, 50)).add_modifier(Modifier::ITALIC);
-					spans.push(Span::styled(
-						format!(
-							"  [{}/{}]",
-							if idx > 99 { ">99".to_string() } else { (idx + 1).to_string() },
-							if len > 99 { ">99".to_string() } else { len.to_string() }
-						),
-						style,
-					));
+				if hovered && self.is_find {
+					if let Some(idx) = active
+						.finder()
+						.filter(|&f| f.has_matched())
+						.and_then(|finder| finder.matched_idx(f.url()))
+					{
+						let len = active.finder().unwrap().matched().len();
+						spans.push(Span::styled(
+							format!(
+								"  [{}/{}]",
+								if idx > 99 { ">99".to_string() } else { (idx + 1).to_string() },
+								if len > 99 { ">99".to_string() } else { len.to_string() }
+							),
+							find_style,
+						));
+					}
 				}
 
 				ListItem::new(Line::from(spans)).style(style)
