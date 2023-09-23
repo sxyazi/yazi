@@ -10,8 +10,10 @@ keymap = [
 	{ on = [ "k" ], exec = "arrow -1", desc = "Move cursor up" },
 	{ on = [ "j" ], exec = "arrow 1",  desc = "Move cursor down" },
 
-	{ on = [ "K" ], exec = "arrow -5", desc = "Move cursor up 5 lines" },
-	{ on = [ "J" ], exec = "arrow 5",  desc = "Move cursor down 5 lines" },
+	{ on = [ "<C-u>" ], exec = "arrow -50%", desc = "Move cursor up half page" },
+	{ on = [ "<C-d>" ], exec = "arrow 50%",  desc = "Move cursor down half page" },
+	{ on = [ "<C-b>" ], exec = "arrow -100%", desc = "Move cursor up one page" },
+	{ on = [ "<C-f>" ], exec = "arrow 100%",  desc = "Move cursor down one page" },
 
 	{ on = [ "h" ], exec = "leave", desc = "Go back to the parent directory" },
 	{ on = [ "l" ], exec = "enter", desc = "Enter the child directory" },

@@ -1,3 +1,5 @@
+use std::{num::ParseIntError, str::FromStr};
+
 use config::MANAGER;
 use ratatui::layout::Rect;
 use shared::Url;
@@ -16,12 +18,31 @@ pub struct Folder {
 	pub hovered: Option<File>,
 }
 
+#[derive(Default)]
+pub struct Step {
+	pub(super) num:     isize,
+	pub(super) percent: bool,
+}
+
 impl From<Url> for Folder {
 	fn from(cwd: Url) -> Self { Self { cwd, ..Default::default() } }
 }
 
 impl From<&Url> for Folder {
 	fn from(cwd: &Url) -> Self { Self::from(cwd.clone()) }
+}
+
+impl FromStr for Step {
+	type Err = ParseIntError;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		Ok(Self { num: s.trim_end_matches('%').parse()?, percent: s.ends_with('%') })
+	}
+}
+
+impl From<isize> for Step {
+	#[inline]
+	fn from(num: isize) -> Self { Self { num, percent: false } }
 }
 
 impl Folder {
@@ -58,18 +79,21 @@ impl Folder {
 		true
 	}
 
-	pub fn next(&mut self, step: usize) -> bool {
+	pub fn next(&mut self, mut step: usize, percent: bool) -> bool {
 		let len = self.files.len();
 		if len == 0 {
 			return false;
 		}
 
+		let limit = MANAGER.layout.folder_height();
+		if percent {
+			step = ((limit * step) as f64 * 0.01) as usize;
+		}
 		let old = self.cursor;
 		self.cursor = (self.cursor + step).min(len - 1);
 		self.hovered = self.files.duplicate(self.cursor);
 		self.set_page(false);
 
-		let limit = MANAGER.layout.folder_height();
 		if self.cursor >= (self.offset + limit).min(len).saturating_sub(5) {
 			self.offset = len.saturating_sub(limit).min(self.offset + self.cursor - old);
 		}
@@ -77,7 +101,11 @@ impl Folder {
 		old != self.cursor
 	}
 
-	pub fn prev(&mut self, step: usize) -> bool {
+	pub fn prev(&mut self, mut step: usize, percent: bool) -> bool {
+		if percent {
+			let limit = MANAGER.layout.folder_height();
+			step = ((limit * step) as f64 * 0.01) as usize;
+		}
 		let old = self.cursor;
 		self.cursor = self.cursor.saturating_sub(step);
 		self.hovered = self.files.duplicate(self.cursor);
@@ -105,7 +133,11 @@ impl Folder {
 
 	pub fn hover(&mut self, url: &Url) -> bool {
 		let new = self.files.position(url).unwrap_or(self.cursor);
-		if new > self.cursor { self.next(new - self.cursor) } else { self.prev(self.cursor - new) }
+		if new > self.cursor {
+			self.next(new - self.cursor, false)
+		} else {
+			self.prev(self.cursor - new, false)
+		}
 	}
 
 	#[inline]

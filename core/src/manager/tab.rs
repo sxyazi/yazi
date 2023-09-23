@@ -6,7 +6,7 @@ use shared::{Debounce, Defer, InputError, Url};
 use tokio::{pin, task::JoinHandle};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 
-use super::{Finder, Folder, Mode, Preview, PreviewLock};
+use super::{Finder, Folder, Mode, Preview, PreviewLock, Step};
 use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, files::{File, FilesOp, FilesSorter}, input::InputOpt, Event, BLOCKER};
 
 pub struct Tab {
@@ -67,11 +67,12 @@ impl Tab {
 		self.search_stop()
 	}
 
-	pub fn arrow(&mut self, step: isize) -> bool {
-		let ok = if step > 0 {
-			self.current.next(step as usize)
+	pub fn arrow(&mut self, step: Step) -> bool {
+		let Step { num, percent } = step;
+		let ok = if step.num > 0 {
+			self.current.next(num as usize, percent)
 		} else {
-			self.current.prev(step.unsigned_abs())
+			self.current.prev(num.unsigned_abs(), percent)
 		};
 		if !ok {
 			return false;
@@ -248,7 +249,7 @@ impl Tab {
 			};
 
 			if let Some(step) = finder.ring(&self.current.files, self.current.cursor(), prev) {
-				self.arrow(step);
+				self.arrow(step.into());
 			}
 
 			self.finder = Some(finder);
@@ -280,7 +281,7 @@ impl Tab {
 
 		let mut b = finder.catchup(&self.current.files);
 		if let Some(step) = finder.arrow(&self.current.files, self.current.cursor(), prev) {
-			b |= self.arrow(step);
+			b |= self.arrow(step.into());
 		}
 
 		b
