@@ -10,6 +10,13 @@ pub struct ShellOpt {
 	pub orphan: bool,
 }
 
+impl ShellOpt {
+	pub fn with_piped(mut self) -> Self {
+		self.piped = true;
+		self
+	}
+}
+
 pub fn shell(opt: ShellOpt) -> Result<Child> {
 	#[cfg(not(target_os = "windows"))]
 	{

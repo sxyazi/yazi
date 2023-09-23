@@ -1,4 +1,4 @@
-use std::ffi::OsString;
+use std::{ffi::OsString, mem};
 
 use anyhow::Result;
 use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::{mpsc, oneshot}};
@@ -20,6 +20,17 @@ pub(crate) struct ProcessOpOpen {
 	pub cancel: oneshot::Sender<()>,
 }
 
+impl From<&mut ProcessOpOpen> for ShellOpt {
+	fn from(value: &mut ProcessOpOpen) -> Self {
+		Self {
+			cmd:    mem::take(&mut value.cmd),
+			args:   mem::take(&mut value.args),
+			piped:  false,
+			orphan: value.orphan,
+		}
+	}
+}
+
 impl Process {
 	pub(crate) fn new(sch: mpsc::UnboundedSender<TaskOp>) -> Self { Self { sch } }
 
@@ -30,12 +41,11 @@ impl Process {
 	fn done(&self, id: usize) -> Result<()> { Ok(self.sch.send(TaskOp::Done(id))?) }
 
 	pub(crate) async fn open(&self, mut task: ProcessOpOpen) -> Result<()> {
-		let opt = ShellOpt { cmd: task.cmd, args: task.args, piped: true, orphan: task.orphan };
 		if task.block {
 			let _guard = BLOCKER.acquire().await.unwrap();
 			emit!(Stop(true)).await;
 
-			match external::shell(ShellOpt { piped: false, ..opt }) {
+			match external::shell(ShellOpt::from(&mut task)) {
 				Ok(mut child) => {
 					child.wait().await.ok();
 				}
@@ -50,7 +60,7 @@ impl Process {
 		}
 
 		self.sch.send(TaskOp::New(task.id, 0))?;
-		let mut child = external::shell(opt)?;
+		let mut child = external::shell(ShellOpt::from(&mut task).with_piped())?;
 
 		let mut stdout = BufReader::new(child.stdout.take().unwrap()).lines();
 		let mut stderr = BufReader::new(child.stderr.take().unwrap()).lines();
