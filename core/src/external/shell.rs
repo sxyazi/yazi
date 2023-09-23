@@ -63,13 +63,7 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 #[cfg(target_os = "windows")]
 mod cmdexpand {
 	use anyhow::{anyhow, Result};
-	use nom::branch::alt;
-	use nom::bytes::complete::{is_not, tag, take_while1};
-	use nom::character::complete::{anychar, char, digit1, space0, space1};
-	use nom::combinator::recognize;
-	use nom::multi::{many0, many1};
-	use nom::sequence::{delimited, pair, preceded, tuple};
-	use nom::IResult;
+	use nom::{branch::alt, bytes::complete::{is_not, tag, take_while1}, character::complete::{anychar, char, digit1, space0, space1}, combinator::recognize, multi::{many0, many1}, sequence::{delimited, pair, preceded, tuple}, IResult};
 
 	enum CommandPart<'a> {
 		Space(&'a str),
