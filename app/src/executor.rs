@@ -114,8 +114,8 @@ impl Executor {
 				let permanently = exec.named.contains_key("permanently");
 				cx.tasks.file_remove(targets, force, permanently)
 			}
-			"create" => cx.manager.create(),
-			"rename" => cx.manager.rename(),
+			"create" => cx.manager.create(exec.named.contains_key("force")),
+			"rename" => cx.manager.rename(exec.named.contains_key("force")),
 			"copy" => cx.manager.active().copy(exec.args.get(0).map(|s| s.as_str()).unwrap_or("")),
 			"shell" => cx.manager.active().shell(
 				exec.args.get(0).map(|e| e.as_str()).unwrap_or(""),
