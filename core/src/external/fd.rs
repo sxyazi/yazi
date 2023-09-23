@@ -17,7 +17,7 @@ pub fn fd(opt: FdOpt) -> Result<UnboundedReceiver<File>> {
 	let mut child = Command::new("fd")
 		.arg("--base-directory")
 		.arg(&opt.cwd)
-		.arg(if opt.hidden { "--hidden" } else { "--no-hidden" })
+		.args(if opt.hidden { ["--hidden", "--no-ignore"] } else { ["--no-hidden", "--ignore"] })
 		.arg(if opt.glob { "--glob" } else { "--regex" })
 		.arg(&opt.subject)
 		.kill_on_drop(true)
