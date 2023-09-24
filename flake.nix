@@ -21,5 +21,14 @@
         formatter = pkgs.nixpkgs-fmt;
 
         devShells.default = import ./nix/shell.nix { inherit pkgs inputs; };
-      });
+      }) 
+    // rec {
+      overlays = {
+        default = overlays.yazi;
+        yazi = final: prev: {
+          yazi = final.callPackage ./nix/yazi.nix { };
+        };
+      };
+      overlay = overlays.default;
+    };
 }
