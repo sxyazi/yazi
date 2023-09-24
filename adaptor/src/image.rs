@@ -9,19 +9,22 @@ use tokio::fs;
 pub struct Image;
 
 impl Image {
-	pub(super) async fn crop(path: &Path, size: (u16, u16)) -> Result<DynamicImage> {
-		let (w, h) = Term::ratio()
-			.map(|(w, h)| {
-				let (w, h) = ((size.0 as f64 * w) as u32, (size.1 as f64 * h) as u32);
-				(w.min(PREVIEW.max_width), h.min(PREVIEW.max_height))
+	pub(super) async fn crop(
+		path: &Path,
+		(target_width, target_height): (u16, u16),
+	) -> Result<DynamicImage> {
+		let (max_width, max_height) = Term::ratio()
+			.map(|(a, b)| {
+				let (width, height) = ((target_width as f64 * a) as u32, (target_height as f64 * b) as u32);
+				(width.min(PREVIEW.max_width), height.min(PREVIEW.max_height))
 			})
 			.unwrap_or((PREVIEW.max_width, PREVIEW.max_height));
 
 		let img = fs::read(path).await?;
 		let img = tokio::task::spawn_blocking(move || -> Result<DynamicImage> {
 			let img = image::load_from_memory(&img)?;
-			Ok(if img.width() > w || img.height() > h {
-				img.resize(w, h, FilterType::Triangle)
+			Ok(if img.width() > max_width || img.height() > max_height {
+				img.resize(max_width, max_height, FilterType::Triangle)
 			} else {
 				img
 			})
@@ -34,13 +37,15 @@ impl Image {
 		let cache = cache.as_ref().to_owned();
 		let result = tokio::task::spawn_blocking(move || {
 			let img = image::load_from_memory(&img)?;
-			let (w, h) = (PREVIEW.max_width, PREVIEW.max_height);
+			let (max_width, max_height) = (PREVIEW.max_width, PREVIEW.max_height);
 
-			if img.width() <= w && img.height() <= h {
+			if img.width() <= max_width && img.height() <= max_height {
 				return Ok(false);
 			}
 
-			img.resize(w, h, FilterType::Triangle).save_with_format(cache, ImageFormat::Jpeg)?;
+			img
+				.resize(max_width, max_height, FilterType::Triangle)
+				.save_with_format(cache, ImageFormat::Jpeg)?;
 			Ok(true)
 		});
 

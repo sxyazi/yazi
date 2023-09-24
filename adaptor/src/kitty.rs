@@ -1,4 +1,7 @@
-use std::{io::{stdout, Write}, path::Path};
+use std::{
+	io::{stdout, Write},
+	path::Path,
+};
 
 use anyhow::Result;
 use base64::{engine::general_purpose, Engine};
@@ -29,7 +32,7 @@ impl Kitty {
 	}
 
 	async fn encode(img: DynamicImage) -> Result<Vec<u8>> {
-		fn output(raw: &[u8], format: u8, size: (u32, u32)) -> Result<Vec<u8>> {
+		fn output(raw: &[u8], format: u8, (width, height): (u32, u32)) -> Result<Vec<u8>> {
 			let b64 = general_purpose::STANDARD.encode(raw).chars().collect::<Vec<_>>();
 
 			let mut it = b64.chunks(4096).peekable();
@@ -40,8 +43,8 @@ impl Kitty {
 					"{}_Ga=T,f={},s={},v={},m={};{}{}\\{}",
 					START,
 					format,
-					size.0,
-					size.1,
+					width,
+					height,
 					it.peek().is_some() as u8,
 					first.iter().collect::<String>(),
 					ESCAPE,

@@ -96,9 +96,8 @@ impl<'a> Widget for Folder<'a> {
 					);
 				}
 
-				let hovered =
-					matches!(self.folder.hovered, Some(ref hover) if hover.url() == file.url());
-			    
+				let hovered = matches!(self.folder.hovered, Some(ref hover) if hover.url() == file.url());
+
 				let style = match (self.is_preview, hovered) {
 					(true, true) => THEME.preview.hovered.get(),
 					(_, true) => THEME.selection.hovered.get(),

@@ -17,7 +17,7 @@ impl<'a> Preview<'a> {
 impl<'a> Widget for Preview<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let manager = &self.cx.manager;
-		let Some(hovered) = manager.hovered().map(|h| h.url()) else {
+		let Some(hovered) = manager.hovered().map(|hovered| hovered.url()) else {
 			return;
 		};
 

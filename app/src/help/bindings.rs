@@ -1,4 +1,9 @@
-use ratatui::{layout::{self, Constraint}, prelude::{Buffer, Direction, Rect}, style::{Color, Style, Stylize}, widgets::{List, ListItem, Widget}};
+use ratatui::{
+	layout::{self, Constraint},
+	prelude::{Buffer, Direction, Rect},
+	style::{Color, Style, Stylize},
+	widgets::{List, ListItem, Widget},
+};
 
 use crate::context::Ctx;
 
@@ -7,7 +12,9 @@ pub(super) struct Bindings<'a> {
 }
 
 impl<'a> Bindings<'a> {
-	pub(super) fn new(cx: &'a Ctx) -> Self { Self { cx } }
+	pub(super) fn new(cx: &'a Ctx) -> Self {
+		Self { cx }
+	}
 }
 
 impl Widget for Bindings<'_> {
@@ -17,17 +24,20 @@ impl Widget for Bindings<'_> {
 			return;
 		}
 
-		let col1 = bindings
+		// The First Column
+		let keys = bindings
 			.iter()
 			.map(|c| ListItem::new(c.on()).style(Style::new().fg(Color::Yellow)))
 			.collect::<Vec<_>>();
 
-		let col2 = bindings
+		// The Second Column
+		let commands = bindings
 			.iter()
 			.map(|c| ListItem::new(c.exec()).style(Style::new().fg(Color::Cyan)))
 			.collect::<Vec<_>>();
 
-		let col3 = bindings
+		// The Third Column
+		let desc = bindings
 			.iter()
 			.map(|c| ListItem::new(if let Some(ref desc) = c.desc { desc } else { "-" }))
 			.collect::<Vec<_>>();
@@ -43,8 +53,8 @@ impl Widget for Bindings<'_> {
 			Style::new().bg(Color::Black).bold(),
 		);
 
-		List::new(col1).render(chunks[0], buf);
-		List::new(col2).render(chunks[1], buf);
-		List::new(col3).render(chunks[2], buf);
+		for (i, col) in [keys, commands, desc].into_iter().enumerate() {
+			List::new(col).render(chunks[i], buf);
+		}
 	}
 }

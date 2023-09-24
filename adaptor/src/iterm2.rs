@@ -1,4 +1,7 @@
-use std::{io::{stdout, BufWriter, Write}, path::Path};
+use std::{
+	io::{stdout, BufWriter, Write},
+	path::Path,
+};
 
 use anyhow::Result;
 use base64::{engine::general_purpose, Engine};
@@ -33,8 +36,6 @@ impl Iterm2 {
 
 	async fn encode(img: DynamicImage) -> Result<Vec<u8>> {
 		tokio::task::spawn_blocking(move || {
-			let size = (img.width(), img.height());
-
 			let mut jpg = vec![];
 			JpegEncoder::new_with_quality(&mut jpg, 75).encode_image(&img)?;
 
@@ -44,8 +45,8 @@ impl Iterm2 {
 				"{}]1337;File=inline=1;size={};width={}px;height={}px;doNotMoveCursor=1:{}\x07{}",
 				START,
 				jpg.len(),
-				size.0,
-				size.1,
+				img.width(),
+				img.height(),
 				general_purpose::STANDARD.encode(&jpg),
 				CLOSE
 			)?;
