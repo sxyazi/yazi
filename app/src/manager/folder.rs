@@ -60,7 +60,7 @@ impl<'a> Folder<'a> {
 			.unwrap_or_else(Style::new)
 	}
 
-	fn highlighted_style<'b>(&'b self, file: &'b File) -> Vec<Span> {
+	fn highlighted_item<'b>(&'b self, file: &'b File) -> Vec<Span> {
 		let short = short_path(file.url(), &self.folder.cwd);
 
 		let v = self.is_find.then_some(()).and_then(|_| {
@@ -120,7 +120,7 @@ impl<'a> Widget for Folder<'a> {
 
 				let mut spans = Vec::with_capacity(10);
 				spans.push(Span::raw(format!(" {} ", Self::icon(f))));
-				spans.extend(self.highlighted_style(f));
+				spans.extend(self.highlighted_item(f));
 
 				if let Some(link_to) = f.link_to() {
 					if MANAGER.show_symlink {
