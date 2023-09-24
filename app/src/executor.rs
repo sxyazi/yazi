@@ -61,7 +61,7 @@ impl Executor {
 
 			// Navigation
 			"arrow" => {
-				let step = exec.args.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
+				let step = exec.args.get(0).and_then(|s| s.parse().ok()).unwrap_or_default();
 				cx.manager.active_mut().arrow(step)
 			}
 			"peek" => {
