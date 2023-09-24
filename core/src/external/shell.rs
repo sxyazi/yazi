@@ -147,13 +147,17 @@ mod cmdexpand {
 		Ok(expanded)
 	}
 
+	fn escaped_char(input: &str) -> IResult<&str, &str> {
+		recognize(pair(char('\\'), anychar))(input)
+	}
+
 	fn parse_cmd(cmd: &str) -> Result<Vec<CommandPart>> {
 		fn double_quote_text(input: &str) -> IResult<&str, &str> {
-			recognize(delimited(char('"'), is_not("\""), char('"')))(input)
+			recognize(delimited(char('"'), many0(alt((is_not("\"\\"), escaped_char))), char('"')))(input)
 		}
 
 		fn single_quote_text(input: &str) -> IResult<&str, &str> {
-			recognize(delimited(char('\''), is_not("'"), char('\'')))(input)
+			recognize(delimited(char('\''), many0(alt((is_not("'"), escaped_char))), char('\'')))(input)
 		}
 
 		fn no_quote_text(input: &str) -> IResult<&str, &str> {
@@ -183,10 +187,6 @@ mod cmdexpand {
 	}
 
 	fn parse_text(text: &str) -> Result<Vec<TextPart>> {
-		fn escaped_char(input: &str) -> IResult<&str, &str> {
-			recognize(pair(char('\\'), anychar))(input)
-		}
-
 		fn normal_text(input: &str) -> IResult<&str, TextPart> {
 			let (input, output) = recognize(many1(alt((escaped_char, is_not("\\%")))))(input)?;
 			Ok((input, TextPart::NormalText(output)))
@@ -217,6 +217,42 @@ mod cmdexpand {
 			(Quote::NoQuote, false) => content.to_string(),
 			(Quote::SingleQuote, _) => content.replace("'", "\\'").to_string(),
 			(Quote::DoubleQuote, _) => content.replace("\"", "\\\"").to_string(),
+		}
+	}
+
+	#[cfg(test)]
+	mod tests {
+		use super::*;
+
+		#[test]
+		fn test_expand_arguments() {
+			assert_eq!(expand_cmd("echo %1", &["abc"]).unwrap(), "echo abc");
+			assert_eq!(expand_cmd("echo %2", &["abc", "def"]).unwrap(), "echo def");
+			assert_eq!(expand_cmd("echo %1", &["abc def"]).unwrap(), "echo \"abc def\"");
+			assert_eq!(expand_cmd("echo %1", &["\"abc\""]).unwrap(), "echo \"abc\"");
+			assert_eq!(
+				expand_cmd(r#"echo "hello %1""#, &[r#""world""#]).unwrap(),
+				r#"echo "hello \"world\"""#
+			);
+			assert_eq!(
+				expand_cmd(r#"echo "hello %1""#, &[r#""my king""#]).unwrap(),
+				r#"echo "hello \"my king\"""#
+			);
+			assert_eq!(
+				expand_cmd(r#"echo "hello %1""#, &["my king"]).unwrap(),
+				r#"echo "hello my king""#
+			);
+			assert_eq!(
+				expand_cmd(r#"echo %1"#, &["cmd /C \"run something\""]).unwrap(),
+				r#"echo "cmd /C \"run something\"""#
+			);
+			assert_eq!(expand_cmd("cmd %*", &["abc", "def ghk"]).unwrap(), r#"cmd abc "def ghk""#);
+			assert_eq!(expand_cmd("cmd a\\%*", &["abc", "def ghk"]).unwrap(), r#"cmd a\%*"#);
+			assert_eq!(
+				expand_cmd(r#"cmd "Hello \"world"#, &Vec::<String>::new()).unwrap(),
+				r#"cmd "Hello \"world"#
+			);
+			assert_eq!(expand_cmd(r#"  a "b \"%1\""  "#, &["c", "d"]).unwrap(), r#"  a "b \"c\""  "#);
 		}
 	}
 }
