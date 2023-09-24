@@ -63,7 +63,15 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 #[cfg(target_os = "windows")]
 mod cmdexpand {
 	use anyhow::{anyhow, Result};
-	use nom::{branch::alt, bytes::complete::{is_not, tag, take_while1}, character::complete::{anychar, char, digit1, space0, space1}, combinator::recognize, multi::{many0, many1}, sequence::{delimited, pair, preceded, tuple}, IResult};
+	use nom::{
+		branch::alt,
+		bytes::complete::{is_not, tag, take_while1},
+		character::complete::{alpha1, alphanumeric0, anychar, char, digit1, space0, space1},
+		combinator::recognize,
+		multi::{many0, many1},
+		sequence::{delimited, pair, preceded, tuple},
+		IResult,
+	};
 
 	enum CommandPart<'a> {
 		Space(&'a str),
@@ -181,6 +189,15 @@ mod cmdexpand {
 	}
 
 	fn parse_text(text: &str) -> Result<Vec<TextPart>> {
+		fn variable_name(input: &str) -> IResult<&str, &str> {
+			recognize(pair(alt((alpha1, tag("_"))), alt((alphanumeric0, tag("_")))))(input)
+		}
+
+		fn variable_placeholder(input: &str) -> IResult<&str, TextPart> {
+			let (input, output) = recognize(tuple((char('%'), variable_name, char('%'))))(input)?;
+			Ok((input, TextPart::NormalText(output)))
+		}
+
 		fn normal_text(input: &str) -> IResult<&str, TextPart> {
 			let (input, output) = recognize(many1(alt((escaped_char, is_not("\\%")))))(input)?;
 			Ok((input, TextPart::NormalText(output)))
@@ -197,8 +214,9 @@ mod cmdexpand {
 			Ok((input, TextPart::PercentNumber(num)))
 		}
 
-		let (_, parts) = many0(alt((normal_text, percent_star, percent_number)))(text)
-			.map_err(|_| anyhow!("Cannot parse text `{text}`"))?;
+		let (_, parts) =
+			many0(alt((normal_text, percent_star, percent_number, variable_placeholder)))(text)
+				.map_err(|_| anyhow!("Cannot parse text `{text}`"))?;
 		Ok(parts)
 	}
 
