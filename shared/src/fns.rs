@@ -1,4 +1,4 @@
-use std::{env, ffi::OsStr, path::{Component, Path, PathBuf}};
+use std::{env, ffi::OsStr, fmt::Display, path::{Component, Path, PathBuf}};
 
 use tokio::fs;
 
@@ -23,27 +23,28 @@ pub fn expand_url(mut u: Url) -> Url {
 	u
 }
 
-pub struct PathParts<'a> {
-	pub path:     &'a Path,
-	pub filename: &'a OsStr,
+pub struct ShortPath<'a> {
+	pub prefix: &'a Path,
+	pub name:   &'a OsStr,
 }
 
-pub fn short_path_parts<'a>(p: &'a Path, base: &Path) -> Option<PathParts<'a>> {
+impl Display for ShortPath<'_> {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		if self.prefix == Path::new("") {
+			return write!(f, "{}", self.name.to_string_lossy());
+		}
+		write!(f, "{}/{}", self.prefix.display(), self.name.to_string_lossy())
+	}
+}
+
+pub fn short_path<'a>(p: &'a Path, base: &Path) -> ShortPath<'a> {
 	let p = p.strip_prefix(base).unwrap_or(p);
 	let mut parts = p.components();
-	let filename = parts.next_back().and_then(|p| match p {
+	let name = parts.next_back().and_then(|p| match p {
 		Component::Normal(p) => Some(p),
 		_ => None,
-	})?;
-	let rest = parts.as_path();
-	Some(PathParts { path: rest, filename })
-}
-
-pub fn short_path(p: &Path, base: &Path) -> String {
-	if let Ok(p) = p.strip_prefix(base) {
-		return p.display().to_string();
-	}
-	p.display().to_string()
+	});
+	ShortPath { prefix: parts.as_path(), name: name.unwrap_or_default() }
 }
 
 pub fn readable_path(p: &Path) -> String {

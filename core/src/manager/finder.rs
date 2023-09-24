@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, ffi::OsStr};
+use std::{borrow::Cow, collections::BTreeMap, ffi::OsStr};
 
 use anyhow::Result;
 use regex::bytes::Regex;
@@ -109,26 +109,23 @@ impl Finder {
 		}
 	}
 
-	/// Try to render the highlight range for the given name.
-	///
-	/// # Returns
-	/// (prefix, highlight, suffix)
-	pub fn try_render_highlight(&self, name: &OsStr) -> Option<(String, String, String)> {
-		let name_bytes;
+	/// Explode the name into three parts: head, body, tail.
+	#[inline]
+	pub fn explode<'a>(&self, name: &'a OsStr) -> Option<(Cow<'a, str>, Cow<'a, str>, Cow<'a, str>)> {
 		#[cfg(target_os = "windows")]
-		{
-			name_bytes = name.to_string_lossy().as_bytes();
-		}
+		let b = { name.to_string_lossy().as_bytes() };
+
 		#[cfg(not(target_os = "windows"))]
-		{
+		let b = {
 			use std::os::unix::ffi::OsStrExt;
-			name_bytes = name.as_bytes();
-		}
-		let range = self.query.find(name_bytes).map(|m| m.range())?;
+			name.as_bytes()
+		};
+
+		let range = self.query.find(b).map(|m| m.range())?;
 		Some((
-			String::from_utf8_lossy(&name_bytes[..range.start]).into_owned(),
-			String::from_utf8_lossy(&name_bytes[range.start..range.end]).into_owned(),
-			String::from_utf8_lossy(&name_bytes[range.end..]).into_owned(),
+			String::from_utf8_lossy(&b[..range.start]),
+			String::from_utf8_lossy(&b[range.start..range.end]),
+			String::from_utf8_lossy(&b[range.end..]),
 		))
 	}
 }
