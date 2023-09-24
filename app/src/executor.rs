@@ -98,7 +98,7 @@ impl Executor {
 			"open" => cx.manager.open(exec.named.contains_key("interactive")),
 			"yank" => cx.manager.yank(exec.named.contains_key("cut")),
 			"paste" => {
-				let dest = cx.manager.cwd().to_owned();
+				let dest = cx.manager.cwd();
 				let (cut, src) = cx.manager.yanked();
 
 				let force = exec.named.contains_key("force");
@@ -113,7 +113,7 @@ impl Executor {
 				!cut
 					&& cx.tasks.file_link(
 						src,
-						cx.manager.cwd().to_owned(),
+						cx.manager.cwd(),
 						exec.named.contains_key("relative"),
 						exec.named.contains_key("force"),
 					)
