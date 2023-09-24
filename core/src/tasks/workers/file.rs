@@ -131,8 +131,11 @@ impl File {
 					Cow::Borrowed(task.from.as_path())
 				};
 
-				let src =
-					if task.relative { path_relative_to(&src, task.to.parent().unwrap()) } else { src };
+				let src = if task.relative {
+					path_relative_to(&src, &fs::canonicalize(task.to.parent().unwrap()).await?)
+				} else {
+					src
+				};
 
 				match fs::remove_file(&task.to).await {
 					Err(e) if e.kind() != NotFound => Err(e)?,
