@@ -64,8 +64,8 @@ impl Folder {
 			return false;
 		}
 
-		let limit = MANAGER.layout.folder_height();
 		let old = self.cursor;
+		let limit = MANAGER.layout.folder_height();
 		self.cursor = step.add(self.cursor, || limit).min(len - 1);
 		self.hovered = self.files.duplicate(self.cursor);
 		self.set_page(false);
@@ -79,7 +79,7 @@ impl Folder {
 
 	pub fn prev(&mut self, step: Step) -> bool {
 		let old = self.cursor;
-		self.cursor = step.add(self.cursor, || 0);
+		self.cursor = step.add(self.cursor, || MANAGER.layout.folder_height());
 		self.hovered = self.files.duplicate(self.cursor);
 		self.set_page(false);
 
