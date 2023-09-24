@@ -42,13 +42,10 @@ impl File {
 	pub fn url(&self) -> &Url { &self.url }
 
 	#[inline]
-	pub fn set_url(&mut self, url: Url) { self.url = url; }
+	pub fn url_mut(&mut self) -> &mut Url { &mut self.url }
 
 	#[inline]
 	pub fn url_owned(&self) -> Url { self.url.clone() }
-
-	#[inline]
-	pub fn url_os_str(&self) -> &OsStr { self.url.as_os_str() }
 
 	#[inline]
 	pub fn name(&self) -> Option<&OsStr> { self.url.file_name() }

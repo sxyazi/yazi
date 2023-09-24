@@ -56,7 +56,6 @@
 - paste: Paste the files.
 
   - `--force`: Overwrite the destination file if it exists.
-  - `--follow`: Copy the file pointed to by a symbolic link, rather than the link itself. Only valid during copying.
 
 - remove: Move the files to the trash/recycle bin.
 

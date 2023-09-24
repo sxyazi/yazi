@@ -1,9 +1,9 @@
-use std::{collections::VecDeque, fs::Metadata, path::{Path, PathBuf}};
+use std::{borrow::Cow, collections::VecDeque, fs::Metadata, path::{Path, PathBuf}};
 
 use anyhow::Result;
 use config::TASKS;
 use futures::{future::BoxFuture, FutureExt};
-use shared::{calculate_size, copy_with_progress, Url};
+use shared::{calculate_size, copy_with_progress, path_relative_to, Url};
 use tokio::{fs, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::trace;
 
@@ -36,11 +36,13 @@ pub(crate) struct FileOpPaste {
 
 #[derive(Clone, Debug)]
 pub(crate) struct FileOpLink {
-	pub id:     usize,
-	pub from:   Url,
-	pub to:     Url,
-	pub cut:    bool,
-	pub length: u64,
+	pub id:       usize,
+	pub from:     Url,
+	pub to:       Url,
+	pub meta:     Option<Metadata>,
+	pub resolve:  bool,
+	pub relative: bool,
+	pub delete:   bool,
 }
 
 #[derive(Clone, Debug)]
@@ -114,33 +116,49 @@ impl File {
 				self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
 			}
 			FileOp::Link(task) => {
-				let src = match fs::read_link(&task.from).await {
-					Ok(src) => src,
-					Err(e) if e.kind() == NotFound => {
-						self.log(task.id, format!("Link task partially done: {:?}", task))?;
-						return Ok(self.sch.send(TaskOp::Adv(task.id, 1, task.length))?);
+				let meta = task.meta.as_ref().unwrap();
+
+				let src = if task.resolve {
+					match fs::read_link(&task.from).await {
+						Ok(p) => Cow::Owned(p),
+						Err(e) if e.kind() == NotFound => {
+							self.log(task.id, format!("Link task partially done: {:?}", task))?;
+							return Ok(self.sch.send(TaskOp::Adv(task.id, 1, meta.len()))?);
+						}
+						Err(e) => Err(e)?,
 					}
-					Err(e) => Err(e)?,
+				} else {
+					Cow::Borrowed(task.from.as_path())
+				};
+
+				let src = if task.relative {
+					path_relative_to(&src, &fs::canonicalize(task.to.parent().unwrap()).await?)
+				} else {
+					src
 				};
 
 				match fs::remove_file(&task.to).await {
 					Err(e) if e.kind() != NotFound => Err(e)?,
 					_ => {
-						#[cfg(target_os = "windows")]
-						{
-							fs::symlink_file(src, &task.to).await?
-						}
-						#[cfg(not(target_os = "windows"))]
+						#[cfg(unix)]
 						{
 							fs::symlink(src, &task.to).await?
+						}
+						#[cfg(windows)]
+						{
+							if meta.is_dir() {
+								fs::symlink_dir(src, &task.to).await?
+							} else {
+								fs::symlink_file(src, &task.to).await?
+							}
 						}
 					}
 				}
 
-				if task.cut {
+				if task.delete {
 					fs::remove_file(&task.from).await.ok();
 				}
-				self.sch.send(TaskOp::Adv(task.id, 1, task.length))?;
+				self.sch.send(TaskOp::Adv(task.id, 1, meta.len()))?;
 			}
 			FileOp::Delete(task) => {
 				if let Err(e) = fs::remove_file(&task.target).await {
@@ -192,7 +210,7 @@ impl File {
 			if meta.is_file() {
 				self.tx.send(FileOp::Paste(task)).await?;
 			} else if meta.is_symlink() {
-				self.tx.send(FileOp::Link(task.to_link(meta.len()))).await?;
+				self.tx.send(FileOp::Link(task.to_link(meta))).await?;
 			}
 			return self.done(id);
 		}
@@ -205,7 +223,7 @@ impl File {
 			let dest = root.join(src.components().skip(skip).collect::<PathBuf>());
 			match fs::create_dir(&dest).await {
 				Err(e) if e.kind() != AlreadyExists => {
-					self.log(task.id, format!("Create dir failed: {:?}, {e}", dest))?;
+					self.log(task.id, format!("Create dir failed: {dest:?}, {e}"))?;
 					continue;
 				}
 				_ => {}
@@ -214,7 +232,7 @@ impl File {
 			let mut it = match fs::read_dir(&src).await {
 				Ok(it) => it,
 				Err(e) => {
-					self.log(task.id, format!("Read dir failed: {:?}, {e}", src))?;
+					self.log(task.id, format!("Read dir failed: {src:?}, {e}"))?;
 					continue;
 				}
 			};
@@ -237,11 +255,22 @@ impl File {
 				if meta.is_file() {
 					self.tx.send(FileOp::Paste(task.clone())).await?;
 				} else if meta.is_symlink() {
-					self.tx.send(FileOp::Link(task.to_link(meta.len()))).await?;
+					self.tx.send(FileOp::Link(task.to_link(meta))).await?;
 				}
 			}
 		}
 		self.done(task.id)
+	}
+
+	pub(crate) async fn link(&self, mut task: FileOpLink) -> Result<()> {
+		let id = task.id;
+		if task.meta.is_none() {
+			task.meta = Some(fs::symlink_metadata(&task.from).await?);
+		}
+
+		self.sch.send(TaskOp::New(id, task.meta.as_ref().unwrap().len()))?;
+		self.tx.send(FileOp::Link(task)).await?;
+		self.done(id)
 	}
 
 	pub(crate) async fn delete(&self, mut task: FileOpDelete) -> Result<()> {
@@ -321,7 +350,15 @@ impl File {
 }
 
 impl FileOpPaste {
-	fn to_link(&self, length: u64) -> FileOpLink {
-		FileOpLink { id: self.id, from: self.from.clone(), to: self.to.clone(), cut: self.cut, length }
+	fn to_link(&self, meta: Metadata) -> FileOpLink {
+		FileOpLink {
+			id:       self.id,
+			from:     self.from.clone(),
+			to:       self.to.clone(),
+			meta:     Some(meta),
+			resolve:  true,
+			relative: false,
+			delete:   self.cut,
+		}
 	}
 }

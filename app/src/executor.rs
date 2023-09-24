@@ -98,15 +98,25 @@ impl Executor {
 			"open" => cx.manager.open(exec.named.contains_key("interactive")),
 			"yank" => cx.manager.yank(exec.named.contains_key("cut")),
 			"paste" => {
-				let dest = cx.manager.cwd().to_owned();
+				let dest = cx.manager.cwd();
 				let (cut, src) = cx.manager.yanked();
 
 				let force = exec.named.contains_key("force");
 				if *cut {
 					cx.tasks.file_cut(src, dest, force)
 				} else {
-					cx.tasks.file_copy(src, dest, force, exec.named.contains_key("follow"))
+					cx.tasks.file_copy(src, dest, force)
 				}
+			}
+			"link" => {
+				let (cut, src) = cx.manager.yanked();
+				!cut
+					&& cx.tasks.file_link(
+						src,
+						cx.manager.cwd(),
+						exec.named.contains_key("relative"),
+						exec.named.contains_key("force"),
+					)
 			}
 			"remove" => {
 				let targets = cx.manager.selected().into_iter().map(|f| f.url_owned()).collect();
