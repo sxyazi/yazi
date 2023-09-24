@@ -20,6 +20,12 @@ impl<'a> Folder<'a> {
 	}
 
 	#[inline]
+	pub(super) fn with_preview(mut self, state: bool) -> Self {
+		self.is_preview = state;
+		self
+	}
+
+	#[inline]
 	pub(super) fn with_selection(mut self, state: bool) -> Self {
 		self.is_selection = state;
 		self

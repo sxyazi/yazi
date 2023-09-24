@@ -2,7 +2,7 @@ use config::MANAGER;
 use ratatui::{buffer::Buffer, layout::{self, Constraint, Direction, Rect}, widgets::{Block, Borders, Padding, Widget}};
 
 use super::{Folder, Preview};
-use crate::context::Ctx;
+use crate::Ctx;
 
 pub(crate) struct Layout<'a> {
 	cx: &'a Ctx,
