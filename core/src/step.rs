@@ -6,6 +6,7 @@ pub enum Step {
 }
 
 impl Default for Step {
+	#[inline]
 	fn default() -> Self { Self::Fixed(0) }
 }
 
@@ -22,10 +23,12 @@ impl FromStr for Step {
 }
 
 impl From<isize> for Step {
+	#[inline]
 	fn from(n: isize) -> Self { Self::Fixed(n) }
 }
 
 impl From<usize> for Step {
+	#[inline]
 	fn from(n: usize) -> Self { Self::Fixed(n as isize) }
 }
 
@@ -46,11 +49,10 @@ impl Step {
 	}
 
 	#[inline]
-	pub fn positive(&self) -> bool {
-		match self {
-			Self::Fixed(n) if *n > 0 => true,
-			Self::Percent(n) if *n > 0 => true,
-			_ => false,
+	pub fn is_positive(&self) -> bool {
+		match *self {
+			Self::Fixed(n) => n > 0,
+			Self::Percent(n) => n > 0,
 		}
 	}
 }

@@ -68,7 +68,7 @@ impl Tab {
 	}
 
 	pub fn arrow(&mut self, step: Step) -> bool {
-		let ok = if step.positive() { self.current.next(step) } else { self.current.prev(step) };
+		let ok = if step.is_positive() { self.current.next(step) } else { self.current.prev(step) };
 		if !ok {
 			return false;
 		}
