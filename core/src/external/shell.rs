@@ -4,9 +4,17 @@ use anyhow::Result;
 use tokio::process::{Child, Command};
 
 pub struct ShellOpt {
-	pub cmd:   OsString,
-	pub args:  Vec<OsString>,
-	pub piped: bool,
+	pub cmd:    OsString,
+	pub args:   Vec<OsString>,
+	pub piped:  bool,
+	pub orphan: bool,
+}
+
+impl ShellOpt {
+	pub fn with_piped(mut self) -> Self {
+		self.piped = true;
+		self
+	}
 }
 
 pub fn shell(opt: ShellOpt) -> Result<Child> {
@@ -21,7 +29,7 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 				.stdin(if opt.piped { Stdio::piped() } else { Stdio::inherit() })
 				.stdout(if opt.piped { Stdio::piped() } else { Stdio::inherit() })
 				.stderr(if opt.piped { Stdio::piped() } else { Stdio::inherit() })
-				.kill_on_drop(true)
+				.kill_on_drop(!opt.orphan)
 				.spawn()?,
 		)
 	}
