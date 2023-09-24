@@ -73,8 +73,7 @@ pub async fn unique_path(mut p: Url) -> Url {
 // * Unix: The relative format to `root` of `path`.
 // * Windows: The relative format to `root` of `path`; or `path` itself when
 //   `path` and `root` are both under different disk drives.
-pub fn path_relative_to<P: AsRef<Path>>(path: &Path, root: P) -> Cow<'_, Path> {
-	let root = root.as_ref();
+pub fn path_relative_to<'a>(path: &'a Path, root: &Path) -> Cow<'a, Path> {
 	assert!(path.is_absolute());
 	assert!(root.is_absolute());
 	let mut p_comps = path.components();
@@ -131,14 +130,28 @@ mod tests {
 	#[cfg(unix)]
 	#[test]
 	fn test_path_relative_to() {
-		assert_path_relate_to_root("/a/b", "/a/b/c", "../");
-		assert_path_relate_to_root("/a/b/c", "/a/b", "c");
-		assert_path_relate_to_root("/a/b/c", "/a/b/d", "../c");
-		assert_path_relate_to_root("/a", "/a/b/c", "../../");
-		assert_path_relate_to_root("/a/a/b", "/a/b/b", "../../b/b");
+		fn assert(path: &str, root: &str, res: &str) {
+			assert_eq!(path_relative_to(Path::new(path), Path::new(root)), Cow::Borrowed(Path::new(res)));
+		}
+
+		assert("/a/b", "/a/b/c", "../");
+		assert("/a/b/c", "/a/b", "c");
+		assert("/a/b/c", "/a/b/d", "../c");
+		assert("/a", "/a/b/c", "../../");
+		assert("/a/a/b", "/a/b/b", "../../a/b");
 	}
 
-	fn assert_path_relate_to_root(path: &str, root: &str, res: &str) {
-		assert_eq!(path_relative_to(Path::new(path), Path::new(root)), Cow::Borrowed(Path::new(res)));
+	#[cfg(windows)]
+	#[test]
+	fn test_path_relative_to() {
+		fn assert(path: &str, root: &str, res: &str) {
+			assert_eq!(path_relative_to(Path::new(path), Path::new(root)), Cow::Borrowed(Path::new(res)));
+		}
+
+		assert("C:\\a\\b", "C:\\a\\b\\c", "..\\");
+		assert("C:\\a\\b\\c", "C:\\a\\b", "c");
+		assert("C:\\a\\b\\c", "C:\\a\\b\\d", "..\\c");
+		assert("C:\\a", "C:\\a\\b\\c", "..\\..\\");
+		assert("C:\\a\\a\\b", "C:\\a\\b\\b", "..\\..\\a\\b");
 	}
 }
