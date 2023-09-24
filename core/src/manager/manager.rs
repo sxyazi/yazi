@@ -259,9 +259,10 @@ impl Manager {
 			emit!(Stop(true)).await;
 
 			let mut child = external::shell(ShellOpt {
-				cmd:   (*opener.exec).into(),
-				args:  vec![tmp.to_owned().into()],
-				piped: false,
+				cmd:    (*opener.exec).into(),
+				args:   vec![tmp.to_owned().into()],
+				piped:  false,
+				orphan: false,
 			})?;
 			child.wait().await?;
 

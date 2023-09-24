@@ -310,6 +310,7 @@ impl Scheduler {
 						cmd: opener.exec.into(),
 						args,
 						block: opener.block,
+						orphan: opener.orphan,
 						cancel: cancel_tx,
 					})
 					.await

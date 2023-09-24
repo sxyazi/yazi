@@ -4,6 +4,7 @@ use serde::{Deserialize, Deserializer};
 pub struct Opener {
 	pub exec:         String,
 	pub block:        bool,
+	pub orphan:       bool,
 	pub display_name: String,
 	pub spread:       bool,
 }
@@ -18,6 +19,8 @@ impl<'de> Deserialize<'de> for Opener {
 			pub exec:         String,
 			#[serde(default)]
 			pub block:        bool,
+			#[serde(default)]
+			pub orphan:       bool,
 			pub display_name: Option<String>,
 		}
 
@@ -32,6 +35,6 @@ impl<'de> Deserialize<'de> for Opener {
 			.unwrap_or_else(|| shadow.exec.split_whitespace().next().unwrap().to_string());
 
 		let spread = shadow.exec.contains("$*") || shadow.exec.contains("$@");
-		Ok(Self { exec: shadow.exec, block: shadow.block, display_name, spread })
+		Ok(Self { exec: shadow.exec, block: shadow.block, orphan: shadow.orphan, display_name, spread })
 	}
 }

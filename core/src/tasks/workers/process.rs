@@ -1,4 +1,4 @@
-use std::ffi::OsString;
+use std::{ffi::OsString, mem};
 
 use anyhow::Result;
 use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::{mpsc, oneshot}};
@@ -16,7 +16,19 @@ pub(crate) struct ProcessOpOpen {
 	pub cmd:    OsString,
 	pub args:   Vec<OsString>,
 	pub block:  bool,
+	pub orphan: bool,
 	pub cancel: oneshot::Sender<()>,
+}
+
+impl From<&mut ProcessOpOpen> for ShellOpt {
+	fn from(value: &mut ProcessOpOpen) -> Self {
+		Self {
+			cmd:    mem::take(&mut value.cmd),
+			args:   mem::take(&mut value.args),
+			piped:  false,
+			orphan: value.orphan,
+		}
+	}
 }
 
 impl Process {
@@ -33,7 +45,7 @@ impl Process {
 			let _guard = BLOCKER.acquire().await.unwrap();
 			emit!(Stop(true)).await;
 
-			match external::shell(ShellOpt { cmd: task.cmd, args: task.args, piped: false }) {
+			match external::shell(ShellOpt::from(&mut task)) {
 				Ok(mut child) => {
 					child.wait().await.ok();
 				}
@@ -48,13 +60,16 @@ impl Process {
 		}
 
 		self.sch.send(TaskOp::New(task.id, 0))?;
-		let mut child = external::shell(ShellOpt { cmd: task.cmd, args: task.args, piped: true })?;
+		let mut child = external::shell(ShellOpt::from(&mut task).with_piped())?;
 
 		let mut stdout = BufReader::new(child.stdout.take().unwrap()).lines();
 		let mut stderr = BufReader::new(child.stderr.take().unwrap()).lines();
 		loop {
 			select! {
-				_ = task.cancel.closed() => break,
+				_ = task.cancel.closed() => {
+					child.start_kill().ok();
+					break;
+				}
 				Ok(Some(line)) = stdout.next_line() => {
 					self.log(task.id, line)?;
 				}
