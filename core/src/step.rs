@@ -6,7 +6,6 @@ pub enum Step {
 }
 
 impl Default for Step {
-	#[inline]
 	fn default() -> Self { Self::Fixed(0) }
 }
 
@@ -23,12 +22,10 @@ impl FromStr for Step {
 }
 
 impl From<isize> for Step {
-	#[inline]
 	fn from(n: isize) -> Self { Self::Fixed(n) }
 }
 
 impl From<usize> for Step {
-	#[inline]
 	fn from(n: usize) -> Self { Self::Fixed(n as isize) }
 }
 
