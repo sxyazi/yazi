@@ -1,17 +1,23 @@
 use core::files::File;
 
 use config::{MANAGER, THEME};
-use ratatui::{buffer::Buffer, layout::Rect, style::{Color, Modifier, Style}, text::{Line, Span}, widgets::{List, ListItem, Widget}};
+use ratatui::{
+	buffer::Buffer,
+	layout::Rect,
+	style::{Color, Modifier, Style},
+	text::{Line, Span},
+	widgets::{List, ListItem, Widget},
+};
 use shared::short_path;
 
 use crate::Ctx;
 
 pub(super) struct Folder<'a> {
-	cx:           &'a Ctx,
-	folder:       &'a core::manager::Folder,
-	is_preview:   bool,
+	cx: &'a Ctx,
+	folder: &'a core::manager::Folder,
+	is_preview: bool,
 	is_selection: bool,
-	is_find:      bool,
+	is_find: bool,
 }
 
 impl<'a> Folder<'a> {
@@ -75,8 +81,8 @@ impl<'a> Widget for Folder<'a> {
 		let items: Vec<_> = window
 			.iter()
 			.enumerate()
-			.map(|(i, f)| {
-				let is_selected = self.folder.files.is_selected(f.url());
+			.map(|(i, file)| {
+				let is_selected = self.folder.files.is_selected(file.url());
 				if (!self.is_selection && is_selected)
 					|| (self.is_selection && mode.pending(self.folder.offset() + i, is_selected))
 				{
@@ -90,21 +96,21 @@ impl<'a> Widget for Folder<'a> {
 					);
 				}
 
-				let hovered = matches!(self.folder.hovered, Some(ref h) if h.url() == f.url());
-				let style = if self.is_preview && hovered {
-					THEME.preview.hovered.get()
-				} else if hovered {
-					THEME.selection.hovered.get()
-				} else {
-					self.file_style(f)
+				let hovered =
+					matches!(self.folder.hovered, Some(ref hover) if hover.url() == file.url());
+			    
+				let style = match (self.is_preview, hovered) {
+					(true, true) => THEME.preview.hovered.get(),
+					(_, true) => THEME.selection.hovered.get(),
+					_ => self.file_style(file),
 				};
 
 				let mut spans = Vec::with_capacity(10);
 
-				spans.push(Span::raw(format!(" {} ", Self::icon(f))));
-				spans.push(Span::raw(short_path(f.url(), &self.folder.cwd)));
+				spans.push(Span::raw(format!(" {} ", Self::icon(file))));
+				spans.push(Span::raw(short_path(file.url(), &self.folder.cwd)));
 
-				if let Some(link_to) = f.link_to() {
+				if let Some(link_to) = file.link_to() {
 					if MANAGER.show_symlink {
 						spans.push(Span::raw(format!(" -> {}", link_to.display())));
 					}
@@ -112,8 +118,8 @@ impl<'a> Widget for Folder<'a> {
 
 				if let Some(idx) = active
 					.finder()
-					.filter(|&f| hovered && self.is_find && f.has_matched())
-					.and_then(|finder| finder.matched_idx(f.url()))
+					.filter(|&finder| hovered && self.is_find && finder.has_matched())
+					.and_then(|finder| finder.matched_idx(file.url()))
 				{
 					let len = active.finder().unwrap().matched().len();
 					let style = Style::new().fg(Color::Rgb(255, 255, 50)).add_modifier(Modifier::ITALIC);
