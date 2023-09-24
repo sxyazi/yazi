@@ -50,7 +50,7 @@ impl<'a> Folder<'a> {
 	}
 
 	#[inline]
-	fn hovered_style(&self, file: &File) -> Style {
+	fn item_style(&self, file: &File) -> Style {
 		let mimetype = &self.cx.manager.mimetype;
 		THEME
 			.filetypes
@@ -115,7 +115,7 @@ impl<'a> Widget for Folder<'a> {
 				} else if hovered {
 					THEME.selection.hovered.get()
 				} else {
-					self.hovered_style(f)
+					self.item_style(f)
 				};
 
 				let mut spans = Vec::with_capacity(10);
