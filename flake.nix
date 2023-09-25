@@ -29,6 +29,5 @@
           yazi = final.callPackage ./nix/yazi.nix { };
         };
       };
-      overlay = overlays.default;
     };
 }
