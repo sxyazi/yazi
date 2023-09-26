@@ -11,6 +11,7 @@ use crate::{validation::check_validation, MERGED_THEME};
 pub struct Tabs {
 	pub active:    Style,
 	pub inactive:  Style,
+	pub header:    Style,
 	#[validate(range(min = 1, message = "Must be greater than 0"))]
 	pub max_width: u8,
 }
