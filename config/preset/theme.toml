@@ -38,6 +38,13 @@ cut      = { fg = "#FF84A9", bg = "#FF84A9" }
 hovered       = { underline = true }
 syntect_theme = "~/.config/bat/themes/Catppuccin-macchiato.tmTheme"
 
+[help]
+key  = { fg = "#E5E510" }
+exec = { fg = "#11A8CD" }
+desc = { fg = "#E5E5E5" }
+curr = { bg = "#666666", bold = true }
+btm  = { fg = "#666666", bg = "#E5E5E5" }
+
 [filetype]
 
 rules = [

@@ -1,6 +1,7 @@
-use core::Ctx;
+use config::THEME;
+use ratatui::{layout::{self, Constraint}, prelude::{Buffer, Direction, Rect}, widgets::{List, ListItem, Widget}};
 
-use ratatui::{layout::{self, Constraint}, prelude::{Buffer, Direction, Rect}, style::{Color, Style, Stylize}, widgets::{List, ListItem, Widget}};
+use crate::context::Ctx;
 
 pub(super) struct Bindings<'a> {
 	cx: &'a Ctx,
@@ -17,19 +18,25 @@ impl Widget for Bindings<'_> {
 			return;
 		}
 
+		// Key
 		let col1 = bindings
 			.iter()
-			.map(|c| ListItem::new(c.on()).style(Style::new().fg(Color::Yellow)))
+			.map(|c| ListItem::new(c.on()).style(THEME.help.key.get()))
 			.collect::<Vec<_>>();
 
+		// Execution
 		let col2 = bindings
 			.iter()
-			.map(|c| ListItem::new(c.exec()).style(Style::new().fg(Color::Cyan)))
+			.map(|c| ListItem::new(c.exec()).style(THEME.help.exec.get()))
 			.collect::<Vec<_>>();
 
+		// Description
 		let col3 = bindings
 			.iter()
-			.map(|c| ListItem::new(if let Some(ref desc) = c.desc { desc } else { "-" }))
+			.map(|c| {
+				ListItem::new(if let Some(ref desc) = c.desc { desc } else { "-" })
+					.style(THEME.help.desc.get())
+			})
 			.collect::<Vec<_>>();
 
 		let chunks = layout::Layout::new()
@@ -40,7 +47,7 @@ impl Widget for Bindings<'_> {
 		let cursor = self.cx.help.rel_cursor() as u16;
 		buf.set_style(
 			Rect { x: area.x, y: area.y + cursor, width: area.width, height: 1 },
-			Style::new().bg(Color::Black).bold(),
+			THEME.help.curr.get(),
 		);
 
 		List::new(col1).render(chunks[0], buf);
