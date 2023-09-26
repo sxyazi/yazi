@@ -1,8 +1,8 @@
-use core::Ctx;
-
-use ratatui::{layout, prelude::{Buffer, Constraint, Direction, Rect}, style::{Color, Style}, widgets::{Block, Clear, Widget}};
+use config::THEME;
+use ratatui::{layout, prelude::{Buffer, Constraint, Direction, Rect}, style::Style, widgets::{Block, Clear, Widget}};
 
 use super::Side;
+use crate::Ctx;
 
 pub(crate) struct Which<'a> {
 	cx: &'a Ctx,
@@ -35,11 +35,13 @@ impl Widget for Which<'_> {
 
 		let chunks = layout::Layout::new()
 			.direction(Direction::Horizontal)
-			.constraints([Constraint::Ratio(1, 3), Constraint::Ratio(1, 3), Constraint::Ratio(1, 3)])
+			.constraints(
+				[Constraint::Ratio(1, 3), Constraint::Ratio(1, 3), Constraint::Ratio(1, 3)].as_ref(),
+			)
 			.split(area);
 
 		Clear.render(area, buf);
-		Block::new().style(Style::new().bg(Color::Rgb(47, 51, 73))).render(area, buf);
+		Block::new().style(Style::new().bg(*THEME.which.block)).render(area, buf);
 		Side::new(which.times, cands.0).render(chunks[0], buf);
 		Side::new(which.times, cands.1).render(chunks[1], buf);
 		Side::new(which.times, cands.2).render(chunks[2], buf);
