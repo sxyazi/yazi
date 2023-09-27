@@ -1,14 +1,22 @@
-use mlua::{LuaSerdeExt, UserData};
+use mlua::{AnyUserData, LuaSerdeExt, UserDataFields};
 
-// Tasks
-pub struct Tasks<'a>(&'a core::tasks::Tasks);
+use crate::LUA;
 
-impl<'a> Tasks<'a> {
-	pub fn new(tasks: &'a core::tasks::Tasks) -> Self { Self(tasks) }
-}
+pub struct Tasks;
 
-impl<'a> UserData for Tasks<'a> {
-	fn add_fields<'lua, F: mlua::UserDataFields<'lua, Self>>(fields: &mut F) {
-		fields.add_field_method_get("progress", |lua, me| lua.to_value(&me.0.progress))
+impl Tasks {
+	pub(crate) fn init() -> mlua::Result<()> {
+		LUA.register_userdata_type::<core::tasks::Tasks>(|reg| {
+			reg.add_field_method_get("progress", |lua, me| lua.to_value(&me.progress))
+		})?;
+
+		Ok(())
+	}
+
+	pub(crate) fn make<'a>(
+		scope: &mlua::Scope<'a, 'a>,
+		inner: &'a core::tasks::Tasks,
+	) -> mlua::Result<AnyUserData<'a>> {
+		scope.create_any_userdata_ref(inner)
 	}
 }

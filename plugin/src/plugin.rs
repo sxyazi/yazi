@@ -3,7 +3,7 @@ use config::THEME;
 use mlua::{Lua, LuaSerdeExt, SerializeOptions, Table};
 use shared::RoCell;
 
-use crate::layout;
+use crate::{bindings, layout};
 
 pub(crate) static LUA: RoCell<Lua> = RoCell::new();
 pub(crate) static GLOBALS: RoCell<Table> = RoCell::new();
@@ -27,6 +27,7 @@ pub fn init() {
 		// Initialize
 		LUA.init(lua);
 		GLOBALS.init(LUA.globals());
+		bindings::init()?;
 
 		// Install
 		layout::Layout::install()?;

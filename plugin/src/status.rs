@@ -12,14 +12,14 @@ impl Status {
 		// crate::Manager::register()?;
 
 		LUA.scope(|scope| {
-			let manager = crate::Manager::make(scope, &cx.manager)?;
-			let tasks = scope.create_nonstatic_userdata(bindings::Tasks::new(&cx.tasks))?;
+			let manager = bindings::Manager::make(scope, &cx.manager)?;
+			let tasks = bindings::Tasks::make(scope, &cx.tasks)?;
 
-			let cx3 = LUA.create_table()?;
-			cx3.set("manager", manager)?;
-			cx3.set("tasks", tasks)?;
+			let cx = LUA.create_table()?;
+			cx.set("manager", manager)?;
+			cx.set("tasks", tasks)?;
 
-			GLOBALS.set("cx", cx3)?;
+			GLOBALS.set("cx", cx)?;
 
 			f()
 		})

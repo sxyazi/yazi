@@ -1,6 +1,5 @@
 use mlua::{MetaMethod, UserData};
 
-// Url
 pub struct Url(shared::Url);
 
 impl From<&shared::Url> for Url {
