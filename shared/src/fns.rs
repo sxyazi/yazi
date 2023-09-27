@@ -1,4 +1,4 @@
-use std::{borrow::Cow, env, path::{Component, Path, PathBuf}};
+use std::{borrow::Cow, env, ffi::OsStr, fmt::Display, path::{Component, Path, PathBuf}};
 
 use tokio::fs;
 
@@ -23,11 +23,28 @@ pub fn expand_url(mut u: Url) -> Url {
 	u
 }
 
-pub fn short_path(p: &Path, base: &Path) -> String {
-	if let Ok(p) = p.strip_prefix(base) {
-		return p.display().to_string();
+pub struct ShortPath<'a> {
+	pub prefix: &'a Path,
+	pub name:   &'a OsStr,
+}
+
+impl Display for ShortPath<'_> {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		if self.prefix == Path::new("") {
+			return write!(f, "{}", self.name.to_string_lossy());
+		}
+		write!(f, "{}/{}", self.prefix.display(), self.name.to_string_lossy())
 	}
-	p.display().to_string()
+}
+
+pub fn short_path<'a>(p: &'a Path, base: &Path) -> ShortPath<'a> {
+	let p = p.strip_prefix(base).unwrap_or(p);
+	let mut parts = p.components();
+	let name = parts.next_back().and_then(|p| match p {
+		Component::Normal(p) => Some(p),
+		_ => None,
+	});
+	ShortPath { prefix: parts.as_path(), name: name.unwrap_or_default() }
 }
 
 pub fn readable_path(p: &Path) -> String {

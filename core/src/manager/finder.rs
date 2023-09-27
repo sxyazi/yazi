@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, ffi::OsStr};
+use std::{borrow::Cow, collections::BTreeMap, ffi::OsStr};
 
 use anyhow::Result;
 use regex::bytes::Regex;
@@ -107,6 +107,26 @@ impl Finder {
 			use std::os::unix::ffi::OsStrExt;
 			self.query.is_match(name.as_bytes())
 		}
+	}
+
+	/// Explode the name into three parts: head, body, tail.
+	#[inline]
+	pub fn explode<'a>(&self, name: &'a OsStr) -> Option<(Cow<'a, str>, Cow<'a, str>, Cow<'a, str>)> {
+		#[cfg(target_os = "windows")]
+		let b = { name.to_string_lossy().as_bytes() };
+
+		#[cfg(not(target_os = "windows"))]
+		let b = {
+			use std::os::unix::ffi::OsStrExt;
+			name.as_bytes()
+		};
+
+		let range = self.query.find(b).map(|m| m.range())?;
+		Some((
+			String::from_utf8_lossy(&b[..range.start]),
+			String::from_utf8_lossy(&b[range.start..range.end]),
+			String::from_utf8_lossy(&b[range.end..]),
+		))
 	}
 }
 

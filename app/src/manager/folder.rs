@@ -50,7 +50,7 @@ impl<'a> Folder<'a> {
 	}
 
 	#[inline]
-	fn file_style(&self, file: &File) -> Style {
+	fn item_style(&self, file: &File) -> Style {
 		let mimetype = &self.cx.manager.mimetype;
 		THEME
 			.filetypes
@@ -58,6 +58,25 @@ impl<'a> Folder<'a> {
 			.find(|x| x.matches(file.url(), mimetype.get(file.url()), file.is_dir()))
 			.map(|x| x.style.get())
 			.unwrap_or_else(Style::new)
+	}
+
+	fn highlighted_item<'b>(&'b self, file: &'b File) -> Vec<Span> {
+		let short = short_path(file.url(), &self.folder.cwd);
+
+		let v = self.is_find.then_some(()).and_then(|_| {
+			let finder = self.cx.manager.active().finder()?;
+			let (head, body, tail) = finder.explode(short.name)?;
+
+			// TODO: to be configured by THEME?
+			let style = Style::new().fg(Color::Rgb(255, 255, 50)).add_modifier(Modifier::ITALIC);
+			Some(vec![
+				Span::raw(short.prefix.join(head.as_ref()).display().to_string()),
+				Span::styled(body, style),
+				Span::raw(tail),
+			])
+		});
+
+		v.unwrap_or_else(|| vec![Span::raw(format!("{}", short))])
 	}
 }
 
@@ -96,13 +115,12 @@ impl<'a> Widget for Folder<'a> {
 				} else if hovered {
 					THEME.selection.hovered.get()
 				} else {
-					self.file_style(f)
+					self.item_style(f)
 				};
 
 				let mut spans = Vec::with_capacity(10);
-
 				spans.push(Span::raw(format!(" {} ", Self::icon(f))));
-				spans.push(Span::raw(short_path(f.url(), &self.folder.cwd)));
+				spans.extend(self.highlighted_item(f));
 
 				if let Some(link_to) = f.link_to() {
 					if MANAGER.show_symlink {
@@ -116,14 +134,14 @@ impl<'a> Widget for Folder<'a> {
 					.and_then(|finder| finder.matched_idx(f.url()))
 				{
 					let len = active.finder().unwrap().matched().len();
-					let style = Style::new().fg(Color::Rgb(255, 255, 50)).add_modifier(Modifier::ITALIC);
 					spans.push(Span::styled(
 						format!(
 							"  [{}/{}]",
 							if idx > 99 { ">99".to_string() } else { (idx + 1).to_string() },
 							if len > 99 { ">99".to_string() } else { len.to_string() }
 						),
-						style,
+						// TODO: to be configured by THEME?
+						Style::new().fg(Color::Rgb(255, 255, 50)).add_modifier(Modifier::ITALIC),
 					));
 				}
 
