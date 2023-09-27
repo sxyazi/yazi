@@ -4,9 +4,9 @@ use anyhow::Result;
 use tokio::process::{Child, Command};
 
 pub struct ShellOpt {
-	pub cmd:    OsString,
-	pub args:   Vec<OsString>,
-	pub piped:  bool,
+	pub cmd: OsString,
+	pub args: Vec<OsString>,
+	pub piped: bool,
 	pub orphan: bool,
 }
 
@@ -46,11 +46,11 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 	#[cfg(target_os = "windows")]
 	{
 		let args: Vec<String> = opt.args.iter().map(|s| s.to_string_lossy().to_string()).collect();
-		let expanded_cmd = cmdexpand::expand_cmd(opt.cmd.to_string_lossy().as_ref(), &args)?;
+		let expanded_args = cmdparse::parse_cmd_to_args(opt.cmd.to_string_lossy().as_ref(), &args);
 		Ok(
 			Command::new("cmd")
 				.arg("/C")
-				.arg(expanded_cmd)
+				.args(&expanded_args)
 				.stdin(if opt.piped { Stdio::piped() } else { Stdio::inherit() })
 				.stdout(if opt.piped { Stdio::piped() } else { Stdio::inherit() })
 				.stderr(if opt.piped { Stdio::piped() } else { Stdio::inherit() })
@@ -61,174 +61,111 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 }
 
 #[cfg(target_os = "windows")]
-mod cmdexpand {
-	use anyhow::{anyhow, Result};
-	use nom::{
-		branch::alt,
-		bytes::complete::{is_not, tag, take_while1},
-		character::complete::{alpha1, alphanumeric0, anychar, char, digit1, space0, space1},
-		combinator::recognize,
-		multi::{many0, many1},
-		sequence::{delimited, pair, preceded, tuple},
-		IResult,
-	};
-
-	enum CommandPart<'a> {
-		Space(&'a str),
-		Text(&'a str),
-	}
-
-	enum TextPart<'a> {
-		NormalText(&'a str),
-		PercentNumber(usize),
-		PercentStar,
-	}
-
-	#[derive(Debug, Copy, Clone)]
-	enum Quote {
-		DoubleQuote,
-		SingleQuote,
-		NoQuote,
-	}
-
-	pub fn expand_cmd<T>(cmd: &str, args: &[T]) -> Result<String>
+mod cmdparse {
+	pub fn parse_cmd_to_args<T>(cmd: &str, args: &[T]) -> Vec<String>
 	where
 		T: AsRef<str>,
 	{
-		let parts = parse_cmd(cmd)?;
-		let mut expanded = String::new();
-		for part in parts {
-			match part {
-				CommandPart::Space(s) => expanded.push_str(s),
-				CommandPart::Text(text) => {
-					expanded.push_str(&expand_text(text, args)?);
+		let mut iter = cmd.chars().peekable();
+		let mut expanded_args = Vec::new();
+
+		while let Some(c) = iter.peek() {
+			if c.is_whitespace() {
+				while iter.peek().is_some_and(|_c| _c.is_whitespace()) {
+					iter.next();
 				}
-			}
-		}
-		Ok(expanded)
-	}
-
-	fn expand_text<T>(text: &str, args: &[T]) -> Result<String>
-	where
-		T: AsRef<str>,
-	{
-		let quote = if text.starts_with("\"") {
-			Quote::DoubleQuote
-		} else if text.starts_with("'") {
-			Quote::SingleQuote
-		} else {
-			Quote::NoQuote
-		};
-
-		let parts = parse_text(text)?;
-		let mut expanded = String::new();
-		for part in parts {
-			match part {
-				TextPart::NormalText(s) => expanded.push_str(s),
-				TextPart::PercentNumber(i) => {
-					if i > 0 {
-						let replace_text = args
-							.get(i - 1)
-							.map(|content| preprocess(content.as_ref(), quote))
-							.unwrap_or_default();
-						expanded.push_str(&replace_text);
-					} else {
-						// Does not support %0, replace it with ""
+			} else if *c == '\'' {
+				iter.next();
+				let mut text = String::new();
+				loop {
+					if iter.peek().is_none() {
+						break;
 					}
+					if iter.peek().is_some_and(|_c| *_c == '\'') {
+						iter.next();
+						break;
+					}
+					get_next_char(&mut iter, &mut text, args);
 				}
-				TextPart::PercentStar => {
-					for (i, arg) in args.iter().enumerate() {
-						expanded.push_str(&preprocess(arg.as_ref(), quote));
-						if i + 1 < args.len() {
-							expanded.push_str(" ");
+				expanded_args.push(text);
+			} else if *c == '"' {
+				iter.next();
+				let mut text = String::new();
+				loop {
+					if iter.peek().is_none() {
+						break;
+					}
+					if iter.peek().is_some_and(|_c| *_c == '"') {
+						iter.next();
+						break;
+					}
+					get_next_char(&mut iter, &mut text, args);
+				}
+				expanded_args.push(text);
+			} else {
+				if *c == '%' {
+					let mut tmp_iter = iter.clone();
+					tmp_iter.next();
+					if tmp_iter.peek().is_some_and(|_c| *_c == '*') {
+						iter.next();
+						iter.next();
+						for arg in args {
+							expanded_args.push(arg.as_ref().to_string())
 						}
+						continue;
+					}
+				}
+
+				let mut text = String::new();
+				loop {
+					if iter.peek().is_none() || iter.peek().is_some_and(|_c| _c.is_whitespace()) {
+						break;
+					}
+					get_next_char(&mut iter, &mut text, args);
+				}
+				expanded_args.push(text);
+			}
+		}
+
+		expanded_args
+	}
+
+	fn get_next_char<T>(
+		iter: &mut std::iter::Peekable<std::str::Chars<'_>>,
+		text: &mut String,
+		args: &[T],
+	) where
+		T: AsRef<str>,
+	{
+		let ch = iter.next().unwrap();
+		if ch == '\\' {
+			match iter.next() {
+				Some('n') => text.push('\n'),
+				Some('r') => text.push('\r'),
+				Some('t') => text.push('\t'),
+				Some(x) => text.push(x),
+				None => (),
+			}
+		} else if ch == '%' {
+			if iter.peek().is_some_and(|_c| *_c == '*') {
+				iter.next();
+				text.push_str(&args.iter().map(|value| value.as_ref()).collect::<Vec<&str>>().join(" "));
+			} else {
+				let mut num = String::new();
+				while iter.peek().is_some_and(|_c| _c.is_numeric()) {
+					num.push(iter.next().unwrap());
+				}
+				if num.is_empty() {
+					text.push('%');
+				} else {
+					let i: usize = num.parse().unwrap();
+					if i > 0 {
+						text.push_str(args.get(i - 1).map(|value| value.as_ref()).unwrap_or_default());
 					}
 				}
 			}
-		}
-		Ok(expanded)
-	}
-
-	fn escaped_char(input: &str) -> IResult<&str, &str> {
-		recognize(pair(char('\\'), anychar))(input)
-	}
-
-	fn parse_cmd(cmd: &str) -> Result<Vec<CommandPart>> {
-		fn double_quote_text(input: &str) -> IResult<&str, &str> {
-			recognize(delimited(char('"'), many0(alt((is_not("\"\\"), escaped_char))), char('"')))(input)
-		}
-
-		fn single_quote_text(input: &str) -> IResult<&str, &str> {
-			recognize(delimited(char('\''), many0(alt((is_not("'"), escaped_char))), char('\'')))(input)
-		}
-
-		fn no_quote_text(input: &str) -> IResult<&str, &str> {
-			take_while1(|c: char| !c.is_whitespace())(input)
-		}
-
-		let (_, (leading_space, command_name, args, trailing_space)) = tuple((
-			space0,
-			alt((double_quote_text, single_quote_text, no_quote_text)),
-			many0(pair(space1, alt((double_quote_text, single_quote_text, no_quote_text)))),
-			space0,
-		))(cmd)
-		.map_err(|_| anyhow!("Cannot parse command `{cmd}`"))?;
-		let mut parts = Vec::new();
-		if !leading_space.is_empty() {
-			parts.push(CommandPart::Space(leading_space));
-		}
-		parts.push(CommandPart::Text(command_name));
-		for (space, arg) in args {
-			parts.push(CommandPart::Space(space));
-			parts.push(CommandPart::Text(arg));
-		}
-		if !trailing_space.is_empty() {
-			parts.push(CommandPart::Space(trailing_space));
-		}
-		Ok(parts)
-	}
-
-	fn parse_text(text: &str) -> Result<Vec<TextPart>> {
-		fn variable_name(input: &str) -> IResult<&str, &str> {
-			recognize(pair(alt((alpha1, tag("_"))), alt((alphanumeric0, tag("_")))))(input)
-		}
-
-		fn variable_placeholder(input: &str) -> IResult<&str, TextPart> {
-			let (input, output) = recognize(tuple((char('%'), variable_name, char('%'))))(input)?;
-			Ok((input, TextPart::NormalText(output)))
-		}
-
-		fn normal_text(input: &str) -> IResult<&str, TextPart> {
-			let (input, output) = recognize(many1(alt((escaped_char, is_not("\\%")))))(input)?;
-			Ok((input, TextPart::NormalText(output)))
-		}
-
-		fn percent_star(input: &str) -> IResult<&str, TextPart> {
-			let (input, _) = tag("%*")(input)?;
-			Ok((input, TextPart::PercentStar))
-		}
-
-		fn percent_number(input: &str) -> IResult<&str, TextPart> {
-			let (input, output) = preceded(char('%'), digit1)(input)?;
-			let num: usize = output.parse().unwrap();
-			Ok((input, TextPart::PercentNumber(num)))
-		}
-
-		let (_, parts) =
-			many0(alt((normal_text, percent_star, percent_number, variable_placeholder)))(text)
-				.map_err(|_| anyhow!("Cannot parse text `{text}`"))?;
-		Ok(parts)
-	}
-
-	// Preprocess the content inside %x before replacing it in the command text
-	// to make sure white space and quote inside %x does not mess up the command.
-	fn preprocess(content: &str, quote: Quote) -> String {
-		let inner_space = content.chars().any(|c| c.is_whitespace());
-		match (quote, inner_space) {
-			(Quote::NoQuote, true) => format!("\"{}\"", content.replace("\"", "\\\"")),
-			(Quote::NoQuote, false) => content.to_string(),
-			(Quote::SingleQuote, _) => content.replace("'", "\\'").to_string(),
-			(Quote::DoubleQuote, _) => content.replace("\"", "\\\"").to_string(),
+		} else {
+			text.push(ch);
 		}
 	}
 
@@ -237,34 +174,45 @@ mod cmdexpand {
 		use super::*;
 
 		#[test]
-		fn test_expand_arguments() {
-			assert_eq!(expand_cmd("echo %1", &["abc"]).unwrap(), "echo abc");
-			assert_eq!(expand_cmd("echo %2", &["abc", "def"]).unwrap(), "echo def");
-			assert_eq!(expand_cmd("echo %1", &["abc def"]).unwrap(), "echo \"abc def\"");
-			assert_eq!(expand_cmd("echo %1", &["\"abc\""]).unwrap(), "echo \"abc\"");
-			assert_eq!(
-				expand_cmd(r#"echo "hello %1""#, &[r#""world""#]).unwrap(),
-				r#"echo "hello \"world\"""#
-			);
-			assert_eq!(
-				expand_cmd(r#"echo "hello %1""#, &[r#""my king""#]).unwrap(),
-				r#"echo "hello \"my king\"""#
-			);
-			assert_eq!(
-				expand_cmd(r#"echo "hello %1""#, &["my king"]).unwrap(),
-				r#"echo "hello my king""#
-			);
-			assert_eq!(
-				expand_cmd(r#"echo %1"#, &["cmd /C \"run something\""]).unwrap(),
-				r#"echo "cmd /C \"run something\"""#
-			);
-			assert_eq!(expand_cmd("cmd %*", &["abc", "def ghk"]).unwrap(), r#"cmd abc "def ghk""#);
-			assert_eq!(expand_cmd("cmd a\\%*", &["abc", "def ghk"]).unwrap(), r#"cmd a\%*"#);
-			assert_eq!(
-				expand_cmd(r#"cmd "Hello \"world"#, &Vec::<String>::new()).unwrap(),
-				r#"cmd "Hello \"world"#
-			);
-			assert_eq!(expand_cmd(r#"  a "b \"%1\""  "#, &["c", "d"]).unwrap(), r#"  a "b \"c\""  "#);
+		fn test_no_quote() {
+			let args = parse_cmd_to_args("echo abc xyz %1 %2", &["111", "222"]);
+			assert_eq!(args, vec!["echo", "abc", "xyz", "111", "222"]);
+
+			let args = parse_cmd_to_args("  echo   abc   xyz %1   %2  ", &["111", "222"]);
+			assert_eq!(args, vec!["echo", "abc", "xyz", "111", "222"]);
+		}
+
+		#[test]
+		fn test_single_quote() {
+			let args = parse_cmd_to_args("echo 'abc xyz' '%1' %2", &["111", "222"]);
+			assert_eq!(args, vec!["echo", "abc xyz", "111", "222"]);
+
+			let args = parse_cmd_to_args("echo 'abc \"\"xyz' '%1' %2", &["111", "222"]);
+			assert_eq!(args, vec!["echo", "abc \"\"xyz", "111", "222"]);
+		}
+
+		#[test]
+		fn test_double_quote() {
+			let args = parse_cmd_to_args("echo \"abc ' 'xyz\" \"%1\" %2 %3", &["111", "222"]);
+			assert_eq!(args, vec!["echo", "abc ' 'xyz", "111", "222", ""]);
+		}
+
+		#[test]
+		fn test_escaped() {
+			let args = parse_cmd_to_args("echo \"a\tbc ' 'x\nyz\" \"\\%1\" %2 %3", &["111", "22  2"]);
+			assert_eq!(args, vec!["echo", "a\tbc ' 'x\nyz", "%1", "22  2", ""]);
+		}
+
+		#[test]
+		fn test_percent_star() {
+			let args = parse_cmd_to_args("echo %* xyz", &["111", "222"]);
+			assert_eq!(args, vec!["echo", "111", "222", "xyz"]);
+
+			let args = parse_cmd_to_args("echo '%*' xyz", &["111", "222"]);
+			assert_eq!(args, vec!["echo", "111 222", "xyz"]);
+
+			let args = parse_cmd_to_args("echo -C%* xyz", &["111", "222"]);
+			assert_eq!(args, vec!["echo", "-C111 222", "xyz"]);
 		}
 	}
 }

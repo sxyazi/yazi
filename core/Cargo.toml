@@ -30,7 +30,6 @@ yazi-prebuild = "^0"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 clipboard-win = "^4"
-nom           = "^7"
 
 [target.'cfg(not(target_os = "netbsd"))'.dependencies]
 trash = "^3"
