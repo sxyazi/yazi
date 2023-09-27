@@ -13,39 +13,44 @@ function Status.mode()
 end
 
 function Status.size()
-	local hovered = cx.manager.current_hovered
-	if hovered == nil then
-		return ui.Span("")
+	-- cx.manager.current.files
+
+	-- yazi.print(#cx.manager.current.files)
+
+	for key, value in pairs(cx.manager.current.files) do
+		yazi.print(key, value)
+		break
 	end
 
-	return ui.Line(
-		ui.Span(" " .. hovered.length .. " "):fg(THEME.status.mode_normal.bg):bg(THEME.status.fancy.bg),
-		ui.Span(THEME.status.separator.closing):fg(THEME.status.fancy.bg)
-	)
+	return ui.Span("fff")
+	-- return ui.Line(
+	-- 	ui.Span(" " .. utils.readable_size(h.length) .. " "):fg(THEME.status.mode_normal.bg):bg(THEME.status.fancy.bg),
+	-- 	ui.Span(THEME.status.separator.closing):fg(THEME.status.fancy.bg)
+	-- )
 end
 
 function Status.name()
-	local hovered = cx.manager.current_hovered
-	if hovered == nil then
+	local h = cx.manager.current.hovered
+	if h == nil then
 		return ui.Span("")
 	end
 
-	return ui.Span(" " .. utils.basename(hovered.url))
+	return ui.Span(" " .. utils.basename(h.url))
 end
 
 function Status.permissions()
-	local hovered = cx.manager.current_hovered
-	if hovered == nil then
+	local h = cx.manager.current.hovered
+	if h == nil then
 		return ui.Span("")
 	end
 
-	if hovered.permissions == nil then
+	if h.permissions == nil then
 		return ui.Span("")
 	end
 
 	local spans = {}
-	for i = 1, #hovered.permissions do
-		local c = hovered.permissions:sub(i, i)
+	for i = 1, #h.permissions do
+		local c = h.permissions:sub(i, i)
 		local style = THEME.status.permissions_t
 		if c == "r" then
 			style = THEME.status.permissions_r
@@ -61,8 +66,8 @@ end
 
 function Status.percentage()
 	local percent = 0
-	local cursor = cx.manager.current_cursor
-	local length = cx.manager.current_length
+	local cursor = cx.manager.current.cursor
+	local length = cx.manager.current.len()
 	if cursor ~= 0 and length ~= 0 then
 		percent = math.floor((cursor + 1) * 100 / length)
 	end
@@ -74,15 +79,19 @@ function Status.percentage()
 	end
 
 	return ui.Line(
-		ui.Span(THEME.status.separator.opening):fg(THEME.status.fancy.bg),
+		ui.Span(" " .. THEME.status.separator.opening):fg(THEME.status.fancy.bg),
 		ui.Span(percent):fg(THEME.status.mode_normal.bg):bg(THEME.status.fancy.bg)
 	)
 end
 
 function Status.position()
-	local cursor = cx.manager.current_cursor
-	local length = cx.manager.current_length
-	return ui.Span(string.format(" %d/%d ", cursor + 1, length))
+	local cursor = cx.manager.current.cursor
+	local length = cx.manager.current.length
+
+	return ui.Line(
+		ui.Span(string.format(" %2d/%-2d ", cursor + 1, length)):style(THEME.status.mode_normal),
+		ui.Span(THEME.status.separator.closing):fg(THEME.status.mode_normal.bg)
+	)
 end
 
 function Status:render(area)
@@ -91,10 +100,12 @@ function Status:render(area)
 		:constraints({ ui.Constraint.Percentage(50), ui.Constraint.Percentage(50) })
 		:split(area)
 
-	local left = ui.Line(self.mode(), self.size(), self.name())
-	local right = ui.Line(self.permissions(), self.percentage(), self.position())
+	-- local left = ui.Line(self.mode(), self.size(), self.name())
+	-- local right = ui.Line(self.permissions(), self.percentage(), self.position())
+
+	local left = ui.Line(self.mode(), self.size())
 	return ui.Paragraph.render(
-		ui.Paragraph(left):area(chunks[1]),
-		ui.Paragraph(right):align(ui.Alignment.RIGHT):area(chunks[2])
+		ui.Paragraph(left):area(chunks[1])
+		-- ui.Paragraph(right):align(ui.Alignment.RIGHT):area(chunks[2])
 	)
 end

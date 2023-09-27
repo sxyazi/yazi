@@ -9,14 +9,17 @@ pub struct Status;
 
 impl Status {
 	fn scope<T, F: FnOnce() -> Result<T>>(cx: &Ctx, f: F) -> Result<T> {
+		// crate::Manager::register()?;
+
 		LUA.scope(|scope| {
-			let manager = scope.create_nonstatic_userdata(bindings::Manager::new(&cx.manager))?;
+			let manager = crate::Manager::make(scope, &cx.manager)?;
 			let tasks = scope.create_nonstatic_userdata(bindings::Tasks::new(&cx.tasks))?;
 
-			let cx = LUA.create_table()?;
-			cx.set("manager", manager)?;
-			cx.set("tasks", tasks)?;
-			GLOBALS.set("cx", cx)?;
+			let cx3 = LUA.create_table()?;
+			cx3.set("manager", manager)?;
+			cx3.set("tasks", tasks)?;
+
+			GLOBALS.set("cx", cx3)?;
 
 			f()
 		})
