@@ -1,6 +1,7 @@
 use core::{tasks::TASKS_PERCENT, Ctx};
 
-use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Direction, Rect}, style::{Color, Modifier, Style}, widgets::{Block, BorderType, Borders, List, ListItem, Padding, Widget}};
+use config::THEME;
+use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Direction, Rect}, widgets::{Block, BorderType, Borders, List, ListItem, Padding, Widget}};
 
 use super::Clear;
 
@@ -41,9 +42,10 @@ impl<'a> Widget for Layout<'a> {
 			.title("Tasks")
 			.title_alignment(Alignment::Center)
 			.padding(Padding::new(0, 0, 1, 1))
+            // Maybe also add these border type in to the later theme system
 			.borders(Borders::ALL)
 			.border_type(BorderType::Rounded)
-			.border_style(Style::new().fg(Color::Rgb(128, 174, 250)));
+			.border_style(THEME.tasks.border.get());
 		block.clone().render(area, buf);
 
 		let tasks = &self.cx.tasks;
@@ -54,7 +56,7 @@ impl<'a> Widget for Layout<'a> {
 			.map(|(i, v)| {
 				let mut item = ListItem::new(v.name.clone());
 				if i == tasks.cursor {
-					item = item.style(Style::new().add_modifier(Modifier::UNDERLINED));
+					item = item.style(THEME.tasks.items.get());
 				}
 				item
 			})
