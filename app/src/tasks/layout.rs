@@ -1,7 +1,7 @@
 use core::{tasks::TASKS_PERCENT, Ctx};
 
 use config::THEME;
-use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Direction, Rect}, widgets::{Block, BorderType, Borders, List, ListItem, Padding, Widget}};
+use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Direction, Rect}, text::Line, widgets::{Block, BorderType, Borders, List, ListItem, Padding, Widget}};
 
 use super::Clear;
 
@@ -39,7 +39,11 @@ impl<'a> Widget for Layout<'a> {
 
 		Clear.render(area, buf);
 		let block = Block::new()
-			.title("Tasks")
+			.title({
+                let mut line = Line::from("Tasks".to_string());
+                line.patch_style(THEME.tasks.title.get());
+                line
+})
 			.title_alignment(Alignment::Center)
 			.padding(Padding::new(0, 0, 1, 1))
             // Maybe also add these border type in to the later theme system
