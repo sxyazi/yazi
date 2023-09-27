@@ -1,5 +1,4 @@
-use mlua::{AnyUserData, IntoLua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
-use tracing::info;
+use mlua::{AnyUserData, IntoLua, MetaMethod, UserDataFields, UserDataMethods};
 
 use crate::{Url, LUA};
 

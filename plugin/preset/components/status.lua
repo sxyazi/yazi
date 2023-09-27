@@ -13,20 +13,15 @@ function Status.mode()
 end
 
 function Status.size()
-	-- cx.manager.current.files
-
-	-- yazi.print(#cx.manager.current.files)
-
-	for key, value in pairs(cx.manager.current.files) do
-		yazi.print(key, value)
-		break
+	local h = cx.manager.current.hovered
+	if h == nil then
+		return ui.Span("")
 	end
 
-	return ui.Span("fff")
-	-- return ui.Line(
-	-- 	ui.Span(" " .. utils.readable_size(h.length) .. " "):fg(THEME.status.mode_normal.bg):bg(THEME.status.fancy.bg),
-	-- 	ui.Span(THEME.status.separator.closing):fg(THEME.status.fancy.bg)
-	-- )
+	return ui.Line(
+		ui.Span(" " .. utils.readable_size(h.length) .. " "):fg(THEME.status.mode_normal.bg):bg(THEME.status.fancy.bg),
+		ui.Span(THEME.status.separator.closing):fg(THEME.status.fancy.bg)
+	)
 end
 
 function Status.name()
@@ -35,7 +30,7 @@ function Status.name()
 		return ui.Span("")
 	end
 
-	return ui.Span(" " .. utils.basename(h.url))
+	return ui.Span(" " .. utils.basename(tostring(h.url)))
 end
 
 function Status.permissions()
@@ -67,7 +62,7 @@ end
 function Status.percentage()
 	local percent = 0
 	local cursor = cx.manager.current.cursor
-	local length = cx.manager.current.len()
+	local length = #cx.manager.current.files
 	if cursor ~= 0 and length ~= 0 then
 		percent = math.floor((cursor + 1) * 100 / length)
 	end
@@ -86,7 +81,7 @@ end
 
 function Status.position()
 	local cursor = cx.manager.current.cursor
-	local length = cx.manager.current.length
+	local length = #cx.manager.current.files
 
 	return ui.Line(
 		ui.Span(string.format(" %2d/%-2d ", cursor + 1, length)):style(THEME.status.mode_normal),
@@ -100,12 +95,11 @@ function Status:render(area)
 		:constraints({ ui.Constraint.Percentage(50), ui.Constraint.Percentage(50) })
 		:split(area)
 
-	-- local left = ui.Line(self.mode(), self.size(), self.name())
-	-- local right = ui.Line(self.permissions(), self.percentage(), self.position())
+	local left = ui.Line(self.mode(), self.size(), self.name())
+	local right = ui.Line(self.permissions(), self.percentage(), self.position())
 
-	local left = ui.Line(self.mode(), self.size())
 	return ui.Paragraph.render(
-		ui.Paragraph(left):area(chunks[1])
-		-- ui.Paragraph(right):align(ui.Alignment.RIGHT):area(chunks[2])
+		ui.Paragraph(left):area(chunks[1]),
+		ui.Paragraph(right):align(ui.Alignment.RIGHT):area(chunks[2])
 	)
 end
