@@ -1,5 +1,5 @@
 use config::THEME;
-use ratatui::{layout, prelude::{Buffer, Constraint, Direction, Rect}, style::Style, widgets::{Block, Clear, Widget}};
+use ratatui::{layout, prelude::{Buffer, Constraint, Direction, Rect}, widgets::{Block, Clear, Widget}};
 
 use super::Side;
 use crate::Ctx;
@@ -41,7 +41,7 @@ impl Widget for Which<'_> {
 			.split(area);
 
 		Clear.render(area, buf);
-		Block::new().style(Style::new().bg(*THEME.which.block)).render(area, buf);
+		Block::new().style(THEME.which.block.get()).render(area, buf);
 		Side::new(which.times, cands.0).render(chunks[0], buf);
 		Side::new(which.times, cands.1).render(chunks[1], buf);
 		Side::new(which.times, cands.2).render(chunks[2], buf);
