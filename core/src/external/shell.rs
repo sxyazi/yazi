@@ -214,5 +214,11 @@ mod cmdparse {
 			let args = parse_cmd_to_args("echo -C%* xyz", &["111", "222"]);
 			assert_eq!(args, vec!["echo", "-C111 222", "xyz"]);
 		}
+
+		#[test]
+		fn test_env_var() {
+			let args = parse_cmd_to_args(" %EDITOR% %* xyz", &["111", "222"]);
+			assert_eq!(args, vec!["%EDITOR%", "111", "222", "xyz"]);
+		}
 	}
 }
