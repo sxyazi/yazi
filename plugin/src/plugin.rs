@@ -13,16 +13,13 @@ pub fn init() {
 		let lua = Lua::new();
 
 		// Base
+		lua.load(include_str!("../preset/ui.lua")).exec()?;
 		lua.load(include_str!("../preset/utils.lua")).exec()?;
 		lua.load(include_str!("../preset/inspect/inspect.lua")).exec()?;
 
-		// Elements
-		lua.load(include_str!("../preset/elements/span.lua")).exec()?;
-		lua.load(include_str!("../preset/elements/line.lua")).exec()?;
-		lua.load(include_str!("../preset/elements/paragraph.lua")).exec()?;
-
 		// Components
 		lua.load(include_str!("../preset/components/status.lua")).exec()?;
+		lua.load(include_str!("../preset/components/folder.lua")).exec()?;
 
 		// Initialize
 		LUA.init(lua);
@@ -30,8 +27,12 @@ pub fn init() {
 		bindings::init()?;
 
 		// Install
-		layout::Layout::install()?;
 		layout::Constraint::install()?;
+		layout::Layout::install()?;
+		layout::Line::install()?;
+		layout::Paragraph::install()?;
+		layout::Span::install()?;
+		layout::Style::install()?;
 
 		let options =
 			SerializeOptions::new().serialize_none_to_null(false).serialize_unit_to_null(false);

@@ -1,53 +1,35 @@
-use anyhow::{bail, Result};
-use ratatui::style;
-use serde::{Deserialize, Serialize, Serializer};
+use std::str::FromStr;
 
-#[derive(Deserialize)]
+use anyhow::Result;
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Copy, Deserialize)]
 #[serde(try_from = "String")]
-pub struct Color([u8; 3]);
+pub struct Color(ratatui::style::Color);
 
-impl TryFrom<&str> for Color {
-	type Error = anyhow::Error;
+impl FromStr for Color {
+	type Err = anyhow::Error;
 
-	fn try_from(s: &str) -> Result<Self, Self::Error> {
-		if s.len() != 7 {
-			bail!("Invalid color: {s}");
-		}
-		Ok(Self([
-			u8::from_str_radix(&s[1..3], 16)?,
-			u8::from_str_radix(&s[3..5], 16)?,
-			u8::from_str_radix(&s[5..7], 16)?,
-		]))
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		ratatui::style::Color::from_str(s).map(Self).map_err(|_| anyhow::anyhow!("invalid color"))
 	}
 }
 
 impl TryFrom<String> for Color {
 	type Error = anyhow::Error;
 
-	fn try_from(s: String) -> Result<Self, Self::Error> { Self::try_from(s.as_str()) }
+	fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(s.as_str()) }
 }
 
-impl From<&Color> for style::Color {
-	fn from(&Color(rgb): &Color) -> Self { style::Color::Rgb(rgb[0], rgb[1], rgb[2]) }
-}
-
-impl From<Color> for style::Color {
-	fn from(Color(rgb): Color) -> Self { style::Color::Rgb(rgb[0], rgb[1], rgb[2]) }
-}
-
-impl Color {
-	#[inline]
-	pub fn fg(&self) -> style::Style { style::Style::new().fg(self.into()) }
-
-	#[inline]
-	pub fn bg(&self) -> style::Style { style::Style::new().bg(self.into()) }
+impl From<Color> for ratatui::style::Color {
+	fn from(value: Color) -> Self { value.0 }
 }
 
 impl Serialize for Color {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
-		S: Serializer,
+		S: serde::Serializer,
 	{
-		serializer.serialize_str(&format!("#{:02X}{:02X}{:02X}", self.0[0], self.0[1], self.0[2]))
+		self.0.to_string().serialize(serializer)
 	}
 }

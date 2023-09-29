@@ -49,9 +49,9 @@ impl<'a> Widget for Tabs<'a> {
 					}
 
 					if i == tabs.idx() {
-						Span::styled(format!(" {text} "), THEME.tab.active.get())
+						Span::styled(format!(" {text} "), THEME.tab.active.into())
 					} else {
-						Span::styled(format!(" {text} "), THEME.tab.inactive.get())
+						Span::styled(format!(" {text} "), THEME.tab.inactive.into())
 					}
 				})
 				.collect::<Vec<_>>(),

@@ -1,10 +1,9 @@
 #![allow(clippy::unit_arg)]
 
 mod bindings;
+mod components;
 mod layout;
 mod plugin;
-mod status;
 
-pub use layout::*;
+pub use components::*;
 pub use plugin::*;
-pub use status::*;

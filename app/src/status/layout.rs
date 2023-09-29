@@ -3,8 +3,6 @@ use core::Ctx;
 use ratatui::{buffer::Buffer, prelude::Rect, widgets::Widget};
 use tracing::info;
 
-use crate::parser::Parser;
-
 pub(crate) struct Layout<'a> {
 	cx: &'a Ctx,
 }
@@ -21,8 +19,8 @@ impl<'a> Widget for Layout<'a> {
 			return;
 		}
 
-		if let Ok(s) = x {
-			Parser::render(&s, buf);
+		for x in x.unwrap() {
+			x.render(buf);
 		}
 	}
 }

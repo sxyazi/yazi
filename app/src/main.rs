@@ -7,7 +7,6 @@ mod help;
 mod input;
 mod logs;
 mod manager;
-mod parser;
 mod root;
 mod select;
 mod signals;

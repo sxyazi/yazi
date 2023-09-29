@@ -9,8 +9,9 @@ impl Manager {
 	pub(crate) fn init() -> mlua::Result<()> {
 		LUA.register_userdata_type::<core::manager::Manager>(|reg| {
 			reg.add_field_method_get("mode", |_, me| Ok(me.active().mode().to_string()));
-			reg.add_field_function_get("current", |_, me| me.named_user_value::<AnyUserData>("current"));
 			reg.add_field_function_get("parent", |_, me| me.named_user_value::<AnyUserData>("parent"));
+			reg.add_field_function_get("current", |_, me| me.named_user_value::<AnyUserData>("current"));
+			reg.add_field_function_get("preview", |_, me| me.named_user_value::<AnyUserData>("preview"));
 		})?;
 
 		LUA.register_userdata_type::<core::manager::Folder>(|reg| {
@@ -20,10 +21,6 @@ impl Manager {
 
 			reg.add_field_function_get("files", |_, me| me.named_user_value::<AnyUserData>("files"));
 			reg.add_field_function_get("hovered", |_, me| me.named_user_value::<AnyUserData>("hovered"));
-			// reg.add_field_method_get("window", |_, me| {
-			// LUA.scope(|scope| scope.create_nonstatic_userdata(Files { files:
-			// &me.0.files }))
-			// });
 		})?;
 
 		LUA.register_userdata_type::<core::files::Files>(|reg| {
@@ -46,6 +43,9 @@ impl Manager {
 		})?;
 
 		LUA.register_userdata_type::<core::files::File>(|reg| {
+			reg.add_field_method_get("name", |_, me| {
+				Ok(me.url().file_name().map(|n| n.to_string_lossy().to_string()))
+			});
 			reg.add_field_method_get("url", |_, me| Ok(Url::from(me.url())));
 			reg.add_field_method_get("length", |_, me| Ok(me.length()));
 			reg.add_field_method_get("link_to", |_, me| {
@@ -60,6 +60,10 @@ impl Manager {
 			});
 		})?;
 
+		LUA.register_userdata_type::<core::manager::Preview>(|reg| {
+			reg.add_field_function_get("folder", |_, me| me.named_user_value::<AnyUserData>("folder"));
+		})?;
+
 		Ok(())
 	}
 
@@ -68,13 +72,14 @@ impl Manager {
 		inner: &'a core::manager::Manager,
 	) -> mlua::Result<AnyUserData<'a>> {
 		let ud = scope.create_any_userdata_ref(inner)?;
-		ud.set_named_user_value("current", Self::folder(scope, inner.current())?)?;
 		ud.set_named_user_value("parent", inner.parent().and_then(|p| Self::folder(scope, p).ok()))?;
+		ud.set_named_user_value("current", Self::folder(scope, inner.current())?)?;
+		ud.set_named_user_value("preview", Self::preview(scope, inner.active())?)?;
 
 		Ok(ud)
 	}
 
-	fn folder<'a>(
+	pub(crate) fn folder<'a>(
 		scope: &mlua::Scope<'a, 'a>,
 		inner: &'a core::manager::Folder,
 	) -> mlua::Result<AnyUserData<'a>> {
@@ -106,5 +111,25 @@ impl Manager {
 		inner: &'a core::files::File,
 	) -> mlua::Result<AnyUserData<'a>> {
 		scope.create_any_userdata_ref(inner)
+	}
+
+	fn preview<'a>(
+		scope: &mlua::Scope<'a, 'a>,
+		tab: &'a core::manager::Tab,
+	) -> mlua::Result<AnyUserData<'a>> {
+		let inner = tab.preview();
+
+		let ud = scope.create_any_userdata_ref(inner)?;
+		ud.set_named_user_value(
+			"folder",
+			inner
+				.lock
+				.as_ref()
+				.filter(|l| l.is_folder())
+				.and_then(|l| tab.history(&l.url))
+				.and_then(|f| Self::folder(scope, f).ok()),
+		)?;
+
+		Ok(ud)
 	}
 }

@@ -19,11 +19,11 @@ impl<'a> Widget for Progress<'a> {
 		}
 
 		Gauge::default()
-			.gauge_style(THEME.status.progress_gauge.get())
+			.gauge_style(THEME.status.progress_gauge.into())
 			.percent(progress.0 as u16)
 			.label(Span::styled(
 				format!("{:>3}%, {} left", progress.0, progress.1),
-				THEME.status.progress_label.get(),
+				THEME.status.progress_label.into(),
 			))
 			.render(area, buf);
 	}
