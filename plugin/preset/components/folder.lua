@@ -6,9 +6,23 @@ function Folder:parent(area)
 		return ui.Paragraph(area, ui.Line {})
 	end
 
+	local hovered = nil
+	if parent.hovered ~= nil then
+		hovered = parent.hovered.url
+	end
+
 	local lines = {}
 	for _, f in pairs(parent.files) do
-		lines[#lines + 1] = ui.Line { ui.Span(f.name) }
+		local line = ui.Line { ui.Span(" " .. f.icon .. " " .. f.name .. " ") }
+
+		-- TODO: preview hovered
+		if f.url == hovered then
+			line = line:style(THEME.selection.hovered)
+		else
+			line = line:style(f.style)
+		end
+
+		lines[#lines + 1] = line
 	end
 
 	return { ui.Paragraph(area, lines) }
@@ -22,10 +36,15 @@ function Folder:current(area)
 
 	local lines = {}
 	for _, f in pairs(cx.manager.current.files) do
-		local line = ui.Line { ui.Span(f.name) }
+		local line = ui.Line { ui.Span(" " .. f.icon .. " " .. f.name .. " ") }
+
+		-- TODO: preview hovered
 		if f.url == hovered then
 			line = line:style(THEME.selection.hovered)
+		else
+			line = line:style(f.style)
 		end
+
 		lines[#lines + 1] = line
 	end
 

@@ -1,7 +1,8 @@
-use mlua::{AnyUserData, IntoLua, MetaMethod, UserDataFields, UserDataMethods};
+use config::THEME;
+use mlua::{AnyUserData, Function, IntoLua, MetaMethod, UserDataFields, UserDataMethods};
 
 use super::Url;
-use crate::LUA;
+use crate::{layout::Style, LUA};
 
 pub struct Manager;
 
@@ -46,6 +47,13 @@ impl Manager {
 			reg.add_field_method_get("name", |_, me| {
 				Ok(me.url().file_name().map(|n| n.to_string_lossy().to_string()))
 			});
+			reg.add_field_function_get("icon", |_, me| {
+				me.named_user_value::<Function>("icon")?.call::<_, String>(())
+			});
+			reg.add_field_function_get("style", |_, me| {
+				me.named_user_value::<Function>("style")?.call::<_, Style>(())
+			});
+
 			reg.add_field_method_get("url", |_, me| Ok(Url::from(me.url())));
 			reg.add_field_method_get("length", |_, me| Ok(me.length()));
 			reg.add_field_method_get("link_to", |_, me| {
@@ -72,22 +80,26 @@ impl Manager {
 		inner: &'a core::manager::Manager,
 	) -> mlua::Result<AnyUserData<'a>> {
 		let ud = scope.create_any_userdata_ref(inner)?;
-		ud.set_named_user_value("parent", inner.parent().and_then(|p| Self::folder(scope, p).ok()))?;
-		ud.set_named_user_value("current", Self::folder(scope, inner.current())?)?;
-		ud.set_named_user_value("preview", Self::preview(scope, inner.active())?)?;
+		ud.set_named_user_value(
+			"parent",
+			inner.parent().and_then(|p| Self::folder(scope, inner, p).ok()),
+		)?;
+		ud.set_named_user_value("current", Self::folder(scope, inner, inner.current())?)?;
+		ud.set_named_user_value("preview", Self::preview(scope, inner, inner.active())?)?;
 
 		Ok(ud)
 	}
 
 	pub(crate) fn folder<'a>(
 		scope: &mlua::Scope<'a, 'a>,
+		manager: &'a core::manager::Manager,
 		inner: &'a core::manager::Folder,
 	) -> mlua::Result<AnyUserData<'a>> {
 		let ud = scope.create_any_userdata_ref(inner)?;
-		ud.set_named_user_value("files", Self::files(scope, &inner.files)?)?;
+		ud.set_named_user_value("files", Self::files(scope, manager, &inner.files)?)?;
 		ud.set_named_user_value(
 			"hovered",
-			inner.hovered.as_ref().and_then(|h| Self::file(scope, h).ok()),
+			inner.hovered.as_ref().and_then(|h| Self::file(scope, manager, h).ok()),
 		)?;
 
 		Ok(ud)
@@ -95,12 +107,13 @@ impl Manager {
 
 	fn files<'a>(
 		scope: &mlua::Scope<'a, 'a>,
+		manager: &'a core::manager::Manager,
 		inner: &'a core::files::Files,
 	) -> mlua::Result<AnyUserData<'a>> {
 		let ud = scope.create_any_userdata_ref(inner)?;
 		ud.set_named_user_value(
 			"items",
-			inner.iter().filter_map(|f| Self::file(scope, f).ok()).collect::<Vec<_>>(),
+			inner.iter().filter_map(|f| Self::file(scope, manager, f).ok()).collect::<Vec<_>>(),
 		)?;
 
 		Ok(ud)
@@ -108,13 +121,44 @@ impl Manager {
 
 	fn file<'a>(
 		scope: &mlua::Scope<'a, 'a>,
+		manager: &'a core::manager::Manager,
 		inner: &'a core::files::File,
 	) -> mlua::Result<AnyUserData<'a>> {
-		scope.create_any_userdata_ref(inner)
+		let ud = scope.create_any_userdata_ref(inner)?;
+
+		ud.set_named_user_value(
+			"icon",
+			scope.create_function(|_, ()| {
+				Ok(
+					THEME
+						.icons
+						.iter()
+						.find(|&x| x.name.match_path(inner.url(), Some(inner.is_dir())))
+						.map(|x| x.display.to_string()),
+				)
+			})?,
+		)?;
+
+		ud.set_named_user_value(
+			"style",
+			scope.create_function(|_, ()| {
+				let mime = manager.mimetype.get(inner.url());
+				Ok(
+					THEME
+						.filetypes
+						.iter()
+						.find(|&x| x.matches(inner.url(), mime, inner.is_dir()))
+						.map(|x| Style::from(x.style)),
+				)
+			})?,
+		)?;
+
+		Ok(ud)
 	}
 
 	fn preview<'a>(
 		scope: &mlua::Scope<'a, 'a>,
+		manager: &'a core::manager::Manager,
 		tab: &'a core::manager::Tab,
 	) -> mlua::Result<AnyUserData<'a>> {
 		let inner = tab.preview();
@@ -127,7 +171,7 @@ impl Manager {
 				.as_ref()
 				.filter(|l| l.is_folder())
 				.and_then(|l| tab.history(&l.url))
-				.and_then(|f| Self::folder(scope, f).ok()),
+				.and_then(|f| Self::folder(scope, manager, f).ok()),
 		)?;
 
 		Ok(ud)

@@ -14,6 +14,10 @@ impl Style {
 	}
 }
 
+impl From<config::theme::Style> for Style {
+	fn from(value: config::theme::Style) -> Self { Self(value.into()) }
+}
+
 impl<'a> From<Table<'a>> for Style {
 	fn from(value: Table) -> Self {
 		let mut style = ratatui::style::Style::default();

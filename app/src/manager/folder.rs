@@ -1,7 +1,6 @@
-use core::{files::File, Ctx};
+use core::Ctx;
 
-use config::THEME;
-use ratatui::{buffer::Buffer, layout::Rect, style::Style, widgets::Widget};
+use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 use tracing::info;
 
 pub(super) struct Folder<'a> {
@@ -20,52 +19,24 @@ impl<'a> Folder<'a> {
 }
 
 impl<'a> Folder<'a> {
-	#[inline]
-	fn icon(file: &File) -> &'static str {
-		THEME
-			.icons
-			.iter()
-			.find(|x| x.name.match_path(file.url(), Some(file.is_dir())))
-			.map(|x| x.display.as_ref())
-			.unwrap_or("")
-	}
-
-	#[inline]
-	fn item_style(&self, file: &File) -> Style {
-		let mime = self.cx.manager.mimetype.get(file.url());
-		THEME
-			.filetypes
-			.iter()
-			.find(|x| x.matches(file.url(), mime, file.is_dir()))
-			.map(|x| x.style.into())
-			.unwrap_or_else(Style::new)
-	}
-
-	fn highlighted_item<'b>(&'b self, file: &'b File) -> Vec<Span> {
-		let short = short_path(file.url(), &self.folder.cwd);
-
-		let v = self.is_find.then_some(()).and_then(|_| {
-			let finder = self.cx.manager.active().finder()?;
-			#[cfg(target_os = "windows")]
-			let (head, body, tail) = finder.explode(short.name.to_string_lossy().as_bytes())?;
-
-			#[cfg(not(target_os = "windows"))]
-			let (head, body, tail) = {
-				use std::os::unix::ffi::OsStrExt;
-				finder.explode(short.name.as_bytes())?
-			};
-
-			// TODO: to be configured by THEME?
-			let style = Style::new().fg(Color::Rgb(255, 255, 50)).add_modifier(Modifier::ITALIC);
-			Some(vec![
-				Span::raw(short.prefix.join(head).display().to_string()),
-				Span::styled(body, style),
-				Span::raw(tail),
-			])
-		});
-
-		v.unwrap_or_else(|| vec![Span::raw(format!("{}", short))])
-	}
+	// fn highlighted_item<'b>(&'b self, file: &'b File) -> Vec<Span> {
+	// 	let short = short_path(file.url(), &self.folder.cwd);
+	//
+	// 	let v = self.is_find.then_some(()).and_then(|_| {
+	// 		let finder = self.cx.manager.active().finder()?;
+	// 		let (head, body, tail) = finder.explode(short.name)?;
+	//
+	// 		// TODO: to be configured by THEME?
+	// 		let style = Style::new().fg(Color::Rgb(255, 255,
+	// 50)).add_modifier(Modifier::ITALIC); 		Some(vec![
+	// 			Span::raw(short.prefix.join(head.as_ref()).display().to_string()),
+	// 			Span::styled(body, style),
+	// 			Span::raw(tail),
+	// 		])
+	// 	});
+	//
+	// 	v.unwrap_or_else(|| vec![Span::raw(format!("{}", short))])
+	// }
 }
 
 impl<'a> Widget for Folder<'a> {

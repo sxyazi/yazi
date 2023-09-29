@@ -50,11 +50,15 @@ impl<'lua> FromLua<'lua> for Line {
 
 impl UserData for Line {
 	fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-		methods.add_function("style", |_, (ud, style): (AnyUserData, Style)| {
+		methods.add_function("style", |_, (ud, value): (AnyUserData, Value)| {
 			{
 				let mut me = ud.borrow_mut::<Self>()?;
-				me.0.reset_style();
-				me.0.patch_style(style.0);
+				match value {
+					Value::Nil => me.0.reset_style(),
+					Value::Table(tbl) => me.0.patch_style(Style::from(tbl).0),
+					Value::UserData(ud) => me.0.patch_style(ud.borrow::<Style>()?.0),
+					_ => return Err(mlua::Error::external("expected a Style or Table or nil")),
+				};
 			}
 			Ok(ud)
 		});
