@@ -6,7 +6,7 @@ use shared::{Debounce, Defer, InputError, Url};
 use tokio::{pin, task::JoinHandle};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 
-use super::{Finder, Folder, Mode, Preview, PreviewLock};
+use super::{backstack::BackStack, Finder, Folder, Mode, Preview, PreviewLock};
 use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, files::{File, FilesOp, FilesSorter}, input::InputOpt, Event, Step, BLOCKER};
 
 pub struct Tab {
@@ -14,8 +14,9 @@ pub struct Tab {
 	pub(super) current: Folder,
 	pub(super) parent:  Option<Folder>,
 
-	pub(super) history: BTreeMap<Url, Folder>,
-	pub(super) preview: Preview,
+	pub(super) backstack: BackStack<Url>,
+	pub(super) history:   BTreeMap<Url, Folder>,
+	pub(super) preview:   Preview,
 
 	finder:                 Option<Finder>,
 	search:                 Option<JoinHandle<Result<()>>>,
@@ -29,9 +30,10 @@ impl From<Url> for Tab {
 
 		Self {
 			mode: Default::default(),
-			current: Folder::from(url),
+			current: Folder::from(url.clone()),
 			parent,
 
+			backstack: BackStack::new(url),
 			history: Default::default(),
 			preview: Default::default(),
 
@@ -87,7 +89,7 @@ impl Tab {
 		true
 	}
 
-	pub async fn cd(&mut self, mut target: Url) -> bool {
+	pub async fn cd(&mut self, mut target: Url, backstack_push: bool) -> bool {
 		let Ok(file) = File::from(target.clone()).await else {
 			return false;
 		};
@@ -107,6 +109,10 @@ impl Tab {
 
 		if let Some(rep) = self.parent.take() {
 			self.history.insert(rep.cwd.clone(), rep);
+		}
+
+		if backstack_push {
+			self.backstack.push(target.clone());
 		}
 
 		let rep = self.history_new(&target);
@@ -132,7 +138,7 @@ impl Tab {
 				emit!(Input(InputOpt::top("Change directory:").with_value(target.to_string_lossy())));
 
 			if let Some(Ok(s)) = result.recv().await {
-				emit!(Cd(Url::from(s)));
+				emit!(Cd(Url::from(s), true));
 			}
 		});
 		false
@@ -156,6 +162,8 @@ impl Tab {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 		self.parent = Some(self.history_new(&hovered.parent().unwrap()));
+
+		self.backstack.push(self.current.cwd.clone());
 
 		emit!(Refresh);
 		true
@@ -187,15 +195,25 @@ impl Tab {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 
+		self.backstack.push(self.current.cwd.clone());
+
 		emit!(Refresh);
 		true
 	}
 
-	// TODO
-	pub fn back(&mut self) -> bool { false }
+	pub fn back(&mut self) -> bool {
+		if let Some(url) = self.backstack.shift_backward() {
+			emit!(Cd(url.clone(), false));
+		}
+		false
+	}
 
-	// TODO
-	pub fn forward(&mut self) -> bool { false }
+	pub fn forward(&mut self) -> bool {
+		if let Some(url) = self.backstack.shift_forward() {
+			emit!(Cd(url.clone(), false));
+		}
+		false
+	}
 
 	pub fn select(&mut self, state: Option<bool>) -> bool {
 		if let Some(ref hovered) = self.current.hovered {
@@ -309,7 +327,7 @@ impl Tab {
 			let mut first = true;
 			while let Some(chunk) = rx.next().await {
 				if first {
-					emit!(Cd(cwd.clone()));
+					emit!(Cd(cwd.clone(), true));
 					first = false;
 				}
 				emit!(Files(FilesOp::Part(cwd.clone(), ticket, chunk)));
@@ -345,7 +363,7 @@ impl Tab {
 				if global { external::fzf(FzfOpt { cwd }) } else { external::zoxide(ZoxideOpt { cwd }) }?;
 
 			if let Ok(target) = rx.await? {
-				emit!(Cd(target));
+				emit!(Cd(target, true));
 			}
 			Ok::<(), Error>(())
 		});

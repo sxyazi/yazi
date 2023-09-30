@@ -1,3 +1,4 @@
+mod backstack;
 mod finder;
 mod folder;
 mod manager;

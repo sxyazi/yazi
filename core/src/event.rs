@@ -21,7 +21,7 @@ pub enum Event {
 	Call(Vec<Exec>, KeymapLayer),
 
 	// Manager
-	Cd(Url),
+	Cd(Url, bool),
 	Refresh,
 	Files(FilesOp),
 	Pages(usize),
@@ -71,8 +71,8 @@ macro_rules! emit {
 		$crate::Event::Call($exec, $layer).emit();
 	};
 
-	(Cd($url:expr)) => {
-		$crate::Event::Cd($url).emit();
+	(Cd($url:expr, $backstack_push:expr)) => {
+		$crate::Event::Cd($url, $backstack_push).emit();
 	};
 	(Files($op:expr)) => {
 		$crate::Event::Files($op).emit();
