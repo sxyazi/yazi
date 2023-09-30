@@ -1,17 +1,23 @@
 use core::files::File;
 
 use config::{MANAGER, THEME};
-use ratatui::{buffer::Buffer, layout::Rect, style::{Color, Modifier, Style}, text::{Line, Span}, widgets::{List, ListItem, Widget}};
+use ratatui::{
+	buffer::Buffer,
+	layout::Rect,
+	style::{Color, Modifier, Style},
+	text::{Line, Span},
+	widgets::{List, ListItem, Widget},
+};
 use shared::short_path;
 
 use crate::Ctx;
 
 pub(super) struct Folder<'a> {
-	cx:           &'a Ctx,
-	folder:       &'a core::manager::Folder,
-	is_preview:   bool,
+	cx: &'a Ctx,
+	folder: &'a core::manager::Folder,
+	is_preview: bool,
 	is_selection: bool,
-	is_find:      bool,
+	is_find: bool,
 }
 
 impl<'a> Folder<'a> {
@@ -65,13 +71,7 @@ impl<'a> Folder<'a> {
 
 		let v = self.is_find.then_some(()).and_then(|_| {
 			let finder = self.cx.manager.active().finder()?;
-			#[cfg(target_os = "windows")]
-			let (head, body, tail) = finder.explode(short.name.to_string_lossy().as_bytes())?;
-			#[cfg(not(target_os = "windows"))]
-			let (head, body, tail) = {
-				use std::os::unix::ffi::OsStrExt;
-				finder.explode(short.name.as_bytes())?
-			};
+			let (head, body, tail) = finder.explode(short.name.to_string_lossy())?;
 
 			// TODO: to be configured by THEME?
 			let style = Style::new().fg(Color::Rgb(255, 255, 50)).add_modifier(Modifier::ITALIC);
