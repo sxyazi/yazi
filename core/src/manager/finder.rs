@@ -7,7 +7,7 @@ use shared::Url;
 use crate::files::Files;
 
 pub struct Finder {
-	query: Regex,
+	query:   Regex,
 	matched: BTreeMap<Url, u8>,
 	version: u64,
 }
@@ -123,14 +123,10 @@ impl Finder {
 
 impl Finder {
 	#[inline]
-	pub fn matched(&self) -> &BTreeMap<Url, u8> {
-		&self.matched
-	}
+	pub fn matched(&self) -> &BTreeMap<Url, u8> { &self.matched }
 
 	#[inline]
-	pub fn has_matched(&self) -> bool {
-		!self.matched.is_empty()
-	}
+	pub fn has_matched(&self) -> bool { !self.matched.is_empty() }
 
 	#[inline]
 	pub fn matched_idx(&self, url: &Url) -> Option<u8> {

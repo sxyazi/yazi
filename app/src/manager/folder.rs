@@ -1,23 +1,17 @@
 use core::files::File;
 
 use config::{MANAGER, THEME};
-use ratatui::{
-	buffer::Buffer,
-	layout::Rect,
-	style::{Color, Modifier, Style},
-	text::{Line, Span},
-	widgets::{List, ListItem, Widget},
-};
+use ratatui::{buffer::Buffer, layout::Rect, style::{Color, Modifier, Style}, text::{Line, Span}, widgets::{List, ListItem, Widget}};
 use shared::short_path;
 
 use crate::Ctx;
 
 pub(super) struct Folder<'a> {
-	cx: &'a Ctx,
-	folder: &'a core::manager::Folder,
-	is_preview: bool,
+	cx:           &'a Ctx,
+	folder:       &'a core::manager::Folder,
+	is_preview:   bool,
 	is_selection: bool,
-	is_find: bool,
+	is_find:      bool,
 }
 
 impl<'a> Folder<'a> {
