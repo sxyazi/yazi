@@ -111,13 +111,12 @@ impl Finder {
 
 	/// Explode the name into three parts: head, body, tail.
 	#[inline]
-	pub fn explode<'a>(&self, name: &'a impl AsRef<str>) -> Option<(String, String, String)> {
-		let b = name.as_ref().as_bytes();
-		let range = self.query.find(b).map(|m| m.range())?;
+	pub fn explode<'a>(&self, name: &[u8]) -> Option<(String, String, String)> {
+		let range = self.query.find(name).map(|m| m.range())?;
 		Some((
-			String::from_utf8_lossy(&b[..range.start]).to_string(),
-			String::from_utf8_lossy(&b[range.start..range.end]).to_string(),
-			String::from_utf8_lossy(&b[range.end..]).to_string(),
+			String::from_utf8_lossy(&name[..range.start]).to_string(),
+			String::from_utf8_lossy(&name[range.start..range.end]).to_string(),
+			String::from_utf8_lossy(&name[range.end..]).to_string(),
 		))
 	}
 }

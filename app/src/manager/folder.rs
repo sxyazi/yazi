@@ -72,9 +72,9 @@ impl<'a> Folder<'a> {
 		let v = self.is_find.then_some(()).and_then(|_| {
 			let finder = self.cx.manager.active().finder()?;
 			#[cfg(target_os = "windows")]
-			let (head, body, tail) = finder.explode(&short.name.to_string_lossy())?;
+			let (head, body, tail) = finder.explode(short.name.to_string_lossy().as_bytes())?;
 			#[cfg(not(target_os = "windows"))]
-			let (head, body, tail) = finder.explode(&short.name)?;
+			let (head, body, tail) = finder.explode(short.name.as_bytes())?;
 
 			// TODO: to be configured by THEME?
 			let style = Style::new().fg(Color::Rgb(255, 255, 50)).add_modifier(Modifier::ITALIC);
