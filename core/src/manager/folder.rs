@@ -84,7 +84,7 @@ impl Folder {
 		self.set_page(false);
 
 		if self.cursor < self.offset + 5 {
-			self.offset = self.offset.saturating_sub(old - self.cursor);
+			self.offset = self.offset.saturating_sub(old.saturating_sub(self.cursor));
 		}
 
 		old != self.cursor
