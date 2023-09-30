@@ -65,12 +65,19 @@ impl<'a> Folder<'a> {
 
 		let v = self.is_find.then_some(()).and_then(|_| {
 			let finder = self.cx.manager.active().finder()?;
-			let (head, body, tail) = finder.explode(short.name)?;
+			#[cfg(target_os = "windows")]
+			let (head, body, tail) = finder.explode(short.name.to_string_lossy().as_bytes())?;
+
+			#[cfg(not(target_os = "windows"))]
+			let (head, body, tail) = {
+				use std::os::unix::ffi::OsStrExt;
+				finder.explode(short.name.as_bytes())?
+			};
 
 			// TODO: to be configured by THEME?
 			let style = Style::new().fg(Color::Rgb(255, 255, 50)).add_modifier(Modifier::ITALIC);
 			Some(vec![
-				Span::raw(short.prefix.join(head.as_ref()).display().to_string()),
+				Span::raw(short.prefix.join(head).display().to_string()),
 				Span::styled(body, style),
 				Span::raw(tail),
 			])
