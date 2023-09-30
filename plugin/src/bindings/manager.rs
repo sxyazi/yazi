@@ -1,5 +1,5 @@
 use config::THEME;
-use mlua::{AnyUserData, Function, IntoLua, MetaMethod, UserDataFields, UserDataMethods};
+use mlua::{AnyUserData, Function, IntoLua, MetaMethod, UserDataFields, UserDataMethods, Value};
 
 use super::Url;
 use crate::{layout::Style, LUA};
@@ -9,10 +9,19 @@ pub struct Manager;
 impl Manager {
 	pub(crate) fn init() -> mlua::Result<()> {
 		LUA.register_userdata_type::<core::manager::Manager>(|reg| {
-			reg.add_field_method_get("mode", |_, me| Ok(me.active().mode().to_string()));
-			reg.add_field_function_get("parent", |_, me| me.named_user_value::<AnyUserData>("parent"));
+			reg.add_field_function_get("mode", |_, me| me.named_user_value::<AnyUserData>("mode"));
+			reg.add_field_function_get("parent", |_, me| me.named_user_value::<Value>("parent"));
 			reg.add_field_function_get("current", |_, me| me.named_user_value::<AnyUserData>("current"));
 			reg.add_field_function_get("preview", |_, me| me.named_user_value::<AnyUserData>("preview"));
+		})?;
+
+		LUA.register_userdata_type::<core::manager::Mode>(|reg| {
+			reg.add_field_method_get("is_select", |_, me| Ok(me.is_select()));
+			reg.add_field_method_get("is_unset", |_, me| Ok(me.is_unset()));
+			reg.add_field_method_get("is_visual", |_, me| Ok(me.is_visual()));
+			reg.add_method("pending", |_, me, (idx, state): (usize, bool)| Ok(me.pending(idx, state)));
+
+			reg.add_meta_method(MetaMethod::ToString, |_, me, ()| Ok(me.to_string()));
 		})?;
 
 		LUA.register_userdata_type::<core::manager::Folder>(|reg| {
@@ -21,7 +30,7 @@ impl Manager {
 			reg.add_field_method_get("cursor", |_, me| Ok(me.cursor()));
 
 			reg.add_field_function_get("files", |_, me| me.named_user_value::<AnyUserData>("files"));
-			reg.add_field_function_get("hovered", |_, me| me.named_user_value::<AnyUserData>("hovered"));
+			reg.add_field_function_get("hovered", |_, me| me.named_user_value::<Value>("hovered"));
 		})?;
 
 		LUA.register_userdata_type::<core::files::Files>(|reg| {
@@ -41,24 +50,27 @@ impl Manager {
 				})?;
 				Ok((iter, me, 0))
 			});
+
+			reg.add_function("slice", |_, (me, skip, take): (AnyUserData, usize, usize)| {
+				let items = me.named_user_value::<Vec<AnyUserData>>("items")?;
+				Ok(items.iter().skip(skip).take(take).cloned().collect::<Vec<_>>())
+			});
 		})?;
 
 		LUA.register_userdata_type::<core::files::File>(|reg| {
 			reg.add_field_method_get("name", |_, me| {
 				Ok(me.url().file_name().map(|n| n.to_string_lossy().to_string()))
 			});
-			reg.add_field_function_get("icon", |_, me| {
+			reg.add_function("icon", |_, me: AnyUserData| {
 				me.named_user_value::<Function>("icon")?.call::<_, String>(())
 			});
-			reg.add_field_function_get("style", |_, me| {
+			reg.add_function("style", |_, me: AnyUserData| {
 				me.named_user_value::<Function>("style")?.call::<_, Style>(())
 			});
 
 			reg.add_field_method_get("url", |_, me| Ok(Url::from(me.url())));
 			reg.add_field_method_get("length", |_, me| Ok(me.length()));
-			reg.add_field_method_get("link_to", |_, me| {
-				Ok(me.link_to().map(|l| l.to_string_lossy().to_string()))
-			});
+			reg.add_field_method_get("link_to", |_, me| Ok(me.link_to().map(Url::from)));
 			reg.add_field_method_get("is_link", |_, me| Ok(me.is_link()));
 			reg.add_field_method_get("is_hidden", |_, me| Ok(me.is_hidden()));
 
@@ -69,7 +81,7 @@ impl Manager {
 		})?;
 
 		LUA.register_userdata_type::<core::manager::Preview>(|reg| {
-			reg.add_field_function_get("folder", |_, me| me.named_user_value::<AnyUserData>("folder"));
+			reg.add_field_function_get("folder", |_, me| me.named_user_value::<Value>("folder"));
 		})?;
 
 		Ok(())
@@ -80,6 +92,7 @@ impl Manager {
 		inner: &'a core::manager::Manager,
 	) -> mlua::Result<AnyUserData<'a>> {
 		let ud = scope.create_any_userdata_ref(inner)?;
+		ud.set_named_user_value("mode", scope.create_any_userdata_ref(inner.active().mode())?)?;
 		ud.set_named_user_value(
 			"parent",
 			inner.parent().and_then(|p| Self::folder(scope, inner, p).ok()),

@@ -1,25 +1,47 @@
-Folder = {}
+Folder = {
+	Kind = {
+		Parent = 0,
+		Current = 1,
+		Preview = 2,
+	},
+}
+
+function Folder:by_kind(kind)
+	if kind == self.Kind.Parent then
+		return cx.manager.parent
+	elseif kind == self.Kind.Current then
+		return cx.manager.current
+	elseif kind == self.Kind.Preview then
+		return cx.manager.preview.folder
+	end
+end
+
+function Folder:window(kind)
+	local folder = self:by_kind(kind)
+	if folder ~= nil then
+		return folder.files:slice(folder.offset, MANAGER.layout.folder_height())
+	end
+end
+
+function Folder:hovered(kind)
+	local folder = self:by_kind(kind)
+	return folder and folder.hovered
+end
 
 function Folder:parent(area)
-	local parent = cx.manager.parent
-	if parent == nil then
-		return ui.Paragraph(area, ui.Line {})
+	local window = self:window(self.Kind.Parent)
+	if window == nil then
+		return {}
 	end
 
-	local hovered = nil
-	if parent.hovered ~= nil then
-		hovered = parent.hovered.url
-	end
-
+	local hovered = (self:hovered(self.Kind.Parent) or {}).url
 	local lines = {}
-	for _, f in pairs(parent.files) do
-		local line = ui.Line { ui.Span(" " .. f.icon .. " " .. f.name .. " ") }
-
-		-- TODO: preview hovered
+	for _, f in pairs(window) do
+		local line = ui.Line { ui.Span(" " .. f:icon() .. " " .. f.name .. " ") }
 		if f.url == hovered then
 			line = line:style(THEME.selection.hovered)
 		else
-			line = line:style(f.style)
+			line = line:style(f:style())
 		end
 
 		lines[#lines + 1] = line
@@ -29,20 +51,25 @@ function Folder:parent(area)
 end
 
 function Folder:current(area)
-	local hovered = nil
-	if cx.manager.current.hovered ~= nil then
-		hovered = cx.manager.current.hovered.url
-	end
-
+	local hovered = (self:hovered(self.Kind.Current) or {}).url
 	local lines = {}
-	for _, f in pairs(cx.manager.current.files) do
-		local line = ui.Line { ui.Span(" " .. f.icon .. " " .. f.name .. " ") }
+	for _, f in pairs(self:window(self.Kind.Current)) do
+		local name = f.name
 
-		-- TODO: preview hovered
+		-- Show symlink target
+		if MANAGER.show_symlink then
+			local link_to = f.link_to
+			if link_to ~= nil then
+				name = name .. " -> " .. tostring(link_to)
+			end
+		end
+
+		-- Highlight hovered file
+		local line = ui.Line { ui.Span(" " .. f:icon() .. " " .. name .. " ") }
 		if f.url == hovered then
 			line = line:style(THEME.selection.hovered)
 		else
-			line = line:style(f.style)
+			line = line:style(f:style())
 		end
 
 		lines[#lines + 1] = line
@@ -52,25 +79,32 @@ function Folder:current(area)
 end
 
 function Folder:preview(area)
-	local target = cx.manager.preview.folder
-	if target == nil then
-		return ui.Paragraph(area, ui.Line {})
+	local window = self:window(self.Kind.Preview)
+	if window == nil then
+		return {}
 	end
 
+	local hovered = (self:hovered(self.Kind.Preview) or {}).url
 	local lines = {}
-	for _, f in pairs(target.files) do
-		lines[#lines + 1] = ui.Line { ui.Span(f.name) }
+	for _, f in pairs(window) do
+		local line = ui.Line { ui.Span(" " .. f:icon() .. " " .. f.name .. " ") }
+		if f.url == hovered then
+			line = line:style(THEME.preview.hovered)
+		else
+			line = line:style(f:style())
+		end
+		lines[#lines + 1] = line
 	end
 
 	return { ui.Paragraph(area, lines) }
 end
 
 function Folder:render(area, args)
-	if args.kind == 0 then
+	if args.kind == self.Kind.Parent then
 		return self:parent(area)
-	elseif args.kind == 1 then
+	elseif args.kind == self.Kind.Current then
 		return self:current(area)
-	elseif args.kind == 2 then
+	elseif args.kind == self.Kind.Preview then
 		return self:preview(area)
 	end
 end

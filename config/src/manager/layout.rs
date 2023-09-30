@@ -1,12 +1,12 @@
 use anyhow::bail;
 use crossterm::terminal::WindowSize;
 use ratatui::prelude::Rect;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use shared::Term;
 
 use super::{FOLDER_MARGIN, PREVIEW_BORDER, PREVIEW_MARGIN};
 
-#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(try_from = "Vec<u32>")]
 pub struct ManagerLayout {
 	pub parent:  u32,

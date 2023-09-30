@@ -69,24 +69,6 @@ impl<'a> Widget for Folder<'a> {
 		// 			);
 		// 		}
 		//
-		// 		let hovered = matches!(self.folder.hovered, Some(ref h) if h.url() ==
-		// f.url()); 		let style = if self.is_preview && hovered {
-		// 			THEME.preview.hovered.get()
-		// 		} else if hovered {
-		// 			THEME.selection.hovered.get()
-		// 		} else {
-		// 			self.item_style(f)
-		// 		};
-		//
-		// 		let mut spans = Vec::with_capacity(10);
-		// 		spans.push(Span::raw(format!(" {} ", Self::icon(f))));
-		// 		spans.extend(self.highlighted_item(f));
-		//
-		// 		if let Some(link_to) = f.link_to() {
-		// 			if MANAGER.show_symlink {
-		// 				spans.push(Span::raw(format!(" -> {}", link_to.display())));
-		// 			}
-		// 		}
 		//
 		// 		if let Some(idx) = active
 		// 			.finder()

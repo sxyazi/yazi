@@ -1,7 +1,7 @@
 use anyhow::bail;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(try_from = "String")]
 pub enum SortBy {
 	#[default]

@@ -1,6 +1,5 @@
 use anyhow::Result;
-use config::THEME;
-use mlua::{Lua, LuaSerdeExt, SerializeOptions, Table};
+use mlua::{Lua, Table};
 use shared::RoCell;
 
 use crate::{bindings, layout};
@@ -27,16 +26,15 @@ pub fn init() {
 		bindings::init()?;
 
 		// Install
+		crate::Config.install()?;
+
 		layout::Constraint::install()?;
 		layout::Layout::install()?;
 		layout::Line::install()?;
 		layout::Paragraph::install()?;
+		layout::Rect::install()?;
 		layout::Span::install()?;
 		layout::Style::install()?;
-
-		let options =
-			SerializeOptions::new().serialize_none_to_null(false).serialize_unit_to_null(false);
-		GLOBALS.set("THEME", LUA.to_value_with(&*THEME, options)?)?;
 
 		Ok(())
 	}

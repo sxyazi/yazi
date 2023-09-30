@@ -1,10 +1,9 @@
 Status = {}
 
 function Status.style()
-	local mode = cx.manager.mode:upper()
-	if mode == "SELECT" then
+	if cx.manager.mode.is_select then
 		return THEME.status.mode_select
-	elseif mode == "UNSET" then
+	elseif cx.manager.mode.is_unset then
 		return THEME.status.mode_unset
 	else
 		return THEME.status.mode_normal
@@ -12,7 +11,7 @@ function Status.style()
 end
 
 function Status:mode()
-	local mode = cx.manager.mode:upper()
+	local mode = tostring(cx.manager.mode):upper()
 	if mode == "UNSET" then
 		mode = "UN-SET"
 	end
