@@ -74,7 +74,10 @@ impl<'a> Folder<'a> {
 			#[cfg(target_os = "windows")]
 			let (head, body, tail) = finder.explode(short.name.to_string_lossy().as_bytes())?;
 			#[cfg(not(target_os = "windows"))]
-			let (head, body, tail) = finder.explode(short.name.as_bytes())?;
+			let (head, body, tail) = {
+				use std::os::unix::ffi::OsStrExt;
+				finder.explode(short.name.as_bytes())?
+			};
 
 			// TODO: to be configured by THEME?
 			let style = Style::new().fg(Color::Rgb(255, 255, 50)).add_modifier(Modifier::ITALIC);
