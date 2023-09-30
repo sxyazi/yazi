@@ -74,7 +74,7 @@ impl<'a> Folder<'a> {
 			#[cfg(target_os = "windows")]
 			let (head, body, tail) = finder.explode(&short.name.to_string_lossy())?;
 			#[cfg(not(target_os = "windows"))]
-			let (head, body, tail) = finder.explode(short.name)?;
+			let (head, body, tail) = finder.explode(&short.name)?;
 
 			// TODO: to be configured by THEME?
 			let style = Style::new().fg(Color::Rgb(255, 255, 50)).add_modifier(Modifier::ITALIC);
