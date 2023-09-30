@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::BTreeMap, ffi::OsStr};
+use std::{collections::BTreeMap, ffi::OsStr, borrow::Cow};
 
 use anyhow::Result;
 use regex::bytes::Regex;

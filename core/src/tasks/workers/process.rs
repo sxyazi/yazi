@@ -2,7 +2,6 @@ use std::{ffi::OsString, mem};
 
 use anyhow::Result;
 use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::{mpsc, oneshot}};
-use tracing::trace;
 
 use crate::{emit, external::{self, ShellOpt}, tasks::TaskOp, BLOCKER};
 
@@ -41,26 +40,37 @@ impl Process {
 	fn done(&self, id: usize) -> Result<()> { Ok(self.sch.send(TaskOp::Done(id))?) }
 
 	pub(crate) async fn open(&self, mut task: ProcessOpOpen) -> Result<()> {
+		let opt = ShellOpt::from(&mut task);
 		if task.block {
 			let _guard = BLOCKER.acquire().await.unwrap();
 			emit!(Stop(true)).await;
 
-			match external::shell(ShellOpt::from(&mut task)) {
+			match external::shell(opt) {
 				Ok(mut child) => {
 					child.wait().await.ok();
+					self.done(task.id)?;
 				}
 				Err(e) => {
-					trace!("Failed to spawn process: {e}");
+					self.sch.send(TaskOp::New(task.id, 0))?;
+					self.log(task.id, format!("Failed to spawn process: {e}"))?;
 				}
 			}
-			emit!(Stop(false)).await;
+			return Ok(emit!(Stop(false)).await);
+		}
 
-			self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
-			return self.done(task.id);
+		if task.orphan {
+			match external::shell(opt) {
+				Ok(_) => self.done(task.id)?,
+				Err(e) => {
+					self.sch.send(TaskOp::New(task.id, 0))?;
+					self.log(task.id, format!("Failed to spawn process: {e}"))?;
+				}
+			}
+			return Ok(());
 		}
 
 		self.sch.send(TaskOp::New(task.id, 0))?;
-		let mut child = external::shell(ShellOpt::from(&mut task).with_piped())?;
+		let mut child = external::shell(opt.with_piped())?;
 
 		let mut stdout = BufReader::new(child.stdout.take().unwrap()).lines();
 		let mut stderr = BufReader::new(child.stderr.take().unwrap()).lines();

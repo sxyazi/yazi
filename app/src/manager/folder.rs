@@ -76,7 +76,7 @@ impl<'a> Folder<'a> {
 			// TODO: to be configured by THEME?
 			let style = Style::new().fg(Color::Rgb(255, 255, 50)).add_modifier(Modifier::ITALIC);
 			Some(vec![
-				Span::raw(short.prefix.join(&head).display().to_string()),
+				Span::raw(short.prefix.join(head).display().to_string()),
 				Span::styled(body, style),
 				Span::raw(tail),
 			])
