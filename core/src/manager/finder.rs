@@ -7,7 +7,7 @@ use shared::Url;
 use crate::files::Files;
 
 pub struct Finder {
-	query:   Regex,
+	query: Regex,
 	matched: BTreeMap<Url, u8>,
 	version: u64,
 }
@@ -19,20 +19,21 @@ impl Finder {
 
 	pub(super) fn arrow(&self, files: &Files, cursor: usize, prev: bool) -> Option<isize> {
 		if prev {
-			files
-				.iter()
-				.take(cursor)
-				.rev()
-				.enumerate()
-				.find(|(_, f)| f.name().map_or(false, |n| self.matches(n)))
-				.map(|(i, _)| -(i as isize) - 1)
+			for i in 1..files.len() {
+				let index = (cursor + files.len() - i) % files.len();
+				if files[index].name().is_some_and(|name| self.matches(name)) {
+					return Some((index as isize) - (cursor as isize));
+				}
+			}
+			None
 		} else {
-			files
-				.iter()
-				.skip(cursor + 1)
-				.enumerate()
-				.find(|(_, f)| f.name().map_or(false, |n| self.matches(n)))
-				.map(|(i, _)| i as isize + 1)
+			for i in 1..files.len() {
+				let index = (cursor + i) % files.len();
+				if files[index].name().is_some_and(|name| self.matches(name)) {
+					return Some((index as isize) - (cursor as isize));
+				}
+			}
+			None
 		}
 	}
 
@@ -123,10 +124,14 @@ impl Finder {
 
 impl Finder {
 	#[inline]
-	pub fn matched(&self) -> &BTreeMap<Url, u8> { &self.matched }
+	pub fn matched(&self) -> &BTreeMap<Url, u8> {
+		&self.matched
+	}
 
 	#[inline]
-	pub fn has_matched(&self) -> bool { !self.matched.is_empty() }
+	pub fn has_matched(&self) -> bool {
+		!self.matched.is_empty()
+	}
 
 	#[inline]
 	pub fn matched_idx(&self, url: &Url) -> Option<u8> {
