@@ -18,7 +18,7 @@ impl Finder {
 	}
 
 	pub(super) fn prev(&self, files: &Files, cursor: usize, include: bool) -> Option<isize> {
-		for i in include as usize ^ 1..files.len() {
+		for i in !include as usize..files.len() {
 			let idx = (cursor + files.len() - i) % files.len();
 			if files[idx].name().is_some_and(|n| self.matches(n)) {
 				return Some(idx as isize - cursor as isize);
@@ -28,7 +28,7 @@ impl Finder {
 	}
 
 	pub(super) fn next(&self, files: &Files, cursor: usize, include: bool) -> Option<isize> {
-		for i in include as usize ^ 1..files.len() {
+		for i in !include as usize..files.len() {
 			let idx = (cursor + i) % files.len();
 			if files[idx].name().is_some_and(|n| self.matches(n)) {
 				return Some(idx as isize - cursor as isize);

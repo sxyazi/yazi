@@ -287,7 +287,7 @@ impl Tab {
 			finder.next(&self.current.files, self.current.cursor(), false)
 		};
 
-		b || step.is_some_and(|s| self.arrow(s.into()))
+		b | step.is_some_and(|s| self.arrow(s.into()))
 	}
 
 	pub fn search(&mut self, grep: bool) -> bool {
