@@ -17,60 +17,24 @@ impl Finder {
 		Ok(Self { query: Regex::new(s)?, matched: Default::default(), version: 0 })
 	}
 
-	pub(super) fn arrow(&self, files: &Files, cursor: usize, prev: bool) -> Option<isize> {
-		if prev {
-			for i in 1..files.len() {
-				let index = (cursor + files.len() - i) % files.len();
-				if files[index].name().is_some_and(|name| self.matches(name)) {
-					return Some((index as isize) - (cursor as isize));
-				}
+	pub(super) fn prev(&self, files: &Files, cursor: usize, include: bool) -> Option<isize> {
+		for i in include as usize ^ 1..files.len() {
+			let idx = (cursor + files.len() - i) % files.len();
+			if files[idx].name().is_some_and(|n| self.matches(n)) {
+				return Some(idx as isize - cursor as isize);
 			}
-			None
-		} else {
-			for i in 1..files.len() {
-				let index = (cursor + i) % files.len();
-				if files[index].name().is_some_and(|name| self.matches(name)) {
-					return Some((index as isize) - (cursor as isize));
-				}
-			}
-			None
 		}
+		None
 	}
 
-	pub(super) fn ring(&self, files: &Files, cursor: usize, prev: bool) -> Option<isize> {
-		if prev {
-			files
-				.iter()
-				.take(cursor + 1)
-				.rev()
-				.enumerate()
-				.find(|(_, f)| f.name().map_or(false, |n| self.matches(n)))
-				.map(|(i, _)| -(i as isize))
-				.or_else(|| {
-					files
-						.iter()
-						.skip(cursor + 1)
-						.enumerate()
-						.find(|(_, f)| f.name().map_or(false, |n| self.matches(n)))
-						.map(|(i, _)| i as isize + 1)
-				})
-		} else {
-			files
-				.iter()
-				.skip(cursor)
-				.enumerate()
-				.find(|(_, f)| f.name().map_or(false, |n| self.matches(n)))
-				.map(|(i, _)| i as isize)
-				.or_else(|| {
-					files
-						.iter()
-						.take(cursor)
-						.rev()
-						.enumerate()
-						.find(|(_, f)| f.name().map_or(false, |n| self.matches(n)))
-						.map(|(i, _)| -(i as isize) - 1)
-				})
+	pub(super) fn next(&self, files: &Files, cursor: usize, include: bool) -> Option<isize> {
+		for i in include as usize ^ 1..files.len() {
+			let idx = (cursor + i) % files.len();
+			if files[idx].name().is_some_and(|n| self.matches(n)) {
+				return Some(idx as isize - cursor as isize);
+			}
 		}
+		None
 	}
 
 	pub(super) fn catchup(&mut self, files: &Files) -> bool {
