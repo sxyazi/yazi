@@ -86,5 +86,5 @@ pub async fn clipboard_set(s: impl AsRef<std::ffi::OsStr>) -> Result<()> {
 	let result =
 		tokio::task::spawn_blocking(move || set_clipboard(formats::Unicode, s.to_string_lossy()));
 
-	Ok(result.await?.map_err(|_| anyhow!("failed to set clipboard"))?)
+	result.await?.map_err(|_| anyhow!("failed to set clipboard"))
 }

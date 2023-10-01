@@ -6,7 +6,7 @@ use shared::{Debounce, Defer, InputError, Url};
 use tokio::{pin, task::JoinHandle};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 
-use super::{Finder, Folder, Mode, Preview, PreviewLock};
+use super::{Backstack, Finder, Folder, Mode, Preview, PreviewLock};
 use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, files::{File, FilesOp, FilesSorter}, input::InputOpt, Event, Step, BLOCKER};
 
 pub struct Tab {
@@ -14,8 +14,9 @@ pub struct Tab {
 	pub(super) current: Folder,
 	pub(super) parent:  Option<Folder>,
 
-	pub(super) history: BTreeMap<Url, Folder>,
-	pub(super) preview: Preview,
+	pub(super) backstack: Backstack<Url>,
+	pub(super) history:   BTreeMap<Url, Folder>,
+	pub(super) preview:   Preview,
 
 	finder:                 Option<Finder>,
 	search:                 Option<JoinHandle<Result<()>>>,
@@ -29,9 +30,10 @@ impl From<Url> for Tab {
 
 		Self {
 			mode: Default::default(),
-			current: Folder::from(url),
+			current: Folder::from(url.clone()),
 			parent,
 
+			backstack: Backstack::new(url),
 			history: Default::default(),
 			preview: Default::default(),
 
@@ -87,6 +89,7 @@ impl Tab {
 		true
 	}
 
+	// TODO: change to sync, and remove `Event::Cd`
 	pub async fn cd(&mut self, mut target: Url) -> bool {
 		let Ok(file) = File::from(target.clone()).await else {
 			return false;
@@ -98,6 +101,7 @@ impl Tab {
 			target = target.parent_url().unwrap();
 		}
 
+		// Already in target
 		if self.current.cwd == target {
 			if hovered.map(|h| self.current.hover_force(h)) == Some(true) {
 				emit!(Hover);
@@ -105,23 +109,31 @@ impl Tab {
 			return false;
 		}
 
+		// Take parent to history
 		if let Some(rep) = self.parent.take() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 
+		// Current
 		let rep = self.history_new(&target);
 		let rep = mem::replace(&mut self.current, rep);
 		if rep.cwd.is_regular() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 
+		// Parent
 		if let Some(parent) = target.parent_url() {
 			self.parent = Some(self.history_new(&parent));
 		}
 
+		// Hover the file
 		if let Some(h) = hovered {
 			self.current.hover_force(h);
 		}
+
+		// Backstack
+		self.backstack.push(target.clone());
+
 		emit!(Refresh);
 		true
 	}
@@ -146,16 +158,21 @@ impl Tab {
 			return false;
 		}
 
+		// Current
 		let rep = self.history_new(hovered.url());
 		let rep = mem::replace(&mut self.current, rep);
 		if rep.cwd.is_regular() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 
+		// Parent
 		if let Some(rep) = self.parent.take() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 		self.parent = Some(self.history_new(&hovered.parent().unwrap()));
+
+		// Backstack
+		self.backstack.push(hovered.url_owned());
 
 		emit!(Refresh);
 		true
@@ -174,6 +191,7 @@ impl Tab {
 			return false;
 		};
 
+		// Parent
 		if let Some(rep) = self.parent.take() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
@@ -181,21 +199,33 @@ impl Tab {
 			self.parent = Some(self.history_new(&parent));
 		}
 
+		// Current
 		let rep = self.history_new(&current);
 		let rep = mem::replace(&mut self.current, rep);
 		if rep.cwd.is_regular() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 
+		// Backstack
+		self.backstack.push(current);
+
 		emit!(Refresh);
 		true
 	}
 
-	// TODO
-	pub fn back(&mut self) -> bool { false }
+	pub fn back(&mut self) -> bool {
+		if let Some(url) = self.backstack.shift_backward().cloned() {
+			futures::executor::block_on(self.cd(url));
+		}
+		false
+	}
 
-	// TODO
-	pub fn forward(&mut self) -> bool { false }
+	pub fn forward(&mut self) -> bool {
+		if let Some(url) = self.backstack.shift_forward().cloned() {
+			futures::executor::block_on(self.cd(url));
+		}
+		false
+	}
 
 	pub fn select(&mut self, state: Option<bool>) -> bool {
 		if let Some(ref hovered) = self.current.hovered {
