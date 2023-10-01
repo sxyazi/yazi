@@ -1,5 +1,6 @@
 use std::{num::ParseIntError, str::FromStr};
 
+#[derive(Clone, Copy)]
 pub enum Step {
 	Fixed(isize),
 	Percent(i8),
@@ -25,29 +26,28 @@ impl From<isize> for Step {
 	fn from(n: isize) -> Self { Self::Fixed(n) }
 }
 
-impl From<usize> for Step {
-	fn from(n: usize) -> Self { Self::Fixed(n as isize) }
+impl Step {
+	#[inline]
+	pub fn prev(n: usize) -> Self { Self::Fixed(-(n as isize)) }
+
+	#[inline]
+	pub fn next(n: usize) -> Self { Self::Fixed(n as isize) }
 }
 
 impl Step {
 	#[inline]
-	fn fixed<F: FnOnce() -> usize>(self, f: F) -> isize {
-		match self {
+	pub fn add<F: FnOnce() -> usize>(self, pos: usize, f: F) -> usize {
+		let fixed = match self {
 			Self::Fixed(n) => n,
 			Self::Percent(0) => 0,
 			Self::Percent(n) => n as isize * f() as isize / 100,
-		}
-	}
-
-	#[inline]
-	pub fn add<F: FnOnce() -> usize>(self, pos: usize, f: F) -> usize {
-		let fixed = self.fixed(f);
+		};
 		if fixed > 0 { pos + fixed as usize } else { pos.saturating_sub(fixed.unsigned_abs()) }
 	}
 
 	#[inline]
-	pub fn is_positive(&self) -> bool {
-		match *self {
+	pub fn is_positive(self) -> bool {
+		match self {
 			Self::Fixed(n) => n > 0,
 			Self::Percent(n) => n > 0,
 		}
