@@ -177,33 +177,40 @@ impl Manager {
 		false
 	}
 
-	pub fn create(&self) -> bool {
+	pub fn create(&self, force: bool) -> bool {
 		let cwd = self.cwd().to_owned();
 		tokio::spawn(async move {
 			let mut result = emit!(Input(InputOpt::top("Create:")));
+			let Some(Ok(name)) = result.recv().await else {
+				return Ok(());
+			};
 
-			if let Some(Ok(name)) = result.recv().await {
-				let path = cwd.join(&name);
-				let hovered = path.components().take(cwd.components().count() + 1).collect::<PathBuf>();
-
-				if name.ends_with('/') {
-					fs::create_dir_all(path).await?;
-				} else {
-					fs::create_dir_all(path.parent().unwrap()).await.ok();
-					fs::File::create(path).await?;
+			let path = cwd.join(&name);
+			if !force && fs::symlink_metadata(&path).await.is_ok() {
+				match emit!(Input(InputOpt::top("Overwrite an existing file? (y/N)"))).recv().await {
+					Some(Ok(c)) if c == "y" || c == "Y" => (),
+					_ => return Ok(()),
 				}
+			}
 
-				if let Ok(file) = File::from(Url::from(hovered)).await {
-					emit!(Hover(file));
-					emit!(Refresh);
-				}
+			if name.ends_with('/') {
+				fs::create_dir_all(&path).await?;
+			} else {
+				fs::create_dir_all(&path.parent().unwrap()).await.ok();
+				fs::File::create(&path).await?;
+			}
+
+			let child = path.components().take(cwd.components().count() + 1).collect::<PathBuf>();
+			if let Ok(file) = File::from(Url::from(child)).await {
+				emit!(Hover(file));
+				emit!(Refresh);
 			}
 			Ok::<(), Error>(())
 		});
 		false
 	}
 
-	pub fn rename(&self) -> bool {
+	pub fn rename(&self, force: bool) -> bool {
 		if self.active().in_selecting() {
 			return self.bulk_rename();
 		}
@@ -217,10 +224,22 @@ impl Manager {
 				InputOpt::hovered("Rename:").with_value(hovered.file_name().unwrap().to_string_lossy())
 			));
 
-			if let Some(Ok(new)) = result.recv().await {
-				let to = hovered.parent().unwrap().join(new);
-				fs::rename(&hovered, to).await.ok();
+			let Some(Ok(name)) = result.recv().await else {
+				return;
+			};
+
+			let new = hovered.parent().unwrap().join(name);
+			if force || fs::symlink_metadata(&new).await.is_err() {
+				fs::rename(&hovered, new).await.ok();
+				return;
 			}
+
+			let mut result = emit!(Input(InputOpt::hovered("Overwrite an existing file? (y/N)")));
+			if let Some(Ok(choice)) = result.recv().await {
+				if choice == "y" || choice == "Y" {
+					fs::rename(&hovered, new).await.ok();
+				}
+			};
 		});
 		false
 	}
