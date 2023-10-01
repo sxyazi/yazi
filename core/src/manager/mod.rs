@@ -8,6 +8,7 @@ mod tab;
 mod tabs;
 mod watcher;
 
+pub use backstack::*;
 pub use finder::*;
 pub use folder::*;
 pub use manager::*;

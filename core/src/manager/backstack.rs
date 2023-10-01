@@ -1,9 +1,9 @@
-pub struct BackStack<T: Eq> {
+pub struct Backstack<T: Eq> {
 	cursor: usize,
 	stack:  Vec<T>,
 }
 
-impl<T: Eq> BackStack<T> {
+impl<T: Eq> Backstack<T> {
 	pub fn new(item: T) -> Self { Self { cursor: 0, stack: vec![item] } }
 
 	pub fn push(&mut self, item: T) {
@@ -27,8 +27,8 @@ impl<T: Eq> BackStack<T> {
 		}
 	}
 
-	#[inline]
 	#[cfg(test)]
+	#[inline]
 	pub fn current(&self) -> &T { &self.stack[self.cursor] }
 
 	pub fn shift_backward(&mut self) -> Option<&T> {
@@ -56,7 +56,7 @@ mod tests {
 
 	#[test]
 	fn test_backstack() {
-		let mut backstack = BackStack::<u32>::new(1);
+		let mut backstack = Backstack::<u32>::new(1);
 		assert_eq!(backstack.current(), &1);
 
 		backstack.push(2);

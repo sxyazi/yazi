@@ -6,7 +6,7 @@ use shared::{Debounce, Defer, InputError, Url};
 use tokio::{pin, task::JoinHandle};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 
-use super::{backstack::BackStack, Finder, Folder, Mode, Preview, PreviewLock};
+use super::{Backstack, Finder, Folder, Mode, Preview, PreviewLock};
 use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, files::{File, FilesOp, FilesSorter}, input::InputOpt, Event, Step, BLOCKER};
 
 pub struct Tab {
@@ -14,7 +14,7 @@ pub struct Tab {
 	pub(super) current: Folder,
 	pub(super) parent:  Option<Folder>,
 
-	pub(super) backstack: BackStack<Url>,
+	pub(super) backstack: Backstack<Url>,
 	pub(super) history:   BTreeMap<Url, Folder>,
 	pub(super) preview:   Preview,
 
@@ -33,7 +33,7 @@ impl From<Url> for Tab {
 			current: Folder::from(url.clone()),
 			parent,
 
-			backstack: BackStack::new(url),
+			backstack: Backstack::new(url),
 			history: Default::default(),
 			preview: Default::default(),
 
@@ -101,6 +101,7 @@ impl Tab {
 			target = target.parent_url().unwrap();
 		}
 
+		// Already in target
 		if self.current.cwd == target {
 			if hovered.map(|h| self.current.hover_force(h)) == Some(true) {
 				emit!(Hover);
@@ -108,24 +109,31 @@ impl Tab {
 			return false;
 		}
 
+		// Take parent to history
 		if let Some(rep) = self.parent.take() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 
+		// Current
 		let rep = self.history_new(&target);
 		let rep = mem::replace(&mut self.current, rep);
 		if rep.cwd.is_regular() {
 			self.history.insert(rep.cwd.clone(), rep);
-			self.backstack.push(target.clone());
 		}
 
+		// Parent
 		if let Some(parent) = target.parent_url() {
 			self.parent = Some(self.history_new(&parent));
 		}
 
+		// Hover the file
 		if let Some(h) = hovered {
 			self.current.hover_force(h);
 		}
+
+		// Backstack
+		self.backstack.push(target.clone());
+
 		emit!(Refresh);
 		true
 	}
@@ -150,17 +158,21 @@ impl Tab {
 			return false;
 		}
 
+		// Current
 		let rep = self.history_new(hovered.url());
 		let rep = mem::replace(&mut self.current, rep);
 		if rep.cwd.is_regular() {
 			self.history.insert(rep.cwd.clone(), rep);
-			self.backstack.push(self.current.cwd.clone());
 		}
 
+		// Parent
 		if let Some(rep) = self.parent.take() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 		self.parent = Some(self.history_new(&hovered.parent().unwrap()));
+
+		// Backstack
+		self.backstack.push(hovered.url_owned());
 
 		emit!(Refresh);
 		true
@@ -179,6 +191,7 @@ impl Tab {
 			return false;
 		};
 
+		// Parent
 		if let Some(rep) = self.parent.take() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
@@ -186,12 +199,15 @@ impl Tab {
 			self.parent = Some(self.history_new(&parent));
 		}
 
+		// Current
 		let rep = self.history_new(&current);
 		let rep = mem::replace(&mut self.current, rep);
 		if rep.cwd.is_regular() {
 			self.history.insert(rep.cwd.clone(), rep);
-			self.backstack.push(self.current.cwd.clone());
 		}
+
+		// Backstack
+		self.backstack.push(current);
 
 		emit!(Refresh);
 		true
