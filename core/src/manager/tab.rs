@@ -243,7 +243,13 @@ impl Tab {
 				return false;
 			};
 
-			if let Some(step) = finder.ring(&self.current.files, self.current.cursor(), prev) {
+			let step = if prev {
+				finder.prev(&self.current.files, self.current.cursor(), true)
+			} else {
+				finder.next(&self.current.files, self.current.cursor(), true)
+			};
+
+			if let Some(step) = step {
 				self.arrow(step.into());
 			}
 
@@ -274,12 +280,14 @@ impl Tab {
 			return false;
 		};
 
-		let mut b = finder.catchup(&self.current.files);
-		if let Some(step) = finder.arrow(&self.current.files, self.current.cursor(), prev) {
-			b |= self.arrow(step.into());
-		}
+		let b = finder.catchup(&self.current.files);
+		let step = if prev {
+			finder.prev(&self.current.files, self.current.cursor(), false)
+		} else {
+			finder.next(&self.current.files, self.current.cursor(), false)
+		};
 
-		b
+		b | step.is_some_and(|s| self.arrow(s.into()))
 	}
 
 	pub fn search(&mut self, grep: bool) -> bool {
