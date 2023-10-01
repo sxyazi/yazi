@@ -367,8 +367,8 @@ impl Manager {
 			false
 		};
 
-		b |= self.active_mut().parent.as_mut().map_or(false, |p| p.hover(&cwd));
-		b |= hovered.as_ref().map_or(false, |h| self.current_mut().hover(h));
+		b |= self.active_mut().parent.as_mut().is_some_and(|p| p.hover(&cwd));
+		b |= hovered.as_ref().is_some_and(|h| self.current_mut().hover(h));
 
 		if hovered.as_ref() != self.hovered().map(|h| h.url()) {
 			emit!(Hover);

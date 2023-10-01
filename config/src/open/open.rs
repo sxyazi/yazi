@@ -25,8 +25,8 @@ impl Open {
 	{
 		self.rules.iter().find_map(|rule| {
 			let is_folder = Some(mime.as_ref() == MIME_DIR);
-			if rule.mime.as_ref().map_or(false, |m| m.matches(&mime))
-				|| rule.name.as_ref().map_or(false, |n| n.match_path(&path, is_folder))
+			if rule.mime.as_ref().is_some_and(|m| m.matches(&mime))
+				|| rule.name.as_ref().is_some_and(|n| n.match_path(&path, is_folder))
 			{
 				let openers = rule
 					.use_

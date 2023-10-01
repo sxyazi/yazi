@@ -30,7 +30,7 @@ impl Pattern {
 		} else {
 			path.file_name().and_then(|n| n.to_str()).or_else(|| path.to_str())
 		};
-		is_folder.map_or(true, |f| f == self.is_folder) && s.map_or(false, |s| self.matches(s))
+		is_folder.map_or(true, |f| f == self.is_folder) && s.is_some_and(|s| self.matches(s))
 	}
 }
 
