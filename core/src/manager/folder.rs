@@ -106,9 +106,9 @@ impl Folder {
 	pub fn hover(&mut self, url: &Url) -> bool {
 		let new = self.files.position(url).unwrap_or(self.cursor);
 		if new > self.cursor {
-			self.next(Step::from(new - self.cursor))
+			self.next(Step::next(new - self.cursor))
 		} else {
-			self.prev(Step::from(self.cursor - new))
+			self.prev(Step::prev(self.cursor - new))
 		}
 	}
 
