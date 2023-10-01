@@ -78,7 +78,7 @@ impl Executor {
 				if exec.named.contains_key("interactive") {
 					cx.manager.active_mut().cd_interactive(url)
 				} else {
-					emit!(Cd(url, true));
+					emit!(Cd(url));
 					false
 				}
 			}

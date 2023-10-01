@@ -1,36 +1,51 @@
-pub struct BackStack<T> {
-	current: usize,
-	stack:   Vec<T>,
+pub struct BackStack<T: Eq> {
+	cursor: usize,
+	stack:  Vec<T>,
 }
 
-impl<T> BackStack<T> {
-	pub fn new(item: T) -> Self { Self { current: 0, stack: vec![item] } }
+impl<T: Eq> BackStack<T> {
+	pub fn new(item: T) -> Self { Self { cursor: 0, stack: vec![item] } }
+
+	pub fn push(&mut self, item: T) {
+		if self.stack[self.cursor] == item {
+			return;
+		}
+
+		self.cursor += 1;
+		if self.cursor == self.stack.len() {
+			self.stack.push(item);
+		} else {
+			self.stack[self.cursor] = item;
+			self.stack.truncate(self.cursor + 1);
+		}
+
+		// Only keep 30 items before the cursor, the cleanup threshold is 60
+		if self.stack.len() > 60 {
+			let start = self.cursor.saturating_sub(30);
+			self.stack.drain(..start);
+			self.cursor -= start;
+		}
+	}
+
+	#[inline]
+	#[cfg(test)]
+	pub fn current(&self) -> &T { &self.stack[self.cursor] }
 
 	pub fn shift_backward(&mut self) -> Option<&T> {
-		if self.current > 0 {
-			self.current -= 1;
-			Some(&self.stack[self.current])
+		if self.cursor > 0 {
+			self.cursor -= 1;
+			Some(&self.stack[self.cursor])
 		} else {
 			None
 		}
 	}
 
 	pub fn shift_forward(&mut self) -> Option<&T> {
-		if self.current + 1 == self.stack.len() {
+		if self.cursor + 1 == self.stack.len() {
 			None
 		} else {
-			self.current += 1;
-			Some(&self.stack[self.current])
-		}
-	}
-
-	pub fn push(&mut self, item: T) {
-		self.current += 1;
-		if self.current == self.stack.len() {
-			self.stack.push(item);
-		} else {
-			self.stack[self.current] = item;
-			self.stack.truncate(self.current + 1);
+			self.cursor += 1;
+			Some(&self.stack[self.cursor])
 		}
 	}
 }
@@ -39,22 +54,20 @@ impl<T> BackStack<T> {
 mod tests {
 	use super::*;
 
-	fn get_current<T>(backstack: &BackStack<T>) -> &T { &backstack.stack[backstack.current] }
-
 	#[test]
 	fn test_backstack() {
-		let mut backstack = BackStack::<i32>::new(1);
-		assert_eq!(get_current(&backstack), &1);
+		let mut backstack = BackStack::<u32>::new(1);
+		assert_eq!(backstack.current(), &1);
 
 		backstack.push(2);
 		backstack.push(3);
-		assert_eq!(get_current(&backstack), &3);
+		assert_eq!(backstack.current(), &3);
 
 		assert_eq!(backstack.shift_backward(), Some(&2));
 		assert_eq!(backstack.shift_backward(), Some(&1));
 		assert_eq!(backstack.shift_backward(), None);
 		assert_eq!(backstack.shift_backward(), None);
-		assert_eq!(get_current(&backstack), &1);
+		assert_eq!(backstack.current(), &1);
 		assert_eq!(backstack.shift_forward(), Some(&2));
 		assert_eq!(backstack.shift_forward(), Some(&3));
 		assert_eq!(backstack.shift_forward(), None);
@@ -62,7 +75,7 @@ mod tests {
 		backstack.shift_backward();
 		backstack.push(4);
 
-		assert_eq!(get_current(&backstack), &4);
+		assert_eq!(backstack.current(), &4);
 		assert_eq!(backstack.shift_forward(), None);
 		assert_eq!(backstack.shift_backward(), Some(&2));
 	}

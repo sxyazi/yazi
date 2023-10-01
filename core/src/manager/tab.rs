@@ -89,7 +89,8 @@ impl Tab {
 		true
 	}
 
-	pub async fn cd(&mut self, mut target: Url, backstack_push: bool) -> bool {
+	// TODO: change to sync, and remove `Event::Cd`
+	pub async fn cd(&mut self, mut target: Url) -> bool {
 		let Ok(file) = File::from(target.clone()).await else {
 			return false;
 		};
@@ -111,14 +112,11 @@ impl Tab {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 
-		if backstack_push {
-			self.backstack.push(target.clone());
-		}
-
 		let rep = self.history_new(&target);
 		let rep = mem::replace(&mut self.current, rep);
 		if rep.cwd.is_regular() {
 			self.history.insert(rep.cwd.clone(), rep);
+			self.backstack.push(target.clone());
 		}
 
 		if let Some(parent) = target.parent_url() {
@@ -138,7 +136,7 @@ impl Tab {
 				emit!(Input(InputOpt::top("Change directory:").with_value(target.to_string_lossy())));
 
 			if let Some(Ok(s)) = result.recv().await {
-				emit!(Cd(Url::from(s), true));
+				emit!(Cd(Url::from(s)));
 			}
 		});
 		false
@@ -156,14 +154,13 @@ impl Tab {
 		let rep = mem::replace(&mut self.current, rep);
 		if rep.cwd.is_regular() {
 			self.history.insert(rep.cwd.clone(), rep);
+			self.backstack.push(self.current.cwd.clone());
 		}
 
 		if let Some(rep) = self.parent.take() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 		self.parent = Some(self.history_new(&hovered.parent().unwrap()));
-
-		self.backstack.push(self.current.cwd.clone());
 
 		emit!(Refresh);
 		true
@@ -193,24 +190,23 @@ impl Tab {
 		let rep = mem::replace(&mut self.current, rep);
 		if rep.cwd.is_regular() {
 			self.history.insert(rep.cwd.clone(), rep);
+			self.backstack.push(self.current.cwd.clone());
 		}
-
-		self.backstack.push(self.current.cwd.clone());
 
 		emit!(Refresh);
 		true
 	}
 
 	pub fn back(&mut self) -> bool {
-		if let Some(url) = self.backstack.shift_backward() {
-			emit!(Cd(url.clone(), false));
+		if let Some(url) = self.backstack.shift_backward().cloned() {
+			futures::executor::block_on(self.cd(url));
 		}
 		false
 	}
 
 	pub fn forward(&mut self) -> bool {
-		if let Some(url) = self.backstack.shift_forward() {
-			emit!(Cd(url.clone(), false));
+		if let Some(url) = self.backstack.shift_forward().cloned() {
+			futures::executor::block_on(self.cd(url));
 		}
 		false
 	}
@@ -327,7 +323,7 @@ impl Tab {
 			let mut first = true;
 			while let Some(chunk) = rx.next().await {
 				if first {
-					emit!(Cd(cwd.clone(), true));
+					emit!(Cd(cwd.clone()));
 					first = false;
 				}
 				emit!(Files(FilesOp::Part(cwd.clone(), ticket, chunk)));
@@ -363,7 +359,7 @@ impl Tab {
 				if global { external::fzf(FzfOpt { cwd }) } else { external::zoxide(ZoxideOpt { cwd }) }?;
 
 			if let Ok(target) = rx.await? {
-				emit!(Cd(target, true));
+				emit!(Cd(target));
 			}
 			Ok::<(), Error>(())
 		});
