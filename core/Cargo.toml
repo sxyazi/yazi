@@ -15,7 +15,6 @@ crossterm     = "^0"
 futures       = "^0"
 indexmap      = "^2"
 libc          = "^0"
-natord        = "^1"
 notify        = { version = "^6", default-features = false, features = [ "macos_fsevent" ] }
 parking_lot   = "^0"
 ratatui       = "^0"
