@@ -1,7 +1,7 @@
 use std::{cmp::Ordering, collections::BTreeMap, mem};
 
 use config::{manager::SortBy, MANAGER};
-use shared::Url;
+use shared::{natsort, Url};
 
 use super::File;
 
@@ -37,8 +37,8 @@ impl FilesSorter {
 				}
 
 				self.cmp(
-					a.url.as_os_str().to_ascii_lowercase(),
-					b.url.as_os_str().to_ascii_lowercase(),
+					a.url.as_os_str().to_ascii_uppercase(),
+					b.url.as_os_str().to_ascii_uppercase(),
 					self.promote(a, b),
 				)
 			}),
@@ -78,12 +78,7 @@ impl FilesSorter {
 				return promote;
 			}
 
-			let ordering = if self.sensitive {
-				natord::compare(&entities[a].0, &entities[b].0)
-			} else {
-				natord::compare_ignore_case(&entities[a].0, &entities[b].0)
-			};
-
+			let ordering = natsort(&entities[a].0, &entities[b].0, !self.sensitive);
 			if self.reverse { ordering.reverse() } else { ordering }
 		});
 
