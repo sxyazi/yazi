@@ -5,12 +5,36 @@ use tokio::fs;
 use crate::Url;
 
 pub fn expand_path(p: impl AsRef<Path>) -> PathBuf {
-	let p = p.as_ref();
+	let mut p = p.as_ref();
+
+	// expand the environment variable by calling the "echo" command
+	#[cfg(target_os = "windows")]
+	let expanded_path = match std::process::Command::new("cmd").args(&["/C", "echo"]).arg(p).output() {
+		Ok(output) if output.status.success() => Some(String::from_utf8_lossy(&output.stdout).trim_end().to_string()),
+		_ => None,
+	};
+	#[cfg(not(target_os = "windows"))]
+	let expanded_path = match std::process::Command::new("sh").args(&["-c", "echo"]).arg(p).output() {
+		Ok(output) if output.status.success() => Some(String::from_utf8_lossy(&output.stdout).trim_end().to_string()),
+		_ => None,
+	};
+
+	if let Some(s) = &expanded_path {
+		p = Path::new(s);
+	}
+
 	if let Ok(p) = p.strip_prefix("~") {
+		#[cfg(not(target_os = "windows"))]
 		if let Some(home) = env::var_os("HOME") {
 			return PathBuf::from_iter([&home, p.as_os_str()]);
 		}
+
+		#[cfg(target_os = "windows")]
+		if let Ok(home) = env::var("USERPROFILE") {
+			return Path::new(&home).join(p);
+		}
 	}
+
 	if p.is_absolute() {
 		return p.to_path_buf();
 	}
