@@ -1,7 +1,7 @@
 use std::{collections::BTreeMap, ffi::OsStr};
 
 use anyhow::Result;
-use regex::bytes::Regex;
+use regex::bytes::{Regex, RegexBuilder};
 use shared::Url;
 
 use crate::files::Files;
@@ -14,7 +14,9 @@ pub struct Finder {
 
 impl Finder {
 	pub(super) fn new(s: &str) -> Result<Self> {
-		Ok(Self { query: Regex::new(s)?, matched: Default::default(), version: 0 })
+		let uppercase = s.chars().any(|c| c.is_uppercase());
+		let query = RegexBuilder::new(s).case_insensitive(!uppercase).build()?;
+		Ok(Self { query, matched: Default::default(), version: 0 })
 	}
 
 	pub(super) fn prev(&self, files: &Files, cursor: usize, include: bool) -> Option<isize> {
