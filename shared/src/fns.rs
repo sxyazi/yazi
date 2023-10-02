@@ -7,14 +7,14 @@ use crate::Url;
 pub fn expand_path(p: impl AsRef<Path>) -> PathBuf {
 	let mut p = p.as_ref();
 
-	// expand the environment variable by calling the "echo" command
+	// expand the environment variable by calling the "echo" command, in linux case, this also expands the '~' path
 	#[cfg(target_os = "windows")]
 	let expanded_path = match std::process::Command::new("cmd").args(&["/C", "echo"]).arg(p).output() {
 		Ok(output) if output.status.success() => Some(String::from_utf8_lossy(&output.stdout).trim_end().to_string()),
 		_ => None,
 	};
 	#[cfg(not(target_os = "windows"))]
-	let expanded_path = match std::process::Command::new("sh").args(&["-c", "echo"]).arg(p).output() {
+	let expanded_path = match std::process::Command::new("sh").arg("-c").arg(format!("echo {}", p.display())).output() {
 		Ok(output) if output.status.success() => Some(String::from_utf8_lossy(&output.stdout).trim_end().to_string()),
 		_ => None,
 	};
@@ -23,13 +23,9 @@ pub fn expand_path(p: impl AsRef<Path>) -> PathBuf {
 		p = Path::new(s);
 	}
 
+	// support '~' on Windows
+	#[cfg(target_os = "windows")]
 	if let Ok(p) = p.strip_prefix("~") {
-		#[cfg(not(target_os = "windows"))]
-		if let Some(home) = env::var_os("HOME") {
-			return PathBuf::from_iter([&home, p.as_os_str()]);
-		}
-
-		#[cfg(target_os = "windows")]
 		if let Ok(home) = env::var("USERPROFILE") {
 			return Path::new(&home).join(p);
 		}
