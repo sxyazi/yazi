@@ -1,4 +1,4 @@
-use core::{emit, files::FilesSorter, input::InputMode};
+use core::{emit, files::FilesSorter, input::InputMode, manager::FinderCase};
 
 use config::{keymap::{Control, Exec, Key, KeymapLayer}, manager::SortBy, KEYMAP};
 use shared::{optional_bool, Url};
@@ -154,7 +154,14 @@ impl Executor {
 			"find" => {
 				let query = exec.args.get(0).map(|s| s.as_str());
 				let prev = exec.named.contains_key("previous");
-				cx.manager.active_mut().find(query, prev)
+				let smart_case = exec.named.contains_key("smart-case");
+				let ingore_case = exec.named.contains_key("ignore-case");
+				let case = match (smart_case, ingore_case) {
+					(false, false) => FinderCase::CaseSensitive,
+					(false, true) => FinderCase::CaseInsensitive,
+					(true, _) => FinderCase::SmartCase, // prioritize smart-case over ignore-case
+				};
+				cx.manager.active_mut().find(query, prev, case)
 			}
 			"find_arrow" => cx.manager.active_mut().find_arrow(exec.named.contains_key("previous")),
 

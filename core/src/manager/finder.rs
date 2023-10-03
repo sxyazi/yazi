@@ -6,6 +6,13 @@ use shared::Url;
 
 use crate::files::Files;
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum FinderCase {
+	CaseSensitive,
+	CaseInsensitive,
+	SmartCase,
+}
+
 pub struct Finder {
 	query:   Regex,
 	matched: BTreeMap<Url, u8>,
@@ -13,9 +20,15 @@ pub struct Finder {
 }
 
 impl Finder {
-	pub(super) fn new(s: &str) -> Result<Self> {
-		let uppercase = s.chars().any(|c| c.is_uppercase());
-		let query = RegexBuilder::new(s).case_insensitive(!uppercase).build()?;
+	pub(super) fn new(s: &str, case: FinderCase) -> Result<Self> {
+		let query = match case {
+			FinderCase::CaseSensitive => Regex::new(s)?,
+			FinderCase::CaseInsensitive => RegexBuilder::new(s).case_insensitive(true).build()?,
+			FinderCase::SmartCase => {
+				let uppercase = s.chars().any(|c| c.is_uppercase());
+				RegexBuilder::new(s).case_insensitive(!uppercase).build()?
+			},
+		};
 		Ok(Self { query, matched: Default::default(), version: 0 })
 	}
 

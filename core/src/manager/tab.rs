@@ -6,7 +6,7 @@ use shared::{Debounce, Defer, InputError, Url};
 use tokio::{pin, task::JoinHandle};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 
-use super::{Backstack, Finder, Folder, Mode, Preview, PreviewLock};
+use super::{Backstack, Finder, Folder, Mode, Preview, PreviewLock, FinderCase};
 use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, files::{File, FilesOp, FilesSorter}, input::InputOpt, Event, Step, BLOCKER};
 
 pub struct Tab {
@@ -267,9 +267,9 @@ impl Tab {
 		false
 	}
 
-	pub fn find(&mut self, query: Option<&str>, prev: bool) -> bool {
+	pub fn find(&mut self, query: Option<&str>, prev: bool, case: FinderCase) -> bool {
 		if let Some(query) = query {
-			let Ok(finder) = Finder::new(query) else {
+			let Ok(finder) = Finder::new(query, case) else {
 				return false;
 			};
 
@@ -297,7 +297,11 @@ impl Tab {
 
 			while let Some(Ok(s)) | Some(Err(InputError::Typed(s))) = rx.next().await {
 				emit!(Call(
-					Exec::call("find", vec![s]).with_bool("previous", prev).vec(),
+					Exec::call("find", vec![s])
+						.with_bool("previous", prev)
+						.with_bool("smart-case", case == FinderCase::SmartCase)
+						.with_bool("ignore-case", case == FinderCase::CaseInsensitive)
+						.vec(),
 					KeymapLayer::Manager
 				));
 			}
