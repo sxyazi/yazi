@@ -1032,6 +1032,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5e6163cb8c49088c2c36f57875e58ccd8c87c7427f7fbd50ea6710b2f3f2e8f"
 
 [[package]]
+name = "lua-src"
+version = "546.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7c26d4af78361e025a3d03a2b964cd1592aff7495f4d4f7947218c084c6fdca8"
+dependencies = [
+ "cc",
+]
+
+[[package]]
+name = "luajit-src"
+version = "210.4.8+resty107baaf"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e05167e8b2a2185758d83ed23541e5bd8bce37072e4204e0ef2c9b322bc87c4e"
+dependencies = [
+ "cc",
+ "which",
+]
+
+[[package]]
 name = "malloc_buf"
 version = "0.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1117,6 +1136,8 @@ checksum = "3ec8b54eddb76093069cce9eeffb4c7b3a1a0fe66962d7bd44c4867928149ca3"
 dependencies = [
  "cc",
  "cfg-if",
+ "lua-src",
+ "luajit-src",
  "pkg-config",
 ]
 
@@ -2225,6 +2246,17 @@ name = "weezl"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9193164d4de03a926d909d3bc7c30543cecb35400c02114792c2cae20d5e2dbb"
+
+[[package]]
+name = "which"
+version = "4.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2441c784c52b289a054b7201fc93253e288f094e2f4be9058343127c4226a269"
+dependencies = [
+ "either",
+ "libc",
+ "once_cell",
+]
 
 [[package]]
 name = "winapi"
