@@ -16,17 +16,9 @@ function Folder:by_kind(kind)
 	end
 end
 
-function Folder:window(kind)
-	local folder = self:by_kind(kind)
-	if folder ~= nil then
-		return folder.files:slice(folder.offset, MANAGER.layout.folder_height())
-	end
-end
+function Folder:window(kind) return (self:by_kind(kind) or {}).window end
 
-function Folder:hovered(kind)
-	local folder = self:by_kind(kind)
-	return folder and folder.hovered
-end
+function Folder:hovered(kind) return (self:by_kind(kind) or {}).hovered end
 
 function Folder:parent(area)
 	local window = self:window(self.Kind.Parent)

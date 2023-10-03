@@ -1,12 +1,31 @@
-use config::THEME;
-use mlua::{AnyUserData, Function, IntoLua, MetaMethod, UserDataFields, UserDataMethods, Value};
+use config::{MANAGER, THEME};
+use mlua::{AnyUserData, Function, IntoLua, MetaMethod, UserData, UserDataFields, UserDataMethods, Value};
 
 use super::Url;
 use crate::{layout::Style, LUA};
 
-pub struct Manager;
+struct File(core::files::File);
 
-impl Manager {
+impl From<&core::files::File> for File {
+	fn from(value: &core::files::File) -> Self { Self(value.clone()) }
+}
+
+impl UserData for File {
+	fn add_fields<'lua, F: UserDataFields<'lua, Self>>(fields: &mut F) {
+		fields.add_field_method_get("url", |_, me| Ok(Url::from(me.0.url())));
+		fields.add_field_method_get("length", |_, me| Ok(me.0.length()));
+		fields.add_field_method_get("link_to", |_, me| Ok(me.0.link_to().map(Url::from)));
+		fields.add_field_method_get("is_link", |_, me| Ok(me.0.is_link()));
+		fields.add_field_method_get("is_hidden", |_, me| Ok(me.0.is_hidden()));
+	}
+}
+
+pub struct Manager<'a, 'b> {
+	scope: &'b mlua::Scope<'a, 'a>,
+	inner: &'a core::manager::Manager,
+}
+
+impl<'a, 'b> Manager<'a, 'b> {
 	pub(crate) fn init() -> mlua::Result<()> {
 		LUA.register_userdata_type::<core::manager::Manager>(|reg| {
 			reg.add_field_function_get("mode", |_, me| me.named_user_value::<AnyUserData>("mode"));
@@ -29,6 +48,7 @@ impl Manager {
 			reg.add_field_method_get("offset", |_, me| Ok(me.offset()));
 			reg.add_field_method_get("cursor", |_, me| Ok(me.cursor()));
 
+			reg.add_field_function_get("window", |_, me| me.named_user_value::<Value>("window"));
 			reg.add_field_function_get("files", |_, me| me.named_user_value::<AnyUserData>("files"));
 			reg.add_field_function_get("hovered", |_, me| me.named_user_value::<Value>("hovered"));
 		})?;
@@ -38,22 +58,20 @@ impl Manager {
 
 			reg.add_meta_function(MetaMethod::Pairs, |lua, me: AnyUserData| {
 				let iter = lua.create_function(|lua, (me, i): (AnyUserData, usize)| {
-					let items: Vec<AnyUserData> = me.named_user_value("items")?;
-
+					let files = me.borrow::<core::files::Files>()?;
 					let i = i + 1;
-					Ok(if i > items.len() {
+					Ok(if i > files.len() {
 						mlua::Variadic::new()
 					} else {
-						let item = items[i - 1].clone().into_lua(lua)?;
-						mlua::Variadic::from_iter([i.into_lua(lua)?, item])
+						mlua::Variadic::from_iter([i.into_lua(lua)?, File::from(&files[i - 1]).into_lua(lua)?])
 					})
 				})?;
 				Ok((iter, me, 0))
 			});
 
 			reg.add_function("slice", |_, (me, skip, take): (AnyUserData, usize, usize)| {
-				let items = me.named_user_value::<Vec<AnyUserData>>("items")?;
-				Ok(items.iter().skip(skip).take(take).cloned().collect::<Vec<_>>())
+				let files = me.borrow::<core::files::Files>()?;
+				Ok(files.iter().skip(skip).take(take).map(File::from).collect::<Vec<_>>())
 			});
 		})?;
 
@@ -87,61 +105,56 @@ impl Manager {
 		Ok(())
 	}
 
-	pub(crate) fn make<'a>(
-		scope: &mlua::Scope<'a, 'a>,
-		inner: &'a core::manager::Manager,
-	) -> mlua::Result<AnyUserData<'a>> {
-		let ud = scope.create_any_userdata_ref(inner)?;
-		ud.set_named_user_value("mode", scope.create_any_userdata_ref(inner.active().mode())?)?;
+	pub(crate) fn new(scope: &'b mlua::Scope<'a, 'a>, inner: &'a core::manager::Manager) -> Self {
+		Self { scope, inner }
+	}
+
+	pub(crate) fn make(&self) -> mlua::Result<AnyUserData<'a>> {
+		let ud = self.scope.create_any_userdata_ref(self.inner)?;
 		ud.set_named_user_value(
-			"parent",
-			inner.parent().and_then(|p| Self::folder(scope, inner, p).ok()),
+			"mode",
+			self.scope.create_any_userdata_ref(self.inner.active().mode())?,
 		)?;
-		ud.set_named_user_value("current", Self::folder(scope, inner, inner.current())?)?;
-		ud.set_named_user_value("preview", Self::preview(scope, inner, inner.active())?)?;
+		ud.set_named_user_value("parent", self.inner.parent().and_then(|p| self.folder(p, None).ok()))?;
+		ud.set_named_user_value("current", self.folder(self.inner.current(), None)?)?;
+		ud.set_named_user_value("preview", self.preview(self.inner.active())?)?;
 
 		Ok(ud)
 	}
 
-	pub(crate) fn folder<'a>(
-		scope: &mlua::Scope<'a, 'a>,
-		manager: &'a core::manager::Manager,
+	pub(crate) fn folder(
+		&self,
 		inner: &'a core::manager::Folder,
+		window: Option<(usize, usize)>,
 	) -> mlua::Result<AnyUserData<'a>> {
-		let ud = scope.create_any_userdata_ref(inner)?;
-		ud.set_named_user_value("files", Self::files(scope, manager, &inner.files)?)?;
+		let window = window.unwrap_or_else(|| (inner.offset(), MANAGER.layout.folder_height()));
+
+		let ud = self.scope.create_any_userdata_ref(inner)?;
 		ud.set_named_user_value(
-			"hovered",
-			inner.hovered.as_ref().and_then(|h| Self::file(scope, manager, h).ok()),
+			"window",
+			inner
+				.files
+				.iter()
+				.skip(window.0)
+				.take(window.1)
+				.filter_map(|f| self.file(f).ok())
+				.collect::<Vec<_>>(),
 		)?;
+		ud.set_named_user_value("files", self.files(&inner.files)?)?;
+		ud.set_named_user_value("hovered", inner.hovered.as_ref().and_then(|h| self.file(h).ok()))?;
 
 		Ok(ud)
 	}
 
-	fn files<'a>(
-		scope: &mlua::Scope<'a, 'a>,
-		manager: &'a core::manager::Manager,
-		inner: &'a core::files::Files,
-	) -> mlua::Result<AnyUserData<'a>> {
-		let ud = scope.create_any_userdata_ref(inner)?;
-		ud.set_named_user_value(
-			"items",
-			inner.iter().filter_map(|f| Self::file(scope, manager, f).ok()).collect::<Vec<_>>(),
-		)?;
-
-		Ok(ud)
+	fn files(&self, inner: &'a core::files::Files) -> mlua::Result<AnyUserData<'a>> {
+		self.scope.create_any_userdata_ref(inner)
 	}
 
-	fn file<'a>(
-		scope: &mlua::Scope<'a, 'a>,
-		manager: &'a core::manager::Manager,
-		inner: &'a core::files::File,
-	) -> mlua::Result<AnyUserData<'a>> {
-		let ud = scope.create_any_userdata_ref(inner)?;
-
+	fn file(&self, inner: &'a core::files::File) -> mlua::Result<AnyUserData<'a>> {
+		let ud = self.scope.create_any_userdata_ref(inner)?;
 		ud.set_named_user_value(
 			"icon",
-			scope.create_function(|_, ()| {
+			self.scope.create_function(|_, ()| {
 				Ok(
 					THEME
 						.icons
@@ -154,8 +167,8 @@ impl Manager {
 
 		ud.set_named_user_value(
 			"style",
-			scope.create_function(|_, ()| {
-				let mime = manager.mimetype.get(inner.url());
+			self.scope.create_function(|_, ()| {
+				let mime = self.inner.mimetype.get(inner.url());
 				Ok(
 					THEME
 						.filetypes
@@ -169,14 +182,10 @@ impl Manager {
 		Ok(ud)
 	}
 
-	fn preview<'a>(
-		scope: &mlua::Scope<'a, 'a>,
-		manager: &'a core::manager::Manager,
-		tab: &'a core::manager::Tab,
-	) -> mlua::Result<AnyUserData<'a>> {
+	fn preview(&self, tab: &'a core::manager::Tab) -> mlua::Result<AnyUserData<'a>> {
 		let inner = tab.preview();
 
-		let ud = scope.create_any_userdata_ref(inner)?;
+		let ud = self.scope.create_any_userdata_ref(inner)?;
 		ud.set_named_user_value(
 			"folder",
 			inner
@@ -184,7 +193,7 @@ impl Manager {
 				.as_ref()
 				.filter(|l| l.is_folder())
 				.and_then(|l| tab.history(&l.url))
-				.and_then(|f| Self::folder(scope, manager, f).ok()),
+				.and_then(|f| self.folder(f, Some((f.offset(), MANAGER.layout.preview_height()))).ok()),
 		)?;
 
 		Ok(ud)

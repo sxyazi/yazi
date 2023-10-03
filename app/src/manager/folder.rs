@@ -41,7 +41,7 @@ impl<'a> Folder<'a> {
 
 impl<'a> Widget for Folder<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let x = plugin::Folder { kind: self.kind as u8 }.render(self.cx, area);
+		let x = plugin::Folder { kind: self.kind as u8 }.render(area);
 		if x.is_err() {
 			info!("{:?}", x);
 			return;

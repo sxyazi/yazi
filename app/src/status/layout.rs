@@ -13,7 +13,7 @@ impl<'a> Layout<'a> {
 
 impl<'a> Widget for Layout<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let x = plugin::Status::render(self.cx, area);
+		let x = plugin::Status::render(area);
 		if x.is_err() {
 			info!("{:?}", x);
 			return;
