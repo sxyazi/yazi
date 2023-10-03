@@ -10,11 +10,19 @@ pub fn expand_path(p: impl AsRef<Path>) -> PathBuf {
 	// expand the environment variable by calling the "echo" command, in linux case, this also expands the '~' path
 	#[cfg(target_os = "windows")]
 	let expanded_path = match std::process::Command::new("cmd").args(&["/C", "echo"]).arg(p).output() {
-		Ok(output) if output.status.success() => Some(String::from_utf8_lossy(&output.stdout).trim_end().to_string()),
+		Ok(output) if output.status.success() => Some(String::from_utf8_lossy(&output.stdout)
+															.trim_end()
+															.trim_matches('"')
+															.replace("\\\"", "\"")
+															.to_string()
+														),
 		_ => None,
 	};
 	#[cfg(not(target_os = "windows"))]
-	let expanded_path = match std::process::Command::new("sh").arg("-c").arg(format!("echo {}", p.display())).output() {
+	let expanded_path = match std::process::Command::new("sh")
+								.arg("-c")
+								.arg(format!("echo \"{}\"", p.to_string_lossy().replace("\"", "\\\"")))
+								.output() {
 		Ok(output) if output.status.success() => Some(String::from_utf8_lossy(&output.stdout).trim_end().to_string()),
 		_ => None,
 	};
@@ -160,9 +168,11 @@ pub fn optional_bool(s: &str) -> Option<bool> {
 
 #[cfg(test)]
 mod tests {
-	use std::{borrow::Cow, path::Path};
+	use std::{borrow::Cow, path::Path, env};
 
-	use super::path_relative_to;
+	use crate::expand_path;
+
+use super::path_relative_to;
 
 	#[cfg(unix)]
 	#[test]
@@ -190,5 +200,20 @@ mod tests {
 		assert("C:\\a\\b\\c", "C:\\a\\b\\d", "..\\c");
 		assert("C:\\a", "C:\\a\\b\\c", "..\\..\\");
 		assert("C:\\a\\a\\b", "C:\\a\\b\\b", "..\\..\\a\\b");
+	}
+
+	#[test]
+	fn test_expand_path() {
+		let path_s = r#"a"b"#;
+		assert_eq!(expand_path(path_s), env::current_dir().unwrap().join(std::path::Path::new(path_s)));
+
+		let path_s = r#"a'b"#;
+		assert_eq!(expand_path(path_s), env::current_dir().unwrap().join(std::path::Path::new(path_s)));
+
+		let path_s = r#"a; x b"#;
+		assert_eq!(expand_path(path_s), env::current_dir().unwrap().join(std::path::Path::new(path_s)));
+
+		let path_s = r#"a && x b"#;
+		assert_eq!(expand_path(path_s), env::current_dir().unwrap().join(std::path::Path::new(path_s)));
 	}
 }
