@@ -6,7 +6,7 @@ use shared::{Debounce, Defer, InputError, Url};
 use tokio::{pin, task::JoinHandle};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 
-use super::{Backstack, Finder, Folder, Mode, Preview, PreviewLock, FinderCase};
+use super::{Backstack, Finder, FinderCase, Folder, Mode, Preview, PreviewLock};
 use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, files::{File, FilesOp, FilesSorter}, input::InputOpt, Event, Step, BLOCKER};
 
 pub struct Tab {

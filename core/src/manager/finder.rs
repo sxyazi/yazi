@@ -27,7 +27,7 @@ impl Finder {
 			FinderCase::SmartCase => {
 				let uppercase = s.chars().any(|c| c.is_uppercase());
 				RegexBuilder::new(s).case_insensitive(!uppercase).build()?
-			},
+			}
 		};
 		Ok(Self { query, matched: Default::default(), version: 0 })
 	}
