@@ -156,9 +156,9 @@ impl Executor {
 				let prev = exec.named.contains_key("previous");
 				let case = match (exec.named.contains_key("smart"), exec.named.contains_key("insensitive"))
 				{
-					(false, false) => FinderCase::Sensitive,
-					(false, true) => FinderCase::Insensitive,
-					(true, _) => FinderCase::Smart, // prioritize smart over insensitive
+					(true, _) => FinderCase::Smart,
+					(_, false) => FinderCase::Sensitive,
+					(_, true) => FinderCase::Insensitive,
 				};
 				cx.manager.active_mut().find(query, prev, case)
 			}
