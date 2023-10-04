@@ -154,12 +154,11 @@ impl Executor {
 			"find" => {
 				let query = exec.args.get(0).map(|s| s.as_str());
 				let prev = exec.named.contains_key("previous");
-				let smart_case = exec.named.contains_key("smart-case");
-				let ingore_case = exec.named.contains_key("ignore-case");
-				let case = match (smart_case, ingore_case) {
-					(false, false) => FinderCase::CaseSensitive,
-					(false, true) => FinderCase::CaseInsensitive,
-					(true, _) => FinderCase::SmartCase, // prioritize smart-case over ignore-case
+				let case = match (exec.named.contains_key("smart"), exec.named.contains_key("insensitive"))
+				{
+					(false, false) => FinderCase::Sensitive,
+					(false, true) => FinderCase::Insensitive,
+					(true, _) => FinderCase::Smart, // prioritize smart over insensitive
 				};
 				cx.manager.active_mut().find(query, prev, case)
 			}

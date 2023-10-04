@@ -6,11 +6,11 @@ use shared::Url;
 
 use crate::files::Files;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(PartialEq, Eq)]
 pub enum FinderCase {
-	CaseSensitive,
-	CaseInsensitive,
-	SmartCase,
+	Sensitive,
+	Insensitive,
+	Smart,
 }
 
 pub struct Finder {
@@ -22,9 +22,9 @@ pub struct Finder {
 impl Finder {
 	pub(super) fn new(s: &str, case: FinderCase) -> Result<Self> {
 		let query = match case {
-			FinderCase::CaseSensitive => Regex::new(s)?,
-			FinderCase::CaseInsensitive => RegexBuilder::new(s).case_insensitive(true).build()?,
-			FinderCase::SmartCase => {
+			FinderCase::Sensitive => Regex::new(s)?,
+			FinderCase::Insensitive => RegexBuilder::new(s).case_insensitive(true).build()?,
+			FinderCase::Smart => {
 				let uppercase = s.chars().any(|c| c.is_uppercase());
 				RegexBuilder::new(s).case_insensitive(!uppercase).build()?
 			}

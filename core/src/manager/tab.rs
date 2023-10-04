@@ -299,8 +299,8 @@ impl Tab {
 				emit!(Call(
 					Exec::call("find", vec![s])
 						.with_bool("previous", prev)
-						.with_bool("smart-case", case == FinderCase::SmartCase)
-						.with_bool("ignore-case", case == FinderCase::CaseInsensitive)
+						.with_bool("smart", case == FinderCase::Smart)
+						.with_bool("insensitive", case == FinderCase::Insensitive)
 						.vec(),
 					KeymapLayer::Manager
 				));
