@@ -73,8 +73,8 @@ keymap = [
 	{ on = [ "c", "n" ], exec = "copy name_without_ext", desc = "Copy the name of the file without the extension" },
 
 	# Find
-	{ on = [ "/" ], exec = "find" },
-	{ on = [ "?" ], exec = "find --previous" },
+	{ on = [ "/" ], exec = "find --smart" },
+	{ on = [ "?" ], exec = "find --previous --smart" },
 	{ on = [ "n" ], exec = "find_arrow" },
 	{ on = [ "N" ], exec = "find_arrow --previous" },
 

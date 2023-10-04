@@ -1,10 +1,17 @@
 use std::{collections::BTreeMap, ffi::OsStr};
 
 use anyhow::Result;
-use regex::bytes::Regex;
+use regex::bytes::{Regex, RegexBuilder};
 use shared::Url;
 
 use crate::files::Files;
+
+#[derive(PartialEq, Eq)]
+pub enum FinderCase {
+	Smart,
+	Sensitive,
+	Insensitive,
+}
 
 pub struct Finder {
 	query:   Regex,
@@ -13,8 +20,16 @@ pub struct Finder {
 }
 
 impl Finder {
-	pub(super) fn new(s: &str) -> Result<Self> {
-		Ok(Self { query: Regex::new(s)?, matched: Default::default(), version: 0 })
+	pub(super) fn new(s: &str, case: FinderCase) -> Result<Self> {
+		let query = match case {
+			FinderCase::Smart => {
+				let uppercase = s.chars().any(|c| c.is_uppercase());
+				RegexBuilder::new(s).case_insensitive(!uppercase).build()?
+			}
+			FinderCase::Sensitive => Regex::new(s)?,
+			FinderCase::Insensitive => RegexBuilder::new(s).case_insensitive(true).build()?,
+		};
+		Ok(Self { query, matched: Default::default(), version: 0 })
 	}
 
 	pub(super) fn prev(&self, files: &Files, cursor: usize, include: bool) -> Option<isize> {
