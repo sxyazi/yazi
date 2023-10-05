@@ -25,8 +25,8 @@ impl App {
 
 		while let Some(event) = app.signals.recv().await {
 			match event {
-				Event::Quit(write_cwd_file) => {
-					app.dispatch_quit(write_cwd_file);
+				Event::Quit(no_cwd_file) => {
+					app.dispatch_quit(no_cwd_file);
 					break;
 				}
 				Event::Key(key) => app.dispatch_key(key),
@@ -41,19 +41,20 @@ impl App {
 		Ok(())
 	}
 
-	fn dispatch_quit(&mut self, write_cwd_file: bool) {
-		if let Some(p) = &BOOT.cwd_file {
-			let cwd =
-				if write_cwd_file { self.cx.manager.cwd().as_os_str() } else { &BOOT.cwd.as_os_str() };
+	fn dispatch_quit(&mut self, no_cwd_file: bool) {
+		if !no_cwd_file {
+			if let Some(p) = &BOOT.cwd_file {
+				let cwd = self.cx.manager.cwd().as_os_str();
 
-			#[cfg(target_os = "windows")]
-			{
-				std::fs::write(p, cwd.to_string_lossy().as_bytes()).ok();
-			}
-			#[cfg(not(target_os = "windows"))]
-			{
-				use std::os::unix::ffi::OsStrExt;
-				std::fs::write(p, cwd.as_bytes()).ok();
+				#[cfg(target_os = "windows")]
+				{
+					std::fs::write(p, cwd.to_string_lossy().as_bytes()).ok();
+				}
+				#[cfg(not(target_os = "windows"))]
+				{
+					use std::os::unix::ffi::OsStrExt;
+					std::fs::write(p, cwd.as_bytes()).ok();
+				}
 			}
 		}
 	}

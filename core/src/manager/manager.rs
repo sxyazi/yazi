@@ -88,10 +88,10 @@ impl Manager {
 		false
 	}
 
-	pub fn quit(&self, tasks: &Tasks, write_cwd_file: bool) -> bool {
+	pub fn quit(&self, tasks: &Tasks, no_cwd_file: bool) -> bool {
 		let tasks = tasks.len();
 		if tasks == 0 {
-			emit!(Quit(write_cwd_file));
+			emit!(Quit(no_cwd_file));
 			return false;
 		}
 
@@ -102,7 +102,7 @@ impl Manager {
 
 			if let Some(Ok(choice)) = result.recv().await {
 				if choice == "y" || choice == "Y" {
-					emit!(Quit(write_cwd_file));
+					emit!(Quit(no_cwd_file));
 				}
 			}
 		});
