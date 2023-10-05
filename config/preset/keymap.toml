@@ -1,10 +1,11 @@
 [manager]
 
 keymap = [
-	{ on = [ "<Esc>" ], exec = "escape",  desc = "Exit visual mode, clear selected, or cancel search" },
-	{ on = [ "q" ],     exec = "quit",    desc = "Exit the process" },
-	{ on = [ "<C-q>" ], exec = "close",   desc = "Close the current tab, or quit if it is last tab" },
-	{ on = [ "<C-z>" ], exec = "suspend", desc = "Suspend the process" },
+	{ on = [ "<Esc>" ], exec = "escape",             desc = "Exit visual mode, clear selected, or cancel search" },
+	{ on = [ "q" ],     exec = "quit",               desc = "Exit the process" },
+	{ on = [ "Q" ],     exec = "quit --no-cwd-file", desc = "Exit the process without writing cwd-file" },
+	{ on = [ "<C-q>" ], exec = "close",              desc = "Close the current tab, or quit if it is last tab" },
+	{ on = [ "<C-z>" ], exec = "suspend",            desc = "Suspend the process" },
 
 	# Navigation
 	{ on = [ "k" ], exec = "arrow -1", desc = "Move cursor up" },

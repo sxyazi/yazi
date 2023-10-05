@@ -12,7 +12,7 @@ use crate::manager::PreviewLock;
 static TX: RoCell<UnboundedSender<Event>> = RoCell::new();
 
 pub enum Event {
-	Quit,
+	Quit(bool), // no-cwd-file
 	Key(KeyEvent),
 	Paste(String),
 	Render(String),
@@ -54,6 +54,9 @@ impl Event {
 
 #[macro_export]
 macro_rules! emit {
+	(Quit($no_cwd_file:expr)) => {
+		$crate::Event::Quit($no_cwd_file).emit();
+	};
 	(Key($key:expr)) => {
 		$crate::Event::Key($key).emit();
 	};

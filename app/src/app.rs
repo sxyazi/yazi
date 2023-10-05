@@ -25,8 +25,8 @@ impl App {
 
 		while let Some(event) = app.signals.recv().await {
 			match event {
-				Event::Quit => {
-					app.dispatch_quit();
+				Event::Quit(no_cwd_file) => {
+					app.dispatch_quit(no_cwd_file);
 					break;
 				}
 				Event::Key(key) => app.dispatch_key(key),
@@ -41,8 +41,8 @@ impl App {
 		Ok(())
 	}
 
-	fn dispatch_quit(&mut self) {
-		if let Some(p) = &BOOT.cwd_file {
+	fn dispatch_quit(&mut self, no_cwd_file: bool) {
+		if let Some(p) = BOOT.cwd_file.as_ref().filter(|_| !no_cwd_file) {
 			let cwd = self.cx.manager.cwd().as_os_str();
 
 			#[cfg(target_os = "windows")]
@@ -200,7 +200,7 @@ impl App {
 						use std::os::unix::ffi::OsStrExt;
 						std::fs::write(p, paths.as_bytes()).ok();
 					}
-					return emit!(Quit);
+					return emit!(Quit(false));
 				}
 
 				if let Some(opener) = opener {
