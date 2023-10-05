@@ -113,7 +113,7 @@ impl Manager {
 		if self.tabs.len() > 1 {
 			return self.tabs.close(self.tabs.idx());
 		}
-		self.quit(tasks,true)
+		self.quit(tasks, true)
 	}
 
 	pub fn suspend(&mut self) -> bool {

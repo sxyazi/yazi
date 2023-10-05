@@ -55,7 +55,7 @@ impl Executor {
 	fn manager(cx: &mut Ctx, exec: &Exec) -> bool {
 		match exec.cmd.as_str() {
 			"escape" => cx.manager.active_mut().escape(),
-			"quit" => cx.manager.quit(&cx.tasks,!exec.named.contains_key("no-cwd-file")),
+			"quit" => cx.manager.quit(&cx.tasks, !exec.named.contains_key("no-cwd-file")),
 			"close" => cx.manager.close(&cx.tasks),
 			"suspend" => cx.manager.suspend(),
 

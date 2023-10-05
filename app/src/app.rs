@@ -43,11 +43,8 @@ impl App {
 
 	fn dispatch_quit(&mut self, write_cwd_file: bool) {
 		if let Some(p) = &BOOT.cwd_file {
-			let cwd = if write_cwd_file {
-				self.cx.manager.cwd().as_os_str()
-			} else {
-				&BOOT.cwd.as_os_str()
-			};
+			let cwd =
+				if write_cwd_file { self.cx.manager.cwd().as_os_str() } else { &BOOT.cwd.as_os_str() };
 
 			#[cfg(target_os = "windows")]
 			{
