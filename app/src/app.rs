@@ -202,7 +202,7 @@ impl App {
 						use std::os::unix::ffi::OsStrExt;
 						std::fs::write(p, paths.as_bytes()).ok();
 					}
-					return emit!(Quit(true));
+					return emit!(Quit(false));
 				}
 
 				if let Some(opener) = opener {
