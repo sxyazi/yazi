@@ -88,10 +88,10 @@ impl Manager {
 		false
 	}
 
-	pub fn quit(&self, tasks: &Tasks) -> bool {
+	pub fn quit(&self, tasks: &Tasks, write_cwd_file: bool) -> bool {
 		let tasks = tasks.len();
 		if tasks == 0 {
-			emit!(Quit);
+			emit!(Quit(write_cwd_file));
 			return false;
 		}
 
@@ -102,7 +102,7 @@ impl Manager {
 
 			if let Some(Ok(choice)) = result.recv().await {
 				if choice == "y" || choice == "Y" {
-					emit!(Quit);
+					emit!(Quit(write_cwd_file));
 				}
 			}
 		});
@@ -113,7 +113,7 @@ impl Manager {
 		if self.tabs.len() > 1 {
 			return self.tabs.close(self.tabs.idx());
 		}
-		self.quit(tasks)
+		self.quit(tasks,true)
 	}
 
 	pub fn suspend(&mut self) -> bool {

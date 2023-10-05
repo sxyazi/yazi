@@ -64,7 +64,7 @@ impl Signals {
 			while let Some(signal) = signals.next().await {
 				match signal {
 					SIGHUP | SIGTERM | SIGQUIT | SIGINT => {
-						if tx.send(Event::Quit).is_err() {
+						if tx.send(Event::Quit(true)).is_err() {
 							break;
 						}
 					}
