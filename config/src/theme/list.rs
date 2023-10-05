@@ -3,12 +3,13 @@ use serde::{Deserialize, Serialize};
 use super::Style;
 
 #[derive(Deserialize, Serialize)]
-pub struct Selection {
+pub struct Files {
 	pub hovered: Style,
 }
 
 #[derive(Deserialize, Serialize)]
 pub struct Marker {
-	pub selecting: Style,
-	pub selected:  Style,
+	pub selected: Style,
+	pub copied:   Style,
+	pub cut:      Style,
 }

@@ -10,9 +10,9 @@ use super::{Backstack, Finder, FinderCase, Folder, Mode, Preview, PreviewLock};
 use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, files::{File, FilesOp, FilesSorter}, input::InputOpt, Event, Step, BLOCKER};
 
 pub struct Tab {
-	pub(super) mode:    Mode,
-	pub(super) current: Folder,
-	pub(super) parent:  Option<Folder>,
+	pub mode:    Mode,
+	pub current: Folder,
+	pub parent:  Option<Folder>,
 
 	pub(super) backstack: Backstack<Url>,
 	pub(super) history:   BTreeMap<Url, Folder>,
@@ -455,14 +455,10 @@ impl Tab {
 impl Tab {
 	// --- Mode
 	#[inline]
-	pub fn mode(&self) -> &Mode { &self.mode }
-
-	#[inline]
-	pub fn in_selecting(&self) -> bool {
-		self.mode().is_visual() || self.current.files.has_selected()
-	}
+	pub fn in_selecting(&self) -> bool { self.mode.is_visual() || self.current.files.has_selected() }
 
 	// --- Current
+	// TODO: remove this
 	#[inline]
 	pub fn name(&self) -> &str {
 		self
@@ -475,10 +471,9 @@ impl Tab {
 	}
 
 	pub fn selected(&self) -> Vec<&File> {
-		let mode = self.mode();
-		let pending = mode.visual().map(|(_, p)| Cow::Borrowed(p)).unwrap_or_default();
+		let pending = self.mode.visual().map(|(_, p)| Cow::Borrowed(p)).unwrap_or_default();
+		let selected = self.current.files.selected(&pending, self.mode.is_unset());
 
-		let selected = self.current.files.selected(&pending, mode.is_unset());
 		if selected.is_empty() {
 			self.current.hovered.as_ref().map(|h| vec![h]).unwrap_or_default()
 		} else {

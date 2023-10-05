@@ -56,8 +56,16 @@ impl<'lua> FromLua<'lua> for Paragraph {
 
 impl UserData for Paragraph {
 	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
-		methods.add_function("style", |_, (ud, style): (AnyUserData, Style)| {
-			ud.borrow_mut::<Self>()?.style = Some(style.0);
+		methods.add_function("style", |_, (ud, value): (AnyUserData, Value)| {
+			{
+				let mut me = ud.borrow_mut::<Self>()?;
+				match value {
+					Value::Nil => me.style = None,
+					Value::Table(tbl) => me.style = Some(Style::from(tbl).0),
+					Value::UserData(ud) => me.style = Some(ud.borrow::<Style>()?.0),
+					_ => return Err(mlua::Error::external("expected a Style or Table or nil")),
+				}
+			}
 			Ok(ud)
 		});
 		methods.add_function("align", |_, (ud, align): (AnyUserData, u8)| {

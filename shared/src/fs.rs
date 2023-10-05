@@ -92,7 +92,6 @@ pub fn copy_with_progress(from: &Path, to: &Path) -> mpsc::Receiver<Result<u64, 
 }
 
 // Convert a file mode to a string representation
-#[cfg(unix)]
 #[allow(clippy::collapsible_else_if)]
 pub fn permissions(permissions: Permissions) -> Option<String> {
 	#[cfg(windows)]

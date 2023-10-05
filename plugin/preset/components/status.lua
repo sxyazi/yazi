@@ -1,9 +1,9 @@
 Status = {}
 
 function Status.style()
-	if cx.manager.mode.is_select then
+	if cx.active.mode.is_select then
 		return THEME.status.mode_select
-	elseif cx.manager.mode.is_unset then
+	elseif cx.active.mode.is_unset then
 		return THEME.status.mode_unset
 	else
 		return THEME.status.mode_normal
@@ -11,7 +11,7 @@ function Status.style()
 end
 
 function Status:mode()
-	local mode = tostring(cx.manager.mode):upper()
+	local mode = tostring(cx.active.mode):upper()
 	if mode == "UNSET" then
 		mode = "UN-SET"
 	end
@@ -24,7 +24,7 @@ function Status:mode()
 end
 
 function Status:size()
-	local h = cx.manager.current.hovered
+	local h = cx.active.current.hovered
 	if h == nil then
 		return ui.Span("")
 	end
@@ -37,7 +37,7 @@ function Status:size()
 end
 
 function Status:name()
-	local h = cx.manager.current.hovered
+	local h = cx.active.current.hovered
 	if h == nil then
 		return ui.Span("")
 	end
@@ -46,7 +46,7 @@ function Status:name()
 end
 
 function Status:permissions()
-	local h = cx.manager.current.hovered
+	local h = cx.active.current.hovered
 	if h == nil or h.permissions == nil then
 		return ui.Span("")
 	end
@@ -69,8 +69,8 @@ end
 
 function Status:percentage()
 	local percent = 0
-	local cursor = cx.manager.current.cursor
-	local length = #cx.manager.current.files
+	local cursor = cx.active.current.cursor
+	local length = #cx.active.current.files
 	if cursor ~= 0 and length ~= 0 then
 		percent = math.floor((cursor + 1) * 100 / length)
 	end
@@ -89,8 +89,8 @@ function Status:percentage()
 end
 
 function Status:position()
-	local cursor = cx.manager.current.cursor
-	local length = #cx.manager.current.files
+	local cursor = cx.active.current.cursor
+	local length = #cx.active.current.files
 
 	local style = self.style()
 	return ui.Line {

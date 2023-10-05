@@ -1,17 +1,9 @@
-use core::Ctx;
-
 use ratatui::{buffer::Buffer, prelude::Rect, widgets::Widget};
 use tracing::info;
 
-pub(crate) struct Layout<'a> {
-	cx: &'a Ctx,
-}
+pub(crate) struct Layout;
 
-impl<'a> Layout<'a> {
-	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
-}
-
-impl<'a> Widget for Layout<'a> {
+impl Widget for Layout {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let x = plugin::Status::render(area);
 		if x.is_err() {

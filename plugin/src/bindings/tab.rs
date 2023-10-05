@@ -1,3 +1,5 @@
+use core::Ctx;
+
 use config::{MANAGER, THEME};
 use mlua::{AnyUserData, Function, IntoLua, MetaMethod, UserData, UserDataFields, UserDataMethods, Value};
 
@@ -20,14 +22,16 @@ impl UserData for File {
 	}
 }
 
-pub struct Manager<'a, 'b> {
+pub struct Tab<'a, 'b> {
 	scope: &'b mlua::Scope<'a, 'a>,
-	inner: &'a core::manager::Manager,
+
+	cx:    &'a core::Ctx,
+	inner: &'a core::manager::Tab,
 }
 
-impl<'a, 'b> Manager<'a, 'b> {
+impl<'a, 'b> Tab<'a, 'b> {
 	pub(crate) fn init() -> mlua::Result<()> {
-		LUA.register_userdata_type::<core::manager::Manager>(|reg| {
+		LUA.register_userdata_type::<core::manager::Tab>(|reg| {
 			reg.add_field_function_get("mode", |_, me| me.named_user_value::<AnyUserData>("mode"));
 			reg.add_field_function_get("parent", |_, me| me.named_user_value::<Value>("parent"));
 			reg.add_field_function_get("current", |_, me| me.named_user_value::<AnyUserData>("current"));
@@ -85,6 +89,9 @@ impl<'a, 'b> Manager<'a, 'b> {
 			reg.add_function("style", |_, me: AnyUserData| {
 				me.named_user_value::<Function>("style")?.call::<_, Style>(())
 			});
+			reg.add_function("selected", |_, me: AnyUserData| {
+				me.named_user_value::<Function>("selected")?.call::<_, bool>(me)
+			});
 
 			reg.add_field_method_get("url", |_, me| Ok(Url::from(me.url())));
 			reg.add_field_method_get("length", |_, me| Ok(me.length()));
@@ -105,19 +112,24 @@ impl<'a, 'b> Manager<'a, 'b> {
 		Ok(())
 	}
 
-	pub(crate) fn new(scope: &'b mlua::Scope<'a, 'a>, inner: &'a core::manager::Manager) -> Self {
-		Self { scope, inner }
+	pub(crate) fn new(
+		scope: &'b mlua::Scope<'a, 'a>,
+
+		cx: &'a Ctx,
+		inner: &'a core::manager::Tab,
+	) -> Self {
+		Self { scope, cx, inner }
 	}
 
 	pub(crate) fn make(&self) -> mlua::Result<AnyUserData<'a>> {
 		let ud = self.scope.create_any_userdata_ref(self.inner)?;
+		ud.set_named_user_value("mode", self.scope.create_any_userdata_ref(&self.inner.mode)?)?;
 		ud.set_named_user_value(
-			"mode",
-			self.scope.create_any_userdata_ref(self.inner.active().mode())?,
+			"parent",
+			self.inner.parent.as_ref().and_then(|p| self.folder(p, None).ok()),
 		)?;
-		ud.set_named_user_value("parent", self.inner.parent().and_then(|p| self.folder(p, None).ok()))?;
-		ud.set_named_user_value("current", self.folder(self.inner.current(), None)?)?;
-		ud.set_named_user_value("preview", self.preview(self.inner.active())?)?;
+		ud.set_named_user_value("current", self.folder(&self.inner.current, None)?)?;
+		ud.set_named_user_value("preview", self.preview(self.inner)?)?;
 
 		Ok(ud)
 	}
@@ -137,11 +149,16 @@ impl<'a, 'b> Manager<'a, 'b> {
 				.iter()
 				.skip(window.0)
 				.take(window.1)
-				.filter_map(|f| self.file(f).ok())
+				.enumerate()
+				.filter_map(|(i, f)| self.file(i, f, inner).ok())
 				.collect::<Vec<_>>(),
 		)?;
 		ud.set_named_user_value("files", self.files(&inner.files)?)?;
-		ud.set_named_user_value("hovered", inner.hovered.as_ref().and_then(|h| self.file(h).ok()))?;
+		// TODO: remove this
+		ud.set_named_user_value(
+			"hovered",
+			inner.hovered.as_ref().and_then(|h| self.file(999, h, inner).ok()),
+		)?;
 
 		Ok(ud)
 	}
@@ -150,8 +167,15 @@ impl<'a, 'b> Manager<'a, 'b> {
 		self.scope.create_any_userdata_ref(inner)
 	}
 
-	fn file(&self, inner: &'a core::files::File) -> mlua::Result<AnyUserData<'a>> {
+	fn file(
+		&self,
+		idx: usize,
+		inner: &'a core::files::File,
+		folder: &'a core::manager::Folder,
+	) -> mlua::Result<AnyUserData<'a>> {
 		let ud = self.scope.create_any_userdata_ref(inner)?;
+		ud.set_named_user_value("idx", idx)?;
+
 		ud.set_named_user_value(
 			"icon",
 			self.scope.create_function(|_, ()| {
@@ -168,7 +192,7 @@ impl<'a, 'b> Manager<'a, 'b> {
 		ud.set_named_user_value(
 			"style",
 			self.scope.create_function(|_, ()| {
-				let mime = self.inner.mimetype.get(inner.url());
+				let mime = self.cx.manager.mimetype.get(inner.url());
 				Ok(
 					THEME
 						.filetypes
@@ -176,6 +200,20 @@ impl<'a, 'b> Manager<'a, 'b> {
 						.find(|&x| x.matches(inner.url(), mime, inner.is_dir()))
 						.map(|x| Style::from(x.style)),
 				)
+			})?,
+		)?;
+
+		ud.set_named_user_value(
+			"selected",
+			self.scope.create_function(|_, me: AnyUserData| {
+				let is_visual = self.inner.mode.is_visual();
+				let selected = folder.files.is_selected(inner.url());
+				Ok(if !is_visual {
+					selected
+				} else {
+					let idx: usize = me.named_user_value("idx")?;
+					self.inner.mode.pending(folder.offset() + idx, selected)
+				})
 			})?,
 		)?;
 

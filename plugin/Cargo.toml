@@ -10,6 +10,6 @@ shared = { path = "../shared" }
 
 # External dependencies
 anyhow  = "^1"
-mlua    = { version = "^0", features = [ "lua54", "vendored", "serialize" ] }
+mlua    = { version = "^0", features = [ "luajit52", "vendored", "serialize" ] }
 tracing = "^0"
 ratatui = "^0"

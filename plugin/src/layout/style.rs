@@ -1,6 +1,5 @@
 use config::theme::Color;
 use mlua::{AnyUserData, FromLua, Lua, Table, UserData, UserDataMethods, Value};
-use tracing::info;
 
 use crate::{GLOBALS, LUA};
 
@@ -51,7 +50,6 @@ impl UserData for Style {
 	fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 		methods.add_function("fg", |_, (ud, color): (AnyUserData, String)| {
 			ud.borrow_mut::<Self>()?.0.fg = Color::try_from(color).ok().map(Into::into);
-			info!("fg: {:?}", ud.borrow::<Self>()?.0.fg);
 			Ok(ud)
 		});
 		methods.add_function("bg", |_, (ud, color): (AnyUserData, String)| {

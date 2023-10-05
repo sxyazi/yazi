@@ -1,11 +1,11 @@
 #![allow(clippy::module_inception)]
 
 mod bindings;
-mod manager;
 mod shared;
+mod tab;
 mod tasks;
 
 pub use bindings::*;
-pub use manager::*;
 pub use shared::*;
+pub use tab::*;
 pub use tasks::*;

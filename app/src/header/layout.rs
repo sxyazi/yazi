@@ -17,7 +17,7 @@ impl<'a> Widget for Layout<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let chunks = layout::Layout::new()
 			.direction(Direction::Horizontal)
-			.constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+			.constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
 			.split(area);
 
 		let cwd = &self.cx.manager.current().cwd;

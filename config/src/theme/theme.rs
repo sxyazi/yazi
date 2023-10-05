@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use shared::expand_path;
 use validator::Validate;
 
-use super::{Filetype, Icon, Marker, Selection, Status, Style};
+use super::{Files, Filetype, Icon, Marker, Status, Style};
 use crate::{validation::check_validation, MERGED_THEME};
 
 #[derive(Deserialize, Serialize, Validate)]
@@ -25,7 +25,7 @@ pub struct Preview {
 pub struct Theme {
 	pub tab:       Tab,
 	pub status:    Status,
-	pub selection: Selection,
+	pub files:     Files,
 	pub marker:    Marker,
 	pub preview:   Preview,
 	#[serde(rename = "filetype", deserialize_with = "Filetype::deserialize", skip_serializing)]

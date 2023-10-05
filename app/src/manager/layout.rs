@@ -20,25 +20,22 @@ impl<'a> Widget for Layout<'a> {
 
 		let chunks = layout::Layout::new()
 			.direction(Direction::Horizontal)
-			.constraints(
-				[
-					Constraint::Ratio(layout.parent, layout.all),
-					Constraint::Ratio(layout.current, layout.all),
-					Constraint::Ratio(layout.preview, layout.all),
-				]
-				.as_ref(),
-			)
+			.constraints([
+				Constraint::Ratio(layout.parent, layout.all),
+				Constraint::Ratio(layout.current, layout.all),
+				Constraint::Ratio(layout.preview, layout.all),
+			])
 			.split(area);
 
 		// Parent
 		let block = Block::new().borders(Borders::RIGHT).padding(Padding::new(1, 0, 0, 0));
 		if manager.parent().is_some() {
-			Folder::new(self.cx, FolderKind::Parent).render(block.inner(chunks[0]), buf);
+			Folder::new(FolderKind::Parent).render(block.inner(chunks[0]), buf);
 		}
 		block.render(chunks[0], buf);
 
 		// Current
-		Folder::new(self.cx, FolderKind::Current).render(chunks[1], buf);
+		Folder::new(FolderKind::Current).render(chunks[1], buf);
 
 		// Preview
 		let block = Block::new().borders(Borders::LEFT).padding(Padding::new(0, 1, 0, 0));

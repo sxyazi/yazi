@@ -35,9 +35,7 @@ impl Widget for Which<'_> {
 
 		let chunks = layout::Layout::new()
 			.direction(Direction::Horizontal)
-			.constraints(
-				[Constraint::Ratio(1, 3), Constraint::Ratio(1, 3), Constraint::Ratio(1, 3)].as_ref(),
-			)
+			.constraints([Constraint::Ratio(1, 3), Constraint::Ratio(1, 3), Constraint::Ratio(1, 3)])
 			.split(area);
 
 		Clear.render(area, buf);

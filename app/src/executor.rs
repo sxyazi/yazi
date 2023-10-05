@@ -1,4 +1,4 @@
-use core::{emit, files::FilesSorter, input::InputMode, manager::FinderCase};
+use core::{emit, files::FilesSorter, input::InputMode, manager::FinderCase, Ctx};
 
 use config::{keymap::{Control, Exec, Key, KeymapLayer}, manager::SortBy, KEYMAP};
 use shared::{optional_bool, Url};

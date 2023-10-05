@@ -58,7 +58,7 @@ impl UserData for Line {
 					Value::Table(tbl) => me.0.patch_style(Style::from(tbl).0),
 					Value::UserData(ud) => me.0.patch_style(ud.borrow::<Style>()?.0),
 					_ => return Err(mlua::Error::external("expected a Style or Table or nil")),
-				};
+				}
 			}
 			Ok(ud)
 		});

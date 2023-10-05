@@ -23,12 +23,13 @@ permissions_r = { fg = "#F3D398" }
 permissions_w = { fg = "#FA7F94" }
 permissions_x = { fg = "#7AD9E5" }
 
-[selection]
+[files]
 hovered = { fg = "#1E2031", bg = "#80AEFA" }
 
 [marker]
-selecting = { fg = "#97DC8D", bg = "#97DC8D" }
-selected  = { fg = "#F3D398", bg = "#F3D398" }
+selected = { fg = "#97DC8D", bg = "#97DC8D" }
+copied   = { fg = "#F3D398", bg = "#F3D398" }
+cut      = { fg = "#FF84A9", bg = "#FF84A9" }
 
 [preview]
 hovered       = { underline = true }
