@@ -42,19 +42,17 @@ impl App {
 	}
 
 	fn dispatch_quit(&mut self, no_cwd_file: bool) {
-		if !no_cwd_file {
-			if let Some(p) = &BOOT.cwd_file {
-				let cwd = self.cx.manager.cwd().as_os_str();
+		if let Some(p) = BOOT.cwd_file.as_ref().filter(|_| !no_cwd_file) {
+			let cwd = self.cx.manager.cwd().as_os_str();
 
-				#[cfg(target_os = "windows")]
-				{
-					std::fs::write(p, cwd.to_string_lossy().as_bytes()).ok();
-				}
-				#[cfg(not(target_os = "windows"))]
-				{
-					use std::os::unix::ffi::OsStrExt;
-					std::fs::write(p, cwd.as_bytes()).ok();
-				}
+			#[cfg(target_os = "windows")]
+			{
+				std::fs::write(p, cwd.to_string_lossy().as_bytes()).ok();
+			}
+			#[cfg(not(target_os = "windows"))]
+			{
+				use std::os::unix::ffi::OsStrExt;
+				std::fs::write(p, cwd.as_bytes()).ok();
 			}
 		}
 	}
