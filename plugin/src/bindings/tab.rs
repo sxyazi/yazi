@@ -54,6 +54,7 @@ impl<'a, 'b> Tab<'a, 'b> {
 
 			reg.add_field_function_get("window", |_, me| me.named_user_value::<Value>("window"));
 			reg.add_field_function_get("files", |_, me| me.named_user_value::<AnyUserData>("files"));
+			reg.add_field_function_get("hovered", |_, me| me.named_user_value::<Value>("hovered"));
 		})?;
 
 		LUA.register_userdata_type::<core::files::Files>(|reg| {
@@ -157,6 +158,11 @@ impl<'a, 'b> Tab<'a, 'b> {
 				.collect::<Vec<_>>(),
 		)?;
 		ud.set_named_user_value("files", self.files(&inner.files)?)?;
+		// TODO: remove this
+		ud.set_named_user_value(
+			"hovered",
+			inner.hovered.as_ref().and_then(|h| self.file(999, h, inner).ok()),
+		)?;
 
 		Ok(ud)
 	}
