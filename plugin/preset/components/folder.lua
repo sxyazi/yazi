@@ -16,10 +16,6 @@ function Folder:by_kind(kind)
 	end
 end
 
-function Folder:window(kind) return (self:by_kind(kind) or {}).window end
-
-function Folder:hovered(kind) return (self:by_kind(kind) or {}).hovered end
-
 function Folder:markers(area, markers)
 	if #markers == 0 then
 		return {}
@@ -51,50 +47,47 @@ function Folder:markers(area, markers)
 end
 
 function Folder:parent(area)
-	local window = self:window(self.Kind.Parent)
-	if window == nil then
+	local folder = self:by_kind(self.Kind.Parent)
+	if folder == nil then
 		return {}
 	end
 
-	local hovered = (self:hovered(self.Kind.Parent) or {}).url
-	local lines = {}
-	for _, f in ipairs(window) do
-		local line = ui.Line { ui.Span(" " .. f:icon() .. " " .. f.name .. " ") }
-		if f.url == hovered then
-			line = line:style(THEME.files.hovered)
+	local items = {}
+	for _, f in ipairs(folder.window) do
+		local item = ui.ListItem(" " .. f:icon() .. " " .. f.name .. " ")
+		if f.hovered then
+			item = item:style(THEME.files.hovered)
 		else
-			line = line:style(f:style())
+			item = item:style(f:style())
 		end
 
-		lines[#lines + 1] = line
+		items[#items + 1] = item
 	end
 
-	return { ui.Paragraph(area, lines) }
+	return { ui.List(area, items) }
 end
 
 function Folder:current(area)
-	local hovered = (self:hovered(self.Kind.Current) or {}).url
 	local markers = {}
-	local lines = {}
-	for i, f in ipairs(self:window(self.Kind.Current)) do
-		local name = f.name
+	local items = {}
+	for i, f in ipairs(self:by_kind(self.Kind.Current).window) do
+		local name = ui.highlight_ranges(f.name, f:highlights())
 
 		-- Show symlink target
 		if MANAGER.show_symlink then
-			local link_to = f.link_to
-			if link_to ~= nil then
-				name = name .. " -> " .. tostring(link_to)
+			if f.link_to ~= nil then
+				name[#name + 1] = ui.Span(" -> " .. tostring(f.link_to)):italic()
 			end
 		end
 
 		-- Highlight hovered file
-		local line = ui.Line { ui.Span(" " .. f:icon() .. " " .. name .. " ") }
-		if f.url == hovered then
-			line = line:style(THEME.files.hovered)
+		local item = ui.ListItem(ui.Line { ui.Span(" " .. f:icon() .. " "), table.unpack(name) })
+		if f.hovered then
+			item = item:style(THEME.files.hovered)
 		else
-			line = line:style(f:style())
+			item = item:style(f:style())
 		end
-		lines[#lines + 1] = line
+		items[#items + 1] = item
 
 		-- Mark selected/yanked files
 		if f:selected() then
@@ -102,28 +95,27 @@ function Folder:current(area)
 		end
 	end
 
-	return { ui.Paragraph(area, lines), table.unpack(self:markers(area, markers)) }
+	return { ui.List(area, items), table.unpack(self:markers(area, markers)) }
 end
 
 function Folder:preview(area)
-	local window = self:window(self.Kind.Preview)
-	if window == nil then
+	local folder = self:by_kind(self.Kind.Preview)
+	if folder == nil then
 		return {}
 	end
 
-	local hovered = (self:hovered(self.Kind.Preview) or {}).url
-	local lines = {}
-	for _, f in ipairs(window) do
-		local line = ui.Line { ui.Span(" " .. f:icon() .. " " .. f.name .. " ") }
-		if f.url == hovered then
-			line = line:style(THEME.preview.hovered)
+	local items = {}
+	for _, f in ipairs(folder.window) do
+		local item = ui.ListItem(" " .. f:icon() .. " " .. f.name .. " ")
+		if f.hovered then
+			item = item:style(THEME.preview.hovered)
 		else
-			line = line:style(f:style())
+			item = item:style(f:style())
 		end
-		lines[#lines + 1] = line
+		items[#items + 1] = item
 	end
 
-	return { ui.Paragraph(area, lines) }
+	return { ui.List(area, items) }
 end
 
 function Folder:render(area, args)

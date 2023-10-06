@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, ffi::OsStr};
+use std::{collections::BTreeMap, ffi::OsStr, ops::Range};
 
 use anyhow::Result;
 use regex::bytes::{Regex, RegexBuilder};
@@ -91,13 +91,17 @@ impl Finder {
 
 	/// Explode the name into three parts: head, body, tail.
 	#[inline]
-	pub fn explode(&self, name: &[u8]) -> Option<(String, String, String)> {
-		let range = self.query.find(name).map(|m| m.range())?;
-		Some((
-			String::from_utf8_lossy(&name[..range.start]).to_string(),
-			String::from_utf8_lossy(&name[range.start..range.end]).to_string(),
-			String::from_utf8_lossy(&name[range.end..]).to_string(),
-		))
+	pub fn highlighted(&self, name: &OsStr) -> Vec<Range<usize>> {
+		#[cfg(target_os = "windows")]
+		let found = self.query.find(name.to_string_lossy().as_bytes());
+
+		#[cfg(not(target_os = "windows"))]
+		let found = {
+			use std::os::unix::ffi::OsStrExt;
+			self.query.find(name.as_bytes())
+		};
+
+		found.map(|m| vec![m.range()]).unwrap_or_default()
 	}
 }
 

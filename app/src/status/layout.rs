@@ -5,14 +5,10 @@ pub(crate) struct Layout;
 
 impl Widget for Layout {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let x = plugin::Status::render(area);
+		let x = plugin::Status.render(area, buf);
 		if x.is_err() {
 			info!("{:?}", x);
 			return;
-		}
-
-		for x in x.unwrap() {
-			x.render(buf);
 		}
 	}
 }

@@ -3,7 +3,7 @@ use core::Ctx;
 use config::{MANAGER, THEME};
 use mlua::{AnyUserData, Function, IntoLua, MetaMethod, UserData, UserDataFields, UserDataMethods, Value};
 
-use super::Url;
+use super::{Range, Url};
 use crate::{layout::Style, LUA};
 
 struct File(core::files::File);
@@ -89,8 +89,12 @@ impl<'a, 'b> Tab<'a, 'b> {
 			reg.add_function("style", |_, me: AnyUserData| {
 				me.named_user_value::<Function>("style")?.call::<_, Style>(())
 			});
+			reg.add_field_function_get("hovered", |_, me| me.named_user_value::<bool>("hovered"));
 			reg.add_function("selected", |_, me: AnyUserData| {
 				me.named_user_value::<Function>("selected")?.call::<_, bool>(me)
+			});
+			reg.add_function("highlights", |_, me: AnyUserData| {
+				me.named_user_value::<Function>("highlights")?.call::<_, Value>(())
 			});
 
 			reg.add_field_method_get("url", |_, me| Ok(Url::from(me.url())));
@@ -204,6 +208,11 @@ impl<'a, 'b> Tab<'a, 'b> {
 		)?;
 
 		ud.set_named_user_value(
+			"hovered",
+			matches!(&folder.hovered, Some(f) if f.url() == inner.url()),
+		)?;
+
+		ud.set_named_user_value(
 			"selected",
 			self.scope.create_function(|_, me: AnyUserData| {
 				let is_visual = self.inner.mode.is_visual();
@@ -214,6 +223,20 @@ impl<'a, 'b> Tab<'a, 'b> {
 					let idx: usize = me.named_user_value("idx")?;
 					self.inner.mode.pending(folder.offset() + idx, selected)
 				})
+			})?,
+		)?;
+
+		ud.set_named_user_value(
+			"highlights",
+			self.scope.create_function(|_, ()| {
+				let Some(finder) = self.inner.finder() else {
+					return Ok(None);
+				};
+				Ok(
+					inner
+						.name()
+						.map(|n| finder.highlighted(n).into_iter().map(Range::from).collect::<Vec<_>>()),
+				)
 			})?,
 		)?;
 

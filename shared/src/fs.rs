@@ -95,10 +95,9 @@ pub fn copy_with_progress(from: &Path, to: &Path) -> mpsc::Receiver<Result<u64, 
 #[allow(clippy::collapsible_else_if)]
 pub fn permissions(permissions: Permissions) -> Option<String> {
 	#[cfg(windows)]
-	{
-		return None;
-	}
+	return None;
 
+	#[cfg(unix)]
 	Some({
 		use std::os::unix::prelude::PermissionsExt;
 

@@ -31,6 +31,8 @@ pub fn init() {
 		layout::Constraint::install()?;
 		layout::Layout::install()?;
 		layout::Line::install()?;
+		layout::List::install()?;
+		layout::ListItem::install()?;
 		layout::Paragraph::install()?;
 		layout::Rect::install()?;
 		layout::Span::install()?;

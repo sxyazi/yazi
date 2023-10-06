@@ -76,7 +76,7 @@ impl App {
 	fn dispatch_render(&mut self) {
 		if let Some(term) = &mut self.term {
 			let _ = term.draw(|f| {
-				plugin::scope(&self.cx, || {
+				plugin::scope(&self.cx, |_| {
 					f.render_widget(Root::new(&self.cx), f.size());
 				});
 

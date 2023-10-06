@@ -30,7 +30,7 @@ impl Paragraph {
 		)
 	}
 
-	pub fn render(self, buf: &mut ratatui::buffer::Buffer) {
+	pub(crate) fn render(self, buf: &mut ratatui::buffer::Buffer) {
 		let mut p = ratatui::widgets::Paragraph::new(self.text);
 		if let Some(style) = self.style {
 			p = p.style(style);

@@ -16,36 +16,14 @@ impl Folder {
 }
 
 impl Folder {
-	// fn highlighted_item<'b>(&'b self, file: &'b File) -> Vec<Span> {
 	// 	let short = short_path(file.url(), &self.folder.cwd);
-	//
-	// 	let v = self.is_find.then_some(()).and_then(|_| {
-	// 		let finder = self.cx.manager.active().finder()?;
-	// 		let (head, body, tail) = finder.explode(short.name)?;
-	//
-	// 		// TODO: to be configured by THEME?
-	// 		let style = Style::new().fg(Color::Rgb(255, 255,
-	// 50)).add_modifier(Modifier::ITALIC); 		Some(vec![
-	// 			Span::raw(short.prefix.join(head.as_ref()).display().to_string()),
-	// 			Span::styled(body, style),
-	// 			Span::raw(tail),
-	// 		])
-	// 	});
-	//
-	// 	v.unwrap_or_else(|| vec![Span::raw(format!("{}", short))])
-	// }
 }
 
 impl Widget for Folder {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let x = plugin::Folder { kind: self.kind as u8 }.render(area);
+		let x = plugin::Folder { kind: self.kind as u8 }.render(area, buf);
 		if x.is_err() {
 			info!("{:?}", x);
-			return;
-		}
-
-		for x in x.unwrap() {
-			x.render(buf);
 		}
 
 		// let items: Vec<_> = window
