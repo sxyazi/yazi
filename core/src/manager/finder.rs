@@ -92,16 +92,16 @@ impl Finder {
 	/// Explode the name into three parts: head, body, tail.
 	#[inline]
 	pub fn highlighted(&self, name: &OsStr) -> Vec<Range<usize>> {
-		#[cfg(target_os = "windows")]
-		let found = self.query.find(name.to_string_lossy().as_bytes());
+		#[cfg(windows)]
+		let found = self.query.find(name.to_string_lossy().as_bytes()).map(|m| m.range());
 
-		#[cfg(not(target_os = "windows"))]
+		#[cfg(unix)]
 		let found = {
 			use std::os::unix::ffi::OsStrExt;
-			self.query.find(name.as_bytes())
+			self.query.find(name.as_bytes()).map(|m| m.range())
 		};
 
-		found.map(|m| vec![m.range()]).unwrap_or_default()
+		found.map(|r| vec![r]).unwrap_or_default()
 	}
 }
 
