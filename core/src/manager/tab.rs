@@ -132,7 +132,9 @@ impl Tab {
 		}
 
 		// Backstack
-		self.backstack.push(target.clone());
+		if !target.is_search() {
+			self.backstack.push(target.clone());
+		}
 
 		emit!(Refresh);
 		true
