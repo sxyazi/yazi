@@ -40,7 +40,12 @@ impl Image {
 				return Ok(false);
 			}
 
-			img.resize(w, h, FilterType::Triangle).save_with_format(cache, ImageFormat::Jpeg)?;
+			match img.resize(w, h, FilterType::Triangle) {
+				DynamicImage::ImageRgb8(buf) => buf.save_with_format(cache, ImageFormat::Jpeg),
+				DynamicImage::ImageRgba8(buf) => buf.save_with_format(cache, ImageFormat::Jpeg),
+				buf => buf.to_rgb8().save_with_format(cache, ImageFormat::Jpeg),
+			}?;
+
 			Ok(true)
 		});
 
