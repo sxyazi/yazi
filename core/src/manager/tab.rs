@@ -132,7 +132,7 @@ impl Tab {
 		}
 
 		// Backstack
-		if !target.is_search() {
+		if target.is_regular() {
 			self.backstack.push(target.clone());
 		}
 
