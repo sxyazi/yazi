@@ -29,6 +29,7 @@ pub fn init() {
 		crate::Config.install()?;
 
 		layout::Constraint::install()?;
+		layout::Gauge::install()?;
 		layout::Layout::install()?;
 		layout::Line::install()?;
 		layout::List::install()?;

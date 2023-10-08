@@ -99,6 +99,33 @@ function Status:position()
 	}
 end
 
+function Status:progress(area, offset)
+	local progress = cx.tasks.progress
+	local left = progress.total - progress.succ
+	if left == 0 then
+		return {}
+	end
+
+	local gauge = ui.Gauge(ui.Rect {
+		x = area.x + math.max(0, area.w - offset - 21),
+		y = area.y,
+		w = math.min(20, area.w),
+		h = 1,
+	})
+
+	local percent = 0
+	if progress.processed ~= 0 then
+		percent = math.floor(progress.processed * 100 / progress.found)
+	end
+
+	return {
+		gauge
+			:gauge_style(THEME.status.progress_normal)
+			:percent(percent)
+			:label(ui.Span(string.format("%3d%%, %d left", percent, left)):style(THEME.status.progress_label)),
+	}
+end
+
 function Status:render(area)
 	local chunks = ui.Layout()
 		:direction(ui.Direction.HORIZONTAL)
@@ -107,5 +134,10 @@ function Status:render(area)
 
 	local left = ui.Line { self:mode(), self:size(), self:name() }
 	local right = ui.Line { self:permissions(), self:percentage(), self:position() }
-	return { ui.Paragraph(chunks[1], { left }), ui.Paragraph(chunks[2], { right }):align(ui.Alignment.RIGHT) }
+	local progress = self:progress(chunks[2], right:width())
+	return {
+		ui.Paragraph(chunks[1], { left }),
+		ui.Paragraph(chunks[2], { right }):align(ui.Alignment.RIGHT),
+		table.unpack(progress),
+	}
 end

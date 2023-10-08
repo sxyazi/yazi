@@ -1,14 +1,12 @@
 use std::{ffi::OsStr, sync::Arc, time::Duration};
 
-use async_channel::{Receiver, Sender};
 use config::{open::Opener, TASKS};
 use futures::{future::BoxFuture, FutureExt};
 use parking_lot::RwLock;
 use shared::{unique_path, Throttle, Url};
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, time::sleep};
-use tracing::{info, trace};
 
-use super::{workers::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash, Precache, PrecacheOpMime, PrecacheOpSize, Process, ProcessOpOpen}, Running, TaskOp, TaskStage};
+use super::{workers::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash, Precache, PrecacheOpMime, PrecacheOpSize, Process, ProcessOpOpen}, Running, TaskOp, TaskStage, TasksProgress};
 use crate::emit;
 
 pub struct Scheduler {
@@ -16,7 +14,8 @@ pub struct Scheduler {
 	precache: Arc<Precache>,
 	process:  Arc<Process>,
 
-	todo:               Sender<BoxFuture<'static, ()>>,
+	todo:               async_channel::Sender<BoxFuture<'static, ()>>,
+	prog:               mpsc::UnboundedSender<TaskOp>,
 	pub(super) running: Arc<RwLock<Running>>,
 }
 
@@ -28,9 +27,10 @@ impl Scheduler {
 		let scheduler = Self {
 			file:     Arc::new(File::new(prog_tx.clone())),
 			precache: Arc::new(Precache::new(prog_tx.clone())),
-			process:  Arc::new(Process::new(prog_tx)),
+			process:  Arc::new(Process::new(prog_tx.clone())),
 
 			todo:    todo_tx,
+			prog:    prog_tx,
 			running: Default::default(),
 		};
 
@@ -44,7 +44,7 @@ impl Scheduler {
 		scheduler
 	}
 
-	fn schedule_micro(&self, rx: Receiver<BoxFuture<'static, ()>>) {
+	fn schedule_micro(&self, rx: async_channel::Receiver<BoxFuture<'static, ()>>) {
 		tokio::spawn(async move {
 			loop {
 				if let Ok(fut) = rx.recv().await {
@@ -54,9 +54,11 @@ impl Scheduler {
 		});
 	}
 
-	fn schedule_macro(&self, rx: Receiver<BoxFuture<'static, ()>>) {
+	fn schedule_macro(&self, rx: async_channel::Receiver<BoxFuture<'static, ()>>) {
 		let file = self.file.clone();
 		let precache = self.precache.clone();
+
+		let prog = self.prog.clone();
 		let running = self.running.clone();
 
 		tokio::spawn(async move {
@@ -72,20 +74,18 @@ impl Scheduler {
 					}
 					Ok((id, mut op)) = file.recv() => {
 						if !running.read().exists(id) {
-							trace!("Skipping task {:?} as it was removed", op);
 							continue;
 						}
 						if let Err(e) = file.work(&mut op).await {
-							info!("Failed to work on task {:?}: {e}", op);
+							prog.send(TaskOp::Fail(id, format!("Failed to work on this task: {:?}", e))).ok();
 						}
 					}
 					Ok((id, mut op)) = precache.recv() => {
 						if !running.read().exists(id) {
-							trace!("Skipping task {:?} as it was removed", op);
 							continue;
 						}
 						if let Err(e) = precache.work(&mut op).await {
-							info!("Failed to work on task {:?}: {e}", op);
+							prog.send(TaskOp::Fail(id, format!("Failed to work on this task: {:?}", e))).ok();
 						}
 					}
 				}
@@ -102,8 +102,36 @@ impl Scheduler {
 				match op {
 					TaskOp::New(id, size) => {
 						if let Some(task) = running.write().get_mut(id) {
-							task.found += 1;
-							task.todo += size;
+							task.total += 1;
+							task.found += size;
+						}
+					}
+					TaskOp::Adv(id, succ, processed) => {
+						let mut running = running.write();
+						if let Some(task) = running.get_mut(id) {
+							task.succ += succ;
+							task.processed += processed;
+						}
+						if succ > 0 {
+							if let Some(fut) = running.try_remove(id, TaskStage::Pending) {
+								todo.send_blocking(fut).ok();
+							}
+						}
+					}
+					TaskOp::Succ(id) => {
+						if let Some(fut) = running.write().try_remove(id, TaskStage::Dispatched) {
+							todo.send_blocking(fut).ok();
+						}
+					}
+					TaskOp::Fail(id, reason) => {
+						if let Some(task) = running.write().get_mut(id) {
+							task.fail += 1;
+							task.logs.push_str(&reason);
+							task.logs.push('\n');
+
+							if let Some(logger) = &task.logger {
+								logger.send(reason).ok();
+							}
 						}
 					}
 					TaskOp::Log(id, line) => {
@@ -116,62 +144,20 @@ impl Scheduler {
 							}
 						}
 					}
-					TaskOp::Adv(id, processed, size) => {
-						let mut running = running.write();
-						if let Some(task) = running.get_mut(id) {
-							task.processed += processed;
-							task.done += size;
-						}
-						if processed > 0 {
-							if let Some(fut) = running.try_remove(id, TaskStage::Pending) {
-								todo.send_blocking(fut).ok();
-							}
-						}
-					}
-					TaskOp::Done(id) => {
-						if let Some(fut) = running.write().try_remove(id, TaskStage::Dispatched) {
-							todo.send_blocking(fut).ok();
-						}
-					}
 				}
 			}
 		});
 
 		let running = self.running.clone();
-		let mut last = (100, 0);
 		tokio::spawn(async move {
+			let mut last = TasksProgress::default();
 			loop {
-				sleep(Duration::from_secs(1)).await;
-				if running.read().is_empty() {
-					if last != (100, 0) {
-						last = (100, 0);
-						emit!(Progress(last.0, last.1));
-					}
-					continue;
-				}
+				sleep(Duration::from_millis(500)).await;
 
-				let mut tasks = 0u32;
-				let mut left = 0;
-				let mut progress = (0, 0);
-				for task in running.read().values() {
-					tasks += 1;
-					left += task.found.saturating_sub(task.processed);
-					progress = (progress.0 + task.done, progress.1 + task.todo);
-				}
-
-				let mut percent = match progress.1 {
-					0 => 100u8,
-					_ => 100.min(progress.0 * 100 / progress.1) as u8,
-				};
-
-				if tasks != 0 {
-					percent = percent.min(99);
-					left = left.max(1);
-				}
-
-				if last != (percent, left) {
-					last = (percent, left);
-					emit!(Progress(last.0, last.1));
+				let new = TasksProgress::from(&*running.read());
+				if last != new {
+					last = new;
+					emit!(Progress(new));
 				}
 			}
 		});

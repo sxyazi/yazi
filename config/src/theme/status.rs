@@ -14,8 +14,9 @@ pub struct Status {
 	pub mode_unset:  Style,
 
 	// Progress
-	pub progress_label: Style,
-	pub progress_gauge: Style,
+	pub progress_label:  Style,
+	pub progress_normal: Style,
+	pub progress_error:  Style,
 
 	// Permissions
 	pub permissions_t: Style,

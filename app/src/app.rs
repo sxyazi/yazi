@@ -211,8 +211,8 @@ impl App {
 					tasks.file_open(&targets);
 				}
 			}
-			Event::Progress(percent, left) => {
-				tasks.progress = (percent, left);
+			Event::Progress(progress) => {
+				tasks.progress = progress;
 				emit!(Render);
 			}
 

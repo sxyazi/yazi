@@ -50,6 +50,7 @@ impl<'lua> FromLua<'lua> for Line {
 
 impl UserData for Line {
 	fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+		methods.add_function("width", |_, ud: AnyUserData| Ok(ud.borrow_mut::<Self>()?.0.width()));
 		methods.add_function("style", |_, (ud, value): (AnyUserData, Value)| {
 			{
 				let mut me = ud.borrow_mut::<Self>()?;

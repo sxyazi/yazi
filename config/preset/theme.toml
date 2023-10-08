@@ -14,8 +14,9 @@ mode_select = { fg = "#1E1E30", bg = "#D2A4FE", bold = true }
 mode_unset  = { fg = "#1E1E30", bg = "#FFAF80", bold = true }
 
 # Progress
-progress_label = { fg = "#FFFFFF", bold = true }
-progress_gauge = { fg = "#FFA577", bg = "#484D66" }
+progress_label  = { fg = "#FFFFFF", bold = true }
+progress_normal = { fg = "#FFA577", bg = "#484D66" }
+progress_error  = { fg = "#FF84A9", bg = "#484D66" }
 
 # Permissions
 permissions_t = { fg = "#6D738F" }

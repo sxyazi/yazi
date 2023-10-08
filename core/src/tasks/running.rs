@@ -54,7 +54,7 @@ impl Running {
 			match task.stage {
 				TaskStage::Pending => return None,
 				TaskStage::Dispatched => {
-					if task.processed < task.found {
+					if task.succ < task.total {
 						return None;
 					}
 					if let Some(hook) = self.hooks.remove(&id) {

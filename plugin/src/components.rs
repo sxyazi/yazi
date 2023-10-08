@@ -1,6 +1,6 @@
 use mlua::{AnyUserData, Table, TableExt};
 
-use crate::{layout::{List, Paragraph, Rect}, GLOBALS, LUA};
+use crate::{layout::{Gauge, List, Paragraph, Rect}, GLOBALS, LUA};
 
 #[inline]
 fn layout(values: Vec<AnyUserData>, buf: &mut ratatui::prelude::Buffer) -> mlua::Result<()> {
@@ -8,6 +8,8 @@ fn layout(values: Vec<AnyUserData>, buf: &mut ratatui::prelude::Buffer) -> mlua:
 		if let Ok(c) = value.take::<Paragraph>() {
 			c.render(buf)
 		} else if let Ok(c) = value.take::<List>() {
+			c.render(buf)
+		} else if let Ok(c) = value.take::<Gauge>() {
 			c.render(buf)
 		}
 	}

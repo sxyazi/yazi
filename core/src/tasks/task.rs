@@ -1,49 +1,36 @@
 use tokio::sync::mpsc;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Task {
 	pub id:    usize,
 	pub name:  String,
 	pub stage: TaskStage,
 
-	pub found:     u32,
-	pub processed: u32,
+	pub total: u32,
+	pub succ:  u32,
+	pub fail:  u32,
 
-	pub todo: u64,
-	pub done: u64,
+	pub found:     u64,
+	pub processed: u64,
 
 	pub logs:   String,
 	pub logger: Option<mpsc::UnboundedSender<String>>,
+}
+
+impl Task {
+	pub fn new(id: usize, name: String) -> Self { Self { id, name, ..Default::default() } }
 }
 
 #[derive(Debug)]
 pub struct TaskSummary {
 	pub name: String,
 
-	pub found:     u32,
-	pub processed: u32,
+	pub total: u32,
+	pub succ:  u32,
+	pub fail:  u32,
 
-	pub todo: u64,
-	pub done: u64,
-}
-
-impl Task {
-	pub fn new(id: usize, name: String) -> Self {
-		Self {
-			id,
-			name,
-			stage: Default::default(),
-
-			found: 0,
-			processed: 0,
-
-			todo: 0,
-			done: 0,
-
-			logs: Default::default(),
-			logger: Default::default(),
-		}
-	}
+	pub found:     u64,
+	pub processed: u64,
 }
 
 impl From<&Task> for TaskSummary {
@@ -51,25 +38,28 @@ impl From<&Task> for TaskSummary {
 		TaskSummary {
 			name: task.name.clone(),
 
+			total: task.total,
+			succ:  task.succ,
+			fail:  task.fail,
+
 			found:     task.found,
 			processed: task.processed,
-
-			todo: task.todo,
-			done: task.done,
 		}
 	}
 }
 
 #[derive(Debug)]
 pub enum TaskOp {
-	// task_id, size
+	// id, size
 	New(usize, u64),
-	// task_id, line
-	Log(usize, String),
-	// task_id, processed, size
+	// id, processed, size
 	Adv(usize, u32, u64),
-	// task_id
-	Done(usize),
+	// id
+	Succ(usize),
+	// id
+	Fail(usize, String),
+	// id, line
+	Log(usize, String),
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd)]

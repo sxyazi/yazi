@@ -33,12 +33,6 @@ impl From<&mut ProcessOpOpen> for ShellOpt {
 impl Process {
 	pub(crate) fn new(sch: mpsc::UnboundedSender<TaskOp>) -> Self { Self { sch } }
 
-	#[inline]
-	fn log(&self, id: usize, line: String) -> Result<()> { Ok(self.sch.send(TaskOp::Log(id, line))?) }
-
-	#[inline]
-	fn done(&self, id: usize) -> Result<()> { Ok(self.sch.send(TaskOp::Done(id))?) }
-
 	pub(crate) async fn open(&self, mut task: ProcessOpOpen) -> Result<()> {
 		let opt = ShellOpt::from(&mut task);
 		if task.block {
@@ -48,11 +42,11 @@ impl Process {
 			match external::shell(opt) {
 				Ok(mut child) => {
 					child.wait().await.ok();
-					self.done(task.id)?;
+					self.succ(task.id)?;
 				}
 				Err(e) => {
 					self.sch.send(TaskOp::New(task.id, 0))?;
-					self.log(task.id, format!("Failed to spawn process: {e}"))?;
+					self.fail(task.id, format!("Failed to spawn process: {e}"))?;
 				}
 			}
 			return Ok(emit!(Stop(false)).await);
@@ -60,10 +54,10 @@ impl Process {
 
 		if task.orphan {
 			match external::shell(opt) {
-				Ok(_) => self.done(task.id)?,
+				Ok(_) => self.succ(task.id)?,
 				Err(e) => {
 					self.sch.send(TaskOp::New(task.id, 0))?;
-					self.log(task.id, format!("Failed to spawn process: {e}"))?;
+					self.fail(task.id, format!("Failed to spawn process: {e}"))?;
 				}
 			}
 			return Ok(());
@@ -92,7 +86,7 @@ impl Process {
 						None => "Process terminated by signal".to_string(),
 					})?;
 					if !status.success() {
-						return Ok(());
+						return self.fail(task.id, "Process failed".to_string());
 					}
 					break;
 				}
@@ -100,6 +94,19 @@ impl Process {
 		}
 
 		self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
-		self.done(task.id)
+		self.succ(task.id)
 	}
+}
+
+impl Process {
+	#[inline]
+	fn succ(&self, id: usize) -> Result<()> { Ok(self.sch.send(TaskOp::Succ(id))?) }
+
+	#[inline]
+	fn fail(&self, id: usize, reason: String) -> Result<()> {
+		Ok(self.sch.send(TaskOp::Fail(id, reason))?)
+	}
+
+	#[inline]
+	fn log(&self, id: usize, line: String) -> Result<()> { Ok(self.sch.send(TaskOp::Log(id, line))?) }
 }
