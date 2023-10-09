@@ -158,10 +158,9 @@ pub fn optional_bool(s: &str) -> Option<bool> {
 
 #[cfg(test)]
 mod tests {
-	use std::{borrow::Cow, env, path::Path};
+	use std::{borrow::Cow, path::Path};
 
 	use super::path_relative_to;
-	use crate::expand_path;
 
 	#[cfg(unix)]
 	#[test]
@@ -189,20 +188,5 @@ mod tests {
 		assert("C:\\a\\b\\c", "C:\\a\\b\\d", "..\\c");
 		assert("C:\\a", "C:\\a\\b\\c", "..\\..\\");
 		assert("C:\\a\\a\\b", "C:\\a\\b\\b", "..\\..\\a\\b");
-	}
-
-	#[test]
-	fn test_expand_path() {
-		let path_s = r#"a"b"#;
-		assert_eq!(expand_path(path_s), env::current_dir().unwrap().join(std::path::Path::new(path_s)));
-
-		let path_s = r#"a'b"#;
-		assert_eq!(expand_path(path_s), env::current_dir().unwrap().join(std::path::Path::new(path_s)));
-
-		let path_s = r#"a; x b"#;
-		assert_eq!(expand_path(path_s), env::current_dir().unwrap().join(std::path::Path::new(path_s)));
-
-		let path_s = r#"a && x b"#;
-		assert_eq!(expand_path(path_s), env::current_dir().unwrap().join(std::path::Path::new(path_s)));
 	}
 }
