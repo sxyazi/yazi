@@ -177,7 +177,7 @@ impl File {
 					ctx.set_delete_method(DeleteMethod::NsFileManager);
 					ctx.delete(&task.target)?;
 				}
-				#[cfg(not(target_os = "netbsd"))]
+				#[cfg(not(target_os = "macos"))]
 				{
 					trash::delete(&task.target)?;
 				}
