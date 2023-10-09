@@ -7,23 +7,28 @@ use crate::Url;
 pub fn expand_path(p: impl AsRef<Path>) -> PathBuf {
 	let mut p = p.as_ref();
 
-	// expand the environment variable by calling the "echo" command, in linux case, this also expands the '~' path
+	// expand the environment variable by calling the "echo" command, in linux case,
+	// this also expands the '~' path
 	#[cfg(target_os = "windows")]
 	let expanded_path = match std::process::Command::new("cmd").args(&["/C", "echo"]).arg(p).output() {
-		Ok(output) if output.status.success() => Some(String::from_utf8_lossy(&output.stdout)
-															.trim_end()
-															.trim_matches('"')
-															.replace("\\\"", "\"")
-															.to_string()
-														),
+		Ok(output) if output.status.success() => Some(
+			String::from_utf8_lossy(&output.stdout)
+				.trim_end()
+				.trim_matches('"')
+				.replace("\\\"", "\"")
+				.to_string(),
+		),
 		_ => None,
 	};
 	#[cfg(not(target_os = "windows"))]
 	let expanded_path = match std::process::Command::new("sh")
-								.arg("-c")
-								.arg(format!("echo \"{}\"", p.to_string_lossy().replace("\"", "\\\"")))
-								.output() {
-		Ok(output) if output.status.success() => Some(String::from_utf8_lossy(&output.stdout).trim_end().to_string()),
+		.arg("-c")
+		.arg(format!("echo \"{}\"", p.to_string_lossy().replace("\"", "\\\"")))
+		.output()
+	{
+		Ok(output) if output.status.success() => {
+			Some(String::from_utf8_lossy(&output.stdout).trim_end().to_string())
+		}
 		_ => None,
 	};
 
@@ -168,11 +173,10 @@ pub fn optional_bool(s: &str) -> Option<bool> {
 
 #[cfg(test)]
 mod tests {
-	use std::{borrow::Cow, path::Path, env};
+	use std::{borrow::Cow, env, path::Path};
 
+	use super::path_relative_to;
 	use crate::expand_path;
-
-use super::path_relative_to;
 
 	#[cfg(unix)]
 	#[test]
