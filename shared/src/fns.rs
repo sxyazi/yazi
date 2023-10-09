@@ -5,41 +5,26 @@ use tokio::fs;
 use crate::Url;
 
 pub fn expand_path(p: impl AsRef<Path>) -> PathBuf {
-	let mut p = p.as_ref();
+	let p = p.as_ref().to_string_lossy();
 
-	// expand the environment variable by calling the "echo" command, in linux case,
-	// this also expands the '~' path
-	#[cfg(target_os = "windows")]
-	let expanded_path = match std::process::Command::new("cmd").args(&["/C", "echo"]).arg(p).output() {
-		Ok(output) if output.status.success() => Some(
-			String::from_utf8_lossy(&output.stdout)
-				.trim_end()
-				.trim_matches('"')
-				.replace("\\\"", "\"")
-				.to_string(),
-		),
-		_ => None,
-	};
-	#[cfg(not(target_os = "windows"))]
-	let expanded_path = match std::process::Command::new("sh")
-		.arg("-c")
-		.arg(format!("echo \"{}\"", p.to_string_lossy().replace("\"", "\\\"")))
-		.output()
-	{
-		Ok(output) if output.status.success() => {
-			Some(String::from_utf8_lossy(&output.stdout).trim_end().to_string())
-		}
-		_ => None,
-	};
+	#[cfg(unix)]
+	let re = regex::Regex::new(r"\$([a-zA-Z0-9_]+)").unwrap();
+	#[cfg(windows)]
+	let re = regex::Regex::new(r"%([^%]+)%").unwrap();
 
-	if let Some(s) = &expanded_path {
-		p = Path::new(s);
-	}
+	let expanded = re.replace_all(&p, |caps: &regex::Captures| {
+		env::var(caps.get(1).unwrap().as_str())
+			.unwrap_or_else(|_| caps.get(0).unwrap().as_str().to_string())
+	});
 
-	// support '~' on Windows
-	#[cfg(target_os = "windows")]
+	let p = Path::new(expanded.as_ref());
 	if let Ok(p) = p.strip_prefix("~") {
-		if let Ok(home) = env::var("USERPROFILE") {
+		#[cfg(unix)]
+		if let Some(home) = env::var_os("HOME") {
+			return Path::new(&home).join(p);
+		}
+		#[cfg(windows)]
+		if let Some(home) = env::var_os("USERPROFILE") {
 			return Path::new(&home).join(p);
 		}
 	}
@@ -81,7 +66,7 @@ pub fn short_path<'a>(p: &'a Path, base: &Path) -> ShortPath<'a> {
 }
 
 pub fn readable_path(p: &Path) -> String {
-	if let Ok(home) = env::var("HOME") {
+	if let Some(home) = env::var_os("HOME") {
 		if let Ok(p) = p.strip_prefix(home) {
 			return format!("~/{}", p.display());
 		}

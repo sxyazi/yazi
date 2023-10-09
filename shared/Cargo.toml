@@ -10,4 +10,5 @@ futures     = "^0"
 libc        = "^0"
 parking_lot = "^0"
 ratatui    	= { version = "^0" }
+regex       = "^1"
 tokio       = { version = "^1", features = [ "parking_lot", "macros", "rt-multi-thread", "sync", "time", "fs" ] }
