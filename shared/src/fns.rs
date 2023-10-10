@@ -5,19 +5,21 @@ use tokio::fs;
 use crate::Url;
 
 pub fn expand_path(p: impl AsRef<Path>) -> PathBuf {
-	let p = p.as_ref().to_string_lossy();
-
+	// ${HOME} or $HOME
 	#[cfg(unix)]
-	let re = regex::Regex::new(r"\$([a-zA-Z0-9_]+)").unwrap();
+	let re = regex::Regex::new(r"\$(?:\{([^}]+)\}|([a-zA-Z\d_]+))").unwrap();
+
+	// %USERPROFILE%
 	#[cfg(windows)]
 	let re = regex::Regex::new(r"%([^%]+)%").unwrap();
 
-	let expanded = re.replace_all(&p, |caps: &regex::Captures| {
-		env::var(caps.get(1).unwrap().as_str())
-			.unwrap_or_else(|_| caps.get(0).unwrap().as_str().to_string())
+	let s = p.as_ref().to_string_lossy();
+	let s = re.replace_all(&s, |caps: &regex::Captures| {
+		let name = caps.get(2).or_else(|| caps.get(1)).unwrap();
+		env::var(name.as_str()).unwrap_or_else(|_| caps.get(0).unwrap().as_str().to_owned())
 	});
 
-	let p = Path::new(expanded.as_ref());
+	let p = Path::new(s.as_ref());
 	if let Ok(p) = p.strip_prefix("~") {
 		#[cfg(unix)]
 		if let Some(home) = env::var_os("HOME") {
