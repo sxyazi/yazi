@@ -1,43 +1,20 @@
 use core::Ctx;
 
 use config::{MANAGER, THEME};
-use mlua::{AnyUserData, Function, IntoLua, MetaMethod, UserData, UserDataFields, UserDataMethods, Value};
+use mlua::{AnyUserData, MetaMethod, UserDataFields, UserDataMethods, Value};
 
 use super::{Range, Url};
 use crate::{layout::Style, LUA};
 
-struct File(core::files::File);
-
-impl From<&core::files::File> for File {
-	fn from(value: &core::files::File) -> Self { Self(value.clone()) }
-}
-
-impl UserData for File {
-	fn add_fields<'lua, F: UserDataFields<'lua, Self>>(fields: &mut F) {
-		fields.add_field_method_get("url", |_, me| Ok(Url::from(me.0.url())));
-		fields.add_field_method_get("length", |_, me| Ok(me.0.length()));
-		fields.add_field_method_get("link_to", |_, me| Ok(me.0.link_to().map(Url::from)));
-		fields.add_field_method_get("is_link", |_, me| Ok(me.0.is_link()));
-		fields.add_field_method_get("is_hidden", |_, me| Ok(me.0.is_hidden()));
-	}
-}
-
-pub struct Tab<'a, 'b> {
+pub struct Active<'a, 'b> {
 	scope: &'b mlua::Scope<'a, 'a>,
 
 	cx:    &'a core::Ctx,
 	inner: &'a core::manager::Tab,
 }
 
-impl<'a, 'b> Tab<'a, 'b> {
+impl<'a, 'b> Active<'a, 'b> {
 	pub(crate) fn init() -> mlua::Result<()> {
-		LUA.register_userdata_type::<core::manager::Tab>(|reg| {
-			reg.add_field_function_get("mode", |_, me| me.named_user_value::<AnyUserData>("mode"));
-			reg.add_field_function_get("parent", |_, me| me.named_user_value::<Value>("parent"));
-			reg.add_field_function_get("current", |_, me| me.named_user_value::<AnyUserData>("current"));
-			reg.add_field_function_get("preview", |_, me| me.named_user_value::<AnyUserData>("preview"));
-		})?;
-
 		LUA.register_userdata_type::<core::manager::Mode>(|reg| {
 			reg.add_field_method_get("is_select", |_, me| Ok(me.is_select()));
 			reg.add_field_method_get("is_unset", |_, me| Ok(me.is_unset()));
@@ -57,58 +34,6 @@ impl<'a, 'b> Tab<'a, 'b> {
 			reg.add_field_function_get("hovered", |_, me| me.named_user_value::<Value>("hovered"));
 		})?;
 
-		LUA.register_userdata_type::<core::files::Files>(|reg| {
-			reg.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.len()));
-
-			reg.add_meta_function(MetaMethod::Pairs, |lua, me: AnyUserData| {
-				let iter = lua.create_function(|lua, (me, i): (AnyUserData, usize)| {
-					let files = me.borrow::<core::files::Files>()?;
-					let i = i + 1;
-					Ok(if i > files.len() {
-						mlua::Variadic::new()
-					} else {
-						mlua::Variadic::from_iter([i.into_lua(lua)?, File::from(&files[i - 1]).into_lua(lua)?])
-					})
-				})?;
-				Ok((iter, me, 0))
-			});
-
-			reg.add_function("slice", |_, (me, skip, take): (AnyUserData, usize, usize)| {
-				let files = me.borrow::<core::files::Files>()?;
-				Ok(files.iter().skip(skip).take(take).map(File::from).collect::<Vec<_>>())
-			});
-		})?;
-
-		LUA.register_userdata_type::<core::files::File>(|reg| {
-			reg.add_field_method_get("name", |_, me| {
-				Ok(me.url().file_name().map(|n| n.to_string_lossy().to_string()))
-			});
-			reg.add_function("icon", |_, me: AnyUserData| {
-				me.named_user_value::<Function>("icon")?.call::<_, String>(())
-			});
-			reg.add_function("style", |_, me: AnyUserData| {
-				me.named_user_value::<Function>("style")?.call::<_, Style>(())
-			});
-			reg.add_field_function_get("hovered", |_, me| me.named_user_value::<bool>("hovered"));
-			reg.add_function("selected", |_, me: AnyUserData| {
-				me.named_user_value::<Function>("selected")?.call::<_, bool>(me)
-			});
-			reg.add_function("highlights", |_, me: AnyUserData| {
-				me.named_user_value::<Function>("highlights")?.call::<_, Value>(())
-			});
-
-			reg.add_field_method_get("url", |_, me| Ok(Url::from(me.url())));
-			reg.add_field_method_get("length", |_, me| Ok(me.length()));
-			reg.add_field_method_get("link_to", |_, me| Ok(me.link_to().map(Url::from)));
-			reg.add_field_method_get("is_link", |_, me| Ok(me.is_link()));
-			reg.add_field_method_get("is_hidden", |_, me| Ok(me.is_hidden()));
-
-			// Meta
-			reg.add_field_method_get("permissions", |_, me| {
-				Ok(shared::permissions(me.meta().permissions()))
-			});
-		})?;
-
 		LUA.register_userdata_type::<core::manager::Preview>(|reg| {
 			reg.add_field_function_get("folder", |_, me| me.named_user_value::<Value>("folder"));
 		})?;
@@ -116,13 +41,8 @@ impl<'a, 'b> Tab<'a, 'b> {
 		Ok(())
 	}
 
-	pub(crate) fn new(
-		scope: &'b mlua::Scope<'a, 'a>,
-
-		cx: &'a Ctx,
-		inner: &'a core::manager::Tab,
-	) -> Self {
-		Self { scope, cx, inner }
+	pub(crate) fn new(scope: &'b mlua::Scope<'a, 'a>, cx: &'a Ctx) -> Self {
+		Self { scope, cx, inner: cx.manager.active() }
 	}
 
 	pub(crate) fn make(&self) -> mlua::Result<AnyUserData<'a>> {
@@ -210,6 +130,20 @@ impl<'a, 'b> Tab<'a, 'b> {
 		ud.set_named_user_value(
 			"hovered",
 			matches!(&folder.hovered, Some(f) if f.url() == inner.url()),
+		)?;
+
+		ud.set_named_user_value(
+			"yanked",
+			self.scope.create_function(|_, ()| {
+				let (cut, urls) = self.cx.manager.yanked();
+				Ok(if !urls.contains(inner.url()) {
+					0u8
+				} else if *cut {
+					2u8
+				} else {
+					1u8
+				})
+			})?,
 		)?;
 
 		ud.set_named_user_value(

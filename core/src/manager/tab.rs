@@ -458,18 +458,6 @@ impl Tab {
 	pub fn in_selecting(&self) -> bool { self.mode.is_visual() || self.current.files.has_selected() }
 
 	// --- Current
-	// TODO: remove this
-	#[inline]
-	pub fn name(&self) -> &str {
-		self
-			.current
-			.cwd
-			.file_name()
-			.and_then(|n| n.to_str())
-			.or_else(|| self.current.cwd.to_str())
-			.unwrap_or_default()
-	}
-
 	pub fn selected(&self) -> Vec<&File> {
 		let pending = self.mode.visual().map(|(_, p)| Cow::Borrowed(p)).unwrap_or_default();
 		let selected = self.current.files.selected(&pending, self.mode.is_unset());

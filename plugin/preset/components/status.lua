@@ -113,14 +113,19 @@ function Status:progress(area, offset)
 		h = 1,
 	})
 
-	local percent = 0
-	if progress.processed ~= 0 then
-		percent = math.floor(progress.processed * 100 / progress.found)
+	if progress.fail == 0 then
+		gauge = gauge:gauge_style(THEME.status.progress_normal)
+	else
+		gauge = gauge:gauge_style(THEME.status.progress_error)
+	end
+
+	local percent = 99
+	if progress.found ~= 0 then
+		percent = math.min(99, progress.processed * 100 / progress.found)
 	end
 
 	return {
 		gauge
-			:gauge_style(THEME.status.progress_normal)
 			:percent(percent)
 			:label(ui.Span(string.format("%3d%%, %d left", percent, left)):style(THEME.status.progress_label)),
 	}

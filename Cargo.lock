@@ -1364,6 +1364,7 @@ dependencies = [
  "ratatui",
  "shared",
  "tracing",
+ "unicode-width",
 ]
 
 [[package]]

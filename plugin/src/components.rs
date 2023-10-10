@@ -17,6 +17,22 @@ fn layout(values: Vec<AnyUserData>, buf: &mut ratatui::prelude::Buffer) -> mlua:
 }
 
 // --- Status
+pub struct Header;
+
+impl Header {
+	pub fn render(
+		self,
+		area: ratatui::layout::Rect,
+		buf: &mut ratatui::prelude::Buffer,
+	) -> mlua::Result<()> {
+		let comp: Table = GLOBALS.get("Header")?;
+		let values: Vec<AnyUserData> = comp.call_method::<_, _>("render", Rect(area))?;
+
+		layout(values, buf)
+	}
+}
+
+// --- Status
 pub struct Status;
 
 impl Status {

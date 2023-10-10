@@ -1,4 +1,4 @@
-[tab]
+[tabs]
 active    = { fg = "#1E2031", bg = "#80AEFA" }
 inactive  = { fg = "#C8D3F8", bg = "#484D66" }
 max_width = 1

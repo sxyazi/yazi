@@ -9,7 +9,8 @@ core   = { path = "../core" }
 shared = { path = "../shared" }
 
 # External dependencies
-anyhow  = "^1"
-mlua    = { version = "^0", features = [ "luajit52", "vendored", "serialize" ] }
-tracing = "^0"
-ratatui = "^0"
+anyhow        = "^1"
+mlua          = { version = "^0", features = [ "luajit52", "vendored", "serialize" ] }
+ratatui       = "^0"
+tracing       = "^0"
+unicode-width = "^0"

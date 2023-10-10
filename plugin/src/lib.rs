@@ -6,6 +6,7 @@ mod config;
 mod layout;
 mod plugin;
 mod scope;
+mod utils;
 
 pub use components::*;
 use config::*;

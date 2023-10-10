@@ -2,7 +2,7 @@ use anyhow::Result;
 use mlua::{Lua, Table};
 use shared::RoCell;
 
-use crate::{bindings, layout};
+use crate::{bindings, layout, utils};
 
 pub(crate) static LUA: RoCell<Lua> = RoCell::new();
 pub(crate) static GLOBALS: RoCell<Table> = RoCell::new();
@@ -17,12 +17,14 @@ pub fn init() {
 		lua.load(include_str!("../preset/inspect/inspect.lua")).exec()?;
 
 		// Components
-		lua.load(include_str!("../preset/components/status.lua")).exec()?;
 		lua.load(include_str!("../preset/components/folder.lua")).exec()?;
+		lua.load(include_str!("../preset/components/header.lua")).exec()?;
+		lua.load(include_str!("../preset/components/status.lua")).exec()?;
 
 		// Initialize
 		LUA.init(lua);
 		GLOBALS.init(LUA.globals());
+		utils::init()?;
 		bindings::init()?;
 
 		// Install

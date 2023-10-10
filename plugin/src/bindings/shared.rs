@@ -25,6 +25,13 @@ impl From<&shared::Url> for Url {
 }
 
 impl UserData for Url {
+	fn add_fields<'lua, F: mlua::UserDataFields<'lua, Self>>(fields: &mut F) {
+		fields.add_field_method_get("frag", |_, me| Ok(me.0.frag().map(ToOwned::to_owned)));
+		fields.add_field_method_get("is_regular", |_, me| Ok(me.0.is_regular()));
+		fields.add_field_method_get("is_search", |_, me| Ok(me.0.is_search()));
+		fields.add_field_method_get("is_archive", |_, me| Ok(me.0.is_archive()));
+	}
+
 	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
 		methods.add_meta_function(
 			MetaMethod::Eq,

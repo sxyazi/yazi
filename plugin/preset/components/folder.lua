@@ -23,13 +23,24 @@ function Folder:markers(area, markers)
 
 	local elements = {}
 	local append = function(last)
-		local rect = ui.Rect {
-			x = area.x - 1,
-			y = area.y + last[1] - 1,
-			w = 1,
-			h = 1 + last[2] - last[1],
-		}
-		elements[#elements + 1] = ui.Paragraph(rect, {}):style(THEME.marker.selected)
+		local p = ui.Paragraph(
+			ui.Rect {
+				x = area.x - 1,
+				y = area.y + last[1] - 1,
+				w = 1,
+				h = 1 + last[2] - last[1],
+			},
+			{}
+		)
+
+		if last[3] == 1 then
+			p = p:style(THEME.marker.copied)
+		elseif last[3] == 2 then
+			p = p:style(THEME.marker.cut)
+		elseif last[3] == 3 then
+			p = p:style(THEME.marker.selected)
+		end
+		elements[#elements + 1] = p
 	end
 
 	local last = { markers[1][1], markers[1][1], markers[1][2] } -- start, end, type
@@ -89,9 +100,12 @@ function Folder:current(area)
 		end
 		items[#items + 1] = item
 
-		-- Mark selected/yanked files
-		if f:selected() then
-			markers[#markers + 1] = { i, 1 }
+		-- Mark yanked/selected files
+		local yanked = f:yanked()
+		if yanked ~= 0 then
+			markers[#markers + 1] = { i, yanked }
+		elseif f:selected() then
+			markers[#markers + 1] = { i, 3 }
 		end
 	end
 

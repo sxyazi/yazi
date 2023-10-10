@@ -8,7 +8,7 @@ use super::{Files, Filetype, Icon, Marker, Status, Style};
 use crate::{validation::check_validation, MERGED_THEME};
 
 #[derive(Deserialize, Serialize, Validate)]
-pub struct Tab {
+pub struct Tabs {
 	pub active:    Style,
 	pub inactive:  Style,
 	#[validate(range(min = 1, message = "Must be greater than 0"))]
@@ -23,7 +23,7 @@ pub struct Preview {
 
 #[derive(Deserialize, Serialize)]
 pub struct Theme {
-	pub tab:       Tab,
+	pub tabs:      Tabs,
 	pub status:    Status,
 	pub files:     Files,
 	pub marker:    Marker,
@@ -38,7 +38,7 @@ impl Default for Theme {
 	fn default() -> Self {
 		let mut theme: Self = toml::from_str(&MERGED_THEME).unwrap();
 
-		check_validation(theme.tab.validate());
+		check_validation(theme.tabs.validate());
 
 		theme.preview.syntect_theme = expand_path(&theme.preview.syntect_theme);
 

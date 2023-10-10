@@ -20,7 +20,7 @@ impl<'a> Widget for Root<'a> {
 			.constraints([Constraint::Length(1), Constraint::Min(0), Constraint::Length(1)])
 			.split(area);
 
-		header::Layout::new(self.cx).render(chunks[0], buf);
+		header::Layout.render(chunks[0], buf);
 		manager::Layout::new(self.cx).render(chunks[1], buf);
 		status::Layout.render(chunks[2], buf);
 
