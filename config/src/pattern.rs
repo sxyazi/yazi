@@ -17,7 +17,7 @@ impl Pattern {
 	pub fn matches(&self, str: impl AsRef<str>) -> bool {
 		self.inner.matches_with(str.as_ref(), MatchOptions {
 			case_sensitive:              self.sensitive,
-			require_literal_separator:   false,
+			require_literal_separator:   self.full_path,
 			require_literal_leading_dot: false,
 		})
 	}
