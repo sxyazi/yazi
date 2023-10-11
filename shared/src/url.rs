@@ -42,15 +42,15 @@ impl From<&Path> for Url {
 }
 
 impl From<String> for Url {
-	fn from(path: String) -> Self { Self::from(PathBuf::from(path)) }
+	fn from(path: String) -> Self { Self::from(PathBuf::from(path.trim())) }
 }
 
 impl From<&String> for Url {
-	fn from(path: &String) -> Self { Self::from(PathBuf::from(path)) }
+	fn from(path: &String) -> Self { Self::from(PathBuf::from(path.trim())) }
 }
 
 impl From<&str> for Url {
-	fn from(path: &str) -> Self { Self::from(PathBuf::from(path)) }
+	fn from(path: &str) -> Self { Self::from(PathBuf::from(path.trim())) }
 }
 
 impl AsRef<Url> for Url {
