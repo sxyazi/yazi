@@ -1,47 +1,35 @@
-use std::ops::Deref;
+use std::str::FromStr;
 
-use anyhow::{bail, Result};
-use ratatui::style;
-use serde::Deserialize;
+use anyhow::Result;
+use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize)]
+#[derive(Clone, Copy, Deserialize)]
 #[serde(try_from = "String")]
-pub struct Color(pub(super) style::Color);
+pub struct Color(ratatui::style::Color);
 
-impl Default for Color {
-	fn default() -> Self { Self(style::Color::Reset) }
+impl FromStr for Color {
+	type Err = anyhow::Error;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		ratatui::style::Color::from_str(s).map(Self).map_err(|_| anyhow::anyhow!("invalid color"))
+	}
 }
 
 impl TryFrom<String> for Color {
 	type Error = anyhow::Error;
 
-	fn try_from(s: String) -> Result<Self, Self::Error> {
-		if s.len() < 7 {
-			bail!("Invalid color: {s}");
-		}
-		Ok(Self(style::Color::Rgb(
-			u8::from_str_radix(&s[1..3], 16)?,
-			u8::from_str_radix(&s[3..5], 16)?,
-			u8::from_str_radix(&s[5..7], 16)?,
-		)))
+	fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(s.as_str()) }
+}
+
+impl From<Color> for ratatui::style::Color {
+	fn from(value: Color) -> Self { value.0 }
+}
+
+impl Serialize for Color {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: serde::Serializer,
+	{
+		self.0.to_string().serialize(serializer)
 	}
-}
-
-impl Deref for Color {
-	type Target = style::Color;
-
-	fn deref(&self) -> &Self::Target { &self.0 }
-}
-
-impl Color {
-	pub fn fg(&self) -> style::Style { style::Style::new().fg(self.0) }
-
-	pub fn bg(&self) -> style::Style { style::Style::new().bg(self.0) }
-}
-
-#[derive(Deserialize)]
-pub struct ColorGroup {
-	pub normal: Color,
-	pub select: Color,
-	pub unset:  Color,
 }

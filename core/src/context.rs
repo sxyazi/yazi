@@ -1,9 +1,9 @@
-use core::{help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which, Position};
-
 use config::keymap::KeymapLayer;
 use crossterm::terminal::WindowSize;
 use ratatui::prelude::Rect;
 use shared::Term;
+
+use crate::{help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which, Position};
 
 pub struct Ctx {
 	pub manager: Manager,
@@ -15,7 +15,7 @@ pub struct Ctx {
 }
 
 impl Ctx {
-	pub(super) fn new() -> Self {
+	pub fn make() -> Self {
 		Self {
 			manager: Manager::make(),
 			which:   Default::default(),
@@ -26,7 +26,7 @@ impl Ctx {
 		}
 	}
 
-	pub(super) fn area(&self, pos: &Position) -> Rect {
+	pub fn area(&self, pos: &Position) -> Rect {
 		let WindowSize { columns, rows, .. } = Term::size();
 
 		let (x, y) = match pos {
@@ -57,7 +57,7 @@ impl Ctx {
 	}
 
 	#[inline]
-	pub(super) fn cursor(&self) -> Option<(u16, u16)> {
+	pub fn cursor(&self) -> Option<(u16, u16)> {
 		if self.input.visible {
 			let Rect { x, y, .. } = self.area(&self.input.position);
 			return Some((x + 1 + self.input.cursor(), y + 1));
@@ -69,7 +69,7 @@ impl Ctx {
 	}
 
 	#[inline]
-	pub(super) fn layer(&self) -> KeymapLayer {
+	pub fn layer(&self) -> KeymapLayer {
 		if self.which.visible {
 			KeymapLayer::Which
 		} else if self.help.visible() {
@@ -86,7 +86,7 @@ impl Ctx {
 	}
 
 	#[inline]
-	pub(super) fn image_layer(&self) -> bool {
+	pub fn image_layer(&self) -> bool {
 		!matches!(self.layer(), KeymapLayer::Which | KeymapLayer::Help | KeymapLayer::Tasks)
 	}
 }

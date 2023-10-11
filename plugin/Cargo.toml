@@ -1,0 +1,16 @@
+[package]
+name    = "plugin"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+config = { path = "../config" }
+core   = { path = "../core" }
+shared = { path = "../shared" }
+
+# External dependencies
+anyhow        = "^1"
+mlua          = { version = "^0", features = [ "luajit52", "vendored", "serialize" ] }
+ratatui       = "^0"
+tracing       = "^0"
+unicode-width = "^0"

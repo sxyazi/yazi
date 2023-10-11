@@ -7,7 +7,7 @@ use shared::{InputError, RoCell, Url};
 use tokio::sync::{mpsc::{self, UnboundedSender}, oneshot};
 
 use super::{files::{File, FilesOp}, input::InputOpt, select::SelectOpt};
-use crate::manager::PreviewLock;
+use crate::{manager::PreviewLock, tasks::TasksProgress};
 
 static TX: RoCell<UnboundedSender<Event>> = RoCell::new();
 
@@ -36,7 +36,7 @@ pub enum Event {
 
 	// Tasks
 	Open(Vec<(OsString, String)>, Option<Opener>),
-	Progress(u8, u32),
+	Progress(TasksProgress),
 }
 
 impl Event {
@@ -115,8 +115,8 @@ macro_rules! emit {
 	(Open($targets:expr, $opener:expr)) => {
 		$crate::Event::Open($targets, $opener).emit();
 	};
-	(Progress($percent:expr, $tasks:expr)) => {
-		$crate::Event::Progress($percent, $tasks).emit();
+	(Progress($progress:expr)) => {
+		$crate::Event::Progress($progress).emit();
 	};
 
 	($event:ident) => {

@@ -85,7 +85,7 @@ impl Manager {
 	pub fn yank(&mut self, cut: bool) -> bool {
 		self.yanked.0 = cut;
 		self.yanked.1 = self.selected().into_iter().map(|f| f.url_owned()).collect();
-		false
+		true
 	}
 
 	pub fn quit(&self, tasks: &Tasks, no_cwd_file: bool) -> bool {

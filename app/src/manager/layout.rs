@@ -1,8 +1,9 @@
+use core::Ctx;
+
 use config::MANAGER;
 use ratatui::{buffer::Buffer, layout::{self, Constraint, Direction, Rect}, widgets::{Block, Borders, Padding, Widget}};
 
 use super::{Folder, Preview};
-use crate::Ctx;
 
 pub(crate) struct Layout<'a> {
 	cx: &'a Ctx,
@@ -19,28 +20,22 @@ impl<'a> Widget for Layout<'a> {
 
 		let chunks = layout::Layout::new()
 			.direction(Direction::Horizontal)
-			.constraints(
-				[
-					Constraint::Ratio(layout.parent, layout.all),
-					Constraint::Ratio(layout.current, layout.all),
-					Constraint::Ratio(layout.preview, layout.all),
-				]
-				.as_ref(),
-			)
+			.constraints([
+				Constraint::Ratio(layout.parent, layout.all),
+				Constraint::Ratio(layout.current, layout.all),
+				Constraint::Ratio(layout.preview, layout.all),
+			])
 			.split(area);
 
 		// Parent
 		let block = Block::new().borders(Borders::RIGHT).padding(Padding::new(1, 0, 0, 0));
-		if let Some(parent) = manager.parent() {
-			Folder::new(self.cx, parent).render(block.inner(chunks[0]), buf);
+		if manager.parent().is_some() {
+			Folder::Parent.render(block.inner(chunks[0]), buf);
 		}
 		block.render(chunks[0], buf);
 
 		// Current
-		Folder::new(self.cx, manager.current())
-			.with_selection(manager.active().mode().is_visual())
-			.with_find(manager.active().finder().is_some())
-			.render(chunks[1], buf);
+		Folder::Current.render(chunks[1], buf);
 
 		// Preview
 		let block = Block::new().borders(Borders::LEFT).padding(Padding::new(0, 1, 0, 0));

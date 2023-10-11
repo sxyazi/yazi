@@ -171,9 +171,6 @@ impl Preview {
 
 impl Preview {
 	#[inline]
-	pub fn lock(&self) -> &Option<PreviewLock> { &self.lock }
-
-	#[inline]
 	pub fn skip(&self) -> usize { self.skip }
 
 	#[inline]

@@ -1,8 +1,6 @@
-use std::{collections::BTreeSet, fmt::Display};
+use std::collections::BTreeSet;
 
-use config::theme::{self, ColorGroup};
-
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub enum Mode {
 	#[default]
 	Normal,
@@ -11,15 +9,6 @@ pub enum Mode {
 }
 
 impl Mode {
-	#[inline]
-	pub fn color<'a>(&self, group: &'a ColorGroup) -> &'a theme::Color {
-		match *self {
-			Mode::Normal => &group.normal,
-			Mode::Select(..) => &group.select,
-			Mode::Unset(..) => &group.unset,
-		}
-	}
-
 	#[inline]
 	pub fn visual(&self) -> Option<(usize, &BTreeSet<usize>)> {
 		match self {
@@ -59,12 +48,13 @@ impl Mode {
 	pub fn is_visual(&self) -> bool { matches!(self, Mode::Select(..) | Mode::Unset(..)) }
 }
 
-impl Display for Mode {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		match *self {
-			Mode::Normal => write!(f, "NORMAL"),
-			Mode::Select(..) => write!(f, "SELECT"),
-			Mode::Unset(..) => write!(f, "UN-SET"),
+impl ToString for Mode {
+	fn to_string(&self) -> String {
+		match self {
+			Mode::Normal => "normal",
+			Mode::Select(..) => "select",
+			Mode::Unset(..) => "unset",
 		}
+		.to_string()
 	}
 }

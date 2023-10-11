@@ -1,9 +1,8 @@
-use core::tasks::TASKS_PERCENT;
+use core::{tasks::TASKS_PERCENT, Ctx};
 
 use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Direction, Rect}, style::{Color, Modifier, Style}, widgets::{Block, BorderType, Borders, List, ListItem, Padding, Widget}};
 
 use super::Clear;
-use crate::Ctx;
 
 pub(crate) struct Layout<'a> {
 	cx: &'a Ctx,
@@ -15,29 +14,21 @@ impl<'a> Layout<'a> {
 	pub(super) fn area(area: Rect) -> Rect {
 		let chunk = layout::Layout::new()
 			.direction(Direction::Vertical)
-			.constraints(
-				[
-					Constraint::Percentage((100 - TASKS_PERCENT) / 2),
-					Constraint::Percentage(TASKS_PERCENT),
-					Constraint::Percentage((100 - TASKS_PERCENT) / 2),
-				]
-				.as_ref(),
-			)
+			.constraints([
+				Constraint::Percentage((100 - TASKS_PERCENT) / 2),
+				Constraint::Percentage(TASKS_PERCENT),
+				Constraint::Percentage((100 - TASKS_PERCENT) / 2),
+			])
 			.split(area)[1];
 
-		let chunk = layout::Layout::new()
+		layout::Layout::new()
 			.direction(Direction::Horizontal)
-			.constraints(
-				[
-					Constraint::Percentage((100 - TASKS_PERCENT) / 2),
-					Constraint::Percentage(TASKS_PERCENT),
-					Constraint::Percentage((100 - TASKS_PERCENT) / 2),
-				]
-				.as_ref(),
-			)
-			.split(chunk)[1];
-
-		chunk
+			.constraints([
+				Constraint::Percentage((100 - TASKS_PERCENT) / 2),
+				Constraint::Percentage(TASKS_PERCENT),
+				Constraint::Percentage((100 - TASKS_PERCENT) / 2),
+			])
+			.split(chunk)[1]
 	}
 }
 

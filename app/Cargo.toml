@@ -7,6 +7,7 @@ edition = "2021"
 adaptor = { path = "../adaptor" }
 config  = { path = "../config" }
 core    = { path = "../core" }
+plugin  = { path = "../plugin" }
 shared  = { path = "../shared" }
 
 # External dependencies

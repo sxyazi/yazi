@@ -10,8 +10,8 @@ use tokio::{fs, sync::mpsc};
 use crate::{emit, external, files::FilesOp, tasks::TaskOp};
 
 pub(crate) struct Precache {
-	rx: async_channel::Receiver<PrecacheOp>,
 	tx: async_channel::Sender<PrecacheOp>,
+	rx: async_channel::Receiver<PrecacheOp>,
 
 	sch: mpsc::UnboundedSender<TaskOp>,
 
@@ -105,9 +105,6 @@ impl Precache {
 		Ok(())
 	}
 
-	#[inline]
-	fn done(&self, id: usize) -> Result<()> { Ok(self.sch.send(TaskOp::Done(id))?) }
-
 	pub(crate) async fn mime(&self, task: PrecacheOpMime) -> Result<()> {
 		self.sch.send(TaskOp::New(task.id, 0))?;
 		if let Ok(mimes) = external::file(&task.targets).await {
@@ -115,7 +112,7 @@ impl Precache {
 		}
 
 		self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
-		self.done(task.id)
+		self.succ(task.id)
 	}
 
 	pub(crate) async fn size(&self, task: PrecacheOpSize) -> Result<()> {
@@ -133,7 +130,7 @@ impl Precache {
 		});
 
 		self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
-		self.done(task.id)
+		self.succ(task.id)
 	}
 
 	pub(crate) fn image(&self, id: usize, targets: Vec<Url>) -> Result<()> {
@@ -141,7 +138,7 @@ impl Precache {
 			self.sch.send(TaskOp::New(id, 0))?;
 			self.tx.send_blocking(PrecacheOp::Image(PrecacheOpImage { id, target }))?;
 		}
-		self.done(id)
+		self.succ(id)
 	}
 
 	pub(crate) fn video(&self, id: usize, targets: Vec<Url>) -> Result<()> {
@@ -149,7 +146,7 @@ impl Precache {
 			self.sch.send(TaskOp::New(id, 0))?;
 			self.tx.send_blocking(PrecacheOp::Video(PrecacheOpVideo { id, target }))?;
 		}
-		self.done(id)
+		self.succ(id)
 	}
 
 	pub(crate) fn pdf(&self, id: usize, targets: Vec<Url>) -> Result<()> {
@@ -157,6 +154,11 @@ impl Precache {
 			self.sch.send(TaskOp::New(id, 0))?;
 			self.tx.send_blocking(PrecacheOp::Pdf(PrecacheOpPDF { id, target }))?;
 		}
-		self.done(id)
+		self.succ(id)
 	}
+}
+
+impl Precache {
+	#[inline]
+	fn succ(&self, id: usize) -> Result<()> { Ok(self.sch.send(TaskOp::Succ(id))?) }
 }

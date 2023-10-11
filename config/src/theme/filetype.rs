@@ -3,7 +3,7 @@ use std::path::Path;
 use serde::{Deserialize, Deserializer};
 
 use super::Style;
-use crate::{theme::Color, Pattern};
+use crate::{theme::{Color, StyleShadow}, Pattern};
 
 pub struct Filetype {
 	pub name:  Option<Pattern>,
@@ -30,16 +30,31 @@ impl Filetype {
 	{
 		#[derive(Deserialize)]
 		struct FiletypeOuter {
-			rules: Vec<FiletypeOuterStyle>,
+			rules: Vec<FiletypeRule>,
 		}
 		#[derive(Deserialize)]
-		struct FiletypeOuterStyle {
-			name:      Option<Pattern>,
-			mime:      Option<Pattern>,
-			fg:        Option<Color>,
-			bg:        Option<Color>,
-			bold:      Option<bool>,
-			underline: Option<bool>,
+		struct FiletypeRule {
+			name: Option<Pattern>,
+			mime: Option<Pattern>,
+
+			fg:          Option<Color>,
+			bg:          Option<Color>,
+			#[serde(default)]
+			bold:        bool,
+			#[serde(default)]
+			dim:         bool,
+			#[serde(default)]
+			italic:      bool,
+			#[serde(default)]
+			underline:   bool,
+			#[serde(default)]
+			blink:       bool,
+			#[serde(default)]
+			blink_rapid: bool,
+			#[serde(default)]
+			hidden:      bool,
+			#[serde(default)]
+			crossed:     bool,
 		}
 
 		Ok(
@@ -49,12 +64,19 @@ impl Filetype {
 				.map(|r| Filetype {
 					name:  r.name,
 					mime:  r.mime,
-					style: Style {
-						fg:        r.fg,
-						bg:        r.bg,
-						bold:      r.bold,
-						underline: r.underline,
-					},
+					style: StyleShadow {
+						fg:          r.fg,
+						bg:          r.bg,
+						bold:        r.bold,
+						dim:         r.dim,
+						italic:      r.italic,
+						underline:   r.underline,
+						blink:       r.blink,
+						blink_rapid: r.blink_rapid,
+						hidden:      r.hidden,
+						crossed:     r.crossed,
+					}
+					.into(),
 				})
 				.collect::<Vec<_>>(),
 		)

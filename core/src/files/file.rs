@@ -75,7 +75,14 @@ impl File {
 	#[inline]
 	pub fn length(&self) -> u64 { self.length }
 
-	// --- Link to
+	// --- Link to / Is link
 	#[inline]
 	pub fn link_to(&self) -> Option<&Url> { self.link_to.as_ref() }
+
+	#[inline]
+	pub fn is_link(&self) -> bool { self.is_link }
+
+	// -- Is hidden
+	#[inline]
+	pub fn is_hidden(&self) -> bool { self.is_hidden }
 }

@@ -1,4 +1,4 @@
-use core::{emit, files::FilesOp, input::InputMode, Event};
+use core::{emit, files::FilesOp, input::InputMode, Ctx, Event};
 use std::ffi::OsString;
 
 use anyhow::{Ok, Result};
@@ -7,7 +7,7 @@ use crossterm::event::KeyEvent;
 use shared::{expand_url, Term};
 use tokio::sync::oneshot;
 
-use crate::{Ctx, Executor, Logs, Root, Signals};
+use crate::{Executor, Logs, Root, Signals};
 
 pub(super) struct App {
 	cx:      Ctx,
@@ -21,7 +21,7 @@ impl App {
 		let term = Term::start()?;
 
 		let signals = Signals::start()?;
-		let mut app = Self { cx: Ctx::new(), term: Some(term), signals };
+		let mut app = Self { cx: Ctx::make(), term: Some(term), signals };
 
 		while let Some(event) = app.signals.recv().await {
 			match event {
@@ -76,7 +76,9 @@ impl App {
 	fn dispatch_render(&mut self) {
 		if let Some(term) = &mut self.term {
 			let _ = term.draw(|f| {
-				f.render_widget(Root::new(&self.cx), f.size());
+				plugin::scope(&self.cx, |_| {
+					f.render_widget(Root::new(&self.cx), f.size());
+				});
 
 				if let Some((x, y)) = self.cx.cursor() {
 					f.set_cursor(x, y);
@@ -209,8 +211,8 @@ impl App {
 					tasks.file_open(&targets);
 				}
 			}
-			Event::Progress(percent, left) => {
-				tasks.progress = (percent, left);
+			Event::Progress(progress) => {
+				tasks.progress = progress;
 				emit!(Render);
 			}
 

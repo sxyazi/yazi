@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, ffi::OsStr};
+use std::{collections::BTreeMap, ffi::OsStr, ops::Range};
 
 use anyhow::Result;
 use regex::bytes::{Regex, RegexBuilder};
@@ -91,13 +91,17 @@ impl Finder {
 
 	/// Explode the name into three parts: head, body, tail.
 	#[inline]
-	pub fn explode(&self, name: &[u8]) -> Option<(String, String, String)> {
-		let range = self.query.find(name).map(|m| m.range())?;
-		Some((
-			String::from_utf8_lossy(&name[..range.start]).to_string(),
-			String::from_utf8_lossy(&name[range.start..range.end]).to_string(),
-			String::from_utf8_lossy(&name[range.end..]).to_string(),
-		))
+	pub fn highlighted(&self, name: &OsStr) -> Option<Vec<Range<usize>>> {
+		#[cfg(windows)]
+		let found = self.query.find(name.to_string_lossy().as_bytes()).map(|m| m.range());
+
+		#[cfg(unix)]
+		let found = {
+			use std::os::unix::ffi::OsStrExt;
+			self.query.find(name.as_bytes()).map(|m| m.range())
+		};
+
+		found.map(|r| vec![r])
 	}
 }
 
@@ -106,15 +110,9 @@ impl Finder {
 	pub fn matched(&self) -> &BTreeMap<Url, u8> { &self.matched }
 
 	#[inline]
-	pub fn has_matched(&self) -> bool { !self.matched.is_empty() }
-
-	#[inline]
 	pub fn matched_idx(&self, url: &Url) -> Option<u8> {
 		if let Some((_, &idx)) = self.matched.iter().find(|(u, _)| *u == url) {
 			return Some(idx);
-		}
-		if url.file_name().map(|n| self.matches(n)) == Some(true) {
-			return Some(100);
 		}
 		None
 	}

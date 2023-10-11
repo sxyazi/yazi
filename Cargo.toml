@@ -5,6 +5,7 @@ members  = [
 	"app",
 	"config",
 	"core",
+	"plugin",
 	"shared",
 ]
 

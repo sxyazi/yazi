@@ -1,9 +1,9 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use super::{ManagerLayout, SortBy};
 use crate::MERGED_YAZI;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Manager {
 	pub layout: ManagerLayout,
 

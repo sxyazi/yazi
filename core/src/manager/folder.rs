@@ -90,19 +90,6 @@ impl Folder {
 		old != self.cursor
 	}
 
-	#[inline]
-	pub fn window(&self) -> &[File] {
-		let end = (self.offset + MANAGER.layout.folder_height()).min(self.files.len());
-		&self.files[self.offset..end]
-	}
-
-	#[inline]
-	pub fn window_for(&self, offset: usize) -> &[File] {
-		let start = offset.min(self.files.len().saturating_sub(1));
-		let end = (offset + MANAGER.layout.folder_height()).min(self.files.len());
-		&self.files[start..end]
-	}
-
 	pub fn hover(&mut self, url: &Url) -> bool {
 		let new = self.files.position(url).unwrap_or(self.cursor);
 		if new > self.cursor {

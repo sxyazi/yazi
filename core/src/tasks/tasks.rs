@@ -2,11 +2,12 @@ use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, io::{stdout, Wr
 
 use config::{manager::SortBy, open::Opener, OPEN};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use serde::Serialize;
 use shared::{Defer, MimeKind, Term, Url};
 use tokio::{io::{stdin, AsyncReadExt}, select, sync::mpsc, time};
 use tracing::trace;
 
-use super::{task::TaskSummary, Scheduler, TASKS_PADDING, TASKS_PERCENT};
+use super::{running::Running, task::TaskSummary, Scheduler, TASKS_PADDING, TASKS_PERCENT};
 use crate::{emit, files::{File, Files}, input::InputOpt, Event, BLOCKER};
 
 pub struct Tasks {
@@ -14,7 +15,7 @@ pub struct Tasks {
 
 	pub visible:  bool,
 	pub cursor:   usize,
-	pub progress: (u8, u32),
+	pub progress: TasksProgress,
 }
 
 impl Tasks {
@@ -23,7 +24,7 @@ impl Tasks {
 			scheduler: Arc::new(Scheduler::start()),
 			visible:   false,
 			cursor:    0,
-			progress:  (100, 0),
+			progress:  Default::default(),
 		}
 	}
 
@@ -304,4 +305,33 @@ impl Tasks {
 impl Tasks {
 	#[inline]
 	pub fn len(&self) -> usize { self.scheduler.running.read().len() }
+}
+
+#[derive(Clone, Copy, Default, Eq, PartialEq, Serialize)]
+pub struct TasksProgress {
+	pub total: u32,
+	pub succ:  u32,
+	pub fail:  u32,
+
+	pub found:     u64,
+	pub processed: u64,
+}
+
+impl From<&Running> for TasksProgress {
+	fn from(running: &Running) -> Self {
+		let mut progress = Self::default();
+		if running.is_empty() {
+			return progress;
+		}
+
+		for task in running.values() {
+			progress.total += task.total;
+			progress.succ += task.succ;
+			progress.fail += task.fail;
+
+			progress.found += task.found;
+			progress.processed += task.processed;
+		}
+		progress
+	}
 }
