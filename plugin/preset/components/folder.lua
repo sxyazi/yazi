@@ -57,6 +57,33 @@ function Folder:markers(area, markers)
 	return elements
 end
 
+function Folder:highlighted_name(file)
+	-- Complete prefix when searching across directories
+	local prefix = file:prefix() or ""
+	if prefix ~= "" then
+		prefix = prefix .. "/"
+	end
+
+	-- Range highlighting for filenames
+	local highlights = file:highlights()
+	local spans = ui.highlight_ranges(prefix .. file.name, highlights)
+
+	-- Show symlink target
+	if MANAGER.show_symlink and file.link_to ~= nil then
+		spans[#spans + 1] = ui.Span(" -> " .. tostring(file.link_to)):italic()
+	end
+
+	if highlights == nil or not file:is_hovered() then
+		return spans
+	end
+
+	local found = file:found()
+	if found ~= nil then
+		spans[#spans + 1] = ui.Span(string.format("  [%d/%d]", found[1] + 1, found[2])):fg("#ffff32"):italic()
+	end
+	return spans
+end
+
 function Folder:parent(area)
 	local folder = self:by_kind(self.Kind.Parent)
 	if folder == nil then
@@ -66,7 +93,7 @@ function Folder:parent(area)
 	local items = {}
 	for _, f in ipairs(folder.window) do
 		local item = ui.ListItem(" " .. f:icon() .. " " .. f.name .. " ")
-		if f.hovered then
+		if f:is_hovered() then
 			item = item:style(THEME.files.hovered)
 		else
 			item = item:style(f:style())
@@ -82,18 +109,11 @@ function Folder:current(area)
 	local markers = {}
 	local items = {}
 	for i, f in ipairs(self:by_kind(self.Kind.Current).window) do
-		local name = ui.highlight_ranges(f.name, f:highlights())
-
-		-- Show symlink target
-		if MANAGER.show_symlink then
-			if f.link_to ~= nil then
-				name[#name + 1] = ui.Span(" -> " .. tostring(f.link_to)):italic()
-			end
-		end
+		local name = self:highlighted_name(f)
 
 		-- Highlight hovered file
 		local item = ui.ListItem(ui.Line { ui.Span(" " .. f:icon() .. " "), table.unpack(name) })
-		if f.hovered then
+		if f:is_hovered() then
 			item = item:style(THEME.files.hovered)
 		else
 			item = item:style(f:style())
@@ -101,10 +121,10 @@ function Folder:current(area)
 		items[#items + 1] = item
 
 		-- Mark yanked/selected files
-		local yanked = f:yanked()
+		local yanked = f:is_yanked()
 		if yanked ~= 0 then
 			markers[#markers + 1] = { i, yanked }
-		elseif f:selected() then
+		elseif f:is_selected() then
 			markers[#markers + 1] = { i, 3 }
 		end
 	end
@@ -121,7 +141,7 @@ function Folder:preview(area)
 	local items = {}
 	for _, f in ipairs(folder.window) do
 		local item = ui.ListItem(" " .. f:icon() .. " " .. f.name .. " ")
-		if f.hovered then
+		if f:is_hovered() then
 			item = item:style(THEME.preview.hovered)
 		else
 			item = item:style(f:style())

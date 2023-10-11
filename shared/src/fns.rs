@@ -1,4 +1,4 @@
-use std::{borrow::Cow, env, ffi::OsStr, fmt::Display, path::{Component, Path, PathBuf}};
+use std::{borrow::Cow, env, path::{Component, Path, PathBuf}};
 
 use tokio::fs;
 
@@ -43,39 +43,6 @@ pub fn expand_url(mut u: Url) -> Url {
 	u
 }
 
-pub struct ShortPath<'a> {
-	pub prefix: &'a Path,
-	pub name:   &'a OsStr,
-}
-
-impl Display for ShortPath<'_> {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		if self.prefix == Path::new("") {
-			return write!(f, "{}", self.name.to_string_lossy());
-		}
-		write!(f, "{}/{}", self.prefix.display(), self.name.to_string_lossy())
-	}
-}
-
-pub fn short_path<'a>(p: &'a Path, base: &Path) -> ShortPath<'a> {
-	let p = p.strip_prefix(base).unwrap_or(p);
-	let mut parts = p.components();
-	let name = parts.next_back().and_then(|p| match p {
-		Component::Normal(p) => Some(p),
-		_ => None,
-	});
-	ShortPath { prefix: parts.as_path(), name: name.unwrap_or_default() }
-}
-
-pub fn readable_path(p: &Path) -> String {
-	if let Some(home) = env::var_os("HOME") {
-		if let Ok(p) = p.strip_prefix(home) {
-			return format!("~/{}", p.display());
-		}
-	}
-	p.display().to_string()
-}
-
 pub async fn unique_path(mut p: Url) -> Url {
 	let Some(name) = p.file_name().map(|n| n.to_owned()) else {
 		return p;
@@ -91,7 +58,7 @@ pub async fn unique_path(mut p: Url) -> Url {
 	p
 }
 
-// Parmaters
+// Parameters
 // * `path`: The absolute path(contains no `/./`) to get relative path.
 // * `root`: The absolute path(contains no `/./`) to be compared.
 //
@@ -138,12 +105,10 @@ pub fn path_relative_to<'a>(path: &'a Path, root: &Path) -> Cow<'a, Path> {
 
 #[inline]
 pub fn optional_bool(s: &str) -> Option<bool> {
-	if s == "true" {
-		Some(true)
-	} else if s == "false" {
-		Some(false)
-	} else {
-		None
+	match s {
+		"true" => Some(true),
+		"false" => Some(false),
+		_ => None,
 	}
 }
 

@@ -91,7 +91,7 @@ impl Finder {
 
 	/// Explode the name into three parts: head, body, tail.
 	#[inline]
-	pub fn highlighted(&self, name: &OsStr) -> Vec<Range<usize>> {
+	pub fn highlighted(&self, name: &OsStr) -> Option<Vec<Range<usize>>> {
 		#[cfg(windows)]
 		let found = self.query.find(name.to_string_lossy().as_bytes()).map(|m| m.range());
 
@@ -101,7 +101,7 @@ impl Finder {
 			self.query.find(name.as_bytes()).map(|m| m.range())
 		};
 
-		found.map(|r| vec![r]).unwrap_or_default()
+		found.map(|r| vec![r])
 	}
 }
 
@@ -110,15 +110,9 @@ impl Finder {
 	pub fn matched(&self) -> &BTreeMap<Url, u8> { &self.matched }
 
 	#[inline]
-	pub fn has_matched(&self) -> bool { !self.matched.is_empty() }
-
-	#[inline]
 	pub fn matched_idx(&self, url: &Url) -> Option<u8> {
 		if let Some((_, &idx)) = self.matched.iter().find(|(u, _)| *u == url) {
 			return Some(idx);
-		}
-		if url.file_name().map(|n| self.matches(n)) == Some(true) {
-			return Some(100);
 		}
 		None
 	}

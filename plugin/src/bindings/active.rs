@@ -1,10 +1,10 @@
 use core::Ctx;
 
-use config::{MANAGER, THEME};
+use config::MANAGER;
 use mlua::{AnyUserData, MetaMethod, UserDataFields, UserDataMethods, Value};
 
-use super::{Range, Url};
-use crate::{layout::Style, LUA};
+use super::Url;
+use crate::LUA;
 
 pub struct Active<'a, 'b> {
 	scope: &'b mlua::Scope<'a, 'a>,
@@ -99,80 +99,8 @@ impl<'a, 'b> Active<'a, 'b> {
 	) -> mlua::Result<AnyUserData<'a>> {
 		let ud = self.scope.create_any_userdata_ref(inner)?;
 		ud.set_named_user_value("idx", idx)?;
-
-		ud.set_named_user_value(
-			"icon",
-			self.scope.create_function(|_, ()| {
-				Ok(
-					THEME
-						.icons
-						.iter()
-						.find(|&x| x.name.match_path(inner.url(), Some(inner.is_dir())))
-						.map(|x| x.display.to_string()),
-				)
-			})?,
-		)?;
-
-		ud.set_named_user_value(
-			"style",
-			self.scope.create_function(|_, ()| {
-				let mime = self.cx.manager.mimetype.get(inner.url());
-				Ok(
-					THEME
-						.filetypes
-						.iter()
-						.find(|&x| x.matches(inner.url(), mime, inner.is_dir()))
-						.map(|x| Style::from(x.style)),
-				)
-			})?,
-		)?;
-
-		ud.set_named_user_value(
-			"hovered",
-			matches!(&folder.hovered, Some(f) if f.url() == inner.url()),
-		)?;
-
-		ud.set_named_user_value(
-			"yanked",
-			self.scope.create_function(|_, ()| {
-				let (cut, urls) = self.cx.manager.yanked();
-				Ok(if !urls.contains(inner.url()) {
-					0u8
-				} else if *cut {
-					2u8
-				} else {
-					1u8
-				})
-			})?,
-		)?;
-
-		ud.set_named_user_value(
-			"selected",
-			self.scope.create_function(|_, me: AnyUserData| {
-				let is_visual = self.inner.mode.is_visual();
-				let selected = folder.files.is_selected(inner.url());
-				Ok(if !is_visual {
-					selected
-				} else {
-					let idx: usize = me.named_user_value("idx")?;
-					self.inner.mode.pending(folder.offset() + idx, selected)
-				})
-			})?,
-		)?;
-
-		ud.set_named_user_value(
-			"highlights",
-			self.scope.create_function(|_, ()| {
-				let Some(finder) = self.inner.finder() else {
-					return Ok(None);
-				};
-				Ok(
-					inner
-						.name()
-						.map(|n| finder.highlighted(n).into_iter().map(Range::from).collect::<Vec<_>>()),
-				)
-			})?,
-		)?;
+		ud.set_named_user_value("folder", self.scope.create_any_userdata_ref(folder)?)?;
+		ud.set_named_user_value("manager", self.scope.create_any_userdata_ref(&self.cx.manager)?)?;
 
 		Ok(ud)
 	}
