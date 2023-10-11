@@ -55,7 +55,9 @@ function Status:permissions()
 	for i = 1, #h.permissions do
 		local c = h.permissions:sub(i, i)
 		local style = THEME.status.permissions_t
-		if c == "r" then
+		if c == "-" then
+			style = THEME.status.permissions_s
+		elseif c == "r" then
 			style = THEME.status.permissions_r
 		elseif c == "w" then
 			style = THEME.status.permissions_w

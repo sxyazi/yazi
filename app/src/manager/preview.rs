@@ -3,7 +3,7 @@ use core::{manager::PreviewData, Ctx};
 use ansi_to_tui::IntoText;
 use ratatui::{buffer::Buffer, layout::Rect, widgets::{Paragraph, Widget}};
 
-use super::{folder::FolderKind, Folder};
+use super::Folder;
 
 pub(super) struct Preview<'a> {
 	cx: &'a Ctx,
@@ -27,7 +27,7 @@ impl<'a> Widget for Preview<'a> {
 
 		match &preview.lock.as_ref().unwrap().data {
 			PreviewData::Folder => {
-				Folder::new(FolderKind::Preview).render(area, buf);
+				Folder::Preview.render(area, buf);
 			}
 			PreviewData::Text(s) => {
 				let p = Paragraph::new(s.as_bytes().into_text().unwrap());

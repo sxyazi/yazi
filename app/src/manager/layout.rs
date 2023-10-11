@@ -3,7 +3,7 @@ use core::Ctx;
 use config::MANAGER;
 use ratatui::{buffer::Buffer, layout::{self, Constraint, Direction, Rect}, widgets::{Block, Borders, Padding, Widget}};
 
-use super::{folder::FolderKind, Folder, Preview};
+use super::{Folder, Preview};
 
 pub(crate) struct Layout<'a> {
 	cx: &'a Ctx,
@@ -30,12 +30,12 @@ impl<'a> Widget for Layout<'a> {
 		// Parent
 		let block = Block::new().borders(Borders::RIGHT).padding(Padding::new(1, 0, 0, 0));
 		if manager.parent().is_some() {
-			Folder::new(FolderKind::Parent).render(block.inner(chunks[0]), buf);
+			Folder::Parent.render(block.inner(chunks[0]), buf);
 		}
 		block.render(chunks[0], buf);
 
 		// Current
-		Folder::new(FolderKind::Current).render(chunks[1], buf);
+		Folder::Current.render(chunks[1], buf);
 
 		// Preview
 		let block = Block::new().borders(Borders::LEFT).padding(Padding::new(0, 1, 0, 0));

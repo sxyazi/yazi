@@ -19,10 +19,11 @@ progress_normal = { fg = "#FFA577", bg = "#484D66" }
 progress_error  = { fg = "#FF84A9", bg = "#484D66" }
 
 # Permissions
-permissions_t = { fg = "#6D738F" }
+permissions_t = { fg = "#97DC8D" }
 permissions_r = { fg = "#F3D398" }
 permissions_w = { fg = "#FA7F94" }
 permissions_x = { fg = "#7AD9E5" }
+permissions_s = { fg = "#6D738F" }
 
 [files]
 hovered = { fg = "#1E2031", bg = "#80AEFA" }

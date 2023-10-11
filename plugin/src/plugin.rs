@@ -1,4 +1,5 @@
 use anyhow::Result;
+use config::PLUGINS;
 use mlua::{Lua, Table};
 use shared::RoCell;
 
@@ -8,13 +9,13 @@ pub(crate) static LUA: RoCell<Lua> = RoCell::new();
 pub(crate) static GLOBALS: RoCell<Table> = RoCell::new();
 
 pub fn init() {
-	fn inner() -> Result<()> {
+	fn stage_1() -> Result<()> {
 		let lua = Lua::new();
 
 		// Base
+		lua.load(include_str!("../preset/inspect/inspect.lua")).exec()?;
 		lua.load(include_str!("../preset/ui.lua")).exec()?;
 		lua.load(include_str!("../preset/utils.lua")).exec()?;
-		lua.load(include_str!("../preset/inspect/inspect.lua")).exec()?;
 
 		// Components
 		lua.load(include_str!("../preset/components/folder.lua")).exec()?;
@@ -44,5 +45,13 @@ pub fn init() {
 		Ok(())
 	}
 
-	inner().expect("failed to initialize Lua");
+	fn stage_2() {
+		PLUGINS.preload.iter().for_each(|p| {
+			let b = std::fs::read(p).unwrap_or_else(|_| panic!("failed to read plugin: {p:?}"));
+			LUA.load(&b).exec().unwrap_or_else(|_| panic!("failed to load plugin: {p:?}"));
+		});
+	}
+
+	stage_1().expect("failed to initialize Lua");
+	stage_2();
 }

@@ -1649,6 +1649,7 @@ dependencies = [
  "libc",
  "parking_lot",
  "ratatui",
+ "regex",
  "tokio",
 ]
 

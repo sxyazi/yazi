@@ -70,5 +70,8 @@ micro_workers = 5
 macro_workers = 10
 bizarre_retry = 5
 
+[plugins]
+preload = []
+
 [log]
 enabled = false
