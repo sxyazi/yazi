@@ -1,6 +1,7 @@
 use core::Ctx;
 
-use ratatui::{buffer::Buffer, layout::{self, Rect}, prelude::{Constraint, Direction}, style::{Color, Style}, widgets::{Clear, Paragraph, Widget}};
+use config::THEME;
+use ratatui::{buffer::Buffer, layout::{self, Rect}, prelude::{Constraint, Direction}, widgets::{Clear, Paragraph, Widget}};
 
 use super::Bindings;
 
@@ -23,7 +24,7 @@ impl<'a> Widget for Layout<'a> {
 
 		let help = &self.cx.help;
 		Paragraph::new(help.keyword().unwrap_or_else(|| format!("{}.help", help.layer())))
-			.style(Style::new().fg(Color::Black).bg(Color::White))
+			.style(THEME.help.footer.into())
 			.render(chunks[1], buf);
 
 		Bindings::new(self.cx).render(chunks[0], buf);

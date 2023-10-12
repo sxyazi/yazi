@@ -2,7 +2,8 @@ use core::{input::InputMode, Ctx};
 use std::ops::Range;
 
 use ansi_to_tui::IntoText;
-use ratatui::{buffer::Buffer, layout::Rect, style::{Color, Style}, text::{Line, Text}, widgets::{Block, BorderType, Borders, Clear, Paragraph, Widget}};
+use config::THEME;
+use ratatui::{buffer::Buffer, layout::Rect, text::{Line, Text}, widgets::{Block, BorderType, Borders, Clear, Paragraph, Widget}};
 use shared::Term;
 
 pub(crate) struct Input<'a> {
@@ -30,14 +31,14 @@ impl<'a> Widget for Input<'a> {
 				Block::new()
 					.borders(Borders::ALL)
 					.border_type(BorderType::Rounded)
-					.border_style(Style::new().fg(Color::Blue))
+					.border_style(THEME.input.border.into())
 					.title({
 						let mut line = Line::from(input.title());
-						line.patch_style(Style::new().fg(Color::White));
+						line.patch_style(THEME.input.title.into());
 						line
 					}),
 			)
-			.style(Style::new().fg(Color::White))
+			.style(THEME.input.value.into())
 			.render(area, buf);
 
 		if let Some(Range { start, end }) = input.selected() {
@@ -46,7 +47,7 @@ impl<'a> Widget for Input<'a> {
 
 			buf.set_style(
 				Rect { x, y, width: (end - start).min(win.width - x), height: 1.min(win.height - y) },
-				Style::new().bg(Color::Rgb(72, 77, 102)),
+				THEME.input.selected.into(),
 			)
 		}
 

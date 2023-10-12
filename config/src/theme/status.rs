@@ -4,7 +4,6 @@ use super::Style;
 
 #[derive(Deserialize, Serialize)]
 pub struct Status {
-	pub plain:     Style,
 	pub fancy:     Style,
 	pub separator: StatusSeparator,
 

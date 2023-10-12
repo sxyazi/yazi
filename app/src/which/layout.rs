@@ -1,6 +1,7 @@
 use core::Ctx;
 
-use ratatui::{layout, prelude::{Buffer, Constraint, Direction, Rect}, style::{Color, Style}, widgets::{Block, Clear, Widget}};
+use config::THEME;
+use ratatui::{layout, prelude::{Buffer, Constraint, Direction, Rect}, widgets::{Block, Clear, Widget}};
 
 use super::Side;
 
@@ -39,7 +40,7 @@ impl Widget for Which<'_> {
 			.split(area);
 
 		Clear.render(area, buf);
-		Block::new().style(Style::new().bg(Color::Rgb(47, 51, 73))).render(area, buf);
+		Block::new().style(THEME.which.mask.into()).render(area, buf);
 		Side::new(which.times, cands.0).render(chunks[0], buf);
 		Side::new(which.times, cands.1).render(chunks[1], buf);
 		Side::new(which.times, cands.2).render(chunks[2], buf);
