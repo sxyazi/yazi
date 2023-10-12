@@ -41,7 +41,7 @@ impl<'a> Widget for Layout<'a> {
 		let block = Block::new()
 			.title({
                 let mut line = Line::from("Tasks".to_string());
-                line.patch_style(THEME.tasks.title.get());
+                line.patch_style(THEME.tasks.title.into());
                 line
 })
 			.title_alignment(Alignment::Center)
@@ -49,7 +49,7 @@ impl<'a> Widget for Layout<'a> {
             // Maybe also add these border type in to the later theme system
 			.borders(Borders::ALL)
 			.border_type(BorderType::Rounded)
-			.border_style(THEME.tasks.border.get());
+			.border_style(THEME.tasks.border.into());
 		block.clone().render(area, buf);
 
 		let tasks = &self.cx.tasks;
@@ -60,7 +60,7 @@ impl<'a> Widget for Layout<'a> {
 			.map(|(i, v)| {
 				let mut item = ListItem::new(v.name.clone());
 				if i == tasks.cursor {
-					item = item.style(THEME.tasks.items.get());
+					item = item.style(THEME.tasks.items.into());
 				}
 				item
 			})

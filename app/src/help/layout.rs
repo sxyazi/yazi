@@ -1,8 +1,9 @@
+use core::Ctx;
+
 use config::THEME;
 use ratatui::{buffer::Buffer, layout::{self, Rect}, prelude::{Constraint, Direction}, widgets::{Clear, Paragraph, Widget}};
 
 use super::Bindings;
-use crate::Ctx;
 
 pub(crate) struct Layout<'a> {
 	cx: &'a Ctx,
@@ -23,7 +24,7 @@ impl<'a> Widget for Layout<'a> {
 
 		let help = &self.cx.help;
 		Paragraph::new(help.keyword().unwrap_or_else(|| format!("{}.help", help.layer())))
-			.style(THEME.help.btm.get())
+			.style(THEME.help.btm.into())
 			.render(chunks[1], buf);
 
 		Bindings::new(self.cx).render(chunks[0], buf);

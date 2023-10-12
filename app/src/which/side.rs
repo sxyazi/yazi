@@ -21,19 +21,19 @@ impl Widget for Side<'_> {
 				// Keys
 				let keys = c.on[self.times..].iter().map(ToString::to_string).collect::<Vec<_>>();
 				spans.push(Span::raw(" ".repeat(10usize.saturating_sub(keys.join("").len()))));
-				spans.push(Span::styled(keys[0].clone(), THEME.which.key.get()));
+				spans.push(Span::styled(keys[0].clone(), THEME.which.key.into()));
 				spans.extend(
-					keys.iter().skip(1).map(|k| Span::styled(k.to_string(), THEME.which.extend.get())),
+					keys.iter().skip(1).map(|k| Span::styled(k.to_string(), THEME.which.extend.into())),
 				);
 
 				// Separator
 				spans.push(Span::styled(
 					THEME.which.separator.separator.to_string(),
-					Style::new().fg(*THEME.which.separator.color),
+					Style::new().fg(THEME.which.separator.color.into()),
 				));
 
 				// Exec,
-				spans.push(Span::styled(c.desc_or_exec(), THEME.which.desc.get()));
+				spans.push(Span::styled(c.desc_or_exec(), THEME.which.desc.into()));
 
 				ListItem::new(Line::from(spans))
 			})

@@ -1,7 +1,7 @@
+use core::Ctx;
+
 use config::THEME;
 use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, Borders, Clear, List, ListItem, Widget}};
-
-use crate::Ctx;
 
 pub(crate) struct Select<'a> {
 	cx: &'a Ctx,
@@ -22,10 +22,10 @@ impl<'a> Widget for Select<'a> {
 			.enumerate()
 			.map(|(i, v)| {
 				if i != select.rel_cursor() {
-					return ListItem::new(format!("  {v}")).style(THEME.opener.inactive.get());
+					return ListItem::new(format!("  {v}")).style(THEME.select.inactive.into());
 				}
 
-				ListItem::new(format!(" {v}")).style(THEME.opener.active.get())
+				ListItem::new(format!(" {v}")).style(THEME.select.active.into())
 			})
 			.collect::<Vec<_>>();
 
@@ -36,7 +36,7 @@ impl<'a> Widget for Select<'a> {
 					.title(select.title())
 					.borders(Borders::ALL)
 					.border_type(BorderType::Rounded)
-					.border_style(THEME.opener.border.get()),
+					.border_style(THEME.select.border.into()),
 			)
 			.render(area, buf);
 	}

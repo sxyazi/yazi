@@ -31,14 +31,14 @@ impl<'a> Widget for Input<'a> {
 				Block::new()
 					.borders(Borders::ALL)
 					.border_type(BorderType::Rounded)
-					.border_style(THEME.input.border.get())
+					.border_style(THEME.input.border.into())
 					.title({
 						let mut line = Line::from(input.title());
-						line.patch_style(THEME.input.title.get());
+						line.patch_style(THEME.input.title.into());
 						line
 					}),
 			)
-			.style(THEME.input.text.get())
+			.style(THEME.input.text.into())
 			.render(area, buf);
 
 		if let Some(Range { start, end }) = input.selected() {
@@ -47,7 +47,7 @@ impl<'a> Widget for Input<'a> {
 
 			buf.set_style(
 				Rect { x, y, width: (end - start).min(win.width - x), height: 1.min(win.height - y) },
-				THEME.input.visual.get(),
+				THEME.input.visual.into(),
 			)
 		}
 

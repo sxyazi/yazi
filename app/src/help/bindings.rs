@@ -1,7 +1,7 @@
+use core::Ctx;
+
 use config::THEME;
 use ratatui::{layout::{self, Constraint}, prelude::{Buffer, Direction, Rect}, widgets::{List, ListItem, Widget}};
-
-use crate::context::Ctx;
 
 pub(super) struct Bindings<'a> {
 	cx: &'a Ctx,
@@ -21,13 +21,13 @@ impl Widget for Bindings<'_> {
 		// Key
 		let col1 = bindings
 			.iter()
-			.map(|c| ListItem::new(c.on()).style(THEME.help.key.get()))
+			.map(|c| ListItem::new(c.on()).style(THEME.help.key.into()))
 			.collect::<Vec<_>>();
 
 		// Execution
 		let col2 = bindings
 			.iter()
-			.map(|c| ListItem::new(c.exec()).style(THEME.help.exec.get()))
+			.map(|c| ListItem::new(c.exec()).style(THEME.help.exec.into()))
 			.collect::<Vec<_>>();
 
 		// Description
@@ -35,7 +35,7 @@ impl Widget for Bindings<'_> {
 			.iter()
 			.map(|c| {
 				ListItem::new(if let Some(ref desc) = c.desc { desc } else { "-" })
-					.style(THEME.help.desc.get())
+					.style(THEME.help.desc.into())
 			})
 			.collect::<Vec<_>>();
 
@@ -47,7 +47,7 @@ impl Widget for Bindings<'_> {
 		let cursor = self.cx.help.rel_cursor() as u16;
 		buf.set_style(
 			Rect { x: area.x, y: area.y + cursor, width: area.width, height: 1 },
-			THEME.help.curr.get(),
+			THEME.help.curr.into(),
 		);
 
 		List::new(col1).render(chunks[0], buf);
