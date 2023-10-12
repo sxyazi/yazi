@@ -146,7 +146,7 @@ impl Tab {
 				emit!(Input(InputOpt::top("Change directory:").with_value(target.to_string_lossy())));
 
 			if let Some(Ok(s)) = result.recv().await {
-				emit!(Cd(Url::from(s)));
+				emit!(Cd(Url::from(s.trim())));
 			}
 		});
 		false
