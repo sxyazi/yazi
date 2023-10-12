@@ -1,8 +1,6 @@
-[tabs]
-active    = { fg = "#1E2031", bg = "#80AEFA" }
-inactive  = { fg = "#C8D3F8", bg = "#484D66" }
-header    = { fg = "#00FFFF" }
-max_width = 1
+# vim:fileencoding=utf-8:foldmethod=marker
+
+# : Status {{{
 
 [status]
 plain     = { fg = "#FFFFFF" }
@@ -26,6 +24,17 @@ permissions_w = { fg = "#FA7F94" }
 permissions_x = { fg = "#7AD9E5" }
 permissions_s = { fg = "#6D738F" }
 
+# : }}}
+
+
+# : Manager {{{
+
+[tabs]
+active    = { fg = "#1E2031", bg = "#80AEFA" }
+inactive  = { fg = "#C8D3F8", bg = "#484D66" }
+header    = { fg = "#00FFFF" }
+max_width = 1
+
 [files]
 hovered = { fg = "#1E2031", bg = "#80AEFA" }
 
@@ -34,16 +43,17 @@ selected = { fg = "#97DC8D", bg = "#97DC8D" }
 copied   = { fg = "#F3D398", bg = "#F3D398" }
 cut      = { fg = "#FF84A9", bg = "#FF84A9" }
 
+[find]
+# arrow = { fg = "LightYellow", italic = true }
+
 [preview]
 hovered       = { underline = true }
 syntect_theme = "~/.config/bat/themes/Catppuccin-macchiato.tmTheme"
 
-[help]
-key  = { fg = "#E5E510" }
-exec = { fg = "#11A8CD" }
-desc = { fg = "#E5E5E5" }
-curr = { bg = "#666666", bold = true }
-btm  = { fg = "#666666", bg = "#E5E5E5" }
+# : }}}
+
+
+# : File-specific styles {{{
 
 [filetype]
 
@@ -163,3 +173,60 @@ rules = [
 # Default
 "*"  = ""
 "*/" = ""
+
+# : }}}
+
+
+# : Input {{{
+
+[input]
+border   = { fg = "blue" }
+title    = { fg = "white" }
+value    = { fg = "white" }
+selected = { fg = "darkGray" }
+
+# : }}}
+
+
+# : Select {{{
+
+[select]
+border   = { fg = "blue" }
+active   = { fg = "magenta" }
+inactive = { fg = "white" }
+
+# : }}}
+
+
+# : Tasks {{{
+
+[tasks]
+border  = { fg = "blue" }
+title   = { fg = "white" }
+hovered = { underline = true }
+
+# : }}}
+
+
+# : Which {{{
+
+[which]
+# block     = { bg = "Black" }
+# key       = { fg = "LightCyan" }
+# extend    = { fg = "DarkGray" }
+# desc      = { fg = "Magenta" }
+# separator = { separator = " -> ", color = "DarkGray" }
+
+# : }}}
+
+
+# : Help {{{
+
+[help]
+# key  = { fg = "#E5E510" }
+# exec = { fg = "#11A8CD" }
+# desc = { fg = "#E5E5E5" }
+# curr = { bg = "#666666", bold = true }
+# btm  = { fg = "#666666", bg = "#E5E5E5" }
+
+# : }}}

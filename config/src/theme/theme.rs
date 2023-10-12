@@ -1,38 +1,41 @@
-use std::path::PathBuf;
-
 use serde::{Deserialize, Serialize};
 use shared::expand_path;
 use validator::Validate;
 
-use super::{Files, Filetype, Icon, Marker, Status, Style};
+use super::{Files, Filetype, Help, Icon, Input, Marker, Preview, Select, Status, Tabs, Tasks, Which};
 use crate::{validation::check_validation, MERGED_THEME};
-
-#[derive(Deserialize, Serialize, Validate)]
-pub struct Tabs {
-	pub active:    Style,
-	pub inactive:  Style,
-	pub header:    Style,
-	#[validate(range(min = 1, message = "Must be greater than 0"))]
-	pub max_width: u8,
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct Preview {
-	pub hovered:       Style,
-	pub syntect_theme: PathBuf,
-}
 
 #[derive(Deserialize, Serialize)]
 pub struct Theme {
-	pub tabs:      Tabs,
-	pub status:    Status,
-	pub files:     Files,
-	pub marker:    Marker,
-	pub preview:   Preview,
+	// Status
+	pub status: Status,
+
+	// Manager
+	pub tabs:    Tabs,
+	pub files:   Files,
+	pub marker:  Marker,
+	pub preview: Preview,
+
+	// File-specific styles
 	#[serde(rename = "filetype", deserialize_with = "Filetype::deserialize", skip_serializing)]
 	pub filetypes: Vec<Filetype>,
 	#[serde(deserialize_with = "Icon::deserialize", skip_serializing)]
 	pub icons:     Vec<Icon>,
+
+	// Input
+	pub input: Input,
+
+	// Select
+	pub select: Select,
+
+	// Tasks
+	pub tasks: Tasks,
+
+	// Which
+	pub which: Which,
+
+	// Help
+	pub help: Help,
 }
 
 impl Default for Theme {

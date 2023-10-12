@@ -38,7 +38,7 @@ impl<'a> Widget for Input<'a> {
 						line
 					}),
 			)
-			.style(THEME.input.text.into())
+			.style(THEME.input.value.into())
 			.render(area, buf);
 
 		if let Some(Range { start, end }) = input.selected() {
@@ -47,7 +47,7 @@ impl<'a> Widget for Input<'a> {
 
 			buf.set_style(
 				Rect { x, y, width: (end - start).min(win.width - x), height: 1.min(win.height - y) },
-				THEME.input.visual.into(),
+				THEME.input.selected.into(),
 			)
 		}
 
