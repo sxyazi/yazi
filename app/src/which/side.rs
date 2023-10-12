@@ -32,7 +32,7 @@ impl Widget for Side<'_> {
 					THEME.which.separator_style.into(),
 				));
 
-				// Exec
+				// Desc / Exec
 				spans.push(Span::styled(c.desc_or_exec(), THEME.which.desc.into()));
 
 				ListItem::new(Line::from(spans))

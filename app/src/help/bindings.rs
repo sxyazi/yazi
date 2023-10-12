@@ -24,13 +24,13 @@ impl Widget for Bindings<'_> {
 			.map(|c| ListItem::new(c.on()).style(THEME.help.on.into()))
 			.collect::<Vec<_>>();
 
-		// Execution
+		// Exec
 		let col2 = bindings
 			.iter()
 			.map(|c| ListItem::new(c.exec()).style(THEME.help.exec.into()))
 			.collect::<Vec<_>>();
 
-		// Description
+		// Desc
 		let col3 = bindings
 			.iter()
 			.map(|c| ListItem::new(c.desc.as_deref().unwrap_or("-")).style(THEME.help.desc.into()))
