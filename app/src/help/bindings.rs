@@ -18,10 +18,10 @@ impl Widget for Bindings<'_> {
 			return;
 		}
 
-		// Key
+		// On
 		let col1 = bindings
 			.iter()
-			.map(|c| ListItem::new(c.on()).style(THEME.help.key.into()))
+			.map(|c| ListItem::new(c.on()).style(THEME.help.on.into()))
 			.collect::<Vec<_>>();
 
 		// Execution
@@ -33,10 +33,7 @@ impl Widget for Bindings<'_> {
 		// Description
 		let col3 = bindings
 			.iter()
-			.map(|c| {
-				ListItem::new(if let Some(ref desc) = c.desc { desc } else { "-" })
-					.style(THEME.help.desc.into())
-			})
+			.map(|c| ListItem::new(c.desc.as_deref().unwrap_or("-")).style(THEME.help.desc.into()))
 			.collect::<Vec<_>>();
 
 		let chunks = layout::Layout::new()
@@ -47,7 +44,7 @@ impl Widget for Bindings<'_> {
 		let cursor = self.cx.help.rel_cursor() as u16;
 		buf.set_style(
 			Rect { x: area.x, y: area.y + cursor, width: area.width, height: 1 },
-			THEME.help.curr.into(),
+			THEME.help.hovered.into(),
 		);
 
 		List::new(col1).render(chunks[0], buf);

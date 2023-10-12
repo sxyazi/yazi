@@ -17,14 +17,14 @@ impl<'a> Widget for Layout<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let chunks = layout::Layout::new()
 			.direction(Direction::Vertical)
-			.constraints([Constraint::Min(0), Constraint::Length(1)].as_ref())
+			.constraints([Constraint::Min(0), Constraint::Length(1)])
 			.split(area);
 
 		Clear.render(area, buf);
 
 		let help = &self.cx.help;
 		Paragraph::new(help.keyword().unwrap_or_else(|| format!("{}.help", help.layer())))
-			.style(THEME.help.btm.into())
+			.style(THEME.help.footer.into())
 			.render(chunks[1], buf);
 
 		Bindings::new(self.cx).render(chunks[0], buf);

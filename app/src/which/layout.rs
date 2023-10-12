@@ -36,13 +36,11 @@ impl Widget for Which<'_> {
 
 		let chunks = layout::Layout::new()
 			.direction(Direction::Horizontal)
-			.constraints(
-				[Constraint::Ratio(1, 3), Constraint::Ratio(1, 3), Constraint::Ratio(1, 3)].as_ref(),
-			)
+			.constraints([Constraint::Ratio(1, 3), Constraint::Ratio(1, 3), Constraint::Ratio(1, 3)])
 			.split(area);
 
 		Clear.render(area, buf);
-		Block::new().style(THEME.which.block.into()).render(area, buf);
+		Block::new().style(THEME.which.mask.into()).render(area, buf);
 		Side::new(which.times, cands.0).render(chunks[0], buf);
 		Side::new(which.times, cands.1).render(chunks[1], buf);
 		Side::new(which.times, cands.2).render(chunks[2], buf);

@@ -40,13 +40,12 @@ impl<'a> Widget for Layout<'a> {
 		Clear.render(area, buf);
 		let block = Block::new()
 			.title({
-                let mut line = Line::from("Tasks".to_string());
-                line.patch_style(THEME.tasks.title.into());
-                line
-})
+				let mut line = Line::from("Tasks");
+				line.patch_style(THEME.tasks.title.into());
+				line
+			})
 			.title_alignment(Alignment::Center)
 			.padding(Padding::new(0, 0, 1, 1))
-            // Maybe also add these border type in to the later theme system
 			.borders(Borders::ALL)
 			.border_type(BorderType::Rounded)
 			.border_style(THEME.tasks.border.into());
