@@ -25,7 +25,7 @@ function Folder:markers(area, markers)
 	local append = function(last)
 		local p = ui.Paragraph(
 			ui.Rect {
-				x = area.x - 1,
+				x = math.max(1, area.x) - 1,
 				y = area.y + last[1] - 1,
 				w = 1,
 				h = 1 + last[2] - last[1],
