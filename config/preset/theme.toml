@@ -3,14 +3,13 @@
 # : Status {{{
 
 [status]
-plain     = { fg = "#FFFFFF" }
-fancy     = { bg = "#45475D" }
+fancy     = { bg = "darkgray" }
 separator = { opening = "", closing = "" }
 
 # Mode
-mode_normal = { fg = "#181827", bg = "#7DB5FF", bold = true }
-mode_select = { fg = "#1E1E30", bg = "#D2A4FE", bold = true }
-mode_unset  = { fg = "#1E1E30", bg = "#FFAF80", bold = true }
+mode_normal = { fg = "black", bg = "blue", bold = true }
+mode_select = { fg = "black", bg = "green", bold = true }
+mode_unset  = { fg = "black", bg = "magenta", bold = true }
 
 # Progress
 progress_label  = { fg = "#FFFFFF", bold = true }
@@ -18,11 +17,11 @@ progress_normal = { fg = "#FFA577", bg = "#484D66" }
 progress_error  = { fg = "#FF84A9", bg = "#484D66" }
 
 # Permissions
-permissions_t = { fg = "#97DC8D" }
-permissions_r = { fg = "#F3D398" }
-permissions_w = { fg = "#FA7F94" }
-permissions_x = { fg = "#7AD9E5" }
-permissions_s = { fg = "#6D738F" }
+permissions_t = { fg = "lightgreen" }
+permissions_r = { fg = "lightyellow" }
+permissions_w = { fg = "lightred" }
+permissions_x = { fg = "lightcyan" }
+permissions_s = { fg = "darkgray" }
 
 # : }}}
 
@@ -30,17 +29,17 @@ permissions_s = { fg = "#6D738F" }
 # : Manager {{{
 
 [tabs]
-active    = { fg = "#1E2031", bg = "#80AEFA" }
-inactive  = { fg = "#C8D3F8", bg = "#484D66" }
+active    = { fg = "black", bg = "blue" }
+inactive  = { bg = "darkgray" }
 max_width = 1
 
 [files]
-hovered = { fg = "#1E2031", bg = "#80AEFA" }
+hovered = { fg = "#000000", bg = "blue" }
 
 [marker]
-selected = { fg = "#97DC8D", bg = "#97DC8D" }
-copied   = { fg = "#F3D398", bg = "#F3D398" }
-cut      = { fg = "#FF84A9", bg = "#FF84A9" }
+selected = { fg = "lightgreen",  bg = "lightgreen" }
+copied   = { fg = "lightyellow", bg = "lightyellow" }
+cut      = { fg = "lightred",    bg = "lightred" }
 
 [preview]
 hovered       = { underline = true }
@@ -55,24 +54,23 @@ syntect_theme = "~/.config/bat/themes/Catppuccin-macchiato.tmTheme"
 
 rules = [
 	# Images
-	{ mime = "image/*", fg = "#7AD9E5" },
+	{ mime = "image/*", fg = "cyan" },
 
 	# Videos
-	{ mime = "video/*", fg = "#F3D398" },
-	{ mime = "audio/*", fg = "#F3D398" },
+	{ mime = "video/*", fg = "yellow" },
+	{ mime = "audio/*", fg = "yellow" },
 
 	# Archives
-	{ mime = "application/zip", fg = "#CD9EFC" },
-	{ mime = "application/gzip", fg = "#CD9EFC" },
-	{ mime = "application/x-tar", fg = "#CD9EFC" },
-	{ mime = "application/x-bzip", fg = "#CD9EFC" },
-	{ mime = "application/x-bzip2", fg = "#CD9EFC" },
-	{ mime = "application/x-7z-compressed", fg = "#CD9EFC" },
-	{ mime = "application/x-rar", fg = "#CD9EFC" },
+	{ mime = "application/zip",             fg = "magenta" },
+	{ mime = "application/gzip",            fg = "magenta" },
+	{ mime = "application/x-tar",           fg = "magenta" },
+	{ mime = "application/x-bzip",          fg = "magenta" },
+	{ mime = "application/x-bzip2",         fg = "magenta" },
+	{ mime = "application/x-7z-compressed", fg = "magenta" },
+	{ mime = "application/x-rar",           fg = "magenta" },
 
 	# Fallback
-	{ name = "*", fg = "#C8D3F8" },
-	{ name = "*/", fg = "#80AEFA" }
+	{ name = "*/", fg = "blue" }
 ]
 
 [icons]
@@ -179,7 +177,7 @@ rules = [
 border   = { fg = "blue" }
 title    = { fg = "white" }
 value    = { fg = "white" }
-selected = { fg = "darkGray" }
+selected = { bg = "black" }
 
 # : }}}
 
@@ -207,12 +205,12 @@ hovered = { underline = true }
 # : Which {{{
 
 [which]
-mask            = { bg = "Black" }
-cand            = { fg = "LightCyan" }
-rest            = { fg = "DarkGray" }
-desc            = { fg = "Magenta" }
+mask            = { bg = "black" }
+cand            = { fg = "lightcyan" }
+rest            = { fg = "darkgray" }
+desc            = { fg = "magenta" }
 separator       = "  "
-separator_style = { fg = "DarkGray" }
+separator_style = { fg = "darkgray" }
 
 # : }}}
 
@@ -220,10 +218,10 @@ separator_style = { fg = "DarkGray" }
 # : Help {{{
 
 [help]
-on      = { fg = "#E5E510" }
-exec    = { fg = "#11A8CD" }
-desc    = { fg = "#E5E5E5" }
-hovered = { bg = "#666666", bold = true }
-footer  = { fg = "#666666", bg = "#E5E5E5" }
+on      = { fg = "magenta" }
+exec    = { fg = "cyan" }
+desc    = { fg = "gray" }
+hovered = { bg = "darkgray", bold = true }
+footer  = { fg = "black", bg = "white" }
 
 # : }}}
