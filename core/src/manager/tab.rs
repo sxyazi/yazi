@@ -77,7 +77,7 @@ impl Tab {
 
 		// Visual selection
 		if let Some((start, items)) = self.mode.visual_mut() {
-			let after = self.current.cursor();
+			let after = self.current.cursor;
 
 			items.clear();
 			for i in start.min(after)..=after.max(start) {
@@ -97,14 +97,15 @@ impl Tab {
 
 		let mut hovered = None;
 		if !file.is_dir() {
-			hovered = Some(file);
+			hovered = Some(file.url_owned());
 			target = target.parent_url().unwrap();
+			emit!(Files(FilesOp::Creating(target.clone(), file.into_map())));
 		}
 
 		// Already in target
 		if self.current.cwd == target {
-			if hovered.map(|h| self.current.hover_force(h)) == Some(true) {
-				emit!(Hover);
+			if let Some(h) = hovered {
+				emit!(Hover(h));
 			}
 			return false;
 		}
@@ -128,7 +129,7 @@ impl Tab {
 
 		// Hover the file
 		if let Some(h) = hovered {
-			self.current.hover_force(h);
+			emit!(Hover(h));
 		}
 
 		// Backstack
@@ -153,15 +154,12 @@ impl Tab {
 	}
 
 	pub fn enter(&mut self) -> bool {
-		let Some(hovered) = self.current.hovered.clone() else {
+		let Some(hovered) = self.current.hovered().filter(|h| h.is_dir()).map(|h| h.url_owned()) else {
 			return false;
 		};
-		if !hovered.is_dir() {
-			return false;
-		}
 
 		// Current
-		let rep = self.history_new(hovered.url());
+		let rep = self.history_new(&hovered);
 		let rep = mem::replace(&mut self.current, rep);
 		if rep.cwd.is_regular() {
 			self.history.insert(rep.cwd.clone(), rep);
@@ -171,10 +169,10 @@ impl Tab {
 		if let Some(rep) = self.parent.take() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
-		self.parent = Some(self.history_new(&hovered.parent().unwrap()));
+		self.parent = Some(self.history_new(&hovered.parent_url().unwrap()));
 
 		// Backstack
-		self.backstack.push(hovered.url_owned());
+		self.backstack.push(hovered);
 
 		emit!(Refresh);
 		true
@@ -183,8 +181,7 @@ impl Tab {
 	pub fn leave(&mut self) -> bool {
 		let current = self
 			.current
-			.hovered
-			.as_ref()
+			.hovered()
 			.and_then(|h| h.parent())
 			.filter(|p| *p != self.current.cwd)
 			.or_else(|| self.current.cwd.parent_url());
@@ -230,8 +227,8 @@ impl Tab {
 	}
 
 	pub fn select(&mut self, state: Option<bool>) -> bool {
-		if let Some(ref hovered) = self.current.hovered {
-			return self.current.files.select(hovered.url(), state);
+		if let Some(u) = self.current.hovered().map(|h| h.url_owned()) {
+			return self.current.files.select(&u, state);
 		}
 		false
 	}
@@ -239,7 +236,7 @@ impl Tab {
 	pub fn select_all(&mut self, state: Option<bool>) -> bool { self.current.files.select_all(state) }
 
 	pub fn visual_mode(&mut self, unset: bool) -> bool {
-		let idx = self.current.cursor();
+		let idx = self.current.cursor;
 
 		if unset {
 			self.mode = Mode::Unset(idx, BTreeSet::from([idx]));
@@ -276,9 +273,9 @@ impl Tab {
 			};
 
 			let step = if prev {
-				finder.prev(&self.current.files, self.current.cursor(), true)
+				finder.prev(&self.current.files, self.current.cursor, true)
 			} else {
-				finder.next(&self.current.files, self.current.cursor(), true)
+				finder.next(&self.current.files, self.current.cursor, true)
 			};
 
 			if let Some(step) = step {
@@ -318,9 +315,9 @@ impl Tab {
 
 		let b = finder.catchup(&self.current.files);
 		let step = if prev {
-			finder.prev(&self.current.files, self.current.cursor(), false)
+			finder.prev(&self.current.files, self.current.cursor, false)
 		} else {
-			finder.next(&self.current.files, self.current.cursor(), false)
+			finder.next(&self.current.files, self.current.cursor, false)
 		};
 
 		b | step.is_some_and(|s| self.arrow(s.into()))
@@ -427,7 +424,7 @@ impl Tab {
 	}
 
 	pub fn update_peek(&mut self, max: usize, url: Url) -> bool {
-		let Some(ref hovered) = self.current.hovered else {
+		let Some(hovered) = self.current.hovered() else {
 			return false;
 		};
 
@@ -439,7 +436,7 @@ impl Tab {
 	}
 
 	pub fn update_preview(&mut self, lock: PreviewLock) -> bool {
-		let Some(hovered) = self.current.hovered.as_ref().map(|h| h.url()) else {
+		let Some(hovered) = self.current.hovered().map(|h| h.url()) else {
 			return self.preview_reset();
 		};
 
@@ -463,7 +460,7 @@ impl Tab {
 		let selected = self.current.files.selected(&pending, self.mode.is_unset());
 
 		if selected.is_empty() {
-			self.current.hovered.as_ref().map(|h| vec![h]).unwrap_or_default()
+			self.current.hovered().map(|h| vec![h]).unwrap_or_default()
 		} else {
 			selected
 		}
@@ -513,26 +510,27 @@ impl Tab {
 		}
 
 		self.show_hidden = state;
-		self.apply_files_attrs(false)
+		if self.apply_files_attrs(false) {
+			emit!(Peek);
+			return true;
+		}
+		false
 	}
 
-	pub fn apply_files_attrs(&mut self, only_hovered: bool) -> bool {
+	pub fn apply_files_attrs(&mut self, just_preview: bool) -> bool {
 		let mut b = false;
-		if let Some(f) = self
-			.current
-			.hovered
-			.as_ref()
-			.filter(|h| h.is_dir())
-			.and_then(|h| self.history.get_mut(h.url()))
+		if let Some(f) =
+			self.current.hovered().filter(|h| h.is_dir()).and_then(|h| self.history.get_mut(h.url()))
 		{
 			b |= f.files.set_show_hidden(self.show_hidden);
 			b |= f.files.set_sorter(self.sorter);
 		}
 
-		if only_hovered {
+		if just_preview {
 			return b;
 		}
 
+		let hovered = self.current.hovered().map(|h| h.url_owned());
 		b |= self.current.files.set_show_hidden(self.show_hidden);
 		b |= self.current.files.set_sorter(self.sorter);
 
@@ -541,7 +539,7 @@ impl Tab {
 			b |= parent.files.set_sorter(self.sorter);
 		}
 
-		self.current.hover_repos();
+		self.current.repos(hovered);
 		b
 	}
 }

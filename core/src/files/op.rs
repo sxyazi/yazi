@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, sync::atomic::{AtomicU64, Ordering}};
+use std::{collections::{BTreeMap, BTreeSet}, sync::atomic::{AtomicU64, Ordering}};
 
 use shared::Url;
 
@@ -13,6 +13,10 @@ pub enum FilesOp {
 	Part(Url, u64, Vec<File>),
 	Size(Url, BTreeMap<Url, u64>),
 	IOErr(Url),
+
+	Creating(Url, BTreeMap<Url, File>),
+	Deleting(Url, BTreeSet<Url>),
+	Replacing(Url, BTreeMap<Url, File>),
 }
 
 impl FilesOp {
@@ -23,6 +27,10 @@ impl FilesOp {
 			Self::Part(url, ..) => url,
 			Self::Size(url, _) => url,
 			Self::IOErr(url) => url,
+
+			Self::Creating(url, _) => url,
+			Self::Deleting(url, _) => url,
+			Self::Replacing(url, _) => url,
 		}
 	}
 

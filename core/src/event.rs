@@ -6,7 +6,7 @@ use crossterm::event::KeyEvent;
 use shared::{InputError, RoCell, Url};
 use tokio::sync::{mpsc::{self, UnboundedSender}, oneshot};
 
-use super::{files::{File, FilesOp}, input::InputOpt, select::SelectOpt};
+use super::{files::FilesOp, input::InputOpt, select::SelectOpt};
 use crate::{manager::PreviewLock, tasks::TasksProgress};
 
 static TX: RoCell<UnboundedSender<Event>> = RoCell::new();
@@ -26,7 +26,7 @@ pub enum Event {
 	Files(FilesOp),
 	Pages(usize),
 	Mimetype(BTreeMap<Url, String>),
-	Hover(Option<File>),
+	Hover(Option<Url>),
 	Peek(Option<(usize, Url)>),
 	Preview(PreviewLock),
 

@@ -130,12 +130,10 @@ impl App {
 				manager.refresh();
 			}
 			Event::Files(op) => {
-				let calc = matches!(op, FilesOp::Full(..) | FilesOp::Part(..));
+				let calc = !matches!(op, FilesOp::Size(..) | FilesOp::IOErr(_));
 				let b = match op {
-					FilesOp::Full(..) => manager.update_read(op),
-					FilesOp::Part(..) => manager.update_read(op),
-					FilesOp::Size(..) => manager.update_read(op),
 					FilesOp::IOErr(..) => manager.update_ioerr(op),
+					_ => manager.update_read(op),
 				};
 				if b {
 					emit!(Render);
@@ -156,8 +154,8 @@ impl App {
 					emit!(Peek);
 				}
 			}
-			Event::Hover(file) => {
-				if manager.update_hover(file) {
+			Event::Hover(url) => {
+				if manager.current_mut().repos(url) {
 					emit!(Render);
 				}
 				emit!(Peek);

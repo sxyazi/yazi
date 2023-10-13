@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ffi::OsStr, fs::Metadata};
+use std::{borrow::Cow, collections::BTreeMap, ffi::OsStr, fs::Metadata};
 
 use anyhow::Result;
 use shared::Url;
@@ -33,6 +33,13 @@ impl File {
 		let length = meta.len();
 		let is_hidden = url.file_name().map(|s| s.to_string_lossy().starts_with('.')).unwrap_or(false);
 		Self { url, meta, length, link_to, is_link, is_hidden }
+	}
+
+	#[inline]
+	pub fn into_map(self) -> BTreeMap<Url, File> {
+		let mut map = BTreeMap::new();
+		map.insert(self.url.clone(), self);
+		map
 	}
 }
 

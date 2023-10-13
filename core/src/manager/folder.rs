@@ -9,11 +9,10 @@ pub struct Folder {
 	pub cwd:   Url,
 	pub files: Files,
 
-	offset: usize,
-	cursor: usize,
+	pub offset: usize,
+	pub cursor: usize,
 
-	pub page:    usize,
-	pub hovered: Option<File>,
+	pub page: usize,
 }
 
 impl From<Url> for Folder {
@@ -30,19 +29,23 @@ impl Folder {
 			FilesOp::Full(_, items) => self.files.update_full(items),
 			FilesOp::Part(_, ticket, items) => self.files.update_part(ticket, items),
 			FilesOp::Size(_, items) => self.files.update_size(items),
+
+			FilesOp::Creating(_, items) => self.files.update_creating(items),
+			FilesOp::Deleting(_, items) => self.files.update_deleting(items),
+			FilesOp::Replacing(_, mut items) => self.files.update_replacing(&mut items),
 			_ => unreachable!(),
 		};
 		if !b {
 			return false;
 		}
 
-		let max = self.files.len().saturating_sub(1);
-		self.offset = self.offset.min(max);
-		self.cursor = self.cursor.min(max);
-		self.set_page(true);
+		let old = self.page;
+		self.prev(Default::default());
 
-		self.hover_repos();
-		self.hovered = self.files.duplicate(self.cursor);
+		if self.page == old {
+			emit!(Pages(self.page)); // Force update
+		}
+
 		true
 	}
 
@@ -59,35 +62,34 @@ impl Folder {
 	}
 
 	pub fn next(&mut self, step: Step) -> bool {
+		let old = (self.cursor, self.offset);
 		let len = self.files.len();
-		if len == 0 {
-			return false;
-		}
 
-		let old = self.cursor;
 		let limit = MANAGER.layout.folder_height();
-		self.cursor = step.add(self.cursor, || limit).min(len - 1);
-		self.hovered = self.files.duplicate(self.cursor);
+		self.cursor = step.add(self.cursor, || limit).min(len.saturating_sub(1));
+		self.offset = if self.cursor >= (self.offset + limit).min(len).saturating_sub(5) {
+			len.saturating_sub(limit).min(self.offset + self.cursor - old.0)
+		} else {
+			self.offset.min(len.saturating_sub(1))
+		};
+
 		self.set_page(false);
-
-		if self.cursor >= (self.offset + limit).min(len).saturating_sub(5) {
-			self.offset = len.saturating_sub(limit).min(self.offset + self.cursor - old);
-		}
-
-		old != self.cursor
+		old != (self.cursor, self.offset)
 	}
 
 	pub fn prev(&mut self, step: Step) -> bool {
-		let old = self.cursor;
-		self.cursor = step.add(self.cursor, || MANAGER.layout.folder_height());
-		self.hovered = self.files.duplicate(self.cursor);
+		let old = (self.cursor, self.offset);
+		let max = self.files.len().saturating_sub(1);
+
+		self.cursor = step.add(self.cursor, || MANAGER.layout.folder_height()).min(max);
+		self.offset = if self.cursor < self.offset + 5 {
+			self.offset.saturating_sub(old.0 - self.cursor)
+		} else {
+			self.offset.min(max)
+		};
+
 		self.set_page(false);
-
-		if self.cursor < self.offset + 5 {
-			self.offset = self.offset.saturating_sub(old - self.cursor);
-		}
-
-		old != self.cursor
+		old != (self.cursor, self.offset)
 	}
 
 	pub fn hover(&mut self, url: &Url) -> bool {
@@ -100,26 +102,14 @@ impl Folder {
 	}
 
 	#[inline]
-	pub fn hover_repos(&mut self) -> bool {
-		self.hover(&self.hovered.as_ref().map(|h| h.url_owned()).unwrap_or_default())
-	}
-
-	pub fn hover_force(&mut self, file: File) -> bool {
-		if self.hover(file.url()) {
-			return true;
-		}
-
-		self.hovered = Some(file);
-		false
+	pub fn repos(&mut self, url: Option<impl AsRef<Url>>) -> bool {
+		if let Some(u) = url { self.hover(u.as_ref()) } else { self.prev(Default::default()) }
 	}
 }
 
 impl Folder {
 	#[inline]
-	pub fn offset(&self) -> usize { self.offset }
-
-	#[inline]
-	pub fn cursor(&self) -> usize { self.cursor }
+	pub fn hovered(&self) -> Option<&File> { self.files.get(self.cursor) }
 
 	pub fn paginate(&self) -> &[File] {
 		let len = self.files.len();

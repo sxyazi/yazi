@@ -98,7 +98,7 @@ impl Files {
 			reg.add_function("is_hovered", |_, me: AnyUserData| {
 				let folder = me.named_user_value::<UserDataRef<core::manager::Folder>>("folder")?;
 				let file = me.borrow::<core::files::File>()?;
-				Ok(matches!(&folder.hovered, Some(f) if f.url() == file.url()))
+				Ok(matches!(folder.hovered(), Some(f) if f.url() == file.url()))
 			});
 
 			reg.add_function("is_yanked", |_, me: AnyUserData| {
@@ -123,7 +123,7 @@ impl Files {
 					selected
 				} else {
 					let idx: usize = me.named_user_value("idx")?;
-					manager.active().mode.pending(folder.offset() + idx, selected)
+					manager.active().mode.pending(folder.offset + idx, selected)
 				})
 			});
 
