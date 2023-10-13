@@ -18,7 +18,7 @@ function Status:mode()
 
 	local style = self.style()
 	return ui.Line {
-		ui.Span(THEME.status.separator.opening):fg(style.bg),
+		ui.Span(THEME.status.separator_open):fg(style.bg),
 		ui.Span(" " .. mode .. " "):style(style),
 	}
 end
@@ -31,8 +31,8 @@ function Status:size()
 
 	local style = self.style()
 	return ui.Line {
-		ui.Span(" " .. utils.readable_size(h.length) .. " "):fg(style.bg):bg(THEME.status.fancy.bg),
-		ui.Span(THEME.status.separator.closing):fg(THEME.status.fancy.bg),
+		ui.Span(" " .. utils.readable_size(h.length) .. " "):fg(style.bg):bg(THEME.status.separator_style.bg),
+		ui.Span(THEME.status.separator_close):fg(THEME.status.separator_style.fg),
 	}
 end
 
@@ -85,8 +85,8 @@ function Status:percentage()
 
 	local style = self.style()
 	return ui.Line {
-		ui.Span(" " .. THEME.status.separator.opening):fg(THEME.status.fancy.bg),
-		ui.Span(percent):fg(style.bg):bg(THEME.status.fancy.bg),
+		ui.Span(" " .. THEME.status.separator_open):fg(THEME.status.separator_style.fg),
+		ui.Span(percent):fg(style.bg):bg(THEME.status.separator_style.bg),
 	}
 end
 
@@ -97,7 +97,7 @@ function Status:position()
 	local style = self.style()
 	return ui.Line {
 		ui.Span(string.format(" %2d/%-2d ", cursor + 1, length)):style(style),
-		ui.Span(THEME.status.separator.closing):fg(style.bg),
+		ui.Span(THEME.status.separator_close):fg(style.bg),
 	}
 end
 

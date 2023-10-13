@@ -2,8 +2,8 @@ use std::path::Path;
 
 use serde::{Deserialize, Deserializer};
 
-use super::Style;
-use crate::{theme::{Color, StyleShadow}, Pattern};
+use super::{Color, Style, StyleShadow};
+use crate::Pattern;
 
 pub struct Filetype {
 	pub name:  Option<Pattern>,

@@ -9,20 +9,20 @@ function Header:cwd()
 	else
 		span = ui.Span(string.format("%s (search: %s)", utils.readable_path(tostring(cwd)), cwd.frag))
 	end
-	return span:fg("cyan")
+	return span:style(THEME.manager.cwd)
 end
 
 function Header:tabs()
 	local spans = {}
 	for i = 1, #cx.tabs do
 		local text = i
-		if THEME.tabs.max_width > 2 then
-			text = utils.truncate(text .. " " .. cx.tabs[i]:name(), THEME.tabs.max_width)
+		if THEME.manager.tab_width > 2 then
+			text = utils.truncate(text .. " " .. cx.tabs[i]:name(), THEME.manager.tab_width)
 		end
 		if i == cx.tabs.idx + 1 then
-			spans[#spans + 1] = ui.Span(" " .. text .. " "):style(THEME.tabs.active)
+			spans[#spans + 1] = ui.Span(" " .. text .. " "):style(THEME.manager.tab_active)
 		else
-			spans[#spans + 1] = ui.Span(" " .. text .. " "):style(THEME.tabs.inactive)
+			spans[#spans + 1] = ui.Span(" " .. text .. " "):style(THEME.manager.tab_inactive)
 		end
 	end
 	return ui.Line(spans)
