@@ -22,7 +22,7 @@ function ui.highlight_ranges(s, ranges)
 			spans[#spans + 1] = ui.Span(s:sub(last + 1, r[1]))
 		end
 		-- TODO: use a customable style
-		spans[#spans + 1] = ui.Span(s:sub(r[1] + 1, r[2])):fg("yellow"):italic()
+		spans[#spans + 1] = ui.Span(s:sub(r[1] + 1, r[2])):style(THEME.manager.find_keyword)
 		last = r[2]
 	end
 	if last < #s then

@@ -34,11 +34,11 @@ function Folder:markers(area, markers)
 		)
 
 		if last[3] == 1 then
-			p = p:style(THEME.marker.copied)
+			p = p:style(THEME.manager.marker_copied)
 		elseif last[3] == 2 then
-			p = p:style(THEME.marker.cut)
+			p = p:style(THEME.manager.marker_cut)
 		elseif last[3] == 3 then
-			p = p:style(THEME.marker.selected)
+			p = p:style(THEME.manager.marker_selected)
 		end
 		elements[#elements + 1] = p
 	end
@@ -79,7 +79,8 @@ function Folder:highlighted_name(file)
 
 	local found = file:found()
 	if found ~= nil then
-		spans[#spans + 1] = ui.Span(string.format("  [%d/%d]", found[1] + 1, found[2])):fg("#ffff32"):italic()
+		spans[#spans + 1] = ui.Span("  ")
+		spans[#spans + 1] = ui.Span(string.format("[%d/%d]", found[1] + 1, found[2])):style(THEME.manager.find_position)
 	end
 	return spans
 end
@@ -94,7 +95,7 @@ function Folder:parent(area)
 	for _, f in ipairs(folder.window) do
 		local item = ui.ListItem(" " .. f:icon() .. " " .. f.name .. " ")
 		if f:is_hovered() then
-			item = item:style(THEME.files.hovered)
+			item = item:style(THEME.manager.hovered)
 		else
 			item = item:style(f:style())
 		end
@@ -114,7 +115,7 @@ function Folder:current(area)
 		-- Highlight hovered file
 		local item = ui.ListItem(ui.Line { ui.Span(" " .. f:icon() .. " "), table.unpack(name) })
 		if f:is_hovered() then
-			item = item:style(THEME.files.hovered)
+			item = item:style(THEME.manager.hovered)
 		else
 			item = item:style(f:style())
 		end
@@ -142,7 +143,7 @@ function Folder:preview(area)
 	for _, f in ipairs(folder.window) do
 		local item = ui.ListItem(" " .. f:icon() .. " " .. f.name .. " ")
 		if f:is_hovered() then
-			item = item:style(THEME.preview.hovered)
+			item = item:style(THEME.manager.preview_hovered)
 		else
 			item = item:style(f:style())
 		end
