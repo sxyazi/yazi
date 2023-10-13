@@ -43,7 +43,7 @@ pub fn copy_with_progress(from: &Path, to: &Path) -> mpsc::Receiver<Result<u64, 
 		let (from, to) = (from.to_path_buf(), to.to_path_buf());
 
 		async move {
-			let _ = match fs::copy(from, to).await {
+			_ = match fs::copy(from, to).await {
 				Ok(len) => tick_tx.send(Ok(len)),
 				Err(e) => tick_tx.send(Err(e)),
 			};

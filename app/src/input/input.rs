@@ -51,7 +51,7 @@ impl<'a> Widget for Input<'a> {
 			)
 		}
 
-		let _ = match input.mode() {
+		_ = match input.mode() {
 			InputMode::Insert => Term::set_cursor_bar(),
 			_ => Term::set_cursor_block(),
 		};

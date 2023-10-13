@@ -35,7 +35,7 @@ impl Term {
 	pub fn size() -> WindowSize {
 		let mut size = WindowSize { rows: 0, columns: 0, width: 0, height: 0 };
 		if let Ok(s) = crossterm::terminal::window_size() {
-			let _ = mem::replace(&mut size, s);
+			_ = mem::replace(&mut size, s);
 		}
 
 		if size.rows == 0 || size.columns == 0 {

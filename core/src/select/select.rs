@@ -31,7 +31,7 @@ impl Select {
 
 	pub fn close(&mut self, submit: bool) -> bool {
 		if let Some(cb) = self.callback.take() {
-			let _ = cb.send(if submit { Ok(self.cursor) } else { Err(anyhow!("canceled")) });
+			_ = cb.send(if submit { Ok(self.cursor) } else { Err(anyhow!("canceled")) });
 		}
 
 		self.cursor = 0;

@@ -192,7 +192,7 @@ impl Scheduler {
 			})
 		});
 
-		let _ = self.todo.send_blocking({
+		_ = self.todo.send_blocking({
 			let file = self.file.clone();
 			async move {
 				if !force {
@@ -208,7 +208,7 @@ impl Scheduler {
 		let name = format!("Copy {:?} to {:?}", from, to);
 		let id = self.running.write().add(name);
 
-		let _ = self.todo.send_blocking({
+		_ = self.todo.send_blocking({
 			let file = self.file.clone();
 			async move {
 				if !force {
@@ -224,7 +224,7 @@ impl Scheduler {
 		let name = format!("Link {from:?} to {to:?}");
 		let id = self.running.write().add(name);
 
-		let _ = self.todo.send_blocking({
+		_ = self.todo.send_blocking({
 			let file = self.file.clone();
 			async move {
 				if !force {
@@ -258,7 +258,7 @@ impl Scheduler {
 			})
 		});
 
-		let _ = self.todo.send_blocking({
+		_ = self.todo.send_blocking({
 			let file = self.file.clone();
 			async move {
 				file.delete(FileOpDelete { id, target, length: 0 }).await.ok();
@@ -271,7 +271,7 @@ impl Scheduler {
 		let name = format!("Trash {:?}", target);
 		let id = self.running.write().add(name);
 
-		let _ = self.todo.send_blocking({
+		_ = self.todo.send_blocking({
 			let file = self.file.clone();
 			async move {
 				file.trash(FileOpTrash { id, target, length: 0 }).await.ok();
@@ -337,7 +337,7 @@ impl Scheduler {
 			}
 
 			let id = running.add(format!("Calculate the size of {:?}", target));
-			let _ = self.todo.send_blocking({
+			_ = self.todo.send_blocking({
 				let precache = self.precache.clone();
 				let target = target.clone();
 				let throttle = throttle.clone();
@@ -353,7 +353,7 @@ impl Scheduler {
 		let name = format!("Preload mimetype for {} files", targets.len());
 		let id = self.running.write().add(name);
 
-		let _ = self.todo.send_blocking({
+		_ = self.todo.send_blocking({
 			let precache = self.precache.clone();
 			async move {
 				precache.mime(PrecacheOpMime { id, targets }).await.ok();

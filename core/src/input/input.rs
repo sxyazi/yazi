@@ -45,7 +45,7 @@ impl Input {
 	pub fn close(&mut self, submit: bool) -> bool {
 		if let Some(cb) = self.callback.take() {
 			let value = self.snap_mut().value.clone();
-			let _ = cb.send(if submit { Ok(value) } else { Err(InputError::Canceled(value)) });
+			_ = cb.send(if submit { Ok(value) } else { Err(InputError::Canceled(value)) });
 		}
 
 		self.visible = false;
