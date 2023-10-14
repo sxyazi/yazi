@@ -60,6 +60,12 @@ impl Files {
 				Ok(shared::permissions(me.meta().permissions()))
 			});
 
+			reg.add_function("mime", |_, me: AnyUserData| {
+				let manager = me.named_user_value::<UserDataRef<core::manager::Manager>>("manager")?;
+				let file = me.borrow::<core::files::File>()?;
+				Ok(manager.mimetype.get(file.url()).cloned())
+			});
+
 			reg.add_function("prefix", |_, me: AnyUserData| {
 				let folder = me.named_user_value::<UserDataRef<core::manager::Folder>>("folder")?;
 				if !folder.cwd.is_search() {
