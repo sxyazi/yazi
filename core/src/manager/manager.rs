@@ -42,10 +42,9 @@ impl Manager {
 		let mut to_watch = BTreeSet::new();
 		for tab in self.tabs.iter() {
 			to_watch.insert(&tab.current.cwd);
-			if let Some(ref h) = tab.current.hovered {
-				if h.is_dir() {
-					to_watch.insert(h.url());
-				}
+			match tab.current.hovered() {
+				Some(h) if h.is_dir() => _ = to_watch.insert(h.url()),
+				_ => {}
 			}
 			if let Some(ref p) = tab.parent {
 				to_watch.insert(&p.cwd);
@@ -65,7 +64,7 @@ impl Manager {
 		}
 
 		if hovered.is_dir() {
-			let position = self.active().history(url).map(|f| (f.offset(), f.files.len()));
+			let position = self.active().history(url).map(|f| (f.offset, f.files.len()));
 			self.active_mut().preview.folder(url, position, sequent);
 			return false;
 		}
@@ -200,9 +199,11 @@ impl Manager {
 				fs::File::create(&path).await?;
 			}
 
-			let child = path.components().take(cwd.components().count() + 1).collect::<PathBuf>();
-			if let Ok(file) = File::from(Url::from(child)).await {
-				emit!(Hover(file));
+			let child =
+				Url::from(path.components().take(cwd.components().count() + 1).collect::<PathBuf>());
+			if let Ok(f) = File::from(child.clone()).await {
+				emit!(Files(FilesOp::Creating(cwd, f.into_map())));
+				emit!(Hover(child));
 				emit!(Refresh);
 			}
 			Ok::<(), Error>(())
@@ -219,6 +220,21 @@ impl Manager {
 			return false;
 		};
 
+		async fn rename_and_hover(old: Url, new: Url) -> Result<()> {
+			fs::rename(&old, &new).await?;
+			if old.parent() != new.parent() {
+				return Ok(());
+			}
+
+			let parent = old.parent_url().unwrap();
+			emit!(Files(FilesOp::Deleting(parent, BTreeSet::from([old]))));
+
+			let file = File::from(new.clone()).await?;
+			emit!(Files(FilesOp::Creating(file.parent().unwrap(), file.into_map())));
+			emit!(Hover(new));
+			Ok(())
+		}
+
 		tokio::spawn(async move {
 			let mut result = emit!(Input(
 				InputOpt::hovered("Rename:").with_value(hovered.file_name().unwrap().to_string_lossy())
@@ -230,14 +246,14 @@ impl Manager {
 
 			let new = hovered.parent().unwrap().join(name);
 			if force || fs::symlink_metadata(&new).await.is_err() {
-				fs::rename(&hovered, new).await.ok();
+				rename_and_hover(hovered, Url::from(new)).await.ok();
 				return;
 			}
 
 			let mut result = emit!(Input(InputOpt::hovered("Overwrite an existing file? (y/N)")));
 			if let Some(Ok(choice)) = result.recv().await {
 				if choice == "y" || choice == "Y" {
-					fs::rename(&hovered, new).await.ok();
+					rename_and_hover(hovered, Url::from(new)).await.ok();
 				}
 			};
 		});
@@ -404,11 +420,6 @@ impl Manager {
 		self.mimetype.extend(mimes);
 		true
 	}
-
-	#[inline]
-	pub fn update_hover(&mut self, file: Option<File>) -> bool {
-		file.map(|f| self.current_mut().hover_force(f)) == Some(true)
-	}
 }
 
 impl Manager {
@@ -437,7 +448,7 @@ impl Manager {
 	pub fn parent(&self) -> Option<&Folder> { self.tabs.active().parent.as_ref() }
 
 	#[inline]
-	pub fn hovered(&self) -> Option<&File> { self.tabs.active().current.hovered.as_ref() }
+	pub fn hovered(&self) -> Option<&File> { self.tabs.active().current.hovered() }
 
 	#[inline]
 	pub fn selected(&self) -> Vec<&File> { self.tabs.active().selected() }

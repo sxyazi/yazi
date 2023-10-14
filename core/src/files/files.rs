@@ -173,6 +173,84 @@ impl Files {
 		}
 		true
 	}
+
+	pub fn update_creating(&mut self, mut todo: BTreeMap<Url, File>) -> bool {
+		if !self.show_hidden {
+			todo.retain(|_, f| !f.is_hidden);
+		}
+
+		let b = self.update_replacing(&mut todo);
+		if todo.is_empty() {
+			return b;
+		}
+
+		self.items.extend(todo.into_values());
+		self.sorter.sort(&mut self.items, &self.sizes);
+		self.version += 1;
+		true
+	}
+
+	pub fn update_deleting(&mut self, mut todo: BTreeSet<Url>) -> bool {
+		let mut removed = Vec::with_capacity(todo.len());
+		macro_rules! go {
+			($name:expr) => {
+				removed.clear();
+				for i in 0..$name.len() {
+					if todo.remove(&$name[i].url) {
+						removed.push(i);
+						if todo.is_empty() {
+							break;
+						}
+					}
+				}
+				for i in (0..removed.len()).rev() {
+					$name.remove(removed[i]);
+				}
+			};
+		}
+
+		let mut b = false;
+		if !todo.is_empty() {
+			go!(self.items);
+			b |= !removed.is_empty();
+		}
+
+		if !todo.is_empty() {
+			go!(self.hidden);
+			b |= !removed.is_empty();
+		}
+		b
+	}
+
+	pub fn update_replacing(&mut self, todo: &mut BTreeMap<Url, File>) -> bool {
+		if todo.is_empty() {
+			return false;
+		}
+
+		macro_rules! go {
+			($name:expr) => {
+				for i in 0..$name.len() {
+					if let Some(f) = todo.remove(&$name[i].url) {
+						$name[i] = f;
+						if todo.is_empty() {
+							self.version += 1;
+							return true;
+						}
+					}
+				}
+			};
+		}
+
+		let old = todo.len();
+		go!(self.items);
+		go!(self.hidden);
+
+		if old != todo.len() {
+			self.version += 1;
+			return true;
+		}
+		false
+	}
 }
 
 impl Files {

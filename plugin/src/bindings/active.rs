@@ -26,8 +26,8 @@ impl<'a, 'b> Active<'a, 'b> {
 
 		LUA.register_userdata_type::<core::manager::Folder>(|reg| {
 			reg.add_field_method_get("cwd", |_, me| Ok(Url::from(&me.cwd)));
-			reg.add_field_method_get("offset", |_, me| Ok(me.offset()));
-			reg.add_field_method_get("cursor", |_, me| Ok(me.cursor()));
+			reg.add_field_method_get("offset", |_, me| Ok(me.offset));
+			reg.add_field_method_get("cursor", |_, me| Ok(me.cursor));
 
 			reg.add_field_function_get("window", |_, me| me.named_user_value::<Value>("window"));
 			reg.add_field_function_get("files", |_, me| me.named_user_value::<AnyUserData>("files"));
@@ -63,7 +63,7 @@ impl<'a, 'b> Active<'a, 'b> {
 		inner: &'a core::manager::Folder,
 		window: Option<(usize, usize)>,
 	) -> mlua::Result<AnyUserData<'a>> {
-		let window = window.unwrap_or_else(|| (inner.offset(), MANAGER.layout.folder_height()));
+		let window = window.unwrap_or_else(|| (inner.offset, MANAGER.layout.folder_height()));
 
 		let ud = self.scope.create_any_userdata_ref(inner)?;
 		ud.set_named_user_value(
@@ -81,7 +81,7 @@ impl<'a, 'b> Active<'a, 'b> {
 		// TODO: remove this
 		ud.set_named_user_value(
 			"hovered",
-			inner.hovered.as_ref().and_then(|h| self.file(999, h, inner).ok()),
+			inner.hovered().and_then(|h| self.file(999, h, inner).ok()),
 		)?;
 
 		Ok(ud)
@@ -116,7 +116,7 @@ impl<'a, 'b> Active<'a, 'b> {
 				.as_ref()
 				.filter(|l| l.is_folder())
 				.and_then(|l| tab.history(&l.url))
-				.and_then(|f| self.folder(f, Some((f.offset(), MANAGER.layout.preview_height()))).ok()),
+				.and_then(|f| self.folder(f, Some((f.offset, MANAGER.layout.preview_height()))).ok()),
 		)?;
 
 		Ok(ud)
