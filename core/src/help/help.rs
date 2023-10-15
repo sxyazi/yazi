@@ -7,9 +7,9 @@ use crate::{emit, input::Input};
 
 #[derive(Default)]
 pub struct Help {
-	visible:  bool,
-	layer:    KeymapLayer,
-	bindings: Vec<Control>,
+	pub visible: bool,
+	pub layer:   KeymapLayer,
+	bindings:    Vec<Control>,
 
 	// Filter
 	keyword:   Option<String>,
@@ -127,14 +127,6 @@ impl Help {
 }
 
 impl Help {
-	// --- Visible
-	#[inline]
-	pub fn visible(&self) -> bool { self.visible }
-
-	// --- Layer
-	#[inline]
-	pub fn layer(&self) -> KeymapLayer { self.layer }
-
 	// --- Keyword
 	#[inline]
 	pub fn keyword(&self) -> Option<String> {

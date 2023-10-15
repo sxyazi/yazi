@@ -6,12 +6,12 @@ use tokio::fs;
 
 #[derive(Clone, Debug)]
 pub struct File {
-	pub(super) url:       Url,
-	pub(super) meta:      Metadata,
-	pub(super) length:    u64,
-	pub(super) link_to:   Option<Url>,
-	pub(super) is_link:   bool,
-	pub(super) is_hidden: bool,
+	pub url:            Url,
+	pub meta:           Metadata,
+	pub length:         u64,
+	pub(super) link_to: Option<Url>,
+	pub is_link:        bool,
+	pub is_hidden:      bool,
 }
 
 impl File {
@@ -46,13 +46,7 @@ impl File {
 impl File {
 	// --- Url
 	#[inline]
-	pub fn url(&self) -> &Url { &self.url }
-
-	#[inline]
-	pub fn url_mut(&mut self) -> &mut Url { &mut self.url }
-
-	#[inline]
-	pub fn url_owned(&self) -> Url { self.url.clone() }
+	pub fn url(&self) -> Url { self.url.clone() }
 
 	#[inline]
 	pub fn name(&self) -> Option<&OsStr> { self.url.file_name() }
@@ -70,26 +64,12 @@ impl File {
 
 	// --- Meta
 	#[inline]
-	pub fn meta(&self) -> &Metadata { &self.meta }
-
-	#[inline]
 	pub fn is_file(&self) -> bool { self.meta.is_file() }
 
 	#[inline]
 	pub fn is_dir(&self) -> bool { self.meta.is_dir() }
 
-	// --- Length
-	#[inline]
-	pub fn length(&self) -> u64 { self.length }
-
 	// --- Link to / Is link
 	#[inline]
 	pub fn link_to(&self) -> Option<&Url> { self.link_to.as_ref() }
-
-	#[inline]
-	pub fn is_link(&self) -> bool { self.is_link }
-
-	// -- Is hidden
-	#[inline]
-	pub fn is_hidden(&self) -> bool { self.is_hidden }
 }

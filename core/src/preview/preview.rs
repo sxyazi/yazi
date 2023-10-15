@@ -171,9 +171,6 @@ impl Preview {
 
 impl Preview {
 	#[inline]
-	pub fn skip(&self) -> usize { self.skip }
-
-	#[inline]
 	pub fn same(&self, url: &Url, mime: &str) -> bool {
 		if let Some(ref lock) = self.lock {
 			return &lock.url == url && lock.mime == mime && lock.skip == self.skip;

@@ -8,10 +8,10 @@ use tokio::{fs, select, sync::mpsc::{self, UnboundedReceiver}};
 use super::{File, FilesSorter, FILES_TICKET};
 
 pub struct Files {
-	items:   Vec<File>,
-	hidden:  Vec<File>,
-	ticket:  u64,
-	version: u64,
+	items:              Vec<File>,
+	hidden:             Vec<File>,
+	ticket:             u64,
+	pub(crate) version: u64,
 
 	sizes:    BTreeMap<Url, u64>,
 	selected: BTreeSet<Url>,
@@ -89,7 +89,7 @@ impl Files {
 					self.items.iter().any(|f| !self.selected.contains(&f.url))
 				};
 
-				self.selected = self.iter().map(|f| f.url_owned()).collect();
+				self.selected = self.iter().map(|f| f.url()).collect();
 				b
 			}
 			Some(false) => {
@@ -106,7 +106,7 @@ impl Files {
 					if self.selected.contains(&item.url) {
 						self.selected.remove(&item.url);
 					} else {
-						self.selected.insert(item.url_owned());
+						self.selected.insert(item.url());
 					}
 				}
 				!self.items.is_empty()
@@ -116,7 +116,7 @@ impl Files {
 
 	pub fn select_index(&mut self, indices: &BTreeSet<usize>, state: Option<bool>) -> bool {
 		let mut applied = false;
-		let paths: Vec<_> = self.pick(indices).iter().map(|f| f.url_owned()).collect();
+		let paths: Vec<_> = self.pick(indices).iter().map(|f| f.url()).collect();
 
 		for path in paths {
 			applied |= self.select(&path, state);
@@ -267,13 +267,6 @@ impl Files {
 
 	#[inline]
 	pub fn position(&self, url: &Url) -> Option<usize> { self.iter().position(|f| &f.url == url) }
-
-	#[inline]
-	pub fn duplicate(&self, idx: usize) -> Option<File> { self.items.get(idx).cloned() }
-
-	// --- Version
-	#[inline]
-	pub fn version(&self) -> u64 { self.version }
 
 	// --- Sizes
 	#[inline]

@@ -7,7 +7,7 @@ use shared::{InputError, RoCell, Url};
 use tokio::sync::{mpsc::{self, UnboundedSender}, oneshot};
 
 use super::{files::FilesOp, input::InputOpt, select::SelectOpt};
-use crate::{manager::PreviewLock, tasks::TasksProgress};
+use crate::{preview::PreviewLock, tasks::TasksProgress};
 
 static TX: RoCell<UnboundedSender<Event>> = RoCell::new();
 

@@ -10,12 +10,12 @@ pub struct Active<'a, 'b> {
 	scope: &'b mlua::Scope<'a, 'a>,
 
 	cx:    &'a core::Ctx,
-	inner: &'a core::manager::Tab,
+	inner: &'a core::tab::Tab,
 }
 
 impl<'a, 'b> Active<'a, 'b> {
 	pub(crate) fn init() -> mlua::Result<()> {
-		LUA.register_userdata_type::<core::manager::Mode>(|reg| {
+		LUA.register_userdata_type::<core::tab::Mode>(|reg| {
 			reg.add_field_method_get("is_select", |_, me| Ok(me.is_select()));
 			reg.add_field_method_get("is_unset", |_, me| Ok(me.is_unset()));
 			reg.add_field_method_get("is_visual", |_, me| Ok(me.is_visual()));
@@ -24,7 +24,7 @@ impl<'a, 'b> Active<'a, 'b> {
 			reg.add_meta_method(MetaMethod::ToString, |_, me, ()| Ok(me.to_string()));
 		})?;
 
-		LUA.register_userdata_type::<core::manager::Folder>(|reg| {
+		LUA.register_userdata_type::<core::tab::Folder>(|reg| {
 			reg.add_field_method_get("cwd", |_, me| Ok(Url::from(&me.cwd)));
 			reg.add_field_method_get("offset", |_, me| Ok(me.offset));
 			reg.add_field_method_get("cursor", |_, me| Ok(me.cursor));
@@ -34,7 +34,7 @@ impl<'a, 'b> Active<'a, 'b> {
 			reg.add_field_function_get("hovered", |_, me| me.named_user_value::<Value>("hovered"));
 		})?;
 
-		LUA.register_userdata_type::<core::manager::Preview>(|reg| {
+		LUA.register_userdata_type::<core::preview::Preview>(|reg| {
 			reg.add_field_function_get("folder", |_, me| me.named_user_value::<Value>("folder"));
 		})?;
 
@@ -60,7 +60,7 @@ impl<'a, 'b> Active<'a, 'b> {
 
 	pub(crate) fn folder(
 		&self,
-		inner: &'a core::manager::Folder,
+		inner: &'a core::tab::Folder,
 		window: Option<(usize, usize)>,
 	) -> mlua::Result<AnyUserData<'a>> {
 		let window = window.unwrap_or_else(|| (inner.offset, MANAGER.layout.folder_height()));
@@ -95,7 +95,7 @@ impl<'a, 'b> Active<'a, 'b> {
 		&self,
 		idx: usize,
 		inner: &'a core::files::File,
-		folder: &'a core::manager::Folder,
+		folder: &'a core::tab::Folder,
 	) -> mlua::Result<AnyUserData<'a>> {
 		let ud = self.scope.create_any_userdata_ref(inner)?;
 		ud.set_named_user_value("idx", idx)?;
@@ -105,8 +105,8 @@ impl<'a, 'b> Active<'a, 'b> {
 		Ok(ud)
 	}
 
-	fn preview(&self, tab: &'a core::manager::Tab) -> mlua::Result<AnyUserData<'a>> {
-		let inner = tab.preview();
+	fn preview(&self, tab: &'a core::tab::Tab) -> mlua::Result<AnyUserData<'a>> {
+		let inner = &tab.preview;
 
 		let ud = self.scope.create_any_userdata_ref(inner)?;
 		ud.set_named_user_value(

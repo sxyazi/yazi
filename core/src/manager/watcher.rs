@@ -200,7 +200,7 @@ impl Watcher {
 			let mut new = Vec::with_capacity(files.len());
 			for file in files {
 				let mut file = file.clone();
-				*file.url_mut() = ori.join(file.url().strip_prefix(url).unwrap());
+				file.url = ori.join(file.url.strip_prefix(url).unwrap());
 				new.push(file);
 			}
 			new

@@ -1,4 +1,4 @@
-use core::{emit, files::FilesSorter, input::InputMode, manager::FinderCase, Ctx};
+use core::{emit, files::FilesSorter, input::InputMode, tab::FinderCase, Ctx};
 
 use config::{keymap::{Control, Exec, Key, KeymapLayer}, manager::SortBy, KEYMAP};
 use shared::{optional_bool, Url};
@@ -97,17 +97,13 @@ impl Executor {
 			"yank" => cx.manager.yank(exec.named.contains_key("cut")),
 			"paste" => {
 				let dest = cx.manager.cwd();
-				let (cut, src) = cx.manager.yanked();
+				let (cut, ref src) = cx.manager.yanked;
 
 				let force = exec.named.contains_key("force");
-				if *cut {
-					cx.tasks.file_cut(src, dest, force)
-				} else {
-					cx.tasks.file_copy(src, dest, force)
-				}
+				if cut { cx.tasks.file_cut(src, dest, force) } else { cx.tasks.file_copy(src, dest, force) }
 			}
 			"link" => {
-				let (cut, src) = cx.manager.yanked();
+				let (cut, ref src) = cx.manager.yanked;
 				!cut
 					&& cx.tasks.file_link(
 						src,
@@ -117,7 +113,7 @@ impl Executor {
 					)
 			}
 			"remove" => {
-				let targets = cx.manager.selected().into_iter().map(|f| f.url_owned()).collect();
+				let targets = cx.manager.selected().into_iter().map(|f| f.url()).collect();
 				let force = exec.named.contains_key("force");
 				let permanently = exec.named.contains_key("permanently");
 				cx.tasks.file_remove(targets, force, permanently)
@@ -182,20 +178,20 @@ impl Executor {
 				} else {
 					exec.args.get(0).map(Url::from).unwrap_or_else(|| Url::from("/"))
 				};
-				cx.manager.tabs_mut().create(&path)
+				cx.manager.tabs.create(&path)
 			}
 			"tab_close" => {
 				let idx = exec.args.get(0).and_then(|i| i.parse().ok()).unwrap_or(0);
-				cx.manager.tabs_mut().close(idx)
+				cx.manager.tabs.close(idx)
 			}
 			"tab_switch" => {
 				let step = exec.args.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
 				let rel = exec.named.contains_key("relative");
-				cx.manager.tabs_mut().switch(step, rel)
+				cx.manager.tabs.switch(step, rel)
 			}
 			"tab_swap" => {
 				let step = exec.args.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
-				cx.manager.tabs_mut().swap(step)
+				cx.manager.tabs.swap(step)
 			}
 
 			// Tasks

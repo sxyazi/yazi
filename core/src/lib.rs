@@ -16,8 +16,10 @@ mod highlighter;
 pub mod input;
 pub mod manager;
 mod position;
+pub mod preview;
 pub mod select;
 mod step;
+pub mod tab;
 pub mod tasks;
 pub mod which;
 
