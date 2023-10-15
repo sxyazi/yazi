@@ -53,6 +53,7 @@ impl Adaptor {
 		match term.as_str() {
 			"xterm-kitty" => return Self::Kitty,
 			"foot" => return Self::Sixel,
+			"foot-extra" => return Self::Sixel,
 			_ => {}
 		}
 		match env::var("XDG_SESSION_TYPE").unwrap_or_default().as_str() {
