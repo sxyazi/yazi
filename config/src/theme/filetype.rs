@@ -52,6 +52,8 @@ impl Filetype {
 			#[serde(default)]
 			blink_rapid: bool,
 			#[serde(default)]
+			reversed:    bool,
+			#[serde(default)]
 			hidden:      bool,
 			#[serde(default)]
 			crossed:     bool,
@@ -73,6 +75,7 @@ impl Filetype {
 						underline:   r.underline,
 						blink:       r.blink,
 						blink_rapid: r.blink_rapid,
+						reversed:    r.reversed,
 						hidden:      r.hidden,
 						crossed:     r.crossed,
 					}

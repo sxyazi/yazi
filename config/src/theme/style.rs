@@ -55,6 +55,8 @@ pub(super) struct StyleShadow {
 	#[serde(default)]
 	pub(super) blink_rapid: bool,
 	#[serde(default)]
+	pub(super) reversed:    bool,
+	#[serde(default)]
 	pub(super) hidden:      bool,
 	#[serde(default)]
 	pub(super) crossed:     bool,
@@ -80,6 +82,9 @@ impl From<StyleShadow> for Style {
 		}
 		if value.blink_rapid {
 			modifier |= Modifier::RAPID_BLINK;
+		}
+		if value.reversed {
+			modifier |= Modifier::REVERSED;
 		}
 		if value.hidden {
 			modifier |= Modifier::HIDDEN;

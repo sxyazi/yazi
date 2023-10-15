@@ -134,6 +134,7 @@ rules = [
 	{ mime = "application/x-rar",           fg = "magenta" },
 
 	# Fallback
+	{ name = "*", blink = true },
 	{ name = "*/", fg = "blue" }
 ]
 
