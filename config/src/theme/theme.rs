@@ -30,6 +30,10 @@ pub struct Manager {
 	#[validate(range(min = 1, message = "Must be greater than 0"))]
 	tab_width:    u8,
 
+	// Border
+	pub border_symbol: String,
+	pub border_style:  Style,
+
 	// Highlighting
 	pub syntect_theme: PathBuf,
 }

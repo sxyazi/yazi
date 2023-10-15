@@ -1,6 +1,7 @@
 use core::Ctx;
 
-use config::MANAGER;
+use config::{MANAGER, THEME};
+use plugin::layout::Bar;
 use ratatui::{buffer::Buffer, layout::{self, Constraint, Direction, Rect}, widgets::{Block, Borders, Padding, Widget}};
 
 use super::{Folder, Preview};
@@ -28,18 +29,23 @@ impl<'a> Widget for Layout<'a> {
 			.split(area);
 
 		// Parent
-		let block = Block::new().borders(Borders::RIGHT).padding(Padding::new(1, 0, 0, 0));
+		Bar::new(chunks[0], Borders::RIGHT)
+			.symbol(&THEME.manager.border_symbol)
+			.style(THEME.manager.border_style.into())
+			.render(buf);
 		if manager.parent().is_some() {
-			Folder::Parent.render(block.inner(chunks[0]), buf);
+			Folder::Parent.render(Block::new().padding(Padding::new(1, 1, 0, 0)).inner(chunks[0]), buf);
 		}
-		block.render(chunks[0], buf);
 
 		// Current
 		Folder::Current.render(chunks[1], buf);
 
 		// Preview
-		let block = Block::new().borders(Borders::LEFT).padding(Padding::new(0, 1, 0, 0));
-		Preview::new(self.cx).render(block.inner(chunks[2]), buf);
-		block.render(chunks[2], buf);
+		Bar::new(chunks[2], Borders::LEFT)
+			.symbol(&THEME.manager.border_symbol)
+			.style(THEME.manager.border_style.into())
+			.render(buf);
+		Preview::new(self.cx)
+			.render(Block::new().padding(Padding::new(1, 1, 0, 0)).inner(chunks[2]), buf);
 	}
 }

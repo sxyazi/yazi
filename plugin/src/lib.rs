@@ -3,7 +3,7 @@
 mod bindings;
 mod components;
 mod config;
-mod layout;
+pub mod layout;
 mod plugin;
 mod scope;
 mod utils;
