@@ -8,6 +8,13 @@ ui = {
 		HORIZONTAL = false,
 		VERTICAL = true,
 	},
+	Position = {
+		NONE = 0,
+		TOP = 1,
+		RIGHT = 2,
+		BOTTOM = 3,
+		LEFT = 4,
+	},
 }
 
 function ui.highlight_ranges(s, ranges)
