@@ -23,6 +23,10 @@ tab_active   = { fg = "black", bg = "blue" }
 tab_inactive = { bg = "darkgray" }
 tab_width    = 1
 
+# Border
+border_symbol = "│"
+border_style  = { fg = "gray" }
+
 # Highlighting
 syntect_theme = ""
 
@@ -134,7 +138,7 @@ rules = [
 	{ mime = "application/x-rar",           fg = "magenta" },
 
 	# Fallback
-	{ name = "*", blink = true },
+	# { name = "*", fg = "white" },
 	{ name = "*/", fg = "blue" }
 ]
 

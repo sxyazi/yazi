@@ -1,5 +1,6 @@
 #![allow(clippy::module_inception)]
 
+mod bar;
 mod constraint;
 mod gauge;
 mod layout;
@@ -10,6 +11,7 @@ mod rect;
 mod span;
 mod style;
 
+pub use bar::*;
 pub(super) use constraint::*;
 pub(super) use gauge::*;
 pub(super) use layout::*;
