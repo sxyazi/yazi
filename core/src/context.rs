@@ -38,7 +38,7 @@ impl Ctx {
 			}
 			Position::Hovered(rect @ Rect { mut x, y, width, height }) => {
 				let Some(r) =
-					self.manager.hovered().and_then(|h| self.manager.current().rect_current(h.url()))
+					self.manager.hovered().and_then(|h| self.manager.current().rect_current(&h.url))
 				else {
 					return self.area(&Position::Top(*rect));
 				};
@@ -72,7 +72,7 @@ impl Ctx {
 	pub fn layer(&self) -> KeymapLayer {
 		if self.which.visible {
 			KeymapLayer::Which
-		} else if self.help.visible() {
+		} else if self.help.visible {
 			KeymapLayer::Help
 		} else if self.input.visible {
 			KeymapLayer::Input

@@ -56,8 +56,8 @@ impl FilesSorter {
 			}),
 			SortBy::Natural => self.sort_naturally(items),
 			SortBy::Size => items.sort_unstable_by(|a, b| {
-				let aa = if a.is_dir() { sizes.get(a.url()).copied() } else { None };
-				let bb = if b.is_dir() { sizes.get(b.url()).copied() } else { None };
+				let aa = if a.is_dir() { sizes.get(&a.url).copied() } else { None };
+				let bb = if b.is_dir() { sizes.get(&b.url).copied() } else { None };
 				self.cmp(aa.unwrap_or(a.length), bb.unwrap_or(b.length), self.promote(a, b))
 			}),
 		}

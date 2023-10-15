@@ -1,4 +1,4 @@
-use core::{manager::PreviewData, Ctx};
+use core::{preview::PreviewData, Ctx};
 
 use ansi_to_tui::IntoText;
 use ratatui::{buffer::Buffer, layout::Rect, widgets::{Paragraph, Widget}};
@@ -16,11 +16,11 @@ impl<'a> Preview<'a> {
 impl<'a> Widget for Preview<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let manager = &self.cx.manager;
-		let Some(hovered) = manager.hovered().map(|h| h.url()) else {
+		let Some(hovered) = manager.hovered().map(|h| &h.url) else {
 			return;
 		};
 
-		let preview = manager.active().preview();
+		let preview = &manager.active().preview;
 		if !preview.same_path(hovered) {
 			return;
 		}

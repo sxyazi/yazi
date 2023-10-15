@@ -11,7 +11,7 @@ pub struct Tabs<'a, 'b> {
 impl<'a, 'b> Tabs<'a, 'b> {
 	pub(crate) fn init() -> mlua::Result<()> {
 		LUA.register_userdata_type::<core::manager::Tabs>(|reg| {
-			reg.add_field_method_get("idx", |_, me| Ok(me.idx()));
+			reg.add_field_method_get("idx", |_, me| Ok(me.idx));
 			reg.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.len()));
 			reg.add_meta_function(MetaMethod::Index, |_, (me, index): (AnyUserData, usize)| {
 				let items = me.named_user_value::<Vec<AnyUserData>>("items")?;
@@ -19,7 +19,7 @@ impl<'a, 'b> Tabs<'a, 'b> {
 			});
 		})?;
 
-		LUA.register_userdata_type::<core::manager::Tab>(|reg| {
+		LUA.register_userdata_type::<core::tab::Tab>(|reg| {
 			reg.add_method("name", |_, me, ()| {
 				Ok(
 					me.current
@@ -56,7 +56,7 @@ impl<'a, 'b> Tabs<'a, 'b> {
 		Ok(ud)
 	}
 
-	fn tab(&self, inner: &'a core::manager::Tab) -> mlua::Result<AnyUserData<'a>> {
+	fn tab(&self, inner: &'a core::tab::Tab) -> mlua::Result<AnyUserData<'a>> {
 		let ud = self.scope.create_any_userdata_ref(inner)?;
 
 		ud.set_named_user_value("parent", inner.parent.as_ref().and_then(|p| self.folder(p).ok()))?;
@@ -66,7 +66,7 @@ impl<'a, 'b> Tabs<'a, 'b> {
 		Ok(ud)
 	}
 
-	pub(crate) fn folder(&self, inner: &'a core::manager::Folder) -> mlua::Result<AnyUserData<'a>> {
+	pub(crate) fn folder(&self, inner: &'a core::tab::Folder) -> mlua::Result<AnyUserData<'a>> {
 		let ud = self.scope.create_any_userdata_ref(inner)?;
 		ud.set_named_user_value("files", self.files(&inner.files)?)?;
 
@@ -77,8 +77,8 @@ impl<'a, 'b> Tabs<'a, 'b> {
 		self.scope.create_any_userdata_ref(inner)
 	}
 
-	fn preview(&self, tab: &'a core::manager::Tab) -> mlua::Result<AnyUserData<'a>> {
-		let inner = tab.preview();
+	fn preview(&self, tab: &'a core::tab::Tab) -> mlua::Result<AnyUserData<'a>> {
+		let inner = &tab.preview;
 
 		let ud = self.scope.create_any_userdata_ref(inner)?;
 		ud.set_named_user_value(

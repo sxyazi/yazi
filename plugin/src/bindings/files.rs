@@ -12,11 +12,11 @@ impl From<&core::files::File> for File {
 
 impl UserData for File {
 	fn add_fields<'lua, F: UserDataFields<'lua, Self>>(fields: &mut F) {
-		fields.add_field_method_get("url", |_, me| Ok(Url::from(me.0.url())));
-		fields.add_field_method_get("length", |_, me| Ok(me.0.length()));
+		fields.add_field_method_get("url", |_, me| Ok(Url::from(&me.0.url)));
+		fields.add_field_method_get("length", |_, me| Ok(me.0.length));
 		fields.add_field_method_get("link_to", |_, me| Ok(me.0.link_to().map(Url::from)));
-		fields.add_field_method_get("is_link", |_, me| Ok(me.0.is_link()));
-		fields.add_field_method_get("is_hidden", |_, me| Ok(me.0.is_hidden()));
+		fields.add_field_method_get("is_link", |_, me| Ok(me.0.is_link));
+		fields.add_field_method_get("is_hidden", |_, me| Ok(me.0.is_hidden));
 	}
 }
 
@@ -47,33 +47,33 @@ impl Files {
 		})?;
 
 		LUA.register_userdata_type::<core::files::File>(|reg| {
-			reg.add_field_method_get("url", |_, me| Ok(Url::from(me.url())));
-			reg.add_field_method_get("length", |_, me| Ok(me.length()));
+			reg.add_field_method_get("url", |_, me| Ok(Url::from(&me.url)));
+			reg.add_field_method_get("length", |_, me| Ok(me.length));
 			reg.add_field_method_get("link_to", |_, me| Ok(me.link_to().map(Url::from)));
-			reg.add_field_method_get("is_link", |_, me| Ok(me.is_link()));
-			reg.add_field_method_get("is_hidden", |_, me| Ok(me.is_hidden()));
+			reg.add_field_method_get("is_link", |_, me| Ok(me.is_link));
+			reg.add_field_method_get("is_hidden", |_, me| Ok(me.is_hidden));
 
 			reg.add_field_method_get("name", |_, me| {
-				Ok(me.url().file_name().map(|n| n.to_string_lossy().to_string()))
+				Ok(me.url.file_name().map(|n| n.to_string_lossy().to_string()))
 			});
 			reg.add_field_method_get("permissions", |_, me| {
-				Ok(shared::permissions(me.meta().permissions()))
+				Ok(shared::permissions(me.meta.permissions()))
 			});
 
 			reg.add_function("mime", |_, me: AnyUserData| {
 				let manager = me.named_user_value::<UserDataRef<core::manager::Manager>>("manager")?;
 				let file = me.borrow::<core::files::File>()?;
-				Ok(manager.mimetype.get(file.url()).cloned())
+				Ok(manager.mimetype.get(&file.url).cloned())
 			});
 
 			reg.add_function("prefix", |_, me: AnyUserData| {
-				let folder = me.named_user_value::<UserDataRef<core::manager::Folder>>("folder")?;
+				let folder = me.named_user_value::<UserDataRef<core::tab::Folder>>("folder")?;
 				if !folder.cwd.is_search() {
 					return Ok(None);
 				}
 
 				let file = me.borrow::<core::files::File>()?;
-				let mut p = file.url().strip_prefix(&folder.cwd).unwrap_or(file.url()).components();
+				let mut p = file.url.strip_prefix(&folder.cwd).unwrap_or(&file.url).components();
 				p.next_back();
 				Ok(Some(p.as_path().to_string_lossy().to_string()))
 			});
@@ -83,7 +83,7 @@ impl Files {
 					THEME
 						.icons
 						.iter()
-						.find(|&x| x.name.match_path(me.url(), Some(me.is_dir())))
+						.find(|&x| x.name.match_path(&me.url, Some(me.is_dir())))
 						.map(|x| x.display.to_string()),
 				)
 			});
@@ -91,28 +91,28 @@ impl Files {
 			reg.add_function("style", |_, me: AnyUserData| {
 				let manager = me.named_user_value::<UserDataRef<core::manager::Manager>>("manager")?;
 				let file = me.borrow::<core::files::File>()?;
-				let mime = manager.mimetype.get(file.url());
+				let mime = manager.mimetype.get(&file.url);
 				Ok(
 					THEME
 						.filetypes
 						.iter()
-						.find(|&x| x.matches(file.url(), mime, file.is_dir()))
+						.find(|&x| x.matches(&file.url, mime, file.is_dir()))
 						.map(|x| Style::from(x.style)),
 				)
 			});
 
 			reg.add_function("is_hovered", |_, me: AnyUserData| {
-				let folder = me.named_user_value::<UserDataRef<core::manager::Folder>>("folder")?;
+				let folder = me.named_user_value::<UserDataRef<core::tab::Folder>>("folder")?;
 				let file = me.borrow::<core::files::File>()?;
-				Ok(matches!(folder.hovered(), Some(f) if f.url() == file.url()))
+				Ok(matches!(folder.hovered(), Some(f) if f.url == file.url))
 			});
 
 			reg.add_function("is_yanked", |_, me: AnyUserData| {
 				let manager = me.named_user_value::<UserDataRef<core::manager::Manager>>("manager")?;
 				let file = me.borrow::<core::files::File>()?;
-				Ok(if !manager.yanked().1.contains(file.url()) {
+				Ok(if !manager.yanked.1.contains(&file.url) {
 					0u8
-				} else if manager.yanked().0 {
+				} else if manager.yanked.0 {
 					2u8
 				} else {
 					1u8
@@ -121,10 +121,10 @@ impl Files {
 
 			reg.add_function("is_selected", |_, me: AnyUserData| {
 				let manager = me.named_user_value::<UserDataRef<core::manager::Manager>>("manager")?;
-				let folder = me.named_user_value::<UserDataRef<core::manager::Folder>>("folder")?;
+				let folder = me.named_user_value::<UserDataRef<core::tab::Folder>>("folder")?;
 				let file = me.borrow::<core::files::File>()?;
 
-				let selected = folder.files.is_selected(file.url());
+				let selected = folder.files.is_selected(&file.url);
 				Ok(if !manager.active().mode.is_visual() {
 					selected
 				} else {
@@ -135,12 +135,12 @@ impl Files {
 
 			reg.add_function("found", |lua, me: AnyUserData| {
 				let manager = me.named_user_value::<UserDataRef<core::manager::Manager>>("manager")?;
-				let Some(finder) = manager.active().finder() else {
+				let Some(finder) = &manager.active().finder else {
 					return Ok(None);
 				};
 
 				let file = me.borrow::<core::files::File>()?;
-				if let Some(idx) = finder.matched_idx(file.url()) {
+				if let Some(idx) = finder.matched_idx(&file.url) {
 					return Some(
 						lua.create_sequence_from([idx.into_lua(lua)?, finder.matched().len().into_lua(lua)?]),
 					)
@@ -151,7 +151,7 @@ impl Files {
 
 			reg.add_function("highlights", |_, me: AnyUserData| {
 				let manager = me.named_user_value::<UserDataRef<core::manager::Manager>>("manager")?;
-				let Some(finder) = manager.active().finder() else {
+				let Some(finder) = &manager.active().finder else {
 					return Ok(None);
 				};
 

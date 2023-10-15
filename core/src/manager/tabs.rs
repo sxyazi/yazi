@@ -1,14 +1,13 @@
 use config::BOOT;
 use shared::Url;
 
-use super::Tab;
-use crate::emit;
+use crate::{emit, tab::Tab};
 
 const MAX_TABS: usize = 9;
 
 pub struct Tabs {
-	idx:   usize,
-	items: Vec<Tab>,
+	pub idx: usize,
+	items:   Vec<Tab>,
 }
 
 impl Tabs {
@@ -90,9 +89,6 @@ impl Tabs {
 }
 
 impl Tabs {
-	#[inline]
-	pub fn idx(&self) -> usize { self.idx }
-
 	#[inline]
 	pub fn len(&self) -> usize { self.items.len() }
 

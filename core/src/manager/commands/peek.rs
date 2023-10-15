@@ -1,0 +1,31 @@
+use crate::manager::Manager;
+
+impl Manager {
+	pub fn peek(&mut self, sequent: bool, show_image: bool) -> bool {
+		let Some(hovered) = self.hovered().cloned() else {
+			return self.active_mut().preview_reset();
+		};
+
+		let url = &hovered.url;
+		if !show_image {
+			self.active_mut().preview_reset_image();
+		}
+
+		if hovered.is_dir() {
+			let position = self.active().history(url).map(|f| (f.offset, f.files.len()));
+			self.active_mut().preview.folder(url, position, sequent);
+			return false;
+		}
+
+		let Some(mime) = self.mimetype.get(url).cloned() else {
+			return false;
+		};
+
+		if sequent {
+			self.active_mut().preview.sequent(url, &mime, show_image);
+		} else {
+			self.active_mut().preview.go(url, &mime, show_image);
+		}
+		false
+	}
+}
