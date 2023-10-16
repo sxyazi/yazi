@@ -15,8 +15,7 @@ pub struct Boot {
 }
 
 #[derive(Debug, Parser)]
-#[command(name = "yazi")]
-#[command(version = "0.1.4")]
+#[command(name = "yazi", version)]
 struct Args {
 	/// Set the current working directory
 	#[arg(index = 1)]

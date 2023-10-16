@@ -4,7 +4,7 @@ version = 3
 
 [[package]]
 name = "adaptor"
-version = "0.1.0"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "base64",
@@ -123,7 +123,7 @@ checksum = "a4668cab20f66d8d020e1fbc0ebe47217433c1b6c8f2040faf858554e394ace6"
 
 [[package]]
 name = "app"
-version = "0.1.0"
+version = "0.1.5"
 dependencies = [
  "adaptor",
  "ansi-to-tui",
@@ -359,7 +359,7 @@ dependencies = [
 
 [[package]]
 name = "config"
-version = "0.1.0"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "clap",
@@ -379,7 +379,7 @@ dependencies = [
 
 [[package]]
 name = "core"
-version = "0.1.0"
+version = "0.1.5"
 dependencies = [
  "adaptor",
  "anyhow",
@@ -1355,7 +1355,7 @@ dependencies = [
 
 [[package]]
 name = "plugin"
-version = "0.1.0"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "config",
@@ -1641,7 +1641,7 @@ dependencies = [
 
 [[package]]
 name = "shared"
-version = "0.1.0"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "crossterm",
