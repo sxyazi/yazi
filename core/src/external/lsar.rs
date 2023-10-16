@@ -32,9 +32,7 @@ pub struct LsarFile {
 
 #[allow(clippy::manual_map)]
 pub async fn lsar(path: &Path, skip: usize, limit: usize) -> Result<Vec<LsarFile>, PeekError> {
-	let output =
-		Command::new("lsar").args(["-j", "-jss"]).arg(path).kill_on_drop(true).output().await?;
-
+	let output = Command::new("lsar").arg("-j").arg(path).kill_on_drop(true).output().await?;
 	if !output.status.success() {
 		return Err(String::from_utf8_lossy(&output.stderr).to_string().into());
 	}
