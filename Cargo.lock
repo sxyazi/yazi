@@ -308,6 +308,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap_complete"
+version = "4.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3ae8ba90b9d8b007efe66e55e48fb936272f5ca00349b5b0e89877520d35ea7"
+dependencies = [
+ "clap",
+]
+
+[[package]]
+name = "clap_complete_fig"
+version = "4.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "29bdbe21a263b628f83fcbeac86a4416a1d588c7669dd41473bc4149e4e7d2f1"
+dependencies = [
+ "clap",
+ "clap_complete",
+]
+
+[[package]]
+name = "clap_complete_nushell"
+version = "4.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df47268eb308aaac1ffbfcd8ae43e43820cd094a051b03956d238f2bc60dc3fe"
+dependencies = [
+ "clap",
+ "clap_complete",
+]
+
+[[package]]
 name = "clap_derive"
 version = "4.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -363,6 +392,9 @@ version = "0.1.5"
 dependencies = [
  "anyhow",
  "clap",
+ "clap_complete",
+ "clap_complete_fig",
+ "clap_complete_nushell",
  "crossterm",
  "dirs",
  "futures",
