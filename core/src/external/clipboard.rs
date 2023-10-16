@@ -2,7 +2,7 @@ use std::ffi::OsString;
 
 use anyhow::Result;
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(unix)]
 pub async fn clipboard_get() -> Result<OsString> {
 	use std::os::unix::prelude::OsStringExt;
 
@@ -28,7 +28,7 @@ pub async fn clipboard_get() -> Result<OsString> {
 	bail!("failed to get clipboard")
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(windows)]
 pub async fn clipboard_get() -> Result<OsString> {
 	use anyhow::anyhow;
 	use clipboard_win::{formats, get_clipboard};
@@ -37,7 +37,7 @@ pub async fn clipboard_get() -> Result<OsString> {
 	Ok(result.await?.map_err(|_| anyhow!("failed to get clipboard"))?.into())
 }
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(unix)]
 pub async fn clipboard_set(s: impl AsRef<std::ffi::OsStr>) -> Result<()> {
 	use std::{os::unix::prelude::OsStrExt, process::Stdio};
 
@@ -77,7 +77,7 @@ pub async fn clipboard_set(s: impl AsRef<std::ffi::OsStr>) -> Result<()> {
 	bail!("failed to set clipboard")
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(windows)]
 pub async fn clipboard_set(s: impl AsRef<std::ffi::OsStr>) -> Result<()> {
 	use anyhow::anyhow;
 	use clipboard_win::{formats, set_clipboard};

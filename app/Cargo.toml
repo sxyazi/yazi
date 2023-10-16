@@ -24,7 +24,7 @@ tracing            = "^0"
 tracing-appender   = "^0"
 tracing-subscriber = "^0"
 
-[target.'cfg(not(target_os = "windows"))'.dependencies]
+[target."cfg(unix)".dependencies]
 libc              = "^0"
 signal-hook-tokio = { version = "^0", features = [ "futures-v0_3" ] }
 

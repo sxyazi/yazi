@@ -31,5 +31,5 @@ yazi-prebuild = "^0"
 # Logging
 tracing = "^0"
 
-[target.'cfg(target_os = "windows")'.dependencies]
+[target."cfg(windows)".dependencies]
 clipboard-win = "^4"

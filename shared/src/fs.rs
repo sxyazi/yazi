@@ -179,7 +179,7 @@ pub fn max_common_root(files: &[impl AsRef<Path>]) -> PathBuf {
 	root
 }
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(unix)]
 #[test]
 fn test_max_common_root() {
 	assert_eq!(max_common_root(&[] as &[PathBuf]).as_os_str(), "");

@@ -10,11 +10,11 @@ impl Xdg {
 			return Some(expand_path(s));
 		}
 
-		#[cfg(target_os = "windows")]
+		#[cfg(windows)]
 		{
 			dirs::config_dir().map(|p| p.join("yazi").join("config"))
 		}
-		#[cfg(not(target_os = "windows"))]
+		#[cfg(unix)]
 		{
 			env::var_os("XDG_CONFIG_HOME")
 				.map(PathBuf::from)
@@ -25,11 +25,11 @@ impl Xdg {
 	}
 
 	pub(super) fn state_dir() -> Option<PathBuf> {
-		#[cfg(target_os = "windows")]
+		#[cfg(windows)]
 		{
 			dirs::data_dir().map(|p| p.join("yazi").join("state"))
 		}
-		#[cfg(not(target_os = "windows"))]
+		#[cfg(unix)]
 		{
 			env::var_os("XDG_STATE_HOME")
 				.map(PathBuf::from)
