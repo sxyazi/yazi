@@ -1,0 +1,76 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  publish:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Bootstrap
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+
+      - name: Cache Dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build
+        run: cargo build --release --locked --target ${{ matrix.target }}
+
+      - name: Pack Artifacts [Linux]
+        if: matrix.os == 'ubuntu-latest'
+        env:
+          RELEASE_NAME: yazi-${{ matrix.target }}
+        run: |
+          mkdir $RELEASE_NAME
+          cp target/${{ matrix.target }}/release/yazi -t $RELEASE_NAME
+          cp -r config/completions -t $RELEASE_NAME
+          cp README.md LICENSE -t $RELEASE_NAME
+          zip -r $RELEASE_NAME.zip $RELEASE_NAME
+
+      - name: Pack Artifacts [macOS]
+        if: matrix.os == 'macos-latest'
+        env:
+          RELEASE_NAME: yazi-${{ matrix.target }}
+        run: |
+          mkdir $RELEASE_NAME
+          cp target/${{ matrix.target }}/release/yazi $RELEASE_NAME
+          cp -R config/completions $RELEASE_NAME
+          cp README.md LICENSE $RELEASE_NAME
+          zip -r $RELEASE_NAME.zip $RELEASE_NAME
+
+      - name: Pack Artifacts [Windows]
+        if: matrix.os == 'windows-latest'
+        env:
+          RELEASE_NAME: yazi-${{ matrix.target }}
+        run: |
+          New-Item -ItemType Directory -Path ${env:RELEASE_NAME}
+          Copy-Item -Path "target\${{ matrix.target }}\release\yazi.exe" -Destination ${env:RELEASE_NAME}
+          Copy-Item -Path "config\completions" -Destination ${env:RELEASE_NAME} -Recurse
+          Copy-Item -Path "README.md", "LICENSE" -Destination ${env:RELEASE_NAME}
+          Compress-Archive -Path ${env:RELEASE_NAME} -DestinationPath "${env:RELEASE_NAME}.zip"
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: yazi-${{ matrix.target }}.zip
