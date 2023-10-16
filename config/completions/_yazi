@@ -1,0 +1,39 @@
+#compdef yazi
+
+autoload -U is-at-least
+
+_yazi() {
+    typeset -A opt_args
+    typeset -a _arguments_options
+    local ret=1
+
+    if is-at-least 5.2; then
+        _arguments_options=(-s -S -C)
+    else
+        _arguments_options=(-s -C)
+    fi
+
+    local context curcontext="$curcontext" state line
+    _arguments "${_arguments_options[@]}" \
+'--cwd-file=[Write the cwd on exit to this file]:CWD_FILE:_files' \
+'--chooser-file=[Write the selected files on open emitted by the chooser mode]:CHOOSER_FILE:_files' \
+'--clear-cache[Clear the cache directory]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'-V[Print version]' \
+'--version[Print version]' \
+'::cwd -- Set the current working directory:_files' \
+&& ret=0
+}
+
+(( $+functions[_yazi_commands] )) ||
+_yazi_commands() {
+    local commands; commands=()
+    _describe -t commands 'yazi commands' commands "$@"
+}
+
+if [ "$funcstack[1]" = "_yazi" ]; then
+    _yazi "$@"
+else
+    compdef _yazi yazi
+fi
