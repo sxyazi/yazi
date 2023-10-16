@@ -72,11 +72,11 @@ impl Manager {
 			{
 				let s = old.iter().map(|o| o.as_os_str()).collect::<Vec<_>>().join(OsStr::new("\n"));
 				let mut f = OpenOptions::new().write(true).create_new(true).open(&tmp).await?;
-				#[cfg(target_os = "windows")]
+				#[cfg(windows)]
 				{
 					f.write_all(s.to_string_lossy().as_bytes()).await?;
 				}
-				#[cfg(not(target_os = "windows"))]
+				#[cfg(unix)]
 				{
 					use std::os::unix::ffi::OsStrExt;
 					f.write_all(s.as_bytes()).await?;

@@ -45,10 +45,10 @@ impl Signals {
 		}
 	}
 
-	#[cfg(target_os = "windows")]
+	#[cfg(windows)]
 	fn spawn_system_task(&self) -> Result<()> { Ok(()) }
 
-	#[cfg(not(target_os = "windows"))]
+	#[cfg(unix)]
 	fn spawn_system_task(&self) -> Result<JoinHandle<()>> {
 		use libc::{SIGCONT, SIGHUP, SIGINT, SIGQUIT, SIGTERM};
 

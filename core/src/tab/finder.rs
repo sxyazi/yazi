@@ -78,11 +78,11 @@ impl Finder {
 
 	#[inline]
 	fn matches(&self, name: &OsStr) -> bool {
-		#[cfg(target_os = "windows")]
+		#[cfg(windows)]
 		{
 			self.query.is_match(name.to_string_lossy().as_bytes())
 		}
-		#[cfg(not(target_os = "windows"))]
+		#[cfg(unix)]
 		{
 			use std::os::unix::ffi::OsStrExt;
 			self.query.is_match(name.as_bytes())

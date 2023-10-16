@@ -45,11 +45,11 @@ impl App {
 		if let Some(p) = BOOT.cwd_file.as_ref().filter(|_| !no_cwd_file) {
 			let cwd = self.cx.manager.cwd().as_os_str();
 
-			#[cfg(target_os = "windows")]
+			#[cfg(windows)]
 			{
 				std::fs::write(p, cwd.to_string_lossy().as_bytes()).ok();
 			}
-			#[cfg(not(target_os = "windows"))]
+			#[cfg(unix)]
 			{
 				use std::os::unix::ffi::OsStrExt;
 				std::fs::write(p, cwd.as_bytes()).ok();
@@ -191,11 +191,11 @@ impl App {
 						s
 					});
 
-					#[cfg(target_os = "windows")]
+					#[cfg(windows)]
 					{
 						std::fs::write(p, paths.to_string_lossy().as_bytes()).ok();
 					}
-					#[cfg(not(target_os = "windows"))]
+					#[cfg(unix)]
 					{
 						use std::os::unix::ffi::OsStrExt;
 						std::fs::write(p, paths.as_bytes()).ok();

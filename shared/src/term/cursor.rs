@@ -22,7 +22,7 @@ impl Term {
 		W: Write,
 		F: FnOnce(&mut W) -> Result<()>,
 	{
-		#[cfg(target_os = "windows")]
+		#[cfg(windows)]
 		{
 			use std::{thread, time::Duration};
 
@@ -39,7 +39,7 @@ impl Term {
 			stdout.flush()?;
 			result
 		}
-		#[cfg(not(target_os = "windows"))]
+		#[cfg(unix)]
 		{
 			queue!(&mut stdout, SavePosition, MoveTo(x, y))?;
 			let result = cb(&mut stdout);

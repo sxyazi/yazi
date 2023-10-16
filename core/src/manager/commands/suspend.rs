@@ -1,10 +1,10 @@
-use crate::{emit, manager::Manager};
+use crate::manager::Manager;
 
 impl Manager {
 	pub fn suspend(&mut self) -> bool {
-		#[cfg(not(target_os = "windows"))]
+		#[cfg(unix)]
 		tokio::spawn(async move {
-			emit!(Stop(true)).await;
+			crate::emit!(Stop(true)).await;
 			unsafe { libc::raise(libc::SIGTSTP) };
 		});
 		false
