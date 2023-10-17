@@ -3,7 +3,6 @@ use mlua::{AnyUserData, FromLua, Lua, Table, UserData, Value};
 use super::{Rect, Style};
 use crate::{GLOBALS, LUA};
 
-// --- Bar
 #[derive(Clone)]
 pub struct Bar {
 	area: ratatui::layout::Rect,
@@ -34,23 +33,6 @@ impl Bar {
 				})
 			})?,
 		)
-	}
-
-	#[inline]
-	pub fn new(area: ratatui::layout::Rect, position: ratatui::widgets::Borders) -> Self {
-		Self { area, position, symbol: Default::default(), style: Default::default() }
-	}
-
-	#[inline]
-	pub fn symbol(mut self, symbol: &str) -> Self {
-		self.symbol = symbol.to_owned();
-		self
-	}
-
-	#[inline]
-	pub fn style(mut self, style: ratatui::style::Style) -> Self {
-		self.style = Some(style);
-		self
 	}
 
 	pub fn render(self, buf: &mut ratatui::buffer::Buffer) {

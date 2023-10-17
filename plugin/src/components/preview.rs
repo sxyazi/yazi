@@ -27,7 +27,7 @@ impl<'a> Widget for Preview<'a> {
 
 		match &preview.lock.as_ref().unwrap().data {
 			PreviewData::Folder => {
-				Folder::Preview.render(area, buf);
+				Folder::preview(self.cx).render(area, buf);
 			}
 			PreviewData::Text(s) => {
 				let p = Paragraph::new(s.as_bytes().into_text().unwrap());

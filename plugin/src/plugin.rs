@@ -3,7 +3,7 @@ use config::PLUGINS;
 use mlua::{Lua, Table};
 use shared::RoCell;
 
-use crate::{bindings, layout, utils};
+use crate::{bindings, components, layout, utils};
 
 pub(crate) static LUA: RoCell<Lua> = RoCell::new();
 pub(crate) static GLOBALS: RoCell<Table> = RoCell::new();
@@ -20,6 +20,7 @@ pub fn init() {
 		// Components
 		lua.load(include_str!("../preset/components/folder.lua")).exec()?;
 		lua.load(include_str!("../preset/components/header.lua")).exec()?;
+		lua.load(include_str!("../preset/components/manager.lua")).exec()?;
 		lua.load(include_str!("../preset/components/status.lua")).exec()?;
 
 		// Initialize
@@ -27,9 +28,12 @@ pub fn init() {
 		GLOBALS.init(LUA.globals());
 		utils::init()?;
 		bindings::init()?;
+		components::init()?;
 
 		// Install
 		crate::Config.install()?;
+
+		components::Base::install()?;
 
 		layout::Bar::install()?;
 		layout::Constraint::install()?;
@@ -38,6 +42,7 @@ pub fn init() {
 		layout::Line::install()?;
 		layout::List::install()?;
 		layout::ListItem::install()?;
+		layout::Padding::install()?;
 		layout::Paragraph::install()?;
 		layout::Rect::install()?;
 		layout::Span::install()?;

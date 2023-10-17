@@ -1,5 +1,19 @@
 utils = utils or {}
 
+function utils.flat(t)
+	local r = {}
+	for _, v in ipairs(t) do
+		if type(v) == "table" then
+			for _, v2 in ipairs(utils.flat(v)) do
+				r[#r + 1] = v2
+			end
+		else
+			r[#r + 1] = v
+		end
+	end
+	return r
+end
+
 function utils.basename(str) return string.gsub(str, "(.*[/\\])(.*)", "%2") end
 
 function utils.readable_size(size)

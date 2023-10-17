@@ -9,6 +9,7 @@ core   = { path = "../core" }
 shared = { path = "../shared" }
 
 # External dependencies
+ansi-to-tui   = "^3"
 anyhow        = "^1"
 mlua          = { version = "^0", features = [ "luajit52", "vendored", "serialize" ] }
 ratatui       = "^0"
