@@ -36,6 +36,7 @@ pub fn init() {
 		components::Base::install()?;
 
 		layout::Bar::install()?;
+		layout::Border::install()?;
 		layout::Constraint::install()?;
 		layout::Gauge::install()?;
 		layout::Layout::install()?;

@@ -24,8 +24,8 @@ impl Bar {
 					position: match direction {
 						1 => ratatui::widgets::Borders::TOP,
 						2 => ratatui::widgets::Borders::RIGHT,
-						3 => ratatui::widgets::Borders::BOTTOM,
-						4 => ratatui::widgets::Borders::LEFT,
+						4 => ratatui::widgets::Borders::BOTTOM,
+						8 => ratatui::widgets::Borders::LEFT,
 						_ => ratatui::widgets::Borders::NONE,
 					},
 					symbol:   Default::default(),

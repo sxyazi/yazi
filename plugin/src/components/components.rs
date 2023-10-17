@@ -2,7 +2,7 @@ use mlua::{AnyUserData, Table};
 use shared::RoCell;
 
 use super::Base;
-use crate::{layout::{Bar, Gauge, List, Paragraph}, GLOBALS};
+use crate::{layout::{Bar, Border, Gauge, List, Paragraph}, GLOBALS};
 
 pub(super) static COMP_FOLDER: RoCell<Table> = RoCell::new();
 pub(super) static COMP_HEADER: RoCell<Table> = RoCell::new();
@@ -31,6 +31,8 @@ pub(super) fn layout(
 			c.render(buf)
 		} else if let Ok(c) = value.take::<Base>() {
 			c.render(cx, buf)
+		} else if let Ok(c) = value.take::<Border>() {
+			c.render(buf)
 		} else if let Ok(c) = value.take::<Gauge>() {
 			c.render(buf)
 		}

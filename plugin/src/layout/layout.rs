@@ -70,11 +70,11 @@ impl UserData for Layout {
 			let me = ud.borrow::<Self>()?;
 
 			let mut layout = ratatui::layout::Layout::new()
-				.direction(
-					me.direction
-						.then_some(ratatui::layout::Direction::Vertical)
-						.unwrap_or(ratatui::layout::Direction::Horizontal),
-				)
+				.direction(if me.direction {
+					ratatui::layout::Direction::Vertical
+				} else {
+					ratatui::layout::Direction::Horizontal
+				})
 				.constraints(me.constraints.as_slice());
 
 			if let Some(margin) = me.margin {
