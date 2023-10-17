@@ -10,16 +10,16 @@ function Manager:render(area)
 		})
 		:split(area)
 
-	return {
-		-- Parent
-		table.unpack(Folder:render(chunks[1]:padding(ui.Padding.x(1)), { kind = Folder.Kind.Parent })),
-		-- Current
-		table.unpack(Folder:render(chunks[2], { kind = Folder.Kind.Current })),
-		-- Preview
-		ui.Base(chunks[3]:padding(ui.Padding.x(1)), "Preview"),
-
+	return utils.flat {
 		-- Borders
 		ui.Bar(chunks[1], ui.Position.RIGHT):symbol(THEME.manager.border_symbol):style(THEME.manager.border_style),
 		ui.Bar(chunks[3], ui.Position.LEFT):symbol(THEME.manager.border_symbol):style(THEME.manager.border_style),
+
+		-- Parent
+		Folder:render(chunks[1]:padding(ui.Padding.x(1)), { kind = Folder.PARENT }),
+		-- Current
+		Folder:render(chunks[2], { kind = Folder.CURRENT }),
+		-- Preview
+		ui.Base(chunks[3]:padding(ui.Padding.x(1)), ui.Base.PREVIEW),
 	}
 end

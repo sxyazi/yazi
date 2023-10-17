@@ -7,21 +7,22 @@ use crate::{layout::Rect, GLOBALS, LUA};
 pub struct Base {
 	area: ratatui::layout::Rect,
 
-	name: String,
+	kind: u8,
 }
 
 impl Base {
 	pub(crate) fn install() -> mlua::Result<()> {
 		let ui: Table = GLOBALS.get("ui")?;
-		ui.set(
-			"Base",
-			LUA.create_function(|_, (area, name): (Rect, String)| Ok(Self { area: area.0, name }))?,
+		let base: Table = ui.get("Base")?;
+		base.set(
+			"new",
+			LUA.create_function(|_, (area, kind): (Rect, u8)| Ok(Self { area: area.0, kind }))?,
 		)
 	}
 
 	pub fn render(self, cx: &core::Ctx, buf: &mut ratatui::buffer::Buffer) {
-		match self.name.as_ref() {
-			"Preview" => super::Preview::new(cx).render(self.area, buf),
+		match self.kind {
+			0 => super::Preview::new(cx).render(self.area, buf),
 			_ => {}
 		}
 	}

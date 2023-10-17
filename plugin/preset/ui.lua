@@ -16,6 +16,11 @@ ui = {
 		LEFT = 4,
 	},
 
+	Base = setmetatable({
+		PREVIEW = 0,
+	}, {
+		__call = function(_, ...) return ui.Base.new(...) end,
+	}),
 	Padding = setmetatable({
 		left = function(left) return ui.Padding.new(left, 0, 0, 0) end,
 		right = function(right) return ui.Padding.new(0, right, 0, 0) end,
@@ -24,7 +29,7 @@ ui = {
 		x = function(x) return ui.Padding.new(x, x, 0, 0) end,
 		y = function(y) return ui.Padding.new(0, 0, y, y) end,
 	}, {
-		__call = function(...) return ui.Padding.new(...) end,
+		__call = function(_, ...) return ui.Padding.new(...) end,
 	}),
 }
 

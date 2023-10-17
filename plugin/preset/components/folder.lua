@@ -1,17 +1,15 @@
 Folder = {
-	Kind = {
-		Parent = 0,
-		Current = 1,
-		Preview = 2,
-	},
+	PARENT = 0,
+	CURRENT = 1,
+	PREVIEW = 2,
 }
 
 function Folder:by_kind(kind)
-	if kind == self.Kind.Parent then
+	if kind == self.PARENT then
 		return cx.active.parent
-	elseif kind == self.Kind.Current then
+	elseif kind == self.CURRENT then
 		return cx.active.current
-	elseif kind == self.Kind.Preview then
+	elseif kind == self.PREVIEW then
 		return cx.active.preview.folder
 	end
 end
@@ -23,14 +21,14 @@ function Folder:markers(area, markers)
 
 	local elements = {}
 	local append = function(last)
-		local p = ui.Paragraph(
+		local p = ui.Bar(
 			ui.Rect {
 				x = math.max(1, area.x) - 1,
 				y = area.y + last[1] - 1,
 				w = 1,
 				h = 1 + last[2] - last[1],
 			},
-			{}
+			ui.Position.LEFT
 		)
 
 		if last[3] == 1 then
@@ -86,7 +84,7 @@ function Folder:highlighted_name(file)
 end
 
 function Folder:parent(area)
-	local folder = self:by_kind(self.Kind.Parent)
+	local folder = self:by_kind(self.PARENT)
 	if folder == nil then
 		return {}
 	end
@@ -109,7 +107,7 @@ end
 function Folder:current(area)
 	local markers = {}
 	local items = {}
-	for i, f in ipairs(self:by_kind(self.Kind.Current).window) do
+	for i, f in ipairs(self:by_kind(self.CURRENT).window) do
 		local name = self:highlighted_name(f)
 
 		-- Highlight hovered file
@@ -134,7 +132,7 @@ function Folder:current(area)
 end
 
 function Folder:preview(area)
-	local folder = self:by_kind(self.Kind.Preview)
+	local folder = self:by_kind(self.PREVIEW)
 	if folder == nil then
 		return {}
 	end
@@ -154,11 +152,11 @@ function Folder:preview(area)
 end
 
 function Folder:render(area, args)
-	if args.kind == self.Kind.Parent then
+	if args.kind == self.PARENT then
 		return self:parent(area)
-	elseif args.kind == self.Kind.Current then
+	elseif args.kind == self.CURRENT then
 		return self:current(area)
-	elseif args.kind == self.Kind.Preview then
+	elseif args.kind == self.PREVIEW then
 		return self:preview(area)
 	end
 end
