@@ -1,10 +1,10 @@
 use anyhow::bail;
 use crossterm::terminal::WindowSize;
-use ratatui::prelude::Rect;
+use ratatui::{prelude::Rect, widgets::{Block, Padding}};
 use serde::{Deserialize, Serialize};
 use shared::Term;
 
-use super::{FOLDER_MARGIN, PREVIEW_BORDER, PREVIEW_MARGIN};
+use crate::THEME;
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(try_from = "Vec<u32>")]
@@ -42,14 +42,13 @@ impl ManagerLayout {
 		let width = (columns as u32 * self.preview) as f64 / self.all as f64;
 		let width = if width.fract() > 0.5 { width.ceil() as u16 } else { width.floor() as u16 };
 
-		let x = columns.saturating_sub(width);
-
-		Rect {
-			x:      x.saturating_add(PREVIEW_BORDER / 2),
-			y:      PREVIEW_MARGIN / 2,
-			width:  width.saturating_sub(PREVIEW_BORDER),
-			height: rows.saturating_sub(PREVIEW_MARGIN),
-		}
+		let offset = THEME.manager.preview_offset;
+		Block::default().padding(Padding::new(offset.3, offset.1, offset.0, offset.2)).inner(Rect {
+			x: columns.saturating_sub(width),
+			y: 0,
+			width,
+			height: rows,
+		})
 	}
 
 	#[inline]
@@ -58,12 +57,13 @@ impl ManagerLayout {
 	pub fn folder_rect(&self) -> Rect {
 		let WindowSize { columns, rows, .. } = Term::size();
 
-		Rect {
+		let offset = THEME.manager.folder_offset;
+		Block::default().padding(Padding::new(offset.3, offset.1, offset.0, offset.2)).inner(Rect {
 			x:      (columns as u32 * self.parent / self.all) as u16,
-			y:      FOLDER_MARGIN / 2,
+			y:      0,
 			width:  (columns as u32 * self.current / self.all) as u16,
-			height: rows.saturating_sub(FOLDER_MARGIN),
-		}
+			height: rows,
+		})
 	}
 
 	#[inline]
