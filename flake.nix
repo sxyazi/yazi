@@ -22,11 +22,11 @@
 
         devShells.default = import ./nix/shell.nix { inherit pkgs inputs; };
       }) 
-    // rec {
-      overlays = {
-        default = overlays.yazi;
+    // {
+      overlays = rec {
+        default = yazi;
         yazi = final: prev: {
-          yazi = final.callPackage ./nix/yazi.nix { };
+          yazi = self.packages."${final.system}".yazi;
         };
       };
     };
