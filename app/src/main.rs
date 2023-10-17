@@ -5,7 +5,6 @@ mod executor;
 mod help;
 mod input;
 mod logs;
-mod manager;
 mod root;
 mod select;
 mod signals;

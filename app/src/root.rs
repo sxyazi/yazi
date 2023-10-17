@@ -1,9 +1,9 @@
 use core::Ctx;
 
+use plugin::components;
 use ratatui::{buffer::Buffer, layout::{Constraint, Direction, Layout, Rect}, widgets::Widget};
-use tracing::error;
 
-use super::{input, manager, select, tasks, which};
+use super::{input, select, tasks, which};
 use crate::help;
 
 pub(super) struct Root<'a> {
@@ -21,13 +21,9 @@ impl<'a> Widget for Root<'a> {
 			.constraints([Constraint::Length(1), Constraint::Min(0), Constraint::Length(1)])
 			.split(area);
 
-		if let Err(e) = plugin::Header.render(chunks[0], buf) {
-			error!("{:?}", e);
-		}
-		manager::Layout::new(self.cx).render(chunks[1], buf);
-		if let Err(e) = plugin::Status.render(chunks[2], buf) {
-			error!("{:?}", e);
-		}
+		components::Header::new(self.cx).render(chunks[0], buf);
+		components::Manager::new(self.cx).render(chunks[1], buf);
+		components::Status::new(self.cx).render(chunks[2], buf);
 
 		if self.cx.tasks.visible {
 			tasks::Layout::new(self.cx).render(area, buf);
