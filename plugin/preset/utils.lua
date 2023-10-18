@@ -1,3 +1,5 @@
+table.unpack = table.unpack or unpack
+
 utils = utils or {}
 
 function utils.flat(t)
