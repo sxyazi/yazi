@@ -47,7 +47,7 @@ impl Manager {
 
 			let result = emit!(Select(SelectOpt::hovered(
 				"Open with:",
-				openers.iter().map(|o| o.display_name.clone()).collect()
+				openers.iter().map(|o| o.desc.clone()).collect()
 			)));
 			if let Ok(choice) = result.await {
 				emit!(Open(files, Some(openers[choice].clone())));

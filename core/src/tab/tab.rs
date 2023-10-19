@@ -108,9 +108,6 @@ impl Tab {
 	#[inline]
 	pub fn preview_reset_image(&mut self) -> bool { self.preview.reset(|l| l.is_image()) }
 
-	#[inline]
-	pub fn preview_arrow(&mut self, step: isize) -> bool { self.preview.arrow(step) }
-
 	// --- Sorter
 	pub fn set_sorter(&mut self, sorter: FilesSorter) -> bool {
 		if sorter == self.sorter {

@@ -26,7 +26,14 @@ impl Tab {
 
 			emit!(Open(
 				selected,
-				Some(Opener { exec, block, orphan: false, display_name: Default::default(), spread: true })
+				Some(Opener {
+					exec,
+					block,
+					orphan: false,
+					desc: Default::default(),
+					for_: None,
+					spread: true
+				})
 			));
 		});
 
