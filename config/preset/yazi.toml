@@ -14,55 +14,52 @@ max_height = 900
 cache_dir  = ""
 
 [opener]
-folder = [
-	{ exec = 'open -R "$@"', display_name = "Reveal in Finder" },
-	{ exec = '$EDITOR "$@"' },
+edit = [
+	{ exec = '$EDITOR "$@"', block = true, for = "unix" },
+	{ exec = 'code "%*"',                  for = "windows" },
 ]
-archive = [
-	{ exec = 'unar "$1"', display_name = "Extract here" },
+open = [
+	{ exec = 'xdg-open "$@"', desc = "Open", for = "linux" },
+	{ exec = 'open "$@"',     desc = "Open", for = "macos" },
+	{ exec = '%1',            desc = "Open", for = "windows" }
 ]
-text = [
-	{ exec = '$EDITOR "$@"', block = true },
+reveal = [
+	{ exec = 'open -R "$@"',  desc = "Reveal", for = "macos" },
+	{ exec = 'explorer "%*"', desc = "Reveal", for = "windows" },
+	{ exec = '''exiftool "$1"; echo "Press enter to exit"; read''', block = true, desc = "Show EXIF", for = "unix" },
 ]
-image = [
-	{ exec = 'open "$@"', display_name = "Open" },
-	{ exec = '''exiftool "$1"; echo "Press enter to exit"; read''', block = true, display_name = "Show EXIF" },
+extract = [
+	{ exec = 'unar "$1"', desc = "Extract here", for = "unix" },
+	{ exec = 'unar "%1"', desc = "Extract here", for = "windows" },
 ]
-video = [
-	{ exec = 'mpv "$@"' },
-	{ exec = '''mediainfo "$1"; echo "Press enter to exit"; read''', block = true, display_name = "Show media info" },
-]
-audio = [
-	{ exec = 'mpv "$@"' },
-	{ exec = '''mediainfo "$1"; echo "Press enter to exit"; read''', block = true, display_name = "Show media info" },
-]
-fallback = [
-	{ exec = 'open "$@"', display_name = "Open" },
-	{ exec = 'open -R "$@"', display_name = "Reveal in Finder" },
+play = [
+	{ exec = 'mpv "$@"', orphan = true, for = "unix" },
+	{ exec = 'mpv "%1"',                for = "windows" },
+	{ exec = '''mediainfo "$1"; echo "Press enter to exit"; read''', block = true, desc = "Show media info", for = "unix" },
 ]
 
 [open]
 rules = [
-	{ name = "*/", use = "folder" },
+	{ name = "*/", use = [ "edit", "open", "reveal" ] },
 
-	{ mime = "text/*", use = "text" },
-	{ mime = "image/*", use = "image" },
-	{ mime = "video/*", use = "video" },
-	{ mime = "audio/*", use = "audio" },
-	{ mime = "inode/x-empty", use = "text" },
+	{ mime = "text/*",  use = [ "edit", "reveal" ] },
+	{ mime = "image/*", use = [ "open", "reveal" ] },
+	{ mime = "video/*", use = [ "play", "reveal" ] },
+	{ mime = "audio/*", use = [ "play", "reveal" ] },
+	{ mime = "inode/x-empty", use = [ "edit", "reveal" ] },
 
-	{ mime = "application/json", use = "text" },
-	{ mime = "*/javascript", use = "text" },
+	{ mime = "application/json", use = [ "edit", "reveal" ] },
+	{ mime = "*/javascript",     use = [ "edit", "reveal" ] },
 
-	{ mime = "application/zip", use = "archive" },
-	{ mime = "application/gzip", use = "archive" },
-	{ mime = "application/x-tar", use = "archive" },
-	{ mime = "application/x-bzip", use = "archive" },
-	{ mime = "application/x-bzip2", use = "archive" },
-	{ mime = "application/x-7z-compressed", use = "archive" },
-	{ mime = "application/x-rar", use = "archive" },
+	{ mime = "application/zip",             use = [ "extract", "reveal" ] },
+	{ mime = "application/gzip",            use = [ "extract", "reveal" ] },
+	{ mime = "application/x-tar",           use = [ "extract", "reveal" ] },
+	{ mime = "application/x-bzip",          use = [ "extract", "reveal" ] },
+	{ mime = "application/x-bzip2",         use = [ "extract", "reveal" ] },
+	{ mime = "application/x-7z-compressed", use = [ "extract", "reveal" ] },
+	{ mime = "application/x-rar",           use = [ "extract", "reveal" ] },
 
-	{ mime = "*", use = "fallback" },
+	{ mime = "*", use = [ "open", "reveal" ] },
 ]
 
 [tasks]

@@ -23,11 +23,11 @@ impl Default for Preview {
 		}
 		#[derive(Deserialize)]
 		struct Shadow {
-			pub tab_size:   u32,
-			pub max_width:  u32,
-			pub max_height: u32,
+			tab_size:   u32,
+			max_width:  u32,
+			max_height: u32,
 
-			pub cache_dir: Option<String>,
+			cache_dir: Option<String>,
 		}
 
 		let preview = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().preview;

@@ -64,7 +64,7 @@ impl Executor {
 			}
 			"peek" => {
 				let step = exec.args.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
-				cx.manager.active_mut().preview_arrow(step);
+				cx.manager.active_mut().preview.arrow(step);
 				cx.manager.peek(true, cx.image_layer())
 			}
 			"leave" => cx.manager.active_mut().leave(),

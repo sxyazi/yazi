@@ -9,8 +9,8 @@ use crate::{open::OpenRule, MERGED_YAZI};
 
 #[derive(Debug)]
 pub struct Open {
-	openers: BTreeMap<String, IndexSet<Opener>>,
 	rules:   Vec<OpenRule>,
+	openers: BTreeMap<String, IndexSet<Opener>>,
 }
 
 impl Default for Open {
@@ -23,8 +23,8 @@ impl Open {
 		P: AsRef<Path>,
 		M: AsRef<str>,
 	{
+		let is_folder = Some(mime.as_ref() == MIME_DIR);
 		self.rules.iter().find_map(|rule| {
-			let is_folder = Some(mime.as_ref() == MIME_DIR);
 			if rule.mime.as_ref().is_some_and(|m| m.matches(&mime))
 				|| rule.name.as_ref().is_some_and(|n| n.match_path(&path, is_folder))
 			{
@@ -74,7 +74,11 @@ impl<'de> Deserialize<'de> for Open {
 		}
 
 		let outer = Outer::deserialize(deserializer)?;
-		let openers = outer.opener.into_iter().map(|(k, v)| (k, IndexSet::from_iter(v))).collect();
-		Ok(Self { openers, rules: outer.open.rules })
+		let openers = outer
+			.opener
+			.into_iter()
+			.map(|(k, v)| (k, v.into_iter().filter_map(|o| o.take()).collect::<IndexSet<_>>()))
+			.collect();
+		Ok(Self { rules: outer.open.rules, openers })
 	}
 }
