@@ -21,8 +21,8 @@ https://github.com/sxyazi/yazi/assets/17523360/92ff23fa-0cd5-4f04-b387-894c12265
 
 ## Documentation
 
-- Usage: https://yazi-rs.github.io/docs/usage/installation
-- Showcase: https://yazi-rs.github.io/docs/showcase
+- Usage: https://yazi-rs.github.io/usage/installation
+- Showcase: https://yazi-rs.github.io/showcase
 
 ## Discussion
 
