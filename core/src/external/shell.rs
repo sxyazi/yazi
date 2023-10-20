@@ -30,7 +30,7 @@ impl ShellOpt {
 
 pub fn shell(opt: ShellOpt) -> Result<Child> {
 	#[cfg(unix)]
-	return Ok(
+	return Ok(unsafe {
 		Command::new("sh")
 			.arg("-c")
 			.stdin(opt.stdio())
@@ -40,8 +40,14 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 			.arg("") // $0 is the command name
 			.args(opt.args)
 			.kill_on_drop(!opt.orphan)
-			.spawn()?,
-	);
+			.pre_exec(move || {
+				if opt.orphan && libc::setpgid(0i32, 0i32) < 0 {
+					libc::perror(std::ptr::null());
+				}
+				Ok(())
+			})
+			.spawn()?
+	});
 
 	#[cfg(windows)]
 	{
