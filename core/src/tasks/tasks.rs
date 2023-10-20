@@ -237,7 +237,7 @@ impl Tasks {
 
 		let targets: Vec<_> = targets
 			.iter()
-			.filter(|f| f.is_dir() && targets.size(&f.url).is_none())
+			.filter(|f| f.is_dir() && !targets.sizes.contains_key(&f.url))
 			.map(|f| &f.url)
 			.collect();
 

@@ -60,6 +60,16 @@ impl Files {
 				Ok(shared::permissions(me.meta.permissions()))
 			});
 
+			reg.add_function("size", |_, me: AnyUserData| {
+				let file = me.borrow::<core::files::File>()?;
+				if !file.is_dir() {
+					return Ok(file.length);
+				}
+
+				let folder = me.named_user_value::<UserDataRef<core::tab::Folder>>("folder")?;
+				Ok(folder.files.sizes.get(&file.url).copied().unwrap_or(file.length))
+			});
+
 			reg.add_function("mime", |_, me: AnyUserData| {
 				let manager = me.named_user_value::<UserDataRef<core::manager::Manager>>("manager")?;
 				let file = me.borrow::<core::files::File>()?;

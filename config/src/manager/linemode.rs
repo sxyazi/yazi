@@ -24,3 +24,15 @@ impl TryFrom<String> for Linemode {
 		})
 	}
 }
+
+impl ToString for Linemode {
+	fn to_string(&self) -> String {
+		match self {
+			Self::None => "none",
+			Self::Size => "size",
+			Self::Mtime => "mtime",
+			Self::Permissions => "permissions",
+		}
+		.to_string()
+	}
+}
