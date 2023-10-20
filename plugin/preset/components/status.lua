@@ -47,13 +47,18 @@ end
 
 function Status:permissions()
 	local h = cx.active.current.hovered
-	if h == nil or h.permissions == nil then
+	if h == nil then
+		return ui.Span("")
+	end
+
+	local perm = h:permissions()
+	if perm == nil then
 		return ui.Span("")
 	end
 
 	local spans = {}
-	for i = 1, #h.permissions do
-		local c = h.permissions:sub(i, i)
+	for i = 1, #perm do
+		local c = perm:sub(i, i)
 		local style = THEME.status.permissions_t
 		if c == "-" then
 			style = THEME.status.permissions_s

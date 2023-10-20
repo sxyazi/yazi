@@ -53,9 +53,9 @@ function Folder:labels(area)
 		if linemode == "size" then
 			lines[#lines + 1] = ui.Line { ui.Span(utils.readable_size(f:size())) }
 		elseif linemode == "mtime" then
-			lines[#lines + 1] = ui.Line { ui.Span("mtime") }
+			lines[#lines + 1] = ui.Line { ui.Span(os.date("%y-%m-%d %H:%M", f.modified)) }
 		elseif linemode == "permissions" then
-			lines[#lines + 1] = ui.Line { ui.Span("permissions") }
+			lines[#lines + 1] = ui.Line { ui.Span(f:permissions() or "") }
 		end
 	end
 	return ui.Paragraph(area, lines):align(ui.Alignment.RIGHT)
