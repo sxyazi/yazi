@@ -33,6 +33,7 @@ impl<'a, 'b> Tabs<'a, 'b> {
 			});
 
 			reg.add_field_function_get("mode", |_, me| me.named_user_value::<AnyUserData>("mode"));
+			reg.add_field_function_get("conf", |_, me| me.named_user_value::<AnyUserData>("conf"));
 			reg.add_field_function_get("parent", |_, me| me.named_user_value::<Value>("parent"));
 			reg.add_field_function_get("current", |_, me| me.named_user_value::<AnyUserData>("current"));
 			reg.add_field_function_get("preview", |_, me| me.named_user_value::<AnyUserData>("preview"));

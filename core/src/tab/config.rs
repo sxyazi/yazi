@@ -1,8 +1,8 @@
-use config::{manager::{Linemode, SortBy}, MANAGER};
+use config::{manager::SortBy, MANAGER};
 
 use crate::files::FilesSorter;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct Config {
 	// Sorting
 	pub sort_by:        SortBy,
@@ -11,7 +11,7 @@ pub struct Config {
 	pub sort_dir_first: bool,
 
 	// Display
-	pub linemode:    Linemode,
+	pub linemode:    String,
 	pub show_hidden: bool,
 }
 
@@ -25,7 +25,7 @@ impl Default for Config {
 			sort_dir_first: MANAGER.sort_dir_first,
 
 			// Display
-			linemode:    MANAGER.linemode,
+			linemode:    MANAGER.linemode.to_owned(),
 			show_hidden: MANAGER.show_hidden,
 		}
 	}
@@ -33,7 +33,7 @@ impl Default for Config {
 
 impl Config {
 	pub(super) fn patch<F: FnOnce(&mut Self)>(&mut self, f: F) -> bool {
-		let old = *self;
+		let old = self.clone();
 		f(self);
 		*self != old
 	}

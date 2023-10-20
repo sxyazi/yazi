@@ -14,6 +14,56 @@ function Folder:by_kind(kind)
 	end
 end
 
+function Folder:highlighted_name(file)
+	-- Complete prefix when searching across directories
+	local prefix = file:prefix() or ""
+	if prefix ~= "" then
+		prefix = prefix .. "/"
+	end
+
+	-- Range highlighting for filenames
+	local highlights = file:highlights()
+	local spans = ui.highlight_ranges(prefix .. file.name, highlights)
+
+	-- Show symlink target
+	if MANAGER.show_symlink and file.link_to ~= nil then
+		spans[#spans + 1] = ui.Span(" -> " .. tostring(file.link_to)):italic()
+	end
+
+	if highlights == nil or not file:is_hovered() then
+		return spans
+	end
+
+	local found = file:found()
+	if found ~= nil then
+		spans[#spans + 1] = ui.Span("  ")
+		spans[#spans + 1] = ui.Span(string.format("[%d/%d]", found[1] + 1, found[2])):style(THEME.manager.find_position)
+	end
+	return spans
+end
+
+function Folder:linemode(area)
+	local mode = cx.active.conf.linemode
+	if mode == "none" then
+		return {}
+	end
+
+	local lines = {}
+	for _, f in ipairs(self:by_kind(self.CURRENT).window) do
+		local spans = { ui.Span(" ") }
+		if mode == "size" then
+			local size = f:size()
+			spans[#spans + 1] = ui.Span(size and utils.readable_size(size) or "")
+		elseif mode == "mtime" then
+			spans[#spans + 1] = ui.Span(os.date("%y-%m-%d %H:%M", f.modified))
+		elseif mode == "permissions" then
+			spans[#spans + 1] = ui.Span(f:permissions() or "")
+		end
+		lines[#lines + 1] = ui.Line(spans)
+	end
+	return ui.Paragraph(area:padding(ui.Padding.right(1)), lines):align(ui.Alignment.RIGHT)
+end
+
 function Folder:markers(area, markers)
 	if #markers == 0 then
 		return {}
@@ -53,34 +103,6 @@ function Folder:markers(area, markers)
 
 	append(last)
 	return elements
-end
-
-function Folder:highlighted_name(file)
-	-- Complete prefix when searching across directories
-	local prefix = file:prefix() or ""
-	if prefix ~= "" then
-		prefix = prefix .. "/"
-	end
-
-	-- Range highlighting for filenames
-	local highlights = file:highlights()
-	local spans = ui.highlight_ranges(prefix .. file.name, highlights)
-
-	-- Show symlink target
-	if MANAGER.show_symlink and file.link_to ~= nil then
-		spans[#spans + 1] = ui.Span(" -> " .. tostring(file.link_to)):italic()
-	end
-
-	if highlights == nil or not file:is_hovered() then
-		return spans
-	end
-
-	local found = file:found()
-	if found ~= nil then
-		spans[#spans + 1] = ui.Span("  ")
-		spans[#spans + 1] = ui.Span(string.format("[%d/%d]", found[1] + 1, found[2])):style(THEME.manager.find_position)
-	end
-	return spans
 end
 
 function Folder:parent(area)
@@ -127,8 +149,7 @@ function Folder:current(area)
 			markers[#markers + 1] = { i, 3 }
 		end
 	end
-
-	return { ui.List(area, items), table.unpack(self:markers(area, markers)) }
+	return utils.flat { ui.List(area, items), self:linemode(area), table.unpack(self:markers(area, markers)) }
 end
 
 function Folder:preview(area)

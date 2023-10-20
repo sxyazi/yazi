@@ -48,7 +48,7 @@ impl FilesSorter {
 			SortBy::Size => items.sort_unstable_by(|a, b| {
 				let aa = if a.is_dir() { sizes.get(&a.url).copied() } else { None };
 				let bb = if b.is_dir() { sizes.get(&b.url).copied() } else { None };
-				self.cmp(aa.unwrap_or(a.length), bb.unwrap_or(b.length), self.promote(a, b))
+				self.cmp(aa.unwrap_or(a.meta.len()), bb.unwrap_or(b.meta.len()), self.promote(a, b))
 			}),
 		}
 		true
@@ -75,7 +75,6 @@ impl FilesSorter {
 		let dummy = File {
 			url:       Default::default(),
 			meta:      items[0].meta.clone(),
-			length:    0,
 			link_to:   None,
 			is_link:   false,
 			is_hidden: false,

@@ -24,6 +24,16 @@ impl<'a, 'b> Active<'a, 'b> {
 			reg.add_meta_method(MetaMethod::ToString, |_, me, ()| Ok(me.to_string()));
 		})?;
 
+		LUA.register_userdata_type::<core::tab::Config>(|reg| {
+			reg.add_field_method_get("sort_by", |_, me| Ok(me.sort_by.to_string()));
+			reg.add_field_method_get("sort_sensitive", |_, me| Ok(me.sort_sensitive));
+			reg.add_field_method_get("sort_reverse", |_, me| Ok(me.sort_reverse));
+			reg.add_field_method_get("sort_dir_first", |_, me| Ok(me.sort_dir_first));
+
+			reg.add_field_method_get("linemode", |_, me| Ok(me.linemode.to_owned()));
+			reg.add_field_method_get("show_hidden", |_, me| Ok(me.show_hidden));
+		})?;
+
 		LUA.register_userdata_type::<core::tab::Folder>(|reg| {
 			reg.add_field_method_get("cwd", |_, me| Ok(Url::from(&me.cwd)));
 			reg.add_field_method_get("offset", |_, me| Ok(me.offset));
@@ -48,6 +58,7 @@ impl<'a, 'b> Active<'a, 'b> {
 	pub(crate) fn make(&self) -> mlua::Result<AnyUserData<'a>> {
 		let ud = self.scope.create_any_userdata_ref(self.inner)?;
 		ud.set_named_user_value("mode", self.scope.create_any_userdata_ref(&self.inner.mode)?)?;
+		ud.set_named_user_value("conf", self.scope.create_any_userdata_ref(&self.inner.conf)?)?;
 		ud.set_named_user_value(
 			"parent",
 			self.inner.parent.as_ref().and_then(|p| self.folder(p, None).ok()),

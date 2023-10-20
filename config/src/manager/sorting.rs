@@ -36,3 +36,17 @@ impl TryFrom<String> for SortBy {
 
 	fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
 }
+
+impl ToString for SortBy {
+	fn to_string(&self) -> String {
+		match self {
+			Self::None => "none",
+			Self::Alphabetical => "alphabetical",
+			Self::Created => "created",
+			Self::Modified => "modified",
+			Self::Natural => "natural",
+			Self::Size => "size",
+		}
+		.to_string()
+	}
+}

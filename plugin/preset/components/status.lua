@@ -31,7 +31,7 @@ function Status:size()
 
 	local style = self.style()
 	return ui.Line {
-		ui.Span(" " .. utils.readable_size(h.length) .. " "):fg(style.bg):bg(THEME.status.separator_style.bg),
+		ui.Span(" " .. utils.readable_size(h:size() or h.length) .. " "):fg(style.bg):bg(THEME.status.separator_style.bg),
 		ui.Span(THEME.status.separator_close):fg(THEME.status.separator_style.fg),
 	}
 end
@@ -47,13 +47,18 @@ end
 
 function Status:permissions()
 	local h = cx.active.current.hovered
-	if h == nil or h.permissions == nil then
+	if h == nil then
+		return ui.Span("")
+	end
+
+	local perm = h:permissions()
+	if perm == nil then
 		return ui.Span("")
 	end
 
 	local spans = {}
-	for i = 1, #h.permissions do
-		local c = h.permissions:sub(i, i)
+	for i = 1, #perm do
+		local c = perm:sub(i, i)
 		local style = THEME.status.permissions_t
 		if c == "-" then
 			style = THEME.status.permissions_s
@@ -109,9 +114,9 @@ function Status:progress(area, offset)
 	end
 
 	local gauge = ui.Gauge(ui.Rect {
-		x = area.x + math.max(0, area.w - offset - 21),
+		x = math.max(0, area.w - offset - 21),
 		y = area.y,
-		w = math.min(20, area.w),
+		w = math.max(0, math.min(20, area.w - offset - 1)),
 		h = 1,
 	})
 
@@ -134,17 +139,12 @@ function Status:progress(area, offset)
 end
 
 function Status:render(area)
-	local chunks = ui.Layout()
-		:direction(ui.Direction.HORIZONTAL)
-		:constraints({ ui.Constraint.Percentage(50), ui.Constraint.Percentage(50) })
-		:split(area)
-
 	local left = ui.Line { self:mode(), self:size(), self:name() }
 	local right = ui.Line { self:permissions(), self:percentage(), self:position() }
-	local progress = self:progress(chunks[2], right:width())
+	local progress = self:progress(area, right:width())
 	return {
-		ui.Paragraph(chunks[1], { left }),
-		ui.Paragraph(chunks[2], { right }):align(ui.Alignment.RIGHT),
+		ui.Paragraph(area, { left }),
+		ui.Paragraph(area, { right }):align(ui.Alignment.RIGHT),
 		table.unpack(progress),
 	}
 end

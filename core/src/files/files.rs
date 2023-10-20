@@ -13,8 +13,8 @@ pub struct Files {
 	ticket:             u64,
 	pub(crate) version: u64,
 
-	sizes:    BTreeMap<Url, u64>,
-	selected: BTreeSet<Url>,
+	pub sizes: BTreeMap<Url, u64>,
+	selected:  BTreeSet<Url>,
 
 	sorter:      FilesSorter,
 	show_hidden: bool,
@@ -267,10 +267,6 @@ impl Files {
 
 	#[inline]
 	pub fn position(&self, url: &Url) -> Option<usize> { self.iter().position(|f| &f.url == url) }
-
-	// --- Sizes
-	#[inline]
-	pub fn size(&self, url: &Url) -> Option<u64> { self.sizes.get(url).copied() }
 
 	// --- Selected
 	pub fn selected(&self, pending: &BTreeSet<usize>, unset: bool) -> Vec<&File> {

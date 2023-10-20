@@ -8,6 +8,7 @@ mod find;
 mod hidden;
 mod jump;
 mod leave;
+mod linemode;
 mod search;
 mod select;
 mod shell;
