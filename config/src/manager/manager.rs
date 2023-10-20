@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{ManagerLayout, SortBy};
+use super::{Linemode, ManagerLayout, SortBy};
 use crate::MERGED_YAZI;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -14,6 +14,7 @@ pub struct Manager {
 	pub sort_dir_first: bool,
 
 	// Display
+	pub linemode:     Linemode,
 	pub show_hidden:  bool,
 	pub show_symlink: bool,
 }

@@ -1,26 +1,24 @@
 use std::{borrow::Cow, collections::BTreeMap};
 
 use anyhow::Result;
-use config::MANAGER;
 use shared::Url;
 use tokio::task::JoinHandle;
 
-use super::{Backstack, Finder, Folder, Mode};
-use crate::{emit, files::{File, FilesSorter}, preview::{Preview, PreviewLock}};
+use super::{Backstack, Config, Finder, Folder, Mode};
+use crate::{files::File, preview::{Preview, PreviewLock}};
 
 pub struct Tab {
 	pub mode:    Mode,
+	pub conf:    Config,
 	pub current: Folder,
 	pub parent:  Option<Folder>,
 
 	pub backstack: Backstack<Url>,
 	pub history:   BTreeMap<Url, Folder>,
-	pub preview:   Preview,
 
+	pub preview:       Preview,
 	pub finder:        Option<Finder>,
 	pub(super) search: Option<JoinHandle<Result<()>>>,
-	pub sorter:        FilesSorter,
-	pub show_hidden:   bool,
 }
 
 impl From<Url> for Tab {
@@ -34,12 +32,12 @@ impl From<Url> for Tab {
 
 			backstack: Backstack::new(url),
 			history: Default::default(),
-			preview: Default::default(),
 
+			preview: Default::default(),
 			finder: None,
 			search: None,
-			sorter: Default::default(),
-			show_hidden: MANAGER.show_hidden,
+
+			conf: Default::default(),
 		}
 	}
 }
@@ -63,7 +61,7 @@ impl Tab {
 
 	pub fn update_preview(&mut self, lock: PreviewLock) -> bool {
 		let Some(hovered) = self.current.hovered().map(|h| &h.url) else {
-			return self.preview_reset();
+			return self.preview.reset(|_| true);
 		};
 
 		if lock.url != *hovered {
@@ -101,45 +99,13 @@ impl Tab {
 		self.history.remove(url).unwrap_or_else(|| Folder::from(url))
 	}
 
-	// --- Preview
-	#[inline]
-	pub fn preview_reset(&mut self) -> bool { self.preview.reset(|_| true) }
-
-	#[inline]
-	pub fn preview_reset_image(&mut self) -> bool { self.preview.reset(|l| l.is_image()) }
-
-	// --- Sorter
-	pub fn set_sorter(&mut self, sorter: FilesSorter) -> bool {
-		if sorter == self.sorter {
-			return false;
-		}
-
-		self.sorter = sorter;
-		self.apply_files_attrs(false)
-	}
-
-	// --- Show hidden
-	pub fn set_show_hidden(&mut self, state: Option<bool>) -> bool {
-		let state = state.unwrap_or(!self.show_hidden);
-		if state == self.show_hidden {
-			return false;
-		}
-
-		self.show_hidden = state;
-		if self.apply_files_attrs(false) {
-			emit!(Peek);
-			return true;
-		}
-		false
-	}
-
 	pub fn apply_files_attrs(&mut self, just_preview: bool) -> bool {
 		let mut b = false;
 		if let Some(f) =
 			self.current.hovered().filter(|h| h.is_dir()).and_then(|h| self.history.get_mut(&h.url))
 		{
-			b |= f.files.set_show_hidden(self.show_hidden);
-			b |= f.files.set_sorter(self.sorter);
+			b |= f.files.set_show_hidden(self.conf.show_hidden);
+			b |= f.files.set_sorter(self.conf.sorter());
 		}
 
 		if just_preview {
@@ -147,12 +113,12 @@ impl Tab {
 		}
 
 		let hovered = self.current.hovered().map(|h| h.url());
-		b |= self.current.files.set_show_hidden(self.show_hidden);
-		b |= self.current.files.set_sorter(self.sorter);
+		b |= self.current.files.set_show_hidden(self.conf.show_hidden);
+		b |= self.current.files.set_sorter(self.conf.sorter());
 
 		if let Some(parent) = self.parent.as_mut() {
-			b |= parent.files.set_show_hidden(self.show_hidden);
-			b |= parent.files.set_sorter(self.sorter);
+			b |= parent.files.set_show_hidden(self.conf.show_hidden);
+			b |= parent.files.set_sorter(self.conf.sorter());
 		}
 
 		self.current.repos(hovered);

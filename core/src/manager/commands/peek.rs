@@ -3,12 +3,12 @@ use crate::manager::Manager;
 impl Manager {
 	pub fn peek(&mut self, sequent: bool, show_image: bool) -> bool {
 		let Some(hovered) = self.hovered().cloned() else {
-			return self.active_mut().preview_reset();
+			return self.active_mut().preview.reset(|_| true);
 		};
 
 		let url = &hovered.url;
 		if !show_image {
-			self.active_mut().preview_reset_image();
+			self.active_mut().preview.reset(|l| l.is_image());
 		}
 
 		if hovered.is_dir() {

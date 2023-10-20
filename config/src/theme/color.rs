@@ -18,7 +18,7 @@ impl FromStr for Color {
 impl TryFrom<String> for Color {
 	type Error = anyhow::Error;
 
-	fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(s.as_str()) }
+	fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
 }
 
 impl From<Color> for ratatui::style::Color {

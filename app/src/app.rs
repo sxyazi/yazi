@@ -89,13 +89,13 @@ impl App {
 
 	fn dispatch_resize(&mut self) {
 		self.cx.manager.current_mut().set_page(true);
-		self.cx.manager.active_mut().preview_reset();
+		self.cx.manager.active_mut().preview.reset(|_| true);
 		self.cx.manager.peek(true, self.cx.image_layer());
 		emit!(Render);
 	}
 
 	fn dispatch_stop(&mut self, state: bool, tx: Option<oneshot::Sender<()>>) {
-		self.cx.manager.active_mut().preview_reset_image();
+		self.cx.manager.active_mut().preview.reset(|l| l.is_image());
 		if state {
 			self.signals.stop_term(true);
 			self.term = None;

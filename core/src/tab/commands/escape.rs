@@ -38,8 +38,8 @@ impl Tab {
 	fn escape_search(&mut self) -> bool { self.search_stop() }
 
 	pub fn escape(&mut self, opt: impl Into<Opt>) -> bool {
-		let opt = opt.into();
-		if opt.0 == 0 {
+		let opt = opt.into().0;
+		if opt == 0 {
 			return self.escape_find()
 				|| self.escape_visual()
 				|| self.escape_select()
@@ -47,16 +47,16 @@ impl Tab {
 		}
 
 		let mut b = false;
-		if opt.0 & 0b0001 != 0 {
+		if opt & 0b0001 != 0 {
 			b |= self.escape_find();
 		}
-		if opt.0 & 0b0010 != 0 {
+		if opt & 0b0010 != 0 {
 			b |= self.escape_visual();
 		}
-		if opt.0 & 0b0100 != 0 {
+		if opt & 0b0100 != 0 {
 			b |= self.escape_select();
 		}
-		if opt.0 & 0b1000 != 0 {
+		if opt & 0b1000 != 0 {
 			b |= self.escape_search();
 		}
 		b

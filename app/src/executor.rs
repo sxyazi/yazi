@@ -1,6 +1,6 @@
-use core::{emit, files::FilesSorter, input::InputMode, tab::FinderCase, Ctx};
+use core::{emit, input::InputMode, tab::FinderCase, Ctx};
 
-use config::{keymap::{Control, Exec, Key, KeymapLayer}, manager::SortBy, KEYMAP};
+use config::{keymap::{Control, Exec, Key, KeymapLayer}, KEYMAP};
 use shared::{optional_bool, Url};
 
 pub(super) struct Executor;
@@ -126,13 +126,7 @@ impl Executor {
 				exec.named.contains_key("block"),
 				exec.named.contains_key("confirm"),
 			),
-			"hidden" => {
-				cx.manager.active_mut().set_show_hidden(match exec.args.get(0).map(|s| s.as_str()) {
-					Some("show") => Some(true),
-					Some("hide") => Some(false),
-					_ => None,
-				})
-			}
+			"hidden" => cx.manager.active_mut().hidden(exec),
 			"search" => match exec.args.get(0).map(|s| s.as_str()).unwrap_or("") {
 				"rg" => cx.manager.active_mut().search(true),
 				"fd" => cx.manager.active_mut().search(false),
@@ -160,13 +154,7 @@ impl Executor {
 
 			// Sorting
 			"sort" => {
-				let b = cx.manager.active_mut().set_sorter(FilesSorter {
-					by:        SortBy::try_from(exec.args.get(0).cloned().unwrap_or_default())
-						.unwrap_or_default(),
-					sensitive: exec.named.contains_key("sensitive"),
-					reverse:   exec.named.contains_key("reverse"),
-					dir_first: exec.named.contains_key("dir_first"),
-				});
+				let b = cx.manager.active_mut().sort(exec);
 				cx.tasks.precache_size(&cx.manager.current().files);
 				b
 			}

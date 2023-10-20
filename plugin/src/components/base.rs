@@ -21,9 +21,8 @@ impl Base {
 	}
 
 	pub fn render(self, cx: &core::Ctx, buf: &mut ratatui::buffer::Buffer) {
-		match self.kind {
-			0 => super::Preview::new(cx).render(self.area, buf),
-			_ => {}
+		if self.kind == 0 {
+			super::Preview::new(cx).render(self.area, buf)
 		}
 	}
 }

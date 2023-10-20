@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use anyhow::bail;
 use serde::{Deserialize, Serialize};
 
@@ -5,6 +7,7 @@ use serde::{Deserialize, Serialize};
 #[serde(try_from = "String")]
 pub enum SortBy {
 	#[default]
+	None,
 	Alphabetical,
 	Created,
 	Modified,
@@ -12,11 +15,12 @@ pub enum SortBy {
 	Size,
 }
 
-impl TryFrom<String> for SortBy {
-	type Error = anyhow::Error;
+impl FromStr for SortBy {
+	type Err = anyhow::Error;
 
-	fn try_from(s: String) -> Result<Self, Self::Error> {
-		Ok(match s.as_str() {
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		Ok(match s {
+			"none" => Self::None,
 			"alphabetical" => Self::Alphabetical,
 			"created" => Self::Created,
 			"modified" => Self::Modified,
@@ -25,4 +29,10 @@ impl TryFrom<String> for SortBy {
 			_ => bail!("invalid sort_by value: {s}"),
 		})
 	}
+}
+
+impl TryFrom<String> for SortBy {
+	type Error = anyhow::Error;
+
+	fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
 }

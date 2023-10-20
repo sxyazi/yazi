@@ -23,8 +23,8 @@ impl Tabs {
 		}
 
 		let mut tab = Tab::from(url);
-		tab.set_show_hidden(Some(self.active().show_hidden));
-		tab.set_sorter(self.active().sorter);
+		tab.conf = self.active().conf;
+		tab.apply_files_attrs(false);
 
 		self.items.insert(self.idx + 1, tab);
 		self.set_idx(self.idx + 1);
@@ -83,7 +83,7 @@ impl Tabs {
 	#[inline]
 	fn set_idx(&mut self, idx: usize) {
 		self.idx = idx;
-		self.active_mut().preview_reset_image();
+		self.active_mut().preview.reset(|l| l.is_image());
 		emit!(Refresh);
 	}
 }

@@ -13,7 +13,7 @@ impl Tab {
 		}
 
 		let mut cwd = self.current.cwd.clone();
-		let hidden = self.show_hidden;
+		let hidden = self.conf.show_hidden;
 
 		self.search = Some(tokio::spawn(async move {
 			let Some(Ok(subject)) = emit!(Input(InputOpt::top("Search:"))).recv().await else {
@@ -49,7 +49,7 @@ impl Tab {
 			handle.abort();
 		}
 		if self.current.cwd.is_search() {
-			self.preview_reset_image();
+			self.preview.reset(|l| l.is_image());
 
 			let rep = self.history_new(&self.current.cwd.to_regular());
 			drop(mem::replace(&mut self.current, rep));

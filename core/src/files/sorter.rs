@@ -1,27 +1,16 @@
 use std::{cmp::Ordering, collections::BTreeMap, mem};
 
-use config::{manager::SortBy, MANAGER};
+use config::manager::SortBy;
 use shared::{natsort, Url};
 
 use super::File;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, Default, PartialEq)]
 pub struct FilesSorter {
 	pub by:        SortBy,
 	pub sensitive: bool,
 	pub reverse:   bool,
 	pub dir_first: bool,
-}
-
-impl Default for FilesSorter {
-	fn default() -> Self {
-		Self {
-			by:        MANAGER.sort_by,
-			sensitive: MANAGER.sort_sensitive,
-			reverse:   MANAGER.sort_reverse,
-			dir_first: MANAGER.sort_dir_first,
-		}
-	}
 }
 
 impl FilesSorter {
@@ -31,6 +20,7 @@ impl FilesSorter {
 		}
 
 		match self.by {
+			SortBy::None => return false,
 			SortBy::Alphabetical => items.sort_unstable_by(|a, b| {
 				if self.sensitive {
 					return self.cmp(&*a.url, &*b.url, self.promote(a, b));
@@ -98,7 +88,7 @@ impl FilesSorter {
 		*items = new;
 	}
 
-	#[inline]
+	#[inline(always)]
 	#[allow(clippy::collapsible_else_if)]
 	fn cmp<T: Ord>(&self, a: T, b: T, promote: Ordering) -> Ordering {
 		if promote != Ordering::Equal {
@@ -108,7 +98,7 @@ impl FilesSorter {
 		}
 	}
 
-	#[inline]
+	#[inline(always)]
 	fn promote(&self, a: &File, b: &File) -> Ordering {
 		if self.dir_first { b.is_dir().cmp(&a.is_dir()) } else { Ordering::Equal }
 	}
