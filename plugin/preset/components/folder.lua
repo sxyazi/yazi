@@ -42,7 +42,7 @@ function Folder:highlighted_name(file)
 	return spans
 end
 
-function Folder:labels(area)
+function Folder:linemode(area)
 	local mode = cx.active.conf.linemode
 	if mode == "none" then
 		return {}
@@ -149,7 +149,7 @@ function Folder:current(area)
 			markers[#markers + 1] = { i, 3 }
 		end
 	end
-	return utils.flat { ui.List(area, items), self:labels(area), table.unpack(self:markers(area, markers)) }
+	return utils.flat { ui.List(area, items), self:linemode(area), table.unpack(self:markers(area, markers)) }
 end
 
 function Folder:preview(area)
