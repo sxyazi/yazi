@@ -87,11 +87,11 @@ impl Files {
 			reg.add_function("size", |_, me: AnyUserData| {
 				let file = me.borrow::<core::files::File>()?;
 				if !file.is_dir() {
-					return Ok(file.meta.len());
+					return Ok(Some(file.meta.len()));
 				}
 
 				let folder = me.named_user_value::<UserDataRef<core::tab::Folder>>("folder")?;
-				Ok(folder.files.sizes.get(&file.url).copied().unwrap_or(file.meta.len()))
+				Ok(folder.files.sizes.get(&file.url).copied())
 			});
 			reg.add_function("mime", |_, me: AnyUserData| {
 				let manager = me.named_user_value::<UserDataRef<core::manager::Manager>>("manager")?;

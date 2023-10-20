@@ -43,22 +43,25 @@ function Folder:highlighted_name(file)
 end
 
 function Folder:labels(area)
-	local linemode = cx.active.conf.linemode
-	if linemode == "none" then
+	local mode = cx.active.conf.linemode
+	if mode == "none" then
 		return {}
 	end
 
 	local lines = {}
 	for _, f in ipairs(self:by_kind(self.CURRENT).window) do
-		if linemode == "size" then
-			lines[#lines + 1] = ui.Line { ui.Span(utils.readable_size(f:size())) }
-		elseif linemode == "mtime" then
-			lines[#lines + 1] = ui.Line { ui.Span(os.date("%y-%m-%d %H:%M", f.modified)) }
-		elseif linemode == "permissions" then
-			lines[#lines + 1] = ui.Line { ui.Span(f:permissions() or "") }
+		local spans = { ui.Span(" ") }
+		if mode == "size" then
+			local size = f:size()
+			spans[#spans + 1] = ui.Span(size and utils.readable_size(size) or "")
+		elseif mode == "mtime" then
+			spans[#spans + 1] = ui.Span(os.date("%y-%m-%d %H:%M", f.modified))
+		elseif mode == "permissions" then
+			spans[#spans + 1] = ui.Span(f:permissions() or "")
 		end
+		lines[#lines + 1] = ui.Line(spans)
 	end
-	return ui.Paragraph(area, lines):align(ui.Alignment.RIGHT)
+	return ui.Paragraph(area:padding(ui.Padding.right(1)), lines):align(ui.Alignment.RIGHT)
 end
 
 function Folder:markers(area, markers)

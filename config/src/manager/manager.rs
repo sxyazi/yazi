@@ -1,9 +1,10 @@
 use serde::{Deserialize, Serialize};
+use validator::Validate;
 
-use super::{Linemode, ManagerLayout, SortBy};
-use crate::MERGED_YAZI;
+use super::{ManagerLayout, SortBy};
+use crate::{validation::check_validation, MERGED_YAZI};
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Validate)]
 pub struct Manager {
 	pub layout: ManagerLayout,
 
@@ -14,7 +15,8 @@ pub struct Manager {
 	pub sort_dir_first: bool,
 
 	// Display
-	pub linemode:     Linemode,
+	#[validate(length(min = 1, max = 20, message = "must be between 1 and 20 characters"))]
+	pub linemode:     String,
 	pub show_hidden:  bool,
 	pub show_symlink: bool,
 }
@@ -26,6 +28,9 @@ impl Default for Manager {
 			manager: Manager,
 		}
 
-		toml::from_str::<Outer>(&MERGED_YAZI).unwrap().manager
+		let manager = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().manager;
+
+		check_validation(manager.validate());
+		manager
 	}
 }

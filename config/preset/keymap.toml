@@ -67,6 +67,12 @@ keymap = [
 	{ on = [ "z" ],         exec = "jump zoxide",                                          desc = "Jump to a directory using zoxide" },
 	{ on = [ "Z" ],         exec = "jump fzf",                                             desc = "Jump to a directory, or reveal a file using fzf" },
 
+	# Linemode
+	{ on = [ "m", "s" ], exec = "linemode size",        desc = "Set linemode to size" },
+	{ on = [ "m", "p" ], exec = "linemode permissions", desc = "Set linemode to permissions" },
+	{ on = [ "m", "m" ], exec = "linemode mtime",       desc = "Set linemode to mtime" },
+	{ on = [ "m", "n" ], exec = "linemode none",        desc = "Set linemode to none" },
+
 	# Copy
 	{ on = [ "c", "c" ], exec = "copy path",             desc = "Copy the absolute path" },
 	{ on = [ "c", "d" ], exec = "copy dirname",          desc = "Copy the path of the parent directory" },

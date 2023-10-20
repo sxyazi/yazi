@@ -30,7 +30,7 @@ impl<'a, 'b> Active<'a, 'b> {
 			reg.add_field_method_get("sort_reverse", |_, me| Ok(me.sort_reverse));
 			reg.add_field_method_get("sort_dir_first", |_, me| Ok(me.sort_dir_first));
 
-			reg.add_field_method_get("linemode", |_, me| Ok(me.linemode.to_string()));
+			reg.add_field_method_get("linemode", |_, me| Ok(me.linemode.to_owned()));
 			reg.add_field_method_get("show_hidden", |_, me| Ok(me.show_hidden));
 		})?;
 
