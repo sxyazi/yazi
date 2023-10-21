@@ -59,9 +59,11 @@ function Folder:linemode(area)
 		elseif mode == "permissions" then
 			spans[#spans + 1] = ui.Span(f:permissions() or "")
 		end
+
+		spans[#spans + 1] = ui.Span(" ")
 		lines[#lines + 1] = ui.Line(spans)
 	end
-	return ui.Paragraph(area:padding(ui.Padding.right(1)), lines):align(ui.Alignment.RIGHT)
+	return ui.Paragraph(area, lines):align(ui.Alignment.RIGHT)
 end
 
 function Folder:markers(area, markers)
