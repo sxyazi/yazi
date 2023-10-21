@@ -50,9 +50,9 @@ mode_select = { fg = "black", bg = "green", bold = true }
 mode_unset  = { fg = "black", bg = "magenta", bold = true }
 
 # Progress
-progress_label  = { fg = "#FFFFFF", bold = true }
-progress_normal = { fg = "#FFA577", bg = "#484D66" }
-progress_error  = { fg = "#FF84A9", bg = "#484D66" }
+progress_label  = { bold = true }
+progress_normal = { fg = "red", bg = "black" }
+progress_error  = { fg = "blue", bg = "black" }
 
 # Permissions
 permissions_t = { fg = "lightgreen" }
@@ -70,7 +70,7 @@ permissions_s = { fg = "darkgray" }
 border   = { fg = "blue" }
 title    = {}
 value    = {}
-selected = { fg = "black", bg = "white" }
+selected = { reversed = true }
 
 # : }}}
 
