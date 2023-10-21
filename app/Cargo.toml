@@ -15,7 +15,7 @@ ansi-to-tui   = "^3"
 anyhow        = "^1"
 crossterm     = { version = "^0", features = [ "event-stream" ] }
 futures       = "^0"
-ratatui    		 = "^0"
+ratatui       = "^0"
 tokio         = { version = "^1", features = [ "parking_lot" ] }
 unicode-width = "^0"
 

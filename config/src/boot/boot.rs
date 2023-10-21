@@ -1,8 +1,9 @@
 use std::{env, fs, path::PathBuf, process};
 
-use clap::{command, Parser};
+use clap::Parser;
 use shared::expand_path;
 
+use super::cli::Args;
 use crate::{Xdg, PREVIEW};
 
 #[derive(Debug)]
@@ -12,25 +13,6 @@ pub struct Boot {
 
 	pub cwd_file:     Option<PathBuf>,
 	pub chooser_file: Option<PathBuf>,
-}
-
-#[derive(Debug, Parser)]
-#[command(name = "yazi", version)]
-struct Args {
-	/// Set the current working directory
-	#[arg(index = 1)]
-	cwd: Option<PathBuf>,
-
-	/// Write the cwd on exit to this file
-	#[arg(long)]
-	cwd_file:     Option<PathBuf>,
-	/// Write the selected files on open emitted by the chooser mode
-	#[arg(long)]
-	chooser_file: Option<PathBuf>,
-
-	/// Clear the cache directory
-	#[arg(long, action)]
-	clear_cache: bool,
 }
 
 impl Default for Boot {
