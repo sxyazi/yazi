@@ -2,16 +2,30 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    devenv = {
-      url = "github:cachix/devenv";
-      inputs.nixpkgs.follows = "nixpkgs";
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flake-utils.follows = "flake-utils";
+      };
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, ... } @ inputs:
+  outputs = { self, nixpkgs, flake-utils, rust-overlay, ... } @ inputs:
+    let
+      # Nixpkgs overlays
+      overlays = [
+        rust-overlay.overlays.default
+        (final: prev: {
+          rustToolchain = final.rust-bin.stable.latest.default.override {
+            extensions = [ "rust-src" ];
+          };
+        })
+      ];
+    in
     flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs { inherit system overlays; };
         versionSuffix = "pre${builtins.substring 0 8 (self.lastModifiedDate or self.lastModified or "19700101")}_${self.shortRev or "dirty"}";
         version = (builtins.fromTOML (builtins.readFile ./app/Cargo.toml)).package.version + versionSuffix;
         yazi = pkgs.callPackage ./nix/yazi.nix { inherit version; };
