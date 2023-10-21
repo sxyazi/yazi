@@ -4,26 +4,21 @@ mod cli;
 use std::{fs, io};
 
 use clap::CommandFactory;
-use clap_complete::{generate_to, Shell::*};
-use clap_complete_fig::Fig;
-use clap_complete_nushell::Nushell;
-
-use self::cli::Args;
+use clap_complete::{generate_to, Shell};
 
 fn main() -> io::Result<()> {
-	let cmd = &mut Args::command();
-	let name = "yazi";
-	let dir = "completions";
+	let cmd = &mut cli::Args::command();
+	let bin = "yazi";
+	let out = "completions";
 
-	fs::create_dir_all(dir)?;
-
-	generate_to(Bash, cmd, name, dir)?;
-	generate_to(Fish, cmd, name, dir)?;
-	generate_to(Zsh, cmd, name, dir)?;
-	generate_to(Elvish, cmd, name, dir)?;
-	generate_to(PowerShell, cmd, name, dir)?;
-	generate_to(Nushell, cmd, name, dir)?;
-	generate_to(Fig, cmd, name, dir)?;
+	fs::create_dir_all(out)?;
+	generate_to(Shell::Bash, cmd, bin, out)?;
+	generate_to(Shell::Fish, cmd, bin, out)?;
+	generate_to(Shell::Zsh, cmd, bin, out)?;
+	generate_to(Shell::Elvish, cmd, bin, out)?;
+	generate_to(Shell::PowerShell, cmd, bin, out)?;
+	generate_to(clap_complete_nushell::Nushell, cmd, bin, out)?;
+	generate_to(clap_complete_fig::Fig, cmd, bin, out)?;
 
 	Ok(())
 }

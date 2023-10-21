@@ -1,6 +1,8 @@
 target/
+config/completions
 
 .DS_Store
+
 result
 result-*
 .devenv*
