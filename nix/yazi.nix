@@ -3,6 +3,7 @@
 , lib
 
 , makeWrapper
+, installShellFiles
 , stdenv
 , darwin
 
@@ -34,7 +35,7 @@ rustPlatform.buildRustPackage {
 
   cargoLock.lockFile = ../Cargo.lock;
 
-  nativeBuildInputs = [ makeWrapper ];
+  nativeBuildInputs = [ makeWrapper installShellFiles ];
   buildInputs = lib.optionals stdenv.isDarwin (
     with darwin.apple_sdk.frameworks; [ Foundation ]
   );
@@ -55,6 +56,10 @@ rustPlatform.buildRustPackage {
     ''
       wrapProgram $out/bin/yazi \
          --prefix PATH : "${makeBinPath runtimePaths}"
+      installShellCompletion --cmd yazi \
+        --bash ./config/completions/yazi.bash \
+        --fish ./config/completions/yazi.fish \
+        --zsh  ./config/completions/_yazi
     '';
 
   meta = with lib; {
