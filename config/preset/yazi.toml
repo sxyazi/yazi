@@ -16,17 +16,17 @@ cache_dir  = ""
 
 [opener]
 edit = [
-	{ exec = '$EDITOR "$@"', block = true, for = "unix" },
-	{ exec = 'code "%*"',                  for = "windows" },
+	{ exec = '$EDITOR "$@"', block = true,  for = "unix" },
+	{ exec = 'code "%*"',    orphan = true, for = "windows" },
 ]
 open = [
-	{ exec = 'xdg-open "$@"', desc = "Open", for = "linux" },
-	{ exec = 'open "$@"',     desc = "Open", for = "macos" },
-	{ exec = '%1',            desc = "Open", for = "windows" }
+	{ exec = 'xdg-open "$@"',             desc = "Open", for = "linux" },
+	{ exec = 'open "$@"',                 desc = "Open", for = "macos" },
+	{ exec = 'start "%1"', orphan = true, desc = "Open", for = "windows" }
 ]
 reveal = [
-	{ exec = 'open -R "$@"',  desc = "Reveal", for = "macos" },
-	{ exec = 'explorer "%*"', desc = "Reveal", for = "windows" },
+	{ exec = 'open -R "$1"',                       desc = "Reveal", for = "macos" },
+	{ exec = 'explorer /select,%1', orphan = true, desc = "Reveal", for = "windows" },
 	{ exec = '''exiftool "$1"; echo "Press enter to exit"; read''', block = true, desc = "Show EXIF", for = "unix" },
 ]
 extract = [
@@ -35,7 +35,7 @@ extract = [
 ]
 play = [
 	{ exec = 'mpv "$@"', orphan = true, for = "unix" },
-	{ exec = 'mpv "%1"',                for = "windows" },
+	{ exec = 'mpv "%1"', orphan = true, for = "windows" },
 	{ exec = '''mediainfo "$1"; echo "Press enter to exit"; read''', block = true, desc = "Show media info", for = "unix" },
 ]
 
