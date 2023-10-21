@@ -25,8 +25,8 @@ keymap = [
 	{ on = [ "H" ], exec = "back",    desc = "Go back to the previous directory" },
 	{ on = [ "L" ], exec = "forward", desc = "Go forward to the next directory" },
 
-	{ on = [ "<C-k>" ], exec = "peek -5", desc = "Peek up 5 units in the preview" },
-	{ on = [ "<C-j>" ], exec = "peek 5",  desc = "Peek down 5 units in the preview" },
+	{ on = [ "<A-k>" ], exec = "peek -5", desc = "Peek up 5 units in the preview" },
+	{ on = [ "<A-j>" ], exec = "peek 5",  desc = "Peek down 5 units in the preview" },
 
 	{ on = [ "<Up>" ],    exec = "arrow -1", desc = "Move cursor up" },
 	{ on = [ "<Down>" ],  exec = "arrow 1",  desc = "Move cursor down" },
