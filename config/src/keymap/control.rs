@@ -33,8 +33,9 @@ impl Control {
 
 	#[inline]
 	pub fn contains(&self, s: &str) -> bool {
-		self.desc.as_ref().map(|d| d.contains(s)) == Some(true)
-			|| self.exec().contains(s)
-			|| self.on().contains(s)
+		let s = s.to_lowercase();
+		self.desc.as_ref().map(|d| d.to_lowercase().contains(&s)) == Some(true)
+			|| self.exec().to_lowercase().contains(&s)
+			|| self.on().to_lowercase().contains(&s)
 	}
 }
