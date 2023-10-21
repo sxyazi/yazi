@@ -6,7 +6,7 @@
 cwd = { fg = "cyan" }
 
 # Hovered
-hovered         = { fg = "black", bg = "blue" }
+hovered         = { fg = "black", bg = "lightblue" }
 preview_hovered = { underline = true }
 
 # Find
@@ -19,8 +19,8 @@ marker_copied   = { fg = "lightyellow", bg = "lightyellow" }
 marker_cut      = { fg = "lightred",    bg = "lightred" }
 
 # Tab
-tab_active   = { fg = "black", bg = "blue" }
-tab_inactive = { bg = "darkgray" }
+tab_active   = { fg = "black", bg = "lightblue" }
+tab_inactive = { fg = "white", bg = "darkgray" }
 tab_width    = 1
 
 # Border
@@ -45,14 +45,14 @@ separator_close = ""
 separator_style = { fg = "darkgray", bg = "darkgray" }
 
 # Mode
-mode_normal = { fg = "black", bg = "blue", bold = true }
-mode_select = { fg = "black", bg = "green", bold = true }
-mode_unset  = { fg = "black", bg = "magenta", bold = true }
+mode_normal = { fg = "black", bg = "lightblue", bold = true }
+mode_select = { fg = "black", bg = "lightgreen", bold = true }
+mode_unset  = { fg = "black", bg = "lightmagenta", bold = true }
 
 # Progress
 progress_label  = { bold = true }
-progress_normal = { fg = "red", bg = "black" }
-progress_error  = { fg = "blue", bg = "black" }
+progress_normal = { fg = "blue", bg = "black" }
+progress_error  = { fg = "red", bg = "black" }
 
 # Permissions
 permissions_t = { fg = "lightgreen" }
