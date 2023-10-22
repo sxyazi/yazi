@@ -5,4 +5,4 @@ config/completions
 
 result
 result-*
-.devenv*
+.direnv

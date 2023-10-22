@@ -1,7 +1,10 @@
-{ pkgs, inputs, ... }:
+{ pkgs, ... }:
 
 pkgs.mkShell {
   packages = with pkgs; [
+    rustToolchain
+    rust-analyzer
+
     nodePackages.cspell
 
     file
@@ -15,18 +18,11 @@ pkgs.mkShell {
     zoxide
   ];
 
-  buildInputs = pkgs.lib.optionals pkgs.stdenv.isDarwin (
-    with pkgs.darwin.apple_sdk.frameworks; [ Foundation ]
+  buildInputs = with pkgs; lib.optionals stdenv.isDarwin (
+    with darwin.apple_sdk.frameworks; [ Foundation ]
   );
 
-  inputsFrom = [
-    (inputs.devenv.lib.mkShell {
-      inherit inputs pkgs;
-      modules = [
-        ({ pkgs, ... }: {
-          languages.rust.enable = true;
-        })
-      ];
-    })
-  ];
+  env = {
+    RUST_BACKTRACE = "1";
+  };
 }
