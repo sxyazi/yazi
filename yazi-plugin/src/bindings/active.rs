@@ -2,7 +2,7 @@ use mlua::{AnyUserData, MetaMethod, UserDataFields, UserDataMethods, Value};
 use yazi_config::MANAGER;
 use yazi_core::Ctx;
 
-use super::shared::Url;
+use super::Url;
 use crate::LUA;
 
 pub struct Active<'a, 'b> {
