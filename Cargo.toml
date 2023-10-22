@@ -1,12 +1,7 @@
 [workspace]
 resolver = "2"
 members  = [
-	"adaptor",
-	"app",
-	"config",
-	"core",
-	"plugin",
-	"shared",
+	"yazi-*",
 ]
 
 [profile.release]

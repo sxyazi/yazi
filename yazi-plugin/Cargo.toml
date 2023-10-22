@@ -1,0 +1,17 @@
+[package]
+name    = "yazi-plugin"
+version = "0.1.5"
+edition = "2021"
+
+[dependencies]
+yazi-config = { path = "../yazi-config" }
+yazi-core   = { path = "../yazi-core" }
+yazi-shared = { path = "../yazi-shared" }
+
+# External dependencies
+ansi-to-tui   = "^3"
+anyhow        = "^1"
+mlua          = { version = "^0", features = [ "luajit52", "vendored", "serialize" ] }
+ratatui       = "^0"
+tracing       = "^0"
+unicode-width = "^0"

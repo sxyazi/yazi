@@ -1,0 +1,19 @@
+[package]
+name    = "yazi-adaptor"
+version = "0.1.5"
+edition = "2021"
+
+[dependencies]
+yazi-config = { path = "../yazi-config" }
+yazi-shared = { path = "../yazi-shared" }
+
+# External dependencies
+anyhow      = "^1"
+base64      = "^0"
+color_quant = "^1"
+image       = "^0"
+ratatui     = "^0"
+tokio       = { version = "^1", features = [ "parking_lot" ] }
+
+# Logging
+tracing = "^0"

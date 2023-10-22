@@ -1,5 +1,5 @@
 target/
-config/completions
+yazi-config/completions
 
 .DS_Store
 

@@ -1,0 +1,33 @@
+[package]
+name    = "yazi-fm"
+version = "0.1.5"
+edition = "2021"
+
+[dependencies]
+yazi-adaptor = { path = "../yazi-adaptor" }
+yazi-config  = { path = "../yazi-config" }
+yazi-core    = { path = "../yazi-core" }
+yazi-plugin  = { path = "../yazi-plugin" }
+yazi-shared  = { path = "../yazi-shared" }
+
+# External dependencies
+ansi-to-tui   = "^3"
+anyhow        = "^1"
+crossterm     = { version = "^0", features = [ "event-stream" ] }
+futures       = "^0"
+ratatui       = "^0"
+tokio         = { version = "^1", features = [ "parking_lot" ] }
+unicode-width = "^0"
+
+# Logging
+tracing            = "^0"
+tracing-appender   = "^0"
+tracing-subscriber = "^0"
+
+[target."cfg(unix)".dependencies]
+libc              = "^0"
+signal-hook-tokio = { version = "^0", features = [ "futures-v0_3" ] }
+
+[[bin]]
+name = "yazi"
+path = "src/main.rs"
