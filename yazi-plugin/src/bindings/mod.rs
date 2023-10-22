@@ -10,6 +10,6 @@ mod tasks;
 pub use active::*;
 pub use bindings::*;
 pub use files::*;
-pub use yazi_shared::*;
+pub use shared::*;
 pub use tabs::*;
 pub use tasks::*;

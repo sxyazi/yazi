@@ -3,7 +3,7 @@ use std::time::UNIX_EPOCH;
 use mlua::{AnyUserData, IntoLua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef};
 use yazi_config::THEME;
 
-use super::shared::{Range, Url};
+use super::{Range, Url};
 use crate::{layout::Style, LUA};
 
 pub struct File(yazi_core::files::File);
