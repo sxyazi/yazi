@@ -18,7 +18,7 @@ base64      = "^0"
 color_quant = "^1"
 image       = "^0"
 ratatui     = "^0"
-tokio       = { version = "^1", features = [ "parking_lot", "process" ] }
+tokio       = { version = "^1", features = [ "parking_lot", "io-util", "process" ] }
 
 # Logging
 tracing = "^0"
