@@ -46,7 +46,7 @@ jobs:
         run: |
           mkdir $TARGET_NAME
           cp target/${{ matrix.target }}/release/yazi $TARGET_NAME
-          cp -r config/completions $TARGET_NAME
+          cp -r yazi-config/completions $TARGET_NAME
           cp README.md LICENSE $TARGET_NAME
           zip -r $TARGET_NAME.zip $TARGET_NAME
 
@@ -57,7 +57,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Path ${env:TARGET_NAME}
           Copy-Item -Path "target\${{ matrix.target }}\release\yazi.exe" -Destination ${env:TARGET_NAME}
-          Copy-Item -Path "config\completions" -Destination ${env:TARGET_NAME} -Recurse
+          Copy-Item -Path "yazi-config\completions" -Destination ${env:TARGET_NAME} -Recurse
           Copy-Item -Path "README.md", "LICENSE" -Destination ${env:TARGET_NAME}
           Compress-Archive -Path ${env:TARGET_NAME} -DestinationPath "${env:TARGET_NAME}.zip"
 
