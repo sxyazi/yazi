@@ -27,7 +27,7 @@
       let
         pkgs = import nixpkgs { inherit system overlays; };
         versionSuffix = "pre${builtins.substring 0 8 (self.lastModifiedDate or self.lastModified or "19700101")}_${self.shortRev or "dirty"}";
-        version = (builtins.fromTOML (builtins.readFile ./app/Cargo.toml)).package.version + versionSuffix;
+        version = (builtins.fromTOML (builtins.readFile ./yazi-fm/Cargo.toml)).package.version + versionSuffix;
         yazi = pkgs.callPackage ./nix/yazi.nix { inherit version; };
       in
       {

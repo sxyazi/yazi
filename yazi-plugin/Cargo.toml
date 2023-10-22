@@ -4,9 +4,9 @@ version = "0.1.5"
 edition = "2021"
 
 [dependencies]
-yazi-config = { path = "../yazi-config" }
-yazi-core   = { path = "../yazi-core" }
-yazi-shared = { path = "../yazi-shared" }
+yazi-config = { path = "../yazi-config", version = "0.1.5" }
+yazi-core   = { path = "../yazi-core", version = "0.1.5" }
+yazi-shared = { path = "../yazi-shared", version = "0.1.5" }
 
 # External dependencies
 ansi-to-tui   = "^3"

@@ -4,8 +4,8 @@ version = "0.1.5"
 edition = "2021"
 
 [dependencies]
-yazi-config = { path = "../yazi-config" }
-yazi-shared = { path = "../yazi-shared" }
+yazi-config = { path = "../yazi-config", version = "0.1.5" }
+yazi-shared = { path = "../yazi-shared", version = "0.1.5" }
 
 # External dependencies
 anyhow      = "^1"
