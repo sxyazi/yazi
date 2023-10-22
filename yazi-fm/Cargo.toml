@@ -5,10 +5,10 @@ edition = "2021"
 
 [dependencies]
 yazi-adaptor = { path = "../yazi-adaptor", version = "0.1.5" }
-yazi-config  = { path = "../yazi-config", version = "0.1.5" }
-yazi-core    = { path = "../yazi-core", version = "0.1.5" }
-yazi-plugin  = { path = "../yazi-plugin", version = "0.1.5" }
-yazi-shared  = { path = "../yazi-shared", version = "0.1.5" }
+yazi-config = { path = "../yazi-config", version = "0.1.5" }
+yazi-core = { path = "../yazi-core", version = "0.1.5" }
+yazi-plugin = { path = "../yazi-plugin", version = "0.1.5" }
+yazi-shared = { path = "../yazi-shared", version = "0.1.5" }
 
 # External dependencies
 ansi-to-tui   = "^3"
