@@ -7,7 +7,7 @@ mod kitty;
 mod sixel;
 mod ueberzug;
 
-use adaptor::Adaptor;
+use adaptor::*;
 use iterm2::*;
 use kitty::*;
 use sixel::*;
