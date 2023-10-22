@@ -1,13 +1,6 @@
 [workspace]
 resolver = "2"
-members  = [
-	"adaptor",
-	"app",
-	"config",
-	"core",
-	"plugin",
-	"shared",
-]
+members  = [ "yazi-*" ]
 
 [profile.release]
 lto   = true

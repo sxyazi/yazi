@@ -35,6 +35,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Build
+        env:
+          YAZI_GEN_COMPLETIONS: true
         run: cargo build --release --locked --target ${{ matrix.target }}
 
       - name: Pack artifacts [Linux & macOS]

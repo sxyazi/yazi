@@ -1,0 +1,33 @@
+[package]
+name        = "yazi-config"
+version     = "0.1.5"
+edition     = "2021"
+license     = "MIT"
+authors     = [ "sxyazi <sxyazi@gmail.com>" ]
+description = "Yazi configuration file parser"
+homepage    = "https://yazi-rs.github.io"
+repository  = "https://github.com/sxyazi/yazi"
+
+[dependencies]
+yazi-shared = { path = "../yazi-shared", version = "0.1.5" }
+
+# External dependencies
+anyhow      = "^1"
+clap        = { version = "^4", features = [ "derive" ] }
+crossterm   = "^0"
+dirs        = "^5"
+futures     = "^0"
+glob        = "^0"
+indexmap    = "^2"
+md-5        = "^0"
+ratatui     = "^0"
+serde       = { version = "^1", features = [ "derive" ] }
+shell-words = "^1"
+toml        = { version = "^0", features = [ "preserve_order" ] }
+validator   = { version = "^0", features = [ "derive" ] }
+
+[build-dependencies]
+clap                  = { version = "^4", features = [ "derive" ] }
+clap_complete         = "^4"
+clap_complete_nushell = "^4"
+clap_complete_fig     = "^4"

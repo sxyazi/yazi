@@ -3,21 +3,6 @@
 version = 3
 
 [[package]]
-name = "adaptor"
-version = "0.1.5"
-dependencies = [
- "anyhow",
- "base64",
- "color_quant",
- "config",
- "image",
- "ratatui",
- "shared",
- "tokio",
- "tracing",
-]
-
-[[package]]
 name = "addr2line"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -120,29 +105,6 @@ name = "anyhow"
 version = "1.0.75"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4668cab20f66d8d020e1fbc0ebe47217433c1b6c8f2040faf858554e394ace6"
-
-[[package]]
-name = "app"
-version = "0.1.5"
-dependencies = [
- "adaptor",
- "ansi-to-tui",
- "anyhow",
- "config",
- "core",
- "crossterm",
- "futures",
- "libc",
- "plugin",
- "ratatui",
- "shared",
- "signal-hook-tokio",
- "tokio",
- "tracing",
- "tracing-appender",
- "tracing-subscriber",
- "unicode-width",
-]
 
 [[package]]
 name = "async-channel"
@@ -384,58 +346,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f057a694a54f12365049b0958a1685bb52d567f5593b355fbf685838e873d400"
 dependencies = [
  "crossbeam-utils",
-]
-
-[[package]]
-name = "config"
-version = "0.1.5"
-dependencies = [
- "anyhow",
- "clap",
- "clap_complete",
- "clap_complete_fig",
- "clap_complete_nushell",
- "crossterm",
- "dirs",
- "futures",
- "glob",
- "indexmap 2.0.2",
- "md-5",
- "ratatui",
- "serde",
- "shared",
- "shell-words",
- "toml",
- "validator",
-]
-
-[[package]]
-name = "core"
-version = "0.1.5"
-dependencies = [
- "adaptor",
- "anyhow",
- "async-channel",
- "clipboard-win",
- "config",
- "crossterm",
- "futures",
- "indexmap 2.0.2",
- "libc",
- "notify",
- "parking_lot",
- "ratatui",
- "regex",
- "serde",
- "serde_json",
- "shared",
- "syntect",
- "tokio",
- "tokio-stream",
- "tracing",
- "trash",
- "unicode-width",
- "yazi-prebuild",
 ]
 
 [[package]]
@@ -1386,21 +1296,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "plugin"
-version = "0.1.5"
-dependencies = [
- "ansi-to-tui",
- "anyhow",
- "config",
- "core",
- "mlua",
- "ratatui",
- "shared",
- "tracing",
- "unicode-width",
-]
-
-[[package]]
 name = "png"
 version = "0.17.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1670,20 +1565,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f40ca3c46823713e0d4209592e8d6e826aa57e928f09752619fc696c499637f6"
 dependencies = [
  "lazy_static",
-]
-
-[[package]]
-name = "shared"
-version = "0.1.5"
-dependencies = [
- "anyhow",
- "crossterm",
- "futures",
- "libc",
- "parking_lot",
- "ratatui",
- "regex",
- "tokio",
 ]
 
 [[package]]
@@ -2484,6 +2365,111 @@ dependencies = [
 ]
 
 [[package]]
+name = "yazi-adaptor"
+version = "0.1.5"
+dependencies = [
+ "anyhow",
+ "base64",
+ "color_quant",
+ "image",
+ "ratatui",
+ "tokio",
+ "tracing",
+ "yazi-config",
+ "yazi-shared",
+]
+
+[[package]]
+name = "yazi-config"
+version = "0.1.5"
+dependencies = [
+ "anyhow",
+ "clap",
+ "clap_complete",
+ "clap_complete_fig",
+ "clap_complete_nushell",
+ "crossterm",
+ "dirs",
+ "futures",
+ "glob",
+ "indexmap 2.0.2",
+ "md-5",
+ "ratatui",
+ "serde",
+ "shell-words",
+ "toml",
+ "validator",
+ "yazi-shared",
+]
+
+[[package]]
+name = "yazi-core"
+version = "0.1.5"
+dependencies = [
+ "anyhow",
+ "async-channel",
+ "clipboard-win",
+ "crossterm",
+ "futures",
+ "indexmap 2.0.2",
+ "libc",
+ "notify",
+ "parking_lot",
+ "ratatui",
+ "regex",
+ "serde",
+ "serde_json",
+ "syntect",
+ "tokio",
+ "tokio-stream",
+ "tracing",
+ "trash",
+ "unicode-width",
+ "yazi-adaptor",
+ "yazi-config",
+ "yazi-prebuild",
+ "yazi-shared",
+]
+
+[[package]]
+name = "yazi-fm"
+version = "0.1.5"
+dependencies = [
+ "ansi-to-tui",
+ "anyhow",
+ "crossterm",
+ "futures",
+ "libc",
+ "ratatui",
+ "signal-hook-tokio",
+ "tokio",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
+ "unicode-width",
+ "yazi-adaptor",
+ "yazi-config",
+ "yazi-core",
+ "yazi-plugin",
+ "yazi-shared",
+]
+
+[[package]]
+name = "yazi-plugin"
+version = "0.1.5"
+dependencies = [
+ "ansi-to-tui",
+ "anyhow",
+ "mlua",
+ "ratatui",
+ "tracing",
+ "unicode-width",
+ "yazi-config",
+ "yazi-core",
+ "yazi-shared",
+]
+
+[[package]]
 name = "yazi-prebuild"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2492,6 +2478,20 @@ dependencies = [
  "anyhow",
  "syntect",
  "walkdir",
+]
+
+[[package]]
+name = "yazi-shared"
+version = "0.1.5"
+dependencies = [
+ "anyhow",
+ "crossterm",
+ "futures",
+ "libc",
+ "parking_lot",
+ "ratatui",
+ "regex",
+ "tokio",
 ]
 
 [[package]]
