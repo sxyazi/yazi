@@ -14,15 +14,15 @@ max_width  = 600
 max_height = 900
 cache_dir  = ""
 
-[preview.ueberzug]
-# Scale down the coordinate and size of image preview that is incorrectly scaled
-# up by ueberzugpp in Wayland (tested under Hyprland). Example usage: if your
-# monitor has a 2.0 scale factor, you should pass 2.0 here.
-scale_down_factor = 1.0
-x_offset = 0.0
-y_offset = 0.0
-width_offset = 0.0
-height_offset = 0.0
+	[preview.ueberzug]
+	# Scale down the coordinate and size of image preview that is incorrectly scaled
+	# up by ueberzugpp in Wayland (tested under Hyprland). Example usage: if your
+	# monitor has a 2.0 scale factor, you should pass 2.0 here.
+	scale_down_factor = 1.0
+	x_offset          = 0.0
+	y_offset          = 0.0
+	width_offset      = 0.0
+	height_offset     = 0.0
 
 [opener]
 edit = [

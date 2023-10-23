@@ -1,7 +1,4 @@
-use std::{
-	path::{Path, PathBuf},
-	time::{self, SystemTime},
-};
+use std::{path::{Path, PathBuf}, time::{self, SystemTime}};
 
 use md5::{Digest, Md5};
 use serde::Deserialize;
@@ -12,16 +9,16 @@ use crate::{xdg::Xdg, MERGED_YAZI};
 #[derive(Debug, Deserialize)]
 pub struct UeberzugPreview {
 	pub scale_down_factor: f64,
-	pub x_offset: f64,
-	pub y_offset: f64,
-	pub width_offset: f64,
-	pub height_offset: f64,
+	pub x_offset:          f64,
+	pub y_offset:          f64,
+	pub width_offset:      f64,
+	pub height_offset:     f64,
 }
 
 #[derive(Debug)]
 pub struct Preview {
-	pub tab_size: u32,
-	pub max_width: u32,
+	pub tab_size:   u32,
+	pub max_width:  u32,
 	pub max_height: u32,
 
 	pub cache_dir: PathBuf,
@@ -37,8 +34,8 @@ impl Default for Preview {
 		}
 		#[derive(Deserialize)]
 		struct Shadow {
-			tab_size: u32,
-			max_width: u32,
+			tab_size:   u32,
+			max_width:  u32,
 			max_height: u32,
 
 			cache_dir: Option<String>,

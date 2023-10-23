@@ -21,4 +21,4 @@ ratatui     = "^0"
 tokio       = { version = "^1", features = [ "parking_lot", "io-util", "process" ] }
 
 # Logging
-tracing = {version = "^0", features = ["max_level_debug", "release_max_level_warn"]}
+tracing = { version = "^0", features = [ "max_level_debug", "release_max_level_warn" ] }

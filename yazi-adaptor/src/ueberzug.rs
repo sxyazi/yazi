@@ -1,14 +1,9 @@
-use std::cmp::max;
-use std::{path::PathBuf, process::Stdio};
-use tracing::debug;
+use std::{cmp::max, path::PathBuf, process::Stdio};
 
 use anyhow::Result;
 use ratatui::prelude::Rect;
-use tokio::{
-	io::AsyncWriteExt,
-	process::{Child, Command},
-	sync::mpsc::{self, UnboundedSender},
-};
+use tokio::{io::AsyncWriteExt, process::{Child, Command}, sync::mpsc::{self, UnboundedSender}};
+use tracing::debug;
 use yazi_config::PREVIEW;
 
 use crate::Adaptor;
@@ -40,10 +35,8 @@ impl Ueberzug {
 
 	fn adjust_rect(mut rect: Rect) -> Rect {
 		let cfg = &PREVIEW.ueberzug;
-		rect.x =
-			max((rect.x as f64 / cfg.scale_down_factor + cfg.x_offset) as i32, 0) as u16;
-		rect.y =
-			max((rect.y as f64 / cfg.scale_down_factor + cfg.y_offset) as i32, 0) as u16;
+		rect.x = max((rect.x as f64 / cfg.scale_down_factor + cfg.x_offset) as i32, 0) as u16;
+		rect.y = max((rect.y as f64 / cfg.scale_down_factor + cfg.y_offset) as i32, 0) as u16;
 		rect.width =
 			max((rect.width as f64 / cfg.scale_down_factor + cfg.width_offset) as i32, 0) as u16;
 		rect.height =
