@@ -13,6 +13,9 @@ pub struct Preview {
 	pub max_height: u32,
 
 	pub cache_dir: PathBuf,
+
+	pub ueberzug_scale:  f64,
+	pub ueberzug_offset: (f64, f64, f64, f64),
 }
 
 impl Default for Preview {
@@ -28,6 +31,9 @@ impl Default for Preview {
 			max_height: u32,
 
 			cache_dir: Option<String>,
+
+			ueberzug_scale:  f64,
+			ueberzug_offset: (f64, f64, f64, f64),
 		}
 
 		let preview = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().preview;
@@ -41,6 +47,9 @@ impl Default for Preview {
 			max_height: preview.max_height,
 
 			cache_dir,
+
+			ueberzug_scale: preview.ueberzug_scale,
+			ueberzug_offset: preview.ueberzug_offset,
 		}
 	}
 }
