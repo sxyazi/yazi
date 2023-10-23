@@ -6,15 +6,6 @@ use yazi_shared::expand_path;
 
 use crate::{xdg::Xdg, MERGED_YAZI};
 
-#[derive(Debug, Deserialize)]
-pub struct UeberzugPreview {
-	pub scale_down_factor: f64,
-	pub x_offset:          f64,
-	pub y_offset:          f64,
-	pub width_offset:      f64,
-	pub height_offset:     f64,
-}
-
 #[derive(Debug)]
 pub struct Preview {
 	pub tab_size:   u32,

@@ -57,9 +57,9 @@ impl Ueberzug {
 
 	async fn send_command(child: &mut Child, cmd: Option<(PathBuf, Rect)>) -> Result<()> {
 		let stdin = child.stdin.as_mut().unwrap();
-		if let Some((path, tmp_rect)) = cmd {
-			debug!("ueberzug rect before adjustment: {:?}", tmp_rect);
-			let rect = Self::adjust_rect(tmp_rect);
+		if let Some((path, rect)) = cmd {
+			debug!("ueberzug rect before adjustment: {:?}", rect);
+			let rect = Self::adjust_rect(rect);
 			debug!("ueberzug rect after adjustment: {:?}", rect);
 
 			let s = format!(
