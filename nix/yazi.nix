@@ -32,6 +32,7 @@ rustPlatform.buildRustPackage {
   inherit version;
 
   src = ../.;
+  YAZI_GEN_COMPLETIONS = true;
 
   cargoLock.lockFile = ../Cargo.lock;
 
