@@ -14,6 +14,8 @@ function Folder:by_kind(kind)
 	end
 end
 
+function Folder:icon(file) return ui.Span(" " .. file:icon() .. " ") end
+
 function Folder:highlighted_name(file)
 	-- Complete prefix when searching across directories
 	local prefix = file:prefix() or ""
@@ -115,7 +117,7 @@ function Folder:parent(area)
 
 	local items = {}
 	for _, f in ipairs(folder.window) do
-		local item = ui.ListItem(" " .. f:icon() .. " " .. f.name .. " ")
+		local item = ui.ListItem(ui.Line { self:icon(f), ui.Span(f.name) })
 		if f:is_hovered() then
 			item = item:style(THEME.manager.hovered)
 		else
@@ -135,7 +137,7 @@ function Folder:current(area)
 		local name = self:highlighted_name(f)
 
 		-- Highlight hovered file
-		local item = ui.ListItem(ui.Line { ui.Span(" " .. f:icon() .. " "), table.unpack(name) })
+		local item = ui.ListItem(ui.Line { self:icon(f), table.unpack(name) })
 		if f:is_hovered() then
 			item = item:style(THEME.manager.hovered)
 		else
@@ -162,7 +164,7 @@ function Folder:preview(area)
 
 	local items = {}
 	for _, f in ipairs(folder.window) do
-		local item = ui.ListItem(" " .. f:icon() .. " " .. f.name .. " ")
+		local item = ui.ListItem(ui.Line { self:icon(f), ui.Span(f.name) })
 		if f:is_hovered() then
 			item = item:style(THEME.manager.preview_hovered)
 		else
