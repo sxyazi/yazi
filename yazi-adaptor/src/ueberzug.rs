@@ -60,7 +60,7 @@ impl Ueberzug {
 		if let Some((path, tmp_rect)) = cmd {
 			debug!("ueberzug rect before adjustment: {:?}", tmp_rect);
 			let rect = Self::adjust_rect(tmp_rect);
-			debug!("ueberzug rect after adjust adjustment: {:?}", rect);
+			debug!("ueberzug rect after adjustment: {:?}", rect);
 			let s = format!(
 				r#"{{"action":"add","identifier":"yazi","x":{},"y":{},"max_width":{},"max_height":{},"path":"{}"}}{}"#,
 				rect.x,
