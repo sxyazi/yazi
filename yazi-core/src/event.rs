@@ -1,9 +1,9 @@
 use std::{collections::BTreeMap, ffi::OsString};
 
 use anyhow::Result;
-use yazi_config::{keymap::{Exec, KeymapLayer}, open::Opener};
 use crossterm::event::KeyEvent;
 use tokio::sync::{mpsc::{self, UnboundedSender}, oneshot};
+use yazi_config::{keymap::{Exec, KeymapLayer}, open::Opener};
 use yazi_shared::{InputError, RoCell, Url};
 
 use super::{files::FilesOp, input::InputOpt, select::SelectOpt};

@@ -1,6 +1,5 @@
-use yazi_core::Ctx;
-
 pub use mlua::Scope;
+use yazi_core::Ctx;
 
 use crate::{bindings, GLOBALS, LUA};
 

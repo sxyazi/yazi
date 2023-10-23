@@ -1,9 +1,9 @@
 use std::{path::Path, process::Stdio};
 
 use anyhow::Result;
+use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command};
 use yazi_config::PREVIEW;
 use yazi_shared::PeekError;
-use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command};
 
 pub async fn jq(path: &Path, skip: usize, limit: usize) -> Result<String, PeekError> {
 	let mut child = Command::new("jq")

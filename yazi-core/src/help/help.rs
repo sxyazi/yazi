@@ -1,6 +1,6 @@
+use unicode_width::UnicodeWidthStr;
 use yazi_config::{keymap::{Control, Key, KeymapLayer}, KEYMAP};
 use yazi_shared::Term;
-use unicode_width::UnicodeWidthStr;
 
 use super::HELP_MARGIN;
 use crate::{emit, input::Input};

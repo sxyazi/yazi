@@ -3,8 +3,8 @@ use std::path::Path;
 use anyhow::anyhow;
 use serde::Deserialize;
 use serde_json::Value;
-use yazi_shared::PeekError;
 use tokio::process::Command;
+use yazi_shared::PeekError;
 
 #[derive(Debug)]
 pub enum LsarAttr {

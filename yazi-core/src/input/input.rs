@@ -1,10 +1,10 @@
 use std::ops::Range;
 
-use yazi_config::keymap::Key;
 use crossterm::event::KeyCode;
-use yazi_shared::{CharKind, InputError};
 use tokio::sync::mpsc::UnboundedSender;
 use unicode_width::UnicodeWidthStr;
+use yazi_config::keymap::Key;
+use yazi_shared::{CharKind, InputError};
 
 use super::{mode::InputMode, op::InputOp, InputOpt, InputSnap, InputSnaps};
 use crate::{external, Position};

@@ -1,8 +1,8 @@
 use std::{fs::File, io::BufReader, sync::OnceLock};
 
 use anyhow::Result;
-use yazi_config::THEME;
 use syntect::{dumps::from_uncompressed_data, highlighting::{Theme, ThemeSet}, parsing::SyntaxSet};
+use yazi_config::THEME;
 
 static SYNTECT_SYNTAX: OnceLock<SyntaxSet> = OnceLock::new();
 static SYNTECT_THEME: OnceLock<Theme> = OnceLock::new();

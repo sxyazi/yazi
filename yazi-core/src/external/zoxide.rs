@@ -1,8 +1,8 @@
 use std::process::Stdio;
 
 use anyhow::Result;
-use yazi_shared::Url;
 use tokio::{process::Command, sync::oneshot::{self, Receiver}};
+use yazi_shared::Url;
 
 pub struct ZoxideOpt {
 	pub cwd: Url,

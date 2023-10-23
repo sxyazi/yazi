@@ -1,11 +1,11 @@
 use std::{borrow::Cow, collections::VecDeque, fs::Metadata, path::{Path, PathBuf}};
 
 use anyhow::Result;
-use yazi_config::TASKS;
 use futures::{future::BoxFuture, FutureExt};
-use yazi_shared::{calculate_size, copy_with_progress, path_relative_to, Url};
 use tokio::{fs, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
-use tracing::trace;
+use tracing::warn;
+use yazi_config::TASKS;
+use yazi_shared::{calculate_size, copy_with_progress, path_relative_to, Url};
 
 use crate::tasks::TaskOp;
 
@@ -94,7 +94,7 @@ impl File {
 						}
 						Ok(n) => self.sch.send(TaskOp::Adv(task.id, 0, n))?,
 						Err(e) if e.kind() == NotFound => {
-							trace!("Paste task partially done: {:?}", task);
+							warn!("Paste task partially done: {:?}", task);
 							break;
 						}
 						// Operation not permitted (os error 1)

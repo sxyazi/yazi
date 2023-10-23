@@ -1,11 +1,11 @@
 use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, io::{stdout, Write}, path::Path, sync::Arc};
 
-use yazi_config::{manager::SortBy, open::Opener, OPEN};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use serde::Serialize;
-use yazi_shared::{Defer, MimeKind, Term, Url};
 use tokio::{io::{stdin, AsyncReadExt}, select, sync::mpsc, time};
-use tracing::trace;
+use tracing::debug;
+use yazi_config::{manager::SortBy, open::Opener, OPEN};
+use yazi_shared::{Defer, MimeKind, Term, Url};
 
 use super::{running::Running, task::TaskSummary, Scheduler, TASKS_PADDING, TASKS_PERCENT};
 use crate::{emit, files::{File, Files}, input::InputOpt, Event, BLOCKER};
@@ -160,7 +160,7 @@ impl Tasks {
 		for u in src {
 			let to = dest.join(u.file_name().unwrap());
 			if force && u == &to {
-				trace!("file_cut: same file, skipping {:?}", to);
+				debug!("file_cut: same file, skipping {:?}", to);
 			} else {
 				self.scheduler.file_cut(u.clone(), to, force);
 			}
@@ -172,7 +172,7 @@ impl Tasks {
 		for u in src {
 			let to = dest.join(u.file_name().unwrap());
 			if force && u == &to {
-				trace!("file_copy: same file, skipping {:?}", to);
+				debug!("file_copy: same file, skipping {:?}", to);
 			} else {
 				self.scheduler.file_copy(u.clone(), to, force);
 			}
@@ -184,7 +184,7 @@ impl Tasks {
 		for u in src {
 			let to = dest.join(u.file_name().unwrap());
 			if force && *u == to {
-				trace!("file_link: same file, skipping {:?}", to);
+				debug!("file_link: same file, skipping {:?}", to);
 			} else {
 				self.scheduler.file_link(u.clone(), to, relative, force);
 			}

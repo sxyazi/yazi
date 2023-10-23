@@ -1,6 +1,6 @@
-use yazi_config::keymap::KeymapLayer;
 use crossterm::terminal::WindowSize;
 use ratatui::prelude::Rect;
+use yazi_config::keymap::KeymapLayer;
 use yazi_shared::Term;
 
 use crate::{help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which, Position};

@@ -1,12 +1,12 @@
 use std::{io::BufRead, path::Path, sync::atomic::{AtomicUsize, Ordering}};
 
-use yazi_adaptor::ADAPTOR;
 use anyhow::anyhow;
-use yazi_config::{MANAGER, PREVIEW};
 use futures::TryFutureExt;
-use yazi_shared::{MimeKind, PeekError};
 use syntect::{easy::HighlightFile, util::as_24_bit_terminal_escaped};
 use tokio::fs;
+use yazi_adaptor::ADAPTOR;
+use yazi_config::{MANAGER, PREVIEW};
+use yazi_shared::{MimeKind, PeekError};
 
 use super::PreviewData;
 use crate::{external, highlighter};

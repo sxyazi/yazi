@@ -1,6 +1,6 @@
 use anyhow::Result;
-use yazi_config::PLUGINS;
 use mlua::{Lua, Table};
+use yazi_config::PLUGINS;
 use yazi_shared::RoCell;
 
 use crate::{bindings, components, layout, utils};

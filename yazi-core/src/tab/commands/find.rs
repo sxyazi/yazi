@@ -1,9 +1,9 @@
 use std::time::Duration;
 
-use yazi_config::keymap::{Exec, KeymapLayer};
-use yazi_shared::{Debounce, InputError};
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
+use yazi_config::keymap::{Exec, KeymapLayer};
+use yazi_shared::{Debounce, InputError};
 
 use crate::{emit, input::InputOpt, tab::{Finder, FinderCase, Tab}};
 

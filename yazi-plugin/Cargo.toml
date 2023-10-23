@@ -18,5 +18,5 @@ ansi-to-tui   = "^3"
 anyhow        = "^1"
 mlua          = { version = "^0", features = [ "luajit52", "vendored", "serialize" ] }
 ratatui       = "^0"
-tracing       = "^0"
+tracing       = { version = "^0", features = [ "max_level_debug", "release_max_level_warn" ] }
 unicode-width = "^0"

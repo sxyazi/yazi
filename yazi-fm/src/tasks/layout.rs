@@ -1,7 +1,6 @@
-use yazi_core::{tasks::TASKS_PERCENT, Ctx};
-
-use yazi_config::THEME;
 use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Direction, Rect}, text::Line, widgets::{Block, BorderType, Borders, List, ListItem, Padding, Widget}};
+use yazi_config::THEME;
+use yazi_core::{tasks::TASKS_PERCENT, Ctx};
 
 use super::Clear;
 

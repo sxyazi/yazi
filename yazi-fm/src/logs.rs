@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
-use yazi_config::BOOT;
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::{fmt, prelude::__tracing_subscriber_SubscriberExt, Registry};
+use yazi_config::BOOT;
 
 pub(super) struct Logs;
 

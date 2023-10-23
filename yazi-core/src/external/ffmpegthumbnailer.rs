@@ -1,7 +1,7 @@
 use std::path::Path;
 
-use yazi_config::PREVIEW;
 use tokio::process::Command;
+use yazi_config::PREVIEW;
 use yazi_shared::PeekError;
 
 pub async fn ffmpegthumbnailer(src: &Path, dest: &Path, skip: usize) -> Result<(), PeekError> {

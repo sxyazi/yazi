@@ -1,7 +1,6 @@
-use yazi_core::Ctx;
-
-use yazi_config::THEME;
 use ratatui::{buffer::Buffer, layout::{self, Rect}, prelude::{Constraint, Direction}, widgets::{Clear, Paragraph, Widget}};
+use yazi_config::THEME;
+use yazi_core::Ctx;
 
 use super::Bindings;
 

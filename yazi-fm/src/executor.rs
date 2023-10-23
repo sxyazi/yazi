@@ -1,6 +1,5 @@
-use yazi_core::{emit, input::InputMode, tab::FinderCase, Ctx};
-
 use yazi_config::{keymap::{Control, Exec, Key, KeymapLayer}, KEYMAP};
+use yazi_core::{emit, input::InputMode, tab::FinderCase, Ctx};
 use yazi_shared::{optional_bool, Url};
 
 pub(super) struct Executor;

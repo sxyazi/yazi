@@ -1,11 +1,11 @@
 use std::{collections::{BTreeMap, BTreeSet}, sync::Arc};
 
-use yazi_adaptor::Image;
 use anyhow::Result;
-use yazi_config::PREVIEW;
 use parking_lot::Mutex;
-use yazi_shared::{calculate_size, Throttle, Url};
 use tokio::{fs, sync::mpsc};
+use yazi_adaptor::Image;
+use yazi_config::PREVIEW;
+use yazi_shared::{calculate_size, Throttle, Url};
 
 use crate::{emit, external, files::FilesOp, tasks::TaskOp};
 

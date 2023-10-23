@@ -1,10 +1,10 @@
 use std::{sync::atomic::Ordering, time::Duration};
 
+use tokio::{pin, task::JoinHandle};
+use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_adaptor::ADAPTOR;
 use yazi_config::MANAGER;
 use yazi_shared::{MimeKind, PeekError, Url, MIME_DIR};
-use tokio::{pin, task::JoinHandle};
-use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 
 use super::{Provider, INCR};
 use crate::{emit, files::{Files, FilesOp}};

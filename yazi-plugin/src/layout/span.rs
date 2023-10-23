@@ -1,5 +1,5 @@
-use yazi_config::theme::Color;
 use mlua::{AnyUserData, FromLua, Lua, Table, UserData, UserDataMethods, Value};
+use yazi_config::theme::Color;
 
 use super::Style;
 use crate::{GLOBALS, LUA};

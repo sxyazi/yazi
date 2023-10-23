@@ -1,9 +1,9 @@
 use std::{path::Path, sync::Arc};
 
-use yazi_adaptor::Image;
 use regex::Regex;
-use yazi_shared::PeekError;
 use tokio::process::Command;
+use yazi_adaptor::Image;
+use yazi_shared::PeekError;
 
 pub async fn pdftoppm(src: &Path, dest: impl AsRef<Path>, skip: usize) -> Result<(), PeekError> {
 	let output = Command::new("pdftoppm")

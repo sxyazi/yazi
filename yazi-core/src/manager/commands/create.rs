@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
-use yazi_shared::Url;
 use tokio::fs::{self};
+use yazi_shared::Url;
 
 use crate::{emit, files::{File, FilesOp}, input::InputOpt, manager::Manager};
 

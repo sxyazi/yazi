@@ -1,7 +1,6 @@
-use yazi_core::Ctx;
-
-use yazi_config::THEME;
 use ratatui::{layout::{self, Constraint}, prelude::{Buffer, Direction, Rect}, widgets::{List, ListItem, Widget}};
+use yazi_config::THEME;
+use yazi_core::Ctx;
 
 pub(super) struct Bindings<'a> {
 	cx: &'a Ctx,

@@ -1,9 +1,9 @@
 use std::{collections::BTreeSet, ffi::OsStr, io::{stdout, BufWriter, Write}, path::PathBuf};
 
 use anyhow::{anyhow, bail, Result};
+use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 use yazi_config::{OPEN, PREVIEW};
 use yazi_shared::{max_common_root, Defer, Term, Url};
-use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 
 use crate::{emit, external::{self, ShellOpt}, files::{File, FilesOp}, input::InputOpt, manager::Manager, Event, BLOCKER};
 

@@ -1,7 +1,6 @@
-use yazi_core::{preview::PreviewData, Ctx};
-
 use ansi_to_tui::IntoText;
 use ratatui::{buffer::Buffer, layout::Rect, widgets::{Paragraph, Widget}};
+use yazi_core::{preview::PreviewData, Ctx};
 
 use super::Folder;
 

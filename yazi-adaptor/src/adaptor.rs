@@ -1,9 +1,9 @@
 use std::{env, path::{Path, PathBuf}, sync::atomic::{AtomicBool, Ordering}};
 
 use anyhow::{anyhow, Result};
-use yazi_config::PREVIEW;
 use ratatui::prelude::Rect;
 use tokio::{fs, sync::mpsc::UnboundedSender};
+use yazi_config::PREVIEW;
 use yazi_shared::RoCell;
 
 use super::{Iterm2, Kitty};

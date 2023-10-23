@@ -1,5 +1,5 @@
-use yazi_config::MANAGER;
 use ratatui::layout::Rect;
+use yazi_config::MANAGER;
 use yazi_shared::Url;
 
 use crate::{emit, files::{File, Files, FilesOp}, Step};

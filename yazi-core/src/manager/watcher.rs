@@ -3,9 +3,9 @@ use std::{collections::BTreeSet, sync::Arc, time::Duration};
 use indexmap::IndexMap;
 use notify::{event::{MetadataKind, ModifyKind}, EventKind, RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
 use parking_lot::RwLock;
-use yazi_shared::Url;
 use tokio::{fs, pin, sync::mpsc::{self, UnboundedReceiver}};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
+use yazi_shared::Url;
 
 use crate::{emit, external, files::{File, Files, FilesOp}};
 

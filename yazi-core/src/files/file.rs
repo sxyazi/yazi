@@ -1,8 +1,8 @@
 use std::{borrow::Cow, collections::BTreeMap, ffi::OsStr, fs::Metadata};
 
 use anyhow::Result;
-use yazi_shared::Url;
 use tokio::fs;
+use yazi_shared::Url;
 
 #[derive(Clone, Debug)]
 pub struct File {

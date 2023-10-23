@@ -1,8 +1,8 @@
 use std::process::Stdio;
 
 use anyhow::Result;
-use yazi_shared::Url;
 use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command, sync::mpsc::{self, UnboundedReceiver}};
+use yazi_shared::Url;
 
 use crate::files::File;
 

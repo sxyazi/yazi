@@ -1,9 +1,9 @@
 use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref, sync::atomic::Ordering};
 
 use anyhow::Result;
+use tokio::{fs, select, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_config::{manager::SortBy, MANAGER};
 use yazi_shared::Url;
-use tokio::{fs, select, sync::mpsc::{self, UnboundedReceiver}};
 
 use super::{File, FilesSorter, FILES_TICKET};
 

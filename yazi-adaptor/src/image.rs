@@ -1,9 +1,9 @@
 use std::{path::Path, sync::Arc};
 
 use anyhow::Result;
-use yazi_config::PREVIEW;
 use image::{imageops::FilterType, DynamicImage, ImageFormat};
 use tokio::fs;
+use yazi_config::PREVIEW;
 use yazi_shared::Term;
 
 pub struct Image;
