@@ -32,6 +32,7 @@ rustPlatform.buildRustPackage {
   inherit version;
 
   src = ../.;
+  YAZI_GEN_COMPLETIONS = true;
 
   cargoLock.lockFile = ../Cargo.lock;
 
@@ -57,9 +58,9 @@ rustPlatform.buildRustPackage {
       wrapProgram $out/bin/yazi \
          --prefix PATH : "${makeBinPath runtimePaths}"
       installShellCompletion --cmd yazi \
-        --bash ./config/completions/yazi.bash \
-        --fish ./config/completions/yazi.fish \
-        --zsh  ./config/completions/_yazi
+        --bash ./yazi-config/completions/yazi.bash \
+        --fish ./yazi-config/completions/yazi.fish \
+        --zsh  ./yazi-config/completions/_yazi
     '';
 
   meta = with lib; {
