@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discord server / Telegram group
+    url: https://github.com/sxyazi/yazi#discussion
+    about: If you'd prefer more realtime conversation with the community
+  - name: GitHub Discussions
+    url: https://github.com/sxyazi/yazi/discussions
+    about: When you have questions that are not bug reports or feature requests

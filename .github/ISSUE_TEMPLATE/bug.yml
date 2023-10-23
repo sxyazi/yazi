@@ -1,0 +1,78 @@
+name: Bug Report
+description: Create a report to help us improve
+labels: [bug]
+assignees: []
+body:
+  - type: dropdown
+    id: os
+    attributes:
+      label: What system are you running Yazi on?
+      options:
+        - Linux X11
+        - Linux Wayland
+        - macOS
+        - Windows
+    validations:
+      required: true
+  - type: input
+    id: terminal
+    attributes:
+      label: What terminal are you running Yazi in?
+      placeholder: "ex: Kitty v0.30.1"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Yazi version
+      description: Please do a `yazi -V` and paste the output here.
+      placeholder: "ex: yazi 0.1.5"
+    validations:
+      required: true
+  - type: dropdown
+    id: tried_main
+    attributes:
+      label: Did you try the latest main branch to see if the problem has already been fixed?
+      options:
+        - Tried, but the problem is still present
+        - Not tried, and I'll explain why below
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is
+      placeholder: Tell us what happened
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: A clear and concise description of what you expected to happen
+    validations:
+      required: true
+  - type: textarea
+    id: to_repro
+    attributes:
+      label: To Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        Please include as much information as possible that can help to reproduce and understand the issue.
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration
+      description: |
+        Please include the relevant section(s) of your `yazi.toml`, `keymap.toml`, or `theme.toml` configuration file.
+        You can enter "no config" if the issue happens without you having made a config file.
+  - type: textarea
+    id: other
+    attributes:
+      label: Anything else?
+      description: |
+        Add any other context about the problem here.  You can attach screenshots by clicking
+        this area to highlight it and then drag the files in.
