@@ -92,68 +92,68 @@ pub fn copy_with_progress(from: &Path, to: &Path) -> mpsc::Receiver<Result<u64, 
 }
 
 // Convert a file mode to a string representation
+#[cfg(windows)]
+#[allow(clippy::collapsible_else_if)]
+pub fn permissions(_: Permissions) -> Option<String> { None }
+
+// Convert a file mode to a string representation
+#[cfg(unix)]
 #[allow(clippy::collapsible_else_if)]
 pub fn permissions(permissions: Permissions) -> Option<String> {
-	#[cfg(windows)]
-	return None;
+	use std::os::unix::prelude::PermissionsExt;
 
-	#[cfg(unix)]
-	Some({
-		use std::os::unix::prelude::PermissionsExt;
+	use libc::{S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFSOCK, S_IRGRP, S_IROTH, S_IRUSR, S_ISGID, S_ISUID, S_ISVTX, S_IWGRP, S_IWOTH, S_IWUSR, S_IXGRP, S_IXOTH, S_IXUSR};
 
-		use libc::{S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFSOCK, S_IRGRP, S_IROTH, S_IRUSR, S_ISGID, S_ISUID, S_ISVTX, S_IWGRP, S_IWOTH, S_IWUSR, S_IXGRP, S_IXOTH, S_IXUSR};
+	#[cfg(target_os = "macos")]
+	let m = permissions.mode() as u16;
+	#[cfg(target_os = "freebsd")]
+	let m = permissions.mode() as u16;
+	#[cfg(target_os = "netbsd")]
+	let m = permissions.mode();
+	#[cfg(target_os = "linux")]
+	let m = permissions.mode();
 
-		#[cfg(target_os = "macos")]
-		let m = permissions.mode() as u16;
-		#[cfg(target_os = "freebsd")]
-		let m = permissions.mode() as u16;
-		#[cfg(target_os = "netbsd")]
-		let m = permissions.mode();
-		#[cfg(target_os = "linux")]
-		let m = permissions.mode();
+	let mut s = String::with_capacity(10);
 
-		let mut s = String::with_capacity(10);
+	// File type
+	s.push(match m & S_IFMT {
+		S_IFBLK => 'b',
+		S_IFCHR => 'c',
+		S_IFDIR => 'd',
+		S_IFIFO => 'p',
+		S_IFLNK => 'l',
+		S_IFSOCK => 's',
+		_ => '-',
+	});
 
-		// File type
-		s.push(match m & S_IFMT {
-			S_IFBLK => 'b',
-			S_IFCHR => 'c',
-			S_IFDIR => 'd',
-			S_IFIFO => 'p',
-			S_IFLNK => 'l',
-			S_IFSOCK => 's',
-			_ => '-',
-		});
+	// Owner
+	s.push(if m & S_IRUSR != 0 { 'r' } else { '-' });
+	s.push(if m & S_IWUSR != 0 { 'w' } else { '-' });
+	s.push(if m & S_IXUSR != 0 {
+		if m & S_ISUID != 0 { 's' } else { 'x' }
+	} else {
+		if m & S_ISUID != 0 { 'S' } else { '-' }
+	});
 
-		// Owner
-		s.push(if m & S_IRUSR != 0 { 'r' } else { '-' });
-		s.push(if m & S_IWUSR != 0 { 'w' } else { '-' });
-		s.push(if m & S_IXUSR != 0 {
-			if m & S_ISUID != 0 { 's' } else { 'x' }
-		} else {
-			if m & S_ISUID != 0 { 'S' } else { '-' }
-		});
+	// Group
+	s.push(if m & S_IRGRP != 0 { 'r' } else { '-' });
+	s.push(if m & S_IWGRP != 0 { 'w' } else { '-' });
+	s.push(if m & S_IXGRP != 0 {
+		if m & S_ISGID != 0 { 's' } else { 'x' }
+	} else {
+		if m & S_ISGID != 0 { 'S' } else { '-' }
+	});
 
-		// Group
-		s.push(if m & S_IRGRP != 0 { 'r' } else { '-' });
-		s.push(if m & S_IWGRP != 0 { 'w' } else { '-' });
-		s.push(if m & S_IXGRP != 0 {
-			if m & S_ISGID != 0 { 's' } else { 'x' }
-		} else {
-			if m & S_ISGID != 0 { 'S' } else { '-' }
-		});
+	// Other
+	s.push(if m & S_IROTH != 0 { 'r' } else { '-' });
+	s.push(if m & S_IWOTH != 0 { 'w' } else { '-' });
+	s.push(if m & S_IXOTH != 0 {
+		if m & S_ISVTX != 0 { 't' } else { 'x' }
+	} else {
+		if m & S_ISVTX != 0 { 'T' } else { '-' }
+	});
 
-		// Other
-		s.push(if m & S_IROTH != 0 { 'r' } else { '-' });
-		s.push(if m & S_IWOTH != 0 { 'w' } else { '-' });
-		s.push(if m & S_IXOTH != 0 {
-			if m & S_ISVTX != 0 { 't' } else { 'x' }
-		} else {
-			if m & S_ISVTX != 0 { 'T' } else { '-' }
-		});
-
-		s
-	})
+	Some(s)
 }
 
 // Find the max common root of a list of files
