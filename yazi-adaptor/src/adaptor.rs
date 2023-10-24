@@ -57,10 +57,14 @@ impl Adaptor {
 			_ => {}
 		}
 		match env::var("XDG_SESSION_TYPE").unwrap_or_default().as_str() {
-			"x11" => Self::X11,
-			"wayland" => Self::Wayland,
-			_ => Self::Chafa,
+			"x11" => return Self::X11,
+			"wayland" => return Self::Wayland,
+			_ => {}
 		}
+		if std::fs::symlink_metadata("/proc/sys/fs/binfmt_misc/WSLInterop").is_ok() {
+			return Self::Kitty;
+		}
+		Self::Chafa
 	}
 
 	pub(super) fn term_program() -> (String, String) {
