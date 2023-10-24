@@ -3,6 +3,7 @@ use std::{env, path::{Path, PathBuf}, sync::atomic::{AtomicBool, Ordering}};
 use anyhow::{anyhow, Result};
 use ratatui::prelude::Rect;
 use tokio::{fs, sync::mpsc::UnboundedSender};
+use tracing::warn;
 use yazi_config::PREVIEW;
 use yazi_shared::RoCell;
 
@@ -36,8 +37,9 @@ impl Adaptor {
 			("WEZTERM_EXECUTABLE", cfg!(windows).then_some(Self::Iterm2).unwrap_or(Self::Kitty)),
 			("VSCODE_INJECTION", Self::Sixel),
 		];
-		if let Some(var) = vars.iter().find(|v| env::var_os(v.0).is_some()) {
-			return var.1;
+		match vars.iter().find(|v| env::var_os(v.0).is_some_and(|s| !s.is_empty())) {
+			Some(var) => return var.1,
+			None => warn!("[Adaptor] No special environment variables detected"),
 		}
 
 		let (term, program) = Self::term_program();
@@ -48,27 +50,29 @@ impl Adaptor {
 			"vscode" => return Self::Sixel,
 			"Hyper" => return Self::Sixel,
 			"mintty" => return Self::Iterm2,
-			_ => {}
+			_ => warn!("[Adaptor] Unknown TERM_PROGRAM: {program}"),
 		}
 		match term.as_str() {
 			"xterm-kitty" => return Self::Kitty,
 			"foot" => return Self::Sixel,
 			"foot-extra" => return Self::Sixel,
-			_ => {}
+			_ => warn!("[Adaptor] Unknown TERM: {term}"),
 		}
 		match env::var("XDG_SESSION_TYPE").unwrap_or_default().as_str() {
 			"x11" => return Self::X11,
 			"wayland" => return Self::Wayland,
-			_ => {}
+			_ => warn!("[Adaptor] Could not identify XDG_SESSION_TYPE"),
 		}
-		if env::var_os("WAYLAND_DISPLAY").filter(|s| !s.is_empty()).is_some() {
+		if env::var_os("WAYLAND_DISPLAY").is_some_and(|s| !s.is_empty()) {
 			return Self::Wayland;
 		}
-		if env::var_os("DISPLAY").filter(|s| !s.is_empty()).is_some() {
+		if env::var_os("DISPLAY").is_some_and(|s| !s.is_empty()) {
 			return Self::X11;
 		if std::fs::symlink_metadata("/proc/sys/fs/binfmt_misc/WSLInterop").is_ok() {
 			return Self::Kitty;
 		}
+
+		warn!("[Adaptor] WAYLAND_DISPLAY and DISPLAY are both empty");
 		Self::Chafa
 	}
 
