@@ -2,7 +2,6 @@
 
 pkgs.mkShell {
   packages = with pkgs; [
-    rustToolchain
     rust-analyzer
 
     nodePackages.cspell
@@ -16,13 +15,13 @@ pkgs.mkShell {
     ripgrep
     fzf
     zoxide
+
+    (rust-bin.nightly.latest.rust.override { extensions = [ "rust-src" ]; })
   ];
 
-  buildInputs = with pkgs; lib.optionals stdenv.isDarwin (
-    with darwin.apple_sdk.frameworks; [ Foundation ]
-  );
+  buildInputs = with pkgs;
+    lib.optionals stdenv.isDarwin
+    (with darwin.apple_sdk.frameworks; [ Foundation ]);
 
-  env = {
-    RUST_BACKTRACE = "1";
-  };
+  env = { RUST_BACKTRACE = "1"; };
 }
