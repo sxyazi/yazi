@@ -58,6 +58,7 @@ impl Adaptor {
 			"foot-extra" => return Self::Sixel,
 			_ => warn!("[Adaptor] Unknown TERM: {term}"),
 		}
+
 		match env::var("XDG_SESSION_TYPE").unwrap_or_default().as_str() {
 			"x11" => return Self::X11,
 			"wayland" => return Self::Wayland,
@@ -68,11 +69,12 @@ impl Adaptor {
 		}
 		if env::var_os("DISPLAY").is_some_and(|s| !s.is_empty()) {
 			return Self::X11;
+		}
 		if std::fs::symlink_metadata("/proc/sys/fs/binfmt_misc/WSLInterop").is_ok() {
 			return Self::Kitty;
 		}
 
-		warn!("[Adaptor] WAYLAND_DISPLAY and DISPLAY are both empty");
+		warn!("[Adaptor] Falling back to chafa");
 		Self::Chafa
 	}
 
