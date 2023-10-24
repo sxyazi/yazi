@@ -94,6 +94,7 @@ impl Executor {
 			// Operation
 			"open" => cx.manager.open(exec.named.contains_key("interactive")),
 			"yank" => cx.manager.yank(exec.named.contains_key("cut")),
+			"unyank" => cx.manager.unyank(),
 			"paste" => {
 				let dest = cx.manager.cwd();
 				let (cut, ref src) = cx.manager.yanked;
