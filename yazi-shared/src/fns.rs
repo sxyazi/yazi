@@ -51,9 +51,9 @@ pub async fn unique_path(mut p: Url) -> Url {
 	let mut i = 0;
 	while fs::symlink_metadata(&p).await.is_ok() {
 		i += 1;
-		let mut name = name.clone();
-		name.push(format!("_{i}"));
-		p.set_file_name(name);
+		let name_str = name.as_os_str().to_str().unwrap();
+		let (base_name, extension) = split_filename_extension(name_str);
+		p.set_file_name(format!("{base_name}_{i}{extension}"));
 	}
 	p
 }
@@ -109,6 +109,15 @@ pub fn optional_bool(s: &str) -> Option<bool> {
 		"true" => Some(true),
 		"false" => Some(false),
 		_ => None,
+	}
+}
+
+pub fn split_filename_extension(filename: &str) -> (&str, &str) {
+	if let Some(dot_pos) = filename.rfind('.') {
+		let (base_name, extension) = filename.split_at(dot_pos);
+		(base_name, extension)
+	} else {
+		(filename, "")
 	}
 }
 
