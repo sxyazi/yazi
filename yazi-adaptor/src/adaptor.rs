@@ -61,6 +61,11 @@ impl Adaptor {
 			"wayland" => return Self::Wayland,
 			_ => {}
 		}
+		if env::var_os("WAYLAND_DISPLAY").filter(|s| !s.is_empty()).is_some() {
+			return Self::Wayland;
+		}
+		if env::var_os("DISPLAY").filter(|s| !s.is_empty()).is_some() {
+			return Self::X11;
 		if std::fs::symlink_metadata("/proc/sys/fs/binfmt_misc/WSLInterop").is_ok() {
 			return Self::Kitty;
 		}
