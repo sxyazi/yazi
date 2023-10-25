@@ -7,7 +7,7 @@ use yazi_shared::PeekError;
 
 pub async fn jq(path: &Path, skip: usize, limit: usize) -> Result<String, PeekError> {
 	let mut child = Command::new("jq")
-		.args(["-C", "--indent", "-1", "."])
+		.args(["-C", "--tab", "."])
 		.arg(path)
 		.stdout(Stdio::piped())
 		.stderr(Stdio::piped())
@@ -32,9 +32,8 @@ pub async fn jq(path: &Path, skip: usize, limit: usize) -> Result<String, PeekEr
 	if lines.is_empty() {
 		let mut stderr = child.stderr.take().unwrap();
 		select! {
-			Ok(_) = stderr.read_u8() => {
-				return Err("parse error".into());
-			}
+			Ok(_) = stderr.read_u8() => return Err("parse error".into()),
+			else => {}
 		}
 	}
 
