@@ -1,7 +1,6 @@
 use std::{io::BufRead, path::Path, sync::atomic::{AtomicUsize, Ordering}};
 
 use anyhow::anyhow;
-use futures::TryFutureExt;
 use syntect::{easy::HighlightFile, util::as_24_bit_terminal_escaped};
 use tokio::fs;
 use yazi_adaptor::ADAPTOR;
@@ -70,9 +69,11 @@ impl Provider {
 	}
 
 	pub(super) async fn json(path: &Path, skip: usize) -> Result<String, PeekError> {
-		external::jq(path, skip, MANAGER.layout.preview_height())
-			.or_else(|_| Provider::highlight(path, skip))
-			.await
+		let result = external::jq(path, skip, MANAGER.layout.preview_height()).await;
+		if let Err(PeekError::Unexpected(_)) = result {
+			return Self::highlight(path, skip).await;
+		}
+		result
 	}
 
 	pub(super) async fn archive(path: &Path, skip: usize) -> Result<String, PeekError> {
