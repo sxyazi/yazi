@@ -52,8 +52,10 @@ impl Files {
 			while let Ok(Some(item)) = it.next_entry().await {
 				select! {
 					_ = tx.closed() => break,
-					Ok(meta) = item.metadata() => {
-						tx.send(File::from_meta(Url::from(item.path()), meta).await).ok();
+					result = item.metadata() => {
+						if let Ok(meta) = result {
+							tx.send(File::from_meta(Url::from(item.path()), meta).await).ok();
+						}
 					}
 				}
 			}
