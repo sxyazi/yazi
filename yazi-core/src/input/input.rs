@@ -7,12 +7,12 @@ use yazi_config::keymap::Key;
 use yazi_shared::{CharKind, InputError};
 
 use super::{mode::InputMode, op::InputOp, InputOpt, InputSnap, InputSnaps};
-use crate::{external, Position};
+use crate::{completion::Completion, external, Position};
 
 #[derive(Default)]
 pub struct Input {
-	snaps:       InputSnaps,
-	pub visible: bool,
+	pub(super) snaps: InputSnaps,
+	pub visible:      bool,
 
 	title:        String,
 	pub position: Position,
@@ -23,6 +23,9 @@ pub struct Input {
 
 	// Shell
 	pub(super) highlight: bool,
+
+	pub completion:                 Completion,
+	pub(super) completion_callback: Option<Box<dyn Fn(String) -> Vec<String> + Send>>,
 }
 
 impl Input {
@@ -187,6 +190,11 @@ impl Input {
 	pub fn type_(&mut self, key: &Key) -> bool {
 		if self.mode() != InputMode::Insert {
 			return false;
+		}
+
+		match key {
+			Key { code: KeyCode::Tab, shift: false, ctrl: false, alt: false } => return self.complete(),
+			_ => (),
 		}
 
 		if let Some(c) = key.plain() {

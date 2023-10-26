@@ -2,7 +2,7 @@ use ratatui::{buffer::Buffer, layout::{Constraint, Direction, Layout, Rect}, wid
 use yazi_core::Ctx;
 use yazi_plugin::components;
 
-use super::{input, select, tasks, which};
+use super::{completion, input, select, tasks, which};
 use crate::help;
 
 pub(super) struct Root<'a> {
@@ -34,6 +34,10 @@ impl<'a> Widget for Root<'a> {
 
 		if self.cx.input.visible {
 			input::Input::new(self.cx).render(area, buf);
+		}
+
+		if self.cx.input.completion.visible {
+			completion::Completion::new(self.cx).render(area, buf);
 		}
 
 		if self.cx.help.visible {

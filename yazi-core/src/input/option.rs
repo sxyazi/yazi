@@ -3,34 +3,40 @@ use ratatui::prelude::Rect;
 use crate::Position;
 
 pub struct InputOpt {
-	pub title:     String,
-	pub value:     String,
-	pub position:  Position,
-	pub realtime:  bool,
-	pub highlight: bool,
+	pub title:               String,
+	pub value:               String,
+	pub position:            Position,
+	pub realtime:            bool,
+	pub highlight:           bool,
+	pub completion_callback: Option<Box<dyn Fn(String) -> Vec<String> + Send>>,
 }
 
 impl InputOpt {
 	pub fn top(title: impl AsRef<str>) -> Self {
 		Self {
-			title:     title.as_ref().to_owned(),
-			value:     String::new(),
-			position:  Position::Top(/* TODO: hardcode */ Rect { x: 0, y: 2, width: 50, height: 3 }),
-			realtime:  false,
-			highlight: false,
+			title:               title.as_ref().to_owned(),
+			value:               String::new(),
+			position:            Position::Top(
+				// TODO: hardcode
+				Rect { x: 0, y: 2, width: 50, height: 3 },
+			),
+			realtime:            false,
+			highlight:           false,
+			completion_callback: None,
 		}
 	}
 
 	pub fn hovered(title: impl AsRef<str>) -> Self {
 		Self {
-			title:     title.as_ref().to_owned(),
-			value:     String::new(),
-			position:  Position::Hovered(
+			title:               title.as_ref().to_owned(),
+			value:               String::new(),
+			position:            Position::Hovered(
 				// TODO: hardcode
 				Rect { x: 0, y: 1, width: 50, height: 3 },
 			),
-			realtime:  false,
-			highlight: false,
+			realtime:            false,
+			highlight:           false,
+			completion_callback: None,
 		}
 	}
 
