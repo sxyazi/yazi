@@ -6,3 +6,6 @@ yazi-config/completions
 result
 result-*
 .direnv
+
+.idea/
+.vscode/
