@@ -1,0 +1,16 @@
+name: No Response
+
+on:
+  issue_comment:
+    types: [created]
+  schedule:
+    - cron: '10 * * * *'
+
+jobs:
+  noResponse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: lee-dohm/no-response@v0.5.0
+        with:
+          token: ${{ github.token }}
+          responseRequiredLabel: waiting on op
