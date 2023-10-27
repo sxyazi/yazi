@@ -212,13 +212,8 @@ impl Input {
 					self.completion.close();
 				}
 			}
-		} else {
-			match key {
-				Key { code: KeyCode::Tab, shift: false, ctrl: false, alt: false } => {
-					return self.complete();
-				}
-				_ => (),
-			}
+		} else if matches!(key, Key { code: KeyCode::Tab, shift: false, ctrl: false, alt: false }) {
+			return self.complete();
 		}
 
 		if let Some(c) = key.plain() {

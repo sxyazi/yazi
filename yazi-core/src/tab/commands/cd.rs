@@ -74,24 +74,21 @@ impl Tab {
 						.map(|list| {
 							list
 								.filter_map(|file| {
-									file
-										.ok()
-										.map(|f| {
-											let name = f.file_name().to_string_lossy().to_string();
-											if f.metadata().is_ok_and(|m| m.is_dir()) && name.starts_with(&cmp_prefix) {
-												Some(name)
-											} else {
-												None
-											}
-										})
-										.flatten()
+									file.ok().and_then(|f| {
+										let name = f.file_name().to_string_lossy().to_string();
+										if f.metadata().is_ok_and(|m| m.is_dir()) && name.starts_with(cmp_prefix) {
+											Some(name)
+										} else {
+											None
+										}
+									})
 								})
 								.collect()
 						})
 						.unwrap_or_default()
 					},
 					|current, new| {
-						if let Some((prefix, _)) = current.rsplit_once("/") {
+						if let Some((prefix, _)) = current.rsplit_once('/') {
 							format!("{prefix}/{new}/")
 						} else {
 							format!("{new}/")
