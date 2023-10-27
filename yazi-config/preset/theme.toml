@@ -84,6 +84,15 @@ inactive = {}
 
 # : }}}
 
+# : Completion {{{
+
+[completion]
+border   = { fg = "blue" }
+active   = { fg = "lightcyan" }
+inactive = {}
+
+# : }}}
+
 
 # : Tasks {{{
 

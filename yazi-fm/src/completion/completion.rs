@@ -35,11 +35,10 @@ impl<'a> Widget for Completion<'a> {
 					} else {
 						s.split_at(max_width - 1).0.to_string() + "…"
 					})
-						// todo
 					.style(if completion.cursor() == idx {
-						THEME.select.active.into()
+						THEME.completion.active.into()
 					} else {
-						THEME.select.inactive.into()
+						THEME.completion.inactive.into()
 					}),
 				);
 			}
@@ -47,10 +46,9 @@ impl<'a> Widget for Completion<'a> {
 			Table::new(table)
 				.block(
 					Block::new()
-					.borders(Borders::ALL)
-					.border_type(BorderType::Double)
-					// todo
-					.border_style(THEME.select.border.into()),
+						.borders(Borders::ALL)
+						.border_type(BorderType::Double)
+						.border_style(THEME.completion.border.into()),
 				)
 				.widths(&constraint)
 		};

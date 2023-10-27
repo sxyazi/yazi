@@ -82,6 +82,13 @@ pub struct Select {
 }
 
 #[derive(Deserialize, Serialize)]
+pub struct Completion {
+	pub border:   Style,
+	pub active:   Style,
+	pub inactive: Style,
+}
+
+#[derive(Deserialize, Serialize)]
 pub struct Tasks {
 	pub border:  Style,
 	pub title:   Style,
@@ -111,13 +118,14 @@ pub struct Help {
 
 #[derive(Deserialize, Serialize)]
 pub struct Theme {
-	pub manager: Manager,
-	status:      Status,
-	pub input:   Input,
-	pub select:  Select,
-	pub tasks:   Tasks,
-	pub which:   Which,
-	pub help:    Help,
+	pub manager:    Manager,
+	status:         Status,
+	pub input:      Input,
+	pub select:     Select,
+	pub completion: Completion,
+	pub tasks:      Tasks,
+	pub which:      Which,
+	pub help:       Help,
 
 	// File-specific styles
 	#[serde(rename = "filetype", deserialize_with = "Filetype::deserialize", skip_serializing)]
