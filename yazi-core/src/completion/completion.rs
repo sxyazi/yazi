@@ -33,6 +33,8 @@ impl Completion {
 		let old = self.cursor;
 		self.cursor = (self.cursor + step).min(len - 1);
 
+		eprintln!("Cur: {}", self.items.get(self.cursor).unwrap());
+
 		old != self.cursor
 	}
 
@@ -44,4 +46,6 @@ impl Completion {
 	}
 
 	pub fn list(&self) -> Vec<String> { self.items.clone() }
+
+	pub fn selected_cursor(&self) -> usize { self.cursor }
 }

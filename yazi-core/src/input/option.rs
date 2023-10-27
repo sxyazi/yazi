@@ -57,4 +57,13 @@ impl InputOpt {
 		self.highlight = true;
 		self
 	}
+
+	#[inline]
+	pub fn with_completion<F: Fn(String) -> Vec<String> + Send + 'static>(
+		mut self,
+		callback: F,
+	) -> Self {
+		self.completion_callback = Some(Box::new(callback));
+		self
+	}
 }

@@ -59,8 +59,11 @@ impl Tab {
 
 	pub fn cd_interactive(&mut self, target: Url) -> bool {
 		tokio::spawn(async move {
-			let mut result =
-				emit!(Input(InputOpt::top("Change directory:").with_value(target.to_string_lossy())));
+			let mut result = emit!(Input(
+				InputOpt::top("Change directory:")
+					.with_value(target.to_string_lossy())
+					.with_completion(|s| vec![s, "Hi".to_string()])
+			));
 
 			if let Some(Ok(s)) = result.recv().await {
 				emit!(Cd(Url::from(s.trim())));

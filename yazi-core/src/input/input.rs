@@ -43,6 +43,8 @@ impl Input {
 
 		// Shell
 		self.highlight = opt.highlight;
+
+		self.completion_callback = opt.completion_callback
 	}
 
 	pub fn close(&mut self, submit: bool) -> bool {
@@ -52,6 +54,7 @@ impl Input {
 		}
 
 		self.visible = false;
+		self.completion.close(false);
 		true
 	}
 
@@ -192,6 +195,7 @@ impl Input {
 			return false;
 		}
 
+		eprintln!("Type key {:?}", key);
 		match key {
 			Key { code: KeyCode::Tab, shift: false, ctrl: false, alt: false } => return self.complete(),
 			_ => (),
