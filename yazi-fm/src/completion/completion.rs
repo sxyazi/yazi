@@ -17,26 +17,26 @@ impl<'a> Widget for Completion<'a> {
 		let completion = &self.cx.input.completion;
 		let area = self.cx.area(&completion.position);
 
-		const COLUMN_CNT: usize = 4;
-		const MAX_WIDTH: usize = 20;
-		let constraint =
-			(0..COLUMN_CNT).map(|_| Constraint::Ratio(1, MAX_WIDTH as u32)).collect::<Vec<Constraint>>();
+		let constraint = (0..completion.column_cnt)
+			.map(|_| Constraint::Percentage(completion.max_width))
+			.collect::<Vec<Constraint>>();
 		let table = {
+			let max_width = completion.max_width as usize;
 			let mut table = vec![];
 			let mut cur_row = vec![];
 			for (idx, s) in completion.list().into_iter().enumerate() {
-				if idx != 0 && idx % COLUMN_CNT == 0 {
+				if idx != 0 && idx % completion.column_cnt as usize == 0 {
 					let t = mem::take(&mut cur_row);
 					table.push(Row::new(t));
 				}
-				// todo
 				cur_row.push(
-					Cell::from(if s.len() < MAX_WIDTH {
+					Cell::from(if s.len() < max_width {
 						s
 					} else {
-						s.split_at(MAX_WIDTH - 1).0.to_string() + "…"
+						s.split_at(max_width - 1).0.to_string() + "…"
 					})
-					.style(if completion.selected_cursor() == idx {
+						// todo
+					.style(if completion.cursor() == idx {
 						THEME.select.active.into()
 					} else {
 						THEME.select.inactive.into()

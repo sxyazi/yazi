@@ -60,9 +60,44 @@ impl Tab {
 	pub fn cd_interactive(&mut self, target: Url) -> bool {
 		tokio::spawn(async move {
 			let mut result = emit!(Input(
-				InputOpt::top("Change directory:")
-					.with_value(target.to_string_lossy())
-					.with_completion(|s| vec![s, "Hi".to_string()])
+				InputOpt::top("Change directory:").with_value(target.to_string_lossy()).with_completion(
+					|prefix| {
+						let mut cmp_prefix = prefix;
+						if prefix.contains('/') {
+							let (old_prefix, old_file_prefix) = prefix.rsplit_once('/').unwrap();
+							cmp_prefix = old_file_prefix;
+							std::fs::read_dir(old_prefix.to_string() + "/")
+						} else {
+							std::fs::read_dir(".")
+						}
+						.ok()
+						.map(|list| {
+							list
+								.filter_map(|file| {
+									file
+										.ok()
+										.map(|f| {
+											let name = f.file_name().to_string_lossy().to_string();
+											if f.metadata().is_ok_and(|m| m.is_dir()) && name.starts_with(&cmp_prefix) {
+												Some(name)
+											} else {
+												None
+											}
+										})
+										.flatten()
+								})
+								.collect()
+						})
+						.unwrap_or_default()
+					},
+					|current, new| {
+						if let Some((prefix, _)) = current.rsplit_once("/") {
+							format!("{prefix}/{new}/")
+						} else {
+							format!("{new}/")
+						}
+					}
+				)
 			));
 
 			if let Some(Ok(s)) = result.recv().await {

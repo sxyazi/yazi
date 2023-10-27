@@ -5,20 +5,24 @@ pub struct Completion {
 	items:  Vec<String>,
 	cursor: usize,
 
-	pub position: Position,
-	pub visible:  bool,
+	pub position:   Position,
+	pub column_cnt: u8,
+	pub max_width:  u16,
+	pub visible:    bool,
 }
 
 impl Completion {
 	pub fn show(&mut self, opt: CompletionOpt) {
-		self.close(false);
+		self.close();
 		self.visible = true;
 
 		self.items = opt.items;
 		self.position = opt.position;
+		self.column_cnt = opt.column_cnt;
+		self.max_width = opt.max_width;
 	}
 
-	pub fn close(&mut self, submit: bool) -> bool {
+	pub fn close(&mut self) -> bool {
 		self.cursor = 0;
 		self.visible = false;
 		true
@@ -33,8 +37,6 @@ impl Completion {
 		let old = self.cursor;
 		self.cursor = (self.cursor + step).min(len - 1);
 
-		eprintln!("Cur: {}", self.items.get(self.cursor).unwrap());
-
 		old != self.cursor
 	}
 
@@ -47,5 +49,7 @@ impl Completion {
 
 	pub fn list(&self) -> Vec<String> { self.items.clone() }
 
-	pub fn selected_cursor(&self) -> usize { self.cursor }
+	pub fn cursor(&self) -> usize { self.cursor }
+
+	pub fn get_selection(&self) -> Option<String> { self.items.get(self.cursor).cloned() }
 }
