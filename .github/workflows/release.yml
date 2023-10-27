@@ -15,6 +15,8 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
           - os: windows-latest
             target: x86_64-pc-windows-msvc
           - os: macos-latest
@@ -28,8 +30,14 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Add aarch64 target
-        if: matrix.target == 'aarch64-apple-darwin'
-        run: rustup target add aarch64-apple-darwin
+        if: contains(fromJson('["aarch64-unknown-linux-gnu", "aarch64-apple-darwin"]'), matrix.target)
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Install gcc-aarch64-linux-gnu
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -yq gcc-aarch64-linux-gnu
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
@@ -37,6 +45,7 @@ jobs:
       - name: Build
         env:
           YAZI_GEN_COMPLETIONS: true
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: /usr/bin/aarch64-linux-gnu-gcc
         run: cargo build --release --locked --target ${{ matrix.target }}
 
       - name: Pack artifacts [Linux & macOS]
