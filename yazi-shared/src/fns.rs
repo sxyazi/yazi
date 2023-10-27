@@ -1,4 +1,4 @@
-use std::{borrow::Cow, env, path::{Component, Path, PathBuf}};
+use std::{borrow::Cow, env, ffi::OsString, path::{Component, Path, PathBuf}};
 
 use tokio::fs;
 
@@ -44,15 +44,31 @@ pub fn expand_url(mut u: Url) -> Url {
 }
 
 pub async fn unique_path(mut p: Url) -> Url {
-	let Some(name) = p.file_name().map(|n| n.to_owned()) else {
+	let Some(stem) = p.file_stem().map(|s| s.to_owned()) else {
 		return p;
 	};
+
+	let ext = p
+		.extension()
+		.map(|s| {
+			let mut n = OsString::with_capacity(s.len() + 1);
+			n.push(".");
+			n.push(s);
+			n
+		})
+		.unwrap_or_default();
 
 	let mut i = 0;
 	while fs::symlink_metadata(&p).await.is_ok() {
 		i += 1;
-		let mut name = name.clone();
+
+		let mut name = OsString::with_capacity(stem.len() + ext.len() + 5);
+		name.push(&stem);
 		name.push(format!("_{i}"));
+		if !ext.is_empty() {
+			name.push(&ext);
+		}
+
 		p.set_file_name(name);
 	}
 	p
