@@ -1,4 +1,4 @@
-use std::{sync::atomic::Ordering, time::Duration};
+use std::time::Duration;
 
 use tokio::{pin, task::JoinHandle};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
@@ -6,8 +6,8 @@ use yazi_adaptor::ADAPTOR;
 use yazi_config::MANAGER;
 use yazi_shared::{MimeKind, PeekError, Url, MIME_DIR};
 
-use super::{Provider, INCR};
-use crate::{emit, files::{Files, FilesOp}};
+use super::Provider;
+use crate::{emit, files::{Files, FilesOp}, Highlighter};
 
 #[derive(Default)]
 pub struct Preview {
@@ -113,7 +113,7 @@ impl Preview {
 		}
 
 		self.handle.take().map(|h| h.abort());
-		INCR.fetch_add(1, Ordering::Relaxed);
+		Highlighter::abort();
 
 		let (url, mime, skip) = (url.clone(), mime.to_owned(), self.skip);
 		self.handle = Some(tokio::spawn(async move {
@@ -152,7 +152,7 @@ impl Preview {
 
 	pub fn reset<F: FnOnce(&PreviewLock) -> bool>(&mut self, f: F) -> bool {
 		self.handle.take().map(|h| h.abort());
-		INCR.fetch_add(1, Ordering::Relaxed);
+		Highlighter::abort();
 		ADAPTOR.image_hide(MANAGER.layout.preview_rect()).ok();
 
 		let Some(ref lock) = self.lock else {

@@ -2,7 +2,7 @@ use anyhow::{bail, Result};
 use syntect::{easy::HighlightLines, util::as_24_bit_terminal_escaped};
 
 use super::Input;
-use crate::highlighter;
+use crate::Highlighter;
 
 impl Input {
 	pub fn value_pretty(&self) -> Result<String> {
@@ -10,7 +10,7 @@ impl Input {
 			bail!("Highlighting is disabled")
 		}
 
-		let (syntaxes, theme) = highlighter();
+		let (theme, syntaxes) = Highlighter::init();
 		if let Some(syntax) = syntaxes.find_syntax_by_name("Bourne Again Shell (bash)") {
 			let mut h = HighlightLines::new(syntax, theme);
 			let regions = h.highlight_line(self.value(), syntaxes)?;

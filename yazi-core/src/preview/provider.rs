@@ -1,18 +1,14 @@
-use std::{io::BufRead, path::Path, sync::atomic::{AtomicUsize, Ordering}};
+use std::path::Path;
 
-use anyhow::anyhow;
-use syntect::{easy::HighlightFile, util::as_24_bit_terminal_escaped};
 use tokio::fs;
 use yazi_adaptor::ADAPTOR;
 use yazi_config::{MANAGER, PREVIEW};
 use yazi_shared::{MimeKind, PeekError};
 
 use super::PreviewData;
-use crate::{external, highlighter};
+use crate::{external, Highlighter};
 
 pub(super) struct Provider;
-
-pub(super) static INCR: AtomicUsize = AtomicUsize::new(0);
 
 impl Provider {
 	pub(super) async fn auto(
@@ -88,44 +84,8 @@ impl Provider {
 	}
 
 	pub(super) async fn highlight(path: &Path, skip: usize) -> Result<String, PeekError> {
-		let ticket = INCR.load(Ordering::Relaxed);
-		let path = path.to_path_buf();
-		let spaces = " ".repeat(PREVIEW.tab_size as usize);
-
-		let (syntaxes, theme) = highlighter();
-		tokio::task::spawn_blocking(move || -> Result<String, PeekError> {
-			let mut h = HighlightFile::new(path, syntaxes, theme)?;
-			let mut line = String::new();
-			let mut buf = String::new();
-
-			let mut i = 0;
-			let limit = MANAGER.layout.preview_height();
-			while h.reader.read_line(&mut line)? > 0 {
-				if ticket != INCR.load(Ordering::Relaxed) {
-					return Err("Highlighting cancelled".into());
-				}
-
-				i += 1;
-				if i > skip + limit {
-					break;
-				}
-
-				line = line.replace('\t', &spaces);
-				let regions = h.highlight_lines.highlight_line(&line, syntaxes).map_err(|e| anyhow!(e))?;
-
-				if i > skip {
-					buf.push_str(&as_24_bit_terminal_escaped(&regions, false));
-				}
-				line.clear();
-			}
-
-			if skip > 0 && i < skip + limit {
-				return Err(PeekError::Exceed(i.saturating_sub(limit)));
-			}
-
-			buf.push_str("\x1b[0m");
-			Ok(buf)
-		})
-		.await?
+		let limit = MANAGER.layout.preview_height();
+		let result = Highlighter::new(path.to_owned()).highlight(skip, limit).await?;
+		Ok(result.replace('\t', &" ".repeat(PREVIEW.tab_size as usize)))
 	}
 }
