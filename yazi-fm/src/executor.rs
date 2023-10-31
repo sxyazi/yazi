@@ -233,6 +233,9 @@ impl Executor {
 				let in_operating = exec.named.contains_key("in-operating");
 				return if in_operating { cx.input.move_in_operating(step) } else { cx.input.move_(step) };
 			}
+
+			// asynchronized completion
+			"complete" => return cx.input.fill_completion(exec),
 			_ => {}
 		}
 

@@ -6,7 +6,7 @@ use unicode_width::UnicodeWidthStr;
 use yazi_config::keymap::Key;
 use yazi_shared::{CharKind, InputError};
 
-use super::{mode::InputMode, op::InputOp, InputOpt, InputSnap, InputSnaps};
+use super::{mode::InputMode, op::InputOp, FinishCompletionType, InitCompletionType, InputOpt, InputSnap, InputSnaps};
 use crate::{completion::Completion, external, Position};
 
 #[derive(Default)]
@@ -25,8 +25,8 @@ pub struct Input {
 	pub(super) highlight: bool,
 
 	pub completion:               Completion,
-	pub(super) init_completion:   Option<Box<dyn Fn(&str) -> Vec<String> + Send>>,
-	pub(super) finish_completion: Option<Box<dyn Fn(&str, &str) -> String + Send>>,
+	pub(super) init_completion:   Option<InitCompletionType>,
+	pub(super) finish_completion: Option<FinishCompletionType>,
 }
 
 impl Input {

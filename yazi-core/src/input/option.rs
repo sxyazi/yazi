@@ -1,6 +1,12 @@
+use std::{future::Future, pin::Pin};
+
 use ratatui::prelude::Rect;
 
 use crate::Position;
+
+pub type InitCompletionType =
+	Box<dyn Fn(String) -> Pin<Box<dyn Future<Output = Vec<String>> + Send>> + Send>;
+pub type FinishCompletionType = Box<dyn Fn(&str, &str) -> String + Send>;
 
 pub struct InputOpt {
 	pub title:             String,
@@ -8,8 +14,8 @@ pub struct InputOpt {
 	pub position:          Position,
 	pub realtime:          bool,
 	pub highlight:         bool,
-	pub init_completion:   Option<Box<dyn Fn(&str) -> Vec<String> + Send>>,
-	pub finish_completion: Option<Box<dyn Fn(&str, &str) -> String + Send>>,
+	pub init_completion:   Option<InitCompletionType>,
+	pub finish_completion: Option<FinishCompletionType>,
 }
 
 impl InputOpt {
@@ -63,7 +69,7 @@ impl InputOpt {
 
 	#[inline]
 	pub fn with_completion<
-		F1: Fn(&str) -> Vec<String> + Send + 'static,
+		F1: Fn(String) -> Pin<Box<dyn Future<Output = Vec<String>> + Send>> + Send + 'static,
 		F2: Fn(&str, &str) -> String + Send + 'static,
 	>(
 		mut self,

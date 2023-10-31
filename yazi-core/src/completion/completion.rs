@@ -2,8 +2,9 @@ use crate::{completion::CompletionOpt, Position};
 
 #[derive(Default)]
 pub struct Completion {
-	items:  Vec<String>,
-	cursor: usize,
+	items:          Vec<String>,
+	cursor:         usize,
+	pub identifier: String,
 
 	pub position:   Position,
 	pub column_cnt: u8,
@@ -15,6 +16,13 @@ impl Completion {
 	pub fn show(&mut self, opt: CompletionOpt) {
 		self.close();
 		self.visible = true;
+		self.identifier = format!(
+			"{}",
+			std::time::SystemTime::now()
+				.duration_since(std::time::UNIX_EPOCH)
+				.unwrap_or_default()
+				.as_millis()
+		);
 
 		self.items = opt.items;
 		self.position = opt.position;
@@ -24,6 +32,7 @@ impl Completion {
 
 	pub fn close(&mut self) -> bool {
 		self.cursor = 0;
+		self.identifier = String::new();
 		self.visible = false;
 		true
 	}

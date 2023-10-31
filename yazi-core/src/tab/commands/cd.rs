@@ -62,30 +62,25 @@ impl Tab {
 			let mut result = emit!(Input(
 				InputOpt::top("Change directory:").with_value(target.to_string_lossy()).with_completion(
 					|prefix| {
-						let mut cmp_prefix = prefix;
-						if prefix.contains('/') {
-							let (old_prefix, old_file_prefix) = prefix.rsplit_once('/').unwrap();
-							cmp_prefix = old_file_prefix;
-							std::fs::read_dir(old_prefix.to_string() + "/")
-						} else {
-							std::fs::read_dir(".")
-						}
-						.ok()
-						.map(|list| {
-							list
-								.filter_map(|file| {
-									file.ok().and_then(|f| {
-										let name = f.file_name().to_string_lossy().to_string();
-										if f.metadata().is_ok_and(|m| m.is_dir()) && name.starts_with(cmp_prefix) {
-											Some(name)
-										} else {
-											None
-										}
-									})
-								})
-								.collect()
+						Box::pin(async move {
+							let mut cmp_prefix = prefix.as_str();
+							let mut result = vec![];
+							if let Ok(mut list) = if prefix.contains('/') {
+								let (old_prefix, old_file_prefix) = prefix.rsplit_once('/').unwrap();
+								cmp_prefix = old_file_prefix;
+								tokio::fs::read_dir(old_prefix.to_string() + "/").await
+							} else {
+								tokio::fs::read_dir(".").await
+							} {
+								while let Ok(Some(f)) = list.next_entry().await {
+									let name = f.file_name().to_string_lossy().to_string();
+									if f.metadata().await.is_ok_and(|m| m.is_dir()) && name.starts_with(cmp_prefix) {
+										result.push(name.clone())
+									}
+								}
+							}
+							result
 						})
-						.unwrap_or_default()
 					},
 					|current, new| {
 						if let Some((prefix, _)) = current.rsplit_once('/') {
