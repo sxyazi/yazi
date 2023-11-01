@@ -11,8 +11,8 @@ use crate::{external, Position};
 
 #[derive(Default)]
 pub struct Input {
-	pub(super) snaps: InputSnaps,
-	pub visible:      bool,
+	snaps:       InputSnaps,
+	pub visible: bool,
 
 	title:        String,
 	pub position: Position,

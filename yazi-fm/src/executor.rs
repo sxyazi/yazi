@@ -281,7 +281,7 @@ impl Executor {
 
 	fn completion(cx: &mut Ctx, exec: &Exec) -> bool {
 		match exec.cmd.as_str() {
-			"close" => cx.completion.close(),
+			"close" => cx.completion.close(exec.named.contains_key("submit")),
 
 			"arrow" => {
 				let step: isize = exec.args.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
@@ -292,6 +292,7 @@ impl Executor {
 				}
 			}
 
+			"help" => cx.help.toggle(cx.layer()),
 			_ => false,
 		}
 	}

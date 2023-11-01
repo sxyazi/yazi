@@ -16,7 +16,7 @@ pub struct Completion {
 
 impl Completion {
 	pub fn show(&mut self, opt: CompletionOpt) {
-		self.close();
+		self.close(false);
 		self.items = opt.items;
 
 		self.identifier = format!(
@@ -34,7 +34,7 @@ impl Completion {
 		self.max_width = opt.max_width;
 	}
 
-	pub fn close(&mut self) -> bool {
+	pub fn close(&mut self, submit: bool) -> bool {
 		self.cursor = 0;
 
 		self.identifier = String::new();

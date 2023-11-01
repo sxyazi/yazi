@@ -15,10 +15,7 @@ impl InputOpt {
 		Self {
 			title:     title.as_ref().to_owned(),
 			value:     String::new(),
-			position:  Position::Top(
-				// TODO: hardcode
-				Rect { x: 0, y: 2, width: 50, height: 3 },
-			),
+			position:  Position::Top(/* TODO: hardcode */ Rect { x: 0, y: 2, width: 50, height: 3 }),
 			realtime:  false,
 			highlight: false,
 		}
