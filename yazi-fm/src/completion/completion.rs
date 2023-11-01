@@ -1,4 +1,4 @@
-use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, Borders, Cell, Clear, Row, Table, Widget}};
+use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, Borders, Cell, Clear, List, ListItem, Row, Table, Widget}};
 use yazi_core::Ctx;
 
 pub(crate) struct Completion<'a> {
@@ -11,7 +11,13 @@ impl<'a> Completion<'a> {
 
 impl<'a> Widget for Completion<'a> {
 	fn render(self, _: Rect, buf: &mut Buffer) {
-		todo!()
+		let items =
+			self.cx.completion.items.iter().map(|x| ListItem::new(x.as_str())).collect::<Vec<_>>();
+
+		// TODO
+		Clear.render(Rect { x: 10, y: 10, width: 10, height: 20 }, buf);
+		List::new(items).render(Rect { x: 10, y: 10, width: 10, height: 20 }, buf);
+
 		// let completion = &self.cx.input.completion;
 		// let area = self.cx.area(&completion.position);
 

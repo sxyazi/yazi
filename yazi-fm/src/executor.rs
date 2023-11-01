@@ -286,7 +286,7 @@ impl Executor {
 			"close" => cx.completion.close(exec.named.contains_key("submit")),
 
 			"arrow" => {
-				let step: isize = exec.args.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
+				let step: isize = exec.args.first().and_then(|s| s.parse().ok()).unwrap_or(0);
 				if step > 0 {
 					cx.completion.next(step as usize)
 				} else {

@@ -1,7 +1,8 @@
+use tokio::fs;
 use tracing::info;
-use yazi_config::keymap::Exec;
+use yazi_config::keymap::{Exec, KeymapLayer};
 
-use crate::completion::Completion;
+use crate::{completion::Completion, emit};
 
 pub struct Opt<'a> {
 	word:   &'a str,
@@ -11,7 +12,7 @@ pub struct Opt<'a> {
 impl<'a> From<&'a Exec> for Opt<'a> {
 	fn from(e: &'a Exec) -> Self {
 		Self {
-			word:   e.args.get(0).map(|w| w.as_str()).unwrap_or_default(),
+			word:   e.args.first().map(|w| w.as_str()).unwrap_or_default(),
 			ticket: e.named.get("ticket").and_then(|v| v.parse().ok()).unwrap_or(0),
 		}
 	}
@@ -27,8 +28,34 @@ impl Completion {
 		self.close(false);
 		self.ticket = opt.ticket;
 
-		info!("trigger completion: {}", opt.word);
-		tokio::spawn(async move {});
+		let word = opt.word.to_owned();
+		let ticket = self.ticket;
+		tokio::spawn(async move {
+			let (parent, child) = word.rsplit_once('/').unwrap_or((".", word.as_str()));
+
+			let mut dir = fs::read_dir(parent).await?;
+			let mut cands = Vec::new();
+			while let Ok(Some(f)) = dir.next_entry().await {
+				let name = f.file_name().to_string_lossy().into_owned();
+				if !name.starts_with(child) {
+					continue;
+				}
+
+				cands.push(name);
+				if cands.len() >= 20 {
+					break;
+				}
+			}
+
+			if !cands.is_empty() {
+				emit!(Call(
+					Exec::call("show", cands).with("ticket", ticket).vec(),
+					KeymapLayer::Completion
+				));
+			}
+
+			Ok::<(), anyhow::Error>(())
+		});
 		false
 	}
 }
