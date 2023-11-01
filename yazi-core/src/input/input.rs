@@ -12,9 +12,10 @@ use crate::{emit, external, Position};
 #[derive(Default)]
 pub struct Input {
 	snaps:       InputSnaps,
+	pub ticket:  usize,
 	pub visible: bool,
 
-	title:        String,
+	pub title:    String,
 	pub position: Position,
 
 	// Typing
@@ -30,6 +31,7 @@ impl Input {
 	pub fn show(&mut self, opt: InputOpt, tx: UnboundedSender<Result<String, InputError>>) {
 		self.close(false);
 		self.snaps.reset(opt.value);
+		self.ticket = self.ticket.wrapping_add(1);
 		self.visible = true;
 
 		self.title = opt.title;
@@ -210,8 +212,9 @@ impl Input {
 			snap.value.insert_str(snap.idx(snap.cursor).unwrap(), s);
 		}
 
+		self.move_(s.chars().count() as isize);
 		self.flush_value();
-		self.move_(s.chars().count() as isize)
+		true
 	}
 
 	pub fn backspace(&mut self) -> bool {
@@ -222,8 +225,9 @@ impl Input {
 			snap.value.remove(snap.idx(snap.cursor - 1).unwrap());
 		}
 
+		self.move_(-1);
 		self.flush_value();
-		self.move_(-1)
+		true
 	}
 
 	pub fn delete(&mut self, cut: bool, insert: bool) -> bool {
@@ -322,14 +326,18 @@ impl Input {
 	}
 
 	#[inline]
-	fn flush_value(&self) {
+	fn flush_value(&mut self) {
+		self.ticket = self.ticket.wrapping_add(1);
+
 		if self.realtime {
 			let value = self.snap().value.clone();
 			self.callback.as_ref().unwrap().send(Err(InputError::Typed(value))).ok();
 		}
 		if self.completion {
 			emit!(Call(
-				Exec::call("complete", vec!["".to_string()]).with("version", 1).vec(),
+				Exec::call("complete", vec![self.partition()[0].to_owned()])
+					.with("ticket", self.ticket)
+					.vec(),
 				KeymapLayer::Input
 			));
 		}
@@ -337,9 +345,6 @@ impl Input {
 }
 
 impl Input {
-	#[inline]
-	pub fn title(&self) -> String { self.title.clone() }
-
 	#[inline]
 	pub fn value(&self) -> &str { self.snap().slice(self.snap().window()) }
 
@@ -364,6 +369,13 @@ impl Input {
 
 		let s = snap.slice(snap.offset..start).width() as u16;
 		Some(s..s + snap.slice(start..end).width() as u16)
+	}
+
+	#[inline]
+	pub fn partition(&self) -> [&str; 2] {
+		let snap = self.snap();
+		let idx = snap.idx(snap.cursor).unwrap();
+		[&snap.value[..idx], &snap.value[idx..]]
 	}
 
 	#[inline]

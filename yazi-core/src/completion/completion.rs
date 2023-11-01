@@ -3,7 +3,7 @@ pub struct Completion {
 	pub items:  Vec<String>,
 	pub cursor: usize,
 
-	pub version: usize,
+	pub ticket:  usize,
 	pub visible: bool,
 }
 

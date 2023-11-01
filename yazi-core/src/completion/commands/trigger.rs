@@ -4,15 +4,15 @@ use yazi_config::keymap::Exec;
 use crate::completion::Completion;
 
 pub struct Opt<'a> {
-	word:    &'a str,
-	version: usize,
+	word:   &'a str,
+	ticket: usize,
 }
 
 impl<'a> From<&'a Exec> for Opt<'a> {
 	fn from(e: &'a Exec) -> Self {
 		Self {
-			word:    e.args.get(0).map(|w| w.as_str()).unwrap_or_default(),
-			version: e.named.get("version").and_then(|v| v.parse().ok()).unwrap_or(0),
+			word:   e.args.get(0).map(|w| w.as_str()).unwrap_or_default(),
+			ticket: e.named.get("ticket").and_then(|v| v.parse().ok()).unwrap_or(0),
 		}
 	}
 }
@@ -20,12 +20,12 @@ impl<'a> From<&'a Exec> for Opt<'a> {
 impl Completion {
 	pub fn trigger<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
 		let opt = opt.into();
-		if self.version >= opt.version {
+		if self.ticket >= opt.ticket {
 			return false;
 		}
 
 		self.close(false);
-		self.version = opt.version;
+		self.ticket = opt.ticket;
 
 		info!("trigger completion: {}", opt.word);
 		tokio::spawn(async move {});

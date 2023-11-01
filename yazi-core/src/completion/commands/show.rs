@@ -3,15 +3,15 @@ use yazi_config::keymap::Exec;
 use crate::completion::Completion;
 
 pub struct Opt<'a> {
-	cands:   &'a Vec<String>,
-	version: usize,
+	cands:  &'a Vec<String>,
+	ticket: usize,
 }
 
 impl<'a> From<&'a Exec> for Opt<'a> {
 	fn from(e: &'a Exec) -> Self {
 		Self {
-			cands:   &e.args,
-			version: e.named.get("version").and_then(|v| v.parse().ok()).unwrap_or(0),
+			cands:  &e.args,
+			ticket: e.named.get("ticket").and_then(|v| v.parse().ok()).unwrap_or(0),
 		}
 	}
 }
@@ -19,13 +19,13 @@ impl<'a> From<&'a Exec> for Opt<'a> {
 impl Completion {
 	pub fn show<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
 		let opt = opt.into();
-		if self.version != opt.version {
+		if self.ticket != opt.ticket {
 			return false;
 		}
 
 		self.close(false);
 		self.items = opt.cands.clone();
-		self.version = opt.version;
+		self.ticket = opt.ticket;
 		self.visible = true;
 		true
 	}
