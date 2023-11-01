@@ -235,7 +235,7 @@ impl Executor {
 				return if in_operating { cx.input.move_in_operating(step) } else { cx.input.move_(step) };
 			}
 
-			"complete" => todo!(),
+			"complete" => return cx.completion.trigger(exec),
 			_ => {}
 		}
 
@@ -281,6 +281,8 @@ impl Executor {
 
 	fn completion(cx: &mut Ctx, exec: &Exec) -> bool {
 		match exec.cmd.as_str() {
+			"trigger" => cx.completion.trigger(exec),
+			"show" => cx.completion.show(exec),
 			"close" => cx.completion.close(exec.named.contains_key("submit")),
 
 			"arrow" => {

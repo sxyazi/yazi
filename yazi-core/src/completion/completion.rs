@@ -1,43 +1,16 @@
-use crate::{completion::CompletionOpt, Position};
-
 #[derive(Default)]
 pub struct Completion {
 	pub items:  Vec<String>,
 	pub cursor: usize,
 
-	pub identifier: String,
-	pub visible:    bool,
-
-	// TODO: remove these
-	pub position:   Position,
-	pub column_cnt: u8,
-	pub max_width:  u16,
+	pub version: usize,
+	pub visible: bool,
 }
 
 impl Completion {
-	pub fn show(&mut self, opt: CompletionOpt) {
-		self.close(false);
-		self.items = opt.items;
-
-		self.identifier = format!(
-			"{}",
-			std::time::SystemTime::now()
-				.duration_since(std::time::UNIX_EPOCH)
-				.unwrap_or_default()
-				.as_millis()
-		);
-		self.visible = true;
-
-		// TODO: remove these
-		self.position = opt.position;
-		self.column_cnt = opt.column_cnt;
-		self.max_width = opt.max_width;
-	}
-
 	pub fn close(&mut self, submit: bool) -> bool {
 		self.cursor = 0;
 
-		self.identifier = String::new();
 		self.visible = false;
 		true
 	}
