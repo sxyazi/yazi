@@ -36,12 +36,12 @@ impl<'a> Widget for Root<'a> {
 			input::Input::new(self.cx).render(area, buf);
 		}
 
-		if self.cx.input.completion.visible {
-			completion::Completion::new(self.cx).render(area, buf);
-		}
-
 		if self.cx.help.visible {
 			help::Layout::new(self.cx).render(area, buf);
+		}
+
+		if self.cx.completion.visible {
+			completion::Completion::new(self.cx).render(area, buf);
 		}
 
 		if self.cx.which.visible {

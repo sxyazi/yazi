@@ -59,38 +59,8 @@ impl Tab {
 
 	pub fn cd_interactive(&mut self, target: Url) -> bool {
 		tokio::spawn(async move {
-			let mut result = emit!(Input(
-				InputOpt::top("Change directory:").with_value(target.to_string_lossy()).with_completion(
-					|prefix| {
-						Box::pin(async move {
-							let mut cmp_prefix = prefix.as_str();
-							let mut result = vec![];
-							if let Ok(mut list) = if prefix.contains('/') {
-								let (old_prefix, old_file_prefix) = prefix.rsplit_once('/').unwrap();
-								cmp_prefix = old_file_prefix;
-								tokio::fs::read_dir(old_prefix.to_string() + "/").await
-							} else {
-								tokio::fs::read_dir(".").await
-							} {
-								while let Ok(Some(f)) = list.next_entry().await {
-									let name = f.file_name().to_string_lossy().to_string();
-									if f.metadata().await.is_ok_and(|m| m.is_dir()) && name.starts_with(cmp_prefix) {
-										result.push(name.clone())
-									}
-								}
-							}
-							result
-						})
-					},
-					|current, new| {
-						if let Some((prefix, _)) = current.rsplit_once('/') {
-							format!("{prefix}/{new}/")
-						} else {
-							format!("{new}/")
-						}
-					}
-				)
-			));
+			let mut result =
+				emit!(Input(InputOpt::top("Change directory:").with_value(target.to_string_lossy())));
 
 			if let Some(Ok(s)) = result.recv().await {
 				emit!(Cd(Url::from(s.trim())));

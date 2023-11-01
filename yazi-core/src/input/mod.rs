@@ -1,4 +1,3 @@
-mod completion;
 mod input;
 mod mode;
 mod op;

@@ -7,11 +7,12 @@ use crate::MERGED_KEYMAP;
 
 #[derive(Debug)]
 pub struct Keymap {
-	pub manager: Vec<Control>,
-	pub tasks:   Vec<Control>,
-	pub select:  Vec<Control>,
-	pub input:   Vec<Control>,
-	pub help:    Vec<Control>,
+	pub manager:    Vec<Control>,
+	pub tasks:      Vec<Control>,
+	pub select:     Vec<Control>,
+	pub input:      Vec<Control>,
+	pub help:       Vec<Control>,
+	pub completion: Vec<Control>,
 }
 
 impl<'de> Deserialize<'de> for Keymap {
@@ -21,11 +22,12 @@ impl<'de> Deserialize<'de> for Keymap {
 	{
 		#[derive(Deserialize)]
 		struct Shadow {
-			manager: Inner,
-			tasks:   Inner,
-			select:  Inner,
-			input:   Inner,
-			help:    Inner,
+			manager:    Inner,
+			tasks:      Inner,
+			select:     Inner,
+			input:      Inner,
+			help:       Inner,
+			completion: Inner,
 		}
 		#[derive(Deserialize)]
 		struct Inner {
@@ -34,11 +36,12 @@ impl<'de> Deserialize<'de> for Keymap {
 
 		let shadow = Shadow::deserialize(deserializer)?;
 		Ok(Self {
-			manager: shadow.manager.keymap,
-			tasks:   shadow.tasks.keymap,
-			select:  shadow.select.keymap,
-			input:   shadow.input.keymap,
-			help:    shadow.help.keymap,
+			manager:    shadow.manager.keymap,
+			tasks:      shadow.tasks.keymap,
+			select:     shadow.select.keymap,
+			input:      shadow.input.keymap,
+			help:       shadow.help.keymap,
+			completion: shadow.completion.keymap,
 		})
 	}
 }
@@ -56,6 +59,7 @@ impl Keymap {
 			KeymapLayer::Select => &self.select,
 			KeymapLayer::Input => &self.input,
 			KeymapLayer::Help => &self.help,
+			KeymapLayer::Completion => &self.completion,
 			KeymapLayer::Which => unreachable!(),
 		}
 	}
@@ -69,6 +73,7 @@ pub enum KeymapLayer {
 	Select,
 	Input,
 	Help,
+	Completion,
 	Which,
 }
 
@@ -80,6 +85,7 @@ impl Display for KeymapLayer {
 			KeymapLayer::Select => write!(f, "select"),
 			KeymapLayer::Input => write!(f, "input"),
 			KeymapLayer::Help => write!(f, "help"),
+			KeymapLayer::Completion => write!(f, "completion"),
 			KeymapLayer::Which => write!(f, "which"),
 		}
 	}

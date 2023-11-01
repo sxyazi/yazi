@@ -43,6 +43,7 @@ impl Executor {
 				KeymapLayer::Select => Self::select(cx, e),
 				KeymapLayer::Input => Self::input(cx, e),
 				KeymapLayer::Help => Self::help(cx, e),
+				KeymapLayer::Completion => Self::completion(cx, e),
 				KeymapLayer::Which => unreachable!(),
 			};
 		}
@@ -234,8 +235,7 @@ impl Executor {
 				return if in_operating { cx.input.move_in_operating(step) } else { cx.input.move_(step) };
 			}
 
-			// asynchronized completion
-			"complete" => return cx.input.fill_completion(exec),
+			"complete" => todo!(),
 			_ => {}
 		}
 
@@ -274,6 +274,23 @@ impl Executor {
 			}
 
 			"filter" => cx.help.filter(),
+
+			_ => false,
+		}
+	}
+
+	fn completion(cx: &mut Ctx, exec: &Exec) -> bool {
+		match exec.cmd.as_str() {
+			"close" => cx.completion.close(),
+
+			"arrow" => {
+				let step: isize = exec.args.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
+				if step > 0 {
+					cx.completion.next(step as usize)
+				} else {
+					cx.completion.prev(step.unsigned_abs())
+				}
+			}
 
 			_ => false,
 		}

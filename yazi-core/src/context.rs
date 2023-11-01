@@ -3,26 +3,28 @@ use ratatui::prelude::Rect;
 use yazi_config::keymap::KeymapLayer;
 use yazi_shared::Term;
 
-use crate::{help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which, Position};
+use crate::{completion::Completion, help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which, Position};
 
 pub struct Ctx {
-	pub manager: Manager,
-	pub which:   Which,
-	pub help:    Help,
-	pub input:   Input,
-	pub select:  Select,
-	pub tasks:   Tasks,
+	pub manager:    Manager,
+	pub tasks:      Tasks,
+	pub select:     Select,
+	pub input:      Input,
+	pub help:       Help,
+	pub completion: Completion,
+	pub which:      Which,
 }
 
 impl Ctx {
 	pub fn make() -> Self {
 		Self {
-			manager: Manager::make(),
-			which:   Default::default(),
-			help:    Default::default(),
-			input:   Default::default(),
-			select:  Default::default(),
-			tasks:   Tasks::start(),
+			manager:    Manager::make(),
+			tasks:      Tasks::start(),
+			select:     Default::default(),
+			input:      Default::default(),
+			help:       Default::default(),
+			completion: Default::default(),
+			which:      Default::default(),
 		}
 	}
 
@@ -72,6 +74,8 @@ impl Ctx {
 	pub fn layer(&self) -> KeymapLayer {
 		if self.which.visible {
 			KeymapLayer::Which
+		} else if self.completion.visible {
+			KeymapLayer::Completion
 		} else if self.help.visible {
 			KeymapLayer::Help
 		} else if self.input.visible {

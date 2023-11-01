@@ -6,8 +6,8 @@ use unicode_width::UnicodeWidthStr;
 use yazi_config::keymap::Key;
 use yazi_shared::{CharKind, InputError};
 
-use super::{mode::InputMode, op::InputOp, FinishCompletionType, InitCompletionType, InputOpt, InputSnap, InputSnaps};
-use crate::{completion::Completion, external, Position};
+use super::{mode::InputMode, op::InputOp, InputOpt, InputSnap, InputSnaps};
+use crate::{external, Position};
 
 #[derive(Default)]
 pub struct Input {
@@ -23,10 +23,6 @@ pub struct Input {
 
 	// Shell
 	pub(super) highlight: bool,
-
-	pub completion:               Completion,
-	pub(super) init_completion:   Option<InitCompletionType>,
-	pub(super) finish_completion: Option<FinishCompletionType>,
 }
 
 impl Input {
@@ -44,9 +40,6 @@ impl Input {
 
 		// Shell
 		self.highlight = opt.highlight;
-
-		self.init_completion = opt.init_completion;
-		self.finish_completion = opt.finish_completion;
 	}
 
 	pub fn close(&mut self, submit: bool) -> bool {
@@ -56,7 +49,6 @@ impl Input {
 		}
 
 		self.visible = false;
-		self.completion.close();
 		true
 	}
 
@@ -197,25 +189,6 @@ impl Input {
 			return false;
 		}
 
-		if self.completion.visible {
-			match key {
-				Key {
-					code: KeyCode::Tab | KeyCode::Up | KeyCode::Down | KeyCode::Left | KeyCode::Right,
-					shift: false,
-					ctrl: false,
-					alt: false,
-				} => return self.navigate_completion(key),
-				Key { code: KeyCode::Enter, shift: false, ctrl: false, alt: false } => {
-					return self.finish_completion();
-				}
-				_ => {
-					self.completion.close();
-				}
-			}
-		} else if matches!(key, Key { code: KeyCode::Tab, shift: false, ctrl: false, alt: false }) {
-			return self.complete();
-		}
-
 		if let Some(c) = key.plain() {
 			return self.type_char(c);
 		}
@@ -240,13 +213,6 @@ impl Input {
 			snap.value.insert_str(snap.idx(snap.cursor).unwrap(), s);
 		}
 
-		self.flush_value();
-		self.move_(s.chars().count() as isize)
-	}
-
-	pub fn replace_str(&mut self, s: &str) -> bool {
-		let snap = self.snaps.current_mut();
-		snap.value = s.to_string();
 		self.flush_value();
 		self.move_(s.chars().count() as isize)
 	}
