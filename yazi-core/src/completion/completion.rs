@@ -2,20 +2,23 @@ use crate::{completion::CompletionOpt, Position};
 
 #[derive(Default)]
 pub struct Completion {
-	items:          Vec<String>,
-	cursor:         usize,
-	pub identifier: String,
+	pub items:  Vec<String>,
+	pub cursor: usize,
 
+	pub identifier: String,
+	pub visible:    bool,
+
+	// TODO: remove these
 	pub position:   Position,
 	pub column_cnt: u8,
 	pub max_width:  u16,
-	pub visible:    bool,
 }
 
 impl Completion {
 	pub fn show(&mut self, opt: CompletionOpt) {
 		self.close();
-		self.visible = true;
+		self.items = opt.items;
+
 		self.identifier = format!(
 			"{}",
 			std::time::SystemTime::now()
@@ -23,8 +26,9 @@ impl Completion {
 				.unwrap_or_default()
 				.as_millis()
 		);
+		self.visible = true;
 
-		self.items = opt.items;
+		// TODO: remove these
 		self.position = opt.position;
 		self.column_cnt = opt.column_cnt;
 		self.max_width = opt.max_width;
@@ -32,6 +36,7 @@ impl Completion {
 
 	pub fn close(&mut self) -> bool {
 		self.cursor = 0;
+
 		self.identifier = String::new();
 		self.visible = false;
 		true
@@ -56,9 +61,6 @@ impl Completion {
 		old != self.cursor
 	}
 
-	pub fn list(&self) -> Vec<String> { self.items.clone() }
-
-	pub fn cursor(&self) -> usize { self.cursor }
-
-	pub fn get_selection(&self) -> Option<String> { self.items.get(self.cursor).cloned() }
+	#[inline]
+	pub fn selected(&self) -> Option<&String> { self.items.get(self.cursor) }
 }

@@ -52,7 +52,7 @@ impl Input {
 	}
 
 	pub fn finish_completion(&mut self) -> bool {
-		if let (Some(val), Some(f)) = (self.completion.get_selection(), &self.finish_completion) {
+		if let (Some(val), Some(f)) = (self.completion.selected(), &self.finish_completion) {
 			let final_val = f(self.snaps.current().value.as_str(), val.as_str());
 			self.replace_str(final_val.as_str());
 		}

@@ -24,18 +24,18 @@ impl<'a> Widget for Completion<'a> {
 			let max_width = completion.max_width as usize;
 			let mut table = vec![];
 			let mut cur_row = vec![];
-			for (idx, s) in completion.list().into_iter().enumerate() {
+			for (idx, s) in completion.items.iter().enumerate() {
 				if idx != 0 && idx % completion.column_cnt as usize == 0 {
 					let t = mem::take(&mut cur_row);
 					table.push(Row::new(t));
 				}
 				cur_row.push(
 					Cell::from(if s.len() < max_width {
-						s
+						s.to_owned()
 					} else {
 						s.split_at(max_width - 1).0.to_string() + "…"
 					})
-					.style(if completion.cursor() == idx {
+					.style(if completion.cursor == idx {
 						THEME.completion.active.into()
 					} else {
 						THEME.completion.inactive.into()
