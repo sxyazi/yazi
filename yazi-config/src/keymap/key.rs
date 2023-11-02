@@ -2,7 +2,7 @@ use anyhow::bail;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use serde::Deserialize;
 
-#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash)]
 #[serde(try_from = "String")]
 pub struct Key {
 	pub code:  KeyCode,

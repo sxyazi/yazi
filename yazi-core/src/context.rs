@@ -71,26 +71,7 @@ impl Ctx {
 	}
 
 	#[inline]
-	pub fn layer(&self) -> KeymapLayer {
-		if self.which.visible {
-			KeymapLayer::Which
-		} else if self.completion.visible {
-			KeymapLayer::Completion
-		} else if self.help.visible {
-			KeymapLayer::Help
-		} else if self.input.visible {
-			KeymapLayer::Input
-		} else if self.select.visible {
-			KeymapLayer::Select
-		} else if self.tasks.visible {
-			KeymapLayer::Tasks
-		} else {
-			KeymapLayer::Manager
-		}
-	}
-
-	#[inline]
 	pub fn image_layer(&self) -> bool {
-		!matches!(self.layer(), KeymapLayer::Which | KeymapLayer::Help | KeymapLayer::Tasks)
+		!self.which.visible && !self.help.visible && !self.tasks.visible
 	}
 }

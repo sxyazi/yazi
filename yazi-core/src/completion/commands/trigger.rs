@@ -1,5 +1,4 @@
 use tokio::fs;
-use tracing::info;
 use yazi_config::keymap::{Exec, KeymapLayer};
 
 use crate::{completion::Completion, emit};
