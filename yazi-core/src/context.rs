@@ -1,6 +1,5 @@
 use crossterm::terminal::WindowSize;
 use ratatui::prelude::Rect;
-use yazi_config::keymap::KeymapLayer;
 use yazi_shared::Term;
 
 use crate::{completion::Completion, help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which, Position};
@@ -32,29 +31,31 @@ impl Ctx {
 		let WindowSize { columns, rows, .. } = Term::size();
 
 		let (x, y) = match pos {
-			Position::None => return Rect::default(),
 			Position::Top(Rect { mut x, mut y, width, height }) => {
 				x = x.min(columns.saturating_sub(*width));
 				y = y.min(rows.saturating_sub(*height));
 				((columns / 2).saturating_sub(width / 2) + x, y)
 			}
-			Position::Hovered(rect @ Rect { mut x, y, width, height }) => {
-				let Some(r) =
-					self.manager.hovered().and_then(|h| self.manager.current().rect_current(&h.url))
-				else {
-					return self.area(&Position::Top(*rect));
-				};
-
+			Position::Sticky(Rect { mut x, y, width, height }, r) => {
 				x = x.min(columns.saturating_sub(*width));
 				if y + height + r.y + r.height > rows {
-					(x + r.x, r.y.saturating_sub(height.saturating_sub(1)))
+					(x + r.x, r.y.saturating_sub(height.saturating_sub(*y)))
 				} else {
 					(x + r.x, y + r.y + r.height)
 				}
 			}
+			Position::Hovered(rect) => {
+				return self.area(&if let Some(r) =
+					self.manager.hovered().and_then(|h| self.manager.current().rect_current(&h.url))
+				{
+					Position::Sticky(*rect, r)
+				} else {
+					Position::Top(*rect)
+				});
+			}
 		};
 
-		let (w, h) = pos.dimension().unwrap();
+		let (w, h) = pos.dimension();
 		Rect { x, y, width: w.min(columns.saturating_sub(x)), height: h.min(rows.saturating_sub(y)) }
 	}
 

@@ -1,5 +1,5 @@
-use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, Borders, Cell, Clear, List, ListItem, Row, Table, Widget}};
-use yazi_core::Ctx;
+use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, Borders, Clear, List, ListItem, Widget}};
+use yazi_core::{Ctx, Position};
 
 pub(crate) struct Completion<'a> {
 	cx: &'a Ctx,
@@ -10,54 +10,24 @@ impl<'a> Completion<'a> {
 }
 
 impl<'a> Widget for Completion<'a> {
-	fn render(self, _: Rect, buf: &mut Buffer) {
+	fn render(self, rect: Rect, buf: &mut Buffer) {
 		let items =
 			self.cx.completion.items.iter().map(|x| ListItem::new(x.as_str())).collect::<Vec<_>>();
 
-		// TODO
-		Clear.render(Rect { x: 10, y: 10, width: 10, height: 20 }, buf);
-		List::new(items).render(Rect { x: 10, y: 10, width: 10, height: 20 }, buf);
+		let input_area = self.cx.area(&self.cx.input.position);
+		let mut area =
+			self.cx.area(&Position::Sticky(Rect { x: 1, y: 0, width: 20, height: 15 }, input_area));
 
-		// let completion = &self.cx.input.completion;
-		// let area = self.cx.area(&completion.position);
+		if area.y > input_area.y {
+			area.y = area.y.saturating_sub(1);
+		} else {
+			area.y = rect.height.min(area.y + 1);
+			area.height = rect.height.saturating_sub(area.y).min(area.height);
+		}
 
-		// let constraint = (0..completion.column_cnt)
-		// 	.map(|_| Constraint::Percentage(completion.max_width))
-		// 	.collect::<Vec<Constraint>>();
-		// let table = {
-		// 	let max_width = completion.max_width as usize;
-		// 	let mut table = vec![];
-		// 	let mut cur_row = vec![];
-		// 	for (idx, s) in completion.items.iter().enumerate() {
-		// 		if idx != 0 && idx % completion.column_cnt as usize == 0 {
-		// 			let t = mem::take(&mut cur_row);
-		// 			table.push(Row::new(t));
-		// 		}
-		// 		cur_row.push(
-		// 			Cell::from(if s.len() < max_width {
-		// 				s.to_owned()
-		// 			} else {
-		// 				s.split_at(max_width - 1).0.to_string() + "…"
-		// 			})
-		// 			.style(if completion.cursor == idx {
-		// 				THEME.completion.active.into()
-		// 			} else {
-		// 				THEME.completion.inactive.into()
-		// 			}),
-		// 		);
-		// 	}
-		// 	table.push(Row::new(cur_row));
-		// 	Table::new(table)
-		// 		.block(
-		// 			Block::new()
-		// 				.borders(Borders::ALL)
-		// 				.border_type(BorderType::Double)
-		// 				.border_style(THEME.completion.border.into()),
-		// 		)
-		// 		.widths(&constraint)
-		// };
-
-		// Clear.render(area, buf);
-		// table.render(area, buf);
+		Clear.render(area, buf);
+		List::new(items)
+			.block(Block::new().borders(Borders::ALL).border_type(BorderType::Rounded))
+			.render(area, buf);
 	}
 }
