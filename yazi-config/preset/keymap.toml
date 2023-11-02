@@ -49,6 +49,7 @@ keymap = [
 	{ on = [ "<Enter>" ],   exec = "open",                                                 desc = "Open the selected files" },
 	{ on = [ "<C-Enter>" ], exec = "open --interactive",                                   desc = "Open the selected files interactively" },
 	{ on = [ "y" ],         exec = [ "yank", "escape --visual --select" ],                 desc = "Copy the selected files" },
+	{ on = [ "Y" ],         exec = [ "unyank", "escape --visual --select" ],               desc = "Remove the files from the yank clipboard" },
 	{ on = [ "x" ],         exec = [ "yank --cut", "escape --visual --select" ],           desc = "Cut the selected files" },
 	{ on = [ "p" ],         exec = "paste",                                                desc = "Paste the files" },
 	{ on = [ "P" ],         exec = "paste --force",                                        desc = "Paste the files (overwrite if the destination exists)" },
