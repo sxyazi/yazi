@@ -29,8 +29,7 @@ function utils.readable_size(size)
 end
 
 function utils.readable_path(path)
-	local home = os.getenv("HOME")
-  home = home and home or os.getenv("USERPROFILE")
+	local home = os.getenv("HOME") or os.getenv("USERPROFILE")
 	if home == nil then
 		return path
 	elseif string.sub(path, 1, #home) == home then
