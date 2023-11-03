@@ -268,10 +268,10 @@ impl<'a> Executor<'a> {
 			}
 
 			"complete" => {
-				return if exec.named.contains_key("apply") {
-					self.cx.input.complete(exec)
-				} else {
+				return if exec.args.is_empty() {
 					self.cx.completion.trigger(exec)
+				} else {
+					self.cx.input.complete(exec)
 				};
 			}
 			_ => {}

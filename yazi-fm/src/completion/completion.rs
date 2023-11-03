@@ -19,8 +19,13 @@ impl<'a> Widget for Completion<'a> {
 			.iter()
 			.enumerate()
 			.map(|(i, x)| {
-				let mut item = ListItem::new(format!(" {} {}", THEME.completion.icon_file, x));
+				let icon = if x.ends_with('/') || x.ends_with('\\') {
+					&THEME.completion.icon_folder
+				} else {
+					&THEME.completion.icon_file
+				};
 
+				let mut item = ListItem::new(format!(" {} {}", icon, x));
 				if i == self.cx.completion.cursor {
 					item = item.style(THEME.completion.active.into());
 				} else {

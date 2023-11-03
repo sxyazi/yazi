@@ -4,15 +4,15 @@ use yazi_config::keymap::{Exec, KeymapLayer};
 use crate::{completion::Completion, emit};
 
 pub struct Opt<'a> {
-	word:   &'a str,
+	before: &'a str,
 	ticket: usize,
 }
 
 impl<'a> From<&'a Exec> for Opt<'a> {
 	fn from(e: &'a Exec) -> Self {
 		Self {
-			word:   e.args.first().map(|w| w.as_str()).unwrap_or_default(),
-			ticket: e.named.get("ticket").and_then(|v| v.parse().ok()).unwrap_or(0),
+			before: e.named.get("before").map(|s| s.as_str()).unwrap_or_default(),
+			ticket: e.named.get("ticket").and_then(|s| s.parse().ok()).unwrap_or(0),
 		}
 	}
 }
@@ -27,28 +27,43 @@ impl Completion {
 		self.close(false);
 		self.ticket = opt.ticket;
 
-		let word = opt.word.to_owned();
+		let (parent, child) = opt.before.rsplit_once('/').unwrap_or((".", opt.before));
+		if self.caches.contains_key(parent) {
+			return self.show(
+				&Exec::call("show", vec![])
+					.with("cache-name", parent)
+					.with("word", child)
+					.with("ticket", opt.ticket),
+			);
+		}
+
 		let ticket = self.ticket;
+		let (parent, child) = (parent.to_owned(), child.to_owned());
 		tokio::spawn(async move {
-			let (parent, child) = word.rsplit_once('/').unwrap_or((".", word.as_str()));
-
-			let mut dir = fs::read_dir(parent).await?;
-			let mut cands = Vec::new();
+			let mut dir = fs::read_dir(&parent).await?;
+			let mut cache = Vec::new();
 			while let Ok(Some(f)) = dir.next_entry().await {
-				let name = f.file_name().to_string_lossy().into_owned();
-				if !name.starts_with(child) {
+				let Ok(meta) = f.metadata().await else {
 					continue;
-				}
+				};
 
-				cands.push(name);
-				if cands.len() >= 20 {
-					break;
-				}
+				let sep = if !meta.is_dir() {
+					""
+				} else if cfg!(windows) {
+					"\\"
+				} else {
+					"/"
+				};
+				cache.push(format!("{}{sep}", f.file_name().to_string_lossy()));
 			}
 
-			if !cands.is_empty() {
+			if !cache.is_empty() {
 				emit!(Call(
-					Exec::call("show", cands).with("ticket", ticket).vec(),
+					Exec::call("show", cache)
+						.with("cache-name", parent)
+						.with("word", child)
+						.with("ticket", ticket)
+						.vec(),
 					KeymapLayer::Completion
 				));
 			}

@@ -10,7 +10,7 @@ impl From<&Exec> for Opt {
 
 impl Completion {
 	fn next(&mut self, step: usize) -> bool {
-		let len = self.items.len();
+		let len = self.cands.len();
 		if len == 0 {
 			return false;
 		}

@@ -213,7 +213,7 @@ impl Input {
 		}
 
 		self.move_(s.chars().count() as isize);
-		self.flush_value(false);
+		self.flush_value();
 		true
 	}
 
@@ -226,7 +226,7 @@ impl Input {
 		}
 
 		self.move_(-1);
-		self.flush_value(false);
+		self.flush_value();
 		true
 	}
 
@@ -320,13 +320,13 @@ impl Input {
 			return false;
 		}
 		if !matches!(old.op, InputOp::None | InputOp::Select(_)) {
-			self.snaps.tag().then(|| self.flush_value(false));
+			self.snaps.tag().then(|| self.flush_value());
 		}
 		true
 	}
 
 	#[inline]
-	pub(super) fn flush_value(&mut self, no_complete: bool) {
+	pub(super) fn flush_value(&mut self) {
 		self.ticket = self.ticket.wrapping_add(1);
 
 		if self.realtime {
@@ -334,7 +334,7 @@ impl Input {
 			self.callback.as_ref().unwrap().send(Err(InputError::Typed(value))).ok();
 		}
 
-		if self.completion && !no_complete {
+		if self.completion {
 			let before = self.partition()[0].to_owned();
 			self.callback.as_ref().unwrap().send(Err(InputError::Completed(before, self.ticket))).ok();
 		}

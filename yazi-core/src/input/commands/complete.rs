@@ -39,7 +39,7 @@ impl Input {
 		snap.value = new;
 
 		self.move_(delta);
-		self.flush_value(true);
+		self.flush_value();
 		true
 	}
 }

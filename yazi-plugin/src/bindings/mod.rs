@@ -9,6 +9,7 @@ mod tasks;
 
 pub use active::*;
 pub use bindings::*;
+#[allow(unused_imports)]
 pub use files::*;
 pub use shared::*;
 pub use tabs::*;

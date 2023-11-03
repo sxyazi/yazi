@@ -17,10 +17,7 @@ impl Completion {
 		let submit = opt.into().0;
 		if submit {
 			emit!(Call(
-				Exec::call("complete", vec![self.items[self.cursor].to_owned()])
-					.with_bool("apply", true)
-					.with("ticket", self.ticket)
-					.vec(),
+				Exec::call("complete", vec![self.selected().into()]).with("ticket", self.ticket).vec(),
 				KeymapLayer::Input
 			));
 		}

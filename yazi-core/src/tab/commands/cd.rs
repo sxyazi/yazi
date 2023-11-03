@@ -76,7 +76,7 @@ impl Tab {
 					}
 					Err(InputError::Completed(before, ticket)) => {
 						emit!(Call(
-							Exec::call("complete", vec![before]).with("ticket", ticket).vec(),
+							Exec::call("complete", vec![]).with("before", before).with("ticket", ticket).vec(),
 							KeymapLayer::Input
 						));
 					}
