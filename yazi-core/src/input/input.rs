@@ -3,23 +3,25 @@ use std::ops::Range;
 use crossterm::event::KeyCode;
 use tokio::sync::mpsc::UnboundedSender;
 use unicode_width::UnicodeWidthStr;
-use yazi_config::keymap::Key;
+use yazi_config::keymap::{Exec, Key, KeymapLayer};
 use yazi_shared::{CharKind, InputError};
 
 use super::{mode::InputMode, op::InputOp, InputOpt, InputSnap, InputSnaps};
-use crate::{external, Position};
+use crate::{emit, external, Position};
 
 #[derive(Default)]
 pub struct Input {
-	snaps:       InputSnaps,
-	pub visible: bool,
+	pub(super) snaps: InputSnaps,
+	pub ticket:       usize,
+	pub visible:      bool,
 
-	title:        String,
+	pub title:    String,
 	pub position: Position,
 
 	// Typing
-	callback: Option<UnboundedSender<Result<String, InputError>>>,
-	realtime: bool,
+	callback:   Option<UnboundedSender<Result<String, InputError>>>,
+	realtime:   bool,
+	completion: bool,
 
 	// Shell
 	pub(super) highlight: bool,
@@ -37,6 +39,7 @@ impl Input {
 		// Typing
 		self.callback = Some(tx);
 		self.realtime = opt.realtime;
+		self.completion = opt.completion;
 
 		// Shell
 		self.highlight = opt.highlight;
@@ -48,6 +51,7 @@ impl Input {
 			_ = cb.send(if submit { Ok(value) } else { Err(InputError::Canceled(value)) });
 		}
 
+		self.ticket = self.ticket.wrapping_add(1);
 		self.visible = false;
 		true
 	}
@@ -64,6 +68,10 @@ impl Input {
 			InputMode::Insert => {
 				snap.mode = InputMode::Normal;
 				self.move_(-1);
+
+				if self.completion {
+					emit!(Call(Exec::call("close", vec![]).vec(), KeymapLayer::Completion));
+				}
 			}
 		}
 		self.snaps.tag();
@@ -190,19 +198,14 @@ impl Input {
 		}
 
 		if let Some(c) = key.plain() {
-			return self.type_char(c);
+			let mut bits = [0; 4];
+			return self.type_str(c.encode_utf8(&mut bits));
 		}
 
 		match key {
 			Key { code: KeyCode::Backspace, shift: false, ctrl: false, alt: false } => self.backspace(),
 			_ => false,
 		}
-	}
-
-	#[inline]
-	pub fn type_char(&mut self, c: char) -> bool {
-		let mut bits = [0; 4];
-		self.type_str(c.encode_utf8(&mut bits))
 	}
 
 	pub fn type_str(&mut self, s: &str) -> bool {
@@ -213,8 +216,9 @@ impl Input {
 			snap.value.insert_str(snap.idx(snap.cursor).unwrap(), s);
 		}
 
+		self.move_(s.chars().count() as isize);
 		self.flush_value();
-		self.move_(s.chars().count() as isize)
+		true
 	}
 
 	pub fn backspace(&mut self) -> bool {
@@ -225,8 +229,9 @@ impl Input {
 			snap.value.remove(snap.idx(snap.cursor - 1).unwrap());
 		}
 
+		self.move_(-1);
 		self.flush_value();
-		self.move_(-1)
+		true
 	}
 
 	pub fn delete(&mut self, cut: bool, insert: bool) -> bool {
@@ -278,9 +283,7 @@ impl Input {
 		}
 
 		self.insert(!before);
-		for c in s.to_string_lossy().chars() {
-			self.type_char(c);
-		}
+		self.type_str(&s.to_string_lossy());
 		self.escape();
 		true
 	}
@@ -305,10 +308,6 @@ impl Input {
 				snap.op = InputOp::None;
 				snap.mode = if insert { InputMode::Insert } else { InputMode::Normal };
 				snap.cursor = range.start;
-
-				if self.realtime {
-					self.callback.as_ref().unwrap().send(Err(InputError::Typed(snap.value.clone()))).ok();
-				}
 			}
 			InputOp::Yank(_) => {
 				let range = snap.op.range(cursor, include).unwrap();
@@ -325,24 +324,28 @@ impl Input {
 			return false;
 		}
 		if !matches!(old.op, InputOp::None | InputOp::Select(_)) {
-			self.snaps.tag();
+			self.snaps.tag().then(|| self.flush_value());
 		}
 		true
 	}
 
 	#[inline]
-	fn flush_value(&self) {
+	pub(super) fn flush_value(&mut self) {
+		self.ticket = self.ticket.wrapping_add(1);
+
 		if self.realtime {
 			let value = self.snap().value.clone();
 			self.callback.as_ref().unwrap().send(Err(InputError::Typed(value))).ok();
+		}
+
+		if self.completion {
+			let before = self.partition()[0].to_owned();
+			self.callback.as_ref().unwrap().send(Err(InputError::Completed(before, self.ticket))).ok();
 		}
 	}
 }
 
 impl Input {
-	#[inline]
-	pub fn title(&self) -> String { self.title.clone() }
-
 	#[inline]
 	pub fn value(&self) -> &str { self.snap().slice(self.snap().window()) }
 
@@ -367,6 +370,13 @@ impl Input {
 
 		let s = snap.slice(snap.offset..start).width() as u16;
 		Some(s..s + snap.slice(start..end).width() as u16)
+	}
+
+	#[inline]
+	pub fn partition(&self) -> [&str; 2] {
+		let snap = self.snap();
+		let idx = snap.idx(snap.cursor).unwrap();
+		[&snap.value[..idx], &snap.value[idx..]]
 	}
 
 	#[inline]

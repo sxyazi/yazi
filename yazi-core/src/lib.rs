@@ -7,6 +7,7 @@
 )]
 
 mod blocker;
+pub mod completion;
 mod context;
 mod event;
 pub mod external;

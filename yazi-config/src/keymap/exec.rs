@@ -102,9 +102,15 @@ impl Exec {
 	pub fn vec(self) -> Vec<Self> { vec![self] }
 
 	#[inline]
-	pub fn with_bool(mut self, name: &str, state: bool) -> Self {
+	pub fn with(mut self, name: impl ToString, value: impl ToString) -> Self {
+		self.named.insert(name.to_string(), value.to_string());
+		self
+	}
+
+	#[inline]
+	pub fn with_bool(mut self, name: impl ToString, state: bool) -> Self {
 		if state {
-			self.named.insert(name.to_string(), "".to_string());
+			self.named.insert(name.to_string(), Default::default());
 		}
 		self
 	}

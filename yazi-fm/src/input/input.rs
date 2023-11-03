@@ -33,7 +33,7 @@ impl<'a> Widget for Input<'a> {
 					.border_type(BorderType::Rounded)
 					.border_style(THEME.input.border.into())
 					.title({
-						let mut line = Line::from(input.title());
+						let mut line = Line::from(input.title.as_str());
 						line.patch_style(THEME.input.title.into());
 						line
 					}),

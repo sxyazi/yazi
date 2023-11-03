@@ -85,6 +85,21 @@ inactive = {}
 # : }}}
 
 
+# : Completion {{{
+
+[completion]
+border   = { fg = "blue" }
+active   = { bg = "darkgray" }
+inactive = {}
+
+# Icons
+icon_file    = ""
+icon_folder  = ""
+icon_command = ""
+
+# : }}}
+
+
 # : Tasks {{{
 
 [tasks]

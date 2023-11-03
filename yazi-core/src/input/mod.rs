@@ -1,3 +1,4 @@
+mod commands;
 mod input;
 mod mode;
 mod op;
@@ -10,6 +11,5 @@ pub use input::*;
 pub use mode::*;
 use op::*;
 pub use option::*;
-pub use shell::*;
 use snap::*;
 use snaps::*;

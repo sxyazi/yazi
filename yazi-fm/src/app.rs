@@ -59,13 +59,13 @@ impl App {
 
 	fn dispatch_key(&mut self, key: KeyEvent) {
 		let key = Key::from(key);
-		if Executor::handle(&mut self.cx, key) {
+		if Executor::new(&mut self.cx).handle(key) {
 			emit!(Render);
 		}
 	}
 
 	fn dispatch_paste(&mut self, str: String) {
-		if self.cx.layer() == KeymapLayer::Input {
+		if self.cx.input.visible {
 			let input = &mut self.cx.input;
 			if input.mode() == InputMode::Insert && input.type_str(&str) {
 				emit!(Render);
@@ -112,7 +112,7 @@ impl App {
 
 	#[inline]
 	fn dispatch_call(&mut self, exec: Vec<Exec>, layer: KeymapLayer) {
-		if Executor::dispatch(&mut self.cx, &exec, layer) {
+		if Executor::new(&mut self.cx).dispatch(&exec, layer) {
 			emit!(Render);
 		}
 	}

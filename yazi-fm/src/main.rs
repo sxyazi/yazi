@@ -1,6 +1,7 @@
 #![allow(clippy::module_inception)]
 
 mod app;
+mod completion;
 mod executor;
 mod help;
 mod input;
