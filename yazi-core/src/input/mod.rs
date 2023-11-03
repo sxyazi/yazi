@@ -1,3 +1,4 @@
+mod commands;
 mod input;
 mod mode;
 mod op;

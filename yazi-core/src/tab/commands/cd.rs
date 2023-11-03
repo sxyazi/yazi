@@ -1,6 +1,9 @@
-use std::mem;
+use std::{mem, time::Duration};
 
-use yazi_shared::Url;
+use tokio::pin;
+use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
+use yazi_config::keymap::{Exec, KeymapLayer};
+use yazi_shared::{Debounce, InputError, Url};
 
 use crate::{emit, files::{File, FilesOp}, input::InputOpt, tab::Tab};
 
@@ -59,12 +62,26 @@ impl Tab {
 
 	pub fn cd_interactive(&mut self, target: Url) -> bool {
 		tokio::spawn(async move {
-			let mut result = emit!(Input(
+			let rx = emit!(Input(
 				InputOpt::top("Change directory:").with_value(target.to_string_lossy()).with_completion()
 			));
 
-			if let Some(Ok(s)) = result.recv().await {
-				emit!(Cd(Url::from(s.trim())));
+			let rx = Debounce::new(UnboundedReceiverStream::new(rx), Duration::from_millis(50));
+			pin!(rx);
+
+			while let Some(result) = rx.next().await {
+				match result {
+					Ok(s) => {
+						emit!(Cd(Url::from(s.trim())));
+					}
+					Err(InputError::Completed(before, ticket)) => {
+						emit!(Call(
+							Exec::call("complete", vec![before]).with("ticket", ticket).vec(),
+							KeymapLayer::Input
+						));
+					}
+					_ => break,
+				}
 			}
 		});
 		false

@@ -244,8 +244,8 @@ keymap = [
 	{ on = [ "<C-q>" ],   exec = "close",          desc = "Cancel completion" },
 	{ on = [ "<Enter>" ], exec = "close --submit", desc = "Submit the completion" },
 
-	{ on = [ "k" ], exec = "arrow -1", desc = "Move cursor up" },
-	{ on = [ "j" ], exec = "arrow 1",  desc = "Move cursor down" },
+	{ on = [ "<A-k>" ], exec = "arrow -1", desc = "Move cursor up" },
+	{ on = [ "<A-j>" ], exec = "arrow 1",  desc = "Move cursor down" },
 
 	{ on = [ "<Up>" ],   exec = "arrow -1", desc = "Move cursor up" },
 	{ on = [ "<Down>" ], exec = "arrow 1",  desc = "Move cursor down" },

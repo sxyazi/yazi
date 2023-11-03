@@ -3,17 +3,17 @@ use std::ops::Range;
 use crossterm::event::KeyCode;
 use tokio::sync::mpsc::UnboundedSender;
 use unicode_width::UnicodeWidthStr;
-use yazi_config::keymap::{Exec, Key, KeymapLayer};
+use yazi_config::keymap::Key;
 use yazi_shared::{CharKind, InputError};
 
 use super::{mode::InputMode, op::InputOp, InputOpt, InputSnap, InputSnaps};
-use crate::{emit, external, Position};
+use crate::{external, Position};
 
 #[derive(Default)]
 pub struct Input {
-	snaps:       InputSnaps,
-	pub ticket:  usize,
-	pub visible: bool,
+	pub(super) snaps: InputSnaps,
+	pub ticket:       usize,
+	pub visible:      bool,
 
 	pub title:    String,
 	pub position: Position,
@@ -31,7 +31,6 @@ impl Input {
 	pub fn show(&mut self, opt: InputOpt, tx: UnboundedSender<Result<String, InputError>>) {
 		self.close(false);
 		self.snaps.reset(opt.value);
-		self.ticket = self.ticket.wrapping_add(1);
 		self.visible = true;
 
 		self.title = opt.title;
@@ -52,6 +51,7 @@ impl Input {
 			_ = cb.send(if submit { Ok(value) } else { Err(InputError::Canceled(value)) });
 		}
 
+		self.ticket = self.ticket.wrapping_add(1);
 		self.visible = false;
 		true
 	}
@@ -213,7 +213,7 @@ impl Input {
 		}
 
 		self.move_(s.chars().count() as isize);
-		self.flush_value();
+		self.flush_value(false);
 		true
 	}
 
@@ -226,7 +226,7 @@ impl Input {
 		}
 
 		self.move_(-1);
-		self.flush_value();
+		self.flush_value(false);
 		true
 	}
 
@@ -320,26 +320,23 @@ impl Input {
 			return false;
 		}
 		if !matches!(old.op, InputOp::None | InputOp::Select(_)) {
-			self.snaps.tag().then(|| self.flush_value());
+			self.snaps.tag().then(|| self.flush_value(false));
 		}
 		true
 	}
 
 	#[inline]
-	fn flush_value(&mut self) {
+	pub(super) fn flush_value(&mut self, no_complete: bool) {
 		self.ticket = self.ticket.wrapping_add(1);
 
 		if self.realtime {
 			let value = self.snap().value.clone();
 			self.callback.as_ref().unwrap().send(Err(InputError::Typed(value))).ok();
 		}
-		if self.completion {
-			emit!(Call(
-				Exec::call("complete", vec![self.partition()[0].to_owned()])
-					.with("ticket", self.ticket)
-					.vec(),
-				KeymapLayer::Input
-			));
+
+		if self.completion && !no_complete {
+			let before = self.partition()[0].to_owned();
+			self.callback.as_ref().unwrap().send(Err(InputError::Completed(before, self.ticket))).ok();
 		}
 	}
 }

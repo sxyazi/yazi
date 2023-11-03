@@ -1,4 +1,5 @@
 use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, Borders, Clear, List, ListItem, Widget}};
+use yazi_config::THEME;
 use yazi_core::{Ctx, Position};
 
 pub(crate) struct Completion<'a> {
@@ -11,8 +12,24 @@ impl<'a> Completion<'a> {
 
 impl<'a> Widget for Completion<'a> {
 	fn render(self, rect: Rect, buf: &mut Buffer) {
-		let items =
-			self.cx.completion.items.iter().map(|x| ListItem::new(x.as_str())).collect::<Vec<_>>();
+		let items = self
+			.cx
+			.completion
+			.window()
+			.iter()
+			.enumerate()
+			.map(|(i, x)| {
+				let mut item = ListItem::new(format!(" {} {}", THEME.completion.icon_file, x));
+
+				if i == self.cx.completion.cursor {
+					item = item.style(THEME.completion.active.into());
+				} else {
+					item = item.style(THEME.completion.inactive.into());
+				}
+
+				item
+			})
+			.collect::<Vec<_>>();
 
 		let input_area = self.cx.area(&self.cx.input.position);
 		let mut area =
@@ -27,7 +44,12 @@ impl<'a> Widget for Completion<'a> {
 
 		Clear.render(area, buf);
 		List::new(items)
-			.block(Block::new().borders(Borders::ALL).border_type(BorderType::Rounded))
+			.block(
+				Block::new()
+					.borders(Borders::ALL)
+					.border_type(BorderType::Rounded)
+					.border_style(THEME.completion.border.into()),
+			)
 			.render(area, buf);
 	}
 }

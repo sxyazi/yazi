@@ -267,7 +267,13 @@ impl<'a> Executor<'a> {
 				};
 			}
 
-			"complete" => return self.cx.completion.trigger(exec),
+			"complete" => {
+				return if exec.named.contains_key("apply") {
+					self.cx.input.complete(exec)
+				} else {
+					self.cx.completion.trigger(exec)
+				};
+			}
 			_ => {}
 		}
 
@@ -315,16 +321,9 @@ impl<'a> Executor<'a> {
 		match exec.cmd.as_str() {
 			"trigger" => self.cx.completion.trigger(exec),
 			"show" => self.cx.completion.show(exec),
-			"close" => self.cx.completion.close(exec.named.contains_key("submit")),
+			"close" => self.cx.completion.close(exec),
 
-			"arrow" => {
-				let step: isize = exec.args.first().and_then(|s| s.parse().ok()).unwrap_or(0);
-				if step > 0 {
-					self.cx.completion.next(step as usize)
-				} else {
-					self.cx.completion.prev(step.unsigned_abs())
-				}
-			}
+			"arrow" => self.cx.completion.arrow(exec),
 
 			"help" => self.cx.help.toggle(KeymapLayer::Completion),
 			_ => false,

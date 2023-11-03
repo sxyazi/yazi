@@ -84,12 +84,18 @@ inactive = {}
 
 # : }}}
 
+
 # : Completion {{{
 
 [completion]
 border   = { fg = "blue" }
-active   = { fg = "lightcyan" }
+active   = { bg = "darkgray" }
 inactive = {}
+
+# Icons
+icon_file    = ""
+icon_folder  = ""
+icon_command = ""
 
 # : }}}
 

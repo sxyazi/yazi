@@ -86,6 +86,10 @@ pub struct Completion {
 	pub border:   Style,
 	pub active:   Style,
 	pub inactive: Style,
+
+	pub icon_file:    String,
+	pub icon_folder:  String,
+	pub icon_command: String,
 }
 
 #[derive(Deserialize, Serialize)]
