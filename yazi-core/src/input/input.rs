@@ -3,11 +3,11 @@ use std::ops::Range;
 use crossterm::event::KeyCode;
 use tokio::sync::mpsc::UnboundedSender;
 use unicode_width::UnicodeWidthStr;
-use yazi_config::keymap::Key;
+use yazi_config::keymap::{Exec, Key, KeymapLayer};
 use yazi_shared::{CharKind, InputError};
 
 use super::{mode::InputMode, op::InputOp, InputOpt, InputSnap, InputSnaps};
-use crate::{external, Position};
+use crate::{emit, external, Position};
 
 #[derive(Default)]
 pub struct Input {
@@ -68,6 +68,10 @@ impl Input {
 			InputMode::Insert => {
 				snap.mode = InputMode::Normal;
 				self.move_(-1);
+
+				if self.completion {
+					emit!(Call(Exec::call("close", vec![]).vec(), KeymapLayer::Completion));
+				}
 			}
 		}
 		self.snaps.tag();
