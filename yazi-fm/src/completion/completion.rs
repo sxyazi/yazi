@@ -26,7 +26,7 @@ impl<'a> Widget for Completion<'a> {
 				};
 
 				let mut item = ListItem::new(format!(" {} {}", icon, x));
-				if i == self.cx.completion.cursor {
+				if i == self.cx.completion.rel_cursor() {
 					item = item.style(THEME.completion.active.into());
 				} else {
 					item = item.style(THEME.completion.inactive.into());
@@ -37,8 +37,10 @@ impl<'a> Widget for Completion<'a> {
 			.collect::<Vec<_>>();
 
 		let input_area = self.cx.area(&self.cx.input.position);
-		let mut area =
-			self.cx.area(&Position::Sticky(Rect { x: 1, y: 0, width: 20, height: 15 }, input_area));
+		let mut area = self.cx.area(&Position::Sticky(
+			Rect { x: 1, y: 0, width: 20, height: items.len() as u16 + 2 },
+			input_area,
+		));
 
 		if area.y > input_area.y {
 			area.y = area.y.saturating_sub(1);
