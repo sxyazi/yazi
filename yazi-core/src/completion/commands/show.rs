@@ -46,7 +46,6 @@ impl Completion {
 			ControlFlow::Continue(v)
 		});
 
-		self.close(false);
 		self.cands = match flow {
 			ControlFlow::Continue(v) => v,
 			ControlFlow::Break(v) => v,
@@ -54,6 +53,8 @@ impl Completion {
 		self.ticket = opt.ticket;
 
 		if !self.cands.is_empty() {
+			self.offset = 0;
+			self.cursor = 0;
 			self.visible = true;
 		}
 		true

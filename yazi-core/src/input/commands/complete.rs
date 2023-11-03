@@ -11,7 +11,7 @@ impl<'a> From<&'a Exec> for Opt<'a> {
 	fn from(e: &'a Exec) -> Self {
 		Self {
 			word:   e.args.first().map(|w| w.as_str()).unwrap_or_default(),
-			ticket: e.named.get("ticket").and_then(|v| v.parse().ok()).unwrap_or(0),
+			ticket: e.named.get("ticket").and_then(|s| s.parse().ok()).unwrap_or(0),
 		}
 	}
 }

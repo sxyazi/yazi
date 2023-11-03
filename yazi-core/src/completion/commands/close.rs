@@ -8,10 +8,6 @@ impl From<&Exec> for Opt {
 	fn from(e: &Exec) -> Self { Self(e.named.contains_key("submit")) }
 }
 
-impl From<bool> for Opt {
-	fn from(b: bool) -> Self { Self(b) }
-}
-
 impl Completion {
 	pub fn close(&mut self, opt: impl Into<Opt>) -> bool {
 		let submit = opt.into().0;
@@ -22,7 +18,7 @@ impl Completion {
 			));
 		}
 
-		self.cursor = 0;
+		self.caches.clear();
 		self.visible = false;
 		true
 	}
