@@ -1,4 +1,4 @@
-use std::ops::ControlFlow;
+use std::{mem, ops::ControlFlow};
 
 use yazi_config::keymap::Exec;
 
@@ -46,17 +46,18 @@ impl Completion {
 			ControlFlow::Continue(v)
 		});
 
+		self.ticket = opt.ticket;
 		self.cands = match flow {
 			ControlFlow::Continue(v) => v,
 			ControlFlow::Break(v) => v,
 		};
-		self.ticket = opt.ticket;
-
-		if !self.cands.is_empty() {
-			self.offset = 0;
-			self.cursor = 0;
-			self.visible = true;
+		if self.cands.is_empty() {
+			return mem::replace(&mut self.visible, false);
 		}
+
+		self.offset = 0;
+		self.cursor = 0;
+		self.visible = true;
 		true
 	}
 }
