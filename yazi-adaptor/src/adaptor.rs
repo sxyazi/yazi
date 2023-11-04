@@ -15,7 +15,7 @@ static IMAGE_SHOWN: AtomicBool = AtomicBool::new(false);
 #[allow(clippy::type_complexity)]
 static UEBERZUG: RoCell<Option<UnboundedSender<Option<(PathBuf, Rect)>>>> = RoCell::new();
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Adaptor {
 	Kitty,
 	Iterm2,
@@ -27,36 +27,77 @@ pub enum Adaptor {
 	Chafa,
 }
 
+#[derive(Clone, Copy)]
+enum Emulator {
+	Unknown,
+	Kitty,
+	Konsole,
+	Iterm2,
+	WezTerm,
+	Foot,
+	BlackBox,
+	VSCode,
+	Hyper,
+	Mintty,
+}
+
 impl Adaptor {
-	pub(super) fn detect() -> Self {
+	fn emulator() -> Emulator {
 		let vars = [
-			("ZELLIJ_SESSION_NAME", Self::Sixel),
-			("KITTY_WINDOW_ID", Self::Kitty),
-			("KONSOLE_VERSION", Self::Kitty),
-			("ITERM_SESSION_ID", Self::Iterm2),
-			("WEZTERM_EXECUTABLE", cfg!(windows).then_some(Self::Iterm2).unwrap_or(Self::Kitty)),
-			("VSCODE_INJECTION", Self::Sixel),
+			("KITTY_WINDOW_ID", Emulator::Kitty),
+			("KONSOLE_VERSION", Emulator::Konsole),
+			("ITERM_SESSION_ID", Emulator::Iterm2),
+			("WEZTERM_EXECUTABLE", Emulator::WezTerm),
+			("VSCODE_INJECTION", Emulator::VSCode),
 		];
-		match vars.iter().find(|v| env::var_os(v.0).is_some_and(|s| !s.is_empty())) {
+		match vars.into_iter().find(|v| env::var_os(v.0).is_some_and(|s| !s.is_empty())) {
 			Some(var) => return var.1,
 			None => warn!("[Adaptor] No special environment variables detected"),
 		}
 
 		let (term, program) = Self::term_program();
 		match program.as_str() {
-			"iTerm.app" => return Self::Iterm2,
-			"WezTerm" => return cfg!(windows).then_some(Self::Iterm2).unwrap_or(Self::Kitty),
-			"BlackBox" => return Self::Sixel,
-			"vscode" => return Self::Sixel,
-			"Hyper" => return Self::Sixel,
-			"mintty" => return Self::Iterm2,
+			"iTerm.app" => return Emulator::Iterm2,
+			"WezTerm" => return Emulator::WezTerm,
+			"BlackBox" => return Emulator::BlackBox,
+			"vscode" => return Emulator::VSCode,
+			"Hyper" => return Emulator::Hyper,
+			"mintty" => return Emulator::Mintty,
 			_ => warn!("[Adaptor] Unknown TERM_PROGRAM: {program}"),
 		}
 		match term.as_str() {
-			"xterm-kitty" => return Self::Kitty,
-			"foot" => return Self::Sixel,
-			"foot-extra" => return Self::Sixel,
+			"xterm-kitty" => return Emulator::Kitty,
+			"foot" => return Emulator::Foot,
+			"foot-extra" => return Emulator::Foot,
 			_ => warn!("[Adaptor] Unknown TERM: {term}"),
+		}
+		Emulator::Unknown
+	}
+
+	pub(super) fn detect() -> Self {
+		let mut protocols = match Self::emulator() {
+			Emulator::Unknown => vec![],
+			Emulator::Kitty => vec![Self::Kitty],
+			Emulator::Konsole => vec![Self::Kitty, Self::Iterm2, Self::Sixel],
+			Emulator::Iterm2 => vec![Self::Iterm2, Self::Sixel],
+			Emulator::WezTerm => vec![Self::Kitty, Self::Iterm2, Self::Sixel],
+			Emulator::Foot => vec![Self::Sixel],
+			Emulator::BlackBox => vec![Self::Sixel],
+			Emulator::VSCode => vec![Self::Sixel],
+			Emulator::Hyper => vec![Self::Sixel],
+			Emulator::Mintty => vec![Self::Iterm2],
+		};
+
+		#[cfg(windows)]
+		protocols.retain(|p| *p == Self::Iterm2);
+		if env::var_os("ZELLIJ_SESSION_NAME").is_some_and(|s| !s.is_empty()) {
+			protocols.retain(|p| *p == Self::Sixel);
+		}
+		if *TMUX && protocols.len() > 1 {
+			protocols.retain(|p| *p != Self::Kitty);
+		}
+		if let Some(p) = protocols.first() {
+			return *p;
 		}
 
 		match env::var("XDG_SESSION_TYPE").unwrap_or_default().as_str() {

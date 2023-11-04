@@ -68,7 +68,7 @@ impl Highlighter {
 				break;
 			}
 
-			if !plain && line.len() > 10000 {
+			if !plain && line.len() > 6000 {
 				mem::take(&mut before);
 				plain = true;
 			}
