@@ -93,6 +93,10 @@ impl Folder {
 	}
 
 	pub fn hover(&mut self, url: &Url) -> bool {
+		if self.hovered().map(|h| &h.url) == Some(url) {
+			return false;
+		}
+
 		let new = self.files.position(url).unwrap_or(self.cursor);
 		if new > self.cursor {
 			self.next(Step::next(new - self.cursor))
