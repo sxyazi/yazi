@@ -40,7 +40,7 @@ impl Manager {
 			return false;
 		};
 
-		let opt = opt.into();
+		let opt = opt.into() as Opt;
 		tokio::spawn(async move {
 			let mut result = emit!(Input(
 				InputOpt::hovered("Rename:").with_value(hovered.file_name().unwrap().to_string_lossy())

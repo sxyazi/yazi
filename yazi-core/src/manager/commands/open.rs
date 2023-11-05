@@ -46,7 +46,7 @@ impl Manager {
 			return false;
 		}
 
-		let opt = opt.into();
+		let opt = opt.into() as Opt;
 		tokio::spawn(async move {
 			let todo: Vec<_> = files.iter().filter(|(_, m)| m.is_none()).map(|(u, _)| u).collect();
 			if let Ok(mut mimes) = external::file(&todo).await {

@@ -15,7 +15,7 @@ impl From<&Exec> for Opt {
 
 impl Manager {
 	pub fn link(&mut self, opt: impl Into<Opt>, tasks: &Tasks) -> bool {
-		let opt = opt.into();
+		let opt = opt.into() as Opt;
 		let (cut, ref src) = self.yanked;
 		!cut && tasks.file_link(src, self.cwd(), opt.relative, opt.force)
 	}

@@ -37,7 +37,7 @@ impl From<&Exec> for ArrowOpt {
 
 impl Tab {
 	pub fn find<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
-		let opt = opt.into();
+		let opt = opt.into() as Opt;
 		tokio::spawn(async move {
 			let rx = emit!(Input(
 				InputOpt::top(if opt.prev { "Find previous:" } else { "Find next:" }).with_realtime()
@@ -61,7 +61,7 @@ impl Tab {
 	}
 
 	pub fn find_do<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
-		let opt = opt.into();
+		let opt = opt.into() as Opt;
 		let Some(query) = opt.query else {
 			return false;
 		};

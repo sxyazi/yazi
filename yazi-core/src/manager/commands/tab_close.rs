@@ -18,7 +18,7 @@ impl From<usize> for Opt {
 
 impl Tabs {
 	pub fn close(&mut self, opt: impl Into<Opt>) -> bool {
-		let opt = opt.into();
+		let opt = opt.into() as Opt;
 
 		let len = self.items.len();
 		if len < 2 || opt.idx >= len {

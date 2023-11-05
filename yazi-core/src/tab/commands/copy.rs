@@ -14,7 +14,7 @@ impl<'a> From<&'a Exec> for Opt<'a> {
 
 impl Tab {
 	pub fn copy<'a>(&self, opt: impl Into<Opt<'a>>) -> bool {
-		let opt = opt.into();
+		let opt = opt.into() as Opt;
 
 		let mut s = OsString::new();
 		let mut it = self.selected().into_iter().peekable();

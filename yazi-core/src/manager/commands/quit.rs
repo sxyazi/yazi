@@ -15,7 +15,7 @@ impl From<&Exec> for Opt {
 
 impl Manager {
 	pub fn quit(&self, opt: impl Into<Opt>, tasks: &Tasks) -> bool {
-		let opt = opt.into();
+		let opt = opt.into() as Opt;
 
 		let tasks = tasks.len();
 		if tasks == 0 {

@@ -2,11 +2,13 @@ use yazi_config::keymap::Exec;
 
 use crate::{emit, tab::Tab, Step};
 
-pub struct Opt(Step);
+pub struct Opt {
+	step: Step,
+}
 
 impl From<&Exec> for Opt {
 	fn from(e: &Exec) -> Self {
-		Self(e.args.first().and_then(|s| s.parse().ok()).unwrap_or_default())
+		Self { step: e.args.first().and_then(|s| s.parse().ok()).unwrap_or_default() }
 	}
 }
 
@@ -14,13 +16,17 @@ impl<T> From<T> for Opt
 where
 	T: Into<Step>,
 {
-	fn from(t: T) -> Self { Self(t.into()) }
+	fn from(t: T) -> Self { Self { step: t.into() } }
 }
 
 impl Tab {
 	pub fn arrow(&mut self, opt: impl Into<Opt>) -> bool {
-		let step = opt.into().0;
-		let ok = if step.is_positive() { self.current.next(step) } else { self.current.prev(step) };
+		let opt = opt.into() as Opt;
+		let ok = if opt.step.is_positive() {
+			self.current.next(opt.step)
+		} else {
+			self.current.prev(opt.step)
+		};
 		if !ok {
 			return false;
 		}

@@ -12,7 +12,7 @@ impl From<&Exec> for Opt {
 
 impl Manager {
 	pub fn yank(&mut self, opt: impl Into<Opt>) -> bool {
-		let opt = opt.into();
+		let opt = opt.into() as Opt;
 
 		self.yanked.0 = opt.cut;
 		self.yanked.1 = self.selected().into_iter().map(|f| f.url()).collect();

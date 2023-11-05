@@ -27,7 +27,7 @@ impl Tabs {
 			return false;
 		}
 
-		let opt = opt.into();
+		let opt = opt.into() as Opt;
 		let url = if opt.current { self.active().current.cwd.to_owned() } else { opt.url.unwrap() };
 
 		let mut tab = Tab::from(url);

@@ -28,7 +28,7 @@ impl From<&Exec> for Opt {
 
 impl Tab {
 	pub fn jump(&self, opt: impl Into<Opt>) -> bool {
-		let opt = opt.into();
+		let opt = opt.into() as Opt;
 		if opt.type_ == OptType::None {
 			return false;
 		}

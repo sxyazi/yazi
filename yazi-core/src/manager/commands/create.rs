@@ -16,7 +16,7 @@ impl From<&Exec> for Opt {
 
 impl Manager {
 	pub fn create(&self, opt: impl Into<Opt>) -> bool {
-		let opt = opt.into();
+		let opt = opt.into() as Opt;
 		let cwd = self.cwd().to_owned();
 		tokio::spawn(async move {
 			let mut result = emit!(Input(InputOpt::top("Create:")));

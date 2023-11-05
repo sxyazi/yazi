@@ -15,7 +15,7 @@ impl Manager {
 		let dest = self.cwd();
 		let (cut, ref src) = self.yanked;
 
-		let opt = opt.into();
+		let opt = opt.into() as Opt;
 		if cut { tasks.file_cut(src, dest, opt.force) } else { tasks.file_copy(src, dest, opt.force) }
 	}
 }

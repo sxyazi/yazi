@@ -26,7 +26,7 @@ impl Tab {
 			.map(|f| (f.url.as_os_str().to_owned(), Default::default()))
 			.collect();
 
-		let mut opt = opt.into();
+		let mut opt = opt.into() as Opt;
 		tokio::spawn(async move {
 			if !opt.confirm || opt.cmd.is_empty() {
 				let mut result = emit!(Input(
