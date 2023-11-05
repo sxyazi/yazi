@@ -7,8 +7,36 @@ use yazi_config::keymap::{Exec, KeymapLayer};
 
 use crate::{emit, external, files::FilesOp, input::InputOpt, tab::Tab};
 
+pub struct Opt {
+	pub type_: OptType,
+}
+
+#[derive(PartialEq, Eq)]
+pub enum OptType {
+	None,
+	Rg,
+	Fd,
+}
+
+impl From<&Exec> for Opt {
+	fn from(e: &Exec) -> Self {
+		Self {
+			type_: match e.args.first().map(|s| s.as_str()) {
+				Some("fd") => OptType::Fd,
+				Some("rg") => OptType::Rg,
+				_ => OptType::None,
+			},
+		}
+	}
+}
+
 impl Tab {
-	pub fn search(&mut self, grep: bool) -> bool {
+	pub fn search(&mut self, opt: impl Into<Opt>) -> bool {
+		let opt = opt.into();
+		if opt.type_ == OptType::None {
+			return self.search_stop();
+		}
+
 		if let Some(handle) = self.search.take() {
 			handle.abort();
 		}
@@ -22,7 +50,7 @@ impl Tab {
 			};
 
 			cwd = cwd.into_search(subject.clone());
-			let rx = if grep {
+			let rx = if opt.type_ == OptType::Rg {
 				external::rg(external::RgOpt { cwd: cwd.clone(), hidden, subject })
 			} else {
 				external::fd(external::FdOpt { cwd: cwd.clone(), hidden, glob: false, subject })
@@ -45,7 +73,7 @@ impl Tab {
 		true
 	}
 
-	pub fn search_stop(&mut self) -> bool {
+	pub(super) fn search_stop(&mut self) -> bool {
 		if let Some(handle) = self.search.take() {
 			handle.abort();
 		}

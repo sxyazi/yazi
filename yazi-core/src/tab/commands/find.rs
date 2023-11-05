@@ -7,30 +7,40 @@ use yazi_shared::{Debounce, InputError};
 
 use crate::{emit, input::InputOpt, tab::{Finder, FinderCase, Tab}};
 
-impl Tab {
-	pub fn find(&mut self, query: Option<&str>, prev: bool, case: FinderCase) -> bool {
-		if let Some(query) = query {
-			let Ok(finder) = Finder::new(query, case) else {
-				return false;
-			};
+pub struct Opt<'a> {
+	query: Option<&'a str>,
+	prev:  bool,
+	case:  FinderCase,
+}
 
-			let step = if prev {
-				finder.prev(&self.current.files, self.current.cursor, true)
-			} else {
-				finder.next(&self.current.files, self.current.cursor, true)
-			};
-
-			if let Some(step) = step {
-				self.arrow(step.into());
-			}
-
-			self.finder = Some(finder);
-			return true;
+impl<'a> From<&'a Exec> for Opt<'a> {
+	fn from(e: &'a Exec) -> Self {
+		Self {
+			query: e.args.first().map(|s| s.as_str()),
+			prev:  e.named.contains_key("previous"),
+			case:  match (e.named.contains_key("smart"), e.named.contains_key("insensitive")) {
+				(true, _) => FinderCase::Smart,
+				(_, false) => FinderCase::Sensitive,
+				(_, true) => FinderCase::Insensitive,
+			},
 		}
+	}
+}
 
+pub struct ArrowOpt {
+	prev: bool,
+}
+
+impl From<&Exec> for ArrowOpt {
+	fn from(e: &Exec) -> Self { Self { prev: e.named.contains_key("previous") } }
+}
+
+impl Tab {
+	pub fn find<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
+		let opt = opt.into();
 		tokio::spawn(async move {
 			let rx = emit!(Input(
-				InputOpt::top(if prev { "Find previous:" } else { "Find next:" }).with_realtime()
+				InputOpt::top(if opt.prev { "Find previous:" } else { "Find next:" }).with_realtime()
 			));
 
 			let rx = Debounce::new(UnboundedReceiverStream::new(rx), Duration::from_millis(50));
@@ -38,10 +48,10 @@ impl Tab {
 
 			while let Some(Ok(s)) | Some(Err(InputError::Typed(s))) = rx.next().await {
 				emit!(Call(
-					Exec::call("find", vec![s])
-						.with_bool("previous", prev)
-						.with_bool("smart", case == FinderCase::Smart)
-						.with_bool("insensitive", case == FinderCase::Insensitive)
+					Exec::call("find_do", vec![s])
+						.with_bool("previous", opt.prev)
+						.with_bool("smart", opt.case == FinderCase::Smart)
+						.with_bool("insensitive", opt.case == FinderCase::Insensitive)
 						.vec(),
 					KeymapLayer::Manager
 				));
@@ -50,18 +60,42 @@ impl Tab {
 		false
 	}
 
-	pub fn find_arrow(&mut self, prev: bool) -> bool {
+	pub fn find_do<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
+		let opt = opt.into();
+		let Some(query) = opt.query else {
+			return false;
+		};
+
+		let Ok(finder) = Finder::new(query, opt.case) else {
+			return false;
+		};
+
+		let step = if opt.prev {
+			finder.prev(&self.current.files, self.current.cursor, true)
+		} else {
+			finder.next(&self.current.files, self.current.cursor, true)
+		};
+
+		if let Some(step) = step {
+			self.arrow(step);
+		}
+
+		self.finder = Some(finder);
+		true
+	}
+
+	pub fn find_arrow(&mut self, opt: impl Into<ArrowOpt>) -> bool {
 		let Some(finder) = &mut self.finder else {
 			return false;
 		};
 
 		let b = finder.catchup(&self.current.files);
-		let step = if prev {
+		let step = if opt.into().prev {
 			finder.prev(&self.current.files, self.current.cursor, false)
 		} else {
 			finder.next(&self.current.files, self.current.cursor, false)
 		};
 
-		b | step.is_some_and(|s| self.arrow(s.into()))
+		b | step.is_some_and(|s| self.arrow(s))
 	}
 }
