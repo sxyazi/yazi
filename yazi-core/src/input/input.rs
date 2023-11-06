@@ -56,7 +56,13 @@ impl Input {
 		}
 
 		match key {
-			Key { code: KeyCode::Backspace, shift: false, ctrl: false, alt: false } => self.backspace(),
+			Key { code: KeyCode::Backspace, shift: false, ctrl: false, alt: false } => self.backspace(false),
+			// Handle Emacs-style keybindings.
+			Key { code: KeyCode::Char('a'), shift: false, ctrl: true, alt: false } => self.move_(isize::MIN),
+			Key { code: KeyCode::Char('e'), shift: false, ctrl: true, alt: false } => self.move_(isize::MAX),
+			Key { code: KeyCode::Char('d'), shift: false, ctrl: true, alt: false } => self.backspace(true),
+			Key { code: KeyCode::Char('b'), shift: false, ctrl: false, alt: true } => self.backward(),
+			Key { code: KeyCode::Char('f'), shift: false, ctrl: false, alt: true } => self.forward(false),
 			_ => false,
 		}
 	}
@@ -74,15 +80,27 @@ impl Input {
 		true
 	}
 
-	pub fn backspace(&mut self) -> bool {
+	pub fn backspace(&mut self, forward_delete: bool) -> bool {
 		let snap = self.snaps.current_mut();
-		if snap.cursor < 1 {
-			return false;
+		if forward_delete {
+			// Return false when there is no character on the right to delete.
+			// Note that the cursor can be at index `snap.value.len()` when in
+			// edit mode.
+			if snap.cursor > snap.value.len() - 1 {
+				return false;
+			} else {
+				snap.value.remove(snap.idx(snap.cursor).unwrap());
+			}
+			self.move_(0);
 		} else {
-			snap.value.remove(snap.idx(snap.cursor - 1).unwrap());
+			if snap.cursor < 1 {
+				return false;
+			} else {
+				snap.value.remove(snap.idx(snap.cursor - 1).unwrap());
+			}
+			self.move_(-1);
 		}
 
-		self.move_(-1);
 		self.flush_value();
 		true
 	}
