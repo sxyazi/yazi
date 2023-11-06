@@ -27,6 +27,8 @@ ui = {
 		ROUNDED = 1,
 		DOUBLE = 2,
 		THICK = 3,
+		QUADRANT_INSIDE = 4,
+		QUADRANT_OUTSIDE = 5,
 	}, {
 		__call = function(_, ...) return ui.Border.new(...) end,
 	}),

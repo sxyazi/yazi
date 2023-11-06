@@ -100,28 +100,29 @@ impl Tab {
 	}
 
 	pub fn apply_files_attrs(&mut self, just_preview: bool) -> bool {
+		let apply = |f: &mut Folder| {
+			let hovered = f.hovered().map(|h| h.url());
+
+			let mut b = f.files.set_show_hidden(self.conf.show_hidden);
+			b |= f.files.set_sorter(self.conf.sorter());
+			b | f.repos(hovered)
+		};
+
 		let mut b = false;
 		if let Some(f) =
 			self.current.hovered().filter(|h| h.is_dir()).and_then(|h| self.history.get_mut(&h.url))
 		{
-			b |= f.files.set_show_hidden(self.conf.show_hidden);
-			b |= f.files.set_sorter(self.conf.sorter());
+			b |= apply(f);
 		}
-
 		if just_preview {
 			return b;
 		}
 
-		let hovered = self.current.hovered().map(|h| h.url());
-		b |= self.current.files.set_show_hidden(self.conf.show_hidden);
-		b |= self.current.files.set_sorter(self.conf.sorter());
-
+		b |= apply(&mut self.current);
 		if let Some(parent) = self.parent.as_mut() {
-			b |= parent.files.set_show_hidden(self.conf.show_hidden);
-			b |= parent.files.set_sorter(self.conf.sorter());
+			b |= apply(parent);
 		}
 
-		self.current.repos(hovered);
 		b
 	}
 }

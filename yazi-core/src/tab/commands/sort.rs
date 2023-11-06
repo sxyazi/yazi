@@ -6,7 +6,7 @@ use crate::tab::Tab;
 
 impl Tab {
 	pub fn sort(&mut self, e: &Exec) -> bool {
-		if let Some(by) = e.args.get(0) {
+		if let Some(by) = e.args.first() {
 			self.conf.sort_by = SortBy::from_str(by).unwrap_or_default();
 		}
 		self.conf.sort_sensitive = e.named.contains_key("sensitive");

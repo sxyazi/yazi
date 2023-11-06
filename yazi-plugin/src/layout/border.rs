@@ -62,6 +62,8 @@ impl UserData for Border {
 				1 => ratatui::widgets::BorderType::Rounded,
 				2 => ratatui::widgets::BorderType::Double,
 				3 => ratatui::widgets::BorderType::Thick,
+				4 => ratatui::widgets::BorderType::QuadrantInside,
+				5 => ratatui::widgets::BorderType::QuadrantOutside,
 				_ => ratatui::widgets::BorderType::Plain,
 			};
 			Ok(ud)
