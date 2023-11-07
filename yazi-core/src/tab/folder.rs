@@ -49,29 +49,28 @@ impl Folder {
 		true
 	}
 
-	pub fn set_page(&mut self, force: bool) -> bool {
+	pub fn set_page(&mut self, force: bool) {
 		let limit = MANAGER.layout.folder_height();
-		let new = if limit == 0 { 0 } else { self.cursor / limit };
+		if limit == 0 {
+			return;
+		}
+
+		let new = self.cursor / limit;
 		if !force && self.page == new {
-			return false;
+			return;
 		}
 
-		let old = self.page;
+		if new > 1 && new - 1 != self.page {
+			emit!(Pages(new - 1));
+		}
+
+		let max_page = (self.files.len() + limit - 1) / limit;
+		if new < max_page && new + 1 != self.page {
+			emit!(Pages(new + 1));
+		}
+
 		self.page = new;
-
-		let prev_page = new.saturating_sub(1);
-		let next_page = new.saturating_add(1);
-
-		if prev_page != new && prev_page != old {
-			emit!(Pages(prev_page));
-		}
-
 		emit!(Pages(new));
-
-		if next_page != new && next_page != old {
-			emit!(Pages(next_page));
-		}
-		true
 	}
 
 	pub fn next(&mut self, step: Step) -> bool {
