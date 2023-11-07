@@ -73,7 +73,14 @@ impl Files {
 			reg.add_field_method_get("accessed", |_, me| {
 				Ok(me.accessed.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
 			});
-			reg.add_method("permissions", |_, me, ()| Ok(yazi_shared::permissions(me.permissions)));
+			reg.add_method("permissions", |_, me, ()| {
+				Ok(
+					#[cfg(unix)]
+					Some(yazi_shared::permissions(me.permissions)),
+					#[cfg(windows)]
+					None,
+				)
+			});
 
 			// Extension
 			reg.add_field_method_get("name", |_, me| {

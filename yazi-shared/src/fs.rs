@@ -92,14 +92,9 @@ pub fn copy_with_progress(from: &Path, to: &Path) -> mpsc::Receiver<Result<u64, 
 }
 
 // Convert a file mode to a string representation
-#[cfg(windows)]
-#[allow(clippy::collapsible_else_if)]
-pub fn permissions(_: u32) -> Option<String> { None }
-
-// Convert a file mode to a string representation
 #[cfg(unix)]
 #[allow(clippy::collapsible_else_if)]
-pub fn permissions(mode: u32) -> Option<String> {
+pub fn permissions(mode: u32) -> String {
 	use libc::{mode_t, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFSOCK, S_IRGRP, S_IROTH, S_IRUSR, S_ISGID, S_ISUID, S_ISVTX, S_IWGRP, S_IWOTH, S_IWUSR, S_IXGRP, S_IXOTH, S_IXUSR};
 
 	let mut s = String::with_capacity(10);
@@ -143,7 +138,7 @@ pub fn permissions(mode: u32) -> Option<String> {
 		if m & S_ISVTX != 0 { 'T' } else { '-' }
 	});
 
-	Some(s)
+	s
 }
 
 // Find the max common root of a list of files
