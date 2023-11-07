@@ -9,16 +9,12 @@ use crate::{emit, files::{File, FilesOp}, input::InputOpt, tab::Tab};
 
 impl Tab {
 	// TODO: change to sync, and remove `Event::Cd`
-	pub async fn cd(&mut self, mut target: Url) -> bool {
-		let Ok(file) = File::from(target.clone()).await else {
-			return false;
-		};
-
+	pub fn cd(&mut self, mut target: Url) -> bool {
 		let mut hovered = None;
-		if !file.is_dir() {
-			hovered = Some(file.url());
-			target = target.parent_url().unwrap();
-			emit!(Files(FilesOp::Creating(target.clone(), file.into_map())));
+		if let (false, Some(parent)) = (target.was_dir(), target.parent_url()) {
+			emit!(Files(FilesOp::Creating(parent.clone(), File::from_dummy(target.clone()).into_map())));
+			hovered = Some(target);
+			target = parent;
 		}
 
 		// Already in target

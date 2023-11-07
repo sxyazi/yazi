@@ -1,14 +1,14 @@
 use std::process::Stdio;
 
-use anyhow::Result;
-use tokio::{process::Command, sync::oneshot::{self, Receiver}};
+use anyhow::{bail, Result};
+use tokio::process::Command;
 use yazi_shared::Url;
 
 pub struct ZoxideOpt {
 	pub cwd: Url,
 }
 
-pub fn zoxide(opt: ZoxideOpt) -> Result<Receiver<Result<Url>>> {
+pub async fn zoxide(opt: ZoxideOpt) -> Result<Url> {
 	let child = Command::new("zoxide")
 		.args(["query", "-i", "--exclude"])
 		.arg(&opt.cwd)
@@ -16,16 +16,11 @@ pub fn zoxide(opt: ZoxideOpt) -> Result<Receiver<Result<Url>>> {
 		.stdout(Stdio::piped())
 		.spawn()?;
 
-	let (tx, rx) = oneshot::channel();
-	tokio::spawn(async move {
-		if let Ok(output) = child.wait_with_output().await {
-			let selected = String::from_utf8_lossy(&output.stdout).trim().to_string();
-			if !selected.is_empty() {
-				tx.send(Ok(Url::from(selected))).ok();
-				return;
-			}
-		}
-		tx.send(Err(anyhow::anyhow!("No match"))).ok();
-	});
-	Ok(rx)
+	let output = child.wait_with_output().await?;
+	let selected = String::from_utf8_lossy(&output.stdout).trim().to_string();
+
+	if !selected.is_empty() {
+		return Ok(Url::from(selected).into_dir());
+	}
+	bail!("No match")
 }

@@ -1,19 +1,27 @@
+use bitflags::bitflags;
 use yazi_config::keymap::Exec;
 
 use crate::tab::{Mode, Tab};
 
-pub struct Opt(u8);
+bitflags! {
+	pub struct Opt: u8 {
+		const FIND   = 0b0001;
+		const VISUAL = 0b0010;
+		const SELECT = 0b0100;
+		const SEARCH = 0b1000;
+	}
+}
 
 impl From<&Exec> for Opt {
 	fn from(e: &Exec) -> Self {
-		Self(e.named.iter().fold(0, |acc, (k, _)| match k.as_str() {
-			"all" => 0b1111,
-			"find" => acc | 0b0001,
-			"visual" => acc | 0b0010,
-			"select" => acc | 0b0100,
-			"search" => acc | 0b1000,
+		e.named.iter().fold(Opt::empty(), |acc, (k, _)| match k.as_bytes() {
+			b"all" => Self::all(),
+			b"find" => acc | Self::FIND,
+			b"visual" => acc | Self::VISUAL,
+			b"select" => acc | Self::SELECT,
+			b"search" => acc | Self::SEARCH,
 			_ => acc,
-		}))
+		})
 	}
 }
 
@@ -38,8 +46,8 @@ impl Tab {
 	fn escape_search(&mut self) -> bool { self.search_stop() }
 
 	pub fn escape(&mut self, opt: impl Into<Opt>) -> bool {
-		let opt = opt.into().0;
-		if opt == 0 {
+		let opt = opt.into() as Opt;
+		if opt.is_empty() {
 			return self.escape_find()
 				|| self.escape_visual()
 				|| self.escape_select()
@@ -47,16 +55,16 @@ impl Tab {
 		}
 
 		let mut b = false;
-		if opt & 0b0001 != 0 {
+		if opt.contains(Opt::FIND) {
 			b |= self.escape_find();
 		}
-		if opt & 0b0010 != 0 {
+		if opt.contains(Opt::VISUAL) {
 			b |= self.escape_visual();
 		}
-		if opt & 0b0100 != 0 {
+		if opt.contains(Opt::SELECT) {
 			b |= self.escape_select();
 		}
-		if opt & 0b1000 != 0 {
+		if opt.contains(Opt::SEARCH) {
 			b |= self.escape_search();
 		}
 		b

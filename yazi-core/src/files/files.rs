@@ -128,7 +128,7 @@ impl Files {
 
 	pub fn update_full(&mut self, mut items: Vec<File>) -> bool {
 		if !self.show_hidden {
-			(self.hidden, items) = items.into_iter().partition(|f| f.is_hidden);
+			(self.hidden, items) = items.into_iter().partition(|f| f.is_hidden());
 		}
 		self.ticket = FILES_TICKET.fetch_add(1, Ordering::Relaxed);
 		self.sorter.sort(&mut items, &self.sizes);
@@ -146,7 +146,7 @@ impl Files {
 			if self.show_hidden {
 				self.items.extend(items);
 			} else {
-				let (hidden, items): (Vec<_>, Vec<_>) = items.into_iter().partition(|f| f.is_hidden);
+				let (hidden, items): (Vec<_>, Vec<_>) = items.into_iter().partition(|f| f.is_hidden());
 				self.items.extend(items);
 				self.hidden.extend(hidden);
 			}
@@ -178,7 +178,7 @@ impl Files {
 
 	pub fn update_creating(&mut self, mut todo: BTreeMap<Url, File>) -> bool {
 		if !self.show_hidden {
-			todo.retain(|_, f| !f.is_hidden);
+			todo.retain(|_, f| !f.is_hidden());
 		}
 
 		let b = self.update_replacing(&mut todo);
@@ -335,7 +335,7 @@ impl Files {
 			self.sorter.sort(&mut self.items, &self.sizes);
 		} else {
 			let items = mem::take(&mut self.items);
-			(self.hidden, self.items) = items.into_iter().partition(|f| f.is_hidden);
+			(self.hidden, self.items) = items.into_iter().partition(|f| f.is_hidden());
 		}
 
 		self.show_hidden = state;

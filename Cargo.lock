@@ -2487,6 +2487,7 @@ version = "0.1.5"
 dependencies = [
  "anyhow",
  "async-channel",
+ "bitflags 2.4.1",
  "clipboard-win",
  "crossterm",
  "futures",
@@ -2559,6 +2560,7 @@ name = "yazi-shared"
 version = "0.1.5"
 dependencies = [
  "anyhow",
+ "bitflags 2.4.1",
  "crossterm",
  "futures",
  "libc",

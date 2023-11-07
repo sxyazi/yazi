@@ -11,12 +11,13 @@ impl Tab {
 			let _defer = Defer::new(|| Event::Stop(false, None).emit());
 			emit!(Stop(true)).await;
 
-			let rx =
-				if global { external::fzf(FzfOpt { cwd }) } else { external::zoxide(ZoxideOpt { cwd }) }?;
+			let url = if global {
+				external::fzf(FzfOpt { cwd }).await
+			} else {
+				external::zoxide(ZoxideOpt { cwd }).await
+			}?;
 
-			if let Ok(target) = rx.await? {
-				emit!(Cd(target));
-			}
+			emit!(Cd(url));
 			Ok::<(), anyhow::Error>(())
 		});
 		false

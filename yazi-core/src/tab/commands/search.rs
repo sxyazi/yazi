@@ -17,7 +17,7 @@ impl Tab {
 
 		self.search = Some(tokio::spawn(async move {
 			let Some(Ok(subject)) = emit!(Input(InputOpt::top("Search:"))).recv().await else {
-				bail!("canceled")
+				bail!("")
 			};
 
 			cwd = cwd.into_search(subject.clone());

@@ -1,36 +1,55 @@
-use std::{borrow::Cow, collections::BTreeMap, ffi::OsStr, fs::Metadata};
+use std::{borrow::Cow, collections::BTreeMap, ffi::OsStr, fs::Metadata, ops::Deref};
 
 use anyhow::Result;
 use tokio::fs;
-use yazi_shared::Url;
+use yazi_shared::{Cha, ChaMeta, Url};
 
 #[derive(Clone, Debug)]
 pub struct File {
 	pub url:            Url,
-	pub meta:           Metadata,
+	pub cha:            Cha,
 	pub(super) link_to: Option<Url>,
-	pub is_link:        bool,
-	pub is_hidden:      bool,
+}
+
+impl Deref for File {
+	type Target = Cha;
+
+	#[inline]
+	fn deref(&self) -> &Self::Target { &self.cha }
 }
 
 impl File {
 	#[inline]
 	pub async fn from(url: Url) -> Result<Self> {
-		let meta = fs::metadata(&url).await?;
+		let meta = fs::symlink_metadata(&url).await?;
 		Ok(Self::from_meta(url, meta).await)
 	}
 
 	pub async fn from_meta(url: Url, mut meta: Metadata) -> Self {
-		let is_link = meta.is_symlink();
-		let mut link_to = None;
+		let mut cm = ChaMeta::empty();
 
+		let (is_link, mut link_to) = (meta.is_symlink(), None);
 		if is_link {
+			cm |= ChaMeta::LINK;
 			meta = fs::metadata(&url).await.unwrap_or(meta);
 			link_to = fs::read_link(&url).await.map(Url::from).ok();
 		}
 
-		let is_hidden = url.file_name().map(|s| s.to_string_lossy().starts_with('.')).unwrap_or(false);
-		Self { url, meta, link_to, is_link, is_hidden }
+		if is_link && meta.is_symlink() {
+			cm |= ChaMeta::BAD_LINK;
+		}
+
+		if url.was_hidden() {
+			cm |= ChaMeta::HIDDEN;
+		}
+
+		Self { url, cha: Cha::from(meta).with_meta(cm), link_to }
+	}
+
+	#[inline]
+	pub fn from_dummy(url: Url) -> Self {
+		let cm = if url.was_hidden() { ChaMeta::HIDDEN } else { ChaMeta::empty() };
+		Self { url, cha: Cha::default().with_meta(cm), link_to: None }
 	}
 
 	#[inline]
@@ -59,13 +78,6 @@ impl File {
 
 	#[inline]
 	pub fn parent(&self) -> Option<Url> { self.url.parent_url() }
-
-	// --- Meta
-	#[inline]
-	pub fn is_file(&self) -> bool { self.meta.is_file() }
-
-	#[inline]
-	pub fn is_dir(&self) -> bool { self.meta.is_dir() }
 
 	// --- Link to / Is link
 	#[inline]

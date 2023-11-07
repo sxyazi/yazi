@@ -10,6 +10,7 @@ repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
 anyhow      = "^1"
+bitflags    = "^2"
 crossterm   = "^0"
 futures     = "^0"
 libc        = "^0"

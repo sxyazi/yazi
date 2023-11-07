@@ -1,4 +1,4 @@
-use std::{ffi::{OsStr, OsString}, fmt::{Debug, Formatter}, ops::{Deref, DerefMut}, path::{Path, PathBuf}};
+use std::{ffi::{OsStr, OsString}, fmt::{Debug, Formatter}, ops::{Deref, DerefMut}, path::{Path, PathBuf, MAIN_SEPARATOR}};
 
 #[derive(Clone, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Url {
@@ -95,6 +95,27 @@ impl Url {
 
 	#[inline]
 	pub fn into_os_string(self) -> OsString { self.path.into_os_string() }
+
+	#[inline]
+	pub fn was_hidden(&self) -> bool {
+		self.file_name().map_or(false, |s| s.to_string_lossy().starts_with('.'))
+	}
+
+	#[inline]
+	pub fn was_dir(&self) -> bool {
+		let b = self.path.as_os_str().as_encoded_bytes();
+		if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
+	}
+
+	#[inline]
+	pub fn into_dir(mut self) -> Self {
+		if self.was_dir() {
+			self
+		} else {
+			self.path.as_mut_os_string().push("/");
+			self
+		}
+	}
 }
 
 impl Url {

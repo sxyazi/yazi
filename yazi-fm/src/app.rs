@@ -122,9 +122,7 @@ impl App {
 		let tasks = &mut self.cx.tasks;
 		match event {
 			Event::Cd(url) => {
-				futures::executor::block_on(async {
-					manager.active_mut().cd(expand_url(url)).await;
-				});
+				manager.active_mut().cd(expand_url(url));
 			}
 			Event::Refresh => {
 				manager.refresh();
