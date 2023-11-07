@@ -78,7 +78,7 @@ impl Files {
 					#[cfg(unix)]
 					Some(yazi_shared::permissions(me.permissions)),
 					#[cfg(windows)]
-					None,
+					None::<String>,
 				)
 			});
 
