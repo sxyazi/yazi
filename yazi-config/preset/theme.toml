@@ -64,6 +64,16 @@ permissions_s = { fg = "darkgray" }
 # : }}}
 
 
+# : Select {{{
+
+[select]
+border   = { fg = "blue" }
+active   = { fg = "magenta" }
+inactive = {}
+
+# : }}}
+
+
 # : Input {{{
 
 [input]
@@ -71,16 +81,6 @@ border   = { fg = "blue" }
 title    = {}
 value    = {}
 selected = { reversed = true }
-
-# : }}}
-
-
-# : Select {{{
-
-[select]
-border   = { fg = "blue" }
-active   = { fg = "magenta" }
-inactive = {}
 
 # : }}}
 

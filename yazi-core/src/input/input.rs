@@ -46,6 +46,10 @@ impl Input {
 	}
 
 	pub fn close(&mut self, submit: bool) -> bool {
+		if self.completion {
+			emit!(Call(Exec::call("close", vec![]).vec(), KeymapLayer::Completion));
+		}
+
 		if let Some(cb) = self.callback.take() {
 			let value = self.snap_mut().value.clone();
 			_ = cb.send(if submit { Ok(value) } else { Err(InputError::Canceled(value)) });
