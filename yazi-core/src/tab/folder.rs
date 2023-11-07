@@ -43,16 +43,7 @@ impl Folder {
 		self.prev(Default::default());
 
 		if self.page == old {
-			emit!(Pages(self.page)); // Force update
-			match MANAGER.layout.folder_height() {
-				limit if limit > 0 => {
-					let max_page = (self.files.len() + limit - 1) / limit;
-					if self.page + 1 < max_page {
-						emit!(Pages(self.page + 1));
-					}
-				}
-				_ => {}
-			}
+			self.set_page(true); // Force update
 		}
 
 		true
@@ -69,17 +60,21 @@ impl Folder {
 			return;
 		}
 
-		if new > 1 && new - 1 != self.page {
-			emit!(Pages(new - 1));
-		}
+		// Current page
+		emit!(Pages(new));
 
+		// Next page
 		let max_page = (self.files.len() + limit - 1) / limit;
 		if new < max_page && new + 1 != self.page {
 			emit!(Pages(new + 1));
 		}
 
+		// Previous page
+		if new > 1 && new - 1 != self.page {
+			emit!(Pages(new - 1));
+		}
+
 		self.page = new;
-		emit!(Pages(new));
 	}
 
 	pub fn next(&mut self, step: Step) -> bool {
