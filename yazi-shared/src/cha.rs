@@ -26,7 +26,7 @@ pub struct Cha {
 	pub created:     Option<SystemTime>,
 	pub modified:    Option<SystemTime>,
 	#[cfg(unix)]
-	pub permissions: u16,
+	pub permissions: u32,
 }
 
 impl From<Metadata> for Cha {
@@ -63,7 +63,7 @@ impl From<Metadata> for Cha {
 			#[cfg(unix)]
 			permissions:              {
 				use std::os::unix::prelude::PermissionsExt;
-				m.permissions().mode() as u16
+				m.permissions().mode()
 			},
 		}
 	}
