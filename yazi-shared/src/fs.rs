@@ -99,10 +99,11 @@ pub fn permissions(_: Permissions) -> Option<String> { None }
 // Convert a file mode to a string representation
 #[cfg(unix)]
 #[allow(clippy::collapsible_else_if)]
-pub fn permissions(m: u16) -> Option<String> {
-	use libc::{S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFSOCK, S_IRGRP, S_IROTH, S_IRUSR, S_ISGID, S_ISUID, S_ISVTX, S_IWGRP, S_IWOTH, S_IWUSR, S_IXGRP, S_IXOTH, S_IXUSR};
+pub fn permissions(mode: u16) -> Option<String> {
+	use libc::{mode_t, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFSOCK, S_IRGRP, S_IROTH, S_IRUSR, S_ISGID, S_ISUID, S_ISVTX, S_IWGRP, S_IWOTH, S_IWUSR, S_IXGRP, S_IXOTH, S_IXUSR};
 
 	let mut s = String::with_capacity(10);
+	let m = mode as mode_t;
 
 	// File type
 	s.push(match m & S_IFMT {
