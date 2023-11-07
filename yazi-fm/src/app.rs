@@ -143,10 +143,8 @@ impl App {
 				}
 			}
 			Event::Pages(page) => {
-				if manager.current().page == page {
-					let targets = self.cx.manager.current().paginate();
-					tasks.precache_mime(targets, &self.cx.manager.mimetype);
-				}
+				let targets = self.cx.manager.current().paginate(page);
+				tasks.precache_mime(targets, &self.cx.manager.mimetype);
 			}
 			Event::Mimetype(mimes) => {
 				if manager.update_mimetype(mimes, tasks) {

@@ -56,8 +56,21 @@ impl Folder {
 			return false;
 		}
 
+		let old = self.page;
 		self.page = new;
+
+		let prev_page = new.saturating_sub(1);
+		let next_page = new.saturating_add(1);
+
+		if prev_page != new && prev_page != old {
+			emit!(Pages(prev_page));
+		}
+
 		emit!(Pages(new));
+
+		if next_page != new && next_page != old {
+			emit!(Pages(next_page));
+		}
 		true
 	}
 
@@ -115,11 +128,11 @@ impl Folder {
 	#[inline]
 	pub fn hovered(&self) -> Option<&File> { self.files.get(self.cursor) }
 
-	pub fn paginate(&self) -> &[File] {
+	pub fn paginate(&self, page: usize) -> &[File] {
 		let len = self.files.len();
 		let limit = MANAGER.layout.folder_height();
 
-		let start = (self.page * limit).min(len.saturating_sub(1));
+		let start = (page * limit).min(len.saturating_sub(1));
 		let end = (start + limit).min(len);
 		&self.files[start..end]
 	}
