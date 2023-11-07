@@ -103,8 +103,23 @@ impl Url {
 
 	#[inline]
 	pub fn was_dir(&self) -> bool {
-		let b = self.path.as_os_str().as_encoded_bytes();
-		if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
+		// TODO: uncomment this when Rust 1.74 is released
+		// let b = self.path.as_os_str().as_encoded_bytes();
+		// if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
+
+		#[cfg(unix)]
+		{
+			use std::os::unix::ffi::OsStrExt;
+			let b = self.path.as_os_str().as_bytes();
+			if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
+		}
+
+		#[cfg(windows)]
+		{
+			let s = self.path.to_string_lossy();
+			let b = s.as_bytes();
+			if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
+		}
 	}
 
 	#[inline]
