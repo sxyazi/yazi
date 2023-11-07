@@ -44,6 +44,15 @@ impl Folder {
 
 		if self.page == old {
 			emit!(Pages(self.page)); // Force update
+			match MANAGER.layout.folder_height() {
+				limit if limit > 0 => {
+					let max_page = (self.files.len() + limit - 1) / limit;
+					if self.page + 1 < max_page {
+						emit!(Pages(self.page + 1));
+					}
+				}
+				_ => {}
+			}
 		}
 
 		true
