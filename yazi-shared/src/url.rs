@@ -1,5 +1,9 @@
 use std::{ffi::{OsStr, OsString}, fmt::{Debug, Formatter}, ops::{Deref, DerefMut}, path::{Path, PathBuf, MAIN_SEPARATOR}};
 
+use percent_encoding::{percent_decode_str, percent_encode, AsciiSet, CONTROLS};
+
+const ENCODE_SET: &AsciiSet = &CONTROLS.add(b'#');
+
 #[derive(Clone, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Url {
 	scheme: UrlScheme,
@@ -42,15 +46,41 @@ impl From<&Path> for Url {
 }
 
 impl From<String> for Url {
-	fn from(path: String) -> Self { Self::from(PathBuf::from(path)) }
+	fn from(path: String) -> Self { Self::from(path.as_str()) }
 }
 
 impl From<&String> for Url {
-	fn from(path: &String) -> Self { Self::from(PathBuf::from(path)) }
+	fn from(path: &String) -> Self { Self::from(path.as_str()) }
 }
 
 impl From<&str> for Url {
-	fn from(path: &str) -> Self { Self::from(PathBuf::from(path)) }
+	fn from(mut path: &str) -> Self {
+		let mut url = Url::default();
+		match path.split_once("://").map(|(a, b)| (UrlScheme::from(a), b)) {
+			None => {
+				url.path = PathBuf::from(path);
+				return url;
+			}
+			Some((UrlScheme::Regular, b)) => {
+				url.path = PathBuf::from(b);
+				return url;
+			}
+			Some((a, b)) => {
+				url.scheme = a;
+				path = b;
+			}
+		}
+		match path.split_once('#') {
+			None => {
+				url.path = percent_decode_str(path).decode_utf8_lossy().into_owned().into();
+			}
+			Some((a, b)) => {
+				url.path = percent_decode_str(a).decode_utf8_lossy().into_owned().into();
+				url.frag = Some(b.to_string()).filter(|s| !s.is_empty());
+			}
+		}
+		url
+	}
 }
 
 impl AsRef<Url> for Url {
@@ -63,6 +93,32 @@ impl AsRef<Path> for Url {
 
 impl AsRef<OsStr> for Url {
 	fn as_ref(&self) -> &OsStr { self.path.as_os_str() }
+}
+
+impl ToString for Url {
+	fn to_string(&self) -> String {
+		if self.scheme == UrlScheme::Regular {
+			return self.path.to_string_lossy().to_string();
+		}
+
+		let scheme = match self.scheme {
+			UrlScheme::Regular => unreachable!(),
+			UrlScheme::Search => "search://",
+			UrlScheme::Archive => "archive://",
+		};
+
+		#[cfg(unix)]
+		let path = {
+			use std::os::unix::ffi::OsStrExt;
+			percent_encode(self.path.as_os_str().as_bytes(), ENCODE_SET)
+		};
+		#[cfg(windows)]
+		let path = percent_encode(self.path.to_string_lossy().as_bytes(), ENCODE_SET).to_string();
+
+		let frag = self.frag.as_ref().map(|s| format!("#{s}")).unwrap_or_default();
+
+		format!("{scheme}{path}{frag}")
+	}
 }
 
 impl Url {
@@ -123,6 +179,17 @@ impl Url {
 	}
 
 	#[inline]
+	pub fn pop_dir(&mut self) -> bool {
+		if !self.was_dir() {
+			return false;
+		}
+		if let Some(n) = self.path.file_name() {
+			self.path.set_file_name(n.to_owned());
+		}
+		true
+	}
+
+	#[inline]
 	pub fn into_dir(mut self) -> Self {
 		if self.was_dir() {
 			self
@@ -179,4 +246,14 @@ impl Url {
 	// --- Frag
 	#[inline]
 	pub fn frag(&self) -> Option<&str> { self.frag.as_deref() }
+}
+
+impl From<&str> for UrlScheme {
+	fn from(value: &str) -> Self {
+		match value {
+			"search" => UrlScheme::Search,
+			"archive" => UrlScheme::Archive,
+			_ => UrlScheme::Regular,
+		}
+	}
 }

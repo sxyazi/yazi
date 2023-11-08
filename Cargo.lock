@@ -2565,6 +2565,7 @@ dependencies = [
  "futures",
  "libc",
  "parking_lot",
+ "percent-encoding",
  "ratatui",
  "regex",
  "tokio",

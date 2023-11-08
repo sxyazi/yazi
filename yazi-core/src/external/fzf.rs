@@ -1,4 +1,4 @@
-use std::process::Stdio;
+use std::{path::Path, process::Stdio};
 
 use anyhow::{bail, Result};
 use tokio::process::Command;
@@ -15,8 +15,8 @@ pub async fn fzf(opt: FzfOpt) -> Result<Url> {
 	let output = child.wait_with_output().await?;
 	let selected = String::from_utf8_lossy(&output.stdout).trim().to_string();
 
-	if !selected.is_empty() {
-		return Ok(Url::from(selected));
+	if selected.is_empty() {
+		bail!("No match")
 	}
-	bail!("No match")
+	return Ok(Url::from(Path::new(&opt.cwd).join(selected)));
 }

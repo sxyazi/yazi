@@ -5,7 +5,7 @@ use crossterm::event::KeyEvent;
 use tokio::sync::oneshot;
 use yazi_config::{keymap::{Exec, Key, KeymapLayer}, BOOT};
 use yazi_core::{emit, files::FilesOp, input::InputMode, Ctx, Event};
-use yazi_shared::{expand_url, Term};
+use yazi_shared::Term;
 
 use crate::{Executor, Logs, Root, Signals};
 
@@ -121,9 +121,6 @@ impl App {
 		let manager = &mut self.cx.manager;
 		let tasks = &mut self.cx.tasks;
 		match event {
-			Event::Cd(url) => {
-				manager.active_mut().cd(expand_url(url));
-			}
 			Event::Refresh => {
 				manager.refresh();
 			}

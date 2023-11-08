@@ -4,7 +4,7 @@ use tokio::fs;
 
 use crate::Url;
 
-pub fn expand_path(p: impl AsRef<Path>) -> PathBuf {
+fn _expand_path(p: &Path) -> PathBuf {
 	// ${HOME} or $HOME
 	#[cfg(unix)]
 	let re = regex::Regex::new(r"\$(?:\{([^}]+)\}|([a-zA-Z\d_]+))").unwrap();
@@ -13,7 +13,7 @@ pub fn expand_path(p: impl AsRef<Path>) -> PathBuf {
 	#[cfg(windows)]
 	let re = regex::Regex::new(r"%([^%]+)%").unwrap();
 
-	let s = p.as_ref().to_string_lossy();
+	let s = p.to_string_lossy();
 	let s = re.replace_all(&s, |caps: &regex::Captures| {
 		let name = caps.get(2).or_else(|| caps.get(1)).unwrap();
 		env::var(name.as_str()).unwrap_or_else(|_| caps.get(0).unwrap().as_str().to_owned())
@@ -38,8 +38,11 @@ pub fn expand_path(p: impl AsRef<Path>) -> PathBuf {
 }
 
 #[inline]
+pub fn expand_path(p: impl AsRef<Path>) -> PathBuf { _expand_path(p.as_ref()) }
+
+#[inline]
 pub fn expand_url(mut u: Url) -> Url {
-	u.set_path(expand_path(&u));
+	u.set_path(_expand_path(&u));
 	u
 }
 

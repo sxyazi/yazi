@@ -1,6 +1,6 @@
 use yazi_config::{keymap::{Control, Exec, Key, KeymapLayer}, KEYMAP};
 use yazi_core::{input::InputMode, tab::FinderCase, Ctx};
-use yazi_shared::{optional_bool, Url};
+use yazi_shared::{expand_url, optional_bool, Url};
 
 pub(super) struct Executor<'a> {
 	cx: &'a mut Ctx,
@@ -96,7 +96,7 @@ impl<'a> Executor<'a> {
 				if exec.named.contains_key("interactive") {
 					self.cx.manager.active_mut().cd_interactive(url)
 				} else {
-					self.cx.manager.active_mut().cd(url)
+					self.cx.manager.active_mut().cd(expand_url(url))
 				}
 			}
 

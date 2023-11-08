@@ -1,3 +1,4 @@
+use yazi_config::keymap::{Exec, KeymapLayer};
 use yazi_shared::Defer;
 
 use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, tab::Tab, Event, BLOCKER};
@@ -17,7 +18,7 @@ impl Tab {
 				external::zoxide(ZoxideOpt { cwd }).await
 			}?;
 
-			emit!(Cd(url));
+			emit!(Call(Exec::call("cd", vec![url.to_string()]).vec(), KeymapLayer::Manager));
 			Ok::<(), anyhow::Error>(())
 		});
 		false

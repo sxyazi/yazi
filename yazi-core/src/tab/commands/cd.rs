@@ -3,15 +3,14 @@ use std::{mem, time::Duration};
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::keymap::{Exec, KeymapLayer};
-use yazi_shared::{Debounce, InputError, Url};
+use yazi_shared::{expand_path, Debounce, InputError, Url};
 
 use crate::{emit, files::{File, FilesOp}, input::InputOpt, tab::Tab};
 
 impl Tab {
-	// TODO: change to sync, and remove `Event::Cd`
 	pub fn cd(&mut self, mut target: Url) -> bool {
 		let mut hovered = None;
-		if let (false, Some(parent)) = (target.was_dir(), target.parent_url()) {
+		if let (false, Some(parent)) = (target.pop_dir(), target.parent_url()) {
 			emit!(Files(FilesOp::Creating(parent.clone(), File::from_dummy(target.clone()).into_map())));
 			hovered = Some(target);
 			target = parent;
@@ -68,7 +67,10 @@ impl Tab {
 			while let Some(result) = rx.next().await {
 				match result {
 					Ok(s) => {
-						emit!(Cd(Url::from(s.trim())));
+						emit!(Call(
+							Exec::call("cd", vec![expand_path(s).to_string_lossy().to_string()]).vec(),
+							KeymapLayer::Manager
+						));
 					}
 					Err(InputError::Completed(before, ticket)) => {
 						emit!(Call(
