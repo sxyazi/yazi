@@ -1,4 +1,4 @@
-use std::{borrow::Cow, env, ffi::OsString, path::{Component, Path, PathBuf}};
+use std::{borrow::Cow, env, ffi::OsString, path::{Component, Path, PathBuf, MAIN_SEPARATOR, MAIN_SEPARATOR_STR}};
 
 use tokio::fs;
 
@@ -20,15 +20,24 @@ fn _expand_path(p: &Path) -> PathBuf {
 	});
 
 	let p = Path::new(s.as_ref());
-	if let Ok(p) = p.strip_prefix("~") {
+	if let (slash, Ok(rest)) = (ends_with_slash(p), p.strip_prefix("~")) {
 		#[cfg(unix)]
-		if let Some(home) = env::var_os("HOME") {
-			return Path::new(&home).join(p);
-		}
+		let Some(home) = env::var_os("HOME") else {
+			return rest.to_path_buf();
+		};
 		#[cfg(windows)]
-		if let Some(home) = env::var_os("USERPROFILE") {
-			return Path::new(&home).join(p);
+		let Some(home) = env::var_os("USERPROFILE") else {
+			return rest.to_path_buf();
+		};
+
+		let mut home = PathBuf::from(home);
+		pop_end_slash(&mut home);
+
+		let mut p = if rest == Path::new("") { home } else { home.join(rest) };
+		if slash {
+			p.as_mut_os_string().push(MAIN_SEPARATOR_STR);
 		}
+		return p;
 	}
 
 	if p.is_absolute() {
@@ -44,6 +53,39 @@ pub fn expand_path(p: impl AsRef<Path>) -> PathBuf { _expand_path(p.as_ref()) }
 pub fn expand_url(mut u: Url) -> Url {
 	u.set_path(_expand_path(&u));
 	u
+}
+
+#[inline]
+pub fn ends_with_slash(p: &Path) -> bool {
+	// TODO: uncomment this when Rust 1.74 is released
+	// let b = p.as_os_str().as_encoded_bytes();
+	// if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
+
+	#[cfg(unix)]
+	{
+		use std::os::unix::ffi::OsStrExt;
+		let b = p.as_os_str().as_bytes();
+		if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
+	}
+
+	#[cfg(windows)]
+	{
+		let s = p.to_string_lossy();
+		let b = s.as_bytes();
+		if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
+	}
+}
+
+#[inline]
+#[allow(clippy::unnecessary_to_owned)]
+pub fn pop_end_slash(p: &mut PathBuf) -> bool {
+	if !ends_with_slash(p) {
+		return false;
+	}
+	if let Some(n) = p.file_name() {
+		p.set_file_name(n.to_owned());
+	}
+	true
 }
 
 pub async fn unique_path(mut p: Url) -> Url {

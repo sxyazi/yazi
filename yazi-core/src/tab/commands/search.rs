@@ -36,7 +36,7 @@ impl Tab {
 			while let Some(chunk) = rx.next().await {
 				if first {
 					emit!(Call(
-						Exec::call("cd", vec![cwd.clone().into_dir().to_string()]).vec(),
+						Exec::call("cd", vec![cwd.clone().push_slash().to_string()]).vec(),
 						KeymapLayer::Manager
 					));
 					first = false;

@@ -1,6 +1,8 @@
-use std::{ffi::{OsStr, OsString}, fmt::{Debug, Formatter}, ops::{Deref, DerefMut}, path::{Path, PathBuf, MAIN_SEPARATOR}};
+use std::{ffi::{OsStr, OsString}, fmt::{Debug, Formatter}, ops::{Deref, DerefMut}, path::{Path, PathBuf, MAIN_SEPARATOR_STR}};
 
 use percent_encoding::{percent_decode_str, percent_encode, AsciiSet, CONTROLS};
+
+use crate::{ends_with_slash, pop_end_slash};
 
 const ENCODE_SET: &AsciiSet = &CONTROLS.add(b'#');
 
@@ -158,43 +160,14 @@ impl Url {
 	}
 
 	#[inline]
-	pub fn was_dir(&self) -> bool {
-		// TODO: uncomment this when Rust 1.74 is released
-		// let b = self.path.as_os_str().as_encoded_bytes();
-		// if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
-
-		#[cfg(unix)]
-		{
-			use std::os::unix::ffi::OsStrExt;
-			let b = self.path.as_os_str().as_bytes();
-			if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
-		}
-
-		#[cfg(windows)]
-		{
-			let s = self.path.to_string_lossy();
-			let b = s.as_bytes();
-			if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
-		}
-	}
+	pub fn pop_slash(&mut self) -> bool { pop_end_slash(self) }
 
 	#[inline]
-	pub fn pop_dir(&mut self) -> bool {
-		if !self.was_dir() {
-			return false;
-		}
-		if let Some(n) = self.path.file_name() {
-			self.path.set_file_name(n.to_owned());
-		}
-		true
-	}
-
-	#[inline]
-	pub fn into_dir(mut self) -> Self {
-		if self.was_dir() {
+	pub fn push_slash(mut self) -> Self {
+		if !ends_with_slash(&self) {
 			self
 		} else {
-			self.path.as_mut_os_string().push("/");
+			self.path.as_mut_os_string().push(MAIN_SEPARATOR_STR);
 			self
 		}
 	}

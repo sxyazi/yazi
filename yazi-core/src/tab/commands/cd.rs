@@ -10,7 +10,7 @@ use crate::{emit, files::{File, FilesOp}, input::InputOpt, tab::Tab};
 impl Tab {
 	pub fn cd(&mut self, mut target: Url) -> bool {
 		let mut hovered = None;
-		if let (false, Some(parent)) = (target.pop_dir(), target.parent_url()) {
+		if let (false, Some(parent)) = (target.pop_slash(), target.parent_url()) {
 			emit!(Files(FilesOp::Creating(parent.clone(), File::from_dummy(target.clone()).into_map())));
 			hovered = Some(target);
 			target = parent;
