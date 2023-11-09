@@ -1,8 +1,6 @@
-use std::{ffi::{OsStr, OsString}, fmt::{Debug, Formatter}, ops::{Deref, DerefMut}, path::{Path, PathBuf, MAIN_SEPARATOR_STR}};
+use std::{ffi::{OsStr, OsString}, fmt::{Debug, Formatter}, ops::{Deref, DerefMut}, path::{Path, PathBuf}};
 
 use percent_encoding::{percent_decode_str, percent_encode, AsciiSet, CONTROLS};
-
-use crate::{ends_with_slash, pop_end_slash};
 
 const ENCODE_SET: &AsciiSet = &CONTROLS.add(b'#');
 
@@ -155,21 +153,8 @@ impl Url {
 	pub fn into_os_string(self) -> OsString { self.path.into_os_string() }
 
 	#[inline]
-	pub fn was_hidden(&self) -> bool {
+	pub fn is_hidden(&self) -> bool {
 		self.file_name().map_or(false, |s| s.to_string_lossy().starts_with('.'))
-	}
-
-	#[inline]
-	pub fn pop_slash(&mut self) -> bool { pop_end_slash(self) }
-
-	#[inline]
-	pub fn push_slash(mut self) -> Self {
-		if !ends_with_slash(&self) {
-			self
-		} else {
-			self.path.as_mut_os_string().push(MAIN_SEPARATOR_STR);
-			self
-		}
 	}
 }
 

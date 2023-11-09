@@ -1,26 +1,15 @@
 use std::{mem, time::Duration};
 
-use tokio::pin;
+use tokio::{fs, pin};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::keymap::{Exec, KeymapLayer};
 use yazi_shared::{expand_path, Debounce, InputError, Url};
 
-use crate::{emit, files::{File, FilesOp}, input::InputOpt, tab::Tab};
+use crate::{emit, input::InputOpt, tab::Tab};
 
 impl Tab {
-	pub fn cd(&mut self, mut target: Url) -> bool {
-		let mut hovered = None;
-		if let (false, Some(parent)) = (target.pop_slash(), target.parent_url()) {
-			emit!(Files(FilesOp::Creating(parent.clone(), File::from_dummy(target.clone()).into_map())));
-			hovered = Some(target);
-			target = parent;
-		}
-
-		// Already in target
+	pub fn cd(&mut self, target: Url) -> bool {
 		if self.current.cwd == target {
-			if let Some(h) = hovered {
-				emit!(Hover(h));
-			}
 			return false;
 		}
 
@@ -39,11 +28,6 @@ impl Tab {
 		// Parent
 		if let Some(parent) = target.parent_url() {
 			self.parent = Some(self.history_new(&parent));
-		}
-
-		// Hover the file
-		if let Some(h) = hovered {
-			emit!(Hover(h));
 		}
 
 		// Backstack
@@ -67,8 +51,16 @@ impl Tab {
 			while let Some(result) = rx.next().await {
 				match result {
 					Ok(s) => {
+						let p = expand_path(s);
+						let Ok(meta) = fs::metadata(&p).await else {
+							return;
+						};
+
 						emit!(Call(
-							Exec::call("cd", vec![expand_path(s).to_string_lossy().to_string()]).vec(),
+							Exec::call(if meta.is_dir() { "cd" } else { "reveal" }, vec![
+								p.to_string_lossy().to_string()
+							])
+							.vec(),
 							KeymapLayer::Manager
 						));
 					}

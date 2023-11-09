@@ -20,7 +20,7 @@ pub async fn zoxide(opt: ZoxideOpt) -> Result<Url> {
 	let selected = String::from_utf8_lossy(&output.stdout).trim().to_string();
 
 	if !selected.is_empty() {
-		return Ok(Url::from(selected).push_slash());
+		return Ok(Url::from(selected));
 	}
 	bail!("No match")
 }

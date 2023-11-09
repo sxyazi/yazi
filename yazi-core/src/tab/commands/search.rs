@@ -35,10 +35,7 @@ impl Tab {
 			let mut first = true;
 			while let Some(chunk) = rx.next().await {
 				if first {
-					emit!(Call(
-						Exec::call("cd", vec![cwd.clone().push_slash().to_string()]).vec(),
-						KeymapLayer::Manager
-					));
+					emit!(Call(Exec::call("cd", vec![cwd.clone().to_string()]).vec(), KeymapLayer::Manager));
 					first = false;
 				}
 				emit!(Files(FilesOp::Part(cwd.clone(), ticket, chunk)));

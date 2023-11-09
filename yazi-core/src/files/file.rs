@@ -39,7 +39,7 @@ impl File {
 			cm |= ChaMeta::BAD_LINK;
 		}
 
-		if url.was_hidden() {
+		if url.is_hidden() {
 			cm |= ChaMeta::HIDDEN;
 		}
 
@@ -48,7 +48,7 @@ impl File {
 
 	#[inline]
 	pub fn from_dummy(url: Url) -> Self {
-		let cm = if url.was_hidden() { ChaMeta::HIDDEN } else { ChaMeta::empty() };
+		let cm = if url.is_hidden() { ChaMeta::HIDDEN } else { ChaMeta::empty() };
 		Self { url, cha: Cha::default().with_meta(cm), link_to: None }
 	}
 

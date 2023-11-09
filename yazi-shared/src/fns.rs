@@ -1,4 +1,4 @@
-use std::{borrow::Cow, env, ffi::OsString, path::{Component, Path, PathBuf, MAIN_SEPARATOR, MAIN_SEPARATOR_STR}};
+use std::{borrow::Cow, env, ffi::OsString, path::{Component, Path, PathBuf, MAIN_SEPARATOR}};
 
 use tokio::fs;
 
@@ -20,24 +20,13 @@ fn _expand_path(p: &Path) -> PathBuf {
 	});
 
 	let p = Path::new(s.as_ref());
-	if let (slash, Ok(rest)) = (ends_with_slash(p), p.strip_prefix("~")) {
+	if let Ok(rest) = p.strip_prefix("~") {
 		#[cfg(unix)]
-		let Some(home) = env::var_os("HOME") else {
-			return rest.to_path_buf();
-		};
+		let home = env::var_os("HOME");
 		#[cfg(windows)]
-		let Some(home) = env::var_os("USERPROFILE") else {
-			return rest.to_path_buf();
-		};
+		let home = env::var_os("USERPROFILE");
 
-		let mut home = PathBuf::from(home);
-		pop_end_slash(&mut home);
-
-		let mut p = if rest == Path::new("") { home } else { home.join(rest) };
-		if slash {
-			p.as_mut_os_string().push(MAIN_SEPARATOR_STR);
-		}
-		return p;
+		return if let Some(p) = home { PathBuf::from(p).join(rest) } else { rest.to_path_buf() };
 	}
 
 	if p.is_absolute() {
@@ -74,18 +63,6 @@ pub fn ends_with_slash(p: &Path) -> bool {
 		let b = s.as_bytes();
 		if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
 	}
-}
-
-#[inline]
-#[allow(clippy::unnecessary_to_owned)]
-pub fn pop_end_slash(p: &mut PathBuf) -> bool {
-	if !ends_with_slash(p) {
-		return false;
-	}
-	if let Some(n) = p.file_name() {
-		p.set_file_name(n.to_owned());
-	}
-	true
 }
 
 pub async fn unique_path(mut p: Url) -> Url {

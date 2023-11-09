@@ -99,6 +99,7 @@ impl<'a> Executor<'a> {
 					self.cx.manager.active_mut().cd(expand_url(url))
 				}
 			}
+			"reveal" => self.cx.manager.active_mut().reveal(exec),
 
 			// Selection
 			"select" => {
