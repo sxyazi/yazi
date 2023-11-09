@@ -1,31 +1,15 @@
 use std::{mem, time::Duration};
 
-use tokio::pin;
+use tokio::{fs, pin};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::keymap::{Exec, KeymapLayer};
-use yazi_shared::{Debounce, InputError, Url};
+use yazi_shared::{expand_path, Debounce, InputError, Url};
 
-use crate::{emit, files::{File, FilesOp}, input::InputOpt, tab::Tab};
+use crate::{emit, input::InputOpt, tab::Tab};
 
 impl Tab {
-	// TODO: change to sync, and remove `Event::Cd`
-	pub async fn cd(&mut self, mut target: Url) -> bool {
-		let Ok(file) = File::from(target.clone()).await else {
-			return false;
-		};
-
-		let mut hovered = None;
-		if !file.is_dir() {
-			hovered = Some(file.url());
-			target = target.parent_url().unwrap();
-			emit!(Files(FilesOp::Creating(target.clone(), file.into_map())));
-		}
-
-		// Already in target
+	pub fn cd(&mut self, target: Url) -> bool {
 		if self.current.cwd == target {
-			if let Some(h) = hovered {
-				emit!(Hover(h));
-			}
 			return false;
 		}
 
@@ -44,11 +28,6 @@ impl Tab {
 		// Parent
 		if let Some(parent) = target.parent_url() {
 			self.parent = Some(self.history_new(&parent));
-		}
-
-		// Hover the file
-		if let Some(h) = hovered {
-			emit!(Hover(h));
 		}
 
 		// Backstack
@@ -72,7 +51,18 @@ impl Tab {
 			while let Some(result) = rx.next().await {
 				match result {
 					Ok(s) => {
-						emit!(Cd(Url::from(s.trim())));
+						let p = expand_path(s);
+						let Ok(meta) = fs::metadata(&p).await else {
+							return;
+						};
+
+						emit!(Call(
+							Exec::call(if meta.is_dir() { "cd" } else { "reveal" }, vec![
+								p.to_string_lossy().to_string()
+							])
+							.vec(),
+							KeymapLayer::Manager
+						));
 					}
 					Err(InputError::Completed(before, ticket)) => {
 						emit!(Call(

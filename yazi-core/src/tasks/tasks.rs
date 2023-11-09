@@ -252,7 +252,7 @@ impl Tasks {
 	pub fn precache_mime(&self, targets: &[File], mimetype: &HashMap<Url, String>) -> bool {
 		let targets: Vec<_> = targets
 			.iter()
-			.filter(|f| f.is_file() && !mimetype.contains_key(&f.url))
+			.filter(|f| !f.is_dir() && !mimetype.contains_key(&f.url))
 			.map(|f| f.url())
 			.collect();
 

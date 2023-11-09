@@ -16,8 +16,8 @@ impl UserData for File {
 	fn add_fields<'lua, F: UserDataFields<'lua, Self>>(fields: &mut F) {
 		fields.add_field_method_get("url", |_, me| Ok(Url::from(&me.0.url)));
 		fields.add_field_method_get("link_to", |_, me| Ok(me.0.link_to().map(Url::from)));
-		fields.add_field_method_get("is_link", |_, me| Ok(me.0.is_link));
-		fields.add_field_method_get("is_hidden", |_, me| Ok(me.0.is_hidden));
+		fields.add_field_method_get("is_link", |_, me| Ok(me.0.is_link()));
+		fields.add_field_method_get("is_hidden", |_, me| Ok(me.0.is_hidden()));
 	}
 }
 
@@ -50,36 +50,37 @@ impl Files {
 		LUA.register_userdata_type::<yazi_core::files::File>(|reg| {
 			reg.add_field_method_get("url", |_, me| Ok(Url::from(&me.url)));
 			reg.add_field_method_get("link_to", |_, me| Ok(me.link_to().map(Url::from)));
-			reg.add_field_method_get("is_link", |_, me| Ok(me.is_link));
-			reg.add_field_method_get("is_hidden", |_, me| Ok(me.is_hidden));
+			reg.add_field_method_get("is_link", |_, me| Ok(me.is_link()));
+			reg.add_field_method_get("is_hidden", |_, me| Ok(me.is_hidden()));
 
 			// Metadata
-			reg.add_field_method_get("is_file", |_, me| Ok(me.is_file()));
 			reg.add_field_method_get("is_dir", |_, me| Ok(me.is_dir()));
-			reg.add_field_method_get("is_symlink", |_, me| Ok(me.meta.is_symlink()));
+			reg.add_field_method_get("is_symlink", |_, me| Ok(me.is_link()));
 			#[cfg(unix)]
 			{
-				use std::os::unix::prelude::FileTypeExt;
-				reg.add_field_method_get("is_block_device", |_, me| {
-					Ok(me.meta.file_type().is_block_device())
-				});
-				reg
-					.add_field_method_get("is_char_device", |_, me| Ok(me.meta.file_type().is_char_device()));
-				reg.add_field_method_get("is_fifo", |_, me| Ok(me.meta.file_type().is_fifo()));
-				reg.add_field_method_get("is_socket", |_, me| Ok(me.meta.file_type().is_socket()));
+				reg.add_field_method_get("is_block_device", |_, me| Ok(me.is_block_device()));
+				reg.add_field_method_get("is_char_device", |_, me| Ok(me.is_char_device()));
+				reg.add_field_method_get("is_fifo", |_, me| Ok(me.is_fifo()));
+				reg.add_field_method_get("is_socket", |_, me| Ok(me.is_socket()));
 			}
-			reg.add_field_method_get("length", |_, me| Ok(me.meta.len()));
+			reg.add_field_method_get("length", |_, me| Ok(me.len));
 			reg.add_field_method_get("created", |_, me| {
-				Ok(me.meta.created()?.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok())
+				Ok(me.created.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
 			});
 			reg.add_field_method_get("modified", |_, me| {
-				Ok(me.meta.modified()?.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok())
+				Ok(me.modified.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
 			});
 			reg.add_field_method_get("accessed", |_, me| {
-				Ok(me.meta.accessed()?.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok())
+				Ok(me.accessed.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
 			});
-			reg
-				.add_method("permissions", |_, me, ()| Ok(yazi_shared::permissions(me.meta.permissions())));
+			reg.add_method("permissions", |_, me, ()| {
+				Ok(
+					#[cfg(unix)]
+					Some(yazi_shared::permissions(me.permissions)),
+					#[cfg(windows)]
+					None::<String>,
+				)
+			});
 
 			// Extension
 			reg.add_field_method_get("name", |_, me| {
@@ -88,7 +89,7 @@ impl Files {
 			reg.add_function("size", |_, me: AnyUserData| {
 				let file = me.borrow::<yazi_core::files::File>()?;
 				if !file.is_dir() {
-					return Ok(Some(file.meta.len()));
+					return Ok(Some(file.len));
 				}
 
 				let folder = me.named_user_value::<UserDataRef<yazi_core::tab::Folder>>("folder")?;

@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, fs::Permissions, path::{Path, PathBuf}};
+use std::{collections::VecDeque, path::{Path, PathBuf}};
 
 use anyhow::Result;
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
@@ -92,28 +92,13 @@ pub fn copy_with_progress(from: &Path, to: &Path) -> mpsc::Receiver<Result<u64, 
 }
 
 // Convert a file mode to a string representation
-#[cfg(windows)]
-#[allow(clippy::collapsible_else_if)]
-pub fn permissions(_: Permissions) -> Option<String> { None }
-
-// Convert a file mode to a string representation
 #[cfg(unix)]
 #[allow(clippy::collapsible_else_if)]
-pub fn permissions(permissions: Permissions) -> Option<String> {
-	use std::os::unix::prelude::PermissionsExt;
-
-	use libc::{S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFSOCK, S_IRGRP, S_IROTH, S_IRUSR, S_ISGID, S_ISUID, S_ISVTX, S_IWGRP, S_IWOTH, S_IWUSR, S_IXGRP, S_IXOTH, S_IXUSR};
-
-	#[cfg(target_os = "macos")]
-	let m = permissions.mode() as u16;
-	#[cfg(target_os = "freebsd")]
-	let m = permissions.mode() as u16;
-	#[cfg(target_os = "netbsd")]
-	let m = permissions.mode();
-	#[cfg(target_os = "linux")]
-	let m = permissions.mode();
+pub fn permissions(mode: u32) -> String {
+	use libc::{mode_t, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFSOCK, S_IRGRP, S_IROTH, S_IRUSR, S_ISGID, S_ISUID, S_ISVTX, S_IWGRP, S_IWOTH, S_IWUSR, S_IXGRP, S_IXOTH, S_IXUSR};
 
 	let mut s = String::with_capacity(10);
+	let m = mode as mode_t;
 
 	// File type
 	s.push(match m & S_IFMT {
@@ -153,7 +138,7 @@ pub fn permissions(permissions: Permissions) -> Option<String> {
 		if m & S_ISVTX != 0 { 'T' } else { '-' }
 	});
 
-	Some(s)
+	s
 }
 
 // Find the max common root of a list of files

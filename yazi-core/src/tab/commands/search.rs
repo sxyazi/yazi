@@ -3,6 +3,7 @@ use std::{mem, time::Duration};
 use anyhow::bail;
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
+use yazi_config::keymap::{Exec, KeymapLayer};
 
 use crate::{emit, external, files::FilesOp, input::InputOpt, tab::Tab};
 
@@ -17,7 +18,7 @@ impl Tab {
 
 		self.search = Some(tokio::spawn(async move {
 			let Some(Ok(subject)) = emit!(Input(InputOpt::top("Search:"))).recv().await else {
-				bail!("canceled")
+				bail!("")
 			};
 
 			cwd = cwd.into_search(subject.clone());
@@ -34,7 +35,7 @@ impl Tab {
 			let mut first = true;
 			while let Some(chunk) = rx.next().await {
 				if first {
-					emit!(Cd(cwd.clone()));
+					emit!(Call(Exec::call("cd", vec![cwd.clone().to_string()]).vec(), KeymapLayer::Manager));
 					first = false;
 				}
 				emit!(Files(FilesOp::Part(cwd.clone(), ticket, chunk)));
