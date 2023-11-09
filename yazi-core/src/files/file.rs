@@ -4,7 +4,7 @@ use anyhow::Result;
 use tokio::fs;
 use yazi_shared::{Cha, ChaMeta, Url};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct File {
 	pub url:            Url,
 	pub cha:            Cha,

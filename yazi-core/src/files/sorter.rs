@@ -72,11 +72,9 @@ impl FilesSorter {
 			if self.reverse { ordering.reverse() } else { ordering }
 		});
 
-		let dummy = File { url: Default::default(), cha: Default::default(), link_to: None };
-
 		let mut new = Vec::with_capacity(indices.len());
 		for i in indices {
-			new.push(mem::replace(&mut items[i], dummy.clone()));
+			new.push(mem::take(&mut items[i]));
 		}
 		*items = new;
 	}
