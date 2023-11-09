@@ -7,9 +7,31 @@ use yazi_shared::{expand_path, Debounce, InputError, Url};
 
 use crate::{emit, input::InputOpt, tab::Tab};
 
+pub struct Opt {
+	target:      Url,
+	interactive: bool,
+}
+
+impl From<&Exec> for Opt {
+	fn from(e: &Exec) -> Self {
+		Self {
+			target:      e.args.first().map(Url::from).unwrap_or_default(),
+			interactive: e.named.contains_key("interactive"),
+		}
+	}
+}
+impl From<Url> for Opt {
+	fn from(target: Url) -> Self { Self { target, interactive: false } }
+}
+
 impl Tab {
-	pub fn cd(&mut self, target: Url) -> bool {
-		if self.current.cwd == target {
+	pub fn cd(&mut self, opt: impl Into<Opt>) -> bool {
+		let opt = opt.into() as Opt;
+		if opt.interactive {
+			return self.cd_interactive(opt);
+		}
+
+		if self.current.cwd == opt.target {
 			return false;
 		}
 
@@ -19,30 +41,34 @@ impl Tab {
 		}
 
 		// Current
-		let rep = self.history_new(&target);
+		let rep = self.history_new(&opt.target);
 		let rep = mem::replace(&mut self.current, rep);
 		if rep.cwd.is_regular() {
 			self.history.insert(rep.cwd.clone(), rep);
 		}
 
 		// Parent
-		if let Some(parent) = target.parent_url() {
+		if let Some(parent) = opt.target.parent_url() {
 			self.parent = Some(self.history_new(&parent));
 		}
 
 		// Backstack
-		if target.is_regular() {
-			self.backstack.push(target.clone());
+		if opt.target.is_regular() {
+			self.backstack.push(opt.target.clone());
 		}
 
 		emit!(Refresh);
 		true
 	}
 
-	pub fn cd_interactive(&mut self, target: Url) -> bool {
+	pub fn cd_interactive(&mut self, opt: impl Into<Opt>) -> bool {
+		let opt = opt.into() as Opt;
+
 		tokio::spawn(async move {
 			let rx = emit!(Input(
-				InputOpt::top("Change directory:").with_value(target.to_string_lossy()).with_completion()
+				InputOpt::top("Change directory:")
+					.with_value(opt.target.to_string_lossy())
+					.with_completion()
 			));
 
 			let rx = Debounce::new(UnboundedReceiverStream::new(rx), Duration::from_millis(50));

@@ -1,3 +1,4 @@
+mod commands;
 mod running;
 mod scheduler;
 mod task;

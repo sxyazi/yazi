@@ -39,13 +39,13 @@ impl Tab {
 			let _defer = Defer::new(|| Event::Stop(false, None).emit());
 			emit!(Stop(true)).await;
 
-			let rx = if opt.type_ == OptType::Fzf {
-				external::fzf(FzfOpt { cwd })
+			let url = if opt.type_ == OptType::Fzf {
+				external::fzf(FzfOpt { cwd }).await
 			} else {
-				external::zoxide(ZoxideOpt { cwd })
+				external::zoxide(ZoxideOpt { cwd }).await
 			}?;
 
-			let op = if global && !ends_with_slash(&url) { "reveal" } else { "cd" };
+			let op = if opt.type_ == OptType::Fzf && !ends_with_slash(&url) { "reveal" } else { "cd" };
 			emit!(Call(Exec::call(op, vec![url.to_string()]).vec(), KeymapLayer::Manager));
 			Ok::<(), anyhow::Error>(())
 		});

@@ -100,7 +100,8 @@ impl<'a> Executor<'a> {
 		on!(ACTIVE, enter);
 		on!(ACTIVE, back);
 		on!(ACTIVE, forward);
-		// on!(A, cd);
+		on!(ACTIVE, cd);
+		on!(ACTIVE, reveal);
 
 		// Selection
 		on!(ACTIVE, select);
@@ -145,17 +146,20 @@ impl<'a> Executor<'a> {
 	}
 
 	fn tasks(&mut self, exec: &Exec) -> bool {
+		macro_rules! on {
+			($name:ident) => {
+				if exec.cmd == stringify!($name) {
+					return self.cx.tasks.$name(exec);
+				}
+			};
+		}
+
+		on!(arrow);
+		on!(inspect);
+		on!(cancel);
+
 		match exec.cmd.as_str() {
 			"close" => self.cx.tasks.toggle(),
-
-			"arrow" => {
-				let step = exec.args.first().and_then(|s| s.parse().ok()).unwrap_or(0);
-				if step > 0 { self.cx.tasks.next() } else { self.cx.tasks.prev() }
-			}
-
-			"inspect" => self.cx.tasks.inspect(),
-			"cancel" => self.cx.tasks.cancel(),
-
 			"help" => self.cx.help.toggle(KeymapLayer::Tasks),
 			_ => false,
 		}
