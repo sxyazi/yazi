@@ -1,28 +1,32 @@
 use yazi_config::keymap::Exec;
-use yazi_shared::Url;
+use yazi_shared::{expand_path, Url};
 
 use crate::{emit, files::{File, FilesOp}, tab::Tab};
 
-pub struct Opt<'a> {
-	target: &'a str,
+pub struct Opt {
+	target: Url,
 }
 
-impl<'a> From<&'a Exec> for Opt<'a> {
-	fn from(e: &'a Exec) -> Self { Self { target: e.args.first().map(|s| s.as_str()).unwrap_or("") } }
+impl From<&Exec> for Opt {
+	fn from(e: &Exec) -> Self {
+		Self { target: Url::from(expand_path(e.args.first().map(|s| s.as_str()).unwrap_or(""))) }
+	}
 }
 
 impl Tab {
-	pub fn reveal<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
+	pub fn reveal(&mut self, opt: impl Into<Opt>) -> bool {
 		let opt = opt.into() as Opt;
 
-		let target = Url::from(opt.target);
-		let Some(parent) = target.parent_url() else {
+		let Some(parent) = opt.target.parent_url() else {
 			return false;
 		};
 
 		let b = self.cd(parent.clone());
-		emit!(Files(FilesOp::Creating(parent.clone(), File::from_dummy(target.clone()).into_map())));
-		emit!(Hover(target));
+		emit!(Files(FilesOp::Creating(
+			parent.clone(),
+			File::from_dummy(opt.target.clone()).into_map()
+		)));
+		emit!(Hover(opt.target));
 		b
 	}
 }
