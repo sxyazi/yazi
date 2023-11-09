@@ -36,21 +36,43 @@ impl Completion {
 			return false;
 		};
 
-		let flow = cache.iter().try_fold(Vec::with_capacity(30), |mut v, s| {
-			if s.contains(opt.word) && s != opt.word {
+		let candidate_size = 30;
+
+		// prioritize those with exact prefix
+		let exact_flow = cache.iter().try_fold(Vec::with_capacity(candidate_size), |mut v, s| {
+			if s.starts_with(opt.word) && s != opt.word {
 				v.push(s.to_owned());
-				if v.len() >= 30 {
+				if v.len() >= candidate_size {
 					return ControlFlow::Break(v);
 				}
 			}
 			ControlFlow::Continue(v)
 		});
-
-		self.ticket = opt.ticket;
-		self.cands = match flow {
+		let mut cand = match exact_flow {
 			ControlFlow::Continue(v) => v,
 			ControlFlow::Break(v) => v,
 		};
+
+		let fuzzy_flow =
+			cache.iter().try_fold(Vec::with_capacity(candidate_size - cand.len()), |mut v, s| {
+				if s.contains(opt.word) && !s.starts_with(opt.word) && s != opt.word {
+					v.push(s.to_owned());
+					if v.len() >= candidate_size - cand.len() {
+						return ControlFlow::Break(v);
+					}
+				}
+				ControlFlow::Continue(v)
+			});
+		cand.extend(
+			match fuzzy_flow {
+				ControlFlow::Continue(v) => v,
+				ControlFlow::Break(v) => v,
+			}
+			.into_iter(),
+		);
+
+		self.ticket = opt.ticket;
+		self.cands = cand;
 		if self.cands.is_empty() {
 			return mem::replace(&mut self.visible, false);
 		}
