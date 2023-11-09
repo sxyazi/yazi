@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use tokio::sync::oneshot::Sender;
 
 use super::SelectOpt;
@@ -6,13 +6,13 @@ use crate::Position;
 
 #[derive(Default)]
 pub struct Select {
-	title:        String,
-	items:        Vec<String>,
-	pub position: Position,
+	title:            String,
+	pub(super) items: Vec<String>,
+	pub position:     Position,
 
-	offset:   usize,
-	cursor:   usize,
-	callback: Option<Sender<Result<usize>>>,
+	pub(super) offset:   usize,
+	pub(super) cursor:   usize,
+	pub(super) callback: Option<Sender<Result<usize>>>,
 
 	pub visible: bool,
 }
@@ -27,45 +27,6 @@ impl Select {
 
 		self.callback = Some(tx);
 		self.visible = true;
-	}
-
-	pub fn close(&mut self, submit: bool) -> bool {
-		if let Some(cb) = self.callback.take() {
-			_ = cb.send(if submit { Ok(self.cursor) } else { Err(anyhow!("canceled")) });
-		}
-
-		self.cursor = 0;
-		self.offset = 0;
-		self.visible = false;
-		true
-	}
-
-	pub fn next(&mut self, step: usize) -> bool {
-		let len = self.items.len();
-		if len == 0 {
-			return false;
-		}
-
-		let old = self.cursor;
-		self.cursor = (self.cursor + step).min(len - 1);
-
-		let limit = self.limit();
-		if self.cursor >= len.min(self.offset + limit) {
-			self.offset = len.saturating_sub(limit).min(self.offset + self.cursor - old);
-		}
-
-		old != self.cursor
-	}
-
-	pub fn prev(&mut self, step: usize) -> bool {
-		let old = self.cursor;
-		self.cursor = self.cursor.saturating_sub(step);
-
-		if self.cursor < self.offset {
-			self.offset = self.offset.saturating_sub(old - self.cursor);
-		}
-
-		old != self.cursor
 	}
 
 	#[inline]

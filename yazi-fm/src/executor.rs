@@ -166,18 +166,18 @@ impl<'a> Executor<'a> {
 	}
 
 	fn select(&mut self, exec: &Exec) -> bool {
-		match exec.cmd.as_str() {
-			"close" => self.cx.select.close(exec.named.contains_key("submit")),
-
-			"arrow" => {
-				let step: isize = exec.args.first().and_then(|s| s.parse().ok()).unwrap_or(0);
-				if step > 0 {
-					self.cx.select.next(step as usize)
-				} else {
-					self.cx.select.prev(step.unsigned_abs())
+		macro_rules! on {
+			($name:ident) => {
+				if exec.cmd == stringify!($name) {
+					return self.cx.select.$name(exec);
 				}
-			}
+			};
+		}
 
+		on!(close);
+		on!(arrow);
+
+		match exec.cmd.as_str() {
 			"help" => self.cx.help.toggle(KeymapLayer::Select),
 			_ => false,
 		}
