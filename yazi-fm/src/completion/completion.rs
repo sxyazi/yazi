@@ -38,7 +38,12 @@ impl<'a> Widget for Completion<'a> {
 
 		let input_area = self.cx.area(&self.cx.input.position);
 		let mut area = self.cx.area(&Position::Sticky(
-			Rect { x: 1, y: 0, width: input_area.width - 2, height: items.len() as u16 + 2 },
+			Rect {
+				x:      1,
+				y:      0,
+				width:  input_area.width.saturating_sub(2),
+				height: items.len() as u16 + 2,
+			},
 			input_area,
 		));
 
