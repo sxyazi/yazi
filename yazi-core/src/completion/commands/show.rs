@@ -4,6 +4,8 @@ use yazi_config::keymap::Exec;
 
 use crate::completion::Completion;
 
+const LIMIT: usize = 30;
+
 pub struct Opt<'a> {
 	cache:      &'a Vec<String>,
 	cache_name: &'a str,
@@ -23,6 +25,35 @@ impl<'a> From<&'a Exec> for Opt<'a> {
 }
 
 impl Completion {
+	fn match_candidates(word: &str, cache: &Vec<String>) -> Vec<String> {
+		let flow = cache.iter().try_fold(
+			(Vec::with_capacity(LIMIT), Vec::with_capacity(LIMIT)),
+			|(mut prefixed, mut fuzzy), s| {
+				if s.starts_with(word) {
+					if s != word {
+						prefixed.push(s);
+						if prefixed.len() >= LIMIT {
+							return ControlFlow::Break((prefixed, fuzzy));
+						}
+					}
+				} else if fuzzy.len() < LIMIT - prefixed.len() && s.contains(word) {
+					// here we don't break the control flow, since we want more exact matching.
+					fuzzy.push(s)
+				}
+				ControlFlow::Continue((prefixed, fuzzy))
+			},
+		);
+
+		let (mut prefixed, fuzzy) = match flow {
+			ControlFlow::Continue(v) => v,
+			ControlFlow::Break(v) => v,
+		};
+		if prefixed.len() < LIMIT {
+			prefixed.extend(fuzzy.into_iter().take(LIMIT - prefixed.len()))
+		}
+		prefixed.into_iter().map(ToOwned::to_owned).collect()
+	}
+
 	pub fn show<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
 		let opt = opt.into();
 		if self.ticket != opt.ticket {
@@ -36,38 +67,8 @@ impl Completion {
 			return false;
 		};
 
-		let candidate_size = 30;
-
-		// prioritize those with exact prefix
-		let candidates = cache.iter().try_fold(
-			(Vec::with_capacity(candidate_size), Vec::with_capacity(candidate_size)),
-			|(mut prefix_cand, mut fuzzy_cand), s| {
-				if s.starts_with(opt.word) {
-					if s != opt.word {
-						prefix_cand.push(s.to_owned());
-						if prefix_cand.len() >= candidate_size {
-							return ControlFlow::Break((prefix_cand, fuzzy_cand));
-						}
-					}
-				} else if s.contains(opt.word) && fuzzy_cand.len() < candidate_size - prefix_cand.len() {
-					// here we don't break the control flow, since we want more exact matching.
-					fuzzy_cand.push(s.to_owned())
-				}
-				ControlFlow::Continue((prefix_cand, fuzzy_cand))
-			},
-		);
-
 		self.ticket = opt.ticket;
-		self.cands = {
-			let (mut prefix_cand, fuzzy_cand) = match candidates {
-				ControlFlow::Continue(v) => v,
-				ControlFlow::Break(v) => v,
-			};
-			if prefix_cand.len() < candidate_size {
-				prefix_cand.extend(fuzzy_cand.into_iter().take(candidate_size - prefix_cand.len()))
-			}
-			prefix_cand
-		};
+		self.cands = Self::match_candidates(opt.word, cache);
 		if self.cands.is_empty() {
 			return mem::replace(&mut self.visible, false);
 		}
