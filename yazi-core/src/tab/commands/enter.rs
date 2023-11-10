@@ -1,9 +1,19 @@
 use std::mem;
 
+use yazi_config::keymap::Exec;
+
 use crate::{emit, tab::Tab};
 
+pub struct Opt;
+impl From<()> for Opt {
+	fn from(_: ()) -> Self { Self }
+}
+impl From<&Exec> for Opt {
+	fn from(_: &Exec) -> Self { Self }
+}
+
 impl Tab {
-	pub fn enter(&mut self) -> bool {
+	pub fn enter(&mut self, _: impl Into<Opt>) -> bool {
 		let Some(hovered) = self.current.hovered().filter(|h| h.is_dir()).map(|h| h.url()) else {
 			return false;
 		};

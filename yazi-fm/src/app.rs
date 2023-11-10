@@ -5,7 +5,7 @@ use crossterm::event::KeyEvent;
 use tokio::sync::oneshot;
 use yazi_config::{keymap::{Exec, Key, KeymapLayer}, BOOT};
 use yazi_core::{emit, files::FilesOp, input::InputMode, Ctx, Event};
-use yazi_shared::{expand_url, Term};
+use yazi_shared::Term;
 
 use crate::{Executor, Logs, Root, Signals};
 
@@ -121,11 +121,6 @@ impl App {
 		let manager = &mut self.cx.manager;
 		let tasks = &mut self.cx.tasks;
 		match event {
-			Event::Cd(url) => {
-				futures::executor::block_on(async {
-					manager.active_mut().cd(expand_url(url)).await;
-				});
-			}
 			Event::Refresh => {
 				manager.refresh();
 			}
@@ -143,10 +138,8 @@ impl App {
 				}
 			}
 			Event::Pages(page) => {
-				if manager.current().page == page {
-					let targets = self.cx.manager.current().paginate();
-					tasks.precache_mime(targets, &self.cx.manager.mimetype);
-				}
+				let targets = self.cx.manager.current().paginate(page);
+				tasks.precache_mime(targets, &self.cx.manager.mimetype);
 			}
 			Event::Mimetype(mimes) => {
 				if manager.update_mimetype(mimes, tasks) {

@@ -33,13 +33,13 @@ impl FilesSorter {
 				)
 			}),
 			SortBy::Created => items.sort_unstable_by(|a, b| {
-				if let (Ok(aa), Ok(bb)) = (a.meta.created(), b.meta.created()) {
+				if let (Some(aa), Some(bb)) = (a.created, b.created) {
 					return self.cmp(aa, bb, self.promote(a, b));
 				}
 				Ordering::Equal
 			}),
 			SortBy::Modified => items.sort_unstable_by(|a, b| {
-				if let (Ok(aa), Ok(bb)) = (a.meta.modified(), b.meta.modified()) {
+				if let (Some(aa), Some(bb)) = (a.modified, b.modified) {
 					return self.cmp(aa, bb, self.promote(a, b));
 				}
 				Ordering::Equal
@@ -48,7 +48,7 @@ impl FilesSorter {
 			SortBy::Size => items.sort_unstable_by(|a, b| {
 				let aa = if a.is_dir() { sizes.get(&a.url).copied() } else { None };
 				let bb = if b.is_dir() { sizes.get(&b.url).copied() } else { None };
-				self.cmp(aa.unwrap_or(a.meta.len()), bb.unwrap_or(b.meta.len()), self.promote(a, b))
+				self.cmp(aa.unwrap_or(a.len), bb.unwrap_or(b.len), self.promote(a, b))
 			}),
 		}
 		true
@@ -72,17 +72,9 @@ impl FilesSorter {
 			if self.reverse { ordering.reverse() } else { ordering }
 		});
 
-		let dummy = File {
-			url:       Default::default(),
-			meta:      items[0].meta.clone(),
-			link_to:   None,
-			is_link:   false,
-			is_hidden: false,
-		};
-
 		let mut new = Vec::with_capacity(indices.len());
 		for i in indices {
-			new.push(mem::replace(&mut items[i], dummy.clone()));
+			new.push(mem::take(&mut items[i]));
 		}
 		*items = new;
 	}

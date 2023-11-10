@@ -1,5 +1,6 @@
 #![allow(clippy::option_map_unit_fn)]
 
+mod cha;
 mod chars;
 mod debounce;
 mod defer;
@@ -14,6 +15,7 @@ mod throttle;
 mod time;
 mod url;
 
+pub use cha::*;
 pub use chars::*;
 pub use debounce::*;
 pub use defer::*;

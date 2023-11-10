@@ -29,7 +29,7 @@ impl Completion {
 	}
 
 	pub fn trigger<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
-		let opt = opt.into();
+		let opt = opt.into() as Opt;
 		if opt.ticket < self.ticket {
 			return false;
 		}

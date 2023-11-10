@@ -1,10 +1,10 @@
-use std::{borrow::Cow, env, ffi::OsString, path::{Component, Path, PathBuf}};
+use std::{borrow::Cow, env, ffi::OsString, path::{Component, Path, PathBuf, MAIN_SEPARATOR}};
 
 use tokio::fs;
 
 use crate::Url;
 
-pub fn expand_path(p: impl AsRef<Path>) -> PathBuf {
+fn _expand_path(p: &Path) -> PathBuf {
 	// ${HOME} or $HOME
 	#[cfg(unix)]
 	let re = regex::Regex::new(r"\$(?:\{([^}]+)\}|([a-zA-Z\d_]+))").unwrap();
@@ -13,22 +13,20 @@ pub fn expand_path(p: impl AsRef<Path>) -> PathBuf {
 	#[cfg(windows)]
 	let re = regex::Regex::new(r"%([^%]+)%").unwrap();
 
-	let s = p.as_ref().to_string_lossy();
+	let s = p.to_string_lossy();
 	let s = re.replace_all(&s, |caps: &regex::Captures| {
 		let name = caps.get(2).or_else(|| caps.get(1)).unwrap();
 		env::var(name.as_str()).unwrap_or_else(|_| caps.get(0).unwrap().as_str().to_owned())
 	});
 
 	let p = Path::new(s.as_ref());
-	if let Ok(p) = p.strip_prefix("~") {
+	if let Ok(rest) = p.strip_prefix("~") {
 		#[cfg(unix)]
-		if let Some(home) = env::var_os("HOME") {
-			return Path::new(&home).join(p);
-		}
+		let home = env::var_os("HOME");
 		#[cfg(windows)]
-		if let Some(home) = env::var_os("USERPROFILE") {
-			return Path::new(&home).join(p);
-		}
+		let home = env::var_os("USERPROFILE");
+
+		return if let Some(p) = home { PathBuf::from(p).join(rest) } else { rest.to_path_buf() };
 	}
 
 	if p.is_absolute() {
@@ -38,9 +36,33 @@ pub fn expand_path(p: impl AsRef<Path>) -> PathBuf {
 }
 
 #[inline]
+pub fn expand_path(p: impl AsRef<Path>) -> PathBuf { _expand_path(p.as_ref()) }
+
+#[inline]
 pub fn expand_url(mut u: Url) -> Url {
-	u.set_path(expand_path(&u));
+	u.set_path(_expand_path(&u));
 	u
+}
+
+#[inline]
+pub fn ends_with_slash(p: &Path) -> bool {
+	// TODO: uncomment this when Rust 1.74 is released
+	// let b = p.as_os_str().as_encoded_bytes();
+	// if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
+
+	#[cfg(unix)]
+	{
+		use std::os::unix::ffi::OsStrExt;
+		let b = p.as_os_str().as_bytes();
+		if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
+	}
+
+	#[cfg(windows)]
+	{
+		let s = p.to_string_lossy();
+		let b = s.as_bytes();
+		if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
+	}
 }
 
 pub async fn unique_path(mut p: Url) -> Url {
@@ -117,15 +139,6 @@ pub fn path_relative_to<'a>(path: &'a Path, root: &Path) -> Cow<'a, Path> {
 	buf.extend(p_comps);
 
 	Cow::from(buf)
-}
-
-#[inline]
-pub fn optional_bool(s: &str) -> Option<bool> {
-	match s {
-		"true" => Some(true),
-		"false" => Some(false),
-		_ => None,
-	}
 }
 
 #[cfg(test)]

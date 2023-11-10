@@ -43,22 +43,38 @@ impl Folder {
 		self.prev(Default::default());
 
 		if self.page == old {
-			emit!(Pages(self.page)); // Force update
+			self.set_page(true); // Force update
 		}
 
 		true
 	}
 
-	pub fn set_page(&mut self, force: bool) -> bool {
+	pub fn set_page(&mut self, force: bool) {
 		let limit = MANAGER.layout.folder_height();
-		let new = if limit == 0 { 0 } else { self.cursor / limit };
+		if limit == 0 {
+			return;
+		}
+
+		let new = self.cursor / limit;
 		if !force && self.page == new {
-			return false;
+			return;
+		}
+
+		// Current page
+		emit!(Pages(new));
+
+		// Next page
+		let max_page = (self.files.len() + limit - 1) / limit;
+		if new < max_page && new + 1 != self.page {
+			emit!(Pages(new + 1));
+		}
+
+		// Previous page
+		if new > 1 && new - 1 != self.page {
+			emit!(Pages(new - 1));
 		}
 
 		self.page = new;
-		emit!(Pages(new));
-		true
 	}
 
 	pub fn next(&mut self, step: Step) -> bool {
@@ -115,11 +131,11 @@ impl Folder {
 	#[inline]
 	pub fn hovered(&self) -> Option<&File> { self.files.get(self.cursor) }
 
-	pub fn paginate(&self) -> &[File] {
+	pub fn paginate(&self, page: usize) -> &[File] {
 		let len = self.files.len();
 		let limit = MANAGER.layout.folder_height();
 
-		let start = (self.page * limit).min(len.saturating_sub(1));
+		let start = (page * limit).min(len.saturating_sub(1));
 		let end = (start + limit).min(len);
 		&self.files[start..end]
 	}

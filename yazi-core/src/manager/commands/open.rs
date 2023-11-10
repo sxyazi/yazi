@@ -1,10 +1,36 @@
-use yazi_config::OPEN;
+use std::ffi::OsString;
+
+use yazi_config::{keymap::Exec, OPEN};
 use yazi_shared::MIME_DIR;
 
 use crate::{emit, external, manager::Manager, select::SelectOpt};
 
+pub struct Opt {
+	interactive: bool,
+}
+
+impl From<&Exec> for Opt {
+	fn from(e: &Exec) -> Self { Self { interactive: e.named.contains_key("interactive") } }
+}
+
 impl Manager {
-	pub fn open(&mut self, interactive: bool) -> bool {
+	async fn open_interactive(files: Vec<(OsString, String)>) {
+		let openers = OPEN.common_openers(&files);
+		if openers.is_empty() {
+			return;
+		}
+
+		let result = emit!(Select(SelectOpt::hovered(
+			"Open with:",
+			openers.iter().map(|o| o.desc.clone()).collect()
+		)));
+
+		if let Ok(choice) = result.await {
+			emit!(Open(files, Some(openers[choice].clone())));
+		}
+	}
+
+	pub fn open(&mut self, opt: impl Into<Opt>) -> bool {
 		let mut files: Vec<_> = self
 			.selected()
 			.into_iter()
@@ -20,6 +46,7 @@ impl Manager {
 			return false;
 		}
 
+		let opt = opt.into() as Opt;
 		tokio::spawn(async move {
 			let todo: Vec<_> = files.iter().filter(|(_, m)| m.is_none()).map(|(u, _)| u).collect();
 			if let Ok(mut mimes) = external::file(&todo).await {
@@ -35,23 +62,12 @@ impl Manager {
 			let files: Vec<_> =
 				files.into_iter().filter_map(|(u, m)| m.map(|m| (u.into_os_string(), m))).collect();
 
-			if !interactive {
-				emit!(Open(files, None));
+			if opt.interactive {
+				Self::open_interactive(files).await;
 				return;
 			}
 
-			let openers = OPEN.common_openers(&files);
-			if openers.is_empty() {
-				return;
-			}
-
-			let result = emit!(Select(SelectOpt::hovered(
-				"Open with:",
-				openers.iter().map(|o| o.desc.clone()).collect()
-			)));
-			if let Ok(choice) = result.await {
-				emit!(Open(files, Some(openers[choice].clone())));
-			}
+			emit!(Open(files, None));
 		});
 		false
 	}

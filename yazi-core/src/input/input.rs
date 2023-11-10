@@ -3,11 +3,11 @@ use std::ops::Range;
 use crossterm::event::KeyCode;
 use tokio::sync::mpsc::UnboundedSender;
 use unicode_width::UnicodeWidthStr;
-use yazi_config::keymap::{Exec, Key, KeymapLayer};
-use yazi_shared::{CharKind, InputError};
+use yazi_config::keymap::Key;
+use yazi_shared::InputError;
 
 use super::{mode::InputMode, op::InputOp, InputOpt, InputSnap, InputSnaps};
-use crate::{emit, external, Position};
+use crate::{external, Position};
 
 #[derive(Default)]
 pub struct Input {
@@ -19,9 +19,9 @@ pub struct Input {
 	pub position: Position,
 
 	// Typing
-	callback:   Option<UnboundedSender<Result<String, InputError>>>,
-	realtime:   bool,
-	completion: bool,
+	pub(super) callback:   Option<UnboundedSender<Result<String, InputError>>>,
+	realtime:              bool,
+	pub(super) completion: bool,
 
 	// Shell
 	pub(super) highlight: bool,
@@ -43,153 +43,6 @@ impl Input {
 
 		// Shell
 		self.highlight = opt.highlight;
-	}
-
-	pub fn close(&mut self, submit: bool) -> bool {
-		if let Some(cb) = self.callback.take() {
-			let value = self.snap_mut().value.clone();
-			_ = cb.send(if submit { Ok(value) } else { Err(InputError::Canceled(value)) });
-		}
-
-		self.ticket = self.ticket.wrapping_add(1);
-		self.visible = false;
-		true
-	}
-
-	pub fn escape(&mut self) -> bool {
-		let snap = self.snap_mut();
-		match snap.mode {
-			InputMode::Normal if snap.op == InputOp::None => {
-				self.close(false);
-			}
-			InputMode::Normal => {
-				snap.op = InputOp::None;
-			}
-			InputMode::Insert => {
-				snap.mode = InputMode::Normal;
-				self.move_(-1);
-
-				if self.completion {
-					emit!(Call(Exec::call("close", vec![]).vec(), KeymapLayer::Completion));
-				}
-			}
-		}
-		self.snaps.tag();
-		true
-	}
-
-	pub fn insert(&mut self, append: bool) -> bool {
-		if !self.snap_mut().insert() {
-			return false;
-		}
-		if append {
-			self.move_(1);
-		}
-		true
-	}
-
-	#[inline]
-	pub fn visual(&mut self) -> bool { self.snap_mut().visual() }
-
-	#[inline]
-	pub fn undo(&mut self) -> bool {
-		if !self.snaps.undo() {
-			return false;
-		}
-		if self.snap().mode == InputMode::Insert {
-			self.escape();
-		}
-		true
-	}
-
-	#[inline]
-	pub fn redo(&mut self) -> bool {
-		if !self.snaps.redo() {
-			return false;
-		}
-		true
-	}
-
-	pub fn move_(&mut self, step: isize) -> bool {
-		let snap = self.snap();
-		let b = self.handle_op(
-			if step <= 0 {
-				snap.cursor.saturating_sub(step.unsigned_abs())
-			} else {
-				snap.count().min(snap.cursor + step as usize)
-			},
-			false,
-		);
-
-		let snap = self.snap_mut();
-		if snap.cursor < snap.offset {
-			snap.offset = snap.cursor;
-		} else if snap.value.is_empty() {
-			snap.offset = 0;
-		} else {
-			let delta = snap.mode.delta();
-			let s = snap.slice(snap.offset..snap.cursor + delta);
-			if s.width() >= /*TODO: hardcode*/ 50 - 2 {
-				let s = s.chars().rev().collect::<String>();
-				snap.offset = snap.cursor - InputSnap::find_window(&s, 0).end.saturating_sub(delta);
-			}
-		}
-
-		b
-	}
-
-	#[inline]
-	pub fn move_in_operating(&mut self, step: isize) -> bool {
-		if self.snap_mut().op == InputOp::None { false } else { self.move_(step) }
-	}
-
-	pub fn backward(&mut self) -> bool {
-		let snap = self.snap();
-		if snap.cursor == 0 {
-			return self.move_(0);
-		}
-
-		let idx = snap.idx(snap.cursor).unwrap_or(snap.len());
-		let mut it = snap.value[..idx].chars().rev().enumerate();
-		let mut prev = CharKind::new(it.next().unwrap().1);
-		for (i, c) in it {
-			let c = CharKind::new(c);
-			if prev != CharKind::Space && prev != c {
-				return self.move_(-(i as isize));
-			}
-			prev = c;
-		}
-
-		if prev != CharKind::Space {
-			return self.move_(-(snap.len() as isize));
-		}
-		false
-	}
-
-	pub fn forward(&mut self, end: bool) -> bool {
-		let snap = self.snap();
-		if snap.value.is_empty() {
-			return self.move_(0);
-		}
-
-		let mut it = snap.value.chars().skip(snap.cursor).enumerate();
-		let mut prev = CharKind::new(it.next().unwrap().1);
-		for (i, c) in it {
-			let c = CharKind::new(c);
-			let b = if end {
-				prev != CharKind::Space && prev != c && i != 1
-			} else {
-				c != CharKind::Space && c != prev
-			};
-			if b && !matches!(snap.op, InputOp::None | InputOp::Select(_)) {
-				return self.move_(i as isize);
-			} else if b {
-				return self.move_(if end { i - 1 } else { i } as isize);
-			}
-			prev = c;
-		}
-
-		self.move_(snap.len() as isize)
 	}
 
 	pub fn type_(&mut self, key: &Key) -> bool {
@@ -234,61 +87,7 @@ impl Input {
 		true
 	}
 
-	pub fn delete(&mut self, cut: bool, insert: bool) -> bool {
-		match self.snap().op {
-			InputOp::None => {
-				self.snap_mut().op = InputOp::Delete(cut, insert, self.snap().cursor);
-				false
-			}
-			InputOp::Select(start) => {
-				self.snap_mut().op = InputOp::Delete(cut, insert, start);
-				return self.handle_op(self.snap().cursor, true).then(|| self.move_(0)).is_some();
-			}
-			InputOp::Delete(..) => {
-				self.snap_mut().op = InputOp::Delete(cut, insert, 0);
-				return self.move_(self.snap().len() as isize);
-			}
-			_ => false,
-		}
-	}
-
-	pub fn yank(&mut self) -> bool {
-		match self.snap().op {
-			InputOp::None => {
-				self.snap_mut().op = InputOp::Yank(self.snap().cursor);
-				false
-			}
-			InputOp::Select(start) => {
-				self.snap_mut().op = InputOp::Yank(start);
-				return self.handle_op(self.snap().cursor, true).then(|| self.move_(0)).is_some();
-			}
-			InputOp::Yank(_) => {
-				self.snap_mut().op = InputOp::Yank(0);
-				self.move_(self.snap().len() as isize);
-				false
-			}
-			_ => false,
-		}
-	}
-
-	pub fn paste(&mut self, before: bool) -> bool {
-		if let Some(start) = self.snap().op.start() {
-			self.snap_mut().op = InputOp::Delete(false, false, start);
-			self.handle_op(self.snap().cursor, true);
-		}
-
-		let s = futures::executor::block_on(external::clipboard_get()).unwrap_or_default();
-		if s.is_empty() {
-			return false;
-		}
-
-		self.insert(!before);
-		self.type_str(&s.to_string_lossy());
-		self.escape();
-		true
-	}
-
-	fn handle_op(&mut self, cursor: usize, include: bool) -> bool {
+	pub(super) fn handle_op(&mut self, cursor: usize, include: bool) -> bool {
 		let old = self.snap().clone();
 		let snap = self.snaps.current_mut();
 
@@ -380,8 +179,8 @@ impl Input {
 	}
 
 	#[inline]
-	fn snap(&self) -> &InputSnap { self.snaps.current() }
+	pub(super) fn snap(&self) -> &InputSnap { self.snaps.current() }
 
 	#[inline]
-	fn snap_mut(&mut self) -> &mut InputSnap { self.snaps.current_mut() }
+	pub(super) fn snap_mut(&mut self) -> &mut InputSnap { self.snaps.current_mut() }
 }

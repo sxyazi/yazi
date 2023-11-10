@@ -62,7 +62,7 @@ impl Watcher {
 		);
 
 		let instance = Self { watcher: watcher.unwrap(), watched: Default::default() };
-		tokio::spawn(Self::changed(rx, instance.watched.clone()));
+		tokio::spawn(Self::on_changed(rx, instance.watched.clone()));
 		instance
 	}
 
@@ -124,13 +124,17 @@ impl Watcher {
 
 		let watched = self.watched.clone();
 		tokio::spawn(async move {
+			let watched = watched.read().clone();
 			for dir in dirs {
-				Self::dir_changed(&dir, watched.clone()).await;
+				Self::dir_changed(&dir, &watched).await;
 			}
 		});
 	}
 
-	async fn changed(rx: UnboundedReceiver<Url>, watched: Arc<RwLock<IndexMap<Url, Option<Url>>>>) {
+	async fn on_changed(
+		rx: UnboundedReceiver<Url>,
+		watched: Arc<RwLock<IndexMap<Url, Option<Url>>>>,
+	) {
 		// TODO: revert this once a new notification is implemented
 		// let rx = UnboundedReceiverStream::new(rx).chunks_timeout(100,
 		// Duration::from_millis(200));
@@ -147,70 +151,76 @@ impl Watcher {
 				}
 			}
 
-			Self::file_changed(&files, watched.clone()).await;
+			let watched = watched.read().clone();
+
+			Self::files_changed(&files, &watched).await;
 			for file in files {
+				for u in Self::linked_urls(&file, &watched) {
+					emit!(Files(FilesOp::IOErr(u.clone())));
+				}
 				emit!(Files(FilesOp::IOErr(file)));
 			}
 
 			for dir in dirs {
-				Self::dir_changed(&dir, watched.clone()).await;
+				Self::dir_changed(&dir, &watched).await;
 			}
 		}
 	}
 
-	async fn file_changed(urls: &[Url], watched: Arc<RwLock<IndexMap<Url, Option<Url>>>>) {
+	async fn files_changed(urls: &[Url], watched: &IndexMap<Url, Option<Url>>) {
 		let Ok(mut mimes) = external::file(urls).await else {
 			return;
 		};
 
-		let linked: Vec<_> = watched
-			.read()
-			.iter()
-			.filter_map(|(k, v)| v.as_ref().map(|v| (k, v)))
-			.fold(Vec::new(), |mut aac, (k, v)| {
+		let linked: Vec<_> = watched.iter().filter_map(|(k, v)| v.as_ref().map(|v| (k, v))).fold(
+			Vec::new(),
+			|mut aac, (k, v)| {
 				mimes
 					.iter()
-					.filter(|(f, _)| f.parent().map(|p| p == **v) == Some(true))
-					.for_each(|(f, m)| aac.push((k.join(f.file_name().unwrap()), m.clone())));
+					.filter(|(u, _)| u.parent().map(|p| p == **v) == Some(true))
+					.for_each(|(u, m)| aac.push((k.join(u.file_name().unwrap()), m.clone())));
 				aac
-			});
+			},
+		);
 
 		mimes.extend(linked);
 		emit!(Mimetype(mimes));
 	}
 
-	async fn dir_changed(url: &Url, watched: Arc<RwLock<IndexMap<Url, Option<Url>>>>) {
-		let linked: Vec<_> = watched
-			.read()
-			.iter()
-			.filter_map(|(k, v)| v.as_ref().map(|v| (k, v)))
-			.filter(|(_, v)| *v == url)
-			.map(|(k, _)| k.clone())
-			.collect();
-
+	async fn dir_changed(url: &Url, watched: &IndexMap<Url, Option<Url>>) {
+		let linked = Self::linked_urls(url, watched);
 		let Ok(rx) = Files::from_dir(url).await else {
 			emit!(Files(FilesOp::IOErr(url.clone())));
-			for ori in linked {
-				emit!(Files(FilesOp::IOErr(ori)));
+			for u in linked {
+				emit!(Files(FilesOp::IOErr(u.clone())));
 			}
 			return;
 		};
 
-		let linked_files = |files: &[File], ori: &Url| -> Vec<File> {
+		let linked_files = |files: &[File], linked: &Url| -> Vec<File> {
 			let mut new = Vec::with_capacity(files.len());
 			for file in files {
 				let mut file = file.clone();
-				file.url = ori.join(file.url.strip_prefix(url).unwrap());
+				file.url = linked.join(file.url.strip_prefix(url).unwrap());
 				new.push(file);
 			}
 			new
 		};
 
 		let files: Vec<_> = UnboundedReceiverStream::new(rx).collect().await;
-		for ori in linked {
-			let files = linked_files(&files, &ori);
-			emit!(Files(FilesOp::Full(ori, files)));
+		for u in linked {
+			let files = linked_files(&files, u);
+			emit!(Files(FilesOp::Full(u.clone(), files)));
 		}
 		emit!(Files(FilesOp::Full(url.clone(), files)));
+	}
+
+	fn linked_urls<'a>(url: &'a Url, watched: &'a IndexMap<Url, Option<Url>>) -> Vec<&'a Url> {
+		watched
+			.iter()
+			.filter_map(|(k, v)| v.as_ref().map(|v| (k, v)))
+			.filter(|(_, v)| *v == url)
+			.map(|(k, _)| k)
+			.collect()
 	}
 }

@@ -16,6 +16,7 @@ yazi-shared  = { path = "../yazi-shared", version = "0.1.5" }
 # External dependencies
 anyhow        = "^1"
 async-channel = "^1"
+bitflags      = "^2"
 crossterm     = "^0"
 futures       = "^0"
 indexmap      = "^2"

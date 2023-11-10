@@ -2,10 +2,14 @@ use yazi_config::keymap::Exec;
 
 use crate::completion::Completion;
 
-pub struct Opt(isize);
+pub struct Opt {
+	step: isize,
+}
 
 impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self { Self(e.args.first().and_then(|s| s.parse().ok()).unwrap_or(0)) }
+	fn from(e: &Exec) -> Self {
+		Self { step: e.args.first().and_then(|s| s.parse().ok()).unwrap_or(0) }
+	}
 }
 
 impl Completion {
@@ -38,7 +42,7 @@ impl Completion {
 	}
 
 	pub fn arrow(&mut self, opt: impl Into<Opt>) -> bool {
-		let step = opt.into().0;
-		if step > 0 { self.next(step as usize) } else { self.prev(step.unsigned_abs()) }
+		let opt = opt.into() as Opt;
+		if opt.step > 0 { self.next(opt.step as usize) } else { self.prev(opt.step.unsigned_abs()) }
 	}
 }
