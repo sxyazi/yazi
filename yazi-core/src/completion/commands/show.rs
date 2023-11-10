@@ -4,6 +4,8 @@ use yazi_config::keymap::Exec;
 
 use crate::completion::Completion;
 
+const LIMIT: usize = 30;
+
 pub struct Opt<'a> {
 	cache:      &'a Vec<String>,
 	cache_name: &'a str,
@@ -23,6 +25,35 @@ impl<'a> From<&'a Exec> for Opt<'a> {
 }
 
 impl Completion {
+	fn match_candidates(word: &str, cache: &Vec<String>) -> Vec<String> {
+		let flow = cache.iter().try_fold(
+			(Vec::with_capacity(LIMIT), Vec::with_capacity(LIMIT)),
+			|(mut prefixed, mut fuzzy), s| {
+				if s.starts_with(word) {
+					if s != word {
+						prefixed.push(s);
+						if prefixed.len() >= LIMIT {
+							return ControlFlow::Break((prefixed, fuzzy));
+						}
+					}
+				} else if fuzzy.len() < LIMIT - prefixed.len() && s.contains(word) {
+					// here we don't break the control flow, since we want more exact matching.
+					fuzzy.push(s)
+				}
+				ControlFlow::Continue((prefixed, fuzzy))
+			},
+		);
+
+		let (mut prefixed, fuzzy) = match flow {
+			ControlFlow::Continue(v) => v,
+			ControlFlow::Break(v) => v,
+		};
+		if prefixed.len() < LIMIT {
+			prefixed.extend(fuzzy.into_iter().take(LIMIT - prefixed.len()))
+		}
+		prefixed.into_iter().map(ToOwned::to_owned).collect()
+	}
+
 	pub fn show<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
 		let opt = opt.into() as Opt;
 		if self.ticket != opt.ticket {
@@ -36,21 +67,8 @@ impl Completion {
 			return false;
 		};
 
-		let flow = cache.iter().try_fold(Vec::with_capacity(30), |mut v, s| {
-			if s.contains(opt.word) && s != opt.word {
-				v.push(s.to_owned());
-				if v.len() >= 30 {
-					return ControlFlow::Break(v);
-				}
-			}
-			ControlFlow::Continue(v)
-		});
-
 		self.ticket = opt.ticket;
-		self.cands = match flow {
-			ControlFlow::Continue(v) => v,
-			ControlFlow::Break(v) => v,
-		};
+		self.cands = Self::match_candidates(opt.word, cache);
 		if self.cands.is_empty() {
 			return mem::replace(&mut self.visible, false);
 		}
