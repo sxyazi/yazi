@@ -61,7 +61,7 @@ impl Tab {
 		true
 	}
 
-	pub fn cd_interactive(&mut self, opt: impl Into<Opt>) -> bool {
+	fn cd_interactive(&mut self, opt: impl Into<Opt>) -> bool {
 		let opt = opt.into() as Opt;
 
 		tokio::spawn(async move {

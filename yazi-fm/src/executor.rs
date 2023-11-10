@@ -138,7 +138,7 @@ impl<'a> Executor<'a> {
 
 		match exec.cmd.as_bytes() {
 			// Tasks
-			b"tasks_show" => self.cx.tasks.toggle(),
+			b"tasks_show" => self.cx.tasks.toggle(()),
 			// Help
 			b"help" => self.cx.help.toggle(KeymapLayer::Manager),
 			_ => false,
@@ -152,14 +152,19 @@ impl<'a> Executor<'a> {
 					return self.cx.tasks.$name(exec);
 				}
 			};
+			($name:ident, $alias:literal) => {
+				if exec.cmd == $alias {
+					return self.cx.tasks.$name(exec);
+				}
+			};
 		}
 
+		on!(toggle, "close");
 		on!(arrow);
 		on!(inspect);
 		on!(cancel);
 
 		match exec.cmd.as_str() {
-			"close" => self.cx.tasks.toggle(),
 			"help" => self.cx.help.toggle(KeymapLayer::Tasks),
 			_ => false,
 		}
@@ -184,78 +189,89 @@ impl<'a> Executor<'a> {
 	}
 
 	fn input(&mut self, exec: &Exec) -> bool {
-		match exec.cmd.as_str() {
-			"close" => return self.cx.input.close(exec.named.contains_key("submit")),
-			"escape" => return self.cx.input.escape(),
+		macro_rules! on {
+			($name:ident) => {
+				if exec.cmd == stringify!($name) {
+					return self.cx.input.$name(exec);
+				}
+			};
+			($name:ident, $alias:literal) => {
+				if exec.cmd == $alias {
+					return self.cx.input.$name(exec);
+				}
+			};
+		}
 
-			"move" => {
-				let step = exec.args.first().and_then(|s| s.parse().ok()).unwrap_or(0);
-				let in_operating = exec.named.contains_key("in-operating");
-				return if in_operating {
-					self.cx.input.move_in_operating(step)
-				} else {
-					self.cx.input.move_(step)
-				};
-			}
+		on!(close);
+		on!(escape);
+		on!(move_, "move");
 
-			"complete" => {
-				return if exec.args.is_empty() {
-					self.cx.completion.trigger(exec)
-				} else {
-					self.cx.input.complete(exec)
-				};
-			}
-			_ => {}
+		if exec.cmd.as_str() == "complete" {
+			return if exec.args.is_empty() {
+				self.cx.completion.trigger(exec)
+			} else {
+				self.cx.input.complete(exec)
+			};
 		}
 
 		match self.cx.input.mode() {
-			InputMode::Normal => match exec.cmd.as_str() {
-				"insert" => self.cx.input.insert(exec.named.contains_key("append")),
-				"visual" => self.cx.input.visual(),
+			InputMode::Normal => {
+				on!(insert);
+				on!(visual);
 
-				"backward" => self.cx.input.backward(),
-				"forward" => self.cx.input.forward(exec.named.contains_key("end-of-word")),
-				"delete" => {
-					self.cx.input.delete(exec.named.contains_key("cut"), exec.named.contains_key("insert"))
+				on!(backward);
+				on!(forward);
+				on!(delete);
+
+				on!(yank);
+				on!(paste);
+
+				on!(undo);
+				on!(redo);
+
+				match exec.cmd.as_str() {
+					"help" => self.cx.help.toggle(KeymapLayer::Input),
+					_ => false,
 				}
-
-				"yank" => self.cx.input.yank(),
-				"paste" => self.cx.input.paste(exec.named.contains_key("before")),
-
-				"undo" => self.cx.input.undo(),
-				"redo" => self.cx.input.redo(),
-
-				"help" => self.cx.help.toggle(KeymapLayer::Input),
-				_ => false,
-			},
+			}
 			InputMode::Insert => false,
 		}
 	}
 
 	fn help(&mut self, exec: &Exec) -> bool {
+		macro_rules! on {
+			($name:ident) => {
+				if exec.cmd == stringify!($name) {
+					return self.cx.help.$name(exec);
+				}
+			};
+		}
+
+		on!(escape);
+		on!(arrow);
+		on!(filter);
+
 		match exec.cmd.as_str() {
 			"close" => self.cx.help.toggle(KeymapLayer::Help),
-			"escape" => self.cx.help.escape(),
-
-			"arrow" => {
-				let step = exec.args.first().and_then(|s| s.parse().ok()).unwrap_or(0);
-				self.cx.help.arrow(step)
-			}
-
-			"filter" => self.cx.help.filter(),
-
 			_ => false,
 		}
 	}
 
 	fn completion(&mut self, exec: &Exec) -> bool {
+		macro_rules! on {
+			($name:ident) => {
+				if exec.cmd == stringify!($name) {
+					return self.cx.completion.$name(exec);
+				}
+			};
+		}
+
+		on!(trigger);
+		on!(show);
+		on!(close);
+		on!(arrow);
+
 		match exec.cmd.as_str() {
-			"trigger" => self.cx.completion.trigger(exec),
-			"show" => self.cx.completion.show(exec),
-			"close" => self.cx.completion.close(exec),
-
-			"arrow" => self.cx.completion.arrow(exec),
-
 			"help" => self.cx.help.toggle(KeymapLayer::Completion),
 			_ => false,
 		}

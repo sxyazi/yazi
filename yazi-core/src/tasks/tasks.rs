@@ -31,12 +31,6 @@ impl Tasks {
 		(Term::size().rows * TASKS_PERCENT / 100).saturating_sub(TASKS_PADDING) as usize
 	}
 
-	pub fn toggle(&mut self) -> bool {
-		self.visible = !self.visible;
-		emit!(Peek); // Show/hide preview for images
-		true
-	}
-
 	pub fn paginate(&self) -> Vec<TaskSummary> {
 		let running = self.scheduler.running.read();
 		running.values().take(Self::limit()).map(Into::into).collect()
