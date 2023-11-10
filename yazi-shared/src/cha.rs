@@ -57,7 +57,7 @@ impl From<Metadata> for Cha {
 			meta:     cm,
 			len:      m.len(),
 			accessed: m.accessed().ok(),
-			created:  m.created().ok(),
+			created:  std::panic::catch_unwind(|| m.created().ok()).ok().flatten(),
 			modified: m.modified().ok(),
 
 			#[cfg(unix)]
