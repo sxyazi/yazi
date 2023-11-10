@@ -19,6 +19,7 @@ yazi-shared  = { path = "../yazi-shared", version = "0.1.5" }
 ansi-to-tui   = "^3"
 anyhow        = "^1"
 crossterm     = { version = "^0", features = [ "event-stream" ] }
+fdlimit       = "^0"
 futures       = "^0"
 ratatui       = "^0"
 tokio         = { version = "^1", features = [ "parking_lot" ] }
