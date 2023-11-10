@@ -141,15 +141,6 @@ pub fn path_relative_to<'a>(path: &'a Path, root: &Path) -> Cow<'a, Path> {
 	Cow::from(buf)
 }
 
-#[inline]
-pub fn optional_bool(s: &str) -> Option<bool> {
-	match s {
-		"true" => Some(true),
-		"false" => Some(false),
-		_ => None,
-	}
-}
-
 #[cfg(test)]
 mod tests {
 	use std::{borrow::Cow, path::Path};

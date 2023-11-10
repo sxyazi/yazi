@@ -1,17 +1,15 @@
-use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, io::{stdout, Write}, path::Path, sync::Arc};
+use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, path::Path, sync::Arc};
 
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use serde::Serialize;
-use tokio::{io::{stdin, AsyncReadExt}, select, sync::mpsc, time};
 use tracing::debug;
 use yazi_config::{manager::SortBy, open::Opener, OPEN};
-use yazi_shared::{Defer, MimeKind, Term, Url};
+use yazi_shared::{MimeKind, Term, Url};
 
 use super::{running::Running, task::TaskSummary, Scheduler, TASKS_PADDING, TASKS_PERCENT};
-use crate::{emit, files::{File, Files}, input::InputOpt, Event, BLOCKER};
+use crate::{emit, files::{File, Files}, input::InputOpt};
 
 pub struct Tasks {
-	scheduler: Arc<Scheduler>,
+	pub(super) scheduler: Arc<Scheduler>,
 
 	pub visible:  bool,
 	pub cursor:   usize,
@@ -33,103 +31,9 @@ impl Tasks {
 		(Term::size().rows * TASKS_PERCENT / 100).saturating_sub(TASKS_PADDING) as usize
 	}
 
-	pub fn toggle(&mut self) -> bool {
-		self.visible = !self.visible;
-		emit!(Peek); // Show/hide preview for images
-		true
-	}
-
-	#[allow(clippy::should_implement_trait)]
-	pub fn next(&mut self) -> bool {
-		let limit = Self::limit().min(self.len());
-
-		let old = self.cursor;
-		self.cursor = limit.saturating_sub(1).min(self.cursor + 1);
-
-		old != self.cursor
-	}
-
-	pub fn prev(&mut self) -> bool {
-		let old = self.cursor;
-		self.cursor = self.cursor.saturating_sub(1);
-		old != self.cursor
-	}
-
 	pub fn paginate(&self) -> Vec<TaskSummary> {
 		let running = self.scheduler.running.read();
 		running.values().take(Self::limit()).map(Into::into).collect()
-	}
-
-	pub fn inspect(&self) -> bool {
-		let Some(id) = self.scheduler.running.read().get_id(self.cursor) else {
-			return false;
-		};
-
-		let scheduler = self.scheduler.clone();
-		tokio::spawn(async move {
-			let _guard = BLOCKER.acquire().await.unwrap();
-			let (tx, mut rx) = mpsc::unbounded_channel();
-
-			let buffered = {
-				let mut running = scheduler.running.write();
-				let Some(task) = running.get_mut(id) else { return };
-
-				task.logger = Some(tx);
-				task.logs.clone()
-			};
-
-			emit!(Stop(true)).await;
-			let _defer = Defer::new(|| {
-				disable_raw_mode().ok();
-				Event::Stop(false, None).emit();
-			});
-
-			Term::clear(&mut stdout()).ok();
-			stdout().write_all(buffered.as_bytes()).ok();
-			enable_raw_mode().ok();
-
-			let mut stdin = stdin();
-			let mut quit = [0; 10];
-			loop {
-				select! {
-					Some(line) = rx.recv() => {
-						let mut stdout = stdout().lock();
-						stdout.write_all(line.as_bytes()).ok();
-						stdout.write_all(b"\r\n").ok();
-					}
-					_ = time::sleep(time::Duration::from_millis(100)) => {
-						if scheduler.running.read().get(id).is_none() {
-							stdout().write_all(b"Task finished, press `q` to quit\r\n").ok();
-							break;
-						}
-					},
-					Ok(_) = stdin.read(&mut quit) => {
-						if quit[0] == b'q' {
-							break;
-						}
-					}
-				}
-			}
-
-			if let Some(task) = scheduler.running.write().get_mut(id) {
-				task.logger = None;
-			}
-			while quit[0] != b'q' {
-				stdin.read(&mut quit).await.ok();
-			}
-		});
-		false
-	}
-
-	pub fn cancel(&mut self) -> bool {
-		let id = self.scheduler.running.read().get_id(self.cursor);
-		if id.map(|id| self.scheduler.cancel(id)) != Some(true) {
-			return false;
-		}
-
-		let len = self.scheduler.running.read().len();
-		self.cursor = self.cursor.min(len.saturating_sub(1));
-		true
 	}
 
 	pub fn file_open(&self, targets: &[(impl AsRef<Path>, impl AsRef<str>)]) -> bool {

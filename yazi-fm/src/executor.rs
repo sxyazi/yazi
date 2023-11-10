@@ -1,6 +1,5 @@
 use yazi_config::{keymap::{Control, Exec, Key, KeymapLayer}, KEYMAP};
-use yazi_core::{input::InputMode, tab::FinderCase, Ctx};
-use yazi_shared::{expand_url, optional_bool, Url};
+use yazi_core::{input::InputMode, Ctx};
 
 pub(super) struct Executor<'a> {
 	cx: &'a mut Ctx,
@@ -71,260 +70,212 @@ impl<'a> Executor<'a> {
 	}
 
 	fn manager(&mut self, exec: &Exec) -> bool {
-		match exec.cmd.as_str() {
-			"escape" => self.cx.manager.active_mut().escape(exec),
-			"quit" => self.cx.manager.quit(&self.cx.tasks, exec.named.contains_key("no-cwd-file")),
-			"close" => self.cx.manager.close(&self.cx.tasks),
-			"suspend" => self.cx.manager.suspend(),
+		macro_rules! on {
+			(MANAGER, $name:ident $(,$args:expr)*) => {
+				if exec.cmd == stringify!($name) {
+					return self.cx.manager.$name(exec, $($args),*);
+				}
+			};
+			(ACTIVE, $name:ident) => {
+				if exec.cmd == stringify!($name) {
+					return self.cx.manager.active_mut().$name(exec);
+				}
+			};
+			(TABS, $name:ident) => {
+				if exec.cmd == concat!("tab_", stringify!($name)) {
+					return self.cx.manager.tabs.$name(exec);
+				}
+			};
+		}
 
-			// Navigation
-			"arrow" => {
-				let step = exec.args.first().and_then(|s| s.parse().ok()).unwrap_or_default();
-				self.cx.manager.active_mut().arrow(step)
-			}
-			"peek" => {
+		on!(ACTIVE, escape);
+		on!(MANAGER, quit, &self.cx.tasks);
+		on!(MANAGER, close, &self.cx.tasks);
+		on!(MANAGER, suspend);
+
+		// Navigation
+		on!(ACTIVE, arrow);
+		on!(ACTIVE, leave);
+		on!(ACTIVE, enter);
+		on!(ACTIVE, back);
+		on!(ACTIVE, forward);
+		on!(ACTIVE, cd);
+		on!(ACTIVE, reveal);
+
+		// Selection
+		on!(ACTIVE, select);
+		on!(ACTIVE, select_all);
+		on!(ACTIVE, visual_mode);
+
+		// Operation
+		on!(MANAGER, open);
+		on!(MANAGER, yank);
+		on!(MANAGER, paste, &self.cx.tasks);
+		on!(MANAGER, link, &self.cx.tasks);
+		on!(MANAGER, remove, &self.cx.tasks);
+		on!(MANAGER, create);
+		on!(MANAGER, rename);
+		on!(ACTIVE, copy);
+		on!(ACTIVE, shell);
+		on!(ACTIVE, hidden);
+		on!(ACTIVE, linemode);
+		on!(ACTIVE, search);
+		on!(ACTIVE, jump);
+
+		// Find
+		on!(ACTIVE, find);
+		on!(ACTIVE, find_arrow);
+
+		// Sorting
+		on!(ACTIVE, sort);
+
+		// Tabs
+		on!(TABS, create);
+		on!(TABS, close);
+		on!(TABS, switch);
+		on!(TABS, swap);
+
+		match exec.cmd.as_bytes() {
+			b"peek" => {
 				let step = exec.args.first().and_then(|s| s.parse().ok()).unwrap_or(0);
 				self.cx.manager.active_mut().preview.arrow(step);
 				self.cx.manager.peek(true, self.cx.image_layer())
 			}
-			"leave" => self.cx.manager.active_mut().leave(),
-			"enter" => self.cx.manager.active_mut().enter(),
-			"back" => self.cx.manager.active_mut().back(),
-			"forward" => self.cx.manager.active_mut().forward(),
-			"cd" => {
-				let url = exec.args.first().map(Url::from).unwrap_or_default();
-				if exec.named.contains_key("interactive") {
-					self.cx.manager.active_mut().cd_interactive(url)
-				} else {
-					self.cx.manager.active_mut().cd(expand_url(url))
-				}
-			}
-			"reveal" => self.cx.manager.active_mut().reveal(exec),
-
-			// Selection
-			"select" => {
-				let state = exec.named.get("state").cloned().unwrap_or("none".to_string());
-				self.cx.manager.active_mut().select(optional_bool(&state))
-			}
-			"select_all" => {
-				let state = exec.named.get("state").cloned().unwrap_or("none".to_string());
-				self.cx.manager.active_mut().select_all(optional_bool(&state))
-			}
-			"visual_mode" => self.cx.manager.active_mut().visual_mode(exec.named.contains_key("unset")),
-
-			// Operation
-			"open" => self.cx.manager.open(exec.named.contains_key("interactive")),
-			"yank" => self.cx.manager.yank(exec.named.contains_key("cut")),
-			"paste" => {
-				let dest = self.cx.manager.cwd();
-				let (cut, ref src) = self.cx.manager.yanked;
-
-				let force = exec.named.contains_key("force");
-				if cut {
-					self.cx.tasks.file_cut(src, dest, force)
-				} else {
-					self.cx.tasks.file_copy(src, dest, force)
-				}
-			}
-			"link" => {
-				let (cut, ref src) = self.cx.manager.yanked;
-				!cut
-					&& self.cx.tasks.file_link(
-						src,
-						self.cx.manager.cwd(),
-						exec.named.contains_key("relative"),
-						exec.named.contains_key("force"),
-					)
-			}
-			"remove" => {
-				let targets = self.cx.manager.selected().into_iter().map(|f| f.url()).collect();
-				let force = exec.named.contains_key("force");
-				let permanently = exec.named.contains_key("permanently");
-				self.cx.tasks.file_remove(targets, force, permanently)
-			}
-			"create" => self.cx.manager.create(exec.named.contains_key("force")),
-			"rename" => self.cx.manager.rename(exec.named.contains_key("force")),
-			"copy" => self.cx.manager.active().copy(exec.args.first().map(|s| s.as_str()).unwrap_or("")),
-			"shell" => self.cx.manager.active().shell(
-				exec.args.first().map(|e| e.as_str()).unwrap_or(""),
-				exec.named.contains_key("block"),
-				exec.named.contains_key("confirm"),
-			),
-			"hidden" => self.cx.manager.active_mut().hidden(exec),
-			"linemode" => self.cx.manager.active_mut().linemode(exec),
-			"search" => match exec.args.first().map(|s| s.as_str()).unwrap_or("") {
-				"rg" => self.cx.manager.active_mut().search(true),
-				"fd" => self.cx.manager.active_mut().search(false),
-				_ => self.cx.manager.active_mut().search_stop(),
-			},
-			"jump" => match exec.args.first().map(|s| s.as_str()).unwrap_or("") {
-				"fzf" => self.cx.manager.active_mut().jump(true),
-				"zoxide" => self.cx.manager.active_mut().jump(false),
-				_ => false,
-			},
-
-			// Find
-			"find" => {
-				let query = exec.args.first().map(|s| s.as_str());
-				let prev = exec.named.contains_key("previous");
-				let case = match (exec.named.contains_key("smart"), exec.named.contains_key("insensitive"))
-				{
-					(true, _) => FinderCase::Smart,
-					(_, false) => FinderCase::Sensitive,
-					(_, true) => FinderCase::Insensitive,
-				};
-				self.cx.manager.active_mut().find(query, prev, case)
-			}
-			"find_arrow" => self.cx.manager.active_mut().find_arrow(exec.named.contains_key("previous")),
-
-			// Sorting
-			"sort" => {
-				let b = self.cx.manager.active_mut().sort(exec);
-				self.cx.tasks.precache_size(&self.cx.manager.current().files);
-				b
-			}
-
-			// Tabs
-			"tab_create" => {
-				let path = if exec.named.contains_key("current") {
-					self.cx.manager.cwd().to_owned()
-				} else {
-					exec.args.first().map(Url::from).unwrap_or_else(|| Url::from("/"))
-				};
-				self.cx.manager.tabs.create(&path)
-			}
-			"tab_close" => {
-				let idx = exec.args.first().and_then(|i| i.parse().ok()).unwrap_or(0);
-				self.cx.manager.tabs.close(idx)
-			}
-			"tab_switch" => {
-				let step = exec.args.first().and_then(|s| s.parse().ok()).unwrap_or(0);
-				let rel = exec.named.contains_key("relative");
-				self.cx.manager.tabs.switch(step, rel)
-			}
-			"tab_swap" => {
-				let step = exec.args.first().and_then(|s| s.parse().ok()).unwrap_or(0);
-				self.cx.manager.tabs.swap(step)
-			}
-
 			// Tasks
-			"tasks_show" => self.cx.tasks.toggle(),
-
+			b"tasks_show" => self.cx.tasks.toggle(()),
 			// Help
-			"help" => self.cx.help.toggle(KeymapLayer::Manager),
-
+			b"help" => self.cx.help.toggle(KeymapLayer::Manager),
 			_ => false,
 		}
 	}
 
 	fn tasks(&mut self, exec: &Exec) -> bool {
+		macro_rules! on {
+			($name:ident) => {
+				if exec.cmd == stringify!($name) {
+					return self.cx.tasks.$name(exec);
+				}
+			};
+			($name:ident, $alias:literal) => {
+				if exec.cmd == $alias {
+					return self.cx.tasks.$name(exec);
+				}
+			};
+		}
+
+		on!(toggle, "close");
+		on!(arrow);
+		on!(inspect);
+		on!(cancel);
+
 		match exec.cmd.as_str() {
-			"close" => self.cx.tasks.toggle(),
-
-			"arrow" => {
-				let step = exec.args.first().and_then(|s| s.parse().ok()).unwrap_or(0);
-				if step > 0 { self.cx.tasks.next() } else { self.cx.tasks.prev() }
-			}
-
-			"inspect" => self.cx.tasks.inspect(),
-			"cancel" => self.cx.tasks.cancel(),
-
 			"help" => self.cx.help.toggle(KeymapLayer::Tasks),
 			_ => false,
 		}
 	}
 
 	fn select(&mut self, exec: &Exec) -> bool {
-		match exec.cmd.as_str() {
-			"close" => self.cx.select.close(exec.named.contains_key("submit")),
-
-			"arrow" => {
-				let step: isize = exec.args.first().and_then(|s| s.parse().ok()).unwrap_or(0);
-				if step > 0 {
-					self.cx.select.next(step as usize)
-				} else {
-					self.cx.select.prev(step.unsigned_abs())
+		macro_rules! on {
+			($name:ident) => {
+				if exec.cmd == stringify!($name) {
+					return self.cx.select.$name(exec);
 				}
-			}
+			};
+		}
 
+		on!(close);
+		on!(arrow);
+
+		match exec.cmd.as_str() {
 			"help" => self.cx.help.toggle(KeymapLayer::Select),
 			_ => false,
 		}
 	}
 
 	fn input(&mut self, exec: &Exec) -> bool {
-		match exec.cmd.as_str() {
-			"close" => return self.cx.input.close(exec.named.contains_key("submit")),
-			"escape" => return self.cx.input.escape(),
+		macro_rules! on {
+			($name:ident) => {
+				if exec.cmd == stringify!($name) {
+					return self.cx.input.$name(exec);
+				}
+			};
+			($name:ident, $alias:literal) => {
+				if exec.cmd == $alias {
+					return self.cx.input.$name(exec);
+				}
+			};
+		}
 
-			"move" => {
-				let step = exec.args.first().and_then(|s| s.parse().ok()).unwrap_or(0);
-				let in_operating = exec.named.contains_key("in-operating");
-				return if in_operating {
-					self.cx.input.move_in_operating(step)
-				} else {
-					self.cx.input.move_(step)
-				};
-			}
+		on!(close);
+		on!(escape);
+		on!(move_, "move");
 
-			"complete" => {
-				return if exec.args.is_empty() {
-					self.cx.completion.trigger(exec)
-				} else {
-					self.cx.input.complete(exec)
-				};
-			}
-			_ => {}
+		if exec.cmd.as_str() == "complete" {
+			return if exec.args.is_empty() {
+				self.cx.completion.trigger(exec)
+			} else {
+				self.cx.input.complete(exec)
+			};
 		}
 
 		match self.cx.input.mode() {
-			InputMode::Normal => match exec.cmd.as_str() {
-				"insert" => self.cx.input.insert(exec.named.contains_key("append")),
-				"visual" => self.cx.input.visual(),
+			InputMode::Normal => {
+				on!(insert);
+				on!(visual);
 
-				"backward" => self.cx.input.backward(),
-				"forward" => self.cx.input.forward(exec.named.contains_key("end-of-word")),
-				"delete" => {
-					self.cx.input.delete(exec.named.contains_key("cut"), exec.named.contains_key("insert"))
+				on!(backward);
+				on!(forward);
+				on!(delete);
+
+				on!(yank);
+				on!(paste);
+
+				on!(undo);
+				on!(redo);
+
+				match exec.cmd.as_str() {
+					"help" => self.cx.help.toggle(KeymapLayer::Input),
+					_ => false,
 				}
-
-				"yank" => self.cx.input.yank(),
-				"paste" => self.cx.input.paste(exec.named.contains_key("before")),
-
-				"undo" => self.cx.input.undo(),
-				"redo" => self.cx.input.redo(),
-
-				"help" => self.cx.help.toggle(KeymapLayer::Input),
-				_ => false,
-			},
+			}
 			InputMode::Insert => false,
 		}
 	}
 
 	fn help(&mut self, exec: &Exec) -> bool {
+		macro_rules! on {
+			($name:ident) => {
+				if exec.cmd == stringify!($name) {
+					return self.cx.help.$name(exec);
+				}
+			};
+		}
+
+		on!(escape);
+		on!(arrow);
+		on!(filter);
+
 		match exec.cmd.as_str() {
 			"close" => self.cx.help.toggle(KeymapLayer::Help),
-			"escape" => self.cx.help.escape(),
-
-			"arrow" => {
-				let step = exec.args.first().and_then(|s| s.parse().ok()).unwrap_or(0);
-				self.cx.help.arrow(step)
-			}
-
-			"filter" => self.cx.help.filter(),
-
 			_ => false,
 		}
 	}
 
 	fn completion(&mut self, exec: &Exec) -> bool {
+		macro_rules! on {
+			($name:ident) => {
+				if exec.cmd == stringify!($name) {
+					return self.cx.completion.$name(exec);
+				}
+			};
+		}
+
+		on!(trigger);
+		on!(show);
+		on!(close);
+		on!(arrow);
+
 		match exec.cmd.as_str() {
-			"trigger" => self.cx.completion.trigger(exec),
-			"show" => self.cx.completion.show(exec),
-			"close" => self.cx.completion.close(exec),
-
-			"arrow" => self.cx.completion.arrow(exec),
-
 			"help" => self.cx.help.toggle(KeymapLayer::Completion),
 			_ => false,
 		}

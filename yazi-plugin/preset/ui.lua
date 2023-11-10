@@ -56,7 +56,6 @@ function ui.highlight_ranges(s, ranges)
 		if r[1] > last then
 			spans[#spans + 1] = ui.Span(s:sub(last + 1, r[1]))
 		end
-		-- TODO: use a customable style
 		spans[#spans + 1] = ui.Span(s:sub(r[1] + 1, r[2])):style(THEME.manager.find_keyword)
 		last = r[2]
 	end

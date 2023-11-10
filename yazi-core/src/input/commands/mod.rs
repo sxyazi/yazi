@@ -1,1 +1,13 @@
+mod backward;
+mod close;
 mod complete;
+mod delete;
+mod escape;
+mod forward;
+mod insert;
+mod move_;
+mod paste;
+mod redo;
+mod undo;
+mod visual;
+mod yank;

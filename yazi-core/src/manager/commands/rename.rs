@@ -2,13 +2,36 @@ use std::{collections::BTreeSet, ffi::OsStr, io::{stdout, BufWriter, Write}, pat
 
 use anyhow::{anyhow, bail, Result};
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
-use yazi_config::{OPEN, PREVIEW};
+use yazi_config::{keymap::Exec, OPEN, PREVIEW};
 use yazi_shared::{max_common_root, Defer, Term, Url};
 
 use crate::{emit, external::{self, ShellOpt}, files::{File, FilesOp}, input::InputOpt, manager::Manager, Event, BLOCKER};
 
+pub struct Opt {
+	force: bool,
+}
+
+impl From<&Exec> for Opt {
+	fn from(e: &Exec) -> Self { Self { force: e.named.contains_key("force") } }
+}
+
 impl Manager {
-	pub fn rename(&self, force: bool) -> bool {
+	async fn rename_and_hover(old: Url, new: Url) -> Result<()> {
+		fs::rename(&old, &new).await?;
+		if old.parent() != new.parent() {
+			return Ok(());
+		}
+
+		let parent = old.parent_url().unwrap();
+		emit!(Files(FilesOp::Deleting(parent, BTreeSet::from([old]))));
+
+		let file = File::from(new.clone()).await?;
+		emit!(Files(FilesOp::Creating(file.parent().unwrap(), file.into_map())));
+		emit!(Hover(new));
+		Ok(())
+	}
+
+	pub fn rename(&self, opt: impl Into<Opt>) -> bool {
 		if self.active().in_selecting() {
 			return self.bulk_rename();
 		}
@@ -17,21 +40,7 @@ impl Manager {
 			return false;
 		};
 
-		async fn rename_and_hover(old: Url, new: Url) -> Result<()> {
-			fs::rename(&old, &new).await?;
-			if old.parent() != new.parent() {
-				return Ok(());
-			}
-
-			let parent = old.parent_url().unwrap();
-			emit!(Files(FilesOp::Deleting(parent, BTreeSet::from([old]))));
-
-			let file = File::from(new.clone()).await?;
-			emit!(Files(FilesOp::Creating(file.parent().unwrap(), file.into_map())));
-			emit!(Hover(new));
-			Ok(())
-		}
-
+		let opt = opt.into() as Opt;
 		tokio::spawn(async move {
 			let mut result = emit!(Input(
 				InputOpt::hovered("Rename:").with_value(hovered.file_name().unwrap().to_string_lossy())
@@ -42,15 +51,15 @@ impl Manager {
 			};
 
 			let new = hovered.parent().unwrap().join(name);
-			if force || fs::symlink_metadata(&new).await.is_err() {
-				rename_and_hover(hovered, Url::from(new)).await.ok();
+			if opt.force || fs::symlink_metadata(&new).await.is_err() {
+				Self::rename_and_hover(hovered, Url::from(new)).await.ok();
 				return;
 			}
 
 			let mut result = emit!(Input(InputOpt::hovered("Overwrite an existing file? (y/N)")));
 			if let Some(Ok(choice)) = result.recv().await {
 				if choice == "y" || choice == "Y" {
-					rename_and_hover(hovered, Url::from(new)).await.ok();
+					Self::rename_and_hover(hovered, Url::from(new)).await.ok();
 				}
 			};
 		});

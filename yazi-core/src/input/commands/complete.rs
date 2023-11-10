@@ -18,7 +18,7 @@ impl<'a> From<&'a Exec> for Opt<'a> {
 
 impl Input {
 	pub fn complete<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
-		let opt = opt.into();
+		let opt = opt.into() as Opt;
 		if self.ticket != opt.ticket {
 			return false;
 		}

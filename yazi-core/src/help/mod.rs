@@ -1,3 +1,4 @@
+mod commands;
 mod help;
 
 pub use help::*;

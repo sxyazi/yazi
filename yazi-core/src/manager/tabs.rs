@@ -3,11 +3,9 @@ use yazi_shared::Url;
 
 use crate::{emit, tab::Tab};
 
-const MAX_TABS: usize = 9;
-
 pub struct Tabs {
-	pub idx: usize,
-	items:   Vec<Tab>,
+	pub idx:          usize,
+	pub(super) items: Vec<Tab>,
 }
 
 impl Tabs {
@@ -17,62 +15,8 @@ impl Tabs {
 		tabs
 	}
 
-	pub fn create(&mut self, url: &Url) -> bool {
-		if self.items.len() >= MAX_TABS {
-			return false;
-		}
-
-		let mut tab = Tab::from(url);
-		tab.conf = self.active().conf.clone();
-		tab.apply_files_attrs(false);
-
-		self.items.insert(self.idx + 1, tab);
-		self.set_idx(self.idx + 1);
-		true
-	}
-
-	pub fn switch(&mut self, idx: isize, rel: bool) -> bool {
-		let idx = if rel {
-			(self.idx as isize + idx).rem_euclid(self.items.len() as isize) as usize
-		} else {
-			idx as usize
-		};
-
-		if idx == self.idx || idx >= self.items.len() {
-			return false;
-		}
-
-		self.set_idx(idx);
-		true
-	}
-
-	pub fn swap(&mut self, rel: isize) -> bool {
-		let idx = self.absolute(rel);
-		if idx == self.idx {
-			return false;
-		}
-
-		self.items.swap(self.idx, idx);
-		self.set_idx(idx);
-		true
-	}
-
-	pub fn close(&mut self, idx: usize) -> bool {
-		let len = self.items.len();
-		if len < 2 || idx >= len {
-			return false;
-		}
-
-		self.items.remove(idx);
-		if idx <= self.idx {
-			self.set_idx(self.absolute(1));
-		}
-
-		true
-	}
-
 	#[inline]
-	fn absolute(&self, rel: isize) -> usize {
+	pub(super) fn absolute(&self, rel: isize) -> usize {
 		if rel > 0 {
 			(self.idx + rel as usize).min(self.items.len() - 1)
 		} else {
@@ -81,7 +25,7 @@ impl Tabs {
 	}
 
 	#[inline]
-	fn set_idx(&mut self, idx: usize) {
+	pub(super) fn set_idx(&mut self, idx: usize) {
 		self.idx = idx;
 		self.active_mut().preview.reset(|l| l.is_image());
 		emit!(Refresh);
