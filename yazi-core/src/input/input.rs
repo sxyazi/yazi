@@ -67,7 +67,7 @@ impl Input {
 			Key { code: KeyCode::Char('d'), shift: false, ctrl: true, alt: false } => {
 				self.forward_delete()
 			}
-			Key { code: KeyCode::Char('b'), shift: false, ctrl: false, alt: true } => self.backward(),
+			Key { code: KeyCode::Char('b'), shift: false, ctrl: false, alt: true } => self.backward(()),
 			Key { code: KeyCode::Char('f'), shift: false, ctrl: false, alt: true } => self.forward(false),
 			_ => false,
 		}
