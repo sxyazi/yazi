@@ -58,7 +58,7 @@ impl From<Metadata> for Cha {
 			len:      m.len(),
 			accessed: m.accessed().ok(),
 			// TODO: remove this once https://github.com/rust-lang/rust/issues/108277 is fixed.
-			created:  std::panic::catch_unwind(|| m.created().ok()).ok().flatten(),
+			created:  None,
 			modified: m.modified().ok(),
 
 			#[cfg(unix)]
