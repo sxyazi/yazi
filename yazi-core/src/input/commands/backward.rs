@@ -14,6 +14,8 @@ impl From<()> for Opt {
 
 impl Input {
 	pub fn backward(&mut self, _: impl Into<Opt>) -> bool {
+		return self.move_word(false, false);
+
 		let snap = self.snap();
 		if snap.cursor == 0 {
 			return self.move_(0);

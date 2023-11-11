@@ -1,10 +1,10 @@
-use std::ops::Range;
+use std::ops::{Range, RangeBounds};
 
 use crossterm::event::KeyCode;
 use tokio::sync::mpsc::UnboundedSender;
 use unicode_width::UnicodeWidthStr;
 use yazi_config::keymap::Key;
-use yazi_shared::InputError;
+use yazi_shared::{CharKind, InputError};
 
 use super::{mode::InputMode, op::InputOp, InputOpt, InputSnap, InputSnaps};
 use crate::{external, Position};
@@ -45,6 +45,65 @@ impl Input {
 		self.highlight = opt.highlight;
 	}
 
+	/// Searches for a word boundary and returns the movement in the cursor
+	/// position.
+	///
+	/// A word boundary is where the [`CharKind`] changes. However, we also skip
+	/// initial whitespace.
+	///
+	/// If `stop_before_boundary` is true, returns how many characters the cursor
+	/// needs to move to be at the character *BEFORE* the word boundary, or until
+	/// the end of the iterator.
+	///
+	/// Otherwise, returns how many characters to move to reach right *AFTER* the
+	/// word boundary, or the end of the iterator.
+	fn find_word_boundary(
+		input: impl Iterator<Item = char> + Clone,
+		stop_before_boundary: bool,
+	) -> usize {
+		// Move until we don't see any more whitespace.
+		let spaces_count = input.clone().take_while(|c| CharKind::new(*c) == CharKind::Space).count();
+		let input = input.skip(spaces_count);
+
+		// If we want the *NEXT* end of word, then we want to skip the current
+		// character.
+		let mut input = input.skip(stop_before_boundary.into()).peekable();
+
+		// Determine the current character class.
+		let prev = input.peek().cloned();
+		let Some(prev) = prev else {
+			return spaces_count;
+		};
+
+		// Move until we see a different character class or the end of the iterator.
+		let character_count = input.take_while(|c| CharKind::new(*c) == CharKind::new(prev)).count();
+
+		spaces_count + character_count
+	}
+
+	pub(super) fn move_word(&mut self, forwards: bool, end: bool) -> bool {
+		let snap = self.snap();
+		let idx = snap.idx(snap.cursor).unwrap_or(snap.len());
+
+		let movement = if forwards {
+			Self::find_word_boundary(snap.value[idx..].chars(), end) as isize
+		} else {
+			-(Self::find_word_boundary(snap.value[..idx].chars().rev(), false) as isize)
+		};
+		self.move_(movement)
+	}
+
+	fn delete_range(&mut self, range: impl RangeBounds<usize>) {
+		let snap = self.snap_mut();
+		snap.cursor = match range.start_bound() {
+			std::ops::Bound::Included(i) => *i,
+			std::ops::Bound::Excluded(i) => i + 1,
+			std::ops::Bound::Unbounded => 0,
+		};
+		snap.value.drain(range);
+		self.flush_value();
+	}
+
 	pub fn type_(&mut self, key: &Key) -> bool {
 		if self.mode() != InputMode::Insert {
 			return false;
@@ -55,22 +114,65 @@ impl Input {
 			return self.type_str(c.encode_utf8(&mut bits));
 		}
 
+		use KeyCode as K;
+		use KeyCode::Char as C;
+
 		match key {
-			Key { code: KeyCode::Backspace, shift: false, ctrl: false, alt: false } => self.backspace(),
+			Key { code: K::Backspace, shift: false, ctrl: false, alt: false } => self.backspace(),
 			// Handle Emacs-style keybindings.
-			Key { code: KeyCode::Char('a'), shift: false, ctrl: true, alt: false } => {
-				self.move_(isize::MIN)
+			Key { code: C('a'), shift: false, ctrl: true, alt: false } => self.move_(isize::MIN),
+			Key { code: C('e'), shift: false, ctrl: true, alt: false } => self.move_(isize::MAX),
+			Key { code: C('b'), shift: false, ctrl: true, alt: false } => self.move_(-1),
+			Key { code: C('f'), shift: false, ctrl: true, alt: false } => self.move_(1),
+			Key { code: C('h'), shift: false, ctrl: true, alt: false } => self.backspace(),
+			Key { code: C('d'), shift: false, ctrl: true, alt: false } => self.forward_delete(),
+			Key { code: C('b'), shift: false, ctrl: false, alt: true } => self.move_word(false, false),
+			Key { code: C('f'), shift: false, ctrl: false, alt: true } => self.move_word(true, false),
+			Key { code: C('u'), shift: false, ctrl: true, alt: false } => {
+				let snap = self.snap_mut();
+				let end = snap.idx(snap.cursor).unwrap_or(snap.len());
+				self.delete_range(..end);
+				true
 			}
-			Key { code: KeyCode::Char('e'), shift: false, ctrl: true, alt: false } => {
-				self.move_(isize::MAX)
+			Key { code: C('k'), shift: false, ctrl: true, alt: false }
+			| Key { code: K::Delete, shift: false, ctrl: false, alt: false } => {
+				let snap = self.snap_mut();
+				let start = snap.idx(snap.cursor).unwrap_or(snap.len());
+				self.delete_range(start..);
+				true
 			}
-			Key { code: KeyCode::Char('d'), shift: false, ctrl: true, alt: false } => {
-				self.forward_delete()
+			Key { code: C('w'), shift: false, ctrl: true, alt: false }
+			| Key { code: K::Backspace, shift: false, ctrl: false, alt: true } => {
+				let snap = self.snap_mut();
+				let end = snap.idx(snap.cursor).unwrap_or(snap.len());
+				let start = end - Self::find_word_boundary(snap.value[..end].chars().rev(), false);
+				self.delete_range(start..end);
+				true
 			}
-			Key { code: KeyCode::Char('b'), shift: false, ctrl: false, alt: true } => self.backward(()),
-			Key { code: KeyCode::Char('f'), shift: false, ctrl: false, alt: true } => self.forward(false),
+			Key { code: C('d'), shift: false, ctrl: false, alt: true } => {
+				let snap = self.snap_mut();
+				let start = snap.idx(snap.cursor).unwrap_or(snap.len());
+				let end = start + Self::find_word_boundary(snap.value[start..].chars(), false);
+				self.delete_range(start..end);
+				true
+			}
 			_ => false,
 		}
+	}
+
+	pub fn forward_delete(&mut self) -> bool {
+		let snap = self.snaps.current_mut();
+		// Return false when there is no character on the right to delete.
+		// Note that the cursor can be at index `snap.value.len()` when in
+		// edit mode, but it should be strictly less for forward deletion.
+		if snap.cursor >= snap.value.len() {
+			return false;
+		} else {
+			snap.value.remove(snap.idx(snap.cursor).unwrap());
+		}
+		self.move_(0);
+		self.flush_value();
+		true
 	}
 
 	pub fn type_str(&mut self, s: &str) -> bool {
@@ -82,21 +184,6 @@ impl Input {
 		}
 
 		self.move_(s.chars().count() as isize);
-		self.flush_value();
-		true
-	}
-
-	pub fn forward_delete(&mut self) -> bool {
-		let snap = self.snaps.current_mut();
-		// Return false when there is no character on the right to delete.
-		// Note that the cursor can be at index `snap.value.len()` when in
-		// edit mode.
-		if snap.cursor > snap.value.len() - 1 {
-			return false;
-		} else {
-			snap.value.remove(snap.idx(snap.cursor).unwrap());
-		}
-		self.move_(0);
 		self.flush_value();
 		true
 	}

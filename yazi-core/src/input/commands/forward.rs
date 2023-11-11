@@ -17,6 +17,7 @@ impl From<bool> for Opt {
 impl Input {
 	pub fn forward(&mut self, opt: impl Into<Opt>) -> bool {
 		let opt = opt.into() as Opt;
+		return self.move_word(false, opt.end_of_word);
 
 		let snap = self.snap();
 		if snap.value.is_empty() {
