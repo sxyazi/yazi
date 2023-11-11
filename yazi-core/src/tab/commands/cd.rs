@@ -15,7 +15,7 @@ pub struct Opt {
 impl From<&Exec> for Opt {
 	fn from(e: &Exec) -> Self {
 		Self {
-			target:      e.args.first().map(Url::from).unwrap_or_default(),
+			target:      Url::from(expand_path(e.args.first().map(|s| s.as_str()).unwrap_or(""))),
 			interactive: e.named.contains_key("interactive"),
 		}
 	}
