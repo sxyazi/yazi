@@ -112,9 +112,9 @@ impl Tasks {
 		tokio::spawn(async move {
 			let s = if targets.len() > 1 { "s" } else { "" };
 			let mut result = emit!(Input(InputOpt::hovered(if permanently {
-				format!("Delete selected file{s} permanently? (y/N)")
+				format!("Delete {} selected file{s} permanently? (y/N)", targets.len())
 			} else {
-				format!("Move selected file{s} to trash? (y/N)")
+				format!("Move {} selected file{s} to trash? (y/N)", targets.len())
 			})));
 
 			if let Some(Ok(choice)) = result.recv().await {
