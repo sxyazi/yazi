@@ -18,6 +18,7 @@ yazi-shared  = { path = "../yazi-shared", version = "0.1.5" }
 # External dependencies
 ansi-to-tui   = "^3"
 anyhow        = "^1"
+better-panic  = "^0"
 crossterm     = { version = "^0", features = [ "event-stream" ] }
 fdlimit       = "^0"
 futures       = "^0"

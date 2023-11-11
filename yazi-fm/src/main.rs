@@ -6,6 +6,7 @@ mod executor;
 mod help;
 mod input;
 mod logs;
+mod panic;
 mod root;
 mod select;
 mod signals;
@@ -15,6 +16,7 @@ mod which;
 use app::*;
 use executor::*;
 use logs::*;
+use panic::*;
 use root::*;
 use signals::*;
 
