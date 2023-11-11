@@ -57,7 +57,8 @@ impl From<Metadata> for Cha {
 			meta:     cm,
 			len:      m.len(),
 			accessed: m.accessed().ok(),
-			created:  m.created().ok(),
+			// TODO: remove this once https://github.com/rust-lang/rust/issues/108277 is fixed.
+			created:  None,
 			modified: m.modified().ok(),
 
 			#[cfg(unix)]

@@ -32,6 +32,32 @@ impl Term {
 		Ok(term)
 	}
 
+	fn stop(&mut self) -> Result<()> {
+		if self.csi_u {
+			execute!(stdout(), PopKeyboardEnhancementFlags)?;
+		}
+
+		execute!(stdout(), DisableFocusChange, DisableBracketedPaste, LeaveAlternateScreen)?;
+
+		Self::set_cursor_default()?;
+		self.show_cursor()?;
+		Ok(disable_raw_mode()?)
+	}
+
+	pub fn goodbye(f: impl FnOnce() -> bool) -> Result<()> {
+		execute!(
+			stdout(),
+			PopKeyboardEnhancementFlags,
+			DisableFocusChange,
+			DisableBracketedPaste,
+			LeaveAlternateScreen,
+			crossterm::cursor::SetCursorStyle::DefaultUserShape,
+			crossterm::cursor::Show,
+		)?;
+		disable_raw_mode()?;
+		std::process::exit(f() as i32);
+	}
+
 	pub fn size() -> WindowSize {
 		let mut size = WindowSize { rows: 0, columns: 0, width: 0, height: 0 };
 		if let Ok(s) = crossterm::terminal::window_size() {
@@ -69,21 +95,7 @@ impl Term {
 }
 
 impl Drop for Term {
-	fn drop(&mut self) {
-		let mut f = || -> Result<()> {
-			if self.csi_u {
-				execute!(stdout(), PopKeyboardEnhancementFlags)?;
-			}
-
-			execute!(stdout(), DisableFocusChange, DisableBracketedPaste, LeaveAlternateScreen)?;
-
-			Self::set_cursor_default()?;
-			self.show_cursor()?;
-			Ok(disable_raw_mode()?)
-		};
-
-		f().ok();
-	}
+	fn drop(&mut self) { self.stop().ok(); }
 }
 
 impl Deref for Term {

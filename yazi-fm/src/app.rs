@@ -2,12 +2,13 @@ use std::ffi::OsString;
 
 use anyhow::{Ok, Result};
 use crossterm::event::KeyEvent;
+use ratatui::prelude::Rect;
 use tokio::sync::oneshot;
 use yazi_config::{keymap::{Exec, Key, KeymapLayer}, BOOT};
 use yazi_core::{emit, files::FilesOp, input::InputMode, Ctx, Event};
 use yazi_shared::Term;
 
-use crate::{Executor, Logs, Root, Signals};
+use crate::{Executor, Logs, Panic, Root, Signals};
 
 pub(super) struct App {
 	cx:      Ctx,
@@ -17,6 +18,7 @@ pub(super) struct App {
 
 impl App {
 	pub(super) async fn run() -> Result<()> {
+		Panic::install();
 		let _log = Logs::init()?;
 		let term = Term::start()?;
 
@@ -32,7 +34,7 @@ impl App {
 				Event::Key(key) => app.dispatch_key(key),
 				Event::Paste(str) => app.dispatch_paste(str),
 				Event::Render(_) => app.dispatch_render(),
-				Event::Resize(..) => app.dispatch_resize(),
+				Event::Resize(cols, rows) => app.dispatch_resize(cols, rows),
 				Event::Stop(state, tx) => app.dispatch_stop(state, tx),
 				Event::Call(exec, layer) => app.dispatch_call(exec, layer),
 				event => app.dispatch_module(event),
@@ -55,6 +57,7 @@ impl App {
 				std::fs::write(p, cwd.as_bytes()).ok();
 			}
 		}
+		Term::goodbye(|| false).unwrap();
 	}
 
 	fn dispatch_key(&mut self, key: KeyEvent) {
@@ -87,7 +90,11 @@ impl App {
 		}
 	}
 
-	fn dispatch_resize(&mut self) {
+	fn dispatch_resize(&mut self, cols: u16, rows: u16) {
+		if let Some(term) = &mut self.term {
+			term.resize(Rect::new(0, 0, cols, rows)).ok();
+		}
+
 		self.cx.manager.current_mut().set_page(true);
 		self.cx.manager.active_mut().preview.reset(|_| true);
 		self.cx.manager.peek(true, self.cx.image_layer());

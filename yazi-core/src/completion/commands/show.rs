@@ -25,7 +25,7 @@ impl<'a> From<&'a Exec> for Opt<'a> {
 }
 
 impl Completion {
-	fn match_candidates(word: &str, cache: &Vec<String>) -> Vec<String> {
+	fn match_candidates(word: &str, cache: &[String]) -> Vec<String> {
 		let flow = cache.iter().try_fold(
 			(Vec::with_capacity(LIMIT), Vec::with_capacity(LIMIT)),
 			|(mut prefixed, mut fuzzy), s| {
