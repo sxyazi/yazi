@@ -57,7 +57,7 @@ impl Input {
 	///
 	/// Otherwise, returns how many characters to move to reach right *AFTER* the
 	/// word boundary, or the end of the iterator.
-	fn find_word_boundary(
+	pub(super) fn find_word_boundary(
 		input: impl Iterator<Item = char> + Clone,
 		stop_before_boundary: bool,
 	) -> usize {
@@ -81,18 +81,6 @@ impl Input {
 		spaces_count + character_count
 	}
 
-	pub(super) fn move_word(&mut self, forwards: bool, end: bool) -> bool {
-		let snap = self.snap();
-		let idx = snap.idx(snap.cursor).unwrap_or(snap.len());
-
-		let movement = if forwards {
-			Self::find_word_boundary(snap.value[idx..].chars(), end) as isize
-		} else {
-			-(Self::find_word_boundary(snap.value[..idx].chars().rev(), false) as isize)
-		};
-		self.move_(movement)
-	}
-
 	fn delete_range(&mut self, range: impl RangeBounds<usize>) {
 		let snap = self.snap_mut();
 		snap.cursor = match range.start_bound() {
@@ -114,11 +102,10 @@ impl Input {
 			return self.type_str(c.encode_utf8(&mut bits));
 		}
 
-		use KeyCode as K;
-		use KeyCode::Char as C;
+		use KeyCode::{Backspace, Char as C, Delete};
 
 		match key {
-			Key { code: K::Backspace, shift: false, ctrl: false, alt: false } => self.backspace(),
+			Key { code: Backspace, shift: false, ctrl: false, alt: false } => self.backspace(),
 			// Handle Emacs-style keybindings.
 			Key { code: C('a'), shift: false, ctrl: true, alt: false } => self.move_(isize::MIN),
 			Key { code: C('e'), shift: false, ctrl: true, alt: false } => self.move_(isize::MAX),
@@ -126,8 +113,8 @@ impl Input {
 			Key { code: C('f'), shift: false, ctrl: true, alt: false } => self.move_(1),
 			Key { code: C('h'), shift: false, ctrl: true, alt: false } => self.backspace(),
 			Key { code: C('d'), shift: false, ctrl: true, alt: false } => self.forward_delete(),
-			Key { code: C('b'), shift: false, ctrl: false, alt: true } => self.move_word(false, false),
-			Key { code: C('f'), shift: false, ctrl: false, alt: true } => self.move_word(true, false),
+			Key { code: C('b'), shift: false, ctrl: false, alt: true } => self.backspace(),
+			Key { code: C('f'), shift: false, ctrl: false, alt: true } => self.forward(false),
 			Key { code: C('u'), shift: false, ctrl: true, alt: false } => {
 				let snap = self.snap_mut();
 				let end = snap.idx(snap.cursor).unwrap_or(snap.len());
@@ -135,14 +122,14 @@ impl Input {
 				true
 			}
 			Key { code: C('k'), shift: false, ctrl: true, alt: false }
-			| Key { code: K::Delete, shift: false, ctrl: false, alt: false } => {
+			| Key { code: Delete, shift: false, ctrl: false, alt: false } => {
 				let snap = self.snap_mut();
 				let start = snap.idx(snap.cursor).unwrap_or(snap.len());
 				self.delete_range(start..);
 				true
 			}
 			Key { code: C('w'), shift: false, ctrl: true, alt: false }
-			| Key { code: K::Backspace, shift: false, ctrl: false, alt: true } => {
+			| Key { code: Backspace, shift: false, ctrl: false, alt: true } => {
 				let snap = self.snap_mut();
 				let end = snap.idx(snap.cursor).unwrap_or(snap.len());
 				let start = end - Self::find_word_boundary(snap.value[..end].chars().rev(), false);
@@ -195,8 +182,8 @@ impl Input {
 		} else {
 			snap.value.remove(snap.idx(snap.cursor - 1).unwrap());
 		}
-		self.move_(-1);
 
+		self.move_(-1);
 		self.flush_value();
 		true
 	}
