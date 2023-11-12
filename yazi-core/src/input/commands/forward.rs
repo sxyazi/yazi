@@ -1,4 +1,5 @@
 use yazi_config::keymap::Exec;
+use yazi_shared::CharKind;
 
 use crate::input::{op::InputOp, Input};
 
@@ -18,14 +19,27 @@ impl Input {
 		let opt = opt.into() as Opt;
 
 		let snap = self.snap();
-		let idx = snap.idx(snap.cursor).unwrap_or(snap.len());
+		if snap.value.is_empty() {
+			return self.move_(0);
+		}
 
-		let step = Self::find_word_boundary(
-			snap.value[idx..].chars(),
-			// If not in vim mode or just moving (not deleting or yanking), use end_of_word.
-			if let InputOp::None = snap.op { opt.end_of_word } else { false },
-			opt.end_of_word,
-		);
-		self.move_(step as isize)
+		let mut it = snap.value.chars().skip(snap.cursor).enumerate();
+		let mut prev = CharKind::new(it.next().unwrap().1);
+		for (i, c) in it {
+			let c = CharKind::new(c);
+			let b = if opt.end_of_word {
+				prev != CharKind::Space && prev != c && i != 1
+			} else {
+				c != CharKind::Space && c != prev
+			};
+			if b && !matches!(snap.op, InputOp::None | InputOp::Select(_)) {
+				return self.move_(i as isize);
+			} else if b {
+				return self.move_(if opt.end_of_word { i - 1 } else { i } as isize);
+			}
+			prev = c;
+		}
+
+		self.move_(snap.len() as isize)
 	}
 }

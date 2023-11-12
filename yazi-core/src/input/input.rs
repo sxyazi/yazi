@@ -59,15 +59,7 @@ impl Input {
 	///
 	/// Otherwise, returns how many characters to move to reach right *AFTER* the
 	/// word boundary, or the end of the iterator.
-	pub(super) fn find_word_boundary(
-		input: impl Iterator<Item = char> + Clone,
-		stop_before_boundary: bool,
-		skip_whitespace_first: bool,
-	) -> usize {
-		// If we want the *NEXT* end of word, then we want to skip the current
-		// character.
-		let input = input.skip(stop_before_boundary.into());
-
+	pub(super) fn find_word_boundary(input: impl Iterator<Item = char> + Clone) -> usize {
 		fn count_spaces(input: impl Iterator<Item = char>) -> usize {
 			// Move until we don't see any more whitespace.
 			input.take_while(|c| CharKind::new(*c) == CharKind::Space).count()
@@ -84,15 +76,9 @@ impl Input {
 			input.take_while(|c| CharKind::new(*c) == CharKind::new(prev)).count()
 		}
 
-		if skip_whitespace_first {
-			let spaces_count = count_spaces(input.clone());
-			let character_count = count_characters(input.skip(spaces_count).peekable());
-			spaces_count + character_count
-		} else {
-			let character_count = count_characters(input.clone().peekable());
-			let spaces_count = count_spaces(input.skip(character_count));
-			spaces_count + character_count
-		}
+		let spaces_count = count_spaces(input.clone());
+		let character_count = count_characters(input.skip(spaces_count).peekable());
+		spaces_count + character_count
 	}
 
 	fn delete_range(&mut self, range: impl RangeBounds<usize>) {
@@ -127,8 +113,20 @@ impl Input {
 			Key { code: C('f'), shift: false, ctrl: true, alt: false } => self.move_(1),
 			Key { code: C('h'), shift: false, ctrl: true, alt: false } => self.backspace(),
 			Key { code: C('d'), shift: false, ctrl: true, alt: false } => self.forward_delete(),
-			Key { code: C('b'), shift: false, ctrl: false, alt: true } => self.backward(()),
-			Key { code: C('f'), shift: false, ctrl: false, alt: true } => self.forward(false),
+			Key { code: C('b'), shift: false, ctrl: false, alt: true } => {
+				let snap = self.snap();
+				let idx = snap.idx(snap.cursor).unwrap_or(snap.len());
+
+				let step = Self::find_word_boundary(snap.value[..idx].chars().rev());
+				self.move_(-(step as isize))
+			}
+			Key { code: C('f'), shift: false, ctrl: false, alt: true } => {
+				let snap = self.snap();
+				let idx = snap.idx(snap.cursor).unwrap_or(snap.len());
+
+				let step = Self::find_word_boundary(snap.value[idx..].chars());
+				self.move_(step as isize)
+			}
 			Key { code: C('u'), shift: false, ctrl: true, alt: false } => {
 				let snap = self.snap_mut();
 				let end = snap.idx(snap.cursor).unwrap_or(snap.len());
@@ -146,7 +144,7 @@ impl Input {
 			| Key { code: Backspace, shift: false, ctrl: false, alt: true } => {
 				let snap = self.snap_mut();
 				let end = snap.idx(snap.cursor).unwrap_or(snap.len());
-				let start = end - Self::find_word_boundary(snap.value[..end].chars().rev(), false, false);
+				let start = end - Self::find_word_boundary(snap.value[..end].chars().rev());
 				self.delete_range(start..end);
 				true
 			}
@@ -154,7 +152,7 @@ impl Input {
 				let snap = self.snap_mut();
 				let start = snap.idx(snap.cursor).unwrap_or(snap.len());
 				// Hitting this keybind `ab |cd `should give `|cd`.
-				let end = start + Self::find_word_boundary(snap.value[start..].chars(), false, false);
+				let end = start + Self::find_word_boundary(snap.value[start..].chars());
 				self.delete_range(start..end);
 				true
 			}
