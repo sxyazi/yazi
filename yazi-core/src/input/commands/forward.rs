@@ -22,10 +22,8 @@ impl Input {
 
 		let step = Self::find_word_boundary(
 			snap.value[idx..].chars(),
-			// When in vim mode and deleting, we want to skip over the boundary of words.
-			// In other words |A|bcd efg when deleting till the end of the word should be
-			// | |efg as opposed to |d| efg.
-			if let InputOp::Delete(..) = snap.op { false } else { opt.end_of_word },
+			// If not in vim mode or just moving (not deleting or yanking), use end_of_word.
+			if let InputOp::None = snap.op { opt.end_of_word } else { false },
 			opt.end_of_word,
 		);
 		self.move_(step as isize)
