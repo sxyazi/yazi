@@ -127,7 +127,7 @@ impl Input {
 			Key { code: C('f'), shift: false, ctrl: true, alt: false } => self.move_(1),
 			Key { code: C('h'), shift: false, ctrl: true, alt: false } => self.backspace(),
 			Key { code: C('d'), shift: false, ctrl: true, alt: false } => self.forward_delete(),
-			Key { code: C('b'), shift: false, ctrl: false, alt: true } => self.backspace(),
+			Key { code: C('b'), shift: false, ctrl: false, alt: true } => self.backward(()),
 			Key { code: C('f'), shift: false, ctrl: false, alt: true } => self.forward(false),
 			Key { code: C('u'), shift: false, ctrl: true, alt: false } => {
 				let snap = self.snap_mut();
@@ -153,7 +153,8 @@ impl Input {
 			Key { code: C('d'), shift: false, ctrl: false, alt: true } => {
 				let snap = self.snap_mut();
 				let start = snap.idx(snap.cursor).unwrap_or(snap.len());
-				let end = start + Self::find_word_boundary(snap.value[start..].chars(), false, true);
+				// Hitting this keybind `ab |cd `should give `|cd`.
+				let end = start + Self::find_word_boundary(snap.value[start..].chars(), false, false);
 				self.delete_range(start..end);
 				true
 			}
