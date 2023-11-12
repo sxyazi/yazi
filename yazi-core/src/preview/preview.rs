@@ -32,11 +32,9 @@ pub enum PreviewData {
 }
 
 impl Preview {
-	pub fn go(&mut self, url: &Url, mime: &str, show_image: bool) {
+	pub fn go(&mut self, url: &Url, mime: &str) {
 		let kind = MimeKind::new(mime);
-		if !show_image && kind.show_as_image() {
-			return;
-		} else if self.same(url, mime) {
+		if self.same(url, mime) {
 			return;
 		}
 
@@ -104,11 +102,9 @@ impl Preview {
 		}));
 	}
 
-	pub fn sequent(&mut self, url: &Url, mime: &str, show_image: bool) {
+	pub fn sequent(&mut self, url: &Url, mime: &str) {
 		let kind = MimeKind::new(mime);
-		if !show_image && kind.show_as_image() {
-			return;
-		} else if self.same(url, mime) {
+		if self.same(url, mime) {
 			return;
 		}
 

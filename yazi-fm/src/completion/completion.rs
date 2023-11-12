@@ -4,6 +4,8 @@ use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, Borders
 use yazi_config::{popup::{Offset, Position}, THEME};
 use yazi_core::Ctx;
 
+use crate::widgets;
+
 pub(crate) struct Completion<'a> {
 	cx: &'a Ctx,
 }
@@ -53,7 +55,7 @@ impl<'a> Widget for Completion<'a> {
 			area.height = rect.height.saturating_sub(area.y).min(area.height);
 		}
 
-		Clear.render(area, buf);
+		widgets::Clear.render(area, buf);
 		List::new(items)
 			.block(
 				Block::new()

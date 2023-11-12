@@ -1,6 +1,8 @@
-use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, Borders, Clear, List, ListItem, Widget}};
+use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, Borders, List, ListItem, Widget}};
 use yazi_config::THEME;
 use yazi_core::Ctx;
+
+use crate::widgets;
 
 pub(crate) struct Select<'a> {
 	cx: &'a Ctx,
@@ -28,7 +30,7 @@ impl<'a> Widget for Select<'a> {
 			})
 			.collect::<Vec<_>>();
 
-		Clear.render(area, buf);
+		widgets::Clear.render(area, buf);
 		List::new(items)
 			.block(
 				Block::new()
