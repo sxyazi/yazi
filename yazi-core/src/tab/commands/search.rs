@@ -3,7 +3,7 @@ use std::{mem, time::Duration};
 use anyhow::bail;
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
-use yazi_config::keymap::{Exec, KeymapLayer};
+use yazi_config::{keymap::{Exec, KeymapLayer}, INPUTBOX};
 
 use crate::{emit, external, files::FilesOp, input::InputOpt, tab::Tab};
 
@@ -45,7 +45,7 @@ impl Tab {
 		let hidden = self.conf.show_hidden;
 
 		self.search = Some(tokio::spawn(async move {
-			let Some(Ok(subject)) = emit!(Input(InputOpt::top("Search:"))).recv().await else {
+			let Some(Ok(subject)) = emit!(Input(InputOpt::from_cfg("Search:", &INPUTBOX.cd_position, &INPUTBOX.cd_offset))).recv().await else {
 				bail!("")
 			};
 

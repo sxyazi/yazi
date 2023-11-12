@@ -111,11 +111,12 @@ impl Tasks {
 		let scheduler = self.scheduler.clone();
 		tokio::spawn(async move {
 			let s = if targets.len() > 1 { "s" } else { "" };
-			let mut result = emit!(Input(InputOpt::hovered(if permanently {
+			let prompt = if permanently {
 				format!("Delete {} selected file{s} permanently? (y/N)", targets.len())
 			} else {
 				format!("Move {} selected file{s} to trash? (y/N)", targets.len())
-			})));
+			};
+			let mut result = emit!(Input(InputOpt::hovered(prompt, Default::default())));
 
 			if let Some(Ok(choice)) = result.recv().await {
 				if choice != "y" && choice != "Y" {

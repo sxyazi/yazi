@@ -9,6 +9,7 @@ pub mod manager;
 pub mod open;
 mod pattern;
 pub mod plugins;
+pub mod popup;
 mod preset;
 pub mod preview;
 mod tasks;
@@ -32,6 +33,7 @@ pub static PLUGINS: RoCell<plugins::Plugins> = RoCell::new();
 pub static PREVIEW: RoCell<preview::Preview> = RoCell::new();
 pub static TASKS: RoCell<tasks::Tasks> = RoCell::new();
 pub static THEME: RoCell<theme::Theme> = RoCell::new();
+pub static INPUTBOX: RoCell<popup::Input> = RoCell::new();
 
 pub static BOOT: RoCell<boot::Boot> = RoCell::new();
 
@@ -48,6 +50,7 @@ pub fn init() {
 	PREVIEW.with(Default::default);
 	TASKS.with(Default::default);
 	THEME.with(Default::default);
+	INPUTBOX.with(Default::default);
 
 	BOOT.with(Default::default);
 }

@@ -1,4 +1,4 @@
-use yazi_config::{keymap::Exec, open::Opener};
+use yazi_config::{keymap::Exec, open::Opener, INPUTBOX};
 
 use crate::{emit, input::InputOpt, tab::Tab};
 
@@ -29,8 +29,9 @@ impl Tab {
 		let mut opt = opt.into() as Opt;
 		tokio::spawn(async move {
 			if !opt.confirm || opt.cmd.is_empty() {
+				let title = if opt.block { "Shell (block):" } else { "Shell:" };
 				let mut result = emit!(Input(
-					InputOpt::top(if opt.block { "Shell (block):" } else { "Shell:" })
+					InputOpt::from_cfg(title, &INPUTBOX.shell_position, &INPUTBOX.shell_offset)
 						.with_value(opt.cmd)
 						.with_highlight()
 				));

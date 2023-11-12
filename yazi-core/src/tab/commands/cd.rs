@@ -2,7 +2,7 @@ use std::{mem, time::Duration};
 
 use tokio::{fs, pin};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
-use yazi_config::keymap::{Exec, KeymapLayer};
+use yazi_config::{keymap::{Exec, KeymapLayer}, INPUTBOX};
 use yazi_shared::{expand_path, Debounce, InputError, Url};
 
 use crate::{emit, input::InputOpt, tab::Tab};
@@ -66,7 +66,7 @@ impl Tab {
 
 		tokio::spawn(async move {
 			let rx = emit!(Input(
-				InputOpt::top("Change directory:")
+				InputOpt::from_cfg("Change directory:", &INPUTBOX.cd_position, &INPUTBOX.cd_offset)
 					.with_value(opt.target.to_string_lossy())
 					.with_completion()
 			));

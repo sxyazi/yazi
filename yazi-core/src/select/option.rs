@@ -1,6 +1,6 @@
 use ratatui::prelude::Rect;
 
-use crate::Position;
+use crate::{Position, RectShim};
 
 pub struct SelectOpt {
 	pub title:    String,
@@ -14,7 +14,10 @@ impl SelectOpt {
 		Self {
 			title: title.to_owned(),
 			items,
-			position: Position::Top(/* TODO: hardcode */ Rect { x: 0, y: 2, width: 50, height }),
+			position: Position::Top(
+				// TODO:
+				RectShim { x_offset: 0, y_offset: 2, width: 50, height },
+			),
 		}
 	}
 
@@ -24,8 +27,8 @@ impl SelectOpt {
 			title: title.to_owned(),
 			items,
 			position: Position::Hovered(
-				// TODO: hardcode
-				Rect { x: 0, y: 1, width: 50, height },
+				// TODO:
+				RectShim { x_offset: 0, y_offset: 1, width: 50, height },
 			),
 		}
 	}

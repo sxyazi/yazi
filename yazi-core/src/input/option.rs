@@ -1,6 +1,6 @@
-use ratatui::prelude::Rect;
+use yazi_config::popup::{Offset as CfgOffset, Position as CfgPosition};
 
-use crate::Position;
+use crate::{Position, RectShim};
 
 #[derive(Default)]
 pub struct InputOpt {
@@ -12,23 +12,48 @@ pub struct InputOpt {
 	pub highlight:  bool,
 }
 
-impl InputOpt {
-	pub fn top(title: impl AsRef<str>) -> Self {
-		Self {
-			title: title.as_ref().to_owned(),
-			position: Position::Top(/* TODO: hardcode */ Rect { x: 0, y: 2, width: 50, height: 3 }),
-			..Default::default()
+macro_rules! gen_method {
+	($func_name:ident, $position:ident) => {
+		pub fn $func_name(title: impl AsRef<str>, rect: RectShim) -> InputOpt {
+			InputOpt {
+				title: title.as_ref().to_owned(),
+				position: Position::$position(rect),
+				..Default::default()
+			}
 		}
-	}
+	};
+}
 
-	pub fn hovered(title: impl AsRef<str>) -> Self {
-		Self {
-			title: title.as_ref().to_owned(),
-			position: Position::Hovered(
-				// TODO: hardcode
-				Rect { x: 0, y: 1, width: 50, height: 3 },
-			),
-			..Default::default()
+impl InputOpt {
+	gen_method!(top_left, TopLeft);
+
+	gen_method!(top_right, TopRight);
+
+	gen_method!(top, Top);
+
+	gen_method!(center, Center);
+
+	gen_method!(bottom, Bottom);
+
+	gen_method!(bottom_left, BottomLeft);
+
+	gen_method!(bottom_right, BottomRight);
+
+	gen_method!(hovered, Hovered);
+
+	pub fn from_cfg(title: impl AsRef<str>, pos: &CfgPosition, rect: &CfgOffset) -> Self {
+		let rect =
+			RectShim { x_offset: rect.x, y_offset: rect.y, width: rect.width, height: rect.height };
+
+		match pos {
+			CfgPosition::TopLeft => Self::top_left(title, rect),
+			CfgPosition::TopRight => Self::top_right(title, rect),
+			CfgPosition::Top => Self::top(title, rect),
+			CfgPosition::Center => Self::center(title, rect),
+			CfgPosition::Bottom => Self::bottom(title, rect),
+			CfgPosition::BottomLeft => Self::bottom_left(title, rect),
+			CfgPosition::BottomRight => Self::bottom_right(title, rect),
+			CfgPosition::Hovered => Self::hovered(title, rect),
 		}
 	}
 

@@ -16,6 +16,25 @@ cache_dir       = ""
 ueberzug_scale  = 1
 ueberzug_offset = [ 0, 0, 0, 0 ]
 
+[input]
+cd_position = "top"
+cd_offset = [0, 2, 50, 3]
+
+search_position = "top"
+search_offset = [0, 2, 50, 3]
+
+find_position = "top"
+find_offset = [0, 2, 50, 3]
+
+shell_position = "top"
+shell_offset = [0, 2, 50, 3]
+
+create_position = "top"
+create_offset = [0, 2, 50, 3]
+
+rename_position = "hovered"
+rename_offset = [0, 1, 50, 3]
+
 [opener]
 edit = [
 	{ exec = '$EDITOR "$@"', block = true,  for = "unix" },
