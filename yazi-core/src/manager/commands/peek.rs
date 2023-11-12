@@ -18,7 +18,7 @@ impl Manager {
 		}
 
 		let Some(mime) = self.mimetype.get(url).cloned() else {
-			return false;
+			return self.active_mut().preview.reset(|_| true);
 		};
 
 		if sequent {
