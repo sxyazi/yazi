@@ -2,7 +2,7 @@ use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Direction, R
 use yazi_config::THEME;
 use yazi_core::{tasks::TASKS_PERCENT, Ctx};
 
-use super::Clear;
+use crate::widgets;
 
 pub(crate) struct Layout<'a> {
 	cx: &'a Ctx,
@@ -36,7 +36,7 @@ impl<'a> Widget for Layout<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let area = Self::area(area);
 
-		Clear.render(area, buf);
+		widgets::Clear.render(area, buf);
 		let block = Block::new()
 			.title({
 				let mut line = Line::from("Tasks");

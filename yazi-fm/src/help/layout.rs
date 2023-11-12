@@ -1,8 +1,9 @@
-use ratatui::{buffer::Buffer, layout::{self, Rect}, prelude::{Constraint, Direction}, widgets::{Clear, Paragraph, Widget}};
+use ratatui::{buffer::Buffer, layout::{self, Rect}, prelude::{Constraint, Direction}, widgets::{Paragraph, Widget}};
 use yazi_config::THEME;
 use yazi_core::Ctx;
 
 use super::Bindings;
+use crate::widgets;
 
 pub(crate) struct Layout<'a> {
 	cx: &'a Ctx,
@@ -19,7 +20,7 @@ impl<'a> Widget for Layout<'a> {
 			.constraints([Constraint::Min(0), Constraint::Length(1)])
 			.split(area);
 
-		Clear.render(area, buf);
+		widgets::Clear.render(area, buf);
 
 		let help = &self.cx.help;
 		Paragraph::new(help.keyword().unwrap_or_else(|| format!("{}.help", help.layer)))

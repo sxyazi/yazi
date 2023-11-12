@@ -1,8 +1,9 @@
-use ratatui::{layout, prelude::{Buffer, Constraint, Direction, Rect}, widgets::{Block, Clear, Widget}};
+use ratatui::{layout, prelude::{Buffer, Constraint, Direction, Rect}, widgets::{Block, Widget}};
 use yazi_config::THEME;
 use yazi_core::Ctx;
 
 use super::Side;
+use crate::widgets;
 
 pub(crate) struct Which<'a> {
 	cx: &'a Ctx,
@@ -38,7 +39,7 @@ impl Widget for Which<'_> {
 			.constraints([Constraint::Ratio(1, 3), Constraint::Ratio(1, 3), Constraint::Ratio(1, 3)])
 			.split(area);
 
-		Clear.render(area, buf);
+		widgets::Clear.render(area, buf);
 		Block::new().style(THEME.which.mask.into()).render(area, buf);
 		Side::new(which.times, cands.0).render(chunks[0], buf);
 		Side::new(which.times, cands.1).render(chunks[1], buf);

@@ -140,7 +140,7 @@ impl<'a> Executor<'a> {
 			b"peek" => {
 				let step = exec.args.first().and_then(|s| s.parse().ok()).unwrap_or(0);
 				self.cx.manager.active_mut().preview.arrow(step);
-				self.cx.manager.peek(true, self.cx.image_layer())
+				self.cx.manager.peek(true)
 			}
 			// Tasks
 			b"tasks_show" => self.cx.tasks.toggle(()),
