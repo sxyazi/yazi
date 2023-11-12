@@ -1,6 +1,6 @@
 use yazi_config::keymap::Exec;
 
-use crate::input::Input;
+use crate::input::{op::InputOp, Input};
 
 pub struct Opt {
 	end_of_word: bool,
@@ -20,8 +20,14 @@ impl Input {
 		let snap = self.snap();
 		let idx = snap.idx(snap.cursor).unwrap_or(snap.len());
 
-		let step =
-			Self::find_word_boundary(snap.value[idx..].chars(), opt.end_of_word, opt.end_of_word);
+		let step = Self::find_word_boundary(
+			snap.value[idx..].chars(),
+			// When in vim mode and deleting, we want to skip over the boundary of words.
+			// In other words |A|bcd efg when deleting till the end of the word should be
+			// | |efg as opposed to |d| efg.
+			if let InputOp::Delete(..) = snap.op { false } else { opt.end_of_word },
+			opt.end_of_word,
+		);
 		self.move_(step as isize)
 	}
 }
