@@ -61,13 +61,13 @@ impl Input {
 		input: impl Iterator<Item = char> + Clone,
 		stop_before_boundary: bool,
 	) -> usize {
-		// Move until we don't see any more whitespace.
-		let spaces_count = input.clone().take_while(|c| CharKind::new(*c) == CharKind::Space).count();
-		let input = input.skip(spaces_count);
-
 		// If we want the *NEXT* end of word, then we want to skip the current
 		// character.
-		let mut input = input.skip(stop_before_boundary.into()).peekable();
+		let input = input.skip(stop_before_boundary.into());
+
+		// Move until we don't see any more whitespace.
+		let spaces_count = input.clone().take_while(|c| CharKind::new(*c) == CharKind::Space).count();
+		let mut input = input.skip(spaces_count).peekable();
 
 		// Determine the current character class.
 		let prev = input.peek().cloned();
