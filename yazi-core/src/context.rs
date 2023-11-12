@@ -70,9 +70,4 @@ impl Ctx {
 		}
 		None
 	}
-
-	#[inline]
-	pub fn image_layer(&self) -> bool {
-		!self.which.visible && !self.help.visible && !self.tasks.visible
-	}
 }

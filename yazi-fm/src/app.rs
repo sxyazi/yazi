@@ -97,7 +97,7 @@ impl App {
 
 		self.cx.manager.current_mut().set_page(true);
 		self.cx.manager.active_mut().preview.reset(|_| true);
-		self.cx.manager.peek(true, self.cx.image_layer());
+		self.cx.manager.peek(true);
 		emit!(Render);
 	}
 
@@ -163,9 +163,9 @@ impl App {
 			Event::Peek(sequent) => {
 				if let Some((max, url)) = sequent {
 					manager.active_mut().update_peek(max, url);
-					self.cx.manager.peek(true, self.cx.image_layer());
+					self.cx.manager.peek(true);
 				} else {
-					self.cx.manager.peek(false, self.cx.image_layer());
+					self.cx.manager.peek(false);
 				}
 			}
 			Event::Preview(lock) => {
