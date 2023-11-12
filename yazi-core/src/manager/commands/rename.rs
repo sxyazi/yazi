@@ -66,7 +66,7 @@ impl Manager {
 		false
 	}
 
-	pub fn bulk_rename(&self) -> bool {
+	fn bulk_rename(&self) -> bool {
 		let old: Vec<_> = self.selected().into_iter().map(|f| &f.url).collect();
 
 		let root = max_common_root(&old);

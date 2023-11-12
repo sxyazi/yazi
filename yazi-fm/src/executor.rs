@@ -124,6 +124,7 @@ impl<'a> Executor<'a> {
 
 		// Find
 		on!(ACTIVE, find);
+		on!(ACTIVE, find_do);
 		on!(ACTIVE, find_arrow);
 
 		// Sorting
