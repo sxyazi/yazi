@@ -79,7 +79,7 @@ impl Input {
 			let Some(prev) = prev else {
 				return 0;
 			};
-	
+
 			// Move until we see a different character class or the end of the iterator.
 			input.take_while(|c| CharKind::new(*c) == CharKind::new(prev)).count()
 		}
