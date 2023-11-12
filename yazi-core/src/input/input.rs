@@ -48,8 +48,10 @@ impl Input {
 	/// Searches for a word boundary and returns the movement in the cursor
 	/// position.
 	///
-	/// A word boundary is where the [`CharKind`] changes. However, we also skip
-	/// initial whitespace.
+	/// A word boundary is where the [`CharKind`] changes.
+	///
+	/// If `skip_whitespace_first` is true, we skip initial whitespace.
+	/// Otherwise, we skip whitespace after reaching a word boundary.
 	///
 	/// If `stop_before_boundary` is true, returns how many characters the cursor
 	/// needs to move to be at the character *BEFORE* the word boundary, or until
@@ -60,25 +62,37 @@ impl Input {
 	pub(super) fn find_word_boundary(
 		input: impl Iterator<Item = char> + Clone,
 		stop_before_boundary: bool,
+		skip_whitespace_first: bool,
 	) -> usize {
 		// If we want the *NEXT* end of word, then we want to skip the current
 		// character.
 		let input = input.skip(stop_before_boundary.into());
 
-		// Move until we don't see any more whitespace.
-		let spaces_count = input.clone().take_while(|c| CharKind::new(*c) == CharKind::Space).count();
-		let mut input = input.skip(spaces_count).peekable();
+		fn count_spaces(input: impl Iterator<Item = char>) -> usize {
+			// Move until we don't see any more whitespace.
+			input.take_while(|c| CharKind::new(*c) == CharKind::Space).count()
+		}
 
-		// Determine the current character class.
-		let prev = input.peek().cloned();
-		let Some(prev) = prev else {
-			return spaces_count;
-		};
+		fn count_characters(mut input: std::iter::Peekable<impl Iterator<Item = char>>) -> usize {
+			// Determine the current character class.
+			let prev = input.peek().cloned();
+			let Some(prev) = prev else {
+				return 0;
+			};
+	
+			// Move until we see a different character class or the end of the iterator.
+			input.take_while(|c| CharKind::new(*c) == CharKind::new(prev)).count()
+		}
 
-		// Move until we see a different character class or the end of the iterator.
-		let character_count = input.take_while(|c| CharKind::new(*c) == CharKind::new(prev)).count();
-
-		spaces_count + character_count
+		if skip_whitespace_first {
+			let spaces_count = count_spaces(input.clone());
+			let character_count = count_characters(input.skip(spaces_count).peekable());
+			spaces_count + character_count
+		} else {
+			let character_count = count_characters(input.clone().peekable());
+			let spaces_count = count_spaces(input.skip(character_count));
+			spaces_count + character_count
+		}
 	}
 
 	fn delete_range(&mut self, range: impl RangeBounds<usize>) {
@@ -132,14 +146,14 @@ impl Input {
 			| Key { code: Backspace, shift: false, ctrl: false, alt: true } => {
 				let snap = self.snap_mut();
 				let end = snap.idx(snap.cursor).unwrap_or(snap.len());
-				let start = end - Self::find_word_boundary(snap.value[..end].chars().rev(), false);
+				let start = end - Self::find_word_boundary(snap.value[..end].chars().rev(), false, false);
 				self.delete_range(start..end);
 				true
 			}
 			Key { code: C('d'), shift: false, ctrl: false, alt: true } => {
 				let snap = self.snap_mut();
 				let start = snap.idx(snap.cursor).unwrap_or(snap.len());
-				let end = start + Self::find_word_boundary(snap.value[start..].chars(), false);
+				let end = start + Self::find_word_boundary(snap.value[start..].chars(), false, true);
 				self.delete_range(start..end);
 				true
 			}

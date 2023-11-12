@@ -20,7 +20,7 @@ impl Input {
 		let snap = self.snap();
 		let idx = snap.idx(snap.cursor).unwrap_or(snap.len());
 
-		let step = Self::find_word_boundary(snap.value[idx..].chars(), opt.end_of_word);
+		let step = Self::find_word_boundary(snap.value[idx..].chars(), opt.end_of_word, opt.end_of_word);
 		self.move_(step as isize)
 	}
 }

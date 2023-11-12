@@ -16,7 +16,7 @@ impl Input {
 		let snap = self.snap();
 		let idx = snap.idx(snap.cursor).unwrap_or(snap.len());
 
-		let step = Self::find_word_boundary(snap.value[..idx].chars().rev(), false);
+		let step = Self::find_word_boundary(snap.value[..idx].chars().rev(), false, true);
 		self.move_(-(step as isize))
 	}
 }
