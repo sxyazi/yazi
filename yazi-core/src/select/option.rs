@@ -1,4 +1,4 @@
-use ratatui::prelude::Rect;
+use yazi_config::popup::{Offset as CfgOffset, Position as CfgPosition};
 
 use crate::{Position, RectShim};
 
@@ -8,28 +8,52 @@ pub struct SelectOpt {
 	pub position: Position,
 }
 
-impl SelectOpt {
-	pub fn top(title: &str, items: Vec<String>) -> Self {
-		let height = 2 + items.len().min(/* TODO: hardcode */ 5) as u16;
-		Self {
-			title: title.to_owned(),
-			items,
-			position: Position::Top(
-				// TODO:
-				RectShim { x_offset: 0, y_offset: 2, width: 50, height },
-			),
+macro_rules! gen_method {
+	($func_name:ident, $position:ident) => {
+		pub fn $func_name(title: &str, items: Vec<String>, rect: RectShim) -> SelectOpt {
+			let height = 2
+				+ items.len().min(
+					5, // TODO: hardcode
+				) as u16;
+			Self {
+				title: title.to_owned(),
+				items,
+				position: Position::$position(RectShim { height, ..rect }),
+			}
 		}
-	}
+	};
+}
 
-	pub fn hovered(title: &str, items: Vec<String>) -> Self {
-		let height = 2 + items.len().min(/* TODO: hardcode */ 5) as u16;
-		Self {
-			title: title.to_owned(),
-			items,
-			position: Position::Hovered(
-				// TODO:
-				RectShim { x_offset: 0, y_offset: 1, width: 50, height },
-			),
+impl SelectOpt {
+	gen_method!(top_left, TopLeft);
+
+	gen_method!(top_right, TopRight);
+
+	gen_method!(top, Top);
+
+	gen_method!(center, Center);
+
+	gen_method!(bottom, Bottom);
+
+	gen_method!(bottom_left, BottomLeft);
+
+	gen_method!(bottom_right, BottomRight);
+
+	gen_method!(hovered, Hovered);
+
+	pub fn from_cfg(title: &str, items: Vec<String>, pos: &CfgPosition, rect: &CfgOffset) -> Self {
+		let rect =
+			RectShim { x_offset: rect.x, y_offset: rect.y, width: rect.width, height: rect.height };
+
+		match pos {
+			CfgPosition::TopLeft => Self::top_left(title, items, rect),
+			CfgPosition::TopRight => Self::top_right(title, items, rect),
+			CfgPosition::Top => Self::top(title, items, rect),
+			CfgPosition::Center => Self::center(title, items, rect),
+			CfgPosition::Bottom => Self::bottom(title, items, rect),
+			CfgPosition::BottomLeft => Self::bottom_left(title, items, rect),
+			CfgPosition::BottomRight => Self::bottom_right(title, items, rect),
+			CfgPosition::Hovered => Self::hovered(title, items, rect),
 		}
 	}
 }

@@ -35,6 +35,11 @@ create_offset = [0, 2, 50, 3]
 rename_position = "hovered"
 rename_offset = [0, 1, 50, 3]
 
+[select]
+open_position = "hovered"
+# height takes no effect
+open_offset = [0, 1, 50, 3]
+
 [opener]
 edit = [
 	{ exec = '$EDITOR "$@"', block = true,  for = "unix" },

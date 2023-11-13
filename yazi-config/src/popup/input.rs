@@ -32,7 +32,6 @@ impl Default for Input {
 			input: Input,
 		}
 
-		// TODO:
 		toml::from_str::<Outer>(&MERGED_YAZI).unwrap().input
 	}
 }

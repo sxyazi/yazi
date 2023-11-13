@@ -1,6 +1,6 @@
 use std::ffi::OsString;
 
-use yazi_config::{keymap::Exec, OPEN};
+use yazi_config::{keymap::Exec, OPEN, SELECTBOX};
 use yazi_shared::MIME_DIR;
 
 use crate::{emit, external, manager::Manager, select::SelectOpt};
@@ -20,9 +20,11 @@ impl Manager {
 			return;
 		}
 
-		let result = emit!(Select(SelectOpt::hovered(
+		let result = emit!(Select(SelectOpt::from_cfg(
 			"Open with:",
-			openers.iter().map(|o| o.desc.clone()).collect()
+			openers.iter().map(|o| o.desc.clone()).collect(),
+			&SELECTBOX.open_position,
+			&SELECTBOX.open_offset
 		)));
 
 		if let Ok(choice) = result.await {
