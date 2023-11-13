@@ -10,9 +10,6 @@ pub struct Opt {
 impl From<&Exec> for Opt {
 	fn from(e: &Exec) -> Self { Self { end_of_word: e.named.contains_key("end-of-word") } }
 }
-impl From<bool> for Opt {
-	fn from(end_of_word: bool) -> Self { Self { end_of_word } }
-}
 
 impl Input {
 	pub fn forward(&mut self, opt: impl Into<Opt>) -> bool {

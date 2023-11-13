@@ -8,9 +8,6 @@ pub struct Opt;
 impl From<&Exec> for Opt {
 	fn from(_: &Exec) -> Self { Self }
 }
-impl From<()> for Opt {
-	fn from(_: ()) -> Self { Self }
-}
 
 impl Input {
 	pub fn backward(&mut self, _: impl Into<Opt>) -> bool {
