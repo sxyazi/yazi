@@ -1,3 +1,5 @@
+use std::path::MAIN_SEPARATOR;
+
 use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, Borders, Clear, List, ListItem, Widget}};
 use yazi_config::THEME;
 use yazi_core::{Ctx, Position};
@@ -19,7 +21,7 @@ impl<'a> Widget for Completion<'a> {
 			.iter()
 			.enumerate()
 			.map(|(i, x)| {
-				let icon = if x.ends_with('/') || x.ends_with('\\') {
+				let icon = if x.ends_with(MAIN_SEPARATOR) {
 					&THEME.completion.icon_folder
 				} else {
 					&THEME.completion.icon_file

@@ -1,4 +1,4 @@
-use std::mem;
+use std::{mem, path::{MAIN_SEPARATOR, MAIN_SEPARATOR_STR}};
 
 use tokio::fs;
 use yazi_config::keymap::{Exec, KeymapLayer};
@@ -22,8 +22,8 @@ impl<'a> From<&'a Exec> for Opt<'a> {
 impl Completion {
 	#[inline]
 	fn split_path(s: &str) -> (String, String) {
-		match s.rsplit_once(|c| c == '/' || c == '\\') {
-			Some((p, c)) => (format!("{p}/"), c.to_owned()),
+		match s.rsplit_once(MAIN_SEPARATOR) {
+			Some((p, c)) => (format!("{p}{}", MAIN_SEPARATOR), c.to_owned()),
 			None => (".".to_owned(), s.to_owned()),
 		}
 	}
@@ -55,14 +55,11 @@ impl Completion {
 					continue;
 				};
 
-				let sep = if !meta.is_dir() {
-					""
-				} else if cfg!(windows) {
-					"\\"
-				} else {
-					"/"
-				};
-				cache.push(format!("{}{sep}", f.file_name().to_string_lossy()));
+				cache.push(format!(
+					"{}{}",
+					f.file_name().to_string_lossy(),
+					if meta.is_dir() { MAIN_SEPARATOR_STR } else { "" },
+				));
 			}
 
 			if !cache.is_empty() {
@@ -87,6 +84,7 @@ impl Completion {
 mod tests {
 	use super::*;
 
+	#[cfg(unix)]
 	#[test]
 	fn test_explode() {
 		assert_eq!(Completion::split_path(""), (".".to_owned(), "".to_owned()));
@@ -96,15 +94,18 @@ mod tests {
 		assert_eq!(Completion::split_path("/foo"), ("/".to_owned(), "foo".to_owned()));
 		assert_eq!(Completion::split_path("/foo/"), ("/foo/".to_owned(), "".to_owned()));
 		assert_eq!(Completion::split_path("/foo/bar"), ("/foo/".to_owned(), "bar".to_owned()));
+	}
 
-		// Windows
+	#[cfg(windows)]
+	#[test]
+	fn test_explode() {
 		assert_eq!(Completion::split_path("foo"), (".".to_owned(), "foo".to_owned()));
-		assert_eq!(Completion::split_path("foo\\"), ("foo/".to_owned(), "".to_owned()));
-		assert_eq!(Completion::split_path("foo\\bar"), ("foo/".to_owned(), "bar".to_owned()));
-		assert_eq!(Completion::split_path("foo\\bar\\"), ("foo\\bar/".to_owned(), "".to_owned()));
-		assert_eq!(Completion::split_path("C:\\"), ("C:/".to_owned(), "".to_owned()));
-		assert_eq!(Completion::split_path("C:\\foo"), ("C:/".to_owned(), "foo".to_owned()));
-		assert_eq!(Completion::split_path("C:\\foo\\"), ("C:\\foo/".to_owned(), "".to_owned()));
-		assert_eq!(Completion::split_path("C:\\foo\\bar"), ("C:\\foo/".to_owned(), "bar".to_owned()));
+		assert_eq!(Completion::split_path("foo\\"), ("foo\\".to_owned(), "".to_owned()));
+		assert_eq!(Completion::split_path("foo\\bar"), ("foo\\".to_owned(), "bar".to_owned()));
+		assert_eq!(Completion::split_path("foo\\bar\\"), ("foo\\bar\\".to_owned(), "".to_owned()));
+		assert_eq!(Completion::split_path("C:\\"), ("C:\\".to_owned(), "".to_owned()));
+		assert_eq!(Completion::split_path("C:\\foo"), ("C:\\".to_owned(), "foo".to_owned()));
+		assert_eq!(Completion::split_path("C:\\foo\\"), ("C:\\foo\\".to_owned(), "".to_owned()));
+		assert_eq!(Completion::split_path("C:\\foo\\bar"), ("C:\\foo\\".to_owned(), "bar".to_owned()));
 	}
 }

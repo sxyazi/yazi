@@ -1,3 +1,5 @@
+use std::path::MAIN_SEPARATOR;
+
 use yazi_config::keymap::Exec;
 
 use crate::input::Input;
@@ -24,7 +26,7 @@ impl Input {
 		}
 
 		let [before, after] = self.partition();
-		let new = if let Some((prefix, _)) = before.rsplit_once('/') {
+		let new = if let Some((prefix, _)) = before.rsplit_once(MAIN_SEPARATOR) {
 			format!("{prefix}/{}{after}", opt.word)
 		} else {
 			format!("{}{after}", opt.word)
