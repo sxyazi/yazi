@@ -1,16 +1,11 @@
 use std::io::{stdout, Write};
 
 use anyhow::Result;
-use crossterm::{cursor::{MoveTo, RestorePosition, SavePosition, SetCursorStyle}, execute, queue, terminal::{Clear, ClearType}};
+use crossterm::{cursor::{MoveTo, RestorePosition, SavePosition, SetCursorStyle}, execute, queue};
 
 use crate::Term;
 
 impl Term {
-	#[inline]
-	pub fn kill_to_end(stdout: &mut impl Write) -> Result<()> {
-		Ok(queue!(stdout, Clear(ClearType::UntilNewLine))?)
-	}
-
 	#[inline]
 	pub fn move_to(stdout: &mut impl Write, x: u16, y: u16) -> Result<()> {
 		Ok(queue!(stdout, MoveTo(x, y))?)

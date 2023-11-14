@@ -33,7 +33,7 @@ https://github.com/sxyazi/yazi/assets/17523360/92ff23fa-0cd5-4f04-b387-894c12265
 
 | Platform          | Protocol                                                                         | Support               |
 | ----------------- | -------------------------------------------------------------------------------- | --------------------- |
-| Kitty             | [Terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) | ✅ Built-in           |
+| kitty             | [Terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) | ✅ Built-in           |
 | WezTerm           | [Terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) | ✅ Built-in           |
 | Konsole           | [Terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) | ✅ Built-in           |
 | iTerm2            | [Inline images protocol](https://iterm2.com/documentation-images.html)           | ✅ Built-in           |
