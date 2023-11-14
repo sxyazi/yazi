@@ -56,19 +56,6 @@ impl Input {
 		true
 	}
 
-	pub fn backspace(&mut self) -> bool {
-		let snap = self.snaps.current_mut();
-		if snap.cursor < 1 {
-			return false;
-		} else {
-			snap.value.remove(snap.idx(snap.cursor - 1).unwrap());
-		}
-
-		self.move_(-1);
-		self.flush_value();
-		true
-	}
-
 	pub(super) fn handle_op(&mut self, cursor: usize, include: bool) -> bool {
 		let old = self.snap().clone();
 		let snap = self.snaps.current_mut();

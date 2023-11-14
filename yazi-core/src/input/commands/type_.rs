@@ -52,7 +52,7 @@ impl Input {
 		let snap = self.snap_mut();
 		snap.cursor = match range.start_bound() {
 			std::ops::Bound::Included(i) => *i,
-			std::ops::Bound::Excluded(i) => i + 1,
+			std::ops::Bound::Excluded(_) => unreachable!(),
 			std::ops::Bound::Unbounded => 0,
 		};
 		if snap.value.drain(range).next().is_some() {
@@ -62,15 +62,22 @@ impl Input {
 		false
 	}
 
-	fn forward_delete(&mut self) -> bool {
+	fn backspace(&mut self, under: bool) -> bool {
 		let snap = self.snaps.current_mut();
-		if snap.cursor >= snap.value.len() {
+		if !under && snap.cursor < 1 {
 			return false;
-		} else {
-			snap.value.remove(snap.idx(snap.cursor).unwrap());
+		} else if under && snap.cursor >= snap.value.len() {
+			return false;
 		}
 
-		self.move_(0);
+		if under {
+			snap.value.remove(snap.idx(snap.cursor).unwrap());
+			self.move_(0);
+		} else {
+			snap.value.remove(snap.idx(snap.cursor - 1).unwrap());
+			self.move_(-1);
+		}
+
 		self.flush_value();
 		true
 	}
@@ -99,10 +106,10 @@ impl Input {
 			Key { code: C('f'), shift: false, ctrl: true, alt: false } => self.move_(1),
 
 			// Delete the character before the cursor
-			Key { code: Backspace, shift: false, ctrl: false, alt: false } => self.backspace(),
-			Key { code: C('h'), shift: false, ctrl: true, alt: false } => self.backspace(),
+			Key { code: Backspace, shift: false, ctrl: false, alt: false } => self.backspace(false),
+			Key { code: C('h'), shift: false, ctrl: true, alt: false } => self.backspace(false),
 			// Delete the character under the cursor
-			Key { code: C('d'), shift: false, ctrl: true, alt: false } => self.forward_delete(),
+			Key { code: C('d'), shift: false, ctrl: true, alt: false } => self.backspace(true),
 
 			// Move back to the start of the current or previous word
 			Key { code: C('b'), shift: false, ctrl: false, alt: true } => {
