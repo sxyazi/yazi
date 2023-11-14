@@ -5,9 +5,9 @@ use ratatui::prelude::Rect;
 use tokio::{fs, sync::mpsc::UnboundedSender};
 use tracing::warn;
 use yazi_config::PREVIEW;
-use yazi_shared::RoCell;
+use yazi_shared::{env_exists, RoCell};
 
-use super::{Iterm2, Kitty};
+use super::{Iterm2, Kitty, KittyOld};
 use crate::{ueberzug::Ueberzug, Sixel, TMUX};
 
 static IMAGE_SHOWN: AtomicBool = AtomicBool::new(false);
@@ -18,6 +18,7 @@ static UEBERZUG: RoCell<Option<UnboundedSender<Option<(PathBuf, Rect)>>>> = RoCe
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Adaptor {
 	Kitty,
+	KittyOld,
 	Iterm2,
 	Sixel,
 
@@ -39,10 +40,15 @@ enum Emulator {
 	VSCode,
 	Hyper,
 	Mintty,
+	Neovim,
 }
 
 impl Adaptor {
 	fn emulator() -> Emulator {
+		if env_exists("NVIM_LOG_FILE") && env_exists("NVIM") {
+			return Emulator::Neovim;
+		}
+
 		let vars = [
 			("KITTY_WINDOW_ID", Emulator::Kitty),
 			("KONSOLE_VERSION", Emulator::Konsole),
@@ -50,7 +56,7 @@ impl Adaptor {
 			("WEZTERM_EXECUTABLE", Emulator::WezTerm),
 			("VSCODE_INJECTION", Emulator::VSCode),
 		];
-		match vars.into_iter().find(|v| env::var_os(v.0).is_some_and(|s| !s.is_empty())) {
+		match vars.into_iter().find(|v| env_exists(v.0)) {
 			Some(var) => return var.1,
 			None => warn!("[Adaptor] No special environment variables detected"),
 		}
@@ -80,21 +86,22 @@ impl Adaptor {
 			Emulator::Kitty => vec![Self::Kitty],
 			Emulator::Konsole => vec![Self::Kitty, Self::Iterm2, Self::Sixel],
 			Emulator::Iterm2 => vec![Self::Iterm2, Self::Sixel],
-			Emulator::WezTerm => vec![Self::Kitty, Self::Iterm2, Self::Sixel],
+			Emulator::WezTerm => vec![Self::KittyOld, Self::Iterm2, Self::Sixel],
 			Emulator::Foot => vec![Self::Sixel],
 			Emulator::BlackBox => vec![Self::Sixel],
 			Emulator::VSCode => vec![Self::Sixel],
 			Emulator::Hyper => vec![Self::Sixel],
 			Emulator::Mintty => vec![Self::Iterm2],
+			Emulator::Neovim => vec![],
 		};
 
 		#[cfg(windows)]
 		protocols.retain(|p| *p == Self::Iterm2);
-		if env::var_os("ZELLIJ_SESSION_NAME").is_some_and(|s| !s.is_empty()) {
+		if env_exists("ZELLIJ_SESSION_NAME") {
 			protocols.retain(|p| *p == Self::Sixel);
 		}
 		if *TMUX && protocols.len() > 1 {
-			protocols.retain(|p| *p != Self::Kitty);
+			protocols.retain(|p| *p != Self::KittyOld);
 		}
 		if let Some(p) = protocols.first() {
 			return *p;
@@ -105,10 +112,10 @@ impl Adaptor {
 			"wayland" => return Self::Wayland,
 			_ => warn!("[Adaptor] Could not identify XDG_SESSION_TYPE"),
 		}
-		if env::var_os("WAYLAND_DISPLAY").is_some_and(|s| !s.is_empty()) {
+		if env_exists("WAYLAND_DISPLAY") {
 			return Self::Wayland;
 		}
-		if env::var_os("DISPLAY").is_some_and(|s| !s.is_empty()) {
+		if env_exists("DISPLAY") {
 			return Self::X11;
 		}
 		if std::fs::symlink_metadata("/proc/sys/fs/binfmt_misc/WSLInterop").is_ok() {
@@ -145,6 +152,7 @@ impl ToString for Adaptor {
 	fn to_string(&self) -> String {
 		match self {
 			Self::Kitty => "kitty",
+			Self::KittyOld => "kitty",
 			Self::Iterm2 => "iterm2",
 			Self::Sixel => "sixel",
 			Self::X11 => "x11",
@@ -171,6 +179,7 @@ impl Adaptor {
 
 		match self {
 			Self::Kitty => Kitty::image_show(path, rect).await,
+			Self::KittyOld => KittyOld::image_show(path, rect).await,
 			Self::Iterm2 => Iterm2::image_show(path, rect).await,
 			Self::Sixel => Sixel::image_show(path, rect).await,
 			_ => Ok(if let Some(tx) = &*UEBERZUG {
@@ -185,7 +194,8 @@ impl Adaptor {
 		}
 
 		match self {
-			Self::Kitty => Kitty::image_hide(),
+			Self::Kitty => Kitty::image_hide(rect),
+			Self::KittyOld => KittyOld::image_hide(),
 			Self::Iterm2 => Iterm2::image_hide(rect),
 			Self::Sixel => Sixel::image_hide(rect),
 			_ => Ok(if let Some(tx) = &*UEBERZUG {
@@ -196,6 +206,6 @@ impl Adaptor {
 
 	#[inline]
 	pub(super) fn needs_ueberzug(self) -> bool {
-		!matches!(self, Self::Kitty | Self::Iterm2 | Self::Sixel)
+		!matches!(self, Self::Kitty | Self::KittyOld | Self::Iterm2 | Self::Sixel)
 	}
 }

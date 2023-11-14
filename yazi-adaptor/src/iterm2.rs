@@ -22,10 +22,11 @@ impl Iterm2 {
 
 	pub(super) fn image_hide(rect: Rect) -> Result<()> {
 		let stdout = BufWriter::new(stdout().lock());
+		let s = " ".repeat(rect.width as usize);
 		Term::move_lock(stdout, (0, 0), |stdout| {
 			for y in rect.top()..rect.bottom() {
 				Term::move_to(stdout, rect.x, y)?;
-				Term::kill_to_end(stdout)?;
+				stdout.write_all(s.as_bytes())?;
 			}
 			Ok(())
 		})
