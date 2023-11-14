@@ -24,7 +24,7 @@ impl Manager {
 		}
 
 		tokio::spawn(async move {
-			let mut result = emit!(Input(InputOpt::top(
+			let mut result = emit!(Input(InputOpt::top_center(
 				format!("{tasks} tasks running, sure to quit? (y/N)",),
 				Default::default()
 			)));

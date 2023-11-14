@@ -29,11 +29,11 @@ impl SelectOpt {
 
 	gen_method!(top_right, TopRight);
 
-	gen_method!(top, Top);
+	gen_method!(top_center, TopCenter);
 
 	gen_method!(center, Center);
 
-	gen_method!(bottom, Bottom);
+	gen_method!(bottom_center, BottomCenter);
 
 	gen_method!(bottom_left, BottomLeft);
 
@@ -48,9 +48,9 @@ impl SelectOpt {
 		match pos {
 			CfgPosition::TopLeft => Self::top_left(title, items, rect),
 			CfgPosition::TopRight => Self::top_right(title, items, rect),
-			CfgPosition::Top => Self::top(title, items, rect),
+			CfgPosition::TopCenter => Self::top_center(title, items, rect),
 			CfgPosition::Center => Self::center(title, items, rect),
-			CfgPosition::Bottom => Self::bottom(title, items, rect),
+			CfgPosition::BottomCenter => Self::bottom_center(title, items, rect),
 			CfgPosition::BottomLeft => Self::bottom_left(title, items, rect),
 			CfgPosition::BottomRight => Self::bottom_right(title, items, rect),
 			CfgPosition::Hovered => Self::hovered(title, items, rect),

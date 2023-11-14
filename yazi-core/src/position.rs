@@ -16,9 +16,9 @@ impl Default for RectShim {
 pub enum Position {
 	TopLeft(RectShim),
 	TopRight(RectShim),
-	Top(RectShim),
+	TopCenter(RectShim),
 	Center(RectShim),
-	Bottom(RectShim),
+	BottomCenter(RectShim),
 	BottomLeft(RectShim),
 	BottomRight(RectShim),
 	Hovered(RectShim),
@@ -26,7 +26,7 @@ pub enum Position {
 }
 
 impl Default for Position {
-	fn default() -> Self { Self::Top(RectShim::default()) }
+	fn default() -> Self { Self::TopCenter(RectShim::default()) }
 }
 
 impl Position {
@@ -35,9 +35,9 @@ impl Position {
 		match self {
 			Position::TopLeft(rect) => rect,
 			Position::TopRight(rect) => rect,
-			Position::Top(rect) => rect,
+			Position::TopCenter(rect) => rect,
 			Position::Center(rect) => rect,
-			Position::Bottom(rect) => rect,
+			Position::BottomCenter(rect) => rect,
 			Position::BottomLeft(rect) => rect,
 			Position::BottomRight(rect) => rect,
 			Position::Hovered(rect) => rect,

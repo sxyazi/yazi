@@ -55,7 +55,7 @@ impl Ctx {
 
 				(x, y)
 			}
-			Position::Top(RectShim { x_offset, y_offset, width, height }) => {
+			Position::TopCenter(RectShim { x_offset, y_offset, width, height }) => {
 				let right_max = columns.saturating_sub(width);
 				let bottom_max = rows.saturating_sub(height);
 
@@ -79,7 +79,7 @@ impl Ctx {
 
 				(x, y)
 			}
-			Position::Bottom(RectShim { x_offset, y_offset, width, height }) => {
+			Position::BottomCenter(RectShim { x_offset, y_offset, width, height }) => {
 				let right_max = columns.saturating_sub(width);
 				let bottom_max = rows.saturating_sub(height);
 
@@ -121,7 +121,7 @@ impl Ctx {
 				{
 					Position::Sticky(rect_shim, r)
 				} else {
-					Position::Top(rect_shim)
+					Position::TopCenter(rect_shim)
 				});
 			}
 			Position::Sticky(RectShim { x_offset, y_offset, width, height }, r) => {

@@ -7,12 +7,12 @@ pub enum Position {
 	TopLeft,
 	#[serde(rename = "top-right")]
 	TopRight,
-	#[serde(rename = "top")]
-	Top,
+	#[serde(rename = "top-center")]
+	TopCenter,
 	#[serde(rename = "center")]
 	Center,
-	#[serde(rename = "bottom")]
-	Bottom,
+	#[serde(rename = "bottom-center")]
+	BottomCenter,
 	#[serde(rename = "bottom-left")]
 	BottomLeft,
 	#[serde(rename = "bottom-right")]
