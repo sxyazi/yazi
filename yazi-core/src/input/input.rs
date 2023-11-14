@@ -1,9 +1,7 @@
 use std::ops::Range;
 
-use crossterm::event::KeyCode;
 use tokio::sync::mpsc::UnboundedSender;
 use unicode_width::UnicodeWidthStr;
-use yazi_config::keymap::Key;
 use yazi_shared::InputError;
 
 use super::{mode::InputMode, op::InputOp, InputOpt, InputSnap, InputSnaps};
@@ -45,22 +43,6 @@ impl Input {
 		self.highlight = opt.highlight;
 	}
 
-	pub fn type_(&mut self, key: &Key) -> bool {
-		if self.mode() != InputMode::Insert {
-			return false;
-		}
-
-		if let Some(c) = key.plain() {
-			let mut bits = [0; 4];
-			return self.type_str(c.encode_utf8(&mut bits));
-		}
-
-		match key {
-			Key { code: KeyCode::Backspace, shift: false, ctrl: false, alt: false } => self.backspace(),
-			_ => false,
-		}
-	}
-
 	pub fn type_str(&mut self, s: &str) -> bool {
 		let snap = self.snaps.current_mut();
 		if snap.cursor < 1 {
@@ -70,19 +52,6 @@ impl Input {
 		}
 
 		self.move_(s.chars().count() as isize);
-		self.flush_value();
-		true
-	}
-
-	pub fn backspace(&mut self) -> bool {
-		let snap = self.snaps.current_mut();
-		if snap.cursor < 1 {
-			return false;
-		} else {
-			snap.value.remove(snap.idx(snap.cursor - 1).unwrap());
-		}
-
-		self.move_(-1);
 		self.flush_value();
 		true
 	}
