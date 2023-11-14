@@ -1,6 +1,6 @@
 use yazi_config::popup::{Offset as CfgOffset, Position as CfgPosition};
 
-use crate::{Position, RectShim};
+use crate::{Position, Offset};
 
 pub struct SelectOpt {
 	pub title:    String,
@@ -10,7 +10,7 @@ pub struct SelectOpt {
 
 macro_rules! gen_method {
 	($func_name:ident, $position:ident) => {
-		pub fn $func_name(title: &str, items: Vec<String>, rect: RectShim) -> SelectOpt {
+		pub fn $func_name(title: &str, items: Vec<String>, rect: Offset) -> SelectOpt {
 			let height = 2
 				+ items.len().min(
 					5, // TODO: hardcode
@@ -18,7 +18,7 @@ macro_rules! gen_method {
 			Self {
 				title: title.to_owned(),
 				items,
-				position: Position::$position(RectShim { height, ..rect }),
+				position: Position::$position(Offset { height, ..rect }),
 			}
 		}
 	};
@@ -43,7 +43,7 @@ impl SelectOpt {
 
 	pub fn from_cfg(title: &str, items: Vec<String>, pos: &CfgPosition, rect: &CfgOffset) -> Self {
 		let rect =
-			RectShim { x_offset: rect.x, y_offset: rect.y, width: rect.width, height: rect.height };
+			Offset { x_offset: rect.x, y_offset: rect.y, width: rect.width, height: rect.height };
 
 		match pos {
 			CfgPosition::TopLeft => Self::top_left(title, items, rect),

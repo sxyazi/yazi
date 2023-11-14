@@ -2,7 +2,7 @@ use crossterm::terminal::WindowSize;
 use ratatui::prelude::Rect;
 use yazi_shared::Term;
 
-use crate::{completion::Completion, help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which, Position, RectShim};
+use crate::{completion::Completion, help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which, Position, Offset};
 
 pub struct Ctx {
 	pub manager:    Manager,
@@ -31,7 +31,7 @@ impl Ctx {
 		let WindowSize { columns, rows, .. } = Term::size();
 
 		let (x, y) = match *pos {
-			Position::TopLeft(RectShim { x_offset, y_offset, width, height }) => {
+			Position::TopLeft(Offset { x_offset, y_offset, width, height }) => {
 				let right_max = columns.saturating_sub(width);
 				let bottom_max = rows.saturating_sub(height);
 
@@ -43,7 +43,7 @@ impl Ctx {
 
 				(x, y)
 			}
-			Position::TopRight(RectShim { x_offset, y_offset, width, height }) => {
+			Position::TopRight(Offset { x_offset, y_offset, width, height }) => {
 				let right_max = columns.saturating_sub(width);
 				let bottom_max = rows.saturating_sub(height);
 
@@ -55,7 +55,7 @@ impl Ctx {
 
 				(x, y)
 			}
-			Position::TopCenter(RectShim { x_offset, y_offset, width, height }) => {
+			Position::TopCenter(Offset { x_offset, y_offset, width, height }) => {
 				let right_max = columns.saturating_sub(width);
 				let bottom_max = rows.saturating_sub(height);
 
@@ -67,7 +67,7 @@ impl Ctx {
 
 				(x, y)
 			}
-			Position::Center(RectShim { x_offset, y_offset, width, height }) => {
+			Position::Center(Offset { x_offset, y_offset, width, height }) => {
 				let right_max = columns.saturating_sub(width);
 				let bottom_max = rows.saturating_sub(height);
 
@@ -79,7 +79,7 @@ impl Ctx {
 
 				(x, y)
 			}
-			Position::BottomCenter(RectShim { x_offset, y_offset, width, height }) => {
+			Position::BottomCenter(Offset { x_offset, y_offset, width, height }) => {
 				let right_max = columns.saturating_sub(width);
 				let bottom_max = rows.saturating_sub(height);
 
@@ -91,7 +91,7 @@ impl Ctx {
 
 				(x, y)
 			}
-			Position::BottomLeft(RectShim { x_offset, y_offset, width, height }) => {
+			Position::BottomLeft(Offset { x_offset, y_offset, width, height }) => {
 				let right_max = columns.saturating_sub(width);
 				let bottom_max = rows.saturating_sub(height);
 
@@ -103,7 +103,7 @@ impl Ctx {
 
 				(x, y)
 			}
-			Position::BottomRight(RectShim { x_offset, y_offset, width, height }) => {
+			Position::BottomRight(Offset { x_offset, y_offset, width, height }) => {
 				let right_max = columns.saturating_sub(width);
 				let bottom_max = rows.saturating_sub(height);
 
@@ -124,7 +124,7 @@ impl Ctx {
 					Position::TopCenter(rect_shim)
 				});
 			}
-			Position::Sticky(RectShim { x_offset, y_offset, width, height }, r) => {
+			Position::Sticky(Offset { x_offset, y_offset, width, height }, r) => {
 				// TODO:
 				unimplemented!("Position::Sticky is not implemented");
 				// let mut x = columns.saturating_sub(width);

@@ -1,6 +1,6 @@
 use yazi_config::popup::{Offset as CfgOffset, Position as CfgPosition};
 
-use crate::{Position, RectShim};
+use crate::{Position, Offset};
 
 #[derive(Default)]
 pub struct InputOpt {
@@ -14,7 +14,7 @@ pub struct InputOpt {
 
 macro_rules! gen_method {
 	($func_name:ident, $position:ident) => {
-		pub fn $func_name(title: impl AsRef<str>, rect: RectShim) -> InputOpt {
+		pub fn $func_name(title: impl AsRef<str>, rect: Offset) -> InputOpt {
 			InputOpt {
 				title: title.as_ref().to_owned(),
 				position: Position::$position(rect),
@@ -43,7 +43,7 @@ impl InputOpt {
 
 	pub fn from_cfg(title: impl AsRef<str>, pos: &CfgPosition, rect: &CfgOffset) -> Self {
 		let rect =
-			RectShim { x_offset: rect.x, y_offset: rect.y, width: rect.width, height: rect.height };
+			Offset { x_offset: rect.x, y_offset: rect.y, width: rect.width, height: rect.height };
 
 		match pos {
 			CfgPosition::TopLeft => Self::top_left(title, rect),

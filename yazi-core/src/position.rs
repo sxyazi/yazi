@@ -1,50 +1,50 @@
 use ratatui::prelude::Rect;
 
 #[derive(Debug, Clone, Copy)]
-pub struct RectShim {
+pub struct Offset {
 	pub x_offset: i16,
 	pub y_offset: i16,
 	pub width:    u16,
 	pub height:   u16,
 }
 
-impl Default for RectShim {
+impl Default for Offset {
 	fn default() -> Self { Self { x_offset: 0, y_offset: 2, width: 50, height: 3 } }
 }
 
 #[derive(Debug, Clone)]
 pub enum Position {
-	TopLeft(RectShim),
-	TopRight(RectShim),
-	TopCenter(RectShim),
-	Center(RectShim),
-	BottomCenter(RectShim),
-	BottomLeft(RectShim),
-	BottomRight(RectShim),
-	Hovered(RectShim),
-	Sticky(RectShim, Rect),
+	TopLeft(Offset),
+	TopRight(Offset),
+	TopCenter(Offset),
+	Center(Offset),
+	BottomCenter(Offset),
+	BottomLeft(Offset),
+	BottomRight(Offset),
+	Hovered(Offset),
+	Sticky(Offset, Rect),
 }
 
 impl Default for Position {
-	fn default() -> Self { Self::TopCenter(RectShim::default()) }
+	fn default() -> Self { Self::TopCenter(Offset::default()) }
 }
 
 impl Position {
 	#[inline]
-	pub fn rect(&self) -> &RectShim {
+	pub fn offset(&self) -> &Offset {
 		match self {
-			Position::TopLeft(rect) => rect,
-			Position::TopRight(rect) => rect,
-			Position::TopCenter(rect) => rect,
-			Position::Center(rect) => rect,
-			Position::BottomCenter(rect) => rect,
-			Position::BottomLeft(rect) => rect,
-			Position::BottomRight(rect) => rect,
-			Position::Hovered(rect) => rect,
-			Position::Sticky(rect, _) => rect,
+			Position::TopLeft(offset) => offset,
+			Position::TopRight(offset) => offset,
+			Position::TopCenter(offset) => offset,
+			Position::Center(offset) => offset,
+			Position::BottomCenter(offset) => offset,
+			Position::BottomLeft(offset) => offset,
+			Position::BottomRight(offset) => offset,
+			Position::Hovered(offset) => offset,
+			Position::Sticky(offset, _) => offset,
 		}
 	}
 
 	#[inline]
-	pub fn dimension(&self) -> (u16, u16) { (self.rect().width, self.rect().height) }
+	pub fn dimension(&self) -> (u16, u16) { (self.offset().width, self.offset().height) }
 }

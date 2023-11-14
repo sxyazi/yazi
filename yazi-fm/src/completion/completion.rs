@@ -2,7 +2,7 @@ use std::path::MAIN_SEPARATOR;
 
 use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, Borders, Clear, List, ListItem, Widget}};
 use yazi_config::THEME;
-use yazi_core::{Ctx, Position, RectShim};
+use yazi_core::{Ctx, Position, Offset};
 
 pub(crate) struct Completion<'a> {
 	cx: &'a Ctx,
@@ -41,7 +41,7 @@ impl<'a> Widget for Completion<'a> {
 		let input_area = self.cx.area(&self.cx.input.position);
 		let mut area = self.cx.area(&Position::Sticky(
 			// TODO:
-			RectShim {
+			Offset {
 				x_offset: 1,
 				y_offset: 0,
 				width:    input_area.width.saturating_sub(2),
