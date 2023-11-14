@@ -8,6 +8,7 @@ mod insert;
 mod move_;
 mod paste;
 mod redo;
+mod type_;
 mod undo;
 mod visual;
 mod yank;
