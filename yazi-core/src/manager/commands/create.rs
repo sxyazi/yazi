@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use tokio::fs::{self};
+use tokio::fs;
 use yazi_config::keymap::Exec;
 use yazi_shared::Url;
 

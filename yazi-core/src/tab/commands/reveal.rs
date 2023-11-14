@@ -12,6 +12,9 @@ impl From<&Exec> for Opt {
 		Self { target: Url::from(expand_path(e.args.first().map(|s| s.as_str()).unwrap_or(""))) }
 	}
 }
+impl From<Url> for Opt {
+	fn from(target: Url) -> Self { Self { target } }
+}
 
 impl Tab {
 	pub fn reveal(&mut self, opt: impl Into<Opt>) -> bool {

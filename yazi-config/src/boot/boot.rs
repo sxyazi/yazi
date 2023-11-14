@@ -1,4 +1,4 @@
-use std::{env, fs, path::PathBuf, process};
+use std::{env, ffi::OsString, fs, path::PathBuf, process};
 
 use clap::Parser;
 use yazi_shared::expand_path;
@@ -8,24 +8,43 @@ use crate::{Xdg, PREVIEW};
 
 #[derive(Debug)]
 pub struct Boot {
-	pub cwd:       PathBuf,
+	pub cwd:  PathBuf,
+	pub file: Option<OsString>,
+
 	pub state_dir: PathBuf,
 
 	pub cwd_file:     Option<PathBuf>,
 	pub chooser_file: Option<PathBuf>,
 }
 
+impl Boot {
+	fn parse_entry(entry: Option<PathBuf>) -> (PathBuf, Option<OsString>) {
+		let Some(entry) = entry else {
+			return (env::current_dir().unwrap(), None);
+		};
+
+		let entry = expand_path(entry);
+		let parent = entry.parent();
+		if parent.is_none() || entry.is_dir() {
+			return (entry, None);
+		}
+
+		return (parent.unwrap().to_owned(), Some(entry.file_name().unwrap().to_owned()));
+	}
+}
+
 impl Default for Boot {
 	fn default() -> Self {
 		let args = Args::parse();
-
-		let cwd = args.cwd.map(expand_path).filter(|p| p.is_dir()).or_else(|| env::current_dir().ok());
+		let (cwd, file) = Self::parse_entry(args.entry);
 
 		let boot = Self {
-			cwd:       cwd.unwrap_or("/".into()),
+			cwd,
+			file,
+
 			state_dir: Xdg::state_dir().unwrap(),
 
-			cwd_file:     args.cwd_file,
+			cwd_file: args.cwd_file,
 			chooser_file: args.chooser_file,
 		};
 

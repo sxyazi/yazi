@@ -5,9 +5,9 @@ use clap::{command, Parser};
 #[derive(Debug, Parser)]
 #[command(name = "yazi", version)]
 pub(super) struct Args {
-	/// Set the current working directory
+	/// Set the current working entry
 	#[arg(index = 1)]
-	pub cwd: Option<PathBuf>,
+	pub entry: Option<PathBuf>,
 
 	/// Write the cwd on exit to this file
 	#[arg(long)]

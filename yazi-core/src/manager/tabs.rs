@@ -11,6 +11,10 @@ pub struct Tabs {
 impl Tabs {
 	pub fn make() -> Self {
 		let mut tabs = Self { idx: usize::MAX, items: vec![Tab::from(Url::from(&BOOT.cwd))] };
+		if let Some(file) = &BOOT.file {
+			tabs.items[0].reveal(Url::from(BOOT.cwd.join(file)));
+		}
+
 		tabs.set_idx(0);
 		tabs
 	}
