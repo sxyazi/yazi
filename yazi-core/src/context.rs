@@ -2,7 +2,7 @@ use crossterm::terminal::WindowSize;
 use ratatui::prelude::Rect;
 use yazi_shared::Term;
 
-use crate::{completion::Completion, help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which, Position, Offset};
+use crate::{completion::Completion, help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which, Offset, Position};
 
 pub struct Ctx {
 	pub manager:    Manager,
@@ -125,18 +125,21 @@ impl Ctx {
 				});
 			}
 			Position::Sticky(Offset { x_offset, y_offset, width, height }, r) => {
-				// TODO:
-				unimplemented!("Position::Sticky is not implemented");
-				// let mut x = columns.saturating_sub(width);
-				// x = x.saturating_add_signed(x_offset);
-				// let mut y = r.y;
-				// y = y.saturating_add_signed(y_offset);
-
-				// if y + height + r.height > rows {
-				// 	(x + r.x, r.y.saturating_sub(height.saturating_sub(y)))
-				// } else {
-				// 	(x + r.x, y + r.height)
-				// }
+				let base_x = r.x;
+				let base_y = r.y;
+				if base_y.saturating_add(height).saturating_add(r.height).saturating_add_signed(y_offset)
+					> rows
+				{
+					(
+						base_x.saturating_add_signed(x_offset).max(0).min(columns.saturating_sub(width)),
+						base_y.saturating_sub(height.saturating_sub(y_offset.unsigned_abs())),
+					)
+				} else {
+					(
+						base_x.saturating_add_signed(x_offset),
+						base_y.saturating_add(r.height).saturating_add_signed(y_offset),
+					)
+				}
 			}
 		};
 
