@@ -33,8 +33,8 @@ pub static PLUGINS: RoCell<plugins::Plugins> = RoCell::new();
 pub static PREVIEW: RoCell<preview::Preview> = RoCell::new();
 pub static TASKS: RoCell<tasks::Tasks> = RoCell::new();
 pub static THEME: RoCell<theme::Theme> = RoCell::new();
-pub static INPUTBOX: RoCell<popup::Input> = RoCell::new();
-pub static SELECTBOX: RoCell<popup::Select> = RoCell::new();
+pub static INPUT: RoCell<popup::Input> = RoCell::new();
+pub static SELECT: RoCell<popup::Select> = RoCell::new();
 
 pub static BOOT: RoCell<boot::Boot> = RoCell::new();
 
@@ -51,8 +51,8 @@ pub fn init() {
 	PREVIEW.with(Default::default);
 	TASKS.with(Default::default);
 	THEME.with(Default::default);
-	INPUTBOX.with(Default::default);
-	SELECTBOX.with(Default::default);
+	INPUT.with(Default::default);
+	SELECT.with(Default::default);
 
 	BOOT.with(Default::default);
 }

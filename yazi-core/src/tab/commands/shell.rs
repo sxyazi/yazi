@@ -1,4 +1,4 @@
-use yazi_config::{keymap::Exec, open::Opener, INPUTBOX};
+use yazi_config::{keymap::Exec, open::Opener, INPUT};
 
 use crate::{emit, input::InputOpt, tab::Tab};
 
@@ -31,7 +31,7 @@ impl Tab {
 			if !opt.confirm || opt.cmd.is_empty() {
 				let title = if opt.block { "Shell (block):" } else { "Shell:" };
 				let mut result = emit!(Input(
-					InputOpt::from_cfg(title, &INPUTBOX.shell_position, &INPUTBOX.shell_offset)
+					InputOpt::from_cfg(title, &INPUT.shell_position, &INPUT.shell_offset)
 						.with_value(opt.cmd)
 						.with_highlight()
 				));

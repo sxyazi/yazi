@@ -2,7 +2,7 @@ use std::{collections::BTreeSet, ffi::OsStr, io::{stdout, BufWriter, Write}, pat
 
 use anyhow::{anyhow, bail, Result};
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
-use yazi_config::{keymap::Exec, INPUTBOX, OPEN, PREVIEW};
+use yazi_config::{keymap::Exec, INPUT, OPEN, PREVIEW};
 use yazi_shared::{max_common_root, Defer, Term, Url};
 
 use crate::{emit, external::{self, ShellOpt}, files::{File, FilesOp}, input::InputOpt, manager::Manager, Event, BLOCKER};
@@ -43,7 +43,7 @@ impl Manager {
 		let opt = opt.into() as Opt;
 		tokio::spawn(async move {
 			let mut result = emit!(Input(
-				InputOpt::from_cfg("Rename:", &INPUTBOX.rename_position, &INPUTBOX.rename_offset)
+				InputOpt::from_cfg("Rename:", &INPUT.rename_position, &INPUT.rename_offset)
 					.with_value(hovered.file_name().unwrap().to_string_lossy())
 			));
 
@@ -59,8 +59,8 @@ impl Manager {
 
 			let mut result = emit!(Input(InputOpt::from_cfg(
 				"Overwrite an existing file? (y/N)",
-				&INPUTBOX.rename_position,
-				&INPUTBOX.rename_offset
+				&INPUT.rename_position,
+				&INPUT.rename_offset
 			)));
 			if let Some(Ok(choice)) = result.recv().await {
 				if choice == "y" || choice == "Y" {
