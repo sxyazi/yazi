@@ -42,7 +42,7 @@ impl Provider {
 	}
 
 	pub(super) async fn image(path: &Path) -> Result<PreviewData, PeekError> {
-		ADAPTOR.image_show(path, MANAGER.layout.preview_rect()).await?;
+		ADAPTOR.image_show(path, MANAGER.layout.image_rect()).await?;
 		Ok(PreviewData::Image)
 	}
 
