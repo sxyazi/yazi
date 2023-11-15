@@ -2,10 +2,10 @@ use std::{mem, time::Duration};
 
 use tokio::{fs, pin};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
-use yazi_config::{keymap::{Exec, KeymapLayer}, INPUT};
+use yazi_config::{keymap::{Exec, KeymapLayer}, popup::InputOpt};
 use yazi_shared::{expand_path, Debounce, InputError, Url};
 
-use crate::{emit, input::InputOpt, tab::Tab};
+use crate::{emit, tab::Tab};
 
 pub struct Opt {
 	target:      Url,
@@ -65,11 +65,7 @@ impl Tab {
 		let opt = opt.into() as Opt;
 
 		tokio::spawn(async move {
-			let rx = emit!(Input(
-				InputOpt::from_cfg("Change directory:", &INPUT.cd_position, &INPUT.cd_offset)
-					.with_value(opt.target.to_string_lossy())
-					.with_completion()
-			));
+			let rx = emit!(Input(InputOpt::cd().with_value(opt.target.to_string_lossy())));
 
 			let rx = Debounce::new(UnboundedReceiverStream::new(rx), Duration::from_millis(50));
 			pin!(rx);

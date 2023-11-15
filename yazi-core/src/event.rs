@@ -3,10 +3,10 @@ use std::{collections::BTreeMap, ffi::OsString};
 use anyhow::Result;
 use crossterm::event::KeyEvent;
 use tokio::sync::{mpsc::{self, UnboundedSender}, oneshot};
-use yazi_config::{keymap::{Exec, KeymapLayer}, open::Opener};
+use yazi_config::{keymap::{Exec, KeymapLayer}, open::Opener, popup::{InputOpt, SelectOpt}};
 use yazi_shared::{InputError, RoCell, Url};
 
-use super::{files::FilesOp, input::InputOpt, select::SelectOpt};
+use super::files::FilesOp;
 use crate::{preview::PreviewLock, tasks::TasksProgress};
 
 static TX: RoCell<UnboundedSender<Event>> = RoCell::new();

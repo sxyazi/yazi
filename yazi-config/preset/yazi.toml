@@ -90,6 +90,16 @@ rename_title    = "Rename:"
 rename_position = "hovered"
 rename_offset   = [ 0, 1, 50, 3 ]
 
+# trash
+trash_title   	= "Move {n} selected file{s} to trash? (y/N)"
+trash_position	= "top-center"
+trash_offset  	= [ 0, 2, 50, 3 ]
+
+# delete
+delete_title   	= "Delete {n} selected file{s} permanently? (y/N)"
+delete_position	= "top-center"
+delete_offset  	= [ 0, 2, 50, 3 ]
+
 # find
 find_title    = [ "Find previous:", "Find next:" ]
 find_position = "top-center"
@@ -106,6 +116,11 @@ shell_title     = [ "Shell:", "Shell (block):" ]
 shell_position  = "top-center"
 shell_offset    = [ 0, 2, 50, 3 ]
 shell_highlight = true
+
+# overwrite
+overwrite_title    = "Overwrite an existing file? (y/N)"
+overwrite_position = "top-center"
+overwrite_offset   = [ 0, 2, 50, 3 ]
 
 [select]
 open_title    = "Open with:"

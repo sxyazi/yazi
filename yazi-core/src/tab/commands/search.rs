@@ -3,9 +3,9 @@ use std::{mem, time::Duration};
 use anyhow::bail;
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
-use yazi_config::{keymap::{Exec, KeymapLayer}, INPUT};
+use yazi_config::{keymap::{Exec, KeymapLayer}, popup::InputOpt, INPUT};
 
-use crate::{emit, external, files::FilesOp, input::InputOpt, tab::Tab};
+use crate::{emit, external, files::FilesOp, tab::Tab};
 
 pub struct Opt {
 	pub type_: OptType,
@@ -45,9 +45,7 @@ impl Tab {
 		let hidden = self.conf.show_hidden;
 
 		self.search = Some(tokio::spawn(async move {
-			let Some(Ok(subject)) = emit!(Input(InputOpt::from_cfg("Search:", &INPUT.cd_position, &INPUT.cd_offset))).recv().await else {
-				bail!("")
-			};
+			let Some(Ok(subject)) = emit!(Input(InputOpt::search())).recv().await else { bail!("") };
 
 			cwd = cwd.into_search(subject.clone());
 			let rx = if opt.type_ == OptType::Rg {

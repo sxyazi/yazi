@@ -2,10 +2,10 @@ use std::{collections::BTreeSet, ffi::OsStr, io::{stdout, BufWriter, Write}, pat
 
 use anyhow::{anyhow, bail, Result};
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
-use yazi_config::{keymap::Exec, INPUT, OPEN, PREVIEW};
+use yazi_config::{keymap::Exec, popup::InputOpt, INPUT, OPEN, PREVIEW};
 use yazi_shared::{max_common_root, Defer, Term, Url};
 
-use crate::{emit, external::{self, ShellOpt}, files::{File, FilesOp}, input::InputOpt, manager::Manager, Event, BLOCKER};
+use crate::{emit, external::{self, ShellOpt}, files::{File, FilesOp}, manager::Manager, Event, BLOCKER};
 
 pub struct Opt {
 	force: bool,
@@ -42,10 +42,8 @@ impl Manager {
 
 		let opt = opt.into() as Opt;
 		tokio::spawn(async move {
-			let mut result = emit!(Input(
-				InputOpt::from_cfg("Rename:", &INPUT.rename_position, &INPUT.rename_offset)
-					.with_value(hovered.file_name().unwrap().to_string_lossy())
-			));
+			let mut result =
+				emit!(Input(InputOpt::rename().with_value(hovered.file_name().unwrap().to_string_lossy())));
 
 			let Some(Ok(name)) = result.recv().await else {
 				return;
@@ -57,11 +55,7 @@ impl Manager {
 				return;
 			}
 
-			let mut result = emit!(Input(InputOpt::from_cfg(
-				"Overwrite an existing file? (y/N)",
-				&INPUT.rename_position,
-				&INPUT.rename_offset
-			)));
+			let mut result = emit!(Input(InputOpt::overwrite()));
 			if let Some(Ok(choice)) = result.recv().await {
 				if choice == "y" || choice == "Y" {
 					Self::rename_and_hover(hovered, Url::from(new)).await.ok();

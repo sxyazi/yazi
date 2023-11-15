@@ -6,6 +6,7 @@ use crate::MERGED_YAZI;
 #[derive(Debug, Deserialize)]
 pub struct Select {
 	// open
+	pub open_title:    String,
 	pub open_position: Position,
 	pub open_offset:   Offset,
 }

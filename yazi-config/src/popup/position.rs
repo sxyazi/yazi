@@ -1,7 +1,7 @@
 use anyhow::bail;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 pub enum Position {
 	#[serde(rename = "top-left")]
 	TopLeft,
@@ -9,14 +9,17 @@ pub enum Position {
 	TopCenter,
 	#[serde(rename = "top-right")]
 	TopRight,
-	#[serde(rename = "center")]
-	Center,
+
 	#[serde(rename = "bottom-left")]
 	BottomLeft,
 	#[serde(rename = "bottom-center")]
 	BottomCenter,
 	#[serde(rename = "bottom-right")]
 	BottomRight,
+
+	#[serde(rename = "center")]
+	#[default]
+	Center,
 	#[serde(rename = "hovered")]
 	Hovered,
 }

@@ -1,6 +1,6 @@
 use yazi_config::keymap::Exec;
 
-use crate::{emit, input::InputOpt, manager::Manager, tasks::Tasks};
+use crate::{emit, manager::Manager, tasks::Tasks};
 
 #[derive(Default)]
 pub struct Opt {

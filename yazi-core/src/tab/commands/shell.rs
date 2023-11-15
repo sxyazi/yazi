@@ -1,6 +1,6 @@
-use yazi_config::{keymap::Exec, open::Opener, INPUT};
+use yazi_config::{keymap::Exec, open::Opener, popup::InputOpt, INPUT};
 
-use crate::{emit, input::InputOpt, tab::Tab};
+use crate::{emit, tab::Tab};
 
 pub struct Opt {
 	cmd:     String,
@@ -29,12 +29,7 @@ impl Tab {
 		let mut opt = opt.into() as Opt;
 		tokio::spawn(async move {
 			if !opt.confirm || opt.cmd.is_empty() {
-				let title = if opt.block { "Shell (block):" } else { "Shell:" };
-				let mut result = emit!(Input(
-					InputOpt::from_cfg(title, &INPUT.shell_position, &INPUT.shell_offset)
-						.with_value(opt.cmd)
-						.with_highlight()
-				));
+				let mut result = emit!(Input(InputOpt::shell(opt.block).with_value(opt.cmd)));
 				match result.recv().await {
 					Some(Ok(e)) => opt.cmd = e,
 					_ => return,

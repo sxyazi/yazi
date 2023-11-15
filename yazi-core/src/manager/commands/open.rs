@@ -1,9 +1,9 @@
 use std::ffi::OsString;
 
-use yazi_config::{keymap::Exec, OPEN, SELECT};
+use yazi_config::{keymap::Exec, popup::SelectOpt, OPEN, SELECT};
 use yazi_shared::MIME_DIR;
 
-use crate::{emit, external, manager::Manager, select::SelectOpt};
+use crate::{emit, external, manager::Manager};
 
 pub struct Opt {
 	interactive: bool,
@@ -20,12 +20,8 @@ impl Manager {
 			return;
 		}
 
-		let result = emit!(Select(SelectOpt::from_cfg(
-			"Open with:",
-			openers.iter().map(|o| o.desc.clone()).collect(),
-			&SELECT.open_position,
-			&SELECT.open_offset
-		)));
+		let result =
+			emit!(Select(SelectOpt::open().with_items(openers.iter().map(|o| o.desc.clone()).collect())));
 
 		if let Ok(choice) = result.await {
 			emit!(Open(files, Some(openers[choice].clone())));

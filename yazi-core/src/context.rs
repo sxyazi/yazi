@@ -1,8 +1,9 @@
 use crossterm::terminal::WindowSize;
 use ratatui::prelude::Rect;
+use yazi_config::popup::Position;
 use yazi_shared::Term;
 
-use crate::{completion::Completion, help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which, Offset, Position};
+use crate::{completion::Completion, help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which};
 
 pub struct Ctx {
 	pub manager:    Manager,
