@@ -153,7 +153,7 @@ impl Preview {
 	pub fn reset<F: FnOnce(&PreviewLock) -> bool>(&mut self, f: F) -> bool {
 		self.handle.take().map(|h| h.abort());
 		Highlighter::abort();
-		ADAPTOR.image_hide(MANAGER.layout.preview_rect()).ok();
+		ADAPTOR.image_hide(MANAGER.layout.image_rect()).ok();
 
 		let Some(ref lock) = self.lock else {
 			return false;
