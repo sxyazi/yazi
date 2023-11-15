@@ -144,7 +144,7 @@ impl Manager {
 
 		let mut failed = Vec::new();
 		for (o, n) in todo {
-			if fs::metadata(&n).await.is_ok() {
+			if fs::symlink_metadata(&n).await.is_ok() {
 				failed.push((o, n, anyhow!("Destination already exists")));
 				continue;
 			}

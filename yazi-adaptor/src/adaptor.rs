@@ -170,7 +170,7 @@ impl Adaptor {
 
 	pub async fn image_show(self, mut path: &Path, rect: Rect) -> Result<()> {
 		let cache = PREVIEW.cache(path, 0);
-		if fs::metadata(&cache).await.is_ok() {
+		if fs::symlink_metadata(&cache).await.is_ok() {
 			path = cache.as_path();
 		}
 
