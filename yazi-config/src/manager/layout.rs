@@ -7,18 +7,18 @@ use yazi_shared::Term;
 use crate::THEME;
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
-#[serde(try_from = "Vec<u32>")]
+#[serde(try_from = "Vec<u16>")]
 pub struct ManagerLayout {
-	pub parent:  u32,
-	pub current: u32,
-	pub preview: u32,
-	pub all:     u32,
+	pub parent:  u16,
+	pub current: u16,
+	pub preview: u16,
+	pub all:     u16,
 }
 
-impl TryFrom<Vec<u32>> for ManagerLayout {
+impl TryFrom<Vec<u16>> for ManagerLayout {
 	type Error = anyhow::Error;
 
-	fn try_from(ratio: Vec<u32>) -> Result<Self, Self::Error> {
+	fn try_from(ratio: Vec<u16>) -> Result<Self, Self::Error> {
 		if ratio.len() != 3 {
 			bail!("invalid layout ratio: {:?}", ratio);
 		}
@@ -39,7 +39,7 @@ impl ManagerLayout {
 	pub fn preview_rect(&self) -> Rect {
 		let WindowSize { columns, rows, .. } = Term::size();
 
-		let width = (columns as u32 * self.preview) as f64 / self.all as f64;
+		let width = (columns * self.preview) as f64 / self.all as f64;
 		let width = if width.fract() > 0.5 { width.ceil() as u16 } else { width.floor() as u16 };
 
 		let offset = THEME.manager.preview_offset;
@@ -59,9 +59,9 @@ impl ManagerLayout {
 
 		let offset = THEME.manager.folder_offset;
 		Block::default().padding(Padding::new(offset.3, offset.1, offset.0, offset.2)).inner(Rect {
-			x:      (columns as u32 * self.parent / self.all) as u16,
+			x:      columns * self.parent / self.all,
 			y:      0,
-			width:  (columns as u32 * self.current / self.all) as u16,
+			width:  columns * self.current / self.all,
 			height: rows,
 		})
 	}

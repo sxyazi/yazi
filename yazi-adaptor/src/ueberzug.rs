@@ -48,10 +48,10 @@ impl Ueberzug {
 		let scale = PREVIEW.ueberzug_scale;
 		let (x, y, w, h) = PREVIEW.ueberzug_offset;
 
-		rect.x = 0f64.max(rect.x as f64 * scale + x) as u16;
-		rect.y = 0f64.max(rect.y as f64 * scale + y) as u16;
-		rect.width = 0f64.max(rect.width as f64 * scale + w) as u16;
-		rect.height = 0f64.max(rect.height as f64 * scale + h) as u16;
+		rect.x = 0f32.max(rect.x as f32 * scale + x) as u16;
+		rect.y = 0f32.max(rect.y as f32 * scale + y) as u16;
+		rect.width = 0f32.max(rect.width as f32 * scale + w) as u16;
+		rect.height = 0f32.max(rect.height as f32 * scale + h) as u16;
 		rect
 	}
 
