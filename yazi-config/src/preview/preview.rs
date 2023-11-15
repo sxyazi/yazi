@@ -8,14 +8,14 @@ use crate::{xdg::Xdg, MERGED_YAZI};
 
 #[derive(Debug)]
 pub struct Preview {
-	pub tab_size:   u32,
+	pub tab_size:   u8,
 	pub max_width:  u32,
 	pub max_height: u32,
 
 	pub cache_dir: PathBuf,
 
-	pub ueberzug_scale:  f64,
-	pub ueberzug_offset: (f64, f64, f64, f64),
+	pub ueberzug_scale:  f32,
+	pub ueberzug_offset: (f32, f32, f32, f32),
 }
 
 impl Default for Preview {
@@ -26,14 +26,14 @@ impl Default for Preview {
 		}
 		#[derive(Deserialize)]
 		struct Shadow {
-			tab_size:   u32,
+			tab_size:   u8,
 			max_width:  u32,
 			max_height: u32,
 
 			cache_dir: Option<String>,
 
-			ueberzug_scale:  f64,
-			ueberzug_offset: (f64, f64, f64, f64),
+			ueberzug_scale:  f32,
+			ueberzug_offset: (f32, f32, f32, f32),
 		}
 
 		let preview = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().preview;
