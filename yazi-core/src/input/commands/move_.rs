@@ -39,7 +39,7 @@ impl Input {
 		);
 
 		let snap = self.snap_mut();
-		if snap.cursor < snap.offset {
+		if snap.offset > snap.cursor {
 			snap.offset = snap.cursor;
 		} else if snap.value.is_empty() {
 			snap.offset = 0;

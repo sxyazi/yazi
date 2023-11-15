@@ -55,11 +55,13 @@ impl Input {
 			std::ops::Bound::Excluded(_) => unreachable!(),
 			std::ops::Bound::Unbounded => 0,
 		};
-		if snap.value.drain(range).next().is_some() {
-			self.flush_value();
-			return true;
+		if snap.value.drain(range).next().is_none() {
+			return false;
 		}
-		false
+
+		self.move_(0);
+		self.flush_value();
+		true
 	}
 
 	fn backspace(&mut self, under: bool) -> bool {
