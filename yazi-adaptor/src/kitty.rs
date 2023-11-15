@@ -313,7 +313,7 @@ pub(super) struct Kitty;
 
 impl Kitty {
 	pub(super) async fn image_show(path: &Path, rect: Rect) -> Result<()> {
-		let img = Image::crop(path, (rect.width, rect.height)).await?;
+		let img = Image::downscale(path, (rect.width, rect.height)).await?;
 		let b = Self::encode(img).await?;
 
 		Self::image_hide(rect)?;

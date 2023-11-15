@@ -75,7 +75,7 @@ impl Precache {
 		match task {
 			PrecacheOp::Image(task) => {
 				let cache = PREVIEW.cache(&task.target, 0);
-				if fs::metadata(&cache).await.is_ok() {
+				if fs::symlink_metadata(&cache).await.is_ok() {
 					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
 				}
 				if let Ok(img) = fs::read(&task.target).await {
@@ -85,7 +85,7 @@ impl Precache {
 			}
 			PrecacheOp::Video(task) => {
 				let cache = PREVIEW.cache(&task.target, 0);
-				if fs::metadata(&cache).await.is_ok() {
+				if fs::symlink_metadata(&cache).await.is_ok() {
 					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
 				}
 
@@ -94,7 +94,7 @@ impl Precache {
 			}
 			PrecacheOp::Pdf(task) => {
 				let cache = PREVIEW.cache(&task.target, 0);
-				if fs::metadata(&cache).await.is_ok() {
+				if fs::symlink_metadata(&cache).await.is_ok() {
 					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
 				}
 
