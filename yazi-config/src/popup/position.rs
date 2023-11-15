@@ -5,16 +5,16 @@ use serde::{Deserialize, Serialize};
 pub enum Position {
 	#[serde(rename = "top-left")]
 	TopLeft,
-	#[serde(rename = "top-right")]
-	TopRight,
 	#[serde(rename = "top-center")]
 	TopCenter,
+	#[serde(rename = "top-right")]
+	TopRight,
 	#[serde(rename = "center")]
 	Center,
-	#[serde(rename = "bottom-center")]
-	BottomCenter,
 	#[serde(rename = "bottom-left")]
 	BottomLeft,
+	#[serde(rename = "bottom-center")]
+	BottomCenter,
 	#[serde(rename = "bottom-right")]
 	BottomRight,
 	#[serde(rename = "hovered")]

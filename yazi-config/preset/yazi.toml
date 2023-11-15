@@ -20,24 +20,23 @@ ueberzug_offset = [ 0, 0, 0, 0 ]
 cd_position = "top-center"
 cd_offset = [0, 2, 50, 3]
 
-search_position = "top-center"
-search_offset = [0, 2, 50, 3]
-
-find_position = "top-center"
-find_offset = [0, 2, 50, 3]
-
-shell_position = "top-center"
-shell_offset = [0, 2, 50, 3]
-
 create_position = "top-center"
 create_offset = [0, 2, 50, 3]
 
 rename_position = "hovered"
 rename_offset = [0, 1, 50, 3]
 
+find_position = "top-center"
+find_offset = [0, 2, 50, 3]
+
+search_position = "top-center"
+search_offset = [0, 2, 50, 3]
+
+shell_position = "top-center"
+shell_offset = [0, 2, 50, 3]
+
 [select]
 open_position = "hovered"
-# height takes no effect
 open_offset = [0, 1, 50, 3]
 
 [opener]
