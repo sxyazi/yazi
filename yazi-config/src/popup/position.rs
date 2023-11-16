@@ -11,6 +11,9 @@ pub struct Position {
 }
 
 impl Position {
+	#[inline]
+	pub fn new(origin: Origin, offset: Offset) -> Self { Self { origin, offset } }
+
 	pub fn rect(&self) -> Rect {
 		let Offset { x, y, width, height } = self.offset;
 		let WindowSize { columns, rows, .. } = Term::size();

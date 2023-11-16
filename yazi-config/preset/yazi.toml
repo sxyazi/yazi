@@ -75,10 +75,9 @@ preload = []
 
 [input]
 # cd
-cd_title      = "Change directory:"
-cd_origin     = "top-center"
-cd_offset     = [ 0, 2, 50, 3 ]
-cd_completion = 1
+cd_title  = "Change directory:"
+cd_origin = "top-center"
+cd_offset = [ 0, 2, 50, 3 ]
 
 # create
 create_title  = "Create:"
@@ -101,10 +100,9 @@ delete_origin	= "top-center"
 delete_offset	= [ 0, 2, 50, 3 ]
 
 # find
-find_title    = [ "Find previous:", "Find next:" ]
-find_origin   = "top-center"
-find_offset   = [ 0, 2, 50, 3 ]
-find_realtime = true
+find_title  = [ "Find next:", "Find previous:" ]
+find_origin = "top-center"
+find_offset = [ 0, 2, 50, 3 ]
 
 # search
 search_title  = "Search:"
@@ -112,10 +110,9 @@ search_origin = "top-center"
 search_offset = [ 0, 2, 50, 3 ]
 
 # shell
-shell_title     = [ "Shell:", "Shell (block):" ]
-shell_origin    = "top-center"
-shell_offset    = [ 0, 2, 50, 3 ]
-shell_highlight = true
+shell_title  = [ "Shell:", "Shell (block):" ]
+shell_origin = "top-center"
+shell_offset = [ 0, 2, 50, 3 ]
 
 # overwrite
 overwrite_title  = "Overwrite an existing file? (y/N)"

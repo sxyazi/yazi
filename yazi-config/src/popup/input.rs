@@ -44,6 +44,11 @@ pub struct Input {
 	pub shell_title:  [String; 2],
 	pub shell_origin: Origin,
 	pub shell_offset: Offset,
+
+	// overwrite
+	pub overwrite_title:  String,
+	pub overwrite_origin: Origin,
+	pub overwrite_offset: Offset,
 }
 
 impl Default for Input {
