@@ -1,4 +1,4 @@
-use yazi_config::keymap::Exec;
+use yazi_config::{keymap::Exec, popup::InputOpt};
 
 use crate::{emit, manager::Manager, tasks::Tasks};
 
@@ -24,17 +24,12 @@ impl Manager {
 		}
 
 		tokio::spawn(async move {
-			// TODO
-			// let mut result = emit!(Input(InputOpt::top_center(
-			// 	format!("{tasks} tasks running, sure to quit? (y/N)",),
-			// 	Default::default()
-			// )));
-
-			// if let Some(Ok(choice)) = result.recv().await {
-			// 	if choice == "y" || choice == "Y" {
-			// 		emit!(Quit(opt.no_cwd_file));
-			// 	}
-			// }
+			let mut result = emit!(Input(InputOpt::quit(tasks)));
+			if let Some(Ok(choice)) = result.recv().await {
+				if choice == "y" || choice == "Y" {
+					emit!(Quit(opt.no_cwd_file));
+				}
+			}
 		});
 		false
 	}

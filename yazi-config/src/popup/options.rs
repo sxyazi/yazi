@@ -1,5 +1,5 @@
 use super::Position;
-use crate::INPUT;
+use crate::{INPUT, SELECT};
 
 #[derive(Default)]
 pub struct InputOpt {
@@ -106,6 +106,16 @@ impl InputOpt {
 	}
 
 	#[inline]
+	pub fn quit(n: usize) -> Self {
+		let title = INPUT.quit_title.replace("{n}", &n.to_string());
+		Self {
+			title: title.replace("{s}", if n > 1 { "s" } else { "" }),
+			position: Position::new(INPUT.quit_origin, INPUT.quit_offset),
+			..Default::default()
+		}
+	}
+
+	#[inline]
 	pub fn with_value(mut self, value: impl Into<String>) -> Self {
 		self.value = value.into();
 		self
@@ -114,7 +124,13 @@ impl InputOpt {
 
 impl SelectOpt {
 	#[inline]
-	pub fn open() -> Self { todo!() }
+	pub fn open() -> Self {
+		Self {
+			title: SELECT.open_title.to_owned(),
+			position: Position::new(SELECT.open_origin, SELECT.open_offset),
+			..Default::default()
+		}
+	}
 
 	#[inline]
 	pub fn with_items(mut self, items: Vec<String>) -> Self {

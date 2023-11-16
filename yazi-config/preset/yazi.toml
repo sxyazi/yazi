@@ -119,6 +119,11 @@ overwrite_title  = "Overwrite an existing file? (y/N)"
 overwrite_origin = "top-center"
 overwrite_offset = [ 0, 2, 50, 3 ]
 
+# quit
+quit_title  = "{n} task{s} running, sure to quit? (y/N)"
+quit_origin = "top-center"
+quit_offset = [ 0, 2, 50, 3 ]
+
 [select]
 open_title  = "Open with:"
 open_origin = "hovered"

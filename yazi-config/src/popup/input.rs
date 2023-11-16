@@ -49,6 +49,11 @@ pub struct Input {
 	pub overwrite_title:  String,
 	pub overwrite_origin: Origin,
 	pub overwrite_offset: Offset,
+
+	// quit
+	pub quit_title:  String,
+	pub quit_origin: Origin,
+	pub quit_offset: Offset,
 }
 
 impl Default for Input {
