@@ -15,58 +15,33 @@ impl Position {
 	pub fn new(origin: Origin, offset: Offset) -> Self { Self { origin, offset } }
 
 	pub fn rect(&self) -> Rect {
+		use Origin::*;
 		let Offset { x, y, width, height } = self.offset;
 		let WindowSize { columns, rows, .. } = Term::size();
 
 		let max_x = columns.saturating_sub(width);
+		let new_x = match self.origin {
+			TopLeft | BottomLeft => x.clamp(0, max_x as i16) as u16,
+			TopCenter | BottomCenter | Center => {
+				(columns / 2).saturating_sub(width / 2).saturating_add_signed(x).clamp(0, max_x)
+			}
+			TopRight | BottomRight => max_x.saturating_add_signed(x).clamp(0, max_x),
+			Hovered => unreachable!(),
+		};
+
 		let max_y = rows.saturating_sub(height);
-
-		let (x, y) = match self.origin {
-			// Top
-			Origin::TopLeft => (x.clamp(0, max_x as i16) as u16, y.clamp(0, max_y as i16) as u16),
-			Origin::TopCenter => (
-				(columns / 2).saturating_sub(width / 2).saturating_add_signed(x).clamp(0, max_x),
-				y.clamp(0, max_y as i16) as u16,
-			),
-			Origin::TopRight => {
-				(max_x.saturating_add_signed(x).clamp(0, max_x), y.clamp(0, max_y as i16) as u16)
-			}
-
-			// Bottom
-			Origin::BottomLeft => {
-				(x.clamp(0, max_x as i16) as u16, max_y.saturating_add_signed(y).clamp(0, max_y))
-			}
-			Origin::BottomCenter => (
-				(columns / 2).saturating_sub(width / 2).saturating_add_signed(x).clamp(0, max_x),
-				max_y.saturating_add_signed(y).clamp(0, max_y),
-			),
-			Origin::BottomRight => (
-				max_x.saturating_add_signed(x).clamp(0, max_x),
-				max_y.saturating_add_signed(y).clamp(0, max_y),
-			),
-
-			// Special
-			// Origin::Hovered => {
-			// 	return Origin::rect(&if let Some(r) =
-			// 		self.manager.hovered().and_then(|h| self.manager.current().rect_current(&h.url))
-			// 	{
-			// 		Origin::Sticky(r)
-			// 	} else {
-			// 		Origin::TopCenter(rect_shim)
-			// 	});
-			// }
-			Origin::Center => (
-				(columns / 2).saturating_sub(width / 2).saturating_add_signed(x).clamp(0, max_x),
-				(max_y / 2).saturating_sub(height / 2).saturating_add_signed(y).clamp(0, max_y),
-			),
-			Origin::Hovered => unreachable!(),
+		let new_y = match self.origin {
+			TopLeft | TopCenter | TopRight => y.clamp(0, max_y as i16) as u16,
+			Center => (max_y / 2).saturating_sub(height / 2).saturating_add_signed(y).clamp(0, max_y),
+			BottomLeft | BottomCenter | BottomRight => max_y.saturating_add_signed(y).clamp(0, max_y),
+			Hovered => unreachable!(),
 		};
 
 		Rect {
-			x,
-			y,
-			width: width.min(columns.saturating_sub(x)),
-			height: height.min(rows.saturating_sub(y)),
+			x:      new_x,
+			y:      new_y,
+			width:  width.min(columns.saturating_sub(new_x)),
+			height: height.min(rows.saturating_sub(new_y)),
 		}
 	}
 
@@ -77,18 +52,18 @@ impl Position {
 		let above =
 			base.y.saturating_add(base.height).saturating_add(height).saturating_add_signed(y) > rows;
 
-		let x = base.x.saturating_add_signed(x).clamp(0, columns.saturating_sub(width));
-		let y = if above {
+		let new_x = base.x.saturating_add_signed(x).clamp(0, columns.saturating_sub(width));
+		let new_y = if above {
 			base.y.saturating_sub(height.saturating_sub(y.unsigned_abs()))
 		} else {
 			base.y.saturating_add(base.height).saturating_add_signed(y)
 		};
 
 		Rect {
-			x,
-			y,
-			width: width.min(columns.saturating_sub(x)),
-			height: height.min(rows.saturating_sub(y)),
+			x:      new_x,
+			y:      new_y,
+			width:  width.min(columns.saturating_sub(new_x)),
+			height: height.min(rows.saturating_sub(new_y)),
 		}
 	}
 }
