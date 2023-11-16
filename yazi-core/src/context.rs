@@ -26,13 +26,18 @@ impl Ctx {
 		}
 	}
 
-	pub fn area(&self, pos: &Position) -> Rect {
-		// TODO: hovered
-		if let Origin::Hovered = pos.origin {
-			return Rect::default();
+	pub fn area(&self, position: &Position) -> Rect {
+		if position.origin != Origin::Hovered {
+			return position.rect();
 		}
 
-		pos.rect()
+		if let Some(r) =
+			self.manager.hovered().and_then(|h| self.manager.current().rect_current(&h.url))
+		{
+			Position::sticky(r, position.offset)
+		} else {
+			Position::new(Origin::TopCenter, position.offset).rect()
+		}
 	}
 
 	#[inline]
