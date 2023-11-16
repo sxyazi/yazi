@@ -1,49 +1,49 @@
 use serde::Deserialize;
 
-use super::position::{Offset, Position};
+use super::{Offset, Origin};
 use crate::MERGED_YAZI;
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 pub struct Input {
 	// cd
-	pub cd_title:    String,
-	pub cd_position: Position,
-	pub cd_offset:   Offset,
+	pub cd_title:  String,
+	pub cd_origin: Origin,
+	pub cd_offset: Offset,
 
 	// create
-	pub create_title:    String,
-	pub create_position: Position,
-	pub create_offset:   Offset,
+	pub create_title:  String,
+	pub create_origin: Origin,
+	pub create_offset: Offset,
 
 	// rename
-	pub rename_title:    String,
-	pub rename_position: Position,
-	pub rename_offset:   Offset,
+	pub rename_title:  String,
+	pub rename_origin: Origin,
+	pub rename_offset: Offset,
 
 	// trash
-	pub trash_title:    String,
-	pub trash_position: Position,
-	pub trash_offset:   Offset,
+	pub trash_title:  String,
+	pub trash_origin: Origin,
+	pub trash_offset: Offset,
 
 	// delete
-	pub delete_title:    String,
-	pub delete_position: Position,
-	pub delete_offset:   Offset,
+	pub delete_title:  String,
+	pub delete_origin: Origin,
+	pub delete_offset: Offset,
 
 	// find
-	pub find_title:    [String; 2],
-	pub find_position: Position,
-	pub find_offset:   Offset,
+	pub find_title:  [String; 2],
+	pub find_origin: Origin,
+	pub find_offset: Offset,
 
 	// search
-	pub search_title:    String,
-	pub search_position: Position,
-	pub search_offset:   Offset,
+	pub search_title:  String,
+	pub search_origin: Origin,
+	pub search_offset: Offset,
 
 	// shell
-	pub shell_title:    [String; 2],
-	pub shell_position: Position,
-	pub shell_offset:   Offset,
+	pub shell_title:  [String; 2],
+	pub shell_origin: Origin,
+	pub shell_offset: Offset,
 }
 
 impl Default for Input {

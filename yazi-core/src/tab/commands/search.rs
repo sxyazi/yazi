@@ -3,7 +3,7 @@ use std::{mem, time::Duration};
 use anyhow::bail;
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
-use yazi_config::{keymap::{Exec, KeymapLayer}, popup::InputOpt, INPUT};
+use yazi_config::{keymap::{Exec, KeymapLayer}, popup::InputOpt};
 
 use crate::{emit, external, files::FilesOp, tab::Tab};
 

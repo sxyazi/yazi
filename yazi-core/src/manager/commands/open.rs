@@ -1,6 +1,6 @@
 use std::ffi::OsString;
 
-use yazi_config::{keymap::Exec, popup::SelectOpt, OPEN, SELECT};
+use yazi_config::{keymap::Exec, popup::SelectOpt, OPEN};
 use yazi_shared::MIME_DIR;
 
 use crate::{emit, external, manager::Manager};

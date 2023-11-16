@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
-use yazi_config::{keymap::{Exec, KeymapLayer}, popup::InputOpt, INPUT};
+use yazi_config::{keymap::{Exec, KeymapLayer}, popup::InputOpt};
 use yazi_shared::{Debounce, InputError};
 
 use crate::{emit, tab::{Finder, FinderCase, Tab}};
@@ -39,7 +39,6 @@ impl Tab {
 	pub fn find<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
 		let opt = opt.into() as Opt;
 		tokio::spawn(async move {
-			let title = if opt.prev { "Find previous:" } else { "Find next:" };
 			let rx = emit!(Input(InputOpt::find(opt.prev)));
 
 			let rx = Debounce::new(UnboundedReceiverStream::new(rx), Duration::from_millis(50));

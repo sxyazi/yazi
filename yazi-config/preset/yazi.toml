@@ -76,56 +76,56 @@ preload = []
 [input]
 # cd
 cd_title      = "Change directory:"
-cd_position   = "top-center"
+cd_origin     = "top-center"
 cd_offset     = [ 0, 2, 50, 3 ]
 cd_completion = 1
 
 # create
-create_title    = "Create:"
-create_position = "top-center"
-create_offset   = [ 0, 2, 50, 3 ]
+create_title  = "Create:"
+create_origin = "top-center"
+create_offset = [ 0, 2, 50, 3 ]
 
 # rename
-rename_title    = "Rename:"
-rename_position = "hovered"
-rename_offset   = [ 0, 1, 50, 3 ]
+rename_title  = "Rename:"
+rename_origin = "hovered"
+rename_offset = [ 0, 1, 50, 3 ]
 
 # trash
-trash_title   	= "Move {n} selected file{s} to trash? (y/N)"
-trash_position	= "top-center"
-trash_offset  	= [ 0, 2, 50, 3 ]
+trash_title 	= "Move {n} selected file{s} to trash? (y/N)"
+trash_origin	= "top-center"
+trash_offset	= [ 0, 2, 50, 3 ]
 
 # delete
-delete_title   	= "Delete {n} selected file{s} permanently? (y/N)"
-delete_position	= "top-center"
-delete_offset  	= [ 0, 2, 50, 3 ]
+delete_title 	= "Delete {n} selected file{s} permanently? (y/N)"
+delete_origin	= "top-center"
+delete_offset	= [ 0, 2, 50, 3 ]
 
 # find
 find_title    = [ "Find previous:", "Find next:" ]
-find_position = "top-center"
+find_origin   = "top-center"
 find_offset   = [ 0, 2, 50, 3 ]
 find_realtime = true
 
 # search
-search_title    = "Search:"
-search_position = "top-center"
-search_offset   = [ 0, 2, 50, 3 ]
+search_title  = "Search:"
+search_origin = "top-center"
+search_offset = [ 0, 2, 50, 3 ]
 
 # shell
 shell_title     = [ "Shell:", "Shell (block):" ]
-shell_position  = "top-center"
+shell_origin    = "top-center"
 shell_offset    = [ 0, 2, 50, 3 ]
 shell_highlight = true
 
 # overwrite
-overwrite_title    = "Overwrite an existing file? (y/N)"
-overwrite_position = "top-center"
-overwrite_offset   = [ 0, 2, 50, 3 ]
+overwrite_title  = "Overwrite an existing file? (y/N)"
+overwrite_origin = "top-center"
+overwrite_offset = [ 0, 2, 50, 3 ]
 
 [select]
-open_title    = "Open with:"
-open_position = "hovered"
-open_offset   = [ 0, 1, 50, 3 ]
+open_title  = "Open with:"
+open_origin = "hovered"
+open_offset = [ 0, 1, 50, 3 ]
 
 [log]
 enabled = false

@@ -24,16 +24,17 @@ impl Manager {
 		}
 
 		tokio::spawn(async move {
-			let mut result = emit!(Input(InputOpt::top_center(
-				format!("{tasks} tasks running, sure to quit? (y/N)",),
-				Default::default()
-			)));
+			// TODO
+			// let mut result = emit!(Input(InputOpt::top_center(
+			// 	format!("{tasks} tasks running, sure to quit? (y/N)",),
+			// 	Default::default()
+			// )));
 
-			if let Some(Ok(choice)) = result.recv().await {
-				if choice == "y" || choice == "Y" {
-					emit!(Quit(opt.no_cwd_file));
-				}
-			}
+			// if let Some(Ok(choice)) = result.recv().await {
+			// 	if choice == "y" || choice == "Y" {
+			// 		emit!(Quit(opt.no_cwd_file));
+			// 	}
+			// }
 		});
 		false
 	}

@@ -1,14 +1,14 @@
 use serde::Deserialize;
 
-use super::position::{Offset, Position};
+use super::{Offset, Origin};
 use crate::MERGED_YAZI;
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 pub struct Select {
 	// open
-	pub open_title:    String,
-	pub open_position: Position,
-	pub open_offset:   Offset,
+	pub open_title:  String,
+	pub open_origin: Origin,
+	pub open_offset: Offset,
 }
 
 impl Default for Select {

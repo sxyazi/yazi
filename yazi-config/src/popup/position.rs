@@ -1,54 +1,91 @@
-use anyhow::bail;
-use serde::{Deserialize, Serialize};
+use crossterm::terminal::WindowSize;
+use ratatui::layout::Rect;
+use yazi_shared::Term;
 
-#[derive(Debug, Default, Deserialize)]
-pub enum Position {
-	#[serde(rename = "top-left")]
-	TopLeft,
-	#[serde(rename = "top-center")]
-	TopCenter,
-	#[serde(rename = "top-right")]
-	TopRight,
+use super::{Offset, Origin};
 
-	#[serde(rename = "bottom-left")]
-	BottomLeft,
-	#[serde(rename = "bottom-center")]
-	BottomCenter,
-	#[serde(rename = "bottom-right")]
-	BottomRight,
-
-	#[serde(rename = "center")]
-	#[default]
-	Center,
-	#[serde(rename = "hovered")]
-	Hovered,
+#[derive(Clone, Copy, Default)]
+pub struct Position {
+	pub origin: Origin,
+	pub offset: Offset,
 }
 
-#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
-#[serde(try_from = "Vec<i16>")]
-pub struct Offset {
-	pub x:      i16,
-	pub y:      i16,
-	pub width:  u16,
-	pub height: u16,
-}
+impl Position {
+	pub fn rect(&self) -> Rect {
+		let Offset { x, y, width, height } = self.offset;
+		let WindowSize { columns, rows, .. } = Term::size();
 
-impl TryFrom<Vec<i16>> for Offset {
-	type Error = anyhow::Error;
+		let max_x = columns.saturating_sub(width);
+		let max_y = rows.saturating_sub(height);
 
-	fn try_from(values: Vec<i16>) -> Result<Self, Self::Error> {
-		if values.len() != 4 {
-			bail!("invalid offset: {:?}", values);
+		let (x, y) = match self.origin {
+			// Top
+			Origin::TopLeft => (x.clamp(0, max_x as i16) as u16, y.clamp(0, max_y as i16) as u16),
+			Origin::TopCenter => (
+				(columns / 2).saturating_sub(width / 2).saturating_add_signed(x).clamp(0, max_x),
+				y.clamp(0, max_y as i16) as u16,
+			),
+			Origin::TopRight => {
+				(max_x.saturating_add_signed(x).clamp(0, max_x), y.clamp(0, max_y as i16) as u16)
+			}
+
+			// Bottom
+			Origin::BottomLeft => {
+				(x.clamp(0, max_x as i16) as u16, max_y.saturating_add_signed(y).clamp(0, max_y))
+			}
+			Origin::BottomCenter => (
+				(columns / 2).saturating_sub(width / 2).saturating_add_signed(x).clamp(0, max_x),
+				max_y.saturating_add_signed(y).clamp(0, max_y),
+			),
+			Origin::BottomRight => (
+				max_x.saturating_add_signed(x).clamp(0, max_x),
+				max_y.saturating_add_signed(y).clamp(0, max_y),
+			),
+
+			// Special
+			// Origin::Hovered => {
+			// 	return Origin::rect(&if let Some(r) =
+			// 		self.manager.hovered().and_then(|h| self.manager.current().rect_current(&h.url))
+			// 	{
+			// 		Origin::Sticky(r)
+			// 	} else {
+			// 		Origin::TopCenter(rect_shim)
+			// 	});
+			// }
+			Origin::Center => (
+				(columns / 2).saturating_sub(width / 2).saturating_add_signed(x).clamp(0, max_x),
+				(max_y / 2).saturating_sub(height / 2).saturating_add_signed(y).clamp(0, max_y),
+			),
+			Origin::Hovered => unreachable!(),
+		};
+
+		Rect {
+			x,
+			y,
+			width: width.min(columns.saturating_sub(x)),
+			height: height.min(rows.saturating_sub(y)),
 		}
-		if values[2] < 0 || values[3] < 0 {
-			bail!("invalid offset: {:?}", values);
-		}
+	}
 
-		Ok(Self {
-			x:      values[0],
-			y:      values[1],
-			width:  values[2] as u16,
-			height: values[3] as u16,
-		})
+	pub fn sticky(base: Rect, offset: Offset) -> Rect {
+		let Offset { x, y, width, height } = offset;
+		let WindowSize { columns, rows, .. } = Term::size();
+
+		let above =
+			base.y.saturating_add(base.height).saturating_add(height).saturating_add_signed(y) > rows;
+
+		let x = base.x.saturating_add_signed(x).clamp(0, columns.saturating_sub(width));
+		let y = if above {
+			base.y.saturating_sub(height.saturating_sub(y.unsigned_abs()))
+		} else {
+			base.y.saturating_add(base.height).saturating_add_signed(y)
+		};
+
+		Rect {
+			x,
+			y,
+			width: width.min(columns.saturating_sub(x)),
+			height: height.min(rows.saturating_sub(y)),
+		}
 	}
 }
