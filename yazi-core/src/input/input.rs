@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use tokio::sync::mpsc::UnboundedSender;
 use unicode_width::UnicodeWidthStr;
-use yazi_config::popup::{InputOpt, Position};
+use yazi_config::{popup::{InputOpt, Position}, INPUT};
 use yazi_shared::InputError;
 
 use super::{mode::InputMode, op::InputOp, InputSnap, InputSnaps};
@@ -29,9 +29,7 @@ pub struct Input {
 impl Input {
 	pub fn show(&mut self, opt: InputOpt, tx: UnboundedSender<Result<String, InputError>>) {
 		self.close(false);
-		self.snaps.reset(opt.value);
 		self.visible = true;
-
 		self.title = opt.title;
 		self.position = opt.position;
 
@@ -42,6 +40,14 @@ impl Input {
 
 		// Shell
 		self.highlight = opt.highlight;
+
+		// Reset snaps
+		self.snaps.reset(opt.value, self.limit());
+	}
+
+	#[inline]
+	pub(super) fn limit(&self) -> usize {
+		self.position.offset.width.saturating_sub(INPUT.border()) as usize
 	}
 
 	pub fn type_str(&mut self, s: &str) -> bool {
@@ -93,7 +99,7 @@ impl Input {
 			return false;
 		}
 		if !matches!(old.op, InputOp::None | InputOp::Select(_)) {
-			self.snaps.tag().then(|| self.flush_value());
+			self.snaps.tag(self.limit()).then(|| self.flush_value());
 		}
 		true
 	}
@@ -116,7 +122,7 @@ impl Input {
 
 impl Input {
 	#[inline]
-	pub fn value(&self) -> &str { self.snap().slice(self.snap().window()) }
+	pub fn value(&self) -> &str { self.snap().slice(self.snap().window(self.limit())) }
 
 	#[inline]
 	pub fn mode(&self) -> InputMode { self.snap().mode }
@@ -134,7 +140,7 @@ impl Input {
 		let (start, end) =
 			if start < snap.cursor { (start, snap.cursor) } else { (snap.cursor + 1, start + 1) };
 
-		let win = snap.window();
+		let win = snap.window(self.limit());
 		let Range { start, end } = start.max(win.start)..end.min(win.end);
 
 		let s = snap.slice(snap.offset..start).width() as u16;

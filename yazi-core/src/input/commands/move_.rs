@@ -38,7 +38,7 @@ impl Input {
 			false,
 		);
 
-		let snap = self.snap_mut();
+		let (limit, snap) = (self.limit(), self.snap_mut());
 		if snap.offset > snap.cursor {
 			snap.offset = snap.cursor;
 		} else if snap.value.is_empty() {
@@ -46,9 +46,9 @@ impl Input {
 		} else {
 			let delta = snap.mode.delta();
 			let s = snap.slice(snap.offset..snap.cursor + delta);
-			if s.width() >= /*TODO: hardcode*/ 50 - 2 {
+			if s.width() >= limit {
 				let s = s.chars().rev().collect::<String>();
-				snap.offset = snap.cursor - InputSnap::find_window(&s, 0).end.saturating_sub(delta);
+				snap.offset = snap.cursor - InputSnap::find_window(&s, 0, limit).end.saturating_sub(delta);
 			}
 		}
 

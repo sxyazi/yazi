@@ -16,7 +16,7 @@ pub(super) struct InputSnap {
 }
 
 impl InputSnap {
-	pub(super) fn new(value: String) -> Self {
+	pub(super) fn new(value: String, limit: usize) -> Self {
 		let mut snap = Self {
 			value,
 
@@ -26,15 +26,15 @@ impl InputSnap {
 			offset: usize::MAX,
 			cursor: usize::MAX,
 		};
-		snap.reset();
+		snap.reset(limit);
 		snap
 	}
 
 	#[inline]
-	pub(super) fn reset(&mut self) {
+	pub(super) fn reset(&mut self, limit: usize) {
 		self.cursor = self.cursor.min(self.value.chars().count().saturating_sub(self.mode.delta()));
 		self.offset =
-			self.offset.min(self.cursor.saturating_sub(Self::find_window(&self.rev(), 0).end));
+			self.offset.min(self.cursor.saturating_sub(Self::find_window(&self.rev(), 0, limit).end));
 	}
 }
 
@@ -65,10 +65,12 @@ impl InputSnap {
 	pub(super) fn rev(&self) -> String { self.value.chars().rev().collect::<String>() }
 
 	#[inline]
-	pub(super) fn window(&self) -> Range<usize> { Self::find_window(&self.value, self.offset) }
+	pub(super) fn window(&self, limit: usize) -> Range<usize> {
+		Self::find_window(&self.value, self.offset, limit)
+	}
 
 	#[inline]
-	pub(super) fn find_window(s: &str, offset: usize) -> Range<usize> {
+	pub(super) fn find_window(s: &str, offset: usize, limit: usize) -> Range<usize> {
 		let mut width = 0;
 		let v = s
 			.chars()
@@ -76,7 +78,7 @@ impl InputSnap {
 			.skip(offset)
 			.map_while(|(i, c)| {
 				width += c.width().unwrap_or(0);
-				if width < /*TODO: hardcode*/ 50 - 2 { Some(i) } else { None }
+				if width < limit { Some(i) } else { None }
 			})
 			.collect::<Vec<_>>();
 
