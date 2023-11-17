@@ -2,11 +2,11 @@ use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, path::Path, syn
 
 use serde::Serialize;
 use tracing::debug;
-use yazi_config::{manager::SortBy, open::Opener, OPEN};
+use yazi_config::{manager::SortBy, open::Opener, popup::InputOpt, OPEN};
 use yazi_shared::{MimeKind, Term, Url};
 
 use super::{running::Running, task::TaskSummary, Scheduler, TASKS_PADDING, TASKS_PERCENT};
-use crate::{emit, files::{File, Files}, input::InputOpt};
+use crate::{emit, files::{File, Files}};
 
 pub struct Tasks {
 	pub(super) scheduler: Arc<Scheduler>,
@@ -110,12 +110,11 @@ impl Tasks {
 
 		let scheduler = self.scheduler.clone();
 		tokio::spawn(async move {
-			let s = if targets.len() > 1 { "s" } else { "" };
-			let mut result = emit!(Input(InputOpt::hovered(if permanently {
-				format!("Delete {} selected file{s} permanently? (y/N)", targets.len())
+			let mut result = emit!(Input(if permanently {
+				InputOpt::delete(targets.len())
 			} else {
-				format!("Move {} selected file{s} to trash? (y/N)", targets.len())
-			})));
+				InputOpt::trash(targets.len())
+			}));
 
 			if let Some(Ok(choice)) = result.recv().await {
 				if choice != "y" && choice != "Y" {

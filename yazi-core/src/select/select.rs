@@ -1,8 +1,6 @@
 use anyhow::Result;
 use tokio::sync::oneshot::Sender;
-
-use super::SelectOpt;
-use crate::Position;
+use yazi_config::{popup::{Position, SelectOpt}, SELECT};
 
 #[derive(Default)]
 pub struct Select {
@@ -36,7 +34,9 @@ impl Select {
 	}
 
 	#[inline]
-	pub fn limit(&self) -> usize { self.items.len().min(5) }
+	pub(super) fn limit(&self) -> usize {
+		self.position.offset.height.saturating_sub(SELECT.border()) as usize
+	}
 }
 
 impl Select {

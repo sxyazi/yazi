@@ -1,8 +1,7 @@
-use crossterm::terminal::WindowSize;
 use ratatui::prelude::Rect;
-use yazi_shared::Term;
+use yazi_config::popup::{Origin, Position};
 
-use crate::{completion::Completion, help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which, Position};
+use crate::{completion::Completion, help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which};
 
 pub struct Ctx {
 	pub manager:    Manager,
@@ -27,36 +26,18 @@ impl Ctx {
 		}
 	}
 
-	pub fn area(&self, pos: &Position) -> Rect {
-		let WindowSize { columns, rows, .. } = Term::size();
+	pub fn area(&self, position: &Position) -> Rect {
+		if position.origin != Origin::Hovered {
+			return position.rect();
+		}
 
-		let (x, y) = match pos {
-			Position::Top(Rect { mut x, mut y, width, height }) => {
-				x = x.min(columns.saturating_sub(*width));
-				y = y.min(rows.saturating_sub(*height));
-				((columns / 2).saturating_sub(width / 2) + x, y)
-			}
-			Position::Sticky(Rect { mut x, y, width, height }, r) => {
-				x = x.min(columns.saturating_sub(*width));
-				if y + height + r.y + r.height > rows {
-					(x + r.x, r.y.saturating_sub(height.saturating_sub(*y)))
-				} else {
-					(x + r.x, y + r.y + r.height)
-				}
-			}
-			Position::Hovered(rect) => {
-				return self.area(&if let Some(r) =
-					self.manager.hovered().and_then(|h| self.manager.current().rect_current(&h.url))
-				{
-					Position::Sticky(*rect, r)
-				} else {
-					Position::Top(*rect)
-				});
-			}
-		};
-
-		let (w, h) = pos.dimension();
-		Rect { x, y, width: w.min(columns.saturating_sub(x)), height: h.min(rows.saturating_sub(y)) }
+		if let Some(r) =
+			self.manager.hovered().and_then(|h| self.manager.current().rect_current(&h.url))
+		{
+			Position::sticky(r, position.offset)
+		} else {
+			Position::new(Origin::TopCenter, position.offset).rect()
+		}
 	}
 
 	#[inline]

@@ -2,10 +2,10 @@ use std::time::Duration;
 
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
-use yazi_config::keymap::{Exec, KeymapLayer};
+use yazi_config::{keymap::{Exec, KeymapLayer}, popup::InputOpt};
 use yazi_shared::{Debounce, InputError};
 
-use crate::{emit, input::InputOpt, tab::{Finder, FinderCase, Tab}};
+use crate::{emit, tab::{Finder, FinderCase, Tab}};
 
 pub struct Opt<'a> {
 	query: Option<&'a str>,
@@ -39,9 +39,7 @@ impl Tab {
 	pub fn find<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
 		let opt = opt.into() as Opt;
 		tokio::spawn(async move {
-			let rx = emit!(Input(
-				InputOpt::top(if opt.prev { "Find previous:" } else { "Find next:" }).with_realtime()
-			));
+			let rx = emit!(Input(InputOpt::find(opt.prev)));
 
 			let rx = Debounce::new(UnboundedReceiverStream::new(rx), Duration::from_millis(50));
 			pin!(rx);
