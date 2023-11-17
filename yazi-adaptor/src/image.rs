@@ -1,8 +1,7 @@
-use std::{path::Path, sync::Arc};
+use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use image::{imageops::FilterType, DynamicImage, ImageFormat};
-use tokio::fs;
 use yazi_config::PREVIEW;
 use yazi_shared::Term;
 
@@ -17,32 +16,51 @@ impl Image {
 			})
 			.unwrap_or((PREVIEW.max_width, PREVIEW.max_height));
 
-		let img = fs::read(path).await?;
-		let img = tokio::task::spawn_blocking(move || -> Result<DynamicImage> {
-			let img = image::load_from_memory(&img)?;
+		let path = path.to_owned();
+		let img = tokio::task::spawn_blocking(move || {
+			image::io::Reader::open(path)?.with_guessed_format()?.decode()
+		})
+		.await??;
+
+		tokio::task::spawn_blocking(move || {
 			Ok(if img.width() > w || img.height() > h {
 				img.resize(w, h, FilterType::Triangle)
 			} else {
 				img
 			})
-		});
-
-		img.await?
+		})
+		.await?
 	}
 
-	pub async fn precache(img: Arc<Vec<u8>>, cache: impl AsRef<Path>) -> Result<()> {
-		let cache = cache.as_ref().to_owned();
-		let result = tokio::task::spawn_blocking(move || {
-			let img = image::load_from_memory(&img)?;
-			let (w, h) = (PREVIEW.max_width, PREVIEW.max_height);
+	pub async fn precache(path: &Path, cache: PathBuf) -> Result<()> {
+		let path = path.to_owned();
+		let img = tokio::task::spawn_blocking(move || {
+			image::io::Reader::open(path)?.with_guessed_format()?.decode()
+		})
+		.await??;
 
+		tokio::task::spawn_blocking(move || {
+			let (w, h) = (PREVIEW.max_width, PREVIEW.max_height);
 			Ok(match img.resize(w, h, FilterType::Triangle) {
 				DynamicImage::ImageRgb8(buf) => buf.save_with_format(cache, ImageFormat::Jpeg),
 				DynamicImage::ImageRgba8(buf) => buf.save_with_format(cache, ImageFormat::Jpeg),
-				buf => buf.to_rgb8().save_with_format(cache, ImageFormat::Jpeg),
+				buf => buf.into_rgb8().save_with_format(cache, ImageFormat::Jpeg),
 			}?)
-		});
+		})
+		.await?
+	}
 
-		result.await?
+	pub async fn precache_bin(bin: Vec<u8>, cache: PathBuf) -> Result<()> {
+		let img = tokio::task::spawn_blocking(move || image::load_from_memory(&bin)).await??;
+
+		tokio::task::spawn_blocking(move || {
+			let (w, h) = (PREVIEW.max_width, PREVIEW.max_height);
+			Ok(match img.resize(w, h, FilterType::Triangle) {
+				DynamicImage::ImageRgb8(buf) => buf.save_with_format(cache, ImageFormat::Jpeg),
+				DynamicImage::ImageRgba8(buf) => buf.save_with_format(cache, ImageFormat::Jpeg),
+				buf => buf.into_rgb8().save_with_format(cache, ImageFormat::Jpeg),
+			}?)
+		})
+		.await?
 	}
 }

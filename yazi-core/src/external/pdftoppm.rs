@@ -1,11 +1,11 @@
-use std::{path::Path, sync::Arc};
+use std::path::Path;
 
 use regex::Regex;
 use tokio::process::Command;
 use yazi_adaptor::Image;
 use yazi_shared::PeekError;
 
-pub async fn pdftoppm(src: &Path, dest: impl AsRef<Path>, skip: usize) -> Result<(), PeekError> {
+pub async fn pdftoppm(src: &Path, dest: &Path, skip: usize) -> Result<(), PeekError> {
 	let output = Command::new("pdftoppm")
 		.args(["-singlefile", "-jpeg", "-jpegopt", "quality=75", "-f"])
 		.arg((skip + 1).to_string())
@@ -25,5 +25,5 @@ pub async fn pdftoppm(src: &Path, dest: impl AsRef<Path>, skip: usize) -> Result
 		return if pages > 0 { Err(PeekError::Exceed(pages - 1)) } else { Err(s.to_string().into()) };
 	}
 
-	Ok(Image::precache(Arc::new(output.stdout), dest).await?)
+	Ok(Image::precache_bin(output.stdout, dest.to_owned()).await?)
 }

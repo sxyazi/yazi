@@ -78,9 +78,7 @@ impl Precache {
 				if fs::symlink_metadata(&cache).await.is_ok() {
 					return Ok(self.sch.send(TaskOp::Adv(task.id, 1, 0))?);
 				}
-				if let Ok(img) = fs::read(&task.target).await {
-					Image::precache(Arc::new(img), cache).await.ok();
-				}
+				Image::precache(&task.target, cache).await.ok();
 				self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
 			}
 			PrecacheOp::Video(task) => {
