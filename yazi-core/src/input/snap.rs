@@ -36,27 +36,6 @@ impl InputSnap {
 		self.offset =
 			self.offset.min(self.cursor.saturating_sub(Self::find_window(&self.rev(), 0).end));
 	}
-
-	pub(super) fn insert(&mut self) -> bool {
-		if self.mode != InputMode::Normal {
-			return false;
-		}
-
-		self.op = InputOp::None;
-		self.mode = InputMode::Insert;
-		true
-	}
-
-	pub fn visual(&mut self) -> bool {
-		if self.mode != InputMode::Normal {
-			return false;
-		} else if self.value.is_empty() {
-			return false;
-		}
-
-		self.op = InputOp::Select(self.cursor);
-		true
-	}
 }
 
 impl InputSnap {

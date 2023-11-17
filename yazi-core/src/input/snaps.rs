@@ -39,7 +39,15 @@ impl InputSnaps {
 	}
 
 	pub(super) fn tag(&mut self) -> bool {
-		self.catch();
+		// Sync *current* cursor position to the *last* version:
+		// 		Save offset/cursor/ect. of the *current* as the last version,
+		// 		while keeping the *last* value unchanged.
+		let value = mem::take(&mut self.versions[self.idx].value);
+		self.versions[self.idx] = self.current.clone();
+		self.versions[self.idx].value = value;
+		self.versions[self.idx].reset();
+
+		// If the *current* value is the same as the *last* version
 		if self.versions[self.idx].value == self.current.value {
 			return false;
 		}
@@ -48,14 +56,6 @@ impl InputSnaps {
 		self.versions.push(self.current().clone());
 		self.idx += 1;
 		true
-	}
-
-	#[inline]
-	pub(super) fn catch(&mut self) {
-		let value = mem::take(&mut self.versions[self.idx].value);
-		self.versions[self.idx] = self.current.clone();
-		self.versions[self.idx].value = value;
-		self.versions[self.idx].reset();
 	}
 }
 

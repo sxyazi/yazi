@@ -1,6 +1,6 @@
 use yazi_config::keymap::Exec;
 
-use crate::input::Input;
+use crate::input::{op::InputOp, Input, InputMode};
 
 pub struct Opt {
 	append: bool,
@@ -15,7 +15,11 @@ impl From<bool> for Opt {
 
 impl Input {
 	pub fn insert(&mut self, opt: impl Into<Opt>) -> bool {
-		if !self.snap_mut().insert() {
+		let snap = self.snap_mut();
+		if snap.mode == InputMode::Normal {
+			snap.op = InputOp::None;
+			snap.mode = InputMode::Insert;
+		} else {
 			return false;
 		}
 
