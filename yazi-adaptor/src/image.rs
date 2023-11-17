@@ -1,13 +1,28 @@
-use std::path::{Path, PathBuf};
+use std::{fs::File, io::BufReader, path::{Path, PathBuf}};
 
 use anyhow::Result;
-use image::{imageops::FilterType, DynamicImage, ImageFormat};
-use yazi_config::PREVIEW;
+use image::{imageops::FilterType, io::Limits, DynamicImage, ImageFormat};
+use yazi_config::{PREVIEW, TASKS};
 use yazi_shared::Term;
 
 pub struct Image;
 
 impl Image {
+	fn set_limits(mut r: image::io::Reader<BufReader<File>>) -> image::io::Reader<BufReader<File>> {
+		let mut limits = Limits::no_limits();
+		if TASKS.image_alloc > 0 {
+			limits.max_alloc = Some(TASKS.image_alloc as u64);
+		}
+		if TASKS.image_bound[0] > 0 {
+			limits.max_image_width = Some(TASKS.image_bound[0] as u32);
+		}
+		if TASKS.image_bound[1] > 0 {
+			limits.max_image_height = Some(TASKS.image_bound[1] as u32);
+		}
+		r.limits(limits);
+		r
+	}
+
 	pub(super) async fn downscale(path: &Path, size: (u16, u16)) -> Result<DynamicImage> {
 		let (w, h) = Term::ratio()
 			.map(|(w, h)| {
@@ -18,7 +33,7 @@ impl Image {
 
 		let path = path.to_owned();
 		let img = tokio::task::spawn_blocking(move || {
-			image::io::Reader::open(path)?.with_guessed_format()?.decode()
+			Self::set_limits(image::io::Reader::open(path)?.with_guessed_format()?).decode()
 		})
 		.await??;
 
@@ -35,7 +50,7 @@ impl Image {
 	pub async fn precache(path: &Path, cache: PathBuf) -> Result<()> {
 		let path = path.to_owned();
 		let img = tokio::task::spawn_blocking(move || {
-			image::io::Reader::open(path)?.with_guessed_format()?.decode()
+			Self::set_limits(image::io::Reader::open(path)?.with_guessed_format()?).decode()
 		})
 		.await??;
 
@@ -50,7 +65,7 @@ impl Image {
 		.await?
 	}
 
-	pub async fn precache_bin(bin: Vec<u8>, cache: PathBuf) -> Result<()> {
+	pub async fn precache_vec(bin: Vec<u8>, cache: PathBuf) -> Result<()> {
 		let img = tokio::task::spawn_blocking(move || image::load_from_memory(&bin)).await??;
 
 		tokio::task::spawn_blocking(move || {
