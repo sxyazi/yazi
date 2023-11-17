@@ -21,3 +21,8 @@ impl Default for Select {
 		toml::from_str::<Outer>(&MERGED_YAZI).unwrap().select
 	}
 }
+
+impl Select {
+	#[inline]
+	pub const fn border(&self) -> u16 { 2 }
+}

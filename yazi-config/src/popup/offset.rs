@@ -15,10 +15,13 @@ impl TryFrom<Vec<i16>> for Offset {
 
 	fn try_from(values: Vec<i16>) -> Result<Self, Self::Error> {
 		if values.len() != 4 {
-			bail!("invalid offset: {:?}", values);
+			bail!("offset must have 4 values: {:?}", values);
 		}
 		if values[2] < 0 || values[3] < 0 {
-			bail!("invalid offset: {:?}", values);
+			bail!("offset width and height must be positive: {:?}", values);
+		}
+		if values[3] < 3 {
+			bail!("offset height must be at least 3: {:?}", values);
 		}
 
 		Ok(Self {

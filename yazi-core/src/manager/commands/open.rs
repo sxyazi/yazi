@@ -20,9 +20,7 @@ impl Manager {
 			return;
 		}
 
-		let result =
-			emit!(Select(SelectOpt::open().with_items(openers.iter().map(|o| o.desc.clone()).collect())));
-
+		let result = emit!(Select(SelectOpt::open(openers.iter().map(|o| o.desc.clone()).collect())));
 		if let Ok(choice) = result.await {
 			emit!(Open(files, Some(openers[choice].clone())));
 		}

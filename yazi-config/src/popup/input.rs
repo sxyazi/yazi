@@ -66,3 +66,8 @@ impl Default for Input {
 		toml::from_str::<Outer>(&MERGED_YAZI).unwrap().input
 	}
 }
+
+impl Input {
+	#[inline]
+	pub const fn border(&self) -> u16 { 2 }
+}

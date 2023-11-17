@@ -1,4 +1,4 @@
-use super::Position;
+use super::{Offset, Position};
 use crate::{INPUT, SELECT};
 
 #[derive(Default)]
@@ -124,17 +124,20 @@ impl InputOpt {
 
 impl SelectOpt {
 	#[inline]
-	pub fn open() -> Self {
-		Self {
-			title: SELECT.open_title.to_owned(),
-			position: Position::new(SELECT.open_origin, SELECT.open_offset),
-			..Default::default()
-		}
+	fn max_height(len: usize) -> u16 {
+		SELECT.open_offset.height.min(SELECT.border().saturating_add(len as u16))
 	}
 
 	#[inline]
-	pub fn with_items(mut self, items: Vec<String>) -> Self {
-		self.items = items;
-		self
+	pub fn open(items: Vec<String>) -> Self {
+		let max_height = Self::max_height(items.len());
+		Self {
+			title: SELECT.open_title.to_owned(),
+			items,
+			position: Position::new(SELECT.open_origin, Offset {
+				height: max_height,
+				..SELECT.open_offset
+			}),
+		}
 	}
 }
