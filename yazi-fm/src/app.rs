@@ -2,7 +2,7 @@ use std::ffi::OsString;
 
 use anyhow::{Ok, Result};
 use crossterm::event::KeyEvent;
-use ratatui::prelude::Rect;
+use ratatui::{backend::Backend, prelude::Rect};
 use tokio::sync::oneshot;
 use yazi_config::{keymap::{Exec, Key, KeymapLayer}, BOOT};
 use yazi_core::{emit, files::FilesOp, input::InputMode, Ctx, Event};
@@ -33,7 +33,7 @@ impl App {
 				}
 				Event::Key(key) => app.dispatch_key(key),
 				Event::Paste(str) => app.dispatch_paste(str),
-				Event::Render(_) => app.dispatch_render(),
+				Event::Render(_) => app.dispatch_render()?,
 				Event::Resize(cols, rows) => app.dispatch_resize(cols, rows),
 				Event::Stop(state, tx) => app.dispatch_stop(state, tx),
 				Event::Call(exec, layer) => app.dispatch_call(exec, layer),
@@ -76,18 +76,36 @@ impl App {
 		}
 	}
 
-	fn dispatch_render(&mut self) {
-		if let Some(term) = &mut self.term {
-			_ = term.draw(|f| {
-				yazi_plugin::scope(&self.cx, |_| {
-					f.render_widget(Root::new(&self.cx), f.size());
-				});
+	fn dispatch_render(&mut self) -> Result<()> {
+		let Some(term) = &mut self.term else {
+			return Ok(());
+		};
 
-				if let Some((x, y)) = self.cx.cursor() {
-					f.set_cursor(x, y);
-				}
+		let frame = term.draw(|f| {
+			yazi_plugin::scope(&self.cx, |_| {
+				f.render_widget(Root::new(&self.cx), f.size());
 			});
+		})?;
+
+		let mut patches = Vec::new();
+		// TODO: find a more efficient way to do this
+		for x in frame.area.left()..frame.area.right() {
+			for y in frame.area.top()..frame.area.bottom() {
+				let cell = frame.buffer.get(x, y);
+				if cell.skip {
+					patches.push((x, y, cell.clone()));
+				}
+			}
 		}
+
+		term.backend_mut().draw(patches.iter().map(|(x, y, cell)| (*x, *y, cell)))?;
+		if let Some((x, y)) = self.cx.cursor() {
+			term.show_cursor()?;
+			term.set_cursor(x, y)?;
+		}
+
+		term.backend_mut().flush()?;
+		Ok(())
 	}
 
 	fn dispatch_resize(&mut self, cols: u16, rows: u16) {
