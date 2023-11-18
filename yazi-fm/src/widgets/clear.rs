@@ -1,19 +1,39 @@
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
+use yazi_adaptor::ADAPTOR;
+use yazi_config::MANAGER;
 
 pub(crate) struct Clear;
 
+#[inline]
+const fn is_overlapping(a: &Rect, b: &Rect) -> bool {
+	a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y
+}
+
+fn overlap(a: &Rect, b: &Rect) -> Option<Rect> {
+	if !is_overlapping(a, b) {
+		return None;
+	}
+
+	let x = a.x.max(b.x);
+	let y = a.y.max(b.y);
+	let width = (a.x + a.width).min(b.x + b.width) - x;
+	let height = (a.y + a.height).min(b.y + b.height) - y;
+	Some(Rect { x, y, width, height })
+}
+
 impl Widget for Clear {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		// let stdout = BufWriter::new(stdout().lock());
-		// let s = " ".repeat(area.width as usize);
-		// _ = Term::move_lock(stdout, (0, 0), |stdout| {
-		// 	for y in area.top()..area.bottom() {
-		// 		Term::move_to(stdout, area.x, y)?;
-		// 		stdout.write_all(s.as_bytes())?;
-		// 	}
-		// 	Ok(())
-		// });
-
 		ratatui::widgets::Clear.render(area, buf);
+
+		let Some(r) = overlap(&area, &MANAGER.layout.image_rect()) else {
+			return;
+		};
+
+		ADAPTOR.image_hide(r).ok();
+		for x in r.left()..r.right() {
+			for y in r.top()..r.bottom() {
+				buf.get_mut(x, y).set_skip(true);
+			}
+		}
 	}
 }
