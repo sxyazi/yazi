@@ -4,7 +4,6 @@ members  = [ "yazi-*" ]
 
 [profile.release]
 codegen-units = 1
-opt-level = 3
-lto   = true
-strip = true
-panic = "abort"
+lto           = true
+panic         = "abort"
+strip         = true
