@@ -39,12 +39,6 @@ fn _expand_path(p: &Path) -> PathBuf {
 pub fn expand_path(p: impl AsRef<Path>) -> PathBuf { _expand_path(p.as_ref()) }
 
 #[inline]
-pub fn expand_url(mut u: Url) -> Url {
-	u.set_path(_expand_path(&u));
-	u
-}
-
-#[inline]
 pub fn ends_with_slash(p: &Path) -> bool {
 	// TODO: uncomment this when Rust 1.74 is released
 	// let b = p.as_os_str().as_encoded_bytes();

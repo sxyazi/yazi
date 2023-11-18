@@ -14,10 +14,12 @@ pub struct Opt {
 
 impl From<&Exec> for Opt {
 	fn from(e: &Exec) -> Self {
-		Self {
-			target:      Url::from(expand_path(e.args.first().map(|s| s.as_str()).unwrap_or(""))),
-			interactive: e.named.contains_key("interactive"),
+		let mut target = Url::from(e.args.first().map(|s| s.as_str()).unwrap_or(""));
+		if target.is_regular() {
+			target.set_path(expand_path(&target))
 		}
+
+		Self { target, interactive: e.named.contains_key("interactive") }
 	}
 }
 impl From<Url> for Opt {

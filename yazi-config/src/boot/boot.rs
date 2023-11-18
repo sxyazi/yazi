@@ -19,11 +19,11 @@ pub struct Boot {
 
 impl Boot {
 	fn parse_entry(entry: Option<PathBuf>) -> (PathBuf, Option<OsString>) {
-		let Some(entry) = entry else {
-			return (env::current_dir().unwrap(), None);
+		let entry = match entry {
+			Some(p) => expand_path(p),
+			None => return (env::current_dir().unwrap(), None),
 		};
 
-		let entry = expand_path(entry);
 		let parent = entry.parent();
 		if parent.is_none() || entry.is_dir() {
 			return (entry, None);
