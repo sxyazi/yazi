@@ -3,9 +3,6 @@ use std::{collections::VecDeque, path::{Path, PathBuf}};
 use anyhow::Result;
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
 
-#[inline]
-pub fn env_exists(name: &str) -> bool { std::env::var_os(name).is_some_and(|s| !s.is_empty()) }
-
 pub async fn calculate_size(path: &Path) -> u64 {
 	let mut total = 0;
 	let mut stack = VecDeque::from([path.to_path_buf()]);

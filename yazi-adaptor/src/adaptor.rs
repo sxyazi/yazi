@@ -7,7 +7,7 @@ use tracing::warn;
 use yazi_config::PREVIEW;
 use yazi_shared::{env_exists, RoCell};
 
-use super::{Iterm2, Kitty, KittyOld};
+use super::{Iterm2, Kitty};
 use crate::{ueberzug::Ueberzug, Sixel, TMUX};
 
 static IMAGE_SHOWN: AtomicBool = AtomicBool::new(false);
@@ -18,7 +18,6 @@ static UEBERZUG: RoCell<Option<UnboundedSender<Option<(PathBuf, Rect)>>>> = RoCe
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Adaptor {
 	Kitty,
-	KittyOld,
 	Iterm2,
 	Sixel,
 
@@ -86,7 +85,7 @@ impl Adaptor {
 			Emulator::Kitty => vec![Self::Kitty],
 			Emulator::Konsole => vec![Self::Kitty, Self::Iterm2, Self::Sixel],
 			Emulator::Iterm2 => vec![Self::Iterm2, Self::Sixel],
-			Emulator::WezTerm => vec![Self::KittyOld, Self::Iterm2, Self::Sixel],
+			Emulator::WezTerm => vec![Self::Iterm2, Self::Sixel],
 			Emulator::Foot => vec![Self::Sixel],
 			Emulator::BlackBox => vec![Self::Sixel],
 			Emulator::VSCode => vec![Self::Sixel],
@@ -99,9 +98,6 @@ impl Adaptor {
 		protocols.retain(|p| *p == Self::Iterm2);
 		if env_exists("ZELLIJ_SESSION_NAME") {
 			protocols.retain(|p| *p == Self::Sixel);
-		}
-		if *TMUX && protocols.len() > 1 {
-			protocols.retain(|p| *p != Self::KittyOld);
 		}
 		if let Some(p) = protocols.first() {
 			return *p;
@@ -152,7 +148,6 @@ impl ToString for Adaptor {
 	fn to_string(&self) -> String {
 		match self {
 			Self::Kitty => "kitty",
-			Self::KittyOld => "kitty",
 			Self::Iterm2 => "iterm2",
 			Self::Sixel => "sixel",
 			Self::X11 => "x11",
@@ -179,7 +174,6 @@ impl Adaptor {
 
 		match self {
 			Self::Kitty => Kitty::image_show(path, rect).await,
-			Self::KittyOld => KittyOld::image_show(path, rect).await,
 			Self::Iterm2 => Iterm2::image_show(path, rect).await,
 			Self::Sixel => Sixel::image_show(path, rect).await,
 			_ => Ok(if let Some(tx) = &*UEBERZUG {
@@ -195,7 +189,6 @@ impl Adaptor {
 
 		match self {
 			Self::Kitty => Kitty::image_hide(rect),
-			Self::KittyOld => KittyOld::image_hide(),
 			Self::Iterm2 => Iterm2::image_hide(rect),
 			Self::Sixel => Sixel::image_hide(rect),
 			_ => Ok(if let Some(tx) = &*UEBERZUG {
@@ -206,6 +199,6 @@ impl Adaptor {
 
 	#[inline]
 	pub(super) fn needs_ueberzug(self) -> bool {
-		!matches!(self, Self::Kitty | Self::KittyOld | Self::Iterm2 | Self::Sixel)
+		!matches!(self, Self::Kitty | Self::Iterm2 | Self::Sixel)
 	}
 }

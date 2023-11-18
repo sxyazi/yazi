@@ -4,14 +4,12 @@ mod adaptor;
 mod image;
 mod iterm2;
 mod kitty;
-mod kitty_old;
 mod sixel;
 mod ueberzug;
 
 use adaptor::*;
 use iterm2::*;
 use kitty::*;
-use kitty_old::*;
 use sixel::*;
 use yazi_shared::{env_exists, RoCell};
 
