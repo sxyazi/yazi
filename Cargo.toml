@@ -3,6 +3,8 @@ resolver = "2"
 members  = [ "yazi-*" ]
 
 [profile.release]
+codegen-units = 1
+opt-level = 3
 lto   = true
 strip = true
 panic = "abort"
