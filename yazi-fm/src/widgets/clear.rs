@@ -1,7 +1,4 @@
-use std::io::{stdout, BufWriter, Write};
-
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
-use yazi_shared::Term;
 
 pub(crate) struct Clear;
 
