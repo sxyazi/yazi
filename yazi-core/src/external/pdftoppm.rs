@@ -25,5 +25,5 @@ pub async fn pdftoppm(src: &Path, dest: &Path, skip: usize) -> Result<(), PeekEr
 		return if pages > 0 { Err(PeekError::Exceed(pages - 1)) } else { Err(s.to_string().into()) };
 	}
 
-	Ok(Image::precache_bin(output.stdout, dest.to_owned()).await?)
+	Ok(Image::precache_vec(output.stdout, dest.to_owned()).await?)
 }
