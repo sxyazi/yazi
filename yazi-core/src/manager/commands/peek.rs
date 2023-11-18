@@ -24,4 +24,9 @@ impl Manager {
 		}
 		false
 	}
+
+    pub fn peek_refresh(&mut self, sequent: bool) -> bool {
+        self.active_mut().preview.reset(|_| true);
+        self.peek(sequent)
+    }
 }

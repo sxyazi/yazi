@@ -8,6 +8,9 @@ use yazi_config::{keymap::{Exec, Key, KeymapLayer}, BOOT};
 use yazi_core::{emit, files::FilesOp, input::InputMode, Ctx, Event};
 use yazi_shared::Term;
 
+use yazi_adaptor::ADAPTOR;
+// use yazi_config::MANAGER;
+
 use crate::{Executor, Logs, Panic, Root, Signals};
 
 pub(super) struct App {
@@ -194,10 +197,16 @@ impl App {
 
 			Event::Select(opt, tx) => {
 				self.cx.select.show(opt, tx);
+                let Rect { x, y, width, height} = self.cx.area(&self.cx.select.position);
+                let select_area = Rect {x:x+1, y:y+1, width:width-2, height:height-2};
+                ADAPTOR.image_hide(select_area).ok();
 				emit!(Render);
 			}
 			Event::Input(opt, tx) => {
 				self.cx.input.show(opt, tx);
+                let Rect { x, y, width, height} = self.cx.area(&self.cx.input.position);
+                let input_area = Rect {x:x+1, y:y+1, width:width-2, height:height-2};
+                ADAPTOR.image_hide(input_area).ok();
 				emit!(Render);
 			}
 

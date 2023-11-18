@@ -164,12 +164,15 @@ impl<'a> Executor<'a> {
 			};
 		}
 
-		on!(toggle, "close");
 		on!(arrow);
 		on!(inspect);
 		on!(cancel);
 
 		match exec.cmd.as_str() {
+            "close" => {
+                self.cx.manager.peek_refresh(false);
+                self.cx.tasks.toggle(exec)
+            },
 			"help" => self.cx.help.toggle(KeymapLayer::Tasks),
 			_ => false,
 		}
@@ -184,11 +187,14 @@ impl<'a> Executor<'a> {
 			};
 		}
 
-		on!(close);
 		on!(arrow);
 
 		match exec.cmd.as_str() {
 			"help" => self.cx.help.toggle(KeymapLayer::Select),
+            "close" => {
+                self.cx.manager.peek_refresh(false);
+                self.cx.select.close(exec)    
+            },
 			_ => false,
 		}
 	}
@@ -207,11 +213,20 @@ impl<'a> Executor<'a> {
 			};
 		}
 
-		on!(close);
-		on!(escape);
 		on!(move_, "move");
 
-		if exec.cmd.as_str() == "complete" {
+
+        if exec.cmd.as_str() == "close" {
+            self.cx.manager.peek_refresh(false);
+            return self.cx.input.close(exec);
+        }
+        else if exec.cmd.as_str() == "escape" {
+            if self.cx.input.mode() == InputMode::Normal {
+                self.cx.manager.peek_refresh(false);    
+            }
+            return self.cx.input.escape(exec);
+        }
+        else if exec.cmd.as_str() == "complete" {
 			return if exec.args.is_empty() {
 				self.cx.completion.trigger(exec)
 			} else {
