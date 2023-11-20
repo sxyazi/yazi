@@ -71,8 +71,10 @@ impl Ueberzug {
 				path.to_string_lossy(),
 				"\n"
 			);
+			debug!("ueberzug command: {}", s);
 			stdin.write_all(s.as_bytes()).await?;
 		} else {
+			debug!("ueberzug command: remove");
 			stdin
 				.write_all(format!(r#"{{"action":"remove","identifier":"yazi"}}{}"#, "\n").as_bytes())
 				.await?;

@@ -24,7 +24,7 @@ impl MimeKind {
 			|| s.ends_with("/x-wine-extension-ini")
 		{
 			Self::Text
-		} else if s.starts_with("image/") {
+		} else if s.starts_with("image/") && s != "image/vnd.djvu" {
 			Self::Image
 		} else if s.starts_with("video/") {
 			Self::Video
