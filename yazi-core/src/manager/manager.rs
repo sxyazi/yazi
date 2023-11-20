@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use yazi_shared::Url;
 
 use super::{Tabs, Watcher};
-use crate::{emit, files::{File, FilesOp}, tab::{Folder, Tab}, tasks::Tasks};
+use crate::{files::{File, FilesOp}, tab::{Folder, Tab}, tasks::Tasks};
 
 pub struct Manager {
 	pub tabs:   Tabs,
@@ -46,7 +46,7 @@ impl Manager {
 		b |= hovered.as_ref().is_some_and(|h| self.current_mut().hover(h));
 
 		if hovered.as_ref() != self.hovered().map(|h| &h.url) {
-			emit!(Hover);
+			Self::_hover(None);
 		}
 		b
 	}

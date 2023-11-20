@@ -1,6 +1,6 @@
 use yazi_config::keymap::Exec;
 
-use crate::{emit, tab::Tab, Step};
+use crate::{manager::Manager, tab::Tab, Step};
 
 pub struct Opt {
 	step: Step,
@@ -41,7 +41,7 @@ impl Tab {
 			}
 		}
 
-		emit!(Hover);
+		Manager::_hover(None);
 		true
 	}
 }

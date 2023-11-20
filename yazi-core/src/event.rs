@@ -21,11 +21,9 @@ pub enum Event {
 	Call(Vec<Exec>, KeymapLayer),
 
 	// Manager
-	Refresh,
 	Files(FilesOp),
 	Pages(usize),
 	Mimetype(BTreeMap<Url, String>),
-	Hover(Option<Url>),
 	Peek(Option<(usize, Url)>),
 	Preview(PreviewLock),
 
@@ -81,12 +79,6 @@ macro_rules! emit {
 	};
 	(Mimetype($mimes:expr)) => {
 		$crate::Event::Mimetype($mimes).emit();
-	};
-	(Hover) => {
-		$crate::Event::Hover(None).emit();
-	};
-	(Hover($file:expr)) => {
-		$crate::Event::Hover(Some($file)).emit();
 	};
 	(Peek) => {
 		$crate::Event::Peek(None).emit();

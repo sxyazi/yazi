@@ -43,8 +43,8 @@ impl Manager {
 				Url::from(path.components().take(cwd.components().count() + 1).collect::<PathBuf>());
 			if let Ok(f) = File::from(child.clone()).await {
 				emit!(Files(FilesOp::Creating(cwd, f.into_map())));
-				emit!(Hover(child));
-				emit!(Refresh);
+				Manager::_hover(Some(child));
+				Manager::_refresh();
 			}
 			Ok::<(), anyhow::Error>(())
 		});

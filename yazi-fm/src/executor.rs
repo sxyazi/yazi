@@ -88,10 +88,12 @@ impl<'a> Executor<'a> {
 			};
 		}
 
-		on!(ACTIVE, escape);
+		on!(MANAGER, hover);
+		on!(MANAGER, refresh);
 		on!(MANAGER, quit, &self.cx.tasks);
 		on!(MANAGER, close, &self.cx.tasks);
 		on!(MANAGER, suspend);
+		on!(ACTIVE, escape);
 
 		// Navigation
 		on!(ACTIVE, arrow);
@@ -212,7 +214,7 @@ impl<'a> Executor<'a> {
 		on!(move_, "move");
 
 		if exec.cmd.as_str() == "complete" {
-			return if exec.args.is_empty() {
+			return if exec.named.contains_key("trigger") {
 				self.cx.completion.trigger(exec)
 			} else {
 				self.cx.input.complete(exec)

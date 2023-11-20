@@ -2,7 +2,7 @@ use std::mem;
 
 use yazi_config::keymap::Exec;
 
-use crate::{emit, tab::Tab};
+use crate::{manager::Manager, tab::Tab};
 
 pub struct Opt;
 impl From<()> for Opt {
@@ -34,7 +34,7 @@ impl Tab {
 		// Backstack
 		self.backstack.push(hovered);
 
-		emit!(Refresh);
+		Manager::_refresh();
 		true
 	}
 }

@@ -1,5 +1,6 @@
 mod close;
 mod create;
+mod hover;
 mod link;
 mod open;
 mod paste;
