@@ -212,6 +212,8 @@ impl<'a> Executor<'a> {
 		on!(close);
 		on!(escape);
 		on!(move_, "move");
+		on!(backward);
+		on!(forward);
 
 		if exec.cmd.as_str() == "complete" {
 			return if exec.named.contains_key("trigger") {
@@ -226,10 +228,7 @@ impl<'a> Executor<'a> {
 				on!(insert);
 				on!(visual);
 
-				on!(backward);
-				on!(forward);
 				on!(delete);
-
 				on!(yank);
 				on!(paste);
 
@@ -241,7 +240,11 @@ impl<'a> Executor<'a> {
 					_ => false,
 				}
 			}
-			InputMode::Insert => false,
+			InputMode::Insert => {
+				on!(backspace);
+
+				false
+			}
 		}
 	}
 
