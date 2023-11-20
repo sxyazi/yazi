@@ -14,14 +14,13 @@ impl From<&Exec> for Opt {
 impl Input {
 	pub fn forward(&mut self, opt: impl Into<Opt>) -> bool {
 		let opt = opt.into() as Opt;
-
 		let snap = self.snap();
-		if snap.value.is_empty() {
-			return self.move_(0);
-		}
 
 		let mut it = snap.value.chars().skip(snap.cursor).enumerate();
-		let mut prev = CharKind::new(it.next().unwrap().1);
+		let Some(mut prev) = it.next().map(|(_, c)| CharKind::new(c)) else {
+			return self.move_(0);
+		};
+
 		for (i, c) in it {
 			let c = CharKind::new(c);
 			let b = if opt.end_of_word {
