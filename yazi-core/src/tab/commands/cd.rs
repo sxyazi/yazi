@@ -5,7 +5,7 @@ use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::{keymap::{Exec, KeymapLayer}, popup::InputOpt};
 use yazi_shared::{expand_path, Debounce, InputError, Url};
 
-use crate::{emit, tab::Tab};
+use crate::{completion::Completion, emit, manager::Manager, tab::Tab};
 
 pub struct Opt {
 	target:      Url,
@@ -27,6 +27,11 @@ impl From<Url> for Opt {
 }
 
 impl Tab {
+	#[inline]
+	pub fn _cd(target: &Url) {
+		emit!(Call(Exec::call("cd", vec![target.to_string()]).vec(), KeymapLayer::Manager));
+	}
+
 	pub fn cd(&mut self, opt: impl Into<Opt>) -> bool {
 		let opt = opt.into() as Opt;
 		if opt.interactive {
@@ -59,7 +64,7 @@ impl Tab {
 			self.backstack.push(opt.target.clone());
 		}
 
-		emit!(Refresh);
+		Manager::_refresh();
 		true
 	}
 
@@ -75,24 +80,19 @@ impl Tab {
 			while let Some(result) = rx.next().await {
 				match result {
 					Ok(s) => {
-						let p = expand_path(s);
-						let Ok(meta) = fs::metadata(&p).await else {
+						let u = Url::from(expand_path(s));
+						let Ok(meta) = fs::metadata(&u).await else {
 							return;
 						};
 
-						emit!(Call(
-							Exec::call(if meta.is_dir() { "cd" } else { "reveal" }, vec![
-								p.to_string_lossy().to_string()
-							])
-							.vec(),
-							KeymapLayer::Manager
-						));
+						if meta.is_dir() {
+							Tab::_cd(&u);
+						} else {
+							Tab::_reveal(&u);
+						}
 					}
 					Err(InputError::Completed(before, ticket)) => {
-						emit!(Call(
-							Exec::call("complete", vec![]).with("before", before).with("ticket", ticket).vec(),
-							KeymapLayer::Input
-						));
+						Completion::_trigger(&before, ticket);
 					}
 					_ => break,
 				}

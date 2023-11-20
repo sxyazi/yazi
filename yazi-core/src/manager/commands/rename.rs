@@ -27,7 +27,7 @@ impl Manager {
 
 		let file = File::from(new.clone()).await?;
 		emit!(Files(FilesOp::Creating(file.parent().unwrap(), file.into_map())));
-		emit!(Hover(new));
+		Self::_hover(Some(new));
 		Ok(())
 	}
 

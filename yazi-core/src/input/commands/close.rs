@@ -1,7 +1,7 @@
-use yazi_config::keymap::{Exec, KeymapLayer};
+use yazi_config::keymap::Exec;
 use yazi_shared::InputError;
 
-use crate::{emit, input::Input};
+use crate::{completion::Completion, input::Input};
 
 pub struct Opt {
 	submit: bool,
@@ -19,7 +19,7 @@ impl Input {
 		let opt = opt.into() as Opt;
 
 		if self.completion {
-			emit!(Call(Exec::call("close", vec![]).vec(), KeymapLayer::Completion));
+			Completion::_close();
 		}
 
 		if let Some(cb) = self.callback.take() {

@@ -1,4 +1,4 @@
-use yazi_config::keymap::{Exec, KeymapLayer};
+use yazi_config::keymap::Exec;
 use yazi_shared::{ends_with_slash, Defer};
 
 use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, tab::Tab, Event, BLOCKER};
@@ -39,15 +39,21 @@ impl Tab {
 			let _defer = Defer::new(|| Event::Stop(false, None).emit());
 			emit!(Stop(true)).await;
 
-			let url = if opt.type_ == OptType::Fzf {
+			let result = if opt.type_ == OptType::Fzf {
 				external::fzf(FzfOpt { cwd }).await
 			} else {
 				external::zoxide(ZoxideOpt { cwd }).await
-			}?;
+			};
 
-			let op = if opt.type_ == OptType::Fzf && !ends_with_slash(&url) { "reveal" } else { "cd" };
-			emit!(Call(Exec::call(op, vec![url.to_string()]).vec(), KeymapLayer::Manager));
-			Ok::<(), anyhow::Error>(())
+			let Ok(url) = result else {
+				return;
+			};
+
+			if opt.type_ == OptType::Fzf && !ends_with_slash(&url) {
+				Tab::_reveal(&url)
+			} else {
+				Tab::_cd(&url)
+			}
 		});
 		false
 	}

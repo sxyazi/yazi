@@ -6,14 +6,14 @@ use yazi_config::keymap::{Exec, KeymapLayer};
 use crate::{completion::Completion, emit};
 
 pub struct Opt<'a> {
-	before: &'a str,
+	word:   &'a str,
 	ticket: usize,
 }
 
 impl<'a> From<&'a Exec> for Opt<'a> {
 	fn from(e: &'a Exec) -> Self {
 		Self {
-			before: e.named.get("before").map(|s| s.as_str()).unwrap_or_default(),
+			word:   e.args.first().map(|s| s.as_str()).unwrap_or_default(),
 			ticket: e.named.get("ticket").and_then(|s| s.parse().ok()).unwrap_or(0),
 		}
 	}
@@ -21,11 +21,11 @@ impl<'a> From<&'a Exec> for Opt<'a> {
 
 impl Completion {
 	#[inline]
-	fn split_path(s: &str) -> (String, String) {
-		match s.rsplit_once(MAIN_SEPARATOR) {
-			Some((p, c)) => (format!("{p}{}", MAIN_SEPARATOR), c.to_owned()),
-			None => (".".to_owned(), s.to_owned()),
-		}
+	pub fn _trigger(word: &str, ticket: usize) {
+		emit!(Call(
+			Exec::call("trigger", vec![word.to_owned()]).with("ticket", ticket).vec(),
+			KeymapLayer::Completion
+		));
 	}
 
 	pub fn trigger<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
@@ -35,7 +35,7 @@ impl Completion {
 		}
 
 		self.ticket = opt.ticket;
-		let (parent, child) = Self::split_path(opt.before);
+		let (parent, child) = Self::split_path(opt.word);
 
 		if self.caches.contains_key(&parent) {
 			return self.show(
@@ -77,6 +77,14 @@ impl Completion {
 		});
 
 		mem::replace(&mut self.visible, false)
+	}
+
+	#[inline]
+	fn split_path(s: &str) -> (String, String) {
+		match s.rsplit_once(MAIN_SEPARATOR) {
+			Some((p, c)) => (format!("{p}{}", MAIN_SEPARATOR), c.to_owned()),
+			None => (".".to_owned(), s.to_owned()),
+		}
 	}
 }
 

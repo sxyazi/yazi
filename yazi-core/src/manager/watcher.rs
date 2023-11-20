@@ -91,8 +91,8 @@ impl Watcher {
 		*guard = watched
 			.into_iter()
 			.map(|k| {
-				if let Some((k, v)) = guard.remove_entry(k) {
-					(k, v)
+				if let Some(old) = guard.remove_entry(k) {
+					old
 				} else {
 					to_resolve.push(k.clone());
 					(k.clone(), None)
@@ -102,17 +102,14 @@ impl Watcher {
 
 		let lock = self.watched.clone();
 		tokio::spawn(async move {
-			let mut ext = IndexMap::new();
 			for k in to_resolve {
 				match fs::canonicalize(&k).await {
 					Ok(v) if v != *k => {
-						ext.insert(k, Some(Url::from(v)));
+						lock.write().insert(k, Some(Url::from(v)));
 					}
 					_ => {}
 				}
 			}
-
-			lock.write().extend(ext);
 		});
 	}
 

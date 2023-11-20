@@ -5,7 +5,7 @@ use crossterm::event::KeyEvent;
 use ratatui::prelude::Rect;
 use tokio::sync::oneshot;
 use yazi_config::{keymap::{Exec, Key, KeymapLayer}, BOOT};
-use yazi_core::{emit, files::FilesOp, input::InputMode, Ctx, Event};
+use yazi_core::{emit, files::FilesOp, input::InputMode, manager::Manager, Ctx, Event};
 use yazi_shared::Term;
 
 use crate::{Executor, Logs, Panic, Root, Signals};
@@ -110,7 +110,7 @@ impl App {
 			self.term = Some(Term::start().unwrap());
 			self.signals.stop_term(false);
 			emit!(Render);
-			emit!(Hover);
+			Manager::_hover(None);
 		}
 		if let Some(tx) = tx {
 			tx.send(()).ok();
@@ -128,9 +128,6 @@ impl App {
 		let manager = &mut self.cx.manager;
 		let tasks = &mut self.cx.tasks;
 		match event {
-			Event::Refresh => {
-				manager.refresh();
-			}
 			Event::Files(op) => {
 				let calc = !matches!(op, FilesOp::Size(..) | FilesOp::IOErr(_));
 				let b = match op {
@@ -153,12 +150,6 @@ impl App {
 					emit!(Render);
 					emit!(Peek);
 				}
-			}
-			Event::Hover(url) => {
-				if manager.current_mut().repos(url) {
-					emit!(Render);
-				}
-				emit!(Peek);
 			}
 			Event::Peek(sequent) => {
 				if let Some((max, url)) = sequent {

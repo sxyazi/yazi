@@ -3,9 +3,9 @@ use std::{mem, time::Duration};
 use anyhow::bail;
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
-use yazi_config::{keymap::{Exec, KeymapLayer}, popup::InputOpt};
+use yazi_config::{keymap::Exec, popup::InputOpt};
 
-use crate::{emit, external, files::FilesOp, tab::Tab};
+use crate::{emit, external, files::FilesOp, manager::Manager, tab::Tab};
 
 pub struct Opt {
 	pub type_: OptType,
@@ -61,7 +61,7 @@ impl Tab {
 			let mut first = true;
 			while let Some(chunk) = rx.next().await {
 				if first {
-					emit!(Call(Exec::call("cd", vec![cwd.clone().to_string()]).vec(), KeymapLayer::Manager));
+					Tab::_cd(&cwd);
 					first = false;
 				}
 				emit!(Files(FilesOp::Part(cwd.clone(), ticket, chunk)));
@@ -80,7 +80,7 @@ impl Tab {
 
 			let rep = self.history_new(&self.current.cwd.to_regular());
 			drop(mem::replace(&mut self.current, rep));
-			emit!(Refresh);
+			Manager::_refresh();
 		}
 		false
 	}

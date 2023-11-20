@@ -1,6 +1,6 @@
-use yazi_config::keymap::{Exec, KeymapLayer};
+use yazi_config::keymap::Exec;
 
-use crate::{emit, input::{op::InputOp, Input, InputMode}};
+use crate::{completion::Completion, input::{op::InputOp, Input, InputMode}};
 
 pub struct Opt;
 
@@ -26,7 +26,7 @@ impl Input {
 				self.move_(-1);
 
 				if self.completion {
-					emit!(Call(Exec::call("close", vec![]).vec(), KeymapLayer::Completion));
+					Completion::_close();
 				}
 			}
 		}

@@ -1,7 +1,7 @@
 use yazi_config::BOOT;
 use yazi_shared::Url;
 
-use crate::{emit, tab::Tab};
+use crate::{manager::Manager, tab::Tab};
 
 pub struct Tabs {
 	pub idx:          usize,
@@ -32,7 +32,7 @@ impl Tabs {
 	pub(super) fn set_idx(&mut self, idx: usize) {
 		self.idx = idx;
 		self.active_mut().preview.reset(|l| l.is_image());
-		emit!(Refresh);
+		Manager::_refresh();
 	}
 }
 

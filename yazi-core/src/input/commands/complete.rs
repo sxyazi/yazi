@@ -1,8 +1,8 @@
 use std::path::MAIN_SEPARATOR;
 
-use yazi_config::keymap::Exec;
+use yazi_config::keymap::{Exec, KeymapLayer};
 
-use crate::input::Input;
+use crate::{emit, input::Input};
 
 pub struct Opt<'a> {
 	word:   &'a str,
@@ -19,6 +19,14 @@ impl<'a> From<&'a Exec> for Opt<'a> {
 }
 
 impl Input {
+	#[inline]
+	pub fn _complete(word: &str, ticket: usize) {
+		emit!(Call(
+			Exec::call("complete", vec![word.to_owned()]).with("ticket", ticket).vec(),
+			KeymapLayer::Input
+		));
+	}
+
 	pub fn complete<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
 		let opt = opt.into() as Opt;
 		if self.ticket != opt.ticket {

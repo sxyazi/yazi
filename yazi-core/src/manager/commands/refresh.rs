@@ -1,10 +1,24 @@
-use std::{collections::BTreeSet, env};
+use std::env;
+
+use yazi_config::keymap::{Exec, KeymapLayer};
 
 use crate::{emit, manager::Manager};
 
+pub struct Opt;
+
+impl From<&Exec> for Opt {
+	fn from(_: &Exec) -> Self { Self }
+}
+
 impl Manager {
-	pub fn refresh(&mut self) {
+	#[inline]
+	pub fn _refresh() {
+		emit!(Call(Exec::call("refresh", vec![]).vec(), KeymapLayer::Manager));
+	}
+
+	pub fn refresh(&mut self, _: impl Into<Opt>) -> bool {
 		env::set_current_dir(self.cwd()).ok();
+		env::set_var("PWD", self.cwd());
 
 		self.active_mut().apply_files_attrs(false);
 
@@ -13,19 +27,8 @@ impl Manager {
 		} else {
 			self.watcher.trigger_dirs(&[self.cwd()]);
 		}
-		emit!(Hover);
 
-		let mut to_watch = BTreeSet::new();
-		for tab in self.tabs.iter() {
-			to_watch.insert(&tab.current.cwd);
-			match tab.current.hovered() {
-				Some(h) if h.is_dir() => _ = to_watch.insert(&h.url),
-				_ => {}
-			}
-			if let Some(ref p) = tab.parent {
-				to_watch.insert(&p.cwd);
-			}
-		}
-		self.watcher.watch(to_watch);
+		Self::_hover(None);
+		false
 	}
 }
