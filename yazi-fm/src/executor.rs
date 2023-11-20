@@ -242,6 +242,7 @@ impl<'a> Executor<'a> {
 			}
 			InputMode::Insert => {
 				on!(backspace);
+				on!(kill);
 
 				false
 			}
