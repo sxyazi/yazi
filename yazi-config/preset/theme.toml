@@ -200,6 +200,9 @@ rules = [
 # Text
 "*.txt" = ""
 "*.md"  = ""
+"*.rst" = ""
+"COPYING" = "󰿃"
+"LICENSE" = "󰿃"
 
 # Archives
 "*.zip" = ""
