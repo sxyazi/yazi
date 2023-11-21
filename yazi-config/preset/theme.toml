@@ -296,6 +296,10 @@ rules = [
 "*.yaml"  = ""
 "*.ini"   = ""
 "*.conf"  = ""
+"*.lock"  = ""
+"*.nix"   = ""
+"Containerfile" = "󰡨"
+"Dockerfile"    = "󰡨"
 
 # Default
 "*"  = ""
