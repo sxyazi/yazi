@@ -9,6 +9,9 @@ pub struct Opt {
 impl From<&Exec> for Opt {
 	fn from(e: &Exec) -> Self { Self { under: e.named.contains_key("under") } }
 }
+impl From<bool> for Opt {
+	fn from(under: bool) -> Self { Self { under } }
+}
 
 impl Input {
 	pub fn backspace(&mut self, opt: impl Into<Opt>) -> bool {

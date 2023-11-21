@@ -192,11 +192,11 @@ keymap = [
 	{ on = [ "<C-f>" ],   exec = "move 1",  desc = "Move forward a character" },
 
 	# Word-wise movement
-	{ on = [ "b" ],     exec = "backward",                  desc = "Move back to the start of the current or previous word" },
-	{ on = [ "w" ],     exec = "forward",                   desc = "Move forward to the start of the next word" },
-	{ on = [ "e" ],     exec = "forward --end-of-word",     desc = "Move forward to the end of the current or next word" },
-	{ on = [ "<A-b>" ], exec = "backward",                  desc = "Move back to the start of the current or previous word" },
-	{ on = [ "<A-f>" ], exec = "forward --after-last-char", desc = "Move forward to the end of the current or next word" },
+	{ on = [ "b" ],     exec = "backward",              desc = "Move back to the start of the current or previous word" },
+	{ on = [ "w" ],     exec = "forward",               desc = "Move forward to the start of the next word" },
+	{ on = [ "e" ],     exec = "forward --end-of-word", desc = "Move forward to the end of the current or next word" },
+	{ on = [ "<A-b>" ], exec = "backward",              desc = "Move back to the start of the current or previous word" },
+	{ on = [ "<A-f>" ], exec = "forward --end-of-word", desc = "Move forward to the end of the current or next word" },
 
 	# Line-wise movement
 	{ on = [ "0" ],     exec = "move -999", desc = "Move to the BOL" },

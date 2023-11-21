@@ -13,10 +13,10 @@ impl<'a> Executor<'a> {
 		if self.cx.which.visible {
 			return self.cx.which.press(key);
 		}
-		if self.cx.input.visible && self.cx.input.type_(&key) {
+		if self.cx.help.visible && self.cx.help.type_(&key) {
 			return true;
 		}
-		if self.cx.help.visible && self.cx.help.type_(&key) {
+		if self.cx.input.visible && self.cx.input.type_(&key) {
 			return true;
 		}
 
