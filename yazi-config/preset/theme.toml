@@ -155,6 +155,7 @@ rules = [
 	{ mime = "application/x-bzip2",         fg = "magenta" },
 	{ mime = "application/x-7z-compressed", fg = "magenta" },
 	{ mime = "application/x-rar",           fg = "magenta" },
+	{ mime = "application/xz",              fg = "magenta" },
 
 	# Fallback
 	# { name = "*", fg = "white" },
@@ -199,6 +200,8 @@ rules = [
 "*.tar" = ""
 "*.gz"  = ""
 "*.7z"  = ""
+"*.bz2" = ""
+"*.xz"  = ""
 
 # Audio
 "*.mp3"  = ""
