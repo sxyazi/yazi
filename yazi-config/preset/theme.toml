@@ -157,6 +157,12 @@ rules = [
 	{ mime = "application/x-rar",           fg = "magenta" },
 	{ mime = "application/xz",              fg = "magenta" },
 
+	# Documents
+	{ mime = "application/doc",    fg = "green"},
+	{ mime = "application/pdf",    fg = "green"},
+	{ mime = "application/rtf",    fg = "green"},
+	{ mime = "application/vnd.*",  fg = "green"},
+
 	# Fallback
 	# { name = "*", fg = "white" },
 	{ name = "*/", fg = "blue" }
@@ -202,6 +208,32 @@ rules = [
 "*.7z"  = ""
 "*.bz2" = ""
 "*.xz"  = ""
+
+# Documents
+"*.csv" = ""
+"*.doc"  = ""
+"*.doct" = ""
+"*.docx" = ""
+"*.dot"  = ""
+"*.ods"  = ""
+"*.ots"  = ""
+"*.pdf"  = ""
+"*.pom"  = ""
+"*.pot"  = ""
+"*.ppm"  = ""
+"*.pps"  = ""
+"*.ppt"  = ""
+"*.potx" = ""
+"*.ppmx" = ""
+"*.ppmx" = ""
+"*.ppsx" = ""
+"*.pptx" = ""
+"*.xlc"  = ""
+"*.xlm"  = ""
+"*.xls"  = ""
+"*.xlt"  = ""
+"*.xlsm" = ""
+"*.xlsx" = ""
 
 # Audio
 "*.mp3"  = ""
