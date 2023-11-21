@@ -264,6 +264,8 @@ rules = [
 "*.bmp"  = ""
 "*.ico"  = ""
 "*.svg"  = ""
+"*.xcf"  = ""
+"*.HEIC" = ""
 
 # Programming
 "*.c"     = ""
