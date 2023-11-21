@@ -1,3 +1,4 @@
+use crossterm::event::KeyCode;
 use unicode_width::UnicodeWidthStr;
 use yazi_config::{keymap::{Control, Key, KeymapLayer}, KEYMAP};
 use yazi_shared::Term;
@@ -65,11 +66,14 @@ impl Help {
 			return true;
 		}
 
-		if input.type_(key) {
-			return self.filter_apply();
-		}
+		let b = match &key {
+			Key { code: KeyCode::Backspace, shift: false, ctrl: false, alt: false } => {
+				input.backspace(false)
+			}
+			_ => input.type_(key),
+		};
 
-		false
+		if b { self.filter_apply() } else { false }
 	}
 }
 

@@ -171,40 +171,56 @@ keymap = [
 [input]
 
 keymap = [
-	{ on = [ "<C-q>" ],       exec = "close",          desc = "Cancel input" },
-	{ on = [ "<Enter>" ],     exec = "close --submit", desc = "Submit the input" },
-	{ on = [ "<Esc>" ],       exec = "escape",         desc = "Go back the normal mode, or cancel input" },
+	{ on = [ "<C-q>" ],   exec = "close",          desc = "Cancel input" },
+	{ on = [ "<Enter>" ], exec = "close --submit", desc = "Submit the input" },
+	{ on = [ "<Esc>" ],   exec = "escape",         desc = "Go back the normal mode, or cancel input" },
 
 	# Mode
 	{ on = [ "i" ], exec = "insert",                              desc = "Enter insert mode" },
 	{ on = [ "a" ], exec = "insert --append",                     desc = "Enter append mode" },
+	{ on = [ "I" ], exec = [ "move -999", "insert" ],             desc = "Move to the BOL, and enter insert mode" },
+	{ on = [ "A" ], exec = [ "move 999", "insert --append" ],     desc = "Move to the EOL, and enter append mode" },
 	{ on = [ "v" ], exec = "visual",                              desc = "Enter visual mode" },
 	{ on = [ "V" ], exec = [ "move -999", "visual", "move 999" ], desc = "Enter visual mode and select all" },
 
-	# Navigation
-	{ on = [ "h" ], exec = "move -1", desc = "Move cursor left" },
-	{ on = [ "l" ], exec = "move 1",  desc = "Move cursor right" },
+	# Character-wise movement
+	{ on = [ "h" ],       exec = "move -1", desc = "Move back a character" },
+	{ on = [ "l" ],       exec = "move 1",  desc = "Move forward a character" },
+	{ on = [ "<Left>" ],  exec = "move -1", desc = "Move back a character" },
+	{ on = [ "<Right>" ], exec = "move 1",  desc = "Move forward a character" },
+	{ on = [ "<C-b>" ],   exec = "move -1", desc = "Move back a character" },
+	{ on = [ "<C-f>" ],   exec = "move 1",  desc = "Move forward a character" },
 
-	{ on = [ "0" ], exec = "move -999",                       desc = "Move to the BOL" },
-	{ on = [ "$" ], exec = "move 999",                        desc = "Move to the EOL" },
-	{ on = [ "I" ], exec = [ "move -999", "insert" ],         desc = "Move to the BOL, and enter insert mode" },
-	{ on = [ "A" ], exec = [ "move 999", "insert --append" ], desc = "Move to the EOL, and enter append mode" },
+	# Word-wise movement
+	{ on = [ "b" ],     exec = "backward",              desc = "Move back to the start of the current or previous word" },
+	{ on = [ "w" ],     exec = "forward",               desc = "Move forward to the start of the next word" },
+	{ on = [ "e" ],     exec = "forward --end-of-word", desc = "Move forward to the end of the current or next word" },
+	{ on = [ "<A-b>" ], exec = "backward",              desc = "Move back to the start of the current or previous word" },
+	{ on = [ "<A-f>" ], exec = "forward --end-of-word", desc = "Move forward to the end of the current or next word" },
 
-	{ on = [ "<Left>" ],  exec = "move -1", desc = "Move cursor left" },
-	{ on = [ "<Right>" ], exec = "move 1",  desc = "Move cursor right" },
+	# Line-wise movement
+	{ on = [ "0" ],     exec = "move -999", desc = "Move to the BOL" },
+	{ on = [ "$" ],     exec = "move 999",  desc = "Move to the EOL" },
+	{ on = [ "<C-a>" ], exec = "move -999", desc = "Move to the BOL" },
+	{ on = [ "<C-e>" ], exec = "move 999",  desc = "Move to the EOL" },
 
-	{ on = [ "b" ], exec = "backward",              desc = "Move to the beginning of the previous word" },
-	{ on = [ "w" ], exec = "forward",               desc = "Move to the beginning of the next word" },
-	{ on = [ "e" ], exec = "forward --end-of-word", desc = "Move to the end of the next word" },
+	# Delete
+	{ on = [ "<Backspace>" ], exec = "backspace",	        desc = "Delete the character before the cursor" },
+	{ on = [ "<C-h>" ],       exec = "backspace",         desc = "Delete the character before the cursor" },
+	{ on = [ "<C-d>" ],       exec = "backspace --under", desc = "Delete the character under the cursor" },
 
-	# Deletion
+	# Kill
+	{ on = [ "<C-u>" ], exec = "kill bol",      desc = "Kill backwards to the BOL" },
+	{ on = [ "<C-k>" ], exec = "kill eol",      desc = "Kill forwards to the EOL" },
+	{ on = [ "<C-w>" ], exec = "kill backward", desc = "Kill backwards to the start of the current word" },
+	{ on = [ "<A-d>" ], exec = "kill forward",  desc = "Kill forwards to the end of the current word" },
+
+	# Cut/Yank/Paste
 	{ on = [ "d" ], exec = "delete --cut",                              desc = "Cut the selected characters" },
 	{ on = [ "D" ], exec = [ "delete --cut", "move 999" ],              desc = "Cut until the EOL" },
 	{ on = [ "c" ], exec = "delete --cut --insert",                     desc = "Cut the selected characters, and enter insert mode" },
 	{ on = [ "C" ], exec = [ "delete --cut --insert", "move 999" ],     desc = "Cut until the EOL, and enter insert mode" },
 	{ on = [ "x" ], exec = [ "delete --cut", "move 1 --in-operating" ], desc = "Cut the current character" },
-
-	# Yank/Paste
 	{ on = [ "y" ], exec = "yank",           desc = "Copy the selected characters" },
 	{ on = [ "p" ], exec = "paste",          desc = "Paste the copied characters after the cursor" },
 	{ on = [ "P" ], exec = "paste --before", desc = "Paste the copied characters before the cursor" },

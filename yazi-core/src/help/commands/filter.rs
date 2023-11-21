@@ -1,6 +1,6 @@
-use yazi_config::keymap::Exec;
+use yazi_config::{keymap::Exec, popup::{Offset, Origin, Position}};
 
-use crate::help::Help;
+use crate::{help::Help, input::Input};
 
 pub struct Opt;
 
@@ -10,7 +10,10 @@ impl From<&Exec> for Opt {
 
 impl Help {
 	pub fn filter(&mut self, _: impl Into<Opt>) -> bool {
-		self.in_filter = Some(Default::default());
+		let mut input = Input::default();
+		input.position = Position::new(Origin::BottomLeft, Offset::line());
+
+		self.in_filter = Some(input);
 		self.filter_apply();
 		true
 	}

@@ -1,3 +1,4 @@
+mod backspace;
 mod backward;
 mod close;
 mod complete;
@@ -5,6 +6,7 @@ mod delete;
 mod escape;
 mod forward;
 mod insert;
+mod kill;
 mod move_;
 mod paste;
 mod redo;

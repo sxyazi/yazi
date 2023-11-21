@@ -32,3 +32,8 @@ impl TryFrom<Vec<i16>> for Offset {
 		})
 	}
 }
+
+impl Offset {
+	#[inline]
+	pub fn line() -> Self { Self { x: 0, y: 0, width: u16::MAX, height: 1 } }
+}
