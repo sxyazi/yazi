@@ -301,6 +301,11 @@ rules = [
 "Containerfile" = "󰡨"
 "Dockerfile"    = "󰡨"
 
+# Misc
+"*.bin"   = ""
+"*.exe"   = ""
+"*.pkg"   = ""
+
 # Default
 "*"  = ""
 "*/" = ""
