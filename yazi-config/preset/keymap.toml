@@ -14,10 +14,18 @@ keymap = [
 	{ on = [ "K" ], exec = "arrow -5", desc = "Move cursor up 5 lines" },
 	{ on = [ "J" ], exec = "arrow 5",  desc = "Move cursor down 5 lines" },
 
+	{ on = [ "<S-Up>" ],   exec = "arrow -5", desc = "Move cursor up 5 lines" },
+	{ on = [ "<S-Down>" ], exec = "arrow 5",  desc = "Move cursor down 5 lines" },
+
 	{ on = [ "<C-u>" ], exec = "arrow -50%",  desc = "Move cursor up half page" },
 	{ on = [ "<C-d>" ], exec = "arrow 50%",   desc = "Move cursor down half page" },
 	{ on = [ "<C-b>" ], exec = "arrow -100%", desc = "Move cursor up one page" },
 	{ on = [ "<C-f>" ], exec = "arrow 100%",  desc = "Move cursor down one page" },
+
+	{ on = [ "<C-PageUp>" ],   exec = "arrow -50%",  desc = "Move cursor up half page" },
+	{ on = [ "<C-PageDown>" ], exec = "arrow 50%",   desc = "Move cursor down half page" },
+	{ on = [ "<PageUp>" ],     exec = "arrow -100%", desc = "Move cursor up one page" },
+	{ on = [ "<PageDown>" ],   exec = "arrow 100%",  desc = "Move cursor down one page" },
 
 	{ on = [ "h" ], exec = [ "leave", "escape --visual --select" ], desc = "Go back to the parent directory" },
 	{ on = [ "l" ], exec = [ "enter", "escape --visual --select" ], desc = "Enter the child directory" },
@@ -27,6 +35,8 @@ keymap = [
 
 	{ on = [ "<A-k>" ], exec = "peek -5", desc = "Peek up 5 units in the preview" },
 	{ on = [ "<A-j>" ], exec = "peek 5",  desc = "Peek down 5 units in the preview" },
+	{ on = [ "<A-PageUp>" ],   exec = "peek -5", desc = "Peek up 5 units in the preview" },
+	{ on = [ "<A-PageDown>" ], exec = "peek 5",  desc = "Peek down 5 units in the preview" },
 
 	{ on = [ "<Up>" ],    exec = "arrow -1", desc = "Move cursor up" },
 	{ on = [ "<Down>" ],  exec = "arrow 1",  desc = "Move cursor down" },
@@ -165,6 +175,9 @@ keymap = [
 	{ on = [ "<Up>" ],   exec = "arrow -1", desc = "Move cursor up" },
 	{ on = [ "<Down>" ], exec = "arrow 1",  desc = "Move cursor down" },
 
+	{ on = [ "<S-Up>" ],   exec = "arrow -5", desc = "Move cursor up 5 lines" },
+	{ on = [ "<S-Down>" ], exec = "arrow 5",  desc = "Move cursor down 5 lines" },
+
 	{ on = [ "~" ], exec = "help", desc = "Open help" }
 ]
 
@@ -264,6 +277,9 @@ keymap = [
 
 	{ on = [ "<Up>" ],   exec = "arrow -1", desc = "Move cursor up" },
 	{ on = [ "<Down>" ], exec = "arrow 1",  desc = "Move cursor down" },
+
+	{ on = [ "<S-Up>" ],   exec = "arrow -5", desc = "Move cursor up 5 lines" },
+	{ on = [ "<S-Down>" ], exec = "arrow 5",  desc = "Move cursor down 5 lines" },
 
 	# Filtering
 	{ on = [ "/" ], exec = "filter", desc = "Apply a filter for the help items" },
