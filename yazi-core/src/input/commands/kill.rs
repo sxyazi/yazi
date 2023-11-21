@@ -62,8 +62,12 @@ impl Input {
 			input.take_while(|&c| CharKind::new(c) == first).count() + 1
 		}
 
-		let spaces = count_spaces(input.clone());
-		spaces + count_characters(input.skip(spaces))
+		let space_or_trailing_slash = match input.clone().next() {
+			Some(std::path::MAIN_SEPARATOR) => 1,
+			Some(c) if CharKind::new(c) == CharKind::Space => count_spaces(input.clone()),
+			_ => 0,
+		};
+		space_or_trailing_slash + count_characters(input.skip(space_or_trailing_slash))
 	}
 
 	pub fn kill<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
