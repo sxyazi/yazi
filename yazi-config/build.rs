@@ -1,12 +1,15 @@
 #[path = "src/boot/cli.rs"]
 mod cli;
 
-use std::{env, fs, io};
+use std::{env, error::Error, fs};
 
 use clap::CommandFactory;
 use clap_complete::{generate_to, Shell};
+use vergen::EmitBuilder;
 
-fn main() -> io::Result<()> {
+fn main() -> Result<(), Box<dyn Error>> {
+	EmitBuilder::builder().all_build().all_git().emit()?;
+
 	if env::var_os("YAZI_GEN_COMPLETIONS").is_none() {
 		return Ok(());
 	}
@@ -23,5 +26,6 @@ fn main() -> io::Result<()> {
 	generate_to(Shell::PowerShell, cmd, bin, out)?;
 	generate_to(clap_complete_nushell::Nushell, cmd, bin, out)?;
 	generate_to(clap_complete_fig::Fig, cmd, bin, out)?;
+
 	Ok(())
 }
