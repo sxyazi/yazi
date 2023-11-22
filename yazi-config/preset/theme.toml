@@ -155,6 +155,13 @@ rules = [
 	{ mime = "application/x-bzip2",         fg = "magenta" },
 	{ mime = "application/x-7z-compressed", fg = "magenta" },
 	{ mime = "application/x-rar",           fg = "magenta" },
+	{ mime = "application/xz",              fg = "magenta" },
+
+	# Documents
+	{ mime = "application/doc",   fg = "green" },
+	{ mime = "application/pdf",   fg = "green" },
+	{ mime = "application/rtf",   fg = "green" },
+	{ mime = "application/vnd.*", fg = "green" },
 
 	# Fallback
 	# { name = "*", fg = "white" },
@@ -193,23 +200,58 @@ rules = [
 # Text
 "*.txt" = ""
 "*.md"  = ""
+"*.rst" = ""
+COPYING = "󰿃"
+LICENSE = "󰿃"
 
 # Archives
 "*.zip" = ""
 "*.tar" = ""
 "*.gz"  = ""
 "*.7z"  = ""
+"*.bz2" = ""
+"*.xz"  = ""
+
+# Documents
+"*.csv"  = ""
+"*.doc"  = ""
+"*.doct" = ""
+"*.docx" = ""
+"*.dot"  = ""
+"*.ods"  = ""
+"*.ots"  = ""
+"*.pdf"  = ""
+"*.pom"  = ""
+"*.pot"  = ""
+"*.ppm"  = ""
+"*.pps"  = ""
+"*.ppt"  = ""
+"*.potx" = ""
+"*.ppmx" = ""
+"*.ppsx" = ""
+"*.pptx" = ""
+"*.xlc"  = ""
+"*.xlm"  = ""
+"*.xls"  = ""
+"*.xlt"  = ""
+"*.xlsm" = ""
+"*.xlsx" = ""
 
 # Audio
 "*.mp3"  = ""
 "*.flac" = ""
 "*.wav"  = ""
+"*.aac"  = ""
+"*.ogg"  = ""
+"*.m4a"  = ""
+"*.mp2"  = ""
 
 # Movies
-"*.mp4" = ""
-"*.mkv" = ""
-"*.avi" = ""
-"*.mov" = ""
+"*.mp4"  = ""
+"*.mkv"  = ""
+"*.avi"  = ""
+"*.mov"  = ""
+"*.webm" = ""
 
 # Images
 "*.jpg"  = ""
@@ -221,36 +263,47 @@ rules = [
 "*.bmp"  = ""
 "*.ico"  = ""
 "*.svg"  = ""
+"*.xcf"  = ""
+"*.HEIC" = ""
 
 # Programming
-"*.c"     = ""
-"*.cpp"   = ""
-"*.h"     = ""
-"*.hpp"   = ""
-"*.rs"    = ""
-"*.go"    = ""
-"*.py"    = ""
-"*.js"    = ""
-"*.ts"    = ""
-"*.tsx"   = ""
-"*.jsx"   = ""
-"*.rb"    = ""
-"*.php"   = ""
-"*.java"  = ""
-"*.sh"    = ""
-"*.fish"  = ""
-"*.swift" = ""
-"*.vim"   = ""
-"*.lua"   = ""
-"*.html"  = ""
-"*.css"   = ""
-"*.scss"  = ""
-"*.json"  = ""
-"*.toml"  = ""
-"*.yml"   = ""
-"*.yaml"  = ""
-"*.ini"   = ""
-"*.conf"  = ""
+"*.c"         = ""
+"*.cpp"       = ""
+"*.h"         = ""
+"*.hpp"       = ""
+"*.rs"        = ""
+"*.go"        = ""
+"*.py"        = ""
+"*.js"        = ""
+"*.ts"        = ""
+"*.tsx"       = ""
+"*.jsx"       = ""
+"*.rb"        = ""
+"*.php"       = ""
+"*.java"      = ""
+"*.sh"        = ""
+"*.fish"      = ""
+"*.swift"     = ""
+"*.vim"       = ""
+"*.lua"       = ""
+"*.html"      = ""
+"*.css"       = ""
+"*.scss"      = ""
+"*.json"      = ""
+"*.toml"      = ""
+"*.yml"       = ""
+"*.yaml"      = ""
+"*.ini"       = ""
+"*.conf"      = ""
+"*.lock"      = ""
+"*.nix"       = ""
+Containerfile = "󰡨"
+Dockerfile    = "󰡨"
+
+# Misc
+"*.bin" = ""
+"*.exe" = ""
+"*.pkg" = ""
 
 # Default
 "*"  = ""
