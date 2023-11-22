@@ -158,10 +158,10 @@ rules = [
 	{ mime = "application/xz",              fg = "magenta" },
 
 	# Documents
-	{ mime = "application/doc",    fg = "green"},
-	{ mime = "application/pdf",    fg = "green"},
-	{ mime = "application/rtf",    fg = "green"},
-	{ mime = "application/vnd.*",  fg = "green"},
+	{ mime = "application/doc",   fg = "green" },
+	{ mime = "application/pdf",   fg = "green" },
+	{ mime = "application/rtf",   fg = "green" },
+	{ mime = "application/vnd.*", fg = "green" },
 
 	# Fallback
 	# { name = "*", fg = "white" },
@@ -201,8 +201,8 @@ rules = [
 "*.txt" = ""
 "*.md"  = ""
 "*.rst" = ""
-"COPYING" = "󰿃"
-"LICENSE" = "󰿃"
+COPYING = "󰿃"
+LICENSE = "󰿃"
 
 # Archives
 "*.zip" = ""
@@ -213,7 +213,7 @@ rules = [
 "*.xz"  = ""
 
 # Documents
-"*.csv" = ""
+"*.csv"  = ""
 "*.doc"  = ""
 "*.doct" = ""
 "*.docx" = ""
@@ -227,7 +227,6 @@ rules = [
 "*.pps"  = ""
 "*.ppt"  = ""
 "*.potx" = ""
-"*.ppmx" = ""
 "*.ppmx" = ""
 "*.ppsx" = ""
 "*.pptx" = ""
@@ -268,43 +267,43 @@ rules = [
 "*.HEIC" = ""
 
 # Programming
-"*.c"     = ""
-"*.cpp"   = ""
-"*.h"     = ""
-"*.hpp"   = ""
-"*.rs"    = ""
-"*.go"    = ""
-"*.py"    = ""
-"*.js"    = ""
-"*.ts"    = ""
-"*.tsx"   = ""
-"*.jsx"   = ""
-"*.rb"    = ""
-"*.php"   = ""
-"*.java"  = ""
-"*.sh"    = ""
-"*.fish"  = ""
-"*.swift" = ""
-"*.vim"   = ""
-"*.lua"   = ""
-"*.html"  = ""
-"*.css"   = ""
-"*.scss"  = ""
-"*.json"  = ""
-"*.toml"  = ""
-"*.yml"   = ""
-"*.yaml"  = ""
-"*.ini"   = ""
-"*.conf"  = ""
-"*.lock"  = ""
-"*.nix"   = ""
-"Containerfile" = "󰡨"
-"Dockerfile"    = "󰡨"
+"*.c"         = ""
+"*.cpp"       = ""
+"*.h"         = ""
+"*.hpp"       = ""
+"*.rs"        = ""
+"*.go"        = ""
+"*.py"        = ""
+"*.js"        = ""
+"*.ts"        = ""
+"*.tsx"       = ""
+"*.jsx"       = ""
+"*.rb"        = ""
+"*.php"       = ""
+"*.java"      = ""
+"*.sh"        = ""
+"*.fish"      = ""
+"*.swift"     = ""
+"*.vim"       = ""
+"*.lua"       = ""
+"*.html"      = ""
+"*.css"       = ""
+"*.scss"      = ""
+"*.json"      = ""
+"*.toml"      = ""
+"*.yml"       = ""
+"*.yaml"      = ""
+"*.ini"       = ""
+"*.conf"      = ""
+"*.lock"      = ""
+"*.nix"       = ""
+Containerfile = "󰡨"
+Dockerfile    = "󰡨"
 
 # Misc
-"*.bin"   = ""
-"*.exe"   = ""
-"*.pkg"   = ""
+"*.bin" = ""
+"*.exe" = ""
+"*.pkg" = ""
 
 # Default
 "*"  = ""
