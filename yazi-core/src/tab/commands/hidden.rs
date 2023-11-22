@@ -1,6 +1,6 @@
 use yazi_config::keymap::Exec;
 
-use crate::{emit, tab::Tab};
+use crate::{manager::Manager, tab::Tab};
 
 impl Tab {
 	pub fn hidden(&mut self, e: &Exec) -> bool {
@@ -10,7 +10,7 @@ impl Tab {
 			_ => !self.conf.show_hidden,
 		};
 		if self.apply_files_attrs(false) {
-			emit!(Peek);
+			Manager::_hover(None);
 			return true;
 		}
 		false

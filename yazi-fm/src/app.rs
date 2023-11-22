@@ -115,7 +115,8 @@ impl App {
 
 		self.cx.manager.current_mut().set_page(true);
 		self.cx.manager.active_mut().preview.reset(|_| true);
-		self.cx.manager.peek(true);
+		// TODO: Peek-trigger
+		// self.cx.manager.peek(true);
 		emit!(Render);
 	}
 
@@ -166,15 +167,7 @@ impl App {
 			Event::Mimetype(mimes) => {
 				if manager.update_mimetype(mimes, tasks) {
 					emit!(Render);
-					emit!(Peek);
-				}
-			}
-			Event::Peek(sequent) => {
-				if let Some((max, url)) = sequent {
-					manager.active_mut().update_peek(max, url);
-					self.cx.manager.peek(true);
-				} else {
-					self.cx.manager.peek(false);
+					manager.peek(0);
 				}
 			}
 			Event::Preview(lock) => {

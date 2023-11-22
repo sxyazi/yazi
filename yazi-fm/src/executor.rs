@@ -88,6 +88,7 @@ impl<'a> Executor<'a> {
 			};
 		}
 
+		on!(MANAGER, peek);
 		on!(MANAGER, hover);
 		on!(MANAGER, refresh);
 		on!(MANAGER, quit, &self.cx.tasks);
@@ -139,11 +140,6 @@ impl<'a> Executor<'a> {
 		on!(TABS, swap);
 
 		match exec.cmd.as_bytes() {
-			b"peek" => {
-				let step = exec.args.first().and_then(|s| s.parse().ok()).unwrap_or(0);
-				self.cx.manager.active_mut().preview.arrow(step);
-				self.cx.manager.peek(true)
-			}
 			// Tasks
 			b"tasks_show" => self.cx.tasks.toggle(()),
 			// Help

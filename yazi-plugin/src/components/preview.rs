@@ -14,17 +14,11 @@ impl<'a> Preview<'a> {
 
 impl<'a> Widget for Preview<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let manager = &self.cx.manager;
-		let Some(hovered) = manager.hovered().map(|h| &h.url) else {
+		let Some(ref lock) = self.cx.manager.active().preview.lock else {
 			return;
 		};
 
-		let preview = &manager.active().preview;
-		if !preview.same_path(hovered) {
-			return;
-		}
-
-		match &preview.lock.as_ref().unwrap().data {
+		match &lock.data {
 			PreviewData::Folder => {
 				Folder::preview(self.cx).render(area, buf);
 			}
