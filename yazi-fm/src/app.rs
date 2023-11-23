@@ -81,7 +81,7 @@ impl App {
 			return Ok(());
 		};
 
-		COLLISION.store(false, Ordering::Relaxed);
+		let collision = COLLISION.swap(false, Ordering::Relaxed);
 		let frame = term.draw(|f| {
 			yazi_plugin::scope(&self.cx, |_| {
 				f.render_widget(Root::new(&self.cx), f.size());
@@ -92,6 +92,11 @@ impl App {
 			}
 		})?;
 		if !COLLISION.load(Ordering::Relaxed) {
+			if collision {
+				// Reload preview if collision is resolved
+				self.cx.manager.active_mut().preview.reset();
+				self.cx.manager.peek(0);
+			}
 			return Ok(());
 		}
 
