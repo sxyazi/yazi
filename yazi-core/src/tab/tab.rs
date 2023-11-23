@@ -47,21 +47,9 @@ impl From<&Url> for Tab {
 }
 
 impl Tab {
-	pub fn update_peek(&mut self, max: usize, url: Url) -> bool {
-		let Some(hovered) = self.current.hovered() else {
-			return false;
-		};
-
-		if url != hovered.url {
-			return false;
-		}
-
-		self.preview.arrow_max(max)
-	}
-
 	pub fn update_preview(&mut self, lock: PreviewLock) -> bool {
 		let Some(hovered) = self.current.hovered().map(|h| &h.url) else {
-			return self.preview.reset(|_| true);
+			return self.preview.reset();
 		};
 
 		if lock.url != *hovered {

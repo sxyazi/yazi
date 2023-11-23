@@ -23,25 +23,26 @@ impl Manager {
 	}
 
 	pub fn hover(&mut self, opt: impl Into<Opt>) -> bool {
+		// Hover on the file
+		let opt = opt.into() as Opt;
+		let b = self.current_mut().repos(opt.url);
+
+		// Re-peek
+		self.peek(0);
+
 		// Refresh watcher
 		let mut to_watch = BTreeSet::new();
 		for tab in self.tabs.iter() {
 			to_watch.insert(&tab.current.cwd);
-			match tab.current.hovered() {
-				Some(h) if h.is_dir() => _ = to_watch.insert(&h.url),
-				_ => {}
-			}
 			if let Some(ref p) = tab.parent {
 				to_watch.insert(&p.cwd);
+			}
+			if let Some(h) = tab.current.hovered().filter(|&h| h.is_dir()) {
+				to_watch.insert(&h.url);
 			}
 		}
 		self.watcher.watch(to_watch);
 
-		// Trigger peek
-		emit!(Peek);
-
-		// Hover
-		let opt = opt.into() as Opt;
-		self.current_mut().repos(opt.url)
+		b
 	}
 }

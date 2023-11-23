@@ -12,6 +12,7 @@ mod select;
 mod signals;
 mod tasks;
 mod which;
+mod widgets;
 
 use app::*;
 use executor::*;

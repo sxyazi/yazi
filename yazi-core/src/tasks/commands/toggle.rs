@@ -1,6 +1,6 @@
 use yazi_config::keymap::Exec;
 
-use crate::{emit, tasks::Tasks};
+use crate::tasks::Tasks;
 
 pub struct Opt;
 
@@ -14,7 +14,6 @@ impl From<()> for Opt {
 impl Tasks {
 	pub fn toggle(&mut self, _: impl Into<Opt>) -> bool {
 		self.visible = !self.visible;
-		emit!(Peek); // Show/hide preview for images
 		true
 	}
 }

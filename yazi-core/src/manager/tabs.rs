@@ -31,7 +31,7 @@ impl Tabs {
 	#[inline]
 	pub(super) fn set_idx(&mut self, idx: usize) {
 		self.idx = idx;
-		self.active_mut().preview.reset(|l| l.is_image());
+		self.active_mut().preview.reset_image();
 		Manager::_refresh();
 	}
 }

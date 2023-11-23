@@ -4,7 +4,7 @@ use yazi_config::{keymap::{Control, Key, KeymapLayer}, KEYMAP};
 use yazi_shared::Term;
 
 use super::HELP_MARGIN;
-use crate::{emit, input::Input};
+use crate::input::Input;
 
 #[derive(Default)]
 pub struct Help {
@@ -34,8 +34,6 @@ impl Help {
 
 		self.offset = 0;
 		self.cursor = 0;
-
-		emit!(Peek); // Show/hide preview for images
 		true
 	}
 

@@ -24,7 +24,6 @@ pub enum Event {
 	Files(FilesOp),
 	Pages(usize),
 	Mimetype(BTreeMap<Url, String>),
-	Peek(Option<(usize, Url)>),
 	Preview(PreviewLock),
 
 	// Input
@@ -79,12 +78,6 @@ macro_rules! emit {
 	};
 	(Mimetype($mimes:expr)) => {
 		$crate::Event::Mimetype($mimes).emit();
-	};
-	(Peek) => {
-		$crate::Event::Peek(None).emit();
-	};
-	(Peek($skip:expr, $url:expr)) => {
-		$crate::Event::Peek(Some(($skip, $url))).emit();
 	};
 	(Preview($lock:expr)) => {
 		$crate::Event::Preview($lock).emit();
