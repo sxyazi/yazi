@@ -86,6 +86,10 @@ impl App {
 			yazi_plugin::scope(&self.cx, |_| {
 				f.render_widget(Root::new(&self.cx), f.size());
 			});
+
+			if let Some((x, y)) = self.cx.cursor() {
+				f.set_cursor(x, y);
+			}
 		})?;
 		if !COLLISION.load(Ordering::Relaxed) {
 			return Ok(());
@@ -106,7 +110,6 @@ impl App {
 			term.show_cursor()?;
 			term.set_cursor(x, y)?;
 		}
-
 		term.backend_mut().flush()?;
 		Ok(())
 	}

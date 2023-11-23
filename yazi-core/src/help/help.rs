@@ -34,9 +34,6 @@ impl Help {
 
 		self.offset = 0;
 		self.cursor = 0;
-
-		// TODO: Peek
-		// emit!(Peek); // Show/hide preview for images
 		true
 	}
 

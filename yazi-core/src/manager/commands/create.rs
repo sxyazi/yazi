@@ -44,7 +44,6 @@ impl Manager {
 			if let Ok(f) = File::from(child.clone()).await {
 				emit!(Files(FilesOp::Creating(cwd, f.into_map())));
 				Manager::_hover(Some(child));
-				Manager::_refresh();
 			}
 			Ok::<(), anyhow::Error>(())
 		});

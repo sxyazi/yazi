@@ -14,8 +14,6 @@ impl From<()> for Opt {
 impl Tasks {
 	pub fn toggle(&mut self, _: impl Into<Opt>) -> bool {
 		self.visible = !self.visible;
-		// TODO: Peek
-		// emit!(Peek); // Show/hide preview for images
 		true
 	}
 }

@@ -41,9 +41,9 @@ impl<'de> Deserialize<'de> for Opener {
 			#[serde(rename = "for")]
 			for_:   Option<String>,
 
-			// TODO: remove this when v1.0.5 is released --
+			// TODO: remove this when v0.1.6 is released --
 			display_name: Option<String>,
-			// TODO: -- remove this when v1.0.5 is released
+			// TODO: -- remove this when v0.1.6 is released
 		}
 
 		let mut shadow = Shadow::deserialize(deserializer)?;
