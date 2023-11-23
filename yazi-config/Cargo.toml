@@ -31,3 +31,4 @@ clap                  = { version = "^4", features = [ "derive" ] }
 clap_complete         = "^4"
 clap_complete_nushell = "^4"
 clap_complete_fig     = "^4"
+vergen                = { version = "^8", features = [ "build", "git", "gitcl" ] }

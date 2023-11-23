@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use clap::{command, Parser};
 
 #[derive(Debug, Parser)]
-#[command(name = "yazi", version)]
+#[command(name = "yazi")]
 pub(super) struct Args {
 	/// Set the current working entry
 	#[arg(index = 1)]
@@ -19,4 +19,8 @@ pub(super) struct Args {
 	/// Clear the cache directory
 	#[arg(long, action)]
 	pub clear_cache: bool,
+
+	/// Print version
+	#[arg(short = 'V', long)]
+	pub version: bool,
 }

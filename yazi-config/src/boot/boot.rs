@@ -36,8 +36,17 @@ impl Boot {
 impl Default for Boot {
 	fn default() -> Self {
 		let args = Args::parse();
-		let (cwd, file) = Self::parse_entry(args.entry);
+		if args.version {
+			println!(
+				"yazi {} ({} {})",
+				env!("CARGO_PKG_VERSION"),
+				env!("VERGEN_GIT_SHA"),
+				env!("VERGEN_BUILD_DATE")
+			);
+			process::exit(0);
+		}
 
+		let (cwd, file) = Self::parse_entry(args.entry);
 		let boot = Self {
 			cwd,
 			file,
