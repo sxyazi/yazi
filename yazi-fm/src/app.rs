@@ -94,7 +94,7 @@ impl App {
 		if !COLLISION.load(Ordering::Relaxed) {
 			if collision {
 				// Reload preview if collision is resolved
-				self.cx.manager.active_mut().preview.reset();
+				self.cx.manager.active_mut().preview.reset_image();
 				self.cx.manager.peek(0);
 			}
 			return Ok(());

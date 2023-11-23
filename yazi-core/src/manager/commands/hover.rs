@@ -25,10 +25,10 @@ impl Manager {
 	pub fn hover(&mut self, opt: impl Into<Opt>) -> bool {
 		// Hover on the file
 		let opt = opt.into() as Opt;
-		let b = self.current_mut().repos(opt.url);
+		let mut b = self.current_mut().repos(opt.url);
 
 		// Re-peek
-		self.peek(0);
+		b |= self.peek(0);
 
 		// Refresh watcher
 		let mut to_watch = BTreeSet::new();

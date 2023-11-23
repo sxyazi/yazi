@@ -125,8 +125,8 @@ impl<'a, 'b> Active<'a, 'b> {
 				.lock
 				.as_ref()
 				.filter(|l| l.is_folder())
-				.and_then(|l| tab.history(&l.url))
-				.and_then(|f| self.folder(f, Some((f.offset, MANAGER.layout.preview_height()))).ok()),
+				.and_then(|l| tab.history(&l.url).map(|f| (l, f)))
+				.and_then(|(l, f)| self.folder(f, Some((l.skip, MANAGER.layout.preview_height()))).ok()),
 		)?;
 
 		Ok(ud)

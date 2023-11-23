@@ -37,7 +37,7 @@ impl Preview {
 			return;
 		}
 
-		self.reset();
+		self.abort();
 		let (url, kind, skip) = (url.clone(), MimeKind::new(mime), self.skip);
 
 		self.handle = Some(tokio::spawn(async move {
@@ -54,7 +54,7 @@ impl Preview {
 	}
 
 	pub fn go_folder(&mut self, url: Url, in_chunks: bool) {
-		self.reset();
+		self.abort();
 		self.lock = Some(PreviewLock {
 			url:  url.clone(),
 			cha:  None,
@@ -84,32 +84,47 @@ impl Preview {
 		}));
 	}
 
-	pub fn reset(&mut self) -> bool {
-		self.handle.take().map(|h| h.abort());
-		Highlighter::abort();
-		ADAPTOR.image_hide(MANAGER.layout.image_rect()).ok();
+	pub fn arrow(&mut self, step: isize, mime: &str, upper: Option<usize>) {
+		let size = Provider::step_size(MimeKind::new(mime), step.unsigned_abs());
+		self.skip = if step < 0 { self.skip.saturating_sub(size) } else { self.skip + size };
 
-		let Some(ref lock) = self.lock else {
-			return false;
-		};
-
-		let b = !lock.is_image();
-		self.lock = None;
-		b
-	}
-
-	pub fn reset_image(&mut self) -> bool {
-		if !matches!(self.lock, Some(ref lock) if lock.is_image()) {
-			return false;
+		if let Some(upper) = upper {
+			self.skip = self.skip.min(upper);
 		}
-
-		self.reset();
-		true
 	}
 
 	#[inline]
+	pub fn abort(&mut self) {
+		self.handle.take().map(|h| h.abort());
+		Highlighter::abort();
+		ADAPTOR.image_hide(MANAGER.layout.image_rect()).ok();
+	}
+
+	#[inline]
+	pub fn reset(&mut self) -> bool {
+		self.abort();
+		self.lock.take().map(|l| l.is_image()) == Some(false)
+	}
+
+	pub fn reset_image(&mut self) -> bool {
+		if matches!(self.lock, Some(ref l) if l.is_image()) {
+			self.reset();
+			true
+		} else {
+			false
+		}
+	}
+
 	pub fn same_url(&self, url: &Url) -> bool {
 		matches!(self.lock, Some(ref lock) if lock.url == *url)
+	}
+
+	pub fn sync_skip(&mut self) -> bool {
+		if let Some(lock) = &mut self.lock {
+			mem::replace(&mut lock.skip, self.skip) != self.skip
+		} else {
+			false
+		}
 	}
 
 	fn content_unchanged(&self, url: &Url, cha: &Cha) -> bool {
@@ -135,29 +150,6 @@ impl Preview {
 					true
 				}
 			}
-	}
-}
-
-impl Preview {
-	// --- skip
-	#[inline]
-	pub fn arrow(&mut self, step: isize, mime: &str) -> bool {
-		let size = Provider::step_size(MimeKind::new(mime), step.unsigned_abs());
-		let skip = if step < 0 { self.skip.saturating_sub(size) } else { self.skip + size };
-		mem::replace(&mut self.skip, skip) != skip
-	}
-
-	#[inline]
-	pub fn set_skip(&mut self, skip: usize) -> bool { mem::replace(&mut self.skip, skip) != skip }
-
-	#[inline]
-	pub fn apply_bound(&mut self, upper: usize) -> bool {
-		if self.skip <= upper {
-			return false;
-		}
-
-		self.skip = upper;
-		true
 	}
 }
 

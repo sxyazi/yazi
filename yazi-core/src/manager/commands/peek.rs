@@ -54,12 +54,13 @@ impl Manager {
 		};
 
 		let (url, cha) = (hovered.url.clone(), hovered.cha);
-		if self.active().preview.same_url(&url) {
-			self.active_mut().preview.arrow(opt.step, &mime);
-		} else if opt.upper_bound {
-			self.active_mut().preview.apply_bound(opt.step as usize);
+		if opt.upper_bound {
+			self.active_mut().preview.arrow(0, &mime, Some(opt.step as usize));
+		} else if self.active().preview.same_url(&url) {
+			self.active_mut().preview.arrow(opt.step, &mime, None);
 		} else {
-			self.active_mut().preview.set_skip(0);
+			self.active_mut().preview.arrow(0, &mime, Some(0));
+			self.active_mut().preview.reset();
 		}
 
 		self.active_mut().preview.go(&url, cha, &mime);
@@ -72,15 +73,14 @@ impl Manager {
 			.map(|f| (f.offset, f.files.len().saturating_sub(MANAGER.layout.folder_height())))
 			.unwrap_or_default();
 
-		if self.active().preview.same_url(&url) {
-			self.active_mut().preview.arrow(opt.step, MIME_DIR);
-			self.active_mut().preview.apply_bound(bound);
-			return false;
-		}
-
 		let in_chunks = folder.is_none();
-		self.active_mut().preview.set_skip(skip);
-		self.active_mut().preview.go_folder(url, in_chunks);
-		false
+		if self.active().preview.same_url(&url) {
+			self.active_mut().preview.arrow(opt.step, MIME_DIR, Some(bound));
+			self.active_mut().preview.sync_skip()
+		} else {
+			self.active_mut().preview.arrow(skip as isize, MIME_DIR, Some(skip));
+			self.active_mut().preview.go_folder(url, in_chunks);
+			false
+		}
 	}
 }
