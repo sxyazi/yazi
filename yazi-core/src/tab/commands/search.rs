@@ -76,7 +76,7 @@ impl Tab {
 			handle.abort();
 		}
 		if self.current.cwd.is_search() {
-			self.preview.reset(|l| l.is_image());
+			self.preview.reset_image();
 
 			let rep = self.history_new(&self.current.cwd.to_regular());
 			drop(mem::replace(&mut self.current, rep));

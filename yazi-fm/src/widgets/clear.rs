@@ -1,6 +1,9 @@
+use std::sync::atomic::Ordering;
+
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 use yazi_adaptor::ADAPTOR;
 use yazi_config::MANAGER;
+use yazi_core::preview::COLLISION;
 
 pub(crate) struct Clear;
 
@@ -30,6 +33,7 @@ impl Widget for Clear {
 		};
 
 		ADAPTOR.image_hide(r).ok();
+		COLLISION.store(true, Ordering::Relaxed);
 		for x in r.left()..r.right() {
 			for y in r.top()..r.bottom() {
 				buf.get_mut(x, y).set_skip(true);

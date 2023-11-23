@@ -1,11 +1,11 @@
-use std::ffi::OsString;
+use std::{ffi::OsString, sync::atomic::Ordering};
 
 use anyhow::{Ok, Result};
 use crossterm::event::KeyEvent;
 use ratatui::{backend::Backend, prelude::Rect};
 use tokio::sync::oneshot;
 use yazi_config::{keymap::{Exec, Key, KeymapLayer}, BOOT};
-use yazi_core::{emit, files::FilesOp, input::InputMode, manager::Manager, Ctx, Event};
+use yazi_core::{emit, files::FilesOp, input::InputMode, manager::Manager, preview::COLLISION, Ctx, Event};
 use yazi_shared::Term;
 
 use crate::{Executor, Logs, Panic, Root, Signals};
@@ -81,14 +81,17 @@ impl App {
 			return Ok(());
 		};
 
+		COLLISION.store(false, Ordering::Relaxed);
 		let frame = term.draw(|f| {
 			yazi_plugin::scope(&self.cx, |_| {
 				f.render_widget(Root::new(&self.cx), f.size());
 			});
 		})?;
+		if !COLLISION.load(Ordering::Relaxed) {
+			return Ok(());
+		}
 
 		let mut patches = Vec::new();
-		// TODO: find a more efficient way to do this
 		for x in frame.area.left()..frame.area.right() {
 			for y in frame.area.top()..frame.area.bottom() {
 				let cell = frame.buffer.get(x, y);
@@ -114,14 +117,13 @@ impl App {
 		}
 
 		self.cx.manager.current_mut().set_page(true);
-		self.cx.manager.active_mut().preview.reset(|_| true);
-		// TODO: Peek-trigger
-		// self.cx.manager.peek(true);
+		self.cx.manager.active_mut().preview.reset();
+		self.cx.manager.peek(0);
 		emit!(Render);
 	}
 
 	fn dispatch_stop(&mut self, state: bool, tx: Option<oneshot::Sender<()>>) {
-		self.cx.manager.active_mut().preview.reset(|l| l.is_image());
+		self.cx.manager.active_mut().preview.reset_image();
 		if state {
 			self.signals.stop_term(true);
 			self.term = None;

@@ -4,7 +4,7 @@ use tokio::{pin, task::JoinHandle};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_adaptor::ADAPTOR;
 use yazi_config::MANAGER;
-use yazi_shared::{MimeKind, PeekError, Url};
+use yazi_shared::{Cha, MimeKind, PeekError, Url};
 
 use super::Provider;
 use crate::{emit, files::{Files, FilesOp}, manager::Manager, Highlighter};
@@ -19,6 +19,7 @@ pub struct Preview {
 
 pub struct PreviewLock {
 	pub url:  Url,
+	pub cha:  Option<Cha>,
 	pub skip: usize,
 	pub data: PreviewData,
 }
@@ -31,14 +32,18 @@ pub enum PreviewData {
 }
 
 impl Preview {
-	pub fn go(&mut self, url: &Url, mime: &str) {
-		self.reset(|_| true);
-		let (url, skip, kind) = (url.clone(), self.skip, MimeKind::new(mime));
+	pub fn go(&mut self, url: &Url, cha: Cha, mime: &str) {
+		if self.content_unchanged(url, &cha) {
+			return;
+		}
+
+		self.reset();
+		let (url, kind, skip) = (url.clone(), MimeKind::new(mime), self.skip);
 
 		self.handle = Some(tokio::spawn(async move {
 			match Provider::auto(kind, &url, skip).await {
 				Ok(data) => {
-					emit!(Preview(PreviewLock { url, skip, data }));
+					emit!(Preview(PreviewLock { url, cha: Some(cha), skip, data }));
 				}
 				Err(PeekError::Exceed(max)) => {
 					Manager::_peek_upper_bound(max, &url);
@@ -49,8 +54,13 @@ impl Preview {
 	}
 
 	pub fn go_folder(&mut self, url: Url, in_chunks: bool) {
-		self.reset(|_| true);
-		emit!(Preview(PreviewLock { url: url.clone(), skip: self.skip, data: PreviewData::Folder }));
+		self.reset();
+		self.lock = Some(PreviewLock {
+			url:  url.clone(),
+			cha:  None,
+			skip: self.skip,
+			data: PreviewData::Folder,
+		});
 
 		self.handle = Some(tokio::spawn(async move {
 			let Ok(rx) = Files::from_dir(&url).await else {
@@ -74,7 +84,7 @@ impl Preview {
 		}));
 	}
 
-	pub fn reset<F: FnOnce(&PreviewLock) -> bool>(&mut self, f: F) -> bool {
+	pub fn reset(&mut self) -> bool {
 		self.handle.take().map(|h| h.abort());
 		Highlighter::abort();
 		ADAPTOR.image_hide(MANAGER.layout.image_rect()).ok();
@@ -83,13 +93,48 @@ impl Preview {
 			return false;
 		};
 
-		if !f(lock) {
-			return false;
-		}
-
 		let b = !lock.is_image();
 		self.lock = None;
 		b
+	}
+
+	pub fn reset_image(&mut self) -> bool {
+		if !matches!(self.lock, Some(ref lock) if lock.is_image()) {
+			return false;
+		}
+
+		self.reset();
+		true
+	}
+
+	#[inline]
+	pub fn same_url(&self, url: &Url) -> bool {
+		matches!(self.lock, Some(ref lock) if lock.url == *url)
+	}
+
+	fn content_unchanged(&self, url: &Url, cha: &Cha) -> bool {
+		let Some(lock) = &self.lock else {
+			return false;
+		};
+		let Some(cha_) = &lock.cha else {
+			return false;
+		};
+
+		*url == lock.url
+			&& self.skip == lock.skip
+			&& cha.len == cha_.len
+			&& cha.modified == cha_.modified
+			&& cha.meta == cha_.meta
+			&& {
+				#[cfg(unix)]
+				{
+					cha.permissions == cha_.permissions
+				}
+				#[cfg(windows)]
+				{
+					true
+				}
+			}
 	}
 }
 
@@ -106,12 +151,12 @@ impl Preview {
 	pub fn set_skip(&mut self, skip: usize) -> bool { mem::replace(&mut self.skip, skip) != skip }
 
 	#[inline]
-	pub fn apply_bound(&mut self, max: usize) -> bool {
-		if self.skip <= max {
+	pub fn apply_bound(&mut self, upper: usize) -> bool {
+		if self.skip <= upper {
 			return false;
 		}
 
-		self.skip = max;
+		self.skip = upper;
 		true
 	}
 }

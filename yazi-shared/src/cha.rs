@@ -3,7 +3,7 @@ use std::{fs::Metadata, time::SystemTime};
 use bitflags::bitflags;
 
 bitflags! {
-	#[derive(Clone, Copy, Debug, Default)]
+	#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 	pub struct ChaMeta: u8 {
 		const DIR           = 0b00000001;
 
