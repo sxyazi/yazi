@@ -40,13 +40,13 @@ impl Default for Boot {
 			println!(
 				"yazi {} ({} {})",
 				env!("CARGO_PKG_VERSION"),
-				&env!("VERGEN_GIT_SHA")[0..9],
+				env!("VERGEN_GIT_SHA"),
 				env!("VERGEN_BUILD_DATE")
 			);
 			process::exit(0);
 		}
-		let (cwd, file) = Self::parse_entry(args.entry);
 
+		let (cwd, file) = Self::parse_entry(args.entry);
 		let boot = Self {
 			cwd,
 			file,
