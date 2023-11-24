@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, io::{stdout, BufWriter, Write}, path::PathBuf};
+use std::{collections::BTreeMap, ffi::OsStr, io::{stdout, BufWriter, Write}, path::PathBuf};
 
 use anyhow::{anyhow, bail, Result};
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
@@ -23,7 +23,7 @@ impl Manager {
 		}
 
 		let file = File::from(new.clone()).await?;
-		emit!(Files(FilesOp::Replacing(file.parent().unwrap(), file.into_map())));
+		emit!(Files(FilesOp::Replacing(file.parent().unwrap(), BTreeMap::from_iter([(old, file)]))));
 		Ok(Self::_hover(Some(new)))
 	}
 
