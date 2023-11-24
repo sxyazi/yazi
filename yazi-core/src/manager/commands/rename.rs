@@ -1,4 +1,4 @@
-use std::{collections::BTreeSet, ffi::OsStr, io::{stdout, BufWriter, Write}, path::PathBuf};
+use std::{ffi::OsStr, io::{stdout, BufWriter, Write}, path::PathBuf};
 
 use anyhow::{anyhow, bail, Result};
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
@@ -22,13 +22,9 @@ impl Manager {
 			return Ok(());
 		}
 
-		let parent = old.parent_url().unwrap();
-		emit!(Files(FilesOp::Deleting(parent, BTreeSet::from([old]))));
-
 		let file = File::from(new.clone()).await?;
-		emit!(Files(FilesOp::Creating(file.parent().unwrap(), file.into_map())));
-		Self::_hover(Some(new));
-		Ok(())
+		emit!(Files(FilesOp::Replacing(file.parent().unwrap(), file.into_map())));
+		Ok(Self::_hover(Some(new)))
 	}
 
 	pub fn rename(&self, opt: impl Into<Opt>) -> bool {
