@@ -133,9 +133,7 @@ impl Watcher {
 		watched: Arc<RwLock<IndexMap<Url, Option<Url>>>>,
 	) {
 		// TODO: revert this once a new notification is implemented
-		// let rx = UnboundedReceiverStream::new(rx).chunks_timeout(100,
-		// Duration::from_millis(200));
-		let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1, Duration::ZERO);
+		let rx = UnboundedReceiverStream::new(rx).chunks_timeout(10, Duration::from_millis(20));
 		pin!(rx);
 
 		while let Some(urls) = rx.next().await {
