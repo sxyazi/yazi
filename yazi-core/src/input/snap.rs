@@ -35,6 +35,13 @@ impl InputSnap {
 		self.cursor = self.cursor.min(self.value.chars().count().saturating_sub(self.mode.delta()));
 		self.offset =
 			self.offset.min(self.cursor.saturating_sub(Self::find_window(&self.rev(), 0, limit).end));
+		// If we have an extension, move cursor right before the last dot ...
+		if let Some((base, ext)) = self.value.rsplit_once('.') {
+			// ... unless the name starts with a dot.
+			if !base.is_empty() {
+				self.cursor = self.cursor.saturating_sub(ext.chars().count() + 1);
+			}
+		}
 	}
 }
 
@@ -86,5 +93,35 @@ impl InputSnap {
 			return 0..0;
 		}
 		*v.first().unwrap()..v.last().unwrap() + 1
+	}
+}
+
+#[cfg(test)]
+mod tests {
+
+	use super::*;
+
+	#[test]
+	fn test_snap_cursor_at_the_end() {
+		let input_snap = InputSnap::new("hello".to_string(), 100);
+		assert_eq!(input_snap.cursor, 5);
+	}
+
+	#[test]
+	fn test_snap_cursor_before_the_extension() {
+		let input_snap = InputSnap::new("hello.rs".to_string(), 100);
+		assert_eq!(input_snap.cursor, 5);
+	}
+
+	#[test]
+	fn test_snap_cursor_empty_value() {
+		let input_snap = InputSnap::new("".to_string(), 100);
+		assert_eq!(input_snap.cursor, 0);
+	}
+
+	#[test]
+	fn test_snap_cursor_leading_dot() {
+		let input_snap = InputSnap::new(".bashrc".to_string(), 100);
+		assert_eq!(input_snap.cursor, 7);
 	}
 }
