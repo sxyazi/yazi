@@ -139,7 +139,7 @@ impl Preview {
 			&& self.skip == lock.skip
 			&& cha.len == cha_.len
 			&& cha.modified == cha_.modified
-			&& cha.meta == cha_.meta
+			&& cha.kind == cha_.kind
 			&& {
 				#[cfg(unix)]
 				{

@@ -2,7 +2,7 @@ use std::{borrow::Cow, collections::BTreeMap, ffi::OsStr, fs::Metadata, ops::Der
 
 use anyhow::Result;
 use tokio::fs;
-use yazi_shared::{Cha, ChaMeta, Url};
+use yazi_shared::{Cha, ChaKind, Url};
 
 #[derive(Clone, Debug, Default)]
 pub struct File {
@@ -26,30 +26,30 @@ impl File {
 	}
 
 	pub async fn from_meta(url: Url, mut meta: Metadata) -> Self {
-		let mut cm = ChaMeta::empty();
+		let mut cm = ChaKind::empty();
 
 		let (is_link, mut link_to) = (meta.is_symlink(), None);
 		if is_link {
-			cm |= ChaMeta::LINK;
+			cm |= ChaKind::LINK;
 			meta = fs::metadata(&url).await.unwrap_or(meta);
 			link_to = fs::read_link(&url).await.map(Url::from).ok();
 		}
 
 		if is_link && meta.is_symlink() {
-			cm |= ChaMeta::BAD_LINK;
+			cm |= ChaKind::BAD_LINK;
 		}
 
 		if url.is_hidden() {
-			cm |= ChaMeta::HIDDEN;
+			cm |= ChaKind::HIDDEN;
 		}
 
-		Self { url, cha: Cha::from(meta).with_meta(cm), link_to }
+		Self { url, cha: Cha::from(meta).with_kind(cm), link_to }
 	}
 
 	#[inline]
 	pub fn from_dummy(url: Url) -> Self {
-		let cm = if url.is_hidden() { ChaMeta::HIDDEN } else { ChaMeta::empty() };
-		Self { url, cha: Cha::default().with_meta(cm), link_to: None }
+		let cm = if url.is_hidden() { ChaKind::HIDDEN } else { ChaKind::empty() };
+		Self { url, cha: Cha::default().with_kind(cm), link_to: None }
 	}
 
 	#[inline]

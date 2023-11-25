@@ -35,6 +35,17 @@ impl<'de> Deserialize<'de> for Keymap {
 		}
 
 		let shadow = Shadow::deserialize(deserializer)?;
+
+		// TODO: remove this when v0.1.6 is released --
+		if !shadow.input.keymap.iter().any(|c| c.on() == "<Backspace>") {
+			println!(
+				"WARNING: Default keybinding for `<Backspace>` is missing, please add a `{}` to the `[input]` section of `keymap.toml`.
+In Yazi v0.1.6, `<Backspace>` previously hardcoded within the Input component has been moved to `keymap.toml` to allow users to customize it.",
+				r#"{ on = [ "<Backspace>" ], exec = "backspace" }"#
+			);
+		}
+		// TODO: -- remove this when v0.1.6 is released
+
 		Ok(Self {
 			manager:    shadow.manager.keymap,
 			tasks:      shadow.tasks.keymap,
