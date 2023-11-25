@@ -19,36 +19,35 @@ impl FilesSorter {
 			return false;
 		}
 
+		let by_alphabetical = |a: &File, b: &File| {
+			if self.sensitive {
+				return self.cmp(&*a.url, &*b.url, self.promote(a, b));
+			}
+
+			self.cmp(
+				a.url.as_os_str().to_ascii_uppercase(),
+				b.url.as_os_str().to_ascii_uppercase(),
+				self.promote(a, b),
+			)
+		};
+
 		match self.by {
 			SortBy::None => return false,
-			SortBy::Alphabetical => items.sort_unstable_by(|a, b| {
-				if self.sensitive {
-					return self.cmp(&*a.url, &*b.url, self.promote(a, b));
-				}
-
-				self.cmp(
-					a.url.as_os_str().to_ascii_uppercase(),
-					b.url.as_os_str().to_ascii_uppercase(),
-					self.promote(a, b),
-				)
-			}),
+			SortBy::Alphabetical => items.sort_unstable_by(by_alphabetical),
 			SortBy::Created => items.sort_unstable_by(|a, b| {
-				if let (Some(aa), Some(bb)) = (a.created, b.created) {
-					return self.cmp(aa, bb, self.promote(a, b));
-				}
-				Ordering::Equal
+				let ord = self.cmp(a.created, b.created, self.promote(a, b));
+				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
 			}),
 			SortBy::Modified => items.sort_unstable_by(|a, b| {
-				if let (Some(aa), Some(bb)) = (a.modified, b.modified) {
-					return self.cmp(aa, bb, self.promote(a, b));
-				}
-				Ordering::Equal
+				let ord = self.cmp(a.modified, b.modified, self.promote(a, b));
+				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
 			}),
 			SortBy::Natural => self.sort_naturally(items),
 			SortBy::Size => items.sort_unstable_by(|a, b| {
 				let aa = if a.is_dir() { sizes.get(&a.url).copied() } else { None };
 				let bb = if b.is_dir() { sizes.get(&b.url).copied() } else { None };
-				self.cmp(aa.unwrap_or(a.len), bb.unwrap_or(b.len), self.promote(a, b))
+				let ord = self.cmp(aa.unwrap_or(a.len), bb.unwrap_or(b.len), self.promote(a, b));
+				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
 			}),
 		}
 		true
