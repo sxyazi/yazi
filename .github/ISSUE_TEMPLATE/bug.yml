@@ -26,7 +26,7 @@ body:
     attributes:
       label: Yazi version
       description: Please do a `yazi -V` and paste the output here.
-      placeholder: "ex: yazi 0.1.5"
+      placeholder: "ex: yazi 0.1.5 (3867c29 2023-11-25)"
     validations:
       required: true
   - type: dropdown

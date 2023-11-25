@@ -77,31 +77,12 @@ impl Finder {
 	}
 
 	#[inline]
-	fn matches(&self, name: &OsStr) -> bool {
-		#[cfg(windows)]
-		{
-			self.query.is_match(name.to_string_lossy().as_bytes())
-		}
-		#[cfg(unix)]
-		{
-			use std::os::unix::ffi::OsStrExt;
-			self.query.is_match(name.as_bytes())
-		}
-	}
+	fn matches(&self, name: &OsStr) -> bool { self.query.is_match(name.as_encoded_bytes()) }
 
 	/// Explode the name into three parts: head, body, tail.
 	#[inline]
 	pub fn highlighted(&self, name: &OsStr) -> Option<Vec<Range<usize>>> {
-		#[cfg(windows)]
-		let found = self.query.find(name.to_string_lossy().as_bytes()).map(|m| m.range());
-
-		#[cfg(unix)]
-		let found = {
-			use std::os::unix::ffi::OsStrExt;
-			self.query.find(name.as_bytes()).map(|m| m.range())
-		};
-
-		found.map(|r| vec![r])
+		self.query.find(name.as_encoded_bytes()).map(|m| vec![m.range()])
 	}
 }
 

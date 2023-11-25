@@ -14,7 +14,7 @@ body:
       label: Will you be willing to contribute this feature?
       description: The feature has a much higher chance of completion if you are willing to get involved!
       options:
-        - label: Yes, I will try to implement it
+        - label: Yes, I'll give it a shot
   - type: textarea
     id: solution
     attributes:

@@ -46,16 +46,7 @@ impl App {
 	fn dispatch_quit(&mut self, no_cwd_file: bool) {
 		if let Some(p) = BOOT.cwd_file.as_ref().filter(|_| !no_cwd_file) {
 			let cwd = self.cx.manager.cwd().as_os_str();
-
-			#[cfg(windows)]
-			{
-				std::fs::write(p, cwd.to_string_lossy().as_bytes()).ok();
-			}
-			#[cfg(unix)]
-			{
-				use std::os::unix::ffi::OsStrExt;
-				std::fs::write(p, cwd.as_bytes()).ok();
-			}
+			std::fs::write(p, cwd.as_encoded_bytes()).ok();
 		}
 		Term::goodbye(|| false).unwrap();
 	}
@@ -203,15 +194,7 @@ impl App {
 						s
 					});
 
-					#[cfg(windows)]
-					{
-						std::fs::write(p, paths.to_string_lossy().as_bytes()).ok();
-					}
-					#[cfg(unix)]
-					{
-						use std::os::unix::ffi::OsStrExt;
-						std::fs::write(p, paths.as_bytes()).ok();
-					}
+					std::fs::write(p, paths.as_encoded_bytes()).ok();
 					return emit!(Quit(false));
 				}
 

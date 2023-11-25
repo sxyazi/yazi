@@ -4,13 +4,16 @@ on:
   issue_comment:
     types: [created]
   schedule:
-    - cron: '10 * * * *'
+    - cron: "10 * * * *"
 
 jobs:
   noResponse:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
       - uses: lee-dohm/no-response@v0.5.0
         with:
           token: ${{ github.token }}
+          daysUntilClose: 7
           responseRequiredLabel: waiting on op

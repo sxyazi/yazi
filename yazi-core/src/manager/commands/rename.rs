@@ -75,16 +75,13 @@ impl Manager {
 
 			{
 				let s = old.iter().map(|o| o.as_os_str()).collect::<Vec<_>>().join(OsStr::new("\n"));
-				let mut f = OpenOptions::new().write(true).create_new(true).open(&tmp).await?;
-				#[cfg(windows)]
-				{
-					f.write_all(s.to_string_lossy().as_bytes()).await?;
-				}
-				#[cfg(unix)]
-				{
-					use std::os::unix::ffi::OsStrExt;
-					f.write_all(s.as_bytes()).await?;
-				}
+				OpenOptions::new()
+					.write(true)
+					.create_new(true)
+					.open(&tmp)
+					.await?
+					.write_all(s.as_encoded_bytes())
+					.await?;
 			}
 
 			let _guard = BLOCKER.acquire().await.unwrap();

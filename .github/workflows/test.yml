@@ -2,9 +2,9 @@ name: Test
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   CARGO_TERM_COLOR: always
@@ -19,6 +19,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Install stable toolchain
+        run: rustup toolchain install stable --profile minimal
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2

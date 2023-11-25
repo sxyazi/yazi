@@ -107,16 +107,8 @@ impl ToString for Url {
 			UrlScheme::Archive => "archive://",
 		};
 
-		#[cfg(unix)]
-		let path = {
-			use std::os::unix::ffi::OsStrExt;
-			percent_encode(self.path.as_os_str().as_bytes(), ENCODE_SET)
-		};
-		#[cfg(windows)]
-		let path = percent_encode(self.path.to_string_lossy().as_bytes(), ENCODE_SET).to_string();
-
+		let path = percent_encode(self.path.as_os_str().as_encoded_bytes(), ENCODE_SET);
 		let frag = self.frag.as_ref().map(|s| format!("#{s}")).unwrap_or_default();
-
 		format!("{scheme}{path}{frag}")
 	}
 }

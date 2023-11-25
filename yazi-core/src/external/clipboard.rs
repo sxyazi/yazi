@@ -39,7 +39,7 @@ pub async fn clipboard_get() -> Result<OsString> {
 
 #[cfg(unix)]
 pub async fn clipboard_set(s: impl AsRef<std::ffi::OsStr>) -> Result<()> {
-	use std::{os::unix::prelude::OsStrExt, process::Stdio};
+	use std::process::Stdio;
 
 	use anyhow::bail;
 	use tokio::{io::AsyncWriteExt, process::Command};
@@ -64,7 +64,7 @@ pub async fn clipboard_set(s: impl AsRef<std::ffi::OsStr>) -> Result<()> {
 		};
 
 		let mut stdin = child.stdin.take().unwrap();
-		if stdin.write_all(s.as_ref().as_bytes()).await.is_err() {
+		if stdin.write_all(s.as_ref().as_encoded_bytes()).await.is_err() {
 			continue;
 		}
 		drop(stdin);

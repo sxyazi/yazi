@@ -48,23 +48,8 @@ pub fn expand_path(p: impl AsRef<Path>) -> PathBuf { _expand_path(p.as_ref()) }
 
 #[inline]
 pub fn ends_with_slash(p: &Path) -> bool {
-	// TODO: uncomment this when Rust 1.74 is released
-	// let b = p.as_os_str().as_encoded_bytes();
-	// if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
-
-	#[cfg(unix)]
-	{
-		use std::os::unix::ffi::OsStrExt;
-		let b = p.as_os_str().as_bytes();
-		if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
-	}
-
-	#[cfg(windows)]
-	{
-		let s = p.to_string_lossy();
-		let b = s.as_bytes();
-		if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
-	}
+	let b = p.as_os_str().as_encoded_bytes();
+	if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
 }
 
 pub async fn unique_path(mut p: Url) -> Url {

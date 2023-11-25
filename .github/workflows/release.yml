@@ -29,6 +29,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Install stable toolchain
+        run: rustup toolchain install stable --profile minimal
+
       - name: Add aarch64 target
         if: contains(fromJson('["aarch64-unknown-linux-gnu", "aarch64-apple-darwin"]'), matrix.target)
         run: rustup target add ${{ matrix.target }}
