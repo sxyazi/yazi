@@ -13,6 +13,7 @@ yazi-shared = { path = "../yazi-shared", version = "0.1.5" }
 
 # External dependencies
 anyhow      = "^1"
+arc-swap    = "^1"
 clap        = { version = "^4", features = [ "derive" ] }
 crossterm   = "^0"
 dirs        = "^5"

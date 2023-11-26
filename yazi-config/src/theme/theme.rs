@@ -34,10 +34,6 @@ pub struct Manager {
 	pub border_symbol: String,
 	pub border_style:  Style,
 
-	// Offset
-	pub(crate) folder_offset:  (u16, u16, u16, u16),
-	pub(crate) preview_offset: (u16, u16, u16, u16),
-
 	// Highlighting
 	pub syntect_theme: PathBuf,
 }

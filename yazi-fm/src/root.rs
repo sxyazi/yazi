@@ -1,9 +1,7 @@
 use ratatui::{buffer::Buffer, layout::{Constraint, Direction, Layout, Rect}, widgets::Widget};
-use yazi_core::Ctx;
-use yazi_plugin::components;
 
 use super::{completion, input, select, tasks, which};
-use crate::help;
+use crate::{components, help, Ctx};
 
 pub(super) struct Root<'a> {
 	cx: &'a Ctx,
@@ -20,9 +18,10 @@ impl<'a> Widget for Root<'a> {
 			.constraints([Constraint::Length(1), Constraint::Min(0), Constraint::Length(1)])
 			.split(area);
 
-		components::Header::new(self.cx).render(chunks[0], buf);
-		components::Manager::new(self.cx).render(chunks[1], buf);
-		components::Status::new(self.cx).render(chunks[2], buf);
+		components::Header.render(chunks[0], buf);
+		components::Manager.render(chunks[1], buf);
+		components::Status.render(chunks[2], buf);
+		components::Preview::new(self.cx).render(chunks[2], buf);
 
 		if self.cx.tasks.visible {
 			tasks::Layout::new(self.cx).render(area, buf);

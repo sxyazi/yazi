@@ -11,6 +11,7 @@ repository  = "https://github.com/sxyazi/yazi"
 [dependencies]
 yazi-adaptor   = { path = "../yazi-adaptor", version = "0.1.5" }
 yazi-config    = { path = "../yazi-config", version = "0.1.5" }
+yazi-plugin    = { path = "../yazi-plugin", version = "0.1.5" }
 yazi-scheduler = { path = "../yazi-scheduler", version = "0.1.5" }
 yazi-shared    = { path = "../yazi-shared", version = "0.1.5" }
 
@@ -30,8 +31,8 @@ serde         = "^1"
 syntect       = { version = "^5", default-features = false, features = [ "parsing", "default-themes", "plist-load", "regex-onig" ] }
 tokio         = { version = "^1", features = [ "parking_lot", "macros", "rt-multi-thread", "sync", "time", "fs", "process", "io-std", "io-util" ] }
 tokio-stream  = "^0"
+tokio-util    = "^0"
 unicode-width = "^0"
-yazi-prebuild = "^0"
 
 # Logging
 tracing = { version = "^0", features = [ "max_level_debug", "release_max_level_warn" ] }

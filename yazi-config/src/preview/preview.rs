@@ -1,12 +1,11 @@
-use std::{path::{Path, PathBuf}, time::{self, SystemTime}};
+use std::{fs, path::PathBuf, process, time::{self, SystemTime}};
 
-use md5::{Digest, Md5};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use yazi_shared::fs::expand_path;
 
-use crate::{xdg::Xdg, MERGED_YAZI};
+use crate::{xdg::Xdg, ARGS, MERGED_YAZI};
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Preview {
 	pub tab_size:   u8,
 	pub max_width:  u32,
@@ -37,9 +36,25 @@ impl Default for Preview {
 		}
 
 		let preview = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().preview;
-
 		let cache_dir =
 			preview.cache_dir.filter(|p| !p.is_empty()).map_or_else(Xdg::cache_dir, expand_path);
+
+		if !cache_dir.is_dir() {
+			fs::create_dir(&cache_dir).unwrap();
+		}
+
+		if ARGS.clear_cache {
+			if cache_dir == Xdg::cache_dir() {
+				println!("Clearing cache directory: \n{:?}", cache_dir);
+				fs::remove_dir_all(&cache_dir).unwrap();
+			} else {
+				println!(
+					"You've changed the default cache directory, for your data's safety, please clear it manually: \n{:?}",
+					cache_dir
+				);
+			}
+			process::exit(0);
+		}
 
 		Preview {
 			tab_size: preview.tab_size,
@@ -55,13 +70,6 @@ impl Default for Preview {
 }
 
 impl Preview {
-	#[inline]
-	pub fn cache(&self, path: &Path, skip: usize) -> PathBuf {
-		self
-			.cache_dir
-			.join(format!("{:x}", Md5::new_with_prefix(format!("{:?}///{}", path, skip)).finalize()))
-	}
-
 	#[inline]
 	pub fn tmpfile(&self, prefix: &str) -> PathBuf {
 		let nanos = SystemTime::now().duration_since(time::UNIX_EPOCH).unwrap().as_nanos();

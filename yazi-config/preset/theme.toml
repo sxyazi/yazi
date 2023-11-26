@@ -27,10 +27,6 @@ tab_width    = 1
 border_symbol = "│"
 border_style  = { fg = "gray" }
 
-# Offset
-folder_offset  = [ 1, 0, 1, 0 ]
-preview_offset = [ 1, 1, 1, 1 ]
-
 # Highlighting
 syntect_theme = ""
 

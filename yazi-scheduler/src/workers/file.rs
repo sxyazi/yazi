@@ -9,7 +9,7 @@ use yazi_shared::fs::{calculate_size, copy_with_progress, path_relative_to, Url}
 
 use crate::TaskOp;
 
-pub(crate) struct File {
+pub struct File {
 	tx: async_channel::Sender<FileOp>,
 	rx: async_channel::Receiver<FileOp>,
 
@@ -17,7 +17,7 @@ pub(crate) struct File {
 }
 
 #[derive(Debug)]
-pub(crate) enum FileOp {
+pub enum FileOp {
 	Paste(FileOpPaste),
 	Link(FileOpLink),
 	Delete(FileOpDelete),
@@ -25,7 +25,7 @@ pub(crate) enum FileOp {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct FileOpPaste {
+pub struct FileOpPaste {
 	pub id:     usize,
 	pub from:   Url,
 	pub to:     Url,
@@ -35,7 +35,7 @@ pub(crate) struct FileOpPaste {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct FileOpLink {
+pub struct FileOpLink {
 	pub id:       usize,
 	pub from:     Url,
 	pub to:       Url,
@@ -46,27 +46,27 @@ pub(crate) struct FileOpLink {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct FileOpDelete {
+pub struct FileOpDelete {
 	pub id:     usize,
 	pub target: Url,
 	pub length: u64,
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct FileOpTrash {
+pub struct FileOpTrash {
 	pub id:     usize,
 	pub target: Url,
 	pub length: u64,
 }
 
 impl File {
-	pub(crate) fn new(sch: mpsc::UnboundedSender<TaskOp>) -> Self {
+	pub fn new(sch: mpsc::UnboundedSender<TaskOp>) -> Self {
 		let (tx, rx) = async_channel::unbounded();
 		Self { tx, rx, sch }
 	}
 
 	#[inline]
-	pub(crate) async fn recv(&self) -> Result<(usize, FileOp)> {
+	pub async fn recv(&self) -> Result<(usize, FileOp)> {
 		Ok(match self.rx.recv().await? {
 			FileOp::Paste(t) => (t.id, FileOp::Paste(t)),
 			FileOp::Link(t) => (t.id, FileOp::Link(t)),
@@ -75,7 +75,7 @@ impl File {
 		})
 	}
 
-	pub(crate) async fn work(&self, op: &mut FileOp) -> Result<()> {
+	pub async fn work(&self, op: &mut FileOp) -> Result<()> {
 		match op {
 			FileOp::Paste(task) => {
 				match fs::remove_file(&task.to).await {
@@ -184,7 +184,7 @@ impl File {
 		Ok(())
 	}
 
-	pub(crate) async fn paste(&self, mut task: FileOpPaste) -> Result<()> {
+	pub async fn paste(&self, mut task: FileOpPaste) -> Result<()> {
 		if task.cut {
 			match fs::rename(&task.from, &task.to).await {
 				Ok(_) => return self.succ(task.id),
@@ -254,7 +254,7 @@ impl File {
 		self.succ(task.id)
 	}
 
-	pub(crate) async fn link(&self, mut task: FileOpLink) -> Result<()> {
+	pub async fn link(&self, mut task: FileOpLink) -> Result<()> {
 		let id = task.id;
 		if task.meta.is_none() {
 			task.meta = Some(fs::symlink_metadata(&task.from).await?);
@@ -265,7 +265,7 @@ impl File {
 		self.succ(id)
 	}
 
-	pub(crate) async fn delete(&self, mut task: FileOpDelete) -> Result<()> {
+	pub async fn delete(&self, mut task: FileOpDelete) -> Result<()> {
 		let meta = fs::symlink_metadata(&task.target).await?;
 		if !meta.is_dir() {
 			let id = task.id;
@@ -302,7 +302,7 @@ impl File {
 		self.succ(task.id)
 	}
 
-	pub(crate) async fn trash(&self, mut task: FileOpTrash) -> Result<()> {
+	pub async fn trash(&self, mut task: FileOpTrash) -> Result<()> {
 		let id = task.id;
 		task.length = calculate_size(&task.target).await;
 

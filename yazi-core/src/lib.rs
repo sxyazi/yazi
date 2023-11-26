@@ -8,13 +8,10 @@
 
 mod clipboard;
 pub mod completion;
-mod context;
-pub mod files;
+pub mod folder;
 pub mod help;
-mod highlighter;
 pub mod input;
 pub mod manager;
-pub mod preview;
 pub mod select;
 mod step;
 pub mod tab;
@@ -22,8 +19,6 @@ pub mod tasks;
 pub mod which;
 
 pub use clipboard::*;
-pub use context::*;
-pub use highlighter::*;
 pub use step::*;
 
 pub fn init() {

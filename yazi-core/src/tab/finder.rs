@@ -4,7 +4,7 @@ use anyhow::Result;
 use regex::bytes::{Regex, RegexBuilder};
 use yazi_shared::fs::Url;
 
-use crate::files::Files;
+use crate::folder::Files;
 
 #[derive(PartialEq, Eq)]
 pub enum FinderCase {

@@ -84,6 +84,8 @@ impl<'a> Executor<'a> {
 			};
 		}
 
+		on!(plugin);
+		on!(plugin_do);
 		on!(stop);
 
 		false
@@ -108,13 +110,16 @@ impl<'a> Executor<'a> {
 			};
 		}
 
-		on!(MANAGER, peek);
+		on!(MANAGER, update_mimetype, &self.app.cx.tasks);
 		on!(MANAGER, hover);
+		on!(MANAGER, peek);
+		on!(MANAGER, seek);
 		on!(MANAGER, refresh);
 		on!(MANAGER, quit, &self.app.cx.tasks);
 		on!(MANAGER, close, &self.app.cx.tasks);
 		on!(MANAGER, suspend);
 		on!(ACTIVE, escape);
+		on!(ACTIVE, preview);
 
 		// Navigation
 		on!(ACTIVE, arrow);

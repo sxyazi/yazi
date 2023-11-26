@@ -61,6 +61,7 @@ rules = [
 	{ mime = "application/x-bzip2",         use = [ "extract", "reveal" ] },
 	{ mime = "application/x-7z-compressed", use = [ "extract", "reveal" ] },
 	{ mime = "application/x-rar",           use = [ "extract", "reveal" ] },
+	{ mime = "application/xz",              use = [ "extract", "reveal" ] },
 
 	{ mime = "*", use = [ "open", "reveal" ] },
 ]
@@ -73,8 +74,44 @@ image_alloc      = 536870912  # 512MB
 image_bound      = [ 0, 0 ]
 suppress_preload = false
 
-[plugins]
-preload = []
+[plugin]
+
+preloaders = [
+	{ name = "*", cond = "!mime", exec = "mime.lua", multi = true },
+	# Image
+	{ mime = "image/vnd.djvu", exec = "noop.lua" },
+	{ mime = "image/*",        exec = "image.lua" },
+	# Video
+	{ mime = "video/*", exec = "video.lua" },
+	# PDF
+	{ mime = "application/pdf", exec = "pdf.lua" },
+]
+previewers = [
+	{ name = "*/", exec = "folder.lua", sync = true },
+	# Code
+	{ mime = "text/*",                 exec = "code.lua" },
+	{ mime = "*/xml",                  exec = "code.lua" },
+	{ mime = "*/javascript",           exec = "code.lua" },
+	{ mime = "*/x-wine-extension-ini", exec = "code.lua" },
+	# JSON
+	{ mime = "application/json", exec = "json.lua" },
+	# Image
+	{ mime = "image/vnd.djvu", exec = "noop.lua" },
+	{ mime = "image/*",        exec = "image.lua" },
+	# Video
+	{ mime = "video/*", exec = "video.lua" },
+	# PDF
+	{ mime = "application/pdf", exec = "pdf.lua" },
+	# Archive
+	{ mime = "application/zip",             exec = "archive.lua" },
+	{ mime = "application/gzip",            exec = "archive.lua" },
+	{ mime = "application/x-tar",           exec = "archive.lua" },
+	{ mime = "application/x-bzip",          exec = "archive.lua" },
+	{ mime = "application/x-bzip2",         exec = "archive.lua" },
+	{ mime = "application/x-7z-compressed", exec = "archive.lua" },
+	{ mime = "application/x-rar",           exec = "archive.lua" },
+	{ mime = "application/xz",              exec = "archive.lua" },
+]
 
 [input]
 # cd

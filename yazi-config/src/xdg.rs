@@ -24,6 +24,9 @@ impl Xdg {
 		}
 	}
 
+	#[inline]
+	pub(super) fn plugin_dir() -> Option<PathBuf> { Self::config_dir().map(|p| p.join("plugins")) }
+
 	pub(super) fn state_dir() -> Option<PathBuf> {
 		#[cfg(windows)]
 		{

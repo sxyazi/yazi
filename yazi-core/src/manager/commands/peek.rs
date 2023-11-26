@@ -1,11 +1,10 @@
-use yazi_config::MANAGER;
-use yazi_shared::{emit, event::Exec, fs::Url, Layer, MIME_DIR};
+use yazi_shared::{event::Exec, fs::Url, MIME_DIR};
 
 use crate::manager::Manager;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Opt {
-	step:        isize,
+	skip:        Option<usize>,
 	only_if:     Option<Url>,
 	upper_bound: bool,
 }
@@ -13,28 +12,17 @@ pub struct Opt {
 impl From<&Exec> for Opt {
 	fn from(e: &Exec) -> Self {
 		Self {
-			step:        e.args.first().and_then(|s| s.parse().ok()).unwrap_or(0),
+			skip:        e.args.first().and_then(|s| s.parse().ok()),
 			only_if:     e.named.get("only-if").map(Url::from),
 			upper_bound: e.named.contains_key("upper-bound"),
 		}
 	}
 }
-impl From<isize> for Opt {
-	fn from(step: isize) -> Self { Self { step, only_if: None, upper_bound: false } }
+impl From<()> for Opt {
+	fn from(_: ()) -> Self { Default::default() }
 }
 
 impl Manager {
-	#[inline]
-	pub fn _peek_upper_bound(bound: usize, only_if: &Url) {
-		emit!(Call(
-			Exec::call("peek", vec![bound.to_string()])
-				.with("only-if", only_if.to_string())
-				.with_bool("upper-bound", true)
-				.vec(),
-			Layer::Manager
-		));
-	}
-
 	pub fn peek(&mut self, opt: impl Into<Opt>) -> bool {
 		let Some(hovered) = self.hovered() else {
 			return self.active_mut().preview.reset();
@@ -45,42 +33,30 @@ impl Manager {
 			return false;
 		}
 
-		if hovered.is_dir() {
-			return self.peek_folder(opt, hovered.url.clone());
-		}
-
-		let Some(mime) = self.mimetype.get(&hovered.url).cloned() else {
+		let mime = if hovered.is_dir() {
+			MIME_DIR.to_owned()
+		} else if let Some(s) = self.mimetype.get(&hovered.url) {
+			s.to_owned()
+		} else {
 			return self.active_mut().preview.reset();
 		};
 
-		let (url, cha) = (hovered.url.clone(), hovered.cha);
-		if opt.upper_bound {
-			self.active_mut().preview.arrow(0, &mime, Some(opt.step as usize));
-		} else if self.active().preview.same_url(&url) {
-			self.active_mut().preview.arrow(opt.step, &mime, None);
-		} else {
-			self.active_mut().preview.arrow(0, &mime, Some(0));
+		let hovered = hovered.clone();
+		if !self.active().preview.same_url(&hovered.url) {
+			self.active_mut().preview.skip = 0;
 			self.active_mut().preview.reset();
 		}
 
-		self.active_mut().preview.go(&url, cha, &mime);
-		false
-	}
-
-	fn peek_folder(&mut self, opt: Opt, url: Url) -> bool {
-		let folder = self.active().history.get(&url);
-		let (skip, bound) = folder
-			.map(|f| (f.offset, f.files.len().saturating_sub(MANAGER.layout.folder_height())))
-			.unwrap_or_default();
-
-		let in_chunks = folder.is_none();
-		if self.active().preview.same_url(&url) {
-			self.active_mut().preview.arrow(opt.step, MIME_DIR, Some(bound));
-			self.active_mut().preview.sync_skip()
-		} else {
-			self.active_mut().preview.arrow(skip as isize, MIME_DIR, Some(skip));
-			self.active_mut().preview.go_folder(url, in_chunks);
-			false
+		if let Some(skip) = opt.skip {
+			let preview = &mut self.active_mut().preview;
+			if opt.upper_bound {
+				preview.skip = preview.skip.min(skip);
+			} else {
+				preview.skip = skip;
+			}
 		}
+
+		self.active_mut().preview.go(hovered, mime);
+		false
 	}
 }

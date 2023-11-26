@@ -1,13 +1,15 @@
-Header = {}
+Header = {
+	area = ui.Rect.default,
+}
 
 function Header:cwd()
 	local cwd = cx.active.current.cwd
 
 	local span
 	if not cwd.is_search then
-		span = ui.Span(utils.readable_path(tostring(cwd)))
+		span = ui.Span(ya.readable_path(tostring(cwd)))
 	else
-		span = ui.Span(string.format("%s (search: %s)", utils.readable_path(tostring(cwd)), cwd.frag))
+		span = ui.Span(string.format("%s (search: %s)", ya.readable_path(tostring(cwd)), cwd.frag))
 	end
 	return span:style(THEME.manager.cwd)
 end
@@ -17,7 +19,7 @@ function Header:tabs()
 	for i = 1, #cx.tabs do
 		local text = i
 		if THEME.manager.tab_width > 2 then
-			text = utils.truncate(text .. " " .. cx.tabs[i]:name(), THEME.manager.tab_width)
+			text = ya.truncate(text .. " " .. cx.tabs[i]:name(), THEME.manager.tab_width)
 		end
 		if i == cx.tabs.idx + 1 then
 			spans[#spans + 1] = ui.Span(" " .. text .. " "):style(THEME.manager.tab_active)
@@ -29,6 +31,8 @@ function Header:tabs()
 end
 
 function Header:render(area)
+	self.area = area
+
 	local chunks = ui.Layout()
 		:direction(ui.Direction.HORIZONTAL)
 		:constraints({ ui.Constraint.Percentage(50), ui.Constraint.Percentage(50) })

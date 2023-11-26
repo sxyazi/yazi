@@ -1,1 +1,2 @@
+mod plugin;
 mod stop;

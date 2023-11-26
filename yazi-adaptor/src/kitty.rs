@@ -312,8 +312,9 @@ static DIACRITICS: [char; 297] = [
 pub(super) struct Kitty;
 
 impl Kitty {
-	pub(super) async fn image_show(path: &Path, rect: Rect) -> Result<()> {
-		let img = Image::downscale(path, (rect.width, rect.height)).await?;
+	pub(super) async fn image_show(path: &Path, rect: Rect) -> Result<(u32, u32)> {
+		let img = Image::downscale(path, rect).await?;
+		let size = (img.width(), img.height());
 		let b = Self::encode(img).await?;
 
 		Self::image_hide(rect)?;
@@ -335,7 +336,7 @@ impl Kitty {
 				stdout.write_all(buf.as_bytes())?;
 			}
 
-			Ok(())
+			Ok(size)
 		})
 	}
 

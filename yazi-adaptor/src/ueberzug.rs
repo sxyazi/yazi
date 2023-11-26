@@ -1,17 +1,26 @@
-use std::{path::PathBuf, process::Stdio};
+use std::{path::{Path, PathBuf}, process::Stdio};
 
-use anyhow::Result;
+use anyhow::{bail, Result};
+use imagesize::ImageSize;
 use ratatui::prelude::Rect;
 use tokio::{io::AsyncWriteExt, process::{Child, Command}, sync::mpsc::{self, UnboundedSender}};
 use tracing::debug;
 use yazi_config::PREVIEW;
+use yazi_shared::RoCell;
 
-use crate::Adaptor;
+use crate::{Adaptor, Image};
+
+#[allow(clippy::type_complexity)]
+static DEMON: RoCell<Option<UnboundedSender<Option<(PathBuf, Rect)>>>> = RoCell::new();
 
 pub(super) struct Ueberzug;
 
 impl Ueberzug {
-	pub(super) fn start(adaptor: Adaptor) -> Result<UnboundedSender<Option<(PathBuf, Rect)>>> {
+	pub(super) fn start(adaptor: Adaptor) {
+		if !adaptor.needs_ueberzug() {
+			return DEMON.init(None);
+		}
+
 		let mut child = Self::create_demon(adaptor).ok();
 		let (tx, mut rx) = mpsc::unbounded_channel();
 
@@ -29,8 +38,35 @@ impl Ueberzug {
 				}
 			}
 		});
+		DEMON.init(Some(tx))
+	}
 
-		Ok(tx)
+	pub(super) async fn image_show(path: &Path, rect: Rect) -> Result<(u32, u32)> {
+		if let Some(tx) = &*DEMON {
+			tx.send(Some((path.to_path_buf(), rect)))?;
+		} else {
+			bail!("uninitialized ueberzug");
+		}
+
+		let path = path.to_owned();
+		let ImageSize { width: w, height: h } =
+			tokio::task::spawn_blocking(move || imagesize::size(path)).await??;
+
+		let (max_w, max_h) = Image::max_size(rect);
+		if w <= max_w as usize && h <= max_h as usize {
+			return Ok((w as u32, h as u32));
+		}
+
+		let ratio = f64::min(max_w as f64 / w as f64, max_h as f64 / h as f64);
+		Ok(((w as f64 * ratio).round() as u32, (h as f64 * ratio).round() as u32))
+	}
+
+	pub(super) fn image_hide(_: Rect) -> Result<()> {
+		if let Some(tx) = &*DEMON {
+			Ok(tx.send(None)?)
+		} else {
+			bail!("uninitialized ueberzug");
+		}
 	}
 
 	fn create_demon(adaptor: Adaptor) -> Result<Child> {

@@ -55,11 +55,11 @@ function Folder:linemode(area)
 		local spans = { ui.Span(" ") }
 		if mode == "size" then
 			local size = f:size()
-			spans[#spans + 1] = ui.Span(size and utils.readable_size(size) or "")
+			spans[#spans + 1] = ui.Span(size and ya.readable_size(size) or "")
 		elseif mode == "mtime" then
-			spans[#spans + 1] = ui.Span(os.date("%y-%m-%d %H:%M", f.modified))
+			spans[#spans + 1] = ui.Span(os.date("%y-%m-%d %H:%M", f.cha.modified))
 		elseif mode == "permissions" then
-			spans[#spans + 1] = ui.Span(f:permissions() or "")
+			spans[#spans + 1] = ui.Span(f.cha:permissions() or "")
 		end
 
 		spans[#spans + 1] = ui.Span(" ")
@@ -108,81 +108,4 @@ function Folder:markers(area, markers)
 
 	append(last)
 	return elements
-end
-
-function Folder:parent(area)
-	local folder = self:by_kind(self.PARENT)
-	if folder == nil then
-		return {}
-	end
-
-	local items = {}
-	for _, f in ipairs(folder.window) do
-		local item = ui.ListItem(ui.Line { self:icon(f), ui.Span(f.name) })
-		if f:is_hovered() then
-			item = item:style(THEME.manager.hovered)
-		else
-			item = item:style(f:style())
-		end
-
-		items[#items + 1] = item
-	end
-
-	return { ui.List(area, items) }
-end
-
-function Folder:current(area)
-	local markers = {}
-	local items = {}
-	for i, f in ipairs(self:by_kind(self.CURRENT).window) do
-		local name = self:highlighted_name(f)
-
-		-- Highlight hovered file
-		local item = ui.ListItem(ui.Line { self:icon(f), table.unpack(name) })
-		if f:is_hovered() then
-			item = item:style(THEME.manager.hovered)
-		else
-			item = item:style(f:style())
-		end
-		items[#items + 1] = item
-
-		-- Mark yanked/selected files
-		local yanked = f:is_yanked()
-		if yanked ~= 0 then
-			markers[#markers + 1] = { i, yanked }
-		elseif f:is_selected() then
-			markers[#markers + 1] = { i, 3 }
-		end
-	end
-	return utils.flat { ui.List(area, items), self:linemode(area), self:markers(area, markers) }
-end
-
-function Folder:preview(area)
-	local folder = self:by_kind(self.PREVIEW)
-	if folder == nil then
-		return {}
-	end
-
-	local items = {}
-	for _, f in ipairs(folder.window) do
-		local item = ui.ListItem(ui.Line { self:icon(f), ui.Span(f.name) })
-		if f:is_hovered() then
-			item = item:style(THEME.manager.preview_hovered)
-		else
-			item = item:style(f:style())
-		end
-		items[#items + 1] = item
-	end
-
-	return { ui.List(area, items) }
-end
-
-function Folder:render(area, args)
-	if args.kind == self.PARENT then
-		return self:parent(area)
-	elseif args.kind == self.CURRENT then
-		return self:current(area)
-	elseif args.kind == self.PREVIEW then
-		return self:preview(area)
-	end
 end

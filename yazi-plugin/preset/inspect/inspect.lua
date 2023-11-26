@@ -302,9 +302,9 @@ setmetatable(inspect, {
 	__call = function(_, root, options) return inspect.inspect(root, options) end,
 })
 
-yazi = yazi or {}
-yazi.inspect = inspect
-yazi.print = function(...)
+ya = ya or {}
+ya.inspect = inspect
+ya.print = function(...)
 	local args = { ... }
 	for i = 1, #args do
 		print(inspect(args[i]))

@@ -1,9 +1,9 @@
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 
-use yazi_shared::{fs::{File, FilesOp}, fs::Url};
+use yazi_shared::fs::{File, FilesOp, Url};
 
 use super::{Tabs, Watcher};
-use crate::{tab::{Folder, Tab}, tasks::Tasks};
+use crate::{folder::Folder, tab::Tab};
 
 pub struct Manager {
 	pub tabs:   Tabs,
@@ -64,20 +64,6 @@ impl Manager {
 		} else {
 			false
 		}
-	}
-
-	pub fn update_mimetype(&mut self, mut mimes: BTreeMap<Url, String>, tasks: &Tasks) -> bool {
-		mimes.retain(|f, m| self.mimetype.get(f) != Some(m));
-		if mimes.is_empty() {
-			return false;
-		}
-
-		tasks.precache_image(&mimes);
-		tasks.precache_video(&mimes);
-		tasks.precache_pdf(&mimes);
-
-		self.mimetype.extend(mimes);
-		true
 	}
 }
 

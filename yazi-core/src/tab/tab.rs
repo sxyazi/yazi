@@ -2,10 +2,10 @@ use std::{borrow::Cow, collections::BTreeMap};
 
 use anyhow::Result;
 use tokio::task::JoinHandle;
-use yazi_shared::{event::PreviewLock, fs::File, fs::Url};
+use yazi_shared::fs::{File, Url};
 
-use super::{Backstack, Config, Finder, Folder, Mode};
-use crate::preview::Preview;
+use super::{Backstack, Config, Finder, Mode, Preview};
+use crate::folder::Folder;
 
 pub struct Tab {
 	pub mode:    Mode,
@@ -44,21 +44,6 @@ impl From<Url> for Tab {
 
 impl From<&Url> for Tab {
 	fn from(url: &Url) -> Self { Self::from(url.clone()) }
-}
-
-impl Tab {
-	pub fn update_preview(&mut self, lock: PreviewLock) -> bool {
-		let Some(hovered) = self.current.hovered().map(|h| &h.url) else {
-			return self.preview.reset();
-		};
-
-		if lock.url != *hovered {
-			return false;
-		}
-
-		self.preview.lock = Some(lock);
-		true
-	}
 }
 
 impl Tab {

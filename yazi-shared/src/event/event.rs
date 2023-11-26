@@ -1,10 +1,8 @@
-use std::collections::BTreeMap;
-
 use crossterm::event::KeyEvent;
 use tokio::sync::{mpsc::UnboundedSender, oneshot};
 
 use super::Exec;
-use crate::{fs::{Cha, FilesOp, Url}, term::Term, Layer, RoCell};
+use crate::{fs::FilesOp, term::Term, Layer, RoCell};
 
 static TX: RoCell<UnboundedSender<Event>> = RoCell::new();
 
@@ -19,8 +17,6 @@ pub enum Event {
 	// Manager
 	Files(FilesOp),
 	Pages(usize),
-	Mimetype(BTreeMap<Url, String>),
-	Preview(PreviewLock),
 }
 
 impl Event {
@@ -41,14 +37,8 @@ macro_rules! emit {
 	(Quit($no_cwd_file:expr)) => {
 		$crate::event::Event::Quit($no_cwd_file).emit();
 	};
-	(Key($key:expr)) => {
-		$crate::event::Event::Key($key).emit();
-	};
 	(Render) => {
 		$crate::event::Event::Render(format!("{}:{}", file!(), line!())).emit();
-	};
-	(Resize($cols:expr, $rows:expr)) => {
-		$crate::event::Event::Resize($cols, $rows).emit();
 	};
 	(Call($exec:expr, $layer:expr)) => {
 		$crate::event::Event::Call($exec, $layer).emit();
@@ -60,41 +50,8 @@ macro_rules! emit {
 	(Pages($page:expr)) => {
 		$crate::event::Event::Pages($page).emit();
 	};
-	(Mimetype($mimes:expr)) => {
-		$crate::event::Event::Mimetype($mimes).emit();
-	};
-	(Preview($lock:expr)) => {
-		$crate::event::Event::Preview($lock).emit();
-	};
-
-	(Open($targets:expr, $opener:expr)) => {
-		$crate::event::Event::Open($targets, $opener).emit();
-	};
 
 	($event:ident) => {
 		$crate::event::Event::$event.emit();
 	};
-}
-
-// TODO: remove this
-pub struct PreviewLock {
-	pub url:  Url,
-	pub cha:  Option<Cha>,
-	pub skip: usize,
-	pub data: PreviewData,
-}
-
-#[derive(Debug)]
-pub enum PreviewData {
-	Folder,
-	Text(String),
-	Image,
-}
-
-impl PreviewLock {
-	#[inline]
-	pub fn is_image(&self) -> bool { matches!(self.data, PreviewData::Image) }
-
-	#[inline]
-	pub fn is_folder(&self) -> bool { matches!(self.data, PreviewData::Folder) }
 }

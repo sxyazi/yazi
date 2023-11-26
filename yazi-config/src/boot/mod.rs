@@ -1,4 +1,5 @@
+mod args;
 mod boot;
-mod cli;
 
+pub use args::*;
 pub use boot::*;

@@ -1,6 +1,10 @@
-Manager = {}
+Manager = {
+	area = ui.Rect.default,
+}
 
 function Manager:render(area)
+	self.area = area
+
 	local chunks = ui.Layout()
 		:direction(ui.Direction.HORIZONTAL)
 		:constraints({
@@ -10,16 +14,16 @@ function Manager:render(area)
 		})
 		:split(area)
 
-	return utils.flat {
+	return ya.flat {
 		-- Borders
 		ui.Bar(chunks[1], ui.Position.RIGHT):symbol(THEME.manager.border_symbol):style(THEME.manager.border_style),
 		ui.Bar(chunks[3], ui.Position.LEFT):symbol(THEME.manager.border_symbol):style(THEME.manager.border_style),
 
 		-- Parent
-		Folder:render(chunks[1]:padding(ui.Padding.x(1)), { kind = Folder.PARENT }),
+		Parent:render(chunks[1]:padding(ui.Padding.x(1))),
 		-- Current
-		Folder:render(chunks[2], { kind = Folder.CURRENT }),
+		Current:render(chunks[2]),
 		-- Preview
-		ui.Base(chunks[3]:padding(ui.Padding.x(1)), ui.Base.PREVIEW),
+		Preview:render(chunks[3]:padding(ui.Padding.x(1))),
 	}
 end

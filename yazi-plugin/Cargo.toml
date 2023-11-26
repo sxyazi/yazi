@@ -9,19 +9,29 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
-yazi-config = { path = "../yazi-config", version = "0.1.5" }
-yazi-core   = { path = "../yazi-core", version = "0.1.5" }
-yazi-shared = { path = "../yazi-shared", version = "0.1.5" }
+yazi-adaptor = { path = "../yazi-adaptor", version = "0.1.5" }
+yazi-config  = { path = "../yazi-config", version = "0.1.5" }
+yazi-shared  = { path = "../yazi-shared", version = "0.1.5" }
 
 # External dependencies
 ansi-to-tui   = "^3"
 anyhow        = "^1"
+futures       = "^0"
+libc          = "^0"
+md-5          = "^0"
+parking_lot   = "^0"
 ratatui       = "^0"
+serde         = "^1"
+serde_json    = "^1"
+syntect       = { version = "^5", default-features = false, features = [ "parsing", "default-themes", "plist-load", "regex-onig" ] }
+tokio         = { version = "^1", features = [ "parking_lot", "rt-multi-thread" ] }
+tokio-util    = "^0"
 tracing       = { version = "^0", features = [ "max_level_debug", "release_max_level_warn" ] }
 unicode-width = "^0"
+yazi-prebuild = "^0"
 
-[target.'cfg(any(target_arch = "riscv64", target_arch="loongarch64"))'.dependencies]
-mlua = { version = "^0", features = [ "lua52", "vendored", "serialize" ] }
+[target.'cfg(any(target_arch="riscv64", target_arch="loongarch64"))'.dependencies]
+mlua = { version = "^0", features = [ "lua52", "vendored", "serialize", "macros", "async" ] }
 
-[target.'cfg(not(any(target_arch = "riscv64", target_arch="loongarch64")))'.dependencies]
-mlua = { version = "^0", features = [ "luajit52", "vendored", "serialize" ] }
+[target.'cfg(not(any(target_arch="riscv64", target_arch="loongarch64")))'.dependencies]
+mlua = { version = "^0", features = [ "luajit52", "vendored", "serialize", "macros", "async" ] }

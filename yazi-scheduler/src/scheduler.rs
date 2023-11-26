@@ -3,16 +3,17 @@ use std::{ffi::OsStr, sync::Arc, time::Duration};
 use futures::{future::BoxFuture, FutureExt};
 use parking_lot::RwLock;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}};
-use yazi_config::{open::Opener, TASKS};
+use yazi_config::{open::Opener, plugin::PluginRule, TASKS};
 use yazi_shared::{emit, event::Exec, fs::{unique_path, Url}, Layer, Throttle};
 
 use super::{Running, TaskOp, TaskStage};
-use crate::{workers::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash, Precache, PrecacheOpMime, PrecacheOpSize, Process, ProcessOpOpen}, TaskKind};
+use crate::{workers::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash, Plugin, PluginOpEntry, Preload, PreloadOpRule, PreloadOpSize, Process, ProcessOpOpen}, TaskKind};
 
 pub struct Scheduler {
-	file:     Arc<File>,
-	precache: Arc<Precache>,
-	process:  Arc<Process>,
+	pub file:    Arc<File>,
+	pub plugin:  Arc<Plugin>,
+	pub preload: Arc<Preload>,
+	pub process: Arc<Process>,
 
 	todo:        async_channel::Sender<BoxFuture<'static, ()>>,
 	prog:        mpsc::UnboundedSender<TaskOp>,
@@ -25,9 +26,10 @@ impl Scheduler {
 		let (prog_tx, prog_rx) = mpsc::unbounded_channel();
 
 		let scheduler = Self {
-			file:     Arc::new(File::new(prog_tx.clone())),
-			precache: Arc::new(Precache::new(prog_tx.clone())),
-			process:  Arc::new(Process::new(prog_tx.clone())),
+			file:    Arc::new(File::new(prog_tx.clone())),
+			plugin:  Arc::new(Plugin::new(prog_tx.clone())),
+			preload: Arc::new(Preload::new(prog_tx.clone())),
+			process: Arc::new(Process::new(prog_tx.clone())),
 
 			todo:    todo_tx,
 			prog:    prog_tx,
@@ -56,7 +58,7 @@ impl Scheduler {
 
 	fn schedule_macro(&self, rx: async_channel::Receiver<BoxFuture<'static, ()>>) {
 		let file = self.file.clone();
-		let precache = self.precache.clone();
+		let plugin = self.plugin.clone();
 
 		let prog = self.prog.clone();
 		let running = self.running.clone();
@@ -80,11 +82,11 @@ impl Scheduler {
 							prog.send(TaskOp::Fail(id, format!("Failed to work on this task: {:?}", e))).ok();
 						}
 					}
-					Ok((id, mut op)) = precache.recv() => {
+					Ok((id, mut op)) = plugin.recv() => {
 						if !running.read().exists(id) {
 							continue;
 						}
-						if let Err(e) = precache.work(&mut op).await {
+						if let Err(e) = plugin.work(&mut op).await {
 							prog.send(TaskOp::Fail(id, format!("Failed to work on this task: {:?}", e))).ok();
 						}
 					}
@@ -279,11 +281,65 @@ impl Scheduler {
 		});
 	}
 
+	pub fn plugin_micro(&self, name: String) {
+		let id = self.running.write().add(TaskKind::User, format!("Run micro plugin `{name}`"));
+
+		_ = self.todo.send_blocking({
+			let plugin = self.plugin.clone();
+			async move {
+				plugin.micro(PluginOpEntry { id, name }).await.ok();
+			}
+			.boxed()
+		});
+	}
+
+	pub fn plugin_macro(&self, name: String) {
+		let id = self.running.write().add(TaskKind::User, format!("Run macro plugin `{name}`"));
+
+		self.plugin.macro_(PluginOpEntry { id, name }).ok();
+	}
+
+	pub fn preload_paged(&self, rule: &PluginRule, targets: Vec<&yazi_shared::fs::File>) {
+		let id = self.running.write().add(
+			TaskKind::Preload,
+			format!("Run preloader `{}` with {} target(s)", rule.exec.cmd, targets.len()),
+		);
+
+		_ = self.todo.send_blocking({
+			let preload = self.preload.clone();
+
+			let rule_id = rule.id;
+			let cmd = rule.exec.cmd.clone();
+			let targets = targets.into_iter().cloned().collect();
+			async move {
+				preload.rule(PreloadOpRule { id, rule_id, plugin: cmd, targets }).await.ok();
+			}
+			.boxed()
+		});
+	}
+
+	pub fn preload_size(&self, targets: Vec<&Url>) {
+		let throttle = Arc::new(Throttle::new(targets.len(), Duration::from_millis(300)));
+		let mut running = self.running.write();
+		for target in targets {
+			let id = running.add(TaskKind::Preload, format!("Calculate the size of {:?}", target));
+			_ = self.todo.send_blocking({
+				let preload = self.preload.clone();
+				let target = target.clone();
+				let throttle = throttle.clone();
+				async move {
+					preload.size(PreloadOpSize { id, target, throttle }).await.ok();
+				}
+				.boxed()
+			});
+		}
+	}
+
 	pub fn process_open(&self, opener: &Opener, args: &[impl AsRef<OsStr>]) {
 		let name = {
 			let s = format!("Execute `{}`", opener.exec);
 			let args = args.iter().map(|a| a.as_ref().to_string_lossy()).collect::<Vec<_>>().join(" ");
-			if args.is_empty() { s } else { format!("{} with `{}`", s, args) }
+			if args.is_empty() { s } else { format!("{s} with `{args}`") }
 		};
 
 		let mut running = self.running.write();
@@ -321,64 +377,5 @@ impl Scheduler {
 					.ok();
 			}
 		});
-	}
-
-	pub fn precache_size(&self, targets: Vec<&Url>) {
-		let throttle = Arc::new(Throttle::new(targets.len(), Duration::from_millis(300)));
-		let mut handing = self.precache.size_handing.lock();
-		let mut running = self.running.write();
-
-		for target in targets {
-			if !handing.contains(target) {
-				handing.insert(target.clone());
-			} else {
-				continue;
-			}
-
-			let id = running.add(TaskKind::Preload, format!("Calculate the size of {:?}", target));
-			_ = self.todo.send_blocking({
-				let precache = self.precache.clone();
-				let target = target.clone();
-				let throttle = throttle.clone();
-				async move {
-					precache.size(PrecacheOpSize { id, target, throttle }).await.ok();
-				}
-				.boxed()
-			});
-		}
-	}
-
-	pub fn precache_mime(&self, targets: Vec<Url>) {
-		let name = format!("Preload mimetype for {} files", targets.len());
-		let id = self.running.write().add(TaskKind::Preload, name);
-
-		_ = self.todo.send_blocking({
-			let precache = self.precache.clone();
-			async move {
-				precache.mime(PrecacheOpMime { id, targets }).await.ok();
-			}
-			.boxed()
-		});
-	}
-
-	pub fn precache_image(&self, targets: Vec<Url>) {
-		let name = format!("Precache of {} image files", targets.len());
-		let id = self.running.write().add(TaskKind::Preload, name);
-
-		self.precache.image(id, targets).ok();
-	}
-
-	pub fn precache_video(&self, targets: Vec<Url>) {
-		let name = format!("Precache of {} video files", targets.len());
-		let id = self.running.write().add(TaskKind::Preload, name);
-
-		self.precache.video(id, targets).ok();
-	}
-
-	pub fn precache_pdf(&self, targets: Vec<Url>) {
-		let name = format!("Precache of {} PDF files", targets.len());
-		let id = self.running.write().add(TaskKind::Preload, name);
-
-		self.precache.pdf(id, targets).ok();
 	}
 }

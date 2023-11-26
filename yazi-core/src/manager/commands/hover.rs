@@ -27,7 +27,7 @@ impl Manager {
 		let mut b = self.current_mut().repos(opt.url);
 
 		// Re-peek
-		b |= self.peek(0);
+		b |= self.peek(());
 
 		// Refresh watcher
 		let mut to_watch = BTreeSet::new();

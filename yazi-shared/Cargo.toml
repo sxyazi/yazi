@@ -18,4 +18,5 @@ parking_lot      = "^0"
 percent-encoding = "^2"
 ratatui          = "^0"
 regex            = "^1"
+serde            = "^1"
 tokio            = { version = "^1", features = [ "parking_lot", "macros", "rt-multi-thread", "sync", "time", "fs" ] }

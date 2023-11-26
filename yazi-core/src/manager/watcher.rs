@@ -5,10 +5,9 @@ use notify::{event::{MetadataKind, ModifyKind}, EventKind, RecommendedWatcher, R
 use parking_lot::RwLock;
 use tokio::{fs, pin, sync::mpsc::{self, UnboundedReceiver}};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
-use yazi_scheduler::external;
 use yazi_shared::{emit, fs::{File, FilesOp, Url}};
 
-use crate::files::Files;
+use crate::folder::Files;
 
 pub struct Watcher {
 	watcher: RecommendedWatcher,
@@ -164,23 +163,24 @@ impl Watcher {
 	}
 
 	async fn files_changed(urls: &[Url], watched: &IndexMap<Url, Option<Url>>) {
-		let Ok(mut mimes) = external::file(urls).await else {
-			return;
-		};
+		// TODO: plugin system
+		// let Ok(mut mimes) = external::file(urls).await else {
+		// 	return;
+		// };
 
-		let linked: Vec<_> = watched.iter().filter_map(|(k, v)| v.as_ref().map(|v| (k, v))).fold(
-			Vec::new(),
-			|mut aac, (k, v)| {
-				mimes
-					.iter()
-					.filter(|(u, _)| u.parent().map(|p| p == **v) == Some(true))
-					.for_each(|(u, m)| aac.push((k.join(u.file_name().unwrap()), m.clone())));
-				aac
-			},
-		);
+		// let linked: Vec<_> = watched.iter().filter_map(|(k, v)|
+		// v.as_ref().map(|v| (k, v))).fold( 	Vec::new(),
+		// 	|mut aac, (k, v)| {
+		// 		mimes
+		// 			.iter()
+		// 			.filter(|(u, _)| u.parent().map(|p| p == **v) == Some(true))
+		// 			.for_each(|(u, m)| aac.push((k.join(u.file_name().unwrap()),
+		// m.clone()))); 		aac
+		// 	},
+		// );
 
-		mimes.extend(linked);
-		emit!(Mimetype(mimes));
+		// mimes.extend(linked);
+		// emit!(Mimetype(mimes));
 	}
 
 	async fn dir_changed(url: &Url, watched: &IndexMap<Url, Option<Url>>) {

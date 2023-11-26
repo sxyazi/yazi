@@ -17,6 +17,7 @@ anyhow      = "^1"
 base64      = "^0"
 color_quant = "^1"
 image       = "^0"
+imagesize   = "^0"
 ratatui     = "^0"
 tokio       = { version = "^1", features = [ "parking_lot", "io-util", "process" ] }
 

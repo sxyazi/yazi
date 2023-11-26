@@ -1,9 +1,8 @@
 use ratatui::{layout, prelude::{Buffer, Constraint, Direction, Rect}, widgets::{Block, Widget}};
 use yazi_config::THEME;
-use yazi_core::Ctx;
 
 use super::Side;
-use crate::widgets;
+use crate::{Ctx, widgets};
 
 pub(crate) struct Which<'a> {
 	cx: &'a Ctx,

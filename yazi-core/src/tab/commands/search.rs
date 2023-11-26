@@ -4,7 +4,7 @@ use anyhow::bail;
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
-use yazi_scheduler::external;
+use yazi_plugin::external;
 use yazi_shared::{emit, event::Exec, fs::FilesOp};
 
 use crate::{input::Input, manager::Manager, tab::Tab};
@@ -78,7 +78,8 @@ impl Tab {
 			handle.abort();
 		}
 		if self.current.cwd.is_search() {
-			self.preview.reset_image();
+			// TODO: plugin system
+			// self.preview.reset_image();
 
 			let rep = self.history_new(&self.current.cwd.to_regular());
 			drop(mem::replace(&mut self.current, rep));

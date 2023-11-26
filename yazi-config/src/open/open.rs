@@ -23,7 +23,7 @@ impl Open {
 		P: AsRef<Path>,
 		M: AsRef<str>,
 	{
-		let is_folder = Some(mime.as_ref() == MIME_DIR);
+		let is_folder = mime.as_ref() == MIME_DIR;
 		self.rules.iter().find_map(|rule| {
 			if rule.mime.as_ref().is_some_and(|m| m.matches(&mime))
 				|| rule.name.as_ref().is_some_and(|n| n.match_path(&path, is_folder))

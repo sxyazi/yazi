@@ -1,19 +1,14 @@
-use std::{env, path::{Path, PathBuf}, sync::atomic::{AtomicBool, Ordering}};
+use std::{env, path::Path, sync::atomic::{AtomicBool, Ordering}};
 
 use anyhow::{anyhow, Result};
 use ratatui::prelude::Rect;
-use tokio::{fs, sync::mpsc::UnboundedSender};
 use tracing::warn;
-use yazi_config::PREVIEW;
-use yazi_shared::{env_exists, RoCell};
+use yazi_shared::env_exists;
 
 use super::{Iterm2, Kitty, KittyOld};
 use crate::{ueberzug::Ueberzug, Sixel, TMUX};
 
 static IMAGE_SHOWN: AtomicBool = AtomicBool::new(false);
-
-#[allow(clippy::type_complexity)]
-static UEBERZUG: RoCell<Option<UnboundedSender<Option<(PathBuf, Rect)>>>> = RoCell::new();
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Adaptor {
@@ -164,16 +159,9 @@ impl ToString for Adaptor {
 }
 
 impl Adaptor {
-	pub(super) fn start(self) {
-		UEBERZUG.init(if self.needs_ueberzug() { Ueberzug::start(self).ok() } else { None });
-	}
+	pub(super) fn start(self) { Ueberzug::start(self); }
 
-	pub async fn image_show(self, mut path: &Path, rect: Rect) -> Result<()> {
-		let cache = PREVIEW.cache(path, 0);
-		if fs::symlink_metadata(&cache).await.is_ok() {
-			path = cache.as_path();
-		}
-
+	pub async fn image_show(self, path: &Path, rect: Rect) -> Result<(u32, u32)> {
 		self.image_hide(rect).ok();
 		IMAGE_SHOWN.store(true, Ordering::Relaxed);
 
@@ -182,9 +170,7 @@ impl Adaptor {
 			Self::KittyOld => KittyOld::image_show(path, rect).await,
 			Self::Iterm2 => Iterm2::image_show(path, rect).await,
 			Self::Sixel => Sixel::image_show(path, rect).await,
-			_ => Ok(if let Some(tx) = &*UEBERZUG {
-				tx.send(Some((path.to_path_buf(), rect)))?;
-			}),
+			_ => Ueberzug::image_show(path, rect).await,
 		}
 	}
 
@@ -198,9 +184,7 @@ impl Adaptor {
 			Self::Iterm2 => Iterm2::image_hide(rect),
 			Self::KittyOld => KittyOld::image_hide(),
 			Self::Sixel => Sixel::image_hide(rect),
-			_ => Ok(if let Some(tx) = &*UEBERZUG {
-				tx.send(None)?;
-			}),
+			_ => Ueberzug::image_hide(rect),
 		}
 	}
 

@@ -34,6 +34,8 @@ impl From<Metadata> for Cha {
 		let mut ck = ChaKind::empty();
 		if m.is_dir() {
 			ck |= ChaKind::DIR;
+		} else if m.is_symlink() {
+			ck |= ChaKind::LINK;
 		}
 
 		#[cfg(unix)]

@@ -1,7 +1,7 @@
 use std::ffi::OsString;
 
 use anyhow::anyhow;
-use yazi_config::{open::Opener, BOOT};
+use yazi_config::{open::Opener, ARGS};
 use yazi_shared::{emit, event::Exec, Layer};
 
 use crate::tasks::Tasks;
@@ -29,7 +29,7 @@ impl Tasks {
 			return false;
 		};
 
-		if let Some(p) = &BOOT.chooser_file {
+		if let Some(p) = &ARGS.chooser_file {
 			let paths = opt.targets.into_iter().fold(OsString::new(), |mut s, (p, _)| {
 				s.push(p);
 				s.push("\n");

@@ -12,10 +12,10 @@ impl Term {
 	}
 
 	#[inline]
-	pub fn move_lock<W, F>(mut stdout: W, (x, y): (u16, u16), cb: F) -> Result<()>
+	pub fn move_lock<W, F, T>(mut stdout: W, (x, y): (u16, u16), cb: F) -> Result<T>
 	where
 		W: Write,
-		F: FnOnce(&mut W) -> Result<()>,
+		F: FnOnce(&mut W) -> Result<T>,
 	{
 		#[cfg(windows)]
 		{

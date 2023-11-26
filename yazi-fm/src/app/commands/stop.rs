@@ -24,7 +24,8 @@ impl App {
 			return false;
 		};
 
-		self.cx.manager.active_mut().preview.reset_image();
+		// TODO: plugin system
+		// self.cx.manager.active_mut().preview.reset_image();
 		if opt.state {
 			self.signals.stop_term(true);
 			self.term = None;

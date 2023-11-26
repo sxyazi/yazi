@@ -36,11 +36,11 @@ impl Step {
 
 impl Step {
 	#[inline]
-	pub fn add<F: FnOnce() -> usize>(self, pos: usize, f: F) -> usize {
+	pub fn add(self, pos: usize, limit: usize) -> usize {
 		let fixed = match self {
 			Self::Fixed(n) => n,
 			Self::Percent(0) => 0,
-			Self::Percent(n) => n as isize * f() as isize / 100,
+			Self::Percent(n) => n as isize * limit as isize / 100,
 		};
 		if fixed > 0 { pos + fixed as usize } else { pos.saturating_sub(fixed.unsigned_abs()) }
 	}

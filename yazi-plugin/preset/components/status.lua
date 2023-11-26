@@ -1,4 +1,6 @@
-Status = {}
+Status = {
+	area = ui.Rect.default,
+}
 
 function Status.style()
 	if cx.active.mode.is_select then
@@ -31,7 +33,7 @@ function Status:size()
 
 	local style = self.style()
 	return ui.Line {
-		ui.Span(" " .. utils.readable_size(h:size() or h.length) .. " "):fg(style.bg):bg(THEME.status.separator_style.bg),
+		ui.Span(" " .. ya.readable_size(h:size() or h.cha.length) .. " "):fg(style.bg):bg(THEME.status.separator_style.bg),
 		ui.Span(THEME.status.separator_close):fg(THEME.status.separator_style.fg),
 	}
 end
@@ -51,7 +53,7 @@ function Status:permissions()
 		return ui.Span("")
 	end
 
-	local perm = h:permissions()
+	local perm = h.cha:permissions()
 	if perm == nil then
 		return ui.Span("")
 	end
@@ -139,6 +141,8 @@ function Status:progress(area, offset)
 end
 
 function Status:render(area)
+	self.area = area
+
 	local left = ui.Line { self:mode(), self:size(), self:name() }
 	local right = ui.Line { self:permissions(), self:percentage(), self:position() }
 	local progress = self:progress(area, right:width())

@@ -2,9 +2,12 @@
 
 mod app;
 mod completion;
+mod components;
+mod context;
 mod executor;
 mod help;
 mod input;
+mod lives;
 mod logs;
 mod panic;
 mod root;
@@ -14,6 +17,7 @@ mod tasks;
 mod which;
 mod widgets;
 
+use context::*;
 use executor::*;
 use logs::*;
 use panic::*;
@@ -28,6 +32,8 @@ async fn main() -> anyhow::Result<()> {
 	yazi_config::init();
 
 	yazi_core::init();
+
+	yazi_scheduler::init();
 
 	yazi_plugin::init();
 

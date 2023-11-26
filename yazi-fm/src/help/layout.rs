@@ -1,9 +1,8 @@
 use ratatui::{buffer::Buffer, layout::{self, Rect}, prelude::{Constraint, Direction}, widgets::{Paragraph, Widget}};
 use yazi_config::THEME;
-use yazi_core::Ctx;
 
 use super::Bindings;
-use crate::widgets;
+use crate::{Ctx, widgets};
 
 pub(crate) struct Layout<'a> {
 	cx: &'a Ctx,

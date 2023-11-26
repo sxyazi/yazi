@@ -1,13 +1,13 @@
-use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, path::Path, sync::Arc, time::Duration};
+use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, mem, path::Path, sync::Arc, time::Duration};
 
 use tokio::time::sleep;
 use tracing::debug;
-use yazi_config::{manager::SortBy, open::Opener, popup::InputCfg, OPEN};
+use yazi_config::{manager::SortBy, open::Opener, plugin::{PluginRule, MAX_PRELOADERS}, popup::InputCfg, OPEN, PLUGIN};
 use yazi_scheduler::{Scheduler, TaskSummary};
-use yazi_shared::{fs::{File, Url}, term::Term, MimeKind};
+use yazi_shared::{fs::{File, Url}, term::Term, MIME_DIR};
 
 use super::{TasksProgress, TASKS_PADDING, TASKS_PERCENT};
-use crate::{files::Files, input::Input};
+use crate::{folder::Files, input::Input};
 
 pub struct Tasks {
 	pub(super) scheduler: Arc<Scheduler>,
@@ -149,76 +149,94 @@ impl Tasks {
 		false
 	}
 
-	#[inline]
-	pub fn precache_size(&self, targets: &Files) -> bool {
+	pub fn plugin_micro(&self, name: &str) -> bool {
+		self.scheduler.plugin_micro(name.to_owned());
+		false
+	}
+
+	pub fn plugin_macro(&self, name: &str) -> bool {
+		self.scheduler.plugin_macro(name.to_owned());
+		false
+	}
+
+	pub fn preload_paged(&self, paged: &[File], mimetype: &HashMap<Url, String>) {
+		let mut single_tasks = Vec::with_capacity(paged.len());
+		let mut multi_tasks: [Vec<_>; MAX_PRELOADERS as usize] = Default::default();
+
+		let loaded = self.scheduler.preload.rule_loaded.read();
+		for f in paged {
+			let mime = if f.is_dir() { Some(MIME_DIR) } else { mimetype.get(&f.url).map(|s| &**s) };
+			let factors = |s: &str| match s {
+				"mime" => mime.is_some(),
+				_ => false,
+			};
+
+			for rule in PLUGIN.preloaders(&f.url, mime, factors) {
+				if loaded.get(&f.url).is_some_and(|x| x & 1 << rule.id != 0) {
+					continue;
+				}
+				if rule.multi {
+					multi_tasks[rule.id as usize].push(f);
+				} else {
+					single_tasks.push((rule, f));
+				}
+			}
+		}
+
+		drop(loaded);
+		let mut loaded = self.scheduler.preload.rule_loaded.write();
+
+		let mut go = |rule: &PluginRule, targets: Vec<&File>| {
+			for &f in &targets {
+				*loaded.entry(f.url.clone()).or_default() |= 1 << rule.id;
+			}
+			self.scheduler.preload_paged(rule, targets);
+		};
+
+		for i in 0..PLUGIN.preloaders.len() {
+			if !multi_tasks[i].is_empty() {
+				go(&PLUGIN.preloaders[i], mem::take(&mut multi_tasks[i]));
+			}
+		}
+		for (rule, target) in single_tasks {
+			go(rule, vec![target]);
+		}
+	}
+
+	pub fn preload_affected(&self, paged: &[File], mimetype: &HashMap<Url, String>) {
+		{
+			let mut loaded = self.scheduler.preload.rule_loaded.write();
+			for u in mimetype.keys() {
+				loaded.remove(u);
+			}
+		}
+
+		self.preload_paged(paged, mimetype);
+	}
+
+	pub fn preload_sorted(&self, targets: &Files) {
 		if targets.sorter().by != SortBy::Size {
-			return false;
+			return;
 		}
 
-		let targets: Vec<_> = targets
-			.iter()
-			.filter(|f| f.is_dir() && !targets.sizes.contains_key(&f.url))
-			.map(|f| &f.url)
-			.collect();
-
-		if !targets.is_empty() {
-			self.scheduler.precache_size(targets);
+		let targets: Vec<_> = {
+			let loading = self.scheduler.preload.size_loading.read();
+			targets
+				.iter()
+				.filter(|f| f.is_dir() && !targets.sizes.contains_key(&f.url) && !loading.contains(&f.url))
+				.map(|f| &f.url)
+				.collect()
+		};
+		if targets.is_empty() {
+			return;
 		}
 
-		false
-	}
-
-	#[inline]
-	pub fn precache_mime(&self, targets: &[File], mimetype: &HashMap<Url, String>) -> bool {
-		let targets: Vec<_> = targets
-			.iter()
-			.filter(|f| !f.is_dir() && !mimetype.contains_key(&f.url))
-			.map(|f| f.url())
-			.collect();
-
-		if !targets.is_empty() {
-			self.scheduler.precache_mime(targets);
+		let mut loading = self.scheduler.preload.size_loading.write();
+		for &target in &targets {
+			loading.insert(target.clone());
 		}
-		false
-	}
 
-	pub fn precache_image(&self, mimetype: &BTreeMap<Url, String>) -> bool {
-		let targets: Vec<_> = mimetype
-			.iter()
-			.filter(|(_, m)| MimeKind::new(m) == MimeKind::Image)
-			.map(|(u, _)| u.clone())
-			.collect();
-
-		if !targets.is_empty() {
-			self.scheduler.precache_image(targets);
-		}
-		false
-	}
-
-	pub fn precache_video(&self, mimetype: &BTreeMap<Url, String>) -> bool {
-		let targets: Vec<_> = mimetype
-			.iter()
-			.filter(|(_, m)| MimeKind::new(m) == MimeKind::Video)
-			.map(|(u, _)| u.clone())
-			.collect();
-
-		if !targets.is_empty() {
-			self.scheduler.precache_video(targets);
-		}
-		false
-	}
-
-	pub fn precache_pdf(&self, mimetype: &BTreeMap<Url, String>) -> bool {
-		let targets: Vec<_> = mimetype
-			.iter()
-			.filter(|(_, m)| MimeKind::new(m) == MimeKind::PDF)
-			.map(|(u, _)| u.clone())
-			.collect();
-
-		if !targets.is_empty() {
-			self.scheduler.precache_pdf(targets);
-		}
-		false
+		self.scheduler.preload_size(targets);
 	}
 }
 
