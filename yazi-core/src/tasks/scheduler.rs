@@ -7,7 +7,7 @@ use yazi_config::{open::Opener, TASKS};
 use yazi_shared::{fs::{unique_path, Url}, Throttle};
 
 use super::{workers::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash, Precache, PrecacheOpMime, PrecacheOpSize, Process, ProcessOpOpen}, Running, TaskOp, TaskStage, TasksProgress};
-use crate::emit;
+use crate::tasks::Tasks;
 
 pub struct Scheduler {
 	file:     Arc<File>,
@@ -157,7 +157,7 @@ impl Scheduler {
 				let new = TasksProgress::from(&*running.read());
 				if last != new {
 					last = new;
-					emit!(Progress(new));
+					Tasks::_update(new);
 				}
 			}
 		});

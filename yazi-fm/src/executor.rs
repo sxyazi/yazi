@@ -163,6 +163,7 @@ impl<'a> Executor<'a> {
 			};
 		}
 
+		on!(update);
 		on!(toggle, "close");
 		on!(arrow);
 		on!(inspect);

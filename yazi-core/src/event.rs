@@ -6,7 +6,7 @@ use yazi_config::open::Opener;
 use yazi_shared::{fs::Url, term::Term, Exec, Layer, RoCell};
 
 use super::files::FilesOp;
-use crate::{preview::PreviewLock, tasks::TasksProgress};
+use crate::preview::PreviewLock;
 
 static TX: RoCell<UnboundedSender<Event>> = RoCell::new();
 
@@ -25,11 +25,8 @@ pub enum Event {
 	Mimetype(BTreeMap<Url, String>),
 	Preview(PreviewLock),
 
-	// Input(InputOpt, mpsc::UnboundedSender<Result<String, InputError>>),
-
 	// Tasks
 	Open(Vec<(OsString, String)>, Option<Opener>),
-	Progress(TasksProgress),
 }
 
 impl Event {
@@ -82,9 +79,6 @@ macro_rules! emit {
 
 	(Open($targets:expr, $opener:expr)) => {
 		$crate::Event::Open($targets, $opener).emit();
-	};
-	(Progress($progress:expr)) => {
-		$crate::Event::Progress($progress).emit();
 	};
 
 	($event:ident) => {

@@ -41,6 +41,11 @@ impl Exec {
 		self.data = RefCell::new(Some(Box::new(data)));
 		self
 	}
+
+	#[inline]
+	pub fn take_data<T: 'static>(&self) -> Option<T> {
+		self.data.replace(None).and_then(|d| d.downcast::<T>().ok()).map(|d| *d)
+	}
 }
 
 impl Display for Exec {

@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{anyhow, Result};
 use tokio::sync::oneshot;
 use yazi_config::popup::SelectCfg;
 use yazi_shared::{term::Term, Exec, Layer};
@@ -14,13 +14,7 @@ impl TryFrom<&Exec> for Opt {
 	type Error = anyhow::Error;
 
 	fn try_from(e: &Exec) -> Result<Self, Self::Error> {
-		let Some(data) = e.data.borrow_mut().take() else {
-			bail!("missing data");
-		};
-		let Ok(opt) = data.downcast::<Opt>() else {
-			bail!("invalid data");
-		};
-		Ok(*opt)
+		e.take_data().ok_or_else(|| anyhow!("invalid data"))
 	}
 }
 

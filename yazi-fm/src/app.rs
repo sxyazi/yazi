@@ -195,10 +195,6 @@ impl App {
 					tasks.file_open(&targets);
 				}
 			}
-			Event::Progress(progress) => {
-				tasks.progress = progress;
-				emit!(Render);
-			}
 
 			_ => unreachable!(),
 		}
