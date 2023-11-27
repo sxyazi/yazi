@@ -64,6 +64,7 @@ impl Keymap {
 	#[inline]
 	pub fn get(&self, layer: Layer) -> &Vec<Control> {
 		match layer {
+			Layer::App => unreachable!(),
 			Layer::Manager => &self.manager,
 			Layer::Tasks => &self.tasks,
 			Layer::Select => &self.select,

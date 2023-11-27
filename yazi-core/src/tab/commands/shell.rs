@@ -1,7 +1,7 @@
 use yazi_config::{open::Opener, popup::InputCfg};
 use yazi_shared::Exec;
 
-use crate::{emit, input::Input, tab::Tab};
+use crate::{input::Input, tab::Tab, tasks::Tasks};
 
 pub struct Opt {
 	cmd:     String,
@@ -37,7 +37,7 @@ impl Tab {
 				}
 			}
 
-			emit!(Open(
+			Tasks::_open(
 				selected,
 				Some(Opener {
 					exec:   opt.cmd,
@@ -46,8 +46,8 @@ impl Tab {
 					desc:   Default::default(),
 					for_:   None,
 					spread: true,
-				})
-			));
+				}),
+			);
 		});
 
 		false

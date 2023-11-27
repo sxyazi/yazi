@@ -1,7 +1,9 @@
 use ratatui::prelude::Rect;
+use tokio::sync::oneshot;
 use yazi_config::popup::{Origin, Position};
+use yazi_shared::{Exec, Layer};
 
-use crate::{completion::Completion, help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which};
+use crate::{completion::Completion, emit, help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which};
 
 pub struct Ctx {
 	pub manager:    Manager,
@@ -24,6 +26,21 @@ impl Ctx {
 			completion: Default::default(),
 			which:      Default::default(),
 		}
+	}
+
+	#[inline]
+	pub async fn stop() {
+		let (tx, rx) = oneshot::channel::<()>();
+		emit!(Call(Exec::call("stop", vec!["true".to_string()]).with_data(Some(tx)).vec(), Layer::App));
+		rx.await.ok();
+	}
+
+	#[inline]
+	pub fn resume() {
+		emit!(Call(
+			Exec::call("stop", vec!["false".to_string()]).with_data(None::<oneshot::Sender<()>>).vec(),
+			Layer::App
+		));
 	}
 
 	pub fn area(&self, position: &Position) -> Rect {

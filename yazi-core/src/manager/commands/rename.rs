@@ -5,7 +5,7 @@ use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 use yazi_config::{popup::InputCfg, OPEN, PREVIEW};
 use yazi_shared::{fs::{max_common_root, Url}, term::Term, Defer, Exec};
 
-use crate::{emit, external::{self, ShellOpt}, files::{File, FilesOp}, input::Input, manager::Manager, Event, BLOCKER};
+use crate::{emit, external::{self, ShellOpt}, files::{File, FilesOp}, input::Input, manager::Manager, Ctx, BLOCKER};
 
 pub struct Opt {
 	force: bool,
@@ -86,10 +86,10 @@ impl Manager {
 
 			let _guard = BLOCKER.acquire().await.unwrap();
 			let _defer = Defer::new(|| {
-				Event::Stop(false, None).emit();
+				Ctx::resume();
 				tokio::spawn(fs::remove_file(tmp.clone()))
 			});
-			emit!(Stop(true)).await;
+			Ctx::stop().await;
 
 			let mut child = external::shell(ShellOpt {
 				cmd:    (*opener.exec).into(),

@@ -1,7 +1,6 @@
-use yazi_shared::Exec;
-use yazi_shared::{fs::ends_with_slash, Defer};
+use yazi_shared::{fs::ends_with_slash, Defer, Exec};
 
-use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, tab::Tab, Event, BLOCKER};
+use crate::{external::{self, FzfOpt, ZoxideOpt}, tab::Tab, Ctx, BLOCKER};
 
 pub struct Opt {
 	type_: OptType,
@@ -36,8 +35,8 @@ impl Tab {
 		let cwd = self.current.cwd.clone();
 		tokio::spawn(async move {
 			let _guard = BLOCKER.acquire().await.unwrap();
-			let _defer = Defer::new(|| Event::Stop(false, None).emit());
-			emit!(Stop(true)).await;
+			let _defer = Defer::new(Ctx::resume);
+			Ctx::stop().await;
 
 			let result = if opt.type_ == OptType::Fzf {
 				external::fzf(FzfOpt { cwd }).await

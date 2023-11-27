@@ -3,6 +3,7 @@ use std::fmt::{self, Display};
 #[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum Layer {
 	#[default]
+	App,
 	Manager,
 	Tasks,
 	Select,
@@ -15,6 +16,7 @@ pub enum Layer {
 impl Display for Layer {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
+			Self::App => write!(f, "app"),
 			Self::Manager => write!(f, "manager"),
 			Self::Tasks => write!(f, "tasks"),
 			Self::Select => write!(f, "select"),

@@ -1,8 +1,7 @@
-use std::{collections::BTreeMap, ffi::OsString};
+use std::collections::BTreeMap;
 
 use crossterm::event::KeyEvent;
 use tokio::sync::{mpsc::UnboundedSender, oneshot};
-use yazi_config::open::Opener;
 use yazi_shared::{fs::Url, term::Term, Exec, Layer, RoCell};
 
 use super::files::FilesOp;
@@ -16,7 +15,6 @@ pub enum Event {
 	Paste(String),
 	Render(String),
 	Resize(u16, u16),
-	Stop(bool, Option<oneshot::Sender<()>>),
 	Call(Vec<Exec>, Layer),
 
 	// Manager
@@ -24,9 +22,6 @@ pub enum Event {
 	Pages(usize),
 	Mimetype(BTreeMap<Url, String>),
 	Preview(PreviewLock),
-
-	// Tasks
-	Open(Vec<(OsString, String)>, Option<Opener>),
 }
 
 impl Event {
@@ -56,10 +51,6 @@ macro_rules! emit {
 	(Resize($cols:expr, $rows:expr)) => {
 		$crate::Event::Resize($cols, $rows).emit();
 	};
-	(Stop($state:expr)) => {{
-		let (tx, rx) = tokio::sync::oneshot::channel();
-		$crate::Event::Stop($state, Some(tx)).wait(rx)
-	}};
 	(Call($exec:expr, $layer:expr)) => {
 		$crate::Event::Call($exec, $layer).emit();
 	};

@@ -3,7 +3,7 @@ use std::ffi::OsString;
 use yazi_config::{popup::SelectCfg, OPEN};
 use yazi_shared::{Exec, MIME_DIR};
 
-use crate::{emit, external, manager::Manager, select::Select};
+use crate::{external, manager::Manager, select::Select, tasks::Tasks};
 
 pub struct Opt {
 	interactive: bool,
@@ -22,7 +22,7 @@ impl Manager {
 
 		let result = Select::_show(SelectCfg::open(openers.iter().map(|o| o.desc.clone()).collect()));
 		if let Ok(choice) = result.await {
-			emit!(Open(files, Some(openers[choice].clone())));
+			Tasks::_open(files, Some(openers[choice].clone()));
 		}
 	}
 
@@ -63,7 +63,7 @@ impl Manager {
 				return;
 			}
 
-			emit!(Open(files, None));
+			Tasks::_open(files, None);
 		});
 		false
 	}
