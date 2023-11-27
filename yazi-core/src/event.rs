@@ -1,10 +1,9 @@
 use std::{collections::BTreeMap, ffi::OsString};
 
-use anyhow::Result;
 use crossterm::event::KeyEvent;
-use tokio::sync::{mpsc::{self, UnboundedSender}, oneshot};
-use yazi_config::{open::Opener, popup::InputOpt};
-use yazi_shared::{fs::Url, term::Term, Exec, InputError, Layer, RoCell};
+use tokio::sync::{mpsc::UnboundedSender, oneshot};
+use yazi_config::open::Opener;
+use yazi_shared::{fs::Url, term::Term, Exec, Layer, RoCell};
 
 use super::files::FilesOp;
 use crate::{preview::PreviewLock, tasks::TasksProgress};
@@ -26,8 +25,7 @@ pub enum Event {
 	Mimetype(BTreeMap<Url, String>),
 	Preview(PreviewLock),
 
-	// Input
-	Input(InputOpt, mpsc::UnboundedSender<Result<String, InputError>>),
+	// Input(InputOpt, mpsc::UnboundedSender<Result<String, InputError>>),
 
 	// Tasks
 	Open(Vec<(OsString, String)>, Option<Opener>),
@@ -81,12 +79,6 @@ macro_rules! emit {
 	(Preview($lock:expr)) => {
 		$crate::Event::Preview($lock).emit();
 	};
-
-	(Input($opt:expr)) => {{
-		let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-		$crate::Event::Input($opt, tx).emit();
-		rx
-	}};
 
 	(Open($targets:expr, $opener:expr)) => {
 		$crate::Event::Open($targets, $opener).emit();

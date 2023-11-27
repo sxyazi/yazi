@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use tokio::sync::mpsc::UnboundedSender;
 use unicode_width::UnicodeWidthStr;
-use yazi_config::{popup::{InputOpt, Position}, INPUT};
+use yazi_config::{popup::Position, INPUT};
 use yazi_shared::InputError;
 
 use super::{mode::InputMode, op::InputOp, InputSnap, InputSnaps};
@@ -19,7 +19,7 @@ pub struct Input {
 
 	// Typing
 	pub(super) callback:   Option<UnboundedSender<Result<String, InputError>>>,
-	realtime:              bool,
+	pub(super) realtime:   bool,
 	pub(super) completion: bool,
 
 	// Shell
@@ -27,24 +27,6 @@ pub struct Input {
 }
 
 impl Input {
-	pub fn show(&mut self, opt: InputOpt, tx: UnboundedSender<Result<String, InputError>>) {
-		self.close(false);
-		self.visible = true;
-		self.title = opt.title;
-		self.position = opt.position;
-
-		// Typing
-		self.callback = Some(tx);
-		self.realtime = opt.realtime;
-		self.completion = opt.completion;
-
-		// Shell
-		self.highlight = opt.highlight;
-
-		// Reset snaps
-		self.snaps.reset(opt.value, self.limit());
-	}
-
 	#[inline]
 	pub(super) fn limit(&self) -> usize {
 		self.position.offset.width.saturating_sub(INPUT.border()) as usize

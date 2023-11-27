@@ -2,10 +2,10 @@ use std::{mem, time::Duration};
 
 use tokio::{fs, pin};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
-use yazi_config::popup::InputOpt;
+use yazi_config::popup::InputCfg;
 use yazi_shared::{fs::{expand_path, Url}, Debounce, Exec, InputError, Layer};
 
-use crate::{completion::Completion, emit, manager::Manager, tab::Tab};
+use crate::{completion::Completion, emit, input::Input, manager::Manager, tab::Tab};
 
 pub struct Opt {
 	target:      Url,
@@ -72,7 +72,7 @@ impl Tab {
 		let opt = opt.into() as Opt;
 
 		tokio::spawn(async move {
-			let rx = emit!(Input(InputOpt::cd().with_value(opt.target.to_string_lossy())));
+			let rx = Input::_show(InputCfg::cd().with_value(opt.target.to_string_lossy()));
 
 			let rx = Debounce::new(UnboundedReceiverStream::new(rx), Duration::from_millis(50));
 			pin!(rx);

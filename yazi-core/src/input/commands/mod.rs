@@ -10,6 +10,7 @@ mod kill;
 mod move_;
 mod paste;
 mod redo;
+mod show;
 mod type_;
 mod undo;
 mod visual;

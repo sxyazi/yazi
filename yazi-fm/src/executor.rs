@@ -207,6 +207,7 @@ impl<'a> Executor<'a> {
 			};
 		}
 
+		on!(show);
 		on!(close);
 		on!(escape);
 		on!(move_, "move");

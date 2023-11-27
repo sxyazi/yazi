@@ -177,11 +177,6 @@ impl App {
 				}
 			}
 
-			Event::Input(opt, tx) => {
-				self.cx.input.show(opt, tx);
-				emit!(Render);
-			}
-
 			Event::Open(targets, opener) => {
 				if let Some(p) = &BOOT.chooser_file {
 					let paths = targets.into_iter().fold(OsString::new(), |mut s, (p, _)| {

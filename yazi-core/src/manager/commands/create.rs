@@ -1,10 +1,10 @@
 use std::path::{PathBuf, MAIN_SEPARATOR};
 
 use tokio::fs;
-use yazi_config::popup::InputOpt;
+use yazi_config::popup::InputCfg;
 use yazi_shared::{fs::Url, Exec};
 
-use crate::{emit, files::{File, FilesOp}, manager::Manager};
+use crate::{emit, files::{File, FilesOp}, input::Input, manager::Manager};
 
 pub struct Opt {
 	force: bool,
@@ -19,14 +19,14 @@ impl Manager {
 		let opt = opt.into() as Opt;
 		let cwd = self.cwd().to_owned();
 		tokio::spawn(async move {
-			let mut result = emit!(Input(InputOpt::create()));
+			let mut result = Input::_show(InputCfg::create());
 			let Some(Ok(name)) = result.recv().await else {
 				return Ok(());
 			};
 
 			let path = cwd.join(&name);
 			if !opt.force && fs::symlink_metadata(&path).await.is_ok() {
-				match emit!(Input(InputOpt::overwrite())).recv().await {
+				match Input::_show(InputCfg::overwrite()).recv().await {
 					Some(Ok(c)) if c == "y" || c == "Y" => (),
 					_ => return Ok(()),
 				}

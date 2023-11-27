@@ -2,7 +2,7 @@ use super::{Offset, Position};
 use crate::{INPUT, SELECT};
 
 #[derive(Default)]
-pub struct InputOpt {
+pub struct InputCfg {
 	pub title:      String,
 	pub value:      String,
 	pub position:   Position,
@@ -18,7 +18,7 @@ pub struct SelectCfg {
 	pub position: Position,
 }
 
-impl InputOpt {
+impl InputCfg {
 	#[inline]
 	pub fn cd() -> Self {
 		Self {
