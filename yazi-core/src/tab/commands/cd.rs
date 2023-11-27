@@ -2,8 +2,8 @@ use std::{mem, time::Duration};
 
 use tokio::{fs, pin};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
-use yazi_config::{keymap::{Exec, KeymapLayer}, popup::InputOpt};
-use yazi_shared::{fs::{expand_path, Url}, Debounce, InputError};
+use yazi_config::{keymap::Exec, popup::InputOpt};
+use yazi_shared::{fs::{expand_path, Url}, Debounce, InputError, Layer};
 
 use crate::{completion::Completion, emit, manager::Manager, tab::Tab};
 
@@ -29,7 +29,7 @@ impl From<Url> for Opt {
 impl Tab {
 	#[inline]
 	pub fn _cd(target: &Url) {
-		emit!(Call(Exec::call("cd", vec![target.to_string()]).vec(), KeymapLayer::Manager));
+		emit!(Call(Exec::call("cd", vec![target.to_string()]).vec(), Layer::Manager));
 	}
 
 	pub fn cd(&mut self, opt: impl Into<Opt>) -> bool {

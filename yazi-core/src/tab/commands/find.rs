@@ -2,8 +2,8 @@ use std::time::Duration;
 
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
-use yazi_config::{keymap::{Exec, KeymapLayer}, popup::InputOpt};
-use yazi_shared::{Debounce, InputError};
+use yazi_config::{keymap::Exec, popup::InputOpt};
+use yazi_shared::{Debounce, InputError, Layer};
 
 use crate::{emit, tab::{Finder, FinderCase, Tab}};
 
@@ -51,7 +51,7 @@ impl Tab {
 						.with_bool("smart", opt.case == FinderCase::Smart)
 						.with_bool("insensitive", opt.case == FinderCase::Insensitive)
 						.vec(),
-					KeymapLayer::Manager
+					Layer::Manager
 				));
 			}
 		});

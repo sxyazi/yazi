@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 
-use yazi_config::keymap::{Exec, KeymapLayer};
-use yazi_shared::fs::Url;
+use yazi_config::keymap::Exec;
+use yazi_shared::{fs::Url, Layer};
 
 use crate::{emit, manager::Manager};
 
@@ -18,7 +18,7 @@ impl Manager {
 	pub fn _hover(url: Option<Url>) {
 		emit!(Call(
 			Exec::call("hover", url.map_or_else(Vec::new, |u| vec![u.to_string()])).vec(),
-			KeymapLayer::Manager
+			Layer::Manager
 		));
 	}
 

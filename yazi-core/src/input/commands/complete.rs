@@ -1,6 +1,7 @@
 use std::path::MAIN_SEPARATOR;
 
-use yazi_config::keymap::{Exec, KeymapLayer};
+use yazi_config::keymap::Exec;
+use yazi_shared::Layer;
 
 use crate::{emit, input::Input};
 
@@ -23,7 +24,7 @@ impl Input {
 	pub fn _complete(word: &str, ticket: usize) {
 		emit!(Call(
 			Exec::call("complete", vec![word.to_owned()]).with("ticket", ticket).vec(),
-			KeymapLayer::Input
+			Layer::Input
 		));
 	}
 

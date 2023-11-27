@@ -1,5 +1,6 @@
-use yazi_config::{keymap::{Control, Exec, Key, KeymapLayer}, KEYMAP};
+use yazi_config::{keymap::{Control, Exec, Key}, KEYMAP};
 use yazi_core::{input::InputMode, Ctx};
+use yazi_shared::Layer;
 
 pub(super) struct Executor<'a> {
 	cx: &'a mut Ctx,
@@ -21,23 +22,23 @@ impl<'a> Executor<'a> {
 		}
 
 		let b = if self.cx.completion.visible {
-			self.matches(KeymapLayer::Completion, key).or_else(|| self.matches(KeymapLayer::Input, key))
+			self.matches(Layer::Completion, key).or_else(|| self.matches(Layer::Input, key))
 		} else if self.cx.help.visible {
-			self.matches(KeymapLayer::Help, key)
+			self.matches(Layer::Help, key)
 		} else if self.cx.input.visible {
-			self.matches(KeymapLayer::Input, key)
+			self.matches(Layer::Input, key)
 		} else if self.cx.select.visible {
-			self.matches(KeymapLayer::Select, key)
+			self.matches(Layer::Select, key)
 		} else if self.cx.tasks.visible {
-			self.matches(KeymapLayer::Tasks, key)
+			self.matches(Layer::Tasks, key)
 		} else {
-			self.matches(KeymapLayer::Manager, key)
+			self.matches(Layer::Manager, key)
 		};
 		b == Some(true)
 	}
 
 	#[inline]
-	fn matches(&mut self, layer: KeymapLayer, key: Key) -> Option<bool> {
+	fn matches(&mut self, layer: Layer, key: Key) -> Option<bool> {
 		for Control { on, exec, .. } in KEYMAP.get(layer) {
 			if on.is_empty() || on[0] != key {
 				continue;
@@ -53,17 +54,17 @@ impl<'a> Executor<'a> {
 	}
 
 	#[inline]
-	pub(super) fn dispatch(&mut self, exec: &[Exec], layer: KeymapLayer) -> bool {
+	pub(super) fn dispatch(&mut self, exec: &[Exec], layer: Layer) -> bool {
 		let mut render = false;
 		for e in exec {
 			render |= match layer {
-				KeymapLayer::Manager => self.manager(e),
-				KeymapLayer::Tasks => self.tasks(e),
-				KeymapLayer::Select => self.select(e),
-				KeymapLayer::Input => self.input(e),
-				KeymapLayer::Help => self.help(e),
-				KeymapLayer::Completion => self.completion(e),
-				KeymapLayer::Which => unreachable!(),
+				Layer::Manager => self.manager(e),
+				Layer::Tasks => self.tasks(e),
+				Layer::Select => self.select(e),
+				Layer::Input => self.input(e),
+				Layer::Help => self.help(e),
+				Layer::Completion => self.completion(e),
+				Layer::Which => unreachable!(),
 			};
 		}
 		render
@@ -143,7 +144,7 @@ impl<'a> Executor<'a> {
 			// Tasks
 			b"tasks_show" => self.cx.tasks.toggle(()),
 			// Help
-			b"help" => self.cx.help.toggle(KeymapLayer::Manager),
+			b"help" => self.cx.help.toggle(Layer::Manager),
 			_ => false,
 		}
 	}
@@ -168,7 +169,7 @@ impl<'a> Executor<'a> {
 		on!(cancel);
 
 		match exec.cmd.as_str() {
-			"help" => self.cx.help.toggle(KeymapLayer::Tasks),
+			"help" => self.cx.help.toggle(Layer::Tasks),
 			_ => false,
 		}
 	}
@@ -186,7 +187,7 @@ impl<'a> Executor<'a> {
 		on!(arrow);
 
 		match exec.cmd.as_str() {
-			"help" => self.cx.help.toggle(KeymapLayer::Select),
+			"help" => self.cx.help.toggle(Layer::Select),
 			_ => false,
 		}
 	}
@@ -232,7 +233,7 @@ impl<'a> Executor<'a> {
 				on!(redo);
 
 				match exec.cmd.as_str() {
-					"help" => self.cx.help.toggle(KeymapLayer::Input),
+					"help" => self.cx.help.toggle(Layer::Input),
 					_ => false,
 				}
 			}
@@ -259,7 +260,7 @@ impl<'a> Executor<'a> {
 		on!(filter);
 
 		match exec.cmd.as_str() {
-			"close" => self.cx.help.toggle(KeymapLayer::Help),
+			"close" => self.cx.help.toggle(Layer::Help),
 			_ => false,
 		}
 	}
@@ -279,7 +280,7 @@ impl<'a> Executor<'a> {
 		on!(arrow);
 
 		match exec.cmd.as_str() {
-			"help" => self.cx.help.toggle(KeymapLayer::Completion),
+			"help" => self.cx.help.toggle(Layer::Completion),
 			_ => false,
 		}
 	}

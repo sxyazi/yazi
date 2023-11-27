@@ -1,6 +1,7 @@
 use std::env;
 
-use yazi_config::keymap::{Exec, KeymapLayer};
+use yazi_config::keymap::Exec;
+use yazi_shared::Layer;
 
 use crate::{emit, manager::Manager};
 
@@ -13,7 +14,7 @@ impl From<&Exec> for Opt {
 impl Manager {
 	#[inline]
 	pub fn _refresh() {
-		emit!(Call(Exec::call("refresh", vec![]).vec(), KeymapLayer::Manager));
+		emit!(Call(Exec::call("refresh", vec![]).vec(), Layer::Manager));
 	}
 
 	pub fn refresh(&mut self, _: impl Into<Opt>) -> bool {

@@ -3,8 +3,8 @@ use std::{collections::BTreeMap, ffi::OsString};
 use anyhow::Result;
 use crossterm::event::KeyEvent;
 use tokio::sync::{mpsc::{self, UnboundedSender}, oneshot};
-use yazi_config::{keymap::{Exec, KeymapLayer}, open::Opener, popup::{InputOpt, SelectOpt}};
-use yazi_shared::{fs::Url, InputError, RoCell};
+use yazi_config::{keymap::Exec, open::Opener, popup::{InputOpt, SelectOpt}};
+use yazi_shared::{fs::Url, InputError, Layer, RoCell};
 
 use super::files::FilesOp;
 use crate::{preview::PreviewLock, tasks::TasksProgress};
@@ -18,7 +18,7 @@ pub enum Event {
 	Render(String),
 	Resize(u16, u16),
 	Stop(bool, Option<oneshot::Sender<()>>),
-	Call(Vec<Exec>, KeymapLayer),
+	Call(Vec<Exec>, Layer),
 
 	// Manager
 	Files(FilesOp),

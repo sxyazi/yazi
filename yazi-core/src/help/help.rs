@@ -1,7 +1,7 @@
 use crossterm::event::KeyCode;
 use unicode_width::UnicodeWidthStr;
-use yazi_config::{keymap::{Control, Key, KeymapLayer}, KEYMAP};
-use yazi_shared::term::Term;
+use yazi_config::{keymap::{Control, Key}, KEYMAP};
+use yazi_shared::{term::Term, Layer};
 
 use super::HELP_MARGIN;
 use crate::input::Input;
@@ -9,7 +9,7 @@ use crate::input::Input;
 #[derive(Default)]
 pub struct Help {
 	pub visible:         bool,
-	pub layer:           KeymapLayer,
+	pub layer:           Layer,
 	pub(super) bindings: Vec<Control>,
 
 	// Filter
@@ -24,7 +24,7 @@ impl Help {
 	#[inline]
 	pub fn limit() -> usize { Term::size().rows.saturating_sub(HELP_MARGIN) as usize }
 
-	pub fn toggle(&mut self, layer: KeymapLayer) -> bool {
+	pub fn toggle(&mut self, layer: Layer) -> bool {
 		self.visible = !self.visible;
 		self.layer = layer;
 

@@ -4,9 +4,9 @@ use anyhow::{Ok, Result};
 use crossterm::event::KeyEvent;
 use ratatui::{backend::Backend, prelude::Rect};
 use tokio::sync::oneshot;
-use yazi_config::{keymap::{Exec, Key, KeymapLayer}, BOOT};
+use yazi_config::{keymap::{Exec, Key}, BOOT};
 use yazi_core::{emit, files::FilesOp, input::InputMode, manager::Manager, preview::COLLISION, Ctx, Event};
-use yazi_shared::term::Term;
+use yazi_shared::{term::Term, Layer};
 
 use crate::{Executor, Logs, Panic, Root, Signals};
 
@@ -138,7 +138,7 @@ impl App {
 	}
 
 	#[inline]
-	fn dispatch_call(&mut self, exec: Vec<Exec>, layer: KeymapLayer) {
+	fn dispatch_call(&mut self, exec: Vec<Exec>, layer: Layer) {
 		if Executor::new(&mut self.cx).dispatch(&exec, layer) {
 			emit!(Render);
 		}

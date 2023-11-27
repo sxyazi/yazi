@@ -1,6 +1,5 @@
-use std::fmt::{self, Display};
-
 use serde::{Deserialize, Deserializer};
+use yazi_shared::Layer;
 
 use super::Control;
 use crate::MERGED_KEYMAP;
@@ -63,41 +62,15 @@ impl Default for Keymap {
 
 impl Keymap {
 	#[inline]
-	pub fn get(&self, layer: KeymapLayer) -> &Vec<Control> {
+	pub fn get(&self, layer: Layer) -> &Vec<Control> {
 		match layer {
-			KeymapLayer::Manager => &self.manager,
-			KeymapLayer::Tasks => &self.tasks,
-			KeymapLayer::Select => &self.select,
-			KeymapLayer::Input => &self.input,
-			KeymapLayer::Help => &self.help,
-			KeymapLayer::Completion => &self.completion,
-			KeymapLayer::Which => unreachable!(),
-		}
-	}
-}
-
-#[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Copy)]
-pub enum KeymapLayer {
-	#[default]
-	Manager,
-	Tasks,
-	Select,
-	Input,
-	Help,
-	Completion,
-	Which,
-}
-
-impl Display for KeymapLayer {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		match self {
-			KeymapLayer::Manager => write!(f, "manager"),
-			KeymapLayer::Tasks => write!(f, "tasks"),
-			KeymapLayer::Select => write!(f, "select"),
-			KeymapLayer::Input => write!(f, "input"),
-			KeymapLayer::Help => write!(f, "help"),
-			KeymapLayer::Completion => write!(f, "completion"),
-			KeymapLayer::Which => write!(f, "which"),
+			Layer::Manager => &self.manager,
+			Layer::Tasks => &self.tasks,
+			Layer::Select => &self.select,
+			Layer::Input => &self.input,
+			Layer::Help => &self.help,
+			Layer::Completion => &self.completion,
+			Layer::Which => unreachable!(),
 		}
 	}
 }
