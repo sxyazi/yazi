@@ -1,9 +1,9 @@
 use ratatui::prelude::Rect;
 use tokio::sync::oneshot;
 use yazi_config::popup::{Origin, Position};
-use yazi_shared::{Exec, Layer};
+use yazi_shared::{emit, event::Exec, Layer};
 
-use crate::{completion::Completion, emit, help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which};
+use crate::{completion::Completion, help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which};
 
 pub struct Ctx {
 	pub manager:    Manager,

@@ -1,6 +1,6 @@
 use yazi_config::{keymap::{Control, Key}, KEYMAP};
 use yazi_core::input::InputMode;
-use yazi_shared::{Exec, Layer};
+use yazi_shared::{event::Exec, Layer};
 
 use crate::app::App;
 

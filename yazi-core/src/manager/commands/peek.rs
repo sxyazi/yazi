@@ -1,7 +1,7 @@
 use yazi_config::MANAGER;
-use yazi_shared::{fs::Url, Exec, Layer, MIME_DIR};
+use yazi_shared::{emit, event::Exec, fs::Url, Layer, MIME_DIR};
 
-use crate::{emit, manager::Manager};
+use crate::manager::Manager;
 
 #[derive(Debug)]
 pub struct Opt {

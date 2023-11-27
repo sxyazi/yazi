@@ -6,10 +6,10 @@ use yazi_config::THEME;
 use super::{Range, Url};
 use crate::{layout::Style, LUA};
 
-pub struct File(yazi_core::files::File);
+pub struct File(yazi_shared::files::File);
 
-impl From<&yazi_core::files::File> for File {
-	fn from(value: &yazi_core::files::File) -> Self { Self(value.clone()) }
+impl From<&yazi_shared::files::File> for File {
+	fn from(value: &yazi_shared::files::File) -> Self { Self(value.clone()) }
 }
 
 impl UserData for File {
@@ -47,7 +47,7 @@ impl Files {
 			});
 		})?;
 
-		LUA.register_userdata_type::<yazi_core::files::File>(|reg| {
+		LUA.register_userdata_type::<yazi_shared::files::File>(|reg| {
 			reg.add_field_method_get("url", |_, me| Ok(Url::from(&me.url)));
 			reg.add_field_method_get("link_to", |_, me| Ok(me.link_to().map(Url::from)));
 			reg.add_field_method_get("is_link", |_, me| Ok(me.is_link()));
@@ -87,7 +87,7 @@ impl Files {
 				Ok(me.url.file_name().map(|n| n.to_string_lossy().to_string()))
 			});
 			reg.add_function("size", |_, me: AnyUserData| {
-				let file = me.borrow::<yazi_core::files::File>()?;
+				let file = me.borrow::<yazi_shared::files::File>()?;
 				if !file.is_dir() {
 					return Ok(Some(file.len));
 				}
@@ -97,7 +97,7 @@ impl Files {
 			});
 			reg.add_function("mime", |_, me: AnyUserData| {
 				let manager = me.named_user_value::<UserDataRef<yazi_core::manager::Manager>>("manager")?;
-				let file = me.borrow::<yazi_core::files::File>()?;
+				let file = me.borrow::<yazi_shared::files::File>()?;
 				Ok(manager.mimetype.get(&file.url).cloned())
 			});
 			reg.add_function("prefix", |_, me: AnyUserData| {
@@ -106,7 +106,7 @@ impl Files {
 					return Ok(None);
 				}
 
-				let file = me.borrow::<yazi_core::files::File>()?;
+				let file = me.borrow::<yazi_shared::files::File>()?;
 				let mut p = file.url.strip_prefix(&folder.cwd).unwrap_or(&file.url).components();
 				p.next_back();
 				Ok(Some(p.as_path().to_string_lossy().to_string()))
@@ -122,7 +122,7 @@ impl Files {
 			});
 			reg.add_function("style", |_, me: AnyUserData| {
 				let manager = me.named_user_value::<UserDataRef<yazi_core::manager::Manager>>("manager")?;
-				let file = me.borrow::<yazi_core::files::File>()?;
+				let file = me.borrow::<yazi_shared::files::File>()?;
 				let mime = manager.mimetype.get(&file.url);
 				Ok(
 					THEME
@@ -134,12 +134,12 @@ impl Files {
 			});
 			reg.add_function("is_hovered", |_, me: AnyUserData| {
 				let folder = me.named_user_value::<UserDataRef<yazi_core::tab::Folder>>("folder")?;
-				let file = me.borrow::<yazi_core::files::File>()?;
+				let file = me.borrow::<yazi_shared::files::File>()?;
 				Ok(matches!(folder.hovered(), Some(f) if f.url == file.url))
 			});
 			reg.add_function("is_yanked", |_, me: AnyUserData| {
 				let manager = me.named_user_value::<UserDataRef<yazi_core::manager::Manager>>("manager")?;
-				let file = me.borrow::<yazi_core::files::File>()?;
+				let file = me.borrow::<yazi_shared::files::File>()?;
 				Ok(if !manager.yanked.1.contains(&file.url) {
 					0u8
 				} else if manager.yanked.0 {
@@ -151,7 +151,7 @@ impl Files {
 			reg.add_function("is_selected", |_, me: AnyUserData| {
 				let manager = me.named_user_value::<UserDataRef<yazi_core::manager::Manager>>("manager")?;
 				let folder = me.named_user_value::<UserDataRef<yazi_core::tab::Folder>>("folder")?;
-				let file = me.borrow::<yazi_core::files::File>()?;
+				let file = me.borrow::<yazi_shared::files::File>()?;
 
 				let selected = folder.files.is_selected(&file.url);
 				Ok(if !manager.active().mode.is_visual() {
@@ -167,7 +167,7 @@ impl Files {
 					return Ok(None);
 				};
 
-				let file = me.borrow::<yazi_core::files::File>()?;
+				let file = me.borrow::<yazi_shared::files::File>()?;
 				if let Some(idx) = finder.matched_idx(&file.url) {
 					return Some(
 						lua.create_sequence_from([idx.into_lua(lua)?, finder.matched().len().into_lua(lua)?]),
@@ -182,7 +182,7 @@ impl Files {
 					return Ok(None);
 				};
 
-				let file = me.borrow::<yazi_core::files::File>()?;
+				let file = me.borrow::<yazi_shared::files::File>()?;
 				let Some(h) = file.name().and_then(|n| finder.highlighted(n)) else {
 					return Ok(None);
 				};

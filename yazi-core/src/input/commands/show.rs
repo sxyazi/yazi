@@ -1,9 +1,9 @@
 use anyhow::anyhow;
 use tokio::sync::mpsc;
 use yazi_config::popup::InputCfg;
-use yazi_shared::{Exec, InputError, Layer};
+use yazi_shared::{emit, event::Exec, InputError, Layer};
 
-use crate::{emit, input::Input};
+use crate::input::Input;
 
 pub struct Opt {
 	cfg: InputCfg,

@@ -2,9 +2,9 @@ use std::ffi::OsString;
 
 use anyhow::anyhow;
 use yazi_config::{open::Opener, BOOT};
-use yazi_shared::{Exec, Layer};
+use yazi_shared::{emit, event::Exec, Layer};
 
-use crate::{emit, tasks::Tasks};
+use crate::tasks::Tasks;
 
 pub struct Opt {
 	targets: Vec<(OsString, String)>,

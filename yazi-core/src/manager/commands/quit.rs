@@ -1,7 +1,7 @@
 use yazi_config::popup::InputCfg;
-use yazi_shared::Exec;
+use yazi_shared::{emit, event::Exec};
 
-use crate::{emit, input::Input, manager::Manager, tasks::Tasks};
+use crate::{input::Input, manager::Manager, tasks::Tasks};
 
 #[derive(Default)]
 pub struct Opt {

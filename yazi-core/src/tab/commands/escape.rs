@@ -1,5 +1,5 @@
 use bitflags::bitflags;
-use yazi_shared::Exec;
+use yazi_shared::event::Exec;
 
 use crate::tab::{Mode, Tab};
 

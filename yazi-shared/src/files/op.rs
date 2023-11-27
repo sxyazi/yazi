@@ -1,11 +1,9 @@
 use std::{collections::{BTreeMap, BTreeSet}, sync::atomic::{AtomicU64, Ordering}};
 
-use yazi_shared::fs::Url;
-
 use super::File;
-use crate::emit;
+use crate::{emit, fs::Url};
 
-pub(super) static FILES_TICKET: AtomicU64 = AtomicU64::new(0);
+pub static FILES_TICKET: AtomicU64 = AtomicU64::new(0);
 
 #[derive(Debug)]
 pub enum FilesOp {

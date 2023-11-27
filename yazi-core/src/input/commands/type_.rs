@@ -1,5 +1,5 @@
 use yazi_config::keymap::Key;
-use yazi_shared::Exec;
+use yazi_shared::event::Exec;
 
 use crate::input::{Input, InputMode};
 

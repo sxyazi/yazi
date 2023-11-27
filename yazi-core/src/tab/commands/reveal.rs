@@ -1,7 +1,6 @@
-use yazi_shared::Exec;
-use yazi_shared::{fs::{expand_path, Url}, Layer};
+use yazi_shared::{emit, event::Exec, files::{File, FilesOp}, fs::{expand_path, Url}, Layer};
 
-use crate::{emit, files::{File, FilesOp}, manager::Manager, tab::Tab};
+use crate::{manager::Manager, tab::Tab};
 
 pub struct Opt {
 	target: Url,

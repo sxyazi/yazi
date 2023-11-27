@@ -1,4 +1,4 @@
-use yazi_shared::{fs::ends_with_slash, Defer, Exec};
+use yazi_shared::{event::Exec, fs::ends_with_slash, Defer};
 
 use crate::{external::{self, FzfOpt, ZoxideOpt}, tab::Tab, Ctx, BLOCKER};
 

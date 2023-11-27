@@ -4,9 +4,9 @@ use anyhow::bail;
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
-use yazi_shared::Exec;
+use yazi_shared::{emit, event::Exec, files::FilesOp};
 
-use crate::{emit, external, files::FilesOp, input::Input, manager::Manager, tab::Tab};
+use crate::{external, input::Input, manager::Manager, tab::Tab};
 
 pub struct Opt {
 	pub type_: OptType,

@@ -1,6 +1,6 @@
-use yazi_shared::{Exec, Layer};
+use yazi_shared::{emit, event::Exec, Layer};
 
-use crate::{completion::Completion, emit, input::Input};
+use crate::{completion::Completion, input::Input};
 
 pub struct Opt {
 	submit: bool,

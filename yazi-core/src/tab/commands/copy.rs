@@ -1,6 +1,6 @@
 use std::ffi::{OsStr, OsString};
 
-use yazi_shared::Exec;
+use yazi_shared::event::Exec;
 
 use crate::{external, tab::Tab};
 

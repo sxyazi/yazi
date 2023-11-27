@@ -1,9 +1,8 @@
 use std::env;
 
-use yazi_shared::Exec;
-use yazi_shared::Layer;
+use yazi_shared::{emit, event::Exec, Layer};
 
-use crate::{emit, manager::Manager};
+use crate::manager::Manager;
 
 pub struct Opt;
 

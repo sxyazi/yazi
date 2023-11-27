@@ -1,9 +1,9 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
-use yazi_shared::fs::Url;
+use yazi_shared::{files::{File, FilesOp}, fs::Url};
 
 use super::{Tabs, Watcher};
-use crate::{files::{File, FilesOp}, tab::{Folder, Tab}, tasks::Tasks};
+use crate::{tab::{Folder, Tab}, tasks::Tasks};
 
 pub struct Manager {
 	pub tabs:   Tabs,

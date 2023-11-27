@@ -3,9 +3,9 @@ use std::time::Duration;
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
-use yazi_shared::{Debounce, Exec, InputError, Layer};
+use yazi_shared::{emit, event::Exec, Debounce, InputError, Layer};
 
-use crate::{emit, input::Input, tab::{Finder, FinderCase, Tab}};
+use crate::{input::Input, tab::{Finder, FinderCase, Tab}};
 
 pub struct Opt<'a> {
 	query: Option<&'a str>,

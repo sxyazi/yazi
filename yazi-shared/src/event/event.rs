@@ -2,10 +2,9 @@ use std::collections::BTreeMap;
 
 use crossterm::event::KeyEvent;
 use tokio::sync::{mpsc::UnboundedSender, oneshot};
-use yazi_shared::{fs::Url, term::Term, Exec, Layer, RoCell};
 
-use super::files::FilesOp;
-use crate::preview::PreviewLock;
+use super::Exec;
+use crate::{files::FilesOp, fs::{Cha, Url}, term::Term, Layer, RoCell};
 
 static TX: RoCell<UnboundedSender<Event>> = RoCell::new();
 
@@ -40,39 +39,62 @@ impl Event {
 #[macro_export]
 macro_rules! emit {
 	(Quit($no_cwd_file:expr)) => {
-		$crate::Event::Quit($no_cwd_file).emit();
+		$crate::event::Event::Quit($no_cwd_file).emit();
 	};
 	(Key($key:expr)) => {
-		$crate::Event::Key($key).emit();
+		$crate::event::Event::Key($key).emit();
 	};
 	(Render) => {
-		$crate::Event::Render(format!("{}:{}", file!(), line!())).emit();
+		$crate::event::Event::Render(format!("{}:{}", file!(), line!())).emit();
 	};
 	(Resize($cols:expr, $rows:expr)) => {
-		$crate::Event::Resize($cols, $rows).emit();
+		$crate::event::Event::Resize($cols, $rows).emit();
 	};
 	(Call($exec:expr, $layer:expr)) => {
-		$crate::Event::Call($exec, $layer).emit();
+		$crate::event::Event::Call($exec, $layer).emit();
 	};
 
 	(Files($op:expr)) => {
-		$crate::Event::Files($op).emit();
+		$crate::event::Event::Files($op).emit();
 	};
 	(Pages($page:expr)) => {
-		$crate::Event::Pages($page).emit();
+		$crate::event::Event::Pages($page).emit();
 	};
 	(Mimetype($mimes:expr)) => {
-		$crate::Event::Mimetype($mimes).emit();
+		$crate::event::Event::Mimetype($mimes).emit();
 	};
 	(Preview($lock:expr)) => {
-		$crate::Event::Preview($lock).emit();
+		$crate::event::Event::Preview($lock).emit();
 	};
 
 	(Open($targets:expr, $opener:expr)) => {
-		$crate::Event::Open($targets, $opener).emit();
+		$crate::event::Event::Open($targets, $opener).emit();
 	};
 
 	($event:ident) => {
-		$crate::Event::$event.emit();
+		$crate::event::Event::$event.emit();
 	};
+}
+
+// TODO: remove this
+pub struct PreviewLock {
+	pub url:  Url,
+	pub cha:  Option<Cha>,
+	pub skip: usize,
+	pub data: PreviewData,
+}
+
+#[derive(Debug)]
+pub enum PreviewData {
+	Folder,
+	Text(String),
+	Image,
+}
+
+impl PreviewLock {
+	#[inline]
+	pub fn is_image(&self) -> bool { matches!(self.data, PreviewData::Image) }
+
+	#[inline]
+	pub fn is_folder(&self) -> bool { matches!(self.data, PreviewData::Folder) }
 }

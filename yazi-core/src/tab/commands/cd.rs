@@ -3,9 +3,9 @@ use std::{mem, time::Duration};
 use tokio::{fs, pin};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
-use yazi_shared::{fs::{expand_path, Url}, Debounce, Exec, InputError, Layer};
+use yazi_shared::{emit, event::Exec, fs::{expand_path, Url}, Debounce, InputError, Layer};
 
-use crate::{completion::Completion, emit, input::Input, manager::Manager, tab::Tab};
+use crate::{completion::Completion, input::Input, manager::Manager, tab::Tab};
 
 pub struct Opt {
 	target:      Url,

@@ -3,10 +3,10 @@ use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, path::Path, syn
 use serde::Serialize;
 use tracing::debug;
 use yazi_config::{manager::SortBy, open::Opener, popup::InputCfg, OPEN};
-use yazi_shared::{fs::Url, term::Term, MimeKind};
+use yazi_shared::{files::File, fs::Url, term::Term, MimeKind};
 
 use super::{running::Running, task::TaskSummary, Scheduler, TASKS_PADDING, TASKS_PERCENT};
-use crate::{files::{File, Files}, input::Input};
+use crate::{files::Files, input::Input};
 
 pub struct Tasks {
 	pub(super) scheduler: Arc<Scheduler>,

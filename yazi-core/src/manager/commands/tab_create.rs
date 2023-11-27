@@ -1,5 +1,4 @@
-use yazi_shared::Exec;
-use yazi_shared::fs::Url;
+use yazi_shared::{event::Exec, fs::Url};
 
 use crate::{manager::Tabs, tab::Tab};
 

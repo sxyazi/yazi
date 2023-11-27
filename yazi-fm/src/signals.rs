@@ -2,7 +2,7 @@ use anyhow::Result;
 use crossterm::event::{Event as CrosstermEvent, EventStream, KeyEvent, KeyEventKind};
 use futures::StreamExt;
 use tokio::{select, sync::{mpsc::{self, UnboundedReceiver, UnboundedSender}, oneshot}, task::JoinHandle};
-use yazi_core::Event;
+use yazi_shared::event::Event;
 
 pub(super) struct Signals {
 	tx: UnboundedSender<Event>,

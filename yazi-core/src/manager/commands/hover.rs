@@ -1,9 +1,8 @@
 use std::collections::BTreeSet;
 
-use yazi_shared::Exec;
-use yazi_shared::{fs::Url, Layer};
+use yazi_shared::{emit, event::Exec, fs::Url, Layer};
 
-use crate::{emit, manager::Manager};
+use crate::manager::Manager;
 
 pub struct Opt {
 	url: Option<Url>,

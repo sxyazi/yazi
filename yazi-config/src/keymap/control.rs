@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use serde::Deserialize;
-use yazi_shared::Exec;
+use yazi_shared::event::Exec;
 
 use super::Key;
 

@@ -1,8 +1,8 @@
 use std::path::MAIN_SEPARATOR;
 
-use yazi_shared::{Exec, Layer};
+use yazi_shared::{emit, event::Exec, Layer};
 
-use crate::{emit, input::Input};
+use crate::input::Input;
 
 pub struct Opt<'a> {
 	word:   &'a str,

@@ -2,7 +2,7 @@ use std::fmt;
 
 use anyhow::{bail, Result};
 use serde::{de::{self, Visitor}, Deserializer};
-use yazi_shared::Exec;
+use yazi_shared::event::Exec;
 
 pub(super) fn exec_deserialize<'de, D>(deserializer: D) -> Result<Vec<Exec>, D::Error>
 where

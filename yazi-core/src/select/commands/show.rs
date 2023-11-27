@@ -1,9 +1,9 @@
 use anyhow::{anyhow, Result};
 use tokio::sync::oneshot;
 use yazi_config::popup::SelectCfg;
-use yazi_shared::{term::Term, Exec, Layer};
+use yazi_shared::{emit, event::Exec, term::Term, Layer};
 
-use crate::{emit, select::Select};
+use crate::select::Select;
 
 pub struct Opt {
 	cfg: SelectCfg,

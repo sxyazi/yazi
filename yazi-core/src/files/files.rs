@@ -3,9 +3,9 @@ use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref, sync::atomic::Orde
 use anyhow::Result;
 use tokio::{fs, select, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_config::{manager::SortBy, MANAGER};
-use yazi_shared::fs::Url;
+use yazi_shared::{files::{File, FILES_TICKET}, fs::Url};
 
-use super::{File, FilesSorter, FILES_TICKET};
+use super::FilesSorter;
 
 pub struct Files {
 	items:              Vec<File>,

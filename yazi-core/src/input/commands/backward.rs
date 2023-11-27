@@ -1,4 +1,4 @@
-use yazi_shared::{CharKind, Exec};
+use yazi_shared::{event::Exec, CharKind};
 
 use crate::input::Input;
 

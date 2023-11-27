@@ -3,9 +3,8 @@ use std::path::Path;
 use tokio::fs;
 use yazi_adaptor::ADAPTOR;
 use yazi_config::{MANAGER, PREVIEW};
-use yazi_shared::{MimeKind, PeekError};
+use yazi_shared::{event::PreviewData, MimeKind, PeekError};
 
-use super::PreviewData;
 use crate::{external, Highlighter};
 
 pub(super) struct Provider;

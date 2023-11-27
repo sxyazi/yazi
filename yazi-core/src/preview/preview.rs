@@ -4,10 +4,10 @@ use tokio::{pin, task::JoinHandle};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_adaptor::ADAPTOR;
 use yazi_config::MANAGER;
-use yazi_shared::{fs::{Cha, Url}, MimeKind, PeekError};
+use yazi_shared::{emit, event::{PreviewData, PreviewLock}, files::FilesOp, fs::{Cha, Url}, MimeKind, PeekError};
 
 use super::Provider;
-use crate::{emit, files::{Files, FilesOp}, manager::Manager, Highlighter};
+use crate::{files::Files, manager::Manager, Highlighter};
 
 #[derive(Default)]
 pub struct Preview {
@@ -15,20 +15,6 @@ pub struct Preview {
 	skip:     usize,
 
 	handle: Option<JoinHandle<()>>,
-}
-
-pub struct PreviewLock {
-	pub url:  Url,
-	pub cha:  Option<Cha>,
-	pub skip: usize,
-	pub data: PreviewData,
-}
-
-#[derive(Debug)]
-pub enum PreviewData {
-	Folder,
-	Text(String),
-	Image,
 }
 
 impl Preview {
@@ -151,12 +137,4 @@ impl Preview {
 				}
 			}
 	}
-}
-
-impl PreviewLock {
-	#[inline]
-	pub fn is_image(&self) -> bool { matches!(self.data, PreviewData::Image) }
-
-	#[inline]
-	pub fn is_folder(&self) -> bool { matches!(self.data, PreviewData::Folder) }
 }

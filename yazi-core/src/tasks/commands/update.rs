@@ -1,7 +1,7 @@
 use anyhow::anyhow;
-use yazi_shared::{Exec, Layer};
+use yazi_shared::{emit, event::Exec, Layer};
 
-use crate::{emit, tasks::{Tasks, TasksProgress}};
+use crate::tasks::{Tasks, TasksProgress};
 
 pub struct Opt {
 	progress: TasksProgress,

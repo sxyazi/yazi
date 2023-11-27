@@ -1,4 +1,4 @@
-use yazi_shared::{Exec, InputError};
+use yazi_shared::{event::Exec, InputError};
 
 use crate::{completion::Completion, input::Input};
 

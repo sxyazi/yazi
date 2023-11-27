@@ -1,6 +1,6 @@
 use std::{mem, ops::ControlFlow};
 
-use yazi_shared::Exec;
+use yazi_shared::event::Exec;
 
 use crate::completion::Completion;
 

@@ -1,6 +1,6 @@
 use std::mem;
 
-use yazi_shared::Exec;
+use yazi_shared::event::Exec;
 
 use crate::{manager::Manager, tab::Tab};
 

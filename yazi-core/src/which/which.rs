@@ -1,9 +1,7 @@
 use std::mem;
 
 use yazi_config::{keymap::{Control, Key}, KEYMAP};
-use yazi_shared::Layer;
-
-use crate::emit;
+use yazi_shared::{emit, Layer};
 
 pub struct Which {
 	layer:     Layer,

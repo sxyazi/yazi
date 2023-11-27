@@ -2,9 +2,9 @@ use std::path::{PathBuf, MAIN_SEPARATOR};
 
 use tokio::fs;
 use yazi_config::popup::InputCfg;
-use yazi_shared::{fs::Url, Exec};
+use yazi_shared::{emit, event::Exec, files::{File, FilesOp}, fs::Url};
 
-use crate::{emit, files::{File, FilesOp}, input::Input, manager::Manager};
+use crate::{input::Input, manager::Manager};
 
 pub struct Opt {
 	force: bool,

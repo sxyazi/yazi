@@ -5,9 +5,9 @@ use notify::{event::{MetadataKind, ModifyKind}, EventKind, RecommendedWatcher, R
 use parking_lot::RwLock;
 use tokio::{fs, pin, sync::mpsc::{self, UnboundedReceiver}};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
-use yazi_shared::fs::Url;
+use yazi_shared::{emit, files::{File, FilesOp}, fs::Url};
 
-use crate::{emit, external, files::{File, Files, FilesOp}};
+use crate::{external, files::Files};
 
 pub struct Watcher {
 	watcher: RecommendedWatcher,

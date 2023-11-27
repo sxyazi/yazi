@@ -104,7 +104,7 @@ impl<'a, 'b> Active<'a, 'b> {
 	fn file(
 		&self,
 		idx: usize,
-		inner: &'a yazi_core::files::File,
+		inner: &'a yazi_shared::files::File,
 		folder: &'a yazi_core::tab::Folder,
 	) -> mlua::Result<AnyUserData<'a>> {
 		let ud = self.scope.create_any_userdata_ref(inner)?;

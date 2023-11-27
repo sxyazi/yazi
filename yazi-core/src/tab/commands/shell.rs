@@ -1,5 +1,5 @@
 use yazi_config::{open::Opener, popup::InputCfg};
-use yazi_shared::Exec;
+use yazi_shared::event::Exec;
 
 use crate::{input::Input, tab::Tab, tasks::Tasks};
 

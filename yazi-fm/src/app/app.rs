@@ -4,8 +4,8 @@ use anyhow::{Ok, Result};
 use crossterm::event::KeyEvent;
 use ratatui::{backend::Backend, prelude::Rect};
 use yazi_config::{keymap::Key, BOOT};
-use yazi_core::{emit, files::FilesOp, input::InputMode, preview::COLLISION, Ctx, Event};
-use yazi_shared::{term::Term, Exec, Layer};
+use yazi_core::{input::InputMode, preview::COLLISION, Ctx};
+use yazi_shared::{emit, event::{Event, Exec}, files::FilesOp, term::Term, Layer};
 
 use crate::{Executor, Logs, Panic, Root, Signals};
 

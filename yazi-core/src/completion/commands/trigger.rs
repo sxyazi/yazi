@@ -1,9 +1,9 @@
 use std::{mem, path::{MAIN_SEPARATOR, MAIN_SEPARATOR_STR}};
 
 use tokio::fs;
-use yazi_shared::{Exec, Layer};
+use yazi_shared::{emit, event::Exec, Layer};
 
-use crate::{completion::Completion, emit};
+use crate::completion::Completion;
 
 pub struct Opt<'a> {
 	word:   &'a str,
