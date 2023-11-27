@@ -5,7 +5,7 @@ use futures::{future::BoxFuture, FutureExt};
 use tokio::{fs, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::TASKS;
-use yazi_shared::{calculate_size, copy_with_progress, path_relative_to, Url};
+use yazi_shared::{fs::{calculate_size, copy_with_progress, Url}, path_relative_to};
 
 use crate::tasks::TaskOp;
 

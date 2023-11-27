@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
-use yazi_shared::Url;
+use yazi_shared::fs::Url;
 
 use super::{Tabs, Watcher};
 use crate::{files::{File, FilesOp}, tab::{Folder, Tab}, tasks::Tasks};

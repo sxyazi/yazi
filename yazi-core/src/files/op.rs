@@ -1,6 +1,6 @@
 use std::{collections::{BTreeMap, BTreeSet}, sync::atomic::{AtomicU64, Ordering}};
 
-use yazi_shared::Url;
+use yazi_shared::fs::Url;
 
 use super::File;
 use crate::emit;

@@ -2,7 +2,7 @@ use anyhow::bail;
 use crossterm::terminal::WindowSize;
 use ratatui::{prelude::Rect, widgets::{Block, Padding}};
 use serde::{Deserialize, Serialize};
-use yazi_shared::Term;
+use yazi_shared::term::Term;
 
 use crate::{PREVIEW, THEME};
 

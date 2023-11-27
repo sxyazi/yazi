@@ -1,4 +1,4 @@
-use yazi_shared::Term;
+use yazi_shared::term::Term;
 
 pub(super) struct Panic;
 

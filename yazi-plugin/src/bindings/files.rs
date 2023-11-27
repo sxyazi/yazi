@@ -76,7 +76,7 @@ impl Files {
 			reg.add_method("permissions", |_, me, ()| {
 				Ok(
 					#[cfg(unix)]
-					Some(yazi_shared::permissions(me.permissions)),
+					Some(yazi_shared::fs::permissions(me.permissions)),
 					#[cfg(windows)]
 					None::<String>,
 				)

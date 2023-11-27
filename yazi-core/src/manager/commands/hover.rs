@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 
 use yazi_config::keymap::{Exec, KeymapLayer};
-use yazi_shared::Url;
+use yazi_shared::fs::Url;
 
 use crate::{emit, manager::Manager};
 

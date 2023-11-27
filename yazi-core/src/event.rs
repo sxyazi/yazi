@@ -4,7 +4,7 @@ use anyhow::Result;
 use crossterm::event::KeyEvent;
 use tokio::sync::{mpsc::{self, UnboundedSender}, oneshot};
 use yazi_config::{keymap::{Exec, KeymapLayer}, open::Opener, popup::{InputOpt, SelectOpt}};
-use yazi_shared::{InputError, RoCell, Url};
+use yazi_shared::{fs::Url, InputError, RoCell};
 
 use super::files::FilesOp;
 use crate::{preview::PreviewLock, tasks::TasksProgress};

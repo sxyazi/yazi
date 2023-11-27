@@ -1,7 +1,7 @@
 use std::{cmp::Ordering, collections::BTreeMap, mem};
 
 use yazi_config::manager::SortBy;
-use yazi_shared::{natsort, Url};
+use yazi_shared::{fs::Url, natsort};
 
 use super::File;
 

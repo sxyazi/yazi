@@ -2,7 +2,7 @@ use std::{borrow::Cow, collections::BTreeMap, ffi::OsStr, fs::Metadata, ops::Der
 
 use anyhow::Result;
 use tokio::fs;
-use yazi_shared::{Cha, ChaKind, Url};
+use yazi_shared::fs::{Cha, ChaKind, Url};
 
 #[derive(Clone, Debug, Default)]
 pub struct File {

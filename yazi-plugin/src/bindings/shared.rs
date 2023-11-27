@@ -18,10 +18,10 @@ where
 }
 
 // --- Url
-pub struct Url(yazi_shared::Url);
+pub struct Url(yazi_shared::fs::Url);
 
-impl From<&yazi_shared::Url> for Url {
-	fn from(value: &yazi_shared::Url) -> Self { Self(value.clone()) }
+impl From<&yazi_shared::fs::Url> for Url {
+	fn from(value: &yazi_shared::fs::Url) -> Self { Self(value.clone()) }
 }
 
 impl UserData for Url {

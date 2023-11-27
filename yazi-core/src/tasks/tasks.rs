@@ -3,7 +3,7 @@ use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, path::Path, syn
 use serde::Serialize;
 use tracing::debug;
 use yazi_config::{manager::SortBy, open::Opener, popup::InputOpt, OPEN};
-use yazi_shared::{MimeKind, Term, Url};
+use yazi_shared::{fs::Url, term::Term, MimeKind};
 
 use super::{running::Running, task::TaskSummary, Scheduler, TASKS_PADDING, TASKS_PERCENT};
 use crate::{emit, files::{File, Files}};

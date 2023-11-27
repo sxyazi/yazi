@@ -1,5 +1,5 @@
 use yazi_config::{keymap::{Exec, KeymapLayer}, MANAGER};
-use yazi_shared::{Url, MIME_DIR};
+use yazi_shared::{fs::Url, MIME_DIR};
 
 use crate::{emit, manager::Manager};
 

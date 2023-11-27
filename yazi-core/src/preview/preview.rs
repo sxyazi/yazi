@@ -4,7 +4,7 @@ use tokio::{pin, task::JoinHandle};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_adaptor::ADAPTOR;
 use yazi_config::MANAGER;
-use yazi_shared::{Cha, MimeKind, PeekError, Url};
+use yazi_shared::{fs::{Cha, Url}, MimeKind, PeekError};
 
 use super::Provider;
 use crate::{emit, files::{Files, FilesOp}, manager::Manager, Highlighter};

@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 use color_quant::NeuQuant;
 use image::DynamicImage;
 use ratatui::prelude::Rect;
-use yazi_shared::Term;
+use yazi_shared::term::Term;
 
 use crate::{Image, CLOSE, ESCAPE, START};
 

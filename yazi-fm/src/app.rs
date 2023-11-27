@@ -6,7 +6,7 @@ use ratatui::{backend::Backend, prelude::Rect};
 use tokio::sync::oneshot;
 use yazi_config::{keymap::{Exec, Key, KeymapLayer}, BOOT};
 use yazi_core::{emit, files::FilesOp, input::InputMode, manager::Manager, preview::COLLISION, Ctx, Event};
-use yazi_shared::Term;
+use yazi_shared::term::Term;
 
 use crate::{Executor, Logs, Panic, Root, Signals};
 

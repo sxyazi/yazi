@@ -1,5 +1,5 @@
 use yazi_config::keymap::{Exec, KeymapLayer};
-use yazi_shared::{expand_path, Url};
+use yazi_shared::{expand_path, fs::Url};
 
 use crate::{emit, files::{File, FilesOp}, manager::Manager, tab::Tab};
 

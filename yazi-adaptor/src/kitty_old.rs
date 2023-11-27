@@ -4,7 +4,7 @@ use anyhow::Result;
 use base64::{engine::general_purpose, Engine};
 use image::DynamicImage;
 use ratatui::prelude::Rect;
-use yazi_shared::Term;
+use yazi_shared::term::Term;
 
 use super::image::Image;
 use crate::{CLOSE, ESCAPE, START};

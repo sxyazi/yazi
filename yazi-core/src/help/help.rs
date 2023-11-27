@@ -1,7 +1,7 @@
 use crossterm::event::KeyCode;
 use unicode_width::UnicodeWidthStr;
 use yazi_config::{keymap::{Control, Key, KeymapLayer}, KEYMAP};
-use yazi_shared::Term;
+use yazi_shared::term::Term;
 
 use super::HELP_MARGIN;
 use crate::input::Input;

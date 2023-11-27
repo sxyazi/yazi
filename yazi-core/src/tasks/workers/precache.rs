@@ -5,7 +5,7 @@ use parking_lot::Mutex;
 use tokio::{fs, sync::mpsc};
 use yazi_adaptor::Image;
 use yazi_config::PREVIEW;
-use yazi_shared::{calculate_size, Throttle, Url};
+use yazi_shared::{fs::{calculate_size, Url}, Throttle};
 
 use crate::{emit, external, files::FilesOp, tasks::TaskOp};
 
