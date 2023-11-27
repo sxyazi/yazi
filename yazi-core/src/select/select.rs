@@ -1,10 +1,10 @@
 use anyhow::Result;
 use tokio::sync::oneshot::Sender;
-use yazi_config::{popup::{Position, SelectOpt}, SELECT};
+use yazi_config::{popup::Position, SELECT};
 
 #[derive(Default)]
 pub struct Select {
-	title:            String,
+	pub(super) title: String,
 	pub(super) items: Vec<String>,
 	pub position:     Position,
 
@@ -16,17 +16,6 @@ pub struct Select {
 }
 
 impl Select {
-	pub fn show(&mut self, opt: SelectOpt, tx: Sender<Result<usize>>) {
-		self.close(false);
-
-		self.title = opt.title;
-		self.items = opt.items;
-		self.position = opt.position;
-
-		self.callback = Some(tx);
-		self.visible = true;
-	}
-
 	#[inline]
 	pub fn window(&self) -> &[String] {
 		let end = (self.offset + self.limit()).min(self.items.len());

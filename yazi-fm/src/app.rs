@@ -48,7 +48,7 @@ impl App {
 			let cwd = self.cx.manager.cwd().as_os_str();
 			std::fs::write(p, cwd.as_encoded_bytes()).ok();
 		}
-		Term::goodbye(|| false).unwrap();
+		Term::goodbye(|| false);
 	}
 
 	fn dispatch_key(&mut self, key: KeyEvent) {
@@ -177,10 +177,6 @@ impl App {
 				}
 			}
 
-			Event::Select(opt, tx) => {
-				self.cx.select.show(opt, tx);
-				emit!(Render);
-			}
 			Event::Input(opt, tx) => {
 				self.cx.input.show(opt, tx);
 				emit!(Render);

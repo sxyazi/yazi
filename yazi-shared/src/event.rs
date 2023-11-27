@@ -1,11 +1,11 @@
-use std::{any::Any, collections::BTreeMap, fmt::{self, Display}};
+use std::{any::Any, cell::RefCell, collections::BTreeMap, fmt::{self, Display}};
 
 #[derive(Debug, Default)]
 pub struct Exec {
 	pub cmd:   String,
 	pub args:  Vec<String>,
 	pub named: BTreeMap<String, String>,
-	pub data:  Option<Box<dyn Any + Send>>,
+	pub data:  RefCell<Option<Box<dyn Any + Send>>>,
 }
 
 impl Exec {
@@ -33,6 +33,12 @@ impl Exec {
 		if state {
 			self.named.insert(name.to_string(), Default::default());
 		}
+		self
+	}
+
+	#[inline]
+	pub fn with_data(mut self, data: impl Any + Send) -> Self {
+		self.data = RefCell::new(Some(Box::new(data)));
 		self
 	}
 }

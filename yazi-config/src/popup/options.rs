@@ -12,7 +12,7 @@ pub struct InputOpt {
 }
 
 #[derive(Default)]
-pub struct SelectOpt {
+pub struct SelectCfg {
 	pub title:    String,
 	pub items:    Vec<String>,
 	pub position: Position,
@@ -122,7 +122,7 @@ impl InputOpt {
 	}
 }
 
-impl SelectOpt {
+impl SelectCfg {
 	#[inline]
 	fn max_height(len: usize) -> u16 {
 		SELECT.open_offset.height.min(SELECT.border().saturating_add(len as u16))

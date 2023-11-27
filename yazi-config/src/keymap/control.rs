@@ -19,10 +19,10 @@ impl Control {
 			.exec
 			.iter()
 			.map(|e| Exec {
-				cmd:   e.cmd.clone(),
-				args:  e.args.clone(),
+				cmd: e.cmd.clone(),
+				args: e.args.clone(),
 				named: e.named.clone(),
-				data:  None,
+				..Default::default()
 			})
 			.collect()
 	}

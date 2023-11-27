@@ -1,9 +1,9 @@
 use std::ffi::OsString;
 
-use yazi_config::{popup::SelectOpt, OPEN};
+use yazi_config::{popup::SelectCfg, OPEN};
 use yazi_shared::{Exec, MIME_DIR};
 
-use crate::{emit, external, manager::Manager};
+use crate::{emit, external, manager::Manager, select::Select};
 
 pub struct Opt {
 	interactive: bool,
@@ -20,7 +20,7 @@ impl Manager {
 			return;
 		}
 
-		let result = emit!(Select(SelectOpt::open(openers.iter().map(|o| o.desc.clone()).collect())));
+		let result = Select::_show(SelectCfg::open(openers.iter().map(|o| o.desc.clone()).collect()));
 		if let Ok(choice) = result.await {
 			emit!(Open(files, Some(openers[choice].clone())));
 		}

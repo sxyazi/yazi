@@ -44,7 +44,7 @@ impl Term {
 		Ok(disable_raw_mode()?)
 	}
 
-	pub fn goodbye(f: impl FnOnce() -> bool) -> Result<()> {
+	pub fn goodbye(f: impl FnOnce() -> bool) -> ! {
 		execute!(
 			stdout(),
 			PopKeyboardEnhancementFlags,
@@ -53,8 +53,9 @@ impl Term {
 			LeaveAlternateScreen,
 			crossterm::cursor::SetCursorStyle::DefaultUserShape,
 			crossterm::cursor::Show,
-		)?;
-		disable_raw_mode()?;
+		)
+		.ok();
+		disable_raw_mode().ok();
 		std::process::exit(f() as i32);
 	}
 

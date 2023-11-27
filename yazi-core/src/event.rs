@@ -3,8 +3,8 @@ use std::{collections::BTreeMap, ffi::OsString};
 use anyhow::Result;
 use crossterm::event::KeyEvent;
 use tokio::sync::{mpsc::{self, UnboundedSender}, oneshot};
-use yazi_config::{open::Opener, popup::{InputOpt, SelectOpt}};
-use yazi_shared::{fs::Url, Exec, InputError, Layer, RoCell};
+use yazi_config::{open::Opener, popup::InputOpt};
+use yazi_shared::{fs::Url, term::Term, Exec, InputError, Layer, RoCell};
 
 use super::files::FilesOp;
 use crate::{preview::PreviewLock, tasks::TasksProgress};
@@ -27,7 +27,6 @@ pub enum Event {
 	Preview(PreviewLock),
 
 	// Input
-	Select(SelectOpt, oneshot::Sender<Result<usize>>),
 	Input(InputOpt, mpsc::UnboundedSender<Result<String, InputError>>),
 
 	// Tasks
@@ -44,7 +43,7 @@ impl Event {
 
 	pub async fn wait<T>(self, rx: oneshot::Receiver<T>) -> T {
 		TX.send(self).ok();
-		rx.await.unwrap_or_else(|_| std::process::exit(0))
+		rx.await.unwrap_or_else(|_| Term::goodbye(|| false))
 	}
 }
 
@@ -83,10 +82,6 @@ macro_rules! emit {
 		$crate::Event::Preview($lock).emit();
 	};
 
-	(Select($opt:expr)) => {{
-		let (tx, rx) = tokio::sync::oneshot::channel();
-		$crate::Event::Select($opt, tx).wait(rx)
-	}};
 	(Input($opt:expr)) => {{
 		let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
 		$crate::Event::Input($opt, tx).emit();
