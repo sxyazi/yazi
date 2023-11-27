@@ -9,7 +9,6 @@
 mod blocker;
 pub mod completion;
 mod context;
-mod event;
 pub mod external;
 pub mod files;
 pub mod help;
@@ -25,7 +24,6 @@ pub mod which;
 
 pub use blocker::*;
 pub use context::*;
-pub use event::*;
 pub use highlighter::*;
 pub use step::*;
 

@@ -2,7 +2,7 @@ use std::{borrow::Cow, env, ffi::OsString, path::{Component, Path, PathBuf, MAIN
 
 use tokio::fs;
 
-use crate::Url;
+use crate::fs::Url;
 
 #[inline]
 pub fn current_cwd() -> Option<PathBuf> {

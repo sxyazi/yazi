@@ -4,7 +4,7 @@ use ansi_to_tui::IntoText;
 use ratatui::{buffer::Buffer, layout::Rect, text::{Line, Text}, widgets::{Block, BorderType, Borders, Paragraph, Widget}};
 use yazi_config::THEME;
 use yazi_core::{input::InputMode, Ctx};
-use yazi_shared::Term;
+use yazi_shared::term::Term;
 
 use crate::widgets;
 

@@ -1,4 +1,4 @@
-use yazi_config::keymap::Exec;
+use yazi_shared::event::Exec;
 
 use crate::{completion::Completion, input::{op::InputOp, Input, InputMode}};
 

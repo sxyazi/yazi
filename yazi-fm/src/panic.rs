@@ -1,4 +1,4 @@
-use yazi_shared::Term;
+use yazi_shared::term::Term;
 
 pub(super) struct Panic;
 
@@ -8,7 +8,7 @@ impl Panic {
 
 		let hook = std::panic::take_hook();
 		std::panic::set_hook(Box::new(move |info| {
-			_ = Term::goodbye(|| {
+			Term::goodbye(|| {
 				hook(info);
 				true
 			});

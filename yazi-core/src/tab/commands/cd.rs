@@ -2,10 +2,10 @@ use std::{mem, time::Duration};
 
 use tokio::{fs, pin};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
-use yazi_config::{keymap::{Exec, KeymapLayer}, popup::InputOpt};
-use yazi_shared::{expand_path, Debounce, InputError, Url};
+use yazi_config::popup::InputCfg;
+use yazi_shared::{emit, event::Exec, fs::{expand_path, Url}, Debounce, InputError, Layer};
 
-use crate::{completion::Completion, emit, manager::Manager, tab::Tab};
+use crate::{completion::Completion, input::Input, manager::Manager, tab::Tab};
 
 pub struct Opt {
 	target:      Url,
@@ -29,7 +29,7 @@ impl From<Url> for Opt {
 impl Tab {
 	#[inline]
 	pub fn _cd(target: &Url) {
-		emit!(Call(Exec::call("cd", vec![target.to_string()]).vec(), KeymapLayer::Manager));
+		emit!(Call(Exec::call("cd", vec![target.to_string()]).vec(), Layer::Manager));
 	}
 
 	pub fn cd(&mut self, opt: impl Into<Opt>) -> bool {
@@ -72,7 +72,7 @@ impl Tab {
 		let opt = opt.into() as Opt;
 
 		tokio::spawn(async move {
-			let rx = emit!(Input(InputOpt::cd().with_value(opt.target.to_string_lossy())));
+			let rx = Input::_show(InputCfg::cd().with_value(opt.target.to_string_lossy()));
 
 			let rx = Debounce::new(UnboundedReceiverStream::new(rx), Duration::from_millis(50));
 			pin!(rx);

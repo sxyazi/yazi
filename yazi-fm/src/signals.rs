@@ -2,7 +2,7 @@ use anyhow::Result;
 use crossterm::event::{Event as CrosstermEvent, EventStream, KeyEvent, KeyEventKind};
 use futures::StreamExt;
 use tokio::{select, sync::{mpsc::{self, UnboundedReceiver, UnboundedSender}, oneshot}, task::JoinHandle};
-use yazi_core::Event;
+use yazi_shared::event::Event;
 
 pub(super) struct Signals {
 	tx: UnboundedSender<Event>,
@@ -50,6 +50,7 @@ impl Signals {
 	#[cfg(unix)]
 	fn spawn_system_task(&self) -> Result<JoinHandle<()>> {
 		use libc::{SIGCONT, SIGHUP, SIGINT, SIGQUIT, SIGTERM};
+		use yazi_core::Ctx;
 
 		let tx = self.tx.clone();
 		let mut signals = signal_hook_tokio::Signals::new([
@@ -67,9 +68,7 @@ impl Signals {
 							break;
 						}
 					}
-					SIGCONT => {
-						tx.send(Event::Stop(false, None)).ok();
-					}
+					SIGCONT => Ctx::resume(),
 					_ => {}
 				}
 			}

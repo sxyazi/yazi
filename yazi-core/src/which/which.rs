@@ -1,29 +1,27 @@
 use std::mem;
 
-use yazi_config::{keymap::{Control, Key, KeymapLayer}, KEYMAP};
-
-use crate::emit;
+use yazi_config::{keymap::{Control, Key}, KEYMAP};
+use yazi_shared::{emit, Layer};
 
 pub struct Which {
-	layer:     KeymapLayer,
+	layer:     Layer,
 	pub times: usize,
-	pub cands: Vec<Control>,
+	pub cands: Vec<&'static Control>,
 
 	pub visible: bool,
 }
 
 impl Default for Which {
 	fn default() -> Self {
-		Self { layer: KeymapLayer::Manager, times: 0, cands: Default::default(), visible: false }
+		Self { layer: Layer::Manager, times: 0, cands: Default::default(), visible: false }
 	}
 }
 
 impl Which {
-	pub fn show(&mut self, key: &Key, layer: KeymapLayer) -> bool {
+	pub fn show(&mut self, key: &Key, layer: Layer) -> bool {
 		self.layer = layer;
 		self.times = 1;
-		self.cands =
-			KEYMAP.get(layer).iter().filter(|s| s.on.len() > 1 && &s.on[0] == key).cloned().collect();
+		self.cands = KEYMAP.get(layer).iter().filter(|s| s.on.len() > 1 && &s.on[0] == key).collect();
 		self.visible = true;
 		true
 	}

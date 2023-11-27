@@ -1,6 +1,6 @@
-use yazi_config::keymap::{Exec, KeymapLayer};
+use yazi_shared::{emit, event::Exec, Layer};
 
-use crate::{completion::Completion, emit, input::Input};
+use crate::{completion::Completion, input::Input};
 
 pub struct Opt {
 	submit: bool,
@@ -13,7 +13,7 @@ impl From<&Exec> for Opt {
 impl Completion {
 	#[inline]
 	pub fn _close() {
-		emit!(Call(Exec::call("close", vec![]).vec(), KeymapLayer::Completion));
+		emit!(Call(Exec::call("close", vec![]).vec(), Layer::Completion));
 	}
 
 	pub fn close(&mut self, opt: impl Into<Opt>) -> bool {

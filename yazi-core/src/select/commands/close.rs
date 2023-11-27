@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use yazi_config::keymap::Exec;
+use yazi_shared::event::Exec;
 
 use crate::select::Select;
 

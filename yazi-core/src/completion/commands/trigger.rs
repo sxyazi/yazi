@@ -1,9 +1,9 @@
 use std::{mem, path::{MAIN_SEPARATOR, MAIN_SEPARATOR_STR}};
 
 use tokio::fs;
-use yazi_config::keymap::{Exec, KeymapLayer};
+use yazi_shared::{emit, event::Exec, Layer};
 
-use crate::{completion::Completion, emit};
+use crate::completion::Completion;
 
 pub struct Opt<'a> {
 	word:   &'a str,
@@ -24,7 +24,7 @@ impl Completion {
 	pub fn _trigger(word: &str, ticket: usize) {
 		emit!(Call(
 			Exec::call("trigger", vec![word.to_owned()]).with("ticket", ticket).vec(),
-			KeymapLayer::Completion
+			Layer::Completion
 		));
 	}
 
@@ -69,7 +69,7 @@ impl Completion {
 						.with("word", child)
 						.with("ticket", ticket)
 						.vec(),
-					KeymapLayer::Completion
+					Layer::Completion
 				));
 			}
 

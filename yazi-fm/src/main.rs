@@ -14,7 +14,6 @@ mod tasks;
 mod which;
 mod widgets;
 
-use app::*;
 use executor::*;
 use logs::*;
 use panic::*;
@@ -34,5 +33,5 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_adaptor::init();
 
-	App::run().await
+	app::App::run().await
 }

@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 use futures::TryFutureExt;
 use tokio::process::Command;
 use tracing::error;
-use yazi_shared::{MimeKind, Url};
+use yazi_shared::{fs::Url, MimeKind};
 
 async fn _file(files: &[&Url]) -> Result<BTreeMap<Url, String>> {
 	if files.is_empty() {

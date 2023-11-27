@@ -1,7 +1,7 @@
-use yazi_config::{keymap::{Exec, KeymapLayer}, MANAGER};
-use yazi_shared::{Url, MIME_DIR};
+use yazi_config::MANAGER;
+use yazi_shared::{emit, event::Exec, fs::Url, Layer, MIME_DIR};
 
-use crate::{emit, manager::Manager};
+use crate::manager::Manager;
 
 #[derive(Debug)]
 pub struct Opt {
@@ -31,7 +31,7 @@ impl Manager {
 				.with("only-if", only_if.to_string())
 				.with_bool("upper-bound", true)
 				.vec(),
-			KeymapLayer::Manager
+			Layer::Manager
 		));
 	}
 

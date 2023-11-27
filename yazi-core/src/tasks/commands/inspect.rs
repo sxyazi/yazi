@@ -2,10 +2,9 @@ use std::io::{stdout, Write};
 
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use tokio::{io::{stdin, AsyncReadExt}, select, sync::mpsc, time};
-use yazi_config::keymap::Exec;
-use yazi_shared::{Defer, Term};
+use yazi_shared::{event::Exec, term::Term, Defer};
 
-use crate::{emit, tasks::Tasks, Event, BLOCKER};
+use crate::{tasks::Tasks, Ctx, BLOCKER};
 
 pub struct Opt;
 
@@ -32,10 +31,10 @@ impl Tasks {
 				task.logs.clone()
 			};
 
-			emit!(Stop(true)).await;
+			Ctx::stop().await;
 			let _defer = Defer::new(|| {
 				disable_raw_mode().ok();
-				Event::Stop(false, None).emit();
+				Ctx::resume();
 			});
 
 			Term::clear(&mut stdout()).ok();

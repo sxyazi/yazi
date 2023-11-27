@@ -3,7 +3,7 @@ use std::{fs::File, io::BufReader, path::{Path, PathBuf}};
 use anyhow::Result;
 use image::{imageops::FilterType, io::Limits, DynamicImage, ImageFormat};
 use yazi_config::{PREVIEW, TASKS};
-use yazi_shared::Term;
+use yazi_shared::term::Term;
 
 pub struct Image;
 

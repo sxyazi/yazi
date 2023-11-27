@@ -17,7 +17,7 @@ impl Widget for Which<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let which = &self.cx.which;
 		let mut cands: (Vec<_>, Vec<_>, Vec<_>) = Default::default();
-		for (i, c) in which.cands.iter().enumerate() {
+		for (i, &c) in which.cands.iter().enumerate() {
 			match i % 3 {
 				0 => cands.0.push(c),
 				1 => cands.1.push(c),

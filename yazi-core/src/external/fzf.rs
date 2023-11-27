@@ -2,7 +2,7 @@ use std::{path::Path, process::Stdio};
 
 use anyhow::{bail, Result};
 use tokio::process::Command;
-use yazi_shared::Url;
+use yazi_shared::fs::Url;
 
 pub struct FzfOpt {
 	pub cwd: Url,

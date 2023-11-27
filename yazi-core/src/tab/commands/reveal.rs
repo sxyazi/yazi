@@ -1,7 +1,6 @@
-use yazi_config::keymap::{Exec, KeymapLayer};
-use yazi_shared::{expand_path, Url};
+use yazi_shared::{emit, event::Exec, files::{File, FilesOp}, fs::{expand_path, Url}, Layer};
 
-use crate::{emit, files::{File, FilesOp}, manager::Manager, tab::Tab};
+use crate::{manager::Manager, tab::Tab};
 
 pub struct Opt {
 	target: Url,
@@ -24,7 +23,7 @@ impl From<Url> for Opt {
 impl Tab {
 	#[inline]
 	pub fn _reveal(target: &Url) {
-		emit!(Call(Exec::call("reveal", vec![target.to_string()]).vec(), KeymapLayer::Manager));
+		emit!(Call(Exec::call("reveal", vec![target.to_string()]).vec(), Layer::Manager));
 	}
 
 	pub fn reveal(&mut self, opt: impl Into<Opt>) -> bool {

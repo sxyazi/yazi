@@ -1,23 +1,22 @@
-use std::{ffi::OsString, sync::atomic::Ordering};
+use std::sync::atomic::Ordering;
 
 use anyhow::{Ok, Result};
 use crossterm::event::KeyEvent;
 use ratatui::{backend::Backend, prelude::Rect};
-use tokio::sync::oneshot;
-use yazi_config::{keymap::{Exec, Key, KeymapLayer}, BOOT};
-use yazi_core::{emit, files::FilesOp, input::InputMode, manager::Manager, preview::COLLISION, Ctx, Event};
-use yazi_shared::Term;
+use yazi_config::{keymap::Key, BOOT};
+use yazi_core::{input::InputMode, preview::COLLISION, Ctx};
+use yazi_shared::{emit, event::{Event, Exec}, files::FilesOp, term::Term, Layer};
 
 use crate::{Executor, Logs, Panic, Root, Signals};
 
-pub(super) struct App {
-	cx:      Ctx,
-	term:    Option<Term>,
-	signals: Signals,
+pub(crate) struct App {
+	pub(crate) cx:      Ctx,
+	pub(crate) term:    Option<Term>,
+	pub(crate) signals: Signals,
 }
 
 impl App {
-	pub(super) async fn run() -> Result<()> {
+	pub(crate) async fn run() -> Result<()> {
 		Panic::install();
 		let _log = Logs::init()?;
 		let term = Term::start()?;
@@ -35,7 +34,6 @@ impl App {
 				Event::Paste(str) => app.dispatch_paste(str),
 				Event::Render(_) => app.dispatch_render()?,
 				Event::Resize(cols, rows) => app.dispatch_resize(cols, rows),
-				Event::Stop(state, tx) => app.dispatch_stop(state, tx),
 				Event::Call(exec, layer) => app.dispatch_call(exec, layer),
 				event => app.dispatch_module(event),
 			}
@@ -48,12 +46,12 @@ impl App {
 			let cwd = self.cx.manager.cwd().as_os_str();
 			std::fs::write(p, cwd.as_encoded_bytes()).ok();
 		}
-		Term::goodbye(|| false).unwrap();
+		Term::goodbye(|| false);
 	}
 
 	fn dispatch_key(&mut self, key: KeyEvent) {
 		let key = Key::from(key);
-		if Executor::new(&mut self.cx).handle(key) {
+		if Executor::new(self).handle(key) {
 			emit!(Render);
 		}
 	}
@@ -121,25 +119,9 @@ impl App {
 		emit!(Render);
 	}
 
-	fn dispatch_stop(&mut self, state: bool, tx: Option<oneshot::Sender<()>>) {
-		self.cx.manager.active_mut().preview.reset_image();
-		if state {
-			self.signals.stop_term(true);
-			self.term = None;
-		} else {
-			self.term = Some(Term::start().unwrap());
-			self.signals.stop_term(false);
-			emit!(Render);
-			Manager::_hover(None);
-		}
-		if let Some(tx) = tx {
-			tx.send(()).ok();
-		}
-	}
-
 	#[inline]
-	fn dispatch_call(&mut self, exec: Vec<Exec>, layer: KeymapLayer) {
-		if Executor::new(&mut self.cx).dispatch(&exec, layer) {
+	fn dispatch_call(&mut self, exec: Vec<Exec>, layer: Layer) {
+		if Executor::new(self).dispatch(&exec, layer) {
 			emit!(Render);
 		}
 	}
@@ -176,39 +158,6 @@ impl App {
 					emit!(Render);
 				}
 			}
-
-			Event::Select(opt, tx) => {
-				self.cx.select.show(opt, tx);
-				emit!(Render);
-			}
-			Event::Input(opt, tx) => {
-				self.cx.input.show(opt, tx);
-				emit!(Render);
-			}
-
-			Event::Open(targets, opener) => {
-				if let Some(p) = &BOOT.chooser_file {
-					let paths = targets.into_iter().fold(OsString::new(), |mut s, (p, _)| {
-						s.push(p);
-						s.push("\n");
-						s
-					});
-
-					std::fs::write(p, paths.as_encoded_bytes()).ok();
-					return emit!(Quit(false));
-				}
-
-				if let Some(opener) = opener {
-					tasks.file_open_with(&opener, &targets.into_iter().map(|(f, _)| f).collect::<Vec<_>>());
-				} else {
-					tasks.file_open(&targets);
-				}
-			}
-			Event::Progress(progress) => {
-				tasks.progress = progress;
-				emit!(Render);
-			}
-
 			_ => unreachable!(),
 		}
 	}

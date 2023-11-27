@@ -1,20 +1,31 @@
 use std::borrow::Cow;
 
 use serde::Deserialize;
+use yazi_shared::event::Exec;
 
-use super::{Exec, Key};
+use super::Key;
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Control {
 	pub on:   Vec<Key>,
-	#[serde(deserialize_with = "Exec::deserialize")]
+	#[serde(deserialize_with = "super::exec_deserialize")]
 	pub exec: Vec<Exec>,
 	pub desc: Option<String>,
 }
 
 impl Control {
-	#[inline]
-	pub fn to_call(&self) -> Vec<Exec> { self.exec.clone() }
+	pub fn to_call(&self) -> Vec<Exec> {
+		self
+			.exec
+			.iter()
+			.map(|e| Exec {
+				cmd: e.cmd.clone(),
+				args: e.args.clone(),
+				named: e.named.clone(),
+				..Default::default()
+			})
+			.collect()
+	}
 }
 
 impl Control {

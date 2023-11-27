@@ -1,7 +1,6 @@
 use std::ops::RangeBounds;
 
-use yazi_config::keymap::Exec;
-use yazi_shared::CharKind;
+use yazi_shared::{event::Exec, CharKind};
 
 use crate::input::Input;
 

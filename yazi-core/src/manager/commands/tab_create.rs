@@ -1,5 +1,4 @@
-use yazi_config::keymap::Exec;
-use yazi_shared::Url;
+use yazi_shared::{event::Exec, fs::Url};
 
 use crate::{manager::Tabs, tab::Tab};
 

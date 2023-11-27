@@ -2,7 +2,7 @@ use std::{collections::BTreeMap, ffi::OsStr, ops::Range};
 
 use anyhow::Result;
 use regex::bytes::{Regex, RegexBuilder};
-use yazi_shared::Url;
+use yazi_shared::fs::Url;
 
 use crate::files::Files;
 

@@ -3,7 +3,7 @@ use std::io::{stdout, Write};
 use anyhow::Result;
 use crossterm::{cursor::{MoveTo, RestorePosition, SavePosition, SetCursorStyle}, execute, queue};
 
-use crate::Term;
+use super::Term;
 
 impl Term {
 	#[inline]

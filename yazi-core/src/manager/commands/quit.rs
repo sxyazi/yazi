@@ -1,6 +1,7 @@
-use yazi_config::{keymap::Exec, popup::InputOpt};
+use yazi_config::popup::InputCfg;
+use yazi_shared::{emit, event::Exec};
 
-use crate::{emit, manager::Manager, tasks::Tasks};
+use crate::{input::Input, manager::Manager, tasks::Tasks};
 
 #[derive(Default)]
 pub struct Opt {
@@ -24,7 +25,7 @@ impl Manager {
 		}
 
 		tokio::spawn(async move {
-			let mut result = emit!(Input(InputOpt::quit(tasks)));
+			let mut result = Input::_show(InputCfg::quit(tasks));
 			if let Some(Ok(choice)) = result.recv().await {
 				if choice == "y" || choice == "Y" {
 					emit!(Quit(opt.no_cwd_file));

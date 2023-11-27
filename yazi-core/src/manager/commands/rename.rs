@@ -2,10 +2,10 @@ use std::{collections::BTreeMap, ffi::OsStr, io::{stdout, BufWriter, Write}, pat
 
 use anyhow::{anyhow, bail, Result};
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
-use yazi_config::{keymap::Exec, popup::InputOpt, OPEN, PREVIEW};
-use yazi_shared::{max_common_root, Defer, Term, Url};
+use yazi_config::{popup::InputCfg, OPEN, PREVIEW};
+use yazi_shared::{emit, event::Exec, files::{File, FilesOp}, fs::{max_common_root, Url}, term::Term, Defer};
 
-use crate::{emit, external::{self, ShellOpt}, files::{File, FilesOp}, manager::Manager, Event, BLOCKER};
+use crate::{external::{self, ShellOpt}, input::Input, manager::Manager, Ctx, BLOCKER};
 
 pub struct Opt {
 	force: bool,
@@ -39,7 +39,7 @@ impl Manager {
 		let opt = opt.into() as Opt;
 		tokio::spawn(async move {
 			let mut result =
-				emit!(Input(InputOpt::rename().with_value(hovered.file_name().unwrap().to_string_lossy())));
+				Input::_show(InputCfg::rename().with_value(hovered.file_name().unwrap().to_string_lossy()));
 
 			let Some(Ok(name)) = result.recv().await else {
 				return;
@@ -51,7 +51,7 @@ impl Manager {
 				return;
 			}
 
-			let mut result = emit!(Input(InputOpt::overwrite()));
+			let mut result = Input::_show(InputCfg::overwrite());
 			if let Some(Ok(choice)) = result.recv().await {
 				if choice == "y" || choice == "Y" {
 					Self::rename_and_hover(hovered, Url::from(new)).await.ok();
@@ -86,10 +86,10 @@ impl Manager {
 
 			let _guard = BLOCKER.acquire().await.unwrap();
 			let _defer = Defer::new(|| {
-				Event::Stop(false, None).emit();
+				Ctx::resume();
 				tokio::spawn(fs::remove_file(tmp.clone()))
 			});
-			emit!(Stop(true)).await;
+			Ctx::stop().await;
 
 			let mut child = external::shell(ShellOpt {
 				cmd:    (*opener.exec).into(),

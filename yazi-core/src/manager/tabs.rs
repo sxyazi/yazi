@@ -1,5 +1,5 @@
 use yazi_config::BOOT;
-use yazi_shared::Url;
+use yazi_shared::fs::Url;
 
 use crate::{manager::Manager, tab::Tab};
 

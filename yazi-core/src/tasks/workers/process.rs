@@ -3,7 +3,7 @@ use std::{ffi::OsString, mem};
 use anyhow::Result;
 use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::{mpsc, oneshot}};
 
-use crate::{emit, external::{self, ShellOpt}, tasks::TaskOp, BLOCKER};
+use crate::{external::{self, ShellOpt}, tasks::TaskOp, Ctx, BLOCKER};
 
 pub(crate) struct Process {
 	sch: mpsc::UnboundedSender<TaskOp>,
@@ -37,7 +37,7 @@ impl Process {
 		let opt = ShellOpt::from(&mut task);
 		if task.block {
 			let _guard = BLOCKER.acquire().await.unwrap();
-			emit!(Stop(true)).await;
+			Ctx::stop().await;
 
 			match external::shell(opt) {
 				Ok(mut child) => {
@@ -49,7 +49,7 @@ impl Process {
 					self.fail(task.id, format!("Failed to spawn process: {e}"))?;
 				}
 			}
-			return Ok(emit!(Stop(false)).await);
+			return Ok(Ctx::resume());
 		}
 
 		if task.orphan {

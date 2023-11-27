@@ -1,5 +1,4 @@
-use yazi_config::keymap::Exec;
-use yazi_shared::InputError;
+use yazi_shared::{event::Exec, InputError};
 
 use crate::{completion::Completion, input::Input};
 

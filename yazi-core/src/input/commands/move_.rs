@@ -1,5 +1,5 @@
 use unicode_width::UnicodeWidthStr;
-use yazi_config::keymap::Exec;
+use yazi_shared::event::Exec;
 
 use crate::input::{op::InputOp, snap::InputSnap, Input};
 

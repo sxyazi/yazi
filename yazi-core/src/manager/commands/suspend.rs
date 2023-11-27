@@ -1,6 +1,6 @@
-use yazi_config::keymap::Exec;
+use yazi_shared::event::Exec;
 
-use crate::manager::Manager;
+use crate::{manager::Manager, Ctx};
 
 pub struct Opt;
 impl From<&Exec> for Opt {
@@ -11,7 +11,7 @@ impl Manager {
 	pub fn suspend(&mut self, _: impl Into<Opt>) -> bool {
 		#[cfg(unix)]
 		tokio::spawn(async move {
-			crate::emit!(Stop(true)).await;
+			Ctx::stop().await;
 			unsafe { libc::raise(libc::SIGTSTP) };
 		});
 		false

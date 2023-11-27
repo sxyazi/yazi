@@ -1,8 +1,8 @@
 use ratatui::layout::Rect;
 use yazi_config::MANAGER;
-use yazi_shared::Url;
+use yazi_shared::{emit, files::{File, FilesOp}, fs::Url};
 
-use crate::{emit, files::{File, Files, FilesOp}, Step};
+use crate::{files::Files, Step};
 
 #[derive(Default)]
 pub struct Folder {

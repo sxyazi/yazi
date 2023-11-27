@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use yazi_config::keymap::Exec;
+use yazi_shared::event::Exec;
 
 use crate::tab::{Mode, Tab};
 

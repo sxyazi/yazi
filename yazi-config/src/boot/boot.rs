@@ -1,7 +1,7 @@
 use std::{ffi::OsString, fs, path::PathBuf, process};
 
 use clap::Parser;
-use yazi_shared::{current_cwd, expand_path};
+use yazi_shared::fs::{current_cwd, expand_path};
 
 use super::cli::Args;
 use crate::{Xdg, PREVIEW};
