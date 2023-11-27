@@ -2,7 +2,7 @@ use std::{path::{Path, PathBuf}, time::{self, SystemTime}};
 
 use md5::{Digest, Md5};
 use serde::Deserialize;
-use yazi_shared::expand_path;
+use yazi_shared::fs::expand_path;
 
 use crate::{xdg::Xdg, MERGED_YAZI};
 

@@ -1,6 +1,6 @@
 use std::{env, path::PathBuf};
 
-use yazi_shared::expand_path;
+use yazi_shared::fs::expand_path;
 
 pub(super) struct Xdg;
 

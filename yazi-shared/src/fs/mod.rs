@@ -1,7 +1,9 @@
 mod cha;
-mod fs;
+mod fns;
+mod path;
 mod url;
 
 pub use cha::*;
-pub use fs::*;
+pub use fns::*;
+pub use path::*;
 pub use url::*;

@@ -3,7 +3,7 @@ use std::{mem, time::Duration};
 use tokio::{fs, pin};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::{keymap::{Exec, KeymapLayer}, popup::InputOpt};
-use yazi_shared::{expand_path, fs::Url, Debounce, InputError};
+use yazi_shared::{fs::{expand_path, Url}, Debounce, InputError};
 
 use crate::{completion::Completion, emit, manager::Manager, tab::Tab};
 

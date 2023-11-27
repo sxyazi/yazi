@@ -4,7 +4,7 @@ use futures::{future::BoxFuture, FutureExt};
 use parking_lot::RwLock;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, time::sleep};
 use yazi_config::{open::Opener, TASKS};
-use yazi_shared::{fs::Url, unique_path, Throttle};
+use yazi_shared::{fs::{unique_path, Url}, Throttle};
 
 use super::{workers::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash, Precache, PrecacheOpMime, PrecacheOpSize, Process, ProcessOpOpen}, Running, TaskOp, TaskStage, TasksProgress};
 use crate::emit;

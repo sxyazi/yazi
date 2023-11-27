@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use serde::Deserialize;
 use validator::Validate;
-use yazi_shared::expand_path;
+use yazi_shared::fs::expand_path;
 
 use crate::MERGED_YAZI;
 
