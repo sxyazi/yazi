@@ -4,7 +4,7 @@ use serde::Deserialize;
 
 use super::{Exec, Key};
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Control {
 	pub on:   Vec<Key>,
 	#[serde(deserialize_with = "Exec::deserialize")]
@@ -13,8 +13,18 @@ pub struct Control {
 }
 
 impl Control {
-	#[inline]
-	pub fn to_call(&self) -> Vec<Exec> { self.exec.clone() }
+	pub fn to_call(&self) -> Vec<Exec> {
+		self
+			.exec
+			.iter()
+			.map(|e| Exec {
+				cmd:   e.cmd.clone(),
+				args:  e.args.clone(),
+				named: e.named.clone(),
+				data:  None,
+			})
+			.collect()
+	}
 }
 
 impl Control {

@@ -8,7 +8,7 @@ use crate::emit;
 pub struct Which {
 	layer:     Layer,
 	pub times: usize,
-	pub cands: Vec<Control>,
+	pub cands: Vec<&'static Control>,
 
 	pub visible: bool,
 }
@@ -23,8 +23,7 @@ impl Which {
 	pub fn show(&mut self, key: &Key, layer: Layer) -> bool {
 		self.layer = layer;
 		self.times = 1;
-		self.cands =
-			KEYMAP.get(layer).iter().filter(|s| s.on.len() > 1 && &s.on[0] == key).cloned().collect();
+		self.cands = KEYMAP.get(layer).iter().filter(|s| s.on.len() > 1 && &s.on[0] == key).collect();
 		self.visible = true;
 		true
 	}

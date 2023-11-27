@@ -1,13 +1,14 @@
-use std::{collections::BTreeMap, fmt::{self, Debug, Display}};
+use std::{any::Any, collections::BTreeMap, fmt::{self, Debug, Display}};
 
 use anyhow::bail;
 use serde::{de::{self, Visitor}, Deserializer};
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Default)]
 pub struct Exec {
 	pub cmd:   String,
 	pub args:  Vec<String>,
 	pub named: BTreeMap<String, String>,
+	pub data:  Option<Box<dyn Any + Send>>,
 }
 
 impl TryFrom<&str> for Exec {
@@ -19,7 +20,7 @@ impl TryFrom<&str> for Exec {
 			bail!("`exec` cannot be empty");
 		}
 
-		let mut exec = Self { cmd: s[0].clone(), args: Vec::new(), named: BTreeMap::new() };
+		let mut exec = Self { cmd: s[0].clone(), ..Default::default() };
 		for arg in s.into_iter().skip(1) {
 			if arg.starts_with("--") {
 				let mut arg = arg.splitn(2, '=');
@@ -90,12 +91,12 @@ impl Exec {
 impl Exec {
 	#[inline]
 	pub fn call(cwd: &str, args: Vec<String>) -> Self {
-		Exec { cmd: cwd.to_owned(), args, named: Default::default() }
+		Exec { cmd: cwd.to_owned(), args, ..Default::default() }
 	}
 
 	#[inline]
 	pub fn call_named(cwd: &str, named: BTreeMap<String, String>) -> Self {
-		Exec { cmd: cwd.to_owned(), args: Default::default(), named }
+		Exec { cmd: cwd.to_owned(), named, ..Default::default() }
 	}
 
 	#[inline]

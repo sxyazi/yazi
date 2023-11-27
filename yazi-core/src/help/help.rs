@@ -10,7 +10,7 @@ use crate::input::Input;
 pub struct Help {
 	pub visible:         bool,
 	pub layer:           Layer,
-	pub(super) bindings: Vec<Control>,
+	pub(super) bindings: Vec<&'static Control>,
 
 	// Filter
 	keyword:              Option<String>,
@@ -44,9 +44,9 @@ impl Help {
 		}
 
 		if let Some(kw) = kw {
-			self.bindings = KEYMAP.get(self.layer).iter().filter(|&c| c.contains(kw)).cloned().collect();
+			self.bindings = KEYMAP.get(self.layer).iter().filter(|&c| c.contains(kw)).collect();
 		} else {
-			self.bindings = KEYMAP.get(self.layer).clone();
+			self.bindings = KEYMAP.get(self.layer).iter().collect();
 		}
 
 		self.keyword = kw.map(|s| s.to_owned());
@@ -89,7 +89,7 @@ impl Help {
 
 	// --- Bindings
 	#[inline]
-	pub fn window(&self) -> &[Control] {
+	pub fn window(&self) -> &[&Control] {
 		let end = (self.offset + Self::limit()).min(self.bindings.len());
 		&self.bindings[self.offset..end]
 	}
