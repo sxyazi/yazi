@@ -2,8 +2,8 @@ use std::{collections::BTreeMap, ffi::OsStr, io::{stdout, BufWriter, Write}, pat
 
 use anyhow::{anyhow, bail, Result};
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
-use yazi_config::{keymap::Exec, popup::InputOpt, OPEN, PREVIEW};
-use yazi_shared::{fs::{max_common_root, Url}, term::Term, Defer};
+use yazi_config::{popup::InputOpt, OPEN, PREVIEW};
+use yazi_shared::{fs::{max_common_root, Url}, term::Term, Defer, Exec};
 
 use crate::{emit, external::{self, ShellOpt}, files::{File, FilesOp}, manager::Manager, Event, BLOCKER};
 

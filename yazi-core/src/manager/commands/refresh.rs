@@ -1,6 +1,6 @@
 use std::env;
 
-use yazi_config::keymap::Exec;
+use yazi_shared::Exec;
 use yazi_shared::Layer;
 
 use crate::{emit, manager::Manager};

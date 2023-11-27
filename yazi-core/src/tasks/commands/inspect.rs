@@ -2,7 +2,7 @@ use std::io::{stdout, Write};
 
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use tokio::{io::{stdin, AsyncReadExt}, select, sync::mpsc, time};
-use yazi_config::keymap::Exec;
+use yazi_shared::Exec;
 use yazi_shared::{term::Term, Defer};
 
 use crate::{emit, tasks::Tasks, Event, BLOCKER};

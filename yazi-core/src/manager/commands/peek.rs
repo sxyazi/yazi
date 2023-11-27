@@ -1,5 +1,5 @@
-use yazi_config::{keymap::Exec, MANAGER};
-use yazi_shared::{fs::Url, Layer, MIME_DIR};
+use yazi_config::MANAGER;
+use yazi_shared::{fs::Url, Exec, Layer, MIME_DIR};
 
 use crate::{emit, manager::Manager};
 

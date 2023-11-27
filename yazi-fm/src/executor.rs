@@ -1,6 +1,6 @@
-use yazi_config::{keymap::{Control, Exec, Key}, KEYMAP};
+use yazi_config::{keymap::{Control, Key}, KEYMAP};
 use yazi_core::{input::InputMode, Ctx};
-use yazi_shared::Layer;
+use yazi_shared::{Exec, Layer};
 
 pub(super) struct Executor<'a> {
 	cx: &'a mut Ctx,

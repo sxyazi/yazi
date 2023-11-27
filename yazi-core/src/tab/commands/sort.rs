@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
-use yazi_config::{keymap::Exec, manager::SortBy};
+use yazi_config::manager::SortBy;
+use yazi_shared::Exec;
 
 use crate::tab::Tab;
 

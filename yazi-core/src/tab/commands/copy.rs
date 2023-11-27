@@ -1,6 +1,6 @@
 use std::ffi::{OsStr, OsString};
 
-use yazi_config::keymap::Exec;
+use yazi_shared::Exec;
 
 use crate::{external, tab::Tab};
 

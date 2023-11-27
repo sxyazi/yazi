@@ -3,8 +3,8 @@ use std::{collections::BTreeMap, ffi::OsString};
 use anyhow::Result;
 use crossterm::event::KeyEvent;
 use tokio::sync::{mpsc::{self, UnboundedSender}, oneshot};
-use yazi_config::{keymap::Exec, open::Opener, popup::{InputOpt, SelectOpt}};
-use yazi_shared::{fs::Url, InputError, Layer, RoCell};
+use yazi_config::{open::Opener, popup::{InputOpt, SelectOpt}};
+use yazi_shared::{fs::Url, Exec, InputError, Layer, RoCell};
 
 use super::files::FilesOp;
 use crate::{preview::PreviewLock, tasks::TasksProgress};

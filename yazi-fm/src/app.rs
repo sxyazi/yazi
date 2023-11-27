@@ -4,9 +4,9 @@ use anyhow::{Ok, Result};
 use crossterm::event::KeyEvent;
 use ratatui::{backend::Backend, prelude::Rect};
 use tokio::sync::oneshot;
-use yazi_config::{keymap::{Exec, Key}, BOOT};
+use yazi_config::{keymap::Key, BOOT};
 use yazi_core::{emit, files::FilesOp, input::InputMode, manager::Manager, preview::COLLISION, Ctx, Event};
-use yazi_shared::{term::Term, Layer};
+use yazi_shared::{term::Term, Exec, Layer};
 
 use crate::{Executor, Logs, Panic, Root, Signals};
 

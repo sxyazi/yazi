@@ -1,4 +1,4 @@
-use yazi_config::keymap::Exec;
+use yazi_shared::Exec;
 use yazi_shared::{fs::ends_with_slash, Defer};
 
 use crate::{emit, external::{self, FzfOpt, ZoxideOpt}, tab::Tab, Event, BLOCKER};

@@ -1,4 +1,5 @@
-use yazi_config::{keymap::Exec, open::Opener, popup::InputOpt};
+use yazi_config::{open::Opener, popup::InputOpt};
+use yazi_shared::Exec;
 
 use crate::{emit, tab::Tab};
 

@@ -1,4 +1,5 @@
-use yazi_config::{keymap::Exec, popup::{Offset, Origin, Position}};
+use yazi_config::popup::{Offset, Origin, Position};
+use yazi_shared::Exec;
 
 use crate::{help::Help, input::Input};
 

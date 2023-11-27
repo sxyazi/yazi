@@ -1,8 +1,7 @@
 use std::{mem, path::{MAIN_SEPARATOR, MAIN_SEPARATOR_STR}};
 
 use tokio::fs;
-use yazi_config::keymap::Exec;
-use yazi_shared::Layer;
+use yazi_shared::{Exec, Layer};
 
 use crate::{completion::Completion, emit};
 

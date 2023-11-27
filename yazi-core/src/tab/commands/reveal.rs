@@ -1,4 +1,4 @@
-use yazi_config::keymap::Exec;
+use yazi_shared::Exec;
 use yazi_shared::{fs::{expand_path, Url}, Layer};
 
 use crate::{emit, files::{File, FilesOp}, manager::Manager, tab::Tab};

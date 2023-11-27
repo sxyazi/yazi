@@ -1,4 +1,5 @@
-use yazi_config::{keymap::Exec, popup::InputOpt};
+use yazi_config::popup::InputOpt;
+use yazi_shared::Exec;
 
 use crate::{emit, manager::Manager, tasks::Tasks};
 

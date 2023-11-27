@@ -1,5 +1,4 @@
-use yazi_config::keymap::Exec;
-use yazi_shared::Layer;
+use yazi_shared::{Exec, Layer};
 
 use crate::{completion::Completion, emit, input::Input};
 

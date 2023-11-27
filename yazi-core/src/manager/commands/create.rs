@@ -1,8 +1,8 @@
 use std::path::{PathBuf, MAIN_SEPARATOR};
 
 use tokio::fs;
-use yazi_config::{keymap::Exec, popup::InputOpt};
-use yazi_shared::fs::Url;
+use yazi_config::popup::InputOpt;
+use yazi_shared::{fs::Url, Exec};
 
 use crate::{emit, files::{File, FilesOp}, manager::Manager};
 
