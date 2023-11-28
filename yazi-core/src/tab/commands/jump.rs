@@ -1,6 +1,7 @@
+use yazi_scheduler::external::{self, FzfOpt, ZoxideOpt};
 use yazi_shared::{event::Exec, fs::ends_with_slash, Defer};
 
-use crate::{external::{self, FzfOpt, ZoxideOpt}, tab::Tab, Ctx, BLOCKER};
+use crate::{tab::Tab, Ctx, BLOCKER};
 
 pub struct Opt {
 	type_: OptType,

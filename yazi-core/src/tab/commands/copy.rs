@@ -1,8 +1,9 @@
 use std::ffi::{OsStr, OsString};
 
+use yazi_scheduler::external;
 use yazi_shared::event::Exec;
 
-use crate::{external, tab::Tab};
+use crate::tab::Tab;
 
 pub struct Opt<'a> {
 	type_: &'a str,

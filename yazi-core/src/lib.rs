@@ -9,7 +9,6 @@
 mod blocker;
 pub mod completion;
 mod context;
-pub mod external;
 pub mod files;
 pub mod help;
 mod highlighter;

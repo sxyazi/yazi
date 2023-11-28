@@ -2,8 +2,9 @@ use std::{ffi::OsString, mem};
 
 use anyhow::Result;
 use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::{mpsc, oneshot}};
+use yazi_scheduler::external::{self, ShellOpt};
 
-use crate::{external::{self, ShellOpt}, tasks::TaskOp, Ctx, BLOCKER};
+use crate::{tasks::TaskOp, Ctx, BLOCKER};
 
 pub(crate) struct Process {
 	sch: mpsc::UnboundedSender<TaskOp>,

@@ -2576,6 +2576,7 @@ dependencies = [
  "yazi-adaptor",
  "yazi-config",
  "yazi-prebuild",
+ "yazi-scheduler",
  "yazi-shared",
 ]
 
@@ -2624,6 +2625,36 @@ name = "yazi-prebuild"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "394457709d77af570fcb3c0ef878336213b4e9c8f298eccde728aecd602aa7e0"
+
+[[package]]
+name = "yazi-scheduler"
+version = "0.1.5"
+dependencies = [
+ "anyhow",
+ "async-channel",
+ "bitflags 2.4.1",
+ "clipboard-win",
+ "crossterm",
+ "futures",
+ "indexmap",
+ "libc",
+ "notify",
+ "parking_lot",
+ "ratatui",
+ "regex",
+ "serde",
+ "serde_json",
+ "syntect",
+ "tokio",
+ "tokio-stream",
+ "tracing",
+ "trash",
+ "unicode-width",
+ "yazi-adaptor",
+ "yazi-config",
+ "yazi-prebuild",
+ "yazi-shared",
+]
 
 [[package]]
 name = "yazi-shared"

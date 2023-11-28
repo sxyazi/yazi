@@ -1,6 +1,7 @@
+use yazi_scheduler::external;
 use yazi_shared::event::Exec;
 
-use crate::{external, input::{op::InputOp, Input}};
+use crate::input::{op::InputOp, Input};
 
 pub struct Opt {
 	before: bool,
