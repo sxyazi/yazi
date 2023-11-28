@@ -13,6 +13,7 @@ pub enum SortBy {
 	Modified,
 	Natural,
 	Size,
+	Extension,
 }
 
 impl FromStr for SortBy {
@@ -26,6 +27,7 @@ impl FromStr for SortBy {
 			"modified" => Self::Modified,
 			"natural" => Self::Natural,
 			"size" => Self::Size,
+			"extension" => Self::Extension,
 			_ => bail!("invalid sort_by value: {s}"),
 		})
 	}
@@ -46,6 +48,7 @@ impl ToString for SortBy {
 			Self::Modified => "modified",
 			Self::Natural => "natural",
 			Self::Size => "size",
+			Self::Extension => "extension",
 		}
 		.to_string()
 	}

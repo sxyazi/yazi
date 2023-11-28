@@ -106,6 +106,8 @@ keymap = [
 	{ on = [ ",", "N" ], exec = "sort natural --reverse --dir_first",      desc = "Sort naturally (reverse)" },
 	{ on = [ ",", "s" ], exec = "sort size --dir_first",                   desc = "Sort by size" },
 	{ on = [ ",", "S" ], exec = "sort size --reverse --dir_first",         desc = "Sort by size (reverse)" },
+	{ on = [ ",", "e" ], exec = "sort extension --dir_first",         	   desc = "Sort by extension" },
+	{ on = [ ",", "E" ], exec = "sort extension --reverse --dir_first",    desc = "Sort by extension (reverse)" },
 
 	# Tabs
 	{ on = [ "t" ], exec = "tab_create --current", desc = "Create a new tab using the current path" },

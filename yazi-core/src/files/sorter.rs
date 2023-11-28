@@ -47,6 +47,12 @@ impl FilesSorter {
 				let ord = self.cmp(aa.unwrap_or(a.len), bb.unwrap_or(b.len), self.promote(a, b));
 				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
 			}),
+			SortBy::Extension => items.sort_unstable_by(|a,b| {
+				let a_ext = a.url.extension().unwrap_or_default().to_ascii_lowercase();
+				let b_ext = b.url.extension().unwrap_or_default().to_ascii_lowercase();
+				let ord = self.cmp(a_ext, b_ext, self.promote(a, b));
+				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
+			}),
 		}
 		true
 	}
