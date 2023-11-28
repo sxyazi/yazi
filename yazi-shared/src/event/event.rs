@@ -4,7 +4,7 @@ use crossterm::event::KeyEvent;
 use tokio::sync::{mpsc::UnboundedSender, oneshot};
 
 use super::Exec;
-use crate::{files::FilesOp, fs::{Cha, Url}, term::Term, Layer, RoCell};
+use crate::{fs::{Cha, FilesOp, Url}, term::Term, Layer, RoCell};
 
 static TX: RoCell<UnboundedSender<Event>> = RoCell::new();
 

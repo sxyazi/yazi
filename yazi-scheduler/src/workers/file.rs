@@ -7,7 +7,7 @@ use tracing::warn;
 use yazi_config::TASKS;
 use yazi_shared::fs::{calculate_size, copy_with_progress, path_relative_to, Url};
 
-use crate::tasks::TaskOp;
+use crate::TaskOp;
 
 pub(crate) struct File {
 	tx: async_channel::Sender<FileOp>,

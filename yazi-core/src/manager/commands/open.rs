@@ -1,9 +1,10 @@
 use std::ffi::OsString;
 
 use yazi_config::{popup::SelectCfg, OPEN};
+use yazi_scheduler::external;
 use yazi_shared::{event::Exec, MIME_DIR};
 
-use crate::{external, manager::Manager, select::Select, tasks::Tasks};
+use crate::{manager::Manager, select::Select, tasks::Tasks};
 
 pub struct Opt {
 	interactive: bool,

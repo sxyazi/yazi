@@ -6,10 +6,8 @@
 	clippy::unit_arg
 )]
 
-mod blocker;
 pub mod completion;
 mod context;
-pub mod external;
 pub mod files;
 pub mod help;
 mod highlighter;
@@ -22,9 +20,8 @@ pub mod tab;
 pub mod tasks;
 pub mod which;
 
-pub use blocker::*;
 pub use context::*;
 pub use highlighter::*;
 pub use step::*;
 
-pub fn init() { init_blocker(); }
+pub fn init() { yazi_scheduler::init(); }

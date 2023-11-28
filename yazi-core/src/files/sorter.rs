@@ -1,7 +1,7 @@
 use std::{cmp::Ordering, collections::BTreeMap, mem};
 
 use yazi_config::manager::SortBy;
-use yazi_shared::{files::File, fs::Url, natsort};
+use yazi_shared::{fs::File, fs::Url, natsort};
 
 #[derive(Clone, Copy, Default, PartialEq)]
 pub struct FilesSorter {

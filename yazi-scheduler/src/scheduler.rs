@@ -2,25 +2,25 @@ use std::{ffi::OsStr, sync::Arc, time::Duration};
 
 use futures::{future::BoxFuture, FutureExt};
 use parking_lot::RwLock;
-use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, time::sleep};
+use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}};
 use yazi_config::{open::Opener, TASKS};
-use yazi_shared::{fs::{unique_path, Url}, Throttle};
+use yazi_shared::{emit, event::Exec, fs::{unique_path, Url}, Layer, Throttle};
 
-use super::{workers::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash, Precache, PrecacheOpMime, PrecacheOpSize, Process, ProcessOpOpen}, Running, TaskOp, TaskStage, TasksProgress};
-use crate::tasks::Tasks;
+use super::{Running, TaskOp, TaskStage};
+use crate::workers::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash, Precache, PrecacheOpMime, PrecacheOpSize, Process, ProcessOpOpen};
 
 pub struct Scheduler {
 	file:     Arc<File>,
 	precache: Arc<Precache>,
 	process:  Arc<Process>,
 
-	todo:               async_channel::Sender<BoxFuture<'static, ()>>,
-	prog:               mpsc::UnboundedSender<TaskOp>,
-	pub(super) running: Arc<RwLock<Running>>,
+	todo:        async_channel::Sender<BoxFuture<'static, ()>>,
+	prog:        mpsc::UnboundedSender<TaskOp>,
+	pub running: Arc<RwLock<Running>>,
 }
 
 impl Scheduler {
-	pub(super) fn start() -> Self {
+	pub fn start() -> Self {
 		let (todo_tx, todo_rx) = async_channel::unbounded();
 		let (prog_tx, prog_rx) = mpsc::unbounded_channel();
 
@@ -147,23 +147,9 @@ impl Scheduler {
 				}
 			}
 		});
-
-		let running = self.running.clone();
-		tokio::spawn(async move {
-			let mut last = TasksProgress::default();
-			loop {
-				sleep(Duration::from_millis(500)).await;
-
-				let new = TasksProgress::from(&*running.read());
-				if last != new {
-					last = new;
-					Tasks::_update(new);
-				}
-			}
-		});
 	}
 
-	pub(super) fn cancel(&self, id: usize) -> bool {
+	pub fn cancel(&self, id: usize) -> bool {
 		let mut running = self.running.write();
 		let b = running.all.remove(&id).is_some();
 
@@ -173,7 +159,20 @@ impl Scheduler {
 		b
 	}
 
-	pub(super) fn file_cut(&self, from: Url, mut to: Url, force: bool) {
+	pub async fn app_stop() {
+		let (tx, rx) = oneshot::channel::<()>();
+		emit!(Call(Exec::call("stop", vec!["true".to_string()]).with_data(Some(tx)).vec(), Layer::App));
+		rx.await.ok();
+	}
+
+	pub fn app_resume() {
+		emit!(Call(
+			Exec::call("stop", vec!["false".to_string()]).with_data(None::<oneshot::Sender<()>>).vec(),
+			Layer::App
+		));
+	}
+
+	pub fn file_cut(&self, from: Url, mut to: Url, force: bool) {
 		let mut running = self.running.write();
 		let id = running.add(format!("Cut {:?} to {:?}", from, to));
 
@@ -204,7 +203,7 @@ impl Scheduler {
 		});
 	}
 
-	pub(super) fn file_copy(&self, from: Url, mut to: Url, force: bool) {
+	pub fn file_copy(&self, from: Url, mut to: Url, force: bool) {
 		let name = format!("Copy {:?} to {:?}", from, to);
 		let id = self.running.write().add(name);
 
@@ -220,7 +219,7 @@ impl Scheduler {
 		});
 	}
 
-	pub(super) fn file_link(&self, from: Url, mut to: Url, relative: bool, force: bool) {
+	pub fn file_link(&self, from: Url, mut to: Url, relative: bool, force: bool) {
 		let name = format!("Link {from:?} to {to:?}");
 		let id = self.running.write().add(name);
 
@@ -239,7 +238,7 @@ impl Scheduler {
 		});
 	}
 
-	pub(super) fn file_delete(&self, target: Url) {
+	pub fn file_delete(&self, target: Url) {
 		let mut running = self.running.write();
 		let id = running.add(format!("Delete {:?}", target));
 
@@ -267,7 +266,7 @@ impl Scheduler {
 		});
 	}
 
-	pub(super) fn file_trash(&self, target: Url) {
+	pub fn file_trash(&self, target: Url) {
 		let name = format!("Trash {:?}", target);
 		let id = self.running.write().add(name);
 
@@ -280,7 +279,7 @@ impl Scheduler {
 		});
 	}
 
-	pub(super) fn process_open(&self, opener: &Opener, args: &[impl AsRef<OsStr>]) {
+	pub fn process_open(&self, opener: &Opener, args: &[impl AsRef<OsStr>]) {
 		let name = {
 			let s = format!("Execute `{}`", opener.exec);
 			let args = args.iter().map(|a| a.as_ref().to_string_lossy()).collect::<Vec<_>>().join(" ");
@@ -324,7 +323,7 @@ impl Scheduler {
 		});
 	}
 
-	pub(super) fn precache_size(&self, targets: Vec<&Url>) {
+	pub fn precache_size(&self, targets: Vec<&Url>) {
 		let throttle = Arc::new(Throttle::new(targets.len(), Duration::from_millis(300)));
 		let mut handing = self.precache.size_handing.lock();
 		let mut running = self.running.write();
@@ -349,7 +348,7 @@ impl Scheduler {
 		}
 	}
 
-	pub(super) fn precache_mime(&self, targets: Vec<Url>) {
+	pub fn precache_mime(&self, targets: Vec<Url>) {
 		let name = format!("Preload mimetype for {} files", targets.len());
 		let id = self.running.write().add(name);
 
@@ -362,21 +361,21 @@ impl Scheduler {
 		});
 	}
 
-	pub(super) fn precache_image(&self, targets: Vec<Url>) {
+	pub fn precache_image(&self, targets: Vec<Url>) {
 		let name = format!("Precache of {} image files", targets.len());
 		let id = self.running.write().add(name);
 
 		self.precache.image(id, targets).ok();
 	}
 
-	pub(super) fn precache_video(&self, targets: Vec<Url>) {
+	pub fn precache_video(&self, targets: Vec<Url>) {
 		let name = format!("Precache of {} video files", targets.len());
 		let id = self.running.write().add(name);
 
 		self.precache.video(id, targets).ok();
 	}
 
-	pub(super) fn precache_pdf(&self, targets: Vec<Url>) {
+	pub fn precache_pdf(&self, targets: Vec<Url>) {
 		let name = format!("Precache of {} PDF files", targets.len());
 		let id = self.running.write().add(name);
 
