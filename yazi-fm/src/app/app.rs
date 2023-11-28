@@ -5,7 +5,7 @@ use crossterm::event::KeyEvent;
 use ratatui::{backend::Backend, prelude::Rect};
 use yazi_config::{keymap::Key, BOOT};
 use yazi_core::{input::InputMode, preview::COLLISION, Ctx};
-use yazi_shared::{emit, event::{Event, Exec}, files::FilesOp, term::Term, Layer};
+use yazi_shared::{emit, event::{Event, Exec}, fs::FilesOp, term::Term, Layer};
 
 use crate::{Executor, Logs, Panic, Root, Signals};
 

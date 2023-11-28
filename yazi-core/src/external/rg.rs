@@ -2,7 +2,7 @@ use std::process::Stdio;
 
 use anyhow::Result;
 use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command, sync::mpsc::{self, UnboundedReceiver}};
-use yazi_shared::{files::File, fs::Url};
+use yazi_shared::fs::{File, Url};
 
 pub struct RgOpt {
 	pub cwd:     Url,

@@ -6,7 +6,6 @@ mod defer;
 mod env;
 mod errors;
 pub mod event;
-pub mod files;
 pub mod fs;
 mod layer;
 mod mime;

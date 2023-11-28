@@ -2,7 +2,7 @@ use std::path::{PathBuf, MAIN_SEPARATOR};
 
 use tokio::fs;
 use yazi_config::popup::InputCfg;
-use yazi_shared::{emit, event::Exec, files::{File, FilesOp}, fs::Url};
+use yazi_shared::{emit, event::Exec, fs::{File, FilesOp}, fs::Url};
 
 use crate::{input::Input, manager::Manager};
 

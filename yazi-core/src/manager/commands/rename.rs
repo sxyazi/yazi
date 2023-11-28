@@ -3,7 +3,7 @@ use std::{collections::BTreeMap, ffi::OsStr, io::{stdout, BufWriter, Write}, pat
 use anyhow::{anyhow, bail, Result};
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 use yazi_config::{popup::InputCfg, OPEN, PREVIEW};
-use yazi_shared::{emit, event::Exec, files::{File, FilesOp}, fs::{max_common_root, Url}, term::Term, Defer};
+use yazi_shared::{emit, event::Exec, fs::{File, FilesOp}, fs::{max_common_root, Url}, term::Term, Defer};
 
 use crate::{external::{self, ShellOpt}, input::Input, manager::Manager, Ctx, BLOCKER};
 

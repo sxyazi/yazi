@@ -2,7 +2,7 @@ use std::{borrow::Cow, collections::BTreeMap};
 
 use anyhow::Result;
 use tokio::task::JoinHandle;
-use yazi_shared::{event::PreviewLock, files::File, fs::Url};
+use yazi_shared::{event::PreviewLock, fs::File, fs::Url};
 
 use super::{Backstack, Config, Finder, Folder, Mode};
 use crate::preview::Preview;

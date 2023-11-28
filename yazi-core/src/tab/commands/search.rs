@@ -4,7 +4,7 @@ use anyhow::bail;
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
-use yazi_shared::{emit, event::Exec, files::FilesOp};
+use yazi_shared::{emit, event::Exec, fs::FilesOp};
 
 use crate::{external, input::Input, manager::Manager, tab::Tab};
 
