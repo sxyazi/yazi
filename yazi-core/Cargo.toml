@@ -34,6 +34,3 @@ yazi-prebuild = "^0"
 
 # Logging
 tracing = { version = "^0", features = [ "max_level_debug", "release_max_level_warn" ] }
-
-[target."cfg(windows)".dependencies]
-clipboard-win = "^4"

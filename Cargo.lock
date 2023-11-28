@@ -2555,7 +2555,6 @@ version = "0.1.5"
 dependencies = [
  "anyhow",
  "bitflags 2.4.1",
- "clipboard-win",
  "crossterm",
  "futures",
  "indexmap",
@@ -2629,6 +2628,7 @@ version = "0.1.5"
 dependencies = [
  "anyhow",
  "async-channel",
+ "clipboard-win",
  "futures",
  "libc",
  "parking_lot",
