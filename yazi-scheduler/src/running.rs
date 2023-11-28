@@ -5,7 +5,7 @@ use futures::future::BoxFuture;
 use super::{Task, TaskStage};
 
 #[derive(Default)]
-pub(super) struct Running {
+pub struct Running {
 	incr: usize,
 
 	pub(super) hooks:
@@ -21,25 +21,25 @@ impl Running {
 	}
 
 	#[inline]
-	pub(super) fn get(&self, id: usize) -> Option<&Task> { self.all.get(&id) }
+	pub fn get(&self, id: usize) -> Option<&Task> { self.all.get(&id) }
 
 	#[inline]
-	pub(super) fn get_mut(&mut self, id: usize) -> Option<&mut Task> { self.all.get_mut(&id) }
+	pub fn get_mut(&mut self, id: usize) -> Option<&mut Task> { self.all.get_mut(&id) }
 
 	#[inline]
-	pub(super) fn get_id(&self, idx: usize) -> Option<usize> { self.values().nth(idx).map(|t| t.id) }
+	pub fn get_id(&self, idx: usize) -> Option<usize> { self.values().nth(idx).map(|t| t.id) }
 
 	#[inline]
-	pub(super) fn len(&self) -> usize { self.all.len() }
+	pub fn len(&self) -> usize { self.all.len() }
 
 	#[inline]
 	pub(super) fn exists(&self, id: usize) -> bool { self.all.contains_key(&id) }
 
 	#[inline]
-	pub(super) fn values(&self) -> impl Iterator<Item = &Task> { self.all.values() }
+	pub fn values(&self) -> impl Iterator<Item = &Task> { self.all.values() }
 
 	#[inline]
-	pub(super) fn is_empty(&self) -> bool { self.all.is_empty() }
+	pub fn is_empty(&self) -> bool { self.all.is_empty() }
 
 	pub(super) fn try_remove(
 		&mut self,

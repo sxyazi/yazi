@@ -1,11 +1,12 @@
-use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, path::Path, sync::Arc};
+use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, path::Path, sync::Arc, time::Duration};
 
-use serde::Serialize;
+use tokio::time::sleep;
 use tracing::debug;
 use yazi_config::{manager::SortBy, open::Opener, popup::InputCfg, OPEN};
-use yazi_shared::{fs::File, fs::Url, term::Term, MimeKind};
+use yazi_scheduler::{Scheduler, TaskSummary};
+use yazi_shared::{fs::{File, Url}, term::Term, MimeKind};
 
-use super::{running::Running, task::TaskSummary, Scheduler, TASKS_PADDING, TASKS_PERCENT};
+use super::{TasksProgress, TASKS_PADDING, TASKS_PERCENT};
 use crate::{files::Files, input::Input};
 
 pub struct Tasks {
@@ -18,12 +19,28 @@ pub struct Tasks {
 
 impl Tasks {
 	pub fn start() -> Self {
-		Self {
+		let tasks = Self {
 			scheduler: Arc::new(Scheduler::start()),
 			visible:   false,
 			cursor:    0,
 			progress:  Default::default(),
-		}
+		};
+
+		let running = tasks.scheduler.running.clone();
+		tokio::spawn(async move {
+			let mut last = TasksProgress::default();
+			loop {
+				sleep(Duration::from_millis(500)).await;
+
+				let new = TasksProgress::from(&*running.read());
+				if last != new {
+					last = new;
+					Tasks::_update(new);
+				}
+			}
+		});
+
+		tasks
 	}
 
 	#[inline]
@@ -208,33 +225,4 @@ impl Tasks {
 impl Tasks {
 	#[inline]
 	pub fn len(&self) -> usize { self.scheduler.running.read().len() }
-}
-
-#[derive(Clone, Copy, Default, Eq, PartialEq, Serialize)]
-pub struct TasksProgress {
-	pub total: u32,
-	pub succ:  u32,
-	pub fail:  u32,
-
-	pub found:     u64,
-	pub processed: u64,
-}
-
-impl From<&Running> for TasksProgress {
-	fn from(running: &Running) -> Self {
-		let mut progress = Self::default();
-		if running.is_empty() {
-			return progress;
-		}
-
-		for task in running.values() {
-			progress.total += task.total;
-			progress.succ += task.succ;
-			progress.fail += task.fail;
-
-			progress.found += task.found;
-			progress.processed += task.processed;
-		}
-		progress
-	}
 }

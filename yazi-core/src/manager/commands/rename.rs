@@ -3,10 +3,10 @@ use std::{collections::BTreeMap, ffi::OsStr, io::{stdout, BufWriter, Write}, pat
 use anyhow::{anyhow, bail, Result};
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 use yazi_config::{popup::InputCfg, OPEN, PREVIEW};
-use yazi_scheduler::external::{self, ShellOpt};
+use yazi_scheduler::{external::{self, ShellOpt}, BLOCKER};
 use yazi_shared::{emit, event::Exec, fs::{max_common_root, File, FilesOp, Url}, term::Term, Defer};
 
-use crate::{input::Input, manager::Manager, Ctx, BLOCKER};
+use crate::{input::Input, manager::Manager, Ctx};
 
 pub struct Opt {
 	force: bool,
