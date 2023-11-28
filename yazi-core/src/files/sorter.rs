@@ -31,15 +31,27 @@ impl FilesSorter {
 
 		match self.by {
 			SortBy::None => return false,
-			SortBy::Alphabetical => items.sort_unstable_by(by_alphabetical),
-			SortBy::Created => items.sort_unstable_by(|a, b| {
-				let ord = self.cmp(a.created, b.created, self.promote(a, b));
-				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
-			}),
 			SortBy::Modified => items.sort_unstable_by(|a, b| {
 				let ord = self.cmp(a.modified, b.modified, self.promote(a, b));
 				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
 			}),
+			SortBy::Created => items.sort_unstable_by(|a, b| {
+				let ord = self.cmp(a.created, b.created, self.promote(a, b));
+				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
+			}),
+			SortBy::Extension => items.sort_unstable_by(|a, b| {
+				let ord = if self.sensitive {
+					self.cmp(a.url.extension(), b.url.extension(), self.promote(a, b))
+				} else {
+					self.cmp(
+						a.url.extension().map(|s| s.to_ascii_lowercase()),
+						b.url.extension().map(|s| s.to_ascii_lowercase()),
+						self.promote(a, b),
+					)
+				};
+				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
+			}),
+			SortBy::Alphabetical => items.sort_unstable_by(by_alphabetical),
 			SortBy::Natural => self.sort_naturally(items),
 			SortBy::Size => items.sort_unstable_by(|a, b| {
 				let aa = if a.is_dir() { sizes.get(&a.url).copied() } else { None };
