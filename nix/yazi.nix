@@ -1,4 +1,5 @@
-{ rustPlatform
+{ makeRustPlatform
+, rustToolchain
 , version ? "git"
 , lib
 
@@ -27,7 +28,7 @@
 , zoxide
 }:
 
-rustPlatform.buildRustPackage {
+(makeRustPlatform { cargo = rustToolchain; rustc = rustToolchain; }).buildRustPackage {
   pname = "yazi";
   inherit version;
 
