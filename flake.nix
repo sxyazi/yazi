@@ -22,25 +22,28 @@
           };
         })
       ];
-    in flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = import nixpkgs { inherit system overlays; };
-        versionSuffix = "pre${
+    in
+    flake-utils.lib.eachDefaultSystem
+      (system:
+        let
+          pkgs = import nixpkgs { inherit system overlays; };
+          versionSuffix = "pre${
             builtins.substring 0 8
             (self.lastModifiedDate or self.lastModified or "19700101")
           }_${self.shortRev or "dirty"}";
-        version = (builtins.fromTOML
-          (builtins.readFile ./yazi-fm/Cargo.toml)).package.version
+          version = (builtins.fromTOML
+            (builtins.readFile ./yazi-fm/Cargo.toml)).package.version
           + versionSuffix;
-        yazi = pkgs.callPackage ./nix/yazi.nix { inherit version; };
-      in {
-        packages.default = yazi;
-        packages.yazi = yazi;
+          yazi = pkgs.callPackage ./nix/yazi.nix { inherit version; };
+        in
+        {
+          packages.default = yazi;
+          packages.yazi = yazi;
 
-        formatter = pkgs.nixpkgs-fmt;
+          formatter = pkgs.nixpkgs-fmt;
 
-        devShells.default = import ./nix/shell.nix { inherit pkgs inputs; };
-      }) 
+          devShells.default = import ./nix/shell.nix { inherit pkgs inputs; };
+        })
     // {
       overlays = rec {
         default = yazi;
