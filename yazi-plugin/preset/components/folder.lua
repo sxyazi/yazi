@@ -69,30 +69,31 @@ function Folder:linemode(area)
 end
 
 function Folder:markers(area, markers)
-	if #markers == 0 then
+	if #markers == 0 or area.w * area.h == 0 then
 		return {}
 	end
 
 	local elements = {}
 	local append = function(last)
-		local p = ui.Bar(
+		local y = math.min(area.y + last[1], area.y + area.h) - 1
+		local bar = ui.Bar(
 			ui.Rect {
-				x = math.max(1, area.x) - 1,
-				y = area.y + last[1] - 1,
+				x = math.max(0, area.x - 1),
+				y = y,
 				w = 1,
-				h = 1 + last[2] - last[1],
+				h = 1 + math.min(last[2] - last[1], area.h - y),
 			},
 			ui.Position.LEFT
 		)
 
 		if last[3] == 1 then
-			p = p:style(THEME.manager.marker_copied)
+			bar = bar:style(THEME.manager.marker_copied)
 		elseif last[3] == 2 then
-			p = p:style(THEME.manager.marker_cut)
+			bar = bar:style(THEME.manager.marker_cut)
 		elseif last[3] == 3 then
-			p = p:style(THEME.manager.marker_selected)
+			bar = bar:style(THEME.manager.marker_selected)
 		end
-		elements[#elements + 1] = p
+		elements[#elements + 1] = bar
 	end
 
 	local last = { markers[1][1], markers[1][1], markers[1][2] } -- start, end, type
@@ -153,7 +154,7 @@ function Folder:current(area)
 			markers[#markers + 1] = { i, 3 }
 		end
 	end
-	return utils.flat { ui.List(area, items), self:linemode(area), table.unpack(self:markers(area, markers)) }
+	return utils.flat { ui.List(area, items), self:linemode(area), self:markers(area, markers) }
 end
 
 function Folder:preview(area)
