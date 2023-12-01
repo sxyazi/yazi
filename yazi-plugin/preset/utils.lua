@@ -2,6 +2,16 @@ table.unpack = table.unpack or unpack
 
 utils = utils or {}
 
+function utils.clamp(min, x, max)
+	if x < min then
+		return min
+	elseif x > max then
+		return max
+	else
+		return x
+	end
+end
+
 function utils.flat(t)
 	local r = {}
 	for _, v in ipairs(t) do
