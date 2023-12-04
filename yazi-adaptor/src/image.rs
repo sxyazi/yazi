@@ -49,14 +49,18 @@ impl Image {
 
 	pub async fn precache(path: &Path, cache: PathBuf) -> Result<()> {
 		let path = path.to_owned();
-		let img = tokio::task::spawn_blocking(move || {
+		let mut img = tokio::task::spawn_blocking(move || {
 			Self::set_limits(image::io::Reader::open(path)?.with_guessed_format()?).decode()
 		})
 		.await??;
 
 		tokio::task::spawn_blocking(move || {
 			let (w, h) = (PREVIEW.max_width, PREVIEW.max_height);
-			Ok(match img.resize(w, h, FilterType::Triangle) {
+			if img.width() > w || img.height() > h {
+				img = img.resize(w, h, FilterType::Triangle);
+			}
+
+			Ok(match img {
 				DynamicImage::ImageRgb8(buf) => buf.save_with_format(cache, ImageFormat::Jpeg),
 				DynamicImage::ImageRgba8(buf) => buf.save_with_format(cache, ImageFormat::Jpeg),
 				buf => buf.into_rgb8().save_with_format(cache, ImageFormat::Jpeg),
@@ -66,11 +70,15 @@ impl Image {
 	}
 
 	pub async fn precache_vec(bin: Vec<u8>, cache: PathBuf) -> Result<()> {
-		let img = tokio::task::spawn_blocking(move || image::load_from_memory(&bin)).await??;
+		let mut img = tokio::task::spawn_blocking(move || image::load_from_memory(&bin)).await??;
 
 		tokio::task::spawn_blocking(move || {
 			let (w, h) = (PREVIEW.max_width, PREVIEW.max_height);
-			Ok(match img.resize(w, h, FilterType::Triangle) {
+			if img.width() > w || img.height() > h {
+				img = img.resize(w, h, FilterType::Triangle);
+			}
+
+			Ok(match img {
 				DynamicImage::ImageRgb8(buf) => buf.save_with_format(cache, ImageFormat::Jpeg),
 				DynamicImage::ImageRgba8(buf) => buf.save_with_format(cache, ImageFormat::Jpeg),
 				buf => buf.into_rgb8().save_with_format(cache, ImageFormat::Jpeg),
