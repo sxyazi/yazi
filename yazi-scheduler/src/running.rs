@@ -1,8 +1,10 @@
 use std::collections::BTreeMap;
 
 use futures::future::BoxFuture;
+use yazi_config::TASKS;
 
 use super::{Task, TaskStage};
+use crate::TaskKind;
 
 #[derive(Default)]
 pub struct Running {
@@ -36,7 +38,14 @@ impl Running {
 	pub(super) fn exists(&self, id: usize) -> bool { self.all.contains_key(&id) }
 
 	#[inline]
-	pub fn values(&self) -> impl Iterator<Item = &Task> { self.all.values() }
+	pub fn values(&self) -> impl Iterator<Item = &Task> {
+		let map = self.all.values();
+		if TASKS.ignore_precaching_tasks {
+			map.into_iter().filter(|t| t.kind == TaskKind::User).collect::<Vec<_>>().into_iter()
+		} else {
+			map.into_iter().collect::<Vec<_>>().into_iter()
+		}
+	}
 
 	#[inline]
 	pub fn is_empty(&self) -> bool { self.all.is_empty() }

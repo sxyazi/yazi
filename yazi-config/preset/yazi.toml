@@ -71,6 +71,7 @@ macro_workers = 10
 bizarre_retry = 5
 image_alloc   = 536870912  # 512MB
 image_bound   = [ 0, 0 ]
+ignore_precaching_tasks = true
 
 [plugins]
 preload = []

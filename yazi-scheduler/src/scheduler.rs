@@ -7,7 +7,7 @@ use yazi_config::{open::Opener, TASKS};
 use yazi_shared::{emit, event::Exec, fs::{unique_path, Url}, Layer, Throttle};
 
 use super::{Running, TaskOp, TaskStage};
-use crate::workers::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash, Precache, PrecacheOpMime, PrecacheOpSize, Process, ProcessOpOpen};
+use crate::{workers::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash, Precache, PrecacheOpMime, PrecacheOpSize, Process, ProcessOpOpen}, TaskKind};
 
 pub struct Scheduler {
 	file:     Arc<File>,
@@ -336,6 +336,10 @@ impl Scheduler {
 			}
 
 			let id = running.add(format!("Calculate the size of {:?}", target));
+			if let Some(task) = self.running.clone().write().get_mut(id) {
+				task.kind = TaskKind::PreCache;
+			}
+
 			_ = self.todo.send_blocking({
 				let precache = self.precache.clone();
 				let target = target.clone();
@@ -352,6 +356,10 @@ impl Scheduler {
 		let name = format!("Preload mimetype for {} files", targets.len());
 		let id = self.running.write().add(name);
 
+		if let Some(task) = self.running.clone().write().get_mut(id) {
+			task.kind = TaskKind::PreCache;
+		}
+
 		_ = self.todo.send_blocking({
 			let precache = self.precache.clone();
 			async move {
@@ -365,6 +373,10 @@ impl Scheduler {
 		let name = format!("Precache of {} image files", targets.len());
 		let id = self.running.write().add(name);
 
+		if let Some(task) = self.running.clone().write().get_mut(id) {
+			task.kind = TaskKind::PreCache;
+		}
+
 		self.precache.image(id, targets).ok();
 	}
 
@@ -372,12 +384,20 @@ impl Scheduler {
 		let name = format!("Precache of {} video files", targets.len());
 		let id = self.running.write().add(name);
 
+		if let Some(task) = self.running.clone().write().get_mut(id) {
+			task.kind = TaskKind::PreCache;
+		}
+
 		self.precache.video(id, targets).ok();
 	}
 
 	pub fn precache_pdf(&self, targets: Vec<Url>) {
 		let name = format!("Precache of {} PDF files", targets.len());
 		let id = self.running.write().add(name);
+
+		if let Some(task) = self.running.clone().write().get_mut(id) {
+			task.kind = TaskKind::PreCache;
+		}
 
 		self.precache.pdf(id, targets).ok();
 	}

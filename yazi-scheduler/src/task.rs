@@ -5,6 +5,7 @@ pub struct Task {
 	pub id:    usize,
 	pub name:  String,
 	pub stage: TaskStage,
+	pub kind:  TaskKind,
 
 	pub total: u32,
 	pub succ:  u32,
@@ -68,4 +69,11 @@ pub enum TaskStage {
 	Pending,
 	Dispatched,
 	Hooked,
+}
+
+#[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd)]
+pub enum TaskKind {
+	#[default]
+	User,
+	PreCache,
 }
