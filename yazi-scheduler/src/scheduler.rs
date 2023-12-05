@@ -7,7 +7,7 @@ use yazi_config::{open::Opener, TASKS};
 use yazi_shared::{emit, event::Exec, fs::{unique_path, Url}, Layer, Throttle};
 
 use super::{Running, TaskOp, TaskStage};
-use crate::workers::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash, Precache, PrecacheOpMime, PrecacheOpSize, Process, ProcessOpOpen};
+use crate::{workers::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash, Precache, PrecacheOpMime, PrecacheOpSize, Process, ProcessOpOpen}, TaskKind};
 
 pub struct Scheduler {
 	file:     Arc<File>,
@@ -174,7 +174,7 @@ impl Scheduler {
 
 	pub fn file_cut(&self, from: Url, mut to: Url, force: bool) {
 		let mut running = self.running.write();
-		let id = running.add(format!("Cut {:?} to {:?}", from, to));
+		let id = running.add(TaskKind::User, format!("Cut {:?} to {:?}", from, to));
 
 		running.hooks.insert(id, {
 			let from = from.clone();
@@ -205,7 +205,7 @@ impl Scheduler {
 
 	pub fn file_copy(&self, from: Url, mut to: Url, force: bool) {
 		let name = format!("Copy {:?} to {:?}", from, to);
-		let id = self.running.write().add(name);
+		let id = self.running.write().add(TaskKind::User, name);
 
 		_ = self.todo.send_blocking({
 			let file = self.file.clone();
@@ -221,7 +221,7 @@ impl Scheduler {
 
 	pub fn file_link(&self, from: Url, mut to: Url, relative: bool, force: bool) {
 		let name = format!("Link {from:?} to {to:?}");
-		let id = self.running.write().add(name);
+		let id = self.running.write().add(TaskKind::User, name);
 
 		_ = self.todo.send_blocking({
 			let file = self.file.clone();
@@ -240,7 +240,7 @@ impl Scheduler {
 
 	pub fn file_delete(&self, target: Url) {
 		let mut running = self.running.write();
-		let id = running.add(format!("Delete {:?}", target));
+		let id = running.add(TaskKind::User, format!("Delete {:?}", target));
 
 		running.hooks.insert(id, {
 			let target = target.clone();
@@ -268,7 +268,7 @@ impl Scheduler {
 
 	pub fn file_trash(&self, target: Url) {
 		let name = format!("Trash {:?}", target);
-		let id = self.running.write().add(name);
+		let id = self.running.write().add(TaskKind::User, name);
 
 		_ = self.todo.send_blocking({
 			let file = self.file.clone();
@@ -287,7 +287,7 @@ impl Scheduler {
 		};
 
 		let mut running = self.running.write();
-		let id = running.add(name);
+		let id = running.add(TaskKind::User, name);
 
 		let (cancel_tx, mut cancel_rx) = oneshot::channel();
 		running.hooks.insert(id, {
@@ -335,7 +335,7 @@ impl Scheduler {
 				continue;
 			}
 
-			let id = running.add(format!("Calculate the size of {:?}", target));
+			let id = running.add(TaskKind::Preload, format!("Calculate the size of {:?}", target));
 			_ = self.todo.send_blocking({
 				let precache = self.precache.clone();
 				let target = target.clone();
@@ -350,7 +350,7 @@ impl Scheduler {
 
 	pub fn precache_mime(&self, targets: Vec<Url>) {
 		let name = format!("Preload mimetype for {} files", targets.len());
-		let id = self.running.write().add(name);
+		let id = self.running.write().add(TaskKind::Preload, name);
 
 		_ = self.todo.send_blocking({
 			let precache = self.precache.clone();
@@ -363,21 +363,21 @@ impl Scheduler {
 
 	pub fn precache_image(&self, targets: Vec<Url>) {
 		let name = format!("Precache of {} image files", targets.len());
-		let id = self.running.write().add(name);
+		let id = self.running.write().add(TaskKind::Preload, name);
 
 		self.precache.image(id, targets).ok();
 	}
 
 	pub fn precache_video(&self, targets: Vec<Url>) {
 		let name = format!("Precache of {} video files", targets.len());
-		let id = self.running.write().add(name);
+		let id = self.running.write().add(TaskKind::Preload, name);
 
 		self.precache.video(id, targets).ok();
 	}
 
 	pub fn precache_pdf(&self, targets: Vec<Url>) {
 		let name = format!("Precache of {} PDF files", targets.len());
-		let id = self.running.write().add(name);
+		let id = self.running.write().add(TaskKind::Preload, name);
 
 		self.precache.pdf(id, targets).ok();
 	}

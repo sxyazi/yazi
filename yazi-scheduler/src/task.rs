@@ -3,6 +3,7 @@ use tokio::sync::mpsc;
 #[derive(Debug, Default)]
 pub struct Task {
 	pub id:    usize,
+	pub kind:  TaskKind,
 	pub name:  String,
 	pub stage: TaskStage,
 
@@ -18,7 +19,16 @@ pub struct Task {
 }
 
 impl Task {
-	pub fn new(id: usize, name: String) -> Self { Self { id, name, ..Default::default() } }
+	pub fn new(id: usize, kind: TaskKind, name: String) -> Self {
+		Self { id, kind, name, ..Default::default() }
+	}
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum TaskKind {
+	#[default]
+	User,
+	Preload,
 }
 
 #[derive(Debug)]
