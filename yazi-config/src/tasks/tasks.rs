@@ -15,7 +15,7 @@ pub struct Tasks {
 	pub image_alloc: u32,
 	pub image_bound: [u16; 2],
 
-	pub ignore_precaching_tasks: bool,
+	pub suppress_preload: bool,
 }
 
 impl Default for Tasks {

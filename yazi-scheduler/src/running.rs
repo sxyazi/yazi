@@ -16,9 +16,9 @@ pub struct Running {
 }
 
 impl Running {
-	pub(super) fn add(&mut self, name: String) -> usize {
+	pub(super) fn add(&mut self, kind: TaskKind, name: String) -> usize {
 		self.incr += 1;
-		self.all.insert(self.incr, Task::new(self.incr, name));
+		self.all.insert(self.incr, Task::new(self.incr, kind, name));
 		self.incr
 	}
 
@@ -32,23 +32,28 @@ impl Running {
 	pub fn get_id(&self, idx: usize) -> Option<usize> { self.values().nth(idx).map(|t| t.id) }
 
 	#[inline]
-	pub fn len(&self) -> usize { self.all.len() }
+	pub fn len(&self) -> usize {
+		if TASKS.suppress_preload {
+			self.all.values().filter(|t| t.kind != TaskKind::Preload).count()
+		} else {
+			self.all.len()
+		}
+	}
 
 	#[inline]
 	pub(super) fn exists(&self, id: usize) -> bool { self.all.contains_key(&id) }
 
 	#[inline]
-	pub fn values(&self) -> impl Iterator<Item = &Task> {
-		let map = self.all.values();
-		if TASKS.ignore_precaching_tasks {
-			map.into_iter().filter(|t| t.kind == TaskKind::User).collect::<Vec<_>>().into_iter()
+	pub fn values(&self) -> Box<dyn Iterator<Item = &Task> + '_> {
+		if TASKS.suppress_preload {
+			Box::new(self.all.values().filter(|t| t.kind != TaskKind::Preload))
 		} else {
-			map.into_iter().collect::<Vec<_>>().into_iter()
+			Box::new(self.all.values())
 		}
 	}
 
 	#[inline]
-	pub fn is_empty(&self) -> bool { self.all.is_empty() }
+	pub fn is_empty(&self) -> bool { self.len() == 0 }
 
 	pub(super) fn try_remove(
 		&mut self,
