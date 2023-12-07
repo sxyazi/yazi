@@ -52,9 +52,26 @@ pub fn copy_with_progress(from: &Path, to: &Path) -> mpsc::Receiver<Result<u64, 
 
 		async move {
 			if is_symlink {
-				_ = match fs::symlink(from, to).await {
-					Ok(()) => tick_tx.send(Ok(1)),
-					Err(e) => tick_tx.send(Err(e)),
+				#[cfg(unix)]
+				{
+					_ = match fs::symlink(from, to).await {
+						Ok(()) => tick_tx.send(Ok(1)),
+						Err(e) => tick_tx.send(Err(e)),
+					}
+				}
+				#[cfg(windows)]
+				{
+					if from.is_dir() {
+						_ = match fs::symlink_dir(from, to).await {
+							Ok(()) => tick_tx.send(Ok(1)),
+							Err(e) => tick_tx.send(Err(e)),
+						}
+					} else {
+						_ = match fs::symlink_file(from, to).await {
+							Ok(()) => tick_tx.send(Ok(1)),
+							Err(e) => tick_tx.send(Err(e)),
+						}
+					}
 				}
 			} else {
 				_ = match fs::copy(from, to).await {
