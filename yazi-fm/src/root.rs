@@ -1,5 +1,6 @@
-use ratatui::{buffer::Buffer, layout::{Constraint, Direction, Layout, Rect}, widgets::Widget};
+use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 use yazi_core::Ctx;
+#[cfg(feature = "plugin")]
 use yazi_plugin::components;
 
 use super::{completion, input, select, tasks, which};
@@ -9,20 +10,25 @@ pub(super) struct Root<'a> {
 	cx: &'a Ctx,
 }
 
+#[cfg(feature = "plugin")]
 impl<'a> Root<'a> {
 	pub(super) fn new(cx: &'a Ctx) -> Self { Self { cx } }
 }
 
 impl<'a> Widget for Root<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let chunks = Layout::new()
-			.direction(Direction::Vertical)
-			.constraints([Constraint::Length(1), Constraint::Min(0), Constraint::Length(1)])
-			.split(area);
+		#[cfg(feature = "plugin")]
+		{
+			use ratatui::layout::{Constraint, Direction, Layout};
+			let chunks = Layout::new()
+				.direction(Direction::Vertical)
+				.constraints([Constraint::Length(1), Constraint::Min(0), Constraint::Length(1)])
+				.split(area);
 
-		components::Header::new(self.cx).render(chunks[0], buf);
-		components::Manager::new(self.cx).render(chunks[1], buf);
-		components::Status::new(self.cx).render(chunks[2], buf);
+			components::Header::new(self.cx).render(chunks[0], buf);
+			components::Manager::new(self.cx).render(chunks[1], buf);
+			components::Status::new(self.cx).render(chunks[2], buf);
+		}
 
 		if self.cx.tasks.visible {
 			tasks::Layout::new(self.cx).render(area, buf);

@@ -12,7 +12,7 @@ repository  = "https://github.com/sxyazi/yazi"
 yazi-adaptor = { path = "../yazi-adaptor", version = "0.1.5" }
 yazi-config  = { path = "../yazi-config", version = "0.1.5" }
 yazi-core    = { path = "../yazi-core", version = "0.1.5" }
-yazi-plugin  = { path = "../yazi-plugin", version = "0.1.5" }
+yazi-plugin  = { path = "../yazi-plugin", version = "0.1.5", optional = true }
 yazi-shared  = { path = "../yazi-shared", version = "0.1.5" }
 
 # External dependencies
@@ -38,3 +38,7 @@ signal-hook-tokio = { version = "^0", features = [ "futures-v0_3" ] }
 [[bin]]
 name = "yazi"
 path = "src/main.rs"
+
+[features]
+plugin  = ["dep:yazi-plugin"]
+default = ["plugin"]

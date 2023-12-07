@@ -7,7 +7,7 @@ use yazi_config::{keymap::Key, BOOT};
 use yazi_core::{input::InputMode, preview::COLLISION, Ctx};
 use yazi_shared::{emit, event::{Event, Exec}, fs::FilesOp, term::Term, Layer};
 
-use crate::{Executor, Logs, Panic, Root, Signals};
+use crate::{Executor, Logs, Panic, Signals};
 
 pub(crate) struct App {
 	pub(crate) cx:      Ctx,
@@ -72,9 +72,13 @@ impl App {
 
 		let collision = COLLISION.swap(false, Ordering::Relaxed);
 		let frame = term.draw(|f| {
-			yazi_plugin::scope(&self.cx, |_| {
-				f.render_widget(Root::new(&self.cx), f.size());
-			});
+			#[cfg(feature = "plugin")]
+			{
+				use crate::Root;
+				yazi_plugin::scope(&self.cx, |_| {
+					f.render_widget(Root::new(&self.cx), f.size());
+				});
+			}
 
 			if let Some((x, y)) = self.cx.cursor() {
 				f.set_cursor(x, y);

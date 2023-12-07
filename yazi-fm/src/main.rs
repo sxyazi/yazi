@@ -17,6 +17,7 @@ mod widgets;
 use executor::*;
 use logs::*;
 use panic::*;
+#[cfg(feature = "plugin")]
 use root::*;
 use signals::*;
 
@@ -29,6 +30,7 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_core::init();
 
+	#[cfg(feature = "plugin")]
 	yazi_plugin::init();
 
 	yazi_adaptor::init();
