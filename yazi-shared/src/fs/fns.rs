@@ -1,14 +1,7 @@
-use std::{
-	collections::VecDeque,
-	path::{Path, PathBuf},
-};
+use std::{collections::VecDeque, path::{Path, PathBuf}};
 
 use anyhow::Result;
-use tokio::{
-	fs, io, select,
-	sync::{mpsc, oneshot},
-	time,
-};
+use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
 
 pub async fn calculate_size(path: &Path) -> u64 {
 	let mut total = 0;
@@ -132,10 +125,7 @@ pub fn copy_with_progress(from: &Path, to: &Path) -> mpsc::Receiver<Result<u64, 
 #[cfg(unix)]
 #[allow(clippy::collapsible_else_if)]
 pub fn permissions(mode: u32) -> String {
-	use libc::{
-		mode_t, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFSOCK, S_IRGRP, S_IROTH,
-		S_IRUSR, S_ISGID, S_ISUID, S_ISVTX, S_IWGRP, S_IWOTH, S_IWUSR, S_IXGRP, S_IXOTH, S_IXUSR,
-	};
+	use libc::{mode_t, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFSOCK, S_IRGRP, S_IROTH, S_IRUSR, S_ISGID, S_ISUID, S_ISVTX, S_IWGRP, S_IWOTH, S_IWUSR, S_IXGRP, S_IXOTH, S_IXUSR};
 
 	let mut s = String::with_capacity(10);
 	let m = mode as mode_t;
@@ -155,51 +145,27 @@ pub fn permissions(mode: u32) -> String {
 	s.push(if m & S_IRUSR != 0 { 'r' } else { '-' });
 	s.push(if m & S_IWUSR != 0 { 'w' } else { '-' });
 	s.push(if m & S_IXUSR != 0 {
-		if m & S_ISUID != 0 {
-			's'
-		} else {
-			'x'
-		}
+		if m & S_ISUID != 0 { 's' } else { 'x' }
 	} else {
-		if m & S_ISUID != 0 {
-			'S'
-		} else {
-			'-'
-		}
+		if m & S_ISUID != 0 { 'S' } else { '-' }
 	});
 
 	// Group
 	s.push(if m & S_IRGRP != 0 { 'r' } else { '-' });
 	s.push(if m & S_IWGRP != 0 { 'w' } else { '-' });
 	s.push(if m & S_IXGRP != 0 {
-		if m & S_ISGID != 0 {
-			's'
-		} else {
-			'x'
-		}
+		if m & S_ISGID != 0 { 's' } else { 'x' }
 	} else {
-		if m & S_ISGID != 0 {
-			'S'
-		} else {
-			'-'
-		}
+		if m & S_ISGID != 0 { 'S' } else { '-' }
 	});
 
 	// Other
 	s.push(if m & S_IROTH != 0 { 'r' } else { '-' });
 	s.push(if m & S_IWOTH != 0 { 'w' } else { '-' });
 	s.push(if m & S_IXOTH != 0 {
-		if m & S_ISVTX != 0 {
-			't'
-		} else {
-			'x'
-		}
+		if m & S_ISVTX != 0 { 't' } else { 'x' }
 	} else {
-		if m & S_ISVTX != 0 {
-			'T'
-		} else {
-			'-'
-		}
+		if m & S_ISVTX != 0 { 'T' } else { '-' }
 	});
 
 	s
