@@ -16,7 +16,12 @@ yazi-shared = { path = "../yazi-shared", version = "0.1.5" }
 # External dependencies
 ansi-to-tui   = "^3"
 anyhow        = "^1"
-mlua          = { version = "^0", features = [ "luajit52", "vendored", "serialize" ] }
 ratatui       = "^0"
 tracing       = { version = "^0", features = [ "max_level_debug", "release_max_level_warn" ] }
 unicode-width = "^0"
+
+[target.'cfg(any(target_arch = "riscv64", target_arch="loongarch64"))'.dependencies]
+mlua          = { version = "^0", features = [ "lua52", "vendored", "serialize" ] }
+
+[target.'cfg(not(any(target_arch = "riscv64", target_arch="loongarch64")))'.dependencies]
+mlua          = { version = "^0", features = [ "luajit52", "vendored", "serialize" ] }
