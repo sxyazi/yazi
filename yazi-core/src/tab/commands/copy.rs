@@ -1,6 +1,6 @@
 use std::ffi::{OsStr, OsString};
 
-use yazi_scheduler::external;
+use yazi_scheduler::external::Clipboard;
 use yazi_shared::event::Exec;
 
 use crate::tab::Tab;
@@ -32,7 +32,7 @@ impl Tab {
 			}
 		}
 
-		futures::executor::block_on(external::clipboard_set(s)).ok();
+		futures::executor::block_on(Clipboard::default().set(s));
 		false
 	}
 }
