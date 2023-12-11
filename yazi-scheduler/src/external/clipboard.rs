@@ -41,7 +41,7 @@ impl Clipboard {
 
 		let result = tokio::task::spawn_blocking(|| get_clipboard::<String, _>(formats::Unicode));
 		if let Ok(Ok(s)) = result.await {
-			return s;
+			return s.into();
 		}
 
 		self.content.clone()
