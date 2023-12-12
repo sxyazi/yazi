@@ -21,7 +21,7 @@ tracing       = { version = "^0", features = [ "max_level_debug", "release_max_l
 unicode-width = "^0"
 
 [target.'cfg(any(target_arch = "riscv64", target_arch="loongarch64"))'.dependencies]
-mlua          = { version = "^0", features = [ "lua52", "vendored", "serialize" ] }
+mlua = { version = "^0", features = [ "lua52", "vendored", "serialize" ] }
 
 [target.'cfg(not(any(target_arch = "riscv64", target_arch="loongarch64")))'.dependencies]
-mlua          = { version = "^0", features = [ "luajit52", "vendored", "serialize" ] }
+mlua = { version = "^0", features = [ "luajit52", "vendored", "serialize" ] }

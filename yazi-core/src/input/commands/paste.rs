@@ -1,4 +1,3 @@
-use yazi_scheduler::external;
 use yazi_shared::event::Exec;
 
 use crate::input::{op::InputOp, Input};
@@ -18,7 +17,7 @@ impl Input {
 			self.handle_op(self.snap().cursor, true);
 		}
 
-		let s = futures::executor::block_on(external::clipboard_get()).unwrap_or_default();
+		let s = futures::executor::block_on(self.clipboard.get());
 		if s.is_empty() {
 			return false;
 		}
