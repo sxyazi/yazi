@@ -30,13 +30,9 @@ impl Tasks {
 		};
 
 		if let Some(p) = &BOOT.chooser_file {
-			let paths = opt.targets.into_iter().fold(OsString::new(), |mut s, (p, _)| {
-				s.push(p);
-				s.push("\n");
-				s
-			});
+			let paths = opt.targets.into_iter().map(|(p, _)| p.to_string_lossy().to_string()).collect::<Vec<_>>().join("\n");
 
-			std::fs::write(p, paths.as_encoded_bytes()).ok();
+			std::fs::write(p, paths.as_bytes()).ok();
 			emit!(Quit(false));
 			return false;
 		}

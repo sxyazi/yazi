@@ -43,8 +43,8 @@ impl App {
 
 	fn dispatch_quit(&mut self, no_cwd_file: bool) {
 		if let Some(p) = BOOT.cwd_file.as_ref().filter(|_| !no_cwd_file) {
-			let cwd = self.cx.manager.cwd().as_os_str();
-			std::fs::write(p, cwd.as_encoded_bytes()).ok();
+			let cwd = self.cx.manager.cwd();
+			std::fs::write(p, cwd.display().to_string().as_bytes()).ok();
 		}
 		Term::goodbye(|| false);
 	}

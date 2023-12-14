@@ -48,8 +48,7 @@ pub fn expand_path(p: impl AsRef<Path>) -> PathBuf { _expand_path(p.as_ref()) }
 
 #[inline]
 pub fn ends_with_slash(p: &Path) -> bool {
-	let b = p.as_os_str().as_encoded_bytes();
-	if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
+	p.display().to_string().ends_with(MAIN_SEPARATOR)
 }
 
 pub async fn unique_path(mut p: Url) -> Url {

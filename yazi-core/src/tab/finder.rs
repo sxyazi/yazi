@@ -77,12 +77,12 @@ impl Finder {
 	}
 
 	#[inline]
-	fn matches(&self, name: &OsStr) -> bool { self.query.is_match(name.as_encoded_bytes()) }
+	fn matches(&self, name: &OsStr) -> bool { self.query.is_match(name.to_string_lossy().as_bytes()) }
 
 	/// Explode the name into three parts: head, body, tail.
 	#[inline]
 	pub fn highlighted(&self, name: &OsStr) -> Option<Vec<Range<usize>>> {
-		self.query.find(name.as_encoded_bytes()).map(|m| vec![m.range()])
+		self.query.find(name.to_string_lossy().as_bytes()).map(|m| vec![m.range()])
 	}
 }
 

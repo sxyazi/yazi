@@ -75,13 +75,13 @@ impl Manager {
 			};
 
 			{
-				let s = old.iter().map(|o| o.as_os_str()).collect::<Vec<_>>().join(OsStr::new("\n"));
+				let s = old.iter().map(|o| o.display().to_string()).collect::<Vec<_>>().join("\n");
 				OpenOptions::new()
 					.write(true)
 					.create_new(true)
 					.open(&tmp)
 					.await?
-					.write_all(s.as_encoded_bytes())
+					.write_all(s.as_bytes())
 					.await?;
 			}
 

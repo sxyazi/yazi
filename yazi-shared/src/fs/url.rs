@@ -107,7 +107,8 @@ impl ToString for Url {
 			UrlScheme::Archive => "archive://",
 		};
 
-		let path = percent_encode(self.path.as_os_str().as_encoded_bytes(), ENCODE_SET);
+		let path_str = self.path.display().to_string();
+		let path = percent_encode(path_str.as_bytes(), ENCODE_SET);
 		let frag = self.frag.as_ref().map(|s| format!("#{s}")).unwrap_or_default();
 		format!("{scheme}{path}{frag}")
 	}
