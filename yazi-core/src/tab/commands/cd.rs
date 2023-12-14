@@ -72,7 +72,7 @@ impl Tab {
 		let opt = opt.into() as Opt;
 
 		tokio::spawn(async move {
-			let rx = Input::_show(InputCfg::cd().with_value(opt.target.to_string_lossy()));
+			let rx = Input::_show(InputCfg::cd().with_value(""));
 
 			let rx = Debounce::new(UnboundedReceiverStream::new(rx), Duration::from_millis(50));
 			pin!(rx);
