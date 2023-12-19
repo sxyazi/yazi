@@ -6,6 +6,7 @@
 	clippy::unit_arg
 )]
 
+mod clipboard;
 pub mod completion;
 mod context;
 pub mod files;
@@ -20,8 +21,13 @@ pub mod tab;
 pub mod tasks;
 pub mod which;
 
+pub use clipboard::*;
 pub use context::*;
 pub use highlighter::*;
 pub use step::*;
 
-pub fn init() { yazi_scheduler::init(); }
+pub fn init() {
+	CLIPBOARD.with(Default::default);
+
+	yazi_scheduler::init();
+}

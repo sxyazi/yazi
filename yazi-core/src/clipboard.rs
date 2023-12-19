@@ -1,8 +1,13 @@
 use std::ffi::OsString;
 
+use parking_lot::Mutex;
+use yazi_shared::RoCell;
+
+pub static CLIPBOARD: RoCell<Clipboard> = RoCell::new();
+
 #[derive(Default)]
 pub struct Clipboard {
-	content: OsString,
+	content: Mutex<OsString>,
 }
 
 impl Clipboard {
@@ -14,7 +19,7 @@ impl Clipboard {
 		use yazi_shared::in_ssh_connection;
 
 		if in_ssh_connection() {
-			return self.content.clone();
+			return self.content.lock().clone();
 		}
 
 		let all = [
@@ -32,7 +37,7 @@ impl Clipboard {
 				return OsString::from_vec(output.stdout);
 			}
 		}
-		self.content.clone()
+		self.content.lock().clone()
 	}
 
 	#[cfg(windows)]
@@ -44,20 +49,20 @@ impl Clipboard {
 			return s.into();
 		}
 
-		self.content.clone()
+		self.content.lock().clone()
 	}
 
 	#[cfg(unix)]
-	pub async fn set(&mut self, s: impl AsRef<std::ffi::OsStr>) {
+	pub async fn set(&self, s: impl AsRef<std::ffi::OsStr>) {
 		use std::{io::stdout, process::Stdio};
 
 		use crossterm::execute;
 		use tokio::{io::AsyncWriteExt, process::Command};
 		use yazi_shared::in_ssh_connection;
 
-		self.content = s.as_ref().to_owned();
+		*self.content.lock() = s.as_ref().to_owned();
 		if in_ssh_connection() {
-			execute!(stdout(), osc52::SetClipboard::new(&self.content)).ok();
+			execute!(stdout(), osc52::SetClipboard::new(s.as_ref())).ok();
 		}
 
 		let all = [
@@ -93,12 +98,12 @@ impl Clipboard {
 	}
 
 	#[cfg(windows)]
-	pub async fn set(&mut self, s: impl AsRef<std::ffi::OsStr>) {
+	pub async fn set(&self, s: impl AsRef<std::ffi::OsStr>) {
 		use clipboard_win::{formats, set_clipboard};
 
-		self.content = s.as_ref().to_owned();
-
 		let s = s.as_ref().to_owned();
+		*self.content.lock() = s.clone();
+
 		tokio::task::spawn_blocking(move || set_clipboard(formats::Unicode, s.to_string_lossy()))
 			.await
 			.ok();
@@ -110,7 +115,6 @@ mod osc52 {
 	use std::ffi::OsStr;
 
 	use base64::{engine::general_purpose, Engine};
-	use crossterm;
 
 	#[derive(Debug)]
 	pub struct SetClipboard {

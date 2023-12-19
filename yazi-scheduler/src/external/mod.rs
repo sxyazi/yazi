@@ -1,4 +1,3 @@
-mod clipboard;
 mod fd;
 mod ffmpegthumbnailer;
 mod file;
@@ -11,7 +10,6 @@ mod shell;
 mod unar;
 mod zoxide;
 
-pub use clipboard::*;
 pub use fd::*;
 pub use ffmpegthumbnailer::*;
 pub use file::*;

@@ -2611,7 +2611,9 @@ name = "yazi-core"
 version = "0.1.5"
 dependencies = [
  "anyhow",
+ "base64",
  "bitflags 2.4.1",
+ "clipboard-win",
  "crossterm",
  "futures",
  "indexmap",
@@ -2686,7 +2688,6 @@ dependencies = [
  "anyhow",
  "async-channel",
  "base64",
- "clipboard-win",
  "crossterm",
  "futures",
  "libc",

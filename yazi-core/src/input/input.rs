@@ -3,10 +3,10 @@ use std::ops::Range;
 use tokio::sync::mpsc::UnboundedSender;
 use unicode_width::UnicodeWidthStr;
 use yazi_config::{popup::Position, INPUT};
-use yazi_scheduler::external::Clipboard;
 use yazi_shared::InputError;
 
 use super::{mode::InputMode, op::InputOp, InputSnap, InputSnaps};
+use crate::CLIPBOARD;
 
 #[derive(Default)]
 pub struct Input {
@@ -24,8 +24,6 @@ pub struct Input {
 
 	// Shell
 	pub(super) highlight: bool,
-
-	pub(super) clipboard: Clipboard,
 }
 
 impl Input {
@@ -61,7 +59,7 @@ impl Input {
 
 				let drain = snap.value.drain(start.unwrap()..end.unwrap()).collect::<String>();
 				if cut {
-					futures::executor::block_on(self.clipboard.set(&drain));
+					futures::executor::block_on(CLIPBOARD.set(&drain));
 				}
 
 				snap.op = InputOp::None;
@@ -74,7 +72,7 @@ impl Input {
 				let yanked = &snap.value[start.unwrap()..end.unwrap()];
 
 				snap.op = InputOp::None;
-				futures::executor::block_on(self.clipboard.set(yanked));
+				futures::executor::block_on(CLIPBOARD.set(yanked));
 			}
 		};
 

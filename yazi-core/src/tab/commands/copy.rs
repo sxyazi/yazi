@@ -1,9 +1,8 @@
 use std::ffi::{OsStr, OsString};
 
-use yazi_scheduler::external::Clipboard;
 use yazi_shared::event::Exec;
 
-use crate::tab::Tab;
+use crate::{tab::Tab, CLIPBOARD};
 
 pub struct Opt<'a> {
 	type_: &'a str,
@@ -32,7 +31,7 @@ impl Tab {
 			}
 		}
 
-		futures::executor::block_on(Clipboard::default().set(s));
+		futures::executor::block_on(CLIPBOARD.set(s));
 		false
 	}
 }

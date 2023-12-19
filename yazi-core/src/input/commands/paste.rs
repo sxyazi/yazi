@@ -1,6 +1,6 @@
 use yazi_shared::event::Exec;
 
-use crate::input::{op::InputOp, Input};
+use crate::{input::{op::InputOp, Input}, CLIPBOARD};
 
 pub struct Opt {
 	before: bool,
@@ -17,7 +17,7 @@ impl Input {
 			self.handle_op(self.snap().cursor, true);
 		}
 
-		let s = futures::executor::block_on(self.clipboard.get());
+		let s = futures::executor::block_on(CLIPBOARD.get());
 		if s.is_empty() {
 			return false;
 		}
