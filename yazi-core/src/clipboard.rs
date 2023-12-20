@@ -48,7 +48,7 @@ impl Clipboard {
 			return s.into();
 		}
 
-		self.content.lock().clone()
+		self.content.borrow().clone()
 	}
 
 	#[cfg(unix)]
@@ -101,7 +101,7 @@ impl Clipboard {
 		use clipboard_win::{formats, set_clipboard};
 
 		let s = s.as_ref().to_owned();
-		*self.content.lock() = s.clone();
+		*self.content.borrow_mut() = s.clone();
 
 		tokio::task::spawn_blocking(move || set_clipboard(formats::Unicode, s.to_string_lossy()))
 			.await
