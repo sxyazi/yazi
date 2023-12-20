@@ -7,7 +7,7 @@ use ratatui::prelude::Rect;
 use yazi_shared::term::Term;
 
 use super::image::Image;
-use crate::{CLOSE, ESCAPE, START};
+use crate::{adaptor::Adaptor, CLOSE, ESCAPE, START};
 
 pub(super) struct KittyOld;
 
@@ -17,7 +17,7 @@ impl KittyOld {
 		let size = (img.width(), img.height());
 		let b = Self::encode(img).await?;
 
-		Self::image_hide()?;
+		Adaptor::KittyOld.image_hide()?;
 		Term::move_lock(stdout().lock(), (rect.x, rect.y), |stdout| {
 			stdout.write_all(&b)?;
 			Ok(size)
@@ -25,7 +25,7 @@ impl KittyOld {
 	}
 
 	#[inline]
-	pub(super) fn image_hide() -> Result<()> {
+	pub(super) fn image_erase() -> Result<()> {
 		let mut stdout = stdout().lock();
 		stdout.write_all(format!("{}_Gq=1,a=d,d=A{}\\{}", START, ESCAPE, CLOSE).as_bytes())?;
 		stdout.flush()?;

@@ -32,7 +32,7 @@ impl Widget for Clear {
 			return;
 		};
 
-		ADAPTOR.image_hide(r).ok();
+		ADAPTOR.image_erase(r).ok();
 		COLLISION.store(true, Ordering::Relaxed);
 		for x in r.left()..r.right() {
 			for y in r.top()..r.bottom() {

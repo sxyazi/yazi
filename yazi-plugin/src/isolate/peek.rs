@@ -6,7 +6,7 @@ use yazi_config::LAYOUT;
 use yazi_shared::{emit, event::Exec, Layer};
 
 use super::slim_lua;
-use crate::{bindings::{Cast, File}, elements::Rect, OptData, LOADED, LUA};
+use crate::{bindings::{Cast, File, Window}, elements::Rect, OptData, LOADED, LUA};
 
 pub fn peek(exec: &Exec, file: yazi_shared::fs::File, skip: usize) -> CancellationToken {
 	let ct = CancellationToken::new();
@@ -33,6 +33,7 @@ pub fn peek(exec: &Exec, file: yazi_shared::fs::File, skip: usize) -> Cancellati
 			plugin.set("file", File::cast(&lua, file)?)?;
 			plugin.set("skip", skip)?;
 			plugin.set("area", Rect::cast(&lua, LAYOUT.load().preview)?)?;
+			plugin.set("window", Window::default())?;
 
 			if ct2.is_cancelled() { Ok(()) } else { plugin.call_async_method("peek", ()).await }
 		};
@@ -59,6 +60,7 @@ pub fn peek_sync(exec: &Exec, file: yazi_shared::fs::File, skip: usize) {
 			plugin.set("file", File::cast(&LUA, file)?)?;
 			plugin.set("skip", skip)?;
 			plugin.set("area", Rect::cast(&LUA, LAYOUT.load().preview)?)?;
+			plugin.set("window", Window::default())?;
 			plugin.call_method("peek", ())
 		})),
 		tx:   None,

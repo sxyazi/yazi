@@ -60,7 +60,7 @@ impl<'a, 'b> Active<'a, 'b> {
 
 	fn preview(&self, tab: &'a yazi_core::tab::Tab) -> mlua::Result<AnyUserData<'a>> {
 		let inner = &tab.preview;
-		let window = || inner.lock.as_ref().map(|l| (l.skip, LAYOUT.load().preview.height as usize));
+		let window = Some((inner.skip, LAYOUT.load().preview.height as usize));
 
 		let ud = self.scope.create_any_userdata_ref(inner)?;
 		ud.set_named_user_value(
@@ -70,7 +70,7 @@ impl<'a, 'b> Active<'a, 'b> {
 				.hovered()
 				.filter(|&f| f.is_dir())
 				.and_then(|f| tab.history(&f.url))
-				.and_then(|f| Folder::new(self.scope, f).make(window()).ok()),
+				.and_then(|f| Folder::new(self.scope, f).make(window).ok()),
 		)?;
 
 		Ok(ud)

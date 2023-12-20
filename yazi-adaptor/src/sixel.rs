@@ -6,7 +6,7 @@ use image::DynamicImage;
 use ratatui::prelude::Rect;
 use yazi_shared::term::Term;
 
-use crate::{Image, CLOSE, ESCAPE, START};
+use crate::{adaptor::Adaptor, Image, CLOSE, ESCAPE, START};
 
 pub(super) struct Sixel;
 
@@ -16,14 +16,14 @@ impl Sixel {
 		let size = (img.width(), img.height());
 		let b = Self::encode(img).await?;
 
-		Self::image_hide(rect)?;
+		Adaptor::Sixel.image_hide()?;
 		Term::move_lock(stdout().lock(), (rect.x, rect.y), |stdout| {
 			stdout.write_all(&b)?;
 			Ok(size)
 		})
 	}
 
-	pub(super) fn image_hide(rect: Rect) -> Result<()> {
+	pub(super) fn image_erase(rect: Rect) -> Result<()> {
 		let stdout = BufWriter::new(stdout().lock());
 		let s = " ".repeat(rect.width as usize);
 		Term::move_lock(stdout, (0, 0), |stdout| {

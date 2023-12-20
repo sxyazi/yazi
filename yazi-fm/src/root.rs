@@ -21,7 +21,7 @@ impl<'a> Widget for Root<'a> {
 		components::Header.render(chunks[0], buf);
 		components::Manager.render(chunks[1], buf);
 		components::Status.render(chunks[2], buf);
-		components::Preview::new(self.cx).render(chunks[2], buf);
+		components::Preview::new(self.cx).render(area, buf);
 
 		if self.cx.tasks.visible {
 			tasks::Layout::new(self.cx).render(area, buf);

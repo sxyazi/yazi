@@ -14,6 +14,7 @@ yazi-shared = { path = "../yazi-shared", version = "0.1.5" }
 
 # External dependencies
 anyhow      = "^1"
+arc-swap    = "^1"
 base64      = "^0"
 color_quant = "^1"
 image       = "^0"

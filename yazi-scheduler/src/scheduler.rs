@@ -308,11 +308,11 @@ impl Scheduler {
 		_ = self.todo.send_blocking({
 			let preload = self.preload.clone();
 
-			let rule_id = rule.id;
+			let (rule_id, rule_multi) = (rule.id, rule.multi);
 			let cmd = rule.exec.cmd.clone();
 			let targets = targets.into_iter().cloned().collect();
 			async move {
-				preload.rule(PreloadOpRule { id, rule_id, plugin: cmd, targets }).await.ok();
+				preload.rule(PreloadOpRule { id, rule_id, rule_multi, plugin: cmd, targets }).await.ok();
 			}
 			.boxed()
 		});

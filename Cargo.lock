@@ -2614,6 +2614,7 @@ name = "yazi-adaptor"
 version = "0.1.5"
 dependencies = [
  "anyhow",
+ "arc-swap",
  "base64",
  "color_quant",
  "image",
@@ -2713,6 +2714,7 @@ version = "0.1.5"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
+ "crossterm",
  "futures",
  "libc",
  "md-5",

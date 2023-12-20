@@ -16,6 +16,7 @@ yazi-shared  = { path = "../yazi-shared", version = "0.1.5" }
 # External dependencies
 ansi-to-tui   = "^3"
 anyhow        = "^1"
+crossterm     = "^0"
 futures       = "^0"
 libc          = "^0"
 md-5          = "^0"

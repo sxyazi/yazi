@@ -1,6 +1,6 @@
 use tokio_util::sync::CancellationToken;
 use yazi_adaptor::ADAPTOR;
-use yazi_config::{LAYOUT, PLUGIN};
+use yazi_config::PLUGIN;
 use yazi_plugin::{external::Highlighter, utils::PreviewLock};
 use yazi_shared::fs::{Cha, File, Url};
 
@@ -18,11 +18,12 @@ impl Preview {
 			return;
 		}
 
-		self.abort();
 		let Some(previewer) = PLUGIN.previewer(&file.url, &mime) else {
+			self.reset();
 			return;
 		};
 
+		self.abort();
 		if previewer.sync {
 			yazi_plugin::isolate::peek_sync(&previewer.exec, file, self.skip);
 		} else {
@@ -39,7 +40,7 @@ impl Preview {
 	#[inline]
 	pub fn reset(&mut self) -> bool {
 		self.abort();
-		ADAPTOR.image_hide(LAYOUT.load().preview).ok();
+		ADAPTOR.image_hide().ok();
 		self.lock.take().is_some()
 	}
 

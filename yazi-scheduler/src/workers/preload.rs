@@ -24,10 +24,11 @@ pub struct PreloadOpSize {
 
 #[derive(Clone, Debug)]
 pub struct PreloadOpRule {
-	pub id:      usize,
-	pub rule_id: u8,
-	pub plugin:  String,
-	pub targets: Vec<yazi_shared::fs::File>,
+	pub id:         usize,
+	pub rule_id:    u8,
+	pub rule_multi: bool,
+	pub plugin:     String,
+	pub targets:    Vec<yazi_shared::fs::File>,
 }
 
 impl Preload {
@@ -39,7 +40,7 @@ impl Preload {
 		self.sch.send(TaskOp::New(task.id, 0))?;
 
 		let urls: Vec<_> = task.targets.iter().map(|f| f.url()).collect();
-		let result = yazi_plugin::isolate::preload(task.plugin, task.targets).await;
+		let result = yazi_plugin::isolate::preload(task.plugin, task.targets, task.rule_multi).await;
 		if let Err(e) = result {
 			self.fail(task.id, format!("Preload task failed:\n{e}"))?;
 			return Err(e.into());

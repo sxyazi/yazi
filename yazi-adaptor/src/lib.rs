@@ -25,11 +25,16 @@ static ESCAPE: RoCell<&'static str> = RoCell::new();
 static START: RoCell<&'static str> = RoCell::new();
 static CLOSE: RoCell<&'static str> = RoCell::new();
 
+// Image state
+static SHOWN: RoCell<arc_swap::ArcSwapOption<ratatui::layout::Rect>> = RoCell::new();
+
 pub fn init() {
 	TMUX.init(env_exists("TMUX"));
 	START.init(if *TMUX { "\x1bPtmux;\x1b\x1b" } else { "\x1b" });
 	CLOSE.init(if *TMUX { "\x1b\\" } else { "" });
 	ESCAPE.init(if *TMUX { "\x1b\x1b" } else { "\x1b" });
+
+	SHOWN.with(Default::default);
 
 	ADAPTOR.init(Adaptor::detect());
 	ADAPTOR.start();

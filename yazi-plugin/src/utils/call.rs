@@ -20,7 +20,7 @@ impl Utils {
 					args.push(v.to_str()?.to_owned());
 				}
 				Value::String(s) => {
-					named.insert(s.to_str()?.to_owned(), v.to_str()?.to_owned());
+					named.insert(s.to_str()?.replace('_', "-"), v.to_str()?.to_owned());
 				}
 				_ => return Err("invalid key in exec".into_lua_err()),
 			}

@@ -15,6 +15,10 @@ impl App {
 			return self.cx.tasks.plugin_micro(&opt.name);
 		}
 
+		if LOADED.read().contains_key(&opt.name) {
+			return self.plugin_do(opt);
+		}
+
 		tokio::spawn(async move {
 			if LOADED.ensure(&opt.name).await.is_ok() {
 				emit!(Call(Exec::call("plugin_do", vec![opt.name]).with_data(opt.data).vec(), Layer::App));

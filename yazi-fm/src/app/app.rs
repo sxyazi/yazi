@@ -2,7 +2,7 @@ use std::sync::atomic::Ordering;
 
 use anyhow::{Ok, Result};
 use crossterm::event::KeyEvent;
-use ratatui::{backend::Backend, prelude::Rect};
+use ratatui::backend::Backend;
 use yazi_config::{keymap::Key, ARGS};
 use yazi_core::input::InputMode;
 use yazi_shared::{emit, event::{Event, Exec}, fs::FilesOp, term::Term, Layer, COLLISION};
@@ -36,7 +36,7 @@ impl App {
 				Event::Key(key) => app.dispatch_key(key),
 				Event::Paste(str) => app.dispatch_paste(str),
 				Event::Render(_) => app.dispatch_render()?,
-				Event::Resize(cols, rows) => app.dispatch_resize(cols, rows),
+				Event::Resize(cols, rows) => app.dispatch_resize(cols, rows)?,
 				Event::Call(exec, layer) => app.dispatch_call(exec, layer),
 				event => app.dispatch_module(event),
 			}
@@ -112,15 +112,13 @@ impl App {
 		Ok(())
 	}
 
-	fn dispatch_resize(&mut self, cols: u16, rows: u16) {
-		if let Some(term) = &mut self.term {
-			term.resize(Rect::new(0, 0, cols, rows)).ok();
-		}
+	fn dispatch_resize(&mut self, _: u16, _: u16) -> Result<()> {
+		self.cx.manager.active_mut().preview.reset();
+		self.dispatch_render()?;
 
 		self.cx.manager.current_mut().set_page(true);
-		self.cx.manager.active_mut().preview.reset();
 		self.cx.manager.peek(());
-		emit!(Render);
+		Ok(())
 	}
 
 	#[inline]

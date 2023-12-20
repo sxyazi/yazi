@@ -5,7 +5,7 @@ function Image:cache() return ya.cache_file(self.file.url .. tostring(self.file.
 function Image:peek()
 	local cache = self:cache()
 	ya.image_show(fs.symlink_metadata(cache) and cache or self.file.url, self.area)
-	ya.preview_widgets(self.file, self.skip, {})
+	ya.preview_widgets(self, {})
 end
 
 function Image:seek() end

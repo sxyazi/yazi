@@ -166,7 +166,7 @@ impl<'a, 'b> Folder<'a, 'b> {
 
 	pub(crate) fn make(&self, window: Option<(usize, usize)>) -> mlua::Result<AnyUserData<'a>> {
 		let window =
-			window.unwrap_or_else(|| (self.inner.offset, LAYOUT.load().current.height as usize));
+			window.unwrap_or_else(|| (self.inner.offset, LAYOUT.load().preview.height as usize));
 
 		let ud = self.scope.create_any_userdata_ref(self.inner)?;
 		ud.set_named_user_value(

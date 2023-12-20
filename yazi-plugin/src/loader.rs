@@ -24,7 +24,7 @@ impl Loader {
 
 		let b = fs::read(BOOT.plugin_dir.join(name)).await.map(|v| v.into()).unwrap_or(Cow::from(
 			match name {
-				"noop.lua" => &[] as &[u8],
+				"noop.lua" => include_bytes!("../preset/plugins/noop.lua") as &[u8],
 				"archive.lua" => include_bytes!("../preset/plugins/archive.lua"),
 				"code.lua" => include_bytes!("../preset/plugins/code.lua"),
 				"folder.lua" => include_bytes!("../preset/plugins/folder.lua"),

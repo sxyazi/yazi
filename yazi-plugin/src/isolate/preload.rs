@@ -5,10 +5,13 @@ use yazi_config::LAYOUT;
 use super::slim_lua;
 use crate::{bindings::{Cast, File}, elements::Rect, LOADED};
 
-pub async fn preload(name: String, files: Vec<yazi_shared::fs::File>) -> mlua::Result<u8> {
+pub async fn preload(
+	name: String,
+	files: Vec<yazi_shared::fs::File>,
+	multi: bool,
+) -> mlua::Result<u8> {
 	LOADED.ensure(&name).await.into_lua_err()?;
 
-	let multi = files.len() > 1;
 	tokio::task::spawn_blocking(move || {
 		let lua = slim_lua()?;
 		let plugin: Table = if let Some(b) = LOADED.read().get(&name) {

@@ -1,14 +1,12 @@
-use std::{env, path::Path, sync::atomic::{AtomicBool, Ordering}};
+use std::{env, path::Path, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use ratatui::prelude::Rect;
 use tracing::warn;
-use yazi_shared::env_exists;
+use yazi_shared::{env_exists, term::Term};
 
 use super::{Iterm2, Kitty, KittyOld};
-use crate::{ueberzug::Ueberzug, Sixel, TMUX};
-
-static IMAGE_SHOWN: AtomicBool = AtomicBool::new(false);
+use crate::{ueberzug::Ueberzug, Sixel, SHOWN, TMUX};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Adaptor {
@@ -162,29 +160,40 @@ impl Adaptor {
 	pub(super) fn start(self) { Ueberzug::start(self); }
 
 	pub async fn image_show(self, path: &Path, rect: Rect) -> Result<(u32, u32)> {
-		self.image_hide(rect).ok();
-		IMAGE_SHOWN.store(true, Ordering::Relaxed);
+		self.image_hide().ok();
 
-		match self {
+		let size = match self {
 			Self::Kitty => Kitty::image_show(path, rect).await,
 			Self::KittyOld => KittyOld::image_show(path, rect).await,
 			Self::Iterm2 => Iterm2::image_show(path, rect).await,
 			Self::Sixel => Sixel::image_show(path, rect).await,
 			_ => Ueberzug::image_show(path, rect).await,
-		}
+		}?;
+
+		let shown = Term::ratio()
+			.map(|(r1, r2)| Rect {
+				x:      rect.x,
+				y:      rect.y,
+				width:  (size.0 as f64 / r1).ceil() as u16,
+				height: (size.1 as f64 / r2).ceil() as u16,
+			})
+			.unwrap_or(rect);
+
+		SHOWN.store(Some(Arc::new(shown)));
+		Ok(size)
 	}
 
-	pub fn image_hide(self, rect: Rect) -> Result<()> {
-		if !IMAGE_SHOWN.swap(false, Ordering::Relaxed) {
-			return Ok(());
-		}
+	pub fn image_hide(self) -> Result<()> {
+		if let Some(rect) = SHOWN.swap(None) { self.image_erase(*rect) } else { Ok(()) }
+	}
 
+	pub fn image_erase(self, rect: Rect) -> Result<()> {
 		match self {
-			Self::Kitty => Kitty::image_hide(rect),
-			Self::Iterm2 => Iterm2::image_hide(rect),
-			Self::KittyOld => KittyOld::image_hide(),
-			Self::Sixel => Sixel::image_hide(rect),
-			_ => Ueberzug::image_hide(rect),
+			Self::Kitty => Kitty::image_erase(rect),
+			Self::Iterm2 => Iterm2::image_erase(rect),
+			Self::KittyOld => KittyOld::image_erase(),
+			Self::Sixel => Sixel::image_erase(rect),
+			_ => Ueberzug::image_erase(rect),
 		}
 	}
 

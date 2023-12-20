@@ -61,7 +61,7 @@ impl Ueberzug {
 		Ok(((w as f64 * ratio).round() as u32, (h as f64 * ratio).round() as u32))
 	}
 
-	pub(super) fn image_hide(_: Rect) -> Result<()> {
+	pub(super) fn image_erase(_: Rect) -> Result<()> {
 		if let Some(tx) = &*DEMON {
 			Ok(tx.send(None)?)
 		} else {
