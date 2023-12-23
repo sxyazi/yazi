@@ -2,7 +2,7 @@ use crossterm::event::KeyEvent;
 use tokio::sync::{mpsc::UnboundedSender, oneshot};
 
 use super::Exec;
-use crate::{fs::FilesOp, term::Term, Layer, RoCell};
+use crate::{term::Term, Layer, RoCell};
 
 static TX: RoCell<UnboundedSender<Event>> = RoCell::new();
 
@@ -15,7 +15,6 @@ pub enum Event {
 	Call(Vec<Exec>, Layer),
 
 	// Manager
-	Files(FilesOp),
 	Pages(usize),
 }
 
@@ -44,9 +43,6 @@ macro_rules! emit {
 		$crate::event::Event::Call($exec, $layer).emit();
 	};
 
-	(Files($op:expr)) => {
-		$crate::event::Event::Files($op).emit();
-	};
 	(Pages($page:expr)) => {
 		$crate::event::Event::Pages($page).emit();
 	};

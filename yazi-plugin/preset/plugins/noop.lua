@@ -1,9 +1,9 @@
-local Noop = {}
+local M = {}
 
-function Noop:peek() end
+function M:peek() end
 
-function Noop:seek() end
+function M:seek() end
 
-function Noop:preload() return 1 end
+function M:preload() return 1 end
 
-return Noop
+return M

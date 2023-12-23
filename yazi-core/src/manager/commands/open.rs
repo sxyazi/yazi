@@ -1,7 +1,6 @@
 use std::ffi::OsString;
 
 use yazi_config::{popup::SelectCfg, OPEN};
-use yazi_plugin::external;
 use yazi_shared::{event::Exec, MIME_DIR};
 
 use crate::{manager::Manager, select::Select, tasks::Tasks};
@@ -44,28 +43,30 @@ impl Manager {
 		}
 
 		let opt = opt.into() as Opt;
-		tokio::spawn(async move {
-			let todo: Vec<_> = files.iter().filter(|(_, m)| m.is_none()).map(|(u, _)| u).collect();
-			if let Ok(mut mimes) = external::file(&todo).await {
-				files = files
-					.into_iter()
-					.map(|(u, m)| {
-						let mime = m.or_else(|| mimes.remove(&u));
-						(u, mime)
-					})
-					.collect();
-			}
+		// TODO: plugin system
+		// tokio::spawn(async move {
+		// 	let todo: Vec<_> = files.iter().filter(|(_, m)| m.is_none()).map(|(u, _)|
+		// u).collect(); 	if let Ok(mut mimes) = external::file(&todo).await {
+		// 		files = files
+		// 			.into_iter()
+		// 			.map(|(u, m)| {
+		// 				let mime = m.or_else(|| mimes.remove(&u));
+		// 				(u, mime)
+		// 			})
+		// 			.collect();
+		// 	}
 
-			let files: Vec<_> =
-				files.into_iter().filter_map(|(u, m)| m.map(|m| (u.into_os_string(), m))).collect();
+		// 	let files: Vec<_> =
+		// 		files.into_iter().filter_map(|(u, m)| m.map(|m| (u.into_os_string(),
+		// m))).collect();
 
-			if opt.interactive {
-				Self::open_interactive(files).await;
-				return;
-			}
+		// 	if opt.interactive {
+		// 		Self::open_interactive(files).await;
+		// 		return;
+		// 	}
 
-			Tasks::_open(files, None);
-		});
+		// 	Tasks::_open(files, None);
+		// });
 		false
 	}
 }

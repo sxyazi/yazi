@@ -8,10 +8,10 @@ use yazi_shared::fs::{File, Url, FILES_TICKET};
 use super::FilesSorter;
 
 pub struct Files {
-	items:              Vec<File>,
-	hidden:             Vec<File>,
-	ticket:             u64,
-	pub(crate) version: u64,
+	hidden:              Vec<File>,
+	items:               Vec<File>,
+	ticket:              u64,
+	pub(crate) revision: u64,
 
 	pub sizes: BTreeMap<Url, u64>,
 	selected:  BTreeSet<Url>,
@@ -23,10 +23,10 @@ pub struct Files {
 impl Default for Files {
 	fn default() -> Self {
 		Self {
-			items:   Default::default(),
-			hidden:  Default::default(),
-			ticket:  Default::default(),
-			version: Default::default(),
+			items:    Default::default(),
+			hidden:   Default::default(),
+			ticket:   Default::default(),
+			revision: Default::default(),
 
 			sizes:    Default::default(),
 			selected: Default::default(),
@@ -68,7 +68,7 @@ impl Files {
 	#[inline]
 	pub fn select(&mut self, url: &Url, state: Option<bool>) -> bool {
 		let old = self.selected.contains(url);
-		let new = if let Some(new) = state { new } else { !old };
+		let new = state.unwrap_or(!old);
 
 		if new == old {
 			return false;
@@ -126,132 +126,174 @@ impl Files {
 		applied
 	}
 
-	pub fn update_full(&mut self, mut items: Vec<File>) -> bool {
-		if !self.show_hidden {
-			(self.hidden, items) = items.into_iter().partition(|f| f.is_hidden());
+	pub fn update_full(&mut self, files: Vec<File>) {
+		if files.is_empty() {
+			return;
 		}
+
 		self.ticket = FILES_TICKET.fetch_add(1, Ordering::Relaxed);
-		self.sorter.sort(&mut items, &self.sizes);
-		self.items = items;
-		self.version += 1;
-		true
+		self.revision += 1;
+
+		(self.hidden, self.items) = if self.show_hidden {
+			(vec![], files)
+		} else {
+			files.into_iter().partition(|f| f.is_hidden())
+		};
 	}
 
-	pub fn update_part(&mut self, version: u64, items: Vec<File>) -> bool {
-		if !items.is_empty() {
-			if version != self.ticket {
-				return false;
+	pub fn update_part(&mut self, files: Vec<File>, ticket: u64) {
+		if !files.is_empty() {
+			if ticket != self.ticket {
+				return;
 			}
 
+			self.revision += 1;
 			if self.show_hidden {
-				self.items.extend(items);
+				self.hidden.clear();
+				self.items.extend(files);
 			} else {
-				let (hidden, items): (Vec<_>, Vec<_>) = items.into_iter().partition(|f| f.is_hidden());
-				self.items.extend(items);
+				let (hidden, items): (Vec<_>, Vec<_>) = files.into_iter().partition(|f| f.is_hidden());
 				self.hidden.extend(hidden);
+				self.items.extend(items);
 			}
-
-			self.sorter.sort(&mut self.items, &self.sizes);
-			self.version += 1;
-			return true;
+			return;
 		}
 
-		self.ticket = version;
-		if self.items.is_empty() && self.hidden.is_empty() {
-			return false;
+		self.ticket = ticket;
+		if !self.items.is_empty() || !self.hidden.is_empty() {
+			self.revision += 1;
+			self.hidden.clear();
+			self.items.clear();
 		}
-
-		self.items.clear();
-		self.hidden.clear();
-		self.version += 1;
-		true
 	}
 
-	pub fn update_size(&mut self, items: BTreeMap<Url, u64>) -> bool {
-		self.sizes.extend(items);
+	pub fn update_size(&mut self, sizes: BTreeMap<Url, u64>) {
+		if sizes.is_empty() {
+			return;
+		}
+
 		if self.sorter.by == SortBy::Size {
-			self.sorter.sort(&mut self.items, &self.sizes);
-			self.version += 1;
+			self.revision += 1;
 		}
-		true
+		self.sizes.extend(sizes);
 	}
 
-	pub fn update_creating(&mut self, mut todo: BTreeMap<Url, File>) -> bool {
-		if !self.show_hidden {
-			todo.retain(|_, f| !f.is_hidden());
+	pub fn update_creating(&mut self, files: Vec<File>) {
+		if files.is_empty() {
+			return;
 		}
 
-		let b = self.update_replacing(&mut todo);
-		if todo.is_empty() {
-			return b;
-		}
-
-		self.items.extend(todo.into_values());
-		self.sorter.sort(&mut self.items, &self.sizes);
-		self.version += 1;
-		true
-	}
-
-	pub fn update_deleting(&mut self, mut todo: BTreeSet<Url>) -> bool {
-		let mut removed = Vec::with_capacity(todo.len());
 		macro_rules! go {
-			($name:expr) => {
-				removed.clear();
-				for i in 0..$name.len() {
-					if todo.remove(&$name[i].url) {
-						removed.push(i);
-						if todo.is_empty() {
+			($dist:expr, $src:expr) => {
+				let mut todo: BTreeMap<_, _> = $src.into_iter().map(|f| (f.url(), f)).collect();
+				for f in &$dist {
+					if todo.remove(&f.url).is_some() && todo.is_empty() {
+						break;
+					}
+				}
+				if !todo.is_empty() {
+					self.revision += 1;
+					$dist.extend(todo.into_values());
+				}
+			};
+		}
+
+		let (hidden, items) = if self.show_hidden {
+			(vec![], files)
+		} else {
+			files.into_iter().partition(|f| f.is_hidden())
+		};
+
+		if !items.is_empty() {
+			go!(self.items, items);
+		}
+		if !hidden.is_empty() {
+			go!(self.hidden, hidden);
+		}
+	}
+
+	pub fn update_deleting(&mut self, urls: Vec<Url>) {
+		if urls.is_empty() {
+			return;
+		}
+
+		macro_rules! go {
+			($dist:expr, $src:expr) => {
+				let mut todo: BTreeSet<_> = $src.into_iter().collect();
+				let len = $dist.len();
+
+				$dist.retain(|f| !todo.remove(&f.url));
+				if $dist.len() != len {
+					self.revision += 1;
+				}
+			};
+		}
+
+		let (hidden, items) =
+			if self.show_hidden { (vec![], urls) } else { urls.into_iter().partition(|u| u.is_hidden()) };
+
+		if !items.is_empty() {
+			go!(self.items, items);
+		}
+		if !hidden.is_empty() {
+			go!(self.hidden, hidden);
+		}
+	}
+
+	pub fn update_updating(&mut self, files: BTreeMap<Url, File>) -> [BTreeMap<Url, File>; 2] {
+		if files.is_empty() {
+			return Default::default();
+		}
+
+		macro_rules! go {
+			($dist:expr, $src:expr) => {
+				let len = $src.len();
+				for i in 0..$dist.len() {
+					if let Some(f) = $src.remove(&$dist[i].url) {
+						$dist[i] = f;
+						if $src.is_empty() {
 							break;
 						}
 					}
 				}
-				for i in (0..removed.len()).rev() {
-					$name.remove(removed[i]);
+				if $src.len() != len {
+					self.revision += 1;
 				}
 			};
 		}
 
-		let mut b = false;
-		if !todo.is_empty() {
-			go!(self.items);
-			b |= !removed.is_empty();
-		}
+		let (mut hidden, mut items) = if self.show_hidden {
+			(BTreeMap::new(), files)
+		} else {
+			files.into_iter().partition(|(_, f)| f.is_hidden())
+		};
 
-		if !todo.is_empty() {
-			go!(self.hidden);
-			b |= !removed.is_empty();
+		if !items.is_empty() {
+			go!(self.items, items);
 		}
-		b
+		if !hidden.is_empty() {
+			go!(self.hidden, hidden);
+		}
+		[hidden, items]
 	}
 
-	pub fn update_replacing(&mut self, todo: &mut BTreeMap<Url, File>) -> bool {
-		if todo.is_empty() {
-			return false;
+	pub fn update_upserting(&mut self, files: BTreeMap<Url, File>) {
+		if files.is_empty() {
+			return;
 		}
 
-		macro_rules! go {
-			($name:expr) => {
-				for i in 0..$name.len() {
-					if let Some(f) = todo.remove(&$name[i].url) {
-						$name[i] = f;
-						if todo.is_empty() {
-							self.version += 1;
-							return true;
-						}
-					}
-				}
-			};
+		let [hidden, items] = self.update_updating(files);
+		if hidden.is_empty() && items.is_empty() {
+			return;
 		}
 
-		let old = todo.len();
-		go!(self.items);
-		go!(self.hidden);
-
-		if old != todo.len() {
-			self.version += 1;
-			return true;
+		self.revision += 1;
+		if !hidden.is_empty() {
+			self.hidden.extend(hidden.into_values());
 		}
-		false
+		if !items.is_empty() {
+			self.items.extend(items.into_values());
+		}
 	}
 }
 
@@ -318,7 +360,7 @@ impl Files {
 			return false;
 		}
 		self.sorter = sorter;
-		self.version += 1;
+		self.revision += 1;
 		self.sorter.sort(&mut self.items, &self.sizes)
 	}
 
@@ -339,7 +381,7 @@ impl Files {
 		}
 
 		self.show_hidden = state;
-		self.version += 1;
+		self.revision += 1;
 		true
 	}
 }

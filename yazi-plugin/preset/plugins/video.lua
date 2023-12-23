@@ -1,15 +1,15 @@
-local Video = {}
+local M = {}
 
-function Video:cache() return ya.cache_file(self.file.url .. self.skip .. tostring(self.file.cha.modified)) end
+function M:cache() return ya.cache_file(self.file.url .. self.skip .. tostring(self.file.cha.modified)) end
 
-function Video:peek()
+function M:peek()
 	if self:preload() == 1 then
 		ya.image_show(self:cache(), self.area)
 		ya.preview_widgets(self, {})
 	end
 end
 
-function Video:seek(units)
+function M:seek(units)
 	local h = cx.active.current.hovered
 	if h and h.url == self.file.url then
 		ya.manager_emit("peek", {
@@ -19,7 +19,7 @@ function Video:seek(units)
 	end
 end
 
-function Video:preload()
+function M:preload()
 	local percentage = 5 + self.skip
 	if percentage > 95 then
 		ya.manager_emit("peek", { "90", only_if = tostring(self.file.url), upper_bound = "" })
@@ -52,4 +52,4 @@ function Video:preload()
 	return status:success() and 1 or 2
 end
 
-return Video
+return M

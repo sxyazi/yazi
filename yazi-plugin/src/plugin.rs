@@ -1,5 +1,6 @@
 use anyhow::Result;
-use mlua::{Lua, Table};
+use mlua::Lua;
+use yazi_config::BOOT;
 use yazi_shared::RoCell;
 
 pub static LUA: RoCell<Lua> = RoCell::new();
@@ -7,7 +8,7 @@ pub static LUA: RoCell<Lua> = RoCell::new();
 pub fn init() {
 	fn stage_1(lua: &Lua) -> Result<()> {
 		crate::Loader::init();
-		crate::Config::new(lua).install_theme()?.install_manager()?;
+		crate::Config::new(lua).install_boot()?.install_manager()?.install_theme()?;
 		crate::utils::install(lua)?;
 
 		// Base
@@ -29,14 +30,15 @@ pub fn init() {
 	}
 
 	fn stage_2(lua: &Lua) {
-		let ya: Table = lua.globals().get("ya").unwrap();
-		ya.set("SYNC_ON", true).unwrap();
+		let setup = br#"
+ya.SYNC_ON = true
+package.path = BOOT.plugin_dir .. "/?.yazi/init.lua;" .. BOOT.plugin_dir .. "/?.lua;" .. package.path
+"#;
+		lua.load(setup as &[u8]).exec().unwrap();
 
-		// TODO: plugin system
-		// PLUGIN.preload.iter().for_each(|p| {
-		// 	let b = std::fs::read(p).unwrap_or_else(|_| panic!("failed to read
-		// plugin: {p:?}")); 	lua.load(&b).exec().unwrap_or_else(|_| panic!("failed
-		// to load plugin: {p:?}")); });
+		if let Ok(b) = std::fs::read(BOOT.config_dir.join("init.lua")) {
+			lua.load(b).exec().unwrap();
+		}
 	}
 
 	let lua = Lua::new();

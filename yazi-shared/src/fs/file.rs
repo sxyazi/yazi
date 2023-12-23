@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, ffi::OsStr, fs::Metadata, ops::Deref};
+use std::{ffi::OsStr, fs::Metadata, ops::Deref};
 
 use anyhow::Result;
 use tokio::fs;
@@ -51,13 +51,6 @@ impl File {
 	pub fn from_dummy(url: Url) -> Self {
 		let ck = if url.is_hidden() { ChaKind::HIDDEN } else { ChaKind::empty() };
 		Self { url, cha: Cha::default().with_kind(ck), link_to: None }
-	}
-
-	#[inline]
-	pub fn into_map(self) -> BTreeMap<Url, File> {
-		let mut map = BTreeMap::new();
-		map.insert(self.url.clone(), self);
-		map
 	}
 }
 

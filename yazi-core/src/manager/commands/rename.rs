@@ -5,7 +5,7 @@ use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 use yazi_config::{popup::InputCfg, OPEN, PREVIEW};
 use yazi_plugin::external::{self, ShellOpt};
 use yazi_scheduler::{Scheduler, BLOCKER};
-use yazi_shared::{emit, event::Exec, fs::{max_common_root, File, FilesOp, Url}, term::Term, Defer};
+use yazi_shared::{event::Exec, fs::{max_common_root, File, FilesOp, Url}, term::Term, Defer};
 
 use crate::{input::Input, manager::Manager};
 
@@ -25,7 +25,7 @@ impl Manager {
 		}
 
 		let file = File::from(new.clone()).await?;
-		emit!(Files(FilesOp::Replacing(file.parent().unwrap(), BTreeMap::from_iter([(old, file)]))));
+		FilesOp::Upserting(file.parent().unwrap(), BTreeMap::from_iter([(old, file)])).emit();
 		Ok(Self::_hover(Some(new)))
 	}
 

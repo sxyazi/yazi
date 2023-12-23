@@ -1,6 +1,6 @@
-local Json = {}
+local M = {}
 
-function Json:peek()
+function M:peek()
 	local limit = self.area.h
 	local child = Command.new("jq")
 		:args({
@@ -35,7 +35,7 @@ function Json:peek()
 	end
 end
 
-function Json:seek(units)
+function M:seek(units)
 	local h = cx.active.current.hovered
 	if h and h.url == self.file.url then
 		local step = math.floor(units * self.area.h / 10)
@@ -46,4 +46,4 @@ function Json:seek(units)
 	end
 end
 
-return Json
+return M

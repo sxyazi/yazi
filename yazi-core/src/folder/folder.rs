@@ -25,17 +25,19 @@ impl From<&Url> for Folder {
 
 impl Folder {
 	pub fn update(&mut self, op: FilesOp) -> bool {
-		let b = match op {
-			FilesOp::Full(_, items) => self.files.update_full(items),
-			FilesOp::Part(_, ticket, items) => self.files.update_part(ticket, items),
-			FilesOp::Size(_, items) => self.files.update_size(items),
+		let revision = self.files.revision;
+		match op {
+			FilesOp::Full(_, files) => self.files.update_full(files),
+			FilesOp::Part(_, files, ticket) => self.files.update_part(files, ticket),
+			FilesOp::Size(_, sizes) => self.files.update_size(sizes),
 
-			FilesOp::Creating(_, items) => self.files.update_creating(items),
-			FilesOp::Deleting(_, items) => self.files.update_deleting(items),
-			FilesOp::Replacing(_, mut items) => self.files.update_replacing(&mut items),
+			FilesOp::Creating(_, files) => self.files.update_creating(files),
+			FilesOp::Deleting(_, urls) => self.files.update_deleting(urls),
+			FilesOp::Updating(_, files) => _ = self.files.update_updating(files),
+			FilesOp::Upserting(_, files) => self.files.update_upserting(files),
 			_ => unreachable!(),
-		};
-		if !b {
+		}
+		if revision == self.files.revision {
 			return false;
 		}
 

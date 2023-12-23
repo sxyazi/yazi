@@ -1,5 +1,4 @@
 mod fd;
-mod file;
 mod fzf;
 mod highlighter;
 mod lsar;
@@ -8,7 +7,6 @@ mod shell;
 mod zoxide;
 
 pub use fd::*;
-pub use file::*;
 pub use fzf::*;
 pub use highlighter::*;
 pub use lsar::*;

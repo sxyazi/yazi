@@ -2,7 +2,7 @@ use std::path::{PathBuf, MAIN_SEPARATOR};
 
 use tokio::fs;
 use yazi_config::popup::InputCfg;
-use yazi_shared::{emit, event::Exec, fs::{File, FilesOp}, fs::Url};
+use yazi_shared::{event::Exec, fs::{File, FilesOp, Url}};
 
 use crate::{input::Input, manager::Manager};
 
@@ -42,7 +42,7 @@ impl Manager {
 			let child =
 				Url::from(path.components().take(cwd.components().count() + 1).collect::<PathBuf>());
 			if let Ok(f) = File::from(child.clone()).await {
-				emit!(Files(FilesOp::Creating(cwd, f.into_map())));
+				FilesOp::Creating(cwd, vec![f]).emit();
 				Manager::_hover(Some(child));
 			}
 			Ok::<(), anyhow::Error>(())

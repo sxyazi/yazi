@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use yazi_shared::fs::{File, FilesOp, Url};
+use yazi_shared::fs::{File, Url};
 
 use super::{Tabs, Watcher};
 use crate::{folder::Folder, tab::Tab};
@@ -21,48 +21,6 @@ impl Manager {
 
 			watcher:  Watcher::start(),
 			mimetype: Default::default(),
-		}
-	}
-
-	pub fn update_read(&mut self, op: FilesOp) -> bool {
-		let url = op.url().clone();
-		let cwd = self.cwd().to_owned();
-		let hovered = self.hovered().map(|h| h.url());
-
-		let mut b = if cwd == url {
-			self.current_mut().update(op)
-		} else if matches!(self.parent(), Some(p) if p.cwd == url) {
-			self.active_mut().parent.as_mut().unwrap().update(op)
-		} else if matches!(self.hovered(), Some(h) if h.url == url) {
-			self.active_mut().history.entry(url.clone()).or_insert_with(|| Folder::from(&url));
-			self.active_mut().apply_files_attrs(true);
-			self.active_mut().history.get_mut(&url).unwrap().update(op)
-		} else {
-			self.active_mut().history.entry(url.clone()).or_insert_with(|| Folder::from(&url)).update(op);
-			false
-		};
-
-		b |= self.active_mut().parent.as_mut().is_some_and(|p| p.hover(&cwd));
-		b |= hovered.as_ref().is_some_and(|h| self.current_mut().hover(h));
-
-		if hovered.as_ref() != self.hovered().map(|h| &h.url) {
-			Self::_hover(None);
-		}
-		b
-	}
-
-	pub fn update_ioerr(&mut self, op: FilesOp) -> bool {
-		let url = op.url();
-		let op = FilesOp::Full(url.clone(), Vec::new());
-
-		if url == self.cwd() {
-			self.current_mut().update(op);
-			self.active_mut().leave(());
-			true
-		} else if matches!(self.parent(), Some(p) if &p.cwd == url) {
-			self.active_mut().parent.as_mut().unwrap().update(op)
-		} else {
-			false
 		}
 	}
 }

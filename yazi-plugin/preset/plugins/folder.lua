@@ -1,6 +1,6 @@
-local Folder_ = {}
+local M = {}
 
-function Folder_:peek()
+function M:peek()
 	local folder = Folder:by_kind(Folder.PREVIEW)
 	if folder == nil or folder.cwd ~= self.file.url then
 		return {}
@@ -24,7 +24,7 @@ function Folder_:peek()
 	ya.preview_widgets(self, { ui.List(self.area, items) })
 end
 
-function Folder_:seek(units)
+function M:seek(units)
 	local folder = Folder:by_kind(Folder.PREVIEW)
 	if folder and folder.cwd == self.file.url then
 		local step = math.floor(units * self.area.h / 10)
@@ -36,4 +36,4 @@ function Folder_:seek(units)
 	end
 end
 
-return Folder_
+return M

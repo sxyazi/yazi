@@ -53,7 +53,7 @@ impl Finder {
 	}
 
 	pub(super) fn catchup(&mut self, files: &Files) -> bool {
-		if self.version == files.version {
+		if self.version == files.revision {
 			return false;
 		}
 		self.matched.clear();
@@ -72,7 +72,7 @@ impl Finder {
 			i += 1;
 		}
 
-		self.version = files.version;
+		self.version = files.revision;
 		true
 	}
 

@@ -1,15 +1,15 @@
-local Pdf = {}
+local M = {}
 
-function Pdf:cache() return ya.cache_file(self.file.url .. self.skip .. tostring(self.file.cha.modified)) end
+function M:cache() return ya.cache_file(self.file.url .. self.skip .. tostring(self.file.cha.modified)) end
 
-function Pdf:peek()
+function M:peek()
 	if self:preload() == 1 then
 		ya.image_show(self:cache(), self.area)
 		ya.preview_widgets(self, {})
 	end
 end
 
-function Pdf:seek(units)
+function M:seek(units)
 	local h = cx.active.current.hovered
 	if h and h.url == self.file.url then
 		local step = ya.clamp(-1, units, 1)
@@ -17,7 +17,7 @@ function Pdf:seek(units)
 	end
 end
 
-function Pdf:preload()
+function M:preload()
 	local cache = self:cache()
 	if fs.symlink_metadata(cache) then
 		return 1
@@ -40,4 +40,4 @@ function Pdf:preload()
 	return fs.write(cache, output.stdout) and 1 or 2
 end
 
-return Pdf
+return M

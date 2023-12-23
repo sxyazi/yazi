@@ -22,8 +22,8 @@ impl Manager {
 
 		self.active_mut().apply_files_attrs(false);
 
-		if let Some(f) = self.parent() {
-			self.watcher.trigger_dirs(&[self.cwd(), &f.cwd]);
+		if let Some(p) = self.parent() {
+			self.watcher.trigger_dirs(&[self.cwd(), &p.cwd]);
 		} else {
 			self.watcher.trigger_dirs(&[self.cwd()]);
 		}

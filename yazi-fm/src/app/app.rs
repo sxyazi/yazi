@@ -5,7 +5,7 @@ use crossterm::event::KeyEvent;
 use ratatui::backend::Backend;
 use yazi_config::{keymap::Key, ARGS};
 use yazi_core::input::InputMode;
-use yazi_shared::{emit, event::{Event, Exec}, fs::FilesOp, term::Term, Layer, COLLISION};
+use yazi_shared::{emit, event::{Event, Exec}, term::Term, Layer, COLLISION};
 
 use crate::{lives::Lives, Ctx, Executor, Logs, Panic, Root, Signals};
 
@@ -132,19 +132,6 @@ impl App {
 		let manager = &mut self.cx.manager;
 		let tasks = &mut self.cx.tasks;
 		match event {
-			Event::Files(op) => {
-				let calc = !matches!(op, FilesOp::Size(..) | FilesOp::IOErr(_));
-				let b = match op {
-					FilesOp::IOErr(..) => manager.update_ioerr(op),
-					_ => manager.update_read(op),
-				};
-				if b {
-					emit!(Render);
-				}
-				if calc {
-					tasks.preload_sorted(&manager.current().files);
-				}
-			}
 			Event::Pages(page) => {
 				let targets = self.cx.manager.current().paginate(page);
 				tasks.preload_paged(targets, &self.cx.manager.mimetype);

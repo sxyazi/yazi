@@ -1,13 +1,13 @@
-local Archive = {}
+local M = {}
 
-function Archive:peek()
+function M:peek()
 	local _, bound = ya.preview_archive(self)
 	if bound then
 		ya.manager_emit("peek", { tostring(bound), only_if = tostring(self.file.url), upper_bound = "" })
 	end
 end
 
-function Archive:seek(units)
+function M:seek(units)
 	local h = cx.active.current.hovered
 	if h and h.url == self.file.url then
 		local step = math.floor(units * self.area.h / 10)
@@ -18,4 +18,4 @@ function Archive:seek(units)
 	end
 end
 
-return Archive
+return M

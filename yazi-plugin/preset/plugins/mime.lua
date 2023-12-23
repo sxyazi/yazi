@@ -1,6 +1,6 @@
-local Mime = {}
+local M = {}
 
-function Mime:preload()
+function M:preload()
 	local command = Command.new("file"):arg("--mime-type"):stdout(Command.PIPED):stderr(Command.PIPED)
 	if ya.target_family() == "windows" then
 		command:arg("-b")
@@ -13,23 +13,23 @@ function Mime:preload()
 		urls[#urls + 1] = tostring(file.url)
 	end
 
-	local i, data = 1, {}
+	local i, mimes = 1, {}
 	local output = command:args(urls):output()
 	for line in output.stdout:gmatch("[^\r\n]+") do
 		if i > #urls then
 			break
 		end
 		if ya.mime_valid(line) then
-			data[urls[i]] = line
+			mimes[urls[i]] = line
 		end
 		i = i + 1
 	end
 
-	if #data then
-		ya.manager_emit("update_mimetype", {}, data)
+	if #mimes then
+		ya.manager_emit("update_mimetype", {}, mimes)
 		return 3
 	end
 	return 2
 end
 
-return Mime
+return M

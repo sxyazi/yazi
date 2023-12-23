@@ -4,7 +4,7 @@ use anyhow::Result;
 use parking_lot::RwLock;
 use tokio::sync::mpsc;
 use tracing::error;
-use yazi_shared::{emit, fs::{calculate_size, FilesOp, Url}, Throttle};
+use yazi_shared::{fs::{calculate_size, FilesOp, Url}, Throttle};
 
 use crate::TaskOp;
 
@@ -74,7 +74,7 @@ impl Preload {
 			}
 
 			let parent = buf[0].0.parent_url().unwrap();
-			emit!(Files(FilesOp::Size(parent, BTreeMap::from_iter(buf))));
+			FilesOp::Size(parent, BTreeMap::from_iter(buf)).emit();
 		});
 
 		self.sch.send(TaskOp::Adv(task.id, 1, 0))?;

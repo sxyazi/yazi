@@ -1,12 +1,13 @@
 use std::{ffi::OsString, fs, path::{Path, PathBuf}, process};
 
 use clap::Parser;
+use serde::Serialize;
 use yazi_shared::fs::{current_cwd, expand_path};
 
 use super::Args;
 use crate::{Xdg, ARGS};
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Boot {
 	pub cwd:  PathBuf,
 	pub file: Option<OsString>,
