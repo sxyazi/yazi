@@ -11,6 +11,7 @@ pub struct Files {
 	hidden:              Vec<File>,
 	items:               Vec<File>,
 	ticket:              u64,
+	version:             u64,
 	pub(crate) revision: u64,
 
 	pub sizes: BTreeMap<Url, u64>,
@@ -26,6 +27,7 @@ impl Default for Files {
 			items:    Default::default(),
 			hidden:   Default::default(),
 			ticket:   Default::default(),
+			version:  Default::default(),
 			revision: Default::default(),
 
 			sizes:    Default::default(),
@@ -160,9 +162,9 @@ impl Files {
 		}
 
 		self.ticket = ticket;
-		if !self.items.is_empty() || !self.hidden.is_empty() {
+		self.hidden.clear();
+		if !self.items.is_empty() {
 			self.revision += 1;
-			self.hidden.clear();
 			self.items.clear();
 		}
 	}
@@ -287,13 +289,23 @@ impl Files {
 			return;
 		}
 
-		self.revision += 1;
 		if !hidden.is_empty() {
 			self.hidden.extend(hidden.into_values());
 		}
 		if !items.is_empty() {
+			self.revision += 1;
 			self.items.extend(items.into_values());
 		}
+	}
+
+	pub fn catchup_revision(&mut self) -> bool {
+		if self.version == self.revision {
+			return false;
+		}
+
+		self.version = self.revision;
+		self.sorter.sort(&mut self.items, &self.sizes);
+		true
 	}
 }
 
@@ -355,33 +367,32 @@ impl Files {
 	#[inline]
 	pub fn sorter(&self) -> &FilesSorter { &self.sorter }
 
-	pub fn set_sorter(&mut self, sorter: FilesSorter) -> bool {
-		if self.sorter == sorter {
-			return false;
+	pub fn set_sorter(&mut self, sorter: FilesSorter) {
+		if self.sorter != sorter {
+			self.sorter = sorter;
+			self.revision += 1;
 		}
-		self.sorter = sorter;
-		self.revision += 1;
-		self.sorter.sort(&mut self.items, &self.sizes)
 	}
 
 	// --- Show hidden
-	pub fn set_show_hidden(&mut self, state: bool) -> bool {
-		if state == self.show_hidden {
-			return false;
-		} else if state && self.hidden.is_empty() {
-			return false;
+	pub fn set_show_hidden(&mut self, state: bool) {
+		if self.show_hidden == state {
+			return;
 		}
 
-		if state {
+		self.show_hidden = state;
+		if self.show_hidden && self.hidden.is_empty() {
+			return;
+		} else if !self.show_hidden && self.items.is_empty() {
+			return;
+		}
+
+		self.revision += 1;
+		if self.show_hidden {
 			self.items.append(&mut self.hidden);
-			self.sorter.sort(&mut self.items, &self.sizes);
 		} else {
 			let items = mem::take(&mut self.items);
 			(self.hidden, self.items) = items.into_iter().partition(|f| f.is_hidden());
 		}
-
-		self.show_hidden = state;
-		self.revision += 1;
-		true
 	}
 }

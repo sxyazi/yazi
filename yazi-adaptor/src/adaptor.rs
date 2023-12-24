@@ -160,8 +160,6 @@ impl Adaptor {
 	pub(super) fn start(self) { Ueberzug::start(self); }
 
 	pub async fn image_show(self, path: &Path, rect: Rect) -> Result<(u32, u32)> {
-		self.image_hide().ok();
-
 		let size = match self {
 			Self::Kitty => Kitty::image_show(path, rect).await,
 			Self::KittyOld => KittyOld::image_show(path, rect).await,

@@ -1,10 +1,11 @@
-use yazi_shared::{event::Exec, fs::Url, MIME_DIR};
+use yazi_shared::{emit, event::Exec, fs::Url, Layer, MIME_DIR};
 
 use crate::manager::Manager;
 
 #[derive(Debug, Default)]
 pub struct Opt {
 	skip:        Option<usize>,
+	force:       bool,
 	only_if:     Option<Url>,
 	upper_bound: bool,
 }
@@ -13,16 +14,22 @@ impl From<&Exec> for Opt {
 	fn from(e: &Exec) -> Self {
 		Self {
 			skip:        e.args.first().and_then(|s| s.parse().ok()),
+			force:       e.named.contains_key("force"),
 			only_if:     e.named.get("only-if").map(Url::from),
 			upper_bound: e.named.contains_key("upper-bound"),
 		}
 	}
 }
-impl From<()> for Opt {
-	fn from(_: ()) -> Self { Default::default() }
+impl From<bool> for Opt {
+	fn from(force: bool) -> Self { Self { force, ..Default::default() } }
 }
 
 impl Manager {
+	#[inline]
+	pub fn _peek(force: bool) {
+		emit!(Call(Exec::call("peek", vec![]).with_bool("force", force).vec(), Layer::Manager));
+	}
+
 	pub fn peek(&mut self, opt: impl Into<Opt>) -> bool {
 		let Some(hovered) = self.hovered() else {
 			return self.active_mut().preview.reset();
@@ -56,7 +63,11 @@ impl Manager {
 			}
 		}
 
-		self.active_mut().preview.go(hovered, mime);
+		if opt.force {
+			self.active_mut().preview.force(hovered, mime);
+		} else {
+			self.active_mut().preview.go(hovered, mime);
+		}
 		false
 	}
 }

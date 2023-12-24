@@ -1,3 +1,4 @@
+use yazi_adaptor::ADAPTOR;
 use yazi_config::BOOT;
 use yazi_shared::fs::Url;
 

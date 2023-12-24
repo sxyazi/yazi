@@ -78,9 +78,6 @@ impl Tab {
 			handle.abort();
 		}
 		if self.current.cwd.is_search() {
-			// TODO: plugin system
-			// self.preview.reset_image();
-
 			let rep = self.history_new(&self.current.cwd.to_regular());
 			drop(mem::replace(&mut self.current, rep));
 			Manager::_refresh();

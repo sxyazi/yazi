@@ -1,5 +1,6 @@
 use anyhow::Result;
 use tokio::sync::oneshot;
+use yazi_adaptor::ADAPTOR;
 use yazi_core::manager::Manager;
 use yazi_shared::{emit, event::Exec, term::Term};
 
@@ -24,16 +25,16 @@ impl App {
 			return false;
 		};
 
-		// TODO: plugin system
-		// self.cx.manager.active_mut().preview.reset_image();
+		self.cx.manager.active_mut().preview.reset_image();
 		if opt.state {
 			self.signals.stop_term(true);
 			self.term = None;
 		} else {
 			self.term = Some(Term::start().unwrap());
 			self.signals.stop_term(false);
+			self.cx.manager.hover(None);
+			self.cx.manager.peek(true);
 			emit!(Render);
-			Manager::_hover(None);
 		}
 		if let Some(tx) = opt.tx {
 			tx.send(()).ok();

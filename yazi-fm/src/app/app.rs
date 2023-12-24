@@ -86,9 +86,7 @@ impl App {
 		if !COLLISION.load(Ordering::Relaxed) {
 			if collision {
 				// Reload preview if collision is resolved
-				// TODO: plugin system
-				// self.cx.manager.active_mut().preview.reset_image();
-				self.cx.manager.peek(());
+				self.cx.manager.peek(true);
 			}
 			return Ok(());
 		}
@@ -117,7 +115,7 @@ impl App {
 		self.dispatch_render()?;
 
 		self.cx.manager.current_mut().set_page(true);
-		self.cx.manager.peek(());
+		self.cx.manager.peek(false);
 		Ok(())
 	}
 

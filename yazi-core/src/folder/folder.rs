@@ -25,7 +25,6 @@ impl From<&Url> for Folder {
 
 impl Folder {
 	pub fn update(&mut self, op: FilesOp) -> bool {
-		let revision = self.files.revision;
 		match op {
 			FilesOp::Full(_, files) => self.files.update_full(files),
 			FilesOp::Part(_, files, ticket) => self.files.update_part(files, ticket),
@@ -37,7 +36,7 @@ impl Folder {
 			FilesOp::Upserting(_, files) => self.files.update_upserting(files),
 			_ => unreachable!(),
 		}
-		if revision == self.files.revision {
+		if !self.files.catchup_revision() {
 			return false;
 		}
 

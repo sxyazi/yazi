@@ -14,10 +14,12 @@ pub struct Preview {
 
 impl Preview {
 	pub fn go(&mut self, file: File, mime: String) {
-		if self.content_unchanged(&file.url, &file.cha) {
-			return;
+		if !self.content_unchanged(&file.url, &file.cha) {
+			self.force(file, mime);
 		}
+	}
 
+	pub fn force(&mut self, file: File, mime: String) {
 		let Some(previewer) = PLUGIN.previewer(&file.url, &mime) else {
 			self.reset();
 			return;
@@ -42,6 +44,12 @@ impl Preview {
 		self.abort();
 		ADAPTOR.image_hide().ok();
 		self.lock.take().is_some()
+	}
+
+	#[inline]
+	pub fn reset_image(&mut self) {
+		self.abort();
+		ADAPTOR.image_hide().ok();
 	}
 
 	#[inline]

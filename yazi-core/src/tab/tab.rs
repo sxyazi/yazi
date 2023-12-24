@@ -76,9 +76,9 @@ impl Tab {
 		let apply = |f: &mut Folder| {
 			let hovered = f.hovered().map(|h| h.url());
 
-			let mut b = f.files.set_show_hidden(self.conf.show_hidden);
-			b |= f.files.set_sorter(self.conf.sorter());
-			b | f.repos(hovered)
+			f.files.set_show_hidden(self.conf.show_hidden);
+			f.files.set_sorter(self.conf.sorter());
+			f.files.catchup_revision() | f.repos(hovered)
 		};
 
 		let mut b = false;

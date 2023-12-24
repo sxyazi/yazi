@@ -35,7 +35,7 @@ impl Manager {
 		b |= hovered.as_ref().is_some_and(|h| self.current_mut().hover(h));
 
 		if hovered.as_ref() != self.hovered().map(|h| &h.url) {
-			Self::_hover(None);
+			b |= self.hover(None);
 		}
 		b
 	}

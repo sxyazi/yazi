@@ -28,7 +28,6 @@ impl Manager {
 			self.watcher.trigger_dirs(&[self.cwd()]);
 		}
 
-		Self::_hover(None);
-		false
+		self.hover(None)
 	}
 }

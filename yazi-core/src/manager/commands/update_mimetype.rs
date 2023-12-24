@@ -37,7 +37,7 @@ impl Manager {
 		tasks.preload_affected(paged, &updates);
 
 		self.mimetype.extend(updates);
-		self.peek(());
+		self.peek(false);
 		true
 	}
 }
