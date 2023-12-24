@@ -16,7 +16,7 @@ impl<'a> From<&'a Exec> for Opt<'a> {
 }
 
 impl Tab {
-	pub fn filter<'a>(&mut self, _opt: impl Into<Opt<'a>>) -> bool {
+	pub fn filter<'a>(&mut self, _: impl Into<Opt<'a>>) -> bool {
 		tokio::spawn(async move {
 			let rx = Input::_show(InputCfg::filter());
 
@@ -36,22 +36,12 @@ impl Tab {
 			return false;
 		};
 
-		let hovered = &self.current.hovered().map(|f| f.url());
-
-		self.current.files.set_filter(query);
-
-		if let Some(hovered_url) = hovered {
-			match (self.current.files.position(hovered_url), self.current.files.first()) {
-				(Some(_), _) => {
-					self.current.hover(hovered_url);
-				}
-				(None, Some(first)) => {
-					self.current.hover(&first.url());
-				}
-				(..) => {}
-			}
+		let hovered = self.current.hovered().map(|f| f.url());
+		if !self.current.files.set_filter(query) {
+			return false;
 		}
 
+		self.current.repos(hovered);
 		true
 	}
 }
