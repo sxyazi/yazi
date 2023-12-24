@@ -139,6 +139,11 @@ delete_title 	= "Delete {n} selected file{s} permanently? (y/N)"
 delete_origin	= "top-center"
 delete_offset	= [ 0, 2, 50, 3 ]
 
+# filter
+filter_title  = "Filter:"
+filter_origin = "top-center"
+filter_offset = [ 0, 2, 50, 3 ]
+
 # find
 find_title  = [ "Find next:", "Find previous:" ]
 find_origin = "top-center"
@@ -148,11 +153,6 @@ find_offset = [ 0, 2, 50, 3 ]
 search_title  = "Search:"
 search_origin = "top-center"
 search_offset = [ 0, 2, 50, 3 ]
-
-# filter
-filter_title  = "Filter:"
-filter_origin = "top-center"
-filter_offset = [ 0, 2, 50, 3 ]
 
 # shell
 shell_title  = [ "Shell:", "Shell (block):" ]

@@ -12,9 +12,7 @@ pub struct Opt<'a> {
 }
 
 impl<'a> From<&'a Exec> for Opt<'a> {
-	fn from(e: &'a Exec) -> Self {
-		Self { query: e.args.first().map(|s| s.as_str()) }
-	}
+	fn from(e: &'a Exec) -> Self { Self { query: e.args.first().map(|s| s.as_str()) } }
 }
 
 impl Tab {
@@ -50,7 +48,7 @@ impl Tab {
 				(None, Some(first)) => {
 					self.current.hover(&first.url());
 				}
-				(_, _) => {}
+				(..) => {}
 			}
 		}
 
