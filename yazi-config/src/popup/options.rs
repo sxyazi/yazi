@@ -78,6 +78,16 @@ impl InputCfg {
 	}
 
 	#[inline]
+	pub fn filter() -> Self {
+		Self {
+			title: INPUT.filter_title.to_owned(),
+			position: Position::new(INPUT.filter_origin, INPUT.filter_offset),
+			realtime: true,
+			..Default::default()
+		}
+	}
+
+	#[inline]
 	pub fn search() -> Self {
 		Self {
 			title: INPUT.search_title.to_owned(),

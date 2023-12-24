@@ -152,6 +152,10 @@ impl<'a> Executor<'a> {
 		on!(ACTIVE, search);
 		on!(ACTIVE, jump);
 
+		// Filter
+		on!(ACTIVE, filter);
+		on!(ACTIVE, filter_do);
+
 		// Find
 		on!(ACTIVE, find);
 		on!(ACTIVE, find_do);

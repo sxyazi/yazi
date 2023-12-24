@@ -4,6 +4,7 @@ mod cd;
 mod copy;
 mod enter;
 mod escape;
+mod filter;
 mod find;
 mod hidden;
 mod jump;

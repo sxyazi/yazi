@@ -35,6 +35,11 @@ pub struct Input {
 	pub find_origin: Origin,
 	pub find_offset: Offset,
 
+    // filter
+	pub filter_title:  String,
+	pub filter_origin: Origin,
+	pub filter_offset: Offset,
+
 	// search
 	pub search_title:  String,
 	pub search_origin: Origin,
