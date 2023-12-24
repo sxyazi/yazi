@@ -387,8 +387,12 @@ impl Files {
 		}
 
 		let old_hidden: Vec<File>;
-		(self.hidden, old_hidden) =
-			self.hidden.iter().cloned().partition(|f| !self.show_hidden && f.is_hidden());
+        if self.show_hidden {
+            (self.hidden, old_hidden) = (Vec::new(), self.hidden.clone());
+        } else {
+            (self.hidden, old_hidden) =
+                self.hidden.iter().cloned().partition(|f| f.is_hidden());
+        };
 
 		if keyword.is_empty() {
 			self.filter = None;
