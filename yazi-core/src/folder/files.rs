@@ -18,6 +18,7 @@ pub struct Files {
 	selected:  BTreeSet<Url>,
 
 	sorter:      FilesSorter,
+	filter:      Option<String>,
 	show_hidden: bool,
 }
 
@@ -34,6 +35,7 @@ impl Default for Files {
 			selected: Default::default(),
 
 			sorter:      Default::default(),
+			filter:      Default::default(),
 			show_hidden: MANAGER.show_hidden,
 		}
 	}
@@ -289,6 +291,9 @@ impl Files {
 			return;
 		}
 
+		if !todo.is_empty() {
+			go!(self.hidden);
+			b |= !removed.is_empty();
 		if !hidden.is_empty() {
 			self.hidden.extend(hidden.into_values());
 		}
@@ -296,6 +301,7 @@ impl Files {
 			self.revision += 1;
 			self.items.extend(items.into_values());
 		}
+		b
 	}
 
 	pub fn catchup_revision(&mut self) -> bool {
@@ -372,6 +378,44 @@ impl Files {
 			self.sorter = sorter;
 			self.revision += 1;
 		}
+	}
+
+	// --- Filter
+	pub fn set_filter(&mut self, keyword: &str) -> bool {
+		if keyword == self.filter.as_deref().unwrap_or_default() {
+			return false;
+		}
+
+		let old_hidden: Vec<File>;
+		(self.hidden, old_hidden) =
+			self.hidden.iter().cloned().partition(|f| !self.show_hidden && f.is_hidden());
+
+		if keyword.is_empty() {
+			self.filter = None;
+
+			self.items.extend(old_hidden);
+			self.sorter.sort(&mut self.items, &self.sizes);
+
+			return true;
+		}
+
+		self.filter = Some(keyword.to_owned());
+
+		if !old_hidden.is_empty() {
+			self.items.extend(old_hidden);
+			self.sorter.sort(&mut self.items, &self.sizes);
+		}
+
+		let hidden: Vec<File>;
+		(hidden, self.items) = self.items.iter().cloned().partition(|f| {
+			let Some(filename) = f.url.file_name().and_then(|o| o.to_str()) else {
+				return true;
+			};
+			!filename.to_lowercase().contains(&keyword.to_lowercase())
+		});
+
+		self.hidden.extend(hidden);
+		true
 	}
 
 	// --- Show hidden

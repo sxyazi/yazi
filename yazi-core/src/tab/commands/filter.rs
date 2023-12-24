@@ -38,7 +38,7 @@ impl Tab {
 
 		let hovered = &self.current.hovered().map(|f| f.url());
 
-		self.current.files.set_filter_keyword(query);
+		self.current.files.set_filter(query);
 
 		if let Some(hovered_url) = hovered {
 			match (self.current.files.position(hovered_url), self.current.files.first()) {

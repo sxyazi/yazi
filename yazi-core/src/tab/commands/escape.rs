@@ -5,11 +5,11 @@ use crate::tab::{Mode, Tab};
 
 bitflags! {
 	pub struct Opt: u8 {
-		const FIND   = 0b0001;
-		const VISUAL = 0b0010;
-		const SELECT = 0b0100;
-		const SEARCH = 0b1000;
-		const FILTER = 0b1001;
+		const FIND   = 0b00001;
+		const VISUAL = 0b00010;
+		const SELECT = 0b00100;
+		const FILTER = 0b01000;
+		const SEARCH = 0b10000;
 	}
 }
 
@@ -20,8 +20,8 @@ impl From<&Exec> for Opt {
 			b"find" => acc | Self::FIND,
 			b"visual" => acc | Self::VISUAL,
 			b"select" => acc | Self::SELECT,
-			b"search" => acc | Self::SEARCH,
 			b"filter" => acc | Self::FILTER,
+			b"search" => acc | Self::SEARCH,
 			_ => acc,
 		})
 	}
@@ -45,16 +45,10 @@ impl Tab {
 	fn escape_select(&mut self) -> bool { self.select_all(Some(false)) }
 
 	#[inline]
-	fn escape_search(&mut self) -> bool { self.search_stop() }
+	fn escape_filter(&mut self) -> bool { self.current.files.set_filter("") }
 
 	#[inline]
-	fn escape_filter(&mut self) -> bool {
-		if self.current.files.filter_keyword.is_some() {
-			self.current.files.set_filter_keyword("");
-			return true;
-		}
-		false
-	}
+	fn escape_search(&mut self) -> bool { self.search_stop() }
 
 	pub fn escape(&mut self, opt: impl Into<Opt>) -> bool {
 		let opt = opt.into() as Opt;
@@ -62,8 +56,8 @@ impl Tab {
 			return self.escape_find()
 				|| self.escape_visual()
 				|| self.escape_select()
-				|| self.escape_search()
-				|| self.escape_filter();
+				|| self.escape_filter()
+				|| self.escape_search();
 		}
 
 		let mut b = false;
@@ -76,11 +70,11 @@ impl Tab {
 		if opt.contains(Opt::SELECT) {
 			b |= self.escape_select();
 		}
-		if opt.contains(Opt::SEARCH) {
-			b |= self.escape_search();
-		}
 		if opt.contains(Opt::FILTER) {
 			b |= self.escape_filter();
+		}
+		if opt.contains(Opt::SEARCH) {
+			b |= self.escape_search();
 		}
 		b
 	}
