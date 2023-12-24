@@ -1,4 +1,4 @@
-use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref, sync::atomic::Ordering};
+use std::{collections::{BTreeMap, BTreeSet}, ffi::OsStr, mem, ops::Deref, sync::atomic::Ordering};
 
 use anyhow::Result;
 use tokio::{fs, select, sync::mpsc::{self, UnboundedReceiver}};
@@ -386,39 +386,35 @@ impl Files {
 			return false;
 		}
 
-		let old_hidden: Vec<File>;
-        if self.show_hidden {
-            (self.hidden, old_hidden) = (Vec::new(), self.hidden.clone());
-        } else {
-            (self.hidden, old_hidden) =
-                self.hidden.iter().cloned().partition(|f| f.is_hidden());
-        };
+		let (hidden, items) = if self.show_hidden {
+			(vec![], mem::take(&mut self.hidden))
+		} else {
+			mem::take(&mut self.hidden).into_iter().partition(|f| f.is_hidden())
+		};
+
+		self.hidden = hidden;
+		if !items.is_empty() {
+			self.items.extend(items);
+			self.sorter.sort(&mut self.items, &self.sizes);
+		}
 
 		if keyword.is_empty() {
 			self.filter = None;
-
-			self.items.extend(old_hidden);
-			self.sorter.sort(&mut self.items, &self.sizes);
-
 			return true;
+		} else {
+			self.filter = Some(keyword.to_owned());
 		}
 
-		self.filter = Some(keyword.to_owned());
-
-		if !old_hidden.is_empty() {
-			self.items.extend(old_hidden);
-			self.sorter.sort(&mut self.items, &self.sizes);
-		}
-
-		let hidden: Vec<File>;
-		(hidden, self.items) = self.items.iter().cloned().partition(|f| {
-			let Some(filename) = f.url.file_name().and_then(|o| o.to_str()) else {
-				return true;
-			};
-			!filename.to_lowercase().contains(&keyword.to_lowercase())
+		let keyword = OsStr::new(keyword).to_ascii_lowercase();
+		let keyword = keyword.as_encoded_bytes();
+		let (items, hidden): (Vec<_>, Vec<_>) = mem::take(&mut self.items).into_iter().partition(|f| {
+			f.url.file_name().is_some_and(|s| {
+				s.to_ascii_lowercase().as_encoded_bytes().windows(keyword.len()).any(|w| w == keyword)
+			})
 		});
 
 		self.hidden.extend(hidden);
+		self.items = items;
 		true
 	}
 
