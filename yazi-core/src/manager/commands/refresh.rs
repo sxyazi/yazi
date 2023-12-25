@@ -4,19 +4,13 @@ use yazi_shared::{emit, event::Exec, Layer};
 
 use crate::manager::Manager;
 
-pub struct Opt;
-
-impl From<&Exec> for Opt {
-	fn from(_: &Exec) -> Self { Self }
-}
-
 impl Manager {
 	#[inline]
 	pub fn _refresh() {
 		emit!(Call(Exec::call("refresh", vec![]).vec(), Layer::Manager));
 	}
 
-	pub fn refresh(&mut self, _: impl Into<Opt>) -> bool {
+	pub fn refresh(&mut self, _: &Exec) -> bool {
 		env::set_current_dir(self.cwd()).ok();
 		env::set_var("PWD", self.cwd());
 

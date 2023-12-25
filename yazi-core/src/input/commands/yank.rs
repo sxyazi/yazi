@@ -2,14 +2,8 @@ use yazi_shared::event::Exec;
 
 use crate::input::{op::InputOp, Input};
 
-pub struct Opt;
-
-impl From<&Exec> for Opt {
-	fn from(_: &Exec) -> Self { Self }
-}
-
 impl Input {
-	pub fn yank(&mut self, _: impl Into<Opt>) -> bool {
+	pub fn yank(&mut self, _: &Exec) -> bool {
 		match self.snap().op {
 			InputOp::None => {
 				self.snap_mut().op = InputOp::Yank(self.snap().cursor);

@@ -1,14 +1,12 @@
-use std::ffi::OsString;
-
 use anyhow::anyhow;
-use yazi_config::{open::Opener, ARGS};
-use yazi_shared::{emit, event::Exec, Layer};
+use yazi_config::open::Opener;
+use yazi_shared::{emit, event::Exec, fs::Url, Layer};
 
 use crate::tasks::Tasks;
 
 pub struct Opt {
-	targets: Vec<(OsString, String)>,
-	opener:  Option<Opener>,
+	targets: Vec<Url>,
+	opener:  Opener,
 }
 
 impl TryFrom<&Exec> for Opt {
@@ -20,31 +18,13 @@ impl TryFrom<&Exec> for Opt {
 }
 
 impl Tasks {
-	pub fn _open(targets: Vec<(OsString, String)>, opener: Option<Opener>) {
+	pub fn _open(targets: Vec<Url>, opener: Opener) {
 		emit!(Call(Exec::call("open", vec![]).with_data(Opt { targets, opener }).vec(), Layer::Tasks));
 	}
 
 	pub fn open(&mut self, opt: impl TryInto<Opt>) -> bool {
-		let Ok(opt) = opt.try_into() else {
-			return false;
-		};
-
-		if let Some(p) = &ARGS.chooser_file {
-			let paths = opt.targets.into_iter().fold(OsString::new(), |mut s, (p, _)| {
-				s.push(p);
-				s.push("\n");
-				s
-			});
-
-			std::fs::write(p, paths.as_encoded_bytes()).ok();
-			emit!(Quit(false));
-			return false;
-		}
-
-		if let Some(opener) = opt.opener {
-			self.file_open_with(&opener, &opt.targets.into_iter().map(|(f, _)| f).collect::<Vec<_>>());
-		} else {
-			self.file_open(&opt.targets);
+		if let Ok(opt) = opt.try_into() {
+			self.file_open_with(&opt.opener, &opt.targets);
 		}
 		false
 	}

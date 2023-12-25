@@ -177,17 +177,22 @@ impl<'a, 'b> Folder<'a, 'b> {
 				.iter()
 				.skip(window.0)
 				.take(window.1)
-				.filter_map(|f| self.file(f).ok())
+				.enumerate()
+				.filter_map(|(i, f)| self.file(i, f).ok())
 				.collect::<Vec<_>>(),
 		)?;
 		ud.set_named_user_value("files", self.scope.create_any_userdata_ref(&self.inner.files)?)?;
-		ud.set_named_user_value("hovered", self.inner.hovered().and_then(|h| self.file(h).ok()))?;
+		ud.set_named_user_value(
+			"hovered",
+			self.inner.hovered().and_then(|h| self.file(self.inner.cursor - window.0, h).ok()),
+		)?;
 
 		Ok(ud)
 	}
 
-	fn file(&self, inner: &'a yazi_shared::fs::File) -> mlua::Result<AnyUserData<'a>> {
+	fn file(&self, idx: usize, inner: &'a yazi_shared::fs::File) -> mlua::Result<AnyUserData<'a>> {
 		let ud = self.scope.create_any_userdata_ref(inner)?;
+		ud.set_named_user_value("idx", idx)?;
 		ud.set_named_user_value("folder", self.scope.create_any_userdata_ref(self.inner)?)?;
 
 		Ok(ud)

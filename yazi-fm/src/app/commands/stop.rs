@@ -1,7 +1,5 @@
 use anyhow::Result;
 use tokio::sync::oneshot;
-use yazi_adaptor::ADAPTOR;
-use yazi_core::manager::Manager;
 use yazi_shared::{emit, event::Exec, term::Term};
 
 use crate::app::App;

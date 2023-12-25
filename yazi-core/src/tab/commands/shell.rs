@@ -21,13 +21,9 @@ impl<'a> From<&'a Exec> for Opt {
 
 impl Tab {
 	pub fn shell(&self, opt: impl Into<Opt>) -> bool {
-		let selected: Vec<_> = self
-			.selected()
-			.into_iter()
-			.map(|f| (f.url.as_os_str().to_owned(), Default::default()))
-			.collect();
-
 		let mut opt = opt.into() as Opt;
+		let selected: Vec<_> = self.selected().into_iter().map(|f| f.url()).collect();
+
 		tokio::spawn(async move {
 			if !opt.confirm || opt.cmd.is_empty() {
 				let mut result = Input::_show(InputCfg::shell(opt.block).with_value(opt.cmd));
@@ -37,19 +33,15 @@ impl Tab {
 				}
 			}
 
-			Tasks::_open(
-				selected,
-				Some(Opener {
-					exec:   opt.cmd,
-					block:  opt.block,
-					orphan: false,
-					desc:   Default::default(),
-					for_:   None,
-					spread: true,
-				}),
-			);
+			Tasks::_open(selected, Opener {
+				exec:   opt.cmd,
+				block:  opt.block,
+				orphan: false,
+				desc:   Default::default(),
+				for_:   None,
+				spread: true,
+			});
 		});
-
 		false
 	}
 }

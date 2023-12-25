@@ -2,14 +2,8 @@ use yazi_shared::{event::Exec, CharKind};
 
 use crate::input::Input;
 
-pub struct Opt;
-
-impl From<&Exec> for Opt {
-	fn from(_: &Exec) -> Self { Self }
-}
-
 impl Input {
-	pub fn backward(&mut self, _: impl Into<Opt>) -> bool {
+	pub fn backward(&mut self, _: &Exec) -> bool {
 		let snap = self.snap();
 		if snap.cursor == 0 {
 			return self.move_(0);

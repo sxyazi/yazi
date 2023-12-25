@@ -137,7 +137,8 @@ impl<'a> Executor<'a> {
 		on!(ACTIVE, visual_mode);
 
 		// Operation
-		on!(MANAGER, open);
+		on!(MANAGER, open, &self.app.cx.tasks);
+		on!(MANAGER, open_do, &self.app.cx.tasks);
 		on!(MANAGER, yank);
 		on!(MANAGER, paste, &self.app.cx.tasks);
 		on!(MANAGER, link, &self.app.cx.tasks);

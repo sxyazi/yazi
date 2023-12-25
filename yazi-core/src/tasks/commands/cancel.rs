@@ -2,14 +2,8 @@ use yazi_shared::event::Exec;
 
 use crate::tasks::Tasks;
 
-pub struct Opt;
-
-impl From<&Exec> for Opt {
-	fn from(_: &Exec) -> Self { Self }
-}
-
 impl Tasks {
-	pub fn cancel(&mut self, _: impl Into<Opt>) -> bool {
+	pub fn cancel(&mut self, _: &Exec) -> bool {
 		let id = self.scheduler.running.read().get_id(self.cursor);
 		if id.map(|id| self.scheduler.cancel(id)) != Some(true) {
 			return false;

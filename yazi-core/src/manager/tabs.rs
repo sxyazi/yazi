@@ -1,4 +1,3 @@
-use yazi_adaptor::ADAPTOR;
 use yazi_config::BOOT;
 use yazi_shared::fs::Url;
 
@@ -11,12 +10,12 @@ pub struct Tabs {
 
 impl Tabs {
 	pub fn make() -> Self {
-		let mut tabs = Self { idx: usize::MAX, items: vec![Tab::from(Url::from(&BOOT.cwd))] };
+		let mut tabs = Self { idx: 0, items: vec![Tab::from(Url::from(&BOOT.cwd))] };
 		if let Some(file) = &BOOT.file {
 			tabs.items[0].reveal(Url::from(BOOT.cwd.join(file)));
 		}
 
-		tabs.set_idx(0);
+		Manager::_refresh();
 		tabs
 	}
 
@@ -31,10 +30,16 @@ impl Tabs {
 
 	#[inline]
 	pub(super) fn set_idx(&mut self, idx: usize) {
+		if self.idx == idx {
+			return;
+		}
+
+		// We must reset it before changing the tab index.
+		self.active_mut().preview.reset_image();
+
 		self.idx = idx;
-		// TODO: plugin system
-		// self.active_mut().preview.reset_image();
 		Manager::_refresh();
+		Manager::_peek(true);
 	}
 }
 

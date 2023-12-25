@@ -7,14 +7,8 @@ use yazi_shared::{event::Exec, term::Term, Defer};
 
 use crate::tasks::Tasks;
 
-pub struct Opt;
-
-impl From<&Exec> for Opt {
-	fn from(_: &Exec) -> Self { Self }
-}
-
 impl Tasks {
-	pub fn inspect(&self, _: impl Into<Opt>) -> bool {
+	pub fn inspect(&self, _: &Exec) -> bool {
 		let Some(id) = self.scheduler.running.read().get_id(self.cursor) else {
 			return false;
 		};
