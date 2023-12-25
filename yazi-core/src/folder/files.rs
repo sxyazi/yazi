@@ -1,4 +1,4 @@
-use std::{collections::{BTreeMap, BTreeSet}, ffi::OsStr, mem, ops::Deref, sync::atomic::Ordering};
+use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref, sync::atomic::Ordering};
 
 use anyhow::Result;
 use tokio::{fs, select, sync::mpsc::{self, UnboundedReceiver}};
@@ -386,35 +386,43 @@ impl Files {
 			return false;
 		}
 
-		let (hidden, items) = if self.show_hidden {
-			(vec![], mem::take(&mut self.hidden))
-		} else {
-			mem::take(&mut self.hidden).into_iter().partition(|f| f.is_hidden())
-		};
-
-		self.hidden = hidden;
-		if !items.is_empty() {
-			self.items.extend(items);
-			self.sorter.sort(&mut self.items, &self.sizes);
-		}
-
 		if keyword.is_empty() {
+			let (hidden, items) = if self.show_hidden {
+				(vec![], mem::take(&mut self.hidden))
+			} else {
+				mem::take(&mut self.hidden).into_iter().partition(|f| f.is_hidden())
+			};
+
+			self.hidden = hidden;
+			if !items.is_empty() {
+				self.items.extend(items);
+				self.sorter.sort(&mut self.items, &self.sizes);
+			}
+
 			self.filter = None;
 			return true;
-		} else {
-			self.filter = Some(keyword.to_owned());
 		}
 
-		let keyword = OsStr::new(keyword).to_ascii_lowercase();
-		let keyword = keyword.as_encoded_bytes();
-		let (items, hidden): (Vec<_>, Vec<_>) = mem::take(&mut self.items).into_iter().partition(|f| {
-			f.url.file_name().is_some_and(|s| {
-				s.to_ascii_lowercase().as_encoded_bytes().windows(keyword.len()).any(|w| w == keyword)
+		let keyword = keyword.to_ascii_lowercase();
+		let it = mem::take(&mut self.items).into_iter().chain(mem::take(&mut self.hidden));
+		(self.items, self.hidden) = if self.show_hidden {
+			it.partition(|f| {
+				f.url
+					.file_name()
+					.is_some_and(|s| s.to_string_lossy().to_ascii_lowercase().contains(&keyword))
 			})
-		});
+		} else {
+			it.partition(|f| {
+				!f.is_hidden()
+					&& f
+						.url
+						.file_name()
+						.is_some_and(|s| s.to_string_lossy().to_ascii_lowercase().contains(&keyword))
+			})
+		};
 
-		self.hidden.extend(hidden);
-		self.items = items;
+		self.filter = Some(keyword);
+		self.sorter.sort(&mut self.items, &self.sizes);
 		true
 	}
 
