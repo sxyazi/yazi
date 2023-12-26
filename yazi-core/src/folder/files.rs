@@ -291,9 +291,6 @@ impl Files {
 			return;
 		}
 
-		if !todo.is_empty() {
-			go!(self.hidden);
-			b |= !removed.is_empty();
 		if !hidden.is_empty() {
 			self.hidden.extend(hidden.into_values());
 		}
@@ -301,7 +298,6 @@ impl Files {
 			self.revision += 1;
 			self.items.extend(items.into_values());
 		}
-		b
 	}
 
 	pub fn catchup_revision(&mut self) -> bool {
