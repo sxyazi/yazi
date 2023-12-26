@@ -4,8 +4,8 @@ use anyhow::bail;
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
-use yazi_scheduler::external;
-use yazi_shared::{emit, event::Exec, fs::FilesOp};
+use yazi_plugin::external;
+use yazi_shared::{event::Exec, fs::FilesOp};
 
 use crate::{input::Input, manager::Manager, tab::Tab};
 
@@ -66,7 +66,7 @@ impl Tab {
 					Tab::_cd(&cwd);
 					first = false;
 				}
-				emit!(Files(FilesOp::Part(cwd.clone(), ticket, chunk)));
+				FilesOp::Part(cwd.clone(), chunk, ticket).emit();
 			}
 			Ok(())
 		}));
@@ -78,8 +78,6 @@ impl Tab {
 			handle.abort();
 		}
 		if self.current.cwd.is_search() {
-			self.preview.reset_image();
-
 			let rep = self.history_new(&self.current.cwd.to_regular());
 			drop(mem::replace(&mut self.current, rep));
 			Manager::_refresh();

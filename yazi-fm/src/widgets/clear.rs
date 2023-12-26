@@ -2,8 +2,8 @@ use std::sync::atomic::Ordering;
 
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 use yazi_adaptor::ADAPTOR;
-use yazi_config::MANAGER;
-use yazi_core::preview::COLLISION;
+use yazi_config::LAYOUT;
+use yazi_shared::COLLISION;
 
 pub(crate) struct Clear;
 
@@ -28,11 +28,11 @@ impl Widget for Clear {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		ratatui::widgets::Clear.render(area, buf);
 
-		let Some(r) = overlap(&area, &MANAGER.layout.image_rect()) else {
+		let Some(r) = overlap(&area, &LAYOUT.load().preview) else {
 			return;
 		};
 
-		ADAPTOR.image_hide(r).ok();
+		ADAPTOR.image_erase(r).ok();
 		COLLISION.store(true, Ordering::Relaxed);
 		for x in r.left()..r.right() {
 			for y in r.top()..r.bottom() {

@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use serde::{Deserialize, Deserializer};
+use yazi_shared::MIME_DIR;
 
 use super::{Color, Style, StyleShadow};
 use crate::Pattern;
@@ -12,14 +13,10 @@ pub struct Filetype {
 }
 
 impl Filetype {
-	pub fn matches(&self, path: &Path, mime: Option<impl AsRef<str>>, is_dir: bool) -> bool {
-		if self.name.as_ref().is_some_and(|e| e.match_path(path, Some(is_dir))) {
-			return true;
-		}
-		if let Some(mime) = mime {
-			return self.mime.as_ref().is_some_and(|m| m.matches(mime));
-		}
-		false
+	pub fn matches(&self, path: &Path, mime: Option<&str>) -> bool {
+		let is_dir = mime == Some(MIME_DIR);
+		self.name.as_ref().is_some_and(|n| n.match_path(path, is_dir))
+			|| self.mime.as_ref().zip(mime).map_or(false, |(m, s)| m.matches(s))
 	}
 }
 

@@ -3,10 +3,10 @@ use std::ops::Range;
 use ansi_to_tui::IntoText;
 use ratatui::{buffer::Buffer, layout::Rect, text::{Line, Text}, widgets::{Block, BorderType, Borders, Paragraph, Widget}};
 use yazi_config::THEME;
-use yazi_core::{input::InputMode, Ctx};
+use yazi_core::input::InputMode;
 use yazi_shared::term::Term;
 
-use crate::widgets;
+use crate::{Ctx, widgets};
 
 pub(crate) struct Input<'a> {
 	cx: &'a Ctx,

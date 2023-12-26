@@ -2,9 +2,8 @@ use std::path::MAIN_SEPARATOR;
 
 use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, Borders, List, ListItem, Widget}};
 use yazi_config::{popup::{Offset, Position}, THEME};
-use yazi_core::Ctx;
 
-use crate::widgets;
+use crate::{widgets, Ctx};
 
 pub(crate) struct Completion<'a> {
 	cx: &'a Ctx,

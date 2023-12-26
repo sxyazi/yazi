@@ -1,12 +1,13 @@
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-use super::{ManagerLayout, SortBy};
+use super::{ManagerRatio, SortBy};
 use crate::{validation::check_validation, MERGED_YAZI};
 
 #[derive(Debug, Deserialize, Serialize, Validate)]
 pub struct Manager {
-	pub layout: ManagerLayout,
+	// FIXME: rename this to "ratio"
+	pub layout: ManagerRatio,
 
 	// Sorting
 	pub sort_by:        SortBy,

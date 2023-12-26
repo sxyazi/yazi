@@ -1,13 +1,12 @@
-use std::ffi::OsString;
+use std::{cell::RefCell, ffi::OsString};
 
-use parking_lot::Mutex;
 use yazi_shared::RoCell;
 
 pub static CLIPBOARD: RoCell<Clipboard> = RoCell::new();
 
 #[derive(Default)]
 pub struct Clipboard {
-	content: Mutex<OsString>,
+	content: RefCell<OsString>,
 }
 
 impl Clipboard {
@@ -19,7 +18,7 @@ impl Clipboard {
 		use yazi_shared::in_ssh_connection;
 
 		if in_ssh_connection() {
-			return self.content.lock().clone();
+			return self.content.borrow().clone();
 		}
 
 		let all = [
@@ -37,7 +36,7 @@ impl Clipboard {
 				return OsString::from_vec(output.stdout);
 			}
 		}
-		self.content.lock().clone()
+		self.content.borrow().clone()
 	}
 
 	#[cfg(windows)]
@@ -49,7 +48,7 @@ impl Clipboard {
 			return s.into();
 		}
 
-		self.content.lock().clone()
+		self.content.borrow().clone()
 	}
 
 	#[cfg(unix)]
@@ -60,7 +59,7 @@ impl Clipboard {
 		use tokio::{io::AsyncWriteExt, process::Command};
 		use yazi_shared::in_ssh_connection;
 
-		*self.content.lock() = s.as_ref().to_owned();
+		*self.content.borrow_mut() = s.as_ref().to_owned();
 		if in_ssh_connection() {
 			execute!(stdout(), osc52::SetClipboard::new(s.as_ref())).ok();
 		}
@@ -102,7 +101,7 @@ impl Clipboard {
 		use clipboard_win::{formats, set_clipboard};
 
 		let s = s.as_ref().to_owned();
-		*self.content.lock() = s.clone();
+		*self.content.borrow_mut() = s.clone();
 
 		tokio::task::spawn_blocking(move || set_clipboard(formats::Unicode, s.to_string_lossy()))
 			.await

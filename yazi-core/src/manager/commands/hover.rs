@@ -11,6 +11,9 @@ pub struct Opt {
 impl From<&Exec> for Opt {
 	fn from(e: &Exec) -> Self { Self { url: e.args.first().map(Url::from) } }
 }
+impl From<Option<Url>> for Opt {
+	fn from(url: Option<Url>) -> Self { Self { url } }
+}
 
 impl Manager {
 	#[inline]
@@ -27,7 +30,7 @@ impl Manager {
 		let mut b = self.current_mut().repos(opt.url);
 
 		// Re-peek
-		b |= self.peek(0);
+		b |= self.peek(false);
 
 		// Refresh watcher
 		let mut to_watch = BTreeSet::new();

@@ -2,10 +2,10 @@ use std::{borrow::Cow, collections::BTreeMap};
 
 use anyhow::Result;
 use tokio::task::JoinHandle;
-use yazi_shared::{event::PreviewLock, fs::File, fs::Url};
+use yazi_shared::fs::{File, Url};
 
-use super::{Backstack, Config, Finder, Folder, Mode};
-use crate::preview::Preview;
+use super::{Backstack, Config, Finder, Mode, Preview};
+use crate::folder::Folder;
 
 pub struct Tab {
 	pub mode:    Mode,
@@ -47,21 +47,6 @@ impl From<&Url> for Tab {
 }
 
 impl Tab {
-	pub fn update_preview(&mut self, lock: PreviewLock) -> bool {
-		let Some(hovered) = self.current.hovered().map(|h| &h.url) else {
-			return self.preview.reset();
-		};
-
-		if lock.url != *hovered {
-			return false;
-		}
-
-		self.preview.lock = Some(lock);
-		true
-	}
-}
-
-impl Tab {
 	// --- Mode
 	#[inline]
 	pub fn in_selecting(&self) -> bool { self.mode.is_visual() || self.current.files.has_selected() }
@@ -91,9 +76,9 @@ impl Tab {
 		let apply = |f: &mut Folder| {
 			let hovered = f.hovered().map(|h| h.url());
 
-			let mut b = f.files.set_show_hidden(self.conf.show_hidden);
-			b |= f.files.set_sorter(self.conf.sorter());
-			b | f.repos(hovered)
+			f.files.set_show_hidden(self.conf.show_hidden);
+			f.files.set_sorter(self.conf.sorter());
+			f.files.catchup_revision() | f.repos(hovered)
 		};
 
 		let mut b = false;

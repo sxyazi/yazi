@@ -3,14 +3,8 @@ use yazi_shared::event::Exec;
 
 use crate::{help::Help, input::Input};
 
-pub struct Opt;
-
-impl From<&Exec> for Opt {
-	fn from(_: &Exec) -> Self { Self }
-}
-
 impl Help {
-	pub fn filter(&mut self, _: impl Into<Opt>) -> bool {
+	pub fn filter(&mut self, _: &Exec) -> bool {
 		let mut input = Input::default();
 		input.position = Position::new(Origin::BottomLeft, Offset::line());
 

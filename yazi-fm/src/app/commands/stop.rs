@@ -1,6 +1,5 @@
 use anyhow::Result;
 use tokio::sync::oneshot;
-use yazi_core::manager::Manager;
 use yazi_shared::{emit, event::Exec, term::Term};
 
 use crate::app::App;
@@ -31,8 +30,9 @@ impl App {
 		} else {
 			self.term = Some(Term::start().unwrap());
 			self.signals.stop_term(false);
+			self.cx.manager.hover(None);
+			self.cx.manager.peek(true);
 			emit!(Render);
-			Manager::_hover(None);
 		}
 		if let Some(tx) = opt.tx {
 			tx.send(()).ok();

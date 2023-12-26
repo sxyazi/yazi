@@ -125,6 +125,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4668cab20f66d8d020e1fbc0ebe47217433c1b6c8f2040faf858554e394ace6"
 
 [[package]]
+name = "arc-swap"
+version = "1.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bddcadddf5e9015d310179a59bb28c4d4b9920ad0f11e8e14dbadf654890c9a6"
+
+[[package]]
 name = "async-channel"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -912,6 +918,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "imagesize"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "029d73f573d8e8d63e6d5020011d3255b28c3ba85d6cf870a07184ed23de9284"
+
+[[package]]
 name = "indexmap"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1158,7 +1170,9 @@ checksum = "7c81f8ac20188feb5461a73eabb22a34dd09d6d58513535eb587e46bff6ba250"
 dependencies = [
  "bstr",
  "erased-serde",
+ "futures-util",
  "mlua-sys",
+ "mlua_derive",
  "num-traits",
  "once_cell",
  "rustc-hash",
@@ -1177,6 +1191,21 @@ dependencies = [
  "lua-src",
  "luajit-src",
  "pkg-config",
+]
+
+[[package]]
+name = "mlua_derive"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f359220f24e6452dd82a3f50d7242d4aab822b5594798048e953d7a9e0314c6"
+dependencies = [
+ "itertools",
+ "once_cell",
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "regex",
+ "syn 2.0.40",
 ]
 
 [[package]]
@@ -1982,6 +2011,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio-util"
+version = "0.7.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5419f34732d9eb6ee4c3578b7989078579b7f039cbbb9ca2c4da015749371e15"
+dependencies = [
+ "bytes",
+ "futures-core",
+ "futures-sink",
+ "pin-project-lite",
+ "tokio",
+]
+
+[[package]]
 name = "toml"
 version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2572,9 +2614,11 @@ name = "yazi-adaptor"
 version = "0.1.5"
 dependencies = [
  "anyhow",
+ "arc-swap",
  "base64",
  "color_quant",
  "image",
+ "imagesize",
  "ratatui",
  "tokio",
  "tracing",
@@ -2587,6 +2631,7 @@ name = "yazi-config"
 version = "0.1.5"
 dependencies = [
  "anyhow",
+ "arc-swap",
  "clap",
  "clap_complete",
  "clap_complete_fig",
@@ -2626,11 +2671,12 @@ dependencies = [
  "syntect",
  "tokio",
  "tokio-stream",
+ "tokio-util",
  "tracing",
  "unicode-width",
  "yazi-adaptor",
  "yazi-config",
- "yazi-prebuild",
+ "yazi-plugin",
  "yazi-scheduler",
  "yazi-shared",
 ]
@@ -2646,6 +2692,7 @@ dependencies = [
  "fdlimit",
  "futures",
  "libc",
+ "mlua",
  "ratatui",
  "signal-hook-tokio",
  "tokio",
@@ -2657,6 +2704,7 @@ dependencies = [
  "yazi-config",
  "yazi-core",
  "yazi-plugin",
+ "yazi-scheduler",
  "yazi-shared",
 ]
 
@@ -2666,12 +2714,23 @@ version = "0.1.5"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
+ "crossterm",
+ "futures",
+ "libc",
+ "md-5",
  "mlua",
+ "parking_lot",
  "ratatui",
+ "serde",
+ "serde_json",
+ "syntect",
+ "tokio",
+ "tokio-util",
  "tracing",
  "unicode-width",
+ "yazi-adaptor",
  "yazi-config",
- "yazi-core",
+ "yazi-prebuild",
  "yazi-shared",
 ]
 
@@ -2690,16 +2749,15 @@ dependencies = [
  "base64",
  "crossterm",
  "futures",
- "libc",
  "parking_lot",
  "regex",
- "serde",
- "serde_json",
  "tokio",
+ "tokio-stream",
  "tracing",
  "trash",
  "yazi-adaptor",
  "yazi-config",
+ "yazi-plugin",
  "yazi-shared",
 ]
 
@@ -2716,6 +2774,7 @@ dependencies = [
  "percent-encoding",
  "ratatui",
  "regex",
+ "serde",
  "tokio",
 ]
 

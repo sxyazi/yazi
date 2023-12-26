@@ -50,7 +50,7 @@ impl Signals {
 	#[cfg(unix)]
 	fn spawn_system_task(&self) -> Result<JoinHandle<()>> {
 		use libc::{SIGCONT, SIGHUP, SIGINT, SIGQUIT, SIGTERM};
-		use yazi_core::Ctx;
+		use yazi_scheduler::Scheduler;
 
 		let tx = self.tx.clone();
 		let mut signals = signal_hook_tokio::Signals::new([
@@ -68,7 +68,7 @@ impl Signals {
 							break;
 						}
 					}
-					SIGCONT => Ctx::resume(),
+					SIGCONT => Scheduler::app_resume(),
 					_ => {}
 				}
 			}

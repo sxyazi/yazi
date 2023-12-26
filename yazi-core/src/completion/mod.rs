@@ -1,4 +1,4 @@
 mod commands;
 mod completion;
 
-pub(super) use completion::*;
+pub use completion::*;

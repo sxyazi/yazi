@@ -1,64 +1,48 @@
 use anyhow::Result;
-use mlua::{Lua, Table};
-use yazi_config::PLUGINS;
+use mlua::Lua;
+use yazi_config::BOOT;
 use yazi_shared::RoCell;
 
-use crate::{bindings, components, layout, utils};
-
-pub(crate) static LUA: RoCell<Lua> = RoCell::new();
-pub(crate) static GLOBALS: RoCell<Table> = RoCell::new();
+pub static LUA: RoCell<Lua> = RoCell::new();
 
 pub fn init() {
-	fn stage_1() -> Result<()> {
-		let lua = Lua::new();
+	fn stage_1(lua: &Lua) -> Result<()> {
+		crate::Loader::init();
+		crate::Config::new(lua).install_boot()?.install_manager()?.install_theme()?;
+		crate::utils::install(lua)?;
 
 		// Base
 		lua.load(include_str!("../preset/inspect/inspect.lua")).exec()?;
 		lua.load(include_str!("../preset/ui.lua")).exec()?;
-		lua.load(include_str!("../preset/utils.lua")).exec()?;
+		lua.load(include_str!("../preset/ya.lua")).exec()?;
+		crate::elements::init(lua)?;
 
 		// Components
+		lua.load(include_str!("../preset/components/current.lua")).exec()?;
 		lua.load(include_str!("../preset/components/folder.lua")).exec()?;
 		lua.load(include_str!("../preset/components/header.lua")).exec()?;
 		lua.load(include_str!("../preset/components/manager.lua")).exec()?;
+		lua.load(include_str!("../preset/components/parent.lua")).exec()?;
+		lua.load(include_str!("../preset/components/preview.lua")).exec()?;
 		lua.load(include_str!("../preset/components/status.lua")).exec()?;
-
-		// Initialize
-		LUA.init(lua);
-		GLOBALS.init(LUA.globals());
-		utils::init()?;
-		bindings::init()?;
-		components::init()?;
-
-		// Install
-		crate::Config.install()?;
-
-		components::Base::install()?;
-
-		layout::Bar::install()?;
-		layout::Border::install()?;
-		layout::Constraint::install()?;
-		layout::Gauge::install()?;
-		layout::Layout::install()?;
-		layout::Line::install()?;
-		layout::List::install()?;
-		layout::ListItem::install()?;
-		layout::Padding::install()?;
-		layout::Paragraph::install()?;
-		layout::Rect::install()?;
-		layout::Span::install()?;
-		layout::Style::install()?;
 
 		Ok(())
 	}
 
-	fn stage_2() {
-		PLUGINS.preload.iter().for_each(|p| {
-			let b = std::fs::read(p).unwrap_or_else(|_| panic!("failed to read plugin: {p:?}"));
-			LUA.load(&b).exec().unwrap_or_else(|_| panic!("failed to load plugin: {p:?}"));
-		});
+	fn stage_2(lua: &Lua) {
+		let setup = br#"
+ya.SYNC_ON = true
+package.path = BOOT.plugin_dir .. "/?.yazi/init.lua;" .. BOOT.plugin_dir .. "/?.lua;" .. package.path
+"#;
+		lua.load(setup as &[u8]).exec().unwrap();
+
+		if let Ok(b) = std::fs::read(BOOT.config_dir.join("init.lua")) {
+			lua.load(b).exec().unwrap();
+		}
 	}
 
-	stage_1().expect("failed to initialize Lua");
-	stage_2();
+	let lua = Lua::new();
+	stage_1(&lua).expect("failed to initialize Lua");
+	stage_2(&lua);
+	LUA.init(lua);
 }

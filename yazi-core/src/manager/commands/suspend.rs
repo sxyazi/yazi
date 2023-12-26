@@ -1,17 +1,13 @@
+use yazi_scheduler::Scheduler;
 use yazi_shared::event::Exec;
 
-use crate::{manager::Manager, Ctx};
-
-pub struct Opt;
-impl From<&Exec> for Opt {
-	fn from(_: &Exec) -> Self { Self }
-}
+use crate::manager::Manager;
 
 impl Manager {
-	pub fn suspend(&mut self, _: impl Into<Opt>) -> bool {
+	pub fn suspend(&mut self, _: &Exec) -> bool {
 		#[cfg(unix)]
 		tokio::spawn(async move {
-			Ctx::stop().await;
+			Scheduler::app_stop().await;
 			unsafe { libc::raise(libc::SIGTSTP) };
 		});
 		false

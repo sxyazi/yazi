@@ -35,7 +35,7 @@ impl Tab {
 	pub fn cd(&mut self, opt: impl Into<Opt>) -> bool {
 		let opt = opt.into() as Opt;
 		if opt.interactive {
-			return self.cd_interactive(opt);
+			return self.cd_interactive();
 		}
 
 		if self.current.cwd == opt.target {
@@ -68,11 +68,9 @@ impl Tab {
 		true
 	}
 
-	fn cd_interactive(&mut self, opt: impl Into<Opt>) -> bool {
-		let opt = opt.into() as Opt;
-
+	fn cd_interactive(&mut self) -> bool {
 		tokio::spawn(async move {
-			let rx = Input::_show(InputCfg::cd().with_value(opt.target.to_string_lossy()));
+			let rx = Input::_show(InputCfg::cd());
 
 			let rx = Debounce::new(UnboundedReceiverStream::new(rx), Duration::from_millis(50));
 			pin!(rx);

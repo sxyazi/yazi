@@ -4,7 +4,7 @@ use anyhow::Result;
 use regex::bytes::{Regex, RegexBuilder};
 use yazi_shared::fs::Url;
 
-use crate::files::Files;
+use crate::folder::Files;
 
 #[derive(PartialEq, Eq)]
 pub enum FinderCase {
@@ -14,9 +14,9 @@ pub enum FinderCase {
 }
 
 pub struct Finder {
-	query:   Regex,
-	matched: BTreeMap<Url, u8>,
-	version: u64,
+	query:    Regex,
+	matched:  BTreeMap<Url, u8>,
+	revision: u64,
 }
 
 impl Finder {
@@ -29,7 +29,7 @@ impl Finder {
 			FinderCase::Sensitive => Regex::new(s)?,
 			FinderCase::Insensitive => RegexBuilder::new(s).case_insensitive(true).build()?,
 		};
-		Ok(Self { query, matched: Default::default(), version: 0 })
+		Ok(Self { query, matched: Default::default(), revision: 0 })
 	}
 
 	pub(super) fn prev(&self, files: &Files, cursor: usize, include: bool) -> Option<isize> {
@@ -53,7 +53,7 @@ impl Finder {
 	}
 
 	pub(super) fn catchup(&mut self, files: &Files) -> bool {
-		if self.version == files.version {
+		if self.revision == files.revision {
 			return false;
 		}
 		self.matched.clear();
@@ -72,7 +72,7 @@ impl Finder {
 			i += 1;
 		}
 
-		self.version = files.version;
+		self.revision = files.revision;
 		true
 	}
 

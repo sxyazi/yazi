@@ -16,7 +16,7 @@ pub struct Running {
 }
 
 impl Running {
-	pub(super) fn add(&mut self, kind: TaskKind, name: String) -> usize {
+	pub fn add(&mut self, kind: TaskKind, name: String) -> usize {
 		self.incr += 1;
 		self.all.insert(self.incr, Task::new(self.incr, kind, name));
 		self.incr
@@ -41,7 +41,7 @@ impl Running {
 	}
 
 	#[inline]
-	pub(super) fn exists(&self, id: usize) -> bool { self.all.contains_key(&id) }
+	pub fn exists(&self, id: usize) -> bool { self.all.contains_key(&id) }
 
 	#[inline]
 	pub fn values(&self) -> Box<dyn Iterator<Item = &Task> + '_> {
@@ -55,11 +55,7 @@ impl Running {
 	#[inline]
 	pub fn is_empty(&self) -> bool { self.len() == 0 }
 
-	pub(super) fn try_remove(
-		&mut self,
-		id: usize,
-		stage: TaskStage,
-	) -> Option<BoxFuture<'static, ()>> {
+	pub fn try_remove(&mut self, id: usize, stage: TaskStage) -> Option<BoxFuture<'static, ()>> {
 		if let Some(task) = self.get_mut(id) {
 			if stage > task.stage {
 				task.stage = stage;

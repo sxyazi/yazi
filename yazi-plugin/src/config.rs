@@ -1,42 +1,33 @@
-use mlua::{LuaSerdeExt, SerializeOptions, Table};
-use yazi_config::{MANAGER, THEME};
+use mlua::{Lua, LuaSerdeExt, SerializeOptions};
+use yazi_config::{BOOT, MANAGER, PREVIEW, THEME};
 
-use crate::{layout::Rect, GLOBALS, LUA};
+const OPTIONS: SerializeOptions =
+	SerializeOptions::new().serialize_none_to_null(false).serialize_unit_to_null(false);
 
-#[derive(Clone, Copy)]
-pub(super) struct Config;
+pub struct Config<'a> {
+	lua: &'a Lua,
+}
 
-impl Config {
-	pub(super) fn install(self) -> mlua::Result<()> {
-		let options =
-			SerializeOptions::new().serialize_none_to_null(false).serialize_unit_to_null(false);
+impl<'a> Config<'a> {
+	pub fn new(lua: &'a Lua) -> Self { Self { lua } }
 
-		self.theme(options)?;
-		self.manager(options)?;
-		Ok(())
+	pub fn install_boot(self) -> mlua::Result<Self> {
+		self.lua.globals().set("BOOT", self.lua.to_value_with(&*BOOT, OPTIONS)?)?;
+		Ok(self)
 	}
 
-	fn theme(self, options: SerializeOptions) -> mlua::Result<()> {
-		GLOBALS.set("THEME", LUA.to_value_with(&*THEME, options)?)
+	pub fn install_manager(self) -> mlua::Result<Self> {
+		self.lua.globals().set("MANAGER", self.lua.to_value_with(&*MANAGER, OPTIONS)?)?;
+		Ok(self)
 	}
 
-	fn manager(self, options: SerializeOptions) -> mlua::Result<()> {
-		let manager = LUA.to_value_with(&*MANAGER, options)?;
-		{
-			let layout: Table = manager.as_table().unwrap().get("layout")?;
+	pub fn install_theme(self) -> mlua::Result<Self> {
+		self.lua.globals().set("THEME", self.lua.to_value_with(&*THEME, OPTIONS)?)?;
+		Ok(self)
+	}
 
-			layout.set(
-				"preview_rect",
-				LUA.create_function(|_, ()| Ok(Rect(MANAGER.layout.preview_rect())))?,
-			)?;
-			layout
-				.set("preview_height", LUA.create_function(|_, ()| Ok(MANAGER.layout.preview_height()))?)?;
-			layout
-				.set("folder_rect", LUA.create_function(|_, ()| Ok(Rect(MANAGER.layout.folder_rect())))?)?;
-			layout
-				.set("folder_height", LUA.create_function(|_, ()| Ok(MANAGER.layout.folder_height()))?)?;
-		}
-
-		GLOBALS.set("MANAGER", manager)
+	pub fn install_preview(self) -> mlua::Result<Self> {
+		self.lua.globals().set("PREVIEW", self.lua.to_value_with(&*PREVIEW, OPTIONS)?)?;
+		Ok(self)
 	}
 }

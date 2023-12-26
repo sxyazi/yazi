@@ -1,19 +1,12 @@
-use std::{env, path::{Path, PathBuf}, sync::atomic::{AtomicBool, Ordering}};
+use std::{env, path::Path, sync::{atomic::Ordering, Arc}};
 
 use anyhow::{anyhow, Result};
 use ratatui::prelude::Rect;
-use tokio::{fs, sync::mpsc::UnboundedSender};
 use tracing::warn;
-use yazi_config::PREVIEW;
-use yazi_shared::{env_exists, RoCell};
+use yazi_shared::{env_exists, term::Term};
 
 use super::{Iterm2, Kitty, KittyOld};
-use crate::{ueberzug::Ueberzug, Sixel, TMUX};
-
-static IMAGE_SHOWN: AtomicBool = AtomicBool::new(false);
-
-#[allow(clippy::type_complexity)]
-static UEBERZUG: RoCell<Option<UnboundedSender<Option<(PathBuf, Rect)>>>> = RoCell::new();
+use crate::{ueberzug::Ueberzug, Sixel, SHOWN, TMUX};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Adaptor {
@@ -164,44 +157,44 @@ impl ToString for Adaptor {
 }
 
 impl Adaptor {
-	pub(super) fn start(self) {
-		UEBERZUG.init(if self.needs_ueberzug() { Ueberzug::start(self).ok() } else { None });
-	}
+	pub(super) fn start(self) { Ueberzug::start(self); }
 
-	pub async fn image_show(self, mut path: &Path, rect: Rect) -> Result<()> {
-		let cache = PREVIEW.cache(path, 0);
-		if fs::symlink_metadata(&cache).await.is_ok() {
-			path = cache.as_path();
-		}
-
-		self.image_hide(rect).ok();
-		IMAGE_SHOWN.store(true, Ordering::Relaxed);
-
+	pub async fn image_show(self, path: &Path, rect: Rect) -> Result<(u32, u32)> {
 		match self {
 			Self::Kitty => Kitty::image_show(path, rect).await,
 			Self::KittyOld => KittyOld::image_show(path, rect).await,
 			Self::Iterm2 => Iterm2::image_show(path, rect).await,
 			Self::Sixel => Sixel::image_show(path, rect).await,
-			_ => Ok(if let Some(tx) = &*UEBERZUG {
-				tx.send(Some((path.to_path_buf(), rect)))?;
-			}),
+			_ => Ueberzug::image_show(path, rect).await,
 		}
 	}
 
-	pub fn image_hide(self, rect: Rect) -> Result<()> {
-		if !IMAGE_SHOWN.swap(false, Ordering::Relaxed) {
-			return Ok(());
-		}
+	pub fn image_hide(self) -> Result<()> {
+		if let Some(rect) = SHOWN.swap(None) { self.image_erase(*rect) } else { Ok(()) }
+	}
 
+	pub fn image_erase(self, rect: Rect) -> Result<()> {
 		match self {
-			Self::Kitty => Kitty::image_hide(rect),
-			Self::Iterm2 => Iterm2::image_hide(rect),
-			Self::KittyOld => KittyOld::image_hide(),
-			Self::Sixel => Sixel::image_hide(rect),
-			_ => Ok(if let Some(tx) = &*UEBERZUG {
-				tx.send(None)?;
-			}),
+			Self::Kitty => Kitty::image_erase(rect),
+			Self::Iterm2 => Iterm2::image_erase(rect),
+			Self::KittyOld => KittyOld::image_erase(),
+			Self::Sixel => Sixel::image_erase(rect),
+			_ => Ueberzug::image_erase(rect),
 		}
+	}
+
+	#[inline]
+	pub(super) fn shown_store(rect: Rect, size: (u32, u32)) {
+		SHOWN.store(Some(Arc::new(
+			Term::ratio()
+				.map(|(r1, r2)| Rect {
+					x:      rect.x,
+					y:      rect.y,
+					width:  (size.0 as f64 / r1).ceil() as u16,
+					height: (size.1 as f64 / r2).ceil() as u16,
+				})
+				.unwrap_or(rect),
+		)));
 	}
 
 	#[inline]

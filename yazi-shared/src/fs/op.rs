@@ -1,20 +1,21 @@
-use std::{collections::{BTreeMap, BTreeSet}, sync::atomic::{AtomicU64, Ordering}};
+use std::{collections::BTreeMap, sync::atomic::{AtomicU64, Ordering}};
 
 use super::File;
-use crate::{emit, fs::Url};
+use crate::{emit, event::Exec, fs::Url, Layer};
 
 pub static FILES_TICKET: AtomicU64 = AtomicU64::new(0);
 
 #[derive(Debug)]
 pub enum FilesOp {
 	Full(Url, Vec<File>),
-	Part(Url, u64, Vec<File>),
+	Part(Url, Vec<File>, u64),
 	Size(Url, BTreeMap<Url, u64>),
 	IOErr(Url),
 
-	Creating(Url, BTreeMap<Url, File>),
-	Deleting(Url, BTreeSet<Url>),
-	Replacing(Url, BTreeMap<Url, File>),
+	Creating(Url, Vec<File>),
+	Deleting(Url, Vec<Url>),
+	Updating(Url, BTreeMap<Url, File>),
+	Upserting(Url, BTreeMap<Url, File>),
 }
 
 impl FilesOp {
@@ -28,14 +29,62 @@ impl FilesOp {
 
 			Self::Creating(url, _) => url,
 			Self::Deleting(url, _) => url,
-			Self::Replacing(url, _) => url,
+			Self::Updating(url, _) => url,
+			Self::Upserting(url, _) => url,
 		}
 	}
 
 	#[inline]
+	pub fn emit(self) {
+		emit!(Call(Exec::call("update_files", vec![]).with_data(self).vec(), Layer::Manager));
+	}
+
 	pub fn prepare(url: &Url) -> u64 {
 		let ticket = FILES_TICKET.fetch_add(1, Ordering::Relaxed);
-		emit!(Files(Self::Part(url.clone(), ticket, Vec::new())));
+		Self::Part(url.clone(), Vec::new(), ticket).emit();
 		ticket
+	}
+
+	pub fn chroot(&self, new: &Url) -> Self {
+		let old = self.url();
+		macro_rules! new {
+			($url:expr) => {{ new.join($url.strip_prefix(old).unwrap()) }};
+		}
+		macro_rules! files {
+			($files:expr) => {{
+				$files
+					.iter()
+					.map(|file| {
+						let mut f = file.clone();
+						f.url = new!(f.url);
+						f
+					})
+					.collect()
+			}};
+		}
+		macro_rules! map {
+			($map:expr) => {{
+				$map
+					.iter()
+					.map(|(k, v)| {
+						let mut f = v.clone();
+						f.url = new!(f.url);
+						(new!(k), f)
+					})
+					.collect()
+			}};
+		}
+
+		let u = new.clone();
+		match self {
+			Self::Full(_, files) => Self::Full(u, files!(files)),
+			Self::Part(_, files, ticket) => Self::Part(u, files!(files), *ticket),
+			Self::Size(_, map) => Self::Size(u, map.iter().map(|(k, v)| (new!(k), *v)).collect()),
+			Self::IOErr(_) => Self::IOErr(u),
+			Self::Creating(_, files) => Self::Creating(u, files!(files)),
+			Self::Deleting(_, urls) => Self::Deleting(u, urls.iter().map(|u| new!(u)).collect()),
+			Self::Updating(_, map) => Self::Updating(u, map!(map)),
+			Self::Upserting(_, map) => Self::Upserting(u, map!(map)),
+		}
 	}
 }

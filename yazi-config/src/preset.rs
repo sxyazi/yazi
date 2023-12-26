@@ -2,7 +2,7 @@ use std::fs;
 
 use toml::Table;
 
-use crate::xdg::Xdg;
+use crate::BOOT;
 
 pub(crate) struct Preset;
 
@@ -29,7 +29,7 @@ impl Preset {
 	}
 
 	fn merge_str(user: &str, base: &str) -> String {
-		let path = Xdg::config_dir().unwrap().join(user);
+		let path = BOOT.config_dir.join(user);
 		let mut user = fs::read_to_string(path).unwrap_or_default().parse::<Table>().unwrap();
 
 		let base = base.parse::<Table>().unwrap();

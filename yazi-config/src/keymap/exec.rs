@@ -34,7 +34,7 @@ where
 		type Value = Vec<Exec>;
 
 		fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-			formatter.write_str("a exec string, e.g. `tab_switch 0`")
+			formatter.write_str("a `exec` string or array of strings within [keymap]")
 		}
 
 		fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
@@ -44,6 +44,9 @@ where
 			let mut execs = Vec::new();
 			while let Some(value) = &seq.next_element::<String>()? {
 				execs.push(parse(value).map_err(de::Error::custom)?);
+			}
+			if execs.is_empty() {
+				return Err(de::Error::custom("`exec` within [keymap] cannot be empty"));
 			}
 			Ok(execs)
 		}

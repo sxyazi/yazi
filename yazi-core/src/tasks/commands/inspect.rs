@@ -2,19 +2,13 @@ use std::io::{stdout, Write};
 
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use tokio::{io::{stdin, AsyncReadExt}, select, sync::mpsc, time};
-use yazi_scheduler::BLOCKER;
+use yazi_scheduler::{Scheduler, BLOCKER};
 use yazi_shared::{event::Exec, term::Term, Defer};
 
-use crate::{tasks::Tasks, Ctx};
-
-pub struct Opt;
-
-impl From<&Exec> for Opt {
-	fn from(_: &Exec) -> Self { Self }
-}
+use crate::tasks::Tasks;
 
 impl Tasks {
-	pub fn inspect(&self, _: impl Into<Opt>) -> bool {
+	pub fn inspect(&self, _: &Exec) -> bool {
 		let Some(id) = self.scheduler.running.read().get_id(self.cursor) else {
 			return false;
 		};
@@ -32,10 +26,10 @@ impl Tasks {
 				task.logs.clone()
 			};
 
-			Ctx::stop().await;
+			Scheduler::app_stop().await;
 			let _defer = Defer::new(|| {
 				disable_raw_mode().ok();
-				Ctx::resume();
+				Scheduler::app_resume();
 			});
 
 			Term::clear(&mut stdout()).ok();

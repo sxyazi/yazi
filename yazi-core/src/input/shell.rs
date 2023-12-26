@@ -1,8 +1,8 @@
 use anyhow::{bail, Result};
 use syntect::{easy::HighlightLines, util::as_24_bit_terminal_escaped};
+use yazi_plugin::external::Highlighter;
 
 use super::Input;
-use crate::Highlighter;
 
 impl Input {
 	pub fn value_pretty(&self) -> Result<String> {

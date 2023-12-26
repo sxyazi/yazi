@@ -64,10 +64,7 @@ fn compare_right(left: &[u8], right: &[u8], li: &mut usize, ri: &mut usize) -> O
 	}
 }
 
-pub fn natsort(left: &str, right: &str, insensitive: bool) -> Ordering {
-	let left = left.as_bytes();
-	let right = right.as_bytes();
-
+pub fn natsort(left: &[u8], right: &[u8], insensitive: bool) -> Ordering {
 	let mut li = 0;
 	let mut ri = 0;
 
@@ -132,7 +129,7 @@ mod tests {
 
 	fn cmp(left: &[&str]) {
 		let mut right = left.to_vec();
-		right.sort_by(|a, b| natsort(a, b, true));
+		right.sort_by(|a, b| natsort(a.as_bytes(), b.as_bytes(), true));
 		assert_eq!(left, right);
 	}
 
@@ -179,98 +176,4 @@ mod tests {
 		cmp(&fractions);
 		cmp(&words);
 	}
-
-	// #[test]
-	// fn test_bench() {
-	// 	use std::time::Instant;
-	//
-	// 	let files = vec![
-	// 		"pexels-asad-photo-maldives-1024967.jpg",
-	// 		"154586 (540p).mp4",
-	// 		"163333 (1080p).mp4",
-	// 		"166808 (540p).mp4",
-	// 		"178732 (1080p).mp4",
-	// 		"archive",
-	// 		"file.rs",
-	// 		"no copyright.pdf",
-	// 		"pexels-alex-fu-1302436.jpg",
-	// 		"pexels-alexander-grey-1191710.jpg",
-	// 		"pexels-benjamin-suter-2362002.jpg",
-	// 		"pexels-blaque-x-863963.jpg",
-	// 		"pexels-brakou-abdelghani-1723637.jpg",
-	// 		"pexels-chevanon-photography-1335971.jpg",
-	// 		"pexels-craig-adderley-1563356.jpg",
-	// 		"pexels-danne-516541.jpg",
-	// 		"pexels-eberhard-grossgasteiger-443446.jpg",
-	// 		"pexels-egil-sjøholt-1906658.jpg",
-	// 		"pexels-felix-mittermeier-2832041.jpg",
-	// 		"pexels-gabriel-peter-719396.jpg",
-	// 		"pexels-james-wheeler-1519088.jpg",
-	// 		"pexels-jonas-kakaroto-736230.jpg",
-	// 		"pexels-katie-burandt-1212693.jpg",
-	// 		"pexels-marta-branco-1173576.jpg",
-	// 		"pexels-matthew-montrone-1324803.jpg",
-	// 		"pexels-max-andrey-1366630.jpg",
-	// 		"pexels-nick-collins-1266741.jpg",
-	// 		"pexels-oliver-sjöström-1433052.jpg",
-	// 		"pexels-photomix-company-1002725.jpg",
-	// 		"pexels-pixabay-15239.jpg",
-	// 		"pexels-pixabay-33045.jpg",
-	// 		"pexels-pixabay-33101.jpg",
-	// 		"pexels-pixabay-33109.jpg",
-	// 		"pexels-pixabay-36717.jpg",
-	// 		"pexels-pixabay-36729.jpg",
-	// 		"pexels-pixabay-36762.jpg",
-	// 		"pexels-pixabay-45911.jpg",
-	// 		"pexels-pixabay-47334.jpg",
-	// 		"pexels-pixabay-50594.jpg",
-	// 		"pexels-pixabay-59990.jpg",
-	// 		"pexels-pixabay-60597.jpg",
-	// 		"pexels-pixabay-68507.jpg",
-	// 		"pexels-pixabay-158536.jpg",
-	// 		"pexels-pixabay-207088.jpg",
-	// 		"pexels-pixabay-327509.jpg",
-	// 		"pexels-pixabay-358457.jpg",
-	// 		"pexels-pixabay-372166.jpg",
-	// 		"pexels-pixabay-459203.jpg",
-	// 		"pexels-sevenstorm-juhaszimrus-891030.jpg",
-	// 		"pexels-steve-johnson-1266808.jpg",
-	// 		"pexels-suneo-103573.jpg",
-	// 		"pexels-tetyana-kovyrina-937980.jpg",
-	// 		"pexels-valeria-boltneva-1484657.jpg",
-	// 		"pexels-vlad-chețan-2604929.jpg",
-	// 		"pexels-wang-teck-heng-117139.jpg",
-	// 		"pexels-yuliya-strizhkina-1198802.jpg",
-	// 		"precache.rs",
-	// 		"scheduler.rs",
-	// 		"Symbols-0.73.0-x64.zip",
-	// 		"tasks.rs",
-	// 	];
-	//
-	// 	{
-	// 		let mut large1 = files.repeat(2000);
-	// 		let mut large2 = files.repeat(2000);
-	//
-	// 		let now = Instant::now();
-	// 		large1.sort_unstable_by(|a, b| natord::compare_ignore_case(a, b));
-	// 		println!("natord crate (insensitive) - Elapsed: {:.2?}", now.elapsed());
-	//
-	// 		let now = Instant::now();
-	// 		large2.sort_unstable_by(|a, b| natsort(a, b, true));
-	// 		println!("Yazi (insensitive) - Elapsed: {:.2?}", now.elapsed());
-	// 	}
-	// 	println!();
-	// 	{
-	// 		let mut large1 = files.repeat(2000);
-	// 		let mut large2 = files.repeat(2000);
-	//
-	// 		let now = Instant::now();
-	// 		large1.sort_unstable_by(|a, b| natord::compare(a, b));
-	// 		println!("natord crate (sensitive) - Elapsed: {:.2?}", now.elapsed());
-	//
-	// 		let now = Instant::now();
-	// 		large2.sort_unstable_by(|a, b| natsort(a, b, false));
-	// 		println!("Yazi (sensitive) - Elapsed: {:.2?}", now.elapsed());
-	// 	}
-	// }
 }

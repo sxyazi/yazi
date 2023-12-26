@@ -1,8 +1,3 @@
-pub fn init() -> mlua::Result<()> {
-	super::active::Active::init()?;
-	super::files::Files::init()?;
-	super::tabs::Tabs::init()?;
-	super::tasks::Tasks::init()?;
-
-	Ok(())
+pub trait Cast<T> {
+	fn cast(lua: &mlua::Lua, data: T) -> mlua::Result<mlua::AnyUserData>;
 }

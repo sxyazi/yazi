@@ -10,12 +10,12 @@ pub struct Tabs {
 
 impl Tabs {
 	pub fn make() -> Self {
-		let mut tabs = Self { idx: usize::MAX, items: vec![Tab::from(Url::from(&BOOT.cwd))] };
+		let mut tabs = Self { idx: 0, items: vec![Tab::from(Url::from(&BOOT.cwd))] };
 		if let Some(file) = &BOOT.file {
 			tabs.items[0].reveal(Url::from(BOOT.cwd.join(file)));
 		}
 
-		tabs.set_idx(0);
+		Manager::_refresh();
 		tabs
 	}
 
@@ -30,9 +30,18 @@ impl Tabs {
 
 	#[inline]
 	pub(super) fn set_idx(&mut self, idx: usize) {
+		if self.idx == idx {
+			return;
+		}
+
+		// Reset the preview of the previous active tab
+		if let Some(active) = self.items.get_mut(self.idx) {
+			active.preview.reset_image();
+		}
+
 		self.idx = idx;
-		self.active_mut().preview.reset_image();
 		Manager::_refresh();
+		Manager::_peek(true);
 	}
 }
 

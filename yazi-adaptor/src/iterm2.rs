@@ -7,20 +7,25 @@ use ratatui::prelude::Rect;
 use yazi_shared::term::Term;
 
 use super::image::Image;
-use crate::{CLOSE, START};
+use crate::{adaptor::Adaptor, CLOSE, START};
 
 pub(super) struct Iterm2;
 
 impl Iterm2 {
-	pub(super) async fn image_show(path: &Path, rect: Rect) -> Result<()> {
-		let img = Image::downscale(path, (rect.width, rect.height)).await?;
+	pub(super) async fn image_show(path: &Path, rect: Rect) -> Result<(u32, u32)> {
+		let img = Image::downscale(path, rect).await?;
+		let size = (img.width(), img.height());
 		let b = Self::encode(img).await?;
 
-		Self::image_hide(rect)?;
-		Term::move_lock(stdout().lock(), (rect.x, rect.y), |stdout| Ok(stdout.write_all(&b)?))
+		Adaptor::Iterm2.image_hide()?;
+		Adaptor::shown_store(rect, size);
+		Term::move_lock(stdout().lock(), (rect.x, rect.y), |stdout| {
+			stdout.write_all(&b)?;
+			Ok(size)
+		})
 	}
 
-	pub(super) fn image_hide(rect: Rect) -> Result<()> {
+	pub(super) fn image_erase(rect: Rect) -> Result<()> {
 		let stdout = BufWriter::new(stdout().lock());
 		let s = " ".repeat(rect.width as usize);
 		Term::move_lock(stdout, (0, 0), |stdout| {

@@ -2,15 +2,16 @@ use std::{ffi::OsString, mem};
 
 use anyhow::Result;
 use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::{mpsc, oneshot}};
+use yazi_plugin::external::{self, ShellOpt};
 
-use crate::{external::{self, ShellOpt}, Scheduler, TaskOp, BLOCKER};
+use crate::{Scheduler, TaskOp, BLOCKER};
 
-pub(crate) struct Process {
+pub struct Process {
 	sch: mpsc::UnboundedSender<TaskOp>,
 }
 
 #[derive(Debug)]
-pub(crate) struct ProcessOpOpen {
+pub struct ProcessOpOpen {
 	pub id:     usize,
 	pub cmd:    OsString,
 	pub args:   Vec<OsString>,
@@ -31,9 +32,9 @@ impl From<&mut ProcessOpOpen> for ShellOpt {
 }
 
 impl Process {
-	pub(crate) fn new(sch: mpsc::UnboundedSender<TaskOp>) -> Self { Self { sch } }
+	pub fn new(sch: mpsc::UnboundedSender<TaskOp>) -> Self { Self { sch } }
 
-	pub(crate) async fn open(&self, mut task: ProcessOpOpen) -> Result<()> {
+	pub async fn open(&self, mut task: ProcessOpOpen) -> Result<()> {
 		let opt = ShellOpt::from(&mut task);
 		if task.block {
 			let _guard = BLOCKER.acquire().await.unwrap();

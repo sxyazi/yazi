@@ -4,7 +4,7 @@ mod key;
 mod keymap;
 
 pub use control::*;
-#[allow(unused_imports)]
 pub use exec::*;
+#[allow(unused_imports)]
 pub use key::*;
 pub use keymap::*;

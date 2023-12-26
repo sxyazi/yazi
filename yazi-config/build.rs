@@ -1,5 +1,5 @@
-#[path = "src/boot/cli.rs"]
-mod cli;
+#[path = "src/boot/args.rs"]
+mod args;
 
 use std::{env, error::Error, fs};
 
@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 		return Ok(());
 	}
 
-	let cmd = &mut cli::Args::command();
+	let cmd = &mut args::Args::command();
 	let bin = "yazi";
 	let out = "completions";
 

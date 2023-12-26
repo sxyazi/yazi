@@ -23,14 +23,14 @@ impl Pattern {
 	}
 
 	#[inline]
-	pub fn match_path(&self, path: impl AsRef<Path>, is_folder: Option<bool>) -> bool {
+	pub fn match_path(&self, path: impl AsRef<Path>, is_folder: bool) -> bool {
 		let path = path.as_ref();
 		let s = if self.full_path {
 			path.to_str()
 		} else {
 			path.file_name().and_then(|n| n.to_str()).or_else(|| path.to_str())
 		};
-		is_folder.map_or(true, |f| f == self.is_folder) && s.is_some_and(|s| self.matches(s))
+		is_folder == self.is_folder && s.is_some_and(|s| self.matches(s))
 	}
 }
 

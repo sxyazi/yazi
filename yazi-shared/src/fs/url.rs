@@ -146,7 +146,7 @@ impl Url {
 
 	#[inline]
 	pub fn is_hidden(&self) -> bool {
-		self.file_name().map_or(false, |s| s.to_string_lossy().starts_with('.'))
+		self.file_name().map_or(false, |s| s.as_encoded_bytes().starts_with(&[b'.']))
 	}
 }
 

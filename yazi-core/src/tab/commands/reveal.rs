@@ -1,4 +1,4 @@
-use yazi_shared::{emit, event::Exec, fs::{File, FilesOp}, fs::{expand_path, Url}, Layer};
+use yazi_shared::{emit, event::Exec, fs::{expand_path, File, FilesOp, Url}, Layer};
 
 use crate::{manager::Manager, tab::Tab};
 
@@ -34,10 +34,7 @@ impl Tab {
 		};
 
 		let b = self.cd(parent.clone());
-		emit!(Files(FilesOp::Creating(
-			parent.clone(),
-			File::from_dummy(opt.target.clone()).into_map()
-		)));
+		FilesOp::Creating(parent, vec![File::from_dummy(opt.target.clone())]).emit();
 		Manager::_hover(Some(opt.target));
 		b
 	}

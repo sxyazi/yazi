@@ -2,12 +2,12 @@ use std::sync::atomic::Ordering;
 
 use anyhow::{Ok, Result};
 use crossterm::event::KeyEvent;
-use ratatui::{backend::Backend, prelude::Rect};
-use yazi_config::{keymap::Key, BOOT};
-use yazi_core::{input::InputMode, preview::COLLISION, Ctx};
-use yazi_shared::{emit, event::{Event, Exec}, fs::FilesOp, term::Term, Layer};
+use ratatui::backend::Backend;
+use yazi_config::{keymap::Key, ARGS};
+use yazi_core::input::InputMode;
+use yazi_shared::{emit, event::{Event, Exec}, term::Term, Layer, COLLISION};
 
-use crate::{Executor, Logs, Panic, Root, Signals};
+use crate::{lives::Lives, Ctx, Executor, Logs, Panic, Root, Signals};
 
 pub(crate) struct App {
 	pub(crate) cx:      Ctx,
@@ -19,11 +19,14 @@ impl App {
 	pub(crate) async fn run() -> Result<()> {
 		Panic::install();
 		let _log = Logs::init()?;
-		let term = Term::start()?;
 
+		let term = Term::start()?;
 		let signals = Signals::start()?;
+
+		Lives::register()?;
 		let mut app = Self { cx: Ctx::make(), term: Some(term), signals };
 
+		app.dispatch_render()?;
 		while let Some(event) = app.signals.recv().await {
 			match event {
 				Event::Quit(no_cwd_file) => {
@@ -33,7 +36,7 @@ impl App {
 				Event::Key(key) => app.dispatch_key(key),
 				Event::Paste(str) => app.dispatch_paste(str),
 				Event::Render(_) => app.dispatch_render()?,
-				Event::Resize(cols, rows) => app.dispatch_resize(cols, rows),
+				Event::Resize(cols, rows) => app.dispatch_resize(cols, rows)?,
 				Event::Call(exec, layer) => app.dispatch_call(exec, layer),
 				event => app.dispatch_module(event),
 			}
@@ -42,7 +45,7 @@ impl App {
 	}
 
 	fn dispatch_quit(&mut self, no_cwd_file: bool) {
-		if let Some(p) = BOOT.cwd_file.as_ref().filter(|_| !no_cwd_file) {
+		if let Some(p) = ARGS.cwd_file.as_ref().filter(|_| !no_cwd_file) {
 			let cwd = self.cx.manager.cwd().as_os_str();
 			std::fs::write(p, cwd.as_encoded_bytes()).ok();
 		}
@@ -72,7 +75,7 @@ impl App {
 
 		let collision = COLLISION.swap(false, Ordering::Relaxed);
 		let frame = term.draw(|f| {
-			yazi_plugin::scope(&self.cx, |_| {
+			Lives::scope(&self.cx, |_| {
 				f.render_widget(Root::new(&self.cx), f.size());
 			});
 
@@ -83,8 +86,7 @@ impl App {
 		if !COLLISION.load(Ordering::Relaxed) {
 			if collision {
 				// Reload preview if collision is resolved
-				self.cx.manager.active_mut().preview.reset_image();
-				self.cx.manager.peek(0);
+				self.cx.manager.peek(true);
 			}
 			return Ok(());
 		}
@@ -108,15 +110,13 @@ impl App {
 		Ok(())
 	}
 
-	fn dispatch_resize(&mut self, cols: u16, rows: u16) {
-		if let Some(term) = &mut self.term {
-			term.resize(Rect::new(0, 0, cols, rows)).ok();
-		}
+	fn dispatch_resize(&mut self, _: u16, _: u16) -> Result<()> {
+		self.cx.manager.active_mut().preview.reset();
+		self.dispatch_render()?;
 
 		self.cx.manager.current_mut().set_page(true);
-		self.cx.manager.active_mut().preview.reset();
-		self.cx.manager.peek(0);
-		emit!(Render);
+		self.cx.manager.peek(false);
+		Ok(())
 	}
 
 	#[inline]
@@ -130,33 +130,9 @@ impl App {
 		let manager = &mut self.cx.manager;
 		let tasks = &mut self.cx.tasks;
 		match event {
-			Event::Files(op) => {
-				let calc = !matches!(op, FilesOp::Size(..) | FilesOp::IOErr(_));
-				let b = match op {
-					FilesOp::IOErr(..) => manager.update_ioerr(op),
-					_ => manager.update_read(op),
-				};
-				if b {
-					emit!(Render);
-				}
-				if calc {
-					tasks.precache_size(&manager.current().files);
-				}
-			}
 			Event::Pages(page) => {
 				let targets = self.cx.manager.current().paginate(page);
-				tasks.precache_mime(targets, &self.cx.manager.mimetype);
-			}
-			Event::Mimetype(mimes) => {
-				if manager.update_mimetype(mimes, tasks) {
-					emit!(Render);
-					manager.peek(0);
-				}
-			}
-			Event::Preview(lock) => {
-				if manager.active_mut().update_preview(lock) {
-					emit!(Render);
-				}
+				tasks.preload_paged(targets, &self.cx.manager.mimetype);
 			}
 			_ => unreachable!(),
 		}
