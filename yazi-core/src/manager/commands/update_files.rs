@@ -25,7 +25,7 @@ impl Manager {
 		} else if matches!(self.hovered(), Some(h) if h.url == url) {
 			self.active_mut().history.entry(url.clone()).or_insert_with(|| Folder::from(&url));
 			self.active_mut().apply_files_attrs(true);
-			self.active_mut().history.get_mut(&url).unwrap().update(op)
+			self.active_mut().history.get_mut(&url).unwrap().update(op) | self.peek(true)
 		} else {
 			self.active_mut().history.entry(url.clone()).or_insert_with(|| Folder::from(&url)).update(op);
 			false
@@ -59,17 +59,24 @@ impl Manager {
 		let Ok(opt) = opt.try_into() else {
 			return false;
 		};
-
 		let calc = !matches!(opt.op, FilesOp::Size(..) | FilesOp::IOErr(_) | FilesOp::Deleting(..));
-		let b = match opt.op {
-			FilesOp::IOErr(..) => self.handle_ioerr(opt.op),
-			_ => self.handle_read(opt.op),
-		};
+
+		let mut ops = vec![opt.op];
+		for u in self.watcher.linked.read().from_dir(ops[0].url()) {
+			ops.push(ops[0].chroot(u));
+		}
+
+		let mut b = false;
+		for op in ops {
+			b |= match op {
+				FilesOp::IOErr(..) => self.handle_ioerr(op),
+				_ => self.handle_read(op),
+			};
+		}
 
 		if calc {
 			tasks.preload_sorted(&self.current().files);
 		}
-
 		b
 	}
 }

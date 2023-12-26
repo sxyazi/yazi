@@ -40,14 +40,6 @@ impl Manager {
 			return false;
 		}
 
-		let mime = if hovered.is_dir() {
-			MIME_DIR.to_owned()
-		} else if let Some(s) = self.mimetype.get(&hovered.url) {
-			s.to_owned()
-		} else {
-			return self.active_mut().preview.reset();
-		};
-
 		let hovered = hovered.clone();
 		if !self.active().preview.same_url(&hovered.url) {
 			self.active_mut().preview.skip = 0;
@@ -63,10 +55,19 @@ impl Manager {
 			}
 		}
 
-		if opt.force {
-			self.active_mut().preview.force(hovered, mime);
+		if hovered.is_dir() {
+			if self.active().history.contains_key(&hovered.url) {
+				self.active_mut().preview.go(hovered, MIME_DIR, opt.force);
+			} else {
+				self.active_mut().preview.go_folder(hovered, opt.force);
+			}
+			return false;
+		}
+
+		if let Some(s) = self.mimetype.get(&hovered.url).cloned() {
+			self.active_mut().preview.go(hovered, &s, opt.force);
 		} else {
-			self.active_mut().preview.go(hovered, mime);
+			return self.active_mut().preview.reset();
 		}
 		false
 	}

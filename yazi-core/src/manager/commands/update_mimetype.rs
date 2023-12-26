@@ -21,23 +21,38 @@ impl Manager {
 			return false;
 		};
 
-		let updates: HashMap<_, _> = opt
+		let linked = self.watcher.linked.read();
+		let updates = opt
 			.data
 			.into_table_string()
 			.into_iter()
 			.map(|(url, mime)| (Url::from(url), mime))
 			.filter(|(url, mime)| self.mimetype.get(url) != Some(mime))
-			.collect();
+			.fold(HashMap::new(), |mut map, (u, m)| {
+				for u in linked.from_file(&u) {
+					map.insert(u, m.clone());
+				}
+				map.insert(u, m);
+				map
+			});
 
+		drop(linked);
 		if updates.is_empty() {
 			return false;
 		}
 
-		let paged = self.current().paginate(self.current().page);
-		tasks.preload_affected(paged, &updates);
+		let affected: Vec<_> = self
+			.current()
+			.paginate(self.current().page)
+			.iter()
+			.filter(|&f| updates.contains_key(&f.url))
+			.cloned()
+			.collect();
 
 		self.mimetype.extend(updates);
 		self.peek(false);
+
+		tasks.preload_affected(&affected, &self.mimetype);
 		true
 	}
 }

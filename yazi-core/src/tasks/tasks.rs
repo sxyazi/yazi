@@ -172,7 +172,7 @@ impl Tasks {
 			};
 
 			for rule in PLUGIN.preloaders(&f.url, mime, factors) {
-				if loaded.get(&f.url).is_some_and(|x| x & 1 << rule.id != 0) {
+				if loaded.get(&f.url).is_some_and(|x| x & (1 << rule.id) != 0) {
 					continue;
 				}
 				if rule.multi {
@@ -188,7 +188,11 @@ impl Tasks {
 
 		let mut go = |rule: &PluginRule, targets: Vec<&File>| {
 			for &f in &targets {
-				*loaded.entry(f.url.clone()).or_default() |= 1 << rule.id;
+				if let Some(n) = loaded.get_mut(&f.url) {
+					*n |= 1 << rule.id;
+				} else {
+					loaded.insert(f.url.clone(), 1 << rule.id);
+				}
 			}
 			self.scheduler.preload_paged(rule, targets);
 		};
@@ -203,15 +207,15 @@ impl Tasks {
 		}
 	}
 
-	pub fn preload_affected(&self, paged: &[File], mimetype: &HashMap<Url, String>) {
+	pub fn preload_affected(&self, affected: &[File], mimetype: &HashMap<Url, String>) {
 		{
 			let mut loaded = self.scheduler.preload.rule_loaded.write();
-			for u in mimetype.keys() {
-				loaded.remove(u);
+			for f in affected {
+				loaded.remove(&f.url);
 			}
 		}
 
-		self.preload_paged(paged, mimetype);
+		self.preload_paged(affected, mimetype);
 	}
 
 	pub fn preload_sorted(&self, targets: &Files) {

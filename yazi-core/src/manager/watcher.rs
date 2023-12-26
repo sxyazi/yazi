@@ -8,12 +8,13 @@ use tracing::error;
 use yazi_plugin::isolate;
 use yazi_shared::fs::{File, FilesOp, Url};
 
+use super::Linked;
 use crate::folder::Files;
 
 pub struct Watcher {
 	watcher:    RecommendedWatcher,
 	watched:    Arc<RwLock<BTreeSet<Url>>>,
-	pub linked: Arc<RwLock<BTreeMap<Url, Url>>>, // from ==> to
+	pub linked: Arc<RwLock<Linked>>,
 }
 
 impl Watcher {
@@ -133,7 +134,7 @@ impl Watcher {
 		pin!(rx);
 
 		while let Some(urls) = rx.next().await {
-			let urls = urls.into_iter().collect::<BTreeSet<_>>();
+			let urls: BTreeSet<_> = urls.into_iter().collect();
 			let mut reload = Vec::with_capacity(urls.len());
 
 			for u in urls {
@@ -159,18 +160,5 @@ impl Watcher {
 				error!("preload in watcher failed: {e}");
 			}
 		}
-	}
-}
-
-impl Watcher {
-	pub fn relatives(&self, url: &Url) -> BTreeSet<Url> {
-		let mut map = BTreeSet::from_iter([url.clone()]);
-
-		let linked = self.linked.read();
-		if let Some(to) = linked.get(url) {
-			map.extend(linked.iter().filter(|(_, v)| *v == to).map(|(k, _)| k).cloned());
-		}
-
-		map
 	}
 }

@@ -45,25 +45,46 @@ impl FilesOp {
 		ticket
 	}
 
-	pub fn chroot(&self, new: Url) -> Self {
-		todo!()
-		// Full(Url, Vec<File>),
-		// Part(Url, u64, Vec<File>),
-		// Size(Url, BTreeMap<Url, u64>),
-		// IOErr(Url),
+	pub fn chroot(&self, new: &Url) -> Self {
+		let old = self.url();
+		macro_rules! new {
+			($url:expr) => {{ new.join($url.strip_prefix(old).unwrap()) }};
+		}
+		macro_rules! files {
+			($files:expr) => {{
+				$files
+					.iter()
+					.map(|file| {
+						let mut f = file.clone();
+						f.url = new!(f.url);
+						f
+					})
+					.collect()
+			}};
+		}
+		macro_rules! map {
+			($map:expr) => {{
+				$map
+					.iter()
+					.map(|(k, v)| {
+						let mut f = v.clone();
+						f.url = new!(f.url);
+						(new!(k), f)
+					})
+					.collect()
+			}};
+		}
 
-		// Creating(Url, BTreeMap<Url, File>),
-		// Deleting(Url, BTreeSet<Url>),
-		// Replacing(Url, BTreeMap<Url, File>),
-
-		// match self {
-		// 	FilesOp::Full(_, vec) => {}
-		// 	FilesOp::Part(_, _, vec) => todo!(),
-		// 	FilesOp::Size(_, map) => todo!(),
-		// 	FilesOp::IOErr(_) => todo!(),
-		// 	FilesOp::Creating(_, map) => todo!(),
-		// 	FilesOp::Deleting(_, set) => todo!(),
-		// 	FilesOp::Replacing(_, map) => todo!(),
-		// }
+		let u = new.clone();
+		match self {
+			Self::Full(_, files) => Self::Full(u, files!(files)),
+			Self::Part(_, files, ticket) => Self::Part(u, files!(files), *ticket),
+			Self::Size(_, map) => Self::Size(u, map.iter().map(|(k, v)| (new!(k), *v)).collect()),
+			Self::IOErr(_) => Self::IOErr(u),
+			Self::Creating(_, files) => Self::Creating(u, files!(files)),
+			Self::Deleting(_, urls) => Self::Deleting(u, urls.iter().map(|u| new!(u)).collect()),
+			Self::Updating(_, map) => Self::Updating(u, map!(map)),
+			Self::Upserting(_, map) => Self::Upserting(u, map!(map)),
+		}
 	}
 }

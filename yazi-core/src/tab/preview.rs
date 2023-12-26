@@ -1,26 +1,31 @@
+use std::time::Duration;
+
+use tokio::{pin, task::JoinHandle};
+use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use tokio_util::sync::CancellationToken;
 use yazi_adaptor::ADAPTOR;
 use yazi_config::PLUGIN;
 use yazi_plugin::{external::Highlighter, utils::PreviewLock};
-use yazi_shared::fs::{Cha, File, Url};
+use yazi_shared::{fs::{Cha, File, FilesOp, Url}, MIME_DIR};
+
+use crate::folder::Files;
 
 #[derive(Default)]
 pub struct Preview {
 	pub lock: Option<PreviewLock>,
 	pub skip: usize,
 
-	previewer_ct: Option<CancellationToken>,
+	previewer_ct:  Option<CancellationToken>,
+	folder_handle: Option<JoinHandle<()>>,
 }
 
 impl Preview {
-	pub fn go(&mut self, file: File, mime: String) {
-		if !self.content_unchanged(&file.url, &file.cha) {
-			self.force(file, mime);
+	pub fn go(&mut self, file: File, mime: &str, force: bool) {
+		if !force && self.content_unchanged(&file.url, &file.cha) {
+			return;
 		}
-	}
 
-	pub fn force(&mut self, file: File, mime: String) {
-		let Some(previewer) = PLUGIN.previewer(&file.url, &mime) else {
+		let Some(previewer) = PLUGIN.previewer(&file.url, mime) else {
 			self.reset();
 			return;
 		};
@@ -31,6 +36,31 @@ impl Preview {
 		} else {
 			self.previewer_ct = Some(yazi_plugin::isolate::peek(&previewer.exec, file, self.skip));
 		}
+	}
+
+	pub fn go_folder(&mut self, file: File, force: bool) {
+		if !force && self.content_unchanged(&file.url, &file.cha) {
+			return;
+		}
+
+		self.go(file.clone(), MIME_DIR, force);
+
+		self.folder_handle.take().map(|h| h.abort());
+		self.folder_handle = Some(tokio::spawn(async move {
+			let Ok(rx) = Files::from_dir(&file.url).await else {
+				FilesOp::IOErr(file.url).emit();
+				return;
+			};
+
+			let stream =
+				UnboundedReceiverStream::new(rx).chunks_timeout(10000, Duration::from_millis(350));
+			pin!(stream);
+
+			let ticket = FilesOp::prepare(&file.url);
+			while let Some(chunk) = stream.next().await {
+				FilesOp::Part(file.url.clone(), chunk, ticket).emit();
+			}
+		}));
 	}
 
 	#[inline]
