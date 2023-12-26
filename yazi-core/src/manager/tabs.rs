@@ -34,8 +34,10 @@ impl Tabs {
 			return;
 		}
 
-		// We must reset it before changing the tab index.
-		self.active_mut().preview.reset_image();
+		// Reset the preview of the previous active tab
+		if let Some(active) = self.items.get_mut(self.idx) {
+			active.preview.reset_image();
+		}
 
 		self.idx = idx;
 		Manager::_refresh();

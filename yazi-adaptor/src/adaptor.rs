@@ -1,4 +1,4 @@
-use std::{env, path::Path, sync::Arc};
+use std::{env, path::Path, sync::{atomic::Ordering, Arc}};
 
 use anyhow::{anyhow, Result};
 use ratatui::prelude::Rect;
@@ -160,25 +160,13 @@ impl Adaptor {
 	pub(super) fn start(self) { Ueberzug::start(self); }
 
 	pub async fn image_show(self, path: &Path, rect: Rect) -> Result<(u32, u32)> {
-		let size = match self {
+		match self {
 			Self::Kitty => Kitty::image_show(path, rect).await,
 			Self::KittyOld => KittyOld::image_show(path, rect).await,
 			Self::Iterm2 => Iterm2::image_show(path, rect).await,
 			Self::Sixel => Sixel::image_show(path, rect).await,
 			_ => Ueberzug::image_show(path, rect).await,
-		}?;
-
-		let shown = Term::ratio()
-			.map(|(r1, r2)| Rect {
-				x:      rect.x,
-				y:      rect.y,
-				width:  (size.0 as f64 / r1).ceil() as u16,
-				height: (size.1 as f64 / r2).ceil() as u16,
-			})
-			.unwrap_or(rect);
-
-		SHOWN.store(Some(Arc::new(shown)));
-		Ok(size)
+		}
 	}
 
 	pub fn image_hide(self) -> Result<()> {
@@ -193,6 +181,20 @@ impl Adaptor {
 			Self::Sixel => Sixel::image_erase(rect),
 			_ => Ueberzug::image_erase(rect),
 		}
+	}
+
+	#[inline]
+	pub(super) fn shown_store(rect: Rect, size: (u32, u32)) {
+		SHOWN.store(Some(Arc::new(
+			Term::ratio()
+				.map(|(r1, r2)| Rect {
+					x:      rect.x,
+					y:      rect.y,
+					width:  (size.0 as f64 / r1).ceil() as u16,
+					height: (size.1 as f64 / r2).ceil() as u16,
+				})
+				.unwrap_or(rect),
+		)));
 	}
 
 	#[inline]

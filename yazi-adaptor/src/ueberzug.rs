@@ -44,6 +44,7 @@ impl Ueberzug {
 	pub(super) async fn image_show(path: &Path, rect: Rect) -> Result<(u32, u32)> {
 		if let Some(tx) = &*DEMON {
 			tx.send(Some((path.to_path_buf(), rect)))?;
+			Adaptor::shown_store(rect, (0, 0));
 		} else {
 			bail!("uninitialized ueberzug");
 		}

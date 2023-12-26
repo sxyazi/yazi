@@ -18,6 +18,7 @@ impl KittyOld {
 		let b = Self::encode(img).await?;
 
 		Adaptor::KittyOld.image_hide()?;
+		Adaptor::shown_store(rect, size);
 		Term::move_lock(stdout().lock(), (rect.x, rect.y), |stdout| {
 			stdout.write_all(&b)?;
 			Ok(size)
