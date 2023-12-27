@@ -5,11 +5,12 @@ use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
 use yazi_shared::{emit, event::Exec, Debounce, InputError, Layer};
 
-use crate::{folder::{Filter, FilterCase}, input::Input, tab::Tab};
+use crate::{folder::{Filter, FilterCase}, input::Input, manager::Manager, tab::Tab};
 
+#[derive(Default)]
 pub struct Opt<'a> {
-	query: Option<&'a str>,
-	case:  FilterCase,
+	pub query: Option<&'a str>,
+	pub case:  FilterCase,
 }
 
 impl<'a> From<&'a Exec> for Opt<'a> {
@@ -59,7 +60,9 @@ impl Tab {
 			return false;
 		}
 
-		self.current.repos(hovered);
+		if self.current.repos(hovered) {
+			Manager::_hover(None);
+		}
 		true
 	}
 }

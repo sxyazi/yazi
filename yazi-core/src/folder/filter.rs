@@ -35,9 +35,10 @@ impl Filter {
 	}
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(Default, PartialEq, Eq)]
 pub enum FilterCase {
 	Smart,
+	#[default]
 	Sensitive,
 	Insensitive,
 }

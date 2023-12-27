@@ -221,7 +221,7 @@ impl Files {
 
 		let (hidden, items) = if let Some(filter) = &self.filter {
 			urls.into_iter().partition(|u| {
-				(u.is_hidden() && !self.show_hidden) || !u.file_name().is_some_and(|s| filter.matches(s))
+				(!self.show_hidden && u.is_hidden()) || !u.file_name().is_some_and(|s| filter.matches(s))
 			})
 		} else if self.show_hidden {
 			(vec![], urls)

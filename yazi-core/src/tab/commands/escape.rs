@@ -45,7 +45,9 @@ impl Tab {
 	fn escape_select(&mut self) -> bool { self.select_all(Some(false)) }
 
 	#[inline]
-	fn escape_filter(&mut self) -> bool { self.current.files.set_filter(None) }
+	fn escape_filter(&mut self) -> bool {
+		self.filter_do(super::filter::Opt { query: None, ..Default::default() })
+	}
 
 	#[inline]
 	fn escape_search(&mut self) -> bool { self.search_stop() }
