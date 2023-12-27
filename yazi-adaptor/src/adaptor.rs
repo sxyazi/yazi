@@ -1,4 +1,4 @@
-use std::{env, path::Path, sync::{atomic::Ordering, Arc}};
+use std::{env, path::Path, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use ratatui::prelude::Rect;

@@ -1,7 +1,7 @@
 use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, Borders, List, ListItem, Widget}};
 use yazi_config::THEME;
 
-use crate::{Ctx, widgets};
+use crate::{widgets, Ctx};
 
 pub(crate) struct Select<'a> {
 	cx: &'a Ctx,

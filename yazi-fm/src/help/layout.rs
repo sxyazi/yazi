@@ -2,7 +2,7 @@ use ratatui::{buffer::Buffer, layout::{self, Rect}, prelude::{Constraint, Direct
 use yazi_config::THEME;
 
 use super::Bindings;
-use crate::{Ctx, widgets};
+use crate::{widgets, Ctx};
 
 pub(crate) struct Layout<'a> {
 	cx: &'a Ctx,

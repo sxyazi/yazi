@@ -1,13 +1,10 @@
-use std::sync::atomic::Ordering;
-
 use anyhow::{Ok, Result};
 use crossterm::event::KeyEvent;
-use ratatui::backend::Backend;
 use yazi_config::{keymap::Key, ARGS};
 use yazi_core::input::InputMode;
-use yazi_shared::{emit, event::{Event, Exec}, term::Term, Layer, COLLISION};
+use yazi_shared::{emit, event::{Event, Exec}, term::Term, Layer};
 
-use crate::{lives::Lives, Ctx, Executor, Logs, Panic, Root, Signals};
+use crate::{lives::Lives, Ctx, Executor, Logs, Panic, Signals};
 
 pub(crate) struct App {
 	pub(crate) cx:      Ctx,
@@ -26,7 +23,7 @@ impl App {
 		Lives::register()?;
 		let mut app = Self { cx: Ctx::make(), term: Some(term), signals };
 
-		app.dispatch_render()?;
+		app.render()?;
 		while let Some(event) = app.signals.recv().await {
 			match event {
 				Event::Quit(no_cwd_file) => {
@@ -35,7 +32,7 @@ impl App {
 				}
 				Event::Key(key) => app.dispatch_key(key),
 				Event::Paste(str) => app.dispatch_paste(str),
-				Event::Render(_) => app.dispatch_render()?,
+				Event::Render(_) => app.render()?,
 				Event::Resize(cols, rows) => app.dispatch_resize(cols, rows)?,
 				Event::Call(exec, layer) => app.dispatch_call(exec, layer),
 				event => app.dispatch_module(event),
@@ -68,51 +65,9 @@ impl App {
 		}
 	}
 
-	fn dispatch_render(&mut self) -> Result<()> {
-		let Some(term) = &mut self.term else {
-			return Ok(());
-		};
-
-		let collision = COLLISION.swap(false, Ordering::Relaxed);
-		let frame = term.draw(|f| {
-			Lives::scope(&self.cx, |_| {
-				f.render_widget(Root::new(&self.cx), f.size());
-			});
-
-			if let Some((x, y)) = self.cx.cursor() {
-				f.set_cursor(x, y);
-			}
-		})?;
-		if !COLLISION.load(Ordering::Relaxed) {
-			if collision {
-				// Reload preview if collision is resolved
-				self.cx.manager.peek(true);
-			}
-			return Ok(());
-		}
-
-		let mut patches = Vec::new();
-		for x in frame.area.left()..frame.area.right() {
-			for y in frame.area.top()..frame.area.bottom() {
-				let cell = frame.buffer.get(x, y);
-				if cell.skip {
-					patches.push((x, y, cell.clone()));
-				}
-			}
-		}
-
-		term.backend_mut().draw(patches.iter().map(|(x, y, cell)| (*x, *y, cell)))?;
-		if let Some((x, y)) = self.cx.cursor() {
-			term.show_cursor()?;
-			term.set_cursor(x, y)?;
-		}
-		term.backend_mut().flush()?;
-		Ok(())
-	}
-
 	fn dispatch_resize(&mut self, _: u16, _: u16) -> Result<()> {
 		self.cx.manager.active_mut().preview.reset();
-		self.dispatch_render()?;
+		self.render()?;
 
 		self.cx.manager.current_mut().set_page(true);
 		self.cx.manager.peek(false);
@@ -127,7 +82,6 @@ impl App {
 	}
 
 	fn dispatch_module(&mut self, event: Event) {
-		let manager = &mut self.cx.manager;
 		let tasks = &mut self.cx.tasks;
 		match event {
 			Event::Pages(page) => {

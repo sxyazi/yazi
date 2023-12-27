@@ -12,18 +12,19 @@ pub fn peek(exec: &Exec, file: yazi_shared::fs::File, skip: usize) -> Cancellati
 	let ct = CancellationToken::new();
 
 	let cmd = exec.cmd.to_owned();
-	let (ct1, ct2) = (ct.clone(), ct.clone());
+	let ct2 = ct.clone();
 	tokio::task::spawn_blocking(move || {
 		let future = async {
 			LOADED.ensure(&cmd).await.into_lua_err()?;
 
 			let lua = slim_lua()?;
-			lua.set_hook(
-				HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
-				move |_, _| {
-					if ct1.is_cancelled() { Err("cancelled".into_lua_err()) } else { Ok(()) }
-				},
-			);
+			// FIXME: this will cause a panic
+			// lua.set_hook(
+			// 	HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
+			// 	move |_, _| {
+			// 		if ct1.is_cancelled() { Err("cancelled".into_lua_err()) } else { Ok(()) }
+			// 	},
+			// );
 
 			let plugin: Table = if let Some(b) = LOADED.read().get(&cmd) {
 				lua.load(b).call(())?

@@ -2,7 +2,7 @@ use ratatui::{layout, prelude::{Buffer, Constraint, Direction, Rect}, widgets::{
 use yazi_config::THEME;
 
 use super::Side;
-use crate::{Ctx, widgets};
+use crate::{widgets, Ctx};
 
 pub(crate) struct Which<'a> {
 	cx: &'a Ctx,

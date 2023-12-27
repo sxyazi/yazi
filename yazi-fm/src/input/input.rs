@@ -6,7 +6,7 @@ use yazi_config::THEME;
 use yazi_core::input::InputMode;
 use yazi_shared::term::Term;
 
-use crate::{Ctx, widgets};
+use crate::{widgets, Ctx};
 
 pub(crate) struct Input<'a> {
 	cx: &'a Ctx,
