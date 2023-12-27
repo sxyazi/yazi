@@ -9,13 +9,13 @@ use crate::{folder::{Filter, FilterCase}, input::Input, manager::Manager, tab::T
 
 #[derive(Default)]
 pub struct Opt<'a> {
-	pub query: Option<&'a str>,
+	pub query: &'a str,
 	pub case:  FilterCase,
 }
 
 impl<'a> From<&'a Exec> for Opt<'a> {
 	fn from(e: &'a Exec) -> Self {
-		Self { query: e.args.first().map(|s| s.as_str()), case: e.into() }
+		Self { query: e.args.first().map(|s| s.as_str()).unwrap_or_default(), case: e.into() }
 	}
 }
 
@@ -43,13 +43,10 @@ impl Tab {
 
 	pub fn filter_do<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
 		let opt = opt.into() as Opt;
-		let Some(query) = opt.query else {
-			return false;
-		};
 
-		let filter = if query.is_empty() {
+		let filter = if opt.query.is_empty() {
 			None
-		} else if let Ok(f) = Filter::new(query, opt.case) {
+		} else if let Ok(f) = Filter::new(opt.query, opt.case) {
 			Some(f)
 		} else {
 			return false;
