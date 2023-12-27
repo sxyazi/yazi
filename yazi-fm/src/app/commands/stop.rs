@@ -1,6 +1,6 @@
 use anyhow::Result;
 use tokio::sync::oneshot;
-use yazi_shared::{emit, event::Exec, term::Term};
+use yazi_shared::{event::Exec, term::Term};
 
 use crate::app::App;
 
@@ -30,9 +30,10 @@ impl App {
 		} else {
 			self.term = Some(Term::start().unwrap());
 			self.signals.stop_term(false);
+			// FIXME: find a better way to handle this
+			self.render().unwrap();
 			self.cx.manager.hover(None);
 			self.cx.manager.peek(true);
-			emit!(Render);
 		}
 		if let Some(tx) = opt.tx {
 			tx.send(()).ok();

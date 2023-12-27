@@ -2,7 +2,7 @@ use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Direction, R
 use yazi_config::THEME;
 use yazi_core::tasks::TASKS_PERCENT;
 
-use crate::{Ctx, widgets};
+use crate::{widgets, Ctx};
 
 pub(crate) struct Layout<'a> {
 	cx: &'a Ctx,
