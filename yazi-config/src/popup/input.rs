@@ -30,6 +30,11 @@ pub struct Input {
 	pub delete_origin: Origin,
 	pub delete_offset: Offset,
 
+	// filter
+	pub filter_title:  String,
+	pub filter_origin: Origin,
+	pub filter_offset: Offset,
+
 	// find
 	pub find_title:  [String; 2],
 	pub find_origin: Origin,

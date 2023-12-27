@@ -5,12 +5,12 @@ use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
 use yazi_shared::{emit, event::Exec, Debounce, InputError, Layer};
 
-use crate::{input::Input, tab::{Finder, FinderCase, Tab}};
+use crate::{folder::FilterCase, input::Input, tab::{Finder, Tab}};
 
 pub struct Opt<'a> {
 	query: Option<&'a str>,
 	prev:  bool,
-	case:  FinderCase,
+	case:  FilterCase,
 }
 
 impl<'a> From<&'a Exec> for Opt<'a> {
@@ -18,11 +18,7 @@ impl<'a> From<&'a Exec> for Opt<'a> {
 		Self {
 			query: e.args.first().map(|s| s.as_str()),
 			prev:  e.named.contains_key("previous"),
-			case:  match (e.named.contains_key("smart"), e.named.contains_key("insensitive")) {
-				(true, _) => FinderCase::Smart,
-				(_, false) => FinderCase::Sensitive,
-				(_, true) => FinderCase::Insensitive,
-			},
+			case:  e.into(),
 		}
 	}
 }
@@ -48,8 +44,8 @@ impl Tab {
 				emit!(Call(
 					Exec::call("find_do", vec![s])
 						.with_bool("previous", opt.prev)
-						.with_bool("smart", opt.case == FinderCase::Smart)
-						.with_bool("insensitive", opt.case == FinderCase::Insensitive)
+						.with_bool("smart", opt.case == FilterCase::Smart)
+						.with_bool("insensitive", opt.case == FilterCase::Insensitive)
 						.vec(),
 					Layer::Manager
 				));
@@ -63,10 +59,16 @@ impl Tab {
 		let Some(query) = opt.query else {
 			return false;
 		};
+		if query.is_empty() {
+			return self.escape(super::escape::Opt::FIND);
+		}
 
 		let Ok(finder) = Finder::new(query, opt.case) else {
 			return false;
 		};
+		if matches!(&self.finder, Some(f) if f.filter == finder.filter) {
+			return false;
+		}
 
 		let step = if opt.prev {
 			finder.prev(&self.current.files, self.current.cursor, true)
