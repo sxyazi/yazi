@@ -5,7 +5,7 @@ use tokio::{fs, select, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_config::{manager::SortBy, MANAGER};
 use yazi_shared::fs::{File, Url, FILES_TICKET};
 
-use super::FilesSorter;
+use super::{FilesSorter, Filter};
 
 pub struct Files {
 	hidden:              Vec<File>,
@@ -18,7 +18,7 @@ pub struct Files {
 	selected:  BTreeSet<Url>,
 
 	sorter:      FilesSorter,
-	filter:      Option<String>,
+	filter:      Option<Filter>,
 	show_hidden: bool,
 }
 
@@ -138,11 +138,7 @@ impl Files {
 		self.ticket = FILES_TICKET.fetch_add(1, Ordering::Relaxed);
 		self.revision += 1;
 
-		(self.hidden, self.items) = if self.show_hidden {
-			(vec![], files)
-		} else {
-			files.into_iter().partition(|f| f.is_hidden())
-		};
+		(self.hidden, self.items) = self.split_files(files);
 	}
 
 	pub fn update_part(&mut self, files: Vec<File>, ticket: u64) {
@@ -152,14 +148,9 @@ impl Files {
 			}
 
 			self.revision += 1;
-			if self.show_hidden {
-				self.hidden.clear();
-				self.items.extend(files);
-			} else {
-				let (hidden, items): (Vec<_>, Vec<_>) = files.into_iter().partition(|f| f.is_hidden());
-				self.hidden.extend(hidden);
-				self.items.extend(items);
-			}
+			let (hidden, items) = self.split_files(files);
+			self.hidden.extend(hidden);
+			self.items.extend(items);
 			return;
 		}
 
@@ -202,12 +193,7 @@ impl Files {
 			};
 		}
 
-		let (hidden, items) = if self.show_hidden {
-			(vec![], files)
-		} else {
-			files.into_iter().partition(|f| f.is_hidden())
-		};
-
+		let (hidden, items) = self.split_files(files);
 		if !items.is_empty() {
 			go!(self.items, items);
 		}
@@ -233,8 +219,15 @@ impl Files {
 			};
 		}
 
-		let (hidden, items) =
-			if self.show_hidden { (vec![], urls) } else { urls.into_iter().partition(|u| u.is_hidden()) };
+		let (hidden, items) = if let Some(filter) = &self.filter {
+			urls.into_iter().partition(|u| {
+				(u.is_hidden() && !self.show_hidden) || !u.file_name().is_some_and(|s| filter.matches(s))
+			})
+		} else if self.show_hidden {
+			(vec![], urls)
+		} else {
+			urls.into_iter().partition(|u| u.is_hidden())
+		};
 
 		if !items.is_empty() {
 			go!(self.items, items);
@@ -244,7 +237,10 @@ impl Files {
 		}
 	}
 
-	pub fn update_updating(&mut self, files: BTreeMap<Url, File>) -> [BTreeMap<Url, File>; 2] {
+	pub fn update_updating(
+		&mut self,
+		files: BTreeMap<Url, File>,
+	) -> (BTreeMap<Url, File>, BTreeMap<Url, File>) {
 		if files.is_empty() {
 			return Default::default();
 		}
@@ -266,7 +262,12 @@ impl Files {
 			};
 		}
 
-		let (mut hidden, mut items) = if self.show_hidden {
+		let (mut hidden, mut items) = if let Some(filter) = &self.filter {
+			files.into_iter().partition(|(_, f)| {
+				(f.is_hidden() && !self.show_hidden)
+					|| !f.url.file_name().is_some_and(|s| filter.matches(s))
+			})
+		} else if self.show_hidden {
 			(BTreeMap::new(), files)
 		} else {
 			files.into_iter().partition(|(_, f)| f.is_hidden())
@@ -278,7 +279,7 @@ impl Files {
 		if !hidden.is_empty() {
 			go!(self.hidden, hidden);
 		}
-		[hidden, items]
+		(hidden, items)
 	}
 
 	pub fn update_upserting(&mut self, files: BTreeMap<Url, File>) {
@@ -286,7 +287,7 @@ impl Files {
 			return;
 		}
 
-		let [hidden, items] = self.update_updating(files);
+		let (hidden, items) = self.update_updating(files);
 		if hidden.is_empty() && items.is_empty() {
 			return;
 		}
@@ -308,6 +309,19 @@ impl Files {
 		self.version = self.revision;
 		self.sorter.sort(&mut self.items, &self.sizes);
 		true
+	}
+
+	fn split_files(&self, files: impl IntoIterator<Item = File>) -> (Vec<File>, Vec<File>) {
+		if let Some(filter) = &self.filter {
+			files.into_iter().partition(|f| {
+				(f.is_hidden() && !self.show_hidden)
+					|| !f.url.file_name().is_some_and(|s| filter.matches(s))
+			})
+		} else if self.show_hidden {
+			(vec![], files.into_iter().collect())
+		} else {
+			files.into_iter().partition(|f| f.is_hidden())
+		}
 	}
 }
 
@@ -377,47 +391,26 @@ impl Files {
 	}
 
 	// --- Filter
-	pub fn set_filter(&mut self, keyword: &str) -> bool {
-		if keyword == self.filter.as_deref().unwrap_or_default() {
+	pub fn set_filter(&mut self, filter: Option<Filter>) -> bool {
+		if self.filter == filter {
 			return false;
 		}
 
-		if keyword.is_empty() {
-			let (hidden, items) = if self.show_hidden {
-				(vec![], mem::take(&mut self.hidden))
-			} else {
-				mem::take(&mut self.hidden).into_iter().partition(|f| f.is_hidden())
-			};
+		self.filter = filter;
+		if self.filter.is_none() {
+			let take = mem::take(&mut self.hidden);
+			let (hidden, items) = self.split_files(take);
 
 			self.hidden = hidden;
 			if !items.is_empty() {
 				self.items.extend(items);
 				self.sorter.sort(&mut self.items, &self.sizes);
 			}
-
-			self.filter = None;
 			return true;
 		}
 
-		let keyword = keyword.to_ascii_lowercase();
 		let it = mem::take(&mut self.items).into_iter().chain(mem::take(&mut self.hidden));
-		(self.items, self.hidden) = if self.show_hidden {
-			it.partition(|f| {
-				f.url
-					.file_name()
-					.is_some_and(|s| s.to_string_lossy().to_ascii_lowercase().contains(&keyword))
-			})
-		} else {
-			it.partition(|f| {
-				!f.is_hidden()
-					&& f
-						.url
-						.file_name()
-						.is_some_and(|s| s.to_string_lossy().to_ascii_lowercase().contains(&keyword))
-			})
-		};
-
-		self.filter = Some(keyword);
+		(self.hidden, self.items) = self.split_files(it);
 		self.sorter.sort(&mut self.items, &self.sizes);
 		true
 	}
@@ -435,12 +428,12 @@ impl Files {
 			return;
 		}
 
+		let take =
+			if self.show_hidden { mem::take(&mut self.hidden) } else { mem::take(&mut self.items) };
+		let (hidden, items) = self.split_files(take);
+
 		self.revision += 1;
-		if self.show_hidden {
-			self.items.append(&mut self.hidden);
-		} else {
-			let items = mem::take(&mut self.items);
-			(self.hidden, self.items) = items.into_iter().partition(|f| f.is_hidden());
-		}
+		self.hidden.extend(hidden);
+		self.items.extend(items);
 	}
 }

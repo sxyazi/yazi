@@ -147,7 +147,7 @@ impl<'a, 'b> Folder<'a, 'b> {
 				};
 
 				let file = me.borrow::<yazi_shared::fs::File>()?;
-				let Some(h) = file.name().and_then(|n| finder.highlighted(n)) else {
+				let Some(h) = file.name().and_then(|n| finder.filter.highlighted(n)) else {
 					return Ok(None);
 				};
 

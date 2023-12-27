@@ -1,41 +1,25 @@
-use std::{collections::BTreeMap, ffi::OsStr, ops::Range};
+use std::collections::BTreeMap;
 
 use anyhow::Result;
-use regex::bytes::{Regex, RegexBuilder};
 use yazi_shared::fs::Url;
 
-use crate::folder::Files;
-
-#[derive(PartialEq, Eq)]
-pub enum FinderCase {
-	Smart,
-	Sensitive,
-	Insensitive,
-}
+use crate::folder::{Files, Filter, FilterCase};
 
 pub struct Finder {
-	query:    Regex,
-	matched:  BTreeMap<Url, u8>,
-	revision: u64,
+	pub filter: Filter,
+	matched:    BTreeMap<Url, u8>,
+	revision:   u64,
 }
 
 impl Finder {
-	pub(super) fn new(s: &str, case: FinderCase) -> Result<Self> {
-		let query = match case {
-			FinderCase::Smart => {
-				let uppercase = s.chars().any(|c| c.is_uppercase());
-				RegexBuilder::new(s).case_insensitive(!uppercase).build()?
-			}
-			FinderCase::Sensitive => Regex::new(s)?,
-			FinderCase::Insensitive => RegexBuilder::new(s).case_insensitive(true).build()?,
-		};
-		Ok(Self { query, matched: Default::default(), revision: 0 })
+	pub(super) fn new(s: &str, case: FilterCase) -> Result<Self> {
+		Ok(Self { filter: Filter::new(s, case)?, matched: Default::default(), revision: 0 })
 	}
 
 	pub(super) fn prev(&self, files: &Files, cursor: usize, include: bool) -> Option<isize> {
 		for i in !include as usize..files.len() {
 			let idx = (cursor + files.len() - i) % files.len();
-			if files[idx].name().is_some_and(|n| self.matches(n)) {
+			if files[idx].name().is_some_and(|n| self.filter.matches(n)) {
 				return Some(idx as isize - cursor as isize);
 			}
 		}
@@ -45,7 +29,7 @@ impl Finder {
 	pub(super) fn next(&self, files: &Files, cursor: usize, include: bool) -> Option<isize> {
 		for i in !include as usize..files.len() {
 			let idx = (cursor + i) % files.len();
-			if files[idx].name().is_some_and(|n| self.matches(n)) {
+			if files[idx].name().is_some_and(|n| self.filter.matches(n)) {
 				return Some(idx as isize - cursor as isize);
 			}
 		}
@@ -60,7 +44,7 @@ impl Finder {
 
 		let mut i = 0u8;
 		for file in files.iter() {
-			if file.name().map(|n| self.matches(n)) != Some(true) {
+			if file.name().map(|n| self.filter.matches(n)) != Some(true) {
 				continue;
 			}
 
@@ -74,15 +58,6 @@ impl Finder {
 
 		self.revision = files.revision;
 		true
-	}
-
-	#[inline]
-	fn matches(&self, name: &OsStr) -> bool { self.query.is_match(name.as_encoded_bytes()) }
-
-	/// Explode the name into three parts: head, body, tail.
-	#[inline]
-	pub fn highlighted(&self, name: &OsStr) -> Option<Vec<Range<usize>>> {
-		self.query.find(name.as_encoded_bytes()).map(|m| vec![m.range()])
 	}
 }
 
