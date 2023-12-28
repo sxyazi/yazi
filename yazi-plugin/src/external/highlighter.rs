@@ -26,9 +26,16 @@ impl Highlighter {
 			Ok(ThemeSet::load_from_reader(&mut std::io::BufReader::new(file))?)
 		}
 
-		let theme = SYNTECT_THEME.get_or_init(|| {
-			from_file().unwrap_or_else(|_| ThemeSet::load_defaults().themes["base16-ocean.dark"].clone())
-		});
+		#[inline]
+		fn load_default_theme() -> Theme {
+			let default_theme = include_str!("../../../yazi-config/preset/ansi.tmTheme");
+			let mut theme_cursor = std::io::Cursor::new(default_theme.as_bytes());
+
+			ThemeSet::load_from_reader(&mut theme_cursor).expect("Failed to load default ANSI theme")
+		}
+
+		let theme =
+			SYNTECT_THEME.get_or_init(|| from_file().unwrap_or_else(|_err| load_default_theme()));
 		let syntaxes =
 			SYNTECT_SYNTAX.get_or_init(|| from_uncompressed_data(yazi_prebuild::syntaxes()).unwrap());
 
