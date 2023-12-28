@@ -16,7 +16,6 @@ pub struct Scheduler {
 	pub process: Arc<Process>,
 
 	micro:       async_channel::Sender<BoxFuture<'static, ()>>,
-	macro_:      async_channel::Sender<TaskOp>,
 	prog:        mpsc::UnboundedSender<TaskProg>,
 	pub running: Arc<RwLock<Running>>,
 }
@@ -29,12 +28,11 @@ impl Scheduler {
 
 		let scheduler = Self {
 			file:    Arc::new(File::new(macro_tx.clone(), prog_tx.clone())),
-			plugin:  Arc::new(Plugin::new(prog_tx.clone())),
-			preload: Arc::new(Preload::new(prog_tx.clone())),
+			plugin:  Arc::new(Plugin::new(macro_tx.clone(), prog_tx.clone())),
+			preload: Arc::new(Preload::new(macro_tx.clone(), prog_tx.clone())),
 			process: Arc::new(Process::new(prog_tx.clone())),
 
 			micro:   micro_tx,
-			macro_:  macro_tx,
 			prog:    prog_tx,
 			running: Default::default(),
 		};
@@ -66,6 +64,7 @@ impl Scheduler {
 	) {
 		let file = self.file.clone();
 		let plugin = self.plugin.clone();
+		let preload = self.preload.clone();
 
 		let prog = self.prog.clone();
 		let running = self.running.clone();
@@ -84,8 +83,8 @@ impl Scheduler {
 
 						let result = match op {
 							TaskOp::File(mut op) => file.work(&mut op).await,
-							TaskOp::Plugin(mut op) => todo!(),
-							TaskOp::Preload(mut op) => todo!(),
+							TaskOp::Plugin(mut op) => plugin.work(&mut op).await,
+							TaskOp::Preload(mut op) => preload.work(&mut op).await,
 						};
 
 						if let Err(e) = result {

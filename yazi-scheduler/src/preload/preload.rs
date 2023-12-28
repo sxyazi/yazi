@@ -6,19 +6,32 @@ use tokio::sync::mpsc;
 use tracing::error;
 use yazi_shared::fs::{calculate_size, FilesOp, Url};
 
-use super::{PreloadOpRule, PreloadOpSize};
-use crate::TaskProg;
+use super::{PreloadOp, PreloadOpRule, PreloadOpSize};
+use crate::{TaskOp, TaskProg};
 
 pub struct Preload {
-	prog: mpsc::UnboundedSender<TaskProg>,
+	macro_: async_channel::Sender<TaskOp>,
+	prog:   mpsc::UnboundedSender<TaskProg>,
 
 	pub rule_loaded:  RwLock<HashMap<Url, u32>>,
 	pub size_loading: RwLock<BTreeSet<Url>>,
 }
 
 impl Preload {
-	pub fn new(prog: mpsc::UnboundedSender<TaskProg>) -> Self {
-		Self { prog, rule_loaded: Default::default(), size_loading: Default::default() }
+	pub fn new(macro_: async_channel::Sender<TaskOp>, prog: mpsc::UnboundedSender<TaskProg>) -> Self {
+		Self { macro_, prog, rule_loaded: Default::default(), size_loading: Default::default() }
+	}
+
+	pub async fn work(&self, op: &mut PreloadOp) -> Result<()> {
+		match op {
+			PreloadOp::Rule(task) => {
+				todo!()
+			}
+			PreloadOp::Size(task) => {
+				todo!()
+			}
+		}
+		Ok(())
 	}
 
 	pub async fn rule(&self, task: PreloadOpRule) -> Result<()> {
