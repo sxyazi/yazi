@@ -1,7 +1,8 @@
 use std::{mem, path::{Path, PathBuf}, sync::{atomic::{AtomicUsize, Ordering}, OnceLock}};
 
 use anyhow::{anyhow, Result};
-use syntect::{dumps::from_uncompressed_data, easy::HighlightLines, highlighting::{Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}, util::as_24_bit_terminal_escaped};
+use crossterm::{style::{Color, Print, SetForegroundColor}, Command};
+use syntect::{dumps::from_uncompressed_data, easy::HighlightLines, highlighting::{Style, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
 use tokio::{fs::File, io::{AsyncBufReadExt, BufReader}};
 use yazi_config::THEME;
 use yazi_shared::PeekError;
@@ -117,13 +118,33 @@ impl Highlighter {
 				}
 
 				let regions = h.highlight_line(&line, syntaxes).map_err(|e| anyhow!(e))?;
-				result.push_str(&as_24_bit_terminal_escaped(&regions, false));
+				Self::write_highlighted_line_as_ansi(&regions, &mut result)
+					.map_err(|e| anyhow!("Failed to write highlighted text to preview window: {}", e))?;
 			}
 
-			result.push_str("\x1b[0m");
+			SetForegroundColor(Color::Reset)
+				.write_ansi(&mut result)
+				.map_err(|e| anyhow!("Failed to reset color at end of preview window line: {}", e))?;
+
 			Ok(result)
 		})
 		.await?
+	}
+
+	fn write_highlighted_line_as_ansi(regions: &[(Style, &str)], s: &mut String) -> std::fmt::Result {
+		for &(ref style, text) in regions {
+			let fg = style.foreground;
+			// As is done in the file previewer `bat`, we assume the convention that themes
+			// with a 0x00 alpha value are actually 8-bit themes, with their colors in the
+			// red color component. <https://github.com/sharkdp/bat/blob/b89dc15be1d86869bf73e5b9f96af7b930753a55/src/terminal.rs#L8>
+			let foreground_color =
+				if fg.a == 0 { Color::AnsiValue(fg.r) } else { Color::Rgb { r: fg.r, g: fg.g, b: fg.b } };
+
+			SetForegroundColor(foreground_color).write_ansi(s)?;
+			Print(text).write_ansi(s)?;
+		}
+
+		Ok(())
 	}
 
 	#[inline]
