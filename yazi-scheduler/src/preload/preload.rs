@@ -22,7 +22,7 @@ impl Preload {
 		Self { macro_, prog, rule_loaded: Default::default(), size_loading: Default::default() }
 	}
 
-	pub async fn work(&self, op: &mut PreloadOp) -> Result<()> {
+	pub async fn work(&self, op: PreloadOp) -> Result<()> {
 		match op {
 			PreloadOp::Rule(task) => {
 				todo!()

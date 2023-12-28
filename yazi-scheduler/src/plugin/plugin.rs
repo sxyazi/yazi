@@ -14,7 +14,7 @@ impl Plugin {
 		Self { macro_, prog }
 	}
 
-	pub async fn work(&self, op: &mut PluginOp) -> Result<()> {
+	pub async fn work(&self, op: PluginOp) -> Result<()> {
 		match op {
 			PluginOp::Entry(task) => {
 				yazi_plugin::isolate::entry(&task.name).await?;

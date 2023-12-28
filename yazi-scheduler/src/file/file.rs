@@ -20,9 +20,9 @@ impl File {
 		Self { macro_, prog }
 	}
 
-	pub async fn work(&self, op: &mut FileOp) -> Result<()> {
+	pub async fn work(&self, op: FileOp) -> Result<()> {
 		match op {
-			FileOp::Paste(task) => {
+			FileOp::Paste(mut task) => {
 				match fs::remove_file(&task.to).await {
 					Err(e) if e.kind() != NotFound => Err(e)?,
 					_ => {}
@@ -50,7 +50,7 @@ impl File {
 						{
 							self.log(task.id, format!("Paste task retry: {:?}", task))?;
 							task.retry += 1;
-							return Ok(self.macro_.send(FileOp::Paste(task.clone()).into()).await?);
+							return Ok(self.macro_.send(FileOp::Paste(task).into()).await?);
 						}
 						Err(e) => Err(e)?,
 					}

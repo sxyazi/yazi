@@ -82,9 +82,9 @@ impl Scheduler {
 						}
 
 						let result = match op {
-							TaskOp::File(mut op) => file.work(&mut op).await,
-							TaskOp::Plugin(mut op) => plugin.work(&mut op).await,
-							TaskOp::Preload(mut op) => preload.work(&mut op).await,
+							TaskOp::File(op) => file.work(*op).await,
+							TaskOp::Plugin(op) => plugin.work(*op).await,
+							TaskOp::Preload(op) => preload.work(*op).await,
 						};
 
 						if let Err(e) = result {
