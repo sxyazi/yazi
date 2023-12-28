@@ -4,19 +4,6 @@ use tokio::sync::oneshot;
 use yazi_plugin::external::ShellOpt;
 
 #[derive(Debug)]
-pub enum ProcessOp {
-	Open(ProcessOpOpen),
-}
-
-impl ProcessOp {
-	pub fn id(&self) -> usize {
-		match self {
-			Self::Open(op) => op.id,
-		}
-	}
-}
-
-#[derive(Debug)]
 pub struct ProcessOpOpen {
 	pub id:     usize,
 	pub cmd:    OsString,
@@ -27,12 +14,12 @@ pub struct ProcessOpOpen {
 }
 
 impl From<&mut ProcessOpOpen> for ShellOpt {
-	fn from(value: &mut ProcessOpOpen) -> Self {
+	fn from(op: &mut ProcessOpOpen) -> Self {
 		Self {
-			cmd:    mem::take(&mut value.cmd),
-			args:   mem::take(&mut value.args),
+			cmd:    mem::take(&mut op.cmd),
+			args:   mem::take(&mut op.args),
 			piped:  false,
-			orphan: value.orphan,
+			orphan: op.orphan,
 		}
 	}
 }

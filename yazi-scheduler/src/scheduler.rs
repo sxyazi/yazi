@@ -28,7 +28,7 @@ impl Scheduler {
 		let (prog_tx, prog_rx) = mpsc::unbounded_channel();
 
 		let scheduler = Self {
-			file:    Arc::new(File::new(prog_tx.clone())),
+			file:    Arc::new(File::new(macro_tx.clone(), prog_tx.clone())),
 			plugin:  Arc::new(Plugin::new(prog_tx.clone())),
 			preload: Arc::new(Preload::new(prog_tx.clone())),
 			process: Arc::new(Process::new(prog_tx.clone())),
@@ -76,20 +76,19 @@ impl Scheduler {
 					Ok(fut) = micro.recv() => {
 						fut.await;
 					}
-					Ok(op) = macro_.recv() => {}
-					Ok((id, mut op)) = file.recv() => {
+					Ok(op) = macro_.recv() => {
+						let id = op.id();
 						if !running.read().exists(id) {
 							continue;
 						}
-						if let Err(e) = file.work(&mut op).await {
-							prog.send(TaskProg::Fail(id, format!("Failed to work on this task: {:?}", e))).ok();
-						}
-					}
-					Ok((id, mut op)) = plugin.recv() => {
-						if !running.read().exists(id) {
-							continue;
-						}
-						if let Err(e) = plugin.work(&mut op).await {
+
+						let result = match op {
+							TaskOp::File(mut op) => file.work(&mut op).await,
+							TaskOp::Plugin(mut op) => todo!(),
+							TaskOp::Preload(mut op) => todo!(),
+						};
+
+						if let Err(e) = result {
 							prog.send(TaskProg::Fail(id, format!("Failed to work on this task: {:?}", e))).ok();
 						}
 					}
