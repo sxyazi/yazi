@@ -59,25 +59,6 @@ impl From<&Task> for TaskSummary {
 }
 
 #[derive(Debug)]
-pub enum TaskOp {
-	File(Box<crate::file::FileOp>),
-	Plugin(Box<crate::plugin::PluginOp>),
-	Preload(Box<crate::preload::PreloadOp>),
-	Process(Box<crate::process::ProcessOp>),
-}
-
-impl TaskOp {
-	pub fn id(&self) {
-		match self {
-			TaskOp::File(op) => todo!(),
-			TaskOp::Plugin(op) => todo!(),
-			TaskOp::Preload(_) => todo!(),
-			TaskOp::Process(_) => todo!(),
-		}
-	}
-}
-
-#[derive(Debug)]
 pub enum TaskProg {
 	// id, size
 	New(usize, u64),

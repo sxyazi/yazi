@@ -8,6 +8,15 @@ pub enum PreloadOp {
 	Size(PreloadOpSize),
 }
 
+impl PreloadOp {
+	pub fn id(&self) -> usize {
+		match self {
+			Self::Rule(op) => op.id,
+			Self::Size(op) => op.id,
+		}
+	}
+}
+
 #[derive(Clone, Debug)]
 pub struct PreloadOpRule {
 	pub id:         usize,

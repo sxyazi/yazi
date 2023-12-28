@@ -2,6 +2,7 @@
 
 mod blocker;
 mod file;
+mod op;
 mod plugin;
 mod preload;
 mod process;
@@ -10,6 +11,7 @@ mod scheduler;
 mod task;
 
 pub use blocker::*;
+pub use op::*;
 pub use running::*;
 pub use scheduler::*;
 pub use task::*;

@@ -10,6 +10,17 @@ pub enum FileOp {
 	Trash(FileOpTrash),
 }
 
+impl FileOp {
+	pub fn id(&self) -> usize {
+		match self {
+			Self::Paste(op) => op.id,
+			Self::Link(op) => op.id,
+			Self::Delete(op) => op.id,
+			Self::Trash(op) => op.id,
+		}
+	}
+}
+
 #[derive(Clone, Debug)]
 pub struct FileOpPaste {
 	pub id:     usize,

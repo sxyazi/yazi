@@ -1,10 +1,10 @@
-use std::{collections::{BTreeMap, BTreeSet, HashMap}, sync::Arc};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use anyhow::Result;
 use parking_lot::RwLock;
 use tokio::sync::mpsc;
 use tracing::error;
-use yazi_shared::{fs::{calculate_size, FilesOp, Url}, Throttle};
+use yazi_shared::fs::{calculate_size, FilesOp, Url};
 
 use super::{PreloadOpRule, PreloadOpSize};
 use crate::TaskProg;

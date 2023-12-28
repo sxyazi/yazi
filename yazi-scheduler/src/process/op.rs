@@ -8,6 +8,14 @@ pub enum ProcessOp {
 	Open(ProcessOpOpen),
 }
 
+impl ProcessOp {
+	pub fn id(&self) -> usize {
+		match self {
+			Self::Open(op) => op.id,
+		}
+	}
+}
+
 #[derive(Debug)]
 pub struct ProcessOpOpen {
 	pub id:     usize,
