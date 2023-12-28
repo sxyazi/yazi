@@ -6,6 +6,7 @@ use tokio::sync::mpsc;
 use tracing::error;
 use yazi_shared::{fs::{calculate_size, FilesOp, Url}, Throttle};
 
+use super::{PreloadOpRule, PreloadOpSize};
 use crate::TaskProg;
 
 pub struct Preload {
@@ -13,28 +14,6 @@ pub struct Preload {
 
 	pub rule_loaded:  RwLock<HashMap<Url, u32>>,
 	pub size_loading: RwLock<BTreeSet<Url>>,
-}
-
-#[derive(Debug)]
-pub enum PreloadOp {
-	Rule(PreloadOpRule),
-	Size(PreloadOpSize),
-}
-
-#[derive(Clone, Debug)]
-pub struct PreloadOpRule {
-	pub id:         usize,
-	pub rule_id:    u8,
-	pub rule_multi: bool,
-	pub plugin:     String,
-	pub targets:    Vec<yazi_shared::fs::File>,
-}
-
-#[derive(Debug)]
-pub struct PreloadOpSize {
-	pub id:       usize,
-	pub target:   Url,
-	pub throttle: Arc<Throttle<(Url, u64)>>,
 }
 
 impl Preload {

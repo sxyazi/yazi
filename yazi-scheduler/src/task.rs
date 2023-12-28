@@ -62,8 +62,8 @@ impl From<&Task> for TaskSummary {
 pub enum TaskOp {
 	File(Box<crate::file::FileOp>),
 	Plugin(Box<crate::plugin::PluginOp>),
-	Preload(Box<crate::workers::PreloadOp>),
-	Process(Box<crate::workers::ProcessOp>),
+	Preload(Box<crate::preload::PreloadOp>),
+	Process(Box<crate::process::ProcessOp>),
 }
 
 impl TaskOp {

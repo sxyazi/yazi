@@ -1,39 +1,12 @@
-use std::{ffi::OsString, mem};
-
 use anyhow::Result;
-use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::{mpsc, oneshot}};
+use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::mpsc};
 use yazi_plugin::external::{self, ShellOpt};
 
+use super::ProcessOpOpen;
 use crate::{Scheduler, TaskProg, BLOCKER};
 
 pub struct Process {
 	prog: mpsc::UnboundedSender<TaskProg>,
-}
-
-#[derive(Debug)]
-pub enum ProcessOp {
-	Open(ProcessOpOpen),
-}
-
-#[derive(Debug)]
-pub struct ProcessOpOpen {
-	pub id:     usize,
-	pub cmd:    OsString,
-	pub args:   Vec<OsString>,
-	pub block:  bool,
-	pub orphan: bool,
-	pub cancel: oneshot::Sender<()>,
-}
-
-impl From<&mut ProcessOpOpen> for ShellOpt {
-	fn from(value: &mut ProcessOpOpen) -> Self {
-		Self {
-			cmd:    mem::take(&mut value.cmd),
-			args:   mem::take(&mut value.args),
-			piped:  false,
-			orphan: value.orphan,
-		}
-	}
 }
 
 impl Process {
