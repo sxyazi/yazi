@@ -59,7 +59,7 @@ impl From<&Task> for TaskSummary {
 }
 
 #[derive(Debug)]
-pub enum TaskOp {
+pub enum TaskProg {
 	// id, size
 	New(usize, u64),
 	// id, processed, size
