@@ -57,7 +57,8 @@ function Folder:linemode(area)
 			local size = f:size()
 			spans[#spans + 1] = ui.Span(size and ya.readable_size(size) or "")
 		elseif mode == "mtime" then
-			spans[#spans + 1] = ui.Span(os.date("%y-%m-%d %H:%M", f.cha.modified))
+			local time = f.cha.modified
+			spans[#spans + 1] = ui.Span(time and os.date("%y-%m-%d %H:%M", time // 1) or "")
 		elseif mode == "permissions" then
 			spans[#spans + 1] = ui.Span(f.cha:permissions() or "")
 		end
