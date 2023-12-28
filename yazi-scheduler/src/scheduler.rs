@@ -7,7 +7,7 @@ use yazi_config::{open::Opener, plugin::PluginRule, TASKS};
 use yazi_shared::{emit, event::Exec, fs::{unique_path, Url}, Layer, Throttle};
 
 use super::{Running, TaskProg, TaskStage};
-use crate::{file::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash}, workers::{Plugin, PluginOpEntry, Preload, PreloadOpRule, PreloadOpSize, Process, ProcessOpOpen}, TaskKind, TaskOp};
+use crate::{file::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, workers::{Preload, PreloadOpRule, PreloadOpSize, Process, ProcessOpOpen}, TaskKind, TaskOp};
 
 pub struct Scheduler {
 	pub file:    Arc<File>,

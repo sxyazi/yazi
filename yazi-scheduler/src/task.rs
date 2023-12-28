@@ -61,7 +61,7 @@ impl From<&Task> for TaskSummary {
 #[derive(Debug)]
 pub enum TaskOp {
 	File(Box<crate::file::FileOp>),
-	Plugin(Box<crate::workers::PluginOp>),
+	Plugin(Box<crate::plugin::PluginOp>),
 	Preload(Box<crate::workers::PreloadOp>),
 	Process(Box<crate::workers::ProcessOp>),
 }

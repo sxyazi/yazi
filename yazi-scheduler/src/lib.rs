@@ -2,6 +2,7 @@
 
 mod blocker;
 mod file;
+mod plugin;
 mod running;
 mod scheduler;
 mod task;

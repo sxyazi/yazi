@@ -1,6 +1,7 @@
 use anyhow::Result;
 use tokio::sync::mpsc;
 
+use super::{PluginOp, PluginOpEntry};
 use crate::TaskProg;
 
 pub struct Plugin {
@@ -8,17 +9,6 @@ pub struct Plugin {
 	rx: async_channel::Receiver<PluginOp>,
 
 	prog: mpsc::UnboundedSender<TaskProg>,
-}
-
-#[derive(Debug)]
-pub enum PluginOp {
-	Entry(PluginOpEntry),
-}
-
-#[derive(Clone, Debug)]
-pub struct PluginOpEntry {
-	pub id:   usize,
-	pub name: String,
 }
 
 impl Plugin {
