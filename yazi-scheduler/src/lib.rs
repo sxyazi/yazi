@@ -1,6 +1,7 @@
 #![allow(clippy::option_map_unit_fn, clippy::unit_arg)]
 
 mod blocker;
+mod file;
 mod running;
 mod scheduler;
 mod task;
