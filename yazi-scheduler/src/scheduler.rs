@@ -7,7 +7,7 @@ use yazi_config::{open::Opener, plugin::PluginRule, TASKS};
 use yazi_shared::{emit, event::Exec, fs::{unique_path, Url}, Layer, Throttle};
 
 use super::{Running, TaskProg, TaskStage};
-use crate::{workers::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash, Plugin, PluginOpEntry, Preload, PreloadOpRule, PreloadOpSize, Process, ProcessOpOpen}, TaskKind};
+use crate::{workers::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash, Plugin, PluginOpEntry, Preload, PreloadOpRule, PreloadOpSize, Process, ProcessOpOpen}, TaskKind, TaskOp};
 
 pub struct Scheduler {
 	pub file:    Arc<File>,
@@ -16,6 +16,7 @@ pub struct Scheduler {
 	pub process: Arc<Process>,
 
 	micro:       async_channel::Sender<BoxFuture<'static, ()>>,
+	macro_:      async_channel::Sender<TaskOp>,
 	prog:        mpsc::UnboundedSender<TaskProg>,
 	pub running: Arc<RwLock<Running>>,
 }
@@ -23,6 +24,7 @@ pub struct Scheduler {
 impl Scheduler {
 	pub fn start() -> Self {
 		let (micro_tx, micro_rx) = async_channel::unbounded();
+		let (macro_tx, macro_rx) = async_channel::unbounded();
 		let (prog_tx, prog_rx) = mpsc::unbounded_channel();
 
 		let scheduler = Self {
@@ -32,6 +34,7 @@ impl Scheduler {
 			process: Arc::new(Process::new(prog_tx.clone())),
 
 			micro:   micro_tx,
+			macro_:  macro_tx,
 			prog:    prog_tx,
 			running: Default::default(),
 		};
@@ -40,7 +43,7 @@ impl Scheduler {
 			scheduler.schedule_micro(micro_rx.clone());
 		}
 		for _ in 0..TASKS.macro_workers {
-			scheduler.schedule_macro(micro_rx.clone());
+			scheduler.schedule_macro(micro_rx.clone(), macro_rx.clone());
 		}
 		scheduler.progress(prog_rx);
 		scheduler
@@ -56,7 +59,11 @@ impl Scheduler {
 		});
 	}
 
-	fn schedule_macro(&self, rx: async_channel::Receiver<BoxFuture<'static, ()>>) {
+	fn schedule_macro(
+		&self,
+		micro: async_channel::Receiver<BoxFuture<'static, ()>>,
+		macro_: async_channel::Receiver<TaskOp>,
+	) {
 		let file = self.file.clone();
 		let plugin = self.plugin.clone();
 
@@ -65,15 +72,11 @@ impl Scheduler {
 
 		tokio::spawn(async move {
 			loop {
-				if let Ok(fut) = rx.try_recv() {
-					fut.await;
-					continue;
-				}
-
 				select! {
-					Ok(fut) = rx.recv() => {
+					Ok(fut) = micro.recv() => {
 						fut.await;
 					}
+					Ok(op) = macro_.recv() => {}
 					Ok((id, mut op)) = file.recv() => {
 						if !running.read().exists(id) {
 							continue;

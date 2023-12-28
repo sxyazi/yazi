@@ -11,6 +11,11 @@ pub struct Process {
 }
 
 #[derive(Debug)]
+pub enum ProcessOp {
+	Open(ProcessOpOpen),
+}
+
+#[derive(Debug)]
 pub struct ProcessOpOpen {
 	pub id:     usize,
 	pub cmd:    OsString,
