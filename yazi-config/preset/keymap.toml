@@ -90,13 +90,13 @@ keymap = [
 	{ on = [ "c", "n" ], exec = "copy name_without_ext", desc = "Copy the name of the file without the extension" },
 
 	# Filter
-	{ on = [ "f" ], exec = "filter" },
+	{ on = [ "f" ], exec = "filter --smart", desc = "Filter the files" },
 
 	# Find
-	{ on = [ "/" ], exec = "find --smart" },
-	{ on = [ "?" ], exec = "find --previous --smart" },
-	{ on = [ "n" ], exec = "find_arrow" },
-	{ on = [ "N" ], exec = "find_arrow --previous" },
+	{ on = [ "/" ], exec = "find --smart",            desc = "Find next file" },
+	{ on = [ "?" ], exec = "find --previous --smart", desc = "Find previous file" },
+	{ on = [ "n" ], exec = "find_arrow",              desc = "Go to next found file" },
+	{ on = [ "N" ], exec = "find_arrow --previous",   desc = "Go to previous found file" },
 
 	# Sorting
 	{ on = [ ",", "m" ], exec = "sort modified --dir_first",               desc = "Sort by modified time" },
