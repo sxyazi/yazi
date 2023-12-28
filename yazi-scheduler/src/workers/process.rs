@@ -7,7 +7,7 @@ use yazi_plugin::external::{self, ShellOpt};
 use crate::{Scheduler, TaskOp, BLOCKER};
 
 pub struct Process {
-	sch: mpsc::UnboundedSender<TaskOp>,
+	prog: mpsc::UnboundedSender<TaskOp>,
 }
 
 #[derive(Debug)]
@@ -32,7 +32,7 @@ impl From<&mut ProcessOpOpen> for ShellOpt {
 }
 
 impl Process {
-	pub fn new(sch: mpsc::UnboundedSender<TaskOp>) -> Self { Self { sch } }
+	pub fn new(prog: mpsc::UnboundedSender<TaskOp>) -> Self { Self { prog } }
 
 	pub async fn open(&self, mut task: ProcessOpOpen) -> Result<()> {
 		let opt = ShellOpt::from(&mut task);
@@ -46,7 +46,7 @@ impl Process {
 					self.succ(task.id)?;
 				}
 				Err(e) => {
-					self.sch.send(TaskOp::New(task.id, 0))?;
+					self.prog.send(TaskOp::New(task.id, 0))?;
 					self.fail(task.id, format!("Failed to spawn process: {e}"))?;
 				}
 			}
@@ -57,14 +57,14 @@ impl Process {
 			match external::shell(opt) {
 				Ok(_) => self.succ(task.id)?,
 				Err(e) => {
-					self.sch.send(TaskOp::New(task.id, 0))?;
+					self.prog.send(TaskOp::New(task.id, 0))?;
 					self.fail(task.id, format!("Failed to spawn process: {e}"))?;
 				}
 			}
 			return Ok(());
 		}
 
-		self.sch.send(TaskOp::New(task.id, 0))?;
+		self.prog.send(TaskOp::New(task.id, 0))?;
 		let mut child = external::shell(opt.with_piped())?;
 
 		let mut stdout = BufReader::new(child.stdout.take().unwrap()).lines();
@@ -94,20 +94,22 @@ impl Process {
 			}
 		}
 
-		self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
+		self.prog.send(TaskOp::Adv(task.id, 1, 0))?;
 		self.succ(task.id)
 	}
 }
 
 impl Process {
 	#[inline]
-	fn succ(&self, id: usize) -> Result<()> { Ok(self.sch.send(TaskOp::Succ(id))?) }
+	fn succ(&self, id: usize) -> Result<()> { Ok(self.prog.send(TaskOp::Succ(id))?) }
 
 	#[inline]
 	fn fail(&self, id: usize, reason: String) -> Result<()> {
-		Ok(self.sch.send(TaskOp::Fail(id, reason))?)
+		Ok(self.prog.send(TaskOp::Fail(id, reason))?)
 	}
 
 	#[inline]
-	fn log(&self, id: usize, line: String) -> Result<()> { Ok(self.sch.send(TaskOp::Log(id, line))?) }
+	fn log(&self, id: usize, line: String) -> Result<()> {
+		Ok(self.prog.send(TaskOp::Log(id, line))?)
+	}
 }

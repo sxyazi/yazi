@@ -9,7 +9,7 @@ use yazi_shared::{fs::{calculate_size, FilesOp, Url}, Throttle};
 use crate::TaskOp;
 
 pub struct Preload {
-	sch: mpsc::UnboundedSender<TaskOp>,
+	prog: mpsc::UnboundedSender<TaskOp>,
 
 	pub rule_loaded:  RwLock<HashMap<Url, u32>>,
 	pub size_loading: RwLock<BTreeSet<Url>>,
@@ -32,12 +32,12 @@ pub struct PreloadOpRule {
 }
 
 impl Preload {
-	pub fn new(sch: mpsc::UnboundedSender<TaskOp>) -> Self {
-		Self { sch, rule_loaded: Default::default(), size_loading: Default::default() }
+	pub fn new(prog: mpsc::UnboundedSender<TaskOp>) -> Self {
+		Self { prog, rule_loaded: Default::default(), size_loading: Default::default() }
 	}
 
 	pub async fn rule(&self, task: PreloadOpRule) -> Result<()> {
-		self.sch.send(TaskOp::New(task.id, 0))?;
+		self.prog.send(TaskOp::New(task.id, 0))?;
 
 		let urls: Vec<_> = task.targets.iter().map(|f| f.url()).collect();
 		let result = yazi_plugin::isolate::preload(task.plugin, task.targets, task.rule_multi).await;
@@ -57,12 +57,12 @@ impl Preload {
 			}
 		}
 
-		self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
+		self.prog.send(TaskOp::Adv(task.id, 1, 0))?;
 		self.succ(task.id)
 	}
 
 	pub async fn size(&self, task: PreloadOpSize) -> Result<()> {
-		self.sch.send(TaskOp::New(task.id, 0))?;
+		self.prog.send(TaskOp::New(task.id, 0))?;
 
 		let length = calculate_size(&task.target).await;
 		task.throttle.done((task.target, length), |buf| {
@@ -77,17 +77,17 @@ impl Preload {
 			FilesOp::Size(parent, BTreeMap::from_iter(buf)).emit();
 		});
 
-		self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
+		self.prog.send(TaskOp::Adv(task.id, 1, 0))?;
 		self.succ(task.id)
 	}
 }
 
 impl Preload {
 	#[inline]
-	fn succ(&self, id: usize) -> Result<()> { Ok(self.sch.send(TaskOp::Succ(id))?) }
+	fn succ(&self, id: usize) -> Result<()> { Ok(self.prog.send(TaskOp::Succ(id))?) }
 
 	#[inline]
 	fn fail(&self, id: usize, reason: String) -> Result<()> {
-		Ok(self.sch.send(TaskOp::Fail(id, reason))?)
+		Ok(self.prog.send(TaskOp::Fail(id, reason))?)
 	}
 }

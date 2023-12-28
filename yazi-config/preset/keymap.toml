@@ -33,10 +33,10 @@ keymap = [
 	{ on = [ "H" ], exec = "back",    desc = "Go back to the previous directory" },
 	{ on = [ "L" ], exec = "forward", desc = "Go forward to the next directory" },
 
-	{ on = [ "<A-k>" ], exec = "seek -5", desc = "Peek up 5 units in the preview" },
-	{ on = [ "<A-j>" ], exec = "seek 5",  desc = "Peek down 5 units in the preview" },
-	{ on = [ "<A-PageUp>" ],   exec = "seek -5", desc = "Peek up 5 units in the preview" },
-	{ on = [ "<A-PageDown>" ], exec = "seek 5",  desc = "Peek down 5 units in the preview" },
+	{ on = [ "<A-k>" ], exec = "seek -5", desc = "Seek up 5 units in the preview" },
+	{ on = [ "<A-j>" ], exec = "seek 5",  desc = "Seek down 5 units in the preview" },
+	{ on = [ "<A-PageUp>" ],   exec = "seek -5", desc = "Seek up 5 units in the preview" },
+	{ on = [ "<A-PageDown>" ], exec = "seek 5",  desc = "Seek down 5 units in the preview" },
 
 	{ on = [ "<Up>" ],    exec = "arrow -1", desc = "Move cursor up" },
 	{ on = [ "<Down>" ],  exec = "arrow 1",  desc = "Move cursor down" },

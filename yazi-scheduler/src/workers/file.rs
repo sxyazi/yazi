@@ -13,7 +13,7 @@ pub struct File {
 	tx: async_channel::Sender<FileOp>,
 	rx: async_channel::Receiver<FileOp>,
 
-	sch: mpsc::UnboundedSender<TaskOp>,
+	prog: mpsc::UnboundedSender<TaskOp>,
 }
 
 #[derive(Debug)]
@@ -60,9 +60,9 @@ pub struct FileOpTrash {
 }
 
 impl File {
-	pub fn new(sch: mpsc::UnboundedSender<TaskOp>) -> Self {
+	pub fn new(prog: mpsc::UnboundedSender<TaskOp>) -> Self {
 		let (tx, rx) = async_channel::unbounded();
-		Self { tx, rx, sch }
+		Self { tx, rx, prog }
 	}
 
 	#[inline]
@@ -92,7 +92,7 @@ impl File {
 							}
 							break;
 						}
-						Ok(n) => self.sch.send(TaskOp::Adv(task.id, 0, n))?,
+						Ok(n) => self.prog.send(TaskOp::Adv(task.id, 0, n))?,
 						Err(e) if e.kind() == NotFound => {
 							warn!("Paste task partially done: {:?}", task);
 							break;
@@ -110,7 +110,7 @@ impl File {
 						Err(e) => Err(e)?,
 					}
 				}
-				self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
+				self.prog.send(TaskOp::Adv(task.id, 1, 0))?;
 			}
 			FileOp::Link(task) => {
 				let meta = task.meta.as_ref().unwrap();
@@ -120,7 +120,7 @@ impl File {
 						Ok(p) => Cow::Owned(p),
 						Err(e) if e.kind() == NotFound => {
 							self.log(task.id, format!("Link task partially done: {:?}", task))?;
-							return Ok(self.sch.send(TaskOp::Adv(task.id, 1, meta.len()))?);
+							return Ok(self.prog.send(TaskOp::Adv(task.id, 1, meta.len()))?);
 						}
 						Err(e) => Err(e)?,
 					}
@@ -155,7 +155,7 @@ impl File {
 				if task.delete {
 					fs::remove_file(&task.from).await.ok();
 				}
-				self.sch.send(TaskOp::Adv(task.id, 1, meta.len()))?;
+				self.prog.send(TaskOp::Adv(task.id, 1, meta.len()))?;
 			}
 			FileOp::Delete(task) => {
 				if let Err(e) = fs::remove_file(&task.target).await {
@@ -164,7 +164,7 @@ impl File {
 						Err(e)?
 					}
 				}
-				self.sch.send(TaskOp::Adv(task.id, 1, task.length))?
+				self.prog.send(TaskOp::Adv(task.id, 1, task.length))?
 			}
 			FileOp::Trash(task) => {
 				#[cfg(target_os = "macos")]
@@ -178,7 +178,7 @@ impl File {
 				{
 					trash::delete(&task.target)?;
 				}
-				self.sch.send(TaskOp::Adv(task.id, 1, task.length))?;
+				self.prog.send(TaskOp::Adv(task.id, 1, task.length))?;
 			}
 		}
 		Ok(())
@@ -196,7 +196,7 @@ impl File {
 		let meta = Self::metadata(&task.from, task.follow).await?;
 		if !meta.is_dir() {
 			let id = task.id;
-			self.sch.send(TaskOp::New(id, meta.len()))?;
+			self.prog.send(TaskOp::New(id, meta.len()))?;
 
 			if meta.is_file() {
 				self.tx.send(FileOp::Paste(task)).await?;
@@ -211,7 +211,7 @@ impl File {
 				match $result {
 					Ok(v) => v,
 					Err(e) => {
-						self.sch.send(TaskOp::New(task.id, 0))?;
+						self.prog.send(TaskOp::New(task.id, 0))?;
 						self.fail(task.id, format!("An error occurred while pasting: {e}"))?;
 						continue;
 					}
@@ -242,7 +242,7 @@ impl File {
 
 				task.to = dest.join(src.file_name().unwrap());
 				task.from = src;
-				self.sch.send(TaskOp::New(task.id, meta.len()))?;
+				self.prog.send(TaskOp::New(task.id, meta.len()))?;
 
 				if meta.is_file() {
 					self.tx.send(FileOp::Paste(task.clone())).await?;
@@ -260,7 +260,7 @@ impl File {
 			task.meta = Some(fs::symlink_metadata(&task.from).await?);
 		}
 
-		self.sch.send(TaskOp::New(id, task.meta.as_ref().unwrap().len()))?;
+		self.prog.send(TaskOp::New(id, task.meta.as_ref().unwrap().len()))?;
 		self.tx.send(FileOp::Link(task)).await?;
 		self.succ(id)
 	}
@@ -270,7 +270,7 @@ impl File {
 		if !meta.is_dir() {
 			let id = task.id;
 			task.length = meta.len();
-			self.sch.send(TaskOp::New(id, meta.len()))?;
+			self.prog.send(TaskOp::New(id, meta.len()))?;
 			self.tx.send(FileOp::Delete(task)).await?;
 			return self.succ(id);
 		}
@@ -295,7 +295,7 @@ impl File {
 
 				task.target = Url::from(entry.path());
 				task.length = meta.len();
-				self.sch.send(TaskOp::New(task.id, meta.len()))?;
+				self.prog.send(TaskOp::New(task.id, meta.len()))?;
 				self.tx.send(FileOp::Delete(task.clone())).await?;
 			}
 		}
@@ -306,7 +306,7 @@ impl File {
 		let id = task.id;
 		task.length = calculate_size(&task.target).await;
 
-		self.sch.send(TaskOp::New(id, task.length))?;
+		self.prog.send(TaskOp::New(id, task.length))?;
 		self.tx.send(FileOp::Trash(task)).await?;
 		self.succ(id)
 	}
@@ -343,15 +343,17 @@ impl File {
 
 impl File {
 	#[inline]
-	fn succ(&self, id: usize) -> Result<()> { Ok(self.sch.send(TaskOp::Succ(id))?) }
+	fn succ(&self, id: usize) -> Result<()> { Ok(self.prog.send(TaskOp::Succ(id))?) }
 
 	#[inline]
 	fn fail(&self, id: usize, reason: String) -> Result<()> {
-		Ok(self.sch.send(TaskOp::Fail(id, reason))?)
+		Ok(self.prog.send(TaskOp::Fail(id, reason))?)
 	}
 
 	#[inline]
-	fn log(&self, id: usize, line: String) -> Result<()> { Ok(self.sch.send(TaskOp::Log(id, line))?) }
+	fn log(&self, id: usize, line: String) -> Result<()> {
+		Ok(self.prog.send(TaskOp::Log(id, line))?)
+	}
 }
 
 impl FileOpPaste {

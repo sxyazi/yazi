@@ -7,7 +7,7 @@ pub struct Plugin {
 	tx: async_channel::Sender<PluginOp>,
 	rx: async_channel::Receiver<PluginOp>,
 
-	sch: mpsc::UnboundedSender<TaskOp>,
+	prog: mpsc::UnboundedSender<TaskOp>,
 }
 
 #[derive(Debug)]
@@ -22,9 +22,9 @@ pub struct PluginOpEntry {
 }
 
 impl Plugin {
-	pub fn new(sch: mpsc::UnboundedSender<TaskOp>) -> Self {
+	pub fn new(prog: mpsc::UnboundedSender<TaskOp>) -> Self {
 		let (tx, rx) = async_channel::unbounded();
-		Self { tx, rx, sch }
+		Self { tx, rx, prog }
 	}
 
 	#[inline]
@@ -44,21 +44,21 @@ impl Plugin {
 	}
 
 	pub async fn micro(&self, task: PluginOpEntry) -> Result<()> {
-		self.sch.send(TaskOp::New(task.id, 0))?;
+		self.prog.send(TaskOp::New(task.id, 0))?;
 
 		if let Err(e) = yazi_plugin::isolate::entry(&task.name).await {
 			self.fail(task.id, format!("Micro plugin failed:\n{e}"))?;
 			return Err(e.into());
 		}
 
-		self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
+		self.prog.send(TaskOp::Adv(task.id, 1, 0))?;
 		self.succ(task.id)
 	}
 
 	pub fn macro_(&self, task: PluginOpEntry) -> Result<()> {
 		let id = task.id;
 
-		self.sch.send(TaskOp::New(id, 0))?;
+		self.prog.send(TaskOp::New(id, 0))?;
 		self.tx.send_blocking(PluginOp::Entry(task))?;
 		self.succ(id)
 	}
@@ -66,10 +66,10 @@ impl Plugin {
 
 impl Plugin {
 	#[inline]
-	fn succ(&self, id: usize) -> Result<()> { Ok(self.sch.send(TaskOp::Succ(id))?) }
+	fn succ(&self, id: usize) -> Result<()> { Ok(self.prog.send(TaskOp::Succ(id))?) }
 
 	#[inline]
 	fn fail(&self, id: usize, reason: String) -> Result<()> {
-		Ok(self.sch.send(TaskOp::Fail(id, reason))?)
+		Ok(self.prog.send(TaskOp::Fail(id, reason))?)
 	}
 }
