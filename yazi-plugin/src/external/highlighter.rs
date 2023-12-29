@@ -1,8 +1,8 @@
-use std::{mem, path::{Path, PathBuf}, sync::{atomic::{AtomicUsize, Ordering}, OnceLock}};
+use std::{io::Cursor, mem, path::{Path, PathBuf}, sync::{atomic::{AtomicUsize, Ordering}, OnceLock}};
 
 use anyhow::{anyhow, Result};
 use ratatui::text::{Line, Span, Text};
-use syntect::{dumps::from_uncompressed_data, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
+use syntect::{dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
 use tokio::{fs::File, io::{AsyncBufReadExt, BufReader}};
 use yazi_config::{PREVIEW, THEME};
 use yazi_shared::PeekError;
@@ -26,18 +26,14 @@ impl Highlighter {
 			Ok(ThemeSet::load_from_reader(&mut std::io::BufReader::new(file))?)
 		}
 
-		#[inline]
-		fn load_default_theme() -> Theme {
-			let default_theme = include_str!("../../../yazi-config/preset/ansi.tmTheme");
-			let mut theme_cursor = std::io::Cursor::new(default_theme.as_bytes());
+		let theme = SYNTECT_THEME.get_or_init(|| {
+			from_file().unwrap_or_else(|_| {
+				ThemeSet::load_from_reader(&mut Cursor::new(yazi_prebuild::ansi_theme())).unwrap()
+			})
+		});
 
-			ThemeSet::load_from_reader(&mut theme_cursor).expect("Failed to load default ANSI theme")
-		}
-
-		let theme =
-			SYNTECT_THEME.get_or_init(|| from_file().unwrap_or_else(|_err| load_default_theme()));
-		let syntaxes =
-			SYNTECT_SYNTAX.get_or_init(|| from_uncompressed_data(yazi_prebuild::syntaxes()).unwrap());
+		let syntaxes = SYNTECT_SYNTAX
+			.get_or_init(|| dumps::from_uncompressed_data(yazi_prebuild::syntaxes()).unwrap());
 
 		(theme, syntaxes)
 	}
@@ -139,7 +135,7 @@ impl Highlighter {
 }
 
 impl Highlighter {
-	// https://github.com/sharkdp/bat/blob/master/src/terminal.rs
+	// Copy from https://github.com/sharkdp/bat/blob/master/src/terminal.rs
 	fn to_ansi_color(color: highlighting::Color) -> Option<ratatui::style::Color> {
 		if color.a == 0 {
 			// Themes can specify one of the user-configurable terminal colors by
@@ -198,11 +194,10 @@ impl Highlighter {
 				Span {
 					content: s.replace('\t', &indent).into(),
 					style:   ratatui::style::Style {
-						fg:              Self::to_ansi_color(style.foreground),
-						bg:              Self::to_ansi_color(style.background),
-						underline_color: Default::default(),
-						add_modifier:    modifier,
-						sub_modifier:    Default::default(),
+						fg: Self::to_ansi_color(style.foreground),
+						// bg: Self::to_ansi_color(style.background),
+						add_modifier: modifier,
+						..Default::default()
 					},
 				}
 			})
