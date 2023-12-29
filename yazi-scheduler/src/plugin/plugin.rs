@@ -1,5 +1,6 @@
 use anyhow::Result;
 use tokio::sync::mpsc;
+use yazi_plugin::isolate;
 
 use super::{PluginOp, PluginOpEntry};
 use crate::{TaskOp, TaskProg, HIGH};
@@ -20,7 +21,7 @@ impl Plugin {
 	pub async fn work(&self, op: PluginOp) -> Result<()> {
 		match op {
 			PluginOp::Entry(task) => {
-				yazi_plugin::isolate::entry(&task.name).await?;
+				isolate::entry(&task.name).await?;
 			}
 		}
 		Ok(())
@@ -29,7 +30,7 @@ impl Plugin {
 	pub async fn micro(&self, task: PluginOpEntry) -> Result<()> {
 		self.prog.send(TaskProg::New(task.id, 0))?;
 
-		if let Err(e) = yazi_plugin::isolate::entry(&task.name).await {
+		if let Err(e) = isolate::entry(&task.name).await {
 			self.fail(task.id, format!("Micro plugin failed:\n{e}"))?;
 			return Err(e.into());
 		}

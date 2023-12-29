@@ -312,14 +312,12 @@ impl Scheduler {
 			format!("Run preloader `{}` with {} target(s)", rule.exec.cmd, targets.len()),
 		);
 
-		let (rule_id, rule_multi) = (rule.id, rule.multi);
-		let cmd = rule.exec.cmd.clone();
+		let plugin = rule.into();
 		let targets = targets.into_iter().cloned().collect();
-
 		let preload = self.preload.clone();
 		_ = self.micro.try_send(
 			async move {
-				preload.rule(PreloadOpRule { id, rule_id, rule_multi, plugin: cmd, targets }).await.ok();
+				preload.rule(PreloadOpRule { id, plugin, targets }).await.ok();
 			}
 			.boxed(),
 			HIGH,
@@ -329,6 +327,7 @@ impl Scheduler {
 	pub fn preload_size(&self, targets: Vec<&Url>) {
 		let throttle = Arc::new(Throttle::new(targets.len(), Duration::from_millis(300)));
 		let mut running = self.running.write();
+
 		for target in targets {
 			let id = running.add(TaskKind::Preload, format!("Calculate the size of {:?}", target));
 			let target = target.clone();

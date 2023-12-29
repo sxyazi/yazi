@@ -16,8 +16,8 @@ pub use running::*;
 pub use scheduler::*;
 pub use task::*;
 
-const LOW: u8 = 0;
-const NORMAL: u8 = 1;
-const HIGH: u8 = 2;
+const LOW: u8 = yazi_config::Priority::Low as u8;
+const NORMAL: u8 = yazi_config::Priority::Normal as u8;
+const HIGH: u8 = yazi_config::Priority::High as u8;
 
 pub fn init() { init_blocker(); }
