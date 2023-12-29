@@ -13,6 +13,7 @@ pub mod plugin;
 pub mod popup;
 mod preset;
 pub mod preview;
+mod priority;
 mod tasks;
 pub mod theme;
 mod validation;
@@ -21,6 +22,7 @@ mod xdg;
 pub use layout::*;
 pub(crate) use pattern::*;
 pub(crate) use preset::*;
+pub use priority::*;
 pub(crate) use xdg::*;
 
 pub static ARGS: RoCell<boot::Args> = RoCell::new();

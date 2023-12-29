@@ -33,10 +33,10 @@ keymap = [
 	{ on = [ "H" ], exec = "back",    desc = "Go back to the previous directory" },
 	{ on = [ "L" ], exec = "forward", desc = "Go forward to the next directory" },
 
-	{ on = [ "<A-k>" ], exec = "seek -5", desc = "Peek up 5 units in the preview" },
-	{ on = [ "<A-j>" ], exec = "seek 5",  desc = "Peek down 5 units in the preview" },
-	{ on = [ "<A-PageUp>" ],   exec = "seek -5", desc = "Peek up 5 units in the preview" },
-	{ on = [ "<A-PageDown>" ], exec = "seek 5",  desc = "Peek down 5 units in the preview" },
+	{ on = [ "<A-k>" ], exec = "seek -5", desc = "Seek up 5 units in the preview" },
+	{ on = [ "<A-j>" ], exec = "seek 5",  desc = "Seek down 5 units in the preview" },
+	{ on = [ "<A-PageUp>" ],   exec = "seek -5", desc = "Seek up 5 units in the preview" },
+	{ on = [ "<A-PageDown>" ], exec = "seek 5",  desc = "Seek down 5 units in the preview" },
 
 	{ on = [ "<Up>" ],    exec = "arrow -1", desc = "Move cursor up" },
 	{ on = [ "<Down>" ],  exec = "arrow 1",  desc = "Move cursor down" },
@@ -90,13 +90,13 @@ keymap = [
 	{ on = [ "c", "n" ], exec = "copy name_without_ext", desc = "Copy the name of the file without the extension" },
 
 	# Filter
-	{ on = [ "f" ], exec = "filter" },
+	{ on = [ "f" ], exec = "filter --smart", desc = "Filter the files" },
 
 	# Find
-	{ on = [ "/" ], exec = "find --smart" },
-	{ on = [ "?" ], exec = "find --previous --smart" },
-	{ on = [ "n" ], exec = "find_arrow" },
-	{ on = [ "N" ], exec = "find_arrow --previous" },
+	{ on = [ "/" ], exec = "find --smart",            desc = "Find next file" },
+	{ on = [ "?" ], exec = "find --previous --smart", desc = "Find previous file" },
+	{ on = [ "n" ], exec = "find_arrow",              desc = "Go to next found file" },
+	{ on = [ "N" ], exec = "find_arrow --previous",   desc = "Go to previous found file" },
 
 	# Sorting
 	{ on = [ ",", "m" ], exec = "sort modified --dir_first",               desc = "Sort by modified time" },

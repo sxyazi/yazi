@@ -77,7 +77,7 @@ suppress_preload = false
 [plugin]
 
 preloaders = [
-	{ name = "*", cond = "!mime", exec = "mime.lua", multi = true },
+	{ name = "*", cond = "!mime", exec = "mime.lua", multi = true, prio = "high" },
 	# Image
 	{ mime = "image/vnd.djvu", exec = "noop.lua" },
 	{ mime = "image/*",        exec = "image.lua" },

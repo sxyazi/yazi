@@ -3,7 +3,7 @@ use std::path::Path;
 use serde::Deserialize;
 use yazi_shared::{event::Exec, Condition, MIME_DIR};
 
-use crate::{pattern::Pattern, plugin::MAX_PRELOADERS, MERGED_YAZI};
+use crate::{pattern::Pattern, plugin::MAX_PRELOADERS, Priority, MERGED_YAZI};
 
 #[derive(Deserialize)]
 pub struct Plugin {
@@ -24,6 +24,8 @@ pub struct PluginRule {
 	pub sync:  bool,
 	#[serde(default)]
 	pub multi: bool,
+	#[serde(default)]
+	pub prio:  Priority,
 }
 
 impl Default for Plugin {

@@ -6,8 +6,8 @@ use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}};
 use yazi_config::{open::Opener, plugin::PluginRule, TASKS};
 use yazi_shared::{emit, event::Exec, fs::{unique_path, Url}, Layer, Throttle};
 
-use super::{Running, TaskOp, TaskStage};
-use crate::{workers::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash, Plugin, PluginOpEntry, Preload, PreloadOpRule, PreloadOpSize, Process, ProcessOpOpen}, TaskKind};
+use super::{Running, TaskProg, TaskStage};
+use crate::{file::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, preload::{Preload, PreloadOpRule, PreloadOpSize}, process::{Process, ProcessOpOpen}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
 
 pub struct Scheduler {
 	pub file:    Arc<File>,
@@ -15,79 +15,80 @@ pub struct Scheduler {
 	pub preload: Arc<Preload>,
 	pub process: Arc<Process>,
 
-	todo:        async_channel::Sender<BoxFuture<'static, ()>>,
-	prog:        mpsc::UnboundedSender<TaskOp>,
+	micro:       async_priority_channel::Sender<BoxFuture<'static, ()>, u8>,
+	prog:        mpsc::UnboundedSender<TaskProg>,
 	pub running: Arc<RwLock<Running>>,
 }
 
 impl Scheduler {
 	pub fn start() -> Self {
-		let (todo_tx, todo_rx) = async_channel::unbounded();
+		let (micro_tx, micro_rx) = async_priority_channel::unbounded();
+		let (macro_tx, macro_rx) = async_priority_channel::unbounded();
 		let (prog_tx, prog_rx) = mpsc::unbounded_channel();
 
 		let scheduler = Self {
-			file:    Arc::new(File::new(prog_tx.clone())),
-			plugin:  Arc::new(Plugin::new(prog_tx.clone())),
-			preload: Arc::new(Preload::new(prog_tx.clone())),
+			file:    Arc::new(File::new(macro_tx.clone(), prog_tx.clone())),
+			plugin:  Arc::new(Plugin::new(macro_tx.clone(), prog_tx.clone())),
+			preload: Arc::new(Preload::new(macro_tx.clone(), prog_tx.clone())),
 			process: Arc::new(Process::new(prog_tx.clone())),
 
-			todo:    todo_tx,
+			micro:   micro_tx,
 			prog:    prog_tx,
 			running: Default::default(),
 		};
 
 		for _ in 0..TASKS.micro_workers {
-			scheduler.schedule_micro(todo_rx.clone());
+			scheduler.schedule_micro(micro_rx.clone());
 		}
 		for _ in 0..TASKS.macro_workers {
-			scheduler.schedule_macro(todo_rx.clone());
+			scheduler.schedule_macro(micro_rx.clone(), macro_rx.clone());
 		}
 		scheduler.progress(prog_rx);
 		scheduler
 	}
 
-	fn schedule_micro(&self, rx: async_channel::Receiver<BoxFuture<'static, ()>>) {
+	fn schedule_micro(&self, rx: async_priority_channel::Receiver<BoxFuture<'static, ()>, u8>) {
 		tokio::spawn(async move {
 			loop {
-				if let Ok(fut) = rx.recv().await {
+				if let Ok((fut, _)) = rx.recv().await {
 					fut.await;
 				}
 			}
 		});
 	}
 
-	fn schedule_macro(&self, rx: async_channel::Receiver<BoxFuture<'static, ()>>) {
+	fn schedule_macro(
+		&self,
+		micro: async_priority_channel::Receiver<BoxFuture<'static, ()>, u8>,
+		macro_: async_priority_channel::Receiver<TaskOp, u8>,
+	) {
 		let file = self.file.clone();
 		let plugin = self.plugin.clone();
+		let preload = self.preload.clone();
 
 		let prog = self.prog.clone();
 		let running = self.running.clone();
 
 		tokio::spawn(async move {
 			loop {
-				if let Ok(fut) = rx.try_recv() {
-					fut.await;
-					continue;
-				}
-
 				select! {
-					Ok(fut) = rx.recv() => {
+					Ok((fut, _)) = micro.recv() => {
 						fut.await;
 					}
-					Ok((id, mut op)) = file.recv() => {
+					Ok((op, _)) = macro_.recv() => {
+						let id = op.id();
 						if !running.read().exists(id) {
 							continue;
 						}
-						if let Err(e) = file.work(&mut op).await {
-							prog.send(TaskOp::Fail(id, format!("Failed to work on this task: {:?}", e))).ok();
-						}
-					}
-					Ok((id, mut op)) = plugin.recv() => {
-						if !running.read().exists(id) {
-							continue;
-						}
-						if let Err(e) = plugin.work(&mut op).await {
-							prog.send(TaskOp::Fail(id, format!("Failed to work on this task: {:?}", e))).ok();
+
+						let result = match op {
+							TaskOp::File(op) => file.work(*op).await,
+							TaskOp::Plugin(op) => plugin.work(*op).await,
+							TaskOp::Preload(op) => preload.work(*op).await,
+						};
+
+						if let Err(e) = result {
+							prog.send(TaskProg::Fail(id, format!("Failed to work on this task: {:?}", e))).ok();
 						}
 					}
 				}
@@ -95,20 +96,20 @@ impl Scheduler {
 		});
 	}
 
-	fn progress(&self, mut rx: UnboundedReceiver<TaskOp>) {
-		let todo = self.todo.clone();
+	fn progress(&self, mut rx: UnboundedReceiver<TaskProg>) {
+		let micro = self.micro.clone();
 		let running = self.running.clone();
 
 		tokio::spawn(async move {
 			while let Some(op) = rx.recv().await {
 				match op {
-					TaskOp::New(id, size) => {
+					TaskProg::New(id, size) => {
 						if let Some(task) = running.write().get_mut(id) {
 							task.total += 1;
 							task.found += size;
 						}
 					}
-					TaskOp::Adv(id, succ, processed) => {
+					TaskProg::Adv(id, succ, processed) => {
 						let mut running = running.write();
 						if let Some(task) = running.get_mut(id) {
 							task.succ += succ;
@@ -116,16 +117,16 @@ impl Scheduler {
 						}
 						if succ > 0 {
 							if let Some(fut) = running.try_remove(id, TaskStage::Pending) {
-								todo.send_blocking(fut).ok();
+								micro.try_send(fut, NORMAL).ok();
 							}
 						}
 					}
-					TaskOp::Succ(id) => {
+					TaskProg::Succ(id) => {
 						if let Some(fut) = running.write().try_remove(id, TaskStage::Dispatched) {
-							todo.send_blocking(fut).ok();
+							micro.try_send(fut, NORMAL).ok();
 						}
 					}
-					TaskOp::Fail(id, reason) => {
+					TaskProg::Fail(id, reason) => {
 						if let Some(task) = running.write().get_mut(id) {
 							task.fail += 1;
 							task.logs.push_str(&reason);
@@ -136,7 +137,7 @@ impl Scheduler {
 							}
 						}
 					}
-					TaskOp::Log(id, line) => {
+					TaskProg::Log(id, line) => {
 						if let Some(task) = running.write().get_mut(id) {
 							task.logs.push_str(&line);
 							task.logs.push('\n');
@@ -156,7 +157,7 @@ impl Scheduler {
 		let b = running.all.remove(&id).is_some();
 
 		if let Some(hook) = running.hooks.remove(&id) {
-			self.todo.send_blocking(hook(true)).ok();
+			self.micro.try_send(hook(true), HIGH).ok();
 		}
 		b
 	}
@@ -193,40 +194,42 @@ impl Scheduler {
 			})
 		});
 
-		_ = self.todo.send_blocking({
-			let file = self.file.clone();
+		let file = self.file.clone();
+		_ = self.micro.try_send(
 			async move {
 				if !force {
 					to = unique_path(to).await;
 				}
 				file.paste(FileOpPaste { id, from, to, cut: true, follow: false, retry: 0 }).await.ok();
 			}
-			.boxed()
-		});
+			.boxed(),
+			LOW,
+		);
 	}
 
 	pub fn file_copy(&self, from: Url, mut to: Url, force: bool) {
 		let name = format!("Copy {:?} to {:?}", from, to);
 		let id = self.running.write().add(TaskKind::User, name);
 
-		_ = self.todo.send_blocking({
-			let file = self.file.clone();
+		let file = self.file.clone();
+		_ = self.micro.try_send(
 			async move {
 				if !force {
 					to = unique_path(to).await;
 				}
 				file.paste(FileOpPaste { id, from, to, cut: false, follow: true, retry: 0 }).await.ok();
 			}
-			.boxed()
-		});
+			.boxed(),
+			LOW,
+		);
 	}
 
 	pub fn file_link(&self, from: Url, mut to: Url, relative: bool, force: bool) {
 		let name = format!("Link {from:?} to {to:?}");
 		let id = self.running.write().add(TaskKind::User, name);
 
-		_ = self.todo.send_blocking({
-			let file = self.file.clone();
+		let file = self.file.clone();
+		_ = self.micro.try_send(
 			async move {
 				if !force {
 					to = unique_path(to).await;
@@ -236,8 +239,9 @@ impl Scheduler {
 					.await
 					.ok();
 			}
-			.boxed()
-		});
+			.boxed(),
+			LOW,
+		);
 	}
 
 	pub fn file_delete(&self, target: Url) {
@@ -259,38 +263,41 @@ impl Scheduler {
 			})
 		});
 
-		_ = self.todo.send_blocking({
-			let file = self.file.clone();
+		let file = self.file.clone();
+		_ = self.micro.try_send(
 			async move {
 				file.delete(FileOpDelete { id, target, length: 0 }).await.ok();
 			}
-			.boxed()
-		});
+			.boxed(),
+			LOW,
+		);
 	}
 
 	pub fn file_trash(&self, target: Url) {
 		let name = format!("Trash {:?}", target);
 		let id = self.running.write().add(TaskKind::User, name);
 
-		_ = self.todo.send_blocking({
-			let file = self.file.clone();
+		let file = self.file.clone();
+		_ = self.micro.try_send(
 			async move {
 				file.trash(FileOpTrash { id, target, length: 0 }).await.ok();
 			}
-			.boxed()
-		});
+			.boxed(),
+			LOW,
+		);
 	}
 
 	pub fn plugin_micro(&self, name: String) {
 		let id = self.running.write().add(TaskKind::User, format!("Run micro plugin `{name}`"));
 
-		_ = self.todo.send_blocking({
-			let plugin = self.plugin.clone();
+		let plugin = self.plugin.clone();
+		_ = self.micro.try_send(
 			async move {
 				plugin.micro(PluginOpEntry { id, name }).await.ok();
 			}
-			.boxed()
-		});
+			.boxed(),
+			HIGH,
+		);
 	}
 
 	pub fn plugin_macro(&self, name: String) {
@@ -305,33 +312,35 @@ impl Scheduler {
 			format!("Run preloader `{}` with {} target(s)", rule.exec.cmd, targets.len()),
 		);
 
-		_ = self.todo.send_blocking({
-			let preload = self.preload.clone();
-
-			let (rule_id, rule_multi) = (rule.id, rule.multi);
-			let cmd = rule.exec.cmd.clone();
-			let targets = targets.into_iter().cloned().collect();
+		let plugin = rule.into();
+		let targets = targets.into_iter().cloned().collect();
+		let preload = self.preload.clone();
+		_ = self.micro.try_send(
 			async move {
-				preload.rule(PreloadOpRule { id, rule_id, rule_multi, plugin: cmd, targets }).await.ok();
+				preload.rule(PreloadOpRule { id, plugin, targets }).await.ok();
 			}
-			.boxed()
-		});
+			.boxed(),
+			HIGH,
+		);
 	}
 
 	pub fn preload_size(&self, targets: Vec<&Url>) {
 		let throttle = Arc::new(Throttle::new(targets.len(), Duration::from_millis(300)));
 		let mut running = self.running.write();
+
 		for target in targets {
 			let id = running.add(TaskKind::Preload, format!("Calculate the size of {:?}", target));
-			_ = self.todo.send_blocking({
-				let preload = self.preload.clone();
-				let target = target.clone();
-				let throttle = throttle.clone();
+			let target = target.clone();
+			let throttle = throttle.clone();
+
+			let preload = self.preload.clone();
+			_ = self.micro.try_send(
 				async move {
 					preload.size(PreloadOpSize { id, target, throttle }).await.ok();
 				}
-				.boxed()
-			});
+				.boxed(),
+				HIGH,
+			);
 		}
 	}
 

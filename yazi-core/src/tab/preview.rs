@@ -5,7 +5,7 @@ use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use tokio_util::sync::CancellationToken;
 use yazi_adaptor::ADAPTOR;
 use yazi_config::PLUGIN;
-use yazi_plugin::{external::Highlighter, utils::PreviewLock};
+use yazi_plugin::{external::Highlighter, isolate, utils::PreviewLock};
 use yazi_shared::{fs::{Cha, File, FilesOp, Url}, MIME_DIR};
 
 use crate::folder::Files;
@@ -32,9 +32,9 @@ impl Preview {
 
 		self.abort();
 		if previewer.sync {
-			yazi_plugin::isolate::peek_sync(&previewer.exec, file, self.skip);
+			isolate::peek_sync(&previewer.exec, file, self.skip);
 		} else {
-			self.previewer_ct = Some(yazi_plugin::isolate::peek(&previewer.exec, file, self.skip));
+			self.previewer_ct = Some(isolate::peek(&previewer.exec, file, self.skip));
 		}
 	}
 

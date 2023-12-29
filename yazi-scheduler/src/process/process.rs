@@ -1,38 +1,16 @@
-use std::{ffi::OsString, mem};
-
 use anyhow::Result;
-use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::{mpsc, oneshot}};
+use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::mpsc};
 use yazi_plugin::external::{self, ShellOpt};
 
-use crate::{Scheduler, TaskOp, BLOCKER};
+use super::ProcessOpOpen;
+use crate::{Scheduler, TaskProg, BLOCKER};
 
 pub struct Process {
-	sch: mpsc::UnboundedSender<TaskOp>,
-}
-
-#[derive(Debug)]
-pub struct ProcessOpOpen {
-	pub id:     usize,
-	pub cmd:    OsString,
-	pub args:   Vec<OsString>,
-	pub block:  bool,
-	pub orphan: bool,
-	pub cancel: oneshot::Sender<()>,
-}
-
-impl From<&mut ProcessOpOpen> for ShellOpt {
-	fn from(value: &mut ProcessOpOpen) -> Self {
-		Self {
-			cmd:    mem::take(&mut value.cmd),
-			args:   mem::take(&mut value.args),
-			piped:  false,
-			orphan: value.orphan,
-		}
-	}
+	prog: mpsc::UnboundedSender<TaskProg>,
 }
 
 impl Process {
-	pub fn new(sch: mpsc::UnboundedSender<TaskOp>) -> Self { Self { sch } }
+	pub fn new(prog: mpsc::UnboundedSender<TaskProg>) -> Self { Self { prog } }
 
 	pub async fn open(&self, mut task: ProcessOpOpen) -> Result<()> {
 		let opt = ShellOpt::from(&mut task);
@@ -46,7 +24,7 @@ impl Process {
 					self.succ(task.id)?;
 				}
 				Err(e) => {
-					self.sch.send(TaskOp::New(task.id, 0))?;
+					self.prog.send(TaskProg::New(task.id, 0))?;
 					self.fail(task.id, format!("Failed to spawn process: {e}"))?;
 				}
 			}
@@ -57,14 +35,14 @@ impl Process {
 			match external::shell(opt) {
 				Ok(_) => self.succ(task.id)?,
 				Err(e) => {
-					self.sch.send(TaskOp::New(task.id, 0))?;
+					self.prog.send(TaskProg::New(task.id, 0))?;
 					self.fail(task.id, format!("Failed to spawn process: {e}"))?;
 				}
 			}
 			return Ok(());
 		}
 
-		self.sch.send(TaskOp::New(task.id, 0))?;
+		self.prog.send(TaskProg::New(task.id, 0))?;
 		let mut child = external::shell(opt.with_piped())?;
 
 		let mut stdout = BufReader::new(child.stdout.take().unwrap()).lines();
@@ -94,20 +72,22 @@ impl Process {
 			}
 		}
 
-		self.sch.send(TaskOp::Adv(task.id, 1, 0))?;
+		self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 		self.succ(task.id)
 	}
 }
 
 impl Process {
 	#[inline]
-	fn succ(&self, id: usize) -> Result<()> { Ok(self.sch.send(TaskOp::Succ(id))?) }
+	fn succ(&self, id: usize) -> Result<()> { Ok(self.prog.send(TaskProg::Succ(id))?) }
 
 	#[inline]
 	fn fail(&self, id: usize, reason: String) -> Result<()> {
-		Ok(self.sch.send(TaskOp::Fail(id, reason))?)
+		Ok(self.prog.send(TaskProg::Fail(id, reason))?)
 	}
 
 	#[inline]
-	fn log(&self, id: usize, line: String) -> Result<()> { Ok(self.sch.send(TaskOp::Log(id, line))?) }
+	fn log(&self, id: usize, line: String) -> Result<()> {
+		Ok(self.prog.send(TaskProg::Log(id, line))?)
+	}
 }
