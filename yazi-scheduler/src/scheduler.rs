@@ -7,7 +7,7 @@ use yazi_config::{open::Opener, plugin::PluginRule, TASKS};
 use yazi_shared::{emit, event::Exec, fs::{unique_path, Url}, Layer, Throttle};
 
 use super::{Running, TaskProg, TaskStage};
-use crate::{file::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, preload::{Preload, PreloadOpRule, PreloadOpSize}, process::{Process, ProcessOpOpen}, TaskKind, TaskOp, HIGH, NORMAL, VERY_HIGH, VERY_LOW};
+use crate::{file::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, preload::{Preload, PreloadOpRule, PreloadOpSize}, process::{Process, ProcessOpOpen}, TaskKind, TaskOp, _HIGH, _LOW, _NORMAL};
 
 pub struct Scheduler {
 	pub file:    Arc<File>,
@@ -117,13 +117,13 @@ impl Scheduler {
 						}
 						if succ > 0 {
 							if let Some(fut) = running.try_remove(id, TaskStage::Pending) {
-								micro.try_send(fut, HIGH).ok();
+								micro.try_send(fut, _NORMAL).ok();
 							}
 						}
 					}
 					TaskProg::Succ(id) => {
 						if let Some(fut) = running.write().try_remove(id, TaskStage::Dispatched) {
-							micro.try_send(fut, HIGH).ok();
+							micro.try_send(fut, _NORMAL).ok();
 						}
 					}
 					TaskProg::Fail(id, reason) => {
@@ -157,7 +157,7 @@ impl Scheduler {
 		let b = running.all.remove(&id).is_some();
 
 		if let Some(hook) = running.hooks.remove(&id) {
-			self.micro.try_send(hook(true), HIGH).ok();
+			self.micro.try_send(hook(true), _HIGH).ok();
 		}
 		b
 	}
@@ -203,7 +203,7 @@ impl Scheduler {
 				file.paste(FileOpPaste { id, from, to, cut: true, follow: false, retry: 0 }).await.ok();
 			}
 			.boxed(),
-			VERY_LOW,
+			_LOW,
 		);
 	}
 
@@ -220,7 +220,7 @@ impl Scheduler {
 				file.paste(FileOpPaste { id, from, to, cut: false, follow: true, retry: 0 }).await.ok();
 			}
 			.boxed(),
-			VERY_LOW,
+			_LOW,
 		);
 	}
 
@@ -240,7 +240,7 @@ impl Scheduler {
 					.ok();
 			}
 			.boxed(),
-			VERY_LOW,
+			_LOW,
 		);
 	}
 
@@ -269,7 +269,7 @@ impl Scheduler {
 				file.delete(FileOpDelete { id, target, length: 0 }).await.ok();
 			}
 			.boxed(),
-			VERY_LOW,
+			_LOW,
 		);
 	}
 
@@ -283,7 +283,7 @@ impl Scheduler {
 				file.trash(FileOpTrash { id, target, length: 0 }).await.ok();
 			}
 			.boxed(),
-			VERY_LOW,
+			_LOW,
 		);
 	}
 
@@ -296,7 +296,7 @@ impl Scheduler {
 				plugin.micro(PluginOpEntry { id, name }).await.ok();
 			}
 			.boxed(),
-			VERY_HIGH,
+			_HIGH,
 		);
 	}
 
@@ -322,7 +322,7 @@ impl Scheduler {
 				preload.rule(PreloadOpRule { id, rule_id, rule_multi, plugin: cmd, targets }).await.ok();
 			}
 			.boxed(),
-			HIGH,
+			_HIGH,
 		);
 	}
 
@@ -340,7 +340,7 @@ impl Scheduler {
 					preload.size(PreloadOpSize { id, target, throttle }).await.ok();
 				}
 				.boxed(),
-				HIGH,
+				_HIGH,
 			);
 		}
 	}
