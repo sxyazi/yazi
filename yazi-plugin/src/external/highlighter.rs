@@ -1,10 +1,10 @@
 use std::{mem, path::{Path, PathBuf}, sync::{atomic::{AtomicUsize, Ordering}, OnceLock}};
 
 use anyhow::{anyhow, Result};
-use crossterm::{style::{Color, Print, SetForegroundColor}, Command};
-use syntect::{dumps::from_uncompressed_data, easy::HighlightLines, highlighting::{Style, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
+use ratatui::text::{Line, Span, Text};
+use syntect::{dumps::from_uncompressed_data, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
 use tokio::{fs::File, io::{AsyncBufReadExt, BufReader}};
-use yazi_config::THEME;
+use yazi_config::{PREVIEW, THEME};
 use yazi_shared::PeekError;
 
 static INCR: AtomicUsize = AtomicUsize::new(0);
@@ -60,7 +60,7 @@ impl Highlighter {
 		syntaxes.find_syntax_by_first_line(&line).ok_or_else(|| anyhow!("No syntax found"))
 	}
 
-	pub async fn highlight(&self, skip: usize, limit: usize) -> Result<String, PeekError> {
+	pub async fn highlight(&self, skip: usize, limit: usize) -> Result<Text<'static>, PeekError> {
 		let mut reader = BufReader::new(File::open(&self.path).await?).lines();
 
 		let syntax = Self::find_syntax(&self.path).await;
@@ -77,8 +77,8 @@ impl Highlighter {
 			}
 
 			if !plain && line.len() > 6000 {
-				mem::take(&mut before);
 				plain = true;
+				drop(mem::take(&mut before));
 			}
 
 			if i > skip {
@@ -95,7 +95,7 @@ impl Highlighter {
 		}
 
 		if plain {
-			Ok(after.join(""))
+			Ok(Text::from(after.join("")))
 		} else {
 			Self::highlight_with(before, after, syntax.unwrap()).await
 		}
@@ -105,13 +105,12 @@ impl Highlighter {
 		before: Vec<String>,
 		after: Vec<String>,
 		syntax: &'static SyntaxReference,
-	) -> Result<String, PeekError> {
+	) -> Result<Text<'static>, PeekError> {
 		let ticket = INCR.load(Ordering::Relaxed);
 
 		tokio::task::spawn_blocking(move || {
 			let (theme, syntaxes) = Self::init();
 			let mut h = HighlightLines::new(syntax, theme);
-			let mut result = String::new();
 
 			for line in before {
 				if ticket != INCR.load(Ordering::Relaxed) {
@@ -119,41 +118,96 @@ impl Highlighter {
 				}
 				h.highlight_line(&line, syntaxes).map_err(|e| anyhow!(e))?;
 			}
+
+			let mut lines = Vec::with_capacity(after.len());
 			for line in after {
 				if ticket != INCR.load(Ordering::Relaxed) {
 					return Err("Highlighting cancelled".into());
 				}
 
 				let regions = h.highlight_line(&line, syntaxes).map_err(|e| anyhow!(e))?;
-				Self::write_highlighted_line_as_ansi(&regions, &mut result)
-					.map_err(|e| anyhow!("Failed to write highlighted text to preview window: {}", e))?;
+				lines.push(Self::to_line_widget(regions));
 			}
 
-			SetForegroundColor(Color::Reset)
-				.write_ansi(&mut result)
-				.map_err(|e| anyhow!("Failed to reset color at end of preview window line: {}", e))?;
-
-			Ok(result)
+			Ok(Text::from(lines))
 		})
 		.await?
 	}
 
-	fn write_highlighted_line_as_ansi(regions: &[(Style, &str)], s: &mut String) -> std::fmt::Result {
-		for &(ref style, text) in regions {
-			let fg = style.foreground;
-			// As is done in the file previewer `bat`, we assume the convention that themes
-			// with a 0x00 alpha value are actually 8-bit themes, with their colors in the
-			// red color component. <https://github.com/sharkdp/bat/blob/b89dc15be1d86869bf73e5b9f96af7b930753a55/src/terminal.rs#L8>
-			let foreground_color =
-				if fg.a == 0 { Color::AnsiValue(fg.r) } else { Color::Rgb { r: fg.r, g: fg.g, b: fg.b } };
-
-			SetForegroundColor(foreground_color).write_ansi(s)?;
-			Print(text).write_ansi(s)?;
-		}
-
-		Ok(())
-	}
-
 	#[inline]
 	pub fn abort() { INCR.fetch_add(1, Ordering::Relaxed); }
+}
+
+impl Highlighter {
+	// https://github.com/sharkdp/bat/blob/master/src/terminal.rs
+	fn to_ansi_color(color: highlighting::Color) -> Option<ratatui::style::Color> {
+		if color.a == 0 {
+			// Themes can specify one of the user-configurable terminal colors by
+			// encoding them as #RRGGBBAA with AA set to 00 (transparent) and RR set
+			// to the 8-bit color palette number. The built-in themes ansi, base16,
+			// and base16-256 use this.
+			Some(match color.r {
+				// For the first 8 colors, use the Color enum to produce ANSI escape
+				// sequences using codes 30-37 (foreground) and 40-47 (background).
+				// For example, red foreground is \x1b[31m. This works on terminals
+				// without 256-color support.
+				0x00 => ratatui::style::Color::Black,
+				0x01 => ratatui::style::Color::Red,
+				0x02 => ratatui::style::Color::Green,
+				0x03 => ratatui::style::Color::Yellow,
+				0x04 => ratatui::style::Color::Blue,
+				0x05 => ratatui::style::Color::Magenta,
+				0x06 => ratatui::style::Color::Cyan,
+				0x07 => ratatui::style::Color::White,
+				// For all other colors, use Fixed to produce escape sequences using
+				// codes 38;5 (foreground) and 48;5 (background). For example,
+				// bright red foreground is \x1b[38;5;9m. This only works on
+				// terminals with 256-color support.
+				//
+				// TODO: When ansi_term adds support for bright variants using codes
+				// 90-97 (foreground) and 100-107 (background), we should use those
+				// for values 0x08 to 0x0f and only use Fixed for 0x10 to 0xff.
+				n => ratatui::style::Color::Indexed(n),
+			})
+		} else if color.a == 1 {
+			// Themes can specify the terminal's default foreground/background color
+			// (i.e. no escape sequence) using the encoding #RRGGBBAA with AA set to
+			// 01. The built-in theme ansi uses this.
+			None
+		} else {
+			Some(ratatui::style::Color::Rgb(color.r, color.g, color.b))
+		}
+	}
+
+	fn to_line_widget(regions: Vec<(highlighting::Style, &str)>) -> Line<'static> {
+		let indent = " ".repeat(PREVIEW.tab_size as usize);
+		let spans: Vec<_> = regions
+			.into_iter()
+			.map(|(style, s)| {
+				let mut modifier = ratatui::style::Modifier::empty();
+				if style.font_style.contains(highlighting::FontStyle::BOLD) {
+					modifier |= ratatui::style::Modifier::BOLD;
+				}
+				if style.font_style.contains(highlighting::FontStyle::ITALIC) {
+					modifier |= ratatui::style::Modifier::ITALIC;
+				}
+				if style.font_style.contains(highlighting::FontStyle::UNDERLINE) {
+					modifier |= ratatui::style::Modifier::UNDERLINED;
+				}
+
+				Span {
+					content: s.replace('\t', &indent).into(),
+					style:   ratatui::style::Style {
+						fg:              Self::to_ansi_color(style.foreground),
+						bg:              Self::to_ansi_color(style.background),
+						underline_color: Default::default(),
+						add_modifier:    modifier,
+						sub_modifier:    Default::default(),
+					},
+				}
+			})
+			.collect();
+
+		Line::from(spans)
+	}
 }

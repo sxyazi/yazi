@@ -1,6 +1,4 @@
-use ansi_to_tui::IntoText;
-use mlua::{AnyUserData, ExternalResult, IntoLuaMulti, Lua, Table, Value};
-use yazi_config::PREVIEW;
+use mlua::{AnyUserData, IntoLuaMulti, Lua, Table, Value};
 use yazi_shared::{emit, event::Exec, Layer, PeekError};
 
 use super::Utils;
@@ -38,17 +36,13 @@ impl Utils {
 				let area: RectRef = t.get("area")?;
 				let mut lock = PreviewLock::try_from(t)?;
 
-				let s = match Highlighter::new(&lock.url).highlight(lock.skip, area.height as usize).await {
-					Ok(s) => s.replace('\t', &" ".repeat(PREVIEW.tab_size as usize)),
-					Err(PeekError::Exceed(max)) => return (false, max).into_lua_multi(lua),
-					Err(_) => return (false, Value::Nil).into_lua_multi(lua),
-				};
-
-				lock.data = vec![Box::new(Paragraph {
-					area: *area,
-					text: s.into_text().into_lua_err()?,
-					..Default::default()
-				})];
+				let text =
+					match Highlighter::new(&lock.url).highlight(lock.skip, area.height as usize).await {
+						Ok(text) => text,
+						Err(PeekError::Exceed(max)) => return (false, max).into_lua_multi(lua),
+						Err(_) => return (false, Value::Nil).into_lua_multi(lua),
+					};
+				lock.data = vec![Box::new(Paragraph { area: *area, text, ..Default::default() })];
 
 				emit!(Call(Exec::call("preview", vec![]).with_data(lock).vec(), Layer::Manager));
 				(true, Value::Nil).into_lua_multi(lua)
