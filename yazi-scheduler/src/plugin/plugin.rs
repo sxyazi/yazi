@@ -2,7 +2,7 @@ use anyhow::Result;
 use tokio::sync::mpsc;
 
 use super::{PluginOp, PluginOpEntry};
-use crate::{TaskOp, TaskProg, _HIGH};
+use crate::{TaskOp, TaskProg, HIGH};
 
 pub struct Plugin {
 	macro_: async_priority_channel::Sender<TaskOp, u8>,
@@ -42,7 +42,7 @@ impl Plugin {
 		let id = task.id;
 
 		self.prog.send(TaskProg::New(id, 0))?;
-		self.macro_.try_send(PluginOp::Entry(task).into(), _HIGH)?;
+		self.macro_.try_send(PluginOp::Entry(task).into(), HIGH)?;
 		self.succ(id)
 	}
 }

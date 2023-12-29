@@ -16,8 +16,8 @@ pub use running::*;
 pub use scheduler::*;
 pub use task::*;
 
-const _LOW: u8 = 0;
-const _NORMAL: u8 = 1;
-const _HIGH: u8 = 2;
+const LOW: u8 = 0;
+const NORMAL: u8 = 1;
+const HIGH: u8 = 2;
 
 pub fn init() { init_blocker(); }

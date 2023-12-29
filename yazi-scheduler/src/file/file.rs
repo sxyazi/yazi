@@ -8,7 +8,7 @@ use yazi_config::TASKS;
 use yazi_shared::fs::{calculate_size, copy_with_progress, path_relative_to, Url};
 
 use super::{FileOp, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash};
-use crate::{TaskOp, TaskProg, _LOW, _NORMAL};
+use crate::{TaskOp, TaskProg, LOW, NORMAL};
 
 pub struct File {
 	macro_: async_priority_channel::Sender<TaskOp, u8>,
@@ -53,7 +53,7 @@ impl File {
 						{
 							self.log(task.id, format!("Paste task retry: {:?}", task))?;
 							task.retry += 1;
-							return Ok(self.macro_.send(FileOp::Paste(task).into(), _LOW).await?);
+							return Ok(self.macro_.send(FileOp::Paste(task).into(), LOW).await?);
 						}
 						Err(e) => Err(e)?,
 					}
@@ -147,9 +147,9 @@ impl File {
 			self.prog.send(TaskProg::New(id, meta.len()))?;
 
 			if meta.is_file() {
-				self.macro_.send(FileOp::Paste(task).into(), _LOW).await?;
+				self.macro_.send(FileOp::Paste(task).into(), LOW).await?;
 			} else if meta.is_symlink() {
-				self.macro_.send(FileOp::Link(task.to_link(meta)).into(), _NORMAL).await?;
+				self.macro_.send(FileOp::Link(task.to_link(meta)).into(), NORMAL).await?;
 			}
 			return self.succ(id);
 		}
@@ -193,9 +193,9 @@ impl File {
 				self.prog.send(TaskProg::New(task.id, meta.len()))?;
 
 				if meta.is_file() {
-					self.macro_.send(FileOp::Paste(task.clone()).into(), _LOW).await?;
+					self.macro_.send(FileOp::Paste(task.clone()).into(), LOW).await?;
 				} else if meta.is_symlink() {
-					self.macro_.send(FileOp::Link(task.to_link(meta)).into(), _NORMAL).await?;
+					self.macro_.send(FileOp::Link(task.to_link(meta)).into(), NORMAL).await?;
 				}
 			}
 		}
@@ -209,7 +209,7 @@ impl File {
 		}
 
 		self.prog.send(TaskProg::New(id, task.meta.as_ref().unwrap().len()))?;
-		self.macro_.send(FileOp::Link(task).into(), _NORMAL).await?;
+		self.macro_.send(FileOp::Link(task).into(), NORMAL).await?;
 		self.succ(id)
 	}
 
@@ -219,7 +219,7 @@ impl File {
 			let id = task.id;
 			task.length = meta.len();
 			self.prog.send(TaskProg::New(id, meta.len()))?;
-			self.macro_.send(FileOp::Delete(task).into(), _NORMAL).await?;
+			self.macro_.send(FileOp::Delete(task).into(), NORMAL).await?;
 			return self.succ(id);
 		}
 
@@ -244,7 +244,7 @@ impl File {
 				task.target = Url::from(entry.path());
 				task.length = meta.len();
 				self.prog.send(TaskProg::New(task.id, meta.len()))?;
-				self.macro_.send(FileOp::Delete(task.clone()).into(), _NORMAL).await?;
+				self.macro_.send(FileOp::Delete(task.clone()).into(), NORMAL).await?;
 			}
 		}
 		self.succ(task.id)
@@ -255,7 +255,7 @@ impl File {
 		task.length = calculate_size(&task.target).await;
 
 		self.prog.send(TaskProg::New(id, task.length))?;
-		self.macro_.send(FileOp::Trash(task).into(), _LOW).await?;
+		self.macro_.send(FileOp::Trash(task).into(), LOW).await?;
 		self.succ(id)
 	}
 
