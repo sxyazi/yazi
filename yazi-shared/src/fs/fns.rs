@@ -38,40 +38,15 @@ pub async fn calculate_size(path: &Path) -> u64 {
 pub fn copy_with_progress(from: &Path, to: &Path) -> mpsc::Receiver<Result<u64, io::Error>> {
 	let (tx, rx) = mpsc::channel(1);
 	let (tick_tx, mut tick_rx) = oneshot::channel();
-	let is_symlink = from.is_symlink();
 
 	tokio::spawn({
 		let (from, to) = (from.to_path_buf(), to.to_path_buf());
 
 		async move {
-			if is_symlink {
-				#[cfg(unix)]
-				{
-					_ = match fs::symlink(from, to).await {
-						Ok(()) => tick_tx.send(Ok(1)),
-						Err(e) => tick_tx.send(Err(e)),
-					}
-				}
-				#[cfg(windows)]
-				{
-					if from.is_dir() {
-						_ = match fs::symlink_dir(from, to).await {
-							Ok(()) => tick_tx.send(Ok(1)),
-							Err(e) => tick_tx.send(Err(e)),
-						}
-					} else {
-						_ = match fs::symlink_file(from, to).await {
-							Ok(()) => tick_tx.send(Ok(1)),
-							Err(e) => tick_tx.send(Err(e)),
-						}
-					}
-				}
-			} else {
-				_ = match fs::copy(from, to).await {
-					Ok(len) => tick_tx.send(Ok(len)),
-					Err(e) => tick_tx.send(Err(e)),
-				};
-			}
+			_ = match fs::copy(from, to).await {
+				Ok(len) => tick_tx.send(Ok(len)),
+				Err(e) => tick_tx.send(Err(e)),
+			};
 		}
 	});
 
@@ -104,12 +79,7 @@ pub fn copy_with_progress(from: &Path, to: &Path) -> mpsc::Receiver<Result<u64, 
 					None => {}
 				}
 
-				let len = if is_symlink {
-					1
-				} else {
-					fs::symlink_metadata(&to).await.map(|m| m.len()).unwrap_or(0)
-				};
-
+				let len = fs::symlink_metadata(&to).await.map(|m| m.len()).unwrap_or(0);
 				if len > last {
 					tx.send(Ok(len - last)).await.ok();
 					last = len;
