@@ -15,16 +15,16 @@ yazi-shared  = { path = "../yazi-shared", version = "0.1.5" }
 yazi-plugin  = { path = "../yazi-plugin", version = "0.1.5" }
 
 # External dependencies
-anyhow        = "^1"
-async-channel = "^1"
-base64        = "^0"
-crossterm     = "^0"
-futures       = "^0"
-parking_lot   = "^0"
-regex         = "^1"
-tokio         = { version = "^1", features = [ "parking_lot", "rt-multi-thread" ] }
-tokio-stream  = "^0"
-trash         = "^3"
+anyhow                 = "^1"
+async-priority-channel = "^0"
+base64                 = "^0"
+crossterm              = "^0"
+futures                = "^0"
+parking_lot            = "^0"
+regex                  = "^1"
+tokio                  = { version = "^1", features = [ "parking_lot", "rt-multi-thread" ] }
+tokio-stream           = "^0"
+trash                  = "^3"
 
 # Logging
 tracing = { version = "^0", features = [ "max_level_debug", "release_max_level_warn" ] }

@@ -2,15 +2,18 @@ use anyhow::Result;
 use tokio::sync::mpsc;
 
 use super::{PluginOp, PluginOpEntry};
-use crate::{TaskOp, TaskProg};
+use crate::{TaskOp, TaskProg, NORMAL};
 
 pub struct Plugin {
-	macro_: async_channel::Sender<TaskOp>,
+	macro_: async_priority_channel::Sender<TaskOp, u8>,
 	prog:   mpsc::UnboundedSender<TaskProg>,
 }
 
 impl Plugin {
-	pub fn new(macro_: async_channel::Sender<TaskOp>, prog: mpsc::UnboundedSender<TaskProg>) -> Self {
+	pub fn new(
+		macro_: async_priority_channel::Sender<TaskOp, u8>,
+		prog: mpsc::UnboundedSender<TaskProg>,
+	) -> Self {
 		Self { macro_, prog }
 	}
 
@@ -39,7 +42,7 @@ impl Plugin {
 		let id = task.id;
 
 		self.prog.send(TaskProg::New(id, 0))?;
-		self.macro_.send_blocking(PluginOp::Entry(task).into())?;
+		self.macro_.try_send(PluginOp::Entry(task).into(), NORMAL)?;
 		self.succ(id)
 	}
 }

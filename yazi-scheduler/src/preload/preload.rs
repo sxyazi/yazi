@@ -10,7 +10,7 @@ use super::{PreloadOp, PreloadOpRule, PreloadOpSize};
 use crate::{TaskOp, TaskProg};
 
 pub struct Preload {
-	macro_: async_channel::Sender<TaskOp>,
+	macro_: async_priority_channel::Sender<TaskOp, u8>,
 	prog:   mpsc::UnboundedSender<TaskProg>,
 
 	pub rule_loaded:  RwLock<HashMap<Url, u32>>,
@@ -18,7 +18,10 @@ pub struct Preload {
 }
 
 impl Preload {
-	pub fn new(macro_: async_channel::Sender<TaskOp>, prog: mpsc::UnboundedSender<TaskProg>) -> Self {
+	pub fn new(
+		macro_: async_priority_channel::Sender<TaskOp, u8>,
+		prog: mpsc::UnboundedSender<TaskProg>,
+	) -> Self {
 		Self { macro_, prog, rule_loaded: Default::default(), size_loading: Default::default() }
 	}
 

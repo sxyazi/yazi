@@ -7,7 +7,7 @@ use yazi_config::{open::Opener, plugin::PluginRule, TASKS};
 use yazi_shared::{emit, event::Exec, fs::{unique_path, Url}, Layer, Throttle};
 
 use super::{Running, TaskProg, TaskStage};
-use crate::{file::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, preload::{Preload, PreloadOpRule, PreloadOpSize}, process::{Process, ProcessOpOpen}, TaskKind, TaskOp};
+use crate::{file::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, preload::{Preload, PreloadOpRule, PreloadOpSize}, process::{Process, ProcessOpOpen}, TaskKind, TaskOp, HIGH, NORMAL, VERY_HIGH, VERY_LOW};
 
 pub struct Scheduler {
 	pub file:    Arc<File>,
@@ -15,15 +15,15 @@ pub struct Scheduler {
 	pub preload: Arc<Preload>,
 	pub process: Arc<Process>,
 
-	micro:       async_channel::Sender<BoxFuture<'static, ()>>,
+	micro:       async_priority_channel::Sender<BoxFuture<'static, ()>, u8>,
 	prog:        mpsc::UnboundedSender<TaskProg>,
 	pub running: Arc<RwLock<Running>>,
 }
 
 impl Scheduler {
 	pub fn start() -> Self {
-		let (micro_tx, micro_rx) = async_channel::unbounded();
-		let (macro_tx, macro_rx) = async_channel::unbounded();
+		let (micro_tx, micro_rx) = async_priority_channel::unbounded();
+		let (macro_tx, macro_rx) = async_priority_channel::unbounded();
 		let (prog_tx, prog_rx) = mpsc::unbounded_channel();
 
 		let scheduler = Self {
@@ -47,10 +47,10 @@ impl Scheduler {
 		scheduler
 	}
 
-	fn schedule_micro(&self, rx: async_channel::Receiver<BoxFuture<'static, ()>>) {
+	fn schedule_micro(&self, rx: async_priority_channel::Receiver<BoxFuture<'static, ()>, u8>) {
 		tokio::spawn(async move {
 			loop {
-				if let Ok(fut) = rx.recv().await {
+				if let Ok((fut, _)) = rx.recv().await {
 					fut.await;
 				}
 			}
@@ -59,8 +59,8 @@ impl Scheduler {
 
 	fn schedule_macro(
 		&self,
-		micro: async_channel::Receiver<BoxFuture<'static, ()>>,
-		macro_: async_channel::Receiver<TaskOp>,
+		micro: async_priority_channel::Receiver<BoxFuture<'static, ()>, u8>,
+		macro_: async_priority_channel::Receiver<TaskOp, u8>,
 	) {
 		let file = self.file.clone();
 		let plugin = self.plugin.clone();
@@ -72,10 +72,10 @@ impl Scheduler {
 		tokio::spawn(async move {
 			loop {
 				select! {
-					Ok(fut) = micro.recv() => {
+					Ok((fut, _)) = micro.recv() => {
 						fut.await;
 					}
-					Ok(op) = macro_.recv() => {
+					Ok((op, _)) = macro_.recv() => {
 						let id = op.id();
 						if !running.read().exists(id) {
 							continue;
@@ -117,13 +117,13 @@ impl Scheduler {
 						}
 						if succ > 0 {
 							if let Some(fut) = running.try_remove(id, TaskStage::Pending) {
-								micro.send_blocking(fut).ok();
+								micro.try_send(fut, HIGH).ok();
 							}
 						}
 					}
 					TaskProg::Succ(id) => {
 						if let Some(fut) = running.write().try_remove(id, TaskStage::Dispatched) {
-							micro.send_blocking(fut).ok();
+							micro.try_send(fut, HIGH).ok();
 						}
 					}
 					TaskProg::Fail(id, reason) => {
@@ -157,7 +157,7 @@ impl Scheduler {
 		let b = running.all.remove(&id).is_some();
 
 		if let Some(hook) = running.hooks.remove(&id) {
-			self.micro.send_blocking(hook(true)).ok();
+			self.micro.try_send(hook(true), HIGH).ok();
 		}
 		b
 	}
@@ -194,40 +194,42 @@ impl Scheduler {
 			})
 		});
 
-		_ = self.micro.send_blocking({
-			let file = self.file.clone();
+		let file = self.file.clone();
+		_ = self.micro.try_send(
 			async move {
 				if !force {
 					to = unique_path(to).await;
 				}
 				file.paste(FileOpPaste { id, from, to, cut: true, follow: false, retry: 0 }).await.ok();
 			}
-			.boxed()
-		});
+			.boxed(),
+			VERY_LOW,
+		);
 	}
 
 	pub fn file_copy(&self, from: Url, mut to: Url, force: bool) {
 		let name = format!("Copy {:?} to {:?}", from, to);
 		let id = self.running.write().add(TaskKind::User, name);
 
-		_ = self.micro.send_blocking({
-			let file = self.file.clone();
+		let file = self.file.clone();
+		_ = self.micro.try_send(
 			async move {
 				if !force {
 					to = unique_path(to).await;
 				}
 				file.paste(FileOpPaste { id, from, to, cut: false, follow: true, retry: 0 }).await.ok();
 			}
-			.boxed()
-		});
+			.boxed(),
+			VERY_LOW,
+		);
 	}
 
 	pub fn file_link(&self, from: Url, mut to: Url, relative: bool, force: bool) {
 		let name = format!("Link {from:?} to {to:?}");
 		let id = self.running.write().add(TaskKind::User, name);
 
-		_ = self.micro.send_blocking({
-			let file = self.file.clone();
+		let file = self.file.clone();
+		_ = self.micro.try_send(
 			async move {
 				if !force {
 					to = unique_path(to).await;
@@ -237,8 +239,9 @@ impl Scheduler {
 					.await
 					.ok();
 			}
-			.boxed()
-		});
+			.boxed(),
+			VERY_LOW,
+		);
 	}
 
 	pub fn file_delete(&self, target: Url) {
@@ -260,38 +263,41 @@ impl Scheduler {
 			})
 		});
 
-		_ = self.micro.send_blocking({
-			let file = self.file.clone();
+		let file = self.file.clone();
+		_ = self.micro.try_send(
 			async move {
 				file.delete(FileOpDelete { id, target, length: 0 }).await.ok();
 			}
-			.boxed()
-		});
+			.boxed(),
+			VERY_LOW,
+		);
 	}
 
 	pub fn file_trash(&self, target: Url) {
 		let name = format!("Trash {:?}", target);
 		let id = self.running.write().add(TaskKind::User, name);
 
-		_ = self.micro.send_blocking({
-			let file = self.file.clone();
+		let file = self.file.clone();
+		_ = self.micro.try_send(
 			async move {
 				file.trash(FileOpTrash { id, target, length: 0 }).await.ok();
 			}
-			.boxed()
-		});
+			.boxed(),
+			VERY_LOW,
+		);
 	}
 
 	pub fn plugin_micro(&self, name: String) {
 		let id = self.running.write().add(TaskKind::User, format!("Run micro plugin `{name}`"));
 
-		_ = self.micro.send_blocking({
-			let plugin = self.plugin.clone();
+		let plugin = self.plugin.clone();
+		_ = self.micro.try_send(
 			async move {
 				plugin.micro(PluginOpEntry { id, name }).await.ok();
 			}
-			.boxed()
-		});
+			.boxed(),
+			VERY_HIGH,
+		);
 	}
 
 	pub fn plugin_macro(&self, name: String) {
@@ -306,17 +312,18 @@ impl Scheduler {
 			format!("Run preloader `{}` with {} target(s)", rule.exec.cmd, targets.len()),
 		);
 
-		_ = self.micro.send_blocking({
-			let preload = self.preload.clone();
+		let (rule_id, rule_multi) = (rule.id, rule.multi);
+		let cmd = rule.exec.cmd.clone();
+		let targets = targets.into_iter().cloned().collect();
 
-			let (rule_id, rule_multi) = (rule.id, rule.multi);
-			let cmd = rule.exec.cmd.clone();
-			let targets = targets.into_iter().cloned().collect();
+		let preload = self.preload.clone();
+		_ = self.micro.try_send(
 			async move {
 				preload.rule(PreloadOpRule { id, rule_id, rule_multi, plugin: cmd, targets }).await.ok();
 			}
-			.boxed()
-		});
+			.boxed(),
+			HIGH,
+		);
 	}
 
 	pub fn preload_size(&self, targets: Vec<&Url>) {
@@ -324,15 +331,17 @@ impl Scheduler {
 		let mut running = self.running.write();
 		for target in targets {
 			let id = running.add(TaskKind::Preload, format!("Calculate the size of {:?}", target));
-			_ = self.micro.send_blocking({
-				let preload = self.preload.clone();
-				let target = target.clone();
-				let throttle = throttle.clone();
+			let target = target.clone();
+			let throttle = throttle.clone();
+
+			let preload = self.preload.clone();
+			_ = self.micro.try_send(
 				async move {
 					preload.size(PreloadOpSize { id, target, throttle }).await.ok();
 				}
-				.boxed()
-			});
+				.boxed(),
+				HIGH,
+			);
 		}
 	}
 
