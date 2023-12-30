@@ -1,4 +1,4 @@
-use ratatui::prelude::Rect;
+use ratatui::layout::Rect;
 use yazi_config::popup::{Origin, Position};
 use yazi_core::{completion::Completion, help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which};
 

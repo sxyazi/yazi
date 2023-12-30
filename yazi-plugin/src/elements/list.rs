@@ -16,7 +16,6 @@ impl List {
 		ui.set(
 			"List",
 			lua.create_function(|_, (area, items): (RectRef, Vec<ListItem>)| {
-				let items: Vec<_> = items.into_iter().map(|x| x.into()).collect();
 				Ok(Self { area: *area, inner: ratatui::widgets::List::new(items) })
 			})?,
 		)

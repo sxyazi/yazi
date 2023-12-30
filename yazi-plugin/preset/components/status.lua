@@ -148,7 +148,7 @@ function Status:render(area)
 	local progress = self:progress(area, right:width())
 	return {
 		ui.Paragraph(area, { left }),
-		ui.Paragraph(area, { right }):align(ui.Alignment.RIGHT),
+		ui.Paragraph(area, { right }):align(ui.Paragraph.RIGHT),
 		table.unpack(progress),
 	}
 end

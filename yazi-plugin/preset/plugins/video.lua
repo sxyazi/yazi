@@ -31,7 +31,7 @@ function M:preload()
 		return 1
 	end
 
-	local status = Command.new("ffmpegthumbnailer")
+	local status = Command("ffmpegthumbnailer")
 		:args({
 			"-q",
 			"6",

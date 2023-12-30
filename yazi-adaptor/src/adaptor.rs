@@ -1,7 +1,7 @@
 use std::{env, path::Path, sync::Arc};
 
 use anyhow::{anyhow, Result};
-use ratatui::prelude::Rect;
+use ratatui::layout::Rect;
 use tracing::warn;
 use yazi_shared::{env_exists, term::Term};
 

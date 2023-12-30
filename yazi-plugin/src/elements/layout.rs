@@ -1,7 +1,10 @@
-use mlua::{AnyUserData, Lua, Table, UserData, UserDataMethods};
+use mlua::{AnyUserData, IntoLua, Lua, Table, UserData, UserDataMethods};
 
 use super::{Constraint, Rect, RectRef};
 use crate::bindings::Cast;
+
+const HORIZONTAL: bool = true;
+const VERTICAL: bool = false;
 
 #[derive(Clone, Default)]
 pub struct Layout {
@@ -12,7 +15,16 @@ pub struct Layout {
 
 impl Layout {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		ui.set("Layout", lua.create_function(|_, ()| Ok(Self::default()))?)
+		let new = lua.create_function(|_, _: Table| Ok(Self::default()))?;
+
+		let layout = lua.create_table_from([
+			("HORIZONTAL", HORIZONTAL.into_lua(lua)?),
+			("VERTICAL", VERTICAL.into_lua(lua)?),
+		])?;
+
+		layout.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+
+		ui.set("Layout", layout)
 	}
 }
 
@@ -55,13 +67,14 @@ impl UserData for Layout {
 		methods.add_function("split", |lua, (ud, value): (AnyUserData, RectRef)| {
 			let me = ud.borrow::<Self>()?;
 
-			let mut layout = ratatui::layout::Layout::new()
-				.direction(if me.direction {
+			let mut layout = ratatui::layout::Layout::new(
+				if me.direction == VERTICAL {
 					ratatui::layout::Direction::Vertical
 				} else {
 					ratatui::layout::Direction::Horizontal
-				})
-				.constraints(me.constraints.as_slice());
+				},
+				&me.constraints,
+			);
 
 			if let Some(margin) = me.margin {
 				layout = layout.horizontal_margin(margin.horizontal);

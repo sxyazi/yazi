@@ -3,7 +3,7 @@ use std::{io::{stdout, BufWriter, Write}, path::Path};
 use anyhow::{bail, Result};
 use color_quant::NeuQuant;
 use image::DynamicImage;
-use ratatui::prelude::Rect;
+use ratatui::layout::Rect;
 use yazi_shared::term::Term;
 
 use crate::{adaptor::Adaptor, Image, CLOSE, ESCAPE, START};

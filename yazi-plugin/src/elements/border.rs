@@ -21,22 +21,15 @@ pub struct Border {
 
 impl Border {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		#[inline]
-		fn new(area: RectRef, position: u8) -> mlua::Result<Border> {
+		let new = lua.create_function(|_, (_, area, position): (Table, RectRef, u8)| {
 			Ok(Border {
 				area: *area,
 				position: ratatui::widgets::Borders::from_bits_truncate(position),
 				..Default::default()
 			})
-		}
+		})?;
 
 		let border = lua.create_table_from([
-			(
-				"new",
-				lua
-					.create_function(|_, (area, position): (RectRef, u8)| new(area, position))?
-					.into_lua(lua)?,
-			),
 			// Border type
 			("PLAIN", PLAIN.into_lua(lua)?),
 			("ROUNDED", ROUNDED.into_lua(lua)?),
@@ -46,10 +39,7 @@ impl Border {
 			("QUADRANT_OUTSIDE", QUADRANT_OUTSIDE.into_lua(lua)?),
 		])?;
 
-		border.set_metatable(Some(lua.create_table_from([(
-			"__call",
-			lua.create_function(|_, (_, area, position): (Table, RectRef, u8)| new(area, position))?,
-		)])?));
+		border.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
 		ui.set("Border", border)
 	}

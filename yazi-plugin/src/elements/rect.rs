@@ -19,10 +19,10 @@ impl Rect {
 			})
 		}
 
-		let rect = lua.create_table_from([
-			("new", lua.create_function(new)?.into_lua(lua)?),
-			("default", Rect::cast(lua, ratatui::layout::Rect::default())?.into_lua(lua)?),
-		])?;
+		let rect = lua.create_table_from([(
+			"default",
+			Rect::cast(lua, ratatui::layout::Rect::default())?.into_lua(lua)?,
+		)])?;
 
 		rect.set_metatable(Some(lua.create_table_from([(
 			"__call",

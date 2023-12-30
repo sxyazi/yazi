@@ -6,8 +6,7 @@ use crate::{validation::check_validation, MERGED_YAZI};
 
 #[derive(Debug, Deserialize, Serialize, Validate)]
 pub struct Manager {
-	// FIXME: rename this to "ratio"
-	pub layout: ManagerRatio,
+	pub ratio: ManagerRatio,
 
 	// Sorting
 	pub sort_by:        SortBy,

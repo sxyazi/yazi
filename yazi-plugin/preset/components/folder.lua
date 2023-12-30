@@ -66,7 +66,7 @@ function Folder:linemode(area)
 		spans[#spans + 1] = ui.Span(" ")
 		lines[#lines + 1] = ui.Line(spans)
 	end
-	return ui.Paragraph(area, lines):align(ui.Alignment.RIGHT)
+	return ui.Paragraph(area, lines):align(ui.Paragraph.RIGHT)
 end
 
 function Folder:markers(area, markers)
@@ -84,7 +84,7 @@ function Folder:markers(area, markers)
 				w = 1,
 				h = 1 + math.min(last[2] - last[1], area.h - y),
 			},
-			ui.Position.LEFT
+			ui.Bar.LEFT
 		)
 
 		if last[3] == 1 then

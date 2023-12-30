@@ -14,10 +14,9 @@ impl<'a> Layout<'a> {
 
 impl<'a> Widget for Layout<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let chunks = layout::Layout::new()
-			.direction(Direction::Vertical)
-			.constraints([Constraint::Min(0), Constraint::Length(1)])
-			.split(area);
+		let chunks =
+			layout::Layout::new(Direction::Vertical, [Constraint::Min(0), Constraint::Length(1)])
+				.split(area);
 
 		widgets::Clear.render(area, buf);
 

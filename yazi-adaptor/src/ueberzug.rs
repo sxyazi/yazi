@@ -2,7 +2,7 @@ use std::{path::{Path, PathBuf}, process::Stdio};
 
 use anyhow::{bail, Result};
 use imagesize::ImageSize;
-use ratatui::prelude::Rect;
+use ratatui::layout::Rect;
 use tokio::{io::AsyncWriteExt, process::{Child, Command}, sync::mpsc::{self, UnboundedSender}};
 use tracing::debug;
 use yazi_config::PREVIEW;

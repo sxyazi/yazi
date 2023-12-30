@@ -33,10 +33,12 @@ impl Widget for Which<'_> {
 			height,
 		};
 
-		let chunks = layout::Layout::new()
-			.direction(Direction::Horizontal)
-			.constraints([Constraint::Ratio(1, 3), Constraint::Ratio(1, 3), Constraint::Ratio(1, 3)])
-			.split(area);
+		let chunks = layout::Layout::new(Direction::Horizontal, [
+			Constraint::Ratio(1, 3),
+			Constraint::Ratio(1, 3),
+			Constraint::Ratio(1, 3),
+		])
+		.split(area);
 
 		widgets::Clear.render(area, buf);
 		Block::new().style(THEME.which.mask.into()).render(area, buf);

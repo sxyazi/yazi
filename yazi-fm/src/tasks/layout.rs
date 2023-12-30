@@ -12,23 +12,19 @@ impl<'a> Layout<'a> {
 	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
 
 	pub(super) fn area(area: Rect) -> Rect {
-		let chunk = layout::Layout::new()
-			.direction(Direction::Vertical)
-			.constraints([
-				Constraint::Percentage((100 - TASKS_PERCENT) / 2),
-				Constraint::Percentage(TASKS_PERCENT),
-				Constraint::Percentage((100 - TASKS_PERCENT) / 2),
-			])
-			.split(area)[1];
+		let chunk = layout::Layout::new(Direction::Vertical, [
+			Constraint::Percentage((100 - TASKS_PERCENT) / 2),
+			Constraint::Percentage(TASKS_PERCENT),
+			Constraint::Percentage((100 - TASKS_PERCENT) / 2),
+		])
+		.split(area)[1];
 
-		layout::Layout::new()
-			.direction(Direction::Horizontal)
-			.constraints([
-				Constraint::Percentage((100 - TASKS_PERCENT) / 2),
-				Constraint::Percentage(TASKS_PERCENT),
-				Constraint::Percentage((100 - TASKS_PERCENT) / 2),
-			])
-			.split(chunk)[1]
+		layout::Layout::new(Direction::Horizontal, [
+			Constraint::Percentage((100 - TASKS_PERCENT) / 2),
+			Constraint::Percentage(TASKS_PERCENT),
+			Constraint::Percentage((100 - TASKS_PERCENT) / 2),
+		])
+		.split(chunk)[1]
 	}
 }
 

@@ -1,23 +1,4 @@
-ui = {
-	-- FIXME: merge those three into their own modules
-	Alignment = {
-		LEFT = 0,
-		CENTER = 1,
-		RIGHT = 2,
-	},
-	Direction = {
-		HORIZONTAL = false,
-		VERTICAL = true,
-	},
-	Position = {
-		NONE = 0,
-		TOP = 1,
-		RIGHT = 2,
-		BOTTOM = 4,
-		LEFT = 8,
-		ALL = 15,
-	},
-}
+ui = {}
 
 function ui.highlight_ranges(s, ranges)
 	if ranges == nil or #ranges == 0 then

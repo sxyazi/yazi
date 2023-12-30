@@ -1,8 +1,12 @@
 use ansi_to_tui::IntoText;
-use mlua::{AnyUserData, ExternalError, ExternalResult, Lua, Table, UserData, Value};
+use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, Table, UserData, Value};
 use ratatui::widgets::Widget;
 
 use super::{Line, RectRef, Renderable, Style};
+
+const LEFT: u8 = 0;
+const CENTER: u8 = 1;
+const RIGHT: u8 = 2;
 
 #[derive(Clone, Debug, Default)]
 pub struct Paragraph {
@@ -10,34 +14,32 @@ pub struct Paragraph {
 
 	pub text:      ratatui::text::Text<'static>,
 	pub style:     Option<ratatui::style::Style>,
-	pub alignment: ratatui::prelude::Alignment,
+	pub alignment: ratatui::layout::Alignment,
 }
 
 impl Paragraph {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		#[inline]
-		fn new(area: RectRef, lines: Vec<Line>) -> mlua::Result<Paragraph> {
+		let new = lua.create_function(|_, (_, area, lines): (Table, RectRef, Vec<Line>)| {
 			Ok(Paragraph {
 				area: *area,
 				text: lines.into_iter().map(|s| s.0).collect::<Vec<_>>().into(),
 				..Default::default()
 			})
-		}
+		})?;
 
-		#[inline]
-		fn parse(area: RectRef, code: mlua::String) -> mlua::Result<Paragraph> {
+		let parse = lua.create_function(|_, (area, code): (RectRef, mlua::String)| {
 			Ok(Paragraph { area: *area, text: code.into_text().into_lua_err()?, ..Default::default() })
-		}
+		})?;
 
 		let paragraph = lua.create_table_from([
-			("new", lua.create_function(|_, (area, lines): (RectRef, Vec<Line>)| new(area, lines))?),
-			("parse", lua.create_function(|_, (area, code): (RectRef, mlua::String)| parse(area, code))?),
+			("parse", parse.into_lua(lua)?),
+			// Alignment
+			("LEFT", LEFT.into_lua(lua)?),
+			("CENTER", CENTER.into_lua(lua)?),
+			("RIGHT", RIGHT.into_lua(lua)?),
 		])?;
 
-		paragraph.set_metatable(Some(lua.create_table_from([(
-			"__call",
-			lua.create_function(|_, (_, area, lines): (Table, RectRef, Vec<Line>)| new(area, lines))?,
-		)])?));
+		paragraph.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
 		ui.set("Paragraph", paragraph)
 	}
@@ -59,9 +61,9 @@ impl UserData for Paragraph {
 		});
 		methods.add_function("align", |_, (ud, align): (AnyUserData, u8)| {
 			ud.borrow_mut::<Self>()?.alignment = match align {
-				1 => ratatui::prelude::Alignment::Center,
-				2 => ratatui::prelude::Alignment::Right,
-				_ => ratatui::prelude::Alignment::Left,
+				CENTER => ratatui::layout::Alignment::Center,
+				RIGHT => ratatui::layout::Alignment::Right,
+				_ => ratatui::layout::Alignment::Left,
 			};
 			Ok(ud)
 		});

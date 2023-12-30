@@ -23,7 +23,7 @@ function M:preload()
 		return 1
 	end
 
-	local output = Command.new("pdftoppm")
+	local output = Command("pdftoppm")
 		:args({ "-singlefile", "-jpeg", "-jpegopt", "quality=75", "-f", tostring(self.skip + 1), tostring(self.file.url) })
 		:stdout(Command.PIPED)
 		:stderr(Command.PIPED)

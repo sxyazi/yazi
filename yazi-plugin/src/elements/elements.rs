@@ -34,7 +34,7 @@ pub trait Renderable {
 	fn clone_render(&self, buf: &mut ratatui::buffer::Buffer);
 }
 
-pub fn render_widgets(widgets: Vec<AnyUserData>, buf: &mut ratatui::prelude::Buffer) {
+pub fn render_widgets(widgets: Vec<AnyUserData>, buf: &mut ratatui::buffer::Buffer) {
 	for widget in widgets {
 		if let Some(w) = cast_to_renderable(widget) {
 			w.render(buf);

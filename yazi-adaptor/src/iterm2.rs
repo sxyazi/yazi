@@ -3,7 +3,7 @@ use std::{io::{stdout, BufWriter, Write}, path::Path};
 use anyhow::Result;
 use base64::{engine::general_purpose, Engine};
 use image::{codecs::jpeg::JpegEncoder, DynamicImage};
-use ratatui::prelude::Rect;
+use ratatui::layout::Rect;
 use yazi_shared::term::Term;
 
 use super::image::Image;

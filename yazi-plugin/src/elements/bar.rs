@@ -1,4 +1,5 @@
-use mlua::{AnyUserData, ExternalError, Lua, Table, UserData, Value};
+use mlua::{AnyUserData, ExternalError, IntoLua, Lua, Table, UserData, Value};
+use ratatui::widgets::Borders;
 
 use super::{RectRef, Renderable, Style};
 
@@ -13,24 +14,28 @@ pub struct Bar {
 
 impl Bar {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		ui.set(
-			"Bar",
-			lua.create_function(|_, (area, direction): (RectRef, u8)| {
-				Ok(Self {
-					area: *area,
+		let new = lua.create_function(|_, (_, area, direction): (Table, RectRef, u8)| {
+			Ok(Self {
+				area: *area,
 
-					position: match direction {
-						1 => ratatui::widgets::Borders::TOP,
-						2 => ratatui::widgets::Borders::RIGHT,
-						4 => ratatui::widgets::Borders::BOTTOM,
-						8 => ratatui::widgets::Borders::LEFT,
-						_ => ratatui::widgets::Borders::NONE,
-					},
-					symbol:   Default::default(),
-					style:    Default::default(),
-				})
-			})?,
-		)
+				position: Borders::from_bits_truncate(direction),
+				symbol:   Default::default(),
+				style:    Default::default(),
+			})
+		})?;
+
+		let bar = lua.create_table_from([
+			("NONE", Borders::NONE.bits().into_lua(lua)?),
+			("TOP", Borders::TOP.bits().into_lua(lua)?),
+			("RIGHT", Borders::RIGHT.bits().into_lua(lua)?),
+			("BOTTOM", Borders::BOTTOM.bits().into_lua(lua)?),
+			("LEFT", Borders::LEFT.bits().into_lua(lua)?),
+			("ALL", Borders::ALL.bits().into_lua(lua)?),
+		])?;
+
+		bar.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+
+		ui.set("Bar", bar)
 	}
 }
 
@@ -57,7 +62,6 @@ impl UserData for Bar {
 
 impl Renderable for Bar {
 	fn render(self: Box<Self>, buf: &mut ratatui::buffer::Buffer) {
-		use ratatui::widgets::Borders;
 		if self.area.area() == 0 {
 			return;
 		}

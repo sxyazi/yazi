@@ -2,7 +2,7 @@ local M = {}
 
 function M:peek()
 	local limit = self.area.h
-	local child = Command.new("jq")
+	local child = Command("jq")
 		:args({
 			"-C",
 			"--tab",

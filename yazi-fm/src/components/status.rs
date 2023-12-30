@@ -6,7 +6,7 @@ use yazi_plugin::{bindings::Cast, elements::{render_widgets, Rect}, LUA};
 pub(crate) struct Status;
 
 impl Widget for Status {
-	fn render(self, area: ratatui::layout::Rect, buf: &mut ratatui::prelude::Buffer) {
+	fn render(self, area: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
 		let mut f = || {
 			let area = Rect::cast(&LUA, area)?;
 			let comp: Table = LUA.globals().get("Status")?;

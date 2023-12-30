@@ -1,6 +1,6 @@
 use std::process::Stdio;
 
-use mlua::{prelude::LuaUserDataMethods, AnyUserData, IntoLua, Lua, UserData};
+use mlua::{prelude::LuaUserDataMethods, AnyUserData, IntoLua, Lua, Table, UserData};
 
 use super::{output::Output, Child};
 
@@ -14,23 +14,23 @@ const INHERIT: u8 = 2;
 
 impl Command {
 	pub fn install(lua: &Lua) -> mlua::Result<()> {
-		let new = lua.create_function(|_, program: String| {
+		let new = lua.create_function(|_, (_, program): (Table, String)| {
 			let mut inner = tokio::process::Command::new(program);
 			inner.kill_on_drop(true).stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
 
 			Ok(Self { inner })
 		})?;
 
-		lua.globals().set(
-			"Command",
-			lua.create_table_from([
-				("new", new.into_lua(lua)?),
-				// Stdio
-				("NULL", NULL.into_lua(lua)?),
-				("PIPED", PIPED.into_lua(lua)?),
-				("INHERIT", INHERIT.into_lua(lua)?),
-			])?,
-		)
+		let command = lua.create_table_from([
+			// Stdio
+			("NULL", NULL.into_lua(lua)?),
+			("PIPED", PIPED.into_lua(lua)?),
+			("INHERIT", INHERIT.into_lua(lua)?),
+		])?;
+
+		command.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+
+		lua.globals().set("Command", command)
 	}
 }
 

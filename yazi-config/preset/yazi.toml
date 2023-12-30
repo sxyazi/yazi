@@ -1,5 +1,5 @@
 [manager]
-layout         = [ 1, 4, 3 ]
+ratio          = [ 1, 4, 3 ]
 sort_by        = "modified"
 sort_sensitive = true
 sort_reverse   = true

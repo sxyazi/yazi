@@ -1,7 +1,7 @@
 local M = {}
 
 function M:preload()
-	local command = Command.new("file"):arg("--mime-type"):stdout(Command.PIPED):stderr(Command.PIPED)
+	local command = Command("file"):arg("--mime-type"):stdout(Command.PIPED):stderr(Command.PIPED)
 	if ya.target_family() == "windows" then
 		command:arg("-b")
 	else

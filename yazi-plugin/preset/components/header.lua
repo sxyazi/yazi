@@ -34,7 +34,7 @@ function Header:render(area)
 	self.area = area
 
 	local chunks = ui.Layout()
-		:direction(ui.Direction.HORIZONTAL)
+		:direction(ui.Layout.HORIZONTAL)
 		:constraints({ ui.Constraint.Percentage(50), ui.Constraint.Percentage(50) })
 		:split(area)
 
@@ -42,6 +42,6 @@ function Header:render(area)
 	local right = ui.Line { self:tabs() }
 	return {
 		ui.Paragraph(chunks[1], { left }),
-		ui.Paragraph(chunks[2], { right }):align(ui.Alignment.RIGHT),
+		ui.Paragraph(chunks[2], { right }):align(ui.Paragraph.RIGHT),
 	}
 end

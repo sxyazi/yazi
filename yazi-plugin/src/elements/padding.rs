@@ -8,13 +8,11 @@ pub struct Padding;
 
 impl Padding {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
+		let new = lua.create_function(|lua, args: (Table, u16, u16, u16, u16)| {
+			Self::cast(lua, ratatui::widgets::Padding::new(args.1, args.2, args.3, args.4))
+		})?;
+
 		let padding = lua.create_table_from([
-			(
-				"new",
-				lua.create_function(|lua, args: (u16, u16, u16, u16)| {
-					Self::cast(lua, ratatui::widgets::Padding::new(args.0, args.1, args.2, args.3))
-				})?,
-			),
 			(
 				"left",
 				lua.create_function(|lua, left: u16| {
@@ -59,12 +57,7 @@ impl Padding {
 			),
 		])?;
 
-		padding.set_metatable(Some(lua.create_table_from([(
-			"__call",
-			lua.create_function(|lua, args: (Table, u16, u16, u16, u16)| {
-				Self::cast(lua, ratatui::widgets::Padding::new(args.1, args.2, args.3, args.4))
-			})?,
-		)])?));
+		padding.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
 		ui.set("Padding", padding)
 	}

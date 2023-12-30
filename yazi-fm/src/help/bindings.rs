@@ -36,10 +36,12 @@ impl Widget for Bindings<'_> {
 			.map(|c| ListItem::new(c.desc.as_deref().unwrap_or("-")).style(THEME.help.desc.into()))
 			.collect::<Vec<_>>();
 
-		let chunks = layout::Layout::new()
-			.direction(Direction::Horizontal)
-			.constraints([Constraint::Ratio(2, 10), Constraint::Ratio(3, 10), Constraint::Ratio(5, 10)])
-			.split(area);
+		let chunks = layout::Layout::new(Direction::Horizontal, [
+			Constraint::Ratio(2, 10),
+			Constraint::Ratio(3, 10),
+			Constraint::Ratio(5, 10),
+		])
+		.split(area);
 
 		let cursor = self.cx.help.rel_cursor() as u16;
 		buf.set_style(
