@@ -89,13 +89,13 @@ impl Tasks {
 		false
 	}
 
-	pub fn file_copy(&self, src: &HashSet<Url>, dest: &Url, force: bool) -> bool {
+	pub fn file_copy(&self, src: &HashSet<Url>, dest: &Url, force: bool, follow: bool) -> bool {
 		for u in src {
 			let to = dest.join(u.file_name().unwrap());
 			if force && u == &to {
 				debug!("file_copy: same file, skipping {:?}", to);
 			} else {
-				self.scheduler.file_copy(u.clone(), to, force);
+				self.scheduler.file_copy(u.clone(), to, force, follow);
 			}
 		}
 		false

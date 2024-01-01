@@ -207,7 +207,7 @@ impl Scheduler {
 		);
 	}
 
-	pub fn file_copy(&self, from: Url, mut to: Url, force: bool) {
+	pub fn file_copy(&self, from: Url, mut to: Url, force: bool, follow: bool) {
 		let name = format!("Copy {:?} to {:?}", from, to);
 		let id = self.running.write().add(TaskKind::User, name);
 
@@ -217,7 +217,7 @@ impl Scheduler {
 				if !force {
 					to = unique_path(to).await;
 				}
-				file.paste(FileOpPaste { id, from, to, cut: false, follow: true, retry: 0 }).await.ok();
+				file.paste(FileOpPaste { id, from, to, cut: false, follow, retry: 0 }).await.ok();
 			}
 			.boxed(),
 			LOW,
