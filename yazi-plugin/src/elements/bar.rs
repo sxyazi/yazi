@@ -7,9 +7,9 @@ use super::{RectRef, Renderable, Style};
 pub struct Bar {
 	area: ratatui::layout::Rect,
 
-	position: ratatui::widgets::Borders,
-	symbol:   String,
-	style:    Option<ratatui::style::Style>,
+	direction: ratatui::widgets::Borders,
+	symbol:    String,
+	style:     Option<ratatui::style::Style>,
 }
 
 impl Bar {
@@ -18,13 +18,14 @@ impl Bar {
 			Ok(Self {
 				area: *area,
 
-				position: Borders::from_bits_truncate(direction),
-				symbol:   Default::default(),
-				style:    Default::default(),
+				direction: Borders::from_bits_truncate(direction),
+				symbol:    Default::default(),
+				style:     Default::default(),
 			})
 		})?;
 
 		let bar = lua.create_table_from([
+			// Direction
 			("NONE", Borders::NONE.bits().into_lua(lua)?),
 			("TOP", Borders::TOP.bits().into_lua(lua)?),
 			("RIGHT", Borders::RIGHT.bits().into_lua(lua)?),
@@ -68,15 +69,15 @@ impl Renderable for Bar {
 
 		let symbol = if !self.symbol.is_empty() {
 			&self.symbol
-		} else if self.position.intersects(Borders::TOP | Borders::BOTTOM) {
+		} else if self.direction.intersects(Borders::TOP | Borders::BOTTOM) {
 			"─"
-		} else if self.position.intersects(Borders::LEFT | Borders::RIGHT) {
+		} else if self.direction.intersects(Borders::LEFT | Borders::RIGHT) {
 			"│"
 		} else {
 			" "
 		};
 
-		if self.position.contains(Borders::LEFT) {
+		if self.direction.contains(Borders::LEFT) {
 			for y in self.area.top()..self.area.bottom() {
 				let cell = buf.get_mut(self.area.left(), y).set_symbol(symbol);
 				if let Some(style) = self.style {
@@ -84,7 +85,7 @@ impl Renderable for Bar {
 				}
 			}
 		}
-		if self.position.contains(Borders::TOP) {
+		if self.direction.contains(Borders::TOP) {
 			for x in self.area.left()..self.area.right() {
 				let cell = buf.get_mut(x, self.area.top()).set_symbol(symbol);
 				if let Some(style) = self.style {
@@ -92,7 +93,7 @@ impl Renderable for Bar {
 				}
 			}
 		}
-		if self.position.contains(Borders::RIGHT) {
+		if self.direction.contains(Borders::RIGHT) {
 			let x = self.area.right() - 1;
 			for y in self.area.top()..self.area.bottom() {
 				let cell = buf.get_mut(x, y).set_symbol(symbol);
@@ -101,7 +102,7 @@ impl Renderable for Bar {
 				}
 			}
 		}
-		if self.position.contains(Borders::BOTTOM) {
+		if self.direction.contains(Borders::BOTTOM) {
 			let y = self.area.bottom() - 1;
 			for x in self.area.left()..self.area.right() {
 				let cell = buf.get_mut(x, y).set_symbol(symbol);

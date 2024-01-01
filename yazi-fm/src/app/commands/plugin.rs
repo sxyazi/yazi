@@ -6,9 +6,9 @@ use yazi_shared::{emit, event::Exec, Layer};
 use crate::{app::App, lives::Lives};
 
 impl App {
-	pub(crate) fn plugin(&mut self, opt: impl TryInto<yazi_plugin::Opt>) -> bool {
+	pub(crate) fn plugin(&mut self, opt: impl TryInto<yazi_plugin::Opt>) {
 		let Ok(opt) = opt.try_into() else {
-			return false;
+			return;
 		};
 
 		if !opt.sync {
@@ -24,12 +24,11 @@ impl App {
 				emit!(Call(Exec::call("plugin_do", vec![opt.name]).with_data(opt.data).vec(), Layer::App));
 			}
 		});
-		false
 	}
 
-	pub(crate) fn plugin_do(&mut self, opt: impl TryInto<yazi_plugin::Opt>) -> bool {
+	pub(crate) fn plugin_do(&mut self, opt: impl TryInto<yazi_plugin::Opt>) {
 		let Ok(opt) = opt.try_into() else {
-			return false;
+			return;
 		};
 
 		let args = Variadic::from_iter(opt.data.args.into_iter().filter_map(|v| v.into_lua(&LUA).ok()));
@@ -51,16 +50,15 @@ impl App {
 
 		if let Err(e) = ret {
 			error!("{e}");
-			return false;
+			return;
 		}
 
 		let Some(tx) = opt.data.tx else {
-			return false;
+			return;
 		};
 
 		if let Ok(v) = ret.and_then(|v| v.try_into().into_lua_err()) {
 			tx.send(v).ok();
 		}
-		false
 	}
 }

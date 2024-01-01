@@ -58,10 +58,9 @@ impl<'a> Executor<'a> {
 	}
 
 	#[inline]
-	pub(super) fn dispatch(&mut self, exec: &[Exec], layer: Layer) -> bool {
-		let mut render = false;
+	pub(super) fn dispatch(&mut self, exec: &[Exec], layer: Layer) {
 		for e in exec {
-			render |= match layer {
+			match layer {
 				Layer::App => self.app(e),
 				Layer::Manager => self.manager(e),
 				Layer::Tasks => self.tasks(e),
@@ -72,10 +71,9 @@ impl<'a> Executor<'a> {
 				Layer::Which => unreachable!(),
 			};
 		}
-		render
 	}
 
-	fn app(&mut self, exec: &Exec) -> bool {
+	fn app(&mut self, exec: &Exec) {
 		macro_rules! on {
 			($name:ident) => {
 				if exec.cmd == stringify!($name) {
@@ -87,8 +85,6 @@ impl<'a> Executor<'a> {
 		on!(plugin);
 		on!(plugin_do);
 		on!(stop);
-
-		false
 	}
 
 	fn manager(&mut self, exec: &Exec) -> bool {

@@ -30,6 +30,3 @@ pub use number::*;
 pub use ro_cell::*;
 pub use throttle::*;
 pub use time::*;
-
-// TODO: remove this
-pub static COLLISION: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);

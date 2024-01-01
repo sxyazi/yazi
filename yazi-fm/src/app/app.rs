@@ -2,7 +2,7 @@ use anyhow::{Ok, Result};
 use crossterm::event::KeyEvent;
 use yazi_config::{keymap::Key, ARGS};
 use yazi_core::input::InputMode;
-use yazi_shared::{emit, event::{Event, Exec}, term::Term, Layer};
+use yazi_shared::{emit, event::{Event, Exec}, render, term::Term, Layer};
 
 use crate::{lives::Lives, Ctx, Executor, Logs, Panic, Signals};
 
@@ -32,7 +32,8 @@ impl App {
 				}
 				Event::Key(key) => app.dispatch_key(key),
 				Event::Paste(str) => app.dispatch_paste(str),
-				Event::Render(_) => app.render()?,
+				// TODO: render
+				// Event::Render(_) => app.render()?,
 				Event::Resize(cols, rows) => app.dispatch_resize(cols, rows)?,
 				Event::Call(exec, layer) => app.dispatch_call(exec, layer),
 				event => app.dispatch_module(event),
@@ -49,18 +50,13 @@ impl App {
 		Term::goodbye(|| false);
 	}
 
-	fn dispatch_key(&mut self, key: KeyEvent) {
-		let key = Key::from(key);
-		if Executor::new(self).handle(key) {
-			emit!(Render);
-		}
-	}
+	fn dispatch_key(&mut self, key: KeyEvent) { Executor::new(self).handle(Key::from(key)); }
 
 	fn dispatch_paste(&mut self, str: String) {
 		if self.cx.input.visible {
 			let input = &mut self.cx.input;
 			if input.mode() == InputMode::Insert && input.type_str(&str) {
-				emit!(Render);
+				render!();
 			}
 		}
 	}
@@ -76,9 +72,7 @@ impl App {
 
 	#[inline]
 	fn dispatch_call(&mut self, exec: Vec<Exec>, layer: Layer) {
-		if Executor::new(self).dispatch(&exec, layer) {
-			emit!(Render);
-		}
+		Executor::new(self).dispatch(&exec, layer);
 	}
 
 	fn dispatch_module(&mut self, event: Event) {

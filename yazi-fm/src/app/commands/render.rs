@@ -2,9 +2,8 @@ use std::sync::atomic::Ordering;
 
 use anyhow::Result;
 use ratatui::backend::Backend;
-use yazi_shared::COLLISION;
 
-use crate::{app::App, lives::Lives, root::Root};
+use crate::{app::App, lives::Lives, root::{Root, COLLISION}};
 
 impl App {
 	pub(crate) fn render(&mut self) -> Result<()> {
