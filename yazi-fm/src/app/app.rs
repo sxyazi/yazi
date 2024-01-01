@@ -2,7 +2,7 @@ use anyhow::{Ok, Result};
 use crossterm::event::KeyEvent;
 use yazi_config::{keymap::Key, ARGS};
 use yazi_core::input::InputMode;
-use yazi_shared::{emit, event::{Event, Exec}, render, term::Term, Layer};
+use yazi_shared::{event::{Event, Exec}, render, term::Term, Layer};
 
 use crate::{lives::Lives, Ctx, Executor, Logs, Panic, Signals};
 

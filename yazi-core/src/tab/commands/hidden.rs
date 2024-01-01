@@ -1,4 +1,4 @@
-use yazi_shared::{event::Exec, render};
+use yazi_shared::event::Exec;
 
 use crate::{manager::Manager, tab::Tab};
 
@@ -9,9 +9,8 @@ impl Tab {
 			Some(b"hide") => false,
 			_ => !self.conf.show_hidden,
 		};
-		if self.apply_files_attrs(false) {
-			Manager::_hover(None);
-			render!();
-		}
+
+		self.apply_files_attrs(false);
+		Manager::_hover(None);
 	}
 }

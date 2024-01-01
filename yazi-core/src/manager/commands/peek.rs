@@ -67,7 +67,7 @@ impl Manager {
 		if let Some(s) = self.mimetype.get(&hovered.url).cloned() {
 			self.active_mut().preview.go(hovered, &s, opt.force);
 		} else {
-			return render!(self.active_mut().preview.reset());
+			render!(self.active_mut().preview.reset());
 		}
 	}
 }

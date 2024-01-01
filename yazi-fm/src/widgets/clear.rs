@@ -4,7 +4,7 @@ use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 use yazi_adaptor::ADAPTOR;
 use yazi_config::LAYOUT;
 
-use crate::renderer::COLLISION;
+use crate::root::COLLISION;
 
 pub(crate) struct Clear;
 

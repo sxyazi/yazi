@@ -46,7 +46,9 @@ impl Tab {
 
 	#[inline]
 	fn escape_filter(&mut self) -> bool {
-		self.filter_do(super::filter::Opt { query: "", ..Default::default() })
+		// TODO: render
+		todo!();
+		// self.filter_do(super::filter::Opt { query: "", ..Default::default() })
 	}
 
 	#[inline]

@@ -21,7 +21,7 @@ impl Input {
 		}
 
 		if prev != CharKind::Space {
-			return self.move_(-(snap.len() as isize));
+			self.move_(-(snap.len() as isize));
 		}
 	}
 }

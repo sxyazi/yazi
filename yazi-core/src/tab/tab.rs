@@ -2,7 +2,7 @@ use std::{borrow::Cow, collections::BTreeMap};
 
 use anyhow::Result;
 use tokio::task::JoinHandle;
-use yazi_shared::fs::{File, Url};
+use yazi_shared::{fs::{File, Url}, render};
 
 use super::{Backstack, Config, Finder, Mode, Preview};
 use crate::folder::Folder;
@@ -72,30 +72,28 @@ impl Tab {
 		self.history.remove(url).unwrap_or_else(|| Folder::from(url))
 	}
 
-	pub fn apply_files_attrs(&mut self, just_preview: bool) -> bool {
+	pub fn apply_files_attrs(&mut self, just_preview: bool) {
 		let apply = |f: &mut Folder| {
 			let hovered = f.hovered().map(|h| h.url());
 
 			f.files.set_show_hidden(self.conf.show_hidden);
 			f.files.set_sorter(self.conf.sorter());
-			f.files.catchup_revision() | f.repos(hovered)
+			render!(f.files.catchup_revision());
+			render!(f.repos(hovered));
 		};
 
-		let mut b = false;
 		if let Some(f) =
 			self.current.hovered().filter(|h| h.is_dir()).and_then(|h| self.history.get_mut(&h.url))
 		{
-			b |= apply(f);
+			apply(f);
 		}
 		if just_preview {
-			return b;
+			return;
 		}
 
-		b |= apply(&mut self.current);
+		apply(&mut self.current);
 		if let Some(parent) = self.parent.as_mut() {
-			b |= apply(parent);
+			apply(parent);
 		}
-
-		b
 	}
 }

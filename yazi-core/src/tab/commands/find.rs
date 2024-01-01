@@ -32,7 +32,7 @@ impl From<&Exec> for ArrowOpt {
 }
 
 impl Tab {
-	pub fn find<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
+	pub fn find<'a>(&mut self, opt: impl Into<Opt<'a>>) {
 		let opt = opt.into() as Opt;
 		tokio::spawn(async move {
 			let rx = Input::_show(InputCfg::find(opt.prev));
@@ -51,7 +51,6 @@ impl Tab {
 				));
 			}
 		});
-		false
 	}
 
 	pub fn find_do<'a>(&mut self, opt: impl Into<Opt<'a>>) {

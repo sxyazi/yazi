@@ -1,4 +1,4 @@
-use yazi_shared::{emit, event::Exec, fs::{expand_path, File, FilesOp, Url}, render, Layer};
+use yazi_shared::{emit, event::Exec, fs::{expand_path, File, FilesOp, Url}, Layer};
 
 use crate::{manager::Manager, tab::Tab};
 

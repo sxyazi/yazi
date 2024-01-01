@@ -1,4 +1,4 @@
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::manager::Tabs;
 
@@ -17,12 +17,12 @@ impl From<usize> for Opt {
 }
 
 impl Tabs {
-	pub fn close(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn close(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 
 		let len = self.items.len();
 		if len < 2 || opt.idx >= len {
-			return false;
+			return;
 		}
 
 		self.items.remove(opt.idx);
@@ -30,6 +30,6 @@ impl Tabs {
 			self.set_idx(self.absolute(1));
 		}
 
-		true
+		render!();
 	}
 }

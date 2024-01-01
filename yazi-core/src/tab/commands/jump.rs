@@ -28,10 +28,10 @@ impl From<&Exec> for Opt {
 }
 
 impl Tab {
-	pub fn jump(&self, opt: impl Into<Opt>) -> bool {
+	pub fn jump(&self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		if opt.type_ == OptType::None {
-			return false;
+			return;
 		}
 
 		let cwd = self.current.cwd.clone();
@@ -56,6 +56,5 @@ impl Tab {
 				Tab::_cd(&url)
 			}
 		});
-		false
 	}
 }

@@ -1,4 +1,4 @@
-use yazi_shared::{event::Exec, fs::Url};
+use yazi_shared::{event::Exec, fs::Url, render};
 
 use crate::{manager::Tabs, tab::Tab};
 
@@ -21,9 +21,9 @@ impl From<&Exec> for Opt {
 }
 
 impl Tabs {
-	pub fn create(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn create(&mut self, opt: impl Into<Opt>) {
 		if self.items.len() >= MAX_TABS {
-			return false;
+			return;
 		}
 
 		let opt = opt.into() as Opt;
@@ -35,6 +35,6 @@ impl Tabs {
 
 		self.items.insert(self.idx + 1, tab);
 		self.set_idx(self.idx + 1);
-		true
+		render!();
 	}
 }

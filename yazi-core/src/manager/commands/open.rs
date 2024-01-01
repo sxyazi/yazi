@@ -4,7 +4,7 @@ use tokio::fs;
 use tracing::error;
 use yazi_config::{popup::SelectCfg, ARGS, OPEN};
 use yazi_plugin::isolate;
-use yazi_shared::{emit, event::Exec, fs::{File, Url}, render, Layer, MIME_DIR};
+use yazi_shared::{emit, event::Exec, fs::{File, Url}, Layer, MIME_DIR};
 
 use crate::{manager::Manager, select::Select, tasks::Tasks};
 
