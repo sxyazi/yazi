@@ -88,7 +88,7 @@ impl Tasks {
 		}
 	}
 
-	pub fn file_copy(&self, src: &HashSet<Url>, dest: &Url, force: bool) {
+	pub fn file_copy(&self, src: &HashSet<Url>, dest: &Url, force: bool, follow: bool) {
 		for u in src {
 			let to = dest.join(u.file_name().unwrap());
 			if force && u == &to {

@@ -22,7 +22,7 @@ impl Manager {
 		if cut {
 			tasks.file_cut(src, dest, opt.force);
 		} else {
-			tasks.file_copy(src, dest, opt.force);
+			tasks.file_copy(src, dest, opt.force, opt.follow);
 		}
 	}
 }
