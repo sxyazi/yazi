@@ -1,4 +1,4 @@
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::help::Help;
 
@@ -17,19 +17,23 @@ impl From<isize> for Opt {
 
 impl Help {
 	#[inline]
-	pub fn arrow(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn arrow(&mut self, opt: impl Into<Opt>) {
 		let max = self.bindings.len().saturating_sub(1);
 		self.offset = self.offset.min(max);
 		self.cursor = self.cursor.min(max);
 
 		let opt = opt.into() as Opt;
-		if opt.step > 0 { self.next(opt.step as usize) } else { self.prev(opt.step.unsigned_abs()) }
+		if opt.step > 0 {
+			self.next(opt.step as usize);
+		} else {
+			self.prev(opt.step.unsigned_abs());
+		}
 	}
 
-	fn next(&mut self, step: usize) -> bool {
+	fn next(&mut self, step: usize) {
 		let len = self.bindings.len();
 		if len == 0 {
-			return false;
+			return;
 		}
 
 		let old = self.cursor;
@@ -40,10 +44,10 @@ impl Help {
 			self.offset = len.saturating_sub(limit).min(self.offset + self.cursor - old);
 		}
 
-		old != self.cursor
+		render!(old != self.cursor);
 	}
 
-	fn prev(&mut self, step: usize) -> bool {
+	fn prev(&mut self, step: usize) {
 		let old = self.cursor;
 		self.cursor = self.cursor.saturating_sub(step);
 
@@ -51,6 +55,6 @@ impl Help {
 			self.offset = self.offset.saturating_sub(old - self.cursor);
 		}
 
-		old != self.cursor
+		render!(old != self.cursor);
 	}
 }

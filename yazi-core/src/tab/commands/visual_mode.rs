@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::tab::{Mode, Tab};
 
@@ -13,7 +13,7 @@ impl From<&Exec> for Opt {
 }
 
 impl Tab {
-	pub fn visual_mode(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn visual_mode(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		let idx = self.current.cursor;
 
@@ -22,6 +22,6 @@ impl Tab {
 		} else {
 			self.mode = Mode::Select(idx, BTreeSet::from([idx]));
 		};
-		true
+		render!();
 	}
 }

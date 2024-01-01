@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use tokio::sync::mpsc;
 use yazi_config::popup::InputCfg;
-use yazi_shared::{emit, event::Exec, InputError, Layer};
+use yazi_shared::{emit, event::Exec, render, InputError, Layer};
 
 use crate::input::Input;
 
@@ -25,9 +25,9 @@ impl Input {
 		rx
 	}
 
-	pub fn show(&mut self, opt: impl TryInto<Opt>) -> bool {
+	pub fn show(&mut self, opt: impl TryInto<Opt>) {
 		let Ok(opt) = opt.try_into() else {
-			return false;
+			return;
 		};
 
 		self.close(false);
@@ -45,6 +45,6 @@ impl Input {
 
 		// Reset snaps
 		self.snaps.reset(opt.cfg.value, self.limit());
-		true
+		render!();
 	}
 }

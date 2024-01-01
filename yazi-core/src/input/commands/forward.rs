@@ -11,7 +11,7 @@ impl From<&Exec> for Opt {
 }
 
 impl Input {
-	pub fn forward(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn forward(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		let snap = self.snap();
 

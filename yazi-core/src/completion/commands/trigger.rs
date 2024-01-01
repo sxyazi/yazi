@@ -1,7 +1,7 @@
 use std::{mem, path::{MAIN_SEPARATOR, MAIN_SEPARATOR_STR}};
 
 use tokio::fs;
-use yazi_shared::{emit, event::Exec, Layer};
+use yazi_shared::{emit, event::Exec, render, Layer};
 
 use crate::completion::Completion;
 
@@ -28,10 +28,10 @@ impl Completion {
 		));
 	}
 
-	pub fn trigger<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
+	pub fn trigger<'a>(&mut self, opt: impl Into<Opt<'a>>) {
 		let opt = opt.into() as Opt;
 		if opt.ticket < self.ticket {
-			return false;
+			return;
 		}
 
 		self.ticket = opt.ticket;
@@ -76,7 +76,7 @@ impl Completion {
 			Ok::<(), anyhow::Error>(())
 		});
 
-		mem::replace(&mut self.visible, false)
+		render!(mem::replace(&mut self.visible, false));
 	}
 
 	#[inline]

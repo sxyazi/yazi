@@ -1,15 +1,15 @@
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::input::{Input, InputMode};
 
 impl Input {
-	pub fn undo(&mut self, _: &Exec) -> bool {
+	pub fn undo(&mut self, _: &Exec) {
 		if !self.snaps.undo() {
-			return false;
+			return;
 		}
 		if self.snap().mode == InputMode::Insert {
 			self.escape(());
 		}
-		true
+		render!();
 	}
 }

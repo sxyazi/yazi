@@ -1,4 +1,4 @@
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::tab::Tab;
 
@@ -22,14 +22,13 @@ impl From<Option<bool>> for Opt {
 }
 
 impl Tab {
-	pub fn select(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn select(&mut self, opt: impl Into<Opt>) {
 		if let Some(u) = self.current.hovered().map(|h| h.url()) {
-			return self.current.files.select(&u, opt.into().state);
+			render!(self.current.files.select(&u, opt.into().state));
 		}
-		false
 	}
 
-	pub fn select_all(&mut self, opt: impl Into<Opt>) -> bool {
-		self.current.files.select_all(opt.into().state)
+	pub fn select_all(&mut self, opt: impl Into<Opt>) {
+		render!(self.current.files.select_all(opt.into().state));
 	}
 }

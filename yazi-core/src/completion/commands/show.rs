@@ -1,6 +1,6 @@
 use std::{mem, ops::ControlFlow};
 
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::completion::Completion;
 
@@ -54,28 +54,28 @@ impl Completion {
 		prefixed.into_iter().map(ToOwned::to_owned).collect()
 	}
 
-	pub fn show<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
+	pub fn show<'a>(&mut self, opt: impl Into<Opt<'a>>) {
 		let opt = opt.into() as Opt;
 		if self.ticket != opt.ticket {
-			return false;
+			return;
 		}
 
 		if !opt.cache.is_empty() {
 			self.caches.insert(opt.cache_name.to_owned(), opt.cache.clone());
 		}
 		let Some(cache) = self.caches.get(opt.cache_name) else {
-			return false;
+			return;
 		};
 
 		self.ticket = opt.ticket;
 		self.cands = Self::match_candidates(opt.word, cache);
 		if self.cands.is_empty() {
-			return mem::replace(&mut self.visible, false);
+			return render!(mem::replace(&mut self.visible, false));
 		}
 
 		self.offset = 0;
 		self.cursor = 0;
 		self.visible = true;
-		true
+		render!();
 	}
 }

@@ -1,4 +1,4 @@
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::select::Select;
 
@@ -13,10 +13,10 @@ impl From<&Exec> for Opt {
 }
 
 impl Select {
-	fn next(&mut self, step: usize) -> bool {
+	fn next(&mut self, step: usize) {
 		let len = self.items.len();
 		if len == 0 {
-			return false;
+			return;
 		}
 
 		let old = self.cursor;
@@ -27,10 +27,10 @@ impl Select {
 			self.offset = len.saturating_sub(limit).min(self.offset + self.cursor - old);
 		}
 
-		old != self.cursor
+		render!(old != self.cursor);
 	}
 
-	fn prev(&mut self, step: usize) -> bool {
+	fn prev(&mut self, step: usize) {
 		let old = self.cursor;
 		self.cursor = self.cursor.saturating_sub(step);
 
@@ -38,10 +38,10 @@ impl Select {
 			self.offset = self.offset.saturating_sub(old - self.cursor);
 		}
 
-		old != self.cursor
+		render!(old != self.cursor);
 	}
 
-	pub fn arrow(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn arrow(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		if opt.step > 0 { self.next(opt.step as usize) } else { self.prev(opt.step.unsigned_abs()) }
 	}

@@ -171,7 +171,7 @@ impl<'a> Executor<'a> {
 			b"tasks_show" => self.app.cx.tasks.toggle(()),
 			// Help
 			b"help" => self.app.cx.help.toggle(Layer::Manager),
-			_ => false,
+			_ => {}
 		}
 	}
 
@@ -198,7 +198,7 @@ impl<'a> Executor<'a> {
 
 		match exec.cmd.as_str() {
 			"help" => self.app.cx.help.toggle(Layer::Tasks),
-			_ => false,
+			_ => {}
 		}
 	}
 
@@ -217,7 +217,7 @@ impl<'a> Executor<'a> {
 
 		match exec.cmd.as_str() {
 			"help" => self.app.cx.help.toggle(Layer::Select),
-			_ => false,
+			_ => {}
 		}
 	}
 
@@ -264,14 +264,12 @@ impl<'a> Executor<'a> {
 
 				match exec.cmd.as_str() {
 					"help" => self.app.cx.help.toggle(Layer::Input),
-					_ => false,
+					_ => {}
 				}
 			}
 			InputMode::Insert => {
 				on!(backspace);
 				on!(kill);
-
-				false
 			}
 		}
 	}

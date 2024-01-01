@@ -8,9 +8,9 @@ use yazi_shared::{event::Exec, term::Term, Defer};
 use crate::tasks::Tasks;
 
 impl Tasks {
-	pub fn inspect(&self, _: &Exec) -> bool {
+	pub fn inspect(&self, _: &Exec) {
 		let Some(id) = self.scheduler.running.read().get_id(self.cursor) else {
-			return false;
+			return;
 		};
 
 		let scheduler = self.scheduler.clone();
@@ -66,6 +66,5 @@ impl Tasks {
 				stdin.read(&mut quit).await.ok();
 			}
 		});
-		false
 	}
 }

@@ -14,22 +14,24 @@ impl From<&Exec> for Opt {
 }
 
 impl Input {
-	pub fn delete(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn delete(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		match self.snap().op {
 			InputOp::None => {
 				self.snap_mut().op = InputOp::Delete(opt.cut, opt.insert, self.snap().cursor);
-				false
 			}
 			InputOp::Select(start) => {
 				self.snap_mut().op = InputOp::Delete(opt.cut, opt.insert, start);
-				return self.handle_op(self.snap().cursor, true).then(|| self.move_(0)).is_some();
+				// TODO: render
+				todo!();
+				// return self.handle_op(self.snap().cursor, true).then(||
+				// self.move_(0)).is_some();
 			}
 			InputOp::Delete(..) => {
 				self.snap_mut().op = InputOp::Delete(opt.cut, opt.insert, 0);
-				return self.move_(self.snap().len() as isize);
+				self.move_(self.snap().len() as isize);
 			}
-			_ => false,
+			_ => {}
 		}
 	}
 }

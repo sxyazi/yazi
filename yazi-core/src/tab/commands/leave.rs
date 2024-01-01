@@ -1,6 +1,6 @@
 use std::mem;
 
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::{manager::Manager, tab::Tab};
 
@@ -13,7 +13,7 @@ impl From<&Exec> for Opt {
 }
 
 impl Tab {
-	pub fn leave(&mut self, _: impl Into<Opt>) -> bool {
+	pub fn leave(&mut self, _: impl Into<Opt>) {
 		let current = self
 			.current
 			.hovered()
@@ -22,7 +22,7 @@ impl Tab {
 			.or_else(|| self.current.cwd.parent_url());
 
 		let Some(current) = current else {
-			return false;
+			return;
 		};
 
 		// Parent
@@ -44,6 +44,6 @@ impl Tab {
 		self.backstack.push(current);
 
 		Manager::_refresh();
-		true
+		render!();
 	}
 }

@@ -1,4 +1,4 @@
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::{manager::Manager, tab::Tab, Step};
 
@@ -20,7 +20,7 @@ where
 }
 
 impl Tab {
-	pub fn arrow(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn arrow(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		let ok = if opt.step.is_positive() {
 			self.current.next(opt.step)
@@ -28,7 +28,7 @@ impl Tab {
 			self.current.prev(opt.step)
 		};
 		if !ok {
-			return false;
+			return;
 		}
 
 		// Visual selection
@@ -42,6 +42,6 @@ impl Tab {
 		}
 
 		Manager::_hover(None);
-		true
+		render!();
 	}
 }

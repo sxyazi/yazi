@@ -1,4 +1,4 @@
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::tasks::Tasks;
 
@@ -12,8 +12,8 @@ impl From<()> for Opt {
 }
 
 impl Tasks {
-	pub fn toggle(&mut self, _: impl Into<Opt>) -> bool {
+	pub fn toggle(&mut self, _: impl Into<Opt>) {
 		self.visible = !self.visible;
-		true
+		render!();
 	}
 }

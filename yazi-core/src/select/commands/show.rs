@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use tokio::sync::oneshot;
 use yazi_config::popup::SelectCfg;
-use yazi_shared::{emit, event::Exec, term::Term, Layer};
+use yazi_shared::{emit, event::Exec, render, term::Term, Layer};
 
 use crate::select::Select;
 
@@ -25,9 +25,9 @@ impl Select {
 		rx.await.unwrap_or_else(|_| Term::goodbye(|| false))
 	}
 
-	pub fn show(&mut self, opt: impl TryInto<Opt>) -> bool {
+	pub fn show(&mut self, opt: impl TryInto<Opt>) {
 		let Ok(opt) = opt.try_into() else {
-			return false;
+			return;
 		};
 
 		self.close(false);
@@ -37,6 +37,6 @@ impl Select {
 
 		self.callback = Some(opt.tx);
 		self.visible = true;
-		true
+		render!();
 	}
 }

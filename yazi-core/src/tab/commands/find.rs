@@ -84,18 +84,16 @@ impl Tab {
 		render!();
 	}
 
-	pub fn find_arrow(&mut self, opt: impl Into<ArrowOpt>) -> bool {
+	pub fn find_arrow(&mut self, opt: impl Into<ArrowOpt>) {
 		let Some(finder) = &mut self.finder else {
-			return false;
+			return;
 		};
 
-		let b = finder.catchup(&self.current.files);
-		let step = if opt.into().prev {
-			finder.prev(&self.current.files, self.current.cursor, false)
+		render!(finder.catchup(&self.current.files));
+		if opt.into().prev {
+			finder.prev(&self.current.files, self.current.cursor, false).map(|s| self.arrow(s));
 		} else {
-			finder.next(&self.current.files, self.current.cursor, false)
-		};
-
-		b | step.is_some_and(|s| self.arrow(s))
+			finder.next(&self.current.files, self.current.cursor, false).map(|s| self.arrow(s));
+		}
 	}
 }

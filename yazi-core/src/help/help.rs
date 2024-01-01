@@ -1,7 +1,7 @@
 use crossterm::event::KeyCode;
 use unicode_width::UnicodeWidthStr;
 use yazi_config::{keymap::{Control, Key}, KEYMAP};
-use yazi_shared::{term::Term, Layer};
+use yazi_shared::{render, term::Term, Layer};
 
 use super::HELP_MARGIN;
 use crate::input::Input;
@@ -24,7 +24,7 @@ impl Help {
 	#[inline]
 	pub fn limit() -> usize { Term::size().rows.saturating_sub(HELP_MARGIN) as usize }
 
-	pub fn toggle(&mut self, layer: Layer) -> bool {
+	pub fn toggle(&mut self, layer: Layer) {
 		self.visible = !self.visible;
 		self.layer = layer;
 
@@ -34,7 +34,7 @@ impl Help {
 
 		self.offset = 0;
 		self.cursor = 0;
-		true
+		render!();
 	}
 
 	pub(super) fn filter_apply(&mut self) -> bool {
@@ -54,24 +54,23 @@ impl Help {
 		true
 	}
 
-	pub fn type_(&mut self, key: &Key) -> bool {
+	pub fn type_(&mut self, key: &Key) {
 		let Some(input) = &mut self.in_filter else {
-			return false;
+			return;
 		};
 
 		if key.is_enter() {
 			self.in_filter = None;
-			return true;
+			return render!();
 		}
 
-		let b = match &key {
+		match &key {
 			Key { code: KeyCode::Backspace, shift: false, ctrl: false, alt: false } => {
 				input.backspace(false)
 			}
 			_ => input.type_(key),
-		};
-
-		if b { self.filter_apply() } else { false }
+		}
+		self.filter_apply();
 	}
 }
 

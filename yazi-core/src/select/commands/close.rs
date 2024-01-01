@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::select::Select;
 
@@ -15,7 +15,7 @@ impl From<bool> for Opt {
 }
 
 impl Select {
-	pub fn close(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn close(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		if let Some(cb) = self.callback.take() {
 			_ = cb.send(if opt.submit { Ok(self.cursor) } else { Err(anyhow!("canceled")) });
@@ -24,6 +24,6 @@ impl Select {
 		self.cursor = 0;
 		self.offset = 0;
 		self.visible = false;
-		true
+		render!();
 	}
 }

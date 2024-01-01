@@ -1,4 +1,4 @@
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::input::{op::InputOp, Input, InputMode};
 
@@ -14,13 +14,13 @@ impl From<bool> for Opt {
 }
 
 impl Input {
-	pub fn insert(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn insert(&mut self, opt: impl Into<Opt>) {
 		let snap = self.snap_mut();
 		if snap.mode == InputMode::Normal {
 			snap.op = InputOp::None;
 			snap.mode = InputMode::Insert;
 		} else {
-			return false;
+			return;
 		}
 
 		let opt = opt.into() as Opt;
@@ -28,6 +28,6 @@ impl Input {
 			self.move_(1);
 		}
 
-		true
+		render!();
 	}
 }

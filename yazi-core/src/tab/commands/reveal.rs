@@ -1,4 +1,4 @@
-use yazi_shared::{emit, event::Exec, fs::{expand_path, File, FilesOp, Url}, Layer};
+use yazi_shared::{emit, event::Exec, fs::{expand_path, File, FilesOp, Url}, render, Layer};
 
 use crate::{manager::Manager, tab::Tab};
 
@@ -26,16 +26,15 @@ impl Tab {
 		emit!(Call(Exec::call("reveal", vec![target.to_string()]).vec(), Layer::Manager));
 	}
 
-	pub fn reveal(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn reveal(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 
 		let Some(parent) = opt.target.parent_url() else {
-			return false;
+			return;
 		};
 
-		let b = self.cd(parent.clone());
+		self.cd(parent.clone());
 		FilesOp::Creating(parent, vec![File::from_dummy(opt.target.clone())]).emit();
 		Manager::_hover(Some(opt.target));
-		b
 	}
 }

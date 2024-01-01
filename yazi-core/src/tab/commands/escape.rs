@@ -42,7 +42,7 @@ impl Tab {
 	}
 
 	#[inline]
-	fn escape_select(&mut self) -> bool { self.select_all(Some(false)) }
+	fn escape_select(&mut self) -> bool { self.current.files.select_all(None) }
 
 	#[inline]
 	fn escape_filter(&mut self) -> bool {
