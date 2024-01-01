@@ -6,12 +6,13 @@ use super::slim_lua;
 use crate::{bindings::{Cast, File}, elements::Rect, LOADED};
 
 pub async fn preload(
-	name: String,
+	name: &str,
 	files: Vec<yazi_shared::fs::File>,
 	multi: bool,
 ) -> mlua::Result<u8> {
-	LOADED.ensure(&name).await.into_lua_err()?;
+	LOADED.ensure(name).await.into_lua_err()?;
 
+	let name = name.to_owned();
 	tokio::task::spawn_blocking(move || {
 		let lua = slim_lua()?;
 		let plugin: Table = if let Some(b) = LOADED.read().get(&name) {

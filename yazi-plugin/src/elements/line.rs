@@ -32,13 +32,12 @@ impl<'a> TryFrom<Table<'a>> for Line {
 
 impl Line {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		#[inline]
-		fn new(value: Value) -> mlua::Result<Line> {
+		let new = lua.create_function(|_, (_, value): (Table, Value)| {
 			if let Value::Table(tbl) = value {
 				return Line::try_from(tbl);
 			}
 			Err("expected a table of Spans or Lines".into_lua_err())
-		}
+		})?;
 
 		let line = lua.create_table_from([
 			// Alignment
@@ -47,10 +46,7 @@ impl Line {
 			("RIGHT", RIGHT.into_lua(lua)?),
 		])?;
 
-		line.set_metatable(Some(lua.create_table_from([(
-			"__call",
-			lua.create_function(|_, (_, value): (Table, Value)| new(value))?,
-		)])?));
+		line.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
 		ui.set("Line", line)
 	}

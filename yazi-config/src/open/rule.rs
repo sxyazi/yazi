@@ -31,7 +31,7 @@ impl OpenRule {
 			where
 				A: de::SeqAccess<'de>,
 			{
-				let mut uses = Vec::new();
+				let mut uses = vec![];
 				while let Some(use_) = seq.next_element::<String>()? {
 					uses.push(use_);
 				}

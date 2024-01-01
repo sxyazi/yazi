@@ -42,7 +42,7 @@ impl Manager {
 
 	fn handle_ioerr(&mut self, op: FilesOp) -> bool {
 		let url = op.url();
-		let op = FilesOp::Full(url.clone(), Vec::new());
+		let op = FilesOp::Full(url.clone(), vec![]);
 
 		if url == self.cwd() {
 			self.current_mut().update(op);

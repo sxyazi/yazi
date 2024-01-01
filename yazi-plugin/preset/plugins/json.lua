@@ -1,7 +1,6 @@
 local M = {}
 
 function M:peek()
-	local limit = self.area.h
 	local child = Command("jq")
 		:args({
 			"-C",
@@ -13,10 +12,17 @@ function M:peek()
 		:stderr(Command.PIPED)
 		:spawn()
 
+	if not child then
+		return self:fallback_to_builtin()
+	end
+
+	local limit = self.area.h
 	local i, lines = 0, ""
 	repeat
-		local code, next = child:read_line()
-		if code ~= 0 then
+		local next, event = child:read_line()
+		if event == 1 then
+			return self:fallback_to_builtin()
+		elseif event ~= 0 then
 			break
 		end
 
@@ -43,6 +49,13 @@ function M:seek(units)
 			tostring(math.max(0, cx.active.preview.skip + step)),
 			only_if = tostring(self.file.url),
 		})
+	end
+end
+
+function M:fallback_to_builtin()
+	local _, bound = ya.preview_code(self)
+	if bound then
+		ya.manager_emit("peek", { tostring(bound), only_if = tostring(self.file.url), upper_bound = "" })
 	end
 end
 

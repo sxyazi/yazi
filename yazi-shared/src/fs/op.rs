@@ -41,7 +41,7 @@ impl FilesOp {
 
 	pub fn prepare(url: &Url) -> u64 {
 		let ticket = FILES_TICKET.fetch_add(1, Ordering::Relaxed);
-		Self::Part(url.clone(), Vec::new(), ticket).emit();
+		Self::Part(url.clone(), vec![], ticket).emit();
 		ticket
 	}
 

@@ -1,6 +1,6 @@
 use std::process::Stdio;
 
-use mlua::{prelude::LuaUserDataMethods, AnyUserData, IntoLua, Lua, Table, UserData};
+use mlua::{prelude::LuaUserDataMethods, AnyUserData, IntoLua, Lua, Table, UserData, Value};
 
 use super::{output::Output, Child};
 
@@ -72,9 +72,17 @@ impl UserData for Command {
 			});
 			Ok(ud)
 		});
-		methods.add_method_mut("spawn", |_, me, ()| Ok(Child::new(me.inner.spawn()?)));
-		methods.add_async_method_mut("output", |_, me, ()| async move {
-			Ok(Output::new(me.inner.output().await?))
+		methods.add_method_mut("spawn", |lua, me, ()| {
+			Ok(match me.inner.spawn() {
+				Ok(child) => (Child::new(child).into_lua(lua)?, Value::Nil),
+				Err(e) => (Value::Nil, e.raw_os_error().into_lua(lua)?),
+			})
+		});
+		methods.add_async_method_mut("output", |lua, me, ()| async move {
+			Ok(match me.inner.output().await {
+				Ok(output) => (Output::new(output).into_lua(lua)?, Value::Nil),
+				Err(e) => (Value::Nil, e.raw_os_error().into_lua(lua)?),
+			})
 		});
 	}
 }

@@ -112,7 +112,7 @@ impl Adaptor {
 			return Self::X11;
 		}
 		if std::fs::symlink_metadata("/proc/sys/fs/binfmt_misc/WSLInterop").is_ok() {
-			return Self::Kitty;
+			return Self::KittyOld;
 		}
 
 		warn!("[Adaptor] Falling back to chafa");

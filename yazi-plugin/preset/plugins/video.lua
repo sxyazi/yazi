@@ -31,25 +31,27 @@ function M:preload()
 		return 1
 	end
 
-	local status = Command("ffmpegthumbnailer")
-		:args({
-			"-q",
-			"6",
-			"-c",
-			"jpeg",
-			"-i",
-			tostring(self.file.url),
-			"-o",
-			tostring(cache),
-			"-t",
-			tostring(percentage),
-			"-s",
-			tostring(PREVIEW.max_width),
-		})
-		:spawn()
-		:wait()
+	local child = Command("ffmpegthumbnailer"):args({
+		"-q",
+		"6",
+		"-c",
+		"jpeg",
+		"-i",
+		tostring(self.file.url),
+		"-o",
+		tostring(cache),
+		"-t",
+		tostring(percentage),
+		"-s",
+		tostring(PREVIEW.max_width),
+	}):spawn()
 
-	return status:success() and 1 or 2
+	if not child then
+		return 0
+	end
+
+	local status = child:wait()
+	return status and status:success() and 1 or 2
 end
 
 return M

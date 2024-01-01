@@ -28,7 +28,7 @@ impl Icon {
 			where
 				A: de::MapAccess<'de>,
 			{
-				let mut icons = Vec::new();
+				let mut icons = vec![];
 				while let Some((key, value)) = &map.next_entry::<String, String>()? {
 					icons.push(Icon {
 						name:    Pattern::try_from(key.clone())

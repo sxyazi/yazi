@@ -73,8 +73,8 @@ impl<'de> Deserialize<'de> for Condition {
 
 impl Condition {
 	fn build(expr: &str) -> Self {
-		let mut stack: Vec<ConditionOp> = Vec::new();
-		let mut output: Vec<ConditionOp> = Vec::new();
+		let mut stack: Vec<ConditionOp> = vec![];
+		let mut output: Vec<ConditionOp> = vec![];
 
 		let mut chars = expr.chars().peekable();
 		while let Some(token) = chars.next() {
