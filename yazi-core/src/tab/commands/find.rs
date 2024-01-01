@@ -3,7 +3,7 @@ use std::time::Duration;
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
-use yazi_shared::{emit, event::Exec, Debounce, InputError, Layer};
+use yazi_shared::{emit, event::Exec, render, Debounce, InputError, Layer};
 
 use crate::{folder::FilterCase, input::Input, tab::{Finder, Tab}};
 
@@ -54,20 +54,20 @@ impl Tab {
 		false
 	}
 
-	pub fn find_do<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
+	pub fn find_do<'a>(&mut self, opt: impl Into<Opt<'a>>) {
 		let opt = opt.into() as Opt;
 		let Some(query) = opt.query else {
-			return false;
+			return;
 		};
 		if query.is_empty() {
 			return self.escape(super::escape::Opt::FIND);
 		}
 
 		let Ok(finder) = Finder::new(query, opt.case) else {
-			return false;
+			return;
 		};
 		if matches!(&self.finder, Some(f) if f.filter == finder.filter) {
-			return false;
+			return;
 		}
 
 		let step = if opt.prev {
@@ -81,7 +81,7 @@ impl Tab {
 		}
 
 		self.finder = Some(finder);
-		true
+		render!();
 	}
 
 	pub fn find_arrow(&mut self, opt: impl Into<ArrowOpt>) -> bool {

@@ -1,6 +1,6 @@
 use yazi_config::PLUGIN;
 use yazi_plugin::isolate;
-use yazi_shared::{event::Exec, MIME_DIR};
+use yazi_shared::{event::Exec, render, MIME_DIR};
 
 use crate::manager::Manager;
 
@@ -16,9 +16,9 @@ impl From<&Exec> for Opt {
 }
 
 impl Manager {
-	pub fn seek(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn seek(&mut self, opt: impl Into<Opt>) {
 		let Some(hovered) = self.hovered() else {
-			return self.active_mut().preview.reset();
+			return render!(self.active_mut().preview.reset());
 		};
 
 		let mime = if hovered.is_dir() {
@@ -26,15 +26,14 @@ impl Manager {
 		} else if let Some(s) = self.mimetype.get(&hovered.url) {
 			s
 		} else {
-			return self.active_mut().preview.reset();
+			return render!(self.active_mut().preview.reset());
 		};
 
 		let Some(previewer) = PLUGIN.previewer(&hovered.url, mime) else {
-			return self.active_mut().preview.reset();
+			return render!(self.active_mut().preview.reset());
 		};
 
 		let opt = opt.into() as Opt;
 		isolate::seek_sync(&previewer.exec, hovered.clone(), opt.units);
-		false
 	}
 }

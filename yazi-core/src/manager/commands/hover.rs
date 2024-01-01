@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use yazi_shared::{emit, event::Exec, fs::Url, Layer};
+use yazi_shared::{emit, event::Exec, fs::Url, render, Layer};
 
 use crate::manager::Manager;
 
@@ -24,13 +24,13 @@ impl Manager {
 		));
 	}
 
-	pub fn hover(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn hover(&mut self, opt: impl Into<Opt>) {
 		// Hover on the file
 		let opt = opt.into() as Opt;
-		let mut b = self.current_mut().repos(opt.url);
+		render!(self.current_mut().repos(opt.url));
 
 		// Re-peek
-		b |= self.peek(false);
+		self.peek(false);
 
 		// Refresh watcher
 		let mut to_watch = BTreeSet::new();
@@ -44,7 +44,5 @@ impl Manager {
 			}
 		}
 		self.watcher.watch(to_watch);
-
-		b
 	}
 }

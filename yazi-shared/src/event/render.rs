@@ -7,4 +7,9 @@ macro_rules! render {
 	() => {
 		$crate::event::NEED_RENDER.store(true, std::sync::atomic::Ordering::Relaxed);
 	};
+	($expr:expr) => {
+		if $expr {
+			render!();
+		}
+	};
 }

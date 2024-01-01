@@ -1,4 +1,4 @@
-use yazi_shared::{emit, event::Exec, fs::Url, Layer, MIME_DIR};
+use yazi_shared::{emit, event::Exec, fs::Url, render, Layer, MIME_DIR};
 
 use crate::manager::Manager;
 
@@ -30,14 +30,14 @@ impl Manager {
 		emit!(Call(Exec::call("peek", vec![]).with_bool("force", force).vec(), Layer::Manager));
 	}
 
-	pub fn peek(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn peek(&mut self, opt: impl Into<Opt>) {
 		let Some(hovered) = self.hovered() else {
-			return self.active_mut().preview.reset();
+			return render!(self.active_mut().preview.reset());
 		};
 
 		let opt = opt.into() as Opt;
 		if matches!(opt.only_if, Some(ref u) if *u != hovered.url) {
-			return false;
+			return;
 		}
 
 		let hovered = hovered.clone();
@@ -61,14 +61,13 @@ impl Manager {
 			} else {
 				self.active_mut().preview.go_folder(hovered, opt.force);
 			}
-			return false;
+			return;
 		}
 
 		if let Some(s) = self.mimetype.get(&hovered.url).cloned() {
 			self.active_mut().preview.go(hovered, &s, opt.force);
 		} else {
-			return self.active_mut().preview.reset();
+			return render!(self.active_mut().preview.reset());
 		}
-		false
 	}
 }

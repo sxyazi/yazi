@@ -25,8 +25,8 @@ impl<'a> Executor<'a> {
 			return true;
 		}
 
-		let b = if cx.completion.visible {
-			self.matches(Layer::Completion, key).or_else(|| self.matches(Layer::Input, key))
+		if cx.completion.visible {
+			self.matches(Layer::Completion, key) || self.matches(Layer::Input, key)
 		} else if cx.help.visible {
 			self.matches(Layer::Help, key)
 		} else if cx.input.visible {
@@ -37,24 +37,24 @@ impl<'a> Executor<'a> {
 			self.matches(Layer::Tasks, key)
 		} else {
 			self.matches(Layer::Manager, key)
-		};
-		b == Some(true)
+		}
 	}
 
 	#[inline]
-	fn matches(&mut self, layer: Layer, key: Key) -> Option<bool> {
+	fn matches(&mut self, layer: Layer, key: Key) -> bool {
 		for Control { on, exec, .. } in KEYMAP.get(layer) {
 			if on.is_empty() || on[0] != key {
 				continue;
 			}
 
-			return Some(if on.len() > 1 {
-				self.app.cx.which.show(&key, layer)
+			if on.len() > 1 {
+				self.app.cx.which.show(&key, layer);
 			} else {
-				self.dispatch(exec, layer)
-			});
+				self.dispatch(exec, layer);
+			}
+			return true;
 		}
-		None
+		false
 	}
 
 	#[inline]
@@ -87,7 +87,7 @@ impl<'a> Executor<'a> {
 		on!(stop);
 	}
 
-	fn manager(&mut self, exec: &Exec) -> bool {
+	fn manager(&mut self, exec: &Exec) {
 		macro_rules! on {
 			(MANAGER, $name:ident $(,$args:expr)*) => {
 				if exec.cmd == stringify!($name) {
@@ -175,7 +175,7 @@ impl<'a> Executor<'a> {
 		}
 	}
 
-	fn tasks(&mut self, exec: &Exec) -> bool {
+	fn tasks(&mut self, exec: &Exec) {
 		macro_rules! on {
 			($name:ident) => {
 				if exec.cmd == stringify!($name) {
@@ -202,7 +202,7 @@ impl<'a> Executor<'a> {
 		}
 	}
 
-	fn select(&mut self, exec: &Exec) -> bool {
+	fn select(&mut self, exec: &Exec) {
 		macro_rules! on {
 			($name:ident) => {
 				if exec.cmd == stringify!($name) {
@@ -221,7 +221,7 @@ impl<'a> Executor<'a> {
 		}
 	}
 
-	fn input(&mut self, exec: &Exec) -> bool {
+	fn input(&mut self, exec: &Exec) {
 		macro_rules! on {
 			($name:ident) => {
 				if exec.cmd == stringify!($name) {
@@ -276,7 +276,7 @@ impl<'a> Executor<'a> {
 		}
 	}
 
-	fn help(&mut self, exec: &Exec) -> bool {
+	fn help(&mut self, exec: &Exec) {
 		macro_rules! on {
 			($name:ident) => {
 				if exec.cmd == stringify!($name) {
@@ -295,7 +295,7 @@ impl<'a> Executor<'a> {
 		}
 	}
 
-	fn completion(&mut self, exec: &Exec) -> bool {
+	fn completion(&mut self, exec: &Exec) {
 		macro_rules! on {
 			($name:ident) => {
 				if exec.cmd == stringify!($name) {

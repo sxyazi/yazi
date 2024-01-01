@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use yazi_plugin::ValueSendable;
-use yazi_shared::{event::Exec, fs::Url};
+use yazi_shared::{event::Exec, fs::Url, render};
 
 use crate::{manager::Manager, tasks::Tasks};
 
@@ -16,9 +16,9 @@ impl TryFrom<&Exec> for Opt {
 }
 
 impl Manager {
-	pub fn update_mimetype(&mut self, opt: impl TryInto<Opt>, tasks: &Tasks) -> bool {
+	pub fn update_mimetype(&mut self, opt: impl TryInto<Opt>, tasks: &Tasks) {
 		let Ok(opt) = opt.try_into() else {
-			return false;
+			return;
 		};
 
 		let linked = self.watcher.linked.read();
@@ -38,7 +38,7 @@ impl Manager {
 
 		drop(linked);
 		if updates.is_empty() {
-			return false;
+			return;
 		}
 
 		let affected: Vec<_> = self
@@ -53,6 +53,6 @@ impl Manager {
 		self.peek(false);
 
 		tasks.preload_affected(&affected, &self.mimetype);
-		true
+		render!();
 	}
 }

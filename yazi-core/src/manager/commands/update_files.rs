@@ -1,4 +1,4 @@
-use yazi_shared::{event::Exec, fs::FilesOp};
+use yazi_shared::{event::Exec, fs::FilesOp, render};
 
 use crate::{folder::Folder, manager::Manager, tasks::Tasks};
 
@@ -13,51 +13,49 @@ impl TryFrom<&Exec> for Opt {
 }
 
 impl Manager {
-	fn handle_read(&mut self, op: FilesOp) -> bool {
+	// TODO: refactor this
+	fn handle_read(&mut self, op: FilesOp) {
 		let url = op.url().clone();
 		let cwd = self.cwd().to_owned();
 		let hovered = self.hovered().map(|h| h.url());
 
-		let mut b = if cwd == url {
-			self.current_mut().update(op)
+		if cwd == url {
+			render!(self.current_mut().update(op));
 		} else if matches!(self.parent(), Some(p) if p.cwd == url) {
-			self.active_mut().parent.as_mut().unwrap().update(op)
+			render!(self.active_mut().parent.as_mut().unwrap().update(op));
 		} else if matches!(self.hovered(), Some(h) if h.url == url) {
 			self.active_mut().history.entry(url.clone()).or_insert_with(|| Folder::from(&url));
 			self.active_mut().apply_files_attrs(true);
-			self.active_mut().history.get_mut(&url).unwrap().update(op) | self.peek(true)
+			render!(self.active_mut().history.get_mut(&url).unwrap().update(op));
+			self.peek(true);
 		} else {
 			self.active_mut().history.entry(url.clone()).or_insert_with(|| Folder::from(&url)).update(op);
-			false
-		};
+		}
 
-		b |= self.active_mut().parent.as_mut().is_some_and(|p| p.hover(&cwd));
-		b |= hovered.as_ref().is_some_and(|h| self.current_mut().hover(h));
+		render!(self.active_mut().parent.as_mut().is_some_and(|p| p.hover(&cwd)));
+		render!(hovered.as_ref().is_some_and(|h| self.current_mut().hover(h)));
 
 		if hovered.as_ref() != self.hovered().map(|h| &h.url) {
-			b |= self.hover(None);
+			self.hover(None);
 		}
-		b
 	}
 
-	fn handle_ioerr(&mut self, op: FilesOp) -> bool {
+	fn handle_ioerr(&mut self, op: FilesOp) {
 		let url = op.url();
 		let op = FilesOp::Full(url.clone(), vec![]);
 
 		if url == self.cwd() {
 			self.current_mut().update(op);
 			self.active_mut().leave(());
-			true
+			render!();
 		} else if matches!(self.parent(), Some(p) if &p.cwd == url) {
-			self.active_mut().parent.as_mut().unwrap().update(op)
-		} else {
-			false
+			render!(self.active_mut().parent.as_mut().unwrap().update(op));
 		}
 	}
 
-	pub fn update_files(&mut self, opt: impl TryInto<Opt>, tasks: &Tasks) -> bool {
+	pub fn update_files(&mut self, opt: impl TryInto<Opt>, tasks: &Tasks) {
 		let Ok(opt) = opt.try_into() else {
-			return false;
+			return;
 		};
 		let calc = !matches!(opt.op, FilesOp::Size(..) | FilesOp::IOErr(_) | FilesOp::Deleting(..));
 
@@ -66,9 +64,8 @@ impl Manager {
 			ops.push(ops[0].chroot(u));
 		}
 
-		let mut b = false;
 		for op in ops {
-			b |= match op {
+			match op {
 				FilesOp::IOErr(..) => self.handle_ioerr(op),
 				_ => self.handle_read(op),
 			};
@@ -77,6 +74,5 @@ impl Manager {
 		if calc {
 			tasks.preload_sorted(&self.current().files);
 		}
-		b
 	}
 }
