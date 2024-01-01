@@ -343,7 +343,7 @@ impl Files {
 	// --- Selected
 	pub fn selected(&self, pending: &BTreeSet<usize>, unset: bool) -> Vec<&File> {
 		if self.selected.is_empty() && (unset || pending.is_empty()) {
-			return Vec::new();
+			return vec![];
 		}
 
 		let selected: BTreeSet<_> = self.selected.iter().collect();

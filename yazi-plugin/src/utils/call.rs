@@ -8,7 +8,7 @@ use crate::ValueSendable;
 
 impl Utils {
 	fn parse_args(t: Table) -> mlua::Result<(Vec<String>, BTreeMap<String, String>)> {
-		let mut args = Vec::new();
+		let mut args = vec![];
 		let mut named = BTreeMap::new();
 		for result in t.pairs::<Value, Value>() {
 			let (k, Value::String(v)) = result? else {

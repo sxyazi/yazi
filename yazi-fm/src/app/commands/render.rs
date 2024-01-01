@@ -30,7 +30,7 @@ impl App {
 			return Ok(());
 		}
 
-		let mut patches = Vec::new();
+		let mut patches = vec![];
 		for x in frame.area.left()..frame.area.right() {
 			for y in frame.area.top()..frame.area.bottom() {
 				let cell = frame.buffer.get(x, y);

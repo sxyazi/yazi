@@ -49,7 +49,7 @@ impl Completion {
 		let ticket = self.ticket;
 		tokio::spawn(async move {
 			let mut dir = fs::read_dir(&parent).await?;
-			let mut cache = Vec::new();
+			let mut cache = vec![];
 			while let Ok(Some(f)) = dir.next_entry().await {
 				let Ok(meta) = f.metadata().await else {
 					continue;

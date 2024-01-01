@@ -3,10 +3,12 @@
 mod cache;
 mod call;
 mod image;
+mod log;
 mod plugin;
 mod preview;
 mod target;
 mod text;
+mod time;
 mod utils;
 
 pub use preview::*;

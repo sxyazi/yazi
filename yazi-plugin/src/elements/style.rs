@@ -6,7 +6,12 @@ pub struct Style(pub(super) ratatui::style::Style);
 
 impl Style {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		ui.set("Style", lua.create_function(|_, ()| Ok(Self::default()))?)
+		let new = lua.create_function(|_, ()| Ok(Self::default()))?;
+
+		let style = lua.create_table()?;
+		style.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+
+		ui.set("Style", style)
 	}
 }
 

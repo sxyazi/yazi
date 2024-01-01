@@ -31,7 +31,7 @@ impl Preload {
 		match op {
 			PreloadOp::Rule(task) => {
 				let urls: Vec<_> = task.targets.iter().map(|f| f.url()).collect();
-				let result = isolate::preload(task.plugin.cmd, task.targets, task.plugin.multi).await;
+				let result = isolate::preload(&task.plugin.cmd, task.targets, task.plugin.multi).await;
 				if let Err(e) = result {
 					self.fail(task.id, format!("Preload task failed:\n{e}"))?;
 					return Err(e.into());
@@ -39,7 +39,7 @@ impl Preload {
 
 				let code = result.unwrap();
 				if code & 1 == 0 {
-					error!("Preload task returned {code}");
+					error!("Preload task `{}` returned {code}", task.plugin.cmd);
 				}
 				if code >> 1 & 1 != 0 {
 					let mut loaded = self.rule_loaded.write();

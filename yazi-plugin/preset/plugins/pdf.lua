@@ -29,7 +29,9 @@ function M:preload()
 		:stderr(Command.PIPED)
 		:output()
 
-	if not output.status:success() then
+	if not output then
+		return 0
+	elseif not output.status:success() then
 		local pages = tonumber(output.stderr:match("the last page %((%d+)%)")) or 0
 		if self.skip > 0 and pages > 0 then
 			ya.manager_emit("peek", { tostring(math.max(0, pages - 1)), only_if = tostring(self.file.url), upper_bound = "" })

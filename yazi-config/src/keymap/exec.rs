@@ -41,7 +41,7 @@ where
 		where
 			A: de::SeqAccess<'de>,
 		{
-			let mut execs = Vec::new();
+			let mut execs = vec![];
 			while let Some(value) = &seq.next_element::<String>()? {
 				execs.push(parse(value).map_err(de::Error::custom)?);
 			}

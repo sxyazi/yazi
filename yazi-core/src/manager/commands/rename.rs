@@ -136,7 +136,7 @@ impl Manager {
 			return Ok(());
 		}
 
-		let mut failed = Vec::new();
+		let mut failed = vec![];
 		for (o, n) in todo {
 			if fs::symlink_metadata(&n).await.is_ok() {
 				failed.push((o, n, anyhow!("Destination already exists")));

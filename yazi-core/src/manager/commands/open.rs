@@ -47,7 +47,7 @@ impl Manager {
 
 		tokio::spawn(async move {
 			done.extend(todo.iter().map(|f| (f.url(), None)));
-			if let Err(e) = isolate::preload("mime.lua".to_string(), todo, true).await {
+			if let Err(e) = isolate::preload("mime.lua", todo, true).await {
 				error!("preload in watcher failed: {e}");
 			}
 

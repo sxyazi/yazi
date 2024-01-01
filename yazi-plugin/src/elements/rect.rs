@@ -9,25 +9,21 @@ pub struct Rect;
 
 impl Rect {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		#[inline]
-		fn new<'a>(lua: &'a Lua, args: Table) -> mlua::Result<AnyUserData<'a>> {
+		let new = lua.create_function(|lua, (_, args): (Table, Table)| {
 			Rect::cast(lua, ratatui::layout::Rect {
 				x:      args.get("x")?,
 				y:      args.get("y")?,
 				width:  args.get("w")?,
 				height: args.get("h")?,
 			})
-		}
+		})?;
 
 		let rect = lua.create_table_from([(
 			"default",
 			Rect::cast(lua, ratatui::layout::Rect::default())?.into_lua(lua)?,
 		)])?;
 
-		rect.set_metatable(Some(lua.create_table_from([(
-			"__call",
-			lua.create_function(|lua, (_, args): (Table, Table)| new(lua, args))?,
-		)])?));
+		rect.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
 		ui.set("Rect", rect)
 	}

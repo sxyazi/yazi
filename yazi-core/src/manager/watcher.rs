@@ -156,7 +156,7 @@ impl Watcher {
 			if reload.is_empty() {
 				continue;
 			}
-			if let Err(e) = isolate::preload("mime.lua".to_string(), reload, true).await {
+			if let Err(e) = isolate::preload("mime.lua", reload, true).await {
 				error!("preload in watcher failed: {e}");
 			}
 		}

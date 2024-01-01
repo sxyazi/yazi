@@ -73,7 +73,7 @@ mod parser {
 
 	pub(super) fn parse(cmd: &str, args: &[&str]) -> Vec<String> {
 		let mut it = cmd.chars().peekable();
-		let mut expanded = Vec::new();
+		let mut expanded = vec![];
 
 		while let Some(c) = it.next() {
 			if c.is_whitespace() {
