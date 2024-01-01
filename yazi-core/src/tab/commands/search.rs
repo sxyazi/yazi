@@ -5,7 +5,7 @@ use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
 use yazi_plugin::external;
-use yazi_shared::{event::Exec, fs::FilesOp};
+use yazi_shared::{event::Exec, fs::FilesOp, render};
 
 use crate::{input::Input, manager::Manager, tab::Tab};
 
@@ -33,7 +33,7 @@ impl From<&Exec> for Opt {
 }
 
 impl Tab {
-	pub fn search(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn search(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		if opt.type_ == OptType::None {
 			return self.search_stop();
@@ -70,10 +70,11 @@ impl Tab {
 			}
 			Ok(())
 		}));
-		true
+
+		render!();
 	}
 
-	pub(super) fn search_stop(&mut self) -> bool {
+	pub(super) fn search_stop(&mut self) {
 		if let Some(handle) = self.search.take() {
 			handle.abort();
 		}
@@ -82,6 +83,5 @@ impl Tab {
 			drop(mem::replace(&mut self.current, rep));
 			Manager::_refresh();
 		}
-		false
 	}
 }

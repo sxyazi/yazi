@@ -20,7 +20,7 @@ impl<'a> From<&'a Exec> for Opt {
 }
 
 impl Tab {
-	pub fn shell(&self, opt: impl Into<Opt>) -> bool {
+	pub fn shell(&self, opt: impl Into<Opt>) {
 		let mut opt = opt.into() as Opt;
 		let selected: Vec<_> = self.selected().into_iter().map(|f| f.url()).collect();
 
@@ -42,6 +42,5 @@ impl Tab {
 				spread: true,
 			});
 		});
-		false
 	}
 }

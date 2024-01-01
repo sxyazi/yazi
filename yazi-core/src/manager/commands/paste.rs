@@ -14,15 +14,15 @@ impl From<&Exec> for Opt {
 }
 
 impl Manager {
-	pub fn paste(&mut self, opt: impl Into<Opt>, tasks: &Tasks) -> bool {
+	pub fn paste(&mut self, opt: impl Into<Opt>, tasks: &Tasks) {
 		let dest = self.cwd();
 		let (cut, ref src) = self.yanked;
 
 		let opt = opt.into() as Opt;
 		if cut {
-			tasks.file_cut(src, dest, opt.force)
+			tasks.file_cut(src, dest, opt.force);
 		} else {
-			tasks.file_copy(src, dest, opt.force, opt.follow)
+			tasks.file_copy(src, dest, opt.force);
 		}
 	}
 }

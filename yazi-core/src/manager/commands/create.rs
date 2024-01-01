@@ -15,7 +15,7 @@ impl From<&Exec> for Opt {
 }
 
 impl Manager {
-	pub fn create(&self, opt: impl Into<Opt>) -> bool {
+	pub fn create(&self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		let cwd = self.cwd().to_owned();
 		tokio::spawn(async move {
@@ -47,6 +47,5 @@ impl Manager {
 			}
 			Ok::<(), anyhow::Error>(())
 		});
-		false
 	}
 }

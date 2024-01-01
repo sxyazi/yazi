@@ -289,7 +289,7 @@ impl<'a> Executor<'a> {
 
 		match exec.cmd.as_str() {
 			"close" => self.app.cx.help.toggle(Layer::Help),
-			_ => false,
+			_ => {}
 		}
 	}
 
@@ -309,7 +309,7 @@ impl<'a> Executor<'a> {
 
 		match exec.cmd.as_str() {
 			"help" => self.app.cx.help.toggle(Layer::Completion),
-			_ => false,
+			_ => {}
 		}
 	}
 }

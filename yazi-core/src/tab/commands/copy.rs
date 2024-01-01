@@ -13,7 +13,7 @@ impl<'a> From<&'a Exec> for Opt<'a> {
 }
 
 impl Tab {
-	pub fn copy<'a>(&self, opt: impl Into<Opt<'a>>) -> bool {
+	pub fn copy<'a>(&self, opt: impl Into<Opt<'a>>) {
 		let opt = opt.into() as Opt;
 
 		let mut s = OsString::new();
@@ -24,7 +24,7 @@ impl Tab {
 				"dirname" => f.url.parent().map_or(OsStr::new(""), |p| p.as_os_str()),
 				"filename" => f.name().unwrap_or(OsStr::new("")),
 				"name_without_ext" => f.stem().unwrap_or(OsStr::new("")),
-				_ => return false,
+				_ => return,
 			});
 			if it.peek().is_some() {
 				s.push("\n");
@@ -32,6 +32,5 @@ impl Tab {
 		}
 
 		futures::executor::block_on(CLIPBOARD.set(s));
-		false
 	}
 }

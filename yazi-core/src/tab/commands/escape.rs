@@ -50,7 +50,11 @@ impl Tab {
 	}
 
 	#[inline]
-	fn escape_search(&mut self) -> bool { self.search_stop() }
+	fn escape_search(&mut self) -> bool {
+		self.search_stop();
+		// TODO: render
+		false
+	}
 
 	pub fn escape(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;

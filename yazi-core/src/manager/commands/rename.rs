@@ -29,13 +29,13 @@ impl Manager {
 		Ok(Self::_hover(Some(new)))
 	}
 
-	pub fn rename(&self, opt: impl Into<Opt>) -> bool {
+	pub fn rename(&self, opt: impl Into<Opt>) {
 		if self.active().in_selecting() {
 			return self.bulk_rename();
 		}
 
 		let Some(hovered) = self.hovered().map(|h| h.url()) else {
-			return false;
+			return;
 		};
 
 		let opt = opt.into() as Opt;
@@ -60,10 +60,9 @@ impl Manager {
 				}
 			};
 		});
-		false
 	}
 
-	fn bulk_rename(&self) -> bool {
+	fn bulk_rename(&self) {
 		let old: Vec<_> = self.selected().into_iter().map(|f| &f.url).collect();
 
 		let root = max_common_root(&old);
@@ -104,8 +103,6 @@ impl Manager {
 			let new: Vec<_> = fs::read_to_string(&tmp).await?.lines().map(PathBuf::from).collect();
 			Self::bulk_rename_do(root, old, new).await
 		});
-
-		false
 	}
 
 	async fn bulk_rename_do(root: PathBuf, old: Vec<PathBuf>, new: Vec<PathBuf>) -> Result<()> {
