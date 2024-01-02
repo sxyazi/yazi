@@ -1,4 +1,4 @@
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::input::{op::InputOp, Input};
 
@@ -10,10 +10,8 @@ impl Input {
 			}
 			InputOp::Select(start) => {
 				self.snap_mut().op = InputOp::Yank(start);
-				// TODO: render
-				todo!();
-				// return self.handle_op(self.snap().cursor, true).then(||
-				// self.move_(0)).is_some();
+				render!(self.handle_op(self.snap().cursor, true));
+				self.move_(0);
 			}
 			InputOp::Yank(_) => {
 				self.snap_mut().op = InputOp::Yank(0);

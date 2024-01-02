@@ -1,5 +1,5 @@
 use yazi_config::keymap::Key;
-use yazi_shared::{event::Exec, render};
+use yazi_shared::event::Exec;
 
 use crate::input::{Input, InputMode};
 
@@ -10,14 +10,16 @@ impl From<&Exec> for Opt {
 }
 
 impl Input {
-	pub fn type_(&mut self, key: &Key) {
+	pub fn type_(&mut self, key: &Key) -> bool {
 		if self.mode() != InputMode::Insert {
-			return;
+			return false;
 		}
 
 		if let Some(c) = key.plain() {
-			let mut bits = [0; 4];
-			render!(self.type_str(c.encode_utf8(&mut bits)));
+			self.type_str(c.encode_utf8(&mut [0; 4]));
+			return true;
 		}
+
+		false
 	}
 }

@@ -42,20 +42,20 @@ impl Tab {
 	}
 
 	#[inline]
-	fn escape_select(&mut self) -> bool { self.current.files.select_all(None) }
+	fn escape_select(&mut self) -> bool { self.current.files.select_all(Some(false)) }
 
 	#[inline]
 	fn escape_filter(&mut self) -> bool {
-		// TODO: render
-		todo!();
-		// self.filter_do(super::filter::Opt { query: "", ..Default::default() })
+		let b = self.current.files.filter().is_some();
+		self.filter_do(super::filter::Opt { query: "", ..Default::default() });
+		b
 	}
 
 	#[inline]
 	fn escape_search(&mut self) -> bool {
+		let b = self.current.cwd.is_search();
 		self.search_stop();
-		// TODO: render
-		false
+		b
 	}
 
 	pub fn escape(&mut self, opt: impl Into<Opt>) {

@@ -54,23 +54,27 @@ impl Help {
 		true
 	}
 
-	pub fn type_(&mut self, key: &Key) {
+	pub fn type_(&mut self, key: &Key) -> bool {
 		let Some(input) = &mut self.in_filter else {
-			return;
+			return false;
 		};
 
 		if key.is_enter() {
 			self.in_filter = None;
-			return render!();
+			render!();
+			return true;
 		}
 
 		match &key {
 			Key { code: KeyCode::Backspace, shift: false, ctrl: false, alt: false } => {
-				input.backspace(false)
+				input.backspace(false);
 			}
-			_ => input.type_(key),
+			_ => {
+				input.type_(key);
+			}
 		}
 		self.filter_apply();
+		true
 	}
 }
 

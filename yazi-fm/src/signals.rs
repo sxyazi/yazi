@@ -5,8 +5,8 @@ use tokio::{select, sync::{mpsc::{self, UnboundedReceiver, UnboundedSender}, one
 use yazi_shared::event::Event;
 
 pub(super) struct Signals {
-	tx: UnboundedSender<Event>,
-	rx: UnboundedReceiver<Event>,
+	tx:            UnboundedSender<Event>,
+	pub(super) rx: UnboundedReceiver<Event>,
 
 	term_stop_tx: Option<oneshot::Sender<()>>,
 	term_stop_rx: Option<oneshot::Receiver<()>>,
@@ -26,9 +26,6 @@ impl Signals {
 		Event::init(tx);
 		Ok(signals)
 	}
-
-	#[inline]
-	pub(super) async fn recv(&mut self) -> Option<Event> { self.rx.recv().await }
 
 	pub(super) fn stop_term(&mut self, state: bool) {
 		if state == self.term_stop_tx.is_none() {

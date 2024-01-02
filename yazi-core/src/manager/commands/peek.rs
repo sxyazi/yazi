@@ -35,15 +35,15 @@ impl Manager {
 			return render!(self.active_mut().preview.reset());
 		};
 
-		let opt = opt.into() as Opt;
-		if matches!(opt.only_if, Some(ref u) if *u != hovered.url) {
-			return;
-		}
-
 		let hovered = hovered.clone();
 		if !self.active().preview.same_url(&hovered.url) {
 			self.active_mut().preview.skip = 0;
-			self.active_mut().preview.reset();
+			render!(self.active_mut().preview.reset());
+		}
+
+		let opt = opt.into() as Opt;
+		if matches!(opt.only_if, Some(ref u) if *u != hovered.url) {
+			return;
 		}
 
 		if let Some(skip) = opt.skip {

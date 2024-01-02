@@ -391,6 +391,9 @@ impl Files {
 	}
 
 	// --- Filter
+	#[inline]
+	pub fn filter(&self) -> Option<&Filter> { self.filter.as_ref() }
+
 	pub fn set_filter(&mut self, filter: Option<Filter>) -> bool {
 		if self.filter == filter {
 			return false;

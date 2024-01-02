@@ -30,6 +30,7 @@ impl Input {
 				}
 			}
 		}
+
 		self.snaps.tag(self.limit());
 		render!();
 	}

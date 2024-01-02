@@ -9,9 +9,9 @@ pub struct Opt {
 impl From<&Exec> for Opt {
 	fn from(e: &Exec) -> Self {
 		Self {
-			state: match e.named.get("state").map(|s| s.as_bytes()) {
-				Some(b"true") => Some(true),
-				Some(b"false") => Some(false),
+			state: match e.named.get("state").map(|s| s.as_str()) {
+				Some("true") => Some(true),
+				Some("false") => Some(false),
 				_ => None,
 			},
 		}

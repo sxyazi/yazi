@@ -3,7 +3,7 @@ use std::ops::Range;
 use tokio::sync::mpsc::UnboundedSender;
 use unicode_width::UnicodeWidthStr;
 use yazi_config::{popup::Position, INPUT};
-use yazi_shared::InputError;
+use yazi_shared::{render, InputError};
 
 use super::{mode::InputMode, op::InputOp, InputSnap, InputSnaps};
 use crate::CLIPBOARD;
@@ -32,7 +32,7 @@ impl Input {
 		self.position.offset.width.saturating_sub(INPUT.border()) as usize
 	}
 
-	pub fn type_str(&mut self, s: &str) -> bool {
+	pub fn type_str(&mut self, s: &str) {
 		let snap = self.snaps.current_mut();
 		if snap.cursor < 1 {
 			snap.value.insert_str(0, s);
@@ -42,7 +42,7 @@ impl Input {
 
 		self.move_(s.chars().count() as isize);
 		self.flush_value();
-		true
+		render!();
 	}
 
 	pub(super) fn handle_op(&mut self, cursor: usize, include: bool) -> bool {

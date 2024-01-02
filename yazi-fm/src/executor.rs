@@ -18,14 +18,12 @@ impl<'a> Executor<'a> {
 		if cx.which.visible {
 			return cx.which.press(key);
 		}
-		// TODO: render
-		// if cx.help.visible && cx.help.type_(&key) {
-		// 	return true;
-		// }
-		// TODO: render
-		// if cx.input.visible && cx.input.type_(&key) {
-		// 	return true;
-		// }
+		if cx.help.visible && cx.help.type_(&key) {
+			return true;
+		}
+		if cx.input.visible && cx.input.type_(&key) {
+			return true;
+		}
 
 		if cx.completion.visible {
 			self.matches(Layer::Completion, key) || self.matches(Layer::Input, key)
