@@ -6,11 +6,9 @@ use super::Utils;
 impl Utils {
 	#[cfg(unix)]
 	pub(super) fn user(lua: &Lua, ya: &Table) -> mlua::Result<()> {
-		#[cfg(unix)]
 		use uzers::{Groups, Users, UsersCache};
-		#[cfg(unix)]
-		static CACHE: RoCell<UsersCache> = RoCell::new();
 
+		static CACHE: RoCell<UsersCache> = RoCell::new();
 		CACHE.with(Default::default);
 
 		ya.set("uid", lua.create_function(|_, ()| Ok(CACHE.get_current_uid()))?)?;

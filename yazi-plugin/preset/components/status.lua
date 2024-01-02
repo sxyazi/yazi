@@ -140,35 +140,11 @@ function Status:progress(area, offset)
 	}
 end
 
-function Status:owner(area)
-  local h = cx.active.current.hovered
-  if ya.target_family() ~= "unix" or h == nil then
-    return ui.Span("")
-  end
-
-  local spans = {}
-
-  local uid = h.cha.uid
-  if uid then
-    spans[#spans + 1] = ui.Span(ya.get_user_name_by_uid(uid) or tostring(uid))
-    spans[#spans + 1] = ui.Span(" ")
-  end
-  
-  local gid = h.cha.gid
-  if gid then
-    spans[#spans + 1] = ui.Span(ya.get_group_name_by_gid(gid) or tostring(gid))
-    spans[#spans + 1] = ui.Span(" ")
-  end
-
-  return ui.Line(spans)
-end
-
 function Status:render(area)
 	self.area = area
 
 	local left = ui.Line { self:mode(), self:size(), self:name() }
 	local right = ui.Line { self:permissions(), self:percentage(), self:position() }
-  -- local right = ui.Line({ self:owner(), self:permissions(), self:percentage(), self:position() })
 	local progress = self:progress(area, right:width())
 	return {
 		ui.Paragraph(area, { left }),
