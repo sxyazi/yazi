@@ -30,5 +30,5 @@ tokio         = { version = "^1", features = [ "parking_lot", "rt-multi-thread" 
 tokio-util    = "^0"
 tracing       = { version = "^0", features = [ "max_level_debug", "release_max_level_warn" ] }
 unicode-width = "^0"
+uzers         = "^0"
 yazi-prebuild = "0.1.2"
-users         = "0.11"
