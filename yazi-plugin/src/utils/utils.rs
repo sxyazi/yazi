@@ -14,6 +14,8 @@ pub fn install(lua: &Lua) -> mlua::Result<()> {
 	Utils::target(lua, &ya)?;
 	Utils::time(lua, &ya)?;
 	Utils::text(lua, &ya)?;
+	#[cfg(unix)]
+	Utils::unix_user(lua, &ya)?;
 
 	lua.globals().set("ya", ya)
 }
