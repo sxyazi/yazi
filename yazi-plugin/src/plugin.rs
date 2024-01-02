@@ -9,6 +9,7 @@ pub fn init() {
 	fn stage_1(lua: &Lua) -> Result<()> {
 		crate::Loader::init();
 		crate::Config::new(lua).install_boot()?.install_manager()?.install_theme()?;
+		crate::utils::init();
 		crate::utils::install(lua)?;
 
 		// Base

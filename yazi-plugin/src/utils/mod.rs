@@ -9,6 +9,7 @@ mod preview;
 mod target;
 mod text;
 mod time;
+mod user;
 mod utils;
 
 pub use preview::*;

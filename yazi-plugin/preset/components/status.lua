@@ -28,7 +28,7 @@ end
 function Status:size()
 	local h = cx.active.current.hovered
 	if h == nil then
-		return ui.Span("")
+		return ui.Line {}
 	end
 
 	local style = self.style()
@@ -50,12 +50,12 @@ end
 function Status:permissions()
 	local h = cx.active.current.hovered
 	if h == nil then
-		return ui.Span("")
+		return ui.Line {}
 	end
 
 	local perm = h.cha:permissions()
 	if perm == nil then
-		return ui.Span("")
+		return ui.Line {}
 	end
 
 	local spans = {}

@@ -27,6 +27,10 @@ pub struct Cha {
 	pub modified:    Option<SystemTime>,
 	#[cfg(unix)]
 	pub permissions: u32,
+	#[cfg(unix)]
+	pub uid:         u32,
+	#[cfg(unix)]
+	pub gid:         u32,
 }
 
 impl From<Metadata> for Cha {
@@ -67,6 +71,16 @@ impl From<Metadata> for Cha {
 			permissions:              {
 				use std::os::unix::prelude::PermissionsExt;
 				m.permissions().mode()
+			},
+			#[cfg(unix)]
+			uid:                      {
+				use std::os::unix::fs::MetadataExt;
+				m.uid()
+			},
+			#[cfg(unix)]
+			gid:                      {
+				use std::os::unix::fs::MetadataExt;
+				m.gid()
 			},
 		}
 	}
