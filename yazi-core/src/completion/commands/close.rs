@@ -1,4 +1,4 @@
-use yazi_shared::{emit, event::Exec, Layer};
+use yazi_shared::{emit, event::Exec, render, Layer};
 
 use crate::{completion::Completion, input::Input};
 
@@ -16,7 +16,7 @@ impl Completion {
 		emit!(Call(Exec::call("close", vec![]).vec(), Layer::Completion));
 	}
 
-	pub fn close(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn close(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		if opt.submit {
 			Input::_complete(self.selected(), self.ticket);
@@ -24,6 +24,6 @@ impl Completion {
 
 		self.caches.clear();
 		self.visible = false;
-		true
+		render!();
 	}
 }

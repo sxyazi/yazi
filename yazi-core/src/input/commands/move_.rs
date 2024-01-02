@@ -1,5 +1,5 @@
 use unicode_width::UnicodeWidthStr;
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::input::{op::InputOp, snap::InputSnap, Input};
 
@@ -21,22 +21,22 @@ impl From<isize> for Opt {
 }
 
 impl Input {
-	pub fn move_(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn move_(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 
 		let snap = self.snap();
 		if opt.in_operating && snap.op == InputOp::None {
-			return false;
+			return;
 		}
 
-		let b = self.handle_op(
+		render!(self.handle_op(
 			if opt.step <= 0 {
 				snap.cursor.saturating_sub(opt.step.unsigned_abs())
 			} else {
 				snap.count().min(snap.cursor + opt.step as usize)
 			},
 			false,
-		);
+		));
 
 		let (limit, snap) = (self.limit(), self.snap_mut());
 		if snap.offset > snap.cursor {
@@ -51,7 +51,5 @@ impl Input {
 				snap.offset = snap.cursor - InputSnap::find_window(&s, 0, limit).end.saturating_sub(delta);
 			}
 		}
-
-		b
 	}
 }

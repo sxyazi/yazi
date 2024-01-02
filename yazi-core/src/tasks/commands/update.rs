@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use yazi_shared::{emit, event::Exec, Layer};
+use yazi_shared::{emit, event::Exec, render, Layer};
 
 use crate::tasks::{Tasks, TasksProgress};
 
@@ -20,12 +20,12 @@ impl Tasks {
 		emit!(Call(Exec::call("update", vec![]).with_data(Opt { progress }).vec(), Layer::Tasks));
 	}
 
-	pub fn update(&mut self, opt: impl TryInto<Opt>) -> bool {
+	pub fn update(&mut self, opt: impl TryInto<Opt>) {
 		let Ok(opt) = opt.try_into() else {
-			return false;
+			return;
 		};
 
 		self.progress = opt.progress;
-		true
+		render!();
 	}
 }

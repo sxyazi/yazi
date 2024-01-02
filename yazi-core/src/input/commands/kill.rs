@@ -1,6 +1,6 @@
 use std::ops::RangeBounds;
 
-use yazi_shared::{event::Exec, CharKind};
+use yazi_shared::{event::Exec, render, CharKind};
 
 use crate::input::Input;
 
@@ -15,7 +15,7 @@ impl<'a> From<&'a Exec> for Opt<'a> {
 }
 
 impl Input {
-	fn kill_range(&mut self, range: impl RangeBounds<usize>) -> bool {
+	fn kill_range(&mut self, range: impl RangeBounds<usize>) {
 		let snap = self.snap_mut();
 		snap.cursor = match range.start_bound() {
 			std::ops::Bound::Included(i) => *i,
@@ -23,12 +23,12 @@ impl Input {
 			std::ops::Bound::Unbounded => 0,
 		};
 		if snap.value.drain(range).next().is_none() {
-			return false;
+			return;
 		}
 
 		self.move_(0);
 		self.flush_value();
-		true
+		render!();
 	}
 
 	/// Searches for a word boundary and returns the movement in the cursor
@@ -66,7 +66,7 @@ impl Input {
 		spaces + count_characters(input.skip(spaces))
 	}
 
-	pub fn kill<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
+	pub fn kill<'a>(&mut self, opt: impl Into<Opt<'a>>) {
 		let opt = opt.into() as Opt;
 		let snap = self.snap_mut();
 
@@ -89,7 +89,7 @@ impl Input {
 				let end = start + Self::find_word_boundary(snap.value[start..].chars());
 				self.kill_range(start..end)
 			}
-			_ => false,
+			_ => {}
 		}
 	}
 }

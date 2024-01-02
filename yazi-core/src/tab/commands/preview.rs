@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 use yazi_plugin::utils::PreviewLock;
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::tab::Tab;
 
@@ -17,20 +17,20 @@ impl TryFrom<&Exec> for Opt {
 }
 
 impl Tab {
-	pub fn preview(&mut self, opt: impl TryInto<Opt>) -> bool {
+	pub fn preview(&mut self, opt: impl TryInto<Opt>) {
 		let Some(hovered) = self.current.hovered().map(|h| &h.url) else {
-			return self.preview.reset();
+			return render!(self.preview.reset());
 		};
 
 		let Ok(opt) = opt.try_into() else {
-			return false;
+			return;
 		};
 
 		if hovered != &opt.lock.url {
-			return false;
+			return;
 		}
 
 		self.preview.lock = Some(opt.lock);
-		true
+		render!();
 	}
 }

@@ -1,8 +1,9 @@
 use mlua::{AnyUserData, ExternalError, IntoLua, Lua, Table, UserData, Value};
-use ratatui::widgets::Widget;
+use ratatui::widgets::{Borders, Widget};
 
 use super::{RectRef, Renderable, Style};
 
+// Type
 const PLAIN: u8 = 0;
 const ROUNDED: u8 = 1;
 const DOUBLE: u8 = 2;
@@ -30,7 +31,14 @@ impl Border {
 		})?;
 
 		let border = lua.create_table_from([
-			// Border type
+			// Position
+			("NONE", Borders::NONE.bits().into_lua(lua)?),
+			("TOP", Borders::TOP.bits().into_lua(lua)?),
+			("RIGHT", Borders::RIGHT.bits().into_lua(lua)?),
+			("BOTTOM", Borders::BOTTOM.bits().into_lua(lua)?),
+			("LEFT", Borders::LEFT.bits().into_lua(lua)?),
+			("ALL", Borders::ALL.bits().into_lua(lua)?),
+			// Type
 			("PLAIN", PLAIN.into_lua(lua)?),
 			("ROUNDED", ROUNDED.into_lua(lua)?),
 			("DOUBLE", DOUBLE.into_lua(lua)?),

@@ -1,4 +1,4 @@
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::{input::{op::InputOp, Input}, CLIPBOARD};
 
@@ -11,7 +11,7 @@ impl From<&Exec> for Opt {
 }
 
 impl Input {
-	pub fn paste(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn paste(&mut self, opt: impl Into<Opt>) {
 		if let Some(start) = self.snap().op.start() {
 			self.snap_mut().op = InputOp::Delete(false, false, start);
 			self.handle_op(self.snap().cursor, true);
@@ -19,13 +19,13 @@ impl Input {
 
 		let s = futures::executor::block_on(CLIPBOARD.get());
 		if s.is_empty() {
-			return false;
+			return;
 		}
 
 		let opt = opt.into() as Opt;
 		self.insert(!opt.before);
 		self.type_str(&s.to_string_lossy());
 		self.escape(());
-		true
+		render!();
 	}
 }

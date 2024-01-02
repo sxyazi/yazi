@@ -18,9 +18,9 @@ impl TryFrom<&Exec> for Opt {
 }
 
 impl App {
-	pub(crate) fn stop(&mut self, opt: impl TryInto<Opt>) -> bool {
+	pub(crate) fn stop(&mut self, opt: impl TryInto<Opt>) {
 		let Ok(opt) = opt.try_into() else {
-			return false;
+			return;
 		};
 
 		self.cx.manager.active_mut().preview.reset_image();
@@ -38,6 +38,5 @@ impl App {
 		if let Some(tx) = opt.tx {
 			tx.send(()).ok();
 		}
-		false
 	}
 }

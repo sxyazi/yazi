@@ -1,4 +1,4 @@
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::input::Input;
 
@@ -14,14 +14,14 @@ impl From<bool> for Opt {
 }
 
 impl Input {
-	pub fn backspace(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn backspace(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		let snap = self.snaps.current_mut();
 
 		if !opt.under && snap.cursor < 1 {
-			return false;
+			return;
 		} else if opt.under && snap.cursor >= snap.value.len() {
-			return false;
+			return;
 		}
 
 		if opt.under {
@@ -33,6 +33,6 @@ impl Input {
 		}
 
 		self.flush_value();
-		true
+		render!();
 	}
 }

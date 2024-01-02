@@ -1,7 +1,11 @@
+use std::sync::atomic::AtomicBool;
+
 use ratatui::{buffer::Buffer, layout::{Constraint, Direction, Layout, Rect}, widgets::Widget};
 
 use super::{completion, input, select, tasks, which};
 use crate::{components, help, Ctx};
+
+pub(super) static COLLISION: AtomicBool = AtomicBool::new(false);
 
 pub(super) struct Root<'a> {
 	cx: &'a Ctx,

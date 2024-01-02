@@ -10,7 +10,7 @@ impl Manager {
 		emit!(Call(Exec::call("refresh", vec![]).vec(), Layer::Manager));
 	}
 
-	pub fn refresh(&mut self, _: &Exec) -> bool {
+	pub fn refresh(&mut self, _: &Exec) {
 		env::set_current_dir(self.cwd()).ok();
 		env::set_var("PWD", self.cwd());
 
@@ -22,6 +22,6 @@ impl Manager {
 			self.watcher.trigger_dirs(&[self.cwd()]);
 		}
 
-		self.hover(None)
+		self.hover(None);
 	}
 }

@@ -1,4 +1,4 @@
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::manager::Manager;
 
@@ -11,11 +11,11 @@ impl From<&Exec> for Opt {
 }
 
 impl Manager {
-	pub fn yank(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn yank(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 
 		self.yanked.0 = opt.cut;
 		self.yanked.1 = self.selected().into_iter().map(|f| f.url()).collect();
-		true
+		render!();
 	}
 }

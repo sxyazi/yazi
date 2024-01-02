@@ -17,9 +17,9 @@ impl From<&Exec> for Opt {
 }
 
 impl Manager {
-	pub fn remove(&mut self, opt: impl Into<Opt>, tasks: &Tasks) -> bool {
+	pub fn remove(&mut self, opt: impl Into<Opt>, tasks: &Tasks) {
 		let opt = opt.into() as Opt;
 		let targets = self.selected().into_iter().map(|f| f.url()).collect();
-		tasks.file_remove(targets, opt.force, opt.permanently)
+		tasks.file_remove(targets, opt.force, opt.permanently);
 	}
 }

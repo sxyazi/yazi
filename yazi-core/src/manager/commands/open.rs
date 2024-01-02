@@ -20,12 +20,12 @@ impl From<&Exec> for Opt {
 }
 
 impl Manager {
-	pub fn open(&mut self, opt: impl Into<Opt>, tasks: &Tasks) -> bool {
+	pub fn open(&mut self, opt: impl Into<Opt>, tasks: &Tasks) {
 		let selected = self.selected();
 		if selected.is_empty() {
-			return false;
+			return;
 		} else if Self::quit_with_selected(&selected) {
-			return false;
+			return;
 		}
 
 		let (mut done, mut todo) = (Vec::with_capacity(selected.len()), vec![]);
@@ -53,7 +53,6 @@ impl Manager {
 
 			Self::_open_do(opt.interactive, done);
 		});
-		false
 	}
 
 	#[inline]
@@ -64,10 +63,10 @@ impl Manager {
 		));
 	}
 
-	pub fn open_do(&mut self, opt: impl Into<Opt>, tasks: &Tasks) -> bool {
+	pub fn open_do(&mut self, opt: impl Into<Opt>, tasks: &Tasks) {
 		let opt = opt.into() as Opt;
 		let Some(targets) = opt.targets else {
-			return false;
+			return;
 		};
 
 		let targets: Vec<_> = targets
@@ -76,15 +75,15 @@ impl Manager {
 			.collect();
 
 		if targets.is_empty() {
-			return false;
+			return;
 		} else if !opt.interactive {
 			tasks.file_open(&targets);
-			return false;
+			return;
 		}
 
 		let openers: Vec<_> = OPEN.common_openers(&targets).into_iter().cloned().collect();
 		if openers.is_empty() {
-			return false;
+			return;
 		}
 
 		let urls = targets.into_iter().map(|(u, _)| u).collect();
@@ -94,7 +93,6 @@ impl Manager {
 				Tasks::_open(urls, openers[choice].clone());
 			}
 		});
-		false
 	}
 
 	fn quit_with_selected(selected: &[&File]) -> bool {

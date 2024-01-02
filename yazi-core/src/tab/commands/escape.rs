@@ -1,5 +1,5 @@
 use bitflags::bitflags;
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::tab::{Mode, Tab};
 
@@ -42,42 +42,48 @@ impl Tab {
 	}
 
 	#[inline]
-	fn escape_select(&mut self) -> bool { self.select_all(Some(false)) }
+	fn escape_select(&mut self) -> bool { self.current.files.select_all(Some(false)) }
 
 	#[inline]
 	fn escape_filter(&mut self) -> bool {
-		self.filter_do(super::filter::Opt { query: "", ..Default::default() })
+		let b = self.current.files.filter().is_some();
+		self.filter_do(super::filter::Opt { query: "", ..Default::default() });
+		b
 	}
 
 	#[inline]
-	fn escape_search(&mut self) -> bool { self.search_stop() }
+	fn escape_search(&mut self) -> bool {
+		let b = self.current.cwd.is_search();
+		self.search_stop();
+		b
+	}
 
-	pub fn escape(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn escape(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		if opt.is_empty() {
-			return self.escape_find()
-				|| self.escape_visual()
-				|| self.escape_select()
-				|| self.escape_filter()
-				|| self.escape_search();
+			return render!(
+				self.escape_find()
+					|| self.escape_visual()
+					|| self.escape_select()
+					|| self.escape_filter()
+					|| self.escape_search()
+			);
 		}
 
-		let mut b = false;
 		if opt.contains(Opt::FIND) {
-			b |= self.escape_find();
+			render!(self.escape_find());
 		}
 		if opt.contains(Opt::VISUAL) {
-			b |= self.escape_visual();
+			render!(self.escape_visual());
 		}
 		if opt.contains(Opt::SELECT) {
-			b |= self.escape_select();
+			render!(self.escape_select());
 		}
 		if opt.contains(Opt::FILTER) {
-			b |= self.escape_filter();
+			render!(self.escape_filter());
 		}
 		if opt.contains(Opt::SEARCH) {
-			b |= self.escape_search();
+			render!(self.escape_search());
 		}
-		b
 	}
 }

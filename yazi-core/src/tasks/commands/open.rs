@@ -22,10 +22,9 @@ impl Tasks {
 		emit!(Call(Exec::call("open", vec![]).with_data(Opt { targets, opener }).vec(), Layer::Tasks));
 	}
 
-	pub fn open(&mut self, opt: impl TryInto<Opt>) -> bool {
+	pub fn open(&mut self, opt: impl TryInto<Opt>) {
 		if let Ok(opt) = opt.try_into() {
 			self.file_open_with(&opt.opener, &opt.targets);
 		}
-		false
 	}
 }

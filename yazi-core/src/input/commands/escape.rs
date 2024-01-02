@@ -1,4 +1,4 @@
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::{completion::Completion, input::{op::InputOp, Input, InputMode}};
 
@@ -12,7 +12,7 @@ impl From<()> for Opt {
 }
 
 impl Input {
-	pub fn escape(&mut self, _: impl Into<Opt>) -> bool {
+	pub fn escape(&mut self, _: impl Into<Opt>) {
 		let snap = self.snap_mut();
 		match snap.mode {
 			InputMode::Normal if snap.op == InputOp::None => {
@@ -30,7 +30,8 @@ impl Input {
 				}
 			}
 		}
+
 		self.snaps.tag(self.limit());
-		true
+		render!();
 	}
 }

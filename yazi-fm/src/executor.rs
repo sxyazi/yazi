@@ -25,8 +25,8 @@ impl<'a> Executor<'a> {
 			return true;
 		}
 
-		let b = if cx.completion.visible {
-			self.matches(Layer::Completion, key).or_else(|| self.matches(Layer::Input, key))
+		if cx.completion.visible {
+			self.matches(Layer::Completion, key) || self.matches(Layer::Input, key)
 		} else if cx.help.visible {
 			self.matches(Layer::Help, key)
 		} else if cx.input.visible {
@@ -37,31 +37,30 @@ impl<'a> Executor<'a> {
 			self.matches(Layer::Tasks, key)
 		} else {
 			self.matches(Layer::Manager, key)
-		};
-		b == Some(true)
+		}
 	}
 
 	#[inline]
-	fn matches(&mut self, layer: Layer, key: Key) -> Option<bool> {
+	fn matches(&mut self, layer: Layer, key: Key) -> bool {
 		for Control { on, exec, .. } in KEYMAP.get(layer) {
 			if on.is_empty() || on[0] != key {
 				continue;
 			}
 
-			return Some(if on.len() > 1 {
-				self.app.cx.which.show(&key, layer)
+			if on.len() > 1 {
+				self.app.cx.which.show(&key, layer);
 			} else {
-				self.dispatch(exec, layer)
-			});
+				self.dispatch(exec, layer);
+			}
+			return true;
 		}
-		None
+		false
 	}
 
 	#[inline]
-	pub(super) fn dispatch(&mut self, exec: &[Exec], layer: Layer) -> bool {
-		let mut render = false;
+	pub(super) fn dispatch(&mut self, exec: &[Exec], layer: Layer) {
 		for e in exec {
-			render |= match layer {
+			match layer {
 				Layer::App => self.app(e),
 				Layer::Manager => self.manager(e),
 				Layer::Tasks => self.tasks(e),
@@ -72,10 +71,9 @@ impl<'a> Executor<'a> {
 				Layer::Which => unreachable!(),
 			};
 		}
-		render
 	}
 
-	fn app(&mut self, exec: &Exec) -> bool {
+	fn app(&mut self, exec: &Exec) {
 		macro_rules! on {
 			($name:ident) => {
 				if exec.cmd == stringify!($name) {
@@ -87,11 +85,9 @@ impl<'a> Executor<'a> {
 		on!(plugin);
 		on!(plugin_do);
 		on!(stop);
-
-		false
 	}
 
-	fn manager(&mut self, exec: &Exec) -> bool {
+	fn manager(&mut self, exec: &Exec) {
 		macro_rules! on {
 			(MANAGER, $name:ident $(,$args:expr)*) => {
 				if exec.cmd == stringify!($name) {
@@ -175,11 +171,11 @@ impl<'a> Executor<'a> {
 			b"tasks_show" => self.app.cx.tasks.toggle(()),
 			// Help
 			b"help" => self.app.cx.help.toggle(Layer::Manager),
-			_ => false,
+			_ => {}
 		}
 	}
 
-	fn tasks(&mut self, exec: &Exec) -> bool {
+	fn tasks(&mut self, exec: &Exec) {
 		macro_rules! on {
 			($name:ident) => {
 				if exec.cmd == stringify!($name) {
@@ -202,11 +198,11 @@ impl<'a> Executor<'a> {
 
 		match exec.cmd.as_str() {
 			"help" => self.app.cx.help.toggle(Layer::Tasks),
-			_ => false,
+			_ => {}
 		}
 	}
 
-	fn select(&mut self, exec: &Exec) -> bool {
+	fn select(&mut self, exec: &Exec) {
 		macro_rules! on {
 			($name:ident) => {
 				if exec.cmd == stringify!($name) {
@@ -221,11 +217,11 @@ impl<'a> Executor<'a> {
 
 		match exec.cmd.as_str() {
 			"help" => self.app.cx.help.toggle(Layer::Select),
-			_ => false,
+			_ => {}
 		}
 	}
 
-	fn input(&mut self, exec: &Exec) -> bool {
+	fn input(&mut self, exec: &Exec) {
 		macro_rules! on {
 			($name:ident) => {
 				if exec.cmd == stringify!($name) {
@@ -268,19 +264,17 @@ impl<'a> Executor<'a> {
 
 				match exec.cmd.as_str() {
 					"help" => self.app.cx.help.toggle(Layer::Input),
-					_ => false,
+					_ => {}
 				}
 			}
 			InputMode::Insert => {
 				on!(backspace);
 				on!(kill);
-
-				false
 			}
 		}
 	}
 
-	fn help(&mut self, exec: &Exec) -> bool {
+	fn help(&mut self, exec: &Exec) {
 		macro_rules! on {
 			($name:ident) => {
 				if exec.cmd == stringify!($name) {
@@ -295,11 +289,11 @@ impl<'a> Executor<'a> {
 
 		match exec.cmd.as_str() {
 			"close" => self.app.cx.help.toggle(Layer::Help),
-			_ => false,
+			_ => {}
 		}
 	}
 
-	fn completion(&mut self, exec: &Exec) -> bool {
+	fn completion(&mut self, exec: &Exec) {
 		macro_rules! on {
 			($name:ident) => {
 				if exec.cmd == stringify!($name) {
@@ -315,7 +309,7 @@ impl<'a> Executor<'a> {
 
 		match exec.cmd.as_str() {
 			"help" => self.app.cx.help.toggle(Layer::Completion),
-			_ => false,
+			_ => {}
 		}
 	}
 }

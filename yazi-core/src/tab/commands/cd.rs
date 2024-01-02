@@ -3,7 +3,7 @@ use std::{mem, time::Duration};
 use tokio::{fs, pin};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
-use yazi_shared::{emit, event::Exec, fs::{expand_path, Url}, Debounce, InputError, Layer};
+use yazi_shared::{emit, event::Exec, fs::{expand_path, Url}, render, Debounce, InputError, Layer};
 
 use crate::{completion::Completion, input::Input, manager::Manager, tab::Tab};
 
@@ -32,14 +32,14 @@ impl Tab {
 		emit!(Call(Exec::call("cd", vec![target.to_string()]).vec(), Layer::Manager));
 	}
 
-	pub fn cd(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn cd(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		if opt.interactive {
 			return self.cd_interactive();
 		}
 
 		if self.current.cwd == opt.target {
-			return false;
+			return;
 		}
 
 		// Take parent to history
@@ -65,10 +65,10 @@ impl Tab {
 		}
 
 		Manager::_refresh();
-		true
+		render!();
 	}
 
-	fn cd_interactive(&mut self) -> bool {
+	fn cd_interactive(&mut self) {
 		tokio::spawn(async move {
 			let rx = Input::_show(InputCfg::cd());
 
@@ -96,6 +96,5 @@ impl Tab {
 				}
 			}
 		});
-		false
 	}
 }

@@ -1,8 +1,10 @@
+use std::sync::atomic::Ordering;
+
 use anyhow::{Ok, Result};
 use crossterm::event::KeyEvent;
-use yazi_config::{keymap::Key, ARGS};
+use yazi_config::keymap::Key;
 use yazi_core::input::InputMode;
-use yazi_shared::{emit, event::{Event, Exec}, term::Term, Layer};
+use yazi_shared::{event::{Event, Exec, NEED_RENDER}, term::Term, Layer};
 
 use crate::{lives::Lives, Ctx, Executor, Logs, Panic, Signals};
 
@@ -16,51 +18,44 @@ impl App {
 	pub(crate) async fn run() -> Result<()> {
 		Panic::install();
 		let _log = Logs::init()?;
-
 		let term = Term::start()?;
 		let signals = Signals::start()?;
 
 		Lives::register()?;
 		let mut app = Self { cx: Ctx::make(), term: Some(term), signals };
-
 		app.render()?;
-		while let Some(event) = app.signals.recv().await {
-			match event {
-				Event::Quit(no_cwd_file) => {
-					app.dispatch_quit(no_cwd_file);
-					break;
+
+		let mut events = Vec::with_capacity(10);
+		while app.signals.rx.recv_many(&mut events, 10).await > 0 {
+			for event in events.drain(..) {
+				match event {
+					Event::Quit(no_cwd_file) => {
+						app.quit(no_cwd_file)?;
+						break;
+					}
+					Event::Key(key) => app.dispatch_key(key),
+					Event::Paste(str) => app.dispatch_paste(str),
+					Event::Resize(cols, rows) => app.dispatch_resize(cols, rows)?,
+					Event::Call(exec, layer) => app.dispatch_call(exec, layer),
+					event => app.dispatch_module(event),
 				}
-				Event::Key(key) => app.dispatch_key(key),
-				Event::Paste(str) => app.dispatch_paste(str),
-				Event::Render(_) => app.render()?,
-				Event::Resize(cols, rows) => app.dispatch_resize(cols, rows)?,
-				Event::Call(exec, layer) => app.dispatch_call(exec, layer),
-				event => app.dispatch_module(event),
+			}
+
+			if NEED_RENDER.swap(false, Ordering::Relaxed) {
+				app.render()?;
 			}
 		}
 		Ok(())
 	}
 
-	fn dispatch_quit(&mut self, no_cwd_file: bool) {
-		if let Some(p) = ARGS.cwd_file.as_ref().filter(|_| !no_cwd_file) {
-			let cwd = self.cx.manager.cwd().as_os_str();
-			std::fs::write(p, cwd.as_encoded_bytes()).ok();
-		}
-		Term::goodbye(|| false);
-	}
-
-	fn dispatch_key(&mut self, key: KeyEvent) {
-		let key = Key::from(key);
-		if Executor::new(self).handle(key) {
-			emit!(Render);
-		}
-	}
+	#[inline]
+	fn dispatch_key(&mut self, key: KeyEvent) { Executor::new(self).handle(Key::from(key)); }
 
 	fn dispatch_paste(&mut self, str: String) {
 		if self.cx.input.visible {
 			let input = &mut self.cx.input;
-			if input.mode() == InputMode::Insert && input.type_str(&str) {
-				emit!(Render);
+			if input.mode() == InputMode::Insert {
+				input.type_str(&str);
 			}
 		}
 	}
@@ -76,9 +71,7 @@ impl App {
 
 	#[inline]
 	fn dispatch_call(&mut self, exec: Vec<Exec>, layer: Layer) {
-		if Executor::new(self).dispatch(&exec, layer) {
-			emit!(Render);
-		}
+		Executor::new(self).dispatch(&exec, layer);
 	}
 
 	fn dispatch_module(&mut self, event: Event) {

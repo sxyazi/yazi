@@ -15,13 +15,13 @@ impl From<&Exec> for Opt {
 }
 
 impl Manager {
-	pub fn quit(&self, opt: impl Into<Opt>, tasks: &Tasks) -> bool {
+	pub fn quit(&self, opt: impl Into<Opt>, tasks: &Tasks) {
 		let opt = opt.into() as Opt;
 
 		let tasks = tasks.len();
 		if tasks == 0 {
 			emit!(Quit(opt.no_cwd_file));
-			return false;
+			return;
 		}
 
 		tokio::spawn(async move {
@@ -32,6 +32,5 @@ impl Manager {
 				}
 			}
 		});
-		false
 	}
 }

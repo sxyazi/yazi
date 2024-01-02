@@ -1,4 +1,4 @@
-use yazi_shared::event::Exec;
+use yazi_shared::{event::Exec, render};
 
 use crate::tasks::Tasks;
 
@@ -14,23 +14,28 @@ impl From<&Exec> for Opt {
 
 impl Tasks {
 	#[allow(clippy::should_implement_trait)]
-	fn next(&mut self) -> bool {
+	fn next(&mut self) {
 		let limit = Self::limit().min(self.len());
 
 		let old = self.cursor;
 		self.cursor = limit.saturating_sub(1).min(self.cursor + 1);
 
-		old != self.cursor
+		render!(old != self.cursor);
 	}
 
-	fn prev(&mut self) -> bool {
+	fn prev(&mut self) {
 		let old = self.cursor;
 		self.cursor = self.cursor.saturating_sub(1);
-		old != self.cursor
+
+		render!(old != self.cursor);
 	}
 
-	pub fn arrow(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn arrow(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
-		if opt.step > 0 { self.next() } else { self.prev() }
+		if opt.step > 0 {
+			self.next();
+		} else {
+			self.prev();
+		}
 	}
 }

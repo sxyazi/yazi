@@ -10,7 +10,6 @@ pub enum Event {
 	Quit(bool), // no-cwd-file
 	Key(KeyEvent),
 	Paste(String),
-	Render(String),
 	Resize(u16, u16),
 	Call(Vec<Exec>, Layer),
 
@@ -35,9 +34,6 @@ impl Event {
 macro_rules! emit {
 	(Quit($no_cwd_file:expr)) => {
 		$crate::event::Event::Quit($no_cwd_file).emit();
-	};
-	(Render) => {
-		$crate::event::Event::Render(format!("{}:{}", file!(), line!())).emit();
 	};
 	(Call($exec:expr, $layer:expr)) => {
 		$crate::event::Event::Call($exec, $layer).emit();

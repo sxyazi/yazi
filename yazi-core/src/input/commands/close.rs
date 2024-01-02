@@ -1,4 +1,4 @@
-use yazi_shared::{event::Exec, InputError};
+use yazi_shared::{event::Exec, render, InputError};
 
 use crate::{completion::Completion, input::Input};
 
@@ -14,7 +14,7 @@ impl From<bool> for Opt {
 }
 
 impl Input {
-	pub fn close(&mut self, opt: impl Into<Opt>) -> bool {
+	pub fn close(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 
 		if self.completion {
@@ -28,6 +28,6 @@ impl Input {
 
 		self.ticket = self.ticket.wrapping_add(1);
 		self.visible = false;
-		true
+		render!();
 	}
 }

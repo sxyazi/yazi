@@ -16,9 +16,10 @@ impl Input {
 		}
 
 		if let Some(c) = key.plain() {
-			let mut bits = [0; 4];
-			return self.type_str(c.encode_utf8(&mut bits));
+			self.type_str(c.encode_utf8(&mut [0; 4]));
+			return true;
 		}
+
 		false
 	}
 }

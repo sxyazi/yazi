@@ -3,7 +3,7 @@ use std::time::Duration;
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
-use yazi_shared::{emit, event::Exec, Debounce, InputError, Layer};
+use yazi_shared::{emit, event::Exec, render, Debounce, InputError, Layer};
 
 use crate::{folder::{Filter, FilterCase}, input::Input, manager::Manager, tab::Tab};
 
@@ -20,7 +20,7 @@ impl<'a> From<&'a Exec> for Opt<'a> {
 }
 
 impl Tab {
-	pub fn filter<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
+	pub fn filter<'a>(&mut self, opt: impl Into<Opt<'a>>) {
 		let opt = opt.into() as Opt;
 		tokio::spawn(async move {
 			let rx = Input::_show(InputCfg::filter());
@@ -38,10 +38,9 @@ impl Tab {
 				));
 			}
 		});
-		false
 	}
 
-	pub fn filter_do<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
+	pub fn filter_do<'a>(&mut self, opt: impl Into<Opt<'a>>) {
 		let opt = opt.into() as Opt;
 
 		let filter = if opt.query.is_empty() {
@@ -49,17 +48,17 @@ impl Tab {
 		} else if let Ok(f) = Filter::new(opt.query, opt.case) {
 			Some(f)
 		} else {
-			return false;
+			return;
 		};
 
 		let hovered = self.current.hovered().map(|f| f.url());
 		if !self.current.files.set_filter(filter) {
-			return false;
+			return;
 		}
 
 		if self.current.repos(hovered) {
 			Manager::_hover(None);
 		}
-		true
+		render!();
 	}
 }

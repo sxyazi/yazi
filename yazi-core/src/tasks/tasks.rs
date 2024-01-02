@@ -77,7 +77,7 @@ impl Tasks {
 		false
 	}
 
-	pub fn file_cut(&self, src: &HashSet<Url>, dest: &Url, force: bool) -> bool {
+	pub fn file_cut(&self, src: &HashSet<Url>, dest: &Url, force: bool) {
 		for u in src {
 			let to = dest.join(u.file_name().unwrap());
 			if force && u == &to {
@@ -86,10 +86,9 @@ impl Tasks {
 				self.scheduler.file_cut(u.clone(), to, force);
 			}
 		}
-		false
 	}
 
-	pub fn file_copy(&self, src: &HashSet<Url>, dest: &Url, force: bool, follow: bool) -> bool {
+	pub fn file_copy(&self, src: &HashSet<Url>, dest: &Url, force: bool, follow: bool) {
 		for u in src {
 			let to = dest.join(u.file_name().unwrap());
 			if force && u == &to {
@@ -98,10 +97,9 @@ impl Tasks {
 				self.scheduler.file_copy(u.clone(), to, force, follow);
 			}
 		}
-		false
 	}
 
-	pub fn file_link(&self, src: &HashSet<Url>, dest: &Url, relative: bool, force: bool) -> bool {
+	pub fn file_link(&self, src: &HashSet<Url>, dest: &Url, relative: bool, force: bool) {
 		for u in src {
 			let to = dest.join(u.file_name().unwrap());
 			if force && *u == to {
@@ -110,10 +108,9 @@ impl Tasks {
 				self.scheduler.file_link(u.clone(), to, relative, force);
 			}
 		}
-		false
 	}
 
-	pub fn file_remove(&self, targets: Vec<Url>, force: bool, permanently: bool) -> bool {
+	pub fn file_remove(&self, targets: Vec<Url>, force: bool, permanently: bool) {
 		if force {
 			for u in targets {
 				if permanently {
@@ -122,7 +119,7 @@ impl Tasks {
 					self.scheduler.file_trash(u);
 				}
 			}
-			return false;
+			return;
 		}
 
 		let scheduler = self.scheduler.clone();
@@ -146,18 +143,11 @@ impl Tasks {
 				}
 			}
 		});
-		false
 	}
 
-	pub fn plugin_micro(&self, name: &str) -> bool {
-		self.scheduler.plugin_micro(name.to_owned());
-		false
-	}
+	pub fn plugin_micro(&self, name: &str) { self.scheduler.plugin_micro(name.to_owned()); }
 
-	pub fn plugin_macro(&self, name: &str) -> bool {
-		self.scheduler.plugin_macro(name.to_owned());
-		false
-	}
+	pub fn plugin_macro(&self, name: &str) { self.scheduler.plugin_macro(name.to_owned()); }
 
 	pub fn preload_paged(&self, paged: &[File], mimetype: &HashMap<Url, String>) {
 		let mut single_tasks = Vec::with_capacity(paged.len());

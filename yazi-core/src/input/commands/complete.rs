@@ -1,6 +1,6 @@
 use std::path::MAIN_SEPARATOR;
 
-use yazi_shared::{emit, event::Exec, Layer};
+use yazi_shared::{emit, event::Exec, render, Layer};
 
 use crate::input::Input;
 
@@ -27,10 +27,10 @@ impl Input {
 		));
 	}
 
-	pub fn complete<'a>(&mut self, opt: impl Into<Opt<'a>>) -> bool {
+	pub fn complete<'a>(&mut self, opt: impl Into<Opt<'a>>) {
 		let opt = opt.into() as Opt;
 		if self.ticket != opt.ticket {
-			return false;
+			return;
 		}
 
 		let [before, after] = self.partition();
@@ -42,7 +42,7 @@ impl Input {
 
 		let snap = self.snaps.current_mut();
 		if new == snap.value {
-			return false;
+			return;
 		}
 
 		let delta = new.chars().count() as isize - snap.value.chars().count() as isize;
@@ -50,6 +50,6 @@ impl Input {
 
 		self.move_(delta);
 		self.flush_value();
-		true
+		render!();
 	}
 }
