@@ -22,7 +22,6 @@ bitflags      = "^2"
 crossterm     = "^0"
 futures       = "^0"
 indexmap      = "^2"
-libc          = "^0"
 notify        = { version = "^6", default-features = false, features = [ "macos_fsevent" ] }
 parking_lot   = "^0"
 ratatui       = "^0"
@@ -36,6 +35,9 @@ unicode-width = "^0"
 
 # Logging
 tracing = { version = "^0", features = [ "max_level_debug", "release_max_level_warn" ] }
+
+[target."cfg(unix)".dependencies]
+libc = "^0"
 
 [target."cfg(windows)".dependencies]
 clipboard-win = "^4"

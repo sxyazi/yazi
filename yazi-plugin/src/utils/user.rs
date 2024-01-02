@@ -7,6 +7,7 @@ use super::Utils;
 static CACHE: RoCell<UsersCache> = RoCell::new();
 
 impl Utils {
+	#[cfg(unix)]
 	pub(super) fn user(lua: &Lua, ya: &Table) -> mlua::Result<()> {
 		CACHE.with(Default::default);
 
@@ -36,4 +37,7 @@ impl Utils {
 
 		Ok(())
 	}
+
+	#[cfg(windows)]
+	pub(super) fn user(_lua: &Lua, _ya: &Table) -> mlua::Result<()> { Ok(()) }
 }
