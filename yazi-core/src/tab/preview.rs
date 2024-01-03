@@ -48,7 +48,7 @@ impl Preview {
 		self.folder_handle.take().map(|h| h.abort());
 		self.folder_handle = Some(tokio::spawn(async move {
 			let Ok(rx) = Files::from_dir(&file.url).await else {
-				FilesOp::IOErr(file.url).emit();
+				file.url.parent_url().map(|p| FilesOp::Deleting(p, vec![file.url]).emit());
 				return;
 			};
 

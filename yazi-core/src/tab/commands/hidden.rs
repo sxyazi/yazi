@@ -10,7 +10,7 @@ impl Tab {
 			_ => !self.conf.show_hidden,
 		};
 
-		self.apply_files_attrs(false);
+		self.apply_files_attrs();
 		Manager::_hover(None);
 	}
 }

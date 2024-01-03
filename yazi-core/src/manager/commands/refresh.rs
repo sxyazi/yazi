@@ -14,7 +14,7 @@ impl Manager {
 		env::set_current_dir(self.cwd()).ok();
 		env::set_var("PWD", self.cwd());
 
-		self.active_mut().apply_files_attrs(false);
+		self.active_mut().apply_files_attrs();
 
 		if let Some(p) = self.parent() {
 			self.watcher.trigger_dirs(&[self.cwd(), &p.cwd]);

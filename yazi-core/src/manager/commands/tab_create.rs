@@ -31,7 +31,7 @@ impl Tabs {
 
 		let mut tab = Tab::from(url);
 		tab.conf = self.active().conf.clone();
-		tab.apply_files_attrs(false);
+		tab.apply_files_attrs();
 
 		self.items.insert(self.idx + 1, tab);
 		self.set_idx(self.idx + 1);

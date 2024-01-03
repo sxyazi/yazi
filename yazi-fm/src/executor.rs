@@ -16,7 +16,7 @@ impl<'a> Executor<'a> {
 		let cx = &mut self.app.cx;
 
 		if cx.which.visible {
-			return cx.which.press(key);
+			return cx.which.type_(key);
 		}
 		if cx.help.visible && cx.help.type_(&key) {
 			return true;

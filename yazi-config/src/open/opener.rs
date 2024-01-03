@@ -40,28 +40,12 @@ impl<'de> Deserialize<'de> for Opener {
 			desc:   Option<String>,
 			#[serde(rename = "for")]
 			for_:   Option<String>,
-
-			// TODO: remove this when v0.1.6 is released --
-			display_name: Option<String>,
-			// TODO: -- remove this when v0.1.6 is released
 		}
 
-		let mut shadow = Shadow::deserialize(deserializer)?;
+		let shadow = Shadow::deserialize(deserializer)?;
 		if shadow.exec.is_empty() {
 			return Err(serde::de::Error::custom("`exec` cannot be empty"));
 		}
-
-		// TODO: remove this when v0.1.6 is released --
-		if shadow.display_name.is_some() {
-			println!(
-				"WARNING: `display_name` is deprecated and will be removed in Yazi v0.1.7. Use `desc` instead.\ne.g. {}\n\n",
-				r#"{ exec = 'nvim "$@"', display_name = "Edit" }  ==>  { exec = 'nvim "$@"', desc = "Edit" }"#
-			);
-		}
-		if shadow.display_name.is_some() && shadow.desc.is_none() {
-			shadow.desc = shadow.display_name.clone();
-		}
-		// TODO: -- remove this when v0.1.6 is released
 
 		let desc =
 			shadow.desc.unwrap_or_else(|| shadow.exec.split_whitespace().next().unwrap().to_string());

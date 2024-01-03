@@ -1,4 +1,3 @@
-use anyhow::anyhow;
 use tokio::sync::mpsc;
 use yazi_config::popup::InputCfg;
 use yazi_shared::{emit, event::Exec, render, InputError, Layer};
@@ -11,11 +10,9 @@ pub struct Opt {
 }
 
 impl TryFrom<&Exec> for Opt {
-	type Error = anyhow::Error;
+	type Error = ();
 
-	fn try_from(e: &Exec) -> Result<Self, Self::Error> {
-		e.take_data().ok_or_else(|| anyhow!("invalid data"))
-	}
+	fn try_from(e: &Exec) -> Result<Self, Self::Error> { e.take_data().ok_or(()) }
 }
 
 impl Input {

@@ -13,43 +13,52 @@ impl TryFrom<&Exec> for Opt {
 }
 
 impl Manager {
-	// TODO: refactor this
-	fn handle_read(&mut self, op: FilesOp) {
-		let url = op.url().clone();
-		let cwd = self.cwd().to_owned();
-		let hovered = self.hovered().map(|h| h.url());
+	fn update_parent(&mut self, op: FilesOp) {
+		let cwd = self.cwd().clone();
+		let leave = matches!(op, FilesOp::Deleting(_, ref urls) if urls.contains(&cwd));
 
-		if cwd == url {
-			render!(self.current_mut().update(op));
-		} else if matches!(self.parent(), Some(p) if p.cwd == url) {
-			render!(self.active_mut().parent.as_mut().unwrap().update(op));
-		} else if matches!(self.hovered(), Some(h) if h.url == url) {
-			self.active_mut().history.entry(url.clone()).or_insert_with(|| Folder::from(&url));
-			self.active_mut().apply_files_attrs(true);
-			render!(self.active_mut().history.get_mut(&url).unwrap().update(op));
-			self.peek(true);
-		} else {
-			self.active_mut().history.entry(url.clone()).or_insert_with(|| Folder::from(&url)).update(op);
+		if let Some(p) = self.active_mut().parent.as_mut() {
+			render!(p.update(op));
+			render!(p.hover(&cwd));
 		}
 
-		render!(self.active_mut().parent.as_mut().is_some_and(|p| p.hover(&cwd)));
+		if leave {
+			self.active_mut().leave(());
+		}
+	}
+
+	fn update_current(&mut self, op: FilesOp, tasks: &Tasks) {
+		let hovered = self.hovered().map(|h| h.url());
+		let calc = !matches!(op, FilesOp::Size(..) | FilesOp::Deleting(..));
+
+		render!(self.current_mut().update(op));
 		render!(hovered.as_ref().is_some_and(|h| self.current_mut().hover(h)));
 
 		if hovered.as_ref() != self.hovered().map(|h| &h.url) {
 			self.hover(None);
 		}
+		if calc {
+			tasks.preload_sorted(&self.current().files);
+		}
 	}
 
-	fn handle_ioerr(&mut self, op: FilesOp) {
+	fn update_hovered(&mut self, op: FilesOp) {
 		let url = op.url();
-		let op = FilesOp::Full(url.clone(), vec![]);
+		self.active_mut().history.entry(url.clone()).or_insert_with(|| Folder::from(url)).update(op);
 
-		if url == self.cwd() {
-			self.current_mut().update(op);
+		self.peek(true);
+	}
+
+	fn update_history(&mut self, op: FilesOp) {
+		let leave = self.parent().and_then(|f| f.cwd.parent_url().map(|p| (&f.cwd, p))).is_some_and(
+			|(p, pp)| matches!(op, FilesOp::Deleting(ref parent, ref urls) if *parent == pp && urls.contains(p)),
+		);
+
+		let url = op.url();
+		self.active_mut().history.entry(url.clone()).or_insert_with(|| Folder::from(url)).update(op);
+
+		if leave {
 			self.active_mut().leave(());
-			render!();
-		} else if matches!(self.parent(), Some(p) if &p.cwd == url) {
-			render!(self.active_mut().parent.as_mut().unwrap().update(op));
 		}
 	}
 
@@ -57,7 +66,6 @@ impl Manager {
 		let Ok(opt) = opt.try_into() else {
 			return;
 		};
-		let calc = !matches!(opt.op, FilesOp::Size(..) | FilesOp::IOErr(_) | FilesOp::Deleting(..));
 
 		let mut ops = vec![opt.op];
 		for u in self.watcher.linked.read().from_dir(ops[0].url()) {
@@ -65,14 +73,18 @@ impl Manager {
 		}
 
 		for op in ops {
-			match op {
-				FilesOp::IOErr(..) => self.handle_ioerr(op),
-				_ => self.handle_read(op),
-			};
+			let url = op.url();
+			if self.cwd() == url {
+				self.update_current(op, tasks);
+			} else if matches!(self.parent(), Some(p) if p.cwd == *url) {
+				self.update_parent(op);
+			} else if matches!(self.hovered(), Some(h) if h.url == *url) {
+				self.update_hovered(op);
+			} else {
+				self.update_history(op);
+			}
 		}
 
-		if calc {
-			tasks.preload_sorted(&self.current().files);
-		}
+		self.active_mut().apply_files_attrs();
 	}
 }

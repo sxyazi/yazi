@@ -1,7 +1,7 @@
 use std::mem;
 
 use yazi_config::{keymap::{Control, Key}, KEYMAP};
-use yazi_shared::{emit, Layer};
+use yazi_shared::{emit, render, Layer};
 
 pub struct Which {
 	layer:     Layer,
@@ -18,15 +18,15 @@ impl Default for Which {
 }
 
 impl Which {
-	pub fn show(&mut self, key: &Key, layer: Layer) -> bool {
+	pub fn show(&mut self, key: &Key, layer: Layer) {
 		self.layer = layer;
 		self.times = 1;
 		self.cands = KEYMAP.get(layer).iter().filter(|s| s.on.len() > 1 && &s.on[0] == key).collect();
 		self.visible = true;
-		true
+		render!();
 	}
 
-	pub fn press(&mut self, key: Key) -> bool {
+	pub fn type_(&mut self, key: Key) -> bool {
 		self.cands = mem::take(&mut self.cands)
 			.into_iter()
 			.filter(|s| s.on.len() > self.times && s.on[self.times] == key)
@@ -43,6 +43,8 @@ impl Which {
 		}
 
 		self.times += 1;
+		render!();
+
 		true
 	}
 }

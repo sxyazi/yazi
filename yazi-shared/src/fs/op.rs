@@ -10,7 +10,6 @@ pub enum FilesOp {
 	Full(Url, Vec<File>),
 	Part(Url, Vec<File>, u64),
 	Size(Url, BTreeMap<Url, u64>),
-	IOErr(Url),
 
 	Creating(Url, Vec<File>),
 	Deleting(Url, Vec<Url>),
@@ -25,7 +24,6 @@ impl FilesOp {
 			Self::Full(url, _) => url,
 			Self::Part(url, ..) => url,
 			Self::Size(url, _) => url,
-			Self::IOErr(url) => url,
 
 			Self::Creating(url, _) => url,
 			Self::Deleting(url, _) => url,
@@ -80,7 +78,7 @@ impl FilesOp {
 			Self::Full(_, files) => Self::Full(u, files!(files)),
 			Self::Part(_, files, ticket) => Self::Part(u, files!(files), *ticket),
 			Self::Size(_, map) => Self::Size(u, map.iter().map(|(k, v)| (new!(k), *v)).collect()),
-			Self::IOErr(_) => Self::IOErr(u),
+
 			Self::Creating(_, files) => Self::Creating(u, files!(files)),
 			Self::Deleting(_, urls) => Self::Deleting(u, urls.iter().map(|u| new!(u)).collect()),
 			Self::Updating(_, map) => Self::Updating(u, map!(map)),

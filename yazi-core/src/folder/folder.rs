@@ -34,7 +34,6 @@ impl Folder {
 			FilesOp::Deleting(_, urls) => self.files.update_deleting(urls),
 			FilesOp::Updating(_, files) => _ = self.files.update_updating(files),
 			FilesOp::Upserting(_, files) => self.files.update_upserting(files),
-			_ => unreachable!(),
 		}
 		if !self.files.catchup_revision() {
 			return false;

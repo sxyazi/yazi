@@ -1,4 +1,3 @@
-use anyhow::Result;
 use tokio::sync::oneshot;
 use yazi_shared::{event::Exec, term::Term};
 
@@ -9,11 +8,9 @@ pub struct Opt {
 	tx:    Option<oneshot::Sender<()>>,
 }
 
-impl TryFrom<&Exec> for Opt {
-	type Error = anyhow::Error;
-
-	fn try_from(e: &Exec) -> Result<Self, Self::Error> {
-		Ok(Self { state: e.args.first().map_or(false, |s| s == "true"), tx: e.take_data() })
+impl From<&Exec> for Opt {
+	fn from(e: &Exec) -> Self {
+		Self { state: e.args.first().map_or(false, |s| s == "true"), tx: e.take_data() }
 	}
 }
 

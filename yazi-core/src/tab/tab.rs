@@ -72,7 +72,7 @@ impl Tab {
 		self.history.remove(url).unwrap_or_else(|| Folder::from(url))
 	}
 
-	pub fn apply_files_attrs(&mut self, just_preview: bool) {
+	pub fn apply_files_attrs(&mut self) {
 		let apply = |f: &mut Folder| {
 			let hovered = f.hovered().map(|h| h.url());
 
@@ -86,9 +86,6 @@ impl Tab {
 			self.current.hovered().filter(|h| h.is_dir()).and_then(|h| self.history.get_mut(&h.url))
 		{
 			apply(f);
-		}
-		if just_preview {
-			return;
 		}
 
 		apply(&mut self.current);

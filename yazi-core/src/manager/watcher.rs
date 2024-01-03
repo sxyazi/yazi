@@ -91,13 +91,12 @@ impl Watcher {
 
 		tokio::spawn(async move {
 			for u in urls {
-				let Ok(rx) = Files::from_dir(&u).await else {
-					FilesOp::IOErr(u).emit();
-					return;
-				};
-
-				let files: Vec<_> = UnboundedReceiverStream::new(rx).collect().await;
-				FilesOp::Full(u, files).emit();
+				if let Ok(rx) = Files::from_dir(&u).await {
+					let files: Vec<_> = UnboundedReceiverStream::new(rx).collect().await;
+					FilesOp::Full(u, files).emit();
+				} else if let Some(p) = u.parent_url() {
+					FilesOp::Deleting(p, vec![u]).emit();
+				}
 			}
 		});
 	}
