@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use ratatui::layout::Rect;
 use yazi_config::LAYOUT;
 use yazi_shared::{emit, fs::{File, FilesOp, Url}};
@@ -7,6 +9,7 @@ use crate::{folder::Files, Step};
 #[derive(Default)]
 pub struct Folder {
 	pub cwd:   Url,
+	pub mtime: Option<SystemTime>,
 	pub files: Files,
 
 	pub offset: usize,
@@ -25,9 +28,17 @@ impl From<&Url> for Folder {
 
 impl Folder {
 	pub fn update(&mut self, op: FilesOp) -> bool {
+		let revision = self.files.revision;
 		match op {
-			FilesOp::Full(_, files) => self.files.update_full(files),
+			FilesOp::Full(_, _, mtime) => self.mtime = mtime,
+			FilesOp::Done(_, mtime, ticket) if ticket == self.files.ticket() => self.mtime = mtime,
+			_ => {}
+		}
+
+		match op {
+			FilesOp::Full(_, files, _) => self.files.update_full(files),
 			FilesOp::Part(_, files, ticket) => self.files.update_part(files, ticket),
+			FilesOp::Done(..) => {}
 			FilesOp::Size(_, sizes) => self.files.update_size(sizes),
 
 			FilesOp::Creating(_, files) => self.files.update_creating(files),
@@ -35,10 +46,8 @@ impl Folder {
 			FilesOp::Updating(_, files) => _ = self.files.update_updating(files),
 			FilesOp::Upserting(_, files) => self.files.update_upserting(files),
 		}
-		if !self.files.catchup_revision() {
-			return false;
-		}
 
+		// TODO: use a better way to detect if the page is changed
 		let old = self.page;
 		self.prev(Default::default());
 
@@ -46,7 +55,7 @@ impl Folder {
 			self.set_page(true); // Force update
 		}
 
-		true
+		self.files.revision != revision
 	}
 
 	pub fn set_page(&mut self, force: bool) {

@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, sync::atomic::{AtomicU64, Ordering}};
+use std::{collections::BTreeMap, sync::atomic::{AtomicU64, Ordering}, time::SystemTime};
 
 use super::File;
 use crate::{emit, event::Exec, fs::Url, Layer};
@@ -7,8 +7,9 @@ pub static FILES_TICKET: AtomicU64 = AtomicU64::new(0);
 
 #[derive(Debug)]
 pub enum FilesOp {
-	Full(Url, Vec<File>),
+	Full(Url, Vec<File>, Option<SystemTime>),
 	Part(Url, Vec<File>, u64),
+	Done(Url, Option<SystemTime>, u64),
 	Size(Url, BTreeMap<Url, u64>),
 
 	Creating(Url, Vec<File>),
@@ -21,8 +22,9 @@ impl FilesOp {
 	#[inline]
 	pub fn url(&self) -> &Url {
 		match self {
-			Self::Full(url, _) => url,
+			Self::Full(url, ..) => url,
 			Self::Part(url, ..) => url,
+			Self::Done(url, ..) => url,
 			Self::Size(url, _) => url,
 
 			Self::Creating(url, _) => url,
@@ -75,8 +77,9 @@ impl FilesOp {
 
 		let u = new.clone();
 		match self {
-			Self::Full(_, files) => Self::Full(u, files!(files)),
+			Self::Full(_, files, mtime) => Self::Full(u, files!(files), *mtime),
 			Self::Part(_, files, ticket) => Self::Part(u, files!(files), *ticket),
+			Self::Done(_, mtime, ticket) => Self::Done(u, *mtime, *ticket),
 			Self::Size(_, map) => Self::Size(u, map.iter().map(|(k, v)| (new!(k), *v)).collect()),
 
 			Self::Creating(_, files) => Self::Creating(u, files!(files)),

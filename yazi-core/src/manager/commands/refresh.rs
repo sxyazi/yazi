@@ -17,9 +17,9 @@ impl Manager {
 		self.active_mut().apply_files_attrs();
 
 		if let Some(p) = self.parent() {
-			self.watcher.trigger_dirs(&[self.cwd(), &p.cwd]);
+			self.watcher.trigger_dirs(&[self.current(), p]);
 		} else {
-			self.watcher.trigger_dirs(&[self.cwd()]);
+			self.watcher.trigger_dirs(&[self.current()]);
 		}
 
 		self.hover(None);

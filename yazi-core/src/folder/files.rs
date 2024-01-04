@@ -131,14 +131,12 @@ impl Files {
 	}
 
 	pub fn update_full(&mut self, files: Vec<File>) {
-		if files.is_empty() {
-			return;
-		}
-
 		self.ticket = FILES_TICKET.fetch_add(1, Ordering::Relaxed);
-		self.revision += 1;
 
 		(self.hidden, self.items) = self.split_files(files);
+		if !self.items.is_empty() {
+			self.revision += 1;
+		}
 	}
 
 	pub fn update_part(&mut self, files: Vec<File>, ticket: u64) {
@@ -147,8 +145,11 @@ impl Files {
 				return;
 			}
 
-			self.revision += 1;
 			let (hidden, items) = self.split_files(files);
+			if !items.is_empty() {
+				self.revision += 1;
+			}
+
 			self.hidden.extend(hidden);
 			self.items.extend(items);
 			return;
@@ -340,6 +341,10 @@ impl Files {
 	#[inline]
 	pub fn position(&self, url: &Url) -> Option<usize> { self.iter().position(|f| &f.url == url) }
 
+	// --- Ticket
+	#[inline]
+	pub fn ticket(&self) -> u64 { self.ticket }
+
 	// --- Selected
 	pub fn selected(&self, pending: &BTreeSet<usize>, unset: bool) -> Vec<&File> {
 		if self.selected.is_empty() && (unset || pending.is_empty()) {
@@ -435,8 +440,10 @@ impl Files {
 			if self.show_hidden { mem::take(&mut self.hidden) } else { mem::take(&mut self.items) };
 		let (hidden, items) = self.split_files(take);
 
-		self.revision += 1;
 		self.hidden.extend(hidden);
-		self.items.extend(items);
+		if !items.is_empty() {
+			self.revision += 1;
+			self.items.extend(items);
+		}
 	}
 }
