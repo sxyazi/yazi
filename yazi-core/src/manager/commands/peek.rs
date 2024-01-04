@@ -1,4 +1,4 @@
-use yazi_shared::{emit, event::Exec, fs::Url, render, Layer, MIME_DIR};
+use yazi_shared::{emit, event::Exec, fs::Url, render, Layer};
 
 use crate::manager::Manager;
 
@@ -56,16 +56,13 @@ impl Manager {
 		}
 
 		if hovered.is_dir() {
-			if self.active().history.contains_key(&hovered.url) {
-				self.active_mut().preview.go(hovered, MIME_DIR, opt.force);
-			} else {
-				self.active_mut().preview.go_folder(hovered, opt.force);
-			}
+			let mtime = self.active().history.get(&hovered.url).and_then(|f| f.mtime);
+			self.active_mut().preview.go_folder(hovered, mtime, opt.force);
 			return;
 		}
 
-		if let Some(s) = self.mimetype.get(&hovered.url).cloned() {
-			self.active_mut().preview.go(hovered, &s, opt.force);
+		if let Some(m) = self.mimetype.get(&hovered.url).cloned() {
+			self.active_mut().preview.go(hovered, &m, opt.force);
 		} else {
 			render!(self.active_mut().preview.reset());
 		}

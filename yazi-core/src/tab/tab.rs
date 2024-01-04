@@ -82,15 +82,15 @@ impl Tab {
 			render!(f.repos(hovered));
 		};
 
-		if let Some(f) =
-			self.current.hovered().filter(|h| h.is_dir()).and_then(|h| self.history.get_mut(&h.url))
-		{
-			apply(f);
-		}
-
 		apply(&mut self.current);
-		if let Some(parent) = self.parent.as_mut() {
-			apply(parent);
-		}
+
+		self
+			.current
+			.hovered()
+			.filter(|h| h.is_dir())
+			.and_then(|h| self.history.get_mut(&h.url))
+			.map(apply);
+
+		self.parent.as_mut().map(apply);
 	}
 }

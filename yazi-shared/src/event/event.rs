@@ -6,12 +6,14 @@ use crate::{term::Term, Layer, RoCell};
 
 static TX: RoCell<UnboundedSender<Event>> = RoCell::new();
 
+#[derive(Debug)]
 pub enum Event {
-	Quit(bool), // no-cwd-file
-	Key(KeyEvent),
-	Paste(String),
-	Resize(u16, u16),
 	Call(Vec<Exec>, Layer),
+	Render,
+	Key(KeyEvent),
+	Resize(u16, u16),
+	Paste(String),
+	Quit(bool), // no-cwd-file
 
 	// Manager
 	Pages(usize),

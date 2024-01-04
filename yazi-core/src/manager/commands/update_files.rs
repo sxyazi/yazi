@@ -19,6 +19,7 @@ impl Manager {
 
 		if let Some(p) = self.active_mut().parent.as_mut() {
 			render!(p.update(op));
+			render!(p.files.catchup_revision());
 			render!(p.hover(&cwd));
 		}
 
@@ -32,6 +33,7 @@ impl Manager {
 		let calc = !matches!(op, FilesOp::Size(..) | FilesOp::Deleting(..));
 
 		render!(self.current_mut().update(op));
+		render!(self.current_mut().files.catchup_revision());
 		render!(hovered.as_ref().is_some_and(|h| self.current_mut().hover(h)));
 
 		if hovered.as_ref() != self.hovered().map(|h| &h.url) {
@@ -43,10 +45,13 @@ impl Manager {
 	}
 
 	fn update_hovered(&mut self, op: FilesOp) {
-		let url = op.url();
-		self.active_mut().history.entry(url.clone()).or_insert_with(|| Folder::from(url)).update(op);
+		let folder =
+			self.active_mut().history.entry(op.url().clone()).or_insert_with(|| Folder::from(op.url()));
 
-		self.peek(true);
+		if folder.update(op) {
+			folder.files.catchup_revision();
+			self.peek(true);
+		}
 	}
 
 	fn update_history(&mut self, op: FilesOp) {
@@ -84,7 +89,5 @@ impl Manager {
 				self.update_history(op);
 			}
 		}
-
-		self.active_mut().apply_files_attrs();
 	}
 }

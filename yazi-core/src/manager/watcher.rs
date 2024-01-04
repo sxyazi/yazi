@@ -9,7 +9,7 @@ use yazi_plugin::isolate;
 use yazi_shared::fs::{File, FilesOp, Url};
 
 use super::Linked;
-use crate::folder::Files;
+use crate::folder::{Files, Folder};
 
 pub struct Watcher {
 	watcher:    RecommendedWatcher,
@@ -83,19 +83,31 @@ impl Watcher {
 		self.sync_linked();
 	}
 
-	pub(super) fn trigger_dirs(&self, dirs: &[&Url]) {
-		let urls: Vec<_> = dirs.iter().filter(|&u| u.is_regular()).map(|&u| u.clone()).collect();
-		if urls.is_empty() {
+	pub(super) fn trigger_dirs(&self, folders: &[&Folder]) {
+		let todo: Vec<_> =
+			folders.iter().filter(|&f| f.cwd.is_regular()).map(|&f| (f.cwd.clone(), f.mtime)).collect();
+		if todo.is_empty() {
 			return;
 		}
 
 		tokio::spawn(async move {
-			for u in urls {
-				if let Ok(rx) = Files::from_dir(&u).await {
+			for (url, mtime) in todo {
+				let Ok(meta) = fs::metadata(&url).await else {
+					if let Ok(m) = fs::symlink_metadata(&url).await {
+						FilesOp::Full(url, vec![], m.modified().ok()).emit();
+					} else if let Some(p) = url.parent_url() {
+						FilesOp::Deleting(p, vec![url]).emit();
+					}
+					continue;
+				};
+
+				if meta.modified().ok() == mtime {
+					continue;
+				}
+
+				if let Ok(rx) = Files::from_dir(&url).await {
 					let files: Vec<_> = UnboundedReceiverStream::new(rx).collect().await;
-					FilesOp::Full(u, files).emit();
-				} else if let Some(p) = u.parent_url() {
-					FilesOp::Deleting(p, vec![u]).emit();
+					FilesOp::Full(url, files, meta.modified().ok()).emit();
 				}
 			}
 		});

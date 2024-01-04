@@ -1,6 +1,6 @@
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
-use tokio::{pin, task::JoinHandle};
+use tokio::{fs, pin, task::JoinHandle};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use tokio_util::sync::CancellationToken;
 use yazi_adaptor::ADAPTOR;
@@ -16,7 +16,7 @@ pub struct Preview {
 	pub skip: usize,
 
 	previewer_ct:  Option<CancellationToken>,
-	folder_handle: Option<JoinHandle<()>>,
+	folder_loader: Option<(Url, JoinHandle<()>)>,
 }
 
 impl Preview {
@@ -38,29 +38,51 @@ impl Preview {
 		}
 	}
 
-	pub fn go_folder(&mut self, file: File, force: bool) {
+	pub fn go_folder(&mut self, file: File, mtime: Option<SystemTime>, force: bool) {
 		if !force && self.content_unchanged(&file.url, &file.cha) {
 			return;
 		}
 
-		self.go(file.clone(), MIME_DIR, force);
+		let url = file.url();
+		self.go(file, MIME_DIR, force);
 
-		self.folder_handle.take().map(|h| h.abort());
-		self.folder_handle = Some(tokio::spawn(async move {
-			let Ok(rx) = Files::from_dir(&file.url).await else {
-				file.url.parent_url().map(|p| FilesOp::Deleting(p, vec![file.url]).emit());
-				return;
-			};
+		if matches!(&self.folder_loader, Some((u, _)) if *u == url) {
+			return;
+		}
 
-			let stream =
-				UnboundedReceiverStream::new(rx).chunks_timeout(10000, Duration::from_millis(350));
-			pin!(stream);
+		self.folder_loader.take().map(|(_, h)| h.abort());
+		self.folder_loader = Some((
+			url.clone(),
+			tokio::spawn(async move {
+				let Ok(meta) = fs::metadata(&url).await else {
+					if let Ok(m) = fs::symlink_metadata(&url).await {
+						FilesOp::Full(url, vec![], m.modified().ok()).emit();
+					} else if let Some(p) = url.parent_url() {
+						FilesOp::Deleting(p, vec![url]).emit();
+					}
+					return;
+				};
 
-			let ticket = FilesOp::prepare(&file.url);
-			while let Some(chunk) = stream.next().await {
-				FilesOp::Part(file.url.clone(), chunk, ticket).emit();
-			}
-		}));
+				if meta.modified().ok() == mtime {
+					return;
+				}
+
+				let Ok(rx) = Files::from_dir(&url).await else {
+					FilesOp::Full(url, vec![], meta.modified().ok()).emit();
+					return;
+				};
+
+				let stream =
+					UnboundedReceiverStream::new(rx).chunks_timeout(10000, Duration::from_millis(350));
+				pin!(stream);
+
+				let ticket = FilesOp::prepare(&url);
+				while let Some(chunk) = stream.next().await {
+					FilesOp::Part(url.clone(), chunk, ticket).emit();
+				}
+				FilesOp::Done(url, meta.modified().ok(), ticket).emit();
+			}),
+		));
 	}
 
 	#[inline]

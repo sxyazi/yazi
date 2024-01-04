@@ -31,6 +31,7 @@ impl Manager {
 
 		// Re-peek
 		self.peek(false);
+		self.active_mut().apply_files_attrs();
 
 		// Refresh watcher
 		let mut to_watch = BTreeSet::new();

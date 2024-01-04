@@ -59,15 +59,14 @@ impl Tab {
 			let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(300));
 			pin!(rx);
 
-			let ticket = FilesOp::prepare(&cwd);
-			let mut first = true;
+			let (mut first, ticket) = (true, FilesOp::prepare(&cwd));
 			while let Some(chunk) = rx.next().await {
-				if first {
+				if mem::replace(&mut first, false) {
 					Tab::_cd(&cwd);
-					first = false;
 				}
 				FilesOp::Part(cwd.clone(), chunk, ticket).emit();
 			}
+			FilesOp::Done(cwd, None, ticket).emit();
 			Ok(())
 		}));
 
