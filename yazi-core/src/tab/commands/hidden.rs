@@ -18,5 +18,6 @@ impl Tab {
 		} else if self.current.hovered().is_some_and(|f| f.is_dir()) {
 			Manager::_peek(true);
 		}
+		Manager::_update_paged();
 	}
 }

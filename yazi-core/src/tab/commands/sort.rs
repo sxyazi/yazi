@@ -3,7 +3,7 @@ use std::str::FromStr;
 use yazi_config::manager::SortBy;
 use yazi_shared::event::Exec;
 
-use crate::tab::Tab;
+use crate::{manager::Manager, tab::Tab};
 
 impl Tab {
 	pub fn sort(&mut self, e: &Exec) {
@@ -15,5 +15,6 @@ impl Tab {
 		self.conf.sort_dir_first = e.named.contains_key("dir-first");
 
 		self.apply_files_attrs();
+		Manager::_update_paged();
 	}
 }

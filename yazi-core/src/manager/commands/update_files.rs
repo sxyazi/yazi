@@ -34,7 +34,7 @@ impl Manager {
 		if self.current_mut().update(op) {
 			self.current_mut().repos(hovered.as_ref());
 			Self::_hover(None); // Re-hover in next loop
-			Self::_update_pages(); // Update for paged files in next loop
+			Self::_update_paged(); // Update for paged files in next loop
 		}
 
 		if calc {

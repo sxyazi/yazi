@@ -17,5 +17,5 @@ mod tab_swap;
 mod tab_switch;
 mod update_files;
 mod update_mimetype;
-mod update_pages;
+mod update_paged;
 mod yank;

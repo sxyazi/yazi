@@ -23,19 +23,19 @@ impl From<()> for Opt {
 
 impl Manager {
 	#[inline]
-	pub fn _update_pages() {
-		emit!(Call(Exec::call("update_pages", vec![]).vec(), Layer::Manager));
+	pub fn _update_paged() {
+		emit!(Call(Exec::call("update_paged", vec![]).vec(), Layer::Manager));
 	}
 
 	#[inline]
-	pub fn _update_pages_by(page: usize, only_if: &Url) {
+	pub fn _update_paged_by(page: usize, only_if: &Url) {
 		emit!(Call(
-			Exec::call("update_pages", vec![page.to_string()]).with("only-if", only_if.to_string()).vec(),
+			Exec::call("update_paged", vec![page.to_string()]).with("only-if", only_if.to_string()).vec(),
 			Layer::Manager
 		));
 	}
 
-	pub fn update_pages(&mut self, opt: impl TryInto<Opt>, tasks: &Tasks) {
+	pub fn update_paged(&mut self, opt: impl TryInto<Opt>, tasks: &Tasks) {
 		let Ok(opt) = opt.try_into() else {
 			return;
 		};

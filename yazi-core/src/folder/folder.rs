@@ -94,7 +94,7 @@ impl Folder {
 
 		let new = self.cursor / limit;
 		if mem::replace(&mut self.page, new) != new || force {
-			Manager::_update_pages_by(new, &self.cwd);
+			Manager::_update_paged_by(new, &self.cwd);
 		}
 	}
 

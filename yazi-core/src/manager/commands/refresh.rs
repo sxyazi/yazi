@@ -23,6 +23,6 @@ impl Manager {
 		}
 
 		self.hover(None);
-		self.update_pages((), tasks);
+		self.update_paged((), tasks);
 	}
 }
