@@ -2,7 +2,7 @@ use std::env;
 
 use yazi_shared::{emit, event::Exec, Layer};
 
-use crate::manager::Manager;
+use crate::{manager::Manager, tasks::Tasks};
 
 impl Manager {
 	#[inline]
@@ -10,7 +10,7 @@ impl Manager {
 		emit!(Call(Exec::call("refresh", vec![]).vec(), Layer::Manager));
 	}
 
-	pub fn refresh(&mut self, _: &Exec) {
+	pub fn refresh(&mut self, _: &Exec, tasks: &Tasks) {
 		env::set_current_dir(self.cwd()).ok();
 		env::set_var("PWD", self.cwd());
 
@@ -23,5 +23,6 @@ impl Manager {
 		}
 
 		self.hover(None);
+		self.update_pages((), tasks);
 	}
 }

@@ -37,9 +37,14 @@ impl Term {
 			execute!(stdout(), PopKeyboardEnhancementFlags)?;
 		}
 
-		execute!(stdout(), DisableFocusChange, DisableBracketedPaste, LeaveAlternateScreen)?;
+		execute!(
+			stdout(),
+			DisableFocusChange,
+			DisableBracketedPaste,
+			LeaveAlternateScreen,
+			crossterm::cursor::SetCursorStyle::DefaultUserShape
+		)?;
 
-		Self::set_cursor_default()?;
 		self.show_cursor()?;
 		Ok(disable_raw_mode()?)
 	}
@@ -55,6 +60,7 @@ impl Term {
 			crossterm::cursor::Show,
 		)
 		.ok();
+
 		disable_raw_mode().ok();
 		std::process::exit(f() as i32);
 	}

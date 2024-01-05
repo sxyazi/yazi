@@ -14,9 +14,6 @@ pub enum Event {
 	Resize(u16, u16),
 	Paste(String),
 	Quit(bool), // no-cwd-file
-
-	// Manager
-	Pages(usize),
 }
 
 impl Event {
@@ -39,10 +36,6 @@ macro_rules! emit {
 	};
 	(Call($exec:expr, $layer:expr)) => {
 		$crate::event::Event::Call($exec, $layer).emit();
-	};
-
-	(Pages($page:expr)) => {
-		$crate::event::Event::Pages($page).emit();
 	};
 
 	($event:ident) => {

@@ -74,7 +74,7 @@ impl Tab {
 
 	pub fn apply_files_attrs(&mut self) {
 		let apply = |f: &mut Folder| {
-			let hovered = f.hovered().map(|h| h.url());
+			let hovered = f.hovered().filter(|_| f.tracing).map(|h| h.url());
 
 			f.files.set_show_hidden(self.conf.show_hidden);
 			f.files.set_sorter(self.conf.sorter());

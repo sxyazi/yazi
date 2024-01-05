@@ -19,7 +19,6 @@ impl Manager {
 
 		if let Some(p) = self.active_mut().parent.as_mut() {
 			render!(p.update(op));
-			render!(p.files.catchup_revision());
 			render!(p.hover(&cwd));
 		}
 
@@ -29,16 +28,15 @@ impl Manager {
 	}
 
 	fn update_current(&mut self, op: FilesOp, tasks: &Tasks) {
-		let hovered = self.hovered().map(|h| h.url());
+		let hovered = self.hovered().filter(|_| self.current().tracing).map(|h| h.url());
 		let calc = !matches!(op, FilesOp::Size(..) | FilesOp::Deleting(..));
 
-		render!(self.current_mut().update(op));
-		render!(self.current_mut().files.catchup_revision());
-		render!(hovered.as_ref().is_some_and(|h| self.current_mut().hover(h)));
-
-		if hovered.as_ref() != self.hovered().map(|h| &h.url) {
-			self.hover(None);
+		if self.current_mut().update(op) {
+			self.current_mut().repos(hovered.as_ref());
+			Self::_hover(None); // Re-hover in next loop
+			Self::_update_pages(); // Update for paged files in next loop
 		}
+
 		if calc {
 			tasks.preload_sorted(&self.current().files);
 		}
@@ -46,18 +44,9 @@ impl Manager {
 
 	fn update_hovered(&mut self, op: FilesOp) {
 		let url = op.url();
-		let folder = match self.active_mut().history.get_mut(url) {
-			Some(f) => f,
-			None => {
-				let f = Folder::from(url);
-				self.active_mut().history.insert(url.clone(), f);
-				self.active_mut().apply_files_attrs();
-				self.active_mut().history.get_mut(url).unwrap()
-			}
-		};
+		let folder = self.active_mut().history.entry(url.clone()).or_insert_with(|| Folder::from(url));
 
 		if folder.update(op) {
-			folder.files.catchup_revision();
 			self.peek(true);
 		}
 	}
@@ -97,5 +86,7 @@ impl Manager {
 				self.update_history(op);
 			}
 		}
+
+		self.active_mut().apply_files_attrs();
 	}
 }

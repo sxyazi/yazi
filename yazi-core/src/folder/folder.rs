@@ -1,10 +1,10 @@
-use std::time::SystemTime;
+use std::{mem, time::SystemTime};
 
 use ratatui::layout::Rect;
 use yazi_config::LAYOUT;
-use yazi_shared::{emit, fs::{File, FilesOp, Url}};
+use yazi_shared::fs::{File, FilesOp, Url};
 
-use crate::{folder::Files, Step};
+use crate::{folder::Files, manager::Manager, Step};
 
 #[derive(Default)]
 pub struct Folder {
@@ -15,7 +15,8 @@ pub struct Folder {
 	pub offset: usize,
 	pub cursor: usize,
 
-	pub page: usize,
+	pub page:    usize,
+	pub tracing: bool,
 }
 
 impl From<Url> for Folder {
@@ -47,46 +48,57 @@ impl Folder {
 			FilesOp::Upserting(_, files) => self.files.update_upserting(files),
 		}
 
-		// TODO: use a better way to detect if the page is changed
-		let old = self.page;
-		self.prev(Default::default());
-
-		if self.page == old {
-			self.set_page(true); // Force update
+		self.arrow(0);
+		if self.files.is_empty() {
+			self.tracing = false;
 		}
 
 		self.files.revision != revision
 	}
 
-	pub fn set_page(&mut self, force: bool) {
+	pub fn arrow(&mut self, step: impl Into<Step>) -> bool {
+		let step = step.into() as Step;
+		let b = if self.files.is_empty() {
+			(self.cursor, self.offset, self.tracing) = (0, 0, false);
+			false
+		} else if step.is_positive() {
+			self.next(step)
+		} else {
+			self.prev(step)
+		};
+
+		self.sync_page(false);
+		self.tracing |= b;
+		b
+	}
+
+	pub fn hover(&mut self, url: &Url) -> bool {
+		if self.hovered().map(|h| &h.url) == Some(url) {
+			return false;
+		}
+
+		let new = self.files.position(url).unwrap_or(self.cursor) as isize;
+		self.arrow(new - self.cursor as isize)
+	}
+
+	#[inline]
+	pub fn repos(&mut self, url: Option<impl AsRef<Url>>) -> bool {
+		if let Some(u) = url { self.hover(u.as_ref()) } else { self.arrow(0) }
+	}
+
+	pub fn sync_page(&mut self, force: bool) {
 		let limit = LAYOUT.load().current.height as usize;
 		if limit == 0 {
 			return;
 		}
 
 		let new = self.cursor / limit;
-		if !force && self.page == new {
-			return;
+		if mem::replace(&mut self.page, new) != new || force {
+			Manager::_update_pages_by(new, &self.cwd);
 		}
-
-		// Current page
-		emit!(Pages(new));
-
-		// Next page
-		let max_page = (self.files.len() + limit - 1) / limit;
-		if new < max_page && new + 1 != self.page {
-			emit!(Pages(new + 1));
-		}
-
-		// Previous page
-		if new > 1 && new - 1 != self.page {
-			emit!(Pages(new - 1));
-		}
-
-		self.page = new;
 	}
 
-	pub fn next(&mut self, step: Step) -> bool {
+	fn next(&mut self, step: Step) -> bool {
 		let old = (self.cursor, self.offset);
 		let len = self.files.len();
 
@@ -98,11 +110,10 @@ impl Folder {
 			self.offset.min(len.saturating_sub(1))
 		};
 
-		self.set_page(false);
 		old != (self.cursor, self.offset)
 	}
 
-	pub fn prev(&mut self, step: Step) -> bool {
+	fn prev(&mut self, step: Step) -> bool {
 		let old = (self.cursor, self.offset);
 		let max = self.files.len().saturating_sub(1);
 
@@ -113,26 +124,7 @@ impl Folder {
 			self.offset.min(max)
 		};
 
-		self.set_page(false);
 		old != (self.cursor, self.offset)
-	}
-
-	pub fn hover(&mut self, url: &Url) -> bool {
-		if self.hovered().map(|h| &h.url) == Some(url) {
-			return false;
-		}
-
-		let new = self.files.position(url).unwrap_or(self.cursor);
-		if new > self.cursor {
-			self.next(Step::next(new - self.cursor))
-		} else {
-			self.prev(Step::prev(self.cursor - new))
-		}
-	}
-
-	#[inline]
-	pub fn repos(&mut self, url: Option<impl AsRef<Url>>) -> bool {
-		if let Some(u) = url { self.hover(u.as_ref()) } else { self.prev(Default::default()) }
 	}
 }
 
@@ -144,8 +136,8 @@ impl Folder {
 		let len = self.files.len();
 		let limit = LAYOUT.load().current.height as usize;
 
-		let start = (page * limit).min(len.saturating_sub(1));
-		let end = (start + limit).min(len);
+		let start = (page.saturating_sub(1) * limit).min(len.saturating_sub(1));
+		let end = ((page + 2) * limit).min(len);
 		&self.files[start..end]
 	}
 

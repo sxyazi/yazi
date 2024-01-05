@@ -1,4 +1,4 @@
-use std::sync::atomic::Ordering;
+use std::{mem, sync::atomic::Ordering};
 
 use anyhow::{Ok, Result};
 use crossterm::event::KeyEvent;
@@ -37,14 +37,12 @@ impl App {
 					Event::Paste(str) => app.dispatch_paste(str),
 					Event::Quit(no_cwd_file) => {
 						app.quit(no_cwd_file)?;
-						break;
+						return Ok(());
 					}
-					event => app.dispatch_module(event),
 				}
 			}
 
-			if render_in_place {
-				render_in_place = false;
+			if mem::replace(&mut render_in_place, false) {
 				app.render()?;
 			}
 
@@ -71,7 +69,7 @@ impl App {
 		self.cx.manager.active_mut().preview.reset();
 		self.render()?;
 
-		self.cx.manager.current_mut().set_page(true);
+		self.cx.manager.current_mut().sync_page(true);
 		self.cx.manager.peek(false);
 		Ok(())
 	}
@@ -79,16 +77,5 @@ impl App {
 	#[inline]
 	fn dispatch_call(&mut self, exec: Vec<Exec>, layer: Layer) {
 		Executor::new(self).dispatch(&exec, layer);
-	}
-
-	fn dispatch_module(&mut self, event: Event) {
-		let tasks = &mut self.cx.tasks;
-		match event {
-			Event::Pages(page) => {
-				let targets = self.cx.manager.current().paginate(page);
-				tasks.preload_paged(targets, &self.cx.manager.mimetype);
-			}
-			_ => unreachable!(),
-		}
 	}
 }

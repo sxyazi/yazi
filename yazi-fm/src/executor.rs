@@ -108,10 +108,11 @@ impl<'a> Executor<'a> {
 
 		on!(MANAGER, update_files, &self.app.cx.tasks);
 		on!(MANAGER, update_mimetype, &self.app.cx.tasks);
+		on!(MANAGER, update_pages, &self.app.cx.tasks);
 		on!(MANAGER, hover);
 		on!(MANAGER, peek);
 		on!(MANAGER, seek);
-		on!(MANAGER, refresh);
+		on!(MANAGER, refresh, &self.app.cx.tasks);
 		on!(MANAGER, quit, &self.app.cx.tasks);
 		on!(MANAGER, close, &self.app.cx.tasks);
 		on!(MANAGER, suspend);

@@ -22,12 +22,7 @@ where
 impl Tab {
 	pub fn arrow(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
-		let ok = if opt.step.is_positive() {
-			self.current.next(opt.step)
-		} else {
-			self.current.prev(opt.step)
-		};
-		if !ok {
+		if !self.current.arrow(opt.step) {
 			return;
 		}
 
