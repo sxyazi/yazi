@@ -172,6 +172,8 @@ impl<'a> Executor<'a> {
 			b"tasks_show" => self.app.cx.tasks.toggle(()),
 			// Help
 			b"help" => self.app.cx.help.toggle(Layer::Manager),
+			// Plugin
+			b"plugin" => self.app.plugin(exec),
 			_ => {}
 		}
 	}

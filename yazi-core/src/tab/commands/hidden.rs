@@ -10,7 +10,13 @@ impl Tab {
 			_ => !self.conf.show_hidden,
 		};
 
+		let hovered = self.current.hovered().map(|f| f.url());
 		self.apply_files_attrs();
-		Manager::_hover(None);
+
+		if hovered.as_ref() != self.current.hovered().map(|f| &f.url) {
+			Manager::_hover(hovered);
+		} else if self.current.hovered().is_some_and(|f| f.is_dir()) {
+			Manager::_peek(true);
+		}
 	}
 }
