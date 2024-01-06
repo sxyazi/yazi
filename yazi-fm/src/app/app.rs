@@ -2,6 +2,7 @@ use std::{mem, sync::atomic::Ordering};
 
 use anyhow::{Ok, Result};
 use crossterm::event::KeyEvent;
+use tracing::debug;
 use yazi_config::keymap::Key;
 use yazi_core::input::InputMode;
 use yazi_shared::{emit, event::{Event, Exec, NEED_RENDER}, term::Term, Layer};
@@ -29,6 +30,7 @@ impl App {
 		let mut render_in_place = false;
 		while app.signals.rx.recv_many(&mut events, 10).await > 0 {
 			for event in events.drain(..) {
+				debug!("event - do: {:?}", event);
 				match event {
 					Event::Call(exec, layer) => app.dispatch_call(exec, layer),
 					Event::Render => render_in_place = true,
@@ -40,6 +42,7 @@ impl App {
 						return Ok(());
 					}
 				}
+				debug!("event - done");
 			}
 
 			if mem::replace(&mut render_in_place, false) {

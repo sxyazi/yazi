@@ -2,8 +2,8 @@
 resolver = "2"
 members  = [ "yazi-*" ]
 
-[profile.release]
-codegen-units = 1
-lto           = true
-panic         = "abort"
-strip         = true
+# [profile.release]
+# codegen-units = 1
+# lto           = true
+# panic         = "abort"
+# strip         = true
