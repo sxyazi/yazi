@@ -102,7 +102,6 @@ impl Manager {
 
 	fn quit_with_chooser(selected: &[&File]) -> bool {
 		let mut quit_actions = vec![QuitAction::CwdToFile];
-		let mut initiated_quit = false;
 
 		let paths = selected.iter().fold(OsString::new(), |mut s, &f| {
 			s.push(f.url.as_os_str());
@@ -112,18 +111,20 @@ impl Manager {
 
 		if ARGS.chooser_file.is_some() {
 			quit_actions.push(QuitAction::SelectToFile(paths.clone()));
-			initiated_quit = true;
 		};
 
 		if ARGS.chooser_stdout {
 			quit_actions.push(QuitAction::SelectToStdout(paths.clone()));
-			initiated_quit = true;
 		};
 
-		tokio::spawn(async move {
-			emit!(Quit(quit_actions));
-		});
+		if quit_actions.len() > 1 {
+			tokio::spawn(async move {
+				emit!(Quit(quit_actions));
+			});
 
-		initiated_quit
+			true
+		} else {
+			false
+		}
 	}
 }
