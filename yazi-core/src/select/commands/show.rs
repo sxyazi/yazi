@@ -20,7 +20,7 @@ impl Select {
 	pub async fn _show(cfg: SelectCfg) -> Result<usize> {
 		let (tx, rx) = oneshot::channel();
 		emit!(Call(Exec::call("show", vec![]).with_data(Opt { cfg, tx }).vec(), Layer::Select));
-		rx.await.unwrap_or_else(|_| Term::goodbye(|| false))
+		rx.await.unwrap_or_else(|_| Term::goodbye(|| false, None))
 	}
 
 	pub fn show(&mut self, opt: impl TryInto<Opt>) {

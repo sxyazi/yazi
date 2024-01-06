@@ -1,3 +1,5 @@
+use std::ffi::OsString;
+
 use crossterm::event::KeyEvent;
 use tokio::sync::{mpsc::UnboundedSender, oneshot};
 
@@ -13,31 +15,42 @@ pub enum Event {
 	Key(KeyEvent),
 	Resize(u16, u16),
 	Paste(String),
-	Quit(bool), // no-cwd-file
+	Quit(Vec<QuitAction>),
+}
+
+#[derive(Debug, PartialEq)]
+pub enum QuitAction {
+	None,
+	CwdToFile,
+	SelectToFile(OsString),
+	SelectToStdout(OsString),
 }
 
 impl Event {
 	#[inline]
-	pub fn init(tx: UnboundedSender<Event>) { TX.init(tx); }
+	pub fn init(tx: UnboundedSender<Event>) {
+		TX.init(tx);
+	}
 
 	#[inline]
-	pub fn emit(self) { TX.send(self).ok(); }
+	pub fn emit(self) {
+		TX.send(self).ok();
+	}
 
 	pub async fn wait<T>(self, rx: oneshot::Receiver<T>) -> T {
 		TX.send(self).ok();
-		rx.await.unwrap_or_else(|_| Term::goodbye(|| false))
+		rx.await.unwrap_or_else(|_| Term::goodbye(|| false, None))
 	}
 }
 
 #[macro_export]
 macro_rules! emit {
-	(Quit($no_cwd_file:expr)) => {
-		$crate::event::Event::Quit($no_cwd_file).emit();
+	(Quit($quit_actions:expr)) => {
+		$crate::event::Event::Quit($quit_actions).emit();
 	};
 	(Call($exec:expr, $layer:expr)) => {
 		$crate::event::Event::Call($exec, $layer).emit();
 	};
-
 	($event:ident) => {
 		$crate::event::Event::$event.emit();
 	};

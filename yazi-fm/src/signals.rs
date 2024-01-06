@@ -1,11 +1,18 @@
 use anyhow::Result;
 use crossterm::event::{Event as CrosstermEvent, EventStream, KeyEvent, KeyEventKind};
 use futures::StreamExt;
-use tokio::{select, sync::{mpsc::{self, UnboundedReceiver, UnboundedSender}, oneshot}, task::JoinHandle};
+use tokio::{
+	select,
+	sync::{
+		mpsc::{self, UnboundedReceiver, UnboundedSender},
+		oneshot,
+	},
+	task::JoinHandle,
+};
 use yazi_shared::event::Event;
 
 pub(super) struct Signals {
-	tx:            UnboundedSender<Event>,
+	tx: UnboundedSender<Event>,
 	pub(super) rx: UnboundedReceiver<Event>,
 
 	term_stop_tx: Option<oneshot::Sender<()>>,
@@ -42,12 +49,15 @@ impl Signals {
 	}
 
 	#[cfg(windows)]
-	fn spawn_system_task(&self) -> Result<()> { Ok(()) }
+	fn spawn_system_task(&self) -> Result<()> {
+		Ok(())
+	}
 
 	#[cfg(unix)]
 	fn spawn_system_task(&self) -> Result<JoinHandle<()>> {
 		use libc::{SIGCONT, SIGHUP, SIGINT, SIGQUIT, SIGTERM};
 		use yazi_scheduler::Scheduler;
+		use yazi_shared::event::QuitAction;
 
 		let tx = self.tx.clone();
 		let mut signals = signal_hook_tokio::Signals::new([
@@ -61,7 +71,7 @@ impl Signals {
 			while let Some(signal) = signals.next().await {
 				match signal {
 					SIGHUP | SIGTERM | SIGQUIT | SIGINT => {
-						if tx.send(Event::Quit(false)).is_err() {
+						if tx.send(Event::Quit(vec![QuitAction::CwdToFile])).is_err() {
 							break;
 						}
 					}

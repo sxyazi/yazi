@@ -1,26 +1,42 @@
+use std::ffi::OsString;
+
 use anyhow::Result;
 use yazi_config::ARGS;
-use yazi_shared::term::Term;
+use yazi_shared::{event::QuitAction, term::Term};
 
 use crate::app::App;
 
-pub struct Opt {
-	no_cwd_file: bool,
-}
-
-impl From<bool> for Opt {
-	fn from(no_cwd_file: bool) -> Self { Self { no_cwd_file } }
-}
-
 impl App {
-	pub(crate) fn quit(&mut self, opt: impl Into<Opt>) -> Result<()> {
-		let opt = opt.into() as Opt;
+	pub(crate) fn quit(&mut self, quit_actions: Vec<QuitAction>) -> Result<()> {
+		if quit_actions.contains(&QuitAction::None) {
+			Term::goodbye(|| false, None)
+		}
 
-		if let Some(p) = ARGS.cwd_file.as_ref().filter(|_| !opt.no_cwd_file) {
+		let mut stdout = None;
+		for quit_action in quit_actions {
+			match quit_action {
+				QuitAction::None => unreachable!(),
+				QuitAction::CwdToFile => self.cwd_to_file(),
+				QuitAction::SelectToFile(selected) => self.select_to_file(selected),
+				QuitAction::SelectToStdout(selected) => {
+					stdout = Some(selected.as_encoded_bytes().to_owned())
+				}
+			}
+		}
+
+		Term::goodbye(|| false, stdout.as_deref());
+	}
+
+	fn cwd_to_file(&self) {
+		if let Some(p) = ARGS.cwd_file.as_ref() {
 			let cwd = self.cx.manager.cwd().as_os_str();
 			std::fs::write(p, cwd.as_encoded_bytes()).ok();
 		}
+	}
 
-		Term::goodbye(|| false);
+	fn select_to_file(&self, selected: OsString) {
+		if let Some(p) = ARGS.chooser_file.clone() {
+			std::fs::write(p, selected.as_encoded_bytes()).ok();
+		}
 	}
 }
