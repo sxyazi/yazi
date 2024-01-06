@@ -31,23 +31,51 @@ pub struct PluginRule {
 impl Default for Plugin {
 	fn default() -> Self {
 		#[derive(Deserialize)]
-		struct Outer {
-			plugin: Plugin,
+		struct Shadow {
+			preloaders:         Vec<PluginRule>,
+			#[serde(default)]
+			prepend_preloaders: Vec<PluginRule>,
+			#[serde(default)]
+			append_preloaders:  Vec<PluginRule>,
+
+			previewers:         Vec<PluginRule>,
+			#[serde(default)]
+			prepend_previewers: Vec<PluginRule>,
+			#[serde(default)]
+			append_previewers:  Vec<PluginRule>,
 		}
 
-		let mut plugin = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().plugin;
-		if plugin.preloaders.len() > MAX_PRELOADERS as usize {
+		#[derive(Deserialize)]
+		struct Outer {
+			plugin: Shadow,
+		}
+
+		let mut shadow = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().plugin;
+		shadow.preloaders = shadow
+			.prepend_preloaders
+			.into_iter()
+			.chain(shadow.preloaders)
+			.chain(shadow.append_preloaders)
+			.collect();
+		shadow.previewers = shadow
+			.prepend_previewers
+			.into_iter()
+			.chain(shadow.previewers)
+			.chain(shadow.append_previewers)
+			.collect();
+
+		if shadow.preloaders.len() > MAX_PRELOADERS as usize {
 			panic!("Too many preloaders");
 		}
 
-		for (i, preloader) in plugin.preloaders.iter_mut().enumerate() {
+		for (i, preloader) in shadow.preloaders.iter_mut().enumerate() {
 			if preloader.sync {
 				panic!("Preloaders cannot be synchronous");
 			}
 			preloader.id = i as u8;
 		}
 
-		plugin
+		Self { preloaders: shadow.preloaders, previewers: shadow.previewers }
 	}
 }
 

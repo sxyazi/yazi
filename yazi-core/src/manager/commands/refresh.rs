@@ -24,5 +24,7 @@ impl Manager {
 
 		self.hover(None);
 		self.update_paged((), tasks);
+
+		tasks.preload_sorted(&self.current().files);
 	}
 }

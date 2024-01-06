@@ -94,9 +94,9 @@ impl<'a> Executor<'a> {
 					return self.app.cx.manager.$name(exec, $($args),*);
 				}
 			};
-			(ACTIVE, $name:ident) => {
+			(ACTIVE, $name:ident $(,$args:expr)*) => {
 				if exec.cmd == stringify!($name) {
-					return self.app.cx.manager.active_mut().$name(exec);
+					return self.app.cx.manager.active_mut().$name(exec, $($args),*);
 				}
 			};
 			(TABS, $name:ident) => {
@@ -159,7 +159,7 @@ impl<'a> Executor<'a> {
 		on!(ACTIVE, find_arrow);
 
 		// Sorting
-		on!(ACTIVE, sort);
+		on!(ACTIVE, sort, &self.app.cx.tasks);
 
 		// Tabs
 		on!(TABS, create);

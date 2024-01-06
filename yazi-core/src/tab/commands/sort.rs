@@ -3,10 +3,10 @@ use std::str::FromStr;
 use yazi_config::manager::SortBy;
 use yazi_shared::event::Exec;
 
-use crate::{manager::Manager, tab::Tab};
+use crate::{manager::Manager, tab::Tab, tasks::Tasks};
 
 impl Tab {
-	pub fn sort(&mut self, e: &Exec) {
+	pub fn sort(&mut self, e: &Exec, tasks: &Tasks) {
 		if let Some(by) = e.args.first() {
 			self.conf.sort_by = SortBy::from_str(by).unwrap_or_default();
 		}
@@ -16,5 +16,7 @@ impl Tab {
 
 		self.apply_files_attrs();
 		Manager::_update_paged();
+
+		tasks.preload_sorted(&self.current.files);
 	}
 }
