@@ -29,6 +29,7 @@ enum Emulator {
 	Iterm2,
 	WezTerm,
 	Foot,
+	Ghostty,
 	BlackBox,
 	VSCode,
 	Hyper,
@@ -47,6 +48,7 @@ impl Adaptor {
 			("KONSOLE_VERSION", Emulator::Konsole),
 			("ITERM_SESSION_ID", Emulator::Iterm2),
 			("WEZTERM_EXECUTABLE", Emulator::WezTerm),
+			("GHOSTTY_RESOURCES_DIR", Emulator::Ghostty),
 			("VSCODE_INJECTION", Emulator::VSCode),
 		];
 		match vars.into_iter().find(|v| env_exists(v.0)) {
@@ -58,6 +60,7 @@ impl Adaptor {
 		match program.as_str() {
 			"iTerm.app" => return Emulator::Iterm2,
 			"WezTerm" => return Emulator::WezTerm,
+			"ghostty" => return Emulator::Ghostty,
 			"BlackBox" => return Emulator::BlackBox,
 			"vscode" => return Emulator::VSCode,
 			"Hyper" => return Emulator::Hyper,
@@ -68,6 +71,7 @@ impl Adaptor {
 			"xterm-kitty" => return Emulator::Kitty,
 			"foot" => return Emulator::Foot,
 			"foot-extra" => return Emulator::Foot,
+			"xterm-ghostty" => return Emulator::Ghostty,
 			_ => warn!("[Adaptor] Unknown TERM: {term}"),
 		}
 		Emulator::Unknown
@@ -81,6 +85,7 @@ impl Adaptor {
 			Emulator::Iterm2 => vec![Self::Iterm2, Self::Sixel],
 			Emulator::WezTerm => vec![Self::Iterm2, Self::Sixel],
 			Emulator::Foot => vec![Self::Sixel],
+			Emulator::Ghostty => vec![Self::KittyOld],
 			Emulator::BlackBox => vec![Self::Sixel],
 			Emulator::VSCode => vec![Self::Sixel],
 			Emulator::Hyper => vec![Self::Sixel],
