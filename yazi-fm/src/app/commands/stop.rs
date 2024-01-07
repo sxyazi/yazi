@@ -27,10 +27,10 @@ impl App {
 		} else {
 			self.term = Some(Term::start().unwrap());
 			self.signals.stop_term(false);
-			// FIXME: find a better way to handle this
-			self.render().unwrap();
-			self.cx.manager.hover(None);
-			self.cx.manager.peek(true);
+
+			// While the app resumes, it's possible that the terminal size has changed.
+			// We need to trigger a resize, and render the UI based on the resized area.
+			self.resize().unwrap();
 		}
 		if let Some(tx) = opt.tx {
 			tx.send(()).ok();

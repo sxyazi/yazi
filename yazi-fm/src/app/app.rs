@@ -2,7 +2,6 @@ use std::{mem, sync::atomic::Ordering};
 
 use anyhow::{Ok, Result};
 use crossterm::event::KeyEvent;
-use tracing::debug;
 use yazi_config::keymap::Key;
 use yazi_core::input::InputMode;
 use yazi_shared::{emit, event::{Event, Exec, NEED_RENDER}, term::Term, Layer};
@@ -30,19 +29,17 @@ impl App {
 		let mut render_in_place = false;
 		while app.signals.rx.recv_many(&mut events, 10).await > 0 {
 			for event in events.drain(..) {
-				debug!("event - do: {:?}", event);
 				match event {
 					Event::Call(exec, layer) => app.dispatch_call(exec, layer),
 					Event::Render => render_in_place = true,
 					Event::Key(key) => app.dispatch_key(key),
-					Event::Resize(cols, rows) => app.dispatch_resize(cols, rows)?,
+					Event::Resize => app.resize()?,
 					Event::Paste(str) => app.dispatch_paste(str),
 					Event::Quit(no_cwd_file) => {
 						app.quit(no_cwd_file)?;
 						return Ok(());
 					}
 				}
-				debug!("event - done");
 			}
 
 			if mem::replace(&mut render_in_place, false) {
@@ -66,15 +63,6 @@ impl App {
 				input.type_str(&str);
 			}
 		}
-	}
-
-	fn dispatch_resize(&mut self, _: u16, _: u16) -> Result<()> {
-		self.cx.manager.active_mut().preview.reset();
-		self.render()?;
-
-		self.cx.manager.current_mut().sync_page(true);
-		self.cx.manager.peek(false);
-		Ok(())
 	}
 
 	#[inline]

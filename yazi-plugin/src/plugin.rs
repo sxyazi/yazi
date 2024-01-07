@@ -33,7 +33,7 @@ pub fn init() {
 	fn stage_2(lua: &Lua) {
 		let setup = br#"
 ya.SYNC_ON = true
-package.path = BOOT.plugin_dir .. "/?.yazi/init.lua;" .. BOOT.plugin_dir .. "/?.lua;" .. package.path
+package.path = BOOT.plugin_dir .. "/?.yazi/init.lua;" .. package.path
 "#;
 		lua.load(setup as &[u8]).exec().unwrap();
 

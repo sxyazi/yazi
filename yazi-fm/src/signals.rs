@@ -88,7 +88,7 @@ impl Signals {
 							// otherwise event will be dispatched twice.
 							CrosstermEvent::Key(key @ KeyEvent { kind: KeyEventKind::Press, .. }) => Event::Key(key),
 							CrosstermEvent::Paste(str) => Event::Paste(str),
-							CrosstermEvent::Resize(cols, rows) => Event::Resize(cols, rows),
+							CrosstermEvent::Resize(..) => Event::Resize,
 							_ => continue,
 						};
 						if tx.send(event).is_err() {

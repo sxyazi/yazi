@@ -1,8 +1,7 @@
-use std::{backtrace::Backtrace, sync::atomic::Ordering};
+use std::sync::atomic::Ordering;
 
 use anyhow::Result;
 use ratatui::backend::Backend;
-use tracing::debug;
 
 use crate::{app::App, lives::Lives, root::{Root, COLLISION}};
 
@@ -15,9 +14,7 @@ impl App {
 		let collision = COLLISION.swap(false, Ordering::Relaxed);
 		let frame = term.draw(|f| {
 			Lives::scope(&self.cx, |_| {
-				debug!("rendering: {:?}", Backtrace::force_capture());
 				f.render_widget(Root::new(&self.cx), f.size());
-				debug!("rendered");
 			});
 
 			if let Some((x, y)) = self.cx.cursor() {

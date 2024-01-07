@@ -22,7 +22,8 @@ impl Loader {
 			return Ok(());
 		}
 
-		let b = fs::read(BOOT.plugin_dir.join(name)).await.map(|v| v.into()).or_else(|_| {
+		let path = BOOT.plugin_dir.join(format!("{name}.yazi/init.lua"));
+		let b = fs::read(path).await.map(|v| v.into()).or_else(|_| {
 			Ok(Cow::from(match name {
 				"noop.lua" => include_bytes!("../preset/plugins/noop.lua") as &[u8],
 				"archive.lua" => include_bytes!("../preset/plugins/archive.lua"),

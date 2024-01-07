@@ -11,7 +11,7 @@ pub enum Event {
 	Call(Vec<Exec>, Layer),
 	Render,
 	Key(KeyEvent),
-	Resize(u16, u16),
+	Resize,
 	Paste(String),
 	Quit(bool), // no-cwd-file
 }
