@@ -23,7 +23,7 @@ impl Tab {
 			return;
 		};
 
-		if hovered != &opt.lock.url {
+		if opt.lock.url != *hovered {
 			return;
 		}
 
