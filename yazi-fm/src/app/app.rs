@@ -4,18 +4,13 @@ use anyhow::{Ok, Result};
 use crossterm::event::KeyEvent;
 use yazi_config::keymap::Key;
 use yazi_core::input::InputMode;
-use yazi_shared::{
-	emit,
-	event::{Event, Exec, NEED_RENDER},
-	term::Term,
-	Layer,
-};
+use yazi_shared::{emit, event::{Event, Exec, NEED_RENDER}, term::Term, Layer};
 
 use crate::{lives::Lives, Ctx, Executor, Logs, Panic, Signals};
 
 pub(crate) struct App {
-	pub(crate) cx: Ctx,
-	pub(crate) term: Option<Term>,
+	pub(crate) cx:      Ctx,
+	pub(crate) term:    Option<Term>,
 	pub(crate) signals: Signals,
 }
 
@@ -59,9 +54,7 @@ impl App {
 	}
 
 	#[inline]
-	fn dispatch_key(&mut self, key: KeyEvent) {
-		Executor::new(self).handle(Key::from(key));
-	}
+	fn dispatch_key(&mut self, key: KeyEvent) { Executor::new(self).handle(Key::from(key)); }
 
 	fn dispatch_paste(&mut self, str: String) {
 		if self.cx.input.visible {

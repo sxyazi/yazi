@@ -3,18 +3,12 @@ use std::ffi::OsString;
 use tracing::error;
 use yazi_config::{popup::SelectCfg, ARGS, OPEN};
 use yazi_plugin::isolate;
-use yazi_shared::event::QuitAction;
-use yazi_shared::{
-	emit,
-	event::Exec,
-	fs::{File, Url},
-	Layer, MIME_DIR,
-};
+use yazi_shared::{emit, event::{Exec, QuitAction}, fs::{File, Url}, Layer, MIME_DIR};
 
 use crate::{manager::Manager, select::Select, tasks::Tasks};
 
 pub struct Opt {
-	targets: Option<Vec<(Url, Option<String>)>>,
+	targets:     Option<Vec<(Url, Option<String>)>>,
 	interactive: bool,
 }
 

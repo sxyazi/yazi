@@ -1,21 +1,7 @@
-use std::{
-	io::{stdout, Stdout, Write},
-	mem,
-	ops::{Deref, DerefMut},
-};
+use std::{io::{stdout, Stdout, Write}, mem, ops::{Deref, DerefMut}};
 
 use anyhow::Result;
-use crossterm::{
-	event::{
-		DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange,
-		KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags,
-	},
-	execute, queue,
-	terminal::{
-		disable_raw_mode, enable_raw_mode, supports_keyboard_enhancement, Clear, ClearType,
-		EnterAlternateScreen, LeaveAlternateScreen, WindowSize,
-	},
-};
+use crossterm::{event::{DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, terminal::{disable_raw_mode, enable_raw_mode, supports_keyboard_enhancement, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, WindowSize}};
 use ratatui::{backend::CrosstermBackend, Terminal};
 
 pub struct Term {
@@ -121,21 +107,15 @@ impl Term {
 }
 
 impl Drop for Term {
-	fn drop(&mut self) {
-		self.stop().ok();
-	}
+	fn drop(&mut self) { self.stop().ok(); }
 }
 
 impl Deref for Term {
 	type Target = Terminal<CrosstermBackend<Stdout>>;
 
-	fn deref(&self) -> &Self::Target {
-		&self.inner
-	}
+	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
 impl DerefMut for Term {
-	fn deref_mut(&mut self) -> &mut Self::Target {
-		&mut self.inner
-	}
+	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.inner }
 }

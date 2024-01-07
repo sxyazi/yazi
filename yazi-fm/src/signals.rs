@@ -1,18 +1,11 @@
 use anyhow::Result;
 use crossterm::event::{Event as CrosstermEvent, EventStream, KeyEvent, KeyEventKind};
 use futures::StreamExt;
-use tokio::{
-	select,
-	sync::{
-		mpsc::{self, UnboundedReceiver, UnboundedSender},
-		oneshot,
-	},
-	task::JoinHandle,
-};
+use tokio::{select, sync::{mpsc::{self, UnboundedReceiver, UnboundedSender}, oneshot}, task::JoinHandle};
 use yazi_shared::event::Event;
 
 pub(super) struct Signals {
-	tx: UnboundedSender<Event>,
+	tx:            UnboundedSender<Event>,
 	pub(super) rx: UnboundedReceiver<Event>,
 
 	term_stop_tx: Option<oneshot::Sender<()>>,
@@ -49,9 +42,7 @@ impl Signals {
 	}
 
 	#[cfg(windows)]
-	fn spawn_system_task(&self) -> Result<()> {
-		Ok(())
-	}
+	fn spawn_system_task(&self) -> Result<()> { Ok(()) }
 
 	#[cfg(unix)]
 	fn spawn_system_task(&self) -> Result<JoinHandle<()>> {

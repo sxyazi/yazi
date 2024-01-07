@@ -28,14 +28,10 @@ pub enum QuitAction {
 
 impl Event {
 	#[inline]
-	pub fn init(tx: UnboundedSender<Event>) {
-		TX.init(tx);
-	}
+	pub fn init(tx: UnboundedSender<Event>) { TX.init(tx); }
 
 	#[inline]
-	pub fn emit(self) {
-		TX.send(self).ok();
-	}
+	pub fn emit(self) { TX.send(self).ok(); }
 
 	pub async fn wait<T>(self, rx: oneshot::Receiver<T>) -> T {
 		TX.send(self).ok();

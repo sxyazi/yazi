@@ -1,8 +1,5 @@
 use yazi_config::popup::InputCfg;
-use yazi_shared::{
-	emit,
-	event::{Exec, QuitAction},
-};
+use yazi_shared::{emit, event::{Exec, QuitAction}};
 
 use crate::{input::Input, manager::Manager, tasks::Tasks};
 
@@ -11,14 +8,10 @@ pub struct Opt {
 	no_cwd_file: bool,
 }
 impl From<()> for Opt {
-	fn from(_: ()) -> Self {
-		Self::default()
-	}
+	fn from(_: ()) -> Self { Self::default() }
 }
 impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self {
-		Self { no_cwd_file: e.named.contains_key("no-cwd-file") }
-	}
+	fn from(e: &Exec) -> Self { Self { no_cwd_file: e.named.contains_key("no-cwd-file") } }
 }
 
 impl Manager {
