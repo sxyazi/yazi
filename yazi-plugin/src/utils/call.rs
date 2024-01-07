@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use mlua::{ExternalError, Lua, Table, Value};
-use yazi_shared::{emit, event::Exec, Layer};
+use yazi_shared::{emit, event::Exec, render, Layer};
 
 use super::Utils;
 use crate::ValueSendable;
@@ -29,6 +29,14 @@ impl Utils {
 	}
 
 	pub(super) fn call(lua: &Lua, ya: &Table) -> mlua::Result<()> {
+		ya.set(
+			"render",
+			lua.create_function(|_, ()| {
+				render!();
+				Ok(())
+			})?,
+		)?;
+
 		ya.set(
 			"manager_emit",
 			lua.create_async_function(
