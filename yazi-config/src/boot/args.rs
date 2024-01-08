@@ -15,9 +15,6 @@ pub struct Args {
 	/// Write the selected files on open emitted by the chooser mode
 	#[arg(long)]
 	pub chooser_file:   Option<PathBuf>,
-	/// Write the selected files on open to stdout
-	#[arg(long, action)]
-	pub chooser_stdout: bool,
 
 	/// Clear the cache directory
 	#[arg(long, action)]

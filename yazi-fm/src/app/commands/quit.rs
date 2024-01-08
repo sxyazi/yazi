@@ -9,22 +9,18 @@ use crate::app::App;
 impl App {
 	pub(crate) fn quit(&mut self, quit_actions: Vec<QuitAction>) -> Result<()> {
 		if quit_actions.contains(&QuitAction::None) {
-			Term::goodbye(|| false, None)
+			Term::goodbye(|| false)
 		}
 
-		let mut stdout = None;
 		for quit_action in quit_actions {
 			match quit_action {
 				QuitAction::None => unreachable!(),
 				QuitAction::CwdToFile => self.cwd_to_file(),
 				QuitAction::SelectToFile(selected) => self.select_to_file(selected),
-				QuitAction::SelectToStdout(selected) => {
-					stdout = Some(selected.as_encoded_bytes().to_owned())
-				}
 			}
 		}
 
-		Term::goodbye(|| false, stdout.as_deref());
+		Term::goodbye(|| false);
 	}
 
 	fn cwd_to_file(&self) {

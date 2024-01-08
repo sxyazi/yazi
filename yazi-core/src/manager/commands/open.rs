@@ -107,10 +107,6 @@ impl Manager {
 			quit_actions.push(QuitAction::SelectToFile(paths.clone()));
 		};
 
-		if ARGS.chooser_stdout {
-			quit_actions.push(QuitAction::SelectToStdout(paths.clone()));
-		};
-
 		if quit_actions.len() > 1 {
 			tokio::spawn(async move {
 				emit!(Quit(quit_actions));

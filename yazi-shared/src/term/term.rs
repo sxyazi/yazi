@@ -49,7 +49,7 @@ impl Term {
 		Ok(disable_raw_mode()?)
 	}
 
-	pub fn goodbye(f: impl FnOnce() -> bool, last_words: Option<&[u8]>) -> ! {
+	pub fn goodbye(f: impl FnOnce() -> bool) -> ! {
 		execute!(
 			stdout(),
 			PopKeyboardEnhancementFlags,
@@ -62,10 +62,6 @@ impl Term {
 		.ok();
 
 		disable_raw_mode().ok();
-
-		if let Some(words) = last_words {
-			std::io::stdout().write_all(words).ok();
-		}
 
 		std::process::exit(f() as i32);
 	}

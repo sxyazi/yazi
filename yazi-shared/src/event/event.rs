@@ -23,7 +23,6 @@ pub enum QuitAction {
 	None,
 	CwdToFile,
 	SelectToFile(OsString),
-	SelectToStdout(OsString),
 }
 
 impl Event {
@@ -35,7 +34,7 @@ impl Event {
 
 	pub async fn wait<T>(self, rx: oneshot::Receiver<T>) -> T {
 		TX.send(self).ok();
-		rx.await.unwrap_or_else(|_| Term::goodbye(|| false, None))
+		rx.await.unwrap_or_else(|_| Term::goodbye(|| false))
 	}
 }
 

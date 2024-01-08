@@ -5,6 +5,7 @@ pkgs.mkShell {
     rustToolchain
     rust-analyzer
 
+    nodejs_20
     nodePackages.cspell
 
     file
