@@ -13,14 +13,15 @@ yazi-config = { path = "../yazi-config", version = "0.1.5" }
 yazi-shared = { path = "../yazi-shared", version = "0.1.5" }
 
 # External dependencies
-anyhow      = "^1"
-arc-swap    = "^1"
-base64      = "^0"
-color_quant = "^1"
-image       = "^0"
-imagesize   = "^0"
-ratatui     = "^0"
-tokio       = { version = "^1", features = [ "parking_lot", "io-util", "process" ] }
+anyhow       = "^1"
+arc-swap     = "^1"
+base64       = "^0"
+color_quant  = "^1"
+image        = "^0"
+imagesize    = "^0"
+kamadak-exif = "0"
+ratatui      = "^0"
+tokio        = { version = "^1", features = [ "parking_lot", "io-util", "process" ] }
 
 # Logging
 tracing = { version = "^0", features = [ "max_level_debug", "release_max_level_warn" ] }
