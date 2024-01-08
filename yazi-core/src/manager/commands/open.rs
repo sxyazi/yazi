@@ -1,10 +1,9 @@
 use std::ffi::OsString;
 
-use tokio::fs;
 use tracing::error;
 use yazi_config::{popup::SelectCfg, ARGS, OPEN};
 use yazi_plugin::isolate;
-use yazi_shared::{emit, event::Exec, fs::{File, Url}, Layer, MIME_DIR};
+use yazi_shared::{emit, event::{Exec, QuitAction}, fs::{File, Url}, Layer, MIME_DIR};
 
 use crate::{manager::Manager, select::Select, tasks::Tasks};
 
@@ -24,7 +23,7 @@ impl Manager {
 		let selected = self.selected();
 		if selected.is_empty() {
 			return;
-		} else if Self::quit_with_selected(&selected) {
+		} else if Self::quit_with_chooser(&selected) {
 			return;
 		}
 
@@ -95,10 +94,8 @@ impl Manager {
 		});
 	}
 
-	fn quit_with_selected(selected: &[&File]) -> bool {
-		let Some(p) = ARGS.chooser_file.clone() else {
-			return false;
-		};
+	fn quit_with_chooser(selected: &[&File]) -> bool {
+		let mut quit_actions = vec![QuitAction::CwdToFile];
 
 		let paths = selected.iter().fold(OsString::new(), |mut s, &f| {
 			s.push(f.url.as_os_str());
@@ -106,10 +103,18 @@ impl Manager {
 			s
 		});
 
-		tokio::spawn(async move {
-			fs::write(p, paths.as_encoded_bytes()).await.ok();
-			emit!(Quit(false));
-		});
-		true
+		if ARGS.chooser_file.is_some() {
+			quit_actions.push(QuitAction::SelectToFile(paths.clone()));
+		};
+
+		if quit_actions.len() > 1 {
+			tokio::spawn(async move {
+				emit!(Quit(quit_actions));
+			});
+
+			true
+		} else {
+			false
+		}
 	}
 }
