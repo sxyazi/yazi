@@ -4,13 +4,23 @@ use yazi_shared::{event::Exec, render, CharKind};
 
 use crate::input::Input;
 
+#[derive(Debug, Copy, Clone)]
+enum KillMode {
+	Default,
+	BigWord,
+}
+
 pub struct Opt<'a> {
 	kind: &'a str,
+	mode: KillMode,
 }
 
 impl<'a> From<&'a Exec> for Opt<'a> {
 	fn from(e: &'a Exec) -> Self {
-		Self { kind: e.args.first().map(|s| s.as_str()).unwrap_or_default() }
+		Self {
+			kind: e.args.first().map(|s| s.as_str()).unwrap_or_default(),
+			mode: e.named.get("big-word").map_or(KillMode::Default, |_| KillMode::BigWord),
+		}
 	}
 }
 
@@ -45,7 +55,7 @@ impl Input {
 	///
 	/// Otherwise, returns how many characters to move to reach right *AFTER* the
 	/// word boundary, or the end of the iterator.
-	fn find_word_boundary(input: impl Iterator<Item = char> + Clone) -> usize {
+	fn find_word_boundary(input: impl Iterator<Item = char> + Clone, mode: KillMode) -> usize {
 		fn count_spaces(input: impl Iterator<Item = char>) -> usize {
 			// Move until we don't see any more whitespace.
 			input.take_while(|&c| CharKind::new(c) == CharKind::Space).count()
@@ -62,8 +72,12 @@ impl Input {
 			input.take_while(|&c| CharKind::new(c) == first).count() + 1
 		}
 
-		let spaces = count_spaces(input.clone());
-		spaces + count_characters(input.skip(spaces))
+		let space_or_trailing_slash = match input.clone().next() {
+			Some(std::path::MAIN_SEPARATOR) if matches!(mode, KillMode::BigWord) => 1,
+			Some(c) if CharKind::new(c) == CharKind::Space => count_spaces(input.clone()),
+			_ => 0,
+		};
+		space_or_trailing_slash + count_characters(input.skip(space_or_trailing_slash))
 	}
 
 	pub fn kill<'a>(&mut self, opt: impl Into<Opt<'a>>) {
@@ -81,12 +95,12 @@ impl Input {
 			}
 			b"backward" => {
 				let end = snap.idx(snap.cursor).unwrap_or(snap.len());
-				let start = end - Self::find_word_boundary(snap.value[..end].chars().rev());
+				let start = end - Self::find_word_boundary(snap.value[..end].chars().rev(), opt.mode);
 				self.kill_range(start..end)
 			}
 			b"forward" => {
 				let start = snap.idx(snap.cursor).unwrap_or(snap.len());
-				let end = start + Self::find_word_boundary(snap.value[start..].chars());
+				let end = start + Self::find_word_boundary(snap.value[start..].chars(), opt.mode);
 				self.kill_range(start..end)
 			}
 			_ => {}
