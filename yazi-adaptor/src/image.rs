@@ -1,4 +1,4 @@
-use std::{fs::File, io::BufReader, ops::RangeBounds, path::{Path, PathBuf}};
+use std::{fs::File, io::BufReader, path::{Path, PathBuf}};
 
 use anyhow::Result;
 use exif::{In, Tag};

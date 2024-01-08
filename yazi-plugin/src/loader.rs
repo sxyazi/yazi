@@ -25,15 +25,15 @@ impl Loader {
 		let path = BOOT.plugin_dir.join(format!("{name}.yazi/init.lua"));
 		let b = fs::read(path).await.map(|v| v.into()).or_else(|_| {
 			Ok(Cow::from(match name {
-				"noop.lua" => include_bytes!("../preset/plugins/noop.lua") as &[u8],
-				"archive.lua" => include_bytes!("../preset/plugins/archive.lua"),
-				"code.lua" => include_bytes!("../preset/plugins/code.lua"),
-				"folder.lua" => include_bytes!("../preset/plugins/folder.lua"),
-				"image.lua" => include_bytes!("../preset/plugins/image.lua"),
-				"json.lua" => include_bytes!("../preset/plugins/json.lua"),
-				"mime.lua" => include_bytes!("../preset/plugins/mime.lua"),
-				"pdf.lua" => include_bytes!("../preset/plugins/pdf.lua"),
-				"video.lua" => include_bytes!("../preset/plugins/video.lua"),
+				"noop" => include_bytes!("../preset/plugins/noop.lua") as &[u8],
+				"archive" => include_bytes!("../preset/plugins/archive.lua"),
+				"code" => include_bytes!("../preset/plugins/code.lua"),
+				"folder" => include_bytes!("../preset/plugins/folder.lua"),
+				"image" => include_bytes!("../preset/plugins/image.lua"),
+				"json" => include_bytes!("../preset/plugins/json.lua"),
+				"mime" => include_bytes!("../preset/plugins/mime.lua"),
+				"pdf" => include_bytes!("../preset/plugins/pdf.lua"),
+				"video" => include_bytes!("../preset/plugins/video.lua"),
 				_ => bail!("plugin not found: {name}"),
 			}))
 		})?;
