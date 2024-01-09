@@ -35,8 +35,8 @@ impl App {
 					Event::Key(key) => app.dispatch_key(key),
 					Event::Resize(cols, rows) => app.dispatch_resize(cols, rows)?,
 					Event::Paste(str) => app.dispatch_paste(str),
-					Event::Quit(quit_actions) => {
-						app.quit(quit_actions)?;
+					Event::Quit(opt) => {
+						app.quit(opt)?;
 						return Ok(());
 					}
 				}
