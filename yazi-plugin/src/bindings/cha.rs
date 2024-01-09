@@ -9,12 +9,11 @@ pub struct Cha;
 impl Cha {
 	pub fn register(lua: &Lua) -> mlua::Result<()> {
 		lua.register_userdata_type::<yazi_shared::fs::Cha>(|reg| {
-			reg.add_field_method_get("is_link", |_, me| Ok(me.is_link()));
-			reg.add_field_method_get("is_hidden", |_, me| Ok(me.is_hidden()));
-
-			// Metadata
 			reg.add_field_method_get("is_dir", |_, me| Ok(me.is_dir()));
-			reg.add_field_method_get("is_symlink", |_, me| Ok(me.is_link()));
+			reg.add_field_method_get("is_hidden", |_, me| Ok(me.is_hidden()));
+			reg.add_field_method_get("is_link", |_, me| Ok(me.is_link()));
+			reg.add_field_method_get("is_bad_link", |_, me| Ok(me.is_bad_link()));
+
 			#[cfg(unix)]
 			{
 				reg.add_field_method_get("is_block_device", |_, me| Ok(me.is_block_device()));

@@ -32,7 +32,7 @@ function M:preload()
 
 	local i, j = 1, 0
 	repeat
-		local next, event = child:read_line_with { timeout = 100 }
+		local next, event = child:read_line_with { timeout = 300 }
 		if event == 3 then
 			flush(true)
 			goto continue
