@@ -21,7 +21,7 @@ pub fn peek(exec: &Exec, file: yazi_shared::fs::File, skip: usize) -> Cancellati
 			lua.set_hook(
 				HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
 				move |_, _| {
-					if ct1.is_cancelled() { Err("cancelled".into_lua_err()) } else { Ok(()) }
+					if ct1.is_cancelled() { Err("Peek task cancelled".into_lua_err()) } else { Ok(()) }
 				},
 			);
 
@@ -46,7 +46,9 @@ pub fn peek(exec: &Exec, file: yazi_shared::fs::File, skip: usize) -> Cancellati
 		});
 
 		if let Err(e) = result {
-			error!("{e}");
+			if !e.to_string().contains("Peek task cancelled") {
+				error!("{e}");
+			}
 		}
 	});
 

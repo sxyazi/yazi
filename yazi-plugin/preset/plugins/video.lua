@@ -31,7 +31,7 @@ function M:preload()
 		return 1
 	end
 
-	local child = Command("ffmpegthumbnailer"):args({
+	local child, code = Command("ffmpegthumbnailer"):args({
 		"-q",
 		"6",
 		"-c",
@@ -47,6 +47,7 @@ function M:preload()
 	}):spawn()
 
 	if not child then
+		ya.err("spawn `ffmpegthumbnailer` command returns " .. tostring(code))
 		return 0
 	end
 
