@@ -48,7 +48,6 @@ impl Signals {
 	fn spawn_system_task(&self) -> Result<JoinHandle<()>> {
 		use libc::{SIGCONT, SIGHUP, SIGINT, SIGQUIT, SIGTERM};
 		use yazi_scheduler::Scheduler;
-		use yazi_shared::event::QuitAction;
 
 		let tx = self.tx.clone();
 		let mut signals = signal_hook_tokio::Signals::new([
@@ -62,7 +61,7 @@ impl Signals {
 			while let Some(signal) = signals.next().await {
 				match signal {
 					SIGHUP | SIGTERM | SIGQUIT | SIGINT => {
-						if tx.send(Event::Quit(vec![QuitAction::CwdToFile])).is_err() {
+						if tx.send(Event::Quit(Default::default())).is_err() {
 							break;
 						}
 					}

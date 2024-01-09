@@ -1,5 +1,5 @@
 use yazi_config::popup::InputCfg;
-use yazi_shared::{emit, event::{Exec, QuitAction}};
+use yazi_shared::{emit, event::{EventQuit, Exec}};
 
 use crate::{input::Input, manager::Manager, tasks::Tasks};
 
@@ -16,12 +16,11 @@ impl From<&Exec> for Opt {
 
 impl Manager {
 	pub fn quit(&self, opt: impl Into<Opt>, tasks: &Tasks) {
-		let opt = opt.into() as Opt;
-		let actions = if opt.no_cwd_file { vec![] } else { vec![QuitAction::CwdToFile] };
+		let opt = EventQuit { no_cwd_file: opt.into().no_cwd_file, ..Default::default() };
 
 		let tasks = tasks.len();
 		if tasks == 0 {
-			emit!(Quit(actions));
+			emit!(Quit(opt));
 			return;
 		}
 
@@ -29,7 +28,7 @@ impl Manager {
 			let mut result = Input::_show(InputCfg::quit(tasks));
 			if let Some(Ok(choice)) = result.recv().await {
 				if choice == "y" || choice == "Y" {
-					emit!(Quit(actions));
+					emit!(Quit(opt));
 				}
 			}
 		});

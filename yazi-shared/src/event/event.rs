@@ -15,13 +15,13 @@ pub enum Event {
 	Key(KeyEvent),
 	Resize(u16, u16),
 	Paste(String),
-	Quit(Vec<QuitAction>),
+	Quit(EventQuit),
 }
 
-#[derive(Debug, PartialEq)]
-pub enum QuitAction {
-	CwdToFile,
-	SelectToFile(OsString),
+#[derive(Debug, Default)]
+pub struct EventQuit {
+	pub no_cwd_file: bool,
+	pub selected:    Option<OsString>,
 }
 
 impl Event {
@@ -39,8 +39,8 @@ impl Event {
 
 #[macro_export]
 macro_rules! emit {
-	(Quit($actions:expr)) => {
-		$crate::event::Event::Quit($actions).emit();
+	(Quit($opt:expr)) => {
+		$crate::event::Event::Quit($opt).emit();
 	};
 	(Call($exec:expr, $layer:expr)) => {
 		$crate::event::Event::Call($exec, $layer).emit();

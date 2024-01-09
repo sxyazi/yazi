@@ -2,31 +2,31 @@ use std::ffi::OsString;
 
 use anyhow::Result;
 use yazi_config::ARGS;
-use yazi_shared::{event::QuitAction, term::Term};
+use yazi_shared::{event::EventQuit, term::Term};
 
 use crate::app::App;
 
 impl App {
-	pub(crate) fn quit(&mut self, actions: Vec<QuitAction>) -> Result<()> {
-		for action in actions {
-			match action {
-				QuitAction::CwdToFile => self.cwd_to_file(),
-				QuitAction::SelectToFile(selected) => self.select_to_file(selected),
-			}
+	pub(crate) fn quit(&mut self, opt: EventQuit) -> Result<()> {
+		if !opt.no_cwd_file {
+			self.cwd_to_file();
+		}
+		if let Some(selected) = opt.selected {
+			self.selected_to_file(selected);
 		}
 
 		Term::goodbye(|| false);
 	}
 
 	fn cwd_to_file(&self) {
-		if let Some(p) = ARGS.cwd_file.as_ref() {
+		if let Some(p) = &ARGS.cwd_file {
 			let cwd = self.cx.manager.cwd().as_os_str();
 			std::fs::write(p, cwd.as_encoded_bytes()).ok();
 		}
 	}
 
-	fn select_to_file(&self, selected: OsString) {
-		if let Some(p) = ARGS.chooser_file.clone() {
+	fn selected_to_file(&self, selected: OsString) {
+		if let Some(p) = &ARGS.chooser_file {
 			std::fs::write(p, selected.as_encoded_bytes()).ok();
 		}
 	}
