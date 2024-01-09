@@ -7,14 +7,9 @@ use yazi_shared::{event::QuitAction, term::Term};
 use crate::app::App;
 
 impl App {
-	pub(crate) fn quit(&mut self, quit_actions: Vec<QuitAction>) -> Result<()> {
-		if quit_actions.contains(&QuitAction::None) {
-			Term::goodbye(|| false)
-		}
-
-		for quit_action in quit_actions {
-			match quit_action {
-				QuitAction::None => unreachable!(),
+	pub(crate) fn quit(&mut self, actions: Vec<QuitAction>) -> Result<()> {
+		for action in actions {
+			match action {
 				QuitAction::CwdToFile => self.cwd_to_file(),
 				QuitAction::SelectToFile(selected) => self.select_to_file(selected),
 			}

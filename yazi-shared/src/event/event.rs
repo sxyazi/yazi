@@ -20,7 +20,6 @@ pub enum Event {
 
 #[derive(Debug, PartialEq)]
 pub enum QuitAction {
-	None,
 	CwdToFile,
 	SelectToFile(OsString),
 }
@@ -40,8 +39,8 @@ impl Event {
 
 #[macro_export]
 macro_rules! emit {
-	(Quit($quit_actions:expr)) => {
-		$crate::event::Event::Quit($quit_actions).emit();
+	(Quit($actions:expr)) => {
+		$crate::event::Event::Quit($actions).emit();
 	};
 	(Call($exec:expr, $layer:expr)) => {
 		$crate::event::Event::Call($exec, $layer).emit();

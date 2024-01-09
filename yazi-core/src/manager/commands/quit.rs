@@ -17,13 +17,11 @@ impl From<&Exec> for Opt {
 impl Manager {
 	pub fn quit(&self, opt: impl Into<Opt>, tasks: &Tasks) {
 		let opt = opt.into() as Opt;
-
-		let quit_actions =
-			if opt.no_cwd_file { vec![QuitAction::None] } else { vec![QuitAction::CwdToFile] };
+		let actions = if opt.no_cwd_file { vec![] } else { vec![QuitAction::CwdToFile] };
 
 		let tasks = tasks.len();
 		if tasks == 0 {
-			emit!(Quit(quit_actions));
+			emit!(Quit(actions));
 			return;
 		}
 
@@ -31,7 +29,7 @@ impl Manager {
 			let mut result = Input::_show(InputCfg::quit(tasks));
 			if let Some(Ok(choice)) = result.recv().await {
 				if choice == "y" || choice == "Y" {
-					emit!(Quit(quit_actions));
+					emit!(Quit(actions));
 				}
 			}
 		});
