@@ -11,10 +11,10 @@ pub struct Args {
 
 	/// Write the cwd on exit to this file
 	#[arg(long)]
-	pub cwd_file:       Option<PathBuf>,
+	pub cwd_file:     Option<PathBuf>,
 	/// Write the selected files on open emitted by the chooser mode
 	#[arg(long)]
-	pub chooser_file:   Option<PathBuf>,
+	pub chooser_file: Option<PathBuf>,
 
 	/// Clear the cache directory
 	#[arg(long, action)]
