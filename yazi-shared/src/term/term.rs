@@ -62,6 +62,7 @@ impl Term {
 		.ok();
 
 		disable_raw_mode().ok();
+
 		std::process::exit(f() as i32);
 	}
 

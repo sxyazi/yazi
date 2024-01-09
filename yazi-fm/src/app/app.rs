@@ -35,8 +35,8 @@ impl App {
 					Event::Key(key) => app.dispatch_key(key),
 					Event::Resize => app.resize()?,
 					Event::Paste(str) => app.dispatch_paste(str),
-					Event::Quit(no_cwd_file) => {
-						app.quit(no_cwd_file)?;
+					Event::Quit(opt) => {
+						app.quit(opt)?;
 						return Ok(());
 					}
 				}

@@ -1,3 +1,5 @@
+use std::ffi::OsString;
+
 use crossterm::event::KeyEvent;
 use tokio::sync::{mpsc::UnboundedSender, oneshot};
 
@@ -13,7 +15,13 @@ pub enum Event {
 	Key(KeyEvent),
 	Resize,
 	Paste(String),
-	Quit(bool), // no-cwd-file
+	Quit(EventQuit),
+}
+
+#[derive(Debug, Default)]
+pub struct EventQuit {
+	pub no_cwd_file: bool,
+	pub selected:    Option<OsString>,
 }
 
 impl Event {
@@ -31,13 +39,12 @@ impl Event {
 
 #[macro_export]
 macro_rules! emit {
-	(Quit($no_cwd_file:expr)) => {
-		$crate::event::Event::Quit($no_cwd_file).emit();
+	(Quit($opt:expr)) => {
+		$crate::event::Event::Quit($opt).emit();
 	};
 	(Call($exec:expr, $layer:expr)) => {
 		$crate::event::Event::Call($exec, $layer).emit();
 	};
-
 	($event:ident) => {
 		$crate::event::Event::$event.emit();
 	};

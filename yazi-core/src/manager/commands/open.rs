@@ -1,10 +1,9 @@
 use std::ffi::OsString;
 
-use tokio::fs;
 use tracing::error;
 use yazi_config::{popup::SelectCfg, ARGS, OPEN};
 use yazi_plugin::isolate;
-use yazi_shared::{emit, event::Exec, fs::{File, Url}, Layer, MIME_DIR};
+use yazi_shared::{emit, event::{EventQuit, Exec}, fs::{File, Url}, Layer, MIME_DIR};
 
 use crate::{manager::Manager, select::Select, tasks::Tasks};
 
@@ -96,9 +95,9 @@ impl Manager {
 	}
 
 	fn quit_with_selected(selected: &[&File]) -> bool {
-		let Some(p) = ARGS.chooser_file.clone() else {
+		if ARGS.chooser_file.is_none() {
 			return false;
-		};
+		}
 
 		let paths = selected.iter().fold(OsString::new(), |mut s, &f| {
 			s.push(f.url.as_os_str());
@@ -106,10 +105,7 @@ impl Manager {
 			s
 		});
 
-		tokio::spawn(async move {
-			fs::write(p, paths.as_encoded_bytes()).await.ok();
-			emit!(Quit(false));
-		});
+		emit!(Quit(EventQuit { selected: Some(paths), ..Default::default() }));
 		true
 	}
 }
