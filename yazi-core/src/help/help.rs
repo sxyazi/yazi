@@ -37,10 +37,37 @@ impl Help {
 		render!();
 	}
 
-	pub(super) fn filter_apply(&mut self) -> bool {
+	pub fn type_(&mut self, key: &Key) -> bool {
+		let Some(input) = &mut self.in_filter else {
+			return false;
+		};
+
+		match key {
+			Key { code: KeyCode::Esc, shift: false, ctrl: false, alt: false } => {
+				self.in_filter = None;
+				render!();
+			}
+			Key { code: KeyCode::Enter, shift: false, ctrl: false, alt: false } => {
+				self.in_filter = None;
+				render!();
+				return true; // Don't do the `filter_apply` below, since we already have the filtered results.
+			}
+			Key { code: KeyCode::Backspace, shift: false, ctrl: false, alt: false } => {
+				input.backspace(false);
+			}
+			_ => {
+				input.type_(key);
+			}
+		}
+
+		self.filter_apply();
+		true
+	}
+
+	pub(super) fn filter_apply(&mut self) {
 		let kw = self.in_filter.as_ref().map(|i| i.value()).filter(|v| !v.is_empty());
 		if self.keyword.as_deref() == kw {
-			return false;
+			return;
 		}
 
 		if let Some(kw) = kw {
@@ -51,30 +78,6 @@ impl Help {
 
 		self.keyword = kw.map(|s| s.to_owned());
 		self.arrow(0);
-		true
-	}
-
-	pub fn type_(&mut self, key: &Key) -> bool {
-		let Some(input) = &mut self.in_filter else {
-			return false;
-		};
-
-		if key.is_enter() {
-			self.in_filter = None;
-			render!();
-			return true;
-		}
-
-		match &key {
-			Key { code: KeyCode::Backspace, shift: false, ctrl: false, alt: false } => {
-				input.backspace(false);
-			}
-			_ => {
-				input.type_(key);
-			}
-		}
-		self.filter_apply();
-		true
 	}
 }
 
