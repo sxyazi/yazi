@@ -12,6 +12,7 @@ pub(crate) struct Lives;
 impl Lives {
 	pub(crate) fn register() -> mlua::Result<()> {
 		yazi_plugin::bindings::Cha::register(&LUA)?;
+		yazi_plugin::bindings::Icon::register(&LUA)?;
 		yazi_plugin::bindings::Url::register(&LUA)?;
 
 		super::Active::register(&LUA)?;

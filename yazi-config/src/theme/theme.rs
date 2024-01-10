@@ -130,7 +130,7 @@ pub struct Theme {
 	// File-specific styles
 	#[serde(rename = "filetype", deserialize_with = "Filetype::deserialize", skip_serializing)]
 	pub filetypes: Vec<Filetype>,
-	#[serde(deserialize_with = "Icon::deserialize", skip_serializing)]
+	#[serde(rename = "icon", deserialize_with = "Icon::deserialize", skip_serializing)]
 	pub icons:     Vec<Icon>,
 }
 

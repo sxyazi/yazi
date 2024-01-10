@@ -1,13 +1,12 @@
-use std::fmt;
+use serde::{Deserialize, Deserializer};
 
-use serde::{de::{self, Visitor}, Deserializer};
+use super::Style;
+use crate::{theme::{Color, StyleShadow}, Pattern};
 
-use crate::Pattern;
-
-#[derive(Debug)]
 pub struct Icon {
-	pub name:    Pattern,
-	pub display: String,
+	pub name:  Pattern,
+	pub text:  String,
+	pub style: Style,
 }
 
 impl Icon {
@@ -15,31 +14,28 @@ impl Icon {
 	where
 		D: Deserializer<'de>,
 	{
-		struct IconVisitor;
+		#[derive(Deserialize)]
+		struct IconOuter {
+			rules: Vec<IconRule>,
+		}
+		#[derive(Deserialize)]
+		struct IconRule {
+			name: Pattern,
+			text: String,
 
-		impl<'de> Visitor<'de> for IconVisitor {
-			type Value = Vec<Icon>;
-
-			fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-				formatter.write_str("a icon rule, e.g. \"*.md\"  = \"\"")
-			}
-
-			fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
-			where
-				A: de::MapAccess<'de>,
-			{
-				let mut icons = vec![];
-				while let Some((key, value)) = &map.next_entry::<String, String>()? {
-					icons.push(Icon {
-						name:    Pattern::try_from(key.clone())
-							.map_err(|e| de::Error::custom(e.to_string()))?,
-						display: value.clone(),
-					});
-				}
-				Ok(icons)
-			}
+			fg: Option<Color>,
 		}
 
-		deserializer.deserialize_map(IconVisitor)
+		Ok(
+			IconOuter::deserialize(deserializer)?
+				.rules
+				.into_iter()
+				.map(|r| Icon {
+					name:  r.name,
+					text:  r.text,
+					style: StyleShadow { fg: r.fg, ..Default::default() }.into(),
+				})
+				.collect::<Vec<_>>(),
+		)
 	}
 }
