@@ -1,6 +1,6 @@
 use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, UserDataFields, UserDataMethods, Value};
 use yazi_config::{LAYOUT, THEME};
-use yazi_plugin::{bindings::{Cast, File, Range, Url}, elements::Style};
+use yazi_plugin::{bindings::{Cast, File, Icon, Range, Url}, elements::Style};
 use yazi_shared::MIME_DIR;
 
 use super::{CtxRef, FolderRef};
@@ -69,14 +69,13 @@ impl<'a, 'b> Folder<'a, 'b> {
 				p.next_back();
 				Some(lua.create_string(p.as_path().as_os_str().as_encoded_bytes())).transpose()
 			});
-			reg.add_method("icon", |_, me, ()| {
-				Ok(
-					THEME
-						.icons
-						.iter()
-						.find(|&x| x.name.match_path(&me.url, me.is_dir()))
-						.map(|x| x.display.to_string()),
-				)
+			reg.add_method("icon", |lua, me, ()| {
+				THEME
+					.icons
+					.iter()
+					.find(|&x| x.name.match_path(&me.url, me.is_dir()))
+					.map(|x| Icon::cast(lua, x))
+					.transpose()
 			});
 			reg.add_function("style", |lua, me: AnyUserData| {
 				let cx = lua.named_registry_value::<CtxRef>("cx")?;

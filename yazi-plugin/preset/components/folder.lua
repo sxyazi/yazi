@@ -14,7 +14,10 @@ function Folder:by_kind(kind)
 	end
 end
 
-function Folder:icon(file) return ui.Span(" " .. file:icon() .. " ") end
+function Folder:icon(file)
+	local icon = file:icon()
+	return icon and ui.Span(" " .. icon.text .. " "):style(icon.style) or ui.Span("")
+end
 
 function Folder:highlighted_name(file)
 	-- Complete prefix when searching across directories

@@ -36,7 +36,7 @@ impl From<Style> for ratatui::style::Style {
 	}
 }
 
-#[derive(Deserialize)]
+#[derive(Default, Deserialize)]
 pub(super) struct StyleShadow {
 	#[serde(default)]
 	pub(super) fg:          Option<Color>,
