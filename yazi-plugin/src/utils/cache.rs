@@ -3,17 +3,25 @@ use mlua::{Lua, Table};
 use yazi_config::PREVIEW;
 
 use super::Utils;
-use crate::bindings::{Cast, Url};
+use crate::bindings::{Cast, FileRef, Url};
 
 impl Utils {
 	pub(super) fn cache(lua: &Lua, ya: &Table) -> mlua::Result<()> {
 		ya.set(
-			"cache_file",
-			lua.create_function(|lua, data: mlua::String| {
-				Url::cast(
-					lua,
-					PREVIEW.cache_dir.join(format!("{:x}", Md5::new_with_prefix(data).finalize())),
-				)
+			"file_cache",
+			lua.create_function(|lua, t: Table| {
+				let file: FileRef = t.get("file")?;
+				if file.url.parent() == Some(&PREVIEW.cache_dir) {
+					return Ok(None);
+				}
+
+				let hex = {
+					let mut digest = Md5::new_with_prefix(file.url.as_os_str().as_encoded_bytes());
+					digest.update(&format!("//{:?}//{}", file.cha.modified, t.get("skip").unwrap_or(0)));
+					format!("{:x}", digest.finalize())
+				};
+
+				Some(Url::cast(lua, PREVIEW.cache_dir.join(hex))).transpose()
 			})?,
 		)?;
 
