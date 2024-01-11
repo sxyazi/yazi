@@ -1,8 +1,12 @@
 local M = {}
 
 function M:peek()
-	local cache = ya.file_cache(self)
-	ya.image_show(fs.symlink_metadata(cache) and cache or self.file.url, self.area)
+	local url = ya.file_cache(self)
+	if not url or not fs.symlink_metadata(url) then
+		url = self.file.url
+	end
+
+	ya.image_show(url, self.area)
 	ya.preview_widgets(self, {})
 end
 
@@ -10,7 +14,7 @@ function M:seek() end
 
 function M:preload()
 	local cache = ya.file_cache(self)
-	if fs.symlink_metadata(cache) then
+	if not cache or fs.symlink_metadata(cache) then
 		return 1
 	end
 
