@@ -1,3 +1,5 @@
+# A TOML linter such as https://taplo.tamasfe.dev/ can use this schema to validate your config. 
+# If you encounter any issues, please make an issue at https://github.com/yazi-rs/schemas.
 "$schema" = "https://yazi-rs.github.io/schemas/theme.json"
 
 # vim:fileencoding=utf-8:foldmethod=marker
