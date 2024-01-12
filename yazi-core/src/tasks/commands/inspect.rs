@@ -9,7 +9,7 @@ use crate::tasks::Tasks;
 
 impl Tasks {
 	pub fn inspect(&self, _: &Exec) {
-		let Some(id) = self.scheduler.running.read().get_id(self.cursor) else {
+		let Some(id) = self.scheduler.running.lock().get_id(self.cursor) else {
 			return;
 		};
 
@@ -19,7 +19,7 @@ impl Tasks {
 			let (tx, mut rx) = mpsc::unbounded_channel();
 
 			let buffered = {
-				let mut running = scheduler.running.write();
+				let mut running = scheduler.running.lock();
 				let Some(task) = running.get_mut(id) else { return };
 
 				task.logger = Some(tx);
@@ -45,8 +45,8 @@ impl Tasks {
 						stdout.write_all(line.as_bytes()).ok();
 						stdout.write_all(b"\r\n").ok();
 					}
-					_ = time::sleep(time::Duration::from_millis(100)) => {
-						if scheduler.running.read().get(id).is_none() {
+					_ = time::sleep(time::Duration::from_millis(500)) => {
+						if scheduler.running.lock().get(id).is_none() {
 							stdout().write_all(b"Task finished, press `q` to quit\r\n").ok();
 							break;
 						}
@@ -59,7 +59,7 @@ impl Tasks {
 				}
 			}
 
-			if let Some(task) = scheduler.running.write().get_mut(id) {
+			if let Some(task) = scheduler.running.lock().get_mut(id) {
 				task.logger = None;
 			}
 			while quit[0] != b'q' {

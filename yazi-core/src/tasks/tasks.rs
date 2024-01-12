@@ -32,7 +32,7 @@ impl Tasks {
 			loop {
 				sleep(Duration::from_millis(500)).await;
 
-				let new = TasksProgress::from(&*running.read());
+				let new = TasksProgress::from(&*running.lock());
 				if last != new {
 					last = new;
 					emit!(Call(Exec::call("update_progress", vec![]).with_data(new).vec(), Layer::App));
@@ -49,7 +49,7 @@ impl Tasks {
 	}
 
 	pub fn paginate(&self) -> Vec<TaskSummary> {
-		let running = self.scheduler.running.read();
+		let running = self.scheduler.running.lock();
 		running.values().take(Self::limit()).map(Into::into).collect()
 	}
 
@@ -236,5 +236,5 @@ impl Tasks {
 
 impl Tasks {
 	#[inline]
-	pub fn len(&self) -> usize { self.scheduler.running.read().len() }
+	pub fn len(&self) -> usize { self.scheduler.running.lock().len() }
 }
