@@ -29,6 +29,8 @@ pub fn init(lua: &Lua) -> mlua::Result<()> {
 }
 
 pub trait Renderable {
+	fn area(&self) -> ratatui::layout::Rect;
+
 	fn render(self: Box<Self>, buf: &mut ratatui::buffer::Buffer);
 
 	fn clone_render(&self, buf: &mut ratatui::buffer::Buffer);

@@ -71,6 +71,8 @@ impl UserData for Paragraph {
 }
 
 impl Renderable for Paragraph {
+	fn area(&self) -> ratatui::layout::Rect { self.area }
+
 	fn render(self: Box<Self>, buf: &mut ratatui::buffer::Buffer) {
 		let mut p = ratatui::widgets::Paragraph::new(self.text);
 		if let Some(style) = self.style {

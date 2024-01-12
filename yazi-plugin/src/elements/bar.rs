@@ -62,6 +62,8 @@ impl UserData for Bar {
 }
 
 impl Renderable for Bar {
+	fn area(&self) -> ratatui::layout::Rect { self.area }
+
 	fn render(self: Box<Self>, buf: &mut ratatui::buffer::Buffer) {
 		if self.area.area() == 0 {
 			return;

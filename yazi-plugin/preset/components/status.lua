@@ -108,47 +108,14 @@ function Status:position()
 	}
 end
 
-function Status:progress(area, offset)
-	local progress = cx.tasks.progress
-	local left = progress.total - progress.succ
-	if left == 0 then
-		return {}
-	end
-
-	local gauge = ui.Gauge(ui.Rect {
-		x = math.max(0, area.w - offset - 21),
-		y = area.y,
-		w = math.max(0, math.min(20, area.w - offset - 1)),
-		h = 1,
-	})
-
-	if progress.fail == 0 then
-		gauge = gauge:gauge_style(THEME.status.progress_normal)
-	else
-		gauge = gauge:gauge_style(THEME.status.progress_error)
-	end
-
-	local percent = 99
-	if progress.found ~= 0 then
-		percent = math.min(99, progress.processed * 100 / progress.found)
-	end
-
-	return {
-		gauge
-			:percent(percent)
-			:label(ui.Span(string.format("%3d%%, %d left", percent, left)):style(THEME.status.progress_label)),
-	}
-end
-
 function Status:render(area)
 	self.area = area
 
 	local left = ui.Line { self:mode(), self:size(), self:name() }
 	local right = ui.Line { self:permissions(), self:percentage(), self:position() }
-	local progress = self:progress(area, right:width())
 	return {
 		ui.Paragraph(area, { left }),
 		ui.Paragraph(area, { right }):align(ui.Paragraph.RIGHT),
-		table.unpack(progress),
+		table.unpack(Progress:render(area, right:width())),
 	}
 end

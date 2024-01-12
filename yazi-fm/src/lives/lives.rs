@@ -54,4 +54,20 @@ impl Lives {
 			error!("{e}");
 		}
 	}
+
+	pub(crate) fn partial_scope<'a>(cx: &'a Ctx, f: impl FnOnce(&Scope<'a, 'a>)) {
+		let result = LUA.scope(|scope| {
+			LUA.globals().set(
+				"cx",
+				LUA.create_table_from([("tasks", super::Tasks::new(scope, &cx.tasks).make()?)])?,
+			)?;
+
+			f(scope);
+			Ok(())
+		});
+
+		if let Err(e) = result {
+			error!("{e}");
+		}
+	}
 }

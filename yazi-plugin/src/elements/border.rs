@@ -82,6 +82,8 @@ impl UserData for Border {
 }
 
 impl Renderable for Border {
+	fn area(&self) -> ratatui::layout::Rect { self.area }
+
 	fn render(self: Box<Self>, buf: &mut ratatui::buffer::Buffer) {
 		let mut block =
 			ratatui::widgets::Block::default().borders(self.position).border_type(self.type_);

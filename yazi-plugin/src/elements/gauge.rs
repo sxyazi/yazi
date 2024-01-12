@@ -70,6 +70,8 @@ impl UserData for Gauge {
 }
 
 impl Renderable for Gauge {
+	fn area(&self) -> ratatui::layout::Rect { self.area }
+
 	fn render(self: Box<Self>, buf: &mut ratatui::buffer::Buffer) {
 		let mut gauge = ratatui::widgets::Gauge::default();
 

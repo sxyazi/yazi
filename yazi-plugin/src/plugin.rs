@@ -25,6 +25,7 @@ pub fn init() {
 		lua.load(include_str!("../preset/components/manager.lua")).exec()?;
 		lua.load(include_str!("../preset/components/parent.lua")).exec()?;
 		lua.load(include_str!("../preset/components/preview.lua")).exec()?;
+		lua.load(include_str!("../preset/components/progress.lua")).exec()?;
 		lua.load(include_str!("../preset/components/status.lua")).exec()?;
 
 		Ok(())
