@@ -9,13 +9,33 @@ use crate::Pattern;
 pub struct Filetype {
 	pub name:  Option<Pattern>,
 	pub mime:  Option<Pattern>,
+	pub typ:   Option<String>,
 	pub style: Style,
 }
 
 impl Filetype {
 	pub fn matches(&self, path: &Path, mime: Option<&str>) -> bool {
 		let is_dir = mime == Some(MIME_DIR);
-		self.name.as_ref().is_some_and(|n| n.match_path(path, is_dir))
+		let special_types = self.typ.as_ref().is_some_and(|t| match t.as_str() {
+			"symlink" => path.is_symlink(),
+			#[cfg(unix)]
+			"executable" => {
+				use std::os::unix::fs::PermissionsExt;
+				let Ok(metadata) = path.metadata() else {
+					return false;
+				};
+
+				let mode_bin = format!("{:b}", metadata.permissions().mode());
+				return mode_bin.len() == 16 && match *mode_bin.as_bytes() {
+					[.., _, _, a, _, _, b, _, _, c] => a == b'1' || b == b'1' || c == b'1',
+					_ => false,
+				}
+			},
+			_ => false
+		});
+
+		special_types
+			|| self.name.as_ref().is_some_and(|n| n.match_path(path, is_dir))
 			|| self.mime.as_ref().zip(mime).map_or(false, |(m, s)| m.matches(s))
 	}
 }
@@ -33,6 +53,8 @@ impl Filetype {
 		struct FiletypeRule {
 			name: Option<Pattern>,
 			mime: Option<Pattern>,
+			#[serde(rename = "type")]
+			typ:  Option<String>,
 
 			fg:          Option<Color>,
 			bg:          Option<Color>,
@@ -63,6 +85,7 @@ impl Filetype {
 				.map(|r| Filetype {
 					name:  r.name,
 					mime:  r.mime,
+					typ:   r.typ,
 					style: StyleShadow {
 						fg:          r.fg,
 						bg:          r.bg,
