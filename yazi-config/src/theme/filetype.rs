@@ -50,11 +50,7 @@ impl Filetype {
 					return false;
 				};
 
-				let mode_bin = format!("{:b}", metadata.permissions().mode());
-				return mode_bin.len() == 16 && match *mode_bin.as_bytes() {
-					[.., _, _, a, _, _, b, _, _, c] => a == b'1' || b == b'1' || c == b'1',
-					_ => false,
-				}
+				metadata.permissions().mode() & 0o100111 > 0o100000
 			},
 		});
 
