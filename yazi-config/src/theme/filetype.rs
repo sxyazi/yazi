@@ -1,7 +1,7 @@
 use std::{path::Path, str::FromStr};
 
 use serde::{Deserialize, Deserializer};
-use yazi_shared::{MIME_DIR, fs::File};
+use yazi_shared::{fs::File, MIME_DIR};
 
 use super::{Color, Style, StyleShadow};
 use crate::Pattern;
@@ -20,7 +20,7 @@ impl FromStr for FileKind {
 		match s {
 			"executable" => Ok(Self::Executable),
 			"symlink" => Ok(Self::Symlink),
-			_ => Err(anyhow::anyhow!("invalid file kind"))
+			_ => Err(anyhow::anyhow!("invalid file kind")),
 		}
 	}
 }

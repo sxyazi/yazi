@@ -87,13 +87,7 @@ impl<'a, 'b> Folder<'a, 'b> {
 					cx.manager.mimetype.get(&file.url).map(|x| &**x)
 				};
 
-				Ok(
-					THEME
-						.filetypes
-						.iter()
-						.find(|&x| x.matches(&file, mime))
-						.map(|x| Style::from(x.style)),
-				)
+				Ok(THEME.filetypes.iter().find(|&x| x.matches(&file, mime)).map(|x| Style::from(x.style)))
 			});
 			reg.add_function("is_hovered", |_, me: AnyUserData| {
 				let folder = me.named_user_value::<FolderRef>("folder")?;
