@@ -5,16 +5,16 @@ use bitflags::bitflags;
 bitflags! {
 	#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 	pub struct ChaKind: u8 {
-		const DIR           = 0b00000001;
+		const DIR          = 0b00000001;
 
-		const HIDDEN        = 0b00000010;
-		const LINK          = 0b00000100;
-		const BAD_LINK      = 0b00001000;
+		const HIDDEN       = 0b00000010;
+		const LINK         = 0b00000100;
+		const ORPHAN       = 0b00001000;
 
-		const BLOCK_DEVICE  = 0b00010000;
-		const CHAR_DEVICE   = 0b00100000;
-		const FIFO          = 0b01000000;
-		const SOCKET        = 0b10000000;
+		const BLOCK_DEVICE = 0b00010000;
+		const CHAR_DEVICE  = 0b00100000;
+		const FIFO         = 0b01000000;
+		const SOCKET       = 0b10000000;
 	}
 }
 
@@ -26,7 +26,7 @@ pub struct Cha {
 	pub created:     Option<SystemTime>,
 	pub modified:    Option<SystemTime>,
 	#[cfg(unix)]
-	pub permissions: u32,
+	pub permissions: libc::mode_t,
 	#[cfg(unix)]
 	pub uid:         u32,
 	#[cfg(unix)]
@@ -70,7 +70,7 @@ impl From<Metadata> for Cha {
 			#[cfg(unix)]
 			permissions:              {
 				use std::os::unix::prelude::PermissionsExt;
-				m.permissions().mode()
+				m.permissions().mode() as libc::mode_t
 			},
 			#[cfg(unix)]
 			uid:                      {
@@ -96,30 +96,50 @@ impl Cha {
 
 impl Cha {
 	#[inline]
-	pub fn is_dir(self) -> bool { self.kind.contains(ChaKind::DIR) }
+	pub fn is_dir(&self) -> bool { self.kind.contains(ChaKind::DIR) }
 
 	#[inline]
-	pub fn is_hidden(self) -> bool { self.kind.contains(ChaKind::HIDDEN) }
+	pub fn is_hidden(&self) -> bool { self.kind.contains(ChaKind::HIDDEN) }
 
 	#[inline]
-	pub fn is_link(self) -> bool { self.kind.contains(ChaKind::LINK) }
+	pub fn is_link(&self) -> bool { self.kind.contains(ChaKind::LINK) }
 
 	#[inline]
-	pub fn is_bad_link(self) -> bool { self.kind.contains(ChaKind::BAD_LINK) }
+	pub fn is_orphan(&self) -> bool { self.kind.contains(ChaKind::ORPHAN) }
 
-	#[cfg(unix)]
 	#[inline]
-	pub fn is_block_device(self) -> bool { self.kind.contains(ChaKind::BLOCK_DEVICE) }
+	pub fn is_block_device(&self) -> bool { self.kind.contains(ChaKind::BLOCK_DEVICE) }
 
-	#[cfg(unix)]
 	#[inline]
-	pub fn is_char_device(self) -> bool { self.kind.contains(ChaKind::CHAR_DEVICE) }
+	pub fn is_char_device(&self) -> bool { self.kind.contains(ChaKind::CHAR_DEVICE) }
 
-	#[cfg(unix)]
 	#[inline]
-	pub fn is_fifo(self) -> bool { self.kind.contains(ChaKind::FIFO) }
+	pub fn is_fifo(&self) -> bool { self.kind.contains(ChaKind::FIFO) }
 
-	#[cfg(unix)]
 	#[inline]
-	pub fn is_socket(self) -> bool { self.kind.contains(ChaKind::SOCKET) }
+	pub fn is_socket(&self) -> bool { self.kind.contains(ChaKind::SOCKET) }
+
+	#[inline]
+	pub fn is_exec(&self) -> bool {
+		#[cfg(unix)]
+		{
+			self.permissions & libc::S_IXUSR != 0
+		}
+		#[cfg(windows)]
+		{
+			false
+		}
+	}
+
+	#[inline]
+	pub fn is_sticky(&self) -> bool {
+		#[cfg(unix)]
+		{
+			self.permissions & libc::S_ISVTX != 0
+		}
+		#[cfg(windows)]
+		{
+			false
+		}
+	}
 }
