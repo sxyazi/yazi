@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{path::Path, str::FromStr};
 
 use serde::{Deserialize, Deserializer};
 use yazi_shared::MIME_DIR;
@@ -6,20 +6,45 @@ use yazi_shared::MIME_DIR;
 use super::{Color, Style, StyleShadow};
 use crate::Pattern;
 
+#[derive(Deserialize)]
+#[serde(try_from = "String")]
+pub enum FileKind {
+	Executable,
+	Symlink,
+}
+
+impl FromStr for FileKind {
+	type Err = anyhow::Error;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		match s {
+			"executable" => Ok(Self::Executable),
+			"symlink" => Ok(Self::Symlink),
+			_ => Err(anyhow::anyhow!("invalid file kind"))
+		}
+	}
+}
+
+impl TryFrom<String> for FileKind {
+	type Error = anyhow::Error;
+
+	fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
+}
+
 pub struct Filetype {
 	pub name:  Option<Pattern>,
 	pub mime:  Option<Pattern>,
-	pub typ:   Option<String>,
+	pub kind:  Option<FileKind>,
 	pub style: Style,
 }
 
 impl Filetype {
 	pub fn matches(&self, path: &Path, mime: Option<&str>) -> bool {
 		let is_dir = mime == Some(MIME_DIR);
-		let special_types = self.typ.as_ref().is_some_and(|t| match t.as_str() {
-			"symlink" => path.is_symlink(),
+		let kind_check = self.kind.as_ref().is_some_and(|t| match t {
+			FileKind::Symlink => path.is_symlink(),
 			#[cfg(unix)]
-			"executable" => {
+			FileKind::Executable => {
 				use std::os::unix::fs::PermissionsExt;
 				let Ok(metadata) = path.metadata() else {
 					return false;
@@ -31,10 +56,9 @@ impl Filetype {
 					_ => false,
 				}
 			},
-			_ => false
 		});
 
-		special_types
+		kind_check
 			|| self.name.as_ref().is_some_and(|n| n.match_path(path, is_dir))
 			|| self.mime.as_ref().zip(mime).map_or(false, |(m, s)| m.matches(s))
 	}
@@ -53,8 +77,7 @@ impl Filetype {
 		struct FiletypeRule {
 			name: Option<Pattern>,
 			mime: Option<Pattern>,
-			#[serde(rename = "type")]
-			typ:  Option<String>,
+			kind: Option<FileKind>,
 
 			fg:          Option<Color>,
 			bg:          Option<Color>,
@@ -85,7 +108,7 @@ impl Filetype {
 				.map(|r| Filetype {
 					name:  r.name,
 					mime:  r.mime,
-					typ:   r.typ,
+					kind:  r.kind,
 					style: StyleShadow {
 						fg:          r.fg,
 						bg:          r.bg,
