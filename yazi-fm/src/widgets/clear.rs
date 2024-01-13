@@ -2,7 +2,6 @@ use std::sync::atomic::Ordering;
 
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 use yazi_adaptor::ADAPTOR;
-use yazi_config::LAYOUT;
 
 use crate::root::COLLISION;
 
@@ -29,7 +28,7 @@ impl Widget for Clear {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		ratatui::widgets::Clear.render(area, buf);
 
-		let Some(r) = overlap(&area, &LAYOUT.load().preview) else {
+		let Some(r) = ADAPTOR.shown_load().and_then(|r| overlap(&area, &r)) else {
 			return;
 		};
 

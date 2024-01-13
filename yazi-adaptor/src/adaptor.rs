@@ -189,6 +189,9 @@ impl Adaptor {
 	}
 
 	#[inline]
+	pub fn shown_load(self) -> Option<Rect> { SHOWN.load_full().map(|r| *r) }
+
+	#[inline]
 	pub(super) fn shown_store(rect: Rect, size: (u32, u32)) {
 		SHOWN.store(Some(Arc::new(
 			Term::ratio()

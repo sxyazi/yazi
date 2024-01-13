@@ -85,7 +85,7 @@ function Folder:markers(area, markers)
 				x = math.max(0, area.x - 1),
 				y = y,
 				w = 1,
-				h = 1 + math.min(last[2] - last[1], area.h - y),
+				h = math.min(1 + last[2] - last[1], area.y + area.h - y),
 			},
 			ui.Bar.LEFT
 		)
