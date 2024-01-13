@@ -37,7 +37,7 @@ impl File {
 		}
 
 		if is_link && meta.is_symlink() {
-			ck |= ChaKind::BAD_LINK;
+			ck |= ChaKind::ORPHAN;
 		}
 
 		if url.is_hidden() {
