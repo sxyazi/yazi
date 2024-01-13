@@ -91,7 +91,7 @@ impl<'a, 'b> Folder<'a, 'b> {
 					THEME
 						.filetypes
 						.iter()
-						.find(|&x| x.matches(&file.url, mime))
+						.find(|&x| x.matches(&file, mime))
 						.map(|x| Style::from(x.style)),
 				)
 			});

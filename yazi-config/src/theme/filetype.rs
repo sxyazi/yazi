@@ -1,7 +1,7 @@
 use std::{path::Path, str::FromStr};
 
 use serde::{Deserialize, Deserializer};
-use yazi_shared::MIME_DIR;
+use yazi_shared::{MIME_DIR, fs::File};
 
 use super::{Color, Style, StyleShadow};
 use crate::Pattern;
@@ -39,23 +39,16 @@ pub struct Filetype {
 }
 
 impl Filetype {
-	pub fn matches(&self, path: &Path, mime: Option<&str>) -> bool {
+	pub fn matches(&self, file: &File, mime: Option<&str>) -> bool {
 		let is_dir = mime == Some(MIME_DIR);
 		let kind_check = self.kind.as_ref().is_some_and(|t| match t {
-			FileKind::Symlink => path.is_symlink(),
 			#[cfg(unix)]
-			FileKind::Executable => {
-				use std::os::unix::fs::PermissionsExt;
-				let Ok(metadata) = path.metadata() else {
-					return false;
-				};
-
-				metadata.permissions().mode() & 0o100111 > 0o100000
-			},
+			FileKind::Executable => !file.cha.is_dir() && file.cha.permissions & 0o111 != 0,
+			FileKind::Symlink => file.cha.is_link(),
 		});
 
 		kind_check
-			|| self.name.as_ref().is_some_and(|n| n.match_path(path, is_dir))
+			|| self.name.as_ref().is_some_and(|n| n.match_path(&file.url, is_dir))
 			|| self.mime.as_ref().zip(mime).map_or(false, |(m, s)| m.matches(s))
 	}
 }
