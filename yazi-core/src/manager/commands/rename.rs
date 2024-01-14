@@ -11,10 +11,18 @@ use crate::{input::Input, manager::Manager};
 
 pub struct Opt {
 	force: bool,
+	replace: bool,
+	keep_ext: bool,
 }
 
 impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self { Self { force: e.named.contains_key("force") } }
+	fn from(e: &Exec) -> Self {
+		Self {
+			force: e.named.contains_key("force"),
+			replace: e.named.contains_key("replace"),
+			keep_ext: e.named.contains_key("keep-ext"),
+		}
+	}
 }
 
 impl Manager {
@@ -40,8 +48,20 @@ impl Manager {
 
 		let opt = opt.into() as Opt;
 		tokio::spawn(async move {
+			let full_name = hovered.file_name().unwrap().to_string_lossy();
+			let (initial_value, cursor_start) = if opt.keep_ext {
+				let last = full_name.split('.').last();
+				if last == Some(&full_name) {
+					("".into(), None)
+				} else {
+					(format!(".{}", last.unwrap()), Some(0))
+				}
+			} else {
+				(opt.replace.then(|| "").unwrap_or(&full_name).into(), None)
+			};
+
 			let mut result =
-				Input::_show(InputCfg::rename().with_value(hovered.file_name().unwrap().to_string_lossy()));
+				Input::_show(InputCfg::rename().with_value(initial_value).with_cursor_at(cursor_start));
 
 			let Some(Ok(name)) = result.recv().await else {
 				return;

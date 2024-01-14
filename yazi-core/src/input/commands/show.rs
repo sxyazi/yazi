@@ -41,7 +41,7 @@ impl Input {
 		self.highlight = opt.cfg.highlight;
 
 		// Reset snaps
-		self.snaps.reset(opt.cfg.value, self.limit());
+		self.snaps.reset(opt.cfg.value, self.limit(), opt.cfg.cursor_at);
 		render!();
 	}
 }

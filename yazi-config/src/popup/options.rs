@@ -9,6 +9,7 @@ pub struct InputCfg {
 	pub realtime:   bool,
 	pub completion: bool,
 	pub highlight:  bool,
+	pub cursor_at:  Option<usize>,
 }
 
 #[derive(Default)]
@@ -128,6 +129,12 @@ impl InputCfg {
 	#[inline]
 	pub fn with_value(mut self, value: impl Into<String>) -> Self {
 		self.value = value.into();
+		self
+	}
+
+	#[inline]
+	pub fn with_cursor_at(mut self, cursor_at: Option<usize>) -> Self {
+		self.cursor_at = cursor_at;
 		self
 	}
 }
