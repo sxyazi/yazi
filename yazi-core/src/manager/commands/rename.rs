@@ -33,18 +33,11 @@ impl Manager {
 
 		let ext = url.extension();
 		match by {
-			"name" => {
-				return ext.map_or_else(String::new, |s| s.to_string_lossy().to_string());
-			}
-			"ext" if ext.is_some() => {
-				return format!("{}.", url.file_stem().unwrap().to_string_lossy());
-			}
-			"dot_ext" if ext.is_some() => {
-				return url.file_stem().unwrap().to_string_lossy().to_string();
-			}
-			_ => {}
+			"name" => ext.map_or_else(String::new, |s| s.to_string_lossy().to_string()),
+			"ext" if ext.is_some() => format!("{}.", url.file_stem().unwrap().to_string_lossy()),
+			"dot_ext" if ext.is_some() => url.file_stem().unwrap().to_string_lossy().to_string(),
+			_ => url.file_name().map_or_else(String::new, |s| s.to_string_lossy().to_string()),
 		}
-		url.file_name().map_or_else(String::new, |s| s.to_string_lossy().to_string())
 	}
 
 	async fn rename_and_hover(old: Url, new: Url) -> Result<()> {
