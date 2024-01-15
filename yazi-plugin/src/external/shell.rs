@@ -1,4 +1,4 @@
-use std::{ffi::OsString, process::Stdio};
+use std::{env, ffi::OsString, process::Stdio};
 
 use anyhow::Result;
 use tokio::process::{Child, Command};
@@ -29,9 +29,12 @@ impl ShellOpt {
 }
 
 pub fn shell(opt: ShellOpt) -> Result<Child> {
+	let level = env::var("YAZI_LEVEL").ok().and_then(|s| s.parse::<u32>().ok()).unwrap_or(0);
+
 	#[cfg(unix)]
 	return Ok(unsafe {
 		Command::new("sh")
+			.env("YAZI_LEVEL", (level + 1).to_string())
 			.arg("-c")
 			.stdin(opt.stdio())
 			.stdout(opt.stdio())
@@ -56,6 +59,7 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 		let expanded = parser::parse(opt.cmd.to_string_lossy().as_ref(), &args_);
 		Ok(
 			Command::new("cmd")
+				.env("YAZI_LEVEL", (level + 1).to_string())
 				.arg("/C")
 				.args(&expanded)
 				.stdin(opt.stdio())
