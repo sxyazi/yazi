@@ -9,15 +9,37 @@ use yazi_shared::{event::Exec, fs::{max_common_root, File, FilesOp, Url}, term::
 
 use crate::{input::Input, manager::Manager};
 
-pub struct Opt {
-	force: bool,
+pub struct Opt<'a> {
+	force:  bool,
+	empty:  &'a str,
+	cursor: &'a str,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self { Self { force: e.named.contains_key("force") } }
+impl<'a> From<&'a Exec> for Opt<'a> {
+	fn from(e: &'a Exec) -> Self {
+		Self {
+			force:  e.named.contains_key("force"),
+			empty:  e.named.get("empty").map(|s| s.as_str()).unwrap_or_default(),
+			cursor: e.named.get("cursor").map(|s| s.as_str()).unwrap_or_default(),
+		}
+	}
 }
 
 impl Manager {
+	fn empty_url_part(url: &Url, by: &str) -> String {
+		if by == "all" {
+			return String::new();
+		}
+
+		let ext = url.extension();
+		match by {
+			"name" => ext.map_or_else(String::new, |s| format!(".{}", s.to_string_lossy().to_string())),
+			"ext" if ext.is_some() => format!("{}.", url.file_stem().unwrap().to_string_lossy()),
+			"dot_ext" if ext.is_some() => url.file_stem().unwrap().to_string_lossy().to_string(),
+			_ => url.file_name().map_or_else(String::new, |s| s.to_string_lossy().to_string()),
+		}
+	}
+
 	async fn rename_and_hover(old: Url, new: Url) -> Result<()> {
 		fs::rename(&old, &new).await?;
 		if old.parent() != new.parent() {
@@ -29,7 +51,7 @@ impl Manager {
 		Ok(Self::_hover(Some(new)))
 	}
 
-	pub fn rename(&self, opt: impl Into<Opt>) {
+	pub fn rename<'a>(&self, opt: impl Into<Opt<'a>>) {
 		if self.active().in_selecting() {
 			return self.bulk_rename();
 		}
@@ -39,10 +61,15 @@ impl Manager {
 		};
 
 		let opt = opt.into() as Opt;
-		tokio::spawn(async move {
-			let mut result =
-				Input::_show(InputCfg::rename().with_value(hovered.file_name().unwrap().to_string_lossy()));
+		let name = Self::empty_url_part(&hovered, opt.empty);
+		let cursor = match opt.cursor {
+			"start" => Some(0),
+			"before_ext" => name.rfind('.').filter(|&n| n != 0),
+			_ => None,
+		};
 
+		tokio::spawn(async move {
+			let mut result = Input::_show(InputCfg::rename().with_value(name).with_cursor(cursor));
 			let Some(Ok(name)) = result.recv().await else {
 				return;
 			};

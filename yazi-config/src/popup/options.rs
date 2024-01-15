@@ -5,6 +5,7 @@ use crate::{INPUT, SELECT};
 pub struct InputCfg {
 	pub title:      String,
 	pub value:      String,
+	pub cursor:     Option<usize>,
 	pub position:   Position,
 	pub realtime:   bool,
 	pub completion: bool,
@@ -128,6 +129,12 @@ impl InputCfg {
 	#[inline]
 	pub fn with_value(mut self, value: impl Into<String>) -> Self {
 		self.value = value.into();
+		self
+	}
+
+	#[inline]
+	pub fn with_cursor(mut self, cursor: Option<usize>) -> Self {
+		self.cursor = cursor;
 		self
 	}
 }
