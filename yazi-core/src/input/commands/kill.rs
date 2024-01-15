@@ -62,8 +62,9 @@ impl Input {
 			input.take_while(|&c| CharKind::new(c) == first).count() + 1
 		}
 
-		let spaces = count_spaces(input.clone());
-		spaces + count_characters(input.skip(spaces))
+		let n = count_spaces(input.clone());
+		let n = n + count_characters(input.clone().skip(n));
+		input.take(n).fold(0, |acc, c| acc + c.len_utf8())
 	}
 
 	pub fn kill<'a>(&mut self, opt: impl Into<Opt<'a>>) {
