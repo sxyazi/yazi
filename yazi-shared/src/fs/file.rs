@@ -31,13 +31,14 @@ impl File {
 		let (is_link, mut link_to) = (meta.is_symlink(), None);
 
 		if is_link {
-			ck |= ChaKind::LINK;
 			meta = fs::metadata(&url).await.unwrap_or(meta);
 			link_to = fs::read_link(&url).await.map(Url::from).ok();
 		}
 
 		if is_link && meta.is_symlink() {
 			ck |= ChaKind::ORPHAN;
+		} else if is_link {
+			ck |= ChaKind::LINK;
 		}
 
 		if url.is_hidden() {
