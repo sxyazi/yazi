@@ -9,53 +9,44 @@ use yazi_shared::{event::Exec, fs::{max_common_root, File, FilesOp, Url}, term::
 
 use crate::{input::Input, manager::Manager};
 
-enum EmptyOpt {
-	None,
-	All,
-	Name,
-	Ext,
-	DotExt,
-}
-
-enum CursorOpt {
-	None,
-	Append,
-	Prepend,
-}
-
-pub struct Opt {
+pub struct Opt<'a> {
 	force:  bool,
-	empty:  EmptyOpt,
-	cursor: CursorOpt,
+	empty:  &'a str,
+	cursor: &'a str,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self {
+impl<'a> From<&'a Exec> for Opt<'a> {
+	fn from(e: &'a Exec) -> Self {
 		Self {
 			force:  e.named.contains_key("force"),
-			empty:  match e.named.get("empty").map(|s| s.as_str()).unwrap_or_default() {
-				"all" => EmptyOpt::All,
-				"name" => EmptyOpt::Name,
-				"ext" => EmptyOpt::Ext,
-				"dot-ext" => EmptyOpt::DotExt,
-				_ => EmptyOpt::None,
-			},
-			cursor: match e.named.get("cursor").map(|s| s.as_str()).unwrap_or_default() {
-				"append" => CursorOpt::Append,
-				"prepend" => CursorOpt::Prepend,
-				_ => CursorOpt::None,
-			},
+			empty:  e.named.get("empty").map(|s| s.as_str()).unwrap_or_default(),
+			cursor: e.named.get("cursor").map(|s| s.as_str()).unwrap_or_default(),
 		}
 	}
 }
 
-fn get_parts_and_len(s: &str) -> (Vec<&str>, usize) {
-	let parts: Vec<_> = s.split('.').collect();
-	let len = parts.len();
-	(parts, len)
-}
-
 impl Manager {
+	fn empty_url_part(url: &Url, by: &str) -> String {
+		if by == "all" {
+			return String::new();
+		}
+
+		let ext = url.extension();
+		match by {
+			"name" => {
+				return ext.map_or_else(String::new, |s| s.to_string_lossy().to_string());
+			}
+			"ext" if ext.is_some() => {
+				return format!("{}.", url.file_stem().unwrap().to_string_lossy());
+			}
+			"dot_ext" if ext.is_some() => {
+				return url.file_stem().unwrap().to_string_lossy().to_string();
+			}
+			_ => {}
+		}
+		url.file_name().map_or_else(String::new, |s| s.to_string_lossy().to_string())
+	}
+
 	async fn rename_and_hover(old: Url, new: Url) -> Result<()> {
 		fs::rename(&old, &new).await?;
 		if old.parent() != new.parent() {
@@ -67,7 +58,7 @@ impl Manager {
 		Ok(Self::_hover(Some(new)))
 	}
 
-	pub fn rename(&self, opt: impl Into<Opt>) {
+	pub fn rename<'a>(&self, opt: impl Into<Opt<'a>>) {
 		if self.active().in_selecting() {
 			return self.bulk_rename();
 		}
@@ -77,48 +68,15 @@ impl Manager {
 		};
 
 		let opt = opt.into() as Opt;
+		let name = Self::empty_url_part(&hovered, opt.empty);
+		let cursor = match opt.cursor {
+			"start" => Some(0),
+			"before_ext" => name.rfind('.').filter(|&n| n != 0),
+			_ => None,
+		};
+
 		tokio::spawn(async move {
-			let full_name = hovered.file_name().unwrap().to_string_lossy();
-
-			let initial_name = match &opt.empty {
-				EmptyOpt::None => full_name.into(),
-				EmptyOpt::All => "".into(),
-				EmptyOpt::Name => {
-					let ext = full_name.split('.').last().unwrap_or_default();
-					if ext == &full_name {
-						"".into()
-					} else {
-						format!(".{ext}")
-					}
-				}
-				x => {
-					let (name_parts, len) = get_parts_and_len(&full_name);
-					if len > 1 {
-						let partial_name = name_parts[..len - 1].join(".");
-						match x {
-							EmptyOpt::Ext => format!("{partial_name}."),
-							EmptyOpt::DotExt => partial_name,
-							_ => panic!() // impossible
-						}
-					} else {
-						full_name.into()
-					}
-				}
-			};
-
-			let cursor = match opt.cursor {
-				CursorOpt::Append => None,
-				CursorOpt::Prepend => Some(0),
-				CursorOpt::None => match opt.empty {
-					EmptyOpt::None => {
-						let (name_parts, len) = get_parts_and_len(&initial_name);
-						Some(name_parts[..len - 1].join(".").len())
-					}
-					_ => None
-				}
-			};
-
-			let mut result = Input::_show(InputCfg::rename().with_value(initial_name).with_cursor(cursor));
+			let mut result = Input::_show(InputCfg::rename().with_value(name).with_cursor(cursor));
 			let Some(Ok(name)) = result.recv().await else {
 				return;
 			};
