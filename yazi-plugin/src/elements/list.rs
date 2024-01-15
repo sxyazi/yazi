@@ -25,6 +25,8 @@ impl List {
 impl UserData for List {}
 
 impl Renderable for List {
+	fn area(&self) -> ratatui::layout::Rect { self.area }
+
 	fn render(self: Box<Self>, buf: &mut ratatui::buffer::Buffer) {
 		self.inner.render(self.area, buf);
 	}

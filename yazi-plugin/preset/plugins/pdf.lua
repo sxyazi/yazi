@@ -22,7 +22,7 @@ end
 
 function M:preload()
 	local cache = ya.file_cache(self)
-	if not cache or fs.symlink_metadata(cache) then
+	if not cache or fs.cha(cache) then
 		return 1
 	end
 

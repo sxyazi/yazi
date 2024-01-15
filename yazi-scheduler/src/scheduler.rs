@@ -1,7 +1,7 @@
 use std::{ffi::OsStr, sync::Arc, time::Duration};
 
 use futures::{future::BoxFuture, FutureExt};
-use parking_lot::RwLock;
+use parking_lot::Mutex;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}};
 use yazi_config::{open::Opener, plugin::PluginRule, TASKS};
 use yazi_shared::{emit, event::Exec, fs::{unique_path, Url}, Layer, Throttle};
@@ -17,7 +17,7 @@ pub struct Scheduler {
 
 	micro:       async_priority_channel::Sender<BoxFuture<'static, ()>, u8>,
 	prog:        mpsc::UnboundedSender<TaskProg>,
-	pub running: Arc<RwLock<Running>>,
+	pub running: Arc<Mutex<Running>>,
 }
 
 impl Scheduler {
@@ -77,7 +77,7 @@ impl Scheduler {
 					}
 					Ok((op, _)) = macro_.recv() => {
 						let id = op.id();
-						if !running.read().exists(id) {
+						if !running.lock().exists(id) {
 							continue;
 						}
 
@@ -104,13 +104,13 @@ impl Scheduler {
 			while let Some(op) = rx.recv().await {
 				match op {
 					TaskProg::New(id, size) => {
-						if let Some(task) = running.write().get_mut(id) {
+						if let Some(task) = running.lock().get_mut(id) {
 							task.total += 1;
 							task.found += size;
 						}
 					}
 					TaskProg::Adv(id, succ, processed) => {
-						let mut running = running.write();
+						let mut running = running.lock();
 						if let Some(task) = running.get_mut(id) {
 							task.succ += succ;
 							task.processed += processed;
@@ -122,12 +122,12 @@ impl Scheduler {
 						}
 					}
 					TaskProg::Succ(id) => {
-						if let Some(fut) = running.write().try_remove(id, TaskStage::Dispatched) {
+						if let Some(fut) = running.lock().try_remove(id, TaskStage::Dispatched) {
 							micro.try_send(fut, NORMAL).ok();
 						}
 					}
 					TaskProg::Fail(id, reason) => {
-						if let Some(task) = running.write().get_mut(id) {
+						if let Some(task) = running.lock().get_mut(id) {
 							task.fail += 1;
 							task.logs.push_str(&reason);
 							task.logs.push('\n');
@@ -138,7 +138,7 @@ impl Scheduler {
 						}
 					}
 					TaskProg::Log(id, line) => {
-						if let Some(task) = running.write().get_mut(id) {
+						if let Some(task) = running.lock().get_mut(id) {
 							task.logs.push_str(&line);
 							task.logs.push('\n');
 
@@ -153,7 +153,7 @@ impl Scheduler {
 	}
 
 	pub fn cancel(&self, id: usize) -> bool {
-		let mut running = self.running.write();
+		let mut running = self.running.lock();
 		let b = running.all.remove(&id).is_some();
 
 		if let Some(hook) = running.hooks.remove(&id) {
@@ -176,7 +176,7 @@ impl Scheduler {
 	}
 
 	pub fn file_cut(&self, from: Url, mut to: Url, force: bool) {
-		let mut running = self.running.write();
+		let mut running = self.running.lock();
 		let id = running.add(TaskKind::User, format!("Cut {:?} to {:?}", from, to));
 
 		running.hooks.insert(id, {
@@ -188,7 +188,7 @@ impl Scheduler {
 					if !canceled {
 						File::remove_empty_dirs(&from).await;
 					}
-					running.write().try_remove(id, TaskStage::Hooked);
+					running.lock().try_remove(id, TaskStage::Hooked);
 				}
 				.boxed()
 			})
@@ -209,7 +209,7 @@ impl Scheduler {
 
 	pub fn file_copy(&self, from: Url, mut to: Url, force: bool, follow: bool) {
 		let name = format!("Copy {:?} to {:?}", from, to);
-		let id = self.running.write().add(TaskKind::User, name);
+		let id = self.running.lock().add(TaskKind::User, name);
 
 		let file = self.file.clone();
 		_ = self.micro.try_send(
@@ -226,7 +226,7 @@ impl Scheduler {
 
 	pub fn file_link(&self, from: Url, mut to: Url, relative: bool, force: bool) {
 		let name = format!("Link {from:?} to {to:?}");
-		let id = self.running.write().add(TaskKind::User, name);
+		let id = self.running.lock().add(TaskKind::User, name);
 
 		let file = self.file.clone();
 		_ = self.micro.try_send(
@@ -245,7 +245,7 @@ impl Scheduler {
 	}
 
 	pub fn file_delete(&self, target: Url) {
-		let mut running = self.running.write();
+		let mut running = self.running.lock();
 		let id = running.add(TaskKind::User, format!("Delete {:?}", target));
 
 		running.hooks.insert(id, {
@@ -257,7 +257,7 @@ impl Scheduler {
 					if !canceled {
 						fs::remove_dir_all(target).await.ok();
 					}
-					running.write().try_remove(id, TaskStage::Hooked);
+					running.lock().try_remove(id, TaskStage::Hooked);
 				}
 				.boxed()
 			})
@@ -275,7 +275,7 @@ impl Scheduler {
 
 	pub fn file_trash(&self, target: Url) {
 		let name = format!("Trash {:?}", target);
-		let id = self.running.write().add(TaskKind::User, name);
+		let id = self.running.lock().add(TaskKind::User, name);
 
 		let file = self.file.clone();
 		_ = self.micro.try_send(
@@ -288,7 +288,7 @@ impl Scheduler {
 	}
 
 	pub fn plugin_micro(&self, name: String) {
-		let id = self.running.write().add(TaskKind::User, format!("Run micro plugin `{name}`"));
+		let id = self.running.lock().add(TaskKind::User, format!("Run micro plugin `{name}`"));
 
 		let plugin = self.plugin.clone();
 		_ = self.micro.try_send(
@@ -301,13 +301,13 @@ impl Scheduler {
 	}
 
 	pub fn plugin_macro(&self, name: String) {
-		let id = self.running.write().add(TaskKind::User, format!("Run macro plugin `{name}`"));
+		let id = self.running.lock().add(TaskKind::User, format!("Run macro plugin `{name}`"));
 
 		self.plugin.macro_(PluginOpEntry { id, name }).ok();
 	}
 
 	pub fn preload_paged(&self, rule: &PluginRule, targets: Vec<&yazi_shared::fs::File>) {
-		let id = self.running.write().add(
+		let id = self.running.lock().add(
 			TaskKind::Preload,
 			format!("Run preloader `{}` with {} target(s)", rule.exec.cmd, targets.len()),
 		);
@@ -326,7 +326,7 @@ impl Scheduler {
 
 	pub fn preload_size(&self, targets: Vec<&Url>) {
 		let throttle = Arc::new(Throttle::new(targets.len(), Duration::from_millis(300)));
-		let mut running = self.running.write();
+		let mut running = self.running.lock();
 
 		for target in targets {
 			let id = running.add(TaskKind::Preload, format!("Calculate the size of {:?}", target));
@@ -351,7 +351,7 @@ impl Scheduler {
 			if args.is_empty() { s } else { format!("{s} with `{args}`") }
 		};
 
-		let mut running = self.running.write();
+		let mut running = self.running.lock();
 		let id = running.add(TaskKind::User, name);
 
 		let (cancel_tx, mut cancel_rx) = oneshot::channel();
@@ -362,7 +362,7 @@ impl Scheduler {
 					if canceled {
 						cancel_rx.close();
 					}
-					running.write().try_remove(id, TaskStage::Hooked);
+					running.lock().try_remove(id, TaskStage::Hooked);
 				}
 				.boxed()
 			})

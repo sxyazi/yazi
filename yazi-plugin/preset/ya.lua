@@ -12,6 +12,8 @@ function ya.clamp(min, x, max)
 	end
 end
 
+function ya.round(x) return x >= 0 and math.floor(x + 0.5) or math.ceil(x - 0.5) end
+
 function ya.flat(t)
 	local r = {}
 	for _, v in ipairs(t) do

@@ -29,17 +29,17 @@ impl App {
 			return Ok(());
 		}
 
-		let mut patches = vec![];
+		let mut patch = vec![];
 		for x in frame.area.left()..frame.area.right() {
 			for y in frame.area.top()..frame.area.bottom() {
 				let cell = frame.buffer.get(x, y);
 				if cell.skip {
-					patches.push((x, y, cell.clone()));
+					patch.push((x, y, cell.clone()));
 				}
 			}
 		}
 
-		term.backend_mut().draw(patches.iter().map(|(x, y, cell)| (*x, *y, cell)))?;
+		term.backend_mut().draw(patch.iter().map(|(x, y, cell)| (*x, *y, cell)))?;
 		if let Some((x, y)) = self.cx.cursor() {
 			term.show_cursor()?;
 			term.set_cursor(x, y)?;

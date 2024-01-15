@@ -1,4 +1,4 @@
-use mlua::Lua;
+use mlua::{IntoLua, Lua, Value};
 use tokio::fs;
 
 use crate::bindings::{Cast, Cha, UrlRef};
@@ -9,20 +9,29 @@ pub fn install(lua: &Lua) -> mlua::Result<()> {
 		lua.create_table_from([
 			(
 				"write",
-				lua.create_async_function(|_, (url, data): (UrlRef, mlua::String)| async move {
-					Ok(fs::write(&*url, data).await.is_ok())
+				lua.create_async_function(|lua, (url, data): (UrlRef, mlua::String)| async move {
+					Ok(match fs::write(&*url, data).await {
+						Ok(_) => (Value::Boolean(true), Value::Nil),
+						Err(e) => (Value::Boolean(false), e.raw_os_error().into_lua(lua)?),
+					})
 				})?,
 			),
 			(
-				"metadata",
+				"cha",
 				lua.create_async_function(|lua, url: UrlRef| async move {
-					fs::metadata(&*url).await.ok().map(|m| Cha::cast(lua, m)).transpose()
+					Ok(match fs::symlink_metadata(&*url).await {
+						Ok(m) => (Cha::cast(lua, m)?.into_lua(lua)?, Value::Nil),
+						Err(e) => (Value::Nil, e.raw_os_error().into_lua(lua)?),
+					})
 				})?,
 			),
 			(
-				"symlink_metadata",
+				"cha_follow",
 				lua.create_async_function(|lua, url: UrlRef| async move {
-					fs::symlink_metadata(&*url).await.ok().map(|m| Cha::cast(lua, m)).transpose()
+					Ok(match fs::metadata(&*url).await {
+						Ok(m) => (Cha::cast(lua, m)?.into_lua(lua)?, Value::Nil),
+						Err(e) => (Value::Nil, e.raw_os_error().into_lua(lua)?),
+					})
 				})?,
 			),
 		])?,

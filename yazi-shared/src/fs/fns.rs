@@ -61,7 +61,7 @@ pub fn copy_with_progress(from: &Path, to: &Path) -> mpsc::Receiver<Result<u64, 
 				select! {
 					res = &mut tick_rx => exit = Some(res.unwrap()),
 					_ = tx.closed() => break,
-					_ = time::sleep(time::Duration::from_secs(1)) => (),
+					_ = time::sleep(time::Duration::from_secs(3)) => (),
 				}
 
 				match exit {
