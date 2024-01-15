@@ -9,20 +9,50 @@ use yazi_shared::{event::Exec, fs::{max_common_root, File, FilesOp, Url}, term::
 
 use crate::{input::Input, manager::Manager};
 
+enum EmptyOpt {
+	None,
+	All,
+	Name,
+	Ext,
+	DotExt,
+}
+
+enum CursorOpt {
+	None,
+	Append,
+	Prepend,
+}
+
 pub struct Opt {
-	force:    bool,
-	replace:  bool,
-	keep_ext: bool,
+	force:  bool,
+	empty:  EmptyOpt,
+	cursor: CursorOpt,
 }
 
 impl From<&Exec> for Opt {
 	fn from(e: &Exec) -> Self {
 		Self {
-			force:    e.named.contains_key("force"),
-			replace:  e.named.contains_key("replace"),
-			keep_ext: e.named.contains_key("keep-ext"),
+			force:  e.named.contains_key("force"),
+			empty:  match e.named.get("empty").map(|s| s.as_str()).unwrap_or_default() {
+				"all" => EmptyOpt::All,
+				"name" => EmptyOpt::Name,
+				"ext" => EmptyOpt::Ext,
+				"dot-ext" => EmptyOpt::DotExt,
+				_ => EmptyOpt::None,
+			},
+			cursor: match e.named.get("cursor").map(|s| s.as_str()).unwrap_or_default() {
+				"append" => CursorOpt::Append,
+				"prepend" => CursorOpt::Prepend,
+				_ => CursorOpt::None,
+			},
 		}
 	}
+}
+
+fn get_parts_and_len(s: &str) -> (Vec<&str>, usize) {
+	let parts: Vec<_> = s.split('.').collect();
+	let len = parts.len();
+	(parts, len)
 }
 
 impl Manager {
@@ -49,18 +79,46 @@ impl Manager {
 		let opt = opt.into() as Opt;
 		tokio::spawn(async move {
 			let full_name = hovered.file_name().unwrap().to_string_lossy();
-			let (initial_value, cursor_start) = if opt.keep_ext {
-				let last = full_name.split('.').last();
-				if last == Some(&full_name) {
-					("".into(), None)
-				} else {
-					(format!(".{}", last.unwrap()), Some(0))
+
+			let initial_name = match &opt.empty {
+				EmptyOpt::None => full_name.into(),
+				EmptyOpt::All => "".into(),
+				EmptyOpt::Name => {
+					let ext = full_name.split('.').last().unwrap_or_default();
+					if ext == &full_name {
+						"".into()
+					} else {
+						format!(".{ext}")
+					}
 				}
-			} else {
-				(opt.replace.then(|| "").unwrap_or(&full_name).into(), None)
+				x => {
+					let (name_parts, len) = get_parts_and_len(&full_name);
+					if len > 1 {
+						let partial_name = name_parts[..len - 1].join(".");
+						match x {
+							EmptyOpt::Ext => format!("{partial_name}."),
+							EmptyOpt::DotExt => partial_name,
+							_ => panic!() // impossible
+						}
+					} else {
+						full_name.into()
+					}
+				}
 			};
 
-			let mut result = Input::_show(InputCfg::rename().with_value(initial_value));
+			let cursor = match opt.cursor {
+				CursorOpt::Append => None,
+				CursorOpt::Prepend => Some(0),
+				CursorOpt::None => match opt.empty {
+					EmptyOpt::None => {
+						let (name_parts, len) = get_parts_and_len(&initial_name);
+						Some(name_parts[..len - 1].join(".").len())
+					}
+					_ => None
+				}
+			};
+
+			let mut result = Input::_show(InputCfg::rename().with_value(initial_name).with_cursor(cursor));
 			let Some(Ok(name)) = result.recv().await else {
 				return;
 			};

@@ -133,8 +133,8 @@ impl InputCfg {
 	}
 
 	#[inline]
-	pub fn with_cursor(mut self, cursor: usize) -> Self {
-		self.cursor = Some(cursor);
+	pub fn with_cursor(mut self, cursor: Option<usize>) -> Self {
+		self.cursor = cursor;
 		self
 	}
 }
