@@ -33,7 +33,7 @@ impl Manager {
 
 		let ext = url.extension();
 		match by {
-			"name" => ext.map_or_else(String::new, |s| s.to_string_lossy().to_string()),
+			"name" => ext.map_or_else(String::new, |s| format!(".{}", s.to_string_lossy().to_string())),
 			"ext" if ext.is_some() => format!("{}.", url.file_stem().unwrap().to_string_lossy()),
 			"dot_ext" if ext.is_some() => url.file_stem().unwrap().to_string_lossy().to_string(),
 			_ => url.file_name().map_or_else(String::new, |s| s.to_string_lossy().to_string()),
