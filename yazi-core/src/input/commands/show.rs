@@ -41,7 +41,13 @@ impl Input {
 		self.highlight = opt.cfg.highlight;
 
 		// Reset snaps
-		self.snaps.reset(opt.cfg.value, self.limit(), opt.cfg.cursor_at);
+		self.snaps.reset(opt.cfg.value, self.limit());
+
+		// Set cursor after reset
+		if let Some(cursor) = opt.cfg.cursor {
+			self.snaps.current_mut().cursor = cursor;
+		}
+
 		render!();
 	}
 }

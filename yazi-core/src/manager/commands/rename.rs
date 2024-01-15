@@ -10,16 +10,16 @@ use yazi_shared::{event::Exec, fs::{max_common_root, File, FilesOp, Url}, term::
 use crate::{input::Input, manager::Manager};
 
 pub struct Opt {
-	force: bool,
-	replace: bool,
+	force:    bool,
+	replace:  bool,
 	keep_ext: bool,
 }
 
 impl From<&Exec> for Opt {
 	fn from(e: &Exec) -> Self {
 		Self {
-			force: e.named.contains_key("force"),
-			replace: e.named.contains_key("replace"),
+			force:    e.named.contains_key("force"),
+			replace:  e.named.contains_key("replace"),
 			keep_ext: e.named.contains_key("keep-ext"),
 		}
 	}
@@ -60,9 +60,7 @@ impl Manager {
 				(opt.replace.then(|| "").unwrap_or(&full_name).into(), None)
 			};
 
-			let mut result =
-				Input::_show(InputCfg::rename().with_value(initial_value).with_cursor_at(cursor_start));
-
+			let mut result = Input::_show(InputCfg::rename().with_value(initial_value));
 			let Some(Ok(name)) = result.recv().await else {
 				return;
 			};

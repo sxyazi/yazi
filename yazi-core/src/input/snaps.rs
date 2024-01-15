@@ -11,15 +11,11 @@ pub(super) struct InputSnaps {
 
 impl InputSnaps {
 	#[inline]
-	pub(super) fn reset(&mut self, value: String, limit: usize, cursor_at: Option<usize>) {
+	pub(super) fn reset(&mut self, value: String, limit: usize) {
 		self.idx = 0;
 		self.versions.clear();
 		self.versions.push(InputSnap::new(value, limit));
 		self.current = self.versions[0].clone();
-
-		if let Some(cursor) = cursor_at {
-			self.current.cursor = cursor;
-		}
 	}
 
 	pub(super) fn tag(&mut self, limit: usize) -> bool {
