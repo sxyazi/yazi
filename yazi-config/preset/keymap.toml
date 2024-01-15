@@ -71,7 +71,7 @@ keymap = [
 	{ on = [ "d" ],         exec = [ "remove", "escape --visual --select" ],               desc = "Move the files to the trash" },
 	{ on = [ "D" ],         exec = [ "remove --permanently", "escape --visual --select" ], desc = "Permanently delete the files" },
 	{ on = [ "a" ],         exec = "create",                                               desc = "Create a file or directory (ends with / for directories)" },
-	{ on = [ "r" ],         exec = "rename",                                               desc = "Rename a file or directory" },
+	{ on = [ "r" ],         exec = "rename --cursor=before_ext",                           desc = "Rename a file or directory" },
 	{ on = [ ";" ],         exec = "shell",                                                desc = "Run a shell command" },
 	{ on = [ ":" ],         exec = "shell --block",                                        desc = "Run a shell command (block the UI until the command finishes)" },
 	{ on = [ "." ],         exec = "hidden toggle",                                        desc = "Toggle the visibility of hidden files" },
