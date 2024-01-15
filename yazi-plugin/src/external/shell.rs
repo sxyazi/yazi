@@ -36,7 +36,7 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 				"YAZI_LEVEL",
 				(env::var("YAZI_LEVEL")
 					.ok()
-					.and_then(|lvl_str| lvl_str.parse::<i32>().ok())
+					.and_then(|lvl_str| lvl_str.parse::<u32>().ok())
 					.unwrap_or(0)
 					+ 1)
 				.to_string(),
