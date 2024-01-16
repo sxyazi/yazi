@@ -8,22 +8,31 @@ use yazi_shared::{emit, event::{EventQuit, Exec}, fs::{File, Url}, Layer, MIME_D
 use crate::{manager::Manager, select::Select, tasks::Tasks};
 
 pub struct Opt {
-	targets:     Option<Vec<(Url, Option<String>)>>,
-	interactive: bool,
+	targets:      Option<Vec<(Url, Option<String>)>>,
+	interactive:  bool,
+	or_enter_dir: bool,
 }
 
 impl From<&Exec> for Opt {
 	fn from(e: &Exec) -> Self {
-		Self { targets: e.take_data(), interactive: e.named.contains_key("interactive") }
+		Self {
+			targets:      e.take_data(),
+			interactive:  e.named.contains_key("interactive"),
+			or_enter_dir: e.named.contains_key("or-enter-dir")
+		}
 	}
 }
 
 impl Manager {
 	pub fn open(&mut self, opt: impl Into<Opt>, tasks: &Tasks) {
+		let mut opt = opt.into() as Opt;
 		let selected = self.selected();
-		if selected.is_empty() {
+
+		if selected.is_empty() || Self::quit_with_selected(&selected) {
 			return;
-		} else if Self::quit_with_selected(&selected) {
+		} else if opt.or_enter_dir && selected.len() == 1 && selected[0].is_dir() {
+			let cur_tab = &mut self.tabs.items[self.tabs.idx];
+			cur_tab.enter(());
 			return;
 		}
 
@@ -38,7 +47,6 @@ impl Manager {
 			}
 		}
 
-		let mut opt = opt.into() as Opt;
 		if todo.is_empty() {
 			opt.targets = Some(done);
 			return self.open_do(opt, tasks);
