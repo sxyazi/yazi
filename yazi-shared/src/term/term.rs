@@ -1,23 +1,21 @@
-use std::{io::{stdout, Stdout, Write}, mem, ops::{Deref, DerefMut}};
+use std::{io::{stdout, Stdout, Write}, mem, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}};
 
 use anyhow::Result;
 use crossterm::{event::{DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, terminal::{disable_raw_mode, enable_raw_mode, supports_keyboard_enhancement, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, WindowSize}};
 use ratatui::{backend::CrosstermBackend, Terminal};
 
-pub struct Term {
-	inner: Terminal<CrosstermBackend<Stdout>>,
-	csi_u: bool,
-}
+static CSI_U: AtomicBool = AtomicBool::new(false);
+
+pub struct Term(Terminal<CrosstermBackend<Stdout>>);
 
 impl Term {
 	pub fn start() -> Result<Self> {
-		let mut term = Self { inner: Terminal::new(CrosstermBackend::new(stdout()))?, csi_u: false };
+		let mut term = Self(Terminal::new(CrosstermBackend::new(stdout()))?);
 
 		enable_raw_mode()?;
-		execute!(stdout(), EnterAlternateScreen, EnableBracketedPaste, EnableFocusChange)?;
+		queue!(stdout(), EnterAlternateScreen, EnableBracketedPaste, EnableFocusChange)?;
 
-		term.csi_u = matches!(supports_keyboard_enhancement(), Ok(true));
-		if term.csi_u {
+		if matches!(supports_keyboard_enhancement(), Ok(true)) {
 			queue!(
 				stdout(),
 				PushKeyboardEnhancementFlags(
@@ -25,15 +23,17 @@ impl Term {
 						| KeyboardEnhancementFlags::REPORT_ALTERNATE_KEYS
 				)
 			)?;
+			CSI_U.store(true, Ordering::Relaxed);
 		}
 
 		term.hide_cursor()?;
 		term.clear()?;
+		term.flush()?;
 		Ok(term)
 	}
 
 	fn stop(&mut self) -> Result<()> {
-		if self.csi_u {
+		if CSI_U.swap(false, Ordering::Relaxed) {
 			execute!(stdout(), PopKeyboardEnhancementFlags)?;
 		}
 
@@ -50,9 +50,12 @@ impl Term {
 	}
 
 	pub fn goodbye(f: impl FnOnce() -> bool) -> ! {
+		if CSI_U.swap(false, Ordering::Relaxed) {
+			execute!(stdout(), PopKeyboardEnhancementFlags).ok();
+		}
+
 		execute!(
 			stdout(),
-			PopKeyboardEnhancementFlags,
 			DisableFocusChange,
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
@@ -109,9 +112,9 @@ impl Drop for Term {
 impl Deref for Term {
 	type Target = Terminal<CrosstermBackend<Stdout>>;
 
-	fn deref(&self) -> &Self::Target { &self.inner }
+	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl DerefMut for Term {
-	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.inner }
+	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
