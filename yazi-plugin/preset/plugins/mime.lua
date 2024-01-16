@@ -6,14 +6,7 @@ function M:preload()
 		urls[#urls + 1] = tostring(file.url)
 	end
 
-	local args
-	if ya.target_family() == "windows" then
-		args = { "-b", "--mime-type" }
-	else
-		args = { "-b", "-L", "--mime-type" }
-	end
-
-	local child, code = Command("file"):args(args):args(urls):stdout(Command.PIPED):spawn()
+	local child, code = Command("file"):args({ "-bL", "--mime-type" }):args(urls):stdout(Command.PIPED):spawn()
 	if not child then
 		ya.err("spawn `file` command returns " .. tostring(code))
 		return 0
