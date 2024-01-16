@@ -64,7 +64,12 @@ impl Manager {
 		let name = Self::empty_url_part(&hovered, opt.empty);
 		let cursor = match opt.cursor {
 			"start" => Some(0),
-			"before_ext" => name.rfind('.').filter(|&n| n != 0),
+			"before_ext" => name
+				.chars()
+				.rev()
+				.position(|c| c == '.')
+				.map(|i| name.chars().count() - i - 1)
+				.filter(|&i| i != 0),
 			_ => None,
 		};
 
