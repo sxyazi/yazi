@@ -26,13 +26,13 @@ edit = [
 	{ exec = 'code "%*"',    orphan = true, for = "windows" },
 ]
 open = [
-	{ exec = 'xdg-open "$@"',             desc = "Open", for = "linux" },
-	{ exec = 'open "$@"',                 desc = "Open", for = "macos" },
-	{ exec = 'start "%1"', orphan = true, desc = "Open", for = "windows" }
+	{ exec = 'xdg-open "$@"',                desc = "Open", for = "linux" },
+	{ exec = 'open "$@"',                    desc = "Open", for = "macos" },
+	{ exec = 'start "" "%1"', orphan = true, desc = "Open", for = "windows" }
 ]
 reveal = [
-	{ exec = 'open -R "$1"',                       desc = "Reveal", for = "macos" },
-	{ exec = 'explorer /select,%1', orphan = true, desc = "Reveal", for = "windows" },
+	{ exec = 'open -R "$1"',                          desc = "Reveal", for = "macos" },
+	{ exec = 'explorer /select, "%1"', orphan = true, desc = "Reveal", for = "windows" },
 	{ exec = '''exiftool "$1"; echo "Press enter to exit"; read''', block = true, desc = "Show EXIF", for = "unix" },
 ]
 extract = [

@@ -186,8 +186,8 @@ mod parser {
 			let args = parse("echo 'abc xyz' '%1' %2", &["111", "222"]);
 			assert_eq!(args, ["echo", "abc xyz", "111", "222"]);
 
-			let args = parse("echo 'abc \"\"xyz' '%1' %2", &["111", "222"]);
-			assert_eq!(args, ["echo", "abc \"\"xyz", "111", "222"]);
+			let args = parse(r#"echo 'abc ""xyz' '%1' %2"#, &["111", "222"]);
+			assert_eq!(args, ["echo", r#"abc ""xyz"#, "111", "222"]);
 		}
 
 		#[test]
