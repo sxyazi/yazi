@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-adaptor"
-version     = "0.2.0"
+version     = "0.2.1"
 edition     = "2021"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -9,8 +9,8 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
-yazi-config = { path = "../yazi-config", version = "0.2.0" }
-yazi-shared = { path = "../yazi-shared", version = "0.2.0" }
+yazi-config = { path = "../yazi-config", version = "0.2.1" }
+yazi-shared = { path = "../yazi-shared", version = "0.2.1" }
 
 # External dependencies
 anyhow       = "^1"
