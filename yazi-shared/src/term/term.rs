@@ -15,7 +15,7 @@ impl Term {
 		enable_raw_mode()?;
 		queue!(stdout(), EnterAlternateScreen, EnableBracketedPaste, EnableFocusChange)?;
 
-		if matches!(supports_keyboard_enhancement(), Ok(true)) {
+		if let Ok(true) = supports_keyboard_enhancement() {
 			queue!(
 				stdout(),
 				PushKeyboardEnhancementFlags(
