@@ -19,12 +19,14 @@ impl<'a, 'b> Tabs<'a, 'b> {
 
 		lua.register_userdata_type::<yazi_core::tab::Tab>(|reg| {
 			reg.add_method("name", |lua, me, ()| {
-				Some(lua.create_string(
-					me.current.cwd.file_name().map_or_else(
-						|| me.current.cwd.as_os_str().as_encoded_bytes(),
-						|n| n.as_encoded_bytes(),
+				Some(
+					lua.create_string(
+						me.current
+							.cwd
+							.file_name()
+							.map_or(me.current.cwd.as_os_str().as_encoded_bytes(), |n| n.as_encoded_bytes()),
 					),
-				))
+				)
 				.transpose()
 			});
 

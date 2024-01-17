@@ -1,4 +1,4 @@
-use ratatui::{prelude::Buffer, widgets::Widget};
+use ratatui::{buffer::Buffer, widgets::Widget};
 
 use crate::Ctx;
 

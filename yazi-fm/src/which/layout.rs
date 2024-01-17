@@ -1,4 +1,4 @@
-use ratatui::{layout, prelude::{Buffer, Constraint, Direction, Rect}, widgets::{Block, Widget}};
+use ratatui::{buffer::Buffer, layout, layout::{Constraint, Direction, Rect}, widgets::{Block, Widget}};
 use yazi_config::THEME;
 
 use super::Side;

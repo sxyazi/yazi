@@ -10,7 +10,9 @@ impl Span {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
 		ui.set(
 			"Span",
-			lua.create_function(|_, content: String| Ok(Self(ratatui::text::Span::raw(content))))?,
+			lua.create_function(|_, content: mlua::String| {
+				Ok(Self(ratatui::text::Span::raw(content.to_string_lossy().into_owned())))
+			})?,
 		)
 	}
 }

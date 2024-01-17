@@ -1,4 +1,4 @@
-use ratatui::{layout::{self, Constraint}, prelude::{Buffer, Direction, Rect}, widgets::{List, ListItem, Widget}};
+use ratatui::{buffer::Buffer, layout::{self, Constraint, Direction, Rect}, widgets::{List, ListItem, Widget}};
 use yazi_config::THEME;
 
 use crate::Ctx;

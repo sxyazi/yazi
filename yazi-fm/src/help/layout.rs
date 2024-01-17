@@ -1,4 +1,4 @@
-use ratatui::{buffer::Buffer, layout::{self, Rect}, prelude::{Constraint, Direction}, widgets::{Paragraph, Widget}};
+use ratatui::{buffer::Buffer, layout::{self, Constraint, Direction, Rect}, widgets::{Paragraph, Widget}};
 use yazi_config::THEME;
 
 use super::Bindings;

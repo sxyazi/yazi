@@ -54,7 +54,7 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 
 	#[cfg(windows)]
 	{
-		let args: Vec<String> = opt.args.iter().map(|s| s.to_string_lossy().to_string()).collect();
+		let args: Vec<String> = opt.args.iter().map(|s| s.to_string_lossy().into_owned()).collect();
 		let args_: Vec<&str> = args.iter().map(|s| s.as_ref()).collect();
 		let expanded = parser::parse(opt.cmd.to_string_lossy().as_ref(), &args_);
 		Ok(

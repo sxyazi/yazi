@@ -1,6 +1,6 @@
 use std::process::Stdio;
 
-use mlua::{prelude::LuaUserDataMethods, AnyUserData, IntoLua, Lua, Table, UserData, Value};
+use mlua::{AnyUserData, IntoLua, Lua, Table, UserData, Value};
 
 use super::{output::Output, Child};
 
@@ -35,19 +35,29 @@ impl Command {
 }
 
 impl UserData for Command {
-	fn add_methods<'lua, M: LuaUserDataMethods<'lua, Self>>(methods: &mut M) {
-		methods.add_function("arg", |_, (ud, arg): (AnyUserData, String)| {
-			ud.borrow_mut::<Self>()?.inner.arg(arg);
+	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+		methods.add_function("arg", |_, (ud, arg): (AnyUserData, mlua::String)| {
+			ud.borrow_mut::<Self>()?.inner.arg(arg.to_string_lossy().as_ref());
 			Ok(ud)
 		});
-		methods.add_function("args", |_, (ud, args): (AnyUserData, Vec<String>)| {
-			ud.borrow_mut::<Self>()?.inner.args(args);
+		methods.add_function("args", |_, (ud, args): (AnyUserData, Vec<mlua::String>)| {
+			{
+				let mut me = ud.borrow_mut::<Self>()?;
+				for arg in args {
+					me.inner.arg(arg.to_string_lossy().as_ref());
+				}
+			}
 			Ok(ud)
 		});
-		methods.add_function("env", |_, (ud, key, value): (AnyUserData, String, String)| {
-			ud.borrow_mut::<Self>()?.inner.env(key, value);
-			Ok(ud)
-		});
+		methods.add_function(
+			"env",
+			|_, (ud, key, value): (AnyUserData, mlua::String, mlua::String)| {
+				ud.borrow_mut::<Self>()?
+					.inner
+					.env(key.to_string_lossy().as_ref(), value.to_string_lossy().as_ref());
+				Ok(ud)
+			},
+		);
 		methods.add_function("stdin", |_, (ud, stdio): (AnyUserData, u8)| {
 			ud.borrow_mut::<Self>()?.inner.stdin(match stdio {
 				PIPED => Stdio::piped(),

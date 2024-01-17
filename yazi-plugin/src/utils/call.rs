@@ -17,10 +17,10 @@ impl Utils {
 
 			match k {
 				Value::Integer(_) => {
-					args.push(v.to_str()?.to_owned());
+					args.push(v.to_string_lossy().into_owned());
 				}
 				Value::String(s) => {
-					named.insert(s.to_str()?.replace('_', "-"), v.to_str()?.to_owned());
+					named.insert(s.to_str()?.replace('_', "-"), v.to_string_lossy().into_owned());
 				}
 				_ => return Err("invalid key in exec".into_lua_err()),
 			}
