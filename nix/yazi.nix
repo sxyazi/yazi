@@ -26,6 +26,7 @@
 , fzf
 , withZoxide ? true
 , zoxide
+, imagemagick
 }:
 
 (makeRustPlatform { cargo = rustToolchain; rustc = rustToolchain; }).buildRustPackage {
@@ -37,7 +38,7 @@
 
   cargoLock.lockFile = ../Cargo.lock;
 
-  nativeBuildInputs = [ makeWrapper installShellFiles ];
+  nativeBuildInputs = [ makeWrapper installShellFiles imagemagick ];
   buildInputs = lib.optionals stdenv.isDarwin (
     with darwin.apple_sdk.frameworks; [ Foundation ]
   );
@@ -62,6 +63,15 @@
         --bash ./yazi-config/completions/yazi.bash \
         --fish ./yazi-config/completions/yazi.fish \
         --zsh  ./yazi-config/completions/_yazi
+
+      # resize logo
+      for RES in 16 24 32 48 64 128 256; do
+        mkdir -p $out/share/icons/hicolor/"$RES"x"$RES"/apps
+        convert data/logo.png -resize "$RES"x"$RES" $out/share/icons/hicolor/"$RES"x"$RES"/apps/yazi.png
+      done
+
+      mkdir -p $out/share/applications
+      install -m644 data/yazi.desktop $out/share/applications/
     '';
 
   meta = with lib; {
