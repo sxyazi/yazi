@@ -1,0 +1,37 @@
+name: yazi
+base: core22
+adopt-info: yazi
+summary: Blazing fast terminal file manager
+description: |
+    Yazi, which means "duck", is a terminal file manager written in Rust, based on non-blocking async I/O.
+    It aims to provide an efficient, user-friendly, and customizable file management experience.
+license: MIT
+
+grade: stable
+confinement: classic
+
+architectures:
+  - build-on: amd64
+    build-for: amd64
+#  - build-on: amd64
+#    build-for: arm64
+
+
+apps:
+  yazi:
+    command: yazi
+    environment:
+      PATH: $SNAP/bin:$PATH
+
+parts:
+  yazi:
+    plugin: rust
+    source: https://github.com/sxyazi/yazi.git
+    override-build: |
+      craftctl default
+      craftctl set version=$(git describe --tags --abbrev=0)
+      cargo install fd-find --root $CRAFT_PART_INSTALL
+      cargo install ripgrep --root $CRAFT_PART_INSTALL
+      cargo install zoxide --root $CRAFT_PART_INSTALL
+      git clone --depth 1 https://github.com/junegunn/fzf.git fzf
+      fzf/install --bin && mv fzf/bin/fzf $CRAFT_PART_INSTALL/bin/
