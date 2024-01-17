@@ -6,5 +6,6 @@ Terminal=true
 TryExec=yazi
 Exec=yazi %u
 Type=Application
-Categories=Utility;Core;FileManager
 MimeType=inode/directory
+Categories=Utility;Core;System;FileTools;FileManager;ConsoleOnly
+Keywords=File;Manager;Explorer;Browser;Launcher
