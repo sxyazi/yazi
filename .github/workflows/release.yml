@@ -51,6 +51,10 @@ jobs:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: /usr/bin/aarch64-linux-gnu-gcc
         run: cargo build --release --locked --target ${{ matrix.target }}
 
+      - name: Build snap
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        uses: snapcore/action-build@v1
+
       - name: Pack artifacts [Linux & macOS]
         if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
         env:
@@ -78,5 +82,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           draft: true
-          files: yazi-${{ matrix.target }}.zip
+          files: |
+            yazi-${{ matrix.target }}.zip
+            yazi*.snap
           generate_release_notes: true
