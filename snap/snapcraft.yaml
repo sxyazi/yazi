@@ -1,21 +1,17 @@
 name: yazi
 base: core22
 adopt-info: yazi
-summary: Blazing fast terminal file manager
+summary: Blazing fast terminal file manager written in Rust, based on async I/O.
 description: |
-    Yazi, which means "duck", is a terminal file manager written in Rust, based on non-blocking async I/O.
-    It aims to provide an efficient, user-friendly, and customizable file management experience.
+  Yazi is a terminal file manager written in Rust, based on non-blocking async I/O.
+  It aims to provide an efficient, user-friendly, and customizable file management experience.
 license: MIT
-
 grade: stable
 confinement: classic
 
 architectures:
-  - build-on: amd64
-    build-for: amd64
-#  - build-on: amd64
-#    build-for: arm64
-
+  - amd64
+  # - arm64
 
 apps:
   yazi:
