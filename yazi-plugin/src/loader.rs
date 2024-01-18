@@ -25,13 +25,14 @@ impl Loader {
 		let path = BOOT.plugin_dir.join(format!("{name}.yazi/init.lua"));
 		let b = fs::read(path).await.map(|v| v.into()).or_else(|_| {
 			Ok(Cow::from(match name {
-				"noop" => include_bytes!("../preset/plugins/noop.lua") as &[u8],
-				"archive" => include_bytes!("../preset/plugins/archive.lua"),
+				"archive" => include_bytes!("../preset/plugins/archive.lua") as &[u8],
 				"code" => include_bytes!("../preset/plugins/code.lua"),
+				"file" => include_bytes!("../preset/plugins/file.lua"),
 				"folder" => include_bytes!("../preset/plugins/folder.lua"),
 				"image" => include_bytes!("../preset/plugins/image.lua"),
 				"json" => include_bytes!("../preset/plugins/json.lua"),
 				"mime" => include_bytes!("../preset/plugins/mime.lua"),
+				"noop" => include_bytes!("../preset/plugins/noop.lua"),
 				"pdf" => include_bytes!("../preset/plugins/pdf.lua"),
 				"video" => include_bytes!("../preset/plugins/video.lua"),
 				_ => bail!("plugin not found: {name}"),
