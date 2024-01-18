@@ -1,4 +1,4 @@
-use mlua::{prelude::LuaUserDataFields, FromLua, UserData};
+use mlua::{FromLua, UserData};
 use yazi_shared::term::Term;
 
 #[derive(Debug, Clone, Copy, FromLua)]
@@ -17,7 +17,7 @@ impl Default for Window {
 }
 
 impl UserData for Window {
-	fn add_fields<'lua, F: LuaUserDataFields<'lua, Self>>(fields: &mut F) {
+	fn add_fields<'lua, F: mlua::UserDataFields<'lua, Self>>(fields: &mut F) {
 		fields.add_field_method_get("rows", |_, me| Ok(me.rows));
 		fields.add_field_method_get("cols", |_, me| Ok(me.cols));
 		fields.add_field_method_get("width", |_, me| Ok(me.width));

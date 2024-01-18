@@ -58,7 +58,7 @@ impl ListItem {
 						return Ok(Self { content, style: None });
 					}
 					Value::String(s) => {
-						return Ok(Self { content: s.to_str()?.to_string().into(), style: None });
+						return Ok(Self { content: s.to_string_lossy().into_owned().into(), style: None });
 					}
 					_ => {}
 				}

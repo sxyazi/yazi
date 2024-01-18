@@ -1,4 +1,4 @@
-use ratatui::{prelude::{Buffer, Rect}, text::{Line, Span}, widgets::{Block, List, ListItem, Padding, Widget}};
+use ratatui::{buffer::Buffer, layout::Rect, text::{Line, Span}, widgets::{Block, List, ListItem, Padding, Widget}};
 use yazi_config::{keymap::Control, THEME};
 
 pub(super) struct Side<'a> {

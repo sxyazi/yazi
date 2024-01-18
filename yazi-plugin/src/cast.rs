@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::bail;
-use mlua::{prelude::{Lua, LuaResult}, AnyUserData, IntoLua, Value};
+use mlua::{AnyUserData, IntoLua, Lua, Value};
 use yazi_shared::OrderedFloat;
 
 use crate::elements::Renderable;
@@ -59,7 +59,7 @@ impl<'a> TryFrom<Value<'a>> for ValueSendable {
 }
 
 impl<'lua> IntoLua<'lua> for ValueSendable {
-	fn into_lua(self, lua: &Lua) -> LuaResult<Value> {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		match self {
 			ValueSendable::Nil => Ok(Value::Nil),
 			ValueSendable::Boolean(b) => Ok(Value::Boolean(b)),
@@ -121,7 +121,7 @@ impl TryInto<ValueSendableKey> for ValueSendable {
 }
 
 impl<'lua> IntoLua<'lua> for ValueSendableKey {
-	fn into_lua(self, lua: &Lua) -> LuaResult<Value> {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		match self {
 			ValueSendableKey::Nil => Ok(Value::Nil),
 			ValueSendableKey::Boolean(b) => Ok(Value::Boolean(b)),

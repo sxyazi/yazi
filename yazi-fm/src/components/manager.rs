@@ -1,5 +1,5 @@
 use mlua::{Table, TableExt};
-use ratatui::{prelude::Buffer, widgets::Widget};
+use ratatui::{buffer::Buffer, widgets::Widget};
 use tracing::error;
 use yazi_plugin::{bindings::Cast, elements::{render_widgets, Rect}, LUA};
 

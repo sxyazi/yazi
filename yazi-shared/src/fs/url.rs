@@ -98,7 +98,7 @@ impl AsRef<OsStr> for Url {
 impl ToString for Url {
 	fn to_string(&self) -> String {
 		if self.scheme == UrlScheme::Regular {
-			return self.path.to_string_lossy().to_string();
+			return self.path.to_string_lossy().into_owned();
 		}
 
 		let scheme = match self.scheme {

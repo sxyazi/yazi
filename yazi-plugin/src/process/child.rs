@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use mlua::{prelude::LuaUserDataMethods, IntoLua, Table, UserData, Value};
+use mlua::{IntoLua, Table, UserData, Value};
 use tokio::{io::{AsyncBufReadExt, AsyncReadExt, BufReader}, process::{ChildStderr, ChildStdin, ChildStdout}, select};
 
 use super::Status;
@@ -22,14 +22,12 @@ impl Child {
 }
 
 impl UserData for Child {
-	fn add_methods<'lua, M: LuaUserDataMethods<'lua, Self>>(methods: &mut M) {
+	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
 		#[inline]
+		// TODO: return mlua::String instead of String
 		async fn read_line(me: &mut Child) -> (String, u8) {
 			async fn read(t: Option<impl AsyncBufReadExt + Unpin>) -> Option<String> {
-				let Some(mut r) = t else {
-					return None;
-				};
-
+				let mut r = t?;
 				let mut buf = String::new();
 				match r.read_line(&mut buf).await {
 					Ok(0) | Err(_) => None,
@@ -46,10 +44,7 @@ impl UserData for Child {
 
 		methods.add_async_method_mut("read", |_, me, len: usize| async move {
 			async fn read(t: Option<impl AsyncBufReadExt + Unpin>, len: usize) -> Option<Vec<u8>> {
-				let Some(mut r) = t else {
-					return None;
-				};
-
+				let mut r = t?;
 				let mut buf = vec![0; len];
 				match r.read(&mut buf).await {
 					Ok(0) | Err(_) => return None,
