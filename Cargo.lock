@@ -2674,7 +2674,6 @@ dependencies = [
  "ratatui",
  "regex",
  "serde",
- "syntect",
  "tokio",
  "tokio-stream",
  "tokio-util",
@@ -2691,7 +2690,6 @@ dependencies = [
 name = "yazi-fm"
 version = "0.2.1"
 dependencies = [
- "ansi-to-tui",
  "anyhow",
  "better-panic",
  "crossterm",
@@ -2701,6 +2699,7 @@ dependencies = [
  "mlua",
  "ratatui",
  "signal-hook-tokio",
+ "syntect",
  "tokio",
  "tracing",
  "tracing-appender",

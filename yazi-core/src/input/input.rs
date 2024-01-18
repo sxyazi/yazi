@@ -23,7 +23,7 @@ pub struct Input {
 	pub(super) completion: bool,
 
 	// Shell
-	pub(super) highlight: bool,
+	pub highlight: bool,
 }
 
 impl Input {
