@@ -17,7 +17,6 @@ yazi-scheduler = { path = "../yazi-scheduler", version = "0.2.1" }
 yazi-shared    = { path = "../yazi-shared", version = "0.2.1" }
 
 # External dependencies
-ansi-to-tui   = "^3"
 anyhow        = "^1"
 better-panic  = "^0"
 crossterm     = { version = "^0", features = [ "event-stream" ] }
@@ -27,6 +26,7 @@ mlua          = { version = "^0", features = [ "lua54", "vendored" ] }
 ratatui       = "^0"
 tokio         = { version = "^1", features = [ "parking_lot" ] }
 unicode-width = "^0"
+syntect       = { version = "^5", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
 
 # Logging
 tracing            = { version = "^0", features = [ "max_level_debug", "release_max_level_warn" ] }

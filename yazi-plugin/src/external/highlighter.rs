@@ -136,7 +136,7 @@ impl Highlighter {
 
 impl Highlighter {
 	// Copy from https://github.com/sharkdp/bat/blob/master/src/terminal.rs
-	fn to_ansi_color(color: highlighting::Color) -> Option<ratatui::style::Color> {
+	pub fn to_ansi_color(color: highlighting::Color) -> Option<ratatui::style::Color> {
 		if color.a == 0 {
 			// Themes can specify one of the user-configurable terminal colors by
 			// encoding them as #RRGGBBAA with AA set to 00 (transparent) and RR set
@@ -175,7 +175,7 @@ impl Highlighter {
 		}
 	}
 
-	fn to_line_widget(regions: Vec<(highlighting::Style, &str)>) -> Line<'static> {
+	pub fn to_line_widget(regions: Vec<(highlighting::Style, &str)>) -> Line<'static> {
 		let indent = " ".repeat(PREVIEW.tab_size as usize);
 		let spans: Vec<_> = regions
 			.into_iter()

@@ -2,7 +2,6 @@ mod commands;
 mod input;
 mod mode;
 mod op;
-mod shell;
 mod snap;
 mod snaps;
 
