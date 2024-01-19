@@ -25,13 +25,9 @@ impl Widget for Which<'_> {
 			}
 		}
 
-		let height = cands.0.len() as u16 + 2;
-		let area = Rect {
-			x: 1,
-			y: area.height.saturating_sub(height + 2),
-			width: area.width.saturating_sub(2),
-			height,
-		};
+		let height = area.height.min(cands.0.len() as u16 + 2);
+		let y = area.height.saturating_sub(height + 2);
+		let area = Rect { x: area.width.min(1), y, width: area.width.saturating_sub(2), height };
 
 		let chunks = layout::Layout::new(Direction::Horizontal, [
 			Constraint::Ratio(1, 3),
