@@ -3,6 +3,8 @@ use mlua::{Lua, Table};
 #[cfg(unix)]
 pub(super) static USERS_CACHE: yazi_shared::RoCell<uzers::UsersCache> = yazi_shared::RoCell::new();
 
+pub(super) static HOSTNAME_CACHE: std::sync::OnceLock<Option<String>> = std::sync::OnceLock::new();
+
 pub(super) struct Utils;
 
 pub fn init() {
