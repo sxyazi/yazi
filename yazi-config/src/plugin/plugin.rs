@@ -3,7 +3,7 @@ use std::path::Path;
 use serde::Deserialize;
 use yazi_shared::{event::Exec, Condition, MIME_DIR};
 
-use crate::{pattern::Pattern, plugin::MAX_PRELOADERS, Priority, MERGED_YAZI};
+use crate::{pattern::Pattern, plugin::MAX_PRELOADERS, Preset, Priority, MERGED_YAZI};
 
 #[derive(Deserialize)]
 pub struct Plugin {
@@ -31,6 +31,11 @@ pub struct PluginRule {
 impl Default for Plugin {
 	fn default() -> Self {
 		#[derive(Deserialize)]
+		struct Outer {
+			plugin: Shadow,
+		}
+
+		#[derive(Deserialize)]
 		struct Shadow {
 			preloaders:         Vec<PluginRule>,
 			#[serde(default)]
@@ -45,24 +50,9 @@ impl Default for Plugin {
 			append_previewers:  Vec<PluginRule>,
 		}
 
-		#[derive(Deserialize)]
-		struct Outer {
-			plugin: Shadow,
-		}
-
 		let mut shadow = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().plugin;
-		shadow.preloaders = shadow
-			.prepend_preloaders
-			.into_iter()
-			.chain(shadow.preloaders)
-			.chain(shadow.append_preloaders)
-			.collect();
-		shadow.previewers = shadow
-			.prepend_previewers
-			.into_iter()
-			.chain(shadow.previewers)
-			.chain(shadow.append_previewers)
-			.collect();
+		Preset::mix(&mut shadow.preloaders, shadow.prepend_preloaders, shadow.append_preloaders);
+		Preset::mix(&mut shadow.previewers, shadow.prepend_previewers, shadow.append_previewers);
 
 		if shadow.preloaders.len() > MAX_PRELOADERS as usize {
 			panic!("Too many preloaders");
