@@ -2616,7 +2616,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-adaptor"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -2634,7 +2634,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-config"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -2659,7 +2659,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-core"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "base64",
@@ -2688,7 +2688,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fm"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "better-panic",
@@ -2715,7 +2715,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-plugin"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -2748,7 +2748,7 @@ checksum = "f4b6c8e12e39ac0f79fa96f36e5b88e0da8d230691abd729eec709b43c74f632"
 
 [[package]]
 name = "yazi-scheduler"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "async-priority-channel",
@@ -2769,7 +2769,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-shared"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "bitflags 2.4.1",

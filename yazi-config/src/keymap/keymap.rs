@@ -2,7 +2,7 @@ use serde::{Deserialize, Deserializer};
 use yazi_shared::Layer;
 
 use super::Control;
-use crate::MERGED_KEYMAP;
+use crate::{Preset, MERGED_KEYMAP};
 
 #[derive(Debug)]
 pub struct Keymap {
@@ -30,12 +30,29 @@ impl<'de> Deserialize<'de> for Keymap {
 		}
 		#[derive(Deserialize)]
 		struct Inner {
-			keymap: Vec<Control>,
+			keymap:         Vec<Control>,
+			#[serde(default)]
+			prepend_keymap: Vec<Control>,
+			#[serde(default)]
+			append_keymap:  Vec<Control>,
 		}
 
-		let shadow = Shadow::deserialize(deserializer)?;
+		let mut shadow = Shadow::deserialize(deserializer)?;
 
-		// TODO: remove this when v0.2.0 is released --
+		#[rustfmt::skip]
+		Preset::mix(&mut shadow.manager.keymap, shadow.manager.prepend_keymap, shadow.manager.append_keymap);
+		#[rustfmt::skip]
+		Preset::mix(&mut shadow.tasks.keymap, shadow.tasks.prepend_keymap, shadow.tasks.append_keymap);
+		#[rustfmt::skip]
+		Preset::mix(&mut shadow.select.keymap, shadow.select.prepend_keymap, shadow.select.append_keymap);
+		#[rustfmt::skip]
+		Preset::mix(&mut shadow.input.keymap, shadow.input.prepend_keymap, shadow.input.append_keymap);
+		#[rustfmt::skip]
+		Preset::mix(&mut shadow.help.keymap, shadow.help.prepend_keymap, shadow.help.append_keymap);
+		#[rustfmt::skip]
+		Preset::mix(&mut shadow.completion.keymap, shadow.completion.prepend_keymap, shadow.completion.append_keymap);
+
+		// TODO: remove this when v0.2.3 is released --
 		if !shadow.input.keymap.iter().any(|c| c.on() == "<Backspace>") {
 			println!(
 				"WARNING: Default keybinding for `<Backspace>` is missing, please add a `{}` to the `[input]` section of `keymap.toml`.
@@ -43,7 +60,15 @@ In Yazi v0.2.0, `<Backspace>` previously hardcoded within the input component ha
 				r#"{ on = [ "<Backspace>" ], exec = "backspace" }"#
 			);
 		}
-		// TODO: -- remove this when v0.2.0 is released
+		// TODO: -- remove this when v0.2.3 is released
+
+		// TODO: remove this when v0.2.3 is released --
+		if shadow.manager.keymap.iter().any(|c| c.exec().contains("--empty=name")) {
+			println!(
+				"WARNING: `rename --empty=name` is deprecated in Yazi v0.2.2, please use `rename --empty=stem` instead.",
+			);
+		}
+		// TODO: -- remove this when v0.2.3 is released
 
 		Ok(Self {
 			manager:    shadow.manager.keymap,

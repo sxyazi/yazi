@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-core"
-version     = "0.2.1"
+version     = "0.2.2"
 edition     = "2021"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -9,11 +9,11 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
-yazi-adaptor   = { path = "../yazi-adaptor", version = "0.2.1" }
-yazi-config    = { path = "../yazi-config", version = "0.2.1" }
-yazi-plugin    = { path = "../yazi-plugin", version = "0.2.1" }
-yazi-scheduler = { path = "../yazi-scheduler", version = "0.2.1" }
-yazi-shared    = { path = "../yazi-shared", version = "0.2.1" }
+yazi-adaptor   = { path = "../yazi-adaptor", version = "0.2.2" }
+yazi-config    = { path = "../yazi-config", version = "0.2.2" }
+yazi-plugin    = { path = "../yazi-plugin", version = "0.2.2" }
+yazi-scheduler = { path = "../yazi-scheduler", version = "0.2.2" }
+yazi-shared    = { path = "../yazi-shared", version = "0.2.2" }
 
 # External dependencies
 anyhow        = "^1"

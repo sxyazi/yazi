@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, mem};
 
 use toml::Table;
 
@@ -7,6 +7,26 @@ use crate::BOOT;
 pub(crate) struct Preset;
 
 impl Preset {
+	#[inline]
+	pub(crate) fn keymap() -> String {
+		Self::merge_str("keymap.toml", include_str!("../preset/keymap.toml"))
+	}
+
+	#[inline]
+	pub(crate) fn theme() -> String {
+		Self::merge_str("theme.toml", include_str!("../preset/theme.toml"))
+	}
+
+	#[inline]
+	pub(crate) fn yazi() -> String {
+		Self::merge_str("yazi.toml", include_str!("../preset/yazi.toml"))
+	}
+
+	#[inline]
+	pub(crate) fn mix<T>(a: &mut Vec<T>, b: Vec<T>, c: Vec<T>) {
+		*a = b.into_iter().chain(mem::take(a)).chain(c).collect();
+	}
+
 	fn merge(a: &mut Table, b: &Table, max: u8) {
 		for (k, v) in b {
 			let Some(a) = a.get_mut(k) else {
@@ -14,7 +34,7 @@ impl Preset {
 				continue;
 			};
 
-			if k == "icons" || max <= 1 {
+			if max <= 1 {
 				continue;
 			}
 
@@ -35,20 +55,5 @@ impl Preset {
 		let base = base.parse::<Table>().unwrap();
 		Self::merge(&mut user, &base, 2);
 		user.to_string()
-	}
-
-	#[inline]
-	pub(crate) fn keymap() -> String {
-		Self::merge_str("keymap.toml", include_str!("../preset/keymap.toml"))
-	}
-
-	#[inline]
-	pub(crate) fn theme() -> String {
-		Self::merge_str("theme.toml", include_str!("../preset/theme.toml"))
-	}
-
-	#[inline]
-	pub(crate) fn yazi() -> String {
-		Self::merge_str("yazi.toml", include_str!("../preset/yazi.toml"))
 	}
 }
