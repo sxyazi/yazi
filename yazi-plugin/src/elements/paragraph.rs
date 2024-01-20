@@ -4,9 +4,15 @@ use ratatui::widgets::Widget;
 
 use super::{Line, RectRef, Renderable, Style};
 
+// Alignment
 const LEFT: u8 = 0;
 const CENTER: u8 = 1;
 const RIGHT: u8 = 2;
+
+// Wrap
+const WRAP_NO: u8 = 0;
+const WRAP: u8 = 1;
+const WRAP_TRIM: u8 = 2;
 
 #[derive(Clone, Debug, Default)]
 pub struct Paragraph {
@@ -15,6 +21,7 @@ pub struct Paragraph {
 	pub text:      ratatui::text::Text<'static>,
 	pub style:     Option<ratatui::style::Style>,
 	pub alignment: ratatui::layout::Alignment,
+	pub wrap:      u8,
 }
 
 impl Paragraph {
@@ -37,6 +44,10 @@ impl Paragraph {
 			("LEFT", LEFT.into_lua(lua)?),
 			("CENTER", CENTER.into_lua(lua)?),
 			("RIGHT", RIGHT.into_lua(lua)?),
+			// Wrap
+			("WRAP_OFF", WRAP_NO.into_lua(lua)?),
+			("WRAP", WRAP.into_lua(lua)?),
+			("WRAP_TRIM", WRAP_TRIM.into_lua(lua)?),
 		])?;
 
 		paragraph.set_metatable(Some(lua.create_table_from([("__call", new)])?));
@@ -67,6 +78,13 @@ impl UserData for Paragraph {
 			};
 			Ok(ud)
 		});
+		methods.add_function("wrap", |_, (ud, wrap): (AnyUserData, u8)| {
+			ud.borrow_mut::<Self>()?.wrap = match wrap {
+				w @ (WRAP | WRAP_TRIM | WRAP_NO) => w,
+				_ => return Err("expected a WRAP or WRAP_TRIM or WRAP_OFF".into_lua_err()),
+			};
+			Ok(ud)
+		});
 	}
 }
 
@@ -79,8 +97,11 @@ impl Renderable for Paragraph {
 			p = p.style(style);
 		}
 
-		p = p.alignment(self.alignment);
-		p.render(self.area, buf)
+		if self.wrap != WRAP_NO {
+			p = p.wrap(ratatui::widgets::Wrap { trim: self.wrap == WRAP_TRIM });
+		}
+
+		p.alignment(self.alignment).render(self.area, buf);
 	}
 
 	fn clone_render(&self, buf: &mut ratatui::buffer::Buffer) { Box::new(self.clone()).render(buf) }
