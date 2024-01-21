@@ -53,6 +53,9 @@ impl Tabs {
 	pub fn iter(&self) -> impl Iterator<Item = &Tab> { self.items.iter() }
 
 	#[inline]
+	pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Tab> { self.items.iter_mut() }
+
+	#[inline]
 	pub fn active(&self) -> &Tab { &self.items[self.idx] }
 
 	#[inline]

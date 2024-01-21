@@ -5,7 +5,7 @@ use crate::{emit, event::Exec, fs::Url, Layer};
 
 pub static FILES_TICKET: AtomicU64 = AtomicU64::new(0);
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum FilesOp {
 	Full(Url, Vec<File>, Option<SystemTime>),
 	Part(Url, Vec<File>, u64),
