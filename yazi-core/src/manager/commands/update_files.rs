@@ -1,6 +1,8 @@
+use std::borrow::Cow;
+
 use yazi_shared::{event::Exec, fs::FilesOp, render};
 
-use crate::{folder::Folder, manager::Manager, tasks::Tasks};
+use crate::{folder::Folder, manager::Manager, tab::Tab, tasks::Tasks};
 
 pub struct Opt {
 	op: FilesOp,
@@ -13,54 +15,80 @@ impl TryFrom<&Exec> for Opt {
 }
 
 impl Manager {
-	fn update_parent(&mut self, op: FilesOp) {
-		let cwd = self.cwd().clone();
-		let leave = matches!(op, FilesOp::Deleting(_, ref urls) if urls.contains(&cwd));
+	fn update_tab(tab: &mut Tab, op: Cow<FilesOp>, tasks: &Tasks) {
+		let url = op.url();
+		if tab.current.cwd == *url {
+			Self::update_current(tab, op, tasks);
+		} else if matches!(&tab.parent, Some(p) if p.cwd == *url) {
+			Self::update_parent(tab, op);
+		} else if matches!(tab.current.hovered(), Some(h) if h.url == *url) {
+			Self::update_hovered(tab, op);
+		} else {
+			Self::update_history(tab, op);
+		}
+	}
 
-		if let Some(p) = self.active_mut().parent.as_mut() {
-			render!(p.update(op));
-			render!(p.hover(&cwd));
+	fn update_parent(tab: &mut Tab, op: Cow<FilesOp>) {
+		let cwd = tab.current.cwd.clone();
+		let leave = matches!(*op, FilesOp::Deleting(_, ref urls) if urls.contains(&cwd));
+
+		if let Some(f) = tab.parent.as_mut() {
+			render!(f.update(op.into_owned()));
+			render!(f.hover(&cwd));
 		}
 
 		if leave {
-			self.active_mut().leave(());
+			tab.leave(());
 		}
 	}
 
-	fn update_current(&mut self, op: FilesOp, tasks: &Tasks) {
-		let hovered = self.hovered().filter(|_| self.current().tracing).map(|h| h.url());
-		let calc = !matches!(op, FilesOp::Size(..) | FilesOp::Deleting(..));
+	fn update_current(tab: &mut Tab, op: Cow<FilesOp>, tasks: &Tasks) {
+		let hovered = tab.current.hovered().filter(|_| tab.current.tracing).map(|h| h.url());
+		let calc = !matches!(*op, FilesOp::Size(..) | FilesOp::Deleting(..));
 
-		if self.current_mut().update(op) {
-			self.current_mut().repos(hovered.as_ref());
-			Self::_hover(None); // Re-hover in next loop
-			Self::_update_paged(); // Update for paged files in next loop
+		let foreign = matches!(op, Cow::Borrowed(_));
+		if !tab.current.update(op.into_owned()) {
+			return;
 		}
 
+		tab.current.repos(hovered);
+		if foreign {
+			return;
+		}
+
+		Self::_hover(None); // Re-hover in next loop
+		Self::_update_paged(); // Update for paged files in next loop
 		if calc {
-			tasks.preload_sorted(&self.current().files);
+			tasks.preload_sorted(&tab.current.files);
 		}
 	}
 
-	fn update_hovered(&mut self, op: FilesOp) {
+	fn update_hovered(tab: &mut Tab, op: Cow<FilesOp>) {
 		let url = op.url();
-		let folder = self.active_mut().history.entry(url.clone()).or_insert_with(|| Folder::from(url));
+		let folder = tab.history.entry(url.clone()).or_insert_with(|| Folder::from(url));
 
-		if folder.update(op) {
-			self.peek(true);
+		let foreign = matches!(op, Cow::Borrowed(_));
+		if !folder.update(op.into_owned()) {
+			return;
+		}
+
+		if !foreign {
+			Self::_peek(true);
 		}
 	}
 
-	fn update_history(&mut self, op: FilesOp) {
-		let leave = self.parent().and_then(|f| f.cwd.parent_url().map(|p| (&f.cwd, p))).is_some_and(
-			|(p, pp)| matches!(op, FilesOp::Deleting(ref parent, ref urls) if *parent == pp && urls.contains(p)),
+	fn update_history(tab: &mut Tab, op: Cow<FilesOp>) {
+		let leave = tab.parent.as_ref().and_then(|f| f.cwd.parent_url().map(|p| (&f.cwd, p))).is_some_and(
+			|(p, pp)| matches!(*op, FilesOp::Deleting(ref parent, ref urls) if *parent == pp && urls.contains(p)),
 		);
 
-		let url = op.url();
-		self.active_mut().history.entry(url.clone()).or_insert_with(|| Folder::from(url)).update(op);
+		if let Some(f) = tab.history.get_mut(op.url()) {
+			let hovered = f.hovered().filter(|_| f.tracing).map(|h| h.url());
+			_ = f.update(op.into_owned()) && f.repos(hovered);
+		}
 
 		if leave {
-			self.active_mut().leave(());
+			tab.leave(());
 		}
 	}
 
@@ -75,16 +103,12 @@ impl Manager {
 		}
 
 		for op in ops {
-			let url = op.url();
-			if self.cwd() == url {
-				self.update_current(op, tasks);
-			} else if matches!(self.parent(), Some(p) if p.cwd == *url) {
-				self.update_parent(op);
-			} else if matches!(self.hovered(), Some(h) if h.url == *url) {
-				self.update_hovered(op);
-			} else {
-				self.update_history(op);
+			let idx = self.tabs.idx;
+			for (_, tab) in self.tabs.iter_mut().enumerate().filter(|(i, _)| *i != idx) {
+				Self::update_tab(tab, Cow::Borrowed(&op), tasks);
 			}
+
+			Self::update_tab(self.active_mut(), Cow::Owned(op), tasks);
 		}
 
 		self.active_mut().apply_files_attrs();
