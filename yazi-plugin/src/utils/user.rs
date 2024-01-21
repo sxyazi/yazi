@@ -6,8 +6,9 @@ impl Utils {
 	#[cfg(unix)]
 	pub(super) fn user(lua: &Lua, ya: &Table) -> mlua::Result<()> {
 		use uzers::{Groups, Users};
+		use yazi_shared::hostname;
 
-		use crate::utils::USERS_CACHE;
+		use crate::utils::{HOSTNAME_CACHE, USERS_CACHE};
 
 		ya.set("uid", lua.create_function(|_, ()| Ok(USERS_CACHE.get_current_uid()))?)?;
 
@@ -29,6 +30,17 @@ impl Utils {
 				USERS_CACHE
 					.get_group_by_gid(gid.unwrap_or_else(|| USERS_CACHE.get_current_gid()))
 					.map(|s| lua.create_string(s.name().as_encoded_bytes()))
+					.transpose()
+			})?,
+		)?;
+
+		ya.set(
+			"host_name",
+			lua.create_function(|lua, ()| {
+				HOSTNAME_CACHE
+					.get_or_init(|| hostname().ok())
+					.as_ref()
+					.map(|s| lua.create_string(s))
 					.transpose()
 			})?,
 		)?;
