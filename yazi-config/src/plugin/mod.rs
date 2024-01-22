@@ -2,6 +2,7 @@ mod exec;
 mod plugin;
 mod props;
 
+#[allow(unused_imports)]
 pub use exec::*;
 pub use plugin::*;
 pub use props::*;

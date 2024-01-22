@@ -7,7 +7,7 @@ use super::Status;
 
 pub struct Child {
 	inner:  tokio::process::Child,
-	stdin:  Option<ChildStdin>,
+	_stdin: Option<ChildStdin>,
 	stdout: Option<BufReader<ChildStdout>>,
 	stderr: Option<BufReader<ChildStderr>>,
 }
@@ -17,7 +17,7 @@ impl Child {
 		let stdin = inner.stdin.take();
 		let stdout = inner.stdout.take().map(BufReader::new);
 		let stderr = inner.stderr.take().map(BufReader::new);
-		Self { inner, stdin, stdout, stderr }
+		Self { inner, _stdin: stdin, stdout, stderr }
 	}
 }
 
