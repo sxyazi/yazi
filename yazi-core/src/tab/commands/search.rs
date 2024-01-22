@@ -9,10 +9,6 @@ use yazi_shared::{event::Exec, fs::FilesOp, render};
 
 use crate::{input::Input, manager::Manager, tab::Tab};
 
-pub struct Opt {
-	pub type_: OptType,
-}
-
 #[derive(PartialEq, Eq)]
 pub enum OptType {
 	None,
@@ -20,15 +16,34 @@ pub enum OptType {
 	Fd,
 }
 
+impl From<&str> for OptType {
+	fn from(value: &str) -> Self {
+		match value {
+			"rg" => Self::Rg,
+			"fd" => Self::Fd,
+			_ => Self::None,
+		}
+	}
+}
+
+impl ToString for OptType {
+	fn to_string(&self) -> String {
+		match self {
+			Self::Rg => "rg",
+			Self::Fd => "fd",
+			Self::None => "none",
+		}
+		.to_owned()
+	}
+}
+
+pub struct Opt {
+	pub type_: OptType,
+}
+
 impl From<&Exec> for Opt {
 	fn from(e: &Exec) -> Self {
-		Self {
-			type_: match e.args.first().map(|s| s.as_str()) {
-				Some("fd") => OptType::Fd,
-				Some("rg") => OptType::Rg,
-				_ => OptType::None,
-			},
-		}
+		Self { type_: e.args.first().map(|s| s.as_str()).unwrap_or_default().into() }
 	}
 }
 
@@ -47,7 +62,8 @@ impl Tab {
 		let hidden = self.conf.show_hidden;
 
 		self.search = Some(tokio::spawn(async move {
-			let Some(Ok(subject)) = Input::_show(InputCfg::search()).recv().await else { bail!("") };
+			let mut input = Input::_show(InputCfg::search(&opt.type_.to_string()));
+			let Some(Ok(subject)) = input.recv().await else { bail!("") };
 
 			cwd = cwd.into_search(subject.clone());
 			let rx = if opt.type_ == OptType::Rg {

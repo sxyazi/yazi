@@ -156,7 +156,7 @@ find_origin = "top-center"
 find_offset = [ 0, 2, 50, 3 ]
 
 # search
-search_title  = "Search:"
+search_title  = "Search via {n}:"
 search_origin = "top-center"
 search_offset = [ 0, 2, 50, 3 ]
 
