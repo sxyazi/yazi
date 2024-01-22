@@ -89,9 +89,9 @@ impl InputCfg {
 	}
 
 	#[inline]
-	pub fn search() -> Self {
+	pub fn search(name: &str) -> Self {
 		Self {
-			title: INPUT.search_title.to_owned(),
+			title: INPUT.search_title.replace("{n}", name),
 			position: Position::new(INPUT.search_origin, INPUT.search_offset),
 			..Default::default()
 		}
