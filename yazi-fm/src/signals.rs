@@ -54,21 +54,19 @@ impl Signals {
 
 		let tx = self.tx.clone();
 		Ok(tokio::spawn(async move {
-			loop {
-				while let Some(signal) = signals.next().await {
-					if BLOCKER.try_acquire().is_err() {
-						continue;
-					}
+			while let Some(signal) = signals.next().await {
+				if BLOCKER.try_acquire().is_err() {
+					continue;
+				}
 
-					match signal {
-						SIGHUP | SIGTERM | SIGQUIT | SIGINT => {
-							if tx.send(Event::Quit(Default::default())).is_err() {
-								break;
-							}
+				match signal {
+					SIGHUP | SIGTERM | SIGQUIT | SIGINT => {
+						if tx.send(Event::Quit(Default::default())).is_err() {
+							break;
 						}
-						SIGCONT => Scheduler::app_resume(),
-						_ => {}
 					}
+					SIGCONT => Scheduler::app_resume(),
+					_ => {}
 				}
 			}
 		}))
