@@ -164,15 +164,12 @@ impl Scheduler {
 
 	pub async fn app_stop() {
 		let (tx, rx) = oneshot::channel::<()>();
-		emit!(Call(Exec::call("stop", vec!["true".to_string()]).with_data(Some(tx)).vec(), Layer::App));
+		emit!(Call(Exec::call("stop", vec![]).with_data(tx).vec(), Layer::App));
 		rx.await.ok();
 	}
 
 	pub fn app_resume() {
-		emit!(Call(
-			Exec::call("stop", vec!["false".to_string()]).with_data(None::<oneshot::Sender<()>>).vec(),
-			Layer::App
-		));
+		emit!(Call(Exec::call("resume", vec![]).vec(), Layer::App));
 	}
 
 	pub fn file_cut(&self, from: Url, mut to: Url, force: bool) {

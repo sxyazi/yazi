@@ -86,6 +86,7 @@ impl<'a> Executor<'a> {
 		on!(plugin_do);
 		on!(update_progress);
 		on!(stop);
+		on!(resume);
 	}
 
 	fn manager(&mut self, exec: &Exec) {

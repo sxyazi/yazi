@@ -1,42 +1,38 @@
 use anyhow::Result;
 use crossterm::event::{Event as CrosstermEvent, EventStream, KeyEvent, KeyEventKind};
 use futures::StreamExt;
-use tokio::{select, sync::{mpsc::{self, UnboundedReceiver, UnboundedSender}, oneshot}, task::JoinHandle};
+use tokio::{select, sync::mpsc, task::JoinHandle};
+use tokio_util::sync::CancellationToken;
 use yazi_shared::event::Event;
 
 pub(super) struct Signals {
-	tx:            UnboundedSender<Event>,
-	pub(super) rx: UnboundedReceiver<Event>,
-
-	term_stop_tx: Option<oneshot::Sender<()>>,
-	term_stop_rx: Option<oneshot::Receiver<()>>,
+	tx:     mpsc::UnboundedSender<Event>,
+	pub rx: mpsc::UnboundedReceiver<Event>,
+	ct:     CancellationToken,
 }
 
 impl Signals {
 	pub(super) fn start() -> Result<Self> {
 		let (tx, rx) = mpsc::unbounded_channel();
-		let (term_tx, term_rx) = oneshot::channel();
+		let ct = CancellationToken::new();
+		let mut signals = Self { tx: tx.clone(), rx, ct };
 
-		let mut signals =
-			Self { tx: tx.clone(), rx, term_stop_tx: Some(term_tx), term_stop_rx: Some(term_rx) };
-
+		Event::init(tx);
 		signals.spawn_system_task()?;
 		signals.spawn_crossterm_task();
 
-		Event::init(tx);
 		Ok(signals)
 	}
 
-	pub(super) fn stop_term(&mut self, state: bool) {
-		if state == self.term_stop_tx.is_none() {
-			return;
+	pub(super) fn stop(&mut self) {
+		if !self.ct.is_cancelled() {
+			self.ct.cancel();
 		}
+	}
 
-		if let Some(tx) = self.term_stop_tx.take() {
-			tx.send(()).ok();
-		} else {
-			let (tx, rx) = oneshot::channel();
-			(self.term_stop_tx, self.term_stop_rx) = (Some(tx), Some(rx));
+	pub(super) fn resume(&mut self) {
+		if self.ct.is_cancelled() {
+			self.ct = CancellationToken::new();
 			self.spawn_crossterm_task();
 		}
 	}
@@ -47,9 +43,8 @@ impl Signals {
 	#[cfg(unix)]
 	fn spawn_system_task(&self) -> Result<JoinHandle<()>> {
 		use libc::{SIGCONT, SIGHUP, SIGINT, SIGQUIT, SIGTERM};
-		use yazi_scheduler::Scheduler;
+		use yazi_scheduler::{Scheduler, BLOCKER};
 
-		let tx = self.tx.clone();
 		let mut signals = signal_hook_tokio::Signals::new([
 			// Terminating signals
 			SIGHUP, SIGTERM, SIGQUIT, SIGINT, //
@@ -57,31 +52,36 @@ impl Signals {
 			SIGCONT,
 		])?;
 
+		let tx = self.tx.clone();
 		Ok(tokio::spawn(async move {
-			while let Some(signal) = signals.next().await {
-				match signal {
-					SIGHUP | SIGTERM | SIGQUIT | SIGINT => {
-						if tx.send(Event::Quit(Default::default())).is_err() {
-							break;
-						}
+			loop {
+				while let Some(signal) = signals.next().await {
+					if BLOCKER.try_acquire().is_err() {
+						continue;
 					}
-					SIGCONT => Scheduler::app_resume(),
-					_ => {}
+
+					match signal {
+						SIGHUP | SIGTERM | SIGQUIT | SIGINT => {
+							if tx.send(Event::Quit(Default::default())).is_err() {
+								break;
+							}
+						}
+						SIGCONT => Scheduler::app_resume(),
+						_ => {}
+					}
 				}
 			}
 		}))
 	}
 
 	fn spawn_crossterm_task(&mut self) -> JoinHandle<()> {
-		let tx = self.tx.clone();
-		let mut stop_rx = self.term_stop_rx.take().unwrap();
+		let mut reader = EventStream::new();
+		let (tx, ct) = (self.tx.clone(), self.ct.clone());
 
 		tokio::spawn(async move {
-			let mut reader = EventStream::new();
-
 			loop {
 				select! {
-					_ = &mut stop_rx => break,
+					_ = ct.cancelled() => break,
 					Some(Ok(event)) = reader.next() => {
 						let event = match event {
 							// We need to check key event kind;

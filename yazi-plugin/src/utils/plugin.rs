@@ -7,7 +7,7 @@ impl Utils {
 		ya.set(
 			"plugin_retrieve",
 			lua.create_async_function(
-				|_, (name, calls, args): (String, usize, Variadic<Value>)| async move { Ok(()) },
+				|_, (_name, _calls, _args): (String, usize, Variadic<Value>)| async move { Ok(()) },
 			)?,
 		)?;
 

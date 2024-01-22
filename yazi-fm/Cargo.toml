@@ -24,9 +24,10 @@ fdlimit       = "^0"
 futures       = "^0"
 mlua          = { version = "^0", features = [ "lua54", "vendored" ] }
 ratatui       = "^0"
-tokio         = { version = "^1", features = [ "parking_lot" ] }
-unicode-width = "^0"
 syntect       = { version = "^5", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
+tokio         = { version = "^1", features = [ "parking_lot" ] }
+tokio-util    = "^0"
+unicode-width = "^0"
 
 # Logging
 tracing            = { version = "^0", features = [ "max_level_debug", "release_max_level_warn" ] }

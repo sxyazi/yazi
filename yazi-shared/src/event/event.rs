@@ -1,12 +1,12 @@
 use std::ffi::OsString;
 
 use crossterm::event::KeyEvent;
-use tokio::sync::{mpsc::UnboundedSender, oneshot};
+use tokio::sync::{mpsc, oneshot};
 
 use super::Exec;
 use crate::{term::Term, Layer, RoCell};
 
-static TX: RoCell<UnboundedSender<Event>> = RoCell::new();
+static TX: RoCell<mpsc::UnboundedSender<Event>> = RoCell::new();
 
 #[derive(Debug)]
 pub enum Event {
@@ -26,11 +26,12 @@ pub struct EventQuit {
 
 impl Event {
 	#[inline]
-	pub fn init(tx: UnboundedSender<Event>) { TX.init(tx); }
+	pub fn init(tx: mpsc::UnboundedSender<Event>) { TX.init(tx); }
 
 	#[inline]
 	pub fn emit(self) { TX.send(self).ok(); }
 
+	#[inline]
 	pub async fn wait<T>(self, rx: oneshot::Receiver<T>) -> T {
 		TX.send(self).ok();
 		rx.await.unwrap_or_else(|_| Term::goodbye(|| false))
