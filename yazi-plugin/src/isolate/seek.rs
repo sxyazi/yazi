@@ -15,7 +15,7 @@ pub fn seek_sync(exec: &Exec, file: yazi_shared::fs::File, units: i16) {
 		tx:   None,
 	};
 	emit!(Call(
-		Exec::call("plugin", vec![exec.cmd.to_owned()]).with_bool("sync", true).with_data(data).vec(),
+		Exec::call("plugin", vec![exec.cmd.to_owned()]).with_bool("sync", true).with_data(data),
 		Layer::App
 	));
 }

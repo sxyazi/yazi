@@ -9,10 +9,12 @@ pub struct Opt {
 	data: ValueSendable,
 }
 
-impl TryFrom<&Exec> for Opt {
+impl TryFrom<Exec> for Opt {
 	type Error = ();
 
-	fn try_from(e: &Exec) -> Result<Self, Self::Error> { Ok(Self { data: e.take_data().ok_or(())? }) }
+	fn try_from(mut e: Exec) -> Result<Self, Self::Error> {
+		Ok(Self { data: e.take_data().ok_or(())? })
+	}
 }
 
 impl Manager {

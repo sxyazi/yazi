@@ -8,11 +8,11 @@ pub struct Opt {
 	only_if: Option<Url>,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self {
+impl From<Exec> for Opt {
+	fn from(mut e: Exec) -> Self {
 		Self {
-			page:    e.args.first().and_then(|s| s.parse().ok()),
-			only_if: e.named.get("only-if").map(Url::from),
+			page:    e.take_first().and_then(|s| s.parse().ok()),
+			only_if: e.take_name("only-if").map(Url::from),
 		}
 	}
 }
@@ -24,13 +24,13 @@ impl From<()> for Opt {
 impl Manager {
 	#[inline]
 	pub fn _update_paged() {
-		emit!(Call(Exec::call("update_paged", vec![]).vec(), Layer::Manager));
+		emit!(Call(Exec::call("update_paged", vec![]), Layer::Manager));
 	}
 
 	#[inline]
 	pub fn _update_paged_by(page: usize, only_if: &Url) {
 		emit!(Call(
-			Exec::call("update_paged", vec![page.to_string()]).with("only-if", only_if.to_string()).vec(),
+			Exec::call("update_paged", vec![page.to_string()]).with("only-if", only_if.to_string()),
 			Layer::Manager
 		));
 	}

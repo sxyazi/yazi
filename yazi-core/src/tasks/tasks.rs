@@ -35,7 +35,7 @@ impl Tasks {
 				let new = TasksProgress::from(&*running.lock());
 				if last != new {
 					last = new;
-					emit!(Call(Exec::call("update_progress", vec![]).with_data(new).vec(), Layer::App));
+					emit!(Call(Exec::call("update_progress", vec![]).with_data(new), Layer::App));
 				}
 			}
 		});
@@ -187,6 +187,7 @@ impl Tasks {
 			self.scheduler.preload_paged(rule, targets);
 		};
 
+		#[allow(clippy::needless_range_loop)]
 		for i in 0..PLUGIN.preloaders.len() {
 			if !multi_tasks[i].is_empty() {
 				go(&PLUGIN.preloaders[i], mem::take(&mut multi_tasks[i]));

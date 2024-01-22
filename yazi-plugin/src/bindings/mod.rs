@@ -8,6 +8,7 @@ mod range;
 mod url;
 mod window;
 
+#[allow(unused_imports)]
 pub use bindings::*;
 pub use cha::*;
 pub use file::*;

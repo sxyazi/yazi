@@ -7,8 +7,8 @@ pub struct Opt {
 	follow: bool,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self {
+impl From<Exec> for Opt {
+	fn from(e: Exec) -> Self {
 		Self { force: e.named.contains_key("force"), follow: e.named.contains_key("follow") }
 	}
 }

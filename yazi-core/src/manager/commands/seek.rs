@@ -9,9 +9,9 @@ pub struct Opt {
 	units: i16,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self {
-		Self { units: e.args.first().and_then(|s| s.parse().ok()).unwrap_or(0) }
+impl From<Exec> for Opt {
+	fn from(mut e: Exec) -> Self {
+		Self { units: e.take_first().and_then(|s| s.parse().ok()).unwrap_or(0) }
 	}
 }
 

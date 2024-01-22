@@ -8,8 +8,8 @@ pub struct Opt {
 	url: Option<Url>,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self { Self { url: e.args.first().map(Url::from) } }
+impl From<Exec> for Opt {
+	fn from(mut e: Exec) -> Self { Self { url: e.take_first().map(Url::from) } }
 }
 impl From<Option<Url>> for Opt {
 	fn from(url: Option<Url>) -> Self { Self { url } }
@@ -19,7 +19,7 @@ impl Manager {
 	#[inline]
 	pub fn _hover(url: Option<Url>) {
 		emit!(Call(
-			Exec::call("hover", url.map_or_else(Vec::new, |u| vec![u.to_string()])).vec(),
+			Exec::call("hover", url.map_or_else(Vec::new, |u| vec![u.to_string()])),
 			Layer::Manager
 		));
 	}

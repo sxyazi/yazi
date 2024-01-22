@@ -9,18 +9,18 @@ use yazi_shared::{event::Exec, fs::{max_common_root, File, FilesOp, Url}, term::
 
 use crate::{input::Input, manager::Manager};
 
-pub struct Opt<'a> {
+pub struct Opt {
 	force:  bool,
-	empty:  &'a str,
-	cursor: &'a str,
+	empty:  String,
+	cursor: String,
 }
 
-impl<'a> From<&'a Exec> for Opt<'a> {
-	fn from(e: &'a Exec) -> Self {
+impl From<Exec> for Opt {
+	fn from(mut e: Exec) -> Self {
 		Self {
 			force:  e.named.contains_key("force"),
-			empty:  e.named.get("empty").map(|s| s.as_str()).unwrap_or_default(),
-			cursor: e.named.get("cursor").map(|s| s.as_str()).unwrap_or_default(),
+			empty:  e.take_name("empty").unwrap_or_default(),
+			cursor: e.take_name("cursor").unwrap_or_default(),
 		}
 	}
 }
@@ -51,7 +51,7 @@ impl Manager {
 		Ok(Self::_hover(Some(new)))
 	}
 
-	pub fn rename<'a>(&self, opt: impl Into<Opt<'a>>) {
+	pub fn rename(&self, opt: impl Into<Opt>) {
 		if self.active().in_selecting() {
 			return self.bulk_rename();
 		}
@@ -61,8 +61,8 @@ impl Manager {
 		};
 
 		let opt = opt.into() as Opt;
-		let name = Self::empty_url_part(&hovered, opt.empty);
-		let cursor = match opt.cursor {
+		let name = Self::empty_url_part(&hovered, &opt.empty);
+		let cursor = match opt.cursor.as_str() {
 			"start" => Some(0),
 			"before_ext" => name
 				.chars()

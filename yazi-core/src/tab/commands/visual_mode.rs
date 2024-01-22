@@ -8,8 +8,8 @@ pub struct Opt {
 	unset: bool,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self { Self { unset: e.named.contains_key("unset") } }
+impl From<Exec> for Opt {
+	fn from(e: Exec) -> Self { Self { unset: e.named.contains_key("unset") } }
 }
 
 impl Tab {

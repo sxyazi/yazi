@@ -5,8 +5,8 @@ use crate::input::{Input, InputMode};
 
 pub struct Opt;
 
-impl From<&Exec> for Opt {
-	fn from(_: &Exec) -> Self { Self }
+impl From<Exec> for Opt {
+	fn from(_: Exec) -> Self { Self }
 }
 
 impl Input {

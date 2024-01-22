@@ -6,8 +6,8 @@ pub struct Opt {
 	append: bool,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self { Self { append: e.named.contains_key("append") } }
+impl From<Exec> for Opt {
+	fn from(e: Exec) -> Self { Self { append: e.named.contains_key("append") } }
 }
 impl From<bool> for Opt {
 	fn from(append: bool) -> Self { Self { append } }

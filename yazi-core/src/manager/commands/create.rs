@@ -10,8 +10,8 @@ pub struct Opt {
 	force: bool,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self { Self { force: e.named.contains_key("force") } }
+impl From<Exec> for Opt {
+	fn from(e: Exec) -> Self { Self { force: e.named.contains_key("force") } }
 }
 
 impl Manager {

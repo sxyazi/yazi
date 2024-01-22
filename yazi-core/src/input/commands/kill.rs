@@ -4,14 +4,12 @@ use yazi_shared::{event::Exec, render, CharKind};
 
 use crate::input::Input;
 
-pub struct Opt<'a> {
-	kind: &'a str,
+pub struct Opt {
+	kind: String,
 }
 
-impl<'a> From<&'a Exec> for Opt<'a> {
-	fn from(e: &'a Exec) -> Self {
-		Self { kind: e.args.first().map(|s| s.as_str()).unwrap_or_default() }
-	}
+impl From<Exec> for Opt {
+	fn from(mut e: Exec) -> Self { Self { kind: e.take_first().unwrap_or_default() } }
 }
 
 impl Input {
@@ -67,7 +65,7 @@ impl Input {
 		input.take(n).fold(0, |acc, c| acc + c.len_utf8())
 	}
 
-	pub fn kill<'a>(&mut self, opt: impl Into<Opt<'a>>) {
+	pub fn kill(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		let snap = self.snap_mut();
 

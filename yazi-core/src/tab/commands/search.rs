@@ -16,9 +16,9 @@ pub enum OptType {
 	Fd,
 }
 
-impl From<&str> for OptType {
-	fn from(value: &str) -> Self {
-		match value {
+impl From<String> for OptType {
+	fn from(value: String) -> Self {
+		match value.as_str() {
 			"rg" => Self::Rg,
 			"fd" => Self::Fd,
 			_ => Self::None,
@@ -41,10 +41,8 @@ pub struct Opt {
 	pub type_: OptType,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self {
-		Self { type_: e.args.first().map(|s| s.as_str()).unwrap_or_default().into() }
-	}
+impl From<Exec> for Opt {
+	fn from(mut e: Exec) -> Self { Self { type_: e.take_first().unwrap_or_default().into() } }
 }
 
 impl Tab {

@@ -9,10 +9,10 @@ pub struct Opt {
 	confirm: bool,
 }
 
-impl<'a> From<&'a Exec> for Opt {
-	fn from(e: &'a Exec) -> Self {
+impl From<Exec> for Opt {
+	fn from(mut e: Exec) -> Self {
 		Self {
-			cmd:     e.args.first().map(|e| e.to_owned()).unwrap_or_default(),
+			cmd:     e.take_first().unwrap_or_default(),
 			block:   e.named.contains_key("block"),
 			confirm: e.named.contains_key("confirm"),
 		}

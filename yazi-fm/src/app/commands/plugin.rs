@@ -21,7 +21,7 @@ impl App {
 
 		tokio::spawn(async move {
 			if LOADED.ensure(&opt.name).await.is_ok() {
-				emit!(Call(Exec::call("plugin_do", vec![opt.name]).with_data(opt.data).vec(), Layer::App));
+				emit!(Call(Exec::call("plugin_do", vec![opt.name]).with_data(opt.data), Layer::App));
 			}
 		});
 	}

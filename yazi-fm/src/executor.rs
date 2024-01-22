@@ -1,6 +1,6 @@
 use yazi_config::{keymap::{Control, Key}, KEYMAP};
 use yazi_core::input::InputMode;
-use yazi_shared::{event::Exec, Layer};
+use yazi_shared::{emit, event::Exec, Layer};
 
 use crate::app::App;
 
@@ -11,6 +11,20 @@ pub(super) struct Executor<'a> {
 impl<'a> Executor<'a> {
 	#[inline]
 	pub(super) fn new(app: &'a mut App) -> Self { Self { app } }
+
+	#[inline]
+	pub(super) fn dispatch(&mut self, exec: Exec, layer: Layer) {
+		match layer {
+			Layer::App => self.app(exec),
+			Layer::Manager => self.manager(exec),
+			Layer::Tasks => self.tasks(exec),
+			Layer::Select => self.select(exec),
+			Layer::Input => self.input(exec),
+			Layer::Help => self.help(exec),
+			Layer::Completion => self.completion(exec),
+			Layer::Which => unreachable!(),
+		}
+	}
 
 	pub(super) fn handle(&mut self, key: Key) -> bool {
 		let cx = &mut self.app.cx;
@@ -42,7 +56,7 @@ impl<'a> Executor<'a> {
 
 	#[inline]
 	fn matches(&mut self, layer: Layer, key: Key) -> bool {
-		for Control { on, exec, .. } in KEYMAP.get(layer) {
+		for ctrl @ Control { on, .. } in KEYMAP.get(layer) {
 			if on.is_empty() || on[0] != key {
 				continue;
 			}
@@ -50,30 +64,14 @@ impl<'a> Executor<'a> {
 			if on.len() > 1 {
 				self.app.cx.which.show(&key, layer);
 			} else {
-				self.dispatch(exec, layer);
+				emit!(Seq(ctrl.to_seq(), layer));
 			}
 			return true;
 		}
 		false
 	}
 
-	#[inline]
-	pub(super) fn dispatch(&mut self, exec: &[Exec], layer: Layer) {
-		for e in exec {
-			match layer {
-				Layer::App => self.app(e),
-				Layer::Manager => self.manager(e),
-				Layer::Tasks => self.tasks(e),
-				Layer::Select => self.select(e),
-				Layer::Input => self.input(e),
-				Layer::Help => self.help(e),
-				Layer::Completion => self.completion(e),
-				Layer::Which => unreachable!(),
-			};
-		}
-	}
-
-	fn app(&mut self, exec: &Exec) {
+	fn app(&mut self, exec: Exec) {
 		macro_rules! on {
 			($name:ident) => {
 				if exec.cmd == stringify!($name) {
@@ -89,7 +87,7 @@ impl<'a> Executor<'a> {
 		on!(resume);
 	}
 
-	fn manager(&mut self, exec: &Exec) {
+	fn manager(&mut self, exec: Exec) {
 		macro_rules! on {
 			(MANAGER, $name:ident $(,$args:expr)*) => {
 				if exec.cmd == stringify!($name) {
@@ -180,7 +178,7 @@ impl<'a> Executor<'a> {
 		}
 	}
 
-	fn tasks(&mut self, exec: &Exec) {
+	fn tasks(&mut self, exec: Exec) {
 		macro_rules! on {
 			($name:ident) => {
 				if exec.cmd == stringify!($name) {
@@ -200,13 +198,14 @@ impl<'a> Executor<'a> {
 		on!(inspect);
 		on!(cancel);
 
+		#[allow(clippy::single_match)]
 		match exec.cmd.as_str() {
 			"help" => self.app.cx.help.toggle(Layer::Tasks),
 			_ => {}
 		}
 	}
 
-	fn select(&mut self, exec: &Exec) {
+	fn select(&mut self, exec: Exec) {
 		macro_rules! on {
 			($name:ident) => {
 				if exec.cmd == stringify!($name) {
@@ -219,13 +218,14 @@ impl<'a> Executor<'a> {
 		on!(close);
 		on!(arrow);
 
+		#[allow(clippy::single_match)]
 		match exec.cmd.as_str() {
 			"help" => self.app.cx.help.toggle(Layer::Select),
 			_ => {}
 		}
 	}
 
-	fn input(&mut self, exec: &Exec) {
+	fn input(&mut self, exec: Exec) {
 		macro_rules! on {
 			($name:ident) => {
 				if exec.cmd == stringify!($name) {
@@ -266,6 +266,7 @@ impl<'a> Executor<'a> {
 				on!(undo);
 				on!(redo);
 
+				#[allow(clippy::single_match)]
 				match exec.cmd.as_str() {
 					"help" => self.app.cx.help.toggle(Layer::Input),
 					_ => {}
@@ -278,7 +279,7 @@ impl<'a> Executor<'a> {
 		}
 	}
 
-	fn help(&mut self, exec: &Exec) {
+	fn help(&mut self, exec: Exec) {
 		macro_rules! on {
 			($name:ident) => {
 				if exec.cmd == stringify!($name) {
@@ -291,13 +292,14 @@ impl<'a> Executor<'a> {
 		on!(arrow);
 		on!(filter);
 
+		#[allow(clippy::single_match)]
 		match exec.cmd.as_str() {
 			"close" => self.app.cx.help.toggle(Layer::Help),
 			_ => {}
 		}
 	}
 
-	fn completion(&mut self, exec: &Exec) {
+	fn completion(&mut self, exec: Exec) {
 		macro_rules! on {
 			($name:ident) => {
 				if exec.cmd == stringify!($name) {
@@ -311,6 +313,7 @@ impl<'a> Executor<'a> {
 		on!(close);
 		on!(arrow);
 
+		#[allow(clippy::single_match)]
 		match exec.cmd.as_str() {
 			"help" => self.app.cx.help.toggle(Layer::Completion),
 			_ => {}

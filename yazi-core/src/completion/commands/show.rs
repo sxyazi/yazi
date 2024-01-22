@@ -6,20 +6,20 @@ use crate::completion::Completion;
 
 const LIMIT: usize = 30;
 
-pub struct Opt<'a> {
-	cache:      &'a Vec<String>,
-	cache_name: &'a str,
-	word:       &'a str,
+pub struct Opt {
+	cache:      Vec<String>,
+	cache_name: String,
+	word:       String,
 	ticket:     usize,
 }
 
-impl<'a> From<&'a Exec> for Opt<'a> {
-	fn from(e: &'a Exec) -> Self {
+impl From<Exec> for Opt {
+	fn from(mut e: Exec) -> Self {
 		Self {
-			cache:      &e.args,
-			cache_name: e.named.get("cache-name").map(|n| n.as_str()).unwrap_or_default(),
-			word:       e.named.get("word").map(|w| w.as_str()).unwrap_or_default(),
-			ticket:     e.named.get("ticket").and_then(|v| v.parse().ok()).unwrap_or(0),
+			cache:      mem::take(&mut e.args),
+			cache_name: e.take_name("cache-name").unwrap_or_default(),
+			word:       e.take_name("word").unwrap_or_default(),
+			ticket:     e.take_name("ticket").and_then(|v| v.parse().ok()).unwrap_or(0),
 		}
 	}
 }
@@ -54,7 +54,7 @@ impl Completion {
 		prefixed.into_iter().map(ToOwned::to_owned).collect()
 	}
 
-	pub fn show<'a>(&mut self, opt: impl Into<Opt<'a>>) {
+	pub fn show(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		if self.ticket != opt.ticket {
 			return;
@@ -63,12 +63,12 @@ impl Completion {
 		if !opt.cache.is_empty() {
 			self.caches.insert(opt.cache_name.to_owned(), opt.cache.clone());
 		}
-		let Some(cache) = self.caches.get(opt.cache_name) else {
+		let Some(cache) = self.caches.get(&opt.cache_name) else {
 			return;
 		};
 
 		self.ticket = opt.ticket;
-		self.cands = Self::match_candidates(opt.word, cache);
+		self.cands = Self::match_candidates(&opt.word, cache);
 		if self.cands.is_empty() {
 			return render!(mem::replace(&mut self.visible, false));
 		}

@@ -18,18 +18,14 @@ pub struct OptData {
 	pub tx:   Option<oneshot::Sender<ValueSendable>>,
 }
 
-impl TryFrom<&Exec> for Opt {
+impl TryFrom<Exec> for Opt {
 	type Error = anyhow::Error;
 
-	fn try_from(e: &Exec) -> Result<Self, Self::Error> {
-		let Some(name) = e.args.first().filter(|s| !s.is_empty()) else {
+	fn try_from(mut e: Exec) -> Result<Self, Self::Error> {
+		let Some(name) = e.take_first().filter(|s| !s.is_empty()) else {
 			bail!("invalid plugin name");
 		};
 
-		Ok(Self {
-			name: name.to_owned(),
-			sync: e.named.contains_key("sync"),
-			data: e.take_data().unwrap_or_default(),
-		})
+		Ok(Self { name, sync: e.named.contains_key("sync"), data: e.take_data().unwrap_or_default() })
 	}
 }

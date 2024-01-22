@@ -8,24 +8,24 @@ use yazi_shared::{emit, event::Exec, render, Debounce, InputError, Layer};
 use crate::{folder::{Filter, FilterCase}, input::Input, manager::Manager, tab::Tab};
 
 #[derive(Default)]
-pub struct Opt<'a> {
-	pub query: &'a str,
+pub struct Opt {
+	pub query: String,
 	pub case:  FilterCase,
 	pub done:  bool,
 }
 
-impl<'a> From<&'a Exec> for Opt<'a> {
-	fn from(e: &'a Exec) -> Self {
+impl From<Exec> for Opt {
+	fn from(mut e: Exec) -> Self {
 		Self {
-			query: e.args.first().map(|s| s.as_str()).unwrap_or_default(),
-			case:  e.into(),
+			query: e.take_first().unwrap_or_default(),
+			case:  FilterCase::from(&e),
 			done:  e.named.contains_key("done"),
 		}
 	}
 }
 
 impl Tab {
-	pub fn filter<'a>(&mut self, opt: impl Into<Opt<'a>>) {
+	pub fn filter(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		tokio::spawn(async move {
 			let rx = Input::_show(InputCfg::filter());
@@ -43,20 +43,19 @@ impl Tab {
 					Exec::call("filter_do", vec![s])
 						.with_bool("smart", opt.case == FilterCase::Smart)
 						.with_bool("insensitive", opt.case == FilterCase::Insensitive)
-						.with_bool("done", done)
-						.vec(),
+						.with_bool("done", done),
 					Layer::Manager
 				));
 			}
 		});
 	}
 
-	pub fn filter_do<'a>(&mut self, opt: impl Into<Opt<'a>>) {
+	pub fn filter_do(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 
 		let filter = if opt.query.is_empty() {
 			None
-		} else if let Ok(f) = Filter::new(opt.query, opt.case) {
+		} else if let Ok(f) = Filter::new(&opt.query, opt.case) {
 			Some(f)
 		} else {
 			return;

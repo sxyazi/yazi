@@ -6,8 +6,8 @@ pub struct Opt;
 impl From<()> for Opt {
 	fn from(_: ()) -> Self { Self }
 }
-impl From<&Exec> for Opt {
-	fn from(_: &Exec) -> Self { Self }
+impl From<Exec> for Opt {
+	fn from(_: Exec) -> Self { Self }
 }
 
 impl Tab {

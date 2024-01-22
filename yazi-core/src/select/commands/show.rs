@@ -10,16 +10,16 @@ pub struct Opt {
 	tx:  oneshot::Sender<Result<usize>>,
 }
 
-impl TryFrom<&Exec> for Opt {
+impl TryFrom<Exec> for Opt {
 	type Error = ();
 
-	fn try_from(e: &Exec) -> Result<Self, Self::Error> { e.take_data().ok_or(()) }
+	fn try_from(mut e: Exec) -> Result<Self, Self::Error> { e.take_data().ok_or(()) }
 }
 
 impl Select {
 	pub async fn _show(cfg: SelectCfg) -> Result<usize> {
 		let (tx, rx) = oneshot::channel();
-		emit!(Call(Exec::call("show", vec![]).with_data(Opt { cfg, tx }).vec(), Layer::Select));
+		emit!(Call(Exec::call("show", vec![]).with_data(Opt { cfg, tx }), Layer::Select));
 		rx.await.unwrap_or_else(|_| Term::goodbye(|| false))
 	}
 

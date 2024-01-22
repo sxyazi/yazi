@@ -7,10 +7,10 @@ use crate::{manager::Manager, tasks::Tasks};
 impl Manager {
 	#[inline]
 	pub fn _refresh() {
-		emit!(Call(Exec::call("refresh", vec![]).vec(), Layer::Manager));
+		emit!(Call(Exec::call("refresh", vec![]), Layer::Manager));
 	}
 
-	pub fn refresh(&mut self, _: &Exec, tasks: &Tasks) {
+	pub fn refresh(&mut self, _: Exec, tasks: &Tasks) {
 		env::set_current_dir(self.cwd()).ok();
 		env::set_var("PWD", self.cwd());
 

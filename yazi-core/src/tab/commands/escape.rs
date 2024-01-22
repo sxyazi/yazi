@@ -13,15 +13,15 @@ bitflags! {
 	}
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self {
-		e.named.iter().fold(Opt::empty(), |acc, (k, _)| match k.as_bytes() {
-			b"all" => Self::all(),
-			b"find" => acc | Self::FIND,
-			b"visual" => acc | Self::VISUAL,
-			b"select" => acc | Self::SELECT,
-			b"filter" => acc | Self::FILTER,
-			b"search" => acc | Self::SEARCH,
+impl From<Exec> for Opt {
+	fn from(e: Exec) -> Self {
+		e.named.iter().fold(Opt::empty(), |acc, (k, _)| match k.as_str() {
+			"all" => Self::all(),
+			"find" => acc | Self::FIND,
+			"visual" => acc | Self::VISUAL,
+			"select" => acc | Self::SELECT,
+			"filter" => acc | Self::FILTER,
+			"search" => acc | Self::SEARCH,
 			_ => acc,
 		})
 	}
@@ -47,7 +47,7 @@ impl Tab {
 	#[inline]
 	fn escape_filter(&mut self) -> bool {
 		let b = self.current.files.filter().is_some();
-		self.filter_do(super::filter::Opt { query: "", ..Default::default() });
+		self.filter_do(super::filter::Opt::default());
 		b
 	}
 

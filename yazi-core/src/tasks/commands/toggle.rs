@@ -4,8 +4,8 @@ use crate::tasks::Tasks;
 
 pub struct Opt;
 
-impl From<&Exec> for Opt {
-	fn from(_: &Exec) -> Self { Self }
+impl From<Exec> for Opt {
+	fn from(_: Exec) -> Self { Self }
 }
 impl From<()> for Opt {
 	fn from(_: ()) -> Self { Self }

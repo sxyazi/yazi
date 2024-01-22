@@ -3,7 +3,7 @@ use yazi_shared::{event::Exec, CharKind};
 use crate::input::Input;
 
 impl Input {
-	pub fn backward(&mut self, _: &Exec) {
+	pub fn backward(&mut self, _: Exec) {
 		let snap = self.snap();
 		if snap.cursor == 0 {
 			return self.move_(0);

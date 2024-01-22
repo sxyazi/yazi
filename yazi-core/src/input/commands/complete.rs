@@ -4,16 +4,16 @@ use yazi_shared::{emit, event::Exec, render, Layer};
 
 use crate::input::Input;
 
-pub struct Opt<'a> {
-	word:   &'a str,
+pub struct Opt {
+	word:   String,
 	ticket: usize,
 }
 
-impl<'a> From<&'a Exec> for Opt<'a> {
-	fn from(e: &'a Exec) -> Self {
+impl From<Exec> for Opt {
+	fn from(mut e: Exec) -> Self {
 		Self {
-			word:   e.args.first().map(|w| w.as_str()).unwrap_or_default(),
-			ticket: e.named.get("ticket").and_then(|s| s.parse().ok()).unwrap_or(0),
+			word:   e.take_first().unwrap_or_default(),
+			ticket: e.take_name("ticket").and_then(|s| s.parse().ok()).unwrap_or(0),
 		}
 	}
 }
@@ -21,13 +21,10 @@ impl<'a> From<&'a Exec> for Opt<'a> {
 impl Input {
 	#[inline]
 	pub fn _complete(word: &str, ticket: usize) {
-		emit!(Call(
-			Exec::call("complete", vec![word.to_owned()]).with("ticket", ticket).vec(),
-			Layer::Input
-		));
+		emit!(Call(Exec::call("complete", vec![word.to_owned()]).with("ticket", ticket), Layer::Input));
 	}
 
-	pub fn complete<'a>(&mut self, opt: impl Into<Opt<'a>>) {
+	pub fn complete(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		if self.ticket != opt.ticket {
 			return;

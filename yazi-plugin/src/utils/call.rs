@@ -48,7 +48,7 @@ impl Utils {
 						exec = exec.with_data(data);
 					}
 
-					emit!(Call(exec.vec(), Layer::Manager));
+					emit!(Call(exec, Layer::Manager));
 					Ok(())
 				},
 			)?,
