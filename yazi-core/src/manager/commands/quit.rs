@@ -10,8 +10,8 @@ pub struct Opt {
 impl From<()> for Opt {
 	fn from(_: ()) -> Self { Self::default() }
 }
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self { Self { no_cwd_file: e.named.contains_key("no-cwd-file") } }
+impl From<Exec> for Opt {
+	fn from(e: Exec) -> Self { Self { no_cwd_file: e.named.contains_key("no-cwd-file") } }
 }
 
 impl Manager {

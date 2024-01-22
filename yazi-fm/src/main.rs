@@ -21,6 +21,7 @@ use context::*;
 use executor::*;
 use logs::*;
 use panic::*;
+#[allow(unused_imports)]
 use root::*;
 use signals::*;
 

@@ -8,7 +8,7 @@ use yazi_shared::{event::Exec, term::Term, Defer};
 use crate::tasks::Tasks;
 
 impl Tasks {
-	pub fn inspect(&self, _: &Exec) {
+	pub fn inspect(&self, _: Exec) {
 		let Some(id) = self.scheduler.running.lock().get_id(self.cursor) else {
 			return;
 		};

@@ -23,7 +23,7 @@ impl Completion {
 	pub fn limit(&self) -> usize { self.cands.len().min(10) }
 
 	#[inline]
-	pub fn selected(&self) -> &String { &self.cands[self.cursor] }
+	pub fn selected(&self) -> Option<&String> { self.cands.get(self.cursor) }
 
 	// --- Cursor
 	#[inline]

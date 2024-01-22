@@ -7,8 +7,8 @@ pub struct Opt {
 	submit: bool,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self { Self { submit: e.named.contains_key("submit") } }
+impl From<Exec> for Opt {
+	fn from(e: Exec) -> Self { Self { submit: e.named.contains_key("submit") } }
 }
 impl From<bool> for Opt {
 	fn from(submit: bool) -> Self { Self { submit } }

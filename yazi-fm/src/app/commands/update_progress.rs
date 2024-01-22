@@ -8,10 +8,10 @@ pub struct Opt {
 	progress: TasksProgress,
 }
 
-impl TryFrom<&Exec> for Opt {
+impl TryFrom<Exec> for Opt {
 	type Error = ();
 
-	fn try_from(e: &Exec) -> Result<Self, Self::Error> {
+	fn try_from(mut e: Exec) -> Result<Self, Self::Error> {
 		Ok(Self { progress: e.take_data().ok_or(())? })
 	}
 }

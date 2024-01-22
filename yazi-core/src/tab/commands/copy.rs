@@ -4,22 +4,22 @@ use yazi_shared::event::Exec;
 
 use crate::{tab::Tab, CLIPBOARD};
 
-pub struct Opt<'a> {
-	type_: &'a str,
+pub struct Opt {
+	type_: String,
 }
 
-impl<'a> From<&'a Exec> for Opt<'a> {
-	fn from(e: &'a Exec) -> Self { Self { type_: e.args.first().map(|s| s.as_str()).unwrap_or("") } }
+impl From<Exec> for Opt {
+	fn from(mut e: Exec) -> Self { Self { type_: e.take_first().unwrap_or_default() } }
 }
 
 impl Tab {
-	pub fn copy<'a>(&self, opt: impl Into<Opt<'a>>) {
+	pub fn copy(&self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 
 		let mut s = OsString::new();
 		let mut it = self.selected().into_iter().peekable();
 		while let Some(f) = it.next() {
-			s.push(match opt.type_ {
+			s.push(match opt.type_.as_str() {
 				"path" => f.url.as_os_str(),
 				"dirname" => f.url.parent().map_or(OsStr::new(""), |p| p.as_os_str()),
 				"filename" => f.name().unwrap_or(OsStr::new("")),

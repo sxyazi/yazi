@@ -4,7 +4,7 @@ use crate::input::{op::InputOp, Input, InputMode};
 
 impl Input {
 	#[inline]
-	pub fn visual(&mut self, _: &Exec) {
+	pub fn visual(&mut self, _: Exec) {
 		let snap = self.snap_mut();
 		if snap.mode != InputMode::Normal {
 			return;

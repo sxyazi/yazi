@@ -7,8 +7,8 @@ pub struct Opt {
 	tx: Option<oneshot::Sender<()>>,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self { Self { tx: e.take_data() } }
+impl From<Exec> for Opt {
+	fn from(mut e: Exec) -> Self { Self { tx: e.take_data() } }
 }
 
 impl App {

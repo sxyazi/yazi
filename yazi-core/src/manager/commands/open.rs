@@ -12,8 +12,8 @@ pub struct Opt {
 	interactive: bool,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self {
+impl From<Exec> for Opt {
+	fn from(mut e: Exec) -> Self {
 		Self { targets: e.take_data(), interactive: e.named.contains_key("interactive") }
 	}
 }
@@ -57,7 +57,7 @@ impl Manager {
 	#[inline]
 	pub fn _open_do(interactive: bool, targets: Vec<(Url, Option<String>)>) {
 		emit!(Call(
-			Exec::call("open_do", vec![]).with_bool("interactive", interactive).with_data(targets).vec(),
+			Exec::call("open_do", vec![]).with_bool("interactive", interactive).with_data(targets),
 			Layer::Manager
 		));
 	}

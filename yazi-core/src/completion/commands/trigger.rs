@@ -5,16 +5,16 @@ use yazi_shared::{emit, event::Exec, render, Layer};
 
 use crate::completion::Completion;
 
-pub struct Opt<'a> {
-	word:   &'a str,
+pub struct Opt {
+	word:   String,
 	ticket: usize,
 }
 
-impl<'a> From<&'a Exec> for Opt<'a> {
-	fn from(e: &'a Exec) -> Self {
+impl From<Exec> for Opt {
+	fn from(mut e: Exec) -> Self {
 		Self {
-			word:   e.args.first().map(|s| s.as_str()).unwrap_or_default(),
-			ticket: e.named.get("ticket").and_then(|s| s.parse().ok()).unwrap_or(0),
+			word:   e.take_first().unwrap_or_default(),
+			ticket: e.take_name("ticket").and_then(|s| s.parse().ok()).unwrap_or(0),
 		}
 	}
 }
@@ -23,23 +23,23 @@ impl Completion {
 	#[inline]
 	pub fn _trigger(word: &str, ticket: usize) {
 		emit!(Call(
-			Exec::call("trigger", vec![word.to_owned()]).with("ticket", ticket).vec(),
+			Exec::call("trigger", vec![word.to_owned()]).with("ticket", ticket),
 			Layer::Completion
 		));
 	}
 
-	pub fn trigger<'a>(&mut self, opt: impl Into<Opt<'a>>) {
+	pub fn trigger(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		if opt.ticket < self.ticket {
 			return;
 		}
 
 		self.ticket = opt.ticket;
-		let (parent, child) = Self::split_path(opt.word);
+		let (parent, child) = Self::split_path(&opt.word);
 
 		if self.caches.contains_key(&parent) {
 			return self.show(
-				&Exec::call("show", vec![])
+				Exec::call("show", vec![])
 					.with("cache-name", parent)
 					.with("word", child)
 					.with("ticket", opt.ticket),
@@ -67,8 +67,7 @@ impl Completion {
 					Exec::call("show", cache)
 						.with("cache-name", parent)
 						.with("word", child)
-						.with("ticket", ticket)
-						.vec(),
+						.with("ticket", ticket),
 					Layer::Completion
 				));
 			}

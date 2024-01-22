@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, collections::VecDeque};
 
 use serde::Deserialize;
 use yazi_shared::event::Exec;
@@ -14,17 +14,8 @@ pub struct Control {
 }
 
 impl Control {
-	pub fn to_call(&self) -> Vec<Exec> {
-		self
-			.exec
-			.iter()
-			.map(|e| Exec {
-				cmd: e.cmd.clone(),
-				args: e.args.clone(),
-				named: e.named.clone(),
-				..Default::default()
-			})
-			.collect()
+	pub fn to_seq(&self) -> VecDeque<Exec> {
+		self.exec.iter().map(|e| e.clone_without_data()).collect()
 	}
 }
 

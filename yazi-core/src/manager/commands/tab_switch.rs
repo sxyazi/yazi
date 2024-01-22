@@ -7,10 +7,10 @@ pub struct Opt {
 	relative: bool,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self {
+impl From<Exec> for Opt {
+	fn from(mut e: Exec) -> Self {
 		Self {
-			step:     e.args.first().and_then(|s| s.parse().ok()).unwrap_or(0),
+			step:     e.take_first().and_then(|s| s.parse().ok()).unwrap_or(0),
 			relative: e.named.contains_key("relative"),
 		}
 	}

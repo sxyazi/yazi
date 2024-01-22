@@ -7,18 +7,18 @@ use yazi_shared::{emit, event::Exec, render, Debounce, InputError, Layer};
 
 use crate::{folder::FilterCase, input::Input, tab::{Finder, Tab}};
 
-pub struct Opt<'a> {
-	query: Option<&'a str>,
+pub struct Opt {
+	query: Option<String>,
 	prev:  bool,
 	case:  FilterCase,
 }
 
-impl<'a> From<&'a Exec> for Opt<'a> {
-	fn from(e: &'a Exec) -> Self {
+impl From<Exec> for Opt {
+	fn from(mut e: Exec) -> Self {
 		Self {
-			query: e.args.first().map(|s| s.as_str()),
+			query: e.take_first(),
 			prev:  e.named.contains_key("previous"),
-			case:  e.into(),
+			case:  FilterCase::from(&e),
 		}
 	}
 }
@@ -27,12 +27,12 @@ pub struct ArrowOpt {
 	prev: bool,
 }
 
-impl From<&Exec> for ArrowOpt {
-	fn from(e: &Exec) -> Self { Self { prev: e.named.contains_key("previous") } }
+impl From<Exec> for ArrowOpt {
+	fn from(e: Exec) -> Self { Self { prev: e.named.contains_key("previous") } }
 }
 
 impl Tab {
-	pub fn find<'a>(&mut self, opt: impl Into<Opt<'a>>) {
+	pub fn find(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		tokio::spawn(async move {
 			let rx = Input::_show(InputCfg::find(opt.prev));
@@ -45,15 +45,14 @@ impl Tab {
 					Exec::call("find_do", vec![s])
 						.with_bool("previous", opt.prev)
 						.with_bool("smart", opt.case == FilterCase::Smart)
-						.with_bool("insensitive", opt.case == FilterCase::Insensitive)
-						.vec(),
+						.with_bool("insensitive", opt.case == FilterCase::Insensitive),
 					Layer::Manager
 				));
 			}
 		});
 	}
 
-	pub fn find_do<'a>(&mut self, opt: impl Into<Opt<'a>>) {
+	pub fn find_do(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		let Some(query) = opt.query else {
 			return;
@@ -62,7 +61,7 @@ impl Tab {
 			return self.escape(super::escape::Opt::FIND);
 		}
 
-		let Ok(finder) = Finder::new(query, opt.case) else {
+		let Ok(finder) = Finder::new(&query, opt.case) else {
 			return;
 		};
 		if matches!(&self.finder, Some(f) if f.filter == finder.filter) {

@@ -1,4 +1,4 @@
-use std::ffi::OsString;
+use std::{collections::VecDeque, ffi::OsString};
 
 use crossterm::event::KeyEvent;
 use tokio::sync::{mpsc, oneshot};
@@ -10,7 +10,8 @@ static TX: RoCell<mpsc::UnboundedSender<Event>> = RoCell::new();
 
 #[derive(Debug)]
 pub enum Event {
-	Call(Vec<Exec>, Layer),
+	Call(Exec, Layer),
+	Seq(VecDeque<Exec>, Layer),
 	Render,
 	Key(KeyEvent),
 	Resize,
@@ -45,6 +46,9 @@ macro_rules! emit {
 	};
 	(Call($exec:expr, $layer:expr)) => {
 		$crate::event::Event::Call($exec, $layer).emit();
+	};
+	(Seq($execs:expr, $layer:expr)) => {
+		$crate::event::Event::Seq($execs, $layer).emit();
 	};
 	($event:ident) => {
 		$crate::event::Event::$event.emit();

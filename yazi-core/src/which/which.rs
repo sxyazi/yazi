@@ -36,10 +36,10 @@ impl Which {
 			self.visible = false;
 		} else if self.cands.len() == 1 {
 			self.visible = false;
-			emit!(Call(self.cands[0].to_call(), self.layer));
+			emit!(Seq(self.cands[0].to_seq(), self.layer));
 		} else if let Some(i) = self.cands.iter().position(|c| c.on.len() == self.times + 1) {
 			self.visible = false;
-			emit!(Call(self.cands[i].to_call(), self.layer));
+			emit!(Seq(self.cands[i].to_seq(), self.layer));
 		}
 
 		self.times += 1;

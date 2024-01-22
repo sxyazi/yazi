@@ -6,8 +6,8 @@ pub struct Opt {
 	before: bool,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self { Self { before: e.named.contains_key("before") } }
+impl From<Exec> for Opt {
+	fn from(e: Exec) -> Self { Self { before: e.named.contains_key("before") } }
 }
 
 impl Input {

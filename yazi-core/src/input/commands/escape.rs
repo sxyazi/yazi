@@ -4,8 +4,8 @@ use crate::{completion::Completion, input::{op::InputOp, Input, InputMode}};
 
 pub struct Opt;
 
-impl From<&Exec> for Opt {
-	fn from(_: &Exec) -> Self { Self }
+impl From<Exec> for Opt {
+	fn from(_: Exec) -> Self { Self }
 }
 impl From<()> for Opt {
 	fn from(_: ()) -> Self { Self }

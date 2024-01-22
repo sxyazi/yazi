@@ -6,8 +6,8 @@ pub struct Opt {
 	state: Option<bool>,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self {
+impl From<Exec> for Opt {
+	fn from(e: Exec) -> Self {
 		Self {
 			state: match e.named.get("state").map(|s| s.as_str()) {
 				Some("true") => Some(true),

@@ -10,12 +10,12 @@ pub struct Opt {
 	upper_bound: bool,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self {
+impl From<Exec> for Opt {
+	fn from(mut e: Exec) -> Self {
 		Self {
-			skip:        e.args.first().and_then(|s| s.parse().ok()),
+			skip:        e.take_first().and_then(|s| s.parse().ok()),
 			force:       e.named.contains_key("force"),
-			only_if:     e.named.get("only-if").map(Url::from),
+			only_if:     e.take_name("only-if").map(Url::from),
 			upper_bound: e.named.contains_key("upper-bound"),
 		}
 	}
@@ -27,7 +27,7 @@ impl From<bool> for Opt {
 impl Manager {
 	#[inline]
 	pub fn _peek(force: bool) {
-		emit!(Call(Exec::call("peek", vec![]).with_bool("force", force).vec(), Layer::Manager));
+		emit!(Call(Exec::call("peek", vec![]).with_bool("force", force), Layer::Manager));
 	}
 
 	pub fn peek(&mut self, opt: impl Into<Opt>) {

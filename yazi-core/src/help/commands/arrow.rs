@@ -6,9 +6,9 @@ pub struct Opt {
 	step: isize,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self {
-		Self { step: e.args.first().and_then(|s| s.parse().ok()).unwrap_or(0) }
+impl From<Exec> for Opt {
+	fn from(mut e: Exec) -> Self {
+		Self { step: e.take_first().and_then(|s| s.parse().ok()).unwrap_or(0) }
 	}
 }
 impl From<isize> for Opt {

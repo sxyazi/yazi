@@ -9,12 +9,12 @@ pub struct Opt {
 	current: bool,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self {
+impl From<Exec> for Opt {
+	fn from(mut e: Exec) -> Self {
 		let mut opt = Self { url: None, current: e.named.contains_key("current") };
 
 		if !opt.current {
-			opt.url = Some(e.args.first().map_or_else(|| Url::from("."), Url::from));
+			opt.url = Some(e.take_first().map_or_else(|| Url::from("."), Url::from));
 		}
 		opt
 	}

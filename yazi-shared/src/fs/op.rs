@@ -36,7 +36,7 @@ impl FilesOp {
 
 	#[inline]
 	pub fn emit(self) {
-		emit!(Call(Exec::call("update_files", vec![]).with_data(self).vec(), Layer::Manager));
+		emit!(Call(Exec::call("update_files", vec![]).with_data(self), Layer::Manager));
 	}
 
 	pub fn prepare(url: &Url) -> u64 {

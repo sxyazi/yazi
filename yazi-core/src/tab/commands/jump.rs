@@ -15,8 +15,8 @@ pub enum OptType {
 	Zoxide,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self {
+impl From<Exec> for Opt {
+	fn from(e: Exec) -> Self {
 		Self {
 			type_: match e.args.first().map(|s| s.as_str()) {
 				Some("fzf") => OptType::Fzf,

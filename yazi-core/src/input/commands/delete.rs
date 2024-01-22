@@ -7,8 +7,8 @@ pub struct Opt {
 	insert: bool,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self {
+impl From<Exec> for Opt {
+	fn from(e: Exec) -> Self {
 		Self { cut: e.named.contains_key("cut"), insert: e.named.contains_key("insert") }
 	}
 }

@@ -6,8 +6,8 @@ pub struct Opt {
 	under: bool,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self { Self { under: e.named.contains_key("under") } }
+impl From<Exec> for Opt {
+	fn from(e: Exec) -> Self { Self { under: e.named.contains_key("under") } }
 }
 impl From<bool> for Opt {
 	fn from(under: bool) -> Self { Self { under } }

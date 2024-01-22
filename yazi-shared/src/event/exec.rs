@@ -1,11 +1,11 @@
-use std::{any::Any, cell::RefCell, collections::BTreeMap, fmt::{self, Display}};
+use std::{any::Any, collections::BTreeMap, fmt::{self, Display}, mem};
 
 #[derive(Debug, Default)]
 pub struct Exec {
 	pub cmd:   String,
 	pub args:  Vec<String>,
 	pub named: BTreeMap<String, String>,
-	pub data:  RefCell<Option<Box<dyn Any + Send>>>,
+	pub data:  Option<Box<dyn Any + Send>>,
 }
 
 impl Exec {
@@ -18,9 +18,6 @@ impl Exec {
 	pub fn call_named(cwd: &str, named: BTreeMap<String, String>) -> Self {
 		Exec { cmd: cwd.to_owned(), named, ..Default::default() }
 	}
-
-	#[inline]
-	pub fn vec(self) -> Vec<Self> { vec![self] }
 
 	#[inline]
 	pub fn with(mut self, name: impl ToString, value: impl ToString) -> Self {
@@ -38,13 +35,31 @@ impl Exec {
 
 	#[inline]
 	pub fn with_data(mut self, data: impl Any + Send) -> Self {
-		self.data = RefCell::new(Some(Box::new(data)));
+		self.data = Some(Box::new(data));
 		self
 	}
 
 	#[inline]
-	pub fn take_data<T: 'static>(&self) -> Option<T> {
-		self.data.replace(None).and_then(|d| d.downcast::<T>().ok()).map(|d| *d)
+	pub fn take_data<T: 'static>(&mut self) -> Option<T> {
+		self.data.take().and_then(|d| d.downcast::<T>().ok()).map(|d| *d)
+	}
+
+	#[inline]
+	pub fn take_first(&mut self) -> Option<String> {
+		if self.args.is_empty() { None } else { Some(mem::take(&mut self.args[0])) }
+	}
+
+	#[inline]
+	pub fn take_name(&mut self, name: &str) -> Option<String> { self.named.remove(name) }
+
+	#[inline]
+	pub fn clone_without_data(&self) -> Self {
+		Self {
+			cmd: self.cmd.clone(),
+			args: self.args.clone(),
+			named: self.named.clone(),
+			..Default::default()
+		}
 	}
 }
 

@@ -6,8 +6,8 @@ pub struct Opt {
 	end_of_word: bool,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self { Self { end_of_word: e.named.contains_key("end-of-word") } }
+impl From<Exec> for Opt {
+	fn from(e: Exec) -> Self { Self { end_of_word: e.named.contains_key("end-of-word") } }
 }
 
 impl Input {

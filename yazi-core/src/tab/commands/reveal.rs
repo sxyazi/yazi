@@ -6,9 +6,9 @@ pub struct Opt {
 	target: Url,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self {
-		let mut target = Url::from(e.args.first().map(|s| s.as_str()).unwrap_or(""));
+impl From<Exec> for Opt {
+	fn from(mut e: Exec) -> Self {
+		let mut target = Url::from(e.take_first().unwrap_or_default());
 		if target.is_regular() {
 			target.set_path(expand_path(&target))
 		}
@@ -23,7 +23,7 @@ impl From<Url> for Opt {
 impl Tab {
 	#[inline]
 	pub fn _reveal(target: &Url) {
-		emit!(Call(Exec::call("reveal", vec![target.to_string()]).vec(), Layer::Manager));
+		emit!(Call(Exec::call("reveal", vec![target.to_string()]), Layer::Manager));
 	}
 
 	pub fn reveal(&mut self, opt: impl Into<Opt>) {

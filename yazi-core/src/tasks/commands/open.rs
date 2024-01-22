@@ -8,15 +8,15 @@ pub struct Opt {
 	opener:  Opener,
 }
 
-impl TryFrom<&Exec> for Opt {
+impl TryFrom<Exec> for Opt {
 	type Error = ();
 
-	fn try_from(e: &Exec) -> Result<Self, Self::Error> { e.take_data().ok_or(()) }
+	fn try_from(mut e: Exec) -> Result<Self, Self::Error> { e.take_data().ok_or(()) }
 }
 
 impl Tasks {
 	pub fn _open(targets: Vec<Url>, opener: Opener) {
-		emit!(Call(Exec::call("open", vec![]).with_data(Opt { targets, opener }).vec(), Layer::Tasks));
+		emit!(Call(Exec::call("open", vec![]).with_data(Opt { targets, opener }), Layer::Tasks));
 	}
 
 	pub fn open(&mut self, opt: impl TryInto<Opt>) {

@@ -9,16 +9,16 @@ pub struct Opt {
 	tx:  mpsc::UnboundedSender<Result<String, InputError>>,
 }
 
-impl TryFrom<&Exec> for Opt {
+impl TryFrom<Exec> for Opt {
 	type Error = ();
 
-	fn try_from(e: &Exec) -> Result<Self, Self::Error> { e.take_data().ok_or(()) }
+	fn try_from(mut e: Exec) -> Result<Self, Self::Error> { e.take_data().ok_or(()) }
 }
 
 impl Input {
 	pub fn _show(cfg: InputCfg) -> mpsc::UnboundedReceiver<Result<String, InputError>> {
 		let (tx, rx) = mpsc::unbounded_channel();
-		emit!(Call(Exec::call("show", vec![]).with_data(Opt { cfg, tx }).vec(), Layer::Input));
+		emit!(Call(Exec::call("show", vec![]).with_data(Opt { cfg, tx }), Layer::Input));
 		rx
 	}
 

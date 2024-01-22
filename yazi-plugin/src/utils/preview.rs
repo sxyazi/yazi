@@ -44,7 +44,7 @@ impl Utils {
 					};
 				lock.data = vec![Box::new(Paragraph { area: *area, text, ..Default::default() })];
 
-				emit!(Call(Exec::call("preview", vec![]).with_data(lock).vec(), Layer::Manager));
+				emit!(Call(Exec::call("preview", vec![]).with_data(lock), Layer::Manager));
 				(true, Value::Nil).into_lua_multi(lua)
 			})?,
 		)?;
@@ -67,7 +67,7 @@ impl Utils {
 					..Default::default()
 				})];
 
-				emit!(Call(Exec::call("preview", vec![]).with_data(lock).vec(), Layer::Manager));
+				emit!(Call(Exec::call("preview", vec![]).with_data(lock), Layer::Manager));
 				(true, Value::Nil).into_lua_multi(lua)
 			})?,
 		)?;
@@ -78,7 +78,7 @@ impl Utils {
 				let mut lock = PreviewLock::try_from(t)?;
 				lock.data = widgets.into_iter().filter_map(cast_to_renderable).collect();
 
-				emit!(Call(Exec::call("preview", vec![]).with_data(lock).vec(), Layer::Manager));
+				emit!(Call(Exec::call("preview", vec![]).with_data(lock), Layer::Manager));
 				Ok(())
 			})?,
 		)?;

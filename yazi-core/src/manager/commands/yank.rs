@@ -6,8 +6,8 @@ pub struct Opt {
 	cut: bool,
 }
 
-impl From<&Exec> for Opt {
-	fn from(e: &Exec) -> Self { Self { cut: e.named.contains_key("cut") } }
+impl From<Exec> for Opt {
+	fn from(e: Exec) -> Self { Self { cut: e.named.contains_key("cut") } }
 }
 
 impl Manager {
