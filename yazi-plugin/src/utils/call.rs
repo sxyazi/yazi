@@ -39,19 +39,17 @@ impl Utils {
 
 		ya.set(
 			"manager_emit",
-			lua.create_async_function(
-				|_, (cmd, table, data): (String, Table, Option<Value>)| async move {
-					let (args, named) = Self::parse_args(table)?;
-					let mut exec = Exec { cmd, args, named, ..Default::default() };
+			lua.create_function(|_, (cmd, table, data): (String, Table, Option<Value>)| {
+				let (args, named) = Self::parse_args(table)?;
+				let mut exec = Exec { cmd, args, named, ..Default::default() };
 
-					if let Some(data) = data.and_then(|v| ValueSendable::try_from(v).ok()) {
-						exec = exec.with_data(data);
-					}
+				if let Some(data) = data.and_then(|v| ValueSendable::try_from(v).ok()) {
+					exec = exec.with_data(data);
+				}
 
-					emit!(Call(exec, Layer::Manager));
-					Ok(())
-				},
-			)?,
+				emit!(Call(exec, Layer::Manager));
+				Ok(())
+			})?,
 		)?;
 
 		Ok(())
