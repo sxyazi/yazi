@@ -270,6 +270,7 @@ impl<'a> Executor<'a> {
 		#[allow(clippy::single_match)]
 		match exec.cmd.as_str() {
 			"help" => self.app.cx.help.toggle(Layer::Completion),
+			"close_input" => self.app.cx.input.close(exec),
 			_ => {}
 		}
 	}
