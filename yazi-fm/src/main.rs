@@ -11,6 +11,7 @@ mod lives;
 mod logs;
 mod panic;
 mod root;
+mod router;
 mod select;
 mod signals;
 mod tasks;
@@ -23,6 +24,7 @@ use logs::*;
 use panic::*;
 #[allow(unused_imports)]
 use root::*;
+use router::*;
 use signals::*;
 
 #[tokio::main]

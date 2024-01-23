@@ -1,13 +1,12 @@
 use std::ffi::OsString;
 
-use anyhow::Result;
 use yazi_config::ARGS;
 use yazi_shared::{event::EventQuit, term::Term};
 
 use crate::app::App;
 
 impl App {
-	pub(crate) fn quit(&mut self, opt: EventQuit) -> Result<()> {
+	pub(crate) fn quit(&mut self, opt: EventQuit) -> ! {
 		if !opt.no_cwd_file {
 			self.cwd_to_file();
 		}
