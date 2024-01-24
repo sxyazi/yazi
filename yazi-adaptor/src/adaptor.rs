@@ -32,6 +32,7 @@ enum Emulator {
 	Ghostty,
 	BlackBox,
 	VSCode,
+	Tabby,
 	Hyper,
 	Mintty,
 	Neovim,
@@ -50,6 +51,7 @@ impl Adaptor {
 			("WEZTERM_EXECUTABLE", Emulator::WezTerm),
 			("GHOSTTY_RESOURCES_DIR", Emulator::Ghostty),
 			("VSCODE_INJECTION", Emulator::VSCode),
+			("TABBY_CONFIG_DIRECTORY", Emulator::Tabby),
 		];
 		match vars.into_iter().find(|v| env_exists(v.0)) {
 			Some(var) => return var.1,
@@ -63,6 +65,7 @@ impl Adaptor {
 			"ghostty" => return Emulator::Ghostty,
 			"BlackBox" => return Emulator::BlackBox,
 			"vscode" => return Emulator::VSCode,
+			"Tabby" => return Emulator::Tabby,
 			"Hyper" => return Emulator::Hyper,
 			"mintty" => return Emulator::Mintty,
 			_ => warn!("[Adaptor] Unknown TERM_PROGRAM: {program}"),
@@ -88,6 +91,7 @@ impl Adaptor {
 			Emulator::Ghostty => vec![Self::KittyOld],
 			Emulator::BlackBox => vec![Self::Sixel],
 			Emulator::VSCode => vec![Self::Sixel],
+			Emulator::Tabby => vec![Self::Sixel],
 			Emulator::Hyper => vec![Self::Sixel],
 			Emulator::Mintty => vec![Self::Iterm2],
 			Emulator::Neovim => vec![],
