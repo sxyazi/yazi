@@ -1,5 +1,5 @@
+mod cand;
 mod layout;
-mod side;
 
+use cand::*;
 pub(super) use layout::*;
-use side::*;
