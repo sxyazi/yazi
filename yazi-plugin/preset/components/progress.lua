@@ -6,8 +6,8 @@ function Progress:render(area, offset)
 	self.area = ui.Rect {
 		x = math.max(0, area.w - offset - 21),
 		y = area.y,
-		w = math.max(0, math.min(20, area.w - offset - 1)),
-		h = 1,
+		w = ya.clamp(0, area.w - offset - 1, 20),
+		h = math.min(1, area.h),
 	}
 	return self:partial_render()
 end

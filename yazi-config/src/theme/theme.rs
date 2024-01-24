@@ -95,8 +95,10 @@ pub struct Tasks {
 	pub hovered: Style,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Validate)]
 pub struct Which {
+	#[validate(range(min = 1, max = 3, message = "Must be between 1 and 3"))]
+	pub cols: u8,
 	pub mask: Style,
 	pub cand: Style,
 	pub rest: Style,
@@ -139,6 +141,7 @@ impl Default for Theme {
 		let mut theme: Self = toml::from_str(&MERGED_THEME).unwrap();
 
 		check_validation(theme.manager.validate());
+		check_validation(theme.which.validate());
 
 		theme.manager.syntect_theme = expand_path(&theme.manager.syntect_theme);
 
