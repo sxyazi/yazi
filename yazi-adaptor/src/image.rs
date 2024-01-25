@@ -2,7 +2,7 @@ use std::{fs::File, io::BufReader, path::{Path, PathBuf}};
 
 use anyhow::Result;
 use exif::{In, Tag};
-use image::{imageops::{self, FilterType}, io::Limits, DynamicImage, ImageFormat};
+use image::{codecs::jpeg::JpegEncoder, imageops::{self, FilterType}, io::Limits, DynamicImage};
 use ratatui::layout::Rect;
 use yazi_config::{PREVIEW, TASKS};
 use yazi_shared::term::Term;
@@ -20,23 +20,32 @@ impl Image {
 		.await??;
 
 		let (mut w, mut h) = (PREVIEW.max_width, PREVIEW.max_height);
-		tokio::task::spawn_blocking(move || {
-			if (5..=8).contains(&orientation) {
-				(w, h) = (h, w);
-			}
+		if (5..=8).contains(&orientation) {
+			(w, h) = (h, w);
+		}
 
+		let buf = tokio::task::spawn_blocking(move || {
 			if img.width() > w || img.height() > h {
 				img = img.resize(w, h, FilterType::Triangle);
 			}
 
 			img = Self::rotate(img, orientation);
-			Ok(match img {
-				DynamicImage::ImageRgb8(buf) => buf.save_with_format(cache, ImageFormat::Jpeg),
-				DynamicImage::ImageRgba8(buf) => buf.save_with_format(cache, ImageFormat::Jpeg),
-				buf => buf.into_rgb8().save_with_format(cache, ImageFormat::Jpeg),
-			}?)
+			if !matches!(img, DynamicImage::ImageRgb8(_) | DynamicImage::ImageRgba8(_)) {
+				img = DynamicImage::ImageRgb8(img.into_rgb8());
+			}
+
+			let mut buf = Vec::new();
+			JpegEncoder::new_with_quality(&mut buf, PREVIEW.image_quality).encode(
+				img.as_bytes(),
+				img.width(),
+				img.height(),
+				img.color(),
+			)?;
+			Ok::<_, anyhow::Error>(buf)
 		})
-		.await?
+		.await??;
+
+		Ok(tokio::fs::write(cache, buf).await?)
 	}
 
 	pub(super) async fn downscale(path: &Path, rect: Rect) -> Result<DynamicImage> {
@@ -49,15 +58,19 @@ impl Image {
 		.await??;
 
 		let (mut w, mut h) = Self::max_size(rect);
-		tokio::task::spawn_blocking(move || {
-			if (5..=8).contains(&orientation) {
-				(w, h) = (h, w);
-			}
+		if (5..=8).contains(&orientation) {
+			(w, h) = (h, w);
+		}
 
+		// Fast path.
+		if img.width() <= w && img.height() <= h && orientation <= 1 {
+			return Ok(img);
+		}
+
+		tokio::task::spawn_blocking(move || {
 			if img.width() > w || img.height() > h {
 				img = img.resize(w, h, FilterType::Triangle)
 			}
-
 			Ok(Self::rotate(img, orientation))
 		})
 		.await?
@@ -73,6 +86,12 @@ impl Image {
 	}
 
 	async fn orientation(path: &Path) -> Result<u8> {
+		// We don't want to read the orientation of the cached image that has been
+		// rotated in the `Self::precache()` step.
+		if path.parent() == Some(&PREVIEW.cache_dir) {
+			return Ok(0);
+		}
+
 		let path = path.to_owned();
 		tokio::task::spawn_blocking(move || {
 			let file = std::fs::File::open(path)?;
@@ -96,23 +115,16 @@ impl Image {
 	// https://magnushoff.com/articles/jpeg-orientation/
 	fn rotate(mut img: DynamicImage, orientation: u8) -> DynamicImage {
 		let rgba = img.color().has_alpha();
-		if orientation == 2 {
-			img = DynamicImage::ImageRgba8(imageops::flip_horizontal(&img));
-		} else if orientation == 3 {
-			img = DynamicImage::ImageRgba8(imageops::rotate180(&img));
-		} else if orientation == 4 {
-			img = DynamicImage::ImageRgba8(imageops::flip_horizontal(&img));
-		} else if orientation == 5 {
-			img = DynamicImage::ImageRgba8(imageops::rotate90(&img));
-			img = DynamicImage::ImageRgba8(imageops::flip_horizontal(&img));
-		} else if orientation == 6 {
-			img = DynamicImage::ImageRgba8(imageops::rotate90(&img));
-		} else if orientation == 7 {
-			img = DynamicImage::ImageRgba8(imageops::rotate270(&img));
-			img = DynamicImage::ImageRgba8(imageops::flip_horizontal(&img));
-		} else if orientation == 8 {
-			img = DynamicImage::ImageRgba8(imageops::rotate270(&img));
-		}
+		img = match orientation {
+			2 => DynamicImage::ImageRgba8(imageops::flip_horizontal(&img)),
+			3 => DynamicImage::ImageRgba8(imageops::rotate180(&img)),
+			4 => DynamicImage::ImageRgba8(imageops::flip_horizontal(&img)),
+			5 => DynamicImage::ImageRgba8(imageops::flip_horizontal(&imageops::rotate90(&img))),
+			6 => DynamicImage::ImageRgba8(imageops::rotate90(&img)),
+			7 => DynamicImage::ImageRgba8(imageops::flip_horizontal(&imageops::rotate270(&img))),
+			8 => DynamicImage::ImageRgba8(imageops::rotate270(&img)),
+			_ => img,
+		};
 		if !rgba {
 			img = DynamicImage::ImageRgb8(img.into_rgb8());
 		}
