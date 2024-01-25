@@ -1,9 +1,10 @@
 use std::{fs, path::PathBuf, process, time::{self, SystemTime}};
 
 use serde::{Deserialize, Serialize};
+use validator::Validate;
 use yazi_shared::fs::expand_path;
 
-use crate::{xdg::Xdg, ARGS, MERGED_YAZI};
+use crate::{validation::check_validation, xdg::Xdg, ARGS, MERGED_YAZI};
 
 #[derive(Debug, Serialize)]
 pub struct Preview {
@@ -12,6 +13,9 @@ pub struct Preview {
 	pub max_height: u32,
 
 	pub cache_dir: PathBuf,
+
+	pub image_quality:  u8,
+	pub sixel_fraction: u8,
 
 	pub ueberzug_scale:  f32,
 	pub ueberzug_offset: (f32, f32, f32, f32),
@@ -23,7 +27,7 @@ impl Default for Preview {
 		struct Outer {
 			preview: Shadow,
 		}
-		#[derive(Deserialize)]
+		#[derive(Deserialize, Validate)]
 		struct Shadow {
 			tab_size:   u8,
 			max_width:  u32,
@@ -31,11 +35,18 @@ impl Default for Preview {
 
 			cache_dir: Option<String>,
 
+			#[validate(range(min = 50, max = 90))]
+			image_quality:  u8,
+			#[validate(range(min = 10, max = 20))]
+			sixel_fraction: u8,
+
 			ueberzug_scale:  f32,
 			ueberzug_offset: (f32, f32, f32, f32),
 		}
 
 		let preview = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().preview;
+		check_validation(preview.validate());
+
 		let cache_dir =
 			preview.cache_dir.filter(|p| !p.is_empty()).map_or_else(Xdg::cache_dir, expand_path);
 
@@ -62,6 +73,9 @@ impl Default for Preview {
 			max_height: preview.max_height,
 
 			cache_dir,
+
+			image_quality: preview.image_quality,
+			sixel_fraction: preview.sixel_fraction,
 
 			ueberzug_scale: preview.ueberzug_scale,
 			ueberzug_offset: preview.ueberzug_offset,
