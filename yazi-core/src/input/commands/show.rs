@@ -46,6 +46,7 @@ impl Input {
 		// Set cursor after reset
 		if let Some(cursor) = opt.cfg.cursor {
 			self.snaps.current_mut().cursor = cursor;
+			self.move_(0);
 		}
 
 		render!();
