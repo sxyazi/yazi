@@ -49,10 +49,6 @@ impl Folder {
 		}
 
 		self.arrow(0);
-		if self.files.is_empty() {
-			self.tracing = false;
-		}
-
 		self.files.revision != revision
 	}
 
