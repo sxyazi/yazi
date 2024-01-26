@@ -84,13 +84,19 @@ impl Tab {
 
 		apply(&mut self.current);
 
+		if let Some(parent) = self.parent.as_mut() {
+			apply(parent);
+
+			// The parent should always track the CWD
+			parent.hover(&self.current.cwd);
+			parent.tracing = parent.hovered().map(|h| &h.url) == Some(&self.current.cwd);
+		}
+
 		self
 			.current
 			.hovered()
 			.filter(|h| h.is_dir())
 			.and_then(|h| self.history.get_mut(&h.url))
 			.map(apply);
-
-		self.parent.as_mut().map(apply);
 	}
 }
