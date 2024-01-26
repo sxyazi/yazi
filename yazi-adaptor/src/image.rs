@@ -26,7 +26,7 @@ impl Image {
 
 		let buf = tokio::task::spawn_blocking(move || {
 			if img.width() > w || img.height() > h {
-				img = img.resize(w, h, FilterType::Triangle);
+				img = img.resize(w, h, Self::filter());
 			}
 
 			img = Self::rotate(img, orientation);
@@ -69,7 +69,7 @@ impl Image {
 
 		tokio::task::spawn_blocking(move || {
 			if img.width() > w || img.height() > h {
-				img = img.resize(w, h, FilterType::Triangle)
+				img = img.resize(w, h, Self::filter())
 			}
 			Ok(Self::rotate(img, orientation))
 		})
@@ -83,6 +83,18 @@ impl Image {
 				(w.min(PREVIEW.max_width), h.min(PREVIEW.max_height))
 			})
 			.unwrap_or((PREVIEW.max_width, PREVIEW.max_height))
+	}
+
+	#[inline]
+	fn filter() -> FilterType {
+		match PREVIEW.image_filter.as_str() {
+			"nearest" => FilterType::Nearest,
+			"triangle" => FilterType::Triangle,
+			"catmull-rom" => FilterType::CatmullRom,
+			"gaussian" => FilterType::Gaussian,
+			"lanczos3" => FilterType::Lanczos3,
+			_ => FilterType::Triangle,
+		}
 	}
 
 	async fn orientation(path: &Path) -> Result<u8> {

@@ -14,6 +14,7 @@ pub struct Preview {
 
 	pub cache_dir: PathBuf,
 
+	pub image_filter:   String,
 	pub image_quality:  u8,
 	pub sixel_fraction: u8,
 
@@ -35,6 +36,7 @@ impl Default for Preview {
 
 			cache_dir: Option<String>,
 
+			image_filter:   String,
 			#[validate(range(min = 50, max = 90))]
 			image_quality:  u8,
 			#[validate(range(min = 10, max = 20))]
@@ -74,6 +76,7 @@ impl Default for Preview {
 
 			cache_dir,
 
+			image_filter: preview.image_filter,
 			image_quality: preview.image_quality,
 			sixel_fraction: preview.sixel_fraction,
 
