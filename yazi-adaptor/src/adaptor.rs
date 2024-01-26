@@ -1,6 +1,6 @@
 use std::{env, io::{Read, Write}, path::Path, sync::Arc};
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, Result};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use ratatui::layout::Rect;
 use tracing::warn;
@@ -22,9 +22,9 @@ pub enum Adaptor {
 	Chafa,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 enum Emulator {
-	Unknown,
+	Unknown(Vec<Adaptor>),
 	Kitty,
 	Konsole,
 	Iterm2,
@@ -79,12 +79,12 @@ impl Adaptor {
 			_ => warn!("[Adaptor] Unknown TERM: {term}"),
 		}
 
-		Self::via_csi().unwrap_or(Emulator::Unknown)
+		Self::via_csi().unwrap_or(Emulator::Unknown(vec![]))
 	}
 
 	pub(super) fn detect() -> Self {
 		let mut protocols = match Self::emulator() {
-			Emulator::Unknown => vec![],
+			Emulator::Unknown(adapters) => adapters,
 			Emulator::Kitty => vec![Self::Kitty],
 			Emulator::Konsole => vec![Self::KittyOld, Self::Iterm2, Self::Sixel],
 			Emulator::Iterm2 => vec![Self::Iterm2, Self::Sixel],
@@ -153,11 +153,12 @@ impl Adaptor {
 
 	fn via_csi() -> Result<Emulator> {
 		enable_raw_mode()?;
-		std::io::stdout().write_all(b"\x1b[>q\x1b[c")?;
+		std::io::stdout()
+			.write_all(b"\x1b[>q\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[=c\x1b[c")?;
 		std::io::stdout().flush()?;
 
 		let mut stdin = std::io::stdin().lock();
-		let mut buf = String::with_capacity(100);
+		let mut buf = String::with_capacity(200);
 		loop {
 			let mut c = [0; 1];
 			if stdin.read(&mut c)? == 0 {
@@ -176,15 +177,25 @@ impl Adaptor {
 			("iTerm2", Emulator::Iterm2),
 			("WezTerm", Emulator::WezTerm),
 			("foot", Emulator::Foot),
+			("!|00000000", Emulator::Foot), // DA3
 			("ghostty", Emulator::Ghostty),
 		];
 
 		for (name, emulator) in names.iter() {
 			if buf.contains(name) {
-				return Ok(*emulator);
+				return Ok(emulator.clone());
 			}
 		}
-		Ok(Emulator::Unknown)
+
+		let mut adapters = Vec::with_capacity(2);
+		if buf.contains("\x1b_Gi=31;OK") {
+			adapters.push(Adaptor::KittyOld);
+		}
+		if ["?4;", "?4c", ";4;", ";4c"].iter().any(|s| buf.contains(s)) {
+			adapters.push(Adaptor::Sixel);
+		}
+
+		Ok(Emulator::Unknown(adapters))
 	}
 }
 
