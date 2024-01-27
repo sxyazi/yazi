@@ -23,7 +23,10 @@ impl Lives {
 		Ok(())
 	}
 
-	pub(crate) fn scope<'a>(cx: &'a Ctx, f: impl FnOnce(&Scope<'a, 'a>)) {
+	pub(crate) fn scope<'a, T>(
+		cx: &'a Ctx,
+		f: impl FnOnce(&Scope<'a, 'a>) -> mlua::Result<T>,
+	) -> mlua::Result<T> {
 		let result = LUA.scope(|scope| {
 			LUA.set_named_registry_value("cx", scope.create_any_userdata_ref(cx)?)?;
 
@@ -37,7 +40,7 @@ impl Lives {
 				])?,
 			)?;
 
-			f(scope);
+			let ret = f(scope)?;
 
 			LAYOUT.store(Arc::new(yazi_config::Layout {
 				header:  *global.get::<_, Table>("Header")?.get::<_, RectRef>("area")?,
@@ -47,12 +50,13 @@ impl Lives {
 				status:  *global.get::<_, Table>("Status")?.get::<_, RectRef>("area")?,
 			}));
 
-			Ok(())
+			Ok(ret)
 		});
 
-		if let Err(e) = result {
+		if let Err(ref e) = result {
 			error!("{e}");
 		}
+		result
 	}
 
 	pub(crate) fn partial_scope<'a>(cx: &'a Ctx, f: impl FnOnce(&Scope<'a, 'a>)) {

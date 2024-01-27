@@ -37,6 +37,7 @@ impl<'a> Executor<'a> {
 		on!(plugin);
 		on!(plugin_do);
 		on!(update_progress);
+		on!(resize);
 		on!(stop);
 		on!(resume);
 	}

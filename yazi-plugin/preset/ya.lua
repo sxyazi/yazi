@@ -39,7 +39,7 @@ function ya.sync(f)
 	end
 
 	local calls = ya.SYNC_CALLS
-	return function(...) return plugin_retrieve(ya.PLUGIN_NAME, calls, ...) end
+	return function(...) return plugin_retrieve(YAZI_PLUGIN_NAME, calls, ...) end
 end
 
 function ya.basename(str) return string.gsub(str, "(.*[/\\])(.*)", "%2") end

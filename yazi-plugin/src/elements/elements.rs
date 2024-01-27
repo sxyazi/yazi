@@ -3,8 +3,7 @@ use mlua::{AnyUserData, Lua, Table};
 use crate::cast_to_renderable;
 
 pub fn init(lua: &Lua) -> mlua::Result<()> {
-	let globals = lua.globals();
-	let ui: Table = globals.get("ui").or_else(|_| lua.create_table())?;
+	let ui: Table = lua.create_table()?;
 
 	// Register
 	super::Padding::register(lua)?;

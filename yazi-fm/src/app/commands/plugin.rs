@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
-use mlua::{ExternalError, ExternalResult, IntoLua, Table, TableExt, Value, Variadic};
-use tracing::{error, warn};
+use mlua::{ExternalError, ExternalResult, IntoLua, Table, TableExt, Variadic};
+use tracing::warn;
 use yazi_plugin::{LOADED, LUA};
 use yazi_shared::{emit, event::Exec, Layer};
 
@@ -36,31 +36,26 @@ impl App {
 		};
 
 		let args = Variadic::from_iter(opt.data.args.into_iter().filter_map(|v| v.into_lua(&LUA).ok()));
-		let mut ret: mlua::Result<Value> = Err("uninitialized plugin".into_lua_err());
+		let result = Lives::scope(&self.cx, |_| {
+			LUA.globals().set("YAZI_PLUGIN_NAME", LUA.create_string(&opt.name)?)?;
 
-		Lives::scope(&self.cx, |_| {
 			let mut plugin: Option<Table> = None;
 			if let Some(b) = LOADED.read().get(&opt.name) {
-				match LUA.load(b).call(args) {
-					Ok(t) => plugin = Some(t),
-					Err(e) => ret = Err(e),
-				}
+				plugin = LUA.load(b).call(args)?;
 			}
-			if let Some(plugin) = plugin {
-				ret = if let Some(cb) = opt.data.cb { cb(plugin) } else { plugin.call_method("entry", ()) };
-			}
-		});
 
-		if let Err(e) = ret {
-			error!("{e}");
-			return;
-		}
+			let Some(plugin) = plugin else {
+				return Err("plugin not found".into_lua_err());
+			};
+
+			if let Some(cb) = opt.data.cb { cb(plugin) } else { plugin.call_method("entry", ()) }
+		});
 
 		let Some(tx) = opt.data.tx else {
 			return;
 		};
 
-		if let Ok(v) = ret.and_then(|v| v.try_into().into_lua_err()) {
+		if let Ok(v) = result.and_then(|v| v.try_into().into_lua_err()) {
 			tx.send(v).ok();
 		}
 	}

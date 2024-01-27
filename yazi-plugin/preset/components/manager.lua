@@ -2,10 +2,10 @@ Manager = {
 	area = ui.Rect.default,
 }
 
-function Manager:render(area)
+function Manager:layout(area)
 	self.area = area
 
-	local chunks = ui.Layout()
+	return ui.Layout()
 		:direction(ui.Layout.HORIZONTAL)
 		:constraints({
 			ui.Constraint.Ratio(MANAGER.ratio.parent, MANAGER.ratio.all),
@@ -13,6 +13,10 @@ function Manager:render(area)
 			ui.Constraint.Ratio(MANAGER.ratio.preview, MANAGER.ratio.all),
 		})
 		:split(area)
+end
+
+function Manager:render(area)
+	local chunks = self:layout(area)
 
 	return ya.flat {
 		-- Borders

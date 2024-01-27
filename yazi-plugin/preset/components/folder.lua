@@ -19,6 +19,26 @@ function Folder:icon(file)
 	return icon and ui.Span(" " .. icon.text .. " "):style(icon.style) or ui.Span("")
 end
 
+function Folder:highlight_ranges(s, ranges)
+	if ranges == nil or #ranges == 0 then
+		return { ui.Span(s) }
+	end
+
+	local spans = {}
+	local last = 0
+	for _, r in ipairs(ranges) do
+		if r[1] > last then
+			spans[#spans + 1] = ui.Span(s:sub(last + 1, r[1]))
+		end
+		spans[#spans + 1] = ui.Span(s:sub(r[1] + 1, r[2])):style(THEME.manager.find_keyword)
+		last = r[2]
+	end
+	if last < #s then
+		spans[#spans + 1] = ui.Span(s:sub(last + 1))
+	end
+	return spans
+end
+
 function Folder:highlighted_name(file)
 	-- Complete prefix when searching across directories
 	local prefix = file:prefix() or ""
@@ -28,7 +48,7 @@ function Folder:highlighted_name(file)
 
 	-- Range highlighting for filenames
 	local highlights = file:highlights()
-	local spans = ui.highlight_ranges(prefix .. file.name, highlights)
+	local spans = self:highlight_ranges(prefix .. file.name, highlights)
 
 	-- Show symlink target
 	if MANAGER.show_symlink and file.link_to ~= nil then
