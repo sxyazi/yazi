@@ -1,3 +1,5 @@
+use yazi_plugin::ValueSendable;
+
 #[derive(Debug)]
 pub enum PluginOp {
 	Entry(PluginOpEntry),
@@ -11,8 +13,9 @@ impl PluginOp {
 	}
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct PluginOpEntry {
 	pub id:   usize,
 	pub name: String,
+	pub args: Vec<ValueSendable>,
 }

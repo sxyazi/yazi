@@ -1,18 +1,21 @@
+use std::fmt::Display;
+
 use mlua::{ExternalError, ExternalResult, IntoLua, Table, TableExt, Value, Variadic};
-use tracing::error;
+use tracing::{error, warn};
 use yazi_plugin::{LOADED, LUA};
 use yazi_shared::{emit, event::Exec, Layer};
 
 use crate::{app::App, lives::Lives};
 
 impl App {
-	pub(crate) fn plugin(&mut self, opt: impl TryInto<yazi_plugin::Opt>) {
-		let Ok(opt) = opt.try_into() else {
-			return;
+	pub(crate) fn plugin(&mut self, opt: impl TryInto<yazi_plugin::Opt, Error = impl Display>) {
+		let opt = match opt.try_into() {
+			Ok(opt) => opt as yazi_plugin::Opt,
+			Err(e) => return warn!("{e}"),
 		};
 
 		if !opt.sync {
-			return self.cx.tasks.plugin_micro(&opt.name);
+			return self.cx.tasks.plugin_micro(opt.name, opt.data.args);
 		}
 
 		if LOADED.read().contains_key(&opt.name) {
@@ -26,9 +29,10 @@ impl App {
 		});
 	}
 
-	pub(crate) fn plugin_do(&mut self, opt: impl TryInto<yazi_plugin::Opt>) {
-		let Ok(opt) = opt.try_into() else {
-			return;
+	pub(crate) fn plugin_do(&mut self, opt: impl TryInto<yazi_plugin::Opt, Error = impl Display>) {
+		let opt = match opt.try_into() {
+			Ok(opt) => opt as yazi_plugin::Opt,
+			Err(e) => return warn!("{e}"),
 		};
 
 		let args = Variadic::from_iter(opt.data.args.into_iter().filter_map(|v| v.into_lua(&LUA).ok()));
@@ -37,14 +41,13 @@ impl App {
 		Lives::scope(&self.cx, |_| {
 			let mut plugin: Option<Table> = None;
 			if let Some(b) = LOADED.read().get(&opt.name) {
-				match LUA.load(b).call(()) {
+				match LUA.load(b).call(args) {
 					Ok(t) => plugin = Some(t),
 					Err(e) => ret = Err(e),
 				}
 			}
 			if let Some(plugin) = plugin {
-				ret =
-					if let Some(cb) = opt.data.cb { cb(plugin) } else { plugin.call_method("entry", args) };
+				ret = if let Some(cb) = opt.data.cb { cb(plugin) } else { plugin.call_method("entry", ()) };
 			}
 		});
 

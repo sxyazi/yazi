@@ -1,5 +1,6 @@
 use std::hash::{Hash, Hasher};
 
+#[derive(Clone, Copy, Debug)]
 pub struct OrderedFloat(f64);
 
 impl OrderedFloat {

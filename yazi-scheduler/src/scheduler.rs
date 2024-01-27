@@ -4,6 +4,7 @@ use futures::{future::BoxFuture, FutureExt};
 use parking_lot::Mutex;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}};
 use yazi_config::{open::Opener, plugin::PluginRule, TASKS};
+use yazi_plugin::ValueSendable;
 use yazi_shared::{emit, event::Exec, fs::{unique_path, Url}, Layer, Throttle};
 
 use super::{Running, TaskProg, TaskStage};
@@ -284,23 +285,23 @@ impl Scheduler {
 		);
 	}
 
-	pub fn plugin_micro(&self, name: String) {
+	pub fn plugin_micro(&self, name: String, args: Vec<ValueSendable>) {
 		let id = self.running.lock().add(TaskKind::User, format!("Run micro plugin `{name}`"));
 
 		let plugin = self.plugin.clone();
 		_ = self.micro.try_send(
 			async move {
-				plugin.micro(PluginOpEntry { id, name }).await.ok();
+				plugin.micro(PluginOpEntry { id, name, args }).await.ok();
 			}
 			.boxed(),
 			HIGH,
 		);
 	}
 
-	pub fn plugin_macro(&self, name: String) {
+	pub fn plugin_macro(&self, name: String, args: Vec<ValueSendable>) {
 		let id = self.running.lock().add(TaskKind::User, format!("Run macro plugin `{name}`"));
 
-		self.plugin.macro_(PluginOpEntry { id, name }).ok();
+		self.plugin.macro_(PluginOpEntry { id, name, args }).ok();
 	}
 
 	pub fn preload_paged(&self, rule: &PluginRule, targets: Vec<&yazi_shared::fs::File>) {
