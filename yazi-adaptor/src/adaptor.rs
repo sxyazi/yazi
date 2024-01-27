@@ -177,7 +177,7 @@ impl Adaptor {
 			("iTerm2", Emulator::Iterm2),
 			("WezTerm", Emulator::WezTerm),
 			("foot", Emulator::Foot),
-			("!|00000000", Emulator::Foot), // DA3
+			("!|464f4f54", Emulator::Foot), // DA3
 			("ghostty", Emulator::Ghostty),
 		];
 
