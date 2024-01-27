@@ -23,7 +23,7 @@ impl App {
 
 		Lives::register()?;
 		let mut app = Self { cx: Ctx::make(), term: Some(term), signals };
-		app.render()?;
+		app.render();
 
 		let mut times = 0;
 		let mut events = Vec::with_capacity(200);
@@ -39,13 +39,13 @@ impl App {
 
 			if times >= 50 {
 				times = 0;
-				app.render()?;
+				app.render();
 			} else if let Ok(event) = app.signals.rx.try_recv() {
 				events.push(event);
 				emit!(Render);
 			} else {
 				times = 0;
-				app.render()?;
+				app.render();
 			}
 		}
 		Ok(())
@@ -58,7 +58,7 @@ impl App {
 			Event::Seq(execs, layer) => self.dispatch_seq(execs, layer),
 			Event::Render => self.dispatch_render(),
 			Event::Key(key) => self.dispatch_key(key),
-			Event::Resize => self.resize()?,
+			Event::Resize => self.resize(()),
 			Event::Paste(str) => self.dispatch_paste(str),
 			Event::Quit(opt) => self.quit(opt),
 		}

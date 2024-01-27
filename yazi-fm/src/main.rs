@@ -1,4 +1,5 @@
 #![allow(clippy::module_inception)]
+#![allow(clippy::unit_arg)]
 
 mod app;
 mod completion;
