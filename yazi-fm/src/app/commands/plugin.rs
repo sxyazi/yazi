@@ -8,13 +8,14 @@ use yazi_shared::{emit, event::Exec, Layer};
 use crate::{app::App, lives::Lives};
 
 impl App {
-	pub(crate) fn plugin(&mut self, opt: impl TryInto<yazi_plugin::Opt>) {
-		let Ok(opt) = opt.try_into() else {
-			return;
+	pub(crate) fn plugin(&mut self, opt: impl TryInto<yazi_plugin::Opt, Error = impl Display>) {
+		let opt = match opt.try_into() {
+			Ok(opt) => opt as yazi_plugin::Opt,
+			Err(e) => return warn!("{e}"),
 		};
 
 		if !opt.sync {
-			return self.cx.tasks.plugin_micro(&opt.name);
+			return self.cx.tasks.plugin_micro(opt.name, opt.data.args);
 		}
 
 		if LOADED.read().contains_key(&opt.name) {

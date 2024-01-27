@@ -3,6 +3,7 @@ use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, mem, path::Path
 use tokio::time::sleep;
 use tracing::debug;
 use yazi_config::{manager::SortBy, open::Opener, plugin::{PluginRule, MAX_PRELOADERS}, popup::InputCfg, OPEN, PLUGIN};
+use yazi_plugin::ValueSendable;
 use yazi_scheduler::{Scheduler, TaskSummary};
 use yazi_shared::{emit, event::Exec, fs::{File, Url}, term::Term, Layer, MIME_DIR};
 
@@ -145,9 +146,15 @@ impl Tasks {
 		});
 	}
 
-	pub fn plugin_micro(&self, name: &str) { self.scheduler.plugin_micro(name.to_owned()); }
+	#[inline]
+	pub fn plugin_micro(&self, name: String, args: Vec<ValueSendable>) {
+		self.scheduler.plugin_micro(name, args);
+	}
 
-	pub fn plugin_macro(&self, name: &str) { self.scheduler.plugin_macro(name.to_owned()); }
+	#[inline]
+	pub fn plugin_macro(&self, name: String, args: Vec<ValueSendable>) {
+		self.scheduler.plugin_macro(name, args);
+	}
 
 	pub fn preload_paged(&self, paged: &[File], mimetype: &HashMap<Url, String>) {
 		let mut single_tasks = Vec::with_capacity(paged.len());
