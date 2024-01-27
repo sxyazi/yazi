@@ -9,8 +9,9 @@ pub async fn entry(name: String, args: Vec<ValueSendable>) -> mlua::Result<()> {
 
 	tokio::task::spawn_blocking(move || {
 		let lua = slim_lua()?;
-		let args = Variadic::from_iter(args.into_iter().filter_map(|v| v.into_lua(&lua).ok()));
+		lua.globals().set("YAZI_PLUGIN_NAME", lua.create_string(&name)?)?;
 
+		let args = Variadic::from_iter(args.into_iter().filter_map(|v| v.into_lua(&lua).ok()));
 		let plugin: Table = if let Some(b) = LOADED.read().get(&name) {
 			lua.load(b).call(args)?
 		} else {

@@ -14,7 +14,7 @@ pub fn init() {
 
 		// Base
 		lua.load(include_str!("../preset/inspect/inspect.lua")).exec()?;
-		lua.load(include_str!("../preset/ui.lua")).exec()?;
+		lua.load(include_str!("../preset/state.lua")).exec()?;
 		lua.load(include_str!("../preset/ya.lua")).exec()?;
 		crate::elements::init(lua)?;
 

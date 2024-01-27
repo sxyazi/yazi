@@ -30,13 +30,17 @@ function Header:tabs()
 	return ui.Line(spans)
 end
 
-function Header:render(area)
+function Header:layout(area)
 	self.area = area
 
-	local chunks = ui.Layout()
+	return ui.Layout()
 		:direction(ui.Layout.HORIZONTAL)
 		:constraints({ ui.Constraint.Percentage(50), ui.Constraint.Percentage(50) })
 		:split(area)
+end
+
+function Header:render(area)
+	local chunks = self:layout(area)
 
 	local left = ui.Line { self:cwd() }
 	local right = ui.Line { self:tabs() }

@@ -13,8 +13,9 @@ impl App {
 
 		let collision = COLLISION.swap(false, Ordering::Relaxed);
 		let frame = term.draw(|f| {
-			Lives::scope(&self.cx, |_| {
+			_ = Lives::scope(&self.cx, |_| {
 				f.render_widget(Root::new(&self.cx), f.size());
+				Ok(())
 			});
 
 			if let Some((x, y)) = self.cx.cursor() {

@@ -64,9 +64,7 @@ impl UserData for Layout {
 			ud.borrow_mut::<Self>()?.constraints = value.into_iter().map(|c| c.0).collect();
 			Ok(ud)
 		});
-		methods.add_function("split", |lua, (ud, value): (AnyUserData, RectRef)| {
-			let me = ud.borrow::<Self>()?;
-
+		methods.add_method("split", |lua, me, value: RectRef| {
 			let mut layout = ratatui::layout::Layout::new(
 				if me.direction == VERTICAL {
 					ratatui::layout::Direction::Vertical
