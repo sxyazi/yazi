@@ -2730,6 +2730,7 @@ dependencies = [
  "ratatui",
  "serde",
  "serde_json",
+ "shell-words",
  "syntect",
  "tokio",
  "tokio-util",

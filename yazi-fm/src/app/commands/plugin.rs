@@ -37,14 +37,13 @@ impl App {
 		Lives::scope(&self.cx, |_| {
 			let mut plugin: Option<Table> = None;
 			if let Some(b) = LOADED.read().get(&opt.name) {
-				match LUA.load(b).call(()) {
+				match LUA.load(b).call(args) {
 					Ok(t) => plugin = Some(t),
 					Err(e) => ret = Err(e),
 				}
 			}
 			if let Some(plugin) = plugin {
-				ret =
-					if let Some(cb) = opt.data.cb { cb(plugin) } else { plugin.call_method("entry", args) };
+				ret = if let Some(cb) = opt.data.cb { cb(plugin) } else { plugin.call_method("entry", ()) };
 			}
 		});
 

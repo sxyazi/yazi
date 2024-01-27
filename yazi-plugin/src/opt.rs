@@ -26,6 +26,15 @@ impl TryFrom<Exec> for Opt {
 			bail!("invalid plugin name");
 		};
 
-		Ok(Self { name, sync: e.named.contains_key("sync"), data: e.take_data().unwrap_or_default() })
+		let mut data: OptData = e.take_data().unwrap_or_default();
+
+		if let Some(args) = e.named.get("args") {
+			data.args = shell_words::split(args)?
+				.into_iter()
+				.map(|s| ValueSendable::String(s.into_bytes()))
+				.collect();
+		}
+
+		Ok(Self { name, sync: e.named.contains_key("sync"), data })
 	}
 }
