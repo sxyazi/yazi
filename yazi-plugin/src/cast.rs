@@ -22,6 +22,7 @@ pub fn cast_to_renderable(ud: AnyUserData) -> Option<Box<dyn Renderable + Send>>
 	}
 }
 
+#[derive(Debug)]
 pub enum ValueSendable {
 	Nil,
 	Boolean(bool),
@@ -96,7 +97,7 @@ impl ValueSendable {
 	}
 }
 
-#[derive(Hash, PartialEq, Eq)]
+#[derive(Debug, Hash, PartialEq, Eq)]
 pub enum ValueSendableKey {
 	Nil,
 	Boolean(bool),

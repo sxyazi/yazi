@@ -1,5 +1,7 @@
+use std::fmt::Display;
+
 use mlua::{ExternalError, ExternalResult, IntoLua, Table, TableExt, Value, Variadic};
-use tracing::error;
+use tracing::{error, warn};
 use yazi_plugin::{LOADED, LUA};
 use yazi_shared::{emit, event::Exec, Layer};
 
@@ -26,9 +28,10 @@ impl App {
 		});
 	}
 
-	pub(crate) fn plugin_do(&mut self, opt: impl TryInto<yazi_plugin::Opt>) {
-		let Ok(opt) = opt.try_into() else {
-			return;
+	pub(crate) fn plugin_do(&mut self, opt: impl TryInto<yazi_plugin::Opt, Error = impl Display>) {
+		let opt = match opt.try_into() {
+			Ok(opt) => opt as yazi_plugin::Opt,
+			Err(e) => return warn!("{e}"),
 		};
 
 		let args = Variadic::from_iter(opt.data.args.into_iter().filter_map(|v| v.into_lua(&LUA).ok()));
