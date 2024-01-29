@@ -1,7 +1,7 @@
 use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref, sync::atomic::Ordering};
 
 use anyhow::Result;
-use tokio::{fs, select, sync::mpsc::{self, UnboundedReceiver}};
+use tokio::{fs::{self, DirEntry}, select, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_config::{manager::SortBy, MANAGER};
 use yazi_shared::fs::{File, Url, FILES_TICKET};
 
@@ -65,6 +65,34 @@ impl Files {
 			}
 		});
 		Ok(rx)
+	}
+
+	pub async fn from_dir_bulk(url: &Url) -> Result<Vec<File>> {
+		let mut it = fs::read_dir(url).await?;
+		let mut items = Vec::with_capacity(5000);
+		while let Ok(Some(item)) = it.next_entry().await {
+			items.push(item);
+		}
+
+		let (first, rest) = items.split_at(items.len() / 3);
+		let (second, third) = rest.split_at(items.len() / 3);
+		async fn go(entities: &[DirEntry]) -> Vec<File> {
+			let mut files = Vec::with_capacity(entities.len() / 3 + 1);
+			for entry in entities {
+				if let Ok(meta) = entry.metadata().await {
+					files.push(File::from_meta(Url::from(entry.path()), meta).await);
+				}
+			}
+			files
+		}
+
+		Ok(
+			futures::future::join_all([go(first), go(second), go(third)])
+				.await
+				.into_iter()
+				.flatten()
+				.collect(),
+		)
 	}
 }
 

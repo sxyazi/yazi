@@ -1,5 +1,6 @@
-use std::{collections::{BTreeMap, BTreeSet}, sync::Arc, time::Duration};
+use std::{collections::{BTreeMap, BTreeSet}, sync::Arc, time::{Duration, SystemTime}};
 
+use anyhow::Result;
 use notify::{event::{MetadataKind, ModifyKind}, EventKind, RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
 use parking_lot::RwLock;
 use tokio::{fs, pin, sync::mpsc::{self, UnboundedReceiver}};
@@ -90,26 +91,27 @@ impl Watcher {
 			return;
 		}
 
-		tokio::spawn(async move {
-			for (url, mtime) in todo {
-				let Ok(meta) = fs::metadata(&url).await else {
-					if let Ok(m) = fs::symlink_metadata(&url).await {
-						FilesOp::Full(url, vec![], m.modified().ok()).emit();
-					} else if let Some(p) = url.parent_url() {
-						FilesOp::Deleting(p, vec![url]).emit();
-					}
-					continue;
-				};
-
-				if meta.modified().ok() == mtime {
-					continue;
+		async fn go(url: Url, mtime: Option<SystemTime>) {
+			let Ok(meta) = fs::metadata(&url).await else {
+				if let Ok(m) = fs::symlink_metadata(&url).await {
+					FilesOp::Full(url, vec![], m.modified().ok()).emit();
+				} else if let Some(p) = url.parent_url() {
+					FilesOp::Deleting(p, vec![url]).emit();
 				}
+				return;
+			};
 
-				if let Ok(rx) = Files::from_dir(&url).await {
-					let files: Vec<_> = UnboundedReceiverStream::new(rx).collect().await;
-					FilesOp::Full(url, files, meta.modified().ok()).emit();
-				}
+			if meta.modified().ok() == mtime {
+				return;
 			}
+
+			if let Ok(files) = Files::from_dir_bulk(&url).await {
+				FilesOp::Full(url, files, meta.modified().ok()).emit();
+			}
+		}
+
+		tokio::spawn(async move {
+			futures::future::join_all(todo.into_iter().map(|(url, mtime)| go(url, mtime))).await;
 		});
 	}
 
