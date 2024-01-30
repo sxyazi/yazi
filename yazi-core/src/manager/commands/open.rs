@@ -8,13 +8,16 @@ use yazi_shared::{emit, event::{EventQuit, Exec}, fs::{File, Url}, Layer, MIME_D
 use crate::{manager::Manager, select::Select, tasks::Tasks};
 
 pub struct Opt {
-	targets:     Option<Vec<(Url, Option<String>)>>,
+	targets:     Vec<(Url, Option<String>)>,
 	interactive: bool,
 }
 
 impl From<Exec> for Opt {
 	fn from(mut e: Exec) -> Self {
-		Self { targets: e.take_data(), interactive: e.named.contains_key("interactive") }
+		Self {
+			targets:     e.take_data().unwrap_or_default(),
+			interactive: e.named.contains_key("interactive"),
+		}
 	}
 }
 
@@ -40,7 +43,7 @@ impl Manager {
 
 		let mut opt = opt.into() as Opt;
 		if todo.is_empty() {
-			opt.targets = Some(done);
+			opt.targets = done;
 			return self.open_do(opt, tasks);
 		}
 
@@ -64,11 +67,12 @@ impl Manager {
 
 	pub fn open_do(&mut self, opt: impl Into<Opt>, tasks: &Tasks) {
 		let opt = opt.into() as Opt;
-		let Some(targets) = opt.targets else {
+		if opt.targets.is_empty() {
 			return;
-		};
+		}
 
-		let targets: Vec<_> = targets
+		let targets: Vec<_> = opt
+			.targets
 			.into_iter()
 			.filter_map(|(u, m)| m.or_else(|| self.mimetype.get(&u).cloned()).map(|m| (u, m)))
 			.collect();
