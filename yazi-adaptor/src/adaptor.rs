@@ -153,8 +153,7 @@ impl Adaptor {
 
 	fn via_csi() -> Result<Emulator> {
 		enable_raw_mode()?;
-		std::io::stdout()
-			.write_all(b"\x1b[>q\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[=c\x1b[c")?;
+		std::io::stdout().write_all(b"\x1b[>q\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[c")?;
 		std::io::stdout().flush()?;
 
 		let mut stdin = std::io::stdin().lock();
@@ -177,7 +176,6 @@ impl Adaptor {
 			("iTerm2", Emulator::Iterm2),
 			("WezTerm", Emulator::WezTerm),
 			("foot", Emulator::Foot),
-			("!|464f4f54", Emulator::Foot), // DA3
 			("ghostty", Emulator::Ghostty),
 		];
 
