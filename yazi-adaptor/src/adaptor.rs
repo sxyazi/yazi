@@ -1,6 +1,7 @@
-use std::{env, path::Path, sync::Arc};
+use std::{env, io::{Read, Write}, path::Path, sync::Arc};
 
 use anyhow::{anyhow, Result};
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use ratatui::layout::Rect;
 use tracing::warn;
 use yazi_shared::{env_exists, term::Term};
@@ -21,9 +22,9 @@ pub enum Adaptor {
 	Chafa,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 enum Emulator {
-	Unknown,
+	Unknown(Vec<Adaptor>),
 	Kitty,
 	Konsole,
 	Iterm2,
@@ -58,7 +59,7 @@ impl Adaptor {
 			None => warn!("[Adaptor] No special environment variables detected"),
 		}
 
-		let (term, program) = Self::term_program();
+		let (term, program) = Self::via_env();
 		match program.as_str() {
 			"iTerm.app" => return Emulator::Iterm2,
 			"WezTerm" => return Emulator::WezTerm,
@@ -77,12 +78,13 @@ impl Adaptor {
 			"xterm-ghostty" => return Emulator::Ghostty,
 			_ => warn!("[Adaptor] Unknown TERM: {term}"),
 		}
-		Emulator::Unknown
+
+		Self::via_csi().unwrap_or(Emulator::Unknown(vec![]))
 	}
 
 	pub(super) fn detect() -> Self {
 		let mut protocols = match Self::emulator() {
-			Emulator::Unknown => vec![],
+			Emulator::Unknown(adapters) => adapters,
 			Emulator::Kitty => vec![Self::Kitty],
 			Emulator::Konsole => vec![Self::KittyOld, Self::Iterm2, Self::Sixel],
 			Emulator::Iterm2 => vec![Self::Iterm2, Self::Sixel],
@@ -128,13 +130,13 @@ impl Adaptor {
 		Self::Chafa
 	}
 
-	pub(super) fn term_program() -> (String, String) {
+	fn via_env() -> (String, String) {
 		fn tmux_env(name: &str) -> Result<String> {
 			let output = std::process::Command::new("tmux").args(["show-environment", name]).output()?;
 
 			String::from_utf8(output.stdout)?
 				.trim()
-				.strip_prefix(&format!("{}=", name))
+				.strip_prefix(&format!("{name}="))
 				.map_or_else(|| Err(anyhow!("")), |s| Ok(s.to_string()))
 		}
 
@@ -147,6 +149,51 @@ impl Adaptor {
 		}
 
 		(term, program)
+	}
+
+	fn via_csi() -> Result<Emulator> {
+		enable_raw_mode()?;
+		std::io::stdout().write_all(b"\x1b[>q\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[c")?;
+		std::io::stdout().flush()?;
+
+		let mut stdin = std::io::stdin().lock();
+		let mut buf = String::with_capacity(200);
+		loop {
+			let mut c = [0; 1];
+			if stdin.read(&mut c)? == 0 {
+				break;
+			}
+			if c[0] == b'c' && buf.contains("\x1b[?") {
+				break;
+			}
+			buf.push(c[0] as char);
+		}
+
+		disable_raw_mode().ok();
+		let names = [
+			("kitty", Emulator::Kitty),
+			("Konsole", Emulator::Konsole),
+			("iTerm2", Emulator::Iterm2),
+			("WezTerm", Emulator::WezTerm),
+			("foot", Emulator::Foot),
+			("ghostty", Emulator::Ghostty),
+		];
+
+		for (name, emulator) in names.iter() {
+			if buf.contains(name) {
+				return Ok(emulator.clone());
+			}
+		}
+
+		let mut adapters = Vec::with_capacity(2);
+		if buf.contains("\x1b_Gi=31;OK") {
+			adapters.push(Adaptor::KittyOld);
+		}
+		if ["?4;", "?4c", ";4;", ";4c"].iter().any(|s| buf.contains(s)) {
+			adapters.push(Adaptor::Sixel);
+		}
+
+		Ok(Emulator::Unknown(adapters))
 	}
 }
 

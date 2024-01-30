@@ -2623,6 +2623,7 @@ dependencies = [
  "arc-swap",
  "base64",
  "color_quant",
+ "crossterm",
  "image",
  "imagesize",
  "kamadak-exif",
