@@ -3,19 +3,19 @@ use tokio::{runtime::Handle, select};
 use tokio_util::sync::CancellationToken;
 use tracing::error;
 use yazi_config::LAYOUT;
-use yazi_shared::{emit, event::Exec, Layer};
+use yazi_shared::{emit, event::Cmd, Layer};
 
 use super::slim_lua;
 use crate::{bindings::{Cast, File, Window}, elements::Rect, OptData, LOADED, LUA};
 
-pub fn peek(exec: &Exec, file: yazi_shared::fs::File, skip: usize) -> CancellationToken {
+pub fn peek(cmd: &Cmd, file: yazi_shared::fs::File, skip: usize) -> CancellationToken {
 	let ct = CancellationToken::new();
 
-	let cmd = exec.cmd.to_owned();
+	let name = cmd.name.to_owned();
 	let (ct1, ct2) = (ct.clone(), ct.clone());
 	tokio::task::spawn_blocking(move || {
 		let future = async {
-			LOADED.ensure(&cmd).await.into_lua_err()?;
+			LOADED.ensure(&name).await.into_lua_err()?;
 
 			let lua = slim_lua()?;
 			lua.set_hook(
@@ -25,7 +25,7 @@ pub fn peek(exec: &Exec, file: yazi_shared::fs::File, skip: usize) -> Cancellati
 				},
 			);
 
-			let plugin: Table = if let Some(b) = LOADED.read().get(&cmd) {
+			let plugin: Table = if let Some(b) = LOADED.read().get(&name) {
 				lua.load(b).call(())?
 			} else {
 				return Err("unloaded plugin".into_lua_err());
@@ -55,7 +55,7 @@ pub fn peek(exec: &Exec, file: yazi_shared::fs::File, skip: usize) -> Cancellati
 	ct
 }
 
-pub fn peek_sync(exec: &Exec, file: yazi_shared::fs::File, skip: usize) {
+pub fn peek_sync(cmd: &Cmd, file: yazi_shared::fs::File, skip: usize) {
 	let data = OptData {
 		args: vec![],
 		cb:   Some(Box::new(move |plugin| {
@@ -68,7 +68,7 @@ pub fn peek_sync(exec: &Exec, file: yazi_shared::fs::File, skip: usize) {
 		tx:   None,
 	};
 	emit!(Call(
-		Exec::call("plugin", vec![exec.cmd.to_owned()]).with_bool("sync", true).with_data(data),
+		Cmd::args("plugin", vec![cmd.name.to_owned()]).with_bool("sync", true).with_data(data),
 		Layer::App
 	));
 }

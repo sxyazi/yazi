@@ -1,6 +1,6 @@
 use std::ffi::{OsStr, OsString};
 
-use yazi_shared::event::Exec;
+use yazi_shared::event::Cmd;
 
 use crate::{tab::Tab, CLIPBOARD};
 
@@ -8,8 +8,8 @@ pub struct Opt {
 	type_: String,
 }
 
-impl From<Exec> for Opt {
-	fn from(mut e: Exec) -> Self { Self { type_: e.take_first().unwrap_or_default() } }
+impl From<Cmd> for Opt {
+	fn from(mut c: Cmd) -> Self { Self { type_: c.take_first().unwrap_or_default() } }
 }
 
 impl Tab {

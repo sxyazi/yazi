@@ -1,10 +1,10 @@
 use yazi_config::popup::{Offset, Origin, Position};
-use yazi_shared::{event::Exec, render};
+use yazi_shared::{event::Cmd, render};
 
 use crate::{help::Help, input::Input};
 
 impl Help {
-	pub fn filter(&mut self, _: Exec) {
+	pub fn filter(&mut self, _: Cmd) {
 		let mut input = Input::default();
 		input.position = Position::new(Origin::BottomLeft, Offset::line());
 

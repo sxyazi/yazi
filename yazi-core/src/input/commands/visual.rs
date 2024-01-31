@@ -1,10 +1,10 @@
-use yazi_shared::{event::Exec, render};
+use yazi_shared::{event::Cmd, render};
 
 use crate::input::{op::InputOp, Input, InputMode};
 
 impl Input {
 	#[inline]
-	pub fn visual(&mut self, _: Exec) {
+	pub fn visual(&mut self, _: Cmd) {
 		let snap = self.snap_mut();
 		if snap.mode != InputMode::Normal {
 			return;

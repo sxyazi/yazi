@@ -1,10 +1,10 @@
-use yazi_shared::event::Exec;
+use yazi_shared::event::Cmd;
 
 use crate::{manager::Manager, tab::Tab};
 
 impl Tab {
-	pub fn hidden(&mut self, e: Exec) {
-		self.conf.show_hidden = match e.args.first().map(|s| s.as_str()) {
+	pub fn hidden(&mut self, c: Cmd) {
+		self.conf.show_hidden = match c.args.first().map(|s| s.as_str()) {
 			Some("show") => true,
 			Some("hide") => false,
 			_ => !self.conf.show_hidden,

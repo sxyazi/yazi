@@ -1,20 +1,20 @@
 use yazi_config::{open::Opener, popup::InputCfg};
-use yazi_shared::event::Exec;
+use yazi_shared::event::Cmd;
 
 use crate::{input::Input, tab::Tab, tasks::Tasks};
 
 pub struct Opt {
-	cmd:     String,
+	exec:    String,
 	block:   bool,
 	confirm: bool,
 }
 
-impl From<Exec> for Opt {
-	fn from(mut e: Exec) -> Self {
+impl From<Cmd> for Opt {
+	fn from(mut c: Cmd) -> Self {
 		Self {
-			cmd:     e.take_first().unwrap_or_default(),
-			block:   e.named.contains_key("block"),
-			confirm: e.named.contains_key("confirm"),
+			exec:    c.take_first().unwrap_or_default(),
+			block:   c.named.contains_key("block"),
+			confirm: c.named.contains_key("confirm"),
 		}
 	}
 }
@@ -25,16 +25,16 @@ impl Tab {
 		let selected: Vec<_> = self.selected().into_iter().map(|f| f.url()).collect();
 
 		tokio::spawn(async move {
-			if !opt.confirm || opt.cmd.is_empty() {
-				let mut result = Input::_show(InputCfg::shell(opt.block).with_value(opt.cmd));
+			if !opt.confirm || opt.exec.is_empty() {
+				let mut result = Input::_show(InputCfg::shell(opt.block).with_value(opt.exec));
 				match result.recv().await {
-					Some(Ok(e)) => opt.cmd = e,
+					Some(Ok(e)) => opt.exec = e,
 					_ => return,
 				}
 			}
 
 			Tasks::_open(selected, Opener {
-				exec:   opt.cmd,
+				exec:   opt.exec,
 				block:  opt.block,
 				orphan: false,
 				desc:   Default::default(),

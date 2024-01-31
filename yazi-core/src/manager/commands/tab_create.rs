@@ -1,4 +1,4 @@
-use yazi_shared::{event::Exec, fs::Url, render};
+use yazi_shared::{event::Cmd, fs::Url, render};
 
 use crate::{manager::Tabs, tab::Tab};
 
@@ -9,12 +9,12 @@ pub struct Opt {
 	current: bool,
 }
 
-impl From<Exec> for Opt {
-	fn from(mut e: Exec) -> Self {
-		let mut opt = Self { url: None, current: e.named.contains_key("current") };
+impl From<Cmd> for Opt {
+	fn from(mut c: Cmd) -> Self {
+		let mut opt = Self { url: None, current: c.named.contains_key("current") };
 
 		if !opt.current {
-			opt.url = Some(e.take_first().map_or_else(|| Url::from("."), Url::from));
+			opt.url = Some(c.take_first().map_or_else(|| Url::from("."), Url::from));
 		}
 		opt
 	}

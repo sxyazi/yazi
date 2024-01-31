@@ -3,12 +3,12 @@ use std::io::{stdout, Write};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use tokio::{io::{stdin, AsyncReadExt}, select, sync::mpsc, time};
 use yazi_scheduler::{Scheduler, BLOCKER};
-use yazi_shared::{event::Exec, term::Term, Defer};
+use yazi_shared::{event::Cmd, term::Term, Defer};
 
 use crate::tasks::Tasks;
 
 impl Tasks {
-	pub fn inspect(&self, _: Exec) {
+	pub fn inspect(&self, _: Cmd) {
 		let Some(id) = self.scheduler.running.lock().get_id(self.cursor) else {
 			return;
 		};

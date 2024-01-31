@@ -5,7 +5,7 @@ use parking_lot::Mutex;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}};
 use yazi_config::{open::Opener, plugin::PluginRule, TASKS};
 use yazi_plugin::ValueSendable;
-use yazi_shared::{emit, event::Exec, fs::{unique_path, Url}, Layer, Throttle};
+use yazi_shared::{emit, event::Cmd, fs::{unique_path, Url}, Layer, Throttle};
 
 use super::{Running, TaskProg, TaskStage};
 use crate::{file::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, preload::{Preload, PreloadOpRule, PreloadOpSize}, process::{Process, ProcessOpOpen}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
@@ -165,12 +165,12 @@ impl Scheduler {
 
 	pub async fn app_stop() {
 		let (tx, rx) = oneshot::channel::<()>();
-		emit!(Call(Exec::call("stop", vec![]).with_data(tx), Layer::App));
+		emit!(Call(Cmd::new("stop").with_data(tx), Layer::App));
 		rx.await.ok();
 	}
 
 	pub fn app_resume() {
-		emit!(Call(Exec::call("resume", vec![]), Layer::App));
+		emit!(Call(Cmd::new("resume"), Layer::App));
 	}
 
 	pub fn file_cut(&self, from: Url, mut to: Url, force: bool) {
@@ -307,7 +307,7 @@ impl Scheduler {
 	pub fn preload_paged(&self, rule: &PluginRule, targets: Vec<&yazi_shared::fs::File>) {
 		let id = self.running.lock().add(
 			TaskKind::Preload,
-			format!("Run preloader `{}` with {} target(s)", rule.exec.cmd, targets.len()),
+			format!("Run preloader `{}` with {} target(s)", rule.cmd.name, targets.len()),
 		);
 
 		let plugin = rule.into();

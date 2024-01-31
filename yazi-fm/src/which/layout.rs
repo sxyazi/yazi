@@ -48,7 +48,7 @@ impl Widget for Which<'_> {
 
 		for y in 0..area.height {
 			for (x, chunk) in chunks.iter().enumerate() {
-				let Some(&cand) = which.cands.get(y as usize * cols + x) else {
+				let Some(cand) = which.cands.get(y as usize * cols + x) else {
 					break;
 				};
 

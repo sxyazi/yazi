@@ -1,6 +1,6 @@
 use std::ops::RangeBounds;
 
-use yazi_shared::{event::Exec, render, CharKind};
+use yazi_shared::{event::Cmd, render, CharKind};
 
 use crate::input::Input;
 
@@ -8,8 +8,8 @@ pub struct Opt {
 	kind: String,
 }
 
-impl From<Exec> for Opt {
-	fn from(mut e: Exec) -> Self { Self { kind: e.take_first().unwrap_or_default() } }
+impl From<Cmd> for Opt {
+	fn from(mut c: Cmd) -> Self { Self { kind: c.take_first().unwrap_or_default() } }
 }
 
 impl Input {

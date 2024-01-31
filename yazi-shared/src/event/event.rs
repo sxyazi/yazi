@@ -3,15 +3,15 @@ use std::{collections::VecDeque, ffi::OsString};
 use crossterm::event::KeyEvent;
 use tokio::sync::{mpsc, oneshot};
 
-use super::Exec;
+use super::Cmd;
 use crate::{term::Term, Layer, RoCell};
 
 static TX: RoCell<mpsc::UnboundedSender<Event>> = RoCell::new();
 
 #[derive(Debug)]
 pub enum Event {
-	Call(Exec, Layer),
-	Seq(VecDeque<Exec>, Layer),
+	Call(Cmd, Layer),
+	Seq(VecDeque<Cmd>, Layer),
 	Render,
 	Key(KeyEvent),
 	Resize,

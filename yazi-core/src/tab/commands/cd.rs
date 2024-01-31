@@ -3,7 +3,7 @@ use std::{mem, time::Duration};
 use tokio::{fs, pin};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
-use yazi_shared::{emit, event::Exec, fs::{expand_path, Url}, render, Debounce, InputError, Layer};
+use yazi_shared::{emit, event::Cmd, fs::{expand_path, Url}, render, Debounce, InputError, Layer};
 
 use crate::{completion::Completion, input::Input, manager::Manager, tab::Tab};
 
@@ -12,14 +12,14 @@ pub struct Opt {
 	interactive: bool,
 }
 
-impl From<Exec> for Opt {
-	fn from(mut e: Exec) -> Self {
-		let mut target = Url::from(e.take_first().unwrap_or_default());
+impl From<Cmd> for Opt {
+	fn from(mut c: Cmd) -> Self {
+		let mut target = Url::from(c.take_first().unwrap_or_default());
 		if target.is_regular() {
 			target.set_path(expand_path(&target))
 		}
 
-		Self { target, interactive: e.named.contains_key("interactive") }
+		Self { target, interactive: c.named.contains_key("interactive") }
 	}
 }
 impl From<Url> for Opt {
@@ -29,7 +29,7 @@ impl From<Url> for Opt {
 impl Tab {
 	#[inline]
 	pub fn _cd(target: &Url) {
-		emit!(Call(Exec::call("cd", vec![target.to_string()]), Layer::Manager));
+		emit!(Call(Cmd::args("cd", vec![target.to_string()]), Layer::Manager));
 	}
 
 	pub fn cd(&mut self, opt: impl Into<Opt>) {

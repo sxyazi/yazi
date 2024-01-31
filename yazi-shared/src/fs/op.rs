@@ -1,7 +1,7 @@
 use std::{collections::BTreeMap, sync::atomic::{AtomicU64, Ordering}, time::SystemTime};
 
 use super::File;
-use crate::{emit, event::Exec, fs::Url, Layer};
+use crate::{emit, event::Cmd, fs::Url, Layer};
 
 pub static FILES_TICKET: AtomicU64 = AtomicU64::new(0);
 
@@ -36,7 +36,7 @@ impl FilesOp {
 
 	#[inline]
 	pub fn emit(self) {
-		emit!(Call(Exec::call("update_files", vec![]).with_data(self), Layer::Manager));
+		emit!(Call(Cmd::new("update_files").with_data(self), Layer::Manager));
 	}
 
 	pub fn prepare(url: &Url) -> u64 {

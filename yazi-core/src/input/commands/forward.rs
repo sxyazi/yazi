@@ -1,4 +1,4 @@
-use yazi_shared::{event::Exec, CharKind};
+use yazi_shared::{event::Cmd, CharKind};
 
 use crate::input::{op::InputOp, Input};
 
@@ -6,8 +6,8 @@ pub struct Opt {
 	end_of_word: bool,
 }
 
-impl From<Exec> for Opt {
-	fn from(e: Exec) -> Self { Self { end_of_word: e.named.contains_key("end-of-word") } }
+impl From<Cmd> for Opt {
+	fn from(c: Cmd) -> Self { Self { end_of_word: c.named.contains_key("end-of-word") } }
 }
 
 impl Input {

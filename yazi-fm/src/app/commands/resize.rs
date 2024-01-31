@@ -1,11 +1,11 @@
-use yazi_shared::event::Exec;
+use yazi_shared::event::Cmd;
 
 use crate::app::App;
 
 pub struct Opt;
 
-impl From<Exec> for Opt {
-	fn from(_: Exec) -> Self { Self }
+impl From<Cmd> for Opt {
+	fn from(_: Cmd) -> Self { Self }
 }
 
 impl From<()> for Opt {

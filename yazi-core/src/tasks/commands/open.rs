@@ -1,5 +1,5 @@
 use yazi_config::open::Opener;
-use yazi_shared::{emit, event::Exec, fs::Url, Layer};
+use yazi_shared::{emit, event::Cmd, fs::Url, Layer};
 
 use crate::tasks::Tasks;
 
@@ -8,15 +8,15 @@ pub struct Opt {
 	opener:  Opener,
 }
 
-impl TryFrom<Exec> for Opt {
+impl TryFrom<Cmd> for Opt {
 	type Error = ();
 
-	fn try_from(mut e: Exec) -> Result<Self, Self::Error> { e.take_data().ok_or(()) }
+	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> { c.take_data().ok_or(()) }
 }
 
 impl Tasks {
 	pub fn _open(targets: Vec<Url>, opener: Opener) {
-		emit!(Call(Exec::call("open", vec![]).with_data(Opt { targets, opener }), Layer::Tasks));
+		emit!(Call(Cmd::new("open").with_data(Opt { targets, opener }), Layer::Tasks));
 	}
 
 	pub fn open(&mut self, opt: impl TryInto<Opt>) {

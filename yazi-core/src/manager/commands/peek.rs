@@ -1,4 +1,4 @@
-use yazi_shared::{emit, event::Exec, fs::Url, render, Layer};
+use yazi_shared::{emit, event::Cmd, fs::Url, render, Layer};
 
 use crate::manager::Manager;
 
@@ -10,13 +10,13 @@ pub struct Opt {
 	upper_bound: bool,
 }
 
-impl From<Exec> for Opt {
-	fn from(mut e: Exec) -> Self {
+impl From<Cmd> for Opt {
+	fn from(mut c: Cmd) -> Self {
 		Self {
-			skip:        e.take_first().and_then(|s| s.parse().ok()),
-			force:       e.named.contains_key("force"),
-			only_if:     e.take_name("only-if").map(Url::from),
-			upper_bound: e.named.contains_key("upper-bound"),
+			skip:        c.take_first().and_then(|s| s.parse().ok()),
+			force:       c.named.contains_key("force"),
+			only_if:     c.take_name("only-if").map(Url::from),
+			upper_bound: c.named.contains_key("upper-bound"),
 		}
 	}
 }
@@ -27,7 +27,7 @@ impl From<bool> for Opt {
 impl Manager {
 	#[inline]
 	pub fn _peek(force: bool) {
-		emit!(Call(Exec::call("peek", vec![]).with_bool("force", force), Layer::Manager));
+		emit!(Call(Cmd::new("peek").with_bool("force", force), Layer::Manager));
 	}
 
 	pub fn peek(&mut self, opt: impl Into<Opt>) {

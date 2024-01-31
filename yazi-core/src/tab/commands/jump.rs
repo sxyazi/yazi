@@ -1,6 +1,6 @@
 use yazi_plugin::external::{self, FzfOpt, ZoxideOpt};
 use yazi_scheduler::{Scheduler, BLOCKER};
-use yazi_shared::{event::Exec, fs::ends_with_slash, Defer};
+use yazi_shared::{event::Cmd, fs::ends_with_slash, Defer};
 
 use crate::tab::Tab;
 
@@ -15,10 +15,10 @@ pub enum OptType {
 	Zoxide,
 }
 
-impl From<Exec> for Opt {
-	fn from(e: Exec) -> Self {
+impl From<Cmd> for Opt {
+	fn from(c: Cmd) -> Self {
 		Self {
-			type_: match e.args.first().map(|s| s.as_str()) {
+			type_: match c.args.first().map(|s| s.as_str()) {
 				Some("fzf") => OptType::Fzf,
 				Some("zoxide") => OptType::Zoxide,
 				_ => OptType::None,

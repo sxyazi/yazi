@@ -1,6 +1,6 @@
 use yazi_config::PLUGIN;
 use yazi_plugin::isolate;
-use yazi_shared::{event::Exec, render, MIME_DIR};
+use yazi_shared::{event::Cmd, render, MIME_DIR};
 
 use crate::manager::Manager;
 
@@ -9,9 +9,9 @@ pub struct Opt {
 	units: i16,
 }
 
-impl From<Exec> for Opt {
-	fn from(mut e: Exec) -> Self {
-		Self { units: e.take_first().and_then(|s| s.parse().ok()).unwrap_or(0) }
+impl From<Cmd> for Opt {
+	fn from(mut c: Cmd) -> Self {
+		Self { units: c.take_first().and_then(|s| s.parse().ok()).unwrap_or(0) }
 	}
 }
 
@@ -34,6 +34,6 @@ impl Manager {
 		};
 
 		let opt = opt.into() as Opt;
-		isolate::seek_sync(&previewer.exec, hovered.clone(), opt.units);
+		isolate::seek_sync(&previewer.cmd, hovered.clone(), opt.units);
 	}
 }

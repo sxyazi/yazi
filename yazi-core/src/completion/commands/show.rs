@@ -1,6 +1,6 @@
 use std::{mem, ops::ControlFlow};
 
-use yazi_shared::{event::Exec, render};
+use yazi_shared::{event::Cmd, render};
 
 use crate::completion::Completion;
 
@@ -13,13 +13,13 @@ pub struct Opt {
 	ticket:     usize,
 }
 
-impl From<Exec> for Opt {
-	fn from(mut e: Exec) -> Self {
+impl From<Cmd> for Opt {
+	fn from(mut c: Cmd) -> Self {
 		Self {
-			cache:      mem::take(&mut e.args),
-			cache_name: e.take_name("cache-name").unwrap_or_default(),
-			word:       e.take_name("word").unwrap_or_default(),
-			ticket:     e.take_name("ticket").and_then(|v| v.parse().ok()).unwrap_or(0),
+			cache:      mem::take(&mut c.args),
+			cache_name: c.take_name("cache-name").unwrap_or_default(),
+			word:       c.take_name("word").unwrap_or_default(),
+			ticket:     c.take_name("ticket").and_then(|v| v.parse().ok()).unwrap_or(0),
 		}
 	}
 }

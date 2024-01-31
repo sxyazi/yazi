@@ -5,7 +5,7 @@ use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
 use yazi_plugin::external;
-use yazi_shared::{event::Exec, fs::FilesOp, render};
+use yazi_shared::{event::Cmd, fs::FilesOp, render};
 
 use crate::{input::Input, manager::Manager, tab::Tab};
 
@@ -41,8 +41,8 @@ pub struct Opt {
 	pub type_: OptType,
 }
 
-impl From<Exec> for Opt {
-	fn from(mut e: Exec) -> Self { Self { type_: e.take_first().unwrap_or_default().into() } }
+impl From<Cmd> for Opt {
+	fn from(mut c: Cmd) -> Self { Self { type_: c.take_first().unwrap_or_default().into() } }
 }
 
 impl Tab {

@@ -1,5 +1,5 @@
 use yazi_core::input::InputMode;
-use yazi_shared::{event::Exec, Layer};
+use yazi_shared::{event::Cmd, Layer};
 
 use crate::app::App;
 
@@ -12,24 +12,24 @@ impl<'a> Executor<'a> {
 	pub(super) fn new(app: &'a mut App) -> Self { Self { app } }
 
 	#[inline]
-	pub(super) fn execute(&mut self, exec: Exec, layer: Layer) {
+	pub(super) fn execute(&mut self, cmd: Cmd, layer: Layer) {
 		match layer {
-			Layer::App => self.app(exec),
-			Layer::Manager => self.manager(exec),
-			Layer::Tasks => self.tasks(exec),
-			Layer::Select => self.select(exec),
-			Layer::Input => self.input(exec),
-			Layer::Help => self.help(exec),
-			Layer::Completion => self.completion(exec),
+			Layer::App => self.app(cmd),
+			Layer::Manager => self.manager(cmd),
+			Layer::Tasks => self.tasks(cmd),
+			Layer::Select => self.select(cmd),
+			Layer::Input => self.input(cmd),
+			Layer::Help => self.help(cmd),
+			Layer::Completion => self.completion(cmd),
 			Layer::Which => unreachable!(),
 		}
 	}
 
-	fn app(&mut self, exec: Exec) {
+	fn app(&mut self, cmd: Cmd) {
 		macro_rules! on {
 			($name:ident) => {
-				if exec.cmd == stringify!($name) {
-					return self.app.$name(exec);
+				if cmd.name == stringify!($name) {
+					return self.app.$name(cmd);
 				}
 			};
 		}
@@ -42,21 +42,21 @@ impl<'a> Executor<'a> {
 		on!(resume);
 	}
 
-	fn manager(&mut self, exec: Exec) {
+	fn manager(&mut self, cmd: Cmd) {
 		macro_rules! on {
 			(MANAGER, $name:ident $(,$args:expr)*) => {
-				if exec.cmd == stringify!($name) {
-					return self.app.cx.manager.$name(exec, $($args),*);
+				if cmd.name == stringify!($name) {
+					return self.app.cx.manager.$name(cmd, $($args),*);
 				}
 			};
 			(ACTIVE, $name:ident $(,$args:expr)*) => {
-				if exec.cmd == stringify!($name) {
-					return self.app.cx.manager.active_mut().$name(exec, $($args),*);
+				if cmd.name == stringify!($name) {
+					return self.app.cx.manager.active_mut().$name(cmd, $($args),*);
 				}
 			};
 			(TABS, $name:ident) => {
-				if exec.cmd == concat!("tab_", stringify!($name)) {
-					return self.app.cx.manager.tabs.$name(exec);
+				if cmd.name == concat!("tab_", stringify!($name)) {
+					return self.app.cx.manager.tabs.$name(cmd);
 				}
 			};
 		}
@@ -122,27 +122,27 @@ impl<'a> Executor<'a> {
 		on!(TABS, switch);
 		on!(TABS, swap);
 
-		match exec.cmd.as_bytes() {
+		match cmd.name.as_bytes() {
 			// Tasks
 			b"tasks_show" => self.app.cx.tasks.toggle(()),
 			// Help
 			b"help" => self.app.cx.help.toggle(Layer::Manager),
 			// Plugin
-			b"plugin" => self.app.plugin(exec),
+			b"plugin" => self.app.plugin(cmd),
 			_ => {}
 		}
 	}
 
-	fn tasks(&mut self, exec: Exec) {
+	fn tasks(&mut self, cmd: Cmd) {
 		macro_rules! on {
 			($name:ident) => {
-				if exec.cmd == stringify!($name) {
-					return self.app.cx.tasks.$name(exec);
+				if cmd.name == stringify!($name) {
+					return self.app.cx.tasks.$name(cmd);
 				}
 			};
 			($name:ident, $alias:literal) => {
-				if exec.cmd == $alias {
-					return self.app.cx.tasks.$name(exec);
+				if cmd.name == $alias {
+					return self.app.cx.tasks.$name(cmd);
 				}
 			};
 		}
@@ -154,17 +154,17 @@ impl<'a> Executor<'a> {
 		on!(cancel);
 
 		#[allow(clippy::single_match)]
-		match exec.cmd.as_str() {
+		match cmd.name.as_str() {
 			"help" => self.app.cx.help.toggle(Layer::Tasks),
 			_ => {}
 		}
 	}
 
-	fn select(&mut self, exec: Exec) {
+	fn select(&mut self, cmd: Cmd) {
 		macro_rules! on {
 			($name:ident) => {
-				if exec.cmd == stringify!($name) {
-					return self.app.cx.select.$name(exec);
+				if cmd.name == stringify!($name) {
+					return self.app.cx.select.$name(cmd);
 				}
 			};
 		}
@@ -174,22 +174,22 @@ impl<'a> Executor<'a> {
 		on!(arrow);
 
 		#[allow(clippy::single_match)]
-		match exec.cmd.as_str() {
+		match cmd.name.as_str() {
 			"help" => self.app.cx.help.toggle(Layer::Select),
 			_ => {}
 		}
 	}
 
-	fn input(&mut self, exec: Exec) {
+	fn input(&mut self, cmd: Cmd) {
 		macro_rules! on {
 			($name:ident) => {
-				if exec.cmd == stringify!($name) {
-					return self.app.cx.input.$name(exec);
+				if cmd.name == stringify!($name) {
+					return self.app.cx.input.$name(cmd);
 				}
 			};
 			($name:ident, $alias:literal) => {
-				if exec.cmd == $alias {
-					return self.app.cx.input.$name(exec);
+				if cmd.name == $alias {
+					return self.app.cx.input.$name(cmd);
 				}
 			};
 		}
@@ -201,11 +201,11 @@ impl<'a> Executor<'a> {
 		on!(backward);
 		on!(forward);
 
-		if exec.cmd.as_str() == "complete" {
-			return if exec.named.contains_key("trigger") {
-				self.app.cx.completion.trigger(exec)
+		if cmd.name.as_str() == "complete" {
+			return if cmd.named.contains_key("trigger") {
+				self.app.cx.completion.trigger(cmd)
 			} else {
-				self.app.cx.input.complete(exec)
+				self.app.cx.input.complete(cmd)
 			};
 		}
 
@@ -222,7 +222,7 @@ impl<'a> Executor<'a> {
 				on!(redo);
 
 				#[allow(clippy::single_match)]
-				match exec.cmd.as_str() {
+				match cmd.name.as_str() {
 					"help" => self.app.cx.help.toggle(Layer::Input),
 					_ => {}
 				}
@@ -234,11 +234,11 @@ impl<'a> Executor<'a> {
 		}
 	}
 
-	fn help(&mut self, exec: Exec) {
+	fn help(&mut self, cmd: Cmd) {
 		macro_rules! on {
 			($name:ident) => {
-				if exec.cmd == stringify!($name) {
-					return self.app.cx.help.$name(exec);
+				if cmd.name == stringify!($name) {
+					return self.app.cx.help.$name(cmd);
 				}
 			};
 		}
@@ -248,17 +248,17 @@ impl<'a> Executor<'a> {
 		on!(filter);
 
 		#[allow(clippy::single_match)]
-		match exec.cmd.as_str() {
+		match cmd.name.as_str() {
 			"close" => self.app.cx.help.toggle(Layer::Help),
 			_ => {}
 		}
 	}
 
-	fn completion(&mut self, exec: Exec) {
+	fn completion(&mut self, cmd: Cmd) {
 		macro_rules! on {
 			($name:ident) => {
-				if exec.cmd == stringify!($name) {
-					return self.app.cx.completion.$name(exec);
+				if cmd.name == stringify!($name) {
+					return self.app.cx.completion.$name(cmd);
 				}
 			};
 		}
@@ -269,9 +269,9 @@ impl<'a> Executor<'a> {
 		on!(arrow);
 
 		#[allow(clippy::single_match)]
-		match exec.cmd.as_str() {
+		match cmd.name.as_str() {
 			"help" => self.app.cx.help.toggle(Layer::Completion),
-			"close_input" => self.app.cx.input.close(exec),
+			"close_input" => self.app.cx.input.close(cmd),
 			_ => {}
 		}
 	}

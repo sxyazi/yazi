@@ -1,9 +1,9 @@
-use yazi_shared::{event::Exec, render};
+use yazi_shared::{event::Cmd, render};
 
 use crate::input::Input;
 
 impl Input {
-	pub fn redo(&mut self, _: Exec) {
+	pub fn redo(&mut self, _: Cmd) {
 		render!(self.snaps.redo());
 	}
 }

@@ -1,6 +1,6 @@
 use std::path::MAIN_SEPARATOR;
 
-use yazi_shared::{emit, event::Exec, render, Layer};
+use yazi_shared::{emit, event::Cmd, render, Layer};
 
 use crate::input::Input;
 
@@ -9,11 +9,11 @@ pub struct Opt {
 	ticket: usize,
 }
 
-impl From<Exec> for Opt {
-	fn from(mut e: Exec) -> Self {
+impl From<Cmd> for Opt {
+	fn from(mut c: Cmd) -> Self {
 		Self {
-			word:   e.take_first().unwrap_or_default(),
-			ticket: e.take_name("ticket").and_then(|s| s.parse().ok()).unwrap_or(0),
+			word:   c.take_first().unwrap_or_default(),
+			ticket: c.take_name("ticket").and_then(|s| s.parse().ok()).unwrap_or(0),
 		}
 	}
 }
@@ -21,7 +21,7 @@ impl From<Exec> for Opt {
 impl Input {
 	#[inline]
 	pub fn _complete(word: &str, ticket: usize) {
-		emit!(Call(Exec::call("complete", vec![word.to_owned()]).with("ticket", ticket), Layer::Input));
+		emit!(Call(Cmd::args("complete", vec![word.to_owned()]).with("ticket", ticket), Layer::Input));
 	}
 
 	pub fn complete(&mut self, opt: impl Into<Opt>) {

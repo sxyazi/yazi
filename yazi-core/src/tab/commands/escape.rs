@@ -1,5 +1,5 @@
 use bitflags::bitflags;
-use yazi_shared::{event::Exec, render};
+use yazi_shared::{event::Cmd, render};
 
 use crate::tab::{Mode, Tab};
 
@@ -13,9 +13,9 @@ bitflags! {
 	}
 }
 
-impl From<Exec> for Opt {
-	fn from(e: Exec) -> Self {
-		e.named.iter().fold(Opt::empty(), |acc, (k, _)| match k.as_str() {
+impl From<Cmd> for Opt {
+	fn from(c: Cmd) -> Self {
+		c.named.iter().fold(Opt::empty(), |acc, (k, _)| match k.as_str() {
 			"all" => Self::all(),
 			"find" => acc | Self::FIND,
 			"visual" => acc | Self::VISUAL,
