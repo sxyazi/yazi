@@ -15,6 +15,7 @@ mod tab_close;
 mod tab_create;
 mod tab_swap;
 mod tab_switch;
+mod unyank;
 mod update_files;
 mod update_mimetype;
 mod update_paged;

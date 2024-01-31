@@ -92,6 +92,7 @@ impl<'a> Executor<'a> {
 		on!(MANAGER, open, &self.app.cx.tasks);
 		on!(MANAGER, open_do, &self.app.cx.tasks);
 		on!(MANAGER, yank);
+		on!(MANAGER, unyank);
 		on!(MANAGER, paste, &self.app.cx.tasks);
 		on!(MANAGER, link, &self.app.cx.tasks);
 		on!(MANAGER, remove, &self.app.cx.tasks);

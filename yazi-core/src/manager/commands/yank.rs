@@ -18,9 +18,4 @@ impl Manager {
 		self.yanked.1 = self.selected().into_iter().map(|f| f.url()).collect();
 		render!();
 	}
-
-	pub fn unyank(&mut self) -> bool {
-		self.yanked = Default::default();
-		true
-	}
 }
