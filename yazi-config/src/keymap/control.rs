@@ -49,19 +49,16 @@ pub enum ControlCow {
 }
 
 impl From<&'static Control> for ControlCow {
-	#[inline]
 	fn from(c: &'static Control) -> Self { Self::Borrowed(c) }
 }
 
 impl From<Control> for ControlCow {
-	#[inline]
 	fn from(c: Control) -> Self { Self::Owned(c) }
 }
 
 impl Deref for ControlCow {
 	type Target = Control;
 
-	#[inline]
 	fn deref(&self) -> &Self::Target {
 		match self {
 			Self::Owned(c) => c,
