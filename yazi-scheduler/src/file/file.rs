@@ -122,7 +122,7 @@ impl File {
 					ctx.set_delete_method(DeleteMethod::NsFileManager);
 					ctx.delete(&task.target)?;
 				}
-				#[cfg(not(target_os = "macos"))]
+				#[cfg(all(not(target_os = "macos"), not(target_os = "android")))]
 				{
 					trash::delete(&task.target)?;
 				}
