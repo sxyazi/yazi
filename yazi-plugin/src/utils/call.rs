@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use mlua::{ExternalError, Lua, Table, Value};
-use yazi_shared::{emit, event::Exec, render, Layer};
+use yazi_shared::{emit, event::Cmd, render, Layer};
 
 use super::Utils;
 use crate::ValueSendable;
@@ -29,9 +29,9 @@ impl Utils {
 	}
 
 	#[inline]
-	fn create_exec(cmd: String, table: Table, data: Option<Value>) -> mlua::Result<Exec> {
+	fn create_cmd(name: String, table: Table, data: Option<Value>) -> mlua::Result<Cmd> {
 		let (args, named) = Self::parse_args(table)?;
-		let mut exec = Exec { cmd, args, named, ..Default::default() };
+		let mut exec = Cmd { name, args, named, ..Default::default() };
 
 		if let Some(data) = data.and_then(|v| ValueSendable::try_from(v).ok()) {
 			exec = exec.with_data(data);
@@ -50,16 +50,16 @@ impl Utils {
 
 		ya.set(
 			"app_emit",
-			lua.create_function(|_, (cmd, table, data): (String, Table, Option<Value>)| {
-				emit!(Call(Self::create_exec(cmd, table, data)?, Layer::App));
+			lua.create_function(|_, (name, table, data): (String, Table, Option<Value>)| {
+				emit!(Call(Self::create_cmd(name, table, data)?, Layer::App));
 				Ok(())
 			})?,
 		)?;
 
 		ya.set(
 			"manager_emit",
-			lua.create_function(|_, (cmd, table, data): (String, Table, Option<Value>)| {
-				emit!(Call(Self::create_exec(cmd, table, data)?, Layer::Manager));
+			lua.create_function(|_, (name, table, data): (String, Table, Option<Value>)| {
+				emit!(Call(Self::create_cmd(name, table, data)?, Layer::Manager));
 				Ok(())
 			})?,
 		)?;

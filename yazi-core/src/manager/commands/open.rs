@@ -3,7 +3,7 @@ use std::ffi::OsString;
 use tracing::error;
 use yazi_config::{popup::SelectCfg, ARGS, OPEN};
 use yazi_plugin::isolate;
-use yazi_shared::{emit, event::{EventQuit, Exec}, fs::{File, Url}, Layer, MIME_DIR};
+use yazi_shared::{emit, event::{Cmd, EventQuit}, fs::{File, Url}, Layer, MIME_DIR};
 
 use crate::{manager::Manager, select::Select, tasks::Tasks};
 
@@ -12,11 +12,11 @@ pub struct Opt {
 	interactive: bool,
 }
 
-impl From<Exec> for Opt {
-	fn from(mut e: Exec) -> Self {
+impl From<Cmd> for Opt {
+	fn from(mut c: Cmd) -> Self {
 		Self {
-			targets:     e.take_data().unwrap_or_default(),
-			interactive: e.named.contains_key("interactive"),
+			targets:     c.take_data().unwrap_or_default(),
+			interactive: c.named.contains_key("interactive"),
 		}
 	}
 }
@@ -60,7 +60,7 @@ impl Manager {
 	#[inline]
 	pub fn _open_do(interactive: bool, targets: Vec<(Url, Option<String>)>) {
 		emit!(Call(
-			Exec::call("open_do", vec![]).with_bool("interactive", interactive).with_data(targets),
+			Cmd::new("open_do").with_bool("interactive", interactive).with_data(targets),
 			Layer::Manager
 		));
 	}

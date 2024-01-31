@@ -1,22 +1,20 @@
 use std::{any::Any, collections::BTreeMap, fmt::{self, Display}, mem};
 
 #[derive(Debug, Default)]
-pub struct Exec {
-	pub cmd:   String,
+pub struct Cmd {
+	pub name:  String,
 	pub args:  Vec<String>,
 	pub named: BTreeMap<String, String>,
 	pub data:  Option<Box<dyn Any + Send>>,
 }
 
-impl Exec {
+impl Cmd {
 	#[inline]
-	pub fn call(cwd: &str, args: Vec<String>) -> Self {
-		Exec { cmd: cwd.to_owned(), args, ..Default::default() }
-	}
+	pub fn new(name: &str) -> Self { Self { name: name.to_owned(), ..Default::default() } }
 
 	#[inline]
-	pub fn call_named(cwd: &str, named: BTreeMap<String, String>) -> Self {
-		Exec { cmd: cwd.to_owned(), named, ..Default::default() }
+	pub fn args(name: &str, args: Vec<String>) -> Self {
+		Self { name: name.to_owned(), args, ..Default::default() }
 	}
 
 	#[inline]
@@ -55,17 +53,17 @@ impl Exec {
 	#[inline]
 	pub fn clone_without_data(&self) -> Self {
 		Self {
-			cmd: self.cmd.clone(),
-			args: self.args.clone(),
+			name:  self.name.clone(),
+			args:  self.args.clone(),
 			named: self.named.clone(),
-			..Default::default()
+			data:  None,
 		}
 	}
 }
 
-impl Display for Exec {
+impl Display for Cmd {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(f, "{}", self.cmd)?;
+		write!(f, "{}", self.name)?;
 		if !self.args.is_empty() {
 			write!(f, " {}", self.args.join(" "))?;
 		}

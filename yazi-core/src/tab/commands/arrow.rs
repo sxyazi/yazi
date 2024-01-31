@@ -1,4 +1,4 @@
-use yazi_shared::{event::Exec, render};
+use yazi_shared::{event::Cmd, render};
 
 use crate::{manager::Manager, tab::Tab, Step};
 
@@ -6,9 +6,9 @@ pub struct Opt {
 	step: Step,
 }
 
-impl From<Exec> for Opt {
-	fn from(mut e: Exec) -> Self {
-		Self { step: e.take_first().and_then(|s| s.parse().ok()).unwrap_or_default() }
+impl From<Cmd> for Opt {
+	fn from(mut c: Cmd) -> Self {
+		Self { step: c.take_first().and_then(|s| s.parse().ok()).unwrap_or_default() }
 	}
 }
 

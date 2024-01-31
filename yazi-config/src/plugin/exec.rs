@@ -2,16 +2,16 @@ use std::fmt;
 
 use anyhow::Result;
 use serde::{de::{self, Visitor}, Deserializer};
-use yazi_shared::event::Exec;
+use yazi_shared::event::Cmd;
 
-pub(super) fn exec_deserialize<'de, D>(deserializer: D) -> Result<Exec, D::Error>
+pub(super) fn exec_deserialize<'de, D>(deserializer: D) -> Result<Cmd, D::Error>
 where
 	D: Deserializer<'de>,
 {
 	struct ExecVisitor;
 
 	impl<'de> Visitor<'de> for ExecVisitor {
-		type Value = Exec;
+		type Value = Cmd;
 
 		fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
 			formatter.write_str("a `exec` string or array of strings")
@@ -31,7 +31,7 @@ where
 			if value.is_empty() {
 				return Err(de::Error::custom("`exec` within [plugin] cannot be empty"));
 			}
-			Ok(Exec { cmd: value.to_owned(), ..Default::default() })
+			Ok(Cmd { name: value.to_owned(), ..Default::default() })
 		}
 	}
 

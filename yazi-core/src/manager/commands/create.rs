@@ -2,7 +2,7 @@ use std::path::{PathBuf, MAIN_SEPARATOR};
 
 use tokio::fs;
 use yazi_config::popup::InputCfg;
-use yazi_shared::{event::Exec, fs::{File, FilesOp, Url}};
+use yazi_shared::{event::Cmd, fs::{File, FilesOp, Url}};
 
 use crate::{input::Input, manager::Manager};
 
@@ -10,8 +10,8 @@ pub struct Opt {
 	force: bool,
 }
 
-impl From<Exec> for Opt {
-	fn from(e: Exec) -> Self { Self { force: e.named.contains_key("force") } }
+impl From<Cmd> for Opt {
+	fn from(c: Cmd) -> Self { Self { force: c.named.contains_key("force") } }
 }
 
 impl Manager {

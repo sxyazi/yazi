@@ -3,7 +3,7 @@ use std::time::Duration;
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
-use yazi_shared::{emit, event::Exec, render, Debounce, InputError, Layer};
+use yazi_shared::{emit, event::Cmd, render, Debounce, InputError, Layer};
 
 use crate::{folder::FilterCase, input::Input, tab::{Finder, Tab}};
 
@@ -13,12 +13,12 @@ pub struct Opt {
 	case:  FilterCase,
 }
 
-impl From<Exec> for Opt {
-	fn from(mut e: Exec) -> Self {
+impl From<Cmd> for Opt {
+	fn from(mut c: Cmd) -> Self {
 		Self {
-			query: e.take_first(),
-			prev:  e.named.contains_key("previous"),
-			case:  FilterCase::from(&e),
+			query: c.take_first(),
+			prev:  c.named.contains_key("previous"),
+			case:  FilterCase::from(&c),
 		}
 	}
 }
@@ -27,8 +27,8 @@ pub struct ArrowOpt {
 	prev: bool,
 }
 
-impl From<Exec> for ArrowOpt {
-	fn from(e: Exec) -> Self { Self { prev: e.named.contains_key("previous") } }
+impl From<Cmd> for ArrowOpt {
+	fn from(c: Cmd) -> Self { Self { prev: c.named.contains_key("previous") } }
 }
 
 impl Tab {
@@ -42,7 +42,7 @@ impl Tab {
 
 			while let Some(Ok(s)) | Some(Err(InputError::Typed(s))) = rx.next().await {
 				emit!(Call(
-					Exec::call("find_do", vec![s])
+					Cmd::args("find_do", vec![s])
 						.with_bool("previous", opt.prev)
 						.with_bool("smart", opt.case == FilterCase::Smart)
 						.with_bool("insensitive", opt.case == FilterCase::Insensitive),

@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use serde::Deserialize;
-use yazi_shared::{event::Exec, Condition, MIME_DIR};
+use yazi_shared::{event::Cmd, Condition, MIME_DIR};
 
 use crate::{pattern::Pattern, plugin::MAX_PRELOADERS, Preset, Priority, MERGED_YAZI};
 
@@ -18,8 +18,9 @@ pub struct PluginRule {
 	pub cond:  Option<Condition>,
 	pub name:  Option<Pattern>,
 	pub mime:  Option<Pattern>,
+	#[serde(rename = "exec")]
 	#[serde(deserialize_with = "super::exec_deserialize")]
-	pub exec:  Exec,
+	pub cmd:   Cmd,
 	#[serde(default)]
 	pub sync:  bool,
 	#[serde(default)]

@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use yazi_shared::{event::Exec, render};
+use yazi_shared::{event::Cmd, render};
 
 use crate::tab::{Mode, Tab};
 
@@ -8,8 +8,8 @@ pub struct Opt {
 	unset: bool,
 }
 
-impl From<Exec> for Opt {
-	fn from(e: Exec) -> Self { Self { unset: e.named.contains_key("unset") } }
+impl From<Cmd> for Opt {
+	fn from(c: Cmd) -> Self { Self { unset: c.named.contains_key("unset") } }
 }
 
 impl Tab {

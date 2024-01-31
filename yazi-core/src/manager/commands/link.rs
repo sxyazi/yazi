@@ -1,4 +1,4 @@
-use yazi_shared::event::Exec;
+use yazi_shared::event::Cmd;
 
 use crate::{manager::Manager, tasks::Tasks};
 
@@ -7,9 +7,9 @@ pub struct Opt {
 	force:    bool,
 }
 
-impl From<Exec> for Opt {
-	fn from(e: Exec) -> Self {
-		Self { relative: e.named.contains_key("relative"), force: e.named.contains_key("force") }
+impl From<Cmd> for Opt {
+	fn from(c: Cmd) -> Self {
+		Self { relative: c.named.contains_key("relative"), force: c.named.contains_key("force") }
 	}
 }
 

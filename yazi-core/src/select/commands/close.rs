@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use yazi_shared::{event::Exec, render};
+use yazi_shared::{event::Cmd, render};
 
 use crate::select::Select;
 
@@ -7,8 +7,8 @@ pub struct Opt {
 	submit: bool,
 }
 
-impl From<Exec> for Opt {
-	fn from(e: Exec) -> Self { Self { submit: e.named.contains_key("submit") } }
+impl From<Cmd> for Opt {
+	fn from(c: Cmd) -> Self { Self { submit: c.named.contains_key("submit") } }
 }
 impl From<bool> for Opt {
 	fn from(submit: bool) -> Self { Self { submit } }

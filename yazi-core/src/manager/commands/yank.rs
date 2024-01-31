@@ -1,4 +1,4 @@
-use yazi_shared::{event::Exec, render};
+use yazi_shared::{event::Cmd, render};
 
 use crate::manager::Manager;
 
@@ -6,8 +6,8 @@ pub struct Opt {
 	cut: bool,
 }
 
-impl From<Exec> for Opt {
-	fn from(e: Exec) -> Self { Self { cut: e.named.contains_key("cut") } }
+impl From<Cmd> for Opt {
+	fn from(c: Cmd) -> Self { Self { cut: c.named.contains_key("cut") } }
 }
 
 impl Manager {

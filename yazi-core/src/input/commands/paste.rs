@@ -1,4 +1,4 @@
-use yazi_shared::{event::Exec, render};
+use yazi_shared::{event::Cmd, render};
 
 use crate::{input::{op::InputOp, Input}, CLIPBOARD};
 
@@ -6,8 +6,8 @@ pub struct Opt {
 	before: bool,
 }
 
-impl From<Exec> for Opt {
-	fn from(e: Exec) -> Self { Self { before: e.named.contains_key("before") } }
+impl From<Cmd> for Opt {
+	fn from(c: Cmd) -> Self { Self { before: c.named.contains_key("before") } }
 }
 
 impl Input {

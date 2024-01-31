@@ -3,7 +3,7 @@ use std::fmt::Display;
 use mlua::{ExternalError, ExternalResult, IntoLua, Table, TableExt, Variadic};
 use tracing::warn;
 use yazi_plugin::{LOADED, LUA};
-use yazi_shared::{emit, event::Exec, Layer};
+use yazi_shared::{emit, event::Cmd, Layer};
 
 use crate::{app::App, lives::Lives};
 
@@ -24,7 +24,7 @@ impl App {
 
 		tokio::spawn(async move {
 			if LOADED.ensure(&opt.name).await.is_ok() {
-				emit!(Call(Exec::call("plugin_do", vec![opt.name]).with_data(opt.data), Layer::App));
+				emit!(Call(Cmd::args("plugin_do", vec![opt.name]).with_data(opt.data), Layer::App));
 			}
 		});
 	}

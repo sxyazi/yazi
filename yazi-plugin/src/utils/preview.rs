@@ -1,5 +1,5 @@
 use mlua::{AnyUserData, IntoLuaMulti, Lua, Table, Value};
-use yazi_shared::{emit, event::Exec, Layer, PeekError};
+use yazi_shared::{emit, event::Cmd, Layer, PeekError};
 
 use super::Utils;
 use crate::{bindings::{FileRef, Window}, cast_to_renderable, elements::{Paragraph, RectRef, Renderable}, external::{self, Highlighter}};
@@ -44,7 +44,7 @@ impl Utils {
 					};
 				lock.data = vec![Box::new(Paragraph { area: *area, text, ..Default::default() })];
 
-				emit!(Call(Exec::call("preview", vec![]).with_data(lock), Layer::Manager));
+				emit!(Call(Cmd::new("preview").with_data(lock), Layer::Manager));
 				(true, Value::Nil).into_lua_multi(lua)
 			})?,
 		)?;
@@ -67,7 +67,7 @@ impl Utils {
 					..Default::default()
 				})];
 
-				emit!(Call(Exec::call("preview", vec![]).with_data(lock), Layer::Manager));
+				emit!(Call(Cmd::new("preview").with_data(lock), Layer::Manager));
 				(true, Value::Nil).into_lua_multi(lua)
 			})?,
 		)?;
@@ -78,7 +78,7 @@ impl Utils {
 				let mut lock = PreviewLock::try_from(t)?;
 				lock.data = widgets.into_iter().filter_map(cast_to_renderable).collect();
 
-				emit!(Call(Exec::call("preview", vec![]).with_data(lock), Layer::Manager));
+				emit!(Call(Cmd::new("preview").with_data(lock), Layer::Manager));
 				Ok(())
 			})?,
 		)?;

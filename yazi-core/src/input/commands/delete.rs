@@ -1,4 +1,4 @@
-use yazi_shared::{event::Exec, render};
+use yazi_shared::{event::Cmd, render};
 
 use crate::input::{op::InputOp, Input};
 
@@ -7,9 +7,9 @@ pub struct Opt {
 	insert: bool,
 }
 
-impl From<Exec> for Opt {
-	fn from(e: Exec) -> Self {
-		Self { cut: e.named.contains_key("cut"), insert: e.named.contains_key("insert") }
+impl From<Cmd> for Opt {
+	fn from(c: Cmd) -> Self {
+		Self { cut: c.named.contains_key("cut"), insert: c.named.contains_key("insert") }
 	}
 }
 

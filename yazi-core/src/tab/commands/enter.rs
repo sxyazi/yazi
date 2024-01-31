@@ -1,6 +1,6 @@
 use std::mem;
 
-use yazi_shared::{event::Exec, render};
+use yazi_shared::{event::Cmd, render};
 
 use crate::{manager::Manager, tab::Tab};
 
@@ -8,8 +8,8 @@ pub struct Opt;
 impl From<()> for Opt {
 	fn from(_: ()) -> Self { Self }
 }
-impl From<Exec> for Opt {
-	fn from(_: Exec) -> Self { Self }
+impl From<Cmd> for Opt {
+	fn from(_: Cmd) -> Self { Self }
 }
 
 impl Tab {

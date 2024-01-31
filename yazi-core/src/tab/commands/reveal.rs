@@ -1,4 +1,4 @@
-use yazi_shared::{emit, event::Exec, fs::{expand_path, File, FilesOp, Url}, Layer};
+use yazi_shared::{emit, event::Cmd, fs::{expand_path, File, FilesOp, Url}, Layer};
 
 use crate::{manager::Manager, tab::Tab};
 
@@ -6,9 +6,9 @@ pub struct Opt {
 	target: Url,
 }
 
-impl From<Exec> for Opt {
-	fn from(mut e: Exec) -> Self {
-		let mut target = Url::from(e.take_first().unwrap_or_default());
+impl From<Cmd> for Opt {
+	fn from(mut c: Cmd) -> Self {
+		let mut target = Url::from(c.take_first().unwrap_or_default());
 		if target.is_regular() {
 			target.set_path(expand_path(&target))
 		}
@@ -23,7 +23,7 @@ impl From<Url> for Opt {
 impl Tab {
 	#[inline]
 	pub fn _reveal(target: &Url) {
-		emit!(Call(Exec::call("reveal", vec![target.to_string()]), Layer::Manager));
+		emit!(Call(Cmd::args("reveal", vec![target.to_string()]), Layer::Manager));
 	}
 
 	pub fn reveal(&mut self, opt: impl Into<Opt>) {

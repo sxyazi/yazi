@@ -1,11 +1,11 @@
-use yazi_shared::{event::Exec, render};
+use yazi_shared::{event::Cmd, render};
 
 use crate::{completion::Completion, input::{op::InputOp, Input, InputMode}};
 
 pub struct Opt;
 
-impl From<Exec> for Opt {
-	fn from(_: Exec) -> Self { Self }
+impl From<Cmd> for Opt {
+	fn from(_: Cmd) -> Self { Self }
 }
 impl From<()> for Opt {
 	fn from(_: ()) -> Self { Self }

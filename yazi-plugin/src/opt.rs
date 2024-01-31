@@ -1,7 +1,7 @@
 use anyhow::bail;
 use mlua::{Table, Value};
 use tokio::sync::oneshot;
-use yazi_shared::event::Exec;
+use yazi_shared::event::Cmd;
 
 use crate::ValueSendable;
 
@@ -18,23 +18,23 @@ pub struct OptData {
 	pub tx:   Option<oneshot::Sender<ValueSendable>>,
 }
 
-impl TryFrom<Exec> for Opt {
+impl TryFrom<Cmd> for Opt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut e: Exec) -> Result<Self, Self::Error> {
-		let Some(name) = e.take_first().filter(|s| !s.is_empty()) else {
+	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
+		let Some(name) = c.take_first().filter(|s| !s.is_empty()) else {
 			bail!("invalid plugin name");
 		};
 
-		let mut data: OptData = e.take_data().unwrap_or_default();
+		let mut data: OptData = c.take_data().unwrap_or_default();
 
-		if let Some(args) = e.named.get("args") {
+		if let Some(args) = c.named.get("args") {
 			data.args = shell_words::split(args)?
 				.into_iter()
 				.map(|s| ValueSendable::String(s.into_bytes()))
 				.collect();
 		}
 
-		Ok(Self { name, sync: e.named.contains_key("sync"), data })
+		Ok(Self { name, sync: c.named.contains_key("sync"), data })
 	}
 }

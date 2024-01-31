@@ -1,4 +1,4 @@
-use yazi_shared::{event::Exec, render};
+use yazi_shared::{event::Cmd, render};
 
 use crate::input::Input;
 
@@ -6,8 +6,8 @@ pub struct Opt {
 	under: bool,
 }
 
-impl From<Exec> for Opt {
-	fn from(e: Exec) -> Self { Self { under: e.named.contains_key("under") } }
+impl From<Cmd> for Opt {
+	fn from(c: Cmd) -> Self { Self { under: c.named.contains_key("under") } }
 }
 impl From<bool> for Opt {
 	fn from(under: bool) -> Self { Self { under } }

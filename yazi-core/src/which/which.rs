@@ -1,12 +1,10 @@
-use std::mem;
-
-use yazi_config::{keymap::{Control, Key}, KEYMAP};
+use yazi_config::{keymap::{Control, ControlCow, Key}, KEYMAP};
 use yazi_shared::{emit, render, Layer};
 
 pub struct Which {
 	layer:     Layer,
 	pub times: usize,
-	pub cands: Vec<&'static Control>,
+	pub cands: Vec<ControlCow>,
 
 	pub visible: bool,
 }
@@ -21,16 +19,28 @@ impl Which {
 	pub fn show(&mut self, key: &Key, layer: Layer) {
 		self.layer = layer;
 		self.times = 1;
-		self.cands = KEYMAP.get(layer).iter().filter(|s| s.on.len() > 1 && &s.on[0] == key).collect();
+		self.cands = KEYMAP
+			.get(layer)
+			.iter()
+			.filter(|c| c.on.len() > 1 && &c.on[0] == key)
+			.map(|c| c.into())
+			.collect();
+
+		self.visible = true;
+		render!();
+	}
+
+	pub fn show_with(&mut self, cands: Vec<Control>, layer: Layer) {
+		self.layer = layer;
+		self.times = 0;
+		self.cands = cands.into_iter().map(|c| c.into()).collect();
+
 		self.visible = true;
 		render!();
 	}
 
 	pub fn type_(&mut self, key: Key) -> bool {
-		self.cands = mem::take(&mut self.cands)
-			.into_iter()
-			.filter(|s| s.on.len() > self.times && s.on[self.times] == key)
-			.collect();
+		self.cands.retain(|c| c.on.len() > self.times && c.on[self.times] == key);
 
 		if self.cands.is_empty() {
 			self.visible = false;

@@ -1,4 +1,4 @@
-use yazi_shared::event::Exec;
+use yazi_shared::event::Cmd;
 
 use crate::{manager::Manager, tasks::Tasks};
 
@@ -7,11 +7,11 @@ pub struct Opt {
 	permanently: bool,
 }
 
-impl From<Exec> for Opt {
-	fn from(e: Exec) -> Self {
+impl From<Cmd> for Opt {
+	fn from(c: Cmd) -> Self {
 		Self {
-			force:       e.named.contains_key("force"),
-			permanently: e.named.contains_key("permanently"),
+			force:       c.named.contains_key("force"),
+			permanently: c.named.contains_key("permanently"),
 		}
 	}
 }

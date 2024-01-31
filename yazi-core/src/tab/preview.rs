@@ -32,9 +32,9 @@ impl Preview {
 
 		self.abort();
 		if previewer.sync {
-			isolate::peek_sync(&previewer.exec, file, self.skip);
+			isolate::peek_sync(&previewer.cmd, file, self.skip);
 		} else {
-			self.previewer_ct = Some(isolate::peek(&previewer.exec, file, self.skip));
+			self.previewer_ct = Some(isolate::peek(&previewer.cmd, file, self.skip));
 		}
 	}
 

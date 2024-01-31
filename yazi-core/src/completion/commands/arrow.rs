@@ -1,4 +1,4 @@
-use yazi_shared::{event::Exec, render};
+use yazi_shared::{event::Cmd, render};
 
 use crate::completion::Completion;
 
@@ -6,9 +6,9 @@ pub struct Opt {
 	step: isize,
 }
 
-impl From<Exec> for Opt {
-	fn from(mut e: Exec) -> Self {
-		Self { step: e.take_first().and_then(|s| s.parse().ok()).unwrap_or(0) }
+impl From<Cmd> for Opt {
+	fn from(mut c: Cmd) -> Self {
+		Self { step: c.take_first().and_then(|s| s.parse().ok()).unwrap_or(0) }
 	}
 }
 

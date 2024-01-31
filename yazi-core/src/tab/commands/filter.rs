@@ -3,7 +3,7 @@ use std::time::Duration;
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
-use yazi_shared::{emit, event::Exec, render, Debounce, InputError, Layer};
+use yazi_shared::{emit, event::Cmd, render, Debounce, InputError, Layer};
 
 use crate::{folder::{Filter, FilterCase}, input::Input, manager::Manager, tab::Tab};
 
@@ -14,12 +14,12 @@ pub struct Opt {
 	pub done:  bool,
 }
 
-impl From<Exec> for Opt {
-	fn from(mut e: Exec) -> Self {
+impl From<Cmd> for Opt {
+	fn from(mut c: Cmd) -> Self {
 		Self {
-			query: e.take_first().unwrap_or_default(),
-			case:  FilterCase::from(&e),
-			done:  e.named.contains_key("done"),
+			query: c.take_first().unwrap_or_default(),
+			case:  FilterCase::from(&c),
+			done:  c.named.contains_key("done"),
 		}
 	}
 }
@@ -40,7 +40,7 @@ impl Tab {
 				};
 
 				emit!(Call(
-					Exec::call("filter_do", vec![s])
+					Cmd::args("filter_do", vec![s])
 						.with_bool("smart", opt.case == FilterCase::Smart)
 						.with_bool("insensitive", opt.case == FilterCase::Insensitive)
 						.with_bool("done", done),

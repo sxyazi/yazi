@@ -1,9 +1,9 @@
-use yazi_shared::{event::Exec, render};
+use yazi_shared::{event::Cmd, render};
 
 use crate::input::{op::InputOp, Input};
 
 impl Input {
-	pub fn yank(&mut self, _: Exec) {
+	pub fn yank(&mut self, _: Cmd) {
 		match self.snap().op {
 			InputOp::None => {
 				self.snap_mut().op = InputOp::Yank(self.snap().cursor);

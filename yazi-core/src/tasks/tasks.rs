@@ -5,7 +5,7 @@ use tracing::debug;
 use yazi_config::{manager::SortBy, open::Opener, plugin::{PluginRule, MAX_PRELOADERS}, popup::InputCfg, OPEN, PLUGIN};
 use yazi_plugin::ValueSendable;
 use yazi_scheduler::{Scheduler, TaskSummary};
-use yazi_shared::{emit, event::Exec, fs::{File, Url}, term::Term, Layer, MIME_DIR};
+use yazi_shared::{emit, event::Cmd, fs::{File, Url}, term::Term, Layer, MIME_DIR};
 
 use super::{TasksProgress, TASKS_PADDING, TASKS_PERCENT};
 use crate::{folder::Files, input::Input};
@@ -36,7 +36,7 @@ impl Tasks {
 				let new = TasksProgress::from(&*running.lock());
 				if last != new {
 					last = new;
-					emit!(Call(Exec::call("update_progress", vec![]).with_data(new), Layer::App));
+					emit!(Call(Cmd::new("update_progress").with_data(new), Layer::App));
 				}
 			}
 		});

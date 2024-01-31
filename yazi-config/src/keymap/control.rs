@@ -1,7 +1,7 @@
-use std::{borrow::Cow, collections::VecDeque};
+use std::{borrow::Cow, collections::VecDeque, ops::Deref};
 
 use serde::Deserialize;
-use yazi_shared::event::Exec;
+use yazi_shared::event::Cmd;
 
 use super::Key;
 
@@ -9,12 +9,13 @@ use super::Key;
 pub struct Control {
 	pub on:   Vec<Key>,
 	#[serde(deserialize_with = "super::exec_deserialize")]
-	pub exec: Vec<Exec>,
+	pub exec: Vec<Cmd>,
 	pub desc: Option<String>,
 }
 
 impl Control {
-	pub fn to_seq(&self) -> VecDeque<Exec> {
+	#[inline]
+	pub fn to_seq(&self) -> VecDeque<Cmd> {
 		self.exec.iter().map(|e| e.clone_without_data()).collect()
 	}
 }
@@ -39,5 +40,29 @@ impl Control {
 		self.desc.as_ref().map(|d| d.to_lowercase().contains(&s)) == Some(true)
 			|| self.exec().to_lowercase().contains(&s)
 			|| self.on().to_lowercase().contains(&s)
+	}
+}
+
+pub enum ControlCow {
+	Owned(Control),
+	Borrowed(&'static Control),
+}
+
+impl From<&'static Control> for ControlCow {
+	fn from(c: &'static Control) -> Self { Self::Borrowed(c) }
+}
+
+impl From<Control> for ControlCow {
+	fn from(c: Control) -> Self { Self::Owned(c) }
+}
+
+impl Deref for ControlCow {
+	type Target = Control;
+
+	fn deref(&self) -> &Self::Target {
+		match self {
+			Self::Owned(c) => c,
+			Self::Borrowed(c) => c,
+		}
 	}
 }

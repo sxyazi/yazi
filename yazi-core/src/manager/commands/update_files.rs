@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use yazi_shared::{event::Exec, fs::FilesOp, render};
+use yazi_shared::{event::Cmd, fs::FilesOp, render};
 
 use crate::{folder::Folder, manager::Manager, tab::Tab, tasks::Tasks};
 
@@ -8,12 +8,10 @@ pub struct Opt {
 	op: FilesOp,
 }
 
-impl TryFrom<Exec> for Opt {
+impl TryFrom<Cmd> for Opt {
 	type Error = ();
 
-	fn try_from(mut e: Exec) -> Result<Self, Self::Error> {
-		Ok(Self { op: e.take_data().ok_or(())? })
-	}
+	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> { Ok(Self { op: c.take_data().ok_or(())? }) }
 }
 
 impl Manager {

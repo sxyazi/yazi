@@ -1,7 +1,7 @@
 use std::{mem, path::{MAIN_SEPARATOR, MAIN_SEPARATOR_STR}};
 
 use tokio::fs;
-use yazi_shared::{emit, event::Exec, render, Layer};
+use yazi_shared::{emit, event::Cmd, render, Layer};
 
 use crate::completion::Completion;
 
@@ -10,11 +10,11 @@ pub struct Opt {
 	ticket: usize,
 }
 
-impl From<Exec> for Opt {
-	fn from(mut e: Exec) -> Self {
+impl From<Cmd> for Opt {
+	fn from(mut c: Cmd) -> Self {
 		Self {
-			word:   e.take_first().unwrap_or_default(),
-			ticket: e.take_name("ticket").and_then(|s| s.parse().ok()).unwrap_or(0),
+			word:   c.take_first().unwrap_or_default(),
+			ticket: c.take_name("ticket").and_then(|s| s.parse().ok()).unwrap_or(0),
 		}
 	}
 }
@@ -23,7 +23,7 @@ impl Completion {
 	#[inline]
 	pub fn _trigger(word: &str, ticket: usize) {
 		emit!(Call(
-			Exec::call("trigger", vec![word.to_owned()]).with("ticket", ticket),
+			Cmd::args("trigger", vec![word.to_owned()]).with("ticket", ticket),
 			Layer::Completion
 		));
 	}
@@ -39,10 +39,7 @@ impl Completion {
 
 		if self.caches.contains_key(&parent) {
 			return self.show(
-				Exec::call("show", vec![])
-					.with("cache-name", parent)
-					.with("word", child)
-					.with("ticket", opt.ticket),
+				Cmd::new("show").with("cache-name", parent).with("word", child).with("ticket", opt.ticket),
 			);
 		}
 
@@ -64,7 +61,7 @@ impl Completion {
 
 			if !cache.is_empty() {
 				emit!(Call(
-					Exec::call("show", cache)
+					Cmd::args("show", cache)
 						.with("cache-name", parent)
 						.with("word", child)
 						.with("ticket", ticket),

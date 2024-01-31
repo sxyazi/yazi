@@ -5,7 +5,7 @@ use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 use yazi_config::{popup::InputCfg, OPEN, PREVIEW};
 use yazi_plugin::external::{self, ShellOpt};
 use yazi_scheduler::{Scheduler, BLOCKER};
-use yazi_shared::{event::Exec, fs::{max_common_root, File, FilesOp, Url}, term::Term, Defer};
+use yazi_shared::{event::Cmd, fs::{max_common_root, File, FilesOp, Url}, term::Term, Defer};
 
 use crate::{input::Input, manager::Manager};
 
@@ -15,12 +15,12 @@ pub struct Opt {
 	cursor: String,
 }
 
-impl From<Exec> for Opt {
-	fn from(mut e: Exec) -> Self {
+impl From<Cmd> for Opt {
+	fn from(mut c: Cmd) -> Self {
 		Self {
-			force:  e.named.contains_key("force"),
-			empty:  e.take_name("empty").unwrap_or_default(),
-			cursor: e.take_name("cursor").unwrap_or_default(),
+			force:  c.named.contains_key("force"),
+			empty:  c.take_name("empty").unwrap_or_default(),
+			cursor: c.take_name("cursor").unwrap_or_default(),
 		}
 	}
 }

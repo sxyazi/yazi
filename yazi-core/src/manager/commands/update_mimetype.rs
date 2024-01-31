@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use yazi_plugin::ValueSendable;
-use yazi_shared::{event::Exec, fs::Url, render};
+use yazi_shared::{event::Cmd, fs::Url, render};
 
 use crate::{manager::Manager, tasks::Tasks};
 
@@ -9,11 +9,11 @@ pub struct Opt {
 	data: ValueSendable,
 }
 
-impl TryFrom<Exec> for Opt {
+impl TryFrom<Cmd> for Opt {
 	type Error = ();
 
-	fn try_from(mut e: Exec) -> Result<Self, Self::Error> {
-		Ok(Self { data: e.take_data().ok_or(())? })
+	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
+		Ok(Self { data: c.take_data().ok_or(())? })
 	}
 }
 

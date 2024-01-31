@@ -1,5 +1,5 @@
 use unicode_width::UnicodeWidthStr;
-use yazi_shared::{event::Exec, render};
+use yazi_shared::{event::Cmd, render};
 
 use crate::input::{op::InputOp, snap::InputSnap, Input};
 
@@ -8,11 +8,11 @@ pub struct Opt {
 	in_operating: bool,
 }
 
-impl From<Exec> for Opt {
-	fn from(mut e: Exec) -> Self {
+impl From<Cmd> for Opt {
+	fn from(mut c: Cmd) -> Self {
 		Self {
-			step:         e.take_first().and_then(|s| s.parse().ok()).unwrap_or(0),
-			in_operating: e.named.contains_key("in-operating"),
+			step:         c.take_first().and_then(|s| s.parse().ok()).unwrap_or(0),
+			in_operating: c.named.contains_key("in-operating"),
 		}
 	}
 }
