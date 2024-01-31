@@ -74,7 +74,7 @@ impl Tab {
 
 	pub fn apply_files_attrs(&mut self) {
 		let apply = |f: &mut Folder| {
-			if f.stage != FolderStage::Loaded {
+			if f.stage == FolderStage::Loading {
 				return render!();
 			}
 
