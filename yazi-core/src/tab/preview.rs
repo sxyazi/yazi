@@ -73,7 +73,7 @@ impl Preview {
 				};
 
 				let stream =
-					UnboundedReceiverStream::new(rx).chunks_timeout(10000, Duration::from_millis(350));
+					UnboundedReceiverStream::new(rx).chunks_timeout(50000, Duration::from_millis(500));
 				pin!(stream);
 
 				let ticket = FilesOp::prepare(&url);

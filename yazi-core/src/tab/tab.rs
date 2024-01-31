@@ -5,7 +5,7 @@ use tokio::task::JoinHandle;
 use yazi_shared::{fs::{File, Url}, render};
 
 use super::{Backstack, Config, Finder, Mode, Preview};
-use crate::folder::Folder;
+use crate::folder::{Folder, FolderStage};
 
 pub struct Tab {
 	pub mode:    Mode,
@@ -74,10 +74,14 @@ impl Tab {
 
 	pub fn apply_files_attrs(&mut self) {
 		let apply = |f: &mut Folder| {
-			let hovered = f.hovered().filter(|_| f.tracing).map(|h| h.url());
+			if f.stage != FolderStage::Loaded {
+				return render!();
+			}
 
+			let hovered = f.hovered().filter(|_| f.tracing).map(|h| h.url());
 			f.files.set_show_hidden(self.conf.show_hidden);
 			f.files.set_sorter(self.conf.sorter());
+
 			render!(f.files.catchup_revision());
 			render!(f.repos(hovered));
 		};
