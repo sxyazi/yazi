@@ -4,13 +4,15 @@ use ratatui::layout::Rect;
 use yazi_config::LAYOUT;
 use yazi_shared::fs::{File, FilesOp, Url};
 
+use super::FolderStage;
 use crate::{folder::Files, manager::Manager, Step};
 
 #[derive(Default)]
 pub struct Folder {
 	pub cwd:   Url,
-	pub mtime: Option<SystemTime>,
 	pub files: Files,
+	pub mtime: Option<SystemTime>,
+	pub stage: FolderStage,
 
 	pub offset: usize,
 	pub cursor: usize,
@@ -31,8 +33,15 @@ impl Folder {
 	pub fn update(&mut self, op: FilesOp) -> bool {
 		let revision = self.files.revision;
 		match op {
-			FilesOp::Full(_, _, mtime) => self.mtime = mtime,
-			FilesOp::Done(_, mtime, ticket) if ticket == self.files.ticket() => self.mtime = mtime,
+			FilesOp::Full(_, _, mtime) => {
+				(self.mtime, self.stage) = (mtime, FolderStage::Loaded);
+			}
+			FilesOp::Part(_, _, ticket) if ticket == self.files.ticket() => {
+				self.stage = FolderStage::Loading;
+			}
+			FilesOp::Done(_, mtime, ticket) if ticket == self.files.ticket() => {
+				(self.mtime, self.stage) = (mtime, FolderStage::Loaded);
+			}
 			_ => {}
 		}
 
