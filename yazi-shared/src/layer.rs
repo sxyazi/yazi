@@ -1,4 +1,6 @@
-use std::fmt::{self, Display};
+use std::str::FromStr;
+
+use anyhow::bail;
 
 #[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum Layer {
@@ -13,17 +15,36 @@ pub enum Layer {
 	Which,
 }
 
-impl Display for Layer {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl ToString for Layer {
+	fn to_string(&self) -> String {
 		match self {
-			Self::App => write!(f, "app"),
-			Self::Manager => write!(f, "manager"),
-			Self::Tasks => write!(f, "tasks"),
-			Self::Select => write!(f, "select"),
-			Self::Input => write!(f, "input"),
-			Self::Help => write!(f, "help"),
-			Self::Completion => write!(f, "completion"),
-			Self::Which => write!(f, "which"),
+			Self::App => "app",
+			Self::Manager => "manager",
+			Self::Tasks => "tasks",
+			Self::Select => "select",
+			Self::Input => "input",
+			Self::Help => "help",
+			Self::Completion => "completion",
+			Self::Which => "which",
 		}
+		.to_string()
+	}
+}
+
+impl FromStr for Layer {
+	type Err = anyhow::Error;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		Ok(match s {
+			"app" => Self::App,
+			"manager" => Self::Manager,
+			"tasks" => Self::Tasks,
+			"select" => Self::Select,
+			"input" => Self::Input,
+			"help" => Self::Help,
+			"completion" => Self::Completion,
+			"which" => Self::Which,
+			_ => bail!("invalid layer: {s}"),
+		})
 	}
 }

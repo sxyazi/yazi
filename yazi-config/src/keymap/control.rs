@@ -66,3 +66,12 @@ impl Deref for ControlCow {
 		}
 	}
 }
+
+impl ControlCow {
+	pub fn into_seq(self) -> VecDeque<Cmd> {
+		match self {
+			Self::Owned(c) => c.exec.into(),
+			Self::Borrowed(c) => c.to_seq(),
+		}
+	}
+}

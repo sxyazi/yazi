@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use anyhow::bail;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use serde::Deserialize;
@@ -58,10 +60,10 @@ impl From<KeyEvent> for Key {
 	}
 }
 
-impl TryFrom<String> for Key {
-	type Error = anyhow::Error;
+impl FromStr for Key {
+	type Err = anyhow::Error;
 
-	fn try_from(s: String) -> Result<Self, Self::Error> {
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		if s.is_empty() {
 			bail!("empty key")
 		}
@@ -122,6 +124,12 @@ impl TryFrom<String> for Key {
 		}
 		Ok(key)
 	}
+}
+
+impl TryFrom<String> for Key {
+	type Error = anyhow::Error;
+
+	fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
 }
 
 impl ToString for Key {

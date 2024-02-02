@@ -18,8 +18,11 @@ impl<'a> Which<'a> {
 impl Widget for Which<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let which = &self.cx.which;
-		let cols = THEME.which.cols as usize;
+		if which.silent {
+			return;
+		}
 
+		let cols = THEME.which.cols as usize;
 		let height = area.height.min(which.cands.len().div_ceil(cols) as u16 + PADDING_Y * 2);
 		let area = Rect {
 			x: PADDING_X.min(area.width),

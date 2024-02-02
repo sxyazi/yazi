@@ -3,6 +3,7 @@
 mod cache;
 mod call;
 mod image;
+mod layer;
 mod log;
 mod plugin;
 mod preview;
