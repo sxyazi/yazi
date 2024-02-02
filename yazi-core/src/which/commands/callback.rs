@@ -1,4 +1,5 @@
 use tokio::sync::mpsc;
+use tracing::error;
 use yazi_shared::event::Cmd;
 
 use crate::which::Which;
@@ -21,8 +22,12 @@ impl TryFrom<Cmd> for Opt {
 
 impl Which {
 	pub fn callback(&mut self, opt: impl TryInto<Opt>) {
-		if let Ok(opt) = opt.try_into() {
-			opt.tx.try_send(opt.idx).ok();
+		let Ok(opt) = opt.try_into() else {
+			return;
+		};
+
+		if opt.tx.try_send(opt.idx).is_err() {
+			error!("callback: send error");
 		}
 	}
 }

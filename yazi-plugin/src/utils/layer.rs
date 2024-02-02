@@ -49,7 +49,7 @@ impl Utils {
 					Layer::Which
 				));
 
-				Ok(rx.recv().await)
+				Ok(rx.recv().await.map(|idx| idx + 1))
 			})?,
 		)?;
 
