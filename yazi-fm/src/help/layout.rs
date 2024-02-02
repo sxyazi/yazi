@@ -21,7 +21,7 @@ impl<'a> Widget for Layout<'a> {
 		widgets::Clear.render(area, buf);
 
 		let help = &self.cx.help;
-		Paragraph::new(help.keyword().unwrap_or_else(|| format!("{}.help", help.layer)))
+		Paragraph::new(help.keyword().unwrap_or_else(|| format!("{}.help", help.layer.to_string())))
 			.style(THEME.help.footer.into())
 			.render(chunks[1], buf);
 

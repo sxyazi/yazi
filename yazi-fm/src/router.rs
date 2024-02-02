@@ -48,7 +48,7 @@ impl<'a> Router<'a> {
 			}
 
 			if on.len() > 1 {
-				self.app.cx.which.show(&key, layer);
+				self.app.cx.which.show_with(&key, layer);
 			} else {
 				emit!(Seq(ctrl.to_seq(), layer));
 			}

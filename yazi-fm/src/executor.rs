@@ -21,7 +21,7 @@ impl<'a> Executor<'a> {
 			Layer::Input => self.input(cmd),
 			Layer::Help => self.help(cmd),
 			Layer::Completion => self.completion(cmd),
-			Layer::Which => unreachable!(),
+			Layer::Which => self.which(cmd),
 		}
 	}
 
@@ -275,5 +275,18 @@ impl<'a> Executor<'a> {
 			"close_input" => self.app.cx.input.close(cmd),
 			_ => {}
 		}
+	}
+
+	fn which(&mut self, cmd: Cmd) {
+		macro_rules! on {
+			($name:ident) => {
+				if cmd.name == stringify!($name) {
+					return self.app.cx.which.$name(cmd);
+				}
+			};
+		}
+
+		on!(show);
+		on!(callback);
 	}
 }
