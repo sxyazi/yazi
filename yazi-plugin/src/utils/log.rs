@@ -5,9 +5,9 @@ use super::Utils;
 
 impl Utils {
 	pub(super) fn log(lua: &Lua, ya: &Table) -> mlua::Result<()> {
-		ya.set("dbg", lua.create_async_function(|_, s: String| async move { Ok(debug!("{s}")) })?)?;
+		ya.set("dbg", lua.create_function(|_, s: String| Ok(debug!("{s}")))?)?;
 
-		ya.set("err", lua.create_async_function(|_, s: String| async move { Ok(error!("{s}")) })?)?;
+		ya.set("err", lua.create_function(|_, s: String| Ok(error!("{s}")))?)?;
 
 		Ok(())
 	}

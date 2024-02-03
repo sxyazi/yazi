@@ -130,7 +130,7 @@ impl Image {
 		img = match orientation {
 			2 => DynamicImage::ImageRgba8(imageops::flip_horizontal(&img)),
 			3 => DynamicImage::ImageRgba8(imageops::rotate180(&img)),
-			4 => DynamicImage::ImageRgba8(imageops::flip_horizontal(&img)),
+			4 => DynamicImage::ImageRgba8(imageops::flip_vertical(&img)),
 			5 => DynamicImage::ImageRgba8(imageops::flip_horizontal(&imageops::rotate90(&img))),
 			6 => DynamicImage::ImageRgba8(imageops::rotate90(&img)),
 			7 => DynamicImage::ImageRgba8(imageops::flip_horizontal(&imageops::rotate270(&img))),
