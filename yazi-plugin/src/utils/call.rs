@@ -32,7 +32,7 @@ impl Utils {
 					};
 					named.insert(s.to_str()?.replace('_', "-"), v);
 				}
-				_ => Err("invalid key in cmd".into_lua_err())?,
+				_ => return Err("invalid key in cmd".into_lua_err()),
 			}
 		}
 		Ok((args, named))
