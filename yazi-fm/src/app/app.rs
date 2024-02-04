@@ -54,8 +54,8 @@ impl App {
 	#[inline]
 	fn dispatch(&mut self, event: Event) -> Result<()> {
 		match event {
-			Event::Call(exec, layer) => self.dispatch_call(exec, layer),
-			Event::Seq(execs, layer) => self.dispatch_seq(execs, layer),
+			Event::Call(cmd, layer) => self.dispatch_call(cmd, layer),
+			Event::Seq(cmds, layer) => self.dispatch_seq(cmds, layer),
 			Event::Render => self.dispatch_render(),
 			Event::Key(key) => self.dispatch_key(key),
 			Event::Resize => self.resize(()),
@@ -69,12 +69,12 @@ impl App {
 	fn dispatch_call(&mut self, cmd: Cmd, layer: Layer) { Executor::new(self).execute(cmd, layer); }
 
 	#[inline]
-	fn dispatch_seq(&mut self, mut execs: VecDeque<Cmd>, layer: Layer) {
-		if let Some(exec) = execs.pop_front() {
-			Executor::new(self).execute(exec, layer);
+	fn dispatch_seq(&mut self, mut cmds: VecDeque<Cmd>, layer: Layer) {
+		if let Some(cmd) = cmds.pop_front() {
+			Executor::new(self).execute(cmd, layer);
 		}
-		if !execs.is_empty() {
-			emit!(Seq(execs, layer));
+		if !cmds.is_empty() {
+			emit!(Seq(cmds, layer));
 		}
 	}
 

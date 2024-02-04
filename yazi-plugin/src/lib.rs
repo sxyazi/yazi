@@ -11,6 +11,7 @@ mod loader;
 mod opt;
 mod plugin;
 pub mod process;
+pub mod url;
 pub mod utils;
 
 pub use cast::*;

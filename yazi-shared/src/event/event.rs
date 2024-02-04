@@ -44,11 +44,11 @@ macro_rules! emit {
 	(Quit($opt:expr)) => {
 		$crate::event::Event::Quit($opt).emit();
 	};
-	(Call($exec:expr, $layer:expr)) => {
-		$crate::event::Event::Call($exec, $layer).emit();
+	(Call($cmd:expr, $layer:expr)) => {
+		$crate::event::Event::Call($cmd, $layer).emit();
 	};
-	(Seq($execs:expr, $layer:expr)) => {
-		$crate::event::Event::Seq($execs, $layer).emit();
+	(Seq($cmds:expr, $layer:expr)) => {
+		$crate::event::Event::Seq($cmds, $layer).emit();
 	};
 	($event:ident) => {
 		$crate::event::Event::$event.emit();

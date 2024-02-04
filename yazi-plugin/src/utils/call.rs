@@ -11,18 +11,28 @@ impl Utils {
 		let mut args = vec![];
 		let mut named = BTreeMap::new();
 		for result in t.pairs::<Value, Value>() {
-			let (k, Value::String(v)) = result? else {
-				return Err("invalid value in exec".into_lua_err());
-			};
-
+			let (k, v) = result?;
 			match k {
 				Value::Integer(_) => {
-					args.push(v.to_string_lossy().into_owned());
+					args.push(match v {
+						Value::Integer(i) => i.to_string(),
+						Value::Number(n) => n.to_string(),
+						Value::String(s) => s.to_string_lossy().into_owned(),
+						_ => return Err("invalid value in cmd".into_lua_err()),
+					});
 				}
 				Value::String(s) => {
-					named.insert(s.to_str()?.replace('_', "-"), v.to_string_lossy().into_owned());
+					let v = match v {
+						Value::Boolean(b) if b => String::new(),
+						Value::Boolean(b) if !b => continue,
+						Value::Integer(i) => i.to_string(),
+						Value::Number(n) => n.to_string(),
+						Value::String(s) => s.to_string_lossy().into_owned(),
+						_ => return Err("invalid value in cmd".into_lua_err()),
+					};
+					named.insert(s.to_str()?.replace('_', "-"), v);
 				}
-				_ => return Err("invalid key in exec".into_lua_err()),
+				_ => return Err("invalid key in cmd".into_lua_err()),
 			}
 		}
 		Ok((args, named))
@@ -31,12 +41,12 @@ impl Utils {
 	#[inline]
 	fn create_cmd(name: String, table: Table, data: Option<Value>) -> mlua::Result<Cmd> {
 		let (args, named) = Self::parse_args(table)?;
-		let mut exec = Cmd { name, args, named, ..Default::default() };
+		let mut cmd = Cmd { name, args, named, ..Default::default() };
 
 		if let Some(data) = data.and_then(|v| ValueSendable::try_from(v).ok()) {
-			exec = exec.with_data(data);
+			cmd = cmd.with_data(data);
 		}
-		Ok(exec)
+		Ok(cmd)
 	}
 
 	pub(super) fn call(lua: &Lua, ya: &Table) -> mlua::Result<()> {

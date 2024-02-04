@@ -1,7 +1,7 @@
 use mlua::{IntoLua, Lua, Value};
 use tokio::fs;
 
-use crate::bindings::{Cast, Cha, UrlRef};
+use crate::{bindings::{Cast, Cha}, url::UrlRef};
 
 pub fn install(lua: &Lua) -> mlua::Result<()> {
 	lua.globals().set(

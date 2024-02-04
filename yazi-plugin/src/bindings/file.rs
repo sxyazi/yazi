@@ -1,6 +1,7 @@
 use mlua::{AnyUserData, Lua, UserDataFields, UserDataRef, UserDataRegistry};
 
-use super::{Cast, Cha, Url};
+use super::{Cast, Cha};
+use crate::url::Url;
 
 pub type FileRef<'lua> = UserDataRef<'lua, yazi_shared::fs::File>;
 
