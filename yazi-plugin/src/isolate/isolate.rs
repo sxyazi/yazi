@@ -12,7 +12,7 @@ pub fn slim_lua() -> mlua::Result<Lua> {
 
 	crate::fs::install(&lua)?;
 	crate::process::install(&lua)?;
-	crate::utils::Utils::install(&lua)?;
+	crate::utils::install(&lua)?;
 	crate::Config::new(&lua).install_preview()?;
 
 	// Elements

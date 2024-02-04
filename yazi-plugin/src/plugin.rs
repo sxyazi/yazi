@@ -10,7 +10,7 @@ pub fn init() {
 		crate::Loader::init();
 		crate::Config::new(lua).install_boot()?.install_manager()?.install_theme()?;
 		crate::utils::init();
-		crate::utils::pour(lua)?;
+		crate::utils::install(lua)?;
 
 		// Base
 		lua.load(include_str!("../preset/inspect/inspect.lua")).exec()?;
