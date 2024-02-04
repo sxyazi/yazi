@@ -7,11 +7,12 @@ pub fn slim_lua() -> mlua::Result<Lua> {
 
 	// Base
 	bindings::Cha::register(&lua)?;
-	bindings::Url::register(&lua)?;
 	bindings::File::register(&lua, |_| {})?;
+	crate::url::pour(&lua)?;
+
 	crate::fs::install(&lua)?;
 	crate::process::install(&lua)?;
-	crate::utils::install(&lua)?;
+	crate::utils::Utils::install(&lua)?;
 	crate::Config::new(&lua).install_preview()?;
 
 	// Elements

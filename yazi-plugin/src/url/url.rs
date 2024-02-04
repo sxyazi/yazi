@@ -1,6 +1,6 @@
 use mlua::{AnyUserData, Lua, MetaMethod, UserDataFields, UserDataMethods, UserDataRef};
 
-use super::Cast;
+use crate::bindings::Cast;
 
 pub type UrlRef<'lua> = UserDataRef<'lua, yazi_shared::fs::Url>;
 
@@ -30,6 +30,15 @@ impl Url {
 				lua.create_string(out)
 			});
 		})
+	}
+
+	pub fn install(lua: &Lua) -> mlua::Result<()> {
+		lua.globals().set(
+			"Url",
+			lua.create_function(|lua, url: mlua::String| {
+				Self::cast(lua, yazi_shared::fs::Url::from(url.to_str()?))
+			})?,
+		)
 	}
 }
 

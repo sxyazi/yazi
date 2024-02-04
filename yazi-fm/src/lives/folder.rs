@@ -1,6 +1,6 @@
 use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, UserDataFields, UserDataMethods, Value};
 use yazi_config::{LAYOUT, THEME};
-use yazi_plugin::{bindings::{Cast, File, Icon, Range, Url}, elements::Style};
+use yazi_plugin::{bindings::{Cast, File, Icon, Range}, elements::Style, url::Url};
 use yazi_shared::MIME_DIR;
 
 use super::{CtxRef, FolderRef};

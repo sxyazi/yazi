@@ -2,7 +2,7 @@ use mlua::{AnyUserData, Lua, Table};
 
 use crate::cast_to_renderable;
 
-pub fn init(lua: &Lua) -> mlua::Result<()> {
+pub fn pour(lua: &Lua) -> mlua::Result<()> {
 	let ui: Table = lua.create_table()?;
 
 	// Register

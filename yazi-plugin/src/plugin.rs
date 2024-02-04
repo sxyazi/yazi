@@ -10,13 +10,16 @@ pub fn init() {
 		crate::Loader::init();
 		crate::Config::new(lua).install_boot()?.install_manager()?.install_theme()?;
 		crate::utils::init();
-		crate::utils::install(lua)?;
+		crate::utils::pour(lua)?;
 
 		// Base
 		lua.load(include_str!("../preset/inspect/inspect.lua")).exec()?;
 		lua.load(include_str!("../preset/state.lua")).exec()?;
 		lua.load(include_str!("../preset/ya.lua")).exec()?;
-		crate::elements::init(lua)?;
+		crate::bindings::Cha::register(&LUA)?;
+		crate::bindings::Icon::register(&LUA)?;
+		crate::elements::pour(lua)?;
+		crate::url::pour(lua)?;
 
 		// Components
 		lua.load(include_str!("../preset/components/current.lua")).exec()?;

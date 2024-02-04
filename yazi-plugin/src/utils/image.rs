@@ -2,7 +2,7 @@ use mlua::{IntoLuaMulti, Lua, Table, Value};
 use yazi_adaptor::{Image, ADAPTOR};
 
 use super::Utils;
-use crate::{bindings::UrlRef, elements::RectRef};
+use crate::{elements::RectRef, url::UrlRef};
 
 impl Utils {
 	pub(super) fn image(lua: &Lua, ya: &Table) -> mlua::Result<()> {
