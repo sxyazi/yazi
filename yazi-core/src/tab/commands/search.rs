@@ -63,6 +63,10 @@ impl Tab {
 			let mut input = Input::_show(InputCfg::search(&opt.type_.to_string()));
 			let Some(Ok(subject)) = input.recv().await else { bail!("") };
 
+			if subject.is_empty() {
+				return Ok(());
+			}
+
 			cwd = cwd.into_search(subject.clone());
 			let rx = if opt.type_ == OptType::Rg {
 				external::rg(external::RgOpt { cwd: cwd.clone(), hidden, subject })
