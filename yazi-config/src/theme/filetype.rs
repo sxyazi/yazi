@@ -19,6 +19,7 @@ impl Filetype {
 		let b = match self.is {
 			FiletypeIs::None => true,
 			FiletypeIs::Block => file.cha.is_block_device(),
+			FiletypeIs::Char => file.cha.is_char_device(),
 			FiletypeIs::Exec => file.cha.is_exec(),
 			FiletypeIs::Fifo => file.cha.is_fifo(),
 			FiletypeIs::Link => file.cha.is_link(),
@@ -108,6 +109,7 @@ pub enum FiletypeIs {
 	#[default]
 	None,
 	Block,
+	Char,
 	Exec,
 	Fifo,
 	Link,
@@ -122,6 +124,7 @@ impl FromStr for FiletypeIs {
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		Ok(match s {
 			"block" => Self::Block,
+			"char" => Self::Char,
 			"exec" => Self::Exec,
 			"fifo" => Self::Fifo,
 			"link" => Self::Link,
