@@ -18,6 +18,13 @@ impl Input {
 		let opt = opt.into() as Opt;
 		let snap = self.snaps.current_mut();
 
+		if snap.value.is_empty() {
+			self.ticket = self.ticket.wrapping_add(1);
+			self.visible = false;
+			render!();
+			return;
+		}
+
 		if !opt.under && snap.cursor < 1 {
 			return;
 		} else if opt.under && snap.cursor >= snap.value.len() {
