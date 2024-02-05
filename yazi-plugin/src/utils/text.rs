@@ -35,6 +35,19 @@ impl Utils {
 			lua.create_function(|_, mime: mlua::String| Ok(mime_valid(mime.as_bytes())))?,
 		)?;
 
+		ya.set(
+			"shell_join",
+			lua.create_function(|_, table: Table| {
+				let mut s = String::new();
+				for v in table.sequence_values::<mlua::String>() {
+					s.push_str(shell_words::quote(v?.to_str()?).as_ref());
+					s.push(' ');
+				}
+				s.pop();
+				Ok(s)
+			})?,
+		)?;
+
 		Ok(())
 	}
 }
