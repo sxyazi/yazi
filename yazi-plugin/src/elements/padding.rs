@@ -16,25 +16,24 @@ impl Padding {
 			(
 				"left",
 				lua.create_function(|lua, left: u16| {
-					Self::cast(lua, ratatui::widgets::Padding::new(left, 0, 0, 0))
+					Self::cast(lua, ratatui::widgets::Padding::left(left))
 				})?,
 			),
 			(
 				"right",
 				lua.create_function(|lua, right: u16| {
-					Self::cast(lua, ratatui::widgets::Padding::new(0, right, 0, 0))
+					Self::cast(lua, ratatui::widgets::Padding::right(right))
 				})?,
 			),
 			(
 				"top",
-				lua.create_function(|lua, top: u16| {
-					Self::cast(lua, ratatui::widgets::Padding::new(0, 0, top, 0))
-				})?,
+				lua
+					.create_function(|lua, top: u16| Self::cast(lua, ratatui::widgets::Padding::top(top)))?,
 			),
 			(
 				"bottom",
 				lua.create_function(|lua, bottom: u16| {
-					Self::cast(lua, ratatui::widgets::Padding::new(0, 0, 0, bottom))
+					Self::cast(lua, ratatui::widgets::Padding::bottom(bottom))
 				})?,
 			),
 			(

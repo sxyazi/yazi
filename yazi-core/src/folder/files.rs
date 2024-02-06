@@ -231,6 +231,7 @@ impl Files {
 		}
 	}
 
+	#[cfg(unix)]
 	pub fn update_deleting(&mut self, urls: Vec<Url>) {
 		if urls.is_empty() {
 			return;
@@ -263,6 +264,28 @@ impl Files {
 		}
 		if !hidden.is_empty() {
 			go!(self.hidden, hidden);
+		}
+	}
+
+	#[cfg(windows)]
+	pub fn update_deleting(&mut self, urls: Vec<Url>) {
+		macro_rules! go {
+			($dist:expr, $src:expr) => {
+				let len = $dist.len();
+
+				$dist.retain(|f| !$src.remove(&f.url));
+				if $dist.len() != len {
+					self.revision += 1;
+				}
+			};
+		}
+
+		let mut urls: BTreeSet<_> = urls.into_iter().collect();
+		if !urls.is_empty() {
+			go!(self.items, urls);
+		}
+		if !urls.is_empty() {
+			go!(self.hidden, urls);
 		}
 	}
 

@@ -1,4 +1,4 @@
-use ratatui::{buffer::Buffer, layout::{self, Constraint, Direction, Rect}, widgets::{List, ListItem, Widget}};
+use ratatui::{buffer::Buffer, layout::{self, Constraint, Rect}, widgets::{List, ListItem, Widget}};
 use yazi_config::THEME;
 
 use crate::Ctx;
@@ -19,24 +19,20 @@ impl Widget for Bindings<'_> {
 		}
 
 		// On
-		let col1 = bindings
-			.iter()
-			.map(|c| ListItem::new(c.on()).style(THEME.help.on.into()))
-			.collect::<Vec<_>>();
+		let col1 =
+			bindings.iter().map(|c| ListItem::new(c.on()).style(THEME.help.on)).collect::<Vec<_>>();
 
 		// Exec
-		let col2 = bindings
-			.iter()
-			.map(|c| ListItem::new(c.exec()).style(THEME.help.exec.into()))
-			.collect::<Vec<_>>();
+		let col2 =
+			bindings.iter().map(|c| ListItem::new(c.exec()).style(THEME.help.exec)).collect::<Vec<_>>();
 
 		// Desc
 		let col3 = bindings
 			.iter()
-			.map(|c| ListItem::new(c.desc.as_deref().unwrap_or("-")).style(THEME.help.desc.into()))
+			.map(|c| ListItem::new(c.desc.as_deref().unwrap_or("-")).style(THEME.help.desc))
 			.collect::<Vec<_>>();
 
-		let chunks = layout::Layout::new(Direction::Horizontal, [
+		let chunks = layout::Layout::horizontal([
 			Constraint::Ratio(2, 10),
 			Constraint::Ratio(3, 10),
 			Constraint::Ratio(5, 10),
@@ -46,7 +42,7 @@ impl Widget for Bindings<'_> {
 		let cursor = self.cx.help.rel_cursor() as u16;
 		buf.set_style(
 			Rect { x: area.x, y: area.y + cursor, width: area.width, height: 1 },
-			THEME.help.hovered.into(),
+			THEME.help.hovered,
 		);
 
 		List::new(col1).render(chunks[0], buf);

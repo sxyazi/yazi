@@ -1,4 +1,4 @@
-use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, Borders, List, ListItem, Widget}};
+use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, List, ListItem, Widget}};
 use yazi_config::THEME;
 
 use crate::{widgets, Ctx};
@@ -22,21 +22,20 @@ impl<'a> Widget for Select<'a> {
 			.enumerate()
 			.map(|(i, v)| {
 				if i != select.rel_cursor() {
-					return ListItem::new(format!("  {v}")).style(THEME.select.inactive.into());
+					return ListItem::new(format!("  {v}")).style(THEME.select.inactive);
 				}
 
-				ListItem::new(format!(" {v}")).style(THEME.select.active.into())
+				ListItem::new(format!(" {v}")).style(THEME.select.active)
 			})
 			.collect::<Vec<_>>();
 
 		widgets::Clear.render(area, buf);
 		List::new(items)
 			.block(
-				Block::new()
+				Block::bordered()
 					.title(select.title())
-					.borders(Borders::ALL)
 					.border_type(BorderType::Rounded)
-					.border_style(THEME.select.border.into()),
+					.border_style(THEME.select.border),
 			)
 			.render(area, buf);
 	}

@@ -143,7 +143,7 @@ impl Watcher {
 
 	async fn on_changed(rx: UnboundedReceiver<Url>) {
 		// TODO: revert this once a new notification is implemented
-		let rx = UnboundedReceiverStream::new(rx).chunks_timeout(50, Duration::from_millis(20));
+		let rx = UnboundedReceiverStream::new(rx).chunks_timeout(100, Duration::from_millis(20));
 		pin!(rx);
 
 		while let Some(urls) = rx.next().await {

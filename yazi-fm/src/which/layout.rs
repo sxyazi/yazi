@@ -1,4 +1,4 @@
-use ratatui::{buffer::Buffer, layout, layout::{Constraint, Direction, Rect}, widgets::{Block, Widget}};
+use ratatui::{buffer::Buffer, layout, layout::{Constraint, Rect}, widgets::{Block, Widget}};
 use yazi_config::THEME;
 
 use super::Cand;
@@ -38,7 +38,7 @@ impl Widget for Which<'_> {
 
 		let chunks = {
 			use Constraint::*;
-			layout::Layout::new(Direction::Horizontal, match cols {
+			layout::Layout::horizontal(match cols {
 				1 => &[Ratio(1, 1)] as &[Constraint],
 				2 => &[Ratio(1, 2), Ratio(1, 2)],
 				_ => &[Ratio(1, 3), Ratio(1, 3), Ratio(1, 3)],
@@ -47,7 +47,7 @@ impl Widget for Which<'_> {
 		};
 
 		widgets::Clear.render(area, buf);
-		Block::new().style(THEME.which.mask.into()).render(area, buf);
+		Block::new().style(THEME.which.mask).render(area, buf);
 
 		for y in 0..area.height {
 			for (x, chunk) in chunks.iter().enumerate() {

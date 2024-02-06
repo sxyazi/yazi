@@ -1,7 +1,7 @@
 use std::ops::Range;
 
 use anyhow::{bail, Result};
-use ratatui::{buffer::Buffer, layout::Rect, text::Line, widgets::{Block, BorderType, Borders, Paragraph, Widget}};
+use ratatui::{buffer::Buffer, layout::Rect, text::Line, widgets::{Block, BorderType, Paragraph, Widget}};
 use syntect::easy::HighlightLines;
 use yazi_config::THEME;
 use yazi_core::input::InputMode;
@@ -40,17 +40,12 @@ impl<'a> Widget for Input<'a> {
 		widgets::Clear.render(area, buf);
 		Paragraph::new(self.highlighted_value().unwrap_or_else(|_| Line::from(input.value())))
 			.block(
-				Block::new()
-					.borders(Borders::ALL)
+				Block::bordered()
 					.border_type(BorderType::Rounded)
-					.border_style(THEME.input.border.into())
-					.title({
-						let mut line = Line::from(input.title.as_str());
-						line.patch_style(THEME.input.title.into());
-						line
-					}),
+					.border_style(THEME.input.border)
+					.title(Line::styled(&input.title, THEME.input.title)),
 			)
-			.style(THEME.input.value.into())
+			.style(THEME.input.value)
 			.render(area, buf);
 
 		if let Some(Range { start, end }) = input.selected() {
@@ -59,7 +54,7 @@ impl<'a> Widget for Input<'a> {
 
 			buf.set_style(
 				Rect { x, y, width: (end - start).min(win.width - x), height: 1.min(win.height - y) },
-				THEME.input.selected.into(),
+				THEME.input.selected,
 			)
 		}
 

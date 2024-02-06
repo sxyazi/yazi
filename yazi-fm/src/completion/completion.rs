@@ -1,6 +1,6 @@
 use std::path::MAIN_SEPARATOR;
 
-use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, Borders, List, ListItem, Widget}};
+use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, List, ListItem, Widget}};
 use yazi_config::{popup::{Offset, Position}, THEME};
 
 use crate::{widgets, Ctx};
@@ -30,9 +30,9 @@ impl<'a> Widget for Completion<'a> {
 
 				let mut item = ListItem::new(format!(" {} {}", icon, x));
 				if i == self.cx.completion.rel_cursor() {
-					item = item.style(THEME.completion.active.into());
+					item = item.style(THEME.completion.active);
 				} else {
-					item = item.style(THEME.completion.inactive.into());
+					item = item.style(THEME.completion.inactive);
 				}
 
 				item
@@ -57,10 +57,7 @@ impl<'a> Widget for Completion<'a> {
 		widgets::Clear.render(area, buf);
 		List::new(items)
 			.block(
-				Block::new()
-					.borders(Borders::ALL)
-					.border_type(BorderType::Rounded)
-					.border_style(THEME.completion.border.into()),
+				Block::bordered().border_type(BorderType::Rounded).border_style(THEME.completion.border),
 			)
 			.render(area, buf);
 	}

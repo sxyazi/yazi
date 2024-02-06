@@ -11,7 +11,6 @@ where
 	T: IntoLua<'lua>,
 {
 	fn into_lua(self, lua: &'lua mlua::Lua) -> mlua::Result<mlua::Value> {
-		let tbl = lua.create_sequence_from([self.0.start, self.0.end])?;
-		tbl.into_lua(lua)
+		lua.create_sequence_from([self.0.start, self.0.end])?.into_lua(lua)
 	}
 }
