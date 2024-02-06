@@ -97,7 +97,7 @@ impl Filetype {
 					}
 					.into(),
 				})
-				.collect::<Vec<_>>(),
+				.collect(),
 		)
 	}
 }

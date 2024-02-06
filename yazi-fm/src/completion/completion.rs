@@ -15,7 +15,7 @@ impl<'a> Completion<'a> {
 
 impl<'a> Widget for Completion<'a> {
 	fn render(self, rect: Rect, buf: &mut Buffer) {
-		let items = self
+		let items: Vec<_> = self
 			.cx
 			.completion
 			.window()
@@ -37,7 +37,7 @@ impl<'a> Widget for Completion<'a> {
 
 				item
 			})
-			.collect::<Vec<_>>();
+			.collect();
 
 		let input_area = self.cx.area(&self.cx.input.position);
 		let mut area = Position::sticky(input_area, Offset {

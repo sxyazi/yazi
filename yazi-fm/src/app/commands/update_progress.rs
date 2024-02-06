@@ -26,7 +26,7 @@ impl App {
 		let tasks = &mut self.cx.tasks;
 		tasks.progress = opt.progress;
 
-		// If the tasks pane is visible, update the summaries with a complete render.
+		// If the task manager is visible, update the summaries with a complete render.
 		if tasks.visible {
 			let new = tasks.paginate();
 			if new.len() != tasks.summaries.len()

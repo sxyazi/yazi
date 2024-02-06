@@ -16,7 +16,7 @@ impl<'a> Widget for Select<'a> {
 		let select = &self.cx.select;
 		let area = self.cx.area(&select.position);
 
-		let items = select
+		let items: Vec<_> = select
 			.window()
 			.iter()
 			.enumerate()
@@ -27,7 +27,7 @@ impl<'a> Widget for Select<'a> {
 
 				ListItem::new(format!(" {v}")).style(THEME.select.active)
 			})
-			.collect::<Vec<_>>();
+			.collect();
 
 		widgets::Clear.render(area, buf);
 		List::new(items)

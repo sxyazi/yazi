@@ -35,7 +35,7 @@ impl KittyOld {
 
 	async fn encode(img: DynamicImage) -> Result<Vec<u8>> {
 		fn output(raw: &[u8], format: u8, size: (u32, u32)) -> Result<Vec<u8>> {
-			let b64 = general_purpose::STANDARD.encode(raw).chars().collect::<Vec<_>>();
+			let b64: Vec<_> = general_purpose::STANDARD.encode(raw).chars().collect();
 
 			let mut it = b64.chunks(4096).peekable();
 			let mut buf = Vec::with_capacity(b64.len() + it.len() * 50);

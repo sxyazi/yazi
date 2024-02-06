@@ -35,7 +35,7 @@ impl Icon {
 					text:  r.text,
 					style: StyleShadow { fg: r.fg, ..Default::default() }.into(),
 				})
-				.collect::<Vec<_>>(),
+				.collect(),
 		)
 	}
 }

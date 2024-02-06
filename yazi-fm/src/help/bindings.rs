@@ -19,18 +19,18 @@ impl Widget for Bindings<'_> {
 		}
 
 		// On
-		let col1 =
-			bindings.iter().map(|c| ListItem::new(c.on()).style(THEME.help.on)).collect::<Vec<_>>();
+		let col1: Vec<_> =
+			bindings.iter().map(|c| ListItem::new(c.on()).style(THEME.help.on.into())).collect();
 
 		// Exec
-		let col2 =
-			bindings.iter().map(|c| ListItem::new(c.exec()).style(THEME.help.exec)).collect::<Vec<_>>();
+		let col2: Vec<_> =
+			bindings.iter().map(|c| ListItem::new(c.exec()).style(THEME.help.exec.into())).collect();
 
 		// Desc
-		let col3 = bindings
+		let col3: Vec<_> = bindings
 			.iter()
-			.map(|c| ListItem::new(c.desc.as_deref().unwrap_or("-")).style(THEME.help.desc))
-			.collect::<Vec<_>>();
+			.map(|c| ListItem::new(c.desc.as_deref().unwrap_or("-")).style(THEME.help.desc.into()))
+			.collect();
 
 		let chunks = layout::Layout::horizontal([
 			Constraint::Ratio(2, 10),
