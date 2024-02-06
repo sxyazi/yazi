@@ -9,7 +9,7 @@ pub struct Url;
 impl Url {
 	pub fn register(lua: &Lua) -> mlua::Result<()> {
 		lua.register_userdata_type::<yazi_shared::fs::Url>(|reg| {
-			reg.add_field_method_get("frag", |_, me| Ok(me.frag().map(ToOwned::to_owned)));
+			reg.add_field_method_get("frag", |lua, me| lua.create_string(me.frag()));
 			reg.add_field_method_get("is_regular", |_, me| Ok(me.is_regular()));
 			reg.add_field_method_get("is_search", |_, me| Ok(me.is_search()));
 			reg.add_field_method_get("is_archive", |_, me| Ok(me.is_archive()));

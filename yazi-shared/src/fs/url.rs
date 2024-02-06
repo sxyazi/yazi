@@ -8,7 +8,7 @@ const ENCODE_SET: &AsciiSet = &CONTROLS.add(b'#');
 pub struct Url {
 	scheme: UrlScheme,
 	path:   PathBuf,
-	frag:   Option<String>,
+	frag:   String,
 }
 
 #[derive(Clone, Copy, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -76,7 +76,7 @@ impl From<&str> for Url {
 			}
 			Some((a, b)) => {
 				url.path = percent_decode_str(a).decode_utf8_lossy().into_owned().into();
-				url.frag = Some(b.to_string()).filter(|s| !s.is_empty());
+				url.frag = b.to_string();
 			}
 		}
 		url
@@ -108,7 +108,8 @@ impl ToString for Url {
 		};
 
 		let path = percent_encode(self.path.as_os_str().as_encoded_bytes(), ENCODE_SET);
-		let frag = self.frag.as_ref().map(|s| format!("#{s}")).unwrap_or_default();
+		let frag =
+			Some(&self.frag).filter(|&s| !s.is_empty()).map(|s| format!("#{s}")).unwrap_or_default();
 		format!("{scheme}{path}{frag}")
 	}
 }
@@ -174,7 +175,7 @@ impl Url {
 	#[inline]
 	pub fn into_search(mut self, frag: String) -> Self {
 		self.scheme = UrlScheme::Search;
-		self.frag = Some(frag);
+		self.frag = frag;
 		self
 	}
 
@@ -196,7 +197,7 @@ impl Url {
 
 	// --- Frag
 	#[inline]
-	pub fn frag(&self) -> Option<&str> { self.frag.as_deref() }
+	pub fn frag(&self) -> &str { &self.frag }
 }
 
 impl From<&str> for UrlScheme {

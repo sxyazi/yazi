@@ -15,9 +15,12 @@ impl From<bool> for Opt {
 
 impl Input {
 	pub fn backspace(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
 		let snap = self.snaps.current_mut();
+		if snap.value.is_empty() {
+			return self.close(false);
+		}
 
+		let opt = opt.into() as Opt;
 		if !opt.under && snap.cursor < 1 {
 			return;
 		} else if opt.under && snap.cursor >= snap.value.len() {

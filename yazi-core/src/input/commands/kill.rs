@@ -69,21 +69,21 @@ impl Input {
 		let opt = opt.into() as Opt;
 		let snap = self.snap_mut();
 
-		match opt.kind.as_bytes() {
-			b"bol" => {
+		match opt.kind.as_str() {
+			"bol" => {
 				let end = snap.idx(snap.cursor).unwrap_or(snap.len());
 				self.kill_range(..end)
 			}
-			b"eol" => {
+			"eol" => {
 				let start = snap.idx(snap.cursor).unwrap_or(snap.len());
 				self.kill_range(start..)
 			}
-			b"backward" => {
+			"backward" => {
 				let end = snap.idx(snap.cursor).unwrap_or(snap.len());
 				let start = end - Self::find_word_boundary(snap.value[..end].chars().rev());
 				self.kill_range(start..end)
 			}
-			b"forward" => {
+			"forward" => {
 				let start = snap.idx(snap.cursor).unwrap_or(snap.len());
 				let end = start + Self::find_word_boundary(snap.value[start..].chars());
 				self.kill_range(start..end)
