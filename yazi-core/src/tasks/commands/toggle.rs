@@ -14,6 +14,12 @@ impl From<()> for Opt {
 impl Tasks {
 	pub fn toggle(&mut self, _: impl Into<Opt>) {
 		self.visible = !self.visible;
+
+		if self.visible {
+			self.summaries = self.paginate();
+			self.arrow(0);
+		}
+
 		render!();
 	}
 }

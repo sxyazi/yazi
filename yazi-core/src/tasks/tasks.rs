@@ -7,15 +7,16 @@ use yazi_plugin::ValueSendable;
 use yazi_scheduler::{Scheduler, TaskSummary};
 use yazi_shared::{emit, event::Cmd, fs::{File, Url}, term::Term, Layer, MIME_DIR};
 
-use super::{TasksProgress, TASKS_PADDING, TASKS_PERCENT};
+use super::{TasksProgress, TASKS_BORDER, TASKS_PADDING, TASKS_PERCENT};
 use crate::{folder::Files, input::Input};
 
 pub struct Tasks {
 	pub(super) scheduler: Arc<Scheduler>,
 
-	pub visible:  bool,
-	pub cursor:   usize,
-	pub progress: TasksProgress,
+	pub visible:   bool,
+	pub cursor:    usize,
+	pub progress:  TasksProgress,
+	pub summaries: Vec<TaskSummary>,
 }
 
 impl Tasks {
@@ -25,6 +26,7 @@ impl Tasks {
 			visible:   false,
 			cursor:    0,
 			progress:  Default::default(),
+			summaries: Default::default(),
 		};
 
 		let running = tasks.scheduler.running.clone();
@@ -46,7 +48,7 @@ impl Tasks {
 
 	#[inline]
 	pub fn limit() -> usize {
-		(Term::size().rows * TASKS_PERCENT / 100).saturating_sub(TASKS_PADDING) as usize
+		(Term::size().rows * TASKS_PERCENT / 100).saturating_sub(TASKS_BORDER + TASKS_PADDING) as usize
 	}
 
 	pub fn paginate(&self) -> Vec<TaskSummary> {

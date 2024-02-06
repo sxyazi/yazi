@@ -43,8 +43,9 @@ impl<'a> Widget for Layout<'a> {
 
 		let tasks = &self.cx.tasks;
 		let items = tasks
-			.paginate()
+			.summaries
 			.iter()
+			.take(area.height.saturating_sub(2) as usize)
 			.enumerate()
 			.map(|(i, v)| {
 				let mut item = ListItem::new(v.name.clone());

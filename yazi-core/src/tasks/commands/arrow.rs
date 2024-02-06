@@ -12,30 +12,21 @@ impl From<Cmd> for Opt {
 	}
 }
 
+impl From<isize> for Opt {
+	fn from(step: isize) -> Self { Self { step } }
+}
+
 impl Tasks {
-	#[allow(clippy::should_implement_trait)]
-	fn next(&mut self) {
-		let limit = Self::limit().min(self.len());
-
-		let old = self.cursor;
-		self.cursor = limit.saturating_sub(1).min(self.cursor + 1);
-
-		render!(old != self.cursor);
-	}
-
-	fn prev(&mut self) {
-		let old = self.cursor;
-		self.cursor = self.cursor.saturating_sub(1);
-
-		render!(old != self.cursor);
-	}
-
 	pub fn arrow(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
-		if opt.step > 0 {
-			self.next();
+		let old = self.cursor;
+		if opt.into().step > 0 {
+			self.cursor += 1;
 		} else {
-			self.prev();
+			self.cursor = self.cursor.saturating_sub(1);
 		}
+
+		let max = Self::limit().min(self.summaries.len());
+		self.cursor = self.cursor.min(max.saturating_sub(1));
+		render!(self.cursor != old);
 	}
 }
