@@ -9,6 +9,17 @@ use super::Utils;
 impl Utils {
 	pub(super) fn text(lua: &Lua, ya: &Table) -> mlua::Result<()> {
 		ya.set(
+			"quote",
+			lua.create_function(|_, s: mlua::String| {
+				#[cfg(unix)]
+				let s = shell_escape::unix::escape(s.to_str()?.into());
+				#[cfg(windows)]
+				let s = shell_escape::windows::escape(s.to_str()?.into());
+				Ok(s.into_owned())
+			})?,
+		)?;
+
+		ya.set(
 			"truncate",
 			lua.create_function(|_, (text, max): (mlua::String, usize)| {
 				let mut width = 0;
@@ -33,19 +44,6 @@ impl Utils {
 		ya.set(
 			"mime_valid",
 			lua.create_function(|_, mime: mlua::String| Ok(mime_valid(mime.as_bytes())))?,
-		)?;
-
-		ya.set(
-			"shell_join",
-			lua.create_function(|_, table: Table| {
-				let mut s = String::new();
-				for v in table.sequence_values::<mlua::String>() {
-					s.push_str(shell_words::quote(v?.to_str()?).as_ref());
-					s.push(' ');
-				}
-				s.pop();
-				Ok(s)
-			})?,
 		)?;
 
 		Ok(())
