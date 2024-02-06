@@ -34,8 +34,8 @@ impl Widget for Clear {
 
 		ADAPTOR.image_erase(r).ok();
 		COLLISION.store(true, Ordering::Relaxed);
-		for x in r.left()..r.right() {
-			for y in r.top()..r.bottom() {
+		for x in area.left()..area.right() {
+			for y in area.top()..area.bottom() {
 				buf.get_mut(x, y).set_skip(true);
 			}
 		}

@@ -72,7 +72,7 @@ impl InputSnap {
 	#[inline]
 	pub(super) fn find_window(s: &str, offset: usize, limit: usize) -> Range<usize> {
 		let mut width = 0;
-		let v = s
+		let v: Vec<_> = s
 			.chars()
 			.enumerate()
 			.skip(offset)
@@ -80,7 +80,7 @@ impl InputSnap {
 				width += c.width().unwrap_or(0);
 				if width < limit { Some(i) } else { None }
 			})
-			.collect::<Vec<_>>();
+			.collect();
 
 		if v.is_empty() {
 			return 0..0;
