@@ -41,18 +41,23 @@ impl File {
 			ck |= ChaKind::LINK;
 		}
 
+		#[cfg(unix)]
 		if url.is_hidden() {
 			ck |= ChaKind::HIDDEN;
+		}
+		#[cfg(windows)]
+		{
+			use std::os::windows::fs::MetadataExt;
+			if meta.file_attributes() & 2 != 0 {
+				ck |= ChaKind::HIDDEN;
+			}
 		}
 
 		Self { url, cha: Cha::from(meta).with_kind(ck), link_to }
 	}
 
 	#[inline]
-	pub fn from_dummy(url: Url) -> Self {
-		let ck = if url.is_hidden() { ChaKind::HIDDEN } else { ChaKind::empty() };
-		Self { url, cha: Cha::default().with_kind(ck), link_to: None }
-	}
+	pub fn from_dummy(url: &Url) -> Self { Self { url: url.to_owned(), ..Default::default() } }
 }
 
 impl File {

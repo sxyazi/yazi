@@ -1,4 +1,4 @@
-use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Direction, Rect}, text::Line, widgets::{Block, BorderType, Borders, List, ListItem, Padding, Widget}};
+use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Rect}, text::Line, widgets::{Block, BorderType, List, ListItem, Padding, Widget}};
 use yazi_config::THEME;
 use yazi_core::tasks::TASKS_PERCENT;
 
@@ -12,14 +12,14 @@ impl<'a> Layout<'a> {
 	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
 
 	pub(super) fn area(area: Rect) -> Rect {
-		let chunk = layout::Layout::new(Direction::Vertical, [
+		let chunk = layout::Layout::vertical([
 			Constraint::Percentage((100 - TASKS_PERCENT) / 2),
 			Constraint::Percentage(TASKS_PERCENT),
 			Constraint::Percentage((100 - TASKS_PERCENT) / 2),
 		])
 		.split(area)[1];
 
-		layout::Layout::new(Direction::Horizontal, [
+		layout::Layout::horizontal([
 			Constraint::Percentage((100 - TASKS_PERCENT) / 2),
 			Constraint::Percentage(TASKS_PERCENT),
 			Constraint::Percentage((100 - TASKS_PERCENT) / 2),
@@ -33,17 +33,12 @@ impl<'a> Widget for Layout<'a> {
 		let area = Self::area(area);
 
 		widgets::Clear.render(area, buf);
-		let block = Block::new()
-			.title({
-				let mut line = Line::from("Tasks");
-				line.patch_style(THEME.tasks.title.into());
-				line
-			})
+		let block = Block::bordered()
+			.title(Line::styled("Tasks", THEME.tasks.title))
 			.title_alignment(Alignment::Center)
-			.padding(Padding::new(0, 0, 1, 1))
-			.borders(Borders::ALL)
+			.padding(Padding::symmetric(1, 1))
 			.border_type(BorderType::Rounded)
-			.border_style(THEME.tasks.border.into());
+			.border_style(THEME.tasks.border);
 		block.clone().render(area, buf);
 
 		let tasks = &self.cx.tasks;
@@ -54,7 +49,7 @@ impl<'a> Widget for Layout<'a> {
 			.map(|(i, v)| {
 				let mut item = ListItem::new(v.name.clone());
 				if i == tasks.cursor {
-					item = item.style(THEME.tasks.hovered.into());
+					item = item.style(THEME.tasks.hovered);
 				}
 				item
 			})

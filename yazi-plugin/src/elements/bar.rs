@@ -51,7 +51,7 @@ impl UserData for Bar {
 				let mut me = ud.borrow_mut::<Self>()?;
 				match value {
 					Value::Nil => me.style = None,
-					Value::Table(tbl) => me.style = Some(Style::from(tbl).0),
+					Value::Table(tb) => me.style = Some(Style::from(tb).0),
 					Value::UserData(ud) => me.style = Some(ud.borrow::<Style>()?.0),
 					_ => return Err("expected a Style or Table or nil".into_lua_err()),
 				}

@@ -1,4 +1,4 @@
-use ratatui::{buffer::Buffer, layout::Rect, text::{Line, Span}, widgets::{Paragraph, Widget}};
+use ratatui::{buffer::Buffer, layout::Rect, text::{Line, Span}, widgets::Widget};
 use yazi_config::{keymap::Control, THEME};
 
 pub(super) struct Cand<'a> {
@@ -23,17 +23,17 @@ impl Widget for Cand<'_> {
 		spans.push(Span::raw(" ".repeat(10usize.saturating_sub(keys.join("").len()))));
 
 		// First key
-		spans.push(Span::styled(keys[0].clone(), THEME.which.cand.into()));
+		spans.push(Span::styled(keys[0].clone(), THEME.which.cand));
 
 		// Rest keys
-		spans.extend(keys.iter().skip(1).map(|k| Span::styled(k, THEME.which.rest.into())));
+		spans.extend(keys.iter().skip(1).map(|k| Span::styled(k, THEME.which.rest)));
 
 		// Separator
-		spans.push(Span::styled(&THEME.which.separator, THEME.which.separator_style.into()));
+		spans.push(Span::styled(&THEME.which.separator, THEME.which.separator_style));
 
 		// Description
-		spans.push(Span::styled(self.cand.desc_or_exec(), THEME.which.desc.into()));
+		spans.push(Span::styled(self.cand.desc_or_exec(), THEME.which.desc));
 
-		Paragraph::new(Line::from(spans)).render(area, buf);
+		Line::from(spans).render(area, buf);
 	}
 }

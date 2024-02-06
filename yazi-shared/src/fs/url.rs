@@ -144,6 +144,7 @@ impl Url {
 	#[inline]
 	pub fn into_os_string(self) -> OsString { self.path.into_os_string() }
 
+	#[cfg(unix)]
 	#[inline]
 	pub fn is_hidden(&self) -> bool {
 		self.file_name().map_or(false, |s| s.as_encoded_bytes().starts_with(&[b'.']))
