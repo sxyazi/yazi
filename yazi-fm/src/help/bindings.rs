@@ -20,16 +20,16 @@ impl Widget for Bindings<'_> {
 
 		// On
 		let col1: Vec<_> =
-			bindings.iter().map(|c| ListItem::new(c.on()).style(THEME.help.on.into())).collect();
+			bindings.iter().map(|c| ListItem::new(c.on()).style(THEME.help.on)).collect();
 
 		// Exec
 		let col2: Vec<_> =
-			bindings.iter().map(|c| ListItem::new(c.exec()).style(THEME.help.exec.into())).collect();
+			bindings.iter().map(|c| ListItem::new(c.exec()).style(THEME.help.exec)).collect();
 
 		// Desc
 		let col3: Vec<_> = bindings
 			.iter()
-			.map(|c| ListItem::new(c.desc.as_deref().unwrap_or("-")).style(THEME.help.desc.into()))
+			.map(|c| ListItem::new(c.desc.as_deref().unwrap_or("-")).style(THEME.help.desc))
 			.collect();
 
 		let chunks = layout::Layout::horizontal([
