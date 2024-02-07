@@ -1961,6 +1961,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "tikv-jemalloc-sys"
+version = "0.5.4+5.3.0-patched"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9402443cb8fd499b6f327e40565234ff34dbda27460c5b47db0db77443dd85d1"
+dependencies = [
+ "cc",
+ "libc",
+]
+
+[[package]]
+name = "tikv-jemallocator"
+version = "0.5.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "965fe0c26be5c56c94e38ba547249074803efd52adfb66de62107d95aab3eaca"
+dependencies = [
+ "libc",
+ "tikv-jemalloc-sys",
+]
+
+[[package]]
 name = "time"
 version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2652,7 +2672,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-adaptor"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -2671,7 +2691,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-config"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -2696,7 +2716,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-core"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "base64",
@@ -2725,7 +2745,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fm"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "better-panic",
@@ -2737,6 +2757,7 @@ dependencies = [
  "ratatui",
  "signal-hook-tokio",
  "syntect",
+ "tikv-jemallocator",
  "tokio",
  "tokio-util",
  "tracing",
@@ -2753,7 +2774,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-plugin"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -2788,7 +2809,7 @@ checksum = "f4b6c8e12e39ac0f79fa96f36e5b88e0da8d230691abd729eec709b43c74f632"
 
 [[package]]
 name = "yazi-scheduler"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "async-priority-channel",
@@ -2809,7 +2830,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-shared"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "bitflags 2.4.2",

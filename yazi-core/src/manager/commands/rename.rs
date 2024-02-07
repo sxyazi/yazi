@@ -47,6 +47,7 @@ impl Manager {
 		}
 
 		let file = File::from(new.clone()).await?;
+		FilesOp::Deleting(file.parent().unwrap(), vec![new.clone()]).emit();
 		FilesOp::Upserting(file.parent().unwrap(), BTreeMap::from_iter([(old, file)])).emit();
 		Ok(Self::_hover(Some(new)))
 	}
@@ -160,7 +161,7 @@ impl Manager {
 		}
 
 		let mut buf = [0; 10];
-		stdin().read(&mut buf).await.ok();
+		_ = stdin().read(&mut buf).await?;
 		if buf[0] != b'y' && buf[0] != b'Y' {
 			return Ok(());
 		}

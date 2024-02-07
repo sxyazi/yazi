@@ -31,13 +31,17 @@ impl Manager {
 	}
 
 	pub fn peek(&mut self, opt: impl Into<Opt>) {
-		let Some(hovered) = self.hovered() else {
+		let Some(hovered) = self.hovered().cloned() else {
 			return render!(self.active_mut().preview.reset());
 		};
 
-		let hovered = hovered.clone();
+		let folder = Some(())
+			.filter(|_| hovered.is_dir())
+			.and_then(|_| self.active().history.get(&hovered.url))
+			.map(|f| (f.offset, f.mtime));
+
 		if !self.active().preview.same_url(&hovered.url) {
-			self.active_mut().preview.skip = 0;
+			self.active_mut().preview.skip = folder.map(|f| f.0).unwrap_or_default();
 			render!(self.active_mut().preview.reset());
 		}
 
@@ -56,13 +60,12 @@ impl Manager {
 		}
 
 		if hovered.is_dir() {
-			let mtime = self.active().history.get(&hovered.url).and_then(|f| f.mtime);
-			self.active_mut().preview.go_folder(hovered, mtime, opt.force);
+			self.active_mut().preview.go_folder(hovered, folder.and_then(|f| f.1), opt.force);
 			return;
 		}
 
-		if let Some(m) = self.mimetype.get(&hovered.url).cloned() {
-			self.active_mut().preview.go(hovered, &m, opt.force);
+		if let Some(mime) = self.mimetype.get(&hovered.url).cloned() {
+			self.active_mut().preview.go(hovered, &mime, opt.force);
 		} else {
 			render!(self.active_mut().preview.reset());
 		}

@@ -208,7 +208,7 @@ impl Files {
 		}
 
 		macro_rules! go {
-			($dist:expr, $src:expr) => {
+			($dist:expr, $src:expr, $inc:literal) => {
 				let mut todo: BTreeMap<_, _> = $src.into_iter().map(|f| (f.url(), f)).collect();
 				for f in &$dist {
 					if todo.remove(&f.url).is_some() && todo.is_empty() {
@@ -216,7 +216,7 @@ impl Files {
 					}
 				}
 				if !todo.is_empty() {
-					self.revision += 1;
+					self.revision += $inc;
 					$dist.extend(todo.into_values());
 				}
 			};
@@ -224,10 +224,10 @@ impl Files {
 
 		let (hidden, items) = self.split_files(files);
 		if !items.is_empty() {
-			go!(self.items, items);
+			go!(self.items, items, 1);
 		}
 		if !hidden.is_empty() {
-			go!(self.hidden, hidden);
+			go!(self.hidden, hidden, 0);
 		}
 	}
 
@@ -238,13 +238,13 @@ impl Files {
 		}
 
 		macro_rules! go {
-			($dist:expr, $src:expr) => {
+			($dist:expr, $src:expr, $inc:literal) => {
 				let mut todo: BTreeSet<_> = $src.into_iter().collect();
 				let len = $dist.len();
 
 				$dist.retain(|f| !todo.remove(&f.url));
 				if $dist.len() != len {
-					self.revision += 1;
+					self.revision += $inc;
 				}
 			};
 		}
@@ -260,32 +260,32 @@ impl Files {
 		};
 
 		if !items.is_empty() {
-			go!(self.items, items);
+			go!(self.items, items, 1);
 		}
 		if !hidden.is_empty() {
-			go!(self.hidden, hidden);
+			go!(self.hidden, hidden, 0);
 		}
 	}
 
 	#[cfg(windows)]
 	pub fn update_deleting(&mut self, urls: Vec<Url>) {
 		macro_rules! go {
-			($dist:expr, $src:expr) => {
+			($dist:expr, $src:expr, $inc:literal) => {
 				let len = $dist.len();
 
 				$dist.retain(|f| !$src.remove(&f.url));
 				if $dist.len() != len {
-					self.revision += 1;
+					self.revision += $inc;
 				}
 			};
 		}
 
 		let mut urls: BTreeSet<_> = urls.into_iter().collect();
 		if !urls.is_empty() {
-			go!(self.items, urls);
+			go!(self.items, urls, 1);
 		}
 		if !urls.is_empty() {
-			go!(self.hidden, urls);
+			go!(self.hidden, urls, 0);
 		}
 	}
 
@@ -298,7 +298,7 @@ impl Files {
 		}
 
 		macro_rules! go {
-			($dist:expr, $src:expr) => {
+			($dist:expr, $src:expr, $inc:literal) => {
 				let len = $src.len();
 				for i in 0..$dist.len() {
 					if let Some(f) = $src.remove(&$dist[i].url) {
@@ -309,7 +309,7 @@ impl Files {
 					}
 				}
 				if $src.len() != len {
-					self.revision += 1;
+					self.revision += $inc;
 				}
 			};
 		}
@@ -326,10 +326,10 @@ impl Files {
 		};
 
 		if !items.is_empty() {
-			go!(self.items, items);
+			go!(self.items, items, 1);
 		}
 		if !hidden.is_empty() {
-			go!(self.hidden, hidden);
+			go!(self.hidden, hidden, 0);
 		}
 		(hidden, items)
 	}

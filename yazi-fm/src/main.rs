@@ -1,6 +1,10 @@
 #![allow(clippy::module_inception)]
 #![allow(clippy::unit_arg)]
 
+#[cfg(unix)]
+#[global_allocator]
+static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
+
 mod app;
 mod completion;
 mod components;

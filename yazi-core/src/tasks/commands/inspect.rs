@@ -37,7 +37,7 @@ impl Tasks {
 			enable_raw_mode().ok();
 
 			let mut stdin = stdin();
-			let mut quit = [0; 10];
+			let mut answer = 0;
 			loop {
 				select! {
 					Some(line) = rx.recv() => {
@@ -51,8 +51,9 @@ impl Tasks {
 							break;
 						}
 					},
-					Ok(_) = stdin.read(&mut quit) => {
-						if quit[0] == b'q' {
+					result = stdin.read_u8() => {
+						answer = result.unwrap_or(b'q');
+						if answer == b'q' {
 							break;
 						}
 					}
@@ -62,8 +63,8 @@ impl Tasks {
 			if let Some(task) = scheduler.running.lock().get_mut(id) {
 				task.logger = None;
 			}
-			while quit[0] != b'q' {
-				stdin.read(&mut quit).await.ok();
+			while answer != b'q' {
+				answer = stdin.read_u8().await.unwrap_or(b'q');
 			}
 		});
 	}

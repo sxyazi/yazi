@@ -114,8 +114,8 @@ impl<'a, 'b> Folder<'a, 'b> {
 				Ok(if !cx.manager.active().mode.is_visual() {
 					selected
 				} else {
-					let idx: usize = me.named_user_value("idx")?;
-					cx.manager.active().mode.pending(folder.offset + idx, selected)
+					let pos: isize = me.named_user_value("pos")?;
+					cx.manager.active().mode.pending((folder.offset as isize + pos) as usize, selected)
 				})
 			});
 			reg.add_function("found", |lua, me: AnyUserData| {
@@ -171,21 +171,24 @@ impl<'a, 'b> Folder<'a, 'b> {
 				.skip(window.0)
 				.take(window.1)
 				.enumerate()
-				.filter_map(|(i, f)| self.file(i, f).ok())
+				.filter_map(|(i, f)| self.file(i as isize, f).ok())
 				.collect::<Vec<_>>(),
 		)?;
 		ud.set_named_user_value("files", self.scope.create_any_userdata_ref(&self.inner.files)?)?;
 		ud.set_named_user_value(
 			"hovered",
-			self.inner.hovered().and_then(|h| self.file(self.inner.cursor - window.0, h).ok()),
+			self
+				.inner
+				.hovered()
+				.and_then(|h| self.file(self.inner.cursor as isize - window.0 as isize, h).ok()),
 		)?;
 
 		Ok(ud)
 	}
 
-	fn file(&self, idx: usize, inner: &'a yazi_shared::fs::File) -> mlua::Result<AnyUserData<'a>> {
+	fn file(&self, pos: isize, inner: &'a yazi_shared::fs::File) -> mlua::Result<AnyUserData<'a>> {
 		let ud = self.scope.create_any_userdata_ref(inner)?;
-		ud.set_named_user_value("idx", idx)?;
+		ud.set_named_user_value("pos", pos)?;
 		ud.set_named_user_value("folder", self.scope.create_any_userdata_ref(self.inner)?)?;
 
 		Ok(ud)
