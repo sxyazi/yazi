@@ -28,6 +28,11 @@ tab_active   = { fg = "black", bg = "lightblue" }
 tab_inactive = { fg = "white", bg = "darkgray" }
 tab_width    = 1
 
+# Selected counter
+count_selected = { fg = "white", bg = "green" }
+count_copied = { fg = "white", bg = "yellow" }
+count_cut      = { fg = "white", bg = "red" }
+
 # Border
 border_symbol = "│"
 border_style  = { fg = "gray" }
