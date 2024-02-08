@@ -1,3 +1,5 @@
+use std::ops::{Deref, DerefMut};
+
 use yazi_config::BOOT;
 use yazi_shared::fs::Url;
 
@@ -47,17 +49,18 @@ impl Tabs {
 
 impl Tabs {
 	#[inline]
-	pub fn len(&self) -> usize { self.items.len() }
-
-	#[inline]
-	pub fn iter(&self) -> impl Iterator<Item = &Tab> { self.items.iter() }
-
-	#[inline]
-	pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Tab> { self.items.iter_mut() }
-
-	#[inline]
 	pub fn active(&self) -> &Tab { &self.items[self.idx] }
 
 	#[inline]
 	pub(super) fn active_mut(&mut self) -> &mut Tab { &mut self.items[self.idx] }
+}
+
+impl Deref for Tabs {
+	type Target = Vec<Tab>;
+
+	fn deref(&self) -> &Self::Target { &self.items }
+}
+
+impl DerefMut for Tabs {
+	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.items }
 }

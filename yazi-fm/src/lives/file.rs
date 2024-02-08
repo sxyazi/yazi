@@ -1,11 +1,11 @@
 use std::ops::Deref;
 
-use mlua::{IntoLua, Lua, UserDataFields, UserDataMethods};
+use mlua::{AnyUserData, IntoLua, Lua, UserDataFields, UserDataMethods};
 use yazi_config::THEME;
 use yazi_plugin::{bindings::{Cast, Cha, Icon, Range}, elements::Style, url::Url};
 use yazi_shared::MIME_DIR;
 
-use super::CtxRef;
+use super::{CtxRef, SCOPE};
 
 pub(super) struct File {
 	idx:    usize,
@@ -20,7 +20,12 @@ impl Deref for File {
 
 impl File {
 	#[inline]
-	pub(super) fn new(idx: usize, folder: &yazi_core::folder::Folder) -> Self { Self { idx, folder } }
+	pub(super) fn make(
+		idx: usize,
+		folder: &yazi_core::folder::Folder,
+	) -> mlua::Result<AnyUserData<'static>> {
+		SCOPE.create_any_userdata(Self { idx, folder })
+	}
 
 	pub(super) fn register(lua: &Lua) -> mlua::Result<()> {
 		lua.register_userdata_type::<Self>(|reg| {

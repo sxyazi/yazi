@@ -1,20 +1,26 @@
-use std::sync::Arc;
+use std::{mem, sync::Arc};
 
 use mlua::{Scope, Table};
 use tracing::error;
 use yazi_config::LAYOUT;
 use yazi_plugin::{elements::RectRef, LUA};
+use yazi_shared::RoCell;
 
 use crate::Ctx;
+
+pub(super) static SCOPE: RoCell<&mlua::Scope> = RoCell::new();
 
 pub(crate) struct Lives;
 
 impl Lives {
 	pub(crate) fn register() -> mlua::Result<()> {
-		super::Active::register(&LUA)?;
+		super::Config::register(&LUA)?;
 		super::File::register(&LUA)?;
 		super::Files::register(&LUA)?;
 		super::Folder::register(&LUA)?;
+		super::Mode::register(&LUA)?;
+		super::Preview::register(&LUA)?;
+		super::Tab::register(&LUA)?;
 		super::Tabs::register(&LUA)?;
 		super::Tasks::register(&LUA)?;
 
@@ -26,15 +32,16 @@ impl Lives {
 		f: impl FnOnce(&Scope<'a, 'a>) -> mlua::Result<T>,
 	) -> mlua::Result<T> {
 		let result = LUA.scope(|scope| {
+			SCOPE.init(unsafe { mem::transmute(scope) });
 			LUA.set_named_registry_value("cx", scope.create_any_userdata_ref(cx)?)?;
 
 			let global = LUA.globals();
 			global.set(
 				"cx",
 				LUA.create_table_from([
-					("active", super::Active::new(scope, cx.manager.active()).make()?),
-					("tabs", super::Tabs::new(scope, &cx.manager.tabs).make()?),
-					("tasks", super::Tasks::new(scope, &cx.tasks).make()?),
+					("active", super::Tab::make(cx.manager.active())?),
+					("tabs", super::Tabs::make(&cx.manager.tabs)?),
+					("tasks", super::Tasks::make(&cx.tasks)?),
 				])?,
 			)?;
 
@@ -48,6 +55,7 @@ impl Lives {
 				status:  *global.get::<_, Table>("Status")?.get::<_, RectRef>("area")?,
 			}));
 
+			SCOPE.drop();
 			Ok(ret)
 		});
 
@@ -55,21 +63,5 @@ impl Lives {
 			error!("{e}");
 		}
 		result
-	}
-
-	pub(crate) fn partial_scope<'a>(cx: &'a Ctx, f: impl FnOnce(&Scope<'a, 'a>)) {
-		let result = LUA.scope(|scope| {
-			LUA.globals().set(
-				"cx",
-				LUA.create_table_from([("tasks", super::Tasks::new(scope, &cx.tasks).make()?)])?,
-			)?;
-
-			f(scope);
-			Ok(())
-		});
-
-		if let Err(e) = result {
-			error!("{e}");
-		}
 	}
 }

@@ -1,76 +1,42 @@
-// TODO: unsafe
+use std::ops::Deref;
 
-use mlua::{AnyUserData, Lua, MetaMethod, UserDataFields, UserDataMethods, Value};
+use mlua::{AnyUserData, ExternalError, Lua, MetaMethod, UserDataFields, UserDataMethods};
 
-use super::Folder;
+use super::{Tab, SCOPE};
 
-pub(super) struct Tabs<'a, 'b> {
-	scope: &'b mlua::Scope<'a, 'a>,
-
-	inner: &'a yazi_core::manager::Tabs,
+pub(super) struct Tabs {
+	inner: *const yazi_core::manager::Tabs,
 }
 
-impl<'a, 'b> Tabs<'a, 'b> {
+impl Deref for Tabs {
+	type Target = yazi_core::manager::Tabs;
+
+	fn deref(&self) -> &Self::Target { unsafe { &*self.inner } }
+}
+
+impl Tabs {
+	#[inline]
+	pub(super) fn make(inner: &yazi_core::manager::Tabs) -> mlua::Result<AnyUserData<'static>> {
+		SCOPE.create_any_userdata(Self { inner })
+	}
+
 	pub(super) fn register(lua: &Lua) -> mlua::Result<()> {
-		lua.register_userdata_type::<yazi_core::manager::Tabs>(|reg| {
+		lua.register_userdata_type::<Self>(|reg| {
 			reg.add_field_method_get("idx", |_, me| Ok(me.idx));
+
 			reg.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.len()));
-			reg.add_meta_function(MetaMethod::Index, |_, (me, index): (AnyUserData, usize)| {
-				let items = me.named_user_value::<Vec<AnyUserData>>("items")?;
-				Ok(items.get(index - 1).cloned())
-			});
-		})?;
 
-		lua.register_userdata_type::<yazi_core::tab::Tab>(|reg| {
-			reg.add_method("name", |lua, me, ()| {
-				Some(
-					lua.create_string(
-						me.current
-							.cwd
-							.file_name()
-							.map_or(me.current.cwd.as_os_str().as_encoded_bytes(), |n| n.as_encoded_bytes()),
-					),
-				)
-				.transpose()
+			reg.add_meta_method(MetaMethod::Index, |_, me, idx: usize| {
+				if idx > me.len() || idx == 0 {
+					Ok(None)
+				} else if idx - 1 == me.idx {
+					Err("Use `active` instead of `tabs` to access the current tab".into_lua_err())
+				} else {
+					Some(Tab::make(&me[idx - 1])).transpose()
+				}
 			});
-
-			reg.add_field_function_get("mode", |_, me| me.named_user_value::<AnyUserData>("mode"));
-			reg.add_field_function_get("conf", |_, me| me.named_user_value::<AnyUserData>("conf"));
-			reg.add_field_function_get("parent", |_, me| me.named_user_value::<Value>("parent"));
-			reg.add_field_function_get("current", |_, me| me.named_user_value::<AnyUserData>("current"));
-			reg.add_field_function_get("preview", |_, me| me.named_user_value::<AnyUserData>("preview"));
 		})?;
 
 		Ok(())
-	}
-}
-
-impl<'a, 'b> Tabs<'a, 'b> {
-	pub(crate) fn new(scope: &'b mlua::Scope<'a, 'a>, inner: &'a yazi_core::manager::Tabs) -> Self {
-		Self { scope, inner }
-	}
-
-	pub(crate) fn make(&self) -> mlua::Result<AnyUserData<'a>> {
-		let ud = self.scope.create_any_userdata_ref(self.inner)?;
-
-		ud.set_named_user_value(
-			"items",
-			self.inner.iter().filter_map(|t| self.tab(t).ok()).collect::<Vec<_>>(),
-		)?;
-
-		Ok(ud)
-	}
-
-	fn tab(&self, inner: &'a yazi_core::tab::Tab) -> mlua::Result<AnyUserData<'a>> {
-		let ud = self.scope.create_any_userdata_ref(inner)?;
-
-		ud.set_named_user_value(
-			"parent",
-			inner.parent.as_ref().and_then(|p| Folder::make(self.scope, p).ok()),
-		)?;
-
-		ud.set_named_user_value("current", Folder::make(self.scope, &inner.current)?)?;
-
-		Ok(ud)
 	}
 }

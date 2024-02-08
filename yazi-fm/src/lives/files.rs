@@ -1,8 +1,8 @@
 use std::ops::{Deref, Range};
 
-use mlua::{Lua, MetaMethod, UserDataMethods};
+use mlua::{AnyUserData, Lua, MetaMethod, UserDataMethods};
 
-use super::File;
+use super::{File, SCOPE};
 
 pub(super) struct Files {
 	folder: *const yazi_core::folder::Folder,
@@ -17,20 +17,23 @@ impl Deref for Files {
 
 impl Files {
 	#[inline]
-	pub(super) fn new(folder: &yazi_core::folder::Folder, window: Range<usize>) -> Self {
-		Self { folder, window }
+	pub(super) fn make(
+		folder: &yazi_core::folder::Folder,
+		window: Range<usize>,
+	) -> mlua::Result<AnyUserData<'static>> {
+		SCOPE.create_any_userdata(Self { folder, window })
 	}
 
 	pub(super) fn register(lua: &Lua) -> mlua::Result<()> {
 		lua.register_userdata_type::<Self>(|reg| {
 			reg.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.window.end - me.window.start));
 
-			reg.add_meta_method(MetaMethod::Index, |lua, me, mut key: usize| {
-				key += me.window.start;
-				if key > me.window.end || key == 0 {
+			reg.add_meta_method(MetaMethod::Index, |_, me, mut idx: usize| {
+				idx += me.window.start;
+				if idx > me.window.end || idx == 0 {
 					Ok(None)
 				} else {
-					Some(lua.create_any_userdata(File::new(key - 1, me.folder()))).transpose()
+					Some(File::make(idx - 1, me.folder())).transpose()
 				}
 			});
 		})?;

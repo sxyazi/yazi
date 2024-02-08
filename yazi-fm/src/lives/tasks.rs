@@ -1,25 +1,30 @@
+use std::ops::Deref;
+
 use mlua::{AnyUserData, Lua, LuaSerdeExt, UserDataFields};
 
-pub(super) struct Tasks<'a, 'b> {
-	scope: &'b mlua::Scope<'a, 'a>,
+use super::SCOPE;
 
-	inner: &'a yazi_core::tasks::Tasks,
+pub(super) struct Tasks {
+	inner: *const yazi_core::tasks::Tasks,
 }
 
-impl<'a, 'b> Tasks<'a, 'b> {
+impl Deref for Tasks {
+	type Target = yazi_core::tasks::Tasks;
+
+	fn deref(&self) -> &Self::Target { unsafe { &*self.inner } }
+}
+
+impl Tasks {
+	#[inline]
+	pub(crate) fn make(inner: &yazi_core::tasks::Tasks) -> mlua::Result<AnyUserData<'static>> {
+		SCOPE.create_any_userdata(Self { inner })
+	}
+
 	pub(super) fn register(lua: &Lua) -> mlua::Result<()> {
-		lua.register_userdata_type::<yazi_core::tasks::Tasks>(|reg| {
+		lua.register_userdata_type::<Self>(|reg| {
 			reg.add_field_method_get("progress", |lua, me| lua.to_value(&me.progress))
 		})?;
 
 		Ok(())
-	}
-
-	pub(crate) fn new(scope: &'b mlua::Scope<'a, 'a>, inner: &'a yazi_core::tasks::Tasks) -> Self {
-		Self { scope, inner }
-	}
-
-	pub(crate) fn make(&self) -> mlua::Result<AnyUserData<'a>> {
-		self.scope.create_any_userdata_ref(self.inner)
 	}
 }
