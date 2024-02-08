@@ -1,18 +1,24 @@
 #![allow(clippy::module_inception)]
 
-mod active;
+mod config;
 mod file;
 mod files;
 mod folder;
 mod lives;
+mod mode;
+mod preview;
+mod tab;
 mod tabs;
 mod tasks;
 
-use active::*;
+use config::*;
 use file::*;
 use files::*;
 use folder::*;
 pub(super) use lives::*;
+use mode::*;
+use preview::*;
+use tab::*;
 use tabs::*;
 use tasks::*;
 

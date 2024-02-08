@@ -43,15 +43,16 @@ impl App {
 			return;
 		};
 
-		Lives::partial_scope(&self.cx, |_| {
+		_ = Lives::scope(&self.cx, |_| {
 			for patch in Progress::partial_render(term.current_buffer_mut()) {
-				term.backend_mut().draw(patch.iter().map(|(x, y, cell)| (*x, *y, cell))).ok();
+				term.backend_mut().draw(patch.iter().map(|(x, y, cell)| (*x, *y, cell)))?;
 				if let Some((x, y)) = self.cx.cursor() {
-					term.show_cursor().ok();
-					term.set_cursor(x, y).ok();
+					term.show_cursor()?;
+					term.set_cursor(x, y)?;
 				}
-				term.backend_mut().flush().ok();
+				term.backend_mut().flush()?;
 			}
+			Ok(())
 		});
 	}
 }

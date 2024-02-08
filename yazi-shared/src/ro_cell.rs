@@ -25,6 +25,13 @@ impl<T> RoCell<T> {
 	{
 		self.init(f());
 	}
+
+	#[inline]
+	pub fn drop(&self) {
+		unsafe {
+			*self.0.get() = None;
+		}
+	}
 }
 
 impl<T> Deref for RoCell<T> {
