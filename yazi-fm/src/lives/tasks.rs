@@ -1,6 +1,6 @@
 use mlua::{AnyUserData, Lua, LuaSerdeExt, UserDataFields};
 
-pub struct Tasks<'a, 'b> {
+pub(super) struct Tasks<'a, 'b> {
 	scope: &'b mlua::Scope<'a, 'a>,
 
 	inner: &'a yazi_core::tasks::Tasks,

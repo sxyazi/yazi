@@ -12,6 +12,8 @@ pub(crate) struct Lives;
 impl Lives {
 	pub(crate) fn register() -> mlua::Result<()> {
 		super::Active::register(&LUA)?;
+		super::File::register(&LUA)?;
+		super::Files::register(&LUA)?;
 		super::Folder::register(&LUA)?;
 		super::Tabs::register(&LUA)?;
 		super::Tasks::register(&LUA)?;

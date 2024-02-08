@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, Lua, UserDataFields, UserDataRef, UserDataRegistry};
+use mlua::{AnyUserData, Lua, UserDataFields, UserDataRef};
 
 use super::{Cast, Cha};
 use crate::url::Url;
@@ -8,10 +8,7 @@ pub type FileRef<'lua> = UserDataRef<'lua, yazi_shared::fs::File>;
 pub struct File;
 
 impl File {
-	pub fn register(
-		lua: &Lua,
-		f: impl FnOnce(&mut UserDataRegistry<yazi_shared::fs::File>),
-	) -> mlua::Result<()> {
+	pub fn register(lua: &Lua) -> mlua::Result<()> {
 		lua.register_userdata_type::<yazi_shared::fs::File>(|reg| {
 			reg.add_field_method_get("url", |lua, me| Url::cast(lua, me.url.clone()));
 			reg.add_field_method_get("cha", |lua, me| Cha::cast(lua, me.cha));
@@ -23,8 +20,6 @@ impl File {
 			reg.add_field_method_get("name", |lua, me| {
 				me.url.file_name().map(|n| lua.create_string(n.as_encoded_bytes())).transpose()
 			});
-
-			f(reg);
 		})
 	}
 }
