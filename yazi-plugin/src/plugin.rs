@@ -17,6 +17,7 @@ pub fn init() {
 		lua.load(include_str!("../preset/state.lua")).exec()?;
 		lua.load(include_str!("../preset/ya.lua")).exec()?;
 		crate::bindings::Cha::register(lua)?;
+		crate::bindings::File::register(lua)?;
 		crate::bindings::Icon::register(lua)?;
 		crate::elements::pour(lua)?;
 		crate::url::pour(lua)?;

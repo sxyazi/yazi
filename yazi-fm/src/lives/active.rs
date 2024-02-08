@@ -1,9 +1,8 @@
 use mlua::{AnyUserData, Lua, MetaMethod, UserDataFields, UserDataMethods, Value};
-use yazi_config::LAYOUT;
 
 use super::Folder;
 
-pub struct Active<'a, 'b> {
+pub(super) struct Active<'a, 'b> {
 	scope: &'b mlua::Scope<'a, 'a>,
 
 	inner: &'a yazi_core::tab::Tab,
@@ -50,9 +49,9 @@ impl<'a, 'b> Active<'a, 'b> {
 		ud.set_named_user_value("conf", self.scope.create_any_userdata_ref(&self.inner.conf)?)?;
 		ud.set_named_user_value(
 			"parent",
-			self.inner.parent.as_ref().and_then(|p| Folder::new(self.scope, p).make(None).ok()),
+			self.inner.parent.as_ref().and_then(|p| Folder::make(self.scope, p).ok()),
 		)?;
-		ud.set_named_user_value("current", Folder::new(self.scope, &self.inner.current).make(None)?)?;
+		ud.set_named_user_value("current", Folder::make(self.scope, &self.inner.current)?)?;
 		ud.set_named_user_value("preview", self.preview(self.inner)?)?;
 
 		Ok(ud)
@@ -60,7 +59,6 @@ impl<'a, 'b> Active<'a, 'b> {
 
 	fn preview(&self, tab: &'a yazi_core::tab::Tab) -> mlua::Result<AnyUserData<'a>> {
 		let inner = &tab.preview;
-		let window = Some((inner.skip, LAYOUT.load().preview.height as usize));
 
 		let ud = self.scope.create_any_userdata_ref(inner)?;
 		ud.set_named_user_value(
@@ -70,7 +68,7 @@ impl<'a, 'b> Active<'a, 'b> {
 				.hovered()
 				.filter(|&f| f.is_dir())
 				.and_then(|f| tab.history(&f.url))
-				.and_then(|f| Folder::new(self.scope, f).make(window).ok()),
+				.and_then(|f| Folder::make(self.scope, f).ok()),
 		)?;
 
 		Ok(ud)

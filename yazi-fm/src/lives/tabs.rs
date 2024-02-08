@@ -1,6 +1,10 @@
+// TODO: unsafe
+
 use mlua::{AnyUserData, Lua, MetaMethod, UserDataFields, UserDataMethods, Value};
 
-pub struct Tabs<'a, 'b> {
+use super::Folder;
+
+pub(super) struct Tabs<'a, 'b> {
 	scope: &'b mlua::Scope<'a, 'a>,
 
 	inner: &'a yazi_core::manager::Tabs,
@@ -60,18 +64,12 @@ impl<'a, 'b> Tabs<'a, 'b> {
 	fn tab(&self, inner: &'a yazi_core::tab::Tab) -> mlua::Result<AnyUserData<'a>> {
 		let ud = self.scope.create_any_userdata_ref(inner)?;
 
-		ud.set_named_user_value("parent", inner.parent.as_ref().and_then(|p| self.folder(p).ok()))?;
-		ud.set_named_user_value("current", self.folder(&inner.current)?)?;
+		ud.set_named_user_value(
+			"parent",
+			inner.parent.as_ref().and_then(|p| Folder::make(self.scope, p).ok()),
+		)?;
 
-		Ok(ud)
-	}
-
-	pub(crate) fn folder(
-		&self,
-		inner: &'a yazi_core::folder::Folder,
-	) -> mlua::Result<AnyUserData<'a>> {
-		let ud = self.scope.create_any_userdata_ref(inner)?;
-		ud.set_named_user_value("files", self.scope.create_any_userdata_ref(&inner.files)?)?;
+		ud.set_named_user_value("current", Folder::make(self.scope, &inner.current)?)?;
 
 		Ok(ud)
 	}
