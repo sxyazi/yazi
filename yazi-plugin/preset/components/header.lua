@@ -11,7 +11,7 @@ function Header:cwd()
 	else
 		span = ui.Span(string.format("%s (search: %s)", ya.readable_path(tostring(cwd)), cwd:frag()))
 	end
-	return span:style(THEME.manager.mode_normal)
+	return span:style(THEME.manager.cwd)
 end
 
 function Header:selected_count()
