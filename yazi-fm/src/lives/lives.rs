@@ -48,11 +48,11 @@ impl Lives {
 			let ret = f(scope)?;
 
 			LAYOUT.store(Arc::new(yazi_config::Layout {
-				header:  *global.get::<_, Table>("Header")?.get::<_, RectRef>("area")?,
-				parent:  *global.get::<_, Table>("Parent")?.get::<_, RectRef>("area")?,
-				current: *global.get::<_, Table>("Current")?.get::<_, RectRef>("area")?,
-				preview: *global.get::<_, Table>("Preview")?.get::<_, RectRef>("area")?,
-				status:  *global.get::<_, Table>("Status")?.get::<_, RectRef>("area")?,
+				header:  *global.raw_get::<_, Table>("Header")?.raw_get::<_, RectRef>("area")?,
+				parent:  *global.raw_get::<_, Table>("Parent")?.raw_get::<_, RectRef>("area")?,
+				current: *global.raw_get::<_, Table>("Current")?.raw_get::<_, RectRef>("area")?,
+				preview: *global.raw_get::<_, Table>("Preview")?.raw_get::<_, RectRef>("area")?,
+				status:  *global.raw_get::<_, Table>("Status")?.raw_get::<_, RectRef>("area")?,
 			}));
 
 			SCOPE.drop();

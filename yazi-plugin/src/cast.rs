@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
-use anyhow::bail;
-use mlua::{AnyUserData, IntoLua, Lua, Value};
+use mlua::{AnyUserData, ExternalError, IntoLua, Lua, Value, Variadic};
 use yazi_shared::OrderedFloat;
 
 use crate::elements::Renderable;
@@ -33,13 +32,13 @@ pub enum ValueSendable {
 }
 
 impl<'a> TryFrom<Value<'a>> for ValueSendable {
-	type Error = anyhow::Error;
+	type Error = mlua::Error;
 
 	fn try_from(value: Value) -> Result<Self, Self::Error> {
 		Ok(match value {
 			Value::Nil => ValueSendable::Nil,
 			Value::Boolean(b) => ValueSendable::Boolean(b),
-			Value::LightUserData(_) => bail!("light userdata is not supported"),
+			Value::LightUserData(_) => Err("light userdata is not supported".into_lua_err())?,
 			Value::Integer(n) => ValueSendable::Integer(n),
 			Value::Number(n) => ValueSendable::Number(n),
 			Value::String(s) => ValueSendable::String(s.as_bytes().to_vec()),
@@ -51,10 +50,10 @@ impl<'a> TryFrom<Value<'a>> for ValueSendable {
 				}
 				ValueSendable::Table(map)
 			}
-			Value::Function(_) => bail!("function is not supported"),
-			Value::Thread(_) => bail!("thread is not supported"),
-			Value::UserData(_) => bail!("userdata is not supported"),
-			Value::Error(_) => bail!("error is not supported"),
+			Value::Function(_) => Err("function is not supported".into_lua_err())?,
+			Value::Thread(_) => Err("thread is not supported".into_lua_err())?,
+			Value::UserData(_) => Err("userdata is not supported".into_lua_err())?,
+			Value::Error(_) => Err("error is not supported".into_lua_err())?,
 		})
 	}
 }
@@ -79,6 +78,14 @@ impl<'lua> IntoLua<'lua> for ValueSendable {
 }
 
 impl ValueSendable {
+	pub fn try_from_variadic(values: Variadic<Value>) -> mlua::Result<Vec<ValueSendable>> {
+		let mut vec = Vec::with_capacity(values.len());
+		for value in values {
+			vec.push(ValueSendable::try_from(value)?);
+		}
+		Ok(vec)
+	}
+
 	pub fn into_table_string(self) -> HashMap<String, String> {
 		let ValueSendable::Table(table) = self else {
 			return Default::default();
@@ -107,7 +114,7 @@ pub enum ValueSendableKey {
 }
 
 impl TryInto<ValueSendableKey> for ValueSendable {
-	type Error = anyhow::Error;
+	type Error = mlua::Error;
 
 	fn try_into(self) -> Result<ValueSendableKey, Self::Error> {
 		Ok(match self {
@@ -116,7 +123,7 @@ impl TryInto<ValueSendableKey> for ValueSendable {
 			ValueSendable::Integer(n) => ValueSendableKey::Integer(n),
 			ValueSendable::Number(n) => ValueSendableKey::Number(OrderedFloat::new(n)),
 			ValueSendable::String(s) => ValueSendableKey::String(s),
-			ValueSendable::Table(_) => bail!("table is not supported"),
+			ValueSendable::Table(_) => Err("table is not supported".into_lua_err())?,
 		})
 	}
 }

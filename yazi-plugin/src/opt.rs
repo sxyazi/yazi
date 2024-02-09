@@ -1,6 +1,5 @@
 use anyhow::bail;
-use mlua::{Table, Value};
-use tokio::sync::oneshot;
+use mlua::{Lua, Table};
 use yazi_shared::event::Cmd;
 
 use crate::ValueSendable;
@@ -14,8 +13,8 @@ pub struct Opt {
 #[derive(Default)]
 pub struct OptData {
 	pub args: Vec<ValueSendable>,
-	pub cb:   Option<Box<dyn FnOnce(Table) -> mlua::Result<Value> + Send>>,
-	pub tx:   Option<oneshot::Sender<ValueSendable>>,
+	pub init: Option<Box<dyn FnOnce(&Lua) -> mlua::Result<()> + Send>>,
+	pub cb:   Option<Box<dyn FnOnce(&Lua, Table) -> mlua::Result<()> + Send>>,
 }
 
 impl TryFrom<Cmd> for Opt {

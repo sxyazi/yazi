@@ -14,6 +14,7 @@ pub fn slim_lua() -> mlua::Result<Lua> {
 	crate::process::install(&lua)?;
 	crate::utils::install(&lua)?;
 	crate::Config::new(&lua).install_preview()?;
+	lua.load(include_str!("../../preset/ya.lua")).exec()?;
 
 	// Elements
 	let ui = lua.create_table()?;
