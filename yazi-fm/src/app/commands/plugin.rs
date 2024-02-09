@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use mlua::{ExternalError, ExternalResult, Table, TableExt};
+use mlua::{ExternalError, Table, TableExt};
 use tracing::warn;
 use yazi_plugin::{LOADED, LUA};
 use yazi_shared::{emit, event::Cmd, Layer};
@@ -35,7 +35,10 @@ impl App {
 			Err(e) => return warn!("{e}"),
 		};
 
-		let result = Lives::scope(&self.cx, |_| {
+		_ = Lives::scope(&self.cx, |_| {
+			if let Some(init) = opt.data.init {
+				init(&LUA)?;
+			}
 			LUA.globals().set("YAZI_PLUGIN_NAME", LUA.create_string(&opt.name)?)?;
 
 			let mut plugin: Option<Table> = None;
@@ -48,18 +51,10 @@ impl App {
 			};
 
 			if let Some(cb) = opt.data.cb {
-				cb(plugin)
+				cb(&LUA, plugin)
 			} else {
 				plugin.call_method("entry", opt.data.args)
 			}
 		});
-
-		let Some(tx) = opt.data.tx else {
-			return;
-		};
-
-		if let Ok(v) = result.and_then(|v| v.try_into().into_lua_err()) {
-			tx.send(v).ok();
-		}
 	}
 }
