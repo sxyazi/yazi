@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
 use mlua::{AnyUserData, Lua, UserDataFields};
+use yazi_config::LAYOUT;
 
 use super::{Folder, SCOPE};
 
@@ -29,7 +30,10 @@ impl Preview {
 					.hovered()
 					.filter(|&f| f.is_dir())
 					.and_then(|f| me.tab().history(&f.url))
-					.map(Folder::make)
+					.map(|f| {
+						let limit = LAYOUT.load().preview.height as usize;
+						Folder::make(f, Some(me.skip..f.files.len().min(me.skip + limit)))
+					})
 					.transpose()
 			});
 		})

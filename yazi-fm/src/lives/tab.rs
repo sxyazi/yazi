@@ -36,8 +36,10 @@ impl Tab {
 
 			reg.add_field_method_get("mode", |_, me| Mode::make(&me.mode));
 			reg.add_field_method_get("conf", |_, me| Config::make(&me.conf));
-			reg.add_field_method_get("parent", |_, me| me.parent.as_ref().map(Folder::make).transpose());
-			reg.add_field_method_get("current", |_, me| Folder::make(&me.current));
+			reg.add_field_method_get("parent", |_, me| {
+				me.parent.as_ref().map(|f| Folder::make(f, None)).transpose()
+			});
+			reg.add_field_method_get("current", |_, me| Folder::make(&me.current, None));
 			reg.add_field_method_get("preview", |_, me| Preview::make(me));
 		})?;
 
