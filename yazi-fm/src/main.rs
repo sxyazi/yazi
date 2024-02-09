@@ -1,7 +1,7 @@
 #![allow(clippy::module_inception)]
 #![allow(clippy::unit_arg)]
 
-#[cfg(unix)]
+#[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
