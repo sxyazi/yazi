@@ -9,8 +9,8 @@ impl Tasks {
 			return;
 		}
 
-		let len = self.scheduler.running.lock().len();
-		self.cursor = self.cursor.min(len.saturating_sub(1));
+		self.summaries = self.paginate();
+		self.arrow(0);
 		render!();
 	}
 }

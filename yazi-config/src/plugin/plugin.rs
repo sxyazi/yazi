@@ -52,6 +52,13 @@ impl Default for Plugin {
 		}
 
 		let mut shadow = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().plugin;
+		if shadow.append_preloaders.iter().any(|r| r.name.as_ref().is_some_and(|p| p.is_wildcard())) {
+			shadow.preloaders.retain(|r| !r.name.as_ref().is_some_and(|p| p.is_wildcard()));
+		}
+		if shadow.append_previewers.iter().any(|r| r.name.as_ref().is_some_and(|p| p.is_wildcard())) {
+			shadow.previewers.retain(|r| !r.name.as_ref().is_some_and(|p| p.is_wildcard()));
+		}
+
 		Preset::mix(&mut shadow.preloaders, shadow.prepend_preloaders, shadow.append_preloaders);
 		Preset::mix(&mut shadow.previewers, shadow.prepend_previewers, shadow.append_previewers);
 

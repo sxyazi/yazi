@@ -35,6 +35,9 @@ impl Pattern {
 			path.file_name().map_or_else(|| path.to_string_lossy(), |n| n.to_string_lossy())
 		})
 	}
+
+	#[inline]
+	pub fn is_wildcard(&self) -> bool { self.inner.as_str() == "*" || self.inner.as_str() == "*/" }
 }
 
 impl TryFrom<&str> for Pattern {
