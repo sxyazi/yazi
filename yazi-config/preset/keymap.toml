@@ -222,10 +222,12 @@ keymap = [
 	{ on = [ "<A-f>" ], exec = "forward --end-of-word", desc = "Move forward to the end of the current or next word" },
 
 	# Line-wise movement
-	{ on = [ "0" ],     exec = "move -999", desc = "Move to the BOL" },
-	{ on = [ "$" ],     exec = "move 999",  desc = "Move to the EOL" },
-	{ on = [ "<C-a>" ], exec = "move -999", desc = "Move to the BOL" },
-	{ on = [ "<C-e>" ], exec = "move 999",  desc = "Move to the EOL" },
+	{ on = [ "0" ],      exec = "move -999", desc = "Move to the BOL" },
+	{ on = [ "$" ],      exec = "move 999",  desc = "Move to the EOL" },
+	{ on = [ "<C-a>" ],  exec = "move -999", desc = "Move to the BOL" },
+	{ on = [ "<C-e>" ],  exec = "move 999",  desc = "Move to the EOL" },
+	{ on = [ "<Home>" ], exec = "move -999", desc = "Move to the BOL" },
+	{ on = [ "<End>" ],  exec = "move 999",  desc = "Move to the EOL" },
 
 	# Delete
 	{ on = [ "<Backspace>" ], exec = "backspace",	        desc = "Delete the character before the cursor" },
