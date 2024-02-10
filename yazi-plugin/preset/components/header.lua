@@ -9,7 +9,7 @@ function Header:cwd()
 	if not cwd.is_search then
 		span = ui.Span(ya.readable_path(tostring(cwd)))
 	else
-		span = ui.Span(string.format("%s (search: %s)", ya.readable_path(tostring(cwd)), cwd.frag))
+		span = ui.Span(string.format("%s (search: %s)", ya.readable_path(tostring(cwd)), cwd:frag()))
 	end
 	return span:style(THEME.manager.cwd)
 end

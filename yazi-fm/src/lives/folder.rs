@@ -7,8 +7,9 @@ use yazi_plugin::{bindings::Cast, url::Url};
 use super::{File, Files, SCOPE};
 
 pub(super) struct Folder {
-	inner:  *const yazi_core::folder::Folder,
 	window: Range<usize>,
+	inner:  *const yazi_core::folder::Folder,
+	tab:    *const yazi_core::tab::Tab,
 }
 
 impl Deref for Folder {
@@ -20,8 +21,9 @@ impl Deref for Folder {
 impl Folder {
 	#[inline]
 	pub(super) fn make(
-		inner: &yazi_core::folder::Folder,
 		window: Option<Range<usize>>,
+		inner: &yazi_core::folder::Folder,
+		tab: &yazi_core::tab::Tab,
 	) -> mlua::Result<AnyUserData<'static>> {
 		let window = match window {
 			Some(w) => w,
@@ -31,20 +33,20 @@ impl Folder {
 			}
 		};
 
-		SCOPE.create_any_userdata(Self { inner, window })
+		SCOPE.create_any_userdata(Self { window, inner, tab })
 	}
 
 	pub(super) fn register(lua: &Lua) -> mlua::Result<()> {
 		lua.register_userdata_type::<Self>(|reg| {
 			reg.add_field_method_get("cwd", |lua, me| Url::cast(lua, me.cwd.clone()));
-			reg.add_field_method_get("files", |_, me| Files::make(me, 0..me.files.len()));
+			reg.add_field_method_get("files", |_, me| Files::make(0..me.files.len(), me, me.tab()));
 			reg.add_field_method_get("stage", |lua, me| lua.create_any_userdata(me.stage));
-			reg.add_field_method_get("window", |_, me| Files::make(me, me.window.clone()));
+			reg.add_field_method_get("window", |_, me| Files::make(me.window.clone(), me, me.tab()));
 
 			reg.add_field_method_get("offset", |_, me| Ok(me.offset));
 			reg.add_field_method_get("cursor", |_, me| Ok(me.cursor));
 			reg.add_field_method_get("hovered", |_, me| {
-				me.hovered().map(|_| File::make(me.cursor, me)).transpose()
+				me.hovered().map(|_| File::make(me.cursor, me, me.tab())).transpose()
 			});
 		})?;
 
@@ -61,4 +63,7 @@ impl Folder {
 
 		Ok(())
 	}
+
+	#[inline]
+	fn tab(&self) -> &yazi_core::tab::Tab { unsafe { &*self.tab } }
 }

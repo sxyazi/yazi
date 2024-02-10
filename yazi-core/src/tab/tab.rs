@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::BTreeMap};
+use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}};
 
 use anyhow::Result;
 use tokio::task::JoinHandle;
@@ -15,6 +15,7 @@ pub struct Tab {
 
 	pub backstack: Backstack<Url>,
 	pub history:   BTreeMap<Url, Folder>,
+	pub selected:  BTreeSet<Url>,
 
 	pub preview:       Preview,
 	pub finder:        Option<Finder>,
@@ -32,6 +33,7 @@ impl From<Url> for Tab {
 
 			backstack: Backstack::new(url),
 			history: Default::default(),
+			selected: Default::default(),
 
 			preview: Default::default(),
 			finder: None,
@@ -47,26 +49,42 @@ impl From<&Url> for Tab {
 }
 
 impl Tab {
-	// --- Mode
-	#[inline]
-	pub fn in_selecting(&self) -> bool { self.mode.is_visual() || self.current.files.has_selected() }
-
 	// --- Current
+	#[inline]
+	pub fn in_selecting(&self) -> bool {
+		!self.selected.is_empty() || self.mode.visual().is_some_and(|(_, indices)| !indices.is_empty())
+	}
+
 	pub fn selected(&self) -> Vec<&File> {
 		let pending = self.mode.visual().map(|(_, p)| Cow::Borrowed(p)).unwrap_or_default();
-		let selected = self.current.files.selected(&pending, self.mode.is_unset());
-
-		if selected.is_empty() {
-			self.current.hovered().map(|h| vec![h]).unwrap_or_default()
-		} else {
-			selected
+		let is_unset = self.mode.is_unset();
+		if self.selected.is_empty() && (is_unset || pending.is_empty()) {
+			return vec![];
 		}
+
+		let selected: BTreeSet<_> = self.selected.iter().collect();
+		let pending: BTreeSet<_> =
+			pending.iter().filter_map(|&i| self.current.files.get(i)).map(|f| &f.url).collect();
+
+		let urls: BTreeSet<_> = if is_unset {
+			selected.difference(&pending).copied().collect()
+		} else {
+			selected.union(&pending).copied().collect()
+		};
+
+		let mut items = Vec::with_capacity(urls.len());
+		for item in self.current.files.iter() {
+			if urls.contains(&item.url) {
+				items.push(item);
+				if items.len() == urls.len() {
+					break;
+				}
+			}
+		}
+		items
 	}
 
 	// --- History
-	#[inline]
-	pub fn history(&self, url: &Url) -> Option<&Folder> { self.history.get(url) }
-
 	#[inline]
 	pub fn history_new(&mut self, url: &Url) -> Folder {
 		self.history.remove(url).unwrap_or_else(|| Folder::from(url))

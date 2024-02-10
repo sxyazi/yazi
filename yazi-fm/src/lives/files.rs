@@ -5,8 +5,9 @@ use mlua::{AnyUserData, Lua, MetaMethod, UserDataMethods};
 use super::{File, SCOPE};
 
 pub(super) struct Files {
-	folder: *const yazi_core::folder::Folder,
 	window: Range<usize>,
+	folder: *const yazi_core::folder::Folder,
+	tab:    *const yazi_core::tab::Tab,
 }
 
 impl Deref for Files {
@@ -18,10 +19,11 @@ impl Deref for Files {
 impl Files {
 	#[inline]
 	pub(super) fn make(
-		folder: &yazi_core::folder::Folder,
 		window: Range<usize>,
+		folder: &yazi_core::folder::Folder,
+		tab: &yazi_core::tab::Tab,
 	) -> mlua::Result<AnyUserData<'static>> {
-		SCOPE.create_any_userdata(Self { folder, window })
+		SCOPE.create_any_userdata(Self { folder, window, tab })
 	}
 
 	pub(super) fn register(lua: &Lua) -> mlua::Result<()> {
@@ -33,7 +35,7 @@ impl Files {
 				if idx > me.window.end || idx == 0 {
 					Ok(None)
 				} else {
-					Some(File::make(idx - 1, me.folder())).transpose()
+					Some(File::make(idx - 1, me.folder(), me.tab())).transpose()
 				}
 			});
 		})?;
@@ -43,4 +45,7 @@ impl Files {
 
 	#[inline]
 	fn folder(&self) -> &yazi_core::folder::Folder { unsafe { &*self.folder } }
+
+	#[inline]
+	fn tab(&self) -> &yazi_core::tab::Tab { unsafe { &*self.tab } }
 }
