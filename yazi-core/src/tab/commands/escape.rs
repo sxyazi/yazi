@@ -38,13 +38,11 @@ impl Tab {
 		};
 
 		let state = self.mode.is_select();
-		for i in indices {
-			if let Some(file) = self.current.files.get(*i) {
-				if state {
-					self.selected.insert(file.url.clone());
-				} else {
-					self.selected.remove(&file.url);
-				}
+		for f in indices.iter().filter_map(|i| self.current.files.get(*i)) {
+			if state {
+				self.selected.insert(f.url());
+			} else {
+				self.selected.remove(&f.url);
 			}
 		}
 

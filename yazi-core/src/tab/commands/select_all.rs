@@ -26,20 +26,18 @@ impl Tab {
 		let mut b = false;
 		match opt.into().state {
 			Some(true) => {
-				for file in self.current.files.iter() {
-					b |= self.selected.insert(file.url());
+				for f in self.current.files.iter() {
+					b |= self.selected.insert(f.url());
 				}
 			}
 			Some(false) => {
-				for file in self.current.files.iter() {
-					b |= self.selected.remove(&file.url);
+				for f in self.current.files.iter() {
+					b |= self.selected.remove(&f.url);
 				}
 			}
 			None => {
-				for file in self.current.files.iter() {
-					if !self.selected.remove(&file.url) {
-						b |= self.selected.insert(file.url());
-					}
+				for f in self.current.files.iter() {
+					b |= self.selected.remove(&f.url) || self.selected.insert(f.url());
 				}
 			}
 		}

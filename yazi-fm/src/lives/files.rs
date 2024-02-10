@@ -23,7 +23,7 @@ impl Files {
 		folder: &yazi_core::folder::Folder,
 		tab: &yazi_core::tab::Tab,
 	) -> mlua::Result<AnyUserData<'static>> {
-		SCOPE.create_any_userdata(Self { folder, window, tab })
+		SCOPE.create_any_userdata(Self { window, folder, tab })
 	}
 
 	pub(super) fn register(lua: &Lua) -> mlua::Result<()> {

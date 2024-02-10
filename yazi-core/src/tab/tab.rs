@@ -59,7 +59,7 @@ impl Tab {
 		let pending = self.mode.visual().map(|(_, p)| Cow::Borrowed(p)).unwrap_or_default();
 		let is_unset = self.mode.is_unset();
 		if self.selected.is_empty() && (is_unset || pending.is_empty()) {
-			return vec![];
+			return self.current.hovered().map(|h| vec![h]).unwrap_or_default();
 		}
 
 		let selected: BTreeSet<_> = self.selected.iter().collect();
@@ -81,7 +81,10 @@ impl Tab {
 				}
 			}
 		}
-		items
+		Some(items)
+			.filter(|v| !v.is_empty())
+			.or_else(|| self.current.hovered().map(|h| vec![h]))
+			.unwrap_or_default()
 	}
 
 	// --- History
