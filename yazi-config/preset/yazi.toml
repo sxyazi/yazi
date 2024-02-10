@@ -178,6 +178,11 @@ quit_title  = "{n} task{s} running, sure to quit? (y/N)"
 quit_origin = "top-center"
 quit_offset = [ 0, 2, 50, 3 ]
 
+# zoxide
+zoxide_title =  "Zoxide query"
+zoxide_origin = "top-center"
+zoxide_offset = [ 0, 2, 50, 3 ]
+
 [select]
 open_title  = "Open with:"
 open_origin = "hovered"
