@@ -13,11 +13,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: stable
-          components: clippy
-
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup component add clippy
       - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
 
@@ -31,10 +29,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: stable
-          components: rustfmt
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup component add rustfmt --toolchain nightly
 
       - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
