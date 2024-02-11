@@ -31,7 +31,7 @@ jobs:
 
       - name: Setup Rust toolchain
         run: |
-          rustup toolchain install stable --profile minimal
+          rustup toolchain install nightly --profile minimal
           rustup component add rustfmt --toolchain nightly
 
       - name: Setup Rust cache
