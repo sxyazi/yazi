@@ -16,6 +16,7 @@ jobs:
         run: |
           rustup toolchain install stable --profile minimal
           rustup component add clippy
+
       - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
 
@@ -37,4 +38,4 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Rustfmt
-        run: cargo fmt --all -- --check
+        run: cargo +nightly fmt --all -- --check
