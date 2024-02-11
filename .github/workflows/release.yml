@@ -9,7 +9,6 @@ jobs:
   release:
     permissions:
       contents: write
-
     strategy:
       matrix:
         include:
@@ -25,14 +24,14 @@ jobs:
             target: x86_64-pc-windows-msvc
           - os: windows-latest
             target: aarch64-pc-windows-msvc
-
     runs-on: ${{ matrix.os }}
-
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Install stable toolchain
-        run: rustup toolchain install stable --profile minimal
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
 
       - name: Add aarch64 target
         if: contains(fromJson('["aarch64-unknown-linux-gnu", "aarch64-apple-darwin", "aarch64-pc-windows-msvc"]'), matrix.target)
@@ -44,7 +43,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -yq gcc-aarch64-linux-gnu
 
-      - name: Cache dependencies
+      - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
 
       - name: Build
