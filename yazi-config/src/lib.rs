@@ -17,8 +17,8 @@ mod priority;
 mod tasks;
 pub mod theme;
 mod validation;
-mod xdg;
 pub mod which;
+mod xdg;
 
 pub use layout::*;
 pub(crate) use pattern::*;
@@ -65,5 +65,5 @@ pub fn init() {
 	THEME.with(Default::default);
 	INPUT.with(Default::default);
 	SELECT.with(Default::default);
-    WHICH.with(Default::default);
+	WHICH.with(Default::default);
 }

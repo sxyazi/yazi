@@ -42,21 +42,21 @@ impl Which {
 		render!();
 	}
 
-    pub fn show_with(&mut self, key: &Key, layer: Layer) {
-        self.layer = layer;
-        self.times = 1;
-        self.cands = KEYMAP
-            .get(layer)
-            .iter()
-            .filter(|c| c.on.len() > 1 && &c.on[0] == key)
-            .map(|c|  c.into())
-            .collect();
+	pub fn show_with(&mut self, key: &Key, layer: Layer) {
+		self.layer = layer;
+		self.times = 1;
+		self.cands = KEYMAP
+			.get(layer)
+			.iter()
+			.filter(|c| c.on.len() > 1 && &c.on[0] == key)
+			.map(|c| c.into())
+			.collect();
 
-        // sort "which"
-        self.conf.sorter().sort(&mut self.cands);
+		// sort "which"
+		self.conf.sorter().sort(&mut self.cands);
 
-        self.visible = true;
-        self.silent = false;
-        render!();
-    }
+		self.visible = true;
+		self.silent = false;
+		render!();
+	}
 }

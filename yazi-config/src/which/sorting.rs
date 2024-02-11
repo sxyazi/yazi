@@ -8,37 +8,36 @@ use serde::{Deserialize, Serialize};
 pub enum SortBy {
 	#[default]
 	None,
-    Key,
-    Desc,
+	Key,
+	Desc,
 }
 
 impl FromStr for SortBy {
-    type Err = anyhow::Error;
+	type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "none" => Self::None,
-            "key" => Self::Key,
-            "desc" => Self::Desc,
-            _ => bail!("Invalid sort option: {s}")
-        })
-    }
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		Ok(match s {
+			"none" => Self::None,
+			"key" => Self::Key,
+			"desc" => Self::Desc,
+			_ => bail!("Invalid sort option: {s}"),
+		})
+	}
 }
 
 impl TryFrom<String> for SortBy {
-    type Error = anyhow::Error;
+	type Error = anyhow::Error;
 
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        Self::from_str(&value)
-    }
+	fn try_from(value: String) -> Result<Self, Self::Error> { Self::from_str(&value) }
 }
 
 impl ToString for SortBy {
-    fn to_string(&self) -> String {
-        match self {
-            Self::None => "none",
-            Self::Key => "key",
-            Self::Desc => "desc",
-        }.to_string()
-    }
+	fn to_string(&self) -> String {
+		match self {
+			Self::None => "none",
+			Self::Key => "key",
+			Self::Desc => "desc",
+		}
+		.to_string()
+	}
 }

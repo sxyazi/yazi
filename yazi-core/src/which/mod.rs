@@ -1,8 +1,8 @@
 mod commands;
-mod which;
 mod config;
 mod sorter;
+mod which;
 
-pub use which::*;
 pub use config::*;
 pub use sorter::*;
+pub use which::*;

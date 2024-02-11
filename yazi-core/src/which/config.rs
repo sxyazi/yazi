@@ -22,20 +22,13 @@ impl Default for Config {
 }
 
 impl Config {
-    #[allow(unused)]
-	pub(super) fn patch<F: FnOnce(&mut Self)>(&mut self, f: F) -> bool {
-		let old = self.clone();
-		f(self);
-		*self != old
-	}
 
 	#[inline]
 	pub(super) fn sorter(&self) -> WhichSorter {
-        WhichSorter {
-            by: self.sort_by,
-            sensitive: self.sort_sensitive,
-            reverse: self.sort_reverse,
-        }
+		WhichSorter {
+			by:        self.sort_by,
+			sensitive: self.sort_sensitive,
+			reverse:   self.sort_reverse,
+		}
 	}
 }
-

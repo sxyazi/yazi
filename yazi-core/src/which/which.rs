@@ -9,7 +9,7 @@ pub struct Which {
 	pub times:        usize,
 	pub cands:        Vec<ControlCow>,
 
-	pub conf:    Config,
+	pub conf: Config,
 
 	pub visible: bool,
 	pub silent:  bool,
