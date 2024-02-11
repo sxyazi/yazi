@@ -34,8 +34,10 @@ impl<'a> Executor<'a> {
 			};
 		}
 
+		on!(notify);
 		on!(plugin);
 		on!(plugin_do);
+		on!(update_notify);
 		on!(update_progress);
 		on!(resize);
 		on!(stop);

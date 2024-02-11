@@ -1,16 +1,24 @@
-use std::{io::{stdout, Stdout, Write}, mem, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}};
+use std::{io::{self, stdout, Stdout, Write}, mem, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}};
 
 use anyhow::Result;
 use crossterm::{event::{DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, terminal::{disable_raw_mode, enable_raw_mode, supports_keyboard_enhancement, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, WindowSize}};
-use ratatui::{backend::CrosstermBackend, Terminal};
+use ratatui::{backend::CrosstermBackend, buffer::Buffer, layout::Rect, CompletedFrame, Frame, Terminal};
 
 static CSI_U: AtomicBool = AtomicBool::new(false);
 
-pub struct Term(Terminal<CrosstermBackend<Stdout>>);
+pub struct Term {
+	inner:       Terminal<CrosstermBackend<Stdout>>,
+	last_area:   Rect,
+	last_buffer: Buffer,
+}
 
 impl Term {
 	pub fn start() -> Result<Self> {
-		let mut term = Self(Terminal::new(CrosstermBackend::new(stdout()))?);
+		let mut term = Self {
+			inner:       Terminal::new(CrosstermBackend::new(stdout()))?,
+			last_area:   Default::default(),
+			last_buffer: Default::default(),
+		};
 
 		enable_raw_mode()?;
 		queue!(stdout(), EnterAlternateScreen, EnableBracketedPaste, EnableFocusChange)?;
@@ -69,6 +77,32 @@ impl Term {
 		std::process::exit(f() as i32);
 	}
 
+	pub fn draw(&mut self, f: impl FnOnce(&mut Frame)) -> io::Result<CompletedFrame> {
+		let last = self.inner.draw(f)?;
+
+		self.last_area = last.area;
+		self.last_buffer = last.buffer.clone();
+		Ok(last)
+	}
+
+	pub fn draw_partial(&mut self, f: impl FnOnce(&mut Frame)) -> io::Result<CompletedFrame> {
+		self.inner.draw(|frame| {
+			let buffer = frame.buffer_mut();
+			for y in self.last_area.top()..self.last_area.bottom() {
+				for x in self.last_area.left()..self.last_area.right() {
+					let mut cell = self.last_buffer.get(x, y).clone();
+					cell.skip = false;
+					*buffer.get_mut(x, y) = cell;
+				}
+			}
+
+			f(frame);
+		})
+	}
+
+	#[inline]
+	pub fn can_partial(&mut self) -> bool { self.last_area == self.inner.get_frame().size() }
+
 	pub fn size() -> WindowSize {
 		let mut size = WindowSize { rows: 0, columns: 0, width: 0, height: 0 };
 		if let Ok(s) = crossterm::terminal::window_size() {
@@ -112,9 +146,9 @@ impl Drop for Term {
 impl Deref for Term {
 	type Target = Terminal<CrosstermBackend<Stdout>>;
 
-	fn deref(&self) -> &Self::Target { &self.0 }
+	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
 impl DerefMut for Term {
-	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.inner }
 }

@@ -12,6 +12,7 @@ pub mod folder;
 pub mod help;
 pub mod input;
 pub mod manager;
+pub mod notify;
 pub mod select;
 mod step;
 pub mod tab;

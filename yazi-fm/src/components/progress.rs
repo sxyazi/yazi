@@ -22,8 +22,8 @@ impl Progress {
 				w.render(buf);
 
 				let mut patch = Vec::with_capacity(area.width as usize * area.height as usize);
-				for x in area.left()..area.right() {
-					for y in area.top()..area.bottom() {
+				for y in area.top()..area.bottom() {
+					for x in area.left()..area.right() {
 						patch.push((x, y, mem::take(buf.get_mut(x, y))));
 					}
 				}

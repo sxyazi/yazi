@@ -14,6 +14,7 @@ mod help;
 mod input;
 mod lives;
 mod logs;
+mod notify;
 mod panic;
 mod root;
 mod router;

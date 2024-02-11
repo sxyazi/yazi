@@ -1,6 +1,6 @@
 use ratatui::layout::Rect;
 use yazi_config::popup::{Origin, Position};
-use yazi_core::{completion::Completion, help::Help, input::Input, manager::Manager, select::Select, tasks::Tasks, which::Which};
+use yazi_core::{completion::Completion, help::Help, input::Input, manager::Manager, notify::Notify, select::Select, tasks::Tasks, which::Which};
 
 pub struct Ctx {
 	pub manager:    Manager,
@@ -10,6 +10,7 @@ pub struct Ctx {
 	pub help:       Help,
 	pub completion: Completion,
 	pub which:      Which,
+	pub notify:     Notify,
 }
 
 impl Ctx {
@@ -22,6 +23,7 @@ impl Ctx {
 			help:       Default::default(),
 			completion: Default::default(),
 			which:      Default::default(),
+			notify:     Default::default(),
 		}
 	}
 
