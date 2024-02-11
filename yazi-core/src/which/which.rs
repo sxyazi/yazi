@@ -1,11 +1,15 @@
 use yazi_config::keymap::{ControlCow, Key};
 use yazi_shared::{emit, render, Layer};
 
-#[derive(Default)]
+use crate::which::Config;
+
+#[derive(Default, Debug)]
 pub struct Which {
 	pub(super) layer: Layer,
 	pub times:        usize,
 	pub cands:        Vec<ControlCow>,
+
+	pub conf:    Config,
 
 	pub visible: bool,
 	pub silent:  bool,

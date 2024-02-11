@@ -43,6 +43,7 @@ impl Control {
 	}
 }
 
+#[derive(Debug)]
 pub enum ControlCow {
 	Owned(Control),
 	Borrowed(&'static Control),

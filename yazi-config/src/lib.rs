@@ -18,6 +18,7 @@ mod tasks;
 pub mod theme;
 mod validation;
 mod xdg;
+pub mod which;
 
 pub use layout::*;
 pub(crate) use pattern::*;
@@ -43,6 +44,7 @@ pub static TASKS: RoCell<tasks::Tasks> = RoCell::new();
 pub static THEME: RoCell<theme::Theme> = RoCell::new();
 pub static INPUT: RoCell<popup::Input> = RoCell::new();
 pub static SELECT: RoCell<popup::Select> = RoCell::new();
+pub static WHICH: RoCell<which::Which> = RoCell::new();
 
 pub fn init() {
 	ARGS.with(Default::default);
@@ -63,4 +65,5 @@ pub fn init() {
 	THEME.with(Default::default);
 	INPUT.with(Default::default);
 	SELECT.with(Default::default);
+    WHICH.with(Default::default);
 }
