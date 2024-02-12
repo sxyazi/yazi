@@ -7,19 +7,12 @@ pub struct Which {
 	pub times:        usize,
 	pub cands:        Vec<ControlCow>,
 
+	// Visibility
 	pub visible: bool,
 	pub silent:  bool,
 }
 
 impl Which {
-	fn reset(&mut self) {
-		self.times = 0;
-		self.cands.clear();
-
-		self.visible = false;
-		self.silent = false;
-	}
-
 	pub fn type_(&mut self, key: Key) -> bool {
 		self.cands.retain(|c| c.on.len() > self.times && c.on[self.times] == key);
 		self.times += 1;
@@ -36,5 +29,13 @@ impl Which {
 
 		render!();
 		true
+	}
+
+	fn reset(&mut self) {
+		self.times = 0;
+		self.cands.clear();
+
+		self.visible = false;
+		self.silent = false;
 	}
 }

@@ -3,7 +3,7 @@ use std::str::FromStr;
 use yazi_config::{keymap::{Control, Key}, KEYMAP};
 use yazi_shared::{event::Cmd, render, Layer};
 
-use crate::which::Which;
+use crate::which::{Which, WhichSorter};
 
 pub struct Opt {
 	cands:  Vec<Control>,
@@ -52,6 +52,7 @@ impl Which {
 			.map(|c| c.into())
 			.collect();
 
+		WhichSorter::default().sort(&mut self.cands);
 		self.visible = true;
 		self.silent = false;
 		render!();
