@@ -5,7 +5,7 @@ use yazi_shared::event::Cmd;
 
 use super::Key;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 pub struct Control {
 	pub on:   Vec<Key>,
 	#[serde(deserialize_with = "super::exec_deserialize")]
@@ -66,6 +66,10 @@ impl Deref for ControlCow {
 			Self::Borrowed(c) => c,
 		}
 	}
+}
+
+impl Default for ControlCow {
+	fn default() -> Self { Self::Owned(Control::default()) }
 }
 
 impl ControlCow {

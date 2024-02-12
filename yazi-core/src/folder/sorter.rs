@@ -12,9 +12,9 @@ pub struct FilesSorter {
 }
 
 impl FilesSorter {
-	pub(super) fn sort(&self, items: &mut Vec<File>, sizes: &BTreeMap<Url, u64>) -> bool {
+	pub(super) fn sort(&self, items: &mut Vec<File>, sizes: &BTreeMap<Url, u64>) {
 		if items.is_empty() {
-			return false;
+			return;
 		}
 
 		let by_alphabetical = |a: &File, b: &File| {
@@ -30,7 +30,7 @@ impl FilesSorter {
 		};
 
 		match self.by {
-			SortBy::None => return false,
+			SortBy::None => {}
 			SortBy::Modified => items.sort_unstable_by(|a, b| {
 				let ord = self.cmp(a.modified, b.modified, self.promote(a, b));
 				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
@@ -60,7 +60,6 @@ impl FilesSorter {
 				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
 			}),
 		}
-		true
 	}
 
 	fn sort_naturally(&self, items: &mut Vec<File>) {

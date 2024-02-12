@@ -1,3 +1,5 @@
+use std::{borrow::Cow, mem};
+
 use yazi_config::{keymap::ControlCow, which::SortBy};
 use yazi_shared::natsort;
 
@@ -9,30 +11,31 @@ pub struct WhichSorter {
 }
 
 impl WhichSorter {
-	pub(super) fn sort(&self, items: &mut Vec<ControlCow>) -> bool {
-		if items.is_empty() {
-			return false;
+	pub(super) fn sort(&self, items: &mut Vec<ControlCow>) {
+		if self.by == SortBy::None || items.is_empty() {
+			return;
 		}
 
-		let by_alphabetical = |a: &str, b: &str| {
-			let ordering = natsort(a.as_bytes(), b.as_bytes(), !self.sensitive);
+		let mut indices = Vec::with_capacity(items.len());
+		let mut entities = Vec::with_capacity(items.len());
+		for (i, ctrl) in items.iter().enumerate() {
+			indices.push(i);
+			entities.push(match self.by {
+				SortBy::None => unreachable!(),
+				SortBy::Key => Cow::Owned(ctrl.on()),
+				SortBy::Desc => ctrl.desc_or_exec(),
+			});
+		}
+
+		indices.sort_unstable_by(|&a, &b| {
+			let ordering = natsort(entities[a].as_bytes(), entities[b].as_bytes(), !self.sensitive);
 			if self.reverse { ordering.reverse() } else { ordering }
-		};
+		});
 
-		match self.by {
-			SortBy::None => return false,
-			SortBy::Key => items.sort_unstable_by(|a, b| {
-				let a = a.on.iter().map(|c| c.to_string()).collect::<String>();
-				let b = b.on.iter().map(|c| c.to_string()).collect::<String>();
-				by_alphabetical(&a, &b)
-			}),
-			SortBy::Desc => items.sort_unstable_by(|a, b| {
-				// what if description isn't present (need to check if it's mandatory or not)
-				// in case if it is not present, should I just panic ?
-				by_alphabetical(a.desc.as_ref().unwrap(), b.desc.as_ref().unwrap())
-			}),
+		let mut new = Vec::with_capacity(indices.len());
+		for i in indices {
+			new.push(mem::take(&mut items[i]));
 		}
-
-		true
+		*items = new;
 	}
 }

@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 use super::SortBy;
-use crate::{validation::check_validation, MERGED_YAZI};
+use crate::MERGED_YAZI;
 
 #[derive(Debug, Deserialize, Serialize, Validate)]
 pub struct Which {
@@ -19,9 +19,6 @@ impl Default for Which {
 			which: Which,
 		}
 
-		let which = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().which;
-
-		check_validation(which.validate());
-		which
+		toml::from_str::<Outer>(&MERGED_YAZI).unwrap().which
 	}
 }
