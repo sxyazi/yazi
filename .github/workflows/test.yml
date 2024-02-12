@@ -2,9 +2,9 @@ name: Test
 
 on:
   push:
-    branches: ["main"]
+    branches: [main]
   pull_request:
-    branches: ["main"]
+    branches: [main]
 
 env:
   CARGO_TERM_COLOR: always
@@ -14,20 +14,18 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-
     runs-on: ${{ matrix.os }}
-
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Install stable toolchain
+      - name: Setup Rust toolchain
         run: rustup toolchain install stable --profile minimal
 
-      - name: Cache dependencies
+      - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
 
       - name: Build
         run: cargo build --verbose
 
-      - name: Run tests
+      - name: Test
         run: cargo test --verbose

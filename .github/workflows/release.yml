@@ -9,7 +9,6 @@ jobs:
   release:
     permissions:
       contents: write
-
     strategy:
       matrix:
         include:
@@ -25,13 +24,11 @@ jobs:
             target: x86_64-pc-windows-msvc
           - os: windows-latest
             target: aarch64-pc-windows-msvc
-
     runs-on: ${{ matrix.os }}
-
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Install stable toolchain
+      - name: Setup Rust toolchain
         run: rustup toolchain install stable --profile minimal
 
       - name: Add aarch64 target
@@ -44,7 +41,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -yq gcc-aarch64-linux-gnu
 
-      - name: Cache dependencies
+      - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
 
       - name: Build
