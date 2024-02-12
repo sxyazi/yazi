@@ -139,7 +139,7 @@ pub fn permissions(m: libc::mode_t) -> String {
 	s
 }
 
-// Find the max common root of a list of files
+// Find the max common root in a list of files
 // e.g. /a/b/c, /a/b/d       -> /a/b
 //      /aa/bb/cc, /aa/dd/ee -> /aa
 pub fn max_common_root(files: &[impl AsRef<Path>]) -> PathBuf {
