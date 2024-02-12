@@ -52,9 +52,7 @@ impl Which {
 			.map(|c| c.into())
 			.collect();
 
-		// sort "which"
-		self.conf.sorter().sort(&mut self.cands);
-
+		self.sorter().sort(&mut self.cands);
 		self.visible = true;
 		self.silent = false;
 		render!();

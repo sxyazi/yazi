@@ -1,7 +1,7 @@
-use yazi_config::keymap::{ControlCow, Key};
+use yazi_config::{keymap::{ControlCow, Key}, which::SortBy};
 use yazi_shared::{emit, render, Layer};
 
-use crate::which::Config;
+use super::WhichSorter;
 
 #[derive(Default, Debug)]
 pub struct Which {
@@ -9,21 +9,17 @@ pub struct Which {
 	pub times:        usize,
 	pub cands:        Vec<ControlCow>,
 
-	pub conf: Config,
+	// Sorting
+	sort_by:        SortBy,
+	sort_sensitive: bool,
+	sort_reverse:   bool,
 
+	// Visibility
 	pub visible: bool,
 	pub silent:  bool,
 }
 
 impl Which {
-	fn reset(&mut self) {
-		self.times = 0;
-		self.cands.clear();
-
-		self.visible = false;
-		self.silent = false;
-	}
-
 	pub fn type_(&mut self, key: Key) -> bool {
 		self.cands.retain(|c| c.on.len() > self.times && c.on[self.times] == key);
 		self.times += 1;
@@ -40,5 +36,21 @@ impl Which {
 
 		render!();
 		true
+	}
+
+	pub(super) fn sorter(&self) -> WhichSorter {
+		WhichSorter {
+			by:        self.sort_by,
+			sensitive: self.sort_sensitive,
+			reverse:   self.sort_reverse,
+		}
+	}
+
+	fn reset(&mut self) {
+		self.times = 0;
+		self.cands.clear();
+
+		self.visible = false;
+		self.silent = false;
 	}
 }

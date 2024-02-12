@@ -2,11 +2,6 @@
 # If you encounter any issues, please make an issue at https://github.com/yazi-rs/schemas.
 "$schema" = "https://yazi-rs.github.io/schemas/yazi.json"
 
-[which]
-sort_by = "none"
-sort_sensitive = false
-sort_reverse = false
-
 [manager]
 ratio          = [ 1, 4, 3 ]
 sort_by        = "alphabetical"
@@ -187,6 +182,11 @@ quit_offset = [ 0, 2, 50, 3 ]
 open_title  = "Open with:"
 open_origin = "hovered"
 open_offset = [ 0, 1, 50, 7 ]
+
+[which]
+sort_by        = "none"
+sort_sensitive = false
+sort_reverse   = false
 
 [log]
 enabled = false
