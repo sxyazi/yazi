@@ -1,13 +1,23 @@
 use std::{borrow::Cow, mem};
 
-use yazi_config::{keymap::ControlCow, which::SortBy};
+use yazi_config::{keymap::ControlCow, which::SortBy, WHICH};
 use yazi_shared::natsort;
 
-#[derive(Clone, Copy, Default, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct WhichSorter {
 	pub by:        SortBy,
 	pub sensitive: bool,
 	pub reverse:   bool,
+}
+
+impl Default for WhichSorter {
+	fn default() -> Self {
+		Self {
+			by:        WHICH.sort_by,
+			sensitive: WHICH.sort_sensitive,
+			reverse:   WHICH.sort_reverse,
+		}
+	}
 }
 
 impl WhichSorter {
@@ -32,10 +42,6 @@ impl WhichSorter {
 			if self.reverse { ordering.reverse() } else { ordering }
 		});
 
-		let mut new = Vec::with_capacity(indices.len());
-		for i in indices {
-			new.push(mem::take(&mut items[i]));
-		}
-		*items = new;
+		*items = indices.into_iter().map(|i| mem::take(&mut items[i])).collect();
 	}
 }

@@ -1,18 +1,11 @@
-use yazi_config::{keymap::{ControlCow, Key}, which::SortBy};
+use yazi_config::keymap::{ControlCow, Key};
 use yazi_shared::{emit, render, Layer};
 
-use super::WhichSorter;
-
-#[derive(Default, Debug)]
+#[derive(Default)]
 pub struct Which {
 	pub(super) layer: Layer,
 	pub times:        usize,
 	pub cands:        Vec<ControlCow>,
-
-	// Sorting
-	sort_by:        SortBy,
-	sort_sensitive: bool,
-	sort_reverse:   bool,
 
 	// Visibility
 	pub visible: bool,
@@ -36,14 +29,6 @@ impl Which {
 
 		render!();
 		true
-	}
-
-	pub(super) fn sorter(&self) -> WhichSorter {
-		WhichSorter {
-			by:        self.sort_by,
-			sensitive: self.sort_sensitive,
-			reverse:   self.sort_reverse,
-		}
 	}
 
 	fn reset(&mut self) {

@@ -80,11 +80,7 @@ impl FilesSorter {
 			if self.reverse { ordering.reverse() } else { ordering }
 		});
 
-		let mut new = Vec::with_capacity(indices.len());
-		for i in indices {
-			new.push(mem::take(&mut items[i]));
-		}
-		*items = new;
+		*items = indices.into_iter().map(|i| mem::take(&mut items[i])).collect();
 	}
 
 	#[inline(always)]
