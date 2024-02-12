@@ -230,7 +230,7 @@ keymap = [
 	{ on = [ "<End>" ],  exec = "move 999",  desc = "Move to the EOL" },
 
 	# Delete
-	{ on = [ "<Backspace>" ], exec = "backspace",	      desc = "Delete the character before the cursor" },
+	{ on = [ "<Backspace>" ], exec = "backspace",	        desc = "Delete the character before the cursor" },
 	{ on = [ "<Delete>" ],    exec = "backspace --under", desc = "Delete the character under the cursor" },
 	{ on = [ "<C-h>" ],       exec = "backspace",         desc = "Delete the character before the cursor" },
 	{ on = [ "<C-d>" ],       exec = "backspace --under", desc = "Delete the character under the cursor" },
