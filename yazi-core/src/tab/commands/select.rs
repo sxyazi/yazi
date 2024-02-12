@@ -1,14 +1,18 @@
-use yazi_shared::{event::Cmd, render};
+use std::borrow::Cow;
+
+use yazi_shared::{event::Cmd, fs::Url, render};
 
 use crate::tab::Tab;
 
-pub struct Opt {
+pub struct Opt<'a> {
+	url:   Option<Cow<'a, Url>>,
 	state: Option<bool>,
 }
 
-impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self {
+impl<'a> From<Cmd> for Opt<'a> {
+	fn from(mut c: Cmd) -> Self {
 		Self {
+			url:   c.take_name("url").map(|s| Cow::Owned(Url::from(s))),
 			state: match c.named.get("state").map(|s| s.as_str()) {
 				Some("true") => Some(true),
 				Some("false") => Some(false),
@@ -17,18 +21,19 @@ impl From<Cmd> for Opt {
 		}
 	}
 }
-impl From<Option<bool>> for Opt {
-	fn from(state: Option<bool>) -> Self { Self { state } }
-}
 
-impl Tab {
-	pub fn select(&mut self, opt: impl Into<Opt>) {
-		if let Some(u) = self.current.hovered().map(|h| h.url()) {
-			render!(self.current.files.select(&u, opt.into().state));
-		}
-	}
+impl<'a> Tab {
+	pub fn select(&mut self, opt: impl Into<Opt<'a>>) {
+		let opt = opt.into() as Opt;
+		let Some(url) = opt.url.or_else(|| self.current.hovered().map(|h| Cow::Borrowed(&h.url)))
+		else {
+			return;
+		};
 
-	pub fn select_all(&mut self, opt: impl Into<Opt>) {
-		render!(self.current.files.select_all(opt.into().state));
+		render!(match opt.state {
+			Some(true) => self.selected.insert(url.into_owned()),
+			Some(false) => self.selected.remove(&url),
+			None => self.selected.remove(&url) || self.selected.insert(url.into_owned()),
+		});
 	}
 }

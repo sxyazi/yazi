@@ -14,6 +14,7 @@ mod preview;
 mod reveal;
 mod search;
 mod select;
+mod select_all;
 mod shell;
 mod sort;
 mod visual_mode;

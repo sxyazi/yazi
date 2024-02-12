@@ -33,16 +33,30 @@ impl Tab {
 
 	#[inline]
 	fn escape_visual(&mut self) -> bool {
-		if let Some((_, indices)) = self.mode.visual() {
-			self.current.files.select_index(indices, Some(self.mode.is_select()));
-			self.mode = Mode::Normal;
-			return true;
+		let Some((_, indices)) = self.mode.visual() else {
+			return false;
+		};
+
+		let state = self.mode.is_select();
+		for f in indices.iter().filter_map(|i| self.current.files.get(*i)) {
+			if state {
+				self.selected.insert(f.url());
+			} else {
+				self.selected.remove(&f.url);
+			}
 		}
-		false
+
+		self.mode = Mode::Normal;
+		render!();
+		true
 	}
 
 	#[inline]
-	fn escape_select(&mut self) -> bool { self.current.files.select_all(Some(false)) }
+	fn escape_select(&mut self) -> bool {
+		let old = self.selected.len();
+		self.select_all(Some(false));
+		old != self.selected.len()
+	}
 
 	#[inline]
 	fn escape_filter(&mut self) -> bool {

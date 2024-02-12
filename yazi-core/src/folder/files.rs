@@ -15,7 +15,6 @@ pub struct Files {
 	pub(crate) revision: u64,
 
 	pub sizes: BTreeMap<Url, u64>,
-	selected:  BTreeSet<Url>,
 
 	sorter:      FilesSorter,
 	filter:      Option<Filter>,
@@ -31,8 +30,7 @@ impl Default for Files {
 			version:  Default::default(),
 			revision: Default::default(),
 
-			sizes:    Default::default(),
-			selected: Default::default(),
+			sizes: Default::default(),
 
 			sorter:      Default::default(),
 			filter:      Default::default(),
@@ -97,67 +95,6 @@ impl Files {
 }
 
 impl Files {
-	#[inline]
-	pub fn select(&mut self, url: &Url, state: Option<bool>) -> bool {
-		let old = self.selected.contains(url);
-		let new = state.unwrap_or(!old);
-
-		if new == old {
-			return false;
-		}
-
-		if new {
-			self.selected.insert(url.to_owned());
-		} else {
-			self.selected.remove(url);
-		}
-		true
-	}
-
-	pub fn select_all(&mut self, state: Option<bool>) -> bool {
-		match state {
-			Some(true) => {
-				let b = if self.selected.len() < self.items.len() {
-					true
-				} else {
-					self.items.iter().any(|f| !self.selected.contains(&f.url))
-				};
-
-				self.selected = self.iter().map(|f| f.url()).collect();
-				b
-			}
-			Some(false) => {
-				if self.selected.is_empty() {
-					return false;
-				}
-
-				let b = self.items.iter().any(|f| self.selected.contains(&f.url));
-				self.selected.clear();
-				b
-			}
-			None => {
-				for item in &self.items {
-					if self.selected.contains(&item.url) {
-						self.selected.remove(&item.url);
-					} else {
-						self.selected.insert(item.url());
-					}
-				}
-				!self.items.is_empty()
-			}
-		}
-	}
-
-	pub fn select_index(&mut self, indices: &BTreeSet<usize>, state: Option<bool>) -> bool {
-		let mut applied = false;
-		let paths: Vec<_> = self.pick(indices).iter().map(|f| f.url()).collect();
-
-		for path in paths {
-			applied |= self.select(&path, state);
-		}
-		applied
-	}
-
 	pub fn update_full(&mut self, files: Vec<File>) {
 		self.ticket = FILES_TICKET.fetch_add(1, Ordering::Relaxed);
 
@@ -379,61 +316,12 @@ impl Files {
 
 impl Files {
 	// --- Items
-	pub fn pick(&self, indices: &BTreeSet<usize>) -> Vec<&File> {
-		let mut items = Vec::with_capacity(indices.len());
-		for (i, item) in self.iter().enumerate() {
-			if indices.contains(&i) {
-				items.push(item);
-			}
-		}
-		items
-	}
-
 	#[inline]
 	pub fn position(&self, url: &Url) -> Option<usize> { self.iter().position(|f| &f.url == url) }
 
 	// --- Ticket
 	#[inline]
 	pub fn ticket(&self) -> u64 { self.ticket }
-
-	// --- Selected
-	pub fn selected(&self, pending: &BTreeSet<usize>, unset: bool) -> Vec<&File> {
-		if self.selected.is_empty() && (unset || pending.is_empty()) {
-			return vec![];
-		}
-
-		let selected: BTreeSet<_> = self.selected.iter().collect();
-		let pending: BTreeSet<_> =
-			pending.iter().filter_map(|&i| self.items.get(i)).map(|f| &f.url).collect();
-
-		let selected: BTreeSet<_> = if unset {
-			selected.difference(&pending).cloned().collect()
-		} else {
-			selected.union(&pending).cloned().collect()
-		};
-
-		let mut items = Vec::with_capacity(selected.len());
-		for item in &self.items {
-			if selected.contains(&item.url) {
-				items.push(item);
-			}
-			if items.len() == selected.len() {
-				break;
-			}
-		}
-		items
-	}
-
-	#[inline]
-	pub fn is_selected(&self, url: &Url) -> bool { self.selected.contains(url) }
-
-	#[inline]
-	pub fn has_selected(&self) -> bool {
-		if self.selected.is_empty() {
-			return false;
-		}
-		self.iter().any(|f| self.selected.contains(&f.url))
-	}
 
 	// --- Sorter
 	#[inline]

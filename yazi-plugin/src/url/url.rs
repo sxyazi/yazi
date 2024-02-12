@@ -9,17 +9,26 @@ pub struct Url;
 impl Url {
 	pub fn register(lua: &Lua) -> mlua::Result<()> {
 		lua.register_userdata_type::<yazi_shared::fs::Url>(|reg| {
-			reg.add_field_method_get("frag", |lua, me| lua.create_string(me.frag()));
+			reg.add_method("frag", |lua, me, ()| lua.create_string(me.frag()));
 			reg.add_field_method_get("is_regular", |_, me| Ok(me.is_regular()));
 			reg.add_field_method_get("is_search", |_, me| Ok(me.is_search()));
 			reg.add_field_method_get("is_archive", |_, me| Ok(me.is_archive()));
 
-			reg.add_meta_method(MetaMethod::Eq, |_, me, other: UrlRef| Ok(me == &*other));
+			reg.add_method("name", |lua, me, ()| {
+				me.file_name().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
+			});
+			reg.add_method("stem", |lua, me, ()| {
+				me.file_stem().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
+			});
+			reg.add_method("join", |lua, me, other: UrlRef| Self::cast(lua, me.join(&*other)));
+			reg.add_method("parent", |lua, me, ()| {
+				me.parent_url().map(|u| Self::cast(lua, u)).transpose()
+			});
 
+			reg.add_meta_method(MetaMethod::Eq, |_, me, other: UrlRef| Ok(me == &*other));
 			reg.add_meta_method(MetaMethod::ToString, |lua, me, ()| {
 				lua.create_string(me.as_os_str().as_encoded_bytes())
 			});
-
 			reg.add_meta_method(MetaMethod::Concat, |lua, me, other: mlua::String| {
 				let me = me.as_os_str().as_encoded_bytes();
 				let other = other.as_bytes();

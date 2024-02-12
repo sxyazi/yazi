@@ -29,10 +29,10 @@ impl Preview {
 					.current
 					.hovered()
 					.filter(|&f| f.is_dir())
-					.and_then(|f| me.tab().history(&f.url))
+					.and_then(|f| me.tab().history.get(&f.url))
 					.map(|f| {
 						let limit = LAYOUT.load().preview.height as usize;
-						Folder::make(f, Some(me.skip..f.files.len().min(me.skip + limit)))
+						Folder::make(Some(me.skip..f.files.len().min(me.skip + limit)), f, me.tab())
 					})
 					.transpose()
 			});
