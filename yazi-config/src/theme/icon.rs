@@ -1,7 +1,7 @@
 use serde::{Deserialize, Deserializer};
 
 use super::Style;
-use crate::{theme::{Color, StyleShadow}, Pattern};
+use crate::{theme::{Color, StyleShadow}, Pattern, preset::Preset};
 
 pub struct Icon {
 	pub name:  Pattern,
@@ -17,6 +17,10 @@ impl Icon {
 		#[derive(Deserialize)]
 		struct IconOuter {
 			rules: Vec<IconRule>,
+			#[serde(default)]
+            prepend_rules: Vec<IconRule>,
+			#[serde(default)]
+            append_rules: Vec<IconRule>,
 		}
 		#[derive(Deserialize)]
 		struct IconRule {
@@ -26,8 +30,13 @@ impl Icon {
 			fg: Option<Color>,
 		}
 
+		let mut outer = IconOuter::deserialize(deserializer)?;
+
+		#[rustfmt::skip]
+		Preset::mix(&mut outer.rules, outer.prepend_rules, outer.append_rules);
+
 		Ok(
-			IconOuter::deserialize(deserializer)?
+			outer
 				.rules
 				.into_iter()
 				.map(|r| Icon {
