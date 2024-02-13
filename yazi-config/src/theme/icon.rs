@@ -1,15 +1,11 @@
 use serde::{Deserialize, Deserializer};
 
 use super::Style;
-use crate::{
-	preset::Preset,
-	theme::{Color, StyleShadow},
-	Pattern,
-};
+use crate::{preset::Preset, theme::{Color, StyleShadow}, Pattern};
 
 pub struct Icon {
-	pub name: Pattern,
-	pub text: String,
+	pub name:  Pattern,
+	pub text:  String,
 	pub style: Style,
 }
 
@@ -20,11 +16,11 @@ impl Icon {
 	{
 		#[derive(Deserialize)]
 		struct IconOuter {
-			rules: Vec<IconRule>,
+			rules:         Vec<IconRule>,
 			#[serde(default)]
 			prepend_rules: Vec<IconRule>,
 			#[serde(default)]
-			append_rules: Vec<IconRule>,
+			append_rules:  Vec<IconRule>,
 		}
 		#[derive(Deserialize)]
 		struct IconRule {
@@ -44,8 +40,8 @@ impl Icon {
 				.rules
 				.into_iter()
 				.map(|r| Icon {
-					name: r.name,
-					text: r.text,
+					name:  r.name,
+					text:  r.text,
 					style: StyleShadow { fg: r.fg, ..Default::default() }.into(),
 				})
 				.collect(),
