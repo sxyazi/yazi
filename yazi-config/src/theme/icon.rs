@@ -31,8 +31,6 @@ impl Icon {
 		}
 
 		let mut outer = IconOuter::deserialize(deserializer)?;
-
-		#[rustfmt::skip]
 		Preset::mix(&mut outer.rules, outer.prepend_rules, outer.append_rules);
 
 		Ok(
