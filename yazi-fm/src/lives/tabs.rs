@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use mlua::{AnyUserData, ExternalError, Lua, MetaMethod, UserDataFields, UserDataMethods};
+use mlua::{AnyUserData, Lua, MetaMethod, UserDataFields, UserDataMethods};
 
 use super::{Tab, SCOPE};
 
@@ -29,8 +29,6 @@ impl Tabs {
 			reg.add_meta_method(MetaMethod::Index, |_, me, idx: usize| {
 				if idx > me.len() || idx == 0 {
 					Ok(None)
-				} else if idx - 1 == me.idx {
-					Err("Use `active` instead of `tabs` to access the current tab".into_lua_err())
 				} else {
 					Some(Tab::make(&me[idx - 1])).transpose()
 				}
