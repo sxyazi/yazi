@@ -46,7 +46,7 @@ struct SelectedIter(btree_set::Iter<'static, yazi_shared::fs::Url>);
 
 impl SelectedIter {
 	#[inline]
-	fn make(selected: &'static BTreeSet<yazi_shared::fs::Url>) -> mlua::Result<AnyUserData<'static>> {
+	fn make(selected: &BTreeSet<yazi_shared::fs::Url>) -> mlua::Result<AnyUserData<'static>> {
 		SCOPE.create_any_userdata(Self(selected.iter()))
 	}
 }
