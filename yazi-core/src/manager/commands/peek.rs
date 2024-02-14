@@ -35,11 +35,7 @@ impl Manager {
 			return render!(self.active_mut().preview.reset());
 		};
 
-		let folder = Some(())
-			.filter(|_| hovered.is_dir())
-			.and_then(|_| self.active().history.get(&hovered.url))
-			.map(|f| (f.offset, f.mtime));
-
+		let folder = self.active().hovered_folder().map(|f| (f.offset, f.mtime));
 		if !self.active().preview.same_url(&hovered.url) {
 			self.active_mut().preview.skip = folder.map(|f| f.0).unwrap_or_default();
 			render!(self.active_mut().preview.reset());

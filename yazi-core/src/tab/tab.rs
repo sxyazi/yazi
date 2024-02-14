@@ -64,6 +64,11 @@ impl Tab {
 		self.history.remove(url).unwrap_or_else(|| Folder::from(url))
 	}
 
+	#[inline]
+	pub fn hovered_folder(&self) -> Option<&Folder> {
+		self.current.hovered().filter(|&h| h.is_dir()).and_then(|h| self.history.get(&h.url))
+	}
+
 	pub fn apply_files_attrs(&mut self) {
 		let apply = |f: &mut Folder| {
 			if f.stage == FolderStage::Loading {

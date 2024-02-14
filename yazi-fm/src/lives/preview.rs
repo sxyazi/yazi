@@ -26,10 +26,7 @@ impl Preview {
 			reg.add_field_method_get("skip", |_, me| Ok(me.skip));
 			reg.add_field_method_get("folder", |_, me| {
 				me.tab()
-					.current
-					.hovered()
-					.filter(|&f| f.is_dir())
-					.and_then(|f| me.tab().history.get(&f.url))
+					.hovered_folder()
 					.map(|f| {
 						let limit = LAYOUT.load().preview.height as usize;
 						Folder::make(Some(me.skip..f.files.len().min(me.skip + limit)), f, me.tab())

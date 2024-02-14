@@ -317,7 +317,7 @@ impl Files {
 impl Files {
 	// --- Items
 	#[inline]
-	pub fn position(&self, url: &Url) -> Option<usize> { self.iter().position(|f| &f.url == url) }
+	pub fn position(&self, url: &Url) -> Option<usize> { self.iter().position(|f| f.url == *url) }
 
 	// --- Ticket
 	#[inline]
