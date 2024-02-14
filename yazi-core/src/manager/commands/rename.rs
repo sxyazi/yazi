@@ -53,7 +53,7 @@ impl Manager {
 	}
 
 	pub fn rename(&self, opt: impl Into<Opt>) {
-		if self.active().in_selecting() {
+		if !self.active().selected.is_empty() {
 			return self.bulk_rename();
 		}
 
@@ -96,7 +96,7 @@ impl Manager {
 	}
 
 	fn bulk_rename(&self) {
-		let old: Vec<_> = self.selected().into_iter().map(|f| &f.url).collect();
+		let old: Vec<_> = self.selected_or_hovered();
 
 		let root = max_common_root(&old);
 		let old: Vec<_> = old.into_iter().map(|p| p.strip_prefix(&root).unwrap().to_owned()).collect();

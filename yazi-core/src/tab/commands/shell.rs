@@ -22,7 +22,7 @@ impl From<Cmd> for Opt {
 impl Tab {
 	pub fn shell(&self, opt: impl Into<Opt>) {
 		let mut opt = opt.into() as Opt;
-		let selected: Vec<_> = self.selected().into_iter().map(|f| f.url()).collect();
+		let selected: Vec<_> = self.selected_or_hovered().into_iter().cloned().collect();
 
 		tokio::spawn(async move {
 			if !opt.confirm || opt.exec.is_empty() {

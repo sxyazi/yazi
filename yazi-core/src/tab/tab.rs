@@ -1,8 +1,8 @@
-use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}};
+use std::collections::{BTreeMap, BTreeSet};
 
 use anyhow::Result;
 use tokio::task::JoinHandle;
-use yazi_shared::{fs::{File, Url}, render};
+use yazi_shared::{fs::Url, render};
 
 use super::{Backstack, Config, Finder, Mode, Preview};
 use crate::folder::{Folder, FolderStage};
@@ -50,41 +50,12 @@ impl From<&Url> for Tab {
 
 impl Tab {
 	// --- Current
-	#[inline]
-	pub fn in_selecting(&self) -> bool {
-		!self.selected.is_empty() || self.mode.visual().is_some_and(|(_, indices)| !indices.is_empty())
-	}
-
-	pub fn selected(&self) -> Vec<&File> {
-		let pending = self.mode.visual().map(|(_, p)| Cow::Borrowed(p)).unwrap_or_default();
-		let is_unset = self.mode.is_unset();
-		if self.selected.is_empty() && (is_unset || pending.is_empty()) {
-			return self.current.hovered().map(|h| vec![h]).unwrap_or_default();
-		}
-
-		let selected: BTreeSet<_> = self.selected.iter().collect();
-		let pending: BTreeSet<_> =
-			pending.iter().filter_map(|&i| self.current.files.get(i)).map(|f| &f.url).collect();
-
-		let urls: BTreeSet<_> = if is_unset {
-			selected.difference(&pending).copied().collect()
+	pub fn selected_or_hovered(&self) -> Vec<&Url> {
+		if self.selected.is_empty() {
+			self.current.hovered().map(|h| vec![&h.url]).unwrap_or_default()
 		} else {
-			selected.union(&pending).copied().collect()
-		};
-
-		let mut items = Vec::with_capacity(urls.len());
-		for item in self.current.files.iter() {
-			if urls.contains(&item.url) {
-				items.push(item);
-				if items.len() == urls.len() {
-					break;
-				}
-			}
+			self.selected.iter().collect()
 		}
-		Some(items)
-			.filter(|v| !v.is_empty())
-			.or_else(|| self.current.hovered().map(|h| vec![h]))
-			.unwrap_or_default()
 	}
 
 	// --- History

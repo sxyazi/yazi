@@ -15,7 +15,7 @@ impl Manager {
 		let opt = opt.into() as Opt;
 
 		self.yanked =
-			Yanked { cut: opt.cut, urls: self.selected().into_iter().map(|f| f.url()).collect() };
+			Yanked { cut: opt.cut, urls: self.selected_or_hovered().into_iter().cloned().collect() };
 		render!();
 	}
 }

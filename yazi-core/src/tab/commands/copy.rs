@@ -17,13 +17,13 @@ impl Tab {
 		let opt = opt.into() as Opt;
 
 		let mut s = OsString::new();
-		let mut it = self.selected().into_iter().peekable();
-		while let Some(f) = it.next() {
+		let mut it = self.selected_or_hovered().into_iter().peekable();
+		while let Some(u) = it.next() {
 			s.push(match opt.type_.as_str() {
-				"path" => f.url.as_os_str(),
-				"dirname" => f.url.parent().map_or(OsStr::new(""), |p| p.as_os_str()),
-				"filename" => f.name().unwrap_or(OsStr::new("")),
-				"name_without_ext" => f.stem().unwrap_or(OsStr::new("")),
+				"path" => u.as_os_str(),
+				"dirname" => u.parent().map_or(OsStr::new(""), |p| p.as_os_str()),
+				"filename" => u.file_name().unwrap_or(OsStr::new("")),
+				"name_without_ext" => u.file_stem().unwrap_or(OsStr::new("")),
 				_ => return,
 			});
 			if it.peek().is_some() {

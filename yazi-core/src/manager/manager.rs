@@ -48,5 +48,5 @@ impl Manager {
 	pub fn hovered(&self) -> Option<&File> { self.tabs.active().current.hovered() }
 
 	#[inline]
-	pub fn selected(&self) -> Vec<&File> { self.tabs.active().selected() }
+	pub fn selected_or_hovered(&self) -> Vec<&Url> { self.tabs.active().selected_or_hovered() }
 }
