@@ -15,12 +15,11 @@ impl From<Cmd> for Opt {
 
 impl Manager {
 	pub fn link(&mut self, opt: impl Into<Opt>, tasks: &Tasks) {
-		let (cut, ref src) = self.yanked;
-		if cut {
+		if self.yanked.cut {
 			return;
 		}
 
 		let opt = opt.into() as Opt;
-		tasks.file_link(src, self.cwd(), opt.relative, opt.force);
+		tasks.file_link(&self.yanked, self.cwd(), opt.relative, opt.force);
 	}
 }

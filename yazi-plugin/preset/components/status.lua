@@ -27,7 +27,7 @@ end
 
 function Status:size()
 	local h = cx.active.current.hovered
-	if h == nil then
+	if not h then
 		return ui.Line {}
 	end
 
@@ -40,7 +40,7 @@ end
 
 function Status:name()
 	local h = cx.active.current.hovered
-	if h == nil then
+	if not h then
 		return ui.Span("")
 	end
 
@@ -49,12 +49,12 @@ end
 
 function Status:permissions()
 	local h = cx.active.current.hovered
-	if h == nil then
+	if not h then
 		return ui.Line {}
 	end
 
 	local perm = h.cha:permissions()
-	if perm == nil then
+	if not perm then
 		return ui.Line {}
 	end
 

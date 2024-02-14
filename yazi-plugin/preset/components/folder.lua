@@ -20,7 +20,7 @@ function Folder:icon(file)
 end
 
 function Folder:highlight_ranges(s, ranges)
-	if ranges == nil or #ranges == 0 then
+	if not ranges or #ranges == 0 then
 		return { ui.Span(s) }
 	end
 
@@ -55,7 +55,7 @@ function Folder:highlighted_name(file)
 		spans[#spans + 1] = ui.Span(" -> " .. tostring(file.link_to)):italic()
 	end
 
-	if highlights == nil or not file:is_hovered() then
+	if not highlights or not file:is_hovered() then
 		return spans
 	end
 
@@ -67,14 +67,14 @@ function Folder:highlighted_name(file)
 	return spans
 end
 
-function Folder:linemode(area)
+function Folder:linemode(area, files)
 	local mode = cx.active.conf.linemode
 	if mode == "none" then
 		return {}
 	end
 
 	local lines = {}
-	for _, f in ipairs(self:by_kind(self.CURRENT).window) do
+	for _, f in ipairs(files) do
 		local spans = { ui.Span(" ") }
 		if mode == "size" then
 			local size = f:size()

@@ -1,13 +1,13 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use yazi_shared::fs::{File, Url};
 
-use super::{Tabs, Watcher};
+use super::{Tabs, Watcher, Yanked};
 use crate::{folder::Folder, tab::Tab};
 
 pub struct Manager {
 	pub tabs:   Tabs,
-	pub yanked: (bool, HashSet<Url>),
+	pub yanked: Yanked,
 
 	pub(super) watcher: Watcher,
 	pub mimetype:       HashMap<Url, String>,

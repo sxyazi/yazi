@@ -304,9 +304,3 @@ setmetatable(inspect, {
 
 ya = ya or {}
 ya.inspect = inspect
-ya.print = function(...)
-	local args = { ... }
-	for i = 1, #args do
-		print(inspect(args[i]))
-	end
-end

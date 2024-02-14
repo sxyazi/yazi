@@ -4,7 +4,7 @@ use crate::manager::Manager;
 
 impl Manager {
 	pub fn unyank(&mut self, _: Cmd) {
-		render!(!self.yanked.1.is_empty());
+		render!(!self.yanked.is_empty());
 
 		self.yanked = Default::default();
 	}

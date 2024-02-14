@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use mlua::{AnyUserData, Lua, UserDataFields, UserDataMethods};
 
-use super::{Config, Folder, Mode, Preview, SCOPE};
+use super::{Config, Folder, Mode, Preview, Selected, SCOPE};
 
 pub(super) struct Tab {
 	inner: *const yazi_core::tab::Tab,
@@ -36,10 +36,13 @@ impl Tab {
 
 			reg.add_field_method_get("mode", |_, me| Mode::make(&me.mode));
 			reg.add_field_method_get("conf", |_, me| Config::make(&me.conf));
+			reg.add_field_method_get("current", |_, me| Folder::make(None, &me.current, me));
 			reg.add_field_method_get("parent", |_, me| {
 				me.parent.as_ref().map(|f| Folder::make(None, f, me)).transpose()
 			});
-			reg.add_field_method_get("current", |_, me| Folder::make(None, &me.current, me));
+
+			reg.add_field_method_get("selected", |_, me| Selected::make(&me.selected));
+
 			reg.add_field_method_get("preview", |_, me| Preview::make(me));
 		})?;
 

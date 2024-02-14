@@ -2,7 +2,7 @@ local M = {}
 
 function M:peek()
 	local folder = Folder:by_kind(Folder.PREVIEW)
-	if folder == nil or folder.cwd ~= self.file.url then
+	if not folder or folder.cwd ~= self.file.url then
 		return {}
 	end
 
@@ -11,8 +11,9 @@ function M:peek()
 		ya.manager_emit("peek", { tostring(bound), only_if = tostring(self.file.url), upper_bound = "" })
 	end
 
-	local items = {}
-	for _, f in ipairs(folder.window) do
+	local items, markers = {}, {}
+	for i, f in ipairs(folder.window) do
+		-- Highlight hovered file
 		local item = ui.ListItem(ui.Line { Folder:icon(f), ui.Span(f.name) })
 		if f:is_hovered() then
 			item = item:style(THEME.manager.preview_hovered)
@@ -20,8 +21,23 @@ function M:peek()
 			item = item:style(f:style())
 		end
 		items[#items + 1] = item
+
+		-- Mark yanked/selected files
+		local yanked = f:is_yanked()
+		if yanked ~= 0 then
+			markers[#markers + 1] = { i, yanked }
+		elseif f:is_selected() then
+			markers[#markers + 1] = { i, 3 }
+		end
 	end
-	ya.preview_widgets(self, { ui.List(self.area, items) })
+
+	ya.preview_widgets(
+		self,
+		ya.flat {
+			ui.List(self.area, items),
+			Folder:markers(self.area, markers),
+		}
+	)
 end
 
 function M:seek(units)
