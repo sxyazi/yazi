@@ -1,7 +1,7 @@
 use std::{mem, time::SystemTime};
 
 use ratatui::layout::Rect;
-use yazi_config::LAYOUT;
+use yazi_config::{LAYOUT, MANAGER};
 use yazi_shared::fs::{File, FilesOp, Url};
 
 use super::FolderStage;
@@ -108,8 +108,15 @@ impl Folder {
 		let len = self.files.len();
 
 		let limit = LAYOUT.load().current.height as usize;
+		let half_screen = limit / 2;
+		let scrolloff = if MANAGER.scrolloff as usize > half_screen {
+			half_screen
+		} else {
+			MANAGER.scrolloff as usize
+		};
+
 		self.cursor = step.add(self.cursor, limit).min(len.saturating_sub(1));
-		self.offset = if self.cursor >= (self.offset + limit).min(len).saturating_sub(5) {
+		self.offset = if self.cursor >= (self.offset + limit).min(len).saturating_sub(scrolloff) {
 			len.saturating_sub(limit).min(self.offset + self.cursor - old.0)
 		} else {
 			self.offset.min(len.saturating_sub(1))
@@ -122,8 +129,16 @@ impl Folder {
 		let old = (self.cursor, self.offset);
 		let max = self.files.len().saturating_sub(1);
 
-		self.cursor = step.add(self.cursor, LAYOUT.load().current.height as usize).min(max);
-		self.offset = if self.cursor < self.offset + 5 {
+		let limit = LAYOUT.load().current.height as usize;
+		let half_screen = limit / 2;
+		let scrolloff = if MANAGER.scrolloff as usize > half_screen {
+			half_screen
+		} else {
+			MANAGER.scrolloff as usize
+		};
+
+		self.cursor = step.add(self.cursor, limit).min(max);
+		self.offset = if self.cursor < self.offset + scrolloff {
 			self.offset.saturating_sub(old.0 - self.cursor)
 		} else {
 			self.offset.min(max)

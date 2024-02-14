@@ -19,6 +19,7 @@ pub struct Manager {
 	pub linemode:     String,
 	pub show_hidden:  bool,
 	pub show_symlink: bool,
+	pub scrolloff:    u8,
 }
 
 impl Default for Manager {
