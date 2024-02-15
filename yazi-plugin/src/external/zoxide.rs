@@ -6,12 +6,14 @@ use yazi_shared::fs::Url;
 
 pub struct ZoxideOpt {
 	pub cwd: Url,
+	pub query: Option<String>,
 }
 
 pub async fn zoxide(opt: ZoxideOpt) -> Result<Url> {
 	let child = Command::new("zoxide")
-		.args(["query", "-i", "--exclude"])
+		.args(["query", "--exclude"])
 		.arg(&opt.cwd)
+		.arg(if let Some(query) = &opt.query { query } else { "--interactive" })
 		.kill_on_drop(true)
 		.stdout(Stdio::piped())
 		.spawn()?;

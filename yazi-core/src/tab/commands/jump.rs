@@ -1,7 +1,10 @@
+use anyhow::anyhow;
+use yazi_config::popup::InputCfg;
 use yazi_plugin::external::{self, FzfOpt, ZoxideOpt};
 use yazi_scheduler::{Scheduler, BLOCKER};
 use yazi_shared::{event::Cmd, fs::ends_with_slash, Defer};
 
+use crate::input::Input;
 use crate::tab::Tab;
 
 pub struct Opt {
@@ -13,6 +16,7 @@ pub enum OptType {
 	None,
 	Fzf,
 	Zoxide,
+	ZoxideInteractive,
 }
 
 impl From<Cmd> for Opt {
@@ -21,6 +25,7 @@ impl From<Cmd> for Opt {
 			type_: match c.args.first().map(|s| s.as_str()) {
 				Some("fzf") => OptType::Fzf,
 				Some("zoxide") => OptType::Zoxide,
+				Some("zoxide_interactive") => OptType::ZoxideInteractive,
 				_ => OptType::None,
 			},
 		}
@@ -33,17 +38,28 @@ impl Tab {
 		if opt.type_ == OptType::None {
 			return;
 		}
-
 		let cwd = self.current.cwd.clone();
+
 		tokio::spawn(async move {
 			let _guard = BLOCKER.acquire().await.unwrap();
 			let _defer = Defer::new(Scheduler::app_resume);
 			Scheduler::app_stop().await;
 
-			let result = if opt.type_ == OptType::Fzf {
-				external::fzf(FzfOpt { cwd }).await
-			} else {
-				external::zoxide(ZoxideOpt { cwd }).await
+			let result = match opt.type_ {
+				OptType::Fzf => external::fzf(FzfOpt { cwd }).await,
+				OptType::ZoxideInteractive => external::zoxide(ZoxideOpt { cwd, query: None }).await,
+				OptType::Zoxide => {
+					println!("Showing input");
+					let mut result = Input::_show(InputCfg::zoxide());
+
+					if let Some(Ok(input)) = result.recv().await {
+						println!("Got input: {input}");
+						external::zoxide(ZoxideOpt { cwd, query: Some(input) }).await
+					} else {
+						Err(anyhow!(""))
+					}
+				}
+				_ => Err(anyhow!(""))
 			};
 
 			let Ok(url) = result else {

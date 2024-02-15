@@ -126,6 +126,15 @@ impl InputCfg {
 		}
 	}
 
+    #[inline]
+    pub fn zoxide() -> Self {
+        Self {
+            title: INPUT.zoxide_title.to_owned(),
+            position: Position::new(INPUT.zoxide_origin, INPUT.zoxide_offset),
+            ..Default::default()
+        }
+    }
+
 	#[inline]
 	pub fn with_value(mut self, value: impl Into<String>) -> Self {
 		self.value = value.into();

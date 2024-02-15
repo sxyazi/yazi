@@ -59,6 +59,11 @@ pub struct Input {
 	pub quit_title:  String,
 	pub quit_origin: Origin,
 	pub quit_offset: Offset,
+
+    // zoxide
+    pub zoxide_title:  String,
+    pub zoxide_origin: Origin,
+    pub zoxide_offset: Offset,
 }
 
 impl Default for Input {
