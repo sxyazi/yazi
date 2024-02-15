@@ -84,19 +84,19 @@ impl File {
 					1u8
 				})
 			});
-			reg.add_method("is_selected", |lua, me, ()| {
-				let cx = lua.named_registry_value::<CtxRef>("cx")?;
-				let selected = me.tab().selected.contains(&me.url);
+			reg.add_method("is_marked", |_, me, ()| {
+				use yazi_core::tab::Mode::*;
+				if !me.tab().mode.is_visual() || me.folder().cwd != me.tab().current.cwd {
+					return Ok(0u8);
+				}
 
-				#[allow(clippy::if_same_then_else)]
-				Ok(if !cx.manager.active().mode.is_visual() {
-					selected
-				} else if me.folder().cwd != me.tab().current.cwd {
-					selected
-				} else {
-					cx.manager.active().mode.pending(me.idx, selected)
+				Ok(match &me.tab().mode {
+					Select(_, indices) if indices.contains(&me.idx) => 1u8,
+					Unset(_, indices) if indices.contains(&me.idx) => 2u8,
+					_ => 0u8,
 				})
 			});
+			reg.add_method("is_selected", |_, me, ()| Ok(me.tab().selected.contains(&me.url)));
 			reg.add_method("found", |lua, me, ()| {
 				let cx = lua.named_registry_value::<CtxRef>("cx")?;
 				let Some(finder) = &cx.manager.active().finder else {

@@ -26,15 +26,6 @@ impl Mode {
 			Mode::Unset(start, indices) => Some((*start, indices)),
 		}
 	}
-
-	#[inline]
-	pub fn pending(&self, idx: usize, state: bool) -> bool {
-		match self {
-			Mode::Normal => state,
-			Mode::Select(_, indices) => state || indices.contains(&idx),
-			Mode::Unset(_, indices) => state && !indices.contains(&idx),
-		}
-	}
 }
 
 impl Mode {

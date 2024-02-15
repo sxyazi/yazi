@@ -92,6 +92,21 @@ function Folder:linemode(area, files)
 	return ui.Paragraph(area, lines):align(ui.Paragraph.RIGHT)
 end
 
+function Folder:marker(file)
+	local yanked = file:is_yanked()
+	if yanked ~= 0 then
+		return yanked -- 1: copied, 2: cut
+	end
+
+	local marked = file:is_marked()
+	if marked == 1 then
+		return 3 -- 3: marked
+	elseif marked == 0 and file:is_selected() then
+		return 4 -- 4: selected
+	end
+	return 0
+end
+
 function Folder:markers(area, markers)
 	if #markers == 0 or area.w * area.h == 0 then
 		return {}
@@ -115,6 +130,8 @@ function Folder:markers(area, markers)
 		elseif last[3] == 2 then
 			bar = bar:style(THEME.manager.marker_cut)
 		elseif last[3] == 3 then
+			bar = bar:style(THEME.manager.marker_marked)
+		elseif last[3] == 4 then
 			bar = bar:style(THEME.manager.marker_selected)
 		end
 		elements[#elements + 1] = bar

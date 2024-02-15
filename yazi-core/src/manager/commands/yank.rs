@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use yazi_shared::{event::Cmd, render};
 
 use crate::manager::{Manager, Yanked};
@@ -12,10 +14,13 @@ impl From<Cmd> for Opt {
 
 impl Manager {
 	pub fn yank(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
+		let selected: HashSet<_> = self.selected_or_hovered().into_iter().cloned().collect();
+		if selected.is_empty() {
+			return;
+		}
 
-		self.yanked =
-			Yanked { cut: opt.cut, urls: self.selected_or_hovered().into_iter().cloned().collect() };
+		self.yanked = Yanked { cut: opt.into().cut, urls: selected };
+		self.active_mut().escape_select();
 		render!();
 	}
 }
