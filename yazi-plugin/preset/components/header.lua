@@ -15,30 +15,17 @@ function Header:cwd()
 end
 
 function Header:selected_count()
-	local selected = 0
-	local copied = 0
-	local cut = 0
-
-	for _, f in ipairs(Folder:by_kind(Folder.CURRENT).window) do
-		if f:is_selected() then
-			selected = selected + 1
-		end
-
-		local is_yanked = f:is_yanked()
-		if is_yanked == 1 then
-			copied = copied + 1
-		elseif is_yanked == 2 then
-			cut = cut + 1
-		end
-	end
+	local selected = #cx.active.selected
+	local yanked = #cx.yanked
+	local is_cut = cx.yanked.is_cut
 
 	local count
 	local style
-	if cut > 0 then
-		count = cut
+	if is_cut then
+		count = yanked
 		style = THEME.manager.count_cut
-	elseif copied > 0 then
-		count = copied
+	elseif yanked > 0 then
+		count = yanked
 		style = THEME.manager.count_copied
 	else
 		count = selected
