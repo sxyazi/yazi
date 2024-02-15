@@ -28,7 +28,7 @@ tab_active   = { fg = "black", bg = "lightblue" }
 tab_inactive = { fg = "white", bg = "darkgray" }
 tab_width    = 1
 
-# Selected counter
+# Count
 count_copied   = { fg = "black", bg = "lightgreen" }
 count_cut      = { fg = "black", bg = "lightred" }
 count_selected = { fg = "black", bg = "lightblue" }
