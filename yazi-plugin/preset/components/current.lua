@@ -5,9 +5,13 @@ Current = {
 function Current:render(area)
 	self.area = area
 
-	local markers = {}
-	local items = {}
-	for i, f in ipairs(Folder:by_kind(Folder.CURRENT).window) do
+	local files = Folder:by_kind(Folder.CURRENT).window
+	if #files == 0 then
+		return {}
+	end
+
+	local items, markers = {}, {}
+	for i, f in ipairs(files) do
 		local name = Folder:highlighted_name(f)
 
 		-- Highlight hovered file
@@ -27,5 +31,10 @@ function Current:render(area)
 			markers[#markers + 1] = { i, 3 }
 		end
 	end
-	return ya.flat { ui.List(area, items), Folder:linemode(area), Folder:markers(area, markers) }
+
+	return ya.flat {
+		ui.List(area, items),
+		Folder:linemode(area, files),
+		Folder:markers(area, markers),
+	}
 end

@@ -76,9 +76,9 @@ impl File {
 			});
 			reg.add_method("is_yanked", |lua, me, ()| {
 				let cx = lua.named_registry_value::<CtxRef>("cx")?;
-				Ok(if !cx.manager.yanked.1.contains(&me.url) {
+				Ok(if !cx.manager.yanked.contains(&me.url) {
 					0u8
-				} else if cx.manager.yanked.0 {
+				} else if cx.manager.yanked.cut {
 					2u8
 				} else {
 					1u8
@@ -88,7 +88,10 @@ impl File {
 				let cx = lua.named_registry_value::<CtxRef>("cx")?;
 				let selected = me.tab().selected.contains(&me.url);
 
+				#[allow(clippy::if_same_then_else)]
 				Ok(if !cx.manager.active().mode.is_visual() {
+					selected
+				} else if me.folder().cwd != me.tab().current.cwd {
 					selected
 				} else {
 					cx.manager.active().mode.pending(me.idx, selected)

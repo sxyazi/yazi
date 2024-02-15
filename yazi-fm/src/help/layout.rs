@@ -17,7 +17,7 @@ impl<'a> Widget for Layout<'a> {
 		let help = &self.cx.help;
 		widgets::Clear.render(area, buf);
 
-		let chunks = layout::Layout::vertical([Constraint::Min(0), Constraint::Length(1)]).split(area);
+		let chunks = layout::Layout::vertical([Constraint::Fill(1), Constraint::Length(1)]).split(area);
 		Line::styled(
 			help.keyword().unwrap_or_else(|| format!("{}.help", help.layer.to_string())),
 			THEME.help.footer,

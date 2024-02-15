@@ -20,9 +20,11 @@ impl Lives {
 		super::Folder::register(&LUA)?;
 		super::Mode::register(&LUA)?;
 		super::Preview::register(&LUA)?;
+		super::Selected::register(&LUA)?;
 		super::Tab::register(&LUA)?;
 		super::Tabs::register(&LUA)?;
 		super::Tasks::register(&LUA)?;
+		super::Yanked::register(&LUA)?;
 
 		Ok(())
 	}
@@ -42,6 +44,7 @@ impl Lives {
 					("active", super::Tab::make(cx.manager.active())?),
 					("tabs", super::Tabs::make(&cx.manager.tabs)?),
 					("tasks", super::Tasks::make(&cx.tasks)?),
+					("yanked", scope.create_any_userdata_ref(&cx.manager.yanked)?),
 				])?,
 			)?;
 

@@ -31,8 +31,8 @@ keymap = [
 	{ on = [ "<PageUp>" ],     exec = "arrow -100%", desc = "Move cursor up one page" },
 	{ on = [ "<PageDown>" ],   exec = "arrow 100%",  desc = "Move cursor down one page" },
 
-	{ on = [ "h" ], exec = [ "leave", "escape --visual --select" ], desc = "Go back to the parent directory" },
-	{ on = [ "l" ], exec = [ "enter", "escape --visual --select" ], desc = "Enter the child directory" },
+	{ on = [ "h" ], exec = [ "escape --visual", "leave" ], desc = "Go back to the parent directory" },
+	{ on = [ "l" ], exec = [ "escape --visual", "enter" ], desc = "Enter the child directory" },
 
 	{ on = [ "H" ], exec = "back",    desc = "Go back to the previous directory" },
 	{ on = [ "L" ], exec = "forward", desc = "Go forward to the next directory" },

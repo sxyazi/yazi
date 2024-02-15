@@ -5,10 +5,10 @@ use yazi_config::{popup::SelectCfg, ARGS, OPEN};
 use yazi_plugin::isolate;
 use yazi_shared::{emit, event::{Cmd, EventQuit}, fs::{File, Url}, Layer, MIME_DIR};
 
-use crate::{manager::Manager, select::Select, tasks::Tasks};
+use crate::{folder::Folder, manager::Manager, select::Select, tasks::Tasks};
 
 pub struct Opt {
-	targets:     Vec<(Url, Option<String>)>,
+	targets:     Vec<(Url, String)>,
 	interactive: bool,
 }
 
@@ -23,7 +23,7 @@ impl From<Cmd> for Opt {
 
 impl Manager {
 	pub fn open(&mut self, opt: impl Into<Opt>, tasks: &Tasks) {
-		let selected = self.selected();
+		let selected = self.selected_or_hovered();
 		if selected.is_empty() {
 			return;
 		} else if Self::quit_with_selected(&selected) {
@@ -31,13 +31,13 @@ impl Manager {
 		}
 
 		let (mut done, mut todo) = (Vec::with_capacity(selected.len()), vec![]);
-		for f in selected {
-			if f.is_dir() {
-				done.push((f.url(), Some(MIME_DIR.to_owned())));
-			} else if self.mimetype.get(&f.url).is_some() {
-				done.push((f.url(), None));
+		for u in selected {
+			if self.mimetype.get(u).is_some() {
+				done.push((u.clone(), String::new()));
+			} else if self.guess_folder(u) {
+				done.push((u.clone(), MIME_DIR.to_owned()));
 			} else {
-				todo.push(f.clone());
+				todo.push(u.clone());
 			}
 		}
 
@@ -48,8 +48,15 @@ impl Manager {
 		}
 
 		tokio::spawn(async move {
-			done.extend(todo.iter().map(|f| (f.url(), None)));
-			if let Err(e) = isolate::preload("mime", todo, true).await {
+			let mut files = Vec::with_capacity(todo.len());
+			for u in todo {
+				if let Ok(f) = File::from(u).await {
+					files.push(f);
+				}
+			}
+
+			done.extend(files.iter().map(|f| (f.url(), String::new())));
+			if let Err(e) = isolate::preload("mime", files, true).await {
 				error!("preload in watcher failed: {e}");
 			}
 
@@ -58,7 +65,7 @@ impl Manager {
 	}
 
 	#[inline]
-	pub fn _open_do(interactive: bool, targets: Vec<(Url, Option<String>)>) {
+	pub fn _open_do(interactive: bool, targets: Vec<(Url, String)>) {
 		emit!(Call(
 			Cmd::new("open_do").with_bool("interactive", interactive).with_data(targets),
 			Layer::Manager
@@ -74,7 +81,9 @@ impl Manager {
 		let targets: Vec<_> = opt
 			.targets
 			.into_iter()
-			.filter_map(|(u, m)| m.or_else(|| self.mimetype.get(&u).cloned()).map(|m| (u, m)))
+			.filter_map(|(u, m)| {
+				Some(m).filter(|m| !m.is_empty()).or_else(|| self.mimetype.get(&u).cloned()).map(|m| (u, m))
+			})
 			.collect();
 
 		if targets.is_empty() {
@@ -98,13 +107,30 @@ impl Manager {
 		});
 	}
 
-	fn quit_with_selected(selected: &[&File]) -> bool {
+	fn guess_folder(&self, url: &Url) -> bool {
+		let Some(p) = url.parent_url() else {
+			return true;
+		};
+
+		let find = |folder: Option<&Folder>| {
+			folder.is_some_and(|folder| {
+				folder.cwd == p && folder.files.iter().any(|f| f.is_dir() && f.url == *url)
+			})
+		};
+
+		find(Some(self.current()))
+			|| find(self.parent())
+			|| find(self.hovered_folder())
+			|| find(self.active().history.get(&p))
+	}
+
+	fn quit_with_selected(selected: &[&Url]) -> bool {
 		if ARGS.chooser_file.is_none() {
 			return false;
 		}
 
-		let paths = selected.iter().fold(OsString::new(), |mut s, &f| {
-			s.push(f.url.as_os_str());
+		let paths = selected.iter().fold(OsString::new(), |mut s, &u| {
+			s.push(u.as_os_str());
 			s.push("\n");
 			s
 		});

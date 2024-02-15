@@ -52,7 +52,7 @@ end
 
 function ya.readable_path(path)
 	local home = os.getenv("HOME") or os.getenv("USERPROFILE")
-	if home == nil then
+	if not home then
 		return path
 	elseif string.sub(path, 1, #home) == home then
 		return "~" .. string.sub(path, #home + 1)

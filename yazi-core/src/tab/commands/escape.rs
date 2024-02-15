@@ -1,7 +1,7 @@
 use bitflags::bitflags;
 use yazi_shared::{event::Cmd, render};
 
-use crate::tab::{Mode, Tab};
+use crate::{manager::Manager, tab::{Mode, Tab}};
 
 bitflags! {
 	pub struct Opt: u8 {
@@ -53,9 +53,15 @@ impl Tab {
 
 	#[inline]
 	fn escape_select(&mut self) -> bool {
-		let old = self.selected.len();
-		self.select_all(Some(false));
-		old != self.selected.len()
+		if self.selected.is_empty() {
+			return false;
+		}
+
+		self.selected.clear();
+		if self.current.hovered().is_some_and(|h| h.is_dir()) {
+			Manager::_peek(true);
+		}
+		true
 	}
 
 	#[inline]

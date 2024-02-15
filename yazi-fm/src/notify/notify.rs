@@ -13,7 +13,11 @@ impl<'a> Notify<'a> {
 	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
 
 	fn chunks(area: Rect, messages: &[Message]) -> Rc<[Rect]> {
-		let chunks = Layout::horizontal([Constraint::Percentage(100), Constraint::Min(40)]).split(area);
+		let chunks =
+			Layout::horizontal([Constraint::Fill(1), Constraint::Length(40), Constraint::Max(1)])
+				.split(area);
+
+		let chunks = Layout::vertical([Constraint::Max(1), Constraint::Min(1)]).split(chunks[1]);
 
 		Layout::vertical(messages.iter().map(|m| Constraint::Length(m.height() as u16)))
 			.spacing(1)
