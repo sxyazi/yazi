@@ -14,9 +14,39 @@ function Header:cwd()
 	return span:style(THEME.manager.cwd)
 end
 
+function Header:counter()
+	local yanked = #cx.yanked
+
+	local count, style
+	if yanked == 0 then
+		count = #cx.active.selected
+		style = THEME.manager.count_selected
+	elseif cx.yanked.is_cut then
+		count = yanked
+		style = THEME.manager.count_cut
+	else
+		count = yanked
+		style = THEME.manager.count_copied
+	end
+
+	if count == 0 then
+		return ui.Line {}
+	end
+
+	return ui.Line {
+		ui.Span(string.format(" %d ", count)):style(style),
+		ui.Span(" "),
+	}
+end
+
 function Header:tabs()
+	local tabs = #cx.tabs
+	if tabs == 1 then
+		return ui.Line {}
+	end
+
 	local spans = {}
-	for i = 1, #cx.tabs do
+	for i = 1, tabs do
 		local text = i
 		if THEME.manager.tab_width > 2 then
 			text = ya.truncate(text .. " " .. cx.tabs[i]:name(), THEME.manager.tab_width)
@@ -43,7 +73,7 @@ function Header:render(area)
 	local chunks = self:layout(area)
 
 	local left = ui.Line { self:cwd() }
-	local right = ui.Line { self:tabs() }
+	local right = ui.Line { self:counter(), self:tabs() }
 	return {
 		ui.Paragraph(chunks[1], { left }),
 		ui.Paragraph(chunks[2], { right }):align(ui.Paragraph.RIGHT),
