@@ -17,11 +17,10 @@ end
 function Header:counter()
 	local selected = #cx.active.selected
 	local yanked = #cx.yanked
-	local is_cut = cx.yanked.is_cut
 
 	local count
 	local style
-	if is_cut then
+	if cx.yanked.is_cut then
 		count = yanked
 		style = THEME.manager.count_cut
 	elseif yanked > 0 then
