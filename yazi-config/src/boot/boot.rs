@@ -58,10 +58,12 @@ impl Default for Args {
 		let args = Self::parse();
 
 		if args.version {
+			let commit_sha =
+				(env!("VERGEN_GIT_SHA") != "VERGEN_IDEMPOTENT_OUTPUT").then_some(env!("VERGEN_GIT_SHA"));
 			println!(
-				"yazi {} ({} {})",
+				"yazi {} ({}{})",
 				env!("CARGO_PKG_VERSION"),
-				env!("VERGEN_GIT_SHA"),
+				commit_sha.map(|v| format!("{v} ")).unwrap_or_default(),
 				env!("VERGEN_BUILD_DATE")
 			);
 			process::exit(0);
