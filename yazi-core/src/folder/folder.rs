@@ -108,12 +108,7 @@ impl Folder {
 		let len = self.files.len();
 
 		let limit = LAYOUT.load().current.height as usize;
-		let half_screen = limit / 2;
-		let scrolloff = if MANAGER.scrolloff as usize > half_screen {
-			half_screen
-		} else {
-			MANAGER.scrolloff as usize
-		};
+		let scrolloff = (limit / 2).min(MANAGER.scrolloff as usize);
 
 		self.cursor = step.add(self.cursor, limit).min(len.saturating_sub(1));
 		self.offset = if self.cursor >= (self.offset + limit).min(len).saturating_sub(scrolloff) {
@@ -130,12 +125,7 @@ impl Folder {
 		let max = self.files.len().saturating_sub(1);
 
 		let limit = LAYOUT.load().current.height as usize;
-		let half_screen = limit / 2;
-		let scrolloff = if MANAGER.scrolloff as usize > half_screen {
-			half_screen
-		} else {
-			MANAGER.scrolloff as usize
-		};
+		let scrolloff = (limit / 2).min(MANAGER.scrolloff as usize);
 
 		self.cursor = step.add(self.cursor, limit).min(max);
 		self.offset = if self.cursor < self.offset + scrolloff {
