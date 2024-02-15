@@ -70,8 +70,8 @@ end
 function Header:render(area)
 	local chunks = self:layout(area)
 
-	local left = ui.Line({ self:cwd() })
-	local right = ui.Line({ self:selected_count(), self:tabs() })
+	local left = ui.Line { self:cwd() }
+	local right = ui.Line { self:counter(), self:tabs() }
 	return {
 		ui.Paragraph(chunks[1], { left }),
 		ui.Paragraph(chunks[2], { right }):align(ui.Paragraph.RIGHT),
