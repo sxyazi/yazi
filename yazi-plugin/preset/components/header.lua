@@ -14,7 +14,7 @@ function Header:cwd()
 	return span:style(THEME.manager.cwd)
 end
 
-function Header:selected_count()
+function Header:counter()
 	local selected = #cx.active.selected
 	local yanked = #cx.yanked
 	local is_cut = cx.yanked.is_cut
