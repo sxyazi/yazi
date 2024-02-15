@@ -11,6 +11,7 @@ sort_dir_first = false
 linemode       = "none"
 show_hidden    = false
 show_symlink   = true
+scrolloff      = 5
 
 [preview]
 tab_size        = 2
