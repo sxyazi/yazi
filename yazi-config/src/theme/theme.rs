@@ -20,9 +20,10 @@ pub struct Manager {
 	find_position: Style,
 
 	// Marker
-	marker_selected: Style,
 	marker_copied:   Style,
 	marker_cut:      Style,
+	marker_marked:   Style,
+	marker_selected: Style,
 
 	// Tab
 	tab_active:   Style,

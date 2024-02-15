@@ -18,9 +18,10 @@ find_keyword  = { fg = "yellow", italic = true }
 find_position = { fg = "magenta", bg = "reset", italic = true }
 
 # Marker
-marker_selected = { fg = "lightgreen",  bg = "lightgreen" }
-marker_copied   = { fg = "lightyellow", bg = "lightyellow" }
+marker_copied   = { fg = "lightgreen",  bg = "lightgreen" }
 marker_cut      = { fg = "lightred",    bg = "lightred" }
+marker_marked   = { fg = "lightyellow", bg = "lightyellow" }
+marker_selected = { fg = "lightblue",   bg = "lightblue" }
 
 # Tab
 tab_active   = { fg = "black", bg = "lightblue" }

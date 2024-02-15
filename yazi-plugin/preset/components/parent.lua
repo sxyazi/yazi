@@ -21,12 +21,10 @@ function Parent:render(area)
 		end
 		items[#items + 1] = item
 
-		-- Mark yanked/selected files
-		local yanked = f:is_yanked()
-		if yanked ~= 0 then
-			markers[#markers + 1] = { i, yanked }
-		elseif f:is_selected() then
-			markers[#markers + 1] = { i, 3 }
+		-- Yanked/marked/selected files
+		local marker = Folder:marker(f)
+		if marker ~= 0 then
+			markers[#markers + 1] = { i, marker }
 		end
 	end
 

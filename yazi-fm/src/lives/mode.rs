@@ -25,7 +25,6 @@ impl Mode {
 			reg.add_field_method_get("is_select", |_, me| Ok(me.is_select()));
 			reg.add_field_method_get("is_unset", |_, me| Ok(me.is_unset()));
 			reg.add_field_method_get("is_visual", |_, me| Ok(me.is_visual()));
-			reg.add_method("pending", |_, me, (idx, state): (usize, bool)| Ok(me.pending(idx, state)));
 
 			reg.add_meta_method(MetaMethod::ToString, |_, me, ()| Ok(me.to_string()));
 		})

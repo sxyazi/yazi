@@ -29,10 +29,10 @@ impl From<Cmd> for Opt {
 
 impl Tab {
 	#[inline]
-	fn escape_find(&mut self) -> bool { self.finder.take().is_some() }
+	pub fn escape_find(&mut self) -> bool { self.finder.take().is_some() }
 
 	#[inline]
-	fn escape_visual(&mut self) -> bool {
+	pub fn escape_visual(&mut self) -> bool {
 		let Some((_, indices)) = self.mode.visual() else {
 			return false;
 		};
@@ -52,7 +52,7 @@ impl Tab {
 	}
 
 	#[inline]
-	fn escape_select(&mut self) -> bool {
+	pub fn escape_select(&mut self) -> bool {
 		if self.selected.is_empty() {
 			return false;
 		}
@@ -65,14 +65,14 @@ impl Tab {
 	}
 
 	#[inline]
-	fn escape_filter(&mut self) -> bool {
+	pub fn escape_filter(&mut self) -> bool {
 		let b = self.current.files.filter().is_some();
 		self.filter_do(super::filter::Opt::default());
 		b
 	}
 
 	#[inline]
-	fn escape_search(&mut self) -> bool {
+	pub fn escape_search(&mut self) -> bool {
 		let b = self.current.cwd.is_search();
 		self.search_stop();
 		b
