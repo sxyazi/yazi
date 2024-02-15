@@ -34,7 +34,7 @@ impl Manager {
 		for u in selected {
 			if self.mimetype.get(u).is_some() {
 				done.push((u.clone(), String::new()));
-			} else if self.guess_its_folder(u) {
+			} else if self.guess_folder(u) {
 				done.push((u.clone(), MIME_DIR.to_owned()));
 			} else {
 				todo.push(u.clone());
@@ -107,7 +107,7 @@ impl Manager {
 		});
 	}
 
-	fn guess_its_folder(&self, url: &Url) -> bool {
+	fn guess_folder(&self, url: &Url) -> bool {
 		let Some(p) = url.parent_url() else {
 			return true;
 		};
