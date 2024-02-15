@@ -25,7 +25,7 @@ marker_selected = { fg = "lightblue",   bg = "lightblue" }
 
 # Tab
 tab_active   = { fg = "black", bg = "white" }
-tab_inactive = { fg = "white", bg = "black" }
+tab_inactive = { fg = "white", bg = "darkgray" }
 tab_width    = 1
 
 # Count
