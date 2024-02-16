@@ -10,6 +10,7 @@ use crate::{folder::Folder, manager::Manager, select::Select, tasks::Tasks};
 pub struct Opt {
 	targets:     Vec<(Url, String)>,
 	interactive: bool,
+	hovered:     bool,
 }
 
 impl From<Cmd> for Opt {
@@ -17,13 +18,21 @@ impl From<Cmd> for Opt {
 		Self {
 			targets:     c.take_data().unwrap_or_default(),
 			interactive: c.named.contains_key("interactive"),
+			hovered:     c.named.contains_key("hovered"),
 		}
 	}
 }
 
 impl Manager {
 	pub fn open(&mut self, opt: impl Into<Opt>, tasks: &Tasks) {
-		let selected = self.selected_or_hovered();
+		let mut opt = opt.into() as Opt;
+
+		let selected = if opt.hovered {
+			self.hovered().map(|h| vec![&h.url]).unwrap_or_default()
+		} else {
+			self.selected_or_hovered()
+		};
+
 		if selected.is_empty() {
 			return;
 		} else if Self::quit_with_selected(&selected) {
@@ -41,7 +50,6 @@ impl Manager {
 			}
 		}
 
-		let mut opt = opt.into() as Opt;
 		if todo.is_empty() {
 			opt.targets = done;
 			return self.open_do(opt, tasks);
