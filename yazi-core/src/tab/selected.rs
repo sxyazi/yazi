@@ -117,4 +117,69 @@ mod tests {
 		assert!(selected.inner.is_empty(), "Inner set should be empty after removal");
 		assert!(selected.parents.is_empty(), "Parents map should be empty after removal");
 	}
+
+
+	#[test]
+	fn insert_many_success() {
+		let mut selected = Selected::new();
+		let parent = Url::from(Path::new("/parent"));
+		let child1= Url::from(Path::new("/parent/child1"));
+		let child2= Url::from(Path::new("/parent/child2"));
+		let urls = vec![
+			&child1,
+			&child2,
+		];
+		assert!(selected.insert_many(&urls, parent), "Should successfully insert urls with the same parent");
+	}
+
+	#[test]
+	fn insert_many_with_existing_parent_fails() {
+		let mut selected = Selected::new();
+		let parent = Url::from(Path::new("/parent"));
+		selected.insert(Url::from(Path::new("/parent")));
+		let childs1= Url::from(Path::new("/parent/child1"));
+		let childs2=Url::from(Path::new("/parent/child2"));
+		let urls = vec![
+			&childs1,
+			&childs2
+		];
+		assert!(!selected.insert_many(&urls, parent), "Should fail to insert since parent already exists");
+	}
+
+	#[test]
+	fn insert_many_with_existing_child_fails() {
+		let mut selected = Selected::new();
+		let parent = Url::from(Path::new("/parent"));
+		let child = Url::from(Path::new("/parent/child1"));
+		selected.insert(child);
+		let child1= Url::from(Path::new("/parent/child1"));
+		let child2= Url::from(Path::new("/parent/child2"));
+		let urls = vec![
+			&child1,
+			&child2
+		];
+		assert!(!selected.insert_many(&urls, parent), "Should fail to insert since one of the children already exists");
+	}
+
+	#[test]
+	fn insert_many_empty_urls_list() {
+		let mut selected = Selected::new();
+		let parent = Url::from(Path::new("/parent"));
+		let urls = vec![];
+		assert!(selected.insert_many(&urls, parent), "Inserting an empty list of urls should succeed");
+	}
+
+	#[test]
+	fn insert_many_with_parent_as_child_of_another_url() {
+		let mut selected = Selected::new();
+		let parent = Url::from(Path::new("/parent/child"));
+		selected.insert(Url::from(Path::new("/parent")));
+		let child1= Url::from(Path::new("/parent/child/child1"));
+		let child2= Url::from(Path::new("/parent/child/child2"));
+		let urls = vec![
+			&child1,
+			&child2,
+		];
+		assert!(selected.insert_many(&urls, parent), "Should successfully insert urls when parent is a child of another url in the set");
+	}
 }
