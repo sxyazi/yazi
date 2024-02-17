@@ -9,10 +9,7 @@ pub struct Selected {
 }
 
 impl Selected {
-	pub fn get_inner(&self)->BTreeSet<Url>{
-		return self.inner.clone()
-	}
-	pub fn new() -> Self { Selected { inner: BTreeSet::new(), parents: HashMap::new() } }
+	pub fn get_inner(&self) -> BTreeSet<Url> { self.inner.clone() }
 
 	pub fn insert(&mut self, url: Url) -> bool { self.insert_many(&[&url]) }
 
@@ -50,7 +47,7 @@ impl Selected {
 	}
 
 	pub fn remove(&mut self, url: &Url) -> bool {
-		if !self.inner.remove(&url) {
+		if !self.inner.remove(url) {
 			return false;
 		}
 
@@ -66,7 +63,7 @@ impl Selected {
 				self.parents.remove(&current_path);
 			}
 		}
-		return true;
+		true
 	}
 
 	pub fn is_empty(&self) -> bool { self.inner.is_empty() }
@@ -77,10 +74,10 @@ impl Selected {
 	}
 
 	pub fn iter(&self) -> std::collections::btree_set::Iter<Url> { self.inner.iter() }
-	pub fn contains(&self,url:&Url)->bool{
-		self.inner.contains(url)
-	}
+
+	pub fn contains(&self, url: &Url) -> bool { self.inner.contains(url) }
 }
+
 #[cfg(test)]
 mod tests {
 	use std::path::Path;
@@ -89,7 +86,7 @@ mod tests {
 
 	#[test]
 	fn test_insert_non_conflicting() {
-		let mut selected = Selected::new();
+		let mut selected = Selected::default();
 		let url1 = Url::from(Path::new("/a/b"));
 		let url2 = Url::from(Path::new("/c/d"));
 
@@ -100,7 +97,7 @@ mod tests {
 
 	#[test]
 	fn test_insert_conflicting_parent() {
-		let mut selected = Selected::new();
+		let mut selected = Selected::default();
 		let parent_url = Url::from(Path::new("/a"));
 		let child_url = Url::from(Path::new("/a/b"));
 
@@ -110,7 +107,7 @@ mod tests {
 
 	#[test]
 	fn test_insert_conflicting_child() {
-		let mut selected = Selected::new();
+		let mut selected = Selected::default();
 		let child_url = Url::from(Path::new("/a/b/c"));
 		let parent_url = Url::from(Path::new("/a/b"));
 		let sibling_url = Url::from(Path::new("/a/b/d"));
@@ -122,7 +119,7 @@ mod tests {
 
 	#[test]
 	fn test_remove() {
-		let mut selected = Selected::new();
+		let mut selected = Selected::default();
 		let url = Url::from(Path::new("/a/b"));
 
 		assert!(selected.insert(url.clone()), "Should successfully insert url");
@@ -133,7 +130,7 @@ mod tests {
 
 	#[test]
 	fn insert_many_success() {
-		let mut selected = Selected::new();
+		let mut selected = Selected::default();
 		let child1 = Url::from(Path::new("/parent/child1"));
 		let child2 = Url::from(Path::new("/parent/child2"));
 		let child3 = Url::from(Path::new("/parent/child3"));
@@ -143,7 +140,7 @@ mod tests {
 
 	#[test]
 	fn insert_many_with_existing_parent_fails() {
-		let mut selected = Selected::new();
+		let mut selected = Selected::default();
 		selected.insert(Url::from(Path::new("/parent")));
 
 		let childs1 = Url::from(Path::new("/parent/child1"));
@@ -154,7 +151,7 @@ mod tests {
 
 	#[test]
 	fn insert_many_with_existing_child_fails() {
-		let mut selected = Selected::new();
+		let mut selected = Selected::default();
 		let child = Url::from(Path::new("/parent/child1"));
 		selected.insert(child);
 
@@ -169,14 +166,14 @@ mod tests {
 
 	#[test]
 	fn insert_many_empty_urls_list() {
-		let mut selected = Selected::new();
+		let mut selected = Selected::default();
 		let urls = vec![];
 		assert!(!selected.insert_many(&urls), "Inserting an empty list of urls should false");
 	}
 
 	#[test]
 	fn insert_many_with_parent_as_child_of_another_url() {
-		let mut selected = Selected::new();
+		let mut selected = Selected::default();
 		selected.insert(Url::from(Path::new("/parent/child")));
 		let child1 = Url::from(Path::new("/parent/child/child1"));
 		let child2 = Url::from(Path::new("/parent/child/child2"));
@@ -188,7 +185,7 @@ mod tests {
 	}
 	#[test]
 	fn insert_many_with_direct_parent_fails() {
-		let mut selected = Selected::new();
+		let mut selected = Selected::default();
 		selected.insert(Url::from(Path::new("/a")));
 		let binding = Url::from(Path::new("/a/b"));
 		let urls = vec![&binding];
@@ -200,7 +197,7 @@ mod tests {
 
 	#[test]
 	fn insert_many_with_nested_child_fails() {
-		let mut selected = Selected::new();
+		let mut selected = Selected::default();
 		selected.insert(Url::from(Path::new("/a/b")));
 		let binding = Url::from(Path::new("/a"));
 		let urls = vec![&binding];
@@ -212,7 +209,7 @@ mod tests {
 
 	#[test]
 	fn insert_many_sibling_directories_success() {
-		let mut selected = Selected::new();
+		let mut selected = Selected::default();
 		let child1 = Url::from(Path::new("/a/b"));
 		let child2 = Url::from(Path::new("/a/c"));
 		let urls = vec![&child1, &child2];
@@ -221,7 +218,7 @@ mod tests {
 
 	#[test]
 	fn insert_many_with_grandchild_fails() {
-		let mut selected = Selected::new();
+		let mut selected = Selected::default();
 		selected.insert(Url::from(Path::new("/a/b")));
 		let binding = Url::from(Path::new("/a/b/c"));
 		let urls = vec![&binding];
@@ -232,17 +229,17 @@ mod tests {
 	}
 	#[test]
 	fn test_insert_many_with_remove() {
-		let mut selected = Selected::new();
+		let mut selected = Selected::default();
 		let child1 = Url::from(Path::new("/parent/child1"));
 		let child2 = Url::from(Path::new("/parent/child2"));
 		let child3 = Url::from(Path::new("/parent/child3"));
 		let urls = vec![&child1, &child2, &child3];
 		assert!(selected.insert_many(&urls), "Should successfully insert urls with the same parent");
 		assert!(selected.remove(&child1), "Should successfully remove url");
-		assert_eq!(selected.inner.len(),2);
-		assert!(!selected.parents.is_empty(),"parent map should not be empty");
+		assert_eq!(selected.inner.len(), 2);
+		assert!(!selected.parents.is_empty(), "parent map should not be empty");
 		assert!(selected.remove(&child2), "Should successfully remove url");
-		assert!(!selected.parents.is_empty(),"parent map should not be empty");
+		assert!(!selected.parents.is_empty(), "parent map should not be empty");
 		assert!(selected.remove(&child3), "Should successfully remove url");
 
 		assert!(selected.inner.is_empty(), "Inner set should be empty after removal");
