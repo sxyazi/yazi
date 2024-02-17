@@ -1,11 +1,11 @@
-use std::{collections::{BTreeSet, HashMap}, path::PathBuf};
+use std::collections::{BTreeSet, HashMap};
 
 use yazi_shared::fs::Url;
 
 #[derive(Default)]
 pub struct Selected {
 	inner:   BTreeSet<Url>,
-	parents: HashMap<PathBuf, usize>,
+	parents: HashMap<Url, usize>,
 }
 
 impl Selected {
@@ -18,29 +18,23 @@ impl Selected {
 			return true;
 		}
 
-		let url_buf = urls[0].to_path_buf();
-
-		let mut current_path = url_buf.clone();
-		while let Some(parent) = current_path.parent() {
-			if self.inner.contains(&Url::from(parent)) {
+		let mut current_path = urls[0].clone();
+		while let Some(parent) = current_path.parent_url() {
+			if self.inner.contains(&parent) {
 				return false;
 			}
-			current_path = parent.to_path_buf();
+			current_path = parent;
 		}
 
-		if self.parents.contains_key(&url_buf) {
+		if self.parents.contains_key(urls[0]) {
 			return false;
 		}
 
-		let mut current_path = url_buf.clone();
+		let mut current_path = urls[0].clone();
 		let len_of_urls = urls.len();
-		loop {
-			current_path = match current_path.parent() {
-				Some(parent) => parent.to_path_buf(),
-				None => break,
-			};
-			let counter = self.parents.entry(current_path.clone()).or_insert(0);
-			*counter += len_of_urls;
+		while let Some(parent) = current_path.parent_url() {
+			current_path = parent;
+			*self.parents.entry(current_path.clone()).or_insert(0) += len_of_urls;
 		}
 
 		self.inner.extend(urls.iter().cloned().cloned());
@@ -52,12 +46,10 @@ impl Selected {
 			return false;
 		}
 
-		let mut current_path = url.to_path_buf();
-		loop {
-			current_path = match current_path.parent() {
-				Some(parent) => parent.to_path_buf(),
-				None => break,
-			};
+		let mut current_path = url.clone();
+		while let Some(parent) = current_path.parent_url() {
+			current_path = parent;
+
 			let counter = self.parents.entry(current_path.clone()).or_insert(0);
 			*counter -= 1;
 			if *counter == 0 {
