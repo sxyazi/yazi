@@ -58,7 +58,8 @@ impl Tab {
 			return;
 		};
 		if query.is_empty() {
-			return self.escape(super::escape::Opt::FIND);
+			self.escape_find();
+			return;
 		}
 
 		let Ok(finder) = Finder::new(&query, opt.case) else {

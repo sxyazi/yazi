@@ -18,6 +18,10 @@ impl From<Cmd> for Opt {
 
 impl Manager {
 	pub fn remove(&mut self, opt: impl Into<Opt>, tasks: &Tasks) {
+		if !self.active_mut().try_escape_visual() {
+			return;
+		}
+
 		let opt = opt.into() as Opt;
 		let targets = self.selected_or_hovered().into_iter().cloned().collect();
 		tasks.file_remove(targets, opt.force, opt.permanently);

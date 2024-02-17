@@ -20,7 +20,11 @@ impl From<Cmd> for Opt {
 }
 
 impl Tab {
-	pub fn shell(&self, opt: impl Into<Opt>) {
+	pub fn shell(&mut self, opt: impl Into<Opt>) {
+		if !self.try_escape_visual() {
+			return;
+		}
+
 		let mut opt = opt.into() as Opt;
 		let selected: Vec<_> = self.selected_or_hovered().into_iter().cloned().collect();
 

@@ -14,7 +14,7 @@ function Header:cwd()
 	return span:style(THEME.manager.cwd)
 end
 
-function Header:counter()
+function Header:count()
 	local yanked = #cx.yanked
 
 	local count, style
@@ -73,7 +73,7 @@ function Header:render(area)
 	local chunks = self:layout(area)
 
 	local left = ui.Line { self:cwd() }
-	local right = ui.Line { self:counter(), self:tabs() }
+	local right = ui.Line { self:count(), self:tabs() }
 	return {
 		ui.Paragraph(chunks[1], { left }),
 		ui.Paragraph(chunks[2], { right }):align(ui.Paragraph.RIGHT),

@@ -33,6 +33,10 @@ impl Tab {
 	}
 
 	pub fn cd(&mut self, opt: impl Into<Opt>) {
+		if !self.try_escape_visual() {
+			return;
+		}
+
 		let opt = opt.into() as Opt;
 		if opt.interactive {
 			return self.cd_interactive();

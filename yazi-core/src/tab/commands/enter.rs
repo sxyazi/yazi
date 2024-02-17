@@ -1,40 +1,9 @@
-use std::mem;
+use yazi_shared::event::Cmd;
 
-use yazi_shared::{event::Cmd, render};
-
-use crate::{manager::Manager, tab::Tab};
-
-pub struct Opt;
-impl From<()> for Opt {
-	fn from(_: ()) -> Self { Self }
-}
-impl From<Cmd> for Opt {
-	fn from(_: Cmd) -> Self { Self }
-}
+use crate::tab::Tab;
 
 impl Tab {
-	pub fn enter(&mut self, _: impl Into<Opt>) {
-		let Some(hovered) = self.current.hovered().filter(|h| h.is_dir()).map(|h| h.url()) else {
-			return;
-		};
-
-		// Current
-		let rep = self.history_new(&hovered);
-		let rep = mem::replace(&mut self.current, rep);
-		if rep.cwd.is_regular() {
-			self.history.insert(rep.cwd.clone(), rep);
-		}
-
-		// Parent
-		if let Some(rep) = self.parent.take() {
-			self.history.insert(rep.cwd.clone(), rep);
-		}
-		self.parent = Some(self.history_new(&hovered.parent_url().unwrap()));
-
-		// Backstack
-		self.backstack.push(hovered);
-
-		Manager::_refresh();
-		render!();
+	pub fn enter(&mut self, _: Cmd) {
+		self.current.hovered().filter(|h| h.is_dir()).map(|h| h.url()).map(|u| self.cd(u));
 	}
 }
