@@ -41,7 +41,7 @@ impl Tab {
 				me.parent.as_ref().map(|f| Folder::make(None, f, me)).transpose()
 			});
 
-			reg.add_field_method_get("selected", |_, me| Selected::make(&me.selected.get_inner()));
+			reg.add_field_method_get("selected", |_, me| Selected::make(&me.selected));
 
 			reg.add_field_method_get("preview", |_, me| Preview::make(me));
 		})?;

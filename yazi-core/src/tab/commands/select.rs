@@ -31,9 +31,9 @@ impl<'a> Tab {
 		};
 
 		render!(match opt.state {
-			Some(true) => self.selected.insert(url.into_owned()),
+			Some(true) => self.selected.add(&url),
 			Some(false) => self.selected.remove(&url),
-			None => self.selected.remove(&url) || self.selected.insert(url.into_owned()),
+			None => self.selected.remove(&url) || self.selected.add(&url),
 		});
 	}
 }
