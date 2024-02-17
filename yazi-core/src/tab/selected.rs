@@ -91,9 +91,9 @@ mod tests {
 		let url1 = Url::from(Path::new("/a/b"));
 		let url2 = Url::from(Path::new("/c/d"));
 
-		assert!(selected.insert(url1), "Should successfully insert url1");
-		assert!(selected.insert(url2), "Should successfully insert url2");
-		assert_eq!(selected.inner.len(), 2, "There should be two URLs");
+		assert!(selected.insert(url1));
+		assert!(selected.insert(url2));
+		assert_eq!(selected.inner.len(), 2);
 	}
 
 	#[test]
@@ -102,8 +102,8 @@ mod tests {
 		let parent_url = Url::from(Path::new("/a"));
 		let child_url = Url::from(Path::new("/a/b"));
 
-		assert!(selected.insert(parent_url), "Should successfully insert parent_url");
-		assert!(!selected.insert(child_url), "Should fail to insert child_url due to conflict");
+		assert!(selected.insert(parent_url));
+		assert!(!selected.insert(child_url));
 	}
 
 	#[test]
@@ -113,9 +113,9 @@ mod tests {
 		let parent_url = Url::from(Path::new("/a/b"));
 		let sibling_url = Url::from(Path::new("/a/b/d"));
 
-		assert!(selected.insert(child_url), "Should successfully insert child_url");
-		assert!(!selected.insert(parent_url), "Should fail to insert parent_url due to conflict");
-		assert!(selected.insert(sibling_url), "Should successfully insert sibling_url");
+		assert!(selected.insert(child_url));
+		assert!(!selected.insert(parent_url));
+		assert!(selected.insert(sibling_url));
 	}
 
 	#[test]
@@ -123,10 +123,10 @@ mod tests {
 		let mut selected = Selected::default();
 		let url = Url::from(Path::new("/a/b"));
 
-		assert!(selected.insert(url.clone()), "Should successfully insert url");
-		assert!(selected.remove(&url), "Should successfully remove url");
-		assert!(selected.inner.is_empty(), "Inner set should be empty after removal");
-		assert!(selected.parents.is_empty(), "Parents map should be empty after removal");
+		assert!(selected.insert(url.clone()));
+		assert!(selected.remove(&url));
+		assert!(selected.inner.is_empty());
+		assert!(selected.parents.is_empty());
 	}
 
 	#[test]
@@ -136,7 +136,7 @@ mod tests {
 		let child2 = Url::from(Path::new("/parent/child2"));
 		let child3 = Url::from(Path::new("/parent/child3"));
 		let urls = vec![&child1, &child2, &child3];
-		assert!(selected.insert_many(&urls), "Should successfully insert urls with the same parent");
+		assert!(selected.insert_many(&urls));
 	}
 
 	#[test]
@@ -147,7 +147,7 @@ mod tests {
 		let child1 = Url::from(Path::new("/parent/child1"));
 		let child2 = Url::from(Path::new("/parent/child2"));
 		let urls = vec![&child1, &child2];
-		assert!(!selected.insert_many(&urls), "Should fail to insert since parent already exists");
+		assert!(!selected.insert_many(&urls));
 	}
 
 	#[test]
@@ -159,16 +159,13 @@ mod tests {
 		let child1 = Url::from(Path::new("/parent/child1"));
 		let child2 = Url::from(Path::new("/parent/child2"));
 		let urls = vec![&child1, &child2];
-		assert!(
-			selected.insert_many(&urls),
-			"Should success to insert since one of the children already exists"
-		);
+		assert!(selected.insert_many(&urls));
 	}
 
 	#[test]
 	fn insert_many_empty_urls_list() {
 		let mut selected = Selected::default();
-		assert!(selected.insert_many(&[]), "Inserting an empty list of urls should false");
+		assert!(selected.insert_many(&[]));
 	}
 
 	#[test]
@@ -178,10 +175,7 @@ mod tests {
 		let child1 = Url::from(Path::new("/parent/child/child1"));
 		let child2 = Url::from(Path::new("/parent/child/child2"));
 		let urls = vec![&child1, &child2];
-		assert!(
-			!selected.insert_many(&urls),
-			"Should successfully insert urls when parent is a child of another url in the set"
-		);
+		assert!(!selected.insert_many(&urls));
 	}
 	#[test]
 	fn insert_many_with_direct_parent_fails() {
@@ -189,10 +183,7 @@ mod tests {
 		selected.insert(Url::from(Path::new("/a")));
 		let binding = Url::from(Path::new("/a/b"));
 		let urls = vec![&binding];
-		assert!(
-			!selected.insert_many(&urls),
-			"Should not allow insert when parent is already selected"
-		);
+		assert!(!selected.insert_many(&urls));
 	}
 
 	#[test]
@@ -201,10 +192,7 @@ mod tests {
 		selected.insert(Url::from(Path::new("/a/b")));
 		let binding = Url::from(Path::new("/a"));
 		let urls = vec![&binding];
-		assert!(
-			!selected.insert_many(&urls),
-			"Should not allow insert of a parent when a child is already selected"
-		);
+		assert!(!selected.insert_many(&urls));
 	}
 
 	#[test]
@@ -213,7 +201,7 @@ mod tests {
 		let child1 = Url::from(Path::new("/a/b"));
 		let child2 = Url::from(Path::new("/a/c"));
 		let urls = vec![&child1, &child2];
-		assert!(selected.insert_many(&urls), "Should allow inserts of sibling directories");
+		assert!(selected.insert_many(&urls));
 	}
 
 	#[test]
@@ -222,11 +210,9 @@ mod tests {
 		selected.insert(Url::from(Path::new("/a/b")));
 		let binding = Url::from(Path::new("/a/b/c"));
 		let urls = vec![&binding];
-		assert!(
-			!selected.insert_many(&urls),
-			"Should not allow insert of a grandchild when the child is already selected"
-		);
+		assert!(!selected.insert_many(&urls));
 	}
+
 	#[test]
 	fn test_insert_many_with_remove() {
 		let mut selected = Selected::default();
@@ -234,15 +220,15 @@ mod tests {
 		let child2 = Url::from(Path::new("/parent/child2"));
 		let child3 = Url::from(Path::new("/parent/child3"));
 		let urls = vec![&child1, &child2, &child3];
-		assert!(selected.insert_many(&urls), "Should successfully insert urls with the same parent");
-		assert!(selected.remove(&child1), "Should successfully remove url");
+		assert!(selected.insert_many(&urls));
+		assert!(selected.remove(&child1));
 		assert_eq!(selected.inner.len(), 2);
-		assert!(!selected.parents.is_empty(), "parent map should not be empty");
-		assert!(selected.remove(&child2), "Should successfully remove url");
-		assert!(!selected.parents.is_empty(), "parent map should not be empty");
-		assert!(selected.remove(&child3), "Should successfully remove url");
+		assert!(!selected.parents.is_empty());
+		assert!(selected.remove(&child2));
+		assert!(!selected.parents.is_empty());
+		assert!(selected.remove(&child3));
 
-		assert!(selected.inner.is_empty(), "Inner set should be empty after removal");
-		assert!(selected.parents.is_empty(), "Parents map should be empty after removal");
+		assert!(selected.inner.is_empty());
+		assert!(selected.parents.is_empty());
 	}
 }
