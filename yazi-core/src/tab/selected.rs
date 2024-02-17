@@ -81,15 +81,13 @@ impl Selected {
 
 #[cfg(test)]
 mod tests {
-	use std::path::Path;
-
 	use super::*;
 
 	#[test]
 	fn test_insert_non_conflicting() {
 		let mut selected = Selected::default();
-		let url1 = Url::from(Path::new("/a/b"));
-		let url2 = Url::from(Path::new("/c/d"));
+		let url1 = Url::from("/a/b");
+		let url2 = Url::from("/c/d");
 
 		assert!(selected.insert(url1));
 		assert!(selected.insert(url2));
@@ -99,8 +97,8 @@ mod tests {
 	#[test]
 	fn test_insert_conflicting_parent() {
 		let mut selected = Selected::default();
-		let parent_url = Url::from(Path::new("/a"));
-		let child_url = Url::from(Path::new("/a/b"));
+		let parent_url = Url::from("/a");
+		let child_url = Url::from("/a/b");
 
 		assert!(selected.insert(parent_url));
 		assert!(!selected.insert(child_url));
@@ -109,9 +107,9 @@ mod tests {
 	#[test]
 	fn test_insert_conflicting_child() {
 		let mut selected = Selected::default();
-		let child_url = Url::from(Path::new("/a/b/c"));
-		let parent_url = Url::from(Path::new("/a/b"));
-		let sibling_url = Url::from(Path::new("/a/b/d"));
+		let child_url = Url::from("/a/b/c");
+		let parent_url = Url::from("/a/b");
+		let sibling_url = Url::from("/a/b/d");
 
 		assert!(selected.insert(child_url));
 		assert!(!selected.insert(parent_url));
@@ -121,7 +119,7 @@ mod tests {
 	#[test]
 	fn test_remove() {
 		let mut selected = Selected::default();
-		let url = Url::from(Path::new("/a/b"));
+		let url = Url::from("/a/b");
 
 		assert!(selected.insert(url.clone()));
 		assert!(selected.remove(&url));
@@ -132,9 +130,9 @@ mod tests {
 	#[test]
 	fn insert_many_success() {
 		let mut selected = Selected::default();
-		let child1 = Url::from(Path::new("/parent/child1"));
-		let child2 = Url::from(Path::new("/parent/child2"));
-		let child3 = Url::from(Path::new("/parent/child3"));
+		let child1 = Url::from("/parent/child1");
+		let child2 = Url::from("/parent/child2");
+		let child3 = Url::from("/parent/child3");
 		let urls = vec![&child1, &child2, &child3];
 		assert!(selected.insert_many(&urls));
 	}
@@ -142,10 +140,10 @@ mod tests {
 	#[test]
 	fn insert_many_with_existing_parent_fails() {
 		let mut selected = Selected::default();
-		selected.insert(Url::from(Path::new("/parent")));
+		selected.insert(Url::from("/parent"));
 
-		let child1 = Url::from(Path::new("/parent/child1"));
-		let child2 = Url::from(Path::new("/parent/child2"));
+		let child1 = Url::from("/parent/child1");
+		let child2 = Url::from("/parent/child2");
 		let urls = vec![&child1, &child2];
 		assert!(!selected.insert_many(&urls));
 	}
@@ -153,11 +151,11 @@ mod tests {
 	#[test]
 	fn insert_many_with_existing_child_fails() {
 		let mut selected = Selected::default();
-		let child = Url::from(Path::new("/parent/child1"));
+		let child = Url::from("/parent/child1");
 		selected.insert(child);
 
-		let child1 = Url::from(Path::new("/parent/child1"));
-		let child2 = Url::from(Path::new("/parent/child2"));
+		let child1 = Url::from("/parent/child1");
+		let child2 = Url::from("/parent/child2");
 		let urls = vec![&child1, &child2];
 		assert!(selected.insert_many(&urls));
 	}
@@ -171,17 +169,17 @@ mod tests {
 	#[test]
 	fn insert_many_with_parent_as_child_of_another_url() {
 		let mut selected = Selected::default();
-		selected.insert(Url::from(Path::new("/parent/child")));
-		let child1 = Url::from(Path::new("/parent/child/child1"));
-		let child2 = Url::from(Path::new("/parent/child/child2"));
+		selected.insert(Url::from("/parent/child"));
+		let child1 = Url::from("/parent/child/child1");
+		let child2 = Url::from("/parent/child/child2");
 		let urls = vec![&child1, &child2];
 		assert!(!selected.insert_many(&urls));
 	}
 	#[test]
 	fn insert_many_with_direct_parent_fails() {
 		let mut selected = Selected::default();
-		selected.insert(Url::from(Path::new("/a")));
-		let binding = Url::from(Path::new("/a/b"));
+		selected.insert(Url::from("/a"));
+		let binding = Url::from("/a/b");
 		let urls = vec![&binding];
 		assert!(!selected.insert_many(&urls));
 	}
@@ -189,8 +187,8 @@ mod tests {
 	#[test]
 	fn insert_many_with_nested_child_fails() {
 		let mut selected = Selected::default();
-		selected.insert(Url::from(Path::new("/a/b")));
-		let binding = Url::from(Path::new("/a"));
+		selected.insert(Url::from("/a/b"));
+		let binding = Url::from("/a");
 		let urls = vec![&binding];
 		assert!(!selected.insert_many(&urls));
 	}
@@ -198,8 +196,8 @@ mod tests {
 	#[test]
 	fn insert_many_sibling_directories_success() {
 		let mut selected = Selected::default();
-		let child1 = Url::from(Path::new("/a/b"));
-		let child2 = Url::from(Path::new("/a/c"));
+		let child1 = Url::from("/a/b");
+		let child2 = Url::from("/a/c");
 		let urls = vec![&child1, &child2];
 		assert!(selected.insert_many(&urls));
 	}
@@ -207,8 +205,8 @@ mod tests {
 	#[test]
 	fn insert_many_with_grandchild_fails() {
 		let mut selected = Selected::default();
-		selected.insert(Url::from(Path::new("/a/b")));
-		let binding = Url::from(Path::new("/a/b/c"));
+		selected.insert(Url::from("/a/b"));
+		let binding = Url::from("/a/b/c");
 		let urls = vec![&binding];
 		assert!(!selected.insert_many(&urls));
 	}
@@ -216,9 +214,9 @@ mod tests {
 	#[test]
 	fn test_insert_many_with_remove() {
 		let mut selected = Selected::default();
-		let child1 = Url::from(Path::new("/parent/child1"));
-		let child2 = Url::from(Path::new("/parent/child2"));
-		let child3 = Url::from(Path::new("/parent/child3"));
+		let child1 = Url::from("/parent/child1");
+		let child2 = Url::from("/parent/child2");
+		let child3 = Url::from("/parent/child3");
 		let urls = vec![&child1, &child2, &child3];
 		assert!(selected.insert_many(&urls));
 		assert!(selected.remove(&child1));
