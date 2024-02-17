@@ -14,6 +14,10 @@ impl From<Cmd> for Opt {
 
 impl Manager {
 	pub fn yank(&mut self, opt: impl Into<Opt>) {
+		if !self.active_mut().try_escape_visual() {
+			return;
+		}
+
 		let selected: HashSet<_> = self.selected_or_hovered().into_iter().cloned().collect();
 		if selected.is_empty() {
 			return;

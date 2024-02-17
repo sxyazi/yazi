@@ -1,5 +1,5 @@
 use bitflags::bitflags;
-use yazi_shared::{event::Cmd, render};
+use yazi_shared::{event::Cmd, render, render_and};
 
 use crate::{manager::Manager, tab::{Mode, Tab}};
 
@@ -28,8 +28,36 @@ impl From<Cmd> for Opt {
 }
 
 impl Tab {
+	pub fn escape(&mut self, opt: impl Into<Opt>) {
+		let opt = opt.into() as Opt;
+		if opt.is_empty() {
+			_ = self.escape_find()
+				|| self.escape_visual()
+				|| self.escape_select()
+				|| self.escape_filter()
+				|| self.escape_search();
+			return;
+		}
+
+		if opt.contains(Opt::FIND) {
+			self.escape_find();
+		}
+		if opt.contains(Opt::VISUAL) {
+			self.escape_visual();
+		}
+		if opt.contains(Opt::SELECT) {
+			self.escape_select();
+		}
+		if opt.contains(Opt::FILTER) {
+			self.escape_filter();
+		}
+		if opt.contains(Opt::SEARCH) {
+			self.escape_search();
+		}
+	}
+
 	#[inline]
-	pub fn escape_find(&mut self) -> bool { self.finder.take().is_some() }
+	pub fn escape_find(&mut self) -> bool { render_and!(self.finder.take().is_some()) }
 
 	#[inline]
 	pub fn escape_visual(&mut self) -> bool {
@@ -47,8 +75,7 @@ impl Tab {
 		}
 
 		self.mode = Mode::Normal;
-		render!();
-		true
+		render_and!(true)
 	}
 
 	#[inline]
@@ -61,49 +88,32 @@ impl Tab {
 		if self.current.hovered().is_some_and(|h| h.is_dir()) {
 			Manager::_peek(true);
 		}
-		true
+		render_and!(true)
 	}
 
 	#[inline]
 	pub fn escape_filter(&mut self) -> bool {
-		let b = self.current.files.filter().is_some();
+		if self.current.files.filter().is_none() {
+			return false;
+		}
+
 		self.filter_do(super::filter::Opt::default());
-		b
+		render_and!(true)
 	}
 
 	#[inline]
 	pub fn escape_search(&mut self) -> bool {
-		let b = self.current.cwd.is_search();
+		if !self.current.cwd.is_search() {
+			return false;
+		}
+
 		self.search_stop();
-		b
+		render_and!(true)
 	}
 
-	pub fn escape(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
-		if opt.is_empty() {
-			return render!(
-				self.escape_find()
-					|| self.escape_visual()
-					|| self.escape_select()
-					|| self.escape_filter()
-					|| self.escape_search()
-			);
-		}
-
-		if opt.contains(Opt::FIND) {
-			render!(self.escape_find());
-		}
-		if opt.contains(Opt::VISUAL) {
-			render!(self.escape_visual());
-		}
-		if opt.contains(Opt::SELECT) {
-			render!(self.escape_select());
-		}
-		if opt.contains(Opt::FILTER) {
-			render!(self.escape_filter());
-		}
-		if opt.contains(Opt::SEARCH) {
-			render!(self.escape_search());
-		}
+	#[inline]
+	pub fn try_escape_visual(&mut self) -> bool {
+		self.escape_visual();
+		true
 	}
 }

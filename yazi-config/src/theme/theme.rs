@@ -31,7 +31,7 @@ pub struct Manager {
 	#[validate(range(min = 1, message = "Must be greater than 0"))]
 	tab_width:    u8,
 
-	// Selected counter
+	// Count
 	count_selected: Style,
 	count_copied:   Style,
 	count_cut:      Style,

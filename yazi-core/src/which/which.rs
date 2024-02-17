@@ -1,5 +1,5 @@
 use yazi_config::keymap::{ControlCow, Key};
-use yazi_shared::{emit, render, Layer};
+use yazi_shared::{emit, render, render_and, Layer};
 
 #[derive(Default)]
 pub struct Which {
@@ -27,8 +27,7 @@ impl Which {
 			self.reset();
 		}
 
-		render!();
-		true
+		render_and!(true)
 	}
 
 	fn reset(&mut self) {

@@ -52,8 +52,10 @@ impl Manager {
 		Ok(Self::_hover(Some(new)))
 	}
 
-	pub fn rename(&self, opt: impl Into<Opt>) {
-		if !self.active().selected.is_empty() {
+	pub fn rename(&mut self, opt: impl Into<Opt>) {
+		if !self.active_mut().try_escape_visual() {
+			return;
+		} else if !self.active().selected.is_empty() {
 			return self.bulk_rename();
 		}
 

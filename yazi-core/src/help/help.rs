@@ -1,7 +1,7 @@
 use crossterm::event::KeyCode;
 use unicode_width::UnicodeWidthStr;
 use yazi_config::{keymap::{Control, Key}, KEYMAP};
-use yazi_shared::{render, term::Term, Layer};
+use yazi_shared::{render, render_and, term::Term, Layer};
 
 use super::HELP_MARGIN;
 use crate::input::Input;
@@ -49,8 +49,7 @@ impl Help {
 			}
 			Key { code: KeyCode::Enter, shift: false, ctrl: false, alt: false } => {
 				self.in_filter = None;
-				render!();
-				return true; // Don't do the `filter_apply` below, since we already have the filtered results.
+				return render_and!(true); // Don't do the `filter_apply` below, since we already have the filtered results.
 			}
 			Key { code: KeyCode::Backspace, shift: false, ctrl: false, alt: false } => {
 				input.backspace(false);

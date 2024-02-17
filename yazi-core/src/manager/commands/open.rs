@@ -25,8 +25,11 @@ impl From<Cmd> for Opt {
 
 impl Manager {
 	pub fn open(&mut self, opt: impl Into<Opt>, tasks: &Tasks) {
-		let mut opt = opt.into() as Opt;
+		if !self.active_mut().try_escape_visual() {
+			return;
+		}
 
+		let mut opt = opt.into() as Opt;
 		let selected = if opt.hovered {
 			self.hovered().map(|h| vec![&h.url]).unwrap_or_default()
 		} else {
