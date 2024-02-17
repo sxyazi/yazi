@@ -4,6 +4,7 @@ mod config;
 mod finder;
 mod mode;
 mod preview;
+mod selected;
 mod tab;
 
 pub use backstack::*;

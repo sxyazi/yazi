@@ -1,11 +1,11 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use anyhow::Result;
 use tokio::task::JoinHandle;
 use yazi_shared::{fs::Url, render};
 
 use super::{Backstack, Config, Finder, Mode, Preview};
-use crate::folder::{Folder, FolderStage};
+use crate::{folder::{Folder, FolderStage}, tab::selected::Selected};
 
 pub struct Tab {
 	pub mode:    Mode,
@@ -15,7 +15,7 @@ pub struct Tab {
 
 	pub backstack: Backstack<Url>,
 	pub history:   BTreeMap<Url, Folder>,
-	pub selected:  BTreeSet<Url>,
+	pub selected:  Selected,
 
 	pub preview:       Preview,
 	pub finder:        Option<Finder>,
