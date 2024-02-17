@@ -15,8 +15,9 @@ impl Selected {
 
 	pub fn insert_many(&mut self, urls: &[&Url]) -> bool {
 		if urls.is_empty() {
-			return false;
+			return true;
 		}
+
 		let url_buf = urls[0].to_path_buf();
 
 		let mut current_path = url_buf.clone();
@@ -143,9 +144,9 @@ mod tests {
 		let mut selected = Selected::default();
 		selected.insert(Url::from(Path::new("/parent")));
 
-		let childs1 = Url::from(Path::new("/parent/child1"));
-		let childs2 = Url::from(Path::new("/parent/child2"));
-		let urls = vec![&childs1, &childs2];
+		let child1 = Url::from(Path::new("/parent/child1"));
+		let child2 = Url::from(Path::new("/parent/child2"));
+		let urls = vec![&child1, &child2];
 		assert!(!selected.insert_many(&urls), "Should fail to insert since parent already exists");
 	}
 
@@ -167,8 +168,7 @@ mod tests {
 	#[test]
 	fn insert_many_empty_urls_list() {
 		let mut selected = Selected::default();
-		let urls = vec![];
-		assert!(!selected.insert_many(&urls), "Inserting an empty list of urls should false");
+		assert!(selected.insert_many(&[]), "Inserting an empty list of urls should false");
 	}
 
 	#[test]
