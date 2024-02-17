@@ -18,23 +18,22 @@ impl Selected {
 			return true;
 		}
 
-		let mut current_path = urls[0].clone();
-		while let Some(parent) = current_path.parent_url() {
-			if self.inner.contains(&parent) {
+		let mut parent = urls[0].parent_url();
+		while let Some(u) = parent {
+			if self.inner.contains(&u) {
 				return false;
 			}
-			current_path = parent;
+			parent = u.parent_url();
 		}
 
 		if self.parents.contains_key(urls[0]) {
 			return false;
 		}
 
-		let mut current_path = urls[0].clone();
-		let len_of_urls = urls.len();
-		while let Some(parent) = current_path.parent_url() {
-			current_path = parent;
-			*self.parents.entry(current_path.clone()).or_insert(0) += len_of_urls;
+		let mut parent = urls[0].parent_url();
+		while let Some(u) = parent {
+			parent = u.parent_url();
+			*self.parents.entry(u).or_insert(0) += urls.len();
 		}
 
 		self.inner.extend(urls.iter().cloned().cloned());
