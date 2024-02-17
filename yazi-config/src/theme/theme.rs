@@ -32,9 +32,9 @@ pub struct Manager {
 	tab_width:    u8,
 
 	// Count
-	count_selected: Style,
 	count_copied:   Style,
 	count_cut:      Style,
+	count_selected: Style,
 
 	// Border
 	pub border_symbol: String,
