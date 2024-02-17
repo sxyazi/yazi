@@ -9,6 +9,9 @@ pub struct Selected {
 }
 
 impl Selected {
+	pub fn get_inner(&self)->BTreeSet<Url>{
+		return self.inner.clone()
+	}
 	pub fn new() -> Self { Selected { inner: BTreeSet::new(), parents: HashMap::new() } }
 
 	pub fn insert(&mut self, url: Url) -> bool { self.insert_many(&[&url]) }
@@ -74,6 +77,9 @@ impl Selected {
 	}
 
 	pub fn iter(&self) -> std::collections::btree_set::Iter<Url> { self.inner.iter() }
+	pub fn contains(&self,url:&Url)->bool{
+		self.inner.contains(url)
+	}
 }
 #[cfg(test)]
 mod tests {
