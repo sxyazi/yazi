@@ -18,11 +18,11 @@ impl Manager {
 		let opt = opt.into() as Opt;
 
 		let dest = self.cwd();
-		if !self.yanked.cut {
+		if self.yanked.cut {
+			tasks.file_cut(&self.yanked, dest, opt.force);
+			self.unyank(());
+		} else {
 			tasks.file_copy(&self.yanked, dest, opt.force, opt.follow);
 		}
-
-		tasks.file_cut(&self.yanked, dest, opt.force);
-		self.unyank(());
 	}
 }
