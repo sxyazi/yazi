@@ -103,28 +103,23 @@ impl Tab {
 			return true;
 		};
 
-		let results: Vec<_> = indices
-			.iter()
-			.filter_map(|i| self.current.files.get(*i))
-			.map(|f| {
-				if state {
-					self.selected.add(&f.url)
-				} else {
-					self.selected.remove(&f.url);
-					true
-				}
-			})
-			.collect();
-
-		render!(!results.is_empty());
-		if results.into_iter().all(|b| b) {
-			return true;
+		let mut success = true;
+		for f in indices.iter().filter_map(|i| self.current.files.get(*i)) {
+			if state {
+				success &= self.selected.add(&f.url);
+			} else {
+				self.selected.remove(&f.url);
+			}
 		}
 
-		Notify::_push_warn(
-			"Escape visual mode",
-			"Some files cannot be selected due to path nesting conflict.",
-		);
-		false
+		if !success {
+			Notify::_push_warn(
+				"Escape visual mode",
+				"Some files cannot be selected, due to path nesting conflict.",
+			);
+		}
+
+		render!();
+		success
 	}
 }

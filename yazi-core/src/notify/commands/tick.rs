@@ -38,7 +38,7 @@ impl Notify {
 			if m.timeout.is_zero() {
 				m.percent = m.percent.saturating_sub(20);
 			} else if m.percent < 100 {
-				m.percent = m.percent.saturating_add(20);
+				m.percent += 20;
 			} else {
 				m.timeout = m.timeout.saturating_sub(opt.interval);
 			}
