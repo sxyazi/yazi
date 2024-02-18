@@ -48,11 +48,13 @@ impl Selected {
 	/// # Examples
 	///
 	/// ```
+	/// # use yazi_core::tab::Selected;
+	/// # use yazi_shared::fs::Url;
 	/// let mut s = Selected::default();
 	///
 	/// let url1 = Url::from("/a/b/c");
 	/// let url2 = Url::from("/a/b/d");
-	/// assert!(selected.add_many(&[&url1, &url2]));
+	/// assert!(s.add_many(&[&url1, &url2]));
 	/// ```
 	pub fn add_many(&mut self, urls: &[&Url]) -> bool {
 		if urls.is_empty() {

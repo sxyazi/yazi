@@ -12,4 +12,5 @@ pub use config::*;
 pub use finder::*;
 pub use mode::*;
 pub use preview::*;
+pub use selected::*;
 pub use tab::*;
