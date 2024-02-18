@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/logo.png" alt="yazi-logo" width=20%/>
+  <img src="assets/logo.png" alt="Yazi logo" width="20%">
 </div>
 
 ## Yazi - ⚡️ Blazing Fast Terminal File Manager
