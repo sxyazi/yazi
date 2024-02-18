@@ -71,12 +71,12 @@ impl Manager {
 				error!("preload in watcher failed: {e}");
 			}
 
-			Self::_open_do(opt.interactive, done);
+			Self::_open_do(done, opt.interactive);
 		});
 	}
 
 	#[inline]
-	pub fn _open_do(interactive: bool, targets: Vec<(Url, String)>) {
+	pub fn _open_do(targets: Vec<(Url, String)>, interactive: bool) {
 		emit!(Call(
 			Cmd::new("open_do").with_bool("interactive", interactive).with_data(targets),
 			Layer::Manager

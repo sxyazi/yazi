@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use ratatui::layout::Rect;
 use yazi_shared::{emit, event::Cmd, Layer};
 
 use crate::notify::Notify;
@@ -22,13 +23,13 @@ impl TryFrom<Cmd> for Opt {
 }
 
 impl Notify {
-	pub fn tick(&mut self, opt: impl TryInto<Opt>) {
+	pub fn tick(&mut self, opt: impl TryInto<Opt>, area: Rect) {
 		self.tick_handle.take().map(|h| h.abort());
 		let Ok(opt) = opt.try_into() else {
 			return;
 		};
 
-		let limit = self.limit();
+		let limit = self.limit(area);
 		if limit == 0 {
 			return;
 		}
@@ -37,14 +38,14 @@ impl Notify {
 			if m.timeout.is_zero() {
 				m.percent = m.percent.saturating_sub(20);
 			} else if m.percent < 100 {
-				m.percent = m.percent.saturating_add(20);
+				m.percent += 20;
 			} else {
 				m.timeout = m.timeout.saturating_sub(opt.interval);
 			}
 		}
 
 		self.messages.retain(|m| m.percent > 0 || !m.timeout.is_zero());
-		let limit = self.limit();
+		let limit = self.limit(area);
 		let timeouts: Vec<_> = self.messages[..limit]
 			.iter()
 			.filter(|&m| m.percent == 100 && !m.timeout.is_zero())

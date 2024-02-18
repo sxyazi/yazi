@@ -37,7 +37,10 @@ impl Pattern {
 	}
 
 	#[inline]
-	pub fn is_wildcard(&self) -> bool { self.inner.as_str() == "*" || self.inner.as_str() == "*/" }
+	pub fn any_file(&self) -> bool { self.inner.as_str() == "*" }
+
+	#[inline]
+	pub fn any_dir(&self) -> bool { self.inner.as_str() == "*/" }
 }
 
 impl TryFrom<&str> for Pattern {

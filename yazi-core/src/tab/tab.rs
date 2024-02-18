@@ -5,7 +5,7 @@ use tokio::task::JoinHandle;
 use yazi_shared::{fs::Url, render};
 
 use super::{Backstack, Config, Finder, Mode, Preview};
-use crate::{folder::{Folder, FolderStage}, tab::selected::Selected};
+use crate::{folder::{Folder, FolderStage}, tab::Selected};
 
 pub struct Tab {
 	pub mode:    Mode,

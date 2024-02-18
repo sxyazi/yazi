@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, mem};
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub enum Mode {
@@ -9,8 +9,7 @@ pub enum Mode {
 }
 
 impl Mode {
-	#[inline]
-	pub fn visual(&self) -> Option<(usize, &BTreeSet<usize>)> {
+	pub fn visual_mut(&mut self) -> Option<(usize, &mut BTreeSet<usize>)> {
 		match self {
 			Mode::Normal => None,
 			Mode::Select(start, indices) => Some((*start, indices)),
@@ -18,12 +17,11 @@ impl Mode {
 		}
 	}
 
-	#[inline]
-	pub fn visual_mut(&mut self) -> Option<(usize, &mut BTreeSet<usize>)> {
-		match self {
+	pub fn take_visual(&mut self) -> Option<(usize, BTreeSet<usize>)> {
+		match mem::take(self) {
 			Mode::Normal => None,
-			Mode::Select(start, indices) => Some((*start, indices)),
-			Mode::Unset(start, indices) => Some((*start, indices)),
+			Mode::Select(start, indices) => Some((start, indices)),
+			Mode::Unset(start, indices) => Some((start, indices)),
 		}
 	}
 }

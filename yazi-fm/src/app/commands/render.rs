@@ -2,7 +2,7 @@ use std::sync::atomic::Ordering;
 
 use ratatui::{backend::{Backend, CrosstermBackend}, CompletedFrame};
 
-use crate::{app::App, lives::Lives, notify::Notify, root::{Root, COLLISION}};
+use crate::{app::App, lives::Lives, root::{Root, COLLISION}};
 
 impl App {
 	pub(crate) fn render(&mut self) {
@@ -45,7 +45,7 @@ impl App {
 
 		let frame = term
 			.draw_partial(|f| {
-				f.render_widget(Notify::new(&self.cx), f.size());
+				f.render_widget(crate::notify::Layout::new(&self.cx), f.size());
 
 				if let Some((x, y)) = self.cx.cursor() {
 					f.set_cursor(x, y);
