@@ -98,6 +98,7 @@ impl<'a> Executor<'a> {
 		on!(MANAGER, paste, &self.app.cx.tasks);
 		on!(MANAGER, link, &self.app.cx.tasks);
 		on!(MANAGER, remove, &self.app.cx.tasks);
+		on!(MANAGER, remove_do, &self.app.cx.tasks);
 		on!(MANAGER, create);
 		on!(MANAGER, rename);
 		on!(ACTIVE, copy);

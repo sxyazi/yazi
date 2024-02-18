@@ -2,13 +2,13 @@ use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, mem, path::Path
 
 use tokio::time::sleep;
 use tracing::debug;
-use yazi_config::{manager::SortBy, open::Opener, plugin::{PluginRule, MAX_PRELOADERS}, popup::InputCfg, OPEN, PLUGIN};
+use yazi_config::{manager::SortBy, open::Opener, plugin::{PluginRule, MAX_PRELOADERS}, OPEN, PLUGIN};
 use yazi_plugin::ValueSendable;
 use yazi_scheduler::{Scheduler, TaskSummary};
 use yazi_shared::{emit, event::Cmd, fs::{File, Url}, term::Term, Layer, MIME_DIR};
 
 use super::{TasksProgress, TASKS_BORDER, TASKS_PADDING, TASKS_PERCENT};
-use crate::{folder::Files, input::Input};
+use crate::folder::Files;
 
 pub struct Tasks {
 	pub(super) scheduler: Arc<Scheduler>,
@@ -113,39 +113,14 @@ impl Tasks {
 		}
 	}
 
-	pub fn file_remove(&self, targets: Vec<Url>, force: bool, permanently: bool) {
-		if force {
-			for u in targets {
-				if permanently {
-					self.scheduler.file_delete(u);
-				} else {
-					self.scheduler.file_trash(u);
-				}
-			}
-			return;
-		}
-
-		let scheduler = self.scheduler.clone();
-		tokio::spawn(async move {
-			let mut result = Input::_show(if permanently {
-				InputCfg::delete(targets.len())
+	pub fn file_remove(&self, targets: Vec<Url>, permanently: bool) {
+		for u in targets {
+			if permanently {
+				self.scheduler.file_delete(u);
 			} else {
-				InputCfg::trash(targets.len())
-			});
-
-			if let Some(Ok(choice)) = result.recv().await {
-				if choice != "y" && choice != "Y" {
-					return;
-				}
-				for u in targets {
-					if permanently {
-						scheduler.file_delete(u);
-					} else {
-						scheduler.file_trash(u);
-					}
-				}
+				self.scheduler.file_trash(u);
 			}
-		});
+		}
 	}
 
 	#[inline]
