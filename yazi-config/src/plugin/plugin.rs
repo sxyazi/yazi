@@ -11,24 +11,6 @@ pub struct Plugin {
 	pub previewers: Vec<PluginRule>,
 }
 
-#[derive(Deserialize)]
-pub struct PluginRule {
-	#[serde(default)]
-	pub id:    u8,
-	pub cond:  Option<Condition>,
-	pub name:  Option<Pattern>,
-	pub mime:  Option<Pattern>,
-	#[serde(rename = "exec")]
-	#[serde(deserialize_with = "super::exec_deserialize")]
-	pub cmd:   Cmd,
-	#[serde(default)]
-	pub sync:  bool,
-	#[serde(default)]
-	pub multi: bool,
-	#[serde(default)]
-	pub prio:  Priority,
-}
-
 impl Default for Plugin {
 	fn default() -> Self {
 		#[derive(Deserialize)]
@@ -52,11 +34,17 @@ impl Default for Plugin {
 		}
 
 		let mut shadow = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().plugin;
-		if shadow.append_preloaders.iter().any(|r| r.name.as_ref().is_some_and(|p| p.is_wildcard())) {
-			shadow.preloaders.retain(|r| !r.name.as_ref().is_some_and(|p| p.is_wildcard()));
+		if shadow.append_preloaders.iter().any(|r| r.any_file()) {
+			shadow.preloaders.retain(|r| !r.any_file());
 		}
-		if shadow.append_previewers.iter().any(|r| r.name.as_ref().is_some_and(|p| p.is_wildcard())) {
-			shadow.previewers.retain(|r| !r.name.as_ref().is_some_and(|p| p.is_wildcard()));
+		if shadow.append_preloaders.iter().any(|r| r.any_dir()) {
+			shadow.preloaders.retain(|r| !r.any_dir());
+		}
+		if shadow.append_previewers.iter().any(|r| r.any_file()) {
+			shadow.previewers.retain(|r| !r.any_file());
+		}
+		if shadow.append_previewers.iter().any(|r| r.any_dir()) {
+			shadow.previewers.retain(|r| !r.any_dir());
 		}
 
 		Preset::mix(&mut shadow.preloaders, shadow.prepend_preloaders, shadow.append_preloaders);
@@ -103,4 +91,30 @@ impl Plugin {
 				|| rule.name.as_ref().is_some_and(|n| n.match_path(path, is_folder))
 		})
 	}
+}
+
+#[derive(Deserialize)]
+pub struct PluginRule {
+	#[serde(default)]
+	pub id:    u8,
+	pub cond:  Option<Condition>,
+	pub name:  Option<Pattern>,
+	pub mime:  Option<Pattern>,
+	#[serde(rename = "exec")]
+	#[serde(deserialize_with = "super::exec_deserialize")]
+	pub cmd:   Cmd,
+	#[serde(default)]
+	pub sync:  bool,
+	#[serde(default)]
+	pub multi: bool,
+	#[serde(default)]
+	pub prio:  Priority,
+}
+
+impl PluginRule {
+	#[inline]
+	fn any_file(&self) -> bool { self.name.as_ref().is_some_and(|p| p.any_file()) }
+
+	#[inline]
+	fn any_dir(&self) -> bool { self.name.as_ref().is_some_and(|p| p.any_dir()) }
 }

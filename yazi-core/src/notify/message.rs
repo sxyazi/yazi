@@ -1,5 +1,6 @@
 use std::time::{Duration, Instant};
 
+use unicode_width::UnicodeWidthStr;
 use yazi_shared::event::Cmd;
 
 use super::{Level, NOTIFY_BORDER};
@@ -12,7 +13,6 @@ pub struct Message {
 	pub instant: Instant,
 	pub timeout: Duration,
 
-	pub lines:   usize,
 	pub percent: u8,
 }
 
@@ -26,7 +26,6 @@ impl TryFrom<Cmd> for Message {
 		}
 
 		let content = c.take_name("content").ok_or(())?;
-		let lines = content.lines().count();
 		Ok(Self {
 			title: c.take_name("title").ok_or(())?,
 			content,
@@ -35,7 +34,6 @@ impl TryFrom<Cmd> for Message {
 			instant: Instant::now(),
 			timeout: Duration::from_secs_f64(timeout),
 
-			lines,
 			percent: 0,
 		})
 	}
@@ -43,5 +41,8 @@ impl TryFrom<Cmd> for Message {
 
 impl Message {
 	#[inline]
-	pub fn height(&self) -> usize { self.lines + NOTIFY_BORDER as usize }
+	pub fn height(&self, width: u16) -> usize {
+		let lines = (self.content.width() as f64 / width as f64).ceil();
+		lines as usize + NOTIFY_BORDER as usize
+	}
 }

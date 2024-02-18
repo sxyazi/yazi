@@ -31,6 +31,13 @@ impl Icon {
 		}
 
 		let mut outer = IconOuter::deserialize(deserializer)?;
+		if outer.append_rules.iter().any(|r| r.name.any_file()) {
+			outer.rules.retain(|r| !r.name.any_file());
+		}
+		if outer.append_rules.iter().any(|r| r.name.any_dir()) {
+			outer.rules.retain(|r| !r.name.any_dir());
+		}
+
 		Preset::mix(&mut outer.rules, outer.prepend_rules, outer.append_rules);
 
 		Ok(

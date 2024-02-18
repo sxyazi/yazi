@@ -1,7 +1,7 @@
 use std::ops::ControlFlow;
 
+use ratatui::layout::Rect;
 use tokio::task::JoinHandle;
-use yazi_shared::term::Term;
 
 use super::{Message, NOTIFY_SPACING};
 
@@ -12,14 +12,14 @@ pub struct Notify {
 }
 
 impl Notify {
-	pub fn limit(&self) -> usize {
+	pub fn limit(&self, area: Rect) -> usize {
 		if self.messages.is_empty() {
 			return 0;
 		}
 
-		let mut height = Term::size().height as usize;
+		let mut height = area.height as usize;
 		let flow = (0..self.messages.len().min(3)).try_fold(0, |acc, i| {
-			match height.checked_sub(self.messages[i].height() + NOTIFY_SPACING as usize) {
+			match height.checked_sub(self.messages[i].height(area.width) + NOTIFY_SPACING as usize) {
 				Some(h) => {
 					height = h;
 					ControlFlow::Continue(acc + 1)

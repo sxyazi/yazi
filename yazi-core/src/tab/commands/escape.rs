@@ -1,7 +1,7 @@
 use bitflags::bitflags;
 use yazi_shared::{event::Cmd, render, render_and};
 
-use crate::{manager::Manager, tab::{Mode, Tab}};
+use crate::{manager::Manager, notify::Notify, tab::Tab};
 
 bitflags! {
 	pub struct Opt: u8 {
@@ -56,29 +56,17 @@ impl Tab {
 		}
 	}
 
-	#[inline]
 	pub fn escape_find(&mut self) -> bool { render_and!(self.finder.take().is_some()) }
 
-	#[inline]
 	pub fn escape_visual(&mut self) -> bool {
-		let Some((_, indices)) = self.mode.visual() else {
+		if !self.mode.is_visual() {
 			return false;
-		};
-
-		let state = self.mode.is_select();
-		for f in indices.iter().filter_map(|i| self.current.files.get(*i)) {
-			if state {
-				self.selected.add(&f.url);
-			} else {
-				self.selected.remove(&f.url);
-			}
 		}
 
-		self.mode = Mode::Normal;
-		render_and!(true)
+		self.try_escape_visual();
+		true
 	}
 
-	#[inline]
 	pub fn escape_select(&mut self) -> bool {
 		if self.selected.is_empty() {
 			return false;
@@ -91,7 +79,6 @@ impl Tab {
 		render_and!(true)
 	}
 
-	#[inline]
 	pub fn escape_filter(&mut self) -> bool {
 		if self.current.files.filter().is_none() {
 			return false;
@@ -101,7 +88,6 @@ impl Tab {
 		render_and!(true)
 	}
 
-	#[inline]
 	pub fn escape_search(&mut self) -> bool {
 		if !self.current.cwd.is_search() {
 			return false;
@@ -111,9 +97,34 @@ impl Tab {
 		render_and!(true)
 	}
 
-	#[inline]
 	pub fn try_escape_visual(&mut self) -> bool {
-		self.escape_visual();
-		true
+		let state = self.mode.is_select();
+		let Some((_, indices)) = self.mode.take_visual() else {
+			return true;
+		};
+
+		let results: Vec<_> = indices
+			.iter()
+			.filter_map(|i| self.current.files.get(*i))
+			.map(|f| {
+				if state {
+					self.selected.add(&f.url)
+				} else {
+					self.selected.remove(&f.url);
+					true
+				}
+			})
+			.collect();
+
+		render!(!results.is_empty());
+		if results.into_iter().all(|b| b) {
+			return true;
+		}
+
+		Notify::_push_warn(
+			"Escape visual mode",
+			"Some files cannot be selected due to path nesting conflict.",
+		);
+		false
 	}
 }
