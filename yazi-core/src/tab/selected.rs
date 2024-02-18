@@ -17,6 +17,47 @@ impl Deref for Selected {
 impl Selected {
 	pub fn add(&mut self, url: &Url) -> bool { self.add_many(&[url]) }
 
+	/// Adds a list of URLs to the user structure.
+	///
+	/// This method attempts to add a slice of `Url` references to the internal
+	/// structure, ensuring that all URLs have the same parent directory. For
+	/// example, URLs such as `/a/b/c`, `/a/b/d`, `/a/b/e`, and `/a/b/f` are
+	/// acceptable, while `/a/b/c` and `/a/e/f` would not be, due to differing
+	/// parent directories.
+	///
+	/// The addition will fail under the following conditions:
+	/// - Any of the URLs already exists within the `inner` collection.
+	/// - The parent directory of the URLs already exists as a key in the
+	///   `parents` map.
+	///
+	/// When the provided list of URLs is empty, the method will return `true` as
+	/// there are no URLs to process, which is considered a successful operation.
+	///
+	/// # Arguments
+	///
+	/// * `urls` - A slice of references to `Url` objects that are to be added.
+	/// All URLs should have the same parent path.
+	///
+	/// # Returns
+	///
+	/// Returns `true` if all URLs were successfully added, or if the input list
+	/// is empty. Returns `false` if any URL could not be added due to the
+	/// existence of its parent directory in the structure, or if the URL itself
+	/// is already present.
+	///
+	/// # Examples
+	///
+	/// ```
+	/// #
+	/// # use yazi_core::select::Select;
+	/// # use yazi_shared::fs::Url;
+	/// let mut selected= Select::default();
+	/// let url1 = Url::from("/a/b/c");
+	/// let url2 = Url::from("/a/b/d");
+	/// let urls = vec![&url1, &url2];
+	///
+	/// assert!(selected.add_many(&urls));
+	/// ```
 	pub fn add_many(&mut self, urls: &[&Url]) -> bool {
 		if urls.is_empty() {
 			return true;
