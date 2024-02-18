@@ -26,11 +26,12 @@ impl Manager {
 		}
 
 		let mut opt = opt.into() as Opt;
+		opt.targets = self.selected_or_hovered().into_iter().cloned().collect();
+
 		if opt.force {
 			return self.remove_do(opt, tasks);
 		}
 
-		opt.targets = self.selected_or_hovered().into_iter().cloned().collect();
 		tokio::spawn(async move {
 			let mut result = Input::_show(if opt.permanently {
 				InputCfg::delete(opt.targets.len())
