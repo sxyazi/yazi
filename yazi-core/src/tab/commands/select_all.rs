@@ -27,7 +27,7 @@ impl Tab {
 		match opt.into().state {
 			Some(true) => {
 				for f in self.current.files.iter() {
-					b |= self.selected.insert(f.url());
+					b |= self.selected.add(&f.url);
 				}
 			}
 			Some(false) => {
@@ -37,7 +37,7 @@ impl Tab {
 			}
 			None => {
 				for f in self.current.files.iter() {
-					b |= self.selected.remove(&f.url) || self.selected.insert(f.url());
+					b |= self.selected.remove(&f.url) || self.selected.add(&f.url);
 				}
 			}
 		}
