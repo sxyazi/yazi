@@ -48,36 +48,31 @@ impl Selected {
 	/// # Examples
 	///
 	/// ```
-	/// #
-	/// # use yazi_core::select::Select;
-	/// # use yazi_shared::fs::Url;
-	/// let mut selected= Select::default();
+	/// let mut s = Selected::default();
+	///
 	/// let url1 = Url::from("/a/b/c");
 	/// let url2 = Url::from("/a/b/d");
-	/// let urls = vec![&url1, &url2];
-	///
-	/// assert!(selected.add_many(&urls));
+	/// assert!(selected.add_many(&[&url1, &url2]));
 	/// ```
 	pub fn add_many(&mut self, urls: &[&Url]) -> bool {
 		if urls.is_empty() {
 			return true;
-		}
-
-		let mut parent = urls[0].parent_url();
-		while let Some(u) = parent {
-			if self.inner.contains(&u) {
-				return false;
-			}
-			parent = u.parent_url();
-		}
-
-		if self.parents.contains_key(urls[0]) {
+		} else if self.parents.contains_key(urls[0]) {
 			return false;
 		}
 
 		let mut parent = urls[0].parent_url();
+		let mut parents = vec![];
 		while let Some(u) = parent {
+			if self.inner.contains(&u) {
+				return false;
+			}
+
 			parent = u.parent_url();
+			parents.push(u);
+		}
+
+		for u in parents {
 			*self.parents.entry(u).or_insert(0) += urls.len();
 		}
 
