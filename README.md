@@ -51,18 +51,8 @@ https://github.com/sxyazi/yazi/assets/17523360/92ff23fa-0cd5-4f04-b387-894c12265
 | X11 / Wayland     | Window system protocol                                                                                | ☑️ Überzug++ required |
 | Fallback          | [Chafa](https://hpjansson.org/chafa/)                                                                 | ☑️ Überzug++ required |
 
-Yazi automatically selects the appropriate preview method for you, based on the priority from top to bottom.
-That's relying on the `$TERM`, `$TERM_PROGRAM`, and `$XDG_SESSION_TYPE` variables, make sure you don't overwrite them by mistake!
-
-For instance, if your terminal is Alacritty, which doesn't support displaying images itself, but you are running on an X11/Wayland environment,
-it will automatically use the "Window system protocol" to display images -- this requires you to have [Überzug++](https://github.com/jstkdng/ueberzugpp) installed.
-
-Here is a guide for tmux users: [Image preview within tmux](https://github.com/sxyazi/yazi/wiki/Image-preview-within-tmux)
-
-## TODO
-
-See [Feature requests](https://github.com/sxyazi/yazi/issues/51) for more details.
+See https://yazi-rs.github.io/docs/image-preview for details.
 
 ## License
 
-Yazi is MIT licensed. For more information check the [LICENSE](LICENSE) file.
+Yazi is MIT-licensed. For more information check the [LICENSE](LICENSE) file.

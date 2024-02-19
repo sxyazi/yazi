@@ -32,9 +32,9 @@ body:
   - type: dropdown
     id: tried_main
     attributes:
-      label: Did you try the latest main branch to see if the problem has already been fixed?
+      label: Did you try the latest main branch to see if the problem got fixed?
       options:
-        - Tried, but the problem is still present
+        - Tried, but the problem still
         - Not tried, and I'll explain why below
     validations:
       required: true

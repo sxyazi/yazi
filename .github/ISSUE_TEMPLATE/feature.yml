@@ -6,12 +6,14 @@ body:
   - type: textarea
     id: problem
     attributes:
-      label: Is your feature request related to a problem? Please describe
+      label: Please describe the problem you're trying to solve
       description: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+    validations:
+      required: true
   - type: checkboxes
     id: contribute
     attributes:
-      label: Will you be willing to contribute this feature?
+      label: Would you be willing to contribute this feature?
       description: The feature has a much higher chance of completion if you are willing to get involved!
       options:
         - label: Yes, I'll give it a shot
@@ -22,11 +24,6 @@ body:
       description: A clear and concise description of what you want to happen.
     validations:
       required: true
-  - type: textarea
-    id: alternatives
-    attributes:
-      label: Describe alternatives you've considered
-      description: A clear and concise description of any alternative solutions or features you've considered.
   - type: textarea
     id: context
     attributes:
