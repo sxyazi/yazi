@@ -71,9 +71,7 @@ impl File {
 
 				Ok(THEME.filetypes.iter().find(|&x| x.matches(me, mime)).map(|x| Style::from(x.style)))
 			});
-			reg.add_method("is_hovered", |_, me, ()| {
-				Ok(matches!(me.folder().hovered(), Some(f) if f.url == me.url))
-			});
+			reg.add_method("is_hovered", |_, me, ()| Ok(me.idx == me.folder().cursor));
 			reg.add_method("is_yanked", |lua, me, ()| {
 				let cx = lua.named_registry_value::<CtxRef>("cx")?;
 				Ok(if !cx.manager.yanked.contains(&me.url) {

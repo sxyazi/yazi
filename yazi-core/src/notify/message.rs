@@ -42,6 +42,10 @@ impl TryFrom<Cmd> for Message {
 impl Message {
 	#[inline]
 	pub fn height(&self, width: u16) -> usize {
+		if width == 0 {
+			return 0; // In case we can't get the width of the terminal
+		}
+
 		let lines = (self.content.width() as f64 / width as f64).ceil();
 		lines as usize + NOTIFY_BORDER as usize
 	}

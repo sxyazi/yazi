@@ -37,10 +37,10 @@ impl Pattern {
 	}
 
 	#[inline]
-	pub fn any_file(&self) -> bool { self.inner.as_str() == "*" }
+	pub fn any_file(&self) -> bool { !self.is_folder && self.inner.as_str() == "*" }
 
 	#[inline]
-	pub fn any_dir(&self) -> bool { self.inner.as_str() == "*/" }
+	pub fn any_dir(&self) -> bool { self.is_folder && self.inner.as_str() == "*" }
 }
 
 impl TryFrom<&str> for Pattern {

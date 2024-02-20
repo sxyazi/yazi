@@ -34,12 +34,6 @@ impl Default for Plugin {
 		}
 
 		let mut shadow = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().plugin;
-		if shadow.append_preloaders.iter().any(|r| r.any_file()) {
-			shadow.preloaders.retain(|r| !r.any_file());
-		}
-		if shadow.append_preloaders.iter().any(|r| r.any_dir()) {
-			shadow.preloaders.retain(|r| !r.any_dir());
-		}
 		if shadow.append_previewers.iter().any(|r| r.any_file()) {
 			shadow.previewers.retain(|r| !r.any_file());
 		}
