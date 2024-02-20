@@ -1,3 +1,5 @@
+pub const MIME_DIR: &str = "inode/directory";
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum CharKind {
 	Space,

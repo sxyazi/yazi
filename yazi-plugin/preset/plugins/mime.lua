@@ -1,5 +1,12 @@
 local M = {}
 
+local function match_mimetype(s)
+	local type, subtype = s:match("([-a-z]+/)([+-.a-zA-Z0-9]+)%s*$")
+	if string.find("application/audio/biosig/chemical/font/image/inode/message/model/rinex/text/vector/video/x-epoc/", type, 1, true) then
+		return type .. subtype
+	end
+end
+
 function M:preload()
 	local urls = {}
 	for _, file in ipairs(self.files) do
@@ -14,7 +21,7 @@ function M:preload()
 
 	local mimes, last = {}, ya.time()
 	local flush = function(force)
-		if not force and ya.time() - last < 0.1 then
+		if not force and ya.time() - last < 0.3 then
 			return
 		end
 		if next(mimes) then
@@ -23,9 +30,9 @@ function M:preload()
 		end
 	end
 
-	local i, j = 1, 0
+	local i, j, mime = 1, 0, nil
 	repeat
-		local next, event = child:read_line_with { timeout = 300 }
+		local line, event = child:read_line_with { timeout = 300 }
 		if event == 3 then
 			flush(true)
 			goto continue
@@ -33,9 +40,11 @@ function M:preload()
 			break
 		end
 
-		next = next:gsub("[\r\n]+$", "")
-		if ya.mime_valid(next) then
-			j, mimes[urls[i]] = j + 1, next
+		mime = match_mimetype(line)
+		if mime and string.find(line, mime, 1, true) ~= 1 then
+			goto continue
+		elseif mime then
+			j, mimes[urls[i]] = j + 1, mime
 			flush(false)
 		end
 
