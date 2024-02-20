@@ -29,6 +29,10 @@ function ya.flat(t)
 end
 
 function ya.sync(f)
+	if ya.SYNC_ON then
+		return function(...) f(...) end
+	end
+
 	YAZI_SYNC_BLOCKS = YAZI_SYNC_BLOCKS + 1
 	if YAZI_SYNC_CALLS == YAZI_SYNC_BLOCKS then
 		YAZI_SYNC_ENTRY = f
