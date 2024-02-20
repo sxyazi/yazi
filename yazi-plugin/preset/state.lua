@@ -21,5 +21,5 @@ state = setmetatable({}, {
 		cache[bucket] = cache[bucket] or {}
 		cache[bucket][k] = v
 	end,
-	__call = function() return setmetatable({ __yazi_bucket = YAZI_PLUGIN_NAME }, sub_mt) end,
+	__call = function(_, name) return setmetatable({ __yazi_bucket = name or YAZI_PLUGIN_NAME }, sub_mt) end,
 })
