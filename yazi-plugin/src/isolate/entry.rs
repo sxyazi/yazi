@@ -12,7 +12,7 @@ pub async fn entry(name: String, args: Vec<ValueSendable>) -> mlua::Result<()> {
 		let globals = lua.globals();
 
 		globals.raw_set("YAZI_PLUGIN_NAME", lua.create_string(&name)?)?;
-		globals.raw_set("YAZI_SYNC_BLOCKS", 0)?;
+		globals.raw_set("YAZI_SYNC_CALLS", 0)?;
 
 		let plugin: Table = if let Some(b) = LOADED.read().get(&name) {
 			lua.load(b).call(())?

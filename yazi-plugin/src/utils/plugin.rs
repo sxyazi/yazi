@@ -1,4 +1,4 @@
-use mlua::{ExternalError, Function, Lua, Table, Value, Variadic};
+use mlua::{ExternalError, Function, IntoLua, Lua, Table, Value, Variadic};
 use tokio::sync::oneshot;
 use yazi_shared::{emit, event::Cmd, Layer};
 
@@ -10,31 +10,33 @@ impl Utils {
 		ya.set(
 			"plugin_retrieve",
 			lua.create_async_function(
-				|_, (name, blocks, args): (String, usize, Variadic<Value>)| async move {
-					let args = Variadic::from_iter(ValueSendable::try_from_variadic(args)?);
+				|_, (name, calls, args): (String, usize, Variadic<Value>)| async move {
+					let args = ValueSendable::try_from_variadic(args)?;
 					let (tx, rx) = oneshot::channel::<ValueSendable>();
 
 					let data = OptData {
-						init: Some(Box::new(move |lua| {
-							let globals = lua.globals();
-							globals.raw_set("YAZI_SYNC_BLOCKS", 0)?;
-							globals.raw_set("YAZI_SYNC_CALLS", blocks)?;
-							Ok(())
-						})),
-						cb: Some(Box::new(move |lua, _| {
-							let globals = lua.globals();
+						cb: Some({
+							let name = name.clone();
+							Box::new(move |lua, plugin| {
+								let blocks = lua.globals().raw_get::<_, Table>("YAZI_SYNC_BLOCKS")?;
+								let block = blocks.raw_get::<_, Table>(name)?.raw_get::<_, Function>(calls)?;
 
-							let entry = globals.raw_get::<_, Function>("YAZI_SYNC_ENTRY")?;
-							globals.raw_set("YAZI_SYNC_ENTRY", Value::Nil)?;
+								let mut self_args = Vec::with_capacity(args.len() + 1);
+								self_args.push(Value::Table(plugin));
+								for arg in args {
+									self_args.push(arg.into_lua(lua)?);
+								}
 
-							let value: ValueSendable = entry.call::<_, Value>(args)?.try_into()?;
-							tx.send(value).map_err(|_| "send failed".into_lua_err())
-						})),
+								let value: ValueSendable =
+									block.call::<_, Value>(Variadic::from_iter(self_args))?.try_into()?;
+								tx.send(value).map_err(|_| "send failed".into_lua_err())
+							})
+						}),
 						..Default::default()
 					};
 
 					emit!(Call(
-						Cmd::args("plugin", vec![name.to_owned()]).with_bool("sync", true).with_data(data),
+						Cmd::args("plugin", vec![name.clone()]).with_bool("sync", true).with_data(data),
 						Layer::App
 					));
 

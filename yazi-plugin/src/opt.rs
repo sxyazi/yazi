@@ -13,7 +13,6 @@ pub struct Opt {
 #[derive(Default)]
 pub struct OptData {
 	pub args: Vec<ValueSendable>,
-	pub init: Option<Box<dyn FnOnce(&Lua) -> mlua::Result<()> + Send>>,
 	pub cb:   Option<Box<dyn FnOnce(&Lua, Table) -> mlua::Result<()> + Send>>,
 }
 

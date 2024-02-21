@@ -14,7 +14,6 @@ pub fn init() {
 
 		// Base
 		lua.load(include_str!("../preset/inspect/inspect.lua")).exec()?;
-		lua.load(include_str!("../preset/state.lua")).exec()?;
 		lua.load(include_str!("../preset/ya.lua")).exec()?;
 		crate::bindings::Cha::register(lua)?;
 		crate::bindings::File::register(lua)?;
@@ -36,11 +35,7 @@ pub fn init() {
 	}
 
 	fn stage_2(lua: &Lua) {
-		let setup = br#"
-ya.SYNC_ON = true
-package.path = BOOT.plugin_dir .. "/?.yazi/init.lua;" .. package.path
-"#;
-		lua.load(setup as &[u8]).exec().unwrap();
+		lua.load(include_str!("../preset/setup.lua")).exec().unwrap();
 
 		if let Ok(b) = std::fs::read(BOOT.config_dir.join("init.lua")) {
 			lua.load(b).exec().unwrap();

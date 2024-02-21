@@ -37,8 +37,8 @@ impl Lives {
 			SCOPE.init(unsafe { mem::transmute(scope) });
 			LUA.set_named_registry_value("cx", scope.create_any_userdata_ref(cx)?)?;
 
-			let global = LUA.globals();
-			global.set(
+			let globals = LUA.globals();
+			globals.set(
 				"cx",
 				LUA.create_table_from([
 					("active", super::Tab::make(cx.manager.active())?),
@@ -51,11 +51,11 @@ impl Lives {
 			let ret = f(scope)?;
 
 			LAYOUT.store(Arc::new(yazi_config::Layout {
-				header:  *global.raw_get::<_, Table>("Header")?.raw_get::<_, RectRef>("area")?,
-				parent:  *global.raw_get::<_, Table>("Parent")?.raw_get::<_, RectRef>("area")?,
-				current: *global.raw_get::<_, Table>("Current")?.raw_get::<_, RectRef>("area")?,
-				preview: *global.raw_get::<_, Table>("Preview")?.raw_get::<_, RectRef>("area")?,
-				status:  *global.raw_get::<_, Table>("Status")?.raw_get::<_, RectRef>("area")?,
+				header:  *globals.raw_get::<_, Table>("Header")?.raw_get::<_, RectRef>("area")?,
+				parent:  *globals.raw_get::<_, Table>("Parent")?.raw_get::<_, RectRef>("area")?,
+				current: *globals.raw_get::<_, Table>("Current")?.raw_get::<_, RectRef>("area")?,
+				preview: *globals.raw_get::<_, Table>("Preview")?.raw_get::<_, RectRef>("area")?,
+				status:  *globals.raw_get::<_, Table>("Status")?.raw_get::<_, RectRef>("area")?,
 			}));
 
 			SCOPE.drop();
