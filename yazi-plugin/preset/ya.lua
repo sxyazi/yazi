@@ -29,17 +29,16 @@ function ya.flat(t)
 end
 
 function ya.sync(f)
-	if ya.SYNC_ON then
-		return function(...) f(...) end
+	YAZI_SYNC_CALLS = YAZI_SYNC_CALLS + 1
+
+	local name, calls = YAZI_PLUGIN_NAME, YAZI_SYNC_CALLS
+	if not YAZI_SYNC_BLOCKS then
+		return function(...) return ya.plugin_retrieve(name, calls, ...) end
 	end
 
-	YAZI_SYNC_BLOCKS = YAZI_SYNC_BLOCKS + 1
-	if YAZI_SYNC_CALLS == YAZI_SYNC_BLOCKS then
-		YAZI_SYNC_ENTRY = f
-	end
-
-	local blocks = YAZI_SYNC_BLOCKS
-	return function(...) return ya.plugin_retrieve(YAZI_PLUGIN_NAME, blocks, ...) end
+	YAZI_SYNC_BLOCKS[name] = YAZI_SYNC_BLOCKS[name] or {}
+	YAZI_SYNC_BLOCKS[name][calls] = f
+	return function(...) return f(package.loaded[name], ...) end
 end
 
 function ya.basename(str) return string.gsub(str, "(.*[/\\])(.*)", "%2") end

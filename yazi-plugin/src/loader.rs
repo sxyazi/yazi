@@ -1,10 +1,13 @@
 use std::{borrow::Cow, collections::BTreeMap, ops::Deref};
 
 use anyhow::{bail, Result};
+use mlua::{ExternalError, Table};
 use parking_lot::RwLock;
 use tokio::fs;
 use yazi_config::BOOT;
 use yazi_shared::RoCell;
+
+use crate::LUA;
 
 pub static LOADED: RoCell<Loader> = RoCell::new();
 
@@ -41,6 +44,24 @@ impl Loader {
 
 		self.loaded.write().insert(name.to_owned(), b.into_owned());
 		Ok(())
+	}
+
+	pub fn load(&self, name: &str) -> mlua::Result<Table> {
+		let globals = LUA.globals();
+		let loaded: Table = globals.raw_get::<_, Table>("package")?.raw_get("loaded")?;
+		if let Ok(t) = loaded.raw_get::<_, Table>(name) {
+			return Ok(t);
+		}
+
+		globals.raw_set("YAZI_PLUGIN_NAME", LUA.create_string(name)?)?;
+		globals.raw_set("YAZI_SYNC_CALLS", 0)?;
+		let t: Table = match self.read().get(name) {
+			Some(b) => LUA.load(b).call(())?,
+			None => Err(format!("plugin `{name}` not found").into_lua_err())?,
+		};
+
+		loaded.raw_set(name, t.clone())?;
+		Ok(t)
 	}
 }
 
