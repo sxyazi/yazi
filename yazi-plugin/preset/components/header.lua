@@ -51,7 +51,7 @@ function Header:tabs()
 		if THEME.manager.tab_width > 2 then
 			text = ya.truncate(text .. " " .. cx.tabs[i]:name(), THEME.manager.tab_width)
 		end
-		if i == cx.tabs.idx + 1 then
+		if i == cx.tabs.idx then
 			spans[#spans + 1] = ui.Span(" " .. text .. " "):style(THEME.manager.tab_active)
 		else
 			spans[#spans + 1] = ui.Span(" " .. text .. " "):style(THEME.manager.tab_inactive)

@@ -22,7 +22,7 @@ impl Tabs {
 
 	pub(super) fn register(lua: &Lua) -> mlua::Result<()> {
 		lua.register_userdata_type::<Self>(|reg| {
-			reg.add_field_method_get("idx", |_, me| Ok(me.idx));
+			reg.add_field_method_get("idx", |_, me| Ok(me.idx + 1));
 
 			reg.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.len()));
 
