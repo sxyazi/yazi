@@ -13,17 +13,12 @@ function M:peek()
 
 	local items, markers = {}, {}
 	for i, f in ipairs(folder.window) do
-		-- Highlight hovered file
-		local item = ui.ListItem(ui.Line { Folder:icon(f), ui.Span(f.name) })
-		if f:is_hovered() then
-			item = item:style(THEME.manager.preview_hovered)
-		else
-			item = item:style(f:style())
-		end
-		items[#items + 1] = item
+		local style = f:style()
+		items[#items + 1] = ui.ListItem(ui.Line(File:full(f)))
+			:style(f:is_hovered() and style:patch(THEME.manager.preview_hovered) or style)
 
 		-- Yanked/marked/selected files
-		local marker = Folder:marker(f)
+		local marker = File:marker(f)
 		if marker ~= 0 then
 			markers[#markers + 1] = { i, marker }
 		end

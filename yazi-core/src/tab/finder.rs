@@ -66,10 +66,5 @@ impl Finder {
 	pub fn matched(&self) -> &BTreeMap<Url, u8> { &self.matched }
 
 	#[inline]
-	pub fn matched_idx(&self, url: &Url) -> Option<u8> {
-		if let Some((_, &idx)) = self.matched.iter().find(|(u, _)| *u == url) {
-			return Some(idx);
-		}
-		None
-	}
+	pub fn matched_idx(&self, url: &Url) -> Option<u8> { self.matched.get(url).copied() }
 }

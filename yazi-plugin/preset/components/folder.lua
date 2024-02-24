@@ -4,69 +4,6 @@ Folder = {
 	PREVIEW = 2,
 }
 
-function Folder:by_kind(kind)
-	if kind == self.PARENT then
-		return cx.active.parent
-	elseif kind == self.CURRENT then
-		return cx.active.current
-	elseif kind == self.PREVIEW then
-		return cx.active.preview.folder
-	end
-end
-
-function Folder:icon(file)
-	local icon = file:icon()
-	return icon and ui.Span(" " .. icon.text .. " "):style(icon.style) or ui.Span("")
-end
-
-function Folder:highlight_ranges(s, ranges)
-	if not ranges or #ranges == 0 then
-		return { ui.Span(s) }
-	end
-
-	local spans = {}
-	local last = 0
-	for _, r in ipairs(ranges) do
-		if r[1] > last then
-			spans[#spans + 1] = ui.Span(s:sub(last + 1, r[1]))
-		end
-		spans[#spans + 1] = ui.Span(s:sub(r[1] + 1, r[2])):style(THEME.manager.find_keyword)
-		last = r[2]
-	end
-	if last < #s then
-		spans[#spans + 1] = ui.Span(s:sub(last + 1))
-	end
-	return spans
-end
-
-function Folder:highlighted_name(file)
-	-- Complete prefix when searching across directories
-	local prefix = file:prefix() or ""
-	if prefix ~= "" then
-		prefix = prefix .. "/"
-	end
-
-	-- Range highlighting for filenames
-	local highlights = file:highlights()
-	local spans = self:highlight_ranges(prefix .. file.name, highlights)
-
-	-- Show symlink target
-	if MANAGER.show_symlink and file.link_to ~= nil then
-		spans[#spans + 1] = ui.Span(" -> " .. tostring(file.link_to)):italic()
-	end
-
-	if not highlights or not file:is_hovered() then
-		return spans
-	end
-
-	local found = file:found()
-	if found ~= nil then
-		spans[#spans + 1] = ui.Span("  ")
-		spans[#spans + 1] = ui.Span(string.format("[%d/%d]", found[1] + 1, found[2])):style(THEME.manager.find_position)
-	end
-	return spans
-end
-
 function Folder:linemode(area, files)
 	local mode = cx.active.conf.linemode
 	if mode == "none" then
@@ -90,21 +27,6 @@ function Folder:linemode(area, files)
 		lines[#lines + 1] = ui.Line(spans)
 	end
 	return ui.Paragraph(area, lines):align(ui.Paragraph.RIGHT)
-end
-
-function Folder:marker(file)
-	local yanked = file:is_yanked()
-	if yanked ~= 0 then
-		return yanked -- 1: copied, 2: cut
-	end
-
-	local marked = file:is_marked()
-	if marked == 1 then
-		return 3 -- 3: marked
-	elseif marked == 0 and file:is_selected() then
-		return 4 -- 4: selected
-	end
-	return 0
 end
 
 function Folder:markers(area, markers)
@@ -149,4 +71,14 @@ function Folder:markers(area, markers)
 
 	append(last)
 	return elements
+end
+
+function Folder:by_kind(kind)
+	if kind == self.PARENT then
+		return cx.active.parent
+	elseif kind == self.CURRENT then
+		return cx.active.current
+	elseif kind == self.PREVIEW then
+		return cx.active.preview.folder
+	end
 end

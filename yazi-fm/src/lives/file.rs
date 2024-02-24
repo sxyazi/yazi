@@ -95,6 +95,7 @@ impl File {
 				})
 			});
 			reg.add_method("is_selected", |_, me, ()| Ok(me.tab().selected.contains(&me.url)));
+			reg.add_method("in_current", |_, me, ()| Ok(me.folder().cwd == me.tab().current.cwd));
 			reg.add_method("found", |lua, me, ()| {
 				let cx = lua.named_registry_value::<CtxRef>("cx")?;
 				let Some(finder) = &cx.manager.active().finder else {
@@ -113,7 +114,9 @@ impl File {
 				let Some(finder) = &cx.manager.active().finder else {
 					return Ok(None);
 				};
-
+				if me.folder().cwd != me.tab().current.cwd {
+					return Ok(None);
+				}
 				let Some(h) = me.name().and_then(|n| finder.filter.highlighted(n)) else {
 					return Ok(None);
 				};
