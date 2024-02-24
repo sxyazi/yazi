@@ -72,6 +72,17 @@ function File:full(file)
 	}
 end
 
+function File:style(file)
+	local style = file:style()
+	if not file:is_hovered() then
+		return style
+	elseif file:in_preview() then
+		return style and style:patch(THEME.manager.preview_hovered) or THEME.manager.preview_hovered
+	else
+		return style and style:patch(THEME.manager.hovered) or THEME.manager.hovered
+	end
+end
+
 function File:marker(file)
 	local yanked = file:is_yanked()
 	if yanked ~= 0 then
