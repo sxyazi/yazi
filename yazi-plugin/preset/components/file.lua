@@ -77,9 +77,9 @@ function File:style(file)
 	if not file:is_hovered() then
 		return style
 	elseif file:in_preview() then
-		return style and style:patch(THEME.manager.preview_hovered) or style
+		return style and style:patch(THEME.manager.preview_hovered)
 	else
-		return style and style:patch(THEME.manager.hovered) or style
+		return style and style:patch(THEME.manager.hovered)
 	end
 end
 
