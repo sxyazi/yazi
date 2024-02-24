@@ -13,9 +13,7 @@ function M:peek()
 
 	local items, markers = {}, {}
 	for i, f in ipairs(folder.window) do
-		local style = f:style()
-		items[#items + 1] = ui.ListItem(ui.Line(File:full(f)))
-			:style(f:is_hovered() and style:patch(THEME.manager.preview_hovered) or style)
+		items[#items + 1] = ui.ListItem(ui.Line(File:full(f))):style(File:style(f))
 
 		-- Yanked/marked/selected files
 		local marker = File:marker(f)

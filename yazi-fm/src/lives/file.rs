@@ -95,7 +95,13 @@ impl File {
 				})
 			});
 			reg.add_method("is_selected", |_, me, ()| Ok(me.tab().selected.contains(&me.url)));
+			reg.add_method("in_parent", |_, me, ()| {
+				Ok(me.tab().parent.as_ref().is_some_and(|f| me.folder().cwd == f.cwd))
+			});
 			reg.add_method("in_current", |_, me, ()| Ok(me.folder().cwd == me.tab().current.cwd));
+			reg.add_method("in_preview", |_, me, ()| {
+				Ok(me.tab().current.hovered().is_some_and(|f| me.folder().cwd == f.url))
+			});
 			reg.add_method("found", |lua, me, ()| {
 				let cx = lua.named_registry_value::<CtxRef>("cx")?;
 				let Some(finder) = &cx.manager.active().finder else {
