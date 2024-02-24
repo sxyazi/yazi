@@ -58,12 +58,7 @@ impl File {
 				Some(lua.create_string(p.as_path().as_os_str().as_encoded_bytes())).transpose()
 			});
 			reg.add_method("icon", |lua, me, ()| {
-				THEME
-					.icons
-					.iter()
-					.find(|&x| x.matches(me))
-					.map(|x| Icon::cast(lua, x))
-					.transpose()
+				THEME.icons.iter().find(|&x| x.matches(me)).map(|x| Icon::cast(lua, x)).transpose()
 			});
 			reg.add_method("style", |lua, me, ()| {
 				let cx = lua.named_registry_value::<CtxRef>("cx")?;
