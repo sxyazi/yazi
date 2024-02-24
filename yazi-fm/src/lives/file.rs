@@ -61,7 +61,7 @@ impl File {
 				THEME
 					.icons
 					.iter()
-					.find(|&x| x.name.match_path(&me.url, me.is_dir()))
+					.find(|&x| x.matches(me))
 					.map(|x| Icon::cast(lua, x))
 					.transpose()
 			});
