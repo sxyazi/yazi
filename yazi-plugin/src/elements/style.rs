@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, Lua, Table, UserData, UserDataMethods};
+use mlua::{AnyUserData, ExternalError, Lua, Table, UserData, UserDataMethods, Value};
 use yazi_config::theme::Color;
 
 #[derive(Clone, Copy, Default)]
@@ -80,5 +80,16 @@ impl UserData for Style {
 			ud.borrow_mut::<Self>()?.0.add_modifier = ratatui::style::Modifier::empty();
 			Ok(ud)
 		});
+		methods.add_function("patch", |_, (ud, value): (AnyUserData, Value)| {
+			{
+				let mut me = ud.borrow_mut::<Self>()?;
+				me.0 = me.0.patch(match value {
+					Value::Table(tb) => Style::from(tb).0,
+					Value::UserData(ud) => ud.borrow::<Style>()?.0,
+					_ => return Err("expected a Style or Table".into_lua_err()),
+				});
+			}
+			Ok(ud)
+		})
 	}
 }

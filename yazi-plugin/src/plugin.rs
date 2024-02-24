@@ -23,6 +23,7 @@ pub fn init() {
 
 		// Components
 		lua.load(include_str!("../preset/components/current.lua")).exec()?;
+		lua.load(include_str!("../preset/components/file.lua")).exec()?;
 		lua.load(include_str!("../preset/components/folder.lua")).exec()?;
 		lua.load(include_str!("../preset/components/header.lua")).exec()?;
 		lua.load(include_str!("../preset/components/manager.lua")).exec()?;
