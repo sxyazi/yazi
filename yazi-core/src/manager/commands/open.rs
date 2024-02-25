@@ -1,7 +1,8 @@
 use std::ffi::OsString;
 
 use tracing::error;
-use yazi_config::{popup::SelectCfg, ARGS, OPEN};
+use yazi_boot::ARGS;
+use yazi_config::{popup::SelectCfg, OPEN};
 use yazi_plugin::isolate;
 use yazi_shared::{emit, event::{Cmd, EventQuit}, fs::{File, Url}, Layer, MIME_DIR};
 

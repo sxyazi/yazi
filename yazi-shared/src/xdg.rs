@@ -1,11 +1,11 @@
 use std::{env, path::PathBuf};
 
-use yazi_shared::fs::expand_path;
+use crate::fs::expand_path;
 
-pub(super) struct Xdg;
+pub struct Xdg;
 
 impl Xdg {
-	pub(super) fn config_dir() -> Option<PathBuf> {
+	pub fn config_dir() -> Option<PathBuf> {
 		if let Some(s) = env::var_os("YAZI_CONFIG_HOME").filter(|s| !s.is_empty()) {
 			return Some(expand_path(s));
 		}
@@ -25,9 +25,9 @@ impl Xdg {
 	}
 
 	#[inline]
-	pub(super) fn plugin_dir() -> Option<PathBuf> { Self::config_dir().map(|p| p.join("plugins")) }
+	pub fn plugin_dir() -> Option<PathBuf> { Self::config_dir().map(|p| p.join("plugins")) }
 
-	pub(super) fn state_dir() -> Option<PathBuf> {
+	pub fn state_dir() -> Option<PathBuf> {
 		#[cfg(windows)]
 		{
 			dirs::data_dir().map(|p| p.join("yazi").join("state"))
@@ -43,5 +43,5 @@ impl Xdg {
 	}
 
 	#[inline]
-	pub(super) fn cache_dir() -> PathBuf { env::temp_dir().join("yazi") }
+	pub fn cache_dir() -> PathBuf { env::temp_dir().join("yazi") }
 }

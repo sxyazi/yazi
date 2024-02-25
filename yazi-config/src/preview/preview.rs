@@ -1,10 +1,10 @@
-use std::{fs, path::PathBuf, process, time::{self, SystemTime}};
+use std::{fs, path::PathBuf, time::{self, SystemTime}};
 
 use serde::{Deserialize, Serialize};
 use validator::Validate;
-use yazi_shared::fs::expand_path;
+use yazi_shared::{fs::expand_path, Xdg};
 
-use crate::{validation::check_validation, xdg::Xdg, ARGS, MERGED_YAZI};
+use crate::{validation::check_validation, MERGED_YAZI};
 
 #[derive(Debug, Serialize)]
 pub struct Preview {
@@ -56,18 +56,19 @@ impl Default for Preview {
 			fs::create_dir(&cache_dir).unwrap();
 		}
 
-		if ARGS.clear_cache {
-			if cache_dir == Xdg::cache_dir() {
-				println!("Clearing cache directory: \n{:?}", cache_dir);
-				fs::remove_dir_all(&cache_dir).unwrap();
-			} else {
-				println!(
-					"You've changed the default cache directory, for your data's safety, please clear it manually: \n{:?}",
-					cache_dir
-				);
-			}
-			process::exit(0);
-		}
+		// TODO: xx
+		// if ARGS.clear_cache {
+		// 	if cache_dir == Xdg::cache_dir() {
+		// 		println!("Clearing cache directory: \n{:?}", cache_dir);
+		// 		fs::remove_dir_all(&cache_dir).unwrap();
+		// 	} else {
+		// 		println!(
+		// 			"You've changed the default cache directory, for your data's safety, please
+		// clear it manually: \n{:?}", 			cache_dir
+		// 		);
+		// 	}
+		// 	process::exit(0);
+		// }
 
 		Preview {
 			tab_size: preview.tab_size,

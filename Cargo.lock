@@ -2685,17 +2685,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "yazi-boot"
+version = "0.2.3"
+dependencies = [
+ "clap",
+ "clap_complete",
+ "clap_complete_fig",
+ "clap_complete_nushell",
+ "serde",
+ "vergen",
+ "yazi-shared",
+]
+
+[[package]]
 name = "yazi-config"
 version = "0.2.3"
 dependencies = [
  "anyhow",
  "arc-swap",
- "clap",
- "clap_complete",
- "clap_complete_fig",
- "clap_complete_nushell",
  "crossterm",
- "dirs",
  "futures",
  "glob",
  "indexmap",
@@ -2705,7 +2713,6 @@ dependencies = [
  "shell-words",
  "toml",
  "validator",
- "vergen",
  "yazi-shared",
 ]
 
@@ -2732,6 +2739,7 @@ dependencies = [
  "tracing",
  "unicode-width",
  "yazi-adaptor",
+ "yazi-boot",
  "yazi-config",
  "yazi-plugin",
  "yazi-scheduler",
@@ -2760,6 +2768,7 @@ dependencies = [
  "tracing-subscriber",
  "unicode-width",
  "yazi-adaptor",
+ "yazi-boot",
  "yazi-config",
  "yazi-core",
  "yazi-plugin",
@@ -2791,6 +2800,7 @@ dependencies = [
  "unicode-width",
  "uzers",
  "yazi-adaptor",
+ "yazi-boot",
  "yazi-config",
  "yazi-prebuild",
  "yazi-shared",
@@ -2830,6 +2840,7 @@ dependencies = [
  "anyhow",
  "bitflags 2.4.2",
  "crossterm",
+ "dirs",
  "futures",
  "libc",
  "parking_lot",

@@ -40,13 +40,15 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_config::init();
 
-	yazi_core::init();
+	yazi_adaptor::init();
+
+	yazi_boot::init();
 
 	yazi_scheduler::init();
 
 	yazi_plugin::init();
 
-	yazi_adaptor::init();
+	yazi_core::init();
 
 	app::App::run().await
 }

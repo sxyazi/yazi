@@ -16,6 +16,7 @@ mod ro_cell;
 pub mod term;
 mod throttle;
 mod time;
+mod xdg;
 
 pub use chars::*;
 pub use condition::*;
@@ -30,3 +31,4 @@ pub use os::*;
 pub use ro_cell::*;
 pub use throttle::*;
 pub use time::*;
+pub use xdg::*;

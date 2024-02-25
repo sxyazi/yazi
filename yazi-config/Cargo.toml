@@ -14,9 +14,7 @@ yazi-shared = { path = "../yazi-shared", version = "0.2.3" }
 # External dependencies
 anyhow      = "^1"
 arc-swap    = "^1"
-clap        = { version = "^4", features = [ "derive" ] }
 crossterm   = "^0"
-dirs        = "^5"
 futures     = "^0"
 glob        = "^0"
 indexmap    = "^2"
@@ -26,10 +24,3 @@ serde       = { version = "^1", features = [ "derive" ] }
 shell-words = "^1"
 toml        = { version = "^0", features = [ "preserve_order" ] }
 validator   = { version = "^0", features = [ "derive" ] }
-
-[build-dependencies]
-clap                  = { version = "^4", features = [ "derive" ] }
-clap_complete         = "^4"
-clap_complete_nushell = "^4"
-clap_complete_fig     = "^4"
-vergen                = { version = "^8", features = [ "build", "git", "gitcl" ] }

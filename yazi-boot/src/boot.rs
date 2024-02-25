@@ -2,10 +2,10 @@ use std::{ffi::OsString, fs, path::{Path, PathBuf}, process};
 
 use clap::Parser;
 use serde::Serialize;
-use yazi_shared::fs::{current_cwd, expand_path};
+use yazi_shared::{fs::{current_cwd, expand_path}, Xdg};
 
 use super::Args;
-use crate::{Xdg, ARGS};
+use crate::ARGS;
 
 #[derive(Debug, Serialize)]
 pub struct Boot {
@@ -29,7 +29,7 @@ impl Boot {
 			return (entry, None);
 		}
 
-		return (parent.unwrap().to_owned(), Some(entry.file_name().unwrap().to_owned()));
+		(parent.unwrap().to_owned(), Some(entry.file_name().unwrap().to_owned()))
 	}
 }
 

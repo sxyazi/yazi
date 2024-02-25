@@ -1,4 +1,4 @@
-use std::{env, io::{Read, Write}, path::Path, sync::Arc};
+use std::{env, fmt::Display, io::{Read, Write}, path::Path, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
@@ -197,18 +197,17 @@ impl Adaptor {
 	}
 }
 
-impl ToString for Adaptor {
-	fn to_string(&self) -> String {
+impl Display for Adaptor {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
-			Self::Kitty => "kitty",
-			Self::KittyOld => "kitty",
-			Self::Iterm2 => "iterm2",
-			Self::Sixel => "sixel",
-			Self::X11 => "x11",
-			Self::Wayland => "wayland",
-			Self::Chafa => "chafa",
+			Self::Kitty => write!(f, "kitty"),
+			Self::KittyOld => write!(f, "kitty"),
+			Self::Iterm2 => write!(f, "iterm2"),
+			Self::Sixel => write!(f, "sixel"),
+			Self::X11 => write!(f, "x11"),
+			Self::Wayland => write!(f, "wayland"),
+			Self::Chafa => write!(f, "chafa"),
 		}
-		.to_string()
 	}
 }
 
