@@ -48,7 +48,10 @@ syntect_theme = ""
 [status]
 separator_open  = ""
 separator_close = ""
+# remove separator_style? probably in use on cand.rs:32
 separator_style = { fg = "darkgray", bg = "darkgray" }
+
+inner_section = { fg = "black", bg = "darkgray", bold = true }
 
 # Mode
 mode_normal = { fg = "black", bg = "lightblue", bold = true }

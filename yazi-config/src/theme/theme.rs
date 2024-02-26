@@ -49,6 +49,7 @@ struct Status {
 	pub separator_open:  String,
 	pub separator_close: String,
 	pub separator_style: Style,
+	pub inner_section: Style,
 
 	// Mode
 	pub mode_normal: Style,
