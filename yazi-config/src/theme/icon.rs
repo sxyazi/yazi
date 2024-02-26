@@ -1,12 +1,24 @@
 use serde::{Deserialize, Deserializer};
+use yazi_shared::fs::File;
 
 use super::Style;
-use crate::{preset::Preset, theme::{Color, StyleShadow}, Pattern};
+use crate::{preset::Preset, theme::{Color, Is, StyleShadow}, Pattern};
 
 pub struct Icon {
+	pub is:    Is,
 	pub name:  Pattern,
 	pub text:  String,
 	pub style: Style,
+}
+
+impl Icon {
+	pub fn matches(&self, file: &File) -> bool {
+		if !self.is.check(&file.cha) {
+			return false;
+		}
+
+		self.name.match_path(&file.url, file.is_dir())
+	}
 }
 
 impl Icon {
@@ -24,6 +36,8 @@ impl Icon {
 		}
 		#[derive(Deserialize)]
 		struct IconRule {
+			#[serde(default)]
+			is:   Is,
 			name: Pattern,
 			text: String,
 
@@ -45,6 +59,7 @@ impl Icon {
 				.rules
 				.into_iter()
 				.map(|r| Icon {
+					is:    r.is,
 					name:  r.name,
 					text:  r.text,
 					style: StyleShadow { fg: r.fg, ..Default::default() }.into(),
