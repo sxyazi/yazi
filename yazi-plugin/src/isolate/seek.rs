@@ -7,8 +7,8 @@ use crate::{bindings::{Cast, File}, elements::Rect, OptData, LUA};
 pub fn seek_sync(cmd: &Cmd, file: yazi_shared::fs::File, units: i16) {
 	let data = OptData {
 		cb: Some(Box::new(move |_, plugin| {
-			plugin.set("file", File::cast(&LUA, file)?)?;
-			plugin.set("area", Rect::cast(&LUA, LAYOUT.load().preview)?)?;
+			plugin.raw_set("file", File::cast(&LUA, file)?)?;
+			plugin.raw_set("area", Rect::cast(&LUA, LAYOUT.load().preview)?)?;
 			plugin.call_method("seek", units)
 		})),
 		..Default::default()

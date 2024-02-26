@@ -49,7 +49,7 @@ impl Border {
 
 		border.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
-		ui.set("Border", border)
+		ui.raw_set("Border", border)
 	}
 }
 

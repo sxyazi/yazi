@@ -61,7 +61,7 @@ impl UserData for Child {
 		});
 		methods.add_async_method_mut("read_line", |_, me, ()| async move { Ok(read_line(me).await) });
 		methods.add_async_method_mut("read_line_with", |_, me, options: Table| async move {
-			let timeout: u64 = options.get("timeout")?;
+			let timeout: u64 = options.raw_get("timeout")?;
 			match tokio::time::timeout(Duration::from_millis(timeout), read_line(me)).await {
 				Ok(value) => Ok(value),
 				Err(_) => Ok((String::new(), 3u8)),

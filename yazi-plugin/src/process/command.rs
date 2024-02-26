@@ -30,7 +30,7 @@ impl Command {
 
 		command.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
-		lua.globals().set("Command", command)
+		lua.globals().raw_set("Command", command)
 	}
 }
 

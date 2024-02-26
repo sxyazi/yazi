@@ -2,7 +2,7 @@ use mlua::Lua;
 
 use crate::{bindings, elements};
 
-pub fn slim_lua() -> mlua::Result<Lua> {
+pub fn slim_lua(name: &str) -> mlua::Result<Lua> {
 	let lua = Lua::new();
 
 	// Base
@@ -23,7 +23,13 @@ pub fn slim_lua() -> mlua::Result<Lua> {
 	elements::Rect::register(&lua)?;
 	elements::Rect::install(&lua, &ui)?;
 	elements::Span::install(&lua, &ui)?;
-	lua.globals().set("ui", ui)?;
+
+	{
+		let globals = lua.globals();
+		globals.raw_set("ui", ui)?;
+		globals.raw_set("YAZI_PLUGIN_NAME", lua.create_string(name)?)?;
+		globals.raw_set("YAZI_SYNC_CALLS", 0)?;
+	}
 
 	Ok(lua)
 }

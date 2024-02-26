@@ -38,7 +38,7 @@ impl Lives {
 			LUA.set_named_registry_value("cx", scope.create_any_userdata_ref(cx)?)?;
 
 			let globals = LUA.globals();
-			globals.set(
+			globals.raw_set(
 				"cx",
 				LUA.create_table_from([
 					("active", super::Tab::make(cx.manager.active())?),

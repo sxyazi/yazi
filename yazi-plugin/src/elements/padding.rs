@@ -58,7 +58,7 @@ impl Padding {
 
 		padding.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
-		ui.set("Padding", padding)
+		ui.raw_set("Padding", padding)
 	}
 
 	pub fn register(lua: &Lua) -> mlua::Result<()> {

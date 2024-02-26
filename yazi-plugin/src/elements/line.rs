@@ -48,7 +48,7 @@ impl Line {
 
 		line.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
-		ui.set("Line", line)
+		ui.raw_set("Line", line)
 	}
 }
 

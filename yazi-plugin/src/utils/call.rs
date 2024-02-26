@@ -50,7 +50,7 @@ impl Utils {
 	}
 
 	pub(super) fn call(lua: &Lua, ya: &Table) -> mlua::Result<()> {
-		ya.set(
+		ya.raw_set(
 			"render",
 			lua.create_function(|_, ()| {
 				render!();
@@ -58,7 +58,7 @@ impl Utils {
 			})?,
 		)?;
 
-		ya.set(
+		ya.raw_set(
 			"app_emit",
 			lua.create_function(|_, (name, table, data): (String, Table, Option<Value>)| {
 				emit!(Call(Self::create_cmd(name, table, data)?, Layer::App));
@@ -66,7 +66,7 @@ impl Utils {
 			})?,
 		)?;
 
-		ya.set(
+		ya.raw_set(
 			"manager_emit",
 			lua.create_function(|_, (name, table, data): (String, Table, Option<Value>)| {
 				emit!(Call(Self::create_cmd(name, table, data)?, Layer::Manager));

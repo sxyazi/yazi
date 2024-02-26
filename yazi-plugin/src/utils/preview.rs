@@ -17,12 +17,12 @@ impl<'a> TryFrom<Table<'a>> for PreviewLock {
 	type Error = mlua::Error;
 
 	fn try_from(t: Table) -> Result<Self, Self::Error> {
-		let file: FileRef = t.get("file")?;
+		let file: FileRef = t.raw_get("file")?;
 		Ok(Self {
 			url:    file.url(),
 			cha:    file.cha,
-			skip:   t.get("skip")?,
-			window: t.get("window")?,
+			skip:   t.raw_get("skip")?,
+			window: t.raw_get("window")?,
 			data:   Default::default(),
 		})
 	}
@@ -30,10 +30,10 @@ impl<'a> TryFrom<Table<'a>> for PreviewLock {
 
 impl Utils {
 	pub(super) fn preview(lua: &Lua, ya: &Table) -> mlua::Result<()> {
-		ya.set(
+		ya.raw_set(
 			"preview_code",
 			lua.create_async_function(|lua, t: Table| async move {
-				let area: RectRef = t.get("area")?;
+				let area: RectRef = t.raw_get("area")?;
 				let mut lock = PreviewLock::try_from(t)?;
 
 				let text =
@@ -49,10 +49,10 @@ impl Utils {
 			})?,
 		)?;
 
-		ya.set(
+		ya.raw_set(
 			"preview_archive",
 			lua.create_async_function(|lua, t: Table| async move {
-				let area: RectRef = t.get("area")?;
+				let area: RectRef = t.raw_get("area")?;
 				let mut lock = PreviewLock::try_from(t)?;
 
 				let lines: Vec<_> = match external::lsar(&lock.url, lock.skip, area.height as usize).await {
@@ -72,7 +72,7 @@ impl Utils {
 			})?,
 		)?;
 
-		ya.set(
+		ya.raw_set(
 			"preview_widgets",
 			lua.create_async_function(|_, (t, widgets): (Table, Vec<AnyUserData>)| async move {
 				let mut lock = PreviewLock::try_from(t)?;

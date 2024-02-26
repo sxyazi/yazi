@@ -20,7 +20,7 @@ pub fn install(lua: &mlua::Lua) -> mlua::Result<()> {
 	Utils::time(lua, &ya)?;
 	Utils::user(lua, &ya)?;
 
-	lua.globals().set("ya", ya)
+	lua.globals().raw_set("ya", ya)
 }
 
 pub fn init() {

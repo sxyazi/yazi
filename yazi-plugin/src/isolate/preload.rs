@@ -14,7 +14,7 @@ pub async fn preload(
 
 	let name = name.to_owned();
 	tokio::task::spawn_blocking(move || {
-		let lua = slim_lua()?;
+		let lua = slim_lua(&name)?;
 		let plugin: Table = if let Some(b) = LOADED.read().get(&name) {
 			lua.load(b).call(())?
 		} else {
@@ -26,12 +26,12 @@ pub async fn preload(
 			return Err("no files".into_lua_err());
 		}
 
-		plugin.set("skip", 0)?;
-		plugin.set("area", Rect::cast(&lua, LAYOUT.load().preview)?)?;
+		plugin.raw_set("skip", 0)?;
+		plugin.raw_set("area", Rect::cast(&lua, LAYOUT.load().preview)?)?;
 		if multi {
-			plugin.set("files", files)?;
+			plugin.raw_set("files", files)?;
 		} else {
-			plugin.set("file", files.remove(0))?;
+			plugin.raw_set("file", files.remove(0))?;
 		}
 
 		Handle::current().block_on(plugin.call_async_method("preload", ()))

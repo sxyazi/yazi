@@ -24,7 +24,7 @@ pub fn pour(lua: &Lua) -> mlua::Result<()> {
 	super::Span::install(lua, &ui)?;
 	super::Style::install(lua, &ui)?;
 
-	lua.globals().set("ui", ui)
+	lua.globals().raw_set("ui", ui)
 }
 
 pub trait Renderable {

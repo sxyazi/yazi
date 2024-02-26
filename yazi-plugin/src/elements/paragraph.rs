@@ -52,7 +52,7 @@ impl Paragraph {
 
 		paragraph.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
-		ui.set("Paragraph", paragraph)
+		ui.raw_set("Paragraph", paragraph)
 	}
 }
 

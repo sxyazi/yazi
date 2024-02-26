@@ -13,22 +13,22 @@ impl<'a> Config<'a> {
 	pub fn new(lua: &'a Lua) -> Self { Self { lua } }
 
 	pub fn install_boot(self) -> mlua::Result<Self> {
-		self.lua.globals().set("BOOT", self.lua.to_value_with(&*BOOT, OPTIONS)?)?;
+		self.lua.globals().raw_set("BOOT", self.lua.to_value_with(&*BOOT, OPTIONS)?)?;
 		Ok(self)
 	}
 
 	pub fn install_manager(self) -> mlua::Result<Self> {
-		self.lua.globals().set("MANAGER", self.lua.to_value_with(&*MANAGER, OPTIONS)?)?;
+		self.lua.globals().raw_set("MANAGER", self.lua.to_value_with(&*MANAGER, OPTIONS)?)?;
 		Ok(self)
 	}
 
 	pub fn install_theme(self) -> mlua::Result<Self> {
-		self.lua.globals().set("THEME", self.lua.to_value_with(&*THEME, OPTIONS)?)?;
+		self.lua.globals().raw_set("THEME", self.lua.to_value_with(&*THEME, OPTIONS)?)?;
 		Ok(self)
 	}
 
 	pub fn install_preview(self) -> mlua::Result<Self> {
-		self.lua.globals().set("PREVIEW", self.lua.to_value_with(&*PREVIEW, OPTIONS)?)?;
+		self.lua.globals().raw_set("PREVIEW", self.lua.to_value_with(&*PREVIEW, OPTIONS)?)?;
 		Ok(self)
 	}
 }

@@ -4,7 +4,7 @@ use tokio::fs;
 use crate::{bindings::{Cast, Cha}, url::UrlRef};
 
 pub fn install(lua: &Lua) -> mlua::Result<()> {
-	lua.globals().set(
+	lua.globals().raw_set(
 		"fs",
 		lua.create_table_from([
 			(
