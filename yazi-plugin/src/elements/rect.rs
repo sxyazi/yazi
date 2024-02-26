@@ -11,10 +11,10 @@ impl Rect {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
 		let new = lua.create_function(|lua, (_, args): (Table, Table)| {
 			Rect::cast(lua, ratatui::layout::Rect {
-				x:      args.get("x")?,
-				y:      args.get("y")?,
-				width:  args.get("w")?,
-				height: args.get("h")?,
+				x:      args.raw_get("x")?,
+				y:      args.raw_get("y")?,
+				width:  args.raw_get("w")?,
+				height: args.raw_get("h")?,
 			})
 		})?;
 
@@ -25,7 +25,7 @@ impl Rect {
 
 		rect.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
-		ui.set("Rect", rect)
+		ui.raw_set("Rect", rect)
 	}
 
 	pub fn register(lua: &Lua) -> mlua::Result<()> {

@@ -13,7 +13,7 @@ pub struct List {
 
 impl List {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		ui.set(
+		ui.raw_set(
 			"List",
 			lua.create_function(|_, (area, items): (RectRef, Vec<ListItem>)| {
 				Ok(Self { area: *area, inner: ratatui::widgets::List::new(items) })
@@ -43,7 +43,7 @@ pub struct ListItem {
 
 impl ListItem {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		ui.set(
+		ui.raw_set(
 			"ListItem",
 			lua.create_function(|_, value: Value| {
 				match value {

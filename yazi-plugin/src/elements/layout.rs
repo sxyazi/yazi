@@ -24,7 +24,7 @@ impl Layout {
 
 		layout.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
-		ui.set("Layout", layout)
+		ui.raw_set("Layout", layout)
 	}
 }
 

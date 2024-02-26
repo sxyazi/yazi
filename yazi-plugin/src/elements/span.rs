@@ -8,7 +8,7 @@ pub struct Span(pub(super) ratatui::text::Span<'static>);
 
 impl Span {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		ui.set(
+		ui.raw_set(
 			"Span",
 			lua.create_function(|_, content: mlua::String| {
 				Ok(Self(ratatui::text::Span::raw(content.to_string_lossy().into_owned())))

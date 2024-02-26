@@ -25,7 +25,7 @@ impl Utils {
 	}
 
 	pub(super) fn layer(lua: &Lua, ya: &Table) -> mlua::Result<()> {
-		ya.set(
+		ya.raw_set(
 			"which",
 			lua.create_async_function(|_, t: Table| async move {
 				let (tx, mut rx) = mpsc::channel::<usize>(1);
@@ -34,9 +34,9 @@ impl Utils {
 				for (i, cand) in t.get::<_, Table>("cands")?.sequence_values::<Table>().enumerate() {
 					let cand = cand?;
 					cands.push(Control {
-						on:   Self::parse_keys(cand.get("on")?)?,
+						on:   Self::parse_keys(cand.raw_get("on")?)?,
 						exec: vec![Cmd::args("callback", vec![i.to_string()]).with_data(tx.clone())],
-						desc: cand.get("desc").ok(),
+						desc: cand.raw_get("desc").ok(),
 					});
 				}
 
@@ -44,7 +44,7 @@ impl Utils {
 				emit!(Call(
 					Cmd::new("show")
 						.with("layer", Layer::Which)
-						.with_bool("silent", t.get("silent").unwrap_or_default())
+						.with_bool("silent", t.raw_get("silent").unwrap_or_default())
 						.with_data(cands),
 					Layer::Which
 				));

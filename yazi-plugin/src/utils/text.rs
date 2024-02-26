@@ -7,7 +7,7 @@ use super::Utils;
 
 impl Utils {
 	pub(super) fn text(lua: &Lua, ya: &Table) -> mlua::Result<()> {
-		ya.set(
+		ya.raw_set(
 			"quote",
 			lua.create_function(|_, s: mlua::String| {
 				#[cfg(unix)]
@@ -18,7 +18,7 @@ impl Utils {
 			})?,
 		)?;
 
-		ya.set(
+		ya.raw_set(
 			"truncate",
 			lua.create_function(|_, (text, max): (mlua::String, usize)| {
 				let mut width = 0;

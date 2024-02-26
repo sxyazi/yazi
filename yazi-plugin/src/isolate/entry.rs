@@ -8,12 +8,7 @@ pub async fn entry(name: String, args: Vec<ValueSendable>) -> mlua::Result<()> {
 	LOADED.ensure(&name).await.into_lua_err()?;
 
 	tokio::task::spawn_blocking(move || {
-		let lua = slim_lua()?;
-		let globals = lua.globals();
-
-		globals.raw_set("YAZI_PLUGIN_NAME", lua.create_string(&name)?)?;
-		globals.raw_set("YAZI_SYNC_CALLS", 0)?;
-
+		let lua = slim_lua(&name)?;
 		let plugin: Table = if let Some(b) = LOADED.read().get(&name) {
 			lua.load(b).call(())?
 		} else {

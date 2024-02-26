@@ -10,11 +10,11 @@ impl Utils {
 
 		use crate::utils::{HOSTNAME_CACHE, USERS_CACHE};
 
-		ya.set("uid", lua.create_function(|_, ()| Ok(USERS_CACHE.get_current_uid()))?)?;
+		ya.raw_set("uid", lua.create_function(|_, ()| Ok(USERS_CACHE.get_current_uid()))?)?;
 
-		ya.set("gid", lua.create_function(|_, ()| Ok(USERS_CACHE.get_current_gid()))?)?;
+		ya.raw_set("gid", lua.create_function(|_, ()| Ok(USERS_CACHE.get_current_gid()))?)?;
 
-		ya.set(
+		ya.raw_set(
 			"user_name",
 			lua.create_function(|lua, uid: Option<u32>| {
 				USERS_CACHE
@@ -24,7 +24,7 @@ impl Utils {
 			})?,
 		)?;
 
-		ya.set(
+		ya.raw_set(
 			"group_name",
 			lua.create_function(|lua, gid: Option<u32>| {
 				USERS_CACHE
@@ -34,7 +34,7 @@ impl Utils {
 			})?,
 		)?;
 
-		ya.set(
+		ya.raw_set(
 			"host_name",
 			lua.create_function(|lua, ()| {
 				HOSTNAME_CACHE

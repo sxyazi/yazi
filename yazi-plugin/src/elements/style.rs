@@ -11,7 +11,7 @@ impl Style {
 		let style = lua.create_table()?;
 		style.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
-		ui.set("Style", style)
+		ui.raw_set("Style", style)
 	}
 }
 
@@ -29,7 +29,7 @@ impl<'a> From<Table<'a>> for Style {
 			style.bg = Color::try_from(bg).ok().map(Into::into);
 		}
 		style.add_modifier =
-			ratatui::style::Modifier::from_bits_truncate(value.get("modifier").unwrap_or_default());
+			ratatui::style::Modifier::from_bits_truncate(value.raw_get("modifier").unwrap_or_default());
 		Self(style)
 	}
 }

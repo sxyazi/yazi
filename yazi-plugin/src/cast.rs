@@ -69,7 +69,7 @@ impl<'lua> IntoLua<'lua> for ValueSendable {
 			ValueSendable::Table(t) => {
 				let table = lua.create_table()?;
 				for (k, v) in t {
-					table.set(k.into_lua(lua)?, v.into_lua(lua)?)?;
+					table.raw_set(k.into_lua(lua)?, v.into_lua(lua)?)?;
 				}
 				Ok(Value::Table(table))
 			}

@@ -42,7 +42,7 @@ impl Url {
 	}
 
 	pub fn install(lua: &Lua) -> mlua::Result<()> {
-		lua.globals().set(
+		lua.globals().raw_set(
 			"Url",
 			lua.create_function(|lua, url: mlua::String| {
 				Self::cast(lua, yazi_shared::fs::Url::from(url.to_str()?))

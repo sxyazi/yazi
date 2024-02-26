@@ -12,7 +12,7 @@ impl Progress {
 	) -> Vec<Vec<(u16, u16, ratatui::buffer::Cell)>> {
 		let mut patches = vec![];
 		let mut f = || {
-			let comp: Table = LUA.globals().get("Progress")?;
+			let comp: Table = LUA.globals().raw_get("Progress")?;
 			for widget in comp.call_method::<_, Vec<AnyUserData>>("partial_render", ())? {
 				let Some(w) = cast_to_renderable(widget) else {
 					continue;

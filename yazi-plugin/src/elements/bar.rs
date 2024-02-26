@@ -36,7 +36,7 @@ impl Bar {
 
 		bar.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
-		ui.set("Bar", bar)
+		ui.raw_set("Bar", bar)
 	}
 }
 

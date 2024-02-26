@@ -6,14 +6,14 @@ use super::Utils;
 
 impl Utils {
 	pub(super) fn time(lua: &Lua, ya: &Table) -> mlua::Result<()> {
-		ya.set(
+		ya.raw_set(
 			"time",
 			lua.create_function(|_, ()| {
 				Ok(SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok())
 			})?,
 		)?;
 
-		ya.set(
+		ya.raw_set(
 			"sleep",
 			lua.create_async_function(|_, secs: f64| async move {
 				if secs < 0.0 {
