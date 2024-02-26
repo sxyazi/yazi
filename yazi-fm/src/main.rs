@@ -35,8 +35,10 @@ use signals::*;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+	Panic::install();
+	Logs::start();
+
 	_ = fdlimit::raise_fd_limit();
-	// console_subscriber::init();
 
 	yazi_config::init();
 
