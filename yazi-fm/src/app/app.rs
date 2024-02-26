@@ -6,7 +6,7 @@ use yazi_config::keymap::Key;
 use yazi_core::input::InputMode;
 use yazi_shared::{emit, event::{Cmd, Event, NEED_RENDER}, term::Term, Layer};
 
-use crate::{lives::Lives, Ctx, Executor, Panic, Router, Signals};
+use crate::{lives::Lives, Ctx, Executor, Router, Signals};
 
 pub(crate) struct App {
 	pub(crate) cx:      Ctx,
@@ -16,7 +16,6 @@ pub(crate) struct App {
 
 impl App {
 	pub(crate) async fn run() -> Result<()> {
-		Panic::install();
 		let term = Term::start()?;
 		let signals = Signals::start()?;
 
