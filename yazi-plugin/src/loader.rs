@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 use mlua::{ExternalError, Table};
 use parking_lot::RwLock;
 use tokio::fs;
-use yazi_config::BOOT;
+use yazi_boot::BOOT;
 use yazi_shared::RoCell;
 
 use crate::LUA;

@@ -2,7 +2,6 @@
 
 use yazi_shared::RoCell;
 
-mod boot;
 pub mod keymap;
 mod layout;
 mod log;
@@ -18,16 +17,12 @@ mod tasks;
 pub mod theme;
 mod validation;
 pub mod which;
-mod xdg;
 
 pub use layout::*;
 pub(crate) use pattern::*;
 pub(crate) use preset::*;
 pub use priority::*;
-pub(crate) use xdg::*;
 
-pub static ARGS: RoCell<boot::Args> = RoCell::new();
-pub static BOOT: RoCell<boot::Boot> = RoCell::new();
 pub static LAYOUT: RoCell<arc_swap::ArcSwap<Layout>> = RoCell::new();
 
 static MERGED_KEYMAP: RoCell<String> = RoCell::new();
@@ -47,13 +42,12 @@ pub static SELECT: RoCell<popup::Select> = RoCell::new();
 pub static WHICH: RoCell<which::Which> = RoCell::new();
 
 pub fn init() {
-	ARGS.with(Default::default);
-	BOOT.with(Default::default);
 	LAYOUT.with(Default::default);
 
-	MERGED_KEYMAP.with(Preset::keymap);
-	MERGED_THEME.with(Preset::theme);
-	MERGED_YAZI.with(Preset::yazi);
+	let config_dir = yazi_shared::Xdg::config_dir().unwrap();
+	MERGED_KEYMAP.init(Preset::keymap(&config_dir));
+	MERGED_THEME.init(Preset::theme(&config_dir));
+	MERGED_YAZI.init(Preset::yazi(&config_dir));
 
 	KEYMAP.with(Default::default);
 	LOG.with(Default::default);

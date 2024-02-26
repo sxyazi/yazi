@@ -1,6 +1,6 @@
 use std::ops::{Deref, DerefMut};
 
-use yazi_config::BOOT;
+use yazi_boot::BOOT;
 use yazi_shared::fs::Url;
 
 use crate::{manager::Manager, tab::Tab};

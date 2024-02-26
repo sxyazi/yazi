@@ -1,4 +1,4 @@
-#[path = "src/boot/args.rs"]
+#[path = "src/args.rs"]
 mod args;
 
 use std::{env, error::Error, fs};

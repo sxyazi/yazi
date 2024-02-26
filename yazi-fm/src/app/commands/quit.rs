@@ -1,6 +1,6 @@
 use std::ffi::OsString;
 
-use yazi_config::ARGS;
+use yazi_boot::ARGS;
 use yazi_shared::{event::EventQuit, term::Term};
 
 use crate::app::App;

@@ -1,0 +1,24 @@
+[package]
+name        = "yazi-boot"
+version     = "0.2.3"
+edition     = "2021"
+license     = "MIT"
+authors     = [ "sxyazi <sxyazi@gmail.com>" ]
+description = "Yazi bootstrapper"
+homepage    = "https://yazi-rs.github.io"
+repository  = "https://github.com/sxyazi/yazi"
+
+[dependencies]
+yazi-config = { path = "../yazi-config", version = "0.2.3" }
+yazi-shared = { path = "../yazi-shared", version = "0.2.3" }
+
+# External dependencies
+clap  = { version = "^4", features = [ "derive" ] }
+serde = { version = "^1", features = [ "derive" ] }
+
+[build-dependencies]
+clap                  = { version = "^4", features = [ "derive" ] }
+clap_complete         = "^4"
+clap_complete_nushell = "^4"
+clap_complete_fig     = "^4"
+vergen                = { version = "^8", features = [ "build", "git", "gitcl" ] }

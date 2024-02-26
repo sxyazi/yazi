@@ -2,10 +2,11 @@ use std::{ffi::OsString, fs, path::{Path, PathBuf}, process};
 
 use clap::Parser;
 use serde::Serialize;
-use yazi_shared::fs::{current_cwd, expand_path};
+use yazi_config::PREVIEW;
+use yazi_shared::{fs::{current_cwd, expand_path}, Xdg};
 
 use super::Args;
-use crate::{Xdg, ARGS};
+use crate::ARGS;
 
 #[derive(Debug, Serialize)]
 pub struct Boot {
@@ -29,7 +30,7 @@ impl Boot {
 			return (entry, None);
 		}
 
-		return (parent.unwrap().to_owned(), Some(entry.file_name().unwrap().to_owned()));
+		(parent.unwrap().to_owned(), Some(entry.file_name().unwrap().to_owned()))
 	}
 }
 
@@ -64,6 +65,19 @@ impl Default for Args {
 				env!("VERGEN_GIT_SHA"),
 				env!("VERGEN_BUILD_DATE")
 			);
+			process::exit(0);
+		}
+
+		if args.clear_cache {
+			if PREVIEW.cache_dir == Xdg::cache_dir() {
+				println!("Clearing cache directory: \n{:?}", PREVIEW.cache_dir);
+				fs::remove_dir_all(&PREVIEW.cache_dir).unwrap();
+			} else {
+				println!(
+					"You've changed the default cache directory, for your data's safety, please clear it manually: \n{:?}",
+					PREVIEW.cache_dir
+				);
+			}
 			process::exit(0);
 		}
 

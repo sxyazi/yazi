@@ -1,5 +1,6 @@
 use mlua::{Lua, LuaSerdeExt, SerializeOptions};
-use yazi_config::{BOOT, MANAGER, PREVIEW, THEME};
+use yazi_boot::BOOT;
+use yazi_config::{MANAGER, PREVIEW, THEME};
 
 const OPTIONS: SerializeOptions =
 	SerializeOptions::new().serialize_none_to_null(false).serialize_unit_to_null(false);

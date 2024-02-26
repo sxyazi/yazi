@@ -1,6 +1,6 @@
 use anyhow::Result;
 use mlua::Lua;
-use yazi_config::BOOT;
+use yazi_boot::BOOT;
 use yazi_shared::RoCell;
 
 pub static LUA: RoCell<Lua> = RoCell::new();
