@@ -26,27 +26,27 @@ ueberzug_offset = [ 0, 0, 0, 0 ]
 
 [opener]
 edit = [
-	{ exec = '${EDITOR:=vi} "$@"', desc = "$EDITOR", block = true, for = "unix" },
+	{ exec = '${EDITOR:=vi} "$0"', desc = "$EDITOR", block = true, for = "unix" },
 	{ exec = 'code "%*"',          orphan = true, for = "windows" },
 ]
 open = [
-	{ exec = 'xdg-open "$@"',                desc = "Open", for = "linux" },
-	{ exec = 'open "$@"',                    desc = "Open", for = "macos" },
-	{ exec = 'start "" "%1"', orphan = true, desc = "Open", for = "windows" }
+	{ exec = 'xdg-open "$0"',                desc = "Open", for = "linux" },
+	{ exec = 'open "$0"',                    desc = "Open", for = "macos" },
+	{ exec = 'start "" "%0"', orphan = true, desc = "Open", for = "windows" }
 ]
 reveal = [
-	{ exec = 'open -R "$1"',                          desc = "Reveal", for = "macos" },
-	{ exec = 'explorer /select, "%1"', orphan = true, desc = "Reveal", for = "windows" },
-	{ exec = '''exiftool "$1"; echo "Press enter to exit"; read''', block = true, desc = "Show EXIF", for = "unix" },
+	{ exec = 'open -R "$0"',                          desc = "Reveal", for = "macos" },
+	{ exec = 'explorer /select, "%0"', orphan = true, desc = "Reveal", for = "windows" },
+	{ exec = '''exiftool "$0"; echo "Press enter to exit"; read''', block = true, desc = "Show EXIF", for = "unix" },
 ]
 extract = [
-	{ exec = 'unar "$1"', desc = "Extract here", for = "unix" },
-	{ exec = 'unar "%1"', desc = "Extract here", for = "windows" },
+	{ exec = 'unar "$0"', desc = "Extract here", for = "unix" },
+	{ exec = 'unar "%0"', desc = "Extract here", for = "windows" },
 ]
 play = [
-	{ exec = 'mpv "$@"', orphan = true, for = "unix" },
-	{ exec = 'mpv "%1"', orphan = true, for = "windows" },
-	{ exec = '''mediainfo "$1"; echo "Press enter to exit"; read''', block = true, desc = "Show media info", for = "unix" },
+	{ exec = 'mpv "$0"', orphan = true, for = "unix" },
+	{ exec = 'mpv "%0"', orphan = true, for = "windows" },
+	{ exec = '''mediainfo "$0"; echo "Press enter to exit"; read''', block = true, desc = "Show media info", for = "unix" },
 ]
 
 [open]
