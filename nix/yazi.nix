@@ -60,9 +60,9 @@
       wrapProgram $out/bin/yazi \
          --prefix PATH : "${makeBinPath runtimePaths}"
       installShellCompletion --cmd yazi \
-        --bash ./yazi-config/completions/yazi.bash \
-        --fish ./yazi-config/completions/yazi.fish \
-        --zsh  ./yazi-config/completions/_yazi
+        --bash ./yazi-boot/completions/yazi.bash \
+        --fish ./yazi-boot/completions/yazi.fish \
+        --zsh  ./yazi-boot/completions/_yazi
 
       # Resize logo
       for RES in 16 24 32 48 64 128 256; do
