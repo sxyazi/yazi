@@ -58,6 +58,12 @@ impl Tab {
 		}
 	}
 
+	pub fn hovered_and_selected(&self) -> Vec<&Url> {
+		let mut a = self.current.hovered().map(|h| vec![&h.url]).unwrap_or_default();
+		a.extend(self.selected.iter());
+		a
+	}
+
 	// --- History
 	#[inline]
 	pub fn history_new(&mut self, url: &Url) -> Folder {
