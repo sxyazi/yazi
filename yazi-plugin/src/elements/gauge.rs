@@ -50,7 +50,7 @@ impl UserData for Gauge {
 		methods.add_function("style", |_, (ud, value): (AnyUserData, Value)| {
 			ud.borrow_mut::<Self>()?.style = match value {
 				Value::Nil => None,
-				Value::Table(tb) => Some(Style::from(tb).0),
+				Value::Table(tb) => Some(Style::try_from(tb)?.0),
 				Value::UserData(ud) => Some(ud.borrow::<Style>()?.0),
 				_ => return Err("expected a Style or Table or nil".into_lua_err()),
 			};
@@ -60,7 +60,7 @@ impl UserData for Gauge {
 		methods.add_function("gauge_style", |_, (ud, value): (AnyUserData, Value)| {
 			ud.borrow_mut::<Self>()?.gauge_style = match value {
 				Value::Nil => None,
-				Value::Table(tb) => Some(Style::from(tb).0),
+				Value::Table(tb) => Some(Style::try_from(tb)?.0),
 				Value::UserData(ud) => Some(ud.borrow::<Style>()?.0),
 				_ => return Err("expected a Style or Table or nil".into_lua_err()),
 			};

@@ -67,7 +67,7 @@ impl UserData for Span {
 		methods.add_function("style", |_, (ud, value): (AnyUserData, Value)| {
 			ud.borrow_mut::<Self>()?.0.style = match value {
 				Value::Nil => ratatui::style::Style::default(),
-				Value::Table(tb) => Style::from(tb).0,
+				Value::Table(tb) => Style::try_from(tb)?.0,
 				Value::UserData(ud) => ud.borrow::<Style>()?.0,
 				_ => return Err("expected a Style or Table or nil".into_lua_err()),
 			};

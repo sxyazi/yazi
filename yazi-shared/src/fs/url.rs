@@ -1,4 +1,4 @@
-use std::{ffi::{OsStr, OsString}, fmt::{Debug, Formatter}, ops::{Deref, DerefMut}, path::{Path, PathBuf}};
+use std::{ffi::{OsStr, OsString}, fmt::{Debug, Display, Formatter}, ops::{Deref, DerefMut}, path::{Path, PathBuf}};
 
 use percent_encoding::{percent_decode_str, percent_encode, AsciiSet, CONTROLS};
 
@@ -95,10 +95,10 @@ impl AsRef<OsStr> for Url {
 	fn as_ref(&self) -> &OsStr { self.path.as_os_str() }
 }
 
-impl ToString for Url {
-	fn to_string(&self) -> String {
+impl Display for Url {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
 		if self.scheme == UrlScheme::Regular {
-			return self.path.to_string_lossy().into_owned();
+			return f.write_str(&self.path.to_string_lossy());
 		}
 
 		let scheme = match self.scheme {
@@ -106,11 +106,14 @@ impl ToString for Url {
 			UrlScheme::Search => "search://",
 			UrlScheme::Archive => "archive://",
 		};
-
 		let path = percent_encode(self.path.as_os_str().as_encoded_bytes(), ENCODE_SET);
-		let frag =
-			Some(&self.frag).filter(|&s| !s.is_empty()).map(|s| format!("#{s}")).unwrap_or_default();
-		format!("{scheme}{path}{frag}")
+
+		write!(f, "{scheme}{path}")?;
+		if !self.frag.is_empty() {
+			write!(f, "#{}", self.frag)?;
+		}
+
+		Ok(())
 	}
 }
 

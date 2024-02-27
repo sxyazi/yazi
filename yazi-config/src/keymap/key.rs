@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{fmt::{Display, Write}, str::FromStr};
 
 use anyhow::bail;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -132,22 +132,22 @@ impl TryFrom<String> for Key {
 	fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
 }
 
-impl ToString for Key {
-	fn to_string(&self) -> String {
+impl Display for Key {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		if let Some(c) = self.plain() {
 			let c = if self.shift { c.to_ascii_uppercase() } else { c };
-			return if c == ' ' { "<Space>".to_string() } else { c.to_string() };
+			return if c == ' ' { write!(f, "<Space>") } else { f.write_char(c) };
 		}
 
-		let mut s = "<".to_string();
+		write!(f, "<")?;
 		if self.ctrl {
-			s += "C-";
+			write!(f, "C-")?;
 		}
 		if self.alt {
-			s += "A-";
+			write!(f, "A-")?;
 		}
 		if self.shift && !matches!(self.code, KeyCode::Char(_)) {
-			s += "S-";
+			write!(f, "S-")?;
 		}
 
 		let code = match self.code {
@@ -181,12 +181,12 @@ impl ToString for Key {
 
 			KeyCode::Char(' ') => "Space",
 			KeyCode::Char(c) => {
-				s.push(if self.shift { c.to_ascii_uppercase() } else { c });
+				f.write_char(if self.shift { c.to_ascii_uppercase() } else { c })?;
 				""
 			}
 			_ => "Unknown",
 		};
 
-		s + code + ">"
+		write!(f, "{}>", code)
 	}
 }

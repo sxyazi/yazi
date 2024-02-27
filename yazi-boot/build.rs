@@ -1,7 +1,7 @@
 #[path = "src/args.rs"]
 mod args;
 
-use std::{env, error::Error, fs};
+use std::{env, error::Error};
 
 use clap::CommandFactory;
 use clap_complete::{generate_to, Shell};
@@ -18,7 +18,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 	let bin = "yazi";
 	let out = "completions";
 
-	fs::create_dir_all(out)?;
+	std::fs::create_dir_all(out)?;
 	generate_to(Shell::Bash, cmd, bin, out)?;
 	generate_to(Shell::Fish, cmd, bin, out)?;
 	generate_to(Shell::Zsh, cmd, bin, out)?;
