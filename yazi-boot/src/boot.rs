@@ -50,9 +50,9 @@ impl Default for Boot {
 			state_dir: Xdg::state_dir().unwrap(),
 		};
 
-		fs::create_dir_all(&boot.flavor_dir).unwrap();
-		fs::create_dir_all(&boot.plugin_dir).unwrap();
-		fs::create_dir_all(&boot.state_dir).unwrap();
+		fs::create_dir_all(&boot.flavor_dir).expect("Failed to create flavor directory");
+		fs::create_dir_all(&boot.plugin_dir).expect("Failed to create plugin directory");
+		fs::create_dir_all(&boot.state_dir).expect("Failed to create state directory");
 
 		boot
 	}
