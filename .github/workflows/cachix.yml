@@ -8,7 +8,7 @@ on:
 jobs:
   publish:
     name: Publish Flake
-    runs-on: [ubuntu-latest, macos-latest-xlarge]
+    runs-on: [ubuntu-latest, macos-latest]
     steps:
     - name: Checkout sources
       uses: actions/checkout@v4
