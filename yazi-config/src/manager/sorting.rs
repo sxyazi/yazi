@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{fmt::Display, str::FromStr};
 
 use anyhow::bail;
 use serde::{Deserialize, Serialize};
@@ -39,9 +39,9 @@ impl TryFrom<String> for SortBy {
 	fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
 }
 
-impl ToString for SortBy {
-	fn to_string(&self) -> String {
-		match self {
+impl Display for SortBy {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.write_str(match self {
 			Self::None => "none",
 			Self::Modified => "modified",
 			Self::Created => "created",
@@ -49,7 +49,6 @@ impl ToString for SortBy {
 			Self::Alphabetical => "alphabetical",
 			Self::Natural => "natural",
 			Self::Size => "size",
-		}
-		.to_string()
+		})
 	}
 }

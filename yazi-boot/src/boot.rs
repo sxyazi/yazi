@@ -14,6 +14,7 @@ pub struct Boot {
 	pub file: Option<OsString>,
 
 	pub config_dir: PathBuf,
+	pub flavor_dir: PathBuf,
 	pub plugin_dir: PathBuf,
 	pub state_dir:  PathBuf,
 }
@@ -36,19 +37,22 @@ impl Boot {
 
 impl Default for Boot {
 	fn default() -> Self {
+		let config_dir = Xdg::config_dir().unwrap();
 		let (cwd, file) = Self::parse_entry(ARGS.entry.as_deref());
+
 		let boot = Self {
 			cwd,
 			file,
 
-			config_dir: Xdg::config_dir().unwrap(),
-			plugin_dir: Xdg::plugin_dir().unwrap(),
+			flavor_dir: config_dir.join("flavors"),
+			plugin_dir: config_dir.join("plugins"),
+			config_dir,
 			state_dir: Xdg::state_dir().unwrap(),
 		};
 
-		if !boot.state_dir.is_dir() {
-			fs::create_dir_all(&boot.state_dir).unwrap();
-		}
+		fs::create_dir_all(&boot.flavor_dir).expect("Failed to create flavor directory");
+		fs::create_dir_all(&boot.plugin_dir).expect("Failed to create plugin directory");
+		fs::create_dir_all(&boot.state_dir).expect("Failed to create state directory");
 
 		boot
 	}

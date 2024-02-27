@@ -60,7 +60,7 @@ impl UserData for Line {
 				let mut me = ud.borrow_mut::<Self>()?;
 				me.0.style = match value {
 					Value::Nil => me.0.style.patch(ratatui::style::Style::reset()),
-					Value::Table(tb) => me.0.style.patch(Style::from(tb).0),
+					Value::Table(tb) => me.0.style.patch(Style::try_from(tb)?.0),
 					Value::UserData(ud) => me.0.style.patch(ud.borrow::<Style>()?.0),
 					_ => return Err("expected a Style or Table or nil".into_lua_err()),
 				};

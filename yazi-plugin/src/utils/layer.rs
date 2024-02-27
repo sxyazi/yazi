@@ -31,7 +31,7 @@ impl Utils {
 				let (tx, mut rx) = mpsc::channel::<usize>(1);
 
 				let mut cands = Vec::with_capacity(30);
-				for (i, cand) in t.get::<_, Table>("cands")?.sequence_values::<Table>().enumerate() {
+				for (i, cand) in t.raw_get::<_, Table>("cands")?.sequence_values::<Table>().enumerate() {
 					let cand = cand?;
 					cands.push(Control {
 						on:   Self::parse_keys(cand.raw_get("on")?)?,

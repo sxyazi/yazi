@@ -1,4 +1,4 @@
-use std::{mem, time::Duration};
+use std::{fmt::Display, mem, time::Duration};
 
 use anyhow::bail;
 use tokio::pin;
@@ -26,14 +26,13 @@ impl From<String> for OptType {
 	}
 }
 
-impl ToString for OptType {
-	fn to_string(&self) -> String {
-		match self {
+impl Display for OptType {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.write_str(match self {
 			Self::Rg => "rg",
 			Self::Fd => "fd",
 			Self::None => "none",
-		}
-		.to_owned()
+		})
 	}
 }
 

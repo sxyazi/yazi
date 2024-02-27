@@ -1,4 +1,4 @@
-use std::{collections::BTreeSet, mem};
+use std::{collections::BTreeSet, fmt::Display, mem};
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub enum Mode {
@@ -37,13 +37,12 @@ impl Mode {
 	pub fn is_visual(&self) -> bool { matches!(self, Mode::Select(..) | Mode::Unset(..)) }
 }
 
-impl ToString for Mode {
-	fn to_string(&self) -> String {
-		match self {
+impl Display for Mode {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.write_str(match self {
 			Mode::Normal => "normal",
 			Mode::Select(..) => "select",
 			Mode::Unset(..) => "unset",
-		}
-		.to_string()
+		})
 	}
 }
