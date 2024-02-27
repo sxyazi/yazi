@@ -2,6 +2,7 @@ use std::{env, ffi::OsString, process::Stdio};
 
 use anyhow::Result;
 use tokio::process::{Child, Command};
+use yazi_config::MANAGER;
 
 pub struct ShellOpt {
 	pub cmd:    OsString,
@@ -33,7 +34,7 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 
 	#[cfg(unix)]
 	return Ok(unsafe {
-		Command::new("sh")
+		Command::new(&MANAGER.shell)
 			.env("YAZI_LEVEL", (level + 1).to_string())
 			.arg("-c")
 			.stdin(opt.stdio())

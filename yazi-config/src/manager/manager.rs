@@ -20,6 +20,7 @@ pub struct Manager {
 	pub show_hidden:  bool,
 	pub show_symlink: bool,
 	pub scrolloff:    u8,
+	pub shell:        String,
 }
 
 impl Default for Manager {

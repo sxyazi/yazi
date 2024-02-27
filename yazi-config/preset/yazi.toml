@@ -12,6 +12,7 @@ linemode       = "none"
 show_hidden    = false
 show_symlink   = true
 scrolloff      = 5
+shell          = "sh"
 
 [preview]
 tab_size        = 2
