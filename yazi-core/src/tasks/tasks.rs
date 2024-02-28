@@ -58,9 +58,9 @@ impl Tasks {
 
 	pub fn file_open(&self, hovered: &Url, targets: &[(Url, String)]) {
 		let mut openers = BTreeMap::new();
-		for (path, mime) in targets {
-			if let Some(opener) = OPEN.openers(path, mime).and_then(|o| o.first().copied()) {
-				openers.entry(opener).or_insert_with(|| vec![hovered]).push(path);
+		for (url, mime) in targets {
+			if let Some(opener) = OPEN.openers(url, mime).and_then(|o| o.first().copied()) {
+				openers.entry(opener).or_insert_with(|| vec![hovered]).push(url);
 			}
 		}
 		for (opener, args) in openers {
