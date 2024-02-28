@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use ratatui::{buffer::Buffer, layout::{self, Constraint, Offset, Rect},  widgets::{Block, BorderType, Paragraph, Widget, Wrap}};
+use ratatui::{buffer::Buffer, layout::{self, Constraint, Offset, Rect}, widgets::{Block, BorderType, Paragraph, Widget, Wrap}};
 use yazi_config::THEME;
 use yazi_core::notify::{Level, Message};
 
