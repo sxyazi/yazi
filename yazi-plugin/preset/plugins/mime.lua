@@ -15,7 +15,8 @@ function M:preload()
 		urls[#urls + 1] = tostring(file.url)
 	end
 
-	local child, code = Command("file"):args({ "-bL", "--mime-type" }):args(urls):stdout(Command.PIPED):spawn()
+	local file_cmd_path = os.getenv("YAZI_FILE_CMD_PATH") or "file"
+	local child, code = Command(file_cmd_path):args({ "-bL", "--mime-type" }):args(urls):stdout(Command.PIPED):spawn()
 	if not child then
 		ya.err("spawn `file` command returns " .. tostring(code))
 		return 0
