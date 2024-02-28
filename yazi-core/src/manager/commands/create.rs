@@ -32,7 +32,7 @@ impl Manager {
 				}
 			}
 
-			if name.ends_with(MAIN_SEPARATOR) {
+			if name.ends_with('/') || name.ends_with('\\') {
 				fs::create_dir_all(&path).await?;
 			} else {
 				fs::create_dir_all(&path.parent().unwrap()).await.ok();
