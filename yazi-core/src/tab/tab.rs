@@ -59,10 +59,14 @@ impl Tab {
 	}
 
 	pub fn hovered_and_selected(&self) -> Vec<&Url> {
-		if let Some(h) = self.current.hovered() {
-			[&h.url].into_iter().chain(self.selected.iter()).collect()
+		let Some(h) = self.current.hovered() else {
+			return vec![];
+		};
+
+		if self.selected.is_empty() {
+			vec![&h.url, &h.url]
 		} else {
-			vec![]
+			[&h.url].into_iter().chain(self.selected.iter()).collect()
 		}
 	}
 
