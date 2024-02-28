@@ -335,4 +335,20 @@ rules = [
 	{ name = "*/", text = "" },
 ]
 
+
+# : }}}
+
+
+# : Notify {{{
+
+[notify]
+title_info  = { fg = "green" }
+title_warn  = { bg = "yellow" }
+title_error = { fg = "red" }
+
+# Icons
+icon_info  = ""
+icon_warn  = ""
+icon_error = ""
+
 # : }}}
