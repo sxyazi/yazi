@@ -60,7 +60,7 @@ impl Tab {
 
 	pub fn hovered_and_selected(&self) -> Vec<&Url> {
 		if let Some(h) = self.current.hovered() {
-			[&h.url].iter().copied().chain(self.selected.iter()).collect()
+			[&h.url].into_iter().chain(self.selected.iter()).collect()
 		} else {
 			vec![]
 		}
