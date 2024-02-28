@@ -40,8 +40,7 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 			.stdout(opt.stdio())
 			.stderr(opt.stdio())
 			.arg(opt.cmd)
-			.arg(&opt.args[0]) // $0 is the hovered file
-			.args(&opt.args[1..])
+			.args(opt.args)
 			.kill_on_drop(!opt.orphan)
 			.pre_exec(move || {
 				if opt.orphan && libc::setpgid(0i32, 0i32) < 0 {

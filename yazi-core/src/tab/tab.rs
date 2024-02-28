@@ -59,13 +59,11 @@ impl Tab {
 	}
 
 	pub fn hovered_and_selected(&self) -> Vec<&Url> {
-		let mut a = self.current.hovered().map(|h| vec![&h.url]).unwrap_or_default();
-		if self.selected.is_empty() {
-			a.extend(a.clone());
+		if let Some(h) = self.current.hovered() {
+			[&h.url].iter().copied().chain(self.selected.iter()).collect()
 		} else {
-			a.extend(self.selected.iter());
+			vec![]
 		}
-		a
 	}
 
 	// --- History

@@ -37,7 +37,7 @@ impl Tab {
 				}
 			}
 
-			Tasks::_open(selected, Opener {
+			Tasks::_open_with(selected, Opener {
 				exec:   opt.exec,
 				block:  opt.block,
 				orphan: false,

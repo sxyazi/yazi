@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, ffi::OsStr, io::{stdout, BufWriter, Write}, path::PathBuf};
+use std::{collections::BTreeMap, ffi::{OsStr, OsString}, io::{stdout, BufWriter, Write}, path::PathBuf};
 
 use anyhow::{anyhow, bail, Result};
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
@@ -129,7 +129,7 @@ impl Manager {
 
 			let mut child = external::shell(ShellOpt {
 				cmd:    (*opener.exec).into(),
-				args:   vec![tmp.to_owned().into()],
+				args:   vec![OsString::new(), tmp.to_owned().into()],
 				piped:  false,
 				orphan: false,
 			})?;
