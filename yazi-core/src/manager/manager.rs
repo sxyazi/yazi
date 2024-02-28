@@ -52,4 +52,7 @@ impl Manager {
 
 	#[inline]
 	pub fn selected_or_hovered(&self) -> Vec<&Url> { self.tabs.active().selected_or_hovered() }
+
+	#[inline]
+	pub fn hovered_and_selected(&self) -> Vec<&Url> { self.tabs.active().hovered_and_selected() }
 }
