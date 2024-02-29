@@ -70,7 +70,11 @@ impl<'de> Deserialize<'de> for Open {
 		}
 		#[derive(Deserialize)]
 		struct OuterOpen {
-			rules: Vec<OpenRule>,
+			rules:         Vec<OpenRule>,
+			#[serde(default)]
+			prepend_rules: Vec<OpenRule>,
+			#[serde(default)]
+			append_rules:  Vec<OpenRule>,
 		}
 
 		let outer = Outer::deserialize(deserializer)?;
