@@ -18,6 +18,7 @@ pub struct Theme {
 	pub tasks:      Tasks,
 	pub which:      Which,
 	pub help:       Help,
+	pub notify:     Notify,
 
 	// File-specific styles
 	#[serde(rename = "filetype", deserialize_with = "Filetype::deserialize", skip_serializing)]
@@ -159,4 +160,15 @@ pub struct Help {
 
 	pub hovered: Style,
 	pub footer:  Style,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct Notify {
+	pub title_info:  Style,
+	pub title_warn:  Style,
+	pub title_error: Style,
+
+	pub icon_info:  String,
+	pub icon_warn:  String,
+	pub icon_error: String,
 }
