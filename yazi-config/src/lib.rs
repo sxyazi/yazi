@@ -50,7 +50,7 @@ pub fn init() {
 
 	LAYOUT.with(Default::default);
 	FLAVOR.with(Default::default);
-	FLAVOR.merge_with_theme(&config_dir);
+	FLAVOR.merge_with(&MERGED_THEME, &config_dir);
 
 	KEYMAP.with(Default::default);
 	LOG.with(Default::default);

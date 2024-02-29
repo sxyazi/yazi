@@ -2,6 +2,7 @@ use std::path::Path;
 
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
+use yazi_shared::RoCell;
 
 use crate::{Preset, MERGED_THEME};
 
@@ -23,7 +24,7 @@ impl Default for Flavor {
 }
 
 impl Flavor {
-	pub fn merge_with_theme(&self, p: &Path) {
+	pub fn merge_with(&self, merged: &RoCell<String>, p: &Path) {
 		if self.use_.is_empty() {
 			return;
 		}
@@ -33,6 +34,6 @@ impl Flavor {
 			.with_context(|| format!("Failed to load flavor from: {:?}", path))
 			.unwrap();
 
-		MERGED_THEME.replace(Preset::merge_str(&s, &MERGED_THEME));
+		merged.replace(Preset::merge_str(&s, merged));
 	}
 }
