@@ -28,7 +28,6 @@ static MERGED_KEYMAP: RoCell<String> = RoCell::new();
 static MERGED_THEME: RoCell<String> = RoCell::new();
 
 pub static LAYOUT: RoCell<arc_swap::ArcSwap<Layout>> = RoCell::new();
-pub static FLAVOR: RoCell<theme::Flavor> = RoCell::new();
 
 pub static KEYMAP: RoCell<keymap::Keymap> = RoCell::new();
 pub static LOG: RoCell<log::Log> = RoCell::new();
@@ -49,8 +48,6 @@ pub fn init() {
 	MERGED_THEME.init(Preset::theme(&config_dir));
 
 	LAYOUT.with(Default::default);
-	FLAVOR.with(Default::default);
-	FLAVOR.merge_with(&MERGED_THEME, &config_dir);
 
 	KEYMAP.with(Default::default);
 	LOG.with(Default::default);

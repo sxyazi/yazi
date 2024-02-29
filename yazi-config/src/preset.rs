@@ -1,23 +1,35 @@
 use std::{mem, path::{Path, PathBuf}};
 
+use anyhow::Context;
 use toml::{Table, Value};
+
+use crate::theme::Flavor;
 
 pub(crate) struct Preset;
 
 impl Preset {
-	#[inline]
+	pub(crate) fn yazi(p: &Path) -> String {
+		Self::merge_path(p.join("yazi.toml"), include_str!("../preset/yazi.toml"))
+	}
+
 	pub(crate) fn keymap(p: &Path) -> String {
 		Self::merge_path(p.join("keymap.toml"), include_str!("../preset/keymap.toml"))
 	}
 
-	#[inline]
 	pub(crate) fn theme(p: &Path) -> String {
-		Self::merge_path(p.join("theme.toml"), include_str!("../preset/theme.toml"))
-	}
+		let Ok(user) = std::fs::read_to_string(p.join("theme.toml")) else {
+			return include_str!("../preset/theme.toml").to_owned();
+		};
+		let Some(use_) = Flavor::parse_name(&user) else {
+			return Self::merge_str(&user, include_str!("../preset/theme.toml"));
+		};
 
-	#[inline]
-	pub(crate) fn yazi(p: &Path) -> String {
-		Self::merge_path(p.join("yazi.toml"), include_str!("../preset/yazi.toml"))
+		let p = p.join(format!("flavors/{}.yazi/flavor.toml", use_));
+		let flavor = std::fs::read_to_string(&p)
+			.with_context(|| format!("Failed to load flavor {:?}", p))
+			.unwrap();
+
+		Self::merge_str(&user, &Self::merge_str(&flavor, include_str!("../preset/theme.toml")))
 	}
 
 	#[inline]

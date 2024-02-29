@@ -4,11 +4,12 @@ use serde::{Deserialize, Serialize};
 use validator::Validate;
 use yazi_shared::{fs::expand_path, Xdg};
 
-use super::{Filetype, Icon, Style};
-use crate::{validation::check_validation, FLAVOR, MERGED_THEME};
+use super::{Filetype, Flavor, Icon, Style};
+use crate::{validation::check_validation, MERGED_THEME};
 
 #[derive(Deserialize, Serialize)]
 pub struct Theme {
+	pub flavor:     Flavor,
 	pub manager:    Manager,
 	status:         Status,
 	pub input:      Input,
@@ -32,11 +33,11 @@ impl Default for Theme {
 		check_validation(theme.manager.validate());
 		check_validation(theme.which.validate());
 
-		if FLAVOR.use_.is_empty() {
+		if theme.flavor.use_.is_empty() {
 			theme.manager.syntect_theme = expand_path(&theme.manager.syntect_theme);
 		} else {
 			theme.manager.syntect_theme =
-				Xdg::config_dir().join(format!("flavors/{}.yazi/tmtheme.xml", FLAVOR.use_));
+				Xdg::config_dir().join(format!("flavors/{}.yazi/tmtheme.xml", theme.flavor.use_));
 		}
 
 		theme

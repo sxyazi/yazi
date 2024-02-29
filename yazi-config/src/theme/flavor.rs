@@ -1,10 +1,4 @@
-use std::path::Path;
-
-use anyhow::Context;
 use serde::{Deserialize, Serialize};
-use yazi_shared::RoCell;
-
-use crate::{Preset, MERGED_THEME};
 
 #[derive(Deserialize, Serialize)]
 pub struct Flavor {
@@ -12,28 +6,18 @@ pub struct Flavor {
 	pub use_: String,
 }
 
-impl Default for Flavor {
-	fn default() -> Self {
+impl Flavor {
+	pub fn parse_name(s: &str) -> Option<String> {
 		#[derive(Deserialize)]
 		struct Outer {
-			flavor: Flavor,
+			flavor: Inner,
+		}
+		#[derive(Deserialize)]
+		struct Inner {
+			#[serde(rename = "use")]
+			pub use_: String,
 		}
 
-		toml::from_str::<Outer>(&MERGED_THEME).unwrap().flavor
-	}
-}
-
-impl Flavor {
-	pub fn merge_with(&self, merged: &RoCell<String>, p: &Path) {
-		if self.use_.is_empty() {
-			return;
-		}
-
-		let path = p.join(format!("flavors/{}.yazi/theme.toml", self.use_));
-		let s = std::fs::read_to_string(&path)
-			.with_context(|| format!("Failed to load flavor from: {:?}", path))
-			.unwrap();
-
-		merged.replace(Preset::merge_str(&s, merged));
+		toml::from_str::<Outer>(s).ok().map(|o| o.flavor.use_).filter(|s| !s.is_empty())
 	}
 }
