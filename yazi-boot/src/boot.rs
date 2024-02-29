@@ -1,4 +1,4 @@
-use std::{ffi::OsString, fs, path::{Path, PathBuf}, process};
+use std::{ffi::OsString, path::{Path, PathBuf}, process};
 
 use clap::Parser;
 use serde::Serialize;
@@ -16,7 +16,6 @@ pub struct Boot {
 	pub config_dir: PathBuf,
 	pub flavor_dir: PathBuf,
 	pub plugin_dir: PathBuf,
-	pub state_dir:  PathBuf,
 }
 
 impl Boot {
@@ -37,7 +36,7 @@ impl Boot {
 
 impl Default for Boot {
 	fn default() -> Self {
-		let config_dir = Xdg::config_dir().unwrap();
+		let config_dir = Xdg::config_dir();
 		let (cwd, file) = Self::parse_entry(ARGS.entry.as_deref());
 
 		let boot = Self {
@@ -47,13 +46,10 @@ impl Default for Boot {
 			flavor_dir: config_dir.join("flavors"),
 			plugin_dir: config_dir.join("plugins"),
 			config_dir,
-			state_dir: Xdg::state_dir().unwrap(),
 		};
 
-		fs::create_dir_all(&boot.flavor_dir).expect("Failed to create flavor directory");
-		fs::create_dir_all(&boot.plugin_dir).expect("Failed to create plugin directory");
-		fs::create_dir_all(&boot.state_dir).expect("Failed to create state directory");
-
+		std::fs::create_dir_all(&boot.flavor_dir).expect("Failed to create flavor directory");
+		std::fs::create_dir_all(&boot.plugin_dir).expect("Failed to create plugin directory");
 		boot
 	}
 }
@@ -75,7 +71,7 @@ impl Default for Args {
 		if args.clear_cache {
 			if PREVIEW.cache_dir == Xdg::cache_dir() {
 				println!("Clearing cache directory: \n{:?}", PREVIEW.cache_dir);
-				fs::remove_dir_all(&PREVIEW.cache_dir).unwrap();
+				std::fs::remove_dir_all(&PREVIEW.cache_dir).unwrap();
 			} else {
 				println!(
 					"You've changed the default cache directory, for your data's safety, please clear it manually: \n{:?}",
