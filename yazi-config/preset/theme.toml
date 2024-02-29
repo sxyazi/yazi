@@ -4,6 +4,13 @@
 
 # vim:fileencoding=utf-8:foldmethod=marker
 
+# : Flavors {{{
+
+[flavor]
+use = ""
+
+# : }}}
+
 # : Manager {{{
 
 [manager]

@@ -2,10 +2,46 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 use validator::Validate;
-use yazi_shared::fs::expand_path;
+use yazi_shared::{fs::expand_path, Xdg};
 
 use super::{Filetype, Icon, Style};
-use crate::{validation::check_validation, MERGED_THEME};
+use crate::{validation::check_validation, FLAVOR, MERGED_THEME};
+
+#[derive(Deserialize, Serialize)]
+pub struct Theme {
+	pub manager:    Manager,
+	status:         Status,
+	pub input:      Input,
+	pub select:     Select,
+	pub completion: Completion,
+	pub tasks:      Tasks,
+	pub which:      Which,
+	pub help:       Help,
+
+	// File-specific styles
+	#[serde(rename = "filetype", deserialize_with = "Filetype::deserialize", skip_serializing)]
+	pub filetypes: Vec<Filetype>,
+	#[serde(rename = "icon", deserialize_with = "Icon::deserialize", skip_serializing)]
+	pub icons:     Vec<Icon>,
+}
+
+impl Default for Theme {
+	fn default() -> Self {
+		let mut theme: Self = toml::from_str(&MERGED_THEME).unwrap();
+
+		check_validation(theme.manager.validate());
+		check_validation(theme.which.validate());
+
+		if FLAVOR.use_.is_empty() {
+			theme.manager.syntect_theme = expand_path(&theme.manager.syntect_theme);
+		} else {
+			theme.manager.syntect_theme =
+				Xdg::config_dir().join(format!("flavors/{}.yazi/tmtheme.xml", FLAVOR.use_));
+		}
+
+		theme
+	}
+}
 
 #[derive(Deserialize, Serialize, Validate)]
 pub struct Manager {
@@ -122,35 +158,4 @@ pub struct Help {
 
 	pub hovered: Style,
 	pub footer:  Style,
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct Theme {
-	pub manager:    Manager,
-	status:         Status,
-	pub input:      Input,
-	pub select:     Select,
-	pub completion: Completion,
-	pub tasks:      Tasks,
-	pub which:      Which,
-	pub help:       Help,
-
-	// File-specific styles
-	#[serde(rename = "filetype", deserialize_with = "Filetype::deserialize", skip_serializing)]
-	pub filetypes: Vec<Filetype>,
-	#[serde(rename = "icon", deserialize_with = "Icon::deserialize", skip_serializing)]
-	pub icons:     Vec<Icon>,
-}
-
-impl Default for Theme {
-	fn default() -> Self {
-		let mut theme: Self = toml::from_str(&MERGED_THEME).unwrap();
-
-		check_validation(theme.manager.validate());
-		check_validation(theme.which.validate());
-
-		theme.manager.syntect_theme = expand_path(&theme.manager.syntect_theme);
-
-		theme
-	}
 }

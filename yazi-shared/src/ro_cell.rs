@@ -1,4 +1,4 @@
-use std::{cell::UnsafeCell, fmt::{self, Display}, ops::Deref};
+use std::{cell::UnsafeCell, fmt::{self, Display}, mem, ops::Deref};
 
 // Read-only cell. It's safe to use this in a static variable, but it's not safe
 // to mutate it. This is useful for storing static data that is expensive to
@@ -13,6 +13,7 @@ impl<T> RoCell<T> {
 
 	#[inline]
 	pub fn init(&self, value: T) {
+		debug_assert!(!self.is_initialized());
 		unsafe {
 			*self.0.get() = Some(value);
 		}
@@ -27,17 +28,30 @@ impl<T> RoCell<T> {
 	}
 
 	#[inline]
+	pub fn replace(&self, value: T) -> T {
+		debug_assert!(self.is_initialized());
+		unsafe { mem::replace(&mut *self.0.get(), Some(value)).unwrap_unchecked() }
+	}
+
+	#[inline]
 	pub fn drop(&self) {
 		unsafe {
 			*self.0.get() = None;
 		}
 	}
+
+	#[cfg(debug_assertions)]
+	#[inline]
+	fn is_initialized(&self) -> bool { unsafe { (*self.0.get()).is_some() } }
 }
 
 impl<T> Deref for RoCell<T> {
 	type Target = T;
 
-	fn deref(&self) -> &Self::Target { unsafe { (*self.0.get()).as_ref().unwrap() } }
+	fn deref(&self) -> &Self::Target {
+		debug_assert!(self.is_initialized());
+		unsafe { (*self.0.get()).as_ref().unwrap_unchecked() }
+	}
 }
 
 impl<T> Display for RoCell<T>

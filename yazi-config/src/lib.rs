@@ -1,6 +1,6 @@
 #![allow(clippy::module_inception)]
 
-use yazi_shared::RoCell;
+use yazi_shared::{RoCell, Xdg};
 
 pub mod keymap;
 mod layout;
@@ -23,11 +23,12 @@ pub(crate) use pattern::*;
 pub(crate) use preset::*;
 pub use priority::*;
 
-pub static LAYOUT: RoCell<arc_swap::ArcSwap<Layout>> = RoCell::new();
-
+static MERGED_YAZI: RoCell<String> = RoCell::new();
 static MERGED_KEYMAP: RoCell<String> = RoCell::new();
 static MERGED_THEME: RoCell<String> = RoCell::new();
-static MERGED_YAZI: RoCell<String> = RoCell::new();
+
+pub static LAYOUT: RoCell<arc_swap::ArcSwap<Layout>> = RoCell::new();
+pub static FLAVOR: RoCell<theme::Flavor> = RoCell::new();
 
 pub static KEYMAP: RoCell<keymap::Keymap> = RoCell::new();
 pub static LOG: RoCell<log::Log> = RoCell::new();
@@ -42,12 +43,14 @@ pub static SELECT: RoCell<popup::Select> = RoCell::new();
 pub static WHICH: RoCell<which::Which> = RoCell::new();
 
 pub fn init() {
-	LAYOUT.with(Default::default);
-
-	let config_dir = yazi_shared::Xdg::config_dir().unwrap();
+	let config_dir = Xdg::config_dir();
+	MERGED_YAZI.init(Preset::yazi(&config_dir));
 	MERGED_KEYMAP.init(Preset::keymap(&config_dir));
 	MERGED_THEME.init(Preset::theme(&config_dir));
-	MERGED_YAZI.init(Preset::yazi(&config_dir));
+
+	LAYOUT.with(Default::default);
+	FLAVOR.with(Default::default);
+	FLAVOR.merge_with_theme(&config_dir);
 
 	KEYMAP.with(Default::default);
 	LOG.with(Default::default);
