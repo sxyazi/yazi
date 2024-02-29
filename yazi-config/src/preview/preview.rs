@@ -2,9 +2,9 @@ use std::{fs, path::PathBuf, time::{self, SystemTime}};
 
 use serde::{Deserialize, Serialize};
 use validator::Validate;
-use yazi_shared::{fs::expand_path, Xdg};
+use yazi_shared::fs::expand_path;
 
-use crate::{validation::check_validation, MERGED_YAZI};
+use crate::{validation::check_validation, Xdg, MERGED_YAZI};
 
 #[derive(Debug, Serialize)]
 pub struct Preview {

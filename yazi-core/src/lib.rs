@@ -22,8 +22,4 @@ pub mod which;
 pub use clipboard::*;
 pub use step::*;
 
-pub fn init() {
-	CLIPBOARD.with(Default::default);
-
-	yazi_scheduler::init();
-}
+pub fn init() { CLIPBOARD.with(Default::default); }
