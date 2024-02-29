@@ -7,7 +7,7 @@ pub struct Flavor {
 }
 
 impl Flavor {
-	pub fn parse_name(s: &str) -> Option<String> {
+	pub fn parse_use(s: &str) -> Option<String> {
 		#[derive(Deserialize)]
 		struct Outer {
 			flavor: Inner,

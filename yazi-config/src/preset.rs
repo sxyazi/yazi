@@ -20,7 +20,7 @@ impl Preset {
 		let Ok(user) = std::fs::read_to_string(p.join("theme.toml")) else {
 			return include_str!("../preset/theme.toml").to_owned();
 		};
-		let Some(use_) = Flavor::parse_name(&user) else {
+		let Some(use_) = Flavor::parse_use(&user) else {
 			return Self::merge_str(&user, include_str!("../preset/theme.toml"));
 		};
 
