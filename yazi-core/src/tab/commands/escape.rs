@@ -98,28 +98,25 @@ impl Tab {
 	}
 
 	pub fn try_escape_visual(&mut self) -> bool {
-		let state = self.mode.is_select();
+		let select = self.mode.is_select();
 		let Some((_, indices)) = self.mode.take_visual() else {
 			return true;
 		};
 
-		let mut success = true;
-		for f in indices.iter().filter_map(|i| self.current.files.get(*i)) {
-			if state {
-				success &= self.selected.add(&f.url);
-			} else {
-				self.selected.remove(&f.url);
-			}
-		}
+		render!();
+		let urls: Vec<_> =
+			indices.into_iter().filter_map(|i| self.current.files.get(i)).map(|f| &f.url).collect();
 
-		if !success {
+		if !select {
+			self.selected.remove_many(&urls);
+		} else if self.selected.add_many(&urls) != urls.len() {
 			Notify::_push_warn(
 				"Escape visual mode",
 				"Some files cannot be selected, due to path nesting conflict.",
 			);
+			return false;
 		}
 
-		render!();
-		success
+		true
 	}
 }

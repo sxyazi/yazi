@@ -4,7 +4,7 @@ use mlua::{Scope, Table};
 use tracing::error;
 use yazi_config::LAYOUT;
 use yazi_plugin::{elements::RectRef, LUA};
-use yazi_shared::RoCell;
+use yazi_shared::{Defer, RoCell};
 
 use crate::Ctx;
 
@@ -34,6 +34,7 @@ impl Lives {
 		f: impl FnOnce(&Scope<'a, 'a>) -> mlua::Result<T>,
 	) -> mlua::Result<T> {
 		let result = LUA.scope(|scope| {
+			let _defer = Defer::new(|| SCOPE.drop());
 			SCOPE.init(unsafe { mem::transmute(scope) });
 			LUA.set_named_registry_value("cx", scope.create_any_userdata_ref(cx)?)?;
 
@@ -58,7 +59,6 @@ impl Lives {
 				status:  *globals.raw_get::<_, Table>("Status")?.raw_get::<_, RectRef>("area")?,
 			}));
 
-			SCOPE.drop();
 			Ok(ret)
 		});
 

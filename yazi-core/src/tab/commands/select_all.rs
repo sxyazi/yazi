@@ -27,16 +27,19 @@ impl Tab {
 		match opt.into().state {
 			Some(true) => {
 				for f in self.current.files.iter() {
+					// FIXME
 					b |= self.selected.add(&f.url);
 				}
 			}
 			Some(false) => {
 				for f in self.current.files.iter() {
+					// FIXME
 					b |= self.selected.remove(&f.url);
 				}
 			}
 			None => {
 				for f in self.current.files.iter() {
+					// FIXME
 					b |= self.selected.remove(&f.url) || self.selected.add(&f.url);
 				}
 			}
