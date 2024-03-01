@@ -5,7 +5,7 @@ use serde::{Deserialize, Deserializer};
 use yazi_shared::MIME_DIR;
 
 use super::Opener;
-use crate::{open::OpenRule, MERGED_YAZI};
+use crate::{open::OpenRule, Preset, MERGED_YAZI};
 
 #[derive(Debug)]
 pub struct Open {
@@ -77,12 +77,15 @@ impl<'de> Deserialize<'de> for Open {
 			append_rules:  Vec<OpenRule>,
 		}
 
-		let outer = Outer::deserialize(deserializer)?;
+		let mut outer = Outer::deserialize(deserializer)?;
+		Preset::mix(&mut outer.open.rules, outer.open.prepend_rules, outer.open.append_rules);
+
 		let openers = outer
 			.opener
 			.into_iter()
 			.map(|(k, v)| (k, v.into_iter().filter_map(|o| o.take()).collect::<IndexSet<_>>()))
 			.collect();
+
 		Ok(Self { rules: outer.open.rules, openers })
 	}
 }
