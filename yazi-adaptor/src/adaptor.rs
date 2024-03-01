@@ -92,9 +92,9 @@ impl Adaptor {
 			Emulator::Foot => vec![Self::Sixel],
 			Emulator::Ghostty => vec![Self::KittyOld],
 			Emulator::BlackBox => vec![Self::Sixel],
-			Emulator::VSCode => vec![Self::Sixel],
-			Emulator::Tabby => vec![Self::Sixel],
-			Emulator::Hyper => vec![Self::Sixel],
+			Emulator::VSCode => vec![Self::Iterm2, Self::Sixel],
+			Emulator::Tabby => vec![Self::Iterm2, Self::Sixel],
+			Emulator::Hyper => vec![Self::Iterm2, Self::Sixel],
 			Emulator::Mintty => vec![Self::Iterm2],
 			Emulator::Neovim => vec![],
 		};

@@ -16,7 +16,7 @@ function M:seek(units)
 	local h = cx.active.current.hovered
 	if h and h.url == self.file.url then
 		local step = ya.clamp(-1, units, 1)
-		ya.manager_emit("peek", { tostring(math.max(0, cx.active.preview.skip + step)), only_if = tostring(self.file.url) })
+		ya.manager_emit("peek", { math.max(0, cx.active.preview.skip + step), only_if = tostring(self.file.url) })
 	end
 end
 
@@ -37,7 +37,7 @@ function M:preload()
 	elseif not output.status:success() then
 		local pages = tonumber(output.stderr:match("the last page %((%d+)%)")) or 0
 		if self.skip > 0 and pages > 0 then
-			ya.manager_emit("peek", { tostring(math.max(0, pages - 1)), only_if = tostring(self.file.url), upper_bound = "" })
+			ya.manager_emit("peek", { math.max(0, pages - 1), only_if = tostring(self.file.url), upper_bound = true })
 		end
 		return 0
 	end
