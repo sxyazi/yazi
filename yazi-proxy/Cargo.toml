@@ -13,4 +13,5 @@ yazi-config = { path = "../yazi-config", version = "0.2.3" }
 yazi-shared = { path = "../yazi-shared", version = "0.2.3" }
 
 # External dependencies
-tokio = { version = "^1", features = [ "parking_lot" ] }
+anyhow = "^1"
+tokio  = { version = "^1", features = [ "parking_lot" ] }

@@ -1,4 +1,4 @@
-use yazi_shared::{emit, event::Cmd, fs::Url, render, Layer};
+use yazi_shared::{event::Cmd, fs::Url, render};
 
 use crate::manager::Manager;
 
@@ -25,11 +25,6 @@ impl From<bool> for Opt {
 }
 
 impl Manager {
-	#[inline]
-	pub fn _peek(force: bool) {
-		emit!(Call(Cmd::new("peek").with_bool("force", force), Layer::Manager));
-	}
-
 	pub fn peek(&mut self, opt: impl Into<Opt>) {
 		let Some(hovered) = self.hovered().cloned() else {
 			return render!(self.active_mut().preview.reset());

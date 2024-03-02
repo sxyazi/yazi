@@ -1,6 +1,7 @@
+use yazi_proxy::ManagerProxy;
 use yazi_shared::{event::Cmd, render};
 
-use crate::{manager::Manager, tab::Tab, Step};
+use crate::{tab::Tab, Step};
 
 pub struct Opt {
 	step: Step,
@@ -36,7 +37,7 @@ impl Tab {
 			}
 		}
 
-		Manager::_hover(None);
+		ManagerProxy::hover(None);
 		render!();
 	}
 }

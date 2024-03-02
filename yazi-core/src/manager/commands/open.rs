@@ -4,9 +4,10 @@ use tracing::error;
 use yazi_boot::ARGS;
 use yazi_config::{popup::SelectCfg, OPEN};
 use yazi_plugin::isolate;
-use yazi_shared::{emit, event::{Cmd, EventQuit}, fs::{File, Url}, Layer, MIME_DIR};
+use yazi_proxy::{ManagerProxy, OpenDoOpt, TasksProxy};
+use yazi_shared::{emit, event::{Cmd, EventQuit}, fs::{File, Url}, MIME_DIR};
 
-use crate::{folder::Folder, manager::Manager, select::Select, tasks::Tasks};
+use crate::{folder::Folder, manager::Manager, tasks::Tasks};
 
 pub struct Opt {
 	interactive: bool,
@@ -20,17 +21,6 @@ impl From<Cmd> for Opt {
 			hovered:     c.named.contains_key("hovered"),
 		}
 	}
-}
-
-#[derive(Default)]
-pub struct OptDo {
-	hovered:     Url,
-	targets:     Vec<(Url, String)>,
-	interactive: bool,
-}
-
-impl From<Cmd> for OptDo {
-	fn from(mut c: Cmd) -> Self { c.take_data().unwrap_or_default() }
 }
 
 impl Manager {
@@ -60,7 +50,8 @@ impl Manager {
 		}
 
 		if todo.is_empty() {
-			return self.open_do(OptDo { hovered, targets: done, interactive: opt.interactive }, tasks);
+			return self
+				.open_do(OpenDoOpt { hovered, targets: done, interactive: opt.interactive }, tasks);
 		}
 
 		tokio::spawn(async move {
@@ -76,17 +67,12 @@ impl Manager {
 				error!("preload in open failed: {e}");
 			}
 
-			Self::_open_do(OptDo { hovered, targets: done, interactive: opt.interactive });
+			ManagerProxy::open_do(OpenDoOpt { hovered, targets: done, interactive: opt.interactive });
 		});
 	}
 
-	#[inline]
-	pub fn _open_do(opt: OptDo) {
-		emit!(Call(Cmd::new("open_do").with_data(opt), Layer::Manager));
-	}
-
-	pub fn open_do(&mut self, opt: impl Into<OptDo>, tasks: &Tasks) {
-		let opt = opt.into() as OptDo;
+	pub fn open_do(&mut self, opt: impl Into<OpenDoOpt>, tasks: &Tasks) {
+		let opt = opt.into() as OpenDoOpt;
 		let targets: Vec<_> = opt
 			.targets
 			.into_iter()
@@ -108,9 +94,11 @@ impl Manager {
 
 		let urls = [opt.hovered].into_iter().chain(targets.into_iter().map(|(u, _)| u)).collect();
 		tokio::spawn(async move {
-			let result = Select::_show(SelectCfg::open(openers.iter().map(|o| o.desc.clone()).collect()));
+			let result = yazi_proxy::SelectProxy::show(SelectCfg::open(
+				openers.iter().map(|o| o.desc.clone()).collect(),
+			));
 			if let Ok(choice) = result.await {
-				Tasks::_open_with(urls, openers[choice].clone());
+				TasksProxy::open_with(urls, openers[choice].clone());
 			}
 		});
 	}

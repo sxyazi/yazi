@@ -1,15 +1,10 @@
 use std::env;
 
-use yazi_shared::{emit, event::Cmd, Layer};
+use yazi_shared::event::Cmd;
 
 use crate::{manager::Manager, tasks::Tasks};
 
 impl Manager {
-	#[inline]
-	pub fn _refresh() {
-		emit!(Call(Cmd::new("refresh"), Layer::Manager));
-	}
-
 	pub fn refresh(&mut self, _: Cmd, tasks: &Tasks) {
 		env::set_current_dir(self.cwd()).ok();
 		env::set_var("PWD", self.cwd());

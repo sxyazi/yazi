@@ -2816,6 +2816,7 @@ checksum = "f4b6c8e12e39ac0f79fa96f36e5b88e0da8d230691abd729eec709b43c74f632"
 name = "yazi-proxy"
 version = "0.2.3"
 dependencies = [
+ "anyhow",
  "tokio",
  "yazi-config",
  "yazi-shared",

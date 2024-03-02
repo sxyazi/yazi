@@ -2,10 +2,11 @@ use std::{mem, time::SystemTime};
 
 use ratatui::layout::Rect;
 use yazi_config::{LAYOUT, MANAGER};
+use yazi_proxy::ManagerProxy;
 use yazi_shared::fs::{File, FilesOp, Url};
 
 use super::FolderStage;
-use crate::{folder::Files, manager::Manager, Step};
+use crate::{folder::Files, Step};
 
 #[derive(Default)]
 pub struct Folder {
@@ -99,7 +100,7 @@ impl Folder {
 
 		let new = self.cursor / limit;
 		if mem::replace(&mut self.page, new) != new || force {
-			Manager::_update_paged_by(new, &self.cwd);
+			ManagerProxy::update_paged_by(new, &self.cwd);
 		}
 	}
 

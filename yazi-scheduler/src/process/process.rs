@@ -1,7 +1,7 @@
 use anyhow::Result;
 use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::mpsc};
 use yazi_plugin::external::{self, ShellOpt};
-use yazi_proxy::App;
+use yazi_proxy::AppProxy;
 
 use super::ProcessOpOpen;
 use crate::{TaskProg, BLOCKER};
@@ -17,7 +17,7 @@ impl Process {
 		let opt = ShellOpt::from(&mut task);
 		if task.block {
 			let _guard = BLOCKER.acquire().await.unwrap();
-			App::stop().await;
+			AppProxy::stop().await;
 
 			match external::shell(opt) {
 				Ok(mut child) => {
@@ -29,7 +29,7 @@ impl Process {
 					self.fail(task.id, format!("Failed to spawn process: {e}"))?;
 				}
 			}
-			return Ok(App::resume());
+			return Ok(AppProxy::resume());
 		}
 
 		if task.orphan {

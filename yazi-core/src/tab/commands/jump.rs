@@ -1,5 +1,5 @@
 use yazi_plugin::external::{self, FzfOpt, ZoxideOpt};
-use yazi_proxy::App;
+use yazi_proxy::{AppProxy, TabProxy};
 use yazi_scheduler::BLOCKER;
 use yazi_shared::{event::Cmd, fs::ends_with_slash, Defer};
 
@@ -38,8 +38,8 @@ impl Tab {
 		let cwd = self.current.cwd.clone();
 		tokio::spawn(async move {
 			let _guard = BLOCKER.acquire().await.unwrap();
-			let _defer = Defer::new(App::resume);
-			App::stop().await;
+			let _defer = Defer::new(AppProxy::resume);
+			AppProxy::stop().await;
 
 			let result = if opt.type_ == OptType::Fzf {
 				external::fzf(FzfOpt { cwd }).await
@@ -52,9 +52,9 @@ impl Tab {
 			};
 
 			if opt.type_ == OptType::Fzf && !ends_with_slash(&url) {
-				Tab::_reveal(&url)
+				TabProxy::reveal(&url)
 			} else {
-				Tab::_cd(&url)
+				TabProxy::cd(&url)
 			}
 		});
 	}
