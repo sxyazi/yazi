@@ -1,4 +1,4 @@
-use std::path::{PathBuf, MAIN_SEPARATOR};
+use std::path::PathBuf;
 
 use tokio::fs;
 use yazi_config::popup::InputCfg;

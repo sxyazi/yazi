@@ -153,7 +153,7 @@ footer  = { fg = "black", bg = "white" }
 
 [notify]
 title_info  = { fg = "green" }
-title_warn  = { bg = "yellow" }
+title_warn  = { fg = "yellow" }
 title_error = { fg = "red" }
 
 # Icons
