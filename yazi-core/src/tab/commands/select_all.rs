@@ -1,6 +1,6 @@
 use yazi_shared::{event::Cmd, render};
 
-use crate::tab::Tab;
+use crate::{notify::Notify, tab::Tab};
 
 pub struct Opt {
 	state: Option<bool>,
@@ -23,27 +23,22 @@ impl From<Option<bool>> for Opt {
 
 impl Tab {
 	pub fn select_all(&mut self, opt: impl Into<Opt>) {
-		let mut b = false;
-		match opt.into().state {
-			Some(true) => {
-				for f in self.current.files.iter() {
-					// FIXME
-					b |= self.selected.add(&f.url);
-				}
-			}
-			Some(false) => {
-				for f in self.current.files.iter() {
-					// FIXME
-					b |= self.selected.remove(&f.url);
-				}
-			}
-			None => {
-				for f in self.current.files.iter() {
-					// FIXME
-					b |= self.selected.remove(&f.url) || self.selected.add(&f.url);
-				}
-			}
+		let iter = self.current.files.iter().map(|f| &f.url);
+		let (removal, addition): (Vec<_>, Vec<_>) = match opt.into().state {
+			Some(true) => (vec![], iter.collect()),
+			Some(false) => (iter.collect(), vec![]),
+			None => iter.partition(|&u| self.selected.contains(u)),
+		};
+
+		render!(self.selected.remove_many(&removal) > 0);
+		let added = self.selected.add_many(&addition);
+
+		render!(added > 0);
+		if added != addition.len() {
+			Notify::_push_warn(
+				"Select all",
+				"Some files cannot be selected, due to path nesting conflict.",
+			);
 		}
-		render!(b);
 	}
 }

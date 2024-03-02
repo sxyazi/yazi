@@ -53,7 +53,7 @@ impl Selected {
 	///
 	/// let url1 = Url::from("/a/b/c");
 	/// let url2 = Url::from("/a/b/d");
-	/// assert!(s.add_many(&[&url1, &url2]));
+	/// assert_eq!(2, s.add_many(&[&url1, &url2]));
 	/// ```
 	pub fn add_many(&mut self, urls: &[&Url]) -> usize {
 		// If it has appeared as a parent
