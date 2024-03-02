@@ -102,9 +102,7 @@ mod parser {
 				expanded.push(s);
 			} else if c == '%' && it.peek().is_some_and(|&c| c == '*') {
 				it.next();
-				for arg in args {
-					expanded.push(arg.to_string());
-				}
+				expanded.extend(args.iter().skip(1).map(|&s| s.to_owned()));
 			} else {
 				next_string(&mut it, args, &mut s, c);
 
@@ -140,7 +138,9 @@ mod parser {
 		} else if c == '%' {
 			match it.peek() {
 				Some('*') => {
-					s.push_str(&args.join(" "));
+					if args.len() > 1 {
+						s.push_str(&args[1..].join(" "));
+					}
 					it.next();
 				}
 				Some(n) if n.is_ascii_digit() => {
@@ -155,9 +155,8 @@ mod parser {
 						}
 					}
 
-					let pos = pos.parse::<usize>().unwrap();
-					if pos > 0 {
-						s.push_str(args.get(pos - 1).unwrap_or(&""));
+					if let Some(arg) = args.get(pos.parse::<usize>().unwrap()) {
+						s.push_str(arg);
 					}
 				}
 				_ => s.push('%'),
@@ -173,49 +172,55 @@ mod parser {
 
 		#[test]
 		fn test_no_quote() {
-			let args = parse("echo abc xyz %0 %2", &["111", "222"]);
-			assert_eq!(args, ["echo", "abc", "xyz", "", "222"]);
+			let args = parse("echo abc xyz %0 %2", &["000", "111", "222"]);
+			assert_eq!(args, ["echo", "abc", "xyz", "000", "222"]);
 
-			let args = parse("  echo   abc   xyz %1   %2  ", &["111", "222"]);
+			let args = parse("  echo   abc   xyz %1   %2  ", &["", "111", "222"]);
 			assert_eq!(args, ["echo", "abc", "xyz", "111", "222"]);
 		}
 
 		#[test]
 		fn test_single_quote() {
-			let args = parse("echo 'abc xyz' '%1' %2", &["111", "222"]);
+			let args = parse("echo 'abc xyz' '%1' %2", &["000", "111", "222"]);
 			assert_eq!(args, ["echo", "abc xyz", "111", "222"]);
 
-			let args = parse(r#"echo 'abc ""xyz' '%1' %2"#, &["111", "222"]);
+			let args = parse(r#"echo 'abc ""xyz' '%1' %2"#, &["", "111", "222"]);
 			assert_eq!(args, ["echo", r#"abc ""xyz"#, "111", "222"]);
 		}
 
 		#[test]
 		fn test_double_quote() {
-			let args = parse("echo \"abc ' 'xyz\" \"%1\" %2 %3", &["111", "222"]);
+			let args = parse("echo \"abc ' 'xyz\" \"%1\" %2 %3", &["", "111", "222"]);
 			assert_eq!(args, ["echo", "abc ' 'xyz", "111", "222", ""]);
 		}
 
 		#[test]
 		fn test_escaped() {
-			let args = parse("echo \"a\tbc ' 'x\nyz\" \"\\%1\" %2 %3", &["111", "22  2"]);
+			let args = parse("echo \"a\tbc ' 'x\nyz\" \"\\%1\" %2 %3", &["", "111", "22  2"]);
 			assert_eq!(args, ["echo", "a\tbc ' 'x\nyz", "%1", "22  2", ""]);
 		}
 
 		#[test]
 		fn test_percent_star() {
-			let args = parse("echo %* xyz", &["111", "222"]);
+			let args = parse("echo %* xyz", &[]);
+			assert_eq!(args, ["echo", "xyz"]);
+
+			let args = parse("echo %* xyz", &["000", "111", "222"]);
 			assert_eq!(args, ["echo", "111", "222", "xyz"]);
 
-			let args = parse("echo '%*' xyz", &["111", "222"]);
+			let args = parse("echo '%*' xyz", &["000", "111", "222"]);
 			assert_eq!(args, ["echo", "111 222", "xyz"]);
 
-			let args = parse("echo -C%* xyz", &["111", "222"]);
+			let args = parse("echo -C%* xyz", &[]);
+			assert_eq!(args, ["echo", "-C", "xyz"]);
+
+			let args = parse("echo -C%* xyz", &["000", "111", "222"]);
 			assert_eq!(args, ["echo", "-C111 222", "xyz"]);
 		}
 
 		#[test]
 		fn test_env_var() {
-			let args = parse(" %EDITOR% %* xyz", &["111", "222"]);
+			let args = parse(" %EDITOR% %* xyz", &["000", "111", "222"]);
 			assert_eq!(args, ["%EDITOR%", "111", "222", "xyz"]);
 		}
 	}
