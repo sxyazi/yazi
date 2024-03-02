@@ -1,5 +1,6 @@
 use yazi_plugin::external::{self, FzfOpt, ZoxideOpt};
-use yazi_scheduler::{Scheduler, BLOCKER};
+use yazi_proxy::App;
+use yazi_scheduler::BLOCKER;
 use yazi_shared::{event::Cmd, fs::ends_with_slash, Defer};
 
 use crate::tab::Tab;
@@ -37,8 +38,8 @@ impl Tab {
 		let cwd = self.current.cwd.clone();
 		tokio::spawn(async move {
 			let _guard = BLOCKER.acquire().await.unwrap();
-			let _defer = Defer::new(Scheduler::app_resume);
-			Scheduler::app_stop().await;
+			let _defer = Defer::new(App::resume);
+			App::stop().await;
 
 			let result = if opt.type_ == OptType::Fzf {
 				external::fzf(FzfOpt { cwd }).await

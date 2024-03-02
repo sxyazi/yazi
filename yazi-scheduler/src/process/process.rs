@@ -1,9 +1,10 @@
 use anyhow::Result;
 use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::mpsc};
 use yazi_plugin::external::{self, ShellOpt};
+use yazi_proxy::App;
 
 use super::ProcessOpOpen;
-use crate::{Scheduler, TaskProg, BLOCKER};
+use crate::{TaskProg, BLOCKER};
 
 pub struct Process {
 	prog: mpsc::UnboundedSender<TaskProg>,
@@ -16,7 +17,7 @@ impl Process {
 		let opt = ShellOpt::from(&mut task);
 		if task.block {
 			let _guard = BLOCKER.acquire().await.unwrap();
-			Scheduler::app_stop().await;
+			App::stop().await;
 
 			match external::shell(opt) {
 				Ok(mut child) => {
@@ -28,7 +29,7 @@ impl Process {
 					self.fail(task.id, format!("Failed to spawn process: {e}"))?;
 				}
 			}
-			return Ok(Scheduler::app_resume());
+			return Ok(App::resume());
 		}
 
 		if task.orphan {

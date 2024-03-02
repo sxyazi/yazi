@@ -2,7 +2,8 @@ use std::io::{stdout, Write};
 
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use tokio::{io::{stdin, AsyncReadExt}, select, sync::mpsc, time};
-use yazi_scheduler::{Scheduler, BLOCKER};
+use yazi_proxy::App;
+use yazi_scheduler::BLOCKER;
 use yazi_shared::{event::Cmd, term::Term, Defer};
 
 use crate::tasks::Tasks;
@@ -26,10 +27,10 @@ impl Tasks {
 				task.logs.clone()
 			};
 
-			Scheduler::app_stop().await;
+			App::stop().await;
 			let _defer = Defer::new(|| {
 				disable_raw_mode().ok();
-				Scheduler::app_resume();
+				App::resume();
 			});
 
 			Term::clear(&mut stdout()).ok();

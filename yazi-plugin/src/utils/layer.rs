@@ -53,6 +53,21 @@ impl Utils {
 			})?,
 		)?;
 
+		ya.raw_set(
+			"input",
+			lua.create_async_function(|_, t: Table| async move {
+				// pub title:      String,
+				// pub value:      String,
+				// pub cursor:     Option<usize>,
+				// pub position:   Position,
+				// pub realtime:   bool,
+				// pub completion: bool,
+				// pub highlight:  bool,
+
+				Ok(())
+			})?,
+		)?;
+
 		Ok(())
 	}
 }

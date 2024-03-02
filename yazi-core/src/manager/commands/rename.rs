@@ -4,7 +4,8 @@ use anyhow::{anyhow, bail, Result};
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 use yazi_config::{popup::InputCfg, OPEN, PREVIEW};
 use yazi_plugin::external::{self, ShellOpt};
-use yazi_scheduler::{Scheduler, BLOCKER};
+use yazi_proxy::App;
+use yazi_scheduler::BLOCKER;
 use yazi_shared::{event::Cmd, fs::{max_common_root, File, FilesOp, Url}, term::Term, Defer};
 
 use crate::{input::Input, manager::Manager};
@@ -122,10 +123,10 @@ impl Manager {
 
 			let _guard = BLOCKER.acquire().await.unwrap();
 			let _defer = Defer::new(|| {
-				Scheduler::app_resume();
+				App::resume();
 				tokio::spawn(fs::remove_file(tmp.clone()))
 			});
-			Scheduler::app_stop().await;
+			App::stop().await;
 
 			let mut child = external::shell(ShellOpt {
 				cmd:    (*opener.exec).into(),

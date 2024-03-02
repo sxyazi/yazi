@@ -43,7 +43,7 @@ impl Signals {
 	#[cfg(unix)]
 	fn spawn_system_task(&self) -> Result<JoinHandle<()>> {
 		use libc::{SIGCONT, SIGHUP, SIGINT, SIGQUIT, SIGTERM};
-		use yazi_scheduler::{Scheduler, BLOCKER};
+		use yazi_scheduler::BLOCKER;
 
 		let mut signals = signal_hook_tokio::Signals::new([
 			// Terminating signals
@@ -65,7 +65,7 @@ impl Signals {
 							break;
 						}
 					}
-					SIGCONT => Scheduler::app_resume(),
+					SIGCONT => yazi_proxy::App::resume(),
 					_ => {}
 				}
 			}

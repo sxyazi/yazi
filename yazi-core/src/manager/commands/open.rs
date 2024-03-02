@@ -50,7 +50,7 @@ impl Manager {
 
 		let (mut done, mut todo) = (Vec::with_capacity(selected.len()), vec![]);
 		for u in selected {
-			if self.mimetype.get(u).is_some() {
+			if self.mimetype.contains_key(u) {
 				done.push((u.clone(), String::new()));
 			} else if self.guess_folder(u) {
 				done.push((u.clone(), MIME_DIR.to_owned()));
