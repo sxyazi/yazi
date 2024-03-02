@@ -38,11 +38,19 @@ jobs:
       - name: Add Rust target
         run: rustup target add ${{ matrix.target }}
 
-      - name: Install gcc-aarch64-linux-gnu
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
+      - name: Setup for aarch64
+        if: startsWith(matrix.target, 'aarch64-unknown-linux')
         run: |
           sudo apt-get update
           sudo apt-get install -yq gcc-aarch64-linux-gnu
+          echo "CC=aarch64-linux-gnu-gcc" >> "$GITHUB_ENV"
+          echo "CARGO_BUILD_RUSTFLAGS=-C link-arg=-lgcc" >> "$GITHUB_ENV"
+
+      - name: Install musl tools
+        if: endsWith(matrix.target, '-musl')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -yq musl-tools
 
       - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
@@ -51,7 +59,10 @@ jobs:
         env:
           YAZI_GEN_COMPLETIONS: true
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: /usr/bin/aarch64-linux-gnu-gcc
-        run: cargo build --release --locked --target ${{ matrix.target }}
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: /usr/bin/aarch64-linux-gnu-gcc
+        run: |
+          echo "$CARGO_BUILD_RUSTFLAGS"
+          cargo build --release --locked --target ${{ matrix.target }}
 
       - name: Build snap
         if: matrix.target == 'x86_64-unknown-linux-gnu'
