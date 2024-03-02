@@ -1,11 +1,13 @@
 use std::str::FromStr;
 
-use mlua::{ExternalError, ExternalResult, Lua, Table, Value};
+use mlua::{ExternalError, ExternalResult, IntoLua, Lua, Table, Value};
 use tokio::sync::mpsc;
-use yazi_config::keymap::{Control, Key};
+use yazi_config::{keymap::{Control, Key}, popup::InputCfg};
+use yazi_proxy::InputProxy;
 use yazi_shared::{emit, event::Cmd, Layer};
 
 use super::Utils;
+use crate::bindings::{InputRx, Position};
 
 impl Utils {
 	fn parse_keys(value: Value) -> mlua::Result<Vec<Key>> {
@@ -55,16 +57,25 @@ impl Utils {
 
 		ya.raw_set(
 			"input",
-			lua.create_async_function(|_, t: Table| async move {
-				// pub title:      String,
-				// pub value:      String,
-				// pub cursor:     Option<usize>,
-				// pub position:   Position,
-				// pub realtime:   bool,
-				// pub completion: bool,
-				// pub highlight:  bool,
+			lua.create_async_function(|lua, t: Table| async move {
+				let realtime = t.raw_get("realtime").unwrap_or_default();
+				let mut rx = InputProxy::show(InputCfg {
+					title: t.raw_get("title")?,
+					value: t.raw_get("value").unwrap_or_default(),
+					cursor: None, // TODO
+					position: Position::try_from(t.raw_get::<_, Table>("position")?)?.into(),
+					realtime,
+					completion: false,
+					highlight: false,
+				});
 
-				Ok(())
+				Ok(if realtime {
+					(InputRx::new(rx).into_lua(lua)?, Value::Nil)
+				} else if let Some(Ok(res)) = rx.recv().await {
+					(res.into_lua(lua)?, 1.into_lua(lua)?)
+				} else {
+					(Value::Nil, 0.into_lua(lua)?)
+				})
 			})?,
 		)?;
 

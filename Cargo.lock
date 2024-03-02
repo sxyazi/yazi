@@ -2803,6 +2803,7 @@ dependencies = [
  "yazi-boot",
  "yazi-config",
  "yazi-prebuild",
+ "yazi-proxy",
  "yazi-shared",
 ]
 

@@ -20,7 +20,7 @@ impl FromStr for SortBy {
 			"none" => Self::None,
 			"key" => Self::Key,
 			"desc" => Self::Desc,
-			_ => bail!("Invalid sort option: {s}"),
+			_ => bail!("Invalid `sort_by` value: {s}"),
 		})
 	}
 }
