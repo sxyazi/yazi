@@ -8,6 +8,15 @@ pub struct InputRx {
 
 impl InputRx {
 	pub fn new(inner: UnboundedReceiver<Result<String, InputError>>) -> Self { Self { inner } }
+
+	pub fn parse(res: Result<String, InputError>) -> (Option<String>, u8) {
+		match res {
+			Ok(s) => (Some(s), 1),
+			Err(InputError::Canceled(s)) => (Some(s), 2),
+			Err(InputError::Typed(s)) => (Some(s), 3),
+			_ => (None, 0),
+		}
+	}
 }
 
 impl UserData for InputRx {
@@ -17,11 +26,7 @@ impl UserData for InputRx {
 				return Ok((None, 0));
 			};
 
-			Ok(match res {
-				Ok(s) => (Some(s), 1),
-				Err(InputError::Typed(s)) => (Some(s), 2),
-				_ => (None, 0),
-			})
+			Ok(Self::parse(res))
 		});
 	}
 }

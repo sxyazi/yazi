@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use mlua::{ExternalError, ExternalResult, IntoLua, Lua, Table, Value};
+use mlua::{ExternalError, ExternalResult, IntoLuaMulti, Lua, Table, Value};
 use tokio::sync::mpsc;
 use yazi_config::{keymap::{Control, Key}, popup::InputCfg};
 use yazi_proxy::InputProxy;
@@ -69,13 +69,13 @@ impl Utils {
 					highlight: false,
 				});
 
-				Ok(if realtime {
-					(InputRx::new(rx).into_lua(lua)?, Value::Nil)
-				} else if let Some(Ok(res)) = rx.recv().await {
-					(res.into_lua(lua)?, 1.into_lua(lua)?)
+				if realtime {
+					(InputRx::new(rx), Value::Nil).into_lua_multi(lua)
+				} else if let Some(res) = rx.recv().await {
+					InputRx::parse(res).into_lua_multi(lua)
 				} else {
-					(Value::Nil, 0.into_lua(lua)?)
-				})
+					(Value::Nil, 0).into_lua_multi(lua)
+				}
 			})?,
 		)?;
 
