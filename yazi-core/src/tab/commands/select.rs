@@ -1,8 +1,9 @@
 use std::borrow::Cow;
 
+use yazi_proxy::AppProxy;
 use yazi_shared::{event::Cmd, fs::Url, render, render_and};
 
-use crate::{notify::Notify, tab::Tab};
+use crate::tab::Tab;
 
 pub struct Opt<'a> {
 	url:   Option<Cow<'a, Url>>,
@@ -37,10 +38,7 @@ impl<'a> Tab {
 		};
 
 		if !b {
-			Notify::_push_warn(
-				"Select one",
-				"This file cannot be selected, due to path nesting conflict.",
-			);
+			AppProxy::warn("Select one", "This file cannot be selected, due to path nesting conflict.");
 		}
 	}
 }

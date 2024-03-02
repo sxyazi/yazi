@@ -2,9 +2,10 @@ use std::path::PathBuf;
 
 use tokio::fs;
 use yazi_config::popup::InputCfg;
+use yazi_proxy::{InputProxy, ManagerProxy};
 use yazi_shared::{event::Cmd, fs::{File, FilesOp, Url}};
 
-use crate::{input::Input, manager::Manager};
+use crate::manager::Manager;
 
 pub struct Opt {
 	force: bool,
@@ -19,14 +20,14 @@ impl Manager {
 		let opt = opt.into() as Opt;
 		let cwd = self.cwd().to_owned();
 		tokio::spawn(async move {
-			let mut result = Input::_show(InputCfg::create());
+			let mut result = InputProxy::show(InputCfg::create());
 			let Some(Ok(name)) = result.recv().await else {
 				return Ok(());
 			};
 
 			let path = cwd.join(&name);
 			if !opt.force && fs::symlink_metadata(&path).await.is_ok() {
-				match Input::_show(InputCfg::overwrite()).recv().await {
+				match InputProxy::show(InputCfg::overwrite()).recv().await {
 					Some(Ok(c)) if c == "y" || c == "Y" => (),
 					_ => return Ok(()),
 				}
@@ -43,7 +44,7 @@ impl Manager {
 				Url::from(path.components().take(cwd.components().count() + 1).collect::<PathBuf>());
 			if let Ok(f) = File::from(child.clone()).await {
 				FilesOp::Creating(cwd, vec![f]).emit();
-				Manager::_hover(Some(child));
+				ManagerProxy::hover(Some(child));
 			}
 			Ok::<(), anyhow::Error>(())
 		});

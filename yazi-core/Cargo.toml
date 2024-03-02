@@ -13,6 +13,7 @@ yazi-adaptor   = { path = "../yazi-adaptor", version = "0.2.3" }
 yazi-boot      = { path = "../yazi-boot", version = "0.2.3" }
 yazi-config    = { path = "../yazi-config", version = "0.2.3" }
 yazi-plugin    = { path = "../yazi-plugin", version = "0.2.3" }
+yazi-proxy     = { path = "../yazi-proxy", version = "0.2.3" }
 yazi-scheduler = { path = "../yazi-scheduler", version = "0.2.3" }
 yazi-shared    = { path = "../yazi-shared", version = "0.2.3" }
 

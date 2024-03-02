@@ -1,6 +1,7 @@
-use yazi_shared::{emit, event::Cmd, fs::{expand_path, File, FilesOp, Url}, Layer};
+use yazi_proxy::ManagerProxy;
+use yazi_shared::{event::Cmd, fs::{expand_path, File, FilesOp, Url}};
 
-use crate::{manager::Manager, tab::Tab};
+use crate::tab::Tab;
 
 pub struct Opt {
 	target: Url,
@@ -21,11 +22,6 @@ impl From<Url> for Opt {
 }
 
 impl Tab {
-	#[inline]
-	pub fn _reveal(target: &Url) {
-		emit!(Call(Cmd::args("reveal", vec![target.to_string()]), Layer::Manager));
-	}
-
 	pub fn reveal(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 
@@ -35,6 +31,6 @@ impl Tab {
 
 		self.cd(parent.clone());
 		FilesOp::Creating(parent, vec![File::from_dummy(&opt.target)]).emit();
-		Manager::_hover(Some(opt.target));
+		ManagerProxy::hover(Some(opt.target));
 	}
 }

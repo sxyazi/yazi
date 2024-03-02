@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use yazi_shared::{emit, event::Cmd, fs::Url, render, Layer};
+use yazi_shared::{event::Cmd, fs::Url, render};
 
 use crate::manager::Manager;
 
@@ -16,14 +16,6 @@ impl From<Option<Url>> for Opt {
 }
 
 impl Manager {
-	#[inline]
-	pub fn _hover(url: Option<Url>) {
-		emit!(Call(
-			Cmd::args("hover", url.map_or_else(Vec::new, |u| vec![u.to_string()])),
-			Layer::Manager
-		));
-	}
-
 	pub fn hover(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 

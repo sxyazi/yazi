@@ -1,7 +1,8 @@
 use bitflags::bitflags;
+use yazi_proxy::{AppProxy, ManagerProxy};
 use yazi_shared::{event::Cmd, render, render_and};
 
-use crate::{manager::Manager, notify::Notify, tab::Tab};
+use crate::tab::Tab;
 
 bitflags! {
 	pub struct Opt: u8 {
@@ -74,7 +75,7 @@ impl Tab {
 
 		self.selected.clear();
 		if self.current.hovered().is_some_and(|h| h.is_dir()) {
-			Manager::_peek(true);
+			ManagerProxy::peek(true);
 		}
 		render_and!(true)
 	}
@@ -110,7 +111,7 @@ impl Tab {
 		if !select {
 			self.selected.remove_many(&urls);
 		} else if self.selected.add_many(&urls) != urls.len() {
-			Notify::_push_warn(
+			AppProxy::warn(
 				"Escape visual mode",
 				"Some files cannot be selected, due to path nesting conflict.",
 			);

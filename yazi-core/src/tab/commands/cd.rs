@@ -3,9 +3,10 @@ use std::{mem, time::Duration};
 use tokio::{fs, pin};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
-use yazi_shared::{emit, event::Cmd, fs::{expand_path, Url}, render, Debounce, InputError, Layer};
+use yazi_proxy::{CompletionProxy, InputProxy, ManagerProxy, TabProxy};
+use yazi_shared::{event::Cmd, fs::{expand_path, Url}, render, Debounce, InputError};
 
-use crate::{completion::Completion, input::Input, manager::Manager, tab::Tab};
+use crate::tab::Tab;
 
 pub struct Opt {
 	target:      Url,
@@ -27,11 +28,6 @@ impl From<Url> for Opt {
 }
 
 impl Tab {
-	#[inline]
-	pub fn _cd(target: &Url) {
-		emit!(Call(Cmd::args("cd", vec![target.to_string()]), Layer::Manager));
-	}
-
 	pub fn cd(&mut self, opt: impl Into<Opt>) {
 		if !self.try_escape_visual() {
 			return;
@@ -68,13 +64,13 @@ impl Tab {
 			self.backstack.push(opt.target.clone());
 		}
 
-		Manager::_refresh();
+		ManagerProxy::refresh();
 		render!();
 	}
 
 	fn cd_interactive(&mut self) {
 		tokio::spawn(async move {
-			let rx = Input::_show(InputCfg::cd());
+			let rx = InputProxy::show(InputCfg::cd());
 
 			let rx = Debounce::new(UnboundedReceiverStream::new(rx), Duration::from_millis(50));
 			pin!(rx);
@@ -88,13 +84,13 @@ impl Tab {
 						};
 
 						if meta.is_dir() {
-							Tab::_cd(&u);
+							TabProxy::cd(&u);
 						} else {
-							Tab::_reveal(&u);
+							TabProxy::reveal(&u);
 						}
 					}
 					Err(InputError::Completed(before, ticket)) => {
-						Completion::_trigger(&before, ticket);
+						CompletionProxy::trigger(&before, ticket);
 					}
 					_ => break,
 				}

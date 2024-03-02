@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+use yazi_proxy::ManagerProxy;
 use yazi_shared::{event::Cmd, fs::FilesOp, render};
 
 use crate::{folder::Folder, manager::Manager, tab::Tab, tasks::Tasks};
@@ -56,8 +57,8 @@ impl Manager {
 			return;
 		}
 
-		Self::_hover(None); // Re-hover in next loop
-		Self::_update_paged(); // Update for paged files in next loop
+		ManagerProxy::hover(None); // Re-hover in next loop
+		ManagerProxy::update_paged(); // Update for paged files in next loop
 		if calc {
 			tasks.preload_sorted(&tab.current.files);
 		}
@@ -73,7 +74,7 @@ impl Manager {
 		}
 
 		if !foreign {
-			Self::_peek(true);
+			ManagerProxy::peek(true);
 		}
 	}
 

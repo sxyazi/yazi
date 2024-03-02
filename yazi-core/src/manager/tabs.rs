@@ -1,9 +1,10 @@
 use std::ops::{Deref, DerefMut};
 
 use yazi_boot::BOOT;
+use yazi_proxy::ManagerProxy;
 use yazi_shared::fs::Url;
 
-use crate::{manager::Manager, tab::Tab};
+use crate::tab::Tab;
 
 pub struct Tabs {
 	pub idx:          usize,
@@ -17,7 +18,7 @@ impl Tabs {
 			tabs.items[0].reveal(Url::from(BOOT.cwd.join(file)));
 		}
 
-		Manager::_refresh();
+		ManagerProxy::refresh();
 		tabs
 	}
 
@@ -42,8 +43,8 @@ impl Tabs {
 		}
 
 		self.idx = idx;
-		Manager::_refresh();
-		Manager::_peek(true);
+		ManagerProxy::refresh();
+		ManagerProxy::peek(true);
 	}
 }
 
