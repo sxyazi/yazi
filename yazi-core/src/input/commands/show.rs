@@ -1,28 +1,10 @@
-use tokio::sync::mpsc;
-use yazi_config::popup::InputCfg;
-use yazi_shared::{emit, event::Cmd, render, InputError, Layer};
+use yazi_proxy::InputOpt;
+use yazi_shared::render;
 
 use crate::input::Input;
 
-pub struct Opt {
-	cfg: InputCfg,
-	tx:  mpsc::UnboundedSender<Result<String, InputError>>,
-}
-
-impl TryFrom<Cmd> for Opt {
-	type Error = ();
-
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> { c.take_data().ok_or(()) }
-}
-
 impl Input {
-	pub fn _show(cfg: InputCfg) -> mpsc::UnboundedReceiver<Result<String, InputError>> {
-		let (tx, rx) = mpsc::unbounded_channel();
-		emit!(Call(Cmd::new("show").with_data(Opt { cfg, tx }), Layer::Input));
-		rx
-	}
-
-	pub fn show(&mut self, opt: impl TryInto<Opt>) {
+	pub fn show(&mut self, opt: impl TryInto<InputOpt>) {
 		let Ok(opt) = opt.try_into() else {
 			return;
 		};

@@ -1,7 +1,8 @@
 use yazi_config::{open::Opener, popup::InputCfg};
+use yazi_proxy::{InputProxy, TasksProxy};
 use yazi_shared::event::Cmd;
 
-use crate::{input::Input, tab::Tab, tasks::Tasks};
+use crate::tab::Tab;
 
 pub struct Opt {
 	exec:    String,
@@ -30,14 +31,14 @@ impl Tab {
 
 		tokio::spawn(async move {
 			if !opt.confirm || opt.exec.is_empty() {
-				let mut result = Input::_show(InputCfg::shell(opt.block).with_value(opt.exec));
+				let mut result = InputProxy::show(InputCfg::shell(opt.block).with_value(opt.exec));
 				match result.recv().await {
 					Some(Ok(e)) => opt.exec = e,
 					_ => return,
 				}
 			}
 
-			Tasks::_open_with(selected, Opener {
+			TasksProxy::open_with(selected, Opener {
 				exec:   opt.exec,
 				block:  opt.block,
 				orphan: false,

@@ -1,6 +1,7 @@
+use yazi_proxy::AppProxy;
 use yazi_shared::{event::Cmd, render};
 
-use crate::{notify::Notify, tab::Tab};
+use crate::tab::Tab;
 
 pub struct Opt {
 	state: Option<bool>,
@@ -35,10 +36,7 @@ impl Tab {
 
 		render!(added > 0);
 		if added != addition.len() {
-			Notify::_push_warn(
-				"Select all",
-				"Some files cannot be selected, due to path nesting conflict.",
-			);
+			AppProxy::warn("Select all", "Some files cannot be selected, due to path nesting conflict.");
 		}
 	}
 }

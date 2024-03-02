@@ -5,7 +5,7 @@ use parking_lot::Mutex;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}};
 use yazi_config::{open::Opener, plugin::PluginRule, TASKS};
 use yazi_plugin::ValueSendable;
-use yazi_shared::{emit, event::Cmd, fs::{unique_path, Url}, Layer, Throttle};
+use yazi_shared::{fs::{unique_path, Url}, Throttle};
 
 use super::{Running, TaskProg, TaskStage};
 use crate::{file::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, preload::{Preload, PreloadOpRule, PreloadOpSize}, process::{Process, ProcessOpOpen}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
@@ -161,16 +161,6 @@ impl Scheduler {
 			self.micro.try_send(hook(true), HIGH).ok();
 		}
 		b
-	}
-
-	pub async fn app_stop() {
-		let (tx, rx) = oneshot::channel::<()>();
-		emit!(Call(Cmd::new("stop").with_data(tx), Layer::App));
-		rx.await.ok();
-	}
-
-	pub fn app_resume() {
-		emit!(Call(Cmd::new("resume"), Layer::App));
 	}
 
 	pub fn file_cut(&self, from: Url, mut to: Url, force: bool) {

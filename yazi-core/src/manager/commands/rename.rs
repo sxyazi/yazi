@@ -4,10 +4,11 @@ use anyhow::{anyhow, bail, Result};
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 use yazi_config::{popup::InputCfg, OPEN, PREVIEW};
 use yazi_plugin::external::{self, ShellOpt};
-use yazi_scheduler::{Scheduler, BLOCKER};
+use yazi_proxy::{AppProxy, InputProxy, ManagerProxy};
+use yazi_scheduler::BLOCKER;
 use yazi_shared::{event::Cmd, fs::{max_common_root, File, FilesOp, Url}, term::Term, Defer};
 
-use crate::{input::Input, manager::Manager};
+use crate::manager::Manager;
 
 pub struct Opt {
 	force:  bool,
@@ -49,7 +50,7 @@ impl Manager {
 		let file = File::from(new.clone()).await?;
 		FilesOp::Deleting(file.parent().unwrap(), vec![new.clone()]).emit();
 		FilesOp::Upserting(file.parent().unwrap(), BTreeMap::from_iter([(old, file)])).emit();
-		Ok(Self::_hover(Some(new)))
+		Ok(ManagerProxy::hover(Some(new)))
 	}
 
 	pub fn rename(&mut self, opt: impl Into<Opt>) {
@@ -77,7 +78,7 @@ impl Manager {
 		};
 
 		tokio::spawn(async move {
-			let mut result = Input::_show(InputCfg::rename().with_value(name).with_cursor(cursor));
+			let mut result = InputProxy::show(InputCfg::rename().with_value(name).with_cursor(cursor));
 			let Some(Ok(name)) = result.recv().await else {
 				return;
 			};
@@ -88,7 +89,7 @@ impl Manager {
 				return;
 			}
 
-			let mut result = Input::_show(InputCfg::overwrite());
+			let mut result = InputProxy::show(InputCfg::overwrite());
 			if let Some(Ok(choice)) = result.recv().await {
 				if choice == "y" || choice == "Y" {
 					Self::rename_and_hover(hovered, Url::from(new)).await.ok();
@@ -122,10 +123,10 @@ impl Manager {
 
 			let _guard = BLOCKER.acquire().await.unwrap();
 			let _defer = Defer::new(|| {
-				Scheduler::app_resume();
+				AppProxy::resume();
 				tokio::spawn(fs::remove_file(tmp.clone()))
 			});
-			Scheduler::app_stop().await;
+			AppProxy::stop().await;
 
 			let mut child = external::shell(ShellOpt {
 				cmd:    (*opener.exec).into(),

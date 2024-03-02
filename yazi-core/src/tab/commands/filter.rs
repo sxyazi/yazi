@@ -3,9 +3,10 @@ use std::time::Duration;
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
+use yazi_proxy::{InputProxy, ManagerProxy};
 use yazi_shared::{emit, event::Cmd, render, Debounce, InputError, Layer};
 
-use crate::{folder::{Filter, FilterCase}, input::Input, manager::Manager, tab::Tab};
+use crate::{folder::{Filter, FilterCase}, tab::Tab};
 
 #[derive(Default)]
 pub struct Opt {
@@ -28,7 +29,7 @@ impl Tab {
 	pub fn filter(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		tokio::spawn(async move {
-			let rx = Input::_show(InputCfg::filter());
+			let rx = InputProxy::show(InputCfg::filter());
 
 			let rx = Debounce::new(UnboundedReceiverStream::new(rx), Duration::from_millis(50));
 			pin!(rx);
@@ -62,7 +63,7 @@ impl Tab {
 		};
 
 		if opt.done {
-			Manager::_update_paged(); // Update for paged files in next loop
+			ManagerProxy::update_paged(); // Update for paged files in next loop
 		}
 
 		let hovered = self.current.hovered().map(|f| f.url());
@@ -71,7 +72,7 @@ impl Tab {
 		}
 
 		if self.current.repos(hovered) {
-			Manager::_hover(None);
+			ManagerProxy::hover(None);
 		}
 		render!();
 	}

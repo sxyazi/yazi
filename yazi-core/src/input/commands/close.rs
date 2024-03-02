@@ -1,6 +1,7 @@
+use yazi_proxy::CompletionProxy;
 use yazi_shared::{event::Cmd, render, InputError};
 
-use crate::{completion::Completion, input::Input};
+use crate::input::Input;
 
 pub struct Opt {
 	submit: bool,
@@ -18,7 +19,7 @@ impl Input {
 		let opt = opt.into() as Opt;
 
 		if self.completion {
-			Completion::_close();
+			CompletionProxy::close();
 		}
 
 		if let Some(cb) = self.callback.take() {

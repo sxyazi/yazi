@@ -1,9 +1,10 @@
 use std::str::FromStr;
 
 use yazi_config::manager::SortBy;
+use yazi_proxy::ManagerProxy;
 use yazi_shared::event::Cmd;
 
-use crate::{manager::Manager, tab::Tab, tasks::Tasks};
+use crate::{tab::Tab, tasks::Tasks};
 
 impl Tab {
 	pub fn sort(&mut self, c: Cmd, tasks: &Tasks) {
@@ -15,7 +16,7 @@ impl Tab {
 		self.conf.sort_dir_first = c.named.contains_key("dir-first");
 
 		self.apply_files_attrs();
-		Manager::_update_paged();
+		ManagerProxy::update_paged();
 
 		tasks.preload_sorted(&self.current.files);
 	}

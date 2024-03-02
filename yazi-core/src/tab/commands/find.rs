@@ -3,9 +3,10 @@ use std::time::Duration;
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
+use yazi_proxy::InputProxy;
 use yazi_shared::{emit, event::Cmd, render, Debounce, InputError, Layer};
 
-use crate::{folder::FilterCase, input::Input, tab::{Finder, Tab}};
+use crate::{folder::FilterCase, tab::{Finder, Tab}};
 
 pub struct Opt {
 	query: Option<String>,
@@ -35,7 +36,7 @@ impl Tab {
 	pub fn find(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		tokio::spawn(async move {
-			let rx = Input::_show(InputCfg::find(opt.prev));
+			let rx = InputProxy::show(InputCfg::find(opt.prev));
 
 			let rx = Debounce::new(UnboundedReceiverStream::new(rx), Duration::from_millis(50));
 			pin!(rx);

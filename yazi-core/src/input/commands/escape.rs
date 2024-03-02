@@ -1,6 +1,7 @@
+use yazi_proxy::CompletionProxy;
 use yazi_shared::{event::Cmd, render};
 
-use crate::{completion::Completion, input::{op::InputOp, Input, InputMode}};
+use crate::input::{op::InputOp, Input, InputMode};
 
 pub struct Opt;
 
@@ -26,7 +27,7 @@ impl Input {
 				self.move_(-1);
 
 				if self.completion {
-					Completion::_close();
+					CompletionProxy::close();
 				}
 			}
 		}
