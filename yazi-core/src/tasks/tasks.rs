@@ -69,9 +69,7 @@ impl Tasks {
 	}
 
 	pub fn file_open_with(&self, opener: &Opener, args: &[impl AsRef<OsStr>]) {
-		if args.len() < 2 {
-			return;
-		} else if opener.spread {
+		if opener.spread {
 			self.scheduler.process_open(opener, args);
 			return;
 		}
