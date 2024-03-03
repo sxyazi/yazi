@@ -6,9 +6,7 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
-  release:
-    permissions:
-      contents: write
+  build-unix:
     strategy:
       matrix:
         include:
@@ -20,6 +18,27 @@ jobs:
             target: x86_64-apple-darwin
           - os: macos-latest
             target: aarch64-apple-darwin
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install gcc-aarch64-linux-gnu
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: sudo apt-get update && sudo apt-get install -yq gcc-aarch64-linux-gnu
+
+      - name: Build
+        run: ./scripts/build.sh ${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yazi-${{ matrix.target }}.zip
+          path: yazi-${{ matrix.target }}.zip
+
+  build-windows:
+    strategy:
+      matrix:
+        include:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
           - os: windows-latest
@@ -31,50 +50,85 @@ jobs:
       - name: Setup Rust toolchain
         run: rustup toolchain install stable --profile minimal
 
-      - name: Add aarch64 target
-        if: contains(fromJson('["aarch64-unknown-linux-gnu", "aarch64-apple-darwin", "aarch64-pc-windows-msvc"]'), matrix.target)
+      - name: Add target
         run: rustup target add ${{ matrix.target }}
-
-      - name: Install gcc-aarch64-linux-gnu
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -yq gcc-aarch64-linux-gnu
-
-      - name: Setup Rust cache
-        uses: Swatinem/rust-cache@v2
 
       - name: Build
         env:
           YAZI_GEN_COMPLETIONS: true
-          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: /usr/bin/aarch64-linux-gnu-gcc
         run: cargo build --release --locked --target ${{ matrix.target }}
 
-      - name: Build snap
-        if: matrix.target == 'x86_64-unknown-linux-gnu'
-        uses: snapcore/action-build@v1
-
-      - name: Pack artifacts [Linux & macOS]
-        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
-        env:
-          TARGET_NAME: yazi-${{ matrix.target }}
-        run: |
-          mkdir $TARGET_NAME
-          cp target/${{ matrix.target }}/release/yazi $TARGET_NAME
-          cp -r yazi-config/completions $TARGET_NAME
-          cp README.md LICENSE $TARGET_NAME
-          zip -r $TARGET_NAME.zip $TARGET_NAME
-
-      - name: Pack artifacts [Windows]
+      - name: Pack artifact
         if: matrix.os == 'windows-latest'
         env:
           TARGET_NAME: yazi-${{ matrix.target }}
         run: |
           New-Item -ItemType Directory -Path ${env:TARGET_NAME}
           Copy-Item -Path "target\${{ matrix.target }}\release\yazi.exe" -Destination ${env:TARGET_NAME}
-          Copy-Item -Path "yazi-config\completions" -Destination ${env:TARGET_NAME} -Recurse
+          Copy-Item -Path "yazi-boot\completions" -Destination ${env:TARGET_NAME} -Recurse
           Copy-Item -Path "README.md", "LICENSE" -Destination ${env:TARGET_NAME}
           Compress-Archive -Path ${env:TARGET_NAME} -DestinationPath "${env:TARGET_NAME}.zip"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yazi-${{ matrix.target }}.zip
+          path: yazi-${{ matrix.target }}.zip
+
+  build-musl:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-musl
+            image: rust-musl-cross:x86_64-musl
+          - target: aarch64-unknown-linux-musl
+            image: rust-musl-cross:aarch64-musl
+    container:
+      image: docker://ghcr.io/rust-cross/${{ matrix.image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: ./scripts/build.sh ${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yazi-${{ matrix.target }}.zip
+          path: yazi-${{ matrix.target }}.zip
+
+  build-snap:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build snap
+        uses: snapcore/action-build@v1
+
+      - name: Build
+        run: mv yazi_*.snap yazi-${{ matrix.target }}.snap
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yazi-${{ matrix.target }}.snap
+          path: yazi-${{ matrix.target }}.snap
+
+  release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    needs: [build-unix, build-windows, build-musl, build-snap]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
 
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -82,6 +136,6 @@ jobs:
         with:
           draft: true
           files: |
-            yazi-${{ matrix.target }}.zip
-            yazi*.snap
+            yazi-*.zip
+            yazi-*.snap
           generate_release_notes: true
