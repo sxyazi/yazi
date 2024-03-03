@@ -1,20 +1,26 @@
 #!/bin/bash
 set -euo pipefail
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd $SCRIPT_DIR/..
+export ARTIFACT_NAME="yazi-$1"
+export YAZI_GEN_COMPLETIONS=1
+export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/aarch64-linux-gnu-gcc
 
-cargo +stable build --release --target aarch64-apple-darwin
-cargo +stable build --release --target x86_64-apple-darwin
-cargo +stable build --release --target x86_64-unknown-linux-gnu
-cargo +stable build --release --target x86_64-pc-windows-gnu
+# Setup Rust toolchain
+rustup toolchain install stable --profile minimal
+rustup target add "$1"
 
-mv target/aarch64-apple-darwin/release/yazi yazi-aarch64-apple-darwin
-mv target/x86_64-apple-darwin/release/yazi yazi-x86_64-apple-darwin
-mv target/x86_64-unknown-linux-gnu/release/yazi yazi-x86_64-unknown-linux-gnu
-mv target/x86_64-pc-windows-gnu/release/yazi.exe yazi-x86_64-pc-windows-gnu.exe
+# Build for the target
+cargo build --release --locked --target "$1"
 
-zip -j yazi-aarch64-apple-darwin.zip yazi-aarch64-apple-darwin
-zip -j yazi-x86_64-apple-darwin.zip yazi-x86_64-apple-darwin
-zip -j yazi-x86_64-unknown-linux-gnu.zip yazi-x86_64-unknown-linux-gnu
-zip -j yazi-x86_64-pc-windows-gnu.zip yazi-x86_64-pc-windows-gnu.exe
+# Create the artifact
+mkdir "$ARTIFACT_NAME"
+cp "target/$1/release/yazi" "$ARTIFACT_NAME"
+cp -r yazi-boot/completions "$ARTIFACT_NAME"
+cp README.md LICENSE "$ARTIFACT_NAME"
+
+# Zip the artifact
+if ! command -v zip &> /dev/null
+then
+	sudo apt-get update && sudo apt-get install -yq zip
+fi
+zip -r "$ARTIFACT_NAME.zip" "$ARTIFACT_NAME"

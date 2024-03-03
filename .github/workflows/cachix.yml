@@ -1,4 +1,3 @@
-# Publish the Nix flake outputs to Cachix
 name: Cachix
 on:
   push:
@@ -13,17 +12,16 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - name: Checkout sources
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Install nix
-      uses: cachix/install-nix-action@v25
+      - name: Install Nix
+        uses: cachix/install-nix-action@v25
 
-    - name: Authenticate with Cachix
-      uses: cachix/cachix-action@v14
-      with:
-        name: yazi
-        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      - name: Authenticate with Cachix
+        uses: cachix/cachix-action@v14
+        with:
+          name: yazi
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
 
-    - name: Build nix flake
-      run: nix build -L
+      - name: Build Flake
+        run: nix build -L
