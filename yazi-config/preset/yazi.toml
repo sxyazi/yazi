@@ -27,12 +27,13 @@ ueberzug_offset = [ 0, 0, 0, 0 ]
 [opener]
 edit = [
 	{ exec = '${EDITOR:=vi} "$@"', desc = "$EDITOR", block = true, for = "unix" },
-	{ exec = 'code "%*"',          orphan = true, for = "windows" },
+	{ exec = 'code "%*"',    orphan = true, desc = "code",         for = "windows" },
+	{ exec = 'code -w "%*"', block = true,  desc = "code (block)", for = "windows" },
 ]
 open = [
 	{ exec = 'xdg-open "$@"',                desc = "Open", for = "linux" },
 	{ exec = 'open "$@"',                    desc = "Open", for = "macos" },
-	{ exec = 'start "" "%1"', orphan = true, desc = "Open", for = "windows" }
+	{ exec = 'start "" "%1"', orphan = true, desc = "Open", for = "windows" },
 ]
 reveal = [
 	{ exec = 'open -R "$1"',                          desc = "Reveal", for = "macos" },
