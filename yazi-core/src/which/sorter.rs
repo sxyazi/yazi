@@ -33,7 +33,7 @@ impl WhichSorter {
 			entities.push(match self.by {
 				SortBy::None => unreachable!(),
 				SortBy::Key => Cow::Owned(ctrl.on()),
-				SortBy::Desc => ctrl.desc_or_exec(),
+				SortBy::Desc => ctrl.desc_or_run(),
 			});
 		}
 

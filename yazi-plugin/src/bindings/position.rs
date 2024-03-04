@@ -25,7 +25,7 @@ impl<'a> TryFrom<mlua::Table<'a>> for Position {
 			offset: Offset {
 				x:      t.raw_get("x").unwrap_or_default(),
 				y:      t.raw_get("y").unwrap_or_default(),
-				width:  t.raw_get("w").unwrap_or_default(),
+				width:  t.raw_get("w")?,
 				height: 3,
 			},
 		}))

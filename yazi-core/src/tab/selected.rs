@@ -97,11 +97,9 @@ impl Selected {
 		count
 	}
 
-	pub fn clear(&mut self) -> bool {
-		let b = !self.inner.is_empty();
+	pub fn clear(&mut self) {
 		self.inner.clear();
 		self.parents.clear();
-		b
 	}
 }
 

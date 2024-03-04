@@ -141,7 +141,7 @@ separator_style = { fg = "darkgray" }
 
 [help]
 on      = { fg = "magenta" }
-exec    = { fg = "cyan" }
+run     = { fg = "cyan" }
 desc    = { fg = "gray" }
 hovered = { bg = "darkgray", bold = true }
 footer  = { fg = "black", bg = "white" }

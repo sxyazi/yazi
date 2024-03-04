@@ -18,6 +18,7 @@ pub struct Scheduler {
 
 	micro:       async_priority_channel::Sender<BoxFuture<'static, ()>, u8>,
 	prog:        mpsc::UnboundedSender<TaskProg>,
+	// FIXME
 	pub running: Arc<Mutex<Running>>,
 }
 
@@ -334,7 +335,7 @@ impl Scheduler {
 
 	pub fn process_open(&self, opener: &Opener, args: &[impl AsRef<OsStr>]) {
 		let name = {
-			let s = format!("Execute `{}`", opener.exec);
+			let s = format!("Run `{}`", opener.run);
 			let args = args.iter().map(|a| a.as_ref().to_string_lossy()).collect::<Vec<_>>().join(" ");
 			if args.is_empty() { s } else { format!("{s} with `{args}`") }
 		};
@@ -364,7 +365,7 @@ impl Scheduler {
 				process
 					.open(ProcessOpOpen {
 						id,
-						cmd: opener.exec.into(),
+						cmd: opener.run.into(),
 						args,
 						block: opener.block,
 						orphan: opener.orphan,
