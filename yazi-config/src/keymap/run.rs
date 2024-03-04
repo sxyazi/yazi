@@ -4,16 +4,16 @@ use anyhow::{bail, Result};
 use serde::{de::{self, Visitor}, Deserializer};
 use yazi_shared::event::Cmd;
 
-pub(super) fn exec_deserialize<'de, D>(deserializer: D) -> Result<Vec<Cmd>, D::Error>
+pub(super) fn run_deserialize<'de, D>(deserializer: D) -> Result<Vec<Cmd>, D::Error>
 where
 	D: Deserializer<'de>,
 {
-	struct ExecVisitor;
+	struct RunVisitor;
 
 	fn parse(s: &str) -> Result<Cmd> {
 		let s = shell_words::split(s)?;
 		if s.is_empty() {
-			bail!("`exec` cannot be empty");
+			bail!("`run` cannot be empty");
 		}
 
 		let mut cmd = Cmd { name: s[0].clone(), ..Default::default() };
@@ -30,11 +30,11 @@ where
 		Ok(cmd)
 	}
 
-	impl<'de> Visitor<'de> for ExecVisitor {
+	impl<'de> Visitor<'de> for RunVisitor {
 		type Value = Vec<Cmd>;
 
 		fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-			formatter.write_str("a `exec` string or array of strings within [keymap]")
+			formatter.write_str("a `run` string or array of strings within keymap.toml")
 		}
 
 		fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
@@ -46,7 +46,7 @@ where
 				cmds.push(parse(value).map_err(de::Error::custom)?);
 			}
 			if cmds.is_empty() {
-				return Err(de::Error::custom("`exec` within [keymap] cannot be empty"));
+				return Err(de::Error::custom("`run` within keymap.toml cannot be empty"));
 			}
 			Ok(cmds)
 		}
@@ -59,5 +59,5 @@ where
 		}
 	}
 
-	deserializer.deserialize_any(ExecVisitor)
+	deserializer.deserialize_any(RunVisitor)
 }

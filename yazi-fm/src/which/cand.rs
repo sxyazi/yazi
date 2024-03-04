@@ -32,7 +32,7 @@ impl Widget for Cand<'_> {
 		spans.push(Span::styled(&THEME.which.separator, THEME.which.separator_style));
 
 		// Description
-		spans.push(Span::styled(self.cand.desc_or_exec(), THEME.which.desc));
+		spans.push(Span::styled(self.cand.desc_or_run(), THEME.which.desc));
 
 		Line::from(spans).render(area, buf);
 	}

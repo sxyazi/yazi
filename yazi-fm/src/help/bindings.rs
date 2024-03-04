@@ -22,9 +22,9 @@ impl Widget for Bindings<'_> {
 		let col1: Vec<_> =
 			bindings.iter().map(|c| ListItem::new(c.on()).style(THEME.help.on)).collect();
 
-		// Exec
+		// Run
 		let col2: Vec<_> =
-			bindings.iter().map(|c| ListItem::new(c.exec()).style(THEME.help.exec)).collect();
+			bindings.iter().map(|c| ListItem::new(c.run()).style(THEME.help.run)).collect();
 
 		// Desc
 		let col3: Vec<_> = bindings
