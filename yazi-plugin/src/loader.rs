@@ -60,6 +60,7 @@ impl Loader {
 			None => Err(format!("plugin `{name}` not found").into_lua_err())?,
 		};
 
+		t.raw_set("_name", LUA.create_string(name)?)?;
 		loaded.raw_set(name, t.clone())?;
 		Ok(t)
 	}

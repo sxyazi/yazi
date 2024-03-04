@@ -21,7 +21,7 @@ impl TryFrom<Cmd> for Opt {
 
 	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
 		let Some(name) = c.take_first().filter(|s| !s.is_empty()) else {
-			bail!("invalid plugin name");
+			bail!("plugin name cannot be empty");
 		};
 
 		let mut data: OptData = c.take_data().unwrap_or_default();
