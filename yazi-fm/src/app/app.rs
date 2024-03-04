@@ -15,7 +15,7 @@ pub(crate) struct App {
 }
 
 impl App {
-	pub(crate) async fn run() -> Result<()> {
+	pub(crate) async fn serve() -> Result<()> {
 		let term = Term::start()?;
 		let signals = Signals::start()?;
 

@@ -1,9 +1,10 @@
 use std::path::Path;
 
 use serde::Deserialize;
-use yazi_shared::{event::Cmd, Condition, MIME_DIR};
+use yazi_shared::MIME_DIR;
 
-use crate::{pattern::Pattern, plugin::MAX_PRELOADERS, Preset, Priority, MERGED_YAZI};
+use super::PluginRule;
+use crate::{plugin::MAX_PRELOADERS, Preset, MERGED_YAZI};
 
 #[derive(Deserialize)]
 pub struct Plugin {
@@ -85,30 +86,4 @@ impl Plugin {
 				|| rule.name.as_ref().is_some_and(|n| n.match_path(path, is_folder))
 		})
 	}
-}
-
-#[derive(Deserialize)]
-pub struct PluginRule {
-	#[serde(default)]
-	pub id:    u8,
-	pub cond:  Option<Condition>,
-	pub name:  Option<Pattern>,
-	pub mime:  Option<Pattern>,
-	#[serde(rename = "exec")]
-	#[serde(deserialize_with = "super::exec_deserialize")]
-	pub cmd:   Cmd,
-	#[serde(default)]
-	pub sync:  bool,
-	#[serde(default)]
-	pub multi: bool,
-	#[serde(default)]
-	pub prio:  Priority,
-}
-
-impl PluginRule {
-	#[inline]
-	fn any_file(&self) -> bool { self.name.as_ref().is_some_and(|p| p.any_file()) }
-
-	#[inline]
-	fn any_dir(&self) -> bool { self.name.as_ref().is_some_and(|p| p.any_dir()) }
 }

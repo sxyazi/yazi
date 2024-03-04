@@ -5,7 +5,7 @@ use yazi_shared::event::Cmd;
 use crate::tab::Tab;
 
 pub struct Opt {
-	exec:    String,
+	run:     String,
 	block:   bool,
 	confirm: bool,
 }
@@ -13,7 +13,7 @@ pub struct Opt {
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
-			exec:    c.take_first().unwrap_or_default(),
+			run:     c.take_first().unwrap_or_default(),
 			block:   c.named.contains_key("block"),
 			confirm: c.named.contains_key("confirm"),
 		}
@@ -30,16 +30,16 @@ impl Tab {
 		let selected = self.hovered_and_selected().into_iter().cloned().collect();
 
 		tokio::spawn(async move {
-			if !opt.confirm || opt.exec.is_empty() {
-				let mut result = InputProxy::show(InputCfg::shell(opt.block).with_value(opt.exec));
+			if !opt.confirm || opt.run.is_empty() {
+				let mut result = InputProxy::show(InputCfg::shell(opt.block).with_value(opt.run));
 				match result.recv().await {
-					Some(Ok(e)) => opt.exec = e,
+					Some(Ok(e)) => opt.run = e,
 					_ => return,
 				}
 			}
 
 			TasksProxy::open_with(selected, Opener {
-				exec:   opt.exec,
+				run:    opt.run,
 				block:  opt.block,
 				orphan: false,
 				desc:   Default::default(),

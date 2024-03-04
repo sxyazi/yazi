@@ -37,7 +37,7 @@ impl Utils {
 					let cand = cand?;
 					cands.push(Control {
 						on:   Self::parse_keys(cand.raw_get("on")?)?,
-						exec: vec![Cmd::args("callback", vec![i.to_string()]).with_data(tx.clone())],
+						run:  vec![Cmd::args("callback", vec![i.to_string()]).with_data(tx.clone())],
 						desc: cand.raw_get("desc").ok(),
 					});
 				}

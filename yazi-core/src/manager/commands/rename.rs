@@ -129,7 +129,7 @@ impl Manager {
 			AppProxy::stop().await;
 
 			let mut child = external::shell(ShellOpt {
-				cmd:    (*opener.exec).into(),
+				cmd:    (*opener.run).into(),
 				args:   vec![OsString::new(), tmp.to_owned().into()],
 				piped:  false,
 				orphan: false,

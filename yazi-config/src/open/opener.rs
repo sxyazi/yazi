@@ -2,7 +2,7 @@ use serde::{Deserialize, Deserializer};
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Opener {
-	pub exec:   String,
+	pub run:    String,
 	pub block:  bool,
 	pub orphan: bool,
 	pub desc:   String,
@@ -32,7 +32,9 @@ impl<'de> Deserialize<'de> for Opener {
 	{
 		#[derive(Deserialize)]
 		pub struct Shadow {
-			exec:   String,
+			run:    Option<String>,
+			// TODO: remove this once Yazi 0.3 is released --
+			exec:   Option<String>,
 			#[serde(default)]
 			block:  bool,
 			#[serde(default)]
@@ -43,22 +45,18 @@ impl<'de> Deserialize<'de> for Opener {
 		}
 
 		let shadow = Shadow::deserialize(deserializer)?;
-		if shadow.exec.is_empty() {
-			return Err(serde::de::Error::custom("`exec` cannot be empty"));
+
+		// TODO: remove this once Yazi 0.3 is released --
+		let run = shadow.run.or(shadow.exec).unwrap_or_default();
+		// TODO: -- remove this once Yazi 0.3 is released
+
+		if run.is_empty() {
+			return Err(serde::de::Error::custom("`run` cannot be empty"));
 		}
 
-		let desc =
-			shadow.desc.unwrap_or_else(|| shadow.exec.split_whitespace().next().unwrap().to_string());
+		let desc = shadow.desc.unwrap_or_else(|| run.split_whitespace().next().unwrap().to_string());
 
-		let spread =
-			shadow.exec.contains("$@") || shadow.exec.contains("%*") || shadow.exec.contains("$*");
-		Ok(Self {
-			exec: shadow.exec,
-			block: shadow.block,
-			orphan: shadow.orphan,
-			desc,
-			for_: shadow.for_,
-			spread,
-		})
+		let spread = run.contains("$@") || run.contains("%*") || run.contains("$*");
+		Ok(Self { run, block: shadow.block, orphan: shadow.orphan, desc, for_: shadow.for_, spread })
 	}
 }
