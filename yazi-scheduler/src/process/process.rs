@@ -21,7 +21,14 @@ impl Process {
 
 			match external::shell(opt) {
 				Ok(mut child) => {
-					child.wait().await.ok();
+					let status = child.wait().await?;
+					if !status.success() {
+						let message = match status.code() {
+							Some(code) => format!("Exited with status code: {code}"),
+							None => "Process terminated by signal".to_string(),
+						};
+						AppProxy::warn("Process failed", message.as_str());
+					}
 					self.succ(task.id)?;
 				}
 				Err(e) => {
