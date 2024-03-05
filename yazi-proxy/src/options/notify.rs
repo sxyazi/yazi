@@ -23,7 +23,7 @@ impl<'a> TryFrom<mlua::Table<'a>> for NotifyOpt {
 	fn try_from(t: mlua::Table) -> Result<Self, Self::Error> {
 		let timeout = t.raw_get::<_, f64>("timeout")?;
 		if timeout < 0.0 {
-			return Err("invalid timeout".into_lua_err());
+			return Err("timeout must be non-negative".into_lua_err());
 		}
 
 		Ok(Self {

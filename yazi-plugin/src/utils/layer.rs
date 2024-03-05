@@ -3,7 +3,7 @@ use std::str::FromStr;
 use mlua::{ExternalError, ExternalResult, IntoLuaMulti, Lua, Table, Value};
 use tokio::sync::mpsc;
 use yazi_config::{keymap::{Control, Key}, popup::InputCfg};
-use yazi_proxy::InputProxy;
+use yazi_proxy::{AppProxy, InputProxy};
 use yazi_shared::{emit, event::Cmd, Layer};
 
 use super::Utils;
@@ -79,7 +79,13 @@ impl Utils {
 			})?,
 		)?;
 
-		ya.raw_set("notify", lua.create_function(|lua, t: Table| Ok(()))?)?;
+		ya.raw_set(
+			"notify",
+			lua.create_function(|_, t: Table| {
+				AppProxy::notify(t.try_into()?);
+				Ok(())
+			})?,
+		)?;
 
 		Ok(())
 	}
