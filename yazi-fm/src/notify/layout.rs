@@ -2,7 +2,8 @@ use std::rc::Rc;
 
 use ratatui::{buffer::Buffer, layout::{self, Constraint, Offset, Rect}, widgets::{Block, BorderType, Paragraph, Widget, Wrap}};
 use yazi_config::THEME;
-use yazi_core::notify::{Level, Message};
+use yazi_core::notify::Message;
+use yazi_proxy::options::NotifyLevel;
 
 use crate::{widgets::Clear, Ctx};
 
@@ -43,9 +44,9 @@ impl<'a> Widget for Layout<'a> {
 
 		for (i, m) in notify.messages.iter().enumerate().take(limit) {
 			let (icon, style) = match m.level {
-				Level::Info => (&THEME.notify.icon_info, THEME.notify.title_info),
-				Level::Warn => (&THEME.notify.icon_warn, THEME.notify.title_warn),
-				Level::Error => (&THEME.notify.icon_error, THEME.notify.title_error),
+				NotifyLevel::Info => (&THEME.notify.icon_info, THEME.notify.title_info),
+				NotifyLevel::Warn => (&THEME.notify.icon_warn, THEME.notify.title_warn),
+				NotifyLevel::Error => (&THEME.notify.icon_error, THEME.notify.title_error),
 			};
 
 			let mut rect =

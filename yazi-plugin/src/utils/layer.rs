@@ -79,6 +79,8 @@ impl Utils {
 			})?,
 		)?;
 
+		ya.raw_set("notify", lua.create_function(|lua, t: Table| Ok(()))?)?;
+
 		Ok(())
 	}
 }
