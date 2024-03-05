@@ -5,7 +5,7 @@ use parking_lot::Mutex;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}};
 use yazi_config::{open::Opener, plugin::PluginRule, TASKS};
 use yazi_plugin::ValueSendable;
-use yazi_shared::{emit, event::Cmd, fs::{unique_path, Url}, Layer, Throttle};
+use yazi_shared::{fs::{unique_path, Url}, Throttle};
 
 use super::{Running, TaskProg, TaskStage};
 use crate::{file::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, preload::{Preload, PreloadOpRule, PreloadOpSize}, process::{Process, ProcessOpOpen}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
@@ -18,6 +18,7 @@ pub struct Scheduler {
 
 	micro:       async_priority_channel::Sender<BoxFuture<'static, ()>, u8>,
 	prog:        mpsc::UnboundedSender<TaskProg>,
+	// FIXME
 	pub running: Arc<Mutex<Running>>,
 }
 
@@ -161,16 +162,6 @@ impl Scheduler {
 			self.micro.try_send(hook(true), HIGH).ok();
 		}
 		b
-	}
-
-	pub async fn app_stop() {
-		let (tx, rx) = oneshot::channel::<()>();
-		emit!(Call(Cmd::new("stop").with_data(tx), Layer::App));
-		rx.await.ok();
-	}
-
-	pub fn app_resume() {
-		emit!(Call(Cmd::new("resume"), Layer::App));
 	}
 
 	pub fn file_cut(&self, from: Url, mut to: Url, force: bool) {
@@ -344,7 +335,7 @@ impl Scheduler {
 
 	pub fn process_open(&self, opener: &Opener, args: &[impl AsRef<OsStr>]) {
 		let name = {
-			let s = format!("Execute `{}`", opener.exec);
+			let s = format!("Run `{}`", opener.run);
 			let args = args.iter().map(|a| a.as_ref().to_string_lossy()).collect::<Vec<_>>().join(" ");
 			if args.is_empty() { s } else { format!("{s} with `{args}`") }
 		};
@@ -374,7 +365,7 @@ impl Scheduler {
 				process
 					.open(ProcessOpOpen {
 						id,
-						cmd: opener.exec.into(),
+						cmd: opener.run.into(),
 						args,
 						block: opener.block,
 						orphan: opener.orphan,

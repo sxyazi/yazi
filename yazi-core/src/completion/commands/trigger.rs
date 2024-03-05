@@ -20,14 +20,6 @@ impl From<Cmd> for Opt {
 }
 
 impl Completion {
-	#[inline]
-	pub fn _trigger(word: &str, ticket: usize) {
-		emit!(Call(
-			Cmd::args("trigger", vec![word.to_owned()]).with("ticket", ticket),
-			Layer::Completion
-		));
-	}
-
 	pub fn trigger(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		if opt.ticket < self.ticket {

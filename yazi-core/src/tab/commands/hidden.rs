@@ -1,6 +1,7 @@
+use yazi_proxy::ManagerProxy;
 use yazi_shared::event::Cmd;
 
-use crate::{manager::Manager, tab::Tab};
+use crate::tab::Tab;
 
 impl Tab {
 	pub fn hidden(&mut self, c: Cmd) {
@@ -14,10 +15,10 @@ impl Tab {
 		self.apply_files_attrs();
 
 		if hovered.as_ref() != self.current.hovered().map(|f| &f.url) {
-			Manager::_hover(hovered);
+			ManagerProxy::hover(hovered);
 		} else if self.current.hovered().is_some_and(|f| f.is_dir()) {
-			Manager::_peek(true);
+			ManagerProxy::peek(true);
 		}
-		Manager::_update_paged();
+		ManagerProxy::update_paged();
 	}
 }

@@ -1,4 +1,4 @@
-use yazi_shared::{emit, event::Cmd, fs::Url, Layer};
+use yazi_shared::{event::Cmd, fs::Url};
 
 use crate::{manager::Manager, tasks::Tasks};
 
@@ -22,19 +22,6 @@ impl From<()> for Opt {
 }
 
 impl Manager {
-	#[inline]
-	pub fn _update_paged() {
-		emit!(Call(Cmd::new("update_paged"), Layer::Manager));
-	}
-
-	#[inline]
-	pub fn _update_paged_by(page: usize, only_if: &Url) {
-		emit!(Call(
-			Cmd::args("update_paged", vec![page.to_string()]).with("only-if", only_if.to_string()),
-			Layer::Manager
-		));
-	}
-
 	pub fn update_paged(&mut self, opt: impl TryInto<Opt>, tasks: &Tasks) {
 		let Ok(opt) = opt.try_into() else {
 			return;

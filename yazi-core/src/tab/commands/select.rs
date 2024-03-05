@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 
-use yazi_shared::{event::Cmd, fs::Url, render};
+use yazi_proxy::AppProxy;
+use yazi_shared::{event::Cmd, fs::Url, render, render_and};
 
 use crate::tab::Tab;
 
@@ -30,10 +31,17 @@ impl<'a> Tab {
 			return;
 		};
 
-		render!(match opt.state {
-			Some(true) => self.selected.add(&url),
-			Some(false) => self.selected.remove(&url),
-			None => self.selected.remove(&url) || self.selected.add(&url),
-		});
+		let b = match opt.state {
+			Some(true) => render_and!(self.selected.add(&url)),
+			Some(false) => render_and!(self.selected.remove(&url)) | true,
+			None => render_and!(self.selected.remove(&url) || self.selected.add(&url)),
+		};
+
+		if !b {
+			AppProxy::notify_warn(
+				"Select one",
+				"This file cannot be selected, due to path nesting conflict.",
+			);
+		}
 	}
 }

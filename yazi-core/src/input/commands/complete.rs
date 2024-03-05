@@ -1,6 +1,6 @@
 use std::path::MAIN_SEPARATOR;
 
-use yazi_shared::{emit, event::Cmd, render, Layer};
+use yazi_shared::{event::Cmd, render};
 
 use crate::input::Input;
 
@@ -19,11 +19,6 @@ impl From<Cmd> for Opt {
 }
 
 impl Input {
-	#[inline]
-	pub fn _complete(word: &str, ticket: usize) {
-		emit!(Call(Cmd::args("complete", vec![word.to_owned()]).with("ticket", ticket), Layer::Input));
-	}
-
 	pub fn complete(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		if self.ticket != opt.ticket {

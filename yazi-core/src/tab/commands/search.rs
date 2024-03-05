@@ -1,13 +1,14 @@
-use std::{mem, time::Duration};
+use std::{fmt::Display, mem, time::Duration};
 
 use anyhow::bail;
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
 use yazi_plugin::external;
+use yazi_proxy::{InputProxy, ManagerProxy, TabProxy};
 use yazi_shared::{event::Cmd, fs::FilesOp, render};
 
-use crate::{input::Input, manager::Manager, tab::Tab};
+use crate::tab::Tab;
 
 #[derive(PartialEq, Eq)]
 pub enum OptType {
@@ -26,14 +27,13 @@ impl From<String> for OptType {
 	}
 }
 
-impl ToString for OptType {
-	fn to_string(&self) -> String {
-		match self {
+impl Display for OptType {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.write_str(match self {
 			Self::Rg => "rg",
 			Self::Fd => "fd",
 			Self::None => "none",
-		}
-		.to_owned()
+		})
 	}
 }
 
@@ -60,7 +60,7 @@ impl Tab {
 		let hidden = self.conf.show_hidden;
 
 		self.search = Some(tokio::spawn(async move {
-			let mut input = Input::_show(InputCfg::search(&opt.type_.to_string()));
+			let mut input = InputProxy::show(InputCfg::search(&opt.type_.to_string()));
 			let Some(Ok(subject)) = input.recv().await else { bail!("") };
 
 			cwd = cwd.into_search(subject.clone());
@@ -73,7 +73,7 @@ impl Tab {
 			let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(300));
 			pin!(rx);
 
-			let ((), ticket) = (Tab::_cd(&cwd), FilesOp::prepare(&cwd));
+			let ((), ticket) = (TabProxy::cd(&cwd), FilesOp::prepare(&cwd));
 			while let Some(chunk) = rx.next().await {
 				FilesOp::Part(cwd.clone(), chunk, ticket).emit();
 			}
@@ -91,7 +91,7 @@ impl Tab {
 		if self.current.cwd.is_search() {
 			let rep = self.history_new(&self.current.cwd.to_regular());
 			drop(mem::replace(&mut self.current, rep));
-			Manager::_refresh();
+			ManagerProxy::refresh();
 		}
 	}
 }

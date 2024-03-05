@@ -58,6 +58,18 @@ impl Tab {
 		}
 	}
 
+	pub fn hovered_and_selected(&self) -> Vec<&Url> {
+		let Some(h) = self.current.hovered() else {
+			return vec![];
+		};
+
+		if self.selected.is_empty() {
+			vec![&h.url, &h.url]
+		} else {
+			[&h.url].into_iter().chain(self.selected.iter()).collect()
+		}
+	}
+
 	// --- History
 	#[inline]
 	pub fn history_new(&mut self, url: &Url) -> Folder {

@@ -1,4 +1,7 @@
-use mlua::{AnyUserData, ExternalError, FromLua, IntoLua, Lua, Table, UserData, UserDataMethods, Value};
+use std::mem;
+
+use ansi_to_tui::IntoText;
+use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, Table, UserData, UserDataMethods, Value};
 
 use super::{Span, Style};
 
@@ -39,7 +42,21 @@ impl Line {
 			Err("expected a table of Spans or Lines".into_lua_err())
 		})?;
 
+		let parse = lua.create_function(|_, code: mlua::String| {
+			let Some(line) = code.as_bytes().split_inclusive(|&b| b == b'\n').next() else {
+				return Ok(Line(Default::default()));
+			};
+
+			let mut lines = line.into_text().into_lua_err()?.lines;
+			if lines.is_empty() {
+				return Ok(Line(Default::default()));
+			}
+
+			Ok(Line(mem::take(&mut lines[0])))
+		})?;
+
 		let line = lua.create_table_from([
+			("parse", parse.into_lua(lua)?),
 			// Alignment
 			("LEFT", LEFT.into_lua(lua)?),
 			("CENTER", CENTER.into_lua(lua)?),
@@ -60,7 +77,7 @@ impl UserData for Line {
 				let mut me = ud.borrow_mut::<Self>()?;
 				me.0.style = match value {
 					Value::Nil => me.0.style.patch(ratatui::style::Style::reset()),
-					Value::Table(tb) => me.0.style.patch(Style::from(tb).0),
+					Value::Table(tb) => me.0.style.patch(Style::try_from(tb)?.0),
 					Value::UserData(ud) => me.0.style.patch(ud.borrow::<Style>()?.0),
 					_ => return Err("expected a Style or Table or nil".into_lua_err()),
 				};

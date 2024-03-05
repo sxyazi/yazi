@@ -1,7 +1,8 @@
 use yazi_config::popup::InputCfg;
+use yazi_proxy::InputProxy;
 use yazi_shared::{emit, event::{Cmd, EventQuit}};
 
-use crate::{input::Input, manager::Manager, tasks::Tasks};
+use crate::{manager::Manager, tasks::Tasks};
 
 #[derive(Default)]
 pub struct Opt {
@@ -25,7 +26,7 @@ impl Manager {
 		}
 
 		tokio::spawn(async move {
-			let mut result = Input::_show(InputCfg::quit(tasks));
+			let mut result = InputProxy::show(InputCfg::quit(tasks));
 			if let Some(Ok(choice)) = result.recv().await {
 				if choice == "y" || choice == "Y" {
 					emit!(Quit(opt));

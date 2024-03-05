@@ -4,6 +4,13 @@
 
 # vim:fileencoding=utf-8:foldmethod=marker
 
+# : Flavor {{{
+
+[flavor]
+use = ""
+
+# : }}}
+
 # : Manager {{{
 
 [manager]
@@ -137,10 +144,25 @@ separator_style = { fg = "darkgray" }
 
 [help]
 on      = { fg = "magenta" }
-exec    = { fg = "cyan" }
+run     = { fg = "cyan" }
 desc    = { fg = "gray" }
 hovered = { bg = "darkgray", bold = true }
 footer  = { fg = "black", bg = "white" }
+
+# : }}}
+
+
+# : Notify {{{
+
+[notify]
+title_info  = { fg = "green" }
+title_warn  = { fg = "yellow" }
+title_error = { fg = "red" }
+
+# Icons
+icon_info  = ""
+icon_warn  = ""
+icon_error = ""
 
 # : }}}
 

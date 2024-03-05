@@ -4,20 +4,19 @@ use tracing::error;
 use yazi_boot::ARGS;
 use yazi_config::{popup::SelectCfg, OPEN};
 use yazi_plugin::isolate;
-use yazi_shared::{emit, event::{Cmd, EventQuit}, fs::{File, Url}, Layer, MIME_DIR};
+use yazi_proxy::{options::OpenDoOpt, ManagerProxy, TasksProxy};
+use yazi_shared::{emit, event::{Cmd, EventQuit}, fs::{File, Url}, MIME_DIR};
 
-use crate::{folder::Folder, manager::Manager, select::Select, tasks::Tasks};
+use crate::{folder::Folder, manager::Manager, tasks::Tasks};
 
 pub struct Opt {
-	targets:     Vec<(Url, String)>,
 	interactive: bool,
 	hovered:     bool,
 }
 
 impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self {
+	fn from(c: Cmd) -> Self {
 		Self {
-			targets:     c.take_data().unwrap_or_default(),
 			interactive: c.named.contains_key("interactive"),
 			hovered:     c.named.contains_key("hovered"),
 		}
@@ -29,23 +28,19 @@ impl Manager {
 		if !self.active_mut().try_escape_visual() {
 			return;
 		}
-
-		let mut opt = opt.into() as Opt;
-		let selected = if opt.hovered {
-			self.hovered().map(|h| vec![&h.url]).unwrap_or_default()
-		} else {
-			self.selected_or_hovered()
+		let Some(hovered) = self.hovered().map(|h| h.url()) else {
+			return;
 		};
 
-		if selected.is_empty() {
-			return;
-		} else if Self::quit_with_selected(&selected) {
+		let opt = opt.into() as Opt;
+		let selected = if opt.hovered { vec![&hovered] } else { self.selected_or_hovered() };
+		if Self::quit_with_selected(&selected) {
 			return;
 		}
 
 		let (mut done, mut todo) = (Vec::with_capacity(selected.len()), vec![]);
 		for u in selected {
-			if self.mimetype.get(u).is_some() {
+			if self.mimetype.contains_key(u) {
 				done.push((u.clone(), String::new()));
 			} else if self.guess_folder(u) {
 				done.push((u.clone(), MIME_DIR.to_owned()));
@@ -55,8 +50,8 @@ impl Manager {
 		}
 
 		if todo.is_empty() {
-			opt.targets = done;
-			return self.open_do(opt, tasks);
+			return self
+				.open_do(OpenDoOpt { hovered, targets: done, interactive: opt.interactive }, tasks);
 		}
 
 		tokio::spawn(async move {
@@ -69,27 +64,15 @@ impl Manager {
 
 			done.extend(files.iter().map(|f| (f.url(), String::new())));
 			if let Err(e) = isolate::preload("mime", files, true).await {
-				error!("preload in watcher failed: {e}");
+				error!("preload in open failed: {e}");
 			}
 
-			Self::_open_do(done, opt.interactive);
+			ManagerProxy::open_do(OpenDoOpt { hovered, targets: done, interactive: opt.interactive });
 		});
 	}
 
-	#[inline]
-	pub fn _open_do(targets: Vec<(Url, String)>, interactive: bool) {
-		emit!(Call(
-			Cmd::new("open_do").with_bool("interactive", interactive).with_data(targets),
-			Layer::Manager
-		));
-	}
-
-	pub fn open_do(&mut self, opt: impl Into<Opt>, tasks: &Tasks) {
-		let opt = opt.into() as Opt;
-		if opt.targets.is_empty() {
-			return;
-		}
-
+	pub fn open_do(&mut self, opt: impl Into<OpenDoOpt>, tasks: &Tasks) {
+		let opt = opt.into() as OpenDoOpt;
 		let targets: Vec<_> = opt
 			.targets
 			.into_iter()
@@ -101,8 +84,7 @@ impl Manager {
 		if targets.is_empty() {
 			return;
 		} else if !opt.interactive {
-			tasks.file_open(&targets);
-			return;
+			return tasks.file_open(&opt.hovered, &targets);
 		}
 
 		let openers: Vec<_> = OPEN.common_openers(&targets).into_iter().cloned().collect();
@@ -110,11 +92,13 @@ impl Manager {
 			return;
 		}
 
-		let urls = targets.into_iter().map(|(u, _)| u).collect();
+		let urls = [opt.hovered].into_iter().chain(targets.into_iter().map(|(u, _)| u)).collect();
 		tokio::spawn(async move {
-			let result = Select::_show(SelectCfg::open(openers.iter().map(|o| o.desc.clone()).collect()));
+			let result = yazi_proxy::SelectProxy::show(SelectCfg::open(
+				openers.iter().map(|o| o.desc.clone()).collect(),
+			));
 			if let Ok(choice) = result.await {
-				Tasks::_open(urls, openers[choice].clone());
+				TasksProxy::open_with(urls, openers[choice].clone());
 			}
 		});
 	}

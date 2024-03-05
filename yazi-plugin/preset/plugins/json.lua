@@ -34,7 +34,7 @@ function M:peek()
 
 	child:start_kill()
 	if self.skip > 0 and i < self.skip + limit then
-		ya.manager_emit("peek", { tostring(math.max(0, i - limit)), only_if = tostring(self.file.url), upper_bound = "" })
+		ya.manager_emit("peek", { math.max(0, i - limit), only_if = tostring(self.file.url), upper_bound = true })
 	else
 		lines = lines:gsub("\t", string.rep(" ", PREVIEW.tab_size))
 		ya.preview_widgets(self, { ui.Paragraph.parse(self.area, lines) })
@@ -46,7 +46,7 @@ function M:seek(units)
 	if h and h.url == self.file.url then
 		local step = math.floor(units * self.area.h / 10)
 		ya.manager_emit("peek", {
-			tostring(math.max(0, cx.active.preview.skip + step)),
+			math.max(0, cx.active.preview.skip + step),
 			only_if = tostring(self.file.url),
 		})
 	end
@@ -55,7 +55,7 @@ end
 function M:fallback_to_builtin()
 	local _, bound = ya.preview_code(self)
 	if bound then
-		ya.manager_emit("peek", { tostring(bound), only_if = tostring(self.file.url), upper_bound = "" })
+		ya.manager_emit("peek", { bound, only_if = tostring(self.file.url), upper_bound = true })
 	end
 end
 

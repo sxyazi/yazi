@@ -19,7 +19,7 @@ impl<'a> Widget for Layout<'a> {
 
 		let chunks = layout::Layout::vertical([Constraint::Fill(1), Constraint::Length(1)]).split(area);
 		Line::styled(
-			help.keyword().unwrap_or_else(|| format!("{}.help", help.layer.to_string())),
+			help.keyword().unwrap_or_else(|| format!("{}.help", help.layer)),
 			THEME.help.footer,
 		)
 		.render(chunks[1], buf);

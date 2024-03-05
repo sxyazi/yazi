@@ -49,6 +49,10 @@ impl UserData for Command {
 			}
 			Ok(ud)
 		});
+		methods.add_function("cwd", |_, (ud, dir): (AnyUserData, mlua::String)| {
+			ud.borrow_mut::<Self>()?.inner.current_dir(dir.to_str()?);
+			Ok(ud)
+		});
 		methods.add_function(
 			"env",
 			|_, (ud, key, value): (AnyUserData, mlua::String, mlua::String)| {

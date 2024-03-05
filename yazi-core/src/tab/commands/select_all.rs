@@ -1,3 +1,4 @@
+use yazi_proxy::AppProxy;
 use yazi_shared::{event::Cmd, render};
 
 use crate::tab::Tab;
@@ -23,24 +24,24 @@ impl From<Option<bool>> for Opt {
 
 impl Tab {
 	pub fn select_all(&mut self, opt: impl Into<Opt>) {
-		let mut b = false;
-		match opt.into().state {
-			Some(true) => {
-				for f in self.current.files.iter() {
-					b |= self.selected.add(&f.url);
-				}
-			}
-			Some(false) => {
-				for f in self.current.files.iter() {
-					b |= self.selected.remove(&f.url);
-				}
-			}
-			None => {
-				for f in self.current.files.iter() {
-					b |= self.selected.remove(&f.url) || self.selected.add(&f.url);
-				}
-			}
+		let iter = self.current.files.iter().map(|f| &f.url);
+		let (removal, addition): (Vec<_>, Vec<_>) = match opt.into().state {
+			Some(true) => (vec![], iter.collect()),
+			Some(false) => (iter.collect(), vec![]),
+			None => iter.partition(|&u| self.selected.contains(u)),
+		};
+
+		let same = !self.current.cwd.is_search();
+		render!(self.selected.remove_many(&removal, same) > 0);
+
+		let added = self.selected.add_many(&addition, same);
+		render!(added > 0);
+
+		if added != addition.len() {
+			AppProxy::notify_warn(
+				"Select all",
+				"Some files cannot be selected, due to path nesting conflict.",
+			);
 		}
-		render!(b);
 	}
 }

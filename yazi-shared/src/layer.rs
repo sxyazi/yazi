@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{fmt::Display, str::FromStr};
 
 use anyhow::bail;
 
@@ -15,9 +15,9 @@ pub enum Layer {
 	Which,
 }
 
-impl ToString for Layer {
-	fn to_string(&self) -> String {
-		match self {
+impl Display for Layer {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.write_str(match self {
 			Self::App => "app",
 			Self::Manager => "manager",
 			Self::Tasks => "tasks",
@@ -26,8 +26,7 @@ impl ToString for Layer {
 			Self::Help => "help",
 			Self::Completion => "completion",
 			Self::Which => "which",
-		}
-		.to_string()
+		})
 	}
 }
 

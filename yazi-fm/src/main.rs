@@ -52,5 +52,5 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_core::init();
 
-	app::App::run().await
+	app::App::serve().await
 }

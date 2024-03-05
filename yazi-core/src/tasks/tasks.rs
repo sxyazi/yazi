@@ -1,4 +1,4 @@
-use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, mem, path::Path, sync::Arc, time::Duration};
+use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, mem, sync::Arc, time::Duration};
 
 use tokio::time::sleep;
 use tracing::debug;
@@ -56,28 +56,26 @@ impl Tasks {
 		running.values().take(Self::limit()).map(Into::into).collect()
 	}
 
-	pub fn file_open(&self, targets: &[(impl AsRef<Path>, impl AsRef<str>)]) -> bool {
+	pub fn file_open(&self, hovered: &Url, targets: &[(Url, String)]) {
 		let mut openers = BTreeMap::new();
-		for (path, mime) in targets {
-			if let Some(opener) = OPEN.openers(path, mime).and_then(|o| o.first().copied()) {
-				openers.entry(opener).or_insert_with(Vec::new).push(path.as_ref().as_os_str());
+		for (url, mime) in targets {
+			if let Some(opener) = OPEN.openers(url, mime).and_then(|o| o.first().copied()) {
+				openers.entry(opener).or_insert_with(|| vec![hovered]).push(url);
 			}
 		}
 		for (opener, args) in openers {
 			self.file_open_with(opener, &args);
 		}
-		false
 	}
 
-	pub fn file_open_with(&self, opener: &Opener, args: &[impl AsRef<OsStr>]) -> bool {
+	pub fn file_open_with(&self, opener: &Opener, args: &[impl AsRef<OsStr>]) {
 		if opener.spread {
 			self.scheduler.process_open(opener, args);
-			return false;
+			return;
 		}
-		for target in args {
-			self.scheduler.process_open(opener, &[target]);
+		for target in args.iter().skip(1) {
+			self.scheduler.process_open(opener, &[&args[0], target]);
 		}
-		false
 	}
 
 	pub fn file_cut(&self, src: &HashSet<Url>, dest: &Url, force: bool) {

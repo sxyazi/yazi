@@ -151,11 +151,11 @@ impl<'a> Executor<'a> {
 			};
 		}
 
-		on!(open);
 		on!(toggle, "close");
 		on!(arrow);
 		on!(inspect);
 		on!(cancel);
+		on!(open_with);
 
 		#[allow(clippy::single_match)]
 		match cmd.name.as_str() {
