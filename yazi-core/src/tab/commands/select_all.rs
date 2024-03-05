@@ -38,7 +38,10 @@ impl Tab {
 		render!(added > 0);
 
 		if added != addition.len() {
-			AppProxy::warn("Select all", "Some files cannot be selected, due to path nesting conflict.");
+			AppProxy::notify_warn(
+				"Select all",
+				"Some files cannot be selected, due to path nesting conflict.",
+			);
 		}
 	}
 }

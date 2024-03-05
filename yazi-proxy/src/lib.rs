@@ -2,6 +2,7 @@ mod app;
 mod completion;
 mod input;
 mod manager;
+pub mod options;
 mod select;
 mod tab;
 mod tasks;

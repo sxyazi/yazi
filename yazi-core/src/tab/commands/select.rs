@@ -38,7 +38,10 @@ impl<'a> Tab {
 		};
 
 		if !b {
-			AppProxy::warn("Select one", "This file cannot be selected, due to path nesting conflict.");
+			AppProxy::notify_warn(
+				"Select one",
+				"This file cannot be selected, due to path nesting conflict.",
+			);
 		}
 	}
 }

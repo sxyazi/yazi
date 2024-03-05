@@ -1,15 +1,6 @@
 use yazi_shared::{emit, event::Cmd, fs::Url, Layer};
 
-#[derive(Default)]
-pub struct OpenDoOpt {
-	pub hovered:     Url,
-	pub targets:     Vec<(Url, String)>,
-	pub interactive: bool,
-}
-
-impl From<Cmd> for OpenDoOpt {
-	fn from(mut c: Cmd) -> Self { c.take_data().unwrap_or_default() }
-}
+use crate::options::OpenDoOpt;
 
 pub struct ManagerProxy;
 

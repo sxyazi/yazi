@@ -2,16 +2,7 @@ use tokio::sync::oneshot;
 use yazi_config::popup::SelectCfg;
 use yazi_shared::{emit, event::Cmd, term::Term, Layer};
 
-pub struct SelectOpt {
-	pub cfg: SelectCfg,
-	pub tx:  oneshot::Sender<anyhow::Result<usize>>,
-}
-
-impl TryFrom<Cmd> for SelectOpt {
-	type Error = ();
-
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> { c.take_data().ok_or(()) }
-}
+use crate::options::SelectOpt;
 
 pub struct SelectProxy;
 
