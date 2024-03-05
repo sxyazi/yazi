@@ -26,16 +26,24 @@ impl<'a> TryFrom<mlua::Table<'a>> for NotifyOpt {
 			return Err("timeout must be non-negative".into_lua_err());
 		}
 
+		let level = if let Ok(s) = t.raw_get::<_, mlua::String>("level") {
+			s.to_str()?.parse().into_lua_err()?
+		} else {
+			Default::default()
+		};
+
 		Ok(Self {
-			title:   t.raw_get("title")?,
+			title: t.raw_get("title")?,
 			content: t.raw_get("content")?,
-			level:   t.raw_get::<_, mlua::String>("level")?.to_str()?.parse().into_lua_err()?,
+			level,
 			timeout: Duration::from_secs_f64(timeout),
 		})
 	}
 }
 
+#[derive(Default)]
 pub enum NotifyLevel {
+	#[default]
 	Info,
 	Warn,
 	Error,
