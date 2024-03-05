@@ -1,4 +1,4 @@
-use yazi_proxy::OpenWithOpt;
+use yazi_proxy::options::OpenWithOpt;
 
 use crate::tasks::Tasks;
 
