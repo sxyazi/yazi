@@ -27,13 +27,13 @@ impl Process {
 							Some(code) => format!("Exited with status code: {code}"),
 							None => "Process terminated by signal".to_string(),
 						};
-						AppProxy::warn("Process failed", message.as_str());
+						AppProxy::notify_warn("Process failed", message.as_str());
 					}
 					self.succ(task.id)?;
 				}
 				Err(e) => {
-					self.prog.send(TaskProg::New(task.id, 0))?;
-					self.fail(task.id, format!("Failed to spawn process: {e}"))?;
+					AppProxy::notify_warn("Process failed", format!("Failed to spawn process: {e}").as_str());
+					self.succ(task.id)?;
 				}
 			}
 			return Ok(AppProxy::resume());
