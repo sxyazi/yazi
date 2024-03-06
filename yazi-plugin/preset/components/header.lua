@@ -2,16 +2,21 @@ Header = {
 	area = ui.Rect.default,
 }
 
-function Header:cwd()
+function Header:cwd(area)
 	local cwd = cx.active.current.cwd
 
-	local span
+	local path
 	if not cwd.is_search then
-		span = ui.Span(ya.readable_path(tostring(cwd)))
+		path = ya.readable_path(tostring(cwd))
 	else
-		span = ui.Span(string.format("%s (search: %s)", ya.readable_path(tostring(cwd)), cwd:frag()))
+		path = string.format("%s (search: %s)", ya.readable_path(tostring(cwd)), cwd:frag())
 	end
-	return span:style(THEME.manager.cwd)
+
+	local width = area.right
+	if #path > width then
+		path = string.sub(path, #path - width + 1)
+	end
+	return ui.Span(path):style(THEME.manager.cwd)
 end
 
 function Header:count()
@@ -72,7 +77,7 @@ end
 function Header:render(area)
 	local chunks = self:layout(area)
 
-	local left = ui.Line { self:cwd() }
+	local left = ui.Line { self:cwd(chunks[1]) }
 	local right = ui.Line { self:count(), self:tabs() }
 	return {
 		ui.Paragraph(chunks[1], { left }),
