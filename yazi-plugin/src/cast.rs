@@ -12,6 +12,8 @@ pub fn cast_to_renderable(ud: AnyUserData) -> Option<Box<dyn Renderable + Send>>
 		Some(Box::new(c))
 	} else if let Ok(c) = ud.take::<crate::elements::Bar>() {
 		Some(Box::new(c))
+	} else if let Ok(c) = ud.take::<crate::elements::Clear>() {
+		Some(Box::new(c))
 	} else if let Ok(c) = ud.take::<crate::elements::Border>() {
 		Some(Box::new(c))
 	} else if let Ok(c) = ud.take::<crate::elements::Gauge>() {
@@ -67,9 +69,10 @@ impl<'lua> IntoLua<'lua> for ValueSendable {
 			ValueSendable::Number(n) => Ok(Value::Number(n)),
 			ValueSendable::String(s) => Ok(Value::String(lua.create_string(s)?)),
 			ValueSendable::Table(t) => {
-				let table = lua.create_table()?;
+				let seq_len = t.keys().filter(|&k| !k.is_numeric()).count();
+				let table = lua.create_table_with_capacity(seq_len, t.len() - seq_len)?;
 				for (k, v) in t {
-					table.raw_set(k.into_lua(lua)?, v.into_lua(lua)?)?;
+					table.raw_set(k, v)?;
 				}
 				Ok(Value::Table(table))
 			}
@@ -111,6 +114,11 @@ pub enum ValueSendableKey {
 	Integer(i64),
 	Number(OrderedFloat),
 	String(Vec<u8>),
+}
+
+impl ValueSendableKey {
+	#[inline]
+	fn is_numeric(&self) -> bool { matches!(self, Self::Integer(_) | Self::Number(_)) }
 }
 
 impl TryInto<ValueSendableKey> for ValueSendable {

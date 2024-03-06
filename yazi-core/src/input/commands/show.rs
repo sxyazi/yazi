@@ -1,4 +1,4 @@
-use yazi_proxy::InputOpt;
+use yazi_proxy::options::InputOpt;
 use yazi_shared::render;
 
 use crate::input::Input;

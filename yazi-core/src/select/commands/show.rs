@@ -1,4 +1,4 @@
-use yazi_proxy::SelectOpt;
+use yazi_proxy::options::SelectOpt;
 use yazi_shared::render;
 
 use crate::select::Select;

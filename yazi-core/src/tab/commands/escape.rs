@@ -112,7 +112,7 @@ impl Tab {
 		if !select {
 			self.selected.remove_many(&urls, same);
 		} else if self.selected.add_many(&urls, same) != urls.len() {
-			AppProxy::warn(
+			AppProxy::notify_warn(
 				"Escape visual mode",
 				"Some files cannot be selected, due to path nesting conflict.",
 			);

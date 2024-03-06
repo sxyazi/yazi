@@ -1,6 +1,6 @@
 use std::process::Stdio;
 
-use mlua::{AnyUserData, IntoLua, Lua, Table, UserData, Value};
+use mlua::{AnyUserData, IntoLuaMulti, Lua, Table, UserData, Value};
 
 use super::{output::Output, Child};
 
@@ -23,9 +23,9 @@ impl Command {
 
 		let command = lua.create_table_from([
 			// Stdio
-			("NULL", NULL.into_lua(lua)?),
-			("PIPED", PIPED.into_lua(lua)?),
-			("INHERIT", INHERIT.into_lua(lua)?),
+			("NULL", NULL),
+			("PIPED", PIPED),
+			("INHERIT", INHERIT),
 		])?;
 
 		command.set_metatable(Some(lua.create_table_from([("__call", new)])?));
@@ -47,6 +47,10 @@ impl UserData for Command {
 					me.inner.arg(arg.to_string_lossy().as_ref());
 				}
 			}
+			Ok(ud)
+		});
+		methods.add_function("cwd", |_, (ud, dir): (AnyUserData, mlua::String)| {
+			ud.borrow_mut::<Self>()?.inner.current_dir(dir.to_str()?);
 			Ok(ud)
 		});
 		methods.add_function(
@@ -82,17 +86,15 @@ impl UserData for Command {
 			});
 			Ok(ud)
 		});
-		methods.add_method_mut("spawn", |lua, me, ()| {
-			Ok(match me.inner.spawn() {
-				Ok(child) => (Child::new(child).into_lua(lua)?, Value::Nil),
-				Err(e) => (Value::Nil, e.raw_os_error().into_lua(lua)?),
-			})
+		methods.add_method_mut("spawn", |lua, me, ()| match me.inner.spawn() {
+			Ok(child) => (Child::new(child), Value::Nil).into_lua_multi(lua),
+			Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(lua),
 		});
 		methods.add_async_method_mut("output", |lua, me, ()| async move {
-			Ok(match me.inner.output().await {
-				Ok(output) => (Output::new(output).into_lua(lua)?, Value::Nil),
-				Err(e) => (Value::Nil, e.raw_os_error().into_lua(lua)?),
-			})
+			match me.inner.output().await {
+				Ok(output) => (Output::new(output), Value::Nil).into_lua_multi(lua),
+				Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(lua),
+			}
 		});
 	}
 }

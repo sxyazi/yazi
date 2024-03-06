@@ -1,5 +1,9 @@
+use std::time::Duration;
+
 use tokio::sync::oneshot;
 use yazi_shared::{emit, event::Cmd, Layer};
+
+use crate::options::{NotifyLevel, NotifyOpt};
 
 pub struct AppProxy;
 
@@ -16,14 +20,19 @@ impl AppProxy {
 		emit!(Call(Cmd::new("resume"), Layer::App));
 	}
 
+	pub fn notify(opt: NotifyOpt) {
+		emit!(Call(Cmd::new("notify").with_data(opt), Layer::App));
+	}
+
 	#[inline]
-	pub fn warn(title: &str, content: &str) {
+	pub fn notify_warn(title: &str, content: &str) {
 		emit!(Call(
-			Cmd::new("notify")
-				.with("title", title)
-				.with("content", content)
-				.with("level", "warn")
-				.with("timeout", 5),
+			Cmd::new("notify").with_data(NotifyOpt {
+				title:   title.to_owned(),
+				content: content.to_owned(),
+				level:   NotifyLevel::Warn,
+				timeout: Duration::from_secs(5),
+			}),
 			Layer::App
 		));
 	}

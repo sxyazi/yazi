@@ -12,6 +12,7 @@ pub fn pour(lua: &Lua) -> mlua::Result<()> {
 	// Install
 	super::Bar::install(lua, &ui)?;
 	super::Border::install(lua, &ui)?;
+	super::Clear::install(lua, &ui)?;
 	super::Constraint::install(lua, &ui)?;
 	super::Gauge::install(lua, &ui)?;
 	super::Layout::install(lua, &ui)?;
