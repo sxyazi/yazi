@@ -21,6 +21,30 @@ function Folder:linemode(area, files)
 			spans[#spans + 1] = ui.Span(time and os.date("%y-%m-%d %H:%M", time // 1) or "")
 		elseif mode == "permissions" then
 			spans[#spans + 1] = ui.Span(f.cha:permissions() or "")
+		elseif mode == "mixin" then
+			local size = f:size()
+
+			if f.cha.is_link then
+				if f.cha.is_socket then
+					spans[#spans + 1] = ui.Span("->sock")
+				elseif f.cha.fifo then
+					spans[#spans + 1] = ui.Span("->fifo")
+				elseif f.cha.is_block_device or f.cha.is_char_device then
+					spans[#spans + 1] = ui.Span("->dev")
+				else
+					spans[#spans + 1] = ui.Span("-> " .. (size and ya.readable_size(size)) or "")
+				end
+			elseif f.cha.is_orphan then
+				spans[#spans + 1] = ui.Span("death link")
+			elseif f.cha.is_socket then
+				spans[#spans + 1] = ui.Span("sock")
+			elseif f.cha.is_fifo then
+				spans[#spans + 1] = ui.Span("fifo")
+			elseif f.cha.is_block_device or f.cha.is_char_device then
+				spans[#spans + 1] = ui.Span("dev")
+			else
+				spans[#spans + 1] = ui.Span(size and ya.readable_size(size) or "")
+			end
 		end
 
 		spans[#spans + 1] = ui.Span(" ")
