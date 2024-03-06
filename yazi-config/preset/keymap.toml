@@ -276,6 +276,9 @@ keymap = [
 	{ on = [ "<Up>" ],   run = "arrow -1", desc = "Move cursor up" },
 	{ on = [ "<Down>" ], run = "arrow 1",  desc = "Move cursor down" },
 
+	{ on = [ "<C-p>" ], run = "arrow -1", desc = "Move cursor up" },
+	{ on = [ "<C-n>" ], run = "arrow 1",  desc = "Move cursor down" },
+
 	{ on = [ "~" ], run = "help", desc = "Open help" }
 ]
 
