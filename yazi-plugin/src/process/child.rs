@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use mlua::{IntoLua, Table, UserData, Value};
+use mlua::{IntoLuaMulti, Table, UserData, Value};
 use tokio::{io::{AsyncBufReadExt, AsyncReadExt, BufReader}, process::{ChildStderr, ChildStdin, ChildStdout}, select};
 
 use super::Status;
@@ -68,16 +68,14 @@ impl UserData for Child {
 			}
 		});
 		methods.add_async_method_mut("wait", |lua, me, ()| async move {
-			Ok(match me.inner.wait().await {
-				Ok(status) => (Status::new(status).into_lua(lua)?, Value::Nil),
-				Err(e) => (Value::Nil, e.raw_os_error().into_lua(lua)?),
-			})
+			match me.inner.wait().await {
+				Ok(status) => (Status::new(status), Value::Nil).into_lua_multi(lua),
+				Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(lua),
+			}
 		});
-		methods.add_method_mut("start_kill", |lua, me, ()| {
-			Ok(match me.inner.start_kill() {
-				Ok(_) => (true, Value::Nil),
-				Err(e) => (false, e.raw_os_error().into_lua(lua)?),
-			})
+		methods.add_method_mut("start_kill", |lua, me, ()| match me.inner.start_kill() {
+			Ok(_) => (true, Value::Nil).into_lua_multi(lua),
+			Err(e) => (false, e.raw_os_error()).into_lua_multi(lua),
 		});
 	}
 }

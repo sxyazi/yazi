@@ -22,7 +22,6 @@ mod select;
 mod signals;
 mod tasks;
 mod which;
-mod widgets;
 
 use context::*;
 use executor::*;

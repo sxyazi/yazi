@@ -1,6 +1,6 @@
 use std::{collections::{btree_set, BTreeSet}, ops::Deref};
 
-use mlua::{AnyUserData, Lua, MetaMethod, UserDataMethods, UserDataRefMut};
+use mlua::{AnyUserData, IntoLuaMulti, Lua, MetaMethod, UserDataMethods, UserDataRefMut};
 use yazi_plugin::{bindings::Cast, url::Url};
 
 use super::SCOPE;
@@ -28,7 +28,12 @@ impl Selected {
 
 			reg.add_meta_method(MetaMethod::Pairs, |lua, me, ()| {
 				let iter = lua.create_function(|lua, mut iter: UserDataRefMut<SelectedIter>| {
-					Ok(if let Some(url) = iter.0.next() { Some(Url::cast(lua, url.clone())?) } else { None })
+					if let Some(url) = iter.inner.next() {
+						iter.next += 1;
+						(iter.next, Url::cast(lua, url.clone())?).into_lua_multi(lua)
+					} else {
+						().into_lua_multi(lua)
+					}
 				})?;
 
 				Ok((iter, SelectedIter::make(me.inner())))
@@ -42,11 +47,14 @@ impl Selected {
 	fn inner(&self) -> &'static BTreeSet<yazi_shared::fs::Url> { unsafe { &*self.inner } }
 }
 
-struct SelectedIter(btree_set::Iter<'static, yazi_shared::fs::Url>);
+struct SelectedIter {
+	next:  usize,
+	inner: btree_set::Iter<'static, yazi_shared::fs::Url>,
+}
 
 impl SelectedIter {
 	#[inline]
 	fn make(selected: &'static BTreeSet<yazi_shared::fs::Url>) -> mlua::Result<AnyUserData<'static>> {
-		SCOPE.create_any_userdata(Self(selected.iter()))
+		SCOPE.create_any_userdata(Self { next: 0, inner: selected.iter() })
 	}
 }

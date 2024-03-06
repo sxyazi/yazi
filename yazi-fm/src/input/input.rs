@@ -8,7 +8,7 @@ use yazi_core::input::InputMode;
 use yazi_plugin::external::Highlighter;
 use yazi_shared::term::Term;
 
-use crate::{widgets, Ctx};
+use crate::Ctx;
 
 pub(crate) struct Input<'a> {
 	cx: &'a Ctx,
@@ -37,7 +37,7 @@ impl<'a> Widget for Input<'a> {
 		let input = &self.cx.input;
 		let area = self.cx.area(&input.position);
 
-		widgets::Clear.render(area, buf);
+		yazi_plugin::elements::Clear::default().render(area, buf);
 		Paragraph::new(self.highlighted_value().unwrap_or_else(|_| Line::from(input.value())))
 			.block(
 				Block::bordered()

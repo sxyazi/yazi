@@ -1,8 +1,9 @@
 use std::sync::atomic::Ordering;
 
 use ratatui::{backend::{Backend, CrosstermBackend}, CompletedFrame};
+use yazi_plugin::elements::COLLISION;
 
-use crate::{app::App, lives::Lives, root::{Root, COLLISION}};
+use crate::{app::App, lives::Lives, root::Root};
 
 impl App {
 	pub(crate) fn render(&mut self) {
