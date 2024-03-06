@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, ExternalError, IntoLua, Lua, Table, UserData, Value};
+use mlua::{AnyUserData, ExternalError, Lua, Table, UserData, Value};
 use ratatui::widgets::{Borders, Widget};
 
 use super::{RectRef, Renderable, Style};
@@ -32,19 +32,19 @@ impl Border {
 
 		let border = lua.create_table_from([
 			// Position
-			("NONE", Borders::NONE.bits().into_lua(lua)?),
-			("TOP", Borders::TOP.bits().into_lua(lua)?),
-			("RIGHT", Borders::RIGHT.bits().into_lua(lua)?),
-			("BOTTOM", Borders::BOTTOM.bits().into_lua(lua)?),
-			("LEFT", Borders::LEFT.bits().into_lua(lua)?),
-			("ALL", Borders::ALL.bits().into_lua(lua)?),
+			("NONE", Borders::NONE.bits()),
+			("TOP", Borders::TOP.bits()),
+			("RIGHT", Borders::RIGHT.bits()),
+			("BOTTOM", Borders::BOTTOM.bits()),
+			("LEFT", Borders::LEFT.bits()),
+			("ALL", Borders::ALL.bits()),
 			// Type
-			("PLAIN", PLAIN.into_lua(lua)?),
-			("ROUNDED", ROUNDED.into_lua(lua)?),
-			("DOUBLE", DOUBLE.into_lua(lua)?),
-			("THICK", THICK.into_lua(lua)?),
-			("QUADRANT_INSIDE", QUADRANT_INSIDE.into_lua(lua)?),
-			("QUADRANT_OUTSIDE", QUADRANT_OUTSIDE.into_lua(lua)?),
+			("PLAIN", PLAIN),
+			("ROUNDED", ROUNDED),
+			("DOUBLE", DOUBLE),
+			("THICK", THICK),
+			("QUADRANT_INSIDE", QUADRANT_INSIDE),
+			("QUADRANT_OUTSIDE", QUADRANT_OUTSIDE),
 		])?;
 
 		border.set_metatable(Some(lua.create_table_from([("__call", new)])?));

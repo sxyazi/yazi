@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, ExternalError, IntoLua, Lua, Table, UserData, Value};
+use mlua::{AnyUserData, ExternalError, Lua, Table, UserData, Value};
 use ratatui::widgets::Borders;
 
 use super::{RectRef, Renderable, Style};
@@ -26,12 +26,12 @@ impl Bar {
 
 		let bar = lua.create_table_from([
 			// Direction
-			("NONE", Borders::NONE.bits().into_lua(lua)?),
-			("TOP", Borders::TOP.bits().into_lua(lua)?),
-			("RIGHT", Borders::RIGHT.bits().into_lua(lua)?),
-			("BOTTOM", Borders::BOTTOM.bits().into_lua(lua)?),
-			("LEFT", Borders::LEFT.bits().into_lua(lua)?),
-			("ALL", Borders::ALL.bits().into_lua(lua)?),
+			("NONE", Borders::NONE.bits()),
+			("TOP", Borders::TOP.bits()),
+			("RIGHT", Borders::RIGHT.bits()),
+			("BOTTOM", Borders::BOTTOM.bits()),
+			("LEFT", Borders::LEFT.bits()),
+			("ALL", Borders::ALL.bits()),
 		])?;
 
 		bar.set_metatable(Some(lua.create_table_from([("__call", new)])?));
