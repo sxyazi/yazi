@@ -169,10 +169,9 @@ icon_error = ""
 [filetype]
 
 rules = [
-	# Images
-	{ mime = "image/*", fg = "cyan" },
 
-	# Videos
+	# Media
+	{ mime = "image/*", fg = "yellow" },
 	{ mime = "video/*", fg = "yellow" },
 	{ mime = "audio/*", fg = "yellow" },
 
@@ -191,6 +190,13 @@ rules = [
 	{ mime = "application/pdf",   fg = "green" },
 	{ mime = "application/rtf",   fg = "green" },
 	{ mime = "application/vnd.*", fg = "green" },
+	
+	# Unix File
+	{ mime = "inode/symlink",     fg = "cyan" },
+	{ mime = "inode/socket",      fg = "cyan" },
+	{ mime = "inode/fifo",        fg = "cyan" },
+	{ mime = "inode/chardevice",  fg = "cyan" },
+	{ mime = "inode/blockdevice", fg = "cyan" },
 
 	# Fallback
 	# { name = "*", fg = "white" },
