@@ -1,4 +1,4 @@
-use std::{collections::{BTreeMap, BTreeSet}, sync::Arc, time::{Duration, SystemTime}};
+use std::{collections::{HashMap, HashSet}, sync::Arc, time::{Duration, SystemTime}};
 
 use anyhow::Result;
 use notify::{event::{MetadataKind, ModifyKind}, EventKind, RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
@@ -14,7 +14,7 @@ use crate::folder::{Files, Folder};
 
 pub struct Watcher {
 	watcher:    RecommendedWatcher,
-	watched:    Arc<RwLock<BTreeSet<Url>>>,
+	watched:    Arc<RwLock<HashSet<Url>>>,
 	pub linked: Arc<RwLock<Linked>>,
 }
 
@@ -60,11 +60,11 @@ impl Watcher {
 		instance
 	}
 
-	pub(super) fn watch(&mut self, mut new: BTreeSet<&Url>) {
+	pub(super) fn watch(&mut self, mut new: HashSet<&Url>) {
 		new.retain(|&u| u.is_regular());
-		let (to_unwatch, to_watch): (BTreeSet<_>, BTreeSet<_>) = {
+		let (to_unwatch, to_watch): (HashSet<_>, HashSet<_>) = {
 			let guard = self.watched.read();
-			let old: BTreeSet<_> = guard.iter().collect();
+			let old: HashSet<_> = guard.iter().collect();
 			(
 				old.difference(&new).map(|&x| x.clone()).collect(),
 				new.difference(&old).map(|&x| x.clone()).collect(),
@@ -147,7 +147,7 @@ impl Watcher {
 		pin!(rx);
 
 		while let Some(urls) = rx.next().await {
-			let urls: BTreeSet<_> = urls.into_iter().collect();
+			let urls: HashSet<_> = urls.into_iter().collect();
 			let mut reload = Vec::with_capacity(urls.len());
 
 			for u in urls {
@@ -163,7 +163,7 @@ impl Watcher {
 				if !file.is_dir() {
 					reload.push(file.clone());
 				}
-				FilesOp::Upserting(parent, BTreeMap::from_iter([(u, file)])).emit();
+				FilesOp::Upserting(parent, HashMap::from_iter([(u, file)])).emit();
 			}
 
 			if reload.is_empty() {

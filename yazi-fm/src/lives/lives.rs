@@ -45,7 +45,7 @@ impl Lives {
 					("active", super::Tab::make(cx.manager.active())?),
 					("tabs", super::Tabs::make(&cx.manager.tabs)?),
 					("tasks", super::Tasks::make(&cx.tasks)?),
-					("yanked", scope.create_any_userdata_ref(&cx.manager.yanked)?),
+					("yanked", super::Yanked::make(&cx.manager.yanked)?),
 				])?,
 			)?;
 

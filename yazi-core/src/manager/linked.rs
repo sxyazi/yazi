@@ -1,12 +1,12 @@
-use std::{collections::BTreeMap, ops::{Deref, DerefMut}};
+use std::{collections::HashMap, ops::{Deref, DerefMut}};
 
 use yazi_shared::fs::Url;
 
 #[derive(Default)]
-pub struct Linked(BTreeMap<Url, Url> /* from ==> to */);
+pub struct Linked(HashMap<Url, Url> /* from ==> to */);
 
 impl Deref for Linked {
-	type Target = BTreeMap<Url, Url>;
+	type Target = HashMap<Url, Url>;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }

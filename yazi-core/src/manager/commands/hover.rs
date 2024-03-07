@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::collections::HashSet;
 
 use yazi_shared::{event::Cmd, fs::Url, render};
 
@@ -31,7 +31,7 @@ impl Manager {
 		self.peek(false);
 
 		// Refresh watcher
-		let mut to_watch = BTreeSet::new();
+		let mut to_watch = HashSet::with_capacity(3 * self.tabs.len());
 		for tab in self.tabs.iter() {
 			to_watch.insert(&tab.current.cwd);
 			if let Some(ref p) = tab.parent {

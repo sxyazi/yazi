@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 
 use anyhow::Result;
 use yazi_shared::fs::Url;
@@ -7,7 +7,7 @@ use crate::folder::{Files, Filter, FilterCase};
 
 pub struct Finder {
 	pub filter: Filter,
-	matched:    BTreeMap<Url, u8>,
+	matched:    HashMap<Url, u8>,
 	revision:   u64,
 }
 
@@ -63,7 +63,7 @@ impl Finder {
 
 impl Finder {
 	#[inline]
-	pub fn matched(&self) -> &BTreeMap<Url, u8> { &self.matched }
+	pub fn matched(&self) -> &HashMap<Url, u8> { &self.matched }
 
 	#[inline]
 	pub fn matched_idx(&self, url: &Url) -> Option<u8> { self.matched.get(url).copied() }
