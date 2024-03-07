@@ -29,13 +29,13 @@ impl Tasks {
 			summaries: Default::default(),
 		};
 
-		let running = tasks.scheduler.running.clone();
+		let ongoing = tasks.scheduler.ongoing.clone();
 		tokio::spawn(async move {
 			let mut last = TasksProgress::default();
 			loop {
 				sleep(Duration::from_millis(500)).await;
 
-				let new = TasksProgress::from(&*running.lock());
+				let new = TasksProgress::from(&*ongoing.lock());
 				if last != new {
 					last = new;
 					emit!(Call(Cmd::new("update_progress").with_data(new), Layer::App));
@@ -52,8 +52,8 @@ impl Tasks {
 	}
 
 	pub fn paginate(&self) -> Vec<TaskSummary> {
-		let running = self.scheduler.running.lock();
-		running.values().take(Self::limit()).map(Into::into).collect()
+		let ongoing = self.scheduler.ongoing.lock();
+		ongoing.values().take(Self::limit()).map(Into::into).collect()
 	}
 
 	pub fn file_open(&self, hovered: &Url, targets: &[(Url, String)]) {
@@ -219,5 +219,5 @@ impl Tasks {
 
 impl Tasks {
 	#[inline]
-	pub fn len(&self) -> usize { self.scheduler.running.lock().len() }
+	pub fn len(&self) -> usize { self.scheduler.ongoing.lock().len() }
 }

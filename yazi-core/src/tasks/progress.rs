@@ -1,5 +1,5 @@
 use serde::Serialize;
-use yazi_scheduler::Running;
+use yazi_scheduler::Ongoing;
 
 #[derive(Clone, Copy, Default, Eq, PartialEq, Serialize)]
 pub struct TasksProgress {
@@ -11,14 +11,14 @@ pub struct TasksProgress {
 	pub processed: u64,
 }
 
-impl From<&Running> for TasksProgress {
-	fn from(running: &Running) -> Self {
+impl From<&Ongoing> for TasksProgress {
+	fn from(ongoing: &Ongoing) -> Self {
 		let mut progress = Self::default();
-		if running.is_empty() {
+		if ongoing.is_empty() {
 			return progress;
 		}
 
-		for task in running.values() {
+		for task in ongoing.values() {
 			progress.total += task.total;
 			progress.succ += task.succ;
 			progress.fail += task.fail;

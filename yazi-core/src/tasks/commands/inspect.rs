@@ -3,25 +3,25 @@ use std::io::{stdout, Write};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use tokio::{io::{stdin, AsyncReadExt}, select, sync::mpsc, time};
 use yazi_proxy::AppProxy;
-use yazi_scheduler::BLOCKER;
+use yazi_scheduler::HIDER;
 use yazi_shared::{event::Cmd, term::Term, Defer};
 
 use crate::tasks::Tasks;
 
 impl Tasks {
 	pub fn inspect(&self, _: Cmd) {
-		let Some(id) = self.scheduler.running.lock().get_id(self.cursor) else {
+		let Some(id) = self.scheduler.ongoing.lock().get_id(self.cursor) else {
 			return;
 		};
 
 		let scheduler = self.scheduler.clone();
 		tokio::spawn(async move {
-			let _guard = BLOCKER.acquire().await.unwrap();
+			let _permit = HIDER.acquire().await.unwrap();
 			let (tx, mut rx) = mpsc::unbounded_channel();
 
 			let buffered = {
-				let mut running = scheduler.running.lock();
-				let Some(task) = running.get_mut(id) else { return };
+				let mut ongoing = scheduler.ongoing.lock();
+				let Some(task) = ongoing.get_mut(id) else { return };
 
 				task.logger = Some(tx);
 				task.logs.clone()
@@ -47,7 +47,7 @@ impl Tasks {
 						stdout.write_all(b"\r\n").ok();
 					}
 					_ = time::sleep(time::Duration::from_millis(500)) => {
-						if scheduler.running.lock().get(id).is_none() {
+						if scheduler.ongoing.lock().get(id).is_none() {
 							stdout().write_all(b"Task finished, press `q` to quit\r\n").ok();
 							break;
 						}
@@ -61,7 +61,7 @@ impl Tasks {
 				}
 			}
 
-			if let Some(task) = scheduler.running.lock().get_mut(id) {
+			if let Some(task) = scheduler.ongoing.lock().get_mut(id) {
 				task.logger = None;
 			}
 			while answer != b'q' {

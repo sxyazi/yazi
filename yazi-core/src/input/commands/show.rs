@@ -5,9 +5,7 @@ use crate::input::Input;
 
 impl Input {
 	pub fn show(&mut self, opt: impl TryInto<InputOpt>) {
-		let Ok(opt) = opt.try_into() else {
-			return;
-		};
+		let Ok(opt) = opt.try_into() else { return };
 
 		self.close(false);
 		self.visible = true;

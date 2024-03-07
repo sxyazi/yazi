@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet}, ops::Deref};
 
-use yazi_shared::fs::Url;
+use yazi_shared::fs::{FilesOp, Url};
 
 #[derive(Default)]
 pub struct Selected {
@@ -100,6 +100,23 @@ impl Selected {
 	pub fn clear(&mut self) {
 		self.inner.clear();
 		self.parents.clear();
+	}
+
+	pub fn apply_op(&mut self, op: &FilesOp) {
+		let (removal, addition) = match op {
+			FilesOp::Deleting(_, urls) => (urls.iter().collect(), vec![]),
+			FilesOp::Updating(_, urls) | FilesOp::Upserting(_, urls) => {
+				urls.iter().filter(|(u, _)| self.contains(u)).map(|(u, f)| (u, &f.url)).unzip()
+			}
+			_ => (vec![], vec![]),
+		};
+
+		if !removal.is_empty() {
+			self.remove_many(&removal, !op.url().is_search());
+		}
+		if !addition.is_empty() {
+			self.add_many(&addition, !op.url().is_search());
+		}
 	}
 }
 

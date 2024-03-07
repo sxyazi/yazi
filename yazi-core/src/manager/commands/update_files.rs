@@ -16,8 +16,34 @@ impl TryFrom<Cmd> for Opt {
 }
 
 impl Manager {
+	pub fn update_files(&mut self, opt: impl TryInto<Opt>, tasks: &Tasks) {
+		let Ok(opt) = opt.try_into() else {
+			return;
+		};
+
+		let mut ops = vec![opt.op];
+		for u in self.watcher.linked.read().from_dir(ops[0].url()) {
+			ops.push(ops[0].chroot(u));
+		}
+
+		for op in ops {
+			let idx = self.tabs.idx;
+			self.yanked.apply_op(&op);
+
+			for (_, tab) in self.tabs.iter_mut().enumerate().filter(|(i, _)| *i != idx) {
+				Self::update_tab(tab, Cow::Borrowed(&op), tasks);
+			}
+
+			Self::update_tab(self.active_mut(), Cow::Owned(op), tasks);
+		}
+
+		self.active_mut().apply_files_attrs();
+	}
+
 	fn update_tab(tab: &mut Tab, op: Cow<FilesOp>, tasks: &Tasks) {
 		let url = op.url();
+		tab.selected.apply_op(&op);
+
 		if tab.current.cwd == *url {
 			Self::update_current(tab, op, tasks);
 		} else if matches!(&tab.parent, Some(p) if p.cwd == *url) {
@@ -91,27 +117,5 @@ impl Manager {
 		if leave {
 			tab.leave(());
 		}
-	}
-
-	pub fn update_files(&mut self, opt: impl TryInto<Opt>, tasks: &Tasks) {
-		let Ok(opt) = opt.try_into() else {
-			return;
-		};
-
-		let mut ops = vec![opt.op];
-		for u in self.watcher.linked.read().from_dir(ops[0].url()) {
-			ops.push(ops[0].chroot(u));
-		}
-
-		for op in ops {
-			let idx = self.tabs.idx;
-			for (_, tab) in self.tabs.iter_mut().enumerate().filter(|(i, _)| *i != idx) {
-				Self::update_tab(tab, Cow::Borrowed(&op), tasks);
-			}
-
-			Self::update_tab(self.active_mut(), Cow::Owned(op), tasks);
-		}
-
-		self.active_mut().apply_files_attrs();
 	}
 }

@@ -1,6 +1,6 @@
 use yazi_plugin::external::{self, FzfOpt, ZoxideOpt};
 use yazi_proxy::{AppProxy, TabProxy};
-use yazi_scheduler::BLOCKER;
+use yazi_scheduler::HIDER;
 use yazi_shared::{event::Cmd, fs::ends_with_slash, Defer};
 
 use crate::tab::Tab;
@@ -37,7 +37,7 @@ impl Tab {
 
 		let cwd = self.current.cwd.clone();
 		tokio::spawn(async move {
-			let _guard = BLOCKER.acquire().await.unwrap();
+			let _permit = HIDER.acquire().await.unwrap();
 			let _defer = Defer::new(AppProxy::resume);
 			AppProxy::stop().await;
 

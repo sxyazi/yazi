@@ -40,9 +40,7 @@ impl Completion {
 			let mut dir = fs::read_dir(&parent).await?;
 			let mut cache = vec![];
 			while let Ok(Some(f)) = dir.next_entry().await {
-				let Ok(meta) = f.metadata().await else {
-					continue;
-				};
+				let Ok(meta) = f.metadata().await else { continue };
 
 				cache.push(format!(
 					"{}{}",
