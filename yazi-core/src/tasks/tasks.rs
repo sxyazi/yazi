@@ -1,4 +1,4 @@
-use std::{collections::{BTreeMap, HashMap, HashSet}, ffi::OsStr, mem, sync::Arc, time::Duration};
+use std::{collections::{HashMap, HashSet}, ffi::OsStr, mem, sync::Arc, time::Duration};
 
 use tokio::time::sleep;
 use tracing::debug;
@@ -57,7 +57,7 @@ impl Tasks {
 	}
 
 	pub fn file_open(&self, hovered: &Url, targets: &[(Url, String)]) {
-		let mut openers = BTreeMap::new();
+		let mut openers = HashMap::new();
 		for (url, mime) in targets {
 			if let Some(opener) = OPEN.openers(url, mime).and_then(|o| o.first().copied()) {
 				openers.entry(opener).or_insert_with(|| vec![hovered]).push(url);

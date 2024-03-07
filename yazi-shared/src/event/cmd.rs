@@ -1,10 +1,10 @@
-use std::{any::Any, collections::BTreeMap, fmt::{self, Display}, mem};
+use std::{any::Any, collections::HashMap, fmt::{self, Display}, mem};
 
 #[derive(Debug, Default)]
 pub struct Cmd {
 	pub name:  String,
 	pub args:  Vec<String>,
-	pub named: BTreeMap<String, String>,
+	pub named: HashMap<String, String>,
 	pub data:  Option<Box<dyn Any + Send>>,
 }
 

@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 
 use futures::future::BoxFuture;
 use yazi_config::TASKS;
@@ -10,9 +10,8 @@ use crate::TaskKind;
 pub struct Running {
 	incr: usize,
 
-	pub(super) hooks:
-		BTreeMap<usize, Box<dyn (FnOnce(bool) -> BoxFuture<'static, ()>) + Send + Sync>>,
-	pub(super) all:   BTreeMap<usize, Task>,
+	pub(super) hooks: HashMap<usize, Box<dyn (FnOnce(bool) -> BoxFuture<'static, ()>) + Send + Sync>>,
+	pub(super) all:   HashMap<usize, Task>,
 }
 
 impl Running {

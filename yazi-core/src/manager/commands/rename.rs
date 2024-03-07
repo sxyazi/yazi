@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, ffi::{OsStr, OsString}, io::{stdout, BufWriter, Write}, path::PathBuf};
+use std::{collections::HashMap, ffi::{OsStr, OsString}, io::{stdout, BufWriter, Write}, path::PathBuf};
 
 use anyhow::{anyhow, bail, Result};
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
@@ -49,7 +49,7 @@ impl Manager {
 
 		let file = File::from(new.clone()).await?;
 		FilesOp::Deleting(file.parent().unwrap(), vec![new.clone()]).emit();
-		FilesOp::Upserting(file.parent().unwrap(), BTreeMap::from_iter([(old, file)])).emit();
+		FilesOp::Upserting(file.parent().unwrap(), HashMap::from_iter([(old, file)])).emit();
 		Ok(ManagerProxy::hover(Some(new)))
 	}
 

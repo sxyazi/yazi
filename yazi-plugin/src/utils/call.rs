@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 
 use mlua::{ExternalError, Lua, Table, Value};
 use yazi_shared::{emit, event::Cmd, render, Layer};
@@ -7,9 +7,9 @@ use super::Utils;
 use crate::ValueSendable;
 
 impl Utils {
-	fn parse_args(t: Table) -> mlua::Result<(Vec<String>, BTreeMap<String, String>)> {
+	fn parse_args(t: Table) -> mlua::Result<(Vec<String>, HashMap<String, String>)> {
 		let mut args = vec![];
-		let mut named = BTreeMap::new();
+		let mut named = HashMap::new();
 		for result in t.pairs::<Value, Value>() {
 			let (k, v) = result?;
 			match k {
