@@ -2,12 +2,12 @@ use mlua::AnyUserData;
 
 use super::SCOPE;
 
-pub(super) struct Iter<I: Iterator<Item = T>, T: 'static> {
+pub(super) struct Iter<I: Iterator<Item = T>, T> {
 	inner: I,
 	count: usize,
 }
 
-impl<I: Iterator<Item = T> + 'static, T> Iter<I, T> {
+impl<I: Iterator<Item = T> + 'static, T: 'static> Iter<I, T> {
 	#[inline]
 	pub(super) fn make(inner: I) -> mlua::Result<AnyUserData<'static>> {
 		SCOPE.create_any_userdata(Self { inner, count: 0 })
