@@ -1,3 +1,4 @@
+mod bulk_rename;
 mod close;
 mod create;
 mod hover;

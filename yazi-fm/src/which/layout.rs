@@ -39,7 +39,7 @@ impl Widget for Which<'_> {
 		let chunks = {
 			use Constraint::*;
 			layout::Layout::horizontal(match cols {
-				1 => &[Ratio(1, 1)] as &[Constraint],
+				1 => &[Ratio(1, 1)][..],
 				2 => &[Ratio(1, 2), Ratio(1, 2)],
 				_ => &[Ratio(1, 3), Ratio(1, 3), Ratio(1, 3)],
 			})

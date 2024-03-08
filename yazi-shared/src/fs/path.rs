@@ -1,7 +1,6 @@
 use std::{borrow::Cow, env, ffi::OsString, path::{Component, Path, PathBuf, MAIN_SEPARATOR}};
 
-use tokio::fs;
-
+use super::accessible;
 use crate::fs::Url;
 
 #[inline]
@@ -68,7 +67,7 @@ pub async fn unique_path(mut p: Url) -> Url {
 		.unwrap_or_default();
 
 	let mut i = 0;
-	while fs::symlink_metadata(&p).await.is_ok() {
+	while accessible(&p).await {
 		i += 1;
 
 		let mut name = OsString::with_capacity(stem.len() + ext.len() + 5);

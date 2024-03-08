@@ -36,9 +36,7 @@ impl Tab {
 
 			while let Some(result) = rx.next().await {
 				let done = result.is_ok();
-				let (Ok(s) | Err(InputError::Typed(s))) = result else {
-					continue;
-				};
+				let (Ok(s) | Err(InputError::Typed(s))) = result else { continue };
 
 				emit!(Call(
 					Cmd::args("filter_do", vec![s])

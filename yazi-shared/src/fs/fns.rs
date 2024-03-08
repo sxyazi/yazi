@@ -3,27 +3,26 @@ use std::{collections::VecDeque, path::{Path, PathBuf}};
 use anyhow::Result;
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
 
+pub async fn accessible(path: &Path) -> bool {
+	match fs::symlink_metadata(path).await {
+		Ok(_) => true,
+		Err(e) => e.kind() != io::ErrorKind::NotFound,
+	}
+}
+
 pub async fn calculate_size(path: &Path) -> u64 {
 	let mut total = 0;
 	let mut stack = VecDeque::from([path.to_path_buf()]);
 	while let Some(path) = stack.pop_front() {
-		let Ok(meta) = fs::symlink_metadata(&path).await else {
-			continue;
-		};
-
+		let Ok(meta) = fs::symlink_metadata(&path).await else { continue };
 		if !meta.is_dir() {
 			total += meta.len();
 			continue;
 		}
 
-		let Ok(mut it) = fs::read_dir(path).await else {
-			continue;
-		};
-
+		let Ok(mut it) = fs::read_dir(path).await else { continue };
 		while let Ok(Some(entry)) = it.next_entry().await {
-			let Ok(meta) = entry.metadata().await else {
-				continue;
-			};
+			let Ok(meta) = entry.metadata().await else { continue };
 
 			if meta.is_dir() {
 				stack.push_back(entry.path());

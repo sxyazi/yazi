@@ -5,7 +5,7 @@ use yazi_proxy::AppProxy;
 use yazi_shared::Defer;
 
 use super::ProcessOpOpen;
-use crate::{TaskProg, BLOCKER};
+use crate::{TaskProg, HIDER};
 
 pub struct Process {
 	prog: mpsc::UnboundedSender<TaskProg>,
@@ -63,7 +63,7 @@ impl Process {
 	}
 
 	async fn open_block(&self, task: ProcessOpOpen) -> Result<()> {
-		let _guard = BLOCKER.acquire().await.unwrap();
+		let _permit = HIDER.acquire().await.unwrap();
 		let _defer = Defer::new(AppProxy::resume);
 		AppProxy::stop().await;
 

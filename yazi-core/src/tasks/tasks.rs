@@ -29,13 +29,13 @@ impl Tasks {
 			summaries: Default::default(),
 		};
 
-		let running = tasks.scheduler.running.clone();
+		let ongoing = tasks.scheduler.ongoing.clone();
 		tokio::spawn(async move {
 			let mut last = TasksProgress::default();
 			loop {
 				sleep(Duration::from_millis(500)).await;
 
-				let new = TasksProgress::from(&*running.lock());
+				let new = TasksProgress::from(&*ongoing.lock());
 				if last != new {
 					last = new;
 					emit!(Call(Cmd::new("update_progress").with_data(new), Layer::App));
@@ -52,8 +52,8 @@ impl Tasks {
 	}
 
 	pub fn paginate(&self) -> Vec<TaskSummary> {
-		let running = self.scheduler.running.lock();
-		running.values().take(Self::limit()).map(Into::into).collect()
+		let ongoing = self.scheduler.ongoing.lock();
+		ongoing.values().take(Self::limit()).map(Into::into).collect()
 	}
 
 	pub fn file_open(&self, hovered: &Url, targets: &[(Url, String)]) {
@@ -78,10 +78,10 @@ impl Tasks {
 		}
 	}
 
-	pub fn file_cut(&self, src: &HashSet<Url>, dest: &Url, force: bool) {
-		for u in src {
+	pub fn file_cut(&self, src: &[&Url], dest: &Url, force: bool) {
+		for &u in src {
 			let to = dest.join(u.file_name().unwrap());
-			if force && u == &to {
+			if force && *u == to {
 				debug!("file_cut: same file, skipping {:?}", to);
 			} else {
 				self.scheduler.file_cut(u.clone(), to, force);
@@ -89,10 +89,10 @@ impl Tasks {
 		}
 	}
 
-	pub fn file_copy(&self, src: &HashSet<Url>, dest: &Url, force: bool, follow: bool) {
-		for u in src {
+	pub fn file_copy(&self, src: &[&Url], dest: &Url, force: bool, follow: bool) {
+		for &u in src {
 			let to = dest.join(u.file_name().unwrap());
-			if force && u == &to {
+			if force && *u == to {
 				debug!("file_copy: same file, skipping {:?}", to);
 			} else {
 				self.scheduler.file_copy(u.clone(), to, force, follow);
@@ -219,5 +219,5 @@ impl Tasks {
 
 impl Tasks {
 	#[inline]
-	pub fn len(&self) -> usize { self.scheduler.running.lock().len() }
+	pub fn len(&self) -> usize { self.scheduler.ongoing.lock().len() }
 }

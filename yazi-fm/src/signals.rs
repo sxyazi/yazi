@@ -44,7 +44,7 @@ impl Signals {
 	fn spawn_system_task(&self) -> Result<JoinHandle<()>> {
 		use libc::{SIGCONT, SIGHUP, SIGINT, SIGQUIT, SIGTERM};
 		use yazi_proxy::AppProxy;
-		use yazi_scheduler::BLOCKER;
+		use yazi_scheduler::HIDER;
 
 		let mut signals = signal_hook_tokio::Signals::new([
 			// Terminating signals
@@ -56,7 +56,7 @@ impl Signals {
 		let tx = self.tx.clone();
 		Ok(tokio::spawn(async move {
 			while let Some(signal) = signals.next().await {
-				if BLOCKER.try_acquire().is_err() {
+				if HIDER.try_acquire().is_err() {
 					continue;
 				}
 

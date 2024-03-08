@@ -7,7 +7,7 @@ use yazi_config::{open::Opener, plugin::PluginRule, TASKS};
 use yazi_plugin::ValueSendable;
 use yazi_shared::{fs::{unique_path, Url}, Throttle};
 
-use super::{Running, TaskProg, TaskStage};
+use super::{Ongoing, TaskProg, TaskStage};
 use crate::{file::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, preload::{Preload, PreloadOpRule, PreloadOpSize}, process::{Process, ProcessOpOpen}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
 
 pub struct Scheduler {
@@ -18,8 +18,7 @@ pub struct Scheduler {
 
 	micro:       async_priority_channel::Sender<BoxFuture<'static, ()>, u8>,
 	prog:        mpsc::UnboundedSender<TaskProg>,
-	// FIXME
-	pub running: Arc<Mutex<Running>>,
+	pub ongoing: Arc<Mutex<Ongoing>>,
 }
 
 impl Scheduler {
@@ -36,7 +35,7 @@ impl Scheduler {
 
 			micro:   micro_tx,
 			prog:    prog_tx,
-			running: Default::default(),
+			ongoing: Default::default(),
 		};
 
 		for _ in 0..TASKS.micro_workers {
@@ -69,7 +68,7 @@ impl Scheduler {
 		let preload = self.preload.clone();
 
 		let prog = self.prog.clone();
-		let running = self.running.clone();
+		let ongoing = self.ongoing.clone();
 
 		tokio::spawn(async move {
 			loop {
@@ -79,7 +78,7 @@ impl Scheduler {
 					}
 					Ok((op, _)) = macro_.recv() => {
 						let id = op.id();
-						if !running.lock().exists(id) {
+						if !ongoing.lock().exists(id) {
 							continue;
 						}
 
@@ -100,36 +99,36 @@ impl Scheduler {
 
 	fn progress(&self, mut rx: UnboundedReceiver<TaskProg>) {
 		let micro = self.micro.clone();
-		let running = self.running.clone();
+		let ongoing = self.ongoing.clone();
 
 		tokio::spawn(async move {
 			while let Some(op) = rx.recv().await {
 				match op {
 					TaskProg::New(id, size) => {
-						if let Some(task) = running.lock().get_mut(id) {
+						if let Some(task) = ongoing.lock().get_mut(id) {
 							task.total += 1;
 							task.found += size;
 						}
 					}
 					TaskProg::Adv(id, succ, processed) => {
-						let mut running = running.lock();
-						if let Some(task) = running.get_mut(id) {
+						let mut ongoing = ongoing.lock();
+						if let Some(task) = ongoing.get_mut(id) {
 							task.succ += succ;
 							task.processed += processed;
 						}
 						if succ > 0 {
-							if let Some(fut) = running.try_remove(id, TaskStage::Pending) {
+							if let Some(fut) = ongoing.try_remove(id, TaskStage::Pending) {
 								micro.try_send(fut, NORMAL).ok();
 							}
 						}
 					}
 					TaskProg::Succ(id) => {
-						if let Some(fut) = running.lock().try_remove(id, TaskStage::Dispatched) {
+						if let Some(fut) = ongoing.lock().try_remove(id, TaskStage::Dispatched) {
 							micro.try_send(fut, NORMAL).ok();
 						}
 					}
 					TaskProg::Fail(id, reason) => {
-						if let Some(task) = running.lock().get_mut(id) {
+						if let Some(task) = ongoing.lock().get_mut(id) {
 							task.fail += 1;
 							task.logs.push_str(&reason);
 							task.logs.push('\n');
@@ -140,7 +139,7 @@ impl Scheduler {
 						}
 					}
 					TaskProg::Log(id, line) => {
-						if let Some(task) = running.lock().get_mut(id) {
+						if let Some(task) = ongoing.lock().get_mut(id) {
 							task.logs.push_str(&line);
 							task.logs.push('\n');
 
@@ -155,29 +154,29 @@ impl Scheduler {
 	}
 
 	pub fn cancel(&self, id: usize) -> bool {
-		let mut running = self.running.lock();
-		let b = running.all.remove(&id).is_some();
+		let mut ongoing = self.ongoing.lock();
+		let b = ongoing.all.remove(&id).is_some();
 
-		if let Some(hook) = running.hooks.remove(&id) {
+		if let Some(hook) = ongoing.hooks.remove(&id) {
 			self.micro.try_send(hook(true), HIGH).ok();
 		}
 		b
 	}
 
 	pub fn file_cut(&self, from: Url, mut to: Url, force: bool) {
-		let mut running = self.running.lock();
-		let id = running.add(TaskKind::User, format!("Cut {:?} to {:?}", from, to));
+		let mut ongoing = self.ongoing.lock();
+		let id = ongoing.add(TaskKind::User, format!("Cut {:?} to {:?}", from, to));
 
-		running.hooks.insert(id, {
+		ongoing.hooks.insert(id, {
 			let from = from.clone();
-			let running = self.running.clone();
+			let ongoing = self.ongoing.clone();
 
 			Box::new(move |canceled: bool| {
 				async move {
 					if !canceled {
 						File::remove_empty_dirs(&from).await;
 					}
-					running.lock().try_remove(id, TaskStage::Hooked);
+					ongoing.lock().try_remove(id, TaskStage::Hooked);
 				}
 				.boxed()
 			})
@@ -198,7 +197,7 @@ impl Scheduler {
 
 	pub fn file_copy(&self, from: Url, mut to: Url, force: bool, follow: bool) {
 		let name = format!("Copy {:?} to {:?}", from, to);
-		let id = self.running.lock().add(TaskKind::User, name);
+		let id = self.ongoing.lock().add(TaskKind::User, name);
 
 		let file = self.file.clone();
 		_ = self.micro.try_send(
@@ -215,7 +214,7 @@ impl Scheduler {
 
 	pub fn file_link(&self, from: Url, mut to: Url, relative: bool, force: bool) {
 		let name = format!("Link {from:?} to {to:?}");
-		let id = self.running.lock().add(TaskKind::User, name);
+		let id = self.ongoing.lock().add(TaskKind::User, name);
 
 		let file = self.file.clone();
 		_ = self.micro.try_send(
@@ -234,19 +233,19 @@ impl Scheduler {
 	}
 
 	pub fn file_delete(&self, target: Url) {
-		let mut running = self.running.lock();
-		let id = running.add(TaskKind::User, format!("Delete {:?}", target));
+		let mut ongoing = self.ongoing.lock();
+		let id = ongoing.add(TaskKind::User, format!("Delete {:?}", target));
 
-		running.hooks.insert(id, {
+		ongoing.hooks.insert(id, {
 			let target = target.clone();
-			let running = self.running.clone();
+			let ongoing = self.ongoing.clone();
 
 			Box::new(move |canceled: bool| {
 				async move {
 					if !canceled {
 						fs::remove_dir_all(target).await.ok();
 					}
-					running.lock().try_remove(id, TaskStage::Hooked);
+					ongoing.lock().try_remove(id, TaskStage::Hooked);
 				}
 				.boxed()
 			})
@@ -264,7 +263,7 @@ impl Scheduler {
 
 	pub fn file_trash(&self, target: Url) {
 		let name = format!("Trash {:?}", target);
-		let id = self.running.lock().add(TaskKind::User, name);
+		let id = self.ongoing.lock().add(TaskKind::User, name);
 
 		let file = self.file.clone();
 		_ = self.micro.try_send(
@@ -277,7 +276,7 @@ impl Scheduler {
 	}
 
 	pub fn plugin_micro(&self, name: String, args: Vec<ValueSendable>) {
-		let id = self.running.lock().add(TaskKind::User, format!("Run micro plugin `{name}`"));
+		let id = self.ongoing.lock().add(TaskKind::User, format!("Run micro plugin `{name}`"));
 
 		let plugin = self.plugin.clone();
 		_ = self.micro.try_send(
@@ -290,13 +289,13 @@ impl Scheduler {
 	}
 
 	pub fn plugin_macro(&self, name: String, args: Vec<ValueSendable>) {
-		let id = self.running.lock().add(TaskKind::User, format!("Run macro plugin `{name}`"));
+		let id = self.ongoing.lock().add(TaskKind::User, format!("Run macro plugin `{name}`"));
 
 		self.plugin.macro_(PluginOpEntry { id, name, args }).ok();
 	}
 
 	pub fn preload_paged(&self, rule: &PluginRule, targets: Vec<&yazi_shared::fs::File>) {
-		let id = self.running.lock().add(
+		let id = self.ongoing.lock().add(
 			TaskKind::Preload,
 			format!("Run preloader `{}` with {} target(s)", rule.cmd.name, targets.len()),
 		);
@@ -315,10 +314,10 @@ impl Scheduler {
 
 	pub fn preload_size(&self, targets: Vec<&Url>) {
 		let throttle = Arc::new(Throttle::new(targets.len(), Duration::from_millis(300)));
-		let mut running = self.running.lock();
+		let mut ongoing = self.ongoing.lock();
 
 		for target in targets {
-			let id = running.add(TaskKind::Preload, format!("Calculate the size of {:?}", target));
+			let id = ongoing.add(TaskKind::Preload, format!("Calculate the size of {:?}", target));
 			let target = target.clone();
 			let throttle = throttle.clone();
 
@@ -340,18 +339,18 @@ impl Scheduler {
 			if args.is_empty() { s } else { format!("{s} with `{args}`") }
 		};
 
-		let mut running = self.running.lock();
-		let id = running.add(TaskKind::User, name);
+		let mut ongoing = self.ongoing.lock();
+		let id = ongoing.add(TaskKind::User, name);
 
 		let (cancel_tx, mut cancel_rx) = oneshot::channel();
-		running.hooks.insert(id, {
-			let running = self.running.clone();
+		ongoing.hooks.insert(id, {
+			let ongoing = self.ongoing.clone();
 			Box::new(move |canceled: bool| {
 				async move {
 					if canceled {
 						cancel_rx.close();
 					}
-					running.lock().try_remove(id, TaskStage::Hooked);
+					ongoing.lock().try_remove(id, TaskStage::Hooked);
 				}
 				.boxed()
 			})

@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet}, ops::Deref};
 
-use yazi_shared::fs::Url;
+use yazi_shared::fs::{FilesOp, Url};
 
 #[derive(Default)]
 pub struct Selected {
@@ -63,27 +63,27 @@ impl Selected {
 	#[inline]
 	pub fn remove(&mut self, url: &Url) -> bool { self.remove_same(&[url]) == 1 }
 
-	pub fn remove_many(&mut self, urls: &[&Url], same: bool) -> usize {
+	pub fn remove_many(&mut self, urls: &[impl AsRef<Url>], same: bool) -> usize {
 		if same {
 			return self.remove_same(urls);
 		}
 
 		let mut grouped: HashMap<_, Vec<_>> = Default::default();
-		for &u in urls {
-			if let Some(p) = u.parent_url() {
+		for u in urls {
+			if let Some(p) = u.as_ref().parent_url() {
 				grouped.entry(p).or_default().push(u);
 			}
 		}
 		grouped.into_values().map(|v| self.remove_same(&v)).sum()
 	}
 
-	fn remove_same(&mut self, urls: &[&Url]) -> usize {
-		let count = urls.iter().map(|&u| self.inner.remove(u)).filter(|&b| b).count();
+	fn remove_same(&mut self, urls: &[impl AsRef<Url>]) -> usize {
+		let count = urls.iter().map(|u| self.inner.remove(u.as_ref())).filter(|&b| b).count();
 		if count == 0 {
 			return 0;
 		}
 
-		let mut parent = urls[0].parent_url();
+		let mut parent = urls[0].as_ref().parent_url();
 		while let Some(u) = parent {
 			let n = self.parents.get_mut(&u).unwrap();
 
@@ -100,6 +100,23 @@ impl Selected {
 	pub fn clear(&mut self) {
 		self.inner.clear();
 		self.parents.clear();
+	}
+
+	pub fn apply_op(&mut self, op: &FilesOp) {
+		let (removal, addition) = match op {
+			FilesOp::Deleting(_, urls) => (urls.iter().collect(), vec![]),
+			FilesOp::Updating(_, urls) | FilesOp::Upserting(_, urls) => {
+				urls.iter().filter(|(u, _)| self.contains(u)).map(|(u, f)| (u, &f.url)).unzip()
+			}
+			_ => (vec![], vec![]),
+		};
+
+		if !removal.is_empty() {
+			self.remove_many(&removal, !op.url().is_search());
+		}
+		if !addition.is_empty() {
+			self.add_many(&addition, !op.url().is_search());
+		}
 	}
 }
 

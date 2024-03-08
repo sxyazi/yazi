@@ -5,7 +5,7 @@ use futures::{future::BoxFuture, FutureExt};
 use tokio::{fs, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::TASKS;
-use yazi_shared::fs::{calculate_size, copy_with_progress, path_relative_to, Url};
+use yazi_shared::fs::{accessible, calculate_size, copy_with_progress, path_relative_to, Url};
 
 use super::{FileOp, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash};
 use crate::{TaskOp, TaskProg, LOW, NORMAL};
@@ -107,7 +107,7 @@ impl File {
 			}
 			FileOp::Delete(task) => {
 				if let Err(e) = fs::remove_file(&task.target).await {
-					if e.kind() != NotFound && fs::symlink_metadata(&task.target).await.is_ok() {
+					if e.kind() != NotFound && accessible(&task.target).await {
 						self.fail(task.id, format!("Delete task failed: {:?}, {e}", task))?;
 						Err(e)?
 					}
@@ -225,16 +225,10 @@ impl File {
 
 		let mut dirs = VecDeque::from([task.target]);
 		while let Some(target) = dirs.pop_front() {
-			let mut it = match fs::read_dir(target).await {
-				Ok(it) => it,
-				Err(_) => continue,
-			};
+			let Ok(mut it) = fs::read_dir(target).await else { continue };
 
 			while let Ok(Some(entry)) = it.next_entry().await {
-				let meta = match entry.metadata().await {
-					Ok(m) => m,
-					Err(_) => continue,
-				};
+				let Ok(meta) = entry.metadata().await else { continue };
 
 				if meta.is_dir() {
 					dirs.push_front(Url::from(entry.path()));
