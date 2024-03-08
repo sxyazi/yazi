@@ -52,9 +52,13 @@ impl Manager {
 
 	pub fn remove_do(&mut self, opt: impl Into<Opt>, tasks: &Tasks) {
 		let opt = opt.into() as Opt;
+
+		self.tabs.iter_mut().for_each(|t| {
+			t.selected.remove_many(&opt.targets, false);
+		});
+
 		for u in &opt.targets {
 			self.yanked.remove(u);
-			self.tabs.iter_mut().for_each(|t| _ = t.selected.remove(u));
 		}
 
 		tasks.file_remove(opt.targets, opt.permanently);

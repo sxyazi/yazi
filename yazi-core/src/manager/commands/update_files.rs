@@ -33,7 +33,6 @@ impl Manager {
 			for (_, tab) in self.tabs.iter_mut().enumerate().filter(|(i, _)| *i != idx) {
 				Self::update_tab(tab, Cow::Borrowed(&op), tasks);
 			}
-
 			Self::update_tab(self.active_mut(), Cow::Owned(op), tasks);
 		}
 
