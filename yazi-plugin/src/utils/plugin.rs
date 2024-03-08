@@ -12,7 +12,7 @@ impl Utils {
 			lua.create_async_function(
 				|_, (name, calls, args): (String, usize, Variadic<Value>)| async move {
 					let args = ValueSendable::try_from_variadic(args)?;
-					let (tx, rx) = oneshot::channel::<ValueSendable>();
+					let (tx, rx) = oneshot::channel::<Vec<ValueSendable>>();
 
 					let data = OptData {
 						cb: Some({
@@ -27,9 +27,9 @@ impl Utils {
 									self_args.push(arg.into_lua(lua)?);
 								}
 
-								let value: ValueSendable =
-									block.call::<_, Value>(Variadic::from_iter(self_args))?.try_into()?;
-								tx.send(value).map_err(|_| "send failed".into_lua_err())
+								let values =
+									ValueSendable::try_from_variadic(block.call(Variadic::from_iter(self_args))?)?;
+								tx.send(values).map_err(|_| "send failed".into_lua_err())
 							})
 						}),
 						..Default::default()
@@ -40,8 +40,9 @@ impl Utils {
 						Layer::App
 					));
 
-					rx.await
-						.map_err(|_| format!("Failed to execute sync block in `{name}` plugin").into_lua_err())
+					Ok(Variadic::from_iter(rx.await.map_err(|_| {
+						format!("Failed to execute sync block-{calls} in `{name}` plugin").into_lua_err()
+					})?))
 				},
 			)?,
 		)?;

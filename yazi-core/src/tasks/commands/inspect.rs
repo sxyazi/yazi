@@ -2,8 +2,7 @@ use std::io::{stdout, Write};
 
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use tokio::{io::{stdin, AsyncReadExt}, select, sync::mpsc, time};
-use yazi_proxy::AppProxy;
-use yazi_scheduler::HIDER;
+use yazi_proxy::{AppProxy, HIDER};
 use yazi_shared::{event::Cmd, term::Term, Defer};
 
 use crate::tasks::Tasks;

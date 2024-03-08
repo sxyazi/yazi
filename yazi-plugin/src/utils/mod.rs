@@ -1,5 +1,6 @@
 #![allow(clippy::module_inception)]
 
+mod app;
 mod cache;
 mod call;
 mod image;

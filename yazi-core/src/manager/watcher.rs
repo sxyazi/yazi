@@ -7,7 +7,7 @@ use tokio::{fs, pin, sync::mpsc::{self, UnboundedReceiver}};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use tracing::error;
 use yazi_plugin::isolate;
-use yazi_scheduler::WATCHER;
+use yazi_proxy::WATCHER;
 use yazi_shared::fs::{File, FilesOp, Url};
 
 use super::Linked;

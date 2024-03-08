@@ -43,8 +43,7 @@ impl Signals {
 	#[cfg(unix)]
 	fn spawn_system_task(&self) -> Result<JoinHandle<()>> {
 		use libc::{SIGCONT, SIGHUP, SIGINT, SIGQUIT, SIGTERM};
-		use yazi_proxy::AppProxy;
-		use yazi_scheduler::HIDER;
+		use yazi_proxy::{AppProxy, HIDER};
 
 		let mut signals = signal_hook_tokio::Signals::new([
 			// Terminating signals

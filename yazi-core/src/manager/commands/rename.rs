@@ -3,8 +3,7 @@ use std::collections::HashMap;
 use anyhow::Result;
 use tokio::fs;
 use yazi_config::popup::InputCfg;
-use yazi_proxy::{InputProxy, ManagerProxy};
-use yazi_scheduler::WATCHER;
+use yazi_proxy::{InputProxy, ManagerProxy, WATCHER};
 use yazi_shared::{event::Cmd, fs::{accessible, File, FilesOp, Url}};
 
 use crate::manager::Manager;
