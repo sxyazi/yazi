@@ -1,9 +1,10 @@
-use std::{borrow::Cow, collections::VecDeque};
+use std::{borrow::Cow, collections::VecDeque, sync::atomic::Ordering};
 
 use serde::{Deserialize, Deserializer};
 use yazi_shared::event::Cmd;
 
 use super::Key;
+use crate::DEPRECATED_EXEC;
 
 #[derive(Debug, Default)]
 pub struct Control {
@@ -61,6 +62,9 @@ impl<'de> Deserialize<'de> for Control {
 		#[derive(Deserialize)]
 		struct VecCmd(#[serde(deserialize_with = "super::run_deserialize")] Vec<Cmd>);
 
+		if shadow.exec.is_some() {
+			DEPRECATED_EXEC.store(true, Ordering::Relaxed);
+		}
 		let Some(run) = shadow.run.or(shadow.exec) else {
 			return Err(serde::de::Error::custom("missing field `run` within `[keymap]`"));
 		};

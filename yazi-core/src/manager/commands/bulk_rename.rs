@@ -4,8 +4,7 @@ use anyhow::{anyhow, Result};
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 use yazi_config::{OPEN, PREVIEW};
 use yazi_plugin::external::{self, ShellOpt};
-use yazi_proxy::AppProxy;
-use yazi_scheduler::{HIDER, WATCHER};
+use yazi_proxy::{AppProxy, HIDER, WATCHER};
 use yazi_shared::{fs::{accessible, max_common_root, File, FilesOp, Url}, term::Term, Defer};
 
 use crate::manager::Manager;

@@ -1,6 +1,5 @@
 use yazi_plugin::external::{self, FzfOpt, ZoxideOpt};
-use yazi_proxy::{AppProxy, TabProxy};
-use yazi_scheduler::HIDER;
+use yazi_proxy::{AppProxy, TabProxy, HIDER};
 use yazi_shared::{event::Cmd, fs::ends_with_slash, Defer};
 
 use crate::tab::Tab;

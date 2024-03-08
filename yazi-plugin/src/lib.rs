@@ -8,8 +8,8 @@ pub mod external;
 pub mod fs;
 pub mod isolate;
 mod loader;
+mod lua;
 mod opt;
-mod plugin;
 pub mod process;
 pub mod url;
 pub mod utils;
@@ -17,5 +17,7 @@ pub mod utils;
 pub use cast::*;
 pub use config::*;
 pub use loader::*;
+pub use lua::*;
 pub use opt::*;
-pub use plugin::*;
+
+pub fn init() { crate::init_lua(); }

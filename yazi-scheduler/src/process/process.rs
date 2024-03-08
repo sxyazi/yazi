@@ -1,11 +1,11 @@
 use anyhow::Result;
 use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::mpsc};
 use yazi_plugin::external::{self, ShellOpt};
-use yazi_proxy::AppProxy;
+use yazi_proxy::{AppProxy, HIDER};
 use yazi_shared::Defer;
 
 use super::ProcessOpOpen;
-use crate::{TaskProg, HIDER};
+use crate::TaskProg;
 
 pub struct Process {
 	prog: mpsc::UnboundedSender<TaskProg>,
