@@ -7,7 +7,7 @@ pub type PermitRef<'lua, F> = mlua::UserDataRef<'lua, Permit<F>>;
 
 pub struct Permit<F: FnOnce()> {
 	inner:    Option<SemaphorePermit<'static>>,
-	callback: Option<F>,
+	destruct: Option<F>,
 }
 
 impl<F: FnOnce()> Deref for Permit<F> {
@@ -17,12 +17,12 @@ impl<F: FnOnce()> Deref for Permit<F> {
 }
 
 impl<F: FnOnce()> Permit<F> {
-	pub fn new(permit: SemaphorePermit<'static>, f: F) -> Self {
-		Self { inner: Some(permit), callback: Some(f) }
+	pub fn new(inner: SemaphorePermit<'static>, f: F) -> Self {
+		Self { inner: Some(inner), destruct: Some(f) }
 	}
 
 	fn dropping(&mut self) {
-		if let Some(f) = self.callback.take() {
+		if let Some(f) = self.destruct.take() {
 			f();
 		}
 		if let Some(p) = self.inner.take() {

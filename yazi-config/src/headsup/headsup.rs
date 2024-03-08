@@ -4,6 +4,7 @@ use crate::MERGED_YAZI;
 
 #[derive(Debug)]
 pub struct Headsup {
+	// TODO: remove this once Yazi 0.3 is released --
 	pub disable_exec_warn: bool,
 }
 
