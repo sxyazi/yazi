@@ -12,21 +12,14 @@ body:
         - Linux Wayland
         - macOS
         - Windows
+        - Windows WSL
     validations:
       required: true
   - type: input
     id: terminal
     attributes:
       label: What terminal are you running Yazi in?
-      placeholder: "ex: Kitty v0.30.1"
-    validations:
-      required: true
-  - type: input
-    id: version
-    attributes:
-      label: Yazi version
-      description: Please do a `yazi -V` and paste the output here.
-      placeholder: "ex: yazi 0.1.5 (3867c29 2023-11-25)"
+      placeholder: "ex: kitty v0.32.2"
     validations:
       required: true
   - type: dropdown
@@ -36,6 +29,18 @@ body:
       options:
         - Tried, but the problem still
         - Not tried, and I'll explain why below
+    validations:
+      required: true
+  - type: textarea
+    id: debug
+    attributes:
+      label: "`yazi --debug` output"
+      description: Please do a `yazi --debug` and paste the output here.
+      value: |
+        <!-- Paste the output between the backticks below: -->
+        ```sh
+
+        ```
     validations:
       required: true
   - type: textarea

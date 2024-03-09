@@ -1,4 +1,4 @@
-use std::{ffi::OsString, path::{Path, PathBuf}, process};
+use std::{env, ffi::OsString, path::{Path, PathBuf}, process};
 
 use clap::Parser;
 use serde::Serialize;
@@ -32,6 +32,63 @@ impl Boot {
 
 		(parent.unwrap().to_owned(), Some(entry.file_name().unwrap().to_owned()))
 	}
+
+	fn action_version() {
+		println!(
+			"yazi {} ({} {})",
+			env!("CARGO_PKG_VERSION"),
+			env!("VERGEN_GIT_SHA"),
+			env!("VERGEN_BUILD_DATE")
+		);
+	}
+
+	fn action_debug() {
+		print!("Yazi\n    ");
+		Self::action_version();
+
+		println!("\nEnvironment");
+		println!(
+			"    OS: {}-{} ({})",
+			std::env::consts::OS,
+			std::env::consts::ARCH,
+			std::env::consts::FAMILY
+		);
+		println!("    Debug: {}", cfg!(debug_assertions));
+
+		println!("\nEmulator");
+		println!("    Emulator.via_env: {:?}", yazi_adaptor::Emulator::via_env());
+		println!("    Emulator.via_csi: {:?}", yazi_adaptor::Emulator::via_csi());
+		println!("    Emulator.detect: {:?}", yazi_adaptor::Emulator::detect());
+
+		println!("\nAdaptor");
+		println!("    Adaptor.matches: {:?}", yazi_adaptor::Adaptor::matches());
+
+		println!("\ntmux");
+		println!("    TMUX: {:?}", *yazi_adaptor::TMUX);
+
+		println!("\nZellij");
+		println!("    ZELLIJ_SESSION_NAME: {:?}", env::var_os("ZELLIJ_SESSION_NAME"));
+
+		println!("\nDesktop");
+		println!("    XDG_SESSION_TYPE: {:?}", env::var_os("XDG_SESSION_TYPE"));
+		println!("    WAYLAND_DISPLAY: {:?}", env::var_os("WAYLAND_DISPLAY"));
+		println!("    DISPLAY: {:?}", env::var_os("DISPLAY"));
+
+		println!("\nUeberzug");
+		println!("    Version: {:?}", std::process::Command::new("ueberzug").arg("--version").output());
+
+		println!("\nWSL");
+		println!(
+			"    /proc/sys/fs/binfmt_misc/WSLInterop: {:?}",
+			std::fs::symlink_metadata("/proc/sys/fs/binfmt_misc/WSLInterop").is_ok()
+		);
+
+		println!("\n\n--------------------------------------------------");
+		println!(
+			"When reporting a bug, please also upload the `yazi.log` log file - only upload the most recent content by time."
+		);
+		println!("You can find it in the {:?} directory.", Xdg::state_dir());
+	}
 }
 
 impl Default for Boot {
@@ -58,13 +115,13 @@ impl Default for Args {
 	fn default() -> Self {
 		let args = Self::parse();
 
+		if args.debug {
+			Boot::action_debug();
+			process::exit(0);
+		}
+
 		if args.version {
-			println!(
-				"yazi {} ({} {})",
-				env!("CARGO_PKG_VERSION"),
-				env!("VERGEN_GIT_SHA"),
-				env!("VERGEN_BUILD_DATE")
-			);
+			Boot::action_version();
 			process::exit(0);
 		}
 
