@@ -2716,6 +2716,7 @@ dependencies = [
  "clap_complete_nushell",
  "serde",
  "vergen",
+ "yazi-adaptor",
  "yazi-config",
  "yazi-shared",
 ]
