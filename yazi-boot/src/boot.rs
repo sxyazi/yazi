@@ -46,6 +46,15 @@ impl Boot {
 		print!("Yazi\n    ");
 		Self::action_version();
 
+		println!("\nEnvironment");
+		println!(
+			"    OS: {}-{} ({})",
+			std::env::consts::OS,
+			std::env::consts::ARCH,
+			std::env::consts::FAMILY
+		);
+		println!("    Debug: {}", cfg!(debug_assertions));
+
 		println!("\nEmulator");
 		println!("    Emulator.via_env: {:?}", yazi_adaptor::Emulator::via_env());
 		println!("    Emulator.via_csi: {:?}", yazi_adaptor::Emulator::via_csi());
@@ -60,7 +69,7 @@ impl Boot {
 		println!("\nZellij");
 		println!("    ZELLIJ_SESSION_NAME: {:?}", env::var_os("ZELLIJ_SESSION_NAME"));
 
-		println!("\nDesktop environment");
+		println!("\nDesktop");
 		println!("    XDG_SESSION_TYPE: {:?}", env::var_os("XDG_SESSION_TYPE"));
 		println!("    WAYLAND_DISPLAY: {:?}", env::var_os("WAYLAND_DISPLAY"));
 		println!("    DISPLAY: {:?}", env::var_os("DISPLAY"));
@@ -71,7 +80,7 @@ impl Boot {
 		println!("\nWSL");
 		println!(
 			"    /proc/sys/fs/binfmt_misc/WSLInterop: {:?}",
-			std::fs::symlink_metadata("/proc/sys/fs/binfmt_misc/WSLInterop")
+			std::fs::symlink_metadata("/proc/sys/fs/binfmt_misc/WSLInterop").is_ok()
 		);
 
 		println!("\n\n--------------------------------------------------");
