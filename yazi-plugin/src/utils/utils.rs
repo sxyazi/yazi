@@ -8,6 +8,7 @@ pub(super) struct Utils;
 pub fn install(lua: &mlua::Lua) -> mlua::Result<()> {
 	let ya: mlua::Table = lua.create_table()?;
 
+	Utils::app(lua, &ya)?;
 	Utils::cache(lua, &ya)?;
 	Utils::call(lua, &ya)?;
 	Utils::image(lua, &ya)?;

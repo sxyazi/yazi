@@ -20,6 +20,10 @@ pub struct Args {
 	#[arg(long, action)]
 	pub clear_cache: bool,
 
+	/// Print debug information
+	#[arg(long, action)]
+	pub debug: bool,
+
 	/// Print version
 	#[arg(short = 'V', long)]
 	pub version: bool,

@@ -66,6 +66,7 @@ keymap = [
 	{ on = [ "y" ],         run = "yank",                       desc = "Copy the selected files" },
 	{ on = [ "Y" ],         run = "unyank",                     desc = "Cancel the yank status of files" },
 	{ on = [ "x" ],         run = "yank --cut",                 desc = "Cut the selected files" },
+	{ on = [ "X" ],         run = "unyank",                     desc = "Cancel the yank status of files" },
 	{ on = [ "p" ],         run = "paste",                      desc = "Paste the files" },
 	{ on = [ "P" ],         run = "paste --force",              desc = "Paste the files (overwrite if the destination exists)" },
 	{ on = [ "-" ],         run = "link",                       desc = "Symlink the absolute path of files" },
@@ -275,6 +276,9 @@ keymap = [
 
 	{ on = [ "<Up>" ],   run = "arrow -1", desc = "Move cursor up" },
 	{ on = [ "<Down>" ], run = "arrow 1",  desc = "Move cursor down" },
+
+	{ on = [ "<C-p>" ], run = "arrow -1", desc = "Move cursor up" },
+	{ on = [ "<C-n>" ], run = "arrow 1",  desc = "Move cursor down" },
 
 	{ on = [ "~" ], run = "help", desc = "Open help" }
 ]

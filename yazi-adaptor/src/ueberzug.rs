@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 use imagesize::ImageSize;
 use ratatui::layout::Rect;
 use tokio::{io::AsyncWriteExt, process::{Child, Command}, sync::mpsc::{self, UnboundedSender}};
-use tracing::debug;
+use tracing::{debug, warn};
 use yazi_config::PREVIEW;
 use yazi_shared::RoCell;
 
@@ -71,14 +71,17 @@ impl Ueberzug {
 	}
 
 	fn create_demon(adaptor: Adaptor) -> Result<Child> {
-		Ok(
-			Command::new("ueberzug")
-				.args(["layer", "-so", &adaptor.to_string()])
-				.kill_on_drop(true)
-				.stdin(Stdio::piped())
-				.stderr(Stdio::null())
-				.spawn()?,
-		)
+		let result = Command::new("ueberzug")
+			.args(["layer", "-so", &adaptor.to_string()])
+			.kill_on_drop(true)
+			.stdin(Stdio::piped())
+			.stderr(Stdio::null())
+			.spawn();
+
+		if let Err(ref e) = result {
+			warn!("ueberzug spawning failed: {}", e);
+		}
+		Ok(result?)
 	}
 
 	fn adjust_rect(mut rect: Rect) -> Rect {

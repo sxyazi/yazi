@@ -5,7 +5,7 @@ use yazi_config::THEME;
 use yazi_core::notify::Message;
 use yazi_proxy::options::NotifyLevel;
 
-use crate::{widgets::Clear, Ctx};
+use crate::Ctx;
 
 pub(crate) struct Layout<'a> {
 	cx: &'a Ctx,
@@ -53,7 +53,7 @@ impl<'a> Widget for Layout<'a> {
 				tile[i].offset(Offset { x: (100 - m.percent) as i32 * tile[i].width as i32 / 100, y: 0 });
 			rect.width = area.width.saturating_sub(rect.x);
 
-			Clear.render(rect, buf);
+			yazi_plugin::elements::Clear::default().render(rect, buf);
 			Paragraph::new(m.content.as_str())
 				.wrap(Wrap { trim: false })
 				.block(

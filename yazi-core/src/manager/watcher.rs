@@ -1,4 +1,4 @@
-use std::{collections::{BTreeMap, BTreeSet}, sync::Arc, time::{Duration, SystemTime}};
+use std::{collections::{HashMap, HashSet}, sync::Arc, time::{Duration, SystemTime}};
 
 use anyhow::Result;
 use notify::{event::{MetadataKind, ModifyKind}, EventKind, RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
@@ -7,6 +7,7 @@ use tokio::{fs, pin, sync::mpsc::{self, UnboundedReceiver}};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use tracing::error;
 use yazi_plugin::isolate;
+use yazi_proxy::WATCHER;
 use yazi_shared::fs::{File, FilesOp, Url};
 
 use super::Linked;
@@ -14,7 +15,7 @@ use crate::folder::{Files, Folder};
 
 pub struct Watcher {
 	watcher:    RecommendedWatcher,
-	watched:    Arc<RwLock<BTreeSet<Url>>>,
+	watched:    Arc<RwLock<HashSet<Url>>>,
 	pub linked: Arc<RwLock<Linked>>,
 }
 
@@ -25,9 +26,7 @@ impl Watcher {
 			{
 				let tx = tx.clone();
 				move |res: Result<notify::Event, notify::Error>| {
-					let Ok(event) = res else {
-						return;
-					};
+					let Ok(event) = res else { return };
 
 					match event.kind {
 						EventKind::Create(_) => {}
@@ -60,11 +59,11 @@ impl Watcher {
 		instance
 	}
 
-	pub(super) fn watch(&mut self, mut new: BTreeSet<&Url>) {
+	pub(super) fn watch(&mut self, mut new: HashSet<&Url>) {
 		new.retain(|&u| u.is_regular());
-		let (to_unwatch, to_watch): (BTreeSet<_>, BTreeSet<_>) = {
+		let (to_unwatch, to_watch): (HashSet<_>, HashSet<_>) = {
 			let guard = self.watched.read();
-			let old: BTreeSet<_> = guard.iter().collect();
+			let old: HashSet<_> = guard.iter().collect();
 			(
 				old.difference(&new).map(|&x| x.clone()).collect(),
 				new.difference(&old).map(|&x| x.clone()).collect(),
@@ -143,17 +142,15 @@ impl Watcher {
 
 	async fn on_changed(rx: UnboundedReceiver<Url>) {
 		// TODO: revert this once a new notification is implemented
-		let rx = UnboundedReceiverStream::new(rx).chunks_timeout(100, Duration::from_millis(20));
+		let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(50));
 		pin!(rx);
 
 		while let Some(urls) = rx.next().await {
-			let urls: BTreeSet<_> = urls.into_iter().collect();
+			let _permit = WATCHER.acquire().await.unwrap();
 			let mut reload = Vec::with_capacity(urls.len());
 
-			for u in urls {
-				let Some(parent) = u.parent_url() else {
-					continue;
-				};
+			for u in urls.into_iter().collect::<HashSet<_>>() {
+				let Some(parent) = u.parent_url() else { continue };
 
 				let Ok(file) = File::from(u.clone()).await else {
 					FilesOp::Deleting(parent, vec![u]).emit();
@@ -163,7 +160,7 @@ impl Watcher {
 				if !file.is_dir() {
 					reload.push(file.clone());
 				}
-				FilesOp::Upserting(parent, BTreeMap::from_iter([(u, file)])).emit();
+				FilesOp::Upserting(parent, HashMap::from_iter([(u, file)])).emit();
 			}
 
 			if reload.is_empty() {

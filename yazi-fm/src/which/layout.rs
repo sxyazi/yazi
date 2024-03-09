@@ -2,7 +2,7 @@ use ratatui::{buffer::Buffer, layout, layout::{Constraint, Rect}, widgets::{Bloc
 use yazi_config::THEME;
 
 use super::Cand;
-use crate::{widgets, Ctx};
+use crate::Ctx;
 
 const PADDING_X: u16 = 1;
 const PADDING_Y: u16 = 1;
@@ -39,14 +39,14 @@ impl Widget for Which<'_> {
 		let chunks = {
 			use Constraint::*;
 			layout::Layout::horizontal(match cols {
-				1 => &[Ratio(1, 1)] as &[Constraint],
+				1 => &[Ratio(1, 1)][..],
 				2 => &[Ratio(1, 2), Ratio(1, 2)],
 				_ => &[Ratio(1, 3), Ratio(1, 3), Ratio(1, 3)],
 			})
 			.split(area)
 		};
 
-		widgets::Clear.render(area, buf);
+		yazi_plugin::elements::Clear::default().render(area, buf);
 		Block::new().style(THEME.which.mask).render(area, buf);
 
 		for y in 0..area.height {

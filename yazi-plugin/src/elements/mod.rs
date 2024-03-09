@@ -2,6 +2,7 @@
 
 mod bar;
 mod border;
+mod clear;
 mod constraint;
 mod elements;
 mod gauge;
@@ -16,6 +17,7 @@ mod style;
 
 pub use bar::*;
 pub use border::*;
+pub use clear::*;
 pub use constraint::*;
 pub use elements::*;
 pub use gauge::*;

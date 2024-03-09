@@ -1,4 +1,4 @@
-use std::{ffi::OsString, mem};
+use std::ffi::OsString;
 
 use tokio::sync::oneshot;
 use yazi_plugin::external::ShellOpt;
@@ -13,13 +13,8 @@ pub struct ProcessOpOpen {
 	pub cancel: oneshot::Sender<()>,
 }
 
-impl From<&mut ProcessOpOpen> for ShellOpt {
-	fn from(op: &mut ProcessOpOpen) -> Self {
-		Self {
-			cmd:    mem::take(&mut op.cmd),
-			args:   mem::take(&mut op.args),
-			piped:  false,
-			orphan: op.orphan,
-		}
+impl From<ProcessOpOpen> for ShellOpt {
+	fn from(op: ProcessOpOpen) -> Self {
+		Self { cmd: op.cmd, args: op.args, piped: false, orphan: op.orphan }
 	}
 }

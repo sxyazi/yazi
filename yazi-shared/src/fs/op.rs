@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, sync::atomic::{AtomicU64, Ordering}, time::SystemTime};
+use std::{collections::HashMap, sync::atomic::{AtomicU64, Ordering}, time::SystemTime};
 
 use super::File;
 use crate::{emit, event::Cmd, fs::Url, Layer};
@@ -10,12 +10,12 @@ pub enum FilesOp {
 	Full(Url, Vec<File>, Option<SystemTime>),
 	Part(Url, Vec<File>, u64),
 	Done(Url, Option<SystemTime>, u64),
-	Size(Url, BTreeMap<Url, u64>),
+	Size(Url, HashMap<Url, u64>),
 
 	Creating(Url, Vec<File>),
 	Deleting(Url, Vec<Url>),
-	Updating(Url, BTreeMap<Url, File>),
-	Upserting(Url, BTreeMap<Url, File>),
+	Updating(Url, HashMap<Url, File>),
+	Upserting(Url, HashMap<Url, File>),
 }
 
 impl FilesOp {

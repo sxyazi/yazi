@@ -1,6 +1,7 @@
 #![allow(clippy::unit_arg)]
 
 mod adaptor;
+mod emulator;
 mod image;
 mod iterm2;
 mod kitty;
@@ -8,7 +9,8 @@ mod kitty_old;
 mod sixel;
 mod ueberzug;
 
-use adaptor::*;
+pub use adaptor::*;
+pub use emulator::*;
 use iterm2::*;
 use kitty::*;
 use kitty_old::*;
@@ -20,7 +22,7 @@ pub use crate::image::*;
 pub static ADAPTOR: RoCell<Adaptor> = RoCell::new();
 
 // Tmux support
-static TMUX: RoCell<bool> = RoCell::new();
+pub static TMUX: RoCell<bool> = RoCell::new();
 static ESCAPE: RoCell<&'static str> = RoCell::new();
 static START: RoCell<&'static str> = RoCell::new();
 static CLOSE: RoCell<&'static str> = RoCell::new();
@@ -36,7 +38,7 @@ pub fn init() {
 
 	SHOWN.with(Default::default);
 
-	ADAPTOR.init(Adaptor::detect());
+	ADAPTOR.init(Adaptor::matches());
 	ADAPTOR.start();
 
 	if *TMUX {

@@ -1,7 +1,9 @@
+use std::sync::atomic::Ordering;
+
 use serde::{Deserialize, Deserializer};
 use yazi_shared::{event::Cmd, Condition};
 
-use crate::{Pattern, Priority};
+use crate::{Pattern, Priority, DEPRECATED_EXEC};
 
 pub struct PluginRule {
 	pub id:    u8,
@@ -50,6 +52,9 @@ impl<'de> Deserialize<'de> for PluginRule {
 		#[derive(Deserialize)]
 		struct WrappedCmd(#[serde(deserialize_with = "super::run_deserialize")] Cmd);
 
+		if shadow.exec.is_some() {
+			DEPRECATED_EXEC.store(true, Ordering::Relaxed);
+		}
 		let Some(run) = shadow.run.or(shadow.exec) else {
 			return Err(serde::de::Error::custom("missing field `run` within `[plugin]`"));
 		};

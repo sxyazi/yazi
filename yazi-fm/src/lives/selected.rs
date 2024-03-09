@@ -1,24 +1,24 @@
-use std::{collections::{btree_set, BTreeSet}, ops::Deref};
+use std::{collections::{hash_set, HashSet}, ops::Deref};
 
-use mlua::{AnyUserData, Lua, MetaMethod, UserDataMethods, UserDataRefMut};
+use mlua::{AnyUserData, IntoLuaMulti, Lua, MetaMethod, UserDataMethods, UserDataRefMut};
 use yazi_plugin::{bindings::Cast, url::Url};
 
-use super::SCOPE;
+use super::{Iter, SCOPE};
 
 #[derive(Clone, Copy)]
 pub(super) struct Selected {
-	inner: *const BTreeSet<yazi_shared::fs::Url>,
+	inner: *const HashSet<yazi_shared::fs::Url>,
 }
 
 impl Deref for Selected {
-	type Target = BTreeSet<yazi_shared::fs::Url>;
+	type Target = HashSet<yazi_shared::fs::Url>;
 
 	fn deref(&self) -> &Self::Target { self.inner() }
 }
 
 impl Selected {
 	#[inline]
-	pub(crate) fn make(inner: &BTreeSet<yazi_shared::fs::Url>) -> mlua::Result<AnyUserData<'static>> {
+	pub(super) fn make(inner: &HashSet<yazi_shared::fs::Url>) -> mlua::Result<AnyUserData<'static>> {
 		SCOPE.create_any_userdata(Self { inner })
 	}
 
@@ -27,11 +27,17 @@ impl Selected {
 			reg.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.len()));
 
 			reg.add_meta_method(MetaMethod::Pairs, |lua, me, ()| {
-				let iter = lua.create_function(|lua, mut iter: UserDataRefMut<SelectedIter>| {
-					Ok(if let Some(url) = iter.0.next() { Some(Url::cast(lua, url.clone())?) } else { None })
-				})?;
+				let iter = lua.create_function(
+					|lua, mut iter: UserDataRefMut<Iter<hash_set::Iter<yazi_shared::fs::Url>, _>>| {
+						if let Some(next) = iter.next() {
+							(next.0, Url::cast(lua, next.1.clone())?).into_lua_multi(lua)
+						} else {
+							().into_lua_multi(lua)
+						}
+					},
+				)?;
 
-				Ok((iter, SelectedIter::make(me.inner())))
+				Ok((iter, Iter::make(me.inner().iter())))
 			});
 		})?;
 
@@ -39,14 +45,5 @@ impl Selected {
 	}
 
 	#[inline]
-	fn inner(&self) -> &'static BTreeSet<yazi_shared::fs::Url> { unsafe { &*self.inner } }
-}
-
-struct SelectedIter(btree_set::Iter<'static, yazi_shared::fs::Url>);
-
-impl SelectedIter {
-	#[inline]
-	fn make(selected: &'static BTreeSet<yazi_shared::fs::Url>) -> mlua::Result<AnyUserData<'static>> {
-		SCOPE.create_any_userdata(Self(selected.iter()))
-	}
+	fn inner(&self) -> &'static HashSet<yazi_shared::fs::Url> { unsafe { &*self.inner } }
 }

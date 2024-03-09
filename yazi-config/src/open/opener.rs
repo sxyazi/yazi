@@ -1,4 +1,8 @@
+use std::sync::atomic::Ordering;
+
 use serde::{Deserialize, Deserializer};
+
+use crate::DEPRECATED_EXEC;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Opener {
@@ -47,6 +51,9 @@ impl<'de> Deserialize<'de> for Opener {
 		let shadow = Shadow::deserialize(deserializer)?;
 
 		// TODO: remove this once Yazi 0.3 is released --
+		if shadow.exec.is_some() {
+			DEPRECATED_EXEC.store(true, Ordering::Relaxed);
+		}
 		let run = shadow.run.or(shadow.exec).unwrap_or_default();
 		// TODO: -- remove this once Yazi 0.3 is released
 

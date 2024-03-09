@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::BTreeMap, ops::Deref};
+use std::{borrow::Cow, collections::HashMap, ops::Deref};
 
 use anyhow::{bail, Result};
 use mlua::{ExternalError, Table};
@@ -13,7 +13,7 @@ pub static LOADED: RoCell<Loader> = RoCell::new();
 
 #[derive(Default)]
 pub struct Loader {
-	loaded: RwLock<BTreeMap<String, Vec<u8>>>,
+	loaded: RwLock<HashMap<String, Vec<u8>>>,
 }
 
 impl Loader {
@@ -67,7 +67,7 @@ impl Loader {
 }
 
 impl Deref for Loader {
-	type Target = RwLock<BTreeMap<String, Vec<u8>>>;
+	type Target = RwLock<HashMap<String, Vec<u8>>>;
 
 	#[inline]
 	fn deref(&self) -> &Self::Target { &self.loaded }

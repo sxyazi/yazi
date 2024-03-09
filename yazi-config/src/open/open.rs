@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, path::Path};
+use std::{collections::HashMap, path::Path};
 
 use indexmap::IndexSet;
 use serde::{Deserialize, Deserializer};
@@ -10,7 +10,7 @@ use crate::{open::OpenRule, Preset, MERGED_YAZI};
 #[derive(Debug)]
 pub struct Open {
 	rules:   Vec<OpenRule>,
-	openers: BTreeMap<String, IndexSet<Opener>>,
+	openers: HashMap<String, IndexSet<Opener>>,
 }
 
 impl Default for Open {
@@ -65,7 +65,7 @@ impl<'de> Deserialize<'de> for Open {
 	{
 		#[derive(Deserialize)]
 		struct Outer {
-			opener: BTreeMap<String, Vec<Opener>>,
+			opener: HashMap<String, Vec<Opener>>,
 			open:   OuterOpen,
 		}
 		#[derive(Deserialize)]

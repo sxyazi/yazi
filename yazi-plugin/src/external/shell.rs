@@ -3,6 +3,7 @@ use std::{env, ffi::OsString, process::Stdio};
 use anyhow::Result;
 use tokio::process::{Child, Command};
 
+#[derive(Default)]
 pub struct ShellOpt {
 	pub cmd:    OsString,
 	pub args:   Vec<OsString>,
