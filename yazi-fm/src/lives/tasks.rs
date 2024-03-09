@@ -16,7 +16,7 @@ impl Deref for Tasks {
 
 impl Tasks {
 	#[inline]
-	pub(crate) fn make(inner: &yazi_core::tasks::Tasks) -> mlua::Result<AnyUserData<'static>> {
+	pub(super) fn make(inner: &yazi_core::tasks::Tasks) -> mlua::Result<AnyUserData<'static>> {
 		SCOPE.create_any_userdata(Self { inner })
 	}
 

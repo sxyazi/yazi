@@ -1,8 +1,8 @@
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 
 #[derive(Default)]
 pub struct Completion {
-	pub(super) caches: BTreeMap<String, Vec<String>>,
+	pub(super) caches: HashMap<String, Vec<String>>,
 	pub(super) cands:  Vec<String>,
 	pub(super) offset: usize,
 	pub cursor:        usize,

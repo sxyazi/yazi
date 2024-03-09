@@ -2,7 +2,7 @@ use ratatui::{buffer::Buffer, layout::{self, Constraint, Rect}, text::Line, widg
 use yazi_config::THEME;
 
 use super::Bindings;
-use crate::{widgets, Ctx};
+use crate::Ctx;
 
 pub(crate) struct Layout<'a> {
 	cx: &'a Ctx,
@@ -15,7 +15,7 @@ impl<'a> Layout<'a> {
 impl<'a> Widget for Layout<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let help = &self.cx.help;
-		widgets::Clear.render(area, buf);
+		yazi_plugin::elements::Clear::default().render(area, buf);
 
 		let chunks = layout::Layout::vertical([Constraint::Fill(1), Constraint::Length(1)]).split(area);
 		Line::styled(

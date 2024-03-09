@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 
 use anyhow::Result;
 use tokio::task::JoinHandle;
@@ -14,7 +14,7 @@ pub struct Tab {
 	pub parent:  Option<Folder>,
 
 	pub backstack: Backstack<Url>,
-	pub history:   BTreeMap<Url, Folder>,
+	pub history:   HashMap<Url, Folder>,
 	pub selected:  Selected,
 
 	pub preview:       Preview,

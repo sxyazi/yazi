@@ -1,7 +1,7 @@
 use std::ops::ControlFlow;
 
 use mlua::{Lua, Table};
-use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
+use unicode_width::UnicodeWidthChar;
 
 use super::Utils;
 
@@ -20,26 +20,35 @@ impl Utils {
 
 		ya.raw_set(
 			"truncate",
-			lua.create_function(|_, (text, max): (mlua::String, usize)| {
-				let mut width = 0;
-				let flow =
-					text.to_string_lossy().chars().try_fold(String::with_capacity(max), |mut s, c| {
-						width += c.width().unwrap_or(0);
-						if s.width() < max {
-							s.push(c);
-							ControlFlow::Continue(s)
-						} else {
-							ControlFlow::Break(s)
-						}
-					});
+			lua.create_function(|_, (text, t): (mlua::String, Table)| {
+				let (max, text) = (t.raw_get("max")?, text.to_string_lossy());
 
-				Ok(match flow {
-					ControlFlow::Break(s) => s,
-					ControlFlow::Continue(s) => s,
+				Ok(if t.raw_get("rtl").unwrap_or(false) {
+					Self::truncate(text.chars().rev(), max).into_iter().rev().collect()
+				} else {
+					Self::truncate(text.chars(), max).into_iter().collect::<String>()
 				})
 			})?,
 		)?;
 
 		Ok(())
+	}
+
+	fn truncate(mut chars: impl Iterator<Item = char>, max: usize) -> Vec<char> {
+		let mut width = 0;
+		let flow = chars.try_fold(Vec::with_capacity(max), |mut v, c| {
+			width += c.width().unwrap_or(0);
+			if width < max {
+				v.push(c);
+				ControlFlow::Continue(v)
+			} else {
+				ControlFlow::Break(v)
+			}
+		});
+
+		match flow {
+			ControlFlow::Break(v) => v,
+			ControlFlow::Continue(v) => v,
+		}
 	}
 }

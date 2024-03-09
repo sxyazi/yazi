@@ -22,7 +22,6 @@ mod select;
 mod signals;
 mod tasks;
 mod which;
-mod widgets;
 
 use context::*;
 use executor::*;
@@ -46,9 +45,9 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_boot::init();
 
-	yazi_scheduler::init();
-
 	yazi_plugin::init();
+
+	yazi_proxy::init();
 
 	yazi_core::init();
 

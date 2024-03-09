@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::collections::HashSet;
 
 use yazi_shared::{event::Cmd, render};
 
@@ -18,9 +18,9 @@ impl Tab {
 		let idx = self.current.cursor;
 
 		if opt.unset {
-			self.mode = Mode::Unset(idx, BTreeSet::from([idx]));
+			self.mode = Mode::Unset(idx, HashSet::from([idx]));
 		} else {
-			self.mode = Mode::Select(idx, BTreeSet::from([idx]));
+			self.mode = Mode::Select(idx, HashSet::from([idx]));
 		};
 		render!();
 	}

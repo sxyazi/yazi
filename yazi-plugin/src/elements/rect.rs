@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, IntoLua, Lua, Table, UserDataFields, UserDataMethods, UserDataRef};
+use mlua::{AnyUserData, Lua, Table, UserDataFields, UserDataMethods, UserDataRef};
 
 use super::PaddingRef;
 use crate::bindings::Cast;
@@ -18,10 +18,7 @@ impl Rect {
 			})
 		})?;
 
-		let rect = lua.create_table_from([(
-			"default",
-			Rect::cast(lua, ratatui::layout::Rect::default())?.into_lua(lua)?,
-		)])?;
+		let rect = lua.create_table_from([("default", Rect::cast(lua, Default::default())?)])?;
 
 		rect.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 

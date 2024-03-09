@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{HashMap, HashSet};
 
 use anyhow::Result;
 use parking_lot::RwLock;
@@ -16,7 +16,7 @@ pub struct Preload {
 	prog:   mpsc::UnboundedSender<TaskProg>,
 
 	pub rule_loaded:  RwLock<HashMap<Url, u32>>,
-	pub size_loading: RwLock<BTreeSet<Url>>,
+	pub size_loading: RwLock<HashSet<Url>>,
 }
 
 impl Preload {
@@ -60,7 +60,7 @@ impl Preload {
 					}
 
 					let parent = buf[0].0.parent_url().unwrap();
-					FilesOp::Size(parent, BTreeMap::from_iter(buf)).emit();
+					FilesOp::Size(parent, HashMap::from_iter(buf)).emit();
 				});
 				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 			}

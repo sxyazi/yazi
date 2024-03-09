@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, collections::BTreeMap, mem};
+use std::{cmp::Ordering, collections::HashMap, mem};
 
 use yazi_config::manager::SortBy;
 use yazi_shared::{fs::{File, Url}, natsort};
@@ -12,7 +12,7 @@ pub struct FilesSorter {
 }
 
 impl FilesSorter {
-	pub(super) fn sort(&self, items: &mut Vec<File>, sizes: &BTreeMap<Url, u64>) {
+	pub(super) fn sort(&self, items: &mut Vec<File>, sizes: &HashMap<Url, u64>) {
 		if items.is_empty() {
 			return;
 		}

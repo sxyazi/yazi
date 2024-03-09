@@ -31,14 +31,14 @@ marker_marked   = { fg = "lightyellow", bg = "lightyellow" }
 marker_selected = { fg = "lightblue",   bg = "lightblue" }
 
 # Tab
-tab_active   = { fg = "black", bg = "white" }
-tab_inactive = { fg = "white", bg = "darkgray" }
+tab_active   = { reversed = true }
+tab_inactive = {}
 tab_width    = 1
 
 # Count
-count_copied   = { fg = "black", bg = "lightgreen" }
-count_cut      = { fg = "black", bg = "lightred" }
-count_selected = { fg = "black", bg = "lightblue" }
+count_copied   = { fg = "white", bg = "green" }
+count_cut      = { fg = "white", bg = "red" }
+count_selected = { fg = "white", bg = "blue" }
 
 # Border
 border_symbol = "│"
@@ -55,15 +55,14 @@ syntect_theme = ""
 [status]
 separator_open  = ""
 separator_close = ""
-# remove separator_style? probably in use on cand.rs:32
-separator_style = { fg = "darkgray", bg = "darkgray" }
+separator_style = { fg = "gray", bg = "gray" }
 
 inner_section = { fg = "black", bg = "darkgray", bold = true }
 
 # Mode
-mode_normal = { fg = "black", bg = "lightblue", bold = true }
-mode_select = { fg = "black", bg = "lightgreen", bold = true }
-mode_unset  = { fg = "black", bg = "lightmagenta", bold = true }
+mode_normal = { bg = "blue", bold = true }
+mode_select = { bg = "red", bold = true }
+mode_unset  = { bg = "red", bold = true }
 
 # Progress
 progress_label  = { bold = true }
@@ -71,10 +70,10 @@ progress_normal = { fg = "blue", bg = "black" }
 progress_error  = { fg = "red", bg = "black" }
 
 # Permissions
-permissions_t = { fg = "lightgreen" }
-permissions_r = { fg = "lightyellow" }
-permissions_w = { fg = "lightred" }
-permissions_x = { fg = "lightcyan" }
+permissions_t = { fg = "green" }
+permissions_r = { fg = "yellow" }
+permissions_w = { fg = "red" }
+permissions_x = { fg = "cyan" }
 permissions_s = { fg = "darkgray" }
 
 # : }}}
@@ -84,7 +83,7 @@ permissions_s = { fg = "darkgray" }
 
 [select]
 border   = { fg = "blue" }
-active   = { fg = "magenta" }
+active   = { fg = "magenta", bold = true }
 inactive = {}
 
 # : }}}
@@ -105,7 +104,7 @@ selected = { reversed = true }
 
 [completion]
 border   = { fg = "blue" }
-active   = { bg = "darkgray" }
+active   = { reversed = true }
 inactive = {}
 
 # Icons
@@ -121,7 +120,7 @@ icon_command = ""
 [tasks]
 border  = { fg = "blue" }
 title   = {}
-hovered = { underline = true }
+hovered = { fg = "magenta", underline = true }
 
 # : }}}
 
@@ -133,7 +132,7 @@ cols            = 3
 mask            = { bg = "black" }
 cand            = { fg = "lightcyan" }
 rest            = { fg = "darkgray" }
-desc            = { fg = "magenta" }
+desc            = { fg = "lightmagenta" }
 separator       = "  "
 separator_style = { fg = "darkgray" }
 
@@ -143,10 +142,10 @@ separator_style = { fg = "darkgray" }
 # : Help {{{
 
 [help]
-on      = { fg = "magenta" }
-run     = { fg = "cyan" }
-desc    = { fg = "gray" }
-hovered = { bg = "darkgray", bold = true }
+on      = { fg = "cyan" }
+run     = { fg = "magenta" }
+desc    = {}
+hovered = { reversed = true, bold = true }
 footer  = { fg = "black", bg = "white" }
 
 # : }}}
@@ -175,7 +174,7 @@ rules = [
 	# Images
 	{ mime = "image/*", fg = "cyan" },
 
-	# Videos
+	# Media
 	{ mime = "video/*", fg = "yellow" },
 	{ mime = "audio/*", fg = "yellow" },
 

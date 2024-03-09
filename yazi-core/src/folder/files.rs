@@ -1,4 +1,4 @@
-use std::{collections::{BTreeMap, BTreeSet}, mem, ops::Deref, sync::atomic::Ordering};
+use std::{collections::{HashMap, HashSet}, mem, ops::Deref, sync::atomic::Ordering};
 
 use anyhow::Result;
 use tokio::{fs::{self, DirEntry}, select, sync::mpsc::{self, UnboundedReceiver}};
@@ -14,7 +14,7 @@ pub struct Files {
 	version:             u64,
 	pub(crate) revision: u64,
 
-	pub sizes: BTreeMap<Url, u64>,
+	pub sizes: HashMap<Url, u64>,
 
 	sorter:      FilesSorter,
 	filter:      Option<Filter>,
@@ -128,7 +128,7 @@ impl Files {
 		}
 	}
 
-	pub fn update_size(&mut self, sizes: BTreeMap<Url, u64>) {
+	pub fn update_size(&mut self, sizes: HashMap<Url, u64>) {
 		if sizes.is_empty() {
 			return;
 		}
@@ -146,7 +146,7 @@ impl Files {
 
 		macro_rules! go {
 			($dist:expr, $src:expr, $inc:literal) => {
-				let mut todo: BTreeMap<_, _> = $src.into_iter().map(|f| (f.url(), f)).collect();
+				let mut todo: HashMap<_, _> = $src.into_iter().map(|f| (f.url(), f)).collect();
 				for f in &$dist {
 					if todo.remove(&f.url).is_some() && todo.is_empty() {
 						break;
@@ -176,7 +176,7 @@ impl Files {
 
 		macro_rules! go {
 			($dist:expr, $src:expr, $inc:literal) => {
-				let mut todo: BTreeSet<_> = $src.into_iter().collect();
+				let mut todo: HashSet<_> = $src.into_iter().collect();
 				let len = $dist.len();
 
 				$dist.retain(|f| !todo.remove(&f.url));
@@ -217,7 +217,7 @@ impl Files {
 			};
 		}
 
-		let mut urls: BTreeSet<_> = urls.into_iter().collect();
+		let mut urls: HashSet<_> = urls.into_iter().collect();
 		if !urls.is_empty() {
 			go!(self.items, urls, 1);
 		}
@@ -228,8 +228,8 @@ impl Files {
 
 	pub fn update_updating(
 		&mut self,
-		files: BTreeMap<Url, File>,
-	) -> (BTreeMap<Url, File>, BTreeMap<Url, File>) {
+		files: HashMap<Url, File>,
+	) -> (HashMap<Url, File>, HashMap<Url, File>) {
 		if files.is_empty() {
 			return Default::default();
 		}
@@ -257,7 +257,7 @@ impl Files {
 					|| !f.url.file_name().is_some_and(|s| filter.matches(s))
 			})
 		} else if self.show_hidden {
-			(BTreeMap::new(), files)
+			(HashMap::new(), files)
 		} else {
 			files.into_iter().partition(|(_, f)| f.is_hidden())
 		};
@@ -271,7 +271,7 @@ impl Files {
 		(hidden, items)
 	}
 
-	pub fn update_upserting(&mut self, files: BTreeMap<Url, File>) {
+	pub fn update_upserting(&mut self, files: HashMap<Url, File>) {
 		if files.is_empty() {
 			return;
 		}

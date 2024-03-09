@@ -16,13 +16,15 @@ impl From<Cmd> for Opt {
 impl Manager {
 	pub fn paste(&mut self, opt: impl Into<Opt>, tasks: &Tasks) {
 		let opt = opt.into() as Opt;
+		let (src, dest) = (self.yanked.iter().collect::<Vec<_>>(), self.cwd());
 
-		let dest = self.cwd();
 		if self.yanked.cut {
-			tasks.file_cut(&self.yanked, dest, opt.force);
+			tasks.file_cut(&src, dest, opt.force);
+
+			self.tabs.iter_mut().for_each(|t| _ = t.selected.remove_many(&src, false));
 			self.unyank(());
 		} else {
-			tasks.file_copy(&self.yanked, dest, opt.force, opt.follow);
+			tasks.file_copy(&src, dest, opt.force, opt.follow);
 		}
 	}
 }

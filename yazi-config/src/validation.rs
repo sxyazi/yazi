@@ -3,9 +3,7 @@ use std::{borrow::Cow, process};
 use validator::{ValidationErrors, ValidationErrorsKind};
 
 pub fn check_validation(res: Result<(), ValidationErrors>) {
-	let Err(errors) = res else {
-		return;
-	};
+	let Err(errors) = res else { return };
 
 	for (field, kind) in errors.into_errors() {
 		match kind {

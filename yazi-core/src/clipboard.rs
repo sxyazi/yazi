@@ -1,12 +1,13 @@
-use std::{cell::RefCell, ffi::OsString};
+use std::ffi::OsString;
 
+use parking_lot::Mutex;
 use yazi_shared::RoCell;
 
 pub static CLIPBOARD: RoCell<Clipboard> = RoCell::new();
 
 #[derive(Default)]
 pub struct Clipboard {
-	content: RefCell<OsString>,
+	content: Mutex<OsString>,
 }
 
 impl Clipboard {
@@ -18,11 +19,11 @@ impl Clipboard {
 		use yazi_shared::in_ssh_connection;
 
 		if in_ssh_connection() {
-			return self.content.borrow().clone();
+			return self.content.lock().clone();
 		}
 
 		let all = [
-			("pbpaste", &[] as &[&str]),
+			("pbpaste", &[][..]),
 			("wl-paste", &[]),
 			("xclip", &["-o", "-selection", "clipboard"]),
 			("xsel", &["-ob"]),
@@ -36,7 +37,7 @@ impl Clipboard {
 				return OsString::from_vec(output.stdout);
 			}
 		}
-		self.content.borrow().clone()
+		self.content.lock().clone()
 	}
 
 	#[cfg(windows)]
@@ -48,7 +49,7 @@ impl Clipboard {
 			return s.into();
 		}
 
-		self.content.borrow().clone()
+		self.content.lock().clone()
 	}
 
 	#[cfg(unix)]
@@ -59,13 +60,13 @@ impl Clipboard {
 		use tokio::{io::AsyncWriteExt, process::Command};
 		use yazi_shared::in_ssh_connection;
 
-		*self.content.borrow_mut() = s.as_ref().to_owned();
+		*self.content.lock() = s.as_ref().to_owned();
 		if in_ssh_connection() {
 			execute!(stdout(), osc52::SetClipboard::new(s.as_ref())).ok();
 		}
 
 		let all = [
-			("pbcopy", &[] as &[&str]),
+			("pbcopy", &[][..]),
 			("wl-copy", &[]),
 			("xclip", &["-selection", "clipboard"]),
 			("xsel", &["-ib"]),
@@ -80,9 +81,7 @@ impl Clipboard {
 				.kill_on_drop(true)
 				.spawn();
 
-			let Ok(mut child) = cmd else {
-				continue;
-			};
+			let Ok(mut child) = cmd else { continue };
 
 			let mut stdin = child.stdin.take().unwrap();
 			if stdin.write_all(s.as_ref().as_encoded_bytes()).await.is_err() {
@@ -101,7 +100,7 @@ impl Clipboard {
 		use clipboard_win::{formats, set_clipboard};
 
 		let s = s.as_ref().to_owned();
-		*self.content.borrow_mut() = s.clone();
+		*self.content.lock() = s.clone();
 
 		tokio::task::spawn_blocking(move || set_clipboard(formats::Unicode, s.to_string_lossy()))
 			.await
