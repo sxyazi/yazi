@@ -76,7 +76,7 @@ impl Boot {
 
 		println!("\n\n--------------------------------------------------");
 		println!(
-			"When reporting a bug, please also upload the `yazi.log` log file - only upload the most recent portion by time."
+			"When reporting a bug, please also upload the `yazi.log` log file - only upload the most recent content by time."
 		);
 		println!("You can find it in the {:?} directory.", Xdg::state_dir());
 	}
