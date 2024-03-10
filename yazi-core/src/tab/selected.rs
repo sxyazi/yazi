@@ -1,15 +1,15 @@
-use std::{collections::{HashMap, HashSet}, ops::Deref};
+use std::{collections::{BTreeSet, HashMap}, ops::Deref};
 
 use yazi_shared::fs::{FilesOp, Url};
 
 #[derive(Default)]
 pub struct Selected {
-	inner:   HashSet<Url>,
+	inner:   BTreeSet<Url>,
 	parents: HashMap<Url, usize>,
 }
 
 impl Deref for Selected {
-	type Target = HashSet<Url>;
+	type Target = BTreeSet<Url>;
 
 	fn deref(&self) -> &Self::Target { &self.inner }
 }

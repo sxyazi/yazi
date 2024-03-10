@@ -1,4 +1,4 @@
-use std::{collections::{hash_set, HashSet}, ops::Deref};
+use std::{collections::{hash_set, BTreeSet}, ops::Deref};
 
 use mlua::{AnyUserData, IntoLuaMulti, Lua, MetaMethod, UserDataMethods, UserDataRefMut};
 use yazi_plugin::{bindings::Cast, url::Url};
@@ -7,18 +7,18 @@ use super::{Iter, SCOPE};
 
 #[derive(Clone, Copy)]
 pub(super) struct Selected {
-	inner: *const HashSet<yazi_shared::fs::Url>,
+	inner: *const BTreeSet<yazi_shared::fs::Url>,
 }
 
 impl Deref for Selected {
-	type Target = HashSet<yazi_shared::fs::Url>;
+	type Target = BTreeSet<yazi_shared::fs::Url>;
 
 	fn deref(&self) -> &Self::Target { self.inner() }
 }
 
 impl Selected {
 	#[inline]
-	pub(super) fn make(inner: &HashSet<yazi_shared::fs::Url>) -> mlua::Result<AnyUserData<'static>> {
+	pub(super) fn make(inner: &BTreeSet<yazi_shared::fs::Url>) -> mlua::Result<AnyUserData<'static>> {
 		SCOPE.create_any_userdata(Self { inner })
 	}
 
@@ -45,5 +45,5 @@ impl Selected {
 	}
 
 	#[inline]
-	fn inner(&self) -> &'static HashSet<yazi_shared::fs::Url> { unsafe { &*self.inner } }
+	fn inner(&self) -> &'static BTreeSet<yazi_shared::fs::Url> { unsafe { &*self.inner } }
 }
