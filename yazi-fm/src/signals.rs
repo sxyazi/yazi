@@ -55,17 +55,11 @@ impl Signals {
 		let tx = self.tx.clone();
 		Ok(tokio::spawn(async move {
 			while let Some(signal) = signals.next().await {
-				if HIDER.try_acquire().is_err() {
-					continue;
-				}
-
 				match signal {
 					SIGHUP | SIGTERM | SIGQUIT | SIGINT => {
-						if tx.send(Event::Quit(Default::default())).is_err() {
-							break;
-						}
+						tx.send(Event::Quit(Default::default())).ok();
 					}
-					SIGCONT => AppProxy::resume(),
+					SIGCONT if HIDER.try_acquire().is_ok() => AppProxy::resume(),
 					_ => {}
 				}
 			}
