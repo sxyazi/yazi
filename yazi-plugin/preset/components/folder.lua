@@ -23,28 +23,33 @@ function Folder:linemode(area, files)
 			spans[#spans + 1] = ui.Span(f.cha:permissions() or "")
 		elseif mode == "mixin" then
 			local size = f:size()
+			local content = ""
 
-			if f.cha.is_link then
-				if f.cha.is_socket then
-					spans[#spans + 1] = ui.Span("->sock")
+
+			if f.cha.is_orphan then
+				content = "death link"
+			elseif f.cha.is_link then
+				if f.cha.is_dir then
+					content = "->"
+				elseif f.cha.is_socket then
+					content = "->sock"
 				elseif f.cha.fifo then
-					spans[#spans + 1] = ui.Span("->fifo")
+					content = "->fifo"
 				elseif f.cha.is_block_device or f.cha.is_char_device then
-					spans[#spans + 1] = ui.Span("->dev")
+					content = "->dev"
 				else
-					spans[#spans + 1] = ui.Span("-> " .. (size and ya.readable_size(size)) or "")
+					content = "-> " .. (size and ya.readable_size(size) or "")
 				end
-			elseif f.cha.is_orphan then
-				spans[#spans + 1] = ui.Span("death link")
 			elseif f.cha.is_socket then
-				spans[#spans + 1] = ui.Span("sock")
+				content = "sock"
 			elseif f.cha.is_fifo then
-				spans[#spans + 1] = ui.Span("fifo")
+				content = "fifo"
 			elseif f.cha.is_block_device or f.cha.is_char_device then
-				spans[#spans + 1] = ui.Span("dev")
+				content = "dev"
 			else
-				spans[#spans + 1] = ui.Span(size and ya.readable_size(size) or "")
+				content = size and ya.readable_size(size) or ""
 			end
+			spans[#spans + 1] = ui.Span(content)
 		end
 
 		spans[#spans + 1] = ui.Span(" ")
