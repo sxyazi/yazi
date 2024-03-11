@@ -25,7 +25,6 @@ function Folder:linemode(area, files)
 			local size = f:size()
 			local content = ""
 
-
 			if f.cha.is_orphan then
 				content = "death link"
 			elseif f.cha.is_link then
