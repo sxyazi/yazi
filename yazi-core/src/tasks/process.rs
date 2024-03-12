@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ffi::OsString, mem};
+use std::{borrow::Cow, collections::HashMap, ffi::OsString, mem};
 
 use yazi_config::{open::Opener, OPEN};
 use yazi_shared::fs::Url;
@@ -15,13 +15,13 @@ impl Tasks {
 		}
 		for (opener, args) in openers {
 			self.process_from_opener(
-				opener.clone(),
+				Cow::Borrowed(opener),
 				args.into_iter().map(|u| u.into_os_string()).collect(),
 			);
 		}
 	}
 
-	pub fn process_from_opener(&self, opener: Opener, mut args: Vec<OsString>) {
+	pub fn process_from_opener(&self, opener: Cow<'static, Opener>, mut args: Vec<OsString>) {
 		if opener.spread {
 			self.scheduler.process_open(opener, args, None);
 			return;

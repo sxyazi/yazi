@@ -1,4 +1,4 @@
-use std::{ffi::OsString, sync::Arc, time::Duration};
+use std::{borrow::Cow, ffi::OsString, sync::Arc, time::Duration};
 
 use futures::{future::BoxFuture, FutureExt};
 use parking_lot::Mutex;
@@ -335,7 +335,7 @@ impl Scheduler {
 
 	pub fn process_open(
 		&self,
-		opener: Opener,
+		opener: Cow<'static, Opener>,
 		args: Vec<OsString>,
 		done: Option<oneshot::Sender<()>>,
 	) {
@@ -369,19 +369,19 @@ impl Scheduler {
 			})
 		});
 
-		// FIXME: use micro instead
-		tokio::spawn({
-			let process = self.process.clone();
-			let opener = opener.clone();
+		let process = self.process.clone();
+		_ = self.micro.try_send(
 			async move {
-				if opener.orphan {
-					process.orphan(ProcessOpOrphan { id, cmd: opener.run.into(), args }).await.ok();
-				} else if opener.block {
-					process.block(ProcessOpBlock { id, cmd: opener.run.into(), args }).await.ok();
+				if opener.block {
+					process.block(ProcessOpBlock { id, cmd: OsString::from(&opener.run), args }).await.ok();
+				} else if opener.orphan {
+					process.orphan(ProcessOpOrphan { id, cmd: OsString::from(&opener.run), args }).await.ok();
 				} else {
-					process.bg(ProcessOpBg { id, cmd: opener.run.into(), args, ct }).await.ok();
+					process.bg(ProcessOpBg { id, cmd: OsString::from(&opener.run), args, ct }).await.ok();
 				}
 			}
-		});
+			.boxed(),
+			HIGH,
+		);
 	}
 }

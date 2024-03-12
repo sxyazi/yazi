@@ -13,19 +13,6 @@ pub struct Process {
 impl Process {
 	pub fn new(prog: mpsc::UnboundedSender<TaskProg>) -> Self { Self { prog } }
 
-	pub async fn orphan(&self, task: ProcessOpOrphan) -> Result<()> {
-		let id = task.id;
-		match super::shell(task.into()) {
-			Ok(_) => self.succ(id)?,
-			Err(e) => {
-				self.prog.send(TaskProg::New(id, 0))?;
-				self.fail(id, format!("Failed to spawn process: {e}"))?;
-			}
-		}
-
-		Ok(())
-	}
-
 	pub async fn block(&self, task: ProcessOpBlock) -> Result<()> {
 		let _permit = HIDER.acquire().await.unwrap();
 		let _defer = Defer::new(AppProxy::resume);
@@ -48,6 +35,19 @@ impl Process {
 		}
 
 		self.succ(id)
+	}
+
+	pub async fn orphan(&self, task: ProcessOpOrphan) -> Result<()> {
+		let id = task.id;
+		match super::shell(task.into()) {
+			Ok(_) => self.succ(id)?,
+			Err(e) => {
+				self.prog.send(TaskProg::New(id, 0))?;
+				self.fail(id, format!("Failed to spawn process: {e}"))?;
+			}
+		}
+
+		Ok(())
 	}
 
 	pub async fn bg(&self, task: ProcessOpBg) -> Result<()> {

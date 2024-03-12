@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use yazi_config::{open::Opener, popup::InputCfg};
 use yazi_proxy::{InputProxy, TasksProxy};
 use yazi_shared::event::Cmd;
@@ -38,14 +40,17 @@ impl Tab {
 				}
 			}
 
-			TasksProxy::open_with(selected, Opener {
-				run:    opt.run,
-				block:  opt.block,
-				orphan: false,
-				desc:   Default::default(),
-				for_:   None,
-				spread: true,
-			});
+			TasksProxy::open_with(
+				selected,
+				Cow::Owned(Opener {
+					run:    opt.run,
+					block:  opt.block,
+					orphan: false,
+					desc:   Default::default(),
+					for_:   None,
+					spread: true,
+				}),
+			);
 		});
 	}
 }

@@ -1,4 +1,4 @@
-use std::ffi::OsString;
+use std::{borrow::Cow, ffi::OsString};
 
 use tokio::sync::oneshot;
 use yazi_config::open::Opener;
@@ -6,8 +6,8 @@ use yazi_shared::event::Cmd;
 
 // --- Exec
 pub struct ProcessExecOpt {
-	pub opener: Opener,
 	pub args:   Vec<OsString>,
+	pub opener: Cow<'static, Opener>,
 	pub done:   oneshot::Sender<()>,
 }
 

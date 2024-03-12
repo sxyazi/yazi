@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use yazi_config::open::Opener;
 use yazi_shared::{event::Cmd, fs::Url};
 
@@ -16,7 +18,7 @@ impl From<Cmd> for OpenDoOpt {
 // --- Open with
 pub struct OpenWithOpt {
 	pub targets: Vec<Url>,
-	pub opener:  Opener,
+	pub opener:  Cow<'static, Opener>,
 }
 
 impl TryFrom<Cmd> for OpenWithOpt {
