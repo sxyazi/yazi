@@ -1,10 +1,9 @@
 use anyhow::Result;
 use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::mpsc};
-use yazi_plugin::external::{self, ShellOpt};
 use yazi_proxy::{AppProxy, HIDER};
 use yazi_shared::Defer;
 
-use super::ProcessOpOpen;
+use super::{ProcessOpOpen, ShellOpt};
 use crate::TaskProg;
 
 pub struct Process {
@@ -24,12 +23,8 @@ impl Process {
 		}
 
 		self.prog.send(TaskProg::New(task.id, 0))?;
-		let mut child = external::shell(ShellOpt {
-			cmd: task.cmd,
-			args: task.args,
-			piped: true,
-			..Default::default()
-		})?;
+		let mut child =
+			super::shell(ShellOpt { cmd: task.cmd, args: task.args, piped: true, ..Default::default() })?;
 
 		let mut stdout = BufReader::new(child.stdout.take().unwrap()).lines();
 		let mut stderr = BufReader::new(child.stderr.take().unwrap()).lines();
@@ -68,7 +63,7 @@ impl Process {
 		AppProxy::stop().await;
 
 		let (id, cmd) = (task.id, task.cmd.clone());
-		let result = external::shell(task.into());
+		let result = super::shell(task.into());
 		if let Err(e) = result {
 			AppProxy::notify_warn(&cmd.to_string_lossy(), &format!("Failed to spawn process: {e}"));
 			return self.succ(id);
@@ -88,7 +83,7 @@ impl Process {
 
 	async fn open_orphan(&self, task: ProcessOpOpen) -> Result<()> {
 		let id = task.id;
-		match external::shell(task.into()) {
+		match super::shell(task.into()) {
 			Ok(_) => self.succ(id)?,
 			Err(e) => {
 				self.prog.send(TaskProg::New(id, 0))?;

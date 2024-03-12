@@ -3,7 +3,6 @@ use std::{collections::HashMap, ffi::{OsStr, OsString}, io::{stdout, BufWriter, 
 use anyhow::{anyhow, Result};
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 use yazi_config::{OPEN, PREVIEW};
-use yazi_plugin::external::{self, ShellOpt};
 use yazi_proxy::{AppProxy, HIDER, WATCHER};
 use yazi_shared::{fs::{accessible, max_common_root, File, FilesOp, Url}, term::Term, Defer};
 
@@ -37,13 +36,14 @@ impl Manager {
 			let _defer2 = Defer::new(|| tokio::spawn(fs::remove_file(tmp.clone())));
 			AppProxy::stop().await;
 
-			let mut child = external::shell(ShellOpt {
-				cmd:    (*opener.run).into(),
-				args:   vec![OsString::new(), tmp.to_owned().into()],
-				piped:  false,
-				orphan: false,
-			})?;
-			child.wait().await?;
+			// FIXME
+			// let mut child = super::shell(ShellOpt {
+			// 	cmd:    (*opener.run).into(),
+			// 	args:   vec![OsString::new(), tmp.to_owned().into()],
+			// 	piped:  false,
+			// 	orphan: false,
+			// })?;
+			// child.wait().await?;
 
 			let new: Vec<_> = fs::read_to_string(&tmp).await?.lines().map(PathBuf::from).collect();
 			Self::bulk_rename_do(cwd, root, old, new).await

@@ -1,7 +1,8 @@
 use std::ffi::OsString;
 
 use tokio::sync::oneshot;
-use yazi_plugin::external::ShellOpt;
+
+use super::ShellOpt;
 
 #[derive(Debug)]
 pub struct ProcessOpOpen {
