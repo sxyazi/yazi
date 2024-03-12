@@ -56,28 +56,6 @@ impl Tasks {
 		ongoing.values().take(Self::limit()).map(Into::into).collect()
 	}
 
-	pub fn file_open(&self, hovered: &Url, targets: &[(Url, String)]) {
-		let mut openers = HashMap::new();
-		for (url, mime) in targets {
-			if let Some(opener) = OPEN.openers(url, mime).and_then(|o| o.first().copied()) {
-				openers.entry(opener).or_insert_with(|| vec![hovered]).push(url);
-			}
-		}
-		for (opener, args) in openers {
-			self.file_open_with(opener, &args);
-		}
-	}
-
-	pub fn file_open_with(&self, opener: &Opener, args: &[impl AsRef<OsStr>]) {
-		if opener.spread {
-			self.scheduler.process_open(opener, args);
-			return;
-		}
-		for target in args.iter().skip(1) {
-			self.scheduler.process_open(opener, &[&args[0], target]);
-		}
-	}
-
 	pub fn file_cut(&self, src: &[&Url], dest: &Url, force: bool) {
 		for &u in src {
 			let to = dest.join(u.file_name().unwrap());
