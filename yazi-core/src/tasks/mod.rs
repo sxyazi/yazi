@@ -1,4 +1,7 @@
 mod commands;
+mod file;
+mod plugin;
+mod preload;
 mod process;
 mod progress;
 mod tasks;
