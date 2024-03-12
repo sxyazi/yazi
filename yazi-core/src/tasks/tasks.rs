@@ -1,8 +1,8 @@
-use std::{collections::{HashMap, HashSet}, ffi::OsStr, mem, sync::Arc, time::Duration};
+use std::{collections::{HashMap, HashSet}, mem, sync::Arc, time::Duration};
 
 use tokio::time::sleep;
 use tracing::debug;
-use yazi_config::{manager::SortBy, open::Opener, plugin::{PluginRule, MAX_PRELOADERS}, OPEN, PLUGIN};
+use yazi_config::{manager::SortBy, plugin::{PluginRule, MAX_PRELOADERS}, PLUGIN};
 use yazi_plugin::ValueSendable;
 use yazi_scheduler::{Scheduler, TaskSummary};
 use yazi_shared::{emit, event::Cmd, fs::{File, Url}, term::Term, Layer, MIME_DIR};

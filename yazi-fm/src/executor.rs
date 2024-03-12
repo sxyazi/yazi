@@ -156,6 +156,7 @@ impl<'a> Executor<'a> {
 		on!(inspect);
 		on!(cancel);
 		on!(open_with);
+		on!(process_exec);
 
 		#[allow(clippy::single_match)]
 		match cmd.name.as_str() {

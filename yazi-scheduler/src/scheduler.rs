@@ -1,14 +1,15 @@
-use std::{ffi::OsStr, sync::Arc, time::Duration};
+use std::{ffi::OsString, sync::Arc, time::Duration};
 
 use futures::{future::BoxFuture, FutureExt};
 use parking_lot::Mutex;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}};
+use tokio_util::sync::CancellationToken;
 use yazi_config::{open::Opener, plugin::PluginRule, TASKS};
 use yazi_plugin::ValueSendable;
 use yazi_shared::{fs::{unique_path, Url}, Throttle};
 
 use super::{Ongoing, TaskProg, TaskStage};
-use crate::{file::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, preload::{Preload, PreloadOpRule, PreloadOpSize}, process::{Process, ProcessOpOpen}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
+use crate::{file::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, preload::{Preload, PreloadOpRule, PreloadOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
 
 pub struct Scheduler {
 	pub file:    Arc<File>,
@@ -332,46 +333,54 @@ impl Scheduler {
 		}
 	}
 
-	pub fn process_open(&self, opener: &Opener, args: &[impl AsRef<OsStr>]) {
+	pub fn process_open(
+		&self,
+		opener: Opener,
+		args: Vec<OsString>,
+		done: Option<oneshot::Sender<()>>,
+	) {
 		let name = {
-			let s = format!("Run `{}`", opener.run);
-			let args = args.iter().map(|a| a.as_ref().to_string_lossy()).collect::<Vec<_>>().join(" ");
-			if args.is_empty() { s } else { format!("{s} with `{args}`") }
+			let args = args.iter().map(|a| a.to_string_lossy()).collect::<Vec<_>>().join(" ");
+			if args.is_empty() {
+				format!("Run {:?}", opener.run)
+			} else {
+				format!("Run {:?} with `{args}`", opener.run)
+			}
 		};
 
+		let ct = CancellationToken::new();
 		let mut ongoing = self.ongoing.lock();
-		let id = ongoing.add(TaskKind::User, name);
 
-		let (cancel_tx, mut cancel_rx) = oneshot::channel();
+		let id = ongoing.add(TaskKind::User, name);
 		ongoing.hooks.insert(id, {
+			let ct = ct.clone();
 			let ongoing = self.ongoing.clone();
 			Box::new(move |canceled: bool| {
 				async move {
-					if canceled {
-						cancel_rx.close();
-					}
 					ongoing.lock().try_remove(id, TaskStage::Hooked);
+					if canceled {
+						ct.cancel();
+					}
+					if let Some(tx) = done {
+						tx.send(()).ok();
+					}
 				}
 				.boxed()
 			})
 		});
 
-		let args = args.iter().map(|a| a.as_ref().to_os_string()).collect::<Vec<_>>();
+		// FIXME: use micro instead
 		tokio::spawn({
 			let process = self.process.clone();
 			let opener = opener.clone();
 			async move {
-				process
-					.open(ProcessOpOpen {
-						id,
-						cmd: opener.run.into(),
-						args,
-						block: opener.block,
-						orphan: opener.orphan,
-						cancel: cancel_tx,
-					})
-					.await
-					.ok();
+				if opener.orphan {
+					process.orphan(ProcessOpOrphan { id, cmd: opener.run.into(), args }).await.ok();
+				} else if opener.block {
+					process.block(ProcessOpBlock { id, cmd: opener.run.into(), args }).await.ok();
+				} else {
+					process.bg(ProcessOpBg { id, cmd: opener.run.into(), args, ct }).await.ok();
+				}
 			}
 		});
 	}

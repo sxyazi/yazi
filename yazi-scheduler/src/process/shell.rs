@@ -12,11 +12,6 @@ pub struct ShellOpt {
 }
 
 impl ShellOpt {
-	pub fn with_piped(mut self) -> Self {
-		self.piped = true;
-		self
-	}
-
 	#[inline]
 	fn stdio(&self) -> Stdio {
 		if self.orphan {

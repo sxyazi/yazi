@@ -1,14 +1,14 @@
 use std::ffi::OsString;
 
+use tokio::sync::oneshot;
+use yazi_config::open::Opener;
 use yazi_shared::event::Cmd;
 
 // --- Exec
-#[derive(Default)]
 pub struct ProcessExecOpt {
-	pub cmd:    OsString,
+	pub opener: Opener,
 	pub args:   Vec<OsString>,
-	pub block:  bool,
-	pub orphan: bool,
+	pub done:   oneshot::Sender<()>,
 }
 
 impl TryFrom<Cmd> for ProcessExecOpt {

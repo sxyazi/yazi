@@ -84,7 +84,7 @@ impl Manager {
 		if targets.is_empty() {
 			return;
 		} else if !opt.interactive {
-			return tasks.process_from_files(&opt.hovered, &targets);
+			return tasks.process_from_files(opt.hovered, targets);
 		}
 
 		let openers: Vec<_> = OPEN.common_openers(&targets).into_iter().cloned().collect();
