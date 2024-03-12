@@ -1,4 +1,4 @@
-use std::ffi::OsString;
+use std::{borrow::Cow, ffi::OsString};
 
 use tracing::error;
 use yazi_boot::ARGS;
@@ -84,10 +84,10 @@ impl Manager {
 		if targets.is_empty() {
 			return;
 		} else if !opt.interactive {
-			return tasks.file_open(&opt.hovered, &targets);
+			return tasks.process_from_files(opt.hovered, targets);
 		}
 
-		let openers: Vec<_> = OPEN.common_openers(&targets).into_iter().cloned().collect();
+		let openers: Vec<_> = OPEN.common_openers(&targets);
 		if openers.is_empty() {
 			return;
 		}
@@ -98,7 +98,7 @@ impl Manager {
 				openers.iter().map(|o| o.desc.clone()).collect(),
 			));
 			if let Ok(choice) = result.await {
-				TasksProxy::open_with(urls, openers[choice].clone());
+				TasksProxy::open_with(urls, Cow::Borrowed(openers[choice]));
 			}
 		});
 	}

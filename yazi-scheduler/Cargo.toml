@@ -25,9 +25,13 @@ parking_lot            = "^0"
 regex                  = "^1"
 tokio                  = { version = "^1", features = [ "parking_lot", "rt-multi-thread" ] }
 tokio-stream           = "^0"
+tokio-util             = "^0"
 
 # Logging
 tracing = { version = "^0", features = [ "max_level_debug", "release_max_level_warn" ] }
+
+[target."cfg(unix)".dependencies]
+libc = "^0"
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
 trash = "^3"

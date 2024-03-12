@@ -74,8 +74,11 @@ impl Boot {
 		println!("    WAYLAND_DISPLAY: {:?}", env::var_os("WAYLAND_DISPLAY"));
 		println!("    DISPLAY: {:?}", env::var_os("DISPLAY"));
 
-		println!("\nUeberzug");
-		println!("    Version: {:?}", std::process::Command::new("ueberzug").arg("--version").output());
+		println!("\nUeberzug++");
+		println!(
+			"    Version: {:?}",
+			std::process::Command::new("ueberzugpp").arg("--version").output()
+		);
 
 		println!("\nWSL");
 		println!(

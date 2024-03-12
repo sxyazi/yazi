@@ -36,5 +36,4 @@ unicode-width = "^0"
 yazi-prebuild = "0.1.2"
 
 [target."cfg(unix)".dependencies]
-libc  = "^0"
 uzers = "^0"
