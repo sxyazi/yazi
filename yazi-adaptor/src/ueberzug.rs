@@ -46,7 +46,7 @@ impl Ueberzug {
 			tx.send(Some((path.to_path_buf(), rect)))?;
 			Adaptor::shown_store(rect, (0, 0));
 		} else {
-			bail!("uninitialized ueberzug");
+			bail!("uninitialized ueberzugpp");
 		}
 
 		let path = path.to_owned();
@@ -66,12 +66,13 @@ impl Ueberzug {
 		if let Some(tx) = &*DEMON {
 			Ok(tx.send(None)?)
 		} else {
-			bail!("uninitialized ueberzug");
+			bail!("uninitialized ueberzugpp");
 		}
 	}
 
 	fn create_demon(adaptor: Adaptor) -> Result<Child> {
-		let result = Command::new("ueberzug")
+		// TODO: demon
+		let result = Command::new("ueberzugpp")
 			.args(["layer", "-so", &adaptor.to_string()])
 			.kill_on_drop(true)
 			.stdin(Stdio::piped())
@@ -79,7 +80,7 @@ impl Ueberzug {
 			.spawn();
 
 		if let Err(ref e) = result {
-			warn!("ueberzug spawning failed: {}", e);
+			warn!("ueberzugpp spawning failed: {e}");
 		}
 		Ok(result?)
 	}
@@ -98,9 +99,9 @@ impl Ueberzug {
 	async fn send_command(child: &mut Child, cmd: Option<(PathBuf, Rect)>) -> Result<()> {
 		let stdin = child.stdin.as_mut().unwrap();
 		if let Some((path, rect)) = cmd {
-			debug!("ueberzug rect before adjustment: {:?}", rect);
+			debug!("ueberzugpp rect before adjustment: {:?}", rect);
 			let rect = Self::adjust_rect(rect);
-			debug!("ueberzug rect after adjustment: {:?}", rect);
+			debug!("ueberzugpp rect after adjustment: {:?}", rect);
 
 			let s = format!(
 				r#"{{"action":"add","identifier":"yazi","x":{},"y":{},"max_width":{},"max_height":{},"path":"{}"}}{}"#,
@@ -111,10 +112,10 @@ impl Ueberzug {
 				path.to_string_lossy(),
 				"\n"
 			);
-			debug!("ueberzug command: {}", s);
+			debug!("ueberzugpp command: {}", s);
 			stdin.write_all(s.as_bytes()).await?;
 		} else {
-			debug!("ueberzug command: remove");
+			debug!("ueberzugpp command: remove");
 			stdin
 				.write_all(format!(r#"{{"action":"remove","identifier":"yazi"}}{}"#, "\n").as_bytes())
 				.await?;

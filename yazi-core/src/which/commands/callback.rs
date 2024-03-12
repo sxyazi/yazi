@@ -27,7 +27,7 @@ impl Which {
 		};
 
 		if opt.tx.try_send(opt.idx).is_err() {
-			error!("callback: send error");
+			error!("which callback: send error");
 		}
 	}
 }
