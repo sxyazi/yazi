@@ -3223,7 +3223,6 @@ dependencies = [
  "regex",
  "tokio",
  "tokio-stream",
- "tokio-util",
  "tracing",
  "trash",
  "yazi-adaptor",

@@ -20,7 +20,7 @@ pub struct Watcher {
 }
 
 impl Watcher {
-	pub(super) fn start() -> Self {
+	pub(super) fn serve() -> Self {
 		let (tx, rx) = mpsc::unbounded_channel();
 		let watcher = RecommendedWatcher::new(
 			{

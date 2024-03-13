@@ -1,6 +1,6 @@
 use std::{sync::Arc, time::Duration};
 
-use tokio::time::sleep;
+use tokio::{task::JoinHandle, time::sleep};
 use yazi_scheduler::{Scheduler, TaskSummary};
 use yazi_shared::{emit, event::Cmd, term::Term, Layer};
 
@@ -8,6 +8,7 @@ use super::{TasksProgress, TASKS_BORDER, TASKS_PADDING, TASKS_PERCENT};
 
 pub struct Tasks {
 	pub(super) scheduler: Arc<Scheduler>,
+	handle:               JoinHandle<()>,
 
 	pub visible:   bool,
 	pub cursor:    usize,
@@ -16,17 +17,11 @@ pub struct Tasks {
 }
 
 impl Tasks {
-	pub fn start() -> Self {
-		let tasks = Self {
-			scheduler: Arc::new(Scheduler::start()),
-			visible:   false,
-			cursor:    0,
-			progress:  Default::default(),
-			summaries: Default::default(),
-		};
+	pub fn serve() -> Self {
+		let scheduler = Scheduler::serve();
+		let ongoing = scheduler.ongoing.clone();
 
-		let ongoing = tasks.scheduler.ongoing.clone();
-		tokio::spawn(async move {
+		let handle = tokio::spawn(async move {
 			let mut last = TasksProgress::default();
 			loop {
 				sleep(Duration::from_millis(500)).await;
@@ -39,7 +34,20 @@ impl Tasks {
 			}
 		});
 
-		tasks
+		Self {
+			scheduler: Arc::new(scheduler),
+			handle,
+
+			visible: false,
+			cursor: 0,
+			progress: Default::default(),
+			summaries: Default::default(),
+		}
+	}
+
+	pub fn shutdown(&self) {
+		self.scheduler.shutdown();
+		self.handle.abort();
 	}
 
 	#[inline]

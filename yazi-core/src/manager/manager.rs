@@ -19,7 +19,7 @@ impl Manager {
 			tabs:   Tabs::make(),
 			yanked: Default::default(),
 
-			watcher:  Watcher::start(),
+			watcher:  Watcher::serve(),
 			mimetype: Default::default(),
 		}
 	}

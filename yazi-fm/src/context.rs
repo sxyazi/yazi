@@ -17,7 +17,7 @@ impl Ctx {
 	pub fn make() -> Self {
 		Self {
 			manager:    Manager::make(),
-			tasks:      Tasks::start(),
+			tasks:      Tasks::serve(),
 			select:     Default::default(),
 			input:      Default::default(),
 			help:       Default::default(),
