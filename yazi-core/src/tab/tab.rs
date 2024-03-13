@@ -51,8 +51,11 @@ impl From<&Url> for Tab {
 impl Tab {
 	// --- Current
 	pub fn selected_or_hovered(&self) -> Vec<&Url> {
+		let hovered = self.current.hovered().map(|h| vec![&h.url]).unwrap_or_default();
 		if self.selected.is_empty() {
-			self.current.hovered().map(|h| vec![&h.url]).unwrap_or_default()
+			hovered
+		} else if !self.selected.contains(hovered[0]) {
+			hovered
 		} else {
 			self.selected.iter().collect()
 		}
