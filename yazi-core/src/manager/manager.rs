@@ -23,6 +23,8 @@ impl Manager {
 			mimetype: Default::default(),
 		}
 	}
+
+	pub fn shutdown(&mut self) { self.tabs.iter_mut().for_each(|t| t.shutdown()); }
 }
 
 impl Manager {

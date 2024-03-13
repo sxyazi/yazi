@@ -49,6 +49,14 @@ impl From<&Url> for Tab {
 }
 
 impl Tab {
+	pub fn shutdown(&mut self) {
+		if let Some(handle) = self.search.take() {
+			handle.abort();
+		}
+	}
+}
+
+impl Tab {
 	// --- Current
 	pub fn selected_or_hovered(&self) -> Vec<&Url> {
 		if self.selected.is_empty() {
