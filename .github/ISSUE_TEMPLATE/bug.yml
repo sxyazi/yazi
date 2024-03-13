@@ -37,10 +37,14 @@ body:
       label: "`yazi --debug` output"
       description: Please do a `yazi --debug` and paste the output here.
       value: |
+        <details>
+
         <!-- Paste the output between the backticks below: -->
         ```sh
 
         ```
+
+        </details>
     validations:
       required: true
   - type: textarea
