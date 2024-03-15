@@ -10,14 +10,14 @@ pub fn check_validation(res: Result<(), ValidationErrors>) {
 			ValidationErrorsKind::Struct(errors) => check_validation(Err(*errors)),
 			ValidationErrorsKind::List(errors) => {
 				for (i, errors) in errors {
-					print!("Config `{field}[{i}]` format error: ");
+					eprint!("Config `{field}[{i}]` format error: ");
 					check_validation(Err(*errors));
-					println!();
+					eprintln!();
 				}
 			}
 			ValidationErrorsKind::Field(error) => {
 				for e in error {
-					println!(
+					eprintln!(
 						"Config `{field}` format error: {}\n",
 						e.message.unwrap_or(Cow::Borrowed("unknown error"))
 					);

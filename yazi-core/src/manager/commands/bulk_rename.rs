@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::HashMap, ffi::{OsStr, OsString}, io::{stdout, BufWriter, Write}, path::PathBuf};
+use std::{borrow::Cow, collections::HashMap, ffi::{OsStr, OsString}, io::{stderr, BufWriter, Write}, path::PathBuf};
 
 use anyhow::{anyhow, Result};
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
@@ -50,9 +50,9 @@ impl Manager {
 		old: Vec<PathBuf>,
 		new: Vec<PathBuf>,
 	) -> Result<()> {
-		Term::clear(&mut stdout())?;
+		Term::clear(&mut stderr())?;
 		if old.len() != new.len() {
-			println!("Number of old and new differ, press ENTER to exit");
+			eprintln!("Number of old and new differ, press ENTER to exit");
 			stdin().read_exact(&mut [0]).await?;
 			return Ok(());
 		}
@@ -63,12 +63,12 @@ impl Manager {
 		}
 
 		{
-			let mut stdout = BufWriter::new(stdout().lock());
+			let mut stderr = BufWriter::new(stderr().lock());
 			for (o, n) in &todo {
-				writeln!(stdout, "{} -> {}", o.display(), n.display())?;
+				writeln!(stderr, "{} -> {}", o.display(), n.display())?;
 			}
-			write!(stdout, "Continue to rename? (y/N): ")?;
-			stdout.flush()?;
+			write!(stderr, "Continue to rename? (y/N): ")?;
+			stderr.flush()?;
 		}
 
 		let mut buf = [0; 10];
@@ -105,16 +105,16 @@ impl Manager {
 	}
 
 	async fn output_failed(failed: Vec<(PathBuf, PathBuf, anyhow::Error)>) -> Result<()> {
-		Term::clear(&mut stdout())?;
+		Term::clear(&mut stderr())?;
 
 		{
-			let mut stdout = BufWriter::new(stdout().lock());
-			writeln!(stdout, "Failed to rename:")?;
+			let mut stderr = BufWriter::new(stderr().lock());
+			writeln!(stderr, "Failed to rename:")?;
 			for (o, n, e) in failed {
-				writeln!(stdout, "{} -> {}: {e}", o.display(), n.display())?;
+				writeln!(stderr, "{} -> {}: {e}", o.display(), n.display())?;
 			}
-			writeln!(stdout, "\nPress ENTER to exit")?;
-			stdout.flush()?;
+			writeln!(stderr, "\nPress ENTER to exit")?;
+			stderr.flush()?;
 		}
 
 		stdin().read_exact(&mut [0]).await?;

@@ -1,4 +1,4 @@
-use std::{io::{stdout, Write}, path::Path};
+use std::{io::{stderr, Write}, path::Path};
 
 use anyhow::Result;
 use base64::{engine::general_purpose, Engine};
@@ -19,17 +19,17 @@ impl KittyOld {
 
 		Adaptor::KittyOld.image_hide()?;
 		Adaptor::shown_store(rect, size);
-		Term::move_lock(stdout().lock(), (rect.x, rect.y), |stdout| {
-			stdout.write_all(&b)?;
+		Term::move_lock(stderr().lock(), (rect.x, rect.y), |stderr| {
+			stderr.write_all(&b)?;
 			Ok(size)
 		})
 	}
 
 	#[inline]
 	pub(super) fn image_erase() -> Result<()> {
-		let mut stdout = stdout().lock();
-		stdout.write_all(format!("{}_Gq=1,a=d,d=A{}\\{}", START, ESCAPE, CLOSE).as_bytes())?;
-		stdout.flush()?;
+		let mut stderr = stderr().lock();
+		stderr.write_all(format!("{}_Gq=1,a=d,d=A{}\\{}", START, ESCAPE, CLOSE).as_bytes())?;
+		stderr.flush()?;
 		Ok(())
 	}
 

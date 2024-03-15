@@ -18,10 +18,8 @@ pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {
 		.arg(&opt.subject)
 		.kill_on_drop(true)
 		.stdout(Stdio::piped())
-		.stderr(Stdio::piped())
+		.stderr(Stdio::null())
 		.spawn()?;
-
-	drop(child.stderr.take());
 
 	let mut it = BufReader::new(child.stdout.take().unwrap()).lines();
 	let (tx, rx) = mpsc::unbounded_channel();

@@ -92,6 +92,18 @@ impl Boot {
 		);
 		println!("You can find it in the {:?} directory.", Xdg::state_dir());
 	}
+
+	fn action_clear_cache() {
+		if PREVIEW.cache_dir == Xdg::cache_dir() {
+			println!("Clearing cache directory: \n{:?}", PREVIEW.cache_dir);
+			std::fs::remove_dir_all(&PREVIEW.cache_dir).unwrap();
+		} else {
+			println!(
+				"You've changed the default cache directory, for your data's safety, please clear it manually: \n{:?}",
+				PREVIEW.cache_dir
+			);
+		}
+	}
 }
 
 impl Default for Boot {
@@ -129,15 +141,7 @@ impl Default for Args {
 		}
 
 		if args.clear_cache {
-			if PREVIEW.cache_dir == Xdg::cache_dir() {
-				println!("Clearing cache directory: \n{:?}", PREVIEW.cache_dir);
-				std::fs::remove_dir_all(&PREVIEW.cache_dir).unwrap();
-			} else {
-				println!(
-					"You've changed the default cache directory, for your data's safety, please clear it manually: \n{:?}",
-					PREVIEW.cache_dir
-				);
-			}
+			Boot::action_clear_cache();
 			process::exit(0);
 		}
 
