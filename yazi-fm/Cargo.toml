@@ -19,29 +19,29 @@ yazi-scheduler = { path = "../yazi-scheduler", version = "0.2.4" }
 yazi-shared    = { path = "../yazi-shared", version = "0.2.4" }
 
 # External dependencies
-anyhow        = "^1"
-better-panic  = "^0"
-crossterm     = { version = "^0", features = [ "event-stream" ] }
-fdlimit       = "^0"
-futures       = "^0"
-mlua          = { version = "^0", features = [ "lua54", "vendored" ] }
-ratatui       = "^0"
-syntect       = { version = "^5", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
-tokio         = { version = "^1", features = [ "parking_lot" ] }
-tokio-util    = "^0"
-unicode-width = "^0"
+anyhow        = "1.0.81"
+better-panic  = "0.3.0"
+crossterm     = { version = "0.27.0", features = [ "event-stream" ] }
+fdlimit       = "0.3.0"
+futures       = "0.3.30"
+mlua          = { version = "0.9.6", features = [ "lua54", "vendored" ] }
+ratatui       = "0.26.1"
+syntect       = { version = "5.2.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
+tokio         = { version = "1.36.0", features = [ "parking_lot" ] }
+tokio-util    = "0.7.10"
+unicode-width = "0.1.11"
 
 # Logging
-tracing            = { version = "^0", features = [ "max_level_debug", "release_max_level_warn" ] }
-tracing-appender   = "^0"
-tracing-subscriber = "^0"
+tracing            = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
+tracing-appender   = "0.2.3"
+tracing-subscriber = "0.3.18"
 
 [target."cfg(unix)".dependencies]
-libc              = "^0"
-signal-hook-tokio = { version = "^0", features = [ "futures-v0_3" ] }
+libc              = "0.2.153"
+signal-hook-tokio = { version = "0.3.1", features = [ "futures-v0_3" ] }
 
 [target.'cfg(all(not(target_os = "macos"), not(target_os = "windows")))'.dependencies]
-tikv-jemallocator = "^0"
+tikv-jemallocator = "0.5.4"
 
 [[bin]]
 name = "yazi"

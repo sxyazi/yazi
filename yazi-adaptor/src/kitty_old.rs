@@ -28,7 +28,7 @@ impl KittyOld {
 	#[inline]
 	pub(super) fn image_erase() -> Result<()> {
 		let mut stderr = stderr().lock();
-		stderr.write_all(format!("{}_Gq=1,a=d,d=A{}\\{}", START, ESCAPE, CLOSE).as_bytes())?;
+		write!(stderr, "{}_Gq=1,a=d,d=A{}\\{}", START, ESCAPE, CLOSE)?;
 		stderr.flush()?;
 		Ok(())
 	}
@@ -66,7 +66,7 @@ impl KittyOld {
 				)?;
 			}
 
-			buf.write_all(CLOSE.as_bytes())?;
+			write!(buf, "{}", CLOSE)?;
 			Ok(buf)
 		}
 

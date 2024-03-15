@@ -31,7 +31,7 @@ impl Iterm2 {
 		Term::move_lock(stderr, (0, 0), |stderr| {
 			for y in rect.top()..rect.bottom() {
 				Term::move_to(stderr, rect.x, y)?;
-				stderr.write_all(s.as_bytes())?;
+				write!(stderr, "{s}")?;
 			}
 			Ok(())
 		})
