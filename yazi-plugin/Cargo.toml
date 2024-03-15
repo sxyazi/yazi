@@ -16,24 +16,24 @@ yazi-proxy   = { path = "../yazi-proxy", version = "0.2.4" }
 yazi-shared  = { path = "../yazi-shared", version = "0.2.4" }
 
 # External dependencies
-ansi-to-tui   = "^3"
-anyhow        = "^1"
-crossterm     = "^0"
-futures       = "^0"
-md-5          = "^0"
-mlua          = { version = "^0", features = [ "lua54", "vendored", "serialize", "macros", "async" ] }
-parking_lot   = "^0"
-ratatui       = "^0"
-serde         = "^1"
-serde_json    = "^1"
-shell-escape  = "^0"
-shell-words   = "^1"
-syntect       = { version = "^5", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
-tokio         = { version = "^1", features = [ "parking_lot", "rt-multi-thread" ] }
-tokio-util    = "^0"
-tracing       = { version = "^0", features = [ "max_level_debug", "release_max_level_warn" ] }
-unicode-width = "^0"
+ansi-to-tui   = "3.1.0"
+anyhow        = "1.0.81"
+crossterm     = "0.27.0"
+futures       = "0.3.30"
+md-5          = "0.10.6"
+mlua          = { version = "0.9.6", features = [ "lua54", "vendored", "serialize", "macros", "async" ] }
+parking_lot   = "0.12.1"
+ratatui       = "0.26.1"
+serde         = "1.0.197"
+serde_json    = "1.0.114"
+shell-escape  = "0.1.5"
+shell-words   = "1.1.0"
+syntect       = { version = "5.2.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
+tokio         = { version = "1.36.0", features = [ "parking_lot", "rt-multi-thread" ] }
+tokio-util    = "0.7.10"
+tracing       = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
+unicode-width = "0.1.11"
 yazi-prebuild = "0.1.2"
 
 [target."cfg(unix)".dependencies]
-uzers = "^0"
+uzers = "0.11.3"

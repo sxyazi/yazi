@@ -1,7 +1,7 @@
 use std::io::{stderr, Write};
 
 use anyhow::Result;
-use crossterm::{cursor::{MoveTo, RestorePosition, SavePosition, SetCursorStyle}, execute, queue};
+use crossterm::{cursor::{MoveTo, RestorePosition, SavePosition, SetCursorStyle}, queue};
 
 use super::Term;
 
@@ -44,8 +44,8 @@ impl Term {
 	}
 
 	#[inline]
-	pub fn set_cursor_block() -> Result<()> { Ok(execute!(stderr(), SetCursorStyle::BlinkingBlock)?) }
+	pub fn set_cursor_block() -> Result<()> { Ok(queue!(stderr(), SetCursorStyle::BlinkingBlock)?) }
 
 	#[inline]
-	pub fn set_cursor_bar() -> Result<()> { Ok(execute!(stderr(), SetCursorStyle::BlinkingBar)?) }
+	pub fn set_cursor_bar() -> Result<()> { Ok(queue!(stderr(), SetCursorStyle::BlinkingBar)?) }
 }

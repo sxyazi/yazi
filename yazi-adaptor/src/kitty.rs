@@ -315,28 +315,15 @@ impl Kitty {
 	pub(super) async fn image_show(path: &Path, rect: Rect) -> Result<(u32, u32)> {
 		let img = Image::downscale(path, rect).await?;
 		let size = (img.width(), img.height());
-		let b = Self::encode(img).await?;
+
+		let b1 = Self::encode(img).await?;
+		let b2 = Self::place(&rect)?;
 
 		Adaptor::Kitty.image_hide()?;
 		Adaptor::shown_store(rect, size);
 		Term::move_lock(stderr().lock(), (rect.x, rect.y), |stderr| {
-			stderr.write_all(&b)?;
-
-			let mut buf = String::with_capacity(rect.width as usize * 3 + 20);
-			for y in 0..rect.height {
-				Term::move_to(stderr, rect.x, rect.y + y)?;
-
-				buf.clear();
-				buf.push_str("\x1b[38;5;1m");
-				for x in 0..rect.width {
-					buf.push('\u{10EEEE}');
-					buf.push(*DIACRITICS.get(y as usize).unwrap_or(&DIACRITICS[0]));
-					buf.push(*DIACRITICS.get(x as usize).unwrap_or(&DIACRITICS[0]));
-				}
-				buf.push_str("\x1b[0m");
-				stderr.write_all(buf.as_bytes())?;
-			}
-
+			stderr.write_all(&b1)?;
+			stderr.write_all(&b2)?;
 			Ok(size)
 		})
 	}
@@ -347,10 +334,10 @@ impl Kitty {
 		Term::move_lock(stderr, (0, 0), |stderr| {
 			for y in rect.top()..rect.bottom() {
 				Term::move_to(stderr, rect.x, y)?;
-				stderr.write_all(s.as_bytes())?;
+				write!(stderr, "{s}")?;
 			}
 
-			stderr.write_all(format!("{}_Gq=1,a=d,d=A{}\\{}", START, ESCAPE, CLOSE).as_bytes())?;
+			write!(stderr, "{}_Gq=1,a=d,d=A{}\\{}", START, ESCAPE, CLOSE)?;
 			Ok(())
 		})
 	}
@@ -388,7 +375,7 @@ impl Kitty {
 				)?;
 			}
 
-			buf.write_all(CLOSE.as_bytes())?;
+			write!(buf, "{}", CLOSE)?;
 			Ok(buf)
 		}
 
@@ -399,5 +386,19 @@ impl Kitty {
 			v => output(v.to_rgb8().as_raw(), 24, size),
 		})
 		.await?
+	}
+
+	fn place(rect: &Rect) -> Result<Vec<u8>> {
+		let mut buf = Vec::with_capacity(rect.width as usize * rect.height as usize * 3 + 50);
+		for y in 0..rect.height {
+			write!(buf, "\x1b[{};{}H\x1b[38;5;1m", rect.y + y + 1, rect.x + 1)?;
+			for x in 0..rect.width {
+				write!(buf, "{}", '\u{10EEEE}')?;
+				write!(buf, "{}", *DIACRITICS.get(y as usize).unwrap_or(&DIACRITICS[0]))?;
+				write!(buf, "{}", *DIACRITICS.get(x as usize).unwrap_or(&DIACRITICS[0]))?;
+			}
+			write!(buf, "\x1b[0m")?;
+		}
+		Ok(buf)
 	}
 }
