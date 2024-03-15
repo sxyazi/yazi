@@ -1,4 +1,4 @@
-use std::{io::{self, stdout, Stdout, Write}, mem, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}};
+use std::{io::{self, stderr, Stderr, Write}, mem, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}};
 
 use anyhow::Result;
 use crossterm::{event::{DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, terminal::{disable_raw_mode, enable_raw_mode, supports_keyboard_enhancement, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, WindowSize}};
@@ -7,7 +7,7 @@ use ratatui::{backend::CrosstermBackend, buffer::Buffer, layout::Rect, Completed
 static CSI_U: AtomicBool = AtomicBool::new(false);
 
 pub struct Term {
-	inner:       Terminal<CrosstermBackend<Stdout>>,
+	inner:       Terminal<CrosstermBackend<Stderr>>,
 	last_area:   Rect,
 	last_buffer: Buffer,
 }
@@ -15,17 +15,17 @@ pub struct Term {
 impl Term {
 	pub fn start() -> Result<Self> {
 		let mut term = Self {
-			inner:       Terminal::new(CrosstermBackend::new(stdout()))?,
+			inner:       Terminal::new(CrosstermBackend::new(stderr()))?,
 			last_area:   Default::default(),
 			last_buffer: Default::default(),
 		};
 
 		enable_raw_mode()?;
-		queue!(stdout(), EnterAlternateScreen, EnableBracketedPaste, EnableFocusChange)?;
+		queue!(stderr(), EnterAlternateScreen, EnableBracketedPaste, EnableFocusChange)?;
 
 		if let Ok(true) = supports_keyboard_enhancement() {
 			queue!(
-				stdout(),
+				stderr(),
 				PushKeyboardEnhancementFlags(
 					KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES
 						| KeyboardEnhancementFlags::REPORT_ALTERNATE_KEYS
@@ -42,11 +42,11 @@ impl Term {
 
 	fn stop(&mut self) -> Result<()> {
 		if CSI_U.swap(false, Ordering::Relaxed) {
-			execute!(stdout(), PopKeyboardEnhancementFlags)?;
+			execute!(stderr(), PopKeyboardEnhancementFlags)?;
 		}
 
 		execute!(
-			stdout(),
+			stderr(),
 			DisableFocusChange,
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
@@ -59,11 +59,11 @@ impl Term {
 
 	pub fn goodbye(f: impl FnOnce() -> bool) -> ! {
 		if CSI_U.swap(false, Ordering::Relaxed) {
-			execute!(stdout(), PopKeyboardEnhancementFlags).ok();
+			execute!(stderr(), PopKeyboardEnhancementFlags).ok();
 		}
 
 		execute!(
-			stdout(),
+			stderr(),
 			DisableFocusChange,
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
@@ -132,10 +132,10 @@ impl Term {
 	}
 
 	#[inline]
-	pub fn clear(stdout: &mut impl Write) -> Result<()> {
-		queue!(stdout, Clear(ClearType::All))?;
-		writeln!(stdout)?;
-		Ok(stdout.flush()?)
+	pub fn clear(w: &mut impl Write) -> Result<()> {
+		queue!(w, Clear(ClearType::All))?;
+		writeln!(w)?;
+		Ok(w.flush()?)
 	}
 }
 
@@ -144,7 +144,7 @@ impl Drop for Term {
 }
 
 impl Deref for Term {
-	type Target = Terminal<CrosstermBackend<Stdout>>;
+	type Target = Terminal<CrosstermBackend<Stderr>>;
 
 	fn deref(&self) -> &Self::Target { &self.inner }
 }

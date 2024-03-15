@@ -110,8 +110,8 @@ impl Emulator {
 
 	pub fn via_csi() -> Result<Self> {
 		enable_raw_mode()?;
-		std::io::stdout().write_all(b"\x1b[>q\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[c")?;
-		std::io::stdout().flush()?;
+		std::io::stderr().write_all(b"\x1b[>q\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[c")?;
+		std::io::stderr().flush()?;
 
 		let mut stdin = std::io::stdin().lock();
 		let mut buf = String::with_capacity(200);

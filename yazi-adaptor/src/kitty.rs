@@ -1,4 +1,4 @@
-use std::{io::{stdout, BufWriter, Write}, path::Path};
+use std::{io::{stderr, BufWriter, Write}, path::Path};
 
 use anyhow::Result;
 use base64::{engine::general_purpose, Engine};
@@ -319,12 +319,12 @@ impl Kitty {
 
 		Adaptor::Kitty.image_hide()?;
 		Adaptor::shown_store(rect, size);
-		Term::move_lock(stdout().lock(), (rect.x, rect.y), |stdout| {
-			stdout.write_all(&b)?;
+		Term::move_lock(stderr().lock(), (rect.x, rect.y), |stderr| {
+			stderr.write_all(&b)?;
 
 			let mut buf = String::with_capacity(rect.width as usize * 3 + 20);
 			for y in 0..rect.height {
-				Term::move_to(stdout, rect.x, rect.y + y)?;
+				Term::move_to(stderr, rect.x, rect.y + y)?;
 
 				buf.clear();
 				buf.push_str("\x1b[38;5;1m");
@@ -334,7 +334,7 @@ impl Kitty {
 					buf.push(*DIACRITICS.get(x as usize).unwrap_or(&DIACRITICS[0]));
 				}
 				buf.push_str("\x1b[0m");
-				stdout.write_all(buf.as_bytes())?;
+				stderr.write_all(buf.as_bytes())?;
 			}
 
 			Ok(size)
@@ -342,15 +342,15 @@ impl Kitty {
 	}
 
 	pub(super) fn image_erase(rect: Rect) -> Result<()> {
-		let stdout = BufWriter::new(stdout().lock());
+		let stderr = BufWriter::new(stderr().lock());
 		let s = " ".repeat(rect.width as usize);
-		Term::move_lock(stdout, (0, 0), |stdout| {
+		Term::move_lock(stderr, (0, 0), |stderr| {
 			for y in rect.top()..rect.bottom() {
-				Term::move_to(stdout, rect.x, y)?;
-				stdout.write_all(s.as_bytes())?;
+				Term::move_to(stderr, rect.x, y)?;
+				stderr.write_all(s.as_bytes())?;
 			}
 
-			stdout.write_all(format!("{}_Gq=1,a=d,d=A{}\\{}", START, ESCAPE, CLOSE).as_bytes())?;
+			stderr.write_all(format!("{}_Gq=1,a=d,d=A{}\\{}", START, ESCAPE, CLOSE).as_bytes())?;
 			Ok(())
 		})
 	}

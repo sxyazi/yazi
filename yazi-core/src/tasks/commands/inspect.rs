@@ -1,4 +1,4 @@
-use std::io::{stdout, Write};
+use std::io::{stderr, Write};
 
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use tokio::{io::{stdin, AsyncReadExt}, select, sync::mpsc, time};
@@ -32,8 +32,8 @@ impl Tasks {
 				AppProxy::resume();
 			});
 
-			Term::clear(&mut stdout()).ok();
-			stdout().write_all(buffered.as_bytes()).ok();
+			Term::clear(&mut stderr()).ok();
+			stderr().write_all(buffered.as_bytes()).ok();
 			enable_raw_mode().ok();
 
 			let mut stdin = stdin();
@@ -41,13 +41,13 @@ impl Tasks {
 			loop {
 				select! {
 					Some(line) = rx.recv() => {
-						let mut stdout = stdout().lock();
-						stdout.write_all(line.as_bytes()).ok();
-						stdout.write_all(b"\r\n").ok();
+						let mut stderr = stderr().lock();
+						stderr.write_all(line.as_bytes()).ok();
+						stderr.write_all(b"\r\n").ok();
 					}
 					_ = time::sleep(time::Duration::from_millis(500)) => {
 						if scheduler.ongoing.lock().get(id).is_none() {
-							stdout().write_all(b"Task finished, press `q` to quit\r\n").ok();
+							stderr().write_all(b"Task finished, press `q` to quit\r\n").ok();
 							break;
 						}
 					},

@@ -70,7 +70,7 @@ pub fn init() {
 
 	// TODO: remove this once Yazi 0.3 is released --
 	if !HEADSUP.disable_exec_warn && DEPRECATED_EXEC.load(std::sync::atomic::Ordering::Relaxed) {
-		println!(
+		eprintln!(
 			r#"
 WARNING: `exec` will be deprecated in the next major version v0.3 and replaced by `run`.
 

@@ -1,4 +1,4 @@
-use std::{io::{stdout, BufWriter, Write}, path::Path};
+use std::{io::{stderr, BufWriter, Write}, path::Path};
 
 use anyhow::{bail, Result};
 use color_quant::NeuQuant;
@@ -19,19 +19,19 @@ impl Sixel {
 
 		Adaptor::Sixel.image_hide()?;
 		Adaptor::shown_store(rect, size);
-		Term::move_lock(stdout().lock(), (rect.x, rect.y), |stdout| {
-			stdout.write_all(&b)?;
+		Term::move_lock(stderr().lock(), (rect.x, rect.y), |stderr| {
+			stderr.write_all(&b)?;
 			Ok(size)
 		})
 	}
 
 	pub(super) fn image_erase(rect: Rect) -> Result<()> {
-		let stdout = BufWriter::new(stdout().lock());
+		let stderr = BufWriter::new(stderr().lock());
 		let s = " ".repeat(rect.width as usize);
-		Term::move_lock(stdout, (0, 0), |stdout| {
+		Term::move_lock(stderr, (0, 0), |stderr| {
 			for y in rect.top()..rect.bottom() {
-				Term::move_to(stdout, rect.x, y)?;
-				stdout.write_all(s.as_bytes())?;
+				Term::move_to(stderr, rect.x, y)?;
+				stderr.write_all(s.as_bytes())?;
 			}
 			Ok(())
 		})

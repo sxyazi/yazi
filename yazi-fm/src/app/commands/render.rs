@@ -71,7 +71,7 @@ impl App {
 			}
 		}
 
-		let mut backend = CrosstermBackend::new(std::io::stdout().lock());
+		let mut backend = CrosstermBackend::new(std::io::stderr().lock());
 		backend.draw(patches.into_iter()).ok();
 		if let Some((x, y)) = cursor {
 			backend.show_cursor().ok();
