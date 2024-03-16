@@ -91,7 +91,7 @@ impl Boot {
 		writeln!(
 			s,
 			"    default: {:?}",
-			yazi_config::OPEN.openers("bulk.txt", "text/plain").and_then(|a| a.first().cloned())
+			yazi_config::OPEN.openers("f75a.txt", "text/plain").and_then(|a| a.first().cloned())
 		)?;
 		writeln!(s, "    block: {:?}", yazi_config::OPEN.block_opener("bulk.txt", "text/plain"))?;
 
