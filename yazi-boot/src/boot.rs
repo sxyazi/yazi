@@ -1,4 +1,4 @@
-use std::{env, ffi::OsString, path::{Path, PathBuf}, process};
+use std::{env, ffi::OsString, fmt::Write, path::{Path, PathBuf}, process};
 
 use clap::Parser;
 use serde::Serialize;
@@ -33,64 +33,82 @@ impl Boot {
 		(parent.unwrap().to_owned(), Some(entry.file_name().unwrap().to_owned()))
 	}
 
-	fn action_version() {
-		println!(
-			"yazi {} ({} {})",
+	fn action_version() -> String {
+		format!(
+			"{} ({} {})",
 			env!("CARGO_PKG_VERSION"),
 			env!("VERGEN_GIT_SHA"),
 			env!("VERGEN_BUILD_DATE")
-		);
+		)
 	}
 
-	fn action_debug() {
-		print!("Yazi\n    ");
-		Self::action_version();
+	fn action_debug() -> Result<String, std::fmt::Error> {
+		use std::{env::consts::{ARCH, FAMILY, OS}, process::Command};
+		let mut s = String::new();
 
-		println!("\nEnvironment");
-		println!(
-			"    OS: {}-{} ({})",
-			std::env::consts::OS,
-			std::env::consts::ARCH,
-			std::env::consts::FAMILY
-		);
-		println!("    Debug: {}", cfg!(debug_assertions));
+		writeln!(s, "\nYazi")?;
+		writeln!(s, "    Version: {}", Self::action_version())?;
+		writeln!(s, "    OS: {}-{} ({})", OS, ARCH, FAMILY)?;
+		writeln!(s, "    Debug: {}", cfg!(debug_assertions))?;
 
-		println!("\nEmulator");
-		println!("    Emulator.via_env: {:?}", yazi_adaptor::Emulator::via_env());
-		println!("    Emulator.via_csi: {:?}", yazi_adaptor::Emulator::via_csi());
-		println!("    Emulator.detect: {:?}", yazi_adaptor::Emulator::detect());
+		writeln!(s, "\nEmulator")?;
+		writeln!(s, "    Emulator.via_env: {:?}", yazi_adaptor::Emulator::via_env())?;
+		writeln!(s, "    Emulator.via_csi: {:?}", yazi_adaptor::Emulator::via_csi())?;
+		writeln!(s, "    Emulator.detect: {:?}", yazi_adaptor::Emulator::detect())?;
 
-		println!("\nAdaptor");
-		println!("    Adaptor.matches: {:?}", yazi_adaptor::Adaptor::matches());
+		writeln!(s, "\nAdaptor")?;
+		writeln!(s, "    Adaptor.matches: {:?}", yazi_adaptor::Adaptor::matches())?;
 
-		println!("\ntmux");
-		println!("    TMUX: {:?}", *yazi_adaptor::TMUX);
+		writeln!(s, "\nDesktop")?;
+		writeln!(s, "    XDG_SESSION_TYPE: {:?}", env::var_os("XDG_SESSION_TYPE"))?;
+		writeln!(s, "    WAYLAND_DISPLAY: {:?}", env::var_os("WAYLAND_DISPLAY"))?;
+		writeln!(s, "    DISPLAY: {:?}", env::var_os("DISPLAY"))?;
 
-		println!("\nZellij");
-		println!("    ZELLIJ_SESSION_NAME: {:?}", env::var_os("ZELLIJ_SESSION_NAME"));
+		writeln!(s, "\nSSH")?;
+		writeln!(s, "    shared.in_ssh_connection: {:?}", yazi_shared::in_ssh_connection())?;
 
-		println!("\nDesktop");
-		println!("    XDG_SESSION_TYPE: {:?}", env::var_os("XDG_SESSION_TYPE"));
-		println!("    WAYLAND_DISPLAY: {:?}", env::var_os("WAYLAND_DISPLAY"));
-		println!("    DISPLAY: {:?}", env::var_os("DISPLAY"));
-
-		println!("\nUeberzug++");
-		println!(
-			"    Version: {:?}",
-			std::process::Command::new("ueberzugpp").arg("--version").output()
-		);
-
-		println!("\nWSL");
-		println!(
+		writeln!(s, "\nWSL")?;
+		writeln!(
+			s,
 			"    /proc/sys/fs/binfmt_misc/WSLInterop: {:?}",
 			std::fs::symlink_metadata("/proc/sys/fs/binfmt_misc/WSLInterop").is_ok()
-		);
+		)?;
 
-		println!("\n\n--------------------------------------------------");
-		println!(
+		writeln!(s, "\nVariables")?;
+		writeln!(s, "    EDITOR: {:?}", env::var_os("EDITOR"))?;
+		writeln!(s, "    ZELLIJ_SESSION_NAME: {:?}", env::var_os("ZELLIJ_SESSION_NAME"))?;
+		writeln!(s, "    YAZI_FILE_ONE: {:?}", env::var_os("YAZI_FILE_ONE"))?;
+		writeln!(s, "    YAZI_CONFIG_HOME: {:?}", env::var_os("YAZI_CONFIG_HOME"))?;
+
+		writeln!(s, "\nfile(1)")?;
+		writeln!(
+			s,
+			"    Version: {:?}",
+			Command::new(env::var_os("YAZI_FILE_TWO").unwrap_or("file".into())).arg("--version").output()
+		)?;
+
+		writeln!(s, "\nText Opener")?;
+		writeln!(
+			s,
+			"    default: {:?}",
+			yazi_config::OPEN.openers("bulk.txt", "text/plain").and_then(|a| a.first().cloned())
+		)?;
+		writeln!(s, "    block: {:?}", yazi_config::OPEN.block_opener("bulk.txt", "text/plain"))?;
+
+		writeln!(s, "\ntmux")?;
+		writeln!(s, "    TMUX: {:?}", *yazi_adaptor::TMUX)?;
+
+		writeln!(s, "\nUeberzug++")?;
+		writeln!(s, "    Version: {:?}", Command::new("ueberzugpp").arg("--version").output())?;
+
+		writeln!(s, "\n\n--------------------------------------------------")?;
+		writeln!(
+			s,
 			"When reporting a bug, please also upload the `yazi.log` log file - only upload the most recent content by time."
-		);
-		println!("You can find it in the {:?} directory.", Xdg::state_dir());
+		)?;
+		writeln!(s, "You can find it in the {:?} directory.", Xdg::state_dir())?;
+
+		Ok(s)
 	}
 
 	fn action_clear_cache() {
@@ -131,12 +149,12 @@ impl Default for Args {
 		let args = Self::parse();
 
 		if args.debug {
-			Boot::action_debug();
+			println!("{}", Boot::action_debug().unwrap());
 			process::exit(0);
 		}
 
 		if args.version {
-			Boot::action_version();
+			println!("Yazi {}", Boot::action_version());
 			process::exit(0);
 		}
 
