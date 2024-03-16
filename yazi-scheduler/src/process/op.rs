@@ -1,6 +1,6 @@
 use std::ffi::OsString;
 
-use tokio_util::sync::CancellationToken;
+use tokio::sync::mpsc;
 
 use super::ShellOpt;
 
@@ -32,10 +32,10 @@ impl From<ProcessOpOrphan> for ShellOpt {
 
 #[derive(Debug)]
 pub struct ProcessOpBg {
-	pub id:   usize,
-	pub cmd:  OsString,
-	pub args: Vec<OsString>,
-	pub ct:   CancellationToken,
+	pub id:     usize,
+	pub cmd:    OsString,
+	pub args:   Vec<OsString>,
+	pub cancel: mpsc::Receiver<()>,
 }
 
 impl From<ProcessOpBg> for ShellOpt {

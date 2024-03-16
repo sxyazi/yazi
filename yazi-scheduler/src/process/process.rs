@@ -57,10 +57,12 @@ impl Process {
 
 		let mut stdout = BufReader::new(child.stdout.take().unwrap()).lines();
 		let mut stderr = BufReader::new(child.stderr.take().unwrap()).lines();
+		let mut cancel = task.cancel;
 		loop {
 			select! {
-				_ = task.ct.cancelled() => {
+				_ = cancel.recv() => {
 					child.start_kill().ok();
+					cancel.close();
 					break;
 				}
 				Ok(Some(line)) = stdout.next_line() => {

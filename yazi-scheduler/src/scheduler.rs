@@ -2,8 +2,7 @@ use std::{borrow::Cow, ffi::OsString, sync::Arc, time::Duration};
 
 use futures::{future::BoxFuture, FutureExt};
 use parking_lot::Mutex;
-use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}};
-use tokio_util::sync::CancellationToken;
+use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
 use yazi_config::{open::Opener, plugin::PluginRule, TASKS};
 use yazi_plugin::ValueSendable;
 use yazi_shared::{fs::{unique_path, Url}, Throttle};
@@ -19,16 +18,17 @@ pub struct Scheduler {
 
 	micro:       async_priority_channel::Sender<BoxFuture<'static, ()>, u8>,
 	prog:        mpsc::UnboundedSender<TaskProg>,
+	handles:     Vec<JoinHandle<()>>,
 	pub ongoing: Arc<Mutex<Ongoing>>,
 }
 
 impl Scheduler {
-	pub fn start() -> Self {
+	pub fn serve() -> Self {
 		let (micro_tx, micro_rx) = async_priority_channel::unbounded();
 		let (macro_tx, macro_rx) = async_priority_channel::unbounded();
 		let (prog_tx, prog_rx) = mpsc::unbounded_channel();
 
-		let scheduler = Self {
+		let mut scheduler = Self {
 			file:    Arc::new(File::new(macro_tx.clone(), prog_tx.clone())),
 			plugin:  Arc::new(Plugin::new(macro_tx.clone(), prog_tx.clone())),
 			preload: Arc::new(Preload::new(macro_tx.clone(), prog_tx.clone())),
@@ -36,132 +36,35 @@ impl Scheduler {
 
 			micro:   micro_tx,
 			prog:    prog_tx,
+			handles: Vec::with_capacity(TASKS.micro_workers as usize + TASKS.macro_workers as usize + 1),
 			ongoing: Default::default(),
 		};
 
 		for _ in 0..TASKS.micro_workers {
-			scheduler.schedule_micro(micro_rx.clone());
+			scheduler.handles.push(scheduler.schedule_micro(micro_rx.clone()));
 		}
 		for _ in 0..TASKS.macro_workers {
-			scheduler.schedule_macro(micro_rx.clone(), macro_rx.clone());
+			scheduler.handles.push(scheduler.schedule_macro(micro_rx.clone(), macro_rx.clone()));
 		}
 		scheduler.progress(prog_rx);
 		scheduler
 	}
 
-	fn schedule_micro(&self, rx: async_priority_channel::Receiver<BoxFuture<'static, ()>, u8>) {
-		tokio::spawn(async move {
-			loop {
-				if let Ok((fut, _)) = rx.recv().await {
-					fut.await;
-				}
-			}
-		});
-	}
-
-	fn schedule_macro(
-		&self,
-		micro: async_priority_channel::Receiver<BoxFuture<'static, ()>, u8>,
-		macro_: async_priority_channel::Receiver<TaskOp, u8>,
-	) {
-		let file = self.file.clone();
-		let plugin = self.plugin.clone();
-		let preload = self.preload.clone();
-
-		let prog = self.prog.clone();
-		let ongoing = self.ongoing.clone();
-
-		tokio::spawn(async move {
-			loop {
-				select! {
-					Ok((fut, _)) = micro.recv() => {
-						fut.await;
-					}
-					Ok((op, _)) = macro_.recv() => {
-						let id = op.id();
-						if !ongoing.lock().exists(id) {
-							continue;
-						}
-
-						let result = match op {
-							TaskOp::File(op) => file.work(*op).await,
-							TaskOp::Plugin(op) => plugin.work(*op).await,
-							TaskOp::Preload(op) => preload.work(*op).await,
-						};
-
-						if let Err(e) = result {
-							prog.send(TaskProg::Fail(id, format!("Failed to work on this task: {:?}", e))).ok();
-						}
-					}
-				}
-			}
-		});
-	}
-
-	fn progress(&self, mut rx: UnboundedReceiver<TaskProg>) {
-		let micro = self.micro.clone();
-		let ongoing = self.ongoing.clone();
-
-		tokio::spawn(async move {
-			while let Some(op) = rx.recv().await {
-				match op {
-					TaskProg::New(id, size) => {
-						if let Some(task) = ongoing.lock().get_mut(id) {
-							task.total += 1;
-							task.found += size;
-						}
-					}
-					TaskProg::Adv(id, succ, processed) => {
-						let mut ongoing = ongoing.lock();
-						if let Some(task) = ongoing.get_mut(id) {
-							task.succ += succ;
-							task.processed += processed;
-						}
-						if succ > 0 {
-							if let Some(fut) = ongoing.try_remove(id, TaskStage::Pending) {
-								micro.try_send(fut, NORMAL).ok();
-							}
-						}
-					}
-					TaskProg::Succ(id) => {
-						if let Some(fut) = ongoing.lock().try_remove(id, TaskStage::Dispatched) {
-							micro.try_send(fut, NORMAL).ok();
-						}
-					}
-					TaskProg::Fail(id, reason) => {
-						if let Some(task) = ongoing.lock().get_mut(id) {
-							task.fail += 1;
-							task.logs.push_str(&reason);
-							task.logs.push('\n');
-
-							if let Some(logger) = &task.logger {
-								logger.send(reason).ok();
-							}
-						}
-					}
-					TaskProg::Log(id, line) => {
-						if let Some(task) = ongoing.lock().get_mut(id) {
-							task.logs.push_str(&line);
-							task.logs.push('\n');
-
-							if let Some(logger) = &task.logger {
-								logger.send(line).ok();
-							}
-						}
-					}
-				}
-			}
-		});
-	}
-
 	pub fn cancel(&self, id: usize) -> bool {
 		let mut ongoing = self.ongoing.lock();
-		let b = ongoing.all.remove(&id).is_some();
 
 		if let Some(hook) = ongoing.hooks.remove(&id) {
 			self.micro.try_send(hook(true), HIGH).ok();
+			return false;
 		}
-		b
+
+		ongoing.all.remove(&id).is_some()
+	}
+
+	pub fn shutdown(&self) {
+		for handle in &self.handles {
+			handle.abort();
+		}
 	}
 
 	pub fn file_cut(&self, from: Url, mut to: Url, force: bool) {
@@ -285,7 +188,7 @@ impl Scheduler {
 				plugin.micro(PluginOpEntry { id, name, args }).await.ok();
 			}
 			.boxed(),
-			HIGH,
+			NORMAL,
 		);
 	}
 
@@ -309,7 +212,7 @@ impl Scheduler {
 				preload.rule(PreloadOpRule { id, plugin, targets }).await.ok();
 			}
 			.boxed(),
-			HIGH,
+			NORMAL,
 		);
 	}
 
@@ -328,7 +231,7 @@ impl Scheduler {
 					preload.size(PreloadOpSize { id, target, throttle }).await.ok();
 				}
 				.boxed(),
-				HIGH,
+				NORMAL,
 			);
 		}
 	}
@@ -348,40 +251,149 @@ impl Scheduler {
 			}
 		};
 
-		let ct = CancellationToken::new();
+		let (cancel_tx, cancel_rx) = mpsc::channel(1);
 		let mut ongoing = self.ongoing.lock();
 
 		let id = ongoing.add(TaskKind::User, name);
 		ongoing.hooks.insert(id, {
-			let ct = ct.clone();
 			let ongoing = self.ongoing.clone();
 			Box::new(move |canceled: bool| {
 				async move {
-					ongoing.lock().try_remove(id, TaskStage::Hooked);
 					if canceled {
-						ct.cancel();
+						cancel_tx.send(()).await.ok();
+						cancel_tx.closed().await;
 					}
 					if let Some(tx) = done {
 						tx.send(()).ok();
 					}
+					ongoing.lock().try_remove(id, TaskStage::Hooked);
 				}
 				.boxed()
 			})
 		});
 
+		let cmd = OsString::from(&opener.run);
 		let process = self.process.clone();
 		_ = self.micro.try_send(
 			async move {
 				if opener.block {
-					process.block(ProcessOpBlock { id, cmd: OsString::from(&opener.run), args }).await.ok();
+					process.block(ProcessOpBlock { id, cmd, args }).await.ok();
 				} else if opener.orphan {
-					process.orphan(ProcessOpOrphan { id, cmd: OsString::from(&opener.run), args }).await.ok();
+					process.orphan(ProcessOpOrphan { id, cmd, args }).await.ok();
 				} else {
-					process.bg(ProcessOpBg { id, cmd: OsString::from(&opener.run), args, ct }).await.ok();
+					process.bg(ProcessOpBg { id, cmd, args, cancel: cancel_rx }).await.ok();
 				}
 			}
 			.boxed(),
-			HIGH,
+			NORMAL,
 		);
+	}
+
+	fn schedule_micro(
+		&self,
+		rx: async_priority_channel::Receiver<BoxFuture<'static, ()>, u8>,
+	) -> JoinHandle<()> {
+		tokio::spawn(async move {
+			loop {
+				if let Ok((fut, _)) = rx.recv().await {
+					fut.await;
+				}
+			}
+		})
+	}
+
+	fn schedule_macro(
+		&self,
+		micro: async_priority_channel::Receiver<BoxFuture<'static, ()>, u8>,
+		macro_: async_priority_channel::Receiver<TaskOp, u8>,
+	) -> JoinHandle<()> {
+		let file = self.file.clone();
+		let plugin = self.plugin.clone();
+		let preload = self.preload.clone();
+
+		let prog = self.prog.clone();
+		let ongoing = self.ongoing.clone();
+
+		tokio::spawn(async move {
+			loop {
+				select! {
+					Ok((fut, _)) = micro.recv() => {
+						fut.await;
+					}
+					Ok((op, _)) = macro_.recv() => {
+						let id = op.id();
+						if !ongoing.lock().exists(id) {
+							continue;
+						}
+
+						let result = match op {
+							TaskOp::File(op) => file.work(*op).await,
+							TaskOp::Plugin(op) => plugin.work(*op).await,
+							TaskOp::Preload(op) => preload.work(*op).await,
+						};
+
+						if let Err(e) = result {
+							prog.send(TaskProg::Fail(id, format!("Failed to work on this task: {:?}", e))).ok();
+						}
+					}
+				}
+			}
+		})
+	}
+
+	fn progress(&self, mut rx: UnboundedReceiver<TaskProg>) -> JoinHandle<()> {
+		let micro = self.micro.clone();
+		let ongoing = self.ongoing.clone();
+
+		tokio::spawn(async move {
+			while let Some(op) = rx.recv().await {
+				match op {
+					TaskProg::New(id, size) => {
+						if let Some(task) = ongoing.lock().get_mut(id) {
+							task.total += 1;
+							task.found += size;
+						}
+					}
+					TaskProg::Adv(id, succ, processed) => {
+						let mut ongoing = ongoing.lock();
+						if let Some(task) = ongoing.get_mut(id) {
+							task.succ += succ;
+							task.processed += processed;
+						}
+						if succ > 0 {
+							if let Some(fut) = ongoing.try_remove(id, TaskStage::Pending) {
+								micro.try_send(fut, LOW).ok();
+							}
+						}
+					}
+					TaskProg::Succ(id) => {
+						if let Some(fut) = ongoing.lock().try_remove(id, TaskStage::Dispatched) {
+							micro.try_send(fut, LOW).ok();
+						}
+					}
+					TaskProg::Fail(id, reason) => {
+						if let Some(task) = ongoing.lock().get_mut(id) {
+							task.fail += 1;
+							task.logs.push_str(&reason);
+							task.logs.push('\n');
+
+							if let Some(logger) = &task.logger {
+								logger.send(reason).ok();
+							}
+						}
+					}
+					TaskProg::Log(id, line) => {
+						if let Some(task) = ongoing.lock().get_mut(id) {
+							task.logs.push_str(&line);
+							task.logs.push('\n');
+
+							if let Some(logger) = &task.logger {
+								logger.send(line).ok();
+							}
+						}
+					}
+				}
+			}
+		})
 	}
 }

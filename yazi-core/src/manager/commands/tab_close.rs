@@ -25,7 +25,7 @@ impl Tabs {
 			return;
 		}
 
-		self.items.remove(opt.idx);
+		self.items.remove(opt.idx).shutdown();
 		if opt.idx <= self.idx {
 			self.set_idx(self.absolute(1));
 		}

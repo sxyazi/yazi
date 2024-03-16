@@ -7,6 +7,9 @@ use crate::app::App;
 
 impl App {
 	pub(crate) fn quit(&mut self, opt: EventQuit) -> ! {
+		self.cx.tasks.shutdown();
+		self.cx.manager.shutdown();
+
 		if !opt.no_cwd_file {
 			self.cwd_to_file();
 		}

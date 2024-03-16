@@ -1,10 +1,10 @@
 use std::{collections::VecDeque, ffi::OsString};
 
 use crossterm::event::KeyEvent;
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::mpsc;
 
 use super::Cmd;
-use crate::{term::Term, Layer, RoCell};
+use crate::{Layer, RoCell};
 
 static TX: RoCell<mpsc::UnboundedSender<Event>> = RoCell::new();
 
@@ -31,12 +31,6 @@ impl Event {
 
 	#[inline]
 	pub fn emit(self) { TX.send(self).ok(); }
-
-	#[inline]
-	pub async fn wait<T>(self, rx: oneshot::Receiver<T>) -> T {
-		TX.send(self).ok();
-		rx.await.unwrap_or_else(|_| Term::goodbye(|| false))
-	}
 }
 
 #[macro_export]
