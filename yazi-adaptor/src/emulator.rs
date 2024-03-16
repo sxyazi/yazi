@@ -22,6 +22,7 @@ pub enum Emulator {
 	Hyper,
 	Mintty,
 	Neovim,
+	Apple,
 }
 
 impl Emulator {
@@ -40,6 +41,7 @@ impl Emulator {
 			Self::Hyper => vec![Adaptor::Iterm2, Adaptor::Sixel],
 			Self::Mintty => vec![Adaptor::Iterm2],
 			Self::Neovim => vec![],
+			Self::Apple => vec![],
 		}
 	}
 }
@@ -74,6 +76,7 @@ impl Emulator {
 			"Tabby" => return Self::Tabby,
 			"Hyper" => return Self::Hyper,
 			"mintty" => return Self::Mintty,
+			"Apple_Terminal" => return Self::Apple,
 			_ => warn!("[Adaptor] Unknown TERM_PROGRAM: {program}"),
 		}
 		match term.as_str() {
