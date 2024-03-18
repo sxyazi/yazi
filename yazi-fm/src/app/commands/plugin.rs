@@ -2,8 +2,8 @@ use std::fmt::Display;
 
 use mlua::TableExt;
 use tracing::warn;
-use yazi_plugin::{OptData, LOADED, LUA};
-use yazi_shared::{emit, event::Cmd, Layer};
+use yazi_plugin::{OptData, LOADER, LUA};
+use yazi_shared::{emit, event::Cmd, Defer, Layer};
 
 use crate::{app::App, lives::Lives};
 
@@ -18,12 +18,12 @@ impl App {
 			return self.cx.tasks.plugin_micro(opt.name, opt.data.args);
 		}
 
-		if LOADED.read().contains_key(&opt.name) {
+		if LOADER.read().contains_key(&opt.name) {
 			return self.plugin_do(opt);
 		}
 
 		tokio::spawn(async move {
-			if LOADED.ensure(&opt.name).await.is_ok() {
+			if LOADER.ensure(&opt.name).await.is_ok() {
 				Self::_plugin_do(opt.name, opt.data);
 			}
 		});
@@ -40,7 +40,10 @@ impl App {
 			Err(e) => return warn!("{e}"),
 		};
 
-		let plugin = match LOADED.load(&opt.name) {
+		LOADER.set_running(Some(&opt.name));
+		let _defer = Defer::new(|| LOADER.set_running(None));
+
+		let plugin = match LOADER.load(&opt.name) {
 			Ok(plugin) => plugin,
 			Err(e) => return warn!("{e}"),
 		};

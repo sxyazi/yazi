@@ -11,6 +11,7 @@ mod loader;
 mod lua;
 mod opt;
 pub mod process;
+pub mod pubsub;
 pub mod url;
 pub mod utils;
 

@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::HashMap, ops::Deref};
+use std::{borrow::Cow, collections::HashMap, ops::Deref, sync::Arc};
 
 use anyhow::{bail, Result};
 use mlua::{ExternalError, Table};
@@ -9,19 +9,24 @@ use yazi_shared::RoCell;
 
 use crate::LUA;
 
-pub static LOADED: RoCell<Loader> = RoCell::new();
+pub static LOADER: RoCell<Loader> = RoCell::new();
+
+pub(super) static RUNNING: RoCell<arc_swap::ArcSwapOption<String>> = RoCell::new();
 
 #[derive(Default)]
 pub struct Loader {
-	loaded: RwLock<HashMap<String, Vec<u8>>>,
+	cache: RwLock<HashMap<String, Vec<u8>>>,
 }
 
 impl Loader {
 	#[inline]
-	pub(super) fn init() { LOADED.with(Default::default); }
+	pub(super) fn init() {
+		LOADER.with(Default::default);
+		RUNNING.with(Default::default);
+	}
 
 	pub async fn ensure(&self, name: &str) -> Result<()> {
-		if self.loaded.read().contains_key(name) {
+		if self.cache.read().contains_key(name) {
 			return Ok(());
 		}
 
@@ -42,7 +47,7 @@ impl Loader {
 			}))
 		})?;
 
-		self.loaded.write().insert(name.to_owned(), b.into_owned());
+		self.cache.write().insert(name.to_owned(), b.into_owned());
 		Ok(())
 	}
 
@@ -64,11 +69,19 @@ impl Loader {
 		loaded.raw_set(name, t.clone())?;
 		Ok(t)
 	}
+
+	pub fn set_running(&self, name: Option<&str>) {
+		if let Some(s) = name {
+			RUNNING.store(Some(Arc::new(s.to_owned())));
+		} else {
+			RUNNING.store(None);
+		}
+	}
 }
 
 impl Deref for Loader {
 	type Target = RwLock<HashMap<String, Vec<u8>>>;
 
 	#[inline]
-	fn deref(&self) -> &Self::Target { &self.loaded }
+	fn deref(&self) -> &Self::Target { &self.cache }
 }

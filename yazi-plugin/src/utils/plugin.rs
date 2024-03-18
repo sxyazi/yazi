@@ -1,9 +1,10 @@
 use mlua::{ExternalError, Function, IntoLua, Lua, Table, Value, Variadic};
 use tokio::sync::oneshot;
+use yazi_dds::ValueSendable;
 use yazi_shared::{emit, event::Cmd, Layer};
 
 use super::Utils;
-use crate::{OptData, ValueSendable};
+use crate::OptData;
 
 impl Utils {
 	pub(super) fn plugin(lua: &Lua, ya: &Table) -> mlua::Result<()> {

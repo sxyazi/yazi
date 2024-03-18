@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use yazi_plugin::ValueSendable;
+use yazi_dds::ValueSendable;
 use yazi_shared::{event::Cmd, fs::Url, render};
 
 use crate::{manager::Manager, tasks::Tasks};

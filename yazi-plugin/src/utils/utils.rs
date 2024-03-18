@@ -1,12 +1,13 @@
 #[cfg(unix)]
 pub(super) static USERS_CACHE: yazi_shared::RoCell<uzers::UsersCache> = yazi_shared::RoCell::new();
 
+#[cfg(unix)]
 pub(super) static HOSTNAME_CACHE: std::sync::OnceLock<Option<String>> = std::sync::OnceLock::new();
 
 pub(super) struct Utils;
 
 pub fn install(lua: &mlua::Lua) -> mlua::Result<()> {
-	let ya: mlua::Table = lua.create_table()?;
+	let ya = lua.create_table()?;
 
 	Utils::app(lua, &ya)?;
 	Utils::cache(lua, &ya)?;

@@ -8,6 +8,7 @@ use super::{Backstack, Config, Finder, Mode, Preview};
 use crate::{folder::{Folder, FolderStage}, tab::Selected};
 
 pub struct Tab {
+	pub idx:     usize,
 	pub mode:    Mode,
 	pub conf:    Config,
 	pub current: Folder,
@@ -27,6 +28,7 @@ impl From<Url> for Tab {
 		let parent = url.parent_url().map(Folder::from);
 
 		Self {
+			idx: 0,
 			mode: Default::default(),
 			current: Folder::from(url.clone()),
 			parent,

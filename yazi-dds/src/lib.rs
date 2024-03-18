@@ -1,0 +1,32 @@
+#![allow(clippy::option_map_unit_fn)]
+pub mod body;
+mod client;
+mod payload;
+mod pubsub;
+mod sendable;
+mod server;
+
+pub use client::*;
+pub use payload::*;
+pub use pubsub::*;
+pub use sendable::*;
+use server::*;
+
+pub fn init() {
+	let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+
+	// Client
+	ID.init(yazi_shared::timestamp_us());
+	PEERS.with(Default::default);
+	QUEUE.init(tx);
+
+	// Server
+	CLIENTS.with(Default::default);
+	STATES.with(Default::default);
+
+	// Pubsub
+	LOCAL.with(Default::default);
+	REMOTE.with(Default::default);
+
+	Client::serve(rx);
+}

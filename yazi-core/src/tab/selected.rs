@@ -78,7 +78,7 @@ impl Selected {
 	}
 
 	fn remove_same(&mut self, urls: &[impl AsRef<Url>]) -> usize {
-		let count = urls.iter().map(|u| self.inner.remove(u.as_ref())).filter_map(|v| v).count();
+		let count = urls.iter().filter_map(|u| self.inner.remove(u.as_ref())).count();
 		if count == 0 {
 			return 0;
 		}

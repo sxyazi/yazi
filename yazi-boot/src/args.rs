@@ -12,13 +12,20 @@ pub struct Args {
 	/// Write the cwd on exit to this file
 	#[arg(long)]
 	pub cwd_file:     Option<PathBuf>,
-	/// Write the selected files on open emitted by the chooser mode
+	/// Write the selected files to this file on open fired
 	#[arg(long)]
 	pub chooser_file: Option<PathBuf>,
 
 	/// Clear the cache directory
 	#[arg(long, action)]
 	pub clear_cache: bool,
+
+	/// Report the specified local events to stdout
+	#[arg(long, action)]
+	pub local_events:  Option<String>,
+	/// Report the specified remote events to stdout
+	#[arg(long, action)]
+	pub remote_events: Option<String>,
 
 	/// Print debug information
 	#[arg(long, action)]
