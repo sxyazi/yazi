@@ -1,6 +1,7 @@
 use std::{ffi::{OsStr, OsString}, fmt::{Debug, Display, Formatter}, ops::{Deref, DerefMut}, path::{Path, PathBuf}};
 
 use percent_encoding::{percent_decode_str, percent_encode, AsciiSet, CONTROLS};
+use serde::{Deserialize, Serialize};
 
 const ENCODE_SET: &AsciiSet = &CONTROLS.add(b'#');
 
@@ -210,5 +211,21 @@ impl From<&str> for UrlScheme {
 			"archive" => UrlScheme::Archive,
 			_ => UrlScheme::Regular,
 		}
+	}
+}
+
+impl Serialize for Url {
+	fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+		serializer.collect_str(self)
+	}
+}
+
+impl<'de> Deserialize<'de> for Url {
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+	where
+		D: serde::Deserializer<'de>,
+	{
+		let s = String::deserialize(deserializer)?;
+		Ok(Url::from(s))
 	}
 }

@@ -3,6 +3,7 @@ use std::{mem, time::Duration};
 use tokio::{fs, pin};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
+use yazi_dds::Pubsub;
 use yazi_proxy::{CompletionProxy, InputProxy, ManagerProxy, TabProxy};
 use yazi_shared::{event::Cmd, fs::{expand_path, Url}, render, Debounce, InputError};
 
@@ -64,6 +65,7 @@ impl Tab {
 			self.backstack.push(opt.target.clone());
 		}
 
+		Pubsub::pub_from_cd(self.idx, &self.current.cwd);
 		ManagerProxy::refresh();
 		render!();
 	}

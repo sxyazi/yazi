@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use anyhow::Result;
 use tokio::fs;
 use yazi_config::popup::InputCfg;
+use yazi_dds::Pubsub;
 use yazi_proxy::{InputProxy, ManagerProxy, WATCHER};
 use yazi_shared::{event::Cmd, fs::{accessible, File, FilesOp, Url}};
 
@@ -49,6 +50,7 @@ impl Manager {
 			_ => None,
 		};
 
+		let tab = self.tabs.cursor;
 		tokio::spawn(async move {
 			let mut result = InputProxy::show(InputCfg::rename().with_value(name).with_cursor(cursor));
 			let Some(Ok(name)) = result.recv().await else {
@@ -57,20 +59,20 @@ impl Manager {
 
 			let new = hovered.parent().unwrap().join(name);
 			if opt.force || !accessible(&new).await {
-				Self::rename_do(hovered, Url::from(new)).await.ok();
+				Self::rename_do(tab, hovered, Url::from(new)).await.ok();
 				return;
 			}
 
 			let mut result = InputProxy::show(InputCfg::overwrite());
 			if let Some(Ok(choice)) = result.recv().await {
 				if choice == "y" || choice == "Y" {
-					Self::rename_do(hovered, Url::from(new)).await.ok();
+					Self::rename_do(tab, hovered, Url::from(new)).await.ok();
 				}
 			};
 		});
 	}
 
-	async fn rename_do(old: Url, new: Url) -> Result<()> {
+	async fn rename_do(tab: usize, old: Url, new: Url) -> Result<()> {
 		let _permit = WATCHER.acquire().await.unwrap();
 
 		fs::rename(&old, &new).await?;
@@ -79,6 +81,8 @@ impl Manager {
 		}
 
 		let file = File::from(new.clone()).await?;
+		Pubsub::pub_from_rename(tab, &old, &new);
+
 		FilesOp::Deleting(file.parent().unwrap(), vec![new.clone()]).emit();
 		FilesOp::Upserting(file.parent().unwrap(), HashMap::from_iter([(old, file)])).emit();
 		Ok(ManagerProxy::hover(Some(new)))

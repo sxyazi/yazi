@@ -32,8 +32,8 @@ impl<'a> TryFrom<mlua::Table<'a>> for Position {
 	}
 }
 
-impl<'lua> IntoLua<'lua> for Position {
-	fn into_lua(self, lua: &'lua mlua::Lua) -> mlua::Result<mlua::Value> {
+impl IntoLua<'_> for Position {
+	fn into_lua(self, lua: &mlua::Lua) -> mlua::Result<mlua::Value> {
 		lua
 			.create_table_from([
 				(1.into_lua(lua)?, self.origin.to_string().into_lua(lua)?),

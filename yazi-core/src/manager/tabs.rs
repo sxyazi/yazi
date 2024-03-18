@@ -7,13 +7,13 @@ use yazi_shared::fs::Url;
 use crate::tab::Tab;
 
 pub struct Tabs {
-	pub idx:          usize,
+	pub cursor:       usize,
 	pub(super) items: Vec<Tab>,
 }
 
 impl Tabs {
 	pub fn make() -> Self {
-		let mut tabs = Self { idx: 0, items: vec![Tab::from(Url::from(&BOOT.cwd))] };
+		let mut tabs = Self { cursor: 0, items: vec![Tab::from(Url::from(&BOOT.cwd))] };
 		if let Some(file) = &BOOT.file {
 			tabs.items[0].reveal(Url::from(BOOT.cwd.join(file)));
 		}
@@ -25,24 +25,28 @@ impl Tabs {
 	#[inline]
 	pub(super) fn absolute(&self, rel: isize) -> usize {
 		if rel > 0 {
-			(self.idx + rel as usize).min(self.items.len() - 1)
+			(self.cursor + rel as usize).min(self.items.len() - 1)
 		} else {
-			self.idx.saturating_sub(rel.unsigned_abs())
+			self.cursor.saturating_sub(rel.unsigned_abs())
 		}
 	}
 
 	#[inline]
+	pub(super) fn reorder(&mut self) {
+		self.items.iter_mut().enumerate().for_each(|(i, tab)| tab.idx = i);
+	}
+
 	pub(super) fn set_idx(&mut self, idx: usize) {
-		if self.idx == idx {
+		if self.cursor == idx {
 			return;
 		}
 
 		// Reset the preview of the previous active tab
-		if let Some(active) = self.items.get_mut(self.idx) {
+		if let Some(active) = self.items.get_mut(self.cursor) {
 			active.preview.reset_image();
 		}
 
-		self.idx = idx;
+		self.cursor = idx;
 		ManagerProxy::refresh();
 		ManagerProxy::peek(true);
 	}
@@ -50,10 +54,10 @@ impl Tabs {
 
 impl Tabs {
 	#[inline]
-	pub fn active(&self) -> &Tab { &self.items[self.idx] }
+	pub fn active(&self) -> &Tab { &self.items[self.cursor] }
 
 	#[inline]
-	pub(super) fn active_mut(&mut self) -> &mut Tab { &mut self.items[self.idx] }
+	pub(super) fn active_mut(&mut self) -> &mut Tab { &mut self.items[self.cursor] }
 }
 
 impl Deref for Tabs {

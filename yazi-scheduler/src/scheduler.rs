@@ -4,7 +4,7 @@ use futures::{future::BoxFuture, FutureExt};
 use parking_lot::Mutex;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
 use yazi_config::{open::Opener, plugin::PluginRule, TASKS};
-use yazi_plugin::ValueSendable;
+use yazi_dds::ValueSendable;
 use yazi_shared::{fs::{unique_path, Url}, Throttle};
 
 use super::{Ongoing, TaskProg, TaskStage};

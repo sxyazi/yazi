@@ -26,10 +26,11 @@ impl Tabs {
 		}
 
 		self.items.remove(opt.idx).shutdown();
-		if opt.idx <= self.idx {
+		if opt.idx <= self.cursor {
 			self.set_idx(self.absolute(1));
 		}
 
+		self.reorder();
 		render!();
 	}
 }

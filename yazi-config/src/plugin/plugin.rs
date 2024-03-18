@@ -73,8 +73,8 @@ impl Plugin {
 			.iter()
 			.filter(|&rule| {
 				rule.cond.as_ref().and_then(|c| c.eval(f)) != Some(false)
-					&& (rule.name.as_ref().is_some_and(|n| n.match_path(path, is_folder))
-						|| rule.mime.as_ref().zip(mime).map_or(false, |(m, s)| m.matches(s)))
+					&& (rule.mime.as_ref().zip(mime).map_or(false, |(m, s)| m.matches(s))
+						|| rule.name.as_ref().is_some_and(|n| n.match_path(path, is_folder)))
 			})
 			.collect()
 	}

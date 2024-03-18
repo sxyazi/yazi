@@ -15,12 +15,13 @@ impl From<Cmd> for Opt {
 impl Tabs {
 	pub fn swap(&mut self, opt: impl Into<Opt>) {
 		let idx = self.absolute(opt.into().step);
-		if idx == self.idx {
+		if idx == self.cursor {
 			return;
 		}
 
-		self.items.swap(self.idx, idx);
+		self.items.swap(self.cursor, idx);
 		self.set_idx(idx);
+		self.reorder();
 		render!();
 	}
 }

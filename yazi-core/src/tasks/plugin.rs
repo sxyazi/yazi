@@ -1,4 +1,4 @@
-use yazi_plugin::ValueSendable;
+use yazi_dds::ValueSendable;
 
 use super::Tasks;
 
