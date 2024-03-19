@@ -36,11 +36,11 @@ impl Message {
 			return 0; // In case we can't get the width of the terminal
 		}
 
-		let mut num_lines = 0;
+		let mut lines = 0;
 		for line in self.content.lines() {
-			num_lines += (line.width() + 1).div_ceil(width as usize)
+			lines += (line.width() + 1).div_ceil(width as usize)
 		}
 
-		num_lines + NOTIFY_BORDER as usize
+		lines + NOTIFY_BORDER as usize
 	}
 }
