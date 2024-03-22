@@ -19,7 +19,6 @@ fn stage_1(lua: &Lua) -> Result<()> {
 	crate::utils::install(lua)?;
 
 	// Base
-	lua.load(include_str!("../preset/inspect/inspect.lua")).exec()?;
 	lua.load(include_str!("../preset/ya.lua")).exec()?;
 	crate::bindings::Cha::register(lua)?;
 	crate::bindings::File::register(lua)?;
