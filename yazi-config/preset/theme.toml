@@ -57,6 +57,8 @@ separator_open  = ""
 separator_close = ""
 separator_style = { fg = "gray", bg = "gray" }
 
+inner_section = { fg = "black", bg = "darkgray", bold = true }
+
 # Mode
 mode_normal = { bg = "blue", bold = true }
 mode_select = { bg = "red", bold = true }

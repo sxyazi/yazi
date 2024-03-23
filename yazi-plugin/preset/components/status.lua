@@ -31,10 +31,17 @@ function Status:size()
 		return ui.Line {}
 	end
 
-	local style = self.style()
+	-- style of inner section always uses inner_section style
+	-- independent of current mode
+
+	-- set inner separator and section style
+	local st_sec = THEME.status.inner_section
+	-- set color of separator to bg of inner section
+	local fg_sep = st_sec.bg
+
 	return ui.Line {
-		ui.Span(" " .. ya.readable_size(h:size() or h.cha.length) .. " "):fg(style.bg):bg(THEME.status.separator_style.bg),
-		ui.Span(THEME.status.separator_close):fg(THEME.status.separator_style.fg),
+		ui.Span(" " .. ya.readable_size(h:size() or h.cha.length) .. " "):style(st_sec),
+		ui.Span(THEME.status.separator_close):fg(fg_sep),
 	}
 end
 
@@ -90,10 +97,17 @@ function Status:percentage()
 		percent = string.format(" %3d%% ", percent)
 	end
 
-	local style = self.style()
+	-- style of inner section always uses inner_section style
+	-- independent of current mode
+
+	-- set inner separator and section style
+	local st_sec = THEME.status.inner_section
+	-- set color of separator to bg of inner section
+	local fg_sep = st_sec.bg
+
 	return ui.Line {
-		ui.Span(" " .. THEME.status.separator_open):fg(THEME.status.separator_style.fg),
-		ui.Span(percent):fg(style.bg):bg(THEME.status.separator_style.bg),
+		ui.Span(" " .. THEME.status.separator_open):fg(fg_sep),
+		ui.Span(percent):style(st_sec),
 	}
 end
 
