@@ -184,7 +184,7 @@ rules = [
 	{ mime = "application/x-bzip2",         fg = "magenta" },
 	{ mime = "application/x-7z-compressed", fg = "magenta" },
 	{ mime = "application/x-rar",           fg = "magenta" },
-	{ mime = "application/xz",              fg = "magenta" },
+	{ mime = "application/x-xz",            fg = "magenta" },
 
 	# Documents
 	{ mime = "application/doc",   fg = "green" },

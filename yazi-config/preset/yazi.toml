@@ -70,7 +70,7 @@ rules = [
 	{ mime = "application/x-bzip2",         use = [ "extract", "reveal" ] },
 	{ mime = "application/x-7z-compressed", use = [ "extract", "reveal" ] },
 	{ mime = "application/x-rar",           use = [ "extract", "reveal" ] },
-	{ mime = "application/xz",              use = [ "extract", "reveal" ] },
+	{ mime = "application/x-xz",            use = [ "extract", "reveal" ] },
 
 	{ mime = "*", use = [ "open", "reveal" ] },
 ]
@@ -88,8 +88,7 @@ suppress_preload = false
 preloaders = [
 	{ name = "*", cond = "!mime", run = "mime", multi = true, prio = "high" },
 	# Image
-	{ mime = "image/vnd.djvu", run = "noop" },
-	{ mime = "image/*",        run = "image" },
+	{ mime = "image/*", run = "image" },
 	# Video
 	{ mime = "video/*", run = "video" },
 	# PDF
@@ -119,7 +118,7 @@ previewers = [
 	{ mime = "application/x-bzip2",         run = "archive" },
 	{ mime = "application/x-7z-compressed", run = "archive" },
 	{ mime = "application/x-rar",           run = "archive" },
-	{ mime = "application/xz",              run = "archive" },
+	{ mime = "application/x-xz",            run = "archive" },
 	# Fallback
 	{ name = "*", run = "file" },
 ]
