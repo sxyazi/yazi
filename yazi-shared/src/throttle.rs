@@ -2,7 +2,7 @@ use std::{fmt::Debug, mem, sync::atomic::{AtomicU64, AtomicUsize, Ordering}, tim
 
 use parking_lot::Mutex;
 
-use crate::timestamp_ms;
+use crate::timestamp_us;
 
 #[derive(Debug)]
 pub struct Throttle<T> {
@@ -17,7 +17,7 @@ impl<T> Throttle<T> {
 		Self {
 			total: AtomicUsize::new(total),
 			interval,
-			last: AtomicU64::new(timestamp_ms() - interval.as_millis() as u64),
+			last: AtomicU64::new(timestamp_us() - interval.as_micros() as u64),
 			buf: Default::default(),
 		}
 	}
@@ -32,8 +32,8 @@ impl<T> Throttle<T> {
 		}
 
 		let last = self.last.load(Ordering::Relaxed);
-		let now = timestamp_ms();
-		if now > self.interval.as_millis() as u64 + last {
+		let now = timestamp_us();
+		if now > self.interval.as_micros() as u64 + last {
 			self.last.store(now, Ordering::Relaxed);
 			return self.flush(data, f);
 		}

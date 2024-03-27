@@ -20,7 +20,7 @@ impl Tab {
 		}
 
 		let mut s = OsString::new();
-		let mut it = self.selected_or_hovered().into_iter().peekable();
+		let mut it = self.selected_or_hovered(true).into_iter().peekable();
 		while let Some(u) = it.next() {
 			s.push(match opt.type_.as_str() {
 				"path" => u.as_os_str(),

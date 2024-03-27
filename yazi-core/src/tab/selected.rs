@@ -1,15 +1,15 @@
-use std::{collections::{BTreeSet, HashMap}, ops::Deref};
+use std::{collections::HashMap, ops::Deref};
 
-use yazi_shared::fs::{FilesOp, Url};
+use yazi_shared::{fs::{FilesOp, Url}, timestamp_us};
 
 #[derive(Default)]
 pub struct Selected {
-	inner:   BTreeSet<Url>,
+	inner:   HashMap<Url, u64>,
 	parents: HashMap<Url, usize>,
 }
 
 impl Deref for Selected {
-	type Target = BTreeSet<Url>;
+	type Target = HashMap<Url, u64>;
 
 	fn deref(&self) -> &Self::Target { &self.inner }
 }
@@ -43,7 +43,7 @@ impl Selected {
 		let mut parent = urls[0].parent_url();
 		let mut parents = vec![];
 		while let Some(u) = parent {
-			if self.inner.contains(&u) {
+			if self.inner.contains_key(&u) {
 				return 0;
 			}
 
@@ -51,8 +51,8 @@ impl Selected {
 			parents.push(u);
 		}
 
-		let len = self.inner.len();
-		self.inner.extend(urls.iter().map(|&&u| u.clone()));
+		let (now, len) = (timestamp_us(), self.inner.len());
+		self.inner.extend(urls.iter().enumerate().map(|(i, &&u)| (u.clone(), now + i as u64)));
 
 		for u in parents {
 			*self.parents.entry(u).or_insert(0) += self.inner.len() - len;
@@ -78,7 +78,7 @@ impl Selected {
 	}
 
 	fn remove_same(&mut self, urls: &[impl AsRef<Url>]) -> usize {
-		let count = urls.iter().map(|u| self.inner.remove(u.as_ref())).filter(|&b| b).count();
+		let count = urls.iter().map(|u| self.inner.remove(u.as_ref())).filter_map(|v| v).count();
 		if count == 0 {
 			return 0;
 		}
@@ -106,7 +106,7 @@ impl Selected {
 		let (removal, addition) = match op {
 			FilesOp::Deleting(_, urls) => (urls.iter().collect(), vec![]),
 			FilesOp::Updating(_, urls) | FilesOp::Upserting(_, urls) => {
-				urls.iter().filter(|(u, _)| self.contains(u)).map(|(u, f)| (u, &f.url)).unzip()
+				urls.iter().filter(|&(u, _)| self.contains_key(u)).map(|(u, f)| (u, &f.url)).unzip()
 			}
 			_ => (vec![], vec![]),
 		};
