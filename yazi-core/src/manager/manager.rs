@@ -53,7 +53,9 @@ impl Manager {
 	pub fn hovered_folder(&self) -> Option<&Folder> { self.tabs.active().hovered_folder() }
 
 	#[inline]
-	pub fn selected_or_hovered(&self) -> Vec<&Url> { self.tabs.active().selected_or_hovered() }
+	pub fn selected_or_hovered(&self, sorted: bool) -> Vec<&Url> {
+		self.tabs.active().selected_or_hovered(sorted)
+	}
 
 	#[inline]
 	pub fn hovered_and_selected(&self) -> Vec<&Url> { self.tabs.active().hovered_and_selected() }

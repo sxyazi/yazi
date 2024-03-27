@@ -15,7 +15,7 @@ impl Manager {
 		};
 
 		let cwd = self.cwd().clone();
-		let old: Vec<_> = self.selected_or_hovered();
+		let old: Vec<_> = self.selected_or_hovered(true);
 
 		let root = max_common_root(&old);
 		let old: Vec<_> = old.into_iter().map(|p| p.strip_prefix(&root).unwrap().to_owned()).collect();

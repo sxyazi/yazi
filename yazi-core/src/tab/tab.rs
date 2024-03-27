@@ -58,11 +58,15 @@ impl Tab {
 
 impl Tab {
 	// --- Current
-	pub fn selected_or_hovered(&self) -> Vec<&Url> {
+	pub fn selected_or_hovered(&self, sorted: bool) -> Vec<&Url> {
 		if self.selected.is_empty() {
 			self.current.hovered().map(|h| vec![&h.url]).unwrap_or_default()
-		} else {
+		} else if !sorted {
 			self.selected.keys().collect()
+		} else {
+			let mut vec: Vec<_> = self.selected.iter().collect();
+			vec.sort_unstable_by(|a, b| a.1.cmp(b.1));
+			vec.into_iter().map(|(k, _)| k).collect()
 		}
 	}
 

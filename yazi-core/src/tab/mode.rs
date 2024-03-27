@@ -1,15 +1,15 @@
-use std::{collections::HashSet, fmt::Display, mem};
+use std::{collections::BTreeSet, fmt::Display, mem};
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub enum Mode {
 	#[default]
 	Normal,
-	Select(usize, HashSet<usize>),
-	Unset(usize, HashSet<usize>),
+	Select(usize, BTreeSet<usize>),
+	Unset(usize, BTreeSet<usize>),
 }
 
 impl Mode {
-	pub fn visual_mut(&mut self) -> Option<(usize, &mut HashSet<usize>)> {
+	pub fn visual_mut(&mut self) -> Option<(usize, &mut BTreeSet<usize>)> {
 		match self {
 			Mode::Normal => None,
 			Mode::Select(start, indices) => Some((*start, indices)),
@@ -17,7 +17,7 @@ impl Mode {
 		}
 	}
 
-	pub fn take_visual(&mut self) -> Option<(usize, HashSet<usize>)> {
+	pub fn take_visual(&mut self) -> Option<(usize, BTreeSet<usize>)> {
 		match mem::take(self) {
 			Mode::Normal => None,
 			Mode::Select(start, indices) => Some((start, indices)),

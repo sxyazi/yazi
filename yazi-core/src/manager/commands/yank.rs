@@ -18,7 +18,7 @@ impl Manager {
 			return;
 		}
 
-		let selected: HashSet<_> = self.selected_or_hovered().into_iter().cloned().collect();
+		let selected: HashSet<_> = self.selected_or_hovered(false).into_iter().cloned().collect();
 		if selected.is_empty() {
 			return;
 		}
