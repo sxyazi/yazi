@@ -90,7 +90,7 @@ impl File {
 					_ => 0u8,
 				})
 			});
-			reg.add_method("is_selected", |_, me, ()| Ok(me.tab().selected.contains(&me.url)));
+			reg.add_method("is_selected", |_, me, ()| Ok(me.tab().selected.contains_key(&me.url)));
 			reg.add_method("in_parent", |_, me, ()| {
 				Ok(me.tab().parent.as_ref().is_some_and(|f| me.folder().cwd == f.cwd))
 			});

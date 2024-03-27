@@ -28,7 +28,7 @@ impl Tab {
 		let (removal, addition): (Vec<_>, Vec<_>) = match opt.into().state {
 			Some(true) => (vec![], iter.collect()),
 			Some(false) => (iter.collect(), vec![]),
-			None => iter.partition(|&u| self.selected.contains(u)),
+			None => iter.partition(|&u| self.selected.contains_key(u)),
 		};
 
 		let same = !self.current.cwd.is_search();
