@@ -62,7 +62,7 @@ impl Tab {
 		if self.selected.is_empty() {
 			self.current.hovered().map(|h| vec![&h.url]).unwrap_or_default()
 		} else {
-			self.selected.iter().collect()
+			self.selected.keys().collect()
 		}
 	}
 
@@ -74,7 +74,7 @@ impl Tab {
 		if self.selected.is_empty() {
 			vec![&h.url, &h.url]
 		} else {
-			[&h.url].into_iter().chain(self.selected.iter()).collect()
+			[&h.url].into_iter().chain(self.selected.keys()).collect()
 		}
 	}
 
