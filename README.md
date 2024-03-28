@@ -29,6 +29,21 @@ https://github.com/sxyazi/yazi/assets/17523360/92ff23fa-0cd5-4f04-b387-894c12265
 - Usage: https://yazi-rs.github.io/docs/installation
 - Features: https://yazi-rs.github.io/features
 
+### Usage via docker image
+
+`docker run -it --rm -v /filesystem:/filesystem sinawic/yazi /filesystem`
+
+by default path will be `/`
+
+#### build yourself
+
+after cloning the repo:
+
+```bash
+cd yazi
+docker build -t yazi .
+```
+
 ## Discussion
 
 - Discord Server (English mainly): https://discord.gg/qfADduSdJu
