@@ -1,7 +1,7 @@
-use std::{env, io::{Read, Write}};
+use std::{env, io::Read};
 
 use anyhow::{anyhow, Result};
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use crossterm::{cursor::{RestorePosition, SavePosition}, execute, style::Print, terminal::{disable_raw_mode, enable_raw_mode}};
 use tracing::warn;
 use yazi_shared::env_exists;
 
@@ -113,8 +113,12 @@ impl Emulator {
 
 	pub fn via_csi() -> Result<Self> {
 		enable_raw_mode()?;
-		std::io::stderr().write_all(b"\x1b[>q\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[c")?;
-		std::io::stderr().flush()?;
+		execute!(
+			std::io::stderr(),
+			SavePosition,
+			Print("\x1b[>q\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[c"),
+			RestorePosition
+		)?;
 
 		let mut stdin = std::io::stdin().lock();
 		let mut buf = String::with_capacity(200);
