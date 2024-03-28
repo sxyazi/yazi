@@ -11,6 +11,7 @@ repository  = "https://github.com/sxyazi/yazi"
 [dependencies]
 yazi-adaptor = { path = "../yazi-adaptor", version = "0.2.4" }
 yazi-config  = { path = "../yazi-config", version = "0.2.4" }
+yazi-dds     = { path = "../yazi-dds", version = "0.2.4" }
 yazi-plugin  = { path = "../yazi-plugin", version = "0.2.4" }
 yazi-proxy   = { path = "../yazi-proxy", version = "0.2.4" }
 yazi-shared  = { path = "../yazi-shared", version = "0.2.4" }
@@ -23,7 +24,7 @@ crossterm              = "0.27.0"
 futures                = "0.3.30"
 parking_lot            = "0.12.1"
 regex                  = "1.10.3"
-tokio                  = { version = "1.36.0", features = [ "parking_lot", "rt-multi-thread" ] }
+tokio                  = { version = "1.36.0", features = [ "full" ] }
 tokio-stream           = "0.1.15"
 
 # Logging

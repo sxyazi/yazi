@@ -2759,9 +2759,25 @@ dependencies = [
  "yazi-adaptor",
  "yazi-boot",
  "yazi-config",
+ "yazi-dds",
  "yazi-plugin",
  "yazi-proxy",
  "yazi-scheduler",
+ "yazi-shared",
+]
+
+[[package]]
+name = "yazi-dds"
+version = "0.2.4"
+dependencies = [
+ "anyhow",
+ "mlua",
+ "parking_lot",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "yazi-boot",
  "yazi-shared",
 ]
 
@@ -2790,6 +2806,7 @@ dependencies = [
  "yazi-boot",
  "yazi-config",
  "yazi-core",
+ "yazi-dds",
  "yazi-plugin",
  "yazi-proxy",
  "yazi-scheduler",
@@ -2802,6 +2819,7 @@ version = "0.2.4"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
+ "arc-swap",
  "crossterm",
  "futures",
  "md-5",
@@ -2821,6 +2839,7 @@ dependencies = [
  "yazi-adaptor",
  "yazi-boot",
  "yazi-config",
+ "yazi-dds",
  "yazi-prebuild",
  "yazi-proxy",
  "yazi-shared",
@@ -2861,6 +2880,7 @@ dependencies = [
  "trash",
  "yazi-adaptor",
  "yazi-config",
+ "yazi-dds",
  "yazi-plugin",
  "yazi-proxy",
  "yazi-shared",

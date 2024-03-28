@@ -1,3 +1,4 @@
+use yazi_dds::Pubsub;
 use yazi_proxy::ManagerProxy;
 use yazi_shared::{event::Cmd, render};
 
@@ -37,6 +38,7 @@ impl Tab {
 			}
 		}
 
+		Pubsub::pub_from_hover(self.idx, self.current.hovered().map(|h| &h.url));
 		ManagerProxy::hover(None);
 		render!();
 	}

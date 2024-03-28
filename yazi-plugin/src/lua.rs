@@ -6,13 +6,13 @@ use yazi_shared::RoCell;
 pub static LUA: RoCell<Lua> = RoCell::new();
 
 pub(super) fn init_lua() {
-	let lua = Lua::new();
-	stage_1(&lua).expect("failed to initialize Lua");
-	stage_2(&lua);
-	LUA.init(lua);
+	LUA.init(Lua::new());
+
+	stage_1(&LUA).expect("failed to initialize Lua");
+	stage_2(&LUA);
 }
 
-fn stage_1(lua: &Lua) -> Result<()> {
+fn stage_1(lua: &'static Lua) -> Result<()> {
 	crate::Loader::init();
 	crate::Config::new(lua).install_boot()?.install_manager()?.install_theme()?;
 	crate::utils::init();
@@ -24,6 +24,7 @@ fn stage_1(lua: &Lua) -> Result<()> {
 	crate::bindings::File::register(lua)?;
 	crate::bindings::Icon::register(lua)?;
 	crate::elements::pour(lua)?;
+	crate::pubsub::Pubsub::install(lua)?;
 	crate::url::pour(lua)?;
 
 	// Components
@@ -40,7 +41,7 @@ fn stage_1(lua: &Lua) -> Result<()> {
 	Ok(())
 }
 
-fn stage_2(lua: &Lua) {
+fn stage_2(lua: &'static Lua) {
 	lua.load(include_str!("../preset/setup.lua")).exec().unwrap();
 
 	if let Ok(b) = std::fs::read(BOOT.config_dir.join("init.lua")) {

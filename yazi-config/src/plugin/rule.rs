@@ -5,6 +5,7 @@ use yazi_shared::{event::Cmd, Condition};
 
 use crate::{Pattern, Priority, DEPRECATED_EXEC};
 
+#[derive(Debug)]
 pub struct PluginRule {
 	pub id:    u8,
 	pub cond:  Option<Condition>,

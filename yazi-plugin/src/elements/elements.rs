@@ -1,9 +1,9 @@
-use mlua::{AnyUserData, Lua, Table};
+use mlua::{AnyUserData, Lua};
 
 use crate::cast_to_renderable;
 
 pub fn pour(lua: &Lua) -> mlua::Result<()> {
-	let ui: Table = lua.create_table()?;
+	let ui = lua.create_table()?;
 
 	// Register
 	super::Padding::register(lua)?;

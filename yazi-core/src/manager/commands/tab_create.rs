@@ -33,8 +33,9 @@ impl Tabs {
 		tab.conf = self.active().conf.clone();
 		tab.apply_files_attrs();
 
-		self.items.insert(self.idx + 1, tab);
-		self.set_idx(self.idx + 1);
+		self.items.insert(self.cursor + 1, tab);
+		self.set_idx(self.cursor + 1);
+		self.reorder();
 		render!();
 	}
 }

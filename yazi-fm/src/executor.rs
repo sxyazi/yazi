@@ -34,6 +34,7 @@ impl<'a> Executor<'a> {
 			};
 		}
 
+		on!(accept_payload);
 		on!(notify);
 		on!(plugin);
 		on!(plugin_do);
