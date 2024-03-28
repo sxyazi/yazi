@@ -1,13 +1,8 @@
 local M = {}
 
 function M:peek()
-	local output, code = Command("file")
-		:args({
-			"-bL",
-			tostring(self.file.url),
-		})
-		:stdout(Command.PIPED)
-		:output()
+	local cmd = os.getenv("YAZI_FILE_ONE") or "file"
+	local output, code = Command(cmd):args({ "-bL", tostring(self.file.url) }):stdout(Command.PIPED):output()
 
 	local p
 	if output then
@@ -15,7 +10,7 @@ function M:peek()
 	else
 		p = ui.Paragraph(self.area, {
 			ui.Line {
-				ui.Span("Failed to spawn `file` command, error code: " .. tostring(code)),
+				ui.Span(string.format("Spawn `%s` command returns %s", cmd, code)),
 			},
 		})
 	end
