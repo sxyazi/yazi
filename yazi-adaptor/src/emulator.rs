@@ -1,4 +1,4 @@
-use std::{env, io::Read};
+use std::{env, io::{stderr, LineWriter, Read}};
 
 use anyhow::{anyhow, Result};
 use crossterm::{cursor::{RestorePosition, SavePosition}, execute, style::Print, terminal::{disable_raw_mode, enable_raw_mode}};
@@ -114,7 +114,7 @@ impl Emulator {
 	pub fn via_csi() -> Result<Self> {
 		enable_raw_mode()?;
 		execute!(
-			std::io::stderr(),
+			LineWriter::new(stderr()),
 			SavePosition,
 			Print("\x1b[>q\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[c"),
 			RestorePosition

@@ -1,5 +1,5 @@
 use core::str;
-use std::{io::{stderr, Write}, path::Path};
+use std::{io::{stderr, LineWriter, Write}, path::Path};
 
 use anyhow::Result;
 use base64::{engine::general_purpose, Engine};
@@ -20,7 +20,7 @@ impl KittyOld {
 
 		Adaptor::KittyOld.image_hide()?;
 		Adaptor::shown_store(rect, size);
-		Term::move_lock(stderr().lock(), (rect.x, rect.y), |stderr| {
+		Term::move_lock((rect.x, rect.y), |stderr| {
 			stderr.write_all(&b)?;
 			Ok(size)
 		})
@@ -28,7 +28,7 @@ impl KittyOld {
 
 	#[inline]
 	pub(super) fn image_erase() -> Result<()> {
-		let mut stderr = stderr().lock();
+		let mut stderr = LineWriter::new(stderr());
 		write!(stderr, "{}_Gq=1,a=d,d=A{}\\{}", START, ESCAPE, CLOSE)?;
 		stderr.flush()?;
 		Ok(())

@@ -1,4 +1,4 @@
-use std::io::{stderr, Write};
+use std::io::{stderr, BufWriter, StderrLock, Write};
 
 use anyhow::Result;
 use crossterm::{cursor::{MoveTo, RestorePosition, SavePosition, SetCursorStyle}, queue};
@@ -11,34 +11,34 @@ impl Term {
 
 	// FIXME: remove this function
 	#[inline]
-	pub fn move_lock<W, F, T>(mut w: W, (x, y): (u16, u16), cb: F) -> Result<T>
+	pub fn move_lock<F, T>((x, y): (u16, u16), cb: F) -> Result<T>
 	where
-		W: Write,
-		F: FnOnce(&mut W) -> Result<T>,
+		F: FnOnce(&mut BufWriter<StderrLock>) -> Result<T>,
 	{
+		let mut buf = BufWriter::new(stderr().lock());
 		#[cfg(windows)]
 		{
 			use std::{thread, time::Duration};
 
 			use crossterm::cursor::{Hide, Show};
-			queue!(&mut w, SavePosition, MoveTo(x, y), Show)?;
+			queue!(buf, SavePosition, MoveTo(x, y), Show)?;
 
 			// I really don't want to add this,
 			// but on Windows the cursor position will not synchronize in time occasionally
-			w.flush()?;
+			buf.flush()?;
 			thread::sleep(Duration::from_millis(1));
 
-			let result = cb(&mut w);
-			queue!(&mut w, Hide, RestorePosition)?;
-			w.flush()?;
+			let result = cb(&mut buf);
+			queue!(buf, Hide, RestorePosition)?;
+			buf.flush()?;
 			result
 		}
 		#[cfg(unix)]
 		{
-			queue!(&mut w, SavePosition, MoveTo(x, y))?;
-			let result = cb(&mut w);
-			queue!(&mut w, RestorePosition)?;
-			w.flush()?;
+			queue!(buf, SavePosition, MoveTo(x, y))?;
+			let result = cb(&mut buf);
+			queue!(buf, RestorePosition)?;
+			buf.flush()?;
 			result
 		}
 	}

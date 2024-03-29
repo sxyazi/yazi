@@ -1,4 +1,4 @@
-use std::{io::{self, stderr, Stderr, Write}, mem, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}};
+use std::{io::{self, stderr, BufWriter, Stderr, Write}, mem, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}};
 
 use anyhow::Result;
 use crossterm::{event::{DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, terminal::{disable_raw_mode, enable_raw_mode, supports_keyboard_enhancement, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, WindowSize}};
@@ -7,7 +7,7 @@ use ratatui::{backend::CrosstermBackend, buffer::Buffer, layout::Rect, Completed
 static CSI_U: AtomicBool = AtomicBool::new(false);
 
 pub struct Term {
-	inner:       Terminal<CrosstermBackend<Stderr>>,
+	inner:       Terminal<CrosstermBackend<BufWriter<Stderr>>>,
 	last_area:   Rect,
 	last_buffer: Buffer,
 }
@@ -15,7 +15,7 @@ pub struct Term {
 impl Term {
 	pub fn start() -> Result<Self> {
 		let mut term = Self {
-			inner:       Terminal::new(CrosstermBackend::new(stderr()))?,
+			inner:       Terminal::new(CrosstermBackend::new(BufWriter::new(stderr())))?,
 			last_area:   Default::default(),
 			last_buffer: Default::default(),
 		};
@@ -144,7 +144,7 @@ impl Drop for Term {
 }
 
 impl Deref for Term {
-	type Target = Terminal<CrosstermBackend<Stderr>>;
+	type Target = Terminal<CrosstermBackend<BufWriter<Stderr>>>;
 
 	fn deref(&self) -> &Self::Target { &self.inner }
 }

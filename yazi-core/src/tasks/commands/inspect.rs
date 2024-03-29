@@ -1,4 +1,4 @@
-use std::io::{stderr, Write};
+use std::{io::{stderr, BufWriter, LineWriter, Write}, mem};
 
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use tokio::{io::{stdin, AsyncReadExt}, select, sync::mpsc, time};
@@ -18,7 +18,7 @@ impl Tasks {
 			let _permit = HIDER.acquire().await.unwrap();
 			let (tx, mut rx) = mpsc::unbounded_channel();
 
-			let buffered = {
+			let mut buffered = {
 				let mut ongoing = scheduler.ongoing.lock();
 				let Some(task) = ongoing.get_mut(id) else { return };
 
@@ -33,7 +33,7 @@ impl Tasks {
 			});
 
 			Term::clear(&mut stderr()).ok();
-			stderr().write_all(buffered.as_bytes()).ok();
+			BufWriter::new(stderr().lock()).write_all(mem::take(&mut buffered).as_bytes()).ok();
 			enable_raw_mode().ok();
 
 			let mut stdin = stdin();
@@ -41,7 +41,7 @@ impl Tasks {
 			loop {
 				select! {
 					Some(line) = rx.recv() => {
-						let mut stderr = stderr().lock();
+						let mut stderr = LineWriter::new(stderr().lock());
 						stderr.write_all(line.as_bytes()).ok();
 						stderr.write_all(b"\r\n").ok();
 					}
