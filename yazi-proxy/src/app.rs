@@ -20,6 +20,7 @@ impl AppProxy {
 		emit!(Call(Cmd::new("resume"), Layer::App));
 	}
 
+	#[inline]
 	pub fn notify(opt: NotifyOpt) {
 		emit!(Call(Cmd::new("notify").with_data(opt), Layer::App));
 	}

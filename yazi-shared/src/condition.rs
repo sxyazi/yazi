@@ -44,6 +44,7 @@ impl ConditionOp {
 	}
 }
 
+#[derive(Debug)]
 pub struct Condition {
 	ops: Vec<ConditionOp>,
 }
@@ -53,11 +54,11 @@ impl FromStr for Condition {
 
 	fn from_str(expr: &str) -> Result<Self, Self::Err> {
 		let cond = Self::build(expr);
-		if cond.eval(|_| true).is_some() {
-			Ok(cond)
-		} else {
-			bail!("Invalid condition: {}", expr);
+		if cond.eval(|_| true).is_none() {
+			bail!("Invalid condition: {expr}");
 		}
+
+		Ok(cond)
 	}
 }
 

@@ -6,7 +6,7 @@ use yazi_config::LAYOUT;
 use yazi_shared::{emit, event::Cmd, Layer};
 
 use super::slim_lua;
-use crate::{bindings::{Cast, File, Window}, elements::Rect, OptData, LOADED, LUA};
+use crate::{bindings::{Cast, File, Window}, elements::Rect, OptData, LOADER, LUA};
 
 pub fn peek(cmd: &Cmd, file: yazi_shared::fs::File, skip: usize) -> CancellationToken {
 	let ct = CancellationToken::new();
@@ -15,7 +15,7 @@ pub fn peek(cmd: &Cmd, file: yazi_shared::fs::File, skip: usize) -> Cancellation
 	let (ct1, ct2) = (ct.clone(), ct.clone());
 	tokio::task::spawn_blocking(move || {
 		let future = async {
-			LOADED.ensure(&name).await.into_lua_err()?;
+			LOADER.ensure(&name).await.into_lua_err()?;
 
 			let lua = slim_lua(&name)?;
 			lua.set_hook(
@@ -25,7 +25,7 @@ pub fn peek(cmd: &Cmd, file: yazi_shared::fs::File, skip: usize) -> Cancellation
 				},
 			);
 
-			let plugin: Table = if let Some(b) = LOADED.read().get(&name) {
+			let plugin: Table = if let Some(b) = LOADER.read().get(&name) {
 				lua.load(b).call(())?
 			} else {
 				return Err("unloaded plugin".into_lua_err());

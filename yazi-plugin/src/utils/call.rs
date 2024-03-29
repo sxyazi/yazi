@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
 use mlua::{ExternalError, Lua, Table, Value};
+use yazi_dds::ValueSendable;
 use yazi_shared::{emit, event::Cmd, render, Layer};
 
 use super::Utils;
-use crate::ValueSendable;
 
 impl Utils {
 	fn parse_args(t: Table) -> mlua::Result<(Vec<String>, HashMap<String, String>)> {

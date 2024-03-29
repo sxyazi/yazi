@@ -1,8 +1,7 @@
 use anyhow::bail;
 use mlua::{Lua, Table};
+use yazi_dds::ValueSendable;
 use yazi_shared::event::Cmd;
-
-use crate::ValueSendable;
 
 pub struct Opt {
 	pub name: String,

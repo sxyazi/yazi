@@ -86,7 +86,6 @@ impl Input {
 		true
 	}
 
-	#[inline]
 	pub(super) fn flush_value(&mut self) {
 		self.ticket = self.ticket.wrapping_add(1);
 

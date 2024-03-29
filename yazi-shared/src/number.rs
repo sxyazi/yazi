@@ -1,6 +1,9 @@
 use std::hash::{Hash, Hasher};
 
-#[derive(Clone, Copy, Debug)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[serde(transparent)]
 pub struct OrderedFloat(f64);
 
 impl OrderedFloat {

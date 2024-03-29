@@ -393,7 +393,7 @@ impl Kitty {
 		for y in 0..rect.height {
 			write!(buf, "\x1b[{};{}H\x1b[38;5;1m", rect.y + y + 1, rect.x + 1)?;
 			for x in 0..rect.width {
-				write!(buf, "{}", '\u{10EEEE}')?;
+				write!(buf, "\u{10EEEE}")?;
 				write!(buf, "{}", *DIACRITICS.get(y as usize).unwrap_or(&DIACRITICS[0]))?;
 				write!(buf, "{}", *DIACRITICS.get(x as usize).unwrap_or(&DIACRITICS[0]))?;
 			}

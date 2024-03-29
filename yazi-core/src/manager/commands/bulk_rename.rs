@@ -77,7 +77,7 @@ impl Manager {
 			return Ok(());
 		}
 
-		let _permit = WATCHER.acquire().await.unwrap();
+		let permit = WATCHER.acquire().await.unwrap();
 		let (mut failed, mut succeeded) = (Vec::new(), HashMap::with_capacity(todo.len()));
 		for (o, n) in todo {
 			let (old, new) = (root.join(&o), root.join(&n));
@@ -96,7 +96,7 @@ impl Manager {
 		if !succeeded.is_empty() {
 			FilesOp::Upserting(cwd, succeeded).emit();
 		}
-		drop(_permit);
+		drop(permit);
 
 		if !failed.is_empty() {
 			Self::output_failed(failed).await?;

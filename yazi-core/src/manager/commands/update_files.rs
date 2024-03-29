@@ -27,7 +27,7 @@ impl Manager {
 		}
 
 		for op in ops {
-			let idx = self.tabs.idx;
+			let idx = self.tabs.cursor;
 			self.yanked.apply_op(&op);
 
 			for (_, tab) in self.tabs.iter_mut().enumerate().filter(|(i, _)| *i != idx) {

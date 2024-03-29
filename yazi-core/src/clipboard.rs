@@ -60,7 +60,7 @@ impl Clipboard {
 		use tokio::{io::AsyncWriteExt, process::Command};
 		use yazi_shared::in_ssh_connection;
 
-		*self.content.lock() = s.as_ref().to_owned();
+		s.as_ref().clone_into(&mut self.content.lock());
 		if in_ssh_connection() {
 			execute!(BufWriter::new(stderr()), osc52::SetClipboard::new(s.as_ref())).ok();
 		}

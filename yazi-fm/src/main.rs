@@ -45,9 +45,11 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_boot::init();
 
-	yazi_plugin::init();
-
 	yazi_proxy::init();
+
+	yazi_dds::init();
+
+	yazi_plugin::init();
 
 	yazi_core::init();
 
