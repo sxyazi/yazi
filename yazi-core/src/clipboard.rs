@@ -54,7 +54,7 @@ impl Clipboard {
 
 	#[cfg(unix)]
 	pub async fn set(&self, s: impl AsRef<std::ffi::OsStr>) {
-		use std::{io::stderr, process::Stdio};
+		use std::{io::{stderr, BufWriter}, process::Stdio};
 
 		use crossterm::execute;
 		use tokio::{io::AsyncWriteExt, process::Command};
@@ -62,7 +62,7 @@ impl Clipboard {
 
 		*self.content.lock() = s.as_ref().to_owned();
 		if in_ssh_connection() {
-			execute!(stderr(), osc52::SetClipboard::new(s.as_ref())).ok();
+			execute!(BufWriter::new(stderr()), osc52::SetClipboard::new(s.as_ref())).ok();
 		}
 
 		let all = [

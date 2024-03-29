@@ -1,4 +1,4 @@
-use std::sync::atomic::Ordering;
+use std::{io::{stderr, BufWriter}, sync::atomic::Ordering};
 
 use ratatui::{backend::{Backend, CrosstermBackend}, CompletedFrame};
 use yazi_plugin::elements::COLLISION;
@@ -71,7 +71,7 @@ impl App {
 			}
 		}
 
-		let mut backend = CrosstermBackend::new(std::io::stderr().lock());
+		let mut backend = CrosstermBackend::new(BufWriter::new(stderr().lock()));
 		backend.draw(patches.into_iter()).ok();
 		if let Some((x, y)) = cursor {
 			backend.show_cursor().ok();

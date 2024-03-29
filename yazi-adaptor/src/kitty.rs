@@ -1,5 +1,5 @@
 use core::str;
-use std::{io::{stderr, BufWriter, Write}, path::Path};
+use std::{io::Write, path::Path};
 
 use anyhow::Result;
 use base64::{engine::general_purpose, Engine};
@@ -322,7 +322,7 @@ impl Kitty {
 
 		Adaptor::Kitty.image_hide()?;
 		Adaptor::shown_store(rect, size);
-		Term::move_lock(stderr().lock(), (rect.x, rect.y), |stderr| {
+		Term::move_lock((rect.x, rect.y), |stderr| {
 			stderr.write_all(&b1)?;
 			stderr.write_all(&b2)?;
 			Ok(size)
@@ -330,9 +330,8 @@ impl Kitty {
 	}
 
 	pub(super) fn image_erase(rect: Rect) -> Result<()> {
-		let stderr = BufWriter::new(stderr().lock());
 		let s = " ".repeat(rect.width as usize);
-		Term::move_lock(stderr, (0, 0), |stderr| {
+		Term::move_lock((0, 0), |stderr| {
 			for y in rect.top()..rect.bottom() {
 				Term::move_to(stderr, rect.x, y)?;
 				write!(stderr, "{s}")?;
