@@ -13,6 +13,7 @@ pub(super) struct Server;
 
 impl Server {
 	pub(super) async fn make() -> Result<JoinHandle<()>> {
+		CLIENTS.write().clear();
 		let listener = Self::bind().await?;
 
 		Ok(tokio::spawn(async move {
@@ -62,7 +63,7 @@ impl Server {
 
 								if receiver == 0 && severity > 0 {
 									let Some(body) = parts.next() else { continue };
-									STATE.lock().add(format!("{}_{severity}_{kind}", Body::tab(kind, body)), &line);
+									STATE.add(format!("{}_{severity}_{kind}", Body::tab(kind, body)), &line);
 								}
 
 								line.push('\n');
@@ -95,6 +96,10 @@ impl Server {
 
 		let mut clients = CLIENTS.write();
 		id.replace(hi.id).and_then(|id| clients.remove(&id));
+
+		if let Some(ref state) = *STATE.read() {
+			state.values().for_each(|s| _ = tx.send(format!("{s}\n")));
+		}
 
 		clients.insert(hi.id, Client { id: hi.id, tx, abilities: hi.abilities });
 		Self::handle_hey(&clients);

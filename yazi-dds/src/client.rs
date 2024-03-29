@@ -81,10 +81,13 @@ impl Client {
 
 			server.take().map(|h| h.abort());
 			*server = Server::make().await.ok();
+			if server.is_some() {
+				super::STATE.load().await.ok();
+			}
+
 			if mem::replace(&mut first, false) && server.is_some() {
 				continue;
 			}
-
 			time::sleep(time::Duration::from_secs(1)).await;
 		}
 	}
