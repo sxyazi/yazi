@@ -9,7 +9,7 @@ use crate::{body::Body, Payload, Pubsub, Server};
 
 pub(super) static ID: RoCell<u64> = RoCell::new();
 pub(super) static PEERS: RoCell<RwLock<HashMap<u64, Peer>>> = RoCell::new();
-pub(super) static QUEUE: RoCell<mpsc::UnboundedSender<Payload>> = RoCell::new();
+pub(super) static QUEUE: RoCell<mpsc::UnboundedSender<String>> = RoCell::new();
 
 #[cfg(not(unix))]
 use tokio::net::TcpStream;
@@ -29,7 +29,7 @@ pub struct Peer {
 }
 
 impl Client {
-	pub(super) fn serve(mut rx: mpsc::UnboundedReceiver<Payload<'static>>) {
+	pub(super) fn serve(mut rx: mpsc::UnboundedReceiver<String>) {
 		while rx.try_recv().is_ok() {}
 
 		tokio::spawn(async move {
@@ -39,10 +39,9 @@ impl Client {
 			loop {
 				select! {
 					Some(payload) = rx.recv() => {
-						let s = format!("{payload}\n");
-						if writer.write_all(s.as_bytes()).await.is_err() {
+						if writer.write_all(payload.as_bytes()).await.is_err() {
 							(lines, writer) = Self::reconnect(&mut server).await;
-							writer.write_all(s.as_bytes()).await.ok(); // Retry once
+							writer.write_all(payload.as_bytes()).await.ok(); // Retry once
 						}
 					}
 					Ok(next) = lines.next_line() => {
@@ -61,6 +60,9 @@ impl Client {
 			}
 		});
 	}
+
+	#[inline]
+	pub(super) fn push(payload: Payload) { QUEUE.send(format!("{}\n", payload)).ok(); }
 
 	#[inline]
 	pub(super) fn able(&self, ability: &str) -> bool { self.abilities.contains(ability) }

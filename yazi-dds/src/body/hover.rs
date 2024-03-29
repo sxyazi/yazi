@@ -22,12 +22,7 @@ impl<'a> BodyHover<'a> {
 
 impl BodyHover<'static> {
 	#[inline]
-	pub fn owned(tab: usize, url: Option<&Url>) -> Body<'static> {
-		Self { owned: true, tab, url: url.map(|u| Cow::Owned(u.clone())) }.into()
-	}
-
-	#[inline]
-	pub fn digest(tab: usize) -> Body<'static> { Self { owned: false, tab, url: None }.into() }
+	pub fn owned(tab: usize) -> Body<'static> { Self { owned: false, tab, url: None }.into() }
 }
 
 impl<'a> From<BodyHover<'a>> for Body<'a> {

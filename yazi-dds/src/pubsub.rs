@@ -5,7 +5,7 @@ use parking_lot::RwLock;
 use yazi_boot::BOOT;
 use yazi_shared::{fs::Url, RoCell};
 
-use crate::{body::{Body, BodyCd, BodyHi, BodyHover, BodyRename, BodyTabs, BodyYank}, Payload, ID, PEERS, QUEUE};
+use crate::{body::{Body, BodyCd, BodyHi, BodyHover, BodyRename, BodyTabs, BodyYank}, Client, Payload, ID, PEERS};
 
 pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function<'static>>>>> =
 	RoCell::new();
@@ -74,21 +74,21 @@ impl Pubsub {
 
 		let (kind, peers) = (body.kind(), PEERS.read());
 		if receiver == 0 && peers.values().any(|c| c.able(kind)) {
-			QUEUE.send(body.upgrade()).ok();
+			Client::push(body.upgrade());
 		} else if peers.get(&receiver).is_some_and(|c| c.able(kind)) {
-			QUEUE.send(body.upgrade().with_receiver(receiver)).ok();
+			Client::push(body.upgrade().with_receiver(receiver));
 		}
 	}
 
-	pub fn pub_static(severity: u8, body: Body<'static>) {
+	pub fn pub_static(severity: u8, body: Body) {
 		let (kind, peers) = (body.kind(), PEERS.read());
 		if peers.values().any(|c| c.able(kind)) {
-			QUEUE.send(body.upgrade().with_severity(severity)).ok();
+			Client::push(body.upgrade().with_severity(severity));
 		}
 	}
 
 	pub fn pub_from_hi() -> bool {
-		_ = QUEUE.send(Payload::new(
+		Client::push(Payload::new(
 			BodyHi { id: *ID, abilities: REMOTE.read().keys().cloned().collect() }.into(),
 		));
 		true
@@ -96,10 +96,10 @@ impl Pubsub {
 
 	pub fn pub_from_tabs(tab: usize, urls: &[&Url]) {
 		if LOCAL.read().contains_key("tabs") {
-			Self::pub_(BodyTabs::digest(tab));
+			Self::pub_(BodyTabs::owned(tab));
 		}
 		if PEERS.read().values().any(|p| p.able("tabs")) {
-			QUEUE.send(BodyTabs::owned(tab, urls).upgrade()).ok();
+			Client::push(BodyTabs::borrowed(tab, urls).upgrade());
 		}
 		if BOOT.local_events.contains("tabs") {
 			BodyTabs::borrowed(tab, urls).upgrade().flush(true);
@@ -108,10 +108,10 @@ impl Pubsub {
 
 	pub fn pub_from_cd(tab: usize, url: &Url) {
 		if LOCAL.read().contains_key("cd") {
-			Self::pub_(BodyCd::digest(tab));
+			Self::pub_(BodyCd::owned(tab));
 		}
 		if PEERS.read().values().any(|p| p.able("cd")) {
-			QUEUE.send(BodyCd::owned(tab, url).upgrade()).ok();
+			Client::push(BodyCd::borrowed(tab, url).upgrade());
 		}
 		if BOOT.local_events.contains("cd") {
 			BodyCd::borrowed(tab, url).upgrade().flush(true);
@@ -120,10 +120,10 @@ impl Pubsub {
 
 	pub fn pub_from_hover(tab: usize, url: Option<&Url>) {
 		if LOCAL.read().contains_key("hover") {
-			Self::pub_(BodyHover::digest(tab));
+			Self::pub_(BodyHover::owned(tab));
 		}
 		if PEERS.read().values().any(|p| p.able("hover")) {
-			QUEUE.send(BodyHover::owned(tab, url).upgrade()).ok();
+			Client::push(BodyHover::borrowed(tab, url).upgrade());
 		}
 		if BOOT.local_events.contains("hover") {
 			BodyHover::borrowed(tab, url).upgrade().flush(true);
@@ -132,10 +132,10 @@ impl Pubsub {
 
 	pub fn pub_from_rename(tab: usize, from: &Url, to: &Url) {
 		if LOCAL.read().contains_key("rename") {
-			Self::pub_(BodyRename::digest(tab, from, to));
+			Self::pub_(BodyRename::owned(tab, from, to));
 		}
 		if PEERS.read().values().any(|p| p.able("rename")) {
-			QUEUE.send(BodyRename::owned(tab, from, to).upgrade()).ok();
+			Client::push(BodyRename::borrowed(tab, from, to).upgrade());
 		}
 		if BOOT.local_events.contains("rename") {
 			BodyRename::borrowed(tab, from, to).upgrade().flush(true);
@@ -144,10 +144,10 @@ impl Pubsub {
 
 	pub fn pub_from_yank(cut: bool, urls: &HashSet<Url>) {
 		if LOCAL.read().contains_key("yank") {
-			Self::pub_(BodyYank::digest(cut));
+			Self::pub_(BodyYank::owned(cut));
 		}
 		if PEERS.read().values().any(|p| p.able("yank")) {
-			QUEUE.send(BodyYank::owned(cut, urls).upgrade()).ok();
+			Client::push(BodyYank::borrowed(cut, urls).upgrade());
 		}
 		if BOOT.local_events.contains("yank") {
 			BodyYank::borrowed(cut, urls).upgrade().flush(true);

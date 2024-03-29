@@ -22,12 +22,7 @@ impl<'a> BodyCd<'a> {
 
 impl BodyCd<'static> {
 	#[inline]
-	pub fn owned(tab: usize, url: &Url) -> Body<'static> {
-		Self { owned: true, tab, url: Cow::Owned(url.clone()) }.into()
-	}
-
-	#[inline]
-	pub fn digest(tab: usize) -> Body<'static> {
+	pub fn owned(tab: usize) -> Body<'static> {
 		Self { owned: false, tab, url: Default::default() }.into()
 	}
 }

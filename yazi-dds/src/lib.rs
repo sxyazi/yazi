@@ -5,12 +5,14 @@ mod payload;
 mod pubsub;
 mod sendable;
 mod server;
+mod state;
 
 pub use client::*;
 pub use payload::*;
 pub use pubsub::*;
 pub use sendable::*;
 use server::*;
+pub use state::*;
 
 pub fn init() {
 	let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
@@ -22,7 +24,7 @@ pub fn init() {
 
 	// Server
 	CLIENTS.with(Default::default);
-	STATES.with(Default::default);
+	STATE.with(Default::default);
 
 	// Pubsub
 	LOCAL.with(Default::default);

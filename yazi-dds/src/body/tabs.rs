@@ -27,17 +27,7 @@ impl<'a> BodyTabs<'a> {
 
 impl BodyTabs<'static> {
 	#[inline]
-	pub fn owned(cursor: usize, urls: &[&Url]) -> Body<'static> {
-		Self {
-			owned: true,
-			cursor,
-			items: urls.iter().map(|&u| BodyTabsItem { url: Cow::Owned(u.clone()) }).collect(),
-		}
-		.into()
-	}
-
-	#[inline]
-	pub fn digest(cursor: usize) -> Body<'static> {
+	pub fn owned(cursor: usize) -> Body<'static> {
 		Self { owned: false, cursor, items: Default::default() }.into()
 	}
 }

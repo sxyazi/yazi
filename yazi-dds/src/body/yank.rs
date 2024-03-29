@@ -22,12 +22,7 @@ impl<'a> BodyYank<'a> {
 
 impl BodyYank<'static> {
 	#[inline]
-	pub fn owned(cut: bool, urls: &HashSet<Url>) -> Body<'static> {
-		Self { owned: true, cut, urls: Cow::Owned(urls.clone()) }.into()
-	}
-
-	#[inline]
-	pub fn digest(cut: bool) -> Body<'static> {
+	pub fn owned(cut: bool) -> Body<'static> {
 		Self { owned: false, cut, urls: Default::default() }.into()
 	}
 }

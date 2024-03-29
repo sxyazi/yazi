@@ -24,11 +24,6 @@ impl BodyBulk<'static> {
 	pub fn owned(tab: usize, changes: &HashMap<Url, Url>) -> Body<'static> {
 		Self { tab, changes: Cow::Owned(changes.clone()) }.into()
 	}
-
-	#[inline]
-	pub fn digest(tab: usize, changes: &HashMap<Url, Url>) -> Body<'static> {
-		Self::owned(tab, changes)
-	}
 }
 
 impl<'a> From<BodyBulk<'a>> for Body<'a> {

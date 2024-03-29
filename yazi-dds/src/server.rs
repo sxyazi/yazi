@@ -1,14 +1,13 @@
 use std::{collections::HashMap, str::FromStr, time::Duration};
 
 use anyhow::Result;
-use parking_lot::{Mutex, RwLock};
+use parking_lot::RwLock;
 use tokio::{io::{AsyncBufReadExt, AsyncWriteExt, BufReader}, select, sync::mpsc, task::JoinHandle, time};
 use yazi_shared::RoCell;
 
-use crate::{body::{Body, BodyHey}, Client, Payload, Peer};
+use crate::{body::{Body, BodyHey}, Client, Payload, Peer, STATE};
 
 pub(super) static CLIENTS: RoCell<RwLock<HashMap<u64, Client>>> = RoCell::new();
-pub(super) static STATES: RoCell<Mutex<HashMap<String, String>>> = RoCell::new();
 
 pub(super) struct Server;
 
@@ -48,11 +47,6 @@ impl Server {
 								let Some(receiver) = parts.next().and_then(|s| s.parse().ok()) else { continue };
 								let Some(severity) = parts.next().and_then(|s| s.parse::<u8>().ok()) else { continue };
 
-								if receiver == 0 && severity > 0 {
-									let Some(body) = parts.next() else { continue };
-									STATES.lock().insert(format!("{}_{severity}_{kind}", Body::tab(kind, body)), line.clone());
-								}
-
 								let clients = CLIENTS.read();
 								let clients: Vec<_> = if receiver == 0 {
 									clients.values().filter(|c| c.id != id && c.able(kind)).collect()
@@ -62,10 +56,17 @@ impl Server {
 									vec![]
 								};
 
-								if !clients.is_empty() {
-									line.push('\n');
-									clients.into_iter().for_each(|c| _ = c.tx.send(line.clone()));
+								if clients.is_empty() {
+									continue;
 								}
+
+								if receiver == 0 && severity > 0 {
+									let Some(body) = parts.next() else { continue };
+									STATE.lock().add(format!("{}_{severity}_{kind}", Body::tab(kind, body)), &line);
+								}
+
+								line.push('\n');
+								clients.into_iter().for_each(|c| _ = c.tx.send(line.clone()));
 							}
 							else => break
 						}

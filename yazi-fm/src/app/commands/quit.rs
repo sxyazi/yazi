@@ -10,6 +10,7 @@ impl App {
 		self.cx.tasks.shutdown();
 		self.cx.manager.shutdown();
 
+		yazi_dds::STATE.lock().drain().ok();
 		if !opt.no_cwd_file {
 			self.cwd_to_file();
 		}

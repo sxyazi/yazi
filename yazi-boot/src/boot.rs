@@ -19,6 +19,7 @@ pub struct Boot {
 	pub config_dir: PathBuf,
 	pub flavor_dir: PathBuf,
 	pub plugin_dir: PathBuf,
+	pub state_dir:  PathBuf,
 }
 
 impl Boot {
@@ -153,6 +154,7 @@ impl Default for Boot {
 			flavor_dir: config_dir.join("flavors"),
 			plugin_dir: config_dir.join("plugins"),
 			config_dir,
+			state_dir: Xdg::state_dir(),
 		};
 
 		std::fs::create_dir_all(&boot.flavor_dir).expect("Failed to create flavor directory");

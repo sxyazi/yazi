@@ -25,9 +25,6 @@ impl BodyRename<'static> {
 	pub fn owned(tab: usize, from: &Url, to: &Url) -> Body<'static> {
 		Self { tab, from: Cow::Owned(from.clone()), to: Cow::Owned(to.clone()) }.into()
 	}
-
-	#[inline]
-	pub fn digest(tab: usize, from: &Url, to: &Url) -> Body<'static> { Self::owned(tab, from, to) }
 }
 
 impl<'a> From<BodyRename<'a>> for Body<'a> {
