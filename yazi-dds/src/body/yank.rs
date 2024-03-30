@@ -54,11 +54,11 @@ impl From<BodyYank<'static>> for BodyYankIter {
 }
 
 impl UserData for BodyYankIter {
-	fn add_fields<'a, F: mlua::UserDataFields<'a, Self>>(fields: &mut F) {
+	fn add_fields<'lua, F: mlua::UserDataFields<'lua, Self>>(fields: &mut F) {
 		fields.add_field_method_get("is_cut", |_, me| Ok(me.cut));
 	}
 
-	fn add_methods<'a, M: mlua::UserDataMethods<'a, Self>>(methods: &mut M) {
+	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
 		methods.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.urls.len()));
 
 		methods.add_meta_method(MetaMethod::Index, |lua, me, idx: usize| {

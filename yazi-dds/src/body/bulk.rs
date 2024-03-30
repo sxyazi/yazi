@@ -48,11 +48,11 @@ pub struct BodyBulkIter {
 }
 
 impl UserData for BodyBulkIter {
-	fn add_fields<'a, F: mlua::UserDataFields<'a, Self>>(fields: &mut F) {
+	fn add_fields<'lua, F: mlua::UserDataFields<'lua, Self>>(fields: &mut F) {
 		fields.add_field_method_get("tab", |_, me| Ok(me.tab));
 	}
 
-	fn add_methods<'a, M: mlua::UserDataMethods<'a, Self>>(methods: &mut M) {
+	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
 		methods.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.inner.len()));
 
 		methods.add_meta_function(MetaMethod::Pairs, |lua, me: AnyUserData| {

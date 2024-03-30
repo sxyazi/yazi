@@ -1,9 +1,10 @@
 use mlua::Lua;
 
-use crate::{bindings, elements};
+use crate::{bindings, elements, runtime::Runtime};
 
 pub fn slim_lua(name: &str) -> mlua::Result<Lua> {
 	let lua = Lua::new();
+	lua.set_named_registry_value("rt", Runtime::new(name))?;
 
 	// Base
 	bindings::Cha::register(&lua)?;
@@ -12,7 +13,7 @@ pub fn slim_lua(name: &str) -> mlua::Result<Lua> {
 
 	crate::fs::install(&lua)?;
 	crate::process::install(&lua)?;
-	crate::utils::install(&lua)?;
+	crate::utils::install_isolate(&lua)?;
 	crate::Config::new(&lua).install_preview()?;
 	lua.load(include_str!("../../preset/ya.lua")).exec()?;
 
@@ -24,12 +25,6 @@ pub fn slim_lua(name: &str) -> mlua::Result<Lua> {
 	elements::Rect::install(&lua, &ui)?;
 	elements::Span::install(&lua, &ui)?;
 
-	{
-		let globals = lua.globals();
-		globals.raw_set("ui", ui)?;
-		globals.raw_set("YAZI_PLUGIN_NAME", lua.create_string(name)?)?;
-		globals.raw_set("YAZI_SYNC_CALLS", 0)?;
-	}
-
+	lua.globals().raw_set("ui", ui)?;
 	Ok(lua)
 }

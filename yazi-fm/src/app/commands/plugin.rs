@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use mlua::TableExt;
 use tracing::warn;
-use yazi_plugin::{OptData, LOADER, LUA};
+use yazi_plugin::{loader::LOADER, OptData, RtRef, LUA};
 use yazi_shared::{emit, event::Cmd, Defer, Layer};
 
 use crate::{app::App, lives::Lives};
@@ -40,9 +40,12 @@ impl App {
 			Err(e) => return warn!("{e}"),
 		};
 
-		LOADER.set_running(Some(&opt.name));
-		let _defer = Defer::new(|| LOADER.set_running(None));
+		match LUA.named_registry_value::<RtRef>("rt") {
+			Ok(mut r) => r.swap(&opt.name),
+			Err(e) => return warn!("{e}"),
+		}
 
+		let _defer = Defer::new(|| LUA.named_registry_value::<RtRef>("rt").map(|mut r| r.reset()));
 		let plugin = match LOADER.load(&opt.name) {
 			Ok(plugin) => plugin,
 			Err(e) => return warn!("{e}"),

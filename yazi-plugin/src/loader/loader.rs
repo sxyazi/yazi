@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::HashMap, ops::Deref, sync::Arc};
+use std::{borrow::Cow, collections::HashMap, ops::Deref};
 
 use anyhow::{bail, Result};
 use mlua::{ExternalError, Table};
@@ -11,20 +11,12 @@ use crate::LUA;
 
 pub static LOADER: RoCell<Loader> = RoCell::new();
 
-pub(super) static RUNNING: RoCell<arc_swap::ArcSwapOption<String>> = RoCell::new();
-
 #[derive(Default)]
 pub struct Loader {
 	cache: RwLock<HashMap<String, Vec<u8>>>,
 }
 
 impl Loader {
-	#[inline]
-	pub(super) fn init() {
-		LOADER.with(Default::default);
-		RUNNING.with(Default::default);
-	}
-
 	pub async fn ensure(&self, name: &str) -> Result<()> {
 		if self.cache.read().contains_key(name) {
 			return Ok(());
@@ -33,16 +25,16 @@ impl Loader {
 		let path = BOOT.plugin_dir.join(format!("{name}.yazi/init.lua"));
 		let b = fs::read(path).await.map(|v| v.into()).or_else(|_| {
 			Ok(Cow::from(match name {
-				"archive" => include_bytes!("../preset/plugins/archive.lua") as &[u8],
-				"code" => include_bytes!("../preset/plugins/code.lua"),
-				"file" => include_bytes!("../preset/plugins/file.lua"),
-				"folder" => include_bytes!("../preset/plugins/folder.lua"),
-				"image" => include_bytes!("../preset/plugins/image.lua"),
-				"json" => include_bytes!("../preset/plugins/json.lua"),
-				"mime" => include_bytes!("../preset/plugins/mime.lua"),
-				"noop" => include_bytes!("../preset/plugins/noop.lua"),
-				"pdf" => include_bytes!("../preset/plugins/pdf.lua"),
-				"video" => include_bytes!("../preset/plugins/video.lua"),
+				"archive" => include_bytes!("../../preset/plugins/archive.lua") as &[_],
+				"code" => include_bytes!("../../preset/plugins/code.lua"),
+				"file" => include_bytes!("../../preset/plugins/file.lua"),
+				"folder" => include_bytes!("../../preset/plugins/folder.lua"),
+				"image" => include_bytes!("../../preset/plugins/image.lua"),
+				"json" => include_bytes!("../../preset/plugins/json.lua"),
+				"mime" => include_bytes!("../../preset/plugins/mime.lua"),
+				"noop" => include_bytes!("../../preset/plugins/noop.lua"),
+				"pdf" => include_bytes!("../../preset/plugins/pdf.lua"),
+				"video" => include_bytes!("../../preset/plugins/video.lua"),
 				_ => bail!("plugin not found: {name}"),
 			}))
 		})?;
@@ -58,8 +50,6 @@ impl Loader {
 			return Ok(t);
 		}
 
-		globals.raw_set("YAZI_PLUGIN_NAME", LUA.create_string(name)?)?;
-		globals.raw_set("YAZI_SYNC_CALLS", 0)?;
 		let t: Table = match self.read().get(name) {
 			Some(b) => LUA.load(b).call(())?,
 			None => Err(format!("plugin `{name}` not found").into_lua_err())?,
@@ -68,14 +58,6 @@ impl Loader {
 		t.raw_set("_name", LUA.create_string(name)?)?;
 		loaded.raw_set(name, t.clone())?;
 		Ok(t)
-	}
-
-	pub fn set_running(&self, name: Option<&str>) {
-		if let Some(s) = name {
-			RUNNING.store(Some(Arc::new(s.to_owned())));
-		} else {
-			RUNNING.store(None);
-		}
 	}
 }
 
