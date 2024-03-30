@@ -33,11 +33,11 @@ impl Utils {
 			lua.create_function(|lua, ()| {
 				let block = lua.named_registry_value::<RtRef>("rt")?.next_block();
 				lua.create_async_function(move |lua, args: Variadic<Value>| async move {
-					if let Some(cur) = lua.named_registry_value::<RtRef>("rt")?.current.clone() {
-						Self::retrieve(cur, block, args).await
-					} else {
-						Err("`ya.sync()` must be called in a plugin").into_lua_err()
-					}
+					let Some(cur) = lua.named_registry_value::<RtRef>("rt")?.current.clone() else {
+						return Err("`ya.sync()` must be called in a plugin").into_lua_err();
+					};
+
+					Self::retrieve(cur, block, args).await
 				})
 			})?,
 		)?;
