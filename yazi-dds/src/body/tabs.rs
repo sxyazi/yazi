@@ -53,7 +53,7 @@ pub struct BodyTabsItem<'a> {
 }
 
 impl UserData for BodyTabsItem<'static> {
-	fn add_fields<'a, F: mlua::UserDataFields<'a, Self>>(fields: &mut F) {
+	fn add_fields<'lua, F: mlua::UserDataFields<'lua, Self>>(fields: &mut F) {
 		fields.add_field_method_get("url", |lua, me| lua.create_any_userdata(me.url.clone()));
 	}
 }
@@ -69,11 +69,11 @@ impl From<BodyTabs<'static>> for BodyTabsIter {
 }
 
 impl UserData for BodyTabsIter {
-	fn add_fields<'a, F: mlua::UserDataFields<'a, Self>>(fields: &mut F) {
+	fn add_fields<'lua, F: mlua::UserDataFields<'lua, Self>>(fields: &mut F) {
 		fields.add_field_method_get("cursor", |_, me| Ok(me.cursor));
 	}
 
-	fn add_methods<'a, M: mlua::UserDataMethods<'a, Self>>(methods: &mut M) {
+	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
 		methods.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.items.len()));
 
 		methods.add_meta_method(MetaMethod::Index, |_, me, idx: usize| {

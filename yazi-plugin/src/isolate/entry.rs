@@ -3,7 +3,7 @@ use tokio::runtime::Handle;
 use yazi_dds::ValueSendable;
 
 use super::slim_lua;
-use crate::LOADER;
+use crate::loader::LOADER;
 
 pub async fn entry(name: String, args: Vec<ValueSendable>) -> mlua::Result<()> {
 	LOADER.ensure(&name).await.into_lua_err()?;

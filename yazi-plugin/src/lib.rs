@@ -7,18 +7,22 @@ pub mod elements;
 pub mod external;
 pub mod fs;
 pub mod isolate;
-mod loader;
+pub mod loader;
 mod lua;
 mod opt;
 pub mod process;
 pub mod pubsub;
+mod runtime;
 pub mod url;
 pub mod utils;
 
 pub use cast::*;
 pub use config::*;
-pub use loader::*;
 pub use lua::*;
 pub use opt::*;
+pub use runtime::*;
 
-pub fn init() { crate::init_lua(); }
+pub fn init() {
+	crate::init_lua();
+	crate::loader::init();
+}

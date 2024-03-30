@@ -3,7 +3,7 @@ use tokio::runtime::Handle;
 use yazi_config::LAYOUT;
 
 use super::slim_lua;
-use crate::{bindings::{Cast, File}, elements::Rect, LOADER};
+use crate::{bindings::{Cast, File}, elements::Rect, loader::LOADER};
 
 pub async fn preload(
 	name: &str,
