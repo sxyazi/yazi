@@ -1,6 +1,6 @@
 use std::{mem, path::{Path, PathBuf}};
 
-use anyhow::Context;
+use anyhow::{anyhow, Context, Result};
 use toml::{Table, Value};
 
 use crate::theme::Flavor;
@@ -8,28 +8,27 @@ use crate::theme::Flavor;
 pub(crate) struct Preset;
 
 impl Preset {
-	pub(crate) fn yazi(p: &Path) -> String {
+	pub(crate) fn yazi(p: &Path) -> Result<String> {
 		Self::merge_path(p.join("yazi.toml"), include_str!("../preset/yazi.toml"))
 	}
 
-	pub(crate) fn keymap(p: &Path) -> String {
+	pub(crate) fn keymap(p: &Path) -> Result<String> {
 		Self::merge_path(p.join("keymap.toml"), include_str!("../preset/keymap.toml"))
 	}
 
-	pub(crate) fn theme(p: &Path) -> String {
+	pub(crate) fn theme(p: &Path) -> Result<String> {
 		let Ok(user) = std::fs::read_to_string(p.join("theme.toml")) else {
-			return include_str!("../preset/theme.toml").to_owned();
+			return Ok(include_str!("../preset/theme.toml").to_owned());
 		};
 		let Some(use_) = Flavor::parse_use(&user) else {
 			return Self::merge_str(&user, include_str!("../preset/theme.toml"));
 		};
 
-		let p = p.join(format!("flavors/{}.yazi/flavor.toml", use_));
-		let flavor = std::fs::read_to_string(&p)
-			.with_context(|| format!("Failed to load flavor {:?}", p))
-			.unwrap();
+		let p = p.join(format!("flavors/{use_}.yazi/flavor.toml"));
+		let flavor =
+			std::fs::read_to_string(&p).with_context(|| anyhow!("Failed to load flavor {p:?}"))?;
 
-		Self::merge_str(&user, &Self::merge_str(&flavor, include_str!("../preset/theme.toml")))
+		Self::merge_str(&user, &Self::merge_str(&flavor, include_str!("../preset/theme.toml"))?)
 	}
 
 	#[inline]
@@ -38,21 +37,21 @@ impl Preset {
 	}
 
 	#[inline]
-	pub(crate) fn merge_str(user: &str, base: &str) -> String {
-		let mut t = user.parse().unwrap();
-		Self::merge(&mut t, base.parse().unwrap(), 2);
+	pub(crate) fn merge_str(user: &str, base: &str) -> Result<String> {
+		let mut t = user.parse()?;
+		Self::merge(&mut t, base.parse()?, 2);
 
-		t.to_string()
+		Ok(t.to_string())
 	}
 
 	#[inline]
-	fn merge_path(user: PathBuf, base: &str) -> String {
-		let s = std::fs::read_to_string(user).unwrap_or_default();
+	fn merge_path(user: PathBuf, base: &str) -> Result<String> {
+		let s = std::fs::read_to_string(&user).unwrap_or_default();
 		if s.is_empty() {
-			return base.to_string();
+			return Ok(base.to_string());
 		}
 
-		Self::merge_str(&s, base)
+		Self::merge_str(&s, base).with_context(|| anyhow!("Loading {user:?}"))
 	}
 
 	fn merge(a: &mut Table, b: Table, max: u8) {
