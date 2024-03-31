@@ -8,21 +8,20 @@ use super::Body;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BodyHover<'a> {
-	pub owned: bool,
-	pub tab:   usize,
-	pub url:   Option<Cow<'a, Url>>,
+	pub tab: usize,
+	pub url: Option<Cow<'a, Url>>,
 }
 
 impl<'a> BodyHover<'a> {
 	#[inline]
 	pub fn borrowed(tab: usize, url: Option<&'a Url>) -> Body<'a> {
-		Self { owned: false, tab, url: url.map(Cow::Borrowed) }.into()
+		Self { tab, url: url.map(Cow::Borrowed) }.into()
 	}
 }
 
 impl BodyHover<'static> {
 	#[inline]
-	pub fn owned(tab: usize) -> Body<'static> { Self { owned: false, tab, url: None }.into() }
+	pub fn dummy(tab: usize) -> Body<'static> { Self { tab, url: None }.into() }
 }
 
 impl<'a> From<BodyHover<'a>> for Body<'a> {
@@ -31,10 +30,10 @@ impl<'a> From<BodyHover<'a>> for Body<'a> {
 
 impl IntoLua<'_> for BodyHover<'static> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		if self.owned && self.url.is_some() {
+		if let Some(Cow::Owned(url)) = self.url {
 			lua.create_table_from([
 				("tab", self.tab.into_lua(lua)?),
-				("url", lua.create_any_userdata(self.url.unwrap().into_owned())?.into_lua(lua)?),
+				("url", lua.create_any_userdata(url)?.into_lua(lua)?),
 			])?
 		} else {
 			lua.create_table_from([("tab", self.tab)])?

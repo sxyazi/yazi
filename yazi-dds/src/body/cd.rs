@@ -8,22 +8,23 @@ use super::Body;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BodyCd<'a> {
-	pub owned: bool,
-	pub tab:   usize,
-	pub url:   Cow<'a, Url>,
+	pub tab: usize,
+	pub url: Cow<'a, Url>,
+	#[serde(skip)]
+	dummy:   bool,
 }
 
 impl<'a> BodyCd<'a> {
 	#[inline]
 	pub fn borrowed(tab: usize, url: &'a Url) -> Body<'a> {
-		Self { owned: false, tab, url: Cow::Borrowed(url) }.into()
+		Self { tab, url: Cow::Borrowed(url), dummy: false }.into()
 	}
 }
 
 impl BodyCd<'static> {
 	#[inline]
-	pub fn owned(tab: usize) -> Body<'static> {
-		Self { owned: false, tab, url: Default::default() }.into()
+	pub fn dummy(tab: usize) -> Body<'static> {
+		Self { tab, url: Default::default(), dummy: true }.into()
 	}
 }
 
@@ -33,10 +34,10 @@ impl<'a> From<BodyCd<'a>> for Body<'a> {
 
 impl IntoLua<'_> for BodyCd<'static> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		if self.owned {
+		if let Some(Cow::Owned(url)) = Some(self.url).filter(|_| !self.dummy) {
 			lua.create_table_from([
 				("tab", self.tab.into_lua(lua)?),
-				("url", lua.create_any_userdata(self.url.into_owned())?.into_lua(lua)?),
+				("url", lua.create_any_userdata(url)?.into_lua(lua)?),
 			])?
 		} else {
 			lua.create_table_from([("tab", self.tab)])?

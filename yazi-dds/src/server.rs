@@ -92,16 +92,21 @@ impl Server {
 	}
 
 	fn handle_hi(s: String, id: &mut Option<u64>, tx: mpsc::UnboundedSender<String>) {
-		let Ok(Body::Hi(hi)) = Payload::from_str(&s).map(|p| p.body) else { return };
+		let Ok(payload) = Payload::from_str(&s) else { return };
+		let Body::Hi(hi) = payload.body else { return };
 
 		let mut clients = CLIENTS.write();
-		id.replace(hi.id).and_then(|id| clients.remove(&id));
+		id.replace(payload.sender).and_then(|id| clients.remove(&id));
 
 		if let Some(ref state) = *STATE.read() {
 			state.values().for_each(|s| _ = tx.send(format!("{s}\n")));
 		}
 
-		clients.insert(hi.id, Client { id: hi.id, tx, abilities: hi.abilities });
+		clients.insert(payload.sender, Client {
+			id: payload.sender,
+			tx,
+			abilities: hi.abilities.into_iter().map(|s| s.into_owned()).collect(),
+		});
 		Self::handle_hey(&clients);
 	}
 

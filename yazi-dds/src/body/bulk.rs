@@ -32,12 +32,7 @@ impl<'a> From<BodyBulk<'a>> for Body<'a> {
 
 impl IntoLua<'_> for BodyBulk<'static> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		lua
-			.create_any_userdata(BodyBulkIter {
-				tab:   self.tab,
-				inner: self.changes.into_owned().into_iter(),
-			})?
-			.into_lua(lua)
+		BodyBulkIter { tab: self.tab, inner: self.changes.into_owned().into_iter() }.into_lua(lua)
 	}
 }
 
