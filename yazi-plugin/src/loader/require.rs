@@ -39,7 +39,7 @@ impl Require {
 				if key.to_str()? == "setup" {
 					Ok(RequireSetup { name: ts.raw_get("name")?, module: ts.raw_get("module")? })
 				} else {
-					Err("Only `require():setup()` is supported").into_lua_err()
+					Err("Only `require():setup()` and `require().setup()` are supported").into_lua_err()
 				}
 			})?,
 		)?;
@@ -58,7 +58,7 @@ impl UserData for RequireSetup {
 	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
 		methods.add_meta_method(MetaMethod::Call, |lua, me, args: Variadic<Value>| {
 			lua.named_registry_value::<RtRef>("rt")?.swap(me.name.to_str()?);
-			let result = me.module.call_method::<_, Variadic<Value>>("setup", args);
+			let result = me.module.call_function::<_, Variadic<Value>>("setup", args);
 			lua.named_registry_value::<RtRef>("rt")?.reset();
 			result
 		});
