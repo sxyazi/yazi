@@ -5,7 +5,7 @@ use parking_lot::RwLock;
 use yazi_boot::BOOT;
 use yazi_shared::{fs::Url, RoCell};
 
-use crate::{body::{Body, BodyCd, BodyHi, BodyHover, BodyRename, BodyTabs, BodyYank}, Client, Payload, ID, PEERS};
+use crate::{body::{Body, BodyCd, BodyHi, BodyHover, BodyRename, BodyTabs, BodyYank}, Client, ID, PEERS};
 
 pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function<'static>>>>> =
 	RoCell::new();

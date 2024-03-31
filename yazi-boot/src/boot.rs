@@ -157,8 +157,8 @@ impl Default for Boot {
 			state_dir: Xdg::state_dir(),
 		};
 
-		std::fs::create_dir_all(&boot.flavor_dir).expect("Failed to create flavor directory");
-		std::fs::create_dir_all(&boot.plugin_dir).expect("Failed to create plugin directory");
+		std::fs::create_dir_all(&boot.flavor_dir).ok();
+		std::fs::create_dir_all(&boot.plugin_dir).ok();
 		boot
 	}
 }

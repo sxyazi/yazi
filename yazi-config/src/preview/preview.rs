@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf, time::{self, SystemTime}};
+use std::{path::PathBuf, time::{self, SystemTime}};
 
 use serde::{Deserialize, Serialize};
 use validator::Validate;
@@ -53,7 +53,7 @@ impl Default for Preview {
 			preview.cache_dir.filter(|p| !p.is_empty()).map_or_else(Xdg::cache_dir, expand_path);
 
 		if !cache_dir.is_dir() {
-			fs::create_dir(&cache_dir).unwrap();
+			std::fs::create_dir(&cache_dir).expect("Failed to create cache directory");
 		}
 
 		Preview {
