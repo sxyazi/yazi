@@ -39,7 +39,7 @@ async fn main() -> anyhow::Result<()> {
 
 	_ = fdlimit::raise_fd_limit();
 
-	yazi_config::init();
+	yazi_config::init()?;
 
 	yazi_adaptor::init();
 

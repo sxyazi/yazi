@@ -47,11 +47,11 @@ pub static INPUT: RoCell<popup::Input> = RoCell::new();
 pub static SELECT: RoCell<popup::Select> = RoCell::new();
 pub static WHICH: RoCell<which::Which> = RoCell::new();
 
-pub fn init() {
+pub fn init() -> anyhow::Result<()> {
 	let config_dir = Xdg::config_dir();
-	MERGED_YAZI.init(Preset::yazi(&config_dir));
-	MERGED_KEYMAP.init(Preset::keymap(&config_dir));
-	MERGED_THEME.init(Preset::theme(&config_dir));
+	MERGED_YAZI.init(Preset::yazi(&config_dir)?);
+	MERGED_KEYMAP.init(Preset::keymap(&config_dir)?);
+	MERGED_THEME.init(Preset::theme(&config_dir)?);
 
 	LAYOUT.with(Default::default);
 
@@ -81,4 +81,5 @@ Add `disable_exec_warn = true` to your `yazi.toml` under `[headsup]` to suppress
 "#
 		);
 	}
+	Ok(())
 }
