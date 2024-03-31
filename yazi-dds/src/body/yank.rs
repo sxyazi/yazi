@@ -8,23 +8,20 @@ use super::Body;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BodyYank<'a> {
-	pub owned: bool,
-	pub cut:   bool,
-	pub urls:  Cow<'a, HashSet<Url>>,
+	pub cut:  bool,
+	pub urls: Cow<'a, HashSet<Url>>,
 }
 
 impl<'a> BodyYank<'a> {
 	#[inline]
 	pub fn borrowed(cut: bool, urls: &'a HashSet<Url>) -> Body<'a> {
-		Self { owned: false, cut, urls: Cow::Borrowed(urls) }.into()
+		Self { cut, urls: Cow::Borrowed(urls) }.into()
 	}
 }
 
 impl BodyYank<'static> {
 	#[inline]
-	pub fn owned(cut: bool) -> Body<'static> {
-		Self { owned: false, cut, urls: Default::default() }.into()
-	}
+	pub fn dummy(cut: bool) -> Body<'static> { Self { cut, urls: Default::default() }.into() }
 }
 
 impl<'a> From<BodyYank<'a>> for Body<'a> {
@@ -33,8 +30,8 @@ impl<'a> From<BodyYank<'a>> for Body<'a> {
 
 impl IntoLua<'_> for BodyYank<'static> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value<'_>> {
-		if self.owned {
-			BodyYankIter::from(self).into_lua(lua)
+		if let Cow::Owned(urls) = self.urls {
+			BodyYankIter { cut: self.cut, urls: urls.into_iter().collect() }.into_lua(lua)
 		} else {
 			lua.create_table_from([("cut", self.cut)])?.into_lua(lua)
 		}
@@ -45,12 +42,6 @@ impl IntoLua<'_> for BodyYank<'static> {
 pub struct BodyYankIter {
 	pub cut:  bool,
 	pub urls: Vec<Url>,
-}
-
-impl From<BodyYank<'static>> for BodyYankIter {
-	fn from(value: BodyYank) -> Self {
-		Self { cut: value.cut, urls: value.urls.into_owned().into_iter().collect() }
-	}
 }
 
 impl UserData for BodyYankIter {

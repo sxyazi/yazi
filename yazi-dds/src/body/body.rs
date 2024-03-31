@@ -8,7 +8,7 @@ use crate::Payload;
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Body<'a> {
-	Hi(BodyHi),
+	Hi(BodyHi<'a>),
 	Hey(BodyHey),
 	Tabs(BodyTabs<'a>),
 	Cd(BodyCd<'a>),

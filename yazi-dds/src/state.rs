@@ -36,10 +36,11 @@ impl State {
 
 		let mut inner = HashMap::new();
 		while buf.read_line(&mut line).await? > 0 {
-			let mut parts = line.splitn(4, ',');
+			let mut parts = line.splitn(5, ',');
 			let Some(kind) = parts.next() else { continue };
 			let Some(_) = parts.next() else { continue };
 			let Some(severity) = parts.next().and_then(|s| s.parse::<u8>().ok()) else { continue };
+			let Some(_) = parts.next() else { continue };
 			let Some(body) = parts.next() else { continue };
 			inner.insert(format!("{}_{severity}_{kind}", Body::tab(kind, body)), mem::take(&mut line));
 		}

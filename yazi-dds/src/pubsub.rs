@@ -88,69 +88,70 @@ impl Pubsub {
 	}
 
 	pub fn pub_from_hi() -> bool {
-		Client::push(Payload::new(
-			BodyHi { id: *ID, abilities: REMOTE.read().keys().cloned().collect() }.into(),
-		));
+		let abilities = REMOTE.read().keys().cloned().collect();
+		let abilities = BOOT.remote_events.union(&abilities).collect();
+
+		Client::push(BodyHi::borrowed(abilities).upgrade());
 		true
 	}
 
 	pub fn pub_from_tabs(tab: usize, urls: &[&Url]) {
 		if LOCAL.read().contains_key("tabs") {
-			Self::pub_(BodyTabs::owned(tab));
+			Self::pub_(BodyTabs::dummy(tab));
 		}
 		if PEERS.read().values().any(|p| p.able("tabs")) {
 			Client::push(BodyTabs::borrowed(tab, urls).upgrade());
 		}
 		if BOOT.local_events.contains("tabs") {
-			BodyTabs::borrowed(tab, urls).upgrade().flush(true);
+			BodyTabs::borrowed(tab, urls).upgrade().with_receiver(*ID).flush(true);
 		}
 	}
 
 	pub fn pub_from_cd(tab: usize, url: &Url) {
 		if LOCAL.read().contains_key("cd") {
-			Self::pub_(BodyCd::owned(tab));
+			Self::pub_(BodyCd::dummy(tab));
 		}
 		if PEERS.read().values().any(|p| p.able("cd")) {
 			Client::push(BodyCd::borrowed(tab, url).upgrade());
 		}
 		if BOOT.local_events.contains("cd") {
-			BodyCd::borrowed(tab, url).upgrade().flush(true);
+			BodyCd::borrowed(tab, url).upgrade().with_receiver(*ID).flush(true);
 		}
 	}
 
 	pub fn pub_from_hover(tab: usize, url: Option<&Url>) {
 		if LOCAL.read().contains_key("hover") {
-			Self::pub_(BodyHover::owned(tab));
+			Self::pub_(BodyHover::dummy(tab));
 		}
 		if PEERS.read().values().any(|p| p.able("hover")) {
 			Client::push(BodyHover::borrowed(tab, url).upgrade());
 		}
 		if BOOT.local_events.contains("hover") {
-			BodyHover::borrowed(tab, url).upgrade().flush(true);
+			BodyHover::borrowed(tab, url).upgrade().with_receiver(*ID).flush(true);
 		}
 	}
 
 	pub fn pub_from_rename(tab: usize, from: &Url, to: &Url) {
 		if LOCAL.read().contains_key("rename") {
-			Self::pub_(BodyRename::owned(tab, from, to));
+			Self::pub_(BodyRename::dummy(tab, from, to));
 		}
 		if PEERS.read().values().any(|p| p.able("rename")) {
 			Client::push(BodyRename::borrowed(tab, from, to).upgrade());
 		}
 		if BOOT.local_events.contains("rename") {
-			BodyRename::borrowed(tab, from, to).upgrade().flush(true);
+			BodyRename::borrowed(tab, from, to).upgrade().with_receiver(*ID).flush(true);
 		}
 	}
 
 	pub fn pub_from_yank(cut: bool, urls: &HashSet<Url>) {
 		if LOCAL.read().contains_key("yank") {
-			Self::pub_(BodyYank::owned(cut));
+			Self::pub_(BodyYank::dummy(cut));
 		}
 		if PEERS.read().values().any(|p| p.able("yank")) {
 			Client::push(BodyYank::borrowed(cut, urls).upgrade());
 		}
 		if BOOT.local_events.contains("yank") {
-			BodyYank::borrowed(cut, urls).upgrade().flush(true);
+			BodyYank::borrowed(cut, urls).upgrade().with_receiver(*ID).flush(true);
 		}
 	}
 }

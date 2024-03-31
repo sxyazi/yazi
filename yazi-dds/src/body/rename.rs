@@ -22,7 +22,7 @@ impl<'a> BodyRename<'a> {
 
 impl BodyRename<'static> {
 	#[inline]
-	pub fn owned(tab: usize, from: &Url, to: &Url) -> Body<'static> {
+	pub fn dummy(tab: usize, from: &Url, to: &Url) -> Body<'static> {
 		Self { tab, from: Cow::Owned(from.clone()), to: Cow::Owned(to.clone()) }.into()
 	}
 }

@@ -4,18 +4,19 @@ use anyhow::{anyhow, Result};
 use yazi_boot::BOOT;
 use yazi_shared::{emit, event::Cmd, Layer};
 
-use crate::body::Body;
+use crate::{body::Body, ID};
 
 #[derive(Debug)]
 pub struct Payload<'a> {
 	pub receiver: u64,
 	pub severity: u8,
+	pub sender:   u64,
 	pub body:     Body<'a>,
 }
 
 impl<'a> Payload<'a> {
 	#[inline]
-	pub(super) fn new(body: Body<'a>) -> Self { Self { receiver: 0, severity: 0, body } }
+	pub(super) fn new(body: Body<'a>) -> Self { Self { receiver: 0, severity: 0, sender: *ID, body } }
 
 	#[inline]
 	pub(super) fn with_receiver(mut self, receiver: u64) -> Self {
@@ -56,7 +57,7 @@ impl FromStr for Payload<'_> {
 	type Err = anyhow::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		let mut parts = s.splitn(4, ',');
+		let mut parts = s.splitn(5, ',');
 
 		let kind = parts.next().ok_or_else(|| anyhow!("empty kind"))?;
 
@@ -66,9 +67,12 @@ impl FromStr for Payload<'_> {
 		let severity =
 			parts.next().and_then(|s| s.parse().ok()).ok_or_else(|| anyhow!("invalid severity"))?;
 
+		let sender =
+			parts.next().and_then(|s| s.parse().ok()).ok_or_else(|| anyhow!("invalid sender"))?;
+
 		let body = parts.next().ok_or_else(|| anyhow!("empty body"))?;
 
-		Ok(Self { receiver, severity, body: Body::from_str(kind, body)? })
+		Ok(Self { receiver, severity, sender, body: Body::from_str(kind, body)? })
 	}
 }
 
@@ -87,7 +91,7 @@ impl Display for Payload<'_> {
 		};
 
 		if let Ok(s) = result {
-			write!(f, "{},{},{},{s}", self.body.kind(), self.receiver, self.severity)
+			write!(f, "{},{},{},{},{s}", self.body.kind(), self.receiver, self.severity, self.sender)
 		} else {
 			Err(std::fmt::Error)
 		}
