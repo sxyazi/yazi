@@ -8,7 +8,6 @@ mod hey;
 mod hi;
 mod hover;
 mod rename;
-mod tabs;
 mod yank;
 
 pub use body::*;
@@ -19,5 +18,4 @@ pub use hey::*;
 pub use hi::*;
 pub use hover::*;
 pub use rename::*;
-pub use tabs::*;
 pub use yank::*;

@@ -22,12 +22,8 @@ pub struct Folder {
 	pub tracing: bool,
 }
 
-impl From<Url> for Folder {
-	fn from(cwd: Url) -> Self { Self { cwd, ..Default::default() } }
-}
-
 impl From<&Url> for Folder {
-	fn from(cwd: &Url) -> Self { Self::from(cwd.clone()) }
+	fn from(cwd: &Url) -> Self { Self { cwd: cwd.clone(), ..Default::default() } }
 }
 
 impl Folder {

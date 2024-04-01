@@ -5,7 +5,7 @@ use parking_lot::RwLock;
 use yazi_boot::BOOT;
 use yazi_shared::{fs::Url, RoCell};
 
-use crate::{body::{Body, BodyCd, BodyHi, BodyHover, BodyRename, BodyTabs, BodyYank}, Client, ID, PEERS};
+use crate::{body::{Body, BodyCd, BodyHi, BodyHover, BodyRename, BodyYank}, Client, ID, PEERS};
 
 pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function<'static>>>>> =
 	RoCell::new();
@@ -65,7 +65,7 @@ impl Pubsub {
 		unsub!(REMOTE)(plugin, kind) && Self::pub_from_hi()
 	}
 
-	pub fn pub_(body: Body<'static>) { body.upgrade().with_receiver(*ID).flush(false).emit(); }
+	pub fn pub_(body: Body<'static>) { body.with_receiver(*ID).emit(); }
 
 	pub fn pub_to(receiver: u64, body: Body<'static>) {
 		if receiver == *ID {
@@ -74,16 +74,16 @@ impl Pubsub {
 
 		let (kind, peers) = (body.kind(), PEERS.read());
 		if receiver == 0 && peers.values().any(|c| c.able(kind)) {
-			Client::push(body.upgrade());
+			Client::push(body);
 		} else if peers.get(&receiver).is_some_and(|c| c.able(kind)) {
-			Client::push(body.upgrade().with_receiver(receiver));
+			Client::push(body.with_receiver(receiver));
 		}
 	}
 
 	pub fn pub_static(severity: u8, body: Body) {
 		let (kind, peers) = (body.kind(), PEERS.read());
 		if peers.values().any(|c| c.able(kind)) {
-			Client::push(body.upgrade().with_severity(severity));
+			Client::push(body.with_severity(severity));
 		}
 	}
 
@@ -91,20 +91,8 @@ impl Pubsub {
 		let abilities = REMOTE.read().keys().cloned().collect();
 		let abilities = BOOT.remote_events.union(&abilities).collect();
 
-		Client::push(BodyHi::borrowed(abilities).upgrade());
+		Client::push(BodyHi::borrowed(abilities));
 		true
-	}
-
-	pub fn pub_from_tabs(tab: usize, urls: &[&Url]) {
-		if LOCAL.read().contains_key("tabs") {
-			Self::pub_(BodyTabs::dummy(tab));
-		}
-		if PEERS.read().values().any(|p| p.able("tabs")) {
-			Client::push(BodyTabs::borrowed(tab, urls).upgrade());
-		}
-		if BOOT.local_events.contains("tabs") {
-			BodyTabs::borrowed(tab, urls).upgrade().with_receiver(*ID).flush(true);
-		}
 	}
 
 	pub fn pub_from_cd(tab: usize, url: &Url) {
@@ -112,10 +100,10 @@ impl Pubsub {
 			Self::pub_(BodyCd::dummy(tab));
 		}
 		if PEERS.read().values().any(|p| p.able("cd")) {
-			Client::push(BodyCd::borrowed(tab, url).upgrade());
+			Client::push(BodyCd::borrowed(tab, url).with_severity(10));
 		}
 		if BOOT.local_events.contains("cd") {
-			BodyCd::borrowed(tab, url).upgrade().with_receiver(*ID).flush(true);
+			BodyCd::borrowed(tab, url).with_receiver(*ID).flush();
 		}
 	}
 
@@ -124,10 +112,10 @@ impl Pubsub {
 			Self::pub_(BodyHover::dummy(tab));
 		}
 		if PEERS.read().values().any(|p| p.able("hover")) {
-			Client::push(BodyHover::borrowed(tab, url).upgrade());
+			Client::push(BodyHover::borrowed(tab, url).with_severity(20));
 		}
 		if BOOT.local_events.contains("hover") {
-			BodyHover::borrowed(tab, url).upgrade().with_receiver(*ID).flush(true);
+			BodyHover::borrowed(tab, url).with_receiver(*ID).flush();
 		}
 	}
 
@@ -136,10 +124,10 @@ impl Pubsub {
 			Self::pub_(BodyRename::dummy(tab, from, to));
 		}
 		if PEERS.read().values().any(|p| p.able("rename")) {
-			Client::push(BodyRename::borrowed(tab, from, to).upgrade());
+			Client::push(BodyRename::borrowed(tab, from, to));
 		}
 		if BOOT.local_events.contains("rename") {
-			BodyRename::borrowed(tab, from, to).upgrade().with_receiver(*ID).flush(true);
+			BodyRename::borrowed(tab, from, to).with_receiver(*ID).flush();
 		}
 	}
 
@@ -148,10 +136,10 @@ impl Pubsub {
 			Self::pub_(BodyYank::dummy(cut));
 		}
 		if PEERS.read().values().any(|p| p.able("yank")) {
-			Client::push(BodyYank::borrowed(cut, urls).upgrade());
+			Client::push(BodyYank::borrowed(cut, urls).with_severity(30));
 		}
 		if BOOT.local_events.contains("yank") {
-			BodyYank::borrowed(cut, urls).upgrade().with_receiver(*ID).flush(true);
+			BodyYank::borrowed(cut, urls).with_receiver(*ID).flush();
 		}
 	}
 }

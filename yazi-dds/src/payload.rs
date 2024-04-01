@@ -15,40 +15,38 @@ pub struct Payload<'a> {
 }
 
 impl<'a> Payload<'a> {
-	#[inline]
 	pub(super) fn new(body: Body<'a>) -> Self { Self { receiver: 0, severity: 0, sender: *ID, body } }
 
-	#[inline]
+	pub(super) fn flush(&self) { writeln!(std::io::stdout(), "{self}").ok(); }
+
+	pub(super) fn try_flush(&self) {
+		let b = if self.receiver == 0 {
+			BOOT.remote_events.contains(self.body.kind())
+		} else if let Body::Custom(b) = &self.body {
+			BOOT.local_events.contains(&b.kind)
+		} else {
+			false
+		};
+
+		if b {
+			self.flush();
+		}
+	}
+
 	pub(super) fn with_receiver(mut self, receiver: u64) -> Self {
 		self.receiver = receiver;
 		self
 	}
 
-	#[inline]
 	pub(super) fn with_severity(mut self, severity: u8) -> Self {
 		self.severity = severity;
-		self
-	}
-
-	pub(super) fn flush(self, force: bool) -> Self {
-		let b = force
-			|| if self.receiver == 0 {
-				BOOT.remote_events.contains(self.body.kind())
-			} else if let Body::Custom(b) = &self.body {
-				BOOT.local_events.contains(&b.kind)
-			} else {
-				false
-			};
-
-		if b {
-			writeln!(std::io::stdout(), "{self}").ok();
-		}
 		self
 	}
 }
 
 impl Payload<'static> {
 	pub(super) fn emit(self) {
+		self.try_flush();
 		emit!(Call(Cmd::new("accept_payload").with_data(self), Layer::App));
 	}
 }
@@ -76,12 +74,15 @@ impl FromStr for Payload<'_> {
 	}
 }
 
+impl<'a> From<Body<'a>> for Payload<'a> {
+	fn from(value: Body<'a>) -> Self { Self::new(value) }
+}
+
 impl Display for Payload<'_> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		let result = match &self.body {
 			Body::Hi(b) => serde_json::to_string(b),
 			Body::Hey(b) => serde_json::to_string(b),
-			Body::Tabs(b) => serde_json::to_string(b),
 			Body::Cd(b) => serde_json::to_string(b),
 			Body::Hover(b) => serde_json::to_string(b),
 			Body::Rename(b) => serde_json::to_string(b),

@@ -10,18 +10,22 @@ use super::Body;
 pub struct BodyYank<'a> {
 	pub cut:  bool,
 	pub urls: Cow<'a, HashSet<Url>>,
+	#[serde(skip)]
+	dummy:    bool,
 }
 
 impl<'a> BodyYank<'a> {
 	#[inline]
 	pub fn borrowed(cut: bool, urls: &'a HashSet<Url>) -> Body<'a> {
-		Self { cut, urls: Cow::Borrowed(urls) }.into()
+		Self { cut, urls: Cow::Borrowed(urls), dummy: false }.into()
 	}
 }
 
 impl BodyYank<'static> {
 	#[inline]
-	pub fn dummy(cut: bool) -> Body<'static> { Self { cut, urls: Default::default() }.into() }
+	pub fn dummy(cut: bool) -> Body<'static> {
+		Self { cut, urls: Default::default(), dummy: true }.into()
+	}
 }
 
 impl<'a> From<BodyYank<'a>> for Body<'a> {
@@ -30,7 +34,7 @@ impl<'a> From<BodyYank<'a>> for Body<'a> {
 
 impl IntoLua<'_> for BodyYank<'static> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value<'_>> {
-		if let Cow::Owned(urls) = self.urls {
+		if let Some(Cow::Owned(urls)) = Some(self.urls).filter(|_| !self.dummy) {
 			BodyYankIter { cut: self.cut, urls: urls.into_iter().collect() }.into_lua(lua)
 		} else {
 			lua.create_table_from([("cut", self.cut)])?.into_lua(lua)
@@ -46,7 +50,7 @@ pub struct BodyYankIter {
 
 impl UserData for BodyYankIter {
 	fn add_fields<'lua, F: mlua::UserDataFields<'lua, Self>>(fields: &mut F) {
-		fields.add_field_method_get("is_cut", |_, me| Ok(me.cut));
+		fields.add_field_method_get("cut", |_, me| Ok(me.cut));
 	}
 
 	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {

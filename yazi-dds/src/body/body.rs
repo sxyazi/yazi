@@ -2,7 +2,7 @@ use anyhow::Result;
 use mlua::{ExternalResult, IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 
-use super::{BodyBulk, BodyCd, BodyCustom, BodyHey, BodyHi, BodyHover, BodyRename, BodyTabs, BodyYank};
+use super::{BodyBulk, BodyCd, BodyCustom, BodyHey, BodyHi, BodyHover, BodyRename, BodyYank};
 use crate::Payload;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -10,7 +10,6 @@ use crate::Payload;
 pub enum Body<'a> {
 	Hi(BodyHi<'a>),
 	Hey(BodyHey),
-	Tabs(BodyTabs<'a>),
 	Cd(BodyCd<'a>),
 	Hover(BodyHover<'a>),
 	Rename(BodyRename<'a>),
@@ -24,7 +23,6 @@ impl<'a> Body<'a> {
 		Ok(match kind {
 			"hi" => Body::Hi(serde_json::from_str(body)?),
 			"hey" => Body::Hey(serde_json::from_str(body)?),
-			"tabs" => Body::Tabs(serde_json::from_str(body)?),
 			"cd" => Body::Cd(serde_json::from_str(body)?),
 			"hover" => Body::Hover(serde_json::from_str(body)?),
 			"rename" => Body::Rename(serde_json::from_str(body)?),
@@ -36,7 +34,7 @@ impl<'a> Body<'a> {
 
 	pub fn from_lua(kind: &str, value: Value) -> Result<Self> {
 		Ok(match kind {
-			"hi" | "hey" | "tabs" | "cd" | "hover" | "rename" | "bulk" | "yank" => {
+			"hi" | "hey" | "cd" | "hover" | "rename" | "bulk" | "yank" => {
 				Err("Cannot construct system event from Lua").into_lua_err()?
 			}
 			_ => BodyCustom::from_lua(kind, value)?,
@@ -48,7 +46,6 @@ impl<'a> Body<'a> {
 		match self {
 			Self::Hi(_) => "hi",
 			Self::Hey(_) => "hey",
-			Self::Tabs(_) => "tabs",
 			Self::Cd(_) => "cd",
 			Self::Hover(_) => "hover",
 			Self::Rename(_) => "rename",
@@ -73,18 +70,13 @@ impl<'a> Body<'a> {
 		}
 	}
 
-	pub fn upgrade(self) -> Payload<'a> {
-		let severity = match self {
-			Body::Hi(_) => 0,
-			Body::Hey(_) => 0,
-			Body::Tabs(_) => 10,
-			Body::Cd(_) => 20,
-			Body::Hover(_) => 30,
-			Body::Rename(_) => 0,
-			Body::Bulk(_) => 0,
-			Body::Yank(_) => 40,
-			Body::Custom(_) => 0,
-		};
+	#[inline]
+	pub fn with_receiver(self, receiver: u64) -> Payload<'a> {
+		Payload::new(self).with_receiver(receiver)
+	}
+
+	#[inline]
+	pub fn with_severity(self, severity: u8) -> Payload<'a> {
 		Payload::new(self).with_severity(severity)
 	}
 }
@@ -94,7 +86,6 @@ impl IntoLua<'_> for Body<'static> {
 		match self {
 			Body::Hi(b) => b.into_lua(lua),
 			Body::Hey(b) => b.into_lua(lua),
-			Body::Tabs(b) => b.into_lua(lua),
 			Body::Cd(b) => b.into_lua(lua),
 			Body::Hover(b) => b.into_lua(lua),
 			Body::Rename(b) => b.into_lua(lua),

@@ -1,12 +1,16 @@
+#[derive(Default)]
 pub struct Backstack<T: Eq> {
 	cursor: usize,
 	stack:  Vec<T>,
 }
 
 impl<T: Eq> Backstack<T> {
-	pub fn new(item: T) -> Self { Self { cursor: 0, stack: vec![item] } }
-
 	pub fn push(&mut self, item: T) {
+		if self.stack.is_empty() {
+			self.stack.push(item);
+			return;
+		}
+
 		if self.stack[self.cursor] == item {
 			return;
 		}
@@ -26,10 +30,6 @@ impl<T: Eq> Backstack<T> {
 			self.cursor -= start;
 		}
 	}
-
-	#[cfg(test)]
-	#[inline]
-	pub fn current(&self) -> &T { &self.stack[self.cursor] }
 
 	pub fn shift_backward(&mut self) -> Option<&T> {
 		if self.cursor > 0 {
@@ -56,27 +56,28 @@ mod tests {
 
 	#[test]
 	fn test_backstack() {
-		let mut backstack = Backstack::<u32>::new(1);
-		assert_eq!(backstack.current(), &1);
+		let mut bs = Backstack::default();
+		bs.push(1);
+		assert_eq!(bs.stack[bs.cursor], 1);
 
-		backstack.push(2);
-		backstack.push(3);
-		assert_eq!(backstack.current(), &3);
+		bs.push(2);
+		bs.push(3);
+		assert_eq!(bs.stack[bs.cursor], 3);
 
-		assert_eq!(backstack.shift_backward(), Some(&2));
-		assert_eq!(backstack.shift_backward(), Some(&1));
-		assert_eq!(backstack.shift_backward(), None);
-		assert_eq!(backstack.shift_backward(), None);
-		assert_eq!(backstack.current(), &1);
-		assert_eq!(backstack.shift_forward(), Some(&2));
-		assert_eq!(backstack.shift_forward(), Some(&3));
-		assert_eq!(backstack.shift_forward(), None);
+		assert_eq!(bs.shift_backward(), Some(&2));
+		assert_eq!(bs.shift_backward(), Some(&1));
+		assert_eq!(bs.shift_backward(), None);
+		assert_eq!(bs.shift_backward(), None);
+		assert_eq!(bs.stack[bs.cursor], 1);
+		assert_eq!(bs.shift_forward(), Some(&2));
+		assert_eq!(bs.shift_forward(), Some(&3));
+		assert_eq!(bs.shift_forward(), None);
 
-		backstack.shift_backward();
-		backstack.push(4);
+		bs.shift_backward();
+		bs.push(4);
 
-		assert_eq!(backstack.current(), &4);
-		assert_eq!(backstack.shift_forward(), None);
-		assert_eq!(backstack.shift_backward(), Some(&2));
+		assert_eq!(bs.stack[bs.cursor], 4);
+		assert_eq!(bs.shift_forward(), None);
+		assert_eq!(bs.shift_backward(), Some(&2));
 	}
 }
