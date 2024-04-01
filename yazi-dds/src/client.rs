@@ -53,7 +53,7 @@ impl Client {
 						if line.starts_with("hey,") {
 							Self::handle_hey(line);
 						} else {
-							Payload::from_str(&line).map(|p| p.flush(false).emit()).ok();
+							Payload::from_str(&line).map(|p| p.emit()).ok();
 						}
 					}
 				}
@@ -62,7 +62,9 @@ impl Client {
 	}
 
 	#[inline]
-	pub(super) fn push(payload: Payload) { QUEUE.send(format!("{}\n", payload)).ok(); }
+	pub(super) fn push<'a>(payload: impl Into<Payload<'a>>) {
+		QUEUE.send(format!("{}\n", payload.into())).ok();
+	}
 
 	#[inline]
 	pub(super) fn able(&self, ability: &str) -> bool { self.abilities.contains(ability) }

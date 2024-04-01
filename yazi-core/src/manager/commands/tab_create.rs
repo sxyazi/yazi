@@ -29,9 +29,10 @@ impl Tabs {
 		let opt = opt.into() as Opt;
 		let url = if opt.current { self.active().current.cwd.to_owned() } else { opt.url.unwrap() };
 
-		let mut tab = Tab::from(url);
+		let mut tab = Tab::default();
 		tab.conf = self.active().conf.clone();
 		tab.apply_files_attrs();
+		tab.cd(url);
 
 		self.items.insert(self.cursor + 1, tab);
 		self.set_idx(self.cursor + 1);

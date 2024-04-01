@@ -7,6 +7,7 @@ use yazi_shared::{fs::Url, render};
 use super::{Backstack, Config, Finder, Mode, Preview};
 use crate::{folder::{Folder, FolderStage}, tab::Selected};
 
+#[derive(Default)]
 pub struct Tab {
 	pub idx:     usize,
 	pub mode:    Mode,
@@ -21,33 +22,6 @@ pub struct Tab {
 	pub preview:       Preview,
 	pub finder:        Option<Finder>,
 	pub(super) search: Option<JoinHandle<Result<()>>>,
-}
-
-impl From<Url> for Tab {
-	fn from(url: Url) -> Self {
-		let parent = url.parent_url().map(Folder::from);
-
-		Self {
-			idx: 0,
-			mode: Default::default(),
-			current: Folder::from(url.clone()),
-			parent,
-
-			backstack: Backstack::new(url),
-			history: Default::default(),
-			selected: Default::default(),
-
-			preview: Default::default(),
-			finder: None,
-			search: None,
-
-			conf: Default::default(),
-		}
-	}
-}
-
-impl From<&Url> for Tab {
-	fn from(url: &Url) -> Self { Self::from(url.clone()) }
 }
 
 impl Tab {
