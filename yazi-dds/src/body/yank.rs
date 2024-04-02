@@ -23,8 +23,8 @@ impl<'a> BodyYank<'a> {
 
 impl BodyYank<'static> {
 	#[inline]
-	pub fn dummy(cut: bool) -> Body<'static> {
-		Self { cut, urls: Default::default(), dummy: true }.into()
+	pub fn dummy() -> Body<'static> {
+		Self { cut: false, urls: Default::default(), dummy: true }.into()
 	}
 }
 
@@ -37,7 +37,7 @@ impl IntoLua<'_> for BodyYank<'static> {
 		if let Some(Cow::Owned(urls)) = Some(self.urls).filter(|_| !self.dummy) {
 			BodyYankIter { cut: self.cut, urls: urls.into_iter().collect() }.into_lua(lua)
 		} else {
-			lua.create_table_from([("cut", self.cut)])?.into_lua(lua)
+			lua.create_table()?.into_lua(lua)
 		}
 	}
 }

@@ -1,23 +1,19 @@
 use mlua::{IntoLua, Lua, Value};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use super::Body;
 use crate::ValueSendable;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct BodyCustom {
-	#[serde(skip)]
 	pub kind:  String,
-	#[serde(flatten)]
 	pub value: ValueSendable,
 }
 
 impl BodyCustom {
 	#[inline]
 	pub fn from_str(kind: &str, value: &str) -> anyhow::Result<Body<'static>> {
-		let mut me = serde_json::from_str::<Self>(value)?;
-		kind.clone_into(&mut me.kind);
-		Ok(me.into())
+		Ok(Self { kind: kind.to_owned(), value: serde_json::from_str(value)? }.into())
 	}
 
 	#[inline]
@@ -32,4 +28,10 @@ impl From<BodyCustom> for Body<'_> {
 
 impl IntoLua<'_> for BodyCustom {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { self.value.into_lua(lua) }
+}
+
+impl Serialize for BodyCustom {
+	fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+		serde::Serialize::serialize(&self.value, serializer)
+	}
 }

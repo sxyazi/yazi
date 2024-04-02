@@ -84,7 +84,7 @@ impl Client {
 			server.take().map(|h| h.abort());
 			*server = Server::make().await.ok();
 			if server.is_some() {
-				super::STATE.load().await.ok();
+				super::STATE.load_or_create().await;
 			}
 
 			if mem::replace(&mut first, false) && server.is_some() {

@@ -32,3 +32,5 @@ pub use ro_cell::*;
 pub use throttle::*;
 pub use time::*;
 pub use xdg::*;
+
+pub fn init() { event::Event::init(); }
