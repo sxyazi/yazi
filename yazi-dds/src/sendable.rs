@@ -11,7 +11,7 @@ pub enum ValueSendable {
 	Boolean(bool),
 	Integer(i64),
 	Number(f64),
-	String(Vec<u8>),
+	String(String),
 	Table(HashMap<ValueSendableKey, ValueSendable>),
 }
 
@@ -31,10 +31,7 @@ impl ValueSendable {
 
 		let mut map = HashMap::with_capacity(table.len());
 		for pair in table {
-			let (ValueSendableKey::String(k), Self::String(v)) = pair else {
-				continue;
-			};
-			if let (Ok(k), Ok(v)) = (String::from_utf8(k), String::from_utf8(v)) {
+			if let (ValueSendableKey::String(k), Self::String(v)) = pair {
 				map.insert(k, v);
 			}
 		}
@@ -52,7 +49,7 @@ impl<'a> TryFrom<Value<'a>> for ValueSendable {
 			Value::LightUserData(_) => Err("light userdata is not supported".into_lua_err())?,
 			Value::Integer(n) => Self::Integer(n),
 			Value::Number(n) => Self::Number(n),
-			Value::String(s) => Self::String(s.as_bytes().to_vec()),
+			Value::String(s) => Self::String(s.to_str()?.to_owned()),
 			Value::Table(t) => {
 				let mut map = HashMap::with_capacity(t.len().map(|l| l as usize)?);
 				for result in t.pairs::<Value, Value>() {
@@ -96,7 +93,7 @@ pub enum ValueSendableKey {
 	Boolean(bool),
 	Integer(i64),
 	Number(OrderedFloat),
-	String(Vec<u8>),
+	String(String),
 }
 
 impl ValueSendableKey {

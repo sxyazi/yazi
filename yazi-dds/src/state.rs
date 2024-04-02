@@ -30,29 +30,11 @@ impl State {
 		}
 	}
 
-	pub async fn load(&self) -> Result<()> {
-		let mut buf = BufReader::new(File::open(BOOT.state_dir.join(".dds")).await?);
-		let mut line = String::new();
-
-		let mut inner = HashMap::new();
-		while buf.read_line(&mut line).await? > 0 {
-			let mut parts = line.splitn(5, ',');
-			let Some(kind) = parts.next() else { continue };
-			let Some(_) = parts.next() else { continue };
-			let Some(severity) = parts.next().and_then(|s| s.parse::<u8>().ok()) else { continue };
-			let Some(_) = parts.next() else { continue };
-			let Some(body) = parts.next() else { continue };
-			inner.insert(format!("{}_{severity}_{kind}", Body::tab(kind, body)), mem::take(&mut line));
+	pub async fn load_or_create(&self) {
+		if self.load().await.is_err() {
+			self.inner.write().replace(Default::default());
+			self.last.store(timestamp_us(), Ordering::Relaxed);
 		}
-
-		let clients = CLIENTS.read();
-		for payload in inner.values() {
-			clients.values().for_each(|c| _ = c.tx.send(format!("{payload}\n")));
-		}
-
-		self.inner.write().replace(inner);
-		self.last.store(timestamp_us(), Ordering::Relaxed);
-		Ok(())
 	}
 
 	pub async fn drain(&self) -> Result<()> {
@@ -77,6 +59,32 @@ impl State {
 			buf.write_u8(b'\n').await?;
 		}
 
+		buf.flush().await?;
+		Ok(())
+	}
+
+	async fn load(&self) -> Result<()> {
+		let mut buf = BufReader::new(File::open(BOOT.state_dir.join(".dds")).await?);
+		let mut line = String::new();
+
+		let mut inner = HashMap::new();
+		while buf.read_line(&mut line).await? > 0 {
+			let mut parts = line.splitn(5, ',');
+			let Some(kind) = parts.next() else { continue };
+			let Some(_) = parts.next() else { continue };
+			let Some(severity) = parts.next().and_then(|s| s.parse::<u8>().ok()) else { continue };
+			let Some(_) = parts.next() else { continue };
+			let Some(body) = parts.next() else { continue };
+			inner.insert(format!("{}_{severity}_{kind}", Body::tab(kind, body)), mem::take(&mut line));
+		}
+
+		let clients = CLIENTS.read();
+		for payload in inner.values() {
+			clients.values().for_each(|c| _ = c.tx.send(payload.clone()));
+		}
+
+		self.inner.write().replace(inner);
+		self.last.store(timestamp_us(), Ordering::Relaxed);
 		Ok(())
 	}
 

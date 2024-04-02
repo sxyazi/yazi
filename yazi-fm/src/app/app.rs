@@ -17,7 +17,7 @@ pub(crate) struct App {
 impl App {
 	pub(crate) async fn serve() -> Result<()> {
 		let term = Term::start()?;
-		let signals = Signals::start()?;
+		let (mut rx, signals) = (Event::take(), Signals::start()?);
 
 		Lives::register()?;
 		let mut app = Self { cx: Ctx::make(), term: Some(term), signals };
@@ -25,7 +25,7 @@ impl App {
 
 		let mut times = 0;
 		let mut events = Vec::with_capacity(200);
-		while app.signals.rx.recv_many(&mut events, 50).await > 0 {
+		while rx.recv_many(&mut events, 50).await > 0 {
 			for event in events.drain(..) {
 				times += 1;
 				app.dispatch(event)?;
@@ -38,7 +38,7 @@ impl App {
 			if times >= 50 {
 				times = 0;
 				app.render();
-			} else if let Ok(event) = app.signals.rx.try_recv() {
+			} else if let Ok(event) = rx.try_recv() {
 				events.push(event);
 				emit!(Render);
 			} else {

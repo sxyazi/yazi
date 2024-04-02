@@ -133,7 +133,7 @@ impl Pubsub {
 
 	pub fn pub_from_yank(cut: bool, urls: &HashSet<Url>) {
 		if LOCAL.read().contains_key("yank") {
-			Self::pub_(BodyYank::dummy(cut));
+			Self::pub_(BodyYank::dummy());
 		}
 		if PEERS.read().values().any(|p| p.able("yank")) {
 			Client::push(BodyYank::borrowed(cut, urls).with_severity(30));

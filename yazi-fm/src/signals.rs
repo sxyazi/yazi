@@ -1,23 +1,18 @@
 use anyhow::Result;
 use crossterm::event::{Event as CrosstermEvent, EventStream, KeyEvent, KeyEventKind};
 use futures::StreamExt;
-use tokio::{select, sync::mpsc, task::JoinHandle};
+use tokio::{select, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
 use yazi_shared::event::Event;
 
 pub(super) struct Signals {
-	tx:     mpsc::UnboundedSender<Event>,
-	pub rx: mpsc::UnboundedReceiver<Event>,
-	ct:     CancellationToken,
+	ct: CancellationToken,
 }
 
 impl Signals {
 	pub(super) fn start() -> Result<Self> {
-		let (tx, rx) = mpsc::unbounded_channel();
-		let ct = CancellationToken::new();
-		let mut signals = Self { tx: tx.clone(), rx, ct };
+		let mut signals = Self { ct: CancellationToken::new() };
 
-		Event::init(tx);
 		signals.spawn_system_task()?;
 		signals.spawn_crossterm_task();
 
@@ -52,12 +47,11 @@ impl Signals {
 			SIGCONT,
 		])?;
 
-		let tx = self.tx.clone();
 		Ok(tokio::spawn(async move {
 			while let Some(signal) = signals.next().await {
 				match signal {
 					SIGHUP | SIGTERM | SIGQUIT | SIGINT => {
-						tx.send(Event::Quit(Default::default())).ok();
+						Event::Quit(Default::default()).emit();
 					}
 					SIGCONT if HIDER.try_acquire().is_ok() => AppProxy::resume(),
 					_ => {}
@@ -68,23 +62,18 @@ impl Signals {
 
 	fn spawn_crossterm_task(&mut self) -> JoinHandle<()> {
 		let mut reader = EventStream::new();
-		let (tx, ct) = (self.tx.clone(), self.ct.clone());
+		let ct = self.ct.clone();
 
 		tokio::spawn(async move {
 			loop {
 				select! {
 					_ = ct.cancelled() => break,
 					Some(Ok(event)) = reader.next() => {
-						let event = match event {
-							// We need to check key event kind;
-							// otherwise event will be dispatched twice.
-							CrosstermEvent::Key(key @ KeyEvent { kind: KeyEventKind::Press, .. }) => Event::Key(key),
-							CrosstermEvent::Paste(str) => Event::Paste(str),
-							CrosstermEvent::Resize(..) => Event::Resize,
-							_ => continue,
-						};
-						if tx.send(event).is_err() {
-							break;
+						 match event {
+							CrosstermEvent::Key(key @ KeyEvent { kind: KeyEventKind::Press, .. }) => Event::Key(key).emit(),
+							CrosstermEvent::Paste(str) => Event::Paste(str).emit(),
+							CrosstermEvent::Resize(..) => Event::Resize.emit(),
+							_ => {},
 						}
 					}
 				}

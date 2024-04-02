@@ -34,10 +34,9 @@ impl<T> RoCell<T> {
 	}
 
 	#[inline]
-	pub fn drop(&self) {
-		unsafe {
-			*self.0.get() = None;
-		}
+	pub fn drop(&self) -> T {
+		debug_assert!(self.is_initialized());
+		unsafe { mem::take(&mut *self.0.get()).unwrap_unchecked() }
 	}
 
 	#[inline]

@@ -7,6 +7,7 @@ use super::Cmd;
 use crate::{Layer, RoCell};
 
 static TX: RoCell<mpsc::UnboundedSender<Event>> = RoCell::new();
+static RX: RoCell<mpsc::UnboundedReceiver<Event>> = RoCell::new();
 
 #[derive(Debug)]
 pub enum Event {
@@ -27,7 +28,14 @@ pub struct EventQuit {
 
 impl Event {
 	#[inline]
-	pub fn init(tx: mpsc::UnboundedSender<Event>) { TX.init(tx); }
+	pub fn init() {
+		let (tx, rx) = mpsc::unbounded_channel();
+		TX.init(tx);
+		RX.init(rx);
+	}
+
+	#[inline]
+	pub fn take() -> mpsc::UnboundedReceiver<Event> { RX.drop() }
 
 	#[inline]
 	pub fn emit(self) { TX.send(self).ok(); }

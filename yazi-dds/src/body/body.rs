@@ -1,11 +1,11 @@
 use anyhow::Result;
 use mlua::{ExternalResult, IntoLua, Lua, Value};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use super::{BodyBulk, BodyCd, BodyCustom, BodyHey, BodyHi, BodyHover, BodyRename, BodyYank};
 use crate::Payload;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 #[serde(untagged)]
 pub enum Body<'a> {
 	Hi(BodyHi<'a>),

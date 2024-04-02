@@ -95,18 +95,20 @@ impl Server {
 		let Ok(payload) = Payload::from_str(&s) else { return };
 		let Body::Hi(hi) = payload.body else { return };
 
-		let mut clients = CLIENTS.write();
-		id.replace(payload.sender).and_then(|id| clients.remove(&id));
-
-		if let Some(ref state) = *STATE.read() {
-			state.values().for_each(|s| _ = tx.send(format!("{s}\n")));
+		if id.is_none() {
+			if let Some(ref state) = *STATE.read() {
+				state.values().for_each(|s| _ = tx.send(s.clone()));
+			}
 		}
 
+		let mut clients = CLIENTS.write();
+		id.replace(payload.sender).and_then(|id| clients.remove(&id));
 		clients.insert(payload.sender, Client {
 			id: payload.sender,
 			tx,
 			abilities: hi.abilities.into_iter().map(|s| s.into_owned()).collect(),
 		});
+
 		Self::handle_hey(&clients);
 	}
 

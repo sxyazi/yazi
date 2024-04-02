@@ -26,10 +26,7 @@ impl TryFrom<Cmd> for Opt {
 		let mut data: OptData = c.take_data().unwrap_or_default();
 
 		if let Some(args) = c.named.get("args") {
-			data.args = shell_words::split(args)?
-				.into_iter()
-				.map(|s| ValueSendable::String(s.into_bytes()))
-				.collect();
+			data.args = shell_words::split(args)?.into_iter().map(ValueSendable::String).collect();
 		}
 
 		Ok(Self { name, sync: c.named.contains_key("sync"), data })
