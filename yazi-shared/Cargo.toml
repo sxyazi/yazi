@@ -10,16 +10,19 @@ repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
 anyhow           = "1.0.81"
-bitflags         = "2.4.2"
+bitflags         = "2.5.0"
 crossterm        = "0.27.0"
 dirs             = "5.0.1"
 futures          = "0.3.30"
 parking_lot      = "0.12.1"
 percent-encoding = "2.3.1"
 ratatui          = "0.26.1"
-regex            = "1.10.3"
+regex            = "1.10.4"
 serde            = "1.0.197"
-tokio            = { version = "1.36.0", features = [ "full" ] }
+tokio            = { version = "1.37.0", features = [ "full" ] }
+
+# Logging
+tracing = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
 
 [target."cfg(unix)".dependencies]
 libc = "0.2.153"

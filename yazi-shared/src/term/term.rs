@@ -1,7 +1,7 @@
 use std::{io::{self, stderr, BufWriter, Stderr, Write}, mem, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}};
 
 use anyhow::Result;
-use crossterm::{event::{DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, terminal::{disable_raw_mode, enable_raw_mode, supports_keyboard_enhancement, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, WindowSize}};
+use crossterm::{cursor::{RestorePosition, SavePosition}, event::{DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, WindowSize}};
 use ratatui::{backend::CrosstermBackend, buffer::Buffer, layout::Rect, CompletedFrame, Frame, Terminal};
 
 static CSI_U: AtomicBool = AtomicBool::new(false);
@@ -21,9 +21,18 @@ impl Term {
 		};
 
 		enable_raw_mode()?;
-		queue!(stderr(), EnterAlternateScreen, EnableBracketedPaste, EnableFocusChange)?;
+		execute!(
+			BufWriter::new(stderr()),
+			EnterAlternateScreen,
+			EnableBracketedPaste,
+			EnableFocusChange,
+			SavePosition,
+			Print("\x1b[?u\x1b[c"),
+			RestorePosition
+		)?;
 
-		if let Ok(true) = supports_keyboard_enhancement() {
+		let resp = futures::executor::block_on(Self::read_until_da1());
+		if resp.is_ok_and(|s| s.contains("\x1b[?0u")) {
 			queue!(
 				stderr(),
 				PushKeyboardEnhancementFlags(

@@ -1,9 +1,9 @@
-use std::{env, io::{stderr, LineWriter, Read}};
+use std::{env, io::{stderr, LineWriter}};
 
 use anyhow::{anyhow, Result};
 use crossterm::{cursor::{RestorePosition, SavePosition}, execute, style::Print, terminal::{disable_raw_mode, enable_raw_mode}};
 use tracing::warn;
-use yazi_shared::env_exists;
+use yazi_shared::{env_exists, term::Term};
 
 use crate::{Adaptor, TMUX};
 
@@ -120,20 +120,9 @@ impl Emulator {
 			RestorePosition
 		)?;
 
-		let mut stdin = std::io::stdin().lock();
-		let mut buf = String::with_capacity(200);
-		loop {
-			let mut c = [0; 1];
-			if stdin.read(&mut c)? == 0 {
-				break;
-			}
-			if c[0] == b'c' && buf.contains("\x1b[?") {
-				break;
-			}
-			buf.push(c[0] as char);
-		}
-
+		let resp = futures::executor::block_on(Term::read_until_da1())?;
 		disable_raw_mode().ok();
+
 		let names = [
 			("kitty", Self::Kitty),
 			("Konsole", Self::Konsole),
@@ -144,16 +133,16 @@ impl Emulator {
 		];
 
 		for (name, emulator) in names.iter() {
-			if buf.contains(name) {
+			if resp.contains(name) {
 				return Ok(emulator.clone());
 			}
 		}
 
 		let mut adapters = Vec::with_capacity(2);
-		if buf.contains("\x1b_Gi=31;OK") {
+		if resp.contains("\x1b_Gi=31;OK") {
 			adapters.push(Adaptor::KittyOld);
 		}
-		if ["?4;", "?4c", ";4;", ";4c"].iter().any(|s| buf.contains(s)) {
+		if ["?4;", "?4c", ";4;", ";4c"].iter().any(|s| resp.contains(s)) {
 			adapters.push(Adaptor::Sixel);
 		}
 

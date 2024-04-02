@@ -13,14 +13,14 @@ yazi-shared = { path = "../yazi-shared", version = "0.2.4" }
 
 # External dependencies
 anyhow      = "1.0.81"
-arc-swap    = "1.7.0"
+arc-swap    = "1.7.1"
 crossterm   = "0.27.0"
 futures     = "0.3.30"
 glob        = "0.3.1"
-indexmap    = "2.2.5"
+indexmap    = "2.2.6"
 md-5        = "0.10.6"
 ratatui     = "0.26.1"
 serde       = { version = "1.0.197", features = [ "derive" ] }
 shell-words = "1.1.0"
-toml        = { version = "0.8.11", features = [ "preserve_order" ] }
+toml        = { version = "0.8.12", features = [ "preserve_order" ] }
 validator   = { version = "0.17.0", features = [ "derive" ] }
