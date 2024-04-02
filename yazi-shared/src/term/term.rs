@@ -31,8 +31,8 @@ impl Term {
 			RestorePosition
 		)?;
 
-		let resp = futures::executor::block_on(Self::read_until_da1()).unwrap_or_default();
-		if resp.contains("\x1b[?0u") {
+		let resp = futures::executor::block_on(Self::read_until_da1());
+		if resp.is_ok_and(|s| s.contains("\x1b[?0u")) {
 			queue!(
 				stderr(),
 				PushKeyboardEnhancementFlags(
