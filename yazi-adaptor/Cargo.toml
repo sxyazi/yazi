@@ -14,15 +14,16 @@ yazi-shared = { path = "../yazi-shared", version = "0.2.4" }
 
 # External dependencies
 anyhow       = "1.0.81"
-arc-swap     = "1.7.0"
+arc-swap     = "1.7.1"
 base64       = "0.22.0"
 color_quant  = "1.1.0"
 crossterm    = "0.27.0"
-image        = "0.24.9"
+futures      = "0.3.30"
+image        = "0.25.1"
 imagesize    = "0.12.0"
 kamadak-exif = "0.5.5"
 ratatui      = "0.26.1"
-tokio        = { version = "1.36.0", features = [ "full" ] }
+tokio        = { version = "1.37.0", features = [ "full" ] }
 
 # Logging
 tracing = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }

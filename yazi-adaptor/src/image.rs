@@ -39,7 +39,7 @@ impl Image {
 				img.as_bytes(),
 				img.width(),
 				img.height(),
-				img.color(),
+				img.color().into(),
 			)?;
 			Ok::<_, anyhow::Error>(buf)
 		})
