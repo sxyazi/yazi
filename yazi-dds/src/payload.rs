@@ -9,13 +9,12 @@ use crate::{body::Body, ID};
 #[derive(Debug)]
 pub struct Payload<'a> {
 	pub receiver: u64,
-	pub severity: u8,
 	pub sender:   u64,
 	pub body:     Body<'a>,
 }
 
 impl<'a> Payload<'a> {
-	pub(super) fn new(body: Body<'a>) -> Self { Self { receiver: 0, severity: 0, sender: *ID, body } }
+	pub(super) fn new(body: Body<'a>) -> Self { Self { receiver: 0, sender: *ID, body } }
 
 	pub(super) fn flush(&self) { writeln!(std::io::stdout(), "{self}").ok(); }
 
@@ -38,8 +37,8 @@ impl<'a> Payload<'a> {
 		self
 	}
 
-	pub(super) fn with_severity(mut self, severity: u8) -> Self {
-		self.severity = severity;
+	pub(super) fn with_severity(mut self, severity: u16) -> Self {
+		self.sender = severity as u64;
 		self
 	}
 }
@@ -62,15 +61,12 @@ impl FromStr for Payload<'_> {
 		let receiver =
 			parts.next().and_then(|s| s.parse().ok()).ok_or_else(|| anyhow!("invalid receiver"))?;
 
-		let severity =
-			parts.next().and_then(|s| s.parse().ok()).ok_or_else(|| anyhow!("invalid severity"))?;
-
 		let sender =
 			parts.next().and_then(|s| s.parse().ok()).ok_or_else(|| anyhow!("invalid sender"))?;
 
 		let body = parts.next().ok_or_else(|| anyhow!("empty body"))?;
 
-		Ok(Self { receiver, severity, sender, body: Body::from_str(kind, body)? })
+		Ok(Self { receiver, sender, body: Body::from_str(kind, body)? })
 	}
 }
 
@@ -92,7 +88,7 @@ impl Display for Payload<'_> {
 		};
 
 		if let Ok(s) = result {
-			write!(f, "{},{},{},{},{s}", self.body.kind(), self.receiver, self.severity, self.sender)
+			write!(f, "{},{},{},{s}", self.body.kind(), self.receiver, self.sender)
 		} else {
 			Err(std::fmt::Error)
 		}

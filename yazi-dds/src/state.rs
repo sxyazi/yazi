@@ -23,11 +23,25 @@ impl Deref for State {
 }
 
 impl State {
-	pub fn add(&self, key: String, value: &str) {
-		if let Some(ref mut inner) = *self.inner.write() {
-			inner.insert(key, value.to_owned());
-			self.last.store(timestamp_us(), Ordering::Relaxed);
+	pub fn set(&self, kind: &str, severity: u16, body: &str) -> bool {
+		let Some(inner) = &mut *self.inner.write() else { return false };
+		let key = format!("{}_{severity}_{kind}", Body::tab(kind, body));
+
+		if body == "null" {
+			return inner
+				.remove(&key)
+				.map(|_| self.last.store(timestamp_us(), Ordering::Relaxed))
+				.is_some();
 		}
+
+		let value = format!("{kind},0,{severity},{body}\n");
+		if inner.get(&key).is_some_and(|s| *s == value) {
+			return false;
+		}
+
+		inner.insert(key, value);
+		self.last.store(timestamp_us(), Ordering::Relaxed);
+		true
 	}
 
 	pub async fn load_or_create(&self) {
@@ -72,8 +86,7 @@ impl State {
 			let mut parts = line.splitn(5, ',');
 			let Some(kind) = parts.next() else { continue };
 			let Some(_) = parts.next() else { continue };
-			let Some(severity) = parts.next().and_then(|s| s.parse::<u8>().ok()) else { continue };
-			let Some(_) = parts.next() else { continue };
+			let Some(severity) = parts.next().and_then(|s| s.parse::<u16>().ok()) else { continue };
 			let Some(body) = parts.next() else { continue };
 			inner.insert(format!("{}_{severity}_{kind}", Body::tab(kind, body)), mem::take(&mut line));
 		}

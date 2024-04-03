@@ -76,7 +76,7 @@ impl<'a> Body<'a> {
 	}
 
 	#[inline]
-	pub fn with_severity(self, severity: u8) -> Payload<'a> {
+	pub fn with_severity(self, severity: u16) -> Payload<'a> {
 		Payload::new(self).with_severity(severity)
 	}
 }
