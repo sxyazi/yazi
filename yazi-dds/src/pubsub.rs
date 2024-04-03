@@ -80,7 +80,7 @@ impl Pubsub {
 		}
 	}
 
-	pub fn pub_static(severity: u8, body: Body) {
+	pub fn pub_static(severity: u16, body: Body) {
 		let (kind, peers) = (body.kind(), PEERS.read());
 		if peers.values().any(|c| c.able(kind)) {
 			Client::push(body.with_severity(severity));
@@ -100,7 +100,7 @@ impl Pubsub {
 			Self::pub_(BodyCd::dummy(tab));
 		}
 		if PEERS.read().values().any(|p| p.able("cd")) {
-			Client::push(BodyCd::borrowed(tab, url).with_severity(10));
+			Client::push(BodyCd::borrowed(tab, url).with_severity(100));
 		}
 		if BOOT.local_events.contains("cd") {
 			BodyCd::borrowed(tab, url).with_receiver(*ID).flush();
@@ -112,7 +112,7 @@ impl Pubsub {
 			Self::pub_(BodyHover::dummy(tab));
 		}
 		if PEERS.read().values().any(|p| p.able("hover")) {
-			Client::push(BodyHover::borrowed(tab, url).with_severity(20));
+			Client::push(BodyHover::borrowed(tab, url).with_severity(200));
 		}
 		if BOOT.local_events.contains("hover") {
 			BodyHover::borrowed(tab, url).with_receiver(*ID).flush();
@@ -136,7 +136,7 @@ impl Pubsub {
 			Self::pub_(BodyYank::dummy());
 		}
 		if PEERS.read().values().any(|p| p.able("yank")) {
-			Client::push(BodyYank::borrowed(cut, urls).with_severity(30));
+			Client::push(BodyYank::borrowed(cut, urls).with_severity(300));
 		}
 		if BOOT.local_events.contains("yank") {
 			BodyYank::borrowed(cut, urls).with_receiver(*ID).flush();
