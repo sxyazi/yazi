@@ -42,7 +42,7 @@ impl Server {
 									continue;
 								}
 
-								let mut parts = line.splitn(5, ',');
+								let mut parts = line.splitn(4, ',');
 								let Some(id) = id else { continue };
 								let Some(kind) = parts.next() else { continue };
 								let Some(receiver) = parts.next().and_then(|s| s.parse().ok()) else { continue };
@@ -62,7 +62,6 @@ impl Server {
 								}
 
 								if receiver == 0 && sender <= u16::MAX as u64 {
-									let Some(_) = parts.next() else { continue };
 									let Some(body) = parts.next() else { continue };
 									if !STATE.set(kind, sender as u16, body) { continue }
 								}

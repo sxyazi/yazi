@@ -54,7 +54,7 @@ impl FromStr for Payload<'_> {
 	type Err = anyhow::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		let mut parts = s.splitn(5, ',');
+		let mut parts = s.splitn(4, ',');
 
 		let kind = parts.next().ok_or_else(|| anyhow!("empty kind"))?;
 

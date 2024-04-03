@@ -83,7 +83,7 @@ impl State {
 
 		let mut inner = HashMap::new();
 		while buf.read_line(&mut line).await? > 0 {
-			let mut parts = line.splitn(5, ',');
+			let mut parts = line.splitn(4, ',');
 			let Some(kind) = parts.next() else { continue };
 			let Some(_) = parts.next() else { continue };
 			let Some(severity) = parts.next().and_then(|s| s.parse::<u16>().ok()) else { continue };
