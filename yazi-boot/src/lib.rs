@@ -16,5 +16,6 @@ pub fn init() {
 	ARGS.with(Default::default);
 	BOOT.with(Default::default);
 
+	#[cfg(unix)]
 	USERS_CACHE.with(Default::default);
 }
