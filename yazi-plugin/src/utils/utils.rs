@@ -1,7 +1,4 @@
 #[cfg(unix)]
-pub(super) static USERS_CACHE: yazi_shared::RoCell<uzers::UsersCache> = yazi_shared::RoCell::new();
-
-#[cfg(unix)]
 pub(super) static HOSTNAME_CACHE: std::sync::OnceLock<Option<String>> = std::sync::OnceLock::new();
 
 pub(super) struct Utils;
@@ -42,9 +39,4 @@ pub fn install_isolate(lua: &mlua::Lua) -> mlua::Result<()> {
 	Utils::user(lua, &ya)?;
 
 	lua.globals().raw_set("ya", ya)
-}
-
-pub fn init() {
-	#[cfg(unix)]
-	USERS_CACHE.with(Default::default);
 }

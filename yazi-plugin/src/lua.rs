@@ -16,7 +16,6 @@ pub(super) fn init_lua() {
 
 fn stage_1(lua: &'static Lua) -> Result<()> {
 	crate::Config::new(lua).install_boot()?.install_manager()?.install_theme()?;
-	crate::utils::init();
 	crate::utils::install(lua)?;
 
 	// Base

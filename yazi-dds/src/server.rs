@@ -80,9 +80,21 @@ impl Server {
 
 	#[cfg(unix)]
 	#[inline]
+	pub(super) fn socket_file() -> std::path::PathBuf {
+		use uzers::Users;
+		use yazi_boot::USERS_CACHE;
+		use yazi_shared::Xdg;
+
+		Xdg::cache_dir().join(format!(".dds-{}.sock", USERS_CACHE.get_current_uid()))
+	}
+
+	#[cfg(unix)]
+	#[inline]
 	async fn bind() -> Result<tokio::net::UnixListener> {
-		tokio::fs::remove_file("/tmp/yazi.sock").await.ok();
-		Ok(tokio::net::UnixListener::bind("/tmp/yazi.sock")?)
+		let p = Self::socket_file();
+
+		tokio::fs::remove_file(&p).await.ok();
+		Ok(tokio::net::UnixListener::bind(p)?)
 	}
 
 	#[cfg(not(unix))]

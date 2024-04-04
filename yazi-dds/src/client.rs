@@ -75,7 +75,7 @@ impl Client {
 	) -> (Lines<BufReader<ReadHalf<UnixStream>>>, WriteHalf<UnixStream>) {
 		let mut first = true;
 		loop {
-			if let Ok(stream) = UnixStream::connect("/tmp/yazi.sock").await {
+			if let Ok(stream) = UnixStream::connect(Server::socket_file()).await {
 				Pubsub::pub_from_hi();
 				let (reader, writer) = tokio::io::split(stream);
 				return (BufReader::new(reader).lines(), writer);

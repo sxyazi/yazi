@@ -6,9 +6,10 @@ impl Utils {
 	#[cfg(unix)]
 	pub(super) fn user(lua: &Lua, ya: &Table) -> mlua::Result<()> {
 		use uzers::{Groups, Users};
+		use yazi_boot::USERS_CACHE;
 		use yazi_shared::hostname;
 
-		use crate::utils::{HOSTNAME_CACHE, USERS_CACHE};
+		use crate::utils::HOSTNAME_CACHE;
 
 		ya.raw_set("uid", lua.create_function(|_, ()| Ok(USERS_CACHE.get_current_uid()))?)?;
 
