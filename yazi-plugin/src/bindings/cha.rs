@@ -17,6 +17,8 @@ impl Cha {
 			reg.add_field_method_get("is_char_device", |_, me| Ok(me.is_char_device()));
 			reg.add_field_method_get("is_fifo", |_, me| Ok(me.is_fifo()));
 			reg.add_field_method_get("is_socket", |_, me| Ok(me.is_socket()));
+			reg.add_field_method_get("is_exec", |_, me| Ok(me.is_exec()));
+			reg.add_field_method_get("is_sticky", |_, me| Ok(me.is_sticky()));
 
 			#[cfg(unix)]
 			{

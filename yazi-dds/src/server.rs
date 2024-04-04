@@ -61,7 +61,7 @@ impl Server {
 									continue;
 								}
 
-								if receiver == 0 && sender > 0 && sender <= u16::MAX as u64 {
+								if receiver == 0 && sender <= u16::MAX as u64 {
 									let Some(body) = parts.next() else { continue };
 									if !STATE.set(kind, sender as u16, body) { continue }
 								}
