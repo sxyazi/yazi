@@ -60,14 +60,14 @@ impl Watcher {
 
 	pub(super) fn watch(&mut self, mut new: HashSet<&Url>) {
 		new.retain(|&u| u.is_regular());
-		let (to_unwatch, to_watch): (HashSet<_>, HashSet<_>) = {
-			let guard = WATCHED.read();
-			let old: HashSet<_> = guard.iter().collect();
-			(
-				old.difference(&new).map(|&x| x.clone()).collect(),
-				new.difference(&old).map(|&x| x.clone()).collect(),
-			)
-		};
+
+		let old = WATCHED.read();
+		let old: HashSet<_> = old.iter().collect();
+
+		let (to_unwatch, to_watch): (HashSet<_>, HashSet<_>) = (
+			old.difference(&new).map(|&x| x.clone()).collect(),
+			new.difference(&old).map(|&x| x.clone()).collect(),
+		);
 
 		self.tx.send((to_unwatch, to_watch)).ok();
 	}
@@ -122,7 +122,10 @@ impl Watcher {
 				}
 			}
 
-			Self::sync_linked();
+			if !rx.has_changed().unwrap_or(false) {
+				Self::sync_linked().await;
+			}
+
 			if rx.changed().await.is_err() {
 				break;
 			}
@@ -161,7 +164,7 @@ impl Watcher {
 		}
 	}
 
-	fn sync_linked() {
+	async fn sync_linked() {
 		let mut new = WATCHED.read().clone();
 		LINKED.write().retain(|k, _| new.remove(k));
 
@@ -178,10 +181,8 @@ impl Watcher {
 			};
 		}
 
-		tokio::spawn(async move {
-			let old: Vec<_> = LINKED.read().keys().cloned().collect();
-			go!(new);
-			go!(old);
-		});
+		let old: Vec<_> = LINKED.read().keys().cloned().collect();
+		go!(new);
+		go!(old);
 	}
 }
