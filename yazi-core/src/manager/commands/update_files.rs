@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use yazi_proxy::ManagerProxy;
 use yazi_shared::{event::Cmd, fs::FilesOp, render};
 
-use crate::{folder::Folder, manager::Manager, tab::Tab, tasks::Tasks};
+use crate::{folder::Folder, manager::{Manager, LINKED}, tab::Tab, tasks::Tasks};
 
 pub struct Opt {
 	op: FilesOp,
@@ -22,7 +22,7 @@ impl Manager {
 		};
 
 		let mut ops = vec![opt.op];
-		for u in self.watcher.linked.read().from_dir(ops[0].url()) {
+		for u in LINKED.read().from_dir(ops[0].url()) {
 			ops.push(ops[0].chroot(u));
 		}
 

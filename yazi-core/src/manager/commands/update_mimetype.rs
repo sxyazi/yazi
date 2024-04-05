@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use yazi_dds::ValueSendable;
 use yazi_shared::{event::Cmd, fs::Url, render};
 
-use crate::{manager::Manager, tasks::Tasks};
+use crate::{manager::{Manager, LINKED}, tasks::Tasks};
 
 pub struct Opt {
 	data: ValueSendable,
@@ -23,7 +23,7 @@ impl Manager {
 			return;
 		};
 
-		let linked = self.watcher.linked.read();
+		let linked = LINKED.read();
 		let updates = opt
 			.data
 			.into_table_string()

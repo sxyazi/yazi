@@ -22,4 +22,9 @@ pub mod which;
 pub use clipboard::*;
 pub use step::*;
 
-pub fn init() { CLIPBOARD.with(Default::default); }
+pub fn init() {
+	CLIPBOARD.with(Default::default);
+
+	manager::WATCHED.with(Default::default);
+	manager::LINKED.with(Default::default);
+}
