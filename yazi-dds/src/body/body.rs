@@ -37,6 +37,9 @@ impl<'a> Body<'a> {
 			"hi" | "hey" | "cd" | "hover" | "rename" | "bulk" | "yank" => {
 				Err("Cannot construct system event from Lua").into_lua_err()?
 			}
+			_ if !kind.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-') => {
+				Err("Kind must be alphanumeric with dashes").into_lua_err()?
+			}
 			_ => BodyCustom::from_lua(kind, value)?,
 		})
 	}

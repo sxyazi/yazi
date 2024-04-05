@@ -28,10 +28,6 @@ impl Pubsub {
 		ps.raw_set(
 			"pub_static",
 			lua.create_function(|_, (severity, kind, value): (u16, mlua::String, Value)| {
-				if severity < 1 {
-					return Err("Severity must be at least 1").into_lua_err();
-				}
-
 				yazi_dds::Pubsub::pub_static(
 					severity,
 					Body::from_lua(kind.to_str()?, value).into_lua_err()?,

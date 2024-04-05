@@ -3071,6 +3071,7 @@ dependencies = [
  "clap_complete_fig",
  "clap_complete_nushell",
  "serde",
+ "uzers",
  "vergen",
  "yazi-adaptor",
  "yazi-config",
@@ -3139,6 +3140,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "tracing",
+ "uzers",
  "yazi-boot",
  "yazi-shared",
 ]
