@@ -17,7 +17,7 @@ pub(crate) static WATCHED: RoCell<RwLock<HashSet<Url>>> = RoCell::new();
 pub static LINKED: RoCell<RwLock<Linked>> = RoCell::new();
 
 pub struct Watcher {
-	tx: watch::Sender<(HashSet<Url>, HashSet<Url>)>,
+	tx: watch::Sender<HashSet<Url>>,
 }
 
 impl Watcher {
@@ -60,16 +60,7 @@ impl Watcher {
 
 	pub(super) fn watch(&mut self, mut new: HashSet<&Url>) {
 		new.retain(|&u| u.is_regular());
-
-		let old = WATCHED.read();
-		let old: HashSet<_> = old.iter().collect();
-
-		let (to_unwatch, to_watch): (HashSet<_>, HashSet<_>) = (
-			old.difference(&new).map(|&x| x.clone()).collect(),
-			new.difference(&old).map(|&x| x.clone()).collect(),
-		);
-
-		self.tx.send((to_unwatch, to_watch)).ok();
+		self.tx.send(new.into_iter().cloned().collect()).ok();
 	}
 
 	pub(super) fn trigger_dirs(&self, folders: &[&Folder]) {
@@ -103,23 +94,20 @@ impl Watcher {
 		});
 	}
 
-	async fn on_in(
-		mut rx: watch::Receiver<(HashSet<Url>, HashSet<Url>)>,
-		mut watcher: RecommendedWatcher,
-	) {
+	async fn on_in(mut rx: watch::Receiver<HashSet<Url>>, mut watcher: RecommendedWatcher) {
 		loop {
+			let (mut to_unwatch, mut to_watch): (HashSet<_>, HashSet<_>) = {
+				let (new, old) = (&*rx.borrow_and_update(), &*WATCHED.read());
+				(old.difference(new).cloned().collect(), new.difference(old).cloned().collect())
+			};
+
+			to_unwatch.retain(|u| watcher.unwatch(u).is_ok());
+			to_watch.retain(|u| watcher.watch(u, RecursiveMode::NonRecursive).is_ok());
+
 			{
-				let (ref to_unwatch, ref to_watch) = *rx.borrow_and_update();
-				for u in to_unwatch {
-					if watcher.unwatch(u).is_ok() {
-						WATCHED.write().remove(u);
-					}
-				}
-				for u in to_watch {
-					if watcher.watch(u, RecursiveMode::NonRecursive).is_ok() {
-						WATCHED.write().insert(u.clone());
-					}
-				}
+				let mut watched = WATCHED.write();
+				watched.retain(|u| !to_unwatch.contains(u));
+				watched.extend(to_watch);
 			}
 
 			if !rx.has_changed().unwrap_or(false) {
@@ -166,23 +154,24 @@ impl Watcher {
 
 	async fn sync_linked() {
 		let mut new = WATCHED.read().clone();
-		LINKED.write().retain(|k, _| new.remove(k));
 
-		macro_rules! go {
-			($todo:expr) => {
-				for from in $todo {
-					match fs::canonicalize(&from).await {
-						Ok(to) if to != *from && WATCHED.read().contains(&from) => {
-							LINKED.write().insert(from, Url::from(to));
-						}
-						_ => {}
-					}
+		let old = {
+			let mut linked = LINKED.write();
+			linked.retain(|k, _| new.remove(k));
+			linked.keys().cloned().collect()
+		};
+
+		async fn go(todo: HashSet<Url>) {
+			for from in todo {
+				let Ok(to) = fs::canonicalize(&from).await else { continue };
+
+				if to != *from && WATCHED.read().contains(&from) {
+					LINKED.write().insert(from, Url::from(to));
 				}
-			};
+			}
 		}
 
-		let old: Vec<_> = LINKED.read().keys().cloned().collect();
-		go!(new);
-		go!(old);
+		go(new).await;
+		go(old).await;
 	}
 }

@@ -14,14 +14,18 @@ jobs:
     permissions:
       issues: write
       pull-requests: write
+      discussions: write
     steps:
       - uses: dessant/lock-threads@v4
         with:
           issue-inactive-days: "30"
           issue-comment: >
             I'm going to lock this issue because it has been closed for _30 days_. ⏳
+
             This helps our maintainers find and focus on the active issues.
             If you have found a problem that seems similar to this, please open a new
             issue and complete the issue template so we can capture all the details
             necessary to investigate further.
-          process-only: "issues"
+          pr-inactive-days: "30"
+          discussion-inactive-days: "30"
+          process-only: "issues,prs,discussions"
