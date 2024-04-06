@@ -150,15 +150,15 @@ impl Pubsub {
 		}
 	}
 
-	pub fn pub_from_move(tab: usize, from: &Url, to: &Url) {
+	pub fn pub_from_move(from: &Url, to: &Url) {
 		if LOCAL.read().contains_key("move") {
-			Self::pub_(BodyMove::dummy(tab, from, to));
+			Self::pub_(BodyMove::dummy(from, to));
 		}
 		if PEERS.read().values().any(|p| p.able("move")) {
-			Client::push(BodyMove::borrowed(tab, from, to));
+			Client::push(BodyMove::borrowed(from, to));
 		}
 		if BOOT.local_events.contains("move") {
-			BodyMove::borrowed(tab, from, to).with_receiver(*ID).flush();
+			BodyMove::borrowed(from, to).with_receiver(*ID).flush();
 		}
 	}
 }

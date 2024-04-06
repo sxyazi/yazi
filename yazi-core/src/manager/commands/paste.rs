@@ -1,4 +1,3 @@
-use yazi_dds::Pubsub;
 use yazi_shared::event::Cmd;
 
 use crate::{manager::Manager, tasks::Tasks};
@@ -21,12 +20,6 @@ impl Manager {
 
 		if self.yanked.cut {
 			tasks.file_cut(&src, dest, opt.force);
-
-			src.iter().for_each(|source_file| {
-				if let Some(name) = source_file.file_name().map(|s| dest.join(s)) {
-					Pubsub::pub_from_move(self.tabs.cursor, source_file, &name);
-				}
-			});
 
 			self.tabs.iter_mut().for_each(|t| _ = t.selected.remove_many(&src, false));
 			self.unyank(());
