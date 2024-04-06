@@ -2,7 +2,9 @@ use anyhow::Result;
 use mlua::{ExternalResult, IntoLua, Lua, Value};
 use serde::Serialize;
 
-use super::{BodyBulk, BodyCd, BodyCustom, BodyHey, BodyHi, BodyHover, BodyRename, BodyYank};
+use super::{
+	BodyBulk, BodyCd, BodyCustom, BodyHey, BodyHi, BodyHover, BodyMove, BodyRename, BodyYank,
+};
 use crate::Payload;
 
 #[derive(Debug, Serialize)]
@@ -13,6 +15,7 @@ pub enum Body<'a> {
 	Cd(BodyCd<'a>),
 	Hover(BodyHover<'a>),
 	Rename(BodyRename<'a>),
+	Move(BodyMove<'a>),
 	Bulk(BodyBulk<'a>),
 	Yank(BodyYank<'a>),
 	Custom(BodyCustom),
@@ -52,6 +55,7 @@ impl<'a> Body<'a> {
 			Self::Cd(_) => "cd",
 			Self::Hover(_) => "hover",
 			Self::Rename(_) => "rename",
+			Body::Move(_) => "move",
 			Self::Bulk(_) => "bulk",
 			Self::Yank(_) => "yank",
 			Self::Custom(b) => b.kind.as_str(),
@@ -92,6 +96,7 @@ impl IntoLua<'_> for Body<'static> {
 			Body::Cd(b) => b.into_lua(lua),
 			Body::Hover(b) => b.into_lua(lua),
 			Body::Rename(b) => b.into_lua(lua),
+			Body::Move(b) => b.into_lua(lua),
 			Body::Bulk(b) => b.into_lua(lua),
 			Body::Yank(b) => b.into_lua(lua),
 			Body::Custom(b) => b.into_lua(lua),

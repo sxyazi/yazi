@@ -7,6 +7,7 @@ mod custom;
 mod hey;
 mod hi;
 mod hover;
+mod move_event;
 mod rename;
 mod yank;
 
@@ -17,5 +18,6 @@ pub use custom::*;
 pub use hey::*;
 pub use hi::*;
 pub use hover::*;
+pub use move_event::*;
 pub use rename::*;
 pub use yank::*;
