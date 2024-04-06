@@ -23,6 +23,6 @@ pub use opt::*;
 pub use runtime::*;
 
 pub fn init() {
-	crate::init_lua();
 	crate::loader::init();
+	crate::init_lua();
 }
