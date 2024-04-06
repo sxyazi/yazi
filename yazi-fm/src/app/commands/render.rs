@@ -1,6 +1,6 @@
 use std::{io::{stderr, BufWriter}, sync::atomic::Ordering};
 
-use ratatui::{backend::{Backend, CrosstermBackend}, CompletedFrame};
+use ratatui::{backend::{Backend, CrosstermBackend}, buffer::Buffer, CompletedFrame};
 use yazi_plugin::elements::COLLISION;
 
 use crate::{app::App, lives::Lives, root::Root};
@@ -61,16 +61,18 @@ impl App {
 
 	#[inline]
 	fn patch(frame: CompletedFrame, cursor: Option<(u16, u16)>) {
-		let mut patches = vec![];
-		for y in frame.area.top()..frame.area.bottom() {
-			for x in frame.area.left()..frame.area.right() {
+		let mut new = Buffer::empty(frame.area);
+		for y in new.area.top()..new.area.bottom() {
+			for x in new.area.left()..new.area.right() {
 				let cell = frame.buffer.get(x, y);
 				if cell.skip {
-					patches.push((x, y, cell));
+					*new.get_mut(x, y) = cell.clone();
 				}
+				new.get_mut(x, y).set_skip(!cell.skip);
 			}
 		}
 
+		let patches = frame.buffer.diff(&new);
 		let mut backend = CrosstermBackend::new(BufWriter::new(stderr().lock()));
 		backend.draw(patches.into_iter()).ok();
 		if let Some((x, y)) = cursor {
