@@ -88,9 +88,9 @@ impl Display for Payload<'_> {
 			Body::Cd(b) => serde_json::to_string(b),
 			Body::Hover(b) => serde_json::to_string(b),
 			Body::Rename(b) => serde_json::to_string(b),
-			Body::Move(b) => serde_json::to_string(b),
 			Body::Bulk(b) => serde_json::to_string(b),
 			Body::Yank(b) => serde_json::to_string(b),
+			Body::Move(b) => serde_json::to_string(b),
 			Body::Custom(b) => serde_json::to_string(b),
 		};
 
