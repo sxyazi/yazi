@@ -29,6 +29,7 @@ impl Loader {
 				"code" => include_bytes!("../../preset/plugins/code.lua"),
 				"file" => include_bytes!("../../preset/plugins/file.lua"),
 				"folder" => include_bytes!("../../preset/plugins/folder.lua"),
+				"fzf" => include_bytes!("../../preset/plugins/fzf.lua"),
 				"image" => include_bytes!("../../preset/plugins/image.lua"),
 				"json" => include_bytes!("../../preset/plugins/json.lua"),
 				"mime" => include_bytes!("../../preset/plugins/mime.lua"),
