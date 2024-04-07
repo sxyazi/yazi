@@ -1,5 +1,6 @@
-use mlua::{ExternalResult, Function, IntoLua, Lua, MetaMethod, Table, TableExt, UserData, Value, Variadic};
+use mlua::{ExternalResult, IntoLua, Lua, MetaMethod, Table, TableExt, UserData, Value, Variadic};
 
+use super::LOADER;
 use crate::RtRef;
 
 pub(super) struct Require;
@@ -8,15 +9,16 @@ impl Require {
 	pub(super) fn install(lua: &'static Lua) -> mlua::Result<()> {
 		let globals = lua.globals();
 
-		let require = globals.raw_get::<_, Function>("require")?;
 		globals.raw_set(
 			"require",
-			lua.create_function(move |lua, name: mlua::String| {
-				lua.named_registry_value::<RtRef>("rt")?.swap(name.to_str()?);
-				let mod_: Table = require.call(&name)?;
+			lua.create_function(|lua, name: mlua::String| {
+				let s = name.to_str()?;
+				futures::executor::block_on(LOADER.ensure(s)).into_lua_err()?;
+
+				lua.named_registry_value::<RtRef>("rt")?.swap(s);
+				let mod_ = LOADER.load(s)?;
 				lua.named_registry_value::<RtRef>("rt")?.reset();
 
-				mod_.raw_set("_name", &name)?;
 				Self::create_mt(lua, name, mod_)
 			})?,
 		)?;

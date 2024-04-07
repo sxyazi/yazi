@@ -16,7 +16,7 @@ impl<'a> Layout<'a> {
 
 	pub(crate) fn available(area: Rect) -> Rect {
 		let chunks =
-			layout::Layout::horizontal([Constraint::Fill(1), Constraint::Length(40), Constraint::Max(1)])
+			layout::Layout::horizontal([Constraint::Fill(1), Constraint::Length(80), Constraint::Max(1)])
 				.split(area);
 
 		let chunks =

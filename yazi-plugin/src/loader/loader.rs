@@ -35,6 +35,7 @@ impl Loader {
 				"noop" => include_bytes!("../../preset/plugins/noop.lua"),
 				"pdf" => include_bytes!("../../preset/plugins/pdf.lua"),
 				"video" => include_bytes!("../../preset/plugins/video.lua"),
+				"zoxide" => include_bytes!("../../preset/plugins/zoxide.lua"),
 				_ => bail!("plugin not found: {name}"),
 			}))
 		})?;
