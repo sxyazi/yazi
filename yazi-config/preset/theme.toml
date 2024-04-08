@@ -177,11 +177,9 @@ rules = [
 	{ mime = "audio/*", fg = "yellow" },
 
 	# Archives
-	{ mime = "application/zip",             fg = "magenta" },
-	{ mime = "application/gzip",            fg = "magenta" },
+	{ mime = "application/*zip",            fg = "magenta" },
 	{ mime = "application/x-tar",           fg = "magenta" },
-	{ mime = "application/x-bzip",          fg = "magenta" },
-	{ mime = "application/x-bzip2",         fg = "magenta" },
+	{ mime = "application/x-bzip*",         fg = "magenta" },
 	{ mime = "application/x-7z-compressed", fg = "magenta" },
 	{ mime = "application/x-rar",           fg = "magenta" },
 	{ mime = "application/x-xz",            fg = "magenta" },

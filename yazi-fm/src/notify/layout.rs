@@ -20,7 +20,7 @@ impl<'a> Layout<'a> {
 				.split(area);
 
 		let chunks =
-			layout::Layout::vertical([Constraint::Max(1), Constraint::Min(1)]).split(chunks[1]);
+			layout::Layout::vertical([Constraint::Max(1), Constraint::Fill(1)]).split(chunks[1]);
 
 		chunks[1]
 	}

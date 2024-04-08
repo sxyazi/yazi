@@ -9,6 +9,7 @@ use crate::tab::Tab;
 pub struct Opt {
 	run:     String,
 	block:   bool,
+	orphan:  bool,
 	confirm: bool,
 }
 
@@ -17,6 +18,7 @@ impl From<Cmd> for Opt {
 		Self {
 			run:     c.take_first().unwrap_or_default(),
 			block:   c.named.contains_key("block"),
+			orphan:  c.named.contains_key("orphan"),
 			confirm: c.named.contains_key("confirm"),
 		}
 	}
@@ -45,7 +47,7 @@ impl Tab {
 				Cow::Owned(Opener {
 					run:    opt.run,
 					block:  opt.block,
-					orphan: false,
+					orphan: opt.orphan,
 					desc:   Default::default(),
 					for_:   None,
 					spread: true,

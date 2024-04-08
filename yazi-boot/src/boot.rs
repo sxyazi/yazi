@@ -79,6 +79,7 @@ impl Boot {
 		)?;
 
 		writeln!(s, "\nVariables")?;
+		writeln!(s, "    SHELL: {:?}", env::var_os("SHELL"))?;
 		writeln!(s, "    EDITOR: {:?}", env::var_os("EDITOR"))?;
 		writeln!(s, "    ZELLIJ_SESSION_NAME: {:?}", env::var_os("ZELLIJ_SESSION_NAME"))?;
 		writeln!(s, "    YAZI_FILE_ONE: {:?}", env::var_os("YAZI_FILE_ONE"))?;
