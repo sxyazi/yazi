@@ -9,18 +9,14 @@ use crate::{body::Body, ID};
 #[derive(Debug)]
 pub struct Payload<'a> {
 	pub receiver: u64,
-	pub sender: u64,
-	pub body: Body<'a>,
+	pub sender:   u64,
+	pub body:     Body<'a>,
 }
 
 impl<'a> Payload<'a> {
-	pub(super) fn new(body: Body<'a>) -> Self {
-		Self { receiver: 0, sender: *ID, body }
-	}
+	pub(super) fn new(body: Body<'a>) -> Self { Self { receiver: 0, sender: *ID, body } }
 
-	pub(super) fn flush(&self) {
-		writeln!(std::io::stdout(), "{self}").ok();
-	}
+	pub(super) fn flush(&self) { writeln!(std::io::stdout(), "{self}").ok(); }
 
 	pub(super) fn try_flush(&self) {
 		let b = if self.receiver == 0 {
@@ -75,9 +71,7 @@ impl FromStr for Payload<'_> {
 }
 
 impl<'a> From<Body<'a>> for Payload<'a> {
-	fn from(value: Body<'a>) -> Self {
-		Self::new(value)
-	}
+	fn from(value: Body<'a>) -> Self { Self::new(value) }
 }
 
 impl Display for Payload<'_> {

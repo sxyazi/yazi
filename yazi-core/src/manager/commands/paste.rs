@@ -3,7 +3,7 @@ use yazi_shared::event::Cmd;
 use crate::{manager::Manager, tasks::Tasks};
 
 pub struct Opt {
-	force: bool,
+	force:  bool,
 	follow: bool,
 }
 

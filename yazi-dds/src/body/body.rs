@@ -2,9 +2,7 @@ use anyhow::Result;
 use mlua::{ExternalResult, IntoLua, Lua, Value};
 use serde::Serialize;
 
-use super::{
-	BodyBulk, BodyCd, BodyCustom, BodyHey, BodyHi, BodyHover, BodyMove, BodyRename, BodyYank,
-};
+use super::{BodyBulk, BodyCd, BodyCustom, BodyHey, BodyHi, BodyHover, BodyMove, BodyRename, BodyYank};
 use crate::Payload;
 
 #[derive(Debug, Serialize)]

@@ -9,7 +9,7 @@ use super::Body;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BodyMove<'a> {
 	pub from: Cow<'a, Url>,
-	pub to: Cow<'a, Url>,
+	pub to:   Cow<'a, Url>,
 }
 
 impl<'a> BodyMove<'a> {
@@ -27,9 +27,7 @@ impl BodyMove<'static> {
 }
 
 impl<'a> From<BodyMove<'a>> for Body<'a> {
-	fn from(value: BodyMove<'a>) -> Self {
-		Self::Move(value)
-	}
+	fn from(value: BodyMove<'a>) -> Self { Self::Move(value) }
 }
 
 impl IntoLua<'_> for BodyMove<'static> {

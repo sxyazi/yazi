@@ -5,10 +5,7 @@ use parking_lot::RwLock;
 use yazi_boot::BOOT;
 use yazi_shared::{fs::Url, RoCell};
 
-use crate::{
-	body::{Body, BodyCd, BodyHi, BodyHover, BodyMove, BodyRename, BodyYank},
-	Client, ID, PEERS,
-};
+use crate::{body::{Body, BodyCd, BodyHi, BodyHover, BodyMove, BodyRename, BodyYank}, Client, ID, PEERS};
 
 pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function<'static>>>>> =
 	RoCell::new();
@@ -62,17 +59,13 @@ impl Pubsub {
 		sub!(REMOTE)(plugin, kind, f) && Self::pub_from_hi()
 	}
 
-	pub fn unsub(plugin: &str, kind: &str) -> bool {
-		unsub!(LOCAL)(plugin, kind)
-	}
+	pub fn unsub(plugin: &str, kind: &str) -> bool { unsub!(LOCAL)(plugin, kind) }
 
 	pub fn unsub_remote(plugin: &str, kind: &str) -> bool {
 		unsub!(REMOTE)(plugin, kind) && Self::pub_from_hi()
 	}
 
-	pub fn pub_(body: Body<'static>) {
-		body.with_receiver(*ID).emit();
-	}
+	pub fn pub_(body: Body<'static>) { body.with_receiver(*ID).emit(); }
 
 	pub fn pub_to(receiver: u64, body: Body<'static>) {
 		if receiver == *ID {
