@@ -28,6 +28,7 @@ impl Process {
 		let status = result.unwrap().wait().await?;
 		if !status.success() {
 			let content = match status.code() {
+				Some(130) => return self.succ(id), // Ctrl-C pressed by user
 				Some(code) => format!("Process exited with status code: {code}"),
 				None => "Process terminated by signal".to_string(),
 			};

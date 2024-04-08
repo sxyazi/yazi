@@ -63,11 +63,9 @@ rules = [
 	{ mime = "application/json", use = [ "edit", "reveal" ] },
 	{ mime = "*/javascript",     use = [ "edit", "reveal" ] },
 
-	{ mime = "application/zip",             use = [ "extract", "reveal" ] },
-	{ mime = "application/gzip",            use = [ "extract", "reveal" ] },
+	{ mime = "application/*zip",            use = [ "extract", "reveal" ] },
 	{ mime = "application/x-tar",           use = [ "extract", "reveal" ] },
-	{ mime = "application/x-bzip",          use = [ "extract", "reveal" ] },
-	{ mime = "application/x-bzip2",         use = [ "extract", "reveal" ] },
+	{ mime = "application/x-bzip*",         use = [ "extract", "reveal" ] },
 	{ mime = "application/x-7z-compressed", use = [ "extract", "reveal" ] },
 	{ mime = "application/x-rar",           use = [ "extract", "reveal" ] },
 	{ mime = "application/x-xz",            use = [ "extract", "reveal" ] },
@@ -111,11 +109,9 @@ previewers = [
 	# PDF
 	{ mime = "application/pdf", run = "pdf" },
 	# Archive
-	{ mime = "application/zip",             run = "archive" },
-	{ mime = "application/gzip",            run = "archive" },
+	{ mime = "application/*zip",            run = "archive" },
 	{ mime = "application/x-tar",           run = "archive" },
-	{ mime = "application/x-bzip",          run = "archive" },
-	{ mime = "application/x-bzip2",         run = "archive" },
+	{ mime = "application/x-bzip*",         run = "archive" },
 	{ mime = "application/x-7z-compressed", run = "archive" },
 	{ mime = "application/x-rar",           run = "archive" },
 	{ mime = "application/x-xz",            run = "archive" },
