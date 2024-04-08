@@ -17,10 +17,8 @@ impl Manager {
 			return;
 		}
 
-		self.yanked = Yanked {
-			cut:  opt.into().cut,
-			urls: self.selected_or_hovered(false).into_iter().cloned().collect(),
-		};
+		self.yanked =
+			Yanked { cut: opt.into().cut, urls: self.selected_or_hovered(false).cloned().collect() };
 
 		self.active_mut().escape_select();
 		Pubsub::pub_from_yank(self.yanked.cut, &self.yanked.urls);
