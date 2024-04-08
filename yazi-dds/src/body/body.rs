@@ -13,9 +13,9 @@ pub enum Body<'a> {
 	Cd(BodyCd<'a>),
 	Hover(BodyHover<'a>),
 	Rename(BodyRename<'a>),
-	Move(BodyMove<'a>),
 	Bulk(BodyBulk<'a>),
 	Yank(BodyYank<'a>),
+	Move(BodyMove<'a>),
 	Custom(BodyCustom),
 }
 
@@ -29,6 +29,7 @@ impl<'a> Body<'a> {
 			"rename" => Body::Rename(serde_json::from_str(body)?),
 			"bulk" => Body::Bulk(serde_json::from_str(body)?),
 			"yank" => Body::Yank(serde_json::from_str(body)?),
+			"move" => Body::Move(serde_json::from_str(body)?),
 			_ => BodyCustom::from_str(kind, body)?,
 		})
 	}
@@ -53,9 +54,9 @@ impl<'a> Body<'a> {
 			Self::Cd(_) => "cd",
 			Self::Hover(_) => "hover",
 			Self::Rename(_) => "rename",
-			Body::Move(_) => "move",
 			Self::Bulk(_) => "bulk",
 			Self::Yank(_) => "yank",
+			Body::Move(_) => "move",
 			Self::Custom(b) => b.kind.as_str(),
 		}
 	}
@@ -94,9 +95,9 @@ impl IntoLua<'_> for Body<'static> {
 			Body::Cd(b) => b.into_lua(lua),
 			Body::Hover(b) => b.into_lua(lua),
 			Body::Rename(b) => b.into_lua(lua),
-			Body::Move(b) => b.into_lua(lua),
 			Body::Bulk(b) => b.into_lua(lua),
 			Body::Yank(b) => b.into_lua(lua),
+			Body::Move(b) => b.into_lua(lua),
 			Body::Custom(b) => b.into_lua(lua),
 		}
 	}
