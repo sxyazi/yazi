@@ -5,7 +5,6 @@ use futures::{future::BoxFuture, FutureExt};
 use tokio::{fs, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::TASKS;
-use yazi_dds::Pubsub;
 use yazi_shared::fs::{accessible, calculate_size, copy_with_progress, path_relative_to, Url};
 
 use super::{FileOp, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash};
@@ -38,7 +37,6 @@ impl File {
 						Ok(0) => {
 							if task.cut {
 								fs::remove_file(&task.from).await.ok();
-								Pubsub::pub_from_move(&task.from, &task.to);
 							}
 							break;
 						}

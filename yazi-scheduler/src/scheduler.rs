@@ -4,7 +4,7 @@ use futures::{future::BoxFuture, FutureExt};
 use parking_lot::Mutex;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
 use yazi_config::{open::Opener, plugin::PluginRule, TASKS};
-use yazi_dds::ValueSendable;
+use yazi_dds::{Pump, ValueSendable};
 use yazi_shared::{fs::{unique_path, Url}, Throttle};
 
 use super::{Ongoing, TaskProg, TaskStage};
@@ -72,13 +72,14 @@ impl Scheduler {
 		let id = ongoing.add(TaskKind::User, format!("Cut {:?} to {:?}", from, to));
 
 		ongoing.hooks.insert(id, {
-			let from = from.clone();
 			let ongoing = self.ongoing.clone();
+			let (from, to) = (from.clone(), to.clone());
 
 			Box::new(move |canceled: bool| {
 				async move {
 					if !canceled {
 						File::remove_empty_dirs(&from).await;
+						Pump::push_move(from, to);
 					}
 					ongoing.lock().try_remove(id, TaskStage::Hooked);
 				}
@@ -147,7 +148,8 @@ impl Scheduler {
 			Box::new(move |canceled: bool| {
 				async move {
 					if !canceled {
-						fs::remove_dir_all(target).await.ok();
+						fs::remove_dir_all(&target).await.ok();
+						Pump::push_delete(target);
 					}
 					ongoing.lock().try_remove(id, TaskStage::Hooked);
 				}

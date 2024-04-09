@@ -8,21 +8,20 @@ use super::Body;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BodyMove<'a> {
-	pub from: Cow<'a, Url>,
-	pub to:   Cow<'a, Url>,
+	pub items: Cow<'a, Vec<BodyMoveItem>>,
 }
 
 impl<'a> BodyMove<'a> {
 	#[inline]
-	pub fn borrowed(from: &'a Url, to: &'a Url) -> Body<'a> {
-		Self { from: Cow::Borrowed(from), to: Cow::Borrowed(to) }.into()
+	pub fn borrowed(items: &'a Vec<BodyMoveItem>) -> Body<'a> {
+		Self { items: Cow::Borrowed(items) }.into()
 	}
 }
 
 impl BodyMove<'static> {
 	#[inline]
-	pub fn dummy(from: &Url, to: &Url) -> Body<'static> {
-		Self { from: Cow::Owned(from.clone()), to: Cow::Owned(to.clone()) }.into()
+	pub fn owned(items: Vec<BodyMoveItem>) -> Body<'static> {
+		Self { items: Cow::Owned(items) }.into()
 	}
 }
 
@@ -31,11 +30,22 @@ impl<'a> From<BodyMove<'a>> for Body<'a> {
 }
 
 impl IntoLua<'_> for BodyMove<'static> {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { self.items.into_owned().into_lua(lua) }
+}
+
+// --- Item
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BodyMoveItem {
+	pub from: Url,
+	pub to:   Url,
+}
+
+impl IntoLua<'_> for BodyMoveItem {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua
 			.create_table_from([
-				("from", lua.create_any_userdata(self.from.into_owned())?.into_lua(lua)?),
-				("to", lua.create_any_userdata(self.to.into_owned())?.into_lua(lua)?),
+				("from", lua.create_any_userdata(self.from)?),
+				("to", lua.create_any_userdata(self.to)?),
 			])?
 			.into_lua(lua)
 	}

@@ -49,7 +49,7 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_proxy::init();
 
-	yazi_dds::init();
+	yazi_dds::serve();
 
 	yazi_plugin::init();
 

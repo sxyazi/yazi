@@ -2,7 +2,7 @@ use anyhow::Result;
 use mlua::{ExternalResult, IntoLua, Lua, Value};
 use serde::Serialize;
 
-use super::{BodyBulk, BodyCd, BodyCustom, BodyHey, BodyHi, BodyHover, BodyMove, BodyRename, BodyYank};
+use super::{BodyBulk, BodyCd, BodyCustom, BodyDelete, BodyHey, BodyHi, BodyHover, BodyMove, BodyRename, BodyYank};
 use crate::Payload;
 
 #[derive(Debug, Serialize)]
@@ -16,6 +16,7 @@ pub enum Body<'a> {
 	Bulk(BodyBulk<'a>),
 	Yank(BodyYank<'a>),
 	Move(BodyMove<'a>),
+	Delete(BodyDelete<'a>),
 	Custom(BodyCustom),
 }
 
@@ -30,6 +31,7 @@ impl<'a> Body<'a> {
 			"bulk" => Body::Bulk(serde_json::from_str(body)?),
 			"yank" => Body::Yank(serde_json::from_str(body)?),
 			"move" => Body::Move(serde_json::from_str(body)?),
+			"delete" => Body::Delete(serde_json::from_str(body)?),
 			_ => BodyCustom::from_str(kind, body)?,
 		})
 	}
@@ -57,6 +59,7 @@ impl<'a> Body<'a> {
 			Self::Bulk(_) => "bulk",
 			Self::Yank(_) => "yank",
 			Body::Move(_) => "move",
+			Body::Delete(_) => "delete",
 			Self::Custom(b) => b.kind.as_str(),
 		}
 	}
@@ -98,6 +101,7 @@ impl IntoLua<'_> for Body<'static> {
 			Body::Bulk(b) => b.into_lua(lua),
 			Body::Yank(b) => b.into_lua(lua),
 			Body::Move(b) => b.into_lua(lua),
+			Body::Delete(b) => b.into_lua(lua),
 			Body::Custom(b) => b.into_lua(lua),
 		}
 	}

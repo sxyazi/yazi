@@ -7,6 +7,7 @@ use crate::app::App;
 
 impl App {
 	pub(crate) fn quit(&mut self, opt: EventQuit) -> ! {
+		yazi_dds::shutdown();
 		self.cx.tasks.shutdown();
 		self.cx.manager.shutdown();
 		futures::executor::block_on(yazi_dds::STATE.drain()).ok();

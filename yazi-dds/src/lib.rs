@@ -3,6 +3,7 @@ pub mod body;
 mod client;
 mod payload;
 mod pubsub;
+mod pump;
 mod sendable;
 mod server;
 mod state;
@@ -10,11 +11,12 @@ mod state;
 pub use client::*;
 pub use payload::*;
 pub use pubsub::*;
+pub use pump::*;
 pub use sendable::*;
 use server::*;
 pub use state::*;
 
-pub fn init() {
+pub fn serve() {
 	let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
 
 	// Client
@@ -30,5 +32,8 @@ pub fn init() {
 	LOCAL.with(Default::default);
 	REMOTE.with(Default::default);
 
+	Pump::serve();
 	Client::serve(rx);
 }
+
+pub fn shutdown() { Pump::shutdown(); }
