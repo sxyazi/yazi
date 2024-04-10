@@ -53,10 +53,12 @@ impl Manager {
 	pub fn hovered_folder(&self) -> Option<&Folder> { self.tabs.active().hovered_folder() }
 
 	#[inline]
-	pub fn selected_or_hovered(&self, sorted: bool) -> Vec<&Url> {
-		self.tabs.active().selected_or_hovered(sorted)
+	pub fn selected_or_hovered(&self, reorder: bool) -> Box<dyn Iterator<Item = &Url> + '_> {
+		self.tabs.active().selected_or_hovered(reorder)
 	}
 
 	#[inline]
-	pub fn hovered_and_selected(&self) -> Vec<&Url> { self.tabs.active().hovered_and_selected() }
+	pub fn hovered_and_selected(&self, reorder: bool) -> Box<dyn Iterator<Item = &Url> + '_> {
+		self.tabs.active().hovered_and_selected(reorder)
+	}
 }

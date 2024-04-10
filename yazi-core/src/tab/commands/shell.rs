@@ -31,7 +31,7 @@ impl Tab {
 		}
 
 		let mut opt = opt.into() as Opt;
-		let selected = self.hovered_and_selected().into_iter().cloned().collect();
+		let selected = self.hovered_and_selected(true).cloned().collect();
 
 		tokio::spawn(async move {
 			if !opt.confirm || opt.run.is_empty() {
