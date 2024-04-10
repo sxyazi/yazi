@@ -174,7 +174,8 @@ impl Scheduler {
 		let file = self.file.clone();
 		_ = self.micro.try_send(
 			async move {
-				file.trash(FileOpTrash { id, target, length: 0 }).await.ok();
+				file.trash(FileOpTrash { id, target: target.clone(), length: 0 }).await.ok();
+				Pump::push_delete(target);
 			}
 			.boxed(),
 			LOW,
