@@ -155,18 +155,6 @@ impl Pubsub {
 		}
 	}
 
-	pub(super) fn pub_from_delete(urls: Vec<Url>) {
-		if PEERS.read().values().any(|p| p.able("delete")) {
-			Client::push(BodyDelete::borrowed(&urls));
-		}
-		if BOOT.local_events.contains("delete") {
-			BodyDelete::borrowed(&urls).with_receiver(*ID).flush();
-		}
-		if LOCAL.read().contains_key("delete") {
-			Self::pub_(BodyDelete::owned(urls));
-		}
-	}
-
 	pub(super) fn pub_from_trash(urls: Vec<Url>) {
 		if PEERS.read().values().any(|p| p.able("trash")) {
 			Client::push(BodyTrash::borrowed(&urls));
@@ -176,6 +164,18 @@ impl Pubsub {
 		}
 		if LOCAL.read().contains_key("trash") {
 			Self::pub_(BodyTrash::owned(urls));
+		}
+	}
+
+	pub(super) fn pub_from_delete(urls: Vec<Url>) {
+		if PEERS.read().values().any(|p| p.able("delete")) {
+			Client::push(BodyDelete::borrowed(&urls));
+		}
+		if BOOT.local_events.contains("delete") {
+			BodyDelete::borrowed(&urls).with_receiver(*ID).flush();
+		}
+		if LOCAL.read().contains_key("delete") {
+			Self::pub_(BodyDelete::owned(urls));
 		}
 	}
 }

@@ -16,8 +16,8 @@ pub enum Body<'a> {
 	Bulk(BodyBulk<'a>),
 	Yank(BodyYank<'a>),
 	Move(BodyMove<'a>),
-	Delete(BodyDelete<'a>),
 	Trash(BodyTrash<'a>),
+	Delete(BodyDelete<'a>),
 	Custom(BodyCustom),
 }
 
@@ -32,8 +32,8 @@ impl<'a> Body<'a> {
 			"bulk" => Body::Bulk(serde_json::from_str(body)?),
 			"yank" => Body::Yank(serde_json::from_str(body)?),
 			"move" => Body::Move(serde_json::from_str(body)?),
-			"delete" => Body::Delete(serde_json::from_str(body)?),
 			"trash" => Body::Trash(serde_json::from_str(body)?),
+			"delete" => Body::Delete(serde_json::from_str(body)?),
 			_ => BodyCustom::from_str(kind, body)?,
 		})
 	}
@@ -61,8 +61,8 @@ impl<'a> Body<'a> {
 			Self::Bulk(_) => "bulk",
 			Self::Yank(_) => "yank",
 			Body::Move(_) => "move",
-			Body::Delete(_) => "delete",
 			Body::Trash(_) => "trash",
+			Body::Delete(_) => "delete",
 			Self::Custom(b) => b.kind.as_str(),
 		}
 	}
@@ -104,8 +104,8 @@ impl IntoLua<'_> for Body<'static> {
 			Body::Bulk(b) => b.into_lua(lua),
 			Body::Yank(b) => b.into_lua(lua),
 			Body::Move(b) => b.into_lua(lua),
-			Body::Delete(b) => b.into_lua(lua),
 			Body::Trash(b) => b.into_lua(lua),
+			Body::Delete(b) => b.into_lua(lua),
 			Body::Custom(b) => b.into_lua(lua),
 		}
 	}
