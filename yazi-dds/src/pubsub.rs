@@ -155,15 +155,15 @@ impl Pubsub {
 		}
 	}
 
-	pub(super) fn pub_from_delete(targets: Vec<Url>) {
+	pub(super) fn pub_from_delete(urls: Vec<Url>) {
 		if PEERS.read().values().any(|p| p.able("delete")) {
-			Client::push(BodyDelete::borrowed(&targets));
+			Client::push(BodyDelete::borrowed(&urls));
 		}
 		if BOOT.local_events.contains("delete") {
-			BodyDelete::borrowed(&targets).with_receiver(*ID).flush();
+			BodyDelete::borrowed(&urls).with_receiver(*ID).flush();
 		}
 		if LOCAL.read().contains_key("delete") {
-			Self::pub_(BodyDelete::owned(targets));
+			Self::pub_(BodyDelete::owned(urls));
 		}
 	}
 }

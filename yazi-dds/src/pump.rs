@@ -49,7 +49,7 @@ impl Pump {
 			loop {
 				select! {
 					Some(items) = move_rx.next() => Pubsub::pub_from_move(items),
-					Some(targets) = delete_rx.next() => Pubsub::pub_from_delete(targets),
+					Some(urls) = delete_rx.next() => Pubsub::pub_from_delete(urls),
 					else => {
 						CT.cancel();
 						break;

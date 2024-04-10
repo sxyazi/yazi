@@ -8,19 +8,19 @@ use super::Body;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BodyDelete<'a> {
-	pub targets: Cow<'a, Vec<Url>>,
+	pub urls: Cow<'a, Vec<Url>>,
 }
 
 impl<'a> BodyDelete<'a> {
 	#[inline]
 	pub fn borrowed(targets: &'a Vec<Url>) -> Body<'a> {
-		Self { targets: Cow::Borrowed(targets) }.into()
+		Self { urls: Cow::Borrowed(targets) }.into()
 	}
 }
 
 impl BodyDelete<'static> {
 	#[inline]
-	pub fn owned(targets: Vec<Url>) -> Body<'static> { Self { targets: Cow::Owned(targets) }.into() }
+	pub fn owned(targets: Vec<Url>) -> Body<'static> { Self { urls: Cow::Owned(targets) }.into() }
 }
 
 impl<'a> From<BodyDelete<'a>> for Body<'a> {
@@ -29,8 +29,8 @@ impl<'a> From<BodyDelete<'a>> for Body<'a> {
 
 impl IntoLua<'_> for BodyDelete<'static> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value<'_>> {
-		let t = lua.create_table_with_capacity(self.targets.len(), 0)?;
-		for (i, url) in self.targets.into_owned().into_iter().enumerate() {
+		let t = lua.create_table_with_capacity(self.urls.len(), 0)?;
+		for (i, url) in self.urls.into_owned().into_iter().enumerate() {
 			t.raw_set(i + 1, lua.create_any_userdata(url)?)?;
 		}
 		t.into_lua(lua)
