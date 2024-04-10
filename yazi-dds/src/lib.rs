@@ -36,4 +36,4 @@ pub fn serve() {
 	Client::serve(rx);
 }
 
-pub fn shutdown() { Pump::shutdown(); }
+pub async fn shutdown() { Pump::shutdown().await; }
