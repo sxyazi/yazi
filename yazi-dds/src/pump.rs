@@ -11,6 +11,7 @@ use crate::{body::BodyMoveItem, Pubsub};
 static CT: RoCell<CancellationToken> = RoCell::new();
 static MOVE_TX: Mutex<Option<mpsc::UnboundedSender<BodyMoveItem>>> = Mutex::new(None);
 static DELETE_TX: Mutex<Option<mpsc::UnboundedSender<Url>>> = Mutex::new(None);
+static TRASH_TX: Mutex<Option<mpsc::UnboundedSender<Url>>> = Mutex::new(None);
 
 pub struct Pump;
 
@@ -29,27 +30,40 @@ impl Pump {
 		}
 	}
 
+	#[inline]
+	pub fn push_trash(target: Url) {
+		if let Some(tx) = &*TRASH_TX.lock() {
+			tx.send(target).ok();
+		}
+	}
+
 	pub(super) fn serve() {
 		let (move_tx, move_rx) = mpsc::unbounded_channel();
 		let (delete_tx, delete_rx) = mpsc::unbounded_channel();
+		let (trash_tx, trash_rx) = mpsc::unbounded_channel();
 
 		CT.with(Default::default);
 		MOVE_TX.lock().replace(move_tx);
 		DELETE_TX.lock().replace(delete_tx);
+		TRASH_TX.lock().replace(trash_tx);
 
 		tokio::spawn(async move {
 			let move_rx =
 				UnboundedReceiverStream::new(move_rx).chunks_timeout(1000, Duration::from_millis(500));
 			let delete_rx =
 				UnboundedReceiverStream::new(delete_rx).chunks_timeout(1000, Duration::from_millis(500));
+			let trash_rx =
+				UnboundedReceiverStream::new(trash_rx).chunks_timeout(1000, Duration::from_millis(500));
 
 			pin!(move_rx);
 			pin!(delete_rx);
+			pin!(trash_rx);
 
 			loop {
 				select! {
 					Some(items) = move_rx.next() => Pubsub::pub_from_move(items),
 					Some(urls) = delete_rx.next() => Pubsub::pub_from_delete(urls),
+						Some(urls) = trash_rx.next() => Pubsub::pub_from_trash(urls),
 					else => {
 						CT.cancel();
 						break;
@@ -62,6 +76,7 @@ impl Pump {
 	pub(super) async fn shutdown() {
 		drop(MOVE_TX.lock().take());
 		drop(DELETE_TX.lock().take());
+		drop(TRASH_TX.lock().take());
 		CT.cancelled().await;
 	}
 }

@@ -10,6 +10,7 @@ mod hi;
 mod hover;
 mod move_;
 mod rename;
+mod trash;
 mod yank;
 
 pub use body::*;
@@ -22,4 +23,5 @@ pub use hi::*;
 pub use hover::*;
 pub use move_::*;
 pub use rename::*;
+pub use trash::*;
 pub use yank::*;
