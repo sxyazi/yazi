@@ -13,14 +13,12 @@ pub struct BodyDelete<'a> {
 
 impl<'a> BodyDelete<'a> {
 	#[inline]
-	pub fn borrowed(targets: &'a Vec<Url>) -> Body<'a> {
-		Self { urls: Cow::Borrowed(targets) }.into()
-	}
+	pub fn borrowed(urls: &'a Vec<Url>) -> Body<'a> { Self { urls: Cow::Borrowed(urls) }.into() }
 }
 
 impl BodyDelete<'static> {
 	#[inline]
-	pub fn owned(targets: Vec<Url>) -> Body<'static> { Self { urls: Cow::Owned(targets) }.into() }
+	pub fn owned(urls: Vec<Url>) -> Body<'static> { Self { urls: Cow::Owned(urls) }.into() }
 }
 
 impl<'a> From<BodyDelete<'a>> for Body<'a> {
