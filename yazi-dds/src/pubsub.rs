@@ -5,7 +5,7 @@ use parking_lot::RwLock;
 use yazi_boot::BOOT;
 use yazi_shared::{fs::Url, RoCell};
 
-use crate::{body::{Body, BodyCd, BodyHi, BodyHover, BodyRename, BodyYank}, Client, ID, PEERS};
+use crate::{body::{Body, BodyCd, BodyDelete, BodyHi, BodyHover, BodyMove, BodyMoveItem, BodyRename, BodyTrash, BodyYank}, Client, ID, PEERS};
 
 pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function<'static>>>>> =
 	RoCell::new();
@@ -140,6 +140,42 @@ impl Pubsub {
 		}
 		if BOOT.local_events.contains("yank") {
 			BodyYank::borrowed(cut, urls).with_receiver(*ID).flush();
+		}
+	}
+
+	pub(super) fn pub_from_move(items: Vec<BodyMoveItem>) {
+		if PEERS.read().values().any(|p| p.able("move")) {
+			Client::push(BodyMove::borrowed(&items));
+		}
+		if BOOT.local_events.contains("move") {
+			BodyMove::borrowed(&items).with_receiver(*ID).flush();
+		}
+		if LOCAL.read().contains_key("move") {
+			Self::pub_(BodyMove::owned(items));
+		}
+	}
+
+	pub(super) fn pub_from_trash(urls: Vec<Url>) {
+		if PEERS.read().values().any(|p| p.able("trash")) {
+			Client::push(BodyTrash::borrowed(&urls));
+		}
+		if BOOT.local_events.contains("trash") {
+			BodyTrash::borrowed(&urls).with_receiver(*ID).flush();
+		}
+		if LOCAL.read().contains_key("trash") {
+			Self::pub_(BodyTrash::owned(urls));
+		}
+	}
+
+	pub(super) fn pub_from_delete(urls: Vec<Url>) {
+		if PEERS.read().values().any(|p| p.able("delete")) {
+			Client::push(BodyDelete::borrowed(&urls));
+		}
+		if BOOT.local_events.contains("delete") {
+			BodyDelete::borrowed(&urls).with_receiver(*ID).flush();
+		}
+		if LOCAL.read().contains_key("delete") {
+			Self::pub_(BodyDelete::owned(urls));
 		}
 	}
 }

@@ -25,7 +25,7 @@ body:
   - type: dropdown
     id: tried_main
     attributes:
-      label: Did you try the latest main branch to see if the problem got fixed?
+      label: Did you try the latest code to see if this problem got fixed?
       options:
         - Tried, but the problem still
         - Not tried, and I'll explain why below

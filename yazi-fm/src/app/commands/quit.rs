@@ -9,6 +9,7 @@ impl App {
 	pub(crate) fn quit(&mut self, opt: EventQuit) -> ! {
 		self.cx.tasks.shutdown();
 		self.cx.manager.shutdown();
+		futures::executor::block_on(yazi_dds::shutdown());
 		futures::executor::block_on(yazi_dds::STATE.drain()).ok();
 
 		if !opt.no_cwd_file {
