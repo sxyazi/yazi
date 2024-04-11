@@ -27,6 +27,7 @@ fdlimit       = "0.3.0"
 futures       = "0.3.30"
 mlua          = { version = "0.9.6", features = [ "lua54", "vendored" ] }
 ratatui       = "0.26.1"
+scopeguard    = "1.2.0"
 syntect       = { version = "5.2.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
 tokio         = { version = "1.37.0", features = [ "full" ] }
 tokio-util    = "0.7.10"

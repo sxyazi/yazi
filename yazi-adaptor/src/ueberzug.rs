@@ -74,6 +74,7 @@ impl Ueberzug {
 		// TODO: demon
 		let result = Command::new("ueberzugpp")
 			.args(["layer", "-so", &adaptor.to_string()])
+			.env("SPDLOG_LEVEL", if cfg!(debug_assertions) { "debug" } else { "" })
 			.kill_on_drop(true)
 			.stdin(Stdio::piped())
 			.stderr(Stdio::null())

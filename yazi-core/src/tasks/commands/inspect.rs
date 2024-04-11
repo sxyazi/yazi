@@ -1,9 +1,10 @@
 use std::{io::{stderr, BufWriter, LineWriter, Write}, mem};
 
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use scopeguard::defer;
 use tokio::{io::{stdin, AsyncReadExt}, select, sync::mpsc, time};
 use yazi_proxy::{AppProxy, HIDER};
-use yazi_shared::{event::Cmd, term::Term, Defer};
+use yazi_shared::{event::Cmd, term::Term};
 
 use crate::tasks::Tasks;
 
@@ -26,14 +27,13 @@ impl Tasks {
 				task.logs.clone()
 			};
 
+			defer!(AppProxy::resume());
 			AppProxy::stop().await;
-			let _defer = Defer::new(|| {
-				disable_raw_mode().ok();
-				AppProxy::resume();
-			});
 
 			Term::clear(&mut stderr()).ok();
 			BufWriter::new(stderr().lock()).write_all(mem::take(&mut buffered).as_bytes()).ok();
+
+			defer! { disable_raw_mode().ok(); }
 			enable_raw_mode().ok();
 
 			let mut stdin = stdin();

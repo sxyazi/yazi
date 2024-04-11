@@ -24,6 +24,7 @@ crossterm              = "0.27.0"
 futures                = "0.3.30"
 parking_lot            = "0.12.1"
 regex                  = "1.10.4"
+scopeguard             = "1.2.0"
 tokio                  = { version = "1.37.0", features = [ "full" ] }
 tokio-stream           = "0.1.15"
 

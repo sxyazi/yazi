@@ -1,7 +1,7 @@
 use anyhow::Result;
+use scopeguard::defer;
 use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::mpsc};
 use yazi_proxy::{AppProxy, HIDER};
-use yazi_shared::Defer;
 
 use super::{ProcessOpBg, ProcessOpBlock, ProcessOpOrphan, ShellOpt};
 use crate::TaskProg;
@@ -15,7 +15,7 @@ impl Process {
 
 	pub async fn block(&self, task: ProcessOpBlock) -> Result<()> {
 		let _permit = HIDER.acquire().await.unwrap();
-		let _defer = Defer::new(AppProxy::resume);
+		defer!(AppProxy::resume());
 		AppProxy::stop().await;
 
 		let (id, cmd) = (task.id, task.cmd.clone());

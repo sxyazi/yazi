@@ -1,10 +1,11 @@
 use std::{mem, sync::Arc};
 
 use mlua::{Scope, Table};
+use scopeguard::defer;
 use tracing::error;
 use yazi_config::LAYOUT;
 use yazi_plugin::{elements::RectRef, LUA};
-use yazi_shared::{Defer, RoCell};
+use yazi_shared::RoCell;
 
 use crate::Ctx;
 
@@ -34,7 +35,7 @@ impl Lives {
 		f: impl FnOnce(&Scope<'a, 'a>) -> mlua::Result<T>,
 	) -> mlua::Result<T> {
 		let result = LUA.scope(|scope| {
-			let _defer = Defer::new(|| SCOPE.drop());
+			defer! { SCOPE.drop(); };
 			SCOPE.init(unsafe { mem::transmute(scope) });
 			LUA.set_named_registry_value("cx", scope.create_any_userdata_ref(cx)?)?;
 
