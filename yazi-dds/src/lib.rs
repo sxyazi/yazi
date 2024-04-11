@@ -32,6 +32,13 @@ pub fn serve() {
 	LOCAL.with(Default::default);
 	REMOTE.with(Default::default);
 
+	// Env
+	std::env::set_var("YAZI_ID", ID.to_string());
+	std::env::set_var(
+		"YAZI_LEVEL",
+		(std::env::var("YAZI_LEVEL").unwrap_or_default().parse().unwrap_or(0u16) + 1).to_string(),
+	);
+
 	Pump::serve();
 	Client::serve(rx);
 }

@@ -3,7 +3,6 @@
 mod chars;
 mod condition;
 mod debounce;
-mod defer;
 mod env;
 mod errors;
 pub mod event;
@@ -21,7 +20,6 @@ mod xdg;
 pub use chars::*;
 pub use condition::*;
 pub use debounce::*;
-pub use defer::*;
 pub use env::*;
 pub use errors::*;
 pub use layer::*;

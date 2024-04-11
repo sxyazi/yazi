@@ -30,7 +30,9 @@ impl<'a> From<BodyMove<'a>> for Body<'a> {
 }
 
 impl IntoLua<'_> for BodyMove<'static> {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { self.items.into_owned().into_lua(lua) }
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
+		lua.create_table_from([("items", self.items.into_owned())])?.into_lua(lua)
+	}
 }
 
 // --- Item

@@ -1,10 +1,11 @@
 use std::{borrow::Cow, collections::HashMap, ffi::{OsStr, OsString}, io::{stderr, BufWriter, Write}, path::PathBuf};
 
 use anyhow::{anyhow, Result};
+use scopeguard::defer;
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 use yazi_config::{OPEN, PREVIEW};
 use yazi_proxy::{AppProxy, TasksProxy, HIDER, WATCHER};
-use yazi_shared::{fs::{accessible, max_common_root, File, FilesOp, Url}, term::Term, Defer};
+use yazi_shared::{fs::{accessible, max_common_root, File, FilesOp, Url}, term::Term};
 
 use crate::manager::Manager;
 
@@ -31,12 +32,12 @@ impl Manager {
 				.write_all(s.as_encoded_bytes())
 				.await?;
 
-			let _defer1 = Defer::new(|| tokio::spawn(fs::remove_file(tmp.clone())));
+			defer! { tokio::spawn(fs::remove_file(tmp.clone())); }
 			TasksProxy::process_exec(vec![OsString::new(), tmp.to_owned().into()], Cow::Borrowed(opener))
 				.await;
 
 			let _permit = HIDER.acquire().await.unwrap();
-			let _defer2 = Defer::new(AppProxy::resume);
+			defer!(AppProxy::resume());
 			AppProxy::stop().await;
 
 			let new: Vec<_> = fs::read_to_string(&tmp).await?.lines().map(PathBuf::from).collect();

@@ -40,7 +40,7 @@ impl<'a> Body<'a> {
 
 	pub fn from_lua(kind: &str, value: Value) -> Result<Self> {
 		Ok(match kind {
-			"hi" | "hey" | "cd" | "hover" | "rename" | "bulk" | "yank" => {
+			"hi" | "hey" | "cd" | "hover" | "rename" | "bulk" | "yank" | "move" | "trash" | "delete" => {
 				Err("Cannot construct system event from Lua").into_lua_err()?
 			}
 			_ if !kind.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-') => {

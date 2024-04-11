@@ -27,10 +27,10 @@ impl<'a> From<BodyDelete<'a>> for Body<'a> {
 
 impl IntoLua<'_> for BodyDelete<'static> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value<'_>> {
-		let t = lua.create_table_with_capacity(self.urls.len(), 0)?;
+		let urls = lua.create_table_with_capacity(self.urls.len(), 0)?;
 		for (i, url) in self.urls.into_owned().into_iter().enumerate() {
-			t.raw_set(i + 1, lua.create_any_userdata(url)?)?;
+			urls.raw_set(i + 1, lua.create_any_userdata(url)?)?;
 		}
-		t.into_lua(lua)
+		lua.create_table_from([("urls", urls)])?.into_lua(lua)
 	}
 }
