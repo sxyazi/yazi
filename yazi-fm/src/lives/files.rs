@@ -1,8 +1,8 @@
 use std::ops::{Deref, Range};
 
-use mlua::{AnyUserData, Lua, MetaMethod, UserDataMethods};
+use mlua::{AnyUserData, Lua, MetaMethod, UserDataFields, UserDataMethods};
 
-use super::{File, SCOPE};
+use super::{File, Filter, SCOPE};
 
 pub(super) struct Files {
 	window: Range<usize>,
@@ -28,6 +28,8 @@ impl Files {
 
 	pub(super) fn register(lua: &Lua) -> mlua::Result<()> {
 		lua.register_userdata_type::<Self>(|reg| {
+			reg.add_field_method_get("filter", |_, me| me.filter().map(Filter::make).transpose());
+
 			reg.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.window.end - me.window.start));
 
 			reg.add_meta_method(MetaMethod::Index, |_, me, mut idx: usize| {

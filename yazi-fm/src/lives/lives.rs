@@ -18,6 +18,7 @@ impl Lives {
 		super::Config::register(&LUA)?;
 		super::File::register(&LUA)?;
 		super::Files::register(&LUA)?;
+		super::Filter::register(&LUA)?;
 		super::Folder::register(&LUA)?;
 		super::Mode::register(&LUA)?;
 		super::Preview::register(&LUA)?;

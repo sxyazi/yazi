@@ -12,7 +12,7 @@ const RIGHT: u8 = 2;
 #[derive(Clone, FromLua)]
 pub struct Line(pub(super) ratatui::text::Line<'static>);
 
-impl<'a> TryFrom<Table<'a>> for Line {
+impl TryFrom<Table<'_>> for Line {
 	type Error = mlua::Error;
 
 	fn try_from(tb: Table) -> Result<Self, Self::Error> {
@@ -33,13 +33,20 @@ impl<'a> TryFrom<Table<'a>> for Line {
 	}
 }
 
+impl TryFrom<mlua::String<'_>> for Line {
+	type Error = mlua::Error;
+
+	fn try_from(s: mlua::String) -> Result<Self, Self::Error> {
+		Ok(Self(ratatui::text::Line::from(s.to_string_lossy().into_owned())))
+	}
+}
+
 impl Line {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		let new = lua.create_function(|_, (_, value): (Table, Value)| {
-			if let Value::Table(tb) = value {
-				return Line::try_from(tb);
-			}
-			Err("expected a table of Spans or Lines".into_lua_err())
+		let new = lua.create_function(|_, (_, value): (Table, Value)| match value {
+			Value::Table(tb) => Line::try_from(tb),
+			Value::String(s) => Line::try_from(s),
+			_ => Err("expected a String, or a table of Spans and Lines".into_lua_err()),
 		})?;
 
 		let parse = lua.create_function(|_, code: mlua::String| {

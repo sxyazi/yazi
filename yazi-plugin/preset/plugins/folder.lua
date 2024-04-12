@@ -3,12 +3,19 @@ local M = {}
 function M:peek()
 	local folder = Folder:by_kind(Folder.PREVIEW)
 	if not folder or folder.cwd ~= self.file.url then
-		return {}
+		return
 	end
 
 	local bound = math.max(0, #folder.files - self.area.h)
 	if self.skip > bound then
-		ya.manager_emit("peek", { bound, only_if = tostring(self.file.url), upper_bound = true })
+		return ya.manager_emit("peek", { bound, only_if = tostring(self.file.url), upper_bound = true })
+	end
+
+	if #folder.files == 0 then
+		return ya.preview_widgets(self, {
+			ui.Paragraph(self.area, { ui.Line(folder.stage == "loading" and "Loading..." or "No files") })
+				:align(ui.Paragraph.CENTER),
+		})
 	end
 
 	local items, markers = {}, {}
