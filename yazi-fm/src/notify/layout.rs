@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use ratatui::{buffer::Buffer, layout::{self, Constraint, Offset, Rect}, widgets::{Block, BorderType, Paragraph, Widget, Wrap}};
 use yazi_config::THEME;
 use yazi_core::notify::Message;
@@ -15,9 +13,7 @@ impl<'a> Layout<'a> {
 	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
 
 	pub(crate) fn available(area: Rect) -> Rect {
-		let chunks =
-			layout::Layout::horizontal([Constraint::Fill(1), Constraint::Length(80), Constraint::Max(1)])
-				.split(area);
+		let chunks = layout::Layout::horizontal([Constraint::Fill(1), Constraint::Min(80)]).split(area);
 
 		let chunks =
 			layout::Layout::vertical([Constraint::Max(1), Constraint::Fill(1)]).split(chunks[1]);
@@ -25,12 +21,22 @@ impl<'a> Layout<'a> {
 		chunks[1]
 	}
 
-	fn tile(area: Rect, messages: &[Message]) -> Rc<[Rect]> {
+	fn tile(area: Rect, messages: &[Message]) -> Vec<Rect> {
 		layout::Layout::vertical(
 			messages.iter().map(|m| Constraint::Length(m.height(area.width) as u16)),
 		)
 		.spacing(1)
 		.split(area)
+		.iter()
+		.zip(messages)
+		.map(|(&(mut r), m)| {
+			if r.width > m.max_width as u16 {
+				r.x = r.x.saturating_add(r.width - m.max_width as u16);
+				r.width = m.max_width as u16;
+			}
+			r
+		})
+		.collect()
 	}
 }
 
@@ -51,7 +57,7 @@ impl<'a> Widget for Layout<'a> {
 
 			let mut rect =
 				tile[i].offset(Offset { x: (100 - m.percent) as i32 * tile[i].width as i32 / 100, y: 0 });
-			rect.width = area.width.saturating_sub(rect.x);
+			rect.width -= rect.x - tile[i].x;
 
 			yazi_plugin::elements::Clear::default().render(rect, buf);
 			Paragraph::new(m.content.as_str())
@@ -59,7 +65,7 @@ impl<'a> Widget for Layout<'a> {
 				.block(
 					Block::bordered()
 						.border_type(BorderType::Rounded)
-						.title(format!("{} {}", icon, m.title))
+						.title(format!("{icon} {}", m.title))
 						.title_style(style)
 						.border_style(style),
 				)

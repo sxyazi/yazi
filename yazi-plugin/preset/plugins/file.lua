@@ -9,9 +9,7 @@ function M:peek()
 		p = ui.Paragraph.parse(self.area, "----- File Type Classification -----\n\n" .. output.stdout)
 	else
 		p = ui.Paragraph(self.area, {
-			ui.Line {
-				ui.Span(string.format("Spawn `%s` command returns %s", cmd, code)),
-			},
+			ui.Line(string.format("Spawn `%s` command returns %s", cmd, code)),
 		})
 	end
 

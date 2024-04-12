@@ -2,12 +2,27 @@ Current = {
 	area = ui.Rect.default,
 }
 
+function Current:empty(area)
+	local folder = Folder:by_kind(Folder.CURRENT)
+
+	local line
+	if folder.files.filter then
+		line = ui.Line("No filter results")
+	else
+		line = ui.Line(folder.stage == "loading" and "Loading..." or "No files")
+	end
+
+	return {
+		ui.Paragraph(area, { line }):align(ui.Paragraph.CENTER),
+	}
+end
+
 function Current:render(area)
 	self.area = area
 
 	local files = Folder:by_kind(Folder.CURRENT).window
 	if #files == 0 then
-		return {}
+		return self:empty(area)
 	end
 
 	local items, markers = {}, {}

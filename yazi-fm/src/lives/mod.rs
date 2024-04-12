@@ -3,6 +3,7 @@
 mod config;
 mod file;
 mod files;
+mod filter;
 mod folder;
 mod iter;
 mod lives;
@@ -17,6 +18,7 @@ mod yanked;
 use config::*;
 use file::*;
 use files::*;
+use filter::*;
 use folder::*;
 use iter::*;
 pub(super) use lives::*;

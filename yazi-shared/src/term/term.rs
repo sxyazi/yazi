@@ -110,7 +110,9 @@ impl Term {
 	}
 
 	#[inline]
-	pub fn can_partial(&mut self) -> bool { self.last_area == self.inner.get_frame().size() }
+	pub fn can_partial(&mut self) -> bool {
+		self.inner.autoresize().is_ok() && self.last_area == self.inner.get_frame().size()
+	}
 
 	pub fn size() -> WindowSize {
 		let mut size = WindowSize { rows: 0, columns: 0, width: 0, height: 0 };
