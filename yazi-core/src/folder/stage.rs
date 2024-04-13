@@ -3,5 +3,5 @@ pub enum FolderStage {
 	#[default]
 	Loading,
 	Loaded,
-	Failed,
+	Failed(std::io::ErrorKind),
 }

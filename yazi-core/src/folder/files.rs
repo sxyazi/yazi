@@ -157,7 +157,11 @@ impl Files {
 		self.sizes.extend(sizes);
 	}
 
-	pub fn update_ioerr(&mut self) { todo!() }
+	pub fn update_ioerr(&mut self) {
+		self.ticket = FILES_TICKET.fetch_add(1, Ordering::Relaxed);
+		self.hidden.clear();
+		self.items.clear();
+	}
 
 	pub fn update_creating(&mut self, files: Vec<File>) {
 		if files.is_empty() {

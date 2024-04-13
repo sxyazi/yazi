@@ -28,7 +28,7 @@ impl From<&Url> for Folder {
 
 impl Folder {
 	pub fn update(&mut self, op: FilesOp) -> bool {
-		let revision = self.files.revision;
+		let (stage, revision) = (self.stage, self.files.revision);
 		match op {
 			FilesOp::Full(_, _, mtime) => {
 				(self.mtime, self.stage) = (mtime, FolderStage::Loaded);
@@ -38,6 +38,9 @@ impl Folder {
 			}
 			FilesOp::Done(_, mtime, ticket) if ticket == self.files.ticket() => {
 				(self.mtime, self.stage) = (mtime, FolderStage::Loaded);
+			}
+			FilesOp::IOErr(_, kind) => {
+				(self.mtime, self.stage) = (None, FolderStage::Failed(kind));
 			}
 			_ => {}
 		}
@@ -56,7 +59,7 @@ impl Folder {
 		}
 
 		self.arrow(0);
-		self.files.revision != revision
+		(stage, revision) != (self.stage, self.files.revision)
 	}
 
 	pub fn arrow(&mut self, step: impl Into<Step>) -> bool {
