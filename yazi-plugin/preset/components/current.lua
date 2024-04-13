@@ -9,7 +9,7 @@ function Current:empty(area)
 	if folder.files.filter then
 		line = ui.Line("No filter results")
 	else
-		line = ui.Line(folder.stage == "loading" and "Loading..." or "No files")
+		line = ui.Line(folder.stage == "loading" and "Loading..." or "No items")
 	end
 
 	return {
