@@ -19,12 +19,11 @@ yazi-scheduler = { path = "../yazi-scheduler", version = "0.2.4" }
 yazi-shared    = { path = "../yazi-shared", version = "0.2.4" }
 
 # External dependencies
-anyhow        = "1.0.81"
+anyhow        = "1.0.82"
 base64        = "0.22.0"
 bitflags      = "2.5.0"
 crossterm     = "0.27.0"
 futures       = "0.3.30"
-indexmap      = "2.2.6"
 notify        = { version = "6.1.1", default-features = false, features = [ "macos_fsevent" ] }
 parking_lot   = "0.12.1"
 ratatui       = "0.26.1"

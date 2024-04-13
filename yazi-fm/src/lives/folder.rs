@@ -56,7 +56,7 @@ impl Folder {
 				lua.create_string(match me {
 					Loading => "loading",
 					Loaded => "loaded",
-					Failed => "failed",
+					Failed(_) => "failed",
 				})
 			});
 		})?;

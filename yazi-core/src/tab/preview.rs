@@ -1,6 +1,6 @@
 use std::time::{Duration, SystemTime};
 
-use tokio::{fs, pin, task::JoinHandle};
+use tokio::{pin, task::JoinHandle};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use tokio_util::sync::CancellationToken;
 use yazi_adaptor::ADAPTOR;
@@ -54,23 +54,8 @@ impl Preview {
 		self.folder_loader = Some((
 			url.clone(),
 			tokio::spawn(async move {
-				let Ok(meta) = fs::metadata(&url).await else {
-					if let Ok(m) = fs::symlink_metadata(&url).await {
-						FilesOp::Full(url, vec![], m.modified().ok()).emit();
-					} else if let Some(p) = url.parent_url() {
-						FilesOp::Deleting(p, vec![url]).emit();
-					}
-					return;
-				};
-
-				if meta.modified().ok() == mtime {
-					return;
-				}
-
-				let Ok(rx) = Files::from_dir(&url).await else {
-					FilesOp::Full(url, vec![], meta.modified().ok()).emit();
-					return;
-				};
+				let Some(meta) = Files::assert_stale(&url, mtime).await else { return };
+				let Ok(rx) = Files::from_dir(&url).await else { return };
 
 				let stream =
 					UnboundedReceiverStream::new(rx).chunks_timeout(50000, Duration::from_millis(500));

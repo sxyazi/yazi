@@ -11,6 +11,7 @@ pub enum FilesOp {
 	Part(Url, Vec<File>, u64),
 	Done(Url, Option<SystemTime>, u64),
 	Size(Url, HashMap<Url, u64>),
+	IOErr(Url, std::io::ErrorKind),
 
 	Creating(Url, Vec<File>),
 	Deleting(Url, Vec<Url>),
@@ -26,6 +27,7 @@ impl FilesOp {
 			Self::Part(url, ..) => url,
 			Self::Done(url, ..) => url,
 			Self::Size(url, _) => url,
+			Self::IOErr(url, _) => url,
 
 			Self::Creating(url, _) => url,
 			Self::Deleting(url, _) => url,
@@ -81,6 +83,7 @@ impl FilesOp {
 			Self::Part(_, files, ticket) => Self::Part(u, files!(files), *ticket),
 			Self::Done(_, mtime, ticket) => Self::Done(u, *mtime, *ticket),
 			Self::Size(_, map) => Self::Size(u, map.iter().map(|(k, v)| (new!(k), *v)).collect()),
+			Self::IOErr(_, err) => Self::IOErr(u, *err),
 
 			Self::Creating(_, files) => Self::Creating(u, files!(files)),
 			Self::Deleting(_, urls) => Self::Deleting(u, urls.iter().map(|u| new!(u)).collect()),
