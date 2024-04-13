@@ -71,18 +71,7 @@ impl Watcher {
 		}
 
 		async fn go(url: Url, mtime: Option<SystemTime>) {
-			let Ok(meta) = fs::metadata(&url).await else {
-				if let Ok(m) = fs::symlink_metadata(&url).await {
-					FilesOp::Full(url, vec![], m.modified().ok()).emit();
-				} else if let Some(p) = url.parent_url() {
-					FilesOp::Deleting(p, vec![url]).emit();
-				}
-				return;
-			};
-
-			if meta.modified().ok() == mtime {
-				return;
-			}
+			let Some(meta) = Files::assert_stale(&url, mtime).await else { return };
 
 			if let Ok(files) = Files::from_dir_bulk(&url).await {
 				FilesOp::Full(url, files, meta.modified().ok()).emit();

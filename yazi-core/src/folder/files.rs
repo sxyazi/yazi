@@ -1,9 +1,8 @@
-use std::{collections::{HashMap, HashSet}, mem, ops::Deref, sync::atomic::Ordering};
+use std::{collections::{HashMap, HashSet}, fs::Metadata, mem, ops::Deref, sync::atomic::Ordering, time::SystemTime};
 
-use anyhow::Result;
 use tokio::{fs::{self, DirEntry}, select, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_config::{manager::SortBy, MANAGER};
-use yazi_shared::fs::{File, Url, FILES_TICKET};
+use yazi_shared::fs::{accessible, File, FilesOp, Url, FILES_TICKET};
 
 use super::{FilesSorter, Filter};
 
@@ -46,7 +45,7 @@ impl Deref for Files {
 }
 
 impl Files {
-	pub async fn from_dir(url: &Url) -> Result<UnboundedReceiver<File>> {
+	pub async fn from_dir(url: &Url) -> std::io::Result<UnboundedReceiver<File>> {
 		let mut it = fs::read_dir(url).await?;
 		let (tx, rx) = mpsc::unbounded_channel();
 
@@ -65,7 +64,7 @@ impl Files {
 		Ok(rx)
 	}
 
-	pub async fn from_dir_bulk(url: &Url) -> Result<Vec<File>> {
+	pub async fn from_dir_bulk(url: &Url) -> std::io::Result<Vec<File>> {
 		let mut it = fs::read_dir(url).await?;
 		let mut items = Vec::with_capacity(5000);
 		while let Ok(Some(item)) = it.next_entry().await {
@@ -91,6 +90,25 @@ impl Files {
 				.flatten()
 				.collect(),
 		)
+	}
+
+	pub async fn assert_stale(url: &Url, mtime: Option<SystemTime>) -> Option<Metadata> {
+		match fs::metadata(url).await {
+			Ok(m) if !m.is_dir() => {
+				// FIXME: use `ErrorKind::NotADirectory` instead once it gets stabilized
+				FilesOp::IOErr(url.clone(), std::io::ErrorKind::AlreadyExists).emit();
+			}
+			Ok(m) if mtime == m.modified().ok() => {}
+			Ok(m) => return Some(m),
+			Err(e) => {
+				if accessible(url).await {
+					FilesOp::IOErr(url.clone(), e.kind()).emit();
+				} else if let Some(p) = url.parent_url() {
+					FilesOp::Deleting(p, vec![url.clone()]).emit();
+				}
+			}
+		}
+		None
 	}
 }
 
@@ -138,6 +156,8 @@ impl Files {
 		}
 		self.sizes.extend(sizes);
 	}
+
+	pub fn update_ioerr(&mut self) { todo!() }
 
 	pub fn update_creating(&mut self, files: Vec<File>) {
 		if files.is_empty() {

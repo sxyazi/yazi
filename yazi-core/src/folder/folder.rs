@@ -47,6 +47,7 @@ impl Folder {
 			FilesOp::Part(_, files, ticket) => self.files.update_part(files, ticket),
 			FilesOp::Done(..) => {}
 			FilesOp::Size(_, sizes) => self.files.update_size(sizes),
+			FilesOp::IOErr(..) => self.files.update_ioerr(),
 
 			FilesOp::Creating(_, files) => self.files.update_creating(files),
 			FilesOp::Deleting(_, urls) => self.files.update_deleting(urls),

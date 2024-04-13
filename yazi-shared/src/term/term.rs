@@ -1,7 +1,7 @@
 use std::{io::{self, stderr, BufWriter, Stderr, Write}, mem, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}};
 
 use anyhow::Result;
-use crossterm::{cursor::{RestorePosition, SavePosition}, event::{DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, WindowSize}};
+use crossterm::{cursor::{RestorePosition, SavePosition}, event::{DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, SetTitle, WindowSize}};
 use ratatui::{backend::CrosstermBackend, buffer::Buffer, layout::Rect, CompletedFrame, Frame, Terminal};
 
 static CSI_U: AtomicBool = AtomicBool::new(false);
@@ -73,6 +73,7 @@ impl Term {
 
 		execute!(
 			stderr(),
+			SetTitle(""),
 			DisableFocusChange,
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
