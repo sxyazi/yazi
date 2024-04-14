@@ -1,6 +1,14 @@
+use std::path::MAIN_SEPARATOR_STR;
+
 use yazi_shared::{event::Cmd, render};
 
 use crate::input::Input;
+
+#[cfg(windows)]
+const SEPARATOR: [char; 2] = ['/', '\\'];
+
+#[cfg(not(windows))]
+const SEPARATOR: char = std::path::MAIN_SEPARATOR;
 
 pub struct Opt {
 	word:   String,
@@ -24,19 +32,10 @@ impl Input {
 		}
 
 		let [before, after] = self.partition();
-
-		#[cfg(target_os = "windows")]
-		let new = if let Some((prefix, _)) = before.rsplit_once(['/', '\\']) {
-			format!("{prefix}/{}{after}", opt.word).replace(['/', '\\'], std::path::MAIN_SEPARATOR_STR)
+		let new = if let Some((prefix, _)) = before.rsplit_once(SEPARATOR) {
+			format!("{prefix}/{}{after}", opt.word).replace(SEPARATOR, MAIN_SEPARATOR_STR)
 		} else {
-			format!("{}{after}", opt.word).replace(['/', '\\'], std::path::MAIN_SEPARATOR_STR)
-		};
-
-		#[cfg(not(target_os = "windows"))]
-		let new = if let Some((prefix, _)) = before.rsplit_once(std::path::MAIN_SEPARATOR) {
-			format!("{prefix}/{}{after}", opt.word)
-		} else {
-			format!("{}{after}", opt.word)
+			format!("{}{after}", opt.word).replace(SEPARATOR, MAIN_SEPARATOR_STR)
 		};
 
 		let snap = self.snaps.current_mut();

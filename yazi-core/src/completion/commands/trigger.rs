@@ -5,6 +5,12 @@ use yazi_shared::{emit, event::Cmd, render, Layer};
 
 use crate::completion::Completion;
 
+#[cfg(windows)]
+const SEPARATOR: [char; 2] = ['/', '\\'];
+
+#[cfg(not(windows))]
+const SEPARATOR: char = std::path::MAIN_SEPARATOR;
+
 pub struct Opt {
 	word:   String,
 	ticket: usize,
@@ -59,7 +65,7 @@ impl Completion {
 				));
 			}
 
-			Ok::<(), anyhow::Error>(())
+			Ok::<_, anyhow::Error>(())
 		});
 
 		render!(mem::replace(&mut self.visible, false));
@@ -67,14 +73,7 @@ impl Completion {
 
 	#[inline]
 	fn split_path(s: &str) -> (String, String) {
-		#[cfg(target_os = "windows")]
-		match s.rsplit_once(['/', '\\']) {
-			Some((p, c)) => (format!("{p}{}", MAIN_SEPARATOR), c.to_owned()),
-			None => (".".to_owned(), s.to_owned()),
-		}
-
-		#[cfg(not(target_os = "windows"))]
-		match s.rsplit_once(MAIN_SEPARATOR) {
+		match s.rsplit_once(SEPARATOR) {
 			Some((p, c)) => (format!("{p}{}", MAIN_SEPARATOR), c.to_owned()),
 			None => (".".to_owned(), s.to_owned()),
 		}
@@ -87,7 +86,7 @@ mod tests {
 
 	#[cfg(unix)]
 	#[test]
-	fn test_explode() {
+	fn test_split() {
 		assert_eq!(Completion::split_path(""), (".".to_owned(), "".to_owned()));
 		assert_eq!(Completion::split_path(" "), (".".to_owned(), " ".to_owned()));
 		assert_eq!(Completion::split_path("/"), ("/".to_owned(), "".to_owned()));
@@ -99,7 +98,7 @@ mod tests {
 
 	#[cfg(windows)]
 	#[test]
-	fn test_explode() {
+	fn test_split() {
 		assert_eq!(Completion::split_path("foo"), (".".to_owned(), "foo".to_owned()));
 		assert_eq!(Completion::split_path("foo\\"), ("foo\\".to_owned(), "".to_owned()));
 		assert_eq!(Completion::split_path("foo\\bar"), ("foo\\".to_owned(), "bar".to_owned()));
