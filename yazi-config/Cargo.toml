@@ -15,7 +15,7 @@ yazi-shared = { path = "../yazi-shared", version = "0.2.4" }
 anyhow      = "1.0.82"
 arc-swap    = "1.7.1"
 crossterm   = "0.27.0"
-glob        = "0.3.1"
+globset     = "0.4.14"
 indexmap    = "2.2.6"
 ratatui     = "0.26.1"
 serde       = { version = "1.0.197", features = [ "derive" ] }
