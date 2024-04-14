@@ -29,7 +29,12 @@ impl Completion {
 		let flow = cache.iter().try_fold(
 			(Vec::with_capacity(LIMIT), Vec::with_capacity(LIMIT)),
 			|(mut prefixed, mut fuzzy), s| {
-				if s.starts_with(word) {
+				let start_with_word = if word.chars().any(|c| c.is_uppercase()) {
+					s.starts_with(word)
+				} else {
+					s.to_lowercase().starts_with(word)
+				};
+				if start_with_word {
 					if s != word {
 						prefixed.push(s);
 						if prefixed.len() >= LIMIT {
