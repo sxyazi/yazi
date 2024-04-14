@@ -1,4 +1,4 @@
-use std::path::MAIN_SEPARATOR;
+use std::path::MAIN_SEPARATOR_STR;
 
 use yazi_shared::{event::Cmd, render};
 
@@ -26,19 +26,21 @@ impl Input {
 		}
 
 		let [before, after] = self.partition();
-		let new = if let Some((prefix, _)) = before.rsplit_once(MAIN_SEPARATOR) {
+		let new = if let Some((prefix, _)) = before.rsplit_once(['/', '\\']) {
 			format!("{prefix}/{}{after}", opt.word)
 		} else {
 			format!("{}{after}", opt.word)
 		};
 
+		let normalized_new = new.replace(['/', '\\'], MAIN_SEPARATOR_STR);
+
 		let snap = self.snaps.current_mut();
-		if new == snap.value {
+		if normalized_new == snap.value {
 			return;
 		}
 
-		let delta = new.chars().count() as isize - snap.value.chars().count() as isize;
-		snap.value = new;
+		let delta = normalized_new.chars().count() as isize - snap.value.chars().count() as isize;
+		snap.value = normalized_new;
 
 		self.move_(delta);
 		self.flush_value();
