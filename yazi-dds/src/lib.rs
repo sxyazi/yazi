@@ -7,6 +7,7 @@ mod pump;
 mod sendable;
 mod server;
 mod state;
+mod stream;
 
 pub use client::*;
 pub use payload::*;
@@ -15,6 +16,7 @@ pub use pump::*;
 pub use sendable::*;
 use server::*;
 pub use state::*;
+pub use stream::*;
 
 pub fn serve() {
 	let (tx, rx) = tokio::sync::mpsc::unbounded_channel();

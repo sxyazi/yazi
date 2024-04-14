@@ -2,19 +2,14 @@ use std::{collections::{HashMap, HashSet}, mem, str::FromStr};
 
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
-use tokio::{io::{AsyncBufReadExt, AsyncWriteExt, BufReader, Lines, ReadHalf, WriteHalf}, select, sync::mpsc, task::JoinHandle, time};
+use tokio::{io::AsyncWriteExt, select, sync::mpsc, task::JoinHandle, time};
 use yazi_shared::RoCell;
 
-use crate::{body::Body, Payload, Pubsub, Server};
+use crate::{body::Body, ClientReader, ClientWriter, Payload, Pubsub, Server};
 
 pub(super) static ID: RoCell<u64> = RoCell::new();
 pub(super) static PEERS: RoCell<RwLock<HashMap<u64, Peer>>> = RoCell::new();
 pub(super) static QUEUE: RoCell<mpsc::UnboundedSender<String>> = RoCell::new();
-
-#[cfg(not(unix))]
-use tokio::net::TcpStream;
-#[cfg(unix)]
-use tokio::net::UnixStream;
 
 #[derive(Debug)]
 pub struct Client {
@@ -69,16 +64,14 @@ impl Client {
 	#[inline]
 	pub(super) fn able(&self, ability: &str) -> bool { self.abilities.contains(ability) }
 
-	#[cfg(unix)]
-	async fn connect(
-		server: &mut Option<JoinHandle<()>>,
-	) -> (Lines<BufReader<ReadHalf<UnixStream>>>, WriteHalf<UnixStream>) {
+	async fn connect(server: &mut Option<JoinHandle<()>>) -> (ClientReader, ClientWriter) {
+		use crate::Stream;
+
 		let mut first = true;
 		loop {
-			if let Ok(stream) = UnixStream::connect(Server::socket_file()).await {
+			if let Ok(conn) = Stream::connect().await {
 				Pubsub::pub_from_hi();
-				let (reader, writer) = tokio::io::split(stream);
-				return (BufReader::new(reader).lines(), writer);
+				return conn;
 			}
 
 			server.take().map(|h| h.abort());
@@ -94,42 +87,7 @@ impl Client {
 		}
 	}
 
-	#[cfg(not(unix))]
-	async fn connect(
-		server: &mut Option<JoinHandle<()>>,
-	) -> (Lines<BufReader<ReadHalf<TcpStream>>>, WriteHalf<TcpStream>) {
-		let mut first = true;
-		loop {
-			if let Ok(stream) = TcpStream::connect("127.0.0.1:33581").await {
-				Pubsub::pub_from_hi();
-				let (reader, writer) = tokio::io::split(stream);
-				return (BufReader::new(reader).lines(), writer);
-			}
-
-			server.take().map(|h| h.abort());
-			*server = Server::make().await.ok();
-			if mem::replace(&mut first, false) && server.is_some() {
-				continue;
-			}
-
-			time::sleep(time::Duration::from_secs(1)).await;
-		}
-	}
-
-	#[cfg(unix)]
-	async fn reconnect(
-		server: &mut Option<JoinHandle<()>>,
-	) -> (Lines<BufReader<ReadHalf<UnixStream>>>, WriteHalf<UnixStream>) {
-		PEERS.write().clear();
-
-		time::sleep(time::Duration::from_millis(500)).await;
-		Self::connect(server).await
-	}
-
-	#[cfg(not(unix))]
-	async fn reconnect(
-		server: &mut Option<JoinHandle<()>>,
-	) -> (Lines<BufReader<ReadHalf<TcpStream>>>, WriteHalf<TcpStream>) {
+	async fn reconnect(server: &mut Option<JoinHandle<()>>) -> (ClientReader, ClientWriter) {
 		PEERS.write().clear();
 
 		time::sleep(time::Duration::from_millis(500)).await;

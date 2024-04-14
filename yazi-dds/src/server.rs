@@ -5,7 +5,7 @@ use parking_lot::RwLock;
 use tokio::{io::{AsyncBufReadExt, AsyncWriteExt, BufReader}, select, sync::mpsc, task::JoinHandle, time};
 use yazi_shared::RoCell;
 
-use crate::{body::{Body, BodyHey}, Client, Payload, Peer, STATE};
+use crate::{body::{Body, BodyHey}, Client, Payload, Peer, Stream, STATE};
 
 pub(super) static CLIENTS: RoCell<RwLock<HashMap<u64, Client>>> = RoCell::new();
 
@@ -14,7 +14,7 @@ pub(super) struct Server;
 impl Server {
 	pub(super) async fn make() -> Result<JoinHandle<()>> {
 		CLIENTS.write().clear();
-		let listener = Self::bind().await?;
+		let listener = Stream::bind().await?;
 
 		Ok(tokio::spawn(async move {
 			while let Ok((stream, _)) = listener.accept().await {
@@ -76,31 +76,6 @@ impl Server {
 				});
 			}
 		}))
-	}
-
-	#[cfg(unix)]
-	#[inline]
-	pub(super) fn socket_file() -> std::path::PathBuf {
-		use uzers::Users;
-		use yazi_boot::USERS_CACHE;
-		use yazi_shared::Xdg;
-
-		Xdg::cache_dir().join(format!(".dds-{}.sock", USERS_CACHE.get_current_uid()))
-	}
-
-	#[cfg(unix)]
-	#[inline]
-	async fn bind() -> Result<tokio::net::UnixListener> {
-		let p = Self::socket_file();
-
-		tokio::fs::remove_file(&p).await.ok();
-		Ok(tokio::net::UnixListener::bind(p)?)
-	}
-
-	#[cfg(not(unix))]
-	#[inline]
-	async fn bind() -> Result<tokio::net::TcpListener> {
-		Ok(tokio::net::TcpListener::bind("127.0.0.1:33581").await?)
 	}
 
 	fn handle_hi(s: String, id: &mut Option<u64>, tx: mpsc::UnboundedSender<String>) {
