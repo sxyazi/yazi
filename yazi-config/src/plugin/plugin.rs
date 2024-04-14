@@ -73,8 +73,8 @@ impl Plugin {
 			.iter()
 			.filter(|&rule| {
 				rule.cond.as_ref().and_then(|c| c.eval(f)) != Some(false)
-					&& (rule.mime.as_ref().zip(mime).map_or(false, |(m, s)| m.matches(s))
-						|| rule.name.as_ref().is_some_and(|n| n.match_path(path, is_folder)))
+					&& (rule.mime.as_ref().zip(mime).map_or(false, |(p, m)| p.match_mime(m))
+						|| rule.name.as_ref().is_some_and(|p| p.match_path(path, is_folder)))
 			})
 			.collect()
 	}
@@ -82,8 +82,8 @@ impl Plugin {
 	pub fn previewer(&self, path: &Path, mime: &str) -> Option<&PluginRule> {
 		let is_folder = mime == MIME_DIR;
 		self.previewers.iter().find(|&rule| {
-			rule.mime.as_ref().is_some_and(|m| m.matches(mime))
-				|| rule.name.as_ref().is_some_and(|n| n.match_path(path, is_folder))
+			rule.mime.as_ref().is_some_and(|p| p.match_mime(mime))
+				|| rule.name.as_ref().is_some_and(|p| p.match_path(path, is_folder))
 		})
 	}
 }

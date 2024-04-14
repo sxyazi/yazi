@@ -1,46 +1,30 @@
 use std::path::Path;
 
-use glob::MatchOptions;
+use globset::GlobBuilder;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 #[serde(try_from = "String")]
 pub struct Pattern {
-	inner:     glob::Pattern,
-	sensitive: bool,
+	inner:     globset::GlobMatcher,
+	is_star:   bool,
 	is_folder: bool,
-	full_path: bool,
 }
 
 impl Pattern {
 	#[inline]
-	pub fn matches(&self, str: impl AsRef<str>) -> bool {
-		self.inner.matches_with(str.as_ref(), MatchOptions {
-			case_sensitive:              self.sensitive,
-			require_literal_separator:   self.full_path,
-			require_literal_leading_dot: false,
-		})
-	}
+	pub fn match_mime(&self, str: impl AsRef<str>) -> bool { self.inner.is_match(str.as_ref()) }
 
 	#[inline]
 	pub fn match_path(&self, path: impl AsRef<Path>, is_folder: bool) -> bool {
-		if is_folder != self.is_folder {
-			return false;
-		}
-
-		let path = path.as_ref();
-		self.matches(if self.full_path {
-			path.to_string_lossy()
-		} else {
-			path.file_name().map_or_else(|| path.to_string_lossy(), |n| n.to_string_lossy())
-		})
+		is_folder == self.is_folder && (self.is_star || self.inner.is_match(path))
 	}
 
 	#[inline]
-	pub fn any_file(&self) -> bool { !self.is_folder && self.inner.as_str() == "*" }
+	pub fn any_file(&self) -> bool { self.is_star && !self.is_folder }
 
 	#[inline]
-	pub fn any_dir(&self) -> bool { self.is_folder && self.inner.as_str() == "*" }
+	pub fn any_dir(&self) -> bool { self.is_star && self.is_folder }
 }
 
 impl TryFrom<&str> for Pattern {
@@ -49,12 +33,16 @@ impl TryFrom<&str> for Pattern {
 	fn try_from(s: &str) -> Result<Self, Self::Error> {
 		let a = s.trim_start_matches("\\s");
 		let b = a.trim_end_matches('/');
-		Ok(Self {
-			inner:     glob::Pattern::new(b)?,
-			sensitive: a.len() < s.len(),
-			is_folder: b.len() < a.len(),
-			full_path: b.contains('/'),
-		})
+
+		let inner = GlobBuilder::new(b)
+			.case_insensitive(a.len() == s.len())
+			.literal_separator(b.contains('/'))
+			.backslash_escape(false)
+			.empty_alternates(false)
+			.build()?
+			.compile_matcher();
+
+		Ok(Self { inner, is_star: b == "*", is_folder: b.len() < a.len() })
 	}
 }
 

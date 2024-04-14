@@ -17,8 +17,8 @@ impl Filetype {
 			return false;
 		}
 
-		self.name.as_ref().is_some_and(|n| n.match_path(&file.url, file.is_dir()))
-			|| self.mime.as_ref().zip(mime).map_or(false, |(m, s)| m.matches(s))
+		self.mime.as_ref().zip(mime).map_or(false, |(p, m)| p.match_mime(m))
+			|| self.name.as_ref().is_some_and(|n| n.match_path(&file.url, file.is_dir()))
 	}
 }
 
