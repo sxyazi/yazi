@@ -67,7 +67,14 @@ impl Completion {
 
 	#[inline]
 	fn split_path(s: &str) -> (String, String) {
+		#[cfg(target_os = "windows")]
 		match s.rsplit_once(['/', '\\']) {
+			Some((p, c)) => (format!("{p}{}", MAIN_SEPARATOR), c.to_owned()),
+			None => (".".to_owned(), s.to_owned()),
+		}
+
+		#[cfg(not(target_os = "windows"))]
+		match s.rsplit_once(MAIN_SEPARATOR) {
 			Some((p, c)) => (format!("{p}{}", MAIN_SEPARATOR), c.to_owned()),
 			None => (".".to_owned(), s.to_owned()),
 		}

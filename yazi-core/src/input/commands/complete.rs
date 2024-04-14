@@ -1,5 +1,3 @@
-use std::path::MAIN_SEPARATOR_STR;
-
 use yazi_shared::{event::Cmd, render};
 
 use crate::input::Input;
@@ -26,21 +24,28 @@ impl Input {
 		}
 
 		let [before, after] = self.partition();
+
+		#[cfg(target_os = "windows")]
 		let new = if let Some((prefix, _)) = before.rsplit_once(['/', '\\']) {
+			format!("{prefix}/{}{after}", opt.word).replace(['/', '\\'], std::path::MAIN_SEPARATOR_STR)
+		} else {
+			format!("{}{after}", opt.word).replace(['/', '\\'], std::path::MAIN_SEPARATOR_STR)
+		};
+
+		#[cfg(not(target_os = "windows"))]
+		let new = if let Some((prefix, _)) = before.rsplit_once(std::path::MAIN_SEPARATOR) {
 			format!("{prefix}/{}{after}", opt.word)
 		} else {
 			format!("{}{after}", opt.word)
 		};
 
-		let normalized_new = new.replace(['/', '\\'], MAIN_SEPARATOR_STR);
-
 		let snap = self.snaps.current_mut();
-		if normalized_new == snap.value {
+		if new == snap.value {
 			return;
 		}
 
-		let delta = normalized_new.chars().count() as isize - snap.value.chars().count() as isize;
-		snap.value = normalized_new;
+		let delta = new.chars().count() as isize - snap.value.chars().count() as isize;
+		snap.value = new;
 
 		self.move_(delta);
 		self.flush_value();
