@@ -2,7 +2,7 @@ use anyhow::Result;
 use mlua::{ExternalResult, IntoLua, Lua, Value};
 use serde::Serialize;
 
-use super::{BodyBulk, BodyCd, BodyCustom, BodyDelete, BodyHey, BodyHi, BodyHover, BodyMove, BodyRename, BodyTrash, BodyYank};
+use super::{BodyBulk, BodyBye, BodyCd, BodyCustom, BodyDelete, BodyHey, BodyHi, BodyHover, BodyMove, BodyRename, BodyTrash, BodyYank};
 use crate::Payload;
 
 #[derive(Debug, Serialize)]
@@ -10,6 +10,7 @@ use crate::Payload;
 pub enum Body<'a> {
 	Hi(BodyHi<'a>),
 	Hey(BodyHey),
+	Bye(BodyBye),
 	Cd(BodyCd<'a>),
 	Hover(BodyHover<'a>),
 	Rename(BodyRename<'a>),
@@ -21,50 +22,33 @@ pub enum Body<'a> {
 	Custom(BodyCustom),
 }
 
-impl<'a> Body<'a> {
+impl Body<'static> {
 	pub fn from_str(kind: &str, body: &str) -> Result<Self> {
 		Ok(match kind {
-			"hi" => Body::Hi(serde_json::from_str(body)?),
-			"hey" => Body::Hey(serde_json::from_str(body)?),
-			"cd" => Body::Cd(serde_json::from_str(body)?),
-			"hover" => Body::Hover(serde_json::from_str(body)?),
-			"rename" => Body::Rename(serde_json::from_str(body)?),
-			"bulk" => Body::Bulk(serde_json::from_str(body)?),
-			"yank" => Body::Yank(serde_json::from_str(body)?),
-			"move" => Body::Move(serde_json::from_str(body)?),
-			"trash" => Body::Trash(serde_json::from_str(body)?),
-			"delete" => Body::Delete(serde_json::from_str(body)?),
+			"hi" => Self::Hi(serde_json::from_str(body)?),
+			"hey" => Self::Hey(serde_json::from_str(body)?),
+			"bye" => Self::Bye(serde_json::from_str(body)?),
+			"cd" => Self::Cd(serde_json::from_str(body)?),
+			"hover" => Self::Hover(serde_json::from_str(body)?),
+			"rename" => Self::Rename(serde_json::from_str(body)?),
+			"bulk" => Self::Bulk(serde_json::from_str(body)?),
+			"yank" => Self::Yank(serde_json::from_str(body)?),
+			"move" => Self::Move(serde_json::from_str(body)?),
+			"trash" => Self::Trash(serde_json::from_str(body)?),
+			"delete" => Self::Delete(serde_json::from_str(body)?),
 			_ => BodyCustom::from_str(kind, body)?,
 		})
 	}
 
 	pub fn from_lua(kind: &str, value: Value) -> Result<Self> {
 		Ok(match kind {
-			"hi" | "hey" | "cd" | "hover" | "rename" | "bulk" | "yank" | "move" | "trash" | "delete" => {
-				Err("Cannot construct system event from Lua").into_lua_err()?
-			}
+			"hi" | "hey" | "bye" | "cd" | "hover" | "rename" | "bulk" | "yank" | "move" | "trash"
+			| "delete" => Err("Cannot construct system event").into_lua_err()?,
 			_ if !kind.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-') => {
 				Err("Kind must be alphanumeric with dashes").into_lua_err()?
 			}
 			_ => BodyCustom::from_lua(kind, value)?,
 		})
-	}
-
-	#[inline]
-	pub fn kind(&self) -> &str {
-		match self {
-			Self::Hi(_) => "hi",
-			Self::Hey(_) => "hey",
-			Self::Cd(_) => "cd",
-			Self::Hover(_) => "hover",
-			Self::Rename(_) => "rename",
-			Self::Bulk(_) => "bulk",
-			Self::Yank(_) => "yank",
-			Body::Move(_) => "move",
-			Body::Trash(_) => "trash",
-			Body::Delete(_) => "delete",
-			Self::Custom(b) => b.kind.as_str(),
-		}
 	}
 
 	pub fn tab(kind: &str, body: &str) -> usize {
@@ -74,11 +58,31 @@ impl<'a> Body<'a> {
 		}
 
 		match Self::from_str(kind, body) {
-			Ok(Body::Cd(b)) => b.tab,
-			Ok(Body::Hover(b)) => b.tab,
-			Ok(Body::Bulk(b)) => b.tab,
-			Ok(Body::Rename(b)) => b.tab,
+			Ok(Self::Cd(b)) => b.tab,
+			Ok(Self::Hover(b)) => b.tab,
+			Ok(Self::Bulk(b)) => b.tab,
+			Ok(Self::Rename(b)) => b.tab,
 			_ => 0,
+		}
+	}
+}
+
+impl<'a> Body<'a> {
+	#[inline]
+	pub fn kind(&self) -> &str {
+		match self {
+			Self::Hi(_) => "hi",
+			Self::Hey(_) => "hey",
+			Self::Bye(_) => "bye",
+			Self::Cd(_) => "cd",
+			Self::Hover(_) => "hover",
+			Self::Rename(_) => "rename",
+			Self::Bulk(_) => "bulk",
+			Self::Yank(_) => "yank",
+			Self::Move(_) => "move",
+			Self::Trash(_) => "trash",
+			Self::Delete(_) => "delete",
+			Self::Custom(b) => b.kind.as_str(),
 		}
 	}
 
@@ -86,6 +90,9 @@ impl<'a> Body<'a> {
 	pub fn with_receiver(self, receiver: u64) -> Payload<'a> {
 		Payload::new(self).with_receiver(receiver)
 	}
+
+	#[inline]
+	pub fn with_sender(self, sender: u64) -> Payload<'a> { Payload::new(self).with_sender(sender) }
 
 	#[inline]
 	pub fn with_severity(self, severity: u16) -> Payload<'a> {
@@ -96,17 +103,18 @@ impl<'a> Body<'a> {
 impl IntoLua<'_> for Body<'static> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		match self {
-			Body::Hi(b) => b.into_lua(lua),
-			Body::Hey(b) => b.into_lua(lua),
-			Body::Cd(b) => b.into_lua(lua),
-			Body::Hover(b) => b.into_lua(lua),
-			Body::Rename(b) => b.into_lua(lua),
-			Body::Bulk(b) => b.into_lua(lua),
-			Body::Yank(b) => b.into_lua(lua),
-			Body::Move(b) => b.into_lua(lua),
-			Body::Trash(b) => b.into_lua(lua),
-			Body::Delete(b) => b.into_lua(lua),
-			Body::Custom(b) => b.into_lua(lua),
+			Self::Hi(b) => b.into_lua(lua),
+			Self::Hey(b) => b.into_lua(lua),
+			Self::Bye(b) => b.into_lua(lua),
+			Self::Cd(b) => b.into_lua(lua),
+			Self::Hover(b) => b.into_lua(lua),
+			Self::Rename(b) => b.into_lua(lua),
+			Self::Bulk(b) => b.into_lua(lua),
+			Self::Yank(b) => b.into_lua(lua),
+			Self::Move(b) => b.into_lua(lua),
+			Self::Trash(b) => b.into_lua(lua),
+			Self::Delete(b) => b.into_lua(lua),
+			Self::Custom(b) => b.into_lua(lua),
 		}
 	}
 }

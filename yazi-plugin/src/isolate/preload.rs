@@ -16,7 +16,7 @@ pub async fn preload(
 	tokio::task::spawn_blocking(move || {
 		let lua = slim_lua(&name)?;
 		let plugin: Table = if let Some(b) = LOADER.read().get(&name) {
-			lua.load(b).call(())?
+			lua.load(b.as_ref()).call(())?
 		} else {
 			return Err("unloaded plugin".into_lua_err());
 		};

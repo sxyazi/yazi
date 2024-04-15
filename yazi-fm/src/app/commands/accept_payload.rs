@@ -13,7 +13,12 @@ impl App {
 		};
 
 		let kind = payload.body.kind().to_owned();
-		let map = if payload.receiver == 0 { REMOTE.read() } else { LOCAL.read() };
+		let map = if payload.receiver == 0 || payload.receiver != payload.sender {
+			REMOTE.read()
+		} else {
+			LOCAL.read()
+		};
+
 		let Some(map) = map.get(&kind).filter(|&m| !m.is_empty()) else {
 			return;
 		};

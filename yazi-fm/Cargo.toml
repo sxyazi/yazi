@@ -9,27 +9,27 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
-yazi-adaptor   = { path = "../yazi-adaptor", version = "0.2.4" }
-yazi-boot      = { path = "../yazi-boot", version = "0.2.4" }
-yazi-config    = { path = "../yazi-config", version = "0.2.4" }
-yazi-core      = { path = "../yazi-core", version = "0.2.4" }
-yazi-dds       = { path = "../yazi-dds", version = "0.2.4" }
-yazi-plugin    = { path = "../yazi-plugin", version = "0.2.4" }
-yazi-proxy     = { path = "../yazi-proxy", version = "0.2.4" }
-yazi-shared    = { path = "../yazi-shared", version = "0.2.4" }
+yazi-adaptor = { path = "../yazi-adaptor", version = "0.2.4" }
+yazi-boot    = { path = "../yazi-boot", version = "0.2.4" }
+yazi-config  = { path = "../yazi-config", version = "0.2.4" }
+yazi-core    = { path = "../yazi-core", version = "0.2.4" }
+yazi-dds     = { path = "../yazi-dds", version = "0.2.4" }
+yazi-plugin  = { path = "../yazi-plugin", version = "0.2.4" }
+yazi-proxy   = { path = "../yazi-proxy", version = "0.2.4" }
+yazi-shared  = { path = "../yazi-shared", version = "0.2.4" }
 
 # External dependencies
-anyhow        = "1.0.82"
-better-panic  = "0.3.0"
-crossterm     = { version = "0.27.0", features = [ "event-stream" ] }
-fdlimit       = "0.3.0"
-futures       = "0.3.30"
-mlua          = { version = "0.9.7", features = [ "lua54", "vendored" ] }
-ratatui       = "0.26.1"
-scopeguard    = "1.2.0"
-syntect       = { version = "5.2.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
-tokio         = { version = "1.37.0", features = [ "full" ] }
-tokio-util    = "0.7.10"
+anyhow       = "1.0.82"
+better-panic = "0.3.0"
+crossterm    = { version = "0.27.0", features = [ "event-stream" ] }
+fdlimit      = "0.3.0"
+futures      = "0.3.30"
+mlua         = { version = "0.9.7", features = [ "lua54", "vendored" ] }
+ratatui      = "0.26.1"
+scopeguard   = "1.2.0"
+syntect      = { version = "5.2.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
+tokio        = { version = "1.37.0", features = [ "full" ] }
+tokio-util   = "0.7.10"
 
 # Logging
 tracing            = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }

@@ -37,6 +37,11 @@ impl<'a> Payload<'a> {
 		self
 	}
 
+	pub(super) fn with_sender(mut self, sender: u64) -> Self {
+		self.sender = sender;
+		self
+	}
+
 	pub(super) fn with_severity(mut self, severity: u16) -> Self {
 		self.sender = severity as u64;
 		self
@@ -44,16 +49,7 @@ impl<'a> Payload<'a> {
 }
 
 impl Payload<'static> {
-	pub(super) fn emit(self) {
-		self.try_flush();
-		emit!(Call(Cmd::new("accept_payload").with_data(self), Layer::App));
-	}
-}
-
-impl FromStr for Payload<'_> {
-	type Err = anyhow::Error;
-
-	fn from_str(s: &str) -> Result<Self, Self::Err> {
+	pub fn split(s: &str) -> Result<(&str, u64, u64, &str)> {
 		let mut parts = s.splitn(4, ',');
 
 		let kind = parts.next().ok_or_else(|| anyhow!("empty kind"))?;
@@ -66,6 +62,20 @@ impl FromStr for Payload<'_> {
 
 		let body = parts.next().ok_or_else(|| anyhow!("empty body"))?;
 
+		Ok((kind, receiver, sender, body))
+	}
+
+	pub(super) fn emit(self) {
+		self.try_flush();
+		emit!(Call(Cmd::new("accept_payload").with_data(self), Layer::App));
+	}
+}
+
+impl FromStr for Payload<'static> {
+	type Err = anyhow::Error;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		let (kind, receiver, sender, body) = Self::split(s)?;
 		Ok(Self { receiver, sender, body: Body::from_str(kind, body)? })
 	}
 }
@@ -79,6 +89,7 @@ impl Display for Payload<'_> {
 		let result = match &self.body {
 			Body::Hi(b) => serde_json::to_string(b),
 			Body::Hey(b) => serde_json::to_string(b),
+			Body::Bye(b) => serde_json::to_string(b),
 			Body::Cd(b) => serde_json::to_string(b),
 			Body::Hover(b) => serde_json::to_string(b),
 			Body::Rename(b) => serde_json::to_string(b),

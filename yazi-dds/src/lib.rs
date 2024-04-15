@@ -7,6 +7,7 @@ mod pump;
 mod sendable;
 mod server;
 mod state;
+mod stream;
 
 pub use client::*;
 pub use payload::*;
@@ -15,14 +16,19 @@ pub use pump::*;
 pub use sendable::*;
 use server::*;
 pub use state::*;
+use stream::*;
 
-pub fn serve() {
+#[cfg(unix)]
+pub static USERS_CACHE: yazi_shared::RoCell<uzers::UsersCache> = yazi_shared::RoCell::new();
+
+pub fn init() {
 	let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
 
 	// Client
 	ID.init(yazi_shared::timestamp_us());
 	PEERS.with(Default::default);
-	QUEUE.init(tx);
+	QUEUE_TX.init(tx);
+	QUEUE_RX.init(rx);
 
 	// Server
 	CLIENTS.with(Default::default);
@@ -32,15 +38,20 @@ pub fn serve() {
 	LOCAL.with(Default::default);
 	REMOTE.with(Default::default);
 
+	#[cfg(unix)]
+	USERS_CACHE.with(Default::default);
+
 	// Env
 	std::env::set_var("YAZI_ID", ID.to_string());
 	std::env::set_var(
 		"YAZI_LEVEL",
 		(std::env::var("YAZI_LEVEL").unwrap_or_default().parse().unwrap_or(0u16) + 1).to_string(),
 	);
+}
 
+pub fn serve() {
 	Pump::serve();
-	Client::serve(rx);
+	Client::serve();
 }
 
 pub async fn shutdown() { Pump::shutdown().await; }
