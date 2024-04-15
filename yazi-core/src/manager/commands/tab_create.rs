@@ -1,3 +1,4 @@
+use yazi_boot::BOOT;
 use yazi_proxy::AppProxy;
 use yazi_shared::{event::Cmd, fs::Url, render};
 
@@ -15,7 +16,10 @@ impl From<Cmd> for Opt {
 		if c.named.contains_key("current") {
 			Self { url: Default::default(), current: true }
 		} else {
-			Self { url: c.take_first().map_or_else(|| Url::from("."), Url::from), current: false }
+			Self {
+				url:     c.take_first().map_or_else(|| Url::from(&BOOT.cwd), Url::from),
+				current: false,
+			}
 		}
 	}
 }
