@@ -14,6 +14,7 @@ cargo build --release --locked --target "$1"
 
 # Create the artifact
 mkdir "$ARTIFACT_NAME"
+cp "target/$1/release/ya" "$ARTIFACT_NAME"
 cp "target/$1/release/yazi" "$ARTIFACT_NAME"
 cp -r yazi-boot/completions "$ARTIFACT_NAME"
 cp README.md LICENSE "$ARTIFACT_NAME"

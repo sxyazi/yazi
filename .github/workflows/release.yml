@@ -64,6 +64,7 @@ jobs:
           TARGET_NAME: yazi-${{ matrix.target }}
         run: |
           New-Item -ItemType Directory -Path ${env:TARGET_NAME}
+          Copy-Item -Path "target\${{ matrix.target }}\release\ya.exe" -Destination ${env:TARGET_NAME}
           Copy-Item -Path "target\${{ matrix.target }}\release\yazi.exe" -Destination ${env:TARGET_NAME}
           Copy-Item -Path "yazi-boot\completions" -Destination ${env:TARGET_NAME} -Recurse
           Copy-Item -Path "README.md", "LICENSE" -Destination ${env:TARGET_NAME}
