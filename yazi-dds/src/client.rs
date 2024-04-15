@@ -1,15 +1,18 @@
 use std::{collections::{HashMap, HashSet}, mem, str::FromStr};
 
+use anyhow::{bail, Result};
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use tokio::{io::AsyncWriteExt, select, sync::mpsc, task::JoinHandle, time};
 use yazi_shared::RoCell;
 
-use crate::{body::Body, ClientReader, ClientWriter, Payload, Pubsub, Server};
+use crate::{body::{Body, BodyBye, BodyHi}, ClientReader, ClientWriter, Payload, Pubsub, Server, Stream};
 
 pub(super) static ID: RoCell<u64> = RoCell::new();
 pub(super) static PEERS: RoCell<RwLock<HashMap<u64, Peer>>> = RoCell::new();
-pub(super) static QUEUE: RoCell<mpsc::UnboundedSender<String>> = RoCell::new();
+
+pub(super) static QUEUE_TX: RoCell<mpsc::UnboundedSender<String>> = RoCell::new();
+pub(super) static QUEUE_RX: RoCell<mpsc::UnboundedReceiver<String>> = RoCell::new();
 
 #[derive(Debug)]
 pub struct Client {
@@ -24,7 +27,8 @@ pub struct Peer {
 }
 
 impl Client {
-	pub(super) fn serve(mut rx: mpsc::UnboundedReceiver<String>) {
+	pub(super) fn serve() {
+		let mut rx = QUEUE_RX.drop();
 		while rx.try_recv().is_ok() {}
 
 		tokio::spawn(async move {
@@ -45,7 +49,9 @@ impl Client {
 							continue;
 						};
 
-						if line.starts_with("hey,") {
+						if line.is_empty() {
+							continue;
+						} else if line.starts_with("hey,") {
 							Self::handle_hey(line);
 						} else {
 							Payload::from_str(&line).map(|p| p.emit()).ok();
@@ -56,17 +62,42 @@ impl Client {
 		});
 	}
 
+	pub async fn shot(s: &str) -> Result<()> {
+		let (kind, receiver, sender, body) = Payload::split(s)?;
+		if receiver != 0 && sender <= u16::MAX as u64 {
+			bail!("Sender must be greater than 65535 if receiver is non-zero");
+		}
+
+		let payload = format!(
+			"{}\n{kind},{receiver},{sender},{}\n{}\n",
+			Payload::new(BodyHi::borrowed(Default::default())),
+			serde_json::to_string(body)?,
+			Payload::new(BodyBye::borrowed())
+		);
+
+		let (mut lines, mut writer) = Stream::connect().await?;
+		writer.write_all(payload.as_bytes()).await?;
+		writer.flush().await?;
+		drop(writer);
+
+		while let Ok(Some(s)) = lines.next_line().await {
+			if matches!(Payload::split(&s), Ok((kind, ..)) if kind == "bye") {
+				break;
+			}
+		}
+
+		Ok(())
+	}
+
 	#[inline]
 	pub(super) fn push<'a>(payload: impl Into<Payload<'a>>) {
-		QUEUE.send(format!("{}\n", payload.into())).ok();
+		QUEUE_TX.send(format!("{}\n", payload.into())).ok();
 	}
 
 	#[inline]
 	pub(super) fn able(&self, ability: &str) -> bool { self.abilities.contains(ability) }
 
 	async fn connect(server: &mut Option<JoinHandle<()>>) -> (ClientReader, ClientWriter) {
-		use crate::Stream;
-
 		let mut first = true;
 		loop {
 			if let Ok(conn) = Stream::connect().await {

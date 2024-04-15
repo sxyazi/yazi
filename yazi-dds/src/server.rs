@@ -5,7 +5,7 @@ use parking_lot::RwLock;
 use tokio::{io::{AsyncBufReadExt, AsyncWriteExt, BufReader}, select, sync::mpsc, task::JoinHandle, time};
 use yazi_shared::RoCell;
 
-use crate::{body::{Body, BodyHey}, Client, Payload, Peer, Stream, STATE};
+use crate::{body::{Body, BodyBye, BodyHey}, Client, Payload, Peer, Stream, STATE};
 
 pub(super) static CLIENTS: RoCell<RwLock<HashMap<u64, Client>>> = RoCell::new();
 
@@ -42,8 +42,13 @@ impl Server {
 									continue;
 								}
 
-								let mut parts = line.splitn(4, ',');
 								let Some(id) = id else { continue };
+								if line.starts_with("bye,") {
+									writer.write_all(BodyBye::borrowed().with_receiver(id).with_sender(0).to_string().as_bytes()).await.ok();
+									break;
+								}
+
+								let mut parts = line.splitn(4, ',');
 								let Some(kind) = parts.next() else { continue };
 								let Some(receiver) = parts.next().and_then(|s| s.parse().ok()) else { continue };
 								let Some(sender) = parts.next().and_then(|s| s.parse::<u64>().ok()) else { continue };

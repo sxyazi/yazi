@@ -49,11 +49,12 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_proxy::init();
 
-	yazi_dds::serve();
+	yazi_dds::init();
 
 	yazi_plugin::init();
 
 	yazi_core::init();
 
+	yazi_dds::serve();
 	app::App::serve().await
 }

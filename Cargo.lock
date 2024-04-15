@@ -2712,11 +2712,20 @@ dependencies = [
  "clap_complete_fig",
  "clap_complete_nushell",
  "serde",
- "uzers",
  "vergen",
  "yazi-adaptor",
  "yazi-config",
  "yazi-shared",
+]
+
+[[package]]
+name = "yazi-cli"
+version = "0.2.4"
+dependencies = [
+ "anyhow",
+ "clap",
+ "tokio",
+ "yazi-dds",
 ]
 
 [[package]]
