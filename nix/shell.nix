@@ -16,6 +16,7 @@ pkgs.mkShell {
     ripgrep
     fzf
     zoxide
+    rustup
   ];
 
   buildInputs = with pkgs;
