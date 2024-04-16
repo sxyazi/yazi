@@ -9,6 +9,7 @@ use yazi_shared::{emit, event::{Cmd, EventQuit}, fs::{File, Url}, MIME_DIR};
 
 use crate::{folder::Folder, manager::Manager, tasks::Tasks};
 
+#[derive(Clone, Copy)]
 pub struct Opt {
 	interactive: bool,
 	hovered:     bool,
@@ -36,7 +37,7 @@ impl Manager {
 		let selected =
 			if opt.hovered { vec![&hovered] } else { self.selected_or_hovered(true).collect() };
 
-		if Self::quit_with_selected(&selected) {
+		if Self::quit_with_selected(opt, &selected) {
 			return;
 		}
 
@@ -122,8 +123,8 @@ impl Manager {
 			|| find(self.active().history.get(&p))
 	}
 
-	fn quit_with_selected(selected: &[&Url]) -> bool {
-		if ARGS.chooser_file.is_none() {
+	fn quit_with_selected(opt: Opt, selected: &[&Url]) -> bool {
+		if opt.interactive || ARGS.chooser_file.is_none() {
 			return false;
 		}
 
