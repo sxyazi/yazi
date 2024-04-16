@@ -10,13 +10,15 @@ rustup toolchain install stable --profile minimal
 rustup target add "$1"
 
 # Build for the target
-cargo build --release --locked --target "$1"
+cargo build -p yazi-cli --release --locked --target "$1"
+cargo build -p yazi-fm --release --locked --target "$1"
 
 # Create the artifact
-mkdir "$ARTIFACT_NAME"
+mkdir -p "$ARTIFACT_NAME/completions"
 cp "target/$1/release/ya" "$ARTIFACT_NAME"
 cp "target/$1/release/yazi" "$ARTIFACT_NAME"
-cp -r yazi-boot/completions "$ARTIFACT_NAME"
+cp yazi-cli/completions/* "$ARTIFACT_NAME/completions"
+cp yazi-boot/completions/* "$ARTIFACT_NAME/completions"
 cp README.md LICENSE "$ARTIFACT_NAME"
 
 # Zip the artifact
