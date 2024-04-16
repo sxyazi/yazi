@@ -57,6 +57,10 @@ impl Manager {
 				return;
 			};
 
+			if name.is_empty() {
+				return;
+			}
+
 			let new = hovered.parent().unwrap().join(name);
 			if opt.force || !accessible(&new).await {
 				Self::rename_do(tab, hovered, Url::from(new)).await.ok();
