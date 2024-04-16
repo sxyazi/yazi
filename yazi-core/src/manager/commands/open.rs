@@ -36,7 +36,7 @@ impl Manager {
 		let selected =
 			if opt.hovered { vec![&hovered] } else { self.selected_or_hovered(true).collect() };
 
-		if Self::quit_with_selected(&selected) {
+		if !opt.interactive && Self::quit_with_selected(&selected) {
 			return;
 		}
 
