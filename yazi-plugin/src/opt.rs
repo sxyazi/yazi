@@ -1,7 +1,6 @@
 use anyhow::bail;
 use mlua::{Lua, Table};
-use yazi_dds::ValueSendable;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::{Cmd, Data};
 
 pub struct Opt {
 	pub name: String,
@@ -11,7 +10,7 @@ pub struct Opt {
 
 #[derive(Default)]
 pub struct OptData {
-	pub args: Vec<ValueSendable>,
+	pub args: Vec<Data>,
 	pub cb:   Option<Box<dyn FnOnce(&Lua, Table) -> mlua::Result<()> + Send>>,
 }
 
@@ -26,7 +25,7 @@ impl TryFrom<Cmd> for Opt {
 		let mut data: OptData = c.take_data().unwrap_or_default();
 
 		if let Some(args) = c.get_str("args") {
-			data.args = shell_words::split(args)?.into_iter().map(ValueSendable::String).collect();
+			data.args = shell_words::split(args)?.into_iter().map(Data::String).collect();
 		}
 
 		Ok(Self { name, sync: c.get_bool("sync"), data })

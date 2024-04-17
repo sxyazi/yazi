@@ -1,7 +1,7 @@
 use mlua::{ExternalError, ExternalResult, Function, IntoLua, Lua, Table, Value, Variadic};
 use tokio::sync::oneshot;
-use yazi_dds::ValueSendable;
-use yazi_shared::{emit, event::Cmd, Layer};
+use yazi_dds::Sendable;
+use yazi_shared::{emit, event::{Cmd, Data}, Layer};
 
 use super::Utils;
 use crate::{loader::LOADER, runtime::RtRef, OptData};
@@ -37,7 +37,7 @@ impl Utils {
 						return Err("`ya.sync()` must be called in a plugin").into_lua_err();
 					};
 
-					Self::retrieve(cur, block, args).await
+					Sendable::vec_to_variadic(lua, Self::retrieve(cur, block, args).await?)
 				})
 			})?,
 		)?;
@@ -49,9 +49,9 @@ impl Utils {
 		name: String,
 		calls: usize,
 		args: Variadic<Value<'_>>,
-	) -> mlua::Result<mlua::Variadic<ValueSendable>> {
-		let args = ValueSendable::try_from_variadic(args)?;
-		let (tx, rx) = oneshot::channel::<Vec<ValueSendable>>();
+	) -> mlua::Result<Vec<Data>> {
+		let args = Sendable::variadic_to_vec(args)?;
+		let (tx, rx) = oneshot::channel::<Vec<Data>>();
 
 		let data = OptData {
 			cb: Some({
@@ -64,11 +64,10 @@ impl Utils {
 					let mut self_args = Vec::with_capacity(args.len() + 1);
 					self_args.push(Value::Table(plugin));
 					for arg in args {
-						self_args.push(arg.into_lua(lua)?);
+						self_args.push(Sendable::data_to_value(lua, arg)?);
 					}
 
-					let values =
-						ValueSendable::try_from_variadic(block.call(Variadic::from_iter(self_args))?)?;
+					let values = Sendable::variadic_to_vec(block.call(Variadic::from_iter(self_args))?)?;
 					tx.send(values).map_err(|_| "send failed".into_lua_err())
 				})
 			}),
@@ -80,8 +79,8 @@ impl Utils {
 			Layer::App
 		));
 
-		Ok(Variadic::from_iter(rx.await.map_err(|_| {
+		rx.await.map_err(|_| {
 			format!("Failed to execute sync block-{calls} in `{name}` plugin").into_lua_err()
-		})?))
+		})
 	}
 }

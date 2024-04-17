@@ -1,11 +1,12 @@
 use mlua::{ExternalError, ExternalResult, Table, TableExt};
 use tokio::runtime::Handle;
-use yazi_dds::ValueSendable;
+use yazi_dds::Sendable;
+use yazi_shared::event::Data;
 
 use super::slim_lua;
 use crate::loader::LOADER;
 
-pub async fn entry(name: String, args: Vec<ValueSendable>) -> mlua::Result<()> {
+pub async fn entry(name: String, args: Vec<Data>) -> mlua::Result<()> {
 	LOADER.ensure(&name).await.into_lua_err()?;
 
 	tokio::task::spawn_blocking(move || {
@@ -16,7 +17,8 @@ pub async fn entry(name: String, args: Vec<ValueSendable>) -> mlua::Result<()> {
 			return Err("unloaded plugin".into_lua_err());
 		};
 
-		Handle::current().block_on(plugin.call_async_method("entry", args))
+		Handle::current()
+			.block_on(plugin.call_async_method("entry", Sendable::vec_to_table(&lua, args)))
 	})
 	.await
 	.into_lua_err()?

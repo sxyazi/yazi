@@ -1,4 +1,4 @@
-use yazi_dds::ValueSendable;
+use yazi_shared::event::Data;
 
 #[derive(Debug)]
 pub enum PluginOp {
@@ -17,5 +17,5 @@ impl PluginOp {
 pub struct PluginOpEntry {
 	pub id:   usize,
 	pub name: String,
-	pub args: Vec<ValueSendable>,
+	pub args: Vec<Data>,
 }

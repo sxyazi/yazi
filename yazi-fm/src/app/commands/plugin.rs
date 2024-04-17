@@ -3,6 +3,7 @@ use std::fmt::Display;
 use mlua::TableExt;
 use scopeguard::defer;
 use tracing::warn;
+use yazi_dds::Sendable;
 use yazi_plugin::{loader::LOADER, OptData, RtRef, LUA};
 use yazi_shared::{emit, event::Cmd, Layer};
 
@@ -56,7 +57,7 @@ impl App {
 			if let Some(cb) = opt.data.cb {
 				cb(&LUA, plugin)
 			} else {
-				plugin.call_method("entry", opt.data.args)
+				plugin.call_method("entry", Sendable::vec_to_table(&LUA, opt.data.args)?)
 			}
 		});
 	}

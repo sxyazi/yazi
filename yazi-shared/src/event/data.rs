@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use anyhow::bail;
 use serde::{Deserialize, Serialize};
 
 use crate::OrderedFloat;
@@ -8,16 +7,16 @@ use crate::OrderedFloat;
 // --- Arg
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum Arg {
+pub enum Data {
 	Nil,
 	Boolean(bool),
 	Integer(i64),
 	Number(f64),
 	String(String),
-	Table(HashMap<ArgKey, Arg>),
+	Table(HashMap<DataKey, Data>),
 }
 
-impl Arg {
+impl Data {
 	#[inline]
 	pub fn as_bool(&self) -> Option<bool> {
 		match self {
@@ -41,7 +40,7 @@ impl Arg {
 
 		let mut map = HashMap::with_capacity(table.len());
 		for pair in table {
-			if let (ArgKey::String(k), Self::String(v)) = pair {
+			if let (DataKey::String(k), Self::String(v)) = pair {
 				map.insert(k, v);
 			}
 		}
@@ -52,7 +51,7 @@ impl Arg {
 // --- Key
 #[derive(Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum ArgKey {
+pub enum DataKey {
 	Nil,
 	Boolean(bool),
 	Integer(i64),
@@ -60,17 +59,7 @@ pub enum ArgKey {
 	String(String),
 }
 
-impl TryInto<ArgKey> for Arg {
-	type Error = anyhow::Error;
-
-	fn try_into(self) -> Result<ArgKey, Self::Error> {
-		Ok(match self {
-			Self::Nil => ArgKey::Nil,
-			Self::Boolean(v) => ArgKey::Boolean(v),
-			Self::Integer(v) => ArgKey::Integer(v),
-			Self::Number(v) => ArgKey::Number(OrderedFloat::new(v)),
-			Self::String(v) => ArgKey::String(v),
-			Self::Table(_) => bail!("table is not supported"),
-		})
-	}
+impl DataKey {
+	#[inline]
+	pub fn is_numeric(&self) -> bool { matches!(self, Self::Integer(_) | Self::Number(_)) }
 }

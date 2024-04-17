@@ -1,11 +1,11 @@
 use std::{any::Any, collections::HashMap, fmt::{self, Display}};
 
-use super::Arg;
+use super::Data;
 
 #[derive(Debug, Default)]
 pub struct Cmd {
 	pub name: String,
-	pub args: HashMap<String, Arg>,
+	pub args: HashMap<String, Data>,
 	pub data: Option<Box<dyn Any + Send>>,
 }
 
@@ -17,20 +17,20 @@ impl Cmd {
 	pub fn args(name: &str, args: Vec<String>) -> Self {
 		Self {
 			name: name.to_owned(),
-			args: args.into_iter().enumerate().map(|(i, s)| (i.to_string(), Arg::String(s))).collect(),
+			args: args.into_iter().enumerate().map(|(i, s)| (i.to_string(), Data::String(s))).collect(),
 			..Default::default()
 		}
 	}
 
 	#[inline]
 	pub fn with(mut self, name: impl ToString, value: impl ToString) -> Self {
-		self.args.insert(name.to_string(), Arg::String(value.to_string()));
+		self.args.insert(name.to_string(), Data::String(value.to_string()));
 		self
 	}
 
 	#[inline]
 	pub fn with_bool(mut self, name: impl ToString, state: bool) -> Self {
-		self.args.insert(name.to_string(), Arg::Boolean(state));
+		self.args.insert(name.to_string(), Data::Boolean(state));
 		self
 	}
 
@@ -41,11 +41,11 @@ impl Cmd {
 	}
 
 	#[inline]
-	pub fn get_str(&self, name: &str) -> Option<&str> { self.args.get(name).and_then(Arg::as_str) }
+	pub fn get_str(&self, name: &str) -> Option<&str> { self.args.get(name).and_then(Data::as_str) }
 
 	#[inline]
 	pub fn get_bool(&self, name: &str) -> bool {
-		self.args.get(name).and_then(Arg::as_bool).unwrap_or(false)
+		self.args.get(name).and_then(Data::as_bool).unwrap_or(false)
 	}
 
 	#[inline]
@@ -55,19 +55,19 @@ impl Cmd {
 
 	#[inline]
 	pub fn take_first_str(&mut self) -> Option<String> {
-		if let Some(Arg::String(s)) = self.args.remove("0") { Some(s) } else { None }
+		if let Some(Data::String(s)) = self.args.remove("0") { Some(s) } else { None }
 	}
 
 	#[inline]
 	pub fn take_name_str(&mut self, name: &str) -> Option<String> {
-		if let Some(Arg::String(s)) = self.args.remove(name) { Some(s) } else { None }
+		if let Some(Data::String(s)) = self.args.remove(name) { Some(s) } else { None }
 	}
 
 	pub fn shallow_clone(&self) -> Self {
 		let args = self
 			.args
 			.iter()
-			.filter_map(|(k, v)| v.as_str().map(|s| (k.clone(), Arg::String(s.to_owned()))))
+			.filter_map(|(k, v)| v.as_str().map(|s| (k.clone(), Data::String(s.to_owned()))))
 			.collect();
 
 		Self { name: self.name.clone(), args, data: None }

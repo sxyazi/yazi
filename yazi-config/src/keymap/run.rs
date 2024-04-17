@@ -2,7 +2,7 @@ use std::{fmt, mem};
 
 use anyhow::{bail, Result};
 use serde::{de::{self, Visitor}, Deserializer};
-use yazi_shared::event::{Arg, Cmd};
+use yazi_shared::event::{Cmd, Data};
 
 pub(super) fn run_deserialize<'de, D>(deserializer: D) -> Result<Vec<Cmd>, D::Error>
 where
@@ -19,16 +19,16 @@ where
 		let mut cmd = Cmd { name: mem::take(&mut args[0]), ..Default::default() };
 		for (i, arg) in args.into_iter().skip(1).enumerate() {
 			if !arg.starts_with("--") {
-				cmd.args.insert(i.to_string(), Arg::String(arg));
+				cmd.args.insert(i.to_string(), Data::String(arg));
 				continue;
 			}
 
 			let mut parts = arg.splitn(2, '=');
 			let key = parts.next().unwrap().trim_start_matches('-').to_owned();
 			if let Some(val) = parts.next() {
-				cmd.args.insert(key, Arg::String(val.to_owned()));
+				cmd.args.insert(key, Data::String(val.to_owned()));
 			} else {
-				cmd.args.insert(key, Arg::Boolean(true));
+				cmd.args.insert(key, Data::Boolean(true));
 			}
 		}
 		Ok(cmd)
