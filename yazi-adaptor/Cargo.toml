@@ -22,7 +22,7 @@ futures      = "0.3.30"
 image        = "0.24.9"
 imagesize    = "0.12.0"
 kamadak-exif = "0.5.5"
-ratatui      = "0.26.2"
+ratatui      = "=0.26.1"
 tokio        = { version = "1.37.0", features = [ "full" ] }
 
 # Logging

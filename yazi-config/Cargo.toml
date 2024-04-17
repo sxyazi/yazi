@@ -17,8 +17,8 @@ arc-swap    = "1.7.1"
 crossterm   = "0.27.0"
 globset     = "0.4.14"
 indexmap    = "2.2.6"
-ratatui     = "0.26.2"
-serde       = { version = "1.0.197", features = [ "derive" ] }
+ratatui     = "=0.26.1"
+serde       = { version = "1.0.198", features = [ "derive" ] }
 shell-words = "1.1.0"
 toml        = { version = "0.8.12", features = [ "preserve_order" ] }
 validator   = { version = "0.18.1", features = [ "derive" ] }

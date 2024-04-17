@@ -15,7 +15,7 @@ yazi-shared  = { path = "../yazi-shared", version = "0.2.4" }
 
 # External dependencies
 clap  = { version = "4.5.4", features = [ "derive" ] }
-serde = { version = "1.0.197", features = [ "derive" ] }
+serde = { version = "1.0.198", features = [ "derive" ] }
 
 [build-dependencies]
 clap                  = { version = "4.5.4", features = [ "derive" ] }
