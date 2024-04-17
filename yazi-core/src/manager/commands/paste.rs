@@ -8,9 +8,7 @@ pub struct Opt {
 }
 
 impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self {
-		Self { force: c.named.contains_key("force"), follow: c.named.contains_key("follow") }
-	}
+	fn from(c: Cmd) -> Self { Self { force: c.get_bool("force"), follow: c.get_bool("follow") } }
 }
 
 impl Manager {

@@ -16,14 +16,16 @@ bitflags! {
 
 impl From<Cmd> for Opt {
 	fn from(c: Cmd) -> Self {
-		c.named.iter().fold(Opt::empty(), |acc, (k, _)| match k.as_str() {
-			"all" => Self::all(),
-			"find" => acc | Self::FIND,
-			"visual" => acc | Self::VISUAL,
-			"select" => acc | Self::SELECT,
-			"filter" => acc | Self::FILTER,
-			"search" => acc | Self::SEARCH,
-			_ => acc,
+		c.args.iter().fold(Opt::empty(), |acc, (k, v)| {
+			match (k.as_str(), v.as_bool().unwrap_or(false)) {
+				("all", true) => Self::all(),
+				("find", true) => acc | Self::FIND,
+				("visual", true) => acc | Self::VISUAL,
+				("select", true) => acc | Self::SELECT,
+				("filter", true) => acc | Self::FILTER,
+				("search", true) => acc | Self::SEARCH,
+				_ => acc,
+			}
 		})
 	}
 }

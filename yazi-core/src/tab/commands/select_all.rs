@@ -8,9 +8,9 @@ pub struct Opt {
 }
 
 impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self {
+	fn from(mut c: Cmd) -> Self {
 		Self {
-			state: match c.named.get("state").map(|s| s.as_str()) {
+			state: match c.take_name_str("state").as_deref() {
 				Some("true") => Some(true),
 				Some("false") => Some(false),
 				_ => None,

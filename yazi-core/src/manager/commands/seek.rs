@@ -11,7 +11,7 @@ pub struct Opt {
 
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
-		Self { units: c.take_first().and_then(|s| s.parse().ok()).unwrap_or(0) }
+		Self { units: c.take_first_str().and_then(|s| s.parse().ok()).unwrap_or(0) }
 	}
 }
 

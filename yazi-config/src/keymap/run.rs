@@ -1,8 +1,8 @@
-use std::fmt;
+use std::{fmt, mem};
 
 use anyhow::{bail, Result};
 use serde::{de::{self, Visitor}, Deserializer};
-use yazi_shared::event::Cmd;
+use yazi_shared::event::{Arg, Cmd};
 
 pub(super) fn run_deserialize<'de, D>(deserializer: D) -> Result<Vec<Cmd>, D::Error>
 where
@@ -11,20 +11,24 @@ where
 	struct RunVisitor;
 
 	fn parse(s: &str) -> Result<Cmd> {
-		let s = shell_words::split(s)?;
-		if s.is_empty() {
+		let mut args = shell_words::split(s)?;
+		if args.is_empty() {
 			bail!("`run` cannot be empty");
 		}
 
-		let mut cmd = Cmd { name: s[0].clone(), ..Default::default() };
-		for arg in s.into_iter().skip(1) {
-			if arg.starts_with("--") {
-				let mut arg = arg.splitn(2, '=');
-				let key = arg.next().unwrap().trim_start_matches('-');
-				let val = arg.next().unwrap_or("").to_string();
-				cmd.named.insert(key.to_string(), val);
+		let mut cmd = Cmd { name: mem::take(&mut args[0]), ..Default::default() };
+		for (i, arg) in args.into_iter().skip(1).enumerate() {
+			if !arg.starts_with("--") {
+				cmd.args.insert(i.to_string(), Arg::String(arg));
+				continue;
+			}
+
+			let mut parts = arg.splitn(2, '=');
+			let key = parts.next().unwrap().trim_start_matches('-').to_owned();
+			if let Some(val) = parts.next() {
+				cmd.args.insert(key, Arg::String(val.to_owned()));
 			} else {
-				cmd.args.push(arg);
+				cmd.args.insert(key, Arg::Boolean(true));
 			}
 		}
 		Ok(cmd)

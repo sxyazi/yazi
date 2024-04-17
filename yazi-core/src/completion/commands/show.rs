@@ -16,10 +16,12 @@ pub struct Opt {
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
-			cache:      mem::take(&mut c.args),
-			cache_name: c.take_name("cache-name").unwrap_or_default(),
-			word:       c.take_name("word").unwrap_or_default(),
-			ticket:     c.take_name("ticket").and_then(|v| v.parse().ok()).unwrap_or(0),
+			// cache:      mem::take(&mut c.args),
+			// TODO: Fix this
+			cache:      vec![],
+			cache_name: c.take_name_str("cache-name").unwrap_or_default(),
+			word:       c.take_name_str("word").unwrap_or_default(),
+			ticket:     c.take_name_str("ticket").and_then(|v| v.parse().ok()).unwrap_or(0),
 		}
 	}
 }

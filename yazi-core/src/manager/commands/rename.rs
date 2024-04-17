@@ -18,9 +18,9 @@ pub struct Opt {
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
-			force:  c.named.contains_key("force"),
-			empty:  c.take_name("empty").unwrap_or_default(),
-			cursor: c.take_name("cursor").unwrap_or_default(),
+			force:  c.get_bool("force"),
+			empty:  c.take_name_str("empty").unwrap_or_default(),
+			cursor: c.take_name_str("cursor").unwrap_or_default(),
 		}
 	}
 }

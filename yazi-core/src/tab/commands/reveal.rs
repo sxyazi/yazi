@@ -9,7 +9,7 @@ pub struct Opt {
 
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
-		let mut target = Url::from(c.take_first().unwrap_or_default());
+		let mut target = Url::from(c.take_first_str().unwrap_or_default());
 		if target.is_regular() {
 			target.set_path(expand_path(&target))
 		}

@@ -10,7 +10,7 @@ pub struct Opt {
 
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
-		Self { step: c.take_first().and_then(|s| s.parse().ok()).unwrap_or_default() }
+		Self { step: c.take_first_str().and_then(|s| s.parse().ok()).unwrap_or_default() }
 	}
 }
 

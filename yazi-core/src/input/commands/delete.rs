@@ -8,9 +8,7 @@ pub struct Opt {
 }
 
 impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self {
-		Self { cut: c.named.contains_key("cut"), insert: c.named.contains_key("insert") }
-	}
+	fn from(c: Cmd) -> Self { Self { cut: c.get_bool("cut"), insert: c.get_bool("insert") } }
 }
 
 impl Input {

@@ -19,16 +19,16 @@ impl TryFrom<Cmd> for Opt {
 	type Error = anyhow::Error;
 
 	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
-		let Some(name) = c.take_first().filter(|s| !s.is_empty()) else {
+		let Some(name) = c.take_first_str().filter(|s| !s.is_empty()) else {
 			bail!("plugin name cannot be empty");
 		};
 
 		let mut data: OptData = c.take_data().unwrap_or_default();
 
-		if let Some(args) = c.named.get("args") {
+		if let Some(args) = c.get_str("args") {
 			data.args = shell_words::split(args)?.into_iter().map(ValueSendable::String).collect();
 		}
 
-		Ok(Self { name, sync: c.named.contains_key("sync"), data })
+		Ok(Self { name, sync: c.get_bool("sync"), data })
 	}
 }

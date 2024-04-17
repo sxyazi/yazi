@@ -13,8 +13,8 @@ pub struct Opt<'a> {
 impl<'a> From<Cmd> for Opt<'a> {
 	fn from(mut c: Cmd) -> Self {
 		Self {
-			url:   c.take_name("url").map(|s| Cow::Owned(Url::from(s))),
-			state: match c.named.get("state").map(|s| s.as_str()) {
+			url:   c.take_name_str("url").map(|s| Cow::Owned(Url::from(s))),
+			state: match c.take_name_str("state").as_deref() {
 				Some("true") => Some(true),
 				Some("false") => Some(false),
 				_ => None,

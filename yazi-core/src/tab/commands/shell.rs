@@ -16,10 +16,10 @@ pub struct Opt {
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
-			run:     c.take_first().unwrap_or_default(),
-			block:   c.named.contains_key("block"),
-			orphan:  c.named.contains_key("orphan"),
-			confirm: c.named.contains_key("confirm"),
+			run:     c.take_first_str().unwrap_or_default(),
+			block:   c.get_bool("block"),
+			orphan:  c.get_bool("orphan"),
+			confirm: c.get_bool("confirm"),
 		}
 	}
 }

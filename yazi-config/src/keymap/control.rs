@@ -15,9 +15,7 @@ pub struct Control {
 
 impl Control {
 	#[inline]
-	pub fn to_seq(&self) -> VecDeque<Cmd> {
-		self.run.iter().map(|e| e.clone_without_data()).collect()
-	}
+	pub fn to_seq(&self) -> VecDeque<Cmd> { self.run.iter().map(|c| c.shallow_clone()).collect() }
 }
 
 impl Control {

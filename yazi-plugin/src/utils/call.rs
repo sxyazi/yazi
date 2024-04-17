@@ -40,13 +40,16 @@ impl Utils {
 
 	#[inline]
 	fn create_cmd(name: String, table: Table, data: Option<Value>) -> mlua::Result<Cmd> {
-		let (args, named) = Self::parse_args(table)?;
-		let mut cmd = Cmd { name, args, named, ..Default::default() };
+		// TODO: Fix this
+		return Ok(Cmd { name, args: Default::default(), data: None });
 
-		if let Some(data) = data.and_then(|v| ValueSendable::try_from(v).ok()) {
-			cmd = cmd.with_data(data);
-		}
-		Ok(cmd)
+		// let (args, named) = Self::parse_args(table)?;
+		// let mut cmd = Cmd { name, args, named, ..Default::default() };
+
+		// if let Some(data) = data.and_then(|v| ValueSendable::try_from(v).ok()) {
+		// 	cmd = cmd.with_data(data);
+		// }
+		// Ok(cmd)
 	}
 
 	pub(super) fn call(lua: &Lua, ya: &Table) -> mlua::Result<()> {

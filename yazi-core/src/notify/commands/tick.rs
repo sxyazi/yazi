@@ -13,7 +13,7 @@ impl TryFrom<Cmd> for Opt {
 	type Error = ();
 
 	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
-		let interval = c.take_first().and_then(|s| s.parse::<f64>().ok()).ok_or(())?;
+		let interval = c.take_first_str().and_then(|s| s.parse::<f64>().ok()).ok_or(())?;
 		if interval < 0.0 {
 			return Err(());
 		}

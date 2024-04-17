@@ -7,7 +7,7 @@ pub struct Opt {
 }
 
 impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { under: c.named.contains_key("under") } }
+	fn from(c: Cmd) -> Self { Self { under: c.get_bool("under") } }
 }
 impl From<bool> for Opt {
 	fn from(under: bool) -> Self { Self { under } }

@@ -8,9 +8,7 @@ pub struct Opt {
 }
 
 impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self {
-		Self { relative: c.named.contains_key("relative"), force: c.named.contains_key("force") }
-	}
+	fn from(c: Cmd) -> Self { Self { relative: c.get_bool("relative"), force: c.get_bool("force") } }
 }
 
 impl Manager {

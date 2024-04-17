@@ -17,9 +17,9 @@ pub enum OptType {
 }
 
 impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self {
+	fn from(mut c: Cmd) -> Self {
 		Self {
-			type_: match c.args.first().map(|s| s.as_str()) {
+			type_: match c.take_first_str().as_deref() {
 				Some("fzf") => OptType::Fzf,
 				Some("zoxide") => OptType::Zoxide,
 				_ => OptType::None,
