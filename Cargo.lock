@@ -2910,6 +2910,7 @@ dependencies = [
  "bitflags 2.5.0",
  "crossterm",
  "dirs",
+ "filetime",
  "futures",
  "libc",
  "parking_lot",

@@ -1,6 +1,7 @@
 use std::{collections::VecDeque, path::{Path, PathBuf}};
 
 use anyhow::Result;
+use filetime::{set_file_times, FileTime};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
 
 pub async fn accessible(path: &Path) -> bool {
@@ -42,8 +43,17 @@ pub fn copy_with_progress(from: &Path, to: &Path) -> mpsc::Receiver<Result<u64, 
 		let (from, to) = (from.to_path_buf(), to.to_path_buf());
 
 		async move {
-			_ = match fs::copy(from, to).await {
-				Ok(len) => tick_tx.send(Ok(len)),
+			_ = match fs::copy(&from, &to).await {
+				Ok(len) => {
+					// Attempt to preserve file's accessed at and modified at timestamps
+					if let Ok(metadata) = fs::metadata(from).await {
+						let mtime = FileTime::from_last_modification_time(&metadata);
+						let atime = FileTime::from_last_access_time(&metadata);
+						_ = set_file_times(to, atime, mtime);
+					};
+
+					tick_tx.send(Ok(len))
+				}
 				Err(e) => tick_tx.send(Err(e)),
 			};
 		}
