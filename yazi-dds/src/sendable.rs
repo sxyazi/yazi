@@ -24,53 +24,43 @@ impl Sendable {
 			}
 			Value::Function(_) => Err("function is not supported".into_lua_err())?,
 			Value::Thread(_) => Err("thread is not supported".into_lua_err())?,
-			Value::UserData(_) => Err("userdata is not supported".into_lua_err())?,
-			Value::Error(_) => Err("error is not supported".into_lua_err())?,
-		})
-	}
-
-	pub fn value_to_key(value: Value) -> mlua::Result<DataKey> {
-		Ok(match value {
-			Value::Nil => DataKey::Nil,
-			Value::Boolean(v) => DataKey::Boolean(v),
-			Value::LightUserData(_) => Err("light userdata is not supported".into_lua_err())?,
-			Value::Integer(v) => DataKey::Integer(v),
-			Value::Number(v) => DataKey::Number(OrderedFloat::new(v)),
-			Value::String(v) => DataKey::String(v.to_str()?.to_owned()),
-			Value::Table(_) => Err("table is not supported".into_lua_err())?,
-			Value::Function(_) => Err("function is not supported".into_lua_err())?,
-			Value::Thread(_) => Err("thread is not supported".into_lua_err())?,
-			Value::UserData(_) => Err("userdata is not supported".into_lua_err())?,
+			Value::UserData(ud) => {
+				if let Ok(t) = ud.take::<yazi_shared::fs::Url>() {
+					Data::Url(t)
+				} else if let Ok(t) = ud.take::<super::body::BodyYankIter>() {
+					Data::Any(Box::new(t))
+				} else {
+					Err("unsupported userdata included".into_lua_err())?
+				}
+			}
 			Value::Error(_) => Err("error is not supported".into_lua_err())?,
 		})
 	}
 
 	pub fn data_to_value(lua: &Lua, data: Data) -> mlua::Result<Value> {
-		match data {
-			Data::Nil => Ok(Value::Nil),
-			Data::Boolean(v) => Ok(Value::Boolean(v)),
-			Data::Integer(v) => Ok(Value::Integer(v)),
-			Data::Number(v) => Ok(Value::Number(v)),
-			Data::String(v) => Ok(Value::String(lua.create_string(v)?)),
-			Data::Table(v) => {
-				let seq_len = v.keys().filter(|&k| !k.is_numeric()).count();
-				let table = lua.create_table_with_capacity(seq_len, v.len() - seq_len)?;
-				for (k, v) in v {
+		Ok(match data {
+			Data::Nil => Value::Nil,
+			Data::Boolean(v) => Value::Boolean(v),
+			Data::Integer(v) => Value::Integer(v),
+			Data::Number(v) => Value::Number(v),
+			Data::String(v) => Value::String(lua.create_string(v)?),
+			Data::Table(t) => {
+				let seq_len = t.keys().filter(|&k| !k.is_numeric()).count();
+				let table = lua.create_table_with_capacity(seq_len, t.len() - seq_len)?;
+				for (k, v) in t {
 					table.raw_set(Self::key_to_value(lua, k)?, Self::data_to_value(lua, v)?)?;
 				}
-				Ok(Value::Table(table))
+				Value::Table(table)
 			}
-		}
-	}
-
-	pub fn key_to_value(lua: &Lua, key: DataKey) -> mlua::Result<Value> {
-		match key {
-			DataKey::Nil => Ok(Value::Nil),
-			DataKey::Boolean(k) => Ok(Value::Boolean(k)),
-			DataKey::Integer(k) => Ok(Value::Integer(k)),
-			DataKey::Number(k) => Ok(Value::Number(k.get())),
-			DataKey::String(k) => Ok(Value::String(lua.create_string(k)?)),
-		}
+			Data::Url(v) => Value::UserData(lua.create_any_userdata(v)?),
+			Data::Any(v) => {
+				if let Ok(t) = v.downcast::<super::body::BodyYankIter>() {
+					Value::UserData(lua.create_userdata(*t)?)
+				} else {
+					Err("unsupported userdata included".into_lua_err())?
+				}
+			}
+		})
 	}
 
 	pub fn vec_to_table(lua: &Lua, data: Vec<Data>) -> mlua::Result<Table> {
@@ -95,5 +85,31 @@ impl Sendable {
 			vec.push(Self::value_to_data(value)?);
 		}
 		Ok(vec)
+	}
+
+	fn value_to_key(value: Value) -> mlua::Result<DataKey> {
+		Ok(match value {
+			Value::Nil => DataKey::Nil,
+			Value::Boolean(v) => DataKey::Boolean(v),
+			Value::LightUserData(_) => Err("light userdata is not supported".into_lua_err())?,
+			Value::Integer(v) => DataKey::Integer(v),
+			Value::Number(v) => DataKey::Number(OrderedFloat::new(v)),
+			Value::String(v) => DataKey::String(v.to_str()?.to_owned()),
+			Value::Table(_) => Err("table is not supported".into_lua_err())?,
+			Value::Function(_) => Err("function is not supported".into_lua_err())?,
+			Value::Thread(_) => Err("thread is not supported".into_lua_err())?,
+			Value::UserData(_) => Err("userdata is not supported".into_lua_err())?,
+			Value::Error(_) => Err("error is not supported".into_lua_err())?,
+		})
+	}
+
+	fn key_to_value(lua: &Lua, key: DataKey) -> mlua::Result<Value> {
+		Ok(match key {
+			DataKey::Nil => Value::Nil,
+			DataKey::Boolean(k) => Value::Boolean(k),
+			DataKey::Integer(k) => Value::Integer(k),
+			DataKey::Number(k) => Value::Number(k.get()),
+			DataKey::String(k) => Value::String(lua.create_string(k)?),
+		})
 	}
 }

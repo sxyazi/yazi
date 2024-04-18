@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use parking_lot::RwLock;
 use tokio::sync::mpsc;
 use tracing::error;
@@ -73,8 +73,8 @@ impl Preload {
 		self.prog.send(TaskProg::New(id, 0))?;
 
 		match task.plugin.prio {
-			Priority::Low => self.macro_.send(PreloadOp::Rule(task).into(), NORMAL).await?,
-			Priority::Normal => self.macro_.send(PreloadOp::Rule(task).into(), HIGH).await?,
+			Priority::Low => self.queue(PreloadOp::Rule(task), NORMAL).await?,
+			Priority::Normal => self.queue(PreloadOp::Rule(task), HIGH).await?,
 			Priority::High => self.work(PreloadOp::Rule(task)).await?,
 		}
 		self.succ(id)
@@ -96,5 +96,10 @@ impl Preload {
 	#[inline]
 	fn fail(&self, id: usize, reason: String) -> Result<()> {
 		Ok(self.prog.send(TaskProg::Fail(id, reason))?)
+	}
+
+	#[inline]
+	async fn queue(&self, op: impl Into<TaskOp>, priority: u8) -> Result<()> {
+		self.macro_.send(op.into(), priority).await.map_err(|_| anyhow!("Failed to send task"))
 	}
 }

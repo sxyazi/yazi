@@ -1,8 +1,8 @@
-use std::collections::HashMap;
+use std::{any::Any, collections::HashMap};
 
 use serde::{Deserialize, Serialize};
 
-use crate::OrderedFloat;
+use crate::{fs::Url, OrderedFloat};
 
 // --- Arg
 #[derive(Debug, Serialize, Deserialize)]
@@ -14,6 +14,10 @@ pub enum Data {
 	Number(f64),
 	String(String),
 	Table(HashMap<DataKey, Data>),
+	#[serde(skip)]
+	Url(Url),
+	#[serde(skip)]
+	Any(Box<dyn Any + Send>),
 }
 
 impl Data {
