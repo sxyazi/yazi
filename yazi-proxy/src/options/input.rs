@@ -10,5 +10,5 @@ pub struct InputOpt {
 impl TryFrom<Cmd> for InputOpt {
 	type Error = ();
 
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> { c.take_data().ok_or(()) }
+	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> { c.take_any("option").ok_or(()) }
 }

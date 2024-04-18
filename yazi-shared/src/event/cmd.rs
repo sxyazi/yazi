@@ -6,7 +6,6 @@ use super::Data;
 pub struct Cmd {
 	pub name: String,
 	pub args: HashMap<String, Data>,
-	pub data: Option<Box<dyn Any + Send>>,
 }
 
 impl Cmd {
@@ -18,7 +17,6 @@ impl Cmd {
 		Self {
 			name: name.to_owned(),
 			args: args.into_iter().enumerate().map(|(i, s)| (i.to_string(), Data::String(s))).collect(),
-			..Default::default()
 		}
 	}
 
@@ -35,8 +33,14 @@ impl Cmd {
 	}
 
 	#[inline]
-	pub fn with_data(mut self, data: impl Any + Send) -> Self {
-		self.data = Some(Box::new(data));
+	pub fn with_any(mut self, name: impl ToString, data: impl Any + Send) -> Self {
+		self.args.insert(name.to_string(), Data::Any(Box::new(data)));
+		self
+	}
+
+	#[inline]
+	pub fn with_name(mut self, name: impl ToString) -> Self {
+		self.name = name.to_string();
 		self
 	}
 
@@ -49,8 +53,11 @@ impl Cmd {
 	}
 
 	#[inline]
-	pub fn take_data<T: 'static>(&mut self) -> Option<T> {
-		self.data.take().and_then(|d| d.downcast::<T>().ok()).map(|d| *d)
+	pub fn take_data(&mut self, name: &str) -> Option<Data> { self.args.remove(name) }
+
+	#[inline]
+	pub fn take_str(&mut self, name: &str) -> Option<String> {
+		if let Some(Data::String(s)) = self.args.remove(name) { Some(s) } else { None }
 	}
 
 	#[inline]
@@ -59,8 +66,8 @@ impl Cmd {
 	}
 
 	#[inline]
-	pub fn take_name_str(&mut self, name: &str) -> Option<String> {
-		if let Some(Data::String(s)) = self.args.remove(name) { Some(s) } else { None }
+	pub fn take_any<T: 'static>(&mut self, name: &str) -> Option<T> {
+		self.args.remove(name).and_then(|d| d.into_any())
 	}
 
 	pub fn shallow_clone(&self) -> Self {
@@ -70,7 +77,7 @@ impl Cmd {
 			.filter_map(|(k, v)| v.as_str().map(|s| (k.clone(), Data::String(s.to_owned()))))
 			.collect();
 
-		Self { name: self.name.clone(), args, data: None }
+		Self { name: self.name.clone(), args }
 	}
 }
 

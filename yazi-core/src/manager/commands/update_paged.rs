@@ -12,7 +12,7 @@ impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
 			page:    c.take_first_str().and_then(|s| s.parse().ok()),
-			only_if: c.take_name_str("only-if").map(Url::from),
+			only_if: c.take_str("only-if").map(Url::from),
 		}
 	}
 }

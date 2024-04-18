@@ -12,7 +12,7 @@ impl TryFrom<Cmd> for Opt {
 	type Error = ();
 
 	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
-		Ok(Self { progress: c.take_data().ok_or(())? })
+		Ok(Self { progress: c.take_any("progress").ok_or(())? })
 	}
 }
 

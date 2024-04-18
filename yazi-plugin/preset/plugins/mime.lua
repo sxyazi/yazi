@@ -22,18 +22,18 @@ function M:preload()
 		return 0
 	end
 
-	local mimes, last = {}, ya.time()
+	local updates, last = {}, ya.time()
 	local flush = function(force)
 		if not force and ya.time() - last < 0.3 then
 			return
 		end
-		if next(mimes) then
-			ya.manager_emit("update_mimetype", {}, mimes)
-			mimes, last = {}, ya.time()
+		if next(updates) then
+			ya.manager_emit("update_mimetype", { updates = updates })
+			updates, last = {}, ya.time()
 		end
 	end
 
-	local i, j, mime = 1, 0, nil
+	local i, j, valid = 1, 0, nil
 	repeat
 		local line, event = child:read_line_with { timeout = 300 }
 		if event == 3 then
@@ -43,11 +43,11 @@ function M:preload()
 			break
 		end
 
-		mime = match_mimetype(line)
-		if mime and string.find(line, mime, 1, true) ~= 1 then
+		valid = match_mimetype(line)
+		if valid and string.find(line, valid, 1, true) ~= 1 then
 			goto continue
-		elseif mime then
-			j, mimes[urls[i]] = j + 1, mime
+		elseif valid then
+			j, updates[urls[i]] = j + 1, valid
 			flush(false)
 		end
 

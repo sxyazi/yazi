@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{fs::Url, OrderedFloat};
 
-// --- Arg
+// --- Data
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Data {
@@ -33,6 +33,22 @@ impl Data {
 	pub fn as_str(&self) -> Option<&str> {
 		match self {
 			Self::String(s) => Some(s),
+			_ => None,
+		}
+	}
+
+	#[inline]
+	pub fn as_any<T: 'static>(&self) -> Option<&T> {
+		match self {
+			Self::Any(b) => b.downcast_ref::<T>(),
+			_ => None,
+		}
+	}
+
+	#[inline]
+	pub fn into_any<T: 'static>(self) -> Option<T> {
+		match self {
+			Data::Any(b) => b.downcast::<T>().ok().map(|b| *b),
 			_ => None,
 		}
 	}

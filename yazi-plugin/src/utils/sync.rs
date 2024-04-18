@@ -4,7 +4,7 @@ use yazi_dds::Sendable;
 use yazi_shared::{emit, event::{Cmd, Data}, Layer};
 
 use super::Utils;
-use crate::{loader::LOADER, runtime::RtRef, OptData};
+use crate::{loader::LOADER, runtime::RtRef, OptCallback};
 
 impl Utils {
 	pub(super) fn sync(lua: &'static Lua, ya: &Table) -> mlua::Result<()> {
@@ -53,29 +53,28 @@ impl Utils {
 		let args = Sendable::variadic_to_vec(args)?;
 		let (tx, rx) = oneshot::channel::<Vec<Data>>();
 
-		let data = OptData {
-			cb: Some({
-				let name = name.clone();
-				Box::new(move |lua, plugin| {
-					let Some(block) = lua.named_registry_value::<RtRef>("rt")?.get_block(&name, calls) else {
-						return Err("sync block not found".into_lua_err());
-					};
+		let callback: OptCallback = {
+			let name = name.clone();
+			Box::new(move |lua, plugin| {
+				let Some(block) = lua.named_registry_value::<RtRef>("rt")?.get_block(&name, calls) else {
+					return Err("sync block not found".into_lua_err());
+				};
 
-					let mut self_args = Vec::with_capacity(args.len() + 1);
-					self_args.push(Value::Table(plugin));
-					for arg in args {
-						self_args.push(Sendable::data_to_value(lua, arg)?);
-					}
+				let mut self_args = Vec::with_capacity(args.len() + 1);
+				self_args.push(Value::Table(plugin));
+				for arg in args {
+					self_args.push(Sendable::data_to_value(lua, arg)?);
+				}
 
-					let values = Sendable::variadic_to_vec(block.call(Variadic::from_iter(self_args))?)?;
-					tx.send(values).map_err(|_| "send failed".into_lua_err())
-				})
-			}),
-			..Default::default()
+				let values = Sendable::variadic_to_vec(block.call(Variadic::from_iter(self_args))?)?;
+				tx.send(values).map_err(|_| "send failed".into_lua_err())
+			})
 		};
 
 		emit!(Call(
-			Cmd::args("plugin", vec![name.clone()]).with_bool("sync", true).with_data(data),
+			Cmd::args("plugin", vec![name.clone()])
+				.with_bool("sync", true)
+				.with_any("callback", callback),
 			Layer::App
 		));
 

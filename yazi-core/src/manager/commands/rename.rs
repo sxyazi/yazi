@@ -19,8 +19,8 @@ impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
 			force:  c.get_bool("force"),
-			empty:  c.take_name_str("empty").unwrap_or_default(),
-			cursor: c.take_name_str("cursor").unwrap_or_default(),
+			empty:  c.take_str("empty").unwrap_or_default(),
+			cursor: c.take_str("cursor").unwrap_or_default(),
 		}
 	}
 }

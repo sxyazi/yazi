@@ -10,7 +10,7 @@ pub struct Opt {
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
-			state: match c.take_name_str("state").as_deref() {
+			state: match c.take_str("state").as_deref() {
 				Some("true") => Some(true),
 				Some("false") => Some(false),
 				_ => None,

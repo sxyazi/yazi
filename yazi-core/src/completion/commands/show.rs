@@ -19,9 +19,9 @@ impl From<Cmd> for Opt {
 			// cache:      mem::take(&mut c.args),
 			// TODO: Fix this
 			cache:      vec![],
-			cache_name: c.take_name_str("cache-name").unwrap_or_default(),
-			word:       c.take_name_str("word").unwrap_or_default(),
-			ticket:     c.take_name_str("ticket").and_then(|v| v.parse().ok()).unwrap_or(0),
+			cache_name: c.take_str("cache-name").unwrap_or_default(),
+			word:       c.take_str("word").unwrap_or_default(),
+			ticket:     c.take_str("ticket").and_then(|v| v.parse().ok()).unwrap_or(0),
 		}
 	}
 }

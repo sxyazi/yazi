@@ -67,7 +67,7 @@ impl Payload<'static> {
 
 	pub(super) fn emit(self) {
 		self.try_flush();
-		emit!(Call(Cmd::new("accept_payload").with_data(self), Layer::App));
+		emit!(Call(Cmd::new("accept_payload").with_any("payload", self), Layer::App));
 	}
 }
 

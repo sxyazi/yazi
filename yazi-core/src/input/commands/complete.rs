@@ -19,7 +19,7 @@ impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
 			word:   c.take_first_str().unwrap_or_default(),
-			ticket: c.take_name_str("ticket").and_then(|s| s.parse().ok()).unwrap_or(0),
+			ticket: c.take_str("ticket").and_then(|s| s.parse().ok()).unwrap_or(0),
 		}
 	}
 }

@@ -15,7 +15,7 @@ impl From<Cmd> for Opt {
 		Self {
 			force:       c.get_bool("force"),
 			permanently: c.get_bool("permanently"),
-			targets:     c.take_data().unwrap_or_default(),
+			targets:     c.take_any("targets").unwrap_or_default(),
 		}
 	}
 }

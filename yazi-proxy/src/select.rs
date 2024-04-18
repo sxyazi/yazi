@@ -10,7 +10,7 @@ impl SelectProxy {
 	#[inline]
 	pub async fn show(cfg: SelectCfg) -> anyhow::Result<usize> {
 		let (tx, rx) = oneshot::channel();
-		emit!(Call(Cmd::new("show").with_data(SelectOpt { cfg, tx }), Layer::Select));
+		emit!(Call(Cmd::new("show").with_any("option", SelectOpt { cfg, tx }), Layer::Select));
 		rx.await?
 	}
 }

@@ -12,7 +12,7 @@ pub struct OpenDoOpt {
 }
 
 impl From<Cmd> for OpenDoOpt {
-	fn from(mut c: Cmd) -> Self { c.take_data().unwrap_or_default() }
+	fn from(mut c: Cmd) -> Self { c.take_any("option").unwrap_or_default() }
 }
 
 // --- Open with
@@ -24,5 +24,5 @@ pub struct OpenWithOpt {
 impl TryFrom<Cmd> for OpenWithOpt {
 	type Error = ();
 
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> { c.take_data().ok_or(()) }
+	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> { c.take_any("option").ok_or(()) }
 }

@@ -8,7 +8,7 @@ pub struct Opt {
 }
 
 impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self { Self { tx: c.take_data() } }
+	fn from(mut c: Cmd) -> Self { Self { tx: c.take_any("tx") } }
 }
 
 impl App {

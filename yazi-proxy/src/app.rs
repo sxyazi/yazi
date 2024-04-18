@@ -11,7 +11,7 @@ impl AppProxy {
 	#[inline]
 	pub async fn stop() {
 		let (tx, rx) = oneshot::channel::<()>();
-		emit!(Call(Cmd::new("stop").with_data(tx), Layer::App));
+		emit!(Call(Cmd::new("stop").with_any("tx", tx), Layer::App));
 		rx.await.ok();
 	}
 
@@ -22,13 +22,13 @@ impl AppProxy {
 
 	#[inline]
 	pub fn notify(opt: NotifyOpt) {
-		emit!(Call(Cmd::new("notify").with_data(opt), Layer::App));
+		emit!(Call(Cmd::new("notify").with_any("option", opt), Layer::App));
 	}
 
 	#[inline]
 	pub fn notify_warn(title: &str, content: &str) {
 		emit!(Call(
-			Cmd::new("notify").with_data(NotifyOpt {
+			Cmd::new("notify").with_any("option", NotifyOpt {
 				title:   title.to_owned(),
 				content: content.to_owned(),
 				level:   NotifyLevel::Warn,

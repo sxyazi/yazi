@@ -38,9 +38,9 @@ impl Utils {
 	}
 
 	#[inline]
-	fn create_cmd(name: String, table: Table, data: Option<Value>) -> mlua::Result<Cmd> {
+	fn create_cmd(name: String, args: Value) -> mlua::Result<Cmd> {
 		// TODO: Fix this
-		return Ok(Cmd { name, args: Default::default(), data: None });
+		return Ok(Cmd { name, args: Default::default() });
 
 		// let (args, named) = Self::parse_args(table)?;
 		// let mut cmd = Cmd { name, args, named, ..Default::default() };
@@ -62,16 +62,16 @@ impl Utils {
 
 		ya.raw_set(
 			"app_emit",
-			lua.create_function(|_, (name, table, data): (String, Table, Option<Value>)| {
-				emit!(Call(Self::create_cmd(name, table, data)?, Layer::App));
+			lua.create_function(|_, (name, args): (String, Value)| {
+				emit!(Call(Self::create_cmd(name, args)?, Layer::App));
 				Ok(())
 			})?,
 		)?;
 
 		ya.raw_set(
 			"manager_emit",
-			lua.create_function(|_, (name, table, data): (String, Table, Option<Value>)| {
-				emit!(Call(Self::create_cmd(name, table, data)?, Layer::Manager));
+			lua.create_function(|_, (name, args): (String, Value)| {
+				emit!(Call(Self::create_cmd(name, args)?, Layer::Manager));
 				Ok(())
 			})?,
 		)?;

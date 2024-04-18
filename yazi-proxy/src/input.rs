@@ -10,7 +10,7 @@ impl InputProxy {
 	#[inline]
 	pub fn show(cfg: InputCfg) -> mpsc::UnboundedReceiver<Result<String, InputError>> {
 		let (tx, rx) = mpsc::unbounded_channel();
-		emit!(Call(Cmd::new("show").with_data(InputOpt { cfg, tx }), Layer::Input));
+		emit!(Call(Cmd::new("show").with_any("option", InputOpt { cfg, tx }), Layer::Input));
 		rx
 	}
 
