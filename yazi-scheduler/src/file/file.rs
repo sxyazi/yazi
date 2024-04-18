@@ -135,18 +135,12 @@ impl File {
 
 	pub async fn paste(&self, mut task: FileOpPaste) -> Result<()> {
 		// Prevent pasting of a directory into itself
-		if task.from.is_dir() {
-			let mut parent = task.to.parent_url();
-			while let Some(p) = parent {
-				if task.from == p {
-					debug!(
-						"file_paste: cannot paste directory into itself, skipping {:?} -> {:?}",
-						task.from, task.to
-					);
-					return self.succ(task.id);
-				}
-				parent = p.parent_url();
-			}
+		if task.from.is_dir() && task.to.as_path().starts_with(task.from.as_path()) {
+			debug!(
+				"file_paste: cannot paste directory into itself, skipping {:?} -> {:?}",
+				task.from, task.to
+			);
+			return self.succ(task.id);
 		}
 
 		if task.cut {
