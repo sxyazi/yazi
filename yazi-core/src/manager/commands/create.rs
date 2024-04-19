@@ -12,7 +12,7 @@ pub struct Opt {
 }
 
 impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { force: c.get_bool("force") } }
+	fn from(c: Cmd) -> Self { Self { force: c.bool("force") } }
 }
 
 impl Manager {

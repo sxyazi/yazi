@@ -13,8 +13,8 @@ pub struct Opt {
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
-			force:       c.get_bool("force"),
-			permanently: c.get_bool("permanently"),
+			force:       c.bool("force"),
+			permanently: c.bool("permanently"),
 			targets:     c.take_any("targets").unwrap_or_default(),
 		}
 	}

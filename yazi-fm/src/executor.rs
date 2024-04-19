@@ -214,7 +214,7 @@ impl<'a> Executor<'a> {
 		on!(forward);
 
 		if cmd.name.as_str() == "complete" {
-			return if cmd.get_bool("trigger") {
+			return if cmd.bool("trigger") {
 				self.app.cx.completion.trigger(cmd)
 			} else {
 				self.app.cx.input.complete(cmd)

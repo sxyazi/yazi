@@ -1,6 +1,6 @@
 use yazi_config::PLUGIN;
 use yazi_plugin::isolate;
-use yazi_shared::{event::Cmd, render, MIME_DIR};
+use yazi_shared::{event::{Cmd, Data}, render, MIME_DIR};
 
 use crate::manager::Manager;
 
@@ -10,9 +10,7 @@ pub struct Opt {
 }
 
 impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self {
-		Self { units: c.take_first_str().and_then(|s| s.parse().ok()).unwrap_or(0) }
-	}
+	fn from(c: Cmd) -> Self { Self { units: c.first().and_then(Data::as_i16).unwrap_or(0) } }
 }
 
 impl Manager {

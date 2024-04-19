@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use yazi_shared::{event::Cmd, fs::Url, render};
+use yazi_shared::{event::{Cmd, Data}, fs::Url, render};
 
 use crate::manager::Manager;
 
@@ -9,7 +9,7 @@ pub struct Opt {
 }
 
 impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self { Self { url: c.take_first_str().map(Url::from) } }
+	fn from(mut c: Cmd) -> Self { Self { url: c.take_first().and_then(Data::into_url) } }
 }
 impl From<Option<Url>> for Opt {
 	fn from(url: Option<Url>) -> Self { Self { url } }

@@ -18,7 +18,7 @@ impl TryFrom<Cmd> for Opt {
 		Ok(Self {
 			cands:  c.take_any("candidates").unwrap_or_default(),
 			layer:  Layer::from_str(&c.take_str("layer").unwrap_or_default())?,
-			silent: c.get_bool("silent"),
+			silent: c.bool("silent"),
 		})
 	}
 }

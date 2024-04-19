@@ -8,7 +8,7 @@ pub struct Opt {
 }
 
 impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { submit: c.get_bool("submit") } }
+	fn from(c: Cmd) -> Self { Self { submit: c.bool("submit") } }
 }
 impl From<bool> for Opt {
 	fn from(submit: bool) -> Self { Self { submit } }

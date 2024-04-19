@@ -5,7 +5,7 @@ use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
 use yazi_dds::Pubsub;
 use yazi_proxy::{CompletionProxy, InputProxy, ManagerProxy, TabProxy};
-use yazi_shared::{event::Cmd, fs::{expand_path, Url}, render, Debounce, InputError};
+use yazi_shared::{event::{Cmd, Data}, fs::{expand_path, Url}, render, Debounce, InputError};
 
 use crate::tab::Tab;
 
@@ -16,12 +16,12 @@ pub struct Opt {
 
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
-		let mut target = Url::from(c.take_first_str().unwrap_or_default());
+		let mut target = c.take_first().and_then(Data::into_url).unwrap_or_default();
 		if target.is_regular() {
 			target.set_path(expand_path(&target))
 		}
 
-		Self { target, interactive: c.get_bool("interactive") }
+		Self { target, interactive: c.bool("interactive") }
 	}
 }
 impl From<Url> for Opt {

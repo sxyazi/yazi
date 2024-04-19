@@ -20,7 +20,7 @@ impl From<Cmd> for Opt {
 		Self {
 			query: c.take_first_str().unwrap_or_default(),
 			case:  FilterCase::from(&c),
-			done:  c.get_bool("done"),
+			done:  c.bool("done"),
 		}
 	}
 }

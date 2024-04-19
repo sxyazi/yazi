@@ -12,7 +12,7 @@ impl From<()> for Opt {
 	fn from(_: ()) -> Self { Self::default() }
 }
 impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { no_cwd_file: c.get_bool("no-cwd-file") } }
+	fn from(c: Cmd) -> Self { Self { no_cwd_file: c.bool("no-cwd-file") } }
 }
 
 impl Manager {

@@ -45,7 +45,7 @@ pub enum FilterCase {
 
 impl From<&Cmd> for FilterCase {
 	fn from(c: &Cmd) -> Self {
-		match (c.get_bool("smart"), c.get_bool("insensitive")) {
+		match (c.bool("smart"), c.bool("insensitive")) {
 			(true, _) => Self::Smart,
 			(_, false) => Self::Sensitive,
 			(_, true) => Self::Insensitive,

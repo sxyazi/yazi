@@ -8,7 +8,7 @@ pub struct Opt {
 }
 
 impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { force: c.get_bool("force"), follow: c.get_bool("follow") } }
+	fn from(c: Cmd) -> Self { Self { force: c.bool("force"), follow: c.bool("follow") } }
 }
 
 impl Manager {

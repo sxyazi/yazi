@@ -17,9 +17,9 @@ impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
 			run:     c.take_first_str().unwrap_or_default(),
-			block:   c.get_bool("block"),
-			orphan:  c.get_bool("orphan"),
-			confirm: c.get_bool("confirm"),
+			block:   c.bool("block"),
+			orphan:  c.bool("orphan"),
+			confirm: c.bool("confirm"),
 		}
 	}
 }

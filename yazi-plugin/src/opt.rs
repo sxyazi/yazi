@@ -20,13 +20,13 @@ impl TryFrom<Cmd> for Opt {
 			bail!("plugin name cannot be empty");
 		};
 
-		let args = if let Some(s) = c.get_str("args") {
+		let args = if let Some(s) = c.str("args") {
 			shell_words::split(s)?.into_iter().map(Data::String).collect()
 		} else {
 			c.take_any::<Vec<Data>>("args").unwrap_or_default()
 		};
 
-		Ok(Self { name, sync: c.get_bool("sync"), args, cb: c.take_any("callback") })
+		Ok(Self { name, sync: c.bool("sync"), args, cb: c.take_any("callback") })
 	}
 }
 
