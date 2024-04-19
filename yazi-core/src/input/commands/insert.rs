@@ -7,7 +7,7 @@ pub struct Opt {
 }
 
 impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { append: c.get_bool("append") } }
+	fn from(c: Cmd) -> Self { Self { append: c.bool("append") } }
 }
 impl From<bool> for Opt {
 	fn from(append: bool) -> Self { Self { append } }

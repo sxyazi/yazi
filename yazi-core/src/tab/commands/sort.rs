@@ -11,9 +11,9 @@ impl Tab {
 		if let Some(by) = c.take_first_str() {
 			self.conf.sort_by = SortBy::from_str(&by).unwrap_or_default();
 		}
-		self.conf.sort_sensitive = c.get_bool("sensitive");
-		self.conf.sort_reverse = c.get_bool("reverse");
-		self.conf.sort_dir_first = c.get_bool("dir-first");
+		self.conf.sort_sensitive = c.bool("sensitive");
+		self.conf.sort_reverse = c.bool("reverse");
+		self.conf.sort_dir_first = c.bool("dir-first");
 
 		self.apply_files_attrs();
 		ManagerProxy::update_paged();

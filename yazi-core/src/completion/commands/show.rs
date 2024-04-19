@@ -1,6 +1,6 @@
 use std::{mem, ops::ControlFlow};
 
-use yazi_shared::{event::Cmd, render};
+use yazi_shared::{event::{Cmd, Data}, render};
 
 use crate::completion::Completion;
 
@@ -19,7 +19,7 @@ impl From<Cmd> for Opt {
 			cache:      c.take_any("cache").unwrap_or_default(),
 			cache_name: c.take_str("cache-name").unwrap_or_default(),
 			word:       c.take_str("word").unwrap_or_default(),
-			ticket:     c.take_str("ticket").and_then(|v| v.parse().ok()).unwrap_or(0),
+			ticket:     c.get("ticket").and_then(Data::as_usize).unwrap_or(0),
 		}
 	}
 }

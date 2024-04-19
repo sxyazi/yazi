@@ -1,6 +1,6 @@
 use yazi_dds::Pubsub;
 use yazi_proxy::ManagerProxy;
-use yazi_shared::{event::Cmd, render};
+use yazi_shared::{event::{Cmd, Data}, render};
 
 use crate::{tab::Tab, Step};
 
@@ -10,7 +10,13 @@ pub struct Opt {
 
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
-		Self { step: c.take_first_str().and_then(|s| s.parse().ok()).unwrap_or_default() }
+		let step = match c.take_first() {
+			Some(Data::Integer(i)) => Step::from(i as isize),
+			Some(Data::String(s)) => s.parse().unwrap_or_default(),
+			_ => Step::default(),
+		};
+
+		Self { step }
 	}
 }
 

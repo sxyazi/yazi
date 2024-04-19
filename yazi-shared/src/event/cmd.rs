@@ -20,6 +20,7 @@ impl Cmd {
 		}
 	}
 
+	// --- With
 	#[inline]
 	pub fn with(mut self, name: impl ToString, value: impl ToString) -> Self {
 		self.args.insert(name.to_string(), Data::String(value.to_string()));
@@ -44,21 +45,32 @@ impl Cmd {
 		self
 	}
 
+	// --- Get
 	#[inline]
-	pub fn get_str(&self, name: &str) -> Option<&str> { self.args.get(name).and_then(Data::as_str) }
+	pub fn get(&self, name: &str) -> Option<&Data> { self.args.get(name) }
 
 	#[inline]
-	pub fn get_bool(&self, name: &str) -> bool {
+	pub fn str(&self, name: &str) -> Option<&str> { self.args.get(name).and_then(Data::as_str) }
+
+	#[inline]
+	pub fn bool(&self, name: &str) -> bool {
 		self.args.get(name).and_then(Data::as_bool).unwrap_or(false)
 	}
 
 	#[inline]
-	pub fn take_data(&mut self, name: &str) -> Option<Data> { self.args.remove(name) }
+	pub fn first(&self) -> Option<&Data> { self.args.get("0") }
+
+	// --- Take
+	#[inline]
+	pub fn take(&mut self, name: &str) -> Option<Data> { self.args.remove(name) }
 
 	#[inline]
 	pub fn take_str(&mut self, name: &str) -> Option<String> {
 		if let Some(Data::String(s)) = self.args.remove(name) { Some(s) } else { None }
 	}
+
+	#[inline]
+	pub fn take_first(&mut self) -> Option<Data> { self.args.remove("0") }
 
 	#[inline]
 	pub fn take_first_str(&mut self) -> Option<String> {
@@ -70,6 +82,7 @@ impl Cmd {
 		self.args.remove(name).and_then(|d| d.into_any())
 	}
 
+	// --- Clone
 	pub fn shallow_clone(&self) -> Self {
 		Self {
 			name: self.name.clone(),

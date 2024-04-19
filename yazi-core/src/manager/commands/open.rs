@@ -17,7 +17,7 @@ pub struct Opt {
 
 impl From<Cmd> for Opt {
 	fn from(c: Cmd) -> Self {
-		Self { interactive: c.get_bool("interactive"), hovered: c.get_bool("hovered") }
+		Self { interactive: c.bool("interactive"), hovered: c.bool("hovered") }
 	}
 }
 

@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use ratatui::layout::Rect;
-use yazi_shared::{emit, event::Cmd, Layer};
+use yazi_shared::{emit, event::{Cmd, Data}, Layer};
 
 use crate::notify::Notify;
 
@@ -12,8 +12,8 @@ pub struct Opt {
 impl TryFrom<Cmd> for Opt {
 	type Error = ();
 
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
-		let interval = c.take_first_str().and_then(|s| s.parse::<f64>().ok()).ok_or(())?;
+	fn try_from(c: Cmd) -> Result<Self, Self::Error> {
+		let interval = c.first().and_then(Data::as_f64).ok_or(())?;
 		if interval < 0.0 {
 			return Err(());
 		}

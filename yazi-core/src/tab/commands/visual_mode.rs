@@ -9,7 +9,7 @@ pub struct Opt {
 }
 
 impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { unset: c.get_bool("unset") } }
+	fn from(c: Cmd) -> Self { Self { unset: c.bool("unset") } }
 }
 
 impl Tab {

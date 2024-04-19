@@ -55,8 +55,8 @@ impl Server {
 
 								let clients = CLIENTS.read();
 								let clients: Vec<_> = if receiver == 0 {
-									clients.values().filter(|c| c.id != id && c.able(kind)).collect()
-								} else if let Some(c) = clients.get(&receiver).filter(|c| c.id != id && c.able(kind)) {
+									clients.values().filter(|c| c.able(kind)).collect()
+								} else if let Some(c) = clients.get(&receiver).filter(|c| c.able(kind)) {
 									vec![c]
 								} else {
 									vec![]
@@ -72,7 +72,7 @@ impl Server {
 								}
 
 								line.push('\n');
-								clients.into_iter().for_each(|c| _ = c.tx.send(line.clone()));
+								clients.into_iter().filter(|c| c.id != id).for_each(|c| _ = c.tx.send(line.clone()));
 							}
 							else => break
 						}

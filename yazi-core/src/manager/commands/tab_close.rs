@@ -1,4 +1,4 @@
-use yazi_shared::{event::Cmd, render};
+use yazi_shared::{event::{Cmd, Data}, render};
 
 use crate::manager::Tabs;
 
@@ -7,9 +7,7 @@ pub struct Opt {
 }
 
 impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self {
-		Self { idx: c.take_first_str().and_then(|i| i.parse().ok()).unwrap_or(0) }
-	}
+	fn from(c: Cmd) -> Self { Self { idx: c.first().and_then(Data::as_usize).unwrap_or(0) } }
 }
 
 impl From<usize> for Opt {

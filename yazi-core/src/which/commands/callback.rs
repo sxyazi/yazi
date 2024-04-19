@@ -1,6 +1,6 @@
 use tokio::sync::mpsc;
 use tracing::error;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::{Cmd, Data};
 
 use crate::which::Which;
 
@@ -15,7 +15,7 @@ impl TryFrom<Cmd> for Opt {
 	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
 		Ok(Self {
 			tx:  c.take_any("tx").ok_or(())?,
-			idx: c.take_first_str().and_then(|s| s.parse().ok()).ok_or(())?,
+			idx: c.first().and_then(Data::as_usize).ok_or(())?,
 		})
 	}
 }

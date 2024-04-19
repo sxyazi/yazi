@@ -14,7 +14,7 @@ pub enum Data {
 	Number(f64),
 	String(String),
 	Table(HashMap<DataKey, Data>),
-	#[serde(skip)]
+	#[serde(skip_deserializing)]
 	Url(Url),
 	#[serde(skip)]
 	Any(Box<dyn Any + Send>),
@@ -53,6 +53,15 @@ impl Data {
 		}
 	}
 
+	#[inline]
+	pub fn into_url(self) -> Option<Url> {
+		match self {
+			Data::String(s) => Some(Url::from(s)),
+			Data::Url(u) => Some(u),
+			_ => None,
+		}
+	}
+
 	pub fn into_table_string(self) -> HashMap<String, String> {
 		let Self::Table(table) = self else {
 			return Default::default();
@@ -86,7 +95,7 @@ pub enum DataKey {
 	Integer(i64),
 	Number(OrderedFloat),
 	String(String),
-	#[serde(skip)]
+	#[serde(skip_deserializing)]
 	Url(Url),
 }
 
@@ -94,3 +103,40 @@ impl DataKey {
 	#[inline]
 	pub fn is_numeric(&self) -> bool { matches!(self, Self::Integer(_) | Self::Number(_)) }
 }
+
+// --- Macros
+macro_rules! impl_integer_as {
+	($t:ty, $name:ident) => {
+		impl Data {
+			#[inline]
+			pub fn $name(&self) -> Option<$t> {
+				match self {
+					Data::Integer(i) => <$t>::try_from(*i).ok(),
+					Data::String(s) => s.parse().ok(),
+					_ => None,
+				}
+			}
+		}
+	};
+}
+
+macro_rules! impl_number_as {
+	($t:ty, $name:ident) => {
+		impl Data {
+			#[inline]
+			pub fn $name(&self) -> Option<$t> {
+				match self {
+					Data::Number(n) => <$t>::try_from(*n).ok(),
+					Data::String(s) => s.parse().ok(),
+					_ => None,
+				}
+			}
+		}
+	};
+}
+
+impl_integer_as!(usize, as_usize);
+impl_integer_as!(isize, as_isize);
+impl_integer_as!(i16, as_i16);
+
+impl_number_as!(f64, as_f64);

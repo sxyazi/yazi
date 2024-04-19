@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use yazi_proxy::AppProxy;
-use yazi_shared::{event::Cmd, fs::Url, render, render_and};
+use yazi_shared::{event::{Cmd, Data}, fs::Url, render, render_and};
 
 use crate::tab::Tab;
 
@@ -13,7 +13,7 @@ pub struct Opt<'a> {
 impl<'a> From<Cmd> for Opt<'a> {
 	fn from(mut c: Cmd) -> Self {
 		Self {
-			url:   c.take_str("url").map(|s| Cow::Owned(Url::from(s))),
+			url:   c.take("url").and_then(Data::into_url).map(Cow::Owned),
 			state: match c.take_str("state").as_deref() {
 				Some("true") => Some(true),
 				Some("false") => Some(false),

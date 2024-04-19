@@ -1,7 +1,7 @@
 use std::{mem, path::{MAIN_SEPARATOR, MAIN_SEPARATOR_STR}};
 
 use tokio::fs;
-use yazi_shared::{emit, event::Cmd, render, Layer};
+use yazi_shared::{emit, event::{Cmd, Data}, render, Layer};
 
 use crate::completion::Completion;
 
@@ -20,7 +20,7 @@ impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
 			word:   c.take_first_str().unwrap_or_default(),
-			ticket: c.take_str("ticket").and_then(|s| s.parse().ok()).unwrap_or(0),
+			ticket: c.get("ticket").and_then(Data::as_usize).unwrap_or(0),
 		}
 	}
 }

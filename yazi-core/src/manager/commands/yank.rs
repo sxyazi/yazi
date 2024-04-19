@@ -8,7 +8,7 @@ pub struct Opt {
 }
 
 impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { cut: c.get_bool("cut") } }
+	fn from(c: Cmd) -> Self { Self { cut: c.bool("cut") } }
 }
 
 impl Manager {

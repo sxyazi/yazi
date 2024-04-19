@@ -81,8 +81,8 @@ impl Pubsub {
 	}
 
 	pub fn pub_static(severity: u16, body: Body) {
-		let (kind, peers) = (body.kind(), PEERS.read());
-		if peers.values().any(|c| c.able(kind)) {
+		let kind = body.kind();
+		if REMOTE.read().contains_key(kind) || PEERS.read().values().any(|c| c.able(kind)) {
 			Client::push(body.with_severity(severity));
 		}
 	}

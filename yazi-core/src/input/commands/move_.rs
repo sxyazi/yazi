@@ -1,5 +1,5 @@
 use unicode_width::UnicodeWidthStr;
-use yazi_shared::{event::Cmd, render};
+use yazi_shared::{event::{Cmd, Data}, render};
 
 use crate::input::{op::InputOp, snap::InputSnap, Input};
 
@@ -9,10 +9,10 @@ pub struct Opt {
 }
 
 impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self {
+	fn from(c: Cmd) -> Self {
 		Self {
-			step:         c.take_first_str().and_then(|s| s.parse().ok()).unwrap_or(0),
-			in_operating: c.get_bool("in-operating"),
+			step:         c.first().and_then(Data::as_isize).unwrap_or(0),
+			in_operating: c.bool("in-operating"),
 		}
 	}
 }

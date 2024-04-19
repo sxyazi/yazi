@@ -1,6 +1,6 @@
 use std::path::MAIN_SEPARATOR_STR;
 
-use yazi_shared::{event::Cmd, render};
+use yazi_shared::{event::{Cmd, Data}, render};
 
 use crate::input::Input;
 
@@ -19,7 +19,7 @@ impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
 			word:   c.take_first_str().unwrap_or_default(),
-			ticket: c.take_str("ticket").and_then(|s| s.parse().ok()).unwrap_or(0),
+			ticket: c.get("ticket").and_then(Data::as_usize).unwrap_or(0),
 		}
 	}
 }

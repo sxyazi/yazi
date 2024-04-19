@@ -1,4 +1,4 @@
-use yazi_shared::{event::Cmd, fs::Url};
+use yazi_shared::{event::{Cmd, Data}, fs::Url};
 
 use crate::{manager::Manager, tasks::Tasks};
 
@@ -11,8 +11,8 @@ pub struct Opt {
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
-			page:    c.take_first_str().and_then(|s| s.parse().ok()),
-			only_if: c.take_str("only-if").map(Url::from),
+			page:    c.first().and_then(Data::as_usize),
+			only_if: c.take("only-if").and_then(Data::into_url),
 		}
 	}
 }
