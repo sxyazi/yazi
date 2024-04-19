@@ -14,5 +14,5 @@ pub struct ProcessExecOpt {
 impl TryFrom<Cmd> for ProcessExecOpt {
 	type Error = ();
 
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> { c.take_data().ok_or(()) }
+	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> { c.take_any("option").ok_or(()) }
 }

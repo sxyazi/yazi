@@ -1,8 +1,8 @@
-use std::fmt;
+use std::{fmt, mem};
 
 use anyhow::{bail, Result};
 use serde::{de::{self, Visitor}, Deserializer};
-use yazi_shared::event::Cmd;
+use yazi_shared::event::{Cmd, Data};
 
 pub(super) fn run_deserialize<'de, D>(deserializer: D) -> Result<Vec<Cmd>, D::Error>
 where
@@ -10,21 +10,28 @@ where
 {
 	struct RunVisitor;
 
+	#[allow(clippy::explicit_counter_loop)]
 	fn parse(s: &str) -> Result<Cmd> {
-		let s = shell_words::split(s)?;
-		if s.is_empty() {
-			bail!("`run` cannot be empty");
-		}
+		let mut args = shell_words::split(s)?;
+		let mut cmd = Cmd { name: mem::take(&mut args[0]), ..Default::default() };
 
-		let mut cmd = Cmd { name: s[0].clone(), ..Default::default() };
-		for arg in s.into_iter().skip(1) {
-			if arg.starts_with("--") {
-				let mut arg = arg.splitn(2, '=');
-				let key = arg.next().unwrap().trim_start_matches('-');
-				let val = arg.next().unwrap_or("").to_string();
-				cmd.named.insert(key.to_string(), val);
+		let mut i = 0usize;
+		for arg in args.into_iter().skip(1) {
+			let Some(arg) = arg.strip_prefix("--") else {
+				cmd.args.insert(i.to_string(), Data::String(arg));
+				i += 1;
+				continue;
+			};
+
+			let mut parts = arg.splitn(2, '=');
+			let Some(key) = parts.next().map(|s| s.to_owned()) else {
+				bail!("invalid argument: {arg}");
+			};
+
+			if let Some(val) = parts.next() {
+				cmd.args.insert(key, Data::String(val.to_owned()));
 			} else {
-				cmd.args.push(arg);
+				cmd.args.insert(key, Data::Boolean(true));
 			}
 		}
 		Ok(cmd)

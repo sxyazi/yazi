@@ -9,7 +9,7 @@ pub struct Opt {
 }
 
 impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self { Self { url: c.take_first().map(Url::from) } }
+	fn from(mut c: Cmd) -> Self { Self { url: c.take_first_str().map(Url::from) } }
 }
 impl From<Option<Url>> for Opt {
 	fn from(url: Option<Url>) -> Self { Self { url } }

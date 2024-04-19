@@ -1,19 +1,18 @@
 use std::collections::HashMap;
 
-use yazi_dds::ValueSendable;
 use yazi_shared::{event::Cmd, fs::Url, render};
 
 use crate::{manager::{Manager, LINKED}, tasks::Tasks};
 
 pub struct Opt {
-	data: ValueSendable,
+	updates: HashMap<String, String>,
 }
 
 impl TryFrom<Cmd> for Opt {
 	type Error = ();
 
 	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
-		Ok(Self { data: c.take_data().ok_or(())? })
+		Ok(Self { updates: c.take_data("updates").ok_or(())?.into_table_string() })
 	}
 }
 
@@ -25,8 +24,7 @@ impl Manager {
 
 		let linked = LINKED.read();
 		let updates = opt
-			.data
-			.into_table_string()
+			.updates
 			.into_iter()
 			.map(|(url, mime)| (Url::from(url), mime))
 			.filter(|(url, mime)| self.mimetype.get(url) != Some(mime))

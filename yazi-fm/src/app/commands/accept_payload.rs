@@ -8,7 +8,7 @@ use crate::{app::App, lives::Lives};
 
 impl App {
 	pub(crate) fn accept_payload(&mut self, mut cmd: Cmd) {
-		let Some(payload) = cmd.take_data::<Payload>() else {
+		let Some(payload) = cmd.take_any::<Payload>("payload") else {
 			return;
 		};
 

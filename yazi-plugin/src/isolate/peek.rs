@@ -6,7 +6,7 @@ use yazi_config::LAYOUT;
 use yazi_shared::{emit, event::Cmd, Layer};
 
 use super::slim_lua;
-use crate::{bindings::{Cast, File, Window}, elements::Rect, loader::LOADER, OptData, LUA};
+use crate::{bindings::{Cast, File, Window}, elements::Rect, loader::LOADER, Opt, OptCallback, LUA};
 
 pub fn peek(cmd: &Cmd, file: yazi_shared::fs::File, skip: usize) -> CancellationToken {
 	let ct = CancellationToken::new();
@@ -56,18 +56,16 @@ pub fn peek(cmd: &Cmd, file: yazi_shared::fs::File, skip: usize) -> Cancellation
 }
 
 pub fn peek_sync(cmd: &Cmd, file: yazi_shared::fs::File, skip: usize) {
-	let data = OptData {
-		cb: Some(Box::new(move |_, plugin| {
-			plugin.raw_set("file", File::cast(&LUA, file)?)?;
-			plugin.raw_set("skip", skip)?;
-			plugin.raw_set("area", Rect::cast(&LUA, LAYOUT.load().preview)?)?;
-			plugin.raw_set("window", Window::default())?;
-			plugin.call_method("peek", ())
-		})),
-		..Default::default()
-	};
-	emit!(Call(
-		Cmd::args("plugin", vec![cmd.name.to_owned()]).with_bool("sync", true).with_data(data),
-		Layer::App
-	));
+	let cb: OptCallback = Box::new(move |_, plugin| {
+		plugin.raw_set("file", File::cast(&LUA, file)?)?;
+		plugin.raw_set("skip", skip)?;
+		plugin.raw_set("area", Rect::cast(&LUA, LAYOUT.load().preview)?)?;
+		plugin.raw_set("window", Window::default())?;
+		plugin.call_method("peek", ())
+	});
+
+	let cmd: Cmd =
+		Opt { name: cmd.name.to_owned(), sync: true, cb: Some(cb), ..Default::default() }.into();
+
+	emit!(Call(cmd.with_name("plugin"), Layer::App));
 }

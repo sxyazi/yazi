@@ -42,7 +42,7 @@ pub struct Opt {
 }
 
 impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self { Self { type_: c.take_first().unwrap_or_default().into() } }
+	fn from(mut c: Cmd) -> Self { Self { type_: c.take_first_str().unwrap_or_default().into() } }
 }
 
 impl Tab {

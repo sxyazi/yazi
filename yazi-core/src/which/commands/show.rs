@@ -16,9 +16,9 @@ impl TryFrom<Cmd> for Opt {
 
 	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
 		Ok(Self {
-			cands:  c.take_data().unwrap_or_default(),
-			layer:  Layer::from_str(&c.take_name("layer").unwrap_or_default())?,
-			silent: c.named.contains_key("silent"),
+			cands:  c.take_any("candidates").unwrap_or_default(),
+			layer:  Layer::from_str(&c.take_str("layer").unwrap_or_default())?,
+			silent: c.get_bool("silent"),
 		})
 	}
 }

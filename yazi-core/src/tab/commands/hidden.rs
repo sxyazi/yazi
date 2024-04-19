@@ -4,8 +4,8 @@ use yazi_shared::event::Cmd;
 use crate::tab::Tab;
 
 impl Tab {
-	pub fn hidden(&mut self, c: Cmd) {
-		self.conf.show_hidden = match c.args.first().map(|s| s.as_str()) {
+	pub fn hidden(&mut self, mut c: Cmd) {
+		self.conf.show_hidden = match c.take_first_str().as_deref() {
 			Some("show") => true,
 			Some("hide") => false,
 			_ => !self.conf.show_hidden,

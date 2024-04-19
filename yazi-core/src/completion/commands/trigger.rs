@@ -19,8 +19,8 @@ pub struct Opt {
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
-			word:   c.take_first().unwrap_or_default(),
-			ticket: c.take_name("ticket").and_then(|s| s.parse().ok()).unwrap_or(0),
+			word:   c.take_first_str().unwrap_or_default(),
+			ticket: c.take_str("ticket").and_then(|s| s.parse().ok()).unwrap_or(0),
 		}
 	}
 }
@@ -57,7 +57,8 @@ impl Completion {
 
 			if !cache.is_empty() {
 				emit!(Call(
-					Cmd::args("show", cache)
+					Cmd::new("show")
+						.with_any("cache", cache)
 						.with("cache-name", parent)
 						.with("word", child)
 						.with("ticket", ticket),

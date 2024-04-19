@@ -37,7 +37,7 @@ impl Utils {
 					let cand = cand?;
 					cands.push(Control {
 						on:   Self::parse_keys(cand.raw_get("on")?)?,
-						run:  vec![Cmd::args("callback", vec![i.to_string()]).with_data(tx.clone())],
+						run:  vec![Cmd::args("callback", vec![i.to_string()]).with_any("tx", tx.clone())],
 						desc: cand.raw_get("desc").ok(),
 					});
 				}
@@ -46,8 +46,8 @@ impl Utils {
 				emit!(Call(
 					Cmd::new("show")
 						.with("layer", Layer::Which)
-						.with_bool("silent", t.raw_get("silent").unwrap_or_default())
-						.with_data(cands),
+						.with_any("candidates", cands)
+						.with_bool("silent", t.raw_get("silent").unwrap_or_default()),
 					Layer::Which
 				));
 

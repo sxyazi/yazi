@@ -11,8 +11,8 @@ pub struct Opt {
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
-			step:         c.take_first().and_then(|s| s.parse().ok()).unwrap_or(0),
-			in_operating: c.named.contains_key("in-operating"),
+			step:         c.take_first_str().and_then(|s| s.parse().ok()).unwrap_or(0),
+			in_operating: c.get_bool("in-operating"),
 		}
 	}
 }

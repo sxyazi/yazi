@@ -7,13 +7,13 @@ use yazi_shared::event::Cmd;
 use crate::{tab::Tab, tasks::Tasks};
 
 impl Tab {
-	pub fn sort(&mut self, c: Cmd, tasks: &Tasks) {
-		if let Some(by) = c.args.first() {
-			self.conf.sort_by = SortBy::from_str(by).unwrap_or_default();
+	pub fn sort(&mut self, mut c: Cmd, tasks: &Tasks) {
+		if let Some(by) = c.take_first_str() {
+			self.conf.sort_by = SortBy::from_str(&by).unwrap_or_default();
 		}
-		self.conf.sort_sensitive = c.named.contains_key("sensitive");
-		self.conf.sort_reverse = c.named.contains_key("reverse");
-		self.conf.sort_dir_first = c.named.contains_key("dir-first");
+		self.conf.sort_sensitive = c.get_bool("sensitive");
+		self.conf.sort_reverse = c.get_bool("reverse");
+		self.conf.sort_dir_first = c.get_bool("dir-first");
 
 		self.apply_files_attrs();
 		ManagerProxy::update_paged();

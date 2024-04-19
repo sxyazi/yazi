@@ -7,7 +7,7 @@ pub struct Opt {
 }
 
 impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { before: c.named.contains_key("before") } }
+	fn from(c: Cmd) -> Self { Self { before: c.get_bool("before") } }
 }
 
 impl Input {

@@ -38,7 +38,7 @@ impl FilesOp {
 
 	#[inline]
 	pub fn emit(self) {
-		emit!(Call(Cmd::new("update_files").with_data(self), Layer::Manager));
+		emit!(Call(Cmd::new("update_files").with_any("op", self), Layer::Manager));
 	}
 
 	pub fn prepare(url: &Url) -> u64 {

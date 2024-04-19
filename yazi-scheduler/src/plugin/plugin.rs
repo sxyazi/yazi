@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use tokio::sync::mpsc;
 use yazi_plugin::isolate;
 
@@ -43,7 +43,7 @@ impl Plugin {
 		let id = task.id;
 
 		self.prog.send(TaskProg::New(id, 0))?;
-		self.macro_.try_send(PluginOp::Entry(task).into(), HIGH)?;
+		self.queue(PluginOp::Entry(task), HIGH)?;
 		self.succ(id)
 	}
 }
@@ -55,5 +55,10 @@ impl Plugin {
 	#[inline]
 	fn fail(&self, id: usize, reason: String) -> Result<()> {
 		Ok(self.prog.send(TaskProg::Fail(id, reason))?)
+	}
+
+	#[inline]
+	fn queue(&self, op: impl Into<TaskOp>, priority: u8) -> Result<()> {
+		self.macro_.try_send(op.into(), priority).map_err(|_| anyhow!("Failed to send task"))
 	}
 }

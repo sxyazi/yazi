@@ -3,7 +3,8 @@ use std::fmt::Display;
 use mlua::TableExt;
 use scopeguard::defer;
 use tracing::warn;
-use yazi_plugin::{loader::LOADER, OptData, RtRef, LUA};
+use yazi_dds::Sendable;
+use yazi_plugin::{loader::LOADER, RtRef, LUA};
 use yazi_shared::{emit, event::Cmd, Layer};
 
 use crate::{app::App, lives::Lives};
@@ -16,7 +17,7 @@ impl App {
 		};
 
 		if !opt.sync {
-			return self.cx.tasks.plugin_micro(opt.name, opt.data.args);
+			return self.cx.tasks.plugin_micro(opt.name, opt.args);
 		}
 
 		if LOADER.read().contains_key(&opt.name) {
@@ -25,14 +26,15 @@ impl App {
 
 		tokio::spawn(async move {
 			if LOADER.ensure(&opt.name).await.is_ok() {
-				Self::_plugin_do(opt.name, opt.data);
+				Self::_plugin_do(opt);
 			}
 		});
 	}
 
 	#[inline]
-	pub(crate) fn _plugin_do(name: String, data: OptData) {
-		emit!(Call(Cmd::args("plugin_do", vec![name]).with_data(data), Layer::App));
+	pub(crate) fn _plugin_do(opt: yazi_plugin::Opt) {
+		let cmd: Cmd = opt.into();
+		emit!(Call(cmd.with_name("plugin_do"), Layer::App));
 	}
 
 	pub(crate) fn plugin_do(&mut self, opt: impl TryInto<yazi_plugin::Opt, Error = impl Display>) {
@@ -53,10 +55,10 @@ impl App {
 		};
 
 		_ = Lives::scope(&self.cx, |_| {
-			if let Some(cb) = opt.data.cb {
+			if let Some(cb) = opt.cb {
 				cb(&LUA, plugin)
 			} else {
-				plugin.call_method("entry", opt.data.args)
+				plugin.call_method("entry", Sendable::vec_to_table(&LUA, opt.args)?)
 			}
 		});
 	}

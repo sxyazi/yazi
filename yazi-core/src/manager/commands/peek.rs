@@ -13,10 +13,10 @@ pub struct Opt {
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
-			skip:        c.take_first().and_then(|s| s.parse().ok()),
-			force:       c.named.contains_key("force"),
-			only_if:     c.take_name("only-if").map(Url::from),
-			upper_bound: c.named.contains_key("upper-bound"),
+			skip:        c.take_first_str().and_then(|s| s.parse().ok()),
+			force:       c.get_bool("force"),
+			only_if:     c.take_str("only-if").map(Url::from),
+			upper_bound: c.get_bool("upper-bound"),
 		}
 	}
 }

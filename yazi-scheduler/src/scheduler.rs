@@ -4,8 +4,8 @@ use futures::{future::BoxFuture, FutureExt};
 use parking_lot::Mutex;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
 use yazi_config::{open::Opener, plugin::PluginRule, TASKS};
-use yazi_dds::{Pump, ValueSendable};
-use yazi_shared::{fs::{unique_path, Url}, Throttle};
+use yazi_dds::Pump;
+use yazi_shared::{event::Data, fs::{unique_path, Url}, Throttle};
 
 use super::{Ongoing, TaskProg, TaskStage};
 use crate::{file::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, preload::{Preload, PreloadOpRule, PreloadOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
@@ -182,7 +182,7 @@ impl Scheduler {
 		);
 	}
 
-	pub fn plugin_micro(&self, name: String, args: Vec<ValueSendable>) {
+	pub fn plugin_micro(&self, name: String, args: Vec<Data>) {
 		let id = self.ongoing.lock().add(TaskKind::User, format!("Run micro plugin `{name}`"));
 
 		let plugin = self.plugin.clone();
@@ -195,7 +195,7 @@ impl Scheduler {
 		);
 	}
 
-	pub fn plugin_macro(&self, name: String, args: Vec<ValueSendable>) {
+	pub fn plugin_macro(&self, name: String, args: Vec<Data>) {
 		let id = self.ongoing.lock().add(TaskKind::User, format!("Run macro plugin `{name}`"));
 
 		self.plugin.macro_(PluginOpEntry { id, name, args }).ok();

@@ -1,129 +1,122 @@
 use std::collections::HashMap;
 
-use mlua::{ExternalError, IntoLua, Lua, Value, Variadic};
-use serde::{Deserialize, Serialize};
-use yazi_shared::OrderedFloat;
+use mlua::{ExternalError, Lua, Table, Value, Variadic};
+use yazi_shared::{event::{Data, DataKey}, OrderedFloat};
 
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ValueSendable {
-	Nil,
-	Boolean(bool),
-	Integer(i64),
-	Number(f64),
-	String(String),
-	Table(HashMap<ValueSendableKey, ValueSendable>),
-}
+pub struct Sendable;
 
-impl ValueSendable {
-	pub fn try_from_variadic(values: Variadic<Value>) -> mlua::Result<Vec<Self>> {
+impl Sendable {
+	pub fn value_to_data(value: Value) -> mlua::Result<Data> {
+		Ok(match value {
+			Value::Nil => Data::Nil,
+			Value::Boolean(b) => Data::Boolean(b),
+			Value::LightUserData(_) => Err("light userdata is not supported".into_lua_err())?,
+			Value::Integer(n) => Data::Integer(n),
+			Value::Number(n) => Data::Number(n),
+			Value::String(s) => Data::String(s.to_str()?.to_owned()),
+			Value::Table(t) => {
+				let mut map = HashMap::with_capacity(t.raw_len());
+				for result in t.pairs::<Value, Value>() {
+					let (k, v) = result?;
+					map.insert(Self::value_to_key(k)?, Self::value_to_data(v)?);
+				}
+				Data::Table(map)
+			}
+			Value::Function(_) => Err("function is not supported".into_lua_err())?,
+			Value::Thread(_) => Err("thread is not supported".into_lua_err())?,
+			Value::UserData(ud) => {
+				if let Ok(t) = ud.take::<yazi_shared::fs::Url>() {
+					Data::Url(t)
+				} else if let Ok(t) = ud.take::<super::body::BodyYankIter>() {
+					Data::Any(Box::new(t))
+				} else {
+					Err("unsupported userdata included".into_lua_err())?
+				}
+			}
+			Value::Error(_) => Err("error is not supported".into_lua_err())?,
+		})
+	}
+
+	pub fn data_to_value(lua: &Lua, data: Data) -> mlua::Result<Value> {
+		Ok(match data {
+			Data::Nil => Value::Nil,
+			Data::Boolean(v) => Value::Boolean(v),
+			Data::Integer(v) => Value::Integer(v),
+			Data::Number(v) => Value::Number(v),
+			Data::String(v) => Value::String(lua.create_string(v)?),
+			Data::Table(t) => {
+				let seq_len = t.keys().filter(|&k| !k.is_numeric()).count();
+				let table = lua.create_table_with_capacity(seq_len, t.len() - seq_len)?;
+				for (k, v) in t {
+					table.raw_set(Self::key_to_value(lua, k)?, Self::data_to_value(lua, v)?)?;
+				}
+				Value::Table(table)
+			}
+			Data::Url(v) => Value::UserData(lua.create_any_userdata(v)?),
+			Data::Any(v) => {
+				if let Ok(t) = v.downcast::<super::body::BodyYankIter>() {
+					Value::UserData(lua.create_userdata(*t)?)
+				} else {
+					Err("unsupported userdata included".into_lua_err())?
+				}
+			}
+		})
+	}
+
+	pub fn vec_to_table(lua: &Lua, data: Vec<Data>) -> mlua::Result<Table> {
+		let mut vec = Vec::with_capacity(data.len());
+		for v in data.into_iter() {
+			vec.push(Self::data_to_value(lua, v)?);
+		}
+		lua.create_sequence_from(vec)
+	}
+
+	pub fn vec_to_variadic(lua: &Lua, data: Vec<Data>) -> mlua::Result<Variadic<Value>> {
+		let mut vec = Vec::with_capacity(data.len());
+		for v in data {
+			vec.push(Self::data_to_value(lua, v)?);
+		}
+		Ok(Variadic::from_iter(vec))
+	}
+
+	pub fn variadic_to_vec(values: Variadic<Value>) -> mlua::Result<Vec<Data>> {
 		let mut vec = Vec::with_capacity(values.len());
 		for value in values {
-			vec.push(Self::try_from(value)?);
+			vec.push(Self::value_to_data(value)?);
 		}
 		Ok(vec)
 	}
 
-	pub fn into_table_string(self) -> HashMap<String, String> {
-		let Self::Table(table) = self else {
-			return Default::default();
-		};
-
-		let mut map = HashMap::with_capacity(table.len());
-		for pair in table {
-			if let (ValueSendableKey::String(k), Self::String(v)) = pair {
-				map.insert(k, v);
-			}
-		}
-		map
-	}
-}
-
-impl<'a> TryFrom<Value<'a>> for ValueSendable {
-	type Error = mlua::Error;
-
-	fn try_from(value: Value) -> Result<Self, Self::Error> {
+	fn value_to_key(value: Value) -> mlua::Result<DataKey> {
 		Ok(match value {
-			Value::Nil => Self::Nil,
-			Value::Boolean(b) => Self::Boolean(b),
+			Value::Nil => DataKey::Nil,
+			Value::Boolean(v) => DataKey::Boolean(v),
 			Value::LightUserData(_) => Err("light userdata is not supported".into_lua_err())?,
-			Value::Integer(n) => Self::Integer(n),
-			Value::Number(n) => Self::Number(n),
-			Value::String(s) => Self::String(s.to_str()?.to_owned()),
-			Value::Table(t) => {
-				let mut map = HashMap::with_capacity(t.len().map(|l| l as usize)?);
-				for result in t.pairs::<Value, Value>() {
-					let (k, v) = result?;
-					map.insert(Self::try_from(k)?.try_into()?, v.try_into()?);
-				}
-				Self::Table(map)
-			}
+			Value::Integer(v) => DataKey::Integer(v),
+			Value::Number(v) => DataKey::Number(OrderedFloat::new(v)),
+			Value::String(v) => DataKey::String(v.to_str()?.to_owned()),
+			Value::Table(_) => Err("table is not supported".into_lua_err())?,
 			Value::Function(_) => Err("function is not supported".into_lua_err())?,
 			Value::Thread(_) => Err("thread is not supported".into_lua_err())?,
-			Value::UserData(_) => Err("userdata is not supported".into_lua_err())?,
+			Value::UserData(ud) => {
+				if let Ok(t) = ud.take::<yazi_shared::fs::Url>() {
+					DataKey::Url(t)
+				} else {
+					Err("unsupported userdata included".into_lua_err())?
+				}
+			}
 			Value::Error(_) => Err("error is not supported".into_lua_err())?,
 		})
 	}
-}
 
-impl IntoLua<'_> for ValueSendable {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		match self {
-			Self::Nil => Ok(Value::Nil),
-			Self::Boolean(v) => Ok(Value::Boolean(v)),
-			Self::Integer(v) => Ok(Value::Integer(v)),
-			Self::Number(v) => Ok(Value::Number(v)),
-			Self::String(v) => Ok(Value::String(lua.create_string(v)?)),
-			Self::Table(v) => {
-				let seq_len = v.keys().filter(|&k| !k.is_numeric()).count();
-				let table = lua.create_table_with_capacity(seq_len, v.len() - seq_len)?;
-				for (k, v) in v {
-					table.raw_set(k, v)?;
-				}
-				Ok(Value::Table(table))
-			}
-		}
-	}
-}
-
-#[derive(Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ValueSendableKey {
-	Nil,
-	Boolean(bool),
-	Integer(i64),
-	Number(OrderedFloat),
-	String(String),
-}
-
-impl ValueSendableKey {
-	#[inline]
-	fn is_numeric(&self) -> bool { matches!(self, Self::Integer(_) | Self::Number(_)) }
-}
-
-impl TryInto<ValueSendableKey> for ValueSendable {
-	type Error = mlua::Error;
-
-	fn try_into(self) -> Result<ValueSendableKey, Self::Error> {
-		Ok(match self {
-			Self::Nil => ValueSendableKey::Nil,
-			Self::Boolean(v) => ValueSendableKey::Boolean(v),
-			Self::Integer(v) => ValueSendableKey::Integer(v),
-			Self::Number(v) => ValueSendableKey::Number(OrderedFloat::new(v)),
-			Self::String(v) => ValueSendableKey::String(v),
-			Self::Table(_) => Err("table is not supported".into_lua_err())?,
+	fn key_to_value(lua: &Lua, key: DataKey) -> mlua::Result<Value> {
+		Ok(match key {
+			DataKey::Nil => Value::Nil,
+			DataKey::Boolean(k) => Value::Boolean(k),
+			DataKey::Integer(k) => Value::Integer(k),
+			DataKey::Number(k) => Value::Number(k.get()),
+			DataKey::String(k) => Value::String(lua.create_string(k)?),
+			DataKey::Url(k) => Value::UserData(lua.create_any_userdata(k)?),
 		})
-	}
-}
-
-impl IntoLua<'_> for ValueSendableKey {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		match self {
-			Self::Nil => Ok(Value::Nil),
-			Self::Boolean(k) => Ok(Value::Boolean(k)),
-			Self::Integer(k) => Ok(Value::Integer(k)),
-			Self::Number(k) => Ok(Value::Number(k.get())),
-			Self::String(k) => Ok(Value::String(lua.create_string(k)?)),
-		}
 	}
 }

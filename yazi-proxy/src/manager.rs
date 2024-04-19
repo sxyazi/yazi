@@ -25,13 +25,13 @@ impl ManagerProxy {
 
 	#[inline]
 	pub fn open_do(opt: OpenDoOpt) {
-		emit!(Call(Cmd::new("open_do").with_data(opt), Layer::Manager));
+		emit!(Call(Cmd::new("open_do").with_any("option", opt), Layer::Manager));
 	}
 
 	#[inline]
 	pub fn remove_do(targets: Vec<Url>, permanently: bool) {
 		emit!(Call(
-			Cmd::new("remove_do").with_bool("permanently", permanently).with_data(targets),
+			Cmd::new("remove_do").with_bool("permanently", permanently).with_any("targets", targets),
 			Layer::Manager
 		));
 	}

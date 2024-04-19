@@ -7,7 +7,7 @@ pub struct Opt {
 }
 
 impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { end_of_word: c.named.contains_key("end-of-word") } }
+	fn from(c: Cmd) -> Self { Self { end_of_word: c.get_bool("end-of-word") } }
 }
 
 impl Input {

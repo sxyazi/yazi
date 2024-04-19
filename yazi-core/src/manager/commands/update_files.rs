@@ -12,7 +12,9 @@ pub struct Opt {
 impl TryFrom<Cmd> for Opt {
 	type Error = ();
 
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> { Ok(Self { op: c.take_data().ok_or(())? }) }
+	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
+		Ok(Self { op: c.take_any("op").ok_or(())? })
+	}
 }
 
 impl Manager {

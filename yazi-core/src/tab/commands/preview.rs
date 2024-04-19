@@ -11,7 +11,7 @@ impl TryFrom<Cmd> for Opt {
 	type Error = ();
 
 	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
-		Ok(Self { lock: c.take_data().ok_or(())? })
+		Ok(Self { lock: c.take_any("lock").ok_or(())? })
 	}
 }
 

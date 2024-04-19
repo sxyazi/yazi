@@ -13,11 +13,11 @@ pub struct Opt {
 
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
-		if c.named.contains_key("current") {
+		if c.get_bool("current") {
 			Self { url: Default::default(), current: true }
 		} else {
 			Self {
-				url:     c.take_first().map_or_else(|| Url::from(&BOOT.cwd), Url::from),
+				url:     c.take_first_str().map_or_else(|| Url::from(&BOOT.cwd), Url::from),
 				current: false,
 			}
 		}

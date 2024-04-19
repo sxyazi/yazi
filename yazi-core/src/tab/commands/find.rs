@@ -16,11 +16,7 @@ pub struct Opt {
 
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
-		Self {
-			query: c.take_first(),
-			prev:  c.named.contains_key("previous"),
-			case:  FilterCase::from(&c),
-		}
+		Self { query: c.take_first_str(), prev: c.get_bool("previous"), case: FilterCase::from(&c) }
 	}
 }
 
@@ -29,7 +25,7 @@ pub struct ArrowOpt {
 }
 
 impl From<Cmd> for ArrowOpt {
-	fn from(c: Cmd) -> Self { Self { prev: c.named.contains_key("previous") } }
+	fn from(c: Cmd) -> Self { Self { prev: c.get_bool("previous") } }
 }
 
 impl Tab {

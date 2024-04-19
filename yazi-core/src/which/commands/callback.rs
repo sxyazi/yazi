@@ -14,8 +14,8 @@ impl TryFrom<Cmd> for Opt {
 
 	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
 		Ok(Self {
-			tx:  c.take_data().ok_or(())?,
-			idx: c.take_first().and_then(|s| s.parse().ok()).ok_or(())?,
+			tx:  c.take_any("tx").ok_or(())?,
+			idx: c.take_first_str().and_then(|s| s.parse().ok()).ok_or(())?,
 		})
 	}
 }

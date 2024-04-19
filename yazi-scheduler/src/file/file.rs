@@ -1,6 +1,6 @@
 use std::{borrow::Cow, collections::VecDeque, fs::Metadata, path::{Path, PathBuf}};
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use futures::{future::BoxFuture, FutureExt};
 use tokio::{fs, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
@@ -51,9 +51,10 @@ impl File {
 							if task.retry < TASKS.bizarre_retry
 								&& matches!(e.raw_os_error(), Some(1) | Some(93)) =>
 						{
-							self.log(task.id, format!("Paste task retry: {:?}", task))?;
 							task.retry += 1;
-							return Ok(self.macro_.send(FileOp::Paste(task).into(), LOW).await?);
+							self.log(task.id, format!("Paste task retry: {:?}", task))?;
+							self.queue(FileOp::Paste(task), LOW).await?;
+							return Ok(());
 						}
 						Err(e) => Err(e)?,
 					}
@@ -147,9 +148,9 @@ impl File {
 			self.prog.send(TaskProg::New(id, meta.len()))?;
 
 			if meta.is_file() {
-				self.macro_.send(FileOp::Paste(task).into(), LOW).await?;
+				self.queue(FileOp::Paste(task), LOW).await?;
 			} else if meta.is_symlink() {
-				self.macro_.send(FileOp::Link(task.to_link(meta)).into(), NORMAL).await?;
+				self.queue(FileOp::Link(task.to_link(meta)), NORMAL).await?;
 			}
 			return self.succ(id);
 		}
@@ -193,9 +194,9 @@ impl File {
 				self.prog.send(TaskProg::New(task.id, meta.len()))?;
 
 				if meta.is_file() {
-					self.macro_.send(FileOp::Paste(task.clone()).into(), LOW).await?;
+					self.queue(FileOp::Paste(task.clone()), LOW).await?;
 				} else if meta.is_symlink() {
-					self.macro_.send(FileOp::Link(task.to_link(meta)).into(), NORMAL).await?;
+					self.queue(FileOp::Link(task.to_link(meta)), NORMAL).await?;
 				}
 			}
 		}
@@ -209,7 +210,7 @@ impl File {
 		}
 
 		self.prog.send(TaskProg::New(id, task.meta.as_ref().unwrap().len()))?;
-		self.macro_.send(FileOp::Link(task).into(), NORMAL).await?;
+		self.queue(FileOp::Link(task), NORMAL).await?;
 		self.succ(id)
 	}
 
@@ -219,7 +220,7 @@ impl File {
 			let id = task.id;
 			task.length = meta.len();
 			self.prog.send(TaskProg::New(id, meta.len()))?;
-			self.macro_.send(FileOp::Delete(task).into(), NORMAL).await?;
+			self.queue(FileOp::Delete(task), NORMAL).await?;
 			return self.succ(id);
 		}
 
@@ -238,7 +239,7 @@ impl File {
 				task.target = Url::from(entry.path());
 				task.length = meta.len();
 				self.prog.send(TaskProg::New(task.id, meta.len()))?;
-				self.macro_.send(FileOp::Delete(task.clone()).into(), NORMAL).await?;
+				self.queue(FileOp::Delete(task.clone()), NORMAL).await?;
 			}
 		}
 		self.succ(task.id)
@@ -249,7 +250,7 @@ impl File {
 		task.length = calculate_size(&task.target).await;
 
 		self.prog.send(TaskProg::New(id, task.length))?;
-		self.macro_.send(FileOp::Trash(task).into(), LOW).await?;
+		self.queue(FileOp::Trash(task), LOW).await?;
 		self.succ(id)
 	}
 
@@ -295,6 +296,11 @@ impl File {
 	#[inline]
 	fn log(&self, id: usize, line: String) -> Result<()> {
 		Ok(self.prog.send(TaskProg::Log(id, line))?)
+	}
+
+	#[inline]
+	async fn queue(&self, op: impl Into<TaskOp>, priority: u8) -> Result<()> {
+		self.macro_.send(op.into(), priority).await.map_err(|_| anyhow!("Failed to send task"))
 	}
 }
 

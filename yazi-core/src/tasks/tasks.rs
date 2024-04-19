@@ -29,7 +29,7 @@ impl Tasks {
 				let new = TasksProgress::from(&*ongoing.lock());
 				if last != new {
 					last = new;
-					emit!(Call(Cmd::new("update_progress").with_data(new), Layer::App));
+					emit!(Call(Cmd::new("update_progress").with_any("progress", new), Layer::App));
 				}
 			}
 		});

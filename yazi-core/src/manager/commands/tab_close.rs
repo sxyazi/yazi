@@ -8,7 +8,7 @@ pub struct Opt {
 
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
-		Self { idx: c.take_first().and_then(|i| i.parse().ok()).unwrap_or(0) }
+		Self { idx: c.take_first_str().and_then(|i| i.parse().ok()).unwrap_or(0) }
 	}
 }
 
