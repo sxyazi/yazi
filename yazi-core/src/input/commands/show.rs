@@ -1,10 +1,24 @@
-use yazi_proxy::options::InputOpt;
-use yazi_shared::render;
+use tokio::sync::mpsc;
+use yazi_config::popup::InputCfg;
+use yazi_shared::{event::Cmd, render, InputError};
 
 use crate::input::Input;
 
+pub struct Opt {
+	cfg: InputCfg,
+	tx:  mpsc::UnboundedSender<Result<String, InputError>>,
+}
+
+impl TryFrom<Cmd> for Opt {
+	type Error = ();
+
+	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
+		Ok(Self { cfg: c.take_any("cfg").ok_or(())?, tx: c.take_any("tx").ok_or(())? })
+	}
+}
+
 impl Input {
-	pub fn show(&mut self, opt: impl TryInto<InputOpt>) {
+	pub fn show(&mut self, opt: impl TryInto<Opt>) {
 		let Ok(opt) = opt.try_into() else { return };
 
 		self.close(false);

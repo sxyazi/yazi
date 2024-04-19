@@ -16,9 +16,7 @@ pub struct Opt {
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
-			// cache:      mem::take(&mut c.args),
-			// TODO: Fix this
-			cache:      vec![],
+			cache:      c.take_any("cache").unwrap_or_default(),
 			cache_name: c.take_str("cache-name").unwrap_or_default(),
 			word:       c.take_str("word").unwrap_or_default(),
 			ticket:     c.take_str("ticket").and_then(|v| v.parse().ok()).unwrap_or(0),
@@ -65,7 +63,7 @@ impl Completion {
 		}
 
 		if !opt.cache.is_empty() {
-			self.caches.insert(opt.cache_name.to_owned(), opt.cache.clone());
+			self.caches.insert(opt.cache_name.to_owned(), opt.cache);
 		}
 		let Some(cache) = self.caches.get(&opt.cache_name) else {
 			return;

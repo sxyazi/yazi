@@ -46,8 +46,8 @@ impl Utils {
 				emit!(Call(
 					Cmd::new("show")
 						.with("layer", Layer::Which)
-						.with_bool("silent", t.raw_get("silent").unwrap_or_default())
-						.with_any("candidates", cands),
+						.with_any("candidates", cands)
+						.with_bool("silent", t.raw_get("silent").unwrap_or_default()),
 					Layer::Which
 				));
 

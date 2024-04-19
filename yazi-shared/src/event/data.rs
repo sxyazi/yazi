@@ -48,7 +48,7 @@ impl Data {
 	#[inline]
 	pub fn into_any<T: 'static>(self) -> Option<T> {
 		match self {
-			Data::Any(b) => b.downcast::<T>().ok().map(|b| *b),
+			Self::Any(b) => b.downcast::<T>().ok().map(|b| *b),
 			_ => None,
 		}
 	}
@@ -66,6 +66,15 @@ impl Data {
 		}
 		map
 	}
+
+	#[inline]
+	pub fn shallow_clone(&self) -> Option<Self> {
+		match self {
+			Self::Boolean(b) => Some(Self::Boolean(*b)),
+			Self::String(s) => Some(Self::String(s.clone())),
+			_ => None,
+		}
+	}
 }
 
 // --- Key
@@ -77,6 +86,8 @@ pub enum DataKey {
 	Integer(i64),
 	Number(OrderedFloat),
 	String(String),
+	#[serde(skip)]
+	Url(Url),
 }
 
 impl DataKey {

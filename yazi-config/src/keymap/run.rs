@@ -10,21 +10,24 @@ where
 {
 	struct RunVisitor;
 
+	#[allow(clippy::explicit_counter_loop)]
 	fn parse(s: &str) -> Result<Cmd> {
 		let mut args = shell_words::split(s)?;
-		if args.is_empty() {
-			bail!("`run` cannot be empty");
-		}
-
 		let mut cmd = Cmd { name: mem::take(&mut args[0]), ..Default::default() };
-		for (i, arg) in args.into_iter().skip(1).enumerate() {
-			if !arg.starts_with("--") {
+
+		let mut i = 0usize;
+		for arg in args.into_iter().skip(1) {
+			let Some(arg) = arg.strip_prefix("--") else {
 				cmd.args.insert(i.to_string(), Data::String(arg));
+				i += 1;
 				continue;
-			}
+			};
 
 			let mut parts = arg.splitn(2, '=');
-			let key = parts.next().unwrap().trim_start_matches('-').to_owned();
+			let Some(key) = parts.next().map(|s| s.to_owned()) else {
+				bail!("invalid argument: {arg}");
+			};
+
 			if let Some(val) = parts.next() {
 				cmd.args.insert(key, Data::String(val.to_owned()));
 			} else {

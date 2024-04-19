@@ -15,7 +15,7 @@ impl Sendable {
 			Value::Number(n) => Data::Number(n),
 			Value::String(s) => Data::String(s.to_str()?.to_owned()),
 			Value::Table(t) => {
-				let mut map = HashMap::with_capacity(t.len().map(|l| l as usize)?);
+				let mut map = HashMap::with_capacity(t.raw_len());
 				for result in t.pairs::<Value, Value>() {
 					let (k, v) = result?;
 					map.insert(Self::value_to_key(k)?, Self::value_to_data(v)?);
@@ -98,7 +98,13 @@ impl Sendable {
 			Value::Table(_) => Err("table is not supported".into_lua_err())?,
 			Value::Function(_) => Err("function is not supported".into_lua_err())?,
 			Value::Thread(_) => Err("thread is not supported".into_lua_err())?,
-			Value::UserData(_) => Err("userdata is not supported".into_lua_err())?,
+			Value::UserData(ud) => {
+				if let Ok(t) = ud.take::<yazi_shared::fs::Url>() {
+					DataKey::Url(t)
+				} else {
+					Err("unsupported userdata included".into_lua_err())?
+				}
+			}
 			Value::Error(_) => Err("error is not supported".into_lua_err())?,
 		})
 	}
@@ -110,6 +116,7 @@ impl Sendable {
 			DataKey::Integer(k) => Value::Integer(k),
 			DataKey::Number(k) => Value::Number(k.get()),
 			DataKey::String(k) => Value::String(lua.create_string(k)?),
+			DataKey::Url(k) => Value::UserData(lua.create_any_userdata(k)?),
 		})
 	}
 }

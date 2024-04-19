@@ -26,7 +26,7 @@ impl TryFrom<Cmd> for Opt {
 			c.take_any::<Vec<Data>>("args").unwrap_or_default()
 		};
 
-		Ok(Self { name, sync: c.get_bool("sync"), args, cb: c.take_any::<OptCallback>("callback") })
+		Ok(Self { name, sync: c.get_bool("sync"), args, cb: c.take_any("callback") })
 	}
 }
 

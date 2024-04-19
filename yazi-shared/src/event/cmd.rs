@@ -71,13 +71,14 @@ impl Cmd {
 	}
 
 	pub fn shallow_clone(&self) -> Self {
-		let args = self
-			.args
-			.iter()
-			.filter_map(|(k, v)| v.as_str().map(|s| (k.clone(), Data::String(s.to_owned()))))
-			.collect();
-
-		Self { name: self.name.clone(), args }
+		Self {
+			name: self.name.clone(),
+			args: self
+				.args
+				.iter()
+				.filter_map(|(k, v)| v.shallow_clone().map(|v| (k.clone(), v)))
+				.collect(),
+		}
 	}
 }
 

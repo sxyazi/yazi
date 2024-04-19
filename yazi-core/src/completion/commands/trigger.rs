@@ -57,7 +57,8 @@ impl Completion {
 
 			if !cache.is_empty() {
 				emit!(Call(
-					Cmd::args("show", cache)
+					Cmd::new("show")
+						.with_any("cache", cache)
 						.with("cache-name", parent)
 						.with("word", child)
 						.with("ticket", ticket),
