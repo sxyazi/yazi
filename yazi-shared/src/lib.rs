@@ -13,6 +13,7 @@ mod number;
 mod os;
 mod ro_cell;
 pub mod term;
+pub mod theme;
 mod throttle;
 mod time;
 mod xdg;

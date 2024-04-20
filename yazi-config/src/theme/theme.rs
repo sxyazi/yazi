@@ -2,9 +2,9 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 use validator::Validate;
-use yazi_shared::{fs::expand_path, Xdg};
+use yazi_shared::{fs::expand_path, theme::Style, Xdg};
 
-use super::{Filetype, Flavor, Icon, Style};
+use super::{Filetype, Flavor, Icon};
 use crate::{validation::check_validation, MERGED_THEME};
 
 #[derive(Deserialize, Serialize)]
