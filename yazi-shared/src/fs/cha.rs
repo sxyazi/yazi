@@ -84,9 +84,7 @@ impl From<Metadata> for Cha {
 			},
 			#[cfg(unix)]
 			owner: {
-				//use nix::unistd::User;
 				use std::os::unix::fs::MetadataExt;
-				//from_uid(m.uid()).
 				users::get_user_by_uid(m.uid()).unwrap().name().to_str().unwrap_or_default().to_string()
 					+ " " + users::get_group_by_gid(m.gid()).unwrap().name().to_str().unwrap_or_default()
 			},
