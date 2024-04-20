@@ -197,9 +197,9 @@ impl File {
 				self.prog.send(TaskProg::New(task.id, meta.len()))?;
 
 				if meta.is_file() {
-					self.queue(FileOp::Paste(task.spawn(to, from, meta)), LOW).await?;
+					self.queue(FileOp::Paste(task.spawn(from, to, meta)), LOW).await?;
 				} else if meta.is_symlink() {
-					self.queue(FileOp::Link(task.spawn(to, from, meta).into()), NORMAL).await?;
+					self.queue(FileOp::Link(task.spawn(from, to, meta).into()), NORMAL).await?;
 				}
 			}
 		}
