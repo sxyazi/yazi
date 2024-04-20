@@ -20,17 +20,17 @@ bitflags! {
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Cha {
-	pub kind: ChaKind,
-	pub len: u64,
-	pub accessed: Option<SystemTime>,
-	pub created: Option<SystemTime>,
-	pub modified: Option<SystemTime>,
+	pub kind:        ChaKind,
+	pub len:         u64,
+	pub accessed:    Option<SystemTime>,
+	pub created:     Option<SystemTime>,
+	pub modified:    Option<SystemTime>,
 	#[cfg(unix)]
 	pub permissions: libc::mode_t,
 	#[cfg(unix)]
-	pub uid: u32,
+	pub uid:         u32,
 	#[cfg(unix)]
-	pub gid: u32,
+	pub gid:         u32,
 }
 
 impl From<Metadata> for Cha {
@@ -58,25 +58,25 @@ impl From<Metadata> for Cha {
 		}
 
 		Self {
-			kind: ck,
-			len: m.len(),
+			kind:     ck,
+			len:      m.len(),
 			accessed: m.accessed().ok(),
 			// TODO: remove this once https://github.com/rust-lang/rust/issues/108277 is fixed.
-			created: None,
+			created:  None,
 			modified: m.modified().ok(),
 
 			#[cfg(unix)]
-			permissions: {
+			permissions:              {
 				use std::os::unix::prelude::PermissionsExt;
 				m.permissions().mode() as libc::mode_t
 			},
 			#[cfg(unix)]
-			uid: {
+			uid:                      {
 				use std::os::unix::fs::MetadataExt;
 				m.uid()
 			},
 			#[cfg(unix)]
-			gid: {
+			gid:                      {
 				use std::os::unix::fs::MetadataExt;
 				m.gid()
 			},
@@ -94,44 +94,28 @@ impl Cha {
 
 impl Cha {
 	#[inline]
-	pub fn is_dir(&self) -> bool {
-		self.kind.contains(ChaKind::DIR)
-	}
+	pub fn is_dir(&self) -> bool { self.kind.contains(ChaKind::DIR) }
 
 	#[inline]
-	pub fn is_hidden(&self) -> bool {
-		self.kind.contains(ChaKind::HIDDEN)
-	}
+	pub fn is_hidden(&self) -> bool { self.kind.contains(ChaKind::HIDDEN) }
 
 	#[inline]
-	pub fn is_link(&self) -> bool {
-		self.kind.contains(ChaKind::LINK)
-	}
+	pub fn is_link(&self) -> bool { self.kind.contains(ChaKind::LINK) }
 
 	#[inline]
-	pub fn is_orphan(&self) -> bool {
-		self.kind.contains(ChaKind::ORPHAN)
-	}
+	pub fn is_orphan(&self) -> bool { self.kind.contains(ChaKind::ORPHAN) }
 
 	#[inline]
-	pub fn is_block_device(&self) -> bool {
-		self.kind.contains(ChaKind::BLOCK_DEVICE)
-	}
+	pub fn is_block_device(&self) -> bool { self.kind.contains(ChaKind::BLOCK_DEVICE) }
 
 	#[inline]
-	pub fn is_char_device(&self) -> bool {
-		self.kind.contains(ChaKind::CHAR_DEVICE)
-	}
+	pub fn is_char_device(&self) -> bool { self.kind.contains(ChaKind::CHAR_DEVICE) }
 
 	#[inline]
-	pub fn is_fifo(&self) -> bool {
-		self.kind.contains(ChaKind::FIFO)
-	}
+	pub fn is_fifo(&self) -> bool { self.kind.contains(ChaKind::FIFO) }
 
 	#[inline]
-	pub fn is_socket(&self) -> bool {
-		self.kind.contains(ChaKind::SOCKET)
-	}
+	pub fn is_socket(&self) -> bool { self.kind.contains(ChaKind::SOCKET) }
 
 	#[inline]
 	pub fn is_exec(&self) -> bool {

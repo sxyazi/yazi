@@ -25,7 +25,5 @@ impl File {
 }
 
 impl<T: Into<yazi_shared::fs::File>> Cast<T> for File {
-	fn cast(lua: &Lua, data: T) -> mlua::Result<AnyUserData> {
-		lua.create_any_userdata(data.into())
-	}
+	fn cast(lua: &Lua, data: T) -> mlua::Result<AnyUserData> { lua.create_any_userdata(data.into()) }
 }
