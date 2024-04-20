@@ -1,8 +1,16 @@
-use std::{collections::VecDeque, fs::Metadata, path::{Path, PathBuf}};
+use std::{
+	collections::VecDeque,
+	fs::Metadata,
+	path::{Path, PathBuf},
+};
 
 use anyhow::Result;
 use filetime::{set_file_mtime, FileTime};
-use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
+use tokio::{
+	fs, io, select,
+	sync::{mpsc, oneshot},
+	time,
+};
 
 pub async fn accessible(path: &Path) -> bool {
 	match fs::symlink_metadata(path).await {
@@ -103,7 +111,10 @@ pub fn copy_with_progress(
 #[cfg(unix)]
 #[allow(clippy::collapsible_else_if)]
 pub fn permissions(m: libc::mode_t) -> String {
-	use libc::{S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFSOCK, S_IRGRP, S_IROTH, S_IRUSR, S_ISGID, S_ISUID, S_ISVTX, S_IWGRP, S_IWOTH, S_IWUSR, S_IXGRP, S_IXOTH, S_IXUSR};
+	use libc::{
+		S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFSOCK, S_IRGRP, S_IROTH, S_IRUSR,
+		S_ISGID, S_ISUID, S_ISVTX, S_IWGRP, S_IWOTH, S_IWUSR, S_IXGRP, S_IXOTH, S_IXUSR,
+	};
 	let mut s = String::with_capacity(10);
 
 	// File type
@@ -121,30 +132,70 @@ pub fn permissions(m: libc::mode_t) -> String {
 	s.push(if m & S_IRUSR != 0 { 'r' } else { '-' });
 	s.push(if m & S_IWUSR != 0 { 'w' } else { '-' });
 	s.push(if m & S_IXUSR != 0 {
-		if m & S_ISUID != 0 { 's' } else { 'x' }
+		if m & S_ISUID != 0 {
+			's'
+		} else {
+			'x'
+		}
 	} else {
-		if m & S_ISUID != 0 { 'S' } else { '-' }
+		if m & S_ISUID != 0 {
+			'S'
+		} else {
+			'-'
+		}
 	});
 
 	// Group
 	s.push(if m & S_IRGRP != 0 { 'r' } else { '-' });
 	s.push(if m & S_IWGRP != 0 { 'w' } else { '-' });
 	s.push(if m & S_IXGRP != 0 {
-		if m & S_ISGID != 0 { 's' } else { 'x' }
+		if m & S_ISGID != 0 {
+			's'
+		} else {
+			'x'
+		}
 	} else {
-		if m & S_ISGID != 0 { 'S' } else { '-' }
+		if m & S_ISGID != 0 {
+			'S'
+		} else {
+			'-'
+		}
 	});
 
 	// Other
 	s.push(if m & S_IROTH != 0 { 'r' } else { '-' });
 	s.push(if m & S_IWOTH != 0 { 'w' } else { '-' });
 	s.push(if m & S_IXOTH != 0 {
-		if m & S_ISVTX != 0 { 't' } else { 'x' }
+		if m & S_ISVTX != 0 {
+			't'
+		} else {
+			'x'
+		}
 	} else {
-		if m & S_ISVTX != 0 { 'T' } else { '-' }
+		if m & S_ISVTX != 0 {
+			'T'
+		} else {
+			'-'
+		}
 	});
 
 	s
+}
+
+#[cfg(unix)]
+pub fn owner(uid: u32, gid: u32) -> String {
+	let username = match users::get_user_by_uid(uid) {
+		Some(u) => u.name().to_str().unwrap_or_default().to_string(),
+		None => String::default(),
+	};
+	let groupname = match users::get_group_by_gid(gid) {
+		Some(g) => g.name().to_str().unwrap_or_default().to_string(),
+		None => String::default(),
+	};
+	format!("{username} {groupname}")
+	//users::get_user_by_uid(uid).unwrap().name().to_str().unwrap_or_default().to_string()
+	//+ " "
+	//+ users::get_group_by_gid(gid).unwrap().name().to_str().unwrap_or_default()
 }
 
 // Find the max common root in a list of files

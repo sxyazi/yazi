@@ -24,7 +24,6 @@ impl Cha {
 			{
 				reg.add_field_method_get("uid", |_, me| Ok(me.uid));
 				reg.add_field_method_get("gid", |_, me| Ok(me.gid));
-				reg.add_field_method_get("owner", |_, me| Ok(me.owner.clone()));
 			}
 
 			reg.add_field_method_get("length", |_, me| Ok(me.len));
@@ -41,6 +40,14 @@ impl Cha {
 				Ok(
 					#[cfg(unix)]
 					Some(yazi_shared::fs::permissions(me.permissions)),
+					#[cfg(windows)]
+					None::<String>,
+				)
+			});
+			reg.add_method("owner", |_, me, ()| {
+				Ok(
+					#[cfg(unix)]
+					Some(yazi_shared::fs::owner(me.uid, me.gid)),
 					#[cfg(windows)]
 					None::<String>,
 				)

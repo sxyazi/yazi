@@ -18,7 +18,7 @@ bitflags! {
 	}
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Cha {
 	pub kind: ChaKind,
 	pub len: u64,
@@ -31,8 +31,6 @@ pub struct Cha {
 	pub uid: u32,
 	#[cfg(unix)]
 	pub gid: u32,
-	#[cfg(unix)]
-	pub owner: String,
 }
 
 impl From<Metadata> for Cha {
@@ -81,12 +79,6 @@ impl From<Metadata> for Cha {
 			gid: {
 				use std::os::unix::fs::MetadataExt;
 				m.gid()
-			},
-			#[cfg(unix)]
-			owner: {
-				use std::os::unix::fs::MetadataExt;
-				users::get_user_by_uid(m.uid()).unwrap().name().to_str().unwrap_or_default().to_string()
-					+ " " + users::get_group_by_gid(m.gid()).unwrap().name().to_str().unwrap_or_default()
 			},
 		}
 	}

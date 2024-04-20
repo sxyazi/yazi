@@ -22,7 +22,7 @@ function Folder:linemode(area, files)
 		elseif mode == "permissions" then
 			spans[#spans + 1] = ui.Span(f.cha:permissions() or "")
 		elseif mode == "owner" then
-			spans[#spans + 1] = ui.Span(f.cha.owner or "")
+			spans[#spans + 1] = ui.Span(f.cha:owner() or "")
 		end
 
 		spans[#spans + 1] = ui.Span(" ")

@@ -2,21 +2,27 @@ use std::ops::Deref;
 
 use mlua::{AnyUserData, IntoLua, Lua, UserDataFields, UserDataMethods};
 use yazi_config::THEME;
-use yazi_plugin::{bindings::{Cast, Cha, Icon, Range}, elements::Style, url::Url};
+use yazi_plugin::{
+	bindings::{Cast, Cha, Icon, Range},
+	elements::Style,
+	url::Url,
+};
 use yazi_shared::MIME_DIR;
 
 use super::{CtxRef, SCOPE};
 
 pub(super) struct File {
-	idx:    usize,
+	idx: usize,
 	folder: *const yazi_core::folder::Folder,
-	tab:    *const yazi_core::tab::Tab,
+	tab: *const yazi_core::tab::Tab,
 }
 
 impl Deref for File {
 	type Target = yazi_shared::fs::File;
 
-	fn deref(&self) -> &Self::Target { &self.folder().files[self.idx] }
+	fn deref(&self) -> &Self::Target {
+		&self.folder().files[self.idx]
+	}
 }
 
 impl File {
@@ -33,7 +39,7 @@ impl File {
 		lua.register_userdata_type::<Self>(|reg| {
 			reg.add_field_method_get("idx", |_, me| Ok(me.idx + 1));
 			reg.add_field_method_get("url", |lua, me| Url::cast(lua, me.url.clone()));
-			reg.add_field_method_get("cha", |lua, me| Cha::cast(lua, me.cha.clone()));
+			reg.add_field_method_get("cha", |lua, me| Cha::cast(lua, me.cha));
 			reg.add_field_method_get("link_to", |lua, me| {
 				me.link_to.as_ref().cloned().map(|u| Url::cast(lua, u)).transpose()
 			});
@@ -131,8 +137,12 @@ impl File {
 	}
 
 	#[inline]
-	fn folder(&self) -> &yazi_core::folder::Folder { unsafe { &*self.folder } }
+	fn folder(&self) -> &yazi_core::folder::Folder {
+		unsafe { &*self.folder }
+	}
 
 	#[inline]
-	fn tab(&self) -> &yazi_core::tab::Tab { unsafe { &*self.tab } }
+	fn tab(&self) -> &yazi_core::tab::Tab {
+		unsafe { &*self.tab }
+	}
 }
