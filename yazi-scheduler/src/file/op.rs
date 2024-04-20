@@ -61,9 +61,9 @@ impl From<FileOpPaste> for FileOpLink {
 	fn from(value: FileOpPaste) -> Self {
 		Self {
 			id:       value.id,
-			from:     value.from.clone(),
-			to:       value.to.clone(),
-			meta:     value.meta.clone(),
+			from:     value.from,
+			to:       value.to,
+			meta:     value.meta,
 			resolve:  true,
 			relative: false,
 			delete:   value.cut,
