@@ -31,7 +31,7 @@ impl File {
 					_ => {}
 				}
 
-				let mut it = copy_with_progress(&task.from, &task.to);
+				let mut it = copy_with_progress(&task.from, &task.to, task.meta.as_ref().unwrap());
 				while let Some(res) = it.recv().await {
 					match res {
 						Ok(0) => {
@@ -142,7 +142,11 @@ impl File {
 			}
 		}
 
-		let meta = Self::metadata(&task.from, task.follow).await?;
+		if task.meta.is_none() {
+			task.meta = Some(Self::metadata(&task.from, task.follow).await?);
+		}
+
+		let meta = task.meta.as_ref().unwrap();
 		if !meta.is_dir() {
 			let id = task.id;
 			self.prog.send(TaskProg::New(id, meta.len()))?;
@@ -150,7 +154,7 @@ impl File {
 			if meta.is_file() {
 				self.queue(FileOp::Paste(task), LOW).await?;
 			} else if meta.is_symlink() {
-				self.queue(FileOp::Link(task.to_link(meta)), NORMAL).await?;
+				self.queue(FileOp::Link(task.into()), NORMAL).await?;
 			}
 			return self.succ(id);
 		}
@@ -168,9 +172,9 @@ impl File {
 			};
 		}
 
-		let root = task.to.clone();
+		let root = &task.to;
 		let skip = task.from.components().count();
-		let mut dirs = VecDeque::from([task.from]);
+		let mut dirs = VecDeque::from([task.from.clone()]);
 
 		while let Some(src) = dirs.pop_front() {
 			let dest = root.join(src.components().skip(skip).collect::<PathBuf>());
@@ -181,22 +185,21 @@ impl File {
 
 			let mut it = continue_unless_ok!(fs::read_dir(&src).await);
 			while let Ok(Some(entry)) = it.next_entry().await {
-				let src = Url::from(entry.path());
-				let meta = continue_unless_ok!(Self::metadata(&src, task.follow).await);
+				let from = Url::from(entry.path());
+				let meta = continue_unless_ok!(Self::metadata(&from, task.follow).await);
 
 				if meta.is_dir() {
-					dirs.push_back(src);
+					dirs.push_back(from);
 					continue;
 				}
 
-				task.to = dest.join(src.file_name().unwrap());
-				task.from = src;
+				let to = dest.join(from.file_name().unwrap());
 				self.prog.send(TaskProg::New(task.id, meta.len()))?;
 
 				if meta.is_file() {
-					self.queue(FileOp::Paste(task.clone()), LOW).await?;
+					self.queue(FileOp::Paste(task.spawn(to, from, meta)), LOW).await?;
 				} else if meta.is_symlink() {
-					self.queue(FileOp::Link(task.to_link(meta)), NORMAL).await?;
+					self.queue(FileOp::Link(task.spawn(to, from, meta).into()), NORMAL).await?;
 				}
 			}
 		}
@@ -301,19 +304,5 @@ impl File {
 	#[inline]
 	async fn queue(&self, op: impl Into<TaskOp>, priority: u8) -> Result<()> {
 		self.macro_.send(op.into(), priority).await.map_err(|_| anyhow!("Failed to send task"))
-	}
-}
-
-impl FileOpPaste {
-	fn to_link(&self, meta: Metadata) -> FileOpLink {
-		FileOpLink {
-			id:       self.id,
-			from:     self.from.clone(),
-			to:       self.to.clone(),
-			meta:     Some(meta),
-			resolve:  true,
-			relative: false,
-			delete:   self.cut,
-		}
 	}
 }

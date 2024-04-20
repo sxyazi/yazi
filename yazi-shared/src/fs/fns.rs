@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, path::{Path, PathBuf}};
+use std::{collections::VecDeque, fs::Metadata, path::{Path, PathBuf}};
 
 use anyhow::Result;
 use filetime::{set_file_times, FileTime};
@@ -35,22 +35,25 @@ pub async fn calculate_size(path: &Path) -> u64 {
 	total
 }
 
-pub fn copy_with_progress(from: &Path, to: &Path) -> mpsc::Receiver<Result<u64, io::Error>> {
+pub fn copy_with_progress(
+	from: &Path,
+	to: &Path,
+	meta: &Metadata,
+) -> mpsc::Receiver<Result<u64, io::Error>> {
 	let (tx, rx) = mpsc::channel(1);
 	let (tick_tx, mut tick_rx) = oneshot::channel();
 
 	tokio::spawn({
-		let (from, to) = (from.to_path_buf(), to.to_path_buf());
+		let (from, to, meta) = (from.to_owned(), to.to_owned(), meta.clone());
 
 		async move {
 			_ = match fs::copy(&from, &to).await {
 				Ok(len) => {
-					// Attempt to preserve file's accessed at and modified at timestamps
-					if let Ok(metadata) = fs::metadata(from).await {
-						let mtime = FileTime::from_last_modification_time(&metadata);
-						let atime = FileTime::from_last_access_time(&metadata);
-						_ = set_file_times(to, atime, mtime);
-					};
+					_ = set_file_times(
+						to,
+						FileTime::from_last_access_time(&meta),
+						FileTime::from_last_modification_time(&meta),
+					);
 
 					tick_tx.send(Ok(len))
 				}
