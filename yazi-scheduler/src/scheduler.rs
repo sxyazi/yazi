@@ -1,5 +1,6 @@
 use std::{borrow::Cow, ffi::OsString, sync::Arc, time::Duration};
 
+use anyhow::Result;
 use futures::{future::BoxFuture, FutureExt};
 use parking_lot::Mutex;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
@@ -71,6 +72,11 @@ impl Scheduler {
 		let mut ongoing = self.ongoing.lock();
 		let id = ongoing.add(TaskKind::User, format!("Cut {:?} to {:?}", from, to));
 
+		if to.starts_with(&from) && to != from {
+			self.new_and_fail(id, "Cannot cut directory into itself").ok();
+			return;
+		}
+
 		ongoing.hooks.insert(id, {
 			let ongoing = self.ongoing.clone();
 			let (from, to) = (from.clone(), to.clone());
@@ -103,6 +109,11 @@ impl Scheduler {
 	pub fn file_copy(&self, from: Url, mut to: Url, force: bool, follow: bool) {
 		let name = format!("Copy {:?} to {:?}", from, to);
 		let id = self.ongoing.lock().add(TaskKind::User, name);
+
+		if to.starts_with(&from) && to != from {
+			self.new_and_fail(id, "Cannot copy directory into itself").ok();
+			return;
+		}
 
 		let file = self.file.clone();
 		_ = self.micro.try_send(
@@ -398,5 +409,11 @@ impl Scheduler {
 				}
 			}
 		})
+	}
+
+	fn new_and_fail(&self, id: usize, reason: &str) -> Result<()> {
+		self.prog.send(TaskProg::New(id, 0))?;
+		self.prog.send(TaskProg::Fail(id, reason.to_owned()))?;
+		Ok(())
 	}
 }
