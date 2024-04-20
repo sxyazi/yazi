@@ -99,7 +99,10 @@ impl Scheduler {
 				if !force {
 					to = unique_path(to).await;
 				}
-				file.paste(FileOpPaste { id, from, to, cut: true, follow: false, retry: 0 }).await.ok();
+				file
+					.paste(FileOpPaste { id, from, to, meta: None, cut: true, follow: false, retry: 0 })
+					.await
+					.ok();
 			}
 			.boxed(),
 			LOW,
@@ -121,7 +124,10 @@ impl Scheduler {
 				if !force {
 					to = unique_path(to).await;
 				}
-				file.paste(FileOpPaste { id, from, to, cut: false, follow, retry: 0 }).await.ok();
+				file
+					.paste(FileOpPaste { id, from, to, meta: None, cut: false, follow, retry: 0 })
+					.await
+					.ok();
 			}
 			.boxed(),
 			LOW,

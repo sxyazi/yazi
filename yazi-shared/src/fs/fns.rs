@@ -1,7 +1,7 @@
 use std::{collections::VecDeque, fs::Metadata, path::{Path, PathBuf}};
 
 use anyhow::Result;
-use filetime::{set_file_mtime, set_file_times, FileTime};
+use filetime::{set_file_mtime, FileTime};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
 
 pub async fn accessible(path: &Path) -> bool {
