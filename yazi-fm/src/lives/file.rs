@@ -2,27 +2,21 @@ use std::ops::Deref;
 
 use mlua::{AnyUserData, IntoLua, Lua, UserDataFields, UserDataMethods};
 use yazi_config::THEME;
-use yazi_plugin::{
-	bindings::{Cast, Cha, Icon, Range},
-	elements::Style,
-	url::Url,
-};
+use yazi_plugin::{bindings::{Cast, Cha, Icon, Range}, elements::Style, url::Url};
 use yazi_shared::MIME_DIR;
 
 use super::{CtxRef, SCOPE};
 
 pub(super) struct File {
-	idx: usize,
+	idx:    usize,
 	folder: *const yazi_core::folder::Folder,
-	tab: *const yazi_core::tab::Tab,
+	tab:    *const yazi_core::tab::Tab,
 }
 
 impl Deref for File {
 	type Target = yazi_shared::fs::File;
 
-	fn deref(&self) -> &Self::Target {
-		&self.folder().files[self.idx]
-	}
+	fn deref(&self) -> &Self::Target { &self.folder().files[self.idx] }
 }
 
 impl File {
@@ -137,12 +131,8 @@ impl File {
 	}
 
 	#[inline]
-	fn folder(&self) -> &yazi_core::folder::Folder {
-		unsafe { &*self.folder }
-	}
+	fn folder(&self) -> &yazi_core::folder::Folder { unsafe { &*self.folder } }
 
 	#[inline]
-	fn tab(&self) -> &yazi_core::tab::Tab {
-		unsafe { &*self.tab }
-	}
+	fn tab(&self) -> &yazi_core::tab::Tab { unsafe { &*self.tab } }
 }
