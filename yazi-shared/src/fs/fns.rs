@@ -1,7 +1,7 @@
 use std::{collections::VecDeque, fs::Metadata, path::{Path, PathBuf}};
 
 use anyhow::Result;
-use filetime::{set_file_times, FileTime};
+use filetime::{set_file_mtime, set_file_times, FileTime};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
 
 pub async fn accessible(path: &Path) -> bool {
@@ -44,17 +44,13 @@ pub fn copy_with_progress(
 	let (tick_tx, mut tick_rx) = oneshot::channel();
 
 	tokio::spawn({
-		let (from, to, meta) = (from.to_owned(), to.to_owned(), meta.clone());
+		let (from, to) = (from.to_owned(), to.to_owned());
+		let mtime = FileTime::from_last_modification_time(meta);
 
 		async move {
 			_ = match fs::copy(&from, &to).await {
 				Ok(len) => {
-					_ = set_file_times(
-						to,
-						FileTime::from_last_access_time(&meta),
-						FileTime::from_last_modification_time(&meta),
-					);
-
+					set_file_mtime(to, mtime).ok();
 					tick_tx.send(Ok(len))
 				}
 				Err(e) => tick_tx.send(Err(e)),
