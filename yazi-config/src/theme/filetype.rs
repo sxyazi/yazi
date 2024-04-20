@@ -1,7 +1,7 @@
 use serde::{Deserialize, Deserializer};
-use yazi_shared::fs::File;
+use yazi_shared::{fs::File, theme::{Color, Style, StyleShadow}};
 
-use super::{Color, Is, Style, StyleShadow};
+use super::Is;
 use crate::Pattern;
 
 pub struct Filetype {

@@ -1,12 +1,11 @@
 use serde::{Deserialize, Deserializer};
-use yazi_shared::fs::File;
+use yazi_shared::{fs::File, theme::{Color, Style, StyleShadow}};
 
-use super::Style;
-use crate::{preset::Preset, theme::{Color, Is, StyleShadow}, Pattern};
+use crate::{preset::Preset, theme::Is, Pattern};
 
 pub struct Icon {
-	pub is:    Is,
-	pub name:  Pattern,
+	is:        Is,
+	name:      Pattern,
 	pub text:  String,
 	pub style: Style,
 }
