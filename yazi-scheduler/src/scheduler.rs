@@ -72,7 +72,7 @@ impl Scheduler {
 		let mut ongoing = self.ongoing.lock();
 		let id = ongoing.add(TaskKind::User, format!("Cut {:?} to {:?}", from, to));
 
-		if to.starts_with(&from) {
+		if to.starts_with(&from) && to != from {
 			self.new_and_fail(id, "Cannot cut directory into itself").ok();
 			return;
 		}
@@ -110,7 +110,7 @@ impl Scheduler {
 		let name = format!("Copy {:?} to {:?}", from, to);
 		let id = self.ongoing.lock().add(TaskKind::User, name);
 
-		if to.starts_with(&from) {
+		if to.starts_with(&from) && to != from {
 			self.new_and_fail(id, "Cannot copy directory into itself").ok();
 			return;
 		}
