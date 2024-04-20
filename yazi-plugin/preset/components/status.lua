@@ -86,6 +86,8 @@ function Status:percentage()
 
 	if percent == 0 then
 		percent = "  Top "
+	elseif percent == 100 then
+		percent = "  Bot "
 	else
 		percent = string.format(" %3d%% ", percent)
 	end
