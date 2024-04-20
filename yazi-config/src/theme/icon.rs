@@ -1,13 +1,20 @@
+use std::ops::Deref;
+
 use serde::{Deserialize, Deserializer};
-use yazi_shared::{fs::File, theme::{Color, Style, StyleShadow}};
+use yazi_shared::{fs::File, theme::{Color, StyleShadow}};
 
 use crate::{preset::Preset, theme::Is, Pattern};
 
 pub struct Icon {
-	is:        Is,
-	name:      Pattern,
-	pub text:  String,
-	pub style: Style,
+	is:    Is,
+	name:  Pattern,
+	inner: yazi_shared::theme::Icon,
+}
+
+impl Deref for Icon {
+	type Target = yazi_shared::theme::Icon;
+
+	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
 impl Icon {
@@ -60,8 +67,10 @@ impl Icon {
 				.map(|r| Icon {
 					is:    r.is,
 					name:  r.name,
-					text:  r.text,
-					style: StyleShadow { fg: r.fg, ..Default::default() }.into(),
+					inner: yazi_shared::theme::Icon {
+						text:  r.text,
+						style: StyleShadow { fg: r.fg, ..Default::default() }.into(),
+					},
 				})
 				.collect(),
 		)

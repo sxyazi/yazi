@@ -3,7 +3,7 @@ use std::str::FromStr;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize)]
 #[serde(try_from = "String")]
 pub struct Color(ratatui::style::Color);
 
