@@ -3,7 +3,7 @@ use serde::{ser::SerializeMap, Deserialize, Serialize, Serializer};
 
 use super::Color;
 
-#[derive(Clone, Copy, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize)]
 #[serde(from = "StyleShadow")]
 pub struct Style {
 	pub fg:       Option<Color>,
@@ -37,29 +37,29 @@ impl From<Style> for ratatui::style::Style {
 }
 
 #[derive(Default, Deserialize)]
-pub(super) struct StyleShadow {
+pub struct StyleShadow {
 	#[serde(default)]
-	pub(super) fg:          Option<Color>,
+	pub fg:          Option<Color>,
 	#[serde(default)]
-	pub(super) bg:          Option<Color>,
+	pub bg:          Option<Color>,
 	#[serde(default)]
-	pub(super) bold:        bool,
+	pub bold:        bool,
 	#[serde(default)]
-	pub(super) dim:         bool,
+	pub dim:         bool,
 	#[serde(default)]
-	pub(super) italic:      bool,
+	pub italic:      bool,
 	#[serde(default)]
-	pub(super) underline:   bool,
+	pub underline:   bool,
 	#[serde(default)]
-	pub(super) blink:       bool,
+	pub blink:       bool,
 	#[serde(default)]
-	pub(super) blink_rapid: bool,
+	pub blink_rapid: bool,
 	#[serde(default)]
-	pub(super) reversed:    bool,
+	pub reversed:    bool,
 	#[serde(default)]
-	pub(super) hidden:      bool,
+	pub hidden:      bool,
 	#[serde(default)]
-	pub(super) crossed:     bool,
+	pub crossed:     bool,
 }
 
 impl From<StyleShadow> for Style {

@@ -1,5 +1,5 @@
 use mlua::{AnyUserData, ExternalError, FromLua, Lua, Table, UserData, UserDataMethods, Value};
-use yazi_config::theme::Color;
+use yazi_shared::theme::Color;
 
 use super::Style;
 

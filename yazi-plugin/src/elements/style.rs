@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use mlua::{AnyUserData, ExternalError, ExternalResult, Lua, Table, UserData, UserDataMethods, Value};
-use yazi_config::theme::Color;
+use yazi_shared::theme::Color;
 
 #[derive(Clone, Copy, Default)]
 pub struct Style(pub(super) ratatui::style::Style);
@@ -17,8 +17,8 @@ impl Style {
 	}
 }
 
-impl From<yazi_config::theme::Style> for Style {
-	fn from(value: yazi_config::theme::Style) -> Self { Self(value.into()) }
+impl From<yazi_shared::theme::Style> for Style {
+	fn from(value: yazi_shared::theme::Style) -> Self { Self(value.into()) }
 }
 
 impl<'a> TryFrom<Table<'a>> for Style {

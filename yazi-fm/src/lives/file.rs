@@ -58,7 +58,17 @@ impl File {
 				Some(lua.create_string(p.as_path().as_os_str().as_encoded_bytes())).transpose()
 			});
 			reg.add_method("icon", |lua, me, ()| {
-				THEME.icons.iter().find(|&x| x.matches(me)).map(|x| Icon::cast(lua, x)).transpose()
+				use yazi_shared::theme::IconCache;
+
+				match me.icon.get() {
+					IconCache::Missing => {
+						let matched = THEME.icons.iter().find(|&i| i.matches(me));
+						me.icon.set(matched.map_or(IconCache::Undefined, |i| IconCache::Icon(i)));
+						matched.map(|i| Icon::cast(lua, i)).transpose()
+					}
+					IconCache::Undefined => Ok(None),
+					IconCache::Icon(cached) => Some(Icon::cast(lua, cached)).transpose(),
+				}
 			});
 			reg.add_method("style", |lua, me, ()| {
 				let cx = lua.named_registry_value::<CtxRef>("cx")?;

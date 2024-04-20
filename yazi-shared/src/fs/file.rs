@@ -1,15 +1,16 @@
-use std::{ffi::OsStr, fs::Metadata, ops::Deref};
+use std::{cell::Cell, ffi::OsStr, fs::Metadata, ops::Deref};
 
 use anyhow::Result;
 use tokio::fs;
 
-use crate::fs::{Cha, ChaKind, Url};
+use crate::{fs::{Cha, ChaKind, Url}, theme::IconCache};
 
 #[derive(Clone, Debug, Default)]
 pub struct File {
 	pub url:     Url,
 	pub cha:     Cha,
 	pub link_to: Option<Url>,
+	pub icon:    Cell<IconCache>,
 }
 
 impl Deref for File {
@@ -53,7 +54,7 @@ impl File {
 			}
 		}
 
-		Self { url, cha: Cha::from(meta).with_kind(ck), link_to }
+		Self { url, cha: Cha::from(meta).with_kind(ck), link_to, icon: Default::default() }
 	}
 
 	#[inline]
