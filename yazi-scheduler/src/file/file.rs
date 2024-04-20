@@ -3,7 +3,7 @@ use std::{borrow::Cow, collections::VecDeque, fs::Metadata, path::{Path, PathBuf
 use anyhow::{anyhow, Result};
 use futures::{future::BoxFuture, FutureExt};
 use tokio::{fs, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
-use tracing::{debug, warn};
+use tracing::warn;
 use yazi_config::TASKS;
 use yazi_shared::fs::{accessible, calculate_size, copy_with_progress, path_relative_to, Url};
 
@@ -134,15 +134,6 @@ impl File {
 	}
 
 	pub async fn paste(&self, mut task: FileOpPaste) -> Result<()> {
-		// Prevent pasting of a directory into itself
-		if task.from.is_dir() && task.to.as_path().starts_with(task.from.as_path()) {
-			debug!(
-				"file_paste: cannot paste directory into itself, skipping {:?} -> {:?}",
-				task.from, task.to
-			);
-			return self.succ(task.id);
-		}
-
 		if task.cut {
 			match fs::rename(&task.from, &task.to).await {
 				Ok(_) => return self.succ(task.id),
