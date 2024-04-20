@@ -27,3 +27,4 @@ tracing = { version = "0.1.40", features = [ "max_level_debug", "release_max_lev
 
 [target."cfg(unix)".dependencies]
 libc = "0.2.153"
+users = "0.11.0"

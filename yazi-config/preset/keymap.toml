@@ -88,6 +88,7 @@ keymap = [
 	{ on = [ "m", "s" ], run = "linemode size",        desc = "Set linemode to size" },
 	{ on = [ "m", "p" ], run = "linemode permissions", desc = "Set linemode to permissions" },
 	{ on = [ "m", "m" ], run = "linemode mtime",       desc = "Set linemode to mtime" },
+	{ on = [ "m", "o" ], run = "linemode owner",       desc = "Set linemode to owner" },
 	{ on = [ "m", "n" ], run = "linemode none",        desc = "Set linemode to none" },
 
 	# Copy

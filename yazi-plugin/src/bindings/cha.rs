@@ -24,6 +24,7 @@ impl Cha {
 			{
 				reg.add_field_method_get("uid", |_, me| Ok(me.uid));
 				reg.add_field_method_get("gid", |_, me| Ok(me.gid));
+				reg.add_field_method_get("owner", |_, me| Ok(me.owner.clone()));
 			}
 
 			reg.add_field_method_get("length", |_, me| Ok(me.len));
@@ -51,5 +52,7 @@ impl Cha {
 }
 
 impl<T: Into<yazi_shared::fs::Cha>> Cast<T> for Cha {
-	fn cast(lua: &Lua, data: T) -> mlua::Result<AnyUserData> { lua.create_any_userdata(data.into()) }
+	fn cast(lua: &Lua, data: T) -> mlua::Result<AnyUserData> {
+		lua.create_any_userdata(data.into())
+	}
 }

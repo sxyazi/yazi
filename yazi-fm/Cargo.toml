@@ -35,6 +35,7 @@ tokio-util   = "0.7.10"
 tracing            = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
 tracing-appender   = "0.2.3"
 tracing-subscriber = "0.3.18"
+nix = "0.28.0"
 
 [target."cfg(unix)".dependencies]
 libc              = "0.2.153"

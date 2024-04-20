@@ -2,15 +2,20 @@ use mlua::{AnyUserData, IntoLuaMulti, Lua, Table, Value};
 use yazi_shared::{emit, event::Cmd, Layer, PeekError};
 
 use super::Utils;
-use crate::{bindings::{FileRef, Window}, cast_to_renderable, elements::{Paragraph, RectRef, Renderable}, external::{self, Highlighter}};
+use crate::{
+	bindings::{FileRef, Window},
+	cast_to_renderable,
+	elements::{Paragraph, RectRef, Renderable},
+	external::{self, Highlighter},
+};
 
 pub struct PreviewLock {
 	pub url: yazi_shared::fs::Url,
 	pub cha: yazi_shared::fs::Cha,
 
-	pub skip:   usize,
+	pub skip: usize,
 	pub window: Window,
-	pub data:   Vec<Box<dyn Renderable + Send>>,
+	pub data: Vec<Box<dyn Renderable + Send>>,
 }
 
 impl<'a> TryFrom<Table<'a>> for PreviewLock {
@@ -19,11 +24,11 @@ impl<'a> TryFrom<Table<'a>> for PreviewLock {
 	fn try_from(t: Table) -> Result<Self, Self::Error> {
 		let file: FileRef = t.raw_get("file")?;
 		Ok(Self {
-			url:    file.url(),
-			cha:    file.cha,
-			skip:   t.raw_get("skip")?,
+			url: file.url(),
+			cha: file.cha.clone(),
+			skip: t.raw_get("skip")?,
 			window: t.raw_get("window")?,
-			data:   Default::default(),
+			data: Default::default(),
 		})
 	}
 }

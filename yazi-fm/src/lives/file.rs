@@ -33,7 +33,7 @@ impl File {
 		lua.register_userdata_type::<Self>(|reg| {
 			reg.add_field_method_get("idx", |_, me| Ok(me.idx + 1));
 			reg.add_field_method_get("url", |lua, me| Url::cast(lua, me.url.clone()));
-			reg.add_field_method_get("cha", |lua, me| Cha::cast(lua, me.cha));
+			reg.add_field_method_get("cha", |lua, me| Cha::cast(lua, me.cha.clone()));
 			reg.add_field_method_get("link_to", |lua, me| {
 				me.link_to.as_ref().cloned().map(|u| Url::cast(lua, u)).transpose()
 			});

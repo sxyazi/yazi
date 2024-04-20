@@ -11,7 +11,7 @@ impl File {
 	pub fn register(lua: &Lua) -> mlua::Result<()> {
 		lua.register_userdata_type::<yazi_shared::fs::File>(|reg| {
 			reg.add_field_method_get("url", |lua, me| Url::cast(lua, me.url.clone()));
-			reg.add_field_method_get("cha", |lua, me| Cha::cast(lua, me.cha));
+			reg.add_field_method_get("cha", |lua, me| Cha::cast(lua, me.cha.clone()));
 			reg.add_field_method_get("link_to", |lua, me| {
 				me.link_to.as_ref().cloned().map(|u| Url::cast(lua, u)).transpose()
 			});
@@ -25,5 +25,7 @@ impl File {
 }
 
 impl<T: Into<yazi_shared::fs::File>> Cast<T> for File {
-	fn cast(lua: &Lua, data: T) -> mlua::Result<AnyUserData> { lua.create_any_userdata(data.into()) }
+	fn cast(lua: &Lua, data: T) -> mlua::Result<AnyUserData> {
+		lua.create_any_userdata(data.into())
+	}
 }
