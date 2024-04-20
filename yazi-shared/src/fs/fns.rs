@@ -1,6 +1,7 @@
-use std::{collections::VecDeque, path::{Path, PathBuf}};
+use std::{collections::VecDeque, fs::Metadata, path::{Path, PathBuf}};
 
 use anyhow::Result;
+use filetime::{set_file_mtime, FileTime};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
 
 pub async fn accessible(path: &Path) -> bool {
@@ -34,16 +35,24 @@ pub async fn calculate_size(path: &Path) -> u64 {
 	total
 }
 
-pub fn copy_with_progress(from: &Path, to: &Path) -> mpsc::Receiver<Result<u64, io::Error>> {
+pub fn copy_with_progress(
+	from: &Path,
+	to: &Path,
+	meta: &Metadata,
+) -> mpsc::Receiver<Result<u64, io::Error>> {
 	let (tx, rx) = mpsc::channel(1);
 	let (tick_tx, mut tick_rx) = oneshot::channel();
 
 	tokio::spawn({
-		let (from, to) = (from.to_path_buf(), to.to_path_buf());
+		let (from, to) = (from.to_owned(), to.to_owned());
+		let mtime = FileTime::from_last_modification_time(meta);
 
 		async move {
-			_ = match fs::copy(from, to).await {
-				Ok(len) => tick_tx.send(Ok(len)),
+			_ = match fs::copy(&from, &to).await {
+				Ok(len) => {
+					set_file_mtime(to, mtime).ok();
+					tick_tx.send(Ok(len))
+				}
 				Err(e) => tick_tx.send(Err(e)),
 			};
 		}

@@ -26,9 +26,24 @@ pub struct FileOpPaste {
 	pub id:     usize,
 	pub from:   Url,
 	pub to:     Url,
+	pub meta:   Option<Metadata>,
 	pub cut:    bool,
 	pub follow: bool,
 	pub retry:  u8,
+}
+
+impl FileOpPaste {
+	pub(super) fn spawn(&self, from: Url, to: Url, meta: Metadata) -> Self {
+		Self {
+			id: self.id,
+			from,
+			to,
+			meta: Some(meta),
+			cut: self.cut,
+			follow: self.follow,
+			retry: self.retry,
+		}
+	}
 }
 
 #[derive(Clone, Debug)]
@@ -40,6 +55,20 @@ pub struct FileOpLink {
 	pub resolve:  bool,
 	pub relative: bool,
 	pub delete:   bool,
+}
+
+impl From<FileOpPaste> for FileOpLink {
+	fn from(value: FileOpPaste) -> Self {
+		Self {
+			id:       value.id,
+			from:     value.from,
+			to:       value.to,
+			meta:     value.meta,
+			resolve:  true,
+			relative: false,
+			delete:   value.cut,
+		}
+	}
 }
 
 #[derive(Clone, Debug)]
