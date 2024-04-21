@@ -4,6 +4,7 @@ use anyhow::{anyhow, Result};
 use scopeguard::defer;
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 use yazi_config::{OPEN, PREVIEW};
+use yazi_dds::Pubsub;
 use yazi_proxy::{AppProxy, TasksProxy, HIDER, WATCHER};
 use yazi_shared::{fs::{accessible, max_common_root, File, FilesOp, Url}, term::Term};
 
@@ -20,6 +21,7 @@ impl Manager {
 
 		let root = max_common_root(&old);
 		let old: Vec<_> = old.into_iter().map(|p| p.strip_prefix(&root).unwrap().to_owned()).collect();
+		let tab = self.tabs.cursor;
 
 		tokio::spawn(async move {
 			let tmp = PREVIEW.tmpfile("bulk");
@@ -41,7 +43,7 @@ impl Manager {
 			AppProxy::stop().await;
 
 			let new: Vec<_> = fs::read_to_string(&tmp).await?.lines().map(PathBuf::from).collect();
-			Self::bulk_rename_do(cwd, root, old, new).await
+			Self::bulk_rename_do(cwd, root, old, new, tab).await
 		});
 	}
 
@@ -50,6 +52,7 @@ impl Manager {
 		root: PathBuf,
 		old: Vec<PathBuf>,
 		new: Vec<PathBuf>,
+		tab: usize,
 	) -> Result<()> {
 		Term::clear(&mut stderr())?;
 		if old.len() != new.len() {
@@ -83,12 +86,16 @@ impl Manager {
 		for (o, n) in todo {
 			let (old, new) = (root.join(&o), root.join(&n));
 
-			if accessible(&new).await {
+			let new_url: Url = new.into();
+			if accessible(&new_url).await {
 				failed.push((o, n, anyhow!("Destination already exists")));
-			} else if let Err(e) = fs::rename(&old, &new).await {
+			} else if let Err(e) = fs::rename(&old, &new_url).await {
 				failed.push((o, n, e.into()));
-			} else if let Ok(f) = File::from(new.into()).await {
-				succeeded.insert(Url::from(old), f);
+			} else if let Ok(f) = File::from(new_url).await {
+				let old_url = Url::from(old);
+				succeeded.insert(old_url.clone(), f.clone());
+
+				Pubsub::pub_from_rename(tab, &old_url, &f.url);
 			} else {
 				failed.push((o, n, anyhow!("Failed to retrieve file info")));
 			}
