@@ -38,7 +38,7 @@ tab_width    = 1
 # Count
 count_copied   = { fg = "white", bg = "green" }
 count_cut      = { fg = "white", bg = "red" }
-count_selected = { fg = "white", bg = "blue" }
+count_selected = { fg = "white", bg = "yellow" }
 
 # Border
 border_symbol = "│"
