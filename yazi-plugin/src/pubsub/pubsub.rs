@@ -12,7 +12,7 @@ impl Pubsub {
 		ps.raw_set(
 			"pub",
 			lua.create_function(|_, (kind, value): (mlua::String, Value)| {
-				yazi_dds::Pubsub::pub_(Body::from_lua(kind.to_str()?, value).into_lua_err()?);
+				yazi_dds::Pubsub::pub_(Body::from_lua(kind.to_str()?, value)?);
 				Ok(())
 			})?,
 		)?;
@@ -20,7 +20,7 @@ impl Pubsub {
 		ps.raw_set(
 			"pub_to",
 			lua.create_function(|_, (receiver, kind, value): (u64, mlua::String, Value)| {
-				yazi_dds::Pubsub::pub_to(receiver, Body::from_lua(kind.to_str()?, value).into_lua_err()?);
+				yazi_dds::Pubsub::pub_to(receiver, Body::from_lua(kind.to_str()?, value)?);
 				Ok(())
 			})?,
 		)?;
@@ -28,10 +28,7 @@ impl Pubsub {
 		ps.raw_set(
 			"pub_static",
 			lua.create_function(|_, (severity, kind, value): (u16, mlua::String, Value)| {
-				yazi_dds::Pubsub::pub_static(
-					severity,
-					Body::from_lua(kind.to_str()?, value).into_lua_err()?,
-				);
+				yazi_dds::Pubsub::pub_static(severity, Body::from_lua(kind.to_str()?, value)?);
 				Ok(())
 			})?,
 		)?;

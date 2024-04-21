@@ -17,18 +17,18 @@ pub struct Args {
 	pub chooser_file: Option<PathBuf>,
 
 	/// Clear the cache directory
-	#[arg(long, action)]
+	#[arg(long)]
 	pub clear_cache: bool,
 
 	/// Report the specified local events to stdout
-	#[arg(long, action)]
+	#[arg(long)]
 	pub local_events:  Option<String>,
 	/// Report the specified remote events to stdout
-	#[arg(long, action)]
+	#[arg(long)]
 	pub remote_events: Option<String>,
 
 	/// Print debug information
-	#[arg(long, action)]
+	#[arg(long)]
 	pub debug: bool,
 
 	/// Print version

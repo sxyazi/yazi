@@ -49,7 +49,16 @@ impl<'a> Payload<'a> {
 }
 
 impl Payload<'static> {
-	pub fn split(s: &str) -> Result<(&str, u64, u64, &str)> {
+	pub(super) fn emit(self) {
+		self.try_flush();
+		emit!(Call(Cmd::new("accept_payload").with_any("payload", self), Layer::App));
+	}
+}
+
+impl FromStr for Payload<'static> {
+	type Err = anyhow::Error;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		let mut parts = s.splitn(4, ',');
 
 		let kind = parts.next().ok_or_else(|| anyhow!("empty kind"))?;
@@ -62,20 +71,6 @@ impl Payload<'static> {
 
 		let body = parts.next().ok_or_else(|| anyhow!("empty body"))?;
 
-		Ok((kind, receiver, sender, body))
-	}
-
-	pub(super) fn emit(self) {
-		self.try_flush();
-		emit!(Call(Cmd::new("accept_payload").with_any("payload", self), Layer::App));
-	}
-}
-
-impl FromStr for Payload<'static> {
-	type Err = anyhow::Error;
-
-	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		let (kind, receiver, sender, body) = Self::split(s)?;
 		Ok(Self { receiver, sender, body: Body::from_str(kind, body)? })
 	}
 }
