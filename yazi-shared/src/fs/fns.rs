@@ -147,19 +147,6 @@ pub fn permissions(m: libc::mode_t) -> String {
 	s
 }
 
-#[cfg(unix)]
-pub fn owner(uid: u32, gid: u32) -> String {
-	let username = match users::get_user_by_uid(uid) {
-		Some(u) => u.name().to_str().unwrap_or_default().to_string(),
-		None => String::default(),
-	};
-	let groupname = match users::get_group_by_gid(gid) {
-		Some(g) => g.name().to_str().unwrap_or_default().to_string(),
-		None => String::default(),
-	};
-	format!("{username} {groupname}")
-}
-
 // Find the max common root in a list of files
 // e.g. /a/b/c, /a/b/d       -> /a/b
 //      /aa/bb/cc, /aa/dd/ee -> /aa

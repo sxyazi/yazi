@@ -44,14 +44,6 @@ impl Cha {
 					None::<String>,
 				)
 			});
-			reg.add_method("owner", |_, me, ()| {
-				Ok(
-					#[cfg(unix)]
-					Some(yazi_shared::fs::owner(me.uid, me.gid)),
-					#[cfg(windows)]
-					None::<String>,
-				)
-			});
 		})?;
 
 		Ok(())
