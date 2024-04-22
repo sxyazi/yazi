@@ -13,8 +13,7 @@ impl From<()> for Opt {
 
 impl Manager {
 	pub fn unyank(&mut self, _: impl Into<Opt>) {
-		render!(!self.yanked.is_empty());
-
-		self.yanked = Default::default();
+		self.yanked.clear();
+		render!(self.yanked.catchup_revision(false));
 	}
 }

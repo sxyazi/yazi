@@ -69,9 +69,11 @@ impl Tab {
 			return;
 		}
 
-		if self.current.repos(hovered) {
+		self.current.repos(hovered.as_ref());
+		if self.current.hovered().map(|f| &f.url) != hovered.as_ref() {
 			ManagerProxy::hover(None);
 		}
+
 		render!();
 	}
 }

@@ -81,8 +81,7 @@ impl Pubsub {
 	}
 
 	pub fn pub_static(severity: u16, body: Body) {
-		let kind = body.kind();
-		if REMOTE.read().contains_key(kind) || PEERS.read().values().any(|c| c.able(kind)) {
+		if Self::own_static_ability(body.kind()) {
 			Client::push(body.with_severity(severity));
 		}
 	}
@@ -99,7 +98,7 @@ impl Pubsub {
 		if LOCAL.read().contains_key("cd") {
 			Self::pub_(BodyCd::dummy(tab));
 		}
-		if PEERS.read().values().any(|p| p.able("cd")) {
+		if Self::own_static_ability("cd") {
 			Client::push(BodyCd::borrowed(tab, url).with_severity(100));
 		}
 		if BOOT.local_events.contains("cd") {
@@ -111,7 +110,7 @@ impl Pubsub {
 		if LOCAL.read().contains_key("hover") {
 			Self::pub_(BodyHover::dummy(tab));
 		}
-		if PEERS.read().values().any(|p| p.able("hover")) {
+		if Self::own_static_ability("hover") {
 			Client::push(BodyHover::borrowed(tab, url).with_severity(200));
 		}
 		if BOOT.local_events.contains("hover") {
@@ -135,7 +134,7 @@ impl Pubsub {
 		if LOCAL.read().contains_key("yank") {
 			Self::pub_(BodyYank::dummy());
 		}
-		if PEERS.read().values().any(|p| p.able("yank")) {
+		if Self::own_static_ability("yank") {
 			Client::push(BodyYank::borrowed(cut, urls).with_severity(300));
 		}
 		if BOOT.local_events.contains("yank") {
@@ -177,5 +176,12 @@ impl Pubsub {
 		if LOCAL.read().contains_key("delete") {
 			Self::pub_(BodyDelete::owned(urls));
 		}
+	}
+
+	#[inline]
+	fn own_static_ability(kind: &str) -> bool {
+		REMOTE.read().contains_key(kind)  // Owned abilities
+			|| PEERS.read().values().any(|p| p.able(kind))  // Remote peers' abilities
+			|| BOOT.remote_events.contains(kind) // Owned abilities from the command-line argument
 	}
 }

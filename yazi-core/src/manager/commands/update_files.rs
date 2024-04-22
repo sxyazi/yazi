@@ -38,6 +38,7 @@ impl Manager {
 			Self::update_tab(self.active_mut(), Cow::Owned(op), tasks);
 		}
 
+		render!(self.yanked.catchup_revision(false));
 		self.active_mut().apply_files_attrs();
 	}
 

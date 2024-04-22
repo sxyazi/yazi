@@ -17,7 +17,7 @@ function M:seek(units)
 	if h and h.url == self.file.url then
 		ya.manager_emit("peek", {
 			math.max(0, cx.active.preview.skip + units),
-			only_if = tostring(self.file.url),
+			only_if = self.file.url,
 		})
 	end
 end
@@ -25,7 +25,7 @@ end
 function M:preload()
 	local percentage = 5 + self.skip
 	if percentage > 95 then
-		ya.manager_emit("peek", { 90, only_if = tostring(self.file.url), upper_bound = true })
+		ya.manager_emit("peek", { 90, only_if = self.file.url, upper_bound = true })
 		return 2
 	end
 

@@ -8,7 +8,7 @@ function M:peek()
 
 	local bound = math.max(0, #folder.files - self.area.h)
 	if self.skip > bound then
-		return ya.manager_emit("peek", { bound, only_if = tostring(self.file.url), upper_bound = true })
+		return ya.manager_emit("peek", { bound, only_if = self.file.url, upper_bound = true })
 	end
 
 	if #folder.files == 0 then
@@ -45,7 +45,7 @@ function M:seek(units)
 		local bound = math.max(0, #folder.files - self.area.h)
 		ya.manager_emit("peek", {
 			ya.clamp(0, cx.active.preview.skip + step, bound),
-			only_if = tostring(self.file.url),
+			only_if = self.file.url,
 		})
 	end
 end

@@ -25,6 +25,7 @@ impl Loader {
 		let b = match name {
 			"dds" => Some(&include_bytes!("../../preset/plugins/dds.lua")[..]),
 			"noop" => Some(&include_bytes!("../../preset/plugins/noop.lua")[..]),
+			"session" => Some(&include_bytes!("../../preset/plugins/session.lua")[..]),
 			_ => None,
 		};
 		if let Some(b) = b {
