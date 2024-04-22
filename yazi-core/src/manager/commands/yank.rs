@@ -1,4 +1,3 @@
-use yazi_dds::Pubsub;
 use yazi_shared::{event::Cmd, render};
 
 use crate::manager::{Manager, Yanked};
@@ -17,12 +16,9 @@ impl Manager {
 			return;
 		}
 
-		self.yanked =
-			Yanked { cut: opt.into().cut, urls: self.selected_or_hovered(false).cloned().collect() };
+		self.yanked = Yanked::new(opt.into().cut, self.selected_or_hovered(false).cloned().collect());
+		render!(self.yanked.catchup_revision(true));
 
 		self.active_mut().escape_select();
-		Pubsub::pub_from_yank(self.yanked.cut, &self.yanked.urls);
-
-		render!();
 	}
 }

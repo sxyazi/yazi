@@ -61,6 +61,7 @@ impl Manager {
 			self.yanked.remove(u);
 		}
 
+		self.yanked.catchup_revision(false);
 		tasks.file_remove(opt.targets, opt.permanently);
 	}
 }
