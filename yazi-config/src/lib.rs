@@ -18,6 +18,7 @@ mod tasks;
 pub mod theme;
 mod validation;
 pub mod which;
+mod userdic;
 
 pub use layout::*;
 pub(crate) use pattern::*;
@@ -46,12 +47,14 @@ pub static THEME: RoCell<theme::Theme> = RoCell::new();
 pub static INPUT: RoCell<popup::Input> = RoCell::new();
 pub static SELECT: RoCell<popup::Select> = RoCell::new();
 pub static WHICH: RoCell<which::Which> = RoCell::new();
+pub static USER_DIC: RoCell<userdic::USERDICT> = RoCell::new();
 
 pub fn init() -> anyhow::Result<()> {
 	let config_dir = Xdg::config_dir();
 	MERGED_YAZI.init(Preset::yazi(&config_dir)?);
 	MERGED_KEYMAP.init(Preset::keymap(&config_dir)?);
 	MERGED_THEME.init(Preset::theme(&config_dir)?);
+    USER_DIC.init(userdic::read_user_dict(&config_dir));
 
 	LAYOUT.with(Default::default);
 
