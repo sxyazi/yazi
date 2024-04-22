@@ -22,11 +22,11 @@ function Folder:linemode(area, files)
 		elseif mode == "permissions" then
 			spans[#spans + 1] = ui.Span(f.cha:permissions() or "")
 		elseif mode == "owner" then
-      local username = ya.user_name(f.cha.uid)
-      local groupname = ya.group_name(f.cha.gid)
-      if username and groupname then
-        spans[#spans + 1] = ui.Span(username .. ":" .. groupname)
-      end
+			local username = ya.user_name(f.cha.uid)
+			local groupname = ya.group_name(f.cha.gid)
+			if username and groupname then
+				spans[#spans + 1] = ui.Span(username .. ":" .. groupname)
+			end
 		end
 
 		spans[#spans + 1] = ui.Span(" ")
