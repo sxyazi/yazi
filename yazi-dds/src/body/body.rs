@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 use mlua::{ExternalResult, IntoLua, Lua, Value};
 use serde::Serialize;
 
@@ -40,15 +40,9 @@ impl Body<'static> {
 		})
 	}
 
-	pub fn from_lua(kind: &str, value: Value) -> Result<Self> {
-		Ok(match kind {
-			"hi" | "hey" | "bye" | "cd" | "hover" | "rename" | "bulk" | "yank" | "move" | "trash"
-			| "delete" => Err("Cannot construct system event").into_lua_err()?,
-			_ if !kind.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-') => {
-				Err("Kind must be alphanumeric with dashes").into_lua_err()?
-			}
-			_ => BodyCustom::from_lua(kind, value)?,
-		})
+	pub fn from_lua(kind: &str, value: Value) -> mlua::Result<Self> {
+		Self::validate(kind).into_lua_err()?;
+		BodyCustom::from_lua(kind, value)
 	}
 
 	pub fn tab(kind: &str, body: &str) -> usize {
@@ -64,6 +58,27 @@ impl Body<'static> {
 			Ok(Self::Rename(b)) => b.tab,
 			_ => 0,
 		}
+	}
+
+	pub fn validate(kind: &str) -> Result<()> {
+		if matches!(
+			kind,
+			"hi"
+				| "hey" | "bye"
+				| "cd" | "hover"
+				| "rename"
+				| "bulk" | "yank"
+				| "move" | "trash"
+				| "delete"
+		) {
+			bail!("Cannot construct system event");
+		}
+
+		if !kind.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-') {
+			bail!("Kind must be alphanumeric with dashes");
+		}
+
+		Ok(())
 	}
 }
 

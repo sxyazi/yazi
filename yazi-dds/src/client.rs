@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet}, mem, str::FromStr};
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use tokio::{io::AsyncWriteExt, select, sync::mpsc, task::JoinHandle, time};
@@ -62,16 +62,13 @@ impl Client {
 		});
 	}
 
-	pub async fn shot(s: &str) -> Result<()> {
-		let (kind, receiver, sender, body) = Payload::split(s)?;
-		if receiver != 0 && sender <= u16::MAX as u64 {
-			bail!("Sender must be greater than 65535 if receiver is non-zero");
-		}
+	pub async fn shot(kind: &str, receiver: u64, severity: Option<u16>, body: &str) -> Result<()> {
+		Body::validate(kind)?;
 
+		let sender = severity.map(Into::into).unwrap_or(*ID);
 		let payload = format!(
-			"{}\n{kind},{receiver},{sender},{}\n{}\n",
+			"{}\n{kind},{receiver},{sender},{body}\n{}\n",
 			Payload::new(BodyHi::borrowed(Default::default())),
-			serde_json::to_string(body)?,
 			Payload::new(BodyBye::borrowed())
 		);
 
@@ -81,7 +78,7 @@ impl Client {
 		drop(writer);
 
 		while let Ok(Some(s)) = lines.next_line().await {
-			if matches!(Payload::split(&s), Ok((kind, ..)) if kind == "bye") {
+			if matches!(s.split(',').next(), Some(kind) if kind == "bye") {
 				break;
 			}
 		}
