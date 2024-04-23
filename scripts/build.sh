@@ -6,8 +6,11 @@ export YAZI_GEN_COMPLETIONS=1
 export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/aarch64-linux-gnu-gcc
 
 # Setup Rust toolchain
-rustup toolchain install stable --profile minimal
-rustup target add "$1"
+if [[ "$1" == *-musl ]]; then
+	rustup target add "$1"
+else
+	rustup toolchain install stable --profile minimal --target "$1"
+fi
 
 # Build for the target
 cargo build -p yazi-cli --release --locked --target "$1"
