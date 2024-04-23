@@ -8,11 +8,15 @@ description = "Yazi event proxy"
 homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
+[features]
+default      = [ "vendored-lua" ]
+vendored-lua = [ "mlua/vendored" ]
+
 [dependencies]
 yazi-config = { path = "../yazi-config", version = "0.2.5" }
 yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
 anyhow = "1.0.82"
-mlua   = { version = "0.9.7", features = [ "lua54", "vendored" ] }
+mlua   = { version = "0.9.7", features = [ "lua54" ] }
 tokio  = { version = "1.37.0", features = [ "full" ] }
