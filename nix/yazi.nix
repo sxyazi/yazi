@@ -1,12 +1,7 @@
-{ makeRustPlatform
-, rustToolchain
-, version ? "git"
-, lib
-
+{ lib
+, runCommand
 , makeWrapper
-, installShellFiles
-, stdenv
-, darwin
+, yazi-unwrapped
 
 , withFile ? true
 , file
@@ -26,57 +21,29 @@
 , fzf
 , withZoxide ? true
 , zoxide
-, imagemagick
 }:
 
-(makeRustPlatform { cargo = rustToolchain; rustc = rustToolchain; }).buildRustPackage {
-  pname = "yazi";
-  inherit version;
+let
+  runtimePaths = with lib; [ ]
+    ++ optional withFile file
+    ++ optional withJq jq
+    ++ optional withPoppler poppler_utils
+    ++ optional withUnar unar
+    ++ optional withFfmpegthumbnailer ffmpegthumbnailer
+    ++ optional withFd fd
+    ++ optional withRipgrep ripgrep
+    ++ optional withFzf fzf
+    ++ optional withZoxide zoxide;
+in
+runCommand yazi-unwrapped.name
+{
+  inherit (yazi-unwrapped) pname version meta;
 
-  src = ../.;
-  YAZI_GEN_COMPLETIONS = true;
-
-  cargoLock.lockFile = ../Cargo.lock;
-
-  nativeBuildInputs = [ makeWrapper installShellFiles imagemagick ];
-  buildInputs = lib.optionals stdenv.isDarwin (
-    with darwin.apple_sdk.frameworks; [ Foundation ]
-  );
-
-  postInstall = with lib;
-    let
-      runtimePaths = [ ]
-        ++ optional withFile file
-        ++ optional withJq jq
-        ++ optional withPoppler poppler_utils
-        ++ optional withUnar unar
-        ++ optional withFfmpegthumbnailer ffmpegthumbnailer
-        ++ optional withFd fd
-        ++ optional withRipgrep ripgrep
-        ++ optional withFzf fzf
-        ++ optional withZoxide zoxide;
-    in
-    ''
-      wrapProgram $out/bin/yazi \
-         --prefix PATH : "${makeBinPath runtimePaths}"
-      installShellCompletion --cmd yazi \
-        --bash ./yazi-boot/completions/yazi.bash \
-        --fish ./yazi-boot/completions/yazi.fish \
-        --zsh  ./yazi-boot/completions/_yazi
-
-      # Resize logo
-      for RES in 16 24 32 48 64 128 256; do
-        mkdir -p $out/share/icons/hicolor/"$RES"x"$RES"/apps
-        convert assets/logo.png -resize "$RES"x"$RES" $out/share/icons/hicolor/"$RES"x"$RES"/apps/yazi.png
-      done
-
-      mkdir -p $out/share/applications
-      install -m644 assets/yazi.desktop $out/share/applications/
-    '';
-
-  meta = with lib; {
-    description = "Blazing fast terminal file manager written in Rust, based on async I/O";
-    homepage = "https://github.com/sxyazi/yazi";
-    license = licenses.mit;
-  };
-}
+  nativeBuildInputs = [ makeWrapper ];
+} ''
+  mkdir -p $out/bin
+  ln -s ${yazi-unwrapped}/share $out/share
+  ln -s ${yazi-unwrapped}/bin/ya $out/bin/ya
+  makeWrapper ${yazi-unwrapped}/bin/yazi $out/bin/yazi \
+    --prefix PATH : "${lib.makeBinPath runtimePaths}"
+''

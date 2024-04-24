@@ -34,11 +34,15 @@
           version = (builtins.fromTOML
             (builtins.readFile ./yazi-fm/Cargo.toml)).package.version
           + versionSuffix;
-          yazi = pkgs.callPackage ./nix/yazi.nix { inherit version; };
+
+          yazi-unwrapped = pkgs.callPackage ./nix/yazi-unwrapped.nix { inherit version; };
+          yazi = pkgs.callPackage ./nix/yazi.nix { inherit yazi-unwrapped; };
         in
         {
-          packages.default = yazi;
-          packages.yazi = yazi;
+          packages = {
+            inherit yazi-unwrapped yazi;
+            default = yazi;
+          };
 
           formatter = pkgs.nixpkgs-fmt;
 
@@ -48,6 +52,7 @@
       overlays = rec {
         default = yazi;
         yazi = final: prev: {
+          yazi-unwrapped = self.packages."${final.system}".yazi-unwrapped;
           yazi = self.packages."${final.system}".yazi;
         };
       };

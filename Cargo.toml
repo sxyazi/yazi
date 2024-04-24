@@ -1,7 +1,7 @@
 [workspace]
 resolver        = "2"
 members         = [ "yazi-*" ]
-default-members = [ "yazi-fm" ]
+default-members = [ "yazi-fm", "yazi-cli" ]
 
 [profile.release]
 codegen-units = 1
