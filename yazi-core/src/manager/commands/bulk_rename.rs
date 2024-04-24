@@ -94,15 +94,18 @@ impl Manager {
 			} else if let Ok(f) = File::from(new_url).await {
 				let old_url = Url::from(old);
 				succeeded.insert(old_url.clone(), f.clone());
-
-				Pubsub::pub_from_rename(tab, &old_url, &f.url);
 			} else {
 				failed.push((o, n, anyhow!("Failed to retrieve file info")));
 			}
 		}
 
 		if !succeeded.is_empty() {
+			let changes: HashMap<_, _> =
+				succeeded.clone().into_iter().map(|(old, new)| (old, new.url)).collect();
+
 			FilesOp::Upserting(cwd, succeeded).emit();
+
+			Pubsub::pub_from_bulk(tab, &changes);
 		}
 		drop(permit);
 
