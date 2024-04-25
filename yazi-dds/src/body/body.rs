@@ -54,7 +54,6 @@ impl Body<'static> {
 		match Self::from_str(kind, body) {
 			Ok(Self::Cd(b)) => b.tab,
 			Ok(Self::Hover(b)) => b.tab,
-			Ok(Self::Bulk(b)) => b.tab,
 			Ok(Self::Rename(b)) => b.tab,
 			_ => 0,
 		}
