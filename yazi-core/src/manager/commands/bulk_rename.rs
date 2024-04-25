@@ -4,6 +4,7 @@ use anyhow::{anyhow, Result};
 use scopeguard::defer;
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 use yazi_config::{OPEN, PREVIEW};
+use yazi_dds::Pubsub;
 use yazi_proxy::{AppProxy, TasksProxy, HIDER, WATCHER};
 use yazi_shared::{fs::{accessible, max_common_root, File, FilesOp, Url}, term::Term};
 
@@ -95,6 +96,7 @@ impl Manager {
 		}
 
 		if !succeeded.is_empty() {
+			Pubsub::pub_from_bulk(succeeded.iter().map(|(u, f)| (u, &f.url)).collect());
 			FilesOp::Upserting(cwd, succeeded).emit();
 		}
 		drop(permit);

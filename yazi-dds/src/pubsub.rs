@@ -5,7 +5,7 @@ use parking_lot::RwLock;
 use yazi_boot::BOOT;
 use yazi_shared::{fs::Url, RoCell};
 
-use crate::{body::{Body, BodyCd, BodyDelete, BodyHi, BodyHover, BodyMove, BodyMoveItem, BodyRename, BodyTrash, BodyYank}, Client, ID, PEERS};
+use crate::{body::{Body, BodyBulk, BodyCd, BodyDelete, BodyHi, BodyHover, BodyMove, BodyMoveItem, BodyRename, BodyTrash, BodyYank}, Client, ID, PEERS};
 
 pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function<'static>>>>> =
 	RoCell::new();
@@ -127,6 +127,18 @@ impl Pubsub {
 		}
 		if BOOT.local_events.contains("rename") {
 			BodyRename::borrowed(tab, from, to).with_receiver(*ID).flush();
+		}
+	}
+
+	pub fn pub_from_bulk(changes: HashMap<&Url, &Url>) {
+		if LOCAL.read().contains_key("bulk") {
+			Self::pub_(BodyBulk::owned(&changes));
+		}
+		if PEERS.read().values().any(|p| p.able("bulk")) {
+			Client::push(BodyBulk::borrowed(&changes));
+		}
+		if BOOT.local_events.contains("bulk") {
+			BodyBulk::borrowed(&changes).with_receiver(*ID).flush();
 		}
 	}
 
