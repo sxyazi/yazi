@@ -98,8 +98,7 @@ impl Manager {
 		}
 
 		if !succeeded.is_empty() {
-			// Pubsub::pub_from_bulk(tab, &changes);
-
+			Pubsub::pub_from_bulk(tab, succeeded.iter().map(|(u, f)| (u, &f.url)).collect());
 			FilesOp::Upserting(cwd, succeeded).emit();
 		}
 		drop(permit);

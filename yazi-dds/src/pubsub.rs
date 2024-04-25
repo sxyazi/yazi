@@ -130,15 +130,15 @@ impl Pubsub {
 		}
 	}
 
-	pub fn pub_from_bulk(tab: usize, changes: &HashMap<Url, Url>) {
+	pub fn pub_from_bulk(tab: usize, changes: HashMap<&Url, &Url>) {
 		if LOCAL.read().contains_key("bulk") {
-			Self::pub_(BodyBulk::owned(tab, changes));
+			Self::pub_(BodyBulk::owned(tab, &changes));
 		}
 		if PEERS.read().values().any(|p| p.able("bulk")) {
-			Client::push(BodyBulk::borrowed(tab, changes));
+			Client::push(BodyBulk::borrowed(tab, &changes));
 		}
 		if BOOT.local_events.contains("bulk") {
-			BodyBulk::borrowed(tab, changes).with_receiver(*ID).flush();
+			BodyBulk::borrowed(tab, &changes).with_receiver(*ID).flush();
 		}
 	}
 
