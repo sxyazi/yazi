@@ -26,6 +26,15 @@ fn _expand_path(p: &Path) -> PathBuf {
 		env::var(name.as_str()).unwrap_or_else(|_| caps.get(0).unwrap().as_str().to_owned())
 	});
 
+	// Windows paths that only have a drive letter but no root, e.g. "D:"
+	#[cfg(windows)]
+	if s.len() == 2 {
+		let b = s.as_bytes();
+		if b[1] == b':' && b[0].is_ascii_alphabetic() {
+			return PathBuf::from(s.to_uppercase() + "\\");
+		}
+	}
+
 	let p = Path::new(s.as_ref());
 	if let Ok(rest) = p.strip_prefix("~") {
 		#[cfg(unix)]

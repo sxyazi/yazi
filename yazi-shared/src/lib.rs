@@ -26,6 +26,7 @@ pub use errors::*;
 pub use layer::*;
 pub use natsort::*;
 pub use number::*;
+#[cfg(unix)]
 pub use os::*;
 pub use ro_cell::*;
 pub use throttle::*;
