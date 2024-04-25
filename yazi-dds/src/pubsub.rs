@@ -118,18 +118,6 @@ impl Pubsub {
 		}
 	}
 
-	pub fn pub_from_bulk(tab: usize, changes: &HashMap<Url, Url>) {
-		if LOCAL.read().contains_key("bulk") {
-			Self::pub_(BodyBulk::dummy(tab, changes));
-		}
-		if PEERS.read().values().any(|p| p.able("bulk")) {
-			Client::push(BodyBulk::borrowed(tab, changes));
-		}
-		if BOOT.local_events.contains("bulk") {
-			BodyBulk::borrowed(tab, changes).with_receiver(*ID).flush();
-		}
-	}
-
 	pub fn pub_from_rename(tab: usize, from: &Url, to: &Url) {
 		if LOCAL.read().contains_key("rename") {
 			Self::pub_(BodyRename::dummy(tab, from, to));
@@ -139,6 +127,18 @@ impl Pubsub {
 		}
 		if BOOT.local_events.contains("rename") {
 			BodyRename::borrowed(tab, from, to).with_receiver(*ID).flush();
+		}
+	}
+
+	pub fn pub_from_bulk(tab: usize, changes: &HashMap<Url, Url>) {
+		if LOCAL.read().contains_key("bulk") {
+			Self::pub_(BodyBulk::owned(tab, changes));
+		}
+		if PEERS.read().values().any(|p| p.able("bulk")) {
+			Client::push(BodyBulk::borrowed(tab, changes));
+		}
+		if BOOT.local_events.contains("bulk") {
+			BodyBulk::borrowed(tab, changes).with_receiver(*ID).flush();
 		}
 	}
 

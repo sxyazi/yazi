@@ -21,7 +21,7 @@ impl<'a> BodyBulk<'a> {
 
 impl BodyBulk<'static> {
 	#[inline]
-	pub fn dummy(tab: usize, changes: &HashMap<Url, Url>) -> Body<'static> {
+	pub fn owned(tab: usize, changes: &HashMap<Url, Url>) -> Body<'static> {
 		Self { tab, changes: Cow::Owned(changes.clone()) }.into()
 	}
 }
