@@ -91,7 +91,7 @@ impl Manager {
 			} else if let Err(e) = fs::rename(&old, &new).await {
 				failed.push((o, n, e.into()));
 			} else if let Ok(f) = File::from(new.into()).await {
-				succeeded.insert(Url::from(old), f.clone());
+				succeeded.insert(Url::from(old), f);
 			} else {
 				failed.push((o, n, anyhow!("Failed to retrieve file info")));
 			}
