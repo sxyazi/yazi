@@ -86,26 +86,21 @@ impl Manager {
 		for (o, n) in todo {
 			let (old, new) = (root.join(&o), root.join(&n));
 
-			let new_url: Url = new.into();
-			if accessible(&new_url).await {
+			if accessible(&new).await {
 				failed.push((o, n, anyhow!("Destination already exists")));
-			} else if let Err(e) = fs::rename(&old, &new_url).await {
+			} else if let Err(e) = fs::rename(&old, &new).await {
 				failed.push((o, n, e.into()));
-			} else if let Ok(f) = File::from(new_url).await {
-				let old_url = Url::from(old);
-				succeeded.insert(old_url.clone(), f.clone());
+			} else if let Ok(f) = File::from(new.into()).await {
+				succeeded.insert(Url::from(old), f.clone());
 			} else {
 				failed.push((o, n, anyhow!("Failed to retrieve file info")));
 			}
 		}
 
 		if !succeeded.is_empty() {
-			let changes: HashMap<_, _> =
-				succeeded.clone().into_iter().map(|(old, new)| (old, new.url)).collect();
+			// Pubsub::pub_from_bulk(tab, &changes);
 
 			FilesOp::Upserting(cwd, succeeded).emit();
-
-			Pubsub::pub_from_bulk(tab, &changes);
 		}
 		drop(permit);
 
