@@ -36,7 +36,7 @@ impl TryFrom<&str> for Pattern {
 
 		let inner = GlobBuilder::new(b)
 			.case_insensitive(a.len() == s.len())
-			.literal_separator(b.contains('/'))
+			.literal_separator(false)
 			.backslash_escape(false)
 			.empty_alternates(false)
 			.build()?
