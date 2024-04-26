@@ -49,11 +49,13 @@ impl Default for Preview {
 		let preview = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().preview;
 		check_validation(preview.validate());
 
-		let cache_dir =
-			preview.cache_dir.filter(|p| !p.is_empty()).map_or_else(Xdg::cache_dir, expand_path);
+		let mut cache_dir = Xdg::cache_dir();
+		std::fs::create_dir_all(&cache_dir).expect("Failed to create cache directory");
 
-		if !cache_dir.is_dir() {
-			std::fs::create_dir(&cache_dir).expect("Failed to create cache directory");
+		// If the `cache_dir` is set in the configuration file, use it instead
+		if let Some(p) = preview.cache_dir.filter(|s| !s.is_empty()).map(expand_path) {
+			cache_dir = p;
+			std::fs::create_dir_all(&cache_dir).expect("Failed to create cache directory");
 		}
 
 		Preview {
