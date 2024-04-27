@@ -182,6 +182,15 @@ rules = [
 	# Documents
 	{ mime = "application/{pdf,doc,rtf,vnd.*}", fg = "green" },
 
+	# Empty files
+	{ mime = "inode/x-empty", fg = "red" },
+
+	# Is-rules
+	{ name = "*" , is = "orphan", fg = "red" },
+	{ name = "*" , is = "link"  , fg = "cyan" },
+	{ name = "*/", is = "link"  , fg = "cyan" },
+	{ name = "*" , is = "exec"  , fg = "green" },
+
 	# Fallback
 	# { name = "*", fg = "white" },
 	{ name = "*/", fg = "blue" }
