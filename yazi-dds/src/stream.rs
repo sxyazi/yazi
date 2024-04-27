@@ -49,11 +49,12 @@ impl Stream {
 
 	#[cfg(unix)]
 	fn socket_file() -> std::path::PathBuf {
+		use std::env::temp_dir;
+
 		use uzers::Users;
-		use yazi_shared::Xdg;
 
 		use crate::USERS_CACHE;
 
-		Xdg::cache_dir().join(format!(".dds-{}.sock", USERS_CACHE.get_current_uid()))
+		temp_dir().join(format!(".yazi_dds-{}.sock", USERS_CACHE.get_current_uid()))
 	}
 }
