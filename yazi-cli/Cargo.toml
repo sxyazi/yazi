@@ -8,8 +8,12 @@ description = "Yazi command-line interface"
 homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
+[features]
+default      = [ "vendored-lua" ]
+vendored-lua = [ "yazi-dds/vendored-lua" ]
+
 [dependencies]
-yazi-dds = { path = "../yazi-dds", version = "0.2.5" }
+yazi-dds = { path = "../yazi-dds", version = "0.2.5", default-features = false }
 
 # External dependencies
 anyhow     = "1.0.82"

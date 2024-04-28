@@ -12,9 +12,9 @@ repository  = "https://github.com/sxyazi/yazi"
 yazi-adaptor   = { path = "../yazi-adaptor", version = "0.2.5" }
 yazi-boot      = { path = "../yazi-boot", version = "0.2.5" }
 yazi-config    = { path = "../yazi-config", version = "0.2.5" }
-yazi-dds       = { path = "../yazi-dds", version = "0.2.5" }
-yazi-plugin    = { path = "../yazi-plugin", version = "0.2.5" }
-yazi-proxy     = { path = "../yazi-proxy", version = "0.2.5" }
+yazi-dds       = { path = "../yazi-dds", version = "0.2.5", default-features = false }
+yazi-plugin    = { path = "../yazi-plugin", version = "0.2.5", default-features = false }
+yazi-proxy     = { path = "../yazi-proxy", version = "0.2.5", default-features = false }
 yazi-scheduler = { path = "../yazi-scheduler", version = "0.2.5" }
 yazi-shared    = { path = "../yazi-shared", version = "0.2.5" }
 

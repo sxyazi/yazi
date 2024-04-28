@@ -10,16 +10,16 @@ repository  = "https://github.com/sxyazi/yazi"
 
 [features]
 default      = [ "vendored-lua" ]
-vendored-lua = [ "mlua/vendored" ]
+vendored-lua = [ "mlua/vendored", "yazi-dds/vendored-lua", "yazi-plugin/vendored-lua", "yazi-proxy/vendored-lua" ]
 
 [dependencies]
 yazi-adaptor = { path = "../yazi-adaptor", version = "0.2.5" }
 yazi-boot    = { path = "../yazi-boot", version = "0.2.5" }
 yazi-config  = { path = "../yazi-config", version = "0.2.5" }
 yazi-core    = { path = "../yazi-core", version = "0.2.5" }
-yazi-dds     = { path = "../yazi-dds", version = "0.2.5" }
-yazi-plugin  = { path = "../yazi-plugin", version = "0.2.5" }
-yazi-proxy   = { path = "../yazi-proxy", version = "0.2.5" }
+yazi-dds     = { path = "../yazi-dds", version = "0.2.5", default-features = false }
+yazi-plugin  = { path = "../yazi-plugin", version = "0.2.5", default-features = false }
+yazi-proxy   = { path = "../yazi-proxy", version = "0.2.5", default-features = false }
 yazi-shared  = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
