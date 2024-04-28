@@ -170,10 +170,10 @@ icon_error = ""
 
 rules = [
 	# Images
-	{ mime = "image/*", fg = "cyan" },
+	{ mime = "image/*", fg = "yellow" },
 
 	# Media
-	{ mime = "{audio,video}/*", fg = "yellow" },
+	{ mime = "{audio,video}/*", fg = "yellow", bold = true },
 
 	# Archives
 	{ mime = "application/*zip", fg = "magenta" },
@@ -186,7 +186,7 @@ rules = [
 	{ mime = "inode/x-empty", fg = "red" },
 
 	# Is-rules
-	{ name = "*" , is = "orphan", fg = "red" },
+	{ name = "*" , is = "orphan", fg = "cyan", crossed = true },
 	{ name = "*" , is = "link"  , fg = "cyan" },
 	{ name = "*/", is = "link"  , fg = "cyan" },
 	{ name = "*" , is = "exec"  , fg = "green" },
