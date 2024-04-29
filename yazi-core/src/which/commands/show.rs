@@ -1,6 +1,6 @@
-use std::str::FromStr;
+use std::{collections::HashSet, str::FromStr};
 
-use yazi_config::{keymap::{Control, Key}, KEYMAP};
+use yazi_config::{keymap::{Control, ControlCow, Key}, KEYMAP};
 use yazi_shared::{event::Cmd, render, Layer};
 
 use crate::which::{Which, WhichSorter};
@@ -45,16 +45,21 @@ impl Which {
 	pub fn show_with(&mut self, key: &Key, layer: Layer) {
 		self.layer = layer;
 		self.times = 1;
-		self.cands = KEYMAP
-			.get(layer)
-			.iter()
-			.filter(|c| c.on.len() > 1 && &c.on[0] == key)
-			.map(|c| c.into())
-			.collect();
+		self.cands = keymap_candidates(layer, key);
 
 		WhichSorter::default().sort(&mut self.cands);
 		self.visible = true;
 		self.silent = false;
 		render!();
 	}
+}
+
+fn keymap_candidates(layer: Layer, key: &Key) -> Vec<ControlCow> {
+	let mut seen = HashSet::new();
+
+	let mut matches =
+		KEYMAP.get(layer).iter().filter(|c| c.on.len() > 1 && &c.on[0] == key).collect::<Vec<_>>();
+
+	matches.retain(|c| seen.insert(c.on.clone()));
+	matches.into_iter().map(|c| c.into()).collect()
 }
