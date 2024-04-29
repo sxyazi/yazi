@@ -31,15 +31,10 @@ static CLOSE: RoCell<&'static str> = RoCell::new();
 static SHOWN: RoCell<arc_swap::ArcSwapOption<ratatui::layout::Rect>> = RoCell::new();
 
 pub fn init() {
-	TMUX.init(env_exists("TMUX"));
+	TMUX.init(env_exists("TMUX") && env_exists("TMUX_PANE"));
 	START.init(if *TMUX { "\x1bPtmux;\x1b\x1b" } else { "\x1b" });
 	CLOSE.init(if *TMUX { "\x1b\\" } else { "" });
 	ESCAPE.init(if *TMUX { "\x1b\x1b" } else { "\x1b" });
-
-	SHOWN.with(Default::default);
-
-	ADAPTOR.init(Adaptor::matches());
-	ADAPTOR.start();
 
 	if *TMUX {
 		_ = std::process::Command::new("tmux")
@@ -47,6 +42,11 @@ pub fn init() {
 			.stdin(std::process::Stdio::null())
 			.stdout(std::process::Stdio::null())
 			.stderr(std::process::Stdio::null())
-			.spawn();
+			.status();
 	}
+
+	SHOWN.with(Default::default);
+
+	ADAPTOR.init(Adaptor::matches());
+	ADAPTOR.start();
 }
