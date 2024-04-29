@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{collections::HashSet, str::FromStr};
 
 use yazi_config::{keymap::{Control, Key}, KEYMAP};
 use yazi_shared::{event::Cmd, render, Layer};
@@ -43,12 +43,15 @@ impl Which {
 	}
 
 	pub fn show_with(&mut self, key: &Key, layer: Layer) {
+		let mut seen = HashSet::new();
+
 		self.layer = layer;
 		self.times = 1;
 		self.cands = KEYMAP
 			.get(layer)
 			.iter()
 			.filter(|c| c.on.len() > 1 && &c.on[0] == key)
+			.filter(|&c| seen.insert(&c.on))
 			.map(|c| c.into())
 			.collect();
 
