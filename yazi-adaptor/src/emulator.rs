@@ -2,10 +2,11 @@ use std::{env, io::{stderr, LineWriter}};
 
 use anyhow::{anyhow, Result};
 use crossterm::{cursor::{RestorePosition, SavePosition}, execute, style::Print, terminal::{disable_raw_mode, enable_raw_mode}};
+use scopeguard::defer;
 use tracing::warn;
 use yazi_shared::{env_exists, term::Term};
 
-use crate::{Adaptor, TMUX};
+use crate::{Adaptor, CLOSE, ESCAPE, START, TMUX};
 
 #[derive(Clone, Debug)]
 pub enum Emulator {
@@ -112,17 +113,20 @@ impl Emulator {
 	}
 
 	pub fn via_csi() -> Result<Self> {
+		defer! { disable_raw_mode().ok(); }
 		enable_raw_mode()?;
+
 		execute!(
 			LineWriter::new(stderr()),
 			SavePosition,
-			Print("\x1b[>q\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[c"),
+			Print(format!(
+				"{}[>q{}_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA{}\\{}[c{}",
+				START, ESCAPE, ESCAPE, ESCAPE, CLOSE
+			)),
 			RestorePosition
 		)?;
 
 		let resp = futures::executor::block_on(Term::read_until_da1())?;
-		disable_raw_mode().ok();
-
 		let names = [
 			("kitty", Self::Kitty),
 			("Konsole", Self::Konsole),
