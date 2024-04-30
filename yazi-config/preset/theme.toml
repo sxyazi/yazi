@@ -173,23 +173,21 @@ rules = [
 	{ mime = "image/*", fg = "yellow" },
 
 	# Media
-	{ mime = "{audio,video}/*", fg = "yellow", bold = true },
+	{ mime = "{audio,video}/*", fg = "magenta" },
 
 	# Archives
-	{ mime = "application/*zip", fg = "magenta" },
-	{ mime = "application/x-{tar,bzip*,7z-compressed,xz,rar}", fg = "magenta" },
+	{ mime = "application/*zip", fg = "red" },
+	{ mime = "application/x-{tar,bzip*,7z-compressed,xz,rar}", fg = "red" },
 
 	# Documents
-	{ mime = "application/{pdf,doc,rtf,vnd.*}", fg = "green" },
+	{ mime = "application/{pdf,doc,rtf,vnd.*}", fg = "cyan" },
 
 	# Empty files
-	{ mime = "inode/x-empty", fg = "red" },
+	# { mime = "inode/x-empty", fg = "red" },
 
-	# Is-rules
-	{ name = "*" , is = "orphan", fg = "cyan", crossed = true },
-	{ name = "*" , is = "link"  , fg = "cyan" },
-	{ name = "*/", is = "link"  , fg = "cyan" },
-	{ name = "*" , is = "exec"  , fg = "green" },
+	# Special files
+	{ name = "*", is = "orphan", bg = "red" },
+	{ name = "*", is = "exec"  , fg = "green" },
 
 	# Fallback
 	# { name = "*", fg = "white" },
@@ -343,6 +341,16 @@ rules = [
 	{ name = "*/Pictures/"   , text = "" },
 	{ name = "*/Public/"     , text = "" },
 	{ name = "*/Videos/"     , text = "" },
+
+	# Special files
+	{ name = "*", is = "orphan", text = "" },
+	{ name = "*", is = "link"  , text = "" },
+	{ name = "*", is = "block" , text = "" },
+	{ name = "*", is = "char"  , text = "" },
+	{ name = "*", is = "fifo"  , text = "" },
+	{ name = "*", is = "sock"  , text = "" },
+	{ name = "*", is = "sticky", text = "" },
+	{ name = "*", is = "exec"  , text = "" },
 
 	# Default
 	{ name = "*" , text = "" },
