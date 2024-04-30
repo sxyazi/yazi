@@ -2764,7 +2764,6 @@ dependencies = [
  "anyhow",
  "base64 0.22.0",
  "bitflags 2.5.0",
- "clipboard-win",
  "crossterm",
  "futures",
  "libc",
@@ -2843,6 +2842,9 @@ version = "0.2.5"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
+ "base64 0.22.0",
+ "clipboard-win",
+ "crossterm",
  "futures",
  "md-5",
  "mlua",

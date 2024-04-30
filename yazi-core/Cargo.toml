@@ -40,6 +40,3 @@ tracing = { version = "0.1.40", features = [ "max_level_debug", "release_max_lev
 
 [target."cfg(unix)".dependencies]
 libc = "0.2.153"
-
-[target."cfg(windows)".dependencies]
-clipboard-win = "5.3.1"
