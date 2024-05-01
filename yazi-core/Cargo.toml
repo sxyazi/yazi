@@ -20,7 +20,6 @@ yazi-shared    = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
 anyhow        = "1.0.82"
-base64        = "0.22.0"
 bitflags      = "2.5.0"
 crossterm     = "0.27.0"
 futures       = "0.3.30"

@@ -2762,7 +2762,6 @@ name = "yazi-core"
 version = "0.2.5"
 dependencies = [
  "anyhow",
- "base64 0.22.0",
  "bitflags 2.5.0",
  "crossterm",
  "futures",

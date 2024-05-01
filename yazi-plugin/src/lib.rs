@@ -2,7 +2,7 @@
 
 pub mod bindings;
 mod cast;
-pub mod clipboard;
+mod clipboard;
 mod config;
 pub mod elements;
 pub mod external;
@@ -25,7 +25,8 @@ pub use opt::*;
 pub use runtime::*;
 
 pub fn init() {
+	CLIPBOARD.with(Default::default);
+
 	crate::loader::init();
 	crate::init_lua();
-	CLIPBOARD.with(Default::default);
 }

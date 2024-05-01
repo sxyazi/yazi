@@ -34,15 +34,12 @@ impl Utils {
 
 		ya.raw_set(
 			"clipboard",
-			lua.create_async_function(|lua, text: mlua::String| async move {
-				let text = text.to_string_lossy().into_owned();
-
-				if text.is_empty() {
-					let clipboard_data = CLIPBOARD.get().await;
-					Some(lua.create_string(clipboard_data.as_encoded_bytes())).transpose()
-				} else {
+			lua.create_async_function(|lua, text: Option<String>| async move {
+				if let Some(text) = text {
 					CLIPBOARD.set(text).await;
 					Ok(None)
+				} else {
+					Some(lua.create_string(CLIPBOARD.get().await.as_encoded_bytes())).transpose()
 				}
 			})?,
 		)?;
