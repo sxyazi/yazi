@@ -1,5 +1,6 @@
 local M = {}
 
+---@return nil
 function M:peek()
 	local cmd = os.getenv("YAZI_FILE_ONE") or "file"
 	local output, code = Command(cmd):args({ "-bL", tostring(self.file.url) }):stdout(Command.PIPED):output()
@@ -16,6 +17,7 @@ function M:peek()
 	ya.preview_widgets(self, { p:wrap(ui.Paragraph.WRAP) })
 end
 
+---@return nil
 function M:seek() end
 
 return M

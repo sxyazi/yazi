@@ -1,5 +1,6 @@
 local M = {}
 
+---@return nil
 function M:peek()
 	local folder = Folder:by_kind(Folder.PREVIEW)
 	if not folder or folder.cwd ~= self.file.url then
@@ -38,6 +39,7 @@ function M:peek()
 	)
 end
 
+---@return nil
 function M:seek(units)
 	local folder = Folder:by_kind(Folder.PREVIEW)
 	if folder and folder.cwd == self.file.url then

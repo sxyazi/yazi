@@ -1,7 +1,10 @@
+---@class yazi.Manager
 Manager = {
 	area = ui.Rect.default,
 }
 
+---@param area unknown
+---@return unknown[]
 function Manager:layout(area)
 	self.area = area
 
@@ -15,6 +18,8 @@ function Manager:layout(area)
 		:split(area)
 end
 
+---@param area unknown
+---@return unknown[]
 function Manager:render(area)
 	local chunks = self:layout(area)
 

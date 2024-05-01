@@ -1,7 +1,11 @@
+---@class yazi.Progress
 Progress = {
 	area = ui.Rect.default,
 }
 
+---@param area unknown
+---@param offset integer
+---@return table
 function Progress:render(area, offset)
 	self.area = ui.Rect {
 		x = math.max(0, area.w - offset - 21),
@@ -18,6 +22,7 @@ end
 --
 -- However, at this time, we can only access `cx.tasks`. If you need certain data from the complete `cx`,
 -- just cache it to `self` during `render()`, and read it in `partial_render()` - this process is referred to as "composition".
+---@return table
 function Progress:partial_render()
 	local progress = cx.tasks.progress
 	if progress.total == 0 then

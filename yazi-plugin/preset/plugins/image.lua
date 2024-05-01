@@ -1,5 +1,6 @@
 local M = {}
 
+---@return nil
 function M:peek()
 	local url = ya.file_cache(self)
 	if not url or not fs.cha(url) then
@@ -10,8 +11,10 @@ function M:peek()
 	ya.preview_widgets(self, {})
 end
 
+---@return nil
 function M:seek() end
 
+---@return yazi.PreloaderReturnValue
 function M:preload()
 	local cache = ya.file_cache(self)
 	if not cache or fs.cha(cache) then

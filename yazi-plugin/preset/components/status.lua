@@ -1,7 +1,9 @@
+---@class yazi.Status
 Status = {
 	area = ui.Rect.default,
 }
 
+---@return unknown
 function Status.style()
 	if cx.active.mode.is_select then
 		return THEME.status.mode_select
@@ -12,6 +14,7 @@ function Status.style()
 	end
 end
 
+---@return table
 function Status:mode()
 	local mode = tostring(cx.active.mode):upper()
 	if mode == "UNSET" then
@@ -25,6 +28,7 @@ function Status:mode()
 	}
 end
 
+---@return table
 function Status:size()
 	local h = cx.active.current.hovered
 	if not h then
@@ -38,6 +42,7 @@ function Status:size()
 	}
 end
 
+---@return table
 function Status:name()
 	local h = cx.active.current.hovered
 	if not h then
@@ -47,6 +52,7 @@ function Status:name()
 	return ui.Span(" " .. h.name)
 end
 
+---@return table
 function Status:permissions()
 	local h = cx.active.current.hovered
 	if not h then
@@ -76,6 +82,7 @@ function Status:permissions()
 	return ui.Line(spans)
 end
 
+---@return table
 function Status:percentage()
 	local percent = 0
 	local cursor = cx.active.current.cursor
@@ -99,6 +106,7 @@ function Status:percentage()
 	}
 end
 
+---@return table
 function Status:position()
 	local cursor = cx.active.current.cursor
 	local length = #cx.active.current.files
@@ -110,6 +118,8 @@ function Status:position()
 	}
 end
 
+---@param area unknown
+---@return table
 function Status:render(area)
 	self.area = area
 

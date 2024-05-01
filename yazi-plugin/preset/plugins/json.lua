@@ -1,5 +1,6 @@
 local M = {}
 
+---@return nil
 function M:peek()
 	local child = Command("jq")
 		:args({
@@ -41,6 +42,7 @@ function M:peek()
 	end
 end
 
+---@return nil
 function M:seek(units)
 	local h = cx.active.current.hovered
 	if h and h.url == self.file.url then
@@ -52,6 +54,7 @@ function M:seek(units)
 	end
 end
 
+---@return nil
 function M:fallback_to_builtin()
 	local _, bound = ya.preview_code(self)
 	if bound then

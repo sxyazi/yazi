@@ -1,9 +1,12 @@
+---@class yazi.Folder
 Folder = {
 	PARENT = 0,
 	CURRENT = 1,
 	PREVIEW = 2,
 }
 
+---@param area unknown
+---@param files unknown[]
 function Folder:linemode(area, files)
 	local mode = cx.active.conf.linemode
 	if mode == "none" then
@@ -29,6 +32,9 @@ function Folder:linemode(area, files)
 	return ui.Paragraph(area, lines):align(ui.Paragraph.RIGHT)
 end
 
+---@param area unknown
+---@param markers unknown[]
+---@return table
 function Folder:markers(area, markers)
 	if #markers == 0 or area.w * area.h == 0 then
 		return {}
@@ -73,6 +79,7 @@ function Folder:markers(area, markers)
 	return elements
 end
 
+---@param kind yazi.FolderType
 function Folder:by_kind(kind)
 	if kind == self.PARENT then
 		return cx.active.parent

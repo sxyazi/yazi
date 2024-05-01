@@ -1,7 +1,11 @@
+---@class yazi.Current
+---@field area? unknown
 Current = {
 	area = ui.Rect.default,
 }
 
+---@param area unknown
+---@return table
 function Current:empty(area)
 	local folder = Folder:by_kind(Folder.CURRENT)
 
@@ -17,6 +21,8 @@ function Current:empty(area)
 	}
 end
 
+---@param area unknown
+---@return table
 function Current:render(area)
 	self.area = area
 

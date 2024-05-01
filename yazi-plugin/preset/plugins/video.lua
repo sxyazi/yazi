@@ -1,5 +1,6 @@
 local M = {}
 
+---@return nil
 function M:peek()
 	local cache = ya.file_cache(self)
 	if not cache then
@@ -12,6 +13,7 @@ function M:peek()
 	end
 end
 
+---@return nil
 function M:seek(units)
 	local h = cx.active.current.hovered
 	if h and h.url == self.file.url then
@@ -22,6 +24,7 @@ function M:seek(units)
 	end
 end
 
+---@return yazi.PreloaderReturnValue
 function M:preload()
 	local percentage = 5 + self.skip
 	if percentage > 95 then

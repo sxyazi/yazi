@@ -1,7 +1,13 @@
 table.unpack = table.unpack or unpack
 
+---@class yazi.Ya
 ya = ya or {}
 
+---@param min number
+---@param x number
+---@param max number
+---@return number
+---@nodiscard
 function ya.clamp(min, x, max)
 	if x < min then
 		return min
@@ -12,8 +18,16 @@ function ya.clamp(min, x, max)
 	end
 end
 
-function ya.round(x) return x >= 0 and math.floor(x + 0.5) or math.ceil(x - 0.5) end
+---@param x number
+---@return number
+---@nodiscard
+function ya.round(x)
+	return x >= 0 and math.floor(x + 0.5) or math.ceil(x - 0.5)
+end
 
+---@param t table
+---@return table
+---@nodiscard
 function ya.flat(t)
 	local r = {}
 	for _, v in ipairs(t) do
@@ -28,8 +42,17 @@ function ya.flat(t)
 	return r
 end
 
-function ya.basename(str) return string.gsub(str, "(.*[/\\])(.*)", "%2") end
+---@param str string
+---@return string
+---@nodiscard
+function ya.basename(str)
+---@diagnostic disable-next-line: redundant-return-value
+	return string.gsub(str, "(.*[/\\])(.*)", "%2")
+end
 
+---@param size number
+---@return string
+---@nodiscard
 function ya.readable_size(size)
 	local units = { "B", "K", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q" }
 	local i = 1
@@ -40,6 +63,8 @@ function ya.readable_size(size)
 	return string.format("%.1f%s", size, units[i])
 end
 
+---@param path string
+---@return string
 function ya.readable_path(path)
 	local home = os.getenv("HOME") or os.getenv("USERPROFILE")
 	if not home then

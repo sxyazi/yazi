@@ -11,6 +11,8 @@ local function fail(s, ...)
 	ya.notify { title = "Zoxide", content = string.format(s, ...), timeout = 5, level = "error" }
 end
 
+---@param cwd string
+---@return integer
 local function head(cwd)
 	local child = Command("zoxide"):args({ "query", "-l" }):stdout(Command.PIPED):spawn()
 	if not child then
@@ -31,6 +33,10 @@ local function head(cwd)
 	return n
 end
 
+---@class yazi.ZoxideOpts
+---@field update_db? boolean
+
+---@param opts yazi.ZoxideOpts
 local function setup(_, opts)
 	opts = opts or {}
 
@@ -48,6 +54,7 @@ local function setup(_, opts)
 	end
 end
 
+---@return nil
 local function entry()
 	local st = state()
 	if st.empty == true then

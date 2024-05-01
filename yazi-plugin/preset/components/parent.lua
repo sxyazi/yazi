@@ -1,7 +1,10 @@
+---@class yazi.Parent
 Parent = {
 	area = ui.Rect.default,
 }
 
+---@param area unknown
+---@return table
 function Parent:render(area)
 	self.area = area
 

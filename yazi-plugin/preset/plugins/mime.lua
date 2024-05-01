@@ -2,6 +2,8 @@ local SUPPORTED_TYPES = "application/audio/biosig/chemical/font/image/inode/mess
 
 local M = {}
 
+---@param s string
+---@return string | nil
 local function match_mimetype(s)
 	local type, sub = s:match("([-a-z]+/)([+-.a-zA-Z0-9]+)%s*$")
 	if type and sub and string.find(SUPPORTED_TYPES, type, 1, true) then
@@ -9,6 +11,7 @@ local function match_mimetype(s)
 	end
 end
 
+---@return yazi.PreloaderReturnValue
 function M:preload()
 	local urls = {}
 	for _, file in ipairs(self.files) do

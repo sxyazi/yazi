@@ -1,7 +1,10 @@
+---@class yazi.Header
 Header = {
 	area = ui.Rect.default,
 }
 
+---@param max integer
+---@return table
 function Header:cwd(max)
 	local cwd = cx.active.current.cwd
 	local readable = ya.readable_path(tostring(cwd))
@@ -10,6 +13,7 @@ function Header:cwd(max)
 	return ui.Span(ya.truncate(text, { max = max, rtl = true })):style(THEME.manager.cwd)
 end
 
+---@return table
 function Header:count()
 	local yanked = #cx.yanked
 
@@ -35,6 +39,7 @@ function Header:count()
 	}
 end
 
+---@return table
 function Header:tabs()
 	local tabs = #cx.tabs
 	if tabs == 1 then
@@ -57,6 +62,9 @@ function Header:tabs()
 end
 
 -- TODO: remove this function after v0.2.5 release
+--
+---@param area unknown
+---@return table
 function Header:layout(area)
 	if not ya.deprecated_header_layout then
 		ya.deprecated_header_layout = true
@@ -76,6 +84,8 @@ function Header:layout(area)
 		:split(area)
 end
 
+---@param area unknown
+---@return table
 function Header:render(area)
 	self.area = area
 

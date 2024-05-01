@@ -1,5 +1,8 @@
+---@class yazi.File
 File = {}
 
+---@param file unknown
+---@return table
 function File:icon(file)
 	local icon = file:icon()
 	if not icon then
@@ -11,11 +14,15 @@ function File:icon(file)
 	end
 end
 
+---@param file unknown
+---@return table
 function File:prefix(file)
 	local prefix = file:prefix() or ""
 	return prefix == "" and {} or { ui.Span(prefix .. "/") }
 end
 
+---@param file unknown
+---@return table
 function File:highlights(file)
 	local name = file.name:gsub("\r", "?", 1)
 	local highlights = file:highlights()
@@ -53,6 +60,8 @@ function File:found(file)
 	}
 end
 
+---@param file unknown
+---@return table
 function File:symlink(file)
 	if not MANAGER.show_symlink then
 		return {}
@@ -62,6 +71,8 @@ function File:symlink(file)
 	return to and { ui.Span(" -> " .. tostring(to)):italic() } or {}
 end
 
+---@param file unknown
+---@return table
 function File:full(file)
 	return ya.flat {
 		self:icon(file),
@@ -72,6 +83,8 @@ function File:full(file)
 	}
 end
 
+---@param file unknown
+---@return table
 function File:style(file)
 	local style = file:style()
 	if not file:is_hovered() then
@@ -83,6 +96,8 @@ function File:style(file)
 	end
 end
 
+---@param file unknown
+---@return 0 | 1 | 2 | 3 | 4
 function File:marker(file)
 	local yanked = file:is_yanked()
 	if yanked ~= 0 then

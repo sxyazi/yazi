@@ -1,7 +1,9 @@
 local state = ya.sync(function() return cx.active.current.cwd end)
 
+---@return nil
 local function fail(s, ...) ya.notify { title = "Fzf", content = string.format(s, ...), timeout = 5, level = "error" } end
 
+---@return nil
 local function entry()
 	local _permit = ya.hide()
 	local cwd = tostring(state())

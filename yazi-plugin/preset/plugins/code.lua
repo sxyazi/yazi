@@ -1,5 +1,6 @@
 local M = {}
 
+---@return nil
 function M:peek()
 	local _, bound = ya.preview_code(self)
 	if bound then
@@ -7,6 +8,7 @@ function M:peek()
 	end
 end
 
+---@param units number
 function M:seek(units)
 	local h = cx.active.current.hovered
 	if h and h.url == self.file.url then
