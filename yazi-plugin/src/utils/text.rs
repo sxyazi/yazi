@@ -4,6 +4,7 @@ use mlua::{Lua, Table};
 use unicode_width::UnicodeWidthChar;
 
 use super::Utils;
+use crate::CLIPBOARD;
 
 impl Utils {
 	pub(super) fn text(lua: &Lua, ya: &Table) -> mlua::Result<()> {
@@ -28,6 +29,18 @@ impl Utils {
 				} else {
 					Self::truncate(text.chars(), max).into_iter().collect::<String>()
 				})
+			})?,
+		)?;
+
+		ya.raw_set(
+			"clipboard",
+			lua.create_async_function(|lua, text: Option<String>| async move {
+				if let Some(text) = text {
+					CLIPBOARD.set(text).await;
+					Ok(None)
+				} else {
+					Some(lua.create_string(CLIPBOARD.get().await.as_encoded_bytes())).transpose()
+				}
 			})?,
 		)?;
 

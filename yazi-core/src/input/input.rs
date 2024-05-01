@@ -3,10 +3,10 @@ use std::ops::Range;
 use tokio::sync::mpsc::UnboundedSender;
 use unicode_width::UnicodeWidthStr;
 use yazi_config::{popup::Position, INPUT};
+use yazi_plugin::CLIPBOARD;
 use yazi_shared::{render, InputError};
 
 use super::{mode::InputMode, op::InputOp, InputSnap, InputSnaps};
-use crate::CLIPBOARD;
 
 #[derive(Default)]
 pub struct Input {

@@ -1,8 +1,9 @@
 use std::ffi::{OsStr, OsString};
 
+use yazi_plugin::CLIPBOARD;
 use yazi_shared::event::Cmd;
 
-use crate::{tab::Tab, CLIPBOARD};
+use crate::tab::Tab;
 
 pub struct Opt {
 	type_: String,
