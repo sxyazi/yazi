@@ -20,6 +20,8 @@ pub(super) enum Command {
 	Pub(CommandPub),
 	/// Publish a static message to all remote instances.
 	PubStatic(CommandPubStatic),
+	/// Manage packages.
+	Pack(CommandPack),
 }
 
 #[derive(clap::Args)]
@@ -78,4 +80,17 @@ impl CommandPubStatic {
 			bail!("No body provided");
 		}
 	}
+}
+
+#[derive(clap::Args)]
+pub(super) struct CommandPack {
+	/// Add a package.
+	#[arg(short = 'a', long)]
+	pub(super) add:     Option<String>,
+	/// Install all packages.
+	#[arg(short = 'i', long)]
+	pub(super) install: bool,
+	/// Upgrade all packages.
+	#[arg(short = 'u', long)]
+	pub(super) upgrade: bool,
 }

@@ -2,7 +2,7 @@ use std::{collections::{HashMap, HashSet}, fs::Metadata, mem, ops::Deref, sync::
 
 use tokio::{fs::{self, DirEntry}, select, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_config::{manager::SortBy, MANAGER};
-use yazi_shared::fs::{accessible, File, FilesOp, Url, FILES_TICKET};
+use yazi_shared::fs::{maybe_exists, File, FilesOp, Url, FILES_TICKET};
 
 use super::{FilesSorter, Filter};
 
@@ -101,7 +101,7 @@ impl Files {
 			Ok(m) if mtime == m.modified().ok() => {}
 			Ok(m) => return Some(m),
 			Err(e) => {
-				if accessible(url).await {
+				if maybe_exists(url).await {
 					FilesOp::IOErr(url.clone(), e.kind()).emit();
 				} else if let Some(p) = url.parent_url() {
 					FilesOp::Deleting(p, vec![url.clone()]).emit();

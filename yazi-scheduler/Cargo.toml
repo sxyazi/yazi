@@ -19,7 +19,7 @@ yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
 anyhow                 = "1.0.82"
 async-priority-channel = "0.2.0"
 futures                = "0.3.30"
-parking_lot            = "0.12.1"
+parking_lot            = "0.12.2"
 scopeguard             = "1.2.0"
 tokio                  = { version = "1.37.0", features = [ "full" ] }
 
@@ -27,7 +27,7 @@ tokio                  = { version = "1.37.0", features = [ "full" ] }
 tracing = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
 
 [target."cfg(unix)".dependencies]
-libc = "0.2.153"
+libc = "0.2.154"
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
 trash = "4.1.0"

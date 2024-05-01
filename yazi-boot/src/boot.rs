@@ -148,7 +148,7 @@ impl Default for Boot {
 			.map(|s| s.split(',').map(|s| s.to_owned()).collect())
 			.unwrap_or_default();
 
-		let boot = Self {
+		Self {
 			cwd,
 			file,
 
@@ -159,11 +159,7 @@ impl Default for Boot {
 			plugin_dir: config_dir.join("plugins"),
 			config_dir,
 			state_dir: Xdg::state_dir(),
-		};
-
-		std::fs::create_dir_all(&boot.flavor_dir).ok();
-		std::fs::create_dir_all(&boot.plugin_dir).ok();
-		boot
+		}
 	}
 }
 

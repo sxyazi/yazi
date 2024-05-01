@@ -4,8 +4,10 @@ use anyhow::Result;
 use filetime::{set_file_mtime, FileTime};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
 
-pub async fn accessible(path: &Path) -> bool {
-	match fs::symlink_metadata(path).await {
+pub async fn must_exists(p: impl AsRef<Path>) -> bool { fs::symlink_metadata(p).await.is_ok() }
+
+pub async fn maybe_exists(p: impl AsRef<Path>) -> bool {
+	match fs::symlink_metadata(p).await {
 		Ok(_) => true,
 		Err(e) => e.kind() != io::ErrorKind::NotFound,
 	}
