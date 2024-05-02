@@ -61,8 +61,7 @@ impl From<Metadata> for Cha {
 			kind:     ck,
 			len:      m.len(),
 			accessed: m.accessed().ok(),
-			// TODO: remove this once https://github.com/rust-lang/rust/issues/108277 is fixed.
-			created:  None,
+			created:  m.created().ok(),
 			modified: m.modified().ok(),
 
 			#[cfg(unix)]
