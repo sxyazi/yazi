@@ -6,7 +6,9 @@ use serde::{Deserialize, Serialize};
 use tokio::{io::AsyncWriteExt, select, sync::mpsc, task::JoinHandle, time};
 use yazi_shared::RoCell;
 
-use crate::{body::{Body, BodyBye, BodyHi}, ClientReader, ClientWriter, Payload, Pubsub, Server, Stream};
+use crate::{body::{Body, BodyBye, BodyHi}, dds_peer::DDSPeer, ClientReader, ClientWriter, Payload, Pubsub, Server, Stream};
+
+pub mod dds_peer;
 
 pub(super) static ID: RoCell<u64> = RoCell::new();
 pub(super) static PEERS: RoCell<RwLock<HashMap<u64, Peer>>> = RoCell::new();
@@ -52,9 +54,56 @@ impl Client {
 						if line.is_empty() {
 							continue;
 						} else if line.starts_with("hey,") {
-							Self::handle_hey(line);
+							Self::handle_hey(&line);
 						} else {
 							Payload::from_str(&line).map(|p| p.emit()).ok();
+						}
+					}
+				}
+			}
+		});
+	}
+
+	pub fn echo_events_to_stdout(sender: DDSPeer, kinds: HashSet<String>) {
+		let mut rx = QUEUE_RX.drop();
+		while rx.try_recv().is_ok() {}
+
+		tokio::spawn(async move {
+			let mut server = None;
+			let (mut lines, mut writer) = Self::connect(&mut server).await;
+
+			loop {
+				select! {
+					Some(payload) = rx.recv() => {
+						if writer.write_all(payload.as_bytes()).await.is_err() {
+							(lines, writer) = Self::reconnect(&mut server).await;
+							writer.write_all(payload.as_bytes()).await.ok(); // Retry once
+						}
+					}
+					Ok(next) = lines.next_line() => {
+						let Some(line) = next else {
+							(lines, writer) = Self::reconnect(&mut server).await;
+							continue;
+						};
+
+						if line.is_empty() {
+							continue;
+						}
+
+						let payload = Payload::from_str(&line).unwrap();
+						if line.starts_with("hey,") {
+							Self::handle_hey(&line);
+							if sender.matches(payload.sender) {
+								println!("{}", line);
+							}
+						} else {
+							if ! sender.matches(payload.sender) {
+								continue;
+							}
+
+							if kinds.contains(payload.body.kind()) {
+								println!("{}", &line);
+							}
 						}
 					}
 				}
@@ -136,8 +185,8 @@ impl Client {
 		Self::connect(server).await
 	}
 
-	fn handle_hey(s: String) {
-		if let Ok(Body::Hey(mut hey)) = Payload::from_str(&s).map(|p| p.body) {
+	fn handle_hey(s: &str) {
+		if let Ok(Body::Hey(mut hey)) = Payload::from_str(s).map(|p| p.body) {
 			hey.peers.retain(|&id, _| id != *ID);
 			*PEERS.write() = hey.peers;
 		}

@@ -1,8 +1,11 @@
 mod args;
 mod package;
 
+use std::collections::HashSet;
+
 use args::*;
 use clap::Parser;
+use yazi_dds::dds_peer::DDSPeer;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -45,6 +48,26 @@ async fn main() -> anyhow::Result<()> {
 			} else if let Some(repo) = &cmd.add {
 				package::Package::add_to_config(repo).await?;
 			}
+		}
+
+		Command::Sub(cmd) => {
+			yazi_dds::init();
+			let kinds = cmd.kinds.split(',').map(|s| s.to_owned()).collect::<HashSet<_>>();
+
+			yazi_boot::BOOT.init(yazi_boot::Boot::init_with(kinds.clone(), kinds.clone()));
+			yazi_dds::Client::echo_events_to_stdout(DDSPeer::from(cmd.sender), kinds);
+
+			tokio::signal::ctrl_c().await?;
+		}
+
+		Command::SubStatic(cmd) => {
+			yazi_dds::init();
+			let kinds = cmd.kinds.split(',').map(|s| s.to_owned()).collect::<HashSet<_>>();
+
+			yazi_boot::BOOT.init(yazi_boot::Boot::init_with(kinds.clone(), kinds.clone()));
+			yazi_dds::Client::echo_events_to_stdout(DDSPeer::All, kinds);
+
+			tokio::signal::ctrl_c().await?;
 		}
 	}
 

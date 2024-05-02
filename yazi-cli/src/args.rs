@@ -22,6 +22,10 @@ pub(super) enum Command {
 	PubStatic(CommandPubStatic),
 	/// Manage packages.
 	Pack(CommandPack),
+	/// Subscribe to messages from remote instance(s).
+	Sub(CommandSub),
+	/// Subscribe to messages from all remote instance(s).
+	SubStatic(CommandSubStatic),
 }
 
 #[derive(clap::Args)]
@@ -108,4 +112,22 @@ pub(super) struct CommandPack {
 	/// Upgrade all packages.
 	#[arg(short = 'u', long)]
 	pub(super) upgrade: bool,
+}
+
+#[derive(clap::Args)]
+pub(super) struct CommandSub {
+	/// The sender ID whose messages we want to monitor.
+	#[arg(index = 1)]
+	pub(super) sender: u64,
+
+	/// The kind of messages we are interested in.
+	#[arg(index = 2)]
+	pub(super) kinds: String,
+}
+
+#[derive(clap::Args)]
+pub(super) struct CommandSubStatic {
+	/// The kind of messages we are interested in.
+	#[arg(index = 1)]
+	pub(super) kinds: String,
 }
