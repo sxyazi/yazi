@@ -1,7 +1,8 @@
 use std::{sync::Arc, time::Duration};
 
+use parking_lot::Mutex;
 use tokio::{task::JoinHandle, time::sleep};
-use yazi_scheduler::{Scheduler, TaskSummary};
+use yazi_scheduler::{Ongoing, Scheduler, TaskSummary};
 use yazi_shared::{emit, event::Cmd, term::Term, Layer};
 
 use super::{TasksProgress, TASKS_BORDER, TASKS_PADDING, TASKS_PERCENT};
@@ -56,10 +57,9 @@ impl Tasks {
 	}
 
 	pub fn paginate(&self) -> Vec<TaskSummary> {
-		let ongoing = self.scheduler.ongoing.lock();
-		ongoing.values().take(Self::limit()).map(Into::into).collect()
+		self.ongoing().lock().values().take(Self::limit()).map(Into::into).collect()
 	}
 
 	#[inline]
-	pub fn len(&self) -> usize { self.scheduler.ongoing.lock().len() }
+	pub fn ongoing(&self) -> &Arc<Mutex<Ongoing>> { &self.scheduler.ongoing }
 }
