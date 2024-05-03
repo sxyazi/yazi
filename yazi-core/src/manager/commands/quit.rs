@@ -35,9 +35,9 @@ impl Manager {
 			let mut result = InputProxy::show(InputCfg::quit(left));
 			loop {
 				select! {
-					_ = time::sleep(Duration::from_millis(50)) => {
+					_ = time::sleep(Duration::from_millis(100)) => {
 						i += 1;
-						if i > 50 { break }
+						if i > 30 { break }
 						else if ongoing.lock().len() == 0 {
 							emit!(Quit(opt));
 							return;
