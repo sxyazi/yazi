@@ -1,7 +1,5 @@
 use ratatui::{buffer::Buffer, layout::{self, Constraint, Offset, Rect}, widgets::{Block, BorderType, Paragraph, Widget, Wrap}};
-use yazi_config::THEME;
 use yazi_core::notify::Message;
-use yazi_proxy::options::NotifyLevel;
 
 use crate::Ctx;
 
@@ -49,12 +47,6 @@ impl<'a> Widget for Layout<'a> {
 		let tile = Self::tile(available, &notify.messages[..limit]);
 
 		for (i, m) in notify.messages.iter().enumerate().take(limit) {
-			let (icon, style) = match m.level {
-				NotifyLevel::Info => (&THEME.notify.icon_info, THEME.notify.title_info),
-				NotifyLevel::Warn => (&THEME.notify.icon_warn, THEME.notify.title_warn),
-				NotifyLevel::Error => (&THEME.notify.icon_error, THEME.notify.title_error),
-			};
-
 			let mut rect =
 				tile[i].offset(Offset { x: (100 - m.percent) as i32 * tile[i].width as i32 / 100, y: 0 });
 			rect.width -= rect.x - tile[i].x;
@@ -65,9 +57,9 @@ impl<'a> Widget for Layout<'a> {
 				.block(
 					Block::bordered()
 						.border_type(BorderType::Rounded)
-						.title(format!("{icon} {}", m.title))
-						.title_style(style)
-						.border_style(style),
+						.title(format!("{} {}", m.level.icon(), m.title))
+						.title_style(*m.level.style())
+						.border_style(*m.level.style()),
 				)
 				.render(rect, buf);
 		}

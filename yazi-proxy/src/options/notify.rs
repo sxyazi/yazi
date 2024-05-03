@@ -2,7 +2,8 @@ use std::{str::FromStr, time::Duration};
 
 use anyhow::bail;
 use mlua::{ExternalError, ExternalResult};
-use yazi_shared::event::Cmd;
+use yazi_config::THEME;
+use yazi_shared::{event::Cmd, theme::Style};
 
 pub struct NotifyOpt {
 	pub title:   String,
@@ -41,12 +42,32 @@ impl<'a> TryFrom<mlua::Table<'a>> for NotifyOpt {
 	}
 }
 
-#[derive(Default)]
+#[derive(Clone, Copy, Default)]
 pub enum NotifyLevel {
 	#[default]
 	Info,
 	Warn,
 	Error,
+}
+
+impl NotifyLevel {
+	#[inline]
+	pub fn icon(self) -> &'static str {
+		match self {
+			Self::Info => &THEME.notify.icon_info,
+			Self::Warn => &THEME.notify.icon_warn,
+			Self::Error => &THEME.notify.icon_error,
+		}
+	}
+
+	#[inline]
+	pub fn style(self) -> &'static Style {
+		match self {
+			Self::Info => &THEME.notify.title_info,
+			Self::Warn => &THEME.notify.title_warn,
+			Self::Error => &THEME.notify.title_error,
+		}
+	}
 }
 
 impl FromStr for NotifyLevel {
