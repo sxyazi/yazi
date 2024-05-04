@@ -93,8 +93,12 @@ impl Client {
 						let payload = Payload::from_str(&line).unwrap();
 						if line.starts_with("hey,") {
 							Self::handle_hey(&line);
-							if sender.matches(payload.sender) {
-								println!("{}", line);
+							if !sender.matches(payload.sender) {
+								continue;
+							}
+
+							if kinds.contains(payload.body.kind()) {
+								println!("{}", &line);
 							}
 						} else {
 							if ! sender.matches(payload.sender) {
