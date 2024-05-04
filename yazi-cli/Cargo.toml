@@ -24,6 +24,7 @@ clap_complete         = "4.5.2"
 clap_complete_fig     = "4.5.0"
 clap_complete_nushell = "4.5.1"
 serde_json            = "1.0.116"
+vergen                = { version = "8.3.1", features = [ "build", "git", "gitcl" ] }
 
 [[bin]]
 name = "ya"
