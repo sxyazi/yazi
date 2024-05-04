@@ -5,9 +5,17 @@ use clap::Parser;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-	let args = Args::parse();
+	if std::env::args_os().any(|s| s == "-V" || s == "--version") {
+		println!(
+			"Ya {} ({} {})",
+			env!("CARGO_PKG_VERSION"),
+			env!("VERGEN_GIT_SHA"),
+			env!("VERGEN_BUILD_DATE")
+		);
+		return Ok(());
+	}
 
-	match &args.command {
+	match Args::parse().command {
 		Command::Pub(cmd) => {
 			yazi_dds::init();
 			if let Err(e) = yazi_dds::Client::shot(&cmd.kind, cmd.receiver, None, &cmd.body()?).await {

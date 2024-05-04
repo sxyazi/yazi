@@ -2737,6 +2737,7 @@ dependencies = [
  "clap_complete_nushell",
  "serde_json",
  "tokio",
+ "vergen",
  "yazi-dds",
 ]
 

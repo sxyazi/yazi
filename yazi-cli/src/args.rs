@@ -4,11 +4,14 @@ use anyhow::{bail, Result};
 use clap::{command, Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(name = "ya", version, about, long_about = None)]
-#[command(propagate_version = true)]
+#[command(name = "Ya", about, long_about = None)]
 pub(super) struct Args {
 	#[command(subcommand)]
 	pub(super) command: Command,
+
+	/// Print version
+	#[arg(short = 'V', long)]
+	pub(super) version: bool,
 }
 
 #[derive(Subcommand)]
