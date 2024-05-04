@@ -50,3 +50,7 @@ tikv-jemallocator = "0.5.4"
 [[bin]]
 name = "yazi"
 path = "src/main.rs"
+
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/yazi-{ target }{ archive-suffix }"
+bin-dir = "yazi-{ target }/{ bin }{ binary-ext }"

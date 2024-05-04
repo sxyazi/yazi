@@ -28,3 +28,7 @@ serde_json            = "1.0.116"
 [[bin]]
 name = "ya"
 path = "src/main.rs"
+
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/yazi-{ target }{ archive-suffix }"
+bin-dir = "yazi-{ target }/{ bin }{ binary-ext }"
