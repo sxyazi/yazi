@@ -4,14 +4,14 @@ use anyhow::{bail, Result};
 use clap::{command, Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(name = "ya")]
+#[command(name = "Ya", about, long_about = None)]
 pub(super) struct Args {
 	#[command(subcommand)]
-	pub(super) command: Option<Command>,
+	pub(super) command: Command,
 
 	/// Print version
 	#[arg(short = 'V', long)]
-	pub version: bool,
+	pub(super) version: bool,
 }
 
 #[derive(Subcommand)]
