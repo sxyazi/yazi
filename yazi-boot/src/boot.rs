@@ -55,6 +55,9 @@ impl Boot {
 		writeln!(s, "    OS: {}-{} ({})", OS, ARCH, FAMILY)?;
 		writeln!(s, "    Debug: {}", cfg!(debug_assertions))?;
 
+		writeln!(s, "\nYa")?;
+		writeln!(s, "    Version: {:?}", Command::new("ya").args(["--version"]).output())?;
+
 		writeln!(s, "\nEmulator")?;
 		writeln!(s, "    Emulator.via_env: {:?}", yazi_adaptor::Emulator::via_env())?;
 		writeln!(s, "    Emulator.via_csi: {:?}", yazi_adaptor::Emulator::via_csi())?;
