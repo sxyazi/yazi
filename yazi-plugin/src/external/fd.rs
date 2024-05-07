@@ -1,4 +1,4 @@
-use std::process::Stdio;
+use std::{env::args, process::Stdio};
 
 use anyhow::Result;
 use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command, sync::mpsc::{self, UnboundedReceiver}};
@@ -9,6 +9,7 @@ pub struct FdOpt {
 	pub hidden:  bool,
 	pub glob:    bool,
 	pub subject: String,
+	pub args:    Vec<String>,
 }
 
 pub fn fd(opt: FdOpt) -> Result<UnboundedReceiver<File>> {
@@ -16,6 +17,7 @@ pub fn fd(opt: FdOpt) -> Result<UnboundedReceiver<File>> {
 		.arg("--base-directory")
 		.arg(&opt.cwd)
 		.args(if opt.hidden { ["--hidden", "--no-ignore"] } else { ["--no-hidden", "--ignore"] })
+		.args(&opt.args)
 		.arg(if opt.glob { "--glob" } else { "--regex" })
 		.arg(&opt.subject)
 		.kill_on_drop(true)

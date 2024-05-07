@@ -2777,6 +2777,7 @@ dependencies = [
  "regex",
  "scopeguard",
  "serde",
+ "shell-words",
  "tokio",
  "tokio-stream",
  "tokio-util",
