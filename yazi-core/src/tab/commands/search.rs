@@ -63,27 +63,24 @@ impl Tab {
 			let mut input = InputProxy::show(InputCfg::search(&opt.type_.to_string()));
 			let Some(Ok(subject)) = input.recv().await else { bail!("") };
 
-			let mut arguments = Vec::new();
-			let mut subjects = Vec::new();
 			let words = shell_words::split(&subject)?;
-			for word in words {
-				if word.starts_with("--args=") {
-					let args_string = word.strip_prefix("--args=").unwrap();
-					arguments.extend(shell_words::split(args_string)?);
-				} else {
-					subjects.push(word);
-				}
-			}
+			let (arguments, subjects): (Vec<String>, Vec<String>) = words
+				.into_iter()
+				.partition(|word| word.starts_with("--args="));
 			if subjects.is_empty() {
 				bail!("No search subject found");
 			}
 			let subject = subjects.join(" ");
+			let args: Vec<String> = arguments.into_iter()
+				.flat_map(|arg| shell_words::split(&arg["--args=".len()..]))
+				.flatten()
+				.collect();
 
 			cwd = cwd.into_search(subject.clone());
 			let rx = if opt.type_ == OptType::Rg {
-				external::rg(external::RgOpt { cwd: cwd.clone(), hidden, subject, args: arguments})
+				external::rg(external::RgOpt { cwd: cwd.clone(), hidden, subject, args})
 			} else {
-				external::fd(external::FdOpt { cwd: cwd.clone(), hidden, glob: false, subject, args: arguments })
+				external::fd(external::FdOpt { cwd: cwd.clone(), hidden, glob: false, subject, args })
 			}?;
 
 			let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(300));

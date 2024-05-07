@@ -16,7 +16,7 @@ pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {
 		.current_dir(&opt.cwd)
 		.args(["--color=never", "--files-with-matches", "--smart-case"])
 		.args(if opt.hidden { ["--hidden", "--no-ignore"] } else { ["--no-hidden", "--ignore"] })
-		.args(opt.args)
+		.args(&opt.args)
 		.arg(&opt.subject)
 		.kill_on_drop(true)
 		.stdout(Stdio::piped())
