@@ -1,4 +1,5 @@
 mod args;
+mod package;
 
 use args::*;
 use clap::Parser;
@@ -28,6 +29,18 @@ async fn main() -> anyhow::Result<()> {
 			if let Err(e) = yazi_dds::Client::shot(&cmd.kind, 0, Some(cmd.severity), &cmd.body()?).await {
 				eprintln!("Cannot send message: {e}");
 				std::process::exit(1);
+			}
+		}
+		Command::Pack(cmd) => {
+			package::init();
+			if cmd.install {
+				package::Package::install_from_config("plugin", false).await?;
+				package::Package::install_from_config("flavor", false).await?;
+			} else if cmd.upgrade {
+				package::Package::install_from_config("plugin", true).await?;
+				package::Package::install_from_config("flavor", true).await?;
+			} else if let Some(repo) = &cmd.add {
+				package::Package::add_to_config(repo).await?;
 			}
 		}
 	}

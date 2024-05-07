@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use tokio::fs;
 use yazi_config::popup::InputCfg;
 use yazi_proxy::{InputProxy, ManagerProxy};
-use yazi_shared::{event::Cmd, fs::{accessible, File, FilesOp, Url}};
+use yazi_shared::{event::Cmd, fs::{maybe_exists, File, FilesOp, Url}};
 
 use crate::manager::Manager;
 
@@ -26,7 +26,7 @@ impl Manager {
 			};
 
 			let path = cwd.join(&name);
-			if !opt.force && accessible(&path).await {
+			if !opt.force && maybe_exists(&path).await {
 				match InputProxy::show(InputCfg::overwrite()).recv().await {
 					Some(Ok(c)) if c == "y" || c == "Y" => (),
 					_ => return Ok(()),

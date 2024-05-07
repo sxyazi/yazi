@@ -41,7 +41,7 @@ tracing-appender   = "0.2.3"
 tracing-subscriber = "0.3.18"
 
 [target."cfg(unix)".dependencies]
-libc              = "0.2.153"
+libc              = "0.2.154"
 signal-hook-tokio = { version = "0.3.1", features = [ "futures-v0_3" ] }
 
 [target.'cfg(all(not(target_os = "macos"), not(target_os = "windows")))'.dependencies]

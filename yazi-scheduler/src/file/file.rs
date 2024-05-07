@@ -5,7 +5,7 @@ use futures::{future::BoxFuture, FutureExt};
 use tokio::{fs, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::TASKS;
-use yazi_shared::fs::{accessible, calculate_size, copy_with_progress, path_relative_to, Url};
+use yazi_shared::fs::{calculate_size, copy_with_progress, maybe_exists, path_relative_to, Url};
 
 use super::{FileOp, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash};
 use crate::{TaskOp, TaskProg, LOW, NORMAL};
@@ -108,7 +108,7 @@ impl File {
 			}
 			FileOp::Delete(task) => {
 				if let Err(e) = fs::remove_file(&task.target).await {
-					if e.kind() != NotFound && accessible(&task.target).await {
+					if e.kind() != NotFound && maybe_exists(&task.target).await {
 						self.fail(task.id, format!("Delete task failed: {:?}, {e}", task))?;
 						Err(e)?
 					}

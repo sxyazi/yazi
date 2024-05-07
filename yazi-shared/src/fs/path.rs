@@ -1,6 +1,6 @@
 use std::{borrow::Cow, env, ffi::OsString, path::{Component, Path, PathBuf, MAIN_SEPARATOR}};
 
-use super::accessible;
+use super::maybe_exists;
 use crate::fs::Url;
 
 #[inline]
@@ -76,7 +76,7 @@ pub async fn unique_path(mut p: Url) -> Url {
 		.unwrap_or_default();
 
 	let mut i = 0;
-	while accessible(&p).await {
+	while maybe_exists(&p).await {
 		i += 1;
 
 		let mut name = OsString::with_capacity(stem.len() + ext.len() + 5);
