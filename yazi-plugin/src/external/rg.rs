@@ -8,6 +8,7 @@ pub struct RgOpt {
 	pub cwd:     Url,
 	pub hidden:  bool,
 	pub subject: String,
+	pub args:    Vec<String>,
 }
 
 pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {
@@ -15,7 +16,8 @@ pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {
 		.current_dir(&opt.cwd)
 		.args(["--color=never", "--files-with-matches", "--smart-case"])
 		.args(if opt.hidden { ["--hidden", "--no-ignore"] } else { ["--no-hidden", "--ignore"] })
-		.arg(&opt.subject)
+		.args(opt.args)
+		.arg(opt.subject)
 		.kill_on_drop(true)
 		.stdout(Stdio::piped())
 		.stderr(Stdio::null())

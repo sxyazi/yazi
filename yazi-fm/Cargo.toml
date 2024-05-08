@@ -23,7 +23,7 @@ yazi-proxy   = { path = "../yazi-proxy", version = "0.2.5" }
 yazi-shared  = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
-anyhow       = "1.0.82"
+anyhow       = "1.0.83"
 better-panic = "0.3.0"
 crossterm    = { version = "0.27.0", features = [ "event-stream" ] }
 fdlimit      = "0.3.0"
@@ -33,7 +33,7 @@ ratatui      = "=0.26.1"
 scopeguard   = "1.2.0"
 syntect      = { version = "5.2.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
 tokio        = { version = "1.37.0", features = [ "full" ] }
-tokio-util   = "0.7.10"
+tokio-util   = "0.7.11"
 
 # Logging
 tracing            = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }

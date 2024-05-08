@@ -13,7 +13,7 @@ yazi-config = { path = "../yazi-config", version = "0.2.5" }
 yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
-anyhow       = "1.0.82"
+anyhow       = "1.0.83"
 arc-swap     = "1.7.1"
 base64       = "0.22.1"
 color_quant  = "1.1.0"
