@@ -6,7 +6,7 @@ use clap::Parser;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-	if std::env::args_os().any(|s| s == "-V" || s == "--version") {
+	if std::env::args_os().nth(1).is_some_and(|s| s == "-V" || s == "--version") {
 		println!(
 			"Ya {} ({} {})",
 			env!("CARGO_PKG_VERSION"),

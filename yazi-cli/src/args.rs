@@ -83,6 +83,7 @@ impl CommandPubStatic {
 }
 
 #[derive(clap::Args)]
+#[command(arg_required_else_help = true)]
 pub(super) struct CommandPack {
 	/// Add a package.
 	#[arg(short = 'a', long)]
