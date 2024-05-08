@@ -4,6 +4,7 @@ use anyhow::Result;
 use md5::{Digest, Md5};
 use yazi_shared::Xdg;
 
+#[derive(Debug, PartialEq)]
 pub(crate) struct Package {
 	pub(crate) repo:      String,
 	/// When a package is a subdirectory of a repository, this field will be set
@@ -17,13 +18,8 @@ impl Package {
 	pub(super) fn new(url: &str, commit: Option<&str>) -> Self {
 		let mut parts = url.splitn(2, '#');
 
-		let mut repo = parts.next().unwrap_or_default().to_owned();
-		let child = if let Some(s) = parts.next() {
-			format!("{s}.yazi")
-		} else {
-			repo.push_str(".yazi");
-			String::new()
-		};
+		let repo = parts.next().unwrap_or_default().to_owned();
+		let child = parts.next().unwrap_or_default().to_owned();
 
 		Self { repo, child, commit: commit.unwrap_or_default().to_owned(), is_flavor: false }
 	}
@@ -31,9 +27,9 @@ impl Package {
 	#[inline]
 	pub(super) fn use_(&self) -> Cow<str> {
 		if self.child.is_empty() {
-			self.repo.trim_end_matches(".yazi").into()
+			self.repo.clone().into()
 		} else {
-			format!("{}#{}", self.repo, self.child.trim_end_matches(".yazi")).into()
+			format!("{}#{}", self.repo, self.child).into()
 		}
 	}
 
@@ -77,5 +73,57 @@ impl Package {
 			Print("\n\n"),
 		)?;
 		Ok(())
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_adds_yazi_suffix() {
+		// if a package doesn't have a suffix, it should add ".yazi" to the end
+		let package = Package::new("abcd/my-plugin.yazi", None);
+		assert_eq!(package, Package {
+			repo:      "abcd/my-plugin.yazi".to_owned(),
+			child:     "".to_owned(),
+			commit:    "".to_owned(),
+			is_flavor: false,
+		});
+
+		assert_eq!(package.use_(), "abcd/my-plugin.yazi");
+		assert_eq!(package.name(), Some("my-plugin.yazi"));
+		assert_eq!(package.remote(), "https://github.com/abcd/my-plugin.yazi.git");
+	}
+
+	#[test]
+	fn test_supports_subdirectories() {
+		let package = Package::new("yazi-rs/flavors#catppuccin-mocha.yazi", None);
+		assert_eq!(package, Package {
+			repo:      "yazi-rs/flavors".to_owned(),
+			child:     "catppuccin-mocha.yazi".to_owned(),
+			commit:    "".to_owned(),
+			is_flavor: false,
+		});
+
+		assert_eq!(package.use_(), "yazi-rs/flavors#catppuccin-mocha.yazi");
+		assert_eq!(package.name(), Some("catppuccin-mocha.yazi"));
+		assert_eq!(package.remote(), "https://github.com/yazi-rs/flavors.git");
+	}
+
+	#[test]
+	fn test_github_with_yazi_suffix() {
+		// when a github repository ends with .yazi, it should not add another .yazi
+		let package = Package::new("DreamMaoMao/keyjump.yazi", None);
+		assert_eq!(package, Package {
+			repo:      "DreamMaoMao/keyjump.yazi".to_owned(),
+			child:     "".to_owned(),
+			commit:    "".to_owned(),
+			is_flavor: false,
+		});
+
+		assert_eq!(package.use_(), "DreamMaoMao/keyjump.yazi");
+		assert_eq!(package.name(), Some("keyjump.yazi"));
+		assert_eq!(package.remote(), "https://github.com/DreamMaoMao/keyjump.yazi.git");
 	}
 }
