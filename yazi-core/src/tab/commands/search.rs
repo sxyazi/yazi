@@ -39,15 +39,23 @@ impl Display for OptType {
 
 pub struct Opt {
 	pub type_: OptType,
+	pub args:  Vec<String>,
 }
 
-impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self { Self { type_: c.take_first_str().unwrap_or_default().into() } }
+impl TryFrom<Cmd> for Opt {
+	type Error = anyhow::Error;
+
+	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
+		Ok(Self {
+			type_: c.take_first_str().unwrap_or_default().into(),
+			args:  shell_words::split(c.str("args").unwrap_or_default())?,
+		})
+	}
 }
 
 impl Tab {
-	pub fn search(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
+	pub fn search(&mut self, opt: impl TryInto<Opt>) {
+		let Ok(opt) = opt.try_into() else { return };
 		if opt.type_ == OptType::None {
 			return self.search_stop();
 		}
@@ -63,24 +71,11 @@ impl Tab {
 			let mut input = InputProxy::show(InputCfg::search(&opt.type_.to_string()));
 			let Some(Ok(subject)) = input.recv().await else { bail!("") };
 
-			let words = shell_words::split(&subject)?;
-			let (arguments, subjects): (Vec<String>, Vec<String>) = words
-				.into_iter()
-				.partition(|word| word.starts_with("--args="));
-			if subjects.is_empty() {
-				bail!("No search subject found");
-			}
-			let subject = subjects.join(" ");
-			let args: Vec<String> = arguments.into_iter()
-				.flat_map(|arg| shell_words::split(&arg["--args=".len()..]))
-				.flatten()
-				.collect();
-
 			cwd = cwd.into_search(subject.clone());
 			let rx = if opt.type_ == OptType::Rg {
-				external::rg(external::RgOpt { cwd: cwd.clone(), hidden, subject, args})
+				external::rg(external::RgOpt { cwd: cwd.clone(), hidden, subject, args: opt.args })
 			} else {
-				external::fd(external::FdOpt { cwd: cwd.clone(), hidden, glob: false, subject, args })
+				external::fd(external::FdOpt { cwd: cwd.clone(), hidden, subject, args: opt.args })
 			}?;
 
 			let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(300));

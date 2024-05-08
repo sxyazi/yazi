@@ -7,7 +7,6 @@ use yazi_shared::fs::{File, Url};
 pub struct FdOpt {
 	pub cwd:     Url,
 	pub hidden:  bool,
-	pub glob:    bool,
 	pub subject: String,
 	pub args:    Vec<String>,
 }
@@ -16,10 +15,10 @@ pub fn fd(opt: FdOpt) -> Result<UnboundedReceiver<File>> {
 	let mut child = Command::new("fd")
 		.arg("--base-directory")
 		.arg(&opt.cwd)
+		.arg("--regex")
 		.args(if opt.hidden { ["--hidden", "--no-ignore"] } else { ["--no-hidden", "--ignore"] })
-		.args(&opt.args)
-		.arg(if opt.glob { "--glob" } else { "--regex" })
-		.arg(&opt.subject)
+		.args(opt.args)
+		.arg(opt.subject)
 		.kill_on_drop(true)
 		.stdout(Stdio::piped())
 		.stderr(Stdio::null())
