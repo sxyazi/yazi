@@ -37,4 +37,17 @@ impl AppProxy {
 			Layer::App
 		));
 	}
+
+	#[inline]
+	pub fn notify_error(title: &str, content: &str) {
+		emit!(Call(
+			Cmd::new("notify").with_any("option", NotifyOpt {
+				title:   title.to_owned(),
+				content: content.to_owned(),
+				level:   NotifyLevel::Error,
+				timeout: Duration::from_secs(10),
+			}),
+			Layer::App
+		));
+	}
 }

@@ -5,7 +5,7 @@ use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
 use yazi_plugin::external;
-use yazi_proxy::{InputProxy, ManagerProxy, TabProxy};
+use yazi_proxy::{AppProxy, InputProxy, ManagerProxy, TabProxy};
 use yazi_shared::{event::Cmd, fs::FilesOp, render};
 
 use crate::tab::Tab;
@@ -43,19 +43,22 @@ pub struct Opt {
 }
 
 impl TryFrom<Cmd> for Opt {
-	type Error = anyhow::Error;
+	type Error = ();
 
 	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
 		Ok(Self {
 			type_: c.take_first_str().unwrap_or_default().into(),
-			args:  shell_words::split(c.str("args").unwrap_or_default())?,
+			args:  shell_words::split(c.str("args").unwrap_or_default()).map_err(|_| ())?,
 		})
 	}
 }
 
 impl Tab {
 	pub fn search(&mut self, opt: impl TryInto<Opt>) {
-		let Ok(opt) = opt.try_into() else { return };
+		let Ok(opt) = opt.try_into() else {
+			return AppProxy::notify_error("Invalid `search` option", "Failed to parse search option");
+		};
+
 		if opt.type_ == OptType::None {
 			return self.search_stop();
 		}
