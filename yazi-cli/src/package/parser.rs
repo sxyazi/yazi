@@ -12,12 +12,14 @@ pub enum InstallFromConfig {
 impl Package {
 	pub(crate) async fn add_to_config(use_: &str) -> Result<()> {
 		let mut package = Self::new(use_, None);
-		let Some(name) = package.name() else { bail!("Invalid package `use`") };
+		if package.name().is_none() {
+			bail!("Invalid package `use`: '{}'", use_);
+		};
 
 		let path = Xdg::config_dir().join("package.toml");
-		let mut config = Self::parse_config(&fs::read_to_string(&path).await.unwrap_or_default())?;
+		let mut config = parse_config(&fs::read_to_string(&path).await.unwrap_or_default())?;
 
-		ensure_unique(&config, name)?;
+		ensure_unique(&config, &package)?;
 		package.add().await?;
 
 		let dep =
@@ -40,7 +42,7 @@ impl Package {
 			return Ok(());
 		};
 
-		let mut config = Self::parse_config(&s)?;
+		let mut config = parse_config(&s)?;
 		let deps = match section {
 			InstallFromConfig::Plugin => &mut config.plugin.deps,
 			InstallFromConfig::Flavor => &mut config.flavor.deps,
@@ -63,18 +65,20 @@ impl Package {
 
 		fs::write(path, toml::to_string_pretty(&config)?).await.context("Failed to write package.toml")
 	}
-
-	fn parse_config(s: &str) -> Result<PackageConfig, anyhow::Error> {
-		toml::from_str::<PackageConfig>(s).context("Failed to parse package.toml")
-	}
 }
 
-fn ensure_unique(doc: &PackageConfig, name: &str) -> Result<()> {
-	if doc.plugin.deps.iter().any(|v| v.use_ == name) {
-		bail!("Plugin `{name}` already exists in package.toml");
+fn parse_config(s: &str) -> Result<PackageConfig, anyhow::Error> {
+	toml::from_str::<PackageConfig>(s).context("Failed to parse package.toml")
+}
+
+fn ensure_unique(doc: &PackageConfig, dep: &Package) -> Result<()> {
+	let use_ = dep.use_().as_ref().to_owned();
+
+	if doc.plugin.deps.iter().any(|v| v.use_ == use_) {
+		bail!("Plugin `{use_}` already exists in package.toml");
 	}
-	if doc.flavor.deps.iter().any(|v| v.use_ == name) {
-		bail!("Flavor `{name}` already exists in package.toml");
+	if doc.flavor.deps.iter().any(|v| v.use_ == use_) {
+		bail!("Flavor `{use_}` already exists in package.toml");
 	}
 
 	Ok(())
@@ -88,14 +92,22 @@ mod tests {
 	#[test]
 	fn test_disallow_duplicate() {
 		let config = PackageConfig::default();
+		let package = Package::new("test", None);
 
-		assert!(ensure_unique(&config, "test").is_ok());
+		assert!(ensure_unique(&config, &package).is_ok());
+
+		let config = PackageConfig {
+			plugin: PluginConfig { deps: vec![GitDependency { use_: "test".into(), commit: None }] },
+			flavor: FlavorConfig { deps: vec![] },
+		};
+
+		assert!(ensure_unique(&config, &package).is_err());
 
 		let config = PackageConfig {
 			plugin: PluginConfig { deps: vec![] },
 			flavor: FlavorConfig { deps: vec![GitDependency { use_: "test".into(), commit: None }] },
 		};
 
-		assert!(ensure_unique(&config, "test").is_err());
+		assert!(ensure_unique(&config, &package).is_err());
 	}
 }

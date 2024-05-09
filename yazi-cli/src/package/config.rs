@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PackageConfig {
 	pub plugin: PluginConfig,
 	pub flavor: FlavorConfig,
@@ -12,17 +12,17 @@ impl Default for PackageConfig {
 	}
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PluginConfig {
 	pub deps: Vec<GitDependency>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct FlavorConfig {
 	pub deps: Vec<GitDependency>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct GitDependency {
 	#[serde(rename = "use")]
 	pub use_:   String,
