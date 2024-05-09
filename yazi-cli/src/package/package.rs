@@ -6,6 +6,8 @@ use yazi_shared::Xdg;
 
 pub(crate) struct Package {
 	pub(crate) repo:      String,
+	/// When a package is a subdirectory of a repository, this field will be set
+	/// to the subdirectory name.
 	pub(crate) child:     String,
 	pub(crate) commit:    String,
 	pub(super) is_flavor: bool,
