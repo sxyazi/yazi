@@ -15,7 +15,7 @@ impl Utils {
 				{
 					Ok("windows")
 				}
-				#[cfg(wasm)]
+				#[cfg(target_family = "wasm")]
 				{
 					Ok("wasm")
 				}
