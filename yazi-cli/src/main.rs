@@ -3,6 +3,7 @@ mod package;
 
 use args::*;
 use clap::Parser;
+use package::InstallFromConfig;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -34,11 +35,11 @@ async fn main() -> anyhow::Result<()> {
 		Command::Pack(cmd) => {
 			package::init();
 			if cmd.install {
-				package::Package::install_from_config("plugin", false).await?;
-				package::Package::install_from_config("flavor", false).await?;
+				package::Package::install_from_config(&InstallFromConfig::Plugin, false).await?;
+				package::Package::install_from_config(&InstallFromConfig::Flavor, false).await?;
 			} else if cmd.upgrade {
-				package::Package::install_from_config("plugin", true).await?;
-				package::Package::install_from_config("flavor", true).await?;
+				package::Package::install_from_config(&InstallFromConfig::Plugin, true).await?;
+				package::Package::install_from_config(&InstallFromConfig::Flavor, true).await?;
 			} else if let Some(repo) = &cmd.add {
 				package::Package::add_to_config(repo).await?;
 			}
