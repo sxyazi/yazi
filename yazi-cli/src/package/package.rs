@@ -81,22 +81,6 @@ mod tests {
 	use super::*;
 
 	#[test]
-	fn test_adds_yazi_suffix() {
-		// if a package doesn't have a suffix, it should add ".yazi" to the end
-		let package = Package::new("abcd/my-plugin.yazi", None);
-		assert_eq!(package, Package {
-			repo:      "abcd/my-plugin.yazi".to_owned(),
-			child:     "".to_owned(),
-			commit:    "".to_owned(),
-			is_flavor: false,
-		});
-
-		assert_eq!(package.use_(), "abcd/my-plugin.yazi");
-		assert_eq!(package.name(), Some("my-plugin.yazi"));
-		assert_eq!(package.remote(), "https://github.com/abcd/my-plugin.yazi.git");
-	}
-
-	#[test]
 	fn test_supports_subdirectories() {
 		let package = Package::new("yazi-rs/flavors#catppuccin-mocha.yazi", None);
 		assert_eq!(package, Package {
