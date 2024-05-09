@@ -22,8 +22,9 @@ impl Package {
 		let tracker = to.join(TRACKER);
 		if maybe_exists(&to).await && !must_exists(&tracker).await {
 			bail!(
-				"A user package with the same name `{name}` already exists.
-For safety, please manually delete it from your plugin/flavor directory and re-run the command."
+				"A user package with the same name `{}` already exists.
+For safety, please manually delete it and re-run the command.",
+				to.display()
 			);
 		}
 
