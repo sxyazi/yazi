@@ -22,8 +22,6 @@ pub(super) enum Command {
 	PubStatic(CommandPubStatic),
 	/// Manage packages.
 	Pack(CommandPack),
-	/// Subscribe to messages from remote instance(s).
-	Sub(CommandSub),
 	/// Subscribe to messages from all remote instance(s).
 	SubStatic(CommandSubStatic),
 }

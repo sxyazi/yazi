@@ -6,9 +6,7 @@ use serde::{Deserialize, Serialize};
 use tokio::{io::AsyncWriteExt, select, sync::mpsc, task::JoinHandle, time};
 use yazi_shared::RoCell;
 
-use crate::{body::{Body, BodyBye, BodyHi}, dds_peer::DDSPeer, ClientReader, ClientWriter, Payload, Pubsub, Server, Stream};
-
-pub mod dds_peer;
+use crate::{body::{Body, BodyBye, BodyHi}, ClientReader, ClientWriter, Payload, Pubsub, Server, Stream};
 
 pub(super) static ID: RoCell<u64> = RoCell::new();
 pub(super) static PEERS: RoCell<RwLock<HashMap<u64, Peer>>> = RoCell::new();
@@ -29,6 +27,7 @@ pub struct Peer {
 }
 
 impl Client {
+	/// Connect to an existing server or start a new one.
 	pub(super) fn serve() {
 		let mut rx = QUEUE_RX.drop();
 		while rx.try_recv().is_ok() {}
@@ -64,57 +63,26 @@ impl Client {
 		});
 	}
 
-	pub fn echo_events_to_stdout(sender: DDSPeer, kinds: HashSet<String>) {
-		let mut rx = QUEUE_RX.drop();
-		while rx.try_recv().is_ok() {}
+	/// Connect to an existing server and listen in on the messages that are being
+	/// sent by other yazi instances.
+	/// If no server is running, fail.
+	pub async fn echo_events_to_stdout(kinds: HashSet<String>) -> Result<()> {
+		let (mut lines, mut writer) = Stream::connect().await?;
+		let hi = Payload::new(BodyHi::borrowed(kinds.iter().collect()));
+		writer.write_all(format!("{}\n", hi).as_bytes()).await?;
+		writer.flush().await?;
 
-		tokio::spawn(async move {
-			let mut server = None;
-			let (mut lines, mut writer) = Self::connect(&mut server).await;
-
-			loop {
-				select! {
-					Some(payload) = rx.recv() => {
-						if writer.write_all(payload.as_bytes()).await.is_err() {
-							(lines, writer) = Self::reconnect(&mut server).await;
-							writer.write_all(payload.as_bytes()).await.ok(); // Retry once
-						}
-					}
-					Ok(next) = lines.next_line() => {
-						let Some(line) = next else {
-							(lines, writer) = Self::reconnect(&mut server).await;
-							continue;
-						};
-
-						if line.is_empty() {
-							continue;
-						}
-
-						let payload = Payload::from_str(&line).unwrap();
-						if line.starts_with("hey,") {
-							Self::handle_hey(&line);
-							if !sender.matches(payload.sender) {
-								continue;
-							}
-
-							if kinds.contains(payload.body.kind()) {
-								println!("{}", &line);
-							}
-						} else {
-							if ! sender.matches(payload.sender) {
-								continue;
-							}
-
-							if kinds.contains(payload.body.kind()) {
-								println!("{}", &line);
-							}
-						}
-					}
-				}
+		while let Ok(Some(s)) = lines.next_line().await {
+			let kind = s.split(',').next();
+			if matches!(kind, Some(kind) if kinds.contains(kind)) {
+				println!("{}", s);
 			}
-		});
+		}
+
+		Ok(())
 	}
 
+	/// Connect to an existing server to send a single message.
 	pub async fn shot(kind: &str, receiver: u64, severity: Option<u16>, body: &str) -> Result<()> {
 		Body::validate(kind)?;
 

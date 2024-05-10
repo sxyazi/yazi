@@ -5,8 +5,10 @@ use serde::{Deserialize, Serialize};
 
 use super::Body;
 
+/// The handshake message
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BodyHi<'a> {
+	/// Specifies the kinds of events that the client can handle
 	pub abilities: HashSet<Cow<'a, String>>,
 	pub version:   String,
 }
