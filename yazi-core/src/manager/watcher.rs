@@ -1,7 +1,7 @@
 use std::{collections::{HashMap, HashSet}, time::{Duration, SystemTime}};
 
 use anyhow::Result;
-use notify::{event::{MetadataKind, ModifyKind}, EventKind, RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
+use notify::{RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
 use parking_lot::RwLock;
 use tokio::{fs, pin, sync::{mpsc::{self, UnboundedReceiver}, watch}};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
@@ -28,24 +28,6 @@ impl Watcher {
 		let watcher = RecommendedWatcher::new(
 			move |res: Result<notify::Event, notify::Error>| {
 				let Ok(event) = res else { return };
-
-				match event.kind {
-					EventKind::Create(_) => {}
-					EventKind::Modify(kind) => match kind {
-						ModifyKind::Data(_) => {}
-						ModifyKind::Metadata(md) => match md {
-							MetadataKind::WriteTime => {}
-							MetadataKind::Permissions => {}
-							MetadataKind::Ownership => {}
-							_ => return,
-						},
-						ModifyKind::Name(_) => {}
-						_ => return,
-					},
-					EventKind::Remove(_) => {}
-					_ => return,
-				}
-
 				for path in event.paths {
 					out_tx.send(Url::from(path)).ok();
 				}
