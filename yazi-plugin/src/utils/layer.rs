@@ -71,7 +71,7 @@ impl Utils {
 				}));
 
 				if !realtime {
-					return InputRx::parse(rx).await.into_lua_multi(lua);
+					return InputRx::consume(rx).await.into_lua_multi(lua);
 				}
 
 				let debounce = t.raw_get::<_, f64>("debounce").unwrap_or_default();

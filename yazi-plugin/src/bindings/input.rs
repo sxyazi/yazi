@@ -12,12 +12,12 @@ pub struct InputRx<T: StreamExt<Item = Result<String, InputError>>> {
 impl<T: StreamExt<Item = Result<String, InputError>>> InputRx<T> {
 	pub fn new(inner: T) -> Self { Self { inner } }
 
-	pub async fn parse(inner: T) -> (Option<String>, u8) {
+	pub async fn consume(inner: T) -> (Option<String>, u8) {
 		pin!(inner);
-		inner.next().await.map(Self::cast).unwrap_or((None, 0))
+		inner.next().await.map(Self::parse).unwrap_or((None, 0))
 	}
 
-	fn cast(res: Result<String, InputError>) -> (Option<String>, u8) {
+	fn parse(res: Result<String, InputError>) -> (Option<String>, u8) {
 		match res {
 			Ok(s) => (Some(s), 1),
 			Err(InputError::Canceled(s)) => (Some(s), 2),
@@ -31,7 +31,7 @@ impl<T: StreamExt<Item = Result<String, InputError>> + 'static> UserData for Inp
 	fn add_methods<'lua, M: LuaUserDataMethods<'lua, Self>>(methods: &mut M) {
 		methods.add_async_method_mut("recv", |_, me, ()| async move {
 			let mut inner = unsafe { Pin::new_unchecked(&mut me.inner) };
-			Ok(inner.next().await.map(Self::cast).unwrap_or((None, 0)))
+			Ok(inner.next().await.map(Self::parse).unwrap_or((None, 0)))
 		});
 	}
 }
