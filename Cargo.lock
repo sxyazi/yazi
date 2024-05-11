@@ -2857,6 +2857,7 @@ dependencies = [
  "shell-words",
  "syntect",
  "tokio",
+ "tokio-stream",
  "tokio-util",
  "tracing",
  "unicode-width",
