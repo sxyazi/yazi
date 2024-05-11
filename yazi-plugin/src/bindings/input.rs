@@ -1,15 +1,23 @@
+use std::pin::Pin;
+
 use mlua::{prelude::LuaUserDataMethods, UserData};
-use tokio::sync::mpsc::UnboundedReceiver;
+use tokio::pin;
+use tokio_stream::StreamExt;
 use yazi_shared::InputError;
 
-pub struct InputRx {
-	inner: UnboundedReceiver<Result<String, InputError>>,
+pub struct InputRx<T: StreamExt<Item = Result<String, InputError>>> {
+	inner: T,
 }
 
-impl InputRx {
-	pub fn new(inner: UnboundedReceiver<Result<String, InputError>>) -> Self { Self { inner } }
+impl<T: StreamExt<Item = Result<String, InputError>>> InputRx<T> {
+	pub fn new(inner: T) -> Self { Self { inner } }
 
-	pub fn parse(res: Result<String, InputError>) -> (Option<String>, u8) {
+	pub async fn consume(inner: T) -> (Option<String>, u8) {
+		pin!(inner);
+		inner.next().await.map(Self::parse).unwrap_or((None, 0))
+	}
+
+	fn parse(res: Result<String, InputError>) -> (Option<String>, u8) {
 		match res {
 			Ok(s) => (Some(s), 1),
 			Err(InputError::Canceled(s)) => (Some(s), 2),
@@ -19,14 +27,11 @@ impl InputRx {
 	}
 }
 
-impl UserData for InputRx {
+impl<T: StreamExt<Item = Result<String, InputError>> + 'static> UserData for InputRx<T> {
 	fn add_methods<'lua, M: LuaUserDataMethods<'lua, Self>>(methods: &mut M) {
 		methods.add_async_method_mut("recv", |_, me, ()| async move {
-			let Some(res) = me.inner.recv().await else {
-				return Ok((None, 0));
-			};
-
-			Ok(Self::parse(res))
+			let mut inner = unsafe { Pin::new_unchecked(&mut me.inner) };
+			Ok(inner.next().await.map(Self::parse).unwrap_or((None, 0)))
 		});
 	}
 }
