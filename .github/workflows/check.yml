@@ -39,3 +39,15 @@ jobs:
 
       - name: Rustfmt
         run: cargo +nightly fmt --all -- --check
+
+  stylua:
+    name: stylua
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: JohnnyMorganz/stylua-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: latest
+          # CLI arguments
+          args: --color always --check .
