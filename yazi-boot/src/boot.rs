@@ -155,27 +155,6 @@ impl Boot {
 			);
 		}
 	}
-
-	/// Allows for initialization without forcing the reading of command line
-	/// arguments.
-	pub fn init_with(local_events: HashSet<String>, remote_events: HashSet<String>) -> Boot {
-		let config_dir = Xdg::config_dir();
-
-		let (cwd, file) = Self::parse_entry(None);
-
-		Self {
-			cwd,
-			file,
-
-			local_events,
-			remote_events,
-
-			flavor_dir: config_dir.join("flavors"),
-			plugin_dir: config_dir.join("plugins"),
-			config_dir,
-			state_dir: Xdg::state_dir(),
-		}
-	}
 }
 
 impl Default for Boot {

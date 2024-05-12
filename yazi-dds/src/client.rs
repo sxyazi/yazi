@@ -65,21 +65,51 @@ impl Client {
 
 	/// Connect to an existing server and listen in on the messages that are being
 	/// sent by other yazi instances.
-	/// If no server is running, fail.
+	/// If no server is running, fail right away.
+	/// If a server is closed, attempt to reconnect forever.
 	pub async fn echo_events_to_stdout(kinds: HashSet<String>) -> Result<()> {
-		let (mut lines, mut writer) = Stream::connect().await?;
+		let mut lines = Self::connect_listener(&kinds).await?;
+		let mut msg_counter = 0;
+
+		loop {
+			println!("Waiting for messages...");
+			match lines.next_line().await {
+				Ok(Some(s)) => {
+					println!("Received: message {} '{}'", msg_counter, s);
+					msg_counter += 1;
+					let kind = s.split(',').next();
+					if matches!(kind, Some(kind) if kinds.contains(kind)) {
+						println!("{}", s);
+					}
+				}
+				Ok(None) => loop {
+					println!("Connection closed");
+					match Self::connect_listener(&kinds).await {
+						Ok(new_lines) => {
+							lines = new_lines;
+							println!("Reconnected");
+							break;
+						}
+						Err(_) => {
+							println!("Reconnecting...");
+							time::sleep(time::Duration::from_secs(1)).await;
+						}
+					};
+				},
+				Err(e) => {
+					// could not establish initial connection
+					return Err(e.into());
+				}
+			}
+		}
+	}
+
+	async fn connect_listener(kinds: &HashSet<String>) -> Result<ClientReader> {
+		let (lines, mut writer) = Stream::connect().await?;
 		let hi = Payload::new(BodyHi::borrowed(kinds.iter().collect()));
 		writer.write_all(format!("{}\n", hi).as_bytes()).await?;
 		writer.flush().await?;
-
-		while let Ok(Some(s)) = lines.next_line().await {
-			let kind = s.split(',').next();
-			if matches!(kind, Some(kind) if kinds.contains(kind)) {
-				println!("{}", s);
-			}
-		}
-
-		Ok(())
+		Ok(lines)
 	}
 
 	/// Connect to an existing server to send a single message.

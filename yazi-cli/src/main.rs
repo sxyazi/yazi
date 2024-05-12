@@ -49,7 +49,7 @@ async fn main() -> anyhow::Result<()> {
 			}
 		}
 
-		Command::SubStatic(cmd) => {
+		Command::Sub(cmd) => {
 			yazi_dds::init();
 			let kinds = cmd.kinds.split(',').map(|s| s.to_owned()).collect::<HashSet<_>>();
 
