@@ -24,6 +24,7 @@ pub enum Emulator {
 	Mintty,
 	Neovim,
 	Apple,
+	Urxvt,
 }
 
 impl Emulator {
@@ -43,6 +44,7 @@ impl Emulator {
 			Self::Mintty => vec![Adaptor::Iterm2],
 			Self::Neovim => vec![],
 			Self::Apple => vec![],
+			Self::Urxvt => vec![],
 		}
 	}
 }
@@ -85,6 +87,7 @@ impl Emulator {
 			"foot" => return Self::Foot,
 			"foot-extra" => return Self::Foot,
 			"xterm-ghostty" => return Self::Ghostty,
+			"rxvt-unicode-256color" => return Self::Urxvt,
 			_ => warn!("[Adaptor] Unknown TERM: {term}"),
 		}
 
