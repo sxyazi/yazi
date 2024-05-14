@@ -53,6 +53,7 @@ impl Chafa {
 			height: lines.len() as u16,
 		};
 
+		Adaptor::Chafa.image_hide()?;
 		Adaptor::shown_store(area);
 		Emulator::move_lock((max.x, max.y), |stderr| {
 			for (i, line) in lines.into_iter().enumerate() {

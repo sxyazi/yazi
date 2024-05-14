@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-use super::{ManagerRatio, SortBy};
+use super::{ManagerRatio, MouseEvents, SortBy};
 use crate::{validation::check_validation, MERGED_YAZI};
 
 #[derive(Debug, Deserialize, Serialize, Validate)]
@@ -21,6 +21,7 @@ pub struct Manager {
 	pub show_hidden:  bool,
 	pub show_symlink: bool,
 	pub scrolloff:    u8,
+	pub mouse_events: MouseEvents,
 }
 
 impl Default for Manager {

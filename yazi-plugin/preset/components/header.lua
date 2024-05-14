@@ -66,3 +66,9 @@ function Header:render(area)
 		ui.Paragraph(area, { right }):align(ui.Paragraph.RIGHT),
 	}
 end
+
+function Header:click(event, up) end
+
+function Header:scroll(event, step) end
+
+function Header:touch(event, step) end

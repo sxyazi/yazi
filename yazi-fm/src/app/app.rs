@@ -56,6 +56,7 @@ impl App {
 			Event::Seq(cmds, layer) => self.dispatch_seq(cmds, layer),
 			Event::Render => self.dispatch_render(),
 			Event::Key(key) => self.dispatch_key(key),
+			Event::Mouse(mouse) => self.mouse(mouse),
 			Event::Resize => self.resize(()),
 			Event::Paste(str) => self.dispatch_paste(str),
 			Event::Quit(opt) => self.quit(opt),

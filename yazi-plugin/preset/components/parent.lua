@@ -26,3 +26,20 @@ function Parent:render(area)
 		Folder:markers(area, markers),
 	}
 end
+
+function Parent:click(event, up)
+	if up or not event.is_left then
+		return
+	end
+
+	local window = Folder:window(Folder.PARENT) or {}
+	if window[event.y] then
+		ya.manager_emit("reveal", { window[event.y].url })
+	else
+		ya.manager_emit("leave", {})
+	end
+end
+
+function Parent:scroll(event, step) end
+
+function Parent:touch(event, step) end

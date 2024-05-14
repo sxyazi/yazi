@@ -1,4 +1,7 @@
+use crossterm::event::MouseEventKind;
+use mlua::{Table, TableExt};
 use ratatui::{buffer::Buffer, layout::{Constraint, Layout, Rect}, widgets::Widget};
+use yazi_plugin::{bindings::{Cast, MouseEvent}, LUA};
 
 use super::{completion, input, select, tasks, which};
 use crate::{components, help, Ctx};
@@ -45,5 +48,19 @@ impl<'a> Widget for Root<'a> {
 		if self.cx.which.visible {
 			which::Which::new(self.cx).render(area, buf);
 		}
+	}
+}
+
+impl Root<'_> {
+	pub(super) fn mouse(event: crossterm::event::MouseEvent) -> mlua::Result<()> {
+		let evt = MouseEvent::cast(&LUA, event)?;
+		let comp: Table = LUA.globals().raw_get("Root")?;
+
+		match event.kind {
+			MouseEventKind::Moved => comp.call_method("move", evt)?,
+			MouseEventKind::Drag(_) => comp.call_method("drag", evt)?,
+			_ => (),
+		}
+		Ok(())
 	}
 }

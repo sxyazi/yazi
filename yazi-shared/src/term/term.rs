@@ -1,7 +1,7 @@
 use std::{io::{self, stderr, BufWriter, Stderr, Write}, mem, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}};
 
 use anyhow::Result;
-use crossterm::{cursor::{RestorePosition, SavePosition}, event::{DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, SetTitle, WindowSize}};
+use crossterm::{cursor::{RestorePosition, SavePosition}, event::{DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, SetTitle, WindowSize}};
 use ratatui::{backend::CrosstermBackend, buffer::Buffer, layout::Rect, CompletedFrame, Frame, Terminal};
 
 static CSI_U: AtomicBool = AtomicBool::new(false);
@@ -25,7 +25,7 @@ impl Term {
 			BufWriter::new(stderr()),
 			EnterAlternateScreen,
 			EnableBracketedPaste,
-			EnableFocusChange,
+			EnableMouseCapture,
 			SavePosition,
 			Print("\x1b[?u\x1b[c"),
 			RestorePosition
@@ -56,7 +56,7 @@ impl Term {
 
 		execute!(
 			stderr(),
-			DisableFocusChange,
+			DisableMouseCapture,
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
 			crossterm::cursor::SetCursorStyle::DefaultUserShape
@@ -74,7 +74,7 @@ impl Term {
 		execute!(
 			stderr(),
 			SetTitle(""),
-			DisableFocusChange,
+			DisableMouseCapture,
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
 			crossterm::cursor::SetCursorStyle::DefaultUserShape,

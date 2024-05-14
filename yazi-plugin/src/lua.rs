@@ -24,6 +24,7 @@ fn stage_1(lua: &'static Lua) -> Result<()> {
 	crate::bindings::Cha::register(lua)?;
 	crate::bindings::File::register(lua)?;
 	crate::bindings::Icon::register(lua)?;
+	crate::bindings::MouseEvent::register(lua)?;
 	crate::elements::pour(lua)?;
 	crate::loader::install(lua)?;
 	crate::pubsub::install(lua)?;
@@ -38,6 +39,7 @@ fn stage_1(lua: &'static Lua) -> Result<()> {
 	lua.load(include_str!("../preset/components/parent.lua")).exec()?;
 	lua.load(include_str!("../preset/components/preview.lua")).exec()?;
 	lua.load(include_str!("../preset/components/progress.lua")).exec()?;
+	lua.load(include_str!("../preset/components/root.lua")).exec()?;
 	lua.load(include_str!("../preset/components/status.lua")).exec()?;
 
 	Ok(())
