@@ -551,6 +551,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "deunicode"
+version = "1.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "339544cc9e2c4dc3fc7149fd630c5f22263a4fdf18a98afd0075784968b5cf00"
+
+[[package]]
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2915,6 +2921,7 @@ dependencies = [
  "anyhow",
  "bitflags 2.5.0",
  "crossterm",
+ "deunicode",
  "dirs",
  "filetime",
  "futures",

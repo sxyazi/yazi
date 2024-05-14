@@ -13,6 +13,7 @@ pub enum SortBy {
 	Extension,
 	Alphabetical,
 	Natural,
+	DeunicodeNatural,
 	Size,
 }
 
@@ -27,6 +28,7 @@ impl FromStr for SortBy {
 			"extension" => Self::Extension,
 			"alphabetical" => Self::Alphabetical,
 			"natural" => Self::Natural,
+			"deunicode_natural" => Self::DeunicodeNatural,
 			"size" => Self::Size,
 			_ => bail!("invalid sort_by value: {s}"),
 		})
@@ -48,6 +50,7 @@ impl Display for SortBy {
 			Self::Extension => "extension",
 			Self::Alphabetical => "alphabetical",
 			Self::Natural => "natural",
+			Self::DeunicodeNatural => "deunicode_natural",
 			Self::Size => "size",
 		})
 	}

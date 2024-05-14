@@ -6,6 +6,8 @@
 
 use std::cmp::Ordering;
 
+use deunicode::deunicode;
+
 macro_rules! return_unless_equal {
 	($ord:expr) => {
 		match $ord {
@@ -123,6 +125,17 @@ pub fn natsort(left: &[u8], right: &[u8], insensitive: bool) -> Ordering {
 	}
 }
 
+pub fn deunicode_natsort(left: &[u8], right: &[u8], insensitive: bool) -> Ordering {
+	let utf8_left = std::str::from_utf8(left);
+	let utf8_right = std::str::from_utf8(right);
+	match (utf8_left, utf8_right) {
+		(Ok(l), Ok(r)) => natsort(deunicode(l).as_bytes(), deunicode(r).as_bytes(), insensitive),
+		(Ok(l), Err(_)) => natsort(deunicode(l).as_bytes(), right, insensitive),
+		(Err(_), Ok(r)) => natsort(left, deunicode(r).as_bytes(), insensitive),
+		_ => natsort(left, right, insensitive),
+	}
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -130,6 +143,12 @@ mod tests {
 	fn cmp(left: &[&str]) {
 		let mut right = left.to_vec();
 		right.sort_by(|a, b| natsort(a.as_bytes(), b.as_bytes(), true));
+		assert_eq!(left, right);
+	}
+
+	fn cmp_deun(left: &[&str]) {
+		let mut right = left.to_vec();
+		right.sort_by(|a, b| deunicode_natsort(a.as_bytes(), b.as_bytes(), true));
 		assert_eq!(left, right);
 	}
 
@@ -175,5 +194,34 @@ mod tests {
 		cmp(&dates);
 		cmp(&fractions);
 		cmp(&words);
+	}
+
+	#[test]
+	fn test_deunicode_natsort() {
+		let deun = vec![
+			"Acorn",
+			"Ætt",
+			"Alpha",
+			"Átriu",
+			"Attention",
+			"Beta",
+			"Elemér",
+			"Érvényes",
+			"Große",
+			"Grotto",
+			"Hedvig",
+			"Ilona",
+			"Írott",
+			"Olga",
+			"Órmotlan",
+			"Öveges",
+			"Őzike",
+			"Ubul",
+			"Űr",
+			"Útvonal",
+			"Üveg",
+		];
+
+		cmp_deun(&deun)
 	}
 }

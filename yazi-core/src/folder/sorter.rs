@@ -1,7 +1,7 @@
 use std::{cmp::Ordering, collections::HashMap, mem};
 
 use yazi_config::manager::SortBy;
-use yazi_shared::{fs::{File, Url}, natsort};
+use yazi_shared::{deunicode_natsort, fs::{File, Url}, natsort};
 
 #[derive(Clone, Copy, Default, PartialEq)]
 pub struct FilesSorter {
@@ -52,7 +52,8 @@ impl FilesSorter {
 				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
 			}),
 			SortBy::Alphabetical => items.sort_unstable_by(by_alphabetical),
-			SortBy::Natural => self.sort_naturally(items),
+			SortBy::Natural => self.sort_naturally(items, false),
+			SortBy::DeunicodeNatural => self.sort_naturally(items, true),
 			SortBy::Size => items.sort_unstable_by(|a, b| {
 				let aa = if a.is_dir() { sizes.get(&a.url).copied() } else { None };
 				let bb = if b.is_dir() { sizes.get(&b.url).copied() } else { None };
@@ -62,7 +63,7 @@ impl FilesSorter {
 		}
 	}
 
-	fn sort_naturally(&self, items: &mut Vec<File>) {
+	fn sort_naturally(&self, items: &mut Vec<File>, deunicoded: bool) {
 		let mut indices = Vec::with_capacity(items.len());
 		let mut entities = Vec::with_capacity(items.len());
 		for (i, file) in items.iter().enumerate() {
@@ -76,7 +77,11 @@ impl FilesSorter {
 				return promote;
 			}
 
-			let ordering = natsort(entities[a], entities[b], !self.sensitive);
+			let ordering = match deunicoded {
+				true => deunicode_natsort(entities[a], entities[b], !self.sensitive),
+				false => natsort(entities[a], entities[b], !self.sensitive)
+			};
+
 			if self.reverse { ordering.reverse() } else { ordering }
 		});
 
