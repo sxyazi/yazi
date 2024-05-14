@@ -21,6 +21,8 @@ function Folder:linemode(area, files)
 			spans[#spans + 1] = ui.Span(time and os.date("%y-%m-%d %H:%M", time // 1) or "")
 		elseif mode == "permissions" then
 			spans[#spans + 1] = ui.Span(f.cha:permissions() or "")
+		elseif mode == "extension" then
+			spans[#spans + 1] = ui.Span(f.url:extension() or "")
 		end
 
 		spans[#spans + 1] = ui.Span(" ")
