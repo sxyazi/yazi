@@ -3,8 +3,8 @@ use std::str::FromStr;
 use mlua::{AnyUserData, ExternalError, ExternalResult, Lua, Table, UserData, UserDataMethods, Value};
 use yazi_shared::theme::Color;
 
-#[derive(Clone, Copy, Default)]
-pub struct Style(pub(super) ratatui::style::Style);
+#[derive(Clone, Copy, Default, PartialEq, Debug)]
+pub struct Style(pub ratatui::style::Style);
 
 impl Style {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {

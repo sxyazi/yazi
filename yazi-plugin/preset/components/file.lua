@@ -16,26 +16,8 @@ function File:prefix(file)
 	return prefix == "" and {} or { ui.Span(prefix .. "/") }
 end
 
-function File:highlights(file)
-	local name = file.name:gsub("\r", "?", 1)
-	local highlights = file:highlights()
-	if not highlights or #highlights == 0 then
-		return { ui.Span(name) }
-	end
-
-	local spans, last = {}, 0
-	for _, h in ipairs(highlights) do
-		if h[1] > last then
-			spans[#spans + 1] = ui.Span(name:sub(last + 1, h[1]))
-		end
-		spans[#spans + 1] = ui.Span(name:sub(h[1] + 1, h[2])):style(THEME.manager.find_keyword)
-		last = h[2]
-	end
-	if last < #name then
-		spans[#spans + 1] = ui.Span(name:sub(last + 1))
-	end
-	return spans
-end
+--- Returns the name for the file, optionally highlighted
+function File:highlights(file) return file:highlights() end
 
 function File:found(file)
 	if not file:is_hovered() then

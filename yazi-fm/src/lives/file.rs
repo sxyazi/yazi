@@ -2,10 +2,13 @@ use std::ops::Deref;
 
 use mlua::{AnyUserData, IntoLua, Lua, UserDataFields, UserDataMethods};
 use yazi_config::THEME;
-use yazi_plugin::{bindings::{Cast, Cha, Icon, Range}, elements::Style, url::Url};
+use yazi_plugin::{bindings::{Cast, Cha, Icon}, elements::{Span, Style}, url::Url};
 use yazi_shared::MIME_DIR;
 
+use self::highlightable_filename_builder::HighlightedFilenameBuilder;
 use super::{CtxRef, SCOPE};
+
+mod highlightable_filename_builder;
 
 pub(super) struct File {
 	idx:    usize,
@@ -123,17 +126,30 @@ impl File {
 			});
 			reg.add_method("highlights", |lua, me, ()| {
 				let cx = lua.named_registry_value::<CtxRef>("cx")?;
-				let Some(finder) = &cx.manager.active().finder else {
-					return Ok(None);
-				};
-				if me.folder().cwd != me.tab().current.cwd {
-					return Ok(None);
-				}
-				let Some(h) = me.name().and_then(|n| finder.filter.highlighted(n)) else {
-					return Ok(None);
+
+				let stem = me.url.file_stem().unwrap_or_default().to_string_lossy().to_string();
+				let extension_with_leading_dot =
+					me.url.extension().map(|ext| ".".to_string() + ext.to_string_lossy().as_ref());
+
+				let mut builder = HighlightedFilenameBuilder::new(stem, extension_with_leading_dot);
+				if let Some(style) = THEME.manager.extension {
+					if !me.is_dir() {
+						builder.add_extension_highlight(style);
+					}
 				};
 
-				Ok(Some(h.into_iter().map(Range::from).collect::<Vec<_>>()))
+				if let Some(finder) = &cx.manager.active().finder {
+					if me.folder().cwd == me.tab().current.cwd {
+						if let Some(highlighted) = me.name().and_then(|n| finder.filter.highlighted(n)) {
+							highlighted
+								.into_iter()
+								.for_each(|range| builder.add_highlight(range, THEME.manager.find_position));
+						};
+					}
+				};
+
+				let spans: Vec<Span> = builder.build_spans().into_iter().map(|span| span.into()).collect();
+				Ok(Some(spans))
 			});
 		})?;
 

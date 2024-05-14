@@ -3,7 +3,7 @@ use serde::{ser::SerializeMap, Deserialize, Serialize, Serializer};
 
 use super::Color;
 
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
 #[serde(from = "StyleShadow")]
 pub struct Style {
 	pub fg:       Option<Color>,
@@ -32,6 +32,16 @@ impl From<Style> for ratatui::style::Style {
 			underline_color: None,
 			add_modifier:    value.modifier,
 			sub_modifier:    Modifier::empty(),
+		}
+	}
+}
+
+impl From<ratatui::style::Style> for Style {
+	fn from(value: ratatui::style::Style) -> Self {
+		Self {
+			fg:       value.fg.map(Into::into),
+			bg:       value.bg.map(Into::into),
+			modifier: value.add_modifier,
 		}
 	}
 }

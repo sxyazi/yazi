@@ -49,13 +49,16 @@ impl Default for Theme {
 pub struct Manager {
 	cwd: Style,
 
+	/// The style for files that have an extension
+	pub extension: Option<Style>,
+
 	// Hovered
 	hovered:         Style,
 	preview_hovered: Style,
 
 	// Find
-	find_keyword:  Style,
-	find_position: Style,
+	find_keyword:      Style,
+	pub find_position: Style,
 
 	// Marker
 	marker_copied:   Style,

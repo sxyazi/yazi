@@ -20,6 +20,9 @@ impl Url {
 			reg.add_method("stem", |lua, me, ()| {
 				me.file_stem().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
 			});
+			reg.add_method("extension", |lua, me, ()| {
+				me.extension().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
+			});
 			reg.add_method("join", |lua, me, other: UrlRef| Self::cast(lua, me.join(&*other)));
 			reg.add_method("parent", |lua, me, ()| {
 				me.parent_url().map(|u| Self::cast(lua, u)).transpose()

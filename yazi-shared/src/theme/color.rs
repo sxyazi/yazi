@@ -3,9 +3,9 @@ use std::str::FromStr;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
 #[serde(try_from = "String")]
-pub struct Color(ratatui::style::Color);
+pub struct Color(pub ratatui::style::Color);
 
 impl FromStr for Color {
 	type Err = anyhow::Error;
@@ -23,6 +23,10 @@ impl TryFrom<String> for Color {
 
 impl From<Color> for ratatui::style::Color {
 	fn from(value: Color) -> Self { value.0 }
+}
+
+impl From<ratatui::style::Color> for Color {
+	fn from(value: ratatui::style::Color) -> Self { Self(value) }
 }
 
 impl Serialize for Color {

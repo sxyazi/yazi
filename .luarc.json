@@ -1,0 +1,7 @@
+{
+    "diagnostics.globals": [
+        "ui",
+        "THEME",
+        "MANAGER"
+    ]
+}

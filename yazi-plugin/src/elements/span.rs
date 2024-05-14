@@ -3,8 +3,8 @@ use yazi_shared::theme::Color;
 
 use super::Style;
 
-#[derive(Clone, FromLua)]
-pub struct Span(pub(super) ratatui::text::Span<'static>);
+#[derive(Clone, FromLua, Debug)]
+pub struct Span(pub ratatui::text::Span<'static>);
 
 impl Span {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
