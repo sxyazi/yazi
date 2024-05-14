@@ -87,16 +87,17 @@ impl Input {
 	}
 
 	pub(super) fn flush_value(&mut self) {
+		let Some(tx) = &self.callback else { return };
 		self.ticket = self.ticket.wrapping_add(1);
 
 		if self.realtime {
 			let value = self.snap().value.clone();
-			self.callback.as_ref().unwrap().send(Err(InputError::Typed(value))).ok();
+			tx.send(Err(InputError::Typed(value))).ok();
 		}
 
 		if self.completion {
 			let before = self.partition()[0].to_owned();
-			self.callback.as_ref().unwrap().send(Err(InputError::Completed(before, self.ticket))).ok();
+			tx.send(Err(InputError::Completed(before, self.ticket))).ok();
 		}
 	}
 }

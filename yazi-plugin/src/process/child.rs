@@ -1,25 +1,25 @@
 use std::time::Duration;
 
 use futures::future::try_join3;
-use mlua::{AnyUserData, IntoLuaMulti, Table, UserData, Value};
-use tokio::{io::{self, AsyncBufReadExt, AsyncReadExt, BufReader}, process::{ChildStderr, ChildStdin, ChildStdout}, select};
+use mlua::{AnyUserData, ExternalError, IntoLua, IntoLuaMulti, Table, UserData, Value};
+use tokio::{io::{self, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader, BufWriter}, process::{ChildStderr, ChildStdin, ChildStdout}, select};
 
 use super::Status;
 use crate::process::Output;
 
 pub struct Child {
 	inner:  tokio::process::Child,
-	_stdin: Option<ChildStdin>,
+	stdin:  Option<BufWriter<ChildStdin>>,
 	stdout: Option<BufReader<ChildStdout>>,
 	stderr: Option<BufReader<ChildStderr>>,
 }
 
 impl Child {
 	pub fn new(mut inner: tokio::process::Child) -> Self {
-		let stdin = inner.stdin.take();
+		let stdin = inner.stdin.take().map(BufWriter::new);
 		let stdout = inner.stdout.take().map(BufReader::new);
 		let stderr = inner.stderr.take().map(BufReader::new);
-		Self { inner, _stdin: stdin, stdout, stderr }
+		Self { inner, stdin, stdout, stderr }
 	}
 }
 
@@ -69,6 +69,26 @@ impl UserData for Child {
 				Err(_) => Ok((String::new(), 3u8)),
 			}
 		});
+
+		methods.add_async_method_mut("write_all", |lua, me, src: mlua::String| async move {
+			let Some(stdin) = &mut me.stdin else {
+				return Err("stdin is not piped".into_lua_err());
+			};
+			match stdin.write_all(src.as_bytes()).await {
+				Ok(()) => (true, Value::Nil).into_lua_multi(lua),
+				Err(e) => (false, e.raw_os_error()).into_lua_multi(lua),
+			}
+		});
+		methods.add_async_method_mut("flush", |lua, me, ()| async move {
+			let Some(stdin) = &mut me.stdin else {
+				return Err("stdin is not piped".into_lua_err());
+			};
+			match stdin.flush().await {
+				Ok(()) => (true, Value::Nil).into_lua_multi(lua),
+				Err(e) => (false, e.raw_os_error()).into_lua_multi(lua),
+			}
+		});
+
 		methods.add_async_method_mut("wait", |lua, me, ()| async move {
 			match me.inner.wait().await {
 				Ok(status) => (Status::new(status), Value::Nil).into_lua_multi(lua),
@@ -106,6 +126,19 @@ impl UserData for Child {
 		methods.add_method_mut("start_kill", |lua, me, ()| match me.inner.start_kill() {
 			Ok(_) => (true, Value::Nil).into_lua_multi(lua),
 			Err(e) => (false, e.raw_os_error()).into_lua_multi(lua),
+		});
+
+		methods.add_method_mut("take_stdin", |lua, me, ()| match me.stdin.take() {
+			Some(stdin) => lua.create_any_userdata(stdin.into_inner())?.into_lua(lua),
+			None => Ok(Value::Nil),
+		});
+		methods.add_method_mut("take_stdout", |lua, me, ()| match me.stdout.take() {
+			Some(stdout) => lua.create_any_userdata(stdout.into_inner())?.into_lua(lua),
+			None => Ok(Value::Nil),
+		});
+		methods.add_method_mut("take_stderr", |lua, me, ()| match me.stderr.take() {
+			Some(stderr) => lua.create_any_userdata(stderr.into_inner())?.into_lua(lua),
+			None => Ok(Value::Nil),
 		});
 	}
 }

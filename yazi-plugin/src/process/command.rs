@@ -1,6 +1,7 @@
 use std::process::Stdio;
 
-use mlua::{AnyUserData, IntoLuaMulti, Lua, Table, UserData, Value};
+use mlua::{AnyUserData, ExternalError, IntoLuaMulti, Lua, Table, UserData, Value};
+use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
 
 use super::{output::Output, Child};
 
@@ -36,6 +37,33 @@ impl Command {
 
 impl UserData for Command {
 	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+		#[inline]
+		fn make_stdio(v: Value) -> mlua::Result<Stdio> {
+			match v {
+				Value::Integer(n) => {
+					return Ok(match n as u8 {
+						PIPED => Stdio::piped(),
+						INHERIT => Stdio::inherit(),
+						_ => Stdio::null(),
+					});
+				}
+				Value::UserData(ud) => {
+					if let Ok(stdin) = ud.take::<ChildStdin>() {
+						return Ok(stdin.try_into()?);
+					} else if let Ok(stdout) = ud.take::<ChildStdout>() {
+						return Ok(stdout.try_into()?);
+					} else if let Ok(stderr) = ud.take::<ChildStderr>() {
+						return Ok(stderr.try_into()?);
+					}
+				}
+				_ => {}
+			}
+
+			Err(
+				"must be one of Command.NULL, Command.PIPED, Command.INHERIT, or a ChildStdin, ChildStdout, or ChildStderr".into_lua_err(),
+			)
+		}
+
 		methods.add_function("arg", |_, (ud, arg): (AnyUserData, mlua::String)| {
 			ud.borrow_mut::<Self>()?.inner.arg(arg.to_string_lossy().as_ref());
 			Ok(ud)
@@ -62,28 +90,16 @@ impl UserData for Command {
 				Ok(ud)
 			},
 		);
-		methods.add_function("stdin", |_, (ud, stdio): (AnyUserData, u8)| {
-			ud.borrow_mut::<Self>()?.inner.stdin(match stdio {
-				PIPED => Stdio::piped(),
-				INHERIT => Stdio::inherit(),
-				_ => Stdio::null(),
-			});
+		methods.add_function("stdin", |_, (ud, stdio): (AnyUserData, Value)| {
+			ud.borrow_mut::<Self>()?.inner.stdin(make_stdio(stdio)?);
 			Ok(ud)
 		});
-		methods.add_function("stdout", |_, (ud, stdio): (AnyUserData, u8)| {
-			ud.borrow_mut::<Self>()?.inner.stdout(match stdio {
-				PIPED => Stdio::piped(),
-				INHERIT => Stdio::inherit(),
-				_ => Stdio::null(),
-			});
+		methods.add_function("stdout", |_, (ud, stdio): (AnyUserData, Value)| {
+			ud.borrow_mut::<Self>()?.inner.stdout(make_stdio(stdio)?);
 			Ok(ud)
 		});
-		methods.add_function("stderr", |_, (ud, stdio): (AnyUserData, u8)| {
-			ud.borrow_mut::<Self>()?.inner.stderr(match stdio {
-				PIPED => Stdio::piped(),
-				INHERIT => Stdio::inherit(),
-				_ => Stdio::null(),
-			});
+		methods.add_function("stderr", |_, (ud, stdio): (AnyUserData, Value)| {
+			ud.borrow_mut::<Self>()?.inner.stderr(make_stdio(stdio)?);
 			Ok(ud)
 		});
 		methods.add_method_mut("spawn", |lua, me, ()| match me.inner.spawn() {
