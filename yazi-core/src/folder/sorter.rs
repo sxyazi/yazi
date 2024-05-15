@@ -78,8 +78,8 @@ impl FilesSorter {
 			}
 
 			let ordering = match deunicoded {
+				false => natsort(entities[a], entities[b], !self.sensitive),
 				true => deunicode_natsort(entities[a], entities[b], !self.sensitive),
-				false => natsort(entities[a], entities[b], !self.sensitive)
 			};
 
 			if self.reverse { ordering.reverse() } else { ordering }
