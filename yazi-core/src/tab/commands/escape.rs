@@ -1,16 +1,21 @@
 use bitflags::bitflags;
 use yazi_proxy::{AppProxy, ManagerProxy};
-use yazi_shared::{event::Cmd, render, render_and};
+use yazi_shared::{
+	event::{Cmd, Event, EventQuit},
+	render, render_and,
+};
 
 use crate::tab::Tab;
 
 bitflags! {
 	pub struct Opt: u8 {
-		const FIND   = 0b00001;
-		const VISUAL = 0b00010;
-		const SELECT = 0b00100;
-		const FILTER = 0b01000;
-		const SEARCH = 0b10000;
+		const FIND    = 0b0000001;
+		const VISUAL  = 0b0000010;
+		const SELECT  = 0b0000100;
+		const FILTER  = 0b0001000;
+		const SEARCH  = 0b0010000;
+		const QUIT    = 0b0100000;
+		const CASCADE = 0b1000000;
 	}
 }
 
@@ -18,12 +23,14 @@ impl From<Cmd> for Opt {
 	fn from(c: Cmd) -> Self {
 		c.args.iter().fold(Opt::empty(), |acc, (k, v)| {
 			match (k.as_str(), v.as_bool().unwrap_or(false)) {
-				("all", true) => Self::all(),
+				("all", true) => acc | (Self::all() ^ Self::QUIT ^ Self::CASCADE),
 				("find", true) => acc | Self::FIND,
 				("visual", true) => acc | Self::VISUAL,
 				("select", true) => acc | Self::SELECT,
 				("filter", true) => acc | Self::FILTER,
 				("search", true) => acc | Self::SEARCH,
+				("quit", true) => acc | Self::QUIT,
+				("cascade", true) => acc | Self::CASCADE,
 				_ => acc,
 			}
 		})
@@ -33,29 +40,36 @@ impl From<Cmd> for Opt {
 impl Tab {
 	pub fn escape(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
-		if opt.is_empty() {
+		if opt.is_empty() || opt.contains(Opt::CASCADE) {
 			_ = self.escape_find()
 				|| self.escape_visual()
 				|| self.escape_select()
 				|| self.escape_filter()
-				|| self.escape_search();
+				|| self.escape_search()
+				|| (opt.contains(Opt::QUIT) && self.quit());
 			return;
 		}
 
+		let mut matched = false;
+
 		if opt.contains(Opt::FIND) {
-			self.escape_find();
+			matched |= self.escape_find();
 		}
 		if opt.contains(Opt::VISUAL) {
-			self.escape_visual();
+			matched |= self.escape_visual();
 		}
 		if opt.contains(Opt::SELECT) {
-			self.escape_select();
+			matched |= self.escape_select();
 		}
 		if opt.contains(Opt::FILTER) {
-			self.escape_filter();
+			matched |= self.escape_filter();
 		}
 		if opt.contains(Opt::SEARCH) {
-			self.escape_search();
+			matched |= self.escape_search();
+		}
+
+		if !matched && opt.contains(Opt::QUIT) {
+			self.quit();
 		}
 	}
 
@@ -121,6 +135,11 @@ impl Tab {
 			return false;
 		}
 
+		true
+	}
+
+	pub fn quit(&mut self) -> bool {
+		Event::Quit(EventQuit { no_cwd_file: false, selected: None }).emit();
 		true
 	}
 }
