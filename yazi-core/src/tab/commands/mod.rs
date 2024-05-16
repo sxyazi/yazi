@@ -8,7 +8,6 @@ mod filter;
 mod find;
 mod forward;
 mod hidden;
-mod jump;
 mod leave;
 mod linemode;
 mod preview;

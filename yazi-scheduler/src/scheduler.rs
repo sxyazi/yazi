@@ -221,7 +221,7 @@ impl Scheduler {
 	pub fn preload_paged(&self, rule: &PluginRule, targets: Vec<&yazi_shared::fs::File>) {
 		let id = self.ongoing.lock().add(
 			TaskKind::Preload,
-			format!("Run preloader `{}` with {} target(s)", rule.cmd.name, targets.len()),
+			format!("Run preloader `{}` with {} target(s)", rule.run.name, targets.len()),
 		);
 
 		let plugin = rule.into();

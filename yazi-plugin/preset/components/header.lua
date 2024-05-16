@@ -56,26 +56,6 @@ function Header:tabs()
 	return ui.Line(spans)
 end
 
--- TODO: remove this function after v0.2.5 release
-function Header:layout(area)
-	if not ya.deprecated_header_layout then
-		ya.deprecated_header_layout = true
-		ya.notify {
-			title = "Deprecated API",
-			content = "`Header:layout()` is deprecated, please apply the latest `Header:render()` in your `init.lua`",
-			timeout = 5,
-			level = "warn",
-		}
-	end
-
-	self.area = area
-
-	return ui.Layout()
-		:direction(ui.Layout.HORIZONTAL)
-		:constraints({ ui.Constraint.Percentage(50), ui.Constraint.Percentage(50) })
-		:split(area)
-end
-
 function Header:render(area)
 	self.area = area
 

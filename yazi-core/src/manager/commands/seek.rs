@@ -32,6 +32,6 @@ impl Manager {
 		};
 
 		let opt = opt.into() as Opt;
-		isolate::seek_sync(&previewer.cmd, hovered.clone(), opt.units);
+		isolate::seek_sync(&previewer.run, hovered.clone(), opt.units);
 	}
 }
