@@ -11,6 +11,6 @@ pub struct PluginProps {
 
 impl From<&PluginRule> for PluginProps {
 	fn from(rule: &PluginRule) -> Self {
-		Self { id: rule.id, name: rule.cmd.name.to_owned(), multi: rule.multi, prio: rule.prio }
+		Self { id: rule.id, name: rule.run.name.to_owned(), multi: rule.multi, prio: rule.prio }
 	}
 }
