@@ -1,14 +1,15 @@
 use std::{cmp::Ordering, collections::HashMap, mem};
 
 use yazi_config::manager::SortBy;
-use yazi_shared::{fs::{File, Url}, natsort};
+use yazi_shared::{fs::{File, Url}, natsort, Transliterator};
 
 #[derive(Clone, Copy, Default, PartialEq)]
 pub struct FilesSorter {
-	pub by:        SortBy,
-	pub sensitive: bool,
-	pub reverse:   bool,
-	pub dir_first: bool,
+	pub by:              SortBy,
+	pub sensitive:       bool,
+	pub reverse:         bool,
+	pub dir_first:       bool,
+	pub transliteration: bool,
 }
 
 impl FilesSorter {
@@ -76,7 +77,16 @@ impl FilesSorter {
 				return promote;
 			}
 
-			let ordering = natsort(entities[a], entities[b], !self.sensitive);
+			let ordering = if !self.transliteration {
+				natsort(entities[a], entities[b], !self.sensitive)
+			} else {
+				natsort(
+					entities[a].transliterate().as_bytes(),
+					entities[b].transliterate().as_bytes(),
+					!self.sensitive,
+				)
+			};
+
 			if self.reverse { ordering.reverse() } else { ordering }
 		});
 

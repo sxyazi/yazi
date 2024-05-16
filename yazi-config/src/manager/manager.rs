@@ -9,10 +9,11 @@ pub struct Manager {
 	pub ratio: ManagerRatio,
 
 	// Sorting
-	pub sort_by:        SortBy,
-	pub sort_sensitive: bool,
-	pub sort_reverse:   bool,
-	pub sort_dir_first: bool,
+	pub sort_by:              SortBy,
+	pub sort_sensitive:       bool,
+	pub sort_reverse:         bool,
+	pub sort_dir_first:       bool,
+	pub sort_transliteration: bool,
 
 	// Display
 	#[validate(length(min = 1, max = 20, message = "must be between 1 and 20 characters"))]

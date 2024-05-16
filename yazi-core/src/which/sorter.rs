@@ -1,21 +1,23 @@
 use std::{borrow::Cow, mem};
 
 use yazi_config::{keymap::ControlCow, which::SortBy, WHICH};
-use yazi_shared::natsort;
+use yazi_shared::{natsort, Transliterator};
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct WhichSorter {
-	pub by:        SortBy,
-	pub sensitive: bool,
-	pub reverse:   bool,
+	pub by:              SortBy,
+	pub sensitive:       bool,
+	pub reverse:         bool,
+	pub transliteration: bool,
 }
 
 impl Default for WhichSorter {
 	fn default() -> Self {
 		Self {
-			by:        WHICH.sort_by,
-			sensitive: WHICH.sort_sensitive,
-			reverse:   WHICH.sort_reverse,
+			by:              WHICH.sort_by,
+			sensitive:       WHICH.sort_sensitive,
+			reverse:         WHICH.sort_reverse,
+			transliteration: WHICH.sort_transliteration,
 		}
 	}
 }
@@ -38,7 +40,16 @@ impl WhichSorter {
 		}
 
 		indices.sort_unstable_by(|&a, &b| {
-			let ordering = natsort(entities[a].as_bytes(), entities[b].as_bytes(), !self.sensitive);
+			let ordering = if !self.transliteration {
+				natsort(entities[a].as_bytes(), entities[b].as_bytes(), !self.sensitive)
+			} else {
+				natsort(
+					entities[a].as_bytes().transliterate().as_bytes(),
+					entities[b].as_bytes().transliterate().as_bytes(),
+					!self.sensitive,
+				)
+			};
+
 			if self.reverse { ordering.reverse() } else { ordering }
 		});
 

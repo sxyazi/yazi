@@ -7,9 +7,10 @@ use crate::MERGED_YAZI;
 #[derive(Debug, Deserialize, Serialize, Validate)]
 pub struct Which {
 	// Sorting
-	pub sort_by:        SortBy,
-	pub sort_sensitive: bool,
-	pub sort_reverse:   bool,
+	pub sort_by:              SortBy,
+	pub sort_sensitive:       bool,
+	pub sort_reverse:         bool,
+	pub sort_transliteration: bool,
 }
 
 impl Default for Which {

@@ -126,10 +126,21 @@ pub fn natsort(left: &[u8], right: &[u8], insensitive: bool) -> Ordering {
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use crate::Transliterator;
 
-	fn cmp(left: &[&str]) {
+	fn cmp(left: &[&str], transliteration: bool) {
 		let mut right = left.to_vec();
-		right.sort_by(|a, b| natsort(a.as_bytes(), b.as_bytes(), true));
+		right.sort_by(|a, b| {
+			if !transliteration {
+				natsort(a.as_bytes(), b.as_bytes(), true)
+			} else {
+				natsort(
+					a.as_bytes().transliterate().as_bytes(),
+					b.as_bytes().transliterate().as_bytes(),
+					true,
+				)
+			}
+		});
 		assert_eq!(left, right);
 	}
 
@@ -172,8 +183,41 @@ mod tests {
 			"x8-y8",
 		];
 
-		cmp(&dates);
-		cmp(&fractions);
-		cmp(&words);
+		let translit = vec![
+			"1",
+			"Acorn",
+			"Ætt",
+			"Alpha",
+			"Átrium",
+			"Attention",
+			"Beta",
+			"Elemér",
+			"Érvényes",
+			"Große",
+			"Grotto",
+			"Hedvig",
+			"Ilona",
+			"Írott",
+			"Olga",
+			"Órmotlan",
+			"Öveges",
+			"Őzike",
+			"Ubul",
+			"Űr",
+			"Útvonal",
+			"Üveg",
+			"一",
+			"三",
+			"二",
+			"叁",
+			"贰",
+			"🎨",
+			"🔥",
+		];
+
+		cmp(&dates, false);
+		cmp(&fractions, false);
+		cmp(&words, false);
+		cmp(&translit, true);
 	}
 }
