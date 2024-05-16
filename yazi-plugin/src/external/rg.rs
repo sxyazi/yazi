@@ -15,7 +15,7 @@ pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {
 	let mut child = Command::new("rg")
 		.current_dir(&opt.cwd)
 		.args(["--color=never", "--files-with-matches", "--smart-case"])
-		.args(if opt.hidden { ["--hidden", "--no-ignore"] } else { ["--no-hidden", "--ignore"] })
+		.arg(if opt.hidden { "--hidden" } else { "--no-hidden" })
 		.args(opt.args)
 		.arg(opt.subject)
 		.kill_on_drop(true)
