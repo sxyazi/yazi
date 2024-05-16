@@ -1,8 +1,4 @@
-use std::sync::atomic::Ordering;
-
 use serde::{Deserialize, Deserializer};
-
-use crate::DEPRECATED_EXEC;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Opener {
@@ -36,9 +32,7 @@ impl<'de> Deserialize<'de> for Opener {
 	{
 		#[derive(Deserialize)]
 		pub struct Shadow {
-			run:    Option<String>,
-			// TODO: remove this once Yazi 0.3 is released --
-			exec:   Option<String>,
+			run:    String,
 			#[serde(default)]
 			block:  bool,
 			#[serde(default)]
@@ -50,13 +44,7 @@ impl<'de> Deserialize<'de> for Opener {
 
 		let shadow = Shadow::deserialize(deserializer)?;
 
-		// TODO: remove this once Yazi 0.3 is released --
-		if shadow.exec.is_some() {
-			DEPRECATED_EXEC.store(true, Ordering::Relaxed);
-		}
-		let run = shadow.run.or(shadow.exec).unwrap_or_default();
-		// TODO: -- remove this once Yazi 0.3 is released
-
+		let run = shadow.run;
 		if run.is_empty() {
 			return Err(serde::de::Error::custom("`run` cannot be empty"));
 		}

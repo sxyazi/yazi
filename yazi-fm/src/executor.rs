@@ -108,7 +108,6 @@ impl<'a> Executor<'a> {
 		on!(ACTIVE, hidden);
 		on!(ACTIVE, linemode);
 		on!(ACTIVE, search);
-		on!(ACTIVE, jump);
 
 		// Filter
 		on!(ACTIVE, filter);

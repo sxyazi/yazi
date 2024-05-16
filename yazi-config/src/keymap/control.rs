@@ -1,14 +1,14 @@
-use std::{borrow::Cow, collections::VecDeque, sync::atomic::Ordering};
+use std::{borrow::Cow, collections::VecDeque};
 
-use serde::{Deserialize, Deserializer};
+use serde::Deserialize;
 use yazi_shared::event::Cmd;
 
 use super::Key;
-use crate::DEPRECATED_EXEC;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Deserialize)]
 pub struct Control {
 	pub on:   Vec<Key>,
+	#[serde(deserialize_with = "super::run_deserialize")]
 	pub run:  Vec<Cmd>,
 	pub desc: Option<String>,
 }
@@ -38,35 +38,5 @@ impl Control {
 		self.desc.as_ref().map(|d| d.to_lowercase().contains(&s)) == Some(true)
 			|| self.run().to_lowercase().contains(&s)
 			|| self.on().to_lowercase().contains(&s)
-	}
-}
-
-// TODO: remove this once Yazi 0.3 is released
-impl<'de> Deserialize<'de> for Control {
-	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-	where
-		D: Deserializer<'de>,
-	{
-		#[derive(Deserialize)]
-		pub struct Shadow {
-			pub on:   Vec<Key>,
-			pub run:  Option<VecCmd>,
-			pub exec: Option<VecCmd>,
-			pub desc: Option<String>,
-		}
-
-		let shadow = Shadow::deserialize(deserializer)?;
-
-		#[derive(Deserialize)]
-		struct VecCmd(#[serde(deserialize_with = "super::run_deserialize")] Vec<Cmd>);
-
-		if shadow.exec.is_some() {
-			DEPRECATED_EXEC.store(true, Ordering::Relaxed);
-		}
-		let Some(run) = shadow.run.or(shadow.exec) else {
-			return Err(serde::de::Error::custom("missing field `run` within `[keymap]`"));
-		};
-
-		Ok(Self { on: shadow.on, run: run.0, desc: shadow.desc })
 	}
 }
