@@ -61,6 +61,10 @@ yazi/
    cargo test
    
 ## How to Contribute
+### Reporting Bugs
+If you find a bug, please create an issue
+### Suggesting Features
+If you have a feature request, please create an issue
 ### Improving Documentation
 Improvements to documentation are always welcome! Please make sure to follow the same pull request process as for code changes.
 
@@ -93,6 +97,7 @@ Improvements to documentation are always welcome! Please make sure to follow the
 ## Communication
 - Discord Server (English mainly): https://discord.gg/qfADduSdJu
 - Telegram Group (Chinese mainly): https://t.me/yazi_rs
+- For general discussion, use the [Discussions](https://github.com/sxyazi/yazi/discussions) section.
 
 Thank you for your interest in contributing to Yazi!
 
