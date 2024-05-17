@@ -44,6 +44,7 @@ impl Loader {
 				"fzf" => include_bytes!("../../preset/plugins/fzf.lua"),
 				"image" => include_bytes!("../../preset/plugins/image.lua"),
 				"json" => include_bytes!("../../preset/plugins/json.lua"),
+				"magick" => include_bytes!("../../preset/plugins/magick.lua"),
 				"mime" => include_bytes!("../../preset/plugins/mime.lua"),
 				"pdf" => include_bytes!("../../preset/plugins/pdf.lua"),
 				"video" => include_bytes!("../../preset/plugins/video.lua"),
