@@ -303,6 +303,11 @@ rules = [
 	{ name = "*.xlsx", text = "", fg = "#207245" },
 	{ name = "*.xlt" , text = "", fg = "#207245" },
 
+	# Fonts
+	{ name = "*.eot",          text = "", fg = "#ececec" },
+	{ name = "*.[ot]tf",       text = "", fg = "#ececec" },
+	{ name = "*.{woff,woff2}", text = "", fg = "#ececec" },
+
 	# Lockfiles
 	{ name = "*.lock", text = "", fg = "#bbbbbb" },
 

@@ -19,7 +19,7 @@ parking_lot      = "0.12.2"
 percent-encoding = "2.3.1"
 ratatui          = "=0.26.1"
 regex            = "1.10.4"
-serde            = { version = "1.0.201", features = [ "derive" ] }
+serde            = { version = "1.0.202", features = [ "derive" ] }
 tokio            = { version = "1.37.0", features = [ "full" ] }
 
 # Logging

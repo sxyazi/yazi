@@ -28,7 +28,7 @@ parking_lot   = "0.12.2"
 ratatui       = "=0.26.1"
 regex         = "1.10.4"
 scopeguard    = "1.2.0"
-serde         = "1.0.201"
+serde         = "1.0.202"
 tokio         = { version = "1.37.0", features = [ "full" ] }
 tokio-stream  = "0.1.15"
 tokio-util    = "0.7.11"

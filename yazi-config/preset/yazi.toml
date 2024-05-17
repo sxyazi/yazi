@@ -87,6 +87,9 @@ preloaders = [
 	{ mime = "video/*", run = "video" },
 	# PDF
 	{ mime = "application/pdf", run = "pdf" },
+	# Font
+	{ mime = "font/*", run = "font" },
+	{ mime = "application/vnd.ms-opentype", run = "font" },
 ]
 previewers = [
 	{ name = "*/", run = "folder", sync = true },
@@ -105,6 +108,9 @@ previewers = [
 	# Archive
 	{ mime = "application/*zip", run = "archive" },
 	{ mime = "application/x-{tar,bzip*,7z-compressed,xz,rar}", run = "archive" },
+	# Font
+	{ mime = "font/*", run = "font" },
+	{ mime = "application/vnd.ms-opentype", run = "font" },
 	# Fallback
 	{ name = "*", run = "file" },
 ]

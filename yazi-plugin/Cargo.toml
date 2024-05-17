@@ -27,10 +27,10 @@ base64        = "0.22.1"
 crossterm     = "0.27.0"
 futures       = "0.3.30"
 md-5          = "0.10.6"
-mlua          = { version = "0.9.7", features = [ "lua54", "serialize", "macros", "async" ] }
+mlua          = { version = "0.9.8", features = [ "lua54", "serialize", "macros", "async" ] }
 parking_lot   = "0.12.2"
 ratatui       = "=0.26.1"
-serde         = "1.0.201"
+serde         = "1.0.202"
 serde_json    = "1.0.117"
 shell-escape  = "0.1.5"
 shell-words   = "1.1.0"
