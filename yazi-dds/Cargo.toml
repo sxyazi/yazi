@@ -18,9 +18,9 @@ yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
 anyhow       = "1.0.83"
-mlua         = { version = "0.9.7", features = [ "lua54" ] }
+mlua         = { version = "0.9.8", features = [ "lua54" ] }
 parking_lot  = "0.12.2"
-serde        = { version = "1.0.201", features = [ "derive" ] }
+serde        = { version = "1.0.202", features = [ "derive" ] }
 serde_json   = "1.0.117"
 tokio        = { version = "1.37.0", features = [ "full" ] }
 tokio-stream = "0.1.15"
