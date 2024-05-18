@@ -11,7 +11,6 @@ This guide will help you understand how to contribute to the project.
 3. [Development Setup](#development-setup)
 4. [How to Contribute](#how-to-contribute)
 5. [Pull Request Process](#pull-request-process)
-6. [Communication](#communication)
 
 ## Getting Started
 
@@ -40,7 +39,7 @@ Before you begin, ensure you have met the following requirements:
 
 A brief overview of the project's structure:
 
-```bash
+```sh
 yazi/
 ├── assets/             # Assets like images and fonts
 ├── nix/                # Nix-related configurations
@@ -84,6 +83,7 @@ yazi/
    ```
 
 4. Format the code (requires `rustfmt` nightly):
+
    ```sh
    rustup component add rustfmt --toolchain nightly
    rustfmt +nightly **/*.rs
@@ -144,11 +144,3 @@ Yazi's documentation placed at [yazi-rs/yazi-rs.github.io](https://github.com/ya
    - Your code passes all tests and lints.
    - Your pull request description clearly explains the changes and why they are needed.
 4. Address any review comments. Make sure to push updates to the same branch on your fork.
-
-## Communication
-
-- Discord Server (English mainly): https://discord.gg/qfADduSdJu
-- Telegram Group (Chinese mainly): https://t.me/yazi_rs
-- For general discussion, use the [Discussions](https://github.com/sxyazi/yazi/discussions) section.
-
-Thank you for your interest in contributing to Yazi!
