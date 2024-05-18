@@ -49,16 +49,26 @@ yazi/
 └── README.md           # Project overview
 ```
 ## Development Setup
+
 1. Ensure Rust is installed:
    ```sh
    rustc --version
    cargo --version
+   ```
 2. Build the project:
    ```sh
    cargo build
+   ```
 3. Run the tests:
    ```sh
    cargo test
+   ```
+4. Format the code (requires the nightly version of `rustfmt`):
+   ```sh
+   rustup component add rustfmt --toolchain nightly
+   rustfmt +nightly **/*.rs
+   ```
+
    
 ## How to Contribute
 ### Reporting Bugs
@@ -66,29 +76,34 @@ If you find a bug, please create an issue
 ### Suggesting Features
 If you have a feature request, please create an issue
 ### Improving Documentation
-Improvements to documentation are always welcome! Please make sure to follow the same pull request process as for code changes.
+Yazi's documentation repository is located at [yazi-rs.github.io](https://github.com/yazi-rs/yazi-rs.github.io). Contributions related to documentation need to be made within this repository.
 
 ### Submitting Code Changes
 1. Create a new branch for your changes:
    ```sh
    git checkout -b feature/your-feature-name
+   ```
 2. Make your changes. Ensure that your code follows the project's coding standards and passes all tests.
 3. Commit your changes with a descriptive commit message:
    ```sh
    git commit -m "Add feature: description of the feature"
+   ```
 4. Push your changes to your fork:
    ```sh
    git push origin feature/your-feature-name
+   ```
 ## Pull Request Process
 1. Ensure your fork is up-to-date with the upstream repository:
    ```sh
    git fetch upstream
    git checkout main
    git merge upstream/main
+   ```
 2. Rebase your feature branch onto the main branch:
    ```sh
    git checkout feature/your-feature-name
    git rebase main
+   ```
 3. Create a pull request to the `main` branch of the upstream repository. Follow the pull request template and ensure that:
    - Your code passes all tests and lints.
    - Your pull request description clearly explains the changes and why they are needed.
