@@ -3,13 +3,13 @@ use std::path::Path;
 use serde::Deserialize;
 use yazi_shared::MIME_DIR;
 
-use super::PluginRule;
+use super::{Preloader, Previewer};
 use crate::{plugin::MAX_PRELOADERS, Preset, MERGED_YAZI};
 
 #[derive(Deserialize)]
 pub struct Plugin {
-	pub preloaders: Vec<PluginRule>,
-	pub previewers: Vec<PluginRule>,
+	pub preloaders: Vec<Preloader>,
+	pub previewers: Vec<Previewer>,
 }
 
 impl Default for Plugin {
@@ -21,17 +21,17 @@ impl Default for Plugin {
 
 		#[derive(Deserialize)]
 		struct Shadow {
-			preloaders:         Vec<PluginRule>,
+			preloaders:         Vec<Preloader>,
 			#[serde(default)]
-			prepend_preloaders: Vec<PluginRule>,
+			prepend_preloaders: Vec<Preloader>,
 			#[serde(default)]
-			append_preloaders:  Vec<PluginRule>,
+			append_preloaders:  Vec<Preloader>,
 
-			previewers:         Vec<PluginRule>,
+			previewers:         Vec<Previewer>,
 			#[serde(default)]
-			prepend_previewers: Vec<PluginRule>,
+			prepend_previewers: Vec<Previewer>,
 			#[serde(default)]
-			append_previewers:  Vec<PluginRule>,
+			append_previewers:  Vec<Previewer>,
 		}
 
 		let mut shadow = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().plugin;
@@ -50,9 +50,6 @@ impl Default for Plugin {
 		}
 
 		for (i, preloader) in shadow.preloaders.iter_mut().enumerate() {
-			if preloader.sync {
-				panic!("Preloaders cannot be synchronous");
-			}
 			preloader.id = i as u8;
 		}
 
@@ -66,24 +63,34 @@ impl Plugin {
 		path: &Path,
 		mime: Option<&str>,
 		f: impl Fn(&str) -> bool + Copy,
-	) -> Vec<&PluginRule> {
-		let is_folder = mime == Some(MIME_DIR);
-		self
-			.preloaders
-			.iter()
-			.filter(|&rule| {
-				rule.cond.as_ref().and_then(|c| c.eval(f)) != Some(false)
-					&& (rule.mime.as_ref().zip(mime).map_or(false, |(p, m)| p.match_mime(m))
-						|| rule.name.as_ref().is_some_and(|p| p.match_path(path, is_folder)))
-			})
-			.collect()
+	) -> Vec<&Preloader> {
+		let is_dir = mime == Some(MIME_DIR);
+		let mut preloaders = Vec::with_capacity(1);
+
+		for p in &self.preloaders {
+			if p.cond.as_ref().and_then(|c| c.eval(f)) == Some(false) {
+				continue;
+			}
+
+			if !p.mime.as_ref().zip(mime).map_or(false, |(p, m)| p.match_mime(m))
+				&& !p.name.as_ref().is_some_and(|p| p.match_path(path, is_dir))
+			{
+				continue;
+			}
+
+			preloaders.push(p);
+			if !p.next {
+				break;
+			}
+		}
+		preloaders
 	}
 
-	pub fn previewer(&self, path: &Path, mime: &str) -> Option<&PluginRule> {
-		let is_folder = mime == MIME_DIR;
-		self.previewers.iter().find(|&rule| {
-			rule.mime.as_ref().is_some_and(|p| p.match_mime(mime))
-				|| rule.name.as_ref().is_some_and(|p| p.match_path(path, is_folder))
+	pub fn previewer(&self, path: &Path, mime: &str) -> Option<&Previewer> {
+		let is_dir = mime == MIME_DIR;
+		self.previewers.iter().find(|&p| {
+			p.mime.as_ref().is_some_and(|p| p.match_mime(mime))
+				|| p.name.as_ref().is_some_and(|p| p.match_path(path, is_dir))
 		})
 	}
 }

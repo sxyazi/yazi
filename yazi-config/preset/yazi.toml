@@ -80,12 +80,12 @@ suppress_preload = false
 [plugin]
 
 preloaders = [
-	{ name = "*", cond = "!mime", run = "mime", multi = true, prio = "high" },
+	{ name = "*", cond = "!mime", run = "mime", next = true, multi = true, prio = "high" },
 	# Image
-	{ mime = "image/svg+xml",  run = "magick" },
-	{ mime = "image/heic",     run = "magick" },
-	{ mime = "image/jxl",      run = "magick" },
-	{ mime = "image/*",        run = "image" },
+	{ mime = "image/svg+xml", run = "magick" },
+	{ mime = "image/heic",    run = "magick" },
+	{ mime = "image/jxl",     run = "magick" },
+	{ mime = "image/*",       run = "image" },
 	# Video
 	{ mime = "video/*", run = "video" },
 	# PDF
@@ -102,10 +102,10 @@ previewers = [
 	# JSON
 	{ mime = "application/json", run = "json" },
 	# Image
-	{ mime = "image/svg+xml",  run = "magick" },
-	{ mime = "image/heic",     run = "magick" },
-	{ mime = "image/jxl",      run = "magick" },
-	{ mime = "image/*",        run = "image" },
+	{ mime = "image/svg+xml", run = "magick" },
+	{ mime = "image/heic",    run = "magick" },
+	{ mime = "image/jxl",     run = "magick" },
+	{ mime = "image/*",       run = "image" },
 	# Video
 	{ mime = "video/*", run = "video" },
 	# PDF

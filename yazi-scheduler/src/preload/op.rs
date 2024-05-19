@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use yazi_config::plugin::PluginProps;
+use yazi_config::plugin::PreloaderProps;
 use yazi_shared::{fs::Url, Throttle};
 
 #[derive(Debug)]
@@ -21,7 +21,7 @@ impl PreloadOp {
 #[derive(Clone, Debug)]
 pub struct PreloadOpRule {
 	pub id:      usize,
-	pub plugin:  PluginProps,
+	pub plugin:  PreloaderProps,
 	pub targets: Vec<yazi_shared::fs::File>,
 }
 

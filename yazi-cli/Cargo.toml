@@ -13,7 +13,7 @@ yazi-dds    = { path = "../yazi-dds", version = "0.2.5" }
 yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
-anyhow     = "1.0.83"
+anyhow     = "1.0.86"
 clap       = { version = "4.5.4", features = [ "derive" ] }
 crossterm  = "0.27.0"
 md-5       = "0.10.6"
@@ -22,7 +22,7 @@ tokio      = { version = "1.37.0", features = [ "full" ] }
 toml_edit  = "0.22.13"
 
 [build-dependencies]
-anyhow                = "1.0.83"
+anyhow                = "1.0.86"
 clap                  = { version = "4.5.4", features = [ "derive" ] }
 clap_complete         = "4.5.2"
 clap_complete_fig     = "4.5.0"

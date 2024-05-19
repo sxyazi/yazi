@@ -1,15 +1,16 @@
 [package]
-name        = "yazi-shared"
-version     = "0.2.5"
-edition     = "2021"
-license     = "MIT"
-authors     = [ "sxyazi <sxyazi@gmail.com>" ]
-description = "Yazi shared library"
-homepage    = "https://yazi-rs.github.io"
-repository  = "https://github.com/sxyazi/yazi"
+name         = "yazi-shared"
+version      = "0.2.5"
+edition      = "2021"
+license      = "MIT"
+authors      = [ "sxyazi <sxyazi@gmail.com>" ]
+description  = "Yazi shared library"
+homepage     = "https://yazi-rs.github.io"
+repository   = "https://github.com/sxyazi/yazi"
+rust-version = "1.78.0"
 
 [dependencies]
-anyhow           = "1.0.83"
+anyhow           = "1.0.86"
 bitflags         = "2.5.0"
 crossterm        = "0.27.0"
 dirs             = "5.0.1"
@@ -20,10 +21,11 @@ percent-encoding = "2.3.1"
 ratatui          = "=0.26.1"
 regex            = "1.10.4"
 serde            = { version = "1.0.202", features = [ "derive" ] }
+shell-words      = "1.1.0"
 tokio            = { version = "1.37.0", features = [ "full" ] }
 
 # Logging
 tracing = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
 
 [target."cfg(unix)".dependencies]
-libc = "0.2.154"
+libc = "0.2.155"

@@ -1,6 +1,6 @@
 use std::{collections::HashMap, mem};
 
-use yazi_config::{manager::SortBy, plugin::{PluginRule, MAX_PRELOADERS}, PLUGIN};
+use yazi_config::{manager::SortBy, plugin::{Preloader, MAX_PRELOADERS}, PLUGIN};
 use yazi_shared::{fs::{File, Url}, MIME_DIR};
 
 use super::Tasks;
@@ -34,15 +34,15 @@ impl Tasks {
 		drop(loaded);
 		let mut loaded = self.scheduler.preload.rule_loaded.write();
 
-		let mut go = |rule: &PluginRule, targets: Vec<&File>| {
+		let mut go = |preloader: &Preloader, targets: Vec<&File>| {
 			for &f in &targets {
 				if let Some(n) = loaded.get_mut(&f.url) {
-					*n |= 1 << rule.id;
+					*n |= 1 << preloader.id;
 				} else {
-					loaded.insert(f.url.clone(), 1 << rule.id);
+					loaded.insert(f.url.clone(), 1 << preloader.id);
 				}
 			}
-			self.scheduler.preload_paged(rule, targets);
+			self.scheduler.preload_paged(preloader, targets);
 		};
 
 		#[allow(clippy::needless_range_loop)]
