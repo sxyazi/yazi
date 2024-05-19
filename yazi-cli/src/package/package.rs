@@ -12,6 +12,8 @@ pub(crate) struct Package {
 }
 
 impl Package {
+	/// Create a new Package when adding a new package to the config.
+	/// Note that the package must end in `".yazi"`.
 	pub(super) fn new(url: &str, commit: Option<&str>) -> Self {
 		let mut parts = url.splitn(2, '#');
 
@@ -22,6 +24,17 @@ impl Package {
 			repo.push_str(".yazi");
 			String::new()
 		};
+
+		Self { repo, child, commit: commit.unwrap_or_default().to_owned(), is_flavor: false }
+	}
+
+	/// Create a new Package when installing a package from the config. The
+	/// package is name considered valid and no `".yazi"` is prepended.
+	pub(super) fn new_literal(url: &str, commit: Option<&str>) -> Self {
+		let mut parts = url.splitn(2, '#');
+
+		let repo = parts.next().unwrap_or_default().to_owned();
+		let child = if let Some(s) = parts.next() { format!("{s}.yazi") } else { String::new() };
 
 		Self { repo, child, commit: commit.unwrap_or_default().to_owned(), is_flavor: false }
 	}
@@ -75,5 +88,24 @@ impl Package {
 			Print("\n\n"),
 		)?;
 		Ok(())
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_package_new() {
+		// should add ".yazi" to the end of the package name if it doesn't have one
+		let package = Package::new("user/test", None);
+		assert_eq!(package.repo, "user/test.yazi");
+	}
+
+	#[test]
+	fn test_package_new_literal() {
+		// should not add ".yazi" to the end of the package name
+		let package = Package::new_literal("user/test.yazi", None);
+		assert_eq!(package.repo, "user/test.yazi");
 	}
 }

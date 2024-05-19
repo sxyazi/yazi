@@ -49,7 +49,7 @@ impl Package {
 			let use_ = dep.get("use").and_then(|d| d.as_str()).context("Missing `use` field")?;
 			let commit = dep.get("commit").and_then(|d| d.as_str());
 
-			let mut package = Package::new(use_, commit);
+			let mut package = Package::new_literal(use_, commit);
 			if upgrade {
 				package.upgrade().await?;
 			} else {
