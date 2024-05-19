@@ -19,7 +19,7 @@ yazi-scheduler = { path = "../yazi-scheduler", version = "0.2.5" }
 yazi-shared    = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
-anyhow        = "1.0.83"
+anyhow        = "1.0.86"
 bitflags      = "2.5.0"
 crossterm     = "0.27.0"
 futures       = "0.3.30"
@@ -39,4 +39,4 @@ shell-words   = "1.1.0"
 tracing = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
 
 [target."cfg(unix)".dependencies]
-libc = "0.2.154"
+libc = "0.2.155"

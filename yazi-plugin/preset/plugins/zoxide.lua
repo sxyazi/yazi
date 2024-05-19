@@ -50,10 +50,12 @@ end
 
 local function entry()
 	local st = state()
-	if st.empty == true then
-		return fail("No directory history in the database, check out the `zoxide` docs to set it up.")
-	elseif st.empty == nil and head(st.cwd) < 2 then
-		set_state(true)
+	if st.empty == nil then
+		st.empty = head(st.cwd) < 2
+		set_state(st.empty)
+	end
+
+	if st.empty then
 		return fail("No directory history in the database, check out the `zoxide` docs to set it up.")
 	end
 

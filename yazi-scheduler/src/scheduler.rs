@@ -4,7 +4,7 @@ use anyhow::Result;
 use futures::{future::BoxFuture, FutureExt};
 use parking_lot::Mutex;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
-use yazi_config::{open::Opener, plugin::PluginRule, TASKS};
+use yazi_config::{open::Opener, plugin::Preloader, TASKS};
 use yazi_dds::Pump;
 use yazi_shared::{event::Data, fs::{unique_path, Url}, Throttle};
 
@@ -218,13 +218,13 @@ impl Scheduler {
 		self.plugin.macro_(PluginOpEntry { id, name, args }).ok();
 	}
 
-	pub fn preload_paged(&self, rule: &PluginRule, targets: Vec<&yazi_shared::fs::File>) {
+	pub fn preload_paged(&self, preloader: &Preloader, targets: Vec<&yazi_shared::fs::File>) {
 		let id = self.ongoing.lock().add(
 			TaskKind::Preload,
-			format!("Run preloader `{}` with {} target(s)", rule.run.name, targets.len()),
+			format!("Run preloader `{}` with {} target(s)", preloader.run.name, targets.len()),
 		);
 
-		let plugin = rule.into();
+		let plugin = preloader.into();
 		let targets = targets.into_iter().cloned().collect();
 		let preload = self.preload.clone();
 		_ = self.micro.try_send(

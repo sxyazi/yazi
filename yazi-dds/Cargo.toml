@@ -17,7 +17,7 @@ yazi-boot   = { path = "../yazi-boot", version = "0.2.5" }
 yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
-anyhow       = "1.0.83"
+anyhow       = "1.0.86"
 mlua         = { version = "0.9.8", features = [ "lua54" ] }
 parking_lot  = "0.12.2"
 serde        = { version = "1.0.202", features = [ "derive" ] }

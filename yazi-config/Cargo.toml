@@ -12,7 +12,7 @@ repository  = "https://github.com/sxyazi/yazi"
 yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
-anyhow      = "1.0.83"
+anyhow      = "1.0.86"
 arc-swap    = "1.7.1"
 crossterm   = "0.27.0"
 globset     = "0.4.14"

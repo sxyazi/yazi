@@ -23,10 +23,10 @@ impl Open {
 		P: AsRef<Path>,
 		M: AsRef<str>,
 	{
-		let is_folder = mime.as_ref() == MIME_DIR;
+		let is_dir = mime.as_ref() == MIME_DIR;
 		self.rules.iter().find_map(|rule| {
 			if rule.mime.as_ref().is_some_and(|p| p.match_mime(&mime))
-				|| rule.name.as_ref().is_some_and(|p| p.match_path(&path, is_folder))
+				|| rule.name.as_ref().is_some_and(|p| p.match_path(&path, is_dir))
 			{
 				let openers = rule
 					.use_
