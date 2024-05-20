@@ -60,7 +60,7 @@ rules = [
 	{ mime = "{audio,video}/*", use = [ "play", "reveal" ] },
 	{ mime = "inode/x-empty",   use = [ "edit", "reveal" ] },
 
-	{ mime = "application/*zip", use = [ "extract", "reveal" ] },
+	{ mime = "application/?(g)zip", use = [ "extract", "reveal" ] },
 	{ mime = "application/x-{tar,bzip*,7z-compressed,xz,rar}", use = [ "extract", "reveal" ] },
 
 	{ mime = "application/json", use = [ "edit", "reveal" ] },
@@ -114,7 +114,7 @@ previewers = [
 	# PDF
 	{ mime = "application/pdf", run = "pdf" },
 	# Archive
-	{ mime = "application/*zip", run = "archive" },
+	{ mime = "application/?(g)zip", run = "archive" },
 	{ mime = "application/x-{tar,bzip*,7z-compressed,xz,rar}", run = "archive" },
 	# Font
 	{ mime = "font/*", run = "font" },
@@ -191,5 +191,3 @@ sort_reverse   = false
 
 [log]
 enabled = false
-
-[headsup]
