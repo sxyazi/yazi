@@ -1,20 +1,17 @@
-use std::{path::Path, process::Stdio};
+use std::{io::Write, path::Path, process::Stdio};
 
+use ansi_to_tui::IntoText;
 use anyhow::{bail, Result};
-use imagesize::ImageSize;
 use ratatui::layout::Rect;
 use tokio::process::Command;
+use yazi_shared::term::Term;
 
-use crate::Image;
+use crate::Adaptor;
 
 pub(super) struct Chafa;
 
 impl Chafa {
-	pub(super) async fn image_show(path: &Path, rect: Rect) -> Result<(u32, u32)> {
-		let p = path.to_owned();
-		let ImageSize { width: w, height: h } =
-			tokio::task::spawn_blocking(move || imagesize::size(p)).await??;
-
+	pub(super) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
 		let output = Command::new("chafa")
 			.args([
 				"-f",
@@ -29,7 +26,7 @@ impl Chafa {
 				"off",
 				"--view-size",
 			])
-			.arg(format!("{}x{}", rect.width, rect.height))
+			.arg(format!("{}x{}", max.width, max.height))
 			.arg(path)
 			.stdin(Stdio::null())
 			.stderr(Stdio::null())
@@ -40,24 +37,40 @@ impl Chafa {
 
 		if !output.status.success() {
 			bail!("chafa failed with status: {}", output.status);
+		} else if output.stdout.is_empty() {
+			bail!("chafa returned no output");
 		}
 
-		// output.stdout
+		let lines: Vec<_> = output.stdout.split(|&b| b == b'\n').collect();
+		let Ok(Some(first)) = lines[0].into_text().map(|mut t| t.lines.pop()) else {
+			bail!("failed to parse chafa output");
+		};
 
-		let (max_w, max_h) = Image::max_pixel(rect);
-		if w <= max_w as usize && h <= max_h as usize {
-			return Ok((w as u32, h as u32));
-		}
+		let area = Rect {
+			x:      max.x,
+			y:      max.y,
+			width:  first.spans.into_iter().map(|s| s.content.chars().count() as u16).sum(),
+			height: lines.len() as u16,
+		};
 
-		let ratio = f64::min(max_w as f64 / w as f64, max_h as f64 / h as f64);
-		Ok(((w as f64 * ratio).round() as u32, (h as f64 * ratio).round() as u32))
+		Adaptor::shown_store(area);
+		Term::move_lock((max.x, max.y), |stderr| {
+			for (i, line) in lines.into_iter().enumerate() {
+				stderr.write_all(line)?;
+				Term::move_to(stderr, max.x, max.y + i as u16 + 1)?;
+			}
+			Ok(area)
+		})
 	}
 
-	pub(super) fn image_erase(_: Rect) -> Result<()> {
-		if let Some(tx) = &*DEMON {
-			Ok(tx.send(None)?)
-		} else {
-			bail!("uninitialized ueberzugpp");
-		}
+	pub(super) fn image_erase(area: Rect) -> Result<()> {
+		let s = " ".repeat(area.width as usize);
+		Term::move_lock((0, 0), |stderr| {
+			for y in area.top()..area.bottom() {
+				Term::move_to(stderr, area.x, y)?;
+				write!(stderr, "{s}")?;
+			}
+			Ok(())
+		})
 	}
 }

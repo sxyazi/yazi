@@ -3,10 +3,10 @@ use std::{env, fmt::Display, path::Path, sync::Arc};
 use anyhow::Result;
 use ratatui::layout::Rect;
 use tracing::warn;
-use yazi_shared::{env_exists, term::Term};
+use yazi_shared::env_exists;
 
 use super::{Iterm2, Kitty, KittyOld};
-use crate::{ueberzug::Ueberzug, Emulator, Sixel, SHOWN, TMUX};
+use crate::{Chafa, Emulator, Sixel, Ueberzug, SHOWN, TMUX};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Adaptor {
@@ -42,7 +42,8 @@ impl Adaptor {
 			Self::KittyOld => KittyOld::image_show(path, max).await,
 			Self::Iterm2 => Iterm2::image_show(path, max).await,
 			Self::Sixel => Sixel::image_show(path, max).await,
-			_ => Ueberzug::image_show(path, max).await,
+			Self::X11 | Self::Wayland => Ueberzug::image_show(path, max).await,
+			Self::Chafa => Chafa::image_show(path, max).await,
 		}
 	}
 
@@ -54,9 +55,10 @@ impl Adaptor {
 		match self {
 			Self::Kitty => Kitty::image_erase(area),
 			Self::Iterm2 => Iterm2::image_erase(area),
-			Self::KittyOld => KittyOld::image_erase(),
+			Self::KittyOld => KittyOld::image_erase(area),
 			Self::Sixel => Sixel::image_erase(area),
-			_ => Ueberzug::image_erase(area),
+			Self::X11 | Self::Wayland => Ueberzug::image_erase(area),
+			Self::Chafa => Chafa::image_erase(area),
 		}
 	}
 

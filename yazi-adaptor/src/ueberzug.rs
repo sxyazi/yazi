@@ -51,7 +51,7 @@ impl Ueberzug {
 			tokio::task::spawn_blocking(move || imagesize::size(p)).await??;
 
 		let area = Image::pixel_area((w as u32, h as u32), max);
-		tx.send(Some((path.to_owned(), max)))?;
+		tx.send(Some((path.to_owned(), area)))?;
 
 		Adaptor::shown_store(area);
 		Ok(area)

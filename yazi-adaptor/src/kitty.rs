@@ -3,7 +3,7 @@ use std::{io::Write, path::Path};
 
 use anyhow::Result;
 use base64::{engine::general_purpose, Engine};
-use image::{DynamicImage, GenericImageView};
+use image::DynamicImage;
 use ratatui::layout::Rect;
 use yazi_shared::term::Term;
 

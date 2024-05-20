@@ -11,11 +11,13 @@ mod sixel;
 mod ueberzug;
 
 pub use adaptor::*;
+use chafa::*;
 pub use emulator::*;
 use iterm2::*;
 use kitty::*;
 use kitty_old::*;
 use sixel::*;
+use ueberzug::*;
 use yazi_shared::{env_exists, RoCell};
 
 pub use crate::image::*;
