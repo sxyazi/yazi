@@ -9,7 +9,7 @@ local function match_mimetype(s)
 	end
 end
 
-function M:preload()
+function M:prefetch()
 	local urls = {}
 	for _, file in ipairs(self.files) do
 		urls[#urls + 1] = tostring(file.url)

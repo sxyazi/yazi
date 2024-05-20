@@ -12,7 +12,7 @@ Yazi (means "duck") is a terminal file manager written in Rust, based on non-blo
 - 💪 **Powerful Async Task Scheduling and Management**: Provides real-time progress updates, task cancellation, and internal task priority assignment.
 - 🖼️ **Built-in Support for Multiple Image Protocols**: Also integrated with Überzug++, covering almost all terminals.
 - 🌟 **Built-in Code Highlighting and Image Decoding**: Combined with the pre-loading mechanism, greatly accelerates image and normal file loading.
-- 🔌 **Concurrent Plugin System**: UI plugins (rewriting most of the UI), functional plugins, custom previewer, and custom preloader; Just some pieces of Lua.
+- 🔌 **Concurrent Plugin System**: UI plugins (rewriting most of the UI), functional plugins, custom previewer/preloader/prefetcher; Just some pieces of Lua.
 - 📡 **Data Distribution Service**: Built on a client-server architecture (no additional server process required), integrated with a Lua-based publish-subscribe model, achieving cross-instance communication and state persistence.
 - 📦 **Package Manager**: Install plugins and themes with one command, keeping them always up to date, or pin them to a specific version.
 - 🧰 Integration with fd, rg, fzf, zoxide

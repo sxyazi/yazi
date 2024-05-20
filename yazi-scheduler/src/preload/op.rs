@@ -1,32 +1,41 @@
 use std::sync::Arc;
 
-use yazi_config::plugin::PreloaderProps;
+use yazi_config::plugin::{PrefetcherProps, PreloaderProps};
 use yazi_shared::{fs::Url, Throttle};
 
 #[derive(Debug)]
-pub enum PreloadOp {
-	Rule(PreloadOpRule),
-	Size(PreloadOpSize),
+pub enum PreworkOp {
+	Fetch(PreworkOpFetch),
+	Load(PreworkOpLoad),
+	Size(PreworkOpSize),
 }
 
-impl PreloadOp {
+impl PreworkOp {
 	pub fn id(&self) -> usize {
 		match self {
-			Self::Rule(op) => op.id,
+			Self::Fetch(op) => op.id,
+			Self::Load(op) => op.id,
 			Self::Size(op) => op.id,
 		}
 	}
 }
 
 #[derive(Clone, Debug)]
-pub struct PreloadOpRule {
+pub struct PreworkOpFetch {
 	pub id:      usize,
-	pub plugin:  PreloaderProps,
+	pub plugin:  PrefetcherProps,
 	pub targets: Vec<yazi_shared::fs::File>,
 }
 
+#[derive(Clone, Debug)]
+pub struct PreworkOpLoad {
+	pub id:     usize,
+	pub plugin: PreloaderProps,
+	pub target: yazi_shared::fs::File,
+}
+
 #[derive(Debug)]
-pub struct PreloadOpSize {
+pub struct PreworkOpSize {
 	pub id:       usize,
 	pub target:   Url,
 	pub throttle: Arc<Throttle<(Url, u64)>>,

@@ -5,7 +5,7 @@ use yazi_config::LAYOUT;
 use super::slim_lua;
 use crate::{bindings::{Cast, File}, elements::Rect, loader::LOADER};
 
-pub async fn preload(name: &str, file: yazi_shared::fs::File) -> mlua::Result<u8> {
+pub async fn prefetch(name: &str, files: Vec<yazi_shared::fs::File>) -> mlua::Result<u8> {
 	LOADER.ensure(name).await.into_lua_err()?;
 
 	let name = name.to_owned();
@@ -17,11 +17,16 @@ pub async fn preload(name: &str, file: yazi_shared::fs::File) -> mlua::Result<u8
 			return Err("unloaded plugin".into_lua_err());
 		};
 
+		let files = files.into_iter().filter_map(|f| File::cast(&lua, f).ok()).collect::<Vec<_>>();
+		if files.is_empty() {
+			return Err("no files".into_lua_err());
+		}
+
 		plugin.raw_set("skip", 0)?;
 		plugin.raw_set("area", Rect::cast(&lua, LAYOUT.load().preview)?)?;
-		plugin.raw_set("file", File::cast(&lua, file)?)?;
+		plugin.raw_set("files", files)?;
 
-		Handle::current().block_on(plugin.call_async_method("preload", ()))
+		Handle::current().block_on(plugin.call_async_method("prefetch", ()))
 	})
 	.await
 	.into_lua_err()?

@@ -117,8 +117,8 @@ impl Watcher {
 			if reload.is_empty() {
 				continue;
 			}
-			if let Err(e) = isolate::preload("mime", reload, true).await {
-				error!("preload in watcher failed: {e}");
+			if let Err(e) = isolate::prefetch("mime", reload).await {
+				error!("prefetch `mime` failed in watcher: {e}");
 			}
 		}
 	}
