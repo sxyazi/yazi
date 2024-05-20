@@ -36,48 +36,37 @@ impl Display for Adaptor {
 }
 
 impl Adaptor {
-	pub async fn image_show(self, path: &Path, rect: Rect) -> Result<(u32, u32)> {
+	pub async fn image_show(self, path: &Path, max: Rect) -> Result<Rect> {
 		match self {
-			Self::Kitty => Kitty::image_show(path, rect).await,
-			Self::KittyOld => KittyOld::image_show(path, rect).await,
-			Self::Iterm2 => Iterm2::image_show(path, rect).await,
-			Self::Sixel => Sixel::image_show(path, rect).await,
-			_ => Ueberzug::image_show(path, rect).await,
+			Self::Kitty => Kitty::image_show(path, max).await,
+			Self::KittyOld => KittyOld::image_show(path, max).await,
+			Self::Iterm2 => Iterm2::image_show(path, max).await,
+			Self::Sixel => Sixel::image_show(path, max).await,
+			_ => Ueberzug::image_show(path, max).await,
 		}
 	}
 
 	pub fn image_hide(self) -> Result<()> {
-		if let Some(rect) = SHOWN.swap(None) { self.image_erase(*rect) } else { Ok(()) }
+		if let Some(area) = SHOWN.swap(None) { self.image_erase(*area) } else { Ok(()) }
 	}
 
-	pub fn image_erase(self, rect: Rect) -> Result<()> {
+	pub fn image_erase(self, area: Rect) -> Result<()> {
 		match self {
-			Self::Kitty => Kitty::image_erase(rect),
-			Self::Iterm2 => Iterm2::image_erase(rect),
+			Self::Kitty => Kitty::image_erase(area),
+			Self::Iterm2 => Iterm2::image_erase(area),
 			Self::KittyOld => KittyOld::image_erase(),
-			Self::Sixel => Sixel::image_erase(rect),
-			_ => Ueberzug::image_erase(rect),
+			Self::Sixel => Sixel::image_erase(area),
+			_ => Ueberzug::image_erase(area),
 		}
 	}
 
 	#[inline]
 	pub fn shown_load(self) -> Option<Rect> { SHOWN.load_full().map(|r| *r) }
 
-	pub(super) fn start(self) { Ueberzug::start(self); }
-
 	#[inline]
-	pub(super) fn shown_store(rect: Rect, size: (u32, u32)) {
-		SHOWN.store(Some(Arc::new(
-			Term::ratio()
-				.map(|(r1, r2)| Rect {
-					x:      rect.x,
-					y:      rect.y,
-					width:  (size.0 as f64 / r1).ceil() as u16,
-					height: (size.1 as f64 / r2).ceil() as u16,
-				})
-				.unwrap_or(rect),
-		)));
-	}
+	pub(super) fn shown_store(area: Rect) { SHOWN.store(Some(Arc::new(area))); }
+
+	pub(super) fn start(self) { Ueberzug::start(self); }
 
 	#[inline]
 	pub(super) fn needs_ueberzug(self) -> bool {

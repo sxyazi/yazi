@@ -1,6 +1,7 @@
 #![allow(clippy::unit_arg)]
 
 mod adaptor;
+mod chafa;
 mod emulator;
 mod image;
 mod iterm2;
