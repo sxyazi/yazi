@@ -313,27 +313,27 @@ static DIACRITICS: [char; 297] = [
 pub(super) struct Kitty;
 
 impl Kitty {
-	pub(super) async fn image_show(path: &Path, rect: Rect) -> Result<(u32, u32)> {
-		let img = Image::downscale(path, rect).await?;
-		let size = (img.width(), img.height());
+	pub(super) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+		let img = Image::downscale(path, max).await?;
+		let area = Image::pixel_area((img.width(), img.height()), max);
 
 		let b1 = Self::encode(img).await?;
-		let b2 = Self::place(&rect)?;
+		let b2 = Self::place(&area)?;
 
 		Adaptor::Kitty.image_hide()?;
-		Adaptor::shown_store(rect, size);
-		Term::move_lock((rect.x, rect.y), |stderr| {
+		Adaptor::shown_store(area);
+		Term::move_lock((area.x, area.y), |stderr| {
 			stderr.write_all(&b1)?;
 			stderr.write_all(&b2)?;
-			Ok(size)
+			Ok(area)
 		})
 	}
 
-	pub(super) fn image_erase(rect: Rect) -> Result<()> {
-		let s = " ".repeat(rect.width as usize);
+	pub(super) fn image_erase(area: Rect) -> Result<()> {
+		let s = " ".repeat(area.width as usize);
 		Term::move_lock((0, 0), |stderr| {
-			for y in rect.top()..rect.bottom() {
-				Term::move_to(stderr, rect.x, y)?;
+			for y in area.top()..area.bottom() {
+				Term::move_to(stderr, area.x, y)?;
 				write!(stderr, "{s}")?;
 			}
 
@@ -388,11 +388,11 @@ impl Kitty {
 		.await?
 	}
 
-	fn place(rect: &Rect) -> Result<Vec<u8>> {
-		let mut buf = Vec::with_capacity(rect.width as usize * rect.height as usize * 3 + 50);
-		for y in 0..rect.height {
-			write!(buf, "\x1b[{};{}H\x1b[38;5;1m", rect.y + y + 1, rect.x + 1)?;
-			for x in 0..rect.width {
+	fn place(area: &Rect) -> Result<Vec<u8>> {
+		let mut buf = Vec::with_capacity(area.width as usize * area.height as usize * 3 + 50);
+		for y in 0..area.height {
+			write!(buf, "\x1b[{};{}H\x1b[38;5;1m", area.y + y + 1, area.x + 1)?;
+			for x in 0..area.width {
 				write!(buf, "\u{10EEEE}")?;
 				write!(buf, "{}", *DIACRITICS.get(y as usize).unwrap_or(&DIACRITICS[0]))?;
 				write!(buf, "{}", *DIACRITICS.get(x as usize).unwrap_or(&DIACRITICS[0]))?;

@@ -12,24 +12,24 @@ use crate::{adaptor::Adaptor, CLOSE, START};
 pub(super) struct Iterm2;
 
 impl Iterm2 {
-	pub(super) async fn image_show(path: &Path, rect: Rect) -> Result<(u32, u32)> {
-		let img = Image::downscale(path, rect).await?;
-		let size = (img.width(), img.height());
+	pub(super) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+		let img = Image::downscale(path, max).await?;
+		let area = Image::pixel_area((img.width(), img.height()), max);
 		let b = Self::encode(img).await?;
 
 		Adaptor::Iterm2.image_hide()?;
-		Adaptor::shown_store(rect, size);
-		Term::move_lock((rect.x, rect.y), |stderr| {
+		Adaptor::shown_store(area);
+		Term::move_lock((max.x, max.y), |stderr| {
 			stderr.write_all(&b)?;
-			Ok(size)
+			Ok(area)
 		})
 	}
 
-	pub(super) fn image_erase(rect: Rect) -> Result<()> {
-		let s = " ".repeat(rect.width as usize);
+	pub(super) fn image_erase(area: Rect) -> Result<()> {
+		let s = " ".repeat(area.width as usize);
 		Term::move_lock((0, 0), |stderr| {
-			for y in rect.top()..rect.bottom() {
-				Term::move_to(stderr, rect.x, y)?;
+			for y in area.top()..area.bottom() {
+				Term::move_to(stderr, area.x, y)?;
 				write!(stderr, "{s}")?;
 			}
 			Ok(())

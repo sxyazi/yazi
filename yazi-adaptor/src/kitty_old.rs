@@ -13,21 +13,21 @@ use crate::{adaptor::Adaptor, CLOSE, ESCAPE, START};
 pub(super) struct KittyOld;
 
 impl KittyOld {
-	pub(super) async fn image_show(path: &Path, rect: Rect) -> Result<(u32, u32)> {
-		let img = Image::downscale(path, rect).await?;
-		let size = (img.width(), img.height());
+	pub(super) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+		let img = Image::downscale(path, max).await?;
+		let area = Image::pixel_area((img.width(), img.height()), max);
 		let b = Self::encode(img).await?;
 
 		Adaptor::KittyOld.image_hide()?;
-		Adaptor::shown_store(rect, size);
-		Term::move_lock((rect.x, rect.y), |stderr| {
+		Adaptor::shown_store(area);
+		Term::move_lock((area.x, area.y), |stderr| {
 			stderr.write_all(&b)?;
-			Ok(size)
+			Ok(area)
 		})
 	}
 
 	#[inline]
-	pub(super) fn image_erase() -> Result<()> {
+	pub(super) fn image_erase(_: Rect) -> Result<()> {
 		let mut stderr = LineWriter::new(stderr());
 		write!(stderr, "{}_Gq=1,a=d,d=A{}\\{}", START, ESCAPE, CLOSE)?;
 		stderr.flush()?;

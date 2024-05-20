@@ -41,25 +41,20 @@ impl Ueberzug {
 		DEMON.init(Some(tx))
 	}
 
-	pub(super) async fn image_show(path: &Path, rect: Rect) -> Result<(u32, u32)> {
-		if let Some(tx) = &*DEMON {
-			tx.send(Some((path.to_path_buf(), rect)))?;
-			Adaptor::shown_store(rect, (0, 0));
-		} else {
+	pub(super) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+		let Some(tx) = &*DEMON else {
 			bail!("uninitialized ueberzugpp");
-		}
+		};
 
-		let path = path.to_owned();
+		let p = path.to_owned();
 		let ImageSize { width: w, height: h } =
-			tokio::task::spawn_blocking(move || imagesize::size(path)).await??;
+			tokio::task::spawn_blocking(move || imagesize::size(p)).await??;
 
-		let (max_w, max_h) = Image::max_size(rect);
-		if w <= max_w as usize && h <= max_h as usize {
-			return Ok((w as u32, h as u32));
-		}
+		let area = Image::pixel_area((w as u32, h as u32), max);
+		tx.send(Some((path.to_owned(), area)))?;
 
-		let ratio = f64::min(max_w as f64 / w as f64, max_h as f64 / h as f64);
-		Ok(((w as f64 * ratio).round() as u32, (h as f64 * ratio).round() as u32))
+		Adaptor::shown_store(area);
+		Ok(area)
 	}
 
 	pub(super) fn image_erase(_: Rect) -> Result<()> {
@@ -77,6 +72,7 @@ impl Ueberzug {
 			.env("SPDLOG_LEVEL", if cfg!(debug_assertions) { "debug" } else { "" })
 			.kill_on_drop(true)
 			.stdin(Stdio::piped())
+			.stdout(Stdio::null())
 			.stderr(Stdio::null())
 			.spawn();
 

@@ -57,7 +57,7 @@ impl Image {
 		})
 		.await??;
 
-		let (mut w, mut h) = Self::max_size(rect);
+		let (mut w, mut h) = Self::max_pixel(rect);
 		if (5..=8).contains(&orientation) {
 			(w, h) = (h, w);
 		}
@@ -76,13 +76,24 @@ impl Image {
 		.await?
 	}
 
-	pub(super) fn max_size(rect: Rect) -> (u32, u32) {
+	pub(super) fn max_pixel(rect: Rect) -> (u32, u32) {
 		Term::ratio()
 			.map(|(r1, r2)| {
 				let (w, h) = ((rect.width as f64 * r1) as u32, (rect.height as f64 * r2) as u32);
 				(w.min(PREVIEW.max_width), h.min(PREVIEW.max_height))
 			})
 			.unwrap_or((PREVIEW.max_width, PREVIEW.max_height))
+	}
+
+	pub(super) fn pixel_area(size: (u32, u32), rect: Rect) -> Rect {
+		Term::ratio()
+			.map(|(r1, r2)| Rect {
+				x:      rect.x,
+				y:      rect.y,
+				width:  (size.0 as f64 / r1).ceil() as u16,
+				height: (size.1 as f64 / r2).ceil() as u16,
+			})
+			.unwrap_or(rect)
 	}
 
 	#[inline]
