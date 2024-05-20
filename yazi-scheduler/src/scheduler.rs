@@ -9,7 +9,7 @@ use yazi_dds::Pump;
 use yazi_shared::{event::Data, fs::{unique_path, Url}, Throttle};
 
 use super::{Ongoing, TaskProg, TaskStage};
-use crate::{file::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, preload::{PreloadOpFetch, PreloadOpLoad, PreloadOpSize, Prework}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
+use crate::{file::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, preload::{Prework, PreworkOpFetch, PreworkOpLoad, PreworkOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
 
 pub struct Scheduler {
 	pub file:    Arc<File>,
@@ -228,7 +228,7 @@ impl Scheduler {
 		let prework = self.prework.clone();
 		_ = self.micro.try_send(
 			async move {
-				prework.fetch(PreloadOpFetch { id, plugin, targets }).await.ok();
+				prework.fetch(PreworkOpFetch { id, plugin, targets }).await.ok();
 			}
 			.boxed(),
 			NORMAL,
@@ -244,14 +244,14 @@ impl Scheduler {
 		let prework = self.prework.clone();
 		_ = self.micro.try_send(
 			async move {
-				prework.load(PreloadOpLoad { id, plugin, target }).await.ok();
+				prework.load(PreworkOpLoad { id, plugin, target }).await.ok();
 			}
 			.boxed(),
 			NORMAL,
 		);
 	}
 
-	pub fn preload_size(&self, targets: Vec<&Url>) {
+	pub fn prework_size(&self, targets: Vec<&Url>) {
 		let throttle = Arc::new(Throttle::new(targets.len(), Duration::from_millis(300)));
 		let mut ongoing = self.ongoing.lock();
 
@@ -260,10 +260,10 @@ impl Scheduler {
 			let target = target.clone();
 			let throttle = throttle.clone();
 
-			let preload = self.prework.clone();
+			let prework = self.prework.clone();
 			_ = self.micro.try_send(
 				async move {
-					preload.size(PreloadOpSize { id, target, throttle }).await.ok();
+					prework.size(PreworkOpSize { id, target, throttle }).await.ok();
 				}
 				.boxed(),
 				NORMAL,
@@ -344,7 +344,7 @@ impl Scheduler {
 	) -> JoinHandle<()> {
 		let file = self.file.clone();
 		let plugin = self.plugin.clone();
-		let preload = self.prework.clone();
+		let prework = self.prework.clone();
 
 		let prog = self.prog.clone();
 		let ongoing = self.ongoing.clone();
@@ -364,7 +364,7 @@ impl Scheduler {
 						let result = match op {
 							TaskOp::File(op) => file.work(*op).await,
 							TaskOp::Plugin(op) => plugin.work(*op).await,
-							TaskOp::Preload(op) => preload.work(*op).await,
+							TaskOp::Prework(op) => prework.work(*op).await,
 						};
 
 						if let Err(e) = result {

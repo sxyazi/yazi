@@ -8,7 +8,7 @@ use yazi_config::Priority;
 use yazi_plugin::isolate;
 use yazi_shared::fs::{calculate_size, FilesOp, Url};
 
-use super::{PreloadOpFetch, PreloadOpLoad, PreloadOpSize, PreworkOp};
+use super::{PreworkOp, PreworkOpFetch, PreworkOpLoad, PreworkOpSize};
 use crate::{TaskOp, TaskProg, HIGH, NORMAL};
 
 pub struct Prework {
@@ -86,7 +86,7 @@ impl Prework {
 		Ok(())
 	}
 
-	pub async fn fetch(&self, task: PreloadOpFetch) -> Result<()> {
+	pub async fn fetch(&self, task: PreworkOpFetch) -> Result<()> {
 		let id = task.id;
 		self.prog.send(TaskProg::New(id, 0))?;
 
@@ -98,7 +98,7 @@ impl Prework {
 		self.succ(id)
 	}
 
-	pub async fn load(&self, task: PreloadOpLoad) -> Result<()> {
+	pub async fn load(&self, task: PreworkOpLoad) -> Result<()> {
 		let id = task.id;
 		self.prog.send(TaskProg::New(id, 0))?;
 
@@ -110,7 +110,7 @@ impl Prework {
 		self.succ(id)
 	}
 
-	pub async fn size(&self, task: PreloadOpSize) -> Result<()> {
+	pub async fn size(&self, task: PreworkOpSize) -> Result<()> {
 		let id = task.id;
 
 		self.prog.send(TaskProg::New(id, 0))?;

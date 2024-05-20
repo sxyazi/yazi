@@ -5,9 +5,9 @@ use yazi_shared::{fs::Url, Throttle};
 
 #[derive(Debug)]
 pub enum PreworkOp {
-	Fetch(PreloadOpFetch),
-	Load(PreloadOpLoad),
-	Size(PreloadOpSize),
+	Fetch(PreworkOpFetch),
+	Load(PreworkOpLoad),
+	Size(PreworkOpSize),
 }
 
 impl PreworkOp {
@@ -21,21 +21,21 @@ impl PreworkOp {
 }
 
 #[derive(Clone, Debug)]
-pub struct PreloadOpFetch {
+pub struct PreworkOpFetch {
 	pub id:      usize,
 	pub plugin:  PrefetcherProps,
 	pub targets: Vec<yazi_shared::fs::File>,
 }
 
 #[derive(Clone, Debug)]
-pub struct PreloadOpLoad {
+pub struct PreworkOpLoad {
 	pub id:     usize,
 	pub plugin: PreloaderProps,
 	pub target: yazi_shared::fs::File,
 }
 
 #[derive(Debug)]
-pub struct PreloadOpSize {
+pub struct PreworkOpSize {
 	pub id:       usize,
 	pub target:   Url,
 	pub throttle: Arc<Throttle<(Url, u64)>>,

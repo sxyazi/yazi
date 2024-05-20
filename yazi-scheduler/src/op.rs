@@ -4,7 +4,7 @@ use crate::{file::FileOp, plugin::PluginOp, preload::PreworkOp};
 pub enum TaskOp {
 	File(Box<FileOp>),
 	Plugin(Box<PluginOp>),
-	Preload(Box<PreworkOp>),
+	Prework(Box<PreworkOp>),
 }
 
 impl TaskOp {
@@ -12,7 +12,7 @@ impl TaskOp {
 		match self {
 			TaskOp::File(op) => op.id(),
 			TaskOp::Plugin(op) => op.id(),
-			TaskOp::Preload(op) => op.id(),
+			TaskOp::Prework(op) => op.id(),
 		}
 	}
 }
@@ -26,5 +26,5 @@ impl From<PluginOp> for TaskOp {
 }
 
 impl From<PreworkOp> for TaskOp {
-	fn from(op: PreworkOp) -> Self { Self::Preload(Box::new(op)) }
+	fn from(op: PreworkOp) -> Self { Self::Prework(Box::new(op)) }
 }

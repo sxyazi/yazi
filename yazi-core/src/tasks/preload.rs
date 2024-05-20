@@ -84,6 +84,6 @@ impl Tasks {
 			loading.insert(target.clone());
 		}
 
-		self.scheduler.preload_size(targets);
+		self.scheduler.prework_size(targets);
 	}
 }

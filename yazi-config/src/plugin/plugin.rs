@@ -57,11 +57,11 @@ impl Default for Plugin {
 			panic!("Prefetchers and preloaders exceed the limit of {MAX_PREWORKERS}");
 		}
 
-		for (i, preloader) in shadow.prefetchers.iter_mut().enumerate() {
-			preloader.id = i as u8;
+		for (i, p) in shadow.prefetchers.iter_mut().enumerate() {
+			p.id = i as u8;
 		}
-		for (i, preloader) in shadow.preloaders.iter_mut().enumerate() {
-			preloader.id = shadow.prefetchers.len() as u8 + i as u8;
+		for (i, p) in shadow.preloaders.iter_mut().enumerate() {
+			p.id = shadow.prefetchers.len() as u8 + i as u8;
 		}
 
 		Self {
