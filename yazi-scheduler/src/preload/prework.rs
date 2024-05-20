@@ -1,37 +1,57 @@
 use std::collections::{HashMap, HashSet};
 
 use anyhow::{anyhow, Result};
-use parking_lot::RwLock;
+use parking_lot::{Mutex, RwLock};
 use tokio::sync::mpsc;
 use tracing::error;
 use yazi_config::Priority;
 use yazi_plugin::isolate;
 use yazi_shared::fs::{calculate_size, FilesOp, Url};
 
-use super::{PreloadOp, PreloadOpRule, PreloadOpSize};
+use super::{PreloadOpFetch, PreloadOpLoad, PreloadOpSize, PreworkOp};
 use crate::{TaskOp, TaskProg, HIGH, NORMAL};
 
-pub struct Preload {
+pub struct Prework {
 	macro_: async_priority_channel::Sender<TaskOp, u8>,
 	prog:   mpsc::UnboundedSender<TaskProg>,
 
-	pub rule_loaded:  RwLock<HashMap<Url, u32>>,
+	pub loaded:       Mutex<HashMap<Url, u32>>,
 	pub size_loading: RwLock<HashSet<Url>>,
 }
 
-impl Preload {
+impl Prework {
 	pub fn new(
 		macro_: async_priority_channel::Sender<TaskOp, u8>,
 		prog: mpsc::UnboundedSender<TaskProg>,
 	) -> Self {
-		Self { macro_, prog, rule_loaded: Default::default(), size_loading: Default::default() }
+		Self { macro_, prog, loaded: Default::default(), size_loading: Default::default() }
 	}
 
-	pub async fn work(&self, op: PreloadOp) -> Result<()> {
+	pub async fn work(&self, op: PreworkOp) -> Result<()> {
 		match op {
-			PreloadOp::Rule(task) => {
+			PreworkOp::Fetch(task) => {
 				let urls: Vec<_> = task.targets.iter().map(|f| f.url()).collect();
-				let result = isolate::preload(&task.plugin.name, task.targets, task.plugin.multi).await;
+				let result = isolate::prefetch(&task.plugin.name, task.targets).await;
+				if let Err(e) = result {
+					self.fail(task.id, format!("Prefetch task failed:\n{e}"))?;
+					return Err(e.into());
+				};
+
+				let code = result.unwrap();
+				if code & 1 == 0 {
+					error!("Prefetch task `{}` returned {code}", task.plugin.name);
+				}
+				if code >> 1 & 1 != 0 {
+					let mut loaded = self.loaded.lock();
+					for url in urls {
+						loaded.get_mut(&url).map(|x| *x ^= 1 << task.plugin.id);
+					}
+				}
+				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
+			}
+			PreworkOp::Load(task) => {
+				let url = task.target.url();
+				let result = isolate::preload(&task.plugin.name, task.target).await;
 				if let Err(e) = result {
 					self.fail(task.id, format!("Preload task failed:\n{e}"))?;
 					return Err(e.into());
@@ -42,14 +62,12 @@ impl Preload {
 					error!("Preload task `{}` returned {code}", task.plugin.name);
 				}
 				if code >> 1 & 1 != 0 {
-					let mut loaded = self.rule_loaded.write();
-					for url in urls {
-						loaded.get_mut(&url).map(|x| *x ^= 1 << task.plugin.id);
-					}
+					let mut loaded = self.loaded.lock();
+					loaded.get_mut(&url).map(|x| *x ^= 1 << task.plugin.id);
 				}
 				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 			}
-			PreloadOp::Size(task) => {
+			PreworkOp::Size(task) => {
 				let length = calculate_size(&task.target).await;
 				task.throttle.done((task.target, length), |buf| {
 					{
@@ -68,14 +86,26 @@ impl Preload {
 		Ok(())
 	}
 
-	pub async fn rule(&self, task: PreloadOpRule) -> Result<()> {
+	pub async fn fetch(&self, task: PreloadOpFetch) -> Result<()> {
 		let id = task.id;
 		self.prog.send(TaskProg::New(id, 0))?;
 
 		match task.plugin.prio {
-			Priority::Low => self.queue(PreloadOp::Rule(task), NORMAL).await?,
-			Priority::Normal => self.queue(PreloadOp::Rule(task), HIGH).await?,
-			Priority::High => self.work(PreloadOp::Rule(task)).await?,
+			Priority::Low => self.queue(PreworkOp::Fetch(task), NORMAL).await?,
+			Priority::Normal => self.queue(PreworkOp::Fetch(task), HIGH).await?,
+			Priority::High => self.work(PreworkOp::Fetch(task)).await?,
+		}
+		self.succ(id)
+	}
+
+	pub async fn load(&self, task: PreloadOpLoad) -> Result<()> {
+		let id = task.id;
+		self.prog.send(TaskProg::New(id, 0))?;
+
+		match task.plugin.prio {
+			Priority::Low => self.queue(PreworkOp::Load(task), NORMAL).await?,
+			Priority::Normal => self.queue(PreworkOp::Load(task), HIGH).await?,
+			Priority::High => self.work(PreworkOp::Load(task)).await?,
 		}
 		self.succ(id)
 	}
@@ -84,12 +114,12 @@ impl Preload {
 		let id = task.id;
 
 		self.prog.send(TaskProg::New(id, 0))?;
-		self.work(PreloadOp::Size(task)).await?;
+		self.work(PreworkOp::Size(task)).await?;
 		self.succ(id)
 	}
 }
 
-impl Preload {
+impl Prework {
 	#[inline]
 	fn succ(&self, id: usize) -> Result<()> { Ok(self.prog.send(TaskProg::Succ(id))?) }
 

@@ -63,7 +63,7 @@ impl Manager {
 			}
 
 			done.extend(files.iter().map(|f| (f.url(), String::new())));
-			if let Err(e) = isolate::preload("mime", files, true).await {
+			if let Err(e) = isolate::prefetch("mime", files).await {
 				error!("preload in open failed: {e}");
 			}
 

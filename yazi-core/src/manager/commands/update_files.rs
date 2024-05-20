@@ -88,7 +88,7 @@ impl Manager {
 		ManagerProxy::hover(None); // Re-hover in next loop
 		ManagerProxy::update_paged(); // Update for paged files in next loop
 		if calc {
-			tasks.preload_sorted(&tab.current.files);
+			tasks.prework_sorted(&tab.current.files);
 		}
 	}
 

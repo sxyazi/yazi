@@ -79,8 +79,11 @@ suppress_preload = false
 
 [plugin]
 
+prefetchers = [
+	# Mimetype
+	{ name = "*", cond = "!mime", run = "mime", prio = "high" },
+]
 preloaders = [
-	{ name = "*", cond = "!mime", run = "mime", next = true, multi = true, prio = "high" },
 	# Image
 	{ mime = "image/svg+xml", run = "magick" },
 	{ mime = "image/heic",    run = "magick" },

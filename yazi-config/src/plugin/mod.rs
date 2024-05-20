@@ -1,9 +1,11 @@
 mod plugin;
+mod prefetcher;
 mod preloader;
 mod previewer;
 
 pub use plugin::*;
+pub use prefetcher::*;
 pub use preloader::*;
 pub use previewer::*;
 
-pub const MAX_PRELOADERS: u8 = 32;
+pub const MAX_PREWORKERS: u8 = 32;

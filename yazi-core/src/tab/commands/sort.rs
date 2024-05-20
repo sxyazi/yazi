@@ -18,6 +18,6 @@ impl Tab {
 		self.apply_files_attrs();
 		ManagerProxy::update_paged();
 
-		tasks.preload_sorted(&self.current.files);
+		tasks.prework_sorted(&self.current.files);
 	}
 }

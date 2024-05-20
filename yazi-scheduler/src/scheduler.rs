@@ -4,17 +4,17 @@ use anyhow::Result;
 use futures::{future::BoxFuture, FutureExt};
 use parking_lot::Mutex;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
-use yazi_config::{open::Opener, plugin::Preloader, TASKS};
+use yazi_config::{open::Opener, plugin::{Prefetcher, Preloader}, TASKS};
 use yazi_dds::Pump;
 use yazi_shared::{event::Data, fs::{unique_path, Url}, Throttle};
 
 use super::{Ongoing, TaskProg, TaskStage};
-use crate::{file::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, preload::{Preload, PreloadOpRule, PreloadOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
+use crate::{file::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, preload::{PreloadOpFetch, PreloadOpLoad, PreloadOpSize, Prework}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
 
 pub struct Scheduler {
 	pub file:    Arc<File>,
 	pub plugin:  Arc<Plugin>,
-	pub preload: Arc<Preload>,
+	pub prework: Arc<Prework>,
 	pub process: Arc<Process>,
 
 	micro:       async_priority_channel::Sender<BoxFuture<'static, ()>, u8>,
@@ -32,7 +32,7 @@ impl Scheduler {
 		let mut scheduler = Self {
 			file:    Arc::new(File::new(macro_tx.clone(), prog_tx.clone())),
 			plugin:  Arc::new(Plugin::new(macro_tx.clone(), prog_tx.clone())),
-			preload: Arc::new(Preload::new(macro_tx.clone(), prog_tx.clone())),
+			prework: Arc::new(Prework::new(macro_tx.clone(), prog_tx.clone())),
 			process: Arc::new(Process::new(prog_tx.clone())),
 
 			micro:   micro_tx,
@@ -218,18 +218,33 @@ impl Scheduler {
 		self.plugin.macro_(PluginOpEntry { id, name, args }).ok();
 	}
 
-	pub fn preload_paged(&self, preloader: &Preloader, targets: Vec<&yazi_shared::fs::File>) {
+	pub fn prefetch_paged(&self, prefetcher: &Prefetcher, targets: Vec<yazi_shared::fs::File>) {
 		let id = self.ongoing.lock().add(
 			TaskKind::Preload,
-			format!("Run preloader `{}` with {} target(s)", preloader.run.name, targets.len()),
+			format!("Run prefetcher `{}` with {} target(s)", prefetcher.run.name, targets.len()),
 		);
 
-		let plugin = preloader.into();
-		let targets = targets.into_iter().cloned().collect();
-		let preload = self.preload.clone();
+		let plugin = prefetcher.into();
+		let prework = self.prework.clone();
 		_ = self.micro.try_send(
 			async move {
-				preload.rule(PreloadOpRule { id, plugin, targets }).await.ok();
+				prework.fetch(PreloadOpFetch { id, plugin, targets }).await.ok();
+			}
+			.boxed(),
+			NORMAL,
+		);
+	}
+
+	pub fn preload_paged(&self, preloader: &Preloader, target: &yazi_shared::fs::File) {
+		let id =
+			self.ongoing.lock().add(TaskKind::Preload, format!("Run preloader `{}`", preloader.run.name));
+
+		let plugin = preloader.into();
+		let target = target.clone();
+		let prework = self.prework.clone();
+		_ = self.micro.try_send(
+			async move {
+				prework.load(PreloadOpLoad { id, plugin, target }).await.ok();
 			}
 			.boxed(),
 			NORMAL,
@@ -245,7 +260,7 @@ impl Scheduler {
 			let target = target.clone();
 			let throttle = throttle.clone();
 
-			let preload = self.preload.clone();
+			let preload = self.prework.clone();
 			_ = self.micro.try_send(
 				async move {
 					preload.size(PreloadOpSize { id, target, throttle }).await.ok();
@@ -329,7 +344,7 @@ impl Scheduler {
 	) -> JoinHandle<()> {
 		let file = self.file.clone();
 		let plugin = self.plugin.clone();
-		let preload = self.preload.clone();
+		let preload = self.prework.clone();
 
 		let prog = self.prog.clone();
 		let ongoing = self.ongoing.clone();
