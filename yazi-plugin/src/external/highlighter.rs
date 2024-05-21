@@ -97,7 +97,8 @@ impl Highlighter {
 		}
 
 		if plain {
-			Ok(Text::from(after.join("")))
+			let indent = " ".repeat(PREVIEW.tab_size as usize);
+			Ok(Text::from(after.join("").replace('\t', &indent)))
 		} else {
 			Self::highlight_with(before, after, syntax.unwrap()).await
 		}
