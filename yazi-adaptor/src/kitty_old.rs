@@ -5,10 +5,9 @@ use anyhow::Result;
 use base64::{engine::general_purpose, Engine};
 use image::DynamicImage;
 use ratatui::layout::Rect;
-use yazi_shared::term::Term;
 
 use super::image::Image;
-use crate::{adaptor::Adaptor, CLOSE, ESCAPE, START};
+use crate::{adaptor::Adaptor, Emulator, CLOSE, ESCAPE, START};
 
 pub(super) struct KittyOld;
 
@@ -20,7 +19,7 @@ impl KittyOld {
 
 		Adaptor::KittyOld.image_hide()?;
 		Adaptor::shown_store(area);
-		Term::move_lock((area.x, area.y), |stderr| {
+		Emulator::move_lock((area.x, area.y), |stderr| {
 			stderr.write_all(&b)?;
 			Ok(area)
 		})

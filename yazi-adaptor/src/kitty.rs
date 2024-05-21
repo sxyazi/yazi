@@ -8,7 +8,7 @@ use ratatui::layout::Rect;
 use yazi_shared::term::Term;
 
 use super::image::Image;
-use crate::{adaptor::Adaptor, CLOSE, ESCAPE, START};
+use crate::{adaptor::Adaptor, Emulator, CLOSE, ESCAPE, START};
 
 static DIACRITICS: [char; 297] = [
 	'\u{0305}',
@@ -322,7 +322,7 @@ impl Kitty {
 
 		Adaptor::Kitty.image_hide()?;
 		Adaptor::shown_store(area);
-		Term::move_lock((area.x, area.y), |stderr| {
+		Emulator::move_lock((area.x, area.y), |stderr| {
 			stderr.write_all(&b1)?;
 			stderr.write_all(&b2)?;
 			Ok(area)
@@ -331,7 +331,7 @@ impl Kitty {
 
 	pub(super) fn image_erase(area: Rect) -> Result<()> {
 		let s = " ".repeat(area.width as usize);
-		Term::move_lock((0, 0), |stderr| {
+		Emulator::move_lock((0, 0), |stderr| {
 			for y in area.top()..area.bottom() {
 				Term::move_to(stderr, area.x, y)?;
 				write!(stderr, "{s}")?;

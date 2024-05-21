@@ -7,7 +7,7 @@ use ratatui::layout::Rect;
 use yazi_config::PREVIEW;
 use yazi_shared::term::Term;
 
-use crate::{adaptor::Adaptor, Image, CLOSE, ESCAPE, START};
+use crate::{adaptor::Adaptor, Emulator, Image, CLOSE, ESCAPE, START};
 
 pub(super) struct Sixel;
 
@@ -19,7 +19,7 @@ impl Sixel {
 
 		Adaptor::Sixel.image_hide()?;
 		Adaptor::shown_store(area);
-		Term::move_lock((area.x, area.y), |stderr| {
+		Emulator::move_lock((area.x, area.y), |stderr| {
 			stderr.write_all(&b)?;
 			Ok(area)
 		})
@@ -27,7 +27,7 @@ impl Sixel {
 
 	pub(super) fn image_erase(area: Rect) -> Result<()> {
 		let s = " ".repeat(area.width as usize);
-		Term::move_lock((0, 0), |stderr| {
+		Emulator::move_lock((0, 0), |stderr| {
 			for y in area.top()..area.bottom() {
 				Term::move_to(stderr, area.x, y)?;
 				write!(stderr, "{s}")?;

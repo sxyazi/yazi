@@ -155,4 +155,36 @@ impl Emulator {
 
 		Ok(Self::Unknown(adapters))
 	}
+
+	pub fn move_lock<F, T>((x, y): (u16, u16), cb: F) -> Result<T>
+	where
+		F: FnOnce(&mut std::io::BufWriter<std::io::StderrLock>) -> Result<T>,
+	{
+		use std::{io::Write, thread, time::Duration};
+
+		use crossterm::{cursor::{Hide, MoveTo, RestorePosition, SavePosition, Show}, queue};
+
+		let mut buf = std::io::BufWriter::new(stderr().lock());
+
+		// I really don't want to add this,
+		// But tmux and ConPTY sometimes cause the cursor position to get out of sync.
+		if *TMUX || cfg!(windows) {
+			execute!(buf, SavePosition, MoveTo(x, y), Show)?;
+			execute!(buf, MoveTo(x, y), Show)?;
+			execute!(buf, MoveTo(x, y), Show)?;
+			thread::sleep(Duration::from_millis(1));
+		} else {
+			queue!(buf, SavePosition, MoveTo(x, y))?;
+		}
+
+		let result = cb(&mut buf);
+		if *TMUX || cfg!(windows) {
+			queue!(buf, Hide, RestorePosition)?;
+		} else {
+			queue!(buf, RestorePosition)?;
+		}
+
+		buf.flush()?;
+		result
+	}
 }
