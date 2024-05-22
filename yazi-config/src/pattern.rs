@@ -38,7 +38,7 @@ impl TryFrom<&str> for Pattern {
 			.case_insensitive(a.len() == s.len())
 			.literal_separator(false)
 			.backslash_escape(false)
-			.empty_alternates(false)
+			.empty_alternates(true)
 			.build()?
 			.compile_matcher();
 
