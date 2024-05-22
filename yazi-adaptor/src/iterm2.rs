@@ -7,7 +7,7 @@ use ratatui::layout::Rect;
 use yazi_shared::term::Term;
 
 use super::image::Image;
-use crate::{adaptor::Adaptor, CLOSE, START};
+use crate::{adaptor::Adaptor, Emulator, CLOSE, START};
 
 pub(super) struct Iterm2;
 
@@ -19,7 +19,7 @@ impl Iterm2 {
 
 		Adaptor::Iterm2.image_hide()?;
 		Adaptor::shown_store(area);
-		Term::move_lock((max.x, max.y), |stderr| {
+		Emulator::move_lock((max.x, max.y), |stderr| {
 			stderr.write_all(&b)?;
 			Ok(area)
 		})
@@ -27,7 +27,7 @@ impl Iterm2 {
 
 	pub(super) fn image_erase(area: Rect) -> Result<()> {
 		let s = " ".repeat(area.width as usize);
-		Term::move_lock((0, 0), |stderr| {
+		Emulator::move_lock((0, 0), |stderr| {
 			for y in area.top()..area.bottom() {
 				Term::move_to(stderr, area.x, y)?;
 				write!(stderr, "{s}")?;

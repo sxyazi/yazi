@@ -6,7 +6,7 @@ use ratatui::layout::Rect;
 use tokio::process::Command;
 use yazi_shared::term::Term;
 
-use crate::Adaptor;
+use crate::{Adaptor, Emulator};
 
 pub(super) struct Chafa;
 
@@ -54,7 +54,7 @@ impl Chafa {
 		};
 
 		Adaptor::shown_store(area);
-		Term::move_lock((max.x, max.y), |stderr| {
+		Emulator::move_lock((max.x, max.y), |stderr| {
 			for (i, line) in lines.into_iter().enumerate() {
 				stderr.write_all(line)?;
 				Term::move_to(stderr, max.x, max.y + i as u16 + 1)?;
@@ -65,7 +65,7 @@ impl Chafa {
 
 	pub(super) fn image_erase(area: Rect) -> Result<()> {
 		let s = " ".repeat(area.width as usize);
-		Term::move_lock((0, 0), |stderr| {
+		Emulator::move_lock((0, 0), |stderr| {
 			for y in area.top()..area.bottom() {
 				Term::move_to(stderr, area.x, y)?;
 				write!(stderr, "{s}")?;
