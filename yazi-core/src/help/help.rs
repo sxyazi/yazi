@@ -43,15 +43,15 @@ impl Help {
 		};
 
 		match key {
-			Key { code: KeyCode::Esc, shift: false, ctrl: false, alt: false } => {
+			Key { code: KeyCode::Esc, shift: false, ctrl: false, alt: false, super_: false } => {
 				self.in_filter = None;
 				render!();
 			}
-			Key { code: KeyCode::Enter, shift: false, ctrl: false, alt: false } => {
+			Key { code: KeyCode::Enter, shift: false, ctrl: false, alt: false, super_: false } => {
 				self.in_filter = None;
 				return render_and!(true); // Don't do the `filter_apply` below, since we already have the filtered results.
 			}
-			Key { code: KeyCode::Backspace, shift: false, ctrl: false, alt: false } => {
+			Key { code: KeyCode::Backspace, shift: false, ctrl: false, alt: false, super_: false } => {
 				input.backspace(false);
 			}
 			_ => {

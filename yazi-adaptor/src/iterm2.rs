@@ -1,7 +1,7 @@
 use std::{io::Write, path::Path};
 
 use anyhow::Result;
-use base64::{engine::general_purpose, Engine};
+use base64::{engine::{general_purpose::STANDARD, Config}, Engine};
 use image::{codecs::jpeg::JpegEncoder, DynamicImage};
 use ratatui::layout::Rect;
 use yazi_shared::term::Term;
@@ -38,20 +38,20 @@ impl Iterm2 {
 
 	async fn encode(img: DynamicImage) -> Result<Vec<u8>> {
 		tokio::task::spawn_blocking(move || {
-			let size = (img.width(), img.height());
-
 			let mut jpg = vec![];
 			JpegEncoder::new_with_quality(&mut jpg, 75).encode_image(&img)?;
 
-			let mut buf = vec![];
+			let len = base64::encoded_len(jpg.len(), STANDARD.config().encode_padding());
+			let mut buf = Vec::with_capacity(200 + len.unwrap_or(1 << 16));
+
 			write!(
 				buf,
 				"{}]1337;File=inline=1;size={};width={}px;height={}px;doNotMoveCursor=1:{}\x07{}",
 				START,
 				jpg.len(),
-				size.0,
-				size.1,
-				general_purpose::STANDARD.encode(&jpg),
+				img.width(),
+				img.height(),
+				STANDARD.encode(&jpg),
 				CLOSE
 			)?;
 			Ok(buf)

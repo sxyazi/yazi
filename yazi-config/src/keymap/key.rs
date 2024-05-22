@@ -7,29 +7,27 @@ use serde::Deserialize;
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash)]
 #[serde(try_from = "String")]
 pub struct Key {
-	pub code:  KeyCode,
-	pub shift: bool,
-	pub ctrl:  bool,
-	pub alt:   bool,
+	pub code:   KeyCode,
+	pub shift:  bool,
+	pub ctrl:   bool,
+	pub alt:    bool,
+	pub super_: bool,
 }
 
 impl Key {
 	#[inline]
 	pub fn plain(&self) -> Option<char> {
 		match self.code {
-			KeyCode::Char(c) if !self.ctrl && !self.alt => Some(c),
+			KeyCode::Char(c) if !self.ctrl && !self.alt && !self.super_ => Some(c),
 			_ => None,
 		}
-	}
-
-	#[inline]
-	pub fn is_enter(&self) -> bool {
-		matches!(self, Key { code: KeyCode::Enter, shift: false, ctrl: false, alt: false })
 	}
 }
 
 impl Default for Key {
-	fn default() -> Self { Self { code: KeyCode::Null, shift: false, ctrl: false, alt: false } }
+	fn default() -> Self {
+		Self { code: KeyCode::Null, shift: false, ctrl: false, alt: false, super_: false }
+	}
 }
 
 impl From<KeyEvent> for Key {
@@ -56,6 +54,7 @@ impl From<KeyEvent> for Key {
 			shift,
 			ctrl: value.modifiers.contains(KeyModifiers::CONTROL),
 			alt: value.modifiers.contains(KeyModifiers::ALT),
+			super_: value.modifiers.contains(KeyModifiers::SUPER),
 		}
 	}
 }
@@ -82,6 +81,7 @@ impl FromStr for Key {
 				"S-" => key.shift = true,
 				"C-" => key.ctrl = true,
 				"A-" => key.alt = true,
+				"D-" => key.super_ = true,
 
 				"Space" => key.code = KeyCode::Char(' '),
 				"Backspace" => key.code = KeyCode::Backspace,
@@ -140,6 +140,9 @@ impl Display for Key {
 		}
 
 		write!(f, "<")?;
+		if self.super_ {
+			write!(f, "D-")?;
+		}
 		if self.ctrl {
 			write!(f, "C-")?;
 		}
