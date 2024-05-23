@@ -1,7 +1,7 @@
 use std::{mem, path::{MAIN_SEPARATOR, MAIN_SEPARATOR_STR}};
 
 use tokio::fs;
-use yazi_shared::{emit, event::{Cmd, Data}, render, Layer};
+use yazi_shared::{emit, event::{Cmd, Data}, fs::expand_path, render, Layer};
 
 use crate::completion::Completion;
 
@@ -74,9 +74,12 @@ impl Completion {
 
 	#[inline]
 	fn split_path(s: &str) -> (String, String) {
+		let p = expand_path(s);
+		let s = p.to_string_lossy();
+
 		match s.rsplit_once(SEPARATOR) {
 			Some((p, c)) => (format!("{p}{}", MAIN_SEPARATOR), c.to_owned()),
-			None => (".".to_owned(), s.to_owned()),
+			None => (".".to_owned(), s.into_owned()),
 		}
 	}
 }

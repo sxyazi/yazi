@@ -1,6 +1,6 @@
 use std::path::MAIN_SEPARATOR_STR;
 
-use yazi_shared::{event::{Cmd, Data}, render};
+use yazi_shared::{event::{Cmd, Data}, fs::expand_path, render};
 
 use crate::input::Input;
 
@@ -32,7 +32,9 @@ impl Input {
 		}
 
 		let [before, after] = self.partition();
-		let new = if let Some((prefix, _)) = before.rsplit_once(SEPARATOR) {
+		let before = expand_path(before);
+
+		let new = if let Some((prefix, _)) = before.to_string_lossy().rsplit_once(SEPARATOR) {
 			format!("{prefix}/{}{after}", opt.word).replace(SEPARATOR, MAIN_SEPARATOR_STR)
 		} else {
 			format!("{}{after}", opt.word).replace(SEPARATOR, MAIN_SEPARATOR_STR)
