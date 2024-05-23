@@ -2769,6 +2769,7 @@ dependencies = [
  "anyhow",
  "bitflags 2.5.0",
  "crossterm",
+ "dirs",
  "futures",
  "libc",
  "notify",

@@ -37,12 +37,7 @@ fn _expand_path(p: &Path) -> PathBuf {
 
 	let p = Path::new(s.as_ref());
 	if let Ok(rest) = p.strip_prefix("~") {
-		#[cfg(unix)]
-		let home = env::var_os("HOME");
-		#[cfg(windows)]
-		let home = env::var_os("USERPROFILE");
-
-		return if let Some(p) = home { PathBuf::from(p).join(rest) } else { rest.to_path_buf() };
+		return dirs::home_dir().unwrap_or_default().join(rest);
 	}
 
 	if p.is_absolute() {

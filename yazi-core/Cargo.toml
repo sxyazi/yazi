@@ -22,6 +22,7 @@ yazi-shared    = { path = "../yazi-shared", version = "0.2.5" }
 anyhow        = "1.0.86"
 bitflags      = "2.5.0"
 crossterm     = "0.27.0"
+dirs          = "5.0.1"
 futures       = "0.3.30"
 notify        = { version = "6.1.1", default-features = false, features = [ "macos_fsevent" ] }
 parking_lot   = "0.12.2"
@@ -29,11 +30,11 @@ ratatui       = "0.26.3"
 regex         = "1.10.4"
 scopeguard    = "1.2.0"
 serde         = "1.0.202"
+shell-words   = "1.1.0"
 tokio         = { version = "1.37.0", features = [ "full" ] }
 tokio-stream  = "0.1.15"
 tokio-util    = "0.7.11"
 unicode-width = "0.1.12"
-shell-words   = "1.1.0"
 
 # Logging
 tracing = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
