@@ -13,10 +13,13 @@ impl Cha {
 			reg.add_field_method_get("is_hidden", |_, me| Ok(me.is_hidden()));
 			reg.add_field_method_get("is_link", |_, me| Ok(me.is_link()));
 			reg.add_field_method_get("is_orphan", |_, me| Ok(me.is_orphan()));
-			reg.add_field_method_get("is_block_device", |_, me| Ok(me.is_block_device()));
-			reg.add_field_method_get("is_char_device", |_, me| Ok(me.is_char_device()));
+			// TODO: rename to `is_block`
+			reg.add_field_method_get("is_block_device", |_, me| Ok(me.is_block()));
+			// TODO: rename to `is_char`
+			reg.add_field_method_get("is_char_device", |_, me| Ok(me.is_char()));
 			reg.add_field_method_get("is_fifo", |_, me| Ok(me.is_fifo()));
-			reg.add_field_method_get("is_socket", |_, me| Ok(me.is_socket()));
+			// TODO: rename to `is_sock`
+			reg.add_field_method_get("is_socket", |_, me| Ok(me.is_sock()));
 			reg.add_field_method_get("is_exec", |_, me| Ok(me.is_exec()));
 			reg.add_field_method_get("is_sticky", |_, me| Ok(me.is_sticky()));
 

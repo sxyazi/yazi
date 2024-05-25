@@ -105,16 +105,16 @@ impl Cha {
 	pub fn is_orphan(&self) -> bool { self.kind.contains(ChaKind::ORPHAN) }
 
 	#[inline]
-	pub fn is_block_device(&self) -> bool { self.kind.contains(ChaKind::BLOCK_DEVICE) }
+	pub fn is_block(&self) -> bool { self.kind.contains(ChaKind::BLOCK_DEVICE) }
 
 	#[inline]
-	pub fn is_char_device(&self) -> bool { self.kind.contains(ChaKind::CHAR_DEVICE) }
+	pub fn is_char(&self) -> bool { self.kind.contains(ChaKind::CHAR_DEVICE) }
 
 	#[inline]
 	pub fn is_fifo(&self) -> bool { self.kind.contains(ChaKind::FIFO) }
 
 	#[inline]
-	pub fn is_socket(&self) -> bool { self.kind.contains(ChaKind::SOCKET) }
+	pub fn is_sock(&self) -> bool { self.kind.contains(ChaKind::SOCKET) }
 
 	#[inline]
 	pub fn is_exec(&self) -> bool {

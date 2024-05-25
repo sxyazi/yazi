@@ -48,13 +48,13 @@ impl Is {
 	pub fn check(&self, cha: &Cha) -> bool {
 		match self {
 			Self::None => true,
-			Self::Block => cha.is_block_device(),
-			Self::Char => cha.is_char_device(),
+			Self::Block => cha.is_block(),
+			Self::Char => cha.is_char(),
 			Self::Exec => cha.is_exec(),
 			Self::Fifo => cha.is_fifo(),
 			Self::Link => cha.is_link(),
 			Self::Orphan => cha.is_orphan(),
-			Self::Sock => cha.is_socket(),
+			Self::Sock => cha.is_sock(),
 			Self::Sticky => cha.is_sticky(),
 		}
 	}

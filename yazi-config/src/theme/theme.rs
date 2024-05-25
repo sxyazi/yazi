@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use validator::Validate;
 use yazi_shared::{fs::expand_path, theme::Style, Xdg};
 
-use super::{Filetype, Flavor, Icon};
+use super::{Filetype, Flavor, Icons};
 use crate::{validation::check_validation, MERGED_THEME};
 
 #[derive(Deserialize, Serialize)]
@@ -23,8 +23,8 @@ pub struct Theme {
 	// File-specific styles
 	#[serde(rename = "filetype", deserialize_with = "Filetype::deserialize", skip_serializing)]
 	pub filetypes: Vec<Filetype>,
-	#[serde(rename = "icon", deserialize_with = "Icon::deserialize", skip_serializing)]
-	pub icons:     Vec<Icon>,
+	#[serde(rename = "icon", skip_serializing)]
+	pub icons:     Icons,
 }
 
 impl Default for Theme {

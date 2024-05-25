@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Deserialize)]
@@ -11,7 +11,7 @@ impl FromStr for Color {
 	type Err = anyhow::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		ratatui::style::Color::from_str(s).map(Self).map_err(|_| anyhow::anyhow!("invalid color"))
+		ratatui::style::Color::from_str(s).map(Self).map_err(|_| anyhow!("invalid color: {s}"))
 	}
 }
 

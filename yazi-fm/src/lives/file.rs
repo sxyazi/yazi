@@ -62,8 +62,8 @@ impl File {
 
 				match me.icon.get() {
 					IconCache::Missing => {
-						let matched = THEME.icons.iter().find(|&i| i.matches(me));
-						me.icon.set(matched.map_or(IconCache::Undefined, |i| IconCache::Icon(i)));
+						let matched = THEME.icons.matches(me);
+						me.icon.set(matched.map_or(IconCache::Undefined, IconCache::Icon));
 						matched.map(|i| Icon::cast(lua, i)).transpose()
 					}
 					IconCache::Undefined => Ok(None),
