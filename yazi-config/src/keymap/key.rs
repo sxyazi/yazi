@@ -112,10 +112,12 @@ impl FromStr for Key {
 				"f12" => key.code = KeyCode::F(12),
 				"esc" => key.code = KeyCode::Esc,
 
-				c if it.peek().is_none() => {
-					key.code = KeyCode::Char(c.chars().next().unwrap());
-				}
-				k => bail!("unknown key: {k}"),
+				_ => match x {
+					c if it.peek().is_none() => {
+						key.code = KeyCode::Char(c.chars().next().unwrap());
+					}
+					k => bail!("unknown key: {k}"),
+				},
 			}
 		}
 
