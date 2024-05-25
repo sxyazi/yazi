@@ -92,6 +92,7 @@ impl<'de> Deserialize<'de> for Icons {
 			name:     Pattern,
 			text:     String,
 			fg_dark:  Option<Color>,
+			#[allow(dead_code)]
 			fg_light: Option<Color>,
 		}
 		#[derive(Deserialize)]
@@ -99,6 +100,7 @@ impl<'de> Deserialize<'de> for Icons {
 			name:     String,
 			text:     String,
 			fg_dark:  Option<Color>,
+			#[allow(dead_code)]
 			fg_light: Option<Color>,
 		}
 		#[derive(Deserialize)]
@@ -106,6 +108,7 @@ impl<'de> Deserialize<'de> for Icons {
 			cond:     Condition,
 			text:     String,
 			fg_dark:  Option<Color>,
+			#[allow(dead_code)]
 			fg_light: Option<Color>,
 		}
 
