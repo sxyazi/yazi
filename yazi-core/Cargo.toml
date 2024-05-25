@@ -25,7 +25,7 @@ crossterm     = "0.27.0"
 dirs          = "5.0.1"
 futures       = "0.3.30"
 notify        = { version = "6.1.1", default-features = false, features = [ "macos_fsevent" ] }
-parking_lot   = "0.12.2"
+parking_lot   = "0.12.3"
 ratatui       = "0.26.3"
 regex         = "1.10.4"
 scopeguard    = "1.2.0"

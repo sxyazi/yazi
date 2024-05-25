@@ -3,7 +3,7 @@ use serde::{ser::SerializeMap, Deserialize, Serialize, Serializer};
 
 use super::Color;
 
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize)]
 #[serde(from = "StyleShadow")]
 pub struct Style {
 	pub fg:       Option<Color>,

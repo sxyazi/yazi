@@ -1,11 +1,11 @@
 mod filetype;
 mod flavor;
-mod icon;
+mod icons;
 mod is;
 mod theme;
 
 pub use filetype::*;
 pub use flavor::*;
-pub use icon::*;
+pub use icons::*;
 pub use is::*;
 pub use theme::*;
