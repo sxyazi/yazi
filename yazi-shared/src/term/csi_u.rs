@@ -16,10 +16,10 @@ impl Term {
 				if stdin.read(&mut c).await? == 0 {
 					bail!("unexpected EOF");
 				}
+				buf.push(c[0] as char);
 				if c[0] == b'c' && buf.contains("\x1b[?") {
 					break;
 				}
-				buf.push(c[0] as char);
 			}
 			Ok(buf)
 		};
