@@ -9,6 +9,7 @@ pub struct Config {
 	pub sort_sensitive: bool,
 	pub sort_reverse:   bool,
 	pub sort_dir_first: bool,
+	pub sort_translit:  bool,
 
 	// Display
 	pub linemode:    String,
@@ -23,6 +24,7 @@ impl Default for Config {
 			sort_sensitive: MANAGER.sort_sensitive,
 			sort_reverse:   MANAGER.sort_reverse,
 			sort_dir_first: MANAGER.sort_dir_first,
+			sort_translit:  MANAGER.sort_translit,
 
 			// Display
 			linemode:    MANAGER.linemode.to_owned(),
@@ -45,6 +47,7 @@ impl Config {
 			sensitive: self.sort_sensitive,
 			reverse:   self.sort_reverse,
 			dir_first: self.sort_dir_first,
+			translit:  self.sort_translit,
 		}
 	}
 }

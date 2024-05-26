@@ -61,6 +61,11 @@ impl Cmd {
 	}
 
 	#[inline]
+	pub fn maybe_bool(&self, name: &str) -> Option<bool> {
+		self.args.get(name).and_then(Data::as_bool)
+	}
+
+	#[inline]
 	pub fn first(&self) -> Option<&Data> { self.args.get("0") }
 
 	// --- Take

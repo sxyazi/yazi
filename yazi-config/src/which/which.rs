@@ -10,6 +10,7 @@ pub struct Which {
 	pub sort_by:        SortBy,
 	pub sort_sensitive: bool,
 	pub sort_reverse:   bool,
+	pub sort_translit:  bool,
 }
 
 impl Default for Which {

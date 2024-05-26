@@ -25,6 +25,8 @@ impl Data {
 	pub fn as_bool(&self) -> Option<bool> {
 		match self {
 			Self::Boolean(b) => Some(*b),
+			Self::String(s) if s == "no" => Some(false),
+			Self::String(s) if s == "yes" => Some(true),
 			_ => None,
 		}
 	}

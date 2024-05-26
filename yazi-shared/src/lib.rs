@@ -16,6 +16,7 @@ pub mod term;
 pub mod theme;
 mod throttle;
 mod time;
+mod translit;
 mod xdg;
 
 pub use chars::*;
@@ -31,6 +32,7 @@ pub use os::*;
 pub use ro_cell::*;
 pub use throttle::*;
 pub use time::*;
+pub use translit::*;
 pub use xdg::*;
 
 pub fn init() { event::Event::init(); }

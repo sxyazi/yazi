@@ -6,8 +6,9 @@
 ratio          = [ 1, 4, 3 ]
 sort_by        = "alphabetical"
 sort_sensitive = false
-sort_reverse   = false
+sort_reverse 	 = false
 sort_dir_first = true
+sort_translit  = false
 linemode       = "none"
 show_hidden    = false
 show_symlink   = true
@@ -185,9 +186,10 @@ open_origin = "hovered"
 open_offset = [ 0, 1, 50, 7 ]
 
 [which]
-sort_by        = "none"
+sort_by      	 = "none"
 sort_sensitive = false
-sort_reverse   = false
+sort_reverse 	 = false
+sort_translit  = false
 
 [log]
 enabled = false
