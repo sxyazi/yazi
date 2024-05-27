@@ -5,7 +5,7 @@ use yazi_config::LAYOUT;
 use super::slim_lua;
 use crate::{bindings::{Cast, File}, elements::Rect, loader::LOADER};
 
-pub async fn prefetch(name: &str, files: Vec<yazi_shared::fs::File>) -> mlua::Result<u8> {
+pub async fn fetch(name: &str, files: Vec<yazi_shared::fs::File>) -> mlua::Result<u8> {
 	LOADER.ensure(name).await.into_lua_err()?;
 
 	let name = name.to_owned();
@@ -26,7 +26,7 @@ pub async fn prefetch(name: &str, files: Vec<yazi_shared::fs::File>) -> mlua::Re
 		plugin.raw_set("area", Rect::cast(&lua, LAYOUT.load().preview)?)?;
 		plugin.raw_set("files", files)?;
 
-		Handle::current().block_on(plugin.call_async_method("prefetch", ()))
+		Handle::current().block_on(plugin.call_async_method("fetch", ()))
 	})
 	.await
 	.into_lua_err()?

@@ -1,10 +1,10 @@
+mod fetcher;
 mod plugin;
-mod prefetcher;
 mod preloader;
 mod previewer;
 
+pub use fetcher::*;
 pub use plugin::*;
-pub use prefetcher::*;
 pub use preloader::*;
 pub use previewer::*;
 

@@ -80,7 +80,7 @@ suppress_preload = false
 
 [plugin]
 
-prefetchers = [
+fetchers = [
 	# Mimetype
 	{ name = "*", cond = "!mime", run = "mime", prio = "high" },
 ]

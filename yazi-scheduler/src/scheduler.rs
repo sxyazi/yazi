@@ -4,7 +4,7 @@ use anyhow::Result;
 use futures::{future::BoxFuture, FutureExt};
 use parking_lot::Mutex;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
-use yazi_config::{open::Opener, plugin::{Prefetcher, Preloader}, TASKS};
+use yazi_config::{open::Opener, plugin::{Fetcher, Preloader}, TASKS};
 use yazi_dds::Pump;
 use yazi_shared::{event::Data, fs::{unique_path, Url}, Throttle};
 
@@ -218,13 +218,13 @@ impl Scheduler {
 		self.plugin.macro_(PluginOpEntry { id, name, args }).ok();
 	}
 
-	pub fn prefetch_paged(&self, prefetcher: &Prefetcher, targets: Vec<yazi_shared::fs::File>) {
+	pub fn fetch_paged(&self, fetcher: &Fetcher, targets: Vec<yazi_shared::fs::File>) {
 		let id = self.ongoing.lock().add(
 			TaskKind::Preload,
-			format!("Run prefetcher `{}` with {} target(s)", prefetcher.run.name, targets.len()),
+			format!("Run fetcher `{}` with {} target(s)", fetcher.run.name, targets.len()),
 		);
 
-		let plugin = prefetcher.into();
+		let plugin = fetcher.into();
 		let prework = self.prework.clone();
 		_ = self.micro.try_send(
 			async move {

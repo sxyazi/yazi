@@ -4,7 +4,7 @@ use yazi_shared::{event::Cmd, Condition};
 use crate::{Pattern, Priority};
 
 #[derive(Debug, Deserialize)]
-pub struct Prefetcher {
+pub struct Fetcher {
 	#[serde(skip)]
 	pub id:   u8,
 	pub cond: Option<Condition>,
@@ -16,14 +16,14 @@ pub struct Prefetcher {
 }
 
 #[derive(Debug, Clone)]
-pub struct PrefetcherProps {
+pub struct FetcherProps {
 	pub id:   u8,
 	pub name: String,
 	pub prio: Priority,
 }
 
-impl From<&Prefetcher> for PrefetcherProps {
-	fn from(prefetcher: &Prefetcher) -> Self {
-		Self { id: prefetcher.id, name: prefetcher.run.name.to_owned(), prio: prefetcher.prio }
+impl From<&Fetcher> for FetcherProps {
+	fn from(fetcher: &Fetcher) -> Self {
+		Self { id: fetcher.id, name: fetcher.run.name.to_owned(), prio: fetcher.prio }
 	}
 }

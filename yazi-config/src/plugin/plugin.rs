@@ -3,14 +3,14 @@ use std::path::Path;
 use serde::Deserialize;
 use yazi_shared::MIME_DIR;
 
-use super::{Prefetcher, Preloader, Previewer};
+use super::{Fetcher, Preloader, Previewer};
 use crate::{plugin::MAX_PREWORKERS, Preset, MERGED_YAZI};
 
 #[derive(Deserialize)]
 pub struct Plugin {
-	pub prefetchers: Vec<Prefetcher>,
-	pub preloaders:  Vec<Preloader>,
-	pub previewers:  Vec<Previewer>,
+	pub fetchers:   Vec<Fetcher>,
+	pub preloaders: Vec<Preloader>,
+	pub previewers: Vec<Previewer>,
 }
 
 impl Default for Plugin {
@@ -22,11 +22,11 @@ impl Default for Plugin {
 
 		#[derive(Deserialize)]
 		struct Shadow {
-			prefetchers:         Vec<Prefetcher>,
+			fetchers:         Vec<Fetcher>,
 			#[serde(default)]
-			prepend_prefetchers: Vec<Prefetcher>,
+			prepend_fetchers: Vec<Fetcher>,
 			#[serde(default)]
-			append_prefetchers:  Vec<Prefetcher>,
+			append_fetchers:  Vec<Fetcher>,
 
 			preloaders:         Vec<Preloader>,
 			#[serde(default)]
@@ -49,39 +49,39 @@ impl Default for Plugin {
 			shadow.previewers.retain(|r| !r.any_dir());
 		}
 
-		Preset::mix(&mut shadow.prefetchers, shadow.prepend_prefetchers, shadow.append_prefetchers);
+		Preset::mix(&mut shadow.fetchers, shadow.prepend_fetchers, shadow.append_fetchers);
 		Preset::mix(&mut shadow.preloaders, shadow.prepend_preloaders, shadow.append_preloaders);
 		Preset::mix(&mut shadow.previewers, shadow.prepend_previewers, shadow.append_previewers);
 
-		if shadow.prefetchers.len() + shadow.preloaders.len() > MAX_PREWORKERS as usize {
-			panic!("Prefetchers and preloaders exceed the limit of {MAX_PREWORKERS}");
+		if shadow.fetchers.len() + shadow.preloaders.len() > MAX_PREWORKERS as usize {
+			panic!("Fetchers and preloaders exceed the limit of {MAX_PREWORKERS}");
 		}
 
-		for (i, p) in shadow.prefetchers.iter_mut().enumerate() {
+		for (i, p) in shadow.fetchers.iter_mut().enumerate() {
 			p.id = i as u8;
 		}
 		for (i, p) in shadow.preloaders.iter_mut().enumerate() {
-			p.id = shadow.prefetchers.len() as u8 + i as u8;
+			p.id = shadow.fetchers.len() as u8 + i as u8;
 		}
 
 		Self {
-			prefetchers: shadow.prefetchers,
-			preloaders:  shadow.preloaders,
-			previewers:  shadow.previewers,
+			fetchers:   shadow.fetchers,
+			preloaders: shadow.preloaders,
+			previewers: shadow.previewers,
 		}
 	}
 }
 
 impl Plugin {
-	pub fn prefetchers(
+	pub fn fetchers(
 		&self,
 		path: &Path,
 		mime: Option<&str>,
 		f: impl Fn(&str) -> bool + Copy,
-	) -> Vec<&Prefetcher> {
+	) -> Vec<&Fetcher> {
 		let is_dir = mime == Some(MIME_DIR);
 		self
-			.prefetchers
+			.fetchers
 			.iter()
 			.filter(|&p| {
 				p.cond.as_ref().and_then(|c| c.eval(f)) != Some(false)

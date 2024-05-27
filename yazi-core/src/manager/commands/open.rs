@@ -63,8 +63,8 @@ impl Manager {
 			}
 
 			done.extend(files.iter().map(|f| (f.url(), String::new())));
-			if let Err(e) = isolate::prefetch("mime", files).await {
-				error!("prefetch `mime` failed in opening: {e}");
+			if let Err(e) = isolate::fetch("mime", files).await {
+				error!("fetch `mime` failed in opening: {e}");
 			}
 
 			ManagerProxy::open_do(OpenDoOpt { hovered, targets: done, interactive: opt.interactive });

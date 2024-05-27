@@ -7,7 +7,7 @@ use super::Tasks;
 use crate::folder::Files;
 
 impl Tasks {
-	pub fn prefetch_paged(&self, paged: &[File], mimetype: &HashMap<Url, String>) {
+	pub fn fetch_paged(&self, paged: &[File], mimetype: &HashMap<Url, String>) {
 		let mut loaded = self.scheduler.prework.loaded.lock();
 		let mut tasks: [Vec<_>; MAX_PREWORKERS as usize] = Default::default();
 		for f in paged {
@@ -17,7 +17,7 @@ impl Tasks {
 				_ => false,
 			};
 
-			for p in PLUGIN.prefetchers(&f.url, mime, factors) {
+			for p in PLUGIN.fetchers(&f.url, mime, factors) {
 				match loaded.get_mut(&f.url) {
 					Some(n) if *n & (1 << p.id) != 0 => continue,
 					Some(n) => *n |= 1 << p.id,
@@ -30,7 +30,7 @@ impl Tasks {
 		drop(loaded);
 		for (i, tasks) in tasks.into_iter().enumerate() {
 			if !tasks.is_empty() {
-				self.scheduler.prefetch_paged(&PLUGIN.prefetchers[i], tasks);
+				self.scheduler.fetch_paged(&PLUGIN.fetchers[i], tasks);
 			}
 		}
 	}
@@ -58,7 +58,7 @@ impl Tasks {
 			}
 		}
 
-		self.prefetch_paged(affected, mimetype);
+		self.fetch_paged(affected, mimetype);
 		self.preload_paged(affected, mimetype);
 	}
 

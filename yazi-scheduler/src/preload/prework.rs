@@ -31,15 +31,15 @@ impl Prework {
 		match op {
 			PreworkOp::Fetch(task) => {
 				let urls: Vec<_> = task.targets.iter().map(|f| f.url()).collect();
-				let result = isolate::prefetch(&task.plugin.name, task.targets).await;
+				let result = isolate::fetch(&task.plugin.name, task.targets).await;
 				if let Err(e) = result {
-					self.fail(task.id, format!("Prefetch task failed:\n{e}"))?;
+					self.fail(task.id, format!("Fetch task failed:\n{e}"))?;
 					return Err(e.into());
 				};
 
 				let code = result.unwrap();
 				if code & 1 == 0 {
-					error!("Prefetch task `{}` returned {code}", task.plugin.name);
+					error!("Fetch task `{}` returned {code}", task.plugin.name);
 				}
 				if code >> 1 & 1 != 0 {
 					let mut loaded = self.loaded.lock();
