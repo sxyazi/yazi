@@ -13,7 +13,9 @@ pub struct Pattern {
 
 impl Pattern {
 	#[inline]
-	pub fn match_mime(&self, str: impl AsRef<str>) -> bool { self.inner.is_match(str.as_ref()) }
+	pub fn match_mime(&self, str: impl AsRef<str>) -> bool {
+		self.is_star || self.inner.is_match(str.as_ref())
+	}
 
 	#[inline]
 	pub fn match_path(&self, path: impl AsRef<Path>, is_dir: bool) -> bool {
@@ -36,7 +38,7 @@ impl TryFrom<&str> for Pattern {
 
 		let inner = GlobBuilder::new(b)
 			.case_insensitive(a.len() == s.len())
-			.literal_separator(true)
+			.literal_separator(false)
 			.backslash_escape(false)
 			.empty_alternates(true)
 			.build()?
