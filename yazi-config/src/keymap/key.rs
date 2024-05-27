@@ -76,8 +76,8 @@ impl FromStr for Key {
 		}
 
 		let mut it = s[1..s.len() - 1].split_inclusive('-').peekable();
-		while let Some(x) = it.next() {
-			match x.to_lowercase().as_str() {
+		while let Some(next) = it.next() {
+			match next.to_ascii_lowercase().as_str() {
 				"s-" => key.shift = true,
 				"c-" => key.ctrl = true,
 				"a-" => key.alt = true,
@@ -112,11 +112,9 @@ impl FromStr for Key {
 				"f12" => key.code = KeyCode::F(12),
 				"esc" => key.code = KeyCode::Esc,
 
-				_ => match x {
-					c if it.peek().is_none() => {
-						key.code = KeyCode::Char(c.chars().next().unwrap());
-					}
-					k => bail!("unknown key: {k}"),
+				_ => match next {
+					s if it.peek().is_none() => key.code = KeyCode::Char(s.chars().next().unwrap()),
+					s => bail!("unknown key: {s}"),
 				},
 			}
 		}
