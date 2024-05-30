@@ -34,7 +34,7 @@ function M:preload()
 
 	if not output then
 		return 0
-	elseif not output.status:success() then
+	elseif not output.status.success then
 		local pages = tonumber(output.stderr:match("the last page %((%d+)%)")) or 0
 		if self.skip > 0 and pages > 0 then
 			ya.manager_emit("peek", { math.max(0, pages - 1), only_if = self.file.url, upper_bound = true })

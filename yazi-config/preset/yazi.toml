@@ -67,7 +67,7 @@ rules = [
 	{ mime = "application/json", use = [ "edit", "reveal" ] },
 	{ mime = "*/javascript",     use = [ "edit", "reveal" ] },
 
-	{ mime = "*", use = [ "open", "reveal" ] },
+	{ name = "*", use = [ "open", "reveal" ] },
 ]
 
 [tasks]
