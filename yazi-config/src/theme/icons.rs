@@ -43,10 +43,15 @@ impl Icons {
 	#[inline]
 	fn match_name(&self, file: &File) -> Option<&Icon> {
 		let name = file.name()?.to_str()?;
-		if let Some(i) = if file.is_dir() { self.dirs.get(name) } else { self.files.get(name) } {
-			return Some(i);
+		if file.is_dir() {
+			self.dirs.get(name).or_else(|| self.dirs.get(&name.to_ascii_lowercase()))
+		} else {
+			self
+				.files
+				.get(name)
+				.or_else(|| self.files.get(&name.to_ascii_lowercase()))
+				.or_else(|| self.exts.get(file.url.extension()?.to_str()?))
 		}
-		self.exts.get(file.url.extension()?.to_str()?)
 	}
 }
 

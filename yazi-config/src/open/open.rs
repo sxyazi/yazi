@@ -78,6 +78,13 @@ impl<'de> Deserialize<'de> for Open {
 		}
 
 		let mut outer = Outer::deserialize(deserializer)?;
+
+		if outer.open.append_rules.iter().any(|r| r.any_file()) {
+			outer.open.rules.retain(|r| !r.any_file());
+		}
+		if outer.open.append_rules.iter().any(|r| r.any_dir()) {
+			outer.open.rules.retain(|r| !r.any_dir());
+		}
 		Preset::mix(&mut outer.open.rules, outer.open.prepend_rules, outer.open.append_rules);
 
 		let openers = outer

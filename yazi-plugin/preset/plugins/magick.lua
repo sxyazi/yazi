@@ -37,7 +37,7 @@ function M:preload()
 	end
 
 	local status = child:wait()
-	return status and status:success() and 1 or 2
+	return status and status.success and 1 or 2
 end
 
 return M

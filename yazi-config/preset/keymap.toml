@@ -62,7 +62,7 @@ keymap = [
 	{ on = [ "o" ],         run = "open",                       desc = "Open the selected files" },
 	{ on = [ "O" ],         run = "open --interactive",         desc = "Open the selected files interactively" },
 	{ on = [ "<Enter>" ],   run = "open",                       desc = "Open the selected files" },
-	{ on = [ "<C-Enter>" ], run = "open --interactive",         desc = "Open the selected files interactively" },
+	{ on = [ "<S-Enter>" ], run = "open --interactive",         desc = "Open the selected files interactively" },
 	{ on = [ "y" ],         run = "yank",                       desc = "Copy the selected files" },
 	{ on = [ "Y" ],         run = "unyank",                     desc = "Cancel the yank status of files" },
 	{ on = [ "x" ],         run = "yank --cut",                 desc = "Cut the selected files" },
