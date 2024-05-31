@@ -36,6 +36,9 @@ async fn main() -> anyhow::Result<()> {
 			if cmd.install {
 				package::Package::install_from_config("plugin", false).await?;
 				package::Package::install_from_config("flavor", false).await?;
+			} else if cmd.list {
+				package::Package::list_from_config("plugin").await?;
+				package::Package::list_from_config("flavor").await?;
 			} else if cmd.upgrade {
 				package::Package::install_from_config("plugin", true).await?;
 				package::Package::install_from_config("flavor", true).await?;
