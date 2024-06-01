@@ -92,7 +92,7 @@ impl Client {
 
 		if version != Some(BodyHi::version()) {
 			bail!(
-				"Incompatible version - Yazi {} <==> Ya {}",
+				"Incompatible version (Yazi {}, Ya {})",
 				version.as_deref().unwrap_or("Unknown"),
 				BodyHi::version()
 			);
