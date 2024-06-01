@@ -81,7 +81,7 @@ impl Client {
 			match line.split(',').next() {
 				Some("hey") => {
 					if !Payload::from_str(&line)?.body.as_hey().is_some_and(|b| b.match_version()) {
-						bail!("Server version mismatch: `yazi` and `ya` must have the same version")
+						bail!("Server version mismatch - `yazi` and `ya` must have the same version")
 					}
 				}
 				Some("bye") => break,
