@@ -80,7 +80,7 @@ impl Client {
 		let mut version = None;
 		while let Ok(Some(line)) = lines.next_line().await {
 			match line.split(',').next() {
-				Some("hey") => {
+				Some("hey") if version.is_none() => {
 					if let Ok(Body::Hey(hey)) = Payload::from_str(&line).map(|p| p.body) {
 						version = Some(hey.version);
 					}
@@ -92,9 +92,9 @@ impl Client {
 
 		if version != Some(BodyHi::version()) {
 			bail!(
-				"Incompatible version (Yazi {}, Ya {})",
-				version.as_deref().unwrap_or("Unknown"),
-				BodyHi::version()
+				"Incompatible version (Ya {}, Yazi {})",
+				BodyHi::version(),
+				version.as_deref().unwrap_or("Unknown")
 			);
 		}
 		Ok(())
