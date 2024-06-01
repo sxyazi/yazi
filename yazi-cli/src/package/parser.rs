@@ -73,22 +73,18 @@ impl Package {
 		};
 
 		let doc = s.parse::<DocumentMut>().context("Failed to parse package.toml")?;
-
 		let Some(deps) = doc.get(section).and_then(|d| d.get("deps")) else {
 			return Ok(());
 		};
 
 		let deps = deps.as_array().context("`deps` must be an array")?;
-
 		println!("{section}s:");
-		for v in deps {
-			if let Some(dep_name) =
-				v.as_inline_table().and_then(|t| t.get("use")).and_then(|v| v.as_str())
-			{
-				println!("\t{dep_name}");
+
+		for dep in deps {
+			if let Some(Value::String(use_)) = dep.as_inline_table().and_then(|t| t.get("use")) {
+				println!("\t{}", use_.value());
 			}
 		}
-
 		Ok(())
 	}
 

@@ -91,7 +91,7 @@ pub(super) struct CommandPack {
 	/// Install all packages.
 	#[arg(short = 'i', long)]
 	pub(super) install: bool,
-	/// List all installed packages.
+	/// List all packages.
 	#[arg(short = 'l', long)]
 	pub(super) list:    bool,
 	/// Upgrade all packages.
