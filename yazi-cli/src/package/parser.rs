@@ -80,7 +80,7 @@ impl Package {
 
 		let deps = deps.as_array().context("`deps` must be an array")?;
 
-		println!("{section}:");
+		println!("{section}s:");
 		for v in deps {
 			if let Some(dep_name) =
 				v.as_inline_table().and_then(|t| t.get("use")).and_then(|v| v.as_str())
