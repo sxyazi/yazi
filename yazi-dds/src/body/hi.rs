@@ -22,9 +22,7 @@ impl<'a> BodyHi<'a> {
 	}
 
 	#[inline]
-	pub(super) fn version() -> String {
-		format!("{} {}", env!("CARGO_PKG_VERSION"), env!("VERGEN_GIT_SHA"))
-	}
+	pub fn version() -> String { format!("{} {}", env!("CARGO_PKG_VERSION"), env!("VERGEN_GIT_SHA")) }
 }
 
 impl<'a> From<BodyHi<'a>> for Body<'a> {

@@ -17,9 +17,6 @@ impl BodyHey {
 	pub fn owned(peers: HashMap<u64, Peer>) -> Body<'static> {
 		Self { peers, version: BodyHi::version() }.into()
 	}
-
-	#[inline]
-	pub fn match_version(&self) -> bool { self.version == BodyHi::version() }
 }
 
 impl From<BodyHey> for Body<'_> {

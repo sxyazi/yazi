@@ -77,11 +77,12 @@ impl Client {
 		writer.flush().await?;
 		drop(writer);
 
+		let mut version = None;
 		while let Ok(Some(line)) = lines.next_line().await {
 			match line.split(',').next() {
 				Some("hey") => {
-					if !Payload::from_str(&line)?.body.as_hey().is_some_and(|b| b.match_version()) {
-						bail!("Server version mismatch - `yazi` and `ya` must have the same version")
+					if let Ok(Body::Hey(hey)) = Payload::from_str(&line).map(|p| p.body) {
+						version = Some(hey.version);
 					}
 				}
 				Some("bye") => break,
@@ -89,6 +90,13 @@ impl Client {
 			}
 		}
 
+		if version != Some(BodyHi::version()) {
+			bail!(
+				"Incompatible version - Yazi {} <==> Ya {}",
+				version.as_deref().unwrap_or("Unknown"),
+				BodyHi::version()
+			);
+		}
 		Ok(())
 	}
 
