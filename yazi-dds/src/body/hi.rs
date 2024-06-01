@@ -8,12 +8,22 @@ use super::Body;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BodyHi<'a> {
 	pub abilities: HashSet<Cow<'a, String>>,
+	pub version:   String,
 }
 
 impl<'a> BodyHi<'a> {
 	#[inline]
 	pub fn borrowed(abilities: HashSet<&'a String>) -> Body<'a> {
-		Self { abilities: abilities.into_iter().map(Cow::Borrowed).collect() }.into()
+		Self {
+			abilities: abilities.into_iter().map(Cow::Borrowed).collect(),
+			version:   Self::version(),
+		}
+		.into()
+	}
+
+	#[inline]
+	pub(super) fn version() -> String {
+		format!("{} {}", env!("CARGO_PKG_VERSION"), env!("VERGEN_GIT_SHA"))
 	}
 }
 

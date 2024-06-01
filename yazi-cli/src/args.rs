@@ -26,12 +26,12 @@ pub(super) enum Command {
 
 #[derive(clap::Args)]
 pub(super) struct CommandPub {
-	/// The receiver ID.
-	#[arg(index = 1)]
-	pub(super) receiver: u64,
 	/// The kind of message.
-	#[arg(index = 2)]
+	#[arg(index = 1)]
 	pub(super) kind:     String,
+	/// The receiver ID.
+	#[arg(index = 2)]
+	pub(super) receiver: Option<u64>,
 	/// Send the message with a string body.
 	#[arg(long)]
 	pub(super) str:      Option<String>,
@@ -42,25 +42,36 @@ pub(super) struct CommandPub {
 
 impl CommandPub {
 	#[allow(dead_code)]
+	pub(super) fn receiver(&self) -> Result<u64> {
+		if let Some(receiver) = self.receiver {
+			Ok(receiver)
+		} else if let Ok(s) = std::env::var("YAZI_ID") {
+			Ok(s.parse()?)
+		} else {
+			bail!("No receiver ID provided, also no YAZI_ID environment variable found.")
+		}
+	}
+
+	#[allow(dead_code)]
 	pub(super) fn body(&self) -> Result<Cow<str>> {
 		if let Some(json) = &self.json {
 			Ok(json.into())
 		} else if let Some(str) = &self.str {
 			Ok(serde_json::to_string(str)?.into())
 		} else {
-			bail!("No body provided");
+			Ok("".into())
 		}
 	}
 }
 
 #[derive(clap::Args)]
 pub(super) struct CommandPubStatic {
-	/// The severity of the message.
-	#[arg(index = 1)]
-	pub(super) severity: u16,
 	/// The kind of message.
-	#[arg(index = 2)]
+	#[arg(index = 1)]
 	pub(super) kind:     String,
+	/// The severity of the message.
+	#[arg(index = 2)]
+	pub(super) severity: u16,
 	/// Send the message with a string body.
 	#[arg(long)]
 	pub(super) str:      Option<String>,
@@ -77,7 +88,7 @@ impl CommandPubStatic {
 		} else if let Some(str) = &self.str {
 			Ok(serde_json::to_string(str)?.into())
 		} else {
-			bail!("No body provided");
+			Ok("".into())
 		}
 	}
 }

@@ -2,10 +2,10 @@ use std::{collections::HashMap, str::FromStr, time::Duration};
 
 use anyhow::Result;
 use parking_lot::RwLock;
-use tokio::{io::{AsyncBufReadExt, AsyncWriteExt, BufReader}, select, sync::mpsc, task::JoinHandle, time};
+use tokio::{io::{AsyncBufReadExt, AsyncWriteExt, BufReader}, select, sync::mpsc::{self, UnboundedReceiver}, task::JoinHandle, time};
 use yazi_shared::RoCell;
 
-use crate::{body::{Body, BodyBye, BodyHey}, Client, Payload, Peer, Stream, STATE};
+use crate::{body::{Body, BodyBye, BodyHey}, Client, ClientWriter, Payload, Peer, Stream, STATE};
 
 pub(super) static CLIENTS: RoCell<RwLock<HashMap<u64, Client>>> = RoCell::new();
 
@@ -44,7 +44,7 @@ impl Server {
 
 								let Some(id) = id else { continue };
 								if line.starts_with("bye,") {
-									writer.write_all(BodyBye::borrowed().with_receiver(id).with_sender(0).to_string().as_bytes()).await.ok();
+									Self::handle_bye(id, rx, writer).await;
 									break;
 								}
 
@@ -77,7 +77,11 @@ impl Server {
 							else => break
 						}
 					}
-					Self::handle_bye(id);
+
+					let mut clients = CLIENTS.write();
+					if id.and_then(|id| clients.remove(&id)).is_some() {
+						Self::handle_hey(&clients);
+					}
 				});
 			}
 		}))
@@ -111,18 +115,24 @@ impl Server {
 	fn handle_hey(clients: &HashMap<u64, Client>) {
 		let payload = format!(
 			"{}\n",
-			Payload::new(
-				BodyHey { peers: clients.values().map(|c| (c.id, Peer::new(&c.abilities))).collect() }
-					.into()
-			)
+			Payload::new(BodyHey::owned(
+				clients.values().map(|c| (c.id, Peer::new(&c.abilities))).collect()
+			))
 		);
 		clients.values().for_each(|c| _ = c.tx.send(payload.clone()));
 	}
 
-	fn handle_bye(id: Option<u64>) {
-		let mut clients = CLIENTS.write();
-		if id.and_then(|id| clients.remove(&id)).is_some() {
-			Self::handle_hey(&clients);
+	async fn handle_bye(id: u64, mut rx: UnboundedReceiver<String>, mut writer: ClientWriter) {
+		while let Ok(payload) = rx.try_recv() {
+			if writer.write_all(payload.as_bytes()).await.is_err() {
+				break;
+			}
 		}
+
+		_ = writer
+			.write_all(BodyBye::owned().with_receiver(id).with_sender(0).to_string().as_bytes())
+			.await;
+
+		writer.flush().await.ok();
 	}
 }

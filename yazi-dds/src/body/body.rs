@@ -101,6 +101,14 @@ impl<'a> Body<'a> {
 	}
 
 	#[inline]
+	pub fn as_hey(&self) -> Option<&BodyHey> {
+		match self {
+			Self::Hey(b) => Some(b),
+			_ => None,
+		}
+	}
+
+	#[inline]
 	pub fn with_receiver(self, receiver: u64) -> Payload<'a> {
 		Payload::new(self).with_receiver(receiver)
 	}
