@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet}, mem, str::FromStr};
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use tokio::{io::AsyncWriteExt, select, sync::mpsc, task::JoinHandle, time};
@@ -69,7 +69,7 @@ impl Client {
 		let payload = format!(
 			"{}\n{kind},{receiver},{sender},{body}\n{}\n",
 			Payload::new(BodyHi::borrowed(Default::default())),
-			Payload::new(BodyBye::borrowed())
+			Payload::new(BodyBye::owned())
 		);
 
 		let (mut lines, mut writer) = Stream::connect().await?;
@@ -77,12 +77,26 @@ impl Client {
 		writer.flush().await?;
 		drop(writer);
 
-		while let Ok(Some(s)) = lines.next_line().await {
-			if matches!(s.split(',').next(), Some(kind) if kind == "bye") {
-				break;
+		let mut version = None;
+		while let Ok(Some(line)) = lines.next_line().await {
+			match line.split(',').next() {
+				Some("hey") if version.is_none() => {
+					if let Ok(Body::Hey(hey)) = Payload::from_str(&line).map(|p| p.body) {
+						version = Some(hey.version);
+					}
+				}
+				Some("bye") => break,
+				_ => {}
 			}
 		}
 
+		if version != Some(BodyHi::version()) {
+			bail!(
+				"Incompatible version (Ya {}, Yazi {})",
+				BodyHi::version(),
+				version.as_deref().unwrap_or("Unknown")
+			);
+		}
 		Ok(())
 	}
 

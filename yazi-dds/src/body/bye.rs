@@ -4,11 +4,11 @@ use serde::{Deserialize, Serialize};
 use super::Body;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct BodyBye {}
+pub struct BodyBye;
 
 impl BodyBye {
 	#[inline]
-	pub fn borrowed() -> Body<'static> { Self {}.into() }
+	pub fn owned() -> Body<'static> { Self.into() }
 }
 
 impl<'a> From<BodyBye> for Body<'a> {
