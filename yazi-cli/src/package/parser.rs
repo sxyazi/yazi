@@ -66,6 +66,28 @@ impl Package {
 		fs::write(path, doc.to_string()).await.context("Failed to write package.toml")
 	}
 
+	pub(crate) async fn list_from_config(section: &str) -> Result<()> {
+		let path = Xdg::config_dir().join("package.toml");
+		let Ok(s) = fs::read_to_string(&path).await else {
+			return Ok(());
+		};
+
+		let doc = s.parse::<DocumentMut>().context("Failed to parse package.toml")?;
+		let Some(deps) = doc.get(section).and_then(|d| d.get("deps")) else {
+			return Ok(());
+		};
+
+		let deps = deps.as_array().context("`deps` must be an array")?;
+		println!("{section}s:");
+
+		for dep in deps {
+			if let Some(Value::String(use_)) = dep.as_inline_table().and_then(|t| t.get("use")) {
+				println!("\t{}", use_.value());
+			}
+		}
+		Ok(())
+	}
+
 	fn ensure_config(s: &str) -> Result<DocumentMut> {
 		let mut doc = s.parse::<DocumentMut>().context("Failed to parse package.toml")?;
 
