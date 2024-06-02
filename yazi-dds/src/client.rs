@@ -69,14 +69,10 @@ impl Client {
 	/// If a server is closed, attempt to reconnect forever.
 	pub async fn echo_events_to_stdout(kinds: HashSet<String>) -> Result<()> {
 		let mut lines = Self::connect_listener(&kinds).await?;
-		let mut msg_counter = 0;
 
 		loop {
-			println!("Waiting for messages...");
 			match lines.next_line().await {
 				Ok(Some(s)) => {
-					println!("Received: message {} '{}'", msg_counter, s);
-					msg_counter += 1;
 					let kind = s.split(',').next();
 					if matches!(kind, Some(kind) if kinds.contains(kind)) {
 						println!("{}", s);
@@ -87,11 +83,9 @@ impl Client {
 					match Self::connect_listener(&kinds).await {
 						Ok(new_lines) => {
 							lines = new_lines;
-							println!("Reconnected");
 							break;
 						}
 						Err(_) => {
-							println!("Reconnecting...");
 							time::sleep(time::Duration::from_secs(1)).await;
 						}
 					};
