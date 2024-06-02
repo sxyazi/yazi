@@ -1,25 +1,35 @@
-use std::{collections::HashSet, env, ffi::OsString, fmt::Write, path::{Path, PathBuf}, process};
+use std::{
+	collections::HashSet,
+	env,
+	ffi::OsString,
+	fmt::Write,
+	path::{Path, PathBuf},
+	process,
+};
 
 use clap::Parser;
 use serde::Serialize;
 use yazi_config::PREVIEW;
-use yazi_shared::{fs::{current_cwd, expand_path}, Xdg};
+use yazi_shared::{
+	fs::{current_cwd, expand_path},
+	Xdg,
+};
 
 use super::Args;
 use crate::ARGS;
 
 #[derive(Debug, Serialize)]
 pub struct Boot {
-	pub cwd:  PathBuf,
+	pub cwd: PathBuf,
 	pub file: Option<OsString>,
 
-	pub local_events:  HashSet<String>,
+	pub local_events: HashSet<String>,
 	pub remote_events: HashSet<String>,
 
 	pub config_dir: PathBuf,
 	pub flavor_dir: PathBuf,
 	pub plugin_dir: PathBuf,
-	pub state_dir:  PathBuf,
+	pub state_dir: PathBuf,
 }
 
 impl Boot {
@@ -47,7 +57,10 @@ impl Boot {
 	}
 
 	fn action_debug() -> Result<String, std::fmt::Error> {
-		use std::{env::consts::{ARCH, FAMILY, OS}, process::Command};
+		use std::{
+			env::consts::{ARCH, FAMILY, OS},
+			process::Command,
+		};
 		let mut s = String::new();
 
 		writeln!(s, "\nYazi")?;
@@ -56,7 +69,15 @@ impl Boot {
 		writeln!(s, "    Debug: {}", cfg!(debug_assertions))?;
 
 		writeln!(s, "\nYa")?;
-		writeln!(s, "    Version: {:?}", Command::new("ya").arg("--version").output())?;
+		writeln!(
+			s,
+			"    Version: {:?}",
+			Command::new("ya")
+				.arg("--version")
+				.output()
+				.and_then(|output| Ok(String::from_utf8(output.stdout)))
+				.unwrap_or(Ok("Nill".to_string()))
+		)?;
 
 		writeln!(s, "\nEmulator")?;
 		writeln!(s, "    Emulator.via_env: {:?}", yazi_adaptor::Emulator::via_env())?;
@@ -92,7 +113,11 @@ impl Boot {
 		writeln!(
 			s,
 			"    Version: {:?}",
-			Command::new(env::var_os("YAZI_FILE_ONE").unwrap_or("file".into())).arg("--version").output()
+			Command::new(env::var_os("YAZI_FILE_ONE").unwrap_or("file".into()))
+				.arg("--version")
+				.output()
+				.and_then(|output| Ok(String::from_utf8(output.stdout)))
+				.unwrap_or(Ok("Nill".to_string()))
 		)?;
 
 		writeln!(s, "\nText Opener")?;
@@ -106,8 +131,116 @@ impl Boot {
 		writeln!(s, "\ntmux")?;
 		writeln!(s, "    TMUX: {:?}", *yazi_adaptor::TMUX)?;
 
+		writeln!(s, "\nDependencies Versions")?;
+		writeln!(s, "\nffmpegthumbnailer")?;
+		writeln!(
+			s,
+			"    Version: {:?}",
+			Command::new("ffmpegthumbnailer")
+				.arg("-v")
+				.output()
+				.and_then(|output| Ok(String::from_utf8(output.stdout)))
+				.unwrap_or(Ok("Nill".to_string()))
+		)?;
+
 		writeln!(s, "\nUeberzug++")?;
-		writeln!(s, "    Version: {:?}", Command::new("ueberzugpp").arg("--version").output())?;
+		writeln!(
+			s,
+			"    Version: {:?}",
+			Command::new("ueberzugpp")
+				.arg("version")
+				.output()
+				.and_then(|output| Ok(String::from_utf8(output.stdout)))
+				.unwrap_or(Ok("Nill".to_string()))
+		)?;
+
+		writeln!(s, "\nunar")?;
+		writeln!(
+			s,
+			"    Version: {:?}",
+			Command::new("unar")
+				.arg("--version")
+				.output()
+				.and_then(|output| Ok(String::from_utf8(output.stdout)))
+				.unwrap_or(Ok("Nill".to_string()))
+		)?;
+
+		writeln!(s, "\njq")?;
+		writeln!(
+			s,
+			"    Version: {:?}",
+			Command::new("jq")
+				.arg("--version")
+				.output()
+				.and_then(|output| Ok(String::from_utf8(output.stdout)))
+				.unwrap_or(Ok("Nill".to_string()))
+		)?;
+
+		writeln!(s, "\nfd")?;
+		writeln!(
+			s,
+			"    Version: {:?}",
+			Command::new("fd")
+				.arg("--version")
+				.output()
+				.and_then(|output| Ok(String::from_utf8(output.stdout)))
+				.unwrap_or(Ok("Nill".to_string()))
+		)?;
+
+		writeln!(s, "\nrg")?;
+		writeln!(
+			s,
+			"    Version: {:?}",
+			Command::new("rg")
+				.arg("--version")
+				.output()
+				.and_then(|output| Ok(String::from_utf8(output.stdout)))
+				.unwrap_or(Ok("Nill".to_string()))
+		)?;
+
+		writeln!(s, "\nfzf")?;
+		writeln!(
+			s,
+			"    Version: {:?}",
+			Command::new("fzf")
+				.arg("--version")
+				.output()
+				.and_then(|output| Ok(String::from_utf8(output.stdout)))
+				.unwrap_or(Ok("Nill".to_string()))
+		)?;
+
+		writeln!(s, "\nzoxide")?;
+		writeln!(
+			s,
+			"    Version: {:?}",
+			Command::new("zoxide")
+				.arg("--version")
+				.output()
+				.and_then(|output| Ok(String::from_utf8(output.stdout)))
+				.unwrap_or(Ok("Nill".to_string()))
+		)?;
+
+		writeln!(s, "\nchafa")?;
+		writeln!(
+			s,
+			"    Version: {:?}",
+			Command::new("chafa")
+				.arg("--version")
+				.output()
+				.and_then(|output| Ok(String::from_utf8(output.stdout)))
+				.unwrap_or(Ok("Nill".to_string()))
+		)?;
+
+		writeln!(s, "\ntmux")?;
+		writeln!(
+			s,
+			"    Version: {:?}",
+			Command::new("tmux")
+				.arg("-V")
+				.output()
+				.and_then(|output| Ok(String::from_utf8(output.stdout)))
+				.unwrap_or(Ok("Nill".to_string()))
+		)?;
 
 		writeln!(s, "\n\n--------------------------------------------------")?;
 		writeln!(
