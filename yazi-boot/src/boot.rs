@@ -1,35 +1,25 @@
-use std::{
-	collections::HashSet,
-	env,
-	ffi::OsString,
-	fmt::Write,
-	path::{Path, PathBuf},
-	process,
-};
+use std::{collections::HashSet, env, ffi::OsString, fmt::Write, path::{Path, PathBuf}, process};
 
 use clap::Parser;
 use serde::Serialize;
 use yazi_config::PREVIEW;
-use yazi_shared::{
-	fs::{current_cwd, expand_path},
-	Xdg,
-};
+use yazi_shared::{fs::{current_cwd, expand_path}, Xdg};
 
 use super::Args;
 use crate::ARGS;
 
 #[derive(Debug, Serialize)]
 pub struct Boot {
-	pub cwd: PathBuf,
+	pub cwd:  PathBuf,
 	pub file: Option<OsString>,
 
-	pub local_events: HashSet<String>,
+	pub local_events:  HashSet<String>,
 	pub remote_events: HashSet<String>,
 
 	pub config_dir: PathBuf,
 	pub flavor_dir: PathBuf,
 	pub plugin_dir: PathBuf,
-	pub state_dir: PathBuf,
+	pub state_dir:  PathBuf,
 }
 
 impl Boot {
@@ -57,10 +47,7 @@ impl Boot {
 	}
 
 	fn action_debug() -> Result<String, std::fmt::Error> {
-		use std::{
-			env::consts::{ARCH, FAMILY, OS},
-			process::Command,
-		};
+		use std::{env::consts::{ARCH, FAMILY, OS}, process::Command};
 		let mut s = String::new();
 
 		writeln!(s, "\nYazi")?;
