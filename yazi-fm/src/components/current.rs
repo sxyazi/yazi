@@ -5,7 +5,7 @@ use yazi_plugin::{bindings::{Cast, MouseEvent}, LUA};
 pub(crate) struct Current;
 
 impl Current {
-	pub fn mouse(event: crossterm::event::MouseEvent) -> mlua::Result<()> {
+	pub(crate) fn mouse(event: crossterm::event::MouseEvent) -> mlua::Result<()> {
 		let evt = MouseEvent::cast(&LUA, event)?;
 		let comp: Table = LUA.globals().raw_get("Current")?;
 
