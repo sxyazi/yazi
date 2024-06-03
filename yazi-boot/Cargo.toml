@@ -9,6 +9,7 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
+regex        = "1.10.4"
 yazi-adaptor = { path = "../yazi-adaptor", version = "0.2.5" }
 yazi-config  = { path = "../yazi-config", version = "0.2.5" }
 yazi-shared  = { path = "../yazi-shared", version = "0.2.5" }

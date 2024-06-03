@@ -34,7 +34,7 @@
     # Resize logo
     for RES in 16 24 32 48 64 128 256; do
       mkdir -p $out/share/icons/hicolor/"$RES"x"$RES"/apps
-      convert assets/logo.png -resize "$RES"x"$RES" $out/share/icons/hicolor/"$RES"x"$RES"/apps/yazi.png
+      magick assets/logo.png -resize "$RES"x"$RES" $out/share/icons/hicolor/"$RES"x"$RES"/apps/yazi.png
     done
 
     mkdir -p $out/share/applications

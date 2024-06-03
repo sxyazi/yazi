@@ -13,7 +13,7 @@ impl<'a> Preview<'a> {
 	#[inline]
 	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
 
-	pub fn mouse(event: crossterm::event::MouseEvent) -> mlua::Result<()> {
+	pub(crate) fn mouse(event: crossterm::event::MouseEvent) -> mlua::Result<()> {
 		let evt = MouseEvent::cast(&LUA, event)?;
 		let comp: Table = LUA.globals().raw_get("Preview")?;
 

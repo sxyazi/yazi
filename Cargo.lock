@@ -2719,6 +2719,7 @@ dependencies = [
  "clap_complete",
  "clap_complete_fig",
  "clap_complete_nushell",
+ "regex",
  "serde",
  "vergen",
  "yazi-adaptor",

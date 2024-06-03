@@ -20,7 +20,7 @@ function M:preload()
 		return 1
 	end
 
-	local child, code = Command("convert"):args({
+	local child, code = Command("magick"):args({
 		"-density",
 		"200",
 		"-resize",
@@ -32,7 +32,7 @@ function M:preload()
 	}):spawn()
 
 	if not child then
-		ya.err("spawn `convert` command returns " .. tostring(code))
+		ya.err("spawn `magick` command returns " .. tostring(code))
 		return 0
 	end
 
