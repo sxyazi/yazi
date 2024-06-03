@@ -121,3 +121,9 @@ function Status:render(area)
 		table.unpack(Progress:render(area, right:width())),
 	}
 end
+
+function Status:click(event, up) end
+
+function Status:scroll(event, step) end
+
+function Status:touch(event, step) end

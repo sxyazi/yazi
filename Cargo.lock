@@ -2751,6 +2751,7 @@ version = "0.2.5"
 dependencies = [
  "anyhow",
  "arc-swap",
+ "bitflags 2.5.0",
  "crossterm",
  "globset",
  "indexmap",

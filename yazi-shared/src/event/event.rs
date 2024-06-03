@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, ffi::OsString};
 
-use crossterm::event::KeyEvent;
+use crossterm::event::{KeyEvent, MouseEvent};
 use tokio::sync::mpsc;
 
 use super::Cmd;
@@ -15,6 +15,7 @@ pub enum Event {
 	Seq(VecDeque<Cmd>, Layer),
 	Render,
 	Key(KeyEvent),
+	Mouse(MouseEvent),
 	Resize,
 	Paste(String),
 	Quit(EventQuit),

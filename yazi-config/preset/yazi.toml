@@ -13,6 +13,7 @@ linemode       = "none"
 show_hidden    = false
 show_symlink   = true
 scrolloff      = 5
+mouse_events   = [ "click", "scroll" ]
 
 [preview]
 tab_size        = 2
@@ -86,10 +87,8 @@ fetchers = [
 ]
 preloaders = [
 	# Image
-	{ mime = "image/svg+xml", run = "magick" },
-	{ mime = "image/heic",    run = "magick" },
-	{ mime = "image/jxl",     run = "magick" },
-	{ mime = "image/*",       run = "image" },
+	{ mime = "image/{heic,jxl,svg+xml}", run = "magick" },
+	{ mime = "image/*", run = "image" },
 	# Video
 	{ mime = "video/*", run = "video" },
 	# PDF
@@ -106,10 +105,8 @@ previewers = [
 	# JSON
 	{ mime = "application/json", run = "json" },
 	# Image
-	{ mime = "image/svg+xml", run = "magick" },
-	{ mime = "image/heic",    run = "magick" },
-	{ mime = "image/jxl",     run = "magick" },
-	{ mime = "image/*",       run = "image" },
+	{ mime = "image/{heic,jxl,svg+xml}", run = "magick" },
+	{ mime = "image/*", run = "image" },
 	# Video
 	{ mime = "video/*", run = "video" },
 	# PDF

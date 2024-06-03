@@ -1,4 +1,5 @@
 mod accept_payload;
+mod mouse;
 mod notify;
 mod plugin;
 mod quit;

@@ -82,3 +82,8 @@ function Folder:by_kind(kind)
 		return cx.active.preview.folder
 	end
 end
+
+function Folder:window(kind)
+	local folder = self:by_kind(kind)
+	return folder and folder.window
+end
