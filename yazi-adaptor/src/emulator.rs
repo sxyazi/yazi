@@ -32,7 +32,7 @@ impl Emulator {
 		match self {
 			Self::Unknown(adapters) => adapters,
 			Self::Kitty => vec![Adaptor::Kitty],
-			Self::Konsole => vec![Adaptor::Iterm2, Adaptor::KittyOld, Adaptor::Sixel],
+			Self::Konsole => vec![Adaptor::KittyOld],
 			Self::Iterm2 => vec![Adaptor::Iterm2, Adaptor::Sixel],
 			Self::WezTerm => vec![Adaptor::Iterm2, Adaptor::Sixel],
 			Self::Foot => vec![Adaptor::Sixel],

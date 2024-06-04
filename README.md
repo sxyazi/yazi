@@ -41,7 +41,7 @@ https://github.com/sxyazi/yazi/assets/17523360/92ff23fa-0cd5-4f04-b387-894c12265
 | Platform          | Protocol                                                                                              | Support                                                        |
 | ----------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
 | kitty             | [Kitty unicode placeholders](https://sw.kovidgoyal.net/kitty/graphics-protocol/#unicode-placeholders) | ✅ Built-in                                                    |
-| Konsole           | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ✅ Built-in                                                    |
+| Konsole           | [Kitty old protocol](https://github.com/sxyazi/yazi/blob/main/yazi-adaptor/src/kitty_old.rs)          | ✅ Built-in                                                    |
 | iTerm2            | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ✅ Built-in                                                    |
 | WezTerm           | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ✅ Built-in                                                    |
 | Mintty (Git Bash) | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ✅ Built-in                                                    |
