@@ -28,7 +28,7 @@ impl KittyOld {
 	#[inline]
 	pub(super) fn image_erase(_: Rect) -> Result<()> {
 		let mut stderr = LineWriter::new(stderr());
-		write!(stderr, "{}_Gq=1,a=d,d=A{}\\{}", START, ESCAPE, CLOSE)?;
+		write!(stderr, "{}_Gq=2,a=d,d=A{}\\{}", START, ESCAPE, CLOSE)?;
 		stderr.flush()?;
 		Ok(())
 	}
@@ -42,7 +42,7 @@ impl KittyOld {
 			if let Some(first) = it.next() {
 				write!(
 					buf,
-					"{}_Gq=1,a=T,z=-1,C=1,f={},s={},v={},m={};{}{}\\{}",
+					"{}_Gq=2,a=T,z=-1,C=1,f={},s={},v={},m={};{}{}\\{}",
 					START,
 					format,
 					size.0,

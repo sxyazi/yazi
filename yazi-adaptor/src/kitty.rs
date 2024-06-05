@@ -337,7 +337,7 @@ impl Kitty {
 				write!(stderr, "{s}")?;
 			}
 
-			write!(stderr, "{}_Gq=1,a=d,d=A{}\\{}", START, ESCAPE, CLOSE)?;
+			write!(stderr, "{}_Gq=2,a=d,d=A{}\\{}", START, ESCAPE, CLOSE)?;
 			Ok(())
 		})
 	}
@@ -351,7 +351,7 @@ impl Kitty {
 			if let Some(first) = it.next() {
 				write!(
 					buf,
-					"{}_Gq=1,a=T,i=1,C=1,U=1,f={},s={},v={},m={};{}{}\\{}",
+					"{}_Gq=2,a=T,i=1,C=1,U=1,f={},s={},v={},m={};{}{}\\{}",
 					START,
 					format,
 					size.0,
