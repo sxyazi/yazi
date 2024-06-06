@@ -7,6 +7,7 @@
 )]
 
 pub mod completion;
+pub mod confirm;
 pub mod folder;
 pub mod help;
 pub mod input;

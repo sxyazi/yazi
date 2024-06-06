@@ -1,5 +1,5 @@
-use yazi_config::popup::InputCfg;
-use yazi_proxy::{InputProxy, ManagerProxy};
+use yazi_config::popup::ConfirmCfg;
+use yazi_proxy::{ConfirmProxy, ManagerProxy};
 use yazi_shared::{event::Cmd, fs::Url};
 
 use crate::{manager::Manager, tasks::Tasks};
@@ -27,21 +27,21 @@ impl Manager {
 		}
 
 		let mut opt = opt.into() as Opt;
-		opt.targets = self.selected_or_hovered(false).cloned().collect();
+		opt.targets = self.selected_or_hovered(true).cloned().collect();
 
 		if opt.force {
 			return self.remove_do(opt, tasks);
 		}
 
 		tokio::spawn(async move {
-			let mut result = InputProxy::show(if opt.permanently {
-				InputCfg::delete(opt.targets.len())
+			let result = ConfirmProxy::show(if opt.permanently {
+				ConfirmCfg::delete(&opt.targets)
 			} else {
-				InputCfg::trash(opt.targets.len())
+				ConfirmCfg::trash(&opt.targets)
 			});
 
-			if let Some(Ok(choice)) = result.recv().await {
-				if choice != "y" && choice != "Y" {
+			if let Ok(choice) = result.await {
+				if !choice {
 					return;
 				}
 

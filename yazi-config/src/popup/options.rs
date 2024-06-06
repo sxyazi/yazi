@@ -1,5 +1,5 @@
 use super::{Offset, Position};
-use crate::{INPUT, SELECT};
+use crate::{CONFIRM, INPUT, SELECT};
 
 #[derive(Default)]
 pub struct InputCfg {
@@ -16,6 +16,13 @@ pub struct InputCfg {
 pub struct SelectCfg {
 	pub title:    String,
 	pub items:    Vec<String>,
+	pub position: Position,
+}
+
+#[derive(Default)]
+pub struct ConfirmCfg {
+	pub title:    String,
+	pub message:  String,
 	pub position: Position,
 }
 
@@ -44,26 +51,6 @@ impl InputCfg {
 		Self {
 			title: INPUT.rename_title.to_owned(),
 			position: Position::new(INPUT.rename_origin, INPUT.rename_offset),
-			..Default::default()
-		}
-	}
-
-	#[inline]
-	pub fn trash(n: usize) -> Self {
-		let title = INPUT.trash_title.replace("{n}", &n.to_string());
-		Self {
-			title: title.replace("{s}", if n > 1 { "s" } else { "" }),
-			position: Position::new(INPUT.trash_origin, INPUT.trash_offset),
-			..Default::default()
-		}
-	}
-
-	#[inline]
-	pub fn delete(n: usize) -> Self {
-		let title = INPUT.delete_title.replace("{n}", &n.to_string());
-		Self {
-			title: title.replace("{s}", if n > 1 { "s" } else { "" }),
-			position: Position::new(INPUT.delete_origin, INPUT.delete_offset),
 			..Default::default()
 		}
 	}
@@ -136,6 +123,26 @@ impl InputCfg {
 	pub fn with_cursor(mut self, cursor: Option<usize>) -> Self {
 		self.cursor = cursor;
 		self
+	}
+}
+
+impl ConfirmCfg {
+	#[inline]
+	pub fn delete(targets: &[yazi_shared::fs::Url]) -> Self {
+		Self {
+			title:    CONFIRM.delete_title.replace("{n}", &targets.len().to_string()),
+			position: Position::new(CONFIRM.delete_origin, CONFIRM.delete_offset),
+			message:  targets.iter().map(|t| t.to_string()).collect::<Vec<_>>().join("\n"),
+		}
+	}
+
+	#[inline]
+	pub fn trash(targets: &[yazi_shared::fs::Url]) -> Self {
+		Self {
+			title:    CONFIRM.trash_title.replace("{n}", &targets.len().to_string()),
+			position: Position::new(CONFIRM.trash_origin, CONFIRM.trash_offset),
+			message:  targets.iter().map(|t| t.to_string()).collect::<Vec<_>>().join("\n"),
+		}
 	}
 }
 
