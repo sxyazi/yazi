@@ -51,7 +51,7 @@ impl Signals {
 		Ok(tokio::spawn(async move {
 			while let Some(signal) = signals.next().await {
 				match signal {
-					SIGHUP | SIGTERM | SIGQUIT | SIGINT => {
+					SIGHUP | SIGTERM | SIGQUIT => {
 						Event::Quit(Default::default()).emit();
 					}
 					SIGCONT if HIDER.try_acquire().is_ok() => AppProxy::resume(),

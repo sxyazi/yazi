@@ -38,7 +38,7 @@ syntect       = { version = "5.2.0", default-features = false, features = [ "par
 tokio         = { version = "1.38.0", features = [ "full" ] }
 tokio-stream  = "0.1.15"
 tokio-util    = "0.7.11"
-unicode-width = "0.1.12"
+unicode-width = "0.1.13"
 yazi-prebuild = "0.1.2"
 
 # Logging

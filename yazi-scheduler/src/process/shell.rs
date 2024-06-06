@@ -1,4 +1,4 @@
-use std::{ffi::OsString, process::Stdio};
+use std::{ffi::OsString, io::Error, process::Stdio};
 
 use anyhow::Result;
 use tokio::process::{Child, Command};
@@ -36,8 +36,8 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 			.args(opt.args)
 			.kill_on_drop(!opt.orphan)
 			.pre_exec(move || {
-				if opt.orphan && libc::setpgid(0i32, 0i32) < 0 {
-					libc::perror(std::ptr::null());
+				if opt.orphan && libc::setpgid(0, 0) < 0 {
+					return Err(Error::last_os_error());
 				}
 				Ok(())
 			})
