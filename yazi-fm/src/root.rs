@@ -3,7 +3,7 @@ use mlua::{Table, TableExt};
 use ratatui::{buffer::Buffer, layout::{Constraint, Layout, Rect}, widgets::Widget};
 use yazi_plugin::{bindings::{Cast, MouseEvent}, LUA};
 
-use super::{completion, input, select, tasks, which};
+use super::{completion, confirm, input, select, tasks, which};
 use crate::{components, help, Ctx};
 
 pub(super) struct Root<'a> {
@@ -35,6 +35,10 @@ impl<'a> Widget for Root<'a> {
 
 		if self.cx.input.visible {
 			input::Input::new(self.cx).render(area, buf);
+		}
+
+		if self.cx.confirm.visible {
+			confirm::Confirm::new(self.cx).render(area, buf);
 		}
 
 		if self.cx.help.visible {

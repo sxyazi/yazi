@@ -19,6 +19,7 @@ impl<'a> Executor<'a> {
 			Layer::Tasks => self.tasks(cmd),
 			Layer::Select => self.select(cmd),
 			Layer::Input => self.input(cmd),
+			Layer::Confirm => self.confirm(cmd),
 			Layer::Help => self.help(cmd),
 			Layer::Completion => self.completion(cmd),
 			Layer::Which => self.which(cmd),
@@ -244,6 +245,20 @@ impl<'a> Executor<'a> {
 				on!(kill);
 			}
 		}
+	}
+
+	fn confirm(&mut self, cmd: Cmd) {
+		macro_rules! on {
+			($name:ident) => {
+				if cmd.name == stringify!($name) {
+					return self.app.cx.confirm.$name(cmd);
+				}
+			};
+		}
+
+		on!(arrow);
+		on!(show);
+		on!(close);
 	}
 
 	fn help(&mut self, cmd: Cmd) {
