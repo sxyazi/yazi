@@ -262,6 +262,27 @@ keymap = [
 	{ on = "<F1>", run = "help", desc = "Open help" },
 ]
 
+[confirm]
+keymap = [
+  { on = [ "<Esc>" ], run = "close", desc = "Cancel the confirm" },
+  { on = [ "n" ], run = "close", desc = "Cancel the confirm" },
+  { on = [ "y" ], run = "close --submit", desc = "Submit the confirm" },
+
+	{ on = [ "k" ], run = "arrow -1", desc = "Move cursor up" },
+	{ on = [ "j" ], run = "arrow 1",  desc = "Move cursor down" },
+
+	{ on = [ "K" ], run = "arrow -5", desc = "Move cursor up 5 lines" },
+	{ on = [ "J" ], run = "arrow 5",  desc = "Move cursor down 5 lines" },
+
+	{ on = [ "<Up>" ],   run = "arrow -1", desc = "Move cursor up" },
+	{ on = [ "<Down>" ], run = "arrow 1",  desc = "Move cursor down" },
+
+	{ on = [ "<S-Up>" ],   run = "arrow -5", desc = "Move cursor up 5 lines" },
+	{ on = [ "<S-Down>" ], run = "arrow 5",  desc = "Move cursor down 5 lines" },
+
+	{ on = [ "~" ], run = "help", desc = "Open help" }
+]
+
 [completion]
 
 keymap = [

@@ -26,7 +26,7 @@ impl<'a> TryFrom<mlua::Table<'a>> for Position {
 				x:      t.raw_get("x").unwrap_or_default(),
 				y:      t.raw_get("y").unwrap_or_default(),
 				width:  t.raw_get("w")?,
-				height: 3,
+				height: t.raw_get("h").unwrap_or(3),
 			},
 		}))
 	}
