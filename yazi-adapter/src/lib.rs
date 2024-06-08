@@ -1,6 +1,6 @@
 #![allow(clippy::unit_arg)]
 
-mod adaptor;
+mod adapter;
 mod chafa;
 mod dimension;
 mod emulator;
@@ -11,7 +11,7 @@ mod kitty_old;
 mod sixel;
 mod ueberzug;
 
-pub use adaptor::*;
+pub use adapter::*;
 use chafa::*;
 pub use dimension::*;
 pub use emulator::*;
@@ -24,7 +24,7 @@ use yazi_shared::{env_exists, RoCell};
 
 pub use crate::image::*;
 
-pub static ADAPTOR: RoCell<Adaptor> = RoCell::new();
+pub static ADAPTOR: RoCell<Adapter> = RoCell::new();
 
 // Tmux support
 pub static TMUX: RoCell<bool> = RoCell::new();
@@ -52,6 +52,6 @@ pub fn init() {
 
 	SHOWN.with(Default::default);
 
-	ADAPTOR.init(Adaptor::matches());
+	ADAPTOR.init(Adapter::matches());
 	ADAPTOR.start();
 }

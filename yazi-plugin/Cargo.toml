@@ -13,7 +13,7 @@ default      = [ "vendored-lua" ]
 vendored-lua = [ "mlua/vendored" ]
 
 [dependencies]
-yazi-adaptor = { path = "../yazi-adaptor", version = "0.2.5" }
+yazi-adapter = { path = "../yazi-adapter", version = "0.2.5" }
 yazi-boot    = { path = "../yazi-boot", version = "0.2.5" }
 yazi-config  = { path = "../yazi-config", version = "0.2.5" }
 yazi-dds     = { path = "../yazi-dds", version = "0.2.5" }

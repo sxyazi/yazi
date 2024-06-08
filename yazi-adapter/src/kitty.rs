@@ -8,7 +8,7 @@ use image::DynamicImage;
 use ratatui::layout::Rect;
 
 use super::image::Image;
-use crate::{adaptor::Adaptor, Emulator, CLOSE, ESCAPE, START};
+use crate::{adapter::Adapter, Emulator, CLOSE, ESCAPE, START};
 
 static DIACRITICS: [char; 297] = [
 	'\u{0305}',
@@ -320,8 +320,8 @@ impl Kitty {
 		let b1 = Self::encode(img).await?;
 		let b2 = Self::place(&area)?;
 
-		Adaptor::Kitty.image_hide()?;
-		Adaptor::shown_store(area);
+		Adapter::Kitty.image_hide()?;
+		Adapter::shown_store(area);
 		Emulator::move_lock((area.x, area.y), |stderr| {
 			stderr.write_all(&b1)?;
 			stderr.write_all(&b2)?;

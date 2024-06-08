@@ -6,7 +6,7 @@ use crossterm::{cursor::MoveTo, queue};
 use ratatui::layout::Rect;
 use tokio::process::Command;
 
-use crate::{Adaptor, Emulator};
+use crate::{Adapter, Emulator};
 
 pub(super) struct Chafa;
 
@@ -53,8 +53,8 @@ impl Chafa {
 			height: lines.len() as u16,
 		};
 
-		Adaptor::Chafa.image_hide()?;
-		Adaptor::shown_store(area);
+		Adapter::Chafa.image_hide()?;
+		Adapter::shown_store(area);
 		Emulator::move_lock((max.x, max.y), |stderr| {
 			for (i, line) in lines.into_iter().enumerate() {
 				stderr.write_all(line)?;

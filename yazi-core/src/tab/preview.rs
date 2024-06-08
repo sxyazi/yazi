@@ -3,7 +3,7 @@ use std::time::{Duration, SystemTime};
 use tokio::{pin, task::JoinHandle};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use tokio_util::sync::CancellationToken;
-use yazi_adaptor::ADAPTOR;
+use yazi_adapter::ADAPTOR;
 use yazi_config::PLUGIN;
 use yazi_plugin::{external::Highlighter, isolate, utils::PreviewLock};
 use yazi_shared::{fs::{Cha, File, FilesOp, Url}, MIME_DIR};

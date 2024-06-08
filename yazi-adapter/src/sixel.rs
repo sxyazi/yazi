@@ -7,7 +7,7 @@ use image::DynamicImage;
 use ratatui::layout::Rect;
 use yazi_config::PREVIEW;
 
-use crate::{adaptor::Adaptor, Emulator, Image, CLOSE, ESCAPE, START};
+use crate::{adapter::Adapter, Emulator, Image, CLOSE, ESCAPE, START};
 
 pub(super) struct Sixel;
 
@@ -17,8 +17,8 @@ impl Sixel {
 		let area = Image::pixel_area((img.width(), img.height()), max);
 		let b = Self::encode(img).await?;
 
-		Adaptor::Sixel.image_hide()?;
-		Adaptor::shown_store(area);
+		Adapter::Sixel.image_hide()?;
+		Adapter::shown_store(area);
 		Emulator::move_lock((area.x, area.y), |stderr| {
 			stderr.write_all(&b)?;
 			Ok(area)

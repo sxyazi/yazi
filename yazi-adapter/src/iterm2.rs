@@ -7,7 +7,7 @@ use image::{codecs::jpeg::JpegEncoder, DynamicImage};
 use ratatui::layout::Rect;
 
 use super::image::Image;
-use crate::{adaptor::Adaptor, Emulator, CLOSE, START};
+use crate::{adapter::Adapter, Emulator, CLOSE, START};
 
 pub(super) struct Iterm2;
 
@@ -17,8 +17,8 @@ impl Iterm2 {
 		let area = Image::pixel_area((img.width(), img.height()), max);
 		let b = Self::encode(img).await?;
 
-		Adaptor::Iterm2.image_hide()?;
-		Adaptor::shown_store(area);
+		Adapter::Iterm2.image_hide()?;
+		Adapter::shown_store(area);
 		Emulator::move_lock((max.x, max.y), |stderr| {
 			stderr.write_all(&b)?;
 			Ok(area)

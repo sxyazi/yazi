@@ -2690,7 +2690,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d135d17ab770252ad95e9a872d365cf3090e3be864a34ab46f48555993efc904"
 
 [[package]]
-name = "yazi-adaptor"
+name = "yazi-adapter"
 version = "0.2.5"
 dependencies = [
  "ansi-to-tui",
@@ -2722,7 +2722,7 @@ dependencies = [
  "regex",
  "serde",
  "vergen",
- "yazi-adaptor",
+ "yazi-adapter",
  "yazi-config",
  "yazi-shared",
 ]
@@ -2786,7 +2786,7 @@ dependencies = [
  "tokio-util",
  "tracing",
  "unicode-width",
- "yazi-adaptor",
+ "yazi-adapter",
  "yazi-boot",
  "yazi-config",
  "yazi-dds",
@@ -2835,7 +2835,7 @@ dependencies = [
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
- "yazi-adaptor",
+ "yazi-adapter",
  "yazi-boot",
  "yazi-config",
  "yazi-core",
@@ -2870,7 +2870,7 @@ dependencies = [
  "tracing",
  "unicode-width",
  "uzers",
- "yazi-adaptor",
+ "yazi-adapter",
  "yazi-boot",
  "yazi-config",
  "yazi-dds",

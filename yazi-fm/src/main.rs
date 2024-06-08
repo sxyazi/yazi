@@ -45,7 +45,7 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_config::init()?;
 
-	yazi_adaptor::init();
+	yazi_adapter::init();
 
 	yazi_boot::init();
 

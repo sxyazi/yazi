@@ -2,7 +2,7 @@ use std::{sync::Arc, time::Duration};
 
 use parking_lot::Mutex;
 use tokio::{task::JoinHandle, time::sleep};
-use yazi_adaptor::Dimension;
+use yazi_adapter::Dimension;
 use yazi_scheduler::{Ongoing, Scheduler, TaskSummary};
 use yazi_shared::{emit, event::Cmd, Layer};
 

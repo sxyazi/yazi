@@ -3,7 +3,7 @@ use std::{io::{self, stderr, BufWriter, Stderr}, ops::{Deref, DerefMut}, sync::a
 use anyhow::Result;
 use crossterm::{cursor::{RestorePosition, SavePosition}, event::{DisableBracketedPaste, EnableBracketedPaste, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen, SetTitle}};
 use ratatui::{backend::CrosstermBackend, buffer::Buffer, layout::Rect, CompletedFrame, Frame, Terminal};
-use yazi_adaptor::Emulator;
+use yazi_adapter::Emulator;
 use yazi_config::INPUT;
 
 static CSI_U: AtomicBool = AtomicBool::new(false);

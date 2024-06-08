@@ -1,5 +1,5 @@
 use ratatui::layout::Rect;
-use yazi_adaptor::Dimension;
+use yazi_adapter::Dimension;
 use yazi_config::popup::{Origin, Position};
 use yazi_core::{completion::Completion, help::Help, input::Input, manager::Manager, notify::Notify, select::Select, tasks::Tasks, which::Which};
 

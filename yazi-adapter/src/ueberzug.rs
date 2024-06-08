@@ -8,7 +8,7 @@ use tracing::{debug, warn};
 use yazi_config::PREVIEW;
 use yazi_shared::RoCell;
 
-use crate::{Adaptor, Image};
+use crate::{Adapter, Image};
 
 #[allow(clippy::type_complexity)]
 static DEMON: RoCell<Option<UnboundedSender<Option<(PathBuf, Rect)>>>> = RoCell::new();
@@ -16,12 +16,12 @@ static DEMON: RoCell<Option<UnboundedSender<Option<(PathBuf, Rect)>>>> = RoCell:
 pub(super) struct Ueberzug;
 
 impl Ueberzug {
-	pub(super) fn start(adaptor: Adaptor) {
-		if !adaptor.needs_ueberzug() {
+	pub(super) fn start(adapter: Adapter) {
+		if !adapter.needs_ueberzug() {
 			return DEMON.init(None);
 		}
 
-		let mut child = Self::create_demon(adaptor).ok();
+		let mut child = Self::create_demon(adapter).ok();
 		let (tx, mut rx) = mpsc::unbounded_channel();
 
 		tokio::spawn(async move {
@@ -31,7 +31,7 @@ impl Ueberzug {
 					child = None;
 				}
 				if child.is_none() {
-					child = Self::create_demon(adaptor).ok();
+					child = Self::create_demon(adapter).ok();
 				}
 				if let Some(c) = &mut child {
 					Self::send_command(c, cmd).await.ok();
@@ -53,7 +53,7 @@ impl Ueberzug {
 		let area = Image::pixel_area((w as u32, h as u32), max);
 		tx.send(Some((path.to_owned(), area)))?;
 
-		Adaptor::shown_store(area);
+		Adapter::shown_store(area);
 		Ok(area)
 	}
 
@@ -65,10 +65,10 @@ impl Ueberzug {
 		}
 	}
 
-	fn create_demon(adaptor: Adaptor) -> Result<Child> {
+	fn create_demon(adapter: Adapter) -> Result<Child> {
 		// TODO: demon
 		let result = Command::new("ueberzugpp")
-			.args(["layer", "-so", &adaptor.to_string()])
+			.args(["layer", "-so", &adapter.to_string()])
 			.env("SPDLOG_LEVEL", if cfg!(debug_assertions) { "debug" } else { "" })
 			.kill_on_drop(true)
 			.stdin(Stdio::piped())

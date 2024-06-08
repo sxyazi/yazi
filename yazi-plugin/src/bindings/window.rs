@@ -1,5 +1,5 @@
 use mlua::{FromLua, UserData};
-use yazi_adaptor::Dimension;
+use yazi_adapter::Dimension;
 
 #[derive(Debug, Clone, Copy, FromLua)]
 pub struct Window {

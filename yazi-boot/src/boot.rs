@@ -76,12 +76,12 @@ impl Boot {
 		writeln!(s, "    Version: {}", Self::process_output("ya", "--version"))?;
 
 		writeln!(s, "\nEmulator")?;
-		writeln!(s, "    Emulator.via_env: {:?}", yazi_adaptor::Emulator::via_env())?;
-		writeln!(s, "    Emulator.via_csi: {:?}", yazi_adaptor::Emulator::via_csi())?;
-		writeln!(s, "    Emulator.detect : {:?}", yazi_adaptor::Emulator::detect())?;
+		writeln!(s, "    Emulator.via_env: {:?}", yazi_adapter::Emulator::via_env())?;
+		writeln!(s, "    Emulator.via_csi: {:?}", yazi_adapter::Emulator::via_csi())?;
+		writeln!(s, "    Emulator.detect : {:?}", yazi_adapter::Emulator::detect())?;
 
-		writeln!(s, "\nAdaptor")?;
-		writeln!(s, "    Adaptor.matches: {:?}", yazi_adaptor::Adaptor::matches())?;
+		writeln!(s, "\nAdapter")?;
+		writeln!(s, "    Adapter.matches: {:?}", yazi_adapter::Adapter::matches())?;
 
 		writeln!(s, "\nDesktop")?;
 		writeln!(s, "    XDG_SESSION_TYPE: {:?}", env::var_os("XDG_SESSION_TYPE"))?;
@@ -114,7 +114,7 @@ impl Boot {
 		writeln!(s, "    block  : {:?}", yazi_config::OPEN.block_opener("bulk.txt", "text/plain"))?;
 
 		writeln!(s, "\ntmux")?;
-		writeln!(s, "    TMUX   : {:?}", *yazi_adaptor::TMUX)?;
+		writeln!(s, "    TMUX   : {:?}", *yazi_adapter::TMUX)?;
 		writeln!(s, "    Version: {}", Self::process_output("tmux", "-V"))?;
 
 		writeln!(s, "\nDependencies")?;

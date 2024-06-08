@@ -40,18 +40,18 @@ Before you begin, ensure you have met the following requirements:
 A brief overview of the project's structure:
 
 ```sh
-yazi/
+.
 ├── assets/             # Assets like images and fonts
 ├── nix/                # Nix-related configurations
 ├── scripts/            # Helper scripts used by CI/CD
 ├── snap/               # Snapcraft configuration
-├── yazi-adaptor/       # Yazi image adaptor
+├── yazi-adapter/       # Yazi image adapter
 ├── yazi-boot/          # Yazi bootstrapper
 ├── yazi-cli/           # Yazi command-line interface
 ├── yazi-config/        # Yazi configuration file parser
 ├── yazi-core/          # Yazi core logic
 ├── yazi-dds/           # Yazi data distribution service
-├── yazi-fm/            # Yazi File Manager
+├── yazi-fm/            # Yazi file manager
 ├── yazi-plugin/        # Yazi plugin system
 ├── yazi-proxy/         # Yazi event proxy
 ├── yazi-scheduler/     # Yazi task scheduler

@@ -1,6 +1,6 @@
 use crossterm::terminal::WindowSize;
 use ratatui::layout::Rect;
-use yazi_adaptor::Dimension;
+use yazi_adapter::Dimension;
 use yazi_shared::event::Cmd;
 
 use crate::{app::App, notify};

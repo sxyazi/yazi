@@ -9,7 +9,7 @@ use super::{Iterm2, Kitty, KittyOld};
 use crate::{Chafa, Emulator, Sixel, Ueberzug, SHOWN, TMUX};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum Adaptor {
+pub enum Adapter {
 	Kitty,
 	KittyOld,
 	Iterm2,
@@ -21,7 +21,7 @@ pub enum Adaptor {
 	Chafa,
 }
 
-impl Display for Adaptor {
+impl Display for Adapter {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			Self::Kitty => write!(f, "kitty"),
@@ -35,7 +35,7 @@ impl Display for Adaptor {
 	}
 }
 
-impl Adaptor {
+impl Adapter {
 	pub async fn image_show(self, path: &Path, max: Rect) -> Result<Rect> {
 		match self {
 			Self::Kitty => Kitty::image_show(path, max).await,
@@ -76,7 +76,7 @@ impl Adaptor {
 	}
 }
 
-impl Adaptor {
+impl Adapter {
 	pub fn matches() -> Self {
 		let mut protocols = Emulator::detect().adapters();
 
@@ -94,7 +94,7 @@ impl Adaptor {
 		match env::var("XDG_SESSION_TYPE").unwrap_or_default().as_str() {
 			"x11" => return Self::X11,
 			"wayland" => return Self::Wayland,
-			_ => warn!("[Adaptor] Could not identify XDG_SESSION_TYPE"),
+			_ => warn!("[Adapter] Could not identify XDG_SESSION_TYPE"),
 		}
 		if env_exists("WAYLAND_DISPLAY") {
 			return Self::Wayland;
@@ -106,7 +106,7 @@ impl Adaptor {
 			return Self::KittyOld;
 		}
 
-		warn!("[Adaptor] Falling back to chafa");
+		warn!("[Adapter] Falling back to chafa");
 		Self::Chafa
 	}
 }

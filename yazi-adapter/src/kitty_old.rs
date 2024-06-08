@@ -7,7 +7,7 @@ use image::DynamicImage;
 use ratatui::layout::Rect;
 
 use super::image::Image;
-use crate::{adaptor::Adaptor, Emulator, CLOSE, ESCAPE, START};
+use crate::{adapter::Adapter, Emulator, CLOSE, ESCAPE, START};
 
 pub(super) struct KittyOld;
 
@@ -17,8 +17,8 @@ impl KittyOld {
 		let area = Image::pixel_area((img.width(), img.height()), max);
 		let b = Self::encode(img).await?;
 
-		Adaptor::KittyOld.image_hide()?;
-		Adaptor::shown_store(area);
+		Adapter::KittyOld.image_hide()?;
+		Adapter::shown_store(area);
 		Emulator::move_lock((area.x, area.y), |stderr| {
 			stderr.write_all(&b)?;
 			Ok(area)

@@ -1,6 +1,6 @@
 use crossterm::event::KeyCode;
 use unicode_width::UnicodeWidthStr;
-use yazi_adaptor::Dimension;
+use yazi_adapter::Dimension;
 use yazi_config::{keymap::{Control, Key}, KEYMAP};
 use yazi_shared::{render, render_and, Layer};
 
