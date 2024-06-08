@@ -174,7 +174,7 @@ mod mouse {
 		fn execute_winapi(&self) -> io::Result<()> {
 			if MANAGER.mouse_events.is_empty() {
 				Ok(())
-			} else if self.enabled {
+			} else if self.0 {
 				EnableMouseCapture.execute_winapi()
 			} else {
 				DisableMouseCapture.execute_winapi()
