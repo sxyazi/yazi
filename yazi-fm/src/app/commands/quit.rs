@@ -1,9 +1,9 @@
 use std::ffi::OsString;
 
 use yazi_boot::ARGS;
-use yazi_shared::{event::EventQuit, term::Term};
+use yazi_shared::event::EventQuit;
 
-use crate::app::App;
+use crate::{app::App, Term};
 
 impl App {
 	pub(crate) fn quit(&mut self, opt: EventQuit) -> ! {

@@ -4,9 +4,9 @@ use anyhow::Result;
 use crossterm::event::KeyEvent;
 use yazi_config::keymap::Key;
 use yazi_core::input::InputMode;
-use yazi_shared::{emit, event::{Cmd, Event, NEED_RENDER}, term::Term, Layer};
+use yazi_shared::{emit, event::{Cmd, Event, NEED_RENDER}, Layer};
 
-use crate::{lives::Lives, Ctx, Executor, Router, Signals};
+use crate::{lives::Lives, Ctx, Executor, Router, Signals, Term};
 
 pub(crate) struct App {
 	pub(crate) cx:      Ctx,

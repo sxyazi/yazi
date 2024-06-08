@@ -2,9 +2,9 @@ use std::{io::Write, path::Path, process::Stdio};
 
 use ansi_to_tui::IntoText;
 use anyhow::{bail, Result};
+use crossterm::{cursor::MoveTo, queue};
 use ratatui::layout::Rect;
 use tokio::process::Command;
-use yazi_shared::term::Term;
 
 use crate::{Adaptor, Emulator};
 
@@ -58,7 +58,7 @@ impl Chafa {
 		Emulator::move_lock((max.x, max.y), |stderr| {
 			for (i, line) in lines.into_iter().enumerate() {
 				stderr.write_all(line)?;
-				Term::move_to(stderr, max.x, max.y + i as u16 + 1)?;
+				queue!(stderr, MoveTo(max.x, max.y + i as u16 + 1))?;
 			}
 			Ok(area)
 		})
@@ -68,7 +68,7 @@ impl Chafa {
 		let s = " ".repeat(area.width as usize);
 		Emulator::move_lock((0, 0), |stderr| {
 			for y in area.top()..area.bottom() {
-				Term::move_to(stderr, area.x, y)?;
+				queue!(stderr, MoveTo(area.x, y))?;
 				write!(stderr, "{s}")?;
 			}
 			Ok(())

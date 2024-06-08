@@ -1,19 +1,21 @@
-use std::{io::{self, stderr, BufWriter, Stderr, Write}, mem, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}};
+use std::{io::{self, stderr, BufWriter, Stderr}, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}};
 
 use anyhow::Result;
-use crossterm::{cursor::{RestorePosition, SavePosition}, event::{DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, SetTitle, WindowSize}};
+use crossterm::{cursor::{RestorePosition, SavePosition}, event::{DisableBracketedPaste, EnableBracketedPaste, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen, SetTitle}};
 use ratatui::{backend::CrosstermBackend, buffer::Buffer, layout::Rect, CompletedFrame, Frame, Terminal};
+use yazi_adaptor::Emulator;
+use yazi_config::INPUT;
 
 static CSI_U: AtomicBool = AtomicBool::new(false);
 
-pub struct Term {
+pub(super) struct Term {
 	inner:       Terminal<CrosstermBackend<BufWriter<Stderr>>>,
 	last_area:   Rect,
 	last_buffer: Buffer,
 }
 
 impl Term {
-	pub fn start() -> Result<Self> {
+	pub(super) fn start() -> Result<Self> {
 		let mut term = Self {
 			inner:       Terminal::new(CrosstermBackend::new(BufWriter::new(stderr())))?,
 			last_area:   Default::default(),
@@ -25,13 +27,13 @@ impl Term {
 			BufWriter::new(stderr()),
 			EnterAlternateScreen,
 			EnableBracketedPaste,
-			EnableMouseCapture,
+			mouse::SetMouse(true),
 			SavePosition,
 			Print("\x1b[?u\x1b[c"),
 			RestorePosition
 		)?;
 
-		let resp = futures::executor::block_on(Self::read_until_da1());
+		let resp = futures::executor::block_on(Emulator::read_until_da1());
 		if resp.is_ok_and(|s| s.contains("\x1b[?0u")) {
 			queue!(
 				stderr(),
@@ -56,7 +58,7 @@ impl Term {
 
 		execute!(
 			stderr(),
-			DisableMouseCapture,
+			mouse::SetMouse(false),
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
 			crossterm::cursor::SetCursorStyle::DefaultUserShape
@@ -66,7 +68,7 @@ impl Term {
 		Ok(disable_raw_mode()?)
 	}
 
-	pub fn goodbye(f: impl FnOnce() -> bool) -> ! {
+	pub(super) fn goodbye(f: impl FnOnce() -> bool) -> ! {
 		if CSI_U.swap(false, Ordering::Relaxed) {
 			execute!(stderr(), PopKeyboardEnhancementFlags).ok();
 		}
@@ -74,7 +76,7 @@ impl Term {
 		execute!(
 			stderr(),
 			SetTitle(""),
-			DisableMouseCapture,
+			mouse::SetMouse(false),
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
 			crossterm::cursor::SetCursorStyle::DefaultUserShape,
@@ -87,7 +89,7 @@ impl Term {
 		std::process::exit(f() as i32);
 	}
 
-	pub fn draw(&mut self, f: impl FnOnce(&mut Frame)) -> io::Result<CompletedFrame> {
+	pub(super) fn draw(&mut self, f: impl FnOnce(&mut Frame)) -> io::Result<CompletedFrame> {
 		let last = self.inner.draw(f)?;
 
 		self.last_area = last.area;
@@ -95,7 +97,7 @@ impl Term {
 		Ok(last)
 	}
 
-	pub fn draw_partial(&mut self, f: impl FnOnce(&mut Frame)) -> io::Result<CompletedFrame> {
+	pub(super) fn draw_partial(&mut self, f: impl FnOnce(&mut Frame)) -> io::Result<CompletedFrame> {
 		self.inner.draw(|frame| {
 			let buffer = frame.buffer_mut();
 			for y in self.last_area.top()..self.last_area.bottom() {
@@ -111,43 +113,28 @@ impl Term {
 	}
 
 	#[inline]
-	pub fn can_partial(&mut self) -> bool {
+	pub(super) fn can_partial(&mut self) -> bool {
 		self.inner.autoresize().is_ok() && self.last_area == self.inner.get_frame().size()
 	}
 
-	pub fn size() -> WindowSize {
-		let mut size = WindowSize { rows: 0, columns: 0, width: 0, height: 0 };
-		if let Ok(s) = crossterm::terminal::window_size() {
-			_ = mem::replace(&mut size, s);
-		}
-
-		if size.rows == 0 || size.columns == 0 {
-			if let Ok(s) = crossterm::terminal::size() {
-				size.columns = s.0;
-				size.rows = s.1;
-			}
-		}
-
-		// TODO: Use `CSI 14 t` to get the actual size of the terminal
-		// if size.width == 0 || size.height == 0 {}
-
-		size
+	#[inline]
+	pub(super) fn set_cursor_block() -> Result<()> {
+		use crossterm::cursor::SetCursorStyle;
+		Ok(if INPUT.cursor_blink {
+			queue!(stderr(), SetCursorStyle::BlinkingBlock)?
+		} else {
+			queue!(stderr(), SetCursorStyle::SteadyBlock)?
+		})
 	}
 
 	#[inline]
-	pub fn ratio() -> Option<(f64, f64)> {
-		let s = Self::size();
-		if s.width == 0 || s.height == 0 {
-			return None;
-		}
-		Some((f64::from(s.width) / f64::from(s.columns), f64::from(s.height) / f64::from(s.rows)))
-	}
-
-	#[inline]
-	pub fn clear(w: &mut impl Write) -> Result<()> {
-		queue!(w, Clear(ClearType::All))?;
-		writeln!(w)?;
-		Ok(w.flush()?)
+	pub(super) fn set_cursor_bar() -> Result<()> {
+		use crossterm::cursor::SetCursorStyle;
+		Ok(if INPUT.cursor_blink {
+			queue!(stderr(), SetCursorStyle::BlinkingBar)?
+		} else {
+			queue!(stderr(), SetCursorStyle::SteadyBar)?
+		})
 	}
 }
 
@@ -163,4 +150,44 @@ impl Deref for Term {
 
 impl DerefMut for Term {
 	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.inner }
+}
+
+// --- Mouse support
+mod mouse {
+	use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
+	use yazi_config::MANAGER;
+
+	pub struct SetMouse(pub bool);
+
+	impl crossterm::Command for SetMouse {
+		fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+			if MANAGER.mouse_events.is_empty() {
+				Ok(())
+			} else if self.0 {
+				EnableMouseCapture.write_ansi(f)
+			} else {
+				DisableMouseCapture.write_ansi(f)
+			}
+		}
+
+		#[cfg(windows)]
+		fn execute_winapi(&self) -> std::io::Result<()> {
+			if MANAGER.mouse_events.is_empty() {
+				Ok(())
+			} else if self.0 {
+				EnableMouseCapture.execute_winapi()
+			} else {
+				DisableMouseCapture.execute_winapi()
+			}
+		}
+
+		#[cfg(windows)]
+		fn is_ansi_code_supported(&self) -> bool {
+			if self.0 {
+				EnableMouseCapture.is_ansi_code_supported()
+			} else {
+				DisableMouseCapture.is_ansi_code_supported()
+			}
+		}
+	}
 }

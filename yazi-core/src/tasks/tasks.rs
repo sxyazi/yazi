@@ -2,8 +2,9 @@ use std::{sync::Arc, time::Duration};
 
 use parking_lot::Mutex;
 use tokio::{task::JoinHandle, time::sleep};
+use yazi_adaptor::Dimension;
 use yazi_scheduler::{Ongoing, Scheduler, TaskSummary};
-use yazi_shared::{emit, event::Cmd, term::Term, Layer};
+use yazi_shared::{emit, event::Cmd, Layer};
 
 use super::{TasksProgress, TASKS_BORDER, TASKS_PADDING, TASKS_PERCENT};
 
@@ -53,7 +54,8 @@ impl Tasks {
 
 	#[inline]
 	pub fn limit() -> usize {
-		(Term::size().rows * TASKS_PERCENT / 100).saturating_sub(TASKS_BORDER + TASKS_PADDING) as usize
+		(Dimension::available().rows * TASKS_PERCENT / 100).saturating_sub(TASKS_BORDER + TASKS_PADDING)
+			as usize
 	}
 
 	pub fn paginate(&self) -> Vec<TaskSummary> {

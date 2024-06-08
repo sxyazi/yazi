@@ -6,9 +6,8 @@ use syntect::easy::HighlightLines;
 use yazi_config::THEME;
 use yazi_core::input::InputMode;
 use yazi_plugin::external::Highlighter;
-use yazi_shared::term::Term;
 
-use crate::Ctx;
+use crate::{Ctx, Term};
 
 pub(crate) struct Input<'a> {
 	cx: &'a Ctx,

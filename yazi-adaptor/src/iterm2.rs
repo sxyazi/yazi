@@ -2,9 +2,9 @@ use std::{io::Write, path::Path};
 
 use anyhow::Result;
 use base64::{engine::{general_purpose::STANDARD, Config}, Engine};
+use crossterm::{cursor::MoveTo, queue};
 use image::{codecs::jpeg::JpegEncoder, DynamicImage};
 use ratatui::layout::Rect;
-use yazi_shared::term::Term;
 
 use super::image::Image;
 use crate::{adaptor::Adaptor, Emulator, CLOSE, START};
@@ -29,7 +29,7 @@ impl Iterm2 {
 		let s = " ".repeat(area.width as usize);
 		Emulator::move_lock((0, 0), |stderr| {
 			for y in area.top()..area.bottom() {
-				Term::move_to(stderr, area.x, y)?;
+				queue!(stderr, MoveTo(area.x, y))?;
 				write!(stderr, "{s}")?;
 			}
 			Ok(())

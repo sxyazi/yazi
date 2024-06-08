@@ -21,6 +21,7 @@ mod router;
 mod select;
 mod signals;
 mod tasks;
+mod term;
 mod which;
 
 use context::*;
@@ -31,6 +32,7 @@ use panic::*;
 use root::*;
 use router::*;
 use signals::*;
+use term::*;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

@@ -5,6 +5,8 @@ use crate::MERGED_YAZI;
 
 #[derive(Deserialize)]
 pub struct Input {
+	pub cursor_blink: bool,
+
 	// cd
 	pub cd_title:  String,
 	pub cd_origin: Origin,

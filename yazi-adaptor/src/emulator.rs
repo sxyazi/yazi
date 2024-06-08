@@ -1,10 +1,11 @@
-use std::{env, io::{stderr, LineWriter}};
+use std::{env, io::{stderr, LineWriter}, time::Duration};
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use crossterm::{cursor::{RestorePosition, SavePosition}, execute, style::Print, terminal::{disable_raw_mode, enable_raw_mode}};
 use scopeguard::defer;
-use tracing::warn;
-use yazi_shared::{env_exists, term::Term};
+use tokio::{io::{AsyncReadExt, BufReader}, time::timeout};
+use tracing::{error, warn};
+use yazi_shared::env_exists;
 
 use crate::{Adaptor, CLOSE, ESCAPE, START, TMUX};
 
@@ -129,7 +130,7 @@ impl Emulator {
 			RestorePosition
 		)?;
 
-		let resp = futures::executor::block_on(Term::read_until_da1())?;
+		let resp = futures::executor::block_on(Self::read_until_da1())?;
 		let names = [
 			("kitty", Self::Kitty),
 			("Konsole", Self::Konsole),
@@ -186,5 +187,30 @@ impl Emulator {
 
 		buf.flush()?;
 		result
+	}
+
+	pub async fn read_until_da1() -> Result<String> {
+		let read = async {
+			let mut stdin = BufReader::new(tokio::io::stdin());
+			let mut buf = String::with_capacity(200);
+			loop {
+				let mut c = [0; 1];
+				if stdin.read(&mut c).await? == 0 {
+					bail!("unexpected EOF");
+				}
+				buf.push(c[0] as char);
+				if c[0] == b'c' && buf.contains("\x1b[?") {
+					break;
+				}
+			}
+			Ok(buf)
+		};
+
+		let timeout = timeout(Duration::from_secs(10), read).await;
+		if let Err(ref e) = timeout {
+			error!("read_until_da1: {e:?}");
+		}
+
+		timeout?
 	}
 }

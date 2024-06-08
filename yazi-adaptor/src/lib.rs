@@ -2,6 +2,7 @@
 
 mod adaptor;
 mod chafa;
+mod dimension;
 mod emulator;
 mod image;
 mod iterm2;
@@ -12,6 +13,7 @@ mod ueberzug;
 
 pub use adaptor::*;
 use chafa::*;
+pub use dimension::*;
 pub use emulator::*;
 use iterm2::*;
 use kitty::*;

@@ -5,7 +5,8 @@ use exif::{In, Tag};
 use image::{codecs::jpeg::JpegEncoder, imageops::{self, FilterType}, io::Limits, DynamicImage};
 use ratatui::layout::Rect;
 use yazi_config::{PREVIEW, TASKS};
-use yazi_shared::term::Term;
+
+use crate::Dimension;
 
 pub struct Image;
 
@@ -77,7 +78,7 @@ impl Image {
 	}
 
 	pub(super) fn max_pixel(rect: Rect) -> (u32, u32) {
-		Term::ratio()
+		Dimension::ratio()
 			.map(|(r1, r2)| {
 				let (w, h) = ((rect.width as f64 * r1) as u32, (rect.height as f64 * r2) as u32);
 				(w.min(PREVIEW.max_width), h.min(PREVIEW.max_height))
@@ -86,7 +87,7 @@ impl Image {
 	}
 
 	pub(super) fn pixel_area(size: (u32, u32), rect: Rect) -> Rect {
-		Term::ratio()
+		Dimension::ratio()
 			.map(|(r1, r2)| Rect {
 				x:      rect.x,
 				y:      rect.y,

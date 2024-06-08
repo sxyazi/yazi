@@ -4,7 +4,7 @@ use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use scopeguard::defer;
 use tokio::{io::{stdin, AsyncReadExt}, select, sync::mpsc, time};
 use yazi_proxy::{AppProxy, HIDER};
-use yazi_shared::{event::Cmd, term::Term};
+use yazi_shared::{event::Cmd, terminal_clear};
 
 use crate::tasks::Tasks;
 
@@ -30,7 +30,7 @@ impl Tasks {
 			defer!(AppProxy::resume());
 			AppProxy::stop().await;
 
-			Term::clear(&mut stderr()).ok();
+			terminal_clear(&mut stderr()).ok();
 			BufWriter::new(stderr().lock()).write_all(mem::take(&mut buffered).as_bytes()).ok();
 
 			defer! { disable_raw_mode().ok(); }
