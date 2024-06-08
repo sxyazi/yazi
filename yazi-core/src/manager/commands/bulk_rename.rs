@@ -6,7 +6,7 @@ use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 use yazi_config::{OPEN, PREVIEW};
 use yazi_dds::Pubsub;
 use yazi_proxy::{AppProxy, TasksProxy, HIDER, WATCHER};
-use yazi_shared::{fs::{max_common_root, maybe_exists, File, FilesOp, Url}, term::Term};
+use yazi_shared::{fs::{max_common_root, maybe_exists, File, FilesOp, Url}, terminal_clear};
 
 use crate::manager::Manager;
 
@@ -52,7 +52,7 @@ impl Manager {
 		old: Vec<PathBuf>,
 		new: Vec<PathBuf>,
 	) -> Result<()> {
-		Term::clear(&mut stderr())?;
+		terminal_clear(&mut stderr())?;
 		if old.len() != new.len() {
 			eprintln!("Number of old and new differ, press ENTER to exit");
 			stdin().read_exact(&mut [0]).await?;
@@ -108,7 +108,7 @@ impl Manager {
 	}
 
 	async fn output_failed(failed: Vec<(PathBuf, PathBuf, anyhow::Error)>) -> Result<()> {
-		Term::clear(&mut stderr())?;
+		terminal_clear(&mut stderr())?;
 
 		{
 			let mut stderr = BufWriter::new(stderr().lock());

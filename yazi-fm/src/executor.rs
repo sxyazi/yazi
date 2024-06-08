@@ -159,7 +159,6 @@ impl<'a> Executor<'a> {
 		on!(open_with);
 		on!(process_exec);
 
-		#[allow(clippy::single_match)]
 		match cmd.name.as_str() {
 			// Help
 			"help" => self.app.cx.help.toggle(Layer::Tasks),
@@ -182,7 +181,6 @@ impl<'a> Executor<'a> {
 		on!(close);
 		on!(arrow);
 
-		#[allow(clippy::single_match)]
 		match cmd.name.as_str() {
 			// Help
 			"help" => self.app.cx.help.toggle(Layer::Select),
@@ -233,7 +231,6 @@ impl<'a> Executor<'a> {
 				on!(undo);
 				on!(redo);
 
-				#[allow(clippy::single_match)]
 				match cmd.name.as_str() {
 					// Help
 					"help" => self.app.cx.help.toggle(Layer::Input),
@@ -262,7 +259,6 @@ impl<'a> Executor<'a> {
 		on!(arrow);
 		on!(filter);
 
-		#[allow(clippy::single_match)]
 		match cmd.name.as_str() {
 			"close" => self.app.cx.help.toggle(Layer::Help),
 			// Plugin
@@ -285,7 +281,6 @@ impl<'a> Executor<'a> {
 		on!(close);
 		on!(arrow);
 
-		#[allow(clippy::single_match)]
 		match cmd.name.as_str() {
 			"close_input" => self.app.cx.input.close(cmd),
 			// Help

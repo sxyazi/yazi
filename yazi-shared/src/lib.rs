@@ -12,7 +12,7 @@ mod natsort;
 mod number;
 mod os;
 mod ro_cell;
-pub mod term;
+mod terminal;
 pub mod theme;
 mod throttle;
 mod time;
@@ -30,6 +30,7 @@ pub use number::*;
 #[cfg(unix)]
 pub use os::*;
 pub use ro_cell::*;
+pub use terminal::*;
 pub use throttle::*;
 pub use time::*;
 pub use translit::*;

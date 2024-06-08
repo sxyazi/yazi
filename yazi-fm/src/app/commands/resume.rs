@@ -1,6 +1,6 @@
-use yazi_shared::{event::Cmd, term::Term};
+use yazi_shared::event::Cmd;
 
-use crate::app::App;
+use crate::{app::App, Term};
 
 impl App {
 	pub(crate) fn resume(&mut self, _: Cmd) {

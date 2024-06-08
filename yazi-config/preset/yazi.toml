@@ -33,12 +33,12 @@ edit = [
 	{ run = 'code -w "%*"', block = true,  desc = "code (block)", for = "windows" },
 ]
 open = [
-	{ run = 'xdg-open "$@"',                desc = "Open", for = "linux" },
+	{ run = 'xdg-open "$1"',                desc = "Open", for = "linux" },
 	{ run = 'open "$@"',                    desc = "Open", for = "macos" },
 	{ run = 'start "" "%1"', orphan = true, desc = "Open", for = "windows" },
 ]
 reveal = [
-	{ run = 'xdg-open "$(dirname "$0")"',            desc = "Reveal", for = "linux" },
+	{ run = 'xdg-open "$(dirname "$1")"',            desc = "Reveal", for = "linux" },
 	{ run = 'open -R "$1"',                          desc = "Reveal", for = "macos" },
 	{ run = 'explorer /select, "%1"', orphan = true, desc = "Reveal", for = "windows" },
 	{ run = '''exiftool "$1"; echo "Press enter to exit"; read _''', block = true, desc = "Show EXIF", for = "unix" },
@@ -122,6 +122,8 @@ previewers = [
 ]
 
 [input]
+cursor_blink = true
+
 # cd
 cd_title  = "Change directory:"
 cd_origin = "top-center"
