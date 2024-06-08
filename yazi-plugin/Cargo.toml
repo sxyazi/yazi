@@ -39,6 +39,7 @@ tokio         = { version = "1.38.0", features = [ "full" ] }
 tokio-stream  = "0.1.15"
 tokio-util    = "0.7.11"
 unicode-width = "0.1.13"
+textwrap	  = "0.14.2"
 yazi-prebuild = "0.1.2"
 
 # Logging

@@ -6,6 +6,8 @@ use syntect::{dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}
 use tokio::{fs::File, io::{AsyncBufReadExt, BufReader}};
 use yazi_config::{PREVIEW, THEME};
 use yazi_shared::PeekError;
+use ratatui::prelude::Rect;
+use textwrap::wrap as textwrap_wrap;
 
 static INCR: AtomicUsize = AtomicUsize::new(0);
 static SYNTECT_SYNTAX: OnceLock<SyntaxSet> = OnceLock::new();
@@ -56,20 +58,20 @@ impl Highlighter {
 		syntaxes.find_syntax_by_first_line(&line).ok_or_else(|| anyhow!("No syntax found"))
 	}
 
-	pub async fn highlight(&self, skip: usize, limit: usize) -> Result<Text<'static>, PeekError> {
+	pub async fn highlight(&self, skip: usize, area: Rect, wrap: bool) -> Result<Text<'static>, PeekError> {
 		let mut reader = BufReader::new(File::open(&self.path).await?);
 
 		let syntax = Self::find_syntax(&self.path).await;
 		let mut plain = syntax.is_err();
 
 		let mut before = Vec::with_capacity(if plain { 0 } else { skip });
-		let mut after = Vec::with_capacity(limit);
+		let mut after = Vec::with_capacity(area.height as usize);
 
 		let mut i = 0;
 		let mut buf = vec![];
 		while reader.read_until(b'\n', &mut buf).await.is_ok() {
 			i += 1;
-			if buf.is_empty() || i > skip + limit {
+			if buf.is_empty() || i > skip + area.height as usize {
 				break;
 			}
 
@@ -84,23 +86,40 @@ impl Highlighter {
 				buf.push(b'\n');
 			}
 
+			let line = String::from_utf8_lossy(&buf).into_owned();
+
 			if i > skip {
-				after.push(String::from_utf8_lossy(&buf).into_owned());
+				after.push(line);
 			} else if !plain {
-				before.push(String::from_utf8_lossy(&buf).into_owned());
+				before.push(line);
 			}
 			buf.clear();
 		}
 
-		if skip > 0 && i < skip + limit {
-			return Err(PeekError::Exceed(i.saturating_sub(limit)));
+		if skip > 0 && i < skip + area.height as usize {
+			return Err(PeekError::Exceed(i.saturating_sub(area.height as usize)));
 		}
 
+		let indent = " ".repeat(PREVIEW.tab_size as usize);
+		let after_text = after.join("").replace('\t', &indent);
+
 		if plain {
-			let indent = " ".repeat(PREVIEW.tab_size as usize);
-			Ok(Text::from(after.join("").replace('\t', &indent)))
+			let wrapped_text = if wrap {
+				textwrap_wrap(&after_text, area.width as usize).join("\n")
+			} else {
+				after_text
+			};
+			Ok(Text::from(wrapped_text))
 		} else {
-			Self::highlight_with(before, after, syntax.unwrap()).await
+			let wrapped_after: Vec<String> = if wrap {
+				textwrap_wrap(&after_text, area.width as usize)
+					.into_iter()
+					.map(|cow| cow.trim_end_matches('\n').to_string())
+					.collect()
+			} else {
+				after
+			};
+			Self::highlight_with(before, wrapped_after, syntax.unwrap()).await
 		}
 	}
 

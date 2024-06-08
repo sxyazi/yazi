@@ -9,6 +9,7 @@ use crate::{validation::check_validation, Xdg, MERGED_YAZI};
 #[derive(Debug, Serialize)]
 pub struct Preview {
 	pub tab_size:   u8,
+	pub word_wrap: bool,
 	pub max_width:  u32,
 	pub max_height: u32,
 
@@ -31,6 +32,7 @@ impl Default for Preview {
 		#[derive(Deserialize, Validate)]
 		struct Shadow {
 			tab_size:   u8,
+			word_wrap:  bool,
 			max_width:  u32,
 			max_height: u32,
 
@@ -55,6 +57,7 @@ impl Default for Preview {
 
 		Preview {
 			tab_size: preview.tab_size,
+			word_wrap: preview.word_wrap,
 			max_width: preview.max_width,
 			max_height: preview.max_height,
 
