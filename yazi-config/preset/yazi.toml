@@ -18,6 +18,7 @@ title_format   = "Yazi: {cwd}"
 
 [preview]
 tab_size        = 2
+word_wrap		= false
 max_width       = 600
 max_height      = 900
 cache_dir       = ""
