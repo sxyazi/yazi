@@ -171,7 +171,7 @@ mod mouse {
 		}
 
 		#[cfg(windows)]
-		fn execute_winapi(&self) -> io::Result<()> {
+		fn execute_winapi(&self) -> std::io::Result<()> {
 			if MANAGER.mouse_events.is_empty() {
 				Ok(())
 			} else if self.0 {
