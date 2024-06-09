@@ -1,6 +1,6 @@
 use std::{collections::HashSet, str::FromStr};
 
-use yazi_config::{keymap::{Control, Key}, KEYMAP};
+use yazi_config::{keymap::{Control, Key}, KEYMAP, WHICH};
 use yazi_shared::{event::Cmd, render, Layer};
 
 use crate::which::{Which, WhichSorter};
@@ -43,6 +43,10 @@ impl Which {
 	}
 
 	pub fn show_with(&mut self, key: &Key, layer: Layer) {
+		if !WHICH.enable {
+			return;
+		}
+
 		let mut seen = HashSet::new();
 
 		self.layer = layer;

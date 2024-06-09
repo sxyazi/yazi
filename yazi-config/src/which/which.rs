@@ -6,6 +6,7 @@ use crate::MERGED_YAZI;
 
 #[derive(Debug, Deserialize, Serialize, Validate)]
 pub struct Which {
+	pub enable:         bool,
 	// Sorting
 	pub sort_by:        SortBy,
 	pub sort_sensitive: bool,
