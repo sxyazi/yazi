@@ -1,16 +1,64 @@
-use std::{collections::VecDeque, fs::Metadata, path::{Path, PathBuf}};
+use std::{borrow::Cow, collections::{HashMap, VecDeque}, fs::Metadata, path::{Path, PathBuf}};
 
 use anyhow::Result;
 use filetime::{set_file_mtime, FileTime};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
 
+#[inline]
 pub async fn must_exists(p: impl AsRef<Path>) -> bool { fs::symlink_metadata(p).await.is_ok() }
 
+#[inline]
 pub async fn maybe_exists(p: impl AsRef<Path>) -> bool {
 	match fs::symlink_metadata(p).await {
 		Ok(_) => true,
 		Err(e) => e.kind() != io::ErrorKind::NotFound,
 	}
+}
+
+#[inline]
+pub fn ok_or_not_found(result: io::Result<()>) -> io::Result<()> {
+	match result {
+		Ok(()) => Ok(()),
+		Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(()),
+		Err(_) => result,
+	}
+}
+
+// realpath(3) without resolving symlinks. This is useful for case-insensitive
+// filesystems.
+//
+// Make sure the file of the path exists and is a symlink.
+pub async fn symlink_realpath<'a>(
+	path: &'a Path,
+	cached: &'a mut HashMap<PathBuf, PathBuf>,
+) -> io::Result<Cow<'a, Path>> {
+	let Some(parent) = path.parent() else {
+		return Ok(Cow::Borrowed(path));
+	};
+
+	let lowercased: PathBuf = path.as_os_str().to_ascii_lowercase().into();
+	if lowercased == path {
+		return Ok(Cow::Borrowed(path));
+	}
+
+	let case = parent.as_os_str().as_encoded_bytes().iter().any(|&b| b.is_ascii_uppercase());
+	if !cached.contains_key(parent) {
+		let mut it = fs::read_dir(parent).await?;
+		while let Some(entry) = it.next_entry().await? {
+			let p = entry.path();
+			if case || p.file_name().unwrap().as_encoded_bytes().iter().any(|&b| b.is_ascii_uppercase()) {
+				cached.insert(p.as_os_str().to_ascii_lowercase().into(), p);
+			}
+		}
+		cached.insert(parent.to_owned(), PathBuf::new());
+	}
+
+	Ok(
+		cached
+			.get(&lowercased)
+			.filter(|p| !p.as_os_str().is_empty())
+			.map_or_else(|| Cow::Borrowed(path), |p| Cow::Borrowed(p)),
+	)
 }
 
 pub async fn calculate_size(path: &Path) -> u64 {

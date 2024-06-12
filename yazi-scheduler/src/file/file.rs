@@ -5,7 +5,7 @@ use futures::{future::BoxFuture, FutureExt};
 use tokio::{fs, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::TASKS;
-use yazi_shared::fs::{calculate_size, copy_with_progress, maybe_exists, path_relative_to, Url};
+use yazi_shared::fs::{calculate_size, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to, Url};
 
 use super::{FileOp, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash};
 use crate::{TaskOp, TaskProg, LOW, NORMAL};
@@ -26,12 +26,9 @@ impl File {
 	pub async fn work(&self, op: FileOp) -> Result<()> {
 		match op {
 			FileOp::Paste(mut task) => {
-				match fs::remove_file(&task.to).await {
-					Err(e) if e.kind() != NotFound => Err(e)?,
-					_ => {}
-				}
-
+				ok_or_not_found(fs::remove_file(&task.to).await)?;
 				let mut it = copy_with_progress(&task.from, &task.to, task.meta.as_ref().unwrap());
+
 				while let Some(res) = it.recv().await {
 					match res {
 						Ok(0) => {
@@ -83,21 +80,17 @@ impl File {
 					src
 				};
 
-				match fs::remove_file(&task.to).await {
-					Err(e) if e.kind() != NotFound => Err(e)?,
-					_ => {
-						#[cfg(unix)]
-						{
-							fs::symlink(src, &task.to).await?
-						}
-						#[cfg(windows)]
-						{
-							if meta.is_dir() {
-								fs::symlink_dir(src, &task.to).await?
-							} else {
-								fs::symlink_file(src, &task.to).await?
-							}
-						}
+				ok_or_not_found(fs::remove_file(&task.to).await)?;
+				#[cfg(unix)]
+				{
+					fs::symlink(src, &task.to).await?
+				}
+				#[cfg(windows)]
+				{
+					if meta.is_dir() {
+						fs::symlink_dir(src, &task.to).await?
+					} else {
+						fs::symlink_file(src, &task.to).await?
 					}
 				}
 
@@ -134,12 +127,8 @@ impl File {
 	}
 
 	pub async fn paste(&self, mut task: FileOpPaste) -> Result<()> {
-		if task.cut {
-			match fs::rename(&task.from, &task.to).await {
-				Ok(_) => return self.succ(task.id),
-				Err(e) if e.kind() == NotFound => return self.succ(task.id),
-				_ => {}
-			}
+		if task.cut && ok_or_not_found(fs::rename(&task.from, &task.to).await).is_ok() {
+			return self.succ(task.id);
 		}
 
 		if task.meta.is_none() {

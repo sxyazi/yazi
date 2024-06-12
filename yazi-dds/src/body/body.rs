@@ -63,11 +63,15 @@ impl Body<'static> {
 		if matches!(
 			kind,
 			"hi"
-				| "hey" | "bye"
-				| "cd" | "hover"
+				| "hey"
+				| "bye"
+				| "cd"
+				| "hover"
 				| "rename"
-				| "bulk" | "yank"
-				| "move" | "trash"
+				| "bulk"
+				| "yank"
+				| "move"
+				| "trash"
 				| "delete"
 		) {
 			bail!("Cannot construct system event");
