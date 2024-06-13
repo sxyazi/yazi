@@ -110,12 +110,12 @@ impl Watcher {
 					continue;
 				};
 
-				let realpath = if file.is_link() {
+				let real = if file.is_link() {
 					symlink_realpath_with(&url, &mut cached).await
 				} else {
 					fs::canonicalize(&url).await.map(Cow::Owned)
 				};
-				if !realpath.is_ok_and(|p| p == *url) {
+				if !real.is_ok_and(|p| p == *url) {
 					FilesOp::Deleting(parent, vec![url]).emit();
 					continue;
 				}
