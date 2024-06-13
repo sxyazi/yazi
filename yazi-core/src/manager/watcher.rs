@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, time::{Duration, SystemTime}};
+use std::{borrow::Cow, collections::{HashMap, HashSet}, time::{Duration, SystemTime}};
 
 use anyhow::Result;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
@@ -8,7 +8,7 @@ use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use tracing::error;
 use yazi_plugin::isolate;
 use yazi_proxy::WATCHER;
-use yazi_shared::{fs::{File, FilesOp, Url}, RoCell};
+use yazi_shared::{fs::{symlink_realpath_with, File, FilesOp, Url}, RoCell};
 
 use super::Linked;
 use crate::folder::{Files, Folder};
@@ -35,8 +35,8 @@ impl Watcher {
 			Default::default(),
 		);
 
-		tokio::spawn(Self::on_in(in_rx, watcher.unwrap()));
-		tokio::spawn(Self::on_out(out_rx));
+		tokio::spawn(Self::fan_in(in_rx, watcher.unwrap()));
+		tokio::spawn(Self::fan_out(out_rx));
 		Self { tx: in_tx }
 	}
 
@@ -65,7 +65,7 @@ impl Watcher {
 		});
 	}
 
-	async fn on_in(mut rx: watch::Receiver<HashSet<Url>>, mut watcher: RecommendedWatcher) {
+	async fn fan_in(mut rx: watch::Receiver<HashSet<Url>>, mut watcher: RecommendedWatcher) {
 		loop {
 			let (mut to_unwatch, mut to_watch): (HashSet<_>, HashSet<_>) = {
 				let (new, old) = (&*rx.borrow_and_update(), &*WATCHED.read());
@@ -91,27 +91,39 @@ impl Watcher {
 		}
 	}
 
-	async fn on_out(rx: UnboundedReceiver<Url>) {
+	async fn fan_out(rx: UnboundedReceiver<Url>) {
 		// TODO: revert this once a new notification is implemented
 		let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(50));
 		pin!(rx);
 
-		while let Some(urls) = rx.next().await {
+		while let Some(chunk) = rx.next().await {
+			let urls: HashSet<_> = chunk.into_iter().collect();
+			let mut cached: HashMap<_, _> = HashMap::new();
+
 			let _permit = WATCHER.acquire().await.unwrap();
 			let mut reload = Vec::with_capacity(urls.len());
 
-			for u in urls.into_iter().collect::<HashSet<_>>() {
-				let Some(parent) = u.parent_url() else { continue };
-
-				let Ok(file) = File::from(u.clone()).await else {
-					FilesOp::Deleting(parent, vec![u]).emit();
+			for url in urls {
+				let Some(parent) = url.parent_url() else { continue };
+				let Ok(file) = File::from(url.clone()).await else {
+					FilesOp::Deleting(parent, vec![url]).emit();
 					continue;
 				};
+
+				let real = if file.is_link() {
+					symlink_realpath_with(&url, &mut cached).await
+				} else {
+					fs::canonicalize(&url).await.map(Cow::Owned)
+				};
+				if !real.is_ok_and(|p| p == *url) {
+					FilesOp::Deleting(parent, vec![url]).emit();
+					continue;
+				}
 
 				if !file.is_dir() {
 					reload.push(file.clone());
 				}
-				FilesOp::Upserting(parent, HashMap::from_iter([(u, file)])).emit();
+				FilesOp::Upserting(parent, HashMap::from_iter([(url, file)])).emit();
 			}
 
 			if reload.is_empty() {

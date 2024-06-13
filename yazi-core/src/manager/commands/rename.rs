@@ -4,8 +4,8 @@ use anyhow::Result;
 use tokio::fs;
 use yazi_config::popup::InputCfg;
 use yazi_dds::Pubsub;
-use yazi_proxy::{InputProxy, ManagerProxy, WATCHER};
-use yazi_shared::{event::Cmd, fs::{maybe_exists, File, FilesOp, Url}};
+use yazi_proxy::{InputProxy, TabProxy, WATCHER};
+use yazi_shared::{event::Cmd, fs::{maybe_exists, ok_or_not_found, symlink_realpath, File, FilesOp, Url}};
 
 use crate::manager::Manager;
 
@@ -77,19 +77,23 @@ impl Manager {
 	}
 
 	async fn rename_do(tab: usize, old: Url, new: Url) -> Result<()> {
+		let Some(p_old) = old.parent_url() else { return Ok(()) };
+		let Some(p_new) = new.parent_url() else { return Ok(()) };
 		let _permit = WATCHER.acquire().await.unwrap();
 
+		let overwritten = symlink_realpath(&new).await;
 		fs::rename(&old, &new).await?;
-		if old.parent() != new.parent() {
-			return Ok(());
-		}
 
-		let file = File::from(new.clone()).await?;
+		if let Ok(p) = overwritten {
+			ok_or_not_found(fs::rename(&p, &new).await)?;
+			FilesOp::Deleting(p_new.clone(), vec![Url::from(p)]).emit();
+		}
 		Pubsub::pub_from_rename(tab, &old, &new);
 
-		FilesOp::Deleting(file.parent().unwrap(), vec![new.clone()]).emit();
-		FilesOp::Upserting(file.parent().unwrap(), HashMap::from_iter([(old, file)])).emit();
-		Ok(ManagerProxy::hover(Some(new)))
+		let file = File::from(new.clone()).await?;
+		FilesOp::Deleting(p_old, vec![old]).emit();
+		FilesOp::Upserting(p_new, HashMap::from_iter([(new.clone(), file)])).emit();
+		Ok(TabProxy::reveal(&new))
 	}
 
 	fn empty_url_part(url: &Url, by: &str) -> String {
