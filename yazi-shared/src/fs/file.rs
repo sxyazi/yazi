@@ -1,31 +1,23 @@
-use std::ops::Add;
-use std::time::{Duration, SystemTime};
-use std::{cell::Cell, ffi::OsStr, fs::Metadata, ops::Deref};
+use std::{cell::Cell, ffi::OsStr, fs::Metadata, ops::{Add, Deref}, time::{Duration, SystemTime}};
 
 use anyhow::{anyhow, Result};
 use tokio::fs;
 
-use crate::fs::SCHEMES;
-use crate::{
-	fs::{Cha, ChaKind, Url},
-	theme::IconCache,
-};
+use crate::{fs::{Cha, ChaKind, Url, SCHEMES}, theme::IconCache};
 
 #[derive(Clone, Debug, Default)]
 pub struct File {
-	pub url: Url,
-	pub cha: Cha,
+	pub url:     Url,
+	pub cha:     Cha,
 	pub link_to: Option<Url>,
-	pub icon: Cell<IconCache>,
+	pub icon:    Cell<IconCache>,
 }
 
 impl Deref for File {
 	type Target = Cha;
 
 	#[inline]
-	fn deref(&self) -> &Self::Target {
-		&self.cha
-	}
+	fn deref(&self) -> &Self::Target { &self.cha }
 }
 
 impl File {
@@ -102,30 +94,20 @@ impl File {
 	}
 
 	#[inline]
-	pub fn from_dummy(url: &Url) -> Self {
-		Self { url: url.to_owned(), ..Default::default() }
-	}
+	pub fn from_dummy(url: &Url) -> Self { Self { url: url.to_owned(), ..Default::default() } }
 }
 
 impl File {
 	// --- Url
 	#[inline]
-	pub fn url(&self) -> Url {
-		self.url.clone()
-	}
+	pub fn url(&self) -> Url { self.url.clone() }
 
 	#[inline]
-	pub fn name(&self) -> Option<&OsStr> {
-		self.url.file_name()
-	}
+	pub fn name(&self) -> Option<&OsStr> { self.url.file_name() }
 
 	#[inline]
-	pub fn stem(&self) -> Option<&OsStr> {
-		self.url.file_stem()
-	}
+	pub fn stem(&self) -> Option<&OsStr> { self.url.file_stem() }
 
 	#[inline]
-	pub fn parent(&self) -> Option<Url> {
-		self.url.parent_url()
-	}
+	pub fn parent(&self) -> Option<Url> { self.url.parent_url() }
 }

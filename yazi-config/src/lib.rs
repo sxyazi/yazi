@@ -19,12 +19,13 @@ pub mod theme;
 mod validation;
 pub mod which;
 
-use crate::schemes::Schemes;
 pub use layout::*;
 pub(crate) use pattern::*;
 pub(crate) use preset::*;
 pub use priority::*;
 use yazi_shared::fs::SCHEMES;
+
+use crate::schemes::Schemes;
 
 static MERGED_YAZI: RoCell<String> = RoCell::new();
 static MERGED_KEYMAP: RoCell<String> = RoCell::new();

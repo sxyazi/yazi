@@ -1,9 +1,4 @@
-use std::{
-	ffi::{OsStr, OsString},
-	fmt::{Debug, Display, Formatter},
-	ops::{Deref, DerefMut},
-	path::{Path, PathBuf},
-};
+use std::{ffi::{OsStr, OsString}, fmt::{Debug, Display, Formatter}, ops::{Deref, DerefMut}, path::{Path, PathBuf}};
 
 use percent_encoding::{percent_decode_str, percent_encode, AsciiSet, CONTROLS};
 use serde::{Deserialize, Serialize};
@@ -13,8 +8,8 @@ const ENCODE_SET: &AsciiSet = &CONTROLS.add(b'#');
 #[derive(Clone, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Url {
 	scheme: UrlScheme,
-	path: PathBuf,
-	frag: String,
+	path:   PathBuf,
+	frag:   String,
 }
 
 #[derive(Clone, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -29,51 +24,35 @@ pub enum UrlScheme {
 impl Deref for Url {
 	type Target = PathBuf;
 
-	fn deref(&self) -> &Self::Target {
-		&self.path
-	}
+	fn deref(&self) -> &Self::Target { &self.path }
 }
 
 impl DerefMut for Url {
-	fn deref_mut(&mut self) -> &mut Self::Target {
-		&mut self.path
-	}
+	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.path }
 }
 
 impl Debug for Url {
-	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-		write!(f, "{}", self.path.display())
-	}
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { write!(f, "{}", self.path.display()) }
 }
 
 impl From<PathBuf> for Url {
-	fn from(path: PathBuf) -> Self {
-		Self { path, ..Default::default() }
-	}
+	fn from(path: PathBuf) -> Self { Self { path, ..Default::default() } }
 }
 
 impl From<&PathBuf> for Url {
-	fn from(path: &PathBuf) -> Self {
-		Self::from(path.clone())
-	}
+	fn from(path: &PathBuf) -> Self { Self::from(path.clone()) }
 }
 
 impl From<&Path> for Url {
-	fn from(path: &Path) -> Self {
-		Self::from(path.to_path_buf())
-	}
+	fn from(path: &Path) -> Self { Self::from(path.to_path_buf()) }
 }
 
 impl From<String> for Url {
-	fn from(path: String) -> Self {
-		Self::from(path.as_str())
-	}
+	fn from(path: String) -> Self { Self::from(path.as_str()) }
 }
 
 impl From<&String> for Url {
-	fn from(path: &String) -> Self {
-		Self::from(path.as_str())
-	}
+	fn from(path: &String) -> Self { Self::from(path.as_str()) }
 }
 
 impl From<&str> for Url {
@@ -107,21 +86,15 @@ impl From<&str> for Url {
 }
 
 impl AsRef<Url> for Url {
-	fn as_ref(&self) -> &Url {
-		self
-	}
+	fn as_ref(&self) -> &Url { self }
 }
 
 impl AsRef<Path> for Url {
-	fn as_ref(&self) -> &Path {
-		&self.path
-	}
+	fn as_ref(&self) -> &Path { &self.path }
 }
 
 impl AsRef<OsStr> for Url {
-	fn as_ref(&self) -> &OsStr {
-		self.path.as_os_str()
-	}
+	fn as_ref(&self) -> &OsStr { self.path.as_os_str() }
 }
 
 impl Display for Url {
@@ -175,9 +148,7 @@ impl Url {
 	}
 
 	#[inline]
-	pub fn into_os_string(self) -> OsString {
-		self.path.into_os_string()
-	}
+	pub fn into_os_string(self) -> OsString { self.path.into_os_string() }
 
 	#[cfg(unix)]
 	#[inline]
@@ -189,14 +160,10 @@ impl Url {
 impl Url {
 	// --- Scheme
 	#[inline]
-	pub fn is_regular(&self) -> bool {
-		self.scheme == UrlScheme::Regular
-	}
+	pub fn is_regular(&self) -> bool { self.scheme == UrlScheme::Regular }
 
 	#[inline]
-	pub fn to_regular(&self) -> Self {
-		self.clone().into_regular()
-	}
+	pub fn to_regular(&self) -> Self { self.clone().into_regular() }
 
 	#[inline]
 	pub fn into_regular(mut self) -> Self {
@@ -205,14 +172,10 @@ impl Url {
 	}
 
 	#[inline]
-	pub fn is_search(&self) -> bool {
-		self.scheme == UrlScheme::Search
-	}
+	pub fn is_search(&self) -> bool { self.scheme == UrlScheme::Search }
 
 	#[inline]
-	pub fn to_search(&self, frag: String) -> Self {
-		self.clone().into_search(frag)
-	}
+	pub fn to_search(&self, frag: String) -> Self { self.clone().into_search(frag) }
 
 	#[inline]
 	pub fn into_search(mut self, frag: String) -> Self {
@@ -222,14 +185,10 @@ impl Url {
 	}
 
 	#[inline]
-	pub fn is_archive(&self) -> bool {
-		self.scheme == UrlScheme::Archive
-	}
+	pub fn is_archive(&self) -> bool { self.scheme == UrlScheme::Archive }
 
 	#[inline]
-	pub fn to_archive(&self) -> Self {
-		self.clone().into_archive()
-	}
+	pub fn to_archive(&self) -> Self { self.clone().into_archive() }
 
 	#[inline]
 	pub fn into_archive(mut self) -> Self {
@@ -239,7 +198,8 @@ impl Url {
 
 	/// Check and fetch remote scheme.
 	///
-	/// Returns None if current url is not remote, otherwise returns `Some(scheme)`
+	/// Returns None if current url is not remote, otherwise returns
+	/// `Some(scheme)`
 	#[inline]
 	pub fn is_remote(&self) -> Option<&str> {
 		match &self.scheme {
@@ -250,15 +210,11 @@ impl Url {
 
 	// --- Path
 	#[inline]
-	pub fn set_path(&mut self, path: PathBuf) {
-		self.path = path;
-	}
+	pub fn set_path(&mut self, path: PathBuf) { self.path = path; }
 
 	// --- Frag
 	#[inline]
-	pub fn frag(&self) -> &str {
-		&self.frag
-	}
+	pub fn frag(&self) -> &str { &self.frag }
 }
 
 impl From<&str> for UrlScheme {

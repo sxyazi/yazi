@@ -1,8 +1,9 @@
-use crate::RoCell;
+use std::{collections::HashMap, str::FromStr};
+
 use anyhow::{anyhow, Result};
 use opendal::Operator;
-use std::collections::HashMap;
-use std::str::FromStr;
+
+use crate::RoCell;
 
 /// SCHEMES is the read only cell of schemes that already loaded.
 pub static SCHEMES: RoCell<Schemes> = RoCell::new();

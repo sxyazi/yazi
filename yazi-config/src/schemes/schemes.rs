@@ -1,6 +1,7 @@
+use std::collections::HashMap;
+
 use anyhow::Result;
 use serde::{Deserialize, Deserializer};
-use std::collections::HashMap;
 
 use crate::MERGED_YAZI;
 
@@ -11,9 +12,7 @@ pub struct Schemes {
 }
 
 impl Default for Schemes {
-	fn default() -> Self {
-		toml::from_str(&MERGED_YAZI).unwrap()
-	}
+	fn default() -> Self { toml::from_str(&MERGED_YAZI).unwrap() }
 }
 
 impl Schemes {
@@ -47,8 +46,8 @@ impl<'de> Deserialize<'de> for Schemes {
 /// Scheme in configuration file.
 #[derive(Debug, Deserialize)]
 pub struct Scheme {
-	pub name: String,
+	pub name:   String,
 	#[serde(rename = "type")]
-	pub typ: String,
+	pub typ:    String,
 	pub config: HashMap<String, String>,
 }
