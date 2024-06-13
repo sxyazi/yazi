@@ -1,16 +1,16 @@
 [package]
-name = "yazi-proxy"
-version = "0.2.5"
-edition = "2021"
-license = "MIT"
-authors = ["sxyazi <sxyazi@gmail.com>"]
+name        = "yazi-proxy"
+version     = "0.2.5"
+edition     = "2021"
+license     = "MIT"
+authors     = [ "sxyazi <sxyazi@gmail.com>" ]
 description = "Yazi event proxy"
-homepage = "https://yazi-rs.github.io"
-repository = "https://github.com/sxyazi/yazi"
+homepage    = "https://yazi-rs.github.io"
+repository  = "https://github.com/sxyazi/yazi"
 
 [features]
-default = ["vendored-lua"]
-vendored-lua = ["mlua/vendored"]
+default      = [ "vendored-lua" ]
+vendored-lua = [ "mlua/vendored" ]
 
 [dependencies]
 yazi-config = { path = "../yazi-config", version = "0.2.5" }
@@ -18,5 +18,5 @@ yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
 anyhow = "1.0.86"
-mlua = { version = "0.9.8", features = ["lua54"] }
-tokio = { version = "1.38.0", features = ["full"] }
+mlua   = { version = "0.9.8", features = [ "lua54" ] }
+tokio  = { version = "1.38.0", features = [ "full" ] }
