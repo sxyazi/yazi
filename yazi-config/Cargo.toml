@@ -1,12 +1,12 @@
 [package]
-name        = "yazi-config"
-version     = "0.2.5"
-edition     = "2021"
-license     = "MIT"
-authors     = [ "sxyazi <sxyazi@gmail.com>" ]
+name = "yazi-config"
+version = "0.2.5"
+edition = "2021"
+license = "MIT"
+authors = ["sxyazi <sxyazi@gmail.com>"]
 description = "Yazi configuration file parser"
-homepage    = "https://yazi-rs.github.io"
-repository  = "https://github.com/sxyazi/yazi"
+homepage = "https://yazi-rs.github.io"
+repository = "https://github.com/sxyazi/yazi"
 
 [dependencies]
 yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
@@ -23,3 +23,4 @@ serde       = { version = "1.0.203", features = [ "derive" ] }
 shell-words = "1.1.0"
 toml        = { version = "0.8.14", features = [ "preserve_order" ] }
 validator   = { version = "0.18.1", features = [ "derive" ] }
+opendal     = "0.47.0"
