@@ -8,7 +8,7 @@ use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use tracing::error;
 use yazi_plugin::isolate;
 use yazi_proxy::WATCHER;
-use yazi_shared::{fs::{symlink_realpath, File, FilesOp, Url}, RoCell};
+use yazi_shared::{fs::{symlink_realpath_with, File, FilesOp, Url}, RoCell};
 
 use super::Linked;
 use crate::folder::{Files, Folder};
@@ -111,7 +111,7 @@ impl Watcher {
 				};
 
 				let realpath = if file.is_link() {
-					symlink_realpath(&url, &mut cached).await
+					symlink_realpath_with(&url, &mut cached).await
 				} else {
 					fs::canonicalize(&url).await.map(Cow::Owned)
 				};

@@ -5,7 +5,7 @@ use tokio::fs;
 use yazi_config::popup::InputCfg;
 use yazi_dds::Pubsub;
 use yazi_proxy::{InputProxy, TabProxy, WATCHER};
-use yazi_shared::{event::Cmd, fs::{maybe_exists, File, FilesOp, Url}};
+use yazi_shared::{event::Cmd, fs::{maybe_exists, ok_or_not_found, symlink_realpath, File, FilesOp, Url}};
 
 use crate::manager::Manager;
 
@@ -81,7 +81,13 @@ impl Manager {
 		let Some(p_new) = new.parent_url() else { return Ok(()) };
 		let _permit = WATCHER.acquire().await.unwrap();
 
+		let overwritten = symlink_realpath(&new).await;
 		fs::rename(&old, &new).await?;
+
+		if let Ok(p) = overwritten {
+			ok_or_not_found(fs::rename(&p, &new).await)?;
+			FilesOp::Deleting(p_new.clone(), vec![Url::from(p)]).emit();
+		}
 		Pubsub::pub_from_rename(tab, &old, &new);
 
 		let file = File::from(new.clone()).await?;

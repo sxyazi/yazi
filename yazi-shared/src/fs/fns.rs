@@ -24,22 +24,31 @@ pub fn ok_or_not_found(result: io::Result<()>) -> io::Result<()> {
 	}
 }
 
+#[inline]
+pub async fn symlink_realpath(path: &Path) -> io::Result<PathBuf> {
+	if fs::symlink_metadata(path).await?.is_symlink() {
+		symlink_realpath_with(path, &mut HashMap::new()).await.map(|p| p.into_owned())
+	} else {
+		fs::canonicalize(path).await
+	}
+}
+
 // realpath(3) without resolving symlinks. This is useful for case-insensitive
 // filesystems.
 //
 // Make sure the file of the path exists and is a symlink.
-pub async fn symlink_realpath<'a>(
+pub async fn symlink_realpath_with<'a>(
 	path: &'a Path,
 	cached: &'a mut HashMap<PathBuf, PathBuf>,
 ) -> io::Result<Cow<'a, Path>> {
-	let Some(parent) = path.parent() else {
-		return Ok(Cow::Borrowed(path));
-	};
-
 	let lowercased: PathBuf = path.as_os_str().to_ascii_lowercase().into();
 	if lowercased == path {
 		return Ok(Cow::Borrowed(path));
 	}
+
+	let Some(parent) = path.parent() else {
+		return Ok(Cow::Borrowed(path));
+	};
 
 	let case = parent.as_os_str().as_encoded_bytes().iter().any(|&b| b.is_ascii_uppercase());
 	if !cached.contains_key(parent) {

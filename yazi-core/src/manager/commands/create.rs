@@ -4,7 +4,7 @@ use anyhow::Result;
 use tokio::fs;
 use yazi_config::popup::InputCfg;
 use yazi_proxy::{InputProxy, TabProxy, WATCHER};
-use yazi_shared::{event::Cmd, fs::{maybe_exists, ok_or_not_found, File, FilesOp, Url}};
+use yazi_shared::{event::Cmd, fs::{maybe_exists, ok_or_not_found, symlink_realpath, File, FilesOp, Url}};
 
 use crate::manager::Manager;
 
@@ -47,6 +47,10 @@ impl Manager {
 
 		if dir {
 			fs::create_dir_all(&new).await?;
+		} else if let Ok(real) = symlink_realpath(&new).await {
+			ok_or_not_found(fs::remove_file(&new).await)?;
+			FilesOp::Deleting(parent.clone(), vec![Url::from(real)]).emit();
+			fs::File::create(&new).await?;
 		} else {
 			fs::create_dir_all(&parent).await.ok();
 			ok_or_not_found(fs::remove_file(&new).await)?;
@@ -54,7 +58,7 @@ impl Manager {
 		}
 
 		if let Ok(f) = File::from(new.clone()).await {
-			FilesOp::Upserting(parent, HashMap::from_iter([(new.clone(), f)])).emit();
+			FilesOp::Upserting(parent, HashMap::from_iter([(f.url(), f)])).emit();
 			TabProxy::reveal(&new)
 		}
 		Ok(())
