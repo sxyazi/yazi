@@ -3,8 +3,6 @@ use std::collections::HashMap;
 use anyhow::Result;
 use serde::{Deserialize, Deserializer};
 
-use crate::MERGED_YAZI;
-
 /// Schemes in configuration file.
 #[derive(Debug)]
 pub struct Schemes {
@@ -12,7 +10,12 @@ pub struct Schemes {
 }
 
 impl Default for Schemes {
-	fn default() -> Self { toml::from_str(&MERGED_YAZI).unwrap() }
+	fn default() -> Self {
+		let schemes_path = yazi_shared::Xdg::state_dir().join("schemes.toml");
+		// Ignore any errors, as it's fine to have an empty file.
+		let schemes_content = std::fs::read_to_string(&schemes_path).unwrap_or_default();
+		toml::from_str(&schemes_content).unwrap()
+	}
 }
 
 impl Schemes {
@@ -46,8 +49,8 @@ impl<'de> Deserialize<'de> for Schemes {
 /// Scheme in configuration file.
 #[derive(Debug, Deserialize)]
 pub struct Scheme {
-	pub name:   String,
+	pub name: String,
 	#[serde(rename = "type")]
-	pub typ:    String,
+	pub typ: String,
 	pub config: HashMap<String, String>,
 }
