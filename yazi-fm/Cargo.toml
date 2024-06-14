@@ -18,6 +18,7 @@ yazi-boot    = { path = "../yazi-boot", version = "0.2.5" }
 yazi-config  = { path = "../yazi-config", version = "0.2.5" }
 yazi-core    = { path = "../yazi-core", version = "0.2.5" }
 yazi-dds     = { path = "../yazi-dds", version = "0.2.5" }
+yazi-fs      = { path = "../yazi-fs", version = "0.2.5" }
 yazi-plugin  = { path = "../yazi-plugin", version = "0.2.5" }
 yazi-proxy   = { path = "../yazi-proxy", version = "0.2.5" }
 yazi-shared  = { path = "../yazi-shared", version = "0.2.5" }

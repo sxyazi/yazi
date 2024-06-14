@@ -3281,8 +3281,21 @@ dependencies = [
  "yazi-config",
  "yazi-core",
  "yazi-dds",
+ "yazi-fs",
  "yazi-plugin",
  "yazi-proxy",
+ "yazi-shared",
+]
+
+[[package]]
+name = "yazi-fs"
+version = "0.2.5"
+dependencies = [
+ "anyhow",
+ "opendal",
+ "serde",
+ "tokio",
+ "toml",
  "yazi-shared",
 ]
 

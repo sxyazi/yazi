@@ -13,7 +13,6 @@ pub mod popup;
 mod preset;
 pub mod preview;
 mod priority;
-pub mod schemes;
 mod tasks;
 pub mod theme;
 mod validation;
@@ -23,9 +22,6 @@ pub use layout::*;
 pub(crate) use pattern::*;
 pub(crate) use preset::*;
 pub use priority::*;
-use yazi_shared::fs::SCHEMES;
-
-use crate::schemes::Schemes;
 
 static MERGED_YAZI: RoCell<String> = RoCell::new();
 static MERGED_KEYMAP: RoCell<String> = RoCell::new();
@@ -64,10 +60,6 @@ pub fn init() -> anyhow::Result<()> {
 	INPUT.with(Default::default);
 	SELECT.with(Default::default);
 	WHICH.with(Default::default);
-
-	// Load schemes.
-	let schemes = Schemes::default().make()?;
-	SCHEMES.init(schemes);
 
 	Ok(())
 }
