@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet}, mem, str::FromStr};
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use tokio::{io::AsyncWriteExt, select, sync::mpsc, task::JoinHandle, time};
@@ -71,7 +71,7 @@ impl Client {
 		let mut lines = Self::connect_listener(&kinds).await?;
 
 		loop {
-			match lines.next_line().await? {
+			match lines.next_line().await.context("Could not establish initial connection")? {
 				Some(s) => {
 					let kind = s.split(',').next();
 					if matches!(kind, Some(kind) if kinds.contains(kind)) {
