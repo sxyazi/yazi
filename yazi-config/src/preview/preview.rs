@@ -10,7 +10,7 @@ use crate::Xdg;
 #[derive(Debug, Serialize)]
 pub struct Preview {
 	pub tab_size:   u8,
-	pub word_wrap: bool,
+	pub word_wrap:  bool,
 	pub max_width:  u32,
 	pub max_height: u32,
 
