@@ -79,7 +79,6 @@ impl Client {
 					}
 				}
 				None => loop {
-					println!("Connection closed");
 					match Self::connect_listener(&kinds).await {
 						Ok(new_lines) => {
 							lines = new_lines;
