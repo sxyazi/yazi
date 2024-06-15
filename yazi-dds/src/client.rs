@@ -71,14 +71,14 @@ impl Client {
 		let mut lines = Self::connect_listener(&kinds).await?;
 
 		loop {
-			match lines.next_line().await {
-				Ok(Some(s)) => {
+			match lines.next_line().await? {
+				Some(s) => {
 					let kind = s.split(',').next();
 					if matches!(kind, Some(kind) if kinds.contains(kind)) {
 						println!("{}", s);
 					}
 				}
-				Ok(None) => loop {
+				None => loop {
 					println!("Connection closed");
 					match Self::connect_listener(&kinds).await {
 						Ok(new_lines) => {
@@ -90,10 +90,6 @@ impl Client {
 						}
 					};
 				},
-				Err(e) => {
-					// could not establish initial connection
-					return Err(e.into());
-				}
 			}
 		}
 	}
