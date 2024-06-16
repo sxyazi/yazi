@@ -46,6 +46,13 @@ async fn main() -> anyhow::Result<()> {
 				package::Package::add_to_config(repo).await?;
 			}
 		}
+
+		Command::Sub(cmd) => {
+			yazi_dds::init();
+			yazi_dds::Client::draw(cmd.kinds.split(',').collect()).await?;
+
+			tokio::signal::ctrl_c().await?;
+		}
 	}
 
 	Ok(())
