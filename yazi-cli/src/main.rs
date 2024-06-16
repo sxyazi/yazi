@@ -1,8 +1,6 @@
 mod args;
 mod package;
 
-use std::collections::HashSet;
-
 use args::*;
 use clap::Parser;
 
@@ -51,9 +49,7 @@ async fn main() -> anyhow::Result<()> {
 
 		Command::Sub(cmd) => {
 			yazi_dds::init();
-			let kinds = cmd.kinds.split(',').map(|s| s.to_owned()).collect::<HashSet<_>>();
-
-			yazi_dds::Client::echo_events_to_stdout(kinds).await?;
+			yazi_dds::Client::draw(cmd.kinds.split(',').collect()).await?;
 
 			tokio::signal::ctrl_c().await?;
 		}

@@ -63,44 +63,6 @@ impl Client {
 		});
 	}
 
-	/// Connect to an existing server and listen in on the messages that are being
-	/// sent by other yazi instances.
-	/// If no server is running, fail right away.
-	/// If a server is closed, attempt to reconnect forever.
-	pub async fn echo_events_to_stdout(kinds: HashSet<String>) -> Result<()> {
-		let mut lines = Self::connect_listener(&kinds).await?;
-
-		loop {
-			match lines.next_line().await.context("Could not establish initial connection")? {
-				Some(s) => {
-					let kind = s.split(',').next();
-					if matches!(kind, Some(kind) if kinds.contains(kind)) {
-						println!("{}", s);
-					}
-				}
-				None => loop {
-					match Self::connect_listener(&kinds).await {
-						Ok(new_lines) => {
-							lines = new_lines;
-							break;
-						}
-						Err(_) => {
-							time::sleep(time::Duration::from_secs(1)).await;
-						}
-					};
-				},
-			}
-		}
-	}
-
-	async fn connect_listener(kinds: &HashSet<String>) -> Result<ClientReader> {
-		let (lines, mut writer) = Stream::connect().await?;
-		let hi = Payload::new(BodyHi::borrowed(kinds.iter().collect()));
-		writer.write_all(format!("{}\n", hi).as_bytes()).await?;
-		writer.flush().await?;
-		Ok(lines)
-	}
-
 	/// Connect to an existing server to send a single message.
 	pub async fn shot(kind: &str, receiver: u64, severity: Option<u16>, body: &str) -> Result<()> {
 		Body::validate(kind)?;
@@ -138,6 +100,40 @@ impl Client {
 			);
 		}
 		Ok(())
+	}
+
+	/// Connect to an existing server and listen in on the messages that are being
+	/// sent by other yazi instances:
+	///   - If no server is running, fail right away;
+	///   - If a server is closed, attempt to reconnect forever.
+	pub async fn draw(kinds: HashSet<&str>) -> Result<()> {
+		async fn make(kinds: &HashSet<&str>) -> Result<ClientReader> {
+			let (lines, mut writer) = Stream::connect().await?;
+			let hi = Payload::new(BodyHi::borrowed(kinds.clone()));
+			writer.write_all(format!("{hi}\n").as_bytes()).await?;
+			writer.flush().await?;
+			Ok(lines)
+		}
+
+		let mut lines = make(&kinds).await.context("No running Yazi instance found")?;
+		loop {
+			match lines.next_line().await? {
+				Some(s) => {
+					let kind = s.split(',').next();
+					if matches!(kind, Some(kind) if kinds.contains(kind)) {
+						println!("{s}");
+					}
+				}
+				None => loop {
+					if let Ok(new) = make(&kinds).await {
+						lines = new;
+						break;
+					} else {
+						time::sleep(time::Duration::from_secs(1)).await;
+					}
+				},
+			}
+		}
 	}
 
 	#[inline]

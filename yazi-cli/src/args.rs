@@ -22,7 +22,7 @@ pub(super) enum Command {
 	PubStatic(CommandPubStatic),
 	/// Manage packages.
 	Pack(CommandPack),
-	/// Subscribe to messages from all remote instance(s).
+	/// Subscribe to messages from all remote instances.
 	Sub(CommandSub),
 }
 
@@ -114,7 +114,7 @@ pub(super) struct CommandPack {
 
 #[derive(clap::Args)]
 pub(super) struct CommandSub {
-	/// The kind of messages we are interested in.
+	/// The kind of messages to subscribe to, separated by commas if multiple.
 	#[arg(index = 1)]
 	pub(super) kinds: String,
 }

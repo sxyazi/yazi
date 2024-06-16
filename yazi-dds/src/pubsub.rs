@@ -88,7 +88,7 @@ impl Pubsub {
 
 	pub fn pub_from_hi() -> bool {
 		let abilities = REMOTE.read().keys().cloned().collect();
-		let abilities = BOOT.remote_events.union(&abilities).collect();
+		let abilities = BOOT.remote_events.union(&abilities).map(|s| s.as_str()).collect();
 
 		Client::push(BodyHi::borrowed(abilities));
 		true

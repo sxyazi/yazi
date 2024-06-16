@@ -5,17 +5,17 @@ use serde::{Deserialize, Serialize};
 
 use super::Body;
 
-/// The handshake message
+/// The client handshake
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BodyHi<'a> {
 	/// Specifies the kinds of events that the client can handle
-	pub abilities: HashSet<Cow<'a, String>>,
+	pub abilities: HashSet<Cow<'a, str>>,
 	pub version:   String,
 }
 
 impl<'a> BodyHi<'a> {
 	#[inline]
-	pub fn borrowed(abilities: HashSet<&'a String>) -> Body<'a> {
+	pub fn borrowed(abilities: HashSet<&'a str>) -> Body<'a> {
 		Self {
 			abilities: abilities.into_iter().map(Cow::Borrowed).collect(),
 			version:   Self::version(),
