@@ -167,26 +167,29 @@ shell_title  = [ "Shell:", "Shell (block):" ]
 shell_origin = "top-center"
 shell_offset = [ 0, 2, 50, 3 ]
 
-# overwrite
-overwrite_title  = "Overwrite an existing file? (y/N)"
-overwrite_origin = "top-center"
-overwrite_offset = [ 0, 2, 50, 3 ]
-
-# quit
-quit_title  = "{n} task{s} running, sure to quit? (y/N)"
-quit_origin = "top-center"
-quit_offset = [ 0, 2, 50, 3 ]
-
 [confirm]
 # trash
-trash_title 	= "Move {n} selected file{s} to trash? (y/N)"
+trash_title 	= "Move {n} selected file{s} to trash?"
 trash_origin	= "top-center"
 trash_offset	= [ 0, 5, 70, 20 ]
 
 # delete
-delete_title 	= "Delete {n} selected file{s} permanently? (y/N)"
+delete_title 	= "Delete {n} selected file{s} permanently?"
 delete_origin	= "top-center"
 delete_offset	= [ 0, 5, 70, 20 ]
+
+# overwrite
+overwrite_title  = "Are you sure?"
+overwrite_message = "Overwrite existing file: {file}?"
+overwrite_origin = "top-center"
+overwrite_offset = [ 0, 2, 50, 20 ]
+
+# quit
+quit_title  = "Are you sure you want to quit?"
+quit_message = "The following tasks are running:\n"
+quit_origin = "top-center"
+quit_offset = [ 0, 2, 50, 20 ]
+
 
 [select]
 open_title  = "Open with:"

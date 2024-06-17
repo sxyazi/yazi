@@ -1,8 +1,8 @@
-use std::time::Duration;
+use std::{future::Future, time::Duration};
 
 use tokio::{select, time};
-use yazi_config::popup::InputCfg;
-use yazi_proxy::InputProxy;
+use yazi_config::popup::ConfirmCfg;
+use yazi_proxy::ConfirmProxy;
 use yazi_shared::{emit, event::{Cmd, EventQuit}};
 
 use crate::{manager::Manager, tasks::Tasks};
@@ -18,6 +18,10 @@ impl From<Cmd> for Opt {
 	fn from(c: Cmd) -> Self { Self { no_cwd_file: c.bool("no-cwd-file") } }
 }
 
+// async fn recv(result: &mut impl Future<Output = anyhow::Result<bool>>) ->
+// anyhow::Result<bool> {  result
+//}
+
 impl Manager {
 	pub fn quit(&self, opt: impl Into<Opt>, tasks: &Tasks) {
 		let opt = EventQuit { no_cwd_file: opt.into().no_cwd_file, ..Default::default() };
@@ -32,7 +36,9 @@ impl Manager {
 
 		tokio::spawn(async move {
 			let mut i = 0;
-			let mut result = InputProxy::show(InputCfg::quit(left));
+			let result = ConfirmProxy::show(ConfirmCfg::quit(
+				ongoing.lock().values().map(|t| t.name.clone()).collect(),
+			));
 			loop {
 				select! {
 					_ = time::sleep(Duration::from_millis(100)) => {
@@ -43,17 +49,13 @@ impl Manager {
 							return;
 						}
 					}
-					choice = result.recv() => {
-						if matches!(choice, Some(Ok(s)) if s == "y" || s == "Y") {
-							emit!(Quit(opt));
-						}
-						return;
-					}
 				}
 			}
 
-			if let Some(Ok(choice)) = result.recv().await {
-				if choice == "y" || choice == "Y" {
+			//      recv(&mut result);
+
+			if let Ok(choice) = result.await {
+				if choice {
 					emit!(Quit(opt));
 				}
 			}
