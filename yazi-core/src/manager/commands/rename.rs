@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 use tokio::fs;
-use yazi_config::popup::InputCfg;
+use yazi_config::popup::{ConfirmCfg, InputCfg};
 use yazi_dds::Pubsub;
-use yazi_proxy::{InputProxy, TabProxy, WATCHER};
+use yazi_proxy::{ConfirmProxy, InputProxy, TabProxy, WATCHER};
 use yazi_shared::{event::Cmd, fs::{maybe_exists, ok_or_not_found, symlink_realpath, File, FilesOp, Url}};
 
 use crate::manager::Manager;
@@ -67,9 +67,9 @@ impl Manager {
 				return;
 			}
 
-			let mut result = InputProxy::show(InputCfg::overwrite());
-			if let Some(Ok(choice)) = result.recv().await {
-				if choice == "y" || choice == "Y" {
+			let result = ConfirmProxy::show(ConfirmCfg::overwrite(&new.to_string_lossy()));
+			if let Ok(choice) = result.await {
+				if choice {
 					Self::rename_do(tab, hovered, Url::from(new)).await.ok();
 				}
 			};

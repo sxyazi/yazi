@@ -95,25 +95,6 @@ impl InputCfg {
 	}
 
 	#[inline]
-	pub fn overwrite() -> Self {
-		Self {
-			title: INPUT.overwrite_title.to_owned(),
-			position: Position::new(INPUT.overwrite_origin, INPUT.overwrite_offset),
-			..Default::default()
-		}
-	}
-
-	#[inline]
-	pub fn quit(n: usize) -> Self {
-		let title = INPUT.quit_title.replace("{n}", &n.to_string());
-		Self {
-			title: title.replace("{s}", if n > 1 { "s" } else { "" }),
-			position: Position::new(INPUT.quit_origin, INPUT.quit_offset),
-			..Default::default()
-		}
-	}
-
-	#[inline]
 	pub fn with_value(mut self, value: impl Into<String>) -> Self {
 		self.value = value.into();
 		self
@@ -142,6 +123,29 @@ impl ConfirmCfg {
 			title:    CONFIRM.trash_title.replace("{n}", &targets.len().to_string()),
 			position: Position::new(CONFIRM.trash_origin, CONFIRM.trash_offset),
 			message:  targets.iter().map(|t| t.to_string()).collect::<Vec<_>>().join("\n"),
+		}
+	}
+
+	#[inline]
+	pub fn overwrite(file: &str) -> Self {
+		Self {
+			title:    CONFIRM.overwrite_title.to_owned(),
+			message:  CONFIRM.overwrite_message.replace("{file}", file),
+			position: Position::new(CONFIRM.overwrite_origin, CONFIRM.overwrite_offset),
+		}
+	}
+
+	#[inline]
+	pub fn quit(ongoing_task_names: Vec<String>) -> Self {
+		let n = ongoing_task_names.len();
+		let mut message = CONFIRM.quit_message.replace("{n}", &n.to_string());
+
+		message.push_str(&ongoing_task_names.join("\n"));
+
+		Self {
+			title: CONFIRM.quit_title.to_owned(),
+			message,
+			position: Position::new(CONFIRM.quit_origin, CONFIRM.quit_offset),
 		}
 	}
 }

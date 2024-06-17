@@ -11,4 +11,11 @@ impl ConfirmProxy {
 		emit!(Call(Cmd::new("show").with_any("tx", tx).with_any("cfg", cfg), Layer::Confirm));
 		rx.await?
 	}
+
+	#[inline]
+	pub fn show_sync(cfg: ConfirmCfg) -> oneshot::Receiver<bool> {
+		let (tx, rx) = oneshot::channel();
+		emit!(Call(Cmd::new("show").with_any("tx", tx).with_any("cfg", cfg), Layer::Confirm));
+		rx
+	}
 }
