@@ -4,19 +4,19 @@ use mlua::{AnyUserData, Lua};
 
 use super::SCOPE;
 
-pub(super) struct Filter {
-	inner: *const yazi_core::folder::Filter,
+pub(super) struct Finder {
+	inner: *const yazi_core::tab::Finder,
 }
 
-impl Deref for Filter {
-	type Target = yazi_core::folder::Filter;
+impl Deref for Finder {
+	type Target = yazi_core::tab::Finder;
 
 	fn deref(&self) -> &Self::Target { unsafe { &*self.inner } }
 }
 
-impl Filter {
+impl Finder {
 	#[inline]
-	pub(super) fn make(inner: &yazi_core::folder::Filter) -> mlua::Result<AnyUserData<'static>> {
+	pub(super) fn make(inner: &yazi_core::tab::Finder) -> mlua::Result<AnyUserData<'static>> {
 		SCOPE.create_any_userdata(Self { inner })
 	}
 
