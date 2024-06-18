@@ -1,5 +1,7 @@
 #![allow(clippy::module_inception)]
 
+use std::str::FromStr;
+
 use yazi_shared::{RoCell, Xdg};
 
 pub mod keymap;
@@ -15,17 +17,12 @@ pub mod preview;
 mod priority;
 mod tasks;
 pub mod theme;
-mod validation;
 pub mod which;
 
 pub use layout::*;
 pub(crate) use pattern::*;
 pub(crate) use preset::*;
 pub use priority::*;
-
-static MERGED_YAZI: RoCell<String> = RoCell::new();
-static MERGED_KEYMAP: RoCell<String> = RoCell::new();
-static MERGED_THEME: RoCell<String> = RoCell::new();
 
 pub static LAYOUT: RoCell<arc_swap::ArcSwap<Layout>> = RoCell::new();
 
@@ -43,23 +40,23 @@ pub static WHICH: RoCell<which::Which> = RoCell::new();
 
 pub fn init() -> anyhow::Result<()> {
 	let config_dir = Xdg::config_dir();
-	MERGED_YAZI.init(Preset::yazi(&config_dir)?);
-	MERGED_KEYMAP.init(Preset::keymap(&config_dir)?);
-	MERGED_THEME.init(Preset::theme(&config_dir)?);
+	let yazi_toml = &Preset::yazi(&config_dir)?;
+	let keymap_toml = &Preset::keymap(&config_dir)?;
+	let theme_toml = &Preset::theme(&config_dir)?;
 
 	LAYOUT.with(Default::default);
 
-	KEYMAP.with(Default::default);
-	LOG.with(Default::default);
-	MANAGER.with(Default::default);
-	OPEN.with(Default::default);
-	PLUGIN.with(Default::default);
-	PREVIEW.with(Default::default);
-	TASKS.with(Default::default);
-	THEME.with(Default::default);
-	INPUT.with(Default::default);
-	SELECT.with(Default::default);
-	WHICH.with(Default::default);
+	KEYMAP.init(<_>::from_str(keymap_toml)?);
+	LOG.init(<_>::from_str(yazi_toml)?);
+	MANAGER.init(<_>::from_str(yazi_toml)?);
+	OPEN.init(<_>::from_str(yazi_toml)?);
+	PLUGIN.init(<_>::from_str(yazi_toml)?);
+	PREVIEW.init(<_>::from_str(yazi_toml)?);
+	TASKS.init(<_>::from_str(yazi_toml)?);
+	THEME.init(<_>::from_str(theme_toml)?);
+	INPUT.init(<_>::from_str(yazi_toml)?);
+	SELECT.init(<_>::from_str(yazi_toml)?);
+	WHICH.init(<_>::from_str(yazi_toml)?);
 
 	Ok(())
 }

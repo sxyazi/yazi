@@ -24,8 +24,5 @@ serde            = { version = "1.0.203", features = [ "derive" ] }
 shell-words      = "1.1.0"
 tokio            = { version = "1.38.0", features = [ "full" ] }
 
-# Logging
-tracing = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
-
 [target."cfg(unix)".dependencies]
 libc = "0.2.155"

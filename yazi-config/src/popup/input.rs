@@ -1,7 +1,8 @@
+use std::str::FromStr;
+
 use serde::Deserialize;
 
 use super::{Offset, Origin};
-use crate::MERGED_YAZI;
 
 #[derive(Deserialize)]
 pub struct Input {
@@ -63,18 +64,19 @@ pub struct Input {
 	pub quit_offset: Offset,
 }
 
-impl Default for Input {
-	fn default() -> Self {
+impl Input {
+	pub const fn border(&self) -> u16 { 2 }
+}
+
+impl FromStr for Input {
+	type Err = toml::de::Error;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		#[derive(Deserialize)]
 		struct Outer {
 			input: Input,
 		}
 
-		toml::from_str::<Outer>(&MERGED_YAZI).unwrap().input
+		Ok(toml::from_str::<Outer>(s)?.input)
 	}
-}
-
-impl Input {
-	#[inline]
-	pub const fn border(&self) -> u16 { 2 }
 }

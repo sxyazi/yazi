@@ -1,8 +1,10 @@
+use std::str::FromStr;
+
 use serde::{Deserialize, Deserializer};
 use yazi_shared::Layer;
 
 use super::Control;
-use crate::{Preset, MERGED_KEYMAP};
+use crate::Preset;
 
 #[derive(Debug)]
 pub struct Keymap {
@@ -12,6 +14,28 @@ pub struct Keymap {
 	pub input:      Vec<Control>,
 	pub help:       Vec<Control>,
 	pub completion: Vec<Control>,
+}
+
+impl Keymap {
+	#[inline]
+	pub fn get(&self, layer: Layer) -> &Vec<Control> {
+		match layer {
+			Layer::App => unreachable!(),
+			Layer::Manager => &self.manager,
+			Layer::Tasks => &self.tasks,
+			Layer::Select => &self.select,
+			Layer::Input => &self.input,
+			Layer::Help => &self.help,
+			Layer::Completion => &self.completion,
+			Layer::Which => unreachable!(),
+		}
+	}
+}
+
+impl FromStr for Keymap {
+	type Err = toml::de::Error;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> { toml::from_str(s) }
 }
 
 impl<'de> Deserialize<'de> for Keymap {
@@ -60,25 +84,5 @@ impl<'de> Deserialize<'de> for Keymap {
 			help:       shadow.help.keymap,
 			completion: shadow.completion.keymap,
 		})
-	}
-}
-
-impl Default for Keymap {
-	fn default() -> Self { toml::from_str(&MERGED_KEYMAP).unwrap() }
-}
-
-impl Keymap {
-	#[inline]
-	pub fn get(&self, layer: Layer) -> &Vec<Control> {
-		match layer {
-			Layer::App => unreachable!(),
-			Layer::Manager => &self.manager,
-			Layer::Tasks => &self.tasks,
-			Layer::Select => &self.select,
-			Layer::Input => &self.input,
-			Layer::Help => &self.help,
-			Layer::Completion => &self.completion,
-			Layer::Which => unreachable!(),
-		}
 	}
 }

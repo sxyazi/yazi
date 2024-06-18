@@ -13,15 +13,15 @@ yazi-config = { path = "../yazi-config", version = "0.2.5" }
 yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
-ansi-to-tui  = "3.1.0"
+ansi-to-tui  = "=3.1.0"
 anyhow       = "1.0.86"
 arc-swap     = "1.7.1"
 base64       = "0.22.1"
 color_quant  = "1.1.0"
 crossterm    = "0.27.0"
 futures      = "0.3.30"
-image        = "0.24.9"
-imagesize    = "0.12.0"
+image        = "=0.24.9"
+imagesize    = "0.13.0"
 kamadak-exif = "0.5.5"
 ratatui      = "0.26.3"
 scopeguard   = "1.2.0"

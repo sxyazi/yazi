@@ -6,7 +6,8 @@ use crate::{Pattern, Priority};
 #[derive(Debug, Deserialize)]
 pub struct Preloader {
 	#[serde(skip)]
-	pub id:   u8,
+	pub idx: u8,
+
 	pub name: Option<Pattern>,
 	pub mime: Option<Pattern>,
 	pub run:  Cmd,
@@ -25,6 +26,6 @@ pub struct PreloaderProps {
 
 impl From<&Preloader> for PreloaderProps {
 	fn from(preloader: &Preloader) -> Self {
-		Self { id: preloader.id, name: preloader.run.name.to_owned(), prio: preloader.prio }
+		Self { id: preloader.idx, name: preloader.run.name.to_owned(), prio: preloader.prio }
 	}
 }

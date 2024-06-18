@@ -1,8 +1,9 @@
+use std::str::FromStr;
+
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 use super::{ManagerRatio, MouseEvents, SortBy};
-use crate::{validation::check_validation, MERGED_YAZI};
 
 #[derive(Debug, Deserialize, Serialize, Validate)]
 pub struct Manager {
@@ -24,16 +25,18 @@ pub struct Manager {
 	pub mouse_events: MouseEvents,
 }
 
-impl Default for Manager {
-	fn default() -> Self {
+impl FromStr for Manager {
+	type Err = anyhow::Error;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		#[derive(Deserialize)]
 		struct Outer {
 			manager: Manager,
 		}
 
-		let manager = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().manager;
+		let manager = toml::from_str::<Outer>(s)?.manager;
+		manager.validate()?;
 
-		check_validation(manager.validate());
-		manager
+		Ok(manager)
 	}
 }

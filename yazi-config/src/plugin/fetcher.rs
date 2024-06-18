@@ -6,7 +6,9 @@ use crate::{Pattern, Priority};
 #[derive(Debug, Deserialize)]
 pub struct Fetcher {
 	#[serde(skip)]
-	pub id:   u8,
+	pub idx: u8,
+
+	pub id:   String,
 	pub cond: Option<Condition>,
 	pub name: Option<Pattern>,
 	pub mime: Option<Pattern>,
@@ -24,6 +26,6 @@ pub struct FetcherProps {
 
 impl From<&Fetcher> for FetcherProps {
 	fn from(fetcher: &Fetcher) -> Self {
-		Self { id: fetcher.id, name: fetcher.run.name.to_owned(), prio: fetcher.prio }
+		Self { id: fetcher.idx, name: fetcher.run.name.to_owned(), prio: fetcher.prio }
 	}
 }

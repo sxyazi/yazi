@@ -19,11 +19,11 @@ impl Tasks {
 
 			for p in PLUGIN.fetchers(&f.url, mime, factors) {
 				match loaded.get_mut(&f.url) {
-					Some(n) if *n & (1 << p.id) != 0 => continue,
-					Some(n) => *n |= 1 << p.id,
-					None => _ = loaded.insert(f.url.clone(), 1 << p.id),
+					Some(n) if *n & (1 << p.idx) != 0 => continue,
+					Some(n) => *n |= 1 << p.idx,
+					None => _ = loaded.insert(f.url.clone(), 1 << p.idx),
 				}
-				tasks[p.id as usize].push(f.clone());
+				tasks[p.idx as usize].push(f.clone());
 			}
 		}
 
@@ -41,9 +41,9 @@ impl Tasks {
 			let mime = if f.is_dir() { Some(MIME_DIR) } else { mimetype.get(&f.url).map(|s| &**s) };
 			for p in PLUGIN.preloaders(&f.url, mime) {
 				match loaded.get_mut(&f.url) {
-					Some(n) if *n & (1 << p.id) != 0 => continue,
-					Some(n) => *n |= 1 << p.id,
-					None => _ = loaded.insert(f.url.clone(), 1 << p.id),
+					Some(n) if *n & (1 << p.idx) != 0 => continue,
+					Some(n) => *n |= 1 << p.idx,
+					None => _ = loaded.insert(f.url.clone(), 1 << p.idx),
 				}
 				self.scheduler.preload_paged(p, f);
 			}

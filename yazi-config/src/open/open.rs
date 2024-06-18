@@ -1,20 +1,16 @@
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, path::Path, str::FromStr};
 
 use indexmap::IndexSet;
 use serde::{Deserialize, Deserializer};
 use yazi_shared::MIME_DIR;
 
 use super::Opener;
-use crate::{open::OpenRule, Preset, MERGED_YAZI};
+use crate::{open::OpenRule, Preset};
 
 #[derive(Debug)]
 pub struct Open {
 	rules:   Vec<OpenRule>,
 	openers: HashMap<String, IndexSet<Opener>>,
-}
-
-impl Default for Open {
-	fn default() -> Self { toml::from_str(&MERGED_YAZI).unwrap() }
 }
 
 impl Open {
@@ -56,6 +52,12 @@ impl Open {
 		let flat: IndexSet<_> = grouped.iter().flatten().copied().collect();
 		flat.into_iter().filter(|&o| grouped.iter().all(|g| g.contains(o))).collect()
 	}
+}
+
+impl FromStr for Open {
+	type Err = toml::de::Error;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> { toml::from_str(s) }
 }
 
 impl<'de> Deserialize<'de> for Open {

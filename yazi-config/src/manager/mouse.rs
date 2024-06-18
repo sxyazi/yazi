@@ -16,7 +16,6 @@ bitflags! {
 }
 
 impl MouseEvents {
-	#[inline]
 	pub const fn draggable(self) -> bool { self.contains(Self::DRAG) }
 }
 

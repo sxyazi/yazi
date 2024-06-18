@@ -30,4 +30,4 @@ tracing = { version = "0.1.40", features = [ "max_level_debug", "release_max_lev
 libc = "0.2.155"
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
-trash = "4.1.1"
+trash = "5.0.0"

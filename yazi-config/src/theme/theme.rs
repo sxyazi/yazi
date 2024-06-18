@@ -1,11 +1,10 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, str::FromStr};
 
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 use yazi_shared::{fs::expand_path, theme::Style, Xdg};
 
 use super::{Filetype, Flavor, Icons};
-use crate::{validation::check_validation, MERGED_THEME};
 
 #[derive(Deserialize, Serialize)]
 pub struct Theme {
@@ -27,12 +26,13 @@ pub struct Theme {
 	pub icons:     Icons,
 }
 
-impl Default for Theme {
-	fn default() -> Self {
-		let mut theme: Self = toml::from_str(&MERGED_THEME).unwrap();
+impl FromStr for Theme {
+	type Err = anyhow::Error;
 
-		check_validation(theme.manager.validate());
-		check_validation(theme.which.validate());
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		let mut theme: Self = toml::from_str(s)?;
+		theme.manager.validate()?;
+		theme.which.validate()?;
 
 		if theme.flavor.use_.is_empty() {
 			theme.manager.syntect_theme = expand_path(&theme.manager.syntect_theme);
@@ -41,7 +41,7 @@ impl Default for Theme {
 				Xdg::config_dir().join(format!("flavors/{}.yazi/tmtheme.xml", theme.flavor.use_));
 		}
 
-		theme
+		Ok(theme)
 	}
 }
 

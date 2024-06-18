@@ -37,6 +37,10 @@ impl Display for Adapter {
 
 impl Adapter {
 	pub async fn image_show(self, path: &Path, max: Rect) -> Result<Rect> {
+		if max.is_empty() {
+			return Ok(Rect::default());
+		}
+
 		match self {
 			Self::Kitty => Kitty::image_show(path, max).await,
 			Self::KittyOld => KittyOld::image_show(path, max).await,

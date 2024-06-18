@@ -1,8 +1,9 @@
+use std::str::FromStr;
+
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 use super::SortBy;
-use crate::MERGED_YAZI;
 
 #[derive(Debug, Deserialize, Serialize, Validate)]
 pub struct Which {
@@ -13,13 +14,15 @@ pub struct Which {
 	pub sort_translit:  bool,
 }
 
-impl Default for Which {
-	fn default() -> Self {
+impl FromStr for Which {
+	type Err = anyhow::Error;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		#[derive(Deserialize)]
 		struct Outer {
 			which: Which,
 		}
 
-		toml::from_str::<Outer>(&MERGED_YAZI).unwrap().which
+		Ok(toml::from_str::<Outer>(s)?.which)
 	}
 }

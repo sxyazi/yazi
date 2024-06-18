@@ -1,14 +1,16 @@
-use serde::{Deserialize, Deserializer};
+use std::str::FromStr;
 
-use crate::MERGED_YAZI;
+use serde::{Deserialize, Deserializer};
 
 #[derive(Debug)]
 pub struct Log {
 	pub enabled: bool,
 }
 
-impl Default for Log {
-	fn default() -> Self { toml::from_str(&MERGED_YAZI).unwrap() }
+impl FromStr for Log {
+	type Err = toml::de::Error;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> { toml::from_str(s) }
 }
 
 impl<'de> Deserialize<'de> for Log {
