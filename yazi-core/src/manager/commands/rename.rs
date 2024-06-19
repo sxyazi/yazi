@@ -61,17 +61,11 @@ impl Manager {
 				return;
 			}
 
-			let new = hovered.parent().unwrap().join(name);
+			let new = Url::from(hovered.parent().unwrap().join(name));
 			if opt.force || !maybe_exists(&new).await {
-				Self::rename_do(tab, hovered, Url::from(new)).await.ok();
-				return;
-			}
-
-			let result = ConfirmProxy::show(ConfirmCfg::overwrite(&new.to_string_lossy()));
-			if let Ok(choice) = result.await {
-				if choice {
-					Self::rename_do(tab, hovered, Url::from(new)).await.ok();
-				}
+				Self::rename_do(tab, hovered, new).await.ok();
+			} else if ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await {
+				Self::rename_do(tab, hovered, new).await.ok();
 			};
 		});
 	}

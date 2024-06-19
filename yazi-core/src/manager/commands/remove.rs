@@ -40,11 +40,7 @@ impl Manager {
 				ConfirmCfg::trash(&opt.targets)
 			});
 
-			if let Ok(choice) = result.await {
-				if !choice {
-					return;
-				}
-
+			if result.await {
 				ManagerProxy::remove_do(opt.targets, opt.permanently);
 			}
 		});
