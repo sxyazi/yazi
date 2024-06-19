@@ -31,11 +31,11 @@ impl Manager {
 			}
 
 			let new = cwd.join(&name);
-			if !opt.force && maybe_exists(&new).await {
-				match ConfirmProxy::show(ConfirmCfg::overwrite(&new.to_string())).await {
-					Ok(c) if c => (),
-					_ => return Ok(()),
-				}
+			if !opt.force
+				&& maybe_exists(&new).await
+				&& !ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await
+			{
+				return Ok(());
 			}
 
 			Self::create_do(new, opt.dir || name.ends_with('/') || name.ends_with('\\')).await

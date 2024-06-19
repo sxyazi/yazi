@@ -88,18 +88,13 @@ impl Utils {
 
 		ya.raw_set(
 			"confirm",
-			lua.create_async_function(|lua, t: Table| async move {
+			lua.create_async_function(|_, t: Table| async move {
 				let result = ConfirmProxy::show(ConfirmCfg {
 					title:    t.raw_get("title")?,
 					content:  t.raw_get("content")?,
 					position: Position::try_from(t.raw_get::<_, Table>("position")?)?.into(),
 				});
-
-				if let Ok(_answer) = result.await {
-					true.into_lua_multi(lua)
-				} else {
-					false.into_lua_multi(lua)
-				}
+				Ok(result.await)
 			})?,
 		)?;
 

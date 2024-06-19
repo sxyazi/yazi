@@ -1,3 +1,5 @@
+use yazi_shared::fs::Url;
+
 use super::{Offset, Position};
 use crate::{CONFIRM, INPUT, SELECT};
 
@@ -127,10 +129,10 @@ impl ConfirmCfg {
 	}
 
 	#[inline]
-	pub fn overwrite(file: &str) -> Self {
+	pub fn overwrite(url: &Url) -> Self {
 		Self {
 			title:    CONFIRM.overwrite_title.to_owned(),
-			content:  CONFIRM.overwrite_content.replace("{file}", file),
+			content:  CONFIRM.overwrite_content.replace("{url}", &url.to_string()),
 			position: Position::new(CONFIRM.overwrite_origin, CONFIRM.overwrite_offset),
 		}
 	}

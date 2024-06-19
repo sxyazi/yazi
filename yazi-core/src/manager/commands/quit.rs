@@ -52,12 +52,8 @@ impl Manager {
 				}
 			}
 
-			//      recv(&mut result);
-
-			if let Ok(choice) = result.await {
-				if choice {
-					emit!(Quit(opt));
-				}
+			if result.await {
+				emit!(Quit(opt));
 			}
 		});
 	}

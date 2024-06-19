@@ -180,7 +180,7 @@ delete_offset	= [ 0, 5, 70, 20 ]
 
 # overwrite
 overwrite_title   = "Are you sure?"
-overwrite_content = "Overwrite existing file: {file}?"
+overwrite_content = "Will overwrite existing file: {url}"
 overwrite_origin  = "top-center"
 overwrite_offset  = [ 0, 2, 50, 20 ]
 
