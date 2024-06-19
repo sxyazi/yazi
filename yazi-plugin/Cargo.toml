@@ -27,7 +27,7 @@ base64        = "0.22.1"
 crossterm     = "0.27.0"
 futures       = "0.3.30"
 md-5          = "0.10.6"
-mlua          = { version = "0.9.8", features = [ "lua54", "serialize", "macros", "async" ] }
+mlua          = { version = "0.9.9", features = [ "lua54", "serialize", "macros", "async" ] }
 parking_lot   = "0.12.3"
 ratatui       = "0.26.3"
 serde         = "1.0.203"

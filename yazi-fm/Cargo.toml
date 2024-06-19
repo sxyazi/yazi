@@ -28,7 +28,7 @@ better-panic = "0.3.0"
 crossterm    = { version = "0.27.0", features = [ "event-stream" ] }
 fdlimit      = "0.3.0"
 futures      = "0.3.30"
-mlua         = { version = "0.9.8", features = [ "lua54" ] }
+mlua         = { version = "0.9.9", features = [ "lua54" ] }
 ratatui      = "0.26.3"
 scopeguard   = "1.2.0"
 syntect      = { version = "5.2.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }

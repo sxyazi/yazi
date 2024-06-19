@@ -1,7 +1,6 @@
 use std::{borrow::Cow, collections::{HashMap, VecDeque}, fs::Metadata, path::{Path, PathBuf}};
 
 use anyhow::Result;
-use filetime::{set_file_mtime, FileTime};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
 
 #[inline]
@@ -104,12 +103,23 @@ pub fn copy_with_progress(
 
 	tokio::spawn({
 		let (from, to) = (from.to_owned(), to.to_owned());
-		let mtime = FileTime::from_last_modification_time(meta);
+
+		let mut ft = std::fs::FileTimes::new();
+		meta.accessed().map(|t| ft = ft.set_accessed(t)).ok();
+		meta.modified().map(|t| ft = ft.set_modified(t)).ok();
+		#[cfg(target_os = "macos")]
+		{
+			use std::os::macos::fs::FileTimesExt;
+			meta.created().map(|t| ft = ft.set_created(t)).ok();
+		}
 
 		async move {
 			_ = match fs::copy(&from, &to).await {
 				Ok(len) => {
-					set_file_mtime(to, mtime).ok();
+					_ = tokio::task::spawn_blocking(move || {
+						std::fs::File::options().write(true).open(to).and_then(|f| f.set_times(ft)).ok();
+					})
+					.await;
 					tick_tx.send(Ok(len))
 				}
 				Err(e) => tick_tx.send(Err(e)),

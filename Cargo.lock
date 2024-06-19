@@ -1205,9 +1205,9 @@ dependencies = [
 
 [[package]]
 name = "mlua"
-version = "0.9.8"
+version = "0.9.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e340c022072f3208a4105458286f4985ba5355bfe243c3073afe45cbe9ecf491"
+checksum = "d111deb18a9c9bd33e1541309f4742523bfab01d276bfa9a27519f6de9c11dc7"
 dependencies = [
  "bstr",
  "erased-serde",
@@ -1223,9 +1223,9 @@ dependencies = [
 
 [[package]]
 name = "mlua-sys"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5552e7e4e22ada0463dfdeee6caf6dc057a189fdc83136408a8f950a5e5c5540"
+checksum = "a088ed0723df7567f569ba018c5d48c23c501f3878b190b04144dfa5ebfa8abc"
 dependencies = [
  "cc",
  "cfg-if",
@@ -1677,9 +1677,9 @@ checksum = "d626bb9dae77e28219937af045c257c28bfd3f69333c512553507f5f9798cb76"
 
 [[package]]
 name = "rustc-hash"
-version = "1.1.0"
+version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
+checksum = "583034fd73374156e66797ed8e5b0d5690409c9226b22d87cb7f19821c05d152"
 
 [[package]]
 name = "rustix"
@@ -2955,7 +2955,6 @@ dependencies = [
  "bitflags 2.5.0",
  "crossterm",
  "dirs",
- "filetime",
  "futures",
  "libc",
  "parking_lot",
