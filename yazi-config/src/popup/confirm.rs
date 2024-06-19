@@ -18,13 +18,13 @@ pub struct Confirm {
 
 	// overwrite
 	pub overwrite_title:   String,
-	pub overwrite_message: String,
+	pub overwrite_content: String,
 	pub overwrite_origin:  Origin,
 	pub overwrite_offset:  Offset,
 
 	// quit
 	pub quit_title:   String,
-	pub quit_message: String,
+	pub quit_content: String,
 	pub quit_origin:  Origin,
 	pub quit_offset:  Offset,
 }
@@ -43,6 +43,5 @@ impl FromStr for Confirm {
 }
 
 impl Confirm {
-	#[inline]
 	pub const fn border(&self) -> u16 { 2 }
 }

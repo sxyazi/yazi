@@ -264,9 +264,13 @@ keymap = [
 
 [confirm]
 keymap = [
-  { on = [ "<Esc>" ], run = "close", desc = "Cancel the confirm" },
-  { on = [ "n" ], run = "close", desc = "Cancel the confirm" },
-  { on = [ "y" ], run = "close --submit", desc = "Submit the confirm" },
+	{ on = [ "<Esc>" ],   run = "close", desc = "Cancel the confirm" },
+	{ on = [ "<Enter>" ], run = "close --submit", desc = "Submit the confirm" },
+
+	{ on = [ "n" ], run = "close", desc = "Cancel the confirm" },
+	{ on = [ "N" ], run = "close", desc = "Cancel the confirm" },
+	{ on = [ "y" ], run = "close --submit", desc = "Submit the confirm" },
+	{ on = [ "Y" ], run = "close --submit", desc = "Submit the confirm" },
 
 	{ on = [ "k" ], run = "arrow -1", desc = "Move cursor up" },
 	{ on = [ "j" ], run = "arrow 1",  desc = "Move cursor down" },

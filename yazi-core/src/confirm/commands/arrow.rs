@@ -12,23 +12,21 @@ impl From<Cmd> for Opt {
 
 impl Confirm {
 	fn next(&mut self, step: usize) {
-		let len = self.message_num_lines();
-		if len == 0 {
+		if self.lines == 0 {
 			return;
 		}
 
-		let old = self.vertical_scroll;
-		self.vertical_scroll = (self.vertical_scroll + step).min(len - 1);
+		let old = self.offset;
+		self.offset = (self.offset + step).min(self.lines - 1);
 
-		render!(old != self.vertical_scroll);
+		render!(old != self.offset);
 	}
 
 	fn prev(&mut self, step: usize) {
-		let old = self.vertical_scroll;
+		let old = self.offset;
+		self.offset -= step.min(self.offset);
 
-		self.vertical_scroll -= step.min(self.vertical_scroll);
-
-		render!(old != self.vertical_scroll);
+		render!(old != self.offset);
 	}
 
 	pub fn arrow(&mut self, opt: impl Into<Opt>) {
