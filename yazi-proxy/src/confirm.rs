@@ -6,9 +6,9 @@ pub struct ConfirmProxy;
 
 impl ConfirmProxy {
 	#[inline]
-	pub async fn show(cfg: ConfirmCfg) -> anyhow::Result<bool> {
+	pub async fn show(cfg: ConfirmCfg) -> bool {
 		let (tx, rx) = oneshot::channel();
 		emit!(Call(Cmd::new("show").with_any("tx", tx).with_any("cfg", cfg), Layer::Confirm));
-		rx.await?
+		rx.await.unwrap_or(false)
 	}
 }

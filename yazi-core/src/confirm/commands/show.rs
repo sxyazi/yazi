@@ -6,7 +6,7 @@ use crate::confirm::Confirm;
 
 pub struct Opt {
 	cfg: ConfirmCfg,
-	tx:  oneshot::Sender<anyhow::Result<bool>>,
+	tx:  oneshot::Sender<bool>,
 }
 
 impl TryFrom<Cmd> for Opt {

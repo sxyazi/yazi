@@ -1,4 +1,3 @@
-use anyhow::anyhow;
 use yazi_shared::{event::Cmd, render};
 
 use crate::confirm::Confirm;
@@ -18,7 +17,7 @@ impl Confirm {
 	pub fn close(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
 		if let Some(cb) = self.callback.take() {
-			_ = cb.send(if opt.submit { Ok(true) } else { Err(anyhow!("canceled")) });
+			_ = cb.send(opt.submit);
 		}
 
 		self.visible = false;
