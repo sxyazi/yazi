@@ -1,4 +1,3 @@
-use anyhow::Result;
 use tokio::sync::oneshot::Sender;
 use yazi_config::popup::Position;
 
@@ -11,6 +10,6 @@ pub struct Confirm {
 	pub offset:   usize,
 	pub position: Position,
 
-	pub(super) callback: Option<Sender<Result<bool>>>,
+	pub(super) callback: Option<Sender<bool>>,
 	pub visible:         bool,
 }
