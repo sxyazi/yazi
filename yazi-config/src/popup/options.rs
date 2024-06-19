@@ -22,7 +22,7 @@ pub struct SelectCfg {
 #[derive(Default)]
 pub struct ConfirmCfg {
 	pub title:    String,
-	pub message:  String,
+	pub content:  String,
 	pub position: Position,
 }
 
@@ -113,7 +113,7 @@ impl ConfirmCfg {
 		Self {
 			title:    CONFIRM.delete_title.replace("{n}", &targets.len().to_string()),
 			position: Position::new(CONFIRM.delete_origin, CONFIRM.delete_offset),
-			message:  targets.iter().map(|t| t.to_string()).collect::<Vec<_>>().join("\n"),
+			content:  targets.iter().map(|t| t.to_string()).collect::<Vec<_>>().join("\n"),
 		}
 	}
 
@@ -122,7 +122,7 @@ impl ConfirmCfg {
 		Self {
 			title:    CONFIRM.trash_title.replace("{n}", &targets.len().to_string()),
 			position: Position::new(CONFIRM.trash_origin, CONFIRM.trash_offset),
-			message:  targets.iter().map(|t| t.to_string()).collect::<Vec<_>>().join("\n"),
+			content:  targets.iter().map(|t| t.to_string()).collect::<Vec<_>>().join("\n"),
 		}
 	}
 
@@ -130,7 +130,7 @@ impl ConfirmCfg {
 	pub fn overwrite(file: &str) -> Self {
 		Self {
 			title:    CONFIRM.overwrite_title.to_owned(),
-			message:  CONFIRM.overwrite_message.replace("{file}", file),
+			content:  CONFIRM.overwrite_content.replace("{file}", file),
 			position: Position::new(CONFIRM.overwrite_origin, CONFIRM.overwrite_offset),
 		}
 	}
@@ -138,13 +138,13 @@ impl ConfirmCfg {
 	#[inline]
 	pub fn quit(ongoing_task_names: Vec<String>) -> Self {
 		let n = ongoing_task_names.len();
-		let mut message = CONFIRM.quit_message.replace("{n}", &n.to_string());
+		let mut message = CONFIRM.quit_content.replace("{n}", &n.to_string());
 
 		message.push_str(&ongoing_task_names.join("\n"));
 
 		Self {
-			title: CONFIRM.quit_title.to_owned(),
-			message,
+			title:    CONFIRM.quit_title.to_owned(),
+			content:  message,
 			position: Position::new(CONFIRM.quit_origin, CONFIRM.quit_offset),
 		}
 	}

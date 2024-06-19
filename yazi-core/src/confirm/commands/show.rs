@@ -25,10 +25,12 @@ impl Confirm {
 
 		self.close(false);
 		self.title = opt.cfg.title;
-		self.set_message(&opt.cfg.message);
-		self.vertical_scroll = 0;
+		self.content = opt.cfg.content;
+		self.lines = self.content.lines().count();
 
+		self.offset = 0;
 		self.position = opt.cfg.position;
+
 		self.callback = Some(opt.tx);
 		self.visible = true;
 		render!();

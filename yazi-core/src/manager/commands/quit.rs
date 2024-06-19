@@ -1,4 +1,4 @@
-use std::{future::Future, time::Duration};
+use std::time::Duration;
 
 use tokio::{select, time};
 use yazi_config::popup::ConfirmCfg;

@@ -91,7 +91,7 @@ impl Utils {
 			lua.create_async_function(|lua, t: Table| async move {
 				let result = ConfirmProxy::show(ConfirmCfg {
 					title:    t.raw_get("title")?,
-					message:  t.raw_get("message")?,
+					content:  t.raw_get("content")?,
 					position: Position::try_from(t.raw_get::<_, Table>("position")?)?.into(),
 				});
 
