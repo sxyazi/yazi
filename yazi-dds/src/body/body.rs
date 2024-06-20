@@ -45,20 +45,6 @@ impl Body<'static> {
 		BodyCustom::from_lua(kind, value)
 	}
 
-	pub fn tab(kind: &str, body: &str) -> usize {
-		match kind {
-			"cd" | "hover" | "bulk" | "rename" => {}
-			_ => return 0,
-		}
-
-		match Self::from_str(kind, body) {
-			Ok(Self::Cd(b)) => b.tab,
-			Ok(Self::Hover(b)) => b.tab,
-			Ok(Self::Rename(b)) => b.tab,
-			_ => 0,
-		}
-	}
-
 	pub fn validate(kind: &str) -> Result<()> {
 		if matches!(
 			kind,
@@ -111,11 +97,6 @@ impl<'a> Body<'a> {
 
 	#[inline]
 	pub fn with_sender(self, sender: u64) -> Payload<'a> { Payload::new(self).with_sender(sender) }
-
-	#[inline]
-	pub fn with_severity(self, severity: u16) -> Payload<'a> {
-		Payload::new(self).with_severity(severity)
-	}
 }
 
 impl IntoLua<'_> for Body<'static> {
