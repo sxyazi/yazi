@@ -1,0 +1,19 @@
+[package]
+name        = "yazi-fs"
+version     = "0.2.5"
+edition     = "2021"
+license     = "MIT"
+authors     = [ "sxyazi <sxyazi@gmail.com>" ]
+description = "Yazi file system compatibility layer"
+homepage    = "https://yazi-rs.github.io"
+repository  = "https://github.com/sxyazi/yazi"
+
+[dependencies]
+yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
+
+# External dependencies
+anyhow  = "1.0.86"
+opendal = "0.47.0"
+serde   = { version = "1.0.203", features = [ "derive" ] }
+tokio   = { version = "1.38.0", features = [ "full" ] }
+toml    = { version = "0.8.14", features = [ "preserve_order" ] }

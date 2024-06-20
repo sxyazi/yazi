@@ -12,12 +12,13 @@ pub struct Url {
 	frag:   String,
 }
 
-#[derive(Clone, Copy, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum UrlScheme {
 	#[default]
 	Regular,
 	Search,
 	Archive,
+	Remote(String),
 }
 
 impl Deref for Url {
@@ -98,18 +99,16 @@ impl AsRef<OsStr> for Url {
 
 impl Display for Url {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-		if self.scheme == UrlScheme::Regular {
-			return f.write_str(&self.path.to_string_lossy());
+		match &self.scheme {
+			UrlScheme::Regular => return f.write_str(&self.path.to_string_lossy()),
+			UrlScheme::Search => write!(f, "search://")?,
+			UrlScheme::Archive => write!(f, "archive://")?,
+			UrlScheme::Remote(scheme) => write!(f, "{scheme}://")?,
 		}
 
-		let scheme = match self.scheme {
-			UrlScheme::Regular => unreachable!(),
-			UrlScheme::Search => "search://",
-			UrlScheme::Archive => "archive://",
-		};
 		let path = percent_encode(self.path.as_os_str().as_encoded_bytes(), ENCODE_SET);
+		write!(f, "{path}")?;
 
-		write!(f, "{scheme}{path}")?;
 		if !self.frag.is_empty() {
 			write!(f, "#{}", self.frag)?;
 		}
@@ -126,6 +125,7 @@ impl Url {
 			UrlScheme::Regular => url,
 			UrlScheme::Search => url,
 			UrlScheme::Archive => url.into_archive(),
+			UrlScheme::Remote(_) => url,
 		}
 	}
 
@@ -137,6 +137,7 @@ impl Url {
 				UrlScheme::Regular => url,
 				UrlScheme::Search => url,
 				UrlScheme::Archive => url,
+				UrlScheme::Remote(_) => url,
 			}
 		})
 	}
@@ -193,6 +194,18 @@ impl Url {
 	pub fn into_archive(mut self) -> Self {
 		self.scheme = UrlScheme::Archive;
 		self
+	}
+
+	/// Check and fetch remote scheme.
+	///
+	/// Returns None if current url is not remote, otherwise returns
+	/// `Some(scheme)`
+	#[inline]
+	pub fn is_remote(&self) -> Option<&str> {
+		match &self.scheme {
+			UrlScheme::Remote(scheme) => Some(scheme),
+			_ => None,
+		}
 	}
 
 	// --- Path

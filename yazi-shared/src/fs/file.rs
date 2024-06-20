@@ -23,6 +23,11 @@ impl Deref for File {
 impl File {
 	#[inline]
 	pub async fn from(url: Url) -> Result<Self> {
+		// TODO: refactor this
+		// if url.is_remote().is_some() {
+		// 	return Self::from_remote(url).await;
+		// }
+
 		let meta = fs::symlink_metadata(&url).await?;
 		Ok(Self::from_meta(url, meta).await)
 	}
@@ -56,6 +61,39 @@ impl File {
 
 		Self { url, cha: Cha::from(meta).with_kind(ck), link_to, icon: Default::default() }
 	}
+
+	// TODO: refactor this
+	/// Build a new file from remote.
+	// pub async fn from_remote(url: Url) -> Result<Self> {
+	// 	let scheme = url.is_remote().ok_or(anyhow!("not a remote file"))?;
+	// 	let op = SCHEMES.get(scheme)?;
+
+	// 	let meta = op.stat(&url.as_path().to_string_lossy()).await?;
+	// 	let mut kind = ChaKind::default();
+	// 	if meta.is_dir() {
+	// 		kind |= ChaKind::DIR;
+	// 	}
+	// 	let cha = Cha {
+	// 		kind,
+	// 		len: meta.content_length(),
+	// 		accessed: None,
+	// 		created: None,
+	// 		modified: meta
+	// 			.last_modified()
+	// 			.map(|v| SystemTime::UNIX_EPOCH.add(Duration::from_micros(v.timestamp_micros() as u64))),
+	// 		// Always return 774 for remote files.
+	// 		#[cfg(unix)]
+	// 		permissions: 0774,
+	// 		// Always return current user for remote files.
+	// 		#[cfg(unix)]
+	// 		uid: unsafe { libc::getuid().into() },
+	// 		// Always return current group for remote files.
+	// 		#[cfg(unix)]
+	// 		gid: unsafe { libc::getgid().into() },
+	// 	};
+
+	// 	Ok(Self { url, cha, link_to: None, icon: Default::default() })
+	// }
 
 	#[inline]
 	pub fn from_dummy(url: &Url) -> Self { Self { url: url.to_owned(), ..Default::default() } }
