@@ -19,14 +19,7 @@ async fn main() -> anyhow::Result<()> {
 	match Args::parse().command {
 		Command::Pub(cmd) => {
 			yazi_dds::init();
-			if let Err(e) = yazi_dds::Client::shot(&cmd.kind, cmd.receiver()?, None, &cmd.body()?).await {
-				eprintln!("Cannot send message: {e}");
-				std::process::exit(1);
-			}
-		}
-		Command::PubStatic(cmd) => {
-			yazi_dds::init();
-			if let Err(e) = yazi_dds::Client::shot(&cmd.kind, 0, Some(cmd.severity), &cmd.body()?).await {
+			if let Err(e) = yazi_dds::Client::shot(&cmd.kind, cmd.receiver()?, &cmd.body()?).await {
 				eprintln!("Cannot send message: {e}");
 				std::process::exit(1);
 			}
