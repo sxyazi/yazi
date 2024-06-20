@@ -18,5 +18,5 @@ yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
 anyhow = "1.0.86"
-mlua   = { version = "0.9.8", features = [ "lua54" ] }
+mlua   = { version = "0.9.9", features = [ "lua54" ] }
 tokio  = { version = "1.38.0", features = [ "full" ] }

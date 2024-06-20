@@ -18,7 +18,7 @@ yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
 anyhow       = "1.0.86"
-mlua         = { version = "0.9.8", features = [ "lua54" ] }
+mlua         = { version = "0.9.9", features = [ "lua54" ] }
 parking_lot  = "0.12.3"
 serde        = { version = "1.0.203", features = [ "derive" ] }
 serde_json   = "1.0.117"

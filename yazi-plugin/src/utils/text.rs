@@ -10,11 +10,12 @@ impl Utils {
 	pub(super) fn text(lua: &Lua, ya: &Table) -> mlua::Result<()> {
 		ya.raw_set(
 			"quote",
-			lua.create_function(|_, s: mlua::String| {
-				#[cfg(unix)]
-				let s = shell_escape::unix::escape(s.to_str()?.into());
-				#[cfg(windows)]
-				let s = shell_escape::windows::escape(s.to_str()?.into());
+			lua.create_function(|_, (s, unix): (mlua::String, Option<bool>)| {
+				let s = match unix {
+					Some(true) => shell_escape::unix::escape(s.to_str()?.into()),
+					Some(false) => shell_escape::windows::escape(s.to_str()?.into()),
+					None => shell_escape::escape(s.to_str()?.into()),
+				};
 				Ok(s.into_owned())
 			})?,
 		)?;
