@@ -1,6 +1,6 @@
-use std::{borrow::Cow, collections::{HashMap, VecDeque}, fs::Metadata, path::{Path, PathBuf}};
+use std::{borrow::Cow, collections::{HashMap, VecDeque}, ffi::{OsStr, OsString}, fs::Metadata, path::{Path, PathBuf}};
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
 
 #[inline]
@@ -23,50 +23,80 @@ pub fn ok_or_not_found(result: io::Result<()>) -> io::Result<()> {
 	}
 }
 
-#[inline]
-pub async fn symlink_realpath(path: &Path) -> io::Result<PathBuf> {
-	if fs::symlink_metadata(path).await?.is_symlink() {
-		symlink_realpath_with(path, &mut HashMap::new()).await.map(|p| p.into_owned())
-	} else {
-		fs::canonicalize(path).await
+pub async fn symlink_realpath(path: &Path) -> Result<PathBuf> {
+	let p = fs::canonicalize(path).await?;
+	if p == path {
+		return Ok(p);
 	}
+
+	let Some(parent) = path.parent() else { bail!("no parent") };
+	symlink_realname(path, &mut HashMap::new()).await.map(|n| parent.join(n))
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn test_symlink_realpath() {
+	fs::remove_dir_all("/tmp/issue-1173").await.ok();
+	fs::create_dir_all("/tmp/issue-1173/real-dir").await.unwrap();
+	fs::File::create("/tmp/issue-1173/A").await.unwrap();
+	fs::File::create("/tmp/issue-1173/b").await.unwrap();
+	fs::File::create("/tmp/issue-1173/real-dir/C").await.unwrap();
+	fs::symlink("/tmp/issue-1173/b", "/tmp/issue-1173/D").await.unwrap();
+	fs::symlink("real-dir", "/tmp/issue-1173/link-dir").await.unwrap();
+
+	async fn check(a: &str, b: &str) {
+		assert_eq!(symlink_realpath(Path::new(a)).await.ok(), Some(PathBuf::from(b)));
+	}
+
+	check("/tmp/issue-1173/a", "/tmp/issue-1173/A").await;
+	check("/tmp/issue-1173/A", "/tmp/issue-1173/A").await;
+
+	check("/tmp/issue-1173/b", "/tmp/issue-1173/b").await;
+	check("/tmp/issue-1173/B", "/tmp/issue-1173/b").await;
+
+	check("/tmp/issue-1173/link-dir/c", "/tmp/issue-1173/link-dir/C").await;
+	check("/tmp/issue-1173/link-dir/C", "/tmp/issue-1173/link-dir/C").await;
+
+	check("/tmp/issue-1173/d", "/tmp/issue-1173/D").await;
+	check("/tmp/issue-1173/D", "/tmp/issue-1173/D").await;
 }
 
 // realpath(3) without resolving symlinks. This is useful for case-insensitive
 // filesystems.
 //
-// Make sure the file of the path exists and is a symlink.
-pub async fn symlink_realpath_with<'a>(
+// Make sure the file of the path exists.
+pub async fn symlink_realname<'a>(
 	path: &'a Path,
-	cached: &'a mut HashMap<PathBuf, PathBuf>,
-) -> io::Result<Cow<'a, Path>> {
-	let lowercased: PathBuf = path.as_os_str().to_ascii_lowercase().into();
-	if lowercased == path {
-		return Ok(Cow::Borrowed(path));
-	}
+	cached: &'a mut HashMap<PathBuf, HashMap<OsString, OsString>>,
+) -> Result<Cow<'a, OsStr>> {
+	let Some(name) = path.file_name() else { bail!("no file name") };
+	let Some(parent) = path.parent() else { return Ok(name.into()) };
 
-	let Some(parent) = path.parent() else {
-		return Ok(Cow::Borrowed(path));
-	};
-
-	let case = parent.as_os_str().as_encoded_bytes().iter().any(|&b| b.is_ascii_uppercase());
 	if !cached.contains_key(parent) {
+		let mut map = HashMap::new();
 		let mut it = fs::read_dir(parent).await?;
 		while let Some(entry) = it.next_entry().await? {
-			let p = entry.path();
-			if case || p.file_name().unwrap().as_encoded_bytes().iter().any(|&b| b.is_ascii_uppercase()) {
-				cached.insert(p.as_os_str().to_ascii_lowercase().into(), p);
+			let n = entry.file_name();
+			if n.as_encoded_bytes().iter().all(|&b| b.is_ascii_lowercase()) {
+				map.insert(n, OsString::new());
+			} else {
+				map.insert(n.to_ascii_lowercase(), n);
 			}
 		}
-		cached.insert(parent.to_owned(), PathBuf::new());
+		cached.insert(parent.to_owned(), map);
 	}
 
-	Ok(
-		cached
-			.get(&lowercased)
-			.filter(|p| !p.as_os_str().is_empty())
-			.map_or_else(|| Cow::Borrowed(path), |p| Cow::Borrowed(p)),
-	)
+	let c = &cached[parent];
+	if let Some(s) = c.get(name) {
+		return if s.is_empty() { Ok(name.into()) } else { Ok(s.into()) };
+	}
+
+	let lowercased = name.to_ascii_lowercase();
+	if let Some(s) = c.get(&lowercased) {
+		return if s.is_empty() { Ok(lowercased.into()) } else { Ok(s.into()) };
+	}
+
+	Ok(name.into())
 }
 
 pub async fn calculate_size(path: &Path) -> u64 {

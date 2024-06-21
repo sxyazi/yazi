@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::{HashMap, HashSet}, time::{Duration, SystemTime}};
+use std::{collections::{HashMap, HashSet}, time::{Duration, SystemTime}};
 
 use anyhow::Result;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
@@ -8,7 +8,7 @@ use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use tracing::error;
 use yazi_plugin::isolate;
 use yazi_proxy::WATCHER;
-use yazi_shared::{fs::{symlink_realpath_with, File, FilesOp, Url}, RoCell};
+use yazi_shared::{fs::{symlink_realname, File, FilesOp, Url}, RoCell};
 
 use super::Linked;
 use crate::folder::{Files, Folder};
@@ -104,18 +104,18 @@ impl Watcher {
 			let mut reload = Vec::with_capacity(urls.len());
 
 			for url in urls {
+				let Some(name) = url.file_name() else { continue };
 				let Some(parent) = url.parent_url() else { continue };
+
 				let Ok(file) = File::from(url.clone()).await else {
 					FilesOp::Deleting(parent, vec![url]).emit();
 					continue;
 				};
 
-				let real = if file.is_link() {
-					symlink_realpath_with(&url, &mut cached).await
-				} else {
-					fs::canonicalize(&url).await.map(Cow::Owned)
-				};
-				if !real.is_ok_and(|p| p == *url) {
+				let eq = (!file.is_link() && fs::canonicalize(&url).await.is_ok_and(|p| p == *url))
+					|| symlink_realname(&url, &mut cached).await.is_ok_and(|s| s == name);
+
+				if !eq {
 					FilesOp::Deleting(parent, vec![url]).emit();
 					continue;
 				}
