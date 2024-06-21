@@ -45,7 +45,7 @@ async fn test_symlink_realpath() {
 	fs::symlink("real-dir", "/tmp/issue-1173/link-dir").await.unwrap();
 
 	async fn check(a: &str, b: &str) {
-		let expected = if a == b || cfg!(target_os = "macos") { Some(PathBuf::from(a)) } else { None };
+		let expected = if a == b || cfg!(target_os = "macos") { Some(PathBuf::from(b)) } else { None };
 		assert_eq!(symlink_realpath(Path::new(a)).await.ok(), expected);
 	}
 
