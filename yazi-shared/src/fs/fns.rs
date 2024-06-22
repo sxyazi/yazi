@@ -27,7 +27,7 @@ pub fn ok_or_not_found(result: io::Result<()>) -> io::Result<()> {
 pub async fn are_paths_equal(old: impl AsRef<Path>, new: impl AsRef<Path>) -> bool {
 	#[cfg(unix)]
 	{
-		match (fs::metadata(old).await, fs::metadata(new).await) {
+		match (fs::symlink_metadata(old).await, fs::symlink_metadata(new).await) {
 			(Ok(old), Ok(new)) => old.dev() == new.dev() && old.ino() == new.ino(),
 			_ => false,
 		}
