@@ -5,7 +5,7 @@ use tokio::fs;
 use yazi_config::popup::InputCfg;
 use yazi_dds::Pubsub;
 use yazi_proxy::{InputProxy, TabProxy, WATCHER};
-use yazi_shared::{event::Cmd, fs::{maybe_exists, ok_or_not_found, symlink_realpath, File, FilesOp, Url}};
+use yazi_shared::{event::Cmd, fs::{are_paths_equal, maybe_exists, ok_or_not_found, symlink_realpath, File, FilesOp, Url}};
 
 use crate::manager::Manager;
 
@@ -62,7 +62,7 @@ impl Manager {
 			}
 
 			let new = hovered.parent().unwrap().join(name);
-			if opt.force || !maybe_exists(&new).await {
+			if opt.force || !maybe_exists(&new).await || are_paths_equal(&hovered, &new).await {
 				Self::rename_do(tab, hovered, Url::from(new)).await.ok();
 				return;
 			}
@@ -81,14 +81,17 @@ impl Manager {
 		let Some(p_new) = new.parent_url() else { return Ok(()) };
 		let _permit = WATCHER.acquire().await.unwrap();
 
+		let are_different = !are_paths_equal(&old, &new).await;
 		let overwritten = symlink_realpath(&new).await;
 		fs::rename(&old, &new).await?;
 
-		if let Ok(p) = overwritten {
-			ok_or_not_found(fs::rename(&p, &new).await)?;
-			FilesOp::Deleting(p_new.clone(), vec![Url::from(p)]).emit();
+		if are_different {
+			if let Ok(p) = overwritten {
+				ok_or_not_found(fs::rename(&p, &new).await)?;
+				FilesOp::Deleting(p_new.clone(), vec![Url::from(p)]).emit();
+			}
+			Pubsub::pub_from_rename(tab, &old, &new);
 		}
-		Pubsub::pub_from_rename(tab, &old, &new);
 
 		let file = File::from(new.clone()).await?;
 		FilesOp::Deleting(p_old, vec![old]).emit();

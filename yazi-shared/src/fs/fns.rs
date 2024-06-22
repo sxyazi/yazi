@@ -23,6 +23,14 @@ pub fn ok_or_not_found(result: io::Result<()>) -> io::Result<()> {
 	}
 }
 
+#[inline]
+pub async fn are_paths_equal(old: impl AsRef<Path>, new: impl AsRef<Path>) -> bool {
+	match (fs::canonicalize(old).await, fs::canonicalize(new).await) {
+		(Ok(old), Ok(new)) => old == new,
+		_ => false,
+	}
+}
+
 pub async fn symlink_realpath(path: &Path) -> Result<PathBuf> {
 	let p = fs::canonicalize(path).await?;
 	if p == path {
