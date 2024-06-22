@@ -3,8 +3,8 @@ Header = {
 }
 
 function Header:cwd(max)
-	local text = ya.readable_path(tostring(cx.active.current.cwd)) .. self:flags()
-	return ui.Span(ya.truncate(text, { max = max, rtl = true })):style(THEME.manager.cwd)
+	local s = ya.readable_path(tostring(cx.active.current.cwd)) .. self:flags()
+	return ui.Span(ya.truncate(s, { max = max, rtl = true })):style(THEME.manager.cwd)
 end
 
 function Header:flags()
