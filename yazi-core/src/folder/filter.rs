@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, ops::Range};
+use std::{ffi::OsStr, fmt::{Display, Error}, ops::Range};
 
 use anyhow::Result;
 use regex::bytes::{Regex, RegexBuilder};
@@ -33,6 +33,10 @@ impl Filter {
 	pub fn highlighted(&self, name: &OsStr) -> Option<Vec<Range<usize>>> {
 		self.regex.find(name.as_encoded_bytes()).map(|m| vec![m.range()])
 	}
+}
+
+impl Display for Filter {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), Error> { f.write_str(&self.raw) }
 }
 
 #[derive(Default, PartialEq, Eq)]

@@ -5,8 +5,13 @@ Header = {
 function Header:cwd(max)
 	local cwd = cx.active.current.cwd
 	local readable = ya.readable_path(tostring(cwd))
+	local files = cx.active.current.files
 
-	local text = cwd.is_search and string.format("%s (search: %s)", readable, cwd:frag()) or readable
+	local search = cwd.is_search and string.format(" (search: %s)", cwd:frag()) or ""
+	local filter = files.filter and string.format(" (filter: %s)", files.filter.to_string) or ""
+	
+	local text = string.format("%s%s%s", readable, search, filter)
+
 	return ui.Span(ya.truncate(text, { max = max, rtl = true })):style(THEME.manager.cwd)
 end
 
