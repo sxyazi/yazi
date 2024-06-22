@@ -32,7 +32,7 @@ impl Body<'static> {
 			"hover" => Self::Hover(serde_json::from_str(body)?),
 			"rename" => Self::Rename(serde_json::from_str(body)?),
 			"bulk" => Self::Bulk(serde_json::from_str(body)?),
-			"yank" => Self::Yank(serde_json::from_str(body)?),
+			"@yank" => Self::Yank(serde_json::from_str(body)?),
 			"move" => Self::Move(serde_json::from_str(body)?),
 			"trash" => Self::Trash(serde_json::from_str(body)?),
 			"delete" => Self::Delete(serde_json::from_str(body)?),
@@ -55,7 +55,7 @@ impl Body<'static> {
 				| "hover"
 				| "rename"
 				| "bulk"
-				| "yank"
+				| "@yank"
 				| "move"
 				| "trash"
 				| "delete"
@@ -63,7 +63,11 @@ impl Body<'static> {
 			bail!("Cannot construct system event");
 		}
 
-		if !kind.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-') {
+		let mut it = kind.bytes().peekable();
+		if it.peek() == Some(&b'@') {
+			it.next(); // Skip `@` as it's a prefix for static messages
+		}
+		if !it.all(|b| b.is_ascii_alphanumeric() || b == b'-') {
 			bail!("Kind must be alphanumeric with dashes");
 		}
 
@@ -82,7 +86,7 @@ impl<'a> Body<'a> {
 			Self::Hover(_) => "hover",
 			Self::Rename(_) => "rename",
 			Self::Bulk(_) => "bulk",
-			Self::Yank(_) => "yank",
+			Self::Yank(_) => "@yank",
 			Self::Move(_) => "move",
 			Self::Trash(_) => "trash",
 			Self::Delete(_) => "delete",

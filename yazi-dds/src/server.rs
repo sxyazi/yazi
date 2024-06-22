@@ -66,7 +66,7 @@ impl Server {
 									continue;
 								}
 
-								if receiver == 0 {
+								if receiver == 0 && kind.starts_with('@') {
 									let Some(body) = parts.next() else { continue };
 									if !STATE.set(kind, sender, body) { continue }
 								}

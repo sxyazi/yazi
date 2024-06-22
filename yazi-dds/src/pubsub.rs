@@ -137,13 +137,13 @@ impl Pubsub {
 	}
 
 	pub fn pub_from_yank(cut: bool, urls: &HashSet<Url>) {
-		if LOCAL.read().contains_key("yank") {
+		if LOCAL.read().contains_key("@yank") {
 			Self::pub_(BodyYank::dummy());
 		}
-		if Self::own_static_ability("yank") {
+		if Self::own_static_ability("@yank") {
 			Client::push(BodyYank::borrowed(cut, urls));
 		}
-		if BOOT.local_events.contains("yank") {
+		if BOOT.local_events.contains("@yank") {
 			BodyYank::borrowed(cut, urls).with_receiver(*ID).flush();
 		}
 	}
