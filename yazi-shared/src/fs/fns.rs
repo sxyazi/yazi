@@ -1,8 +1,7 @@
-use std::{borrow::Cow, collections::{HashMap, VecDeque}, ffi::{OsStr, OsString}, fs::Metadata, path::{Path, PathBuf}};
+use std::{borrow::Cow, collections::{HashMap, VecDeque}, ffi::{OsStr, OsString}, fs::Metadata, os::unix::fs::MetadataExt, path::{Path, PathBuf}};
 
 use anyhow::{bail, Result};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
-use winapi_util::{file::information, Handle};
 
 #[inline]
 pub async fn must_exists(p: impl AsRef<Path>) -> bool { fs::symlink_metadata(p).await.is_ok() }
@@ -35,6 +34,7 @@ pub async fn are_paths_equal(old: impl AsRef<Path>, new: impl AsRef<Path>) -> bo
 	}
 	#[cfg(windows)]
 	{
+		use winapi_util::{file::information, Handle};
 		match (Handle::from_path_any(old), Handle::from_path_any(new)) {
 			(Ok(old), Ok(new)) => match (information(old), information(new)) {
 				(Ok(old), Ok(new)) => {
