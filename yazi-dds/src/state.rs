@@ -6,7 +6,7 @@ use tokio::{fs::{self, File, OpenOptions}, io::{AsyncBufReadExt, AsyncWriteExt, 
 use yazi_boot::BOOT;
 use yazi_shared::{timestamp_us, RoCell};
 
-use crate::{body::Body, CLIENTS};
+use crate::CLIENTS;
 
 pub static STATE: RoCell<State> = RoCell::new();
 
@@ -23,23 +23,22 @@ impl Deref for State {
 }
 
 impl State {
-	pub fn set(&self, kind: &str, severity: u16, body: &str) -> bool {
+	pub fn set(&self, kind: &str, sender: u64, body: &str) -> bool {
 		let Some(inner) = &mut *self.inner.write() else { return false };
-		let key = format!("{}_{severity}_{kind}", Body::tab(kind, body));
 
 		if body == "null" {
 			return inner
-				.remove(&key)
+				.remove(kind)
 				.map(|_| self.last.store(timestamp_us(), Ordering::Relaxed))
 				.is_some();
 		}
 
-		let value = format!("{kind},0,{severity},{body}\n");
-		if inner.get(&key).is_some_and(|s| *s == value) {
+		let value = format!("{kind},0,{sender},{body}\n");
+		if inner.get(kind).is_some_and(|s| *s == value) {
 			return false;
 		}
 
-		inner.insert(key, value);
+		inner.insert(kind.to_owned(), value);
 		self.last.store(timestamp_us(), Ordering::Relaxed);
 		true
 	}
@@ -86,9 +85,7 @@ impl State {
 			let mut parts = line.splitn(4, ',');
 			let Some(kind) = parts.next() else { continue };
 			let Some(_) = parts.next() else { continue };
-			let Some(severity) = parts.next().and_then(|s| s.parse::<u16>().ok()) else { continue };
-			let Some(body) = parts.next() else { continue };
-			inner.insert(format!("{}_{severity}_{kind}", Body::tab(kind, body)), mem::take(&mut line));
+			inner.insert(kind.to_owned(), mem::take(&mut line));
 		}
 
 		let clients = CLIENTS.read();
