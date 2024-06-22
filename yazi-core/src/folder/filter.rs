@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, fmt::{Display, Error}, ops::Range};
+use std::{ffi::OsStr, fmt::Display, ops::Range};
 
 use anyhow::Result;
 use regex::bytes::{Regex, RegexBuilder};
@@ -7,10 +7,6 @@ use yazi_shared::event::Cmd;
 pub struct Filter {
 	raw:   String,
 	regex: Regex,
-}
-
-impl PartialEq for Filter {
-	fn eq(&self, other: &Self) -> bool { self.raw == other.raw }
 }
 
 impl Filter {
@@ -35,8 +31,12 @@ impl Filter {
 	}
 }
 
+impl PartialEq for Filter {
+	fn eq(&self, other: &Self) -> bool { self.raw == other.raw }
+}
+
 impl Display for Filter {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), Error> { f.write_str(&self.raw) }
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { f.write_str(&self.raw) }
 }
 
 #[derive(Default, PartialEq, Eq)]
