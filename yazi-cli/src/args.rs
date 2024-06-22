@@ -18,8 +18,6 @@ pub(super) struct Args {
 pub(super) enum Command {
 	/// Publish a message to remote instance(s).
 	Pub(CommandPub),
-	/// Publish a static message to all remote instances.
-	PubStatic(CommandPubStatic),
 	/// Manage packages.
 	Pack(CommandPack),
 	/// Subscribe to messages from all remote instances.
@@ -54,35 +52,6 @@ impl CommandPub {
 		}
 	}
 
-	#[allow(dead_code)]
-	pub(super) fn body(&self) -> Result<Cow<str>> {
-		if let Some(json) = &self.json {
-			Ok(json.into())
-		} else if let Some(str) = &self.str {
-			Ok(serde_json::to_string(str)?.into())
-		} else {
-			Ok("".into())
-		}
-	}
-}
-
-#[derive(clap::Args)]
-pub(super) struct CommandPubStatic {
-	/// The kind of message.
-	#[arg(index = 1)]
-	pub(super) kind:     String,
-	/// The severity of the message.
-	#[arg(index = 2)]
-	pub(super) severity: u16,
-	/// Send the message with a string body.
-	#[arg(long)]
-	pub(super) str:      Option<String>,
-	/// Send the message with a JSON body.
-	#[arg(long)]
-	pub(super) json:     Option<String>,
-}
-
-impl CommandPubStatic {
 	#[allow(dead_code)]
 	pub(super) fn body(&self) -> Result<Cow<str>> {
 		if let Some(json) = &self.json {

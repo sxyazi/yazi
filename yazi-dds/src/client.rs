@@ -64,12 +64,11 @@ impl Client {
 	}
 
 	/// Connect to an existing server to send a single message.
-	pub async fn shot(kind: &str, receiver: u64, severity: Option<u16>, body: &str) -> Result<()> {
+	pub async fn shot(kind: &str, receiver: u64, body: &str) -> Result<()> {
 		Body::validate(kind)?;
 
-		let sender = severity.map(Into::into).unwrap_or(*ID);
 		let payload = format!(
-			"{}\n{kind},{receiver},{sender},{body}\n{}\n",
+			"{}\n{kind},{receiver},{ID},{body}\n{}\n",
 			Payload::new(BodyHi::borrowed(Default::default())),
 			Payload::new(BodyBye::owned())
 		);

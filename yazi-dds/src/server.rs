@@ -66,9 +66,9 @@ impl Server {
 									continue;
 								}
 
-								if receiver == 0 && sender <= u16::MAX as u64 {
+								if receiver == 0 && kind.starts_with('@') {
 									let Some(body) = parts.next() else { continue };
-									if !STATE.set(kind, sender as u16, body) { continue }
+									if !STATE.set(kind, sender, body) { continue }
 								}
 
 								line.push('\n');
@@ -90,10 +90,6 @@ impl Server {
 	fn handle_hi(s: String, id: &mut Option<u64>, tx: mpsc::UnboundedSender<String>) {
 		let Ok(payload) = Payload::from_str(&s) else { return };
 		let Body::Hi(hi) = payload.body else { return };
-
-		if payload.sender <= u16::MAX as u64 {
-			return; // The kind of static messages cannot be "hi"
-		}
 
 		if id.is_none() {
 			if let Some(ref state) = *STATE.read() {
