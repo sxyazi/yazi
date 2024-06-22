@@ -2,6 +2,7 @@ use std::{borrow::Cow, collections::{HashMap, VecDeque}, ffi::{OsStr, OsString},
 
 use anyhow::{bail, Result};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
+use winapi_util::{file::information, Handle};
 
 #[inline]
 pub async fn must_exists(p: impl AsRef<Path>) -> bool { fs::symlink_metadata(p).await.is_ok() }
@@ -25,9 +26,25 @@ pub fn ok_or_not_found(result: io::Result<()>) -> io::Result<()> {
 
 #[inline]
 pub async fn are_paths_equal(old: impl AsRef<Path>, new: impl AsRef<Path>) -> bool {
-	match (fs::canonicalize(old).await, fs::canonicalize(new).await) {
-		(Ok(old), Ok(new)) => old == new,
-		_ => false,
+	#[cfg(unix)]
+	{
+		match (fs::metadata(old).await, fs::metadata(new).await) {
+			(Ok(old), Ok(new)) => old.dev() == new.dev() && old.ino() == new.ino(),
+			_ => false,
+		}
+	}
+	#[cfg(windows)]
+	{
+		match (Handle::from_path_any(old), Handle::from_path_any(new)) {
+			(Ok(old), Ok(new)) => match (information(old), information(new)) {
+				(Ok(old), Ok(new)) => {
+					old.volume_serial_number() == new.volume_serial_number()
+						&& old.file_index() == new.file_index()
+				}
+				_ => false,
+			},
+			_ => false,
+		}
 	}
 }
 
