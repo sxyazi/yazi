@@ -62,46 +62,31 @@ impl Manager {
 			}
 
 			let new = hovered.parent().unwrap().join(name);
-			let overwrite_safe;
-			#[cfg(windows)]
-			{
-				overwrite_safe = yazi_shared::fs::rename_without_overwriting(&hovered, &new).await.is_ok();
-			}
-			#[cfg(unix)]
-			{
-				overwrite_safe = yazi_shared::fs::are_paths_equal(&hovered, &new).await;
-			}
-			if opt.force || !maybe_exists(&new).await || overwrite_safe {
-				Self::rename_do(tab, hovered, Url::from(new), overwrite_safe).await.ok();
+			if opt.force || !maybe_exists(&new).await {
+				Self::rename_do(tab, hovered, Url::from(new)).await.ok();
 				return;
 			}
 
 			let mut result = InputProxy::show(InputCfg::overwrite());
 			if let Some(Ok(choice)) = result.recv().await {
 				if choice == "y" || choice == "Y" {
-					Self::rename_do(tab, hovered, Url::from(new), false).await.ok();
+					Self::rename_do(tab, hovered, Url::from(new)).await.ok();
 				}
 			};
 		});
 	}
 
-	async fn rename_do(tab: usize, old: Url, new: Url, overwrite_safe: bool) -> Result<()> {
+	async fn rename_do(tab: usize, old: Url, new: Url) -> Result<()> {
 		let Some(p_old) = old.parent_url() else { return Ok(()) };
 		let Some(p_new) = new.parent_url() else { return Ok(()) };
 		let _permit = WATCHER.acquire().await.unwrap();
 
-		if overwrite_safe {
-			if !cfg!(windows) {
-				fs::rename(&old, &new).await?;
-			}
-		} else {
-			let overwritten = symlink_realpath(&new).await;
-			fs::rename(&old, &new).await?;
+		let overwritten = symlink_realpath(&new).await;
+		fs::rename(&old, &new).await?;
 
-			if let Ok(p) = overwritten {
-				ok_or_not_found(fs::rename(&p, &new).await)?;
-				FilesOp::Deleting(p_new.clone(), vec![Url::from(p)]).emit();
-			}
+		if let Ok(p) = overwritten {
+			ok_or_not_found(fs::rename(&p, &new).await)?;
+			FilesOp::Deleting(p_new.clone(), vec![Url::from(p)]).emit();
 		}
 		Pubsub::pub_from_rename(tab, &old, &new);
 

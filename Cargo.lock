@@ -2475,12 +2475,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "widestring"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7219d36b6eac893fa81e84ebe06485e7dcbb616177469b142df14f1f4deb1311"
-
-[[package]]
 name = "winapi"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2970,7 +2964,6 @@ dependencies = [
  "serde",
  "shell-words",
  "tokio",
- "widestring",
  "windows-sys 0.52.0",
 ]
 

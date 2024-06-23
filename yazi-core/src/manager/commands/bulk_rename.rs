@@ -84,16 +84,7 @@ impl Manager {
 		for (o, n) in todo {
 			let (old, new) = (root.join(&o), root.join(&n));
 
-			let overwrite_safe;
-			#[cfg(windows)]
-			{
-				overwrite_safe = yazi_shared::fs::rename_without_overwriting(&old, &new).await.is_ok();
-			}
-			#[cfg(unix)]
-			{
-				overwrite_safe = yazi_shared::fs::are_paths_equal(&old, &new).await;
-			}
-			if maybe_exists(&new).await && !overwrite_safe {
+			if maybe_exists(&new).await {
 				failed.push((o, n, anyhow!("Destination already exists")));
 			} else {
 				#[cfg(unix)]

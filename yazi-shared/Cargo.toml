@@ -22,8 +22,9 @@ regex            = "1.10.5"
 serde            = { version = "1.0.203", features = [ "derive" ] }
 shell-words      = "1.1.0"
 tokio            = { version = "1.38.0", features = [ "full" ] }
-widestring = "1.1.0"
-windows-sys = { version = "0.52.0", features = ["Win32_Foundation"] }
 
 [target."cfg(unix)".dependencies]
 libc = "0.2.155"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.52.0", features = [ "Win32_Storage_FileSystem" ] }
