@@ -53,8 +53,8 @@ async fn _paths_to_same_file(a: &Path, b: &Path) -> std::io::Result<bool> {
 			.open(p)
 			.await?;
 
-		let mut buf = [0u16; MAX_PATH as usize];
 		tokio::task::spawn_blocking(move || {
+			let mut buf = [0u16; MAX_PATH as usize];
 			let len = unsafe {
 				GetFinalPathNameByHandleW(
 					file.as_raw_handle() as HANDLE,
