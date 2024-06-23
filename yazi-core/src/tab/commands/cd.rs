@@ -66,7 +66,6 @@ impl Tab {
 		}
 
 		Pubsub::pub_from_cd(self.idx, &self.current.cwd);
-		Pubsub::pub_from_hover(self.idx, self.current.hovered().map(|h| &h.url));
 		ManagerProxy::refresh();
 		render!();
 	}
