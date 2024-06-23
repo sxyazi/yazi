@@ -24,16 +24,25 @@ pub fn ok_or_not_found(result: io::Result<()>) -> io::Result<()> {
 }
 
 #[inline]
-pub fn are_names_equal(old: impl AsRef<Path>, new: impl AsRef<Path>) -> bool {
-	if let (Some(old), Some(new)) = (old.as_ref().file_name(), new.as_ref().file_name()) {
-		let (old, new) = if cfg!(target_os = "macos") || cfg!(target_os = "windows") {
-			(Cow::Owned(old.to_ascii_lowercase()), Cow::Owned(new.to_ascii_lowercase()))
+pub async fn are_pathss_equal(old: impl AsRef<Path>, new: impl AsRef<Path>) -> bool {
+	#[cfg(unix)]
+	if let (Ok(canonical_old), Ok(canonical_new)) =
+		(fs::canonicalize(&old).await, fs::canonicalize(&new).await)
+	{
+		if let (Ok(old), Ok(new)) =
+			(fs::metadata(&canonical_old).await, fs::metadata(&canonical_new).await)
+		{
+			use std::os::unix::fs::MetadataExt;
+			old.ino() == new.ino() && old.dev() == new.dev()
 		} else {
-			(Cow::Borrowed(old), Cow::Borrowed(new))
-		};
-		old == new
+			false
+		}
 	} else {
 		false
+	}
+	#[cfg(windows)]
+	{
+		// TODO: use MoveFileEx without MOVEFILE_REPLACE_EXISTING
 	}
 }
 
