@@ -27,13 +27,17 @@ pub fn ok_or_not_found(result: io::Result<()>) -> io::Result<()> {
 pub async fn paths_to_same_file(a: &Path, b: &Path) -> io::Result<bool> {
 	use std::os::unix::fs::MetadataExt;
 
-	let (a, b) = (fs::symlink_metadata(a).await?, fs::symlink_metadata(b).await?);
-	Ok(a.ino() == b.ino() && a.dev() == b.dev())
+	let (a_, b_) = (fs::symlink_metadata(a).await?, fs::symlink_metadata(b).await?);
+	Ok(
+		a_.ino() == b_.ino()
+			&& a_.dev() == b_.dev()
+			&& fs::canonicalize(a).await? == fs::canonicalize(b).await?,
+	)
 }
 
 #[cfg(windows)]
 pub async fn paths_to_same_file(a: &Path, b: &Path) -> std::io::Result<bool> {
-	use std::{ffi::OsString, os::windows::{ffi::OsStringExt, io::AsRawHandle}, path::{Path, PathBuf}};
+	use std::os::windows::{ffi::OsStringExt, io::AsRawHandle};
 
 	use windows_sys::Win32::{Foundation::{HANDLE, MAX_PATH}, Storage::FileSystem::{GetFinalPathNameByHandleW, FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, VOLUME_NAME_DOS}};
 
