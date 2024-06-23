@@ -54,8 +54,11 @@ pub async fn rename_without_overwriting(
 		.map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "invalid path"))?;
 	let new = U16CString::from_os_str(new.as_ref().as_os_str())
 		.map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "invalid path"))?;
-	let result = unsafe { MoveFileExW(old.as_ptr(), new.as_ptr(), 0) };
-	if result != 0 { Ok(()) } else { Err(io::Error::last_os_error()) }
+	tokio::task::spawn_blocking(move || {
+		let result = unsafe { MoveFileExW(old.as_ptr(), new.as_ptr(), 0) };
+		if result != 0 { Ok(()) } else { Err(io::Error::last_os_error()) }
+	})
+	.await?
 }
 
 pub async fn symlink_realpath(path: &Path) -> Result<PathBuf> {
