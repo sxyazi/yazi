@@ -2964,7 +2964,6 @@ dependencies = [
  "serde",
  "shell-words",
  "tokio",
- "winapi-util",
 ]
 
 [[package]]

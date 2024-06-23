@@ -22,7 +22,6 @@ regex            = "1.10.5"
 serde            = { version = "1.0.203", features = [ "derive" ] }
 shell-words      = "1.1.0"
 tokio            = { version = "1.38.0", features = [ "full" ] }
-winapi-util      = "0.1.8"
 
 [target."cfg(unix)".dependencies]
 libc = "0.2.155"
