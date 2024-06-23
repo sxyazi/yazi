@@ -35,6 +35,7 @@ pub async fn are_paths_equal(old: impl AsRef<Path>, new: impl AsRef<Path>) -> bo
 	}
 }
 
+#[inline]
 async fn canonicalize_without_resolving_itself(path: impl AsRef<Path>) -> Option<PathBuf> {
 	let meta = fs::symlink_metadata(&path).await.ok()?;
 	if meta.is_symlink() {
