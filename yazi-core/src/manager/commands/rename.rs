@@ -5,7 +5,7 @@ use tokio::fs;
 use yazi_config::popup::InputCfg;
 use yazi_dds::Pubsub;
 use yazi_proxy::{InputProxy, TabProxy, WATCHER};
-use yazi_shared::{event::Cmd, fs::{are_pathss_equal, maybe_exists, ok_or_not_found, symlink_realpath, File, FilesOp, Url}};
+use yazi_shared::{event::Cmd, fs::{maybe_exists, ok_or_not_found, symlink_realpath, File, FilesOp, Url}};
 
 use crate::manager::Manager;
 
@@ -62,36 +62,48 @@ impl Manager {
 			}
 
 			let new = hovered.parent().unwrap().join(name);
-			if opt.force || !maybe_exists(&new).await || are_pathss_equal(&hovered, &new).await {
-				Self::rename_do(tab, hovered, Url::from(new)).await.ok();
+			let overwrite_safe;
+			#[cfg(windows)]
+			{
+				overwrite_safe = yazi_shared::fs::rename_without_overwriting(&hovered, &new).await.is_ok();
+			}
+			#[cfg(unix)]
+			{
+				overwrite_safe = yazi_shared::fs::are_paths_equal(&hovered, &new).await;
+			}
+			if opt.force || !maybe_exists(&new).await || overwrite_safe {
+				Self::rename_do(tab, hovered, Url::from(new), overwrite_safe).await.ok();
 				return;
 			}
 
 			let mut result = InputProxy::show(InputCfg::overwrite());
 			if let Some(Ok(choice)) = result.recv().await {
 				if choice == "y" || choice == "Y" {
-					Self::rename_do(tab, hovered, Url::from(new)).await.ok();
+					Self::rename_do(tab, hovered, Url::from(new), false).await.ok();
 				}
 			};
 		});
 	}
 
-	async fn rename_do(tab: usize, old: Url, new: Url) -> Result<()> {
+	async fn rename_do(tab: usize, old: Url, new: Url, overwrite_safe: bool) -> Result<()> {
 		let Some(p_old) = old.parent_url() else { return Ok(()) };
 		let Some(p_new) = new.parent_url() else { return Ok(()) };
 		let _permit = WATCHER.acquire().await.unwrap();
 
-		let are_different = !are_pathss_equal(&old, &new).await;
-		let overwritten = symlink_realpath(&new).await;
-		fs::rename(&old, &new).await?;
+		if overwrite_safe {
+			if !cfg!(windows) {
+				fs::rename(&old, &new).await?;
+			}
+		} else {
+			let overwritten = symlink_realpath(&new).await;
+			fs::rename(&old, &new).await?;
 
-		if are_different {
 			if let Ok(p) = overwritten {
 				ok_or_not_found(fs::rename(&p, &new).await)?;
 				FilesOp::Deleting(p_new.clone(), vec![Url::from(p)]).emit();
 			}
-			Pubsub::pub_from_rename(tab, &old, &new);
 		}
+		Pubsub::pub_from_rename(tab, &old, &new);
 
 		let file = File::from(new.clone()).await?;
 		FilesOp::Deleting(p_old, vec![old]).emit();

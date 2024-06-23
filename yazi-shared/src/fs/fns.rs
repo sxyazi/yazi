@@ -24,8 +24,8 @@ pub fn ok_or_not_found(result: io::Result<()>) -> io::Result<()> {
 }
 
 #[inline]
-pub async fn are_pathss_equal(old: impl AsRef<Path>, new: impl AsRef<Path>) -> bool {
-	#[cfg(unix)]
+#[cfg(unix)]
+pub async fn are_paths_equal(old: impl AsRef<Path>, new: impl AsRef<Path>) -> bool {
 	if let (Ok(canonical_old), Ok(canonical_new)) =
 		(fs::canonicalize(&old).await, fs::canonicalize(&new).await)
 	{
@@ -40,10 +40,22 @@ pub async fn are_pathss_equal(old: impl AsRef<Path>, new: impl AsRef<Path>) -> b
 	} else {
 		false
 	}
-	#[cfg(windows)]
-	{
-		// TODO: use MoveFileEx without MOVEFILE_REPLACE_EXISTING
-	}
+}
+
+#[inline]
+#[cfg(windows)]
+pub async fn rename_without_overwriting(
+	old: impl AsRef<Path>,
+	new: impl AsRef<Path>,
+) -> io::Result<()> {
+	use widestring::U16CString;
+	use windows_sys::Win32::Storage::FileSystem::MoveFileExW;
+	let old = U16CString::from_os_str(old.as_ref().as_os_str())
+		.map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "invalid path"))?;
+	let new = U16CString::from_os_str(new.as_ref().as_os_str())
+		.map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "invalid path"))?;
+	let result = unsafe { MoveFileExW(old.as_ptr(), new.as_ptr(), 0) };
+	if result != 0 { Ok(()) } else { Err(io::Error::last_os_error()) }
 }
 
 pub async fn symlink_realpath(path: &Path) -> Result<PathBuf> {
