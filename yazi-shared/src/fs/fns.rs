@@ -24,31 +24,16 @@ pub fn ok_or_not_found(result: io::Result<()>) -> io::Result<()> {
 }
 
 #[inline]
-pub async fn are_paths_equal(old: impl AsRef<Path>, new: impl AsRef<Path>) -> bool {
-	if let (Some(old), Some(new)) = (
-		canonicalize_without_resolving_itself(old).await,
-		canonicalize_without_resolving_itself(new).await,
-	) {
+pub fn are_names_equal(old: impl AsRef<Path>, new: impl AsRef<Path>) -> bool {
+	if let (Some(old), Some(new)) = (old.as_ref().file_name(), new.as_ref().file_name()) {
+		let (old, new) = if cfg!(target_os = "macos") || cfg!(target_os = "windows") {
+			(Cow::Owned(old.to_ascii_lowercase()), Cow::Owned(new.to_ascii_lowercase()))
+		} else {
+			(Cow::Borrowed(old), Cow::Borrowed(new))
+		};
 		old == new
 	} else {
 		false
-	}
-}
-
-#[inline]
-async fn canonicalize_without_resolving_itself(path: impl AsRef<Path>) -> Option<PathBuf> {
-	let meta = fs::symlink_metadata(&path).await.ok()?;
-	if meta.is_symlink() {
-		let (parent, link) = (path.as_ref().parent()?, path.as_ref().file_name()?);
-		let parent = fs::canonicalize(parent).await.ok()?;
-		let new_link = if cfg!(target_os = "macos") || cfg!(target_os = "windows") {
-			Cow::Owned(link.to_ascii_lowercase())
-		} else {
-			Cow::Borrowed(link)
-		};
-		Some(parent.join(new_link))
-	} else {
-		fs::canonicalize(path).await.ok()
 	}
 }
 
