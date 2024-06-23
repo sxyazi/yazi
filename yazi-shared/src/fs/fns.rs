@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::{HashMap, VecDeque}, ffi::{OsStr, OsString}, fs::Metadata, os::unix::fs::MetadataExt, path::{Path, PathBuf}};
+use std::{borrow::Cow, collections::{HashMap, VecDeque}, ffi::{OsStr, OsString}, fs::Metadata, path::{Path, PathBuf}};
 
 use anyhow::{bail, Result};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
@@ -27,6 +27,7 @@ pub fn ok_or_not_found(result: io::Result<()>) -> io::Result<()> {
 pub async fn are_paths_equal(old: impl AsRef<Path>, new: impl AsRef<Path>) -> bool {
 	#[cfg(unix)]
 	{
+		use std::os::unix::fs::MetadataExt;
 		match (fs::symlink_metadata(old).await, fs::symlink_metadata(new).await) {
 			(Ok(old), Ok(new)) => old.dev() == new.dev() && old.ino() == new.ino(),
 			_ => false,
