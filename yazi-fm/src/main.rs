@@ -8,6 +8,7 @@ static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 mod app;
 mod completion;
 mod components;
+mod confirm;
 mod context;
 mod executor;
 mod help;

@@ -3,8 +3,8 @@ use std::{str::FromStr, time::Duration};
 use mlua::{ExternalError, ExternalResult, IntoLuaMulti, Lua, Table, Value};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use yazi_config::{keymap::{Control, Key}, popup::InputCfg};
-use yazi_proxy::{AppProxy, InputProxy};
+use yazi_config::{keymap::{Control, Key}, popup::{ConfirmCfg, InputCfg}};
+use yazi_proxy::{AppProxy, ConfirmProxy, InputProxy};
 use yazi_shared::{emit, event::Cmd, Debounce, Layer};
 
 use super::Utils;
@@ -83,6 +83,18 @@ impl Utils {
 					(InputRx::new(Debounce::new(rx, Duration::from_secs_f64(debounce))), Value::Nil)
 						.into_lua_multi(lua)
 				}
+			})?,
+		)?;
+
+		ya.raw_set(
+			"confirm",
+			lua.create_async_function(|_, t: Table| async move {
+				let result = ConfirmProxy::show(ConfirmCfg {
+					title:    t.raw_get("title")?,
+					content:  t.raw_get("content")?,
+					position: Position::try_from(t.raw_get::<_, Table>("position")?)?.into(),
+				});
+				Ok(result.await)
 			})?,
 		)?;
 

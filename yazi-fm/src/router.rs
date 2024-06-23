@@ -31,6 +31,8 @@ impl<'a> Router<'a> {
 			self.matches(Layer::Help, key)
 		} else if cx.input.visible {
 			self.matches(Layer::Input, key)
+		} else if cx.confirm.visible {
+			self.matches(Layer::Confirm, key)
 		} else if cx.select.visible {
 			self.matches(Layer::Select, key)
 		} else if cx.tasks.visible {

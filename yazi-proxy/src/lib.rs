@@ -1,5 +1,6 @@
 mod app;
 mod completion;
+mod confirm;
 mod input;
 mod manager;
 pub mod options;
@@ -10,6 +11,7 @@ mod tasks;
 
 pub use app::*;
 pub use completion::*;
+pub use confirm::*;
 pub use input::*;
 pub use manager::*;
 pub use select::*;

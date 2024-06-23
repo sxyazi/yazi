@@ -1,5 +1,7 @@
+use yazi_shared::fs::Url;
+
 use super::{Offset, Position};
-use crate::{INPUT, SELECT};
+use crate::{CONFIRM, INPUT, SELECT};
 
 #[derive(Default)]
 pub struct InputCfg {
@@ -16,6 +18,13 @@ pub struct InputCfg {
 pub struct SelectCfg {
 	pub title:    String,
 	pub items:    Vec<String>,
+	pub position: Position,
+}
+
+#[derive(Default)]
+pub struct ConfirmCfg {
+	pub title:    String,
+	pub content:  String,
 	pub position: Position,
 }
 
@@ -44,26 +53,6 @@ impl InputCfg {
 		Self {
 			title: INPUT.rename_title.to_owned(),
 			position: Position::new(INPUT.rename_origin, INPUT.rename_offset),
-			..Default::default()
-		}
-	}
-
-	#[inline]
-	pub fn trash(n: usize) -> Self {
-		let title = INPUT.trash_title.replace("{n}", &n.to_string());
-		Self {
-			title: title.replace("{s}", if n > 1 { "s" } else { "" }),
-			position: Position::new(INPUT.trash_origin, INPUT.trash_offset),
-			..Default::default()
-		}
-	}
-
-	#[inline]
-	pub fn delete(n: usize) -> Self {
-		let title = INPUT.delete_title.replace("{n}", &n.to_string());
-		Self {
-			title: title.replace("{s}", if n > 1 { "s" } else { "" }),
-			position: Position::new(INPUT.delete_origin, INPUT.delete_offset),
 			..Default::default()
 		}
 	}
@@ -108,25 +97,6 @@ impl InputCfg {
 	}
 
 	#[inline]
-	pub fn overwrite() -> Self {
-		Self {
-			title: INPUT.overwrite_title.to_owned(),
-			position: Position::new(INPUT.overwrite_origin, INPUT.overwrite_offset),
-			..Default::default()
-		}
-	}
-
-	#[inline]
-	pub fn quit(n: usize) -> Self {
-		let title = INPUT.quit_title.replace("{n}", &n.to_string());
-		Self {
-			title: title.replace("{s}", if n > 1 { "s" } else { "" }),
-			position: Position::new(INPUT.quit_origin, INPUT.quit_offset),
-			..Default::default()
-		}
-	}
-
-	#[inline]
 	pub fn with_value(mut self, value: impl Into<String>) -> Self {
 		self.value = value.into();
 		self
@@ -136,6 +106,49 @@ impl InputCfg {
 	pub fn with_cursor(mut self, cursor: Option<usize>) -> Self {
 		self.cursor = cursor;
 		self
+	}
+}
+
+impl ConfirmCfg {
+	#[inline]
+	pub fn delete(targets: &[yazi_shared::fs::Url]) -> Self {
+		Self {
+			title:    CONFIRM.delete_title.replace("{n}", &targets.len().to_string()),
+			position: Position::new(CONFIRM.delete_origin, CONFIRM.delete_offset),
+			content:  targets.iter().map(|t| t.to_string()).collect::<Vec<_>>().join("\n"),
+		}
+	}
+
+	#[inline]
+	pub fn trash(targets: &[yazi_shared::fs::Url]) -> Self {
+		Self {
+			title:    CONFIRM.trash_title.replace("{n}", &targets.len().to_string()),
+			position: Position::new(CONFIRM.trash_origin, CONFIRM.trash_offset),
+			content:  targets.iter().map(|t| t.to_string()).collect::<Vec<_>>().join("\n"),
+		}
+	}
+
+	#[inline]
+	pub fn overwrite(url: &Url) -> Self {
+		Self {
+			title:    CONFIRM.overwrite_title.to_owned(),
+			content:  CONFIRM.overwrite_content.replace("{url}", &url.to_string()),
+			position: Position::new(CONFIRM.overwrite_origin, CONFIRM.overwrite_offset),
+		}
+	}
+
+	#[inline]
+	pub fn quit(ongoing_task_names: Vec<String>) -> Self {
+		let n = ongoing_task_names.len();
+		let mut message = CONFIRM.quit_content.replace("{n}", &n.to_string());
+
+		message.push_str(&ongoing_task_names.join("\n"));
+
+		Self {
+			title:    CONFIRM.quit_title.to_owned(),
+			content:  message,
+			position: Position::new(CONFIRM.quit_origin, CONFIRM.quit_offset),
+		}
 	}
 }
 
