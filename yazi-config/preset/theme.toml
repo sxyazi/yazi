@@ -743,6 +743,7 @@ exts = [
 	{ name = "woff2", text = "", fg_dark = "#ececec", fg_light = "#2f2f2f" },
 	{ name = "wrl", text = "󰆧", fg_dark = "#888888", fg_light = "#5b5b5b" },
 	{ name = "wrz", text = "󰆧", fg_dark = "#888888", fg_light = "#5b5b5b" },
+	{ name = "wv", text = "", fg_dark = "#00afff", fg_light = "#0075aa" },
 	{ name = "x", text = "", fg_dark = "#599eff", fg_light = "#3b69aa" },
 	{ name = "xaml", text = "󰙳", fg_dark = "#512bd4", fg_light = "#512bd4" },
 	{ name = "xcf", text = "", fg_dark = "#635b46", fg_light = "#4a4434" },
