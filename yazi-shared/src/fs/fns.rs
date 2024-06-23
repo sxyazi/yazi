@@ -25,27 +25,29 @@ pub fn ok_or_not_found(result: io::Result<()>) -> io::Result<()> {
 
 #[inline]
 pub async fn are_paths_equal(old: impl AsRef<Path>, new: impl AsRef<Path>) -> bool {
-	#[cfg(unix)]
-	{
-		use std::os::unix::fs::MetadataExt;
-		match (fs::symlink_metadata(old).await, fs::symlink_metadata(new).await) {
-			(Ok(old), Ok(new)) => old.dev() == new.dev() && old.ino() == new.ino(),
-			_ => false,
-		}
+	if let (Some(old), Some(new)) = (
+		canonicalize_without_resolving_itself(old).await,
+		canonicalize_without_resolving_itself(new).await,
+	) {
+		old == new
+	} else {
+		false
 	}
-	#[cfg(windows)]
-	{
-		use winapi_util::{file::information, Handle};
-		match (Handle::from_path_any(old), Handle::from_path_any(new)) {
-			(Ok(old), Ok(new)) => match (information(old), information(new)) {
-				(Ok(old), Ok(new)) => {
-					old.volume_serial_number() == new.volume_serial_number()
-						&& old.file_index() == new.file_index()
-				}
-				_ => false,
-			},
-			_ => false,
-		}
+}
+
+async fn canonicalize_without_resolving_itself(path: impl AsRef<Path>) -> Option<PathBuf> {
+	let meta = fs::symlink_metadata(&path).await.ok()?;
+	if meta.is_symlink() {
+		let (parent, link) = (path.as_ref().parent()?, path.as_ref().file_name()?);
+		let parent = fs::canonicalize(parent).await.ok()?;
+		let new_link = if cfg!(target_os = "macos") || cfg!(target_os = "windows") {
+			Cow::Owned(link.to_ascii_lowercase())
+		} else {
+			Cow::Borrowed(link)
+		};
+		Some(parent.join(new_link))
+	} else {
+		fs::canonicalize(path).await.ok()
 	}
 }
 
