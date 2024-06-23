@@ -65,8 +65,8 @@ rules = [
 	{ mime = "application/{,g}zip", use = [ "extract", "reveal" ] },
 	{ mime = "application/x-{tar,bzip*,7z-compressed,xz,rar}", use = [ "extract", "reveal" ] },
 
-	{ mime = "application/json", use = [ "edit", "reveal" ] },
-	{ mime = "*/javascript",     use = [ "edit", "reveal" ] },
+	{ mime = "application/{json,x-ndjson}", use = [ "edit", "reveal" ] },
+	{ mime = "*/javascript", use = [ "edit", "reveal" ] },
 
 	{ name = "*", use = [ "open", "reveal" ] },
 ]
@@ -103,7 +103,7 @@ previewers = [
 	{ mime = "text/*", run = "code" },
 	{ mime = "*/{xml,javascript,x-wine-extension-ini}", run = "code" },
 	# JSON
-	{ mime = "application/json", run = "json" },
+	{ mime = "application/{json,x-ndjson}", run = "json" },
 	# Image
 	{ mime = "image/{heic,jxl,svg+xml}", run = "magick" },
 	{ mime = "image/*", run = "image" },
