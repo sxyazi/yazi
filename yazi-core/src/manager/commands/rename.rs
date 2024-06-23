@@ -5,7 +5,7 @@ use tokio::fs;
 use yazi_config::popup::InputCfg;
 use yazi_dds::Pubsub;
 use yazi_proxy::{InputProxy, TabProxy, WATCHER};
-use yazi_shared::{event::Cmd, fs::{maybe_exists, ok_or_not_found, symlink_realpath, File, FilesOp, Url}};
+use yazi_shared::{event::Cmd, fs::{maybe_exists, ok_or_not_found, paths_to_same_file, symlink_realpath, File, FilesOp, Url}};
 
 use crate::manager::Manager;
 
@@ -62,7 +62,7 @@ impl Manager {
 			}
 
 			let new = hovered.parent().unwrap().join(name);
-			if opt.force || !maybe_exists(&new).await {
+			if opt.force || !maybe_exists(&new).await || paths_to_same_file(&hovered, &new).await {
 				Self::rename_do(tab, hovered, Url::from(new)).await.ok();
 				return;
 			}

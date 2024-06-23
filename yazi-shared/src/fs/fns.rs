@@ -23,8 +23,13 @@ pub fn ok_or_not_found(result: io::Result<()>) -> io::Result<()> {
 	}
 }
 
+#[inline]
+pub async fn paths_to_same_file(a: impl AsRef<Path>, b: impl AsRef<Path>) -> bool {
+	_paths_to_same_file(a.as_ref(), b.as_ref()).await.unwrap_or(false)
+}
+
 #[cfg(unix)]
-pub async fn paths_to_same_file(a: &Path, b: &Path) -> io::Result<bool> {
+async fn _paths_to_same_file(a: &Path, b: &Path) -> io::Result<bool> {
 	use std::os::unix::fs::MetadataExt;
 
 	let (a_, b_) = (fs::symlink_metadata(a).await?, fs::symlink_metadata(b).await?);
@@ -36,7 +41,7 @@ pub async fn paths_to_same_file(a: &Path, b: &Path) -> io::Result<bool> {
 }
 
 #[cfg(windows)]
-pub async fn paths_to_same_file(a: &Path, b: &Path) -> std::io::Result<bool> {
+async fn _paths_to_same_file(a: &Path, b: &Path) -> std::io::Result<bool> {
 	use std::os::windows::{ffi::OsStringExt, io::AsRawHandle};
 
 	use windows_sys::Win32::{Foundation::{HANDLE, MAX_PATH}, Storage::FileSystem::{GetFinalPathNameByHandleW, FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, VOLUME_NAME_DOS}};
