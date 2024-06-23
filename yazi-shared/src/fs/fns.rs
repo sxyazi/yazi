@@ -23,6 +23,59 @@ pub fn ok_or_not_found(result: io::Result<()>) -> io::Result<()> {
 	}
 }
 
+#[inline]
+pub async fn paths_to_same_file(a: impl AsRef<Path>, b: impl AsRef<Path>) -> bool {
+	_paths_to_same_file(a.as_ref(), b.as_ref()).await.unwrap_or(false)
+}
+
+#[cfg(unix)]
+async fn _paths_to_same_file(a: &Path, b: &Path) -> io::Result<bool> {
+	use std::os::unix::fs::MetadataExt;
+
+	let (a_, b_) = (fs::symlink_metadata(a).await?, fs::symlink_metadata(b).await?);
+	Ok(
+		a_.ino() == b_.ino()
+			&& a_.dev() == b_.dev()
+			&& fs::canonicalize(a).await? == fs::canonicalize(b).await?,
+	)
+}
+
+#[cfg(windows)]
+async fn _paths_to_same_file(a: &Path, b: &Path) -> std::io::Result<bool> {
+	use std::os::windows::{ffi::OsStringExt, io::AsRawHandle};
+
+	use windows_sys::Win32::{Foundation::{HANDLE, MAX_PATH}, Storage::FileSystem::{GetFinalPathNameByHandleW, FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, VOLUME_NAME_DOS}};
+
+	async fn final_name(p: &Path) -> std::io::Result<PathBuf> {
+		let file = tokio::fs::OpenOptions::new()
+			.access_mode(0)
+			.custom_flags(FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT)
+			.open(p)
+			.await?;
+
+		tokio::task::spawn_blocking(move || {
+			let mut buf = [0u16; MAX_PATH as usize];
+			let len = unsafe {
+				GetFinalPathNameByHandleW(
+					file.as_raw_handle() as HANDLE,
+					buf.as_mut_ptr(),
+					buf.len() as u32,
+					VOLUME_NAME_DOS,
+				)
+			};
+
+			if len == 0 {
+				Err(std::io::Error::last_os_error())
+			} else {
+				Ok(PathBuf::from(OsString::from_wide(&buf[0..len as usize])))
+			}
+		})
+		.await?
+	}
+
+	Ok(final_name(a).await? == final_name(b).await?)
+}
+
 pub async fn symlink_realpath(path: &Path) -> Result<PathBuf> {
 	let p = fs::canonicalize(path).await?;
 	if p == path {

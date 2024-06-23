@@ -6,7 +6,7 @@ use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 use yazi_config::{OPEN, PREVIEW};
 use yazi_dds::Pubsub;
 use yazi_proxy::{AppProxy, TasksProxy, HIDER, WATCHER};
-use yazi_shared::{fs::{max_common_root, maybe_exists, File, FilesOp, Url}, terminal_clear};
+use yazi_shared::{fs::{max_common_root, maybe_exists, paths_to_same_file, File, FilesOp, Url}, terminal_clear};
 
 use crate::manager::Manager;
 
@@ -84,7 +84,7 @@ impl Manager {
 		for (o, n) in todo {
 			let (old, new) = (root.join(&o), root.join(&n));
 
-			if maybe_exists(&new).await {
+			if maybe_exists(&new).await && !paths_to_same_file(&old, &new).await {
 				failed.push((o, n, anyhow!("Destination already exists")));
 			} else if let Err(e) = fs::rename(&old, &new).await {
 				failed.push((o, n, e.into()));
