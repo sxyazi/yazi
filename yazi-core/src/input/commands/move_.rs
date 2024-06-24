@@ -39,8 +39,8 @@ impl Input {
 		));
 
 		let (limit, snap) = (self.limit(), self.snap_mut());
-		if snap.offset > snap.cursor {
-			snap.offset = snap.cursor;
+		if snap.offset + limit / 2 > snap.cursor {
+			snap.offset = snap.cursor.saturating_sub(limit / 2);
 		} else if snap.value.is_empty() {
 			snap.offset = 0;
 		} else {
