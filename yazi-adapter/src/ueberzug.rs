@@ -8,7 +8,7 @@ use tracing::{debug, warn};
 use yazi_config::PREVIEW;
 use yazi_shared::RoCell;
 
-use crate::{Adapter, Image};
+use crate::{Adapter, Dimension};
 
 #[allow(clippy::type_complexity)]
 static DEMON: RoCell<Option<UnboundedSender<Option<(PathBuf, Rect)>>>> = RoCell::new();
@@ -50,9 +50,16 @@ impl Ueberzug {
 		let ImageSize { width: w, height: h } =
 			tokio::task::spawn_blocking(move || imagesize::size(p)).await??;
 
-		let area = Image::pixel_area((w as u32, h as u32), max);
-		tx.send(Some((path.to_owned(), area)))?;
+		let area = Dimension::ratio()
+			.map(|(r1, r2)| Rect {
+				x:      max.x,
+				y:      max.y,
+				width:  max.width.min((w.min(PREVIEW.max_width as _) as f64 / r1).ceil() as _),
+				height: max.height.min((h.min(PREVIEW.max_height as _) as f64 / r2).ceil() as _),
+			})
+			.unwrap_or(max);
 
+		tx.send(Some((path.to_owned(), area)))?;
 		Adapter::shown_store(area);
 		Ok(area)
 	}
