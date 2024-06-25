@@ -23,11 +23,11 @@ function M:preload()
 	local child, code = Command("magick"):args({
 		"-density",
 		"200",
+		tostring(self.file.url),
 		"-resize",
 		string.format("%dx%d^", PREVIEW.max_width, PREVIEW.max_height),
 		"-quality",
 		tostring(PREVIEW.image_quality),
-		tostring(self.file.url),
 		"JPG:" .. tostring(cache),
 	}):spawn()
 
