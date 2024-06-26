@@ -41,7 +41,7 @@ impl Input {
 		let (limit, snap) = (self.limit(), self.snap_mut());
 		let half_limit = limit / 2;
 		let max_offset = snap.cursor.saturating_sub(half_limit);
-		let min_offset = max_offset.min(snap.len().saturating_sub(limit));
+		let min_offset = max_offset.min(snap.len().saturating_sub(limit - 1));
 		if snap.offset > max_offset {
 			snap.offset = max_offset;
 		} else if snap.offset < min_offset {
