@@ -16,11 +16,11 @@ pub struct Icons {
 
 impl Icons {
 	pub fn matches(&self, file: &File) -> Option<&Icon> {
-		if let Some((_, i)) = self.globs.iter().find(|(p, _)| p.match_path(&file.url, file.is_dir())) {
+		if let Some(i) = self.match_by_glob(file) {
 			return Some(i);
 		}
 
-		if let Some(i) = self.match_name(file) {
+		if let Some(i) = self.match_by_name(file) {
 			return Some(i);
 		}
 
@@ -41,7 +41,12 @@ impl Icons {
 	}
 
 	#[inline]
-	fn match_name(&self, file: &File) -> Option<&Icon> {
+	fn match_by_glob(&self, file: &File) -> Option<&Icon> {
+		self.globs.iter().find(|(p, _)| p.match_path(&file.url, file.is_dir())).map(|(_, i)| i)
+	}
+
+	#[inline]
+	fn match_by_name(&self, file: &File) -> Option<&Icon> {
 		let name = file.name()?.to_str()?;
 		if file.is_dir() {
 			self.dirs.get(name).or_else(|| self.dirs.get(&name.to_ascii_lowercase()))
@@ -110,7 +115,8 @@ impl<'de> Deserialize<'de> for Icons {
 		}
 		#[derive(Deserialize)]
 		pub struct ShadowCond {
-			cond:     Condition,
+			#[serde(rename = "if")]
+			if_:      Condition,
 			text:     String,
 			fg_dark:  Option<Color>,
 			#[allow(dead_code)]
@@ -136,7 +142,7 @@ impl<'de> Deserialize<'de> for Icons {
 			.conds
 			.into_iter()
 			.map(|v| {
-				(v.cond, Icon { text: v.text, style: Style { fg: v.fg_dark, ..Default::default() } })
+				(v.if_, Icon { text: v.text, style: Style { fg: v.fg_dark, ..Default::default() } })
 			})
 			.collect();
 

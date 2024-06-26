@@ -23,7 +23,7 @@ futures      = "0.3.30"
 image        = "=0.24.9"
 imagesize    = "0.13.0"
 kamadak-exif = "0.5.5"
-ratatui      = "0.26.3"
+ratatui      = "0.27.0"
 scopeguard   = "1.2.0"
 tokio        = { version = "1.38.0", features = [ "full" ] }
 

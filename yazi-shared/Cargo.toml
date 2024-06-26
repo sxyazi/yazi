@@ -17,7 +17,7 @@ dirs             = "5.0.1"
 futures          = "0.3.30"
 parking_lot      = "0.12.3"
 percent-encoding = "2.3.1"
-ratatui          = "0.26.3"
+ratatui          = "0.27.0"
 regex            = "1.10.5"
 serde            = { version = "1.0.203", features = [ "derive" ] }
 shell-words      = "1.1.0"

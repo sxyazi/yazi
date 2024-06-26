@@ -26,7 +26,7 @@ dirs          = "5.0.1"
 futures       = "0.3.30"
 notify        = { version = "6.1.1", default-features = false, features = [ "macos_fsevent" ] }
 parking_lot   = "0.12.3"
-ratatui       = "0.26.3"
+ratatui       = "0.27.0"
 regex         = "1.10.5"
 scopeguard    = "1.2.0"
 serde         = "1.0.203"

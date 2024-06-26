@@ -6,7 +6,7 @@ use yazi_config::LAYOUT;
 use yazi_shared::{emit, event::Cmd, Layer};
 
 use super::slim_lua;
-use crate::{bindings::{Cast, File, Window}, elements::Rect, loader::LOADER, Opt, OptCallback, LUA};
+use crate::{bindings::{Cast, Window}, elements::Rect, file::File, loader::LOADER, Opt, OptCallback, LUA};
 
 pub fn peek(cmd: &Cmd, file: yazi_shared::fs::File, skip: usize) -> CancellationToken {
 	let ct = CancellationToken::new();

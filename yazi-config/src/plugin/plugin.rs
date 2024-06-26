@@ -25,7 +25,7 @@ impl Plugin {
 			.fetchers
 			.iter()
 			.filter(|&p| {
-				p.cond.as_ref().and_then(|c| c.eval(f)) != Some(false)
+				p.if_.as_ref().and_then(|c| c.eval(f)) != Some(false)
 					&& (p.mime.as_ref().zip(mime).map_or(false, |(p, m)| p.match_mime(m))
 						|| p.name.as_ref().is_some_and(|p| p.match_path(path, is_dir)))
 			})

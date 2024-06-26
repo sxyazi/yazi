@@ -3,7 +3,7 @@ use tokio::runtime::Handle;
 use yazi_config::LAYOUT;
 
 use super::slim_lua;
-use crate::{bindings::{Cast, File}, elements::Rect, loader::LOADER};
+use crate::{bindings::Cast, elements::Rect, file::File, loader::LOADER};
 
 pub async fn preload(name: &str, file: yazi_shared::fs::File) -> mlua::Result<u8> {
 	LOADER.ensure(name).await.into_lua_err()?;
