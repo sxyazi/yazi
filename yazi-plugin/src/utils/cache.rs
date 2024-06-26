@@ -3,7 +3,7 @@ use mlua::{Lua, Table};
 use yazi_config::PREVIEW;
 
 use super::Utils;
-use crate::{bindings::{Cast, FileRef}, url::Url};
+use crate::{bindings::Cast, file::FileRef, url::Url};
 
 impl Utils {
 	pub(super) fn cache(lua: &Lua, ya: &Table) -> mlua::Result<()> {

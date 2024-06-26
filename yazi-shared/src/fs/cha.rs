@@ -5,16 +5,16 @@ use bitflags::bitflags;
 bitflags! {
 	#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 	pub struct ChaKind: u8 {
-		const DIR          = 0b00000001;
+		const DIR    = 0b00000001;
 
-		const HIDDEN       = 0b00000010;
-		const LINK         = 0b00000100;
-		const ORPHAN       = 0b00001000;
+		const HIDDEN = 0b00000010;
+		const LINK   = 0b00000100;
+		const ORPHAN = 0b00001000;
 
-		const BLOCK_DEVICE = 0b00010000;
-		const CHAR_DEVICE  = 0b00100000;
-		const FIFO         = 0b01000000;
-		const SOCKET       = 0b10000000;
+		const BLOCK  = 0b00010000;
+		const CHAR   = 0b00100000;
+		const FIFO   = 0b01000000;
+		const SOCKET = 0b10000000;
 	}
 }
 
@@ -44,10 +44,10 @@ impl From<Metadata> for Cha {
 		{
 			use std::os::unix::prelude::FileTypeExt;
 			if m.file_type().is_block_device() {
-				ck |= ChaKind::BLOCK_DEVICE;
+				ck |= ChaKind::BLOCK;
 			}
 			if m.file_type().is_char_device() {
-				ck |= ChaKind::CHAR_DEVICE;
+				ck |= ChaKind::CHAR;
 			}
 			if m.file_type().is_fifo() {
 				ck |= ChaKind::FIFO;
@@ -105,10 +105,10 @@ impl Cha {
 	pub fn is_orphan(&self) -> bool { self.kind.contains(ChaKind::ORPHAN) }
 
 	#[inline]
-	pub fn is_block(&self) -> bool { self.kind.contains(ChaKind::BLOCK_DEVICE) }
+	pub fn is_block(&self) -> bool { self.kind.contains(ChaKind::BLOCK) }
 
 	#[inline]
-	pub fn is_char(&self) -> bool { self.kind.contains(ChaKind::CHAR_DEVICE) }
+	pub fn is_char(&self) -> bool { self.kind.contains(ChaKind::CHAR) }
 
 	#[inline]
 	pub fn is_fifo(&self) -> bool { self.kind.contains(ChaKind::FIFO) }

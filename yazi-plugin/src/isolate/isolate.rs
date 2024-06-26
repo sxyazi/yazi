@@ -1,14 +1,15 @@
 use mlua::Lua;
 
-use crate::{bindings, elements, runtime::Runtime};
+use crate::{elements, runtime::Runtime};
 
 pub fn slim_lua(name: &str) -> mlua::Result<Lua> {
 	let lua = Lua::new();
 	lua.set_named_registry_value("rt", Runtime::new(name))?;
 
 	// Base
-	bindings::Cha::register(&lua)?;
-	bindings::File::register(&lua)?;
+	crate::bindings::Icon::register(&lua)?;
+	crate::cha::pour(&lua)?;
+	crate::file::pour(&lua)?;
 	crate::url::pour(&lua)?;
 
 	crate::fs::install(&lua)?;

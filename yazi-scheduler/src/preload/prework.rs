@@ -33,13 +33,24 @@ impl Prework {
 				let urls: Vec<_> = task.targets.iter().map(|f| f.url()).collect();
 				let result = isolate::fetch(&task.plugin.name, task.targets).await;
 				if let Err(e) = result {
-					self.fail(task.id, format!("Fetch task failed:\n{e}"))?;
+					self.fail(
+						task.id,
+						format!(
+							"Failed to run fetcher `{}` with:\n{}\n\nError message:\n{e}",
+							task.plugin.name,
+							urls.iter().map(ToString::to_string).collect::<Vec<_>>().join("\n")
+						),
+					)?;
 					return Err(e.into());
 				};
 
 				let code = result.unwrap();
 				if code & 1 == 0 {
-					error!("Fetch task `{}` returned {code}", task.plugin.name);
+					error!(
+						"Returned {code} when running fetcher `{}` with:\n{}",
+						task.plugin.name,
+						urls.iter().map(ToString::to_string).collect::<Vec<_>>().join("\n")
+					);
 				}
 				if code >> 1 & 1 != 0 {
 					let mut loaded = self.loaded.lock();
@@ -53,13 +64,16 @@ impl Prework {
 				let url = task.target.url();
 				let result = isolate::preload(&task.plugin.name, task.target).await;
 				if let Err(e) = result {
-					self.fail(task.id, format!("Preload task failed:\n{e}"))?;
+					self.fail(
+						task.id,
+						format!("Failed to run preloader `{}` with `{url}`:\n{e}", task.plugin.name),
+					)?;
 					return Err(e.into());
 				};
 
 				let code = result.unwrap();
 				if code & 1 == 0 {
-					error!("Preload task `{}` returned {code}", task.plugin.name);
+					error!("Returned {code} when running preloader `{}` with `{url}`", task.plugin.name);
 				}
 				if code >> 1 & 1 != 0 {
 					let mut loaded = self.loaded.lock();

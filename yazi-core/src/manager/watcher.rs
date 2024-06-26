@@ -130,7 +130,7 @@ impl Watcher {
 				continue;
 			}
 			if let Err(e) = isolate::fetch("mime", reload).await {
-				error!("fetch `mime` failed in watcher: {e}");
+				error!("Fetch `mime` failed in watcher: {e}");
 			}
 		}
 	}

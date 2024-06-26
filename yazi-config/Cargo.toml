@@ -18,7 +18,7 @@ bitflags    = "2.5.0"
 crossterm   = "0.27.0"
 globset     = "0.4.14"
 indexmap    = "2.2.6"
-ratatui     = "0.26.3"
+ratatui     = "0.27.0"
 serde       = { version = "1.0.203", features = [ "derive" ] }
 toml        = { version = "0.8.14", features = [ "preserve_order" ] }
 validator   = { version = "0.18.1", features = [ "derive" ] }

@@ -9,7 +9,8 @@ pub struct Fetcher {
 	pub idx: u8,
 
 	pub id:   String,
-	pub cond: Option<Condition>,
+	#[serde(rename = "if")]
+	pub if_:  Option<Condition>,
 	pub name: Option<Pattern>,
 	pub mime: Option<Pattern>,
 	pub run:  Cmd,

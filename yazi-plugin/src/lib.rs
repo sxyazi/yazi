@@ -2,10 +2,12 @@
 
 pub mod bindings;
 mod cast;
+pub mod cha;
 mod clipboard;
 mod config;
 pub mod elements;
 pub mod external;
+pub mod file;
 pub mod fs;
 pub mod isolate;
 pub mod loader;

@@ -1,8 +1,11 @@
-use std::time::UNIX_EPOCH;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use mlua::{AnyUserData, Lua, UserDataFields, UserDataMethods};
+use mlua::{AnyUserData, ExternalError, Lua, Table, UserDataFields, UserDataMethods, UserDataRef};
+use yazi_shared::fs::ChaKind;
 
-use super::Cast;
+use crate::bindings::Cast;
+
+pub type UrlRef<'lua> = UserDataRef<'lua, yazi_shared::fs::Cha>;
 
 pub struct Cha;
 
@@ -47,6 +50,39 @@ impl Cha {
 		})?;
 
 		Ok(())
+	}
+
+	pub fn install(lua: &Lua) -> mlua::Result<()> {
+		#[inline]
+		fn parse_time(f: Option<f64>) -> mlua::Result<Option<SystemTime>> {
+			Ok(match f {
+				Some(n) if n >= 0.0 => Some(SystemTime::UNIX_EPOCH + Duration::from_secs_f64(n)),
+				Some(n) => Err(format!("Invalid timestamp: {n}").into_lua_err())?,
+				None => None,
+			})
+		}
+
+		lua.globals().raw_set(
+			"Cha",
+			lua.create_function(|lua, t: Table| {
+				let kind =
+					ChaKind::from_bits(t.raw_get("kind")?).ok_or_else(|| "Invalid kind".into_lua_err())?;
+
+				Self::cast(lua, yazi_shared::fs::Cha {
+					kind,
+					len: t.raw_get("len").unwrap_or_default(),
+					accessed: parse_time(t.raw_get("atime").ok())?,
+					created: parse_time(t.raw_get("ctime").ok())?,
+					modified: parse_time(t.raw_get("mtime").ok())?,
+					#[cfg(unix)]
+					permissions: t.raw_get("permissions").unwrap_or_default(),
+					#[cfg(unix)]
+					uid: t.raw_get("uid").unwrap_or_default(),
+					#[cfg(unix)]
+					gid: t.raw_get("gid").unwrap_or_default(),
+				})
+			})?,
+		)
 	}
 }
 
