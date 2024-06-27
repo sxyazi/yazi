@@ -7,6 +7,7 @@ use crate::{manager::Manager, tasks::Tasks};
 pub struct Opt {
 	force:       bool,
 	permanently: bool,
+	hovered:     bool,
 	targets:     Vec<Url>,
 }
 
@@ -15,6 +16,7 @@ impl From<Cmd> for Opt {
 		Self {
 			force:       c.bool("force"),
 			permanently: c.bool("permanently"),
+			hovered:     c.bool("hovered"),
 			targets:     c.take_any("targets").unwrap_or_default(),
 		}
 	}
@@ -27,7 +29,11 @@ impl Manager {
 		}
 
 		let mut opt = opt.into() as Opt;
-		opt.targets = self.selected_or_hovered(false).cloned().collect();
+		opt.targets = if opt.hovered {
+			self.hovered().map(|h| vec![h.clone().url]).unwrap_or_default()
+		} else {
+			self.selected_or_hovered(false).cloned().collect()
+		};
 
 		if opt.force {
 			return self.remove_do(opt, tasks);
