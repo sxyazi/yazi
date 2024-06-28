@@ -43,6 +43,8 @@ impl Input {
 			snap.cursor.saturating_sub(limit / 2).min(snap.len().saturating_sub(limit.saturating_sub(1)));
 		if snap.offset != offset {
 			snap.offset = offset;
+		} else if snap.value.is_empty() {
+			snap.offset = 0;
 		} else {
 			let delta = snap.mode.delta();
 			let s = snap.slice(snap.offset..snap.cursor + delta);
