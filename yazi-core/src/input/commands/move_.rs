@@ -39,15 +39,9 @@ impl Input {
 		));
 
 		let (limit, snap) = (self.limit(), self.snap_mut());
-		let half_limit = limit / 2;
-		let max_offset = snap.cursor.saturating_sub(half_limit);
-		let min_offset = max_offset.min(snap.len().saturating_sub(limit - 1));
-		if snap.offset > max_offset {
-			snap.offset = max_offset;
-		} else if snap.offset < min_offset {
-			snap.offset = min_offset;
-		} else if snap.value.is_empty() {
-			snap.offset = 0;
+		let offset = snap.cursor.saturating_sub(limit / 2).min(snap.len().saturating_sub(limit - 1));
+		if snap.offset != offset {
+			snap.offset = offset;
 		} else {
 			let delta = snap.mode.delta();
 			let s = snap.slice(snap.offset..snap.cursor + delta);
