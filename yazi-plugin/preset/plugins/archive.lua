@@ -45,7 +45,7 @@ function M:peek()
 		if size > 0 then
 			sizes[#sizes + 1] = ui.Line(string.format(" %s ", ya.readable_size(size)))
 		else
-			sizes[#sizes + 1] = ui.Line(" - ")
+			sizes[#sizes + 1] = ui.Line("")
 		end
 
 		::continue::

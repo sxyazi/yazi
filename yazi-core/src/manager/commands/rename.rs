@@ -10,17 +10,19 @@ use yazi_shared::{event::Cmd, fs::{maybe_exists, ok_or_not_found, paths_to_same_
 use crate::manager::Manager;
 
 pub struct Opt {
-	force:  bool,
-	empty:  String,
-	cursor: String,
+	hovered: bool,
+	force:   bool,
+	empty:   String,
+	cursor:  String,
 }
 
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
-			force:  c.bool("force"),
-			empty:  c.take_str("empty").unwrap_or_default(),
-			cursor: c.take_str("cursor").unwrap_or_default(),
+			hovered: c.bool("hovered"),
+			force:   c.bool("force"),
+			empty:   c.take_str("empty").unwrap_or_default(),
+			cursor:  c.take_str("cursor").unwrap_or_default(),
 		}
 	}
 }
@@ -29,15 +31,16 @@ impl Manager {
 	pub fn rename(&mut self, opt: impl Into<Opt>) {
 		if !self.active_mut().try_escape_visual() {
 			return;
-		} else if !self.active().selected.is_empty() {
-			return self.bulk_rename();
 		}
-
 		let Some(hovered) = self.hovered().map(|h| h.url()) else {
 			return;
 		};
 
 		let opt = opt.into() as Opt;
+		if !opt.hovered && !self.active().selected.is_empty() {
+			return self.bulk_rename();
+		}
+
 		let name = Self::empty_url_part(&hovered, &opt.empty);
 		let cursor = match opt.cursor.as_str() {
 			"start" => Some(0),
