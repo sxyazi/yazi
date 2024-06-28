@@ -29,16 +29,17 @@ impl From<Cmd> for Opt {
 
 impl Manager {
 	pub fn rename(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
 		if !self.active_mut().try_escape_visual() {
 			return;
-		} else if !opt.hovered && !self.active().selected.is_empty() {
-			return self.bulk_rename();
 		}
-
 		let Some(hovered) = self.hovered().map(|h| h.url()) else {
 			return;
 		};
+
+		let opt = opt.into() as Opt;
+		if !opt.hovered && !self.active().selected.is_empty() {
+			return self.bulk_rename();
+		}
 
 		let name = Self::empty_url_part(&hovered, &opt.empty);
 		let cursor = match opt.cursor.as_str() {
