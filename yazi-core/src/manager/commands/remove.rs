@@ -27,10 +27,13 @@ impl Manager {
 		if !self.active_mut().try_escape_visual() {
 			return;
 		}
+		let Some(hovered) = self.hovered().map(|h| &h.url) else {
+			return;
+		};
 
 		let mut opt = opt.into() as Opt;
 		opt.targets = if opt.hovered {
-			self.hovered().map(|h| vec![h.clone().url]).unwrap_or_default()
+			vec![hovered.clone()]
 		} else {
 			self.selected_or_hovered(false).cloned().collect()
 		};

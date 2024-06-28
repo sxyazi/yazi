@@ -10,8 +10,8 @@ use yazi_shared::{event::Cmd, fs::{maybe_exists, ok_or_not_found, paths_to_same_
 use crate::manager::Manager;
 
 pub struct Opt {
-	force:   bool,
 	hovered: bool,
+	force:   bool,
 	empty:   String,
 	cursor:  String,
 }
@@ -19,8 +19,8 @@ pub struct Opt {
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
-			force:   c.bool("force"),
 			hovered: c.bool("hovered"),
+			force:   c.bool("force"),
 			empty:   c.take_str("empty").unwrap_or_default(),
 			cursor:  c.take_str("cursor").unwrap_or_default(),
 		}
