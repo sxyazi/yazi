@@ -42,6 +42,9 @@ pub fn init() {
 	USERS_CACHE.with(Default::default);
 
 	// Env
+	if let Some(s) = std::env::var("YAZI_ID").ok().filter(|s| !s.is_empty()) {
+		std::env::set_var("YAZI_PID", s);
+	}
 	std::env::set_var("YAZI_ID", ID.to_string());
 	std::env::set_var(
 		"YAZI_LEVEL",

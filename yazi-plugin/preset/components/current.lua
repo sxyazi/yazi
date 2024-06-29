@@ -44,13 +44,18 @@ function Current:render(area)
 end
 
 function Current:click(event, up)
-	if up or not event.is_left then
+	if up or event.is_middle then
 		return
 	end
 
 	local f = Folder:by_kind(Folder.CURRENT)
-	if event.y <= #f.window and f.hovered then
-		ya.manager_emit("arrow", { event.y + f.offset - f.hovered.idx })
+	if event.y > #f.window or not f.hovered then
+		return
+	end
+
+	ya.manager_emit("arrow", { event.y + f.offset - f.hovered.idx })
+	if event.is_right then
+		ya.manager_emit("open", { hovered = true })
 	end
 end
 
