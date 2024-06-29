@@ -45,7 +45,7 @@ impl CommandPub {
 	pub(super) fn receiver(&self) -> Result<u64> {
 		if let Some(receiver) = self.receiver {
 			Ok(receiver)
-		} else if let Ok(s) = std::env::var("YAZI_ID") {
+		} else if let Some(s) = std::env::var("YAZI_PID").ok().filter(|s| !s.is_empty()) {
 			Ok(s.parse()?)
 		} else {
 			bail!("No receiver ID provided, also no YAZI_ID environment variable found.")
