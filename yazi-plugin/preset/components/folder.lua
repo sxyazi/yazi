@@ -21,6 +21,14 @@ function Folder:linemode(area, files)
 			spans[#spans + 1] = ui.Span(time and os.date("%y-%m-%d %H:%M", time // 1) or "")
 		elseif mode == "permissions" then
 			spans[#spans + 1] = ui.Span(f.cha:permissions() or "")
+		elseif mode == "owner" then
+			if f.cha.uid and f.cha.gid then
+				local user = ya.user_name(f.cha.uid)
+				local group = ya.user_name(f.cha.uid)
+				if user and group then
+					spans[#spans + 1] = ui.Span(user .. ":" .. group)
+				end
+			end
 		end
 
 		spans[#spans + 1] = ui.Span(" ")

@@ -1,6 +1,6 @@
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use mlua::{AnyUserData, ExternalError, Lua, Table, UserDataFields, UserDataMethods, UserDataRef};
+use mlua::{AnyUserData, ExternalError, Lua, Table, UserDataFields, UserDataMethods, UserDataRef, Value::Nil};
 use yazi_shared::fs::ChaKind;
 
 use crate::bindings::Cast;
@@ -23,10 +23,20 @@ impl Cha {
 			reg.add_field_method_get("is_exec", |_, me| Ok(me.is_exec()));
 			reg.add_field_method_get("is_sticky", |_, me| Ok(me.is_sticky()));
 
-			#[cfg(unix)]
+			#[allow(unused_variables)]
 			{
-				reg.add_field_method_get("uid", |_, me| Ok(me.uid));
-				reg.add_field_method_get("gid", |_, me| Ok(me.gid));
+				reg.add_field_method_get("uid", |_, me| {
+					#[cfg(unix)]
+					return Ok(me.uid);
+					#[cfg(windows)]
+					return Ok(Nil);
+				});
+				reg.add_field_method_get("gid", |_, me| {
+					#[cfg(unix)]
+					return Ok(me.gid);
+					#[cfg(windows)]
+					return Ok(Nil);
+				});
 			}
 
 			reg.add_field_method_get("length", |_, me| Ok(me.len));
@@ -39,6 +49,7 @@ impl Cha {
 			reg.add_field_method_get("accessed", |_, me| {
 				Ok(me.accessed.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
 			});
+			#[allow(unused_variables)]
 			reg.add_method("permissions", |_, me, ()| {
 				Ok(
 					#[cfg(unix)]
