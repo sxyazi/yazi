@@ -39,8 +39,9 @@ impl Input {
 		));
 
 		let (limit, snap) = (self.limit(), self.snap_mut());
-		let offset =
-			snap.cursor.saturating_sub(limit / 2).min(snap.len().saturating_sub(limit.saturating_sub(1)));
+		let offset = InputSnap::find_window_backward(&snap.value, snap.cursor, limit / 2)
+			.start
+			.min(InputSnap::find_window_backward(&snap.value, snap.value.chars().count(), limit).start);
 		if snap.offset != offset {
 			snap.offset = offset;
 		} else if snap.value.is_empty() {
