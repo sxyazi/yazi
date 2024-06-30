@@ -24,7 +24,7 @@ function Folder:linemode(area, files)
 		elseif mode == "owner" then
 			if f.cha.uid and f.cha.gid then
 				local user = ya.user_name(f.cha.uid)
-				local group = ya.user_name(f.cha.uid)
+				local group = ya.group_name(f.cha.gid)
 				if user and group then
 					spans[#spans + 1] = ui.Span(user .. ":" .. group)
 				end
