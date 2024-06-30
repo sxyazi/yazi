@@ -1,8 +1,8 @@
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use mlua::{AnyUserData, ExternalError, Lua, Table, UserDataFields, UserDataMethods, UserDataRef};
 #[cfg(windows)]
 use mlua::Value::Nil;
+use mlua::{AnyUserData, ExternalError, Lua, Table, UserDataFields, UserDataMethods, UserDataRef};
 use yazi_shared::fs::ChaKind;
 
 use crate::bindings::Cast;
