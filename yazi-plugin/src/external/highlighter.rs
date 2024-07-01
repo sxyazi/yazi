@@ -1,15 +1,18 @@
 use std::{io::Cursor, mem, path::{Path, PathBuf}, sync::{atomic::{AtomicUsize, Ordering}, OnceLock}};
 
 use anyhow::{anyhow, Result};
-use ratatui::text::{Line, Span, Text};
+use ratatui::{prelude::Rect, text::{Line, Span, Text}};
 use syntect::{dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
 use tokio::{fs::File, io::{AsyncBufReadExt, BufReader}};
+use unicode_width::UnicodeWidthStr;
 use yazi_config::{PREVIEW, THEME};
 use yazi_shared::PeekError;
 
 static INCR: AtomicUsize = AtomicUsize::new(0);
 static SYNTECT_SYNTAX: OnceLock<SyntaxSet> = OnceLock::new();
 static SYNTECT_THEME: OnceLock<Theme> = OnceLock::new();
+
+const MAX_LINE_BYTES_TO_PLAINTEXT_FALLBACK: usize = 6000;
 
 pub struct Highlighter {
 	path: PathBuf,
@@ -56,51 +59,201 @@ impl Highlighter {
 		syntaxes.find_syntax_by_first_line(&line).ok_or_else(|| anyhow!("No syntax found"))
 	}
 
-	pub async fn highlight(&self, skip: usize, limit: usize) -> Result<Text<'static>, PeekError> {
+	pub async fn highlight(
+		&self,
+		skip: usize,
+		area: Rect,
+		wrap: bool,
+	) -> Result<Text<'static>, PeekError> {
 		let mut reader = BufReader::new(File::open(&self.path).await?);
 
 		let syntax = Self::find_syntax(&self.path).await;
 		let mut plain = syntax.is_err();
 
 		let mut before = Vec::with_capacity(if plain { 0 } else { skip });
-		let mut after = Vec::with_capacity(limit);
+		let mut after = Vec::with_capacity(area.height as usize);
 
-		let mut i = 0;
-		let mut buf = vec![];
-		while reader.read_until(b'\n', &mut buf).await.is_ok() {
-			i += 1;
-			if buf.is_empty() || i > skip + limit {
+		let mut lines_handled = 0;
+		let mut long_line = vec![];
+		while reader.read_until(b'\n', &mut long_line).await.is_ok() {
+			if long_line.is_empty() || lines_handled > skip + area.height as usize {
 				break;
 			}
-
-			if !plain && buf.len() > 6000 {
+			if !plain && long_line.len() > MAX_LINE_BYTES_TO_PLAINTEXT_FALLBACK {
 				plain = true;
 				drop(mem::take(&mut before));
 			}
-
-			if buf.ends_with(b"\r\n") {
-				buf.pop();
-				buf.pop();
-				buf.push(b'\n');
+			Self::replace_tabs_with_spaces(&mut long_line, PREVIEW.tab_size as usize);
+			if wrap {
+				Self::handle_line_wrap(
+					&long_line,
+					area,
+					plain,
+					skip,
+					&mut lines_handled,
+					&mut before,
+					&mut after,
+				);
+			} else {
+				lines_handled += 1;
+				Self::handle_single_line(
+					lines_handled,
+					skip,
+					plain,
+					area.height as usize,
+					String::from_utf8_lossy(&long_line).to_string(),
+					&mut before,
+					&mut after,
+				);
 			}
-
-			if i > skip {
-				after.push(String::from_utf8_lossy(&buf).into_owned());
-			} else if !plain {
-				before.push(String::from_utf8_lossy(&buf).into_owned());
-			}
-			buf.clear();
+			long_line.clear();
 		}
 
-		if skip > 0 && i < skip + limit {
-			return Err(PeekError::Exceed(i.saturating_sub(limit)));
+		let no_more_scroll = lines_handled < skip + area.height as usize;
+		if skip > 0 && no_more_scroll {
+			return Err(PeekError::Exceed(lines_handled.saturating_sub(area.height as usize)));
 		}
-
 		if plain {
-			let indent = " ".repeat(PREVIEW.tab_size as usize);
-			Ok(Text::from(after.join("").replace('\t', &indent)))
+			Ok(Text::from(after.join("")))
 		} else {
 			Self::highlight_with(before, after, syntax.unwrap()).await
+		}
+	}
+
+	fn handle_line_wrap(
+		long_line: &[u8],
+		area: Rect,
+		plain: bool,
+		skip: usize,
+		lines_handled: &mut usize,
+		before: &mut Vec<String>,
+		after: &mut Vec<String>,
+	) {
+		for line in Self::chunk_by_width(long_line, area.width as usize) {
+			*lines_handled += 1;
+			let must_break = Self::handle_single_line(
+				*lines_handled,
+				skip,
+				plain,
+				area.height as usize,
+				line,
+				before,
+				after,
+			);
+			if must_break {
+				break;
+			}
+		}
+	}
+
+	fn handle_single_line(
+		lines_handled: usize,
+		skip: usize,
+		plain: bool,
+		limit: usize,
+		mut line: String,
+		before: &mut Vec<String>,
+		after: &mut Vec<String>,
+	) -> bool {
+		if line.is_empty() || lines_handled > skip + limit {
+			return true;
+		}
+
+		if line.ends_with("\r\n") {
+			line.pop();
+			line.pop();
+			line.push('\n');
+		} else if !line.ends_with('\n') {
+			line.push('\n');
+		}
+
+		if lines_handled > skip {
+			after.push(line);
+		} else if !plain {
+			before.push(line);
+		}
+		false
+	}
+
+	fn chunk_by_width(line: &[u8], width: usize) -> Vec<String> {
+		let line = String::from_utf8_lossy(line);
+		if line.width() <= width {
+			return vec![line.to_string()];
+		}
+
+		let mut resulted_lines = vec![];
+		// Use this buffer to calculate width
+		let mut buf_line = String::with_capacity(width);
+		// Use this buffer to slice line
+		let mut buf_chars = Vec::with_capacity(width);
+		let mut last_break_char_idx = 0;
+		let mut last_break_idx = 0;
+		for (i, char) in line.chars().enumerate() {
+			buf_line.push(char);
+			buf_chars.push(char);
+
+			if ",.; ".contains(char) {
+				last_break_char_idx = i + 1
+			}
+
+			let buf_line_width = buf_line.width();
+			if buf_line_width < width {
+				continue;
+			}
+
+			if last_break_char_idx == 0 {
+				// no spaces in line, break right here
+				match buf_line_width.cmp(&width) {
+					std::cmp::Ordering::Equal => {
+						resulted_lines.push(mem::take(&mut buf_line));
+						last_break_idx = i + 1;
+
+						buf_line = String::with_capacity(width);
+						buf_chars = Vec::with_capacity(width);
+					}
+					std::cmp::Ordering::Greater => {
+						let last_idx = buf_line.len() - char.len_utf8();
+						buf_line = buf_line[..last_idx].to_string();
+						resulted_lines.push(mem::take(&mut buf_line));
+						last_break_idx = i - last_idx + 1;
+
+						buf_line = String::with_capacity(width);
+						buf_line.push(char);
+						buf_chars = Vec::with_capacity(width);
+						buf_chars.push(char);
+					}
+					_ => {}
+				}
+			} else {
+				let break_idx = last_break_char_idx - last_break_idx;
+				resulted_lines.push(buf_chars[..break_idx].iter().collect());
+				last_break_idx = last_break_char_idx;
+
+				buf_chars = if last_break_char_idx == buf_chars.len() {
+					Vec::with_capacity(width)
+				} else {
+					buf_chars[break_idx..].to_vec()
+				};
+				buf_line = buf_chars.iter().collect();
+			}
+			last_break_char_idx = 0;
+		}
+		if !buf_line.is_empty() && buf_line != "\n" {
+			resulted_lines.push(buf_line);
+		}
+
+		resulted_lines
+	}
+
+	fn replace_tabs_with_spaces(buf: &mut Vec<u8>, tab_size: usize) {
+		let mut i = 0;
+		while i < buf.len() {
+			if buf[i] == b'\t' {
+				buf.splice(i..i + 1, vec![b' '; tab_size]);
+				i += tab_size;
+			} else {
+				i += 1;
+			}
 		}
 	}
 

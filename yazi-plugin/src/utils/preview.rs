@@ -1,4 +1,5 @@
 use mlua::{AnyUserData, IntoLuaMulti, Lua, Table, Value};
+use yazi_config::PREVIEW;
 use yazi_shared::{emit, event::Cmd, Layer, PeekError};
 
 use super::Utils;
@@ -37,7 +38,7 @@ impl Utils {
 				let mut lock = PreviewLock::try_from(t)?;
 
 				let text =
-					match Highlighter::new(&lock.url).highlight(lock.skip, area.height as usize).await {
+					match Highlighter::new(&lock.url).highlight(lock.skip, *area, PREVIEW.word_wrap).await {
 						Ok(text) => text,
 						Err(PeekError::Exceed(max)) => return (false, max).into_lua_multi(lua),
 						Err(_) => return (false, Value::Nil).into_lua_multi(lua),
