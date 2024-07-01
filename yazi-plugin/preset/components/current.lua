@@ -55,7 +55,7 @@ function Current:click(event, up)
 
 	ya.manager_emit("arrow", { event.y + f.offset - f.hovered.idx })
 	if event.is_right then
-		ya.manager_emit("open", { hovered = true })
+		ya.manager_emit("open", {})
 	end
 end
 

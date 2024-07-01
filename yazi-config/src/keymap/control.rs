@@ -7,8 +7,9 @@ use super::Key;
 
 #[derive(Debug, Default, Deserialize)]
 pub struct Control {
+	#[serde(deserialize_with = "super::deserialize_on")]
 	pub on:   Vec<Key>,
-	#[serde(deserialize_with = "super::run_deserialize")]
+	#[serde(deserialize_with = "super::deserialize_run")]
 	pub run:  Vec<Cmd>,
 	pub desc: Option<String>,
 }
@@ -24,7 +25,7 @@ impl Control {
 
 	#[inline]
 	pub fn run(&self) -> String {
-		self.run.iter().map(|e| e.to_string()).collect::<Vec<_>>().join("; ")
+		self.run.iter().map(|c| c.to_string()).collect::<Vec<_>>().join("; ")
 	}
 
 	#[inline]

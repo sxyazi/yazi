@@ -49,6 +49,14 @@ impl Utils {
 			})?,
 		)?;
 
+		ya.raw_set(
+			"input_emit",
+			lua.create_function(|_, (name, args): (String, Table)| {
+				emit!(Call(Cmd { name, args: Self::parse_args(args)? }, Layer::Input));
+				Ok(())
+			})?,
+		)?;
+
 		Ok(())
 	}
 }
