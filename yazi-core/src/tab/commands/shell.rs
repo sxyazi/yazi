@@ -1,25 +1,27 @@
 use std::borrow::Cow;
 
 use yazi_config::{open::Opener, popup::InputCfg};
-use yazi_proxy::{InputProxy, TasksProxy};
+use yazi_proxy::{AppProxy, InputProxy, TasksProxy};
 use yazi_shared::event::Cmd;
 
 use crate::tab::Tab;
 
 pub struct Opt {
-	run:     String,
-	block:   bool,
-	orphan:  bool,
-	confirm: bool,
+	run:         String,
+	block:       bool,
+	orphan:      bool,
+	confirm:     bool,
+	interactive: bool,
 }
 
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
-			run:     c.take_first_str().unwrap_or_default(),
-			block:   c.bool("block"),
-			orphan:  c.bool("orphan"),
-			confirm: c.bool("confirm"),
+			run:         c.take_first_str().unwrap_or_default(),
+			block:       c.bool("block"),
+			orphan:      c.bool("orphan"),
+			confirm:     c.bool("confirm"),
+			interactive: c.bool("interactive"),
 		}
 	}
 }
@@ -31,6 +33,24 @@ impl Tab {
 		}
 
 		let mut opt = opt.into() as Opt;
+
+		// TODO: Remove in v0.3.2
+		if !opt.interactive && !opt.confirm {
+			AppProxy::notify_error(
+				"`shell` command",
+				r#"In Yazi v0.3, the behavior of the interactive `shell` (i.e., shell templates) must be explicitly specified with `--interactive`.
+
+Please replace e.g. `shell` with `shell --interactive`, `shell "my-template"` with `shell "my-template" --interactive`, in your keymap.toml"#,
+			);
+			return;
+		} else if opt.interactive && opt.confirm {
+			AppProxy::notify_error(
+				"`shell` command",
+				"The `shell` command cannot specify both `--confirm` and `--interactive` at the same time.",
+			);
+			return;
+		}
+
 		let selected = self.hovered_and_selected(true).cloned().collect();
 
 		tokio::spawn(async move {

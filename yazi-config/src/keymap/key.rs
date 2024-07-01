@@ -2,10 +2,8 @@ use std::{fmt::{Display, Write}, str::FromStr};
 
 use anyhow::bail;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use serde::Deserialize;
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash)]
-#[serde(try_from = "String")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Key {
 	pub code:   KeyCode,
 	pub shift:  bool,
@@ -124,12 +122,6 @@ impl FromStr for Key {
 		}
 		Ok(key)
 	}
-}
-
-impl TryFrom<String> for Key {
-	type Error = anyhow::Error;
-
-	fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
 }
 
 impl Display for Key {

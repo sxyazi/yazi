@@ -19,6 +19,10 @@ impl InputSnaps {
 	}
 
 	pub(super) fn tag(&mut self, limit: usize) -> bool {
+		if self.versions.len() <= self.idx {
+			return false;
+		}
+
 		// Sync *current* cursor position to the *last* version:
 		// 		Save offset/cursor/ect. of the *current* as the last version,
 		// 		while keeping the *last* value unchanged.
@@ -49,7 +53,7 @@ impl InputSnaps {
 	}
 
 	pub(super) fn redo(&mut self) -> bool {
-		if self.idx + 1 == self.versions.len() {
+		if self.idx + 1 >= self.versions.len() {
 			return false;
 		}
 
