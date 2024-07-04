@@ -1,59 +1,58 @@
 Current = {
-	area = ui.Rect.default,
+	_id = "current",
 }
 
-function Current:empty(area)
-	local folder = Folder:by_kind(Folder.CURRENT)
+function Current:new(area, tab)
+	return setmetatable({
+		_area = area,
+		_tab = tab,
+		_folder = tab.current,
+	}, { __index = self })
+end
 
+function Current:empty()
 	local line
-	if folder.files.filter then
+	if self._folder.files.filter then
 		line = ui.Line("No filter results")
 	else
-		line = ui.Line(folder.stage == "loading" and "Loading..." or "No items")
+		line = ui.Line(self._folder.stage == "loading" and "Loading..." or "No items")
 	end
 
 	return {
-		ui.Paragraph(area, { line }):align(ui.Paragraph.CENTER),
+		ui.Paragraph(self._area, { line }):align(ui.Paragraph.CENTER),
 	}
 end
 
-function Current:render(area)
-	self.area = area
-
-	local files = Folder:by_kind(Folder.CURRENT).window
+function Current:render()
+	local files = self._folder.window
 	if #files == 0 then
-		return self:empty(area)
+		return self:empty()
 	end
 
-	local items, markers = {}, {}
-	for i, f in ipairs(files) do
-		items[#items + 1] = ui.ListItem(ui.Line(File:full(f))):style(File:style(f))
-
-		-- Yanked/marked/selected files
-		local marker = File:marker(f)
-		if marker ~= 0 then
-			markers[#markers + 1] = { i, marker }
-		end
+	local items = {}
+	for _, f in ipairs(files) do
+		items[#items + 1] = ui.ListItem(Entity:render(f)):style(Entity:style(f))
 	end
 
-	return ya.flat {
-		ui.List(area, items),
-		Folder:linemode(area, files),
-		Folder:markers(area, markers),
+	return {
+		ui.List(self._area, items),
+		ui.Paragraph(self._area, Linemode:render(files)):align(ui.Paragraph.RIGHT),
 	}
 end
 
+-- Mouse events
 function Current:click(event, up)
 	if up or event.is_middle then
 		return
 	end
 
-	local f = Folder:by_kind(Folder.CURRENT)
-	if event.y > #f.window or not f.hovered then
+	local f = self._folder
+	local y = event.y - self._area.y + 1
+	if y > #f.window or not f.hovered then
 		return
 	end
 
-	ya.manager_emit("arrow", { event.y + f.offset - f.hovered.idx })
+	ya.manager_emit("arrow", { y + f.offset - f.hovered.idx })
 	if event.is_right then
 		ya.manager_emit("open", {})
 	end

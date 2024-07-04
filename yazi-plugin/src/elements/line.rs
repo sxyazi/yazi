@@ -23,7 +23,11 @@ impl TryFrom<Table<'_>> for Line {
 				if let Ok(span) = ud.take::<Span>() {
 					spans.push(span.0);
 				} else if let Ok(line) = ud.take::<Line>() {
-					spans.extend(line.0.spans.into_iter().collect::<Vec<_>>());
+					let style = line.0.style;
+					spans.extend(line.0.spans.into_iter().map(|mut span| {
+						span.style = style.patch(span.style);
+						span
+					}));
 				} else {
 					return Err("expected a table of Spans or Lines".into_lua_err());
 				}
@@ -83,9 +87,9 @@ impl UserData for Line {
 			{
 				let mut me = ud.borrow_mut::<Self>()?;
 				me.0.style = match value {
-					Value::Nil => me.0.style.patch(ratatui::style::Style::reset()),
-					Value::Table(tb) => me.0.style.patch(Style::try_from(tb)?.0),
-					Value::UserData(ud) => me.0.style.patch(ud.borrow::<Style>()?.0),
+					Value::Nil => ratatui::style::Style::default(),
+					Value::Table(tb) => Style::try_from(tb)?.0,
+					Value::UserData(ud) => ud.borrow::<Style>()?.0,
 					_ => return Err("expected a Style or Table or nil".into_lua_err()),
 				};
 			}

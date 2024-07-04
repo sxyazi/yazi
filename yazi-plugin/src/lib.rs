@@ -26,9 +26,10 @@ pub use lua::*;
 pub use opt::*;
 pub use runtime::*;
 
-pub fn init() {
+pub fn init() -> anyhow::Result<()> {
 	CLIPBOARD.with(Default::default);
 
 	crate::loader::init();
-	crate::init_lua();
+	crate::init_lua()?;
+	Ok(())
 }

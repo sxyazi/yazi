@@ -1,7 +1,7 @@
-use crossterm::event::MouseEventKind;
 use mlua::{Table, TableExt};
-use ratatui::{buffer::Buffer, layout::{Constraint, Layout, Rect}, widgets::Widget};
-use yazi_plugin::{bindings::{Cast, MouseEvent}, LUA};
+use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
+use tracing::error;
+use yazi_plugin::{bindings::Cast, elements::render_widgets, LUA};
 
 use super::{completion, input, select, tasks, which};
 use crate::{components, help, Ctx};
@@ -16,13 +16,17 @@ impl<'a> Root<'a> {
 
 impl<'a> Widget for Root<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let chunks =
-			Layout::vertical([Constraint::Length(1), Constraint::Fill(1), Constraint::Length(1)])
-				.split(area);
+		let mut f = || {
+			let area = yazi_plugin::elements::Rect::cast(&LUA, area)?;
+			let root = LUA.globals().raw_get::<_, Table>("Root")?.call_method::<_, Table>("new", area)?;
 
-		components::Header.render(chunks[0], buf);
-		components::Manager.render(chunks[1], buf);
-		components::Status.render(chunks[2], buf);
+			render_widgets(root.call_method("render", ())?, buf);
+			Ok::<_, mlua::Error>(())
+		};
+		if let Err(e) = f() {
+			error!("Failed to render the `Root` component:\n{e}");
+		}
+
 		components::Preview::new(self.cx).render(area, buf);
 
 		if self.cx.tasks.visible {
@@ -48,19 +52,5 @@ impl<'a> Widget for Root<'a> {
 		if self.cx.which.visible {
 			which::Which::new(self.cx).render(area, buf);
 		}
-	}
-}
-
-impl Root<'_> {
-	pub(super) fn mouse(event: crossterm::event::MouseEvent) -> mlua::Result<()> {
-		let evt = MouseEvent::cast(&LUA, event)?;
-		let comp: Table = LUA.globals().raw_get("Root")?;
-
-		match event.kind {
-			MouseEventKind::Moved => comp.call_method("move", evt)?,
-			MouseEventKind::Drag(_) => comp.call_method("drag", evt)?,
-			_ => (),
-		}
-		Ok(())
 	}
 }

@@ -1,10 +1,13 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
-use mlua::{ExternalError, Lua, Table, Value};
+use mlua::{ExternalError, Lua, Table, TableExt, Value};
+use tracing::error;
+use yazi_config::LAYOUT;
 use yazi_dds::Sendable;
 use yazi_shared::{emit, event::{Cmd, Data}, render, Layer};
 
 use super::Utils;
+use crate::elements::RectRef;
 
 impl Utils {
 	fn parse_args(t: Table) -> mlua::Result<HashMap<String, Data>> {
@@ -30,6 +33,38 @@ impl Utils {
 			lua.create_function(|_, ()| {
 				render!();
 				Ok(())
+			})?,
+		)?;
+
+		ya.raw_set(
+			"render_with",
+			lua.create_function(|lua, c: Table| {
+				let id: mlua::String = c.get("_id")?;
+				let id = id.to_str()?;
+
+				match id {
+					"current" => {
+						LAYOUT.store(Arc::new(yazi_config::Layout {
+							current: *c.raw_get::<_, RectRef>("_area")?,
+							..*LAYOUT.load_full()
+						}));
+					}
+					"preview" => {
+						LAYOUT.store(Arc::new(yazi_config::Layout {
+							preview: *c.raw_get::<_, RectRef>("_area")?,
+							..*LAYOUT.load_full()
+						}));
+					}
+					_ => {}
+				}
+
+				match c.call_method::<_, Table>("render", ()) {
+					Err(e) => {
+						error!("Failed to `render()` the `{id}` component:\n{e}");
+						lua.create_table()
+					}
+					ok => ok,
+				}
 			})?,
 		)?;
 

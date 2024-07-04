@@ -14,21 +14,21 @@ yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
 anyhow     = "1.0.86"
-clap       = { version = "4.5.7", features = [ "derive" ] }
+clap       = { version = "4.5.9", features = [ "derive" ] }
 crossterm  = "0.27.0"
 md-5       = "0.10.6"
-serde_json = "1.0.117"
+serde_json = "1.0.120"
 tokio      = { version = "1.38.0", features = [ "full" ] }
-toml_edit  = "0.22.14"
+toml_edit  = "0.22.15"
 
 [build-dependencies]
 anyhow                = "1.0.86"
-clap                  = { version = "4.5.7", features = [ "derive" ] }
-clap_complete         = "4.5.6"
+clap                  = { version = "4.5.9", features = [ "derive" ] }
+clap_complete         = "4.5.8"
 clap_complete_fig     = "4.5.1"
 clap_complete_nushell = "4.5.2"
-serde_json            = "1.0.117"
-vergen                = { version = "8.3.1", features = [ "build", "git", "gitcl" ] }
+serde_json            = "1.0.120"
+vergen-gitcl          = { version = "1.0.0", features = [ "build" ] }
 
 [[bin]]
 name = "ya"

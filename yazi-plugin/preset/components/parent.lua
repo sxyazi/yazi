@@ -1,40 +1,40 @@
 Parent = {
-	area = ui.Rect.default,
+	_id = "parent",
 }
 
-function Parent:render(area)
-	self.area = area
+function Parent:new(area, tab)
+	return setmetatable({
+		_area = area,
+		_tab = tab,
+		_folder = tab.parent,
+	}, { __index = self })
+end
 
-	local folder = Folder:by_kind(Folder.PARENT)
-	if not folder then
+function Parent:render()
+	if not self._folder then
 		return {}
 	end
 
-	local items, markers = {}, {}
-	for i, f in ipairs(folder.window) do
-		items[#items + 1] = ui.ListItem(ui.Line(File:full(f))):style(File:style(f))
-
-		-- Yanked/marked/selected files
-		local marker = File:marker(f)
-		if marker ~= 0 then
-			markers[#markers + 1] = { i, marker }
-		end
+	local items = {}
+	for _, f in ipairs(self._folder.window) do
+		items[#items + 1] = ui.ListItem(Entity:render(f)):style(Entity:style(f))
 	end
 
-	return ya.flat {
-		ui.List(area, items),
-		Folder:markers(area, markers),
+	return {
+		ui.List(self._area, items),
 	}
 end
 
+-- Mouse events
 function Parent:click(event, up)
 	if up or not event.is_left then
 		return
 	end
 
-	local window = Folder:window(Folder.PARENT) or {}
-	if window[event.y] then
-		ya.manager_emit("reveal", { window[event.y].url })
+	local y = event.y - self._area.y + 1
+	local window = self._folder and self._folder.window or {}
+	if window[y] then
+		ya.manager_emit("reveal", { window[y].url })
 	else
 		ya.manager_emit("leave", {})
 	end

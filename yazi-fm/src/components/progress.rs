@@ -34,7 +34,7 @@ impl Progress {
 		};
 
 		if let Err(e) = f() {
-			error!("{:?}", e);
+			error!("{e}");
 		}
 		patches
 	}
