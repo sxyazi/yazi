@@ -39,6 +39,17 @@ impl Tasks {
 		}
 	}
 
+	pub fn file_hardlink(&self, src: &HashSet<Url>, dest: &Url, force: bool, follow: bool) {
+		for u in src {
+			let to = dest.join(u.file_name().unwrap());
+			if force && *u == to {
+				debug!("file_hardlink: same file, skipping {:?}", to);
+			} else {
+				self.scheduler.file_hardlink(u.clone(), to, force, follow);
+			}
+		}
+	}
+
 	pub fn file_remove(&self, targets: Vec<Url>, permanently: bool) {
 		for u in targets {
 			if permanently {
