@@ -24,7 +24,10 @@ jobs:
 
       - name: Install gcc-aarch64-linux-gnu
         if: matrix.target == 'aarch64-unknown-linux-gnu'
-        run: sudo apt-get update && sudo apt-get install -yq gcc-aarch64-linux-gnu
+        run: |
+          sudo apt-get update && sudo apt-get install -yq gcc-aarch64-linux-gnu
+          echo "JEMALLOC_SYS_WITH_LG_PAGE=16" >> $GITHUB_ENV
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/aarch64-linux-gnu-gcc" >> $GITHUB_ENV
 
       - name: Build
         run: ./scripts/build.sh ${{ matrix.target }}

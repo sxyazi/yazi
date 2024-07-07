@@ -13,6 +13,8 @@ body:
         - macOS
         - Windows
         - Windows WSL
+        - FreeBSD X11
+        - FreeBSD Wayland
     validations:
       required: true
   - type: input
@@ -22,29 +24,30 @@ body:
       placeholder: "ex: kitty v0.32.2"
     validations:
       required: true
-  - type: dropdown
-    id: tried_main
-    attributes:
-      label: Did you try the latest code to see if this problem got fixed?
-      options:
-        - Tried, but the problem still
-        - Not tried, and I'll explain why below
-    validations:
-      required: true
   - type: textarea
     id: debug
     attributes:
       label: "`yazi --debug` output"
-      description: Please do a `yazi --debug` and paste the output here.
+      description: Please run `yazi --debug` and paste the debug information here.
       value: |
         <details>
 
-        <!-- Paste the output between the backticks below: -->
         ```sh
+        <!-- ↓↓↓ Paste the output here: ↓↓↓ -->
+
 
         ```
 
         </details>
+    validations:
+      required: true
+  - type: dropdown
+    id: tried_main
+    attributes:
+      label: Did you try the latest nightly build to see if the problem got fixed?
+      options:
+        - Yes, and I updated the debug information above (`yazi --debug`) to the nightly that I tried
+        - No, and I'll explain why below
     validations:
       required: true
   - type: textarea
