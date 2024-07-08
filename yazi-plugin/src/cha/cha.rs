@@ -27,6 +27,7 @@ impl Cha {
 			{
 				reg.add_field_method_get("uid", |_, me| Ok(me.uid));
 				reg.add_field_method_get("gid", |_, me| Ok(me.gid));
+				reg.add_field_method_get("nlink", |_, me| Ok(me.nlink));
 			}
 
 			reg.add_field_method_get("length", |_, me| Ok(me.len));
@@ -80,6 +81,8 @@ impl Cha {
 					uid: t.raw_get("uid").unwrap_or_default(),
 					#[cfg(unix)]
 					gid: t.raw_get("gid").unwrap_or_default(),
+					#[cfg(unix)]
+					nlink: t.raw_get("nlink").unwrap_or_default(),
 				})
 			})?,
 		)

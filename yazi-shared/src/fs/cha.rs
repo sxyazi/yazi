@@ -31,6 +31,8 @@ pub struct Cha {
 	pub uid:         u32,
 	#[cfg(unix)]
 	pub gid:         u32,
+	#[cfg(unix)]
+	pub nlink:       u64,
 }
 
 impl From<Metadata> for Cha {
@@ -78,6 +80,11 @@ impl From<Metadata> for Cha {
 			gid:                      {
 				use std::os::unix::fs::MetadataExt;
 				m.gid()
+			},
+			#[cfg(unix)]
+			nlink:                    {
+				use std::os::unix::fs::MetadataExt;
+				m.nlink()
 			},
 		}
 	}
