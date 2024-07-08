@@ -28,11 +28,11 @@ pub struct Cha {
 	#[cfg(unix)]
 	pub permissions: libc::mode_t,
 	#[cfg(unix)]
-	pub uid:         u32,
+	pub uid:         libc::uid_t,
 	#[cfg(unix)]
-	pub gid:         u32,
+	pub gid:         libc::gid_t,
 	#[cfg(unix)]
-	pub nlink:       u64,
+	pub nlink:       libc::nlink_t,
 }
 
 impl From<Metadata> for Cha {
@@ -69,22 +69,22 @@ impl From<Metadata> for Cha {
 			#[cfg(unix)]
 			permissions:              {
 				use std::os::unix::prelude::PermissionsExt;
-				m.permissions().mode() as libc::mode_t
+				m.permissions().mode() as _
 			},
 			#[cfg(unix)]
 			uid:                      {
 				use std::os::unix::fs::MetadataExt;
-				m.uid()
+				m.uid() as _
 			},
 			#[cfg(unix)]
 			gid:                      {
 				use std::os::unix::fs::MetadataExt;
-				m.gid()
+				m.gid() as _
 			},
 			#[cfg(unix)]
 			nlink:                    {
 				use std::os::unix::fs::MetadataExt;
-				m.nlink()
+				m.nlink() as _
 			},
 		}
 	}
