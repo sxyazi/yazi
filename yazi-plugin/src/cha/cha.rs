@@ -16,6 +16,7 @@ impl Cha {
 			reg.add_field_method_get("is_hidden", |_, me| Ok(me.is_hidden()));
 			reg.add_field_method_get("is_link", |_, me| Ok(me.is_link()));
 			reg.add_field_method_get("is_orphan", |_, me| Ok(me.is_orphan()));
+			reg.add_field_method_get("is_dummy", |_, me| Ok(me.is_dummy()));
 			reg.add_field_method_get("is_block", |_, me| Ok(me.is_block()));
 			reg.add_field_method_get("is_char", |_, me| Ok(me.is_char()));
 			reg.add_field_method_get("is_fifo", |_, me| Ok(me.is_fifo()));
@@ -25,25 +26,25 @@ impl Cha {
 
 			#[cfg(unix)]
 			{
-				reg.add_field_method_get("uid", |_, me| Ok(me.uid));
-				reg.add_field_method_get("gid", |_, me| Ok(me.gid));
-				reg.add_field_method_get("nlink", |_, me| Ok(me.nlink));
+				reg.add_field_method_get("uid", |_, me| Ok((!me.is_dummy()).then_some(me.uid)));
+				reg.add_field_method_get("gid", |_, me| Ok((!me.is_dummy()).then_some(me.gid)));
+				reg.add_field_method_get("nlink", |_, me| Ok((!me.is_dummy()).then_some(me.nlink)));
 			}
 
 			reg.add_field_method_get("length", |_, me| Ok(me.len));
 			reg.add_field_method_get("created", |_, me| {
-				Ok(me.created.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
+				Ok(me.ctime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
 			});
 			reg.add_field_method_get("modified", |_, me| {
-				Ok(me.modified.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
+				Ok(me.mtime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
 			});
 			reg.add_field_method_get("accessed", |_, me| {
-				Ok(me.accessed.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
+				Ok(me.atime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
 			});
 			reg.add_method("permissions", |_, me, ()| {
 				Ok(
 					#[cfg(unix)]
-					Some(yazi_shared::fs::permissions(me.permissions)),
+					Some(yazi_shared::fs::permissions(me.perm, me.is_dummy())),
 					#[cfg(windows)]
 					None::<String>,
 				)
@@ -72,11 +73,11 @@ impl Cha {
 				Self::cast(lua, yazi_shared::fs::Cha {
 					kind,
 					len: t.raw_get("len").unwrap_or_default(),
-					accessed: parse_time(t.raw_get("atime").ok())?,
-					created: parse_time(t.raw_get("ctime").ok())?,
-					modified: parse_time(t.raw_get("mtime").ok())?,
+					atime: parse_time(t.raw_get("atime").ok())?,
+					ctime: parse_time(t.raw_get("ctime").ok())?,
+					mtime: parse_time(t.raw_get("mtime").ok())?,
 					#[cfg(unix)]
-					permissions: t.raw_get("permissions").unwrap_or_default(),
+					perm: t.raw_get("permissions").unwrap_or_default(),
 					#[cfg(unix)]
 					uid: t.raw_get("uid").unwrap_or_default(),
 					#[cfg(unix)]

@@ -73,7 +73,7 @@ function Status:permissions()
 	for i = 1, #perm do
 		local c = perm:sub(i, i)
 		local style = THEME.status.permissions_t
-		if c == "-" then
+		if c == "-" or c == "?" then
 			style = THEME.status.permissions_s
 		elseif c == "r" then
 			style = THEME.status.permissions_r

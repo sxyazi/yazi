@@ -264,11 +264,11 @@ pub fn copy_with_progress(
 // Convert a file mode to a string representation
 #[cfg(unix)]
 #[allow(clippy::collapsible_else_if)]
-pub fn permissions(m: libc::mode_t) -> String {
+pub fn permissions(m: libc::mode_t, dummy: bool) -> String {
 	use libc::{S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFSOCK, S_IRGRP, S_IROTH, S_IRUSR, S_ISGID, S_ISUID, S_ISVTX, S_IWGRP, S_IWOTH, S_IWUSR, S_IXGRP, S_IXOTH, S_IXUSR};
 	let mut s = String::with_capacity(10);
 
-	// File type
+	// Filetype
 	s.push(match m & S_IFMT {
 		S_IFBLK => 'b',
 		S_IFCHR => 'c',
@@ -278,6 +278,11 @@ pub fn permissions(m: libc::mode_t) -> String {
 		S_IFSOCK => 's',
 		_ => '-',
 	});
+
+	if dummy {
+		s.push_str("?????????");
+		return s;
+	}
 
 	// Owner
 	s.push(if m & S_IRUSR != 0 { 'r' } else { '-' });

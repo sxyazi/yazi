@@ -54,9 +54,11 @@ impl Files {
 				select! {
 					_ = tx.closed() => break,
 					result = item.metadata() => {
-						if let Ok(meta) = result {
-							tx.send(File::from_meta(Url::from(item.path()), meta).await).ok();
-						}
+						let url = Url::from(item.path());
+						_ = tx.send(match result {
+							Ok(meta) => File::from_meta(url, meta).await,
+							Err(_) => File::from_dummy(url, item.file_type().await.ok())
+						});
 					}
 				}
 			}
@@ -76,9 +78,11 @@ impl Files {
 		async fn go(entities: &[DirEntry]) -> Vec<File> {
 			let mut files = Vec::with_capacity(entities.len() / 3 + 1);
 			for entry in entities {
-				if let Ok(meta) = entry.metadata().await {
-					files.push(File::from_meta(Url::from(entry.path()), meta).await);
-				}
+				let url = Url::from(entry.path());
+				files.push(match entry.metadata().await {
+					Ok(meta) => File::from_meta(url, meta).await,
+					Err(_) => File::from_dummy(url, entry.file_type().await.ok()),
+				});
 			}
 			files
 		}

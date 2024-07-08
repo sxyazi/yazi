@@ -32,11 +32,9 @@ end
 function Linemode:permissions(file) return ui.Line(file.cha:permissions() or "") end
 
 function Linemode:owner(file)
-	if not ya.user_name then
-		return ui.Line("")
-	else
-		return ui.Line(ya.user_name(file.cha.uid) .. ":" .. ya.group_name(file.cha.gid))
-	end
+	local user = file.cha.uid and ya.user_name(file.cha.uid) or file.cha.uid
+	local group = file.cha.gid and ya.group_name(file.cha.gid) or file.cha.gid
+	return ui.Line(string.format("%s:%s", user or "-", group or "-"))
 end
 
 function Linemode:render(files)

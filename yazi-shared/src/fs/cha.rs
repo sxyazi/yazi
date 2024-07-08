@@ -1,4 +1,4 @@
-use std::{fs::Metadata, time::SystemTime};
+use std::{fs::{FileType, Metadata}, time::SystemTime};
 
 use bitflags::bitflags;
 
@@ -11,28 +11,25 @@ bitflags! {
 		const LINK   = 0b00000100;
 		const ORPHAN = 0b00001000;
 
-		const BLOCK  = 0b00010000;
-		const CHAR   = 0b00100000;
-		const FIFO   = 0b01000000;
-		const SOCKET = 0b10000000;
+		const DUMMY  = 0b00010000;
 	}
 }
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Cha {
-	pub kind:        ChaKind,
-	pub len:         u64,
-	pub accessed:    Option<SystemTime>,
-	pub created:     Option<SystemTime>,
-	pub modified:    Option<SystemTime>,
+	pub kind:  ChaKind,
+	pub len:   u64,
+	pub atime: Option<SystemTime>,
+	pub ctime: Option<SystemTime>,
+	pub mtime: Option<SystemTime>,
 	#[cfg(unix)]
-	pub permissions: libc::mode_t,
+	pub perm:  libc::mode_t,
 	#[cfg(unix)]
-	pub uid:         libc::uid_t,
+	pub uid:   libc::uid_t,
 	#[cfg(unix)]
-	pub gid:         libc::gid_t,
+	pub gid:   libc::gid_t,
 	#[cfg(unix)]
-	pub nlink:       libc::nlink_t,
+	pub nlink: libc::nlink_t,
 }
 
 impl From<Metadata> for Cha {
@@ -42,50 +39,77 @@ impl From<Metadata> for Cha {
 			ck |= ChaKind::DIR;
 		}
 
-		#[cfg(unix)]
-		{
-			use std::os::unix::prelude::FileTypeExt;
-			if m.file_type().is_block_device() {
-				ck |= ChaKind::BLOCK;
-			}
-			if m.file_type().is_char_device() {
-				ck |= ChaKind::CHAR;
-			}
-			if m.file_type().is_fifo() {
-				ck |= ChaKind::FIFO;
-			}
-			if m.file_type().is_socket() {
-				ck |= ChaKind::SOCKET;
-			}
-		}
-
 		Self {
-			kind:     ck,
-			len:      m.len(),
-			accessed: m.accessed().ok(),
-			created:  m.created().ok(),
-			modified: m.modified().ok(),
+			kind:  ck,
+			len:   m.len(),
+			atime: m.accessed().ok(),
+			ctime: m.created().ok(),
+			mtime: m.modified().ok(),
 
 			#[cfg(unix)]
-			permissions:              {
+			perm:               {
 				use std::os::unix::prelude::PermissionsExt;
 				m.permissions().mode() as _
 			},
 			#[cfg(unix)]
-			uid:                      {
+			uid:                {
 				use std::os::unix::fs::MetadataExt;
 				m.uid() as _
 			},
 			#[cfg(unix)]
-			gid:                      {
+			gid:                {
 				use std::os::unix::fs::MetadataExt;
 				m.gid() as _
 			},
 			#[cfg(unix)]
-			nlink:                    {
+			nlink:              {
 				use std::os::unix::fs::MetadataExt;
 				m.nlink() as _
 			},
+		}
+	}
+}
+
+impl From<FileType> for Cha {
+	fn from(t: FileType) -> Self {
+		let mut kind = ChaKind::DUMMY;
+
+		#[cfg(unix)]
+		let perm = {
+			use std::os::unix::fs::FileTypeExt;
+			if t.is_dir() {
+				kind |= ChaKind::DIR;
+				libc::S_IFDIR
+			} else if t.is_symlink() {
+				kind |= ChaKind::LINK;
+				libc::S_IFLNK
+			} else if t.is_block_device() {
+				libc::S_IFBLK
+			} else if t.is_char_device() {
+				libc::S_IFCHR
+			} else if t.is_fifo() {
+				libc::S_IFIFO
+			} else if t.is_socket() {
+				libc::S_IFSOCK
+			} else {
+				0
+			}
+		};
+
+		#[cfg(windows)]
+		{
+			if t.is_dir() {
+				kind |= ChaKind::DIR;
+			} else if t.is_symlink() {
+				kind |= ChaKind::LINK;
+			}
+		}
+
+		Self {
+			kind,
+			#[cfg(unix)]
+			perm,
+			..Default::default()
 		}
 	}
 }
@@ -100,34 +124,25 @@ impl Cha {
 
 impl Cha {
 	#[inline]
-	pub fn is_dir(&self) -> bool { self.kind.contains(ChaKind::DIR) }
+	pub const fn is_dir(&self) -> bool { self.kind.contains(ChaKind::DIR) }
 
 	#[inline]
-	pub fn is_hidden(&self) -> bool { self.kind.contains(ChaKind::HIDDEN) }
+	pub const fn is_hidden(&self) -> bool { self.kind.contains(ChaKind::HIDDEN) }
 
 	#[inline]
-	pub fn is_link(&self) -> bool { self.kind.contains(ChaKind::LINK) }
+	pub const fn is_link(&self) -> bool { self.kind.contains(ChaKind::LINK) }
 
 	#[inline]
-	pub fn is_orphan(&self) -> bool { self.kind.contains(ChaKind::ORPHAN) }
+	pub const fn is_orphan(&self) -> bool { self.kind.contains(ChaKind::ORPHAN) }
 
 	#[inline]
-	pub fn is_block(&self) -> bool { self.kind.contains(ChaKind::BLOCK) }
+	pub const fn is_dummy(&self) -> bool { self.kind.contains(ChaKind::DUMMY) }
 
 	#[inline]
-	pub fn is_char(&self) -> bool { self.kind.contains(ChaKind::CHAR) }
-
-	#[inline]
-	pub fn is_fifo(&self) -> bool { self.kind.contains(ChaKind::FIFO) }
-
-	#[inline]
-	pub fn is_sock(&self) -> bool { self.kind.contains(ChaKind::SOCKET) }
-
-	#[inline]
-	pub fn is_exec(&self) -> bool {
+	pub const fn is_block(&self) -> bool {
 		#[cfg(unix)]
 		{
-			self.permissions & libc::S_IXUSR != 0
+			self.perm & libc::S_IFMT == libc::S_IFBLK
 		}
 		#[cfg(windows)]
 		{
@@ -136,10 +151,58 @@ impl Cha {
 	}
 
 	#[inline]
-	pub fn is_sticky(&self) -> bool {
+	pub const fn is_char(&self) -> bool {
 		#[cfg(unix)]
 		{
-			self.permissions & libc::S_ISVTX != 0
+			self.perm & libc::S_IFMT == libc::S_IFCHR
+		}
+		#[cfg(windows)]
+		{
+			false
+		}
+	}
+
+	#[inline]
+	pub const fn is_fifo(&self) -> bool {
+		#[cfg(unix)]
+		{
+			self.perm & libc::S_IFMT == libc::S_IFIFO
+		}
+		#[cfg(windows)]
+		{
+			false
+		}
+	}
+
+	#[inline]
+	pub const fn is_sock(&self) -> bool {
+		#[cfg(unix)]
+		{
+			self.perm & libc::S_IFMT == libc::S_IFSOCK
+		}
+		#[cfg(windows)]
+		{
+			false
+		}
+	}
+
+	#[inline]
+	pub const fn is_exec(&self) -> bool {
+		#[cfg(unix)]
+		{
+			self.perm & libc::S_IXUSR != 0
+		}
+		#[cfg(windows)]
+		{
+			false
+		}
+	}
+
+	#[inline]
+	pub const fn is_sticky(&self) -> bool {
+		#[cfg(unix)]
+		{
+			self.perm & libc::S_ISVTX != 0
 		}
 		#[cfg(windows)]
 		{

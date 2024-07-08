@@ -9,13 +9,14 @@ use yazi_shared::fs::Cha;
 pub enum Is {
 	#[default]
 	None,
-	Block,
-	Char,
-	Exec,
-	Fifo,
 	Link,
 	Orphan,
+	Dummy,
+	Block,
+	Char,
+	Fifo,
 	Sock,
+	Exec,
 	Sticky,
 }
 
@@ -24,13 +25,14 @@ impl FromStr for Is {
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		Ok(match s {
-			"block" => Self::Block,
-			"char" => Self::Char,
-			"exec" => Self::Exec,
-			"fifo" => Self::Fifo,
 			"link" => Self::Link,
 			"orphan" => Self::Orphan,
+			"dummy" => Self::Dummy,
+			"block" => Self::Block,
+			"char" => Self::Char,
+			"fifo" => Self::Fifo,
 			"sock" => Self::Sock,
+			"exec" => Self::Exec,
 			"sticky" => Self::Sticky,
 			_ => bail!("invalid filetype: {s}"),
 		})
@@ -48,13 +50,14 @@ impl Is {
 	pub fn check(&self, cha: &Cha) -> bool {
 		match self {
 			Self::None => true,
-			Self::Block => cha.is_block(),
-			Self::Char => cha.is_char(),
-			Self::Exec => cha.is_exec(),
-			Self::Fifo => cha.is_fifo(),
 			Self::Link => cha.is_link(),
 			Self::Orphan => cha.is_orphan(),
+			Self::Dummy => cha.is_dummy(),
+			Self::Block => cha.is_block(),
+			Self::Char => cha.is_char(),
+			Self::Fifo => cha.is_fifo(),
 			Self::Sock => cha.is_sock(),
+			Self::Exec => cha.is_exec(),
 			Self::Sticky => cha.is_sticky(),
 		}
 	}

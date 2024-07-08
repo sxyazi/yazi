@@ -102,12 +102,12 @@ impl Preview {
 		*url == lock.url
 			&& self.skip == lock.skip
 			&& cha.len == lock.cha.len
-			&& cha.modified == lock.cha.modified
+			&& cha.mtime == lock.cha.mtime
 			&& cha.kind == lock.cha.kind
 			&& {
 				#[cfg(unix)]
 				{
-					cha.permissions == lock.cha.permissions
+					cha.perm == lock.cha.perm
 				}
 				#[cfg(windows)]
 				{

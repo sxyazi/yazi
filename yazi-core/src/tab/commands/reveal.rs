@@ -30,7 +30,7 @@ impl Tab {
 		};
 
 		self.cd(parent.clone());
-		FilesOp::Creating(parent, vec![File::from_dummy(&opt.target)]).emit();
+		FilesOp::Creating(parent, vec![File::from_dummy(opt.target.clone(), None)]).emit();
 		ManagerProxy::hover(Some(opt.target));
 	}
 }
