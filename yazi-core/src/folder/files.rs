@@ -46,7 +46,11 @@ impl Deref for Files {
 
 impl Files {
 	pub async fn from_dir(url: &Url) -> std::io::Result<UnboundedReceiver<File>> {
-		let mut it = fs::read_dir(url).await?;
+		let mut it = fs::read_dir(url).await.map_err(|e| {
+			FilesOp::IOErr(url.clone(), e.kind(), e.to_string()).emit();
+			e
+		})?;
+
 		let (tx, rx) = mpsc::unbounded_channel();
 
 		tokio::spawn(async move {
@@ -100,13 +104,18 @@ impl Files {
 		match fs::metadata(url).await {
 			Ok(m) if !m.is_dir() => {
 				// FIXME: use `ErrorKind::NotADirectory` instead once it gets stabilized
-				FilesOp::IOErr(url.clone(), std::io::ErrorKind::AlreadyExists).emit();
+				FilesOp::IOErr(
+					url.clone(),
+					std::io::ErrorKind::AlreadyExists,
+					"Not a directory".to_string(),
+				)
+				.emit();
 			}
 			Ok(m) if mtime == m.modified().ok() => {}
 			Ok(m) => return Some(m),
 			Err(e) => {
 				if maybe_exists(url).await {
-					FilesOp::IOErr(url.clone(), e.kind()).emit();
+					FilesOp::IOErr(url.clone(), e.kind(), e.to_string()).emit();
 				} else if let Some(p) = url.parent_url() {
 					FilesOp::Deleting(p, vec![url.clone()]).emit();
 				}

@@ -12,9 +12,17 @@ function M:peek()
 	end
 
 	if #folder.files == 0 then
+		local line
+		if tostring(folder.stage) == "loading" then
+			line = ui.Line("Loading...")
+		elseif tostring(folder.stage) == "failed" then
+			line = ui.Line(folder.stage.error)
+		else
+			line = ui.Line("No items")
+		end
+
 		return ya.preview_widgets(self, {
-			ui.Paragraph(self.area, { ui.Line(folder.stage == "loading" and "Loading..." or "No items") })
-				:align(ui.Paragraph.CENTER),
+			ui.Paragraph(self.area, { line }):align(ui.Paragraph.CENTER),
 		})
 	end
 

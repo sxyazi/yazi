@@ -14,8 +14,12 @@ function Current:empty()
 	local line
 	if self._folder.files.filter then
 		line = ui.Line("No filter results")
+	elseif tostring(self._folder.stage) == "loading" then
+		line = ui.Line("Loading...")
+	elseif tostring(self._folder.stage) == "failed" then
+		line = ui.Line(self._folder.stage.error)
 	else
-		line = ui.Line(self._folder.stage == "loading" and "Loading..." or "No items")
+		line = ui.Line("No items")
 	end
 
 	return {

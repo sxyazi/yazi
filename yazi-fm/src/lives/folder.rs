@@ -40,7 +40,7 @@ impl Folder {
 		lua.register_userdata_type::<Self>(|reg| {
 			reg.add_field_method_get("cwd", |lua, me| Url::cast(lua, me.cwd.clone()));
 			reg.add_field_method_get("files", |_, me| Files::make(0..me.files.len(), me, me.tab()));
-			reg.add_field_method_get("stage", |lua, me| lua.create_any_userdata(me.stage));
+			reg.add_field_method_get("stage", |lua, me| lua.create_any_userdata(me.stage.clone()));
 			reg.add_field_method_get("window", |_, me| Files::make(me.window.clone(), me, me.tab()));
 
 			reg.add_field_method_get("offset", |_, me| Ok(me.offset));
@@ -53,11 +53,22 @@ impl Folder {
 		lua.register_userdata_type::<yazi_core::folder::FolderStage>(|reg| {
 			reg.add_meta_method(MetaMethod::ToString, |lua, me, ()| {
 				use yazi_core::folder::FolderStage::{Failed, Loaded, Loading};
+
 				lua.create_string(match me {
 					Loading => "loading",
 					Loaded => "loaded",
-					Failed(_) => "failed",
+					Failed(..) => "failed",
 				})
+			});
+
+			reg.add_field_method_get("error", |lua, me| {
+				use yazi_core::folder::FolderStage::{Failed, Loaded, Loading};
+
+				match me {
+					Loading => Ok(None),
+					Loaded => Ok(None),
+					Failed(_, msg) => Some(lua.create_string(msg)).transpose(),
+				}
 			});
 		})?;
 
