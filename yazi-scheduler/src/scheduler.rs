@@ -9,7 +9,7 @@ use yazi_dds::Pump;
 use yazi_shared::{event::Data, fs::{unique_path, Url}, Throttle};
 
 use super::{Ongoing, TaskProg, TaskStage};
-use crate::{file::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, prework::{Prework, PreworkOpFetch, PreworkOpLoad, PreworkOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
+use crate::{file::{File, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, prework::{Prework, PreworkOpFetch, PreworkOpLoad, PreworkOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
 
 pub struct Scheduler {
 	pub file:    Arc<File>,
@@ -148,6 +148,28 @@ impl Scheduler {
 					.link(FileOpLink { id, from, to, meta: None, resolve: false, relative, delete: false })
 					.await
 					.ok();
+			}
+			.boxed(),
+			LOW,
+		);
+	}
+
+	pub fn file_hardlink(&self, from: Url, mut to: Url, force: bool, follow: bool) {
+		let name = format!("Hardlink {:?} to {:?}", from, to);
+		let id = self.ongoing.lock().add(TaskKind::User, name);
+
+		if to.starts_with(&from) && to != from {
+			self.new_and_fail(id, "Cannot hardlink directory into itself").ok();
+			return;
+		}
+
+		let file = self.file.clone();
+		_ = self.micro.try_send(
+			async move {
+				if !force {
+					to = unique_path(to).await;
+				}
+				file.hardlink(FileOpHardlink { id, from, to, meta: None, follow }).await.ok();
 			}
 			.boxed(),
 			LOW,
@@ -368,7 +390,7 @@ impl Scheduler {
 						};
 
 						if let Err(e) = result {
-							prog.send(TaskProg::Fail(id, format!("Failed to work on this task: {:?}", e))).ok();
+							prog.send(TaskProg::Fail(id, format!("Failed to work on this task: {e:?}"))).ok();
 						}
 					}
 				}

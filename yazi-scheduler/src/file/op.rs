@@ -6,6 +6,7 @@ use yazi_shared::fs::Url;
 pub enum FileOp {
 	Paste(FileOpPaste),
 	Link(FileOpLink),
+	Hardlink(FileOpHardlink),
 	Delete(FileOpDelete),
 	Trash(FileOpTrash),
 }
@@ -15,12 +16,14 @@ impl FileOp {
 		match self {
 			Self::Paste(op) => op.id,
 			Self::Link(op) => op.id,
+			Self::Hardlink(op) => op.id,
 			Self::Delete(op) => op.id,
 			Self::Trash(op) => op.id,
 		}
 	}
 }
 
+// --- Paste
 #[derive(Clone, Debug)]
 pub struct FileOpPaste {
 	pub id:     usize,
@@ -46,6 +49,7 @@ impl FileOpPaste {
 	}
 }
 
+// --- Link
 #[derive(Clone, Debug)]
 pub struct FileOpLink {
 	pub id:       usize,
@@ -71,6 +75,23 @@ impl From<FileOpPaste> for FileOpLink {
 	}
 }
 
+// --- Hardlink
+#[derive(Clone, Debug)]
+pub struct FileOpHardlink {
+	pub id:     usize,
+	pub from:   Url,
+	pub to:     Url,
+	pub meta:   Option<Metadata>,
+	pub follow: bool,
+}
+
+impl FileOpHardlink {
+	pub(super) fn spawn(&self, from: Url, to: Url, meta: Metadata) -> Self {
+		Self { id: self.id, from, to, meta: Some(meta), follow: self.follow }
+	}
+}
+
+// --- Delete
 #[derive(Clone, Debug)]
 pub struct FileOpDelete {
 	pub id:     usize,
@@ -78,6 +99,7 @@ pub struct FileOpDelete {
 	pub length: u64,
 }
 
+// --- Trash
 #[derive(Clone, Debug)]
 pub struct FileOpTrash {
 	pub id:     usize,
