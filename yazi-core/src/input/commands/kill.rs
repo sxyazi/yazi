@@ -70,6 +70,7 @@ impl Input {
 		let snap = self.snap_mut();
 
 		match opt.kind.as_str() {
+			"all" => self.kill_range(..),
 			"bol" => {
 				let end = snap.idx(snap.cursor).unwrap_or(snap.len());
 				self.kill_range(..end)

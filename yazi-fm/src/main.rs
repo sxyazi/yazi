@@ -21,6 +21,7 @@ mod router;
 mod select;
 mod signals;
 mod tasks;
+mod term;
 mod which;
 
 use context::*;
@@ -31,6 +32,7 @@ use panic::*;
 use root::*;
 use router::*;
 use signals::*;
+use term::*;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -43,7 +45,7 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_config::init()?;
 
-	yazi_adaptor::init();
+	yazi_adapter::init();
 
 	yazi_boot::init();
 

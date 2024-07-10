@@ -3,6 +3,7 @@ use crossterm::event::{Event as CrosstermEvent, EventStream, KeyEvent, KeyEventK
 use futures::StreamExt;
 use tokio::{select, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
+use yazi_config::MANAGER;
 use yazi_shared::event::Event;
 
 pub(super) struct Signals {
@@ -50,7 +51,7 @@ impl Signals {
 		Ok(tokio::spawn(async move {
 			while let Some(signal) = signals.next().await {
 				match signal {
-					SIGHUP | SIGTERM | SIGQUIT | SIGINT => {
+					SIGHUP | SIGTERM | SIGQUIT => {
 						Event::Quit(Default::default()).emit();
 					}
 					SIGCONT if HIDER.try_acquire().is_ok() => AppProxy::resume(),
@@ -71,6 +72,11 @@ impl Signals {
 					Some(Ok(event)) = reader.next() => {
 						 match event {
 							CrosstermEvent::Key(key @ KeyEvent { kind: KeyEventKind::Press, .. }) => Event::Key(key).emit(),
+							CrosstermEvent::Mouse(mouse) => {
+								if MANAGER.mouse_events.contains(mouse.kind.into()) {
+									Event::Mouse(mouse).emit();
+								}
+							},
 							CrosstermEvent::Paste(str) => Event::Paste(str).emit(),
 							CrosstermEvent::Resize(..) => Event::Resize.emit(),
 							_ => {},

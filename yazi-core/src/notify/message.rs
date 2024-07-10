@@ -19,7 +19,9 @@ pub struct Message {
 impl From<NotifyOpt> for Message {
 	fn from(opt: NotifyOpt) -> Self {
 		let title = opt.title.lines().next().unwrap_or_default();
-		let max_width = opt.content.lines().map(|s| s.width()).max().unwrap_or(0).max(title.width());
+		let title_width = title.width() + (opt.level.icon().width() + /* Space */ 1);
+
+		let max_width = opt.content.lines().map(|s| s.width()).max().unwrap_or(0).max(title_width);
 
 		Self {
 			title:   title.to_owned(),

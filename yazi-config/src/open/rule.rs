@@ -14,6 +14,14 @@ pub(super) struct OpenRule {
 }
 
 impl OpenRule {
+	#[inline]
+	pub fn any_file(&self) -> bool { self.name.as_ref().is_some_and(|p| p.any_file()) }
+
+	#[inline]
+	pub fn any_dir(&self) -> bool { self.name.as_ref().is_some_and(|p| p.any_dir()) }
+}
+
+impl OpenRule {
 	fn deserialize<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
 	where
 		D: Deserializer<'de>,

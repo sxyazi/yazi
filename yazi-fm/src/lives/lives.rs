@@ -19,6 +19,7 @@ impl Lives {
 		super::File::register(&LUA)?;
 		super::Files::register(&LUA)?;
 		super::Filter::register(&LUA)?;
+		super::Finder::register(&LUA)?;
 		super::Folder::register(&LUA)?;
 		super::Mode::register(&LUA)?;
 		super::Preview::register(&LUA)?;

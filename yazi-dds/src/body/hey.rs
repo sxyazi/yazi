@@ -3,12 +3,20 @@ use std::collections::HashMap;
 use mlua::{ExternalResult, IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 
-use super::Body;
+use super::{Body, BodyHi};
 use crate::Peer;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BodyHey {
-	pub peers: HashMap<u64, Peer>,
+	pub peers:   HashMap<u64, Peer>,
+	pub version: String,
+}
+
+impl BodyHey {
+	#[inline]
+	pub fn owned(peers: HashMap<u64, Peer>) -> Body<'static> {
+		Self { peers, version: BodyHi::version() }.into()
+	}
 }
 
 impl From<BodyHey> for Body<'_> {

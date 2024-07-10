@@ -6,25 +6,27 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 #[serde(try_from = "String")]
 pub struct Pattern {
-	inner:     globset::GlobMatcher,
-	is_star:   bool,
-	is_folder: bool,
+	inner:   globset::GlobMatcher,
+	is_dir:  bool,
+	is_star: bool,
 }
 
 impl Pattern {
 	#[inline]
-	pub fn match_mime(&self, str: impl AsRef<str>) -> bool { self.inner.is_match(str.as_ref()) }
-
-	#[inline]
-	pub fn match_path(&self, path: impl AsRef<Path>, is_folder: bool) -> bool {
-		is_folder == self.is_folder && (self.is_star || self.inner.is_match(path))
+	pub fn match_mime(&self, str: impl AsRef<str>) -> bool {
+		self.is_star || self.inner.is_match(str.as_ref())
 	}
 
 	#[inline]
-	pub fn any_file(&self) -> bool { self.is_star && !self.is_folder }
+	pub fn match_path(&self, path: impl AsRef<Path>, is_dir: bool) -> bool {
+		is_dir == self.is_dir && (self.is_star || self.inner.is_match(path))
+	}
 
 	#[inline]
-	pub fn any_dir(&self) -> bool { self.is_star && self.is_folder }
+	pub fn any_file(&self) -> bool { self.is_star && !self.is_dir }
+
+	#[inline]
+	pub fn any_dir(&self) -> bool { self.is_star && self.is_dir }
 }
 
 impl TryFrom<&str> for Pattern {
@@ -36,13 +38,13 @@ impl TryFrom<&str> for Pattern {
 
 		let inner = GlobBuilder::new(b)
 			.case_insensitive(a.len() == s.len())
-			.literal_separator(b.contains('/'))
+			.literal_separator(false)
 			.backslash_escape(false)
-			.empty_alternates(false)
+			.empty_alternates(true)
 			.build()?
 			.compile_matcher();
 
-		Ok(Self { inner, is_star: b == "*", is_folder: b.len() < a.len() })
+		Ok(Self { inner, is_dir: b.len() < a.len(), is_star: b == "*" })
 	}
 }
 

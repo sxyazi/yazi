@@ -32,6 +32,7 @@ impl Manager {
 		}
 
 		let targets = self.current().paginate(opt.page.unwrap_or(self.current().page));
+		tasks.fetch_paged(targets, &self.mimetype);
 		tasks.preload_paged(targets, &self.mimetype);
 	}
 }

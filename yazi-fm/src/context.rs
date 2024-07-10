@@ -1,4 +1,5 @@
 use ratatui::layout::Rect;
+use yazi_adapter::Dimension;
 use yazi_config::popup::{Origin, Position};
 use yazi_core::{completion::Completion, help::Help, input::Input, manager::Manager, notify::Notify, select::Select, tasks::Tasks, which::Which};
 
@@ -28,16 +29,17 @@ impl Ctx {
 	}
 
 	pub fn area(&self, position: &Position) -> Rect {
+		let ws = Dimension::available();
 		if position.origin != Origin::Hovered {
-			return position.rect();
+			return position.rect(ws);
 		}
 
 		if let Some(r) =
 			self.manager.hovered().and_then(|h| self.manager.current().rect_current(&h.url))
 		{
-			Position::sticky(r, position.offset)
+			Position::sticky(ws, r, position.offset)
 		} else {
-			Position::new(Origin::TopCenter, position.offset).rect()
+			Position::new(Origin::TopCenter, position.offset).rect(ws)
 		}
 	}
 

@@ -16,8 +16,8 @@ local function entry()
 	local output, err = child:wait_with_output()
 	if not output then
 		return fail("Cannot read `fzf` output, error code %s", err)
-	elseif not output.status:success() and output.status:code() ~= 130 then
-		return fail("`fzf` exited with error code %s", output.status:code())
+	elseif not output.status.success and output.status.code ~= 130 then
+		return fail("`fzf` exited with error code %s", output.status.code)
 	end
 
 	local target = output.stdout:gsub("\n$", "")

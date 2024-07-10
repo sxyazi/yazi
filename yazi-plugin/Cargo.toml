@@ -13,7 +13,7 @@ default      = [ "vendored-lua" ]
 vendored-lua = [ "mlua/vendored" ]
 
 [dependencies]
-yazi-adaptor = { path = "../yazi-adaptor", version = "0.2.5" }
+yazi-adapter = { path = "../yazi-adapter", version = "0.2.5" }
 yazi-boot    = { path = "../yazi-boot", version = "0.2.5" }
 yazi-config  = { path = "../yazi-config", version = "0.2.5" }
 yazi-dds     = { path = "../yazi-dds", version = "0.2.5" }
@@ -21,25 +21,29 @@ yazi-proxy   = { path = "../yazi-proxy", version = "0.2.5" }
 yazi-shared  = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
-ansi-to-tui   = "3.1.0"
-anyhow        = "1.0.82"
+ansi-to-tui   = "=3.1.0"
+anyhow        = "1.0.86"
+base64        = "0.22.1"
+crossterm     = "0.27.0"
 futures       = "0.3.30"
 md-5          = "0.10.6"
-mlua          = { version = "0.9.7", features = [ "lua54", "serialize", "macros", "async" ] }
-parking_lot   = "0.12.1"
-ratatui       = "=0.26.1"
-serde         = "1.0.198"
-serde_json    = "1.0.116"
+mlua          = { version = "0.9.9", features = [ "lua54", "serialize", "macros", "async" ] }
+parking_lot   = "0.12.3"
+ratatui       = "0.27.0"
 shell-escape  = "0.1.5"
 shell-words   = "1.1.0"
 syntect       = { version = "5.2.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
-tokio         = { version = "1.37.0", features = [ "full" ] }
-tokio-util    = "0.7.10"
-unicode-width = "0.1.11"
+tokio         = { version = "1.38.0", features = [ "full" ] }
+tokio-stream  = "0.1.15"
+tokio-util    = "0.7.11"
+unicode-width = "0.1.13"
 yazi-prebuild = "0.1.2"
 
 # Logging
 tracing = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
 
 [target."cfg(unix)".dependencies]
-uzers = "0.11.3"
+uzers = "0.12.0"
+
+[target."cfg(windows)".dependencies]
+clipboard-win = "5.3.1"

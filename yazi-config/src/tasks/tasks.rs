@@ -1,7 +1,7 @@
+use std::str::FromStr;
+
 use serde::Deserialize;
 use validator::Validate;
-
-use crate::{validation::check_validation, MERGED_YAZI};
 
 #[derive(Debug, Deserialize, Validate)]
 pub struct Tasks {
@@ -18,16 +18,18 @@ pub struct Tasks {
 	pub suppress_preload: bool,
 }
 
-impl Default for Tasks {
-	fn default() -> Self {
+impl FromStr for Tasks {
+	type Err = anyhow::Error;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		#[derive(Deserialize)]
 		struct Outer {
 			tasks: Tasks,
 		}
 
-		let tasks = toml::from_str::<Outer>(&MERGED_YAZI).unwrap().tasks;
-		check_validation(tasks.validate());
+		let tasks = toml::from_str::<Outer>(s)?.tasks;
+		tasks.validate()?;
 
-		tasks
+		Ok(tasks)
 	}
 }

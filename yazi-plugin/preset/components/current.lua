@@ -42,3 +42,23 @@ function Current:render(area)
 		Folder:markers(area, markers),
 	}
 end
+
+function Current:click(event, up)
+	if up or event.is_middle then
+		return
+	end
+
+	local f = Folder:by_kind(Folder.CURRENT)
+	if event.y > #f.window or not f.hovered then
+		return
+	end
+
+	ya.manager_emit("arrow", { event.y + f.offset - f.hovered.idx })
+	if event.is_right then
+		ya.manager_emit("open", {})
+	end
+end
+
+function Current:scroll(event, step) ya.manager_emit("arrow", { step }) end
+
+function Current:touch(event, step) end

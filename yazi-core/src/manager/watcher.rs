@@ -1,14 +1,14 @@
 use std::{collections::{HashMap, HashSet}, time::{Duration, SystemTime}};
 
 use anyhow::Result;
-use notify::{event::{MetadataKind, ModifyKind}, EventKind, RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
+use notify::{RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
 use parking_lot::RwLock;
 use tokio::{fs, pin, sync::{mpsc::{self, UnboundedReceiver}, watch}};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use tracing::error;
 use yazi_plugin::isolate;
 use yazi_proxy::WATCHER;
-use yazi_shared::{fs::{File, FilesOp, Url}, RoCell};
+use yazi_shared::{fs::{symlink_realname, File, FilesOp, Url}, RoCell};
 
 use super::Linked;
 use crate::folder::{Files, Folder};
@@ -28,24 +28,6 @@ impl Watcher {
 		let watcher = RecommendedWatcher::new(
 			move |res: Result<notify::Event, notify::Error>| {
 				let Ok(event) = res else { return };
-
-				match event.kind {
-					EventKind::Create(_) => {}
-					EventKind::Modify(kind) => match kind {
-						ModifyKind::Data(_) => {}
-						ModifyKind::Metadata(md) => match md {
-							MetadataKind::WriteTime => {}
-							MetadataKind::Permissions => {}
-							MetadataKind::Ownership => {}
-							_ => return,
-						},
-						ModifyKind::Name(_) => {}
-						_ => return,
-					},
-					EventKind::Remove(_) => {}
-					_ => return,
-				}
-
 				for path in event.paths {
 					out_tx.send(Url::from(path)).ok();
 				}
@@ -53,8 +35,8 @@ impl Watcher {
 			Default::default(),
 		);
 
-		tokio::spawn(Self::on_in(in_rx, watcher.unwrap()));
-		tokio::spawn(Self::on_out(out_rx));
+		tokio::spawn(Self::fan_in(in_rx, watcher.unwrap()));
+		tokio::spawn(Self::fan_out(out_rx));
 		Self { tx: in_tx }
 	}
 
@@ -83,7 +65,7 @@ impl Watcher {
 		});
 	}
 
-	async fn on_in(mut rx: watch::Receiver<HashSet<Url>>, mut watcher: RecommendedWatcher) {
+	async fn fan_in(mut rx: watch::Receiver<HashSet<Url>>, mut watcher: RecommendedWatcher) {
 		loop {
 			let (mut to_unwatch, mut to_watch): (HashSet<_>, HashSet<_>) = {
 				let (new, old) = (&*rx.borrow_and_update(), &*WATCHED.read());
@@ -109,34 +91,46 @@ impl Watcher {
 		}
 	}
 
-	async fn on_out(rx: UnboundedReceiver<Url>) {
+	async fn fan_out(rx: UnboundedReceiver<Url>) {
 		// TODO: revert this once a new notification is implemented
 		let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(50));
 		pin!(rx);
 
-		while let Some(urls) = rx.next().await {
+		while let Some(chunk) = rx.next().await {
+			let urls: HashSet<_> = chunk.into_iter().collect();
+			let mut cached: HashMap<_, _> = HashMap::new();
+
 			let _permit = WATCHER.acquire().await.unwrap();
 			let mut reload = Vec::with_capacity(urls.len());
 
-			for u in urls.into_iter().collect::<HashSet<_>>() {
-				let Some(parent) = u.parent_url() else { continue };
+			for url in urls {
+				let Some(name) = url.file_name() else { continue };
+				let Some(parent) = url.parent_url() else { continue };
 
-				let Ok(file) = File::from(u.clone()).await else {
-					FilesOp::Deleting(parent, vec![u]).emit();
+				let Ok(file) = File::from(url.clone()).await else {
+					FilesOp::Deleting(parent, vec![url]).emit();
 					continue;
 				};
+
+				let eq = (!file.is_link() && fs::canonicalize(&url).await.is_ok_and(|p| p == *url))
+					|| symlink_realname(&url, &mut cached).await.is_ok_and(|s| s == name);
+
+				if !eq {
+					FilesOp::Deleting(parent, vec![url]).emit();
+					continue;
+				}
 
 				if !file.is_dir() {
 					reload.push(file.clone());
 				}
-				FilesOp::Upserting(parent, HashMap::from_iter([(u, file)])).emit();
+				FilesOp::Upserting(parent, HashMap::from_iter([(url, file)])).emit();
 			}
 
 			if reload.is_empty() {
 				continue;
 			}
-			if let Err(e) = isolate::preload("mime", reload, true).await {
-				error!("preload in watcher failed: {e}");
+			if let Err(e) = isolate::fetch("mime", reload).await {
+				error!("Fetch `mime` failed in watcher: {e}");
 			}
 		}
 	}

@@ -1,6 +1,6 @@
 use std::{borrow::Cow, env, ffi::OsString, path::{Component, Path, PathBuf, MAIN_SEPARATOR}};
 
-use super::accessible;
+use super::maybe_exists;
 use crate::fs::Url;
 
 #[inline]
@@ -26,14 +26,18 @@ fn _expand_path(p: &Path) -> PathBuf {
 		env::var(name.as_str()).unwrap_or_else(|_| caps.get(0).unwrap().as_str().to_owned())
 	});
 
+	// Windows paths that only have a drive letter but no root, e.g. "D:"
+	#[cfg(windows)]
+	if s.len() == 2 {
+		let b = s.as_bytes();
+		if b[1] == b':' && b[0].is_ascii_alphabetic() {
+			return PathBuf::from(s.to_uppercase() + "\\");
+		}
+	}
+
 	let p = Path::new(s.as_ref());
 	if let Ok(rest) = p.strip_prefix("~") {
-		#[cfg(unix)]
-		let home = env::var_os("HOME");
-		#[cfg(windows)]
-		let home = env::var_os("USERPROFILE");
-
-		return if let Some(p) = home { PathBuf::from(p).join(rest) } else { rest.to_path_buf() };
+		return dirs::home_dir().unwrap_or_default().join(rest);
 	}
 
 	if p.is_absolute() {
@@ -67,7 +71,7 @@ pub async fn unique_path(mut p: Url) -> Url {
 		.unwrap_or_default();
 
 	let mut i = 0;
-	while accessible(&p).await {
+	while maybe_exists(&p).await {
 		i += 1;
 
 		let mut name = OsString::with_capacity(stem.len() + ext.len() + 5);

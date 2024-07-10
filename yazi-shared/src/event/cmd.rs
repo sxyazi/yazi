@@ -1,4 +1,7 @@
-use std::{any::Any, collections::HashMap, fmt::{self, Display}};
+use std::{any::Any, collections::HashMap, fmt::{self, Display}, mem, str::FromStr};
+
+use anyhow::bail;
+use serde::{de, Deserialize};
 
 use super::Data;
 
@@ -58,6 +61,11 @@ impl Cmd {
 	}
 
 	#[inline]
+	pub fn maybe_bool(&self, name: &str) -> Option<bool> {
+		self.args.get(name).and_then(Data::as_bool)
+	}
+
+	#[inline]
 	pub fn first(&self) -> Option<&Data> { self.args.get("0") }
 
 	// --- Take
@@ -110,5 +118,48 @@ impl Display for Cmd {
 			}
 		}
 		Ok(())
+	}
+}
+
+impl FromStr for Cmd {
+	type Err = anyhow::Error;
+
+	#[allow(clippy::explicit_counter_loop)]
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		let mut args = shell_words::split(s)?;
+		if args.is_empty() || args[0].is_empty() {
+			bail!("command name cannot be empty");
+		}
+
+		let mut cmd = Cmd { name: mem::take(&mut args[0]), ..Default::default() };
+		let mut i = 0usize;
+		for arg in args.into_iter().skip(1) {
+			let Some(arg) = arg.strip_prefix("--") else {
+				cmd.args.insert(i.to_string(), Data::String(arg));
+				i += 1;
+				continue;
+			};
+
+			let mut parts = arg.splitn(2, '=');
+			let Some(key) = parts.next().map(|s| s.to_owned()) else {
+				bail!("invalid argument: {arg}");
+			};
+
+			if let Some(val) = parts.next() {
+				cmd.args.insert(key, Data::String(val.to_owned()));
+			} else {
+				cmd.args.insert(key, Data::Boolean(true));
+			}
+		}
+		Ok(cmd)
+	}
+}
+
+impl<'de> Deserialize<'de> for Cmd {
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+	where
+		D: serde::Deserializer<'de>,
+	{
+		<_>::from_str(&String::deserialize(deserializer)?).map_err(de::Error::custom)
 	}
 }

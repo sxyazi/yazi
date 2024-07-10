@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use yazi_dds::Pubsub;
 use yazi_shared::{event::{Cmd, Data}, fs::Url, render};
 
 use crate::manager::Manager;
@@ -42,5 +43,8 @@ impl Manager {
 			}
 		}
 		self.watcher.watch(to_watch);
+
+		// Publish through DDS
+		Pubsub::pub_from_hover(self.active().idx, self.hovered().map(|h| &h.url));
 	}
 }

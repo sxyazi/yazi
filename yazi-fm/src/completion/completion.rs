@@ -1,6 +1,7 @@
 use std::path::MAIN_SEPARATOR;
 
 use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, List, ListItem, Widget}};
+use yazi_adapter::Dimension;
 use yazi_config::{popup::{Offset, Position}, THEME};
 
 use crate::Ctx;
@@ -40,7 +41,7 @@ impl<'a> Widget for Completion<'a> {
 			.collect();
 
 		let input_area = self.cx.area(&self.cx.input.position);
-		let mut area = Position::sticky(input_area, Offset {
+		let mut area = Position::sticky(Dimension::available(), input_area, Offset {
 			x:      1,
 			y:      0,
 			width:  input_area.width.saturating_sub(2),

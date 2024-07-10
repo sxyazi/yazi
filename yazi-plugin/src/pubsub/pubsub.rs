@@ -26,14 +26,6 @@ impl Pubsub {
 		)?;
 
 		ps.raw_set(
-			"pub_static",
-			lua.create_function(|_, (severity, kind, value): (u16, mlua::String, Value)| {
-				yazi_dds::Pubsub::pub_static(severity, Body::from_lua(kind.to_str()?, value)?);
-				Ok(())
-			})?,
-		)?;
-
-		ps.raw_set(
 			"sub",
 			lua.create_function(|lua, (kind, f): (mlua::String, Function)| {
 				let Some(ref cur) = lua.named_registry_value::<RtRef>("rt")?.current else {

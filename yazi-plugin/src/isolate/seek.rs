@@ -2,7 +2,7 @@ use mlua::TableExt;
 use yazi_config::LAYOUT;
 use yazi_shared::{emit, event::Cmd, Layer};
 
-use crate::{bindings::{Cast, File}, elements::Rect, Opt, OptCallback, LUA};
+use crate::{bindings::Cast, elements::Rect, file::File, Opt, OptCallback, LUA};
 
 pub fn seek_sync(cmd: &Cmd, file: yazi_shared::fs::File, units: i16) {
 	let cb: OptCallback = Box::new(move |_, plugin| {

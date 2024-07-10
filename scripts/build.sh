@@ -3,7 +3,6 @@ set -euo pipefail
 
 export ARTIFACT_NAME="yazi-$1"
 export YAZI_GEN_COMPLETIONS=1
-export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/aarch64-linux-gnu-gcc
 
 # Setup Rust toolchain
 if [[ "$1" == *-musl ]]; then

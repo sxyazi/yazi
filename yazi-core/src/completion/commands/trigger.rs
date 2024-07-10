@@ -1,4 +1,4 @@
-use std::{mem, path::{MAIN_SEPARATOR, MAIN_SEPARATOR_STR}};
+use std::{borrow::Cow, mem, path::{MAIN_SEPARATOR, MAIN_SEPARATOR_STR}};
 
 use tokio::fs;
 use yazi_shared::{emit, event::{Cmd, Data}, render, Layer};
@@ -33,7 +33,9 @@ impl Completion {
 		}
 
 		self.ticket = opt.ticket;
-		let (parent, child) = Self::split_path(&opt.word);
+		let Some((parent, child)) = Self::split_path(&opt.word) else {
+			return self.close(false);
+		};
 
 		if self.caches.contains_key(&parent) {
 			return self.show(
@@ -72,12 +74,24 @@ impl Completion {
 		render!(mem::replace(&mut self.visible, false));
 	}
 
-	#[inline]
-	fn split_path(s: &str) -> (String, String) {
-		match s.rsplit_once(SEPARATOR) {
-			Some((p, c)) => (format!("{p}{}", MAIN_SEPARATOR), c.to_owned()),
-			None => (".".to_owned(), s.to_owned()),
+	fn split_path(s: &str) -> Option<(String, String)> {
+		if s == "~" {
+			return None; // We don't autocomplete a `~`, but `~/`
 		}
+
+		let s = if let Some(rest) = s.strip_prefix("~") {
+			Cow::Owned(format!(
+				"{}{rest}",
+				dirs::home_dir().unwrap_or_default().to_string_lossy().trim_end_matches(SEPARATOR),
+			))
+		} else {
+			Cow::Borrowed(s)
+		};
+
+		Some(match s.rsplit_once(SEPARATOR) {
+			Some((p, c)) => (format!("{p}{}", MAIN_SEPARATOR), c.to_owned()),
+			None => (".".to_owned(), s.into_owned()),
+		})
 	}
 }
 
@@ -85,28 +99,32 @@ impl Completion {
 mod tests {
 	use super::*;
 
+	fn compare(s: &str, parent: &str, child: &str) -> bool {
+		matches!(Completion::split_path(s), Some((p, c)) if p == parent && c == child)
+	}
+
 	#[cfg(unix)]
 	#[test]
 	fn test_split() {
-		assert_eq!(Completion::split_path(""), (".".to_owned(), "".to_owned()));
-		assert_eq!(Completion::split_path(" "), (".".to_owned(), " ".to_owned()));
-		assert_eq!(Completion::split_path("/"), ("/".to_owned(), "".to_owned()));
-		assert_eq!(Completion::split_path("//"), ("//".to_owned(), "".to_owned()));
-		assert_eq!(Completion::split_path("/foo"), ("/".to_owned(), "foo".to_owned()));
-		assert_eq!(Completion::split_path("/foo/"), ("/foo/".to_owned(), "".to_owned()));
-		assert_eq!(Completion::split_path("/foo/bar"), ("/foo/".to_owned(), "bar".to_owned()));
+		assert!(compare("", ".", ""));
+		assert!(compare(" ", ".", " "));
+		assert!(compare("/", "/", ""));
+		assert!(compare("//", "//", ""));
+		assert!(compare("/foo", "/", "foo"));
+		assert!(compare("/foo/", "/foo/", ""));
+		assert!(compare("/foo/bar", "/foo/", "bar"));
 	}
 
 	#[cfg(windows)]
 	#[test]
 	fn test_split() {
-		assert_eq!(Completion::split_path("foo"), (".".to_owned(), "foo".to_owned()));
-		assert_eq!(Completion::split_path("foo\\"), ("foo\\".to_owned(), "".to_owned()));
-		assert_eq!(Completion::split_path("foo\\bar"), ("foo\\".to_owned(), "bar".to_owned()));
-		assert_eq!(Completion::split_path("foo\\bar\\"), ("foo\\bar\\".to_owned(), "".to_owned()));
-		assert_eq!(Completion::split_path("C:\\"), ("C:\\".to_owned(), "".to_owned()));
-		assert_eq!(Completion::split_path("C:\\foo"), ("C:\\".to_owned(), "foo".to_owned()));
-		assert_eq!(Completion::split_path("C:\\foo\\"), ("C:\\foo\\".to_owned(), "".to_owned()));
-		assert_eq!(Completion::split_path("C:\\foo\\bar"), ("C:\\foo\\".to_owned(), "bar".to_owned()));
+		assert!(compare("foo", ".", "foo"));
+		assert!(compare("foo\\", "foo\\", ""));
+		assert!(compare("foo\\bar", "foo\\", "bar"));
+		assert!(compare("foo\\bar\\", "foo\\bar\\", ""));
+		assert!(compare("C:\\", "C:\\", ""));
+		assert!(compare("C:\\foo", "C:\\", "foo"));
+		assert!(compare("C:\\foo\\", "C:\\foo\\", ""));
+		assert!(compare("C:\\foo\\bar", "C:\\foo\\", "bar"));
 	}
 }

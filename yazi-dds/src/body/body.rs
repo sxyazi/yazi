@@ -32,7 +32,7 @@ impl Body<'static> {
 			"hover" => Self::Hover(serde_json::from_str(body)?),
 			"rename" => Self::Rename(serde_json::from_str(body)?),
 			"bulk" => Self::Bulk(serde_json::from_str(body)?),
-			"yank" => Self::Yank(serde_json::from_str(body)?),
+			"@yank" => Self::Yank(serde_json::from_str(body)?),
 			"move" => Self::Move(serde_json::from_str(body)?),
 			"trash" => Self::Trash(serde_json::from_str(body)?),
 			"delete" => Self::Delete(serde_json::from_str(body)?),
@@ -45,36 +45,29 @@ impl Body<'static> {
 		BodyCustom::from_lua(kind, value)
 	}
 
-	pub fn tab(kind: &str, body: &str) -> usize {
-		match kind {
-			"cd" | "hover" | "bulk" | "rename" => {}
-			_ => return 0,
-		}
-
-		match Self::from_str(kind, body) {
-			Ok(Self::Cd(b)) => b.tab,
-			Ok(Self::Hover(b)) => b.tab,
-			Ok(Self::Bulk(b)) => b.tab,
-			Ok(Self::Rename(b)) => b.tab,
-			_ => 0,
-		}
-	}
-
 	pub fn validate(kind: &str) -> Result<()> {
 		if matches!(
 			kind,
 			"hi"
-				| "hey" | "bye"
-				| "cd" | "hover"
+				| "hey"
+				| "bye"
+				| "cd"
+				| "hover"
 				| "rename"
-				| "bulk" | "yank"
-				| "move" | "trash"
+				| "bulk"
+				| "@yank"
+				| "move"
+				| "trash"
 				| "delete"
 		) {
 			bail!("Cannot construct system event");
 		}
 
-		if !kind.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-') {
+		let mut it = kind.bytes().peekable();
+		if it.peek() == Some(&b'@') {
+			it.next(); // Skip `@` as it's a prefix for static messages
+		}
+		if !it.all(|b| b.is_ascii_alphanumeric() || b == b'-') {
 			bail!("Kind must be alphanumeric with dashes");
 		}
 
@@ -93,7 +86,7 @@ impl<'a> Body<'a> {
 			Self::Hover(_) => "hover",
 			Self::Rename(_) => "rename",
 			Self::Bulk(_) => "bulk",
-			Self::Yank(_) => "yank",
+			Self::Yank(_) => "@yank",
 			Self::Move(_) => "move",
 			Self::Trash(_) => "trash",
 			Self::Delete(_) => "delete",
@@ -108,11 +101,6 @@ impl<'a> Body<'a> {
 
 	#[inline]
 	pub fn with_sender(self, sender: u64) -> Payload<'a> { Payload::new(self).with_sender(sender) }
-
-	#[inline]
-	pub fn with_severity(self, severity: u16) -> Payload<'a> {
-		Payload::new(self).with_severity(severity)
-	}
 }
 
 impl IntoLua<'_> for Body<'static> {

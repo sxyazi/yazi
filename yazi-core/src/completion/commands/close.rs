@@ -10,6 +10,9 @@ pub struct Opt {
 impl From<Cmd> for Opt {
 	fn from(c: Cmd) -> Self { Self { submit: c.bool("submit") } }
 }
+impl From<bool> for Opt {
+	fn from(submit: bool) -> Self { Self { submit } }
+}
 
 impl Completion {
 	pub fn close(&mut self, opt: impl Into<Opt>) {

@@ -6,7 +6,6 @@
 	clippy::unit_arg
 )]
 
-mod clipboard;
 pub mod completion;
 pub mod folder;
 pub mod help;
@@ -19,12 +18,9 @@ pub mod tab;
 pub mod tasks;
 pub mod which;
 
-pub use clipboard::*;
 pub use step::*;
 
 pub fn init() {
-	CLIPBOARD.with(Default::default);
-
 	manager::WATCHED.with(Default::default);
 	manager::LINKED.with(Default::default);
 }

@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use mlua::{AnyUserData, IntoLua, Lua, UserDataFields, UserDataMethods};
 use yazi_config::THEME;
-use yazi_plugin::{bindings::{Cast, Cha, Icon, Range}, elements::Style, url::Url};
+use yazi_plugin::{bindings::Range, elements::Style};
 use yazi_shared::MIME_DIR;
 
 use super::{CtxRef, SCOPE};
@@ -19,6 +19,10 @@ impl Deref for File {
 	fn deref(&self) -> &Self::Target { &self.folder().files[self.idx] }
 }
 
+impl AsRef<yazi_shared::fs::File> for File {
+	fn as_ref(&self) -> &yazi_shared::fs::File { self }
+}
+
 impl File {
 	#[inline]
 	pub(super) fn make(
@@ -31,16 +35,9 @@ impl File {
 
 	pub(super) fn register(lua: &Lua) -> mlua::Result<()> {
 		lua.register_userdata_type::<Self>(|reg| {
-			reg.add_field_method_get("idx", |_, me| Ok(me.idx + 1));
-			reg.add_field_method_get("url", |lua, me| Url::cast(lua, me.url.clone()));
-			reg.add_field_method_get("cha", |lua, me| Cha::cast(lua, me.cha));
-			reg.add_field_method_get("link_to", |lua, me| {
-				me.link_to.as_ref().cloned().map(|u| Url::cast(lua, u)).transpose()
-			});
+			yazi_plugin::file::File::register_with(reg);
 
-			reg.add_field_method_get("name", |lua, me| {
-				me.url.file_name().map(|n| lua.create_string(n.as_encoded_bytes())).transpose()
-			});
+			reg.add_field_method_get("idx", |_, me| Ok(me.idx + 1));
 			reg.add_method("size", |_, me, ()| {
 				Ok(if me.is_dir() { me.folder().files.sizes.get(&me.url).copied() } else { Some(me.len) })
 			});
@@ -56,19 +53,6 @@ impl File {
 				let mut p = me.url.strip_prefix(&me.folder().cwd).unwrap_or(&me.url).components();
 				p.next_back();
 				Some(lua.create_string(p.as_path().as_os_str().as_encoded_bytes())).transpose()
-			});
-			reg.add_method("icon", |lua, me, ()| {
-				use yazi_shared::theme::IconCache;
-
-				match me.icon.get() {
-					IconCache::Missing => {
-						let matched = THEME.icons.iter().find(|&i| i.matches(me));
-						me.icon.set(matched.map_or(IconCache::Undefined, |i| IconCache::Icon(i)));
-						matched.map(|i| Icon::cast(lua, i)).transpose()
-					}
-					IconCache::Undefined => Ok(None),
-					IconCache::Icon(cached) => Some(Icon::cast(lua, cached)).transpose(),
-				}
 			});
 			reg.add_method("style", |lua, me, ()| {
 				let cx = lua.named_registry_value::<CtxRef>("cx")?;

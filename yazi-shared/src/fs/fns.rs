@@ -1,14 +1,160 @@
-use std::{collections::VecDeque, fs::Metadata, path::{Path, PathBuf}};
+use std::{borrow::Cow, collections::{HashMap, VecDeque}, ffi::{OsStr, OsString}, fs::Metadata, path::{Path, PathBuf}};
 
-use anyhow::Result;
-use filetime::{set_file_mtime, FileTime};
+use anyhow::{bail, Result};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
 
-pub async fn accessible(path: &Path) -> bool {
-	match fs::symlink_metadata(path).await {
+#[inline]
+pub async fn must_exists(p: impl AsRef<Path>) -> bool { fs::symlink_metadata(p).await.is_ok() }
+
+#[inline]
+pub async fn maybe_exists(p: impl AsRef<Path>) -> bool {
+	match fs::symlink_metadata(p).await {
 		Ok(_) => true,
 		Err(e) => e.kind() != io::ErrorKind::NotFound,
 	}
+}
+
+#[inline]
+pub fn ok_or_not_found(result: io::Result<()>) -> io::Result<()> {
+	match result {
+		Ok(()) => Ok(()),
+		Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(()),
+		Err(_) => result,
+	}
+}
+
+#[inline]
+pub async fn paths_to_same_file(a: impl AsRef<Path>, b: impl AsRef<Path>) -> bool {
+	_paths_to_same_file(a.as_ref(), b.as_ref()).await.unwrap_or(false)
+}
+
+#[cfg(unix)]
+async fn _paths_to_same_file(a: &Path, b: &Path) -> io::Result<bool> {
+	use std::os::unix::fs::MetadataExt;
+
+	let (a_, b_) = (fs::symlink_metadata(a).await?, fs::symlink_metadata(b).await?);
+	Ok(
+		a_.ino() == b_.ino()
+			&& a_.dev() == b_.dev()
+			&& fs::canonicalize(a).await? == fs::canonicalize(b).await?,
+	)
+}
+
+#[cfg(windows)]
+async fn _paths_to_same_file(a: &Path, b: &Path) -> std::io::Result<bool> {
+	use std::os::windows::{ffi::OsStringExt, io::AsRawHandle};
+
+	use windows_sys::Win32::{Foundation::{HANDLE, MAX_PATH}, Storage::FileSystem::{GetFinalPathNameByHandleW, FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, VOLUME_NAME_DOS}};
+
+	async fn final_name(p: &Path) -> std::io::Result<PathBuf> {
+		let file = tokio::fs::OpenOptions::new()
+			.access_mode(0)
+			.custom_flags(FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT)
+			.open(p)
+			.await?;
+
+		tokio::task::spawn_blocking(move || {
+			let mut buf = [0u16; MAX_PATH as usize];
+			let len = unsafe {
+				GetFinalPathNameByHandleW(
+					file.as_raw_handle() as HANDLE,
+					buf.as_mut_ptr(),
+					buf.len() as u32,
+					VOLUME_NAME_DOS,
+				)
+			};
+
+			if len == 0 {
+				Err(std::io::Error::last_os_error())
+			} else {
+				Ok(PathBuf::from(OsString::from_wide(&buf[0..len as usize])))
+			}
+		})
+		.await?
+	}
+
+	Ok(final_name(a).await? == final_name(b).await?)
+}
+
+pub async fn symlink_realpath(path: &Path) -> Result<PathBuf> {
+	let p = fs::canonicalize(path).await?;
+	if p == path {
+		return Ok(p);
+	}
+
+	let Some(parent) = path.parent() else { bail!("no parent") };
+	symlink_realname(path, &mut HashMap::new()).await.map(|n| parent.join(n))
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn test_symlink_realpath() {
+	fs::remove_dir_all("/tmp/issue-1173").await.ok();
+	fs::create_dir_all("/tmp/issue-1173/real-dir").await.unwrap();
+	fs::File::create("/tmp/issue-1173/A").await.unwrap();
+	fs::File::create("/tmp/issue-1173/b").await.unwrap();
+	fs::File::create("/tmp/issue-1173/real-dir/C").await.unwrap();
+	fs::symlink("/tmp/issue-1173/b", "/tmp/issue-1173/D").await.unwrap();
+	fs::symlink("real-dir", "/tmp/issue-1173/link-dir").await.unwrap();
+
+	async fn check(a: &str, b: &str) {
+		let expected = if a == b || cfg!(windows) || cfg!(target_os = "macos") {
+			Some(PathBuf::from(b))
+		} else {
+			None
+		};
+		assert_eq!(symlink_realpath(Path::new(a)).await.ok(), expected);
+	}
+
+	check("/tmp/issue-1173/a", "/tmp/issue-1173/A").await;
+	check("/tmp/issue-1173/A", "/tmp/issue-1173/A").await;
+
+	check("/tmp/issue-1173/b", "/tmp/issue-1173/b").await;
+	check("/tmp/issue-1173/B", "/tmp/issue-1173/b").await;
+
+	check("/tmp/issue-1173/link-dir/c", "/tmp/issue-1173/link-dir/C").await;
+	check("/tmp/issue-1173/link-dir/C", "/tmp/issue-1173/link-dir/C").await;
+
+	check("/tmp/issue-1173/d", "/tmp/issue-1173/D").await;
+	check("/tmp/issue-1173/D", "/tmp/issue-1173/D").await;
+}
+
+// realpath(3) without resolving symlinks. This is useful for case-insensitive
+// filesystems.
+//
+// Make sure the file of the path exists.
+pub async fn symlink_realname<'a>(
+	path: &'a Path,
+	cached: &'a mut HashMap<PathBuf, HashMap<OsString, OsString>>,
+) -> Result<Cow<'a, OsStr>> {
+	let Some(name) = path.file_name() else { bail!("no file name") };
+	let Some(parent) = path.parent() else { return Ok(name.into()) };
+
+	if !cached.contains_key(parent) {
+		let mut map = HashMap::new();
+		let mut it = fs::read_dir(parent).await?;
+		while let Some(entry) = it.next_entry().await? {
+			let n = entry.file_name();
+			if n.as_encoded_bytes().iter().all(|&b| b.is_ascii_lowercase()) {
+				map.insert(n, OsString::new());
+			} else {
+				map.insert(n.to_ascii_lowercase(), n);
+			}
+		}
+		cached.insert(parent.to_owned(), map);
+	}
+
+	let c = &cached[parent];
+	if let Some(s) = c.get(name) {
+		return if s.is_empty() { Ok(name.into()) } else { Ok(s.into()) };
+	}
+
+	let lowercased = name.to_ascii_lowercase();
+	if let Some(s) = c.get(&lowercased) {
+		return if s.is_empty() { Ok(lowercased.into()) } else { Ok(s.into()) };
+	}
+
+	Ok(name.into())
 }
 
 pub async fn calculate_size(path: &Path) -> u64 {
@@ -45,12 +191,28 @@ pub fn copy_with_progress(
 
 	tokio::spawn({
 		let (from, to) = (from.to_owned(), to.to_owned());
-		let mtime = FileTime::from_last_modification_time(meta);
+
+		let mut ft = std::fs::FileTimes::new();
+		meta.accessed().map(|t| ft = ft.set_accessed(t)).ok();
+		meta.modified().map(|t| ft = ft.set_modified(t)).ok();
+		#[cfg(target_os = "macos")]
+		{
+			use std::os::macos::fs::FileTimesExt;
+			meta.created().map(|t| ft = ft.set_created(t)).ok();
+		}
+		#[cfg(windows)]
+		{
+			use std::os::windows::fs::FileTimesExt;
+			meta.created().map(|t| ft = ft.set_created(t)).ok();
+		}
 
 		async move {
 			_ = match fs::copy(&from, &to).await {
 				Ok(len) => {
-					set_file_mtime(to, mtime).ok();
+					_ = tokio::task::spawn_blocking(move || {
+						std::fs::File::options().write(true).open(to).and_then(|f| f.set_times(ft)).ok();
+					})
+					.await;
 					tick_tx.send(Ok(len))
 				}
 				Err(e) => tick_tx.send(Err(e)),

@@ -2,7 +2,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use mlua::{Lua, Table, UserData};
 use ratatui::layout::Rect;
-use yazi_adaptor::ADAPTOR;
+use yazi_adapter::ADAPTOR;
 
 use super::{RectRef, Renderable};
 

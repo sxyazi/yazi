@@ -4,23 +4,8 @@ use super::Utils;
 
 impl Utils {
 	pub(super) fn target(lua: &Lua, ya: &Table) -> mlua::Result<()> {
-		ya.raw_set(
-			"target_family",
-			lua.create_function(|_, ()| {
-				#[cfg(unix)]
-				{
-					Ok("unix")
-				}
-				#[cfg(windows)]
-				{
-					Ok("windows")
-				}
-				#[cfg(wasm)]
-				{
-					Ok("wasm")
-				}
-			})?,
-		)?;
+		ya.raw_set("target_os", lua.create_function(|_, ()| Ok(std::env::consts::OS))?)?;
+		ya.raw_set("target_family", lua.create_function(|_, ()| Ok(std::env::consts::FAMILY))?)?;
 
 		Ok(())
 	}

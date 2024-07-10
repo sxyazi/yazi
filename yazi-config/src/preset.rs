@@ -1,4 +1,4 @@
-use std::{mem, path::{Path, PathBuf}};
+use std::{borrow::Cow, mem, path::{Path, PathBuf}};
 
 use anyhow::{anyhow, Context, Result};
 use toml::{Table, Value};
@@ -8,17 +8,17 @@ use crate::theme::Flavor;
 pub(crate) struct Preset;
 
 impl Preset {
-	pub(crate) fn yazi(p: &Path) -> Result<String> {
+	pub(crate) fn yazi(p: &Path) -> Result<Cow<str>> {
 		Self::merge_path(p.join("yazi.toml"), include_str!("../preset/yazi.toml"))
 	}
 
-	pub(crate) fn keymap(p: &Path) -> Result<String> {
+	pub(crate) fn keymap(p: &Path) -> Result<Cow<str>> {
 		Self::merge_path(p.join("keymap.toml"), include_str!("../preset/keymap.toml"))
 	}
 
-	pub(crate) fn theme(p: &Path) -> Result<String> {
+	pub(crate) fn theme(p: &Path) -> Result<Cow<str>> {
 		let Ok(user) = std::fs::read_to_string(p.join("theme.toml")) else {
-			return Ok(include_str!("../preset/theme.toml").to_owned());
+			return Ok(include_str!("../preset/theme.toml").into());
 		};
 		let Some(use_) = Flavor::parse_use(&user) else {
 			return Self::merge_str(&user, include_str!("../preset/theme.toml"));
@@ -37,18 +37,18 @@ impl Preset {
 	}
 
 	#[inline]
-	pub(crate) fn merge_str(user: &str, base: &str) -> Result<String> {
+	pub(crate) fn merge_str(user: &str, base: &str) -> Result<Cow<'static, str>> {
 		let mut t = user.parse()?;
 		Self::merge(&mut t, base.parse()?, 2);
 
-		Ok(t.to_string())
+		Ok(t.to_string().into())
 	}
 
 	#[inline]
-	fn merge_path(user: PathBuf, base: &str) -> Result<String> {
+	fn merge_path(user: PathBuf, base: &str) -> Result<Cow<str>> {
 		let s = std::fs::read_to_string(&user).unwrap_or_default();
 		if s.is_empty() {
-			return Ok(base.to_string());
+			return Ok(base.into());
 		}
 
 		Self::merge_str(&s, base).with_context(|| anyhow!("Loading {user:?}"))

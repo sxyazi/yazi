@@ -12,13 +12,13 @@ repository  = "https://github.com/sxyazi/yazi"
 yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
-anyhow      = "1.0.82"
+anyhow      = "1.0.86"
 arc-swap    = "1.7.1"
+bitflags    = "2.5.0"
 crossterm   = "0.27.0"
 globset     = "0.4.14"
 indexmap    = "2.2.6"
-ratatui     = "=0.26.1"
-serde       = { version = "1.0.198", features = [ "derive" ] }
-shell-words = "1.1.0"
-toml        = { version = "0.8.12", features = [ "preserve_order" ] }
+ratatui     = "0.27.0"
+serde       = { version = "1.0.203", features = [ "derive" ] }
+toml        = { version = "0.8.14", features = [ "preserve_order" ] }
 validator   = { version = "0.18.1", features = [ "derive" ] }

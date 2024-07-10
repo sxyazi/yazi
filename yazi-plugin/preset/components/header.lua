@@ -3,11 +3,22 @@ Header = {
 }
 
 function Header:cwd(max)
-	local cwd = cx.active.current.cwd
-	local readable = ya.readable_path(tostring(cwd))
+	local s = ya.readable_path(tostring(cx.active.current.cwd)) .. self:flags()
+	return ui.Span(ya.truncate(s, { max = max, rtl = true })):style(THEME.manager.cwd)
+end
 
-	local text = cwd.is_search and string.format("%s (search: %s)", readable, cwd:frag()) or readable
-	return ui.Span(ya.truncate(text, { max = max, rtl = true })):style(THEME.manager.cwd)
+function Header:flags()
+	local cwd = cx.active.current.cwd
+	local filter = cx.active.current.files.filter
+
+	local s = cwd.is_search and string.format(" (search: %s", cwd:frag()) or ""
+	if not filter then
+		return s == "" and s or s .. ")"
+	elseif s == "" then
+		return string.format(" (filter: %s)", tostring(filter))
+	else
+		return string.format("%s, filter: %s)", s, tostring(filter))
+	end
 end
 
 function Header:count()
@@ -56,26 +67,6 @@ function Header:tabs()
 	return ui.Line(spans)
 end
 
--- TODO: remove this function after v0.2.5 release
-function Header:layout(area)
-	if not ya.deprecated_header_layout then
-		ya.deprecated_header_layout = true
-		ya.notify {
-			title = "Deprecated API",
-			content = "`Header:layout()` is deprecated, please apply the latest `Header:render()` in your `init.lua`",
-			timeout = 5,
-			level = "warn",
-		}
-	end
-
-	self.area = area
-
-	return ui.Layout()
-		:direction(ui.Layout.HORIZONTAL)
-		:constraints({ ui.Constraint.Percentage(50), ui.Constraint.Percentage(50) })
-		:split(area)
-end
-
 function Header:render(area)
 	self.area = area
 
@@ -86,3 +77,9 @@ function Header:render(area)
 		ui.Paragraph(area, { right }):align(ui.Paragraph.RIGHT),
 	}
 end
+
+function Header:click(event, up) end
+
+function Header:scroll(event, step) end
+
+function Header:touch(event, step) end

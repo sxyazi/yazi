@@ -1,6 +1,7 @@
-use std::{collections::HashSet, env, ffi::OsString, fmt::Write, path::{Path, PathBuf}, process};
+use std::{collections::HashSet, env, ffi::{OsStr, OsString}, fmt::Write, path::{Path, PathBuf}, process};
 
 use clap::Parser;
+use regex::Regex;
 use serde::Serialize;
 use yazi_config::PREVIEW;
 use yazi_shared::{fs::{current_cwd, expand_path}, Xdg};
@@ -37,6 +38,22 @@ impl Boot {
 		(parent.unwrap().to_owned(), Some(entry.file_name().unwrap().to_owned()))
 	}
 
+	fn process_output(name: impl AsRef<OsStr>, arg: impl AsRef<OsStr>) -> String {
+		match std::process::Command::new(name.as_ref()).arg(arg).output() {
+			Ok(out) if out.status.success() => {
+				let line =
+					String::from_utf8_lossy(&out.stdout).trim().lines().next().unwrap_or_default().to_owned();
+				Regex::new(r"\d+\.\d+(\.\d+-\d+|\.\d+|\b)")
+					.unwrap()
+					.find(&line)
+					.map(|m| m.as_str().to_owned())
+					.unwrap_or(line)
+			}
+			Ok(out) => format!("{:?}, {:?}", out.status, String::from_utf8_lossy(&out.stderr)),
+			Err(e) => format!("{e}"),
+		}
+	}
+
 	fn action_version() -> String {
 		format!(
 			"{} ({} {})",
@@ -47,26 +64,29 @@ impl Boot {
 	}
 
 	fn action_debug() -> Result<String, std::fmt::Error> {
-		use std::{env::consts::{ARCH, FAMILY, OS}, process::Command};
+		use std::env::consts::{ARCH, FAMILY, OS};
 		let mut s = String::new();
 
 		writeln!(s, "\nYazi")?;
 		writeln!(s, "    Version: {}", Self::action_version())?;
-		writeln!(s, "    OS: {}-{} ({})", OS, ARCH, FAMILY)?;
-		writeln!(s, "    Debug: {}", cfg!(debug_assertions))?;
+		writeln!(s, "    Debug  : {}", cfg!(debug_assertions))?;
+		writeln!(s, "    OS     : {}-{} ({})", OS, ARCH, FAMILY)?;
+
+		writeln!(s, "\nYa")?;
+		writeln!(s, "    Version: {}", Self::process_output("ya", "--version"))?;
 
 		writeln!(s, "\nEmulator")?;
-		writeln!(s, "    Emulator.via_env: {:?}", yazi_adaptor::Emulator::via_env())?;
-		writeln!(s, "    Emulator.via_csi: {:?}", yazi_adaptor::Emulator::via_csi())?;
-		writeln!(s, "    Emulator.detect: {:?}", yazi_adaptor::Emulator::detect())?;
+		writeln!(s, "    Emulator.via_env: {:?}", yazi_adapter::Emulator::via_env())?;
+		writeln!(s, "    Emulator.via_csi: {:?}", yazi_adapter::Emulator::via_csi())?;
+		writeln!(s, "    Emulator.detect : {:?}", yazi_adapter::Emulator::detect())?;
 
-		writeln!(s, "\nAdaptor")?;
-		writeln!(s, "    Adaptor.matches: {:?}", yazi_adaptor::Adaptor::matches())?;
+		writeln!(s, "\nAdapter")?;
+		writeln!(s, "    Adapter.matches: {:?}", yazi_adapter::Adapter::matches())?;
 
 		writeln!(s, "\nDesktop")?;
 		writeln!(s, "    XDG_SESSION_TYPE: {:?}", env::var_os("XDG_SESSION_TYPE"))?;
-		writeln!(s, "    WAYLAND_DISPLAY: {:?}", env::var_os("WAYLAND_DISPLAY"))?;
-		writeln!(s, "    DISPLAY: {:?}", env::var_os("DISPLAY"))?;
+		writeln!(s, "    WAYLAND_DISPLAY : {:?}", env::var_os("WAYLAND_DISPLAY"))?;
+		writeln!(s, "    DISPLAY         : {:?}", env::var_os("DISPLAY"))?;
 
 		writeln!(s, "\nSSH")?;
 		writeln!(s, "    shared.in_ssh_connection: {:?}", yazi_shared::in_ssh_connection())?;
@@ -79,18 +99,11 @@ impl Boot {
 		)?;
 
 		writeln!(s, "\nVariables")?;
-		writeln!(s, "    SHELL: {:?}", env::var_os("SHELL"))?;
-		writeln!(s, "    EDITOR: {:?}", env::var_os("EDITOR"))?;
+		writeln!(s, "    SHELL              : {:?}", env::var_os("SHELL"))?;
+		writeln!(s, "    EDITOR             : {:?}", env::var_os("EDITOR"))?;
 		writeln!(s, "    ZELLIJ_SESSION_NAME: {:?}", env::var_os("ZELLIJ_SESSION_NAME"))?;
-		writeln!(s, "    YAZI_FILE_ONE: {:?}", env::var_os("YAZI_FILE_ONE"))?;
-		writeln!(s, "    YAZI_CONFIG_HOME: {:?}", env::var_os("YAZI_CONFIG_HOME"))?;
-
-		writeln!(s, "\nfile(1)")?;
-		writeln!(
-			s,
-			"    Version: {:?}",
-			Command::new(env::var_os("YAZI_FILE_ONE").unwrap_or("file".into())).arg("--version").output()
-		)?;
+		writeln!(s, "    YAZI_FILE_ONE      : {:?}", env::var_os("YAZI_FILE_ONE"))?;
+		writeln!(s, "    YAZI_CONFIG_HOME   : {:?}", env::var_os("YAZI_CONFIG_HOME"))?;
 
 		writeln!(s, "\nText Opener")?;
 		writeln!(
@@ -98,13 +111,28 @@ impl Boot {
 			"    default: {:?}",
 			yazi_config::OPEN.openers("f75a.txt", "text/plain").and_then(|a| a.first().cloned())
 		)?;
-		writeln!(s, "    block: {:?}", yazi_config::OPEN.block_opener("bulk.txt", "text/plain"))?;
+		writeln!(s, "    block  : {:?}", yazi_config::OPEN.block_opener("bulk.txt", "text/plain"))?;
 
 		writeln!(s, "\ntmux")?;
-		writeln!(s, "    TMUX: {:?}", *yazi_adaptor::TMUX)?;
+		writeln!(s, "    TMUX   : {:?}", *yazi_adapter::TMUX)?;
+		writeln!(s, "    Version: {}", Self::process_output("tmux", "-V"))?;
 
-		writeln!(s, "\nUeberzug++")?;
-		writeln!(s, "    Version: {:?}", Command::new("ueberzugpp").arg("--version").output())?;
+		writeln!(s, "\nDependencies")?;
+		writeln!(
+			s,
+			"    file             : {}",
+			Self::process_output(env::var_os("YAZI_FILE_ONE").unwrap_or("file".into()), "--version")
+		)?;
+		writeln!(s, "    ueberzugpp       : {}", Self::process_output("ueberzugpp", "--version"))?;
+		writeln!(s, "    ffmpegthumbnailer: {}", Self::process_output("ffmpegthumbnailer", "-v"))?;
+		writeln!(s, "    magick           : {}", Self::process_output("magick", "--version"))?;
+		writeln!(s, "    fzf              : {}", Self::process_output("fzf", "--version"))?;
+		writeln!(s, "    fd               : {}", Self::process_output("fd", "--version"))?;
+		writeln!(s, "    rg               : {}", Self::process_output("rg", "--version"))?;
+		writeln!(s, "    chafa            : {}", Self::process_output("chafa", "--version"))?;
+		writeln!(s, "    zoxide           : {}", Self::process_output("zoxide", "--version"))?;
+		writeln!(s, "    unar             : {}", Self::process_output("unar", "--version"))?;
+		writeln!(s, "    jq               : {}", Self::process_output("jq", "--version"))?;
 
 		writeln!(s, "\n\n--------------------------------------------------")?;
 		writeln!(
@@ -145,7 +173,7 @@ impl Default for Boot {
 			.map(|s| s.split(',').map(|s| s.to_owned()).collect())
 			.unwrap_or_default();
 
-		let boot = Self {
+		Self {
 			cwd,
 			file,
 
@@ -156,11 +184,7 @@ impl Default for Boot {
 			plugin_dir: config_dir.join("plugins"),
 			config_dir,
 			state_dir: Xdg::state_dir(),
-		};
-
-		std::fs::create_dir_all(&boot.flavor_dir).ok();
-		std::fs::create_dir_all(&boot.plugin_dir).ok();
-		boot
+		}
 	}
 }
 

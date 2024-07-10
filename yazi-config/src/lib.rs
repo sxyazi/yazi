@@ -1,8 +1,9 @@
 #![allow(clippy::module_inception)]
 
+use std::str::FromStr;
+
 use yazi_shared::{RoCell, Xdg};
 
-pub mod headsup;
 pub mod keymap;
 mod layout;
 mod log;
@@ -16,7 +17,6 @@ pub mod preview;
 mod priority;
 mod tasks;
 pub mod theme;
-mod validation;
 pub mod which;
 
 pub use layout::*;
@@ -24,17 +24,8 @@ pub(crate) use pattern::*;
 pub(crate) use preset::*;
 pub use priority::*;
 
-// TODO: remove this once Yazi 0.3 is released --
-pub static DEPRECATED_EXEC: std::sync::atomic::AtomicBool =
-	std::sync::atomic::AtomicBool::new(false);
-
-static MERGED_YAZI: RoCell<String> = RoCell::new();
-static MERGED_KEYMAP: RoCell<String> = RoCell::new();
-static MERGED_THEME: RoCell<String> = RoCell::new();
-
 pub static LAYOUT: RoCell<arc_swap::ArcSwap<Layout>> = RoCell::new();
 
-pub static HEADSUP: RoCell<headsup::Headsup> = RoCell::new();
 pub static KEYMAP: RoCell<keymap::Keymap> = RoCell::new();
 pub static LOG: RoCell<log::Log> = RoCell::new();
 pub static MANAGER: RoCell<manager::Manager> = RoCell::new();
@@ -49,37 +40,37 @@ pub static WHICH: RoCell<which::Which> = RoCell::new();
 
 pub fn init() -> anyhow::Result<()> {
 	let config_dir = Xdg::config_dir();
-	MERGED_YAZI.init(Preset::yazi(&config_dir)?);
-	MERGED_KEYMAP.init(Preset::keymap(&config_dir)?);
-	MERGED_THEME.init(Preset::theme(&config_dir)?);
+	let yazi_toml = &Preset::yazi(&config_dir)?;
+	let keymap_toml = &Preset::keymap(&config_dir)?;
+	let theme_toml = &Preset::theme(&config_dir)?;
 
 	LAYOUT.with(Default::default);
 
-	HEADSUP.with(Default::default);
-	KEYMAP.with(Default::default);
-	LOG.with(Default::default);
-	MANAGER.with(Default::default);
-	OPEN.with(Default::default);
-	PLUGIN.with(Default::default);
-	PREVIEW.with(Default::default);
-	TASKS.with(Default::default);
-	THEME.with(Default::default);
-	INPUT.with(Default::default);
-	SELECT.with(Default::default);
-	WHICH.with(Default::default);
+	KEYMAP.init(<_>::from_str(keymap_toml)?);
+	LOG.init(<_>::from_str(yazi_toml)?);
+	MANAGER.init(<_>::from_str(yazi_toml)?);
+	OPEN.init(<_>::from_str(yazi_toml)?);
+	PLUGIN.init(<_>::from_str(yazi_toml)?);
+	PREVIEW.init(<_>::from_str(yazi_toml)?);
+	TASKS.init(<_>::from_str(yazi_toml)?);
+	THEME.init(<_>::from_str(theme_toml)?);
+	INPUT.init(<_>::from_str(yazi_toml)?);
+	SELECT.init(<_>::from_str(yazi_toml)?);
+	WHICH.init(<_>::from_str(yazi_toml)?);
 
-	// TODO: remove this once Yazi 0.3 is released --
-	if !HEADSUP.disable_exec_warn && DEPRECATED_EXEC.load(std::sync::atomic::Ordering::Relaxed) {
-		eprintln!(
-			r#"
-WARNING: `exec` will be deprecated in the next major version v0.3 and replaced by `run`.
+	// TODO: Remove in v0.3.2
+	for c in &KEYMAP.manager {
+		for r in &c.run {
+			if r.name == "shell" && !r.bool("confirm") && !r.bool("interactive") {
+				eprintln!(
+					r#"WARNING: In Yazi v0.3, the behavior of the interactive `shell` (i.e., shell templates) must be explicitly specified with `--interactive`.
 
-Please replace all `exec = ...` with `run = ...`, in your `yazi.toml` and `keymap.toml`.
-
----
-Add `disable_exec_warn = true` to your `yazi.toml` under `[headsup]` to suppress this warning.
-"#
-		);
+Please replace e.g. `shell` with `shell --interactive`, `shell "my-template"` with `shell "my-template" --interactive`, in your keymap.toml"#
+				);
+				return Ok(());
+			}
+		}
 	}
+
 	Ok(())
 }

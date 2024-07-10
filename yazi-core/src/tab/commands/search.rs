@@ -5,7 +5,7 @@ use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
 use yazi_plugin::external;
-use yazi_proxy::{InputProxy, ManagerProxy, TabProxy};
+use yazi_proxy::{AppProxy, InputProxy, ManagerProxy, TabProxy};
 use yazi_shared::{event::Cmd, fs::FilesOp, render};
 
 use crate::tab::Tab;
@@ -39,15 +39,26 @@ impl Display for OptType {
 
 pub struct Opt {
 	pub type_: OptType,
+	pub args:  Vec<String>,
 }
 
-impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self { Self { type_: c.take_first_str().unwrap_or_default().into() } }
+impl TryFrom<Cmd> for Opt {
+	type Error = ();
+
+	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
+		Ok(Self {
+			type_: c.take_first_str().unwrap_or_default().into(),
+			args:  shell_words::split(c.str("args").unwrap_or_default()).map_err(|_| ())?,
+		})
+	}
 }
 
 impl Tab {
-	pub fn search(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
+	pub fn search(&mut self, opt: impl TryInto<Opt>) {
+		let Ok(opt) = opt.try_into() else {
+			return AppProxy::notify_error("Invalid `search` option", "Failed to parse search option");
+		};
+
 		if opt.type_ == OptType::None {
 			return self.search_stop();
 		}
@@ -65,9 +76,9 @@ impl Tab {
 
 			cwd = cwd.into_search(subject.clone());
 			let rx = if opt.type_ == OptType::Rg {
-				external::rg(external::RgOpt { cwd: cwd.clone(), hidden, subject })
+				external::rg(external::RgOpt { cwd: cwd.clone(), hidden, subject, args: opt.args })
 			} else {
-				external::fd(external::FdOpt { cwd: cwd.clone(), hidden, glob: false, subject })
+				external::fd(external::FdOpt { cwd: cwd.clone(), hidden, subject, args: opt.args })
 			}?;
 
 			let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(300));

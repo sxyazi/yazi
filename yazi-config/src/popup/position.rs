@@ -1,6 +1,5 @@
 use crossterm::terminal::WindowSize;
 use ratatui::layout::Rect;
-use yazi_shared::term::Term;
 
 use super::{Offset, Origin};
 
@@ -14,10 +13,9 @@ impl Position {
 	#[inline]
 	pub fn new(origin: Origin, offset: Offset) -> Self { Self { origin, offset } }
 
-	pub fn rect(&self) -> Rect {
+	pub fn rect(&self, WindowSize { columns, rows, .. }: WindowSize) -> Rect {
 		use Origin::*;
 		let Offset { x, y, width, height } = self.offset;
-		let WindowSize { columns, rows, .. } = Term::size();
 
 		let max_x = columns.saturating_sub(width);
 		let new_x = match self.origin {
@@ -45,9 +43,8 @@ impl Position {
 		}
 	}
 
-	pub fn sticky(base: Rect, offset: Offset) -> Rect {
+	pub fn sticky(WindowSize { columns, rows, .. }: WindowSize, base: Rect, offset: Offset) -> Rect {
 		let Offset { x, y, width, height } = offset;
-		let WindowSize { columns, rows, .. } = Term::size();
 
 		let above =
 			base.y.saturating_add(base.height).saturating_add(height).saturating_add_signed(y) > rows;

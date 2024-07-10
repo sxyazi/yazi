@@ -4,9 +4,9 @@ use anyhow::Result;
 use crossterm::event::KeyEvent;
 use yazi_config::keymap::Key;
 use yazi_core::input::InputMode;
-use yazi_shared::{emit, event::{Cmd, Event, NEED_RENDER}, term::Term, Layer};
+use yazi_shared::{emit, event::{Cmd, Event, NEED_RENDER}, Layer};
 
-use crate::{lives::Lives, Ctx, Executor, Router, Signals};
+use crate::{lives::Lives, Ctx, Executor, Router, Signals, Term};
 
 pub(crate) struct App {
 	pub(crate) cx:      Ctx,
@@ -56,6 +56,7 @@ impl App {
 			Event::Seq(cmds, layer) => self.dispatch_seq(cmds, layer),
 			Event::Render => self.dispatch_render(),
 			Event::Key(key) => self.dispatch_key(key),
+			Event::Mouse(mouse) => self.mouse(mouse),
 			Event::Resize => self.resize(()),
 			Event::Paste(str) => self.dispatch_paste(str),
 			Event::Quit(opt) => self.quit(opt),

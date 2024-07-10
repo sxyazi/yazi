@@ -8,8 +8,8 @@ bitflags! {
 	pub struct Opt: u8 {
 		const FIND   = 0b00001;
 		const VISUAL = 0b00010;
-		const SELECT = 0b00100;
-		const FILTER = 0b01000;
+		const FILTER = 0b00100;
+		const SELECT = 0b01000;
 		const SEARCH = 0b10000;
 	}
 }
@@ -21,8 +21,8 @@ impl From<Cmd> for Opt {
 				("all", true) => Self::all(),
 				("find", true) => acc | Self::FIND,
 				("visual", true) => acc | Self::VISUAL,
-				("select", true) => acc | Self::SELECT,
 				("filter", true) => acc | Self::FILTER,
+				("select", true) => acc | Self::SELECT,
 				("search", true) => acc | Self::SEARCH,
 				_ => acc,
 			}
@@ -36,8 +36,8 @@ impl Tab {
 		if opt.is_empty() {
 			_ = self.escape_find()
 				|| self.escape_visual()
-				|| self.escape_select()
 				|| self.escape_filter()
+				|| self.escape_select()
 				|| self.escape_search();
 			return;
 		}
@@ -48,11 +48,11 @@ impl Tab {
 		if opt.contains(Opt::VISUAL) {
 			self.escape_visual();
 		}
-		if opt.contains(Opt::SELECT) {
-			self.escape_select();
-		}
 		if opt.contains(Opt::FILTER) {
 			self.escape_filter();
+		}
+		if opt.contains(Opt::SELECT) {
+			self.escape_select();
 		}
 		if opt.contains(Opt::SEARCH) {
 			self.escape_search();
@@ -70,6 +70,15 @@ impl Tab {
 		true
 	}
 
+	pub fn escape_filter(&mut self) -> bool {
+		if self.current.files.filter().is_none() {
+			return false;
+		}
+
+		self.filter_do(super::filter::Opt::default());
+		render_and!(true)
+	}
+
 	pub fn escape_select(&mut self) -> bool {
 		if self.selected.is_empty() {
 			return false;
@@ -79,15 +88,6 @@ impl Tab {
 		if self.current.hovered().is_some_and(|h| h.is_dir()) {
 			ManagerProxy::peek(true);
 		}
-		render_and!(true)
-	}
-
-	pub fn escape_filter(&mut self) -> bool {
-		if self.current.files.filter().is_none() {
-			return false;
-		}
-
-		self.filter_do(super::filter::Opt::default());
 		render_and!(true)
 	}
 

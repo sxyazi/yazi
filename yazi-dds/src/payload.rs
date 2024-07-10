@@ -41,11 +41,6 @@ impl<'a> Payload<'a> {
 		self.sender = sender;
 		self
 	}
-
-	pub(super) fn with_severity(mut self, severity: u16) -> Self {
-		self.sender = severity as u64;
-		self
-	}
 }
 
 impl Payload<'static> {

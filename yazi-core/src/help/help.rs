@@ -1,7 +1,8 @@
 use crossterm::event::KeyCode;
 use unicode_width::UnicodeWidthStr;
+use yazi_adapter::Dimension;
 use yazi_config::{keymap::{Control, Key}, KEYMAP};
-use yazi_shared::{render, render_and, term::Term, Layer};
+use yazi_shared::{render, render_and, Layer};
 
 use super::HELP_MARGIN;
 use crate::input::Input;
@@ -22,7 +23,7 @@ pub struct Help {
 
 impl Help {
 	#[inline]
-	pub fn limit() -> usize { Term::size().rows.saturating_sub(HELP_MARGIN) as usize }
+	pub fn limit() -> usize { Dimension::available().rows.saturating_sub(HELP_MARGIN) as usize }
 
 	pub fn toggle(&mut self, layer: Layer) {
 		self.visible = !self.visible;
@@ -43,15 +44,15 @@ impl Help {
 		};
 
 		match key {
-			Key { code: KeyCode::Esc, shift: false, ctrl: false, alt: false } => {
+			Key { code: KeyCode::Esc, shift: false, ctrl: false, alt: false, super_: false } => {
 				self.in_filter = None;
 				render!();
 			}
-			Key { code: KeyCode::Enter, shift: false, ctrl: false, alt: false } => {
+			Key { code: KeyCode::Enter, shift: false, ctrl: false, alt: false, super_: false } => {
 				self.in_filter = None;
 				return render_and!(true); // Don't do the `filter_apply` below, since we already have the filtered results.
 			}
-			Key { code: KeyCode::Backspace, shift: false, ctrl: false, alt: false } => {
+			Key { code: KeyCode::Backspace, shift: false, ctrl: false, alt: false, super_: false } => {
 				input.backspace(false);
 			}
 			_ => {
@@ -106,7 +107,7 @@ impl Help {
 			return None;
 		}
 		if let Some(kw) = self.keyword() {
-			return Some((kw.width() as u16, Term::size().rows));
+			return Some((kw.width() as u16, Dimension::available().rows));
 		}
 		None
 	}

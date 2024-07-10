@@ -1,10 +1,11 @@
-use std::str::FromStr;
+use std::{str::FromStr, time::Duration};
 
 use mlua::{ExternalError, ExternalResult, IntoLuaMulti, Lua, Table, Value};
 use tokio::sync::mpsc;
+use tokio_stream::wrappers::UnboundedReceiverStream;
 use yazi_config::{keymap::{Control, Key}, popup::InputCfg};
 use yazi_proxy::{AppProxy, InputProxy};
-use yazi_shared::{emit, event::Cmd, Layer};
+use yazi_shared::{emit, event::Cmd, Debounce, Layer};
 
 use super::Utils;
 use crate::bindings::{InputRx, Position};
@@ -59,7 +60,7 @@ impl Utils {
 			"input",
 			lua.create_async_function(|lua, t: Table| async move {
 				let realtime = t.raw_get("realtime").unwrap_or_default();
-				let mut rx = InputProxy::show(InputCfg {
+				let rx = UnboundedReceiverStream::new(InputProxy::show(InputCfg {
 					title: t.raw_get("title")?,
 					value: t.raw_get("value").unwrap_or_default(),
 					cursor: None, // TODO
@@ -67,14 +68,20 @@ impl Utils {
 					realtime,
 					completion: false,
 					highlight: false,
-				});
+				}));
 
-				if realtime {
+				if !realtime {
+					return InputRx::consume(rx).await.into_lua_multi(lua);
+				}
+
+				let debounce = t.raw_get::<_, f64>("debounce").unwrap_or_default();
+				if debounce < 0.0 {
+					Err("negative debounce duration".into_lua_err())
+				} else if debounce == 0.0 {
 					(InputRx::new(rx), Value::Nil).into_lua_multi(lua)
-				} else if let Some(res) = rx.recv().await {
-					InputRx::parse(res).into_lua_multi(lua)
 				} else {
-					(Value::Nil, 0).into_lua_multi(lua)
+					(InputRx::new(Debounce::new(rx, Duration::from_secs_f64(debounce))), Value::Nil)
+						.into_lua_multi(lua)
 				}
 			})?,
 		)?;

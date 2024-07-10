@@ -4,16 +4,18 @@ use mlua::{Lua, Table};
 use unicode_width::UnicodeWidthChar;
 
 use super::Utils;
+use crate::CLIPBOARD;
 
 impl Utils {
 	pub(super) fn text(lua: &Lua, ya: &Table) -> mlua::Result<()> {
 		ya.raw_set(
 			"quote",
-			lua.create_function(|_, s: mlua::String| {
-				#[cfg(unix)]
-				let s = shell_escape::unix::escape(s.to_str()?.into());
-				#[cfg(windows)]
-				let s = shell_escape::windows::escape(s.to_str()?.into());
+			lua.create_function(|_, (s, unix): (mlua::String, Option<bool>)| {
+				let s = match unix {
+					Some(true) => shell_escape::unix::escape(s.to_str()?.into()),
+					Some(false) => shell_escape::windows::escape(s.to_str()?.into()),
+					None => shell_escape::escape(s.to_str()?.into()),
+				};
 				Ok(s.into_owned())
 			})?,
 		)?;
@@ -28,6 +30,18 @@ impl Utils {
 				} else {
 					Self::truncate(text.chars(), max).into_iter().collect::<String>()
 				})
+			})?,
+		)?;
+
+		ya.raw_set(
+			"clipboard",
+			lua.create_async_function(|lua, text: Option<String>| async move {
+				if let Some(text) = text {
+					CLIPBOARD.set(text).await;
+					Ok(None)
+				} else {
+					Some(lua.create_string(CLIPBOARD.get().await.as_encoded_bytes())).transpose()
+				}
 			})?,
 		)?;
 

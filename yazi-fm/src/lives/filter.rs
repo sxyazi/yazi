@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use mlua::{AnyUserData, Lua};
+use mlua::{AnyUserData, Lua, MetaMethod, UserDataMethods};
 
 use super::SCOPE;
 
@@ -21,8 +21,8 @@ impl Filter {
 	}
 
 	pub(super) fn register(lua: &Lua) -> mlua::Result<()> {
-		lua.register_userdata_type::<Self>(|_| {})?;
-
-		Ok(())
+		lua.register_userdata_type::<Self>(|reg| {
+			reg.add_meta_method(MetaMethod::ToString, |_, me, ()| Ok(me.to_string()));
+		})
 	}
 }

@@ -1,29 +1,30 @@
 [package]
-name        = "yazi-shared"
-version     = "0.2.5"
-edition     = "2021"
-license     = "MIT"
-authors     = [ "sxyazi <sxyazi@gmail.com>" ]
-description = "Yazi shared library"
-homepage    = "https://yazi-rs.github.io"
-repository  = "https://github.com/sxyazi/yazi"
+name         = "yazi-shared"
+version      = "0.2.5"
+edition      = "2021"
+license      = "MIT"
+authors      = [ "sxyazi <sxyazi@gmail.com>" ]
+description  = "Yazi shared library"
+homepage     = "https://yazi-rs.github.io"
+repository   = "https://github.com/sxyazi/yazi"
+rust-version = "1.78.0"
 
 [dependencies]
-anyhow           = "1.0.82"
+anyhow           = "1.0.86"
 bitflags         = "2.5.0"
 crossterm        = "0.27.0"
 dirs             = "5.0.1"
-filetime         = "0.2.23"
 futures          = "0.3.30"
-parking_lot      = "0.12.1"
+parking_lot      = "0.12.3"
 percent-encoding = "2.3.1"
-ratatui          = "=0.26.1"
-regex            = "1.10.4"
-serde            = "1.0.198"
-tokio            = { version = "1.37.0", features = [ "full" ] }
-
-# Logging
-tracing = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
+ratatui          = "0.27.0"
+regex            = "1.10.5"
+serde            = { version = "1.0.203", features = [ "derive" ] }
+shell-words      = "1.1.0"
+tokio            = { version = "1.38.0", features = [ "full" ] }
 
 [target."cfg(unix)".dependencies]
-libc = "0.2.153"
+libc = "0.2.155"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.52.0", features = [ "Win32_Storage_FileSystem" ] }

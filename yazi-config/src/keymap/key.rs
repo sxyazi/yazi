@@ -2,34 +2,30 @@ use std::{fmt::{Display, Write}, str::FromStr};
 
 use anyhow::bail;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use serde::Deserialize;
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash)]
-#[serde(try_from = "String")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Key {
-	pub code:  KeyCode,
-	pub shift: bool,
-	pub ctrl:  bool,
-	pub alt:   bool,
+	pub code:   KeyCode,
+	pub shift:  bool,
+	pub ctrl:   bool,
+	pub alt:    bool,
+	pub super_: bool,
 }
 
 impl Key {
 	#[inline]
 	pub fn plain(&self) -> Option<char> {
 		match self.code {
-			KeyCode::Char(c) if !self.ctrl && !self.alt => Some(c),
+			KeyCode::Char(c) if !self.ctrl && !self.alt && !self.super_ => Some(c),
 			_ => None,
 		}
-	}
-
-	#[inline]
-	pub fn is_enter(&self) -> bool {
-		matches!(self, Key { code: KeyCode::Enter, shift: false, ctrl: false, alt: false })
 	}
 }
 
 impl Default for Key {
-	fn default() -> Self { Self { code: KeyCode::Null, shift: false, ctrl: false, alt: false } }
+	fn default() -> Self {
+		Self { code: KeyCode::Null, shift: false, ctrl: false, alt: false, super_: false }
+	}
 }
 
 impl From<KeyEvent> for Key {
@@ -56,6 +52,7 @@ impl From<KeyEvent> for Key {
 			shift,
 			ctrl: value.modifiers.contains(KeyModifiers::CONTROL),
 			alt: value.modifiers.contains(KeyModifiers::ALT),
+			super_: value.modifiers.contains(KeyModifiers::SUPER),
 		}
 	}
 }
@@ -77,45 +74,46 @@ impl FromStr for Key {
 		}
 
 		let mut it = s[1..s.len() - 1].split_inclusive('-').peekable();
-		while let Some(x) = it.next() {
-			match x {
-				"S-" => key.shift = true,
-				"C-" => key.ctrl = true,
-				"A-" => key.alt = true,
+		while let Some(next) = it.next() {
+			match next.to_ascii_lowercase().as_str() {
+				"s-" => key.shift = true,
+				"c-" => key.ctrl = true,
+				"a-" => key.alt = true,
+				"d-" => key.super_ = true,
 
-				"Space" => key.code = KeyCode::Char(' '),
-				"Backspace" => key.code = KeyCode::Backspace,
-				"Enter" => key.code = KeyCode::Enter,
-				"Left" => key.code = KeyCode::Left,
-				"Right" => key.code = KeyCode::Right,
-				"Up" => key.code = KeyCode::Up,
-				"Down" => key.code = KeyCode::Down,
-				"Home" => key.code = KeyCode::Home,
-				"End" => key.code = KeyCode::End,
-				"PageUp" => key.code = KeyCode::PageUp,
-				"PageDown" => key.code = KeyCode::PageDown,
-				"Tab" => key.code = KeyCode::Tab,
-				"BackTab" => key.code = KeyCode::BackTab,
-				"Delete" => key.code = KeyCode::Delete,
-				"Insert" => key.code = KeyCode::Insert,
-				"F1" => key.code = KeyCode::F(1),
-				"F2" => key.code = KeyCode::F(2),
-				"F3" => key.code = KeyCode::F(3),
-				"F4" => key.code = KeyCode::F(4),
-				"F5" => key.code = KeyCode::F(5),
-				"F6" => key.code = KeyCode::F(6),
-				"F7" => key.code = KeyCode::F(7),
-				"F8" => key.code = KeyCode::F(8),
-				"F9" => key.code = KeyCode::F(9),
-				"F10" => key.code = KeyCode::F(10),
-				"F11" => key.code = KeyCode::F(11),
-				"F12" => key.code = KeyCode::F(12),
-				"Esc" => key.code = KeyCode::Esc,
+				"space" => key.code = KeyCode::Char(' '),
+				"backspace" => key.code = KeyCode::Backspace,
+				"enter" => key.code = KeyCode::Enter,
+				"left" => key.code = KeyCode::Left,
+				"right" => key.code = KeyCode::Right,
+				"up" => key.code = KeyCode::Up,
+				"down" => key.code = KeyCode::Down,
+				"home" => key.code = KeyCode::Home,
+				"end" => key.code = KeyCode::End,
+				"pageup" => key.code = KeyCode::PageUp,
+				"pagedown" => key.code = KeyCode::PageDown,
+				"tab" => key.code = KeyCode::Tab,
+				"backtab" => key.code = KeyCode::BackTab,
+				"delete" => key.code = KeyCode::Delete,
+				"insert" => key.code = KeyCode::Insert,
+				"f1" => key.code = KeyCode::F(1),
+				"f2" => key.code = KeyCode::F(2),
+				"f3" => key.code = KeyCode::F(3),
+				"f4" => key.code = KeyCode::F(4),
+				"f5" => key.code = KeyCode::F(5),
+				"f6" => key.code = KeyCode::F(6),
+				"f7" => key.code = KeyCode::F(7),
+				"f8" => key.code = KeyCode::F(8),
+				"f9" => key.code = KeyCode::F(9),
+				"f10" => key.code = KeyCode::F(10),
+				"f11" => key.code = KeyCode::F(11),
+				"f12" => key.code = KeyCode::F(12),
+				"esc" => key.code = KeyCode::Esc,
 
-				c if it.peek().is_none() => {
-					key.code = KeyCode::Char(c.chars().next().unwrap());
-				}
-				k => bail!("unknown key: {k}"),
+				_ => match next {
+					s if it.peek().is_none() => key.code = KeyCode::Char(s.chars().next().unwrap()),
+					s => bail!("unknown key: {s}"),
+				},
 			}
 		}
 
@@ -126,12 +124,6 @@ impl FromStr for Key {
 	}
 }
 
-impl TryFrom<String> for Key {
-	type Error = anyhow::Error;
-
-	fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
-}
-
 impl Display for Key {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		if let Some(c) = self.plain() {
@@ -140,6 +132,9 @@ impl Display for Key {
 		}
 
 		write!(f, "<")?;
+		if self.super_ {
+			write!(f, "D-")?;
+		}
 		if self.ctrl {
 			write!(f, "C-")?;
 		}

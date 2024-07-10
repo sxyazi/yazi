@@ -1,20 +1,16 @@
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, path::Path, str::FromStr};
 
 use indexmap::IndexSet;
 use serde::{Deserialize, Deserializer};
 use yazi_shared::MIME_DIR;
 
 use super::Opener;
-use crate::{open::OpenRule, Preset, MERGED_YAZI};
+use crate::{open::OpenRule, Preset};
 
 #[derive(Debug)]
 pub struct Open {
 	rules:   Vec<OpenRule>,
 	openers: HashMap<String, IndexSet<Opener>>,
-}
-
-impl Default for Open {
-	fn default() -> Self { toml::from_str(&MERGED_YAZI).unwrap() }
 }
 
 impl Open {
@@ -23,10 +19,10 @@ impl Open {
 		P: AsRef<Path>,
 		M: AsRef<str>,
 	{
-		let is_folder = mime.as_ref() == MIME_DIR;
+		let is_dir = mime.as_ref() == MIME_DIR;
 		self.rules.iter().find_map(|rule| {
 			if rule.mime.as_ref().is_some_and(|p| p.match_mime(&mime))
-				|| rule.name.as_ref().is_some_and(|p| p.match_path(&path, is_folder))
+				|| rule.name.as_ref().is_some_and(|p| p.match_path(&path, is_dir))
 			{
 				let openers = rule
 					.use_
@@ -58,6 +54,12 @@ impl Open {
 	}
 }
 
+impl FromStr for Open {
+	type Err = toml::de::Error;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> { toml::from_str(s) }
+}
+
 impl<'de> Deserialize<'de> for Open {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
@@ -78,6 +80,13 @@ impl<'de> Deserialize<'de> for Open {
 		}
 
 		let mut outer = Outer::deserialize(deserializer)?;
+
+		if outer.open.append_rules.iter().any(|r| r.any_file()) {
+			outer.open.rules.retain(|r| !r.any_file());
+		}
+		if outer.open.append_rules.iter().any(|r| r.any_dir()) {
+			outer.open.rules.retain(|r| !r.any_dir());
+		}
 		Preset::mix(&mut outer.open.rules, outer.open.prepend_rules, outer.open.append_rules);
 
 		let openers = outer

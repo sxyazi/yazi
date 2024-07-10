@@ -17,14 +17,17 @@ yazi-boot   = { path = "../yazi-boot", version = "0.2.5" }
 yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
-anyhow       = "1.0.82"
-mlua         = { version = "0.9.7", features = [ "lua54" ] }
-parking_lot  = "0.12.1"
-serde        = { version = "1.0.198", features = [ "derive" ] }
-serde_json   = "1.0.116"
-tokio        = { version = "1.37.0", features = [ "full" ] }
+anyhow       = "1.0.86"
+mlua         = { version = "0.9.9", features = [ "lua54" ] }
+parking_lot  = "0.12.3"
+serde        = { version = "1.0.203", features = [ "derive" ] }
+serde_json   = "1.0.117"
+tokio        = { version = "1.38.0", features = [ "full" ] }
 tokio-stream = "0.1.15"
-tokio-util   = "0.7.10"
+tokio-util   = "0.7.11"
+
+[build-dependencies]
+vergen       = { version = "8.3.1", features = [ "build", "git", "gitcl" ] }
 
 [target."cfg(unix)".dependencies]
-uzers = "0.11.3"
+uzers = "0.12.0"

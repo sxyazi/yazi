@@ -52,7 +52,7 @@ impl Manager {
 		self.mimetype.extend(updates);
 		self.peek(false);
 
-		tasks.preload_affected(&affected, &self.mimetype);
+		tasks.prework_affected(&affected, &self.mimetype);
 		render!();
 	}
 }

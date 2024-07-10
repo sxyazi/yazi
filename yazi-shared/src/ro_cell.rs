@@ -13,7 +13,7 @@ impl<T> RoCell<T> {
 
 	#[inline]
 	pub fn init(&self, value: T) {
-		debug_assert!(!self.is_initialized());
+		debug_assert!(!self.initialized());
 		unsafe {
 			*self.0.get() = Some(value);
 		}
@@ -29,25 +29,25 @@ impl<T> RoCell<T> {
 
 	#[inline]
 	pub fn replace(&self, value: T) -> T {
-		debug_assert!(self.is_initialized());
+		debug_assert!(self.initialized());
 		unsafe { mem::replace(&mut *self.0.get(), Some(value)).unwrap_unchecked() }
 	}
 
 	#[inline]
 	pub fn drop(&self) -> T {
-		debug_assert!(self.is_initialized());
+		debug_assert!(self.initialized());
 		unsafe { mem::take(&mut *self.0.get()).unwrap_unchecked() }
 	}
 
 	#[inline]
-	fn is_initialized(&self) -> bool { unsafe { (*self.0.get()).is_some() } }
+	fn initialized(&self) -> bool { unsafe { (*self.0.get()).is_some() } }
 }
 
 impl<T> Deref for RoCell<T> {
 	type Target = T;
 
 	fn deref(&self) -> &Self::Target {
-		debug_assert!(self.is_initialized());
+		debug_assert!(self.initialized());
 		unsafe { (*self.0.get()).as_ref().unwrap_unchecked() }
 	}
 }

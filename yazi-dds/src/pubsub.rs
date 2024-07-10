@@ -5,7 +5,7 @@ use parking_lot::RwLock;
 use yazi_boot::BOOT;
 use yazi_shared::{fs::Url, RoCell};
 
-use crate::{body::{Body, BodyCd, BodyDelete, BodyHi, BodyHover, BodyMove, BodyMoveItem, BodyRename, BodyTrash, BodyYank}, Client, ID, PEERS};
+use crate::{body::{Body, BodyBulk, BodyCd, BodyDelete, BodyHi, BodyHover, BodyMove, BodyMoveItem, BodyRename, BodyTrash, BodyYank}, Client, ID, PEERS};
 
 pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function<'static>>>>> =
 	RoCell::new();
@@ -80,15 +80,9 @@ impl Pubsub {
 		}
 	}
 
-	pub fn pub_static(severity: u16, body: Body) {
-		if Self::own_static_ability(body.kind()) {
-			Client::push(body.with_severity(severity));
-		}
-	}
-
 	pub fn pub_from_hi() -> bool {
 		let abilities = REMOTE.read().keys().cloned().collect();
-		let abilities = BOOT.remote_events.union(&abilities).collect();
+		let abilities = BOOT.remote_events.union(&abilities).map(|s| s.as_str()).collect();
 
 		Client::push(BodyHi::borrowed(abilities));
 		true
@@ -98,8 +92,8 @@ impl Pubsub {
 		if LOCAL.read().contains_key("cd") {
 			Self::pub_(BodyCd::dummy(tab));
 		}
-		if Self::own_static_ability("cd") {
-			Client::push(BodyCd::borrowed(tab, url).with_severity(100));
+		if PEERS.read().values().any(|p| p.able("cd")) {
+			Client::push(BodyCd::borrowed(tab, url));
 		}
 		if BOOT.local_events.contains("cd") {
 			BodyCd::borrowed(tab, url).with_receiver(*ID).flush();
@@ -110,8 +104,8 @@ impl Pubsub {
 		if LOCAL.read().contains_key("hover") {
 			Self::pub_(BodyHover::dummy(tab));
 		}
-		if Self::own_static_ability("hover") {
-			Client::push(BodyHover::borrowed(tab, url).with_severity(200));
+		if PEERS.read().values().any(|p| p.able("hover")) {
+			Client::push(BodyHover::borrowed(tab, url));
 		}
 		if BOOT.local_events.contains("hover") {
 			BodyHover::borrowed(tab, url).with_receiver(*ID).flush();
@@ -130,14 +124,26 @@ impl Pubsub {
 		}
 	}
 
+	pub fn pub_from_bulk(changes: HashMap<&Url, &Url>) {
+		if LOCAL.read().contains_key("bulk") {
+			Self::pub_(BodyBulk::owned(&changes));
+		}
+		if PEERS.read().values().any(|p| p.able("bulk")) {
+			Client::push(BodyBulk::borrowed(&changes));
+		}
+		if BOOT.local_events.contains("bulk") {
+			BodyBulk::borrowed(&changes).with_receiver(*ID).flush();
+		}
+	}
+
 	pub fn pub_from_yank(cut: bool, urls: &HashSet<Url>) {
-		if LOCAL.read().contains_key("yank") {
+		if LOCAL.read().contains_key("@yank") {
 			Self::pub_(BodyYank::dummy());
 		}
-		if Self::own_static_ability("yank") {
-			Client::push(BodyYank::borrowed(cut, urls).with_severity(300));
+		if Self::own_static_ability("@yank") {
+			Client::push(BodyYank::borrowed(cut, urls));
 		}
-		if BOOT.local_events.contains("yank") {
+		if BOOT.local_events.contains("@yank") {
 			BodyYank::borrowed(cut, urls).with_receiver(*ID).flush();
 		}
 	}

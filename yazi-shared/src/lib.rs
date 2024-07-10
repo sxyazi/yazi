@@ -12,10 +12,11 @@ mod natsort;
 mod number;
 mod os;
 mod ro_cell;
-pub mod term;
+mod terminal;
 pub mod theme;
 mod throttle;
 mod time;
+mod translit;
 mod xdg;
 
 pub use chars::*;
@@ -26,10 +27,13 @@ pub use errors::*;
 pub use layer::*;
 pub use natsort::*;
 pub use number::*;
+#[cfg(unix)]
 pub use os::*;
 pub use ro_cell::*;
+pub use terminal::*;
 pub use throttle::*;
 pub use time::*;
+pub use translit::*;
 pub use xdg::*;
 
 pub fn init() { event::Event::init(); }

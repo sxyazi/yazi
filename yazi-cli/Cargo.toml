@@ -9,22 +9,31 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
-yazi-dds = { path = "../yazi-dds", version = "0.2.5" }
+yazi-dds    = { path = "../yazi-dds", version = "0.2.5" }
+yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
-anyhow     = "1.0.82"
-clap       = { version = "4.5.4", features = [ "derive" ] }
-serde_json = "1.0.116"
-tokio      = { version = "1.37.0", features = [ "full" ] }
+anyhow     = "1.0.86"
+clap       = { version = "4.5.7", features = [ "derive" ] }
+crossterm  = "0.27.0"
+md-5       = "0.10.6"
+serde_json = "1.0.117"
+tokio      = { version = "1.38.0", features = [ "full" ] }
+toml_edit  = "0.22.14"
 
 [build-dependencies]
-anyhow                = "1.0.82"
-clap                  = { version = "4.5.4", features = [ "derive" ] }
-clap_complete         = "4.5.2"
-clap_complete_fig     = "4.5.0"
-clap_complete_nushell = "4.5.1"
-serde_json            = "1.0.116"
+anyhow                = "1.0.86"
+clap                  = { version = "4.5.7", features = [ "derive" ] }
+clap_complete         = "4.5.6"
+clap_complete_fig     = "4.5.1"
+clap_complete_nushell = "4.5.2"
+serde_json            = "1.0.117"
+vergen                = { version = "8.3.1", features = [ "build", "git", "gitcl" ] }
 
 [[bin]]
 name = "ya"
 path = "src/main.rs"
+
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/yazi-{ target }{ archive-suffix }"
+bin-dir = "yazi-{ target }/{ bin }{ binary-ext }"

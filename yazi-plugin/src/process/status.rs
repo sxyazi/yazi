@@ -9,8 +9,8 @@ impl Status {
 }
 
 impl UserData for Status {
-	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
-		methods.add_method("success", |_, me, ()| Ok(me.inner.success()));
-		methods.add_method("code", |_, me, ()| Ok(me.inner.code()));
+	fn add_fields<'lua, F: mlua::UserDataFields<'lua, Self>>(fields: &mut F) {
+		fields.add_field_method_get("success", |_, me| Ok(me.inner.success()));
+		fields.add_field_method_get("code", |_, me| Ok(me.inner.code()));
 	}
 }

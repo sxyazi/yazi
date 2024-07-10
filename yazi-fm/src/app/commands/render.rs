@@ -1,6 +1,8 @@
 use std::{io::{stderr, BufWriter}, sync::atomic::Ordering};
 
+use crossterm::{execute, queue, terminal::{BeginSynchronizedUpdate, EndSynchronizedUpdate}};
 use ratatui::{backend::{Backend, CrosstermBackend}, buffer::Buffer, CompletedFrame};
+use scopeguard::defer;
 use yazi_plugin::elements::COLLISION;
 
 use crate::{app::App, lives::Lives, root::Root};
@@ -10,6 +12,9 @@ impl App {
 		let Some(term) = &mut self.term else {
 			return;
 		};
+
+		queue!(stderr(), BeginSynchronizedUpdate).ok();
+		defer! { execute!(stderr(), EndSynchronizedUpdate).ok(); }
 
 		let collision = COLLISION.swap(false, Ordering::Relaxed);
 		let frame = term

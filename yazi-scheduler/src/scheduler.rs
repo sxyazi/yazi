@@ -4,17 +4,17 @@ use anyhow::Result;
 use futures::{future::BoxFuture, FutureExt};
 use parking_lot::Mutex;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
-use yazi_config::{open::Opener, plugin::PluginRule, TASKS};
+use yazi_config::{open::Opener, plugin::{Fetcher, Preloader}, TASKS};
 use yazi_dds::Pump;
 use yazi_shared::{event::Data, fs::{unique_path, Url}, Throttle};
 
 use super::{Ongoing, TaskProg, TaskStage};
-use crate::{file::{File, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, preload::{Preload, PreloadOpRule, PreloadOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
+use crate::{file::{File, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, prework::{Prework, PreworkOpFetch, PreworkOpLoad, PreworkOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
 
 pub struct Scheduler {
 	pub file:    Arc<File>,
 	pub plugin:  Arc<Plugin>,
-	pub preload: Arc<Preload>,
+	pub prework: Arc<Prework>,
 	pub process: Arc<Process>,
 
 	micro:       async_priority_channel::Sender<BoxFuture<'static, ()>, u8>,
@@ -32,7 +32,7 @@ impl Scheduler {
 		let mut scheduler = Self {
 			file:    Arc::new(File::new(macro_tx.clone(), prog_tx.clone())),
 			plugin:  Arc::new(Plugin::new(macro_tx.clone(), prog_tx.clone())),
-			preload: Arc::new(Preload::new(macro_tx.clone(), prog_tx.clone())),
+			prework: Arc::new(Prework::new(macro_tx.clone(), prog_tx.clone())),
 			process: Arc::new(Process::new(prog_tx.clone())),
 
 			micro:   micro_tx,
@@ -154,6 +154,28 @@ impl Scheduler {
 		);
 	}
 
+	pub fn file_hardlink(&self, from: Url, mut to: Url, force: bool, follow: bool) {
+		let name = format!("Hardlink {:?} to {:?}", from, to);
+		let id = self.ongoing.lock().add(TaskKind::User, name);
+
+		if to.starts_with(&from) && to != from {
+			self.new_and_fail(id, "Cannot hardlink directory into itself").ok();
+			return;
+		}
+
+		let file = self.file.clone();
+		_ = self.micro.try_send(
+			async move {
+				if !force {
+					to = unique_path(to).await;
+				}
+				file.hardlink(FileOpHardlink { id, from, to, meta: None, follow }).await.ok();
+			}
+			.boxed(),
+			LOW,
+		);
+	}
+
 	pub fn file_delete(&self, target: Url) {
 		let mut ongoing = self.ongoing.lock();
 		let id = ongoing.add(TaskKind::User, format!("Delete {:?}", target));
@@ -218,25 +240,40 @@ impl Scheduler {
 		self.plugin.macro_(PluginOpEntry { id, name, args }).ok();
 	}
 
-	pub fn preload_paged(&self, rule: &PluginRule, targets: Vec<&yazi_shared::fs::File>) {
+	pub fn fetch_paged(&self, fetcher: &Fetcher, targets: Vec<yazi_shared::fs::File>) {
 		let id = self.ongoing.lock().add(
 			TaskKind::Preload,
-			format!("Run preloader `{}` with {} target(s)", rule.cmd.name, targets.len()),
+			format!("Run fetcher `{}` with {} target(s)", fetcher.run.name, targets.len()),
 		);
 
-		let plugin = rule.into();
-		let targets = targets.into_iter().cloned().collect();
-		let preload = self.preload.clone();
+		let plugin = fetcher.into();
+		let prework = self.prework.clone();
 		_ = self.micro.try_send(
 			async move {
-				preload.rule(PreloadOpRule { id, plugin, targets }).await.ok();
+				prework.fetch(PreworkOpFetch { id, plugin, targets }).await.ok();
 			}
 			.boxed(),
 			NORMAL,
 		);
 	}
 
-	pub fn preload_size(&self, targets: Vec<&Url>) {
+	pub fn preload_paged(&self, preloader: &Preloader, target: &yazi_shared::fs::File) {
+		let id =
+			self.ongoing.lock().add(TaskKind::Preload, format!("Run preloader `{}`", preloader.run.name));
+
+		let plugin = preloader.into();
+		let target = target.clone();
+		let prework = self.prework.clone();
+		_ = self.micro.try_send(
+			async move {
+				prework.load(PreworkOpLoad { id, plugin, target }).await.ok();
+			}
+			.boxed(),
+			NORMAL,
+		);
+	}
+
+	pub fn prework_size(&self, targets: Vec<&Url>) {
 		let throttle = Arc::new(Throttle::new(targets.len(), Duration::from_millis(300)));
 		let mut ongoing = self.ongoing.lock();
 
@@ -245,10 +282,10 @@ impl Scheduler {
 			let target = target.clone();
 			let throttle = throttle.clone();
 
-			let preload = self.preload.clone();
+			let prework = self.prework.clone();
 			_ = self.micro.try_send(
 				async move {
-					preload.size(PreloadOpSize { id, target, throttle }).await.ok();
+					prework.size(PreworkOpSize { id, target, throttle }).await.ok();
 				}
 				.boxed(),
 				NORMAL,
@@ -329,7 +366,7 @@ impl Scheduler {
 	) -> JoinHandle<()> {
 		let file = self.file.clone();
 		let plugin = self.plugin.clone();
-		let preload = self.preload.clone();
+		let prework = self.prework.clone();
 
 		let prog = self.prog.clone();
 		let ongoing = self.ongoing.clone();
@@ -349,11 +386,11 @@ impl Scheduler {
 						let result = match op {
 							TaskOp::File(op) => file.work(*op).await,
 							TaskOp::Plugin(op) => plugin.work(*op).await,
-							TaskOp::Preload(op) => preload.work(*op).await,
+							TaskOp::Prework(op) => prework.work(*op).await,
 						};
 
 						if let Err(e) = result {
-							prog.send(TaskProg::Fail(id, format!("Failed to work on this task: {:?}", e))).ok();
+							prog.send(TaskProg::Fail(id, format!("Failed to work on this task: {e:?}"))).ok();
 						}
 					}
 				}

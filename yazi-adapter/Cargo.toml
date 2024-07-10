@@ -1,0 +1,31 @@
+[package]
+name        = "yazi-adapter"
+version     = "0.2.5"
+edition     = "2021"
+license     = "MIT"
+authors     = [ "sxyazi <sxyazi@gmail.com>" ]
+description = "Yazi image adapter"
+homepage    = "https://yazi-rs.github.io"
+repository  = "https://github.com/sxyazi/yazi"
+
+[dependencies]
+yazi-config = { path = "../yazi-config", version = "0.2.5" }
+yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
+
+# External dependencies
+ansi-to-tui  = "=3.1.0"
+anyhow       = "1.0.86"
+arc-swap     = "1.7.1"
+base64       = "0.22.1"
+color_quant  = "1.1.0"
+crossterm    = "0.27.0"
+futures      = "0.3.30"
+image        = "=0.24.9"
+imagesize    = "0.13.0"
+kamadak-exif = "0.5.5"
+ratatui      = "0.27.0"
+scopeguard   = "1.2.0"
+tokio        = { version = "1.38.0", features = [ "full" ] }
+
+# Logging
+tracing = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }

@@ -24,12 +24,12 @@ function File:highlights(file)
 	end
 
 	local spans, last = {}, 0
-	for _, r in ipairs(highlights) do
-		if r[1] > last then
-			spans[#spans + 1] = ui.Span(name:sub(last + 1, r[1]))
+	for _, h in ipairs(highlights) do
+		if h[1] > last then
+			spans[#spans + 1] = ui.Span(name:sub(last + 1, h[1]))
 		end
-		spans[#spans + 1] = ui.Span(name:sub(r[1] + 1, r[2])):style(THEME.manager.find_keyword)
-		last = r[2]
+		spans[#spans + 1] = ui.Span(name:sub(h[1] + 1, h[2])):style(THEME.manager.find_keyword)
+		last = h[2]
 	end
 	if last < #name then
 		spans[#spans + 1] = ui.Span(name:sub(last + 1))

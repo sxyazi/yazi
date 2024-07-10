@@ -1,6 +1,7 @@
 mod bulk_rename;
 mod close;
 mod create;
+mod hardlink;
 mod hover;
 mod link;
 mod open;

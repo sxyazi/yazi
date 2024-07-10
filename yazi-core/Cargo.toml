@@ -9,7 +9,7 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
-yazi-adaptor   = { path = "../yazi-adaptor", version = "0.2.5" }
+yazi-adapter   = { path = "../yazi-adapter", version = "0.2.5" }
 yazi-boot      = { path = "../yazi-boot", version = "0.2.5" }
 yazi-config    = { path = "../yazi-config", version = "0.2.5" }
 yazi-dds       = { path = "../yazi-dds", version = "0.2.5" }
@@ -19,27 +19,25 @@ yazi-scheduler = { path = "../yazi-scheduler", version = "0.2.5" }
 yazi-shared    = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
-anyhow        = "1.0.82"
-base64        = "0.22.0"
+anyhow        = "1.0.86"
 bitflags      = "2.5.0"
 crossterm     = "0.27.0"
+dirs          = "5.0.1"
 futures       = "0.3.30"
 notify        = { version = "6.1.1", default-features = false, features = [ "macos_fsevent" ] }
-parking_lot   = "0.12.1"
-ratatui       = "=0.26.1"
-regex         = "1.10.4"
+parking_lot   = "0.12.3"
+ratatui       = "0.27.0"
+regex         = "1.10.5"
 scopeguard    = "1.2.0"
-serde         = "1.0.198"
-tokio         = { version = "1.37.0", features = [ "full" ] }
+serde         = "1.0.203"
+shell-words   = "1.1.0"
+tokio         = { version = "1.38.0", features = [ "full" ] }
 tokio-stream  = "0.1.15"
-tokio-util    = "0.7.10"
-unicode-width = "0.1.11"
+tokio-util    = "0.7.11"
+unicode-width = "0.1.13"
 
 # Logging
 tracing = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
 
 [target."cfg(unix)".dependencies]
-libc = "0.2.153"
-
-[target."cfg(windows)".dependencies]
-clipboard-win = "5.3.1"
+libc = "0.2.155"

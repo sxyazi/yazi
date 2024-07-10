@@ -13,7 +13,7 @@ default      = [ "vendored-lua" ]
 vendored-lua = [ "mlua/vendored" ]
 
 [dependencies]
-yazi-adaptor = { path = "../yazi-adaptor", version = "0.2.5" }
+yazi-adapter = { path = "../yazi-adapter", version = "0.2.5" }
 yazi-boot    = { path = "../yazi-boot", version = "0.2.5" }
 yazi-config  = { path = "../yazi-config", version = "0.2.5" }
 yazi-core    = { path = "../yazi-core", version = "0.2.5" }
@@ -23,17 +23,17 @@ yazi-proxy   = { path = "../yazi-proxy", version = "0.2.5" }
 yazi-shared  = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
-anyhow       = "1.0.82"
+anyhow       = "1.0.86"
 better-panic = "0.3.0"
 crossterm    = { version = "0.27.0", features = [ "event-stream" ] }
 fdlimit      = "0.3.0"
 futures      = "0.3.30"
-mlua         = { version = "0.9.7", features = [ "lua54" ] }
-ratatui      = "=0.26.1"
+mlua         = { version = "0.9.9", features = [ "lua54" ] }
+ratatui      = "0.27.0"
 scopeguard   = "1.2.0"
 syntect      = { version = "5.2.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
-tokio        = { version = "1.37.0", features = [ "full" ] }
-tokio-util   = "0.7.10"
+tokio        = { version = "1.38.0", features = [ "full" ] }
+tokio-util   = "0.7.11"
 
 # Logging
 tracing            = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
@@ -41,7 +41,7 @@ tracing-appender   = "0.2.3"
 tracing-subscriber = "0.3.18"
 
 [target."cfg(unix)".dependencies]
-libc              = "0.2.153"
+libc              = "0.2.155"
 signal-hook-tokio = { version = "0.3.1", features = [ "futures-v0_3" ] }
 
 [target.'cfg(all(not(target_os = "macos"), not(target_os = "windows")))'.dependencies]
@@ -50,3 +50,7 @@ tikv-jemallocator = "0.5.4"
 [[bin]]
 name = "yazi"
 path = "src/main.rs"
+
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/yazi-{ target }{ archive-suffix }"
+bin-dir = "yazi-{ target }/{ bin }{ binary-ext }"

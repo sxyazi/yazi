@@ -4,23 +4,25 @@ use anyhow::Result;
 use tokio::fs;
 use yazi_config::popup::InputCfg;
 use yazi_dds::Pubsub;
-use yazi_proxy::{InputProxy, ManagerProxy, WATCHER};
-use yazi_shared::{event::Cmd, fs::{accessible, File, FilesOp, Url}};
+use yazi_proxy::{InputProxy, TabProxy, WATCHER};
+use yazi_shared::{event::Cmd, fs::{maybe_exists, ok_or_not_found, paths_to_same_file, symlink_realpath, File, FilesOp, Url}};
 
 use crate::manager::Manager;
 
 pub struct Opt {
-	force:  bool,
-	empty:  String,
-	cursor: String,
+	hovered: bool,
+	force:   bool,
+	empty:   String,
+	cursor:  String,
 }
 
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
-			force:  c.bool("force"),
-			empty:  c.take_str("empty").unwrap_or_default(),
-			cursor: c.take_str("cursor").unwrap_or_default(),
+			hovered: c.bool("hovered"),
+			force:   c.bool("force"),
+			empty:   c.take_str("empty").unwrap_or_default(),
+			cursor:  c.take_str("cursor").unwrap_or_default(),
 		}
 	}
 }
@@ -29,15 +31,16 @@ impl Manager {
 	pub fn rename(&mut self, opt: impl Into<Opt>) {
 		if !self.active_mut().try_escape_visual() {
 			return;
-		} else if !self.active().selected.is_empty() {
-			return self.bulk_rename();
 		}
-
 		let Some(hovered) = self.hovered().map(|h| h.url()) else {
 			return;
 		};
 
 		let opt = opt.into() as Opt;
+		if !opt.hovered && !self.active().selected.is_empty() {
+			return self.bulk_rename();
+		}
+
 		let name = Self::empty_url_part(&hovered, &opt.empty);
 		let cursor = match opt.cursor.as_str() {
 			"start" => Some(0),
@@ -62,7 +65,7 @@ impl Manager {
 			}
 
 			let new = hovered.parent().unwrap().join(name);
-			if opt.force || !accessible(&new).await {
+			if opt.force || !maybe_exists(&new).await || paths_to_same_file(&hovered, &new).await {
 				Self::rename_do(tab, hovered, Url::from(new)).await.ok();
 				return;
 			}
@@ -77,19 +80,23 @@ impl Manager {
 	}
 
 	async fn rename_do(tab: usize, old: Url, new: Url) -> Result<()> {
+		let Some(p_old) = old.parent_url() else { return Ok(()) };
+		let Some(p_new) = new.parent_url() else { return Ok(()) };
 		let _permit = WATCHER.acquire().await.unwrap();
 
+		let overwritten = symlink_realpath(&new).await;
 		fs::rename(&old, &new).await?;
-		if old.parent() != new.parent() {
-			return Ok(());
-		}
 
-		let file = File::from(new.clone()).await?;
+		if let Ok(p) = overwritten {
+			ok_or_not_found(fs::rename(&p, &new).await)?;
+			FilesOp::Deleting(p_new.clone(), vec![Url::from(p)]).emit();
+		}
 		Pubsub::pub_from_rename(tab, &old, &new);
 
-		FilesOp::Deleting(file.parent().unwrap(), vec![new.clone()]).emit();
-		FilesOp::Upserting(file.parent().unwrap(), HashMap::from_iter([(old, file)])).emit();
-		Ok(ManagerProxy::hover(Some(new)))
+		let file = File::from(new.clone()).await?;
+		FilesOp::Deleting(p_old, vec![old]).emit();
+		FilesOp::Upserting(p_new, HashMap::from_iter([(new.clone(), file)])).emit();
+		Ok(TabProxy::reveal(&new))
 	}
 
 	fn empty_url_part(url: &Url, by: &str) -> String {

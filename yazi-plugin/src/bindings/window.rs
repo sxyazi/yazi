@@ -1,5 +1,5 @@
 use mlua::{FromLua, UserData};
-use yazi_shared::term::Term;
+use yazi_adapter::Dimension;
 
 #[derive(Debug, Clone, Copy, FromLua)]
 pub struct Window {
@@ -11,7 +11,7 @@ pub struct Window {
 
 impl Default for Window {
 	fn default() -> Self {
-		let ws = Term::size();
+		let ws = Dimension::available();
 		Self { rows: ws.rows, cols: ws.columns, width: ws.width, height: ws.height }
 	}
 }

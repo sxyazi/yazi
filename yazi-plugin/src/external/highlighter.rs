@@ -57,7 +57,7 @@ impl Highlighter {
 	}
 
 	pub async fn highlight(&self, skip: usize, limit: usize) -> Result<Text<'static>, PeekError> {
-		let mut reader = BufReader::new(File::open(&self.path).await?).lines();
+		let mut reader = BufReader::new(File::open(&self.path).await?);
 
 		let syntax = Self::find_syntax(&self.path).await;
 		let mut plain = syntax.is_err();
@@ -66,24 +66,30 @@ impl Highlighter {
 		let mut after = Vec::with_capacity(limit);
 
 		let mut i = 0;
-		while let Some(mut line) = reader.next_line().await? {
+		let mut buf = vec![];
+		while reader.read_until(b'\n', &mut buf).await.is_ok() {
 			i += 1;
-			if i > skip + limit {
+			if buf.is_empty() || i > skip + limit {
 				break;
 			}
 
-			if !plain && line.len() > 6000 {
+			if !plain && buf.len() > 6000 {
 				plain = true;
 				drop(mem::take(&mut before));
 			}
 
-			if i > skip {
-				line.push('\n');
-				after.push(line);
-			} else if !plain {
-				line.push('\n');
-				before.push(line);
+			if buf.ends_with(b"\r\n") {
+				buf.pop();
+				buf.pop();
+				buf.push(b'\n');
 			}
+
+			if i > skip {
+				after.push(String::from_utf8_lossy(&buf).into_owned());
+			} else if !plain {
+				before.push(String::from_utf8_lossy(&buf).into_owned());
+			}
+			buf.clear();
 		}
 
 		if skip > 0 && i < skip + limit {
@@ -91,7 +97,8 @@ impl Highlighter {
 		}
 
 		if plain {
-			Ok(Text::from(after.join("")))
+			let indent = " ".repeat(PREVIEW.tab_size as usize);
+			Ok(Text::from(after.join("").replace('\t', &indent)))
 		} else {
 			Self::highlight_with(before, after, syntax.unwrap()).await
 		}

@@ -1,12 +1,13 @@
 use crossterm::terminal::WindowSize;
 use ratatui::layout::Rect;
-use yazi_shared::{event::Cmd, term::Term};
+use yazi_adapter::Dimension;
+use yazi_shared::event::Cmd;
 
 use crate::{app::App, notify};
 
 impl App {
 	pub(crate) fn update_notify(&mut self, cmd: Cmd) {
-		let WindowSize { rows, columns, .. } = Term::size();
+		let WindowSize { rows, columns, .. } = Dimension::available();
 		let area =
 			notify::Layout::available(Rect { x: 0, y: 0, width: columns, height: rows });
 

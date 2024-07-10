@@ -1,17 +1,15 @@
-use std::{collections::HashMap, mem};
+use std::collections::HashMap;
 
-use yazi_config::{manager::SortBy, plugin::{PluginRule, MAX_PRELOADERS}, PLUGIN};
+use yazi_config::{manager::SortBy, plugin::MAX_PREWORKERS, PLUGIN};
 use yazi_shared::{fs::{File, Url}, MIME_DIR};
 
 use super::Tasks;
 use crate::folder::Files;
 
 impl Tasks {
-	pub fn preload_paged(&self, paged: &[File], mimetype: &HashMap<Url, String>) {
-		let mut single_tasks = Vec::with_capacity(paged.len());
-		let mut multi_tasks: [Vec<_>; MAX_PRELOADERS as usize] = Default::default();
-
-		let loaded = self.scheduler.preload.rule_loaded.read();
+	pub fn fetch_paged(&self, paged: &[File], mimetype: &HashMap<Url, String>) {
+		let mut loaded = self.scheduler.prework.loaded.lock();
+		let mut tasks: [Vec<_>; MAX_PREWORKERS as usize] = Default::default();
 		for f in paged {
 			let mime = if f.is_dir() { Some(MIME_DIR) } else { mimetype.get(&f.url).map(|s| &**s) };
 			let factors = |s: &str| match s {
@@ -19,61 +17,58 @@ impl Tasks {
 				_ => false,
 			};
 
-			for rule in PLUGIN.preloaders(&f.url, mime, factors) {
-				if loaded.get(&f.url).is_some_and(|x| x & (1 << rule.id) != 0) {
-					continue;
+			for p in PLUGIN.fetchers(&f.url, mime, factors) {
+				match loaded.get_mut(&f.url) {
+					Some(n) if *n & (1 << p.idx) != 0 => continue,
+					Some(n) => *n |= 1 << p.idx,
+					None => _ = loaded.insert(f.url.clone(), 1 << p.idx),
 				}
-				if rule.multi {
-					multi_tasks[rule.id as usize].push(f);
-				} else {
-					single_tasks.push((rule, f));
-				}
+				tasks[p.idx as usize].push(f.clone());
 			}
 		}
 
 		drop(loaded);
-		let mut loaded = self.scheduler.preload.rule_loaded.write();
-
-		let mut go = |rule: &PluginRule, targets: Vec<&File>| {
-			for &f in &targets {
-				if let Some(n) = loaded.get_mut(&f.url) {
-					*n |= 1 << rule.id;
-				} else {
-					loaded.insert(f.url.clone(), 1 << rule.id);
-				}
+		for (i, tasks) in tasks.into_iter().enumerate() {
+			if !tasks.is_empty() {
+				self.scheduler.fetch_paged(&PLUGIN.fetchers[i], tasks);
 			}
-			self.scheduler.preload_paged(rule, targets);
-		};
-
-		#[allow(clippy::needless_range_loop)]
-		for i in 0..PLUGIN.preloaders.len() {
-			if !multi_tasks[i].is_empty() {
-				go(&PLUGIN.preloaders[i], mem::take(&mut multi_tasks[i]));
-			}
-		}
-		for (rule, target) in single_tasks {
-			go(rule, vec![target]);
 		}
 	}
 
-	pub fn preload_affected(&self, affected: &[File], mimetype: &HashMap<Url, String>) {
+	pub fn preload_paged(&self, paged: &[File], mimetype: &HashMap<Url, String>) {
+		let mut loaded = self.scheduler.prework.loaded.lock();
+		for f in paged {
+			let mime = if f.is_dir() { Some(MIME_DIR) } else { mimetype.get(&f.url).map(|s| &**s) };
+			for p in PLUGIN.preloaders(&f.url, mime) {
+				match loaded.get_mut(&f.url) {
+					Some(n) if *n & (1 << p.idx) != 0 => continue,
+					Some(n) => *n |= 1 << p.idx,
+					None => _ = loaded.insert(f.url.clone(), 1 << p.idx),
+				}
+				self.scheduler.preload_paged(p, f);
+			}
+		}
+	}
+
+	pub fn prework_affected(&self, affected: &[File], mimetype: &HashMap<Url, String>) {
 		{
-			let mut loaded = self.scheduler.preload.rule_loaded.write();
+			let mut loaded = self.scheduler.prework.loaded.lock();
 			for f in affected {
 				loaded.remove(&f.url);
 			}
 		}
 
+		self.fetch_paged(affected, mimetype);
 		self.preload_paged(affected, mimetype);
 	}
 
-	pub fn preload_sorted(&self, targets: &Files) {
+	pub fn prework_sorted(&self, targets: &Files) {
 		if targets.sorter().by != SortBy::Size {
 			return;
 		}
 
 		let targets: Vec<_> = {
-			let loading = self.scheduler.preload.size_loading.read();
+			let loading = self.scheduler.prework.size_loading.read();
 			targets
 				.iter()
 				.filter(|f| f.is_dir() && !targets.sizes.contains_key(&f.url) && !loading.contains(&f.url))
@@ -84,11 +79,11 @@ impl Tasks {
 			return;
 		}
 
-		let mut loading = self.scheduler.preload.size_loading.write();
+		let mut loading = self.scheduler.prework.size_loading.write();
 		for &target in &targets {
 			loading.insert(target.clone());
 		}
 
-		self.scheduler.preload_size(targets);
+		self.scheduler.prework_size(targets);
 	}
 }

@@ -1,13 +1,12 @@
 use std::{borrow::Cow, collections::VecDeque, fs::Metadata, path::{Path, PathBuf}};
 
 use anyhow::{anyhow, Result};
-use futures::{future::BoxFuture, FutureExt};
 use tokio::{fs, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::TASKS;
-use yazi_shared::fs::{accessible, calculate_size, copy_with_progress, path_relative_to, Url};
+use yazi_shared::fs::{calculate_size, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to, Url};
 
-use super::{FileOp, FileOpDelete, FileOpLink, FileOpPaste, FileOpTrash};
+use super::{FileOp, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpTrash};
 use crate::{TaskOp, TaskProg, LOW, NORMAL};
 
 pub struct File {
@@ -26,12 +25,9 @@ impl File {
 	pub async fn work(&self, op: FileOp) -> Result<()> {
 		match op {
 			FileOp::Paste(mut task) => {
-				match fs::remove_file(&task.to).await {
-					Err(e) if e.kind() != NotFound => Err(e)?,
-					_ => {}
-				}
-
+				ok_or_not_found(fs::remove_file(&task.to).await)?;
 				let mut it = copy_with_progress(&task.from, &task.to, task.meta.as_ref().unwrap());
+
 				while let Some(res) = it.recv().await {
 					match res {
 						Ok(0) => {
@@ -42,7 +38,7 @@ impl File {
 						}
 						Ok(n) => self.prog.send(TaskProg::Adv(task.id, 0, n))?,
 						Err(e) if e.kind() == NotFound => {
-							warn!("Paste task partially done: {:?}", task);
+							warn!("Paste task partially done: {task:?}");
 							break;
 						}
 						// Operation not permitted (os error 1)
@@ -68,7 +64,7 @@ impl File {
 					match fs::read_link(&task.from).await {
 						Ok(p) => Cow::Owned(p),
 						Err(e) if e.kind() == NotFound => {
-							self.log(task.id, format!("Link task partially done: {:?}", task))?;
+							warn!("Link task partially done: {task:?}");
 							return Ok(self.prog.send(TaskProg::Adv(task.id, 1, meta.len()))?);
 						}
 						Err(e) => Err(e)?,
@@ -83,21 +79,17 @@ impl File {
 					src
 				};
 
-				match fs::remove_file(&task.to).await {
-					Err(e) if e.kind() != NotFound => Err(e)?,
-					_ => {
-						#[cfg(unix)]
-						{
-							fs::symlink(src, &task.to).await?
-						}
-						#[cfg(windows)]
-						{
-							if meta.is_dir() {
-								fs::symlink_dir(src, &task.to).await?
-							} else {
-								fs::symlink_file(src, &task.to).await?
-							}
-						}
+				ok_or_not_found(fs::remove_file(&task.to).await)?;
+				#[cfg(unix)]
+				{
+					fs::symlink(src, &task.to).await?;
+				}
+				#[cfg(windows)]
+				{
+					if meta.is_dir() {
+						fs::symlink_dir(src, &task.to).await?;
+					} else {
+						fs::symlink_file(src, &task.to).await?;
 					}
 				}
 
@@ -106,9 +98,29 @@ impl File {
 				}
 				self.prog.send(TaskProg::Adv(task.id, 1, meta.len()))?;
 			}
+			FileOp::Hardlink(task) => {
+				let meta = task.meta.as_ref().unwrap();
+				let src = if !task.follow {
+					Cow::Borrowed(task.from.as_path())
+				} else if let Ok(p) = fs::canonicalize(&task.from).await {
+					Cow::Owned(p)
+				} else {
+					Cow::Borrowed(task.from.as_path())
+				};
+
+				ok_or_not_found(fs::remove_file(&task.to).await)?;
+				match fs::hard_link(src, &task.to).await {
+					Err(e) if e.kind() == NotFound => {
+						warn!("Hardlink task partially done: {task:?}");
+					}
+					v => v?,
+				}
+
+				self.prog.send(TaskProg::Adv(task.id, 1, meta.len()))?;
+			}
 			FileOp::Delete(task) => {
 				if let Err(e) = fs::remove_file(&task.target).await {
-					if e.kind() != NotFound && accessible(&task.target).await {
+					if e.kind() != NotFound && maybe_exists(&task.target).await {
 						self.fail(task.id, format!("Delete task failed: {:?}, {e}", task))?;
 						Err(e)?
 					}
@@ -134,12 +146,8 @@ impl File {
 	}
 
 	pub async fn paste(&self, mut task: FileOpPaste) -> Result<()> {
-		if task.cut {
-			match fs::rename(&task.from, &task.to).await {
-				Ok(_) => return self.succ(task.id),
-				Err(e) if e.kind() == NotFound => return self.succ(task.id),
-				_ => {}
-			}
+		if task.cut && ok_or_not_found(fs::rename(&task.from, &task.to).await).is_ok() {
+			return self.succ(task.id);
 		}
 
 		if task.meta.is_none() {
@@ -217,6 +225,61 @@ impl File {
 		self.succ(id)
 	}
 
+	pub async fn hardlink(&self, mut task: FileOpHardlink) -> Result<()> {
+		if task.meta.is_none() {
+			task.meta = Some(Self::metadata(&task.from, task.follow).await?);
+		}
+
+		let meta = task.meta.as_ref().unwrap();
+		if !meta.is_dir() {
+			let id = task.id;
+			self.prog.send(TaskProg::New(id, meta.len()))?;
+			self.queue(FileOp::Hardlink(task), NORMAL).await?;
+			return self.succ(id);
+		}
+
+		macro_rules! continue_unless_ok {
+			($result:expr) => {
+				match $result {
+					Ok(v) => v,
+					Err(e) => {
+						self.prog.send(TaskProg::New(task.id, 0))?;
+						self.fail(task.id, format!("An error occurred while hardlinking: {e}"))?;
+						continue;
+					}
+				}
+			};
+		}
+
+		let root = &task.to;
+		let skip = task.from.components().count();
+		let mut dirs = VecDeque::from([task.from.clone()]);
+
+		while let Some(src) = dirs.pop_front() {
+			let dest = root.join(src.components().skip(skip).collect::<PathBuf>());
+			continue_unless_ok!(match fs::create_dir(&dest).await {
+				Err(e) if e.kind() != AlreadyExists => Err(e),
+				_ => Ok(()),
+			});
+
+			let mut it = continue_unless_ok!(fs::read_dir(&src).await);
+			while let Ok(Some(entry)) = it.next_entry().await {
+				let from = Url::from(entry.path());
+				let meta = continue_unless_ok!(Self::metadata(&from, task.follow).await);
+
+				if meta.is_dir() {
+					dirs.push_back(from);
+					continue;
+				}
+
+				let to = dest.join(from.file_name().unwrap());
+				self.prog.send(TaskProg::New(task.id, meta.len()))?;
+				self.queue(FileOp::Hardlink(task.spawn(from, to, meta)), NORMAL).await?;
+			}
+		}
+		self.succ(task.id)
+	}
+
 	pub async fn delete(&self, mut task: FileOpDelete) -> Result<()> {
 		let meta = fs::symlink_metadata(&task.target).await?;
 		if !meta.is_dir() {
@@ -257,6 +320,7 @@ impl File {
 		self.succ(id)
 	}
 
+	#[inline]
 	async fn metadata(path: &Path, follow: bool) -> io::Result<Metadata> {
 		if !follow {
 			return fs::symlink_metadata(path).await;
@@ -266,24 +330,18 @@ impl File {
 		if meta.is_ok() { meta } else { fs::symlink_metadata(path).await }
 	}
 
-	pub(crate) fn remove_empty_dirs(dir: &Path) -> BoxFuture<()> {
-		async move {
-			let mut it = match fs::read_dir(dir).await {
-				Ok(it) => it,
-				Err(_) => return,
-			};
+	pub(crate) async fn remove_empty_dirs(dir: &Path) {
+		let Ok(mut it) = fs::read_dir(dir).await else { return };
 
-			while let Ok(Some(entry)) = it.next_entry().await {
-				if entry.file_type().await.map(|t| t.is_dir()).unwrap_or(false) {
-					let path = entry.path();
-					Self::remove_empty_dirs(&path).await;
-					fs::remove_dir(path).await.ok();
-				}
+		while let Ok(Some(entry)) = it.next_entry().await {
+			if entry.file_type().await.is_ok_and(|t| t.is_dir()) {
+				let path = entry.path();
+				Box::pin(Self::remove_empty_dirs(&path)).await;
+				fs::remove_dir(path).await.ok();
 			}
-
-			fs::remove_dir(dir).await.ok();
 		}
-		.boxed()
+
+		fs::remove_dir(dir).await.ok();
 	}
 }
 

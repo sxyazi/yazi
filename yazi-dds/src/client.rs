@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet}, mem, str::FromStr};
 
-use anyhow::Result;
+use anyhow::{bail, Context, Result};
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use tokio::{io::AsyncWriteExt, select, sync::mpsc, task::JoinHandle, time};
@@ -27,6 +27,7 @@ pub struct Peer {
 }
 
 impl Client {
+	/// Connect to an existing server or start a new one.
 	pub(super) fn serve() {
 		let mut rx = QUEUE_RX.drop();
 		while rx.try_recv().is_ok() {}
@@ -52,7 +53,7 @@ impl Client {
 						if line.is_empty() {
 							continue;
 						} else if line.starts_with("hey,") {
-							Self::handle_hey(line);
+							Self::handle_hey(&line);
 						} else {
 							Payload::from_str(&line).map(|p| p.emit()).ok();
 						}
@@ -62,14 +63,14 @@ impl Client {
 		});
 	}
 
-	pub async fn shot(kind: &str, receiver: u64, severity: Option<u16>, body: &str) -> Result<()> {
+	/// Connect to an existing server to send a single message.
+	pub async fn shot(kind: &str, receiver: u64, body: &str) -> Result<()> {
 		Body::validate(kind)?;
 
-		let sender = severity.map(Into::into).unwrap_or(*ID);
 		let payload = format!(
-			"{}\n{kind},{receiver},{sender},{body}\n{}\n",
+			"{}\n{kind},{receiver},{ID},{body}\n{}\n",
 			Payload::new(BodyHi::borrowed(Default::default())),
-			Payload::new(BodyBye::borrowed())
+			Payload::new(BodyBye::owned())
 		);
 
 		let (mut lines, mut writer) = Stream::connect().await?;
@@ -77,13 +78,61 @@ impl Client {
 		writer.flush().await?;
 		drop(writer);
 
-		while let Ok(Some(s)) = lines.next_line().await {
-			if matches!(s.split(',').next(), Some(kind) if kind == "bye") {
-				break;
+		let mut version = None;
+		while let Ok(Some(line)) = lines.next_line().await {
+			match line.split(',').next() {
+				Some("hey") if version.is_none() => {
+					if let Ok(Body::Hey(hey)) = Payload::from_str(&line).map(|p| p.body) {
+						version = Some(hey.version);
+					}
+				}
+				Some("bye") => break,
+				_ => {}
 			}
 		}
 
+		if version != Some(BodyHi::version()) {
+			bail!(
+				"Incompatible version (Ya {}, Yazi {})",
+				BodyHi::version(),
+				version.as_deref().unwrap_or("Unknown")
+			);
+		}
 		Ok(())
+	}
+
+	/// Connect to an existing server and listen in on the messages that are being
+	/// sent by other yazi instances:
+	///   - If no server is running, fail right away;
+	///   - If a server is closed, attempt to reconnect forever.
+	pub async fn draw(kinds: HashSet<&str>) -> Result<()> {
+		async fn make(kinds: &HashSet<&str>) -> Result<ClientReader> {
+			let (lines, mut writer) = Stream::connect().await?;
+			let hi = Payload::new(BodyHi::borrowed(kinds.clone()));
+			writer.write_all(format!("{hi}\n").as_bytes()).await?;
+			writer.flush().await?;
+			Ok(lines)
+		}
+
+		let mut lines = make(&kinds).await.context("No running Yazi instance found")?;
+		loop {
+			match lines.next_line().await? {
+				Some(s) => {
+					let kind = s.split(',').next();
+					if matches!(kind, Some(kind) if kinds.contains(kind)) {
+						println!("{s}");
+					}
+				}
+				None => loop {
+					if let Ok(new) = make(&kinds).await {
+						lines = new;
+						break;
+					} else {
+						time::sleep(time::Duration::from_secs(1)).await;
+					}
+				},
+			}
+		}
 	}
 
 	#[inline]
@@ -122,8 +171,8 @@ impl Client {
 		Self::connect(server).await
 	}
 
-	fn handle_hey(s: String) {
-		if let Ok(Body::Hey(mut hey)) = Payload::from_str(&s).map(|p| p.body) {
+	fn handle_hey(s: &str) {
+		if let Ok(Body::Hey(mut hey)) = Payload::from_str(s).map(|p| p.body) {
 			hey.peers.retain(|&id, _| id != *ID);
 			*PEERS.write() = hey.peers;
 		}

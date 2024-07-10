@@ -88,7 +88,7 @@ impl Manager {
 		ManagerProxy::hover(None); // Re-hover in next loop
 		ManagerProxy::update_paged(); // Update for paged files in next loop
 		if calc {
-			tasks.preload_sorted(&tab.current.files);
+			tasks.prework_sorted(&tab.current.files);
 		}
 	}
 
@@ -111,9 +111,10 @@ impl Manager {
 			|(p, pp)| matches!(*op, FilesOp::Deleting(ref parent, ref urls) if *parent == pp && urls.contains(p)),
 		);
 
-		if let Some(f) = tab.history.get_mut(op.url()) {
-			let hovered = f.hovered().filter(|_| f.tracing).map(|h| h.url());
-			_ = f.update(op.into_owned()) && f.repos(hovered);
+		let folder = tab.history.entry(op.url().clone()).or_insert_with(|| Folder::from(op.url()));
+		let hovered = folder.hovered().filter(|_| folder.tracing).map(|h| h.url());
+		if folder.update(op.into_owned()) {
+			folder.repos(hovered);
 		}
 
 		if leave {

@@ -5,16 +5,16 @@ use bitflags::bitflags;
 bitflags! {
 	#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 	pub struct ChaKind: u8 {
-		const DIR          = 0b00000001;
+		const DIR    = 0b00000001;
 
-		const HIDDEN       = 0b00000010;
-		const LINK         = 0b00000100;
-		const ORPHAN       = 0b00001000;
+		const HIDDEN = 0b00000010;
+		const LINK   = 0b00000100;
+		const ORPHAN = 0b00001000;
 
-		const BLOCK_DEVICE = 0b00010000;
-		const CHAR_DEVICE  = 0b00100000;
-		const FIFO         = 0b01000000;
-		const SOCKET       = 0b10000000;
+		const BLOCK  = 0b00010000;
+		const CHAR   = 0b00100000;
+		const FIFO   = 0b01000000;
+		const SOCKET = 0b10000000;
 	}
 }
 
@@ -28,9 +28,11 @@ pub struct Cha {
 	#[cfg(unix)]
 	pub permissions: libc::mode_t,
 	#[cfg(unix)]
-	pub uid:         u32,
+	pub uid:         libc::uid_t,
 	#[cfg(unix)]
-	pub gid:         u32,
+	pub gid:         libc::gid_t,
+	#[cfg(unix)]
+	pub nlink:       libc::nlink_t,
 }
 
 impl From<Metadata> for Cha {
@@ -44,10 +46,10 @@ impl From<Metadata> for Cha {
 		{
 			use std::os::unix::prelude::FileTypeExt;
 			if m.file_type().is_block_device() {
-				ck |= ChaKind::BLOCK_DEVICE;
+				ck |= ChaKind::BLOCK;
 			}
 			if m.file_type().is_char_device() {
-				ck |= ChaKind::CHAR_DEVICE;
+				ck |= ChaKind::CHAR;
 			}
 			if m.file_type().is_fifo() {
 				ck |= ChaKind::FIFO;
@@ -61,24 +63,28 @@ impl From<Metadata> for Cha {
 			kind:     ck,
 			len:      m.len(),
 			accessed: m.accessed().ok(),
-			// TODO: remove this once https://github.com/rust-lang/rust/issues/108277 is fixed.
-			created:  None,
+			created:  m.created().ok(),
 			modified: m.modified().ok(),
 
 			#[cfg(unix)]
 			permissions:              {
 				use std::os::unix::prelude::PermissionsExt;
-				m.permissions().mode() as libc::mode_t
+				m.permissions().mode() as _
 			},
 			#[cfg(unix)]
 			uid:                      {
 				use std::os::unix::fs::MetadataExt;
-				m.uid()
+				m.uid() as _
 			},
 			#[cfg(unix)]
 			gid:                      {
 				use std::os::unix::fs::MetadataExt;
-				m.gid()
+				m.gid() as _
+			},
+			#[cfg(unix)]
+			nlink:                    {
+				use std::os::unix::fs::MetadataExt;
+				m.nlink() as _
 			},
 		}
 	}
@@ -106,16 +112,16 @@ impl Cha {
 	pub fn is_orphan(&self) -> bool { self.kind.contains(ChaKind::ORPHAN) }
 
 	#[inline]
-	pub fn is_block_device(&self) -> bool { self.kind.contains(ChaKind::BLOCK_DEVICE) }
+	pub fn is_block(&self) -> bool { self.kind.contains(ChaKind::BLOCK) }
 
 	#[inline]
-	pub fn is_char_device(&self) -> bool { self.kind.contains(ChaKind::CHAR_DEVICE) }
+	pub fn is_char(&self) -> bool { self.kind.contains(ChaKind::CHAR) }
 
 	#[inline]
 	pub fn is_fifo(&self) -> bool { self.kind.contains(ChaKind::FIFO) }
 
 	#[inline]
-	pub fn is_socket(&self) -> bool { self.kind.contains(ChaKind::SOCKET) }
+	pub fn is_sock(&self) -> bool { self.kind.contains(ChaKind::SOCKET) }
 
 	#[inline]
 	pub fn is_exec(&self) -> bool {

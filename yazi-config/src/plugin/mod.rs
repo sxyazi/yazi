@@ -1,12 +1,11 @@
+mod fetcher;
 mod plugin;
-mod props;
-mod rule;
-mod run;
+mod preloader;
+mod previewer;
 
+pub use fetcher::*;
 pub use plugin::*;
-pub use props::*;
-pub use rule::*;
-#[allow(unused_imports)]
-pub use run::*;
+pub use preloader::*;
+pub use previewer::*;
 
-pub const MAX_PRELOADERS: u8 = 32;
+pub const MAX_PREWORKERS: u8 = 32;
