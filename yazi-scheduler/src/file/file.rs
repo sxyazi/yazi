@@ -103,7 +103,7 @@ impl File {
 				let src = if !task.follow {
 					Cow::Borrowed(task.from.as_path())
 				} else {
-					match fs::read_link(&task.from).await {
+					match fs::canonicalize(&task.from).await {
 						Ok(p) => Cow::Owned(p),
 						Err(e) if e.kind() == NotFound => {
 							self.log(task.id, format!("Hardlink task partially done: {:?}", task))?;
@@ -243,7 +243,7 @@ impl File {
 					Ok(v) => v,
 					Err(e) => {
 						self.prog.send(TaskProg::New(task.id, 0))?;
-						self.fail(task.id, format!("An error occurred while hard-linking: {e}"))?;
+						self.fail(task.id, format!("An error occurred while hardlinking: {e}"))?;
 						continue;
 					}
 				}

@@ -390,7 +390,7 @@ impl Scheduler {
 						};
 
 						if let Err(e) = result {
-							prog.send(TaskProg::Fail(id, format!("Failed to work on this task: {:?}", e))).ok();
+							prog.send(TaskProg::Fail(id, format!("Failed to work on this task: {e:?}"))).ok();
 						}
 					}
 				}
