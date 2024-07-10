@@ -38,7 +38,7 @@ impl File {
 						}
 						Ok(n) => self.prog.send(TaskProg::Adv(task.id, 0, n))?,
 						Err(e) if e.kind() == NotFound => {
-							warn!("Paste task partially done: {:?}", task);
+							warn!("Paste task partially done: {task:?}");
 							break;
 						}
 						// Operation not permitted (os error 1)
@@ -64,7 +64,7 @@ impl File {
 					match fs::read_link(&task.from).await {
 						Ok(p) => Cow::Owned(p),
 						Err(e) if e.kind() == NotFound => {
-							self.log(task.id, format!("Link task partially done: {:?}", task))?;
+							warn!("Link task partially done: {task:?}");
 							return Ok(self.prog.send(TaskProg::Adv(task.id, 1, meta.len()))?);
 						}
 						Err(e) => Err(e)?,
@@ -102,19 +102,20 @@ impl File {
 				let meta = task.meta.as_ref().unwrap();
 				let src = if !task.follow {
 					Cow::Borrowed(task.from.as_path())
+				} else if let Ok(p) = fs::canonicalize(&task.from).await {
+					Cow::Owned(p)
 				} else {
-					match fs::canonicalize(&task.from).await {
-						Ok(p) => Cow::Owned(p),
-						Err(e) if e.kind() == NotFound => {
-							self.log(task.id, format!("Hardlink task partially done: {:?}", task))?;
-							return Ok(self.prog.send(TaskProg::Adv(task.id, 1, meta.len()))?);
-						}
-						Err(_) => Cow::Borrowed(task.from.as_path()),
-					}
+					Cow::Borrowed(task.from.as_path())
 				};
 
 				ok_or_not_found(fs::remove_file(&task.to).await)?;
-				fs::hard_link(src, &task.to).await?;
+				match fs::hard_link(src, &task.to).await {
+					Err(e) if e.kind() == NotFound => {
+						warn!("Hardlink task partially done: {task:?}");
+					}
+					v => v?,
+				}
+
 				self.prog.send(TaskProg::Adv(task.id, 1, meta.len()))?;
 			}
 			FileOp::Delete(task) => {
