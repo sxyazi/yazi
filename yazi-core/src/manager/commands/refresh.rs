@@ -1,6 +1,7 @@
 use std::{env, path::MAIN_SEPARATOR};
 
 use crossterm::{execute, terminal::SetTitle};
+use yazi_config::MANAGER;
 use yazi_shared::event::Cmd;
 
 use crate::{manager::Manager, tasks::Tasks};
@@ -18,7 +19,10 @@ impl Manager {
 	pub fn refresh(&mut self, _: Cmd, tasks: &Tasks) {
 		env::set_current_dir(self.cwd()).ok();
 		env::set_var("PWD", self.cwd());
-		execute!(std::io::stderr(), SetTitle(self.title())).ok();
+
+		if MANAGER.update_title {
+			execute!(std::io::stderr(), SetTitle(self.title())).ok();
+		}
 
 		self.active_mut().apply_files_attrs();
 

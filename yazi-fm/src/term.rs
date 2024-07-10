@@ -4,7 +4,7 @@ use anyhow::Result;
 use crossterm::{cursor::{RestorePosition, SavePosition}, event::{DisableBracketedPaste, EnableBracketedPaste, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen, SetTitle}};
 use ratatui::{backend::CrosstermBackend, buffer::Buffer, layout::Rect, CompletedFrame, Frame, Terminal};
 use yazi_adapter::Emulator;
-use yazi_config::INPUT;
+use yazi_config::{INPUT, MANAGER};
 
 static CSI_U: AtomicBool = AtomicBool::new(false);
 
@@ -73,9 +73,12 @@ impl Term {
 			execute!(stderr(), PopKeyboardEnhancementFlags).ok();
 		}
 
+		if MANAGER.update_title {
+			execute!(stderr(), SetTitle("")).ok();
+		}
+
 		execute!(
 			stderr(),
-			SetTitle(""),
 			mouse::SetMouse(false),
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
