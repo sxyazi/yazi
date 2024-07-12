@@ -1,9 +1,9 @@
 Progress = {
-	area = ui.Rect.default,
+	_area = ui.Rect.default, -- TODO: remove this
 }
 
 function Progress:render(area, offset)
-	self.area = ui.Rect {
+	self._area = ui.Rect {
 		x = math.max(0, area.w - offset - 21),
 		y = area.y,
 		w = ya.clamp(0, area.w - offset - 1, 20),
@@ -15,16 +15,13 @@ end
 -- Progress bars usually need frequent updates to report the latest task progress.
 -- We use `partial_render()` to partially render it when there is progress change,
 -- which has almost no cost compared to a full render by `render()`.
---
--- However, at this time, we can only access `cx.tasks`. If you need certain data from the complete `cx`,
--- just cache it to `self` during `render()`, and read it in `partial_render()` - this process is referred to as "composition".
 function Progress:partial_render()
 	local progress = cx.tasks.progress
 	if progress.total == 0 then
-		return { ui.Paragraph(self.area, {}) }
+		return { ui.Paragraph(self._area, {}) }
 	end
 
-	local gauge = ui.Gauge(self.area)
+	local gauge = ui.Gauge(self._area)
 	if progress.fail == 0 then
 		gauge = gauge:gauge_style(THEME.status.progress_normal)
 	else

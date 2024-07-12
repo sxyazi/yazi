@@ -1,4 +1,5 @@
-use mlua::{AnyUserData, Lua};
+use mlua::{AnyUserData, Lua, Table};
+use tracing::error;
 
 use crate::cast_to_renderable;
 
@@ -21,6 +22,7 @@ pub fn pour(lua: &Lua) -> mlua::Result<()> {
 	super::ListItem::install(lua, &ui)?;
 	super::Padding::install(lua, &ui)?;
 	super::Paragraph::install(lua, &ui)?;
+	super::Position::install(lua, &ui)?;
 	super::Rect::install(lua, &ui)?;
 	super::Span::install(lua, &ui)?;
 	super::Style::install(lua, &ui)?;
@@ -36,10 +38,16 @@ pub trait Renderable {
 	fn clone_render(&self, buf: &mut ratatui::buffer::Buffer);
 }
 
-pub fn render_widgets(widgets: Vec<AnyUserData>, buf: &mut ratatui::buffer::Buffer) {
-	for widget in widgets {
-		if let Some(w) = cast_to_renderable(widget) {
-			w.render(buf);
+pub fn render_widgets(widgets: Table, buf: &mut ratatui::buffer::Buffer) {
+	for widget in widgets.sequence_values::<AnyUserData>() {
+		let Ok(widget) = widget else {
+			error!("Failed to convert to renderable UserData: {}", widget.unwrap_err());
+			continue;
+		};
+
+		match cast_to_renderable(&widget) {
+			Some(w) => w.render(buf),
+			None => error!("Only the UserData of renderable element is accepted: {widget:#?}"),
 		}
 	}
 }

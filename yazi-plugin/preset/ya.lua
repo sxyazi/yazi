@@ -14,18 +14,11 @@ end
 
 function ya.round(x) return x >= 0 and math.floor(x + 0.5) or math.ceil(x - 0.5) end
 
-function ya.flat(t)
-	local r = {}
-	for _, v in ipairs(t) do
-		if type(v) == "table" then
-			for _, v2 in ipairs(ya.flat(v)) do
-				r[#r + 1] = v2
-			end
-		else
-			r[#r + 1] = v
-		end
+function ya.list_merge(a, b)
+	for _, v in ipairs(b) do
+		a[#a + 1] = v
 	end
-	return r
+	return a
 end
 
 function ya.basename(str) return string.gsub(str, "(.*[/\\])(.*)", "%2") end
@@ -48,5 +41,13 @@ function ya.readable_path(path)
 		return "~" .. string.sub(path, #home + 1)
 	else
 		return path
+	end
+end
+
+function ya.child_at(position, children)
+	for i = #children, 1, -1 do
+		if children[i]._area:contains(position) then
+			return children[i]
+		end
 	end
 end

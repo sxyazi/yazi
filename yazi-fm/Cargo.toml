@@ -52,5 +52,5 @@ name = "yazi"
 path = "src/main.rs"
 
 [package.metadata.binstall]
-pkg-url = "{ repo }/releases/download/v{ version }/yazi-{ target }{ archive-suffix }"
-bin-dir = "yazi-{ target }/{ bin }{ binary-ext }"
+pkg-url = "{repo}/releases/download/v{version}/yazi-{target}{archive-suffix}"
+bin-dir = "yazi-{target}/{bin}{binary-ext}"

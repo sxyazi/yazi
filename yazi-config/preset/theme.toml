@@ -773,9 +773,9 @@ conds = [
 	{ if = "sticky", text = "" },
 
 	# Fallback
-	{ if = "dir", text = "" },
-	{ if = "exec", text = "" },
-	{ if = "!dir", text = "" },
+	{ if = "dir", text = "󰉋" },
+	{ if = "exec", text = "" },
+	{ if = "!dir", text = "󰈔" },
 ]
 
 # : }}}

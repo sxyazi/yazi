@@ -20,7 +20,7 @@ yazi-shared    = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
 anyhow        = "1.0.86"
-bitflags      = "2.5.0"
+bitflags      = "2.6.0"
 crossterm     = "0.27.0"
 dirs          = "5.0.1"
 futures       = "0.3.30"
@@ -29,7 +29,7 @@ parking_lot   = "0.12.3"
 ratatui       = "0.27.0"
 regex         = "1.10.5"
 scopeguard    = "1.2.0"
-serde         = "1.0.203"
+serde         = "1.0.204"
 shell-words   = "1.1.0"
 tokio         = { version = "1.38.0", features = [ "full" ] }
 tokio-stream  = "0.1.15"

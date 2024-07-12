@@ -1,15 +1,22 @@
 Header = {
-	area = ui.Rect.default,
+	_id = "header",
 }
 
+function Header:new(area, tab)
+	return setmetatable({
+		_area = area,
+		_tab = tab,
+	}, { __index = self })
+end
+
 function Header:cwd(max)
-	local s = ya.readable_path(tostring(cx.active.current.cwd)) .. self:flags()
+	local s = ya.readable_path(tostring(self._tab.current.cwd)) .. self:flags()
 	return ui.Span(ya.truncate(s, { max = max, rtl = true })):style(THEME.manager.cwd)
 end
 
 function Header:flags()
-	local cwd = cx.active.current.cwd
-	local filter = cx.active.current.files.filter
+	local cwd = self._tab.current.cwd
+	local filter = self._tab.current.files.filter
 
 	local s = cwd.is_search and string.format(" (search: %s", cwd:frag()) or ""
 	if not filter then
@@ -26,7 +33,7 @@ function Header:count()
 
 	local count, style
 	if yanked == 0 then
-		count = #cx.active.selected
+		count = #self._tab.selected
 		style = THEME.manager.count_selected
 	elseif cx.yanked.is_cut then
 		count = yanked
@@ -67,17 +74,16 @@ function Header:tabs()
 	return ui.Line(spans)
 end
 
-function Header:render(area)
-	self.area = area
-
+function Header:render()
 	local right = ui.Line { self:count(), self:tabs() }
-	local left = ui.Line { self:cwd(math.max(0, area.w - right:width())) }
+	local left = ui.Line { self:cwd(math.max(0, self._area.w - right:width())) }
 	return {
-		ui.Paragraph(area, { left }),
-		ui.Paragraph(area, { right }):align(ui.Paragraph.RIGHT),
+		ui.Paragraph(self._area, { left }),
+		ui.Paragraph(self._area, { right }):align(ui.Paragraph.RIGHT),
 	}
 end
 
+-- Mouse events
 function Header:click(event, up) end
 
 function Header:scroll(event, step) end

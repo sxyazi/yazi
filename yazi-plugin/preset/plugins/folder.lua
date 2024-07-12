@@ -1,7 +1,7 @@
 local M = {}
 
 function M:peek()
-	local folder = Folder:by_kind(Folder.PREVIEW)
+	local folder = cx.active.preview.folder
 	if not folder or folder.cwd ~= self.file.url then
 		return
 	end
@@ -18,28 +18,19 @@ function M:peek()
 		})
 	end
 
-	local items, markers = {}, {}
-	for i, f in ipairs(folder.window) do
-		items[#items + 1] = ui.ListItem(ui.Line(File:full(f))):style(File:style(f))
-
-		-- Yanked/marked/selected files
-		local marker = File:marker(f)
-		if marker ~= 0 then
-			markers[#markers + 1] = { i, marker }
-		end
+	local items = {}
+	for _, f in ipairs(folder.window) do
+		items[#items + 1] = ui.ListItem(Entity:render(f)):style(Entity:style(f))
 	end
 
-	ya.preview_widgets(
-		self,
-		ya.flat {
-			ui.List(self.area, items),
-			Folder:markers(self.area, markers),
-		}
-	)
+	ya.preview_widgets(self, {
+		ui.List(self.area, items),
+		table.unpack(Marker:new(self.area, folder):render()),
+	})
 end
 
 function M:seek(units)
-	local folder = Folder:by_kind(Folder.PREVIEW)
+	local folder = cx.active.preview.folder
 	if folder and folder.cwd == self.file.url then
 		local step = math.floor(units * self.area.h / 10)
 		local bound = math.max(0, #folder.files - self.area.h)

@@ -8,7 +8,7 @@ impl Utils {
 		ya.raw_set(
 			"dbg",
 			lua.create_function(|_, values: Variadic<Value>| {
-				let s = values.into_iter().map(|v| format!("{:#?}", v)).collect::<Vec<_>>().join(" ");
+				let s = values.into_iter().map(|v| format!("{v:#?}")).collect::<Vec<_>>().join(" ");
 				Ok(debug!("{s}"))
 			})?,
 		)?;
@@ -16,7 +16,7 @@ impl Utils {
 		ya.raw_set(
 			"err",
 			lua.create_function(|_, values: Variadic<Value>| {
-				let s = values.into_iter().map(|v| format!("{:#?}", v)).collect::<Vec<_>>().join(" ");
+				let s = values.into_iter().map(|v| format!("{v:#?}")).collect::<Vec<_>>().join(" ");
 				Ok(error!("{s}"))
 			})?,
 		)?;

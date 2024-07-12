@@ -1,11 +1,10 @@
 use crossterm::event::{MouseEvent, MouseEventKind};
-use mlua::Table;
-use ratatui::layout::{Position, Rect};
+use mlua::{Table, TableExt};
 use tracing::error;
-use yazi_config::{LAYOUT, MANAGER};
+use yazi_config::MANAGER;
 use yazi_plugin::{bindings::Cast, LUA};
 
-use crate::{app::App, components, lives::Lives};
+use crate::{app::App, lives::Lives};
 
 pub struct Opt {
 	event: MouseEvent,
@@ -19,47 +18,36 @@ impl App {
 	pub(crate) fn mouse(&mut self, opt: impl Into<Opt>) {
 		let event = (opt.into() as Opt).event;
 
-		let layout = LAYOUT.load();
-		let position = Position { x: event.column, y: event.row };
+		let Some(size) = self.term.as_ref().and_then(|t| t.size().ok()) else { return };
+		let Ok(evt) = yazi_plugin::bindings::MouseEvent::cast(&LUA, event) else { return };
 
-		if matches!(event.kind, MouseEventKind::Moved | MouseEventKind::Drag(_)) {
-			self.mouse_do(crate::Root::mouse, event, None);
-			return;
-		}
+		let res = Lives::scope(&self.cx, move |_| {
+			let area = yazi_plugin::elements::Rect::cast(&LUA, size)?;
+			let root = LUA.globals().raw_get::<_, Table>("Root")?.call_method::<_, Table>("new", area)?;
 
-		if layout.current.contains(position) {
-			self.mouse_do(components::Current::mouse, event, Some(layout.current));
-		} else if layout.preview.contains(position) {
-			self.mouse_do(components::Preview::mouse, event, Some(layout.preview));
-		} else if layout.parent.contains(position) {
-			self.mouse_do(components::Parent::mouse, event, Some(layout.parent));
-		} else if layout.header.contains(position) {
-			self.mouse_do(components::Header::mouse, event, Some(layout.header));
-		} else if layout.status.contains(position) {
-			self.mouse_do(components::Status::mouse, event, Some(layout.status));
-		}
-	}
-
-	fn mouse_do(
-		&self,
-		f: impl FnOnce(MouseEvent) -> mlua::Result<()>,
-		mut event: MouseEvent,
-		rect: Option<Rect>,
-	) {
-		if matches!(event.kind, MouseEventKind::Down(_) if MANAGER.mouse_events.draggable()) {
-			let evt = yazi_plugin::bindings::MouseEvent::cast(&LUA, event);
-			if let (Ok(evt), Ok(root)) = (evt, LUA.globals().raw_get::<_, Table>("Root")) {
-				root.raw_set("drag_start", evt).ok();
+			if matches!(event.kind, MouseEventKind::Down(_) if MANAGER.mouse_events.draggable()) {
+				root.raw_set("_drag_start", evt.clone())?;
 			}
-		}
 
-		if let Some(rect) = rect {
-			event.row -= rect.y;
-			event.column -= rect.x;
-		}
+			match event.kind {
+				MouseEventKind::Down(_) => root.call_method("click", (evt, false))?,
+				MouseEventKind::Up(_) => root.call_method("click", (evt, true))?,
 
-		if let Err(e) = Lives::scope(&self.cx, move |_| f(event)) {
-			error!("{:?}", e);
+				MouseEventKind::ScrollDown => root.call_method("scroll", (evt, 1))?,
+				MouseEventKind::ScrollUp => root.call_method("scroll", (evt, -1))?,
+
+				MouseEventKind::ScrollRight => root.call_method("touch", (evt, 1))?,
+				MouseEventKind::ScrollLeft => root.call_method("touch", (evt, -1))?,
+
+				MouseEventKind::Moved => root.call_method("move", evt)?,
+				MouseEventKind::Drag(_) => root.call_method("drag", evt)?,
+			}
+
+			Ok(())
+		});
+
+		if let Err(e) = res {
+			error!("{e}");
 		}
 	}
 }
