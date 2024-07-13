@@ -11,6 +11,7 @@ mod layer;
 mod natsort;
 mod number;
 mod os;
+mod rand;
 mod ro_cell;
 mod terminal;
 pub mod theme;
@@ -29,6 +30,7 @@ pub use natsort::*;
 pub use number::*;
 #[cfg(unix)]
 pub use os::*;
+pub use rand::*;
 pub use ro_cell::*;
 pub use terminal::*;
 pub use throttle::*;

@@ -1,7 +1,7 @@
 use std::{cmp::Ordering, collections::HashMap, mem};
 
 use yazi_config::manager::SortBy;
-use yazi_shared::{fs::{File, Url}, natsort, Transliterator};
+use yazi_shared::{fs::{File, Url}, natsort, LcgRng, Transliterator};
 
 #[derive(Clone, Copy, Default, PartialEq)]
 pub struct FilesSorter {
@@ -60,6 +60,10 @@ impl FilesSorter {
 				let ord = self.cmp(aa.unwrap_or(a.len), bb.unwrap_or(b.len), self.promote(a, b));
 				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
 			}),
+			SortBy::Random => {
+				let mut rng = LcgRng::default();
+				items.sort_unstable_by(|a, b| self.cmp(rng.next(), rng.next(), self.promote(a, b)))
+			}
 		}
 	}
 
