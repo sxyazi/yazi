@@ -12,6 +12,8 @@ pub struct Which {
 	pub sort_sensitive: bool,
 	pub sort_reverse:   bool,
 	pub sort_translit:  bool,
+  // emit
+  pub emit_unique:    bool,
 }
 
 impl FromStr for Which {

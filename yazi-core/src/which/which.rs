@@ -1,4 +1,4 @@
-use yazi_config::keymap::{ControlCow, Key};
+use yazi_config::{keymap::{ControlCow, Key}, WHICH};
 use yazi_shared::{emit, render, render_and, Layer};
 
 #[derive(Default)]
@@ -19,7 +19,7 @@ impl Which {
 
 		if self.cands.is_empty() {
 			self.reset();
-		} else if self.cands.len() == 1 {
+		} else if self.cands.len() == 1 && WHICH.emit_unique {
 			emit!(Seq(self.cands.remove(0).into_seq(), self.layer));
 			self.reset();
 		} else if let Some(i) = self.cands.iter().position(|c| c.on.len() == self.times) {
