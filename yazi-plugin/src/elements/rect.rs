@@ -1,6 +1,6 @@
 use mlua::{AnyUserData, Lua, Table, UserDataFields, UserDataMethods, UserDataRef};
 
-use super::PaddingRef;
+use super::{PaddingRef, Position, PositionRef};
 use crate::bindings::Cast;
 
 pub type RectRef<'lua> = UserDataRef<'lua, ratatui::layout::Rect>;
@@ -46,6 +46,8 @@ impl Rect {
 				r.height = r.height.saturating_sub(padding.top + padding.bottom);
 				Rect::cast(lua, r)
 			});
+			reg.add_method("position", |lua, me, ()| Position::cast(lua, me.as_position()));
+			reg.add_method("contains", |_, me, position: PositionRef| Ok(me.contains(*position)));
 		})
 	}
 }

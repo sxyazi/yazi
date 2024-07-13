@@ -15,12 +15,12 @@ yazi-config  = { path = "../yazi-config", version = "0.2.5" }
 yazi-shared  = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
-clap  = { version = "4.5.7", features = [ "derive" ] }
-serde = { version = "1.0.203", features = [ "derive" ] }
+clap  = { version = "4.5.9", features = [ "derive" ] }
+serde = { version = "1.0.204", features = [ "derive" ] }
 
 [build-dependencies]
-clap                  = { version = "4.5.7", features = [ "derive" ] }
-clap_complete         = "4.5.6"
-clap_complete_nushell = "4.5.2"
+clap                  = { version = "4.5.9", features = [ "derive" ] }
+clap_complete         = "4.5.8"
 clap_complete_fig     = "4.5.1"
-vergen                = { version = "8.3.1", features = [ "build", "git", "gitcl" ] }
+clap_complete_nushell = "4.5.2"
+vergen-gitcl          = { version = "1.0.0", features = [ "build" ] }

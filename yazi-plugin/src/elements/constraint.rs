@@ -8,6 +8,18 @@ impl Constraint {
 		let constraint = lua.create_table()?;
 
 		constraint.raw_set(
+			"Min",
+			lua.create_function(|_, n: u16| Ok(Constraint(ratatui::layout::Constraint::Min(n))))?,
+		)?;
+		constraint.raw_set(
+			"Max",
+			lua.create_function(|_, n: u16| Ok(Constraint(ratatui::layout::Constraint::Max(n))))?,
+		)?;
+		constraint.raw_set(
+			"Length",
+			lua.create_function(|_, n: u16| Ok(Constraint(ratatui::layout::Constraint::Length(n))))?,
+		)?;
+		constraint.raw_set(
 			"Percentage",
 			lua
 				.create_function(|_, n: u16| Ok(Constraint(ratatui::layout::Constraint::Percentage(n))))?,
@@ -19,16 +31,8 @@ impl Constraint {
 			})?,
 		)?;
 		constraint.raw_set(
-			"Length",
-			lua.create_function(|_, n: u16| Ok(Constraint(ratatui::layout::Constraint::Length(n))))?,
-		)?;
-		constraint.raw_set(
-			"Max",
-			lua.create_function(|_, n: u16| Ok(Constraint(ratatui::layout::Constraint::Max(n))))?,
-		)?;
-		constraint.raw_set(
-			"Min",
-			lua.create_function(|_, n: u16| Ok(Constraint(ratatui::layout::Constraint::Min(n))))?,
+			"Fill",
+			lua.create_function(|_, n: u16| Ok(Constraint(ratatui::layout::Constraint::Fill(n))))?,
 		)?;
 
 		ui.raw_set("Constraint", constraint)

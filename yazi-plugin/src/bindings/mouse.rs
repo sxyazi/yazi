@@ -8,8 +8,8 @@ pub struct MouseEvent;
 impl MouseEvent {
 	pub fn register(lua: &Lua) -> mlua::Result<()> {
 		lua.register_userdata_type::<crossterm::event::MouseEvent>(|reg| {
-			reg.add_field_method_get("x", |_, me| Ok(me.column as u32 + 1));
-			reg.add_field_method_get("y", |_, me| Ok(me.row as u32 + 1));
+			reg.add_field_method_get("x", |_, me| Ok(me.column));
+			reg.add_field_method_get("y", |_, me| Ok(me.row));
 			reg.add_field_method_get("is_left", |_, me| {
 				use crossterm::event::MouseEventKind as K;
 				Ok(matches!(me.kind, K::Down(b) | K::Up(b) | K::Drag(b) if b == MouseButton::Left))

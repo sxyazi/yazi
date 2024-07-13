@@ -53,7 +53,7 @@ impl Utils {
 			"preview_widgets",
 			lua.create_async_function(|_, (t, widgets): (Table, Vec<AnyUserData>)| async move {
 				let mut lock = PreviewLock::try_from(t)?;
-				lock.data = widgets.into_iter().filter_map(cast_to_renderable).collect();
+				lock.data = widgets.into_iter().filter_map(|ud| cast_to_renderable(&ud)).collect();
 
 				emit!(Call(Cmd::new("preview").with_any("lock", lock), Layer::Manager));
 				Ok(())

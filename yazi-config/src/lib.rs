@@ -61,13 +61,20 @@ pub fn init() -> anyhow::Result<()> {
 	// TODO: Remove in v0.3.2
 	for c in &KEYMAP.manager {
 		for r in &c.run {
-			if r.name == "shell" && !r.bool("confirm") && !r.bool("interactive") {
+			if r.name != "shell" {
+				continue;
+			}
+			if !r.bool("confirm") && !r.bool("interactive") {
 				eprintln!(
 					r#"WARNING: In Yazi v0.3, the behavior of the interactive `shell` (i.e., shell templates) must be explicitly specified with `--interactive`.
 
 Please replace e.g. `shell` with `shell --interactive`, `shell "my-template"` with `shell "my-template" --interactive`, in your keymap.toml"#
 				);
 				return Ok(());
+			} else if r.bool("confirm") && r.bool("interactive") {
+				eprintln!(
+					"The `shell` command cannot specify both `--confirm` and `--interactive` at the same time.",
+				);
 			}
 		}
 	}

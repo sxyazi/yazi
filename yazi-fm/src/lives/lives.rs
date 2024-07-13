@@ -1,10 +1,9 @@
-use std::{mem, sync::Arc};
+use std::mem;
 
-use mlua::{Scope, Table};
+use mlua::Scope;
 use scopeguard::defer;
 use tracing::error;
-use yazi_config::LAYOUT;
-use yazi_plugin::{elements::RectRef, LUA};
+use yazi_plugin::LUA;
 use yazi_shared::RoCell;
 
 use crate::Ctx;
@@ -52,17 +51,7 @@ impl Lives {
 				])?,
 			)?;
 
-			let ret = f(scope)?;
-
-			LAYOUT.store(Arc::new(yazi_config::Layout {
-				header:  *globals.raw_get::<_, Table>("Header")?.raw_get::<_, RectRef>("area")?,
-				parent:  *globals.raw_get::<_, Table>("Parent")?.raw_get::<_, RectRef>("area")?,
-				current: *globals.raw_get::<_, Table>("Current")?.raw_get::<_, RectRef>("area")?,
-				preview: *globals.raw_get::<_, Table>("Preview")?.raw_get::<_, RectRef>("area")?,
-				status:  *globals.raw_get::<_, Table>("Status")?.raw_get::<_, RectRef>("area")?,
-			}));
-
-			Ok(ret)
+			f(scope)
 		});
 
 		if let Err(ref e) = result {

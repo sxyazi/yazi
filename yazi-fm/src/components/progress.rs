@@ -14,7 +14,7 @@ impl Progress {
 		let mut f = || {
 			let comp: Table = LUA.globals().raw_get("Progress")?;
 			for widget in comp.call_method::<_, Vec<AnyUserData>>("partial_render", ())? {
-				let Some(w) = cast_to_renderable(widget) else { continue };
+				let Some(w) = cast_to_renderable(&widget) else { continue };
 
 				let area = w.area();
 				w.render(buf);
@@ -34,7 +34,7 @@ impl Progress {
 		};
 
 		if let Err(e) = f() {
-			error!("{:?}", e);
+			error!("{e}");
 		}
 		patches
 	}
