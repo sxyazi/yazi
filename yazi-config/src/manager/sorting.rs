@@ -14,6 +14,7 @@ pub enum SortBy {
 	Alphabetical,
 	Natural,
 	Size,
+	Random,
 }
 
 impl FromStr for SortBy {
@@ -28,6 +29,7 @@ impl FromStr for SortBy {
 			"alphabetical" => Self::Alphabetical,
 			"natural" => Self::Natural,
 			"size" => Self::Size,
+			"random" => Self::Random,
 			_ => bail!("invalid sort_by value: {s}"),
 		})
 	}
@@ -49,6 +51,7 @@ impl Display for SortBy {
 			Self::Alphabetical => "alphabetical",
 			Self::Natural => "natural",
 			Self::Size => "size",
+			Self::Random => "random",
 		})
 	}
 }
