@@ -120,7 +120,6 @@ keymap = [
 	{ on = [ ",", "s" ], run = "sort size --reverse=no",         desc = "Sort by size" },
 	{ on = [ ",", "S" ], run = "sort size --reverse",            desc = "Sort by size (reverse)" },
 	{ on = [ ",", "r" ], run = "sort random --reverse=no",       desc = "Sort randomly" },
-	{ on = [ ",", "R" ], run = "sort random --reverse",          desc = "Sort randomly (reverse)" },
 
 	# Tabs
 	{ on = "t", run = "tab_create --current", desc = "Create a new tab with CWD" },

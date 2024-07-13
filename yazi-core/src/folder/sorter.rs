@@ -1,24 +1,7 @@
-use std::{cmp::Ordering, collections::HashMap, mem, time::{SystemTime, UNIX_EPOCH}};
+use std::{cmp::Ordering, collections::HashMap, mem};
 
 use yazi_config::manager::SortBy;
-use yazi_shared::{fs::{File, Url}, natsort, Transliterator};
-
-struct LcgRng {
-	seed: u64,
-}
-
-impl LcgRng {
-	const A: u64 = 6364136223846793005;
-	const C: u64 = 1;
-	const M: u64 = u64::MAX;
-
-	fn new(seed: u64) -> Self { LcgRng { seed } }
-
-	fn next(&mut self) -> u64 {
-		self.seed = (Self::A.wrapping_mul(self.seed).wrapping_add(Self::C)) % Self::M;
-		self.seed
-	}
-}
+use yazi_shared::{fs::{File, Url}, natsort, LcgRng, Transliterator};
 
 #[derive(Clone, Copy, Default, PartialEq)]
 pub struct FilesSorter {
@@ -78,15 +61,8 @@ impl FilesSorter {
 				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
 			}),
 			SortBy::Random => {
-				let start = SystemTime::now();
-				let since_epoch = start.duration_since(UNIX_EPOCH).expect("Time went backwards");
-				let seed = since_epoch.as_secs() ^ since_epoch.subsec_nanos() as u64;
-				let mut rng = LcgRng::new(seed);
-				items.sort_unstable_by(|a, b| {
-					let aa = rng.next();
-					let bb = rng.next();
-					self.cmp(aa, bb, self.promote(a, b))
-				})
+				let mut rng = LcgRng::default();
+				items.sort_unstable_by(|a, b| self.cmp(rng.next(), rng.next(), self.promote(a, b)))
 			}
 		}
 	}
