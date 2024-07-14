@@ -24,9 +24,26 @@ function Linemode:size(file)
 	return ui.Line(size and ya.readable_size(size) or "")
 end
 
+function Linemode:ctime(file)
+	local time = (file.cha.created or 0) // 1
+	if time == 0 then
+		return ui.Line("")
+	elseif os.date("%Y", time) == os.date("%Y") then
+		return ui.Line(os.date("%m/%d %H:%M", time))
+	else
+		return ui.Line(os.date("%m/%d  %Y", time))
+	end
+end
+
 function Linemode:mtime(file)
-	local time = file.cha.modified
-	return ui.Line(time and os.date("%y-%m-%d %H:%M", time // 1) or "")
+	local time = (file.cha.modified or 0) // 1
+	if time == 0 then
+		return ui.Line("")
+	elseif os.date("%Y", time) == os.date("%Y") then
+		return ui.Line(os.date("%m/%d %H:%M", time))
+	else
+		return ui.Line(os.date("%m/%d  %Y", time))
+	end
 end
 
 function Linemode:permissions(file) return ui.Line(file.cha:permissions() or "") end

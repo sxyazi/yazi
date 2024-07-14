@@ -81,7 +81,7 @@ local function entry()
 
 	local target = output.stdout:gsub("\n$", "")
 	if target ~= "" then
-		ya.manager_emit("cd", { output.stdout:gsub("\n$", "") })
+		ya.manager_emit("cd", { target })
 	end
 end
 
