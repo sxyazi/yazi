@@ -1,4 +1,4 @@
-use std::{path::PathBuf, str::FromStr, time::{self, SystemTime}};
+use std::{path::PathBuf, str::FromStr, time::{SystemTime, UNIX_EPOCH}};
 
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
@@ -26,8 +26,8 @@ pub struct Preview {
 impl Preview {
 	#[inline]
 	pub fn tmpfile(&self, prefix: &str) -> PathBuf {
-		let nanos = SystemTime::now().duration_since(time::UNIX_EPOCH).unwrap().as_nanos();
-		self.cache_dir.join(format!("{prefix}-{}", nanos / 1000))
+		let time = SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards");
+		self.cache_dir.join(format!("{prefix}-{}", time.as_nanos() / 1000))
 	}
 }
 
