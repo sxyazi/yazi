@@ -1,4 +1,4 @@
-use std::{cell::Cell, ffi::OsStr, fs::Metadata, ops::Deref};
+use std::{cell::Cell, ffi::OsStr, fs::{FileType, Metadata}, ops::Deref};
 
 use anyhow::Result;
 use tokio::fs;
@@ -63,7 +63,10 @@ impl File {
 	}
 
 	#[inline]
-	pub fn from_dummy(url: &Url) -> Self { Self { url: url.to_owned(), ..Default::default() } }
+	pub fn from_dummy(url: Url, ft: Option<FileType>) -> Self {
+		// TODO: set dummy=true
+		Self { url: url.to_owned(), cha: ft.map_or_else(Cha::default, Cha::from), ..Default::default() }
+	}
 }
 
 impl File {

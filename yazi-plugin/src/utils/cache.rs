@@ -17,7 +17,7 @@ impl Utils {
 
 				let hex = {
 					let mut digest = Md5::new_with_prefix(file.url.as_os_str().as_encoded_bytes());
-					digest.update(&format!("//{:?}//{}", file.cha.modified, t.raw_get("skip").unwrap_or(0)));
+					digest.update(&format!("//{:?}//{}", file.cha.mtime, t.raw_get("skip").unwrap_or(0)));
 					format!("{:x}", digest.finalize())
 				};
 

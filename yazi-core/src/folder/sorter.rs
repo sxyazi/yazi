@@ -33,11 +33,11 @@ impl FilesSorter {
 		match self.by {
 			SortBy::None => {}
 			SortBy::Modified => items.sort_unstable_by(|a, b| {
-				let ord = self.cmp(a.modified, b.modified, self.promote(a, b));
+				let ord = self.cmp(a.mtime, b.mtime, self.promote(a, b));
 				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
 			}),
 			SortBy::Created => items.sort_unstable_by(|a, b| {
-				let ord = self.cmp(a.created, b.created, self.promote(a, b));
+				let ord = self.cmp(a.ctime, b.ctime, self.promote(a, b));
 				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
 			}),
 			SortBy::Extension => items.sort_unstable_by(|a, b| {

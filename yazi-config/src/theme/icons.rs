@@ -29,6 +29,7 @@ impl Icons {
 			"hidden" => file.is_hidden(),
 			"link" => file.is_link(),
 			"orphan" => file.is_orphan(),
+			"dummy" => file.is_dummy(),
 			"block" => file.is_block(),
 			"char" => file.is_char(),
 			"fifo" => file.is_fifo(),
