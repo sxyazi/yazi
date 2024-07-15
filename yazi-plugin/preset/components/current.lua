@@ -29,14 +29,17 @@ function Current:render()
 		return self:empty()
 	end
 
-	local items = {}
+	local entities, linemodes = {}, {}
 	for _, f in ipairs(files) do
-		items[#items + 1] = ui.ListItem(Entity:render(f)):style(Entity:style(f))
+		linemodes[#linemodes + 1] = Linemode:new(f):render()
+
+		local entity = Entity:new(f)
+		entities[#entities + 1] = ui.ListItem(entity:render()):style(entity:style())
 	end
 
 	return {
-		ui.List(self._area, items),
-		ui.Paragraph(self._area, Linemode:render(files)):align(ui.Paragraph.RIGHT),
+		ui.List(self._area, entities),
+		ui.Paragraph(self._area, linemodes):align(ui.Paragraph.RIGHT),
 	}
 end
 

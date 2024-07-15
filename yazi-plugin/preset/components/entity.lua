@@ -2,36 +2,27 @@ Entity = {
 	_inc = 1000,
 }
 
-function Entity:style(file)
-	local style = file:style()
-	if not file:is_hovered() then
-		return style
-	elseif file:in_preview() then
-		return style and style:patch(THEME.manager.preview_hovered) or THEME.manager.preview_hovered
-	else
-		return style and style:patch(THEME.manager.hovered) or THEME.manager.hovered
-	end
-end
+function Entity:new(file) return setmetatable({ _file = file }, { __index = self }) end
 
-function Entity:icon(file)
-	local icon = file:icon()
+function Entity:icon()
+	local icon = self._file:icon()
 	if not icon then
 		return ui.Line("")
-	elseif file:is_hovered() then
+	elseif self._file:is_hovered() then
 		return ui.Line(" " .. icon.text .. " ")
 	else
 		return ui.Line(" " .. icon.text .. " "):style(icon.style)
 	end
 end
 
-function Entity:prefix(file)
-	local prefix = file:prefix() or ""
+function Entity:prefix()
+	local prefix = self._file:prefix() or ""
 	return ui.Line(prefix ~= "" and prefix .. "/" or "")
 end
 
-function Entity:highlights(file)
-	local name = file.name:gsub("\r", "?", 1)
-	local highlights = file:highlights()
+function Entity:highlights()
+	local name = self._file.name:gsub("\r", "?", 1)
+	local highlights = self._file:highlights()
 	if not highlights or #highlights == 0 then
 		return ui.Line(name)
 	end
@@ -50,12 +41,12 @@ function Entity:highlights(file)
 	return ui.Line(spans)
 end
 
-function Entity:found(file)
-	if not file:is_hovered() then
+function Entity:found()
+	if not self._file:is_hovered() then
 		return ui.Line {}
 	end
 
-	local found = file:found()
+	local found = self._file:found()
 	if not found then
 		return ui.Line {}
 	end
@@ -66,21 +57,32 @@ function Entity:found(file)
 	}
 end
 
-function Entity:symlink(file)
+function Entity:symlink()
 	if not MANAGER.show_symlink then
 		return ui.Line {}
 	end
 
-	local to = file.link_to
+	local to = self._file.link_to
 	return ui.Line(to and { ui.Span(" -> " .. tostring(to)):italic() } or {})
 end
 
-function Entity:render(file)
+function Entity:render()
 	local lines = {}
 	for _, child in ipairs(self._children) do
-		lines[#lines + 1] = child[1](self, file)
+		lines[#lines + 1] = child[1](self)
 	end
 	return ui.Line(lines)
+end
+
+function Entity:style()
+	local s = self._file:style()
+	if not self._file:is_hovered() then
+		return s
+	elseif self._file:in_preview() then
+		return s and s:patch(THEME.manager.preview_hovered) or THEME.manager.preview_hovered
+	else
+		return s and s:patch(THEME.manager.hovered) or THEME.manager.hovered
+	end
 end
 
 -- Initialize children
