@@ -1,5 +1,16 @@
 Header = {
+	LEFT = 0,
+	RIGHT = 1,
+
 	_id = "header",
+	_inc = 1000,
+	_left = {
+		{ "cwd", id = 1, order = 1000 },
+	},
+	_right = {
+		{ "count", id = 1, order = 1000 },
+		{ "tabs", id = 2, order = 2000 },
+	},
 }
 
 function Header:new(area, tab)
@@ -9,7 +20,12 @@ function Header:new(area, tab)
 	}, { __index = self })
 end
 
-function Header:cwd(max)
+function Header:cwd()
+	local max = self._area.w - self._right_width
+	if max <= 0 then
+		return ui.Span("")
+	end
+
 	local s = ya.readable_path(tostring(self._tab.current.cwd)) .. self:flags()
 	return ui.Span(ya.truncate(s, { max = max, rtl = true })):style(THEME.manager.cwd)
 end
@@ -75,8 +91,10 @@ function Header:tabs()
 end
 
 function Header:render()
-	local right = ui.Line { self:count(), self:tabs() }
-	local left = ui.Line { self:cwd(math.max(0, self._area.w - right:width())) }
+	local right = self:children_render(self.RIGHT)
+	self._right_width = right:width()
+
+	local left = self:children_render(self.LEFT)
 	return {
 		ui.Paragraph(self._area, { left }),
 		ui.Paragraph(self._area, { right }):align(ui.Paragraph.RIGHT),
@@ -89,3 +107,32 @@ function Header:click(event, up) end
 function Header:scroll(event, step) end
 
 function Header:touch(event, step) end
+
+-- Children
+function Header:children_add(fn, order, side)
+	self._inc = self._inc + 1
+	local children = side == self.RIGHT and self._right or self._left
+
+	children[#children + 1] = { fn, id = self._inc, order = order }
+	table.sort(children, function(a, b) return a.order < b.order end)
+
+	return self._inc
+end
+
+function Header:children_remove(id, side)
+	local children = side == self.RIGHT and self._right or self._left
+	for i, child in ipairs(children) do
+		if child.id == id then
+			table.remove(children, i)
+			break
+		end
+	end
+end
+
+function Header:children_render(side)
+	local lines = {}
+	for _, c in ipairs(side == self.RIGHT and self._right or self._left) do
+		lines[#lines + 1] = (type(c[1]) == "string" and self[c[1]] or c[1])(self)
+	end
+	return ui.Line(lines)
+end

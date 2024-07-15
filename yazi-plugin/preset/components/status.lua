@@ -4,6 +4,16 @@ Status = {
 
 	_id = "status",
 	_inc = 1000,
+	_left = {
+		{ "mode", id = 1, order = 1000 },
+		{ "size", id = 2, order = 2000 },
+		{ "name", id = 3, order = 3000 },
+	},
+	_right = {
+		{ "permissions", id = 4, order = 1000 },
+		{ "percentage", id = 5, order = 2000 },
+		{ "position", id = 6, order = 3000 },
+	},
 }
 
 function Status:new(area, tab)
@@ -138,18 +148,7 @@ function Status:scroll(event, step) end
 
 function Status:touch(event, step) end
 
--- Initialize children
-Status._left = {
-	{ Status.mode, id = 1, order = 1000 },
-	{ Status.size, id = 2, order = 2000 },
-	{ Status.name, id = 3, order = 3000 },
-}
-Status._right = {
-	{ Status.permissions, id = 4, order = 1000 },
-	{ Status.percentage, id = 5, order = 2000 },
-	{ Status.position, id = 6, order = 3000 },
-}
-
+-- Children
 function Status:children_add(fn, order, side)
 	self._inc = self._inc + 1
 	local children = side == self.RIGHT and self._right or self._left
@@ -172,8 +171,8 @@ end
 
 function Status:children_render(side)
 	local lines = {}
-	for _, child in ipairs(side == self.RIGHT and self._right or self._left) do
-		lines[#lines + 1] = child[1](self)
+	for _, c in ipairs(side == self.RIGHT and self._right or self._left) do
+		lines[#lines + 1] = (type(c[1]) == "string" and self[c[1]] or c[1])(self)
 	end
 	return ui.Line(lines)
 end

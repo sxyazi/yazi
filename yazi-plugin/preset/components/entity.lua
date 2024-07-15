@@ -1,37 +1,35 @@
 Entity = {
 	_inc = 1000,
+	_children = {
+		{ "icon", id = 1, order = 1000 },
+		{ "prefix", id = 2, order = 2000 },
+		{ "highlights", id = 3, order = 3000 },
+		{ "found", id = 4, order = 4000 },
+		{ "symlink", id = 5, order = 5000 },
+	},
 }
 
-function Entity:style(file)
-	local style = file:style()
-	if not file:is_hovered() then
-		return style
-	elseif file:in_preview() then
-		return style and style:patch(THEME.manager.preview_hovered) or THEME.manager.preview_hovered
-	else
-		return style and style:patch(THEME.manager.hovered) or THEME.manager.hovered
-	end
-end
+function Entity:new(file) return setmetatable({ _file = file }, { __index = self }) end
 
-function Entity:icon(file)
-	local icon = file:icon()
+function Entity:icon()
+	local icon = self._file:icon()
 	if not icon then
 		return ui.Line("")
-	elseif file:is_hovered() then
+	elseif self._file:is_hovered() then
 		return ui.Line(" " .. icon.text .. " ")
 	else
 		return ui.Line(" " .. icon.text .. " "):style(icon.style)
 	end
 end
 
-function Entity:prefix(file)
-	local prefix = file:prefix() or ""
+function Entity:prefix()
+	local prefix = self._file:prefix() or ""
 	return ui.Line(prefix ~= "" and prefix .. "/" or "")
 end
 
-function Entity:highlights(file)
-	local name = file.name:gsub("\r", "?", 1)
-	local highlights = file:highlights()
+function Entity:highlights()
+	local name = self._file.name:gsub("\r", "?", 1)
+	local highlights = self._file:highlights()
 	if not highlights or #highlights == 0 then
 		return ui.Line(name)
 	end
@@ -50,12 +48,12 @@ function Entity:highlights(file)
 	return ui.Line(spans)
 end
 
-function Entity:found(file)
-	if not file:is_hovered() then
+function Entity:found()
+	if not self._file:is_hovered() then
 		return ui.Line {}
 	end
 
-	local found = file:found()
+	local found = self._file:found()
 	if not found then
 		return ui.Line {}
 	end
@@ -66,32 +64,35 @@ function Entity:found(file)
 	}
 end
 
-function Entity:symlink(file)
+function Entity:symlink()
 	if not MANAGER.show_symlink then
 		return ui.Line {}
 	end
 
-	local to = file.link_to
+	local to = self._file.link_to
 	return ui.Line(to and { ui.Span(" -> " .. tostring(to)):italic() } or {})
 end
 
-function Entity:render(file)
+function Entity:render()
 	local lines = {}
-	for _, child in ipairs(self._children) do
-		lines[#lines + 1] = child[1](self, file)
+	for _, c in ipairs(self._children) do
+		lines[#lines + 1] = (type(c[1]) == "string" and self[c[1]] or c[1])(self)
 	end
 	return ui.Line(lines)
 end
 
--- Initialize children
-Entity._children = {
-	{ Entity.icon, id = 1, order = 1000 },
-	{ Entity.prefix, id = 2, order = 2000 },
-	{ Entity.highlights, id = 3, order = 3000 },
-	{ Entity.found, id = 4, order = 4000 },
-	{ Entity.symlink, id = 5, order = 5000 },
-}
+function Entity:style()
+	local s = self._file:style()
+	if not self._file:is_hovered() then
+		return s
+	elseif self._file:in_preview() then
+		return s and s:patch(THEME.manager.preview_hovered) or THEME.manager.preview_hovered
+	else
+		return s and s:patch(THEME.manager.hovered) or THEME.manager.hovered
+	end
+end
 
+-- Children
 function Entity:children_add(fn, order)
 	self._inc = self._inc + 1
 	self._children[#self._children + 1] = { fn, id = self._inc, order = order }

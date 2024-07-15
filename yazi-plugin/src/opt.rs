@@ -6,7 +6,7 @@ pub(super) type OptCallback = Box<dyn FnOnce(&Lua, Table) -> mlua::Result<()> + 
 
 #[derive(Default)]
 pub struct Opt {
-	pub name: String,
+	pub id:   String,
 	pub sync: bool,
 	pub args: Vec<Data>,
 	pub cb:   Option<OptCallback>,
@@ -16,8 +16,8 @@ impl TryFrom<Cmd> for Opt {
 	type Error = anyhow::Error;
 
 	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
-		let Some(name) = c.take_first_str().filter(|s| !s.is_empty()) else {
-			bail!("plugin name cannot be empty");
+		let Some(id) = c.take_first_str().filter(|s| !s.is_empty()) else {
+			bail!("plugin id cannot be empty");
 		};
 
 		let args = if let Some(s) = c.str("args") {
@@ -26,14 +26,14 @@ impl TryFrom<Cmd> for Opt {
 			c.take_any::<Vec<Data>>("args").unwrap_or_default()
 		};
 
-		Ok(Self { name, sync: c.bool("sync"), args, cb: c.take_any("callback") })
+		Ok(Self { id, sync: c.bool("sync"), args, cb: c.take_any("callback") })
 	}
 }
 
 impl From<Opt> for Cmd {
 	fn from(value: Opt) -> Self {
 		let mut cmd =
-			Cmd::args("", vec![value.name]).with_bool("sync", value.sync).with_any("args", value.args);
+			Cmd::args("", vec![value.id]).with_bool("sync", value.sync).with_any("args", value.args);
 
 		if let Some(cb) = value.cb {
 			cmd = cmd.with_any("callback", cb);
