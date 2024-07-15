@@ -20,7 +20,8 @@ function M:peek()
 
 	local items = {}
 	for _, f in ipairs(folder.window) do
-		items[#items + 1] = ui.ListItem(Entity:render(f)):style(Entity:style(f))
+		local entity = Entity:new(f)
+		items[#items + 1] = ui.ListItem(entity:render()):style(entity:style())
 	end
 
 	ya.preview_widgets(self, {

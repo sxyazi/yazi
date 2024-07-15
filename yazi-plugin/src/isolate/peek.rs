@@ -65,7 +65,7 @@ pub fn peek_sync(cmd: &Cmd, file: yazi_shared::fs::File, skip: usize) {
 	});
 
 	let cmd: Cmd =
-		Opt { name: cmd.name.to_owned(), sync: true, cb: Some(cb), ..Default::default() }.into();
+		Opt { id: cmd.name.to_owned(), sync: true, cb: Some(cb), ..Default::default() }.into();
 
 	emit!(Call(cmd.with_name("plugin"), Layer::App));
 }

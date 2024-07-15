@@ -52,21 +52,20 @@ impl Loader {
 		Ok(())
 	}
 
-	pub fn load(&self, name: &str) -> mlua::Result<Table> {
+	pub fn load(&self, id: &str) -> mlua::Result<Table> {
 		let globals = LUA.globals();
 		let loaded: Table = globals.raw_get::<_, Table>("package")?.raw_get("loaded")?;
-		if let Ok(t) = loaded.raw_get::<_, Table>(name) {
+		if let Ok(t) = loaded.raw_get::<_, Table>(id) {
 			return Ok(t);
 		}
 
-		let t: Table = match self.read().get(name) {
-			Some(b) => LUA.load(b.as_ref()).set_name(name).call(())?,
-			None => Err(format!("plugin `{name}` not found").into_lua_err())?,
+		let t: Table = match self.read().get(id) {
+			Some(b) => LUA.load(b.as_ref()).set_name(id).call(())?,
+			None => Err(format!("plugin `{id}` not found").into_lua_err())?,
 		};
 
-		// TODO: rename to `_id`
-		t.raw_set("_name", LUA.create_string(name)?)?;
-		loaded.raw_set(name, t.clone())?;
+		t.raw_set("_id", LUA.create_string(id)?)?;
+		loaded.raw_set(id, t.clone())?;
 		Ok(t)
 	}
 }

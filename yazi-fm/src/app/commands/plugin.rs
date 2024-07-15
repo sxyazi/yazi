@@ -17,15 +17,15 @@ impl App {
 		};
 
 		if !opt.sync {
-			return self.cx.tasks.plugin_micro(opt.name, opt.args);
+			return self.cx.tasks.plugin_micro(opt.id, opt.args);
 		}
 
-		if LOADER.read().contains_key(&opt.name) {
+		if LOADER.read().contains_key(&opt.id) {
 			return self.plugin_do(opt);
 		}
 
 		tokio::spawn(async move {
-			if LOADER.ensure(&opt.name).await.is_ok() {
+			if LOADER.ensure(&opt.id).await.is_ok() {
 				Self::_plugin_do(opt);
 			}
 		});
@@ -44,12 +44,12 @@ impl App {
 		};
 
 		match LUA.named_registry_value::<RtRef>("rt") {
-			Ok(mut r) => r.swap(&opt.name),
+			Ok(mut r) => r.swap(&opt.id),
 			Err(e) => return warn!("{e}"),
 		}
 
 		defer! { LUA.named_registry_value::<RtRef>("rt").map(|mut r| r.reset()).ok(); };
-		let plugin = match LOADER.load(&opt.name) {
+		let plugin = match LOADER.load(&opt.id) {
 			Ok(plugin) => plugin,
 			Err(e) => return warn!("{e}"),
 		};
