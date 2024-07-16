@@ -108,6 +108,7 @@ function Header:scroll(event, step) end
 
 function Header:touch(event, step) end
 
+-- Children
 function Header:children_add(fn, order, side)
 	self._inc = self._inc + 1
 	local children = side == self.RIGHT and self._right or self._left
