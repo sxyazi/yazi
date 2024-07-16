@@ -145,7 +145,8 @@ jobs:
             yazi-*.zip
             yazi-*.snap
           generate_release_notes: true
-      - uses: vedantmgoyal2009/winget-releaser@v2
+      - name: Winget
+        uses: vedantmgoyal2009/winget-releaser@v2
         with:
           identifier: sxyazi.yazi
           installers-regex: 'yazi-(x86_64|aarch64)-pc-windows-msvc\.zip$'
