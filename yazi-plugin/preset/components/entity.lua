@@ -1,5 +1,12 @@
 Entity = {
 	_inc = 1000,
+	_children = {
+		{ "icon", id = 1, order = 1000 },
+		{ "prefix", id = 2, order = 2000 },
+		{ "highlights", id = 3, order = 3000 },
+		{ "found", id = 4, order = 4000 },
+		{ "symlink", id = 5, order = 5000 },
+	},
 }
 
 function Entity:new(file) return setmetatable({ _file = file }, { __index = self }) end
@@ -68,8 +75,8 @@ end
 
 function Entity:render()
 	local lines = {}
-	for _, child in ipairs(self._children) do
-		lines[#lines + 1] = child[1](self)
+	for _, c in ipairs(self._children) do
+		lines[#lines + 1] = (type(c[1]) == "string" and self[c[1]] or c[1])(self)
 	end
 	return ui.Line(lines)
 end
@@ -85,15 +92,7 @@ function Entity:style()
 	end
 end
 
--- Initialize children
-Entity._children = {
-	{ Entity.icon, id = 1, order = 1000 },
-	{ Entity.prefix, id = 2, order = 2000 },
-	{ Entity.highlights, id = 3, order = 3000 },
-	{ Entity.found, id = 4, order = 4000 },
-	{ Entity.symlink, id = 5, order = 5000 },
-}
-
+-- Children
 function Entity:children_add(fn, order)
 	self._inc = self._inc + 1
 	self._children[#self._children + 1] = { fn, id = self._inc, order = order }

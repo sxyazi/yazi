@@ -4,6 +4,13 @@ Header = {
 
 	_id = "header",
 	_inc = 1000,
+	_left = {
+		{ "cwd", id = 1, order = 1000 },
+	},
+	_right = {
+		{ "count", id = 1, order = 1000 },
+		{ "tabs", id = 2, order = 2000 },
+	},
 }
 
 function Header:new(area, tab)
@@ -101,15 +108,6 @@ function Header:scroll(event, step) end
 
 function Header:touch(event, step) end
 
--- Initialize children
-Header._left = {
-	{ Header.cwd, id = 1, order = 1000 },
-}
-Header._right = {
-	{ Header.count, id = 1, order = 1000 },
-	{ Header.tabs, id = 2, order = 2000 },
-}
-
 function Header:children_add(fn, order, side)
 	self._inc = self._inc + 1
 	local children = side == self.RIGHT and self._right or self._left
@@ -132,8 +130,8 @@ end
 
 function Header:children_render(side)
 	local lines = {}
-	for _, child in ipairs(side == self.RIGHT and self._right or self._left) do
-		lines[#lines + 1] = child[1](self)
+	for _, c in ipairs(side == self.RIGHT and self._right or self._left) do
+		lines[#lines + 1] = (type(c[1]) == "string" and self[c[1]] or c[1])(self)
 	end
 	return ui.Line(lines)
 end

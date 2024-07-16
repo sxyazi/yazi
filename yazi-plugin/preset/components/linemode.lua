@@ -1,5 +1,8 @@
 Linemode = {
 	_inc = 1000,
+	_children = {
+		{ "solo", id = 1, order = 1000 },
+	},
 }
 
 function Linemode:new(file) return setmetatable({ _file = file }, { __index = self }) end
@@ -58,17 +61,13 @@ end
 
 function Linemode:render()
 	local lines = {}
-	for _, child in ipairs(self._children) do
-		lines[#lines + 1] = child[1](self)
+	for _, c in ipairs(self._children) do
+		lines[#lines + 1] = (type(c[1]) == "string" and self[c[1]] or c[1])(self)
 	end
 	return ui.Line(lines)
 end
 
--- Initialize children
-Linemode._children = {
-	{ Linemode.solo, id = 1, order = 1000 },
-}
-
+-- Children
 function Linemode:children_add(fn, order)
 	self._inc = self._inc + 1
 	self._children[#self._children + 1] = { fn, id = self._inc, order = order }
