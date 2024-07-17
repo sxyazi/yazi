@@ -1,0 +1,20 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  winget:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: yazi-*
+          merge: true
+      - name: Release to Winget
+        uses: vedantmgoyal2009/winget-releaser@v2
+        with:
+          identifier: sxyazi.yazi
+          installers-regex: 'yazi-(x86_64|aarch64)-pc-windows-msvc\.zip$'
+          token: ${{ secrets.WINGET_TOKEN }}
