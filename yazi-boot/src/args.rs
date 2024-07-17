@@ -34,4 +34,8 @@ pub struct Args {
 	/// Print version
 	#[arg(short = 'V', long)]
 	pub version: bool,
+
+	/// Set the YAZI_ID environment variable (integer)
+	#[arg(long)]
+	pub id: Option<u64>,
 }

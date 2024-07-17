@@ -17,6 +17,7 @@ pub use sendable::*;
 use server::*;
 pub use state::*;
 use stream::*;
+use yazi_boot::BOOT;
 
 #[cfg(unix)]
 pub static USERS_CACHE: yazi_shared::RoCell<uzers::UsersCache> = yazi_shared::RoCell::new();
@@ -25,7 +26,7 @@ pub fn init() {
 	let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
 
 	// Client
-	ID.init(yazi_shared::timestamp_us());
+	ID.init(BOOT.yazi_id.unwrap_or(yazi_shared::timestamp_us()));
 	PEERS.with(Default::default);
 	QUEUE_TX.init(tx);
 	QUEUE_RX.init(rx);
