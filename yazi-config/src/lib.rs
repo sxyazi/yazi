@@ -65,10 +65,12 @@ pub fn init() -> anyhow::Result<()> {
 				continue;
 			}
 			if !r.bool("confirm") && !r.bool("interactive") {
+				let key_desc = c.key_desc();
 				eprintln!(
-					r#"WARNING: In Yazi v0.3, the behavior of the interactive `shell` (i.e., shell templates) must be explicitly specified with `--interactive`.
+					r#"WARNING: In Yazi v0.3, the behavior of the interactive `shell` (i.e., shell templates) must be explicitly specified with either `--interactive` or `--confirm`.
 
-Please replace e.g. `shell` with `shell --interactive`, `shell "my-template"` with `shell "my-template" --interactive`, in your keymap.toml"#
+Please replace e.g. `shell` with `shell --interactive`, `shell "my-template"` with `shell "my-template" --interactive`, in your keymap.toml
+for the key {key_desc}"#
 				);
 				return Ok(());
 			} else if r.bool("confirm") && r.bool("interactive") {

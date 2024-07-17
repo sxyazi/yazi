@@ -38,7 +38,7 @@ impl Tab {
 		if !opt.interactive && !opt.confirm {
 			AppProxy::notify_error(
 				"`shell` command",
-				r#"In Yazi v0.3, the behavior of the interactive `shell` (i.e., shell templates) must be explicitly specified with `--interactive`.
+				r#"WARNING: In Yazi v0.3, the behavior of the interactive `shell` (i.e., shell templates) must be explicitly specified with either `--interactive` or `--confirm`.
 
 Please replace e.g. `shell` with `shell --interactive`, `shell "my-template"` with `shell "my-template" --interactive`, in your keymap.toml"#,
 			);
