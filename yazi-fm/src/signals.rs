@@ -50,6 +50,10 @@ impl Signals {
 		true
 	}
 
+	#[cfg(windows)]
+	#[inline]
+	fn handle_sys(_: ()) -> bool { unreachable!() }
+
 	#[inline]
 	fn handle_term(event: CrosstermEvent) {
 		match event {
