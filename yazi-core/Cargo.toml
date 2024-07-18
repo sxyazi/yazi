@@ -31,7 +31,7 @@ regex         = "1.10.5"
 scopeguard    = "1.2.0"
 serde         = "1.0.204"
 shell-words   = "1.1.0"
-tokio         = { version = "1.38.0", features = [ "full" ] }
+tokio         = { version = "1.38.1", features = [ "full" ] }
 tokio-stream  = "0.1.15"
 tokio-util    = "0.7.11"
 unicode-width = "0.1.13"

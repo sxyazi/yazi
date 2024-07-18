@@ -11,6 +11,6 @@ impl App {
 		// We need to trigger a resize, and render the UI based on the resized area.
 		self.resize(());
 
-		self.signals.resume();
+		self.signals.resume(None);
 	}
 }

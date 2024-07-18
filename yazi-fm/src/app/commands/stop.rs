@@ -15,11 +15,7 @@ impl App {
 	pub(crate) fn stop(&mut self, opt: impl Into<Opt>) {
 		self.cx.manager.active_mut().preview.reset_image();
 
-		self.signals.stop();
+		self.signals.stop(opt.into().tx);
 		self.term = None;
-
-		if let Some(tx) = opt.into().tx {
-			tx.send(()).ok();
-		}
 	}
 }

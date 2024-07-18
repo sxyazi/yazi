@@ -33,7 +33,7 @@ ratatui       = "0.27.0"
 shell-escape  = "0.1.5"
 shell-words   = "1.1.0"
 syntect       = { version = "5.2.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
-tokio         = { version = "1.38.0", features = [ "full" ] }
+tokio         = { version = "1.38.1", features = [ "full" ] }
 tokio-stream  = "0.1.15"
 tokio-util    = "0.7.11"
 unicode-width = "0.1.13"
