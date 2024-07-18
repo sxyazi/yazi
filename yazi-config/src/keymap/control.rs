@@ -33,8 +33,6 @@ impl Control {
 		if let Some(ref s) = self.desc { Cow::Borrowed(s) } else { self.run().into() }
 	}
 
-	pub fn key_desc(&self) -> String { format!("`{}` ({})", self.on(), self.desc_or_run()) }
-
 	#[inline]
 	pub fn contains(&self, s: &str) -> bool {
 		let s = s.to_lowercase();
