@@ -42,7 +42,7 @@ impl Pump {
 		let (trash_tx, trash_rx) = mpsc::unbounded_channel();
 		let (delete_tx, delete_rx) = mpsc::unbounded_channel();
 
-		CT.with(Default::default);
+		CT.with(<_>::default);
 		MOVE_TX.lock().replace(move_tx);
 		TRASH_TX.lock().replace(trash_tx);
 		DELETE_TX.lock().replace(delete_tx);

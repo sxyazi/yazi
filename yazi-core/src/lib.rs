@@ -21,6 +21,6 @@ pub mod which;
 pub use step::*;
 
 pub fn init() {
-	manager::WATCHED.with(Default::default);
-	manager::LINKED.with(Default::default);
+	manager::WATCHED.with(<_>::default);
+	manager::LINKED.with(<_>::default);
 }

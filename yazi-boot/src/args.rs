@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::{command, Parser};
 
-#[derive(Debug, Parser)]
+#[derive(Debug, Default, Parser)]
 #[command(name = "yazi")]
 pub struct Args {
 	/// Set the current working entry

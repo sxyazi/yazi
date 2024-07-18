@@ -18,6 +18,7 @@ async fn main() -> anyhow::Result<()> {
 
 	match Args::parse().command {
 		Command::Pub(cmd) => {
+			yazi_boot::init_default();
 			yazi_dds::init();
 			if let Err(e) = yazi_dds::Client::shot(&cmd.kind, cmd.receiver()?, &cmd.body()?).await {
 				eprintln!("Cannot send message: {e}");
@@ -41,6 +42,7 @@ async fn main() -> anyhow::Result<()> {
 		}
 
 		Command::Sub(cmd) => {
+			yazi_boot::init_default();
 			yazi_dds::init();
 			yazi_dds::Client::draw(cmd.kinds.split(',').collect()).await?;
 
