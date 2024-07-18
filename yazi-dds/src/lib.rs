@@ -25,21 +25,21 @@ pub fn init() {
 	let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
 
 	// Client
-	ID.init(yazi_shared::timestamp_us());
-	PEERS.with(Default::default);
+	ID.init(yazi_boot::ARGS.client_id.unwrap_or(yazi_shared::timestamp_us()));
+	PEERS.with(<_>::default);
 	QUEUE_TX.init(tx);
 	QUEUE_RX.init(rx);
 
 	// Server
-	CLIENTS.with(Default::default);
-	STATE.with(Default::default);
+	CLIENTS.with(<_>::default);
+	STATE.with(<_>::default);
 
 	// Pubsub
-	LOCAL.with(Default::default);
-	REMOTE.with(Default::default);
+	LOCAL.with(<_>::default);
+	REMOTE.with(<_>::default);
 
 	#[cfg(unix)]
-	USERS_CACHE.with(Default::default);
+	USERS_CACHE.with(<_>::default);
 
 	// Env
 	if let Some(s) = std::env::var("YAZI_ID").ok().filter(|s| !s.is_empty()) {

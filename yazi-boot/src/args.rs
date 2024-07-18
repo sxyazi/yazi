@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::{command, Parser};
 
-#[derive(Debug, Parser)]
+#[derive(Debug, Default, Parser)]
 #[command(name = "yazi")]
 pub struct Args {
 	/// Set the current working entry
@@ -20,6 +20,9 @@ pub struct Args {
 	#[arg(long)]
 	pub clear_cache: bool,
 
+	/// Use the specified client ID, must be a globally unique number
+	#[arg(long)]
+	pub client_id:     Option<u64>,
 	/// Report the specified local events to stdout
 	#[arg(long)]
 	pub local_events:  Option<String>,

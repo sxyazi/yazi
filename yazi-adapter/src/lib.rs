@@ -50,7 +50,7 @@ pub fn init() {
 			.status();
 	}
 
-	SHOWN.with(Default::default);
+	SHOWN.with(<_>::default);
 
 	ADAPTOR.init(Adapter::matches());
 	ADAPTOR.start();

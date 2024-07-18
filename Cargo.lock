@@ -2857,6 +2857,7 @@ dependencies = [
  "tokio",
  "toml_edit",
  "vergen-gitcl",
+ "yazi-boot",
  "yazi-dds",
  "yazi-shared",
 ]

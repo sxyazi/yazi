@@ -44,7 +44,7 @@ pub fn init() -> anyhow::Result<()> {
 	let keymap_toml = &Preset::keymap(&config_dir)?;
 	let theme_toml = &Preset::theme(&config_dir)?;
 
-	LAYOUT.with(Default::default);
+	LAYOUT.with(<_>::default);
 
 	KEYMAP.init(<_>::from_str(keymap_toml)?);
 	LOG.init(<_>::from_str(yazi_toml)?);

@@ -27,7 +27,7 @@ pub use opt::*;
 pub use runtime::*;
 
 pub fn init() -> anyhow::Result<()> {
-	CLIPBOARD.with(Default::default);
+	CLIPBOARD.with(<_>::default);
 
 	crate::loader::init();
 	crate::init_lua()?;

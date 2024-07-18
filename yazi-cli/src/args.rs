@@ -48,7 +48,7 @@ impl CommandPub {
 		} else if let Some(s) = std::env::var("YAZI_PID").ok().filter(|s| !s.is_empty()) {
 			Ok(s.parse()?)
 		} else {
-			bail!("No receiver ID provided, also no YAZI_ID environment variable found.")
+			bail!("No receiver ID provided, neither YAZI_ID environment variable found.")
 		}
 	}
 
