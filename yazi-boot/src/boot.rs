@@ -21,8 +21,6 @@ pub struct Boot {
 	pub flavor_dir: PathBuf,
 	pub plugin_dir: PathBuf,
 	pub state_dir:  PathBuf,
-
-	pub yazi_id: Option<u64>,
 }
 
 impl Boot {
@@ -186,7 +184,6 @@ impl Default for Boot {
 			plugin_dir: config_dir.join("plugins"),
 			config_dir,
 			state_dir: Xdg::state_dir(),
-			yazi_id: ARGS.id.clone(),
 		}
 	}
 }

@@ -20,6 +20,9 @@ pub struct Args {
 	#[arg(long)]
 	pub clear_cache: bool,
 
+	/// Use the specified client ID, must be a globally unique number
+	#[arg(long)]
+	pub client_id:     Option<u64>,
 	/// Report the specified local events to stdout
 	#[arg(long)]
 	pub local_events:  Option<String>,
@@ -34,8 +37,4 @@ pub struct Args {
 	/// Print version
 	#[arg(short = 'V', long)]
 	pub version: bool,
-
-	/// Set the YAZI_ID environment variable (integer)
-	#[arg(long)]
-	pub id: Option<u64>,
 }
