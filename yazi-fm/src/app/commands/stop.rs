@@ -15,7 +15,11 @@ impl App {
 	pub(crate) fn stop(&mut self, opt: impl Into<Opt>) {
 		self.cx.manager.active_mut().preview.reset_image();
 
-		self.signals.stop(opt.into().tx);
+		// We need to destroy the `term` first before stopping the `signals`
+		// to prevent any signal from triggering the term to render again
+		// while the app is being suspended.
 		self.term = None;
+
+		self.signals.stop(opt.into().tx);
 	}
 }
