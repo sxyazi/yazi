@@ -7,10 +7,6 @@ pub struct RoCell<T>(UnsafeCell<Option<T>>);
 
 unsafe impl<T> Sync for RoCell<T> {}
 
-impl<T> Default for RoCell<T> {
-	fn default() -> Self { Self::new() }
-}
-
 impl<T> RoCell<T> {
 	#[inline]
 	pub const fn new() -> Self { Self(UnsafeCell::new(None)) }
@@ -45,6 +41,10 @@ impl<T> RoCell<T> {
 
 	#[inline]
 	fn initialized(&self) -> bool { unsafe { (*self.0.get()).is_some() } }
+}
+
+impl<T> Default for RoCell<T> {
+	fn default() -> Self { Self::new() }
 }
 
 impl<T> Deref for RoCell<T> {
