@@ -47,3 +47,6 @@ uzers = "0.12.0"
 
 [target."cfg(windows)".dependencies]
 clipboard-win = "5.4.0"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+crossterm = { version = "0.27.0", features = [ "use-dev-tty" ] }

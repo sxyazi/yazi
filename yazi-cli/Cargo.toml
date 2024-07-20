@@ -31,6 +31,9 @@ clap_complete_nushell = "4.5.2"
 serde_json            = "1.0.120"
 vergen-gitcl          = { version = "1.0.0", features = [ "build" ] }
 
+[target.'cfg(target_os = "macos")'.dependencies]
+crossterm = { version = "0.27.0", features = [ "use-dev-tty" ] }
+
 [[bin]]
 name = "ya"
 path = "src/main.rs"

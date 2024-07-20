@@ -28,3 +28,6 @@ libc = "0.2.155"
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.52.0", features = [ "Win32_Storage_FileSystem" ] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+crossterm = { version = "0.27.0", features = [ "use-dev-tty" ] }
