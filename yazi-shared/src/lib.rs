@@ -5,6 +5,7 @@ mod condition;
 mod debounce;
 mod env;
 mod errors;
+pub mod escape;
 pub mod event;
 pub mod fs;
 mod layer;

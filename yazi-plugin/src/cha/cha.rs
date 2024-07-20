@@ -41,10 +41,10 @@ impl Cha {
 			reg.add_field_method_get("accessed", |_, me| {
 				Ok(me.atime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
 			});
-			reg.add_method("permissions", |_, me, ()| {
+			reg.add_method("permissions", |_, _me, ()| {
 				Ok(
 					#[cfg(unix)]
-					Some(yazi_shared::fs::permissions(me.perm, me.is_dummy())),
+					Some(yazi_shared::fs::permissions(_me.perm, _me.is_dummy())),
 					#[cfg(windows)]
 					None::<String>,
 				)

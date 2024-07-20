@@ -26,6 +26,9 @@ tokio        = { version = "1.38.1", features = [ "full" ] }
 tokio-stream = "0.1.15"
 tokio-util   = "0.7.11"
 
+# Logging
+tracing = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
+
 [build-dependencies]
 vergen-gitcl = { version = "1.0.0", features = [ "build" ] }
 

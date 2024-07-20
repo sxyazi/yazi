@@ -4,6 +4,7 @@ use anyhow::{bail, Context, Result};
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use tokio::{io::AsyncWriteExt, select, sync::mpsc, task::JoinHandle, time};
+use tracing::error;
 use yazi_shared::RoCell;
 
 use crate::{body::{Body, BodyBye, BodyHi}, ClientReader, ClientWriter, Payload, Pubsub, Server, Stream};
@@ -54,8 +55,8 @@ impl Client {
 							continue;
 						} else if line.starts_with("hey,") {
 							Self::handle_hey(&line);
-						} else {
-							Payload::from_str(&line).map(|p| p.emit()).ok();
+						} else if let Err(e) = Payload::from_str(&line).map(|p| p.emit()) {
+							error!("Could not parse payload:\n{line}\n\nError:\n{e}");
 						}
 					}
 				}

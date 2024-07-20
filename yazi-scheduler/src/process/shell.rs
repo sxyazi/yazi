@@ -46,13 +46,10 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 
 	#[cfg(windows)]
 	{
-		let args: Vec<String> = opt.args.iter().map(|s| s.to_string_lossy().into_owned()).collect();
-		let args_: Vec<&str> = args.iter().map(|s| s.as_ref()).collect();
-		let expanded = parser::parse(opt.cmd.to_string_lossy().as_ref(), &args_);
 		Ok(
-			Command::new("cmd")
-				.arg("/C")
-				.args(&expanded)
+			Command::new("cmd.exe")
+				.raw_arg("/C")
+				.raw_arg(parser::parse(&opt.cmd, &opt.args))
 				.stdin(opt.stdio())
 				.stdout(opt.stdio())
 				.stderr(opt.stdio())
@@ -64,156 +61,173 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 
 #[cfg(windows)]
 mod parser {
-	use std::{iter::Peekable, str::Chars};
+	use std::{ffi::{OsStr, OsString}, iter::Peekable, os::windows::ffi::{EncodeWide, OsStrExt, OsStringExt}};
 
-	pub(super) fn parse(cmd: &str, args: &[&str]) -> Vec<String> {
-		let mut it = cmd.chars().peekable();
-		let mut expanded = vec![];
-
-		while let Some(c) = it.next() {
-			if c.is_whitespace() {
-				continue;
-			}
-			let mut s = String::new();
-
-			if c == '\'' {
-				while let Some(c) = it.next() {
-					if c == '\'' {
-						break;
-					}
-					next_string(&mut it, args, &mut s, c);
-				}
-				expanded.push(s);
-			} else if c == '"' {
-				while let Some(c) = it.next() {
-					if c == '"' {
-						break;
-					}
-					next_string(&mut it, args, &mut s, c);
-				}
-				expanded.push(s);
-			} else if c == '%' && it.peek().is_some_and(|&c| c == '*') {
-				it.next();
-				expanded.extend(args.iter().skip(1).map(|&s| s.to_owned()));
-			} else {
-				next_string(&mut it, args, &mut s, c);
-
-				while let Some(c) = it.next() {
-					if c.is_whitespace() {
-						break;
-					}
-					next_string(&mut it, args, &mut s, c);
-				}
-				expanded.push(s);
-			}
-		}
-
-		expanded
+	macro_rules! w {
+		($c:literal) => {
+			$c as u16
+		};
 	}
 
-	fn next_string(it: &mut Peekable<Chars<'_>>, args: &[&str], s: &mut String, c: char) {
-		if c == '\\' {
-			match it.next() {
-				Some('\\') => s.push('\\'), // \\  ==>  \
-				Some('\'') => s.push('\''), // \'  ==>  '
-				Some('"') => s.push('"'),   // \"  ==>  "
-				Some('%') => s.push('%'),   // \%  ==>  %
-				Some('n') => s.push('\n'),  // \n  ==>  '\n'
-				Some('t') => s.push('\t'),  // \t  ==>  '\t'
-				Some('r') => s.push('\r'),  // \r  ==>  '\r'
-				Some(c) => {
-					s.push('\\');
-					s.push(c);
-				}
-				None => s.push('\\'),
-			}
-		} else if c == '%' {
-			match it.peek() {
-				Some('*') => {
-					if args.len() > 1 {
-						s.push_str(&args[1..].join(" "));
-					}
-					it.next();
-				}
-				Some(n) if n.is_ascii_digit() => {
-					let mut pos = n.to_string();
-
-					it.next();
-					while let Some(&n) = it.peek() {
-						if n.is_ascii_digit() {
-							pos.push(it.next().unwrap());
-						} else {
-							break;
-						}
-					}
-
-					if let Some(arg) = args.get(pos.parse::<usize>().unwrap()) {
-						s.push_str(arg);
-					}
-				}
-				_ => s.push('%'),
-			}
-		} else {
-			s.push(c);
+	pub(super) fn parse(cmd: &OsStr, args: &[OsString]) -> OsString {
+		if cmd.len() < 2 {
+			return cmd.to_owned();
 		}
+
+		let mut buf = Vec::with_capacity(cmd.len());
+		let mut it = cmd.encode_wide().peekable();
+
+		while let Some(c) = it.next() {
+			if c == w!('%') {
+				let n = visit_at(it.clone(), &mut buf, &args, false);
+				if n == 0 {
+					buf.push(c);
+				} else {
+					it.by_ref().take(n).for_each(drop);
+				}
+			} else if c == w!('"') && it.peek().is_some_and(|&c| c == w!('%')) {
+				it.next();
+
+				let n = visit_at(it.clone(), &mut buf, &args, true);
+				if n == 0 {
+					buf.push(c);
+					buf.push(w!('%'));
+				} else {
+					it.by_ref().take(n).for_each(drop);
+				}
+			} else {
+				buf.push(c);
+			}
+		}
+
+		OsString::from_wide(&buf)
+	}
+
+	fn visit_at(
+		mut it: Peekable<EncodeWide>,
+		buf: &mut Vec<u16>,
+		args: &[OsString],
+		quote: bool,
+	) -> usize {
+		let Some(c) = it.next().and_then(|c| char::from_u32(c as _)) else {
+			return 0;
+		};
+
+		let mut pos = None;
+		if c.is_ascii_digit() {
+			let mut p = c.to_string();
+			while let Some(n) = it.peek().and_then(|&c| char::from_u32(c as _)) {
+				if n.is_ascii_digit() {
+					it.next();
+					p.push(n);
+				} else {
+					break;
+				}
+			}
+			pos = Some(p);
+		}
+
+		if quote && !it.next().is_some_and(|e| e == w!('"')) {
+			return 0;
+		}
+
+		if let Some(p) = pos {
+			if let Some(arg) = args.get(p.parse::<usize>().unwrap()) {
+				if quote {
+					buf.extend(yazi_shared::escape::os_str(arg).encode_wide());
+				} else {
+					buf.extend(arg.encode_wide());
+				}
+			}
+			return p.len() + quote as usize;
+		}
+
+		if c != '*' && c != '@' {
+			return 0;
+		}
+
+		let mut s = OsString::new();
+		for (i, arg) in args.iter().skip(1).enumerate() {
+			if i > 0 {
+				s.push(" ");
+			}
+			if c == '*' {
+				s.push(yazi_shared::escape::os_str(arg));
+			} else {
+				s.push(arg);
+			}
+		}
+		if quote {
+			buf.extend(yazi_shared::escape::os_str(&s).encode_wide());
+		} else {
+			buf.extend(s.encode_wide());
+		}
+
+		1 + quote as usize
 	}
 
 	#[cfg(test)]
 	mod tests {
-		use super::*;
+		use std::ffi::OsString;
+
+		fn parse(cmd: &str, args: &[&str]) -> String {
+			let cmd = OsString::from(cmd);
+			let args: Vec<_> = args.iter().map(|&s| OsString::from(s)).collect();
+			super::parse(&cmd, &args).to_str().unwrap().to_owned()
+		}
 
 		#[test]
 		fn test_no_quote() {
-			let args = parse("echo abc xyz %0 %2", &["000", "111", "222"]);
-			assert_eq!(args, ["echo", "abc", "xyz", "000", "222"]);
+			let s = parse("echo abc xyz %0 %2", &["000", "111", "222"]);
+			assert_eq!(s, "echo abc xyz 000 222");
 
-			let args = parse("  echo   abc   xyz %1   %2  ", &["", "111", "222"]);
-			assert_eq!(args, ["echo", "abc", "xyz", "111", "222"]);
+			let s = parse("  echo   abc   xyz %1   %2  ", &["", "111", "222"]);
+			assert_eq!(s, "  echo   abc   xyz 111   222  ");
 		}
 
 		#[test]
 		fn test_single_quote() {
-			let args = parse("echo 'abc xyz' '%1' %2", &["000", "111", "222"]);
-			assert_eq!(args, ["echo", "abc xyz", "111", "222"]);
+			let s = parse("echo 'abc xyz' '%1' %2", &["000", "111", "222"]);
+			assert_eq!(s, "echo 'abc xyz' '111' 222");
 
-			let args = parse(r#"echo 'abc ""xyz' '%1' %2"#, &["", "111", "222"]);
-			assert_eq!(args, ["echo", r#"abc ""xyz"#, "111", "222"]);
+			let s = parse(r#"echo 'abc ""xyz' '%1' %2"#, &["", "111", "222"]);
+			assert_eq!(s, r#"echo 'abc ""xyz' '111' 222"#);
 		}
 
 		#[test]
 		fn test_double_quote() {
-			let args = parse("echo \"abc ' 'xyz\" \"%1\" %2 %3", &["", "111", "222"]);
-			assert_eq!(args, ["echo", "abc ' 'xyz", "111", "222", ""]);
+			let s = parse(r#"echo "abc ' 'xyz" "%1" %2 %3"#, &["", "111", "222"]);
+			assert_eq!(s, r#"echo "abc ' 'xyz" 111 222 "#);
 		}
 
 		#[test]
 		fn test_escaped() {
-			let args = parse("echo \"a\tbc ' 'x\nyz\" \"\\%1\" %2 %3", &["", "111", "22  2"]);
-			assert_eq!(args, ["echo", "a\tbc ' 'x\nyz", "%1", "22  2", ""]);
+			let s = parse(r#"echo "a	bc ' 'x\nyz" "\%1" "\"%2"" %3"#, &["", "111", "22  2"]);
+			assert_eq!(s, r#"echo "a	bc ' 'x\nyz" "\111" "\"22  2"" "#);
 		}
 
 		#[test]
 		fn test_percent_star() {
-			let args = parse("echo %* xyz", &[]);
-			assert_eq!(args, ["echo", "xyz"]);
+			let s = parse("echo %* xyz", &[]);
+			assert_eq!(s, "echo  xyz");
 
-			let args = parse("echo %* xyz", &["000", "111", "222"]);
-			assert_eq!(args, ["echo", "111", "222", "xyz"]);
+			let s = parse("echo %* xyz", &["000", "111", "222"]);
+			assert_eq!(s, "echo 111 222 xyz");
 
-			let args = parse("echo '%*' xyz", &["000", "111", "222"]);
-			assert_eq!(args, ["echo", "111 222", "xyz"]);
+			let s = parse("echo '%*' xyz", &["000", "111", "22 2"]);
+			assert_eq!(s, r#"echo '111 "22 2"' xyz"#);
 
-			let args = parse("echo -C%* xyz", &[]);
-			assert_eq!(args, ["echo", "-C", "xyz"]);
+			let s = parse("echo -C%* xyz", &[]);
+			assert_eq!(s, "echo -C xyz");
 
-			let args = parse("echo -C%* xyz", &["000", "111", "222"]);
-			assert_eq!(args, ["echo", "-C111 222", "xyz"]);
+			let s = parse("echo -C%* xyz", &["000", " 111", "222"]);
+			assert_eq!(s, r#"echo -C" 111" 222 xyz"#);
 		}
 
 		#[test]
 		fn test_env_var() {
-			let args = parse(" %EDITOR% %* xyz", &["000", "111", "222"]);
-			assert_eq!(args, ["%EDITOR%", "111", "222", "xyz"]);
+			let s = parse(r#"%EDITOR% %@ "%@" %* "%*" xyz"#, &["000", "1 11", "222"]);
+			assert_eq!(s, r#"%EDITOR% 1 11 222 "1 11 222" "1 11" 222 "\"1 11\" 222" xyz"#);
 		}
 	}
 }
