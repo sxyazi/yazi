@@ -1,4 +1,4 @@
-name: Release
+name: Draft
 
 on:
   push:
@@ -126,7 +126,7 @@ jobs:
           name: yazi-${{ matrix.target }}.snap
           path: yazi-${{ matrix.target }}.snap
 
-  release:
+  draft:
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -136,7 +136,7 @@ jobs:
         with:
           merge-multiple: true
 
-      - name: Release
+      - name: Draft
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
