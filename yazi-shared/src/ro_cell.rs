@@ -43,6 +43,10 @@ impl<T> RoCell<T> {
 	fn initialized(&self) -> bool { unsafe { (*self.0.get()).is_some() } }
 }
 
+impl<T> Default for RoCell<T> {
+	fn default() -> Self { Self::new() }
+}
+
 impl<T> Deref for RoCell<T> {
 	type Target = T;
 

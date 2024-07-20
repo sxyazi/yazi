@@ -37,7 +37,9 @@ impl Lives {
 	) -> mlua::Result<T> {
 		let result = LUA.scope(|scope| {
 			defer! { SCOPE.drop(); };
-			SCOPE.init(unsafe { mem::transmute(scope) });
+			SCOPE.init(unsafe {
+				mem::transmute::<&mlua::Scope<'a, 'a>, &mlua::Scope<'static, 'static>>(scope)
+			});
 			LUA.set_named_registry_value("cx", scope.create_any_userdata_ref(cx)?)?;
 
 			let globals = LUA.globals();
