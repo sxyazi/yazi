@@ -79,7 +79,7 @@ mod parser {
 
 		while let Some(c) = it.next() {
 			if c == w!('%') {
-				let n = visit_at(it.clone(), &mut buf, &args, false);
+				let n = visit_percent(it.clone(), &mut buf, &args, false);
 				if n == 0 {
 					buf.push(c);
 				} else {
@@ -88,7 +88,7 @@ mod parser {
 			} else if c == w!('"') && it.peek().is_some_and(|&c| c == w!('%')) {
 				it.next();
 
-				let n = visit_at(it.clone(), &mut buf, &args, true);
+				let n = visit_percent(it.clone(), &mut buf, &args, true);
 				if n == 0 {
 					buf.push(c);
 					buf.push(w!('%'));
@@ -103,7 +103,7 @@ mod parser {
 		OsString::from_wide(&buf)
 	}
 
-	fn visit_at(
+	fn visit_percent(
 		mut it: Peekable<EncodeWide>,
 		buf: &mut Vec<u16>,
 		args: &[OsString],
