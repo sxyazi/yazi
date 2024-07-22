@@ -21,6 +21,7 @@ md-5       = "0.10.6"
 serde_json = "1.0.120"
 tokio      = { version = "1.38.1", features = [ "full" ] }
 toml_edit  = "0.22.16"
+url = "2.5.2"
 
 [build-dependencies]
 anyhow                = "1.0.86"

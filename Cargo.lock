@@ -2868,6 +2868,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "toml_edit",
+ "url",
  "vergen-gitcl",
  "yazi-boot",
  "yazi-dds",

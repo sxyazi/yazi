@@ -2,28 +2,58 @@ use std::{borrow::Cow, io::BufWriter, path::PathBuf};
 
 use anyhow::Result;
 use md5::{Digest, Md5};
+use url::Url;
 use yazi_shared::Xdg;
 
 pub(crate) struct Package {
 	pub(crate) repo:      String,
 	pub(crate) child:     String,
+	pub(crate) remote:    String,
 	pub(crate) commit:    String,
 	pub(super) is_flavor: bool,
 }
 
 impl Package {
 	pub(super) fn new(url: &str, commit: Option<&str>) -> Self {
-		let mut parts = url.splitn(2, '#');
+		match Url::parse(url) {
+			Ok(url) => {
+				let repo = url.path().trim_start_matches('/').to_string();
+				let child = match url.fragment() {
+					Some(fragment) => format!("{fragment}.yazi"),
+					None => String::new(),
+				};
+				let remote = url.to_string();
 
-		let mut repo = parts.next().unwrap_or_default().to_owned();
-		let child = if let Some(s) = parts.next() {
-			format!("{s}.yazi")
-		} else {
-			repo.push_str(".yazi");
-			String::new()
-		};
+				return Self {
+					repo,
+					child,
+					remote,
+					commit: commit.unwrap_or_default().to_owned(),
+					is_flavor: false,
+				};
+			}
+			Err(_) => {
+				let mut parts = url.splitn(2, '#');
 
-		Self { repo, child, commit: commit.unwrap_or_default().to_owned(), is_flavor: false }
+				let mut repo = parts.next().unwrap_or_default().to_owned();
+				let child = if let Some(s) = parts.next() {
+					format!("{s}.yazi")
+				} else {
+					repo.push_str(".yazi");
+					String::new()
+				};
+
+				let remote = format!("https://github.com/{}.git", repo);
+
+				return Self {
+					repo,
+					child,
+					remote,
+					commit: commit.unwrap_or_default().to_owned(),
+					is_flavor: false,
+				};
+			}
+		}
 	}
 
 	#[inline]
@@ -50,13 +80,7 @@ impl Package {
 	pub(super) fn local(&self) -> PathBuf {
 		Xdg::state_dir()
 			.join("packages")
-			.join(format!("{:x}", Md5::new_with_prefix(self.remote()).finalize()))
-	}
-
-	#[inline]
-	pub(super) fn remote(&self) -> String {
-		// Support more Git hosting services in the future
-		format!("https://github.com/{}.git", self.repo)
+			.join(format!("{:x}", Md5::new_with_prefix(&self.remote).finalize()))
 	}
 
 	pub(super) fn output(&self, s: &str) -> Result<()> {
