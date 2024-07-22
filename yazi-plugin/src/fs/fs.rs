@@ -1,7 +1,7 @@
 use mlua::{IntoLuaMulti, Lua, Value};
 use tokio::fs;
 
-use crate::{bindings::Cast, cha::Cha, url::UrlRef};
+use crate::{bindings::Cast, cha::Cha, url::{Url, UrlRef}};
 
 pub fn install(lua: &Lua) -> mlua::Result<()> {
 	lua.globals().raw_set(
@@ -32,6 +32,13 @@ pub fn install(lua: &Lua) -> mlua::Result<()> {
 						Ok(m) => (Cha::cast(lua, m)?, Value::Nil).into_lua_multi(lua),
 						Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(lua),
 					}
+				})?,
+			),
+			(
+				"unique_name",
+				lua.create_async_function(|lua, url: UrlRef| async move {
+					// FIXME: handle errors
+					Url::cast(lua, yazi_shared::fs::unique_name(url.clone()).await)
 				})?,
 			),
 		])?,

@@ -55,12 +55,14 @@ pub fn ends_with_slash(p: &Path) -> bool {
 	if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
 }
 
-pub async fn unique_path(mut p: Url) -> Url {
-	let Some(stem) = p.file_stem().map(|s| s.to_owned()) else {
-		return p;
+// FIXME: should return a `std::io::Result` to handle errors such as
+// permission denied
+pub async fn unique_name(mut u: Url) -> Url {
+	let Some(stem) = u.file_stem().map(|s| s.to_owned()) else {
+		return u;
 	};
 
-	let ext = p
+	let ext = u
 		.extension()
 		.map(|s| {
 			let mut n = OsString::with_capacity(s.len() + 1);
@@ -70,20 +72,18 @@ pub async fn unique_path(mut p: Url) -> Url {
 		})
 		.unwrap_or_default();
 
-	let mut i = 0;
-	while maybe_exists(&p).await {
-		i += 1;
-
+	let mut i = 1u64;
+	while maybe_exists(&u).await {
 		let mut name = OsString::with_capacity(stem.len() + ext.len() + 5);
 		name.push(&stem);
-		name.push(format!("_{i}"));
-		if !ext.is_empty() {
-			name.push(&ext);
-		}
+		name.push("_");
+		name.push(i.to_string());
+		name.push(&ext);
 
-		p.set_file_name(name);
+		u.set_file_name(name);
+		i += 1;
 	}
-	p
+	u
 }
 
 // Parameters

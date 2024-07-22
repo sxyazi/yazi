@@ -12,9 +12,9 @@ impl Utils {
 			"quote",
 			lua.create_function(|_, (s, unix): (mlua::String, Option<bool>)| {
 				let s = match unix {
-					Some(true) => shell_escape::unix::escape(s.to_str()?.into()),
-					Some(false) => shell_escape::windows::escape(s.to_str()?.into()),
-					None => shell_escape::escape(s.to_str()?.into()),
+					Some(true) => yazi_shared::escape::unix(s.to_str()?),
+					Some(false) => yazi_shared::escape::windows(s.to_str()?),
+					None => yazi_shared::escape::native(s.to_str()?),
 				};
 				Ok(s.into_owned())
 			})?,

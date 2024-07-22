@@ -2935,6 +2935,7 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "tokio-util",
+ "tracing",
  "uzers",
  "vergen-gitcl",
  "yazi-boot",

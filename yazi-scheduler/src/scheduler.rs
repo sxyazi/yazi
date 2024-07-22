@@ -6,7 +6,7 @@ use parking_lot::Mutex;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
 use yazi_config::{open::Opener, plugin::{Fetcher, Preloader}, TASKS};
 use yazi_dds::Pump;
-use yazi_shared::{event::Data, fs::{unique_path, Url}, Throttle};
+use yazi_shared::{event::Data, fs::{unique_name, Url}, Throttle};
 
 use super::{Ongoing, TaskProg, TaskStage};
 use crate::{file::{File, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, prework::{Prework, PreworkOpFetch, PreworkOpLoad, PreworkOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
@@ -97,7 +97,7 @@ impl Scheduler {
 		_ = self.micro.try_send(
 			async move {
 				if !force {
-					to = unique_path(to).await;
+					to = unique_name(to).await;
 				}
 				file
 					.paste(FileOpPaste { id, from, to, meta: None, cut: true, follow: false, retry: 0 })
@@ -122,7 +122,7 @@ impl Scheduler {
 		_ = self.micro.try_send(
 			async move {
 				if !force {
-					to = unique_path(to).await;
+					to = unique_name(to).await;
 				}
 				file
 					.paste(FileOpPaste { id, from, to, meta: None, cut: false, follow, retry: 0 })
@@ -142,7 +142,7 @@ impl Scheduler {
 		_ = self.micro.try_send(
 			async move {
 				if !force {
-					to = unique_path(to).await;
+					to = unique_name(to).await;
 				}
 				file
 					.link(FileOpLink { id, from, to, meta: None, resolve: false, relative, delete: false })
@@ -167,7 +167,7 @@ impl Scheduler {
 		_ = self.micro.try_send(
 			async move {
 				if !force {
-					to = unique_path(to).await;
+					to = unique_name(to).await;
 				}
 				file.hardlink(FileOpHardlink { id, from, to, meta: None, follow }).await.ok();
 			}
