@@ -36,7 +36,7 @@ impl Lives {
 		f: impl FnOnce(&Scope<'a, 'a>) -> mlua::Result<T>,
 	) -> mlua::Result<T> {
 		let result = LUA.scope(|scope| {
-			defer! { SCOPE.drop(); };
+			defer! { SCOPE.drop(); }
 			SCOPE.init(unsafe {
 				mem::transmute::<&mlua::Scope<'a, 'a>, &mlua::Scope<'static, 'static>>(scope)
 			});

@@ -30,6 +30,7 @@ md-5          = "0.10.6"
 mlua          = { version = "0.9.9", features = [ "lua54", "serialize", "macros", "async" ] }
 parking_lot   = "0.12.3"
 ratatui       = "0.27.0"
+scopeguard    = "1.2.0"
 shell-escape  = "0.1.5"
 shell-words   = "1.1.0"
 syntect       = { version = "5.2.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }

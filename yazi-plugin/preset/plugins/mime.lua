@@ -4,7 +4,7 @@ local M = {}
 
 local function match_mimetype(s)
 	local type, sub = s:match("([-a-z]+/)([+-.a-zA-Z0-9]+)%s*$")
-	if type and sub and string.find(SUPPORTED_TYPES, type, 1, true) then
+	if type and sub and SUPPORTED_TYPES:find(type, 1, true) then
 		return type .. sub
 	end
 end
@@ -44,7 +44,7 @@ function M:fetch()
 		end
 
 		valid = match_mimetype(line)
-		if valid and string.find(line, valid, 1, true) ~= 1 then
+		if valid and line:find(valid, 1, true) ~= 1 then
 			goto continue
 		elseif valid then
 			j, updates[urls[i]] = j + 1, valid

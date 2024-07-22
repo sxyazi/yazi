@@ -2990,6 +2990,7 @@ dependencies = [
  "mlua",
  "parking_lot",
  "ratatui",
+ "scopeguard",
  "shell-escape",
  "shell-words",
  "syntect",
