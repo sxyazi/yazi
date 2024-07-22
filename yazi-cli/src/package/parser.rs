@@ -21,6 +21,9 @@ impl Package {
 		if !package.commit.is_empty() {
 			table.insert("commit", package.commit.into());
 		}
+		if !package.remote.starts_with("https://github.com") {
+			table.insert("remote", package.remote.into());
+		}
 
 		if package.is_flavor {
 			doc["flavor"]["deps"].as_array_mut().unwrap().push(table);
@@ -47,9 +50,10 @@ impl Package {
 		for dep in deps.iter_mut() {
 			let dep = dep.as_inline_table_mut().context("Dependency must be an inline table")?;
 			let use_ = dep.get("use").and_then(|d| d.as_str()).context("Missing `use` field")?;
+			let remote = dep.get("remote").and_then(|d| d.as_str());
 			let commit = dep.get("commit").and_then(|d| d.as_str());
 
-			let mut package = Package::new(use_, commit);
+			let mut package = Package::new(if let Some(remote) = remote { remote } else { use_ }, commit);
 			if upgrade {
 				package.upgrade().await?;
 			} else {
