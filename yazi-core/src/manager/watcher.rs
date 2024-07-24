@@ -72,7 +72,7 @@ impl Watcher {
 				(old.difference(new).cloned().collect(), new.difference(old).cloned().collect())
 			};
 
-			to_unwatch.retain(|u| watcher.unwatch(u).is_ok());
+			to_unwatch.retain(|u| watcher.unwatch(u).is_ok() || !u.exists());
 			to_watch.retain(|u| watcher.watch(u, RecursiveMode::NonRecursive).is_ok());
 
 			{
