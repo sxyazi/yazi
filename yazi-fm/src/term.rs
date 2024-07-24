@@ -44,7 +44,7 @@ impl Term {
 			SHAPE.store(
 				s.split_once("\x1bP1$r")
 					.and_then(|(_, s)| s.bytes().next())
-					.filter(|&b| matches!(b, b'0'..b'6'))
+					.filter(|&b| matches!(b, b'0'..=b'6'))
 					.map_or(0, |b| b - b'0'),
 				Ordering::Relaxed,
 			);
