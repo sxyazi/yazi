@@ -237,5 +237,8 @@ mod cursor {
 				DisableBlinking.write_ansi(f)
 			}
 		}
+
+		#[cfg(windows)]
+		fn execute_winapi(&self) -> std::io::Result<()> { Ok(()) }
 	}
 }
