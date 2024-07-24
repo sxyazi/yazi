@@ -192,14 +192,17 @@ impl Emulator {
 	pub async fn read_until_da1() -> Result<String> {
 		let read = async {
 			let mut stdin = BufReader::new(tokio::io::stdin());
-			let mut buf = String::with_capacity(200);
+			let mut buf: Vec<u8> = Vec::with_capacity(200);
 			loop {
 				let mut c = [0; 1];
 				if stdin.read(&mut c).await? == 0 {
 					bail!("unexpected EOF");
 				}
-				buf.push(c[0] as char);
-				if c[0] == b'c' && buf.contains("\x1b[?") {
+				buf.push(c[0]);
+				if c[0] != b'c' {
+					continue;
+				}
+				if buf.rsplitn(2, |&b| b == b'\xb1').next().is_some_and(|s| s.starts_with(b"\x1b[?")) {
 					break;
 				}
 			}
@@ -211,6 +214,6 @@ impl Emulator {
 			error!("read_until_da1: {e:?}");
 		}
 
-		timeout?
+		String::from_utf8(timeout??).map_err(Into::into)
 	}
 }
