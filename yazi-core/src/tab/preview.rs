@@ -46,10 +46,6 @@ impl Preview {
 		let url = file.url();
 		self.go(file, MIME_DIR, force);
 
-		if matches!(&self.folder_loader, Some((u, _)) if *u == url) {
-			return;
-		}
-
 		self.folder_loader.take().map(|(_, h)| h.abort());
 		self.folder_loader = Some((
 			url.clone(),
