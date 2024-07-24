@@ -1,9 +1,12 @@
-use std::{borrow::Cow, collections::VecDeque};
+use std::{borrow::Cow, collections::VecDeque, sync::LazyLock};
 
+use regex::Regex;
 use serde::Deserialize;
 use yazi_shared::event::Cmd;
 
 use super::Key;
+
+static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\s+").unwrap());
 
 #[derive(Debug, Default, Deserialize)]
 pub struct Control {
@@ -20,23 +23,21 @@ impl Control {
 }
 
 impl Control {
-	#[inline]
 	pub fn on(&self) -> String { self.on.iter().map(ToString::to_string).collect() }
 
-	#[inline]
 	pub fn run(&self) -> String {
-		self.run.iter().map(|c| c.to_string()).collect::<Vec<_>>().join("; ")
+		RE.replace_all(&self.run.iter().map(|c| c.to_string()).collect::<Vec<_>>().join("; "), " ")
+			.into_owned()
 	}
 
-	#[inline]
-	pub fn desc_or_run(&self) -> Cow<str> {
-		if let Some(ref s) = self.desc { Cow::Borrowed(s) } else { self.run().into() }
-	}
+	pub fn desc(&self) -> Option<Cow<str>> { self.desc.as_ref().map(|s| RE.replace_all(s, " ")) }
+
+	pub fn desc_or_run(&self) -> Cow<str> { self.desc().unwrap_or_else(|| self.run().into()) }
 
 	#[inline]
 	pub fn contains(&self, s: &str) -> bool {
 		let s = s.to_lowercase();
-		self.desc.as_ref().map(|d| d.to_lowercase().contains(&s)) == Some(true)
+		self.desc().map(|d| d.to_lowercase().contains(&s)) == Some(true)
 			|| self.run().to_lowercase().contains(&s)
 			|| self.on().to_lowercase().contains(&s)
 	}

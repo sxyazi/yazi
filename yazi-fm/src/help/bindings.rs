@@ -29,7 +29,7 @@ impl Widget for Bindings<'_> {
 		// Desc
 		let col3: Vec<_> = bindings
 			.iter()
-			.map(|c| ListItem::new(c.desc.as_deref().unwrap_or("-")).style(THEME.help.desc))
+			.map(|c| ListItem::new(c.desc().unwrap_or("-".into())).style(THEME.help.desc))
 			.collect();
 
 		let chunks = layout::Layout::horizontal([
