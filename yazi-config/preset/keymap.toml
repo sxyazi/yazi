@@ -151,7 +151,7 @@ keymap = [
 	{ on = [ "g", "<Space>" ], run = "cd --interactive", desc = "Go to a directory interactively" },
 
 	# Help
-	{ on = "~", run = "help", desc = "Open help" },
+	{ on = "~",    run = "help", desc = "Open help" },
 	{ on = "<F1>", run = "help", desc = "Open help" },
 ]
 
@@ -172,7 +172,8 @@ keymap = [
 	{ on = "<Enter>", run = "inspect", desc = "Inspect the task" },
 	{ on = "x",       run = "cancel",  desc = "Cancel the task" },
 
-	{ on = "~", run = "help", desc = "Open help" },
+	# Help
+	{ on = "~",    run = "help", desc = "Open help" },
 	{ on = "<F1>", run = "help", desc = "Open help" },
 ]
 
@@ -196,7 +197,8 @@ keymap = [
 	{ on = "<S-Up>",   run = "arrow -5", desc = "Move cursor up 5 lines" },
 	{ on = "<S-Down>", run = "arrow 5",  desc = "Move cursor down 5 lines" },
 
-	{ on = "~", run = "help", desc = "Open help" },
+	# Help
+	{ on = "~",    run = "help", desc = "Open help" },
 	{ on = "<F1>", run = "help", desc = "Open help" },
 ]
 
@@ -266,7 +268,7 @@ keymap = [
 	{ on = "<C-r>", run = "redo", desc = "Redo the last operation" },
 
 	# Help
-	{ on = "~", run = "help", desc = "Open help" },
+	{ on = "~",    run = "help", desc = "Open help" },
 	{ on = "<F1>", run = "help", desc = "Open help" },
 ]
 
@@ -286,7 +288,8 @@ keymap = [
 	{ on = "<C-p>", run = "arrow -1", desc = "Move cursor up" },
 	{ on = "<C-n>", run = "arrow 1",  desc = "Move cursor down" },
 
-	{ on = "~", run = "help", desc = "Open help" },
+	# Help
+	{ on = "~",    run = "help", desc = "Open help" },
 	{ on = "<F1>", run = "help", desc = "Open help" },
 ]
 
