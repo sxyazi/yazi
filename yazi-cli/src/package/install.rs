@@ -5,7 +5,7 @@ use super::{Git, Package};
 
 impl Package {
 	pub(super) async fn install(&mut self) -> Result<()> {
-		self.output("Installing package `{name}`")?;
+		self.header("Installing package `{name}`")?;
 
 		let path = self.local();
 		if !must_exists(&path).await {

@@ -59,7 +59,7 @@ impl Package {
 		format!("https://github.com/{}.git", self.repo)
 	}
 
-	pub(super) fn output(&self, s: &str) -> Result<()> {
+	pub(super) fn header(&self, s: &str) -> Result<()> {
 		use crossterm::style::{Attribute, Print, SetAttributes};
 
 		crossterm::execute!(
@@ -70,8 +70,7 @@ impl Package {
 			Print("  "),
 			Print(s.replacen("{name}", self.name().unwrap_or_default(), 1)),
 			Print("  "),
-			SetAttributes(Attribute::NoBold.into()),
-			SetAttributes(Attribute::NoReverse.into()),
+			SetAttributes(Attribute::Reset.into()),
 			Print("\n\n"),
 		)?;
 		Ok(())

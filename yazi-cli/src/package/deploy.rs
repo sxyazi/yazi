@@ -11,7 +11,7 @@ impl Package {
 		let Some(name) = self.name().map(ToOwned::to_owned) else { bail!("Invalid package url") };
 		let from = self.local().join(&self.child);
 
-		self.output("Deploying package `{name}`")?;
+		self.header("Deploying package `{name}`")?;
 		self.is_flavor = maybe_exists(&from.join("flavor.toml")).await;
 		let to = if self.is_flavor {
 			Xdg::config_dir().join(format!("flavors/{name}"))

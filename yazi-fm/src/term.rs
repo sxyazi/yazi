@@ -1,12 +1,15 @@
-use std::{io::{self, stderr, BufWriter, Stderr}, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}};
+use std::{io::{self, stderr, BufWriter, Stderr}, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, AtomicU8, Ordering}};
 
 use anyhow::Result;
 use crossterm::{cursor::{RestorePosition, SavePosition}, event::{DisableBracketedPaste, EnableBracketedPaste, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen, SetTitle}};
+use cursor::RestoreCursor;
 use ratatui::{backend::CrosstermBackend, buffer::Buffer, layout::Rect, CompletedFrame, Frame, Terminal};
 use yazi_adapter::Emulator;
 use yazi_config::INPUT;
 
 static CSI_U: AtomicBool = AtomicBool::new(false);
+static BLINK: AtomicBool = AtomicBool::new(false);
+static SHAPE: AtomicU8 = AtomicU8::new(0);
 
 pub(super) struct Term {
 	inner:       Terminal<CrosstermBackend<BufWriter<Stderr>>>,
@@ -29,12 +32,25 @@ impl Term {
 			EnableBracketedPaste,
 			mouse::SetMouse(true),
 			SavePosition,
-			Print("\x1b[?u\x1b[c"),
+			Print("\x1b[?12$p"),      // Request cursor blink status (DECSET)
+			Print("\x1bP$q q\x1b\\"), // Request cursor shape (DECRQM)
+			Print("\x1b[?u\x1b[c"),   // Request keyboard enhancement flags (CSI u)
 			RestorePosition
 		)?;
 
-		let resp = futures::executor::block_on(Emulator::read_until_da1());
-		if resp.is_ok_and(|s| s.contains("\x1b[?0u")) {
+		if let Ok(s) = futures::executor::block_on(Emulator::read_until_da1()) {
+			CSI_U.store(s.contains("\x1b[?0u"), Ordering::Relaxed);
+			BLINK.store(s.contains("\x1b[?12;1$y"), Ordering::Relaxed);
+			SHAPE.store(
+				s.split_once("\x1bP1$r")
+					.and_then(|(_, s)| s.bytes().next())
+					.filter(|&b| matches!(b, b'0'..=b'6'))
+					.map_or(0, |b| b - b'0'),
+				Ordering::Relaxed,
+			);
+		}
+
+		if CSI_U.load(Ordering::Relaxed) {
 			queue!(
 				stderr(),
 				PushKeyboardEnhancementFlags(
@@ -42,7 +58,6 @@ impl Term {
 						| KeyboardEnhancementFlags::REPORT_ALTERNATE_KEYS
 				)
 			)?;
-			CSI_U.store(true, Ordering::Relaxed);
 		}
 
 		term.hide_cursor()?;
@@ -61,7 +76,7 @@ impl Term {
 			mouse::SetMouse(false),
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
-			crossterm::cursor::SetCursorStyle::DefaultUserShape
+			RestoreCursor,
 		)?;
 
 		self.show_cursor()?;
@@ -79,8 +94,8 @@ impl Term {
 			mouse::SetMouse(false),
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
-			crossterm::cursor::SetCursorStyle::DefaultUserShape,
-			crossterm::cursor::Show,
+			RestoreCursor,
+			crossterm::cursor::Show
 		)
 		.ok();
 
@@ -189,5 +204,36 @@ mod mouse {
 				DisableMouseCapture.is_ansi_code_supported()
 			}
 		}
+	}
+}
+
+// --- Cursor shape
+mod cursor {
+	use std::sync::atomic::Ordering;
+
+	use crossterm::cursor::SetCursorStyle;
+
+	use super::{BLINK, SHAPE};
+
+	pub struct RestoreCursor;
+
+	impl crossterm::Command for RestoreCursor {
+		fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+			let shape = SHAPE.load(Ordering::Relaxed).max(1);
+			let blink = BLINK.load(Ordering::Relaxed) ^ (shape & 1 == 0);
+
+			Ok(match (shape + 1) / 2 {
+				1 if blink => SetCursorStyle::BlinkingBlock.write_ansi(f)?,
+				1 if !blink => SetCursorStyle::SteadyBlock.write_ansi(f)?,
+				2 if blink => SetCursorStyle::BlinkingUnderScore.write_ansi(f)?,
+				2 if !blink => SetCursorStyle::SteadyUnderScore.write_ansi(f)?,
+				3 if blink => SetCursorStyle::BlinkingBar.write_ansi(f)?,
+				3 if !blink => SetCursorStyle::SteadyBar.write_ansi(f)?,
+				_ => tracing::error!("Terminal didn't respond to the cursor shape request: {shape}"),
+			})
+		}
+
+		#[cfg(windows)]
+		fn execute_winapi(&self) -> std::io::Result<()> { Ok(()) }
 	}
 }
