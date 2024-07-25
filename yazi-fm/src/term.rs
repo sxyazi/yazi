@@ -45,16 +45,10 @@ impl Term {
 				s.split_once("\x1bP1$r")
 					.and_then(|(_, s)| s.bytes().next())
 					.filter(|&b| matches!(b, b'0'..=b'6'))
-					.map_or(0, |b| b - b'0'),
+					.map_or(u8::MAX, |b| b - b'0'),
 				Ordering::Relaxed,
 			);
-		} else {
-			tracing::error!("Failed to read DA1 response");
 		}
-
-		tracing::error!("CSI_U: {}", CSI_U.load(Ordering::Relaxed));
-		tracing::error!("BLINK: {}", BLINK.load(Ordering::Relaxed));
-		tracing::error!("SHAPE: {}", SHAPE.load(Ordering::Relaxed));
 
 		if CSI_U.load(Ordering::Relaxed) {
 			queue!(
@@ -226,23 +220,21 @@ mod cursor {
 	impl crossterm::Command for RestoreCursor {
 		fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
 			let shape = SHAPE.load(Ordering::Relaxed);
-			tracing::error!("Restoring cursor shape: {}", shape);
 			match shape {
+				0 => SetCursorStyle::DefaultUserShape.write_ansi(f)?,
 				1 => SetCursorStyle::BlinkingBlock.write_ansi(f)?,
 				2 => SetCursorStyle::SteadyBlock.write_ansi(f)?,
 				3 => SetCursorStyle::BlinkingUnderScore.write_ansi(f)?,
 				4 => SetCursorStyle::SteadyUnderScore.write_ansi(f)?,
 				5 => SetCursorStyle::BlinkingBar.write_ansi(f)?,
 				6 => SetCursorStyle::SteadyBar.write_ansi(f)?,
-				_ => SetCursorStyle::DefaultUserShape.write_ansi(f)?,
+				_ => tracing::error!("Unknown cursor shape to restore: {shape}"),
 			};
 
 			let blink = BLINK.load(Ordering::Relaxed);
 			if blink ^ (shape.max(1) & 1 == 0) {
-				tracing::error!("Restoring cursor blink1: {}", blink);
 				EnableBlinking.write_ansi(f)
 			} else {
-				tracing::error!("Restoring cursor blink2: {}", blink);
 				DisableBlinking.write_ansi(f)
 			}
 		}
