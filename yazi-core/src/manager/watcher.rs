@@ -72,7 +72,14 @@ impl Watcher {
 				(old.difference(new).cloned().collect(), new.difference(old).cloned().collect())
 			};
 
-			to_unwatch.retain(|u| watcher.unwatch(u).is_ok());
+			to_unwatch.retain(|u| match watcher.unwatch(u) {
+				Ok(_) => true,
+				Err(e) if matches!(e.kind, notify::ErrorKind::WatchNotFound) => true,
+				Err(e) => {
+					error!("Unwatch failed: {e:?}");
+					false
+				}
+			});
 			to_watch.retain(|u| watcher.watch(u, RecursiveMode::NonRecursive).is_ok());
 
 			{
