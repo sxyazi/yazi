@@ -190,9 +190,9 @@ impl Emulator {
 	}
 
 	pub async fn read_until_da1() -> Result<String> {
+		let mut buf: Vec<u8> = Vec::with_capacity(200);
 		let read = async {
 			let mut stdin = BufReader::new(tokio::io::stdin());
-			let mut buf: Vec<u8> = Vec::with_capacity(200);
 			loop {
 				let mut c = [0; 1];
 				if stdin.read(&mut c).await? == 0 {
@@ -206,14 +206,14 @@ impl Emulator {
 					break;
 				}
 			}
-			Ok(buf)
+			Ok(())
 		};
 
-		let timeout = timeout(Duration::from_secs(10), read).await;
-		if let Err(ref e) = timeout {
-			error!("read_until_da1: {e:?}");
+		match timeout(Duration::from_secs(10), read).await {
+			Err(e) => error!("read_until_da1 timed out: {buf:?}, error: {e:?}"),
+			Ok(Err(e)) => error!("read_until_da1 failed: {buf:?}, error: {e:?}"),
+			Ok(Ok(())) => {}
 		}
-
-		String::from_utf8(timeout??).map_err(Into::into)
+		String::from_utf8(buf).map_err(Into::into)
 	}
 }
