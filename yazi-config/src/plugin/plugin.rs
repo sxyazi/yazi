@@ -14,22 +14,18 @@ pub struct Plugin {
 }
 
 impl Plugin {
-	pub fn fetchers(
-		&self,
-		path: &Path,
-		mime: Option<&str>,
-		f: impl Fn(&str) -> bool + Copy,
-	) -> Vec<&Fetcher> {
+	pub fn fetchers<'a>(
+		&'a self,
+		path: &'a Path,
+		mime: Option<&'a str>,
+		factor: impl Fn(&str) -> bool + Copy,
+	) -> impl Iterator<Item = &'a Fetcher> {
 		let is_dir = mime == Some(MIME_DIR);
-		self
-			.fetchers
-			.iter()
-			.filter(|&p| {
-				p.if_.as_ref().and_then(|c| c.eval(f)) != Some(false)
-					&& (p.mime.as_ref().zip(mime).map_or(false, |(p, m)| p.match_mime(m))
-						|| p.name.as_ref().is_some_and(|p| p.match_path(path, is_dir)))
-			})
-			.collect()
+		self.fetchers.iter().filter(move |&f| {
+			f.if_.as_ref().and_then(|c| c.eval(factor)) != Some(false)
+				&& (f.mime.as_ref().zip(mime).map_or(false, |(p, m)| p.match_mime(m))
+					|| f.name.as_ref().is_some_and(|p| p.match_path(path, is_dir)))
+		})
 	}
 
 	pub fn preloaders(&self, path: &Path, mime: Option<&str>) -> Vec<&Preloader> {
