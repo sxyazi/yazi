@@ -1,7 +1,7 @@
 use std::{io::{self, stderr, BufWriter, Stderr}, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, AtomicU8, Ordering}};
 
 use anyhow::Result;
-use crossterm::{cursor::{RestorePosition, SavePosition}, event::{DisableBracketedPaste, EnableBracketedPaste, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen, SetTitle}};
+use crossterm::{event::{DisableBracketedPaste, EnableBracketedPaste, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen, SetTitle}};
 use cursor::RestoreCursor;
 use ratatui::{backend::CrosstermBackend, buffer::Buffer, layout::Rect, CompletedFrame, Frame, Terminal};
 use yazi_adapter::Emulator;
@@ -28,14 +28,12 @@ impl Term {
 		enable_raw_mode()?;
 		execute!(
 			BufWriter::new(stderr()),
-			EnterAlternateScreen,
-			EnableBracketedPaste,
-			mouse::SetMouse(true),
-			SavePosition,
 			Print("\x1b[?12$p"),      // Request cursor blink status (DECSET)
 			Print("\x1bP$q q\x1b\\"), // Request cursor shape (DECRQM)
 			Print("\x1b[?u\x1b[c"),   // Request keyboard enhancement flags (CSI u)
-			RestorePosition
+			EnterAlternateScreen,
+			EnableBracketedPaste,
+			mouse::SetMouse(true),
 		)?;
 
 		if let Ok(s) = futures::executor::block_on(Emulator::read_until_da1()) {
@@ -45,9 +43,11 @@ impl Term {
 				s.split_once("\x1bP1$r")
 					.and_then(|(_, s)| s.bytes().next())
 					.filter(|&b| matches!(b, b'0'..=b'6'))
-					.map_or(0, |b| b - b'0'),
+					.map_or(u8::MAX, |b| b - b'0'),
 				Ordering::Relaxed,
 			);
+		} else {
+			SHAPE.store(u8::MAX, Ordering::Relaxed);
 		}
 
 		if CSI_U.load(Ordering::Relaxed) {
@@ -74,9 +74,9 @@ impl Term {
 		execute!(
 			stderr(),
 			mouse::SetMouse(false),
+			RestoreCursor,
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
-			RestoreCursor,
 		)?;
 
 		self.show_cursor()?;
@@ -90,11 +90,11 @@ impl Term {
 
 		execute!(
 			stderr(),
-			SetTitle(""),
 			mouse::SetMouse(false),
+			RestoreCursor,
+			SetTitle(""),
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
-			RestoreCursor,
 			crossterm::cursor::Show
 		)
 		.ok();
@@ -219,17 +219,20 @@ mod cursor {
 
 	impl crossterm::Command for RestoreCursor {
 		fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
-			let shape = SHAPE.load(Ordering::Relaxed).max(1);
-			let blink = BLINK.load(Ordering::Relaxed) ^ (shape & 1 == 0);
+			let (shape, shape_blink) = match SHAPE.load(Ordering::Relaxed) {
+				u8::MAX => (0, false),
+				n => ((n.max(1) + 1) / 2, n.max(1) & 1 == 1),
+			};
 
-			Ok(match (shape + 1) / 2 {
-				1 if blink => SetCursorStyle::BlinkingBlock.write_ansi(f)?,
-				1 if !blink => SetCursorStyle::SteadyBlock.write_ansi(f)?,
+			let blink = BLINK.load(Ordering::Relaxed) ^ shape_blink;
+			Ok(match shape {
 				2 if blink => SetCursorStyle::BlinkingUnderScore.write_ansi(f)?,
 				2 if !blink => SetCursorStyle::SteadyUnderScore.write_ansi(f)?,
 				3 if blink => SetCursorStyle::BlinkingBar.write_ansi(f)?,
 				3 if !blink => SetCursorStyle::SteadyBar.write_ansi(f)?,
-				_ => tracing::error!("Terminal didn't respond to the cursor shape request: {shape}"),
+				_ if blink => SetCursorStyle::DefaultUserShape.write_ansi(f)?,
+				_ if !blink => SetCursorStyle::SteadyBlock.write_ansi(f)?,
+				_ => unreachable!(),
 			})
 		}
 
