@@ -36,19 +36,16 @@ impl Term {
 			mouse::SetMouse(true),
 		)?;
 
-		if let Ok(s) = futures::executor::block_on(Emulator::read_until_da1()) {
-			CSI_U.store(s.contains("\x1b[?0u"), Ordering::Relaxed);
-			BLINK.store(s.contains("\x1b[?12;1$y"), Ordering::Relaxed);
-			SHAPE.store(
-				s.split_once("\x1bP1$r")
-					.and_then(|(_, s)| s.bytes().next())
-					.filter(|&b| matches!(b, b'0'..=b'6'))
-					.map_or(u8::MAX, |b| b - b'0'),
-				Ordering::Relaxed,
-			);
-		} else {
-			SHAPE.store(u8::MAX, Ordering::Relaxed);
-		}
+		let da = futures::executor::block_on(Emulator::read_until_da1());
+		CSI_U.store(da.contains("\x1b[?0u"), Ordering::Relaxed);
+		BLINK.store(da.contains("\x1b[?12;1$y"), Ordering::Relaxed);
+		SHAPE.store(
+			da.split_once("\x1bP1$r")
+				.and_then(|(_, s)| s.bytes().next())
+				.filter(|&b| matches!(b, b'0'..=b'6'))
+				.map_or(u8::MAX, |b| b - b'0'),
+			Ordering::Relaxed,
+		);
 
 		if CSI_U.load(Ordering::Relaxed) {
 			queue!(

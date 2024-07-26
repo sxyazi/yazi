@@ -130,7 +130,7 @@ impl Emulator {
 			RestorePosition
 		)?;
 
-		let resp = futures::executor::block_on(Self::read_until_da1())?;
+		let resp = futures::executor::block_on(Self::read_until_da1());
 		let names = [
 			("kitty", Self::Kitty),
 			("Konsole", Self::Konsole),
@@ -189,7 +189,7 @@ impl Emulator {
 		result
 	}
 
-	pub async fn read_until_da1() -> Result<String> {
+	pub async fn read_until_da1() -> String {
 		let mut buf: Vec<u8> = Vec::with_capacity(200);
 		let read = async {
 			let mut stdin = BufReader::new(tokio::io::stdin());
@@ -214,6 +214,6 @@ impl Emulator {
 			Ok(Err(e)) => error!("read_until_da1 failed: {buf:?}, error: {e:?}"),
 			Ok(Ok(())) => {}
 		}
-		String::from_utf8(buf).map_err(Into::into)
+		String::from_utf8_lossy(&buf).into_owned()
 	}
 }
