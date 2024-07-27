@@ -153,7 +153,7 @@ keymap = [
 	# Help
 	{ on = "~",		run = "help", 	desc = "Open help" },
 	{ on = "<F1>",	run = "help", 	desc = "Open help" },
-	{ on = "/",		run = "filter", desc = "Apply a filter for the help items" },
+	{ on = "F",		run = "filter", desc = "Apply a filter for the help items" },
 ]
 
 [tasks]
@@ -176,7 +176,7 @@ keymap = [
 	# Help
 	{ on = "~",		run = "help", 	desc = "Open help" },
 	{ on = "<F1>",	run = "help", 	desc = "Open help" },
-	{ on = "/",		run = "filter", desc = "Apply a filter for the help items" },
+	{ on = "F",		run = "filter", desc = "Apply a filter for the help items" },
 ]
 
 [select]
@@ -202,7 +202,7 @@ keymap = [
 	# Help
 	{ on = "~",		run = "help", 	desc = "Open help" },
 	{ on = "<F1>",	run = "help", 	desc = "Open help" },
-	{ on = "/",		run = "filter", desc = "Apply a filter for the help items" },
+	{ on = "F",		run = "filter", desc = "Apply a filter for the help items" },
 ]
 
 [input]
@@ -273,7 +273,7 @@ keymap = [
 	# Help
 	{ on = "~",		run = "help", 	desc = "Open help" },
 	{ on = "<F1>",	run = "help", 	desc = "Open help" },
-	{ on = "/",		run = "filter", desc = "Apply a filter for the help items" },
+	{ on = "F",		run = "filter", desc = "Apply a filter for the help items" },
 ]
 
 [completion]
@@ -295,7 +295,7 @@ keymap = [
 	# Help
 	{ on = "~",		run = "help", 	desc = "Open help" },
 	{ on = "<F1>",	run = "help", 	desc = "Open help" },
-	{ on = "/",		run = "filter", desc = "Apply a filter for the help items" },
+	{ on = "F",		run = "filter", desc = "Apply a filter for the help items" },
 ]
 
 [help]
@@ -320,5 +320,5 @@ keymap = [
 	{ on = "<S-Down>", run = "arrow 5",  desc = "Move cursor down 5 lines" },
 
 	# Filtering
-	{ on = "/", run = "filter", desc = "Apply a filter for the help items" },
+	{ on = "F", run = "filter", desc = "Apply a filter for the help items" },
 ]
