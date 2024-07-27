@@ -16,12 +16,13 @@ pub(crate) struct Package {
 impl Package {
 	pub(super) fn new(url: &str, commit: Option<&str>) -> Self {
 		match Url::parse(url) {
-			Ok(url) => {
+			Ok(mut url) => {
 				let repo = url.path().trim_start_matches('/').to_string();
 				let child = match url.fragment() {
 					Some(fragment) => format!("{fragment}.yazi"),
 					None => String::new(),
 				};
+				url.set_fragment(None);
 				let remote = url.to_string();
 
 				return Self {
