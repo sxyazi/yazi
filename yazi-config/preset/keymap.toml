@@ -151,8 +151,9 @@ keymap = [
 	{ on = [ "g", "<Space>" ], run = "cd --interactive", desc = "Go to a directory interactively" },
 
 	# Help
-	{ on = "~",    run = "help", desc = "Open help" },
-	{ on = "<F1>", run = "help", desc = "Open help" },
+	{ on = "~",		run = "help", 	desc = "Open help" },
+	{ on = "<F1>",	run = "help", 	desc = "Open help" },
+	{ on = "/",		run = "filter", desc = "Apply a filter for the help items" },
 ]
 
 [tasks]
@@ -173,8 +174,9 @@ keymap = [
 	{ on = "x",       run = "cancel",  desc = "Cancel the task" },
 
 	# Help
-	{ on = "~",    run = "help", desc = "Open help" },
-	{ on = "<F1>", run = "help", desc = "Open help" },
+	{ on = "~",		run = "help", 	desc = "Open help" },
+	{ on = "<F1>",	run = "help", 	desc = "Open help" },
+	{ on = "/",		run = "filter", desc = "Apply a filter for the help items" },
 ]
 
 [select]
@@ -198,8 +200,9 @@ keymap = [
 	{ on = "<S-Down>", run = "arrow 5",  desc = "Move cursor down 5 lines" },
 
 	# Help
-	{ on = "~",    run = "help", desc = "Open help" },
-	{ on = "<F1>", run = "help", desc = "Open help" },
+	{ on = "~",		run = "help", 	desc = "Open help" },
+	{ on = "<F1>",	run = "help", 	desc = "Open help" },
+	{ on = "/",		run = "filter", desc = "Apply a filter for the help items" },
 ]
 
 [input]
@@ -268,8 +271,9 @@ keymap = [
 	{ on = "<C-r>", run = "redo", desc = "Redo the last operation" },
 
 	# Help
-	{ on = "~",    run = "help", desc = "Open help" },
-	{ on = "<F1>", run = "help", desc = "Open help" },
+	{ on = "~",		run = "help", 	desc = "Open help" },
+	{ on = "<F1>",	run = "help", 	desc = "Open help" },
+	{ on = "/",		run = "filter", desc = "Apply a filter for the help items" },
 ]
 
 [completion]
@@ -289,8 +293,9 @@ keymap = [
 	{ on = "<C-n>", run = "arrow 1",  desc = "Move cursor down" },
 
 	# Help
-	{ on = "~",    run = "help", desc = "Open help" },
-	{ on = "<F1>", run = "help", desc = "Open help" },
+	{ on = "~",		run = "help", 	desc = "Open help" },
+	{ on = "<F1>",	run = "help", 	desc = "Open help" },
+	{ on = "/",		run = "filter", desc = "Apply a filter for the help items" },
 ]
 
 [help]
