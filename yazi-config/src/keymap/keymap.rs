@@ -30,6 +30,18 @@ impl Keymap {
 			Layer::Which => unreachable!(),
 		}
 	}
+	
+	pub fn get_shortcut_for_command(&self, cmd_name: &str, layer: Layer) -> Option<String> {
+		let control = self
+			.get(layer)
+			.iter()
+			.find(|&c| c.run.iter().any(|cmd| cmd.name.eq(cmd_name)));
+
+		match control {
+			Some(c) => Some(c.on()),
+			None => None
+		}
+	}
 }
 
 impl FromStr for Keymap {
