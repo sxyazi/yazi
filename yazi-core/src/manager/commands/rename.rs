@@ -87,9 +87,9 @@ impl Manager {
 		let overwritten = symlink_realpath(&new).await;
 		fs::rename(&old, &new).await?;
 
-		if let Ok(p) = overwritten {
-			ok_or_not_found(fs::rename(&p, &new).await)?;
-			FilesOp::Deleting(p_new.clone(), vec![Url::from(p)]).emit();
+		if let Ok(o) = overwritten {
+			ok_or_not_found(fs::rename(&o, &new).await)?;
+			FilesOp::Deleting(p_new.clone(), vec![Url::from(o)]).emit();
 		}
 		Pubsub::pub_from_rename(tab, &old, &new);
 

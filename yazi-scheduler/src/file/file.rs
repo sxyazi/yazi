@@ -128,17 +128,21 @@ impl File {
 				self.prog.send(TaskProg::Adv(task.id, 1, task.length))?
 			}
 			FileOp::Trash(task) => {
-				#[cfg(target_os = "macos")]
-				{
-					use trash::{macos::{DeleteMethod, TrashContextExtMacos}, TrashContext};
-					let mut ctx = TrashContext::default();
-					ctx.set_delete_method(DeleteMethod::NsFileManager);
-					ctx.delete(&task.target)?;
-				}
-				#[cfg(all(not(target_os = "macos"), not(target_os = "android")))]
-				{
-					trash::delete(&task.target)?;
-				}
+				tokio::task::spawn_blocking(move || {
+					#[cfg(target_os = "macos")]
+					{
+						use trash::{macos::{DeleteMethod, TrashContextExtMacos}, TrashContext};
+						let mut ctx = TrashContext::default();
+						ctx.set_delete_method(DeleteMethod::NsFileManager);
+						ctx.delete(&task.target)?;
+					}
+					#[cfg(all(not(target_os = "macos"), not(target_os = "android")))]
+					{
+						trash::delete(&task.target)?;
+					}
+					Ok::<_, trash::Error>(())
+				})
+				.await??;
 				self.prog.send(TaskProg::Adv(task.id, 1, task.length))?;
 			}
 		}
@@ -328,20 +332,6 @@ impl File {
 
 		let meta = fs::metadata(path).await;
 		if meta.is_ok() { meta } else { fs::symlink_metadata(path).await }
-	}
-
-	pub(crate) async fn remove_empty_dirs(dir: &Path) {
-		let Ok(mut it) = fs::read_dir(dir).await else { return };
-
-		while let Ok(Some(entry)) = it.next_entry().await {
-			if entry.file_type().await.is_ok_and(|t| t.is_dir()) {
-				let path = entry.path();
-				Box::pin(Self::remove_empty_dirs(&path)).await;
-				fs::remove_dir(path).await.ok();
-			}
-		}
-
-		fs::remove_dir(dir).await.ok();
 	}
 }
 

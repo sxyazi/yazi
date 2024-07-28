@@ -152,7 +152,7 @@ impl Url {
 	#[cfg(unix)]
 	#[inline]
 	pub fn is_hidden(&self) -> bool {
-		self.file_name().map_or(false, |s| s.as_encoded_bytes().starts_with(&[b'.']))
+		self.file_name().map_or(false, |s| s.as_encoded_bytes().starts_with(b"."))
 	}
 }
 

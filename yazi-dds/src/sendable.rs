@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use mlua::{ExternalError, Lua, Table, Value, Variadic};
+use mlua::{ExternalError, Lua, MultiValue, Table, Value};
 use yazi_shared::{event::{Data, DataKey}, OrderedFloat};
 
 pub struct Sendable;
@@ -15,12 +15,22 @@ impl Sendable {
 			Value::Number(n) => Data::Number(n),
 			Value::String(s) => Data::String(s.to_str()?.to_owned()),
 			Value::Table(t) => {
-				let mut map = HashMap::with_capacity(t.raw_len());
+				let (mut i, mut map) = (1, HashMap::with_capacity(t.raw_len()));
 				for result in t.pairs::<Value, Value>() {
 					let (k, v) = result?;
-					map.insert(Self::value_to_key(k)?, Self::value_to_data(v)?);
+					let k = Self::value_to_key(k)?;
+
+					if k == DataKey::Integer(i) {
+						i += 1;
+					}
+					map.insert(k, Self::value_to_data(v)?);
 				}
-				Data::Table(map)
+
+				if map.len() == i as usize - 1 {
+					Data::List(map.into_values().collect())
+				} else {
+					Data::Dict(map)
+				}
 			}
 			Value::Function(_) => Err("function is not supported".into_lua_err())?,
 			Value::Thread(_) => Err("thread is not supported".into_lua_err())?,
@@ -44,8 +54,9 @@ impl Sendable {
 			Data::Integer(v) => Value::Integer(v),
 			Data::Number(v) => Value::Number(v),
 			Data::String(v) => Value::String(lua.create_string(v)?),
-			Data::Table(t) => {
-				let seq_len = t.keys().filter(|&k| !k.is_numeric()).count();
+			Data::List(v) => Value::Table(Self::list_to_table(lua, v)?),
+			Data::Dict(t) => {
+				let seq_len = t.keys().filter(|&k| !k.is_integer()).count();
 				let table = lua.create_table_with_capacity(seq_len, t.len() - seq_len)?;
 				for (k, v) in t {
 					table.raw_set(Self::key_to_value(lua, k)?, Self::data_to_value(lua, v)?)?;
@@ -63,7 +74,7 @@ impl Sendable {
 		})
 	}
 
-	pub fn vec_to_table(lua: &Lua, data: Vec<Data>) -> mlua::Result<Table> {
+	pub fn list_to_table(lua: &Lua, data: Vec<Data>) -> mlua::Result<Table> {
 		let mut vec = Vec::with_capacity(data.len());
 		for v in data.into_iter() {
 			vec.push(Self::data_to_value(lua, v)?);
@@ -71,15 +82,15 @@ impl Sendable {
 		lua.create_sequence_from(vec)
 	}
 
-	pub fn vec_to_variadic(lua: &Lua, data: Vec<Data>) -> mlua::Result<Variadic<Value>> {
+	pub fn list_to_values(lua: &Lua, data: Vec<Data>) -> mlua::Result<MultiValue> {
 		let mut vec = Vec::with_capacity(data.len());
 		for v in data {
 			vec.push(Self::data_to_value(lua, v)?);
 		}
-		Ok(Variadic::from_iter(vec))
+		Ok(MultiValue::from_iter(vec))
 	}
 
-	pub fn variadic_to_vec(values: Variadic<Value>) -> mlua::Result<Vec<Data>> {
+	pub fn values_to_vec(values: MultiValue) -> mlua::Result<Vec<Data>> {
 		let mut vec = Vec::with_capacity(values.len());
 		for value in values {
 			vec.push(Self::value_to_data(value)?);

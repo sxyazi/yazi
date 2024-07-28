@@ -28,7 +28,8 @@ impl Pubsub {
 		ps.raw_set(
 			"sub",
 			lua.create_function(|lua, (kind, f): (mlua::String, Function)| {
-				let Some(ref cur) = lua.named_registry_value::<RtRef>("rt")?.current else {
+				let rt = lua.named_registry_value::<RtRef>("rt")?;
+				let Some(cur) = rt.current() else {
 					return Err("`sub()` must be called in a sync plugin").into_lua_err();
 				};
 				if !yazi_dds::Pubsub::sub(cur, kind.to_str()?, f) {
@@ -41,7 +42,8 @@ impl Pubsub {
 		ps.raw_set(
 			"sub_remote",
 			lua.create_function(|_, (kind, f): (mlua::String, Function)| {
-				let Some(ref cur) = lua.named_registry_value::<RtRef>("rt")?.current else {
+				let rt = lua.named_registry_value::<RtRef>("rt")?;
+				let Some(cur) = rt.current() else {
 					return Err("`sub_remote()` must be called in a sync plugin").into_lua_err();
 				};
 				if !yazi_dds::Pubsub::sub_remote(cur, kind.to_str()?, f) {
@@ -54,7 +56,7 @@ impl Pubsub {
 		ps.raw_set(
 			"unsub",
 			lua.create_function(|_, kind: mlua::String| {
-				if let Some(ref cur) = lua.named_registry_value::<RtRef>("rt")?.current {
+				if let Some(cur) = lua.named_registry_value::<RtRef>("rt")?.current() {
 					Ok(yazi_dds::Pubsub::unsub(cur, kind.to_str()?))
 				} else {
 					Err("`unsub()` must be called in a sync plugin").into_lua_err()
@@ -65,7 +67,7 @@ impl Pubsub {
 		ps.raw_set(
 			"unsub_remote",
 			lua.create_function(|_, kind: mlua::String| {
-				if let Some(ref cur) = lua.named_registry_value::<RtRef>("rt")?.current {
+				if let Some(cur) = lua.named_registry_value::<RtRef>("rt")?.current() {
 					Ok(yazi_dds::Pubsub::unsub_remote(cur, kind.to_str()?))
 				} else {
 					Err("`unsub_remote()` must be called in a sync plugin").into_lua_err()

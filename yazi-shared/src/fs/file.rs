@@ -7,8 +7,8 @@ use crate::{fs::{Cha, ChaKind, Url}, theme::IconCache};
 
 #[derive(Clone, Debug, Default)]
 pub struct File {
-	pub url:     Url,
 	pub cha:     Cha,
+	pub url:     Url,
 	pub link_to: Option<Url>,
 	pub icon:    Cell<IconCache>,
 }
@@ -23,6 +23,13 @@ impl Deref for File {
 impl AsRef<File> for File {
 	#[inline]
 	fn as_ref(&self) -> &File { self }
+}
+
+impl PartialEq for File {
+	#[inline]
+	fn eq(&self, other: &Self) -> bool {
+		self.cha == other.cha && self.url == other.url && self.link_to == other.link_to
+	}
 }
 
 impl File {
@@ -59,13 +66,12 @@ impl File {
 			}
 		}
 
-		Self { url, cha: Cha::from(meta).with_kind(ck), link_to, icon: Default::default() }
+		Self { cha: Cha::from(meta).with_kind(ck), url, link_to, icon: Default::default() }
 	}
 
 	#[inline]
 	pub fn from_dummy(url: Url, ft: Option<FileType>) -> Self {
-		// TODO: set dummy=true
-		Self { url: url.to_owned(), cha: ft.map_or_else(Cha::default, Cha::from), ..Default::default() }
+		Self { cha: ft.map_or_else(Cha::default, Cha::from), url: url.to_owned(), ..Default::default() }
 	}
 }
 

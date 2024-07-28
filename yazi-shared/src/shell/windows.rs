@@ -1,6 +1,6 @@
 use std::{borrow::Cow, iter::repeat};
 
-pub fn from_str(s: &str) -> Cow<str> {
+pub fn escape_str(s: &str) -> Cow<str> {
 	let bytes = s.as_bytes();
 	if !bytes.is_empty() && !bytes.iter().any(|&c| matches!(c, b' ' | b'"' | b'\n' | b'\t')) {
 		return Cow::Borrowed(s);
@@ -39,7 +39,7 @@ pub fn from_str(s: &str) -> Cow<str> {
 }
 
 #[cfg(windows)]
-pub fn from_os_str(s: &std::ffi::OsStr) -> Cow<std::ffi::OsStr> {
+pub fn escape_os_str(s: &std::ffi::OsStr) -> Cow<std::ffi::OsStr> {
 	use std::os::windows::ffi::{OsStrExt, OsStringExt};
 
 	let wide = s.encode_wide();
@@ -80,6 +80,37 @@ pub fn from_os_str(s: &std::ffi::OsStr) -> Cow<std::ffi::OsStr> {
 }
 
 #[cfg(windows)]
+pub fn split(s: &str) -> std::io::Result<Vec<String>> {
+	use std::os::windows::ffi::OsStrExt;
+
+	let s: Vec<_> = std::ffi::OsStr::new(s).encode_wide().chain(std::iter::once(0)).collect();
+	split_slice(&s)
+}
+
+#[cfg(windows)]
+fn split_slice(s: &[u16]) -> std::io::Result<Vec<String>> {
+	use std::mem::MaybeUninit;
+
+	use windows_sys::Win32::{Foundation::LocalFree, UI::Shell::CommandLineToArgvW};
+
+	let mut argc = MaybeUninit::<i32>::uninit();
+	let argv_p = unsafe { CommandLineToArgvW(s.as_ptr(), argc.as_mut_ptr()) };
+	if argv_p.is_null() {
+		return Err(std::io::Error::last_os_error());
+	}
+
+	let argv = unsafe { std::slice::from_raw_parts(argv_p, argc.assume_init() as usize) };
+	let mut res = vec![];
+	for &arg in argv {
+		let len = unsafe { libc::wcslen(arg) };
+		res.push(String::from_utf16_lossy(unsafe { std::slice::from_raw_parts(arg, len) }));
+	}
+
+	unsafe { LocalFree(argv_p as _) };
+	Ok(res)
+}
+
+#[cfg(windows)]
 fn disallowed(b: u16) -> bool {
 	match char::from_u32(b as u32) {
 		Some(c) => matches!(c, ' ' | '"' | '\n' | '\t'),
@@ -92,33 +123,33 @@ mod tests {
 	use super::*;
 
 	#[test]
-	fn test_from_str() {
-		assert_eq!(from_str(""), r#""""#);
-		assert_eq!(from_str(r#""""#), r#""\"\"""#);
+	fn test_escape_str() {
+		assert_eq!(escape_str(""), r#""""#);
+		assert_eq!(escape_str(r#""""#), r#""\"\"""#);
 
-		assert_eq!(from_str("--aaa=bbb-ccc"), "--aaa=bbb-ccc");
-		assert_eq!(from_str(r#"\path\to\my documents\"#), r#""\path\to\my documents\\""#);
+		assert_eq!(escape_str("--aaa=bbb-ccc"), "--aaa=bbb-ccc");
+		assert_eq!(escape_str(r#"\path\to\my documents\"#), r#""\path\to\my documents\\""#);
 
-		assert_eq!(from_str(r#"--features="default""#), r#""--features=\"default\"""#);
-		assert_eq!(from_str(r#""--features=\"default\"""#), r#""\"--features=\\\"default\\\"\"""#);
-		assert_eq!(from_str("linker=gcc -L/foo -Wl,bar"), r#""linker=gcc -L/foo -Wl,bar""#);
+		assert_eq!(escape_str(r#"--features="default""#), r#""--features=\"default\"""#);
+		assert_eq!(escape_str(r#""--features=\"default\"""#), r#""\"--features=\\\"default\\\"\"""#);
+		assert_eq!(escape_str("linker=gcc -L/foo -Wl,bar"), r#""linker=gcc -L/foo -Wl,bar""#);
 	}
 
 	#[cfg(windows)]
 	#[test]
-	fn test_from_os_str() {
+	fn test_escape_os_str() {
 		use std::{ffi::OsString, os::windows::ffi::OsStringExt};
 
 		fn from_str(input: &str, expected: &str) {
 			let observed = OsString::from(input);
 			let expected = OsString::from(expected);
-			assert_eq!(from_os_str(observed.as_os_str()), expected.as_os_str());
+			assert_eq!(escape_os_str(observed.as_os_str()), expected.as_os_str());
 		}
 
 		fn from_bytes(input: &[u16], expected: &[u16]) {
 			let observed = OsString::from_wide(input);
 			let expected = OsString::from_wide(expected);
-			assert_eq!(from_os_str(observed.as_os_str()), expected.as_os_str());
+			assert_eq!(escape_os_str(observed.as_os_str()), expected.as_os_str());
 		}
 
 		from_str("", r#""""#);

@@ -13,7 +13,8 @@ pub enum Data {
 	Integer(i64),
 	Number(f64),
 	String(String),
-	Table(HashMap<DataKey, Data>),
+	List(Vec<Data>),
+	Dict(HashMap<DataKey, Data>),
 	#[serde(skip_deserializing)]
 	Url(Url),
 	#[serde(skip)]
@@ -64,13 +65,13 @@ impl Data {
 		}
 	}
 
-	pub fn into_table_string(self) -> HashMap<String, String> {
-		let Self::Table(table) = self else {
+	pub fn into_dict_string(self) -> HashMap<String, String> {
+		let Self::Dict(dict) = self else {
 			return Default::default();
 		};
 
-		let mut map = HashMap::with_capacity(table.len());
-		for pair in table {
+		let mut map = HashMap::with_capacity(dict.len());
+		for pair in dict {
 			if let (DataKey::String(k), Self::String(v)) = pair {
 				map.insert(k, v);
 			}
@@ -103,7 +104,7 @@ pub enum DataKey {
 
 impl DataKey {
 	#[inline]
-	pub fn is_numeric(&self) -> bool { matches!(self, Self::Integer(_) | Self::Number(_)) }
+	pub fn is_integer(&self) -> bool { matches!(self, Self::Integer(_)) }
 }
 
 // --- Macros

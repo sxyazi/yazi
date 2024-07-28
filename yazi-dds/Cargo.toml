@@ -21,8 +21,8 @@ anyhow       = "1.0.86"
 mlua         = { version = "0.9.9", features = [ "lua54" ] }
 parking_lot  = "0.12.3"
 serde        = { version = "1.0.204", features = [ "derive" ] }
-serde_json   = "1.0.120"
-tokio        = { version = "1.39.1", features = [ "full" ] }
+serde_json   = "1.0.121"
+tokio        = { version = "1.39.2", features = [ "full" ] }
 tokio-stream = "0.1.15"
 tokio-util   = "0.7.11"
 

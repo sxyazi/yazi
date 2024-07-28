@@ -1,62 +1,42 @@
 local M = {}
 
 function M:peek()
-	local child
-	if ya.target_os() == "macos" then
-		child = self:try_spawn("7zz") or self:try_spawn("7z")
-	else
-		child = self:try_spawn("7z") or self:try_spawn("7zz")
-	end
-
-	if not child then
-		return ya.err("spawn `7z` and `7zz` both commands failed, error code: " .. tostring(self.last_error))
-	end
-
 	local limit = self.area.h
-	local i, icon, names, sizes = 0, nil, {}, {}
-	repeat
-		local next, event = child:read_line()
-		if event ~= 0 then
-			break
-		end
+	local paths, sizes = {}, {}
 
-		local attr, size, name = next:match("^[-%d]+%s+[:%d]+%s+([.%a]+)%s+(%d+)%s+%d+%s+(.+)[\r\n]+")
-		if not name then
-			goto continue
-		end
+	local files, bound, code = self:list_files({ "-p", tostring(self.file.url) }, self.skip, limit)
+	if code ~= 0 then
+		return ya.preview_widgets(self, {
+			ui.Paragraph(self.area, {
+				ui.Line(code == 2 and "File list in this archive is encrypted" or "Spawn `7z` and `7zz` both commands failed"),
+			}),
+		})
+	end
 
-		i = i + 1
-		if i <= self.skip then
-			goto continue
-		end
-
-		icon = File({
-			url = Url(name),
-			cha = Cha { kind = attr:sub(1, 1) == "D" and 1 or 0 },
+	for _, f in ipairs(files) do
+		local icon = File({
+			url = Url(f.path),
+			cha = Cha { kind = f.attr:sub(1, 1) == "D" and 1 or 0 },
 		}):icon()
 
 		if icon then
-			names[#names + 1] = ui.Line { ui.Span(" " .. icon.text .. " "):style(icon.style), ui.Span(name) }
+			paths[#paths + 1] = ui.Line { ui.Span(" " .. icon.text .. " "):style(icon.style), ui.Span(f.path) }
 		else
-			names[#names + 1] = ui.Line(name)
+			paths[#paths + 1] = ui.Line(f.path)
 		end
 
-		size = tonumber(size)
-		if size > 0 then
-			sizes[#sizes + 1] = ui.Line(string.format(" %s ", ya.readable_size(size)))
+		if f.size > 0 then
+			sizes[#sizes + 1] = ui.Line(string.format(" %s ", ya.readable_size(f.size)))
 		else
 			sizes[#sizes + 1] = ui.Line("")
 		end
+	end
 
-		::continue::
-	until i >= self.skip + limit
-
-	child:start_kill()
-	if self.skip > 0 and i < self.skip + limit then
-		ya.manager_emit("peek", { math.max(0, i - limit), only_if = self.file.url, upper_bound = true })
+	if self.skip > 0 and bound < self.skip + limit then
+		ya.manager_emit("peek", { math.max(0, bound - limit), only_if = self.file.url, upper_bound = true })
 	else
 		ya.preview_widgets(self, {
-			ui.Paragraph(self.area, names),
+			ui.Paragraph(self.area, paths),
 			ui.Paragraph(self.area, sizes):align(ui.Paragraph.RIGHT),
 		})
 	end
@@ -73,12 +53,93 @@ function M:seek(units)
 	end
 end
 
-function M:try_spawn(name)
-	local child, code = Command(name):args({ "l", "-ba", tostring(self.file.url) }):stdout(Command.PIPED):spawn()
-	if not child then
-		self.last_error = code
+function M:spawn_7z(args)
+	local last_error = nil
+	local try = function(name)
+		local stdout = args[1] == "l" and Command.PIPED or Command.NULL
+		local child, code = Command(name):args(args):stdout(stdout):stderr(Command.PIPED):spawn()
+		if not child then
+			last_error = code
+		end
+		return child
 	end
-	return child
+
+	local child
+	if ya.target_os() == "macos" then
+		child = try("7zz") or try("7z")
+	else
+		child = try("7z") or try("7zz")
+	end
+
+	if not child then
+		return ya.err("spawn `7z` and `7zz` both commands failed, error code: " .. tostring(last_error))
+	end
+	return child, last_error
+end
+
+---List files in an archive
+---@param args table
+---@param skip integer
+---@param limit integer
+---@return table
+---@return integer
+---@return integer
+---  0: success
+---  1: failed to spawn
+---  2: wrong password
+---  3: partial success
+function M:list_files(args, skip, limit)
+	local child = self:spawn_7z { "l", "-ba", "-slt", table.unpack(args) }
+	if not child then
+		return {}, 0, 1
+	end
+
+	local i, files, code = 0, { { path = "", size = 0, attr = "" } }, 0
+	local key, value = "", ""
+	repeat
+		local next, event = child:read_line()
+		if event == 1 and self:is_encrypted(next) then
+			code = 2
+			break
+		elseif event == 1 then
+			code = 3
+			goto continue
+		elseif event ~= 0 then
+			break
+		end
+
+		if next == "\n" or next == "\r\n" then
+			i = i + 1
+			if files[#files].path ~= "" then
+				files[#files + 1] = { path = "", size = 0, attr = "" }
+			end
+			goto continue
+		elseif i < skip then
+			goto continue
+		end
+
+		key, value = next:match("^(%u%l+) = (.+)[\r\n]+")
+		if key == "Path" then
+			files[#files].path = value
+		elseif key == "Size" then
+			files[#files].size = tonumber(value) or 0
+		elseif key == "Attributes" then
+			files[#files].attr = value
+		end
+
+		::continue::
+	until i >= skip + limit
+	child:start_kill()
+
+	if files[#files].path == "" then
+		files[#files] = nil
+	end
+	return files, i, code
+end
+
+function M:is_encrypted(s)
+	return s:find("Cannot open encrypted archive. Wrong password?", 1, true)
+		or s:find("Data Error in encrypted file. Wrong password?", 1, true)
 end
 
 return M

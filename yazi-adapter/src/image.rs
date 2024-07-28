@@ -2,7 +2,7 @@ use std::{fs::File, io::BufReader, path::{Path, PathBuf}};
 
 use anyhow::Result;
 use exif::{In, Tag};
-use image::{codecs::jpeg::JpegEncoder, imageops::{self, FilterType}, io::Limits, DynamicImage};
+use image::{codecs::jpeg::JpegEncoder, imageops::{self, FilterType}, DynamicImage, Limits};
 use ratatui::layout::Rect;
 use yazi_config::{PREVIEW, TASKS};
 
@@ -16,7 +16,7 @@ impl Image {
 
 		let path = path.to_owned();
 		let mut img = tokio::task::spawn_blocking(move || {
-			Self::set_limits(image::io::Reader::open(path)?.with_guessed_format()?).decode()
+			Self::set_limits(image::ImageReader::open(path)?.with_guessed_format()?).decode()
 		})
 		.await??;
 
@@ -54,7 +54,7 @@ impl Image {
 
 		let path = path.to_owned();
 		let mut img = tokio::task::spawn_blocking(move || {
-			Self::set_limits(image::io::Reader::open(path)?.with_guessed_format()?).decode()
+			Self::set_limits(image::ImageReader::open(path)?.with_guessed_format()?).decode()
 		})
 		.await??;
 
@@ -155,7 +155,7 @@ impl Image {
 		img
 	}
 
-	fn set_limits(mut r: image::io::Reader<BufReader<File>>) -> image::io::Reader<BufReader<File>> {
+	fn set_limits(mut r: image::ImageReader<BufReader<File>>) -> image::ImageReader<BufReader<File>> {
 		let mut limits = Limits::no_limits();
 		if TASKS.image_alloc > 0 {
 			limits.max_alloc = Some(TASKS.image_alloc as u64);

@@ -14,7 +14,7 @@ impl OrderedFloat {
 	}
 
 	#[inline]
-	pub fn get(&self) -> f64 { self.0 }
+	pub const fn get(&self) -> f64 { self.0 }
 }
 
 impl Hash for OrderedFloat {

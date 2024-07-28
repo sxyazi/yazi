@@ -6,7 +6,8 @@ use parking_lot::Mutex;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
 use yazi_config::{open::Opener, plugin::{Fetcher, Preloader}, TASKS};
 use yazi_dds::Pump;
-use yazi_shared::{event::Data, fs::{unique_name, Url}, Throttle};
+use yazi_proxy::ManagerProxy;
+use yazi_shared::{event::Data, fs::{remove_dir_clean, unique_name, Url}, Throttle};
 
 use super::{Ongoing, TaskProg, TaskStage};
 use crate::{file::{File, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, prework::{Prework, PreworkOpFetch, PreworkOpLoad, PreworkOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
@@ -84,7 +85,7 @@ impl Scheduler {
 			Box::new(move |canceled: bool| {
 				async move {
 					if !canceled {
-						File::remove_empty_dirs(&from).await;
+						remove_dir_clean(&from).await;
 						Pump::push_move(from, to);
 					}
 					ongoing.lock().try_remove(id, TaskStage::Hooked);
@@ -188,6 +189,7 @@ impl Scheduler {
 				async move {
 					if !canceled {
 						fs::remove_dir_all(&target).await.ok();
+						ManagerProxy::update_task(&target);
 						Pump::push_delete(target);
 					}
 					ongoing.lock().try_remove(id, TaskStage::Hooked);
@@ -207,14 +209,29 @@ impl Scheduler {
 	}
 
 	pub fn file_trash(&self, target: Url) {
-		let name = format!("Trash {:?}", target);
-		let id = self.ongoing.lock().add(TaskKind::User, name);
+		let mut ongoing = self.ongoing.lock();
+		let id = ongoing.add(TaskKind::User, format!("Trash {:?}", target));
+
+		ongoing.hooks.insert(id, {
+			let target = target.clone();
+			let ongoing = self.ongoing.clone();
+
+			Box::new(move |canceled: bool| {
+				async move {
+					if !canceled {
+						ManagerProxy::update_task(&target);
+						Pump::push_trash(target);
+					}
+					ongoing.lock().try_remove(id, TaskStage::Hooked);
+				}
+				.boxed()
+			})
+		});
 
 		let file = self.file.clone();
 		_ = self.micro.try_send(
 			async move {
 				file.trash(FileOpTrash { id, target: target.clone(), length: 0 }).await.ok();
-				Pump::push_trash(target);
 			}
 			.boxed(),
 			LOW,

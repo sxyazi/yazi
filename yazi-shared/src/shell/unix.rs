@@ -1,23 +1,23 @@
 use std::borrow::Cow;
 
-pub fn from_str(s: &str) -> Cow<str> {
-	match from_slice(s.as_bytes()) {
+pub fn escape_str(s: &str) -> Cow<str> {
+	match escape_slice(s.as_bytes()) {
 		Cow::Borrowed(_) => Cow::Borrowed(s),
-		Cow::Owned(v) => String::from_utf8(v).expect("Invalid bytes returned from from_slice()").into(),
+		Cow::Owned(v) => String::from_utf8(v).expect("Invalid bytes returned by escape_slice()").into(),
 	}
 }
 
 #[cfg(unix)]
-pub fn from_os_str(s: &std::ffi::OsStr) -> Cow<std::ffi::OsStr> {
+pub fn escape_os_str(s: &std::ffi::OsStr) -> Cow<std::ffi::OsStr> {
 	use std::os::unix::ffi::{OsStrExt, OsStringExt};
 
-	match from_slice(s.as_bytes()) {
+	match escape_slice(s.as_bytes()) {
 		Cow::Borrowed(_) => Cow::Borrowed(s),
 		Cow::Owned(v) => std::ffi::OsString::from_vec(v).into(),
 	}
 }
 
-fn from_slice(s: &[u8]) -> Cow<[u8]> {
+fn escape_slice(s: &[u8]) -> Cow<[u8]> {
 	if !s.is_empty() && s.iter().copied().all(allowed) {
 		return Cow::Borrowed(s);
 	}
@@ -51,31 +51,31 @@ mod tests {
 	use super::*;
 
 	#[test]
-	fn test_from_str() {
-		assert_eq!(from_str(""), r#"''"#);
-		assert_eq!(from_str(" "), r#"' '"#);
-		assert_eq!(from_str("*"), r#"'*'"#);
+	fn test_escape_str() {
+		assert_eq!(escape_str(""), r#"''"#);
+		assert_eq!(escape_str(" "), r#"' '"#);
+		assert_eq!(escape_str("*"), r#"'*'"#);
 
-		assert_eq!(from_str("--aaa=bbb-ccc"), "--aaa=bbb-ccc");
-		assert_eq!(from_str(r#"--features="default""#), r#"'--features="default"'"#);
-		assert_eq!(from_str("linker=gcc -L/foo -Wl,bar"), r#"'linker=gcc -L/foo -Wl,bar'"#);
+		assert_eq!(escape_str("--aaa=bbb-ccc"), "--aaa=bbb-ccc");
+		assert_eq!(escape_str(r#"--features="default""#), r#"'--features="default"'"#);
+		assert_eq!(escape_str("linker=gcc -L/foo -Wl,bar"), r#"'linker=gcc -L/foo -Wl,bar'"#);
 
 		assert_eq!(
-			from_str("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_=/,.+"),
+			escape_str("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_=/,.+"),
 			"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_=/,.+",
 		);
-		assert_eq!(from_str(r#"'!\$`\\\n "#), r#"''\'''\!'\$`\\\n '"#);
+		assert_eq!(escape_str(r#"'!\$`\\\n "#), r#"''\'''\!'\$`\\\n '"#);
 	}
 
 	#[cfg(unix)]
 	#[test]
-	fn test_from_os_str() {
+	fn test_escape_os_str() {
 		use std::{ffi::OsStr, os::unix::ffi::OsStrExt};
 
 		fn from_str(input: &str, expected: &str) { from_bytes(input.as_bytes(), expected.as_bytes()) }
 
 		fn from_bytes(input: &[u8], expected: &[u8]) {
-			assert_eq!(from_os_str(OsStr::from_bytes(input)), OsStr::from_bytes(expected));
+			assert_eq!(escape_os_str(OsStr::from_bytes(input)), OsStr::from_bytes(expected));
 		}
 
 		from_str("", r#"''"#);

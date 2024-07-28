@@ -44,9 +44,9 @@ impl Actions {
 		writeln!(s, "\nVariables")?;
 		writeln!(s, "    SHELL              : {:?}", env::var_os("SHELL"))?;
 		writeln!(s, "    EDITOR             : {:?}", env::var_os("EDITOR"))?;
-		writeln!(s, "    ZELLIJ_SESSION_NAME: {:?}", env::var_os("ZELLIJ_SESSION_NAME"))?;
 		writeln!(s, "    YAZI_FILE_ONE      : {:?}", env::var_os("YAZI_FILE_ONE"))?;
 		writeln!(s, "    YAZI_CONFIG_HOME   : {:?}", env::var_os("YAZI_CONFIG_HOME"))?;
+		writeln!(s, "    ZELLIJ_SESSION_NAME: {:?}", env::var_os("ZELLIJ_SESSION_NAME"))?;
 
 		writeln!(s, "\nText Opener")?;
 		writeln!(
@@ -74,7 +74,8 @@ impl Actions {
 		writeln!(s, "    rg               : {}", Self::process_output("rg", "--version"))?;
 		writeln!(s, "    chafa            : {}", Self::process_output("chafa", "--version"))?;
 		writeln!(s, "    zoxide           : {}", Self::process_output("zoxide", "--version"))?;
-		writeln!(s, "    unar             : {}", Self::process_output("unar", "--version"))?;
+		writeln!(s, "    7z               : {}", Self::process_output("7z", "i"))?;
+		writeln!(s, "    7zz              : {}", Self::process_output("7zz", "i"))?;
 		writeln!(s, "    jq               : {}", Self::process_output("jq", "--version"))?;
 
 		writeln!(s, "\n\n--------------------------------------------------")?;

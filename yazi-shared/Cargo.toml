@@ -15,19 +15,17 @@ bitflags         = "2.6.0"
 crossterm        = "0.27.0"
 dirs             = "5.0.1"
 futures          = "0.3.30"
+libc             = "0.2.155"
 parking_lot      = "0.12.3"
 percent-encoding = "2.3.1"
 ratatui          = "0.27.0"
 regex            = "1.10.5"
 serde            = { version = "1.0.204", features = [ "derive" ] }
 shell-words      = "1.1.0"
-tokio            = { version = "1.39.1", features = [ "full" ] }
-
-[target."cfg(unix)".dependencies]
-libc = "0.2.155"
+tokio            = { version = "1.39.2", features = [ "full" ] }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.52.0", features = [ "Win32_Storage_FileSystem" ] }
+windows-sys = { version = "0.52.0", features = [ "Win32_Storage_FileSystem", "Win32_UI_Shell" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 crossterm = { version = "0.27.0", features = [ "use-dev-tty" ] }

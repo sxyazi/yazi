@@ -19,8 +19,8 @@ impl<'a> TryFrom<Table<'a>> for PreviewLock {
 	fn try_from(t: Table) -> Result<Self, Self::Error> {
 		let file: FileRef = t.raw_get("file")?;
 		Ok(Self {
-			url:    file.url(),
 			cha:    file.cha,
+			url:    file.url(),
 			skip:   t.raw_get("skip")?,
 			window: t.raw_get("window")?,
 			data:   Default::default(),

@@ -1,11 +1,9 @@
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use mlua::{AnyUserData, ExternalError, Lua, Table, UserDataFields, UserDataMethods, UserDataRef};
+use mlua::{AnyUserData, ExternalError, Lua, Table, UserDataFields, UserDataMethods};
 use yazi_shared::fs::ChaKind;
 
 use crate::bindings::Cast;
-
-pub type UrlRef<'lua> = UserDataRef<'lua, yazi_shared::fs::Cha>;
 
 pub struct Cha;
 

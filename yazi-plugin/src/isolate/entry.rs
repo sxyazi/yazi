@@ -18,7 +18,7 @@ pub async fn entry(name: String, args: Vec<Data>) -> mlua::Result<()> {
 		};
 
 		Handle::current()
-			.block_on(plugin.call_async_method("entry", Sendable::vec_to_table(&lua, args)))
+			.block_on(plugin.call_async_method("entry", Sendable::list_to_table(&lua, args)))
 	})
 	.await
 	.into_lua_err()?

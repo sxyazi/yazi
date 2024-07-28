@@ -261,6 +261,20 @@ pub fn copy_with_progress(
 	rx
 }
 
+pub async fn remove_dir_clean(dir: &Path) {
+	let Ok(mut it) = fs::read_dir(dir).await else { return };
+
+	while let Ok(Some(entry)) = it.next_entry().await {
+		if entry.file_type().await.is_ok_and(|t| t.is_dir()) {
+			let path = entry.path();
+			Box::pin(remove_dir_clean(&path)).await;
+			fs::remove_dir(path).await.ok();
+		}
+	}
+
+	fs::remove_dir(dir).await.ok();
+}
+
 // Convert a file mode to a string representation
 #[cfg(unix)]
 #[allow(clippy::collapsible_else_if)]

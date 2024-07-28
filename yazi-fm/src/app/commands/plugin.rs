@@ -44,12 +44,12 @@ impl App {
 		};
 
 		match LUA.named_registry_value::<RtRef>("rt") {
-			Ok(mut r) => r.swap(&opt.id),
+			Ok(mut r) => r.push(&opt.id),
 			Err(e) => return warn!("{e}"),
 		}
+		defer! { _ = LUA.named_registry_value::<RtRef>("rt").map(|mut r| r.pop()) }
 
-		defer! { LUA.named_registry_value::<RtRef>("rt").map(|mut r| r.reset()).ok(); };
-		let plugin = match LOADER.load(&opt.id) {
+		let plugin = match LOADER.load(&LUA, &opt.id) {
 			Ok(plugin) => plugin,
 			Err(e) => return warn!("{e}"),
 		};
@@ -58,7 +58,7 @@ impl App {
 			if let Some(cb) = opt.cb {
 				cb(&LUA, plugin)
 			} else {
-				plugin.call_method("entry", Sendable::vec_to_table(&LUA, opt.args)?)
+				plugin.call_method("entry", Sendable::list_to_table(&LUA, opt.args)?)
 			}
 		});
 	}

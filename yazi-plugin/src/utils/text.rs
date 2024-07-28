@@ -1,5 +1,6 @@
 use std::ops::ControlFlow;
 
+use md5::{Digest, Md5};
 use mlua::{Lua, Table};
 use unicode_width::UnicodeWidthChar;
 
@@ -9,12 +10,19 @@ use crate::CLIPBOARD;
 impl Utils {
 	pub(super) fn text(lua: &Lua, ya: &Table) -> mlua::Result<()> {
 		ya.raw_set(
+			"md5",
+			lua.create_async_function(|_, s: mlua::String| async move {
+				Ok(format!("{:x}", Md5::new_with_prefix(s.as_bytes()).finalize()))
+			})?,
+		)?;
+
+		ya.raw_set(
 			"quote",
 			lua.create_function(|_, (s, unix): (mlua::String, Option<bool>)| {
 				let s = match unix {
-					Some(true) => yazi_shared::escape::unix(s.to_str()?),
-					Some(false) => yazi_shared::escape::windows(s.to_str()?),
-					None => yazi_shared::escape::native(s.to_str()?),
+					Some(true) => yazi_shared::shell::escape_unix(s.to_str()?),
+					Some(false) => yazi_shared::shell::escape_windows(s.to_str()?),
+					None => yazi_shared::shell::escape_native(s.to_str()?),
 				};
 				Ok(s.into_owned())
 			})?,

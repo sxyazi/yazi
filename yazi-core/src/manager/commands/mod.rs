@@ -21,5 +21,6 @@ mod unyank;
 mod update_files;
 mod update_mimetype;
 mod update_paged;
+mod update_task;
 mod update_yanked;
 mod yank;

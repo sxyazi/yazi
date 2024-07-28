@@ -1,4 +1,4 @@
-use mlua::{ExternalError, ExternalResult, Function, IntoLua, Lua, Table, Value, Variadic};
+use mlua::{ExternalError, ExternalResult, Function, IntoLua, Lua, MultiValue, Table, Value};
 use tokio::sync::oneshot;
 use yazi_dds::Sendable;
 use yazi_shared::{emit, event::{Cmd, Data}, Layer};
@@ -12,14 +12,15 @@ impl Utils {
 			"sync",
 			lua.create_function(|lua, f: Function<'static>| {
 				let mut rt = lua.named_registry_value::<RtRef>("rt")?;
-				if !rt.push_block(f.clone()) {
+				if !rt.put_block(f.clone()) {
 					return Err("`ya.sync()` must be called in a plugin").into_lua_err();
 				}
 
-				let cur = rt.current.clone().unwrap();
-				lua.create_function(move |lua, mut args: Variadic<Value>| {
-					args.insert(0, LOADER.load(&cur)?.into_lua(lua)?);
-					f.call::<_, Variadic<Value>>(args)
+				let cur = rt.current().unwrap().to_owned();
+				lua.create_function(move |lua, args: MultiValue| {
+					f.call::<_, MultiValue>(MultiValue::from_iter(
+						[LOADER.load(lua, &cur)?.into_lua(lua)?].into_iter().chain(args),
+					))
 				})
 			})?,
 		)?;
@@ -31,13 +32,16 @@ impl Utils {
 		ya.raw_set(
 			"sync",
 			lua.create_function(|lua, ()| {
-				let block = lua.named_registry_value::<RtRef>("rt")?.next_block();
-				lua.create_async_function(move |lua, args: Variadic<Value>| async move {
-					let Some(cur) = lua.named_registry_value::<RtRef>("rt")?.current.clone() else {
-						return Err("`ya.sync()` must be called in a plugin").into_lua_err();
-					};
+				let Some(block) = lua.named_registry_value::<RtRef>("rt")?.next_block() else {
+					return Err("`ya.sync()` must be called in a plugin").into_lua_err();
+				};
 
-					Sendable::vec_to_variadic(lua, Self::retrieve(cur, block, args).await?)
+				lua.create_async_function(move |lua, args: MultiValue| async move {
+					if let Some(cur) = lua.named_registry_value::<RtRef>("rt")?.current() {
+						Sendable::list_to_values(lua, Self::retrieve(cur, block, args).await?)
+					} else {
+						Err("block spawned by `ya.sync()` must be called in a plugin").into_lua_err()
+					}
 				})
 			})?,
 		)?;
@@ -45,34 +49,29 @@ impl Utils {
 		Ok(())
 	}
 
-	async fn retrieve(
-		name: String,
-		calls: usize,
-		args: Variadic<Value<'_>>,
-	) -> mlua::Result<Vec<Data>> {
-		let args = Sendable::variadic_to_vec(args)?;
+	async fn retrieve(name: &str, calls: usize, args: MultiValue<'_>) -> mlua::Result<Vec<Data>> {
+		let args = Sendable::values_to_vec(args)?;
 		let (tx, rx) = oneshot::channel::<Vec<Data>>();
 
 		let callback: OptCallback = {
-			let name = name.clone();
+			let name = name.to_owned();
 			Box::new(move |lua, plugin| {
 				let Some(block) = lua.named_registry_value::<RtRef>("rt")?.get_block(&name, calls) else {
 					return Err("sync block not found".into_lua_err());
 				};
 
-				let mut self_args = Vec::with_capacity(args.len() + 1);
-				self_args.push(Value::Table(plugin));
-				for arg in args {
-					self_args.push(Sendable::data_to_value(lua, arg)?);
-				}
+				let args: Vec<_> = [Ok(Value::Table(plugin))]
+					.into_iter()
+					.chain(args.into_iter().map(|d| Sendable::data_to_value(lua, d)))
+					.collect::<mlua::Result<_>>()?;
 
-				let values = Sendable::variadic_to_vec(block.call(Variadic::from_iter(self_args))?)?;
+				let values = Sendable::values_to_vec(block.call(MultiValue::from_vec(args))?)?;
 				tx.send(values).map_err(|_| "send failed".into_lua_err())
 			})
 		};
 
 		emit!(Call(
-			Cmd::args("plugin", vec![name.clone()])
+			Cmd::args("plugin", vec![name.to_owned()])
 				.with_bool("sync", true)
 				.with_any("callback", callback),
 			Layer::App

@@ -12,44 +12,39 @@ keymap = [
 	{ on = "<C-c>", run = "close",              desc = "Close the current tab, or quit if it is last tab" },
 	{ on = "<C-z>", run = "suspend",            desc = "Suspend the process" },
 
-	# Navigation
+	# Hopping
 	{ on = "k", run = "arrow -1", desc = "Move cursor up" },
 	{ on = "j", run = "arrow 1",  desc = "Move cursor down" },
 
-	{ on = "K", run = "arrow -5", desc = "Move cursor up 5 lines" },
-	{ on = "J", run = "arrow 5",  desc = "Move cursor down 5 lines" },
-
-	{ on = "<S-Up>",   run = "arrow -5", desc = "Move cursor up 5 lines" },
-	{ on = "<S-Down>", run = "arrow 5",  desc = "Move cursor down 5 lines" },
+	{ on = "<Up>",    run = "arrow -1", desc = "Move cursor up" },
+	{ on = "<Down>",  run = "arrow 1",  desc = "Move cursor down" },
 
 	{ on = "<C-u>", run = "arrow -50%",  desc = "Move cursor up half page" },
 	{ on = "<C-d>", run = "arrow 50%",   desc = "Move cursor down half page" },
 	{ on = "<C-b>", run = "arrow -100%", desc = "Move cursor up one page" },
 	{ on = "<C-f>", run = "arrow 100%",  desc = "Move cursor down one page" },
 
-	{ on = "<C-PageUp>",   run = "arrow -50%",  desc = "Move cursor up half page" },
-	{ on = "<C-PageDown>", run = "arrow 50%",   desc = "Move cursor down half page" },
+	{ on = "<S-PageUp>",   run = "arrow -50%",  desc = "Move cursor up half page" },
+	{ on = "<S-PageDown>", run = "arrow 50%",   desc = "Move cursor down half page" },
 	{ on = "<PageUp>",     run = "arrow -100%", desc = "Move cursor up one page" },
 	{ on = "<PageDown>",   run = "arrow 100%",  desc = "Move cursor down one page" },
 
+	{ on = [ "g", "g" ], run = "arrow -99999999", desc = "Move cursor to the top" },
+	{ on = "G",          run = "arrow 99999999",  desc = "Move cursor to the bottom" },
+
+	# Navigation
 	{ on = "h", run = "leave", desc = "Go back to the parent directory" },
 	{ on = "l", run = "enter", desc = "Enter the child directory" },
+
+	{ on = "<Left>",  run = "leave",    desc = "Go back to the parent directory" },
+	{ on = "<Right>", run = "enter",    desc = "Enter the child directory" },
 
 	{ on = "H", run = "back",    desc = "Go back to the previous directory" },
 	{ on = "L", run = "forward", desc = "Go forward to the next directory" },
 
-	{ on = "<A-k>",        run = "seek -5", desc = "Seek up 5 units in the preview" },
-	{ on = "<A-j>",        run = "seek 5",  desc = "Seek down 5 units in the preview" },
-	{ on = "<A-PageUp>",   run = "seek -5", desc = "Seek up 5 units in the preview" },
-	{ on = "<A-PageDown>", run = "seek 5",  desc = "Seek down 5 units in the preview" },
-
-	{ on = "<Up>",    run = "arrow -1", desc = "Move cursor up" },
-	{ on = "<Down>",  run = "arrow 1",  desc = "Move cursor down" },
-	{ on = "<Left>",  run = "leave",    desc = "Go back to the parent directory" },
-	{ on = "<Right>", run = "enter",    desc = "Enter the child directory" },
-
-	{ on = [ "g", "g" ], run = "arrow -99999999", desc = "Move cursor to the top" },
-	{ on = "G",          run = "arrow 99999999",  desc = "Move cursor to the bottom" },
+	# Seeking
+	{ on = "K", run = "seek -5", desc = "Seek up 5 units in the preview" },
+	{ on = "J", run = "seek 5",  desc = "Seek down 5 units in the preview" },
 
 	# Selection
 	{ on = "<Space>", run = [ "select --state=none", "arrow 1" ], desc = "Toggle the current selection state" },
@@ -122,6 +117,12 @@ keymap = [
 	{ on = [ ",", "S" ], run = [ "sort size --reverse", "linemode size" ],         desc = "Sort by size (reverse)" },
 	{ on = [ ",", "r" ], run = "sort random --reverse=no",                         desc = "Sort randomly" },
 
+	# Goto
+	{ on = [ "g", "h" ],       run = "cd ~",             desc = "Go to the home directory" },
+	{ on = [ "g", "c" ],       run = "cd ~/.config",     desc = "Go to the config directory" },
+	{ on = [ "g", "d" ],       run = "cd ~/Downloads",   desc = "Go to the downloads directory" },
+	{ on = [ "g", "<Space>" ], run = "cd --interactive", desc = "Go to a directory interactively" },
+
 	# Tabs
 	{ on = "t", run = "tab_create --current", desc = "Create a new tab with CWD" },
 
@@ -143,12 +144,6 @@ keymap = [
 
 	# Tasks
 	{ on = "w", run = "tasks_show", desc = "Show task manager" },
-
-	# Goto
-	{ on = [ "g", "h" ],       run = "cd ~",             desc = "Go to the home directory" },
-	{ on = [ "g", "c" ],       run = "cd ~/.config",     desc = "Go to the config directory" },
-	{ on = [ "g", "d" ],       run = "cd ~/Downloads",   desc = "Go to the downloads directory" },
-	{ on = [ "g", "<Space>" ], run = "cd --interactive", desc = "Go to a directory interactively" },
 
 	# Help
 	{ on = "~",    run = "help", desc = "Open help" },
@@ -188,14 +183,8 @@ keymap = [
 	{ on = "k", run = "arrow -1", desc = "Move cursor up" },
 	{ on = "j", run = "arrow 1",  desc = "Move cursor down" },
 
-	{ on = "K", run = "arrow -5", desc = "Move cursor up 5 lines" },
-	{ on = "J", run = "arrow 5",  desc = "Move cursor down 5 lines" },
-
 	{ on = "<Up>",   run = "arrow -1", desc = "Move cursor up" },
 	{ on = "<Down>", run = "arrow 1",  desc = "Move cursor down" },
-
-	{ on = "<S-Up>",   run = "arrow -5", desc = "Move cursor up 5 lines" },
-	{ on = "<S-Down>", run = "arrow 5",  desc = "Move cursor down 5 lines" },
 
 	# Help
 	{ on = "~",    run = "help", desc = "Open help" },
@@ -305,14 +294,8 @@ keymap = [
 	{ on = "k", run = "arrow -1", desc = "Move cursor up" },
 	{ on = "j", run = "arrow 1",  desc = "Move cursor down" },
 
-	{ on = "K", run = "arrow -5", desc = "Move cursor up 5 lines" },
-	{ on = "J", run = "arrow 5",  desc = "Move cursor down 5 lines" },
-
 	{ on = "<Up>",   run = "arrow -1", desc = "Move cursor up" },
 	{ on = "<Down>", run = "arrow 1",  desc = "Move cursor down" },
-
-	{ on = "<S-Up>",   run = "arrow -5", desc = "Move cursor up 5 lines" },
-	{ on = "<S-Down>", run = "arrow 5",  desc = "Move cursor down 5 lines" },
 
 	# Filtering
 	{ on = "/", run = "filter", desc = "Apply a filter for the help items" },

@@ -21,7 +21,7 @@ function ya.list_merge(a, b)
 	return a
 end
 
-function ya.basename(str) return string.gsub(str, "(.*[/\\])(.*)", "%2") end
+function ya.basename(s) return s:gsub("(.*[/\\])(.*)", "%2") end
 
 function ya.readable_size(size)
 	local units = { "B", "K", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q" }
@@ -37,8 +37,8 @@ function ya.readable_path(path)
 	local home = os.getenv("HOME") or os.getenv("USERPROFILE")
 	if not home then
 		return path
-	elseif string.sub(path, 1, #home) == home then
-		return "~" .. string.sub(path, #home + 1)
+	elseif path:sub(1, #home) == home then
+		return "~" .. path:sub(#home + 1)
 	else
 		return path
 	end
