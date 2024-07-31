@@ -50,10 +50,10 @@
     install -m644 assets/yazi.desktop $out/share/applications/
   '';
 
-  meta = with lib; {
+  meta = {
     description = "Blazing fast terminal file manager written in Rust, based on async I/O";
     homepage = "https://github.com/sxyazi/yazi";
-    license = licenses.mit;
+    license = lib.licenses.mit;
     mainProgram = "yazi";
   };
 }
