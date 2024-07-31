@@ -16,7 +16,12 @@
 
   src = ../.;
 
-  cargoLock.lockFile = ../Cargo.lock;
+  cargoLock = {
+    lockFile = ../Cargo.lock;
+    outputHashes = {
+      "notify-6.1.1" = "sha256-5Ft2yvRPi2EaErcGBkF/3Xv6K7ijFGbdjmSqI4go/h4=";
+    };
+  };
 
   env.YAZI_GEN_COMPLETIONS = true;
 
