@@ -23,8 +23,10 @@
 , zoxide
 }:
 
+
 let
-  runtimePaths = with lib; optional withFile file
+  inherit (lib) optional makeBinPath;
+  runtimePaths = optional withFile file
     ++ optional withJq jq
     ++ optional withPoppler poppler_utils
     ++ optional withUnar unar
@@ -44,5 +46,5 @@ runCommand yazi-unwrapped.name
   ln -s ${yazi-unwrapped}/share $out/share
   ln -s ${yazi-unwrapped}/bin/ya $out/bin/ya
   makeWrapper ${yazi-unwrapped}/bin/yazi $out/bin/yazi \
-    --prefix PATH : "${lib.makeBinPath runtimePaths}"
+    --prefix PATH : "${makeBinPath runtimePaths}"
 ''
