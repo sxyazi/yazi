@@ -1,22 +1,21 @@
 [package]
-name        = "yazi-proxy"
+name        = "yazi-fs"
 version     = "0.3.0"
 edition     = "2021"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
-description = "Yazi event proxy"
+description = "Yazi File System"
 homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
-[features]
-default      = [ "vendored-lua" ]
-vendored-lua = [ "mlua/vendored" ]
-
 [dependencies]
 yazi-config = { path = "../yazi-config", version = "0.3.0" }
+yazi-proxy  = { path = "../yazi-proxy", version = "0.3.0" }
 yazi-shared = { path = "../yazi-shared", version = "0.3.0" }
 
 # External dependencies
-anyhow = "1.0.86"
-mlua   = { version = "0.9.9", features = [ "lua54" ] }
-tokio  = { version = "1.39.2", features = [ "full" ] }
+anyhow  = "1.0.86"
+futures = "0.3.30"
+ratatui = "0.27.0"
+regex   = "1.10.5"
+tokio   = { version = "1.39.2", features = [ "full" ] }

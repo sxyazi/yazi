@@ -9,7 +9,7 @@ use super::{CtxRef, SCOPE};
 
 pub(super) struct File {
 	idx:    usize,
-	folder: *const yazi_core::folder::Folder,
+	folder: *const yazi_fs::Folder,
 	tab:    *const yazi_core::tab::Tab,
 }
 
@@ -27,7 +27,7 @@ impl File {
 	#[inline]
 	pub(super) fn make(
 		idx: usize,
-		folder: &yazi_core::folder::Folder,
+		folder: &yazi_fs::Folder,
 		tab: &yazi_core::tab::Tab,
 	) -> mlua::Result<AnyUserData<'static>> {
 		SCOPE.create_any_userdata(Self { idx, folder, tab })
@@ -125,7 +125,7 @@ impl File {
 	}
 
 	#[inline]
-	fn folder(&self) -> &yazi_core::folder::Folder { unsafe { &*self.folder } }
+	fn folder(&self) -> &yazi_fs::Folder { unsafe { &*self.folder } }
 
 	#[inline]
 	fn tab(&self) -> &yazi_core::tab::Tab { unsafe { &*self.tab } }

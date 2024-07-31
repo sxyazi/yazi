@@ -6,12 +6,12 @@ use super::{File, Filter, SCOPE};
 
 pub(super) struct Files {
 	window: Range<usize>,
-	folder: *const yazi_core::folder::Folder,
+	folder: *const yazi_fs::Folder,
 	tab:    *const yazi_core::tab::Tab,
 }
 
 impl Deref for Files {
-	type Target = yazi_core::folder::Files;
+	type Target = yazi_fs::Files;
 
 	fn deref(&self) -> &Self::Target { &self.folder().files }
 }
@@ -20,7 +20,7 @@ impl Files {
 	#[inline]
 	pub(super) fn make(
 		window: Range<usize>,
-		folder: &yazi_core::folder::Folder,
+		folder: &yazi_fs::Folder,
 		tab: &yazi_core::tab::Tab,
 	) -> mlua::Result<AnyUserData<'static>> {
 		SCOPE.create_any_userdata(Self { window, folder, tab })
@@ -46,7 +46,7 @@ impl Files {
 	}
 
 	#[inline]
-	fn folder(&self) -> &yazi_core::folder::Folder { unsafe { &*self.folder } }
+	fn folder(&self) -> &yazi_fs::Folder { unsafe { &*self.folder } }
 
 	#[inline]
 	fn tab(&self) -> &yazi_core::tab::Tab { unsafe { &*self.tab } }

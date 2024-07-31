@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
 use yazi_config::{manager::SortBy, plugin::MAX_PREWORKERS, PLUGIN};
+use yazi_fs::Files;
 use yazi_shared::{fs::{File, Url}, MIME_DIR};
 
 use super::Tasks;
-use crate::folder::Files;
 
 impl Tasks {
 	pub fn fetch_paged(&self, paged: &[File], mimetype: &HashMap<Url, String>) {
