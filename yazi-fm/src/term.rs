@@ -1,12 +1,15 @@
-use std::{io::{self, stderr, BufWriter, Stderr}, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}};
+use std::{io::{self, stderr, BufWriter, Stderr}, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, AtomicU8, Ordering}};
 
 use anyhow::Result;
-use crossterm::{cursor::{RestorePosition, SavePosition}, event::{DisableBracketedPaste, EnableBracketedPaste, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen, SetTitle}};
+use crossterm::{event::{DisableBracketedPaste, EnableBracketedPaste, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen, SetTitle}};
+use cursor::RestoreCursor;
 use ratatui::{backend::CrosstermBackend, buffer::Buffer, layout::Rect, CompletedFrame, Frame, Terminal};
 use yazi_adapter::Emulator;
 use yazi_config::INPUT;
 
 static CSI_U: AtomicBool = AtomicBool::new(false);
+static BLINK: AtomicBool = AtomicBool::new(false);
+static SHAPE: AtomicU8 = AtomicU8::new(0);
 
 pub(super) struct Term {
 	inner:       Terminal<CrosstermBackend<BufWriter<Stderr>>>,
@@ -25,16 +28,26 @@ impl Term {
 		enable_raw_mode()?;
 		execute!(
 			BufWriter::new(stderr()),
+			Print("\x1b[?12$p"),      // Request cursor blink status (DECSET)
+			Print("\x1bP$q q\x1b\\"), // Request cursor shape (DECRQM)
+			Print("\x1b[?u\x1b[c"),   // Request keyboard enhancement flags (CSI u)
 			EnterAlternateScreen,
 			EnableBracketedPaste,
 			mouse::SetMouse(true),
-			SavePosition,
-			Print("\x1b[?u\x1b[c"),
-			RestorePosition
 		)?;
 
-		let resp = futures::executor::block_on(Emulator::read_until_da1());
-		if resp.is_ok_and(|s| s.contains("\x1b[?0u")) {
+		let da = futures::executor::block_on(Emulator::read_until_da1());
+		CSI_U.store(da.contains("\x1b[?0u"), Ordering::Relaxed);
+		BLINK.store(da.contains("\x1b[?12;1$y"), Ordering::Relaxed);
+		SHAPE.store(
+			da.split_once("\x1bP1$r")
+				.and_then(|(_, s)| s.bytes().next())
+				.filter(|&b| matches!(b, b'0'..=b'6'))
+				.map_or(u8::MAX, |b| b - b'0'),
+			Ordering::Relaxed,
+		);
+
+		if CSI_U.load(Ordering::Relaxed) {
 			queue!(
 				stderr(),
 				PushKeyboardEnhancementFlags(
@@ -42,7 +55,6 @@ impl Term {
 						| KeyboardEnhancementFlags::REPORT_ALTERNATE_KEYS
 				)
 			)?;
-			CSI_U.store(true, Ordering::Relaxed);
 		}
 
 		term.hide_cursor()?;
@@ -59,9 +71,9 @@ impl Term {
 		execute!(
 			stderr(),
 			mouse::SetMouse(false),
+			RestoreCursor,
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
-			crossterm::cursor::SetCursorStyle::DefaultUserShape
 		)?;
 
 		self.show_cursor()?;
@@ -75,12 +87,12 @@ impl Term {
 
 		execute!(
 			stderr(),
-			SetTitle(""),
 			mouse::SetMouse(false),
+			RestoreCursor,
+			SetTitle(""),
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
-			crossterm::cursor::SetCursorStyle::DefaultUserShape,
-			crossterm::cursor::Show,
+			crossterm::cursor::Show
 		)
 		.ok();
 
@@ -189,5 +201,39 @@ mod mouse {
 				DisableMouseCapture.is_ansi_code_supported()
 			}
 		}
+	}
+}
+
+// --- Cursor shape
+mod cursor {
+	use std::sync::atomic::Ordering;
+
+	use crossterm::cursor::SetCursorStyle;
+
+	use super::{BLINK, SHAPE};
+
+	pub struct RestoreCursor;
+
+	impl crossterm::Command for RestoreCursor {
+		fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+			let (shape, shape_blink) = match SHAPE.load(Ordering::Relaxed) {
+				u8::MAX => (0, false),
+				n => ((n.max(1) + 1) / 2, n.max(1) & 1 == 1),
+			};
+
+			let blink = BLINK.load(Ordering::Relaxed) ^ shape_blink;
+			Ok(match shape {
+				2 if blink => SetCursorStyle::BlinkingUnderScore.write_ansi(f)?,
+				2 if !blink => SetCursorStyle::SteadyUnderScore.write_ansi(f)?,
+				3 if blink => SetCursorStyle::BlinkingBar.write_ansi(f)?,
+				3 if !blink => SetCursorStyle::SteadyBar.write_ansi(f)?,
+				_ if blink => SetCursorStyle::DefaultUserShape.write_ansi(f)?,
+				_ if !blink => SetCursorStyle::SteadyBlock.write_ansi(f)?,
+				_ => unreachable!(),
+			})
+		}
+
+		#[cfg(windows)]
+		fn execute_winapi(&self) -> std::io::Result<()> { Ok(()) }
 	}
 }

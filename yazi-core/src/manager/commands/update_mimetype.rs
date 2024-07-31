@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use tracing::error;
 use yazi_shared::{event::Cmd, fs::Url, render};
 
 use crate::{manager::{Manager, LINKED}, tasks::Tasks};
@@ -12,14 +13,14 @@ impl TryFrom<Cmd> for Opt {
 	type Error = ();
 
 	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
-		Ok(Self { updates: c.take("updates").ok_or(())?.into_table_string() })
+		Ok(Self { updates: c.take("updates").ok_or(())?.into_dict_string() })
 	}
 }
 
 impl Manager {
 	pub fn update_mimetype(&mut self, opt: impl TryInto<Opt>, tasks: &Tasks) {
 		let Ok(opt) = opt.try_into() else {
-			return;
+			return error!("invalid arguments for update_mimetype");
 		};
 
 		let linked = LINKED.read();

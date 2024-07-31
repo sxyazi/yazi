@@ -1,7 +1,6 @@
-use std::{path::Path, str::FromStr};
+use std::{collections::HashSet, path::Path, str::FromStr};
 
 use serde::Deserialize;
-use yazi_shared::MIME_DIR;
 
 use super::{Fetcher, Preloader, Previewer};
 use crate::{plugin::MAX_PREWORKERS, Preset};
@@ -14,49 +13,39 @@ pub struct Plugin {
 }
 
 impl Plugin {
-	pub fn fetchers(
-		&self,
-		path: &Path,
-		mime: Option<&str>,
-		f: impl Fn(&str) -> bool + Copy,
-	) -> Vec<&Fetcher> {
-		let is_dir = mime == Some(MIME_DIR);
-		self
-			.fetchers
-			.iter()
-			.filter(|&p| {
-				p.if_.as_ref().and_then(|c| c.eval(f)) != Some(false)
-					&& (p.mime.as_ref().zip(mime).map_or(false, |(p, m)| p.match_mime(m))
-						|| p.name.as_ref().is_some_and(|p| p.match_path(path, is_dir)))
-			})
-			.collect()
+	pub fn fetchers<'a>(
+		&'a self,
+		path: &'a Path,
+		mime: Option<&'a str>,
+		factor: impl Fn(&str) -> bool + Copy,
+	) -> impl Iterator<Item = &'a Fetcher> {
+		let mut seen = HashSet::new();
+		self.fetchers.iter().filter(move |&f| {
+			if seen.contains(&f.id) || !f.matches(path, mime, factor) {
+				return false;
+			}
+			seen.insert(&f.id);
+			true
+		})
 	}
 
-	pub fn preloaders(&self, path: &Path, mime: Option<&str>) -> Vec<&Preloader> {
-		let is_dir = mime == Some(MIME_DIR);
-		let mut preloaders = Vec::with_capacity(1);
-
-		for p in &self.preloaders {
-			if !p.mime.as_ref().zip(mime).map_or(false, |(p, m)| p.match_mime(m))
-				&& !p.name.as_ref().is_some_and(|p| p.match_path(path, is_dir))
-			{
-				continue;
+	pub fn preloaders<'a>(
+		&'a self,
+		path: &'a Path,
+		mime: Option<&'a str>,
+	) -> impl Iterator<Item = &'a Preloader> {
+		let mut next = true;
+		self.preloaders.iter().filter(move |&p| {
+			if !next || !p.matches(path, mime) {
+				return false;
 			}
-
-			preloaders.push(p);
-			if !p.next {
-				break;
-			}
-		}
-		preloaders
+			next = p.next;
+			true
+		})
 	}
 
 	pub fn previewer(&self, path: &Path, mime: &str) -> Option<&Previewer> {
-		let is_dir = mime == MIME_DIR;
-		self.previewers.iter().find(|&p| {
-			p.mime.as_ref().is_some_and(|p| p.match_mime(mime))
-				|| p.name.as_ref().is_some_and(|p| p.match_path(path, is_dir))
-		})
+		self.previewers.iter().find(|&p| p.matches(path, mime))
 	}
 }
 impl FromStr for Plugin {

@@ -264,18 +264,19 @@ impl Files {
 
 		macro_rules! go {
 			($dist:expr, $src:expr, $inc:literal) => {
-				let len = $src.len();
+				let mut b = false;
 				for i in 0..$dist.len() {
 					if let Some(f) = $src.remove(&$dist[i].url) {
-						$dist[i] = f;
+						if $dist[i] != f {
+							b = true;
+							$dist[i] = f;
+						}
 						if $src.is_empty() {
 							break;
 						}
 					}
 				}
-				if $src.len() != len {
-					self.revision += $inc;
-				}
+				self.revision += if b { $inc } else { 0 };
 			};
 		}
 

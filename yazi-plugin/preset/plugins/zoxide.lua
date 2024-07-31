@@ -7,9 +7,7 @@ end)
 
 local set_state = ya.sync(function(st, empty) st.empty = empty end)
 
-local function fail(s, ...)
-	ya.notify { title = "Zoxide", content = string.format(s, ...), timeout = 5, level = "error" }
-end
+local function fail(s, ...) ya.notify { title = "Zoxide", content = s:format(...), timeout = 5, level = "error" } end
 
 local function head(cwd)
 	local child = Command("zoxide"):args({ "query", "-l" }):stdout(Command.PIPED):spawn()

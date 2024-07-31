@@ -134,7 +134,7 @@ mod parser {
 		if let Some(p) = pos {
 			if let Some(arg) = args.get(p.parse::<usize>().unwrap()) {
 				if quote {
-					buf.extend(yazi_shared::escape::os_str(arg).encode_wide());
+					buf.extend(yazi_shared::shell::escape_os_str(arg).encode_wide());
 				} else {
 					buf.extend(arg.encode_wide());
 				}
@@ -152,13 +152,13 @@ mod parser {
 				s.push(" ");
 			}
 			if c == '*' {
-				s.push(yazi_shared::escape::os_str(arg));
+				s.push(yazi_shared::shell::escape_os_str(arg));
 			} else {
 				s.push(arg);
 			}
 		}
 		if quote {
-			buf.extend(yazi_shared::escape::os_str(&s).encode_wide());
+			buf.extend(yazi_shared::shell::escape_os_str(&s).encode_wide());
 		} else {
 			buf.extend(s.encode_wide());
 		}

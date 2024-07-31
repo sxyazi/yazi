@@ -130,7 +130,7 @@ impl Emulator {
 			RestorePosition
 		)?;
 
-		let resp = futures::executor::block_on(Self::read_until_da1())?;
+		let resp = futures::executor::block_on(Self::read_until_da1());
 		let names = [
 			("kitty", Self::Kitty),
 			("Konsole", Self::Konsole),
@@ -189,28 +189,31 @@ impl Emulator {
 		result
 	}
 
-	pub async fn read_until_da1() -> Result<String> {
+	pub async fn read_until_da1() -> String {
+		let mut buf: Vec<u8> = Vec::with_capacity(200);
 		let read = async {
 			let mut stdin = BufReader::new(tokio::io::stdin());
-			let mut buf = String::with_capacity(200);
 			loop {
 				let mut c = [0; 1];
 				if stdin.read(&mut c).await? == 0 {
 					bail!("unexpected EOF");
 				}
-				buf.push(c[0] as char);
-				if c[0] == b'c' && buf.contains("\x1b[?") {
+				buf.push(c[0]);
+				if c[0] != b'c' || !buf.contains(&b'\x1b') {
+					continue;
+				}
+				if buf.rsplitn(2, |&b| b == b'\x1b').next().is_some_and(|s| s.starts_with(b"[?")) {
 					break;
 				}
 			}
-			Ok(buf)
+			Ok(())
 		};
 
-		let timeout = timeout(Duration::from_secs(10), read).await;
-		if let Err(ref e) = timeout {
-			error!("read_until_da1: {e:?}");
+		match timeout(Duration::from_secs(10), read).await {
+			Err(e) => error!("read_until_da1 timed out: {buf:?}, error: {e:?}"),
+			Ok(Err(e)) => error!("read_until_da1 failed: {buf:?}, error: {e:?}"),
+			Ok(Ok(())) => {}
 		}
-
-		timeout?
+		String::from_utf8_lossy(&buf).into_owned()
 	}
 }

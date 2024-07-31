@@ -15,21 +15,24 @@ yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
 
 # External dependencies
 anyhow     = "1.0.86"
-clap       = { version = "4.5.9", features = [ "derive" ] }
+clap       = { version = "4.5.11", features = [ "derive" ] }
 crossterm  = "0.27.0"
 md-5       = "0.10.6"
-serde_json = "1.0.120"
-tokio      = { version = "1.38.1", features = [ "full" ] }
-toml_edit  = "0.22.16"
+serde_json = "1.0.121"
+tokio      = { version = "1.39.2", features = [ "full" ] }
+toml_edit  = "0.22.17"
 url = "2.5.2"
 
 [build-dependencies]
+yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
+
+# External build dependencies
 anyhow                = "1.0.86"
-clap                  = { version = "4.5.9", features = [ "derive" ] }
-clap_complete         = "4.5.8"
-clap_complete_fig     = "4.5.1"
-clap_complete_nushell = "4.5.2"
-serde_json            = "1.0.120"
+clap                  = { version = "4.5.11", features = [ "derive" ] }
+clap_complete         = "4.5.11"
+clap_complete_fig     = "4.5.2"
+clap_complete_nushell = "4.5.3"
+serde_json            = "1.0.121"
 vergen-gitcl          = { version = "1.0.0", features = [ "build" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]

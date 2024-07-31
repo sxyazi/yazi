@@ -12,6 +12,7 @@ pub fn slim_lua(name: &str) -> mlua::Result<Lua> {
 	crate::file::pour(&lua)?;
 	crate::url::pour(&lua)?;
 
+	crate::loader::install_isolate(&lua)?;
 	crate::fs::install(&lua)?;
 	crate::process::install(&lua)?;
 	crate::utils::install_isolate(&lua)?;

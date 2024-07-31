@@ -15,7 +15,7 @@ bitflags! {
 	}
 }
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Cha {
 	pub kind:  ChaKind,
 	pub len:   u64,

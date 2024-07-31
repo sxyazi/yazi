@@ -1,13 +1,11 @@
 use std::{borrow::Cow, collections::HashMap, ops::Deref};
 
 use anyhow::Result;
-use mlua::{ExternalError, Table};
+use mlua::{ExternalError, Lua, Table};
 use parking_lot::RwLock;
 use tokio::fs;
 use yazi_boot::BOOT;
 use yazi_shared::RoCell;
-
-use crate::LUA;
 
 pub static LOADER: RoCell<Loader> = RoCell::new();
 
@@ -23,11 +21,10 @@ impl Loader {
 		}
 
 		let preset = match name {
-			"dds" => &include_bytes!("../../preset/plugins/dds.lua")[..],
-			"noop" => include_bytes!("../../preset/plugins/noop.lua"),
-			"session" => include_bytes!("../../preset/plugins/session.lua"),
-			"archive" => include_bytes!("../../preset/plugins/archive.lua"),
+			"archive" => &include_bytes!("../../preset/plugins/archive.lua")[..],
 			"code" => include_bytes!("../../preset/plugins/code.lua"),
+			"dds" => include_bytes!("../../preset/plugins/dds.lua"),
+			"extract" => include_bytes!("../../preset/plugins/extract.lua"),
 			"file" => include_bytes!("../../preset/plugins/file.lua"),
 			"folder" => include_bytes!("../../preset/plugins/folder.lua"),
 			"font" => include_bytes!("../../preset/plugins/font.lua"),
@@ -36,7 +33,9 @@ impl Loader {
 			"json" => include_bytes!("../../preset/plugins/json.lua"),
 			"magick" => include_bytes!("../../preset/plugins/magick.lua"),
 			"mime" => include_bytes!("../../preset/plugins/mime.lua"),
+			"noop" => include_bytes!("../../preset/plugins/noop.lua"),
 			"pdf" => include_bytes!("../../preset/plugins/pdf.lua"),
+			"session" => include_bytes!("../../preset/plugins/session.lua"),
 			"video" => include_bytes!("../../preset/plugins/video.lua"),
 			"zoxide" => include_bytes!("../../preset/plugins/zoxide.lua"),
 			_ => b"",
@@ -52,19 +51,18 @@ impl Loader {
 		Ok(())
 	}
 
-	pub fn load(&self, id: &str) -> mlua::Result<Table> {
-		let globals = LUA.globals();
-		let loaded: Table = globals.raw_get::<_, Table>("package")?.raw_get("loaded")?;
+	pub fn load<'a>(&self, lua: &'a Lua, id: &str) -> mlua::Result<Table<'a>> {
+		let loaded: Table = lua.globals().raw_get::<_, Table>("package")?.raw_get("loaded")?;
 		if let Ok(t) = loaded.raw_get::<_, Table>(id) {
 			return Ok(t);
 		}
 
 		let t: Table = match self.read().get(id) {
-			Some(b) => LUA.load(b.as_ref()).set_name(id).call(())?,
+			Some(b) => lua.load(b.as_ref()).set_name(id).call(())?,
 			None => Err(format!("plugin `{id}` not found").into_lua_err())?,
 		};
 
-		t.raw_set("_id", LUA.create_string(id)?)?;
+		t.raw_set("_id", lua.create_string(id)?)?;
 		loaded.raw_set(id, t.clone())?;
 		Ok(t)
 	}

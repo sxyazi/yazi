@@ -24,14 +24,14 @@ bitflags      = "2.6.0"
 crossterm     = "0.27.0"
 dirs          = "5.0.1"
 futures       = "0.3.30"
-notify        = { version = "6.1.1", default-features = false, features = [ "macos_fsevent" ] }
+notify        = { git = "https://github.com/notify-rs/notify.git", rev = "96dec74316a93bed6eec9db177b233e6e017275e", default-features = false, features = [ "macos_fsevent" ] }
 parking_lot   = "0.12.3"
 ratatui       = "0.27.0"
 regex         = "1.10.5"
 scopeguard    = "1.2.0"
 serde         = "1.0.204"
 shell-words   = "1.1.0"
-tokio         = { version = "1.38.1", features = [ "full" ] }
+tokio         = { version = "1.39.2", features = [ "full" ] }
 tokio-stream  = "0.1.15"
 tokio-util    = "0.7.11"
 unicode-width = "0.1.13"

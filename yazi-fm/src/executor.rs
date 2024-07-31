@@ -64,6 +64,7 @@ impl<'a> Executor<'a> {
 			};
 		}
 
+		on!(MANAGER, update_task);
 		on!(MANAGER, update_files, &self.app.cx.tasks);
 		on!(MANAGER, update_mimetype, &self.app.cx.tasks);
 		on!(MANAGER, update_paged, &self.app.cx.tasks);

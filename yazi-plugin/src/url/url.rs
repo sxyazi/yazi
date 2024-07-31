@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, Lua, MetaMethod, UserDataFields, UserDataMethods, UserDataRef};
+use mlua::{AnyUserData, ExternalError, Lua, MetaMethod, UserDataFields, UserDataMethods, UserDataRef, Value};
 
 use crate::bindings::Cast;
 
@@ -20,7 +20,16 @@ impl Url {
 			reg.add_method("stem", |lua, me, ()| {
 				me.file_stem().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
 			});
-			reg.add_method("join", |lua, me, other: UrlRef| Self::cast(lua, me.join(&*other)));
+			reg.add_method("join", |lua, me, other: Value| {
+				Ok(match other {
+					Value::String(s) => Self::cast(lua, me.join(s.to_str()?)),
+					Value::UserData(ud) => {
+						let url = ud.borrow::<yazi_shared::fs::Url>()?;
+						Self::cast(lua, me.join(&*url))
+					}
+					_ => Err("must be a string or a Url".into_lua_err())?,
+				})
+			});
 			reg.add_method("parent", |lua, me, ()| {
 				me.parent_url().map(|u| Self::cast(lua, u)).transpose()
 			});

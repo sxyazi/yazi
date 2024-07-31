@@ -5,7 +5,7 @@ use super::{Git, Package};
 
 impl Package {
 	pub(super) async fn add(&mut self) -> Result<()> {
-		self.output("Upgrading package `{name}`")?;
+		self.header("Upgrading package `{name}`")?;
 
 		let path = self.local();
 		if !must_exists(&path).await {

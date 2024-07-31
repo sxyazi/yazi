@@ -37,6 +37,11 @@ impl ManagerProxy {
 	}
 
 	#[inline]
+	pub fn update_task(url: &Url) {
+		emit!(Call(Cmd::new("update_task").with_any("url", url.clone()), Layer::Manager));
+	}
+
+	#[inline]
 	pub fn update_paged() {
 		emit!(Call(Cmd::new("update_paged"), Layer::Manager));
 	}
@@ -44,7 +49,7 @@ impl ManagerProxy {
 	#[inline]
 	pub fn update_paged_by(page: usize, only_if: &Url) {
 		emit!(Call(
-			Cmd::args("update_paged", vec![page.to_string()]).with("only-if", only_if.to_string()),
+			Cmd::args("update_paged", vec![page.to_string()]).with_any("only-if", only_if.clone()),
 			Layer::Manager
 		));
 	}

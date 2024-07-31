@@ -17,7 +17,8 @@ pub(crate) static WATCHED: RoCell<RwLock<HashSet<Url>>> = RoCell::new();
 pub static LINKED: RoCell<RwLock<Linked>> = RoCell::new();
 
 pub struct Watcher {
-	tx: watch::Sender<HashSet<Url>>,
+	in_tx:  watch::Sender<HashSet<Url>>,
+	out_tx: mpsc::UnboundedSender<Url>,
 }
 
 impl Watcher {
@@ -25,11 +26,15 @@ impl Watcher {
 		let (in_tx, in_rx) = watch::channel(Default::default());
 		let (out_tx, out_rx) = mpsc::unbounded_channel();
 
+		let out_tx_ = out_tx.clone();
 		let watcher = RecommendedWatcher::new(
 			move |res: Result<notify::Event, notify::Error>| {
 				let Ok(event) = res else { return };
+				if event.kind.is_access() {
+					return;
+				}
 				for path in event.paths {
-					out_tx.send(Url::from(path)).ok();
+					out_tx_.send(Url::from(path)).ok();
 				}
 			},
 			Default::default(),
@@ -37,12 +42,18 @@ impl Watcher {
 
 		tokio::spawn(Self::fan_in(in_rx, watcher.unwrap()));
 		tokio::spawn(Self::fan_out(out_rx));
-		Self { tx: in_tx }
+		Self { in_tx, out_tx }
 	}
 
 	pub(super) fn watch(&mut self, mut new: HashSet<&Url>) {
 		new.retain(|&u| u.is_regular());
-		self.tx.send(new.into_iter().cloned().collect()).ok();
+		self.in_tx.send(new.into_iter().cloned().collect()).ok();
+	}
+
+	pub(super) fn push_file(&self, url: Url) {
+		if url.parent_url().is_some_and(|p| WATCHED.read().contains(&p)) {
+			self.out_tx.send(url).ok();
+		}
 	}
 
 	pub(super) fn trigger_dirs(&self, folders: &[&Folder]) {
@@ -72,7 +83,14 @@ impl Watcher {
 				(old.difference(new).cloned().collect(), new.difference(old).cloned().collect())
 			};
 
-			to_unwatch.retain(|u| watcher.unwatch(u).is_ok());
+			to_unwatch.retain(|u| match watcher.unwatch(u) {
+				Ok(_) => true,
+				Err(e) if matches!(e.kind, notify::ErrorKind::WatchNotFound) => true,
+				Err(e) => {
+					error!("Unwatch failed: {e:?}");
+					false
+				}
+			});
 			to_watch.retain(|u| watcher.watch(u, RecursiveMode::NonRecursive).is_ok());
 
 			{
