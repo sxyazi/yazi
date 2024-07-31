@@ -50,8 +50,7 @@
       overlays = rec {
         default = yazi;
         yazi = final: _: {
-          inherit (self.packages."${final.system}") yazi-unwrapped;
-          inherit (self.packages."${final.system}") yazi;
+          inherit (self.packages."${final.system}") yazi yazi-unwrapped;
         };
       };
     };
