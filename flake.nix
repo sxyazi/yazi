@@ -16,7 +16,7 @@
       # Nixpkgs overlays
       overlays = [
         rust-overlay.overlays.default
-        (final: prev: {
+        (final: _: {
           rustToolchain = final.rust-bin.stable.latest.default.override {
             extensions = [ "rust-src" ];
           };
@@ -28,7 +28,7 @@
         let
           pkgs = import nixpkgs { inherit system overlays; };
           rev = self.shortRev or "dirty";
-          date = (self.lastModifiedDate or self.lastModified or "19700101");
+          date = self.lastModifiedDate or self.lastModified or "19700101";
           version = (builtins.fromTOML
             (builtins.readFile ./yazi-fm/Cargo.toml)).package.version
           + "pre${builtins.substring 0 8 date}_${rev}";
@@ -49,9 +49,9 @@
     // {
       overlays = rec {
         default = yazi;
-        yazi = final: prev: {
-          yazi-unwrapped = self.packages."${final.system}".yazi-unwrapped;
-          yazi = self.packages."${final.system}".yazi;
+        yazi = final: _: {
+          inherit (self.packages."${final.system}") yazi-unwrapped;
+          inherit (self.packages."${final.system}") yazi;
         };
       };
     };

@@ -12,9 +12,9 @@
 , imagemagick
 }:
 
-(makeRustPlatform { cargo = rustToolchain; rustc = rustToolchain; }).buildRustPackage rec {
+(makeRustPlatform { cargo = rustToolchain; rustc = rustToolchain; }).buildRustPackage {
   pname = "yazi";
-  inherit version rev;
+  inherit version;
 
   src = ../.;
 

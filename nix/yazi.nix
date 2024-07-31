@@ -24,8 +24,7 @@
 }:
 
 let
-  runtimePaths = with lib; [ ]
-    ++ optional withFile file
+  runtimePaths = with lib; optional withFile file
     ++ optional withJq jq
     ++ optional withPoppler poppler_utils
     ++ optional withUnar unar
