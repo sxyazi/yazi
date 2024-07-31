@@ -27,15 +27,13 @@
       (system:
         let
           pkgs = import nixpkgs { inherit system overlays; };
-          versionSuffix = "pre${
-            builtins.substring 0 8
-            (self.lastModifiedDate or self.lastModified or "19700101")
-          }_${self.shortRev or "dirty"}";
+          rev = self.shortRev or "dirty";
+          date = (self.lastModifiedDate or self.lastModified or "19700101");
           version = (builtins.fromTOML
             (builtins.readFile ./yazi-fm/Cargo.toml)).package.version
-          + versionSuffix;
+          + "pre${builtins.substring 0 8 date}_${rev}";
 
-          yazi-unwrapped = pkgs.callPackage ./nix/yazi-unwrapped.nix { inherit version; };
+          yazi-unwrapped = pkgs.callPackage ./nix/yazi-unwrapped.nix { inherit version rev date; };
           yazi = pkgs.callPackage ./nix/yazi.nix { inherit yazi-unwrapped; };
         in
         {

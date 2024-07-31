@@ -1,6 +1,8 @@
 { makeRustPlatform
 , rustToolchain
 , version ? "git"
+, rev
+, date
 , lib
 
 , installShellFiles
@@ -12,7 +14,7 @@
 
 (makeRustPlatform { cargo = rustToolchain; rustc = rustToolchain; }).buildRustPackage rec {
   pname = "yazi";
-  inherit version;
+  inherit version rev;
 
   src = ../.;
 
@@ -24,6 +26,8 @@
   };
 
   env.YAZI_GEN_COMPLETIONS = true;
+  env.VERGEN_GIT_SHA = rev;
+  env.VERGEN_BUILD_DATE = builtins.concatStringsSep "-" (builtins.match "(.{4})(.{2})(.{2}).*" date);
 
   nativeBuildInputs = [ installShellFiles imagemagick ];
   buildInputs = lib.optionals stdenv.isDarwin (
