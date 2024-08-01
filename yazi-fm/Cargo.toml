@@ -24,29 +24,29 @@ yazi-proxy   = { path = "../yazi-proxy", version = "0.3.0" }
 yazi-shared  = { path = "../yazi-shared", version = "0.3.0" }
 
 # External dependencies
-anyhow       = "1.0.86"
+anyhow       = { workspace = true }
 better-panic = "0.3.0"
-crossterm    = { version = "0.27.0", features = [ "event-stream" ] }
+crossterm    = { workspace = true }
 fdlimit      = "0.3.0"
-futures      = "0.3.30"
-mlua         = { version = "0.9.9", features = [ "lua54" ] }
-ratatui      = "0.27.0"
-scopeguard   = "1.2.0"
+futures      = { workspace = true }
+mlua         = { workspace = true }
+ratatui      = { workspace = true }
+scopeguard   = { workspace = true }
 syntect      = { version = "5.2.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
-tokio        = { version = "1.39.2", features = [ "full" ] }
-tokio-stream = "0.1.15"
+tokio        = { workspace = true }
+tokio-stream = { workspace = true }
 
 # Logging
-tracing            = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
+tracing            = { workspace = true }
 tracing-appender   = "0.2.3"
 tracing-subscriber = "0.3.18"
 
 [target."cfg(unix)".dependencies]
-libc              = "0.2.155"
+libc              = { workspace = true }
 signal-hook-tokio = { version = "0.3.1", features = [ "futures-v0_3" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-crossterm = { version = "0.27.0", features = [ "event-stream", "use-dev-tty" ] }
+crossterm = { workspace = true }
 
 [target.'cfg(all(not(target_os = "macos"), not(target_os = "windows")))'.dependencies]
 tikv-jemallocator = "0.6.0"

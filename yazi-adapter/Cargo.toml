@@ -13,22 +13,22 @@ yazi-config = { path = "../yazi-config", version = "0.3.0" }
 yazi-shared = { path = "../yazi-shared", version = "0.3.0" }
 
 # External dependencies
-ansi-to-tui  = "=3.1.0"
-anyhow       = "1.0.86"
-arc-swap     = "1.7.1"
-base64       = "0.22.1"
+ansi-to-tui  = { workspace = true }
+anyhow       = { workspace = true }
+arc-swap     = { workspace = true }
+base64       = { workspace = true }
 color_quant  = "1.1.0"
-crossterm    = "0.27.0"
-futures      = "0.3.30"
+crossterm    = { workspace = true }
+futures      = { workspace = true }
 image        = "0.25.2"
 imagesize    = "0.13.0"
 kamadak-exif = "0.5.5"
-ratatui      = "0.27.0"
-scopeguard   = "1.2.0"
-tokio        = { version = "1.39.2", features = [ "full" ] }
+ratatui      = { workspace = true }
+scopeguard   = { workspace = true }
+tokio        = { workspace = true }
 
 # Logging
-tracing = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
+tracing = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-crossterm = { version = "0.27.0", features = [ "use-dev-tty" ] }
+crossterm = { workspace = true }
