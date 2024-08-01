@@ -39,7 +39,7 @@
                   (
                     final: prev:
                     let
-                      toolchain = final.rust-bin.stable.latest.default.override { extensions = [ "rust-src" ]; };
+                      toolchain = final.rust-bin.stable.latest.default;
                     in
                     {
                       rustPlatform = prev.makeRustPlatform {

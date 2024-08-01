@@ -10,6 +10,7 @@ mainPkg.overrideAttrs (oa: {
   nativeBuildInputs = [
     (rust-bin.stable.latest.default.override {
       extensions = [
+        "rust-src"
         "rustfmt"
         "rust-analyzer"
         "clippy"
