@@ -30,9 +30,11 @@
       };
     };
 
-    env.YAZI_GEN_COMPLETIONS = true;
-    env.VERGEN_GIT_SHA = rev;
-    env.VERGEN_BUILD_DATE = builtins.concatStringsSep "-" (builtins.match "(.{4})(.{2})(.{2}).*" date);
+    env = {
+      YAZI_GEN_COMPLETIONS = true;
+      VERGEN_GIT_SHA = rev;
+      VERGEN_BUILD_DATE = builtins.concatStringsSep "-" (builtins.match "(.{4})(.{2})(.{2}).*" date);
+    };
 
     nativeBuildInputs = [
       installShellFiles
