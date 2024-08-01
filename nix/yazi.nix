@@ -1,41 +1,89 @@
 {
   lib,
+  formats,
   runCommand,
   makeWrapper,
+
+  extraPackages ? [ ],
+  optionalDeps ? [
+    jq
+    poppler_utils
+    unar
+    ffmpegthumbnailer
+    fd
+    ripgrep
+    fzf
+    zoxide
+  ],
+
+  # deps
+  file,
   yazi-unwrapped,
 
-  withFile ? true,
-  file,
-  withJq ? true,
+  # optional deps
   jq,
-  withPoppler ? true,
   poppler_utils,
-  withUnar ? true,
   unar,
-  withFfmpegthumbnailer ? true,
   ffmpegthumbnailer,
-  withFd ? true,
   fd,
-  withRipgrep ? true,
   ripgrep,
-  withFzf ? true,
   fzf,
-  withZoxide ? true,
   zoxide,
-}:
 
+  settings ? { },
+  plugins ? { },
+  flavors ? { },
+  initLua ? null,
+}:
 let
-  inherit (lib) optional makeBinPath;
-  runtimePaths =
-    optional withFile file
-    ++ optional withJq jq
-    ++ optional withPoppler poppler_utils
-    ++ optional withUnar unar
-    ++ optional withFfmpegthumbnailer ffmpegthumbnailer
-    ++ optional withFd fd
-    ++ optional withRipgrep ripgrep
-    ++ optional withFzf fzf
-    ++ optional withZoxide zoxide;
+  inherit (lib)
+    concatStringsSep
+    concatMapStringsSep
+    optionalString
+    makeBinPath
+    mapAttrsToList
+    ;
+
+  runtimePaths = [ file ] ++ optionalDeps ++ extraPackages;
+
+  settingsFormat = formats.toml { };
+
+  files = [
+    "yazi"
+    "theme"
+    "keymap"
+  ];
+
+  configHome =
+    if (settings == { } && initLua == null && plugins == { } && flavors == { }) then
+      null
+    else
+      runCommand "YAZI_CONFIG_HOME" { } ''
+        mkdir -p $out
+        ${concatMapStringsSep "\n" (
+          name:
+          optionalString (settings ? ${name} && settings.${name} != { }) ''
+            ln -s ${settingsFormat.generate "${name}.toml" settings.${name}} $out/${name}.toml
+          ''
+        ) files}
+
+        mkdir $out/plugins
+        ${optionalString (plugins != { }) ''
+          ${concatStringsSep "\n" (
+            mapAttrsToList (name: value: "ln -s ${value} $out/plugins/${name}") plugins
+          )}
+        ''}
+
+        mkdir $out/flavors
+        ${optionalString (flavors != { }) ''
+          ${concatStringsSep "\n" (
+            mapAttrsToList (name: value: "ln -s ${value} $out/flavors/${name}") flavors
+          )}
+        ''}
+
+
+        ${optionalString (initLua != null) "ln -s ${initLua} $out/init.lua"}
+      '';
 in
 runCommand yazi-unwrapped.name
   {
@@ -48,5 +96,6 @@ runCommand yazi-unwrapped.name
     ln -s ${yazi-unwrapped}/share $out/share
     ln -s ${yazi-unwrapped}/bin/ya $out/bin/ya
     makeWrapper ${yazi-unwrapped}/bin/yazi $out/bin/yazi \
-      --prefix PATH : "${makeBinPath runtimePaths}"
+      --prefix PATH : "${makeBinPath runtimePaths}" \
+      ${optionalString (configHome != null) "--set YAZI_CONFIG_HOME ${configHome}"}
   ''

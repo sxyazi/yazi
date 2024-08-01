@@ -1,28 +1,23 @@
-{ pkgs, ... }:
-
-pkgs.mkShell {
-  packages = with pkgs; [
-    rustToolchain
-    rust-analyzer
+{
+  callPackage,
+  rust-bin,
+  nodePackages,
+}:
+let
+  mainPkg = callPackage ./yazi.nix { };
+in
+mainPkg.overrideAttrs (oa: {
+  nativeBuildInputs = [
+    (rust-bin.stable.latest.default.override {
+      extensions = [
+        "rustfmt"
+        "rust-analyzer"
+        "clippy"
+      ];
+    })
 
     nodePackages.cspell
+  ] ++ (oa.nativeBuildInputs or [ ]);
 
-    file
-    jq
-    poppler_utils
-    unar
-    ffmpegthumbnailer
-    fd
-    ripgrep
-    fzf
-    zoxide
-  ];
-
-  buildInputs =
-    with pkgs;
-    lib.optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [ Foundation ]);
-
-  env = {
-    RUST_BACKTRACE = "1";
-  };
-}
+  env.RUST_BACKTRACE = "1";
+})
