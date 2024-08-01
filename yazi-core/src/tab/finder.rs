@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
+use yazi_fs::{Files, Filter, FilterCase};
 use yazi_shared::fs::Url;
-
-use crate::folder::{Files, Filter, FilterCase};
 
 pub struct Finder {
 	pub filter: Filter,

@@ -6,7 +6,7 @@ use yazi_proxy::ManagerProxy;
 use yazi_shared::fs::{File, FilesOp, Url};
 
 use super::FolderStage;
-use crate::{folder::Files, Step};
+use crate::{Files, Step};
 
 #[derive(Default)]
 pub struct Folder {

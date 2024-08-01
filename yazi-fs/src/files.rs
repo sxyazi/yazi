@@ -7,11 +7,11 @@ use yazi_shared::fs::{maybe_exists, File, FilesOp, Url, FILES_TICKET};
 use super::{FilesSorter, Filter};
 
 pub struct Files {
-	hidden:              Vec<File>,
-	items:               Vec<File>,
-	ticket:              u64,
-	version:             u64,
-	pub(crate) revision: u64,
+	hidden:       Vec<File>,
+	items:        Vec<File>,
+	ticket:       u64,
+	version:      u64,
+	pub revision: u64,
 
 	pub sizes: HashMap<Url, u64>,
 
