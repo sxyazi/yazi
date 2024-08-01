@@ -3,10 +3,11 @@ use std::time::Duration;
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
+use yazi_fs::FilterCase;
 use yazi_proxy::InputProxy;
 use yazi_shared::{emit, event::Cmd, render, Debounce, InputError, Layer};
 
-use crate::{folder::FilterCase, tab::{Finder, Tab}};
+use crate::tab::{Finder, Tab};
 
 pub struct Opt {
 	query: Option<String>,

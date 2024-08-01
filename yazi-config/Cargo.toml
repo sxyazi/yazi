@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-config"
-version     = "0.2.5"
+version     = "0.3.0"
 edition     = "2021"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -9,7 +9,7 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
-yazi-shared = { path = "../yazi-shared", version = "0.2.5" }
+yazi-shared = { path = "../yazi-shared", version = "0.3.0" }
 
 # External dependencies
 anyhow    = "1.0.86"
@@ -21,7 +21,7 @@ indexmap  = "2.2.6"
 ratatui   = "0.27.0"
 regex     = "1.10.5"
 serde     = { version = "1.0.204", features = [ "derive" ] }
-toml      = { version = "0.8.16", features = [ "preserve_order" ] }
+toml      = { version = "0.8.17", features = [ "preserve_order" ] }
 validator = { version = "0.18.1", features = [ "derive" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]

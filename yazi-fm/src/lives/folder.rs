@@ -8,12 +8,12 @@ use super::{File, Files, SCOPE};
 
 pub(super) struct Folder {
 	window: Range<usize>,
-	inner:  *const yazi_core::folder::Folder,
+	inner:  *const yazi_fs::Folder,
 	tab:    *const yazi_core::tab::Tab,
 }
 
 impl Deref for Folder {
-	type Target = yazi_core::folder::Folder;
+	type Target = yazi_fs::Folder;
 
 	fn deref(&self) -> &Self::Target { unsafe { &*self.inner } }
 }
@@ -22,7 +22,7 @@ impl Folder {
 	#[inline]
 	pub(super) fn make(
 		window: Option<Range<usize>>,
-		inner: &yazi_core::folder::Folder,
+		inner: &yazi_fs::Folder,
 		tab: &yazi_core::tab::Tab,
 	) -> mlua::Result<AnyUserData<'static>> {
 		let window = match window {
@@ -50,9 +50,9 @@ impl Folder {
 			});
 		})?;
 
-		lua.register_userdata_type::<yazi_core::folder::FolderStage>(|reg| {
+		lua.register_userdata_type::<yazi_fs::FolderStage>(|reg| {
 			reg.add_meta_method(MetaMethod::ToString, |lua, me, ()| {
-				use yazi_core::folder::FolderStage::{Failed, Loaded, Loading};
+				use yazi_fs::FolderStage::{Failed, Loaded, Loading};
 				lua.create_string(match me {
 					Loading => "loading",
 					Loaded => "loaded",

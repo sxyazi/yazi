@@ -1,7 +1,8 @@
+use yazi_fs::Step;
 use yazi_proxy::ManagerProxy;
 use yazi_shared::{event::{Cmd, Data}, render};
 
-use crate::{tab::Tab, Step};
+use crate::tab::Tab;
 
 pub struct Opt {
 	step: Step,
@@ -19,11 +20,8 @@ impl From<Cmd> for Opt {
 	}
 }
 
-impl<T> From<T> for Opt
-where
-	T: Into<Step>,
-{
-	fn from(t: T) -> Self { Self { step: t.into() } }
+impl From<isize> for Opt {
+	fn from(n: isize) -> Self { Self { step: n.into() } }
 }
 
 impl Tab {

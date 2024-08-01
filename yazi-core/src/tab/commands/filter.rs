@@ -3,10 +3,11 @@ use std::time::Duration;
 use tokio::pin;
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use yazi_config::popup::InputCfg;
+use yazi_fs::{Filter, FilterCase};
 use yazi_proxy::{InputProxy, ManagerProxy};
 use yazi_shared::{emit, event::Cmd, render, Debounce, InputError, Layer};
 
-use crate::{folder::{Filter, FilterCase}, tab::Tab};
+use crate::tab::Tab;
 
 #[derive(Default)]
 pub struct Opt {

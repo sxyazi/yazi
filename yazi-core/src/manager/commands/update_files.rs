@@ -1,9 +1,10 @@
 use std::borrow::Cow;
 
+use yazi_fs::Folder;
 use yazi_proxy::ManagerProxy;
 use yazi_shared::{event::Cmd, fs::FilesOp, render};
 
-use crate::{folder::Folder, manager::{Manager, LINKED}, tab::Tab, tasks::Tasks};
+use crate::{manager::{Manager, LINKED}, tab::Tab, tasks::Tasks};
 
 pub struct Opt {
 	op: FilesOp,

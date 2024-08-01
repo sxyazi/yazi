@@ -1,6 +1,6 @@
 [package]
 name         = "yazi-shared"
-version      = "0.2.5"
+version      = "0.3.0"
 edition      = "2021"
 license      = "MIT"
 authors      = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -25,7 +25,7 @@ shell-words      = "1.1.0"
 tokio            = { version = "1.39.2", features = [ "full" ] }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.52.0", features = [ "Win32_Storage_FileSystem", "Win32_UI_Shell" ] }
+windows-sys = { version = "0.59.0", features = [ "Win32_Storage_FileSystem", "Win32_UI_Shell" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 crossterm = { version = "0.27.0", features = [ "use-dev-tty" ] }

@@ -1,6 +1,5 @@
 use yazi_config::{manager::SortBy, MANAGER};
-
-use crate::folder::FilesSorter;
+use yazi_fs::FilesSorter;
 
 #[derive(Clone, PartialEq)]
 pub struct Config {

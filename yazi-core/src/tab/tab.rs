@@ -2,10 +2,11 @@ use std::{collections::HashMap, iter};
 
 use anyhow::Result;
 use tokio::task::JoinHandle;
+use yazi_fs::{Folder, FolderStage};
 use yazi_shared::{fs::Url, render};
 
 use super::{Backstack, Config, Finder, Mode, Preview};
-use crate::{folder::{Folder, FolderStage}, tab::Selected};
+use crate::tab::Selected;
 
 #[derive(Default)]
 pub struct Tab {

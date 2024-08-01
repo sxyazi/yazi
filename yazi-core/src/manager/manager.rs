@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 
+use yazi_fs::Folder;
 use yazi_shared::fs::{File, Url};
 
 use super::{Tabs, Watcher, Yanked};
-use crate::{folder::Folder, tab::Tab};
+use crate::tab::Tab;
 
 pub struct Manager {
 	pub tabs:   Tabs,

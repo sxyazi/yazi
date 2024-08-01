@@ -6,12 +6,12 @@ use parking_lot::RwLock;
 use tokio::{fs, pin, sync::{mpsc::{self, UnboundedReceiver}, watch}};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
 use tracing::error;
+use yazi_fs::{Files, Folder};
 use yazi_plugin::isolate;
 use yazi_proxy::WATCHER;
 use yazi_shared::{fs::{symlink_realname, File, FilesOp, Url}, RoCell};
 
 use super::Linked;
-use crate::folder::{Files, Folder};
 
 pub(crate) static WATCHED: RoCell<RwLock<HashSet<Url>>> = RoCell::new();
 pub static LINKED: RoCell<RwLock<Linked>> = RoCell::new();
