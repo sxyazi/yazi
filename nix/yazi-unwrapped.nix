@@ -18,19 +18,9 @@ let
     fileset = lib.fileset.intersection (lib.fileset.fromSource (lib.sources.cleanSource ../.)) (
       lib.fileset.unions [
         ../assets
-        ../yazi-adapter
-        ../yazi-boot
-        ../yazi-cli
-        ../yazi-config
-        ../yazi-core
-        ../yazi-dds
-        ../yazi-fm
-        ../yazi-plugin
-        ../yazi-proxy
-        ../yazi-scheduler
-        ../yazi-shared
         ../Cargo.toml
         ../Cargo.lock
+        (lib.fileset.fileFilter (file: file.hasExt "rs" || file.hasExt "toml") ../.)
       ]
     );
   };
