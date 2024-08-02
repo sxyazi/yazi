@@ -1,8 +1,11 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Discord server / Telegram group
+  - name: 📝 Documentation Improvement
+    url: https://github.com/yazi-rs/yazi-rs.github.io
+    about: If you'd like to help improve the documentation
+  - name: 🌐 Discord Server / Telegram Group
     url: https://github.com/sxyazi/yazi#discussion
     about: If you'd prefer more realtime conversation with the community
-  - name: GitHub Discussions
+  - name: 💬 GitHub Discussions
     url: https://github.com/sxyazi/yazi/discussions
     about: When you have questions that are not bug reports or feature requests
