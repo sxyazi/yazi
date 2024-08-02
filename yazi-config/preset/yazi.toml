@@ -14,6 +14,7 @@ show_hidden    = false
 show_symlink   = true
 scrolloff      = 5
 mouse_events   = [ "click", "scroll" ]
+title_format   = "Yazi: {cwd}"
 
 [preview]
 tab_size        = 2

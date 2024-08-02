@@ -23,6 +23,7 @@ pub struct Manager {
 	pub show_symlink: bool,
 	pub scrolloff:    u8,
 	pub mouse_events: MouseEvents,
+	pub title_format: String,
 }
 
 impl FromStr for Manager {
