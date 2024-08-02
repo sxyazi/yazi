@@ -84,11 +84,7 @@ impl Highlighter {
 				buf.push(b'\n');
 			}
 
-			buf.iter_mut().for_each(|b| {
-				if *b == 27 {
-					*b = b' '
-				}
-			});
+			buf.iter_mut().filter(|&&mut b| b == b'\x1b').for_each(|b| *b = b'^');
 
 			if i > skip {
 				after.push(String::from_utf8_lossy(&buf).into_owned());
