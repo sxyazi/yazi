@@ -6,6 +6,7 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+"
   schedule:
     - cron: '28 12 * * *'
+  workflow_dispatch:
 
 jobs:
   # build-unix:
@@ -173,7 +174,7 @@ jobs:
 
       - name: Nightly
         uses: softprops/action-gh-release@v1
-        if: github.event_name == 'schedule'
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         with:
           tag_name: "yazi-nightly-${{ env.CURRENT_DATE }}"
           prerelease: true
