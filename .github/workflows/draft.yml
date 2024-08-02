@@ -158,13 +158,11 @@ jobs:
         with:
           merge-multiple: true
 
-      - run: echo "CURRENT_DATE=$(date -u +"%Y%m%d-%H%M")" >> $GITHUB_ENV
-
       - name: Nightly
         uses: softprops/action-gh-release@v1
         if: github.event_name == 'schedule'
         with:
-          tag_name: "yazi-nightly-${{ env.CURRENT_DATE }}"
+          tag_name: "nightly"
           prerelease: true
           files: |
             yazi-*.zip
