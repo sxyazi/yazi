@@ -97,8 +97,14 @@ impl Highlighter {
 		}
 
 		if plain {
-			let indent = " ".repeat(PREVIEW.tab_size as usize);
-			Ok(Text::from(after.join("").replace('\t', &indent)))
+			if after.iter().any(|l| l.contains('\x1b')) {
+				let bytes = after.join("").bytes().collect::<Vec<_>>();
+				use ansi_to_tui::IntoText;
+				bytes.into_text().map_err(|e| PeekError::Unexpected(e.to_string()))
+			} else {
+				let indent = " ".repeat(PREVIEW.tab_size as usize);
+				Ok(Text::from(after.join("").replace('\t', &indent)))
+			}
 		} else {
 			Self::highlight_with(before, after, syntax.unwrap()).await
 		}
