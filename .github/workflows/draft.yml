@@ -4,9 +4,11 @@ on:
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
+    # !TODO: remove the following line before merging
+    branches:
+      - ci-nightly-builds
   schedule:
     - cron: '28 12 * * *'
-  workflow_dispatch:
 
 jobs:
   # build-unix:
@@ -174,7 +176,8 @@ jobs:
 
       - name: Nightly
         uses: softprops/action-gh-release@v1
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        # !TODO: uncomment the following line before merging
+        # if: github.event_name == 'schedule'
         with:
           tag_name: "yazi-nightly-${{ env.CURRENT_DATE }}"
           prerelease: true
