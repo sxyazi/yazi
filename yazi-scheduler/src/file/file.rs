@@ -140,7 +140,7 @@ impl File {
 					{
 						trash::delete(&task.target)?;
 					}
-					Ok::<_, trash::Error>(())
+					Ok::<_, anyhow::Error>(())
 				})
 				.await??;
 				self.prog.send(TaskProg::Adv(task.id, 1, task.length))?;
