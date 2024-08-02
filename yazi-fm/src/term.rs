@@ -73,7 +73,7 @@ impl Term {
 			execute!(stderr(), PopKeyboardEnhancementFlags).ok();
 		}
 
-		if MANAGER.update_title {
+		if !MANAGER.title_format.is_empty() {
 			execute!(stderr(), SetTitle("")).ok();
 		}
 
