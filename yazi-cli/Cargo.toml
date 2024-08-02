@@ -35,7 +35,7 @@ serde_json            = { workspace = true }
 vergen-gitcl          = { version = "1.0.0", features = [ "build" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-crossterm = { workspace = true }
+crossterm = { workspace = true, features = [ "use-dev-tty" ] }
 
 [[bin]]
 name = "ya"

@@ -49,4 +49,4 @@ uzers = "0.12.0"
 clipboard-win = "5.4.0"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-crossterm = { workspace = true }
+crossterm = { workspace = true, features = [ "use-dev-tty" ] }

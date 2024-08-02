@@ -25,4 +25,4 @@ toml      = { version = "0.8.17", features = [ "preserve_order" ] }
 validator = { version = "0.18.1", features = [ "derive" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-crossterm = { workspace = true }
+crossterm = { workspace = true, features = [ "use-dev-tty" ] }
