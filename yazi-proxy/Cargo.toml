@@ -17,6 +17,6 @@ yazi-config = { path = "../yazi-config", version = "0.3.0" }
 yazi-shared = { path = "../yazi-shared", version = "0.3.0" }
 
 # External dependencies
-anyhow = "1.0.86"
-mlua   = { version = "0.9.9", features = [ "lua54" ] }
-tokio  = { version = "1.39.2", features = [ "full" ] }
+anyhow = { workspace = true }
+mlua   = { workspace = true }
+tokio  = { workspace = true }

@@ -16,18 +16,16 @@ yazi-proxy  = { path = "../yazi-proxy", version = "0.3.0" }
 yazi-shared = { path = "../yazi-shared", version = "0.3.0" }
 
 # External dependencies
-anyhow                 = "1.0.86"
+anyhow                 = { workspace = true }
 async-priority-channel = "0.2.0"
-futures                = "0.3.30"
-parking_lot            = "0.12.3"
-scopeguard             = "1.2.0"
-tokio                  = { version = "1.39.2", features = [ "full" ] }
-
-# Logging
-tracing = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
+futures                = { workspace = true }
+parking_lot            = { workspace = true }
+scopeguard             = { workspace = true }
+tokio                  = { workspace = true }
+tracing                = { workspace = true }
 
 [target."cfg(unix)".dependencies]
-libc = "0.2.155"
+libc = { workspace = true }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
 trash = "5.0.0"

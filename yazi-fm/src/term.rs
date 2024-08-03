@@ -5,7 +5,7 @@ use crossterm::{event::{DisableBracketedPaste, EnableBracketedPaste, KeyboardEnh
 use cursor::RestoreCursor;
 use ratatui::{backend::CrosstermBackend, buffer::Buffer, layout::Rect, CompletedFrame, Frame, Terminal};
 use yazi_adapter::Emulator;
-use yazi_config::INPUT;
+use yazi_config::{INPUT, MANAGER};
 
 static CSI_U: AtomicBool = AtomicBool::new(false);
 static BLINK: AtomicBool = AtomicBool::new(false);
@@ -83,6 +83,10 @@ impl Term {
 	pub(super) fn goodbye(f: impl FnOnce() -> bool) -> ! {
 		if CSI_U.swap(false, Ordering::Relaxed) {
 			execute!(stderr(), PopKeyboardEnhancementFlags).ok();
+		}
+
+		if !MANAGER.title_format.is_empty() {
+			execute!(stderr(), SetTitle("")).ok();
 		}
 
 		execute!(

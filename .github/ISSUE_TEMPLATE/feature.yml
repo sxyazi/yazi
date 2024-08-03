@@ -1,8 +1,25 @@
-name: Feature Request
+name: 💡 Feature Request
 description: Suggest an idea for this project
 labels: [feature]
 assignees: []
 body:
+  - type: textarea
+    id: debug
+    attributes:
+      label: "`yazi --debug` output"
+      description: Please run `yazi --debug` and paste the debug information here.
+      value: |
+        <details>
+
+        ```sh
+        ##### ↓↓↓ Paste the output here: ↓↓↓ #####
+
+
+        ```
+
+        </details>
+    validations:
+      required: true
   - type: textarea
     id: problem
     attributes:
@@ -29,3 +46,13 @@ body:
     attributes:
       label: Additional context
       description: Add any other context or screenshots about the feature request here.
+  - type: checkboxes
+    id: validations
+    attributes:
+      label: Validations
+      description: Before submitting the issue, please make sure you have completed the following
+      options:
+      - label: I have searched the existing issues
+        required: true
+      - label: The latest nightly build of Yazi doesn't already have this feature
+        required: true

@@ -20,27 +20,25 @@ yazi-scheduler = { path = "../yazi-scheduler", version = "0.3.0" }
 yazi-shared    = { path = "../yazi-shared", version = "0.3.0" }
 
 # External dependencies
-anyhow        = "1.0.86"
-bitflags      = "2.6.0"
-crossterm     = "0.27.0"
-dirs          = "5.0.1"
-futures       = "0.3.30"
+anyhow        = { workspace = true }
+bitflags      = { workspace = true }
+crossterm     = { workspace = true }
+dirs          = { workspace = true }
+futures       = { workspace = true }
 notify        = { git = "https://github.com/notify-rs/notify.git", rev = "96dec74316a93bed6eec9db177b233e6e017275e", default-features = false, features = [ "macos_fsevent" ] }
-parking_lot   = "0.12.3"
-ratatui       = "0.27.0"
-scopeguard    = "1.2.0"
-serde         = "1.0.204"
-shell-words   = "1.1.0"
-tokio         = { version = "1.39.2", features = [ "full" ] }
-tokio-stream  = "0.1.15"
-tokio-util    = "0.7.11"
-unicode-width = "0.1.13"
-
-# Logging
-tracing = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
+parking_lot   = { workspace = true }
+ratatui       = { workspace = true }
+scopeguard    = { workspace = true }
+serde         = { workspace = true }
+shell-words   = { workspace = true }
+tokio         = { workspace = true }
+tokio-stream  = { workspace = true }
+tokio-util    = { workspace = true }
+tracing       = { workspace = true }
+unicode-width = { workspace = true }
 
 [target."cfg(unix)".dependencies]
-libc = "0.2.155"
+libc = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-crossterm = { version = "0.27.0", features = [ "use-dev-tty" ] }
+crossterm = { workspace = true, features = [ "use-dev-tty" ] }
