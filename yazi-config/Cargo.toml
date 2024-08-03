@@ -12,17 +12,17 @@ repository  = "https://github.com/sxyazi/yazi"
 yazi-shared = { path = "../yazi-shared", version = "0.3.0" }
 
 # External dependencies
-anyhow    = "1.0.86"
-arc-swap  = "1.7.1"
-bitflags  = "2.6.0"
-crossterm = "0.27.0"
-globset   = "0.4.14"
-indexmap  = "2.2.6"
-ratatui   = "0.27.0"
-regex     = "1.10.5"
-serde     = { version = "1.0.204", features = [ "derive" ] }
-toml      = { version = "0.8.17", features = [ "preserve_order" ] }
+anyhow    = { workspace = true }
+arc-swap  = { workspace = true }
+bitflags  = { workspace = true }
+crossterm = { workspace = true }
+globset   = { workspace = true }
+indexmap  = "2.3.0"
+ratatui   = { workspace = true }
+regex     = { workspace = true }
+serde     = { workspace = true }
+toml      = { version = "0.8.19", features = [ "preserve_order" ] }
 validator = { version = "0.18.1", features = [ "derive" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-crossterm = { version = "0.27.0", features = [ "use-dev-tty" ] }
+crossterm = { workspace = true, features = [ "use-dev-tty" ] }

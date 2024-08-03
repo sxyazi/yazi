@@ -14,7 +14,7 @@ pub struct Help {
 	pub(super) bindings: Vec<&'static Control>,
 
 	// Filter
-	keyword:              Option<String>,
+	pub(super) keyword:   String,
 	pub(super) in_filter: Option<Input>,
 
 	pub(super) offset: usize,
@@ -29,7 +29,7 @@ impl Help {
 		self.visible = !self.visible;
 		self.layer = layer;
 
-		self.keyword = Some(String::new());
+		self.keyword = String::new();
 		self.in_filter = None;
 		self.filter_apply();
 
@@ -65,18 +65,16 @@ impl Help {
 	}
 
 	pub(super) fn filter_apply(&mut self) {
-		let kw = self.in_filter.as_ref().map(|i| i.value()).filter(|v| !v.is_empty());
-		if self.keyword.as_deref() == kw {
-			return;
-		}
+		let kw = self.in_filter.as_ref().map_or("", |i| i.value());
 
-		if let Some(kw) = kw {
-			self.bindings = KEYMAP.get(self.layer).iter().filter(|&c| c.contains(kw)).collect();
-		} else {
+		if kw.is_empty() {
+			self.keyword = String::new();
 			self.bindings = KEYMAP.get(self.layer).iter().collect();
+		} else if self.keyword != kw {
+			self.keyword = kw.to_owned();
+			self.bindings = KEYMAP.get(self.layer).iter().filter(|&c| c.contains(kw)).collect();
 		}
 
-		self.keyword = kw.map(|s| s.to_owned());
 		self.arrow(0);
 	}
 }
@@ -89,8 +87,8 @@ impl Help {
 			.in_filter
 			.as_ref()
 			.map(|i| i.value())
-			.or(self.keyword.as_deref())
-			.map(|s| format!("/{}", s))
+			.or(Some(self.keyword.as_str()).filter(|&s| !s.is_empty()))
+			.map(|s| format!("Filter: {}", s))
 	}
 
 	// --- Bindings

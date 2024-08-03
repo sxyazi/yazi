@@ -298,5 +298,5 @@ keymap = [
 	{ on = "<Down>", run = "arrow 1",  desc = "Move cursor down" },
 
 	# Filtering
-	{ on = "/", run = "filter", desc = "Apply a filter for the help items" },
+	{ on = "f", run = "filter", desc = "Apply a filter for the help items" },
 ]

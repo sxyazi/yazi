@@ -1,5 +1,5 @@
 use ratatui::{buffer::Buffer, layout::{self, Constraint, Rect}, text::Line, widgets::Widget};
-use yazi_config::THEME;
+use yazi_config::{KEYMAP, THEME};
 
 use super::Bindings;
 use crate::Ctx;
@@ -10,6 +10,13 @@ pub(crate) struct Layout<'a> {
 
 impl<'a> Layout<'a> {
 	pub fn new(cx: &'a Ctx) -> Self { Self { cx } }
+
+	fn tips() -> String {
+		match KEYMAP.help.iter().find(|&c| c.run.iter().any(|c| c.name == "filter")) {
+			Some(c) => format!(" (Press `{}` to filter)", c.on()),
+			None => String::new(),
+		}
+	}
 }
 
 impl<'a> Widget for Layout<'a> {
@@ -19,7 +26,7 @@ impl<'a> Widget for Layout<'a> {
 
 		let chunks = layout::Layout::vertical([Constraint::Fill(1), Constraint::Length(1)]).split(area);
 		Line::styled(
-			help.keyword().unwrap_or_else(|| format!("{}.help", help.layer)),
+			help.keyword().unwrap_or_else(|| format!("{}.help{}", help.layer, Self::tips())),
 			THEME.help.footer,
 		)
 		.render(chunks[1], buf);

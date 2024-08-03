@@ -1,4 +1,4 @@
-name: Bug Report
+name: 🐞 Bug Report
 description: Create a report to help us improve
 labels: [bug]
 assignees: []
@@ -59,28 +59,14 @@ body:
     validations:
       required: true
   - type: textarea
-    id: expected
+    id: reproducer
     attributes:
-      label: Expected Behavior
-      description: A clear and concise description of what you expected to happen
-    validations:
-      required: true
-  - type: textarea
-    id: to_repro
-    attributes:
-      label: To Reproduce
-      description: Steps to reproduce the behavior
+      label:  Minimal reproducer
+      description: A [minimal reproducer](https://stackoverflow.com/help/minimal-reproducible-example) is required, otherwise the issue might be closed without further notice.
       placeholder: |
         Please include as much information as possible that can help to reproduce and understand the issue.
     validations:
       required: true
-  - type: textarea
-    id: config
-    attributes:
-      label: Configuration
-      description: |
-        Please include the relevant section(s) of your `yazi.toml`, `keymap.toml`, or `theme.toml` configuration file.
-        You can enter "no config" if the issue happens without you having made a config file.
   - type: textarea
     id: other
     attributes:
