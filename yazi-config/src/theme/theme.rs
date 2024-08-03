@@ -64,10 +64,11 @@ pub struct Manager {
 	marker_selected: Style,
 
 	// Tab
-	tab_active:   Style,
-	tab_inactive: Style,
+	tab_active:      Style,
+	tab_inactive:    Style,
 	#[validate(range(min = 1, message = "Must be greater than 0"))]
-	tab_width:    u8,
+	tab_width:       u8,
+	tab_show_always: bool,
 
 	// Count
 	count_copied:   Style,

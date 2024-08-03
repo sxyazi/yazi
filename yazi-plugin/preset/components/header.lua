@@ -71,7 +71,7 @@ end
 
 function Header:tabs()
 	local tabs = #cx.tabs
-	if tabs == 1 then
+	if tabs == 1 and not THEME.manager.tab_show_always then
 		return ui.Line {}
 	end
 
@@ -102,7 +102,13 @@ function Header:render()
 end
 
 -- Mouse events
-function Header:click(event, up) end
+function Header:click(event, up)
+	if up or not event.is_left then
+		return
+	end
+
+	ya.manager_emit("tab_switch", { 0 })
+end
 
 function Header:scroll(event, step) end
 
