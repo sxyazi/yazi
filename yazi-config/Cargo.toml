@@ -17,11 +17,11 @@ arc-swap  = { workspace = true }
 bitflags  = { workspace = true }
 crossterm = { workspace = true }
 globset   = { workspace = true }
-indexmap  = "2.2.6"
+indexmap  = "2.3.0"
 ratatui   = { workspace = true }
 regex     = { workspace = true }
 serde     = { workspace = true }
-toml      = { version = "0.8.17", features = [ "preserve_order" ] }
+toml      = { version = "0.8.19", features = [ "preserve_order" ] }
 validator = { version = "0.18.1", features = [ "derive" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
