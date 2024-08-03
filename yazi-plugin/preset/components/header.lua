@@ -102,13 +102,7 @@ function Header:render()
 end
 
 -- Mouse events
-function Header:click(event, up)
-	if up or not event.is_left then
-		return
-	end
-
-	ya.manager_emit("tab_switch", { 0 })
-end
+function Header:click(event, up) end
 
 function Header:scroll(event, step) end
 
