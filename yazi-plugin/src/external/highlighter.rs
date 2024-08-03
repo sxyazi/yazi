@@ -84,7 +84,19 @@ impl Highlighter {
 				buf.push(b'\n');
 			}
 
-			buf.iter_mut().filter(|&&mut b| b == b'\x1b').for_each(|b| *b = b'^');
+			let esc_count = buf.iter().filter(|&&b| b == 27).count();
+			if esc_count > 0 {
+				plain = true;
+				drop(mem::take(&mut before));
+				buf = buf.iter().fold(Vec::with_capacity(buf.len() + esc_count), |mut acc, &b| {
+					if b == 27 {
+						acc.extend_from_slice(b"^[");
+					} else {
+						acc.push(b);
+					}
+					acc
+				})
+			}
 
 			if i > skip {
 				after.push(String::from_utf8_lossy(&buf).into_owned());
