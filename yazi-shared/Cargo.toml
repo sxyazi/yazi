@@ -10,22 +10,22 @@ repository   = "https://github.com/sxyazi/yazi"
 rust-version = "1.78.0"
 
 [dependencies]
-anyhow           = "1.0.86"
-bitflags         = "2.6.0"
-crossterm        = "0.27.0"
-dirs             = "5.0.1"
-futures          = "0.3.30"
-libc             = "0.2.155"
-parking_lot      = "0.12.3"
+anyhow           = { workspace = true }
+bitflags         = { workspace = true }
+crossterm        = { workspace = true }
+dirs             = { workspace = true }
+futures          = { workspace = true }
+libc             = { workspace = true }
+parking_lot      = { workspace = true }
 percent-encoding = "2.3.1"
-ratatui          = "0.27.0"
-regex            = "1.10.5"
-serde            = { version = "1.0.204", features = [ "derive" ] }
-shell-words      = "1.1.0"
-tokio            = { version = "1.39.2", features = [ "full" ] }
+ratatui          = { workspace = true }
+regex            = { workspace = true }
+serde            = { workspace = true }
+shell-words      = { workspace = true }
+tokio            = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59.0", features = [ "Win32_Storage_FileSystem", "Win32_UI_Shell" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-crossterm = { version = "0.27.0", features = [ "use-dev-tty" ] }
+crossterm = { workspace = true, features = [ "use-dev-tty" ] }

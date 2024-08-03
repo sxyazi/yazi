@@ -9,18 +9,18 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
-regex        = "1.10.5"
+regex        = { workspace = true }
 yazi-adapter = { path = "../yazi-adapter", version = "0.3.0" }
 yazi-config  = { path = "../yazi-config", version = "0.3.0" }
 yazi-shared  = { path = "../yazi-shared", version = "0.3.0" }
 
 # External dependencies
-clap  = { version = "4.5.11", features = [ "derive" ] }
-serde = { version = "1.0.204", features = [ "derive" ] }
+clap  = { workspace = true }
+serde = { workspace = true }
 
 [build-dependencies]
-clap                  = { version = "4.5.11", features = [ "derive" ] }
-clap_complete         = "4.5.11"
+clap                  = { workspace = true }
+clap_complete         = "4.5.12"
 clap_complete_fig     = "4.5.2"
 clap_complete_nushell = "4.5.3"
 vergen-gitcl          = { version = "1.0.0", features = [ "build" ] }
