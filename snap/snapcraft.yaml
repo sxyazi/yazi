@@ -1,5 +1,5 @@
 name: yazi
-base: core22
+base: core24
 adopt-info: yazi
 summary: Blazing fast terminal file manager written in Rust, based on async I/O.
 description: |
@@ -9,9 +9,9 @@ license: MIT
 grade: stable
 confinement: classic
 
-architectures:
-  - amd64
-  # - arm64
+platforms:
+  amd64:
+  # arm64:
 
 apps:
   yazi:
