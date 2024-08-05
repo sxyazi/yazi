@@ -31,7 +31,7 @@ impl Image {
 			}
 
 			img = Self::rotate(img, orientation);
-			if !matches!(img, DynamicImage::ImageRgb8(_) | DynamicImage::ImageRgba8(_)) {
+			if !matches!(img, DynamicImage::ImageRgb8(_)) {
 				img = DynamicImage::ImageRgb8(img.into_rgb8());
 			}
 
