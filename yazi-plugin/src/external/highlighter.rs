@@ -121,6 +121,7 @@ impl Highlighter {
 				h.highlight_line(&line, syntaxes).map_err(|e| anyhow!(e))?;
 			}
 
+			let indent = " ".repeat(PREVIEW.tab_size as usize);
 			let mut lines = Vec::with_capacity(after.len());
 			for line in after {
 				if ticket != INCR.load(Ordering::Relaxed) {
@@ -128,7 +129,7 @@ impl Highlighter {
 				}
 
 				let regions = h.highlight_line(&line, syntaxes).map_err(|e| anyhow!(e))?;
-				lines.push(Self::to_line_widget(regions));
+				lines.push(Self::to_line_widget(regions, &indent));
 			}
 
 			Ok(Text::from(lines))
@@ -181,8 +182,7 @@ impl Highlighter {
 		}
 	}
 
-	pub fn to_line_widget(regions: Vec<(highlighting::Style, &str)>) -> Line<'static> {
-		let indent = " ".repeat(PREVIEW.tab_size as usize);
+	pub fn to_line_widget(regions: Vec<(highlighting::Style, &str)>, indent: &str) -> Line<'static> {
 		let spans: Vec<_> = regions
 			.into_iter()
 			.map(|(style, s)| {
@@ -198,7 +198,7 @@ impl Highlighter {
 				}
 
 				Span {
-					content: s.replace('\t', &indent).into(),
+					content: s.replace('\t', indent).into(),
 					style:   ratatui::style::Style {
 						fg: Self::to_ansi_color(style.foreground),
 						// bg: Self::to_ansi_color(style.background),
