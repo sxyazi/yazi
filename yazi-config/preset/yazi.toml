@@ -92,7 +92,7 @@ fetchers = [
 ]
 preloaders = [
 	# Image
-	{ mime = "image/{avif,heic,jxl,svg+xml}", run = "magick" },
+	{ mime = "image/{avif,hei?,jxl,svg+xml}", run = "magick" },
 	{ mime = "image/*", run = "image" },
 	# Video
 	{ mime = "video/*", run = "video" },
@@ -110,7 +110,7 @@ previewers = [
 	# JSON
 	{ mime = "application/{json,x-ndjson}", run = "json" },
 	# Image
-	{ mime = "image/{avif,heic,jxl,svg+xml}", run = "magick" },
+	{ mime = "image/{avif,hei?,jxl,svg+xml}", run = "magick" },
 	{ mime = "image/*", run = "image" },
 	# Video
 	{ mime = "video/*", run = "video" },

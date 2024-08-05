@@ -50,9 +50,12 @@ impl Manager {
 			.cloned()
 			.collect();
 
+		let repeek = self.hovered().is_some_and(|f| updates.contains_key(&f.url));
 		self.mimetype.extend(updates);
-		self.peek(false);
 
+		if repeek {
+			self.peek(false);
+		}
 		tasks.prework_affected(&affected, &self.mimetype);
 		render!();
 	}
