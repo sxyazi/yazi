@@ -199,10 +199,10 @@ impl Emulator {
 					bail!("unexpected EOF");
 				}
 				buf.push(c[0]);
-				if c[0] != b'c' || !buf.contains(&b'\x1b') {
+				if c[0] != b'c' || !buf.contains(&0x1b) {
 					continue;
 				}
-				if buf.rsplitn(2, |&b| b == b'\x1b').next().is_some_and(|s| s.starts_with(b"[?")) {
+				if buf.rsplitn(2, |&b| b == 0x1b).next().is_some_and(|s| s.starts_with(b"[?")) {
 					break;
 				}
 			}
