@@ -1,15 +1,14 @@
-use std::{io::Cursor, mem, path::{Path, PathBuf}, sync::{atomic::{AtomicUsize, Ordering}, OnceLock}};
+use std::{io::Cursor, mem, path::{Path, PathBuf}, sync::atomic::{AtomicUsize, Ordering}};
 
 use anyhow::{anyhow, Result};
 use ratatui::text::{Line, Span, Text};
-use syntect::{dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
-use tokio::{fs::File, io::{AsyncBufReadExt, BufReader}};
+use syntect::{dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}, LoadingError};
+use tokio::{fs::File, io::{AsyncBufReadExt, BufReader}, sync::OnceCell};
 use yazi_config::{PREVIEW, THEME};
 use yazi_shared::PeekError;
 
 static INCR: AtomicUsize = AtomicUsize::new(0);
-static SYNTECT_SYNTAX: OnceLock<SyntaxSet> = OnceLock::new();
-static SYNTECT_THEME: OnceLock<Theme> = OnceLock::new();
+static SYNTECT: OnceCell<(Theme, SyntaxSet)> = OnceCell::const_new();
 
 pub struct Highlighter {
 	path: PathBuf,
@@ -19,27 +18,28 @@ impl Highlighter {
 	#[inline]
 	pub fn new(path: &Path) -> Self { Self { path: path.to_owned() } }
 
-	pub fn init() -> (&'static Theme, &'static SyntaxSet) {
-		#[inline]
-		fn from_file() -> Result<Theme> {
-			let file = std::fs::File::open(&THEME.manager.syntect_theme)?;
-			Ok(ThemeSet::load_from_reader(&mut std::io::BufReader::new(file))?)
-		}
+	pub async fn init() -> (&'static Theme, &'static SyntaxSet) {
+		let fut = async {
+			tokio::task::spawn_blocking(|| {
+				let theme = std::fs::File::open(&THEME.manager.syntect_theme)
+					.map_err(LoadingError::Io)
+					.and_then(|f| ThemeSet::load_from_reader(&mut std::io::BufReader::new(f)))
+					.or_else(|_| ThemeSet::load_from_reader(&mut Cursor::new(yazi_prebuild::ansi_theme())));
 
-		let theme = SYNTECT_THEME.get_or_init(|| {
-			from_file().unwrap_or_else(|_| {
-				ThemeSet::load_from_reader(&mut Cursor::new(yazi_prebuild::ansi_theme())).unwrap()
+				let syntaxes = dumps::from_uncompressed_data(yazi_prebuild::syntaxes());
+
+				(theme.unwrap(), syntaxes.unwrap())
 			})
-		});
+			.await
+			.unwrap()
+		};
 
-		let syntaxes = SYNTECT_SYNTAX
-			.get_or_init(|| dumps::from_uncompressed_data(yazi_prebuild::syntaxes()).unwrap());
-
-		(theme, syntaxes)
+		let r = SYNTECT.get_or_init(|| fut).await;
+		(&r.0, &r.1)
 	}
 
 	async fn find_syntax(path: &Path) -> Result<&'static SyntaxReference> {
-		let (_, syntaxes) = Self::init();
+		let (_, syntaxes) = Self::init().await;
 		let name = path.file_name().map(|n| n.to_string_lossy()).unwrap_or_default();
 		if let Some(s) = syntaxes.find_syntax_by_extension(&name) {
 			return Ok(s);
@@ -73,7 +73,7 @@ impl Highlighter {
 				break;
 			}
 
-			if !plain && buf.len() > 6000 {
+			if !plain && (buf.len() > 5000 || buf.contains(&0x1b)) {
 				plain = true;
 				drop(mem::take(&mut before));
 			}
@@ -98,7 +98,7 @@ impl Highlighter {
 
 		if plain {
 			let indent = " ".repeat(PREVIEW.tab_size as usize);
-			Ok(Text::from(after.join("").replace('\t', &indent)))
+			Ok(Text::from(after.join("").replace('\x1b', "^[").replace('\t', &indent)))
 		} else {
 			Self::highlight_with(before, after, syntax.unwrap()).await
 		}
@@ -110,11 +110,10 @@ impl Highlighter {
 		syntax: &'static SyntaxReference,
 	) -> Result<Text<'static>, PeekError> {
 		let ticket = INCR.load(Ordering::Relaxed);
+		let (theme, syntaxes) = Self::init().await;
 
 		tokio::task::spawn_blocking(move || {
-			let (theme, syntaxes) = Self::init();
 			let mut h = HighlightLines::new(syntax, theme);
-
 			for line in before {
 				if ticket != INCR.load(Ordering::Relaxed) {
 					return Err("Highlighting cancelled".into());
@@ -122,6 +121,7 @@ impl Highlighter {
 				h.highlight_line(&line, syntaxes).map_err(|e| anyhow!(e))?;
 			}
 
+			let indent = " ".repeat(PREVIEW.tab_size as usize);
 			let mut lines = Vec::with_capacity(after.len());
 			for line in after {
 				if ticket != INCR.load(Ordering::Relaxed) {
@@ -129,7 +129,7 @@ impl Highlighter {
 				}
 
 				let regions = h.highlight_line(&line, syntaxes).map_err(|e| anyhow!(e))?;
-				lines.push(Self::to_line_widget(regions));
+				lines.push(Self::to_line_widget(regions, &indent));
 			}
 
 			Ok(Text::from(lines))
@@ -182,8 +182,7 @@ impl Highlighter {
 		}
 	}
 
-	pub fn to_line_widget(regions: Vec<(highlighting::Style, &str)>) -> Line<'static> {
-		let indent = " ".repeat(PREVIEW.tab_size as usize);
+	pub fn to_line_widget(regions: Vec<(highlighting::Style, &str)>, indent: &str) -> Line<'static> {
 		let spans: Vec<_> = regions
 			.into_iter()
 			.map(|(style, s)| {
@@ -199,7 +198,7 @@ impl Highlighter {
 				}
 
 				Span {
-					content: s.replace('\t', &indent).into(),
+					content: s.replace('\t', indent).into(),
 					style:   ratatui::style::Style {
 						fg: Self::to_ansi_color(style.foreground),
 						// bg: Self::to_ansi_color(style.background),

@@ -3,7 +3,7 @@ use std::ops::Range;
 use anyhow::{bail, Result};
 use ratatui::{buffer::Buffer, layout::Rect, text::Line, widgets::{Block, BorderType, Paragraph, Widget}};
 use syntect::easy::HighlightLines;
-use yazi_config::THEME;
+use yazi_config::{PREVIEW, THEME};
 use yazi_core::input::InputMode;
 use yazi_plugin::external::Highlighter;
 
@@ -21,11 +21,11 @@ impl<'a> Input<'a> {
 			bail!("Highlighting is disabled");
 		}
 
-		let (theme, syntaxes) = Highlighter::init();
+		let (theme, syntaxes) = futures::executor::block_on(Highlighter::init());
 		if let Some(syntax) = syntaxes.find_syntax_by_name("Bourne Again Shell (bash)") {
 			let mut h = HighlightLines::new(syntax, theme);
 			let regions = h.highlight_line(self.cx.input.value(), syntaxes)?;
-			return Ok(Highlighter::to_line_widget(regions));
+			return Ok(Highlighter::to_line_widget(regions, &" ".repeat(PREVIEW.tab_size as usize)));
 		}
 		bail!("Failed to find syntax")
 	}
