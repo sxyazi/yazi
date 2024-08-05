@@ -25,13 +25,6 @@ impl AsRef<File> for File {
 	fn as_ref(&self) -> &File { self }
 }
 
-impl PartialEq for File {
-	#[inline]
-	fn eq(&self, other: &Self) -> bool {
-		self.cha == other.cha && self.url == other.url && self.link_to == other.link_to
-	}
-}
-
 impl File {
 	#[inline]
 	pub async fn from(url: Url) -> Result<Self> {

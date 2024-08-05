@@ -28,6 +28,7 @@ function M:preload()
 		string.format("%dx%d^", PREVIEW.max_width, PREVIEW.max_height),
 		"-quality",
 		tostring(PREVIEW.image_quality),
+		"-auto-orient",
 		"JPG:" .. tostring(cache),
 	}):spawn()
 

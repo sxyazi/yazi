@@ -28,7 +28,7 @@ impl Manager {
 			self.current_mut().tracing = true;
 		}
 
-		// Re-peek
+		// Repeek
 		self.peek(false);
 
 		// Refresh watcher

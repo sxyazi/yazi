@@ -89,25 +89,11 @@ impl Preview {
 		matches!(self.lock, Some(ref lock) if lock.url == *url)
 	}
 
+	#[inline]
 	fn content_unchanged(&self, url: &Url, cha: &Cha) -> bool {
-		let Some(lock) = &self.lock else {
-			return false;
-		};
-
-		*url == lock.url
-			&& self.skip == lock.skip
-			&& cha.len == lock.cha.len
-			&& cha.mtime == lock.cha.mtime
-			&& cha.kind == lock.cha.kind
-			&& {
-				#[cfg(unix)]
-				{
-					cha.perm == lock.cha.perm
-				}
-				#[cfg(windows)]
-				{
-					true
-				}
-			}
+		match &self.lock {
+			Some(l) => *url == l.url && self.skip == l.skip && cha.hits(l.cha),
+			None => false,
+		}
 	}
 }
