@@ -5,7 +5,7 @@ on:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
   schedule:
-    - cron: '0 0 * * *'
+    - cron: "0 */8 * * *"
 
 jobs:
   build-unix:
@@ -147,7 +147,7 @@ jobs:
             yazi-*.zip
             yazi-*.snap
           generate_release_notes: true
-  
+
   nightly:
     permissions:
       contents: write
@@ -159,11 +159,9 @@ jobs:
           merge-multiple: true
 
       - run: |
-          GITHUB_SHA_SHORT=${GITHUB_SHA:0:8}
-          UTC_DATE=$(date -u +"%Y-%m-%d %H:%M")
-          echo 'RELEASE_NOTE<<EOF' >> $GITHUB_ENV
-          echo "From commit: ${GITHUB_SHA_SHORT}" >> $GITHUB_ENV
-          echo "Generated on: ${UTC_DATE} UTC" >> $GITHUB_ENV
+          echo 'NIGHTLY_BODY<<EOF' >> $GITHUB_ENV
+          echo "From commit: ${GITHUB_SHA:0:8}" >> $GITHUB_ENV
+          echo "Generated on: $(date -u +"%Y-%m-%d %H:%M") UTC" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - name: Nightly
@@ -175,5 +173,4 @@ jobs:
           files: |
             yazi-*.zip
             yazi-*.snap
-          generate_release_notes: true
-          body: ${{ env.RELEASE_NOTE }}
+          body: ${{ env.NIGHTLY_BODY }}
