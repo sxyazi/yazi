@@ -12,6 +12,7 @@ pub struct Opt {
 	orphan:      bool,
 	confirm:     bool,
 	interactive: bool,
+	cursor:      String,
 }
 
 impl From<Cmd> for Opt {
@@ -22,6 +23,7 @@ impl From<Cmd> for Opt {
 			orphan:      c.bool("orphan"),
 			confirm:     c.bool("confirm"),
 			interactive: c.bool("interactive"),
+			cursor:      c.take_str("cursor").unwrap_or_default(),
 		}
 	}
 }
@@ -52,10 +54,14 @@ Please replace e.g. `shell` with `shell --interactive`, `shell "my-template"` wi
 		}
 
 		let selected = self.hovered_and_selected(true).cloned().collect();
+		let cursor = match opt.cursor.as_str() {
+			"start" => Some(0),
+			n => n.parse::<usize>().ok(),
+		};
 
 		tokio::spawn(async move {
 			if !opt.confirm || opt.run.is_empty() {
-				let mut result = InputProxy::show(InputCfg::shell(opt.block).with_value(opt.run));
+				let mut result = InputProxy::show(InputCfg::shell(opt.block).with_value(opt.run).with_cursor(cursor));
 				match result.recv().await {
 					Some(Ok(e)) => opt.run = e,
 					_ => return,
