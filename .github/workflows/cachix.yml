@@ -1,8 +1,8 @@
 name: Cachix
+
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   publish:
