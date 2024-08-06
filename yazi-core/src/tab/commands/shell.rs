@@ -61,7 +61,8 @@ Please replace e.g. `shell` with `shell --interactive`, `shell "my-template"` wi
 
 		tokio::spawn(async move {
 			if !opt.confirm || opt.run.is_empty() {
-				let mut result = InputProxy::show(InputCfg::shell(opt.block).with_value(opt.run).with_cursor(cursor));
+				let mut result =
+					InputProxy::show(InputCfg::shell(opt.block).with_value(opt.run).with_cursor(cursor));
 				match result.recv().await {
 					Some(Ok(e)) => opt.run = e,
 					_ => return,
