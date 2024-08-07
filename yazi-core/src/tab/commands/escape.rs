@@ -92,12 +92,10 @@ impl Tab {
 	}
 
 	pub fn escape_search(&mut self) -> bool {
-		if !self.current.cwd.is_search() {
-			return false;
-		}
-
+		let b = self.current.cwd.is_search();
 		self.search_stop();
-		render_and!(true)
+
+		render_and!(b)
 	}
 
 	pub fn try_escape_visual(&mut self) -> bool {

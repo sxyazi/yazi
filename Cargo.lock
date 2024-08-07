@@ -2751,9 +2751,9 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 
 [[package]]
 name = "uzers"
-version = "0.12.0"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d85875e16d59b3b1549efce83ff8251a64923b03bef94add0a1862847448de4"
+checksum = "4df81ff504e7d82ad53e95ed1ad5b72103c11253f39238bcc0235b90768a97dd"
 dependencies = [
  "libc",
  "log",
@@ -3418,6 +3418,7 @@ version = "0.3.0"
 dependencies = [
  "anyhow",
  "mlua",
+ "shell-words",
  "tokio",
  "yazi-config",
  "yazi-shared",

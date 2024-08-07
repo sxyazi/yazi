@@ -17,6 +17,7 @@ yazi-config = { path = "../yazi-config", version = "0.3.0" }
 yazi-shared = { path = "../yazi-shared", version = "0.3.0" }
 
 # External dependencies
-anyhow = { workspace = true }
-mlua   = { workspace = true }
-tokio  = { workspace = true }
+anyhow      = { workspace = true }
+mlua        = { workspace = true }
+shell-words = { workspace = true }
+tokio       = { workspace = true }
