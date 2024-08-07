@@ -64,7 +64,7 @@ impl File {
 
 	#[inline]
 	pub fn from_dummy(url: Url, ft: Option<FileType>) -> Self {
-		Self { cha: ft.map_or_else(Cha::default, Cha::from), url: url.to_owned(), ..Default::default() }
+		Self { cha: ft.map_or_else(Cha::dummy, Cha::from), url: url.to_owned(), ..Default::default() }
 	}
 }
 

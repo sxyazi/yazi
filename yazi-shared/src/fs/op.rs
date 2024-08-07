@@ -1,15 +1,15 @@
-use std::{collections::HashMap, sync::atomic::{AtomicU64, Ordering}, time::SystemTime};
+use std::{collections::HashMap, sync::atomic::{AtomicU64, Ordering}};
 
-use super::File;
+use super::{Cha, File};
 use crate::{emit, event::Cmd, fs::Url, Layer};
 
 pub static FILES_TICKET: AtomicU64 = AtomicU64::new(0);
 
 #[derive(Clone, Debug)]
 pub enum FilesOp {
-	Full(Url, Vec<File>, Option<SystemTime>),
+	Full(Url, Vec<File>, Cha),
 	Part(Url, Vec<File>, u64),
-	Done(Url, Option<SystemTime>, u64),
+	Done(Url, Cha, u64),
 	Size(Url, HashMap<Url, u64>),
 	IOErr(Url, std::io::ErrorKind),
 

@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, time::{Duration, SystemTime}};
+use std::{collections::{HashMap, HashSet}, time::Duration};
 
 use anyhow::Result;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
@@ -9,7 +9,7 @@ use tracing::error;
 use yazi_fs::{Files, Folder};
 use yazi_plugin::isolate;
 use yazi_proxy::WATCHER;
-use yazi_shared::{fs::{symlink_realname, File, FilesOp, Url}, RoCell};
+use yazi_shared::{fs::{symlink_realname, Cha, File, FilesOp, Url}, RoCell};
 
 use super::Linked;
 
@@ -58,21 +58,21 @@ impl Watcher {
 
 	pub(super) fn trigger_dirs(&self, folders: &[&Folder]) {
 		let todo: Vec<_> =
-			folders.iter().filter(|&f| f.cwd.is_regular()).map(|&f| (f.cwd.clone(), f.mtime)).collect();
+			folders.iter().filter(|&f| f.cwd.is_regular()).map(|&f| (f.cwd.clone(), f.cha)).collect();
 		if todo.is_empty() {
 			return;
 		}
 
-		async fn go(url: Url, mtime: Option<SystemTime>) {
-			let Some(meta) = Files::assert_stale(&url, mtime).await else { return };
+		async fn go(url: Url, cha: Cha) {
+			let Some(cha) = Files::assert_stale(&url, cha).await else { return };
 
 			if let Ok(files) = Files::from_dir_bulk(&url).await {
-				FilesOp::Full(url, files, meta.modified().ok()).emit();
+				FilesOp::Full(url, files, cha).emit();
 			}
 		}
 
 		tokio::spawn(async move {
-			futures::future::join_all(todo.into_iter().map(|(url, mtime)| go(url, mtime))).await;
+			futures::future::join_all(todo.into_iter().map(|(url, cha)| go(url, cha))).await;
 		});
 	}
 

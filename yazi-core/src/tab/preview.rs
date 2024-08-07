@@ -1,4 +1,4 @@
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
 
 use tokio::{pin, task::JoinHandle};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
@@ -37,7 +37,7 @@ impl Preview {
 		}
 	}
 
-	pub fn go_folder(&mut self, file: File, mtime: Option<SystemTime>, force: bool) {
+	pub fn go_folder(&mut self, file: File, check: Option<Cha>, force: bool) {
 		if !force && self.content_unchanged(&file.url, &file.cha) {
 			return;
 		}
@@ -49,7 +49,9 @@ impl Preview {
 		self.folder_loader = Some((
 			url.clone(),
 			tokio::spawn(async move {
-				let Some(meta) = Files::assert_stale(&url, mtime).await else { return };
+				let Some(cha) = Files::assert_stale(&url, check.unwrap_or(Cha::dummy())).await else {
+					return;
+				};
 				let Ok(rx) = Files::from_dir(&url).await else { return };
 
 				let stream =
@@ -60,7 +62,7 @@ impl Preview {
 				while let Some(chunk) = stream.next().await {
 					FilesOp::Part(url.clone(), chunk, ticket).emit();
 				}
-				FilesOp::Done(url, meta.modified().ok(), ticket).emit();
+				FilesOp::Done(url, cha, ticket).emit();
 			}),
 		));
 	}
