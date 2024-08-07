@@ -13,11 +13,15 @@ pub struct Tabs {
 
 impl Tabs {
 	pub fn make() -> Self {
-		let mut tabs = Self { cursor: 0, items: vec![Tab::default()] };
-		if let Some(file) = &BOOT.file {
-			tabs.items[0].reveal(Url::from(BOOT.cwd.join(file)));
-		} else {
-			tabs.items[0].cd(Url::from(&BOOT.cwd));
+		let mut tabs = Self { cursor: 0, items: vec![] };
+		for (i, file) in BOOT.files.iter().enumerate() {
+			let mut tab = Tab::default();
+			if let Some(f) = file {
+				tab.reveal(Url::from(BOOT.cwds[i].join(f)));
+			} else {
+				tab.cd(Url::from(&BOOT.cwds[i]));
+			}
+			tabs.push(tab);
 		}
 
 		tabs
