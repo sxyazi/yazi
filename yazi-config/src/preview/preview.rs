@@ -1,4 +1,4 @@
-use std::{path::PathBuf, str::FromStr, time::{SystemTime, UNIX_EPOCH}};
+use std::{borrow::Cow, path::PathBuf, str::FromStr, time::{SystemTime, UNIX_EPOCH}};
 
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
@@ -28,6 +28,22 @@ impl Preview {
 	pub fn tmpfile(&self, prefix: &str) -> PathBuf {
 		let time = SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards");
 		self.cache_dir.join(format!("{prefix}-{}", time.as_nanos() / 1000))
+	}
+
+	#[inline]
+	pub fn indent(&self) -> Cow<'static, str> {
+		match self.tab_size {
+			0 => Cow::Borrowed(""),
+			1 => Cow::Borrowed(" "),
+			2 => Cow::Borrowed("  "),
+			3 => Cow::Borrowed("   "),
+			4 => Cow::Borrowed("    "),
+			5 => Cow::Borrowed("     "),
+			6 => Cow::Borrowed("      "),
+			7 => Cow::Borrowed("       "),
+			8 => Cow::Borrowed("        "),
+			n => Cow::Owned(" ".repeat(n as usize)),
+		}
 	}
 }
 

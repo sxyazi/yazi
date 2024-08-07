@@ -37,7 +37,7 @@ impl Emulator {
 			Self::Iterm2 => vec![Adapter::Iterm2, Adapter::Sixel],
 			Self::WezTerm => vec![Adapter::Iterm2, Adapter::Sixel],
 			Self::Foot => vec![Adapter::Sixel],
-			Self::Ghostty => vec![Adapter::KittyOld],
+			Self::Ghostty => vec![Adapter::Kitty],
 			Self::BlackBox => vec![Adapter::Sixel],
 			Self::VSCode => vec![Adapter::Iterm2, Adapter::Sixel],
 			Self::Tabby => vec![Adapter::Iterm2, Adapter::Sixel],

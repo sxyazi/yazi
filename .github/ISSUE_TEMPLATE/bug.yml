@@ -29,16 +29,7 @@ body:
     attributes:
       label: "`yazi --debug` output"
       description: Please run `yazi --debug` and paste the debug information here.
-      value: |
-        <details>
-
-        ```sh
-        ##### ↓↓↓ Paste the output here: ↓↓↓ #####
-
-
-        ```
-
-        </details>
+      render: Shell
     validations:
       required: true
   - type: dropdown

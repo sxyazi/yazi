@@ -58,8 +58,8 @@ impl Adapter {
 	pub fn image_erase(self, area: Rect) -> Result<()> {
 		match self {
 			Self::Kitty => Kitty::image_erase(area),
-			Self::Iterm2 => Iterm2::image_erase(area),
 			Self::KittyOld => KittyOld::image_erase(area),
+			Self::Iterm2 => Iterm2::image_erase(area),
 			Self::Sixel => Sixel::image_erase(area),
 			Self::X11 | Self::Wayland => Ueberzug::image_erase(area),
 			Self::Chafa => Chafa::image_erase(area),

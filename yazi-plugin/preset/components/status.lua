@@ -34,15 +34,13 @@ function Status:style()
 end
 
 function Status:mode()
-	local mode = tostring(self._tab.mode):upper()
-	if mode == "UNSET" then
-		mode = "UN-SET"
-	end
+	local mode = tostring(self._tab.mode):sub(1, 3):upper()
 
 	local style = self:style()
 	return ui.Line {
 		ui.Span(THEME.status.separator_open):fg(style.bg),
 		ui.Span(" " .. mode .. " "):style(style),
+		ui.Span(THEME.status.separator_close):fg(style.bg):bg(THEME.status.separator_style.fg),
 	}
 end
 
@@ -106,11 +104,11 @@ function Status:percentage()
 	end
 
 	if percent == 0 then
-		percent = "  Top "
+		percent = " Top "
 	elseif percent == 100 then
-		percent = "  Bot "
+		percent = " Bot "
 	else
-		percent = string.format(" %3d%% ", percent)
+		percent = string.format(" %2d%% ", percent)
 	end
 
 	local style = self:style()
@@ -126,6 +124,7 @@ function Status:position()
 
 	local style = self:style()
 	return ui.Line {
+		ui.Span(THEME.status.separator_open):fg(style.bg):bg(THEME.status.separator_style.fg),
 		ui.Span(string.format(" %2d/%-2d ", cursor + 1, length)):style(style),
 		ui.Span(THEME.status.separator_close):fg(style.bg),
 	}
