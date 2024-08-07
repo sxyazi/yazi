@@ -11,6 +11,48 @@ pub fn current_cwd() -> Option<PathBuf> {
 		.or_else(|| env::current_dir().ok())
 }
 
+/// Resolves any `.` and `..` according to Unix and Windows path resolution
+/// rules.
+///
+/// Return a simplified, canonical absolute path
+fn resolve_relative_paths(p: PathBuf) -> PathBuf {
+	assert!(p.is_absolute());
+	let mut components = Vec::new();
+	let mut prefix = None;
+
+	for component in p.components() {
+		match component {
+			std::path::Component::CurDir => {
+				// ignore `.`
+			}
+			std::path::Component::ParentDir => {
+				// `..` case
+				if components.len() > 0 && components[components.len() - 1] != Component::RootDir {
+					components.pop();
+				}
+			}
+			Component::RootDir => {
+				// keep prefix on windows
+				if prefix.is_none() {
+					components.clear();
+				}
+				components.push(component);
+			}
+			Component::Prefix(_) => {
+				prefix = Some(component);
+				components.clear();
+				components.push(component);
+			}
+			_ => {
+				// add other paths
+				components.push(component);
+			}
+		}
+	}
+
+	components.iter().collect()
+}
+
 fn _expand_path(p: &Path) -> PathBuf {
 	// ${HOME} or $HOME
 	#[cfg(unix)]
@@ -41,9 +83,10 @@ fn _expand_path(p: &Path) -> PathBuf {
 	}
 
 	if p.is_absolute() {
-		return p.to_path_buf();
+		return resolve_relative_paths(p.to_path_buf());
 	}
-	current_cwd().map_or_else(|| p.to_path_buf(), |c| c.join(p))
+
+	current_cwd().map_or_else(|| p.to_path_buf(), |c: PathBuf| resolve_relative_paths(c.join(p)))
 }
 
 #[inline]
@@ -133,9 +176,9 @@ pub fn path_relative_to<'a>(path: &'a Path, root: &Path) -> Cow<'a, Path> {
 
 #[cfg(test)]
 mod tests {
-	use std::{borrow::Cow, path::Path};
+	use std::{borrow::Cow, path::{Path, PathBuf}};
 
-	use super::path_relative_to;
+	use super::{path_relative_to, resolve_relative_paths};
 
 	#[cfg(unix)]
 	#[test]
@@ -163,5 +206,37 @@ mod tests {
 		assert("C:\\a\\b\\c", "C:\\a\\b\\d", "..\\c");
 		assert("C:\\a", "C:\\a\\b\\c", "..\\..\\");
 		assert("C:\\a\\a\\b", "C:\\a\\b\\b", "..\\..\\a\\b");
+	}
+
+	#[cfg(unix)]
+	#[test]
+	fn test_resolve_relative_paths() {
+		fn assert(test_path: &str, res_path: &str) {
+			assert_eq!(resolve_relative_paths(PathBuf::from(test_path)), PathBuf::from(res_path));
+		}
+
+		assert("/home/user/.././../etc/./config", "/etc/config");
+		assert("/home/./user/./documents/..", "/home/user");
+		assert("/./home/user/../etc", "/home/etc");
+		assert("/../home/user", "/home/user");
+		assert("/.././.././../home/user", "/home/user");
+		assert("/../../.././../home/user", "/home/user");
+		assert("/home/user/../../../../", "/");
+	}
+
+	#[cfg(windows)]
+	#[test]
+	fn test_resolve_relative_paths() {
+		fn assert(test_path: &str, res_path: &str) {
+			assert_eq!(resolve_relative_paths(PathBuf::from(test_path)), PathBuf::from(res_path));
+		}
+
+		assert(r"C:\Users\user\..\..\Windows\.\System32", r"C:\Windows\System32");
+		assert(r"C:\Users\.\user\documents\..", r"C:\Users\user");
+		assert(r"C:\.\Users\user\..\etc", r"C:\Users\etc");
+		assert(r"C:\..\Users\user", r"C:\Users\user");
+		assert(r"C:\..\.\..\.\..\Users\user", r"C:\Users\user");
+		assert(r"C:\..\..\..\.\..\Users\user", r"C:\Users\user");
+		assert(r"C:\Users\user\..\..\..\..", r"C:\");
 	}
 }
