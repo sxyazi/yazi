@@ -167,6 +167,7 @@ impl Url {
 	#[inline]
 	pub fn into_regular(mut self) -> Self {
 		self.scheme = UrlScheme::Regular;
+		self.frag = String::new();
 		self
 	}
 
@@ -192,6 +193,7 @@ impl Url {
 	#[inline]
 	pub fn into_archive(mut self) -> Self {
 		self.scheme = UrlScheme::Archive;
+		self.frag = String::new();
 		self
 	}
 

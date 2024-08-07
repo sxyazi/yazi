@@ -110,6 +110,7 @@ impl<'a> Executor<'a> {
 		on!(ACTIVE, hidden);
 		on!(ACTIVE, linemode);
 		on!(ACTIVE, search);
+		on!(ACTIVE, search_do);
 
 		// Filter
 		on!(ACTIVE, filter);

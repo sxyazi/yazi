@@ -41,7 +41,7 @@ unicode-width = { workspace = true }
 yazi-prebuild = "0.1.2"
 
 [target."cfg(unix)".dependencies]
-uzers = "0.12.0"
+uzers = "0.12.1"
 
 [target."cfg(windows)".dependencies]
 clipboard-win = "5.4.0"

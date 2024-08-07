@@ -75,7 +75,7 @@ keymap = [
 	{ on = ".",         run = "hidden toggle",               desc = "Toggle the visibility of hidden files" },
 	{ on = "s",         run = "search fd",                   desc = "Search files by name using fd" },
 	{ on = "S",         run = "search rg",                   desc = "Search files by content using ripgrep" },
-	{ on = "<C-s>",     run = "search none",                 desc = "Cancel the ongoing search" },
+	{ on = "<C-s>",     run = "escape --search",             desc = "Cancel the ongoing search" },
 	{ on = "z",         run = "plugin zoxide",               desc = "Jump to a directory using zoxide" },
 	{ on = "Z",         run = "plugin fzf",                  desc = "Jump to a directory or reveal a file using fzf" },
 
