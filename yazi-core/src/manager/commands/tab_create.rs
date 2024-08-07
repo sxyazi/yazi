@@ -17,7 +17,10 @@ impl From<Cmd> for Opt {
 			Self { url: Default::default(), current: true }
 		} else {
 			Self {
-				url:     c.take_first().and_then(Data::into_url).unwrap_or_else(|| Url::from(&BOOT.cwd)),
+				url:     c
+					.take_first()
+					.and_then(Data::into_url)
+					.unwrap_or_else(|| Url::from(&BOOT.cwds[0])),
 				current: false,
 			}
 		}
