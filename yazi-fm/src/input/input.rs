@@ -25,7 +25,7 @@ impl<'a> Input<'a> {
 		if let Some(syntax) = syntaxes.find_syntax_by_name("Bourne Again Shell (bash)") {
 			let mut h = HighlightLines::new(syntax, theme);
 			let regions = h.highlight_line(self.cx.input.value(), syntaxes)?;
-			return Ok(Highlighter::to_line_widget(regions, &" ".repeat(PREVIEW.tab_size as usize)));
+			return Ok(Highlighter::to_line_widget(regions, &PREVIEW.indent()));
 		}
 		bail!("Failed to find syntax")
 	}
