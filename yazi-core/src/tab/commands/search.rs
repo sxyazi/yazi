@@ -6,7 +6,7 @@ use tracing::error;
 use yazi_config::popup::InputCfg;
 use yazi_plugin::external;
 use yazi_proxy::{options::{SearchOpt, SearchOptVia}, AppProxy, InputProxy, ManagerProxy, TabProxy};
-use yazi_shared::fs::FilesOp;
+use yazi_shared::fs::{Cha, FilesOp};
 
 use crate::tab::Tab;
 
@@ -72,7 +72,7 @@ impl Tab {
 			while let Some(chunk) = rx.next().await {
 				FilesOp::Part(cwd.clone(), chunk, ticket).emit();
 			}
-			FilesOp::Done(cwd, None, ticket).emit();
+			FilesOp::Done(cwd, Cha::dummy(), ticket).emit();
 
 			Ok(())
 		}));

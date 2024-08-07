@@ -116,6 +116,9 @@ impl From<FileType> for Cha {
 
 impl Cha {
 	#[inline]
+	pub fn dummy() -> Self { Self { kind: ChaKind::DUMMY, ..Default::default() } }
+
+	#[inline]
 	pub fn with_kind(mut self, kind: ChaKind) -> Self {
 		self.kind |= kind;
 		self

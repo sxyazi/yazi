@@ -1,8 +1,8 @@
-use std::{collections::{HashMap, HashSet}, fs::Metadata, mem, ops::Deref, sync::atomic::Ordering, time::SystemTime};
+use std::{collections::{HashMap, HashSet}, mem, ops::Deref, sync::atomic::Ordering};
 
 use tokio::{fs::{self, DirEntry}, select, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_config::{manager::SortBy, MANAGER};
-use yazi_shared::fs::{maybe_exists, File, FilesOp, Url, FILES_TICKET};
+use yazi_shared::fs::{maybe_exists, Cha, File, FilesOp, Url, FILES_TICKET};
 
 use super::{FilesSorter, Filter};
 
@@ -96,14 +96,14 @@ impl Files {
 		)
 	}
 
-	pub async fn assert_stale(url: &Url, mtime: Option<SystemTime>) -> Option<Metadata> {
-		match fs::metadata(url).await {
-			Ok(m) if !m.is_dir() => {
+	pub async fn assert_stale(url: &Url, cha: Cha) -> Option<Cha> {
+		match fs::metadata(url).await.map(Cha::from) {
+			Ok(c) if !c.is_dir() => {
 				// FIXME: use `ErrorKind::NotADirectory` instead once it gets stabilized
 				FilesOp::IOErr(url.clone(), std::io::ErrorKind::AlreadyExists).emit();
 			}
-			Ok(m) if mtime == m.modified().ok() => {}
-			Ok(m) => return Some(m),
+			Ok(c) if c.hits(cha) => {}
+			Ok(c) => return Some(c),
 			Err(e) => {
 				if maybe_exists(url).await {
 					FilesOp::IOErr(url.clone(), e.kind()).emit();
