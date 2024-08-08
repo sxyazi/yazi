@@ -146,3 +146,38 @@ pub fn path_relative_to<'a>(path: &'a Path, root: &Path) -> Cow<'a, Path> {
 
 	Cow::from(buf)
 }
+
+#[cfg(test)]
+mod tests {
+	use std::{borrow::Cow, path::Path};
+
+	use super::path_relative_to;
+
+	#[cfg(unix)]
+	#[test]
+	fn test_path_relative_to() {
+		fn assert(path: &str, root: &str, res: &str) {
+			assert_eq!(path_relative_to(Path::new(path), Path::new(root)), Cow::Borrowed(Path::new(res)));
+		}
+
+		assert("/a/b", "/a/b/c", "../");
+		assert("/a/b/c", "/a/b", "c");
+		assert("/a/b/c", "/a/b/d", "../c");
+		assert("/a", "/a/b/c", "../../");
+		assert("/a/a/b", "/a/b/b", "../../a/b");
+	}
+
+	#[cfg(windows)]
+	#[test]
+	fn test_path_relative_to() {
+		fn assert(path: &str, root: &str, res: &str) {
+			assert_eq!(path_relative_to(Path::new(path), Path::new(root)), Cow::Borrowed(Path::new(res)));
+		}
+
+		assert("C:\\a\\b", "C:\\a\\b\\c", "..\\");
+		assert("C:\\a\\b\\c", "C:\\a\\b", "c");
+		assert("C:\\a\\b\\c", "C:\\a\\b\\d", "..\\c");
+		assert("C:\\a", "C:\\a\\b\\c", "..\\..\\");
+		assert("C:\\a\\a\\b", "C:\\a\\b\\b", "..\\..\\a\\b");
+	}
+}
