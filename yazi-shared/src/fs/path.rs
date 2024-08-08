@@ -1,15 +1,40 @@
-use std::{borrow::Cow, env, ffi::OsString, path::{Component, Path, PathBuf, MAIN_SEPARATOR}};
+use std::{borrow::Cow, env, ffi::OsString, path::{Component, Path, PathBuf}};
 
 use super::maybe_exists;
 use crate::fs::Url;
 
-#[inline]
 pub fn current_cwd() -> Option<PathBuf> {
 	env::var_os("PWD")
 		.map(PathBuf::from)
 		.filter(|p| p.is_absolute())
 		.or_else(|| env::current_dir().ok())
 }
+
+#[inline]
+pub fn clean_path(path: impl AsRef<Path>) -> PathBuf { _clean_path(path.as_ref()) }
+
+fn _clean_path(path: &Path) -> PathBuf {
+	let mut out = vec![];
+	for c in path.components() {
+		match c {
+			Component::CurDir => {}
+			Component::ParentDir => match out.last() {
+				Some(Component::RootDir) => {}
+				Some(Component::Normal(_)) => _ = out.pop(),
+				None
+				| Some(Component::CurDir)
+				| Some(Component::ParentDir)
+				| Some(Component::Prefix(_)) => out.push(c),
+			},
+			c => out.push(c),
+		}
+	}
+
+	if out.is_empty() { PathBuf::from(".") } else { out.iter().collect() }
+}
+
+#[inline]
+pub fn expand_path(p: impl AsRef<Path>) -> PathBuf { _expand_path(p.as_ref()) }
 
 fn _expand_path(p: &Path) -> PathBuf {
 	// ${HOME} or $HOME
@@ -37,22 +62,14 @@ fn _expand_path(p: &Path) -> PathBuf {
 
 	let p = Path::new(s.as_ref());
 	if let Ok(rest) = p.strip_prefix("~") {
-		return dirs::home_dir().unwrap_or_default().join(rest);
+		clean_path(dirs::home_dir().unwrap_or_default().join(rest))
+	} else if p.is_absolute() {
+		clean_path(p)
+	} else if let Some(cwd) = current_cwd() {
+		clean_path(cwd.join(p))
+	} else {
+		clean_path(p)
 	}
-
-	if p.is_absolute() {
-		return p.to_path_buf();
-	}
-	current_cwd().map_or_else(|| p.to_path_buf(), |c| c.join(p))
-}
-
-#[inline]
-pub fn expand_path(p: impl AsRef<Path>) -> PathBuf { _expand_path(p.as_ref()) }
-
-#[inline]
-pub fn ends_with_slash(p: &Path) -> bool {
-	let b = p.as_os_str().as_encoded_bytes();
-	if let [.., last] = b { *last == MAIN_SEPARATOR as u8 } else { false }
 }
 
 // FIXME: should return a `std::io::Result` to handle errors such as
