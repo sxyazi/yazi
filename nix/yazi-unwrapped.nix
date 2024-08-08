@@ -15,14 +15,12 @@
 let
   src = lib.fileset.toSource {
     root = ../.;
-    fileset = lib.fileset.intersection (lib.fileset.fromSource (lib.sources.cleanSource ../.)) (
-      lib.fileset.unions [
-        ../assets
-        ../Cargo.toml
-        ../Cargo.lock
-        (lib.fileset.fileFilter (file: file.hasExt "rs" || file.hasExt "toml") ../.)
-      ]
-    );
+    fileset = lib.fileset.unions [
+      ../assets
+      ../Cargo.toml
+      ../Cargo.lock
+      (lib.fileset.fromSource (lib.sources.sourceByRegex ../. [ "^yazi-.*" ]))
+    ];
   };
 in
 rustPlatform.buildRustPackage rec {
