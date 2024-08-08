@@ -3,7 +3,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     rust-overlay = {
-      url = "github:oxalica/rust-overlay";
+      url = "github:oxalica/rust-overlay/b7996075da11a2d441cfbf4e77c2939ce51506fd"; # FIX: pin to a specific commit until cargo-c is updated
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
