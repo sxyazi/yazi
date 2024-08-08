@@ -1,6 +1,6 @@
 use std::ops::{Deref, Range};
 
-use mlua::{AnyUserData, Lua, MetaMethod, UserDataFields, UserDataMethods};
+use mlua::{AnyUserData, Lua, UserDataFields};
 use yazi_config::LAYOUT;
 use yazi_plugin::{bindings::Cast, url::Url};
 
@@ -51,14 +51,7 @@ impl Folder {
 		})?;
 
 		lua.register_userdata_type::<yazi_fs::FolderStage>(|reg| {
-			reg.add_meta_method(MetaMethod::ToString, |lua, me, ()| {
-				use yazi_fs::FolderStage::{Failed, Loaded, Loading};
-				lua.create_string(match me {
-					Loading => "loading",
-					Loaded => "loaded",
-					Failed(_) => "failed",
-				})
-			});
+			reg.add_field_method_get("is_loading", |_, me| Ok(*me == yazi_fs::FolderStage::Loading));
 		})?;
 
 		Ok(())

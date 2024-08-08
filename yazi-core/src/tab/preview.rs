@@ -15,12 +15,12 @@ pub struct Preview {
 	pub skip: usize,
 
 	previewer_ct:  Option<CancellationToken>,
-	folder_loader: Option<(Url, JoinHandle<()>)>,
+	folder_loader: Option<JoinHandle<()>>,
 }
 
 impl Preview {
 	pub fn go(&mut self, file: File, mime: &str, force: bool) {
-		if !force && self.content_unchanged(&file.url, &file.cha) {
+		if !force && self.content_unchanged(&file.url, file.cha) {
 			return;
 		}
 
@@ -37,34 +37,31 @@ impl Preview {
 		}
 	}
 
-	pub fn go_folder(&mut self, file: File, check: Option<Cha>, force: bool) {
-		if !force && self.content_unchanged(&file.url, &file.cha) {
+	pub fn go_folder(&mut self, file: File, dir: Option<Cha>, force: bool) {
+		let (cha, url) = (file.cha, file.url());
+		self.go(file, MIME_DIR, force);
+
+		if self.content_unchanged(&url, cha) {
 			return;
 		}
 
-		let url = file.url();
-		self.go(file, MIME_DIR, force);
+		self.folder_loader.take().map(|h| h.abort());
+		self.folder_loader = Some(tokio::spawn(async move {
+			let Some(new) = Files::assert_stale(&url, dir.unwrap_or(Cha::dummy())).await else {
+				return;
+			};
+			let Ok(rx) = Files::from_dir(&url).await else { return };
 
-		self.folder_loader.take().map(|(_, h)| h.abort());
-		self.folder_loader = Some((
-			url.clone(),
-			tokio::spawn(async move {
-				let Some(cha) = Files::assert_stale(&url, check.unwrap_or(Cha::dummy())).await else {
-					return;
-				};
-				let Ok(rx) = Files::from_dir(&url).await else { return };
+			let stream =
+				UnboundedReceiverStream::new(rx).chunks_timeout(50000, Duration::from_millis(500));
+			pin!(stream);
 
-				let stream =
-					UnboundedReceiverStream::new(rx).chunks_timeout(50000, Duration::from_millis(500));
-				pin!(stream);
-
-				let ticket = FilesOp::prepare(&url);
-				while let Some(chunk) = stream.next().await {
-					FilesOp::Part(url.clone(), chunk, ticket).emit();
-				}
-				FilesOp::Done(url, cha, ticket).emit();
-			}),
-		));
+			let ticket = FilesOp::prepare(&url);
+			while let Some(chunk) = stream.next().await {
+				FilesOp::Part(url.clone(), chunk, ticket).emit();
+			}
+			FilesOp::Done(url, new, ticket).emit();
+		}));
 	}
 
 	#[inline]
@@ -92,7 +89,7 @@ impl Preview {
 	}
 
 	#[inline]
-	fn content_unchanged(&self, url: &Url, cha: &Cha) -> bool {
+	fn content_unchanged(&self, url: &Url, cha: Cha) -> bool {
 		match &self.lock {
 			Some(l) => *url == l.url && self.skip == l.skip && cha.hits(l.cha),
 			None => false,
