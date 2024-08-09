@@ -67,9 +67,8 @@ impl FromStr for Key {
 
 		let mut key = Self::default();
 		if !s.starts_with('<') || !s.ends_with('>') {
-			let c = s.chars().next().unwrap();
-			key.code = KeyCode::Char(c);
-			key.shift = c.is_ascii_uppercase();
+			key.code = KeyCode::Char(s.chars().next().unwrap());
+			key.shift = matches!(key.code, KeyCode::Char(c) if c.is_ascii_uppercase());
 			return Ok(key);
 		}
 
@@ -118,7 +117,10 @@ impl FromStr for Key {
 				"esc" => key.code = KeyCode::Esc,
 
 				_ => match next {
-					s if it.peek().is_none() => key.code = KeyCode::Char(s.chars().next().unwrap()),
+					s if it.peek().is_none() => {
+						key.code = KeyCode::Char(s.chars().next().unwrap());
+						key.shift = matches!(key.code, KeyCode::Char(c) if c.is_ascii_uppercase());
+					}
 					s => bail!("unknown key: {s}"),
 				},
 			}
