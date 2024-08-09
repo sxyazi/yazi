@@ -15,7 +15,7 @@ function Current:empty()
 	if self._folder.files.filter then
 		line = ui.Line("No filter results")
 	else
-		line = ui.Line(self._folder.stage == "loading" and "Loading..." or "No items")
+		line = ui.Line(self._folder.stage.is_loading and "Loading..." or "No items")
 	end
 
 	return {

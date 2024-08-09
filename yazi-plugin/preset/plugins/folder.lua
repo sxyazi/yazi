@@ -13,7 +13,7 @@ function M:peek()
 
 	if #folder.files == 0 then
 		return ya.preview_widgets(self, {
-			ui.Paragraph(self.area, { ui.Line(folder.stage == "loading" and "Loading..." or "No items") })
+			ui.Paragraph(self.area, { ui.Line(folder.stage.is_loading and "Loading..." or "No items") })
 				:align(ui.Paragraph.CENTER),
 		})
 	end
