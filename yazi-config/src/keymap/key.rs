@@ -108,6 +108,13 @@ impl FromStr for Key {
 				"f10" => key.code = KeyCode::F(10),
 				"f11" => key.code = KeyCode::F(11),
 				"f12" => key.code = KeyCode::F(12),
+				"f13" => key.code = KeyCode::F(13),
+				"f14" => key.code = KeyCode::F(14),
+				"f15" => key.code = KeyCode::F(15),
+				"f16" => key.code = KeyCode::F(16),
+				"f17" => key.code = KeyCode::F(17),
+				"f18" => key.code = KeyCode::F(18),
+				"f19" => key.code = KeyCode::F(19),
 				"esc" => key.code = KeyCode::Esc,
 
 				_ => match next {
@@ -172,6 +179,13 @@ impl Display for Key {
 			KeyCode::F(10) => "F10",
 			KeyCode::F(11) => "F11",
 			KeyCode::F(12) => "F12",
+			KeyCode::F(13) => "F13",
+			KeyCode::F(14) => "F14",
+			KeyCode::F(15) => "F15",
+			KeyCode::F(16) => "F16",
+			KeyCode::F(17) => "F17",
+			KeyCode::F(18) => "F18",
+			KeyCode::F(19) => "F19",
 			KeyCode::Esc => "Esc",
 
 			KeyCode::Char(' ') => "Space",
