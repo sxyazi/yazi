@@ -9,7 +9,7 @@ impl Package {
 
 		let path = self.local();
 		if !must_exists(&path).await {
-			Git::clone(&self.remote(), &path).await?;
+			Git::clone(&self.remote, &path).await?;
 		} else {
 			Git::pull(&path).await?;
 		};
