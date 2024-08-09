@@ -1,8 +1,9 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt::Display};
 
+use anyhow::bail;
 use yazi_config::{open::Opener, popup::InputCfg};
 use yazi_proxy::{AppProxy, InputProxy, TasksProxy};
-use yazi_shared::event::Cmd;
+use yazi_shared::event::{Cmd, Data};
 
 use crate::tab::Tab;
 
@@ -12,29 +13,40 @@ pub struct Opt {
 	orphan:      bool,
 	confirm:     bool,
 	interactive: bool,
-	cursor:      String,
+	cursor:      Option<usize>,
 }
 
-impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self {
-		Self {
+impl TryFrom<Cmd> for Opt {
+	type Error = anyhow::Error;
+
+	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
+		let me = Self {
 			run:         c.take_first_str().unwrap_or_default(),
 			block:       c.bool("block"),
 			orphan:      c.bool("orphan"),
 			confirm:     c.bool("confirm"),
 			interactive: c.bool("interactive"),
-			cursor:      c.take_str("cursor").unwrap_or_default(),
+			cursor:      c.get("cursor").and_then(Data::as_usize),
+		};
+
+		if me.cursor.is_some_and(|c| c > me.run.chars().count()) {
+			bail!("The cursor position is out of bounds.");
 		}
+
+		Ok(me)
 	}
 }
 
 impl Tab {
-	pub fn shell(&mut self, opt: impl Into<Opt>) {
+	pub fn shell(&mut self, opt: impl TryInto<Opt, Error = impl Display>) {
 		if !self.try_escape_visual() {
 			return;
 		}
 
-		let mut opt = opt.into() as Opt;
+		let mut opt = match opt.try_into() {
+			Ok(o) => o as Opt,
+			Err(e) => return AppProxy::notify_warn("`shell` command", e),
+		};
 
 		// TODO: Remove in v0.3.2
 		if !opt.interactive && !opt.confirm {
@@ -54,15 +66,10 @@ Please replace e.g. `shell` with `shell --interactive`, `shell "my-template"` wi
 		}
 
 		let selected = self.hovered_and_selected(true).cloned().collect();
-		let cursor = match opt.cursor.as_str() {
-			"start" => Some(0),
-			n => n.parse::<usize>().ok(),
-		};
-
 		tokio::spawn(async move {
 			if !opt.confirm || opt.run.is_empty() {
 				let mut result =
-					InputProxy::show(InputCfg::shell(opt.block).with_value(opt.run).with_cursor(cursor));
+					InputProxy::show(InputCfg::shell(opt.block).with_value(opt.run).with_cursor(opt.cursor));
 				match result.recv().await {
 					Some(Ok(e)) => opt.run = e,
 					_ => return,
