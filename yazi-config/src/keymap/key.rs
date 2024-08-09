@@ -118,8 +118,9 @@ impl FromStr for Key {
 
 				_ => match next {
 					s if it.peek().is_none() => {
-						key.code = KeyCode::Char(s.chars().next().unwrap());
-						key.shift = matches!(key.code, KeyCode::Char(c) if c.is_ascii_uppercase());
+						let c = s.chars().next().unwrap();
+						key.shift |= c.is_ascii_uppercase();
+						key.code = KeyCode::Char(if key.shift { c.to_ascii_uppercase() } else { c });
 					}
 					s => bail!("unknown key: {s}"),
 				},
@@ -136,7 +137,6 @@ impl FromStr for Key {
 impl Display for Key {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		if let Some(c) = self.plain() {
-			let c = if self.shift { c.to_ascii_uppercase() } else { c };
 			return if c == ' ' { write!(f, "<Space>") } else { f.write_char(c) };
 		}
 
@@ -192,7 +192,7 @@ impl Display for Key {
 
 			KeyCode::Char(' ') => "Space",
 			KeyCode::Char(c) => {
-				f.write_char(if self.shift { c.to_ascii_uppercase() } else { c })?;
+				f.write_char(c)?;
 				""
 			}
 			_ => "Unknown",
