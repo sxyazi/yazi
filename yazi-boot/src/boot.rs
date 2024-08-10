@@ -1,12 +1,12 @@
-use std::{collections::HashSet, ffi::OsString, path::{Path, PathBuf}};
+use std::{collections::HashSet, ffi::OsString, path::PathBuf};
 
 use serde::Serialize;
 use yazi_shared::{fs::{current_cwd, expand_path}, Xdg};
 
 #[derive(Debug, Default, Serialize)]
 pub struct Boot {
-	pub cwd:  PathBuf,
-	pub file: Option<OsString>,
+	pub cwds:  Vec<PathBuf>,
+	pub files: Vec<OsString>,
 
 	pub local_events:  HashSet<String>,
 	pub remote_events: HashSet<String>,
@@ -18,25 +18,31 @@ pub struct Boot {
 }
 
 impl Boot {
-	fn parse_entry(entry: Option<&Path>) -> (PathBuf, Option<OsString>) {
-		let entry = match entry {
-			Some(p) => expand_path(p),
-			None => return (current_cwd().unwrap(), None),
-		};
-
-		let parent = entry.parent();
-		if parent.is_none() || entry.is_dir() {
-			return (entry, None);
+	fn parse_entries(entries: &[PathBuf]) -> (Vec<PathBuf>, Vec<OsString>) {
+		if entries.is_empty() {
+			return (vec![current_cwd().unwrap()], vec![OsString::new()]);
 		}
 
-		(parent.unwrap().to_owned(), Some(entry.file_name().unwrap().to_owned()))
+		let mut cwds = Vec::with_capacity(entries.len());
+		let mut files = Vec::with_capacity(entries.len());
+		for entry in entries.iter().map(expand_path) {
+			if let Some(p) = entry.parent().filter(|_| !entry.is_dir()) {
+				cwds.push(p.to_owned());
+				files.push(entry.file_name().unwrap().to_owned());
+			} else {
+				cwds.push(entry);
+				files.push(OsString::new());
+			}
+		}
+
+		(cwds, files)
 	}
 }
 
 impl From<&crate::Args> for Boot {
 	fn from(args: &crate::Args) -> Self {
 		let config_dir = Xdg::config_dir();
-		let (cwd, file) = Self::parse_entry(args.entry.as_deref());
+		let (cwds, files) = Self::parse_entries(&args.entries);
 
 		let local_events = args
 			.local_events
@@ -50,8 +56,8 @@ impl From<&crate::Args> for Boot {
 			.unwrap_or_default();
 
 		Self {
-			cwd,
-			file,
+			cwds,
+			files,
 
 			local_events,
 			remote_events,

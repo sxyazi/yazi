@@ -6,8 +6,8 @@ use clap::{command, Parser};
 #[command(name = "yazi")]
 pub struct Args {
 	/// Set the current working entry
-	#[arg(index = 1)]
-	pub entry: Option<PathBuf>,
+	#[arg(index = 1, num_args = 1..=9)]
+	pub entries: Vec<PathBuf>,
 
 	/// Write the cwd on exit to this file
 	#[arg(long)]

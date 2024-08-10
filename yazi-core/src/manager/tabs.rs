@@ -13,13 +13,18 @@ pub struct Tabs {
 
 impl Tabs {
 	pub fn make() -> Self {
-		let mut tabs = Self { cursor: 0, items: vec![Tab::default()] };
-		if let Some(file) = &BOOT.file {
-			tabs.items[0].reveal(Url::from(BOOT.cwd.join(file)));
-		} else {
-			tabs.items[0].cd(Url::from(&BOOT.cwd));
-		}
+		let mut tabs =
+			Self { cursor: 0, items: (0..BOOT.cwds.len()).map(|_| Tab::default()).collect() };
+		tabs.reorder();
 
+		for (i, tab) in tabs.iter_mut().enumerate() {
+			let file = &BOOT.files[i];
+			if file.is_empty() {
+				tab.cd(Url::from(&BOOT.cwds[i]));
+			} else {
+				tab.reveal(Url::from(BOOT.cwds[i].join(file)));
+			}
+		}
 		tabs
 	}
 
