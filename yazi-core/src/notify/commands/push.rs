@@ -12,6 +12,6 @@ impl Notify {
 		msg.timeout += instant - self.messages.first().map_or(instant, |m| m.instant);
 		self.messages.push(msg);
 
-		emit!(Call(Cmd::args("update_notify", vec![0.to_string()]), Layer::App));
+		emit!(Call(Cmd::args("update_notify", &[0]), Layer::App));
 	}
 }

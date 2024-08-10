@@ -71,9 +71,7 @@ impl Utils {
 		};
 
 		emit!(Call(
-			Cmd::args("plugin", vec![name.to_owned()])
-				.with_bool("sync", true)
-				.with_any("callback", callback),
+			Cmd::args("plugin", &[name]).with_bool("sync", true).with_any("callback", callback),
 			Layer::App
 		));
 

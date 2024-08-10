@@ -11,9 +11,9 @@ impl ManagerProxy {
 	}
 
 	#[inline]
-	pub fn hover(url: Option<Url>) {
+	pub fn hover(url: Option<Url>, tab: usize) {
 		emit!(Call(
-			Cmd::args("hover", url.map_or_else(Vec::new, |u| vec![u.to_string()])),
+			Cmd::args("hover", &url.map_or_else(Vec::new, |u| vec![u])).with("tab", tab),
 			Layer::Manager
 		));
 	}
@@ -49,7 +49,7 @@ impl ManagerProxy {
 	#[inline]
 	pub fn update_paged_by(page: usize, only_if: &Url) {
 		emit!(Call(
-			Cmd::args("update_paged", vec![page.to_string()]).with_any("only-if", only_if.clone()),
+			Cmd::args("update_paged", &[page]).with_any("only-if", only_if.clone()),
 			Layer::Manager
 		));
 	}

@@ -21,7 +21,7 @@ impl Process {
 		let (id, cmd) = (task.id, task.cmd.clone());
 		let result = super::shell(task.into());
 		if let Err(e) = result {
-			AppProxy::notify_warn(&cmd.to_string_lossy(), &format!("Failed to spawn process: {e}"));
+			AppProxy::notify_warn(&cmd.to_string_lossy(), format!("Failed to spawn process: {e}"));
 			return self.succ(id);
 		}
 

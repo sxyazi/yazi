@@ -7,13 +7,19 @@ use crate::manager::Manager;
 
 pub struct Opt {
 	url: Option<Url>,
+	tab: Option<usize>,
 }
 
 impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self { Self { url: c.take_first().and_then(Data::into_url) } }
+	fn from(mut c: Cmd) -> Self {
+		Self {
+			url: c.take_first().and_then(Data::into_url),
+			tab: c.get("tab").and_then(Data::as_usize),
+		}
+	}
 }
 impl From<Option<Url>> for Opt {
-	fn from(url: Option<Url>) -> Self { Self { url } }
+	fn from(url: Option<Url>) -> Self { Self { url, tab: None } }
 }
 
 impl Manager {
@@ -21,11 +27,11 @@ impl Manager {
 		let opt = opt.into() as Opt;
 
 		// Hover on the file
-		render!(self.current_mut().repos(opt.url.as_ref()));
+		render!(self.current_or_mut(opt.tab).repos(opt.url.as_ref()));
 		if opt.url.zip(self.current().hovered()).is_some_and(|(u, f)| u == f.url) {
 			// `hover(Some)` occurs after user actions, such as create, rename, reveal, etc.
 			// At this point, it's intuitive to track the location of this file regardless.
-			self.current_mut().tracing = true;
+			self.current_or_mut(opt.tab).tracing = true;
 		}
 
 		// Repeek

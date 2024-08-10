@@ -16,10 +16,14 @@ impl Cmd {
 	pub fn new(name: &str) -> Self { Self { name: name.to_owned(), ..Default::default() } }
 
 	#[inline]
-	pub fn args(name: &str, args: Vec<String>) -> Self {
+	pub fn args(name: &str, args: &[impl ToString]) -> Self {
 		Self {
 			name: name.to_owned(),
-			args: args.into_iter().enumerate().map(|(i, s)| (i.to_string(), Data::String(s))).collect(),
+			args: args
+				.iter()
+				.enumerate()
+				.map(|(i, s)| (i.to_string(), Data::String(s.to_string())))
+				.collect(),
 		}
 	}
 

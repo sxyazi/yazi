@@ -40,7 +40,7 @@ impl Tab {
 				let (Ok(s) | Err(InputError::Typed(s))) = result else { continue };
 
 				emit!(Call(
-					Cmd::args("filter_do", vec![s])
+					Cmd::args("filter_do", &[s])
 						.with_bool("smart", opt.case == FilterCase::Smart)
 						.with_bool("insensitive", opt.case == FilterCase::Insensitive)
 						.with_bool("done", done),
@@ -72,7 +72,7 @@ impl Tab {
 
 		self.current.repos(hovered.as_ref());
 		if self.current.hovered().map(|f| &f.url) != hovered.as_ref() {
-			ManagerProxy::hover(None);
+			ManagerProxy::hover(None, self.idx);
 		}
 
 		render!();

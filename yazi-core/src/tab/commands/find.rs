@@ -40,7 +40,7 @@ impl Tab {
 
 			while let Some(Ok(s)) | Some(Err(InputError::Typed(s))) = rx.next().await {
 				emit!(Call(
-					Cmd::args("find_do", vec![s])
+					Cmd::args("find_do", &[s])
 						.with_bool("previous", opt.prev)
 						.with_bool("smart", opt.case == FilterCase::Smart)
 						.with_bool("insensitive", opt.case == FilterCase::Insensitive),

@@ -59,6 +59,20 @@ impl Tabs {
 
 	#[inline]
 	pub(super) fn active_mut(&mut self) -> &mut Tab { &mut self.items[self.cursor] }
+
+	#[inline]
+	pub fn active_or(&self, idx: Option<usize>) -> &Tab {
+		idx.and_then(|i| self.items.get(i)).unwrap_or(&self.items[self.cursor])
+	}
+
+	#[inline]
+	pub(super) fn active_or_mut(&mut self, idx: Option<usize>) -> &mut Tab {
+		if let Some(i) = idx.filter(|&i| i < self.items.len()) {
+			&mut self.items[i]
+		} else {
+			&mut self.items[self.cursor]
+		}
+	}
 }
 
 impl Deref for Tabs {

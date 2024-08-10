@@ -62,7 +62,7 @@ impl Notify {
 
 		self.tick_handle = Some(tokio::spawn(async move {
 			tokio::time::sleep(interval).await;
-			emit!(Call(Cmd::args("update_notify", vec![interval.as_secs_f64().to_string()]), Layer::App));
+			emit!(Call(Cmd::args("update_notify", &[interval.as_secs_f64()]), Layer::App));
 		}));
 	}
 }

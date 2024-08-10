@@ -33,7 +33,7 @@ impl TryFrom<Cmd> for Opt {
 impl From<Opt> for Cmd {
 	fn from(value: Opt) -> Self {
 		let mut cmd =
-			Cmd::args("", vec![value.id]).with_bool("sync", value.sync).with_any("args", value.args);
+			Cmd::args("", &[value.id]).with_bool("sync", value.sync).with_any("args", value.args);
 
 		if let Some(cb) = value.cb {
 			cmd = cmd.with_any("callback", cb);

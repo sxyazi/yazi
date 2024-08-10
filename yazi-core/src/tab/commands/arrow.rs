@@ -41,7 +41,7 @@ impl Tab {
 			}
 		}
 
-		ManagerProxy::hover(None);
+		ManagerProxy::hover(None, self.idx);
 		render!();
 	}
 }

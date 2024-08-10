@@ -14,6 +14,6 @@ impl InputProxy {
 
 	#[inline]
 	pub fn complete(word: &str, ticket: usize) {
-		emit!(Call(Cmd::args("complete", vec![word.to_owned()]).with("ticket", ticket), Layer::Input));
+		emit!(Call(Cmd::args("complete", &[word]).with("ticket", ticket), Layer::Input));
 	}
 }

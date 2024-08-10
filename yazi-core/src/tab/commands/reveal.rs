@@ -31,6 +31,6 @@ impl Tab {
 
 		self.cd(parent.clone());
 		FilesOp::Creating(parent, vec![File::from_dummy(opt.target.clone(), None)]).emit();
-		ManagerProxy::hover(Some(opt.target));
+		ManagerProxy::hover(Some(opt.target), self.idx);
 	}
 }
