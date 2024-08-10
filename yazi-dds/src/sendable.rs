@@ -27,7 +27,7 @@ impl Sendable {
 				}
 
 				if map.len() == i as usize - 1 {
-					Data::List(map.into_values().collect())
+					Data::List((1..i).map(|i| map.remove(&DataKey::Integer(i)).unwrap()).collect())
 				} else {
 					Data::Dict(map)
 				}
