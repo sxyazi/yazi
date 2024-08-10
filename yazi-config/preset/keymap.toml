@@ -64,6 +64,7 @@ keymap = [
 	{ on = "P",         run = "paste --force",               desc = "Paste yanked files (overwrite if the destination exists)" },
 	{ on = "-",         run = "link",                        desc = "Symlink the absolute path of yanked files" },
 	{ on = "_",         run = "link --relative",             desc = "Symlink the relative path of yanked files" },
+	{ on = "<C-h>",     run = "hardlink",                    desc = "Create hard links to the yanked files" },
 	{ on = "Y",         run = "unyank",                      desc = "Cancel the yank status" },
 	{ on = "X",         run = "unyank",                      desc = "Cancel the yank status" },
 	{ on = "d",         run = "remove",                      desc = "Trash selected files" },
