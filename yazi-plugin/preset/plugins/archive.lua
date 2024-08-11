@@ -137,6 +137,6 @@ function M:list_files(args, skip, limit)
 	return files, i, code
 end
 
-function M:is_encrypted(s) return s:find(". Wrong password?", 1, true) end
+function M:is_encrypted(s) return s:find(" Wrong password", 1, true) end
 
 return M
