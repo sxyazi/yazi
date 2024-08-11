@@ -72,7 +72,7 @@ impl Server {
 								}
 
 								line.push('\n');
-								clients.into_iter().filter(|c| c.id != id).for_each(|c| _ = c.tx.send(line.clone()));
+								clients.into_iter().for_each(|c| _ = c.tx.send(line.clone()));
 							}
 							else => break
 						}
