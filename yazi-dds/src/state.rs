@@ -69,7 +69,6 @@ impl State {
 		state.sort_unstable_by(|(a, _), (b, _)| a.cmp(b));
 		for (_, v) in state {
 			buf.write_all(v.as_bytes()).await?;
-			buf.write_u8(b'\n').await?;
 		}
 
 		buf.flush().await?;
@@ -77,15 +76,17 @@ impl State {
 	}
 
 	async fn load(&self) -> Result<()> {
-		let mut buf = BufReader::new(File::open(BOOT.state_dir.join(".dds")).await?);
-		let mut line = String::new();
+		let mut file = BufReader::new(File::open(BOOT.state_dir.join(".dds")).await?);
+		let mut buf = String::new();
 
 		let mut inner = HashMap::new();
-		while buf.read_line(&mut line).await? > 0 {
+		while file.read_line(&mut buf).await? > 0 {
+			let line = mem::take(&mut buf);
 			let mut parts = line.splitn(4, ',');
+
 			let Some(kind) = parts.next() else { continue };
 			let Some(_) = parts.next() else { continue };
-			inner.insert(kind.to_owned(), mem::take(&mut line));
+			inner.insert(kind.to_owned(), line);
 		}
 
 		let clients = CLIENTS.read();

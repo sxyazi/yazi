@@ -30,7 +30,6 @@ parking_lot   = { workspace = true }
 ratatui       = { workspace = true }
 scopeguard    = { workspace = true }
 serde         = { workspace = true }
-shell-words   = { workspace = true }
 tokio         = { workspace = true }
 tokio-stream  = { workspace = true }
 tokio-util    = { workspace = true }
