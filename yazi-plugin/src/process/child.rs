@@ -90,6 +90,7 @@ impl UserData for Child {
 		});
 
 		methods.add_async_method_mut("wait", |lua, me, ()| async move {
+			drop(me.stdin.take());
 			match me.inner.wait().await {
 				Ok(status) => (Status::new(status), Value::Nil).into_lua_multi(lua),
 				Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(lua),
@@ -111,6 +112,7 @@ impl UserData for Child {
 			let stdout_fut = read_to_end(&mut stdout_pipe);
 			let stderr_fut = read_to_end(&mut stderr_pipe);
 
+			drop(me.stdin.take());
 			let result = try_join3(me.inner.wait(), stdout_fut, stderr_fut).await;
 			drop(stdout_pipe);
 			drop(stderr_pipe);
