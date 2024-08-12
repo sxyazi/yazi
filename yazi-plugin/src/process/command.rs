@@ -4,6 +4,7 @@ use mlua::{AnyUserData, ExternalError, IntoLuaMulti, Lua, Table, UserData, Value
 use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
 
 use super::{output::Output, Child};
+use crate::process::Status;
 
 pub struct Command {
 	inner: tokio::process::Command,
@@ -109,6 +110,12 @@ impl UserData for Command {
 		methods.add_async_method_mut("output", |lua, me, ()| async move {
 			match me.inner.output().await {
 				Ok(output) => (Output::new(output), Value::Nil).into_lua_multi(lua),
+				Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(lua),
+			}
+		});
+		methods.add_async_method_mut("status", |lua, me, ()| async move {
+			match me.inner.status().await {
+				Ok(status) => (Status::new(status), Value::Nil).into_lua_multi(lua),
 				Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(lua),
 			}
 		});
