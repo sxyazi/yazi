@@ -1,3 +1,4 @@
+use yazi_dds::Pubsub;
 use yazi_shared::{event::{Cmd, Data}, render};
 
 use crate::manager::Tabs;
@@ -28,5 +29,8 @@ impl Tabs {
 
 		self.set_idx(idx);
 		render!();
+
+		// Publish through DDS
+		Pubsub::pub_from_tab_switch(self.active().idx);
 	}
 }

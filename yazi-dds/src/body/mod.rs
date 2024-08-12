@@ -11,6 +11,7 @@ mod hi;
 mod hover;
 mod move_;
 mod rename;
+mod tab;
 mod trash;
 mod yank;
 
@@ -25,5 +26,6 @@ pub use hi::*;
 pub use hover::*;
 pub use move_::*;
 pub use rename::*;
+pub use tab::*;
 pub use trash::*;
 pub use yank::*;
