@@ -72,6 +72,10 @@ impl UserData for Style {
 			ud.borrow_mut::<Self>()?.0.add_modifier |= ratatui::style::Modifier::RAPID_BLINK;
 			Ok(ud)
 		});
+		methods.add_function("reverse", |_, ud: AnyUserData| {
+			ud.borrow_mut::<Self>()?.0.add_modifier |= ratatui::style::Modifier::REVERSED;
+			Ok(ud)
+		});
 		methods.add_function("hidden", |_, ud: AnyUserData| {
 			ud.borrow_mut::<Self>()?.0.add_modifier |= ratatui::style::Modifier::HIDDEN;
 			Ok(ud)

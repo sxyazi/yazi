@@ -47,7 +47,7 @@ pub fn peek(cmd: &Cmd, file: yazi_shared::fs::File, skip: usize) -> Cancellation
 
 		if let Err(e) = result {
 			if !e.to_string().contains("Peek task cancelled") {
-				error!("{e}");
+				error!("{e:?}");
 			}
 		}
 	});
