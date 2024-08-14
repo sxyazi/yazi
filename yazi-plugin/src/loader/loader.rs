@@ -1,6 +1,6 @@
 use std::{borrow::Cow, collections::HashMap, ops::Deref};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use mlua::{ExternalError, Lua, Table};
 use parking_lot::RwLock;
 use tokio::fs;
@@ -24,6 +24,7 @@ impl Loader {
 			"archive" => &include_bytes!("../../preset/plugins/archive.lua")[..],
 			"code" => include_bytes!("../../preset/plugins/code.lua"),
 			"dds" => include_bytes!("../../preset/plugins/dds.lua"),
+			"empty" => include_bytes!("../../preset/plugins/empty.lua"),
 			"extract" => include_bytes!("../../preset/plugins/extract.lua"),
 			"file" => include_bytes!("../../preset/plugins/file.lua"),
 			"folder" => include_bytes!("../../preset/plugins/folder.lua"),
@@ -42,7 +43,8 @@ impl Loader {
 		};
 
 		let b = if preset.is_empty() {
-			Cow::Owned(fs::read(BOOT.plugin_dir.join(format!("{name}.yazi/init.lua"))).await?)
+			let p = BOOT.plugin_dir.join(format!("{name}.yazi/init.lua"));
+			Cow::Owned(fs::read(&p).await.with_context(|| format!("failed to load plugin from {p:?}"))?)
 		} else {
 			Cow::Borrowed(preset)
 		};
