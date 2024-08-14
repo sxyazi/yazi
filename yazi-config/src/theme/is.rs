@@ -9,6 +9,7 @@ use yazi_shared::fs::Cha;
 pub enum Is {
 	#[default]
 	None,
+	Hidden,
 	Link,
 	Orphan,
 	Dummy,
@@ -25,6 +26,7 @@ impl FromStr for Is {
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		Ok(match s {
+			"hidden" => Self::Hidden,
 			"link" => Self::Link,
 			"orphan" => Self::Orphan,
 			"dummy" => Self::Dummy,
@@ -50,6 +52,7 @@ impl Is {
 	pub fn check(&self, cha: &Cha) -> bool {
 		match self {
 			Self::None => true,
+			Self::Hidden => cha.is_hidden(),
 			Self::Link => cha.is_link(),
 			Self::Orphan => cha.is_orphan(),
 			Self::Dummy => cha.is_dummy(),
