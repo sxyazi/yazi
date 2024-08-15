@@ -5,7 +5,7 @@ use parking_lot::RwLock;
 use yazi_boot::BOOT;
 use yazi_shared::{fs::Url, RoCell};
 
-use crate::{body::{Body, BodyBulk, BodyCd, BodyDelete, BodyHi, BodyHover, BodyMove, BodyMoveItem, BodyRename, BodyTrash, BodyYank}, Client, ID, PEERS};
+use crate::{body::{Body, BodyBulk, BodyCd, BodyDelete, BodyHi, BodyHover, BodyMove, BodyMoveItem, BodyRename, BodyTab, BodyTrash, BodyYank}, Client, ID, PEERS};
 
 pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function<'static>>>>> =
 	RoCell::new();
@@ -109,6 +109,18 @@ impl Pubsub {
 		}
 		if BOOT.local_events.contains("hover") {
 			BodyHover::borrowed(tab, url).with_receiver(*ID).flush();
+		}
+	}
+
+	pub fn pub_from_tab(idx: usize) {
+		if LOCAL.read().contains_key("tab") {
+			Self::pub_(BodyTab::owned(idx));
+		}
+		if PEERS.read().values().any(|p| p.able("tab")) {
+			Client::push(BodyTab::owned(idx));
+		}
+		if BOOT.local_events.contains("tab") {
+			BodyTab::owned(idx).with_receiver(*ID).flush();
 		}
 	}
 

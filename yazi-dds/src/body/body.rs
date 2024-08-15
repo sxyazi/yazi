@@ -2,7 +2,7 @@ use anyhow::{bail, Result};
 use mlua::{ExternalResult, IntoLua, Lua, Value};
 use serde::Serialize;
 
-use super::{BodyBulk, BodyBye, BodyCd, BodyCustom, BodyDelete, BodyHey, BodyHi, BodyHover, BodyMove, BodyRename, BodyTrash, BodyYank};
+use super::{BodyBulk, BodyBye, BodyCd, BodyCustom, BodyDelete, BodyHey, BodyHi, BodyHover, BodyMove, BodyRename, BodyTab, BodyTrash, BodyYank};
 use crate::Payload;
 
 #[derive(Debug, Serialize)]
@@ -13,6 +13,7 @@ pub enum Body<'a> {
 	Bye(BodyBye),
 	Cd(BodyCd<'a>),
 	Hover(BodyHover<'a>),
+	Tab(BodyTab),
 	Rename(BodyRename<'a>),
 	Bulk(BodyBulk<'a>),
 	Yank(BodyYank<'a>),
@@ -30,6 +31,7 @@ impl Body<'static> {
 			"bye" => Self::Bye(serde_json::from_str(body)?),
 			"cd" => Self::Cd(serde_json::from_str(body)?),
 			"hover" => Self::Hover(serde_json::from_str(body)?),
+			"tab" => Self::Tab(serde_json::from_str(body)?),
 			"rename" => Self::Rename(serde_json::from_str(body)?),
 			"bulk" => Self::Bulk(serde_json::from_str(body)?),
 			"@yank" => Self::Yank(serde_json::from_str(body)?),
@@ -53,6 +55,7 @@ impl Body<'static> {
 				| "bye"
 				| "cd"
 				| "hover"
+				| "tab"
 				| "rename"
 				| "bulk"
 				| "@yank"
@@ -84,6 +87,7 @@ impl<'a> Body<'a> {
 			Self::Bye(_) => "bye",
 			Self::Cd(_) => "cd",
 			Self::Hover(_) => "hover",
+			Self::Tab(_) => "tab",
 			Self::Rename(_) => "rename",
 			Self::Bulk(_) => "bulk",
 			Self::Yank(_) => "@yank",
@@ -111,6 +115,7 @@ impl IntoLua<'_> for Body<'static> {
 			Self::Bye(b) => b.into_lua(lua),
 			Self::Cd(b) => b.into_lua(lua),
 			Self::Hover(b) => b.into_lua(lua),
+			Self::Tab(b) => b.into_lua(lua),
 			Self::Rename(b) => b.into_lua(lua),
 			Self::Bulk(b) => b.into_lua(lua),
 			Self::Yank(b) => b.into_lua(lua),
