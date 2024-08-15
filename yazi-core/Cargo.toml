@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-core"
-version     = "0.3.0"
+version     = "0.3.1"
 edition     = "2021"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -9,15 +9,15 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
-yazi-adapter   = { path = "../yazi-adapter", version = "0.3.0" }
-yazi-boot      = { path = "../yazi-boot", version = "0.3.0" }
-yazi-config    = { path = "../yazi-config", version = "0.3.0" }
-yazi-dds       = { path = "../yazi-dds", version = "0.3.0" }
-yazi-fs        = { path = "../yazi-fs", version = "0.3.0" }
-yazi-plugin    = { path = "../yazi-plugin", version = "0.3.0" }
-yazi-proxy     = { path = "../yazi-proxy", version = "0.3.0" }
-yazi-scheduler = { path = "../yazi-scheduler", version = "0.3.0" }
-yazi-shared    = { path = "../yazi-shared", version = "0.3.0" }
+yazi-adapter   = { path = "../yazi-adapter", version = "0.3.1" }
+yazi-boot      = { path = "../yazi-boot", version = "0.3.1" }
+yazi-config    = { path = "../yazi-config", version = "0.3.1" }
+yazi-dds       = { path = "../yazi-dds", version = "0.3.1" }
+yazi-fs        = { path = "../yazi-fs", version = "0.3.1" }
+yazi-plugin    = { path = "../yazi-plugin", version = "0.3.1" }
+yazi-proxy     = { path = "../yazi-proxy", version = "0.3.1" }
+yazi-scheduler = { path = "../yazi-scheduler", version = "0.3.1" }
+yazi-shared    = { path = "../yazi-shared", version = "0.3.1" }
 
 # External dependencies
 anyhow        = { workspace = true }
@@ -25,7 +25,7 @@ bitflags      = { workspace = true }
 crossterm     = { workspace = true }
 dirs          = { workspace = true }
 futures       = { workspace = true }
-notify        = { git = "https://github.com/notify-rs/notify.git", rev = "96dec74316a93bed6eec9db177b233e6e017275e", default-features = false, features = [ "macos_fsevent" ] }
+notify-fork   = { version = "6.1.1", default-features = false, features = [ "macos_fsevent" ] }
 parking_lot   = { workspace = true }
 ratatui       = { workspace = true }
 scopeguard    = { workspace = true }

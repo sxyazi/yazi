@@ -1,7 +1,7 @@
 use std::{collections::{HashMap, HashSet}, time::Duration};
 
 use anyhow::Result;
-use notify::{RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
+use notify_fork::{RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
 use parking_lot::RwLock;
 use tokio::{fs, pin, sync::{mpsc::{self, UnboundedReceiver}, watch}};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
@@ -28,7 +28,7 @@ impl Watcher {
 
 		let out_tx_ = out_tx.clone();
 		let watcher = RecommendedWatcher::new(
-			move |res: Result<notify::Event, notify::Error>| {
+			move |res: Result<notify_fork::Event, notify_fork::Error>| {
 				let Ok(event) = res else { return };
 				if event.kind.is_access() {
 					return;
@@ -85,7 +85,7 @@ impl Watcher {
 
 			to_unwatch.retain(|u| match watcher.unwatch(u) {
 				Ok(_) => true,
-				Err(e) if matches!(e.kind, notify::ErrorKind::WatchNotFound) => true,
+				Err(e) if matches!(e.kind, notify_fork::ErrorKind::WatchNotFound) => true,
 				Err(e) => {
 					error!("Unwatch failed: {e:?}");
 					false
