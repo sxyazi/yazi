@@ -4,27 +4,21 @@ use serde::{Deserialize, Serialize};
 use super::Body;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct BodyTabSwitch {
-	/// The index of the tab
-	pub tab: usize,
+pub struct BodyTab {
+	pub idx: usize,
 }
 
-impl<'a> BodyTabSwitch {
+impl BodyTab {
 	#[inline]
-	pub fn borrowed(tab: usize) -> Body<'a> { Self { tab }.into() }
+	pub fn owned(idx: usize) -> Body<'static> { Self { idx }.into() }
 }
 
-impl BodyTabSwitch {
-	#[inline]
-	pub fn dummy(tab: usize) -> Body<'static> { Self { tab }.into() }
+impl<'a> From<BodyTab> for Body<'a> {
+	fn from(value: BodyTab) -> Self { Self::Tab(value) }
 }
 
-impl<'a> From<BodyTabSwitch> for Body<'a> {
-	fn from(value: BodyTabSwitch) -> Self { Self::TabSwitch(value) }
-}
-
-impl IntoLua<'_> for BodyTabSwitch {
+impl IntoLua<'_> for BodyTab {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		lua.create_table_from([("tab", self.tab)])?.into_lua(lua)
+		lua.create_table_from([("idx", self.idx)])?.into_lua(lua)
 	}
 }

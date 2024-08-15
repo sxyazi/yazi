@@ -44,9 +44,9 @@ impl Actions {
 		writeln!(s, "\nVariables")?;
 		writeln!(s, "    SHELL              : {:?}", env::var_os("SHELL"))?;
 		writeln!(s, "    EDITOR             : {:?}", env::var_os("EDITOR"))?;
+		writeln!(s, "    VISUAL             : {:?}", env::var_os("VISUAL"))?;
 		writeln!(s, "    YAZI_FILE_ONE      : {:?}", env::var_os("YAZI_FILE_ONE"))?;
 		writeln!(s, "    YAZI_CONFIG_HOME   : {:?}", env::var_os("YAZI_CONFIG_HOME"))?;
-		writeln!(s, "    ZELLIJ_SESSION_NAME: {:?}", env::var_os("ZELLIJ_SESSION_NAME"))?;
 
 		writeln!(s, "\nText Opener")?;
 		writeln!(
@@ -56,9 +56,11 @@ impl Actions {
 		)?;
 		writeln!(s, "    block  : {:?}", yazi_config::OPEN.block_opener("bulk.txt", "text/plain"))?;
 
-		writeln!(s, "\ntmux")?;
-		writeln!(s, "    TMUX   : {:?}", *yazi_adapter::TMUX)?;
-		writeln!(s, "    Version: {}", Self::process_output("tmux", "-V"))?;
+		writeln!(s, "\nMultiplexers")?;
+		writeln!(s, "    TMUX               : {:?}", *yazi_adapter::TMUX)?;
+		writeln!(s, "    tmux version       : {}", Self::process_output("tmux", "-V"))?;
+		writeln!(s, "    ZELLIJ_SESSION_NAME: {:?}", env::var_os("ZELLIJ_SESSION_NAME"))?;
+		writeln!(s, "    Zellij version     : {}", Self::process_output("zellij", "--version"))?;
 
 		writeln!(s, "\nDependencies")?;
 		writeln!(
@@ -89,15 +91,19 @@ impl Actions {
 	}
 
 	fn process_output(name: impl AsRef<OsStr>, arg: impl AsRef<OsStr>) -> String {
-		match std::process::Command::new(name.as_ref()).arg(arg).output() {
+		match std::process::Command::new(&name).arg(arg).output() {
 			Ok(out) if out.status.success() => {
 				let line =
 					String::from_utf8_lossy(&out.stdout).trim().lines().next().unwrap_or_default().to_owned();
-				Regex::new(r"\d+\.\d+(\.\d+-\d+|\.\d+|\b)")
-					.unwrap()
-					.find(&line)
-					.map(|m| m.as_str().to_owned())
-					.unwrap_or(line)
+				if name.as_ref() == "ya" {
+					line.trim_start_matches("Ya ").to_owned()
+				} else {
+					Regex::new(r"\d+\.\d+(\.\d+-\d+|\.\d+|\b)")
+						.unwrap()
+						.find(&line)
+						.map(|m| m.as_str().to_owned())
+						.unwrap_or(line)
+				}
 			}
 			Ok(out) => format!("{:?}, {:?}", out.status, String::from_utf8_lossy(&out.stderr)),
 			Err(e) => format!("{e}"),

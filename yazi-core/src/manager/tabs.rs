@@ -1,6 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
 use yazi_boot::BOOT;
+use yazi_dds::Pubsub;
 use yazi_proxy::ManagerProxy;
 use yazi_shared::fs::Url;
 
@@ -47,7 +48,7 @@ impl Tabs {
 			return;
 		}
 
-		// Reset the preview of the previous active tab
+		// Reset the preview of the last active tab
 		if let Some(active) = self.items.get_mut(self.cursor) {
 			active.preview.reset_image();
 		}
@@ -55,6 +56,7 @@ impl Tabs {
 		self.cursor = idx;
 		ManagerProxy::refresh();
 		ManagerProxy::peek(true);
+		Pubsub::pub_from_tab(idx);
 	}
 }
 
