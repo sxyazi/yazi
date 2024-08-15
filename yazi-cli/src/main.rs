@@ -45,6 +45,7 @@ async fn main() -> anyhow::Result<()> {
 
 		Command::Pack(cmd) => {
 			package::init();
+			package::Package::migrate().await?;
 			if cmd.install {
 				package::Package::install_from_config("plugin", false).await?;
 				package::Package::install_from_config("flavor", false).await?;
@@ -54,8 +55,16 @@ async fn main() -> anyhow::Result<()> {
 			} else if cmd.upgrade {
 				package::Package::install_from_config("plugin", true).await?;
 				package::Package::install_from_config("flavor", true).await?;
-			} else if let Some(repo) = &cmd.add {
-				package::Package::add_to_config(repo).await?;
+			} else if let Some(mut repo) = cmd.add {
+				// TODO: remove this in the future
+				if repo.contains("#") {
+					repo = repo.replace("#", ":");
+					println!(
+						"WARNING: `#` has been deprecated in Yazi 0.3.1, please use `:` instead. See https://github.com/sxyazi/yazi/issues/1471 for more information."
+					);
+				}
+
+				package::Package::add_to_config(&repo).await?;
 			}
 		}
 	}

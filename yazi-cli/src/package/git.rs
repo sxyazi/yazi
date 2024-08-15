@@ -15,8 +15,8 @@ impl Git {
 		Self::exec(|c| c.current_dir(path).arg("fetch")).await
 	}
 
-	pub(super) async fn checkout(path: &Path, commit: &str) -> Result<()> {
-		Self::exec(|c| c.current_dir(path).args(["checkout", commit])).await
+	pub(super) async fn checkout(path: &Path, rev: &str) -> Result<()> {
+		Self::exec(|c| c.current_dir(path).args(["checkout", rev])).await
 	}
 
 	pub(super) async fn pull(path: &Path) -> Result<()> {
@@ -31,14 +31,14 @@ impl Git {
 			.args(["rev-parse", "--short", "HEAD"])
 			.output()
 			.await
-			.context("Failed to get current commit hash")?;
+			.context("Failed to get current revision")?;
 
 		if !output.status.success() {
-			bail!("Getting commit hash failed: {}", output.status);
+			bail!("Getting revision failed: {}", output.status);
 		}
 
 		Ok(strip_trailing_newline(
-			String::from_utf8(output.stdout).context("Failed to parse commit hash")?,
+			String::from_utf8(output.stdout).context("Failed to parse revision")?,
 		))
 	}
 

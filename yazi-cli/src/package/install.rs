@@ -14,10 +14,10 @@ impl Package {
 			Git::fetch(&path).await?;
 		};
 
-		if self.commit.is_empty() {
-			self.commit = Git::hash(&path).await?;
+		if self.rev.is_empty() {
+			self.rev = Git::hash(&path).await?;
 		} else {
-			Git::checkout(&path, self.commit.trim_start_matches('=')).await?;
+			Git::checkout(&path, self.rev.trim_start_matches('=')).await?;
 		}
 
 		self.deploy().await
