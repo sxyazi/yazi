@@ -14,7 +14,7 @@ impl Package {
 			Git::pull(&path).await?;
 		};
 
-		self.commit = Git::hash(&path).await?;
+		self.rev = Git::hash(&path).await?;
 		self.deploy().await
 	}
 }

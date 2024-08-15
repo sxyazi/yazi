@@ -7,13 +7,13 @@ use yazi_shared::Xdg;
 pub(crate) struct Package {
 	pub(crate) repo:      String,
 	pub(crate) child:     String,
-	pub(crate) commit:    String,
+	pub(crate) rev:       String,
 	pub(super) is_flavor: bool,
 }
 
 impl Package {
-	pub(super) fn new(url: &str, commit: Option<&str>) -> Self {
-		let mut parts = url.splitn(2, '#');
+	pub(super) fn new(url: &str, rev: Option<&str>) -> Self {
+		let mut parts = url.splitn(2, ':');
 
 		let mut repo = parts.next().unwrap_or_default().to_owned();
 		let child = if let Some(s) = parts.next() {
@@ -23,7 +23,7 @@ impl Package {
 			String::new()
 		};
 
-		Self { repo, child, commit: commit.unwrap_or_default().to_owned(), is_flavor: false }
+		Self { repo, child, rev: rev.unwrap_or_default().to_owned(), is_flavor: false }
 	}
 
 	#[inline]
@@ -31,7 +31,7 @@ impl Package {
 		if self.child.is_empty() {
 			self.repo.trim_end_matches(".yazi").into()
 		} else {
-			format!("{}#{}", self.repo, self.child.trim_end_matches(".yazi")).into()
+			format!("{}:{}", self.repo, self.child.trim_end_matches(".yazi")).into()
 		}
 	}
 

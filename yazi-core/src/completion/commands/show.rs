@@ -26,7 +26,7 @@ impl From<Cmd> for Opt {
 
 impl Completion {
 	fn match_candidates(word: &str, cache: &[String]) -> Vec<String> {
-		let smart = word.chars().all(|c| c.is_lowercase());
+		let smart = !word.bytes().any(|c| c.is_ascii_uppercase());
 
 		let flow = cache.iter().try_fold(
 			(Vec::with_capacity(LIMIT), Vec::with_capacity(LIMIT)),
