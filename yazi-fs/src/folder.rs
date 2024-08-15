@@ -73,6 +73,7 @@ impl Folder {
 		};
 
 		self.sync_page(false);
+		self.adjust_offset();
 		self.tracing |= b;
 		b
 	}
@@ -101,6 +102,18 @@ impl Folder {
 		if mem::replace(&mut self.page, new) != new || force {
 			ManagerProxy::update_paged_by(new, &self.cwd);
 		}
+	}
+
+	pub fn adjust_offset(&mut self) {
+		let len = self.files.len();
+		let limit = LAYOUT.load().current.height as usize;
+		let scrolloff = (limit / 2).min(MANAGER.scrolloff as usize);
+		let max_offset = (self.offset + limit).saturating_sub(scrolloff).min(len);
+
+		let new_offset =
+			if self.cursor >= max_offset { self.cursor - limit + scrolloff } else { self.offset };
+
+		self.offset = new_offset.min(len.saturating_sub(limit));
 	}
 
 	fn next(&mut self, step: Step) -> bool {
