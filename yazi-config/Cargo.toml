@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-config"
-version     = "0.3.0"
+version     = "0.3.1"
 edition     = "2021"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -9,7 +9,7 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
-yazi-shared = { path = "../yazi-shared", version = "0.3.0" }
+yazi-shared = { path = "../yazi-shared", version = "0.3.1" }
 
 # External dependencies
 anyhow    = { workspace = true }
@@ -17,7 +17,7 @@ arc-swap  = { workspace = true }
 bitflags  = { workspace = true }
 crossterm = { workspace = true }
 globset   = { workspace = true }
-indexmap  = "2.3.0"
+indexmap  = "2.4.0"
 ratatui   = { workspace = true }
 regex     = { workspace = true }
 serde     = { workspace = true }

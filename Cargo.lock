@@ -403,9 +403,9 @@ dependencies = [
 
 [[package]]
 name = "clap_complete"
-version = "4.5.14"
+version = "4.5.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d11bff0290e9a266fc9b4ce6fa96c2bf2ca3f9724c41c10202ac1daf7a087f8"
+checksum = "9c677cd0126f3026d8b093fa29eae5d812fde5c05bc66dbb29d0374eea95113a"
 dependencies = [
  "clap",
 ]
@@ -1135,9 +1135,9 @@ checksum = "44feda355f4159a7c757171a77de25daf6411e217b4cabd03bd6650690468126"
 
 [[package]]
 name = "indexmap"
-version = "2.3.0"
+version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "de3fc2e30ba82dd1b3911c8de1ffc143c74a914a14e99514d7637e3099df5ea0"
+checksum = "93ead53efc7ea8ed3cfb0c79fc8023fbb782a5432b52830b6518941cebe6505c"
 dependencies = [
  "equivalent",
  "hashbrown",
@@ -1510,9 +1510,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0676bb32a98c1a483ce53e500a81ad9c3d5b3f7c920c28c24e9cb0980d0b5bc8"
 
 [[package]]
-name = "notify"
+name = "notify-fork"
 version = "6.1.1"
-source = "git+https://github.com/notify-rs/notify.git?rev=96dec74316a93bed6eec9db177b233e6e017275e#96dec74316a93bed6eec9db177b233e6e017275e"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f610737468f7a95610d2b320b5d5e246b3cd1c3603782680c0f454ac5825b64b"
 dependencies = [
  "bitflags 2.6.0",
  "filetime",
@@ -1522,15 +1523,16 @@ dependencies = [
  "libc",
  "log",
  "mio 0.8.11",
- "notify-types",
+ "notify-types-fork",
  "walkdir",
  "windows-sys 0.52.0",
 ]
 
 [[package]]
-name = "notify-types"
+name = "notify-types-fork"
 version = "1.0.0"
-source = "git+https://github.com/notify-rs/notify.git?rev=96dec74316a93bed6eec9db177b233e6e017275e#96dec74316a93bed6eec9db177b233e6e017275e"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dcc01866a421a4ce1eddc764da8a95b30b82aa0d9d7f33508265c196d4863b18"
 dependencies = [
  "instant",
 ]
@@ -2126,9 +2128,9 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "serde"
-version = "1.0.206"
+version = "1.0.207"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b3e4cd94123dd520a128bcd11e34d9e9e423e7e3e50425cb1b4b1e3549d0284"
+checksum = "5665e14a49a4ea1b91029ba7d3bca9f299e1f7cfa194388ccc20f14743e784f2"
 dependencies = [
  "serde_derive",
 ]
@@ -2145,9 +2147,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.206"
+version = "1.0.207"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fabfb6138d2383ea8208cf98ccf69cdfb1aff4088460681d84189aa259762f97"
+checksum = "6aea2634c86b0e8ef2cfdc0c340baede54ec27b1e46febd7f80dffb2aa44a00e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2156,9 +2158,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.124"
+version = "1.0.125"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66ad62847a56b3dba58cc891acd13884b9c61138d330c0d7b6181713d4fce38d"
+checksum = "83c8e735a073ccf5be70aa8066aa984eaf2fa000db6c8d0100ae605b366d31ed"
 dependencies = [
  "itoa",
  "memchr",
@@ -3203,7 +3205,7 @@ checksum = "d135d17ab770252ad95e9a872d365cf3090e3be864a34ab46f48555993efc904"
 
 [[package]]
 name = "yazi-adapter"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -3225,7 +3227,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-boot"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "clap",
  "clap_complete",
@@ -3241,7 +3243,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-cli"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -3261,7 +3263,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-config"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -3279,7 +3281,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-core"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "bitflags 2.6.0",
@@ -3287,7 +3289,7 @@ dependencies = [
  "dirs",
  "futures",
  "libc",
- "notify",
+ "notify-fork",
  "parking_lot",
  "ratatui",
  "scopeguard",
@@ -3310,7 +3312,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-dds"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "mlua",
@@ -3329,7 +3331,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fm"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "better-panic",
@@ -3361,7 +3363,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fs"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "futures",
@@ -3375,7 +3377,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-plugin"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -3413,7 +3415,7 @@ checksum = "f4b6c8e12e39ac0f79fa96f36e5b88e0da8d230691abd729eec709b43c74f632"
 
 [[package]]
 name = "yazi-proxy"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "mlua",
@@ -3425,7 +3427,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-scheduler"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "async-priority-channel",
@@ -3445,7 +3447,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-shared"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "bitflags 2.6.0",
