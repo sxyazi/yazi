@@ -5,7 +5,7 @@ use scopeguard::defer;
 use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 use yazi_config::{OPEN, PREVIEW};
 use yazi_dds::Pubsub;
-use yazi_proxy::{AppProxy, TasksProxy, HIDER, WATCHER};
+use yazi_proxy::{AppProxy, ManagerProxy, TasksProxy, HIDER, WATCHER};
 use yazi_shared::{fs::{max_common_root, maybe_exists, paths_to_same_file, File, FilesOp, Url}, terminal_clear};
 
 use crate::manager::Manager;
@@ -104,6 +104,7 @@ impl Manager {
 		if !failed.is_empty() {
 			Self::output_failed(failed).await?;
 		}
+		ManagerProxy::refresh();
 		Ok(())
 	}
 
