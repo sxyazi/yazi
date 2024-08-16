@@ -60,9 +60,9 @@ impl Highlighter {
 		let mut reader = BufReader::new(File::open(&self.path).await?);
 
 		let syntax = Self::find_syntax(&self.path).await;
-		let mut plain = syntax.is_err() as u8;
+		let mut plain = syntax.is_err();
 
-		let mut before = Vec::with_capacity(if plain == 0 { skip } else { 0 });
+		let mut before = Vec::with_capacity(if plain { 0 } else { skip });
 		let mut after = Vec::with_capacity(limit);
 
 		let mut i = 0;
@@ -73,11 +73,8 @@ impl Highlighter {
 				break;
 			}
 
-			if plain == 0 && buf.len() > 5000 {
-				plain = 1;
-				drop(mem::take(&mut before));
-			} else if plain == 0 && buf.contains(&0x1b) {
-				plain = 2;
+			if !plain && (buf.len() > 5000 || buf.contains(&0x1b)) {
+				plain = true;
 				drop(mem::take(&mut before));
 			}
 
@@ -89,7 +86,7 @@ impl Highlighter {
 
 			if i > skip {
 				after.push(String::from_utf8_lossy(&buf).into_owned());
-			} else if plain == 0 {
+			} else if !plain {
 				before.push(String::from_utf8_lossy(&buf).into_owned());
 			}
 			buf.clear();
@@ -99,15 +96,11 @@ impl Highlighter {
 			return Err(PeekError::Exceed(i.saturating_sub(limit)));
 		}
 
-		if plain == 0 {
-			Self::highlight_with(before, after, syntax.unwrap()).await
-		} else if plain == 1 {
-			Ok(Text::from(after.join("").replace('\t', &PREVIEW.indent())))
-		} else if plain == 2 {
-			Ok(Text::from(after.join("").replace('\x1b', "^[").replace('\t', &PREVIEW.indent())))
+		Ok(if plain {
+			Text::from(after.join("").replace('\x1b', "^[").replace('\t', &PREVIEW.indent()))
 		} else {
-			unreachable!()
-		}
+			Self::highlight_with(before, after, syntax.unwrap()).await?
+		})
 	}
 
 	async fn highlight_with(
