@@ -4,7 +4,7 @@ version     = "0.3.1"
 edition     = "2021"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
-description = "Yazi File System"
+description = "Yazi file system"
 homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 

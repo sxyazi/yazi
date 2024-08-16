@@ -12,8 +12,7 @@ else
 fi
 
 # Build for the target
-cargo build -p yazi-cli --release --locked --target "$1"
-cargo build -p yazi-fm --release --locked --target "$1"
+cargo build --release --locked --target "$1"
 
 # Create the artifact
 mkdir -p "$ARTIFACT_NAME/completions"

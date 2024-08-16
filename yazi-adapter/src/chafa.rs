@@ -42,7 +42,7 @@ impl Chafa {
 		}
 
 		let lines: Vec<_> = output.stdout.split(|&b| b == b'\n').collect();
-		let Ok(Some(first)) = lines[0].into_text().map(|mut t| t.lines.pop()) else {
+		let Ok(Some(first)) = lines[0].to_text().map(|mut t| t.lines.pop()) else {
 			bail!("failed to parse chafa output");
 		};
 
