@@ -4,22 +4,17 @@ use anyhow::Result;
 use tokio::fs;
 use yazi_config::popup::InputCfg;
 use yazi_proxy::{InputProxy, TabProxy, WATCHER};
-use yazi_shared::{
-	event::Cmd,
-	fs::{maybe_exists, ok_or_not_found, symlink_realpath, File, FilesOp, Url},
-};
+use yazi_shared::{event::Cmd, fs::{maybe_exists, ok_or_not_found, symlink_realpath, File, FilesOp, Url}};
 
 use crate::manager::Manager;
 
 pub struct Opt {
 	force: bool,
-	dir: bool,
+	dir:   bool,
 }
 
 impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self {
-		Self { force: c.bool("force"), dir: c.bool("dir") }
-	}
+	fn from(c: Cmd) -> Self { Self { force: c.bool("force"), dir: c.bool("dir") } }
 }
 
 impl Manager {
