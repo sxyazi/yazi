@@ -1,11 +1,12 @@
 local M = {}
 
 function M:peek()
-	local url = ya.file_cache(self)
+	local start, url = os.clock(), ya.file_cache(self)
 	if not url or not fs.cha(url) then
 		url = self.file.url
 	end
 
+	ya.sleep(math.max(0, PREVIEW.image_delay / 1000 + start - os.clock()))
 	ya.image_show(url, self.area)
 	ya.preview_widgets(self, {})
 end
