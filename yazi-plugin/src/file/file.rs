@@ -42,6 +42,14 @@ impl File {
 				IconCache::Icon(cached) => Some(Icon::cast(lua, cached)).transpose(),
 			}
 		});
+
+		reg.add_method("count", |_, me, ()| {
+			if me.as_ref().cha.is_dir() {
+				return Ok(Some(std::fs::read_dir::<&std::path::Path>(me.as_ref().url.as_ref())?.count()));
+			} else {
+				return Ok(None);
+			}
+		});
 	}
 
 	pub fn install(lua: &Lua) -> mlua::Result<()> {
