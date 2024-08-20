@@ -56,8 +56,11 @@ impl File {
 			});
 			reg.add_method("style", |lua, me, ()| {
 				let cx = lua.named_registry_value::<CtxRef>("cx")?;
-				let mime =
-					if me.is_dir() { Some(MIME_DIR) } else { cx.manager.mimetype.get(&me.url).map(|x| &**x) };
+				let mime = if me.is_dir() {
+					MIME_DIR
+				} else {
+					cx.manager.mimetype.get(&me.url).map(|x| &**x).unwrap_or_default()
+				};
 
 				Ok(THEME.filetypes.iter().find(|&x| x.matches(me, mime)).map(|x| Style::from(x.style)))
 			});

@@ -20,6 +20,9 @@ impl Url {
 			reg.add_method("stem", |lua, me, ()| {
 				me.file_stem().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
 			});
+			reg.add_method("ext", |lua, me, ()| {
+				me.extension().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
+			});
 			reg.add_method("join", |lua, me, other: Value| {
 				Ok(match other {
 					Value::String(s) => Self::cast(lua, me.join(s.to_str()?)),

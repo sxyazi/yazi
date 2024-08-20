@@ -13,8 +13,8 @@ pub struct Pattern {
 
 impl Pattern {
 	#[inline]
-	pub fn match_mime(&self, str: impl AsRef<str>) -> bool {
-		self.is_star || self.inner.is_match(str.as_ref())
+	pub fn match_mime(&self, mime: impl AsRef<str>) -> bool {
+		self.is_star || (!mime.as_ref().is_empty() && self.inner.is_match(mime.as_ref()))
 	}
 
 	#[inline]
