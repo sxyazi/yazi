@@ -16,7 +16,7 @@ impl Plugin {
 	pub fn fetchers<'a>(
 		&'a self,
 		path: &'a Path,
-		mime: Option<&'a str>,
+		mime: &'a str,
 		factor: impl Fn(&str) -> bool + Copy,
 	) -> impl Iterator<Item = &'a Fetcher> {
 		let mut seen = HashSet::new();
@@ -32,7 +32,7 @@ impl Plugin {
 	pub fn preloaders<'a>(
 		&'a self,
 		path: &'a Path,
-		mime: Option<&'a str>,
+		mime: &'a str,
 	) -> impl Iterator<Item = &'a Preloader> {
 		let mut next = true;
 		self.preloaders.iter().filter(move |&p| {

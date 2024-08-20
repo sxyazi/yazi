@@ -55,10 +55,7 @@ impl Manager {
 			return;
 		}
 
-		if let Some(mime) = self.mimetype.get(&hovered.url).cloned() {
-			self.active_mut().preview.go(hovered, &mime, opt.force);
-		} else {
-			render!(self.active_mut().preview.reset());
-		}
+		let mime = self.mimetype.get(&hovered.url).cloned().unwrap_or_default();
+		self.active_mut().preview.go(hovered, &mime, opt.force);
 	}
 }
