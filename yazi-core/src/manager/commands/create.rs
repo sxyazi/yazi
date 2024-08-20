@@ -9,11 +9,12 @@ use yazi_shared::{event::Cmd, fs::{maybe_exists, ok_or_not_found, symlink_realpa
 use crate::manager::Manager;
 
 pub struct Opt {
+	dir:   bool,
 	force: bool,
 }
 
 impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { force: c.bool("force") } }
+	fn from(c: Cmd) -> Self { Self { dir: c.bool("dir"), force: c.bool("force") } }
 }
 
 impl Manager {
@@ -37,7 +38,7 @@ impl Manager {
 				}
 			}
 
-			Self::create_do(new, name.ends_with('/') || name.ends_with('\\')).await
+			Self::create_do(new, opt.dir || name.ends_with('/') || name.ends_with('\\')).await
 		});
 	}
 
