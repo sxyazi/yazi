@@ -179,14 +179,14 @@ delete_origin	= "top-center"
 delete_offset	= [ 0, 5, 70, 20 ]
 
 # overwrite
-overwrite_title   = "Are you sure?"
-overwrite_content = "Will overwrite existing file: {url}"
+overwrite_title   = "Overwrite file?"
+overwrite_content = "Will overwrite the following file:\n{url}"
 overwrite_origin  = "top-center"
 overwrite_offset  = [ 0, 2, 50, 20 ]
 
 # quit
-quit_title   = "Are you sure you want to quit?"
-quit_content = "The following tasks are running:\n"
+quit_title   = "Quit?"
+quit_content = "The following task is still running, are you sure you want to quit?\n{tasks}"
 quit_origin  = "top-center"
 quit_offset  = [ 0, 2, 50, 20 ]
 

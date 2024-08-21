@@ -29,7 +29,6 @@ pub struct ConfirmCfg {
 }
 
 impl InputCfg {
-	#[inline]
 	pub fn cd() -> Self {
 		Self {
 			title: INPUT.cd_title.to_owned(),
@@ -39,7 +38,6 @@ impl InputCfg {
 		}
 	}
 
-	#[inline]
 	pub fn create() -> Self {
 		Self {
 			title: INPUT.create_title.to_owned(),
@@ -48,7 +46,6 @@ impl InputCfg {
 		}
 	}
 
-	#[inline]
 	pub fn rename() -> Self {
 		Self {
 			title: INPUT.rename_title.to_owned(),
@@ -57,7 +54,6 @@ impl InputCfg {
 		}
 	}
 
-	#[inline]
 	pub fn filter() -> Self {
 		Self {
 			title: INPUT.filter_title.to_owned(),
@@ -67,7 +63,6 @@ impl InputCfg {
 		}
 	}
 
-	#[inline]
 	pub fn find(prev: bool) -> Self {
 		Self {
 			title: INPUT.find_title[prev as usize].to_owned(),
@@ -77,7 +72,6 @@ impl InputCfg {
 		}
 	}
 
-	#[inline]
 	pub fn search(name: &str) -> Self {
 		Self {
 			title: INPUT.search_title.replace("{n}", name),
@@ -86,7 +80,6 @@ impl InputCfg {
 		}
 	}
 
-	#[inline]
 	pub fn shell(block: bool) -> Self {
 		Self {
 			title: INPUT.shell_title[block as usize].to_owned(),
@@ -110,25 +103,22 @@ impl InputCfg {
 }
 
 impl ConfirmCfg {
-	#[inline]
-	pub fn delete(targets: &[yazi_shared::fs::Url]) -> Self {
+	pub fn trash(urls: &[yazi_shared::fs::Url]) -> Self {
 		Self {
-			title:    CONFIRM.delete_title.replace("{n}", &targets.len().to_string()),
-			position: Position::new(CONFIRM.delete_origin, CONFIRM.delete_offset),
-			content:  targets.iter().map(|t| t.to_string()).collect::<Vec<_>>().join("\n"),
-		}
-	}
-
-	#[inline]
-	pub fn trash(targets: &[yazi_shared::fs::Url]) -> Self {
-		Self {
-			title:    CONFIRM.trash_title.replace("{n}", &targets.len().to_string()),
+			title:    Self::replace_number(&CONFIRM.trash_title, urls.len(), usize::MAX),
 			position: Position::new(CONFIRM.trash_origin, CONFIRM.trash_offset),
-			content:  targets.iter().map(|t| t.to_string()).collect::<Vec<_>>().join("\n"),
+			content:  urls.iter().map(ToString::to_string).collect::<Vec<_>>().join("\n"),
 		}
 	}
 
-	#[inline]
+	pub fn delete(urls: &[yazi_shared::fs::Url]) -> Self {
+		Self {
+			title:    Self::replace_number(&CONFIRM.delete_title, urls.len(), usize::MAX),
+			position: Position::new(CONFIRM.delete_origin, CONFIRM.delete_offset),
+			content:  urls.iter().map(ToString::to_string).collect::<Vec<_>>().join("\n"),
+		}
+	}
+
 	pub fn overwrite(url: &Url) -> Self {
 		Self {
 			title:    CONFIRM.overwrite_title.to_owned(),
@@ -137,18 +127,17 @@ impl ConfirmCfg {
 		}
 	}
 
-	#[inline]
-	pub fn quit(ongoing_task_names: Vec<String>) -> Self {
-		let n = ongoing_task_names.len();
-		let mut message = CONFIRM.quit_content.replace("{n}", &n.to_string());
-
-		message.push_str(&ongoing_task_names.join("\n"));
-
+	pub fn quit(tasks: Vec<String>) -> Self {
 		Self {
-			title:    CONFIRM.quit_title.to_owned(),
-			content:  message,
+			title:    Self::replace_number(&CONFIRM.quit_title, tasks.len(), 10),
+			content:  CONFIRM.quit_content.replace("{tasks}", &tasks.join("\n")),
 			position: Position::new(CONFIRM.quit_origin, CONFIRM.quit_offset),
 		}
+	}
+
+	fn replace_number(tpl: &str, n: usize, max: usize) -> String {
+		let s = tpl.replace("{s}", if n > 1 { "s" } else { "" });
+		s.replace("{n}", &if n > max { format!("{max}+") } else { n.to_string() })
 	}
 }
 
@@ -158,7 +147,6 @@ impl SelectCfg {
 		SELECT.open_offset.height.min(SELECT.border().saturating_add(len as u16))
 	}
 
-	#[inline]
 	pub fn open(items: Vec<String>) -> Self {
 		let max_height = Self::max_height(items.len());
 		Self {
