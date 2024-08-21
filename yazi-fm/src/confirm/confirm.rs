@@ -52,7 +52,7 @@ impl<'a> Widget for Confirm<'a> {
 					.position(confirm.offset);
 
 			Scrollbar::new(ScrollbarOrientation::VerticalRight).render(
-				popup_layout[0].inner(&Margin { vertical: 1, horizontal: 0 }),
+				popup_layout[0].inner(Margin { vertical: 1, horizontal: 0 }),
 				buf,
 				&mut scrollbar_state,
 			);
