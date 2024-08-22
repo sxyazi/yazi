@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 use tokio::fs;
-use yazi_config::popup::InputCfg;
+use yazi_config::popup::{ConfirmCfg, InputCfg};
 use yazi_dds::Pubsub;
-use yazi_proxy::{InputProxy, TabProxy, WATCHER};
+use yazi_proxy::{ConfirmProxy, InputProxy, TabProxy, WATCHER};
 use yazi_shared::{event::Cmd, fs::{maybe_exists, ok_or_not_found, paths_to_same_file, symlink_realpath, File, FilesOp, Url}};
 
 use crate::manager::Manager;
@@ -64,18 +64,12 @@ impl Manager {
 				return;
 			}
 
-			let new = hovered.parent().unwrap().join(name);
+			let new = Url::from(hovered.parent().unwrap().join(name));
 			if opt.force || !maybe_exists(&new).await || paths_to_same_file(&hovered, &new).await {
-				Self::rename_do(tab, hovered, Url::from(new)).await.ok();
-				return;
+				Self::rename_do(tab, hovered, new).await.ok();
+			} else if ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await {
+				Self::rename_do(tab, hovered, new).await.ok();
 			}
-
-			let mut result = InputProxy::show(InputCfg::overwrite());
-			if let Some(Ok(choice)) = result.recv().await {
-				if choice == "y" || choice == "Y" {
-					Self::rename_do(tab, hovered, Url::from(new)).await.ok();
-				}
-			};
 		});
 	}
 

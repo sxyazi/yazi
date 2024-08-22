@@ -3,7 +3,7 @@ use std::{fmt::Display, str::FromStr};
 use anyhow::bail;
 use serde::Deserialize;
 
-#[derive(Clone, Copy, Default, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq)]
 #[serde(try_from = "String")]
 pub enum Origin {
 	#[default]

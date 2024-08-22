@@ -1,8 +1,8 @@
 use std::time::Duration;
 
 use tokio::{select, time};
-use yazi_config::popup::InputCfg;
-use yazi_proxy::InputProxy;
+use yazi_config::popup::ConfirmCfg;
+use yazi_proxy::ConfirmProxy;
 use yazi_shared::{emit, event::{Cmd, EventQuit}};
 
 use crate::{manager::Manager, tasks::Tasks};
@@ -23,16 +23,16 @@ impl Manager {
 		let opt = EventQuit { no_cwd_file: opt.into().no_cwd_file, ..Default::default() };
 
 		let ongoing = tasks.ongoing().clone();
-		let left = ongoing.lock().len();
+		let left: Vec<String> = ongoing.lock().values().take(11).map(|t| t.name.clone()).collect();
 
-		if left == 0 {
+		if left.is_empty() {
 			emit!(Quit(opt));
 			return;
 		}
 
 		tokio::spawn(async move {
 			let mut i = 0;
-			let mut result = InputProxy::show(InputCfg::quit(left));
+			let mut rx = ConfirmProxy::show_rx(ConfirmCfg::quit(left));
 			loop {
 				select! {
 					_ = time::sleep(Duration::from_millis(100)) => {
@@ -43,8 +43,8 @@ impl Manager {
 							return;
 						}
 					}
-					choice = result.recv() => {
-						if matches!(choice, Some(Ok(s)) if s == "y" || s == "Y") {
+					b = &mut rx => {
+						if b.unwrap_or(false) {
 							emit!(Quit(opt));
 						}
 						return;
@@ -52,10 +52,8 @@ impl Manager {
 				}
 			}
 
-			if let Some(Ok(choice)) = result.recv().await {
-				if choice == "y" || choice == "Y" {
-					emit!(Quit(opt));
-				}
+			if rx.await.unwrap_or(false) {
+				emit!(Quit(opt));
 			}
 		});
 	}

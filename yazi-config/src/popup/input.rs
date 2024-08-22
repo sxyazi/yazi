@@ -23,16 +23,6 @@ pub struct Input {
 	pub rename_origin: Origin,
 	pub rename_offset: Offset,
 
-	// trash
-	pub trash_title:  String,
-	pub trash_origin: Origin,
-	pub trash_offset: Offset,
-
-	// delete
-	pub delete_title:  String,
-	pub delete_origin: Origin,
-	pub delete_offset: Offset,
-
 	// filter
 	pub filter_title:  String,
 	pub filter_origin: Origin,
@@ -52,16 +42,6 @@ pub struct Input {
 	pub shell_title:  [String; 2],
 	pub shell_origin: Origin,
 	pub shell_offset: Offset,
-
-	// overwrite
-	pub overwrite_title:  String,
-	pub overwrite_origin: Origin,
-	pub overwrite_offset: Offset,
-
-	// quit
-	pub quit_title:  String,
-	pub quit_origin: Origin,
-	pub quit_offset: Offset,
 }
 
 impl Input {

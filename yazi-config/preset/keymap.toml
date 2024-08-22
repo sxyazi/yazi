@@ -196,7 +196,7 @@ keymap = [
 
 keymap = [
 	{ on = "<C-c>",   run = "close",          desc = "Cancel input" },
-	{ on = "<Enter>", run = "close --submit", desc = "Submit the input" },
+	{ on = "<Enter>", run = "close --submit", desc = "Submit input" },
 	{ on = "<Esc>",   run = "escape",         desc = "Go back the normal mode, or cancel input" },
 	{ on = "<C-[>",   run = "escape",         desc = "Go back the normal mode, or cancel input" },
 
@@ -256,6 +256,27 @@ keymap = [
 	# Undo/Redo
 	{ on = "u",     run = "undo", desc = "Undo the last operation" },
 	{ on = "<C-r>", run = "redo", desc = "Redo the last operation" },
+
+	# Help
+	{ on = "~",    run = "help", desc = "Open help" },
+	{ on = "<F1>", run = "help", desc = "Open help" },
+]
+
+[confirm]
+keymap = [
+	{ on = "<Esc>",   run = "close",          desc = "Cancel the confirm" },
+	{ on = "<C-[>",   run = "close",          desc = "Cancel the confirm" },
+	{ on = "<C-c>",   run = "close",          desc = "Cancel the confirm" },
+	{ on = "<Enter>", run = "close --submit", desc = "Submit the confirm" },
+
+	{ on = "n", run = "close",          desc = "Cancel the confirm" },
+	{ on = "y", run = "close --submit", desc = "Submit the confirm" },
+
+	{ on = "k", run = "arrow -1", desc = "Move cursor up" },
+	{ on = "j", run = "arrow 1",  desc = "Move cursor down" },
+
+	{ on = "<Up>",   run = "arrow -1", desc = "Move cursor up" },
+	{ on = "<Down>", run = "arrow 1",  desc = "Move cursor down" },
 
 	# Help
 	{ on = "~",    run = "help", desc = "Open help" },

@@ -1,6 +1,5 @@
 use std::mem;
 
-use ratatui::layout::Rect;
 use yazi_config::{LAYOUT, MANAGER};
 use yazi_proxy::ManagerProxy;
 use yazi_shared::fs::{Cha, File, FilesOp, Url};
@@ -150,14 +149,5 @@ impl Folder {
 		let start = (page.saturating_sub(1) * limit).min(len.saturating_sub(1));
 		let end = ((page + 2) * limit).min(len);
 		&self.files[start..end]
-	}
-
-	pub fn rect_current(&self, url: &Url) -> Option<Rect> {
-		let y = self.files.position(url)? - self.offset;
-
-		let mut rect = LAYOUT.load().current;
-		rect.y = rect.y.saturating_sub(1) + y as u16;
-		rect.height = 1;
-		Some(rect)
 	}
 }

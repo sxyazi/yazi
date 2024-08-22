@@ -86,6 +86,19 @@ impl Utils {
 			})?,
 		)?;
 
+		// TODO: redesign the confirm API
+		// ya.raw_set(
+		// 	"confirm",
+		// 	lua.create_async_function(|_, t: Table| async move {
+		// 		let result = ConfirmProxy::show(ConfirmCfg {
+		// 			title:    t.raw_get("title")?,
+		// 			content:  t.raw_get("content")?,
+		// 			position: Position::try_from(t.raw_get::<_, Table>("position")?)?.into(),
+		// 		});
+		// 		Ok(result.await)
+		// 	})?,
+		// )?;
+
 		ya.raw_set(
 			"notify",
 			lua.create_function(|_, t: Table| {
