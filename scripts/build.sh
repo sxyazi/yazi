@@ -3,7 +3,7 @@ set -euo pipefail
 
 export ARTIFACT_NAME="yazi-$1"
 export YAZI_GEN_COMPLETIONS=1
-export MACOSX_DEPLOYMENT_TARGE="10.9"
+export MACOSX_DEPLOYMENT_TARGET="10.11"
 
 # Setup Rust toolchain
 if [[ "$1" == *-musl ]]; then
