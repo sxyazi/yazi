@@ -38,21 +38,21 @@ https://github.com/sxyazi/yazi/assets/17523360/92ff23fa-0cd5-4f04-b387-894c12265
 
 ## Image Preview
 
-| Platform          | Protocol                                                                                              | Support                                                        |
-| ----------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| kitty             | [Kitty unicode placeholders](https://sw.kovidgoyal.net/kitty/graphics-protocol/#unicode-placeholders) | ✅ Built-in                                                    |
-| Konsole           | [Kitty old protocol](https://github.com/sxyazi/yazi/blob/main/yazi-adapter/src/kitty_old.rs)          | ✅ Built-in                                                    |
-| iTerm2            | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ✅ Built-in                                                    |
-| WezTerm           | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ✅ Built-in                                                    |
-| Mintty (Git Bash) | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ✅ Built-in                                                    |
-| foot              | [Sixel graphics format](https://www.vt100.net/docs/vt3xx-gp/chapter14.html)                           | ✅ Built-in                                                    |
-| Ghostty           | [Kitty unicode placeholders](https://sw.kovidgoyal.net/kitty/graphics-protocol/#unicode-placeholders) | ✅ Built-in                                                    |
-| Black Box         | [Sixel graphics format](https://www.vt100.net/docs/vt3xx-gp/chapter14.html)                           | ✅ Built-in                                                    |
-| VSCode            | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ✅ Built-in                                                    |
-| Tabby             | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ✅ Built-in                                                    |
-| Hyper             | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ✅ Built-in                                                    |
-| X11 / Wayland     | Window system protocol                                                                                | ☑️ [Überzug++](https://github.com/jstkdng/ueberzugpp) required |
-| Fallback          | [ASCII art (Unicode block)](https://en.wikipedia.org/wiki/ASCII_art)                                  | ☑️ [Chafa](https://hpjansson.org/chafa/) required              |
+| Platform                                                   | Protocol                                                                                              | Support                                                        |
+|------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|----------------------------------------------------------------|
+| [kitty](https://github.com/kovidgoyal/kitty)               | [Kitty unicode placeholders](https://sw.kovidgoyal.net/kitty/graphics-protocol/#unicode-placeholders) | ✅ Built-in                                                     |
+| [Konsole](https://github.com/KDE/konsole)                  | [Kitty old protocol](https://github.com/sxyazi/yazi/blob/main/yazi-adapter/src/kitty_old.rs)          | ✅ Built-in                                                     |
+| [iTerm2](https://github.com/gnachman/iTerm2) (macOS)       | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ✅ Built-in                                                     |
+| [WezTerm](https://github.com/wez/wezterm)                  | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ✅ Built-in                                                     |
+| [Mintty](https://github.com/mintty/mintty) (Git Bash)      | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ✅ Built-in                                                     |
+| [foot](https://codeberg.org/dnkl/foot)                     | [Sixel graphics format](https://www.vt100.net/docs/vt3xx-gp/chapter14.html)                           | ✅ Built-in                                                     |
+| [Ghostty](https://mitchellh.com/ghostty)                   | [Kitty unicode placeholders](https://sw.kovidgoyal.net/kitty/graphics-protocol/#unicode-placeholders) | ✅ Built-in                                                     |
+| [Black Box](https://github.com/yonasBSD/blackbox-terminal) | [Sixel graphics format](https://www.vt100.net/docs/vt3xx-gp/chapter14.html)                           | ✅ Built-in                                                     |
+| [VSCode](https://github.com/microsoft/vscode)              | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ✅ Built-in                                                     |
+| [Tabby](https://github.com/Eugeny/tabby)                   | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ✅ Built-in                                                     |
+| [Hyper](https://github.com/vercel/hyper)                   | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ✅ Built-in                                                     |
+| X11 / Wayland                                              | Window system protocol                                                                                | ☑️ [Überzug++](https://github.com/jstkdng/ueberzugpp) required |
+| Fallback                                                   | [ASCII art (Unicode block)](https://en.wikipedia.org/wiki/ASCII_art)                                  | ☑️ [Chafa](https://hpjansson.org/chafa/) required              |
 
 See https://yazi-rs.github.io/docs/image-preview for details.
 
