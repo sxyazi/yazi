@@ -1,7 +1,10 @@
 use std::{collections::HashMap, iter};
 
 use anyhow::Result;
+use ratatui::layout::Rect;
 use tokio::task::JoinHandle;
+use yazi_adapter::Dimension;
+use yazi_config::{popup::{Origin, Position}, LAYOUT};
 use yazi_fs::{Folder, FolderStage};
 use yazi_shared::{fs::Url, render};
 
@@ -35,6 +38,24 @@ impl Tab {
 
 impl Tab {
 	// --- Current
+	pub fn hovered_rect(&self) -> Option<Rect> {
+		let y = self.current.files.position(&self.current.hovered()?.url)? - self.current.offset;
+
+		let mut rect = LAYOUT.load().current;
+		rect.y = rect.y.saturating_sub(1) + y as u16;
+		rect.height = 1;
+		Some(rect)
+	}
+
+	pub fn hovered_rect_based(&self, pos: Position) -> Rect {
+		let ws = Dimension::available();
+		if let Some(r) = self.hovered_rect() {
+			Position::sticky(ws, r, pos.offset)
+		} else {
+			Position::new(Origin::TopCenter, pos.offset).rect(ws)
+		}
+	}
+
 	pub fn selected_or_hovered(&self, reorder: bool) -> Box<dyn Iterator<Item = &Url> + '_> {
 		if self.selected.is_empty() {
 			Box::new(self.current.hovered().map(|h| vec![&h.url]).unwrap_or_default().into_iter())

@@ -1,11 +1,12 @@
+use ratatui::widgets::Paragraph;
 use tokio::sync::oneshot::Sender;
 use yazi_config::popup::Position;
 
 #[derive(Default)]
 pub struct Confirm {
 	pub title:   String,
-	pub content: String,
-	pub lines:   usize,
+	pub content: Paragraph<'static>,
+	pub list:    Paragraph<'static>,
 
 	pub offset:   usize,
 	pub position: Position,

@@ -1,6 +1,6 @@
 use yazi_shared::{event::{Cmd, Data}, render};
 
-use crate::confirm::Confirm;
+use crate::{confirm::Confirm, manager::Manager};
 
 pub struct Opt {
 	step: isize,
@@ -11,13 +11,14 @@ impl From<Cmd> for Opt {
 }
 
 impl Confirm {
-	fn next(&mut self, step: usize) {
-		if self.lines == 0 {
+	fn next(&mut self, step: usize, width: u16) {
+		let height = self.list.line_count(width);
+		if height == 0 {
 			return;
 		}
 
 		let old = self.offset;
-		self.offset = (self.offset + step).min(self.lines - 1);
+		self.offset = (self.offset + step).min(height - 1);
 
 		render!(old != self.offset);
 	}
@@ -29,8 +30,12 @@ impl Confirm {
 		render!(old != self.offset);
 	}
 
-	pub fn arrow(&mut self, opt: impl Into<Opt>) {
+	pub fn arrow(&mut self, opt: impl Into<Opt>, manager: &Manager) {
 		let opt = opt.into() as Opt;
-		if opt.step > 0 { self.next(opt.step as usize) } else { self.prev(opt.step.unsigned_abs()) }
+		if opt.step > 0 {
+			self.next(opt.step as usize, manager.area(self.position).width)
+		} else {
+			self.prev(opt.step.unsigned_abs())
+		}
 	}
 }

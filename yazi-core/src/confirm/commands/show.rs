@@ -26,7 +26,7 @@ impl Confirm {
 		self.close(false);
 		self.title = opt.cfg.title;
 		self.content = opt.cfg.content;
-		self.lines = self.content.lines().count();
+		self.list = opt.cfg.list;
 
 		self.offset = 0;
 		self.position = opt.cfg.position;

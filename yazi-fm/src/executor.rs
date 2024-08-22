@@ -252,14 +252,14 @@ impl<'a> Executor<'a> {
 
 	fn confirm(&mut self, cmd: Cmd) {
 		macro_rules! on {
-			($name:ident) => {
+			($name:ident $(,$args:expr)*) => {
 				if cmd.name == stringify!($name) {
-					return self.app.cx.confirm.$name(cmd);
+					return self.app.cx.confirm.$name(cmd, $($args),*);
 				}
 			};
 		}
 
-		on!(arrow);
+		on!(arrow, &self.app.cx.manager);
 		on!(show);
 		on!(close);
 	}

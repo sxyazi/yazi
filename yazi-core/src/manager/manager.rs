@@ -1,5 +1,8 @@
 use std::collections::HashMap;
 
+use ratatui::layout::Rect;
+use yazi_adapter::Dimension;
+use yazi_config::popup::{Origin, Position};
 use yazi_fs::Folder;
 use yazi_shared::fs::{File, Url};
 
@@ -22,6 +25,14 @@ impl Manager {
 
 			watcher:  Watcher::serve(),
 			mimetype: Default::default(),
+		}
+	}
+
+	pub fn area(&self, pos: Position) -> Rect {
+		if pos.origin == Origin::Hovered {
+			self.active().hovered_rect_based(pos)
+		} else {
+			pos.rect(Dimension::available())
 		}
 	}
 

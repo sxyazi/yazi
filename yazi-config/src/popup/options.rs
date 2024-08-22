@@ -1,6 +1,7 @@
+use ratatui::{text::Text, widgets::{Paragraph, Wrap}};
 use yazi_shared::fs::Url;
 
-use super::{Offset, Position};
+use super::{Offset, Origin, Position};
 use crate::{CONFIRM, INPUT, SELECT};
 
 #[derive(Default)]
@@ -24,8 +25,9 @@ pub struct SelectCfg {
 #[derive(Default)]
 pub struct ConfirmCfg {
 	pub title:    String,
-	pub content:  String,
 	pub position: Position,
+	pub content:  Paragraph<'static>,
+	pub list:     Paragraph<'static>,
 }
 
 impl InputCfg {
@@ -103,36 +105,54 @@ impl InputCfg {
 }
 
 impl ConfirmCfg {
-	pub fn trash(urls: &[yazi_shared::fs::Url]) -> Self {
+	fn new(
+		title: String,
+		(origin, offset): (Origin, Offset),
+		content: Option<Text<'static>>,
+		list: Option<Text<'static>>,
+	) -> Self {
 		Self {
-			title:    Self::replace_number(&CONFIRM.trash_title, urls.len(), usize::MAX),
-			position: Position::new(CONFIRM.trash_origin, CONFIRM.trash_offset),
-			content:  urls.iter().map(ToString::to_string).collect::<Vec<_>>().join("\n"),
+			title,
+			position: Position::new(origin, offset),
+			content: content.map(|c| Paragraph::new(c).wrap(Wrap { trim: false })).unwrap_or_default(),
+			list: list.map(|l| Paragraph::new(l).wrap(Wrap { trim: false })).unwrap_or_default(),
 		}
+	}
+
+	pub fn trash(urls: &[yazi_shared::fs::Url]) -> Self {
+		Self::new(
+			Self::replace_number(&CONFIRM.trash_title, urls.len(), usize::MAX),
+			(CONFIRM.trash_origin, CONFIRM.trash_offset),
+			None,
+			Some(urls.iter().map(ToString::to_string).collect()),
+		)
 	}
 
 	pub fn delete(urls: &[yazi_shared::fs::Url]) -> Self {
-		Self {
-			title:    Self::replace_number(&CONFIRM.delete_title, urls.len(), usize::MAX),
-			position: Position::new(CONFIRM.delete_origin, CONFIRM.delete_offset),
-			content:  urls.iter().map(ToString::to_string).collect::<Vec<_>>().join("\n"),
-		}
+		Self::new(
+			Self::replace_number(&CONFIRM.delete_title, urls.len(), usize::MAX),
+			(CONFIRM.delete_origin, CONFIRM.delete_offset),
+			None,
+			Some(urls.iter().map(ToString::to_string).collect()),
+		)
 	}
 
 	pub fn overwrite(url: &Url) -> Self {
-		Self {
-			title:    CONFIRM.overwrite_title.to_owned(),
-			content:  CONFIRM.overwrite_content.replace("{url}", &url.to_string()),
-			position: Position::new(CONFIRM.overwrite_origin, CONFIRM.overwrite_offset),
-		}
+		Self::new(
+			CONFIRM.overwrite_title.to_owned(),
+			(CONFIRM.overwrite_origin, CONFIRM.overwrite_offset),
+			Some(Text::raw(&CONFIRM.overwrite_content)),
+			Some(url.to_string().into()),
+		)
 	}
 
-	pub fn quit(tasks: Vec<String>) -> Self {
-		Self {
-			title:    Self::replace_number(&CONFIRM.quit_title, tasks.len(), 10),
-			content:  CONFIRM.quit_content.replace("{tasks}", &tasks.join("\n")),
-			position: Position::new(CONFIRM.quit_origin, CONFIRM.quit_offset),
-		}
+	pub fn quit(left: Vec<String>) -> Self {
+		Self::new(
+			Self::replace_number(&CONFIRM.quit_title, left.len(), 10),
+			(CONFIRM.quit_origin, CONFIRM.quit_offset),
+			Some(Text::raw(&CONFIRM.quit_content)),
+			Some(left.into_iter().collect()),
+		)
 	}
 
 	fn replace_number(tpl: &str, n: usize, max: usize) -> String {

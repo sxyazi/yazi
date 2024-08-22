@@ -3,7 +3,7 @@ use ratatui::layout::Rect;
 
 use super::{Offset, Origin};
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Position {
 	pub origin: Origin,
 	pub offset: Offset,
@@ -30,7 +30,7 @@ impl Position {
 		let max_y = rows.saturating_sub(height);
 		let new_y = match self.origin {
 			TopLeft | TopCenter | TopRight => y.clamp(0, max_y as i16) as u16,
-			Center => (max_y / 2).saturating_sub(height / 2).saturating_add_signed(y).clamp(0, max_y),
+			Center => (rows / 2).saturating_sub(height / 2).saturating_add_signed(y).clamp(0, max_y),
 			BottomLeft | BottomCenter | BottomRight => max_y.saturating_add_signed(y).clamp(0, max_y),
 			Hovered => unreachable!(),
 		};
