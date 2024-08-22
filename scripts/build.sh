@@ -12,7 +12,7 @@ else
 fi
 
 # Build for the target
-cargo build --release --locked --target "$1"
+MACOSX_DEPLOYMENT_TARGE="10.9" cargo build --release --locked --target "$1"
 
 # Create the artifact
 mkdir -p "$ARTIFACT_NAME/completions"
