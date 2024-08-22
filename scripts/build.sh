@@ -3,6 +3,7 @@ set -euo pipefail
 
 export ARTIFACT_NAME="yazi-$1"
 export YAZI_GEN_COMPLETIONS=1
+export MACOSX_DEPLOYMENT_TARGE="10.9"
 
 # Setup Rust toolchain
 if [[ "$1" == *-musl ]]; then
@@ -12,7 +13,7 @@ else
 fi
 
 # Build for the target
-MACOSX_DEPLOYMENT_TARGE="10.9" cargo build --release --locked --target "$1"
+cargo build --release --locked --target "$1"
 
 # Create the artifact
 mkdir -p "$ARTIFACT_NAME/completions"
