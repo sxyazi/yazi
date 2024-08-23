@@ -1,5 +1,5 @@
 #[cfg(unix)]
-pub static USERS_CACHE: super::RoCell<uzers::UsersCache> = super::RoCell::new();
+pub static USERS_CACHE: crate::RoCell<uzers::UsersCache> = crate::RoCell::new();
 
 #[cfg(unix)]
 pub fn hostname() -> Result<String, std::io::Error> {
