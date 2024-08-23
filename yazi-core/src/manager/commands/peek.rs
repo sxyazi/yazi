@@ -56,6 +56,9 @@ impl Manager {
 		}
 
 		let mime = self.mimetype.get(&hovered.url).cloned().unwrap_or_default();
-		self.active_mut().preview.go(hovered, &mime, opt.force);
+		if !mime.is_empty() {
+			// Wait till mimetype is resolved to avoid flickering
+			self.active_mut().preview.go(hovered, &mime, opt.force);
+		}
 	}
 }
