@@ -52,8 +52,7 @@ impl Stream {
 		use std::env::temp_dir;
 
 		use uzers::Users;
-
-		use crate::USERS_CACHE;
+		use yazi_shared::USERS_CACHE;
 
 		temp_dir().join(format!(".yazi_dds-{}.sock", USERS_CACHE.get_current_uid()))
 	}

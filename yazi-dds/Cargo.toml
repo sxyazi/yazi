@@ -31,4 +31,4 @@ tracing      = { workspace = true }
 vergen-gitcl = { version = "1.0.0", features = [ "build" ] }
 
 [target."cfg(unix)".dependencies]
-uzers = "0.12.1"
+uzers = { workspace = true }

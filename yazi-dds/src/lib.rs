@@ -18,9 +18,6 @@ use server::*;
 pub use state::*;
 use stream::*;
 
-#[cfg(unix)]
-pub static USERS_CACHE: yazi_shared::RoCell<uzers::UsersCache> = yazi_shared::RoCell::new();
-
 pub fn init() {
 	let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
 
@@ -37,9 +34,6 @@ pub fn init() {
 	// Pubsub
 	LOCAL.with(<_>::default);
 	REMOTE.with(<_>::default);
-
-	#[cfg(unix)]
-	USERS_CACHE.with(<_>::default);
 
 	// Env
 	if let Some(s) = std::env::var("YAZI_ID").ok().filter(|s| !s.is_empty()) {

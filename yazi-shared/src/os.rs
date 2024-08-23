@@ -1,4 +1,7 @@
 #[cfg(unix)]
+pub static USERS_CACHE: crate::RoCell<uzers::UsersCache> = crate::RoCell::new();
+
+#[cfg(unix)]
 pub fn hostname() -> Result<String, std::io::Error> {
 	use std::io::{Error, ErrorKind};
 

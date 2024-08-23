@@ -6,8 +6,7 @@ impl Utils {
 	#[cfg(unix)]
 	pub(super) fn user(lua: &Lua, ya: &Table) -> mlua::Result<()> {
 		use uzers::{Groups, Users};
-		use yazi_dds::USERS_CACHE;
-		use yazi_shared::hostname;
+		use yazi_shared::{hostname, USERS_CACHE};
 
 		use crate::utils::HOSTNAME_CACHE;
 
