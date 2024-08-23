@@ -3477,6 +3477,7 @@ dependencies = [
  "serde",
  "shell-words",
  "tokio",
+ "uzers",
  "windows-sys 0.59.0",
 ]
 

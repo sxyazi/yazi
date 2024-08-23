@@ -35,3 +35,4 @@ tokio-stream  = "0.1.15"
 tokio-util    = "0.7.11"
 tracing       = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
 unicode-width = "0.1.13"
+uzers         = "0.12.1"

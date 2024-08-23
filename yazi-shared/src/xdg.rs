@@ -1,6 +1,6 @@
 use std::{env, path::PathBuf};
 
-use crate::fs::expand_path;
+use crate::{fs::expand_path, USERS_CACHE};
 
 pub struct Xdg;
 
@@ -44,5 +44,16 @@ impl Xdg {
 	}
 
 	#[inline]
-	pub fn cache_dir() -> PathBuf { env::temp_dir().join("yazi") }
+	pub fn cache_dir() -> PathBuf {
+		#[cfg(unix)]
+		let s = {
+			use uzers::Users;
+			format!("yazi-{}", USERS_CACHE.get_current_uid())
+		};
+
+		#[cfg(windows)]
+		let s = "yazi";
+
+		env::temp_dir().join(s)
+	}
 }

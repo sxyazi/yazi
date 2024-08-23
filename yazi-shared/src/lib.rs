@@ -39,4 +39,9 @@ pub use time::*;
 pub use translit::*;
 pub use xdg::*;
 
-pub fn init() { event::Event::init(); }
+pub fn init() {
+	#[cfg(unix)]
+	USERS_CACHE.with(<_>::default);
+
+	event::Event::init();
+}
