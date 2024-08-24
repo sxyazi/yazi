@@ -82,6 +82,8 @@ impl Line {
 
 impl UserData for Line {
 	fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+		crate::impl_style_shorthands!(methods, 0.style);
+
 		methods.add_function("width", |_, ud: AnyUserData| Ok(ud.borrow_mut::<Self>()?.0.width()));
 		methods.add_function("style", |_, (ud, value): (AnyUserData, Value)| {
 			{

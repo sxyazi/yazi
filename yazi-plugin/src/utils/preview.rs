@@ -39,13 +39,15 @@ impl Utils {
 				let text =
 					match Highlighter::new(&lock.url).highlight(lock.skip, area.height as usize).await {
 						Ok(text) => text,
-						Err(PeekError::Exceed(max)) => return (false, max).into_lua_multi(lua),
-						Err(_) => return (false, Value::Nil).into_lua_multi(lua),
+						Err(e @ PeekError::Exceed(max)) => return (e.to_string(), max).into_lua_multi(lua),
+						Err(e @ PeekError::Unexpected(_)) => {
+							return (e.to_string(), Value::Nil).into_lua_multi(lua);
+						}
 					};
 				lock.data = vec![Box::new(Paragraph { area: *area, text, ..Default::default() })];
 
 				emit!(Call(Cmd::new("preview").with_any("lock", lock), Layer::Manager));
-				(true, Value::Nil).into_lua_multi(lua)
+				(Value::Nil, Value::Nil).into_lua_multi(lua)
 			})?,
 		)?;
 

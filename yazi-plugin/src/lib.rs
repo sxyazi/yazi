@@ -12,6 +12,7 @@ pub mod fs;
 pub mod isolate;
 pub mod loader;
 mod lua;
+mod macros;
 mod opt;
 pub mod process;
 pub mod pubsub;

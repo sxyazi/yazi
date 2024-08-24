@@ -2,7 +2,7 @@ local M = {}
 
 function M:msg(s)
 	local p = ui.Paragraph(self.area, {
-		ui.Line { ui.Span(s):reverse() },
+		ui.Line(s):reverse(),
 	})
 	ya.preview_widgets(self, { p:wrap(ui.Paragraph.WRAP) })
 end

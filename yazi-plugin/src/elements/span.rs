@@ -1,5 +1,4 @@
 use mlua::{AnyUserData, ExternalError, FromLua, Lua, Table, UserData, UserDataMethods, Value};
-use yazi_shared::theme::Color;
 
 use super::Style;
 
@@ -19,54 +18,7 @@ impl Span {
 
 impl UserData for Span {
 	fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-		methods.add_function("fg", |_, (ud, color): (AnyUserData, String)| {
-			ud.borrow_mut::<Self>()?.0.style.fg = Color::try_from(color).ok().map(Into::into);
-			Ok(ud)
-		});
-		methods.add_function("bg", |_, (ud, color): (AnyUserData, String)| {
-			ud.borrow_mut::<Self>()?.0.style.bg = Color::try_from(color).ok().map(Into::into);
-			Ok(ud)
-		});
-		methods.add_function("bold", |_, ud: AnyUserData| {
-			ud.borrow_mut::<Self>()?.0.style.add_modifier |= ratatui::style::Modifier::BOLD;
-			Ok(ud)
-		});
-		methods.add_function("dim", |_, ud: AnyUserData| {
-			ud.borrow_mut::<Self>()?.0.style.add_modifier |= ratatui::style::Modifier::DIM;
-			Ok(ud)
-		});
-		methods.add_function("italic", |_, ud: AnyUserData| {
-			ud.borrow_mut::<Self>()?.0.style.add_modifier |= ratatui::style::Modifier::ITALIC;
-			Ok(ud)
-		});
-		methods.add_function("underline", |_, ud: AnyUserData| {
-			ud.borrow_mut::<Self>()?.0.style.add_modifier |= ratatui::style::Modifier::UNDERLINED;
-			Ok(ud)
-		});
-		methods.add_function("blink", |_, ud: AnyUserData| {
-			ud.borrow_mut::<Self>()?.0.style.add_modifier |= ratatui::style::Modifier::SLOW_BLINK;
-			Ok(ud)
-		});
-		methods.add_function("blink_rapid", |_, ud: AnyUserData| {
-			ud.borrow_mut::<Self>()?.0.style.add_modifier |= ratatui::style::Modifier::RAPID_BLINK;
-			Ok(ud)
-		});
-		methods.add_function("reverse", |_, ud: AnyUserData| {
-			ud.borrow_mut::<Self>()?.0.style.add_modifier |= ratatui::style::Modifier::REVERSED;
-			Ok(ud)
-		});
-		methods.add_function("hidden", |_, ud: AnyUserData| {
-			ud.borrow_mut::<Self>()?.0.style.add_modifier |= ratatui::style::Modifier::HIDDEN;
-			Ok(ud)
-		});
-		methods.add_function("crossed", |_, ud: AnyUserData| {
-			ud.borrow_mut::<Self>()?.0.style.add_modifier |= ratatui::style::Modifier::CROSSED_OUT;
-			Ok(ud)
-		});
-		methods.add_function("reset", |_, ud: AnyUserData| {
-			ud.borrow_mut::<Self>()?.0.style.add_modifier = ratatui::style::Modifier::empty();
-			Ok(ud)
-		});
+		crate::impl_style_shorthands!(methods, 0.style);
 
 		methods.add_function("style", |_, (ud, value): (AnyUserData, Value)| {
 			ud.borrow_mut::<Self>()?.0.style = match value {

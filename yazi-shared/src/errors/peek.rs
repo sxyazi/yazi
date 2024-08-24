@@ -9,8 +9,8 @@ pub enum PeekError {
 impl Display for PeekError {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
-			Self::Exceed(lines) => write!(f, "Exceed: {lines}"),
-			Self::Unexpected(msg) => write!(f, "Unexpected error: {msg}"),
+			Self::Exceed(lines) => write!(f, "Exceed maximum lines {lines}"),
+			Self::Unexpected(msg) => write!(f, "{msg}"),
 		}
 	}
 }
