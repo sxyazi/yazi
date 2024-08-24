@@ -9,7 +9,7 @@ pub struct OrderedFloat(f64);
 impl OrderedFloat {
 	#[inline]
 	pub fn new(t: f64) -> Self {
-		debug_assert!(t.is_nan());
+		debug_assert!(!t.is_nan());
 		Self(t)
 	}
 
