@@ -70,7 +70,7 @@ function Entity:symlink()
 	end
 
 	local to = self._file.link_to
-	return ui.Line(to and { ui.Span(" -> " .. tostring(to)):italic() } or {})
+	return to and ui.Line(" -> " .. tostring(to)):italic() or ui.Line {}
 end
 
 function Entity:render()

@@ -84,6 +84,14 @@ impl Highlighter {
 				buf.push(b'\n');
 			}
 
+			for b in &mut buf {
+				match *b {
+					b'\0' => return Err("Binary file".into()),
+					b'\r' => *b = b'\n', // '\r' occurs in the middle of a line
+					_ => {}
+				}
+			}
+
 			if i > skip {
 				after.push(String::from_utf8_lossy(&buf).into_owned());
 			} else if !plain {

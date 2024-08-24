@@ -1,9 +1,13 @@
 local M = {}
 
 function M:peek()
-	local _, bound = ya.preview_code(self)
+	local err, bound = ya.preview_code(self)
 	if bound then
 		ya.manager_emit("peek", { bound, only_if = self.file.url, upper_bound = true })
+	elseif err then
+		ya.preview_widgets(self, {
+			ui.Paragraph(self.area, { ui.Line(err):reverse() }),
+		})
 	end
 end
 

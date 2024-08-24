@@ -19,7 +19,7 @@ pub struct Paragraph {
 	pub area: ratatui::layout::Rect,
 
 	pub text:      ratatui::text::Text<'static>,
-	pub style:     Option<ratatui::style::Style>,
+	pub style:     ratatui::style::Style,
 	pub alignment: ratatui::layout::Alignment,
 	pub wrap:      u8,
 }
@@ -29,7 +29,7 @@ impl Paragraph {
 		let new = lua.create_function(|_, (_, area, lines): (Table, RectRef, Vec<Line>)| {
 			Ok(Paragraph {
 				area: *area,
-				text: lines.into_iter().map(|s| s.0).collect::<Vec<_>>().into(),
+				text: lines.into_iter().map(|s| s.0).collect(),
 				..Default::default()
 			})
 		})?;
@@ -58,13 +58,15 @@ impl Paragraph {
 
 impl UserData for Paragraph {
 	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+		crate::impl_style_shorthands!(methods, style);
+
 		methods.add_function("style", |_, (ud, value): (AnyUserData, Value)| {
 			{
 				let mut me = ud.borrow_mut::<Self>()?;
 				match value {
-					Value::Nil => me.style = None,
-					Value::Table(tb) => me.style = Some(Style::try_from(tb)?.0),
-					Value::UserData(ud) => me.style = Some(ud.borrow::<Style>()?.0),
+					Value::Nil => me.style = ratatui::style::Style::default(),
+					Value::Table(tb) => me.style = Style::try_from(tb)?.0,
+					Value::UserData(ud) => me.style = ud.borrow::<Style>()?.0,
 					_ => return Err("expected a Style or Table or nil".into_lua_err()),
 				}
 			}
@@ -92,10 +94,7 @@ impl Renderable for Paragraph {
 	fn area(&self) -> ratatui::layout::Rect { self.area }
 
 	fn render(self: Box<Self>, buf: &mut ratatui::buffer::Buffer) {
-		let mut p = ratatui::widgets::Paragraph::new(self.text);
-		if let Some(style) = self.style {
-			p = p.style(style);
-		}
+		let mut p = ratatui::widgets::Paragraph::new(self.text).style(self.style);
 
 		if self.wrap != WRAP_NO {
 			p = p.wrap(ratatui::widgets::Wrap { trim: self.wrap == WRAP_TRIM });
