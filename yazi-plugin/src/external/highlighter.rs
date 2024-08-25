@@ -38,23 +38,8 @@ impl Highlighter {
 		(&r.0, &r.1)
 	}
 
-	async fn find_syntax(path: &Path) -> Result<&'static SyntaxReference> {
-		let (_, syntaxes) = Self::init().await;
-		let name = path.file_name().map(|n| n.to_string_lossy()).unwrap_or_default();
-		if let Some(s) = syntaxes.find_syntax_by_extension(&name) {
-			return Ok(s);
-		}
-
-		let ext = path.extension().map(|e| e.to_string_lossy()).unwrap_or_default();
-		if let Some(s) = syntaxes.find_syntax_by_extension(&ext) {
-			return Ok(s);
-		}
-
-		let mut line = String::new();
-		let mut reader = BufReader::new(File::open(&path).await?);
-		reader.read_line(&mut line).await?;
-		syntaxes.find_syntax_by_first_line(&line).ok_or_else(|| anyhow!("No syntax found"))
-	}
+	#[inline]
+	pub fn abort() { INCR.fetch_add(1, Ordering::Relaxed); }
 
 	pub async fn highlight(&self, skip: usize, limit: usize) -> Result<Text<'static>, PeekError> {
 		let mut reader = BufReader::new(File::open(&self.path).await?);
@@ -67,10 +52,13 @@ impl Highlighter {
 
 		let mut i = 0;
 		let mut buf = vec![];
+		let mut inspected = 0u16;
 		while reader.read_until(b'\n', &mut buf).await.is_ok() {
 			i += 1;
 			if buf.is_empty() || i > skip + limit {
 				break;
+			} else if Self::is_binary(&buf, &mut inspected) {
+				return Err("Binary file".into());
 			}
 
 			if !plain && (buf.len() > 5000 || buf.contains(&0x1b)) {
@@ -84,15 +72,8 @@ impl Highlighter {
 				buf.push(b'\n');
 			}
 
-			for b in &mut buf {
-				match *b {
-					b'\0' => return Err("Binary file".into()),
-					b'\r' => *b = b'\n', // '\r' occurs in the middle of a line
-					_ => {}
-				}
-			}
-
 			if i > skip {
+				buf.iter_mut().for_each(Self::carriage_return_to_line_feed);
 				after.push(String::from_utf8_lossy(&buf).into_owned());
 			} else if !plain {
 				before.push(String::from_utf8_lossy(&buf).into_owned());
@@ -144,13 +125,75 @@ impl Highlighter {
 		.await?
 	}
 
-	#[inline]
-	pub fn abort() { INCR.fetch_add(1, Ordering::Relaxed); }
+	async fn find_syntax(path: &Path) -> Result<&'static SyntaxReference> {
+		let (_, syntaxes) = Self::init().await;
+		let name = path.file_name().map(|n| n.to_string_lossy()).unwrap_or_default();
+		if let Some(s) = syntaxes.find_syntax_by_extension(&name) {
+			return Ok(s);
+		}
+
+		let ext = path.extension().map(|e| e.to_string_lossy()).unwrap_or_default();
+		if let Some(s) = syntaxes.find_syntax_by_extension(&ext) {
+			return Ok(s);
+		}
+
+		let mut line = String::new();
+		let mut reader = BufReader::new(File::open(&path).await?);
+		reader.read_line(&mut line).await?;
+		syntaxes.find_syntax_by_first_line(&line).ok_or_else(|| anyhow!("No syntax found"))
+	}
+
+	#[inline(always)]
+	fn is_binary(buf: &[u8], inspected: &mut u16) -> bool {
+		if let Some(n) = 1024u16.checked_sub(*inspected) {
+			*inspected += n.min(buf.len() as u16);
+			buf.iter().take(n as usize).any(|&b| b == 0)
+		} else {
+			false
+		}
+	}
+
+	#[inline(always)]
+	fn carriage_return_to_line_feed(c: &mut u8) {
+		if *c == b'\r' {
+			*c = b'\n';
+		}
+	}
 }
 
 impl Highlighter {
+	pub fn to_line_widget(regions: Vec<(highlighting::Style, &str)>, indent: &str) -> Line<'static> {
+		let spans: Vec<_> = regions
+			.into_iter()
+			.map(|(style, s)| {
+				let mut modifier = ratatui::style::Modifier::empty();
+				if style.font_style.contains(highlighting::FontStyle::BOLD) {
+					modifier |= ratatui::style::Modifier::BOLD;
+				}
+				if style.font_style.contains(highlighting::FontStyle::ITALIC) {
+					modifier |= ratatui::style::Modifier::ITALIC;
+				}
+				if style.font_style.contains(highlighting::FontStyle::UNDERLINE) {
+					modifier |= ratatui::style::Modifier::UNDERLINED;
+				}
+
+				Span {
+					content: s.replace('\t', indent).into(),
+					style:   ratatui::style::Style {
+						fg: Self::to_ansi_color(style.foreground),
+						// bg: Self::to_ansi_color(style.background),
+						add_modifier: modifier,
+						..Default::default()
+					},
+				}
+			})
+			.collect();
+
+		Line::from(spans)
+	}
+
 	// Copy from https://github.com/sharkdp/bat/blob/master/src/terminal.rs
-	pub fn to_ansi_color(color: highlighting::Color) -> Option<ratatui::style::Color> {
+	fn to_ansi_color(color: highlighting::Color) -> Option<ratatui::style::Color> {
 		if color.a == 0 {
 			// Themes can specify one of the user-configurable terminal colors by
 			// encoding them as #RRGGBBAA with AA set to 00 (transparent) and RR set
@@ -187,35 +230,5 @@ impl Highlighter {
 		} else {
 			Some(ratatui::style::Color::Rgb(color.r, color.g, color.b))
 		}
-	}
-
-	pub fn to_line_widget(regions: Vec<(highlighting::Style, &str)>, indent: &str) -> Line<'static> {
-		let spans: Vec<_> = regions
-			.into_iter()
-			.map(|(style, s)| {
-				let mut modifier = ratatui::style::Modifier::empty();
-				if style.font_style.contains(highlighting::FontStyle::BOLD) {
-					modifier |= ratatui::style::Modifier::BOLD;
-				}
-				if style.font_style.contains(highlighting::FontStyle::ITALIC) {
-					modifier |= ratatui::style::Modifier::ITALIC;
-				}
-				if style.font_style.contains(highlighting::FontStyle::UNDERLINE) {
-					modifier |= ratatui::style::Modifier::UNDERLINED;
-				}
-
-				Span {
-					content: s.replace('\t', indent).into(),
-					style:   ratatui::style::Style {
-						fg: Self::to_ansi_color(style.foreground),
-						// bg: Self::to_ansi_color(style.background),
-						add_modifier: modifier,
-						..Default::default()
-					},
-				}
-			})
-			.collect();
-
-		Line::from(spans)
 	}
 }
