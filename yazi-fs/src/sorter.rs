@@ -68,25 +68,25 @@ impl FilesSorter {
 	}
 
 	fn sort_naturally(&self, items: &mut Vec<File>) {
-		let mut indices = Vec::with_capacity(items.len());
-		let mut entities = Vec::with_capacity(items.len());
-		for (i, file) in items.iter().enumerate() {
-			indices.push(i);
-			entities.push(file.url.as_os_str().as_encoded_bytes());
-		}
-
+		let mut indices: Vec<usize> = (0..items.len()).collect();
 		indices.sort_unstable_by(|&a, &b| {
-			let promote = self.promote(&items[a], &items[b]);
+			let (a, b) = (&items[a], &items[b]);
+
+			let promote = self.promote(a, b);
 			if promote != Ordering::Equal {
 				return promote;
 			}
 
-			let ordering = if !self.translit {
-				natsort(entities[a], entities[b], !self.sensitive)
+			let ordering = if self.translit {
+				natsort(
+					a.url.as_os_str().as_encoded_bytes().transliterate().as_bytes(),
+					b.url.as_os_str().as_encoded_bytes().transliterate().as_bytes(),
+					!self.sensitive,
+				)
 			} else {
 				natsort(
-					entities[a].transliterate().as_bytes(),
-					entities[b].transliterate().as_bytes(),
+					a.url.as_os_str().as_encoded_bytes(),
+					b.url.as_os_str().as_encoded_bytes(),
 					!self.sensitive,
 				)
 			};
