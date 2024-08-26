@@ -4,7 +4,7 @@ function M:peek()
 	local err, bound = ya.preview_code(self)
 	if bound then
 		ya.manager_emit("peek", { bound, only_if = self.file.url, upper_bound = true })
-	elseif err then
+	elseif err and not err:find("cancelled", 1, true) then
 		ya.preview_widgets(self, {
 			ui.Paragraph(self.area, { ui.Line(err):reverse() }),
 		})

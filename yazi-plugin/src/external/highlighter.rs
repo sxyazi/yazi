@@ -1,10 +1,10 @@
-use std::{io::Cursor, mem, path::{Path, PathBuf}, sync::atomic::{AtomicUsize, Ordering}};
+use std::{borrow::Cow, io::Cursor, mem, path::{Path, PathBuf}, sync::atomic::{AtomicUsize, Ordering}};
 
 use anyhow::{anyhow, Result};
-use ratatui::text::{Line, Span, Text};
+use ratatui::{layout::Rect, text::{Line, Span, Text}};
 use syntect::{dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}, LoadingError};
 use tokio::{fs::File, io::{AsyncBufReadExt, BufReader}, sync::OnceCell};
-use yazi_config::{PREVIEW, THEME};
+use yazi_config::{preview::PreviewWrap, PREVIEW, THEME};
 use yazi_shared::PeekError;
 
 static INCR: AtomicUsize = AtomicUsize::new(0);
@@ -41,23 +41,20 @@ impl Highlighter {
 	#[inline]
 	pub fn abort() { INCR.fetch_add(1, Ordering::Relaxed); }
 
-	pub async fn highlight(&self, skip: usize, limit: usize) -> Result<Text<'static>, PeekError> {
+	pub async fn highlight(&self, skip: usize, area: Rect) -> Result<Text<'static>, PeekError> {
 		let mut reader = BufReader::new(File::open(&self.path).await?);
 
 		let syntax = Self::find_syntax(&self.path).await;
 		let mut plain = syntax.is_err();
 
 		let mut before = Vec::with_capacity(if plain { 0 } else { skip });
-		let mut after = Vec::with_capacity(limit);
+		let mut after = Vec::with_capacity(area.height as _);
 
 		let mut i = 0;
 		let mut buf = vec![];
 		let mut inspected = 0u16;
-		while reader.read_until(b'\n', &mut buf).await.is_ok() {
-			i += 1;
-			if buf.is_empty() || i > skip + limit {
-				break;
-			} else if Self::is_binary(&buf, &mut inspected) {
+		while reader.read_until(b'\n', &mut buf).await.is_ok_and(|n| n > 0) {
+			if Self::is_binary(&buf, &mut inspected) {
 				return Err("Binary file".into());
 			}
 
@@ -72,17 +69,27 @@ impl Highlighter {
 				buf.push(b'\n');
 			}
 
-			if i > skip {
+			i += if i >= skip {
 				buf.iter_mut().for_each(Self::carriage_return_to_line_feed);
 				after.push(String::from_utf8_lossy(&buf).into_owned());
+				Self::line_height(&after[after.len() - 1], area.width)
 			} else if !plain {
 				before.push(String::from_utf8_lossy(&buf).into_owned());
-			}
+				Self::line_height(&before[before.len() - 1], area.width)
+			} else if PREVIEW.wrap == PreviewWrap::Yes {
+				Self::line_height(&String::from_utf8_lossy(&buf), area.width)
+			} else {
+				1
+			};
+
 			buf.clear();
+			if i > skip + area.height as usize {
+				break;
+			}
 		}
 
-		if skip > 0 && i < skip + limit {
-			return Err(PeekError::Exceed(i.saturating_sub(limit)));
+		if skip > 0 && i < skip + area.height as usize {
+			return Err(PeekError::Exceed(i.saturating_sub(area.height as _)));
 		}
 
 		Ok(if plain {
@@ -151,6 +158,31 @@ impl Highlighter {
 		} else {
 			false
 		}
+	}
+
+	fn line_height(s: &str, width: u16) -> usize {
+		if PREVIEW.wrap != PreviewWrap::Yes {
+			return 1;
+		}
+
+		let pad = PREVIEW
+			.tab_size
+			.checked_sub(1)
+			.map(|n| s.bytes().filter(|&b| b == b'\t').count() * n as usize)
+			.map(|n| yazi_config::preview::Preview::indent_with(n))
+			.unwrap_or_default();
+
+		let line = Line {
+			spans: vec![Span { content: pad, style: Default::default() }, Span {
+				content: Cow::Borrowed(s),
+				..Default::default()
+			}],
+			..Default::default()
+		};
+
+		ratatui::widgets::Paragraph::new(line)
+			.wrap(ratatui::widgets::Wrap { trim: false })
+			.line_count(width)
 	}
 
 	#[inline(always)]

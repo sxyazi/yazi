@@ -5,10 +5,15 @@ use serde::{Deserialize, Serialize};
 use validator::Validate;
 use yazi_shared::fs::expand_path;
 
+use super::PreviewWrap;
 use crate::Xdg;
+
+#[rustfmt::skip]
+const TABS: &[&str] = &["", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ", "         ", "          ", "           ", "            ", "             ", "              ", "               ", "                "];
 
 #[derive(Debug, Serialize)]
 pub struct Preview {
+	pub wrap:       PreviewWrap,
 	pub tab_size:   u8,
 	pub max_width:  u32,
 	pub max_height: u32,
@@ -32,19 +37,11 @@ impl Preview {
 	}
 
 	#[inline]
-	pub fn indent(&self) -> Cow<'static, str> {
-		match self.tab_size {
-			0 => Cow::Borrowed(""),
-			1 => Cow::Borrowed(" "),
-			2 => Cow::Borrowed("  "),
-			3 => Cow::Borrowed("   "),
-			4 => Cow::Borrowed("    "),
-			5 => Cow::Borrowed("     "),
-			6 => Cow::Borrowed("      "),
-			7 => Cow::Borrowed("       "),
-			8 => Cow::Borrowed("        "),
-			n => Cow::Owned(" ".repeat(n as usize)),
-		}
+	pub fn indent(&self) -> Cow<'static, str> { Self::indent_with(self.tab_size as usize) }
+
+	#[inline]
+	pub fn indent_with(n: usize) -> Cow<'static, str> {
+		if let Some(s) = TABS.get(n) { Cow::Borrowed(s) } else { Cow::Owned(" ".repeat(n)) }
 	}
 }
 
@@ -58,6 +55,7 @@ impl FromStr for Preview {
 		}
 		#[derive(Deserialize, Validate)]
 		struct Shadow {
+			wrap:       PreviewWrap,
 			tab_size:   u8,
 			max_width:  u32,
 			max_height: u32,
@@ -84,6 +82,7 @@ impl FromStr for Preview {
 		std::fs::create_dir_all(&cache_dir).context("Failed to create cache directory")?;
 
 		Ok(Preview {
+			wrap: preview.wrap,
 			tab_size: preview.tab_size,
 			max_width: preview.max_width,
 			max_height: preview.max_height,
