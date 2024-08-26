@@ -1,8 +1,9 @@
 use mlua::{AnyUserData, IntoLuaMulti, Lua, Table, Value};
+use yazi_config::{preview::PreviewWrap, PREVIEW};
 use yazi_shared::{emit, event::Cmd, Layer, PeekError};
 
 use super::Utils;
-use crate::{bindings::Window, cast_to_renderable, elements::{Paragraph, RectRef, Renderable}, external::Highlighter, file::FileRef};
+use crate::{bindings::Window, cast_to_renderable, elements::{Paragraph, RectRef, Renderable, WRAP, WRAP_NO}, external::Highlighter, file::FileRef};
 
 pub struct PreviewLock {
 	pub url: yazi_shared::fs::Url,
@@ -36,15 +37,20 @@ impl Utils {
 				let area: RectRef = t.raw_get("area")?;
 				let mut lock = PreviewLock::try_from(t)?;
 
-				let text =
-					match Highlighter::new(&lock.url).highlight(lock.skip, area.height as usize).await {
-						Ok(text) => text,
-						Err(e @ PeekError::Exceed(max)) => return (e.to_string(), max).into_lua_multi(lua),
-						Err(e @ PeekError::Unexpected(_)) => {
-							return (e.to_string(), Value::Nil).into_lua_multi(lua);
-						}
-					};
-				lock.data = vec![Box::new(Paragraph { area: *area, text, ..Default::default() })];
+				let text = match Highlighter::new(&lock.url).highlight(lock.skip, *area).await {
+					Ok(text) => text,
+					Err(e @ PeekError::Exceed(max)) => return (e.to_string(), max).into_lua_multi(lua),
+					Err(e @ PeekError::Unexpected(_)) => {
+						return (e.to_string(), Value::Nil).into_lua_multi(lua);
+					}
+				};
+
+				lock.data = vec![Box::new(Paragraph {
+					area: *area,
+					text,
+					wrap: if PREVIEW.wrap == PreviewWrap::Yes { WRAP } else { WRAP_NO },
+					..Default::default()
+				})];
 
 				emit!(Call(Cmd::new("preview").with_any("lock", lock), Layer::Manager));
 				(Value::Nil, Value::Nil).into_lua_multi(lua)
