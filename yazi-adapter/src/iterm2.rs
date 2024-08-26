@@ -1,10 +1,11 @@
 use std::{io::Write, path::Path};
 
 use anyhow::Result;
-use base64::{engine::{general_purpose::STANDARD, Config}, Engine};
+use base64::{engine::general_purpose::STANDARD, Engine};
 use crossterm::{cursor::MoveTo, queue};
-use image::{codecs::jpeg::JpegEncoder, DynamicImage};
+use image::{codecs::{jpeg::JpegEncoder, png::PngEncoder}, DynamicImage, ImageEncoder};
 use ratatui::layout::Rect;
+use yazi_config::PREVIEW;
 
 use super::image::Image;
 use crate::{adapter::Adapter, Emulator, CLOSE, START};
@@ -38,22 +39,34 @@ impl Iterm2 {
 
 	async fn encode(img: DynamicImage) -> Result<Vec<u8>> {
 		tokio::task::spawn_blocking(move || {
-			let mut jpg = vec![];
-			JpegEncoder::new_with_quality(&mut jpg, 75).encode_image(&img)?;
+			let width = img.width();
+			let height = img.height();
 
-			let len = base64::encoded_len(jpg.len(), STANDARD.config().encode_padding());
-			let mut buf = Vec::with_capacity(200 + len.unwrap_or(1 << 16));
+			let mut img_buf = vec![];
 
+			if img.color().has_alpha() {
+				PngEncoder::new(&mut img_buf).write_image(
+					&img.into_rgba8(),
+					width,
+					height,
+					image::ExtendedColorType::Rgba8,
+				)?;
+			} else {
+				JpegEncoder::new_with_quality(&mut img_buf, PREVIEW.image_quality).encode_image(&img)?;
+			}
+
+			let mut buf = vec![];
 			write!(
 				buf,
 				"{}]1337;File=inline=1;size={};width={}px;height={}px;doNotMoveCursor=1:{}\x07{}",
 				START,
-				jpg.len(),
-				img.width(),
-				img.height(),
-				STANDARD.encode(&jpg),
+				img_buf.len(),
+				width,
+				height,
+				STANDARD.encode(&img_buf),
 				CLOSE
 			)?;
+
 			Ok(buf)
 		})
 		.await?

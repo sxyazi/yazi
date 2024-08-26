@@ -2,7 +2,7 @@ use std::{fs::File, io::BufReader, path::{Path, PathBuf}};
 
 use anyhow::Result;
 use exif::{In, Tag};
-use image::{codecs::jpeg::JpegEncoder, imageops::{self, FilterType}, DynamicImage, Limits};
+use image::{codecs::{jpeg::JpegEncoder, png::PngEncoder}, imageops::{self, FilterType}, DynamicImage, ImageEncoder, Limits};
 use ratatui::layout::Rect;
 use yazi_config::{PREVIEW, TASKS};
 
@@ -30,18 +30,25 @@ impl Image {
 				img = img.resize(w, h, Self::filter());
 			}
 
+			let mut buf = Vec::new();
 			img = Self::rotate(img, orientation);
-			if !matches!(img, DynamicImage::ImageRgb8(_)) {
-				img = DynamicImage::ImageRgb8(img.into_rgb8());
+
+			match img {
+				DynamicImage::ImageRgb8(_) => {
+					JpegEncoder::new_with_quality(&mut buf, PREVIEW.image_quality).encode_image(&img)?;
+				}
+				_ => {
+					let (width, height) = (img.width(), img.height());
+					let img_rgba8 = img.into_rgba8(); // Consume `img` here
+					PngEncoder::new(&mut buf).write_image(
+						&img_rgba8,
+						width,
+						height,
+						image::ExtendedColorType::Rgba8,
+					)?;
+				}
 			}
 
-			let mut buf = Vec::new();
-			JpegEncoder::new_with_quality(&mut buf, PREVIEW.image_quality).encode(
-				img.as_bytes(),
-				img.width(),
-				img.height(),
-				img.color().into(),
-			)?;
 			Ok::<_, anyhow::Error>(buf)
 		})
 		.await??;
