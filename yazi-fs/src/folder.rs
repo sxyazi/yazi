@@ -108,10 +108,13 @@ impl Folder {
 		let len = self.files.len();
 		let limit = LAYOUT.load().current.height as usize;
 		let scrolloff = (limit / 2).min(MANAGER.scrolloff as usize);
-		let max_offset = (self.offset + limit).saturating_sub(scrolloff).min(len);
+		let max_offset = (self.offset + limit).min(len).saturating_sub(scrolloff);
 
-		let new_offset =
-			if self.cursor >= max_offset { self.cursor - limit + scrolloff } else { self.offset };
+		let new_offset = if self.cursor >= max_offset {
+			self.cursor.saturating_sub(limit) + scrolloff
+		} else {
+			self.offset
+		};
 
 		self.offset = new_offset.min(len.saturating_sub(limit));
 	}
