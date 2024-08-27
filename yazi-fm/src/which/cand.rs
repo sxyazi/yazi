@@ -1,13 +1,13 @@
 use ratatui::{buffer::Buffer, layout::Rect, text::{Line, Span}, widgets::Widget};
-use yazi_config::{keymap::Control, THEME};
+use yazi_config::{keymap::Chord, THEME};
 
 pub(super) struct Cand<'a> {
-	cand:  &'a Control,
+	cand:  &'a Chord,
 	times: usize,
 }
 
 impl<'a> Cand<'a> {
-	pub(super) fn new(cand: &'a Control, times: usize) -> Self { Self { times, cand } }
+	pub(super) fn new(cand: &'a Chord, times: usize) -> Self { Self { times, cand } }
 
 	fn keys(&self) -> Vec<String> {
 		self.cand.on[self.times..].iter().map(ToString::to_string).collect()

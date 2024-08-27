@@ -1,4 +1,4 @@
-use yazi_config::{keymap::{Control, Key}, KEYMAP};
+use yazi_config::{keymap::{Chord, Key}, KEYMAP};
 use yazi_shared::{emit, Layer};
 
 use crate::app::App;
@@ -44,13 +44,13 @@ impl<'a> Router<'a> {
 
 	#[inline]
 	fn matches(&mut self, layer: Layer, key: Key) -> bool {
-		for ctrl @ Control { on, .. } in KEYMAP.get(layer) {
+		for ctrl @ Chord { on, .. } in KEYMAP.get(layer) {
 			if on.is_empty() || on[0] != key {
 				continue;
 			}
 
 			if on.len() > 1 {
-				self.app.cx.which.show_with(&key, layer);
+				self.app.cx.which.show_with(key, layer);
 			} else {
 				emit!(Seq(ctrl.to_seq(), layer));
 			}

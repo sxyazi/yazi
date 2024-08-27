@@ -2,24 +2,24 @@ use std::{collections::VecDeque, ops::Deref};
 
 use yazi_shared::event::Cmd;
 
-use super::Control;
+use super::Chord;
 
 #[derive(Debug)]
-pub enum ControlCow {
-	Owned(Control),
-	Borrowed(&'static Control),
+pub enum ChordCow {
+	Owned(Chord),
+	Borrowed(&'static Chord),
 }
 
-impl From<&'static Control> for ControlCow {
-	fn from(c: &'static Control) -> Self { Self::Borrowed(c) }
+impl From<&'static Chord> for ChordCow {
+	fn from(c: &'static Chord) -> Self { Self::Borrowed(c) }
 }
 
-impl From<Control> for ControlCow {
-	fn from(c: Control) -> Self { Self::Owned(c) }
+impl From<Chord> for ChordCow {
+	fn from(c: Chord) -> Self { Self::Owned(c) }
 }
 
-impl Deref for ControlCow {
-	type Target = Control;
+impl Deref for ChordCow {
+	type Target = Chord;
 
 	fn deref(&self) -> &Self::Target {
 		match self {
@@ -29,11 +29,11 @@ impl Deref for ControlCow {
 	}
 }
 
-impl Default for ControlCow {
-	fn default() -> Self { Self::Owned(Control::default()) }
+impl Default for ChordCow {
+	fn default() -> Self { Self::Owned(Chord::default()) }
 }
 
-impl ControlCow {
+impl ChordCow {
 	pub fn into_seq(self) -> VecDeque<Cmd> {
 		match self {
 			Self::Owned(c) => c.run.into(),

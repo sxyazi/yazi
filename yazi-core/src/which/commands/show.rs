@@ -1,12 +1,12 @@
-use std::{collections::HashSet, str::FromStr};
+use std::str::FromStr;
 
-use yazi_config::{keymap::{Control, Key}, KEYMAP};
+use yazi_config::{keymap::{Chord, Key}, KEYMAP};
 use yazi_shared::{event::Cmd, render, Layer};
 
 use crate::which::{Which, WhichSorter};
 
 pub struct Opt {
-	cands:  Vec<Control>,
+	cands:  Vec<Chord>,
 	layer:  Layer,
 	silent: bool,
 }
@@ -42,16 +42,13 @@ impl Which {
 		render!();
 	}
 
-	pub fn show_with(&mut self, key: &Key, layer: Layer) {
-		let mut seen = HashSet::new();
-
+	pub fn show_with(&mut self, key: Key, layer: Layer) {
 		self.layer = layer;
 		self.times = 1;
 		self.cands = KEYMAP
 			.get(layer)
 			.iter()
-			.filter(|c| c.on.len() > 1 && &c.on[0] == key)
-			.filter(|&c| seen.insert(&c.on))
+			.filter(|c| c.on.len() > 1 && c.on[0] == key)
 			.map(|c| c.into())
 			.collect();
 

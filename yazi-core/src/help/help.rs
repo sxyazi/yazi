@@ -1,7 +1,7 @@
 use crossterm::event::KeyCode;
 use unicode_width::UnicodeWidthStr;
 use yazi_adapter::Dimension;
-use yazi_config::{keymap::{Control, Key}, KEYMAP};
+use yazi_config::{keymap::{Chord, Key}, KEYMAP};
 use yazi_shared::{render, render_and, Layer};
 
 use super::HELP_MARGIN;
@@ -11,7 +11,7 @@ use crate::input::Input;
 pub struct Help {
 	pub visible:         bool,
 	pub layer:           Layer,
-	pub(super) bindings: Vec<&'static Control>,
+	pub(super) bindings: Vec<&'static Chord>,
 
 	// Filter
 	pub(super) keyword:   String,
@@ -93,7 +93,7 @@ impl Help {
 
 	// --- Bindings
 	#[inline]
-	pub fn window(&self) -> &[&Control] {
+	pub fn window(&self) -> &[&Chord] {
 		let end = (self.offset + Self::limit()).min(self.bindings.len());
 		&self.bindings[self.offset..end]
 	}

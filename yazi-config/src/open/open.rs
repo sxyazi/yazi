@@ -87,7 +87,6 @@ impl<'de> Deserialize<'de> for Open {
 		if outer.open.append_rules.iter().any(|r| r.any_dir()) {
 			outer.open.rules.retain(|r| !r.any_dir());
 		}
-		Preset::mix(&mut outer.open.rules, outer.open.prepend_rules, outer.open.append_rules);
 
 		let openers = outer
 			.opener
@@ -95,6 +94,10 @@ impl<'de> Deserialize<'de> for Open {
 			.map(|(k, v)| (k, v.into_iter().filter_map(|o| o.take()).collect::<IndexSet<_>>()))
 			.collect();
 
-		Ok(Self { rules: outer.open.rules, openers })
+		Ok(Self {
+			#[rustfmt::skip]
+			rules: Preset::mix(outer.open.rules, outer.open.prepend_rules, outer.open.append_rules).collect(),
+			openers,
+		})
 	}
 }
