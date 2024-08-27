@@ -3,7 +3,7 @@ use std::{str::FromStr, time::Duration};
 use mlua::{ExternalError, ExternalResult, IntoLuaMulti, Lua, Table, Value};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use yazi_config::{keymap::{Control, Key}, popup::InputCfg};
+use yazi_config::{keymap::{Chord, Key}, popup::InputCfg};
 use yazi_proxy::{AppProxy, InputProxy};
 use yazi_shared::{emit, event::Cmd, Debounce, Layer};
 
@@ -36,7 +36,7 @@ impl Utils {
 				let mut cands = Vec::with_capacity(30);
 				for (i, cand) in t.raw_get::<_, Table>("cands")?.sequence_values::<Table>().enumerate() {
 					let cand = cand?;
-					cands.push(Control {
+					cands.push(Chord {
 						on:   Self::parse_keys(cand.raw_get("on")?)?,
 						run:  vec![Cmd::args("callback", &[i]).with_any("tx", tx.clone())],
 						desc: cand.raw_get("desc").ok(),

@@ -1,6 +1,6 @@
 use std::{borrow::Cow, mem};
 
-use yazi_config::{keymap::ControlCow, which::SortBy, WHICH};
+use yazi_config::{keymap::ChordCow, which::SortBy, WHICH};
 use yazi_shared::{natsort, Transliterator};
 
 #[derive(Clone, Copy, PartialEq)]
@@ -23,7 +23,7 @@ impl Default for WhichSorter {
 }
 
 impl WhichSorter {
-	pub(super) fn sort(&self, items: &mut Vec<ControlCow>) {
+	pub(super) fn sort(&self, items: &mut Vec<ChordCow>) {
 		if self.by == SortBy::None || items.is_empty() {
 			return;
 		}

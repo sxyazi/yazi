@@ -1,25 +1,26 @@
-use std::str::FromStr;
+use std::{collections::HashSet, str::FromStr};
 
+use indexmap::IndexSet;
 use serde::{Deserialize, Deserializer};
 use yazi_shared::Layer;
 
-use super::Control;
+use super::Chord;
 use crate::Preset;
 
 #[derive(Debug)]
 pub struct Keymap {
-	pub manager:    Vec<Control>,
-	pub tasks:      Vec<Control>,
-	pub select:     Vec<Control>,
-	pub input:      Vec<Control>,
-	pub confirm:    Vec<Control>,
-	pub help:       Vec<Control>,
-	pub completion: Vec<Control>,
+	pub manager:    Vec<Chord>,
+	pub tasks:      Vec<Chord>,
+	pub select:     Vec<Chord>,
+	pub input:      Vec<Chord>,
+	pub confirm:    Vec<Chord>,
+	pub help:       Vec<Chord>,
+	pub completion: Vec<Chord>,
 }
 
 impl Keymap {
 	#[inline]
-	pub fn get(&self, layer: Layer) -> &Vec<Control> {
+	pub fn get(&self, layer: Layer) -> &Vec<Chord> {
 		match layer {
 			Layer::App => unreachable!(),
 			Layer::Manager => &self.manager,
@@ -57,38 +58,38 @@ impl<'de> Deserialize<'de> for Keymap {
 		}
 		#[derive(Deserialize)]
 		struct Inner {
-			keymap:         Vec<Control>,
+			keymap:         IndexSet<Chord>,
 			#[serde(default)]
-			prepend_keymap: Vec<Control>,
+			prepend_keymap: IndexSet<Chord>,
 			#[serde(default)]
-			append_keymap:  Vec<Control>,
+			append_keymap:  IndexSet<Chord>,
 		}
 
-		let mut shadow = Shadow::deserialize(deserializer)?;
+		fn mix(mut a: IndexSet<Chord>, b: IndexSet<Chord>, c: IndexSet<Chord>) -> Vec<Chord> {
+			let mut seen = HashSet::new();
+			b.iter().filter_map(|v| v.on.get(1)).for_each(|&k| _ = seen.insert(k));
+			c.iter().filter_map(|v| v.on.get(1)).for_each(|&k| _ = seen.insert(k));
 
-		#[rustfmt::skip]
-		Preset::mix(&mut shadow.manager.keymap, shadow.manager.prepend_keymap, shadow.manager.append_keymap);
-		#[rustfmt::skip]
-		Preset::mix(&mut shadow.tasks.keymap, shadow.tasks.prepend_keymap, shadow.tasks.append_keymap);
-		#[rustfmt::skip]
-		Preset::mix(&mut shadow.select.keymap, shadow.select.prepend_keymap, shadow.select.append_keymap);
-		#[rustfmt::skip]
-		Preset::mix(&mut shadow.input.keymap, shadow.input.prepend_keymap, shadow.input.append_keymap);
-		#[rustfmt::skip]
-		Preset::mix(&mut shadow.confirm.keymap, shadow.confirm.prepend_keymap, shadow.confirm.append_keymap);
-		#[rustfmt::skip]
-		Preset::mix(&mut shadow.help.keymap, shadow.help.prepend_keymap, shadow.help.append_keymap);
-		#[rustfmt::skip]
-		Preset::mix(&mut shadow.completion.keymap, shadow.completion.prepend_keymap, shadow.completion.append_keymap);
+			a.retain(|v| v.on.len() < 2 || !seen.contains(&v.on[1]));
+			Preset::mix(a, b, c).collect()
+		}
 
+		let shadow = Shadow::deserialize(deserializer)?;
 		Ok(Self {
-			manager:    shadow.manager.keymap,
-			tasks:      shadow.tasks.keymap,
-			select:     shadow.select.keymap,
-			input:      shadow.input.keymap,
-			confirm:    shadow.confirm.keymap,
-			help:       shadow.help.keymap,
-			completion: shadow.completion.keymap,
+			#[rustfmt::skip]
+			manager:    mix(shadow.manager.keymap, shadow.manager.prepend_keymap, shadow.manager.append_keymap),
+			#[rustfmt::skip]
+			tasks:      mix(shadow.tasks.keymap, shadow.tasks.prepend_keymap, shadow.tasks.append_keymap),
+			#[rustfmt::skip]
+			select:     mix(shadow.select.keymap, shadow.select.prepend_keymap, shadow.select.append_keymap),
+			#[rustfmt::skip]
+			input:      mix(shadow.input.keymap, shadow.input.prepend_keymap, shadow.input.append_keymap),
+			#[rustfmt::skip]
+			confirm:    mix(shadow.confirm.keymap, shadow.confirm.prepend_keymap, shadow.confirm.append_keymap),
+			#[rustfmt::skip]
+			help:       mix(shadow.help.keymap, shadow.help.prepend_keymap, shadow.help.append_keymap),
+			#[rustfmt::skip]
+			completion: mix(shadow.completion.keymap, shadow.completion.prepend_keymap, shadow.completion.append_keymap),
 		})
 	}
 }

@@ -1,4 +1,4 @@
-use std::{borrow::Cow, mem, path::{Path, PathBuf}};
+use std::{borrow::Cow, path::{Path, PathBuf}};
 
 use anyhow::{anyhow, Context, Result};
 use toml::{Table, Value};
@@ -32,8 +32,11 @@ impl Preset {
 	}
 
 	#[inline]
-	pub(crate) fn mix<T>(a: &mut Vec<T>, b: Vec<T>, c: Vec<T>) {
-		*a = b.into_iter().chain(mem::take(a)).chain(c).collect();
+	pub(crate) fn mix<T, E>(a: T, b: T, c: T) -> impl Iterator<Item = E>
+	where
+		T: IntoIterator<Item = E>,
+	{
+		b.into_iter().chain(a).chain(c)
 	}
 
 	#[inline]

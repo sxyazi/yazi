@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::VecDeque, sync::OnceLock};
+use std::{borrow::Cow, collections::VecDeque, hash::{Hash, Hasher}, sync::OnceLock};
 
 use regex::Regex;
 use serde::Deserialize;
@@ -9,7 +9,7 @@ use super::Key;
 static RE: OnceLock<Regex> = OnceLock::new();
 
 #[derive(Debug, Default, Deserialize)]
-pub struct Control {
+pub struct Chord {
 	#[serde(deserialize_with = "super::deserialize_on")]
 	pub on:   Vec<Key>,
 	#[serde(deserialize_with = "super::deserialize_run")]
@@ -17,12 +17,17 @@ pub struct Control {
 	pub desc: Option<String>,
 }
 
-impl Control {
-	#[inline]
-	pub fn to_seq(&self) -> VecDeque<Cmd> { self.run.iter().map(|c| c.shallow_clone()).collect() }
+impl PartialEq for Chord {
+	fn eq(&self, other: &Self) -> bool { self.on == other.on }
 }
 
-impl Control {
+impl Eq for Chord {}
+
+impl Hash for Chord {
+	fn hash<H: Hasher>(&self, state: &mut H) { self.on.hash(state) }
+}
+
+impl Chord {
 	pub fn on(&self) -> String { self.on.iter().map(ToString::to_string).collect() }
 
 	pub fn run(&self) -> String {
@@ -44,4 +49,7 @@ impl Control {
 			|| self.run().to_lowercase().contains(&s)
 			|| self.on().to_lowercase().contains(&s)
 	}
+
+	#[inline]
+	pub fn to_seq(&self) -> VecDeque<Cmd> { self.run.iter().map(|c| c.shallow_clone()).collect() }
 }

@@ -1,10 +1,10 @@
-mod control;
+mod chord;
 mod cow;
 mod deserializers;
 mod key;
 mod keymap;
 
-pub use control::*;
+pub use chord::*;
 pub use cow::*;
 use deserializers::*;
 pub use key::*;
