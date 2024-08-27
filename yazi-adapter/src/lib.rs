@@ -8,7 +8,6 @@ mod image;
 mod iterm2;
 mod kitty;
 mod kitty_old;
-mod macros;
 mod sixel;
 mod ueberzug;
 
@@ -29,9 +28,9 @@ pub static ADAPTOR: RoCell<Adapter> = RoCell::new();
 
 // Tmux support
 pub static TMUX: RoCell<bool> = RoCell::new();
-pub static ESCAPE: RoCell<&'static str> = RoCell::new();
-pub static START: RoCell<&'static str> = RoCell::new();
-pub static CLOSE: RoCell<&'static str> = RoCell::new();
+static ESCAPE: RoCell<&'static str> = RoCell::new();
+static START: RoCell<&'static str> = RoCell::new();
+static CLOSE: RoCell<&'static str> = RoCell::new();
 
 // Image state
 static SHOWN: RoCell<arc_swap::ArcSwapOption<ratatui::layout::Rect>> = RoCell::new();
@@ -55,4 +54,17 @@ pub fn init() {
 
 	ADAPTOR.init(Adapter::matches());
 	ADAPTOR.start();
+}
+
+pub fn tcsi(s: &str) -> std::borrow::Cow<str> {
+	if *TMUX {
+		std::borrow::Cow::Owned(format!(
+			"{}{}{}",
+			*START,
+			s.trim_start_matches('\x1b').replace('\x1b', *ESCAPE),
+			*CLOSE
+		))
+	} else {
+		std::borrow::Cow::Borrowed(s)
+	}
 }
