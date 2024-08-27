@@ -37,9 +37,9 @@ static SHOWN: RoCell<arc_swap::ArcSwapOption<ratatui::layout::Rect>> = RoCell::n
 
 pub fn init() {
 	TMUX.init(env_exists("TMUX") && env_exists("TMUX_PANE"));
+	ESCAPE.init(if *TMUX { "\x1b\x1b" } else { "\x1b" });
 	START.init(if *TMUX { "\x1bPtmux;\x1b\x1b" } else { "\x1b" });
 	CLOSE.init(if *TMUX { "\x1b\\" } else { "" });
-	ESCAPE.init(if *TMUX { "\x1b\x1b" } else { "\x1b" });
 
 	if *TMUX {
 		_ = std::process::Command::new("tmux")
@@ -54,4 +54,17 @@ pub fn init() {
 
 	ADAPTOR.init(Adapter::matches());
 	ADAPTOR.start();
+}
+
+pub fn tcsi(s: &str) -> std::borrow::Cow<str> {
+	if *TMUX {
+		std::borrow::Cow::Owned(format!(
+			"{}{}{}",
+			*START,
+			s.trim_start_matches('\x1b').replace('\x1b', *ESCAPE),
+			*CLOSE
+		))
+	} else {
+		std::borrow::Cow::Borrowed(s)
+	}
 }

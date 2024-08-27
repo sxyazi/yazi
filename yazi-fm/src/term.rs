@@ -4,7 +4,7 @@ use anyhow::Result;
 use crossterm::{event::{DisableBracketedPaste, EnableBracketedPaste, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen, SetTitle}};
 use cursor::RestoreCursor;
 use ratatui::{backend::CrosstermBackend, buffer::Buffer, layout::Rect, CompletedFrame, Frame, Terminal};
-use yazi_adapter::Emulator;
+use yazi_adapter::{tcsi, Emulator};
 use yazi_config::{INPUT, MANAGER};
 
 static CSI_U: AtomicBool = AtomicBool::new(false);
@@ -28,9 +28,9 @@ impl Term {
 		enable_raw_mode()?;
 		execute!(
 			BufWriter::new(stderr()),
-			Print("\x1b[?12$p"),      // Request cursor blink status (DECSET)
-			Print("\x1bP$q q\x1b\\"), // Request cursor shape (DECRQM)
-			Print("\x1b[?u\x1b[c"),   // Request keyboard enhancement flags (CSI u)
+			Print(tcsi("\x1b[?12$p")),      // Request cursor blink status (DECSET)
+			Print(tcsi("\x1bP$q q\x1b\\")), // Request cursor shape (DECRQM)
+			Print(tcsi("\x1b[?u\x1b[c")),   // Request keyboard enhancement flags (CSI u)
 			EnterAlternateScreen,
 			EnableBracketedPaste,
 			mouse::SetMouse(true),
