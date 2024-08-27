@@ -7,7 +7,7 @@ use tokio::{io::{AsyncReadExt, BufReader}, time::timeout};
 use tracing::{error, warn};
 use yazi_shared::env_exists;
 
-use crate::{Adapter, CLOSE, ESCAPE, START, TMUX};
+use crate::{tmux, Adapter, TMUX};
 
 #[derive(Clone, Debug)]
 pub enum Emulator {
@@ -123,10 +123,7 @@ impl Emulator {
 		execute!(
 			LineWriter::new(stderr()),
 			SavePosition,
-			Print(format!(
-				"{}[>q{}_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA{}\\{}[c{}",
-				START, ESCAPE, ESCAPE, ESCAPE, CLOSE
-			)),
+			Print(tmux!("\x1b[>q\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[c")),
 			RestorePosition
 		)?;
 
