@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-plugin"
-version     = "0.3.1"
+version     = "0.3.2"
 edition     = "2021"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -13,12 +13,12 @@ default      = [ "vendored-lua" ]
 vendored-lua = [ "mlua/vendored" ]
 
 [dependencies]
-yazi-adapter = { path = "../yazi-adapter", version = "0.3.1" }
-yazi-boot    = { path = "../yazi-boot", version = "0.3.1" }
-yazi-config  = { path = "../yazi-config", version = "0.3.1" }
-yazi-dds     = { path = "../yazi-dds", version = "0.3.1" }
-yazi-proxy   = { path = "../yazi-proxy", version = "0.3.1" }
-yazi-shared  = { path = "../yazi-shared", version = "0.3.1" }
+yazi-adapter = { path = "../yazi-adapter", version = "0.3.2" }
+yazi-boot    = { path = "../yazi-boot", version = "0.3.2" }
+yazi-config  = { path = "../yazi-config", version = "0.3.2" }
+yazi-dds     = { path = "../yazi-dds", version = "0.3.2" }
+yazi-proxy   = { path = "../yazi-proxy", version = "0.3.2" }
+yazi-shared  = { path = "../yazi-shared", version = "0.3.2" }
 
 # External dependencies
 ansi-to-tui   = { workspace = true }
