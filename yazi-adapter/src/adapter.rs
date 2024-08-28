@@ -1,4 +1,4 @@
-use std::{env, fmt::Display, path::Path, sync::Arc};
+use std::{env, fmt::Display, fs, path::Path, sync::Arc};
 
 use anyhow::Result;
 use ratatui::layout::Rect;
@@ -95,16 +95,39 @@ impl Adapter {
 			return *p;
 		}
 
-		match env::var("XDG_SESSION_TYPE").unwrap_or_default().as_str() {
-			"x11" => return Self::X11,
-			"wayland" => return Self::Wayland,
-			_ => warn!("[Adapter] Could not identify XDG_SESSION_TYPE"),
-		}
-		if env_exists("WAYLAND_DISPLAY") {
-			return Self::Wayland;
-		}
-		if env_exists("DISPLAY") {
-			return Self::X11;
+		#[cfg(windows)]
+		let ueberzugpp_exists = false;
+		#[cfg(unix)]
+		let ueberzugpp_exists = {
+			let paths = env::var_os("PATH").unwrap_or_default();
+			let mut found = false;
+
+			for path in env::split_paths(&paths) {
+				let full_path = path.join("ueberzugpp");
+				if fs::metadata(&full_path).map(|m| m.is_file()).unwrap_or(false) {
+					found = true;
+					break;
+				}
+			}
+
+			found
+		};
+
+		if ueberzugpp_exists {
+			match env::var("XDG_SESSION_TYPE").unwrap_or_default().as_str() {
+				"x11" => return Self::X11,
+				"wayland" => return Self::Wayland,
+				_ => warn!("[Adapter] Could not identify XDG_SESSION_TYPE"),
+			}
+			if env_exists("WAYLAND_DISPLAY") {
+				return Self::Wayland;
+			}
+			if env_exists("DISPLAY") {
+				return Self::X11;
+			}
+		} else {
+			#[cfg(unix)]
+			warn!("[Adapter] Could not find ueberzugpp");
 		}
 		if std::fs::symlink_metadata("/proc/sys/fs/binfmt_misc/WSLInterop").is_ok() {
 			return Self::KittyOld;
