@@ -67,10 +67,10 @@ impl<'de> Deserialize<'de> for Keymap {
 
 		fn mix(mut a: IndexSet<Chord>, b: IndexSet<Chord>, c: IndexSet<Chord>) -> Vec<Chord> {
 			let mut seen = HashSet::new();
-			b.iter().filter_map(|v| v.on.get(1)).for_each(|&k| _ = seen.insert(k));
-			c.iter().filter_map(|v| v.on.get(1)).for_each(|&k| _ = seen.insert(k));
+			b.iter().filter(|&v| v.on.len() > 1).for_each(|v| _ = seen.insert(&v.on[..2]));
+			c.iter().filter(|&v| v.on.len() > 1).for_each(|v| _ = seen.insert(&v.on[..2]));
 
-			a.retain(|v| v.on.len() < 2 || !seen.contains(&v.on[1]));
+			a.retain(|v| v.on.len() < 2 || !seen.contains(&v.on[..2]));
 			Preset::mix(a, b, c).collect()
 		}
 
