@@ -95,20 +95,14 @@ impl Adapter {
 			return *p;
 		}
 
-		// Currently Überzug++'s Wayland output only supports Sway, Hyprland and Wayfire
-		// as it requires information from specific compositior socket directly.
-		// These environment variables are from ueberzugpp src/canvas/wayland/config.cpp
-		let supports_ueberzug_wayland = env_exists("SWAYSOCK")
-			|| env_exists("HYPRLAND_INSTANCE_SIGNATURE")
-			|| env_exists("WAYFIRE_SOCKET");
-
+		let supported_compositor = Ueberzug::supported_compositor();
 		match env::var("XDG_SESSION_TYPE").unwrap_or_default().as_str() {
 			"x11" => return Self::X11,
-			"wayland" if supports_ueberzug_wayland => return Self::Wayland,
-			"wayland" if !supports_ueberzug_wayland => warn!("[Adapter] Unsupported Wayland compositor"),
+			"wayland" if supported_compositor => return Self::Wayland,
+			"wayland" if !supported_compositor => warn!("[Adapter] Unsupported Wayland compositor"),
 			_ => warn!("[Adapter] Could not identify XDG_SESSION_TYPE"),
 		}
-		if supports_ueberzug_wayland && env_exists("WAYLAND_DISPLAY") {
+		if supported_compositor && env_exists("WAYLAND_DISPLAY") {
 			return Self::Wayland;
 		}
 		if env_exists("DISPLAY") {
