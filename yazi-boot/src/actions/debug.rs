@@ -27,9 +27,13 @@ impl Actions {
 		writeln!(s, "    Adapter.matches: {:?}", yazi_adapter::Adapter::matches())?;
 
 		writeln!(s, "\nDesktop")?;
-		writeln!(s, "    XDG_SESSION_TYPE: {:?}", env::var_os("XDG_SESSION_TYPE"))?;
-		writeln!(s, "    WAYLAND_DISPLAY : {:?}", env::var_os("WAYLAND_DISPLAY"))?;
-		writeln!(s, "    DISPLAY         : {:?}", env::var_os("DISPLAY"))?;
+		writeln!(s, "    XDG_SESSION_TYPE           : {:?}", env::var_os("XDG_SESSION_TYPE"))?;
+		writeln!(s, "    WAYLAND_DISPLAY            : {:?}", env::var_os("WAYLAND_DISPLAY"))?;
+		writeln!(s, "    DISPLAY                    : {:?}", env::var_os("DISPLAY"))?;
+		writeln!(s, "    SWAYSOCK                   : {:?}", env::var_os("SWAYSOCK"))?;
+		#[rustfmt::skip]
+		writeln!(s, "    HYPRLAND_INSTANCE_SIGNATURE: {:?}", env::var_os("HYPRLAND_INSTANCE_SIGNATURE"))?;
+		writeln!(s, "    WAYFIRE_SOCKET             : {:?}", env::var_os("WAYFIRE_SOCKET"))?;
 
 		writeln!(s, "\nSSH")?;
 		writeln!(s, "    shared.in_ssh_connection: {:?}", yazi_shared::in_ssh_connection())?;

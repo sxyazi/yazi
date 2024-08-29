@@ -6,7 +6,7 @@ use ratatui::layout::Rect;
 use tokio::{io::AsyncWriteExt, process::{Child, Command}, sync::mpsc::{self, UnboundedSender}};
 use tracing::{debug, warn};
 use yazi_config::PREVIEW;
-use yazi_shared::RoCell;
+use yazi_shared::{env_exists, RoCell};
 
 use crate::{Adapter, Dimension};
 
@@ -70,6 +70,15 @@ impl Ueberzug {
 		} else {
 			bail!("uninitialized ueberzugpp");
 		}
+	}
+
+	// Currently Überzug++'s Wayland output only supports Sway, Hyprland and Wayfire
+	// as it requires information from specific compositor socket directly.
+	// These environment variables are from ueberzugpp src/canvas/wayland/config.cpp
+	pub(super) fn supported_compositor() -> bool {
+		env_exists("SWAYSOCK")
+			|| env_exists("HYPRLAND_INSTANCE_SIGNATURE")
+			|| env_exists("WAYFIRE_SOCKET")
 	}
 
 	fn create_demon(adapter: Adapter) -> Result<Child> {

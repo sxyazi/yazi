@@ -95,12 +95,14 @@ impl Adapter {
 			return *p;
 		}
 
+		let supported_compositor = Ueberzug::supported_compositor();
 		match env::var("XDG_SESSION_TYPE").unwrap_or_default().as_str() {
 			"x11" => return Self::X11,
-			"wayland" => return Self::Wayland,
+			"wayland" if supported_compositor => return Self::Wayland,
+			"wayland" if !supported_compositor => warn!("[Adapter] Unsupported Wayland compositor"),
 			_ => warn!("[Adapter] Could not identify XDG_SESSION_TYPE"),
 		}
-		if env_exists("WAYLAND_DISPLAY") {
+		if supported_compositor && env_exists("WAYLAND_DISPLAY") {
 			return Self::Wayland;
 		}
 		if env_exists("DISPLAY") {
