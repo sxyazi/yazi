@@ -1,7 +1,7 @@
 use std::{collections::{HashMap, HashSet}, time::Duration};
 
 use anyhow::Result;
-use notify_fork::{RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
+use notify_fork::{PollWatcher, RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
 use parking_lot::RwLock;
 use tokio::{fs, pin, sync::{mpsc::{self, UnboundedReceiver}, watch}};
 use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
@@ -27,20 +27,23 @@ impl Watcher {
 		let (out_tx, out_rx) = mpsc::unbounded_channel();
 
 		let out_tx_ = out_tx.clone();
-		let watcher = RecommendedWatcher::new(
-			move |res: Result<notify_fork::Event, notify_fork::Error>| {
-				let Ok(event) = res else { return };
-				if event.kind.is_access() {
-					return;
-				}
-				for path in event.paths {
-					out_tx_.send(Url::from(path)).ok();
-				}
-			},
-			Default::default(),
-		);
+		let handler = move |res: Result<notify_fork::Event, notify_fork::Error>| {
+			let Ok(event) = res else { return };
+			if event.kind.is_access() {
+				return;
+			}
+			for path in event.paths {
+				out_tx_.send(Url::from(path)).ok();
+			}
+		};
 
-		tokio::spawn(Self::fan_in(in_rx, watcher.unwrap()));
+		let config = notify_fork::Config::default().with_poll_interval(Duration::from_millis(500));
+		if *yazi_adapter::WSL {
+			tokio::spawn(Self::fan_in(in_rx, PollWatcher::new(handler, config).unwrap()));
+		} else {
+			tokio::spawn(Self::fan_in(in_rx, RecommendedWatcher::new(handler, config).unwrap()));
+		}
+
 		tokio::spawn(Self::fan_out(out_rx));
 		Self { in_tx, out_tx }
 	}
@@ -76,7 +79,7 @@ impl Watcher {
 		});
 	}
 
-	async fn fan_in(mut rx: watch::Receiver<HashSet<Url>>, mut watcher: RecommendedWatcher) {
+	async fn fan_in(mut rx: watch::Receiver<HashSet<Url>>, mut watcher: impl notify_fork::Watcher) {
 		loop {
 			let (mut to_unwatch, mut to_watch): (HashSet<_>, HashSet<_>) = {
 				let (new, old) = (&*rx.borrow_and_update(), &*WATCHED.read());

@@ -39,11 +39,7 @@ impl Actions {
 		writeln!(s, "    shared.in_ssh_connection: {:?}", yazi_shared::in_ssh_connection())?;
 
 		writeln!(s, "\nWSL")?;
-		writeln!(
-			s,
-			"    /proc/sys/fs/binfmt_misc/WSLInterop: {:?}",
-			std::fs::symlink_metadata("/proc/sys/fs/binfmt_misc/WSLInterop").is_ok()
-		)?;
+		writeln!(s, "    WSL: {:?}", *yazi_adapter::WSL)?;
 
 		writeln!(s, "\nVariables")?;
 		writeln!(s, "    SHELL              : {:?}", env::var_os("SHELL"))?;
