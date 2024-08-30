@@ -49,7 +49,7 @@ impl Chafa {
 		let area = Rect {
 			x:      max.x,
 			y:      max.y,
-			width:  first.spans.into_iter().map(|s| s.content.chars().count() as u16).sum(),
+			width:  first.width() as u16,
 			height: lines.len() as u16,
 		};
 

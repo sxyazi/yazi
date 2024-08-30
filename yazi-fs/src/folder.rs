@@ -63,7 +63,7 @@ impl Folder {
 
 	pub fn arrow(&mut self, step: impl Into<Step>) -> bool {
 		let step = step.into() as Step;
-		let b = if self.files.is_empty() {
+		let mut b = if self.files.is_empty() {
 			(self.cursor, self.offset, self.tracing) = (0, 0, false);
 			false
 		} else if step.is_positive() {
@@ -72,8 +72,10 @@ impl Folder {
 			self.prev(step)
 		};
 
-		self.sync_page(false);
 		self.tracing |= b;
+		b |= self.squeeze_offset();
+
+		self.sync_page(false);
 		b
 	}
 
@@ -111,10 +113,10 @@ impl Folder {
 		let scrolloff = (limit / 2).min(MANAGER.scrolloff as usize);
 
 		self.cursor = step.add(self.cursor, limit).min(len.saturating_sub(1));
-		self.offset = if self.cursor >= (self.offset + limit).min(len).saturating_sub(scrolloff) {
-			len.saturating_sub(limit).min(self.offset + self.cursor - old.0)
-		} else {
+		self.offset = if self.cursor < (self.offset + limit).min(len).saturating_sub(scrolloff) {
 			self.offset.min(len.saturating_sub(1))
+		} else {
+			len.saturating_sub(limit).min(self.offset + self.cursor - old.0)
 		};
 
 		old != (self.cursor, self.offset)
@@ -135,6 +137,22 @@ impl Folder {
 		};
 
 		old != (self.cursor, self.offset)
+	}
+
+	fn squeeze_offset(&mut self) -> bool {
+		let old = self.offset;
+		let len = self.files.len();
+
+		let limit = LAYOUT.load().current.height as usize;
+		let scrolloff = (limit / 2).min(MANAGER.scrolloff as usize);
+
+		self.offset = if self.cursor < (self.offset + limit).min(len).saturating_sub(scrolloff) {
+			len.saturating_sub(limit).min(self.offset)
+		} else {
+			len.saturating_sub(limit).min(self.cursor.saturating_sub(limit) + scrolloff)
+		};
+
+		old != self.offset
 	}
 }
 
