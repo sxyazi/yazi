@@ -20,7 +20,7 @@ use kitty::*;
 use kitty_old::*;
 use sixel::*;
 use ueberzug::*;
-use yazi_shared::{env_exists, RoCell};
+use yazi_shared::{env_exists, in_wsl, RoCell};
 
 pub use crate::image::*;
 
@@ -32,10 +32,14 @@ static ESCAPE: RoCell<&'static str> = RoCell::new();
 static START: RoCell<&'static str> = RoCell::new();
 static CLOSE: RoCell<&'static str> = RoCell::new();
 
+// WSL support
+pub static WSL: RoCell<bool> = RoCell::new();
+
 // Image state
 static SHOWN: RoCell<arc_swap::ArcSwapOption<ratatui::layout::Rect>> = RoCell::new();
 
 pub fn init() {
+	// Tmux support
 	TMUX.init(env_exists("TMUX") && env_exists("TMUX_PANE"));
 	ESCAPE.init(if *TMUX { "\x1b\x1b" } else { "\x1b" });
 	START.init(if *TMUX { "\x1bPtmux;\x1b\x1b" } else { "\x1b" });
@@ -50,6 +54,10 @@ pub fn init() {
 			.status();
 	}
 
+	// WSL support
+	WSL.init(in_wsl());
+
+	// Image state
 	SHOWN.with(<_>::default);
 
 	ADAPTOR.init(Adapter::matches());

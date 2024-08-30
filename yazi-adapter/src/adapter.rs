@@ -6,7 +6,7 @@ use tracing::warn;
 use yazi_shared::env_exists;
 
 use super::{Iterm2, Kitty, KittyOld};
-use crate::{Chafa, Emulator, Sixel, Ueberzug, SHOWN, TMUX};
+use crate::{Chafa, Emulator, Sixel, Ueberzug, SHOWN, TMUX, WSL};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Adapter {
@@ -108,7 +108,7 @@ impl Adapter {
 		if env_exists("DISPLAY") {
 			return Self::X11;
 		}
-		if std::fs::symlink_metadata("/proc/sys/fs/binfmt_misc/WSLInterop").is_ok() {
+		if *WSL {
 			return Self::KittyOld;
 		}
 
