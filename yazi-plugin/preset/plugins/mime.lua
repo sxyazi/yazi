@@ -9,6 +9,29 @@ local function match_mimetype(s)
 	end
 end
 
+local function detect_os()
+    local os_name
+    if os.getenv("OS") then
+        os_name = os.getenv("OS")
+        if os_name:find("Windows") then
+            return "Windows"
+        end
+    end
+
+    local uname_handle = io.popen("uname")
+    if uname_handle then
+        local uname_result = uname_handle:read("*a")
+        uname_handle:close()
+        if uname_result:find("Linux") then
+            return "Linux"
+        elseif uname_result:find("Darwin") then
+            return "macOS"
+        end
+    end
+
+    return "Unknown"
+end
+
 function M:fetch()
 	local urls = {}
 	for _, file in ipairs(self.files) do
@@ -16,7 +39,8 @@ function M:fetch()
 	end
 
 	local cmd = os.getenv("YAZI_FILE_ONE") or "file"
-	local child, code = Command(cmd):args({ "-bL", "--mime-type" }):args(urls):stdout(Command.PIPED):spawn()
+	local options = detect_os() == "Windows" and { "-b", "--mime-type" } or { "-bL", "--mime-type" }
+	local child, code = Command(cmd):args(options):args(urls):stdout(Command.PIPED):spawn()
 	if not child then
 		ya.err(string.format("Spawn `%s` command returns %s", cmd, code))
 		return 0
