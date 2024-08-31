@@ -29,6 +29,11 @@ impl Plugin {
 		})
 	}
 
+	#[inline]
+	pub fn fetchers_mask(&self) -> u32 {
+		self.fetchers.iter().fold(0, |n, f| if f.mime.is_some() { n } else { n | 1 << f.idx as u32 })
+	}
+
 	pub fn preloaders<'a>(
 		&'a self,
 		path: &'a Path,
@@ -48,6 +53,7 @@ impl Plugin {
 		self.previewers.iter().find(|&p| p.matches(path, mime))
 	}
 }
+
 impl FromStr for Plugin {
 	type Err = toml::de::Error;
 

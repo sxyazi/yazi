@@ -30,7 +30,7 @@ scopeguard    = "1.2.0"
 serde         = { version = "1.0.209", features = [ "derive" ] }
 serde_json    = "1.0.127"
 shell-words   = "1.1.0"
-tokio         = { version = "1.39.3", features = [ "full" ] }
+tokio         = { version = "1.40.0", features = [ "full" ] }
 tokio-stream  = "0.1.15"
 tokio-util    = "0.7.11"
 tracing       = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
