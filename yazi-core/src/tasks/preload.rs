@@ -53,10 +53,11 @@ impl Tasks {
 	}
 
 	pub fn prework_affected(&self, affected: &[File], mimetype: &HashMap<Url, String>) {
+		let mask = PLUGIN.fetchers_mask();
 		{
 			let mut loaded = self.scheduler.prework.loaded.lock();
 			for f in affected {
-				loaded.remove(&f.url);
+				loaded.get_mut(&f.url).map(|n| *n &= mask);
 			}
 		}
 
