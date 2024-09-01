@@ -3,7 +3,12 @@ use mlua::{ExternalError, ExternalResult, IntoLuaMulti, Lua, Table, Value};
 use tokio::fs;
 use yazi_shared::fs::remove_dir_clean;
 
-use crate::{bindings::Cast, cha::Cha, file::File, url::{Url, UrlRef}};
+use crate::{
+	bindings::Cast,
+	cha::Cha,
+	file::File,
+	url::{Url, UrlRef},
+};
 
 pub fn install(lua: &Lua) -> mlua::Result<()> {
 	lua.globals().raw_set(
@@ -44,6 +49,21 @@ pub fn install(lua: &Lua) -> mlua::Result<()> {
 						_ => {
 							Err("Removal type must be 'file', 'dir', 'dir_all', or 'dir_clean'".into_lua_err())?
 						}
+					};
+
+					match result {
+						Ok(_) => (true, Value::Nil).into_lua_multi(lua),
+						Err(e) => (false, e.raw_os_error()).into_lua_multi(lua),
+					}
+				})?,
+			),
+			(
+				"create",
+				lua.create_async_function(|lua, (type_, url): (mlua::String, UrlRef)| async move {
+					let result = match type_.to_str()? {
+						"file" => fs::File::create(&*url).await.map(|_| ()),
+						"dir" => fs::create_dir(&*url).await,
+						_ => Err("Creation type must be 'file', 'dir'".into_lua_err())?,
 					};
 
 					match result {
