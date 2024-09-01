@@ -53,6 +53,17 @@ function M:seek(units)
 	end
 end
 
+function M:spawn_tar(args)
+	local command = "tar"
+
+	local stdout = args[1] == "l" and Command.PIPED or Command.NULL
+	local child, code = Command(command):args(args):stdout(stdout):stderr(Command.PIPED):spawn()
+	if not child then
+		return nil, "Failed to spawn, error code: " .. tostring(code)
+	end
+	return child, nil
+end
+
 function M:spawn_7z(args)
 	local last_error = nil
 	local try = function(name)
