@@ -26,6 +26,7 @@ pub enum Emulator {
 	Neovim,
 	Apple,
 	Urxvt,
+	WindowsTerminal
 }
 
 impl Emulator {
@@ -46,6 +47,7 @@ impl Emulator {
 			Self::Neovim => vec![],
 			Self::Apple => vec![],
 			Self::Urxvt => vec![],
+			Self::WindowsTerminal => vec![Adapter::Sixel]
 		}
 	}
 }
@@ -64,6 +66,7 @@ impl Emulator {
 			("GHOSTTY_RESOURCES_DIR", Self::Ghostty),
 			("VSCODE_INJECTION", Self::VSCode),
 			("TABBY_CONFIG_DIRECTORY", Self::Tabby),
+			("WT_Session", Self::WindowsTerminal),
 		];
 		match vars.into_iter().find(|v| env_exists(v.0)) {
 			Some(var) => return var.1,

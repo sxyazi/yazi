@@ -82,14 +82,17 @@ impl Adapter {
 
 impl Adapter {
 	pub fn matches() -> Self {
-		let mut protocols = Emulator::detect().adapters();
+		let emulator = Emulator::detect();
+		let mut protocols = emulator.clone().adapters();
 
 		#[cfg(windows)]
-		protocols.retain(|p| *p == Self::Iterm2);
-		if env_exists("ZELLIJ_SESSION_NAME") {
-			protocols.retain(|p| *p == Self::Sixel);
-		} else if *TMUX {
-			protocols.retain(|p| *p != Self::KittyOld);
+		if !matches!(emulator, Emulator::WindowsTerminal) {
+			protocols.retain(|p| *p == Self::Iterm2);
+			if env_exists("ZELLIJ_SESSION_NAME") {
+				protocols.retain(|p| *p == Self::Sixel);
+			} else if *TMUX {
+				protocols.retain(|p| *p != Self::KittyOld);
+			}
 		}
 		if let Some(p) = protocols.first() {
 			return *p;
