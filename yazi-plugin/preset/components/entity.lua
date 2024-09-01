@@ -1,24 +1,27 @@
 Entity = {
 	_inc = 1000,
 	_children = {
-		{ "icon", id = 1, order = 1000 },
-		{ "prefix", id = 2, order = 2000 },
-		{ "highlights", id = 3, order = 3000 },
-		{ "found", id = 4, order = 4000 },
-		{ "symlink", id = 5, order = 5000 },
+		{ "space", id = 1, order = 1000 },
+		{ "icon", id = 2, order = 2000 },
+		{ "prefix", id = 3, order = 3000 },
+		{ "highlights", id = 4, order = 4000 },
+		{ "found", id = 5, order = 5000 },
+		{ "symlink", id = 6, order = 6000 },
 	},
 }
 
 function Entity:new(file) return setmetatable({ _file = file }, { __index = self }) end
+
+function Entity:space() return ui.Line(" ") end
 
 function Entity:icon()
 	local icon = self._file:icon()
 	if not icon then
 		return ui.Line("")
 	elseif self._file:is_hovered() then
-		return ui.Line(" " .. icon.text .. " ")
+		return ui.Line(icon.text .. " ")
 	else
-		return ui.Line(" " .. icon.text .. " "):style(icon.style)
+		return ui.Line(icon.text .. " "):style(icon.style)
 	end
 end
 

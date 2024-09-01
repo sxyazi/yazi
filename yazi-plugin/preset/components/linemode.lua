@@ -2,22 +2,23 @@ Linemode = {
 	_inc = 1000,
 	_children = {
 		{ "solo", id = 1, order = 1000 },
+		{ "space", id = 2, order = 2000 },
 	},
 }
 
 function Linemode:new(file) return setmetatable({ _file = file }, { __index = self }) end
 
+function Linemode:space() return ui.Line(" ") end
+
 function Linemode:solo()
 	local mode = cx.active.conf.linemode
 	if mode == "none" or mode == "solo" then
 		return ui.Line("")
+	elseif self[mode] then
+		return ui.Line { ui.Span(" "), self[mode](self) }
+	else
+		return ui.Line(" " .. mode)
 	end
-
-	if not self[mode] then
-		return ui.Line(mode)
-	end
-
-	return ui.Line { self[mode](self) }
 end
 
 function Linemode:size()
@@ -59,9 +60,6 @@ function Linemode:render()
 	local lines = {}
 	for _, c in ipairs(self._children) do
 		lines[#lines + 1] = (type(c[1]) == "string" and self[c[1]] or c[1])(self)
-		if lines[#lines] and lines[#lines]:width() > 0 then
-    			lines[#lines + 1] = ui.Line { ui.Span(" ") }
-		end
 	end
 	return ui.Line(lines)
 end
