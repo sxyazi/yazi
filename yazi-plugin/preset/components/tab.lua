@@ -22,10 +22,10 @@ end
 
 function Tab:build()
 	self._children = {
-		Rail:new(self._chunks, self._tab),
 		Parent:new(self._chunks[1]:padding(ui.Padding.x(1)), self._tab),
 		Current:new(self._chunks[2], self._tab),
 		Preview:new(self._chunks[3]:padding(ui.Padding.x(1)), self._tab),
+		Rail:new(self._chunks, self._tab),
 	}
 end
 
