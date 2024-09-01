@@ -1,4 +1,5 @@
 use mlua::{AnyUserData, ExternalError, FromLua, Lua, Table, UserData, UserDataMethods, Value};
+use unicode_width::UnicodeWidthChar;
 
 use super::Style;
 
@@ -28,6 +29,9 @@ impl UserData for Span {
 				_ => return Err("expected a Style or Table or nil".into_lua_err()),
 			};
 			Ok(ud)
+		});
+		methods.add_method("visible", |_, me, ()| {
+			Ok(me.0.content.chars().any(|c| c.width().unwrap_or(0) > 0))
 		});
 	}
 }
