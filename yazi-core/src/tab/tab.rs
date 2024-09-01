@@ -23,9 +23,9 @@ pub struct Tab {
 	pub history:   HashMap<Url, Folder>,
 	pub selected:  Selected,
 
-	pub preview:       Preview,
-	pub finder:        Option<Finder>,
-	pub(super) search: Option<JoinHandle<Result<()>>>,
+	pub preview: Preview,
+	pub finder:  Option<Finder>,
+	pub search:  Option<JoinHandle<Result<()>>>,
 }
 
 impl Tab {

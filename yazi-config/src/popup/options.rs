@@ -121,19 +121,19 @@ impl ConfirmCfg {
 
 	pub fn trash(urls: &[yazi_shared::fs::Url]) -> Self {
 		Self::new(
-			Self::replace_number(&CONFIRM.trash_title, urls.len(), usize::MAX),
+			Self::replace_number(&CONFIRM.trash_title, urls.len()),
 			(CONFIRM.trash_origin, CONFIRM.trash_offset),
 			None,
-			Some(urls.iter().map(ToString::to_string).collect()),
+			Self::truncate_list(urls.iter(), urls.len(), 100),
 		)
 	}
 
 	pub fn delete(urls: &[yazi_shared::fs::Url]) -> Self {
 		Self::new(
-			Self::replace_number(&CONFIRM.delete_title, urls.len(), usize::MAX),
+			Self::replace_number(&CONFIRM.delete_title, urls.len()),
 			(CONFIRM.delete_origin, CONFIRM.delete_offset),
 			None,
-			Some(urls.iter().map(ToString::to_string).collect()),
+			Self::truncate_list(urls.iter(), urls.len(), 100),
 		)
 	}
 
@@ -146,18 +146,33 @@ impl ConfirmCfg {
 		)
 	}
 
-	pub fn quit(left: Vec<String>) -> Self {
+	pub fn quit(len: usize, names: Vec<String>) -> Self {
 		Self::new(
-			Self::replace_number(&CONFIRM.quit_title, left.len(), 10),
+			Self::replace_number(&CONFIRM.quit_title, len),
 			(CONFIRM.quit_origin, CONFIRM.quit_offset),
 			Some(Text::raw(&CONFIRM.quit_content)),
-			Some(left.into_iter().collect()),
+			Self::truncate_list(names.into_iter(), len, 10),
 		)
 	}
 
-	fn replace_number(tpl: &str, n: usize, max: usize) -> String {
-		let s = tpl.replace("{s}", if n > 1 { "s" } else { "" });
-		s.replace("{n}", &if n > max { format!("{max}+") } else { n.to_string() })
+	fn replace_number(tpl: &str, n: usize) -> String {
+		tpl.replace("{n}", &n.to_string()).replace("{s}", if n > 1 { "s" } else { "" })
+	}
+
+	fn truncate_list(
+		it: impl Iterator<Item = impl Into<String>>,
+		len: usize,
+		max: usize,
+	) -> Option<Text<'static>> {
+		let mut lines = Vec::with_capacity(len.min(max + 1));
+		for (i, s) in it.enumerate() {
+			if i >= max {
+				lines.push(format!("... and {} more", len - max));
+				break;
+			}
+			lines.push(s.into());
+		}
+		Some(Text::from_iter(lines))
 	}
 }
 

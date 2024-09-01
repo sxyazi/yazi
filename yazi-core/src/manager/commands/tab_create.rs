@@ -35,7 +35,7 @@ impl Tabs {
 		}
 
 		let opt = opt.into() as Opt;
-		let mut tab = Tab::default();
+		let mut tab = Tab { idx: self.cursor + 1, ..Default::default() };
 
 		if !opt.current {
 			tab.cd(opt.url);
