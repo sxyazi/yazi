@@ -3,12 +3,7 @@ use mlua::{ExternalError, ExternalResult, IntoLuaMulti, Lua, Table, Value};
 use tokio::fs;
 use yazi_shared::fs::remove_dir_clean;
 
-use crate::{
-	bindings::Cast,
-	cha::Cha,
-	file::File,
-	url::{Url, UrlRef},
-};
+use crate::{bindings::Cast, cha::Cha, file::File, url::{Url, UrlRef}};
 
 pub fn install(lua: &Lua) -> mlua::Result<()> {
 	lua.globals().raw_set(
