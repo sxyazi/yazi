@@ -118,6 +118,10 @@ impl Display for Url {
 	}
 }
 
+impl From<&Url> for String {
+	fn from(url: &Url) -> Self { url.to_string() }
+}
+
 impl Url {
 	#[inline]
 	pub fn join(&self, path: impl AsRef<Path>) -> Self {

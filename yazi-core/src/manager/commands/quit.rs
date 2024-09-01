@@ -23,16 +23,19 @@ impl Manager {
 		let opt = EventQuit { no_cwd_file: opt.into().no_cwd_file, ..Default::default() };
 
 		let ongoing = tasks.ongoing().clone();
-		let left: Vec<String> = ongoing.lock().values().take(11).map(|t| t.name.clone()).collect();
+		let (left, left_names) = {
+			let ongoing = ongoing.lock();
+			(ongoing.len(), ongoing.values().take(11).map(|t| t.name.clone()).collect())
+		};
 
-		if left.is_empty() {
+		if left == 0 {
 			emit!(Quit(opt));
 			return;
 		}
 
 		tokio::spawn(async move {
 			let mut i = 0;
-			let mut rx = ConfirmProxy::show_rx(ConfirmCfg::quit(left));
+			let mut rx = ConfirmProxy::show_rx(ConfirmCfg::quit(left, left_names));
 			loop {
 				select! {
 					_ = time::sleep(Duration::from_millis(100)) => {
