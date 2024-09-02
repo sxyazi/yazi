@@ -24,6 +24,7 @@ pub enum Emulator {
 	Tabby,
 	Hyper,
 	Mintty,
+	Contour,
 	Neovim,
 	Apple,
 	Urxvt,
@@ -45,6 +46,7 @@ impl Emulator {
 			Self::Tabby => vec![Adapter::Iterm2, Adapter::Sixel],
 			Self::Hyper => vec![Adapter::Iterm2, Adapter::Sixel],
 			Self::Mintty => vec![Adapter::Iterm2],
+			Self::Contour => vec![Adapter::Sixel],
 			Self::Neovim => vec![],
 			Self::Apple => vec![],
 			Self::Urxvt => vec![],
@@ -67,6 +69,7 @@ impl Emulator {
 			("WT_Session", Self::Microsoft),
 			("VSCODE_INJECTION", Self::VSCode),
 			("TABBY_CONFIG_DIRECTORY", Self::Tabby),
+			("TERMINAL_NAME", Self::Contour),
 		];
 		match vars.into_iter().find(|v| env_exists(v.0)) {
 			Some(var) => return var.1,
@@ -92,6 +95,7 @@ impl Emulator {
 			"foot-extra" => return Self::Foot,
 			"xterm-ghostty" => return Self::Ghostty,
 			"rxvt-unicode-256color" => return Self::Urxvt,
+			"contour" => return Self::Contour,
 			_ => warn!("[Adapter] Unknown TERM: {term}"),
 		}
 
@@ -138,6 +142,7 @@ impl Emulator {
 			("WezTerm", Self::WezTerm),
 			("foot", Self::Foot),
 			("ghostty", Self::Ghostty),
+			("contour", Self::Contour),
 		];
 
 		for (name, emulator) in names.iter() {
