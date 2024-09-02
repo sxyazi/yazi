@@ -58,6 +58,8 @@ impl Emulator {
 			return Self::Neovim;
 		}
 
+		let mut warnings = Vec::new();
+
 		let vars = [
 			("KITTY_WINDOW_ID", Self::Kitty),
 			("KONSOLE_VERSION", Self::Konsole),
@@ -70,7 +72,7 @@ impl Emulator {
 		];
 		match vars.into_iter().find(|v| env_exists(v.0)) {
 			Some(var) => return var.1,
-			None => warn!("[Adapter] No special environment variables detected"),
+			None => warnings.push("[Adapter] No special environment variables detected"),
 		}
 
 		let (term, program) = Self::via_env();
@@ -84,7 +86,7 @@ impl Emulator {
 			"Hyper" => return Self::Hyper,
 			"mintty" => return Self::Mintty,
 			"Apple_Terminal" => return Self::Apple,
-			_ => warn!("[Adapter] Unknown TERM_PROGRAM: {program}"),
+			_ => warnings.push("[Adapter] Unknown TERM_PROGRAM: {program}"),
 		}
 		match term.as_str() {
 			"xterm-kitty" => return Self::Kitty,
@@ -92,7 +94,11 @@ impl Emulator {
 			"foot-extra" => return Self::Foot,
 			"xterm-ghostty" => return Self::Ghostty,
 			"rxvt-unicode-256color" => return Self::Urxvt,
-			_ => warn!("[Adapter] Unknown TERM: {term}"),
+			_ => warnings.push("[Adapter] Unknown TERM: {term}"),
+		}
+
+		for warning in warnings {
+			warn!(warning);
 		}
 
 		Self::via_csi().unwrap_or(Self::Unknown(vec![]))
