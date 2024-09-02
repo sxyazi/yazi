@@ -69,7 +69,6 @@ impl Emulator {
 			("WT_Session", Self::Microsoft),
 			("VSCODE_INJECTION", Self::VSCode),
 			("TABBY_CONFIG_DIRECTORY", Self::Tabby),
-			("TERMINAL_NAME", Self::Contour),
 		];
 		match vars.into_iter().find(|v| env_exists(v.0)) {
 			Some(var) => return var.1,
