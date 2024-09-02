@@ -18,6 +18,7 @@ pub enum Emulator {
 	WezTerm,
 	Foot,
 	Ghostty,
+	Microsoft,
 	BlackBox,
 	VSCode,
 	Tabby,
@@ -26,7 +27,6 @@ pub enum Emulator {
 	Neovim,
 	Apple,
 	Urxvt,
-	WindowsTerminal
 }
 
 impl Emulator {
@@ -39,6 +39,7 @@ impl Emulator {
 			Self::WezTerm => vec![Adapter::Iterm2, Adapter::Sixel],
 			Self::Foot => vec![Adapter::Sixel],
 			Self::Ghostty => vec![Adapter::Kitty],
+			Self::Microsoft => vec![Adapter::Sixel],
 			Self::BlackBox => vec![Adapter::Sixel],
 			Self::VSCode => vec![Adapter::Iterm2, Adapter::Sixel],
 			Self::Tabby => vec![Adapter::Iterm2, Adapter::Sixel],
@@ -47,7 +48,6 @@ impl Emulator {
 			Self::Neovim => vec![],
 			Self::Apple => vec![],
 			Self::Urxvt => vec![],
-			Self::WindowsTerminal => vec![Adapter::Sixel]
 		}
 	}
 }
@@ -64,9 +64,9 @@ impl Emulator {
 			("ITERM_SESSION_ID", Self::Iterm2),
 			("WEZTERM_EXECUTABLE", Self::WezTerm),
 			("GHOSTTY_RESOURCES_DIR", Self::Ghostty),
+			("WT_Session", Self::Microsoft),
 			("VSCODE_INJECTION", Self::VSCode),
 			("TABBY_CONFIG_DIRECTORY", Self::Tabby),
-			("WT_Session", Self::WindowsTerminal),
 		];
 		match vars.into_iter().find(|v| env_exists(v.0)) {
 			Some(var) => return var.1,
