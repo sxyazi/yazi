@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
 use mlua::{AnyUserData, Lua, UserDataFields, UserDataMethods};
+use yazi_plugin::url::UrlRef;
 
 use super::{Config, Finder, Folder, Mode, Preview, Selected, SCOPE};
 
@@ -41,6 +42,9 @@ impl Tab {
 				me.parent.as_ref().map(|f| Folder::make(None, f, me)).transpose()
 			});
 
+			reg.add_method("history", |_, me, url: UrlRef| {
+				me.history.get(&url).map(|f| Folder::make(None, f, me)).transpose()
+			});
 			reg.add_field_method_get("selected", |_, me| Selected::make(&me.selected));
 
 			reg.add_field_method_get("preview", |_, me| Preview::make(me));
