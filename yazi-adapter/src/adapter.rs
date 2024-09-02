@@ -82,8 +82,13 @@ impl Adapter {
 
 impl Adapter {
 	pub fn matches() -> Self {
-		let mut protocols = Emulator::detect().adapters();
+		let emulator = Emulator::detect();
+		#[cfg(windows)]
+		if matches!(emulator, Emulator::Microsoft) {
+			return Self::Sixel;
+		}
 
+		let mut protocols = emulator.adapters();
 		#[cfg(windows)]
 		protocols.retain(|p| *p == Self::Iterm2);
 		if env_exists("ZELLIJ_SESSION_NAME") {
