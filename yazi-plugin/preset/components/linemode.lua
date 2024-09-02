@@ -24,7 +24,12 @@ end
 
 function Linemode:size()
 	local size = self._file:size()
-	return ui.Line(size and ya.readable_size(size) or "")
+	if size then
+		return ui.Line(ya.readable_size(size))
+	else
+		local folder = cx.active:history(self._file.url)
+		return ui.Line(folder and tostring(#folder.files) or "")
+	end
 end
 
 function Linemode:ctime()
