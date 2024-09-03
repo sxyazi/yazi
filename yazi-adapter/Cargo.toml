@@ -29,4 +29,4 @@ tokio        = { workspace = true }
 tracing      = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-crossterm = { workspace = true, features = [ "use-dev-tty" ] }
+crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }

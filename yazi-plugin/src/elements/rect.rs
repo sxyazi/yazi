@@ -18,7 +18,8 @@ impl Rect {
 			})
 		})?;
 
-		let rect = lua.create_table_from([("default", Rect::cast(lua, Default::default())?)])?;
+		let rect =
+			lua.create_table_from([("default", Rect::cast(lua, ratatui::layout::Rect::default())?)])?;
 
 		rect.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
@@ -55,5 +56,16 @@ impl Rect {
 impl Cast<ratatui::layout::Rect> for Rect {
 	fn cast(lua: &Lua, data: ratatui::layout::Rect) -> mlua::Result<AnyUserData> {
 		lua.create_any_userdata(data)
+	}
+}
+
+impl Cast<ratatui::layout::Size> for Rect {
+	fn cast(lua: &Lua, data: ratatui::layout::Size) -> mlua::Result<AnyUserData> {
+		lua.create_any_userdata(ratatui::layout::Rect {
+			x:      0,
+			y:      0,
+			width:  data.width,
+			height: data.height,
+		})
 	}
 }

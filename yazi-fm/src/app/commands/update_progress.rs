@@ -46,9 +46,9 @@ impl App {
 		_ = Lives::scope(&self.cx, |_| {
 			for patch in Progress::partial_render(term.current_buffer_mut()) {
 				term.backend_mut().draw(patch.iter().map(|(x, y, cell)| (*x, *y, cell)))?;
-				if let Some((x, y)) = self.cx.cursor() {
+				if let Some(pos) = self.cx.cursor() {
 					term.show_cursor()?;
-					term.set_cursor(x, y)?;
+					term.set_cursor_position(pos)?;
 				}
 				term.backend_mut().flush()?;
 			}

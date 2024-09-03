@@ -39,7 +39,7 @@ impl ratatui::widgets::Widget for Clear {
 		COLLISION.store(true, Ordering::Relaxed);
 		for y in r.top()..r.bottom() {
 			for x in r.left()..r.right() {
-				buf.get_mut(x, y).set_skip(true);
+				buf[(x, y)].set_skip(true);
 			}
 		}
 	}

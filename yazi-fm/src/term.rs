@@ -118,9 +118,9 @@ impl Term {
 			let buffer = frame.buffer_mut();
 			for y in self.last_area.top()..self.last_area.bottom() {
 				for x in self.last_area.left()..self.last_area.right() {
-					let mut cell = self.last_buffer.get(x, y).clone();
+					let mut cell = self.last_buffer[(x, y)].clone();
 					cell.skip = false;
-					*buffer.get_mut(x, y) = cell;
+					buffer[(x, y)] = cell;
 				}
 			}
 
@@ -130,7 +130,7 @@ impl Term {
 
 	#[inline]
 	pub(super) fn can_partial(&mut self) -> bool {
-		self.inner.autoresize().is_ok() && self.last_area == self.inner.get_frame().size()
+		self.inner.autoresize().is_ok() && self.last_area == self.inner.get_frame().area()
 	}
 
 	#[inline]

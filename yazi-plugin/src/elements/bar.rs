@@ -81,7 +81,7 @@ impl Renderable for Bar {
 
 		if self.direction.contains(Borders::LEFT) {
 			for y in self.area.top()..self.area.bottom() {
-				let cell = buf.get_mut(self.area.left(), y).set_symbol(symbol);
+				let cell = buf[(self.area.left(), y)].set_symbol(symbol);
 				if let Some(style) = self.style {
 					cell.set_style(style);
 				}
@@ -89,7 +89,7 @@ impl Renderable for Bar {
 		}
 		if self.direction.contains(Borders::TOP) {
 			for x in self.area.left()..self.area.right() {
-				let cell = buf.get_mut(x, self.area.top()).set_symbol(symbol);
+				let cell = buf[(x, self.area.top())].set_symbol(symbol);
 				if let Some(style) = self.style {
 					cell.set_style(style);
 				}
@@ -98,7 +98,7 @@ impl Renderable for Bar {
 		if self.direction.contains(Borders::RIGHT) {
 			let x = self.area.right() - 1;
 			for y in self.area.top()..self.area.bottom() {
-				let cell = buf.get_mut(x, y).set_symbol(symbol);
+				let cell = buf[(x, y)].set_symbol(symbol);
 				if let Some(style) = self.style {
 					cell.set_style(style);
 				}
@@ -107,7 +107,7 @@ impl Renderable for Bar {
 		if self.direction.contains(Borders::BOTTOM) {
 			let y = self.area.bottom() - 1;
 			for x in self.area.left()..self.area.right() {
-				let cell = buf.get_mut(x, y).set_symbol(symbol);
+				let cell = buf[(x, y)].set_symbol(symbol);
 				if let Some(style) = self.style {
 					cell.set_style(style);
 				}
