@@ -13,6 +13,8 @@ impl Url {
 			reg.add_field_method_get("is_regular", |_, me| Ok(me.is_regular()));
 			reg.add_field_method_get("is_search", |_, me| Ok(me.is_search()));
 			reg.add_field_method_get("is_archive", |_, me| Ok(me.is_archive()));
+			reg.add_field_method_get("is_absolute", |_, me| Ok(me.is_absolute()));
+			reg.add_field_method_get("has_root", |_, me| Ok(me.has_root()));
 
 			reg.add_method("name", |lua, me, ()| {
 				me.file_name().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
@@ -24,17 +26,36 @@ impl Url {
 				me.extension().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
 			});
 			reg.add_method("join", |lua, me, other: Value| {
-				Ok(match other {
-					Value::String(s) => Self::cast(lua, me.join(s.to_str()?)),
-					Value::UserData(ud) => {
-						let url = ud.borrow::<yazi_shared::fs::Url>()?;
-						Self::cast(lua, me.join(&*url))
-					}
+				Self::cast(lua, match other {
+					Value::String(s) => me.join(s.to_str()?),
+					Value::UserData(ud) => me.join(&*ud.borrow::<yazi_shared::fs::Url>()?),
 					_ => Err("must be a string or a Url".into_lua_err())?,
 				})
 			});
 			reg.add_method("parent", |lua, me, ()| {
 				me.parent_url().map(|u| Self::cast(lua, u)).transpose()
+			});
+			reg.add_method("starts_with", |_, me, base: Value| {
+				Ok(match base {
+					Value::String(s) => me.starts_with(s.to_str()?),
+					Value::UserData(ud) => me.starts_with(&*ud.borrow::<yazi_shared::fs::Url>()?),
+					_ => Err("must be a string or a Url".into_lua_err())?,
+				})
+			});
+			reg.add_method("ends_with", |_, me, child: Value| {
+				Ok(match child {
+					Value::String(s) => me.ends_with(s.to_str()?),
+					Value::UserData(ud) => me.ends_with(&*ud.borrow::<yazi_shared::fs::Url>()?),
+					_ => Err("must be a string or a Url".into_lua_err())?,
+				})
+			});
+			reg.add_method("strip_prefix", |lua, me, base: Value| {
+				let path = match base {
+					Value::String(s) => me.strip_prefix(s.to_str()?),
+					Value::UserData(ud) => me.strip_prefix(&*ud.borrow::<yazi_shared::fs::Url>()?),
+					_ => Err("must be a string or a Url".into_lua_err())?,
+				};
+				path.map(|p| Self::cast(lua, yazi_shared::fs::Url::from(p))).transpose()
 			});
 
 			reg.add_meta_method(MetaMethod::Eq, |_, me, other: UrlRef| Ok(me == &*other));
