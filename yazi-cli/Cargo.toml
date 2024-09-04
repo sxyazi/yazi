@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-cli"
-version     = "0.3.2"
+version     = "0.3.3"
 edition     = "2021"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -9,9 +9,9 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
-yazi-boot   = { path = "../yazi-boot", version = "0.3.2" }
-yazi-dds    = { path = "../yazi-dds", version = "0.3.2" }
-yazi-shared = { path = "../yazi-shared", version = "0.3.2" }
+yazi-boot   = { path = "../yazi-boot", version = "0.3.3" }
+yazi-dds    = { path = "../yazi-dds", version = "0.3.3" }
+yazi-shared = { path = "../yazi-shared", version = "0.3.3" }
 
 # External dependencies
 anyhow     = { workspace = true }
@@ -23,7 +23,7 @@ tokio      = { workspace = true }
 toml_edit  = "0.22.20"
 
 [build-dependencies]
-yazi-shared = { path = "../yazi-shared", version = "0.3.2" }
+yazi-shared = { path = "../yazi-shared", version = "0.3.3" }
 
 # External build dependencies
 anyhow                = { workspace = true }

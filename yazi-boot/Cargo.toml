@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-boot"
-version     = "0.3.2"
+version     = "0.3.3"
 edition     = "2021"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -10,9 +10,9 @@ repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
 regex        = { workspace = true }
-yazi-adapter = { path = "../yazi-adapter", version = "0.3.2" }
-yazi-config  = { path = "../yazi-config", version = "0.3.2" }
-yazi-shared  = { path = "../yazi-shared", version = "0.3.2" }
+yazi-adapter = { path = "../yazi-adapter", version = "0.3.3" }
+yazi-config  = { path = "../yazi-config", version = "0.3.3" }
+yazi-shared  = { path = "../yazi-shared", version = "0.3.3" }
 
 # External dependencies
 clap  = { workspace = true }

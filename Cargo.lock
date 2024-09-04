@@ -3225,7 +3225,7 @@ checksum = "d135d17ab770252ad95e9a872d365cf3090e3be864a34ab46f48555993efc904"
 
 [[package]]
 name = "yazi-adapter"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -3247,7 +3247,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-boot"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "clap",
  "clap_complete",
@@ -3263,7 +3263,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-cli"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "anyhow",
  "clap",
@@ -3283,7 +3283,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-config"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -3301,7 +3301,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-core"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "anyhow",
  "bitflags 2.6.0",
@@ -3332,7 +3332,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-dds"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "anyhow",
  "mlua",
@@ -3351,7 +3351,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fm"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "anyhow",
  "better-panic",
@@ -3383,7 +3383,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fs"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "anyhow",
  "futures",
@@ -3397,7 +3397,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-plugin"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -3435,7 +3435,7 @@ checksum = "f4b6c8e12e39ac0f79fa96f36e5b88e0da8d230691abd729eec709b43c74f632"
 
 [[package]]
 name = "yazi-proxy"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "anyhow",
  "mlua",
@@ -3447,7 +3447,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-scheduler"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "anyhow",
  "async-priority-channel",
@@ -3467,7 +3467,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-shared"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "anyhow",
  "bitflags 2.6.0",
