@@ -21,7 +21,12 @@ function ya.list_merge(a, b)
 	return a
 end
 
-function ya.basename(s) return s:gsub("(.*[/\\])(.*)", "%2") end
+function ya.dict_merge(a, b)
+	for k, v in pairs(b) do
+		a[k] = v
+	end
+	return a
+end
 
 function ya.readable_size(size)
 	local units = { "B", "K", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q" }
