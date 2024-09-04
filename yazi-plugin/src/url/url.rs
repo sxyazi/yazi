@@ -13,6 +13,8 @@ impl Url {
 			reg.add_field_method_get("is_regular", |_, me| Ok(me.is_regular()));
 			reg.add_field_method_get("is_search", |_, me| Ok(me.is_search()));
 			reg.add_field_method_get("is_archive", |_, me| Ok(me.is_archive()));
+			reg.add_field_method_get("is_absolute", |_, me| Ok(me.is_absolute()));
+			reg.add_field_method_get("has_root", |_, me| Ok(me.has_root()));
 
 			reg.add_method("name", |lua, me, ()| {
 				me.file_name().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
@@ -35,6 +37,11 @@ impl Url {
 			});
 			reg.add_method("parent", |lua, me, ()| {
 				me.parent_url().map(|u| Self::cast(lua, u)).transpose()
+			});
+			reg.add_method("starts_with", |_, me, base: UrlRef| Ok(me.starts_with(&*base)));
+			reg.add_method("ends_with", |_, me, child: UrlRef| Ok(me.ends_with(&*child)));
+			reg.add_method("strip_prefix", |lua, me, base: UrlRef| {
+				me.strip_prefix(&*base).map(|p| Self::cast(lua, yazi_shared::fs::Url::from(p))).transpose()
 			});
 
 			reg.add_meta_method(MetaMethod::Eq, |_, me, other: UrlRef| Ok(me == &*other));
