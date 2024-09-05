@@ -56,8 +56,14 @@ impl Icons {
 				.files
 				.get(name)
 				.or_else(|| self.files.get(&name.to_ascii_lowercase()))
-				.or_else(|| self.exts.get(file.url.extension()?.to_str()?))
+				.or_else(|| self.match_by_ext(file))
 		}
+	}
+
+	#[inline]
+	fn match_by_ext(&self, file: &File) -> Option<&Icon> {
+		let ext = file.url.extension()?.to_str()?;
+		self.exts.get(ext).or_else(|| self.exts.get(&ext.to_ascii_lowercase()))
 	}
 }
 
