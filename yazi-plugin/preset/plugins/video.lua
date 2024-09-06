@@ -1,5 +1,14 @@
 local M = {}
 
+local function is_command_available(cmd)
+	local child, code = Command(cmd):args({"--version"}):spawn()
+	if not child then
+		return false
+	end
+	local status = child:wait()
+	return status and status.success
+end
+
 function M:peek()
 	local start, cache = os.clock(), ya.file_cache(self)
 	if not cache or self:preload() ~= 1 then
@@ -33,7 +42,12 @@ function M:preload()
 		return 1
 	end
 
-	local child, code = Command("ffmpegthumbnailer"):args({
+	local cmd = "ffmpegthumbnailer"
+	if not is_command_available(cmd) then
+		cmd = "fallback-thumbnailer"
+	end
+
+	local child, code = Command(cmd):args({
 		"-q",
 		"6",
 		"-c",
@@ -49,7 +63,7 @@ function M:preload()
 	}):spawn()
 
 	if not child then
-		ya.err("spawn `ffmpegthumbnailer` command returns " .. tostring(code))
+		ya.err("spawn `" .. cmd .. "` command returns " .. tostring(code))
 		return 0
 	end
 

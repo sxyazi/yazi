@@ -1,6 +1,6 @@
 [workspace]
 resolver        = "2"
-members         = [ "yazi-*" ]
+members         = [ "yazi-*", "fallback-thumbnailer"]
 default-members = [ "yazi-fm", "yazi-cli" ]
 
 [profile.release]

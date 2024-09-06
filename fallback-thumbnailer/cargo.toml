@@ -1,0 +1,14 @@
+[package]
+name = "fallback-thumbnailer"
+version = "0.1.0"
+edition = "2021"
+
+[build-dependencies]
+reqwest = { version = "0.11", features = ["blocking"] }
+sevenz-rust = "0.4"
+zip = "0.6"
+
+[dependencies]
+ffmpeg-next = "7.0.4"
+image = "0.25.2"
+clap = { version = "4.0", features = ["derive"] }
