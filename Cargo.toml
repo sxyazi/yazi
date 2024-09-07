@@ -15,7 +15,7 @@ anyhow        = "1.0.86"
 arc-swap      = "1.7.1"
 base64        = "0.22.1"
 bitflags      = "2.6.0"
-clap          = { version = "4.5.16", features = [ "derive" ] }
+clap          = { version = "4.5.17", features = [ "derive" ] }
 crossterm     = { version = "0.28.1", features = [ "event-stream" ] }
 dirs          = "5.0.1"
 futures       = "0.3.30"
@@ -28,11 +28,11 @@ ratatui       = { version = "0.28.1", features = [ "unstable-rendered-line-info"
 regex         = "1.10.6"
 scopeguard    = "1.2.0"
 serde         = { version = "1.0.209", features = [ "derive" ] }
-serde_json    = "1.0.127"
+serde_json    = "1.0.128"
 shell-words   = "1.1.0"
 tokio         = { version = "1.40.0", features = [ "full" ] }
-tokio-stream  = "0.1.15"
-tokio-util    = "0.7.11"
+tokio-stream  = "0.1.16"
+tokio-util    = "0.7.12"
 tracing       = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
 unicode-width = "0.1.13"
 uzers         = "0.12.1"

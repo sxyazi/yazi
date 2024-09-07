@@ -25,7 +25,7 @@ bitflags      = { workspace = true }
 crossterm     = { workspace = true }
 dirs          = { workspace = true }
 futures       = { workspace = true }
-notify-fork   = { version = "6.1.1", default-features = false, features = [ "macos_fsevent" ] }
+notify        = { package = "notify-fork", version = "6.1.1", default-features = false, features = [ "macos_fsevent" ] }
 parking_lot   = { workspace = true }
 ratatui       = { workspace = true }
 scopeguard    = { workspace = true }
