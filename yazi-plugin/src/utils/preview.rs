@@ -21,7 +21,7 @@ impl<'a> TryFrom<Table<'a>> for PreviewLock {
 		let file: FileRef = t.raw_get("file")?;
 		Ok(Self {
 			cha:    file.cha,
-			url:    file.url(),
+			url:    file.url_owned(),
 			skip:   t.raw_get("skip")?,
 			window: t.raw_get("window")?,
 			data:   Default::default(),

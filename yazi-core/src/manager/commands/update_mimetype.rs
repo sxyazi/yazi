@@ -46,11 +46,11 @@ impl Manager {
 			.current()
 			.paginate(self.current().page)
 			.iter()
-			.filter(|&f| updates.contains_key(&f.url))
+			.filter(|&f| updates.contains_key(f.url()))
 			.cloned()
 			.collect();
 
-		let repeek = self.hovered().is_some_and(|f| updates.contains_key(&f.url));
+		let repeek = self.hovered().is_some_and(|f| updates.contains_key(f.url()));
 		self.mimetype.extend(updates);
 
 		if repeek {

@@ -31,13 +31,13 @@ impl Manager {
 		};
 
 		let folder = self.active().hovered_folder().map(|f| (f.offset, f.cha));
-		if !self.active().preview.same_url(&hovered.url) {
+		if !self.active().preview.same_url(hovered.url()) {
 			self.active_mut().preview.skip = folder.map(|f| f.0).unwrap_or_default();
 			render!(self.active_mut().preview.reset());
 		}
 
 		let opt = opt.into() as Opt;
-		if matches!(opt.only_if, Some(ref u) if *u != hovered.url) {
+		if matches!(opt.only_if, Some(ref u) if u != hovered.url()) {
 			return;
 		}
 
@@ -55,7 +55,7 @@ impl Manager {
 			return;
 		}
 
-		let mime = self.mimetype.get(&hovered.url).cloned().unwrap_or_default();
+		let mime = self.mimetype.get(hovered.url()).cloned().unwrap_or_default();
 		if !mime.is_empty() {
 			// Wait till mimetype is resolved to avoid flickering
 			self.active_mut().preview.go(hovered, &mime, opt.force);

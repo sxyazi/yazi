@@ -20,14 +20,10 @@ impl FilesSorter {
 
 		let by_alphabetical = |a: &File, b: &File| {
 			if self.sensitive {
-				return self.cmp(&*a.url, &*b.url, self.promote(a, b));
+				return self.cmp(a.name(), b.name(), self.promote(a, b));
 			}
 
-			self.cmp(
-				a.url.as_os_str().to_ascii_uppercase(),
-				b.url.as_os_str().to_ascii_uppercase(),
-				self.promote(a, b),
-			)
+			self.cmp(a.name().to_ascii_uppercase(), b.name().to_ascii_uppercase(), self.promote(a, b))
 		};
 
 		match self.by {
@@ -42,11 +38,11 @@ impl FilesSorter {
 			}),
 			SortBy::Extension => items.sort_unstable_by(|a, b| {
 				let ord = if self.sensitive {
-					self.cmp(a.url.extension(), b.url.extension(), self.promote(a, b))
+					self.cmp(a.url().extension(), b.url().extension(), self.promote(a, b))
 				} else {
 					self.cmp(
-						a.url.extension().map(|s| s.to_ascii_lowercase()),
-						b.url.extension().map(|s| s.to_ascii_lowercase()),
+						a.url().extension().map(|s| s.to_ascii_lowercase()),
+						b.url().extension().map(|s| s.to_ascii_lowercase()),
 						self.promote(a, b),
 					)
 				};
@@ -55,8 +51,8 @@ impl FilesSorter {
 			SortBy::Alphabetical => items.sort_unstable_by(by_alphabetical),
 			SortBy::Natural => self.sort_naturally(items),
 			SortBy::Size => items.sort_unstable_by(|a, b| {
-				let aa = if a.is_dir() { sizes.get(&a.url).copied() } else { None };
-				let bb = if b.is_dir() { sizes.get(&b.url).copied() } else { None };
+				let aa = if a.is_dir() { sizes.get(a.url()).copied() } else { None };
+				let bb = if b.is_dir() { sizes.get(b.url()).copied() } else { None };
 				let ord = self.cmp(aa.unwrap_or(a.len), bb.unwrap_or(b.len), self.promote(a, b));
 				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
 			}),
@@ -79,16 +75,12 @@ impl FilesSorter {
 
 			let ordering = if self.translit {
 				natsort(
-					a.url.as_os_str().as_encoded_bytes().transliterate().as_bytes(),
-					b.url.as_os_str().as_encoded_bytes().transliterate().as_bytes(),
+					a.name().as_encoded_bytes().transliterate().as_bytes(),
+					b.name().as_encoded_bytes().transliterate().as_bytes(),
 					!self.sensitive,
 				)
 			} else {
-				natsort(
-					a.url.as_os_str().as_encoded_bytes(),
-					b.url.as_os_str().as_encoded_bytes(),
-					!self.sensitive,
-				)
+				natsort(a.name().as_encoded_bytes(), b.name().as_encoded_bytes(), !self.sensitive)
 			};
 
 			if self.reverse { ordering.reverse() } else { ordering }

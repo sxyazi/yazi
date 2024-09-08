@@ -43,12 +43,12 @@ impl Icons {
 
 	#[inline]
 	fn match_by_glob(&self, file: &File) -> Option<&Icon> {
-		self.globs.iter().find(|(p, _)| p.match_path(&file.url, file.is_dir())).map(|(_, i)| i)
+		self.globs.iter().find(|(p, _)| p.match_path(file.url(), file.is_dir())).map(|(_, i)| i)
 	}
 
 	#[inline]
 	fn match_by_name(&self, file: &File) -> Option<&Icon> {
-		let name = file.name()?.to_str()?;
+		let name = file.name().to_str()?;
 		if file.is_dir() {
 			self.dirs.get(name).or_else(|| self.dirs.get(&name.to_ascii_lowercase()))
 		} else {
@@ -62,7 +62,7 @@ impl Icons {
 
 	#[inline]
 	fn match_by_ext(&self, file: &File) -> Option<&Icon> {
-		let ext = file.url.extension()?.to_str()?;
+		let ext = file.url().extension()?.to_str()?;
 		self.exts.get(ext).or_else(|| self.exts.get(&ext.to_ascii_lowercase()))
 	}
 }

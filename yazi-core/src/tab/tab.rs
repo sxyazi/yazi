@@ -39,7 +39,7 @@ impl Tab {
 impl Tab {
 	// --- Current
 	pub fn hovered_rect(&self) -> Option<Rect> {
-		let y = self.current.files.position(&self.current.hovered()?.url)? - self.current.offset;
+		let y = self.current.files.position(self.current.hovered()?.url())? - self.current.offset;
 
 		let mut rect = LAYOUT.load().current;
 		rect.y = rect.y.saturating_sub(1) + y as u16;
@@ -58,7 +58,7 @@ impl Tab {
 
 	pub fn selected_or_hovered(&self, reorder: bool) -> Box<dyn Iterator<Item = &Url> + '_> {
 		if self.selected.is_empty() {
-			Box::new(self.current.hovered().map(|h| vec![&h.url]).unwrap_or_default().into_iter())
+			Box::new(self.current.hovered().map(|h| vec![h.url()]).unwrap_or_default().into_iter())
 		} else if !reorder {
 			Box::new(self.selected.keys())
 		} else {
@@ -72,13 +72,13 @@ impl Tab {
 		let Some(h) = self.current.hovered() else { return Box::new(iter::empty()) };
 
 		if self.selected.is_empty() {
-			Box::new([&h.url, &h.url].into_iter())
+			Box::new([h.url(), h.url()].into_iter())
 		} else if !reorder {
-			Box::new([&h.url].into_iter().chain(self.selected.keys()))
+			Box::new([h.url()].into_iter().chain(self.selected.keys()))
 		} else {
 			let mut vec: Vec<_> = self.selected.iter().collect();
 			vec.sort_unstable_by(|a, b| a.1.cmp(b.1));
-			Box::new([&h.url].into_iter().chain(vec.into_iter().map(|(k, _)| k)))
+			Box::new([h.url()].into_iter().chain(vec.into_iter().map(|(k, _)| k)))
 		}
 	}
 
@@ -90,7 +90,7 @@ impl Tab {
 
 	#[inline]
 	pub fn hovered_folder(&self) -> Option<&Folder> {
-		self.current.hovered().filter(|&h| h.is_dir()).and_then(|h| self.history.get(&h.url))
+		self.current.hovered().filter(|&h| h.is_dir()).and_then(|h| self.history.get(h.url()))
 	}
 
 	pub fn apply_files_attrs(&mut self) {
@@ -99,7 +99,7 @@ impl Tab {
 				return render!();
 			}
 
-			let hovered = f.hovered().filter(|_| f.tracing).map(|h| h.url());
+			let hovered = f.hovered().filter(|_| f.tracing).map(|h| h.url_owned());
 			f.files.set_show_hidden(self.conf.show_hidden);
 			f.files.set_sorter(self.conf.sorter());
 
@@ -114,14 +114,14 @@ impl Tab {
 
 			// The parent should always track the CWD
 			parent.hover(&self.current.cwd);
-			parent.tracing = parent.hovered().map(|h| &h.url) == Some(&self.current.cwd);
+			parent.tracing = parent.hovered().map(|h| h.url()) == Some(&self.current.cwd);
 		}
 
 		self
 			.current
 			.hovered()
 			.filter(|h| h.is_dir())
-			.and_then(|h| self.history.get_mut(&h.url))
+			.and_then(|h| self.history.get_mut(h.url()))
 			.map(apply);
 	}
 }

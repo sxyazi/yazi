@@ -18,7 +18,7 @@ impl Filetype {
 		}
 
 		self.mime.as_ref().is_some_and(|p| p.match_mime(mime))
-			|| self.name.as_ref().is_some_and(|n| n.match_path(&file.url, file.is_dir()))
+			|| self.name.as_ref().is_some_and(|n| n.match_path(file.url(), file.is_dir()))
 	}
 }
 

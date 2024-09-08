@@ -21,13 +21,13 @@ impl Manager {
 
 		let mime = if hovered.is_dir() {
 			MIME_DIR
-		} else if let Some(s) = self.mimetype.get(&hovered.url) {
+		} else if let Some(s) = self.mimetype.get(hovered.url()) {
 			s
 		} else {
 			return render!(self.active_mut().preview.reset());
 		};
 
-		let Some(previewer) = PLUGIN.previewer(&hovered.url, mime) else {
+		let Some(previewer) = PLUGIN.previewer(hovered.url(), mime) else {
 			return render!(self.active_mut().preview.reset());
 		};
 

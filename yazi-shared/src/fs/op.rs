@@ -58,7 +58,9 @@ impl FilesOp {
 					.iter()
 					.map(|file| {
 						let mut f = file.clone();
-						f.url = new!(f.url);
+						// FIXME
+						todo!();
+						// f.url = new!(f.url);
 						f
 					})
 					.collect()
@@ -70,7 +72,9 @@ impl FilesOp {
 					.iter()
 					.map(|(k, v)| {
 						let mut f = v.clone();
-						f.url = new!(f.url);
+						// FIXME
+						todo!();
+						// f.url = new!(f.url);
 						(new!(k), f)
 					})
 					.collect()

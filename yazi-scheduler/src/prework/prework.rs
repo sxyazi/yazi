@@ -30,7 +30,7 @@ impl Prework {
 	pub async fn work(&self, op: PreworkOp) -> Result<()> {
 		match op {
 			PreworkOp::Fetch(task) => {
-				let urls: Vec<_> = task.targets.iter().map(|f| f.url()).collect();
+				let urls: Vec<_> = task.targets.iter().map(|f| f.url_owned()).collect();
 				let result = isolate::fetch(&task.plugin.name, task.targets).await;
 				if let Err(e) = result {
 					self.fail(
@@ -61,7 +61,7 @@ impl Prework {
 				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 			}
 			PreworkOp::Load(task) => {
-				let url = task.target.url();
+				let url = task.target.url_owned();
 				let result = isolate::preload(&task.plugin.name, task.target).await;
 				if let Err(e) = result {
 					self.fail(
