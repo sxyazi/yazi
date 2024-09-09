@@ -31,7 +31,7 @@ impl Tab {
 			None => iter.partition(|&u| self.selected.contains_key(u)),
 		};
 
-		let same = !self.current.cwd.is_search();
+		let same = !self.cwd().is_search();
 		render!(self.selected.remove_many(&removal, same) > 0);
 
 		let added = self.selected.add_many(&addition, same);

@@ -44,7 +44,7 @@ impl Tab {
 			handle.abort();
 		}
 
-		let cwd = self.current.cwd.to_search(&opt.subject);
+		let cwd = self.cwd().to_search(&opt.subject);
 		let hidden = self.conf.show_hidden;
 
 		self.search = Some(tokio::spawn(async move {
@@ -81,8 +81,8 @@ impl Tab {
 		if let Some(handle) = self.search.take() {
 			handle.abort();
 		}
-		if self.current.cwd.is_search() {
-			let rep = self.history_new(&self.current.cwd.to_regular());
+		if self.cwd().is_search() {
+			let rep = self.history.remove_or(&self.cwd().to_regular());
 			drop(mem::replace(&mut self.current, rep));
 			ManagerProxy::refresh();
 		}

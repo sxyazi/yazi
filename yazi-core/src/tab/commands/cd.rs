@@ -39,25 +39,25 @@ impl Tab {
 			return self.cd_interactive();
 		}
 
-		if self.current.cwd == opt.target {
+		if opt.target == *self.cwd() {
 			return;
 		}
 
 		// Take parent to history
 		if let Some(rep) = self.parent.take() {
-			self.history.insert(rep.cwd.clone(), rep);
+			self.history.insert(rep.loc.url().clone(), rep);
 		}
 
 		// Current
-		let rep = self.history_new(&opt.target);
+		let rep = self.history.remove_or(&opt.target);
 		let rep = mem::replace(&mut self.current, rep);
-		if rep.cwd.is_regular() {
-			self.history.insert(rep.cwd.clone(), rep);
+		if rep.loc.is_regular() {
+			self.history.insert(rep.loc.url().clone(), rep);
 		}
 
 		// Parent
 		if let Some(parent) = opt.target.parent_url() {
-			self.parent = Some(self.history_new(&parent));
+			self.parent = Some(self.history.remove_or(&parent));
 		}
 
 		// Backstack
@@ -65,7 +65,7 @@ impl Tab {
 			self.backstack.push(opt.target.clone());
 		}
 
-		Pubsub::pub_from_cd(self.idx, &self.current.cwd);
+		Pubsub::pub_from_cd(self.idx, self.cwd());
 		ManagerProxy::refresh();
 		render!();
 	}

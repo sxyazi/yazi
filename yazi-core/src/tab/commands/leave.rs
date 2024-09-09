@@ -16,8 +16,8 @@ impl Tab {
 			.current
 			.hovered()
 			.and_then(|h| h.parent())
-			.filter(|p| *p != self.current.cwd)
-			.or_else(|| self.current.cwd.parent_url())
+			.filter(|p| p != self.cwd())
+			.or_else(|| self.cwd().parent_url())
 			.map(|u| self.cd(u));
 	}
 }

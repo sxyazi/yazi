@@ -46,11 +46,11 @@ impl File {
 				Ok(cx.manager.mimetype.get(me.url()).cloned())
 			});
 			reg.add_method("prefix", |lua, me, ()| {
-				if !me.folder().cwd.is_search() {
+				if !me.folder().loc.is_search() {
 					return Ok(None);
 				}
 
-				let mut p = me.url().strip_prefix(&me.folder().cwd).unwrap_or(me.url()).components();
+				let mut p = me.url().strip_prefix(&me.folder().loc).unwrap_or(me.url()).components();
 				p.next_back();
 				Some(lua.create_string(p.as_path().as_os_str().as_encoded_bytes())).transpose()
 			});
@@ -77,7 +77,7 @@ impl File {
 			});
 			reg.add_method("is_marked", |_, me, ()| {
 				use yazi_core::tab::Mode::*;
-				if !me.tab().mode.is_visual() || me.folder().cwd != me.tab().current.cwd {
+				if !me.tab().mode.is_visual() || me.folder().loc != me.tab().current.loc {
 					return Ok(0u8);
 				}
 
@@ -89,11 +89,11 @@ impl File {
 			});
 			reg.add_method("is_selected", |_, me, ()| Ok(me.tab().selected.contains_key(me.url())));
 			reg.add_method("in_parent", |_, me, ()| {
-				Ok(me.tab().parent.as_ref().is_some_and(|f| me.folder().cwd == f.cwd))
+				Ok(me.tab().parent.as_ref().is_some_and(|f| me.folder().loc == f.loc))
 			});
-			reg.add_method("in_current", |_, me, ()| Ok(me.folder().cwd == me.tab().current.cwd));
+			reg.add_method("in_current", |_, me, ()| Ok(me.folder().loc == me.tab().current.loc));
 			reg.add_method("in_preview", |_, me, ()| {
-				Ok(me.tab().current.hovered().is_some_and(|f| me.folder().cwd == *f.url()))
+				Ok(me.tab().current.hovered().is_some_and(|f| f.url() == &*me.folder().loc))
 			});
 			reg.add_method("found", |lua, me, ()| {
 				let cx = lua.named_registry_value::<CtxRef>("cx")?;
@@ -113,7 +113,7 @@ impl File {
 				let Some(finder) = &cx.manager.active().finder else {
 					return Ok(None);
 				};
-				if me.folder().cwd != me.tab().current.cwd {
+				if me.folder().loc != me.tab().current.loc {
 					return Ok(None);
 				}
 				let Some(h) = finder.filter.highlighted(me.name()) else {

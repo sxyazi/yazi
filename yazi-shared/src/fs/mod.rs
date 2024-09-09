@@ -1,7 +1,7 @@
 mod cha;
 mod file;
 mod fns;
-mod location;
+mod loc;
 mod op;
 mod path;
 mod url;
@@ -9,7 +9,7 @@ mod url;
 pub use cha::*;
 pub use file::*;
 pub use fns::*;
-pub use location::*;
+pub use loc::*;
 pub use op::*;
 pub use path::*;
 pub use url::*;

@@ -38,7 +38,7 @@ impl Folder {
 
 	pub(super) fn register(lua: &Lua) -> mlua::Result<()> {
 		lua.register_userdata_type::<Self>(|reg| {
-			reg.add_field_method_get("cwd", |lua, me| Url::cast(lua, me.cwd.clone()));
+			reg.add_field_method_get("cwd", |lua, me| Url::cast(lua, me.loc.url().clone()));
 			reg.add_field_method_get("files", |_, me| Files::make(0..me.files.len(), me, me.tab()));
 			reg.add_field_method_get("stage", |lua, me| lua.create_any_userdata(me.stage));
 			reg.add_field_method_get("window", |_, me| Files::make(me.window.clone(), me, me.tab()));

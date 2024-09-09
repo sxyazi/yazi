@@ -92,7 +92,7 @@ impl Tab {
 	}
 
 	pub fn escape_search(&mut self) -> bool {
-		let b = self.current.cwd.is_search();
+		let b = self.cwd().is_search();
 		self.search_stop();
 
 		render_and!(b)
@@ -108,7 +108,7 @@ impl Tab {
 		let urls: Vec<_> =
 			indices.into_iter().filter_map(|i| self.current.files.get(i)).map(|f| f.url()).collect();
 
-		let same = !self.current.cwd.is_search();
+		let same = !self.cwd().is_search();
 		if !select {
 			self.selected.remove_many(&urls, same);
 		} else if self.selected.add_many(&urls, same) != urls.len() {

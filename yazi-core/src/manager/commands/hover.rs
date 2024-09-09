@@ -40,9 +40,9 @@ impl Manager {
 		// Refresh watcher
 		let mut to_watch = HashSet::with_capacity(3 * self.tabs.len());
 		for tab in self.tabs.iter() {
-			to_watch.insert(&tab.current.cwd);
+			to_watch.insert(tab.cwd());
 			if let Some(ref p) = tab.parent {
-				to_watch.insert(&p.cwd);
+				to_watch.insert(&p.loc);
 			}
 			if let Some(h) = tab.current.hovered().filter(|&h| h.is_dir()) {
 				to_watch.insert(h.url());

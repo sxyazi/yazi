@@ -55,13 +55,10 @@ impl Files {
 					_ = tx.closed() => break,
 					result = item.metadata() => {
 						let url = Url::from(item.path());
-						let file = match result {
+						_ = tx.send(match result {
 							Ok(meta) => File::from_meta(url, meta).await,
 							Err(_) => File::from_dummy(url, item.file_type().await.ok())
-						};
-						if let Ok(f) = file {
-							_ = tx.send(f);
-						}
+						});
 					}
 				}
 			}
@@ -82,13 +79,10 @@ impl Files {
 			let mut files = Vec::with_capacity(entries.len() / 3 + 1);
 			for entry in entries {
 				let url = Url::from(entry.path());
-				let file = match entry.metadata().await {
+				files.push(match entry.metadata().await {
 					Ok(meta) => File::from_meta(url, meta).await,
 					Err(_) => File::from_dummy(url, entry.file_type().await.ok()),
-				};
-				if let Ok(f) = file {
-					files.push(f);
-				}
+				});
 			}
 			files
 		}

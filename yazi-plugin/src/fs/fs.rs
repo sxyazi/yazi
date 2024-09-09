@@ -97,10 +97,7 @@ pub fn install(lua: &Lua) -> mlua::Result<()> {
 						} else {
 							yazi_shared::fs::File::from_dummy(url, next.file_type().await.ok())
 						};
-
-						if let Ok(f) = file {
-							files.push(File::cast(lua, f)?);
-						}
+						files.push(File::cast(lua, file)?);
 					}
 
 					let tbl = lua.create_table_with_capacity(files.len(), 0)?;

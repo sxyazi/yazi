@@ -24,15 +24,7 @@ impl Tab {
 	pub(super) fn register(lua: &Lua) -> mlua::Result<()> {
 		lua.register_userdata_type::<Self>(|reg| {
 			reg.add_method("name", |lua, me, ()| {
-				Some(
-					lua.create_string(
-						me.current
-							.cwd
-							.file_name()
-							.map_or(me.current.cwd.as_os_str().as_encoded_bytes(), |n| n.as_encoded_bytes()),
-					),
-				)
-				.transpose()
+				Some(lua.create_string(me.current.loc.name().as_encoded_bytes())).transpose()
 			});
 
 			reg.add_field_method_get("mode", |_, me| Mode::make(&me.mode));

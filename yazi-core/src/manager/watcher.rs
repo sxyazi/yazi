@@ -60,8 +60,11 @@ impl Watcher {
 	}
 
 	pub(super) fn trigger_dirs(&self, folders: &[&Folder]) {
-		let todo: Vec<_> =
-			folders.iter().filter(|&f| f.cwd.is_regular()).map(|&f| (f.cwd.clone(), f.cha)).collect();
+		let todo: Vec<_> = folders
+			.iter()
+			.filter(|&f| f.loc.is_regular())
+			.map(|&f| (f.loc.url().clone(), f.cha))
+			.collect();
 		if todo.is_empty() {
 			return;
 		}
