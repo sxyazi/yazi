@@ -20,10 +20,10 @@ impl FilesSorter {
 
 		let by_alphabetical = |a: &File, b: &File| {
 			if self.sensitive {
-				return self.cmp(a.name(), b.name(), self.promote(a, b));
+				self.cmp(a.name(), b.name(), self.promote(a, b))
+			} else {
+				self.cmp(a.name().to_ascii_uppercase(), b.name().to_ascii_uppercase(), self.promote(a, b))
 			}
-
-			self.cmp(a.name().to_ascii_uppercase(), b.name().to_ascii_uppercase(), self.promote(a, b))
 		};
 
 		match self.by {

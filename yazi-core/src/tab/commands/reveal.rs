@@ -28,9 +28,12 @@ impl Tab {
 		let Some(parent) = opt.target.parent_url() else {
 			return;
 		};
+		let Ok(file) = File::from_dummy(opt.target.clone(), None) else {
+			return;
+		};
 
 		self.cd(parent.clone());
-		FilesOp::Creating(parent, vec![File::from_dummy(opt.target.clone(), None)]).emit();
+		FilesOp::Creating(parent, vec![file]).emit();
 		ManagerProxy::hover(Some(opt.target), self.idx);
 	}
 }

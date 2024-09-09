@@ -44,11 +44,10 @@ impl Tab {
 			handle.abort();
 		}
 
-		let mut cwd = self.current.cwd.clone();
+		let cwd = self.current.cwd.to_search(&opt.subject);
 		let hidden = self.conf.show_hidden;
 
 		self.search = Some(tokio::spawn(async move {
-			cwd = cwd.into_search(opt.subject.clone());
 			let rx = if opt.via == SearchOptVia::Rg {
 				external::rg(external::RgOpt {
 					cwd: cwd.clone(),

@@ -179,12 +179,12 @@ impl Url {
 	pub fn is_search(&self) -> bool { self.scheme == UrlScheme::Search }
 
 	#[inline]
-	pub fn to_search(&self, frag: String) -> Self { self.clone().into_search(frag) }
+	pub fn to_search(&self, frag: &str) -> Self { self.clone().into_search(frag) }
 
 	#[inline]
-	pub fn into_search(mut self, frag: String) -> Self {
+	pub fn into_search(mut self, frag: &str) -> Self {
 		self.scheme = UrlScheme::Search;
-		self.frag = frag;
+		self.frag = frag.to_owned();
 		self
 	}
 

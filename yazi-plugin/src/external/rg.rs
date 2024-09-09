@@ -28,7 +28,7 @@ pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {
 
 	tokio::spawn(async move {
 		while let Ok(Some(line)) = it.next_line().await {
-			if let Ok(file) = File::from(opt.cwd.join(line)).await {
+			if let Ok(file) = File::from_search(&opt.cwd, opt.cwd.join(line)).await {
 				tx.send(file).ok();
 			}
 		}
