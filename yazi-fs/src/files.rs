@@ -238,7 +238,7 @@ impl Files {
 			($dist:expr, $src:expr, $inc:literal) => {
 				let len = $dist.len();
 
-				$dist.retain(|f| !$src.remove(&f.url));
+				$dist.retain(|f| !$src.remove(&f.url()));
 				if $dist.len() != len {
 					self.revision += $inc;
 				}
