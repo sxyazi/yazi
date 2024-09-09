@@ -26,7 +26,7 @@ impl<'a> From<Cmd> for Opt<'a> {
 impl<'a> Tab {
 	pub fn select(&mut self, opt: impl Into<Opt<'a>>) {
 		let opt = opt.into() as Opt;
-		let Some(url) = opt.url.or_else(|| self.current.hovered().map(|h| Cow::Borrowed(&h.url)))
+		let Some(url) = opt.url.or_else(|| self.current.hovered().map(|h| Cow::Borrowed(h.url())))
 		else {
 			return;
 		};

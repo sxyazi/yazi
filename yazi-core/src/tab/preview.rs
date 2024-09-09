@@ -20,11 +20,11 @@ pub struct Preview {
 
 impl Preview {
 	pub fn go(&mut self, file: File, mime: &str, force: bool) {
-		if !force && self.content_unchanged(&file.url, file.cha) {
+		if !force && self.content_unchanged(file.url(), file.cha) {
 			return;
 		}
 
-		let Some(previewer) = PLUGIN.previewer(&file.url, mime) else {
+		let Some(previewer) = PLUGIN.previewer(file.url(), mime) else {
 			self.reset();
 			return;
 		};
@@ -38,7 +38,7 @@ impl Preview {
 	}
 
 	pub fn go_folder(&mut self, file: File, dir: Option<Cha>, force: bool) {
-		let (cha, url) = (file.cha, file.url());
+		let (cha, url) = (file.cha, file.url_owned());
 		self.go(file, MIME_DIR, force);
 
 		if self.content_unchanged(&url, cha) {

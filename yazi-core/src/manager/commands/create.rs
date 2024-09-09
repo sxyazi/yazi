@@ -59,7 +59,7 @@ impl Manager {
 		}
 
 		if let Ok(f) = File::from(new.clone()).await {
-			FilesOp::Upserting(parent, HashMap::from_iter([(f.url(), f)])).emit();
+			FilesOp::Upserting(parent, HashMap::from_iter([(f.url_owned(), f)])).emit();
 			TabProxy::reveal(&new)
 		}
 		Ok(())

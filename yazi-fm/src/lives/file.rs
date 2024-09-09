@@ -39,18 +39,18 @@ impl File {
 
 			reg.add_field_method_get("idx", |_, me| Ok(me.idx + 1));
 			reg.add_method("size", |_, me, ()| {
-				Ok(if me.is_dir() { me.folder().files.sizes.get(&me.url).copied() } else { Some(me.len) })
+				Ok(if me.is_dir() { me.folder().files.sizes.get(me.url()).copied() } else { Some(me.len) })
 			});
 			reg.add_method("mime", |lua, me, ()| {
 				let cx = lua.named_registry_value::<CtxRef>("cx")?;
-				Ok(cx.manager.mimetype.get(&me.url).cloned())
+				Ok(cx.manager.mimetype.get(me.url()).cloned())
 			});
 			reg.add_method("prefix", |lua, me, ()| {
 				if !me.folder().cwd.is_search() {
 					return Ok(None);
 				}
 
-				let mut p = me.url.strip_prefix(&me.folder().cwd).unwrap_or(&me.url).components();
+				let mut p = me.url().strip_prefix(&me.folder().cwd).unwrap_or(me.url()).components();
 				p.next_back();
 				Some(lua.create_string(p.as_path().as_os_str().as_encoded_bytes())).transpose()
 			});
@@ -59,7 +59,7 @@ impl File {
 				let mime = if me.is_dir() {
 					MIME_DIR
 				} else {
-					cx.manager.mimetype.get(&me.url).map(|x| &**x).unwrap_or_default()
+					cx.manager.mimetype.get(me.url()).map(|x| &**x).unwrap_or_default()
 				};
 
 				Ok(THEME.filetypes.iter().find(|&x| x.matches(me, mime)).map(|x| Style::from(x.style)))
@@ -67,7 +67,7 @@ impl File {
 			reg.add_method("is_hovered", |_, me, ()| Ok(me.idx == me.folder().cursor));
 			reg.add_method("is_yanked", |lua, me, ()| {
 				let cx = lua.named_registry_value::<CtxRef>("cx")?;
-				Ok(if !cx.manager.yanked.contains(&me.url) {
+				Ok(if !cx.manager.yanked.contains(me.url()) {
 					0u8
 				} else if cx.manager.yanked.cut {
 					2u8
@@ -87,13 +87,13 @@ impl File {
 					_ => 0u8,
 				})
 			});
-			reg.add_method("is_selected", |_, me, ()| Ok(me.tab().selected.contains_key(&me.url)));
+			reg.add_method("is_selected", |_, me, ()| Ok(me.tab().selected.contains_key(me.url())));
 			reg.add_method("in_parent", |_, me, ()| {
 				Ok(me.tab().parent.as_ref().is_some_and(|f| me.folder().cwd == f.cwd))
 			});
 			reg.add_method("in_current", |_, me, ()| Ok(me.folder().cwd == me.tab().current.cwd));
 			reg.add_method("in_preview", |_, me, ()| {
-				Ok(me.tab().current.hovered().is_some_and(|f| me.folder().cwd == f.url))
+				Ok(me.tab().current.hovered().is_some_and(|f| me.folder().cwd == *f.url()))
 			});
 			reg.add_method("found", |lua, me, ()| {
 				let cx = lua.named_registry_value::<CtxRef>("cx")?;
@@ -101,7 +101,7 @@ impl File {
 					return Ok(None);
 				};
 
-				let Some(idx) = finder.matched_idx(&me.url) else {
+				let Some(idx) = finder.matched_idx(me.url()) else {
 					return Ok(None);
 				};
 
@@ -116,7 +116,7 @@ impl File {
 				if me.folder().cwd != me.tab().current.cwd {
 					return Ok(None);
 				}
-				let Some(h) = me.name().and_then(|n| finder.filter.highlighted(n)) else {
+				let Some(h) = finder.filter.highlighted(me.name()) else {
 					return Ok(None);
 				};
 

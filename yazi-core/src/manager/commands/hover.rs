@@ -28,7 +28,7 @@ impl Manager {
 
 		// Hover on the file
 		render!(self.current_or_mut(opt.tab).repos(opt.url.as_ref()));
-		if opt.url.zip(self.current_or(opt.tab).hovered()).is_some_and(|(u, f)| u == f.url) {
+		if opt.url.zip(self.current_or(opt.tab).hovered()).is_some_and(|(u, f)| &u == f.url()) {
 			// `hover(Some)` occurs after user actions, such as create, rename, reveal, etc.
 			// At this point, it's intuitive to track the location of this file regardless.
 			self.current_or_mut(opt.tab).tracing = true;
@@ -45,12 +45,12 @@ impl Manager {
 				to_watch.insert(&p.cwd);
 			}
 			if let Some(h) = tab.current.hovered().filter(|&h| h.is_dir()) {
-				to_watch.insert(&h.url);
+				to_watch.insert(h.url());
 			}
 		}
 		self.watcher.watch(to_watch);
 
 		// Publish through DDS
-		Pubsub::pub_from_hover(self.active().idx, self.hovered().map(|h| &h.url));
+		Pubsub::pub_from_hover(self.active().idx, self.hovered().map(|h| h.url()));
 	}
 }

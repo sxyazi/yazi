@@ -80,7 +80,7 @@ impl Folder {
 	}
 
 	pub fn hover(&mut self, url: &Url) -> bool {
-		if self.hovered().map(|h| &h.url) == Some(url) {
+		if self.hovered().map(|h| h.url()) == Some(url) {
 			return false;
 		}
 

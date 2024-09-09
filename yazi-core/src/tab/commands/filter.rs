@@ -65,13 +65,13 @@ impl Tab {
 			ManagerProxy::update_paged(); // Update for paged files in next loop
 		}
 
-		let hovered = self.current.hovered().map(|f| f.url());
+		let hovered = self.current.hovered().map(|f| f.url_owned());
 		if !self.current.files.set_filter(filter) {
 			return;
 		}
 
 		self.current.repos(hovered.as_ref());
-		if self.current.hovered().map(|f| &f.url) != hovered.as_ref() {
+		if self.current.hovered().map(|f| f.url()) != hovered.as_ref() {
 			ManagerProxy::hover(None, self.idx);
 		}
 

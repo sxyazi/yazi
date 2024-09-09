@@ -106,7 +106,7 @@ impl Selected {
 		let (removal, addition) = match op {
 			FilesOp::Deleting(_, urls) => (urls.iter().collect(), vec![]),
 			FilesOp::Updating(_, urls) | FilesOp::Upserting(_, urls) => {
-				urls.iter().filter(|&(u, _)| self.contains_key(u)).map(|(u, f)| (u, &f.url)).unzip()
+				urls.iter().filter(|&(u, _)| self.contains_key(u)).map(|(u, f)| (u, f.url())).unzip()
 			}
 			_ => (vec![], vec![]),
 		};

@@ -27,7 +27,7 @@ impl Manager {
 		if !self.active_mut().try_escape_visual() {
 			return;
 		}
-		let Some(hovered) = self.hovered().map(|h| h.url()) else {
+		let Some(hovered) = self.hovered().map(|h| h.url_owned()) else {
 			return;
 		};
 
@@ -63,7 +63,7 @@ impl Manager {
 				}
 			}
 
-			done.extend(files.iter().map(|f| (f.url(), String::new())));
+			done.extend(files.iter().map(|f| (f.url_owned(), String::new())));
 			if let Err(e) = isolate::fetch("mime", files).await {
 				error!("Fetch `mime` failed in opening: {e}");
 			}
@@ -111,7 +111,7 @@ impl Manager {
 
 		let find = |folder: Option<&Folder>| {
 			folder.is_some_and(|folder| {
-				folder.cwd == p && folder.files.iter().any(|f| f.is_dir() && f.url == *url)
+				folder.cwd == p && folder.files.iter().any(|f| f.is_dir() && url == f.url())
 			})
 		};
 

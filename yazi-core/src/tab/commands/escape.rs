@@ -106,7 +106,7 @@ impl Tab {
 
 		render!();
 		let urls: Vec<_> =
-			indices.into_iter().filter_map(|i| self.current.files.get(i)).map(|f| &f.url).collect();
+			indices.into_iter().filter_map(|i| self.current.files.get(i)).map(|f| f.url()).collect();
 
 		let same = !self.current.cwd.is_search();
 		if !select {

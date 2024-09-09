@@ -27,7 +27,7 @@ impl Manager {
 		if !self.active_mut().try_escape_visual() {
 			return;
 		}
-		let Some(hovered) = self.hovered().map(|h| &h.url) else {
+		let Some(hovered) = self.hovered().map(|h| h.url()) else {
 			return;
 		};
 

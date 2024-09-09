@@ -42,7 +42,7 @@ impl Tabs {
 		} else if let Some(h) = self.active().current.hovered() {
 			tab.conf = self.active().conf.clone();
 			tab.apply_files_attrs();
-			tab.reveal(h.url.to_owned());
+			tab.reveal(h.url_owned());
 		} else {
 			tab.conf = self.active().conf.clone();
 			tab.apply_files_attrs();

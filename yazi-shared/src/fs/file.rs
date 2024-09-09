@@ -71,7 +71,7 @@ impl File {
 impl File {
 	// --- Url
 	#[inline]
-	pub fn url(&self) -> Url { self.url.clone() }
+	pub fn url_owned(&self) -> Url { self.url.clone() }
 
 	#[inline]
 	pub fn name(&self) -> Option<&OsStr> { self.url.file_name() }
