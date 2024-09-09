@@ -82,7 +82,6 @@ impl Ueberzug {
 	}
 
 	fn create_demon(adapter: Adapter) -> Result<Child> {
-		// TODO: demon
 		let result = Command::new("ueberzugpp")
 			.args(["layer", "-so", &adapter.to_string()])
 			.env("SPDLOG_LEVEL", if cfg!(debug_assertions) { "debug" } else { "" })

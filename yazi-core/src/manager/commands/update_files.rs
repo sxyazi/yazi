@@ -47,9 +47,9 @@ impl Manager {
 		let url = op.url();
 		tab.selected.apply_op(&op);
 
-		if tab.current.cwd == *url {
+		if url == tab.cwd() {
 			Self::update_current(tab, op, tasks);
-		} else if matches!(&tab.parent, Some(p) if p.cwd == *url) {
+		} else if matches!(&tab.parent, Some(p) if url == &*p.loc) {
 			Self::update_parent(tab, op);
 		} else if matches!(tab.current.hovered(), Some(h) if url == h.url()) {
 			Self::update_hovered(tab, op);
@@ -59,7 +59,7 @@ impl Manager {
 	}
 
 	fn update_parent(tab: &mut Tab, op: Cow<FilesOp>) {
-		let cwd = tab.current.cwd.clone();
+		let cwd = tab.cwd().clone();
 		let leave = matches!(*op, FilesOp::Deleting(_, ref urls) if urls.contains(&cwd));
 
 		if let Some(f) = tab.parent.as_mut() {
@@ -108,7 +108,7 @@ impl Manager {
 	}
 
 	fn update_history(tab: &mut Tab, op: Cow<FilesOp>) {
-		let leave = tab.parent.as_ref().and_then(|f| f.cwd.parent_url().map(|p| (&f.cwd, p))).is_some_and(
+		let leave = tab.parent.as_ref().and_then(|f| f.loc.parent_url().map(|p| (&f.loc, p))).is_some_and(
 			|(p, pp)| matches!(*op, FilesOp::Deleting(ref parent, ref urls) if *parent == pp && urls.contains(p)),
 		);
 

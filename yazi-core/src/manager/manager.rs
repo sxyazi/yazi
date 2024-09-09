@@ -41,7 +41,7 @@ impl Manager {
 
 impl Manager {
 	#[inline]
-	pub fn cwd(&self) -> &Url { &self.current().cwd }
+	pub fn cwd(&self) -> &Url { &self.current().loc }
 
 	#[inline]
 	pub fn active(&self) -> &Tab { self.tabs.active() }

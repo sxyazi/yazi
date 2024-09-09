@@ -27,7 +27,7 @@ impl Manager {
 			return;
 		};
 
-		if opt.only_if.is_some_and(|u| u != self.current().cwd) {
+		if opt.only_if.is_some_and(|u| u != *self.active().cwd()) {
 			return;
 		}
 

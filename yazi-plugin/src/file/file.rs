@@ -1,5 +1,6 @@
 use mlua::{AnyUserData, Lua, Table, UserDataFields, UserDataMethods, UserDataRef, UserDataRegistry};
 use yazi_config::THEME;
+use yazi_shared::fs::Loc;
 
 use crate::{bindings::{Cast, Icon}, cha::Cha, url::Url};
 
@@ -48,14 +49,11 @@ impl File {
 		lua.globals().raw_set(
 			"File",
 			lua.create_function(|lua, t: Table| {
-				// FIXME
-				todo!();
-				Ok(())
-				// Self::cast(lua, yazi_shared::fs::File {
-				// 	cha: t.raw_get::<_, AnyUserData>("cha")?.take()?,
-				// 	url: t.raw_get::<_, AnyUserData>("url")?.take()?,
-				// 	..Default::default()
-				// })
+				Self::cast(lua, yazi_shared::fs::File {
+					loc: Loc::from(t.raw_get::<_, AnyUserData>("url")?.take()?),
+					cha: t.raw_get::<_, AnyUserData>("cha")?.take()?,
+					..Default::default()
+				})
 			})?,
 		)
 	}

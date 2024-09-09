@@ -48,51 +48,28 @@ impl FilesOp {
 	}
 
 	pub fn chroot(&self, new: &Url) -> Self {
-		let old = self.url();
 		macro_rules! new {
-			($url:expr) => {{ new.join($url.strip_prefix(old).unwrap()) }};
+			($url:expr) => {{ new.join($url.file_name().unwrap()) }};
 		}
 		macro_rules! files {
-			($files:expr) => {{
-				$files
-					.iter()
-					.map(|file| {
-						let mut f = file.clone();
-						// FIXME
-						todo!();
-						// f.url = new!(f.url);
-						f
-					})
-					.collect()
-			}};
+			($files:expr) => {{ $files.iter().map(|f| f.rebase(new)).collect() }};
 		}
 		macro_rules! map {
-			($map:expr) => {{
-				$map
-					.iter()
-					.map(|(k, v)| {
-						let mut f = v.clone();
-						// FIXME
-						todo!();
-						// f.url = new!(f.url);
-						(new!(k), f)
-					})
-					.collect()
-			}};
+			($map:expr) => {{ $map.iter().map(|(u, f)| (new!(u), f.rebase(new))).collect() }};
 		}
 
-		let u = new.clone();
+		let n = new.clone();
 		match self {
-			Self::Full(_, files, mtime) => Self::Full(u, files!(files), *mtime),
-			Self::Part(_, files, ticket) => Self::Part(u, files!(files), *ticket),
-			Self::Done(_, mtime, ticket) => Self::Done(u, *mtime, *ticket),
-			Self::Size(_, map) => Self::Size(u, map.iter().map(|(k, v)| (new!(k), *v)).collect()),
-			Self::IOErr(_, err) => Self::IOErr(u, *err),
+			Self::Full(_, files, mtime) => Self::Full(n, files!(files), *mtime),
+			Self::Part(_, files, ticket) => Self::Part(n, files!(files), *ticket),
+			Self::Done(_, mtime, ticket) => Self::Done(n, *mtime, *ticket),
+			Self::Size(_, map) => Self::Size(n, map.iter().map(|(u, &s)| (new!(u), s)).collect()),
+			Self::IOErr(_, err) => Self::IOErr(n, *err),
 
-			Self::Creating(_, files) => Self::Creating(u, files!(files)),
-			Self::Deleting(_, urls) => Self::Deleting(u, urls.iter().map(|u| new!(u)).collect()),
-			Self::Updating(_, map) => Self::Updating(u, map!(map)),
-			Self::Upserting(_, map) => Self::Upserting(u, map!(map)),
+			Self::Creating(_, files) => Self::Creating(n, files!(files)),
+			Self::Deleting(_, urls) => Self::Deleting(n, urls.iter().map(|u| new!(u)).collect()),
+			Self::Updating(_, map) => Self::Updating(n, map!(map)),
+			Self::Upserting(_, map) => Self::Upserting(n, map!(map)),
 		}
 	}
 }

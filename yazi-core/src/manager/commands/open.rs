@@ -111,7 +111,7 @@ impl Manager {
 
 		let find = |folder: Option<&Folder>| {
 			folder.is_some_and(|folder| {
-				folder.cwd == p && folder.files.iter().any(|f| f.is_dir() && url == f.url())
+				p == *folder.loc && folder.files.iter().any(|f| f.is_dir() && url == f.url())
 			})
 		};
 

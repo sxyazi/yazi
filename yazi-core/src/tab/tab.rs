@@ -1,4 +1,4 @@
-use std::{collections::HashMap, iter};
+use std::iter;
 
 use anyhow::Result;
 use ratatui::layout::Rect;
@@ -8,7 +8,7 @@ use yazi_config::{popup::{Origin, Position}, LAYOUT};
 use yazi_fs::{Folder, FolderStage};
 use yazi_shared::{fs::Url, render};
 
-use super::{Backstack, Config, Finder, Mode, Preview};
+use super::{Backstack, Config, Finder, History, Mode, Preview};
 use crate::tab::Selected;
 
 #[derive(Default)]
@@ -20,7 +20,7 @@ pub struct Tab {
 	pub parent:  Option<Folder>,
 
 	pub backstack: Backstack<Url>,
-	pub history:   HashMap<Url, Folder>,
+	pub history:   History,
 	pub selected:  Selected,
 
 	pub preview: Preview,
@@ -38,6 +38,9 @@ impl Tab {
 
 impl Tab {
 	// --- Current
+	#[inline]
+	pub fn cwd(&self) -> &Url { &self.current.loc }
+
 	pub fn hovered_rect(&self) -> Option<Rect> {
 		let y = self.current.files.position(self.current.hovered()?.url())? - self.current.offset;
 
@@ -83,10 +86,6 @@ impl Tab {
 	}
 
 	// --- History
-	#[inline]
-	pub fn history_new(&mut self, url: &Url) -> Folder {
-		self.history.remove(url).unwrap_or_else(|| Folder::from(url))
-	}
 
 	#[inline]
 	pub fn hovered_folder(&self) -> Option<&Folder> {
@@ -113,8 +112,8 @@ impl Tab {
 			apply(parent);
 
 			// The parent should always track the CWD
-			parent.hover(&self.current.cwd);
-			parent.tracing = parent.hovered().map(|h| h.url()) == Some(&self.current.cwd);
+			parent.hover(&self.current.loc);
+			parent.tracing = parent.hovered().map(|h| h.url()) == Some(&self.current.loc);
 		}
 
 		self

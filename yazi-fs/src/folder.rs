@@ -2,14 +2,14 @@ use std::mem;
 
 use yazi_config::{LAYOUT, MANAGER};
 use yazi_proxy::ManagerProxy;
-use yazi_shared::fs::{Cha, File, FilesOp, Url};
+use yazi_shared::fs::{Cha, File, FilesOp, Loc, Url};
 
 use super::FolderStage;
 use crate::{Files, Step};
 
 #[derive(Default)]
 pub struct Folder {
-	pub cwd:   Url,
+	pub loc:   Loc,
 	pub cha:   Cha,
 	pub files: Files,
 	pub stage: FolderStage,
@@ -22,7 +22,7 @@ pub struct Folder {
 }
 
 impl From<&Url> for Folder {
-	fn from(cwd: &Url) -> Self { Self { cwd: cwd.clone(), ..Default::default() } }
+	fn from(cwd: &Url) -> Self { Self { loc: Loc::from(cwd.clone()), ..Default::default() } }
 }
 
 impl Folder {
@@ -101,7 +101,7 @@ impl Folder {
 
 		let new = self.cursor / limit;
 		if mem::replace(&mut self.page, new) != new || force {
-			ManagerProxy::update_paged_by(new, &self.cwd);
+			ManagerProxy::update_paged_by(new, &self.loc);
 		}
 	}
 

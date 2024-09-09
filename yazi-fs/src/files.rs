@@ -45,8 +45,8 @@ impl Deref for Files {
 }
 
 impl Files {
-	pub async fn from_dir(url: &Url) -> std::io::Result<UnboundedReceiver<File>> {
-		let mut it = fs::read_dir(url).await?;
+	pub async fn from_dir(dir: &Url) -> std::io::Result<UnboundedReceiver<File>> {
+		let mut it = fs::read_dir(dir).await?;
 		let (tx, rx) = mpsc::unbounded_channel();
 
 		tokio::spawn(async move {
@@ -66,18 +66,18 @@ impl Files {
 		Ok(rx)
 	}
 
-	pub async fn from_dir_bulk(url: &Url) -> std::io::Result<Vec<File>> {
-		let mut it = fs::read_dir(url).await?;
-		let mut items = Vec::with_capacity(5000);
-		while let Ok(Some(item)) = it.next_entry().await {
-			items.push(item);
+	pub async fn from_dir_bulk(dir: &Url) -> std::io::Result<Vec<File>> {
+		let mut it = fs::read_dir(dir).await?;
+		let mut entries = Vec::with_capacity(5000);
+		while let Ok(Some(entry)) = it.next_entry().await {
+			entries.push(entry);
 		}
 
-		let (first, rest) = items.split_at(items.len() / 3);
-		let (second, third) = rest.split_at(items.len() / 3);
-		async fn go(entities: &[DirEntry]) -> Vec<File> {
-			let mut files = Vec::with_capacity(entities.len() / 3 + 1);
-			for entry in entities {
+		let (first, rest) = entries.split_at(entries.len() / 3);
+		let (second, third) = rest.split_at(entries.len() / 3);
+		async fn go(entries: &[DirEntry]) -> Vec<File> {
+			let mut files = Vec::with_capacity(entries.len() / 3 + 1);
+			for entry in entries {
 				let url = Url::from(entry.path());
 				files.push(match entry.metadata().await {
 					Ok(meta) => File::from_meta(url, meta).await,
@@ -238,7 +238,7 @@ impl Files {
 			($dist:expr, $src:expr, $inc:literal) => {
 				let len = $dist.len();
 
-				$dist.retain(|f| !$src.remove(&f.url));
+				$dist.retain(|f| !$src.remove(f.url()));
 				if $dist.len() != len {
 					self.revision += $inc;
 				}

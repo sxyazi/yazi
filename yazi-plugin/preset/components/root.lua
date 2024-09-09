@@ -34,7 +34,6 @@ function Root:render()
 	for _, child in ipairs(self._children) do
 		children = ya.list_merge(children, ya.render_with(child))
 	end
-	__yazi_check_and_warn_deprecated_api() -- TODO: remove this after 0.3.0 release
 	return children
 end
 

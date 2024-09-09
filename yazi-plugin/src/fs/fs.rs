@@ -54,7 +54,7 @@ pub fn install(lua: &Lua) -> mlua::Result<()> {
 			),
 			(
 				"read_dir",
-				lua.create_async_function(|lua, (url, options): (UrlRef, Table)| async move {
+				lua.create_async_function(|lua, (dir, options): (UrlRef, Table)| async move {
 					let glob = if let Ok(s) = options.raw_get::<_, mlua::String>("glob") {
 						Some(
 							GlobBuilder::new(s.to_str()?)
@@ -73,7 +73,7 @@ pub fn install(lua: &Lua) -> mlua::Result<()> {
 					let limit = options.raw_get("limit").unwrap_or(usize::MAX);
 					let resolve = options.raw_get("resolve").unwrap_or(false);
 
-					let mut it = match fs::read_dir(&*url).await {
+					let mut it = match fs::read_dir(&*dir).await {
 						Ok(it) => it,
 						Err(e) => return (Value::Nil, e.raw_os_error()).into_lua_multi(lua),
 					};
@@ -97,7 +97,6 @@ pub fn install(lua: &Lua) -> mlua::Result<()> {
 						} else {
 							yazi_shared::fs::File::from_dummy(url, next.file_type().await.ok())
 						};
-
 						files.push(File::cast(lua, file)?);
 					}
 

@@ -46,7 +46,7 @@ impl Tabs {
 		} else {
 			tab.conf = self.active().conf.clone();
 			tab.apply_files_attrs();
-			tab.cd(self.active().current.cwd.clone());
+			tab.cd(self.active().cwd().clone());
 		}
 
 		self.items.insert(self.cursor + 1, tab);
