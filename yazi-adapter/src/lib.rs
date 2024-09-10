@@ -47,7 +47,7 @@ pub fn init() {
 
 	if *TMUX {
 		_ = std::process::Command::new("tmux")
-			.args(["set", "-p", "allow-passthrough", "on"])
+			.args(["set", "-p", "allow-passthrough", "all"])
 			.stdin(std::process::Stdio::null())
 			.stdout(std::process::Stdio::null())
 			.stderr(std::process::Stdio::null())
