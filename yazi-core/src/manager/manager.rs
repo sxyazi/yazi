@@ -1,12 +1,10 @@
-use std::collections::HashMap;
-
 use ratatui::layout::Rect;
 use yazi_adapter::Dimension;
 use yazi_config::popup::{Origin, Position};
 use yazi_fs::Folder;
 use yazi_shared::fs::{File, Url};
 
-use super::{Tabs, Watcher, Yanked};
+use super::{Mimetype, Tabs, Watcher, Yanked};
 use crate::tab::Tab;
 
 pub struct Manager {
@@ -14,7 +12,7 @@ pub struct Manager {
 	pub yanked: Yanked,
 
 	pub(super) watcher: Watcher,
-	pub mimetype:       HashMap<Url, String>,
+	pub mimetype:       Mimetype,
 }
 
 impl Manager {

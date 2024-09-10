@@ -17,6 +17,7 @@ pub enum UrlScheme {
 	#[default]
 	Regular,
 	Search,
+	SearchItem,
 	Archive,
 }
 
@@ -98,12 +99,12 @@ impl AsRef<OsStr> for Url {
 
 impl Display for Url {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-		if self.scheme == UrlScheme::Regular {
+		if matches!(self.scheme, UrlScheme::Regular | UrlScheme::SearchItem) {
 			return f.write_str(&self.path.to_string_lossy());
 		}
 
 		let scheme = match self.scheme {
-			UrlScheme::Regular => unreachable!(),
+			UrlScheme::Regular | UrlScheme::SearchItem => unreachable!(),
 			UrlScheme::Search => "search://",
 			UrlScheme::Archive => "archive://",
 		};
@@ -128,7 +129,8 @@ impl Url {
 		let url = Self::from(self.path.join(path));
 		match self.scheme {
 			UrlScheme::Regular => url,
-			UrlScheme::Search => url.into_search(),
+			UrlScheme::Search => url.into_search_item(),
+			UrlScheme::SearchItem => url,
 			UrlScheme::Archive => url.into_archive(),
 		}
 	}
@@ -140,6 +142,7 @@ impl Url {
 			match self.scheme {
 				UrlScheme::Regular => url,
 				UrlScheme::Search => url,
+				UrlScheme::SearchItem => url,
 				UrlScheme::Archive => url,
 			}
 		})
@@ -187,8 +190,8 @@ impl Url {
 	}
 
 	#[inline]
-	pub fn into_search(mut self) -> Self {
-		self.scheme = UrlScheme::Search;
+	pub fn into_search_item(mut self) -> Self {
+		self.scheme = UrlScheme::SearchItem;
 		self.frag = String::new();
 		self
 	}
@@ -208,9 +211,16 @@ impl Url {
 		self
 	}
 
+	// --- Scheme
+	#[inline]
+	pub fn scheme(&self) -> UrlScheme { self.scheme }
+
 	// --- Path
 	#[inline]
 	pub fn set_path(&mut self, path: PathBuf) { self.path = path; }
+
+	#[inline]
+	pub fn into_path(self) -> PathBuf { self.path }
 
 	// --- Frag
 	#[inline]
