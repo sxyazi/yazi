@@ -43,7 +43,7 @@ impl File {
 			});
 			reg.add_method("mime", |lua, me, ()| {
 				let cx = lua.named_registry_value::<CtxRef>("cx")?;
-				Ok(cx.manager.mimetype.get(me.url()).cloned())
+				Ok(cx.manager.mimetype.get_owned(me.url()))
 			});
 			reg.add_method("prefix", |lua, me, ()| {
 				if !me.folder().loc.is_search() {
@@ -59,7 +59,7 @@ impl File {
 				let mime = if me.is_dir() {
 					MIME_DIR
 				} else {
-					cx.manager.mimetype.get(me.url()).map(|x| &**x).unwrap_or_default()
+					cx.manager.mimetype.get(me.url()).unwrap_or_default()
 				};
 
 				Ok(THEME.filetypes.iter().find(|&x| x.matches(me, mime)).map(|x| Style::from(x.style)))

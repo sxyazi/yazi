@@ -41,7 +41,7 @@ impl Manager {
 
 		let (mut done, mut todo) = (Vec::with_capacity(selected.len()), vec![]);
 		for u in selected {
-			if self.mimetype.contains_key(u) {
+			if self.mimetype.contains(u) {
 				done.push((u.clone(), String::new()));
 			} else if self.guess_folder(u) {
 				done.push((u.clone(), MIME_DIR.to_owned()));
@@ -78,7 +78,7 @@ impl Manager {
 			.targets
 			.into_iter()
 			.filter_map(|(u, m)| {
-				Some(m).filter(|m| !m.is_empty()).or_else(|| self.mimetype.get(&u).cloned()).map(|m| (u, m))
+				Some(m).filter(|m| !m.is_empty()).or_else(|| self.mimetype.get_owned(&u)).map(|m| (u, m))
 			})
 			.collect();
 

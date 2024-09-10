@@ -55,7 +55,7 @@ impl Manager {
 			return;
 		}
 
-		let mime = self.mimetype.get(hovered.url()).cloned().unwrap_or_default();
+		let mime = self.mimetype.get_owned(hovered.url()).unwrap_or_default();
 		if !mime.is_empty() {
 			// Wait till mimetype is resolved to avoid flickering
 			self.active_mut().preview.go(hovered, &mime, opt.force);
