@@ -1,7 +1,7 @@
-use mlua::{AnyUserData, ExternalError, Lua, Table, UserData, Value};
+use mlua::{AnyUserData, Lua, Table, UserData};
 use ratatui::widgets::Borders;
 
-use super::{RectRef, Renderable, Style};
+use super::{RectRef, Renderable};
 
 #[derive(Clone)]
 pub struct Bar {
@@ -9,7 +9,7 @@ pub struct Bar {
 
 	direction: ratatui::widgets::Borders,
 	symbol:    String,
-	style:     Option<ratatui::style::Style>,
+	style:     ratatui::style::Style,
 }
 
 impl Bar {
@@ -42,20 +42,10 @@ impl Bar {
 
 impl UserData for Bar {
 	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+		crate::impl_style_method!(methods, style);
+
 		methods.add_function("symbol", |_, (ud, symbol): (AnyUserData, String)| {
 			ud.borrow_mut::<Self>()?.symbol = symbol;
-			Ok(ud)
-		});
-		methods.add_function("style", |_, (ud, value): (AnyUserData, Value)| {
-			{
-				let mut me = ud.borrow_mut::<Self>()?;
-				match value {
-					Value::Nil => me.style = None,
-					Value::Table(tb) => me.style = Some(Style::try_from(tb)?.0),
-					Value::UserData(ud) => me.style = Some(ud.borrow::<Style>()?.0),
-					_ => return Err("expected a Style or Table or nil".into_lua_err()),
-				}
-			}
 			Ok(ud)
 		});
 	}
@@ -81,36 +71,24 @@ impl Renderable for Bar {
 
 		if self.direction.contains(Borders::LEFT) {
 			for y in self.area.top()..self.area.bottom() {
-				let cell = buf[(self.area.left(), y)].set_symbol(symbol);
-				if let Some(style) = self.style {
-					cell.set_style(style);
-				}
+				buf[(self.area.left(), y)].set_style(self.style).set_symbol(symbol);
 			}
 		}
 		if self.direction.contains(Borders::TOP) {
 			for x in self.area.left()..self.area.right() {
-				let cell = buf[(x, self.area.top())].set_symbol(symbol);
-				if let Some(style) = self.style {
-					cell.set_style(style);
-				}
+				buf[(x, self.area.top())].set_style(self.style).set_symbol(symbol);
 			}
 		}
 		if self.direction.contains(Borders::RIGHT) {
 			let x = self.area.right() - 1;
 			for y in self.area.top()..self.area.bottom() {
-				let cell = buf[(x, y)].set_symbol(symbol);
-				if let Some(style) = self.style {
-					cell.set_style(style);
-				}
+				buf[(x, y)].set_style(self.style).set_symbol(symbol);
 			}
 		}
 		if self.direction.contains(Borders::BOTTOM) {
 			let y = self.area.bottom() - 1;
 			for x in self.area.left()..self.area.right() {
-				let cell = buf[(x, y)].set_symbol(symbol);
-				if let Some(style) = self.style {
-					cell.set_style(style);
-				}
+				buf[(x, y)].set_style(self.style).set_symbol(symbol);
 			}
 		}
 	}

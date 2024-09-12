@@ -1,7 +1,5 @@
-use mlua::{AnyUserData, ExternalError, FromLua, Lua, Table, UserData, UserDataMethods, Value};
+use mlua::{FromLua, Lua, Table, UserData, UserDataMethods};
 use unicode_width::UnicodeWidthChar;
-
-use super::Style;
 
 #[derive(Clone, FromLua)]
 pub struct Span(pub(super) ratatui::text::Span<'static>);
@@ -19,17 +17,9 @@ impl Span {
 
 impl UserData for Span {
 	fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+		crate::impl_style_method!(methods, 0.style);
 		crate::impl_style_shorthands!(methods, 0.style);
 
-		methods.add_function("style", |_, (ud, value): (AnyUserData, Value)| {
-			ud.borrow_mut::<Self>()?.0.style = match value {
-				Value::Nil => ratatui::style::Style::default(),
-				Value::Table(tb) => Style::try_from(tb)?.0,
-				Value::UserData(ud) => ud.borrow::<Style>()?.0,
-				_ => return Err("expected a Style or Table or nil".into_lua_err()),
-			};
-			Ok(ud)
-		});
 		methods.add_method("visible", |_, me, ()| {
 			Ok(me.0.content.chars().any(|c| c.width().unwrap_or(0) > 0))
 		});
