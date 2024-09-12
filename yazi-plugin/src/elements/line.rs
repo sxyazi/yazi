@@ -4,7 +4,7 @@ use ansi_to_tui::IntoText;
 use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, Table, UserData, UserDataMethods, Value};
 use unicode_width::UnicodeWidthChar;
 
-use super::{Span, Style};
+use super::Span;
 
 const LEFT: u8 = 0;
 const CENTER: u8 = 1;
@@ -83,21 +83,10 @@ impl Line {
 
 impl UserData for Line {
 	fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+		crate::impl_style_method!(methods, 0.style);
 		crate::impl_style_shorthands!(methods, 0.style);
 
 		methods.add_method("width", |_, me, ()| Ok(me.0.width()));
-		methods.add_function("style", |_, (ud, value): (AnyUserData, Value)| {
-			{
-				let mut me = ud.borrow_mut::<Self>()?;
-				me.0.style = match value {
-					Value::Nil => ratatui::style::Style::default(),
-					Value::Table(tb) => Style::try_from(tb)?.0,
-					Value::UserData(ud) => ud.borrow::<Style>()?.0,
-					_ => return Err("expected a Style or Table or nil".into_lua_err()),
-				};
-			}
-			Ok(ud)
-		});
 		methods.add_function("align", |_, (ud, align): (AnyUserData, u8)| {
 			ud.borrow_mut::<Self>()?.0.alignment = Some(match align {
 				CENTER => ratatui::layout::Alignment::Center,

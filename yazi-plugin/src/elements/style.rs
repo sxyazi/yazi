@@ -8,17 +8,13 @@ pub struct Style(pub(super) ratatui::style::Style);
 
 impl Style {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		let new = lua.create_function(|_, ()| Ok(Self::default()))?;
+		let new = lua.create_function(|_, value: Value| Self::try_from(value))?;
 
 		let style = lua.create_table()?;
 		style.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
 		ui.raw_set("Style", style)
 	}
-}
-
-impl From<yazi_shared::theme::Style> for Style {
-	fn from(value: yazi_shared::theme::Style) -> Self { Self(value.into()) }
 }
 
 impl<'a> TryFrom<Table<'a>> for Style {
@@ -36,6 +32,23 @@ impl<'a> TryFrom<Table<'a>> for Style {
 			ratatui::style::Modifier::from_bits_truncate(value.raw_get("modifier").unwrap_or_default());
 		Ok(Self(style))
 	}
+}
+
+impl<'a> TryFrom<Value<'a>> for Style {
+	type Error = mlua::Error;
+
+	fn try_from(value: Value<'a>) -> Result<Self, Self::Error> {
+		Ok(Self(match value {
+			Value::Nil => Default::default(),
+			Value::Table(tb) => Style::try_from(tb)?.0,
+			Value::UserData(ud) => ud.borrow::<Style>()?.0,
+			_ => Err("expected a Style or Table or nil".into_lua_err())?,
+		}))
+	}
+}
+
+impl From<yazi_shared::theme::Style> for Style {
+	fn from(value: yazi_shared::theme::Style) -> Self { Self(value.into()) }
 }
 
 impl UserData for Style {

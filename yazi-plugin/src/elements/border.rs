@@ -1,7 +1,7 @@
-use mlua::{AnyUserData, ExternalError, Lua, Table, UserData, Value};
+use mlua::{AnyUserData, Lua, Table, UserData};
 use ratatui::widgets::{Borders, Widget};
 
-use super::{RectRef, Renderable, Style};
+use super::{RectRef, Renderable};
 
 // Type
 const PLAIN: u8 = 0;
@@ -17,7 +17,7 @@ pub struct Border {
 
 	position: ratatui::widgets::Borders,
 	type_:    ratatui::widgets::BorderType,
-	style:    Option<ratatui::style::Style>,
+	style:    ratatui::style::Style,
 }
 
 impl Border {
@@ -55,6 +55,8 @@ impl Border {
 
 impl UserData for Border {
 	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+		crate::impl_style_method!(methods, style);
+
 		methods.add_function("type", |_, (ud, value): (AnyUserData, u8)| {
 			ud.borrow_mut::<Self>()?.type_ = match value {
 				ROUNDED => ratatui::widgets::BorderType::Rounded,
@@ -66,18 +68,6 @@ impl UserData for Border {
 			};
 			Ok(ud)
 		});
-		methods.add_function("style", |_, (ud, value): (AnyUserData, Value)| {
-			{
-				let mut me = ud.borrow_mut::<Self>()?;
-				match value {
-					Value::Nil => me.style = None,
-					Value::Table(tb) => me.style = Some(Style::try_from(tb)?.0),
-					Value::UserData(ud) => me.style = Some(ud.borrow::<Style>()?.0),
-					_ => return Err("expected a Style or Table or nil".into_lua_err()),
-				}
-			}
-			Ok(ud)
-		});
 	}
 }
 
@@ -85,14 +75,11 @@ impl Renderable for Border {
 	fn area(&self) -> ratatui::layout::Rect { self.area }
 
 	fn render(self: Box<Self>, buf: &mut ratatui::buffer::Buffer) {
-		let mut block =
-			ratatui::widgets::Block::default().borders(self.position).border_type(self.type_);
-
-		if let Some(style) = self.style {
-			block = block.border_style(style);
-		}
-
-		block.render(self.area, buf);
+		ratatui::widgets::Block::default()
+			.borders(self.position)
+			.border_type(self.type_)
+			.border_style(self.style)
+			.render(self.area, buf);
 	}
 
 	fn clone_render(&self, buf: &mut ratatui::buffer::Buffer) { Box::new(self.clone()).render(buf); }
