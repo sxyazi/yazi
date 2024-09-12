@@ -40,8 +40,8 @@ impl<'a> TryFrom<Value<'a>> for Style {
 	fn try_from(value: Value<'a>) -> Result<Self, Self::Error> {
 		Ok(Self(match value {
 			Value::Nil => Default::default(),
-			Value::Table(tb) => Style::try_from(tb)?.0,
-			Value::UserData(ud) => ud.borrow::<Style>()?.0,
+			Value::Table(tb) => Self::try_from(tb)?.0,
+			Value::UserData(ud) => ud.borrow::<Self>()?.0,
 			_ => Err("expected a Style or Table or nil".into_lua_err())?,
 		}))
 	}
@@ -58,11 +58,7 @@ impl UserData for Style {
 		methods.add_function("patch", |_, (ud, value): (AnyUserData, Value)| {
 			{
 				let mut me = ud.borrow_mut::<Self>()?;
-				me.0 = me.0.patch(match value {
-					Value::Table(tb) => Style::try_from(tb)?.0,
-					Value::UserData(ud) => ud.borrow::<Style>()?.0,
-					_ => return Err("expected a Style or Table".into_lua_err()),
-				});
+				me.0 = me.0.patch(Self::try_from(value)?.0);
 			}
 			Ok(ud)
 		})

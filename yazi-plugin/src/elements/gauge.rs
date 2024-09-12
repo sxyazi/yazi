@@ -2,6 +2,7 @@ use mlua::{AnyUserData, ExternalError, Lua, Table, UserData, UserDataMethods, Va
 use ratatui::widgets::Widget;
 
 use super::{RectRef, Renderable, Span};
+use crate::elements::Style;
 
 #[derive(Clone, Default)]
 pub struct Gauge {
@@ -50,12 +51,7 @@ impl UserData for Gauge {
 		});
 
 		methods.add_function("gauge_style", |_, (ud, value): (AnyUserData, Value)| {
-			ud.borrow_mut::<Self>()?.gauge_style = match value {
-				Value::Nil => ratatui::style::Style::default(),
-				Value::Table(tb) => crate::elements::Style::try_from(tb)?.0,
-				Value::UserData(ud) => ud.borrow::<crate::elements::Style>()?.0,
-				_ => return Err("expected a Style or Table or nil".into_lua_err()),
-			};
+			ud.borrow_mut::<Self>()?.gauge_style = Style::try_from(value)?.0;
 			Ok(ud)
 		});
 	}
