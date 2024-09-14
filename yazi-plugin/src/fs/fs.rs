@@ -53,21 +53,6 @@ pub fn install(lua: &Lua) -> mlua::Result<()> {
 				})?,
 			),
 			(
-				"create",
-				lua.create_async_function(|lua, (type_, url): (mlua::String, UrlRef)| async move {
-					let result = match type_.to_str()? {
-						"file" => fs::File::create(&*url).await.map(|_| ()),
-						"dir" => fs::create_dir(&*url).await,
-						_ => Err("Creation type must be 'file', 'dir'".into_lua_err())?,
-					};
-
-					match result {
-						Ok(_) => (true, Value::Nil).into_lua_multi(lua),
-						Err(e) => (false, e.raw_os_error()).into_lua_multi(lua),
-					}
-				})?,
-			),
-			(
 				"read_dir",
 				lua.create_async_function(|lua, (dir, options): (UrlRef, Table)| async move {
 					let glob = if let Ok(s) = options.raw_get::<_, mlua::String>("glob") {
