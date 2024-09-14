@@ -2,7 +2,7 @@ use std::{fs::File, io::BufReader, path::{Path, PathBuf}};
 
 use anyhow::Result;
 use exif::{In, Tag};
-use image::{codecs::jpeg::JpegEncoder, imageops::{self, FilterType}, DynamicImage, Limits};
+use image::{codecs::{jpeg::JpegEncoder, png::PngEncoder}, imageops::{self, FilterType}, DynamicImage, ExtendedColorType, ImageEncoder, ImageError, Limits};
 use ratatui::layout::Rect;
 use yazi_config::{PREVIEW, TASKS};
 
@@ -30,19 +30,23 @@ impl Image {
 				img = img.resize(w, h, Self::filter());
 			}
 
+			let mut buf = Vec::new();
 			img = Self::rotate(img, orientation);
-			if !matches!(img, DynamicImage::ImageRgb8(_)) {
-				img = DynamicImage::ImageRgb8(img.into_rgb8());
+
+			if img.color().has_alpha() {
+				let rgba = img.into_rgba8();
+				PngEncoder::new(&mut buf).write_image(
+					&rgba,
+					rgba.width(),
+					rgba.height(),
+					ExtendedColorType::Rgba8,
+				)?;
+			} else {
+				JpegEncoder::new_with_quality(&mut buf, PREVIEW.image_quality)
+					.encode_image(&img.into_rgb8())?;
 			}
 
-			let mut buf = Vec::new();
-			JpegEncoder::new_with_quality(&mut buf, PREVIEW.image_quality).encode(
-				img.as_bytes(),
-				img.width(),
-				img.height(),
-				img.color().into(),
-			)?;
-			Ok::<_, anyhow::Error>(buf)
+			Ok::<_, ImageError>(buf)
 		})
 		.await??;
 
@@ -138,7 +142,7 @@ impl Image {
 
 	// https://magnushoff.com/articles/jpeg-orientation/
 	fn rotate(mut img: DynamicImage, orientation: u8) -> DynamicImage {
-		let rgba = img.color().has_alpha();
+		let alpha = img.color().has_alpha();
 		img = match orientation {
 			2 => DynamicImage::ImageRgba8(imageops::flip_horizontal(&img)),
 			3 => DynamicImage::ImageRgba8(imageops::rotate180(&img)),
@@ -149,7 +153,7 @@ impl Image {
 			8 => DynamicImage::ImageRgba8(imageops::rotate270(&img)),
 			_ => img,
 		};
-		if !rgba {
+		if !alpha {
 			img = DynamicImage::ImageRgb8(img.into_rgb8());
 		}
 		img
