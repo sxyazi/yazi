@@ -4,7 +4,7 @@ local M = {}
 
 function M:setup()
 	ps.sub_remote("extract", function(args)
-		local noisy = #args == 1 and " --noisy" or ""
+		local noisy = #args == 1 and ' "" --noisy' or ' ""'
 		for _, arg in ipairs(args) do
 			ya.manager_emit("plugin", { self._id, args = ya.quote(arg, true) .. noisy })
 		end
@@ -16,16 +16,16 @@ function M:entry(args)
 		fail("No URL provided")
 	end
 
-	local url, pwd = Url(args[1]), ""
+	local from, to, pwd = Url(args[1]), args[2] ~= "" and Url(args[2]) or nil, ""
 	while true do
-		if not M:try_with(url, pwd) then
+		if not M:try_with(from, pwd, to) then
 			break
-		elseif args[2] ~= "--noisy" then
+		elseif args[3] ~= "--noisy" then
 			fail("'%s' is password-protected, please extract it individually and enter the password", args[1])
 		end
 
 		local value, event = ya.input {
-			title = string.format('Password for "%s":', url:name()),
+			title = string.format('Password for "%s":', from:name()),
 			position = { "center", w = 50 },
 		}
 		if event == 1 then
@@ -36,19 +36,19 @@ function M:entry(args)
 	end
 end
 
-function M:try_with(url, pwd)
-	local parent = url:parent()
-	if not parent then
-		fail("Invalid URL '%s'", url)
+function M:try_with(from, pwd, to)
+	to = to or from:parent()
+	if not to then
+		fail("Invalid URL '%s'", from)
 	end
 
-	local tmp = fs.unique_name(parent:join(self.tmp_name(url)))
+	local tmp = fs.unique_name(to:join(self.tmp_name(from)))
 	if not tmp then
-		fail("Failed to determine a temporary directory for %s", url)
+		fail("Failed to determine a temporary directory for %s", from)
 	end
 
 	local archive = require("archive")
-	local child, code = archive:spawn_7z { "x", "-aou", "-p" .. pwd, "-o" .. tostring(tmp), tostring(url) }
+	local child, code = archive:spawn_7z { "x", "-aou", "-p" .. pwd, "-o" .. tostring(tmp), tostring(from) }
 	if not child then
 		fail("Spawn `7z` and `7zz` both commands failed, error code %s", code)
 	end
@@ -59,39 +59,47 @@ function M:try_with(url, pwd)
 		return true -- Need to retry
 	end
 
-	self:tidy(url, tmp)
+	self:tidy(from, to, tmp)
 	if not output then
-		fail("7zip failed to output when extracting '%s', error code %s", err, url)
+		fail("7zip failed to output when extracting '%s', error code %s", err, from)
 	elseif output.status.code ~= 0 then
-		fail("7zip exited when extracting '%s', error code %s", url, output.status.code)
+		fail("7zip exited when extracting '%s', error code %s", from, output.status.code)
 	end
 end
 
-function M:tidy(url, tmp)
-	local files = fs.read_dir(tmp, { limit = 2 })
-	if not files then
-		fail("Failed to read the temporary directory '%s' when extracting '%s'", tmp, url)
-	elseif #files == 0 then
+function M:tidy(from, to, tmp)
+	local outs = fs.read_dir(tmp, { limit = 2 })
+	if not outs then
+		fail("Failed to read the temporary directory '%s' when extracting '%s'", tmp, from)
+	elseif #outs == 0 then
 		fs.remove("dir", tmp)
-		fail("No files extracted from '%s'", url)
+		fail("No files extracted from '%s'", from)
+	end
+
+	local only = #outs == 1
+	if only and not outs[1].cha.is_dir and require("archive"):is_tar(outs[1].url) then
+		self:entry { tostring(outs[1].url), tostring(to) }
+		fs.remove("file", outs[1].url)
+		fs.remove("dir", tmp)
+		return
 	end
 
 	local target
-	local only_dir = #files == 1 and files[1].cha.is_dir
-	if only_dir then
-		target = url:parent():join(files[1].name)
+	if only then
+		target = to:join(outs[1].name)
 	else
-		target = url:parent():join(self.trim_ext(url:name()))
+		target = to:join(self.trim_ext(from:name()))
 	end
 
 	target = fs.unique_name(target)
 	if not target then
-		fail("Failed to determine a target directory for '%s'", url)
+		fail("Failed to determine a target for '%s'", from)
 	end
 
-	if only_dir and not os.rename(tostring(files[1].url), tostring(target)) then
-		fail('Failed to move "%s" to "%s"', files[1].url, target)
-	elseif not only_dir and not os.rename(tostring(tmp), tostring(target)) then
+	target = tostring(target)
+	if only and not os.rename(tostring(outs[1].url), target) then
+		fail('Failed to move "%s" to "%s"', outs[1].url, target)
+	elseif not only and not os.rename(tostring(tmp), target) then
 		fail('Failed to move "%s" to "%s"', tmp, target)
 	end
 	fs.remove("dir", tmp)

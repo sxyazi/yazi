@@ -180,4 +180,6 @@ end
 
 function M:is_encrypted(s) return s:find(" Wrong password", 1, true) end
 
+function M:is_tar(url) return require("archive"):list_meta { "-p", tostring(url) } == "tar" end
+
 return M
