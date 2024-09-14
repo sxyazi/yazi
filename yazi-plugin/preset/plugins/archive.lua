@@ -53,15 +53,6 @@ function M:seek(units)
 	end
 end
 
-function M:spawn_tar(args)
-	local stdout = args[1] and args[1]:sub(0, 2) == "-t" and Command.PIPED or Command.NULL
-	local child, code = Command("tar"):args(args):stdout(stdout):stderr(Command.PIPED):spawn()
-	if not child then
-		return nil, "Failed to spawn, error code: " .. tostring(code)
-	end
-	return child, nil
-end
-
 function M:spawn_7z(args)
 	local last_error = nil
 	local try = function(name)
@@ -188,5 +179,7 @@ function M:list_meta(args)
 end
 
 function M:is_encrypted(s) return s:find(" Wrong password", 1, true) end
+
+function M:is_tar(url) return require("archive"):list_meta { "-p", tostring(url) } == "tar" end
 
 return M
