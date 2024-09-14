@@ -74,7 +74,7 @@ impl KittyOld {
 		tokio::task::spawn_blocking(move || match img {
 			DynamicImage::ImageRgb8(v) => output(v.as_raw(), 24, size),
 			DynamicImage::ImageRgba8(v) => output(v.as_raw(), 32, size),
-			v => output(v.to_rgb8().as_raw(), 24, size),
+			v => output(v.into_rgb8().as_raw(), 24, size),
 		})
 		.await?
 	}

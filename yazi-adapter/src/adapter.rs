@@ -5,14 +5,14 @@ use ratatui::layout::Rect;
 use tracing::warn;
 use yazi_shared::env_exists;
 
-use super::{Iterm2, Kitty, KittyOld};
+use super::{Iip, Kitty, KittyOld};
 use crate::{Chafa, Emulator, Sixel, Ueberzug, SHOWN, TMUX, WSL};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Adapter {
 	Kitty,
 	KittyOld,
-	Iterm2,
+	Iip,
 	Sixel,
 
 	// Supported by Überzug++
@@ -26,7 +26,7 @@ impl Display for Adapter {
 		match self {
 			Self::Kitty => write!(f, "kitty"),
 			Self::KittyOld => write!(f, "kitty"),
-			Self::Iterm2 => write!(f, "iterm2"),
+			Self::Iip => write!(f, "iip"),
 			Self::Sixel => write!(f, "sixel"),
 			Self::X11 => write!(f, "x11"),
 			Self::Wayland => write!(f, "wayland"),
@@ -44,7 +44,7 @@ impl Adapter {
 		match self {
 			Self::Kitty => Kitty::image_show(path, max).await,
 			Self::KittyOld => KittyOld::image_show(path, max).await,
-			Self::Iterm2 => Iterm2::image_show(path, max).await,
+			Self::Iip => Iip::image_show(path, max).await,
 			Self::Sixel => Sixel::image_show(path, max).await,
 			Self::X11 | Self::Wayland => Ueberzug::image_show(path, max).await,
 			Self::Chafa => Chafa::image_show(path, max).await,
@@ -59,7 +59,7 @@ impl Adapter {
 		match self {
 			Self::Kitty => Kitty::image_erase(area),
 			Self::KittyOld => KittyOld::image_erase(area),
-			Self::Iterm2 => Iterm2::image_erase(area),
+			Self::Iip => Iip::image_erase(area),
 			Self::Sixel => Sixel::image_erase(area),
 			Self::X11 | Self::Wayland => Ueberzug::image_erase(area),
 			Self::Chafa => Chafa::image_erase(area),
@@ -76,7 +76,7 @@ impl Adapter {
 
 	#[inline]
 	pub(super) fn needs_ueberzug(self) -> bool {
-		!matches!(self, Self::Kitty | Self::KittyOld | Self::Iterm2 | Self::Sixel)
+		!matches!(self, Self::Kitty | Self::KittyOld | Self::Iip | Self::Sixel)
 	}
 }
 
@@ -90,7 +90,7 @@ impl Adapter {
 
 		let mut protocols = emulator.adapters();
 		#[cfg(windows)]
-		protocols.retain(|p| *p == Self::Iterm2);
+		protocols.retain(|p| *p == Self::Iip);
 		if env_exists("ZELLIJ_SESSION_NAME") {
 			protocols.retain(|p| *p == Self::Sixel);
 		} else if *TMUX {
