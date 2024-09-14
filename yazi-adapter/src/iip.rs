@@ -1,4 +1,4 @@
-use std::{io::Write, path::Path};
+use std::{fmt::Write, io::Write as ioWrite, path::Path};
 
 use anyhow::Result;
 use base64::{engine::{general_purpose::STANDARD, Config}, Engine};
@@ -48,20 +48,22 @@ impl Iip {
 				JpegEncoder::new_with_quality(&mut b, PREVIEW.image_quality).encode_image(&img)?;
 			};
 
-			let len = base64::encoded_len(b.len(), STANDARD.config().encode_padding());
-			let mut buf = Vec::with_capacity(200 + len.unwrap_or(1 << 16));
+			let mut buf = String::with_capacity(
+				200 + base64::encoded_len(b.len(), STANDARD.config().encode_padding()).unwrap_or(0),
+			);
 
 			write!(
 				buf,
-				"{}]1337;File=inline=1;size={};width={}px;height={}px;doNotMoveCursor=1:{}\x07{}",
+				"{}]1337;File=inline=1;size={};width={}px;height={}px;doNotMoveCursor=1:",
 				START,
 				b.len(),
 				w,
 				h,
-				STANDARD.encode(b),
-				CLOSE
 			)?;
-			Ok(buf)
+			STANDARD.encode_string(b, &mut buf);
+			write!(buf, "\x07{}", CLOSE)?;
+
+			Ok(buf.into_bytes())
 		})
 		.await?
 	}
