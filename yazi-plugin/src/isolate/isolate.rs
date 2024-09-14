@@ -1,6 +1,6 @@
 use mlua::Lua;
 
-use crate::{elements, runtime::Runtime};
+use crate::{elements, preset, runtime::Runtime};
 
 pub fn slim_lua(name: &str) -> mlua::Result<Lua> {
 	let lua = Lua::new();
@@ -17,7 +17,7 @@ pub fn slim_lua(name: &str) -> mlua::Result<Lua> {
 	crate::process::install(&lua)?;
 	crate::utils::install_isolate(&lua)?;
 	crate::Config::new(&lua).install_preview()?;
-	lua.load(include_str!("../../preset/ya.lua")).set_name("ya.lua").exec()?;
+	lua.load(preset!("ya")).set_name("ya.lua").exec()?;
 
 	// Elements
 	let ui = lua.create_table()?;

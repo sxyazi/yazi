@@ -7,6 +7,7 @@ use yazi_shared::{RoCell, Xdg};
 pub mod keymap;
 mod layout;
 mod log;
+mod macros;
 pub mod manager;
 pub mod open;
 mod pattern;

@@ -81,9 +81,9 @@ end
 ---@param args table
 ---@param skip integer
 ---@param limit integer
----@return table
----@return integer
----@return integer
+---@return table files
+---@return integer bound
+---@return integer code
 ---  0: success
 ---  1: failed to spawn
 ---  2: wrong password
@@ -135,6 +135,47 @@ function M:list_files(args, skip, limit)
 		files[#files] = nil
 	end
 	return files, i, code
+end
+
+---List metadata of an archive
+---@param args table
+---@return string|nil type
+---@return integer code
+---  0: success
+---  1: failed to spawn
+---  2: wrong password
+---  3: partial success
+function M:list_meta(args)
+	local child = self:spawn_7z { "l", "-slt", table.unpack(args) }
+	if not child then
+		return nil, 1
+	end
+
+	local i, head = 0, ""
+	local typ, code = nil, 0
+	while i < 500 do
+		i = i + 1
+
+		local next, event = child:read_line()
+		if event == 1 and self:is_encrypted(next) then
+			code = 2
+			break
+		elseif event == 1 then
+			code = 3
+		elseif event == 0 then
+			head = head .. next
+		else
+			break
+		end
+
+		typ = head:gmatch("--[\r\n]+Path = .-[\r\n]+Type = (.-)[\r\n]+")()
+		if typ then
+			break
+		end
+	end
+
+	child:start_kill()
+	return typ ~= "" and typ or nil, code
 end
 
 function M:is_encrypted(s) return s:find(" Wrong password", 1, true) end

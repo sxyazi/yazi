@@ -56,7 +56,7 @@ function M:try_with(url, pwd)
 	local output, err = child:wait_with_output()
 	if output and output.status.code == 2 and archive:is_encrypted(output.stderr) then
 		fs.remove("dir_clean", tmp)
-		return true -- Needs retry
+		return true -- Need to retry
 	end
 
 	self:tidy(url, tmp)

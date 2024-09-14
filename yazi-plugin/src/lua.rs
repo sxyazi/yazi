@@ -3,7 +3,7 @@ use mlua::Lua;
 use yazi_boot::BOOT;
 use yazi_shared::RoCell;
 
-use crate::runtime::Runtime;
+use crate::{preset, runtime::Runtime};
 
 pub static LUA: RoCell<Lua> = RoCell::new();
 
@@ -21,7 +21,7 @@ fn stage_1(lua: &'static Lua) -> Result<()> {
 
 	// Base
 	lua.set_named_registry_value("rt", Runtime::default())?;
-	lua.load(include_str!("../preset/ya.lua")).set_name("ya.lua").exec()?;
+	lua.load(preset!("ya")).set_name("ya.lua").exec()?;
 	crate::bindings::Icon::register(lua)?;
 	crate::bindings::MouseEvent::register(lua)?;
 	crate::elements::pour(lua)?;
@@ -32,25 +32,26 @@ fn stage_1(lua: &'static Lua) -> Result<()> {
 	crate::url::pour(lua)?;
 
 	// Components
-	lua.load(include_str!("../preset/components/current.lua")).set_name("current.lua").exec()?;
-	lua.load(include_str!("../preset/components/entity.lua")).set_name("entity.lua").exec()?;
-	lua.load(include_str!("../preset/components/header.lua")).set_name("header.lua").exec()?;
-	lua.load(include_str!("../preset/components/linemode.lua")).set_name("linemode.lua").exec()?;
-	lua.load(include_str!("../preset/components/marker.lua")).set_name("marker.lua").exec()?;
-	lua.load(include_str!("../preset/components/parent.lua")).set_name("parent.lua").exec()?;
-	lua.load(include_str!("../preset/components/preview.lua")).set_name("preview.lua").exec()?;
-	lua.load(include_str!("../preset/components/progress.lua")).set_name("progress.lua").exec()?;
-	lua.load(include_str!("../preset/components/rail.lua")).set_name("rail.lua").exec()?;
-	lua.load(include_str!("../preset/components/root.lua")).set_name("root.lua").exec()?;
-	lua.load(include_str!("../preset/components/status.lua")).set_name("status.lua").exec()?;
-	lua.load(include_str!("../preset/components/tab.lua")).set_name("tab.lua").exec()?;
+	lua.load(preset!("components/current")).set_name("current.lua").exec()?;
+	lua.load(preset!("components/entity")).set_name("entity.lua").exec()?;
+	lua.load(preset!("components/header")).set_name("header.lua").exec()?;
+	lua.load(preset!("components/linemode")).set_name("linemode.lua").exec()?;
+
+	lua.load(preset!("components/marker")).set_name("marker.lua").exec()?;
+	lua.load(preset!("components/parent")).set_name("parent.lua").exec()?;
+	lua.load(preset!("components/preview")).set_name("preview.lua").exec()?;
+	lua.load(preset!("components/progress")).set_name("progress.lua").exec()?;
+	lua.load(preset!("components/rail")).set_name("rail.lua").exec()?;
+	lua.load(preset!("components/root")).set_name("root.lua").exec()?;
+	lua.load(preset!("components/status")).set_name("status.lua").exec()?;
+	lua.load(preset!("components/tab")).set_name("tab.lua").exec()?;
 
 	Ok(())
 }
 
 fn stage_2(lua: &'static Lua) -> mlua::Result<()> {
-	lua.load(include_str!("../preset/setup.lua")).set_name("setup.lua").exec()?;
-	lua.load(include_str!("../preset/compat.lua")).set_name("compat.lua").exec()?;
+	lua.load(preset!("setup")).set_name("setup.lua").exec()?;
+	lua.load(preset!("compat")).set_name("compat.lua").exec()?;
 
 	if let Ok(b) = std::fs::read(BOOT.config_dir.join("init.lua")) {
 		lua.load(b).set_name("init.lua").exec()?;
