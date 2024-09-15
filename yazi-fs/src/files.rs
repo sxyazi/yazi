@@ -2,7 +2,7 @@ use std::{collections::{HashMap, HashSet}, mem, ops::Deref, sync::atomic::Orderi
 
 use tokio::{fs::{self, DirEntry}, select, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_config::{manager::SortBy, MANAGER};
-use yazi_shared::fs::{maybe_exists, Cha, File, FilesOp, Url, FILES_TICKET};
+use yazi_shared::fs::{maybe_exists, Cha, File, FilesOp, Url, Urn, FILES_TICKET};
 
 use super::{FilesSorter, Filter};
 
@@ -345,8 +345,7 @@ impl Files {
 impl Files {
 	// --- Items
 	#[inline]
-	// TODO: use `name` instead of `url`
-	pub fn position(&self, url: &Url) -> Option<usize> { self.iter().position(|f| url == f.url()) }
+	pub fn position(&self, urn: &Urn) -> Option<usize> { self.iter().position(|f| urn == f.urn()) }
 
 	// --- Ticket
 	#[inline]

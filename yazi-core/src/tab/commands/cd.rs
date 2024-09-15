@@ -39,7 +39,7 @@ impl Tab {
 			return self.cd_interactive();
 		}
 
-		if opt.target == *self.cwd() {
+		if opt.target == *self.cwd().url() {
 			return;
 		}
 

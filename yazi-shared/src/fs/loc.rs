@@ -1,6 +1,6 @@
 use std::{ffi::OsStr, fmt::{self, Debug, Formatter}, ops::Deref, path::Path};
 
-use super::Url;
+use super::{Url, Urn, UrnBuf};
 
 pub struct Loc {
 	url:  Url,
@@ -73,7 +73,7 @@ impl Loc {
 	#[inline]
 	fn twin_urn<'a>(&self, new: &'a Url) -> &'a OsStr {
 		let total = new.components().count();
-		let take = self.urn().components().count();
+		let take = self.urn()._as_path().components().count();
 
 		let mut it = new.components();
 		for _ in 0..total - take {
@@ -89,7 +89,13 @@ impl Loc {
 	pub fn url(&self) -> &Url { &self.url }
 
 	#[inline]
-	pub fn urn(&self) -> &Path { Path::new(unsafe { &*self.urn }) }
+	pub fn url_owned(&self) -> Url { self.url.to_owned() }
+
+	#[inline]
+	pub fn urn(&self) -> &Urn { Urn::new(unsafe { &*self.urn }) }
+
+	#[inline]
+	pub fn urn_owned(&self) -> UrnBuf { self.urn().to_owned() }
 
 	#[inline]
 	pub fn name(&self) -> &OsStr { unsafe { &*self.name } }

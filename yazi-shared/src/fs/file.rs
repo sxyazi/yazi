@@ -1,9 +1,9 @@
-use std::{cell::Cell, ffi::OsStr, fs::{FileType, Metadata}, ops::Deref, path::Path};
+use std::{cell::Cell, ffi::OsStr, fs::{FileType, Metadata}, ops::Deref};
 
 use anyhow::Result;
 use tokio::fs;
 
-use super::Loc;
+use super::{Loc, Urn, UrnBuf};
 use crate::{fs::{Cha, ChaKind, Url}, theme::IconCache};
 
 #[derive(Clone, Debug, Default)]
@@ -102,10 +102,13 @@ impl File {
 	pub fn url(&self) -> &Url { self.loc.url() }
 
 	#[inline]
-	pub fn url_owned(&self) -> Url { self.url().clone() }
+	pub fn url_owned(&self) -> Url { self.loc.url_owned() }
 
 	#[inline]
-	pub fn urn(&self) -> &Path { self.loc.urn() }
+	pub fn urn(&self) -> &Urn { self.loc.urn() }
+
+	#[inline]
+	pub fn urn_owned(&self) -> UrnBuf { self.loc.urn_owned() }
 
 	#[inline]
 	pub fn name(&self) -> &OsStr { self.loc.name() }

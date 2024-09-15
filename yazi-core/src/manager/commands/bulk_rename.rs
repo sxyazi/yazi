@@ -16,7 +16,7 @@ impl Manager {
 			return AppProxy::notify_warn("Bulk rename", "No text opener found");
 		};
 
-		let cwd = self.cwd().clone();
+		let cwd = self.cwd().url_owned();
 		let old: Vec<_> = self.selected_or_hovered(true).collect();
 
 		let root = max_common_root(&old);
