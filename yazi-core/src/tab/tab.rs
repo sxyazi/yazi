@@ -86,7 +86,6 @@ impl Tab {
 	}
 
 	// --- History
-
 	#[inline]
 	pub fn hovered_folder(&self) -> Option<&Folder> {
 		self.current.hovered().filter(|&h| h.is_dir()).and_then(|h| self.history.get(h.url()))

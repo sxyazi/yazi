@@ -27,6 +27,8 @@ impl Manager {
 		let opt = opt.into() as Opt;
 		if let Some(u) = opt.url {
 			self.hover_do(u, opt.tab);
+		} else {
+			self.current_or_mut(opt.tab).repos(None);
 		}
 
 		// Repeek
