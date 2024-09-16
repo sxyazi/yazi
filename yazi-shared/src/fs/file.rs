@@ -34,8 +34,8 @@ impl File {
 	}
 
 	#[inline]
-	pub async fn from_search(cwd: &Url, url: Url) -> Result<Self> {
-		let loc = Loc::from_search(cwd, url);
+	pub async fn from_search_item(cwd: &Url, url: Url) -> Result<Self> {
+		let loc = Loc::from_search_item(cwd, url);
 		let meta = fs::symlink_metadata(loc.url()).await?;
 		Ok(Self::from_loc(loc, meta).await)
 	}

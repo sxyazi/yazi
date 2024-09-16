@@ -3,6 +3,8 @@ use std::{ffi::{OsStr, OsString}, fmt::{Debug, Display, Formatter}, ops::{Deref,
 use percent_encoding::{percent_decode_str, percent_encode, AsciiSet, CONTROLS};
 use serde::{Deserialize, Serialize};
 
+use super::Loc;
+
 const ENCODE_SET: &AsciiSet = &CONTROLS.add(b'#');
 
 #[derive(Clone, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -161,6 +163,14 @@ impl Url {
 	pub fn is_hidden(&self) -> bool {
 		self.file_name().map_or(false, |s| s.as_encoded_bytes().starts_with(b"."))
 	}
+
+	#[inline]
+	pub fn to_loc(&self, cwd: &Url) -> Loc { self.clone().into_loc(cwd) }
+
+	#[inline]
+	pub fn into_loc(self, cwd: &Url) -> Loc {
+		if self.is_search_item() { Loc::from_search_item(cwd, self) } else { Loc::from(self) }
+	}
 }
 
 impl Url {
@@ -188,6 +198,9 @@ impl Url {
 	pub fn to_search(&self, frag: &str) -> Self {
 		Self { scheme: UrlScheme::Search, path: self.path.clone(), frag: frag.to_owned() }
 	}
+
+	#[inline]
+	pub fn is_search_item(&self) -> bool { self.scheme == UrlScheme::SearchItem }
 
 	#[inline]
 	pub fn into_search_item(mut self) -> Self {

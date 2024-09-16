@@ -36,7 +36,7 @@ impl Clone for Loc {
 	fn clone(&self) -> Self {
 		let url = self.url.clone();
 		let name = url.file_name().unwrap_or(OsStr::new("")) as *const OsStr;
-		let urn = if url.is_search() { self.twin_urn(&url) } else { name };
+		let urn = if url.is_search_item() { self.twin_urn(&url) } else { name };
 		Self { url, urn, name }
 	}
 }
@@ -57,7 +57,7 @@ impl Loc {
 		Self { url, urn, name: urn }
 	}
 
-	pub fn from_search(cwd: &Url, url: Url) -> Self {
+	pub fn from_search_item(cwd: &Url, url: Url) -> Self {
 		let urn = url.strip_prefix(cwd).unwrap_or(&url).as_os_str() as *const OsStr;
 		let name = url.file_name().unwrap_or(OsStr::new("")) as *const OsStr;
 		Self { url, urn, name }
@@ -66,7 +66,7 @@ impl Loc {
 	pub fn rebase(&self, parent: &Url) -> Self {
 		let url = parent.join(self.name());
 		let name = url.file_name().unwrap_or(OsStr::new("")) as *const OsStr;
-		let urn = if url.is_search() { self.twin_urn(&url) } else { name };
+		let urn = if url.is_search_item() { self.twin_urn(&url) } else { name };
 		Self { url, urn, name }
 	}
 

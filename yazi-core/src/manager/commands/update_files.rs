@@ -25,7 +25,7 @@ impl Manager {
 		};
 
 		let mut ops = vec![opt.op];
-		for u in LINKED.read().from_dir(ops[0].url()) {
+		for u in LINKED.read().from_dir(ops[0].cwd()) {
 			ops.push(ops[0].chroot(u));
 		}
 
@@ -44,7 +44,7 @@ impl Manager {
 	}
 
 	fn update_tab(tab: &mut Tab, op: Cow<FilesOp>, tasks: &Tasks) {
-		let url = op.url();
+		let url = op.cwd();
 		tab.selected.apply_op(&op);
 
 		if url == tab.cwd().url() {
@@ -97,7 +97,7 @@ impl Manager {
 	}
 
 	fn update_hovered(tab: &mut Tab, op: Cow<FilesOp>) {
-		let url = op.url();
+		let url = op.cwd();
 		let folder = tab.history.entry(url.clone()).or_insert_with(|| Folder::from(url));
 
 		let foreign = matches!(op, Cow::Borrowed(_));
@@ -115,7 +115,7 @@ impl Manager {
 			|(p, pp)| matches!(*op, FilesOp::Deleting(ref parent, ref urls) if *parent == pp && urls.contains(p)),
 		);
 
-		let folder = tab.history.entry(op.url().clone()).or_insert_with(|| Folder::from(op.url()));
+		let folder = tab.history.entry(op.cwd().clone()).or_insert_with(|| Folder::from(op.cwd()));
 		let hovered = folder.hovered().filter(|_| folder.tracing).map(|h| h.urn_owned());
 		if folder.update(op.into_owned()) {
 			folder.repos(hovered.as_ref().map(|u| u._deref()));

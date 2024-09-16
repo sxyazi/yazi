@@ -60,25 +60,22 @@ impl Watcher {
 	}
 
 	pub(super) fn trigger_dirs(&self, folders: &[&Folder]) {
-		let todo: Vec<_> = folders
-			.iter()
-			.filter(|&f| f.loc.is_regular())
-			.map(|&f| (f.loc.url().clone(), f.cha))
-			.collect();
+		let todo: Vec<_> =
+			folders.iter().filter(|&f| f.loc.is_regular()).map(|&f| (f.loc.url_owned(), f.cha)).collect();
 		if todo.is_empty() {
 			return;
 		}
 
-		async fn go(url: Url, cha: Cha) {
-			let Some(cha) = Files::assert_stale(&url, cha).await else { return };
+		async fn go(cwd: Url, cha: Cha) {
+			let Some(cha) = Files::assert_stale(&cwd, cha).await else { return };
 
-			if let Ok(files) = Files::from_dir_bulk(&url).await {
-				FilesOp::Full(url, files, cha).emit();
+			if let Ok(files) = Files::from_dir_bulk(&cwd).await {
+				FilesOp::Full(cwd, files, cha).emit();
 			}
 		}
 
 		tokio::spawn(async move {
-			futures::future::join_all(todo.into_iter().map(|(url, cha)| go(url, cha))).await;
+			futures::future::join_all(todo.into_iter().map(|(cwd, cha)| go(cwd, cha))).await;
 		});
 	}
 

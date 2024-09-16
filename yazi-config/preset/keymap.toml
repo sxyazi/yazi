@@ -36,8 +36,8 @@ keymap = [
 	{ on = "h", run = "leave", desc = "Go back to the parent directory" },
 	{ on = "l", run = "enter", desc = "Enter the child directory" },
 
-	{ on = "<Left>",  run = "leave",    desc = "Go back to the parent directory" },
-	{ on = "<Right>", run = "enter",    desc = "Enter the child directory" },
+	{ on = "<Left>",  run = "leave", desc = "Go back to the parent directory" },
+	{ on = "<Right>", run = "enter", desc = "Enter the child directory" },
 
 	{ on = "H", run = "back",    desc = "Go back to the previous directory" },
 	{ on = "L", run = "forward", desc = "Go forward to the next directory" },
@@ -249,9 +249,9 @@ keymap = [
 	{ on = "c", run = "delete --cut --insert",                     desc = "Cut the selected characters, and enter insert mode" },
 	{ on = "C", run = [ "delete --cut --insert", "move 999" ],     desc = "Cut until the EOL, and enter insert mode" },
 	{ on = "x", run = [ "delete --cut", "move 1 --in-operating" ], desc = "Cut the current character" },
-	{ on = "y", run = "yank",           desc = "Copy the selected characters" },
-	{ on = "p", run = "paste",          desc = "Paste the copied characters after the cursor" },
-	{ on = "P", run = "paste --before", desc = "Paste the copied characters before the cursor" },
+	{ on = "y", run = "yank",                                      desc = "Copy the selected characters" },
+	{ on = "p", run = "paste",                                     desc = "Paste the copied characters after the cursor" },
+	{ on = "P", run = "paste --before",                            desc = "Paste the copied characters before the cursor" },
 
 	# Undo/Redo
 	{ on = "u",     run = "undo", desc = "Undo the last operation" },
