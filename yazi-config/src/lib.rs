@@ -83,5 +83,15 @@ Please replace e.g. `shell` with `shell --interactive`, `shell "my-template"` wi
 		}
 	}
 
+	// TODO: Remove when deprecated
+	if matches!(INPUT.create_title, popup::CreateTitle::One(_)) {
+		println!(
+			r#"WARNING: `create_title` config now takes two different values to account for the `--dir` flag.
+Example:
+[input]
+create_title = ["Create:", "Create (dir):"]"#
+		);
+	}
+
 	Ok(())
 }

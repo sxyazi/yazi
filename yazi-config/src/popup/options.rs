@@ -41,8 +41,12 @@ impl InputCfg {
 	}
 
 	pub fn create(dir: bool) -> Self {
+		let title = match &INPUT.create_title {
+			super::CreateTitle::One(single_title) => single_title.to_owned(),
+			super::CreateTitle::Two(titles) => titles[dir as usize].to_owned(),
+		};
 		Self {
-			title: INPUT.create_title[dir as usize].to_owned(),
+			title,
 			position: Position::new(INPUT.create_origin, INPUT.create_offset),
 			..Default::default()
 		}

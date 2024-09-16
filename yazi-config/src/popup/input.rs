@@ -5,6 +5,13 @@ use serde::Deserialize;
 use super::{Offset, Origin};
 
 #[derive(Deserialize)]
+#[serde(untagged)]
+pub enum CreateTitle {
+	One(String),
+	Two([String; 2]),
+}
+
+#[derive(Deserialize)]
 pub struct Input {
 	pub cursor_blink: bool,
 
@@ -14,7 +21,7 @@ pub struct Input {
 	pub cd_offset: Offset,
 
 	// create
-	pub create_title:  [String; 2],
+	pub create_title:  CreateTitle,
 	pub create_origin: Origin,
 	pub create_offset: Offset,
 
