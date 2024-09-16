@@ -1,7 +1,7 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, path::PathBuf};
 
 use yazi_dds::Pubsub;
-use yazi_shared::{event::{Cmd, Data}, fs::Url, render};
+use yazi_shared::{event::{Cmd, Data}, fs::{Url, Urn}, render};
 
 use crate::manager::Manager;
 
@@ -25,13 +25,10 @@ impl From<Option<Url>> for Opt {
 impl Manager {
 	pub fn hover(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
-
-		// Hover on the file
-		render!(self.current_or_mut(opt.tab).repos(opt.url.as_ref()));
-		if opt.url.zip(self.current_or(opt.tab).hovered()).is_some_and(|(u, f)| &u == f.url()) {
-			// `hover(Some)` occurs after user actions, such as create, rename, reveal, etc.
-			// At this point, it's intuitive to track the location of this file regardless.
-			self.current_or_mut(opt.tab).tracing = true;
+		if let Some(u) = opt.url {
+			self.hover_do(u, opt.tab);
+		} else {
+			self.current_or_mut(opt.tab).repos(None);
 		}
 
 		// Repeek
@@ -40,7 +37,7 @@ impl Manager {
 		// Refresh watcher
 		let mut to_watch = HashSet::with_capacity(3 * self.tabs.len());
 		for tab in self.tabs.iter() {
-			to_watch.insert(tab.cwd());
+			to_watch.insert(tab.cwd().url());
 			if let Some(ref p) = tab.parent {
 				to_watch.insert(&p.loc);
 			}
@@ -52,5 +49,19 @@ impl Manager {
 
 		// Publish through DDS
 		Pubsub::pub_from_hover(self.active().idx, self.hovered().map(|h| h.url()));
+	}
+
+	fn hover_do(&mut self, url: Url, tab: Option<usize>) {
+		// Hover on the file
+		if let Some(p) = url.strip_prefix(&self.current_or(tab).loc).map(PathBuf::from) {
+			render!(self.current_or_mut(tab).repos(Some(Urn::new(&p))));
+		}
+
+		// Turn on tracing
+		if self.current_or(tab).hovered().is_some_and(|f| url == *f.url()) {
+			// `hover(Some)` occurs after user actions, such as create, rename, reveal, etc.
+			// At this point, it's intuitive to track the location of this file regardless.
+			self.current_or_mut(tab).tracing = true;
+		}
 	}
 }

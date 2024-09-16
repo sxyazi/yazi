@@ -2,7 +2,7 @@ use std::{collections::{HashMap, HashSet}, mem, ops::Deref, sync::atomic::Orderi
 
 use tokio::{fs::{self, DirEntry}, select, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_config::{manager::SortBy, MANAGER};
-use yazi_shared::fs::{maybe_exists, Cha, File, FilesOp, Url, FILES_TICKET};
+use yazi_shared::fs::{maybe_exists, Cha, File, FilesOp, Url, Urn, FILES_TICKET};
 
 use super::{FilesSorter, Filter};
 
@@ -96,19 +96,19 @@ impl Files {
 		)
 	}
 
-	pub async fn assert_stale(url: &Url, cha: Cha) -> Option<Cha> {
-		match fs::metadata(url).await.map(Cha::from) {
+	pub async fn assert_stale(cwd: &Url, cha: Cha) -> Option<Cha> {
+		match fs::metadata(cwd).await.map(Cha::from) {
 			Ok(c) if !c.is_dir() => {
 				// FIXME: use `ErrorKind::NotADirectory` instead once it gets stabilized
-				FilesOp::IOErr(url.clone(), std::io::ErrorKind::AlreadyExists).emit();
+				FilesOp::IOErr(cwd.clone(), std::io::ErrorKind::AlreadyExists).emit();
 			}
 			Ok(c) if c.hits(cha) => {}
 			Ok(c) => return Some(c),
 			Err(e) => {
-				if maybe_exists(url).await {
-					FilesOp::IOErr(url.clone(), e.kind()).emit();
-				} else if let Some(p) = url.parent_url() {
-					FilesOp::Deleting(p, vec![url.clone()]).emit();
+				if maybe_exists(cwd).await {
+					FilesOp::IOErr(cwd.clone(), e.kind()).emit();
+				} else if let Some(p) = cwd.parent_url() {
+					FilesOp::Deleting(p, vec![cwd.clone()]).emit();
 				}
 			}
 		}
@@ -280,10 +280,9 @@ impl Files {
 		}
 
 		let (mut hidden, mut items) = if let Some(filter) = &self.filter {
-			files.into_iter().partition(|(_, f)| {
-				(f.is_hidden() && !self.show_hidden)
-					|| !f.url().file_name().is_some_and(|s| filter.matches(s))
-			})
+			files
+				.into_iter()
+				.partition(|(_, f)| (f.is_hidden() && !self.show_hidden) || !filter.matches(f.name()))
 		} else if self.show_hidden {
 			(HashMap::new(), files)
 		} else {
@@ -330,10 +329,9 @@ impl Files {
 
 	fn split_files(&self, files: impl IntoIterator<Item = File>) -> (Vec<File>, Vec<File>) {
 		if let Some(filter) = &self.filter {
-			files.into_iter().partition(|f| {
-				(f.is_hidden() && !self.show_hidden)
-					|| !f.url().file_name().is_some_and(|s| filter.matches(s))
-			})
+			files
+				.into_iter()
+				.partition(|f| (f.is_hidden() && !self.show_hidden) || !filter.matches(f.name()))
 		} else if self.show_hidden {
 			(vec![], files.into_iter().collect())
 		} else {
@@ -345,8 +343,7 @@ impl Files {
 impl Files {
 	// --- Items
 	#[inline]
-	// TODO: use `name` instead of `url`
-	pub fn position(&self, url: &Url) -> Option<usize> { self.iter().position(|f| url == f.url()) }
+	pub fn position(&self, urn: &Urn) -> Option<usize> { self.iter().position(|f| urn == f.urn()) }
 
 	// --- Ticket
 	#[inline]

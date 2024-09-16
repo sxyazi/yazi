@@ -1,6 +1,6 @@
 use std::{ffi::OsStr, fmt::{self, Debug, Formatter}, ops::Deref, path::Path};
 
-use super::Url;
+use super::{Url, Urn, UrnBuf};
 
 pub struct Loc {
 	url:  Url,
@@ -36,7 +36,7 @@ impl Clone for Loc {
 	fn clone(&self) -> Self {
 		let url = self.url.clone();
 		let name = url.file_name().unwrap_or(OsStr::new("")) as *const OsStr;
-		let urn = if url.is_search() { self.twin_urn(&url) } else { name };
+		let urn = if url.is_search_item() { self.twin_urn(&url) } else { name };
 		Self { url, urn, name }
 	}
 }
@@ -57,7 +57,7 @@ impl Loc {
 		Self { url, urn, name: urn }
 	}
 
-	pub fn from_search(cwd: &Url, url: Url) -> Self {
+	pub fn from_search_item(cwd: &Url, url: Url) -> Self {
 		let urn = url.strip_prefix(cwd).unwrap_or(&url).as_os_str() as *const OsStr;
 		let name = url.file_name().unwrap_or(OsStr::new("")) as *const OsStr;
 		Self { url, urn, name }
@@ -66,14 +66,14 @@ impl Loc {
 	pub fn rebase(&self, parent: &Url) -> Self {
 		let url = parent.join(self.name());
 		let name = url.file_name().unwrap_or(OsStr::new("")) as *const OsStr;
-		let urn = if url.is_search() { self.twin_urn(&url) } else { name };
+		let urn = if url.is_search_item() { self.twin_urn(&url) } else { name };
 		Self { url, urn, name }
 	}
 
 	#[inline]
 	fn twin_urn<'a>(&self, new: &'a Url) -> &'a OsStr {
 		let total = new.components().count();
-		let take = self.urn().components().count();
+		let take = self.urn()._as_path().components().count();
 
 		let mut it = new.components();
 		for _ in 0..total - take {
@@ -89,7 +89,13 @@ impl Loc {
 	pub fn url(&self) -> &Url { &self.url }
 
 	#[inline]
-	pub fn urn(&self) -> &Path { Path::new(unsafe { &*self.urn }) }
+	pub fn url_owned(&self) -> Url { self.url.to_owned() }
+
+	#[inline]
+	pub fn urn(&self) -> &Urn { Urn::new(unsafe { &*self.urn }) }
+
+	#[inline]
+	pub fn urn_owned(&self) -> UrnBuf { self.urn().to_owned() }
 
 	#[inline]
 	pub fn name(&self) -> &OsStr { unsafe { &*self.name } }

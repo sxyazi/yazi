@@ -2,7 +2,7 @@ use std::mem;
 
 use yazi_config::{LAYOUT, MANAGER};
 use yazi_proxy::ManagerProxy;
-use yazi_shared::fs::{Cha, File, FilesOp, Loc, Url};
+use yazi_shared::fs::{Cha, File, FilesOp, Loc, Url, Urn};
 
 use super::FolderStage;
 use crate::{Files, Step};
@@ -79,18 +79,18 @@ impl Folder {
 		b
 	}
 
-	pub fn hover(&mut self, url: &Url) -> bool {
-		if self.hovered().map(|h| h.url()) == Some(url) {
+	pub fn hover(&mut self, urn: &Urn) -> bool {
+		if self.hovered().map(|h| h.urn()) == Some(urn) {
 			return false;
 		}
 
-		let new = self.files.position(url).unwrap_or(self.cursor) as isize;
+		let new = self.files.position(urn).unwrap_or(self.cursor) as isize;
 		self.arrow(new - self.cursor as isize)
 	}
 
 	#[inline]
-	pub fn repos(&mut self, url: Option<impl AsRef<Url>>) -> bool {
-		if let Some(u) = url { self.hover(u.as_ref()) } else { self.arrow(0) }
+	pub fn repos(&mut self, url: Option<&Urn>) -> bool {
+		if let Some(u) = url { self.hover(u) } else { self.arrow(0) }
 	}
 
 	pub fn sync_page(&mut self, force: bool) {

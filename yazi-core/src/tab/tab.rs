@@ -6,7 +6,7 @@ use tokio::task::JoinHandle;
 use yazi_adapter::Dimension;
 use yazi_config::{popup::{Origin, Position}, LAYOUT};
 use yazi_fs::{Folder, FolderStage};
-use yazi_shared::{fs::Url, render};
+use yazi_shared::{fs::{Loc, Url}, render};
 
 use super::{Backstack, Config, Finder, History, Mode, Preview};
 use crate::tab::Selected;
@@ -39,10 +39,10 @@ impl Tab {
 impl Tab {
 	// --- Current
 	#[inline]
-	pub fn cwd(&self) -> &Url { &self.current.loc }
+	pub fn cwd(&self) -> &Loc { &self.current.loc }
 
 	pub fn hovered_rect(&self) -> Option<Rect> {
-		let y = self.current.files.position(self.current.hovered()?.url())? - self.current.offset;
+		let y = self.current.files.position(self.current.hovered()?.urn())? - self.current.offset;
 
 		let mut rect = LAYOUT.load().current;
 		rect.y = rect.y.saturating_sub(1) + y as u16;
@@ -86,7 +86,6 @@ impl Tab {
 	}
 
 	// --- History
-
 	#[inline]
 	pub fn hovered_folder(&self) -> Option<&Folder> {
 		self.current.hovered().filter(|&h| h.is_dir()).and_then(|h| self.history.get(h.url()))
@@ -98,12 +97,12 @@ impl Tab {
 				return render!();
 			}
 
-			let hovered = f.hovered().filter(|_| f.tracing).map(|h| h.url_owned());
+			let hovered = f.hovered().filter(|_| f.tracing).map(|h| h.urn_owned());
 			f.files.set_show_hidden(self.conf.show_hidden);
 			f.files.set_sorter(self.conf.sorter());
 
 			render!(f.files.catchup_revision());
-			render!(f.repos(hovered));
+			render!(f.repos(hovered.as_ref().map(|u| u._deref())));
 		};
 
 		apply(&mut self.current);
@@ -112,7 +111,7 @@ impl Tab {
 			apply(parent);
 
 			// The parent should always track the CWD
-			parent.hover(&self.current.loc);
+			parent.hover(self.current.loc.urn());
 			parent.tracing = parent.hovered().map(|h| h.url()) == Some(&self.current.loc);
 		}
 

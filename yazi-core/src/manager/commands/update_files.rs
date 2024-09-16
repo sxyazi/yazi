@@ -25,7 +25,7 @@ impl Manager {
 		};
 
 		let mut ops = vec![opt.op];
-		for u in LINKED.read().from_dir(ops[0].url()) {
+		for u in LINKED.read().from_dir(ops[0].cwd()) {
 			ops.push(ops[0].chroot(u));
 		}
 
@@ -44,10 +44,10 @@ impl Manager {
 	}
 
 	fn update_tab(tab: &mut Tab, op: Cow<FilesOp>, tasks: &Tasks) {
-		let url = op.url();
+		let url = op.cwd();
 		tab.selected.apply_op(&op);
 
-		if url == tab.cwd() {
+		if url == tab.cwd().url() {
 			Self::update_current(tab, op, tasks);
 		} else if matches!(&tab.parent, Some(p) if url == &*p.loc) {
 			Self::update_parent(tab, op);
@@ -59,12 +59,15 @@ impl Manager {
 	}
 
 	fn update_parent(tab: &mut Tab, op: Cow<FilesOp>) {
-		let cwd = tab.cwd().clone();
-		let leave = matches!(*op, FilesOp::Deleting(_, ref urls) if urls.contains(&cwd));
+		let urn = tab.cwd().urn_owned();
+		// FIXME
+		let leave = false;
+		// let leave = matches!(*op, FilesOp::Deleting(_, ref urls) if
+		// urls.contains(&urn));
 
 		if let Some(f) = tab.parent.as_mut() {
 			render!(f.update(op.into_owned()));
-			render!(f.hover(&cwd));
+			render!(f.hover(urn._deref()));
 		}
 
 		if leave {
@@ -73,7 +76,7 @@ impl Manager {
 	}
 
 	fn update_current(tab: &mut Tab, op: Cow<FilesOp>, tasks: &Tasks) {
-		let hovered = tab.current.hovered().filter(|_| tab.current.tracing).map(|h| h.url_owned());
+		let hovered = tab.current.hovered().filter(|_| tab.current.tracing).map(|h| h.urn_owned());
 		let calc = !matches!(*op, FilesOp::Size(..) | FilesOp::Deleting(..));
 
 		let foreign = matches!(op, Cow::Borrowed(_));
@@ -81,7 +84,7 @@ impl Manager {
 			return;
 		}
 
-		tab.current.repos(hovered);
+		tab.current.repos(hovered.as_ref().map(|u| u._deref()));
 		if foreign {
 			return;
 		}
@@ -94,7 +97,7 @@ impl Manager {
 	}
 
 	fn update_hovered(tab: &mut Tab, op: Cow<FilesOp>) {
-		let url = op.url();
+		let url = op.cwd();
 		let folder = tab.history.entry(url.clone()).or_insert_with(|| Folder::from(url));
 
 		let foreign = matches!(op, Cow::Borrowed(_));
@@ -112,10 +115,10 @@ impl Manager {
 			|(p, pp)| matches!(*op, FilesOp::Deleting(ref parent, ref urls) if *parent == pp && urls.contains(p)),
 		);
 
-		let folder = tab.history.entry(op.url().clone()).or_insert_with(|| Folder::from(op.url()));
-		let hovered = folder.hovered().filter(|_| folder.tracing).map(|h| h.url_owned());
+		let folder = tab.history.entry(op.cwd().clone()).or_insert_with(|| Folder::from(op.cwd()));
+		let hovered = folder.hovered().filter(|_| folder.tracing).map(|h| h.urn_owned());
 		if folder.update(op.into_owned()) {
-			folder.repos(hovered);
+			folder.repos(hovered.as_ref().map(|u| u._deref()));
 		}
 
 		if leave {

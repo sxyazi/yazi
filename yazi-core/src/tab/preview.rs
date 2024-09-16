@@ -38,29 +38,29 @@ impl Preview {
 	}
 
 	pub fn go_folder(&mut self, file: File, dir: Option<Cha>, force: bool) {
-		let (cha, url) = (file.cha, file.url_owned());
+		let (cha, cwd) = (file.cha, file.url_owned());
 		self.go(file, MIME_DIR, force);
 
-		if self.content_unchanged(&url, cha) {
+		if self.content_unchanged(&cwd, cha) {
 			return;
 		}
 
 		self.folder_loader.take().map(|h| h.abort());
 		self.folder_loader = Some(tokio::spawn(async move {
-			let Some(new) = Files::assert_stale(&url, dir.unwrap_or(Cha::dummy())).await else {
+			let Some(new) = Files::assert_stale(&cwd, dir.unwrap_or(Cha::dummy())).await else {
 				return;
 			};
-			let Ok(rx) = Files::from_dir(&url).await else { return };
+			let Ok(rx) = Files::from_dir(&cwd).await else { return };
 
 			let stream =
 				UnboundedReceiverStream::new(rx).chunks_timeout(50000, Duration::from_millis(500));
 			pin!(stream);
 
-			let ticket = FilesOp::prepare(&url);
+			let ticket = FilesOp::prepare(&cwd);
 			while let Some(chunk) = stream.next().await {
-				FilesOp::Part(url.clone(), chunk, ticket).emit();
+				FilesOp::Part(cwd.clone(), chunk, ticket).emit();
 			}
-			FilesOp::Done(url, new, ticket).emit();
+			FilesOp::Done(cwd, new, ticket).emit();
 		}));
 	}
 

@@ -112,10 +112,10 @@ impl Selected {
 		};
 
 		if !removal.is_empty() {
-			self.remove_many(&removal, !op.url().is_search());
+			self.remove_many(&removal, !op.cwd().is_search());
 		}
 		if !addition.is_empty() {
-			self.add_many(&addition, !op.url().is_search());
+			self.add_many(&addition, !op.cwd().is_search());
 		}
 	}
 }

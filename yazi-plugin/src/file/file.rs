@@ -24,9 +24,11 @@ impl File {
 			me.as_ref().link_to.clone().map(|u| Url::cast(lua, u)).transpose()
 		});
 
-		// Extension
 		reg.add_field_method_get("name", |lua, me| {
-			me.as_ref().url().file_name().map(|n| lua.create_string(n.as_encoded_bytes())).transpose()
+			Some(me.as_ref().name())
+				.filter(|s| !s.is_empty())
+				.map(|s| lua.create_string(s.as_encoded_bytes()))
+				.transpose()
 		});
 
 		reg.add_method("icon", |lua, me, ()| {

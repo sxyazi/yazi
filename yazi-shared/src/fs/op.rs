@@ -21,18 +21,18 @@ pub enum FilesOp {
 
 impl FilesOp {
 	#[inline]
-	pub fn url(&self) -> &Url {
+	pub fn cwd(&self) -> &Url {
 		match self {
-			Self::Full(url, ..) => url,
-			Self::Part(url, ..) => url,
-			Self::Done(url, ..) => url,
-			Self::Size(url, _) => url,
-			Self::IOErr(url, _) => url,
+			Self::Full(u, ..) => u,
+			Self::Part(u, ..) => u,
+			Self::Done(u, ..) => u,
+			Self::Size(u, _) => u,
+			Self::IOErr(u, _) => u,
 
-			Self::Creating(url, _) => url,
-			Self::Deleting(url, _) => url,
-			Self::Updating(url, _) => url,
-			Self::Upserting(url, _) => url,
+			Self::Creating(u, _) => u,
+			Self::Deleting(u, _) => u,
+			Self::Updating(u, _) => u,
+			Self::Upserting(u, _) => u,
 		}
 	}
 
@@ -41,9 +41,9 @@ impl FilesOp {
 		emit!(Call(Cmd::new("update_files").with_any("op", self), Layer::Manager));
 	}
 
-	pub fn prepare(url: &Url) -> u64 {
+	pub fn prepare(cwd: &Url) -> u64 {
 		let ticket = FILES_TICKET.fetch_add(1, Ordering::Relaxed);
-		Self::Part(url.clone(), vec![], ticket).emit();
+		Self::Part(cwd.clone(), vec![], ticket).emit();
 		ticket
 	}
 

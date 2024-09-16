@@ -39,20 +39,20 @@ impl Tab {
 			return self.cd_interactive();
 		}
 
-		if opt.target == *self.cwd() {
+		if opt.target == *self.cwd().url() {
 			return;
 		}
 
 		// Take parent to history
 		if let Some(rep) = self.parent.take() {
-			self.history.insert(rep.loc.url().clone(), rep);
+			self.history.insert(rep.loc.url_owned(), rep);
 		}
 
 		// Current
 		let rep = self.history.remove_or(&opt.target);
 		let rep = mem::replace(&mut self.current, rep);
 		if rep.loc.is_regular() {
-			self.history.insert(rep.loc.url().clone(), rep);
+			self.history.insert(rep.loc.url_owned(), rep);
 		}
 
 		// Parent
