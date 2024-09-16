@@ -22,7 +22,7 @@ impl Manager {
 		let opt = opt.into() as Opt;
 		let cwd = self.cwd().to_owned();
 		tokio::spawn(async move {
-			let mut result = InputProxy::show(InputCfg::create());
+			let mut result = InputProxy::show(InputCfg::create(opt.dir));
 			let Some(Ok(name)) = result.recv().await else {
 				return Ok(());
 			};
