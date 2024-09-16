@@ -83,13 +83,13 @@ Please replace e.g. `shell` with `shell --interactive`, `shell "my-template"` wi
 		}
 	}
 
-	// TODO: Remove when deprecated
-	if matches!(INPUT.create_title, popup::CreateTitle::One(_)) {
+	// TODO: Remove in v0.3.6
+	if matches!(INPUT.create_title, popup::InputCreateTitle::One(_)) {
 		println!(
-			r#"WARNING: `create_title` config now takes two different values to account for the `--dir` flag.
-Example:
-[input]
-create_title = ["Create:", "Create (dir):"]"#
+			r#"WARNING: The `create_title` under `[input]` now accepts an array instead of a string to support different titles for `create` and `create --dir` command.
+
+Please change `create_title = "Create:"` to `create_title = ["Create:", "Create (dir):"]` in your yazi.toml.
+"#
 		);
 	}
 
