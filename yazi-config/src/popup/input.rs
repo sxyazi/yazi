@@ -14,7 +14,7 @@ pub struct Input {
 	pub cd_offset: Offset,
 
 	// create
-	pub create_title:  String,
+	pub create_title:  [String; 2],
 	pub create_origin: Origin,
 	pub create_offset: Offset,
 
