@@ -111,7 +111,8 @@ pub fn install(lua: &Lua) -> mlua::Result<()> {
 			(
 				"unique_name",
 				lua.create_async_function(|lua, url: UrlRef| async move {
-					// FIXME: handle errors
+					// FIXME: should return a `std::io::Result` to handle errors such as
+					// permission denied
 					Url::cast(lua, yazi_shared::fs::unique_name(url.clone()).await)
 				})?,
 			),

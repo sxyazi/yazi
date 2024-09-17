@@ -1,6 +1,6 @@
-use std::{collections::HashMap, sync::atomic::{AtomicU64, Ordering}};
+use std::{collections::{HashMap, HashSet}, sync::atomic::{AtomicU64, Ordering}};
 
-use super::{Cha, File};
+use super::{Cha, File, UrnBuf};
 use crate::{emit, event::Cmd, fs::Url, Layer};
 
 pub static FILES_TICKET: AtomicU64 = AtomicU64::new(0);
@@ -10,13 +10,13 @@ pub enum FilesOp {
 	Full(Url, Vec<File>, Cha),
 	Part(Url, Vec<File>, u64),
 	Done(Url, Cha, u64),
-	Size(Url, HashMap<Url, u64>),
+	Size(Url, HashMap<UrnBuf, u64>),
 	IOErr(Url, std::io::ErrorKind),
 
 	Creating(Url, Vec<File>),
-	Deleting(Url, Vec<Url>),
-	Updating(Url, HashMap<Url, File>),
-	Upserting(Url, HashMap<Url, File>),
+	Deleting(Url, HashSet<UrnBuf>),
+	Updating(Url, HashMap<UrnBuf, File>),
+	Upserting(Url, HashMap<UrnBuf, File>),
 }
 
 impl FilesOp {
@@ -47,15 +47,12 @@ impl FilesOp {
 		ticket
 	}
 
-	pub fn chroot(&self, new: &Url) -> Self {
-		macro_rules! new {
-			($url:expr) => {{ new.join($url.file_name().unwrap()) }};
-		}
+	pub fn rebase(&self, new: &Url) -> Self {
 		macro_rules! files {
 			($files:expr) => {{ $files.iter().map(|f| f.rebase(new)).collect() }};
 		}
 		macro_rules! map {
-			($map:expr) => {{ $map.iter().map(|(u, f)| (new!(u), f.rebase(new))).collect() }};
+			($map:expr) => {{ $map.iter().map(|(u, f)| (u.clone(), f.rebase(new))).collect() }};
 		}
 
 		let n = new.clone();
@@ -63,13 +60,29 @@ impl FilesOp {
 			Self::Full(_, files, mtime) => Self::Full(n, files!(files), *mtime),
 			Self::Part(_, files, ticket) => Self::Part(n, files!(files), *ticket),
 			Self::Done(_, mtime, ticket) => Self::Done(n, *mtime, *ticket),
-			Self::Size(_, map) => Self::Size(n, map.iter().map(|(u, &s)| (new!(u), s)).collect()),
+			Self::Size(_, map) => Self::Size(n, map.iter().map(|(u, &s)| (u.clone(), s)).collect()),
 			Self::IOErr(_, err) => Self::IOErr(n, *err),
 
 			Self::Creating(_, files) => Self::Creating(n, files!(files)),
-			Self::Deleting(_, urls) => Self::Deleting(n, urls.iter().map(|u| new!(u)).collect()),
+			Self::Deleting(_, urns) => Self::Deleting(n, urns.clone()),
 			Self::Updating(_, map) => Self::Updating(n, map!(map)),
 			Self::Upserting(_, map) => Self::Upserting(n, map!(map)),
+		}
+	}
+
+	pub fn diff_recoverable(&self, contains: impl Fn(&Url) -> bool) -> (Vec<Url>, Vec<Url>) {
+		match self {
+			Self::Deleting(cwd, urns) => {
+				(urns.iter().map(|u| cwd.join(u._deref()._as_path())).collect(), vec![])
+			}
+			Self::Updating(cwd, urns) | Self::Upserting(cwd, urns) => urns
+				.iter()
+				.filter(|&(u, f)| u != f.urn())
+				.map(|(u, f)| (cwd.join(u._deref()._as_path()), f))
+				.filter(|(u, _)| contains(u))
+				.map(|(u, f)| (u, f.url_owned()))
+				.unzip(),
+			_ => (vec![], vec![]),
 		}
 	}
 }

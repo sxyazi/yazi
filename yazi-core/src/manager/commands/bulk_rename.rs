@@ -6,7 +6,7 @@ use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
 use yazi_config::{OPEN, PREVIEW};
 use yazi_dds::Pubsub;
 use yazi_proxy::{AppProxy, TasksProxy, HIDER, WATCHER};
-use yazi_shared::{fs::{max_common_root, maybe_exists, paths_to_same_file, File, FilesOp, Url}, terminal_clear};
+use yazi_shared::{fs::{max_common_root, maybe_exists, paths_to_same_file, File, Url}, terminal_clear};
 
 use crate::manager::Manager;
 
@@ -98,7 +98,8 @@ impl Manager {
 		// FIXME: consider old and new in the different directories
 		if !succeeded.is_empty() {
 			Pubsub::pub_from_bulk(succeeded.iter().map(|(u, f)| (u, f.url())).collect());
-			FilesOp::Upserting(cwd, succeeded).emit();
+			// FIXME 0
+			// FilesOp::Upserting(cwd, succeeded).emit();
 		}
 		drop(permit);
 

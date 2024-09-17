@@ -1,10 +1,10 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use anyhow::Result;
 use tokio::fs;
 use yazi_config::popup::{ConfirmCfg, InputCfg};
 use yazi_proxy::{ConfirmProxy, InputProxy, TabProxy, WATCHER};
-use yazi_shared::{event::Cmd, fs::{maybe_exists, ok_or_not_found, symlink_realpath, File, FilesOp, Url}};
+use yazi_shared::{event::Cmd, fs::{maybe_exists, ok_or_not_found, realname, File, FilesOp, Url, UrnBuf}};
 
 use crate::manager::Manager;
 
@@ -48,9 +48,9 @@ impl Manager {
 
 		if dir {
 			fs::create_dir_all(&new).await?;
-		} else if let Ok(real) = symlink_realpath(&new).await {
+		} else if let Some(real) = realname(&new).await {
 			ok_or_not_found(fs::remove_file(&new).await)?;
-			FilesOp::Deleting(parent.clone(), vec![Url::from(real)]).emit();
+			FilesOp::Deleting(parent.clone(), HashSet::from_iter([UrnBuf::_from(real)])).emit();
 			fs::File::create(&new).await?;
 		} else {
 			fs::create_dir_all(&parent).await.ok();
@@ -59,7 +59,7 @@ impl Manager {
 		}
 
 		if let Ok(f) = File::from(new.clone()).await {
-			FilesOp::Upserting(parent, HashMap::from_iter([(f.url_owned(), f)])).emit();
+			FilesOp::Upserting(parent, HashMap::from_iter([(f.urn_owned(), f)])).emit();
 			TabProxy::reveal(&new)
 		}
 		Ok(())

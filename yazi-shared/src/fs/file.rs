@@ -81,7 +81,7 @@ impl File {
 		}
 
 		#[cfg(unix)]
-		if loc.url().is_hidden() {
+		if loc.urn().is_hidden() {
 			ck |= ChaKind::HIDDEN;
 		}
 		#[cfg(windows)]

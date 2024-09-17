@@ -39,17 +39,10 @@ impl Yanked {
 	}
 
 	pub fn apply_op(&mut self, op: &FilesOp) {
-		let (removal, addition) = match op {
-			FilesOp::Deleting(_, urls) => (urls.iter().collect(), vec![]),
-			FilesOp::Updating(_, urls) | FilesOp::Upserting(_, urls) => {
-				urls.iter().filter(|(u, _)| self.contains(u)).map(|(u, f)| (u, f.url_owned())).unzip()
-			}
-			_ => (vec![], vec![]),
-		};
-
+		let (removal, addition) = op.diff_recoverable(|u| self.contains(u));
 		if !removal.is_empty() {
 			let old = self.urls.len();
-			self.urls.retain(|u| !removal.contains(&u));
+			self.urls.retain(|u| !removal.contains(u));
 			self.revision += (old != self.urls.len()) as u64;
 		}
 

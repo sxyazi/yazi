@@ -3,7 +3,7 @@ use std::{ffi::{OsStr, OsString}, fmt::{Debug, Display, Formatter}, ops::{Deref,
 use percent_encoding::{percent_decode_str, percent_encode, AsciiSet, CONTROLS};
 use serde::{Deserialize, Serialize};
 
-use super::Loc;
+use super::{Loc, UrnBuf};
 
 const ENCODE_SET: &AsciiSet = &CONTROLS.add(b'#');
 
@@ -151,18 +151,18 @@ impl Url {
 	}
 
 	#[inline]
+	pub fn pair(&self) -> Option<(Self, UrnBuf)> {
+		let urn = UrnBuf::_from(self.path.file_name()?);
+		Some((self.parent_url()?, urn))
+	}
+
+	#[inline]
 	pub fn strip_prefix(&self, base: impl AsRef<Path>) -> Option<&Path> {
 		self.path.strip_prefix(base).ok()
 	}
 
 	#[inline]
 	pub fn into_os_string(self) -> OsString { self.path.into_os_string() }
-
-	#[cfg(unix)]
-	#[inline]
-	pub fn is_hidden(&self) -> bool {
-		self.file_name().map_or(false, |s| s.as_encoded_bytes().starts_with(b"."))
-	}
 
 	#[inline]
 	pub fn to_loc(&self, cwd: &Url) -> Loc { self.clone().into_loc(cwd) }

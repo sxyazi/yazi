@@ -92,7 +92,8 @@ impl Prework {
 					}
 
 					let parent = buf[0].0.parent_url().unwrap();
-					FilesOp::Size(parent, HashMap::from_iter(buf)).emit();
+					// FIXME 0
+					// FilesOp::Size(parent, HashMap::from_iter(buf)).emit();
 				});
 				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 			}

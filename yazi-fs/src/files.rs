@@ -2,7 +2,7 @@ use std::{collections::{HashMap, HashSet}, mem, ops::Deref, sync::atomic::Orderi
 
 use tokio::{fs::{self, DirEntry}, select, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_config::{manager::SortBy, MANAGER};
-use yazi_shared::fs::{maybe_exists, Cha, File, FilesOp, Url, Urn, FILES_TICKET};
+use yazi_shared::fs::{maybe_exists, Cha, File, FilesOp, Url, Urn, UrnBuf, FILES_TICKET};
 
 use super::{FilesSorter, Filter};
 
@@ -13,7 +13,7 @@ pub struct Files {
 	version:      u64,
 	pub revision: u64,
 
-	pub sizes: HashMap<Url, u64>,
+	pub sizes: HashMap<UrnBuf, u64>,
 
 	sorter:      FilesSorter,
 	filter:      Option<Filter>,
@@ -99,7 +99,7 @@ impl Files {
 	pub async fn assert_stale(cwd: &Url, cha: Cha) -> Option<Cha> {
 		match fs::metadata(cwd).await.map(Cha::from) {
 			Ok(c) if !c.is_dir() => {
-				// FIXME: use `ErrorKind::NotADirectory` instead once it gets stabilized
+				// TODO: use `ErrorKind::NotADirectory` instead once it gets stabilized
 				FilesOp::IOErr(cwd.clone(), std::io::ErrorKind::AlreadyExists).emit();
 			}
 			Ok(c) if c.hits(cha) => {}
@@ -107,8 +107,8 @@ impl Files {
 			Err(e) => {
 				if maybe_exists(cwd).await {
 					FilesOp::IOErr(cwd.clone(), e.kind()).emit();
-				} else if let Some(p) = cwd.parent_url() {
-					FilesOp::Deleting(p, vec![cwd.clone()]).emit();
+				} else if let Some((p, n)) = cwd.pair() {
+					FilesOp::Deleting(p, HashSet::from_iter([n])).emit();
 				}
 			}
 		}
@@ -150,7 +150,7 @@ impl Files {
 		}
 	}
 
-	pub fn update_size(&mut self, sizes: HashMap<Url, u64>) {
+	pub fn update_size(&mut self, sizes: HashMap<UrnBuf, u64>) {
 		if sizes.is_empty() {
 			return;
 		}
@@ -197,31 +197,30 @@ impl Files {
 	}
 
 	#[cfg(unix)]
-	pub fn update_deleting(&mut self, urls: Vec<Url>) {
-		if urls.is_empty() {
+	pub fn update_deleting(&mut self, urns: HashSet<UrnBuf>) {
+		if urns.is_empty() {
 			return;
 		}
 
 		macro_rules! go {
 			($dist:expr, $src:expr, $inc:literal) => {
-				let mut todo: HashSet<_> = $src.into_iter().collect();
 				let len = $dist.len();
-
-				$dist.retain(|f| !todo.remove(f.url()));
+				$dist.retain(|f| !$src.remove(f.urn()));
 				if $dist.len() != len {
 					self.revision += $inc;
 				}
 			};
 		}
 
-		let (hidden, items) = if let Some(filter) = &self.filter {
-			urls.into_iter().partition(|u| {
-				(!self.show_hidden && u.is_hidden()) || !u.file_name().is_some_and(|s| filter.matches(s))
+		let (mut hidden, mut items) = if let Some(filter) = &self.filter {
+			urns.into_iter().partition(|u| {
+				(!self.show_hidden && u._deref().is_hidden())
+					|| !u._deref().name().is_some_and(|s| filter.matches(s))
 			})
 		} else if self.show_hidden {
-			(vec![], urls)
+			(HashSet::new(), urns)
 		} else {
-			urls.into_iter().partition(|u| u.is_hidden())
+			urns.into_iter().partition(|u| u._deref().is_hidden())
 		};
 
 		if !items.is_empty() {
@@ -233,31 +232,29 @@ impl Files {
 	}
 
 	#[cfg(windows)]
-	pub fn update_deleting(&mut self, urls: Vec<Url>) {
+	pub fn update_deleting(&mut self, mut urns: HashSet<UrnBuf>) {
 		macro_rules! go {
 			($dist:expr, $src:expr, $inc:literal) => {
 				let len = $dist.len();
-
-				$dist.retain(|f| !$src.remove(f.url()));
+				$dist.retain(|f| !$src.remove(f.urn()));
 				if $dist.len() != len {
 					self.revision += $inc;
 				}
 			};
 		}
 
-		let mut urls: HashSet<_> = urls.into_iter().collect();
-		if !urls.is_empty() {
-			go!(self.items, urls, 1);
+		if !urns.is_empty() {
+			go!(self.items, urns, 1);
 		}
-		if !urls.is_empty() {
-			go!(self.hidden, urls, 0);
+		if !urns.is_empty() {
+			go!(self.hidden, urns, 0);
 		}
 	}
 
 	pub fn update_updating(
 		&mut self,
-		files: HashMap<Url, File>,
-	) -> (HashMap<Url, File>, HashMap<Url, File>) {
+		files: HashMap<UrnBuf, File>,
+	) -> (HashMap<UrnBuf, File>, HashMap<UrnBuf, File>) {
 		if files.is_empty() {
 			return Default::default();
 		}
@@ -266,7 +263,7 @@ impl Files {
 			($dist:expr, $src:expr, $inc:literal) => {
 				let mut b = true;
 				for i in 0..$dist.len() {
-					if let Some(f) = $src.remove($dist[i].url()) {
+					if let Some(f) = $src.remove($dist[i].urn()) {
 						b &= $dist[i].cha.hits(f.cha);
 						$dist[i] = f;
 
@@ -298,7 +295,7 @@ impl Files {
 		(hidden, items)
 	}
 
-	pub fn update_upserting(&mut self, files: HashMap<Url, File>) {
+	pub fn update_upserting(&mut self, files: HashMap<UrnBuf, File>) {
 		if files.is_empty() {
 			return;
 		}
