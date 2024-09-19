@@ -1,4 +1,4 @@
-use std::{borrow::{Borrow, Cow}, ffi::OsStr, path::{Path, PathBuf}};
+use std::{borrow::Borrow, ffi::OsStr, path::{Path, PathBuf}};
 
 #[derive(Debug, Eq, PartialEq, Hash)]
 #[repr(transparent)]
