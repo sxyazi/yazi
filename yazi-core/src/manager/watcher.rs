@@ -9,7 +9,7 @@ use tracing::error;
 use yazi_fs::{Files, Folder};
 use yazi_plugin::isolate;
 use yazi_proxy::WATCHER;
-use yazi_shared::{fs::{symlink_realname, Cha, File, FilesOp, Url}, RoCell};
+use yazi_shared::{fs::{realname_unchecked, Cha, File, FilesOp, Url}, RoCell};
 
 use super::Linked;
 
@@ -124,27 +124,26 @@ impl Watcher {
 			let _permit = WATCHER.acquire().await.unwrap();
 			let mut reload = Vec::with_capacity(urls.len());
 
-			for url in urls {
-				let Some(name) = url.file_name() else { continue };
-				let Some(parent) = url.parent_url() else { continue };
-
-				let Ok(file) = File::from(url.clone()).await else {
-					FilesOp::Deleting(parent, vec![url]).emit();
+			for u in urls {
+				let Some((parent, urn)) = u.pair() else { continue };
+				let Ok(file) = File::from(u).await else {
+					FilesOp::Deleting(parent, HashSet::from_iter([urn])).emit();
 					continue;
 				};
 
-				let eq = (!file.is_link() && fs::canonicalize(&url).await.is_ok_and(|p| p == *url))
-					|| symlink_realname(&url, &mut cached).await.is_ok_and(|s| s == name);
+				let u = file.url();
+				let eq = (!file.is_link() && fs::canonicalize(u).await.is_ok_and(|p| p == **u))
+					|| realname_unchecked(u, &mut cached).await.is_ok_and(|s| s == urn._deref()._as_path());
 
 				if !eq {
-					FilesOp::Deleting(parent, vec![url]).emit();
+					FilesOp::Deleting(parent, HashSet::from_iter([urn])).emit();
 					continue;
 				}
 
 				if !file.is_dir() {
 					reload.push(file.clone());
 				}
-				FilesOp::Upserting(parent, HashMap::from_iter([(url, file)])).emit();
+				FilesOp::Upserting(parent, HashMap::from_iter([(urn, file)])).emit();
 			}
 
 			if reload.is_empty() {

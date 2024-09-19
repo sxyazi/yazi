@@ -1,7 +1,7 @@
 use std::{cmp::Ordering, collections::HashMap, mem};
 
 use yazi_config::manager::SortBy;
-use yazi_shared::{fs::{File, Url}, natsort, LcgRng, Transliterator};
+use yazi_shared::{fs::{File, UrnBuf}, natsort, LcgRng, Transliterator};
 
 #[derive(Clone, Copy, Default, PartialEq)]
 pub struct FilesSorter {
@@ -13,7 +13,7 @@ pub struct FilesSorter {
 }
 
 impl FilesSorter {
-	pub(super) fn sort(&self, items: &mut Vec<File>, sizes: &HashMap<Url, u64>) {
+	pub(super) fn sort(&self, items: &mut Vec<File>, sizes: &HashMap<UrnBuf, u64>) {
 		if items.is_empty() {
 			return;
 		}
@@ -51,8 +51,8 @@ impl FilesSorter {
 			SortBy::Alphabetical => items.sort_unstable_by(by_alphabetical),
 			SortBy::Natural => self.sort_naturally(items),
 			SortBy::Size => items.sort_unstable_by(|a, b| {
-				let aa = if a.is_dir() { sizes.get(a.url()).copied() } else { None };
-				let bb = if b.is_dir() { sizes.get(b.url()).copied() } else { None };
+				let aa = if a.is_dir() { sizes.get(a.urn()).copied() } else { None };
+				let bb = if b.is_dir() { sizes.get(b.urn()).copied() } else { None };
 				let ord = self.cmp(aa.unwrap_or(a.len), bb.unwrap_or(b.len), self.promote(a, b));
 				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
 			}),

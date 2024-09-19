@@ -18,23 +18,24 @@ impl Selected {
 	#[inline]
 	pub fn add(&mut self, url: &Url) -> bool { self.add_same(&[url]) == 1 }
 
-	pub fn add_many(&mut self, urls: &[&Url], same: bool) -> usize {
+	pub fn add_many(&mut self, urls: &[impl AsRef<Url>], same: bool) -> usize {
 		if same {
 			return self.add_same(urls);
 		}
 
 		let mut grouped: HashMap<_, Vec<_>> = Default::default();
-		for &u in urls {
-			if let Some(p) = u.parent_url() {
+		for u in urls {
+			if let Some(p) = u.as_ref().parent_url() {
 				grouped.entry(p).or_default().push(u);
 			}
 		}
 		grouped.into_values().map(|v| self.add_same(&v)).sum()
 	}
 
-	fn add_same(&mut self, urls: &[&Url]) -> usize {
+	fn add_same(&mut self, urls: &[impl AsRef<Url>]) -> usize {
 		// If it has appeared as a parent
-		let urls: Vec<_> = urls.iter().filter(|&&u| !self.parents.contains_key(u)).collect();
+		let urls: Vec<_> =
+			urls.iter().map(|u| u.as_ref()).filter(|&u| !self.parents.contains_key(u)).collect();
 		if urls.is_empty() {
 			return 0;
 		}
@@ -52,7 +53,7 @@ impl Selected {
 		}
 
 		let (now, len) = (timestamp_us(), self.inner.len());
-		self.inner.extend(urls.iter().enumerate().map(|(i, &&u)| (u.clone(), now + i as u64)));
+		self.inner.extend(urls.iter().enumerate().map(|(i, &u)| (u.clone(), now + i as u64)));
 
 		for u in parents {
 			*self.parents.entry(u).or_insert(0) += self.inner.len() - len;
@@ -103,14 +104,7 @@ impl Selected {
 	}
 
 	pub fn apply_op(&mut self, op: &FilesOp) {
-		let (removal, addition) = match op {
-			FilesOp::Deleting(_, urls) => (urls.iter().collect(), vec![]),
-			FilesOp::Updating(_, urls) | FilesOp::Upserting(_, urls) => {
-				urls.iter().filter(|&(u, _)| self.contains_key(u)).map(|(u, f)| (u, f.url())).unzip()
-			}
-			_ => (vec![], vec![]),
-		};
-
+		let (removal, addition) = op.diff_recoverable(|u| self.contains_key(u));
 		if !removal.is_empty() {
 			self.remove_many(&removal, !op.cwd().is_search());
 		}
@@ -196,7 +190,7 @@ mod tests {
 	fn insert_many_empty_urls_list() {
 		let mut s = Selected::default();
 
-		assert_eq!(0, s.add_same(&[]));
+		assert_eq!(0, s.add_same(&[] as &[&Url]));
 	}
 
 	#[test]

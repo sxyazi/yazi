@@ -26,7 +26,7 @@ impl Manager {
 
 		let mut ops = vec![opt.op];
 		for u in LINKED.read().from_dir(ops[0].cwd()) {
-			ops.push(ops[0].chroot(u));
+			ops.push(ops[0].rebase(u));
 		}
 
 		for op in ops {
@@ -60,10 +60,7 @@ impl Manager {
 
 	fn update_parent(tab: &mut Tab, op: Cow<FilesOp>) {
 		let urn = tab.cwd().urn_owned();
-		// FIXME
-		let leave = false;
-		// let leave = matches!(*op, FilesOp::Deleting(_, ref urls) if
-		// urls.contains(&urn));
+		let leave = matches!(*op, FilesOp::Deleting(_, ref urns) if urns.contains(&urn));
 
 		if let Some(f) = tab.parent.as_mut() {
 			render!(f.update(op.into_owned()));
@@ -111,8 +108,8 @@ impl Manager {
 	}
 
 	fn update_history(tab: &mut Tab, op: Cow<FilesOp>) {
-		let leave = tab.parent.as_ref().and_then(|f| f.loc.parent_url().map(|p| (&f.loc, p))).is_some_and(
-			|(p, pp)| matches!(*op, FilesOp::Deleting(ref parent, ref urls) if *parent == pp && urls.contains(p)),
+		let leave = tab.parent.as_ref().and_then(|f| f.loc.parent_url().map(|p| (p, f.loc.urn()))).is_some_and(
+			|(p, n)| matches!(*op, FilesOp::Deleting(ref parent, ref urns) if *parent == p && urns.contains(n)),
 		);
 
 		let folder = tab.history.entry(op.cwd().clone()).or_insert_with(|| Folder::from(op.cwd()));

@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::{HashMap, VecDeque}, ffi::{OsStr, OsString}, fs::Metadata, path::{Path, PathBuf}};
+use std::{borrow::Cow, collections::{HashMap, HashSet, VecDeque}, ffi::{OsStr, OsString}, fs::Metadata, path::{Path, PathBuf}};
 
 use anyhow::{bail, Result};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
@@ -76,19 +76,22 @@ async fn _paths_to_same_file(a: &Path, b: &Path) -> std::io::Result<bool> {
 	Ok(final_name(a).await? == final_name(b).await?)
 }
 
-pub async fn symlink_realpath(path: &Path) -> Result<PathBuf> {
-	let p = fs::canonicalize(path).await?;
-	if p == path {
-		return Ok(p);
+pub async fn realname(p: &Path) -> Option<OsString> {
+	let name = p.file_name()?;
+	if p == fs::canonicalize(p).await.ok()? {
+		return None;
 	}
 
-	let Some(parent) = path.parent() else { bail!("no parent") };
-	symlink_realname(path, &mut HashMap::new()).await.map(|n| parent.join(n))
+	realname_unchecked(p, &mut HashMap::new())
+		.await
+		.ok()
+		.filter(|s| s != name)
+		.map(|s| s.into_owned())
 }
 
 #[cfg(unix)]
 #[tokio::test]
-async fn test_symlink_realpath() {
+async fn test_realname_unchecked() {
 	fs::remove_dir_all("/tmp/issue-1173").await.ok();
 	fs::create_dir_all("/tmp/issue-1173/real-dir").await.unwrap();
 	fs::File::create("/tmp/issue-1173/A").await.unwrap();
@@ -97,64 +100,52 @@ async fn test_symlink_realpath() {
 	fs::symlink("/tmp/issue-1173/b", "/tmp/issue-1173/D").await.unwrap();
 	fs::symlink("real-dir", "/tmp/issue-1173/link-dir").await.unwrap();
 
-	async fn check(a: &str, b: &str) {
-		let expected = if a == b || cfg!(windows) || cfg!(target_os = "macos") {
-			Some(PathBuf::from(b))
-		} else {
-			None
-		};
-		assert_eq!(symlink_realpath(Path::new(a)).await.ok(), expected);
+	let c = &mut HashMap::new();
+	async fn check(a: &str, b: &str, c: &mut HashMap<PathBuf, HashSet<OsString>>) {
+		assert_eq!(realname_unchecked(Path::new(a), c).await.ok(), Some(OsStr::new(b).into()));
 	}
 
-	check("/tmp/issue-1173/a", "/tmp/issue-1173/A").await;
-	check("/tmp/issue-1173/A", "/tmp/issue-1173/A").await;
+	check("/tmp/issue-1173/a", "A", c).await;
+	check("/tmp/issue-1173/A", "A", c).await;
 
-	check("/tmp/issue-1173/b", "/tmp/issue-1173/b").await;
-	check("/tmp/issue-1173/B", "/tmp/issue-1173/b").await;
+	check("/tmp/issue-1173/b", "b", c).await;
+	check("/tmp/issue-1173/B", "b", c).await;
 
-	check("/tmp/issue-1173/link-dir/c", "/tmp/issue-1173/link-dir/C").await;
-	check("/tmp/issue-1173/link-dir/C", "/tmp/issue-1173/link-dir/C").await;
+	check("/tmp/issue-1173/link-dir/c", "C", c).await;
+	check("/tmp/issue-1173/link-dir/C", "C", c).await;
 
-	check("/tmp/issue-1173/d", "/tmp/issue-1173/D").await;
-	check("/tmp/issue-1173/D", "/tmp/issue-1173/D").await;
+	check("/tmp/issue-1173/d", "D", c).await;
+	check("/tmp/issue-1173/D", "D", c).await;
 }
 
 // realpath(3) without resolving symlinks. This is useful for case-insensitive
 // filesystems.
 //
 // Make sure the file of the path exists.
-pub async fn symlink_realname<'a>(
+pub async fn realname_unchecked<'a>(
 	path: &'a Path,
-	cached: &'a mut HashMap<PathBuf, HashMap<OsString, OsString>>,
+	cached: &'a mut HashMap<PathBuf, HashSet<OsString>>,
 ) -> Result<Cow<'a, OsStr>> {
-	let Some(name) = path.file_name() else { bail!("no file name") };
-	let Some(parent) = path.parent() else { return Ok(name.into()) };
+	let Some(name) = path.file_name() else { bail!("no filename") };
+	let Some(parent) = path.parent() else { return Ok(Cow::Borrowed(name)) };
 
 	if !cached.contains_key(parent) {
-		let mut map = HashMap::new();
+		let mut set = HashSet::new();
 		let mut it = fs::read_dir(parent).await?;
 		while let Some(entry) = it.next_entry().await? {
-			let n = entry.file_name();
-			if n.as_encoded_bytes().iter().all(|&b| b.is_ascii_lowercase()) {
-				map.insert(n, OsString::new());
-			} else {
-				map.insert(n.to_ascii_lowercase(), n);
-			}
+			set.insert(entry.file_name());
 		}
-		cached.insert(parent.to_owned(), map);
+		cached.insert(parent.to_owned(), set);
 	}
 
 	let c = &cached[parent];
-	if let Some(s) = c.get(name) {
-		return if s.is_empty() { Ok(name.into()) } else { Ok(s.into()) };
+	if c.contains(name) {
+		Ok(Cow::Borrowed(name))
+	} else if let Some(n) = c.iter().find(|&n| n.eq_ignore_ascii_case(name)) {
+		Ok(Cow::Borrowed(n))
+	} else {
+		bail!("no such file")
 	}
-
-	let lowercased = name.to_ascii_lowercase();
-	if let Some(s) = c.get(&lowercased) {
-		return if s.is_empty() { Ok(lowercased.into()) } else { Ok(s.into()) };
-	}
-
-	Ok(name.into())
 }
 
 pub async fn calculate_size(path: &Path) -> u64 {

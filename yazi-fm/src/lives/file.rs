@@ -39,7 +39,7 @@ impl File {
 
 			reg.add_field_method_get("idx", |_, me| Ok(me.idx + 1));
 			reg.add_method("size", |_, me, ()| {
-				Ok(if me.is_dir() { me.folder().files.sizes.get(me.url()).copied() } else { Some(me.len) })
+				Ok(if me.is_dir() { me.folder().files.sizes.get(me.urn()).copied() } else { Some(me.len) })
 			});
 			reg.add_method("mime", |lua, me, ()| {
 				let cx = lua.named_registry_value::<CtxRef>("cx")?;

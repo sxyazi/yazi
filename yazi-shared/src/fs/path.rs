@@ -72,8 +72,6 @@ fn _expand_path(p: &Path) -> PathBuf {
 	}
 }
 
-// FIXME: should return a `std::io::Result` to handle errors such as
-// permission denied
 pub async fn unique_name(mut u: Url) -> Url {
 	let Some(stem) = u.file_stem().map(|s| s.to_owned()) else {
 		return u;
