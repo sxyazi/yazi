@@ -10,14 +10,14 @@ impl Tasks {
 		let mut loaded = self.scheduler.prework.loaded.lock();
 		let mut tasks: [Vec<_>; MAX_PREWORKERS as usize] = Default::default();
 		for f in paged {
-			let mime = if f.is_dir() { MIME_DIR } else { mimetype.get(f.url()).unwrap_or_default() };
+			let mime = if f.is_dir() { MIME_DIR } else { mimetype.get(&f.url).unwrap_or_default() };
 			let factors = |s: &str| match s {
 				"mime" => !mime.is_empty(),
 				_ => false,
 			};
 
-			for p in PLUGIN.fetchers(f.url(), mime, factors) {
-				match loaded.get_mut(f.url()) {
+			for p in PLUGIN.fetchers(&f.url, mime, factors) {
+				match loaded.get_mut(&f.url) {
 					Some(n) if *n & (1 << p.idx) != 0 => continue,
 					Some(n) => *n |= 1 << p.idx,
 					None => _ = loaded.insert(f.url_owned(), 1 << p.idx),
@@ -37,9 +37,9 @@ impl Tasks {
 	pub fn preload_paged(&self, paged: &[File], mimetype: &Mimetype) {
 		let mut loaded = self.scheduler.prework.loaded.lock();
 		for f in paged {
-			let mime = if f.is_dir() { MIME_DIR } else { mimetype.get(f.url()).unwrap_or_default() };
-			for p in PLUGIN.preloaders(f.url(), mime) {
-				match loaded.get_mut(f.url()) {
+			let mime = if f.is_dir() { MIME_DIR } else { mimetype.get(&f.url).unwrap_or_default() };
+			for p in PLUGIN.preloaders(&f.url, mime) {
+				match loaded.get_mut(&f.url) {
 					Some(n) if *n & (1 << p.idx) != 0 => continue,
 					Some(n) => *n |= 1 << p.idx,
 					None => _ = loaded.insert(f.url_owned(), 1 << p.idx),
@@ -54,7 +54,7 @@ impl Tasks {
 		{
 			let mut loaded = self.scheduler.prework.loaded.lock();
 			for f in affected {
-				loaded.get_mut(f.url()).map(|n| *n &= mask);
+				loaded.get_mut(&f.url).map(|n| *n &= mask);
 			}
 		}
 
@@ -71,10 +71,8 @@ impl Tasks {
 			let loading = self.scheduler.prework.size_loading.read();
 			targets
 				.iter()
-				.filter(|f| {
-					f.is_dir() && !targets.sizes.contains_key(f.urn()) && !loading.contains(f.url())
-				})
-				.map(|f| f.url())
+				.filter(|f| f.is_dir() && !targets.sizes.contains_key(f.urn()) && !loading.contains(&f.url))
+				.map(|f| &f.url)
 				.collect()
 		};
 		if targets.is_empty() {

@@ -88,17 +88,19 @@ pub async fn unique_name(mut u: Url) -> Url {
 		.unwrap_or_default();
 
 	let mut i = 1u64;
-	while maybe_exists(&u).await {
+	let mut p = u.into_path();
+	while maybe_exists(&p).await {
 		let mut name = OsString::with_capacity(stem.len() + ext.len() + 5);
 		name.push(&stem);
 		name.push("_");
 		name.push(i.to_string());
 		name.push(&ext);
 
-		u.set_file_name(name);
+		p.set_file_name(name);
 		i += 1;
 	}
-	u
+	// FIXME 3: handle base path
+	Url::from(p)
 }
 
 // Parameters

@@ -46,7 +46,7 @@ impl Tabs {
 		} else {
 			tab.conf = self.active().conf.clone();
 			tab.apply_files_attrs();
-			tab.cd(self.active().cwd().url_owned());
+			tab.cd(self.active().cwd().to_owned());
 		}
 
 		self.items.insert(self.cursor + 1, tab);

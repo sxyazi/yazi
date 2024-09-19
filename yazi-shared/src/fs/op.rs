@@ -57,9 +57,9 @@ impl FilesOp {
 
 		let n = new.clone();
 		match self {
-			Self::Full(_, files, mtime) => Self::Full(n, files!(files), *mtime),
+			Self::Full(_, files, cha) => Self::Full(n, files!(files), *cha),
 			Self::Part(_, files, ticket) => Self::Part(n, files!(files), *ticket),
-			Self::Done(_, mtime, ticket) => Self::Done(n, *mtime, *ticket),
+			Self::Done(_, cha, ticket) => Self::Done(n, *cha, *ticket),
 			Self::Size(_, map) => Self::Size(n, map.iter().map(|(u, &s)| (u.clone(), s)).collect()),
 			Self::IOErr(_, err) => Self::IOErr(n, *err),
 

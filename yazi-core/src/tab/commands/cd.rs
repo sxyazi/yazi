@@ -18,7 +18,7 @@ impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		let mut target = c.take_first().and_then(Data::into_url).unwrap_or_default();
 		if target.is_regular() {
-			target.set_path(expand_path(&target))
+			target = Url::from(expand_path(&target));
 		}
 
 		Self { target, interactive: c.bool("interactive") }
@@ -39,20 +39,20 @@ impl Tab {
 			return self.cd_interactive();
 		}
 
-		if opt.target == *self.cwd().url() {
+		if opt.target == *self.cwd() {
 			return;
 		}
 
 		// Take parent to history
 		if let Some(rep) = self.parent.take() {
-			self.history.insert(rep.loc.url_owned(), rep);
+			self.history.insert(rep.url.to_owned(), rep);
 		}
 
 		// Current
 		let rep = self.history.remove_or(&opt.target);
 		let rep = mem::replace(&mut self.current, rep);
-		if rep.loc.is_regular() {
-			self.history.insert(rep.loc.url_owned(), rep);
+		if rep.url.is_regular() {
+			self.history.insert(rep.url.to_owned(), rep);
 		}
 
 		// Parent

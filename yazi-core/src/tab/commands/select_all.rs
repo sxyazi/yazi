@@ -24,7 +24,7 @@ impl From<Option<bool>> for Opt {
 
 impl Tab {
 	pub fn select_all(&mut self, opt: impl Into<Opt>) {
-		let iter = self.current.files.iter().map(|f| f.url());
+		let iter = self.current.files.iter().map(|f| &f.url);
 		let (removal, addition): (Vec<_>, Vec<_>) = match opt.into().state {
 			Some(true) => (vec![], iter.collect()),
 			Some(false) => (iter.collect(), vec![]),

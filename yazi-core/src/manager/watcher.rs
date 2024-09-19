@@ -61,7 +61,7 @@ impl Watcher {
 
 	pub(super) fn trigger_dirs(&self, folders: &[&Folder]) {
 		let todo: Vec<_> =
-			folders.iter().filter(|&f| f.loc.is_regular()).map(|&f| (f.loc.url_owned(), f.cha)).collect();
+			folders.iter().filter(|&f| f.url.is_regular()).map(|&f| (f.url.to_owned(), f.cha)).collect();
 		if todo.is_empty() {
 			return;
 		}
@@ -131,8 +131,8 @@ impl Watcher {
 					continue;
 				};
 
-				let u = file.url();
-				let eq = (!file.is_link() && fs::canonicalize(u).await.is_ok_and(|p| p == **u))
+				let u = &file.url;
+				let eq = (!file.is_link() && fs::canonicalize(u).await.is_ok_and(|p| p == ***u))
 					|| realname_unchecked(u, &mut cached).await.is_ok_and(|s| s == urn._deref()._as_path());
 
 				if !eq {
@@ -168,7 +168,7 @@ impl Watcher {
 			for from in todo {
 				let Ok(to) = fs::canonicalize(&from).await else { continue };
 
-				if to != *from && WATCHED.read().contains(&from) {
+				if to != **from && WATCHED.read().contains(&from) {
 					LINKED.write().insert(from, Url::from(to));
 				}
 			}

@@ -55,7 +55,7 @@ impl Url {
 					Value::UserData(ud) => me.strip_prefix(&*ud.borrow::<yazi_shared::fs::Url>()?),
 					_ => Err("must be a string or a Url".into_lua_err())?,
 				};
-				path.map(|p| Self::cast(lua, yazi_shared::fs::Url::from(p))).transpose()
+				path.ok().map(|p| Self::cast(lua, yazi_shared::fs::Url::from(p))).transpose()
 			});
 
 			reg.add_meta_method(MetaMethod::Eq, |_, me, other: UrlRef| Ok(me == &*other));

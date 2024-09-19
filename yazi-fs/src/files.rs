@@ -176,7 +176,8 @@ impl Files {
 			($dist:expr, $src:expr, $inc:literal) => {
 				let mut todo: HashMap<_, _> = $src.into_iter().map(|f| (f.url_owned(), f)).collect();
 				for f in &$dist {
-					if todo.remove(f.url()).is_some() && todo.is_empty() {
+					// TODO: use urn instead
+					if todo.remove(&f.url).is_some() && todo.is_empty() {
 						break;
 					}
 				}

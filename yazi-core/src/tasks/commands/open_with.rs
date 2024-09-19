@@ -7,7 +7,7 @@ impl Tasks {
 		if let Ok(opt) = opt.try_into() {
 			self.process_from_opener(
 				opt.opener,
-				opt.targets.into_iter().map(|u| u.into_os_string()).collect(),
+				opt.targets.into_iter().map(|u| u.into_path().into_os_string()).collect(),
 			);
 		}
 	}

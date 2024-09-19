@@ -20,11 +20,11 @@ pub struct Preview {
 
 impl Preview {
 	pub fn go(&mut self, file: File, mime: &str, force: bool) {
-		if !force && self.content_unchanged(file.url(), file.cha) {
+		if !force && self.content_unchanged(&file.url, file.cha) {
 			return;
 		}
 
-		let Some(previewer) = PLUGIN.previewer(file.url(), mime) else {
+		let Some(previewer) = PLUGIN.previewer(&file.url, mime) else {
 			self.reset();
 			return;
 		};

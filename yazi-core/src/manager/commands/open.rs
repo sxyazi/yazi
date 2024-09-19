@@ -110,9 +110,8 @@ impl Manager {
 		};
 
 		let find = |folder: Option<&Folder>| {
-			folder.filter(|&f| p == *f.loc).is_some_and(|folder| {
-				let loc = url.to_loc(&folder.loc);
-				folder.files.iter().any(|f| f.is_dir() && f.urn() == loc.urn())
+			folder.is_some_and(|folder| {
+				p == folder.url && folder.files.iter().any(|f| f.is_dir() && f.urn() == url.urn())
 			})
 		};
 
