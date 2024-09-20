@@ -1,4 +1,4 @@
-use mlua::{ExternalError, ExternalResult, Function, IntoLua, Lua, MultiValue, Table, Value};
+use mlua::{ExternalError, ExternalResult, Function, Lua, MultiValue, Table, Value};
 use tokio::sync::oneshot;
 use yazi_dds::Sendable;
 use yazi_shared::{emit, event::{Cmd, Data}, Layer};
@@ -17,10 +17,9 @@ impl Utils {
 				}
 
 				let cur = rt.current().unwrap().to_owned();
-				lua.create_function(move |lua, args: MultiValue| {
-					f.call::<_, MultiValue>(MultiValue::from_iter(
-						[LOADER.load(lua, &cur)?.into_lua(lua)?].into_iter().chain(args),
-					))
+				lua.create_function(move |lua, mut args: MultiValue| {
+					args.push_front(Value::Table(LOADER.load(lua, &cur)?));
+					f.call::<_, MultiValue>(args)
 				})
 			})?,
 		)?;
