@@ -16,7 +16,7 @@ impl Manager {
 			return AppProxy::notify_warn("Bulk rename", "No text opener found");
 		};
 
-		let cwd = self.cwd().url_owned();
+		let cwd = self.cwd().to_owned();
 		let old: Vec<_> = self.selected_or_hovered(true).collect();
 
 		let root = max_common_root(&old);
@@ -97,7 +97,7 @@ impl Manager {
 
 		// FIXME: consider old and new in the different directories
 		if !succeeded.is_empty() {
-			Pubsub::pub_from_bulk(succeeded.iter().map(|(u, f)| (u, f.url())).collect());
+			Pubsub::pub_from_bulk(succeeded.iter().map(|(u, f)| (u, &f.url)).collect());
 			// FIXME 0
 			// FilesOp::Upserting(cwd, succeeded).emit();
 		}

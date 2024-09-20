@@ -2,7 +2,7 @@ use ratatui::layout::Rect;
 use yazi_adapter::Dimension;
 use yazi_config::popup::{Origin, Position};
 use yazi_fs::Folder;
-use yazi_shared::fs::{File, Loc, Url};
+use yazi_shared::fs::{File, Url};
 
 use super::{Mimetype, Tabs, Watcher, Yanked};
 use crate::tab::Tab;
@@ -39,7 +39,7 @@ impl Manager {
 
 impl Manager {
 	#[inline]
-	pub fn cwd(&self) -> &Loc { self.active().cwd() }
+	pub fn cwd(&self) -> &Url { self.active().cwd() }
 
 	#[inline]
 	pub fn active(&self) -> &Tab { self.tabs.active() }

@@ -62,6 +62,7 @@ impl Padding {
 	}
 
 	pub fn register(lua: &Lua) -> mlua::Result<()> {
+		// TODO: remove this
 		lua.register_userdata_type::<ratatui::widgets::Padding>(|reg| {
 			reg.add_field_method_get("left", |_, me| Ok(me.left));
 			reg.add_field_method_get("right", |_, me| Ok(me.right));

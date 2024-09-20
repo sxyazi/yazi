@@ -11,7 +11,7 @@ impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		let mut target = c.take_first().and_then(Data::into_url).unwrap_or_default();
 		if target.is_regular() {
-			target.set_path(expand_path(&target))
+			target = Url::from(expand_path(&target));
 		}
 
 		Self { target }

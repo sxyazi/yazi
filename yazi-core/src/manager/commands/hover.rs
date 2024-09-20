@@ -37,28 +37,28 @@ impl Manager {
 		// Refresh watcher
 		let mut to_watch = HashSet::with_capacity(3 * self.tabs.len());
 		for tab in self.tabs.iter() {
-			to_watch.insert(tab.cwd().url());
+			to_watch.insert(tab.cwd());
 			if let Some(ref p) = tab.parent {
-				to_watch.insert(&p.loc);
+				to_watch.insert(&p.url);
 			}
 			if let Some(h) = tab.current.hovered().filter(|&h| h.is_dir()) {
-				to_watch.insert(h.url());
+				to_watch.insert(&h.url);
 			}
 		}
 		self.watcher.watch(to_watch);
 
 		// Publish through DDS
-		Pubsub::pub_from_hover(self.active().idx, self.hovered().map(|h| h.url()));
+		Pubsub::pub_from_hover(self.active().idx, self.hovered().map(|h| &h.url));
 	}
 
 	fn hover_do(&mut self, url: Url, tab: Option<usize>) {
 		// Hover on the file
-		if let Some(p) = url.strip_prefix(&self.current_or(tab).loc).map(PathBuf::from) {
+		if let Ok(p) = url.strip_prefix(&self.current_or(tab).url).map(PathBuf::from) {
 			render!(self.current_or_mut(tab).repos(Some(Urn::new(&p))));
 		}
 
 		// Turn on tracing
-		if self.current_or(tab).hovered().is_some_and(|f| url == *f.url()) {
+		if self.current_or(tab).hovered().is_some_and(|f| url == f.url) {
 			// `hover(Some)` occurs after user actions, such as create, rename, reveal, etc.
 			// At this point, it's intuitive to track the location of this file regardless.
 			self.current_or_mut(tab).tracing = true;

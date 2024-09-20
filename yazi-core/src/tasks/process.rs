@@ -16,7 +16,7 @@ impl Tasks {
 		for (opener, args) in openers {
 			self.process_from_opener(
 				Cow::Borrowed(opener),
-				args.into_iter().map(|u| u.into_os_string()).collect(),
+				args.into_iter().map(|u| u.into_path().into_os_string()).collect(),
 			);
 		}
 	}

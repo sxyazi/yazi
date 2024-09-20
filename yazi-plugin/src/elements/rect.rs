@@ -27,6 +27,7 @@ impl Rect {
 	}
 
 	pub fn register(lua: &Lua) -> mlua::Result<()> {
+		// TODO: remove this
 		lua.register_userdata_type::<ratatui::layout::Rect>(|reg| {
 			reg.add_field_method_get("x", |_, me| Ok(me.x));
 			reg.add_field_method_get("y", |_, me| Ok(me.y));

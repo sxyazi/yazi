@@ -38,11 +38,11 @@ impl FilesSorter {
 			}),
 			SortBy::Extension => items.sort_unstable_by(|a, b| {
 				let ord = if self.sensitive {
-					self.cmp(a.url().extension(), b.url().extension(), self.promote(a, b))
+					self.cmp(a.url.extension(), b.url.extension(), self.promote(a, b))
 				} else {
 					self.cmp(
-						a.url().extension().map(|s| s.to_ascii_lowercase()),
-						b.url().extension().map(|s| s.to_ascii_lowercase()),
+						a.url.extension().map(|s| s.to_ascii_lowercase()),
+						b.url.extension().map(|s| s.to_ascii_lowercase()),
 						self.promote(a, b),
 					)
 				};

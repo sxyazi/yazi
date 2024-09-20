@@ -1,4 +1,4 @@
-use std::{ffi::{OsStr, OsString}, fmt::{Debug, Display, Formatter}, ops::{Deref, DerefMut}, path::{Path, PathBuf}};
+use std::{ffi::OsStr, fmt::{Debug, Display, Formatter}, ops::Deref, path::{Path, PathBuf}};
 
 use percent_encoding::{percent_decode_str, percent_encode, AsciiSet, CONTROLS};
 use serde::{Deserialize, Serialize};
@@ -9,8 +9,8 @@ const ENCODE_SET: &AsciiSet = &CONTROLS.add(b'#');
 
 #[derive(Clone, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Url {
+	loc:    Loc,
 	scheme: UrlScheme,
-	path:   PathBuf,
 	frag:   String,
 }
 
@@ -24,37 +24,36 @@ pub enum UrlScheme {
 }
 
 impl Deref for Url {
-	type Target = PathBuf;
+	type Target = Loc;
 
-	fn deref(&self) -> &Self::Target { &self.path }
-}
-
-impl DerefMut for Url {
-	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.path }
+	fn deref(&self) -> &Self::Target { &self.loc }
 }
 
 impl Debug for Url {
-	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { write!(f, "{}", self.path.display()) }
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		match self.scheme {
+			UrlScheme::Regular => write!(f, "Regular({:?})", self.loc),
+			UrlScheme::Search => write!(f, "Search({:?}, {})", self.loc, self.frag),
+			UrlScheme::SearchItem => write!(f, "SearchItem({:?})", self.loc),
+			UrlScheme::Archive => write!(f, "Archive({:?})", self.loc),
+		}
+	}
+}
+
+impl From<Loc> for Url {
+	fn from(loc: Loc) -> Self { Self { loc, ..Default::default() } }
 }
 
 impl From<PathBuf> for Url {
-	fn from(path: PathBuf) -> Self { Self { path, ..Default::default() } }
+	fn from(path: PathBuf) -> Self { Loc::new(path).into() }
 }
 
 impl From<&PathBuf> for Url {
-	fn from(path: &PathBuf) -> Self { Self::from(path.clone()) }
+	fn from(path: &PathBuf) -> Self { path.to_owned().into() }
 }
 
 impl From<&Path> for Url {
-	fn from(path: &Path) -> Self { Self::from(path.to_path_buf()) }
-}
-
-impl From<String> for Url {
-	fn from(path: String) -> Self { Self::from(path.as_str()) }
-}
-
-impl From<&String> for Url {
-	fn from(path: &String) -> Self { Self::from(path.as_str()) }
+	fn from(path: &Path) -> Self { path.to_owned().into() }
 }
 
 impl From<&str> for Url {
@@ -62,11 +61,11 @@ impl From<&str> for Url {
 		let mut url = Url::default();
 		match path.split_once("://").map(|(a, b)| (UrlScheme::from(a), b)) {
 			None => {
-				url.path = PathBuf::from(path);
+				url.loc = Loc::new(PathBuf::from(path));
 				return url;
 			}
 			Some((UrlScheme::Regular, b)) => {
-				url.path = PathBuf::from(b);
+				url.loc = Loc::new(PathBuf::from(b));
 				return url;
 			}
 			Some((a, b)) => {
@@ -76,10 +75,12 @@ impl From<&str> for Url {
 		}
 		match path.split_once('#') {
 			None => {
-				url.path = percent_decode_str(path).decode_utf8_lossy().into_owned().into();
+				// FIXME: use `Loc::from(base, path)` instead
+				url.loc = Loc::new(percent_decode_str(path).decode_utf8_lossy().into_owned().into());
 			}
 			Some((a, b)) => {
-				url.path = percent_decode_str(a).decode_utf8_lossy().into_owned().into();
+				// FIXME: use `Loc::from(base, path)` instead
+				url.loc = Loc::new(percent_decode_str(a).decode_utf8_lossy().into_owned().into());
 				url.frag = b.to_string();
 			}
 		}
@@ -87,22 +88,30 @@ impl From<&str> for Url {
 	}
 }
 
+impl From<String> for Url {
+	fn from(path: String) -> Self { path.as_str().into() }
+}
+
+impl From<&String> for Url {
+	fn from(path: &String) -> Self { path.as_str().into() }
+}
+
 impl AsRef<Url> for Url {
 	fn as_ref(&self) -> &Url { self }
 }
 
 impl AsRef<Path> for Url {
-	fn as_ref(&self) -> &Path { &self.path }
+	fn as_ref(&self) -> &Path { &self.loc }
 }
 
 impl AsRef<OsStr> for Url {
-	fn as_ref(&self) -> &OsStr { self.path.as_os_str() }
+	fn as_ref(&self) -> &OsStr { self.loc.as_os_str() }
 }
 
 impl Display for Url {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
 		if matches!(self.scheme, UrlScheme::Regular | UrlScheme::SearchItem) {
-			return f.write_str(&self.path.to_string_lossy());
+			return f.write_str(&self.loc.to_string_lossy());
 		}
 
 		let scheme = match self.scheme {
@@ -110,7 +119,7 @@ impl Display for Url {
 			UrlScheme::Search => "search://",
 			UrlScheme::Archive => "archive://",
 		};
-		let path = percent_encode(self.path.as_os_str().as_encoded_bytes(), ENCODE_SET);
+		let path = percent_encode(self.loc.as_os_str().as_encoded_bytes(), ENCODE_SET);
 
 		write!(f, "{scheme}{path}")?;
 		if !self.frag.is_empty() {
@@ -128,48 +137,47 @@ impl From<&Url> for String {
 impl Url {
 	#[inline]
 	pub fn join(&self, path: impl AsRef<Path>) -> Self {
-		let url = Self::from(self.path.join(path));
 		match self.scheme {
-			UrlScheme::Regular => url,
-			UrlScheme::Search => url.into_search_item(),
-			UrlScheme::SearchItem => url,
-			UrlScheme::Archive => url.into_archive(),
+			UrlScheme::Regular => Self::from(self.loc.join(path)),
+			UrlScheme::Search => {
+				let loc = Loc::from(&self.loc, self.loc.join(path));
+				Self::from(loc).into_search_item()
+			}
+			UrlScheme::SearchItem => {
+				let loc = Loc::from(self.loc.base(), self.loc.join(path));
+				Self::from(loc).into_search_item()
+			}
+			UrlScheme::Archive => Self::from(self.loc.join(path)).into_archive(),
 		}
 	}
 
 	#[inline]
 	pub fn parent_url(&self) -> Option<Url> {
-		self.path.parent().map(|p| {
-			let url = Self::from(p);
-			match self.scheme {
-				UrlScheme::Regular => url,
-				UrlScheme::Search => url,
-				UrlScheme::SearchItem => url,
-				UrlScheme::Archive => url,
+		let p = self.loc.parent()?;
+		Some(match self.scheme {
+			UrlScheme::Regular | UrlScheme::Search => Self::from(p),
+			UrlScheme::SearchItem => {
+				if p == self.loc.base() {
+					Self::from(p).into_search("")
+				} else {
+					Self::from(p).into_search_item()
+				}
 			}
+			UrlScheme::Archive => Self::from(p),
 		})
 	}
 
 	#[inline]
-	pub fn pair(&self) -> Option<(Self, UrnBuf)> {
-		let urn = UrnBuf::_from(self.path.file_name()?);
-		Some((self.parent_url()?, urn))
-	}
+	pub fn pair(&self) -> Option<(Self, UrnBuf)> { Some((self.parent_url()?, self.loc.urn_owned())) }
+
+	#[cfg(unix)]
+	#[inline]
+	pub fn is_hidden(&self) -> bool { self.loc.urn().is_hidden() }
 
 	#[inline]
-	pub fn strip_prefix(&self, base: impl AsRef<Path>) -> Option<&Path> {
-		self.path.strip_prefix(base).ok()
-	}
-
-	#[inline]
-	pub fn into_os_string(self) -> OsString { self.path.into_os_string() }
-
-	#[inline]
-	pub fn to_loc(&self, cwd: &Url) -> Loc { self.clone().into_loc(cwd) }
-
-	#[inline]
-	pub fn into_loc(self, cwd: &Url) -> Loc {
-		if self.is_search_item() { Loc::from_search_item(cwd, self) } else { Loc::from(self) }
+	pub fn rebase(&self, parent: &Path) -> Self {
+		debug_assert!(self.is_regular());
+		self.loc.rebase(parent).into()
 	}
 }
 
@@ -180,7 +188,7 @@ impl Url {
 
 	#[inline]
 	pub fn to_regular(&self) -> Self {
-		Self { scheme: UrlScheme::Regular, path: self.path.clone(), frag: String::new() }
+		Self { loc: self.loc.clone(), scheme: UrlScheme::Regular, frag: String::new() }
 	}
 
 	#[inline]
@@ -196,7 +204,14 @@ impl Url {
 
 	#[inline]
 	pub fn to_search(&self, frag: &str) -> Self {
-		Self { scheme: UrlScheme::Search, path: self.path.clone(), frag: frag.to_owned() }
+		Self { loc: self.loc.clone(), scheme: UrlScheme::Search, frag: frag.to_owned() }
+	}
+
+	#[inline]
+	pub fn into_search(mut self, frag: &str) -> Self {
+		self.scheme = UrlScheme::Search;
+		self.frag = frag.to_owned();
+		self
 	}
 
 	#[inline]
@@ -214,7 +229,7 @@ impl Url {
 
 	#[inline]
 	pub fn to_archive(&self) -> Self {
-		Self { scheme: UrlScheme::Archive, path: self.path.clone(), frag: String::new() }
+		Self { loc: self.loc.clone(), scheme: UrlScheme::Archive, frag: String::new() }
 	}
 
 	#[inline]
@@ -224,16 +239,13 @@ impl Url {
 		self
 	}
 
+	// --- Path
+	#[inline]
+	pub fn into_path(self) -> PathBuf { self.loc.into_path() }
+
 	// --- Scheme
 	#[inline]
 	pub fn scheme(&self) -> UrlScheme { self.scheme }
-
-	// --- Path
-	#[inline]
-	pub fn set_path(&mut self, path: PathBuf) { self.path = path; }
-
-	#[inline]
-	pub fn into_path(self) -> PathBuf { self.path }
 
 	// --- Frag
 	#[inline]
