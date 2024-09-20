@@ -77,6 +77,9 @@ impl UserData for Paragraph {
 			};
 			Ok(ud)
 		});
+		methods.add_method("max_width", |_, me, ()| {
+			Ok(me.text.lines.iter().take(me.area.height as usize).map(|l| l.width()).max())
+		});
 	}
 }
 
