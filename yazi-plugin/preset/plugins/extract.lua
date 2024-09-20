@@ -48,13 +48,13 @@ function M:try_with(from, pwd, to)
 	end
 
 	local archive = require("archive")
-	local child, code = archive:spawn_7z { "x", "-aou", "-p" .. pwd, "-o" .. tostring(tmp), tostring(from) }
+	local child, code = archive.spawn_7z { "x", "-aou", "-p" .. pwd, "-o" .. tostring(tmp), tostring(from) }
 	if not child then
 		fail("Spawn `7z` and `7zz` both commands failed, error code %s", code)
 	end
 
 	local output, err = child:wait_with_output()
-	if output and output.status.code == 2 and archive:is_encrypted(output.stderr) then
+	if output and output.status.code == 2 and archive.is_encrypted(output.stderr) then
 		fs.remove("dir_clean", tmp)
 		return true -- Need to retry
 	end
@@ -77,7 +77,7 @@ function M:tidy(from, to, tmp)
 	end
 
 	local only = #outs == 1
-	if only and not outs[1].cha.is_dir and require("archive"):is_tar(outs[1].url) then
+	if only and not outs[1].cha.is_dir and require("archive").is_tar(outs[1].url) then
 		self:entry { tostring(outs[1].url), tostring(to) }
 		fs.remove("file", outs[1].url)
 		fs.remove("dir", tmp)

@@ -27,6 +27,22 @@ macro_rules! impl_style_method {
 }
 
 #[macro_export]
+macro_rules! impl_area_method {
+	($methods:ident) => {
+		use $crate::{bindings::Cast, elements::{Rect, RectRef}};
+
+		$methods.add_function("area", |lua, (ud, area): (mlua::AnyUserData, Option<RectRef>)| {
+			if let Some(r) = area {
+				ud.borrow_mut::<Self>()?.area = *r;
+				Ok(ud)
+			} else {
+				Rect::cast(lua, ud.borrow::<Self>()?.area)
+			}
+		});
+	};
+}
+
+#[macro_export]
 macro_rules! impl_style_shorthands {
 	($methods:ident, $($field:tt).+) => {
 		$methods.add_function("fg", |_, (ud, color): (mlua::AnyUserData, String)| {

@@ -25,6 +25,7 @@ impl Gauge {
 
 impl UserData for Gauge {
 	fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+		crate::impl_area_method!(methods);
 		crate::impl_style_method!(methods, style);
 
 		methods.add_function("percent", |_, (ud, percent): (AnyUserData, u8)| {

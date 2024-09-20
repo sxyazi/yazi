@@ -42,8 +42,13 @@ impl Bar {
 
 impl UserData for Bar {
 	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+		crate::impl_area_method!(methods);
 		crate::impl_style_method!(methods, style);
 
+		methods.add_function("direction", |_, (ud, symbol): (AnyUserData, u8)| {
+			ud.borrow_mut::<Self>()?.direction = Borders::from_bits_truncate(symbol);
+			Ok(ud)
+		});
 		methods.add_function("symbol", |_, (ud, symbol): (AnyUserData, String)| {
 			ud.borrow_mut::<Self>()?.symbol = symbol;
 			Ok(ud)

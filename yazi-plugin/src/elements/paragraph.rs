@@ -58,6 +58,7 @@ impl Paragraph {
 
 impl UserData for Paragraph {
 	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+		crate::impl_area_method!(methods);
 		crate::impl_style_method!(methods, style);
 		crate::impl_style_shorthands!(methods, style);
 

@@ -55,7 +55,11 @@ impl Renderable for Clear {
 	fn clone_render(&self, buf: &mut ratatui::buffer::Buffer) { Box::new(*self).render(buf); }
 }
 
-impl UserData for Clear {}
+impl UserData for Clear {
+	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+		crate::impl_area_method!(methods);
+	}
+}
 
 #[inline]
 const fn is_overlapping(a: &Rect, b: &Rect) -> bool {
