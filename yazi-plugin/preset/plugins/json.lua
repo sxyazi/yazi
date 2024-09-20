@@ -13,7 +13,7 @@ function M:peek()
 		:spawn()
 
 	if not child then
-		return self:fallback_to_builtin()
+		return require("code").peek(self)
 	end
 
 	local limit = self.area.h
@@ -21,7 +21,7 @@ function M:peek()
 	repeat
 		local next, event = child:read_line()
 		if event == 1 then
-			return self:fallback_to_builtin()
+			return require("code").peek(self)
 		elseif event ~= 0 then
 			break
 		end
@@ -48,17 +48,6 @@ function M:seek(units)
 		ya.manager_emit("peek", {
 			math.max(0, cx.active.preview.skip + step),
 			only_if = self.file.url,
-		})
-	end
-end
-
-function M:fallback_to_builtin()
-	local err, bound = ya.preview_code(self)
-	if bound then
-		ya.manager_emit("peek", { bound, only_if = self.file.url, upper_bound = true })
-	elseif err and not err:find("cancelled", 1, true) then
-		ya.preview_widgets(self, {
-			ui.Paragraph(self.area, { ui.Line(err):reverse() }),
 		})
 	end
 end
