@@ -22,7 +22,11 @@ impl List {
 	}
 }
 
-impl UserData for List {}
+impl UserData for List {
+	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+		crate::impl_area_method!(methods);
+	}
+}
 
 impl Renderable for List {
 	fn area(&self) -> ratatui::layout::Rect { self.area }

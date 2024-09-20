@@ -55,8 +55,13 @@ impl Border {
 
 impl UserData for Border {
 	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+		crate::impl_area_method!(methods);
 		crate::impl_style_method!(methods, style);
 
+		methods.add_function("position", |_, (ud, position): (AnyUserData, u8)| {
+			ud.borrow_mut::<Self>()?.position = ratatui::widgets::Borders::from_bits_truncate(position);
+			Ok(ud)
+		});
 		methods.add_function("type", |_, (ud, value): (AnyUserData, u8)| {
 			ud.borrow_mut::<Self>()?.type_ = match value {
 				ROUNDED => ratatui::widgets::BorderType::Rounded,

@@ -4,7 +4,7 @@ function M:peek()
 	local limit = self.area.h
 	local paths, sizes = {}, {}
 
-	local files, bound, code = self:list_files({ "-p", tostring(self.file.url) }, self.skip, limit)
+	local files, bound, code = self.list_files({ "-p", tostring(self.file.url) }, self.skip, limit)
 	if code ~= 0 then
 		return ya.preview_widgets(self, {
 			ui.Paragraph(self.area, {
@@ -53,7 +53,7 @@ function M:seek(units)
 	end
 end
 
-function M:spawn_7z(args)
+function M.spawn_7z(args)
 	local last_error = nil
 	local try = function(name)
 		local stdout = args[1] == "l" and Command.PIPED or Command.NULL
@@ -88,8 +88,8 @@ end
 ---  1: failed to spawn
 ---  2: wrong password
 ---  3: partial success
-function M:list_files(args, skip, limit)
-	local child = self:spawn_7z { "l", "-ba", "-slt", table.unpack(args) }
+function M.list_files(args, skip, limit)
+	local child = M.spawn_7z { "l", "-ba", "-slt", table.unpack(args) }
 	if not child then
 		return {}, 0, 1
 	end
@@ -98,7 +98,7 @@ function M:list_files(args, skip, limit)
 	local key, value = "", ""
 	repeat
 		local next, event = child:read_line()
-		if event == 1 and self:is_encrypted(next) then
+		if event == 1 and M.is_encrypted(next) then
 			code = 2
 			break
 		elseif event == 1 then
@@ -145,8 +145,8 @@ end
 ---  1: failed to spawn
 ---  2: wrong password
 ---  3: partial success
-function M:list_meta(args)
-	local child = self:spawn_7z { "l", "-slt", table.unpack(args) }
+function M.list_meta(args)
+	local child = M.spawn_7z { "l", "-slt", table.unpack(args) }
 	if not child then
 		return nil, 1
 	end
@@ -157,7 +157,7 @@ function M:list_meta(args)
 		i = i + 1
 
 		local next, event = child:read_line()
-		if event == 1 and self:is_encrypted(next) then
+		if event == 1 and M.is_encrypted(next) then
 			code = 2
 			break
 		elseif event == 1 then
@@ -178,8 +178,8 @@ function M:list_meta(args)
 	return typ ~= "" and typ or nil, code
 end
 
-function M:is_encrypted(s) return s:find(" Wrong password", 1, true) end
+function M.is_encrypted(s) return s:find(" Wrong password", 1, true) end
 
-function M:is_tar(url) return require("archive"):list_meta { "-p", tostring(url) } == "tar" end
+function M.is_tar(url) return M.list_meta { "-p", tostring(url) } == "tar" end
 
 return M
