@@ -85,7 +85,7 @@ Please replace e.g. `shell` with `shell --interactive`, `shell "my-template"` wi
 
 	// TODO: Remove in v0.3.6
 	if matches!(INPUT.create_title, popup::InputCreateTitle::One(_)) {
-		println!(
+		eprintln!(
 			r#"WARNING: The `create_title` under `[input]` now accepts an array instead of a string to support different titles for `create` and `create --dir` command.
 
 Please change `create_title = "Create:"` to `create_title = ["Create:", "Create (dir):"]` in your yazi.toml.
