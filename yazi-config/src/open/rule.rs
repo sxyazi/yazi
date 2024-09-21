@@ -1,6 +1,6 @@
 use std::fmt;
 
-use serde::{de::{self, Visitor}, Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, de::{self, Visitor}};
 
 use crate::pattern::Pattern;
 

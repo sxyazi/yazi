@@ -2,11 +2,11 @@ use std::time::Duration;
 
 use parking_lot::Mutex;
 use tokio::{pin, select, sync::mpsc};
-use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
+use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tokio_util::sync::CancellationToken;
-use yazi_shared::{fs::Url, RoCell};
+use yazi_shared::{RoCell, fs::Url};
 
-use crate::{body::BodyMoveItem, Pubsub};
+use crate::{Pubsub, body::BodyMoveItem};
 
 static CT: RoCell<CancellationToken> = RoCell::new();
 static MOVE_TX: Mutex<Option<mpsc::UnboundedSender<BodyMoveItem>>> = Mutex::new(None);

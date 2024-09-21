@@ -3,7 +3,7 @@ use std::process::Stdio;
 use mlua::{AnyUserData, ExternalError, IntoLuaMulti, Lua, Table, UserData, Value};
 use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
 
-use super::{output::Output, Child};
+use super::{Child, output::Output};
 use crate::process::Status;
 
 pub struct Command {

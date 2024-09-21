@@ -1,6 +1,6 @@
-use yazi_shared::{event::Cmd, CharKind};
+use yazi_shared::{CharKind, event::Cmd};
 
-use crate::input::{op::InputOp, Input};
+use crate::input::{Input, op::InputOp};
 
 pub struct Opt {
 	end_of_word: bool,

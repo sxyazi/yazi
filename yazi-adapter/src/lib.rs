@@ -20,7 +20,7 @@ use kitty::*;
 use kitty_old::*;
 use sixel::*;
 use ueberzug::*;
-use yazi_shared::{env_exists, in_wsl, RoCell};
+use yazi_shared::{RoCell, env_exists, in_wsl};
 
 pub use crate::image::*;
 

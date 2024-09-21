@@ -1,6 +1,6 @@
 use yazi_shared::{event::Cmd, render};
 
-use crate::input::{op::InputOp, Input, InputMode};
+use crate::input::{Input, InputMode, op::InputOp};
 
 impl Input {
 	#[inline]

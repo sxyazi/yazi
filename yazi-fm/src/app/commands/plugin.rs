@@ -4,8 +4,8 @@ use mlua::TableExt;
 use scopeguard::defer;
 use tracing::warn;
 use yazi_dds::Sendable;
-use yazi_plugin::{loader::LOADER, RtRef, LUA};
-use yazi_shared::{emit, event::Cmd, Layer};
+use yazi_plugin::{LUA, RtRef, loader::LOADER};
+use yazi_shared::{Layer, emit, event::Cmd};
 
 use crate::{app::App, lives::Lives};
 

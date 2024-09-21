@@ -1,5 +1,5 @@
 use ratatui::{buffer::Buffer, layout::Rect, text::{Line, Span}, widgets::Widget};
-use yazi_config::{keymap::Chord, THEME};
+use yazi_config::{THEME, keymap::Chord};
 
 pub(super) struct Cand<'a> {
 	cand:  &'a Chord,

@@ -1,5 +1,5 @@
 use yazi_proxy::CompletionProxy;
-use yazi_shared::{event::Cmd, render, InputError};
+use yazi_shared::{InputError, event::Cmd, render};
 
 use crate::input::Input;
 

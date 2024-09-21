@@ -4,7 +4,7 @@ use anyhow::Result;
 use parking_lot::RwLock;
 use tokio::{fs::{self, File, OpenOptions}, io::{AsyncBufReadExt, AsyncWriteExt, BufReader, BufWriter}};
 use yazi_boot::BOOT;
-use yazi_shared::{timestamp_us, RoCell};
+use yazi_shared::{RoCell, timestamp_us};
 
 use crate::CLIENTS;
 

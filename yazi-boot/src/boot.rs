@@ -1,7 +1,7 @@
 use std::{collections::HashSet, ffi::OsString, path::PathBuf};
 
 use serde::Serialize;
-use yazi_shared::{fs::{current_cwd, expand_path}, Xdg};
+use yazi_shared::{Xdg, fs::{current_cwd, expand_path}};
 
 #[derive(Debug, Default, Serialize)]
 pub struct Boot {

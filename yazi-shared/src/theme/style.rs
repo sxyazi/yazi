@@ -1,5 +1,5 @@
 use ratatui::style::Modifier;
-use serde::{ser::SerializeMap, Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Serialize, Serializer, ser::SerializeMap};
 
 use super::Color;
 

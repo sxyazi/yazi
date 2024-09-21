@@ -1,10 +1,10 @@
 use std::{borrow::Cow, io::Cursor, mem, path::{Path, PathBuf}, sync::atomic::{AtomicUsize, Ordering}};
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use ratatui::{layout::Rect, text::{Line, Span, Text}};
-use syntect::{dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}, LoadingError};
+use syntect::{LoadingError, dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
 use tokio::{fs::File, io::{AsyncBufReadExt, BufReader}, sync::OnceCell};
-use yazi_config::{preview::PreviewWrap, PREVIEW, THEME};
+use yazi_config::{PREVIEW, THEME, preview::PreviewWrap};
 use yazi_shared::PeekError;
 
 static INCR: AtomicUsize = AtomicUsize::new(0);

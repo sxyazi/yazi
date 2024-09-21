@@ -2,7 +2,7 @@ use std::{fs::File, io::BufReader, path::{Path, PathBuf}};
 
 use anyhow::Result;
 use exif::{In, Tag};
-use image::{codecs::{jpeg::JpegEncoder, png::PngEncoder}, imageops::{self, FilterType}, DynamicImage, ExtendedColorType, ImageEncoder, ImageError, Limits};
+use image::{DynamicImage, ExtendedColorType, ImageEncoder, ImageError, Limits, codecs::{jpeg::JpegEncoder, png::PngEncoder}, imageops::{self, FilterType}};
 use ratatui::layout::Rect;
 use yazi_config::{PREVIEW, TASKS};
 

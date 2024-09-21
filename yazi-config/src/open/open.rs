@@ -5,7 +5,7 @@ use serde::{Deserialize, Deserializer};
 use yazi_shared::MIME_DIR;
 
 use super::Opener;
-use crate::{open::OpenRule, Preset};
+use crate::{Preset, open::OpenRule};
 
 #[derive(Debug)]
 pub struct Open {

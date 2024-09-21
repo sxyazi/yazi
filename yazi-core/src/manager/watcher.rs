@@ -4,12 +4,12 @@ use anyhow::Result;
 use notify::{PollWatcher, RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
 use parking_lot::RwLock;
 use tokio::{fs, pin, sync::{mpsc::{self, UnboundedReceiver}, watch}};
-use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
+use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tracing::error;
 use yazi_fs::{Files, Folder};
 use yazi_plugin::isolate;
 use yazi_proxy::WATCHER;
-use yazi_shared::{fs::{realname_unchecked, Cha, File, FilesOp, Url}, RoCell};
+use yazi_shared::{RoCell, fs::{Cha, File, FilesOp, Url, realname_unchecked}};
 
 use super::Linked;
 

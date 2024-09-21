@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::{hash_map, HashMap}};
+use std::{borrow::Cow, collections::{HashMap, hash_map}};
 
 use mlua::{AnyUserData, IntoLua, IntoLuaMulti, Lua, MetaMethod, UserData, UserDataRefMut, Value};
 use serde::{Deserialize, Serialize};

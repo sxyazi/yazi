@@ -1,5 +1,5 @@
 use yazi_config::keymap::{ChordCow, Key};
-use yazi_shared::{emit, render, render_and, Layer};
+use yazi_shared::{Layer, emit, render, render_and};
 
 #[derive(Default)]
 pub struct Which {

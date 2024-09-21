@@ -4,9 +4,9 @@ use parking_lot::Mutex;
 use tokio::{task::JoinHandle, time::sleep};
 use yazi_adapter::Dimension;
 use yazi_scheduler::{Ongoing, Scheduler, TaskSummary};
-use yazi_shared::{emit, event::Cmd, Layer};
+use yazi_shared::{Layer, emit, event::Cmd};
 
-use super::{TasksProgress, TASKS_BORDER, TASKS_PADDING, TASKS_PERCENT};
+use super::{TASKS_BORDER, TASKS_PADDING, TASKS_PERCENT, TasksProgress};
 
 pub struct Tasks {
 	pub(super) scheduler: Arc<Scheduler>,

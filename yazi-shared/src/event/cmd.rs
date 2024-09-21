@@ -1,7 +1,7 @@
 use std::{any::Any, collections::HashMap, fmt::{self, Display}, mem, str::FromStr};
 
 use anyhow::bail;
-use serde::{de, Deserialize};
+use serde::{Deserialize, de};
 
 use super::Data;
 

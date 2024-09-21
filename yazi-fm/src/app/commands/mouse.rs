@@ -2,7 +2,7 @@ use crossterm::event::{MouseEvent, MouseEventKind};
 use mlua::{Table, TableExt};
 use tracing::error;
 use yazi_config::MANAGER;
-use yazi_plugin::{bindings::Cast, LUA};
+use yazi_plugin::{LUA, bindings::Cast};
 
 use crate::{app::App, lives::Lives};
 

@@ -1,8 +1,8 @@
 use std::{collections::{HashMap, HashSet}, mem, ops::Deref, sync::atomic::Ordering};
 
 use tokio::{fs::{self, DirEntry}, select, sync::mpsc::{self, UnboundedReceiver}};
-use yazi_config::{manager::SortBy, MANAGER};
-use yazi_shared::fs::{maybe_exists, Cha, File, FilesOp, Url, Urn, UrnBuf, FILES_TICKET};
+use yazi_config::{MANAGER, manager::SortBy};
+use yazi_shared::fs::{Cha, FILES_TICKET, File, FilesOp, Url, Urn, UrnBuf, maybe_exists};
 
 use super::{FilesSorter, Filter};
 

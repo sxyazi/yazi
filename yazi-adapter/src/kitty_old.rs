@@ -1,13 +1,13 @@
 use core::str;
-use std::{io::{stderr, LineWriter, Write}, path::Path};
+use std::{io::{LineWriter, Write, stderr}, path::Path};
 
 use anyhow::Result;
-use base64::{engine::general_purpose, Engine};
+use base64::{Engine, engine::general_purpose};
 use image::DynamicImage;
 use ratatui::layout::Rect;
 
 use super::image::Image;
-use crate::{adapter::Adapter, Emulator, CLOSE, ESCAPE, START};
+use crate::{CLOSE, ESCAPE, Emulator, START, adapter::Adapter};
 
 pub(super) struct KittyOld;
 

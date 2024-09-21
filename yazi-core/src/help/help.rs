@@ -1,8 +1,8 @@
 use crossterm::event::KeyCode;
 use unicode_width::UnicodeWidthStr;
 use yazi_adapter::Dimension;
-use yazi_config::{keymap::{Chord, Key}, KEYMAP};
-use yazi_shared::{render, render_and, Layer};
+use yazi_config::{KEYMAP, keymap::{Chord, Key}};
+use yazi_shared::{Layer, render, render_and};
 
 use super::HELP_MARGIN;
 use crate::input::Input;

@@ -1,15 +1,15 @@
 use std::collections::{HashMap, HashSet};
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use parking_lot::{Mutex, RwLock};
 use tokio::sync::mpsc;
 use tracing::error;
 use yazi_config::Priority;
 use yazi_plugin::isolate;
-use yazi_shared::fs::{calculate_size, FilesOp, Url};
+use yazi_shared::fs::{FilesOp, Url, calculate_size};
 
 use super::{PreworkOp, PreworkOpFetch, PreworkOpLoad, PreworkOpSize};
-use crate::{TaskOp, TaskProg, HIGH, NORMAL};
+use crate::{HIGH, NORMAL, TaskOp, TaskProg};
 
 pub struct Prework {
 	macro_: async_priority_channel::Sender<TaskOp, u8>,

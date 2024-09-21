@@ -1,4 +1,4 @@
-use yazi_config::{manager::SortBy, MANAGER};
+use yazi_config::{MANAGER, manager::SortBy};
 use yazi_fs::FilesSorter;
 
 #[derive(Clone, PartialEq)]

@@ -1,10 +1,10 @@
 use mlua::{Table, TableExt};
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 use tracing::error;
-use yazi_plugin::{bindings::Cast, elements::render_widgets, LUA};
+use yazi_plugin::{LUA, bindings::Cast, elements::render_widgets};
 
 use super::{completion, confirm, input, select, tasks, which};
-use crate::{components, help, Ctx};
+use crate::{Ctx, components, help};
 
 pub(super) struct Root<'a> {
 	cx: &'a Ctx,

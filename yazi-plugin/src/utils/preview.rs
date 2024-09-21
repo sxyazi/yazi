@@ -1,6 +1,6 @@
 use mlua::{AnyUserData, IntoLuaMulti, Lua, Table, Value};
-use yazi_config::{preview::PreviewWrap, PREVIEW};
-use yazi_shared::{emit, event::Cmd, Layer, PeekError};
+use yazi_config::{PREVIEW, preview::PreviewWrap};
+use yazi_shared::{Layer, PeekError, emit, event::Cmd};
 
 use super::Utils;
 use crate::{bindings::Window, cast_to_renderable, elements::{Paragraph, RectRef, Renderable, WRAP, WRAP_NO}, external::Highlighter, file::FileRef};

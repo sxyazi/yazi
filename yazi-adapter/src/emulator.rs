@@ -1,13 +1,13 @@
-use std::{env, io::{stderr, LineWriter}, time::Duration};
+use std::{env, io::{LineWriter, stderr}, time::Duration};
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use crossterm::{cursor::{RestorePosition, SavePosition}, execute, style::Print, terminal::{disable_raw_mode, enable_raw_mode}};
 use scopeguard::defer;
 use tokio::{io::{AsyncReadExt, BufReader}, time::timeout};
 use tracing::{error, warn};
 use yazi_shared::env_exists;
 
-use crate::{tcsi, Adapter, TMUX};
+use crate::{Adapter, TMUX, tcsi};
 
 #[derive(Clone, Debug)]
 pub enum Emulator {

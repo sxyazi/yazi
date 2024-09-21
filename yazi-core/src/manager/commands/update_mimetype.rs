@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use tracing::error;
 use yazi_shared::{event::Cmd, fs::Url, render};
 
-use crate::{manager::{Manager, LINKED}, tasks::Tasks};
+use crate::{manager::{LINKED, Manager}, tasks::Tasks};
 
 pub struct Opt {
 	updates: HashMap<String, String>,

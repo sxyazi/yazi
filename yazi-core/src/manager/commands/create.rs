@@ -4,7 +4,7 @@ use anyhow::Result;
 use tokio::fs;
 use yazi_config::popup::{ConfirmCfg, InputCfg};
 use yazi_proxy::{ConfirmProxy, InputProxy, TabProxy, WATCHER};
-use yazi_shared::{event::Cmd, fs::{maybe_exists, ok_or_not_found, realname, File, FilesOp, Url, UrnBuf}};
+use yazi_shared::{event::Cmd, fs::{File, FilesOp, Url, UrnBuf, maybe_exists, ok_or_not_found, realname}};
 
 use crate::manager::Manager;
 

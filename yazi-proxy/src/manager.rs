@@ -1,4 +1,4 @@
-use yazi_shared::{emit, event::Cmd, fs::Url, Layer};
+use yazi_shared::{Layer, emit, event::Cmd, fs::Url};
 
 use crate::options::OpenDoOpt;
 

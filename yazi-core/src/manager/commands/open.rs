@@ -2,11 +2,11 @@ use std::{borrow::Cow, ffi::OsString};
 
 use tracing::error;
 use yazi_boot::ARGS;
-use yazi_config::{popup::SelectCfg, OPEN};
+use yazi_config::{OPEN, popup::SelectCfg};
 use yazi_fs::Folder;
 use yazi_plugin::isolate;
-use yazi_proxy::{options::OpenDoOpt, ManagerProxy, TasksProxy};
-use yazi_shared::{emit, event::{Cmd, EventQuit}, fs::{File, Url}, MIME_DIR};
+use yazi_proxy::{ManagerProxy, TasksProxy, options::OpenDoOpt};
+use yazi_shared::{MIME_DIR, emit, event::{Cmd, EventQuit}, fs::{File, Url}};
 
 use crate::{manager::Manager, tasks::Tasks};
 

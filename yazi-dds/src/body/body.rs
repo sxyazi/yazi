@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use mlua::{ExternalResult, IntoLua, Lua, Value};
 use serde::Serialize;
 

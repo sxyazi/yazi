@@ -1,13 +1,13 @@
 use std::{collections::{HashMap, HashSet}, mem, str::FromStr};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use tokio::{io::AsyncWriteExt, select, sync::mpsc, task::JoinHandle, time};
 use tracing::error;
 use yazi_shared::RoCell;
 
-use crate::{body::{Body, BodyBye, BodyHi}, ClientReader, ClientWriter, Payload, Pubsub, Server, Stream};
+use crate::{ClientReader, ClientWriter, Payload, Pubsub, Server, Stream, body::{Body, BodyBye, BodyHi}};
 
 pub(super) static ID: RoCell<u64> = RoCell::new();
 pub(super) static PEERS: RoCell<RwLock<HashMap<u64, Peer>>> = RoCell::new();

@@ -1,9 +1,9 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use tokio::sync::mpsc;
 use yazi_plugin::isolate;
 
 use super::{PluginOp, PluginOpEntry};
-use crate::{TaskOp, TaskProg, HIGH};
+use crate::{HIGH, TaskOp, TaskProg};
 
 pub struct Plugin {
 	macro_: async_priority_channel::Sender<TaskOp, u8>,

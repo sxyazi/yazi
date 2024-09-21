@@ -1,13 +1,13 @@
 use std::{io::Write, path::Path};
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use color_quant::NeuQuant;
 use crossterm::{cursor::MoveTo, queue};
 use image::DynamicImage;
 use ratatui::layout::Rect;
 use yazi_config::PREVIEW;
 
-use crate::{adapter::Adapter, Emulator, Image, CLOSE, ESCAPE, START};
+use crate::{CLOSE, ESCAPE, Emulator, Image, START, adapter::Adapter};
 
 pub(super) struct Sixel;
 

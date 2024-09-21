@@ -3,9 +3,9 @@ use std::collections::{HashMap, HashSet};
 use mlua::Function;
 use parking_lot::RwLock;
 use yazi_boot::BOOT;
-use yazi_shared::{fs::Url, RoCell};
+use yazi_shared::{RoCell, fs::Url};
 
-use crate::{body::{Body, BodyBulk, BodyCd, BodyDelete, BodyHi, BodyHover, BodyMove, BodyMoveItem, BodyRename, BodyTab, BodyTrash, BodyYank}, Client, ID, PEERS};
+use crate::{Client, ID, PEERS, body::{Body, BodyBulk, BodyCd, BodyDelete, BodyHi, BodyHover, BodyMove, BodyMoveItem, BodyRename, BodyTab, BodyTrash, BodyYank}};
 
 pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function<'static>>>>> =
 	RoCell::new();

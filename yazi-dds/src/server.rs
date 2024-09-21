@@ -5,7 +5,7 @@ use parking_lot::RwLock;
 use tokio::{io::{AsyncBufReadExt, AsyncWriteExt, BufReader}, select, sync::mpsc::{self, UnboundedReceiver}, task::JoinHandle, time};
 use yazi_shared::RoCell;
 
-use crate::{body::{Body, BodyBye, BodyHey}, Client, ClientWriter, Payload, Peer, Stream, STATE};
+use crate::{Client, ClientWriter, Payload, Peer, STATE, Stream, body::{Body, BodyBye, BodyHey}};
 
 pub(super) static CLIENTS: RoCell<RwLock<HashMap<u64, Client>>> = RoCell::new();
 

@@ -3,7 +3,7 @@ use std::ffi::OsString;
 use yazi_boot::ARGS;
 use yazi_shared::event::EventQuit;
 
-use crate::{app::App, Term};
+use crate::{Term, app::App};
 
 impl App {
 	pub(crate) fn quit(&mut self, opt: EventQuit) -> ! {

@@ -1,6 +1,6 @@
 use yazi_config::PLUGIN;
 use yazi_plugin::isolate;
-use yazi_shared::{event::{Cmd, Data}, render, MIME_DIR};
+use yazi_shared::{MIME_DIR, event::{Cmd, Data}, render};
 
 use crate::manager::Manager;
 

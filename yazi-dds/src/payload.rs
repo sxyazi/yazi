@@ -1,10 +1,10 @@
 use std::{fmt::Display, io::Write, str::FromStr};
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use yazi_boot::BOOT;
-use yazi_shared::{emit, event::Cmd, Layer};
+use yazi_shared::{Layer, emit, event::Cmd};
 
-use crate::{body::Body, ID};
+use crate::{ID, body::Body};
 
 #[derive(Debug)]
 pub struct Payload<'a> {

@@ -1,7 +1,7 @@
 use std::{fmt, str::FromStr};
 
 use anyhow::Result;
-use serde::{de::{self, Visitor}, Deserializer};
+use serde::{Deserializer, de::{self, Visitor}};
 use yazi_shared::event::Cmd;
 
 use crate::keymap::Key;

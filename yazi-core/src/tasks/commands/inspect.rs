@@ -1,8 +1,8 @@
-use std::{io::{stderr, BufWriter, LineWriter, Write}, mem};
+use std::{io::{BufWriter, LineWriter, Write, stderr}, mem};
 
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use scopeguard::defer;
-use tokio::{io::{stdin, AsyncReadExt}, select, sync::mpsc, time};
+use tokio::{io::{AsyncReadExt, stdin}, select, sync::mpsc, time};
 use yazi_proxy::{AppProxy, HIDER};
 use yazi_shared::{event::Cmd, terminal_clear};
 

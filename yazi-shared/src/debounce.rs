@@ -1,7 +1,7 @@
 use std::{pin::Pin, task::{Context, Poll}, time::Duration};
 
 use futures::{FutureExt, Stream, StreamExt};
-use tokio::time::{sleep, Instant, Sleep};
+use tokio::time::{Instant, Sleep, sleep};
 
 pub struct Debounce<S>
 where

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use yazi_config::plugin::{FetcherProps, PreloaderProps};
-use yazi_shared::{fs::Url, Throttle};
+use yazi_shared::{Throttle, fs::Url};
 
 #[derive(Debug)]
 pub enum PreworkOp {

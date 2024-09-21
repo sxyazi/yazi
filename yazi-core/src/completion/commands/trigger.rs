@@ -1,7 +1,7 @@
 use std::{borrow::Cow, mem, path::{MAIN_SEPARATOR, MAIN_SEPARATOR_STR}};
 
 use tokio::fs;
-use yazi_shared::{emit, event::{Cmd, Data}, render, Layer};
+use yazi_shared::{Layer, emit, event::{Cmd, Data}, render};
 
 use crate::completion::Completion;
 

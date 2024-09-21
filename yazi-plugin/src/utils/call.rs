@@ -4,7 +4,7 @@ use mlua::{ExternalError, Lua, Table, TableExt, Value};
 use tracing::error;
 use yazi_config::LAYOUT;
 use yazi_dds::Sendable;
-use yazi_shared::{emit, event::{Cmd, Data}, render, Layer};
+use yazi_shared::{Layer, emit, event::{Cmd, Data}, render};
 
 use super::Utils;
 use crate::elements::RectRef;

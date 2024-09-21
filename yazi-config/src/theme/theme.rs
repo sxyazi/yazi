@@ -2,7 +2,7 @@ use std::{path::PathBuf, str::FromStr};
 
 use serde::{Deserialize, Serialize};
 use validator::Validate;
-use yazi_shared::{fs::expand_path, theme::Style, Xdg};
+use yazi_shared::{Xdg, fs::expand_path, theme::Style};
 
 use super::{Filetype, Flavor, Icons};
 

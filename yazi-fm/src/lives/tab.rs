@@ -3,7 +3,7 @@ use std::ops::Deref;
 use mlua::{AnyUserData, Lua, UserDataFields, UserDataMethods};
 use yazi_plugin::url::UrlRef;
 
-use super::{Config, Finder, Folder, Mode, Preview, Selected, SCOPE};
+use super::{Config, Finder, Folder, Mode, Preview, SCOPE, Selected};
 
 pub(super) struct Tab {
 	inner: *const yazi_core::tab::Tab,

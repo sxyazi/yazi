@@ -1,6 +1,6 @@
 use mlua::IntoLua;
 use tracing::error;
-use yazi_dds::{Payload, LOCAL, REMOTE};
+use yazi_dds::{LOCAL, Payload, REMOTE};
 use yazi_plugin::LUA;
 use yazi_shared::event::Cmd;
 

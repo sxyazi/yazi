@@ -1,11 +1,11 @@
 use std::time::Duration;
 
 use tokio::pin;
-use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
+use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
 use yazi_fs::FilterCase;
 use yazi_proxy::InputProxy;
-use yazi_shared::{emit, event::Cmd, render, Debounce, InputError, Layer};
+use yazi_shared::{Debounce, InputError, Layer, emit, event::Cmd, render};
 
 use crate::tab::{Finder, Tab};
 

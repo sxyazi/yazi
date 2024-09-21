@@ -1,5 +1,5 @@
 use mlua::{IntoLuaMulti, Lua, Table, Value};
-use yazi_adapter::{Image, ADAPTOR};
+use yazi_adapter::{ADAPTOR, Image};
 
 use super::Utils;
 use crate::{bindings::Cast, elements::{Rect, RectRef}, url::UrlRef};

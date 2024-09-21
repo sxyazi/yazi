@@ -2,7 +2,7 @@ use std::{any::Any, collections::HashMap};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{fs::Url, OrderedFloat};
+use crate::{OrderedFloat, fs::Url};
 
 // --- Data
 #[derive(Debug, Serialize, Deserialize)]

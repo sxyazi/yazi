@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use bitflags::bitflags;
 use crossterm::event::MouseEventKind;
 use serde::{Deserialize, Serialize};

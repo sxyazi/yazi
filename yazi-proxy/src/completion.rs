@@ -1,4 +1,4 @@
-use yazi_shared::{emit, event::Cmd, Layer};
+use yazi_shared::{Layer, emit, event::Cmd};
 
 pub struct CompletionProxy;
 

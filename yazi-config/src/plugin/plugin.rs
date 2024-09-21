@@ -3,7 +3,7 @@ use std::{collections::HashSet, path::Path, str::FromStr};
 use serde::Deserialize;
 
 use super::{Fetcher, Preloader, Previewer};
-use crate::{plugin::MAX_PREWORKERS, Preset};
+use crate::{Preset, plugin::MAX_PREWORKERS};
 
 #[derive(Deserialize)]
 pub struct Plugin {

@@ -2,7 +2,7 @@ use std::mem;
 
 use mlua::{AnyUserData, Table, TableExt};
 use tracing::error;
-use yazi_plugin::{cast_to_renderable, LUA};
+use yazi_plugin::{LUA, cast_to_renderable};
 
 pub(crate) struct Progress;
 

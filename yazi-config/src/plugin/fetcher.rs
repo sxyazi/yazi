@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use serde::Deserialize;
-use yazi_shared::{event::Cmd, Condition, MIME_DIR};
+use yazi_shared::{Condition, MIME_DIR, event::Cmd};
 
 use crate::{Pattern, Priority};
 

@@ -1,6 +1,6 @@
 use std::pin::Pin;
 
-use mlua::{prelude::LuaUserDataMethods, UserData};
+use mlua::{UserData, prelude::LuaUserDataMethods};
 use tokio::pin;
 use tokio_stream::StreamExt;
 use yazi_shared::InputError;

@@ -1,12 +1,12 @@
 use std::{path::{Path, PathBuf}, process::Stdio};
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use imagesize::ImageSize;
 use ratatui::layout::Rect;
 use tokio::{io::AsyncWriteExt, process::{Child, Command}, sync::mpsc::{self, UnboundedSender}};
 use tracing::{debug, warn};
 use yazi_config::PREVIEW;
-use yazi_shared::{env_exists, RoCell};
+use yazi_shared::{RoCell, env_exists};
 
 use crate::{Adapter, Dimension};
 

@@ -2,13 +2,13 @@ use core::str;
 use std::{io::Write, path::Path};
 
 use anyhow::Result;
-use base64::{engine::general_purpose, Engine};
+use base64::{Engine, engine::general_purpose};
 use crossterm::{cursor::MoveTo, queue};
 use image::DynamicImage;
 use ratatui::layout::Rect;
 
 use super::image::Image;
-use crate::{adapter::Adapter, Emulator, CLOSE, ESCAPE, START};
+use crate::{CLOSE, ESCAPE, Emulator, START, adapter::Adapter};
 
 static DIACRITICS: [char; 297] = [
 	'\u{0305}',

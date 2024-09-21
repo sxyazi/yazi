@@ -3,10 +3,10 @@ use tokio::{runtime::Handle, select};
 use tokio_util::sync::CancellationToken;
 use tracing::error;
 use yazi_config::LAYOUT;
-use yazi_shared::{emit, event::Cmd, Layer};
+use yazi_shared::{Layer, emit, event::Cmd};
 
 use super::slim_lua;
-use crate::{bindings::{Cast, Window}, elements::Rect, file::File, loader::LOADER, Opt, OptCallback, LUA};
+use crate::{LUA, Opt, OptCallback, bindings::{Cast, Window}, elements::Rect, file::File, loader::LOADER};
 
 pub fn peek(cmd: &Cmd, file: yazi_shared::fs::File, skip: usize) -> CancellationToken {
 	let ct = CancellationToken::new();

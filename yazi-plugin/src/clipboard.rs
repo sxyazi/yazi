@@ -54,7 +54,7 @@ impl Clipboard {
 
 	#[cfg(unix)]
 	pub async fn set(&self, s: impl AsRef<std::ffi::OsStr>) {
-		use std::{io::{stderr, BufWriter}, process::Stdio};
+		use std::{io::{BufWriter, stderr}, process::Stdio};
 
 		use crossterm::execute;
 		use tokio::{io::AsyncWriteExt, process::Command};
@@ -109,7 +109,7 @@ impl Clipboard {
 mod osc52 {
 	use std::ffi::OsStr;
 
-	use base64::{engine::general_purpose, Engine};
+	use base64::{Engine, engine::general_purpose};
 
 	#[derive(Debug)]
 	pub struct SetClipboard {

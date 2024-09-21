@@ -1,6 +1,6 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use tokio::fs;
-use yazi_shared::{fs::{maybe_exists, must_exists}, Xdg};
+use yazi_shared::{Xdg, fs::{maybe_exists, must_exists}};
 
 use super::Package;
 

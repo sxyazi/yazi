@@ -5,7 +5,7 @@ use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use yazi_config::{keymap::{Chord, Key}, popup::InputCfg};
 use yazi_proxy::{AppProxy, InputProxy};
-use yazi_shared::{emit, event::Cmd, Debounce, Layer};
+use yazi_shared::{Debounce, Layer, emit, event::Cmd};
 
 use super::Utils;
 use crate::bindings::{InputRx, Position};

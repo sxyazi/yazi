@@ -1,11 +1,11 @@
 use std::{mem, time::Duration};
 
 use tokio::{fs, pin};
-use tokio_stream::{wrappers::UnboundedReceiverStream, StreamExt};
+use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
 use yazi_dds::Pubsub;
 use yazi_proxy::{CompletionProxy, InputProxy, ManagerProxy, TabProxy};
-use yazi_shared::{event::{Cmd, Data}, fs::{expand_path, Url}, render, Debounce, InputError};
+use yazi_shared::{Debounce, InputError, event::{Cmd, Data}, fs::{Url, expand_path}, render};
 
 use crate::tab::Tab;
 

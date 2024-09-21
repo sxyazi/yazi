@@ -1,12 +1,12 @@
-use std::{borrow::Cow, collections::HashMap, ffi::{OsStr, OsString}, io::{stderr, BufWriter, Write}, path::PathBuf};
+use std::{borrow::Cow, collections::HashMap, ffi::{OsStr, OsString}, io::{BufWriter, Write, stderr}, path::PathBuf};
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use scopeguard::defer;
-use tokio::{fs::{self, OpenOptions}, io::{stdin, AsyncReadExt, AsyncWriteExt}};
+use tokio::{fs::{self, OpenOptions}, io::{AsyncReadExt, AsyncWriteExt, stdin}};
 use yazi_config::{OPEN, PREVIEW};
 use yazi_dds::Pubsub;
-use yazi_proxy::{AppProxy, TasksProxy, HIDER, WATCHER};
-use yazi_shared::{fs::{max_common_root, maybe_exists, paths_to_same_file, File, Url}, terminal_clear};
+use yazi_proxy::{AppProxy, HIDER, TasksProxy, WATCHER};
+use yazi_shared::{fs::{File, Url, max_common_root, maybe_exists, paths_to_same_file}, terminal_clear};
 
 use crate::manager::Manager;
 

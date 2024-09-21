@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
-use anyhow::{bail, Result};
-use clap::{command, Parser, Subcommand};
+use anyhow::{Result, bail};
+use clap::{Parser, Subcommand, command};
 
 #[derive(Parser)]
 #[command(name = "Ya", about, long_about = None)]

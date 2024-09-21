@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use anyhow::bail;
-use serde::{de, Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, de};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ConditionOp {

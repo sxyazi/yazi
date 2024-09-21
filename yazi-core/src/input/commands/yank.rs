@@ -1,6 +1,6 @@
 use yazi_shared::{event::Cmd, render};
 
-use crate::input::{op::InputOp, Input};
+use crate::input::{Input, op::InputOp};
 
 impl Input {
 	pub fn yank(&mut self, _: Cmd) {

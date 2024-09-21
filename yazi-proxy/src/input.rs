@@ -1,6 +1,6 @@
 use tokio::sync::mpsc;
 use yazi_config::popup::InputCfg;
-use yazi_shared::{emit, event::Cmd, InputError, Layer};
+use yazi_shared::{InputError, Layer, emit, event::Cmd};
 
 pub struct InputProxy;
 

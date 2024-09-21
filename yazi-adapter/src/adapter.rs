@@ -6,7 +6,7 @@ use tracing::warn;
 use yazi_shared::env_exists;
 
 use super::{Iip, Kitty, KittyOld};
-use crate::{Chafa, Emulator, Sixel, Ueberzug, SHOWN, TMUX, WSL};
+use crate::{Chafa, Emulator, SHOWN, Sixel, TMUX, Ueberzug, WSL};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Adapter {

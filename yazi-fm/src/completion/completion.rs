@@ -2,7 +2,7 @@ use std::path::MAIN_SEPARATOR;
 
 use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, List, ListItem, Widget}};
 use yazi_adapter::Dimension;
-use yazi_config::{popup::{Offset, Position}, THEME};
+use yazi_config::{THEME, popup::{Offset, Position}};
 
 use crate::Ctx;
 

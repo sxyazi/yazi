@@ -1,6 +1,6 @@
 use tokio::sync::oneshot;
 use yazi_config::popup::ConfirmCfg;
-use yazi_shared::{emit, event::Cmd, Layer};
+use yazi_shared::{Layer, emit, event::Cmd};
 
 pub struct ConfirmProxy;
 

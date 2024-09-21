@@ -1,5 +1,5 @@
 use tracing_appender::non_blocking::WorkerGuard;
-use tracing_subscriber::{fmt, prelude::__tracing_subscriber_SubscriberExt, Registry};
+use tracing_subscriber::{Registry, fmt, prelude::__tracing_subscriber_SubscriberExt};
 use yazi_shared::{RoCell, Xdg};
 
 static _GUARD: RoCell<WorkerGuard> = RoCell::new();

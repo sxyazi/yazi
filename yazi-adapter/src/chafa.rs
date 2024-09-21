@@ -1,7 +1,7 @@
 use std::{io::Write, path::Path, process::Stdio};
 
 use ansi_to_tui::IntoText;
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use crossterm::{cursor::MoveTo, queue};
 use ratatui::layout::Rect;
 use tokio::process::Command;

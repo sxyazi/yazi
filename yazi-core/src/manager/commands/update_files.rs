@@ -4,7 +4,7 @@ use yazi_fs::Folder;
 use yazi_proxy::ManagerProxy;
 use yazi_shared::{event::Cmd, fs::FilesOp, render};
 
-use crate::{manager::{Manager, LINKED}, tab::Tab, tasks::Tasks};
+use crate::{manager::{LINKED, Manager}, tab::Tab, tasks::Tasks};
 
 pub struct Opt {
 	op: FilesOp,

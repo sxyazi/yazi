@@ -1,4 +1,4 @@
-use std::{collections::{hash_map, HashMap}, ops::Deref};
+use std::{collections::{HashMap, hash_map}, ops::Deref};
 
 use mlua::{AnyUserData, IntoLuaMulti, Lua, MetaMethod, UserDataMethods, UserDataRefMut};
 use yazi_plugin::{bindings::Cast, url::Url};

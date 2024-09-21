@@ -1,7 +1,7 @@
-use std::{io::{stderr, BufWriter}, sync::atomic::Ordering};
+use std::{io::{BufWriter, stderr}, sync::atomic::Ordering};
 
 use crossterm::{execute, queue, terminal::{BeginSynchronizedUpdate, EndSynchronizedUpdate}};
-use ratatui::{backend::{Backend, CrosstermBackend}, buffer::Buffer, CompletedFrame};
+use ratatui::{CompletedFrame, backend::{Backend, CrosstermBackend}, buffer::Buffer};
 use scopeguard::defer;
 use yazi_plugin::elements::COLLISION;
 

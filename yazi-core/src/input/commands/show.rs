@@ -1,6 +1,6 @@
 use tokio::sync::mpsc;
 use yazi_config::popup::InputCfg;
-use yazi_shared::{event::Cmd, render, InputError};
+use yazi_shared::{InputError, event::Cmd, render};
 
 use crate::input::Input;
 

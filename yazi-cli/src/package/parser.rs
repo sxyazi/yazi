@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use tokio::fs;
 use toml_edit::{Array, DocumentMut, InlineTable, Item, Value};
 use yazi_shared::Xdg;

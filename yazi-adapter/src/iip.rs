@@ -1,14 +1,14 @@
 use std::{fmt::Write, io::Write as ioWrite, path::Path};
 
 use anyhow::Result;
-use base64::{engine::{general_purpose::STANDARD, Config}, Engine};
+use base64::{Engine, engine::{Config, general_purpose::STANDARD}};
 use crossterm::{cursor::MoveTo, queue};
-use image::{codecs::{jpeg::JpegEncoder, png::PngEncoder}, DynamicImage, ExtendedColorType, ImageEncoder};
+use image::{DynamicImage, ExtendedColorType, ImageEncoder, codecs::{jpeg::JpegEncoder, png::PngEncoder}};
 use ratatui::layout::Rect;
 use yazi_config::PREVIEW;
 
 use super::image::Image;
-use crate::{adapter::Adapter, Emulator, CLOSE, START};
+use crate::{CLOSE, Emulator, START, adapter::Adapter};
 
 pub(super) struct Iip;
 

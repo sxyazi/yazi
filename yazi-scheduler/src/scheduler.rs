@@ -1,16 +1,16 @@
 use std::{borrow::Cow, ffi::OsString, sync::Arc, time::Duration};
 
 use anyhow::Result;
-use futures::{future::BoxFuture, FutureExt};
+use futures::{FutureExt, future::BoxFuture};
 use parking_lot::Mutex;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
-use yazi_config::{open::Opener, plugin::{Fetcher, Preloader}, TASKS};
+use yazi_config::{TASKS, open::Opener, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
 use yazi_proxy::ManagerProxy;
-use yazi_shared::{event::Data, fs::{remove_dir_clean, unique_name, Url}, Throttle};
+use yazi_shared::{Throttle, event::Data, fs::{Url, remove_dir_clean, unique_name}};
 
 use super::{Ongoing, TaskProg, TaskStage};
-use crate::{file::{File, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, prework::{Prework, PreworkOpFetch, PreworkOpLoad, PreworkOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
+use crate::{HIGH, LOW, NORMAL, TaskKind, TaskOp, file::{File, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, prework::{Prework, PreworkOpFetch, PreworkOpLoad, PreworkOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}};
 
 pub struct Scheduler {
 	pub file:    Arc<File>,

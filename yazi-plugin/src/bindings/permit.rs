@@ -1,6 +1,6 @@
 use std::{mem, ops::Deref};
 
-use mlua::{prelude::LuaUserDataMethods, UserData};
+use mlua::{UserData, prelude::LuaUserDataMethods};
 use tokio::sync::SemaphorePermit;
 
 pub type PermitRef<'lua, F> = mlua::UserDataRef<'lua, Permit<F>>;

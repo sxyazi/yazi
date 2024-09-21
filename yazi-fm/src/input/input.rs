@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use ratatui::{buffer::Buffer, layout::Rect, text::Line, widgets::{Block, BorderType, Paragraph, Widget}};
 use syntect::easy::HighlightLines;
 use yazi_config::{PREVIEW, THEME};

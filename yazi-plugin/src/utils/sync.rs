@@ -1,10 +1,10 @@
 use mlua::{ExternalError, ExternalResult, Function, Lua, MultiValue, Table, Value};
 use tokio::sync::oneshot;
 use yazi_dds::Sendable;
-use yazi_shared::{emit, event::{Cmd, Data}, Layer};
+use yazi_shared::{Layer, emit, event::{Cmd, Data}};
 
 use super::Utils;
-use crate::{loader::LOADER, runtime::RtRef, OptCallback};
+use crate::{OptCallback, loader::LOADER, runtime::RtRef};
 
 impl Utils {
 	pub(super) fn sync(lua: &'static Lua, ya: &Table) -> mlua::Result<()> {

@@ -4,7 +4,7 @@ use anyhow::Result;
 use ratatui::layout::Rect;
 use tokio::task::JoinHandle;
 use yazi_adapter::Dimension;
-use yazi_config::{popup::{Origin, Position}, LAYOUT};
+use yazi_config::{LAYOUT, popup::{Origin, Position}};
 use yazi_fs::{Folder, FolderStage};
 use yazi_shared::{fs::Url, render};
 

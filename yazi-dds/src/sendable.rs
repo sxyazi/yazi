@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use mlua::{ExternalError, Lua, MultiValue, Table, Value};
-use yazi_shared::{event::{Data, DataKey}, OrderedFloat};
+use yazi_shared::{OrderedFloat, event::{Data, DataKey}};
 
 pub struct Sendable;
 

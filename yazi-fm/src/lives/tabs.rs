@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use mlua::{AnyUserData, Lua, MetaMethod, UserDataFields, UserDataMethods};
 
-use super::{Tab, SCOPE};
+use super::{SCOPE, Tab};
 
 pub(super) struct Tabs {
 	inner: *const yazi_core::manager::Tabs,

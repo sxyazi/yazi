@@ -1,6 +1,6 @@
 use std::{borrow::Cow, collections::{HashMap, HashSet, VecDeque}, ffi::{OsStr, OsString}, fs::Metadata, path::{Path, PathBuf}};
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
 
 #[inline]
@@ -44,7 +44,7 @@ async fn _paths_to_same_file(a: &Path, b: &Path) -> io::Result<bool> {
 async fn _paths_to_same_file(a: &Path, b: &Path) -> std::io::Result<bool> {
 	use std::os::windows::{ffi::OsStringExt, io::AsRawHandle};
 
-	use windows_sys::Win32::{Foundation::{HANDLE, MAX_PATH}, Storage::FileSystem::{GetFinalPathNameByHandleW, FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, VOLUME_NAME_DOS}};
+	use windows_sys::Win32::{Foundation::{HANDLE, MAX_PATH}, Storage::FileSystem::{FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, GetFinalPathNameByHandleW, VOLUME_NAME_DOS}};
 
 	async fn final_name(p: &Path) -> std::io::Result<PathBuf> {
 		let file = tokio::fs::OpenOptions::new()

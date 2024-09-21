@@ -1,6 +1,6 @@
 use anyhow::Result;
 use tokio::sync::oneshot::Sender;
-use yazi_config::{popup::Position, SELECT};
+use yazi_config::{SELECT, popup::Position};
 
 #[derive(Default)]
 pub struct Select {

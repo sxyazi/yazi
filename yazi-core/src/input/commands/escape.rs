@@ -1,7 +1,7 @@
 use yazi_proxy::CompletionProxy;
 use yazi_shared::{event::Cmd, render};
 
-use crate::input::{op::InputOp, Input, InputMode};
+use crate::input::{Input, InputMode, op::InputOp};
 
 pub struct Opt;
 

@@ -1,6 +1,6 @@
 use std::{ffi::OsStr, fmt::{Debug, Display, Formatter}, ops::Deref, path::{Path, PathBuf}};
 
-use percent_encoding::{percent_decode_str, percent_encode, AsciiSet, CONTROLS};
+use percent_encoding::{AsciiSet, CONTROLS, percent_decode_str, percent_encode};
 use serde::{Deserialize, Serialize};
 
 use super::{Loc, UrnBuf};

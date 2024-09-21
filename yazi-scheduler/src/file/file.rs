@@ -1,13 +1,13 @@
 use std::{borrow::Cow, collections::VecDeque, fs::Metadata, path::{Path, PathBuf}};
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use tokio::{fs, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::TASKS;
-use yazi_shared::fs::{calculate_size, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to, Url};
+use yazi_shared::fs::{Url, calculate_size, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to};
 
 use super::{FileOp, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpTrash};
-use crate::{TaskOp, TaskProg, LOW, NORMAL};
+use crate::{LOW, NORMAL, TaskOp, TaskProg};
 
 pub struct File {
 	macro_: async_priority_channel::Sender<TaskOp, u8>,
@@ -131,7 +131,7 @@ impl File {
 				tokio::task::spawn_blocking(move || {
 					#[cfg(target_os = "macos")]
 					{
-						use trash::{macos::{DeleteMethod, TrashContextExtMacos}, TrashContext};
+						use trash::{TrashContext, macos::{DeleteMethod, TrashContextExtMacos}};
 						let mut ctx = TrashContext::default();
 						ctx.set_delete_method(DeleteMethod::NsFileManager);
 						ctx.delete(&task.target)?;

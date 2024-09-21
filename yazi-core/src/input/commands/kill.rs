@@ -1,6 +1,6 @@
 use std::ops::RangeBounds;
 
-use yazi_shared::{event::Cmd, render, CharKind};
+use yazi_shared::{CharKind, event::Cmd, render};
 
 use crate::input::Input;
 
