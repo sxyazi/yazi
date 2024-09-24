@@ -7,6 +7,14 @@ use yazi_shared::event::Cmd;
 use super::Key;
 
 static RE: OnceLock<Regex> = OnceLock::new();
+static PLURAL_RE: OnceLock<Regex> = OnceLock::new();
+
+#[derive(Debug, Clone, Copy, Default)]
+pub enum Plurality {
+	Singular,
+	#[default]
+	Plural,
+}
 
 #[derive(Debug, Default, Deserialize)]
 pub struct Chord {
@@ -36,16 +44,30 @@ impl Chord {
 			.into_owned()
 	}
 
-	pub fn desc(&self) -> Option<Cow<str>> {
-		self.desc.as_ref().map(|s| RE.get_or_init(|| Regex::new(r"\s+").unwrap()).replace_all(s, " "))
+	pub fn desc(&self, p: Plurality) -> Option<Cow<str>> {
+		self.desc.as_ref().map(|s| {
+			let pluar_re = PLURAL_RE.get_or_init(|| Regex::new(r"\{([^{}]+)\}").unwrap());
+			let result = pluar_re.replace_all(s, |caps: &regex::Captures| {
+				let parts: Vec<&str> = caps[1].split('|').collect();
+				match p {
+					Plurality::Singular => parts.get(1).unwrap_or(&"").to_string(),
+					Plurality::Plural => parts[0].to_string(),
+				}
+			});
+			let whitespace_re = RE.get_or_init(|| Regex::new(r"\s+").unwrap());
+			match result {
+				Cow::Owned(result) => Cow::Owned(whitespace_re.replace_all(&result, "").into_owned()),
+				Cow::Borrowed(result) => whitespace_re.replace_all(result, " "),
+			}
+		})
 	}
 
-	pub fn desc_or_run(&self) -> Cow<str> { self.desc().unwrap_or_else(|| self.run().into()) }
+	pub fn desc_or_run(&self, p: Plurality) -> Cow<str> { self.desc(p).unwrap_or_else(|| self.run().into()) }
 
 	#[inline]
 	pub fn contains(&self, s: &str) -> bool {
 		let s = s.to_lowercase();
-		self.desc().map(|d| d.to_lowercase().contains(&s)) == Some(true)
+		self.desc(Plurality::default()).map(|d| d.to_lowercase().contains(&s)) == Some(true)
 			|| self.run().to_lowercase().contains(&s)
 			|| self.on().to_lowercase().contains(&s)
 	}

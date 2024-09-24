@@ -1,6 +1,6 @@
 use std::{borrow::Cow, mem};
 
-use yazi_config::{WHICH, keymap::ChordCow, which::SortBy};
+use yazi_config::{keymap::{ChordCow, Plurality}, which::SortBy, WHICH};
 use yazi_shared::{Transliterator, natsort};
 
 #[derive(Clone, Copy, PartialEq)]
@@ -35,7 +35,7 @@ impl WhichSorter {
 			entities.push(match self.by {
 				SortBy::None => unreachable!(),
 				SortBy::Key => Cow::Owned(ctrl.on()),
-				SortBy::Desc => ctrl.desc_or_run(),
+				SortBy::Desc => ctrl.desc_or_run(Plurality::Plural),
 			});
 		}
 

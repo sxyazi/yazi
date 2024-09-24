@@ -1,5 +1,5 @@
 use ratatui::{buffer::Buffer, layout::{self, Constraint, Rect}, widgets::{List, ListItem, Widget}};
-use yazi_config::THEME;
+use yazi_config::{keymap::Plurality, THEME};
 
 use crate::Ctx;
 
@@ -29,7 +29,7 @@ impl Widget for Bindings<'_> {
 		// Desc
 		let col3: Vec<_> = bindings
 			.iter()
-			.map(|c| ListItem::new(c.desc().unwrap_or("-".into())).style(THEME.help.desc))
+			.map(|c| ListItem::new(c.desc(Plurality::default()).unwrap_or("-".into())).style(THEME.help.desc))
 			.collect();
 
 		let chunks = layout::Layout::horizontal([

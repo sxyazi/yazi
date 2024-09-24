@@ -2,6 +2,7 @@
 
 use std::str::FromStr;
 
+use keymap::Plurality;
 use yazi_shared::{RoCell, Xdg};
 
 pub mod keymap;
@@ -68,7 +69,7 @@ pub fn init() -> anyhow::Result<()> {
 				continue;
 			}
 			if !r.bool("confirm") && !r.bool("interactive") {
-				let s = format!("`{}` ({})", c.on(), c.desc_or_run());
+				let s = format!("`{}` ({})", c.on(), c.desc_or_run(Plurality::default()));
 				eprintln!(
 					r#"WARNING: In Yazi v0.3, the behavior of the interactive `shell` (i.e., shell templates) must be explicitly specified with either `--interactive` or `--confirm`.
 

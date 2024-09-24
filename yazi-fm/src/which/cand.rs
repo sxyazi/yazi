@@ -1,5 +1,5 @@
 use ratatui::{buffer::Buffer, layout::Rect, text::{Line, Span}, widgets::Widget};
-use yazi_config::{THEME, keymap::Chord};
+use yazi_config::{keymap::{Chord, Plurality}, THEME};
 
 pub(super) struct Cand<'a> {
 	cand:  &'a Chord,
@@ -32,7 +32,7 @@ impl Widget for Cand<'_> {
 		spans.push(Span::styled(&THEME.which.separator, THEME.which.separator_style));
 
 		// Description
-		spans.push(Span::styled(self.cand.desc_or_run(), THEME.which.desc));
+		spans.push(Span::styled(self.cand.desc_or_run(Plurality::Plural), THEME.which.desc));
 
 		Line::from(spans).render(area, buf);
 	}
