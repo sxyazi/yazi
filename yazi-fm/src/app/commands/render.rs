@@ -4,14 +4,14 @@ use crossterm::{execute, queue, terminal::{BeginSynchronizedUpdate, EndSynchroni
 use ratatui::{CompletedFrame, backend::{Backend, CrosstermBackend}, buffer::Buffer};
 use scopeguard::defer;
 use yazi_plugin::elements::COLLISION;
+use yazi_shared::event::NEED_RENDER;
 
 use crate::{app::App, lives::Lives, root::Root};
 
 impl App {
 	pub(crate) fn render(&mut self) {
-		let Some(term) = &mut self.term else {
-			return;
-		};
+		NEED_RENDER.store(false, Ordering::Relaxed);
+		let Some(term) = &mut self.term else { return };
 
 		queue!(stderr(), BeginSynchronizedUpdate).ok();
 		defer! { execute!(stderr(), EndSynchronizedUpdate).ok(); }

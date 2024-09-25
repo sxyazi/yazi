@@ -18,7 +18,7 @@ impl TryFrom<Cmd> for Opt {
 impl Tab {
 	pub fn preview(&mut self, opt: impl TryInto<Opt>) {
 		let Some(hovered) = self.current.hovered().map(|h| &h.url) else {
-			return render!(self.preview.reset());
+			return self.preview.reset();
 		};
 
 		let Ok(opt) = opt.try_into() else {

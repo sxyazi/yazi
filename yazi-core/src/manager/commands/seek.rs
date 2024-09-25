@@ -16,7 +16,7 @@ impl From<Cmd> for Opt {
 impl Manager {
 	pub fn seek(&mut self, opt: impl Into<Opt>) {
 		let Some(hovered) = self.hovered() else {
-			return render!(self.active_mut().preview.reset());
+			return self.active_mut().preview.reset();
 		};
 
 		let mime = if hovered.is_dir() {
@@ -24,11 +24,11 @@ impl Manager {
 		} else if let Some(s) = self.mimetype.get(&hovered.url) {
 			s
 		} else {
-			return render!(self.active_mut().preview.reset());
+			return self.active_mut().preview.reset();
 		};
 
 		let Some(previewer) = PLUGIN.previewer(&hovered.url, mime) else {
-			return render!(self.active_mut().preview.reset());
+			return self.active_mut().preview.reset();
 		};
 
 		let opt = opt.into() as Opt;
