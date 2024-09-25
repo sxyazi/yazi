@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use mlua::{ExternalError, ExternalResult, HookTriggers, Table, TableExt};
 use tokio::{runtime::Handle, select};
 use tokio_util::sync::CancellationToken;
@@ -8,7 +10,12 @@ use yazi_shared::{Layer, emit, event::Cmd};
 use super::slim_lua;
 use crate::{LUA, Opt, OptCallback, bindings::{Cast, Window}, elements::Rect, file::File, loader::LOADER};
 
-pub fn peek(cmd: &Cmd, file: yazi_shared::fs::File, skip: usize) -> CancellationToken {
+pub fn peek(
+	cmd: &Cmd,
+	file: yazi_shared::fs::File,
+	mime: Cow<'static, str>,
+	skip: usize,
+) -> CancellationToken {
 	let ct = CancellationToken::new();
 
 	let name = cmd.name.to_owned();
@@ -31,6 +38,7 @@ pub fn peek(cmd: &Cmd, file: yazi_shared::fs::File, skip: usize) -> Cancellation
 				return Err("unloaded plugin".into_lua_err());
 			};
 			plugin.raw_set("file", File::cast(&lua, file)?)?;
+			plugin.raw_set("_mime", mime)?;
 			plugin.raw_set("skip", skip)?;
 			plugin.raw_set("area", Rect::cast(&lua, LAYOUT.load().preview)?)?;
 			plugin.raw_set("window", Window::default())?;
@@ -55,9 +63,10 @@ pub fn peek(cmd: &Cmd, file: yazi_shared::fs::File, skip: usize) -> Cancellation
 	ct
 }
 
-pub fn peek_sync(cmd: &Cmd, file: yazi_shared::fs::File, skip: usize) {
+pub fn peek_sync(cmd: &Cmd, file: yazi_shared::fs::File, mime: Cow<'static, str>, skip: usize) {
 	let cb: OptCallback = Box::new(move |_, plugin| {
 		plugin.raw_set("file", File::cast(&LUA, file)?)?;
+		plugin.raw_set("_mime", mime)?;
 		plugin.raw_set("skip", skip)?;
 		plugin.raw_set("area", Rect::cast(&LUA, LAYOUT.load().preview)?)?;
 		plugin.raw_set("window", Window::default())?;

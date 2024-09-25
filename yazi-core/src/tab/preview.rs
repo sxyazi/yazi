@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{borrow::Cow, ops::Not, time::Duration};
 
 use tokio::{pin, task::JoinHandle};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
@@ -19,32 +19,31 @@ pub struct Preview {
 }
 
 impl Preview {
-	pub fn go(&mut self, file: File, mime: &str, force: bool) {
-		if !force && self.content_unchanged(&file.url, file.cha) {
+	pub fn go(&mut self, file: File, mime: Cow<'static, str>, force: bool) {
+		if mime.is_empty() {
+			return; // Wait till mimetype is resolved to avoid flickering
+		} else if !force && self.same_lock(&file, &mime) {
 			return;
 		}
 
-		let Some(previewer) = PLUGIN.previewer(&file.url, mime) else {
+		let Some(previewer) = PLUGIN.previewer(&file.url, &mime) else {
 			self.reset();
 			return;
 		};
 
 		self.abort();
 		if previewer.sync {
-			isolate::peek_sync(&previewer.run, file, self.skip);
+			isolate::peek_sync(&previewer.run, file, mime, self.skip);
 		} else {
-			self.previewer_ct = Some(isolate::peek(&previewer.run, file, self.skip));
+			self.previewer_ct = Some(isolate::peek(&previewer.run, file, mime, self.skip));
 		}
 	}
 
 	pub fn go_folder(&mut self, file: File, dir: Option<Cha>, force: bool) {
-		let (cha, cwd) = (file.cha, file.url_owned());
-		self.go(file, MIME_DIR, force);
+		let cwd = self.same_file(&file, MIME_DIR).not().then(|| file.url_owned());
+		self.go(file, Cow::Borrowed(MIME_DIR), force);
 
-		if self.content_unchanged(&cwd, cha) {
-			return;
-		}
-
+		let Some(cwd) = cwd else { return };
 		self.folder_loader.take().map(|h| h.abort());
 		self.folder_loader = Some(tokio::spawn(async move {
 			let Some(new) = Files::assert_stale(&cwd, dir.unwrap_or(Cha::dummy())).await else {
@@ -84,15 +83,16 @@ impl Preview {
 	}
 
 	#[inline]
-	pub fn same_url(&self, url: &Url) -> bool {
-		matches!(self.lock, Some(ref lock) if lock.url == *url)
+	pub fn same_url(&self, url: &Url) -> bool { self.lock.as_ref().is_some_and(|l| *url == l.url) }
+
+	#[inline]
+	pub fn same_file(&self, file: &File, mime: &str) -> bool {
+		self.same_url(&file.url)
+			&& self.lock.as_ref().is_some_and(|l| file.cha.hits(l.cha) && mime == l.mime)
 	}
 
 	#[inline]
-	fn content_unchanged(&self, url: &Url, cha: Cha) -> bool {
-		match &self.lock {
-			Some(l) => *url == l.url && self.skip == l.skip && cha.hits(l.cha),
-			None => false,
-		}
+	pub fn same_lock(&self, file: &File, mime: &str) -> bool {
+		self.same_file(file, mime) && self.lock.as_ref().is_some_and(|l| self.skip == l.skip)
 	}
 }

@@ -6,8 +6,9 @@ use super::Utils;
 use crate::{bindings::Window, cast_to_renderable, elements::{Paragraph, RectRef, Renderable, WRAP, WRAP_NO}, external::Highlighter, file::FileRef};
 
 pub struct PreviewLock {
-	pub url: yazi_shared::fs::Url,
-	pub cha: yazi_shared::fs::Cha,
+	pub url:  yazi_shared::fs::Url,
+	pub cha:  yazi_shared::fs::Cha,
+	pub mime: String,
 
 	pub skip:   usize,
 	pub window: Window,
@@ -18,10 +19,12 @@ impl<'a> TryFrom<Table<'a>> for PreviewLock {
 	type Error = mlua::Error;
 
 	fn try_from(t: Table) -> Result<Self, Self::Error> {
-		let file: FileRef = t.raw_get("file")?;
+		let file: FileRef = t.raw_get("file")?; // TODO: use `_file` instead of `file`
 		Ok(Self {
-			cha:    file.cha,
-			url:    file.url_owned(),
+			url:  file.url_owned(),
+			cha:  file.cha,
+			mime: t.raw_get("_mime")?,
+
 			skip:   t.raw_get("skip")?,
 			window: t.raw_get("window")?,
 			data:   Default::default(),

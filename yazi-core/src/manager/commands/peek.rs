@@ -30,9 +30,13 @@ impl Manager {
 			return render!(self.active_mut().preview.reset());
 		};
 
+		let mime = self.mimetype.get_owned(&hovered.url).unwrap_or_default();
 		let folder = self.active().hovered_folder().map(|f| (f.offset, f.cha));
+
 		if !self.active().preview.same_url(&hovered.url) {
 			self.active_mut().preview.skip = folder.map(|f| f.0).unwrap_or_default();
+		}
+		if !self.active().preview.same_file(&hovered, &mime) {
 			render!(self.active_mut().preview.reset());
 		}
 
@@ -52,13 +56,8 @@ impl Manager {
 
 		if hovered.is_dir() {
 			self.active_mut().preview.go_folder(hovered, folder.map(|f| f.1), opt.force);
-			return;
-		}
-
-		let mime = self.mimetype.get_owned(&hovered.url).unwrap_or_default();
-		if !mime.is_empty() {
-			// Wait till mimetype is resolved to avoid flickering
-			self.active_mut().preview.go(hovered, &mime, opt.force);
+		} else {
+			self.active_mut().preview.go(hovered, mime.into(), opt.force);
 		}
 	}
 }

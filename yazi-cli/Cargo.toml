@@ -23,8 +23,6 @@ tokio      = { workspace = true }
 toml_edit  = "0.22.21"
 
 [build-dependencies]
-yazi-shared = { path = "../yazi-shared", version = "0.3.3" }
-
 # External build dependencies
 anyhow                = { workspace = true }
 clap                  = { workspace = true }

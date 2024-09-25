@@ -40,7 +40,7 @@ static SHOWN: RoCell<arc_swap::ArcSwapOption<ratatui::layout::Rect>> = RoCell::n
 
 pub fn init() {
 	// Tmux support
-	TMUX.init(env_exists("TMUX") && env_exists("TMUX_PANE"));
+	TMUX.init(env_exists("TMUX_PANE") && env_exists("TMUX"));
 	ESCAPE.init(if *TMUX { "\x1b\x1b" } else { "\x1b" });
 	START.init(if *TMUX { "\x1bPtmux;\x1b\x1b" } else { "\x1b" });
 	CLOSE.init(if *TMUX { "\x1b\\" } else { "" });
