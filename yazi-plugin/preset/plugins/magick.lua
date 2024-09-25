@@ -23,6 +23,7 @@ function M:preload()
 		"-density",
 		"200",
 		tostring(self.file.url),
+		"-flatten",
 		"-resize",
 		string.format("%dx%d^", PREVIEW.max_width, PREVIEW.max_height),
 		"-quality",
