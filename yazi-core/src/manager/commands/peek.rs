@@ -27,7 +27,7 @@ impl From<bool> for Opt {
 impl Manager {
 	pub fn peek(&mut self, opt: impl Into<Opt>) {
 		let Some(hovered) = self.hovered().cloned() else {
-			return render!(self.active_mut().preview.reset());
+			return self.active_mut().preview.reset();
 		};
 
 		let mime = self.mimetype.get_owned(&hovered.url).unwrap_or_default();
@@ -37,7 +37,7 @@ impl Manager {
 			self.active_mut().preview.skip = folder.map(|f| f.0).unwrap_or_default();
 		}
 		if !self.active().preview.same_file(&hovered, &mime) {
-			render!(self.active_mut().preview.reset());
+			self.active_mut().preview.reset();
 		}
 
 		let opt = opt.into() as Opt;

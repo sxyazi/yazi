@@ -7,7 +7,7 @@ use yazi_adapter::ADAPTOR;
 use yazi_config::PLUGIN;
 use yazi_fs::Files;
 use yazi_plugin::{external::Highlighter, isolate, utils::PreviewLock};
-use yazi_shared::{MIME_DIR, fs::{Cha, File, FilesOp, Url}};
+use yazi_shared::{MIME_DIR, fs::{Cha, File, FilesOp, Url}, render};
 
 #[derive(Default)]
 pub struct Preview {
@@ -27,8 +27,7 @@ impl Preview {
 		}
 
 		let Some(previewer) = PLUGIN.previewer(&file.url, &mime) else {
-			self.reset();
-			return;
+			return self.reset();
 		};
 
 		self.abort();
@@ -70,10 +69,10 @@ impl Preview {
 	}
 
 	#[inline]
-	pub fn reset(&mut self) -> bool {
+	pub fn reset(&mut self) {
 		self.abort();
 		ADAPTOR.image_hide().ok();
-		self.lock.take().is_some()
+		render!(self.lock.take().is_some())
 	}
 
 	#[inline]
