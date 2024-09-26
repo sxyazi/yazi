@@ -1,3 +1,4 @@
+use crossterm::event::KeyCode;
 use yazi_config::{KEYMAP, keymap::{Chord, Key}};
 use yazi_shared::{Layer, emit};
 
@@ -50,6 +51,13 @@ impl<'a> Router<'a> {
 			}
 
 			if on.len() > 1 {
+				//for `copy` hotkeys starting with 'c', we need to escape visual mode first so that the `Which` UI can check how many files
+				// are selected to decide using plural or singular on command names.
+				if key.code == KeyCode::Char('c') {
+					if !self.app.cx.manager.active_mut().try_escape_visual() {
+						return false;
+					}
+				}
 				self.app.cx.which.show_with(key, layer);
 			} else {
 				emit!(Seq(ctrl.to_seq(), layer));

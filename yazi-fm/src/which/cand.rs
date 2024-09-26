@@ -4,10 +4,11 @@ use yazi_config::{keymap::{Chord, Plurality}, THEME};
 pub(super) struct Cand<'a> {
 	cand:  &'a Chord,
 	times: usize,
+	selected: usize,
 }
 
 impl<'a> Cand<'a> {
-	pub(super) fn new(cand: &'a Chord, times: usize) -> Self { Self { times, cand } }
+	pub(super) fn new(cand: &'a Chord, times: usize, selected: usize) -> Self { Self { times, cand, selected } }
 
 	fn keys(&self) -> Vec<String> {
 		self.cand.on[self.times..].iter().map(ToString::to_string).collect()
@@ -32,7 +33,7 @@ impl Widget for Cand<'_> {
 		spans.push(Span::styled(&THEME.which.separator, THEME.which.separator_style));
 
 		// Description
-		spans.push(Span::styled(self.cand.desc_or_run(Plurality::Plural), THEME.which.desc));
+		spans.push(Span::styled(self.cand.desc_or_run(if self.selected > 1 { Plurality::Plural } else { Plurality::Singular }), THEME.which.desc));
 
 		Line::from(spans).render(area, buf);
 	}

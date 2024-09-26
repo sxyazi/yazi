@@ -56,7 +56,7 @@ impl Chord {
 			});
 			let whitespace_re = RE.get_or_init(|| Regex::new(r"\s+").unwrap());
 			match result {
-				Cow::Owned(result) => Cow::Owned(whitespace_re.replace_all(&result, "").into_owned()),
+				Cow::Owned(result) => Cow::Owned(whitespace_re.replace_all(&result, " ").into_owned()),
 				Cow::Borrowed(result) => whitespace_re.replace_all(result, " "),
 			}
 		})

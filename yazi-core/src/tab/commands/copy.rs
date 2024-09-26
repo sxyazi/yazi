@@ -16,10 +16,6 @@ impl From<Cmd> for Opt {
 impl Tab {
 	pub fn copy(&mut self, opt: impl Into<Opt>) {
 		let opt = opt.into() as Opt;
-		if !self.try_escape_visual() {
-			return;
-		}
-
 		let mut s = OsString::new();
 		let mut it = self.selected_or_hovered(true).peekable();
 		while let Some(u) = it.next() {

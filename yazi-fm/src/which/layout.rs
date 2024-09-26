@@ -48,14 +48,13 @@ impl Widget for Which<'_> {
 
 		yazi_plugin::elements::Clear::default().render(area, buf);
 		Block::new().style(THEME.which.mask).render(area, buf);
-
+		let selected = self.cx.manager.selected_or_hovered(false).count();
 		for y in 0..area.height {
 			for (x, chunk) in chunks.iter().enumerate() {
 				let Some(cand) = which.cands.get(y as usize * cols + x) else {
 					break;
 				};
-
-				Cand::new(cand, which.times).render(Rect { y: chunk.y + y + 1, height: 1, ..*chunk }, buf);
+				Cand::new(cand, which.times, selected).render(Rect { y: chunk.y + y + 1, height: 1, ..*chunk }, buf);
 			}
 		}
 	}
