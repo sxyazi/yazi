@@ -101,7 +101,4 @@ impl File {
 
 	#[inline]
 	pub fn stem(&self) -> Option<&OsStr> { self.url.file_stem() }
-
-	#[inline]
-	pub fn parent(&self) -> Option<Url> { self.url.parent_url() }
 }

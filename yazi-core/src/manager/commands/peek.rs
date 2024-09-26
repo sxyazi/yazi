@@ -1,4 +1,4 @@
-use yazi_shared::{event::{Cmd, Data}, fs::Url, render};
+use yazi_shared::{event::{Cmd, Data}, fs::Url};
 
 use crate::manager::Manager;
 
