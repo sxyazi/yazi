@@ -263,6 +263,7 @@ keymap = [
 ]
 
 [confirm]
+
 keymap = [
 	{ on = "<Esc>",   run = "close",          desc = "Cancel the confirm" },
 	{ on = "<C-[>",   run = "close",          desc = "Cancel the confirm" },
