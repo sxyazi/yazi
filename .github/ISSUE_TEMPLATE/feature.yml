@@ -43,7 +43,7 @@ body:
       label: Validations
       description: Before submitting the issue, please make sure you have completed the following
       options:
-      - label: I have searched the existing issues
-        required: true
-      - label: The latest nightly build of Yazi doesn't already have this feature
-        required: true
+        - label: I have searched the existing issues/discussions
+          required: true
+        - label: The latest nightly build of Yazi doesn't already have this feature
+          required: true
