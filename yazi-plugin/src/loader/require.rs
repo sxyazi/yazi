@@ -42,17 +42,25 @@ impl Require {
 
 	fn create_mt<'a>(lua: &'a Lua, id: &str, mod_: Table<'a>, sync: bool) -> mlua::Result<Table<'a>> {
 		let id: Arc<str> = Arc::from(id);
-		let mt = lua.create_table_from([(
-			"__index",
-			lua.create_function(move |lua, (ts, key): (Table, mlua::String)| {
-				match ts.raw_get::<_, Table>("__mod")?.raw_get::<_, Value>(&key)? {
-					Value::Function(_) => {
-						Self::create_wrapper(lua, id.clone(), key.to_str()?, sync)?.into_lua(lua)
+		let mt = lua.create_table_from([
+			(
+				"__index",
+				lua.create_function(move |lua, (ts, key): (Table, mlua::String)| {
+					match ts.raw_get::<_, Table>("__mod")?.raw_get::<_, Value>(&key)? {
+						Value::Function(_) => {
+							Self::create_wrapper(lua, id.clone(), key.to_str()?, sync)?.into_lua(lua)
+						}
+						v => Ok(v),
 					}
-					v => Ok(v),
-				}
-			})?,
-		)])?;
+				})?,
+			),
+			(
+				"__newindex",
+				lua.create_function(move |_, (ts, key, value): (Table, mlua::String, Value)| {
+					ts.raw_get::<_, Table>("__mod")?.raw_set(key, value)
+				})?,
+			),
+		])?;
 
 		let ts = lua.create_table_from([("__mod", mod_)])?;
 		ts.set_metatable(Some(mt));
