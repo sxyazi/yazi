@@ -174,10 +174,9 @@ impl Files {
 
 		macro_rules! go {
 			($dist:expr, $src:expr, $inc:literal) => {
-				let mut todo: HashMap<_, _> = $src.into_iter().map(|f| (f.url_owned(), f)).collect();
+				let mut todo: HashMap<_, _> = $src.into_iter().map(|f| (f.urn_owned(), f)).collect();
 				for f in &$dist {
-					// TODO: use urn instead
-					if todo.remove(&f.url).is_some() && todo.is_empty() {
+					if todo.remove(f.urn()).is_some() && todo.is_empty() {
 						break;
 					}
 				}
@@ -265,9 +264,10 @@ impl Files {
 				let mut b = true;
 				for i in 0..$dist.len() {
 					if let Some(f) = $src.remove($dist[i].urn()) {
-						b &= $dist[i].cha.hits(f.cha);
-						$dist[i] = f;
+						b = b && $dist[i].cha.hits(f.cha);
+						b = b && $dist[i].urn() == f.urn();
 
+						$dist[i] = f;
 						if $src.is_empty() {
 							break;
 						}
