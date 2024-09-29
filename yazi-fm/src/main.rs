@@ -38,7 +38,7 @@ use term::*;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
 	Panic::install();
-	Logs::start();
+	Logs::start()?;
 
 	_ = fdlimit::raise_fd_limit();
 

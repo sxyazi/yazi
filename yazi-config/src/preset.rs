@@ -1,6 +1,6 @@
 use std::{borrow::Cow, path::{Path, PathBuf}};
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result};
 use toml::{Table, Value};
 
 use crate::{preset, theme::Flavor};
@@ -26,7 +26,7 @@ impl Preset {
 
 		let p = p.join(format!("flavors/{use_}.yazi/flavor.toml"));
 		let flavor =
-			std::fs::read_to_string(&p).with_context(|| anyhow!("Failed to load flavor {p:?}"))?;
+			std::fs::read_to_string(&p).with_context(|| format!("failed to load flavor {p:?}"))?;
 
 		Self::merge_str(&user, &Self::merge_str(&flavor, &preset!("theme"))?)
 	}
@@ -54,7 +54,7 @@ impl Preset {
 			return Ok(base);
 		}
 
-		Self::merge_str(&s, &base).with_context(|| anyhow!("Loading {user:?}"))
+		Self::merge_str(&s, &base).with_context(|| format!("failed to parse config: {user:?}"))
 	}
 
 	fn merge(a: &mut Table, b: Table, max: u8) {
