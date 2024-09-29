@@ -5,7 +5,7 @@ use ratatui::{layout::Rect, text::{Line, Span, Text}};
 use syntect::{LoadingError, dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
 use tokio::{fs::File, io::{AsyncBufReadExt, BufReader}, sync::OnceCell};
 use yazi_config::{PREVIEW, THEME, preview::PreviewWrap};
-use yazi_shared::PeekError;
+use yazi_shared::{PeekError, replace_to_printable};
 
 static INCR: AtomicUsize = AtomicUsize::new(0);
 static SYNTECT: OnceCell<(Theme, SyntaxSet)> = OnceCell::const_new();
@@ -58,7 +58,7 @@ impl Highlighter {
 				return Err("Binary file".into());
 			}
 
-			if !plain && (buf.len() > 5000 || buf.contains(&0x1b)) {
+			if !plain && (buf.len() > 5000 || Self::contains_control_chars(&buf)) {
 				plain = true;
 				drop(mem::take(&mut before));
 			}
@@ -93,7 +93,7 @@ impl Highlighter {
 		}
 
 		Ok(if plain {
-			Text::from(after.join("").replace('\x1b', "^[").replace('\t', &PREVIEW.indent()))
+			Text::from(replace_to_printable(&after.join(""), PREVIEW.tab_size))
 		} else {
 			Self::highlight_with(before, after, syntax.unwrap()).await?
 		})
@@ -186,9 +186,14 @@ impl Highlighter {
 	}
 
 	#[inline(always)]
-	fn carriage_return_to_line_feed(c: &mut u8) {
-		if *c == b'\r' {
-			*c = b'\n';
+	fn contains_control_chars(buf: &[u8]) -> bool {
+		buf.iter().any(|&b| b.is_ascii_control() && !matches!(b, b'\t' | b'\n' | b'\r'))
+	}
+
+	#[inline(always)]
+	fn carriage_return_to_line_feed(b: &mut u8) {
+		if *b == b'\r' {
+			*b = b'\n';
 		}
 	}
 }
