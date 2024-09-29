@@ -1,6 +1,6 @@
-use std::{env, io::{LineWriter, stderr}, time::Duration};
+use std::{io::{LineWriter, stderr}, time::Duration};
 
-use anyhow::{Result, anyhow, bail};
+use anyhow::{Result, bail};
 use crossterm::{cursor::{RestorePosition, SavePosition}, execute, style::Print, terminal::{disable_raw_mode, enable_raw_mode}};
 use scopeguard::defer;
 use tokio::{io::{AsyncReadExt, BufReader}, time::timeout};
@@ -103,21 +103,20 @@ impl Emulator {
 	}
 
 	pub fn via_env() -> (String, String) {
-		fn tmux_env(name: &str) -> Result<String> {
-			let output = std::process::Command::new("tmux").args(["show-environment", name]).output()?;
-
-			String::from_utf8(output.stdout)?
-				.trim()
-				.strip_prefix(&format!("{name}="))
-				.map_or_else(|| Err(anyhow!("")), |s| Ok(s.to_string()))
+		fn tmux_env(name: &str) -> Option<String> {
+			String::from_utf8_lossy(
+				&std::process::Command::new("tmux").args(["show-environment", name]).output().ok()?.stdout,
+			)
+			.trim()
+			.strip_prefix(&format!("{name}="))
+			.map(ToOwned::to_owned)
 		}
 
-		let mut term = env::var("TERM").unwrap_or_default();
-		let mut program = env::var("TERM_PROGRAM").unwrap_or_default();
+		let mut term = std::env::var("TERM").unwrap_or_default();
+		let program = std::env::var("TERM_PROGRAM").unwrap_or_default();
 
 		if *TMUX {
 			term = tmux_env("TERM").unwrap_or(term);
-			program = tmux_env("TERM_PROGRAM").unwrap_or(program);
 		}
 
 		(term, program)

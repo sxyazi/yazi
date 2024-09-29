@@ -41,7 +41,7 @@ For safety, please manually delete it from your plugin/flavor directory and re-r
 
 			fs::copy(&from, &to)
 				.await
-				.with_context(|| format!("Failed to copy `{}` to `{}`", from.display(), to.display()))?;
+				.with_context(|| format!("failed to copy `{}` to `{}`", from.display(), to.display()))?;
 		}
 
 		println!("Done!");

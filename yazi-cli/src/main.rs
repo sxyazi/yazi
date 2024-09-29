@@ -46,7 +46,7 @@ async fn main() -> anyhow::Result<()> {
 		}
 
 		Command::Pack(cmd) => {
-			package::init();
+			package::init()?;
 			package::Package::migrate().await?;
 			if cmd.install {
 				package::Package::install_from_config("plugin", false).await?;
