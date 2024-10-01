@@ -102,7 +102,7 @@ impl Tab {
 			f.files.set_sorter(self.conf.sorter());
 
 			render!(f.files.catchup_revision());
-			render!(f.repos(hovered.as_ref().map(|u| u._deref())));
+			render!(f.repos(hovered.as_ref().map(|u| u.as_urn())));
 		};
 
 		apply(&mut self.current);

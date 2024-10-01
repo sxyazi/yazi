@@ -20,7 +20,7 @@ crossterm  = { workspace = true }
 md-5       = { workspace = true }
 serde_json = { workspace = true }
 tokio      = { workspace = true }
-toml_edit  = "0.22.21"
+toml_edit  = "0.22.22"
 
 [build-dependencies]
 # External build dependencies

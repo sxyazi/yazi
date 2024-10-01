@@ -7,7 +7,7 @@ description: |
   It aims to provide an efficient, user-friendly, and customizable file management experience.
 license: MIT
 grade: stable
-confinement: strict
+confinement: classic
 
 platforms:
   amd64:

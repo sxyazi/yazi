@@ -83,7 +83,7 @@ impl Manager {
 
 		if let Some(o) = overwritten {
 			ok_or_not_found(fs::rename(p_new.join(&o), &new).await)?;
-			FilesOp::Deleting(p_new.clone(), HashSet::from_iter([UrnBuf::_from(o)])).emit();
+			FilesOp::Deleting(p_new.clone(), HashSet::from_iter([UrnBuf::from(o)])).emit();
 		}
 		Pubsub::pub_from_rename(tab, &old, &new);
 

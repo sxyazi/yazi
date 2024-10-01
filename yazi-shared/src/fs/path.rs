@@ -1,6 +1,8 @@
-use std::{borrow::Cow, env, ffi::OsString, path::{Component, Path, PathBuf}};
+use std::{borrow::Cow, env, ffi::OsString, io, path::{Component, Path, PathBuf}};
 
-use super::maybe_exists;
+use tokio::fs;
+
+use super::Loc;
 use crate::fs::Url;
 
 pub fn current_cwd() -> Option<PathBuf> {
@@ -72,9 +74,9 @@ fn _expand_path(p: &Path) -> PathBuf {
 	}
 }
 
-pub async fn unique_name(mut u: Url) -> Url {
+pub async fn unique_name(mut u: Url) -> io::Result<Url> {
 	let Some(stem) = u.file_stem().map(|s| s.to_owned()) else {
-		return u;
+		return Err(io::Error::new(io::ErrorKind::InvalidInput, "empty file stem"));
 	};
 
 	let ext = u
@@ -88,8 +90,14 @@ pub async fn unique_name(mut u: Url) -> Url {
 		.unwrap_or_default();
 
 	let mut i = 1u64;
-	let mut p = u.into_path();
-	while maybe_exists(&p).await {
+	let mut p = u.to_path();
+	loop {
+		match fs::symlink_metadata(&p).await {
+			Ok(_) => {}
+			Err(e) if e.kind() == io::ErrorKind::NotFound => break,
+			Err(e) => return Err(e),
+		}
+
 		let mut name = OsString::with_capacity(stem.len() + ext.len() + 5);
 		name.push(&stem);
 		name.push("_");
@@ -99,8 +107,9 @@ pub async fn unique_name(mut u: Url) -> Url {
 		p.set_file_name(name);
 		i += 1;
 	}
-	// FIXME 3: handle base path
-	Url::from(p)
+
+	u.set_loc(Loc::from(u.base(), p));
+	Ok(u)
 }
 
 // Parameters

@@ -70,8 +70,8 @@ impl Tab {
 			return;
 		}
 
-		self.current.repos(hovered.as_ref().map(|u| u._deref()));
-		if self.current.hovered().map(|f| f.urn()) != hovered.as_ref().map(|u| u._deref()) {
+		self.current.repos(hovered.as_ref().map(|u| u.as_urn()));
+		if self.current.hovered().map(|f| f.urn()) != hovered.as_ref().map(|u| u.as_urn()) {
 			ManagerProxy::hover(None, self.idx);
 		}
 

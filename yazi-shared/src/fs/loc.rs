@@ -22,7 +22,7 @@ impl Clone for Loc {
 	fn clone(&self) -> Self {
 		let path = self.path.clone();
 		let name = path.file_name().unwrap_or(OsStr::new("")) as *const OsStr;
-		let urn = if self.urn()._as_path() == self.name() { name } else { self.twin_urn(&path) };
+		let urn = if self.urn() == self.name() { name } else { self.twin_urn(&path) };
 		Self { path, urn, name }
 	}
 }
@@ -75,14 +75,14 @@ impl Loc {
 
 	pub fn base(&self) -> &Path {
 		let mut it = self.path.components();
-		for _ in 0..self.urn()._as_path().components().count() {
+		for _ in 0..self.urn().components().count() {
 			it.next_back().unwrap();
 		}
 		it.as_path()
 	}
 
 	pub fn rebase(&self, parent: &Path) -> Self {
-		debug_assert!(self.urn()._as_path() == self.name());
+		debug_assert!(self.urn() == self.name());
 
 		let path = parent.join(self.name());
 		let name = path.file_name().unwrap_or(OsStr::new("")) as *const OsStr;
@@ -92,7 +92,7 @@ impl Loc {
 	#[inline]
 	fn twin_urn<'a>(&self, new: &'a Path) -> &'a OsStr {
 		let total = new.components().count();
-		let take = self.urn()._as_path().components().count();
+		let take = self.urn().components().count();
 
 		let mut it = new.components();
 		for _ in 0..total - take {

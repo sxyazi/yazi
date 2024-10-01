@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ffi::OsString, sync::Arc, time::Duration};
+use std::{borrow::Cow, ffi::OsString, future::Future, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use futures::{FutureExt, future::BoxFuture};
@@ -95,19 +95,12 @@ impl Scheduler {
 		});
 
 		let file = self.file.clone();
-		_ = self.micro.try_send(
-			async move {
-				if !force {
-					to = unique_name(to).await;
-				}
-				file
-					.paste(FileOpPaste { id, from, to, meta: None, cut: true, follow: false, retry: 0 })
-					.await
-					.ok();
+		self.send_micro(id, LOW, async move {
+			if !force {
+				to = unique_name(to).await?;
 			}
-			.boxed(),
-			LOW,
-		);
+			file.paste(FileOpPaste { id, from, to, meta: None, cut: true, follow: false, retry: 0 }).await
+		});
 	}
 
 	pub fn file_copy(&self, from: Url, mut to: Url, force: bool, follow: bool) {
@@ -120,19 +113,12 @@ impl Scheduler {
 		}
 
 		let file = self.file.clone();
-		_ = self.micro.try_send(
-			async move {
-				if !force {
-					to = unique_name(to).await;
-				}
-				file
-					.paste(FileOpPaste { id, from, to, meta: None, cut: false, follow, retry: 0 })
-					.await
-					.ok();
+		self.send_micro(id, LOW, async move {
+			if !force {
+				to = unique_name(to).await?;
 			}
-			.boxed(),
-			LOW,
-		);
+			file.paste(FileOpPaste { id, from, to, meta: None, cut: false, follow, retry: 0 }).await
+		});
 	}
 
 	pub fn file_link(&self, from: Url, mut to: Url, relative: bool, force: bool) {
@@ -140,19 +126,14 @@ impl Scheduler {
 		let id = self.ongoing.lock().add(TaskKind::User, name);
 
 		let file = self.file.clone();
-		_ = self.micro.try_send(
-			async move {
-				if !force {
-					to = unique_name(to).await;
-				}
-				file
-					.link(FileOpLink { id, from, to, meta: None, resolve: false, relative, delete: false })
-					.await
-					.ok();
+		self.send_micro(id, LOW, async move {
+			if !force {
+				to = unique_name(to).await?;
 			}
-			.boxed(),
-			LOW,
-		);
+			file
+				.link(FileOpLink { id, from, to, meta: None, resolve: false, relative, delete: false })
+				.await
+		});
 	}
 
 	pub fn file_hardlink(&self, from: Url, mut to: Url, force: bool, follow: bool) {
@@ -165,16 +146,12 @@ impl Scheduler {
 		}
 
 		let file = self.file.clone();
-		_ = self.micro.try_send(
-			async move {
-				if !force {
-					to = unique_name(to).await;
-				}
-				file.hardlink(FileOpHardlink { id, from, to, meta: None, follow }).await.ok();
+		self.send_micro(id, LOW, async move {
+			if !force {
+				to = unique_name(to).await?;
 			}
-			.boxed(),
-			LOW,
-		);
+			file.hardlink(FileOpHardlink { id, from, to, meta: None, follow }).await
+		});
 	}
 
 	pub fn file_delete(&self, target: Url) {
@@ -199,12 +176,10 @@ impl Scheduler {
 		});
 
 		let file = self.file.clone();
-		_ = self.micro.try_send(
-			async move {
-				file.delete(FileOpDelete { id, target, length: 0 }).await.ok();
-			}
-			.boxed(),
+		self.send_micro(
+			id,
 			LOW,
+			async move { file.delete(FileOpDelete { id, target, length: 0 }).await },
 		);
 	}
 
@@ -229,25 +204,19 @@ impl Scheduler {
 		});
 
 		let file = self.file.clone();
-		_ = self.micro.try_send(
-			async move {
-				file.trash(FileOpTrash { id, target: target.clone(), length: 0 }).await.ok();
-			}
-			.boxed(),
-			LOW,
-		);
+		self.send_micro(id, LOW, async move {
+			file.trash(FileOpTrash { id, target: target.clone(), length: 0 }).await
+		})
 	}
 
 	pub fn plugin_micro(&self, name: String, args: Vec<Data>) {
 		let id = self.ongoing.lock().add(TaskKind::User, format!("Run micro plugin `{name}`"));
 
 		let plugin = self.plugin.clone();
-		_ = self.micro.try_send(
-			async move {
-				plugin.micro(PluginOpEntry { id, name, args }).await.ok();
-			}
-			.boxed(),
+		self.send_micro(
+			id,
 			NORMAL,
+			async move { plugin.micro(PluginOpEntry { id, name, args }).await },
 		);
 	}
 
@@ -265,13 +234,9 @@ impl Scheduler {
 
 		let plugin = fetcher.into();
 		let prework = self.prework.clone();
-		_ = self.micro.try_send(
-			async move {
-				prework.fetch(PreworkOpFetch { id, plugin, targets }).await.ok();
-			}
-			.boxed(),
-			NORMAL,
-		);
+		self.send_micro(id, NORMAL, async move {
+			prework.fetch(PreworkOpFetch { id, plugin, targets }).await
+		});
 	}
 
 	pub fn preload_paged(&self, preloader: &Preloader, target: &yazi_shared::fs::File) {
@@ -281,12 +246,10 @@ impl Scheduler {
 		let plugin = preloader.into();
 		let target = target.clone();
 		let prework = self.prework.clone();
-		_ = self.micro.try_send(
-			async move {
-				prework.load(PreworkOpLoad { id, plugin, target }).await.ok();
-			}
-			.boxed(),
+		self.send_micro(
+			id,
 			NORMAL,
+			async move { prework.load(PreworkOpLoad { id, plugin, target }).await },
 		);
 	}
 
@@ -300,13 +263,9 @@ impl Scheduler {
 			let throttle = throttle.clone();
 
 			let prework = self.prework.clone();
-			_ = self.micro.try_send(
-				async move {
-					prework.size(PreworkOpSize { id, target, throttle }).await.ok();
-				}
-				.boxed(),
-				NORMAL,
-			);
+			self.send_micro(id, NORMAL, async move {
+				prework.size(PreworkOpSize { id, target, throttle }).await
+			});
 		}
 	}
 
@@ -348,19 +307,15 @@ impl Scheduler {
 
 		let cmd = OsString::from(&opener.run);
 		let process = self.process.clone();
-		_ = self.micro.try_send(
-			async move {
-				if opener.block {
-					process.block(ProcessOpBlock { id, cmd, args }).await.ok();
-				} else if opener.orphan {
-					process.orphan(ProcessOpOrphan { id, cmd, args }).await.ok();
-				} else {
-					process.bg(ProcessOpBg { id, cmd, args, cancel: cancel_rx }).await.ok();
-				}
+		self.send_micro(id, NORMAL, async move {
+			if opener.block {
+				process.block(ProcessOpBlock { id, cmd, args }).await
+			} else if opener.orphan {
+				process.orphan(ProcessOpOrphan { id, cmd, args }).await
+			} else {
+				process.bg(ProcessOpBg { id, cmd, args, cancel: cancel_rx }).await
 			}
-			.boxed(),
-			NORMAL,
-		);
+		});
 	}
 
 	fn schedule_micro(
@@ -469,6 +424,23 @@ impl Scheduler {
 				}
 			}
 		})
+	}
+
+	fn send_micro<F>(&self, id: usize, priority: u8, f: F)
+	where
+		F: Future<Output = Result<()>> + Send + 'static,
+	{
+		let prog = self.prog.clone();
+		_ = self.micro.try_send(
+			async move {
+				if let Err(e) = f.await {
+					prog.send(TaskProg::New(id, 0)).ok();
+					prog.send(TaskProg::Fail(id, format!("Task initialization failed:\n{e}"))).ok();
+				}
+			}
+			.boxed(),
+			priority,
+		);
 	}
 
 	fn new_and_fail(&self, id: usize, reason: &str) -> Result<()> {

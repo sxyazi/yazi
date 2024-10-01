@@ -59,28 +59,4 @@ function M:fetch()
 	return j == #urls and 3 or 2
 end
 
--- TODO: remove this after v0.3 release
-local notified = ya.sync(function (state)
-	if state.notified then
-		return true
-	else
-		state.notified = true
-		return false
-	end
-end)
-function M:preload()
-	if notified() then
-		return 1
-	end
-	ya.notify {
-		title = "Error",
-		content = [[In Yazi v0.3, the `mime` plugin has been re-classified as a fetcher. Please remove it from the `preloaders` of your yazi.toml
-
-See https://github.com/sxyazi/yazi/issues/1046 for details.]],
-		timeout = 20,
-		level = "error",
-	}
-	return 1
-end
-
 return M

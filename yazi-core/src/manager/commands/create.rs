@@ -50,7 +50,7 @@ impl Manager {
 			fs::create_dir_all(&new).await?;
 		} else if let Some(real) = realname(&new).await {
 			ok_or_not_found(fs::remove_file(&new).await)?;
-			FilesOp::Deleting(parent.clone(), HashSet::from_iter([UrnBuf::_from(real)])).emit();
+			FilesOp::Deleting(parent.clone(), HashSet::from_iter([UrnBuf::from(real)])).emit();
 			fs::File::create(&new).await?;
 		} else {
 			fs::create_dir_all(&parent).await.ok();

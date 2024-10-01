@@ -6,7 +6,7 @@ use tokio::{fs::{self, OpenOptions}, io::{AsyncReadExt, AsyncWriteExt, stdin}};
 use yazi_config::{OPEN, PREVIEW};
 use yazi_dds::Pubsub;
 use yazi_proxy::{AppProxy, HIDER, TasksProxy, WATCHER};
-use yazi_shared::{fs::{File, Url, max_common_root, maybe_exists, paths_to_same_file}, terminal_clear};
+use yazi_shared::{fs::{File, FilesOp, Url, max_common_root, maybe_exists, paths_to_same_file}, terminal_clear};
 
 use crate::manager::Manager;
 
@@ -16,7 +16,6 @@ impl Manager {
 			return AppProxy::notify_warn("Bulk rename", "No text opener found");
 		};
 
-		let cwd = self.cwd().to_owned();
 		let old: Vec<_> = self.selected_or_hovered(true).collect();
 
 		let root = max_common_root(&old);
@@ -42,16 +41,11 @@ impl Manager {
 			AppProxy::stop().await;
 
 			let new: Vec<_> = fs::read_to_string(&tmp).await?.lines().map(PathBuf::from).collect();
-			Self::bulk_rename_do(cwd, root, old, new).await
+			Self::bulk_rename_do(root, old, new).await
 		});
 	}
 
-	async fn bulk_rename_do(
-		cwd: Url,
-		root: PathBuf,
-		old: Vec<PathBuf>,
-		new: Vec<PathBuf>,
-	) -> Result<()> {
+	async fn bulk_rename_do(root: PathBuf, old: Vec<PathBuf>, new: Vec<PathBuf>) -> Result<()> {
 		terminal_clear(&mut stderr())?;
 		if old.len() != new.len() {
 			eprintln!("Number of old and new differ, press ENTER to exit");
@@ -95,11 +89,9 @@ impl Manager {
 			}
 		}
 
-		// FIXME: consider old and new in the different directories
 		if !succeeded.is_empty() {
-			Pubsub::pub_from_bulk(succeeded.iter().map(|(u, f)| (u, &f.url)).collect());
-			// FIXME 0
-			// FilesOp::Upserting(cwd, succeeded).emit();
+			Pubsub::pub_from_bulk(succeeded.iter().map(|(o, n)| (o, &n.url)).collect());
+			FilesOp::rename(succeeded);
 		}
 		drop(permit);
 

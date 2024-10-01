@@ -239,7 +239,13 @@ impl Url {
 		self
 	}
 
-	// --- Path
+	// --- Loc
+	#[inline]
+	pub fn set_loc(&mut self, loc: Loc) { self.loc = loc; }
+
+	#[inline]
+	pub fn to_path(&self) -> PathBuf { self.loc.to_path_buf() }
+
 	#[inline]
 	pub fn into_path(self) -> PathBuf { self.loc.into_path() }
 

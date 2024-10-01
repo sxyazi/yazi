@@ -47,6 +47,30 @@ impl FilesOp {
 		ticket
 	}
 
+	pub fn rename(map: HashMap<Url, File>) {
+		let mut parents = HashMap::new();
+		for (o, n) in map {
+			let Some(o_p) = o.parent_url() else { continue };
+			if o == n.url {
+				parents.entry(o_p).or_insert((HashSet::new(), HashMap::new())).1.insert(o.urn_owned(), n);
+			} else if let Some(n_p) = n.url.parent_url() {
+				parents.entry(o_p).or_insert((HashSet::new(), HashMap::new())).0.insert(o.urn_owned());
+				parents.entry(n_p).or_insert((HashSet::new(), HashMap::new())).1.insert(n.urn_owned(), n);
+			}
+		}
+		for (p, (o, n)) in parents {
+			match (o.is_empty(), n.is_empty()) {
+				(true, true) => unreachable!(),
+				(true, false) => Self::Upserting(p, n).emit(),
+				(false, true) => Self::Deleting(p, o).emit(),
+				(false, false) => {
+					Self::Deleting(p.clone(), o).emit();
+					Self::Upserting(p, n).emit();
+				}
+			}
+		}
+	}
+
 	pub fn rebase(&self, new: &Url) -> Self {
 		macro_rules! files {
 			($files:expr) => {{ $files.iter().map(|f| f.rebase(new)).collect() }};
@@ -72,13 +96,11 @@ impl FilesOp {
 
 	pub fn diff_recoverable(&self, contains: impl Fn(&Url) -> bool) -> (Vec<Url>, Vec<Url>) {
 		match self {
-			Self::Deleting(cwd, urns) => {
-				(urns.iter().map(|u| cwd.join(u._deref()._as_path())).collect(), vec![])
-			}
+			Self::Deleting(cwd, urns) => (urns.iter().map(|u| cwd.join(u)).collect(), vec![]),
 			Self::Updating(cwd, urns) | Self::Upserting(cwd, urns) => urns
 				.iter()
 				.filter(|&(u, f)| u != f.urn())
-				.map(|(u, f)| (cwd.join(u._deref()._as_path()), f))
+				.map(|(u, f)| (cwd.join(u), f))
 				.filter(|(u, _)| contains(u))
 				.map(|(u, f)| (u, f.url_owned()))
 				.unzip(),

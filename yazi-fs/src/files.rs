@@ -214,13 +214,13 @@ impl Files {
 
 		let (mut hidden, mut items) = if let Some(filter) = &self.filter {
 			urns.into_iter().partition(|u| {
-				(!self.show_hidden && u._deref().is_hidden())
-					|| !u._deref().name().is_some_and(|s| filter.matches(s))
+				(!self.show_hidden && u.as_urn().is_hidden())
+					|| !u.as_urn().name().is_some_and(|s| filter.matches(s))
 			})
 		} else if self.show_hidden {
 			(HashSet::new(), urns)
 		} else {
-			urns.into_iter().partition(|u| u._deref().is_hidden())
+			urns.into_iter().partition(|u| u.as_urn().is_hidden())
 		};
 
 		if !items.is_empty() {
