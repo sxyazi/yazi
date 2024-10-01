@@ -1,11 +1,11 @@
-use std::{borrow::Borrow, ffi::OsStr, path::{Path, PathBuf}};
+use std::{borrow::{Borrow, Cow}, ffi::OsStr, ops::Deref, path::{Path, PathBuf}};
 
 #[derive(Debug, Eq, PartialEq, Hash)]
 #[repr(transparent)]
 pub struct Urn(Path);
 
 impl Urn {
-	// TODO: clean this up
+	#[inline]
 	pub fn new<T: AsRef<Path> + ?Sized>(p: &T) -> &Self {
 		unsafe { &*(p.as_ref() as *const Path as *const Self) }
 	}
@@ -18,15 +18,30 @@ impl Urn {
 	pub fn is_hidden(&self) -> bool {
 		self.name().map_or(false, |s| s.as_encoded_bytes().starts_with(b"."))
 	}
+}
 
-	// FIXME 1: remove this
-	pub fn _as_path(&self) -> &Path { &self.0 }
+impl Deref for Urn {
+	type Target = Path;
+
+	fn deref(&self) -> &Self::Target { &self.0 }
+}
+
+impl AsRef<Path> for Urn {
+	fn as_ref(&self) -> &Path { &self.0 }
 }
 
 impl ToOwned for Urn {
 	type Owned = UrnBuf;
 
 	fn to_owned(&self) -> Self::Owned { UrnBuf(self.0.to_owned()) }
+}
+
+impl PartialEq<OsStr> for Urn {
+	fn eq(&self, other: &OsStr) -> bool { self.0 == other }
+}
+
+impl PartialEq<Cow<'_, OsStr>> for &Urn {
+	fn eq(&self, other: &Cow<OsStr>) -> bool { self.0 == other.as_ref() }
 }
 
 // --- UrnBuf
@@ -37,14 +52,19 @@ impl Borrow<Urn> for UrnBuf {
 	fn borrow(&self) -> &Urn { Urn::new(&self.0) }
 }
 
+impl AsRef<Path> for UrnBuf {
+	fn as_ref(&self) -> &Path { &self.0 }
+}
+
 impl PartialEq<Urn> for UrnBuf {
 	fn eq(&self, other: &Urn) -> bool { self.0 == other.0 }
 }
 
-impl UrnBuf {
-	// FIXME 1: remove this
-	pub fn _deref(&self) -> &Urn { Urn::new(&self.0) }
+impl<T: Into<PathBuf>> From<T> for UrnBuf {
+	fn from(p: T) -> Self { Self(p.into()) }
+}
 
-	// FIXME 1: remove this
-	pub fn _from(p: impl Into<PathBuf>) -> Self { Self(p.into()) }
+impl UrnBuf {
+	#[inline]
+	pub fn as_urn(&self) -> &Urn { self.borrow() }
 }

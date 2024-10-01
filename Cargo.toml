@@ -20,12 +20,12 @@ crossterm     = { version = "0.28.1", features = [ "event-stream" ] }
 dirs          = "5.0.1"
 futures       = "0.3.30"
 globset       = "0.4.15"
-libc          = "0.2.158"
+libc          = "0.2.159"
 md-5          = "0.10.6"
 mlua          = { version = "0.9.9", features = [ "lua54", "serialize", "macros", "async" ] }
 parking_lot   = "0.12.3"
 ratatui       = { version = "0.28.1", features = [ "unstable-rendered-line-info" ] }
-regex         = "1.10.6"
+regex         = "1.11.0"
 scopeguard    = "1.2.0"
 serde         = { version = "1.0.210", features = [ "derive" ] }
 serde_json    = "1.0.128"

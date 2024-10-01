@@ -64,7 +64,7 @@ impl Manager {
 
 		if let Some(f) = tab.parent.as_mut() {
 			render!(f.update(op.into_owned()));
-			render!(f.hover(urn._deref()));
+			render!(f.hover(urn.as_urn()));
 		}
 
 		if leave {
@@ -81,7 +81,7 @@ impl Manager {
 			return;
 		}
 
-		tab.current.repos(hovered.as_ref().map(|u| u._deref()));
+		tab.current.repos(hovered.as_ref().map(|u| u.as_urn()));
 		if foreign {
 			return;
 		}
@@ -115,7 +115,7 @@ impl Manager {
 		let folder = tab.history.entry(op.cwd().clone()).or_insert_with(|| Folder::from(op.cwd()));
 		let hovered = folder.hovered().filter(|_| folder.tracing).map(|h| h.urn_owned());
 		if folder.update(op.into_owned()) {
-			folder.repos(hovered.as_ref().map(|u| u._deref()));
+			folder.repos(hovered.as_ref().map(|u| u.as_urn()));
 		}
 
 		if leave {
