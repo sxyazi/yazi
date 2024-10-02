@@ -8,7 +8,7 @@ const TRACKER: &str = "DO_NOT_MODIFY_ANYTHING_IN_THIS_DIRECTORY";
 
 impl Package {
 	pub(super) async fn deploy(&mut self) -> Result<()> {
-		let Some(name) = self.name().map(ToOwned::to_owned) else { bail!("Invalid package url") };
+		let name = self.name().to_owned();
 		let from = self.local().join(&self.child);
 
 		self.header("Deploying package `{name}`")?;
