@@ -20,7 +20,7 @@ base64       = { workspace = true }
 color_quant  = "1.1.0"
 crossterm    = { workspace = true }
 futures      = { workspace = true }
-image        = "0.25.2"
+image        = { version = "0.25.2", default-features = false, features = [ "rayon", "avif", "bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "tga", "webp" ] }
 imagesize    = "0.13.0"
 kamadak-exif = "0.5.5"
 ratatui      = { workspace = true }
