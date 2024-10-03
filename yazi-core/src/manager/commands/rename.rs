@@ -105,10 +105,10 @@ impl Manager {
 
 		let ext = url.extension();
 		match by {
-			"stem" => ext.map_or_else(String::new, |s| format!(".{}", s.to_string_lossy().into_owned())),
+			"stem" => ext.map_or_else(String::new, |s| format!(".{}", s.to_string_lossy())),
 			"ext" if ext.is_some() => format!("{}.", url.file_stem().unwrap().to_string_lossy()),
 			"dot_ext" if ext.is_some() => url.file_stem().unwrap().to_string_lossy().into_owned(),
-			_ => url.file_name().map_or_else(String::new, |s| s.to_string_lossy().into_owned()),
+			_ => url.name().to_string_lossy().into_owned(),
 		}
 	}
 }

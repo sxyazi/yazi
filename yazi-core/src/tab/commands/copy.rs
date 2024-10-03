@@ -26,7 +26,7 @@ impl Tab {
 			s.push(match opt.type_.as_str() {
 				"path" => u.as_os_str(),
 				"dirname" => u.parent().map_or(OsStr::new(""), |p| p.as_os_str()),
-				"filename" => u.file_name().unwrap_or(OsStr::new("")),
+				"filename" => u.name(),
 				"name_without_ext" => u.file_stem().unwrap_or(OsStr::new("")),
 				_ => return,
 			});

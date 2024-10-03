@@ -104,8 +104,7 @@ impl Scheduler {
 	}
 
 	pub fn file_copy(&self, from: Url, mut to: Url, force: bool, follow: bool) {
-		let name = format!("Copy {:?} to {:?}", from, to);
-		let id = self.ongoing.lock().add(TaskKind::User, name);
+		let id = self.ongoing.lock().add(TaskKind::User, format!("Copy {from} to {to}"));
 
 		if to.starts_with(&from) && to != from {
 			self.new_and_fail(id, "Cannot copy directory into itself").ok();
@@ -122,8 +121,7 @@ impl Scheduler {
 	}
 
 	pub fn file_link(&self, from: Url, mut to: Url, relative: bool, force: bool) {
-		let name = format!("Link {from:?} to {to:?}");
-		let id = self.ongoing.lock().add(TaskKind::User, name);
+		let id = self.ongoing.lock().add(TaskKind::User, format!("Link {from} to {to}"));
 
 		let file = self.file.clone();
 		self.send_micro(id, LOW, async move {
@@ -137,8 +135,7 @@ impl Scheduler {
 	}
 
 	pub fn file_hardlink(&self, from: Url, mut to: Url, force: bool, follow: bool) {
-		let name = format!("Hardlink {:?} to {:?}", from, to);
-		let id = self.ongoing.lock().add(TaskKind::User, name);
+		let id = self.ongoing.lock().add(TaskKind::User, format!("Hardlink {from} to {to}"));
 
 		if to.starts_with(&from) && to != from {
 			self.new_and_fail(id, "Cannot hardlink directory into itself").ok();
@@ -156,7 +153,7 @@ impl Scheduler {
 
 	pub fn file_delete(&self, target: Url) {
 		let mut ongoing = self.ongoing.lock();
-		let id = ongoing.add(TaskKind::User, format!("Delete {:?}", target));
+		let id = ongoing.add(TaskKind::User, format!("Delete {target}"));
 
 		ongoing.hooks.insert(id, {
 			let target = target.clone();
@@ -185,7 +182,7 @@ impl Scheduler {
 
 	pub fn file_trash(&self, target: Url) {
 		let mut ongoing = self.ongoing.lock();
-		let id = ongoing.add(TaskKind::User, format!("Trash {:?}", target));
+		let id = ongoing.add(TaskKind::User, format!("Trash {target}"));
 
 		ongoing.hooks.insert(id, {
 			let target = target.clone();
@@ -258,7 +255,7 @@ impl Scheduler {
 		let mut ongoing = self.ongoing.lock();
 
 		for target in targets {
-			let id = ongoing.add(TaskKind::Preload, format!("Calculate the size of {:?}", target));
+			let id = ongoing.add(TaskKind::Preload, format!("Calculate the size of {target}"));
 			let target = target.clone();
 			let throttle = throttle.clone();
 
@@ -435,7 +432,7 @@ impl Scheduler {
 			async move {
 				if let Err(e) = f.await {
 					prog.send(TaskProg::New(id, 0)).ok();
-					prog.send(TaskProg::Fail(id, format!("Task initialization failed:\n{e}"))).ok();
+					prog.send(TaskProg::Fail(id, format!("Task initialization failed:\n{e:?}"))).ok();
 				}
 			}
 			.boxed(),

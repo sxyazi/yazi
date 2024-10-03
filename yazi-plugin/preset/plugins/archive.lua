@@ -42,16 +42,7 @@ function M:peek()
 	end
 end
 
-function M:seek(units)
-	local h = cx.active.current.hovered
-	if h and h.url == self.file.url then
-		local step = math.floor(units * self.area.h / 10)
-		ya.manager_emit("peek", {
-			math.max(0, cx.active.preview.skip + step),
-			only_if = self.file.url,
-		})
-	end
-end
+function M:seek(units) require("code").seek(self, units) end
 
 function M.spawn_7z(args)
 	local last_error = nil
