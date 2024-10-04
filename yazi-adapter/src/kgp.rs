@@ -310,9 +310,9 @@ static DIACRITICS: [char; 297] = [
 	'\u{1D244}',
 ];
 
-pub(super) struct Kitty;
+pub(super) struct Kgp;
 
-impl Kitty {
+impl Kgp {
 	pub(super) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
 		let img = Image::downscale(path, max).await?;
 		let area = Image::pixel_area((img.width(), img.height()), max);
@@ -320,7 +320,7 @@ impl Kitty {
 		let b1 = Self::encode(img).await?;
 		let b2 = Self::place(&area)?;
 
-		Adapter::Kitty.image_hide()?;
+		Adapter::Kgp.image_hide()?;
 		Adapter::shown_store(area);
 		Emulator::move_lock((area.x, area.y), |stderr| {
 			stderr.write_all(&b1)?;
