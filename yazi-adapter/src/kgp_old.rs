@@ -9,15 +9,15 @@ use ratatui::layout::Rect;
 use super::image::Image;
 use crate::{CLOSE, ESCAPE, Emulator, START, adapter::Adapter};
 
-pub(super) struct KittyOld;
+pub(super) struct KgpOld;
 
-impl KittyOld {
+impl KgpOld {
 	pub(super) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
 		let img = Image::downscale(path, max).await?;
 		let area = Image::pixel_area((img.width(), img.height()), max);
 		let b = Self::encode(img).await?;
 
-		Adapter::KittyOld.image_hide()?;
+		Adapter::KgpOld.image_hide()?;
 		Adapter::shown_store(area);
 		Emulator::move_lock((area.x, area.y), |stderr| {
 			stderr.write_all(&b)?;

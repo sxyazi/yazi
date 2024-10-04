@@ -34,12 +34,12 @@ impl Emulator {
 	pub fn adapters(self) -> Vec<Adapter> {
 		match self {
 			Self::Unknown(adapters) => adapters,
-			Self::Kitty => vec![Adapter::Kitty],
-			Self::Konsole => vec![Adapter::KittyOld],
+			Self::Kitty => vec![Adapter::Kgp],
+			Self::Konsole => vec![Adapter::KgpOld],
 			Self::Iterm2 => vec![Adapter::Iip, Adapter::Sixel],
 			Self::WezTerm => vec![Adapter::Iip, Adapter::Sixel],
 			Self::Foot => vec![Adapter::Sixel],
-			Self::Ghostty => vec![Adapter::Kitty],
+			Self::Ghostty => vec![Adapter::Kgp],
 			Self::Microsoft => vec![Adapter::Sixel],
 			Self::Rio => vec![Adapter::Iip, Adapter::Sixel],
 			Self::BlackBox => vec![Adapter::Sixel],
@@ -151,7 +151,7 @@ impl Emulator {
 
 		let mut adapters = Vec::with_capacity(2);
 		if resp.contains("\x1b_Gi=31;OK") {
-			adapters.push(Adapter::KittyOld);
+			adapters.push(Adapter::KgpOld);
 		}
 		if ["?4;", "?4c", ";4;", ";4c"].iter().any(|s| resp.contains(s)) {
 			adapters.push(Adapter::Sixel);

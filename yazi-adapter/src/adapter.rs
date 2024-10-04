@@ -5,13 +5,13 @@ use ratatui::layout::Rect;
 use tracing::warn;
 use yazi_shared::env_exists;
 
-use super::{Iip, Kitty, KittyOld};
+use super::{Iip, Kgp, KgpOld};
 use crate::{Chafa, Emulator, SHOWN, Sixel, TMUX, Ueberzug, WSL};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Adapter {
-	Kitty,
-	KittyOld,
+	Kgp,
+	KgpOld,
 	Iip,
 	Sixel,
 
@@ -24,8 +24,8 @@ pub enum Adapter {
 impl Display for Adapter {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
-			Self::Kitty => write!(f, "kitty"),
-			Self::KittyOld => write!(f, "kitty"),
+			Self::Kgp => write!(f, "kgp"),
+			Self::KgpOld => write!(f, "kgp-old"),
 			Self::Iip => write!(f, "iip"),
 			Self::Sixel => write!(f, "sixel"),
 			Self::X11 => write!(f, "x11"),
@@ -42,8 +42,8 @@ impl Adapter {
 		}
 
 		match self {
-			Self::Kitty => Kitty::image_show(path, max).await,
-			Self::KittyOld => KittyOld::image_show(path, max).await,
+			Self::Kgp => Kgp::image_show(path, max).await,
+			Self::KgpOld => KgpOld::image_show(path, max).await,
 			Self::Iip => Iip::image_show(path, max).await,
 			Self::Sixel => Sixel::image_show(path, max).await,
 			Self::X11 | Self::Wayland => Ueberzug::image_show(path, max).await,
@@ -57,8 +57,8 @@ impl Adapter {
 
 	pub fn image_erase(self, area: Rect) -> Result<()> {
 		match self {
-			Self::Kitty => Kitty::image_erase(area),
-			Self::KittyOld => KittyOld::image_erase(area),
+			Self::Kgp => Kgp::image_erase(area),
+			Self::KgpOld => KgpOld::image_erase(area),
 			Self::Iip => Iip::image_erase(area),
 			Self::Sixel => Sixel::image_erase(area),
 			Self::X11 | Self::Wayland => Ueberzug::image_erase(area),
@@ -76,7 +76,7 @@ impl Adapter {
 
 	#[inline]
 	pub(super) fn needs_ueberzug(self) -> bool {
-		!matches!(self, Self::Kitty | Self::KittyOld | Self::Iip | Self::Sixel)
+		!matches!(self, Self::Kgp | Self::KgpOld | Self::Iip | Self::Sixel)
 	}
 }
 
@@ -94,7 +94,7 @@ impl Adapter {
 		if env_exists("ZELLIJ_SESSION_NAME") {
 			protocols.retain(|p| *p == Self::Sixel);
 		} else if *TMUX {
-			protocols.retain(|p| *p != Self::KittyOld);
+			protocols.retain(|p| *p != Self::KgpOld);
 		}
 		if let Some(p) = protocols.first() {
 			return *p;
@@ -114,7 +114,7 @@ impl Adapter {
 			return Self::X11;
 		}
 		if *WSL {
-			return Self::KittyOld;
+			return Self::KgpOld;
 		}
 
 		warn!("[Adapter] Falling back to chafa");
