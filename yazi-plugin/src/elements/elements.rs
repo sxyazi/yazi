@@ -6,10 +6,6 @@ use crate::cast_to_renderable;
 pub fn pour(lua: &Lua) -> mlua::Result<()> {
 	let ui = lua.create_table()?;
 
-	// Register
-	super::Padding::register(lua)?;
-	super::Rect::register(lua)?;
-
 	// Install
 	super::Bar::install(lua, &ui)?;
 	super::Border::install(lua, &ui)?;

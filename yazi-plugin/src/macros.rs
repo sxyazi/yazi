@@ -29,14 +29,15 @@ macro_rules! impl_style_method {
 #[macro_export]
 macro_rules! impl_area_method {
 	($methods:ident) => {
-		use $crate::{bindings::Cast, elements::{Rect, RectRef}};
+		use mlua::IntoLua;
+		use $crate::elements::Rect;
 
-		$methods.add_function("area", |lua, (ud, area): (mlua::AnyUserData, Option<RectRef>)| {
+		$methods.add_function("area", |lua, (ud, area): (mlua::AnyUserData, Option<Rect>)| {
 			if let Some(r) = area {
-				ud.borrow_mut::<Self>()?.area = *r;
-				Ok(ud)
+				ud.borrow_mut::<Self>()?.area = r;
+				ud.into_lua(lua)
 			} else {
-				Rect::cast(lua, ud.borrow::<Self>()?.area)
+				ud.borrow::<Self>()?.area.into_lua(lua)
 			}
 		});
 	};

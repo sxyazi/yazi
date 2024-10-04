@@ -23,7 +23,6 @@ pub fn slim_lua(name: &str) -> mlua::Result<Lua> {
 	let ui = lua.create_table()?;
 	elements::Line::install(&lua, &ui)?;
 	elements::Paragraph::install(&lua, &ui)?;
-	elements::Rect::register(&lua)?;
 	elements::Rect::install(&lua, &ui)?;
 	elements::Span::install(&lua, &ui)?;
 

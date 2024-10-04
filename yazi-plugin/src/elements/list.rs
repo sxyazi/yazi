@@ -1,12 +1,12 @@
 use mlua::{ExternalError, FromLua, Lua, Table, UserData, Value};
 use ratatui::widgets::Widget;
 
-use super::{Line, RectRef, Renderable, Span};
+use super::{Line, Rect, Renderable, Span};
 
 // --- List
 #[derive(Clone)]
 pub struct List {
-	area: ratatui::layout::Rect,
+	area: Rect,
 
 	inner: ratatui::widgets::List<'static>,
 }
@@ -15,8 +15,8 @@ impl List {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
 		ui.raw_set(
 			"List",
-			lua.create_function(|_, (area, items): (RectRef, Vec<ListItem>)| {
-				Ok(Self { area: *area, inner: ratatui::widgets::List::new(items) })
+			lua.create_function(|_, (area, items): (Rect, Vec<ListItem>)| {
+				Ok(Self { area, inner: ratatui::widgets::List::new(items) })
 			})?,
 		)
 	}
@@ -29,10 +29,10 @@ impl UserData for List {
 }
 
 impl Renderable for List {
-	fn area(&self) -> ratatui::layout::Rect { self.area }
+	fn area(&self) -> ratatui::layout::Rect { *self.area }
 
 	fn render(self: Box<Self>, buf: &mut ratatui::buffer::Buffer) {
-		self.inner.render(self.area, buf);
+		self.inner.render(*self.area, buf);
 	}
 
 	fn clone_render(&self, buf: &mut ratatui::buffer::Buffer) { Box::new(self.clone()).render(buf) }

@@ -93,7 +93,7 @@ impl Highlighter {
 		}
 
 		Ok(if plain {
-			Text::from(replace_to_printable(&after.join(""), PREVIEW.tab_size))
+			Text::from(replace_to_printable(&after, PREVIEW.tab_size))
 		} else {
 			Self::highlight_with(before, after, syntax.unwrap()).await?
 		})

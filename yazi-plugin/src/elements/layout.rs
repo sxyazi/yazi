@@ -1,7 +1,6 @@
 use mlua::{AnyUserData, Lua, Table, UserData, UserDataMethods};
 
-use super::{Constraint, Rect, RectRef};
-use crate::bindings::Cast;
+use super::{Constraint, Rect};
 
 const HORIZONTAL: bool = true;
 const VERTICAL: bool = false;
@@ -61,7 +60,7 @@ impl UserData for Layout {
 			ud.borrow_mut::<Self>()?.constraints = value.into_iter().map(|c| c.0).collect();
 			Ok(ud)
 		});
-		methods.add_method("split", |lua, me, value: RectRef| {
+		methods.add_method("split", |lua, me, value: Rect| {
 			let mut layout = ratatui::layout::Layout::new(
 				if me.direction == VERTICAL {
 					ratatui::layout::Direction::Vertical
@@ -76,11 +75,7 @@ impl UserData for Layout {
 				layout = layout.vertical_margin(margin.vertical);
 			}
 
-			let mut chunks = Vec::with_capacity(me.constraints.len());
-			for chunk in &*layout.split(*value) {
-				chunks.push(Rect::cast(lua, *chunk)?);
-			}
-			Ok(chunks)
+			lua.create_sequence_from(layout.split(*value).iter().map(|chunk| Rect::from(*chunk)))
 		});
 	}
 }

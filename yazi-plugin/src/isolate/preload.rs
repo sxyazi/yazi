@@ -18,7 +18,7 @@ pub async fn preload(name: &str, file: yazi_shared::fs::File) -> mlua::Result<u8
 		};
 
 		plugin.raw_set("skip", 0)?;
-		plugin.raw_set("area", Rect::cast(&lua, LAYOUT.load().preview)?)?;
+		plugin.raw_set("area", Rect::from(LAYOUT.load().preview))?;
 		plugin.raw_set("file", File::cast(&lua, file)?)?;
 
 		Handle::current().block_on(plugin.call_async_method("preload", ()))

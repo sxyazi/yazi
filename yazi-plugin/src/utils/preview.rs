@@ -3,7 +3,7 @@ use yazi_config::{PREVIEW, preview::PreviewWrap};
 use yazi_shared::{Layer, PeekError, emit, event::Cmd};
 
 use super::Utils;
-use crate::{bindings::Window, cast_to_renderable, elements::{Paragraph, RectRef, Renderable, WRAP, WRAP_NO}, external::Highlighter, file::FileRef};
+use crate::{bindings::Window, cast_to_renderable, elements::{Paragraph, Rect, Renderable, WRAP, WRAP_NO}, external::Highlighter, file::FileRef};
 
 pub struct PreviewLock {
 	pub url:  yazi_shared::fs::Url,
@@ -37,7 +37,7 @@ impl Utils {
 		ya.raw_set(
 			"preview_code",
 			lua.create_async_function(|lua, t: Table| async move {
-				let area: RectRef = t.raw_get("area")?;
+				let area: Rect = t.raw_get("area")?;
 				let mut lock = PreviewLock::try_from(t)?;
 
 				let text = match Highlighter::new(&lock.url).highlight(lock.skip, *area).await {
@@ -49,7 +49,7 @@ impl Utils {
 				};
 
 				lock.data = vec![Box::new(Paragraph {
-					area: *area,
+					area,
 					text,
 					wrap: if PREVIEW.wrap == PreviewWrap::Yes { WRAP } else { WRAP_NO },
 					..Default::default()

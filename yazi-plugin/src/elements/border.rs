@@ -1,7 +1,7 @@
 use mlua::{AnyUserData, Lua, Table, UserData};
 use ratatui::widgets::{Borders, Widget};
 
-use super::{RectRef, Renderable};
+use super::{Rect, Renderable};
 
 // Type
 const PLAIN: u8 = 0;
@@ -13,7 +13,7 @@ const QUADRANT_OUTSIDE: u8 = 5;
 
 #[derive(Clone, Default)]
 pub struct Border {
-	area: ratatui::layout::Rect,
+	area: Rect,
 
 	position: ratatui::widgets::Borders,
 	type_:    ratatui::widgets::BorderType,
@@ -22,9 +22,9 @@ pub struct Border {
 
 impl Border {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		let new = lua.create_function(|_, (_, area, position): (Table, RectRef, u8)| {
+		let new = lua.create_function(|_, (_, area, position): (Table, Rect, u8)| {
 			Ok(Border {
-				area: *area,
+				area,
 				position: ratatui::widgets::Borders::from_bits_truncate(position),
 				..Default::default()
 			})
@@ -77,14 +77,14 @@ impl UserData for Border {
 }
 
 impl Renderable for Border {
-	fn area(&self) -> ratatui::layout::Rect { self.area }
+	fn area(&self) -> ratatui::layout::Rect { *self.area }
 
 	fn render(self: Box<Self>, buf: &mut ratatui::buffer::Buffer) {
 		ratatui::widgets::Block::default()
 			.borders(self.position)
 			.border_type(self.type_)
 			.border_style(self.style)
-			.render(self.area, buf);
+			.render(*self.area, buf);
 	}
 
 	fn clone_render(&self, buf: &mut ratatui::buffer::Buffer) { Box::new(self.clone()).render(buf); }
