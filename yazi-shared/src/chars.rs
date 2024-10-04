@@ -28,11 +28,11 @@ pub fn strip_trailing_newline(mut s: String) -> String {
 	s
 }
 
-pub fn replace_to_printable(s: &str, tab_size: u8) -> String {
+pub fn replace_to_printable(s: &[String], tab_size: u8) -> String {
 	let mut buf = Vec::new();
-	buf.try_reserve_exact(s.len() | 15).unwrap_or_else(|_| panic!());
+	buf.try_reserve_exact(s.iter().map(|s| s.len()).sum::<usize>() | 15).unwrap_or_else(|_| panic!());
 
-	for &b in s.as_bytes() {
+	for &b in s.iter().flat_map(|s| s.as_bytes()) {
 		match b {
 			b'\n' => buf.push(b'\n'),
 			b'\t' => {

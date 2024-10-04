@@ -22,7 +22,7 @@ impl App {
 		let Ok(evt) = yazi_plugin::bindings::MouseEvent::cast(&LUA, event) else { return };
 
 		let res = Lives::scope(&self.cx, move |_| {
-			let area = yazi_plugin::elements::Rect::cast(&LUA, size)?;
+			let area = yazi_plugin::elements::Rect::from(size);
 			let root = LUA.globals().raw_get::<_, Table>("Root")?.call_method::<_, Table>("new", area)?;
 
 			if matches!(event.kind, MouseEventKind::Down(_) if MANAGER.mouse_events.draggable()) {

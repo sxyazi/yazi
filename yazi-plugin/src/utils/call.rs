@@ -7,7 +7,6 @@ use yazi_dds::Sendable;
 use yazi_shared::{Layer, emit, event::{Cmd, Data}, render};
 
 use super::Utils;
-use crate::elements::RectRef;
 
 impl Utils {
 	fn parse_args(t: Table) -> mlua::Result<HashMap<String, Data>> {
@@ -45,13 +44,13 @@ impl Utils {
 				match id {
 					"current" => {
 						LAYOUT.store(Arc::new(yazi_config::Layout {
-							current: *c.raw_get::<_, RectRef>("_area")?,
+							current: *c.raw_get::<_, crate::elements::Rect>("_area")?,
 							..*LAYOUT.load_full()
 						}));
 					}
 					"preview" => {
 						LAYOUT.store(Arc::new(yazi_config::Layout {
-							preview: *c.raw_get::<_, RectRef>("_area")?,
+							preview: *c.raw_get::<_, crate::elements::Rect>("_area")?,
 							..*LAYOUT.load_full()
 						}));
 					}

@@ -1,7 +1,7 @@
 use mlua::{Table, TableExt};
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 use tracing::error;
-use yazi_plugin::{LUA, bindings::Cast, elements::render_widgets};
+use yazi_plugin::{LUA, elements::render_widgets};
 
 use super::{completion, confirm, input, select, tasks, which};
 use crate::{Ctx, components, help};
@@ -17,7 +17,7 @@ impl<'a> Root<'a> {
 impl<'a> Widget for Root<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let mut f = || {
-			let area = yazi_plugin::elements::Rect::cast(&LUA, area)?;
+			let area = yazi_plugin::elements::Rect::from(area);
 			let root = LUA.globals().raw_get::<_, Table>("Root")?.call_method::<_, Table>("new", area)?;
 
 			render_widgets(root.call_method("render", ())?, buf);

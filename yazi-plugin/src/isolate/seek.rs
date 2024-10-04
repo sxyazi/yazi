@@ -7,7 +7,7 @@ use crate::{LUA, Opt, OptCallback, bindings::Cast, elements::Rect, file::File};
 pub fn seek_sync(cmd: &Cmd, file: yazi_shared::fs::File, units: i16) {
 	let cb: OptCallback = Box::new(move |_, plugin| {
 		plugin.raw_set("file", File::cast(&LUA, file)?)?;
-		plugin.raw_set("area", Rect::cast(&LUA, LAYOUT.load().preview)?)?;
+		plugin.raw_set("area", Rect::from(LAYOUT.load().preview))?;
 		plugin.call_method("seek", units)
 	});
 

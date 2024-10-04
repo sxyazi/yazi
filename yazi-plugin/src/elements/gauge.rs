@@ -1,12 +1,12 @@
 use mlua::{AnyUserData, ExternalError, Lua, Table, UserData, UserDataMethods, Value};
 use ratatui::widgets::Widget;
 
-use super::{RectRef, Renderable, Span};
+use super::{Rect, Renderable, Span};
 use crate::elements::Style;
 
 #[derive(Clone, Default)]
 pub struct Gauge {
-	area: ratatui::layout::Rect,
+	area: Rect,
 
 	ratio:       f64,
 	label:       Option<ratatui::text::Span<'static>>,
@@ -18,7 +18,7 @@ impl Gauge {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
 		ui.raw_set(
 			"Gauge",
-			lua.create_function(|_, area: RectRef| Ok(Gauge { area: *area, ..Default::default() }))?,
+			lua.create_function(|_, area: Rect| Ok(Gauge { area, ..Default::default() }))?,
 		)
 	}
 }
@@ -59,7 +59,7 @@ impl UserData for Gauge {
 }
 
 impl Renderable for Gauge {
-	fn area(&self) -> ratatui::layout::Rect { self.area }
+	fn area(&self) -> ratatui::layout::Rect { *self.area }
 
 	fn render(self: Box<Self>, buf: &mut ratatui::buffer::Buffer) {
 		let mut gauge = ratatui::widgets::Gauge::default()
@@ -71,7 +71,7 @@ impl Renderable for Gauge {
 			gauge = gauge.label(s)
 		}
 
-		gauge.render(self.area, buf);
+		gauge.render(*self.area, buf);
 	}
 
 	fn clone_render(&self, buf: &mut ratatui::buffer::Buffer) { Box::new(self.clone()).render(buf) }

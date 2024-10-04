@@ -1,11 +1,11 @@
 use mlua::{AnyUserData, Lua, Table, UserData};
 use ratatui::widgets::Borders;
 
-use super::{RectRef, Renderable};
+use super::{Rect, Renderable};
 
 #[derive(Clone)]
 pub struct Bar {
-	area: ratatui::layout::Rect,
+	area: Rect,
 
 	direction: ratatui::widgets::Borders,
 	symbol:    String,
@@ -14,13 +14,13 @@ pub struct Bar {
 
 impl Bar {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		let new = lua.create_function(|_, (_, area, direction): (Table, RectRef, u8)| {
+		let new = lua.create_function(|_, (_, area, direction): (Table, Rect, u8)| {
 			Ok(Self {
-				area: *area,
+				area,
 
 				direction: Borders::from_bits_truncate(direction),
-				symbol:    Default::default(),
-				style:     Default::default(),
+				symbol: Default::default(),
+				style: Default::default(),
 			})
 		})?;
 
@@ -57,7 +57,7 @@ impl UserData for Bar {
 }
 
 impl Renderable for Bar {
-	fn area(&self) -> ratatui::layout::Rect { self.area }
+	fn area(&self) -> ratatui::layout::Rect { *self.area }
 
 	fn render(self: Box<Self>, buf: &mut ratatui::buffer::Buffer) {
 		if self.area.area() == 0 {
