@@ -13,13 +13,17 @@ end
 
 function M:seek(units)
 	local h = cx.active.current.hovered
-	if h and h.url == self.file.url then
-		local step = math.floor(units * self.area.h / 10)
-		ya.manager_emit("peek", {
-			math.max(0, cx.active.preview.skip + step),
-			only_if = self.file.url,
-		})
+	if not h or h.url ~= self.file.url then
+		return
 	end
+
+	local step = math.floor(units * self.area.h / 10)
+	step = step == 0 and ya.clamp(-1, units, 1) or step
+
+	ya.manager_emit("peek", {
+		math.max(0, cx.active.preview.skip + step),
+		only_if = self.file.url,
+	})
 end
 
 return M
