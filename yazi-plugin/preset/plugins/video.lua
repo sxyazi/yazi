@@ -29,7 +29,12 @@ function M:preload()
 	end
 
 	local cache = ya.file_cache(self)
-	if not cache or fs.cha(cache) then
+	if not cache then
+		return 1
+	end
+
+	local cha = fs.cha(cache)
+	if cha and cha.length > 0 then
 		return 1
 	end
 

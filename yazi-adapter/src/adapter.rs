@@ -83,9 +83,10 @@ impl Adapter {
 impl Adapter {
 	pub fn matches() -> Self {
 		let emulator = Emulator::detect();
-		#[cfg(windows)]
 		if matches!(emulator, Emulator::Microsoft) {
 			return Self::Sixel;
+		} else if *WSL && matches!(emulator, Emulator::WezTerm) {
+			return Self::KgpOld;
 		}
 
 		let mut protocols = emulator.adapters();
@@ -104,17 +105,14 @@ impl Adapter {
 		match env::var("XDG_SESSION_TYPE").unwrap_or_default().as_str() {
 			"x11" => return Self::X11,
 			"wayland" if supported_compositor => return Self::Wayland,
-			"wayland" if !supported_compositor => warn!("[Adapter] Unsupported Wayland compositor"),
+			"wayland" if !supported_compositor => return Self::Chafa,
 			_ => warn!("[Adapter] Could not identify XDG_SESSION_TYPE"),
 		}
-		if supported_compositor && env_exists("WAYLAND_DISPLAY") {
-			return Self::Wayland;
+		if env_exists("WAYLAND_DISPLAY") {
+			return if supported_compositor { Self::Wayland } else { Self::Chafa };
 		}
 		if env_exists("DISPLAY") {
 			return Self::X11;
-		}
-		if *WSL {
-			return Self::KgpOld;
 		}
 
 		warn!("[Adapter] Falling back to chafa");
