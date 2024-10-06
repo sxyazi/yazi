@@ -3258,6 +3258,7 @@ dependencies = [
  "clap_complete_nushell",
  "crossterm",
  "md-5",
+ "regex",
  "serde_json",
  "tokio",
  "toml_edit",
