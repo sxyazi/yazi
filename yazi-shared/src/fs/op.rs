@@ -48,15 +48,14 @@ impl FilesOp {
 	}
 
 	pub fn rename(map: HashMap<Url, File>) {
-		let mut parents = HashMap::new();
+		let mut parents: HashMap<_, (HashSet<_>, HashMap<_, _>)> = Default::default();
 		for (o, n) in map {
 			let Some(o_p) = o.parent_url() else { continue };
-			if o == n.url {
-				parents.entry(o_p).or_insert((HashSet::new(), HashMap::new())).1.insert(o.urn_owned(), n);
-			} else if let Some(n_p) = n.url.parent_url() {
-				parents.entry(o_p).or_insert((HashSet::new(), HashMap::new())).0.insert(o.urn_owned());
-				parents.entry(n_p).or_insert((HashSet::new(), HashMap::new())).1.insert(n.urn_owned(), n);
+			let Some(n_p) = n.url.parent_url() else { continue };
+			if o_p != n_p {
+				parents.entry(o_p).or_default().0.insert(o.urn_owned());
 			}
+			parents.entry(n_p).or_default().1.insert(n.urn_owned(), n);
 		}
 		for (p, (o, n)) in parents {
 			match (o.is_empty(), n.is_empty()) {

@@ -301,6 +301,10 @@ impl Files {
 			return;
 		}
 
+		self.update_deleting(
+			files.iter().filter(|&(u, f)| u != f.urn()).map(|(_, f)| f.urn_owned()).collect(),
+		);
+
 		let (hidden, items) = self.update_updating(files);
 		if hidden.is_empty() && items.is_empty() {
 			return;
