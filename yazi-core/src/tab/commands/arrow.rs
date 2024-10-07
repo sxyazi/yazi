@@ -25,8 +25,8 @@ impl From<isize> for Opt {
 }
 
 impl Tab {
-	pub fn arrow(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
+	#[yazi_macro::command]
+	pub fn arrow(&mut self, opt: Opt) {
 		if !self.current.arrow(opt.step) {
 			return;
 		}

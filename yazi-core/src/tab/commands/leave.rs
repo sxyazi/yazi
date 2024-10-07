@@ -11,7 +11,8 @@ impl From<Cmd> for Opt {
 }
 
 impl Tab {
-	pub fn leave(&mut self, _: impl Into<Opt>) {
+	#[yazi_macro::command]
+	pub fn leave(&mut self, _: Opt) {
 		self
 			.current
 			.hovered()

@@ -22,9 +22,8 @@ impl From<Url> for Opt {
 }
 
 impl Tab {
-	pub fn reveal(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
-
+	#[yazi_macro::command]
+	pub fn reveal(&mut self, opt: Opt) {
 		let Some(parent) = opt.target.parent_url() else {
 			return;
 		};

@@ -13,7 +13,8 @@ impl From<()> for Opt {
 }
 
 impl Input {
-	pub fn escape(&mut self, _: impl Into<Opt>) {
+	#[yazi_macro::command]
+	pub fn escape(&mut self, _: Opt) {
 		let snap = self.snap_mut();
 		match snap.mode {
 			InputMode::Normal if snap.op == InputOp::None => {

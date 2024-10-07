@@ -3,9 +3,9 @@ use std::time::Duration;
 use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
-use yazi_fs::{Filter, FilterCase};
-use yazi_proxy::{InputProxy, ManagerProxy};
-use yazi_shared::{Debounce, InputError, Layer, emit, event::Cmd, render};
+use yazi_fs::FilterCase;
+use yazi_proxy::InputProxy;
+use yazi_shared::{Debounce, InputError, Layer, emit, event::Cmd};
 
 use crate::tab::Tab;
 
@@ -27,8 +27,8 @@ impl From<Cmd> for Opt {
 }
 
 impl Tab {
-	pub fn filter(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
+	#[yazi_macro::command]
+	pub fn filter(&mut self, opt: Opt) {
 		tokio::spawn(async move {
 			let rx = InputProxy::show(InputCfg::filter());
 
@@ -48,33 +48,5 @@ impl Tab {
 				));
 			}
 		});
-	}
-
-	pub fn filter_do(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
-
-		let filter = if opt.query.is_empty() {
-			None
-		} else if let Ok(f) = Filter::new(&opt.query, opt.case) {
-			Some(f)
-		} else {
-			return;
-		};
-
-		if opt.done {
-			ManagerProxy::update_paged(); // Update for paged files in next loop
-		}
-
-		let hovered = self.current.hovered().map(|f| f.urn_owned());
-		if !self.current.files.set_filter(filter) {
-			return;
-		}
-
-		self.current.repos(hovered.as_ref().map(|u| u.as_urn()));
-		if self.current.hovered().map(|f| f.urn()) != hovered.as_ref().map(|u| u.as_urn()) {
-			ManagerProxy::hover(None, self.idx);
-		}
-
-		render!();
 	}
 }

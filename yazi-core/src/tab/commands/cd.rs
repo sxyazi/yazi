@@ -29,12 +29,12 @@ impl From<Url> for Opt {
 }
 
 impl Tab {
-	pub fn cd(&mut self, opt: impl Into<Opt>) {
+	#[yazi_macro::command]
+	pub fn cd(&mut self, opt: Opt) {
 		if !self.try_escape_visual() {
 			return;
 		}
 
-		let opt = opt.into() as Opt;
 		if opt.interactive {
 			return self.cd_interactive();
 		}

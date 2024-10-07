@@ -14,8 +14,8 @@ impl From<Cmd> for Opt {
 }
 
 impl Tabs {
-	pub fn switch(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
+	#[yazi_macro::command]
+	pub fn switch(&mut self, opt: Opt) {
 		let idx = if opt.relative {
 			(self.cursor as isize + opt.step).rem_euclid(self.items.len() as isize) as usize
 		} else {

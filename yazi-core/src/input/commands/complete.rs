@@ -25,8 +25,8 @@ impl From<Cmd> for Opt {
 }
 
 impl Input {
-	pub fn complete(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
+	#[yazi_macro::command]
+	pub fn complete(&mut self, opt: Opt) {
 		if self.ticket != opt.ticket {
 			return;
 		}

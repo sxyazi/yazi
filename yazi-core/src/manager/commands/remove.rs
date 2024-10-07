@@ -23,7 +23,8 @@ impl From<Cmd> for Opt {
 }
 
 impl Manager {
-	pub fn remove(&mut self, opt: impl Into<Opt>, tasks: &Tasks) {
+	#[yazi_macro::command]
+	pub fn remove(&mut self, mut opt: Opt, tasks: &Tasks) {
 		if !self.active_mut().try_escape_visual() {
 			return;
 		}
@@ -31,7 +32,6 @@ impl Manager {
 			return;
 		};
 
-		let mut opt = opt.into() as Opt;
 		opt.targets = if opt.hovered {
 			vec![hovered.clone()]
 		} else {
@@ -55,9 +55,8 @@ impl Manager {
 		});
 	}
 
-	pub fn remove_do(&mut self, opt: impl Into<Opt>, tasks: &Tasks) {
-		let opt = opt.into() as Opt;
-
+	#[yazi_macro::command]
+	pub fn remove_do(&mut self, opt: Opt, tasks: &Tasks) {
 		self.tabs.iter_mut().for_each(|t| {
 			t.selected.remove_many(&opt.targets, false);
 		});

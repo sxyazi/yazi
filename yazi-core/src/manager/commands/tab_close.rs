@@ -15,9 +15,8 @@ impl From<usize> for Opt {
 }
 
 impl Tabs {
-	pub fn close(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
-
+	#[yazi_macro::command]
+	pub fn close(&mut self, opt: Opt) {
 		let len = self.items.len();
 		if len < 2 || opt.idx >= len {
 			return;

@@ -12,12 +12,12 @@ impl From<Cmd> for Opt {
 }
 
 impl Manager {
-	pub fn link(&mut self, opt: impl Into<Opt>, tasks: &Tasks) {
+	#[yazi_macro::command]
+	pub fn link(&mut self, opt: Opt, tasks: &Tasks) {
 		if self.yanked.cut {
 			return;
 		}
 
-		let opt = opt.into() as Opt;
 		tasks.file_link(&self.yanked, self.cwd(), opt.relative, opt.force);
 	}
 }

@@ -13,10 +13,9 @@ impl From<Cmd> for Opt {
 }
 
 impl Tab {
-	pub fn visual_mode(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
+	#[yazi_macro::command]
+	pub fn visual_mode(&mut self, opt: Opt) {
 		let idx = self.current.cursor;
-
 		if opt.unset {
 			self.mode = Mode::Unset(idx, BTreeSet::from([idx]));
 		} else {

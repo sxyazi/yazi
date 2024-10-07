@@ -14,9 +14,9 @@ impl From<bool> for Opt {
 }
 
 impl Input {
-	pub fn backspace(&mut self, opt: impl Into<Opt>) {
+	#[yazi_macro::command]
+	pub fn backspace(&mut self, opt: Opt) {
 		let snap = self.snaps.current_mut();
-		let opt = opt.into() as Opt;
 		if !opt.under && snap.cursor < 1 {
 			return;
 		} else if opt.under && snap.cursor >= snap.value.len() {

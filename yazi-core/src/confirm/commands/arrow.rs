@@ -11,6 +11,15 @@ impl From<Cmd> for Opt {
 }
 
 impl Confirm {
+	#[yazi_macro::command]
+	pub fn arrow(&mut self, opt: Opt, manager: &Manager) {
+		if opt.step > 0 {
+			self.next(opt.step as usize, manager.area(self.position).width)
+		} else {
+			self.prev(opt.step.unsigned_abs())
+		}
+	}
+
 	fn next(&mut self, step: usize, width: u16) {
 		let height = self.list.line_count(width);
 		if height == 0 {
@@ -28,14 +37,5 @@ impl Confirm {
 		self.offset -= step.min(self.offset);
 
 		render!(old != self.offset);
-	}
-
-	pub fn arrow(&mut self, opt: impl Into<Opt>, manager: &Manager) {
-		let opt = opt.into() as Opt;
-		if opt.step > 0 {
-			self.next(opt.step as usize, manager.area(self.position).width)
-		} else {
-			self.prev(opt.step.unsigned_abs())
-		}
 	}
 }

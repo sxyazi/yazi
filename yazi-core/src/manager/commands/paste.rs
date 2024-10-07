@@ -12,8 +12,8 @@ impl From<Cmd> for Opt {
 }
 
 impl Manager {
-	pub fn paste(&mut self, opt: impl Into<Opt>, tasks: &Tasks) {
-		let opt = opt.into() as Opt;
+	#[yazi_macro::command]
+	pub fn paste(&mut self, opt: Opt, tasks: &Tasks) {
 		let (src, dest) = (self.yanked.iter().collect::<Vec<_>>(), self.cwd());
 
 		if self.yanked.cut {

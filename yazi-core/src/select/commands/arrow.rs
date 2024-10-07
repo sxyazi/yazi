@@ -11,6 +11,11 @@ impl From<Cmd> for Opt {
 }
 
 impl Select {
+	#[yazi_macro::command]
+	pub fn arrow(&mut self, opt: Opt) {
+		if opt.step > 0 { self.next(opt.step as usize) } else { self.prev(opt.step.unsigned_abs()) }
+	}
+
 	fn next(&mut self, step: usize) {
 		let len = self.items.len();
 		if len == 0 {
@@ -37,10 +42,5 @@ impl Select {
 		}
 
 		render!(old != self.cursor);
-	}
-
-	pub fn arrow(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
-		if opt.step > 0 { self.next(opt.step as usize) } else { self.prev(opt.step.unsigned_abs()) }
 	}
 }

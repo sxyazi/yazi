@@ -28,7 +28,8 @@ impl From<Cmd> for Opt {
 }
 
 impl Manager {
-	pub fn rename(&mut self, opt: impl Into<Opt>) {
+	#[yazi_macro::command]
+	pub fn rename(&mut self, opt: Opt) {
 		if !self.active_mut().try_escape_visual() {
 			return;
 		}
@@ -36,7 +37,6 @@ impl Manager {
 			return;
 		};
 
-		let opt = opt.into() as Opt;
 		if !opt.hovered && !self.active().selected.is_empty() {
 			return self.bulk_rename();
 		}

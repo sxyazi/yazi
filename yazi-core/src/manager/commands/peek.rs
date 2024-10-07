@@ -25,7 +25,8 @@ impl From<bool> for Opt {
 }
 
 impl Manager {
-	pub fn peek(&mut self, opt: impl Into<Opt>) {
+	#[yazi_macro::command]
+	pub fn peek(&mut self, opt: Opt) {
 		let Some(hovered) = self.hovered().cloned() else {
 			return self.active_mut().preview.reset();
 		};
@@ -40,7 +41,6 @@ impl Manager {
 			self.active_mut().preview.reset();
 		}
 
-		let opt = opt.into() as Opt;
 		if matches!(opt.only_if, Some(u) if u != hovered.url) {
 			return;
 		}

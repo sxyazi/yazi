@@ -14,7 +14,8 @@ impl From<Cmd> for Opt {
 }
 
 impl Manager {
-	pub fn seek(&mut self, opt: impl Into<Opt>) {
+	#[yazi_macro::command]
+	pub fn seek(&mut self, opt: Opt) {
 		let Some(hovered) = self.hovered() else {
 			return self.active_mut().preview.reset();
 		};
@@ -31,7 +32,6 @@ impl Manager {
 			return self.active_mut().preview.reset();
 		};
 
-		let opt = opt.into() as Opt;
 		isolate::seek_sync(&previewer.run, hovered.clone(), opt.units);
 	}
 }

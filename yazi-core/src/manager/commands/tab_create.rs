@@ -28,13 +28,13 @@ impl From<Cmd> for Opt {
 }
 
 impl Tabs {
-	pub fn create(&mut self, opt: impl Into<Opt>) {
+	#[yazi_macro::command]
+	pub fn create(&mut self, opt: Opt) {
 		if self.items.len() >= MAX_TABS {
 			AppProxy::notify_warn("Too many tabs", "You can only open up to 9 tabs at the same time.");
 			return;
 		}
 
-		let opt = opt.into() as Opt;
 		let mut tab = Tab { idx: self.cursor + 1, ..Default::default() };
 
 		if !opt.current {

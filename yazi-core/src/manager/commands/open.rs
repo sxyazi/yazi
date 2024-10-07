@@ -23,7 +23,8 @@ impl From<Cmd> for Opt {
 }
 
 impl Manager {
-	pub fn open(&mut self, opt: impl Into<Opt>, tasks: &Tasks) {
+	#[yazi_macro::command]
+	pub fn open(&mut self, opt: Opt, tasks: &Tasks) {
 		if !self.active_mut().try_escape_visual() {
 			return;
 		}
@@ -31,7 +32,6 @@ impl Manager {
 			return;
 		};
 
-		let opt = opt.into() as Opt;
 		let selected =
 			if opt.hovered { vec![&hovered] } else { self.selected_or_hovered(true).collect() };
 
@@ -72,8 +72,8 @@ impl Manager {
 		});
 	}
 
-	pub fn open_do(&mut self, opt: impl Into<OpenDoOpt>, tasks: &Tasks) {
-		let opt = opt.into() as OpenDoOpt;
+	#[yazi_macro::command]
+	pub fn open_do(&mut self, opt: OpenDoOpt, tasks: &Tasks) {
 		let targets: Vec<_> = opt
 			.targets
 			.into_iter()

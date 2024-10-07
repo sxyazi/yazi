@@ -11,8 +11,8 @@ impl From<Cmd> for Opt {
 }
 
 impl Input {
-	pub fn forward(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
+	#[yazi_macro::command]
+	pub fn forward(&mut self, opt: Opt) {
 		let snap = self.snap();
 
 		let mut it = snap.value.chars().skip(snap.cursor).enumerate();
