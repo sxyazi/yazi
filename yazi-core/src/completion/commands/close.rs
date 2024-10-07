@@ -15,9 +15,8 @@ impl From<bool> for Opt {
 }
 
 impl Completion {
-	pub fn close(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
-
+	#[yazi_macro::command]
+	pub fn close(&mut self, opt: Opt) {
 		if let Some(s) = self.selected().filter(|_| opt.submit) {
 			InputProxy::complete(s, self.ticket);
 		}

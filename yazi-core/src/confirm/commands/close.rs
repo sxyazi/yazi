@@ -14,8 +14,8 @@ impl From<bool> for Opt {
 }
 
 impl Confirm {
-	pub fn close(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
+	#[yazi_macro::command]
+	pub fn close(&mut self, opt: Opt) {
 		if let Some(cb) = self.callback.take() {
 			_ = cb.send(opt.submit);
 		}

@@ -23,8 +23,8 @@ impl From<Option<Url>> for Opt {
 }
 
 impl Manager {
-	pub fn hover(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
+	#[yazi_macro::command]
+	pub fn hover(&mut self, opt: Opt) {
 		if let Some(u) = opt.url {
 			self.hover_do(u, opt.tab);
 		} else {

@@ -12,7 +12,8 @@ impl From<()> for Opt {
 }
 
 impl Manager {
-	pub fn unyank(&mut self, _: impl Into<Opt>) {
+	#[yazi_macro::command]
+	pub fn unyank(&mut self, _: Opt) {
 		self.yanked.clear();
 		render!(self.yanked.catchup_revision(false));
 	}

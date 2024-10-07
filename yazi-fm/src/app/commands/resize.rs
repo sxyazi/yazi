@@ -13,7 +13,8 @@ impl From<()> for Opt {
 }
 
 impl App {
-	pub(crate) fn resize(&mut self, _: impl Into<Opt>) {
+	#[yazi_macro::command]
+	pub fn resize(&mut self, _: Opt) {
 		self.cx.manager.active_mut().preview.reset();
 		self.render();
 

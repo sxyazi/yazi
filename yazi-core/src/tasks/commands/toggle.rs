@@ -12,7 +12,8 @@ impl From<()> for Opt {
 }
 
 impl Tasks {
-	pub fn toggle(&mut self, _: impl Into<Opt>) {
+	#[yazi_macro::command]
+	pub fn toggle(&mut self, _: Opt) {
 		self.visible = !self.visible;
 
 		if self.visible {

@@ -13,6 +13,33 @@ impl From<Cmd> for Opt {
 }
 
 impl Input {
+	#[yazi_macro::command]
+	pub fn kill(&mut self, opt: Opt) {
+		let snap = self.snap_mut();
+		match opt.kind.as_str() {
+			"all" => self.kill_range(..),
+			"bol" => {
+				let end = snap.idx(snap.cursor).unwrap_or(snap.len());
+				self.kill_range(..end)
+			}
+			"eol" => {
+				let start = snap.idx(snap.cursor).unwrap_or(snap.len());
+				self.kill_range(start..)
+			}
+			"backward" => {
+				let end = snap.idx(snap.cursor).unwrap_or(snap.len());
+				let start = end - Self::find_word_boundary(snap.value[..end].chars().rev());
+				self.kill_range(start..end)
+			}
+			"forward" => {
+				let start = snap.idx(snap.cursor).unwrap_or(snap.len());
+				let end = start + Self::find_word_boundary(snap.value[start..].chars());
+				self.kill_range(start..end)
+			}
+			_ => {}
+		}
+	}
+
 	fn kill_range(&mut self, range: impl RangeBounds<usize>) {
 		let snap = self.snap_mut();
 		snap.cursor = match range.start_bound() {
@@ -63,33 +90,5 @@ impl Input {
 		let n = count_spaces(input.clone());
 		let n = n + count_characters(input.clone().skip(n));
 		input.take(n).fold(0, |acc, c| acc + c.len_utf8())
-	}
-
-	pub fn kill(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
-		let snap = self.snap_mut();
-
-		match opt.kind.as_str() {
-			"all" => self.kill_range(..),
-			"bol" => {
-				let end = snap.idx(snap.cursor).unwrap_or(snap.len());
-				self.kill_range(..end)
-			}
-			"eol" => {
-				let start = snap.idx(snap.cursor).unwrap_or(snap.len());
-				self.kill_range(start..)
-			}
-			"backward" => {
-				let end = snap.idx(snap.cursor).unwrap_or(snap.len());
-				let start = end - Self::find_word_boundary(snap.value[..end].chars().rev());
-				self.kill_range(start..end)
-			}
-			"forward" => {
-				let start = snap.idx(snap.cursor).unwrap_or(snap.len());
-				let end = start + Self::find_word_boundary(snap.value[start..].chars());
-				self.kill_range(start..end)
-			}
-			_ => {}
-		}
 	}
 }

@@ -12,8 +12,8 @@ impl From<Cmd> for Opt {
 }
 
 impl Input {
-	pub fn delete(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
+	#[yazi_macro::command]
+	pub fn delete(&mut self, opt: Opt) {
 		match self.snap().op {
 			InputOp::None => {
 				self.snap_mut().op = InputOp::Delete(opt.cut, opt.insert, self.snap().cursor);

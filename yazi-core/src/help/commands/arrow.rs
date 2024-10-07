@@ -14,13 +14,12 @@ impl From<isize> for Opt {
 }
 
 impl Help {
-	#[inline]
-	pub fn arrow(&mut self, opt: impl Into<Opt>) {
+	#[yazi_macro::command]
+	pub fn arrow(&mut self, opt: Opt) {
 		let max = self.bindings.len().saturating_sub(1);
 		self.offset = self.offset.min(max);
 		self.cursor = self.cursor.min(max);
 
-		let opt = opt.into() as Opt;
 		if opt.step > 0 {
 			self.next(opt.step as usize);
 		} else {

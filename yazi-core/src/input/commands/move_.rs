@@ -21,9 +21,8 @@ impl From<isize> for Opt {
 }
 
 impl Input {
-	pub fn move_(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
-
+	#[yazi_macro::command]
+	pub fn move_(&mut self, opt: Opt) {
 		let snap = self.snap();
 		if opt.in_operating && snap.op == InputOp::None {
 			return;

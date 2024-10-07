@@ -14,7 +14,8 @@ impl From<bool> for Opt {
 }
 
 impl Input {
-	pub fn insert(&mut self, opt: impl Into<Opt>) {
+	#[yazi_macro::command]
+	pub fn insert(&mut self, opt: Opt) {
 		let snap = self.snap_mut();
 		if snap.mode == InputMode::Normal {
 			snap.op = InputOp::None;
@@ -23,7 +24,6 @@ impl Input {
 			return;
 		}
 
-		let opt = opt.into() as Opt;
 		if opt.append {
 			self.move_(1);
 		}

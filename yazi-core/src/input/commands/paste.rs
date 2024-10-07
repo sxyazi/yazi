@@ -12,7 +12,8 @@ impl From<Cmd> for Opt {
 }
 
 impl Input {
-	pub fn paste(&mut self, opt: impl Into<Opt>) {
+	#[yazi_macro::command]
+	pub fn paste(&mut self, opt: Opt) {
 		if let Some(start) = self.snap().op.start() {
 			self.snap_mut().op = InputOp::Delete(false, false, start);
 			self.handle_op(self.snap().cursor, true);
@@ -23,7 +24,6 @@ impl Input {
 			return;
 		}
 
-		let opt = opt.into() as Opt;
 		self.insert(!opt.before);
 		self.type_str(&s.to_string_lossy());
 		self.escape(());

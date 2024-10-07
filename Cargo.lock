@@ -3310,6 +3310,7 @@ dependencies = [
  "yazi-config",
  "yazi-dds",
  "yazi-fs",
+ "yazi-macro",
  "yazi-plugin",
  "yazi-proxy",
  "yazi-scheduler",
@@ -3362,6 +3363,7 @@ dependencies = [
  "yazi-core",
  "yazi-dds",
  "yazi-fs",
+ "yazi-macro",
  "yazi-plugin",
  "yazi-proxy",
  "yazi-shared",
@@ -3379,6 +3381,14 @@ dependencies = [
  "yazi-config",
  "yazi-proxy",
  "yazi-shared",
+]
+
+[[package]]
+name = "yazi-macro"
+version = "0.3.3"
+dependencies = [
+ "quote",
+ "syn 2.0.79",
 ]
 
 [[package]]

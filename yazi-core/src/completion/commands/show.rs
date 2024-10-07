@@ -25,6 +25,31 @@ impl From<Cmd> for Opt {
 }
 
 impl Completion {
+	#[yazi_macro::command]
+	pub fn show(&mut self, opt: Opt) {
+		if self.ticket != opt.ticket {
+			return;
+		}
+
+		if !opt.cache.is_empty() {
+			self.caches.insert(opt.cache_name.to_owned(), opt.cache);
+		}
+		let Some(cache) = self.caches.get(&opt.cache_name) else {
+			return;
+		};
+
+		self.ticket = opt.ticket;
+		self.cands = Self::match_candidates(&opt.word, cache);
+		if self.cands.is_empty() {
+			return render!(mem::replace(&mut self.visible, false));
+		}
+
+		self.offset = 0;
+		self.cursor = 0;
+		self.visible = true;
+		render!();
+	}
+
 	fn match_candidates(word: &str, cache: &[String]) -> Vec<String> {
 		let smart = !word.bytes().any(|c| c.is_ascii_uppercase());
 
@@ -54,30 +79,5 @@ impl Completion {
 			prefixed.extend(fuzzy.into_iter().take(LIMIT - prefixed.len()))
 		}
 		prefixed.into_iter().map(ToOwned::to_owned).collect()
-	}
-
-	pub fn show(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
-		if self.ticket != opt.ticket {
-			return;
-		}
-
-		if !opt.cache.is_empty() {
-			self.caches.insert(opt.cache_name.to_owned(), opt.cache);
-		}
-		let Some(cache) = self.caches.get(&opt.cache_name) else {
-			return;
-		};
-
-		self.ticket = opt.ticket;
-		self.cands = Self::match_candidates(&opt.word, cache);
-		if self.cands.is_empty() {
-			return render!(mem::replace(&mut self.visible, false));
-		}
-
-		self.offset = 0;
-		self.cursor = 0;
-		self.visible = true;
-		render!();
 	}
 }

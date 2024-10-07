@@ -18,8 +18,8 @@ impl From<Cmd> for Opt {
 }
 
 impl Manager {
-	pub fn create(&self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
+	#[yazi_macro::command]
+	pub fn create(&self, opt: Opt) {
 		let cwd = self.cwd().to_owned();
 		tokio::spawn(async move {
 			let mut result = InputProxy::show(InputCfg::create(opt.dir));

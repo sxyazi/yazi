@@ -15,9 +15,10 @@ impl From<isize> for Opt {
 }
 
 impl Tasks {
-	pub fn arrow(&mut self, opt: impl Into<Opt>) {
+	#[yazi_macro::command]
+	pub fn arrow(&mut self, opt: Opt) {
 		let old = self.cursor;
-		if opt.into().step > 0 {
+		if opt.step > 0 {
 			self.cursor += 1;
 		} else {
 			self.cursor = self.cursor.saturating_sub(1);

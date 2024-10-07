@@ -11,12 +11,13 @@ impl From<Cmd> for Opt {
 }
 
 impl Manager {
-	pub fn yank(&mut self, opt: impl Into<Opt>) {
+	#[yazi_macro::command]
+	pub fn yank(&mut self, opt: Opt) {
 		if !self.active_mut().try_escape_visual() {
 			return;
 		}
 
-		self.yanked = Yanked::new(opt.into().cut, self.selected_or_hovered(false).cloned().collect());
+		self.yanked = Yanked::new(opt.cut, self.selected_or_hovered(false).cloned().collect());
 		render!(self.yanked.catchup_revision(true));
 
 		self.active_mut().escape_select();

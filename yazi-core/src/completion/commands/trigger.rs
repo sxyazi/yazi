@@ -26,8 +26,8 @@ impl From<Cmd> for Opt {
 }
 
 impl Completion {
-	pub fn trigger(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
+	#[yazi_macro::command]
+	pub fn trigger(&mut self, opt: Opt) {
 		if opt.ticket < self.ticket {
 			return;
 		}

@@ -15,9 +15,9 @@ impl From<MouseEvent> for Opt {
 }
 
 impl App {
-	pub(crate) fn mouse(&mut self, opt: impl Into<Opt>) {
-		let event = (opt.into() as Opt).event;
-
+	#[yazi_macro::command]
+	pub fn mouse(&mut self, opt: Opt) {
+		let event = opt.event;
 		let Some(size) = self.term.as_ref().and_then(|t| t.size().ok()) else { return };
 		let Ok(evt) = yazi_plugin::bindings::MouseEvent::cast(&LUA, event) else { return };
 

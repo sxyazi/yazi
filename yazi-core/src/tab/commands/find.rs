@@ -5,14 +5,14 @@ use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
 use yazi_fs::FilterCase;
 use yazi_proxy::InputProxy;
-use yazi_shared::{Debounce, InputError, Layer, emit, event::Cmd, render};
+use yazi_shared::{Debounce, InputError, Layer, emit, event::Cmd};
 
-use crate::tab::{Finder, Tab};
+use crate::tab::Tab;
 
 pub struct Opt {
-	query: Option<String>,
-	prev:  bool,
-	case:  FilterCase,
+	pub(super) query: Option<String>,
+	pub(super) prev:  bool,
+	pub(super) case:  FilterCase,
 }
 
 impl From<Cmd> for Opt {
@@ -21,17 +21,9 @@ impl From<Cmd> for Opt {
 	}
 }
 
-pub struct ArrowOpt {
-	prev: bool,
-}
-
-impl From<Cmd> for ArrowOpt {
-	fn from(c: Cmd) -> Self { Self { prev: c.bool("previous") } }
-}
-
 impl Tab {
-	pub fn find(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
+	#[yazi_macro::command]
+	pub fn find(&mut self, opt: Opt) {
 		tokio::spawn(async move {
 			let rx = InputProxy::show(InputCfg::find(opt.prev));
 
@@ -48,49 +40,5 @@ impl Tab {
 				));
 			}
 		});
-	}
-
-	pub fn find_do(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
-		let Some(query) = opt.query else {
-			return;
-		};
-		if query.is_empty() {
-			self.escape_find();
-			return;
-		}
-
-		let Ok(finder) = Finder::new(&query, opt.case) else {
-			return;
-		};
-		if matches!(&self.finder, Some(f) if f.filter == finder.filter) {
-			return;
-		}
-
-		let step = if opt.prev {
-			finder.prev(&self.current.files, self.current.cursor, true)
-		} else {
-			finder.next(&self.current.files, self.current.cursor, true)
-		};
-
-		if let Some(step) = step {
-			self.arrow(step);
-		}
-
-		self.finder = Some(finder);
-		render!();
-	}
-
-	pub fn find_arrow(&mut self, opt: impl Into<ArrowOpt>) {
-		let Some(finder) = &mut self.finder else {
-			return;
-		};
-
-		render!(finder.catchup(&self.current.files));
-		if opt.into().prev {
-			finder.prev(&self.current.files, self.current.cursor, false).map(|s| self.arrow(s));
-		} else {
-			finder.next(&self.current.files, self.current.cursor, false).map(|s| self.arrow(s));
-		}
 	}
 }

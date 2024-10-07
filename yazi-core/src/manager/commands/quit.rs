@@ -19,8 +19,9 @@ impl From<Cmd> for Opt {
 }
 
 impl Manager {
-	pub fn quit(&self, opt: impl Into<Opt>, tasks: &Tasks) {
-		let opt = EventQuit { no_cwd_file: opt.into().no_cwd_file, ..Default::default() };
+	#[yazi_macro::command]
+	pub fn quit(&self, opt: Opt, tasks: &Tasks) {
+		let opt = EventQuit { no_cwd_file: opt.no_cwd_file, ..Default::default() };
 
 		let ongoing = tasks.ongoing().clone();
 		let (left, left_names) = {

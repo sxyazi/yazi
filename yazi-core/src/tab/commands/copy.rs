@@ -14,8 +14,8 @@ impl From<Cmd> for Opt {
 }
 
 impl Tab {
-	pub fn copy(&mut self, opt: impl Into<Opt>) {
-		let opt = opt.into() as Opt;
+	#[yazi_macro::command]
+	pub fn copy(&mut self, opt: Opt) {
 		if !self.try_escape_visual() {
 			return;
 		}
