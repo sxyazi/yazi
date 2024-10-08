@@ -70,6 +70,28 @@ impl FilesOp {
 		}
 	}
 
+	pub fn mutate(ops: Vec<Self>) {
+		let mut parents: HashMap<_, (HashMap<_, _>, HashSet<_>)> = Default::default();
+		for op in ops {
+			match op {
+				Self::Upserting(p, map) => parents.entry(p).or_default().0.extend(map),
+				Self::Deleting(p, urns) => parents.entry(p).or_default().1.extend(urns),
+				_ => unreachable!(),
+			}
+		}
+		for (p, (u, d)) in parents {
+			match (u.is_empty(), d.is_empty()) {
+				(true, true) => unreachable!(),
+				(true, false) => Self::Deleting(p, d).emit(),
+				(false, true) => Self::Upserting(p, u).emit(),
+				(false, false) => {
+					Self::Deleting(p.clone(), d).emit();
+					Self::Upserting(p, u).emit();
+				}
+			}
+		}
+	}
+
 	pub fn rebase(&self, new: &Url) -> Self {
 		macro_rules! files {
 			($files:expr) => {{ $files.iter().map(|f| f.rebase(new)).collect() }};

@@ -122,12 +122,13 @@ impl Watcher {
 			let mut cached: HashMap<_, _> = HashMap::new();
 
 			let _permit = WATCHER.acquire().await.unwrap();
+			let mut ops = Vec::with_capacity(urls.len());
 			let mut reload = Vec::with_capacity(urls.len());
 
 			for u in urls {
 				let Some((parent, urn)) = u.pair() else { continue };
 				let Ok(file) = File::from(u).await else {
-					FilesOp::Deleting(parent, HashSet::from_iter([urn])).emit();
+					ops.push(FilesOp::Deleting(parent, HashSet::from_iter([urn])));
 					continue;
 				};
 
@@ -136,19 +137,17 @@ impl Watcher {
 					|| realname_unchecked(u, &mut cached).await.is_ok_and(|s| urn.as_urn() == s);
 
 				if !eq {
-					FilesOp::Deleting(parent, HashSet::from_iter([urn])).emit();
+					ops.push(FilesOp::Deleting(parent, HashSet::from_iter([urn])));
 					continue;
 				}
 
 				if !file.is_dir() {
 					reload.push(file.clone());
 				}
-				FilesOp::Upserting(parent, HashMap::from_iter([(urn, file)])).emit();
+				ops.push(FilesOp::Upserting(parent, HashMap::from_iter([(urn, file)])));
 			}
 
-			if reload.is_empty() {
-				continue;
-			}
+			FilesOp::mutate(ops);
 			if let Err(e) = isolate::fetch("mime", reload).await {
 				error!("Fetch `mime` failed in watcher: {e}");
 			}
