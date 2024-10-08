@@ -17,7 +17,7 @@ arc-swap  = { workspace = true }
 bitflags  = { workspace = true }
 crossterm = { workspace = true }
 globset   = { workspace = true }
-indexmap  = { version = "2.5.0", features = [ "serde" ] }
+indexmap  = { version = "2.6.0", features = [ "serde" ] }
 ratatui   = { workspace = true }
 regex     = { workspace = true }
 serde     = { workspace = true }

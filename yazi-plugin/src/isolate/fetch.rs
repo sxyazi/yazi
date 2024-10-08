@@ -6,6 +6,9 @@ use super::slim_lua;
 use crate::{bindings::Cast, elements::Rect, file::File, loader::LOADER};
 
 pub async fn fetch(name: &str, files: Vec<yazi_shared::fs::File>) -> mlua::Result<u8> {
+	if files.is_empty() {
+		return Ok(1);
+	}
 	LOADER.ensure(name).await.into_lua_err()?;
 
 	let name = name.to_owned();

@@ -15,10 +15,10 @@ anyhow        = "1.0.89"
 arc-swap      = "1.7.1"
 base64        = "0.22.1"
 bitflags      = "2.6.0"
-clap          = { version = "4.5.18", features = [ "derive" ] }
+clap          = { version = "4.5.19", features = [ "derive" ] }
 crossterm     = { version = "0.28.1", features = [ "event-stream" ] }
 dirs          = "5.0.1"
-futures       = "0.3.30"
+futures       = "0.3.31"
 globset       = "0.4.15"
 libc          = "0.2.159"
 md-5          = "0.10.6"
