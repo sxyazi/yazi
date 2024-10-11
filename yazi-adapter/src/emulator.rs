@@ -113,10 +113,11 @@ impl Emulator {
 		}
 
 		let mut term = std::env::var("TERM").unwrap_or_default();
-		let program = std::env::var("TERM_PROGRAM").unwrap_or_default();
+		let mut program = std::env::var("TERM_PROGRAM").unwrap_or_default();
 
 		if *TMUX {
 			term = tmux_env("TERM").unwrap_or(term);
+			program = tmux_env("TERM_PROGRAM").unwrap_or(program);
 		}
 
 		(term, program)

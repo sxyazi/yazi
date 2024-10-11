@@ -13,7 +13,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Input {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn kill(&mut self, opt: Opt) {
 		let snap = self.snap_mut();
 		match opt.kind.as_str() {

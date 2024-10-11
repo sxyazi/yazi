@@ -1,6 +1,7 @@
 use std::{fs::{FileType, Metadata}, time::SystemTime};
 
 use bitflags::bitflags;
+use yazi_macro::unix_either;
 
 bitflags! {
 	#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -20,6 +21,8 @@ pub struct Cha {
 	pub kind:  ChaKind,
 	pub len:   u64,
 	pub atime: Option<SystemTime>,
+	pub btime: Option<SystemTime>,
+	#[cfg(unix)]
 	pub ctime: Option<SystemTime>,
 	pub mtime: Option<SystemTime>,
 	#[cfg(unix)]
@@ -40,11 +43,16 @@ impl From<Metadata> for Cha {
 		}
 
 		Self {
-			kind:  ck,
-			len:   m.len(),
-			atime: m.accessed().ok(),
-			ctime: m.created().ok(),
-			mtime: m.modified().ok(),
+			kind:               ck,
+			len:                m.len(),
+			atime:              m.accessed().ok(),
+			btime:              m.created().ok(),
+			#[cfg(unix)]
+			ctime:              {
+				use std::{os::unix::fs::MetadataExt, time::{Duration, UNIX_EPOCH}};
+				UNIX_EPOCH.checked_add(Duration::new(m.ctime() as u64, m.ctime_nsec() as u32))
+			},
+			mtime:              m.modified().ok(),
 
 			#[cfg(unix)]
 			perm:               {
@@ -126,16 +134,12 @@ impl Cha {
 
 	#[inline]
 	pub fn hits(self, c: Self) -> bool {
-		self.len == c.len && self.mtime == c.mtime && self.ctime == c.ctime && self.kind == c.kind && {
-			#[cfg(unix)]
-			{
-				self.perm == c.perm
-			}
-			#[cfg(windows)]
-			{
-				true
-			}
-		}
+		self.len == c.len
+			&& self.mtime == c.mtime
+			&& unix_either!(self.ctime == c.ctime, true)
+			&& self.btime == c.btime
+			&& self.kind == c.kind
+			&& unix_either!(self.perm == c.perm, true)
 	}
 }
 
@@ -157,73 +161,27 @@ impl Cha {
 
 	#[inline]
 	pub const fn is_block(&self) -> bool {
-		#[cfg(unix)]
-		{
-			self.perm & libc::S_IFMT == libc::S_IFBLK
-		}
-		#[cfg(windows)]
-		{
-			false
-		}
+		unix_either!(self.perm & libc::S_IFMT == libc::S_IFBLK, false)
 	}
 
 	#[inline]
 	pub const fn is_char(&self) -> bool {
-		#[cfg(unix)]
-		{
-			self.perm & libc::S_IFMT == libc::S_IFCHR
-		}
-		#[cfg(windows)]
-		{
-			false
-		}
+		unix_either!(self.perm & libc::S_IFMT == libc::S_IFCHR, false)
 	}
 
 	#[inline]
 	pub const fn is_fifo(&self) -> bool {
-		#[cfg(unix)]
-		{
-			self.perm & libc::S_IFMT == libc::S_IFIFO
-		}
-		#[cfg(windows)]
-		{
-			false
-		}
+		unix_either!(self.perm & libc::S_IFMT == libc::S_IFIFO, false)
 	}
 
 	#[inline]
 	pub const fn is_sock(&self) -> bool {
-		#[cfg(unix)]
-		{
-			self.perm & libc::S_IFMT == libc::S_IFSOCK
-		}
-		#[cfg(windows)]
-		{
-			false
-		}
+		unix_either!(self.perm & libc::S_IFMT == libc::S_IFSOCK, false)
 	}
 
 	#[inline]
-	pub const fn is_exec(&self) -> bool {
-		#[cfg(unix)]
-		{
-			self.perm & libc::S_IXUSR != 0
-		}
-		#[cfg(windows)]
-		{
-			false
-		}
-	}
+	pub const fn is_exec(&self) -> bool { unix_either!(self.perm & libc::S_IXUSR != 0, false) }
 
 	#[inline]
-	pub const fn is_sticky(&self) -> bool {
-		#[cfg(unix)]
-		{
-			self.perm & libc::S_ISVTX != 0
-		}
-		#[cfg(windows)]
-		{
-			false
-		}
-	}
+	pub const fn is_sticky(&self) -> bool { unix_either!(self.perm & libc::S_ISVTX != 0, false) }
 }

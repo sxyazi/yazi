@@ -11,7 +11,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Tab {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn leave(&mut self, _: Opt) {
 		self
 			.current

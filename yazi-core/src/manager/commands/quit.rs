@@ -19,7 +19,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Manager {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn quit(&self, opt: Opt, tasks: &Tasks) {
 		let opt = EventQuit { no_cwd_file: opt.no_cwd_file, ..Default::default() };
 

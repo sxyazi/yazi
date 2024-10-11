@@ -13,7 +13,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Tab {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn visual_mode(&mut self, opt: Opt) {
 		let idx = self.current.cursor;
 		if opt.unset {

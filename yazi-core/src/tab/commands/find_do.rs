@@ -4,7 +4,7 @@ use super::find::Opt;
 use crate::tab::{Finder, Tab};
 
 impl Tab {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn find_do(&mut self, opt: Opt) {
 		let Some(query) = opt.query else {
 			return;

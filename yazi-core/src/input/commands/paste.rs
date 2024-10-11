@@ -12,7 +12,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Input {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn paste(&mut self, opt: Opt) {
 		if let Some(start) = self.snap().op.start() {
 			self.snap_mut().op = InputOp::Delete(false, false, start);

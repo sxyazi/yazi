@@ -28,7 +28,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Manager {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn rename(&mut self, opt: Opt) {
 		if !self.active_mut().try_escape_visual() {
 			return;

@@ -26,7 +26,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Completion {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn trigger(&mut self, opt: Opt) {
 		if opt.ticket < self.ticket {
 			return;

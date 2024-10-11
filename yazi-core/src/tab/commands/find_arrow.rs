@@ -11,7 +11,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Tab {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn find_arrow(&mut self, opt: Opt) {
 		let Some(finder) = &mut self.finder else {
 			return;

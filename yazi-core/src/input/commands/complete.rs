@@ -25,7 +25,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Input {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn complete(&mut self, opt: Opt) {
 		if self.ticket != opt.ticket {
 			return;

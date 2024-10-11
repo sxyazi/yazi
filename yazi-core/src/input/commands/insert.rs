@@ -14,7 +14,7 @@ impl From<bool> for Opt {
 }
 
 impl Input {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn insert(&mut self, opt: Opt) {
 		let snap = self.snap_mut();
 		if snap.mode == InputMode::Normal {

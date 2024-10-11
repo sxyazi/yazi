@@ -15,7 +15,7 @@ impl From<MouseEvent> for Opt {
 }
 
 impl App {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn mouse(&mut self, opt: Opt) {
 		let event = opt.event;
 		let Some(size) = self.term.as_ref().and_then(|t| t.size().ok()) else { return };

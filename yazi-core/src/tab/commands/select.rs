@@ -24,7 +24,7 @@ impl<'a> From<Cmd> for Opt<'a> {
 }
 
 impl<'a> Tab {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn select(&mut self, opt: Opt<'a>) {
 		let Some(url) = opt.url.or_else(|| self.current.hovered().map(|h| Cow::Borrowed(&h.url)))
 		else {

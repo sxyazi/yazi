@@ -12,7 +12,7 @@ impl From<Cmd> for Opt {
 }
 
 impl App {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn stop(&mut self, opt: Opt) {
 		self.cx.manager.active_mut().preview.reset_image();
 

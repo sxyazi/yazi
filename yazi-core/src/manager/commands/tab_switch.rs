@@ -14,7 +14,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Tabs {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn switch(&mut self, opt: Opt) {
 		let idx = if opt.relative {
 			(self.cursor as isize + opt.step).rem_euclid(self.items.len() as isize) as usize

@@ -15,11 +15,11 @@ vendored-lua = [ "mlua/vendored" ]
 [dependencies]
 yazi-adapter = { path = "../yazi-adapter", version = "0.3.3" }
 yazi-boot    = { path = "../yazi-boot", version = "0.3.3" }
+yazi-codegen = { path = "../yazi-codegen", version = "0.3.3" }
 yazi-config  = { path = "../yazi-config", version = "0.3.3" }
 yazi-core    = { path = "../yazi-core", version = "0.3.3" }
 yazi-dds     = { path = "../yazi-dds", version = "0.3.3" }
 yazi-fs      = { path = "../yazi-fs", version = "0.3.3" }
-yazi-macro   = { path = "../yazi-macro", version = "0.3.3" }
 yazi-plugin  = { path = "../yazi-plugin", version = "0.3.3" }
 yazi-proxy   = { path = "../yazi-proxy", version = "0.3.3" }
 yazi-shared  = { path = "../yazi-shared", version = "0.3.3" }

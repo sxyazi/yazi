@@ -12,7 +12,7 @@ impl From<()> for Opt {
 }
 
 impl Tasks {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn toggle(&mut self, _: Opt) {
 		self.visible = !self.visible;
 

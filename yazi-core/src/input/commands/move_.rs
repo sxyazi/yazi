@@ -21,7 +21,7 @@ impl From<isize> for Opt {
 }
 
 impl Input {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn move_(&mut self, opt: Opt) {
 		let snap = self.snap();
 		if opt.in_operating && snap.op == InputOp::None {

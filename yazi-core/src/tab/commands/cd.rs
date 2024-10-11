@@ -29,7 +29,7 @@ impl From<Url> for Opt {
 }
 
 impl Tab {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn cd(&mut self, opt: Opt) {
 		if !self.try_escape_visual() {
 			return;

@@ -11,7 +11,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Confirm {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn arrow(&mut self, opt: Opt, manager: &Manager) {
 		if opt.step > 0 {
 			self.next(opt.step as usize, manager.area(self.position).width)
