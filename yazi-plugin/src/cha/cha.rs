@@ -3,20 +3,25 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use mlua::{AnyUserData, ExternalError, Lua, Table, UserDataFields, UserDataMethods};
 use yazi_shared::fs::ChaKind;
 
-use crate::bindings::Cast;
+use crate::{RtRef, bindings::Cast};
 
 pub struct Cha;
 
 static WARNED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 #[inline]
-fn warn_deprecated() {
+fn warn_deprecated(id: Option<&str>) {
 	if !WARNED.swap(true, std::sync::atomic::Ordering::Relaxed) {
+		let id = match id {
+			Some(id) => format!("`{id}.yazi` plugin"),
+			None => "`init.lua` config".to_owned(),
+		};
+		let s = "The `created`, `modified`, `accessed`, `length`, and `permissions` properties of `Cha` have been renamed in Yazi v0.4.
+
+Please use the new `btime`, `mtime`, `atime`, `len`, and `perm` instead, in your {id}. See https://github.com/sxyazi/yazi/pull/1761 for details.";
 		yazi_proxy::AppProxy::notify(yazi_proxy::options::NotifyOpt {
 			title:   "Deprecated API".to_owned(),
-			content: "The `created`, `modified`, `accessed`, `length`, and `permissions` properties of `Cha` have been renamed.
-
-Please use the new `btime`, `mtime`, `atime`, `len`, and `perm` instead. See https://github.com/sxyazi/yazi/pull/1761 for details.".to_string(),
+			content: s.replace("{id}", &id),
 			level:   yazi_proxy::options::NotifyLevel::Warn,
 			timeout: Duration::from_secs(20),
 		});
@@ -70,24 +75,24 @@ impl Cha {
 
 			// TODO: remove these deprecated properties in the future
 			{
-				reg.add_field_method_get("length", |_, me| {
-					warn_deprecated();
+				reg.add_field_method_get("length", |lua, me| {
+					warn_deprecated(lua.named_registry_value::<RtRef>("rt")?.current());
 					Ok(me.len)
 				});
-				reg.add_field_method_get("created", |_, me| {
-					warn_deprecated();
+				reg.add_field_method_get("created", |lua, me| {
+					warn_deprecated(lua.named_registry_value::<RtRef>("rt")?.current());
 					Ok(me.btime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
 				});
-				reg.add_field_method_get("modified", |_, me| {
-					warn_deprecated();
+				reg.add_field_method_get("modified", |lua, me| {
+					warn_deprecated(lua.named_registry_value::<RtRef>("rt")?.current());
 					Ok(me.mtime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
 				});
-				reg.add_field_method_get("accessed", |_, me| {
-					warn_deprecated();
+				reg.add_field_method_get("accessed", |lua, me| {
+					warn_deprecated(lua.named_registry_value::<RtRef>("rt")?.current());
 					Ok(me.atime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
 				});
-				reg.add_method("permissions", |_, _me, ()| {
-					warn_deprecated();
+				reg.add_method("permissions", |lua, _me, ()| {
+					warn_deprecated(lua.named_registry_value::<RtRef>("rt")?.current());
 					Ok(
 						#[cfg(unix)]
 						Some(yazi_shared::fs::permissions(_me.perm, _me.is_dummy())),
