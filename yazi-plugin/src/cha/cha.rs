@@ -14,9 +14,9 @@ fn warn_deprecated() {
 	if !WARNED.swap(true, std::sync::atomic::Ordering::Relaxed) {
 		yazi_proxy::AppProxy::notify(yazi_proxy::options::NotifyOpt {
 			title:   "Deprecated API".to_owned(),
-			content: "The `created`, `modified`, `accessed`, `length`, and `permissions` properties of `Cha` have been deprecated.
+			content: "The `created`, `modified`, `accessed`, `length`, and `permissions` properties of `Cha` have been renamed.
 
-Please use the new `btime`, `mtime`, `atime`, `len`, and `perm` instead.".to_string(),
+Please use the new `btime`, `mtime`, `atime`, `len`, and `perm` instead. See https://github.com/sxyazi/yazi/pull/1761 for details.".to_string(),
 			level:   yazi_proxy::options::NotifyLevel::Warn,
 			timeout: Duration::from_secs(20),
 		});
