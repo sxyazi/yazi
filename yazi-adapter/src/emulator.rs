@@ -7,7 +7,7 @@ use tokio::{io::{AsyncReadExt, BufReader}, time::timeout};
 use tracing::{error, warn};
 use yazi_shared::env_exists;
 
-use crate::{Adapter, TMUX, tcsi};
+use crate::{Adapter, Mux, TMUX};
 
 #[derive(Clone, Debug)]
 pub enum Emulator {
@@ -103,24 +103,11 @@ impl Emulator {
 	}
 
 	pub fn via_env() -> (String, String) {
-		fn tmux_env(name: &str) -> Option<String> {
-			String::from_utf8_lossy(
-				&std::process::Command::new("tmux").args(["show-environment", name]).output().ok()?.stdout,
-			)
-			.trim()
-			.strip_prefix(&format!("{name}="))
-			.map(ToOwned::to_owned)
-		}
-
-		let mut term = std::env::var("TERM").unwrap_or_default();
-		let mut program = std::env::var("TERM_PROGRAM").unwrap_or_default();
-
-		if *TMUX {
-			term = tmux_env("TERM").unwrap_or(term);
-			program = tmux_env("TERM_PROGRAM").unwrap_or(program);
-		}
-
-		(term, program)
+		let (term, program) = Mux::term_program();
+		(
+			term.unwrap_or(std::env::var("TERM").unwrap_or_default()),
+			program.unwrap_or(std::env::var("TERM_PROGRAM").unwrap_or_default()),
+		)
 	}
 
 	pub fn via_csi() -> Result<Self> {
@@ -130,7 +117,7 @@ impl Emulator {
 		execute!(
 			LineWriter::new(stderr()),
 			SavePosition,
-			Print(tcsi("\x1b[>q\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[c")),
+			Print(Mux::csi("\x1b[>q\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[c")),
 			RestorePosition
 		)?;
 

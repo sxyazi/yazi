@@ -8,6 +8,7 @@ mod iip;
 mod image;
 mod kgp;
 mod kgp_old;
+mod mux;
 mod sixel;
 mod ueberzug;
 
@@ -18,6 +19,7 @@ pub use emulator::*;
 use iip::*;
 use kgp::*;
 use kgp_old::*;
+pub use mux::*;
 use sixel::*;
 use ueberzug::*;
 use yazi_shared::{RoCell, env_exists, in_wsl};
@@ -62,17 +64,4 @@ pub fn init() {
 
 	ADAPTOR.init(Adapter::matches());
 	ADAPTOR.start();
-}
-
-pub fn tcsi(s: &str) -> std::borrow::Cow<str> {
-	if *TMUX {
-		std::borrow::Cow::Owned(format!(
-			"{}{}{}",
-			*START,
-			s.trim_start_matches('\x1b').replace('\x1b', *ESCAPE),
-			*CLOSE
-		))
-	} else {
-		std::borrow::Cow::Borrowed(s)
-	}
 }
