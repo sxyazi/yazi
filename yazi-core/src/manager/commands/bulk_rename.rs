@@ -12,7 +12,7 @@ use crate::manager::Manager;
 
 impl Manager {
 	pub(super) fn bulk_rename(&self) {
-		let Some(opener) = OPEN.block_opener("bulk.txt", "text/plain") else {
+		let Some(opener) = OPEN.block_opener("bulk-rename.txt", "text/plain") else {
 			return AppProxy::notify_warn("Bulk rename", "No text opener found");
 		};
 

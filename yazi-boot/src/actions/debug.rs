@@ -1,6 +1,7 @@
 use std::{env, ffi::OsStr, fmt::Write};
 
 use regex::Regex;
+use yazi_adapter::Mux;
 use yazi_shared::Xdg;
 
 use super::Actions;
@@ -51,14 +52,24 @@ impl Actions {
 		writeln!(s, "\nText Opener")?;
 		writeln!(
 			s,
-			"    default: {:?}",
+			"    default     : {:?}",
 			yazi_config::OPEN.openers("f75a.txt", "text/plain").and_then(|a| a.first().cloned())
 		)?;
-		writeln!(s, "    block  : {:?}", yazi_config::OPEN.block_opener("bulk.txt", "text/plain"))?;
+		writeln!(
+			s,
+			"    block-create: {:?}",
+			yazi_config::OPEN.block_opener("bulk-create.txt", "text/plain")
+		)?;
+		writeln!(
+			s,
+			"    block-rename: {:?}",
+			yazi_config::OPEN.block_opener("bulk-rename.txt", "text/plain")
+		)?;
 
 		writeln!(s, "\nMultiplexers")?;
 		writeln!(s, "    TMUX               : {:?}", *yazi_adapter::TMUX)?;
 		writeln!(s, "    tmux version       : {}", Self::process_output("tmux", "-V"))?;
+		writeln!(s, "    tmux build flags   : enable-sixel={}", Mux::tmux_sixel_flag())?;
 		writeln!(s, "    ZELLIJ_SESSION_NAME: {:?}", env::var_os("ZELLIJ_SESSION_NAME"))?;
 		writeln!(s, "    Zellij version     : {}", Self::process_output("zellij", "--version"))?;
 
