@@ -6,7 +6,7 @@ use super::filter::Opt;
 use crate::tab::Tab;
 
 impl Tab {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn filter_do(&mut self, opt: Opt) {
 		let filter = if opt.query.is_empty() {
 			None

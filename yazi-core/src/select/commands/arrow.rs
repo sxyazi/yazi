@@ -11,7 +11,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Select {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn arrow(&mut self, opt: Opt) {
 		if opt.step > 0 { self.next(opt.step as usize) } else { self.prev(opt.step.unsigned_abs()) }
 	}

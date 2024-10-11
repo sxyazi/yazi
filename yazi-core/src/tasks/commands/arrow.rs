@@ -15,7 +15,7 @@ impl From<isize> for Opt {
 }
 
 impl Tasks {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn arrow(&mut self, opt: Opt) {
 		let old = self.cursor;
 		if opt.step > 0 {

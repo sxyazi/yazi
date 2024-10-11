@@ -25,7 +25,7 @@ impl From<isize> for Opt {
 }
 
 impl Tab {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn arrow(&mut self, opt: Opt) {
 		if !self.current.arrow(opt.step) {
 			return;

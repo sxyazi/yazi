@@ -8,8 +8,8 @@ use serde::{Deserialize, Serialize};
 pub enum SortBy {
 	#[default]
 	None,
-	Modified,
-	Created,
+	Mtime,
+	Btime,
 	Extension,
 	Alphabetical,
 	Natural,
@@ -23,8 +23,8 @@ impl FromStr for SortBy {
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		Ok(match s {
 			"none" => Self::None,
-			"modified" => Self::Modified,
-			"created" => Self::Created,
+			"mtime" => Self::Mtime,
+			"btime" => Self::Btime,
 			"extension" => Self::Extension,
 			"alphabetical" => Self::Alphabetical,
 			"natural" => Self::Natural,
@@ -45,8 +45,8 @@ impl Display for SortBy {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.write_str(match self {
 			Self::None => "none",
-			Self::Modified => "modified",
-			Self::Created => "created",
+			Self::Mtime => "mtime",
+			Self::Btime => "btime",
 			Self::Extension => "extension",
 			Self::Alphabetical => "alphabetical",
 			Self::Natural => "natural",

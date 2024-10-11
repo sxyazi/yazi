@@ -12,7 +12,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Manager {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn paste(&mut self, opt: Opt, tasks: &Tasks) {
 		let (src, dest) = (self.yanked.iter().collect::<Vec<_>>(), self.cwd());
 

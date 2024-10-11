@@ -11,7 +11,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Tabs {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn swap(&mut self, opt: Opt) {
 		let idx = self.absolute(opt.step);
 		if idx == self.cursor {

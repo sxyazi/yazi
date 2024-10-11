@@ -22,7 +22,7 @@ impl From<Url> for Opt {
 }
 
 impl Tab {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn reveal(&mut self, opt: Opt) {
 		let Some(parent) = opt.target.parent_url() else {
 			return;

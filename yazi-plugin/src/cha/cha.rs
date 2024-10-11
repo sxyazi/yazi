@@ -7,6 +7,22 @@ use crate::bindings::Cast;
 
 pub struct Cha;
 
+static WARNED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+#[inline]
+fn warn_deprecated() {
+	if !WARNED.swap(true, std::sync::atomic::Ordering::Relaxed) {
+		yazi_proxy::AppProxy::notify(yazi_proxy::options::NotifyOpt {
+			title:   "Deprecated API".to_owned(),
+			content: "The `created`, `modified`, `accessed`, `length`, and `permissions` properties of `Cha` have been deprecated.
+
+Please use the new `btime`, `mtime`, `atime`, `len`, and `perm` instead.".to_string(),
+			level:   yazi_proxy::options::NotifyLevel::Warn,
+			timeout: Duration::from_secs(20),
+		});
+	}
+}
+
 impl Cha {
 	pub fn register(lua: &Lua) -> mlua::Result<()> {
 		lua.register_userdata_type::<yazi_shared::fs::Cha>(|reg| {
@@ -29,17 +45,21 @@ impl Cha {
 				reg.add_field_method_get("nlink", |_, me| Ok((!me.is_dummy()).then_some(me.nlink)));
 			}
 
-			reg.add_field_method_get("length", |_, me| Ok(me.len));
-			reg.add_field_method_get("created", |_, me| {
-				Ok(me.ctime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
-			});
-			reg.add_field_method_get("modified", |_, me| {
-				Ok(me.mtime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
-			});
-			reg.add_field_method_get("accessed", |_, me| {
+			reg.add_field_method_get("len", |_, me| Ok(me.len));
+			reg.add_field_method_get("atime", |_, me| {
 				Ok(me.atime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
 			});
-			reg.add_method("permissions", |_, _me, ()| {
+			reg.add_field_method_get("btime", |_, me| {
+				Ok(me.btime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
+			});
+			#[cfg(unix)]
+			reg.add_field_method_get("ctime", |_, me| {
+				Ok(me.ctime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
+			});
+			reg.add_field_method_get("mtime", |_, me| {
+				Ok(me.mtime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
+			});
+			reg.add_method("perm", |_, _me, ()| {
 				Ok(
 					#[cfg(unix)]
 					Some(yazi_shared::fs::permissions(_me.perm, _me.is_dummy())),
@@ -47,6 +67,35 @@ impl Cha {
 					None::<String>,
 				)
 			});
+
+			// TODO: remove these deprecated properties in the future
+			{
+				reg.add_field_method_get("length", |_, me| {
+					warn_deprecated();
+					Ok(me.len)
+				});
+				reg.add_field_method_get("created", |_, me| {
+					warn_deprecated();
+					Ok(me.btime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
+				});
+				reg.add_field_method_get("modified", |_, me| {
+					warn_deprecated();
+					Ok(me.mtime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
+				});
+				reg.add_field_method_get("accessed", |_, me| {
+					warn_deprecated();
+					Ok(me.atime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
+				});
+				reg.add_method("permissions", |_, _me, ()| {
+					warn_deprecated();
+					Ok(
+						#[cfg(unix)]
+						Some(yazi_shared::fs::permissions(_me.perm, _me.is_dummy())),
+						#[cfg(windows)]
+						None::<String>,
+					)
+				});
+			}
 		})?;
 
 		Ok(())
@@ -72,6 +121,8 @@ impl Cha {
 					kind,
 					len: t.raw_get("len").unwrap_or_default(),
 					atime: parse_time(t.raw_get("atime").ok())?,
+					btime: parse_time(t.raw_get("btime").ok())?,
+					#[cfg(unix)]
 					ctime: parse_time(t.raw_get("ctime").ok())?,
 					mtime: parse_time(t.raw_get("mtime").ok())?,
 					#[cfg(unix)]

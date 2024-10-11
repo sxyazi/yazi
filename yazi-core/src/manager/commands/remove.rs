@@ -23,7 +23,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Manager {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn remove(&mut self, mut opt: Opt, tasks: &Tasks) {
 		if !self.active_mut().try_escape_visual() {
 			return;
@@ -55,7 +55,7 @@ impl Manager {
 		});
 	}
 
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn remove_do(&mut self, opt: Opt, tasks: &Tasks) {
 		self.tabs.iter_mut().for_each(|t| {
 			t.selected.remove_many(&opt.targets, false);

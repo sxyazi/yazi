@@ -27,7 +27,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Tab {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn filter(&mut self, opt: Opt) {
 		tokio::spawn(async move {
 			let rx = InputProxy::show(InputCfg::filter());

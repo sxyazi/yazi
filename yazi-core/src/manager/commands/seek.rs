@@ -14,7 +14,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Manager {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn seek(&mut self, opt: Opt) {
 		let Some(hovered) = self.hovered() else {
 			return self.active_mut().preview.reset();

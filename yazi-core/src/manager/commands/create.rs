@@ -18,7 +18,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Manager {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn create(&self, opt: Opt) {
 		let cwd = self.cwd().to_owned();
 		tokio::spawn(async move {

@@ -3248,6 +3248,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "yazi-codegen"
+version = "0.3.3"
+dependencies = [
+ "quote",
+ "syn 2.0.79",
+]
+
+[[package]]
 name = "yazi-config"
 version = "0.3.3"
 dependencies = [
@@ -3287,10 +3295,10 @@ dependencies = [
  "unicode-width",
  "yazi-adapter",
  "yazi-boot",
+ "yazi-codegen",
  "yazi-config",
  "yazi-dds",
  "yazi-fs",
- "yazi-macro",
  "yazi-plugin",
  "yazi-proxy",
  "yazi-scheduler",
@@ -3339,11 +3347,11 @@ dependencies = [
  "tracing-subscriber",
  "yazi-adapter",
  "yazi-boot",
+ "yazi-codegen",
  "yazi-config",
  "yazi-core",
  "yazi-dds",
  "yazi-fs",
- "yazi-macro",
  "yazi-plugin",
  "yazi-proxy",
  "yazi-shared",
@@ -3366,10 +3374,6 @@ dependencies = [
 [[package]]
 name = "yazi-macro"
 version = "0.3.3"
-dependencies = [
- "quote",
- "syn 2.0.79",
-]
 
 [[package]]
 name = "yazi-plugin"
@@ -3460,6 +3464,7 @@ dependencies = [
  "tokio",
  "uzers",
  "windows-sys 0.59.0",
+ "yazi-macro",
 ]
 
 [[package]]

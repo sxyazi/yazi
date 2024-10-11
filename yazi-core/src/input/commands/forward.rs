@@ -11,7 +11,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Input {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn forward(&mut self, opt: Opt) {
 		let snap = self.snap();
 

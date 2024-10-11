@@ -28,12 +28,12 @@ impl FilesSorter {
 
 		match self.by {
 			SortBy::None => {}
-			SortBy::Modified => items.sort_unstable_by(|a, b| {
+			SortBy::Mtime => items.sort_unstable_by(|a, b| {
 				let ord = self.cmp(a.mtime, b.mtime, self.promote(a, b));
 				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
 			}),
-			SortBy::Created => items.sort_unstable_by(|a, b| {
-				let ord = self.cmp(a.ctime, b.ctime, self.promote(a, b));
+			SortBy::Btime => items.sort_unstable_by(|a, b| {
+				let ord = self.cmp(a.btime, b.btime, self.promote(a, b));
 				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
 			}),
 			SortBy::Extension => items.sort_unstable_by(|a, b| {

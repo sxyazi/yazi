@@ -14,7 +14,7 @@ impl From<isize> for Opt {
 }
 
 impl Help {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn arrow(&mut self, opt: Opt) {
 		let max = self.bindings.len().saturating_sub(1);
 		self.offset = self.offset.min(max);

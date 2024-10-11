@@ -25,7 +25,7 @@ impl From<bool> for Opt {
 }
 
 impl Manager {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn peek(&mut self, opt: Opt) {
 		let Some(hovered) = self.hovered().cloned() else {
 			return self.active_mut().preview.reset();

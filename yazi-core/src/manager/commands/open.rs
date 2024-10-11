@@ -23,7 +23,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Manager {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn open(&mut self, opt: Opt, tasks: &Tasks) {
 		if !self.active_mut().try_escape_visual() {
 			return;
@@ -72,7 +72,7 @@ impl Manager {
 		});
 	}
 
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn open_do(&mut self, opt: OpenDoOpt, tasks: &Tasks) {
 		let targets: Vec<_> = opt
 			.targets

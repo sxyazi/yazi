@@ -32,8 +32,8 @@ function Linemode:size()
 	end
 end
 
-function Linemode:ctime()
-	local time = (self._file.cha.created or 0) // 1
+function Linemode:btime()
+	local time = math.floor(self._file.cha.btime or 0)
 	if time == 0 then
 		return ui.Line("")
 	elseif os.date("%Y", time) == os.date("%Y") then
@@ -44,7 +44,7 @@ function Linemode:ctime()
 end
 
 function Linemode:mtime()
-	local time = (self._file.cha.modified or 0) // 1
+	local time = math.floor(self._file.cha.mtime or 0)
 	if time == 0 then
 		return ui.Line("")
 	elseif os.date("%Y", time) == os.date("%Y") then
@@ -54,7 +54,7 @@ function Linemode:mtime()
 	end
 end
 
-function Linemode:permissions() return ui.Line(self._file.cha:permissions() or "") end
+function Linemode:permissions() return ui.Line(self._file.cha:perm() or "") end
 
 function Linemode:owner()
 	local user = self._file.cha.uid and ya.user_name(self._file.cha.uid) or self._file.cha.uid

@@ -14,7 +14,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Tab {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn copy(&mut self, opt: Opt) {
 		if !self.try_escape_visual() {
 			return;

@@ -28,7 +28,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Tabs {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn create(&mut self, opt: Opt) {
 		if self.items.len() >= MAX_TABS {
 			AppProxy::notify_warn("Too many tabs", "You can only open up to 9 tabs at the same time.");

@@ -12,7 +12,7 @@ impl From<()> for Opt {
 }
 
 impl Manager {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn unyank(&mut self, _: Opt) {
 		self.yanked.clear();
 		render!(self.yanked.catchup_revision(false));

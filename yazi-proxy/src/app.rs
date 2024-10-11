@@ -27,27 +27,21 @@ impl AppProxy {
 
 	#[inline]
 	pub fn notify_warn(title: &str, content: impl ToString) {
-		emit!(Call(
-			Cmd::new("notify").with_any("option", NotifyOpt {
-				title:   title.to_owned(),
-				content: content.to_string(),
-				level:   NotifyLevel::Warn,
-				timeout: Duration::from_secs(5),
-			}),
-			Layer::App
-		));
+		Self::notify(NotifyOpt {
+			title:   title.to_owned(),
+			content: content.to_string(),
+			level:   NotifyLevel::Warn,
+			timeout: Duration::from_secs(5),
+		});
 	}
 
 	#[inline]
 	pub fn notify_error(title: &str, content: impl ToString) {
-		emit!(Call(
-			Cmd::new("notify").with_any("option", NotifyOpt {
-				title:   title.to_owned(),
-				content: content.to_string(),
-				level:   NotifyLevel::Error,
-				timeout: Duration::from_secs(10),
-			}),
-			Layer::App
-		));
+		Self::notify(NotifyOpt {
+			title:   title.to_owned(),
+			content: content.to_string(),
+			level:   NotifyLevel::Error,
+			timeout: Duration::from_secs(10),
+		});
 	}
 }

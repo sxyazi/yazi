@@ -34,7 +34,7 @@ function M:preload()
 	end
 
 	local cha = fs.cha(cache)
-	if cha and cha.length > 0 then
+	if cha and cha.len > 0 then
 		return 1
 	end
 

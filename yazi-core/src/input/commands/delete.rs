@@ -12,7 +12,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Input {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn delete(&mut self, opt: Opt) {
 		match self.snap().op {
 			InputOp::None => {

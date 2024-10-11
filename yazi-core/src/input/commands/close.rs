@@ -15,7 +15,7 @@ impl From<bool> for Opt {
 }
 
 impl Input {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn close(&mut self, opt: Opt) {
 		if self.completion {
 			CompletionProxy::close();

@@ -31,7 +31,7 @@ impl From<Cmd> for Opt {
 }
 
 impl Tab {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn escape(&mut self, opt: Opt) {
 		if opt.is_empty() {
 			_ = self.escape_find()

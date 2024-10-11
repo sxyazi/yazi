@@ -13,7 +13,7 @@ impl From<()> for Opt {
 }
 
 impl App {
-	#[yazi_macro::command]
+	#[yazi_codegen::command]
 	pub fn resize(&mut self, _: Opt) {
 		self.cx.manager.active_mut().preview.reset();
 		self.render();
