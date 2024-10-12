@@ -1,9 +1,10 @@
 use anyhow::{Context, Result};
 use mlua::Lua;
 use yazi_boot::BOOT;
+use yazi_macro::plugin_preset as preset;
 use yazi_shared::RoCell;
 
-use crate::{preset, runtime::Runtime};
+use crate::runtime::Runtime;
 
 pub static LUA: RoCell<Lua> = RoCell::new();
 

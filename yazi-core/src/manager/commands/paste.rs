@@ -2,7 +2,7 @@ use yazi_shared::event::Cmd;
 
 use crate::{manager::Manager, tasks::Tasks};
 
-pub struct Opt {
+struct Opt {
 	force:  bool,
 	follow: bool,
 }

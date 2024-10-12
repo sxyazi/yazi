@@ -4,12 +4,13 @@ use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
 use yazi_fs::FilterCase;
+use yazi_macro::emit;
 use yazi_proxy::InputProxy;
-use yazi_shared::{Debounce, InputError, Layer, emit, event::Cmd};
+use yazi_shared::{Debounce, Layer, errors::InputError, event::Cmd};
 
 use crate::tab::Tab;
 
-pub struct Opt {
+pub(super) struct Opt {
 	pub(super) query: Option<String>,
 	pub(super) prev:  bool,
 	pub(super) case:  FilterCase,

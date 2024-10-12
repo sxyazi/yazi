@@ -1,8 +1,9 @@
-use yazi_shared::{event::Cmd, render};
+use yazi_macro::render;
+use yazi_shared::event::Cmd;
 
 use crate::manager::Manager;
 
-pub struct Opt;
+struct Opt;
 
 impl From<Cmd> for Opt {
 	fn from(_: Cmd) -> Self { Self }

@@ -1,16 +1,8 @@
 #![allow(clippy::module_inception)]
 
-mod add;
-mod deploy;
-mod git;
-mod install;
-mod package;
-mod parser;
-mod upgrade;
+yazi_macro::mod_flat!(add, deploy, git, install, package, parser, upgrade);
 
 use anyhow::Context;
-use git::*;
-pub(super) use package::*;
 
 pub(super) fn init() -> anyhow::Result<()> {
 	let root = yazi_shared::Xdg::state_dir().join("packages");

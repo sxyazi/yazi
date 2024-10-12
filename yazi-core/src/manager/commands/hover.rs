@@ -1,11 +1,12 @@
 use std::{collections::HashSet, path::PathBuf};
 
 use yazi_dds::Pubsub;
-use yazi_shared::{event::{Cmd, Data}, fs::{Url, Urn}, render};
+use yazi_macro::render;
+use yazi_shared::{event::{Cmd, Data}, fs::{Url, Urn}};
 
 use crate::manager::Manager;
 
-pub struct Opt {
+struct Opt {
 	url: Option<Url>,
 	tab: Option<usize>,
 }

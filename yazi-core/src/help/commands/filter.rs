@@ -1,5 +1,6 @@
 use yazi_config::popup::{Offset, Origin, Position};
-use yazi_shared::{event::Cmd, render};
+use yazi_macro::render;
+use yazi_shared::event::Cmd;
 
 use crate::{help::Help, input::Input};
 

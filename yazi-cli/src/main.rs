@@ -1,7 +1,7 @@
-mod args;
-mod package;
+yazi_macro::mod_pub!(package);
 
-use args::*;
+yazi_macro::mod_flat!(args);
+
 use clap::Parser;
 
 #[tokio::main]

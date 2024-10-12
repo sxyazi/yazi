@@ -1,5 +1,5 @@
 #[macro_export]
-macro_rules! preset {
+macro_rules! config_preset {
 	($name:literal) => {{
 		#[cfg(debug_assertions)]
 		{
@@ -16,6 +16,24 @@ macro_rules! preset {
 				$name,
 				".toml"
 			)))
+		}
+	}};
+}
+
+#[macro_export]
+macro_rules! plugin_preset {
+	($name:literal) => {{
+		#[cfg(debug_assertions)]
+		{
+			std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/preset/", $name, ".lua")).expect(concat!(
+				"Failed to read 'yazi-plugin/preset/",
+				$name,
+				".lua'"
+			))
+		}
+		#[cfg(not(debug_assertions))]
+		{
+			&include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/preset/", $name, ".lua"))[..]
 		}
 	}};
 }

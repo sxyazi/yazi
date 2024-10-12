@@ -1,7 +1,7 @@
 use std::{borrow::Cow, mem};
 
 use yazi_config::{WHICH, keymap::ChordCow, which::SortBy};
-use yazi_shared::{Transliterator, natsort};
+use yazi_shared::{natsort, translit::Transliterator};
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct WhichSorter {

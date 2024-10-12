@@ -1,8 +1,6 @@
 #![allow(clippy::module_inception)]
 
-mod url;
-
-pub use url::*;
+yazi_macro::mod_flat!(url);
 
 pub fn pour(lua: &mlua::Lua) -> mlua::Result<()> {
 	url::Url::register(lua)?;

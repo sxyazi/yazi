@@ -1,5 +1,1 @@
-mod bindings;
-mod layout;
-
-use bindings::*;
-pub(super) use layout::*;
+yazi_macro::mod_flat!(bindings, layout);

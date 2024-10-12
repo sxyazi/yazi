@@ -2,7 +2,8 @@ use std::{fmt::Display, io::Write, str::FromStr};
 
 use anyhow::{Result, anyhow};
 use yazi_boot::BOOT;
-use yazi_shared::{Layer, emit, event::Cmd};
+use yazi_macro::emit;
+use yazi_shared::{Layer, event::Cmd};
 
 use crate::{ID, body::Body};
 

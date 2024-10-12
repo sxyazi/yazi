@@ -1,7 +1,3 @@
 #![allow(clippy::module_inception)]
 
-mod op;
-mod plugin;
-
-pub use op::*;
-pub use plugin::*;
+yazi_macro::mod_flat!(op, plugin);

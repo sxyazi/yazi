@@ -1,7 +1,8 @@
 use std::{borrow::Cow, mem, path::{MAIN_SEPARATOR, MAIN_SEPARATOR_STR}};
 
 use tokio::fs;
-use yazi_shared::{Layer, emit, event::{Cmd, Data}, render};
+use yazi_macro::{emit, render};
+use yazi_shared::{Layer, event::{Cmd, Data}};
 
 use crate::completion::Completion;
 
@@ -11,7 +12,7 @@ const SEPARATOR: [char; 2] = ['/', '\\'];
 #[cfg(not(windows))]
 const SEPARATOR: char = std::path::MAIN_SEPARATOR;
 
-pub struct Opt {
+struct Opt {
 	word:   String,
 	ticket: usize,
 }

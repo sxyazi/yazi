@@ -1,4 +1,4 @@
-use yazi_shared::render;
+use yazi_macro::render;
 
 use super::find::Opt;
 use crate::tab::{Finder, Tab};

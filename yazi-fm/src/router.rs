@@ -1,5 +1,6 @@
 use yazi_config::{KEYMAP, keymap::{Chord, Key}};
-use yazi_shared::{Layer, emit};
+use yazi_macro::emit;
+use yazi_shared::Layer;
 
 use crate::app::App;
 

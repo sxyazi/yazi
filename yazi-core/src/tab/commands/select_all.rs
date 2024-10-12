@@ -1,9 +1,10 @@
+use yazi_macro::render;
 use yazi_proxy::AppProxy;
-use yazi_shared::{event::Cmd, render};
+use yazi_shared::event::Cmd;
 
 use crate::tab::Tab;
 
-pub struct Opt {
+struct Opt {
 	state: Option<bool>,
 }
 

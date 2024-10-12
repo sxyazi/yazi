@@ -1,14 +1,3 @@
-mod commands;
-mod linked;
-mod manager;
-mod mimetype;
-mod tabs;
-mod watcher;
-mod yanked;
+yazi_macro::mod_pub!(commands);
 
-pub use linked::*;
-pub use manager::*;
-pub use mimetype::*;
-pub use tabs::*;
-pub use watcher::*;
-pub use yanked::*;
+yazi_macro::mod_flat!(linked, manager, mimetype, tabs, watcher, yanked);

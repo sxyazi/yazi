@@ -1,9 +1,1 @@
-mod manager;
-mod mouse;
-mod ratio;
-mod sorting;
-
-pub use manager::*;
-pub use mouse::*;
-pub use ratio::*;
-pub use sorting::*;
+yazi_macro::mod_flat!(manager, mouse, ratio, sorting);

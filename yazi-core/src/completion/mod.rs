@@ -1,4 +1,3 @@
-mod commands;
-mod completion;
+yazi_macro::mod_pub!(commands);
 
-pub use completion::*;
+yazi_macro::mod_flat!(completion);

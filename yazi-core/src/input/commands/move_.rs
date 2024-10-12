@@ -1,9 +1,10 @@
 use unicode_width::UnicodeWidthStr;
-use yazi_shared::{event::{Cmd, Data}, render};
+use yazi_macro::render;
+use yazi_shared::event::{Cmd, Data};
 
 use crate::input::{Input, op::InputOp, snap::InputSnap};
 
-pub struct Opt {
+struct Opt {
 	step:         isize,
 	in_operating: bool,
 }

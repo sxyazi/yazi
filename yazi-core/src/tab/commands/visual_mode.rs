@@ -1,10 +1,11 @@
 use std::collections::BTreeSet;
 
-use yazi_shared::{event::Cmd, render};
+use yazi_macro::render;
+use yazi_shared::event::Cmd;
 
 use crate::tab::{Mode, Tab};
 
-pub struct Opt {
+struct Opt {
 	unset: bool,
 }
 

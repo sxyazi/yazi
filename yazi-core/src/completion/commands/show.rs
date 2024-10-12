@@ -1,12 +1,13 @@
 use std::{mem, ops::ControlFlow};
 
-use yazi_shared::{event::{Cmd, Data}, render};
+use yazi_macro::render;
+use yazi_shared::event::{Cmd, Data};
 
 use crate::completion::Completion;
 
 const LIMIT: usize = 30;
 
-pub struct Opt {
+struct Opt {
 	cache:      Vec<String>,
 	cache_name: String,
 	word:       String,

@@ -5,7 +5,7 @@ use ratatui::{layout::Rect, text::{Line, Span, Text}};
 use syntect::{LoadingError, dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
 use tokio::{fs::File, io::{AsyncBufReadExt, BufReader}, sync::OnceCell};
 use yazi_config::{PREVIEW, THEME, preview::PreviewWrap};
-use yazi_shared::{PeekError, replace_to_printable};
+use yazi_shared::{errors::PeekError, replace_to_printable};
 
 static INCR: AtomicUsize = AtomicUsize::new(0);
 static SYNTECT: OnceCell<(Theme, SyntaxSet)> = OnceCell::const_new();

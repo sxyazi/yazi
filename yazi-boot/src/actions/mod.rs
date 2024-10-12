@@ -1,8 +1,3 @@
 #![allow(clippy::module_inception)]
 
-mod actions;
-mod clear_cache;
-mod debug;
-mod version;
-
-pub(super) use actions::*;
+yazi_macro::mod_flat!(actions, clear_cache, debug, version);

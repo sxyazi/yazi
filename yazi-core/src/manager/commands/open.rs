@@ -4,14 +4,15 @@ use tracing::error;
 use yazi_boot::ARGS;
 use yazi_config::{OPEN, popup::SelectCfg};
 use yazi_fs::Folder;
+use yazi_macro::emit;
 use yazi_plugin::isolate;
 use yazi_proxy::{ManagerProxy, TasksProxy, options::OpenDoOpt};
-use yazi_shared::{MIME_DIR, emit, event::{Cmd, EventQuit}, fs::{File, Url}};
+use yazi_shared::{MIME_DIR, event::{Cmd, EventQuit}, fs::{File, Url}};
 
 use crate::{manager::Manager, tasks::Tasks};
 
 #[derive(Clone, Copy)]
-pub struct Opt {
+struct Opt {
 	interactive: bool,
 	hovered:     bool,
 }

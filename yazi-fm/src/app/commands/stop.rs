@@ -3,7 +3,7 @@ use yazi_shared::event::Cmd;
 
 use crate::app::App;
 
-pub struct Opt {
+struct Opt {
 	tx: Option<oneshot::Sender<()>>,
 }
 

@@ -1,6 +1,7 @@
 use mlua::Lua;
+use yazi_macro::plugin_preset as preset;
 
-use crate::{elements, preset, runtime::Runtime};
+use crate::{elements, runtime::Runtime};
 
 pub fn slim_lua(name: &str) -> mlua::Result<Lua> {
 	let lua = Lua::new();

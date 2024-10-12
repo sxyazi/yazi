@@ -1,7 +1,8 @@
 use std::time::Duration;
 
 use tokio::sync::oneshot;
-use yazi_shared::{Layer, emit, event::Cmd};
+use yazi_macro::emit;
+use yazi_shared::{Layer, event::Cmd};
 
 use crate::options::{NotifyLevel, NotifyOpt};
 

@@ -1,12 +1,3 @@
-mod commands;
-mod input;
-mod mode;
-mod op;
-mod snap;
-mod snaps;
+yazi_macro::mod_pub!(commands);
 
-pub use input::*;
-pub use mode::*;
-use op::*;
-use snap::*;
-use snaps::*;
+yazi_macro::mod_flat!(input, mode, op, snap, snaps);

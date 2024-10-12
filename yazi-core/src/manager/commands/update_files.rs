@@ -1,8 +1,9 @@
 use std::borrow::Cow;
 
 use yazi_fs::Folder;
+use yazi_macro::render;
 use yazi_proxy::ManagerProxy;
-use yazi_shared::{event::Cmd, fs::FilesOp, render};
+use yazi_shared::{event::Cmd, fs::FilesOp};
 
 use crate::{manager::{LINKED, Manager}, tab::Tab, tasks::Tasks};
 

@@ -1,6 +1,3 @@
-mod commands;
-mod sorter;
-mod which;
+yazi_macro::mod_pub!(commands);
 
-pub use sorter::*;
-pub use which::*;
+yazi_macro::mod_flat!(sorter, which);

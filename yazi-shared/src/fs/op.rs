@@ -1,7 +1,7 @@
 use std::{collections::{HashMap, HashSet}, sync::atomic::{AtomicU64, Ordering}};
 
 use super::{Cha, File, UrnBuf};
-use crate::{Layer, emit, event::Cmd, fs::Url};
+use crate::{Layer, event::Cmd, fs::Url};
 
 pub static FILES_TICKET: AtomicU64 = AtomicU64::new(0);
 
@@ -38,7 +38,7 @@ impl FilesOp {
 
 	#[inline]
 	pub fn emit(self) {
-		emit!(Call(Cmd::new("update_files").with_any("op", self), Layer::Manager));
+		crate::event::Event::Call(Cmd::new("update_files").with_any("op", self), Layer::Manager).emit();
 	}
 
 	pub fn prepare(cwd: &Url) -> u64 {

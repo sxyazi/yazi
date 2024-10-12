@@ -1,3 +1,1 @@
-mod tasks;
-
-pub use tasks::*;
+yazi_macro::mod_flat!(tasks);

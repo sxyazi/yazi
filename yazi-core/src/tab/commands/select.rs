@@ -1,11 +1,12 @@
 use std::borrow::Cow;
 
+use yazi_macro::render_and;
 use yazi_proxy::AppProxy;
-use yazi_shared::{event::{Cmd, Data}, fs::Url, render, render_and};
+use yazi_shared::{event::{Cmd, Data}, fs::Url};
 
 use crate::tab::Tab;
 
-pub struct Opt<'a> {
+struct Opt<'a> {
 	url:   Option<Cow<'a, Url>>,
 	state: Option<bool>,
 }

@@ -2,7 +2,8 @@ use crossterm::event::KeyCode;
 use unicode_width::UnicodeWidthStr;
 use yazi_adapter::Dimension;
 use yazi_config::{KEYMAP, keymap::{Chord, Key}};
-use yazi_shared::{Layer, render, render_and};
+use yazi_macro::{render, render_and};
+use yazi_shared::Layer;
 
 use super::HELP_MARGIN;
 use crate::input::Input;

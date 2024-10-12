@@ -1,3 +1,1 @@
-mod log;
-
-pub use log::*;
+yazi_macro::mod_flat!(log);

@@ -1,4 +1,3 @@
-mod app;
-mod commands;
+yazi_macro::mod_pub!(commands);
 
-pub(crate) use app::*;
+yazi_macro::mod_flat!(app);

@@ -1,31 +1,10 @@
 #![allow(clippy::unit_arg)]
 
-mod adapter;
-mod chafa;
-mod dimension;
-mod emulator;
-mod iip;
-mod image;
-mod kgp;
-mod kgp_old;
-mod mux;
-mod sixel;
-mod ueberzug;
+yazi_macro::mod_flat!(
+	adapter, chafa, dimension, emulator, iip, image, kgp, kgp_old, mux, sixel, ueberzug
+);
 
-pub use adapter::*;
-use chafa::*;
-pub use dimension::*;
-pub use emulator::*;
-use iip::*;
-use kgp::*;
-use kgp_old::*;
-pub use mux::*;
-use sixel::*;
-use ueberzug::*;
 use yazi_shared::{RoCell, env_exists, in_wsl};
-
-pub use crate::image::*;
-
 pub static ADAPTOR: RoCell<Adapter> = RoCell::new();
 
 // Tmux support

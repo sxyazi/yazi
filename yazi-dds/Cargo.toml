@@ -14,6 +14,7 @@ vendored-lua = [ "mlua/vendored" ]
 
 [dependencies]
 yazi-boot   = { path = "../yazi-boot", version = "0.3.3" }
+yazi-macro 	= { path = "../yazi-macro", version = "0.3.3" }
 yazi-shared = { path = "../yazi-shared", version = "0.3.3" }
 
 # External dependencies

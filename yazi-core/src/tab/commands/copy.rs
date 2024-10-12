@@ -5,7 +5,7 @@ use yazi_shared::event::Cmd;
 
 use crate::tab::Tab;
 
-pub struct Opt {
+struct Opt {
 	type_: String,
 }
 

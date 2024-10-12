@@ -1,10 +1,6 @@
 #![allow(clippy::module_inception)]
 
-mod loader;
-mod require;
-
-pub use loader::*;
-use require::*;
+yazi_macro::mod_flat!(loader, require);
 
 pub(super) fn init() { LOADER.with(<_>::default); }
 

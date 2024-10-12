@@ -1,5 +1,3 @@
 #![allow(clippy::module_inception)]
 
-mod fs;
-
-pub use fs::*;
+yazi_macro::mod_flat!(fs);

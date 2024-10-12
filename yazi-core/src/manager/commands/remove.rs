@@ -4,7 +4,7 @@ use yazi_shared::{event::Cmd, fs::Url};
 
 use crate::{manager::Manager, tasks::Tasks};
 
-pub struct Opt {
+struct Opt {
 	force:       bool,
 	permanently: bool,
 	hovered:     bool,

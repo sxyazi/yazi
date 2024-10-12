@@ -1,22 +1,5 @@
-mod app;
-mod completion;
-mod confirm;
-mod input;
-mod manager;
-pub mod options;
-mod select;
-mod semaphore;
-mod tab;
-mod tasks;
+yazi_macro::mod_pub!(options);
 
-pub use app::*;
-pub use completion::*;
-pub use confirm::*;
-pub use input::*;
-pub use manager::*;
-pub use select::*;
-pub use semaphore::*;
-pub use tab::*;
-pub use tasks::*;
+yazi_macro::mod_flat!(app, completion, confirm, input, manager, select, semaphore, tab, tasks);
 
 pub fn init() { crate::init_semaphore(); }

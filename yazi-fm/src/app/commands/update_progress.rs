@@ -1,6 +1,7 @@
 use ratatui::backend::Backend;
 use yazi_core::tasks::TasksProgress;
-use yazi_shared::{event::Cmd, render};
+use yazi_macro::render;
+use yazi_shared::event::Cmd;
 
 use crate::{app::App, components::Progress, lives::Lives};
 

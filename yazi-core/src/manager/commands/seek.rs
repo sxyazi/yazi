@@ -5,7 +5,7 @@ use yazi_shared::{MIME_DIR, event::{Cmd, Data}};
 use crate::manager::Manager;
 
 #[derive(Debug)]
-pub struct Opt {
+struct Opt {
 	units: i16,
 }
 

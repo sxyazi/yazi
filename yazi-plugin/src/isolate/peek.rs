@@ -5,7 +5,8 @@ use tokio::{runtime::Handle, select};
 use tokio_util::sync::CancellationToken;
 use tracing::error;
 use yazi_config::LAYOUT;
-use yazi_shared::{Layer, emit, event::Cmd};
+use yazi_macro::emit;
+use yazi_shared::{Layer, event::Cmd};
 
 use super::slim_lua;
 use crate::{LUA, Opt, OptCallback, bindings::{Cast, Window}, elements::Rect, file::File, loader::LOADER};

@@ -1,4 +1,3 @@
-mod commands;
-mod select;
+yazi_macro::mod_pub!(commands);
 
-pub use select::*;
+yazi_macro::mod_flat!(select);
