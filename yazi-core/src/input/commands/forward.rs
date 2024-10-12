@@ -2,7 +2,7 @@ use yazi_shared::{CharKind, event::Cmd};
 
 use crate::input::{Input, op::InputOp};
 
-pub struct Opt {
+struct Opt {
 	end_of_word: bool,
 }
 

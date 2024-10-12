@@ -1,9 +1,10 @@
+use yazi_macro::render;
 use yazi_proxy::InputProxy;
-use yazi_shared::{event::Cmd, render};
+use yazi_shared::event::Cmd;
 
 use crate::completion::Completion;
 
-pub struct Opt {
+struct Opt {
 	submit: bool,
 }
 

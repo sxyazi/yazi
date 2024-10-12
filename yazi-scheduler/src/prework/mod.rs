@@ -1,7 +1,3 @@
 #![allow(clippy::module_inception)]
 
-mod op;
-mod prework;
-
-pub use op::*;
-pub use prework::*;
+yazi_macro::mod_flat!(op, prework);

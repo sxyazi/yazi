@@ -2,13 +2,14 @@ use std::time::Duration;
 
 use tokio::{select, time};
 use yazi_config::popup::ConfirmCfg;
+use yazi_macro::emit;
 use yazi_proxy::ConfirmProxy;
-use yazi_shared::{emit, event::{Cmd, EventQuit}};
+use yazi_shared::event::{Cmd, EventQuit};
 
 use crate::{manager::Manager, tasks::Tasks};
 
 #[derive(Default)]
-pub struct Opt {
+struct Opt {
 	no_cwd_file: bool,
 }
 impl From<()> for Opt {

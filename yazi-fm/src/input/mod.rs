@@ -1,3 +1,1 @@
-mod input;
-
-pub(super) use input::*;
+yazi_macro::mod_flat!(input);

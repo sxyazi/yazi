@@ -2,8 +2,9 @@ use std::{borrow::Cow, path::{Path, PathBuf}};
 
 use anyhow::{Context, Result};
 use toml::{Table, Value};
+use yazi_macro::config_preset as preset;
 
-use crate::{preset, theme::Flavor};
+use crate::theme::Flavor;
 
 pub(crate) struct Preset;
 

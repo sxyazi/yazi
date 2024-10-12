@@ -1,9 +1,10 @@
+use yazi_macro::render;
 use yazi_proxy::CompletionProxy;
-use yazi_shared::{event::Cmd, render};
+use yazi_shared::event::Cmd;
 
 use crate::input::{Input, InputMode, op::InputOp};
 
-pub struct Opt;
+struct Opt;
 
 impl From<Cmd> for Opt {
 	fn from(_: Cmd) -> Self { Self }

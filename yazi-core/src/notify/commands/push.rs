@@ -1,6 +1,7 @@
 use std::time::Instant;
 
-use yazi_shared::{Layer, emit, event::Cmd};
+use yazi_macro::emit;
+use yazi_shared::{Layer, event::Cmd};
 
 use crate::notify::{Message, Notify};
 

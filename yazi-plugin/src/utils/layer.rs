@@ -4,8 +4,9 @@ use mlua::{ExternalError, ExternalResult, IntoLuaMulti, Lua, Table, Value};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use yazi_config::{keymap::{Chord, Key}, popup::InputCfg};
+use yazi_macro::emit;
 use yazi_proxy::{AppProxy, InputProxy};
-use yazi_shared::{Debounce, Layer, emit, event::Cmd};
+use yazi_shared::{Debounce, Layer, event::Cmd};
 
 use super::Utils;
 use crate::bindings::{InputRx, Position};

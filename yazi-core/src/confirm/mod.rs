@@ -1,4 +1,3 @@
-mod commands;
-mod confirm;
+yazi_macro::mod_pub!(commands);
 
-pub use confirm::*;
+yazi_macro::mod_flat!(confirm);

@@ -5,35 +5,11 @@
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
-mod app;
-mod completion;
-mod components;
-mod confirm;
-mod context;
-mod executor;
-mod help;
-mod input;
-mod lives;
-mod logs;
-mod notify;
-mod panic;
-mod root;
-mod router;
-mod select;
-mod signals;
-mod tasks;
-mod term;
-mod which;
+yazi_macro::mod_pub!(
+	app, completion, components, confirm, help, input, lives, notify, select, tasks, which
+);
 
-use context::*;
-use executor::*;
-use logs::*;
-use panic::*;
-#[allow(unused_imports)]
-use root::*;
-use router::*;
-use signals::*;
-use term::*;
+yazi_macro::mod_flat!(context, executor, logs, panic, root, router, signals, term);
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

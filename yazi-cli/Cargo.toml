@@ -11,6 +11,7 @@ repository  = "https://github.com/sxyazi/yazi"
 [dependencies]
 yazi-boot   = { path = "../yazi-boot", version = "0.3.3" }
 yazi-dds    = { path = "../yazi-dds", version = "0.3.3" }
+yazi-macro  = { path = "../yazi-macro", version = "0.3.3" }
 yazi-shared = { path = "../yazi-shared", version = "0.3.3" }
 
 # External dependencies
@@ -26,9 +27,9 @@ toml_edit  = "0.22.22"
 # External build dependencies
 anyhow                = { workspace = true }
 clap                  = { workspace = true }
-clap_complete         = "4.5.32"
+clap_complete         = "4.5.33"
 clap_complete_fig     = "4.5.2"
-clap_complete_nushell = "4.5.3"
+clap_complete_nushell = "4.5.4"
 serde_json            = { workspace = true }
 vergen-gitcl          = { version = "1.0.1", features = [ "build" ] }
 

@@ -1,8 +1,6 @@
 #![allow(clippy::module_inception)]
 
-mod file;
-
-pub use file::*;
+yazi_macro::mod_flat!(file);
 
 pub fn pour(lua: &mlua::Lua) -> mlua::Result<()> {
 	file::File::register(lua)?;

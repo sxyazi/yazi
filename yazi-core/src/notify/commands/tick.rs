@@ -1,7 +1,8 @@
 use std::time::Duration;
 
 use ratatui::layout::Rect;
-use yazi_shared::{Layer, emit, event::{Cmd, Data}};
+use yazi_macro::emit;
+use yazi_shared::{Layer, event::{Cmd, Data}};
 
 use crate::notify::Notify;
 

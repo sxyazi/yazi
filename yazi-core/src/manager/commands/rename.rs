@@ -9,7 +9,7 @@ use yazi_shared::{event::Cmd, fs::{File, FilesOp, Url, UrnBuf, maybe_exists, ok_
 
 use crate::manager::Manager;
 
-pub struct Opt {
+struct Opt {
 	hovered: bool,
 	force:   bool,
 	empty:   String,

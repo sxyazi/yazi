@@ -1,5 +1,1 @@
-mod preview;
-mod wrap;
-
-pub use preview::*;
-pub use wrap::*;
+yazi_macro::mod_flat!(preview, wrap);

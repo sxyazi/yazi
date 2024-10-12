@@ -1,7 +1,8 @@
 use std::str::FromStr;
 
 use yazi_config::{KEYMAP, keymap::{Chord, Key}};
-use yazi_shared::{Layer, event::Cmd, render};
+use yazi_macro::render;
+use yazi_shared::{Layer, event::Cmd};
 
 use crate::which::{Which, WhichSorter};
 

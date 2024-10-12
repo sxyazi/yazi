@@ -3,7 +3,7 @@ use yazi_shared::{event::{Cmd, Data}, fs::{File, FilesOp, Url, expand_path}};
 
 use crate::tab::Tab;
 
-pub struct Opt {
+struct Opt {
 	target: Url,
 }
 

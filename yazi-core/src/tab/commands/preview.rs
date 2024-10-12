@@ -1,5 +1,6 @@
+use yazi_macro::render;
 use yazi_plugin::utils::PreviewLock;
-use yazi_shared::{event::Cmd, render};
+use yazi_shared::event::Cmd;
 
 use crate::tab::Tab;
 

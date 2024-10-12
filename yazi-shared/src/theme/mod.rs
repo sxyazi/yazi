@@ -1,7 +1,1 @@
-mod color;
-mod icon;
-mod style;
-
-pub use color::*;
-pub use icon::*;
-pub use style::*;
+yazi_macro::mod_flat!(color, icon, style);

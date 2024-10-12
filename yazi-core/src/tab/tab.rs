@@ -6,7 +6,8 @@ use tokio::task::JoinHandle;
 use yazi_adapter::Dimension;
 use yazi_config::{LAYOUT, popup::{Origin, Position}};
 use yazi_fs::{Folder, FolderStage};
-use yazi_shared::{fs::Url, render};
+use yazi_macro::render;
+use yazi_shared::fs::Url;
 
 use super::{Backstack, Config, Finder, History, Mode, Preview};
 use crate::tab::Selected;

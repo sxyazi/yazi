@@ -3,7 +3,7 @@ use yazi_shared::event::Cmd;
 
 use crate::input::{Input, InputMode};
 
-pub struct Opt;
+struct Opt;
 
 impl From<Cmd> for Opt {
 	fn from(_: Cmd) -> Self { Self }

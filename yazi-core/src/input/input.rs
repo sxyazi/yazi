@@ -3,8 +3,9 @@ use std::ops::Range;
 use tokio::sync::mpsc::UnboundedSender;
 use unicode_width::UnicodeWidthStr;
 use yazi_config::{INPUT, popup::Position};
+use yazi_macro::render;
 use yazi_plugin::CLIPBOARD;
-use yazi_shared::{InputError, render};
+use yazi_shared::errors::InputError;
 
 use super::{InputSnap, InputSnaps, mode::InputMode, op::InputOp};
 

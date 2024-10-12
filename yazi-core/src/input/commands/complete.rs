@@ -1,6 +1,7 @@
 use std::path::MAIN_SEPARATOR_STR;
 
-use yazi_shared::{event::{Cmd, Data}, render};
+use yazi_macro::render;
+use yazi_shared::event::{Cmd, Data};
 
 use crate::input::Input;
 
@@ -10,7 +11,7 @@ const SEPARATOR: [char; 2] = ['/', '\\'];
 #[cfg(not(windows))]
 const SEPARATOR: char = std::path::MAIN_SEPARATOR;
 
-pub struct Opt {
+struct Opt {
 	word:   String,
 	ticket: usize,
 }

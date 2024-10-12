@@ -1,18 +1,8 @@
 #![allow(clippy::option_map_unit_fn, clippy::unit_arg)]
 
-mod file;
-mod ongoing;
-mod op;
-mod plugin;
-mod prework;
-mod process;
-mod scheduler;
-mod task;
+yazi_macro::mod_pub!(file, plugin, prework, process);
 
-pub use ongoing::*;
-pub use op::*;
-pub use scheduler::*;
-pub use task::*;
+yazi_macro::mod_flat!(ongoing, op, scheduler, task);
 
 const LOW: u8 = yazi_config::Priority::Low as u8;
 const NORMAL: u8 = yazi_config::Priority::Normal as u8;

@@ -1,7 +1,8 @@
 use mlua::{ExternalError, ExternalResult, Function, Lua, MultiValue, Table, Value};
 use tokio::sync::oneshot;
 use yazi_dds::Sendable;
-use yazi_shared::{Layer, emit, event::{Cmd, Data}};
+use yazi_macro::emit;
+use yazi_shared::{Layer, event::{Cmd, Data}};
 
 use super::Utils;
 use crate::{OptCallback, loader::LOADER, runtime::RtRef};

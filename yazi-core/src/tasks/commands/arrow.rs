@@ -1,8 +1,9 @@
-use yazi_shared::{event::{Cmd, Data}, render};
+use yazi_macro::render;
+use yazi_shared::event::{Cmd, Data};
 
 use crate::tasks::Tasks;
 
-pub struct Opt {
+struct Opt {
 	step: isize,
 }
 

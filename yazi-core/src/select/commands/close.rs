@@ -1,9 +1,10 @@
 use anyhow::anyhow;
-use yazi_shared::{event::Cmd, render};
+use yazi_macro::render;
+use yazi_shared::event::Cmd;
 
 use crate::select::Select;
 
-pub struct Opt {
+struct Opt {
 	submit: bool,
 }
 

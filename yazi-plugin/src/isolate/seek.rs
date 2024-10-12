@@ -1,6 +1,7 @@
 use mlua::TableExt;
 use yazi_config::LAYOUT;
-use yazi_shared::{Layer, emit, event::Cmd};
+use yazi_macro::emit;
+use yazi_shared::{Layer, event::Cmd};
 
 use crate::{LUA, Opt, OptCallback, bindings::Cast, elements::Rect, file::File};
 

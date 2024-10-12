@@ -1,11 +1,12 @@
 use bitflags::bitflags;
+use yazi_macro::{render, render_and};
 use yazi_proxy::{AppProxy, ManagerProxy};
-use yazi_shared::{event::Cmd, render, render_and};
+use yazi_shared::event::Cmd;
 
 use crate::tab::Tab;
 
 bitflags! {
-	pub struct Opt: u8 {
+	struct Opt: u8 {
 		const FIND   = 0b00001;
 		const VISUAL = 0b00010;
 		const FILTER = 0b00100;

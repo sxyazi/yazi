@@ -1,7 +1,1 @@
-mod open;
-mod opener;
-mod rule;
-
-pub use open::*;
-pub use opener::*;
-use rule::*;
+yazi_macro::mod_flat!(open, opener, rule);

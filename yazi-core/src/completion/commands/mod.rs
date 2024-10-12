@@ -1,4 +1,1 @@
-mod arrow;
-mod close;
-mod show;
-mod trigger;
+yazi_macro::mod_flat!(arrow, close, show, trigger);

@@ -2,7 +2,7 @@ use yazi_shared::event::Cmd;
 
 use crate::app::App;
 
-pub struct Opt;
+struct Opt;
 
 impl From<Cmd> for Opt {
 	fn from(_: Cmd) -> Self { Self }

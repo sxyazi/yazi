@@ -1,29 +1,12 @@
 #![allow(clippy::module_inception)]
 
+yazi_macro::mod_pub!(keymap, log, manager, open, plugin, popup, preview, tasks, theme, which);
+
+yazi_macro::mod_flat!(layout, pattern, preset, priority);
+
 use std::str::FromStr;
 
 use yazi_shared::{RoCell, Xdg};
-
-pub mod keymap;
-mod layout;
-mod log;
-mod macros;
-pub mod manager;
-pub mod open;
-mod pattern;
-pub mod plugin;
-pub mod popup;
-mod preset;
-pub mod preview;
-mod priority;
-mod tasks;
-pub mod theme;
-pub mod which;
-
-pub use layout::*;
-pub(crate) use pattern::*;
-pub(crate) use preset::*;
-pub use priority::*;
 
 pub static LAYOUT: RoCell<arc_swap::ArcSwap<Layout>> = RoCell::new();
 

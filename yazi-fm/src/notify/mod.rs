@@ -1,3 +1,1 @@
-mod layout;
-
-pub(super) use layout::*;
+yazi_macro::mod_flat!(layout);

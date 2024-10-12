@@ -30,7 +30,7 @@ impl Term {
 			BufWriter::new(stderr()),
 			Print(Mux::csi("\x1b[?12$p")), // Request cursor blink status (DECSET)
 			Print(Mux::csi("\x1bP$q q\x1b\\")), // Request cursor shape (DECRQM)
-			Print(Mux::csi("\x1b[?u\x1b[c")), // Request keyboard enhancement flags (CSI u)
+			Print(Mux::csi("\x1b[?u\x1b[0c")), // Request keyboard enhancement flags (CSI u)
 			EnterAlternateScreen,
 			EnableBracketedPaste,
 			mouse::SetMouse(true),

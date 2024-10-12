@@ -1,11 +1,5 @@
 #![allow(clippy::module_inception)]
 
-mod cmd;
-mod data;
-mod event;
-mod render;
+yazi_macro::mod_flat!(cmd, data, event);
 
-pub use cmd::*;
-pub use data::*;
-pub use event::*;
-pub use render::*;
+pub static NEED_RENDER: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);

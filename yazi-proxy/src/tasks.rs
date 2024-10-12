@@ -2,7 +2,8 @@ use std::{borrow::Cow, ffi::OsString};
 
 use tokio::sync::oneshot;
 use yazi_config::open::Opener;
-use yazi_shared::{Layer, emit, event::Cmd, fs::Url};
+use yazi_macro::emit;
+use yazi_shared::{Layer, event::Cmd, fs::Url};
 
 use crate::options::{OpenWithOpt, ProcessExecOpt};
 

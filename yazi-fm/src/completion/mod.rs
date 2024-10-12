@@ -1,3 +1,1 @@
-mod completion;
-
-pub(super) use completion::*;
+yazi_macro::mod_flat!(completion);

@@ -1,6 +1,6 @@
 use yazi_fs::Filter;
+use yazi_macro::render;
 use yazi_proxy::ManagerProxy;
-use yazi_shared::render;
 
 use super::filter::Opt;
 use crate::tab::Tab;

@@ -1,8 +1,9 @@
-use yazi_shared::{event::Cmd, render};
+use yazi_macro::render;
+use yazi_shared::event::Cmd;
 
 use crate::confirm::Confirm;
 
-pub struct Opt {
+struct Opt {
 	submit: bool,
 }
 

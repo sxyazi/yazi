@@ -1,6 +1,7 @@
 use tokio::sync::oneshot;
 use yazi_config::popup::SelectCfg;
-use yazi_shared::{event::Cmd, render};
+use yazi_macro::render;
+use yazi_shared::event::Cmd;
 
 use crate::select::Select;
 

@@ -1,3 +1,1 @@
-mod select;
-
-pub(super) use select::*;
+yazi_macro::mod_flat!(select);

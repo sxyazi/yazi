@@ -3,7 +3,7 @@ use yazi_shared::{event::{Cmd, Data}, fs::Url};
 use crate::manager::Manager;
 
 #[derive(Debug, Default)]
-pub struct Opt {
+struct Opt {
 	skip:        Option<usize>,
 	force:       bool,
 	only_if:     Option<Url>,

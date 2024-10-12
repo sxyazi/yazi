@@ -1,22 +1,8 @@
 #![allow(clippy::option_map_unit_fn)]
-pub mod body;
-mod client;
-mod payload;
-mod pubsub;
-mod pump;
-mod sendable;
-mod server;
-mod state;
-mod stream;
 
-pub use client::*;
-pub use payload::*;
-pub use pubsub::*;
-pub use pump::*;
-pub use sendable::*;
-use server::*;
-pub use state::*;
-use stream::*;
+yazi_macro::mod_pub!(body);
+
+yazi_macro::mod_flat!(client, payload, pubsub, pump, sendable, server, state, stream);
 
 pub fn init() {
 	let (tx, rx) = tokio::sync::mpsc::unbounded_channel();

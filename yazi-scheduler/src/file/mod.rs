@@ -1,7 +1,3 @@
 #![allow(clippy::module_inception)]
 
-mod file;
-mod op;
-
-pub use file::*;
-pub use op::*;
+yazi_macro::mod_flat!(file, op);

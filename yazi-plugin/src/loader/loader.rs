@@ -5,9 +5,8 @@ use mlua::{ExternalError, Lua, Table};
 use parking_lot::RwLock;
 use tokio::fs;
 use yazi_boot::BOOT;
+use yazi_macro::plugin_preset as preset;
 use yazi_shared::RoCell;
-
-use crate::preset;
 
 pub static LOADER: RoCell<Loader> = RoCell::new();
 

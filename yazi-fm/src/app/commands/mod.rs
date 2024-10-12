@@ -1,11 +1,13 @@
-mod accept_payload;
-mod mouse;
-mod notify;
-mod plugin;
-mod quit;
-mod render;
-mod resize;
-mod resume;
-mod stop;
-mod update_notify;
-mod update_progress;
+yazi_macro::mod_flat!(
+	accept_payload,
+	mouse,
+	notify,
+	plugin,
+	quit,
+	render,
+	resize,
+	resume,
+	stop,
+	update_notify,
+	update_progress
+);

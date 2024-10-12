@@ -1,10 +1,11 @@
 use std::ops::RangeBounds;
 
-use yazi_shared::{CharKind, event::Cmd, render};
+use yazi_macro::render;
+use yazi_shared::{CharKind, event::Cmd};
 
 use crate::input::Input;
 
-pub struct Opt {
+struct Opt {
 	kind: String,
 }
 

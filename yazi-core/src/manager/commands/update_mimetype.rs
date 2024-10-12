@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
 use tracing::error;
-use yazi_shared::{event::Cmd, fs::Url, render};
+use yazi_macro::render;
+use yazi_shared::{event::Cmd, fs::Url};
 
 use crate::{manager::{LINKED, Manager}, tasks::Tasks};
 

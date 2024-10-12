@@ -4,7 +4,8 @@ use anyhow::Result;
 use crossterm::event::KeyEvent;
 use yazi_config::keymap::Key;
 use yazi_core::input::InputMode;
-use yazi_shared::{Layer, emit, event::{Cmd, Event, NEED_RENDER}};
+use yazi_macro::emit;
+use yazi_shared::{Layer, event::{Cmd, Event, NEED_RENDER}};
 
 use crate::{Ctx, Executor, Router, Signals, Term, lives::Lives};
 

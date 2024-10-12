@@ -4,12 +4,13 @@ use tokio::{fs, pin};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
 use yazi_dds::Pubsub;
+use yazi_macro::render;
 use yazi_proxy::{CompletionProxy, InputProxy, ManagerProxy, TabProxy};
-use yazi_shared::{Debounce, InputError, event::{Cmd, Data}, fs::{Url, expand_path}, render};
+use yazi_shared::{Debounce, errors::InputError, event::{Cmd, Data}, fs::{Url, expand_path}};
 
 use crate::tab::Tab;
 
-pub struct Opt {
+struct Opt {
 	target:      Url,
 	interactive: bool,
 }

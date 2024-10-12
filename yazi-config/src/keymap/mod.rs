@@ -1,11 +1,1 @@
-mod chord;
-mod cow;
-mod deserializers;
-mod key;
-mod keymap;
-
-pub use chord::*;
-pub use cow::*;
-use deserializers::*;
-pub use key::*;
-pub use keymap::*;
+yazi_macro::mod_flat!(chord, cow, deserializers, key, keymap);

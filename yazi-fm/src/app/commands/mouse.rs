@@ -6,7 +6,7 @@ use yazi_plugin::{LUA, bindings::Cast};
 
 use crate::{app::App, lives::Lives};
 
-pub struct Opt {
+struct Opt {
 	event: MouseEvent,
 }
 

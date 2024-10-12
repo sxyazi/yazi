@@ -1,5 +1,1 @@
-mod sorting;
-mod which;
-
-pub use sorting::*;
-pub use which::*;
+yazi_macro::mod_flat!(sorting, which);

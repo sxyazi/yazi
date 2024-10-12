@@ -1,18 +1,3 @@
-mod backstack;
-mod commands;
-mod config;
-mod finder;
-mod history;
-mod mode;
-mod preview;
-mod selected;
-mod tab;
+yazi_macro::mod_pub!(commands);
 
-pub use backstack::*;
-pub use config::*;
-pub use finder::*;
-pub use history::*;
-pub use mode::*;
-pub use preview::*;
-pub use selected::*;
-pub use tab::*;
+yazi_macro::mod_flat!(backstack, config, finder, history, mode, preview, selected, tab);

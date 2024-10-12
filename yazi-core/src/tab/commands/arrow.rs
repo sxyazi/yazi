@@ -1,10 +1,11 @@
 use yazi_fs::Step;
+use yazi_macro::render;
 use yazi_proxy::ManagerProxy;
-use yazi_shared::{event::{Cmd, Data}, render};
+use yazi_shared::event::{Cmd, Data};
 
 use crate::tab::Tab;
 
-pub struct Opt {
+struct Opt {
 	step: Step,
 }
 

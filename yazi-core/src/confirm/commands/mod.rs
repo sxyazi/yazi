@@ -1,3 +1,1 @@
-mod arrow;
-mod close;
-mod show;
+yazi_macro::mod_flat!(arrow, close, show);
