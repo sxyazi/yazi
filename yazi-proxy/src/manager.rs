@@ -38,8 +38,8 @@ impl ManagerProxy {
 	}
 
 	#[inline]
-	pub fn update_task(url: &Url) {
-		emit!(Call(Cmd::new("update_task").with_any("url", url.clone()), Layer::Manager));
+	pub fn update_tasks(url: &Url) {
+		emit!(Call(Cmd::new("update_tasks").with_any("urls", vec![url.clone()]), Layer::Manager));
 	}
 
 	#[inline]

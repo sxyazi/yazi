@@ -81,7 +81,7 @@ function Entity:render()
 	for _, c in ipairs(self._children) do
 		lines[#lines + 1] = (type(c[1]) == "string" and self[c[1]] or c[1])(self)
 	end
-	return ui.Line(lines)
+	return ui.Line(lines):style(self:style())
 end
 
 function Entity:style()

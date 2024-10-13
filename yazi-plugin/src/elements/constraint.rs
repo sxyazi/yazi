@@ -40,4 +40,8 @@ impl Constraint {
 	}
 }
 
+impl From<Constraint> for ratatui::layout::Constraint {
+	fn from(value: Constraint) -> Self { value.0 }
+}
+
 impl UserData for Constraint {}

@@ -19,9 +19,9 @@ impl TryFrom<Cmd> for Opt {
 }
 
 impl Manager {
-	pub fn update_mimetype(&mut self, opt: impl TryInto<Opt>, tasks: &Tasks) {
+	pub fn update_mimes(&mut self, opt: impl TryInto<Opt>, tasks: &Tasks) {
 		let Ok(opt) = opt.try_into() else {
-			return error!("invalid arguments for update_mimetype");
+			return error!("invalid arguments for update_mimes");
 		};
 
 		let linked = LINKED.read();

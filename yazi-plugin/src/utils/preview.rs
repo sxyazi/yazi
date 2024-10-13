@@ -4,7 +4,7 @@ use yazi_macro::emit;
 use yazi_shared::{Layer, errors::PeekError, event::Cmd};
 
 use super::Utils;
-use crate::{bindings::Window, cast_to_renderable, elements::{Paragraph, Rect, Renderable, WRAP, WRAP_NO}, external::Highlighter, file::FileRef};
+use crate::{bindings::Window, cast_to_renderable, elements::{Rect, Renderable, Text, WRAP, WRAP_NO}, external::Highlighter, file::FileRef};
 
 pub struct PreviewLock {
 	pub url:  yazi_shared::fs::Url,
@@ -41,7 +41,7 @@ impl Utils {
 				let area: Rect = t.raw_get("area")?;
 				let mut lock = PreviewLock::try_from(t)?;
 
-				let text = match Highlighter::new(&lock.url).highlight(lock.skip, *area).await {
+				let inner = match Highlighter::new(&lock.url).highlight(lock.skip, *area).await {
 					Ok(text) => text,
 					Err(e @ PeekError::Exceed(max)) => return (e.to_string(), max).into_lua_multi(lua),
 					Err(e @ PeekError::Unexpected(_)) => {
@@ -49,14 +49,14 @@ impl Utils {
 					}
 				};
 
-				lock.data = vec![Box::new(Paragraph {
+				lock.data = vec![Box::new(Text {
 					area,
-					text,
+					inner,
 					wrap: if PREVIEW.wrap == PreviewWrap::Yes { WRAP } else { WRAP_NO },
 					..Default::default()
 				})];
 
-				emit!(Call(Cmd::new("preview").with_any("lock", lock), Layer::Manager));
+				emit!(Call(Cmd::new("update_peeked").with_any("lock", lock), Layer::Manager));
 				(Value::Nil, Value::Nil).into_lua_multi(lua)
 			})?,
 		)?;
@@ -67,7 +67,7 @@ impl Utils {
 				let mut lock = PreviewLock::try_from(t)?;
 				lock.data = widgets.into_iter().filter_map(|ud| cast_to_renderable(&ud)).collect();
 
-				emit!(Call(Cmd::new("preview").with_any("lock", lock), Layer::Manager));
+				emit!(Call(Cmd::new("update_peeked").with_any("lock", lock), Layer::Manager));
 				Ok(())
 			})?,
 		)?;

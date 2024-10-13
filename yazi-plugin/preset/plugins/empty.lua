@@ -1,11 +1,6 @@
 local M = {}
 
-function M:msg(s)
-	local p = ui.Paragraph(self.area, {
-		ui.Line(s):reverse(),
-	})
-	ya.preview_widgets(self, { p:wrap(ui.Paragraph.WRAP) })
-end
+function M:msg(s) ya.preview_widgets(self, { ui.Text(ui.Line(s):reverse()):area(self.area):wrap(ui.Text.WRAP) }) end
 
 function M:peek()
 	local path = tostring(self.file.url)
@@ -31,7 +26,7 @@ function M:peek()
 	elseif self.skip > 0 and i < self.skip + limit then
 		ya.manager_emit("peek", { math.max(0, i - limit), only_if = self.file.url, upper_bound = true })
 	else
-		ya.preview_widgets(self, { ui.Paragraph(self.area, lines) })
+		ya.preview_widgets(self, { ui.Text(lines):area(self.area) })
 	end
 end
 

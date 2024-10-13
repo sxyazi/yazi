@@ -18,7 +18,7 @@ end
 function Progress:partial_render()
 	local progress = cx.tasks.progress
 	if progress.total == 0 then
-		return { ui.Paragraph(self._area, {}) }
+		return { ui.Text {} }
 	end
 
 	local gauge = ui.Gauge(self._area)

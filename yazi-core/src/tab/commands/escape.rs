@@ -86,7 +86,7 @@ impl Tab {
 		}
 
 		self.selected.clear();
-		if self.current.hovered().is_some_and(|h| h.is_dir()) {
+		if self.hovered().is_some_and(|h| h.is_dir()) {
 			ManagerProxy::peek(true);
 		}
 		render_and!(true)

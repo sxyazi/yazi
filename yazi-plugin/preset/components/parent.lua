@@ -17,12 +17,11 @@ function Parent:render()
 
 	local items = {}
 	for _, f in ipairs(self._folder.window) do
-		local entity = Entity:new(f)
-		items[#items + 1] = ui.ListItem(entity:render()):style(entity:style())
+		items[#items + 1] = Entity:new(f):render()
 	end
 
 	return {
-		ui.List(self._area, items),
+		ui.List(items):area(self._area),
 	}
 end
 

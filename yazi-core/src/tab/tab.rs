@@ -7,7 +7,7 @@ use yazi_adapter::Dimension;
 use yazi_config::{LAYOUT, popup::{Origin, Position}};
 use yazi_fs::{Folder, FolderStage};
 use yazi_macro::render;
-use yazi_shared::fs::Url;
+use yazi_shared::fs::{File, Url};
 
 use super::{Backstack, Config, Finder, History, Mode, Preview};
 use crate::tab::Selected;
@@ -42,8 +42,11 @@ impl Tab {
 	#[inline]
 	pub fn cwd(&self) -> &Url { &self.current.url }
 
+	#[inline]
+	pub fn hovered(&self) -> Option<&File> { self.current.hovered() }
+
 	pub fn hovered_rect(&self) -> Option<Rect> {
-		let y = self.current.files.position(self.current.hovered()?.urn())? - self.current.offset;
+		let y = self.current.files.position(self.hovered()?.urn())? - self.current.offset;
 
 		let mut rect = LAYOUT.load().current;
 		rect.y = rect.y.saturating_sub(1) + y as u16;
@@ -62,7 +65,7 @@ impl Tab {
 
 	pub fn selected_or_hovered(&self, reorder: bool) -> Box<dyn Iterator<Item = &Url> + '_> {
 		if self.selected.is_empty() {
-			Box::new(self.current.hovered().map(|h| vec![&h.url]).unwrap_or_default().into_iter())
+			Box::new(self.hovered().map(|h| vec![&h.url]).unwrap_or_default().into_iter())
 		} else if !reorder {
 			Box::new(self.selected.keys())
 		} else {
@@ -73,7 +76,7 @@ impl Tab {
 	}
 
 	pub fn hovered_and_selected(&self, reorder: bool) -> Box<dyn Iterator<Item = &Url> + '_> {
-		let Some(h) = self.current.hovered() else { return Box::new(iter::empty()) };
+		let Some(h) = self.hovered() else { return Box::new(iter::empty()) };
 
 		if self.selected.is_empty() {
 			Box::new([&h.url, &h.url].into_iter())
@@ -89,7 +92,7 @@ impl Tab {
 	// --- History
 	#[inline]
 	pub fn hovered_folder(&self) -> Option<&Folder> {
-		self.current.hovered().filter(|&h| h.is_dir()).and_then(|h| self.history.get(&h.url))
+		self.hovered().filter(|&h| h.is_dir()).and_then(|h| self.history.get(&h.url))
 	}
 
 	pub fn apply_files_attrs(&mut self) {

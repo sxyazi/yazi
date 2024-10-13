@@ -14,14 +14,16 @@ yazi_macro::mod_flat!(
 	hidden
 	leave
 	linemode
-	preview
 	reveal
 	search
 	select
 	select_all
 	shell
 	sort
+	spot
 	toggle
 	toggle_all
+	update_peeked
+	update_spotted
 	visual_mode
 );

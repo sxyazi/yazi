@@ -71,7 +71,7 @@ impl Manager {
 	pub fn parent(&self) -> Option<&Folder> { self.active().parent.as_ref() }
 
 	#[inline]
-	pub fn hovered(&self) -> Option<&File> { self.active().current.hovered() }
+	pub fn hovered(&self) -> Option<&File> { self.active().hovered() }
 
 	#[inline]
 	pub fn hovered_folder(&self) -> Option<&Folder> { self.active().hovered_folder() }

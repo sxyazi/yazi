@@ -163,7 +163,7 @@ impl Scheduler {
 				async move {
 					if !canceled {
 						fs::remove_dir_all(&target).await.ok();
-						ManagerProxy::update_task(&target);
+						ManagerProxy::update_tasks(&target);
 						Pump::push_delete(target);
 					}
 					ongoing.lock().try_remove(id, TaskStage::Hooked);
@@ -191,7 +191,7 @@ impl Scheduler {
 			Box::new(move |canceled: bool| {
 				async move {
 					if !canceled {
-						ManagerProxy::update_task(&target);
+						ManagerProxy::update_tasks(&target);
 						Pump::push_trash(target);
 					}
 					ongoing.lock().try_remove(id, TaskStage::Hooked);

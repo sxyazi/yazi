@@ -40,7 +40,7 @@ impl Tabs {
 
 		if !opt.current {
 			tab.cd(opt.url);
-		} else if let Some(h) = self.active().current.hovered() {
+		} else if let Some(h) = self.active().hovered() {
 			tab.conf = self.active().conf.clone();
 			tab.apply_files_attrs();
 			tab.reveal(h.url.to_regular());

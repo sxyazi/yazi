@@ -19,7 +19,7 @@ function Current:empty()
 	end
 
 	return {
-		ui.Paragraph(self._area, { line }):align(ui.Paragraph.CENTER),
+		ui.Text(line):area(self._area):align(ui.Text.CENTER),
 	}
 end
 
@@ -32,14 +32,12 @@ function Current:render()
 	local entities, linemodes = {}, {}
 	for _, f in ipairs(files) do
 		linemodes[#linemodes + 1] = Linemode:new(f):render()
-
-		local entity = Entity:new(f)
-		entities[#entities + 1] = ui.ListItem(entity:render()):style(entity:style())
+		entities[#entities + 1] = Entity:new(f):render()
 	end
 
 	return {
-		ui.List(self._area, entities),
-		ui.Paragraph(self._area, linemodes):align(ui.Paragraph.RIGHT),
+		ui.List(entities):area(self._area),
+		ui.Text(linemodes):area(self._area):align(ui.Text.RIGHT),
 	}
 end
 

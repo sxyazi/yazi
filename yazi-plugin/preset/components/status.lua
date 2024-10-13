@@ -133,10 +133,11 @@ end
 function Status:render()
 	local left = self:children_render(self.LEFT)
 	local right = self:children_render(self.RIGHT)
+	local right_width = right:width()
 	return {
-		ui.Paragraph(self._area, { left }),
-		ui.Paragraph(self._area, { right }):align(ui.Paragraph.RIGHT),
-		table.unpack(Progress:render(self._area, right:width())),
+		ui.Text(left):area(self._area),
+		ui.Text(right):area(self._area):align(ui.Text.RIGHT),
+		table.unpack(Progress:render(self._area, right_width)),
 	}
 end
 

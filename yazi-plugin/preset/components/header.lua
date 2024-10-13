@@ -96,8 +96,8 @@ function Header:render()
 
 	local left = self:children_render(self.LEFT)
 	return {
-		ui.Paragraph(self._area, { left }),
-		ui.Paragraph(self._area, { right }):align(ui.Paragraph.RIGHT),
+		ui.Text(left):area(self._area),
+		ui.Text(right):area(self._area):align(ui.Text.RIGHT),
 	}
 end
 

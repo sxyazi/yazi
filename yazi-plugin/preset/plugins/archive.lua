@@ -7,9 +7,10 @@ function M:peek()
 	local files, bound, code = self.list_files({ "-p", tostring(self.file.url) }, self.skip, limit)
 	if code ~= 0 then
 		return ya.preview_widgets(self, {
-			ui.Paragraph(self.area, {
-				ui.Line(code == 2 and "File list in this archive is encrypted" or "Spawn `7z` and `7zz` both commands failed"),
-			}),
+			ui.Text(
+				ui.Line(code == 2 and "File list in this archive is encrypted" or "Spawn `7z` and `7zz` both commands failed")
+			)
+				:area(self.area),
 		})
 	end
 
@@ -36,8 +37,8 @@ function M:peek()
 		ya.manager_emit("peek", { math.max(0, bound - limit), only_if = self.file.url, upper_bound = true })
 	else
 		ya.preview_widgets(self, {
-			ui.Paragraph(self.area, paths),
-			ui.Paragraph(self.area, sizes):align(ui.Paragraph.RIGHT),
+			ui.Text(paths):area(self.area),
+			ui.Text(sizes):area(self.area):align(ui.Text.RIGHT),
 		})
 	end
 end
