@@ -1,3 +1,3 @@
 yazi_macro::mod_pub!(commands);
 
-yazi_macro::mod_flat!(sorter, which);
+yazi_macro::mod_flat!(sorter which);

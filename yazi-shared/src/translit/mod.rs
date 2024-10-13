@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(table, traits);
+yazi_macro::mod_flat!(table traits);

@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(input, peek);
+yazi_macro::mod_flat!(input peek);
