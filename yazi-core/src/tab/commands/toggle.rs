@@ -15,9 +15,9 @@ impl<'a> From<Cmd> for Opt<'a> {
 	fn from(mut c: Cmd) -> Self {
 		Self {
 			url:   c.take("url").and_then(Data::into_url).map(Cow::Owned),
-			state: match c.take_str("state").as_deref() {
-				Some("true") => Some(true),
-				Some("false") => Some(false),
+			state: match c.take_first_str().as_deref() {
+				Some("on") => Some(true),
+				Some("off") => Some(false),
 				_ => None,
 			},
 		}
@@ -26,7 +26,7 @@ impl<'a> From<Cmd> for Opt<'a> {
 
 impl<'a> Tab {
 	#[yazi_codegen::command]
-	pub fn select(&mut self, opt: Opt<'a>) {
+	pub fn toggle(&mut self, opt: Opt<'a>) {
 		let Some(url) = opt.url.or_else(|| self.current.hovered().map(|h| Cow::Borrowed(&h.url)))
 		else {
 			return;
@@ -40,7 +40,7 @@ impl<'a> Tab {
 
 		if !b {
 			AppProxy::notify_warn(
-				"Select one",
+				"Toggle",
 				"This file cannot be selected, due to path nesting conflict.",
 			);
 		}

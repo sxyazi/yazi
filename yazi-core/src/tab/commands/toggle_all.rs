@@ -11,9 +11,9 @@ struct Opt {
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
-			state: match c.take_str("state").as_deref() {
-				Some("true") => Some(true),
-				Some("false") => Some(false),
+			state: match c.take_first_str().as_deref() {
+				Some("on") => Some(true),
+				Some("off") => Some(false),
 				_ => None,
 			},
 		}
@@ -25,7 +25,7 @@ impl From<Option<bool>> for Opt {
 
 impl Tab {
 	#[yazi_codegen::command]
-	pub fn select_all(&mut self, opt: Opt) {
+	pub fn toggle_all(&mut self, opt: Opt) {
 		let iter = self.current.files.iter().map(|f| &f.url);
 		let (removal, addition): (Vec<_>, Vec<_>) = match opt.state {
 			Some(true) => (vec![], iter.collect()),
@@ -41,7 +41,7 @@ impl Tab {
 
 		if added != addition.len() {
 			AppProxy::notify_warn(
-				"Select all",
+				"Toggle all",
 				"Some files cannot be selected, due to path nesting conflict.",
 			);
 		}

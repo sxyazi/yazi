@@ -46,12 +46,14 @@ keymap = [
 	{ on = "K", run = "seek -5", desc = "Seek up 5 units in the preview" },
 	{ on = "J", run = "seek 5",  desc = "Seek down 5 units in the preview" },
 
-	# Selection
-	{ on = "<Space>", run = [ "select --state=none", "arrow 1" ], desc = "Toggle the current selection state" },
-	{ on = "v",       run = "visual_mode",                        desc = "Enter visual mode (selection mode)" },
-	{ on = "V",       run = "visual_mode --unset",                desc = "Enter visual mode (unset mode)" },
-	{ on = "<C-a>",   run = "select_all --state=true",            desc = "Select all files" },
-	{ on = "<C-r>",   run = "select_all --state=none",            desc = "Inverse selection of all files" },
+	# Toggle
+	{ on = "<Space>", run = [ "toggle", "arrow 1" ], desc = "Toggle the current selection state" },
+	{ on = "<C-a>",   run = "toggle_all on",         desc = "Select all files" },
+	{ on = "<C-r>",   run = "toggle_all",            desc = "Invert selection of all files" },
+
+	# Visual mode
+	{ on = "v", run = "visual_mode",         desc = "Enter visual mode (selection mode)" },
+	{ on = "V", run = "visual_mode --unset", desc = "Enter visual mode (unset mode)" },
 
 	# Operation
 	{ on = "o",         run = "open",                        desc = "Open selected files" },
@@ -173,13 +175,13 @@ keymap = [
 	{ on = "<F1>", run = "help", desc = "Open help" },
 ]
 
-[select]
+[pick]
 
 keymap = [
-	{ on = "<Esc>",   run = "close",          desc = "Cancel selection" },
-	{ on = "<C-[>",   run = "close",          desc = "Cancel selection" },
-	{ on = "<C-c>",   run = "close",          desc = "Cancel selection" },
-	{ on = "<Enter>", run = "close --submit", desc = "Submit the selection" },
+	{ on = "<Esc>",   run = "close",          desc = "Cancel pick" },
+	{ on = "<C-[>",   run = "close",          desc = "Cancel pick" },
+	{ on = "<C-c>",   run = "close",          desc = "Cancel pick" },
+	{ on = "<Enter>", run = "close --submit", desc = "Submit the pick" },
 
 	{ on = "k", run = "arrow -1", desc = "Move cursor up" },
 	{ on = "j", run = "arrow 1",  desc = "Move cursor down" },

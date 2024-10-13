@@ -1,25 +1,25 @@
 yazi_macro::mod_flat!(
-	arrow,
-	back,
-	cd,
-	copy,
-	enter,
-	escape,
-	filter,
-	filter_do,
-	find,
-	find_arrow,
-	find_do,
-	forward,
-	hidden,
-	leave,
-	linemode,
-	preview,
-	reveal,
-	search,
-	select,
-	select_all,
-	shell,
-	sort,
+	arrow
+	back
+	cd
+	copy
+	enter
+	escape
+	filter
+	filter_do
+	find
+	find_arrow
+	find_do
+	forward
+	hidden
+	leave
+	linemode
+	preview
+	reveal
+	search
+	shell
+	sort
+	toggle
+	toggle_all
 	visual_mode
 );

@@ -12,7 +12,7 @@ pub struct Theme {
 	pub manager:    Manager,
 	status:         Status,
 	pub input:      Input,
-	pub select:     Select,
+	pub pick:       Pick,
 	pub completion: Completion,
 	pub tasks:      Tasks,
 	pub which:      Which,
@@ -115,7 +115,7 @@ pub struct Input {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct Select {
+pub struct Pick {
 	pub border:   Style,
 	pub active:   Style,
 	pub inactive: Style,

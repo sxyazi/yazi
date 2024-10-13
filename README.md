@@ -1,3 +1,7 @@
+## The main branch is the upcoming v0.4 development version. Please see [the `shipped` tag](https://github.com/sxyazi/yazi/tree/shipped) for the stable version of Yazi.
+
+For breaking changes, see [Migrating to Yazi v0.4.0](https://github.com/sxyazi/yazi/issues/1772).
+
 <div align="center">
   <img src="assets/logo.png" alt="Yazi logo" width="20%">
 </div>
@@ -16,7 +20,7 @@ Yazi (means "duck") is a terminal file manager written in Rust, based on non-blo
 - 📡 **Data Distribution Service**: Built on a client-server architecture (no additional server process required), integrated with a Lua-based publish-subscribe model, achieving cross-instance communication and state persistence.
 - 📦 **Package Manager**: Install plugins and themes with one command, keeping them up to date, or pin them to a specific version.
 - 🧰 Integration with ripgrep, fd, fzf, zoxide
-- 💫 Vim-like input/select/confirm/which/notify component, auto-completion for cd paths
+- 💫 Vim-like input/pick/confirm/which/notify component, auto-completion for cd paths
 - 🏷️ Multi-Tab Support, Cross-directory selection, Scrollable Preview (for videos, PDFs, archives, directories, code, etc.)
 - 🔄 Bulk Renaming, Visual Mode, File Chooser
 - 🎨 Theme System, Mouse Support, Trash Bin, Custom Layouts, CSI u

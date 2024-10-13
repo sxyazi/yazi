@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::OsString};
 
 use tracing::error;
 use yazi_boot::ARGS;
-use yazi_config::{OPEN, popup::SelectCfg};
+use yazi_config::{OPEN, popup::PickCfg};
 use yazi_fs::Folder;
 use yazi_macro::emit;
 use yazi_plugin::isolate;
@@ -96,7 +96,7 @@ impl Manager {
 
 		let urls = [opt.hovered].into_iter().chain(targets.into_iter().map(|(u, _)| u)).collect();
 		tokio::spawn(async move {
-			let result = yazi_proxy::SelectProxy::show(SelectCfg::open(
+			let result = yazi_proxy::PickProxy::show(PickCfg::open(
 				openers.iter().map(|o| o.desc.clone()).collect(),
 			));
 			if let Ok(choice) = result.await {
