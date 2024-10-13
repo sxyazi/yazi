@@ -93,6 +93,8 @@ impl<'a> Executor<'a> {
 		on!(ACTIVE, toggle);
 		on!(ACTIVE, toggle_all);
 		on!(ACTIVE, visual_mode);
+		on!(ACTIVE, select);
+		on!(ACTIVE, select_all);
 
 		// Operation
 		on!(MANAGER, open, &self.app.cx.tasks);

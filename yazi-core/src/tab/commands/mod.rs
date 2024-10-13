@@ -17,6 +17,8 @@ yazi_macro::mod_flat!(
 	preview
 	reveal
 	search
+	select
+	select_all
 	shell
 	sort
 	toggle
