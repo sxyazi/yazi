@@ -55,7 +55,7 @@ impl UserData for Style {
 	fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
 		crate::impl_style_shorthands!(methods, 0);
 
-		methods.add_function("patch", |_, (ud, value): (AnyUserData, Value)| {
+		methods.add_function_mut("patch", |_, (ud, value): (AnyUserData, Value)| {
 			{
 				let mut me = ud.borrow_mut::<Self>()?;
 				me.0 = me.0.patch(Self::try_from(value)?.0);

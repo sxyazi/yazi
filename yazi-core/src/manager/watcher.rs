@@ -53,9 +53,12 @@ impl Watcher {
 		self.in_tx.send(new.into_iter().cloned().collect()).ok();
 	}
 
-	pub(super) fn push_file(&self, url: Url) {
-		if url.parent_url().is_some_and(|p| WATCHED.read().contains(&p)) {
-			self.out_tx.send(url).ok();
+	pub(super) fn push_files(&self, url: Vec<Url>) {
+		let watched = WATCHED.read();
+		for u in url {
+			if u.parent_url().is_some_and(|p| watched.contains(&p)) {
+				self.out_tx.send(u).ok();
+			}
 		}
 	}
 

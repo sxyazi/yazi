@@ -1,10 +1,10 @@
-use mlua::{ExternalError, FromLua, Lua, Table, UserData, Value};
+use mlua::{Lua, Table, UserData, Value};
 use ratatui::widgets::Widget;
 
-use super::{Line, Rect, Renderable, Span};
+use super::{Rect, Renderable, Text};
 
 // --- List
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct List {
 	area: Rect,
 
@@ -15,8 +15,13 @@ impl List {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
 		ui.raw_set(
 			"List",
-			lua.create_function(|_, (area, items): (Rect, Vec<ListItem>)| {
-				Ok(Self { area, inner: ratatui::widgets::List::new(items) })
+			lua.create_function(|_, values: Vec<Value>| {
+				let mut items = Vec::with_capacity(values.len());
+				for value in values {
+					items.push(ratatui::widgets::ListItem::new(Text::try_from(value)?));
+				}
+
+				Ok(Self { inner: ratatui::widgets::List::new(items), ..Default::default() })
 			})?,
 		)
 	}
@@ -36,45 +41,4 @@ impl Renderable for List {
 	}
 
 	fn clone_render(&self, buf: &mut ratatui::buffer::Buffer) { Box::new(self.clone()).render(buf) }
-}
-
-// --- ListItem
-#[derive(Clone, Default, FromLua)]
-pub struct ListItem {
-	content: ratatui::text::Text<'static>,
-	style:   ratatui::style::Style,
-}
-
-impl ListItem {
-	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		ui.raw_set(
-			"ListItem",
-			lua.create_function(|_, value: Value| match value {
-				Value::String(s) => {
-					Ok(Self { content: s.to_string_lossy().into_owned().into(), ..Default::default() })
-				}
-				Value::UserData(ud) => {
-					let content: ratatui::text::Text = if let Ok(line) = ud.take::<Line>() {
-						line.0.into()
-					} else if let Ok(span) = ud.take::<Span>() {
-						span.0.into()
-					} else {
-						return Err("expected a String, Line or Span".into_lua_err());
-					};
-					Ok(Self { content, ..Default::default() })
-				}
-				_ => Err("expected a String, Line or Span".into_lua_err()),
-			})?,
-		)
-	}
-}
-
-impl From<ListItem> for ratatui::widgets::ListItem<'static> {
-	fn from(value: ListItem) -> Self { Self::new(value.content).style(value.style) }
-}
-
-impl UserData for ListItem {
-	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
-		crate::impl_style_method!(methods, style);
-	}
 }

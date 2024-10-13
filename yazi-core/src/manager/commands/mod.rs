@@ -20,9 +20,9 @@ yazi_macro::mod_flat!(
 	tab_switch
 	unyank
 	update_files
-	update_mimetype
+	update_mimes
 	update_paged
-	update_task
+	update_tasks
 	update_yanked
 	yank
 );

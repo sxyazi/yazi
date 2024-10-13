@@ -23,9 +23,9 @@ pub fn slim_lua(name: &str) -> mlua::Result<Lua> {
 	// Elements
 	let ui = lua.create_table()?;
 	elements::Line::install(&lua, &ui)?;
-	elements::Paragraph::install(&lua, &ui)?;
 	elements::Rect::install(&lua, &ui)?;
 	elements::Span::install(&lua, &ui)?;
+	elements::Text::install(&lua, &ui)?;
 
 	lua.globals().raw_set("ui", ui)?;
 	Ok(lua)

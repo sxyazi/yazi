@@ -26,15 +26,15 @@ impl Layout {
 
 impl UserData for Layout {
 	fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-		methods.add_function("direction", |_, (ud, value): (AnyUserData, bool)| {
+		methods.add_function_mut("direction", |_, (ud, value): (AnyUserData, bool)| {
 			ud.borrow_mut::<Self>()?.direction = value;
 			Ok(ud)
 		});
-		methods.add_function("margin", |_, (ud, value): (AnyUserData, u16)| {
+		methods.add_function_mut("margin", |_, (ud, value): (AnyUserData, u16)| {
 			ud.borrow_mut::<Self>()?.margin = Some(ratatui::layout::Margin::new(value, value));
 			Ok(ud)
 		});
-		methods.add_function("margin_h", |_, (ud, value): (AnyUserData, u16)| {
+		methods.add_function_mut("margin_h", |_, (ud, value): (AnyUserData, u16)| {
 			{
 				let mut me = ud.borrow_mut::<Self>()?;
 				if let Some(margin) = &mut me.margin {
@@ -45,7 +45,7 @@ impl UserData for Layout {
 			}
 			Ok(ud)
 		});
-		methods.add_function("margin_v", |_, (ud, value): (AnyUserData, u16)| {
+		methods.add_function_mut("margin_v", |_, (ud, value): (AnyUserData, u16)| {
 			{
 				let mut me = ud.borrow_mut::<Self>()?;
 				if let Some(margin) = &mut me.margin {
@@ -56,8 +56,8 @@ impl UserData for Layout {
 			}
 			Ok(ud)
 		});
-		methods.add_function("constraints", |_, (ud, value): (AnyUserData, Vec<Constraint>)| {
-			ud.borrow_mut::<Self>()?.constraints = value.into_iter().map(|c| c.0).collect();
+		methods.add_function_mut("constraints", |_, (ud, value): (AnyUserData, Vec<Constraint>)| {
+			ud.borrow_mut::<Self>()?.constraints = value.into_iter().map(Into::into).collect();
 			Ok(ud)
 		});
 		methods.add_method("split", |lua, me, value: Rect| {

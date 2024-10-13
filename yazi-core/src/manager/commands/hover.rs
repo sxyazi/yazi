@@ -42,7 +42,7 @@ impl Manager {
 			if let Some(ref p) = tab.parent {
 				to_watch.insert(&p.url);
 			}
-			if let Some(h) = tab.current.hovered().filter(|&h| h.is_dir()) {
+			if let Some(h) = tab.hovered().filter(|&h| h.is_dir()) {
 				to_watch.insert(&h.url);
 			}
 		}

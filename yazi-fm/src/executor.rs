@@ -65,20 +65,22 @@ impl<'a> Executor<'a> {
 			};
 		}
 
-		on!(MANAGER, update_task);
+		on!(MANAGER, update_tasks);
 		on!(MANAGER, update_files, &self.app.cx.tasks);
-		on!(MANAGER, update_mimetype, &self.app.cx.tasks);
+		on!(MANAGER, update_mimes, &self.app.cx.tasks);
 		on!(MANAGER, update_paged, &self.app.cx.tasks);
 		on!(MANAGER, update_yanked);
 		on!(MANAGER, hover);
 		on!(MANAGER, peek);
 		on!(MANAGER, seek);
+		on!(ACTIVE, spot);
 		on!(MANAGER, refresh, &self.app.cx.tasks);
 		on!(MANAGER, quit, &self.app.cx.tasks);
 		on!(MANAGER, close, &self.app.cx.tasks);
 		on!(MANAGER, suspend);
 		on!(ACTIVE, escape);
-		on!(ACTIVE, preview);
+		on!(ACTIVE, update_peeked);
+		on!(ACTIVE, update_spotted);
 
 		// Navigation
 		on!(ACTIVE, arrow);

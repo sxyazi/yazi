@@ -6,16 +6,23 @@ function M:peek()
 
 	local p
 	if output then
-		p = ui.Paragraph.parse(self.area, "----- File Type Classification -----\n\n" .. output.stdout)
+		p = ui.Text.parse("----- File Type Classification -----\n\n" .. output.stdout):area(self.area)
 	else
-		p = ui.Paragraph(self.area, {
-			ui.Line(string.format("Spawn `%s` command returns %s", cmd, code)),
-		})
+		p = ui.Text(string.format("Spawn `%s` command returns %s", cmd, code)):area(self.area)
 	end
 
-	ya.preview_widgets(self, { p:wrap(ui.Paragraph.WRAP) })
+	ya.preview_widgets(self, { p:wrap(ui.Text.WRAP) })
 end
 
 function M:seek() end
+
+function M:spot(skip)
+	local rect = ui.Rect { x = 10, y = 10, w = 20, h = 20 }
+
+	ya.spot_widgets(self, {
+		ui.Clear(rect),
+		ui.Table(rect),
+	})
+end
 
 return M

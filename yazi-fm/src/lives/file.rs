@@ -90,7 +90,7 @@ impl File {
 			});
 			reg.add_method("in_current", |_, me, ()| Ok(me.folder().url == me.tab().current.url));
 			reg.add_method("in_preview", |_, me, ()| {
-				Ok(me.tab().current.hovered().is_some_and(|f| f.url == me.folder().url))
+				Ok(me.tab().hovered().is_some_and(|f| f.url == me.folder().url))
 			});
 			reg.add_method("found", |lua, me, ()| {
 				let cx = lua.named_registry_value::<CtxRef>("cx")?;

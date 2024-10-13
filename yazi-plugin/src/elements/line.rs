@@ -87,7 +87,7 @@ impl UserData for Line {
 		crate::impl_style_shorthands!(methods, 0.style);
 
 		methods.add_method("width", |_, me, ()| Ok(me.0.width()));
-		methods.add_function("align", |_, (ud, align): (AnyUserData, u8)| {
+		methods.add_function_mut("align", |_, (ud, align): (AnyUserData, u8)| {
 			ud.borrow_mut::<Self>()?.0.alignment = Some(match align {
 				CENTER => ratatui::layout::Alignment::Center,
 				RIGHT => ratatui::layout::Alignment::Right,

@@ -15,13 +15,14 @@ pub fn pour(lua: &Lua) -> mlua::Result<()> {
 	super::Layout::install(lua, &ui)?;
 	super::Line::install(lua, &ui)?;
 	super::List::install(lua, &ui)?;
-	super::ListItem::install(lua, &ui)?;
 	super::Padding::install(lua, &ui)?;
-	super::Paragraph::install(lua, &ui)?;
 	super::Position::install(lua, &ui)?;
 	super::Rect::install(lua, &ui)?;
 	super::Span::install(lua, &ui)?;
 	super::Style::install(lua, &ui)?;
+	super::Table::install(lua, &ui)?;
+	super::TableRow::install(lua, &ui)?;
+	super::Text::install(lua, &ui)?;
 
 	lua.globals().raw_set("ui", ui)
 }

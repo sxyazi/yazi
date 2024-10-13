@@ -17,8 +17,8 @@ impl TryFrom<Cmd> for Opt {
 }
 
 impl Tab {
-	pub fn preview(&mut self, opt: impl TryInto<Opt>) {
-		let Some(hovered) = self.current.hovered().map(|h| &h.url) else {
+	pub fn update_peeked(&mut self, opt: impl TryInto<Opt>) {
+		let Some(hovered) = self.hovered().map(|h| &h.url) else {
 			return self.preview.reset();
 		};
 

@@ -65,11 +65,11 @@ impl UserData for Command {
 			)
 		}
 
-		methods.add_function("arg", |_, (ud, arg): (AnyUserData, mlua::String)| {
+		methods.add_function_mut("arg", |_, (ud, arg): (AnyUserData, mlua::String)| {
 			ud.borrow_mut::<Self>()?.inner.arg(arg.to_string_lossy().as_ref());
 			Ok(ud)
 		});
-		methods.add_function("args", |_, (ud, args): (AnyUserData, Vec<mlua::String>)| {
+		methods.add_function_mut("args", |_, (ud, args): (AnyUserData, Vec<mlua::String>)| {
 			{
 				let mut me = ud.borrow_mut::<Self>()?;
 				for arg in args {
@@ -78,11 +78,11 @@ impl UserData for Command {
 			}
 			Ok(ud)
 		});
-		methods.add_function("cwd", |_, (ud, dir): (AnyUserData, mlua::String)| {
+		methods.add_function_mut("cwd", |_, (ud, dir): (AnyUserData, mlua::String)| {
 			ud.borrow_mut::<Self>()?.inner.current_dir(dir.to_str()?);
 			Ok(ud)
 		});
-		methods.add_function(
+		methods.add_function_mut(
 			"env",
 			|_, (ud, key, value): (AnyUserData, mlua::String, mlua::String)| {
 				ud.borrow_mut::<Self>()?
@@ -91,15 +91,15 @@ impl UserData for Command {
 				Ok(ud)
 			},
 		);
-		methods.add_function("stdin", |_, (ud, stdio): (AnyUserData, Value)| {
+		methods.add_function_mut("stdin", |_, (ud, stdio): (AnyUserData, Value)| {
 			ud.borrow_mut::<Self>()?.inner.stdin(make_stdio(stdio)?);
 			Ok(ud)
 		});
-		methods.add_function("stdout", |_, (ud, stdio): (AnyUserData, Value)| {
+		methods.add_function_mut("stdout", |_, (ud, stdio): (AnyUserData, Value)| {
 			ud.borrow_mut::<Self>()?.inner.stdout(make_stdio(stdio)?);
 			Ok(ud)
 		});
-		methods.add_function("stderr", |_, (ud, stdio): (AnyUserData, Value)| {
+		methods.add_function_mut("stderr", |_, (ud, stdio): (AnyUserData, Value)| {
 			ud.borrow_mut::<Self>()?.inner.stderr(make_stdio(stdio)?);
 			Ok(ud)
 		});

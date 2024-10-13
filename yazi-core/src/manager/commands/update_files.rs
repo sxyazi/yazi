@@ -52,7 +52,7 @@ impl Manager {
 			Self::update_current(tab, op, tasks);
 		} else if matches!(&tab.parent, Some(p) if *url == p.url) {
 			Self::update_parent(tab, op);
-		} else if matches!(tab.current.hovered(), Some(h) if *url == h.url) {
+		} else if matches!(tab.hovered(), Some(h) if *url == h.url) {
 			Self::update_hovered(tab, op);
 		} else {
 			Self::update_history(tab, op);
@@ -74,7 +74,7 @@ impl Manager {
 	}
 
 	fn update_current(tab: &mut Tab, op: Cow<FilesOp>, tasks: &Tasks) {
-		let hovered = tab.current.hovered().filter(|_| tab.current.tracing).map(|h| h.urn_owned());
+		let hovered = tab.hovered().filter(|_| tab.current.tracing).map(|h| h.urn_owned());
 		let calc = !matches!(*op, FilesOp::Size(..) | FilesOp::Deleting(..));
 
 		let foreign = matches!(op, Cow::Borrowed(_));
