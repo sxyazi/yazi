@@ -1,20 +1,16 @@
-use std::borrow::Cow;
-
 use yazi_macro::render_and;
 use yazi_proxy::AppProxy;
-use yazi_shared::{event::{Cmd, Data}, fs::Url};
+use yazi_shared::event::Cmd;
 
 use crate::tab::Tab;
 
-struct Opt<'a> {
-	url:   Option<Cow<'a, Url>>,
+struct Opt {
 	state: Option<bool>,
 }
 
-impl<'a> From<Cmd> for Opt<'a> {
+impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
 		Self {
-			url:   c.take("url").and_then(Data::into_url).map(Cow::Owned),
 			state: match c.take_first_str().as_deref() {
 				Some("on") => Some(true),
 				Some("off") => Some(false),
@@ -24,18 +20,17 @@ impl<'a> From<Cmd> for Opt<'a> {
 	}
 }
 
-impl<'a> Tab {
+impl Tab {
 	#[yazi_codegen::command]
-	pub fn toggle(&mut self, opt: Opt<'a>) {
-		let Some(url) = opt.url.or_else(|| self.current.hovered().map(|h| Cow::Borrowed(&h.url)))
-		else {
+	pub fn toggle(&mut self, opt: Opt) {
+		let Some(url) = self.current.hovered().map(|h| &h.url) else {
 			return;
 		};
 
 		let b = match opt.state {
-			Some(true) => render_and!(self.selected.add(&url)),
-			Some(false) => render_and!(self.selected.remove(&url)) | true,
-			None => render_and!(self.selected.remove(&url) || self.selected.add(&url)),
+			Some(true) => render_and!(self.selected.add(url)),
+			Some(false) => render_and!(self.selected.remove(url)) | true,
+			None => render_and!(self.selected.remove(url) || self.selected.add(url)),
 		};
 
 		if !b {
