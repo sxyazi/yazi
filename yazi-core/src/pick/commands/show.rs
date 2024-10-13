@@ -1,12 +1,12 @@
 use tokio::sync::oneshot;
-use yazi_config::popup::SelectCfg;
+use yazi_config::popup::PickCfg;
 use yazi_macro::render;
 use yazi_shared::event::Cmd;
 
-use crate::select::Select;
+use crate::pick::Pick;
 
 pub struct Opt {
-	cfg: SelectCfg,
+	cfg: PickCfg,
 	tx:  oneshot::Sender<anyhow::Result<usize>>,
 }
 
@@ -18,7 +18,7 @@ impl TryFrom<Cmd> for Opt {
 	}
 }
 
-impl Select {
+impl Pick {
 	pub fn show(&mut self, opt: impl TryInto<Opt>) {
 		let Ok(opt) = opt.try_into() else {
 			return;

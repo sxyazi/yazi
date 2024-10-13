@@ -1,9 +1,9 @@
 use anyhow::Result;
 use tokio::sync::oneshot::Sender;
-use yazi_config::{SELECT, popup::Position};
+use yazi_config::{PICK, popup::Position};
 
 #[derive(Default)]
-pub struct Select {
+pub struct Pick {
 	pub(super) title: String,
 	pub(super) items: Vec<String>,
 	pub position:     Position,
@@ -15,7 +15,7 @@ pub struct Select {
 	pub visible: bool,
 }
 
-impl Select {
+impl Pick {
 	#[inline]
 	pub fn window(&self) -> &[String] {
 		let end = (self.offset + self.limit()).min(self.items.len());
@@ -24,11 +24,11 @@ impl Select {
 
 	#[inline]
 	pub(super) fn limit(&self) -> usize {
-		self.position.offset.height.saturating_sub(SELECT.border()) as usize
+		self.position.offset.height.saturating_sub(PICK.border()) as usize
 	}
 }
 
-impl Select {
+impl Pick {
 	#[inline]
 	pub fn title(&self) -> String { self.title.clone() }
 

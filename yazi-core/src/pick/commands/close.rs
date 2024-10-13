@@ -2,7 +2,7 @@ use anyhow::anyhow;
 use yazi_macro::render;
 use yazi_shared::event::Cmd;
 
-use crate::select::Select;
+use crate::pick::Pick;
 
 struct Opt {
 	submit: bool,
@@ -15,7 +15,7 @@ impl From<bool> for Opt {
 	fn from(submit: bool) -> Self { Self { submit } }
 }
 
-impl Select {
+impl Pick {
 	#[yazi_codegen::command]
 	pub fn close(&mut self, opt: Opt) {
 		if let Some(cb) = self.callback.take() {

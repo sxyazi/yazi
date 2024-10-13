@@ -2,7 +2,7 @@ use ratatui::{text::Text, widgets::{Paragraph, Wrap}};
 use yazi_shared::fs::Url;
 
 use super::{Offset, Origin, Position};
-use crate::{CONFIRM, INPUT, SELECT};
+use crate::{CONFIRM, INPUT, PICK};
 
 #[derive(Default)]
 pub struct InputCfg {
@@ -16,7 +16,7 @@ pub struct InputCfg {
 }
 
 #[derive(Default)]
-pub struct SelectCfg {
+pub struct PickCfg {
 	pub title:    String,
 	pub items:    Vec<String>,
 	pub position: Position,
@@ -176,21 +176,18 @@ impl ConfirmCfg {
 	}
 }
 
-impl SelectCfg {
+impl PickCfg {
 	#[inline]
 	fn max_height(len: usize) -> u16 {
-		SELECT.open_offset.height.min(SELECT.border().saturating_add(len as u16))
+		PICK.open_offset.height.min(PICK.border().saturating_add(len as u16))
 	}
 
 	pub fn open(items: Vec<String>) -> Self {
 		let max_height = Self::max_height(items.len());
 		Self {
-			title: SELECT.open_title.to_owned(),
+			title: PICK.open_title.to_owned(),
 			items,
-			position: Position::new(SELECT.open_origin, Offset {
-				height: max_height,
-				..SELECT.open_offset
-			}),
+			position: Position::new(PICK.open_origin, Offset { height: max_height, ..PICK.open_offset }),
 		}
 	}
 }

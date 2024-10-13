@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(cand, layout);
+yazi_macro::mod_flat!(cand layout);

@@ -1,10 +1,10 @@
 #![allow(clippy::option_map_unit_fn)]
 
-yazi_macro::mod_pub!(errors, event, fs, shell, theme, translit);
+yazi_macro::mod_pub!(errors event fs shell theme translit);
 
 yazi_macro::mod_flat!(
-	chars, condition, debounce, env, layer, natsort, number, os, rand, ro_cell, terminal, throttle,
-	time, xdg
+	chars condition debounce env layer natsort number os rand ro_cell terminal throttle
+	time xdg
 );
 
 pub fn init() {

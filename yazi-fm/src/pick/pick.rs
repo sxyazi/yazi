@@ -3,29 +3,29 @@ use yazi_config::THEME;
 
 use crate::Ctx;
 
-pub(crate) struct Select<'a> {
+pub(crate) struct Pick<'a> {
 	cx: &'a Ctx,
 }
 
-impl<'a> Select<'a> {
+impl<'a> Pick<'a> {
 	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
 }
 
-impl<'a> Widget for Select<'a> {
+impl<'a> Widget for Pick<'a> {
 	fn render(self, _: Rect, buf: &mut Buffer) {
-		let select = &self.cx.select;
-		let area = self.cx.manager.area(select.position);
+		let pick = &self.cx.pick;
+		let area = self.cx.manager.area(pick.position);
 
-		let items: Vec<_> = select
+		let items: Vec<_> = pick
 			.window()
 			.iter()
 			.enumerate()
 			.map(|(i, v)| {
-				if i != select.rel_cursor() {
-					return ListItem::new(format!("  {v}")).style(THEME.select.inactive);
+				if i != pick.rel_cursor() {
+					return ListItem::new(format!("  {v}")).style(THEME.pick.inactive);
 				}
 
-				ListItem::new(format!(" {v}")).style(THEME.select.active)
+				ListItem::new(format!(" {v}")).style(THEME.pick.active)
 			})
 			.collect();
 
@@ -33,9 +33,9 @@ impl<'a> Widget for Select<'a> {
 		List::new(items)
 			.block(
 				Block::bordered()
-					.title(select.title())
+					.title(pick.title())
 					.border_type(BorderType::Rounded)
-					.border_style(THEME.select.border),
+					.border_style(THEME.pick.border),
 			)
 			.render(area, buf);
 	}

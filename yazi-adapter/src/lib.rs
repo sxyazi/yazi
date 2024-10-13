@@ -1,7 +1,7 @@
 #![allow(clippy::unit_arg)]
 
 yazi_macro::mod_flat!(
-	adapter, chafa, dimension, emulator, iip, image, kgp, kgp_old, mux, sixel, ueberzug
+	adapter chafa dimension emulator iip image kgp kgp_old mux sixel ueberzug
 );
 
 use yazi_shared::{RoCell, env_exists, in_wsl};

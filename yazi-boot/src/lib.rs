@@ -1,6 +1,6 @@
 yazi_macro::mod_pub!(actions);
 
-yazi_macro::mod_flat!(args, boot);
+yazi_macro::mod_flat!(args boot);
 
 use clap::Parser;
 use yazi_shared::RoCell;

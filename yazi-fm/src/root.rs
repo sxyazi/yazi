@@ -3,7 +3,7 @@ use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 use tracing::error;
 use yazi_plugin::{LUA, elements::render_widgets};
 
-use super::{completion, confirm, input, select, tasks, which};
+use super::{completion, confirm, input, pick, tasks, which};
 use crate::{Ctx, components, help};
 
 pub(super) struct Root<'a> {
@@ -33,8 +33,8 @@ impl<'a> Widget for Root<'a> {
 			tasks::Layout::new(self.cx).render(area, buf);
 		}
 
-		if self.cx.select.visible {
-			select::Select::new(self.cx).render(area, buf);
+		if self.cx.pick.visible {
+			pick::Pick::new(self.cx).render(area, buf);
 		}
 
 		if self.cx.input.visible {

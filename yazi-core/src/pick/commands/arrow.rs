@@ -1,7 +1,7 @@
 use yazi_macro::render;
 use yazi_shared::event::{Cmd, Data};
 
-use crate::select::Select;
+use crate::pick::Pick;
 
 struct Opt {
 	step: isize,
@@ -11,7 +11,7 @@ impl From<Cmd> for Opt {
 	fn from(c: Cmd) -> Self { Self { step: c.first().and_then(Data::as_isize).unwrap_or(0) } }
 }
 
-impl Select {
+impl Pick {
 	#[yazi_codegen::command]
 	pub fn arrow(&mut self, opt: Opt) {
 		if opt.step > 0 { self.next(opt.step as usize) } else { self.prev(opt.step.unsigned_abs()) }

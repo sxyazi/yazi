@@ -6,10 +6,10 @@
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
 yazi_macro::mod_pub!(
-	app, completion, components, confirm, help, input, lives, notify, select, tasks, which
+	app completion components confirm help input lives notify pick tasks which
 );
 
-yazi_macro::mod_flat!(context, executor, logs, panic, root, router, signals, term);
+yazi_macro::mod_flat!(context executor logs panic root router signals term);
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

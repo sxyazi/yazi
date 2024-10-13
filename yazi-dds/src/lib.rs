@@ -2,7 +2,7 @@
 
 yazi_macro::mod_pub!(body);
 
-yazi_macro::mod_flat!(client, payload, pubsub, pump, sendable, server, state, stream);
+yazi_macro::mod_flat!(client payload pubsub pump sendable server state stream);
 
 pub fn init() {
 	let (tx, rx) = tokio::sync::mpsc::unbounded_channel();

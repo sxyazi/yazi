@@ -1,48 +1,30 @@
-use std::borrow::Cow;
+use std::time::Duration;
 
-use yazi_macro::render_and;
-use yazi_proxy::AppProxy;
-use yazi_shared::{event::{Cmd, Data}, fs::Url};
+use yazi_shared::event::Cmd;
 
 use crate::tab::Tab;
 
-struct Opt<'a> {
-	url:   Option<Cow<'a, Url>>,
-	state: Option<bool>,
+struct Opt;
+
+impl From<Cmd> for Opt {
+	fn from(_: Cmd) -> Self { Self }
 }
 
-impl<'a> From<Cmd> for Opt<'a> {
-	fn from(mut c: Cmd) -> Self {
-		Self {
-			url:   c.take("url").and_then(Data::into_url).map(Cow::Owned),
-			state: match c.take_str("state").as_deref() {
-				Some("true") => Some(true),
-				Some("false") => Some(false),
-				_ => None,
-			},
-		}
-	}
+impl From<()> for Opt {
+	fn from(_: ()) -> Self { Self }
 }
 
-impl<'a> Tab {
+impl Tab {
+	// TODO: remove this in Yazi 0.4.1
 	#[yazi_codegen::command]
-	pub fn select(&mut self, opt: Opt<'a>) {
-		let Some(url) = opt.url.or_else(|| self.current.hovered().map(|h| Cow::Borrowed(&h.url)))
-		else {
-			return;
-		};
+	pub fn select(&mut self, _: Opt) {
+		yazi_proxy::AppProxy::notify(yazi_proxy::options::NotifyOpt {
+			title:   "Deprecated command".to_owned(),
+			content: "`select` and `select_all` command has been renamed to `toggle` and `toggle_all` in Yazi v0.4
 
-		let b = match opt.state {
-			Some(true) => render_and!(self.selected.add(&url)),
-			Some(false) => render_and!(self.selected.remove(&url)) | true,
-			None => render_and!(self.selected.remove(&url) || self.selected.add(&url)),
-		};
-
-		if !b {
-			AppProxy::notify_warn(
-				"Select one",
-				"This file cannot be selected, due to path nesting conflict.",
-			);
-		}
+Please change it in your keymap.toml, see #1773 for details: https://github.com/sxyazi/yazi/pull/1773".to_owned(),
+			level:   yazi_proxy::options::NotifyLevel::Error,
+			timeout: Duration::from_secs(20),
+		});
 	}
 }

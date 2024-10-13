@@ -5,8 +5,7 @@ pub enum InputOp {
 	#[default]
 	None,
 	Select(usize),
-	// cut, insert, start
-	Delete(bool, bool, usize),
+	Delete(bool, bool, usize), // cut, insert, start
 	Yank(usize),
 }
 

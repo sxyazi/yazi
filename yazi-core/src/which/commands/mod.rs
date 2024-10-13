@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(callback, show);
+yazi_macro::mod_flat!(callback show);

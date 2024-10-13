@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(push, tick);
+yazi_macro::mod_flat!(push tick);

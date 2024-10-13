@@ -17,7 +17,7 @@ impl<'a> Executor<'a> {
 			Layer::App => self.app(cmd),
 			Layer::Manager => self.manager(cmd),
 			Layer::Tasks => self.tasks(cmd),
-			Layer::Select => self.select(cmd),
+			Layer::Pick => self.pick(cmd),
 			Layer::Input => self.input(cmd),
 			Layer::Confirm => self.confirm(cmd),
 			Layer::Help => self.help(cmd),
@@ -89,10 +89,12 @@ impl<'a> Executor<'a> {
 		on!(ACTIVE, cd);
 		on!(ACTIVE, reveal);
 
-		// Selection
+		// Toggle
+		on!(ACTIVE, toggle);
+		on!(ACTIVE, toggle_all);
+		on!(ACTIVE, visual_mode);
 		on!(ACTIVE, select);
 		on!(ACTIVE, select_all);
-		on!(ACTIVE, visual_mode);
 
 		// Operation
 		on!(MANAGER, open, &self.app.cx.tasks);
@@ -172,11 +174,11 @@ impl<'a> Executor<'a> {
 		}
 	}
 
-	fn select(&mut self, cmd: Cmd) {
+	fn pick(&mut self, cmd: Cmd) {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return self.app.cx.select.$name(cmd);
+					return self.app.cx.pick.$name(cmd);
 				}
 			};
 		}
@@ -187,7 +189,7 @@ impl<'a> Executor<'a> {
 
 		match cmd.name.as_str() {
 			// Help
-			"help" => self.app.cx.help.toggle(Layer::Select),
+			"help" => self.app.cx.help.toggle(Layer::Pick),
 			// Plugin
 			"plugin" => self.app.plugin(cmd),
 			_ => {}
