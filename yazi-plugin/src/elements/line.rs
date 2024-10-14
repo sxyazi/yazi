@@ -10,49 +10,14 @@ const LEFT: u8 = 0;
 const CENTER: u8 = 1;
 const RIGHT: u8 = 2;
 
+const EXPECTED: &str = "expected a string, ui.Span, ui.Line, or a table of them";
+
 #[derive(Clone, FromLua)]
 pub struct Line(pub(super) ratatui::text::Line<'static>);
 
-impl TryFrom<Table<'_>> for Line {
-	type Error = mlua::Error;
-
-	fn try_from(tb: Table) -> Result<Self, Self::Error> {
-		let seq: Vec<_> = tb.sequence_values().filter_map(|v| v.ok()).collect();
-		let mut spans = Vec::with_capacity(seq.len());
-		for value in seq {
-			if let Value::UserData(ud) = value {
-				if let Ok(span) = ud.take::<Span>() {
-					spans.push(span.0);
-				} else if let Ok(line) = ud.take::<Line>() {
-					let style = line.0.style;
-					spans.extend(line.0.spans.into_iter().map(|mut span| {
-						span.style = style.patch(span.style);
-						span
-					}));
-				} else {
-					return Err("expected a table of Spans or Lines".into_lua_err());
-				}
-			}
-		}
-		Ok(Self(ratatui::text::Line::from(spans)))
-	}
-}
-
-impl TryFrom<mlua::String<'_>> for Line {
-	type Error = mlua::Error;
-
-	fn try_from(s: mlua::String) -> Result<Self, Self::Error> {
-		Ok(Self(ratatui::text::Line::from(s.to_string_lossy().into_owned())))
-	}
-}
-
 impl Line {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		let new = lua.create_function(|_, (_, value): (Table, Value)| match value {
-			Value::Table(tb) => Line::try_from(tb),
-			Value::String(s) => Line::try_from(s),
-			_ => Err("expected a String, or a table of Spans and Lines".into_lua_err()),
-		})?;
+		let new = lua.create_function(|_, (_, value): (Table, Value)| Line::try_from(value))?;
 
 		let parse = lua.create_function(|_, code: mlua::String| {
 			let Some(line) = code.as_bytes().split_inclusive(|&b| b == b'\n').next() else {
@@ -78,6 +43,53 @@ impl Line {
 		line.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
 		ui.raw_set("Line", line)
+	}
+}
+
+impl TryFrom<Value<'_>> for Line {
+	type Error = mlua::Error;
+
+	fn try_from(value: Value) -> Result<Self, Self::Error> {
+		Ok(Self(match value {
+			Value::Table(tb) => return Self::try_from(tb),
+			Value::String(s) => s.to_string_lossy().into_owned().into(),
+			Value::UserData(ud) => {
+				if let Ok(span) = ud.take::<Span>() {
+					span.0.into()
+				} else if let Ok(mut line) = ud.take::<Line>() {
+					line.0.spans.iter_mut().for_each(|s| s.style = line.0.style.patch(s.style));
+					line.0
+				} else {
+					Err(EXPECTED.into_lua_err())?
+				}
+			}
+			_ => Err(EXPECTED.into_lua_err())?,
+		}))
+	}
+}
+
+impl TryFrom<Table<'_>> for Line {
+	type Error = mlua::Error;
+
+	fn try_from(tb: Table) -> Result<Self, Self::Error> {
+		let mut spans = Vec::with_capacity(tb.raw_len());
+		for v in tb.sequence_values() {
+			match v? {
+				Value::String(s) => spans.push(s.to_string_lossy().into_owned().into()),
+				Value::UserData(ud) => {
+					if let Ok(span) = ud.take::<Span>() {
+						spans.push(span.0);
+					} else if let Ok(mut line) = ud.take::<Line>() {
+						line.0.spans.iter_mut().for_each(|s| s.style = line.0.style.patch(s.style));
+						spans.extend(line.0.spans);
+					} else {
+						return Err(EXPECTED.into_lua_err());
+					}
+				}
+				_ => Err(EXPECTED.into_lua_err())?,
+			}
+		}
+		Ok(Self(spans.into()))
 	}
 }
 

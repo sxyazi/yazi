@@ -13,7 +13,7 @@ function M:peek()
 
 	if #folder.files == 0 then
 		return ya.preview_widgets(self, {
-			ui.Text(ui.Line(folder.stage.is_loading and "Loading..." or "No items")):area(self.area):align(ui.Text.CENTER),
+			ui.Text(folder.stage.is_loading and "Loading..." or "No items"):area(self.area):align(ui.Text.CENTER),
 		})
 	end
 

@@ -132,8 +132,10 @@ end
 
 function Status:render()
 	local left = self:children_render(self.LEFT)
+
 	local right = self:children_render(self.RIGHT)
 	local right_width = right:width()
+
 	return {
 		ui.Text(left):area(self._area),
 		ui.Text(right):area(self._area):align(ui.Text.RIGHT),

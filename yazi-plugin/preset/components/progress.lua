@@ -21,7 +21,7 @@ function Progress:partial_render()
 		return { ui.Text {} }
 	end
 
-	local gauge = ui.Gauge(self._area)
+	local gauge = ui.Gauge():area(self._area)
 	if progress.fail == 0 then
 		gauge = gauge:gauge_style(THEME.status.progress_normal)
 	else

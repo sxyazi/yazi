@@ -16,10 +16,7 @@ pub struct Gauge {
 
 impl Gauge {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		ui.raw_set(
-			"Gauge",
-			lua.create_function(|_, area: Rect| Ok(Gauge { area, ..Default::default() }))?,
-		)
+		ui.raw_set("Gauge", lua.create_function(|_, ()| Ok(Gauge::default()))?)
 	}
 }
 

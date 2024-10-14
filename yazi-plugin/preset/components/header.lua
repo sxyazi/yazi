@@ -95,6 +95,7 @@ function Header:render()
 	self._right_width = right:width()
 
 	local left = self:children_render(self.LEFT)
+
 	return {
 		ui.Text(left):area(self._area),
 		ui.Text(right):area(self._area):align(ui.Text.RIGHT),
