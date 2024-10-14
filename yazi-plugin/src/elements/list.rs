@@ -1,4 +1,4 @@
-use mlua::{Lua, Table, UserData, Value};
+use mlua::{ExternalError, Lua, Table, UserData, Value};
 use ratatui::widgets::Widget;
 
 use super::{Rect, Renderable, Text};
@@ -15,10 +15,13 @@ impl List {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
 		ui.raw_set(
 			"List",
-			lua.create_function(|_, values: Vec<Value>| {
-				let mut items = Vec::with_capacity(values.len());
-				for value in values {
-					items.push(ratatui::widgets::ListItem::new(Text::try_from(value)?));
+			lua.create_function(|_, tb: Table| {
+				let mut items = Vec::with_capacity(tb.raw_len());
+				for v in tb.sequence_values::<Value>() {
+					match v? {
+						Value::Table(_) => Err("Nested table not supported".into_lua_err())?,
+						v => items.push(Text::try_from(v)?),
+					}
 				}
 
 				Ok(Self { inner: ratatui::widgets::List::new(items), ..Default::default() })

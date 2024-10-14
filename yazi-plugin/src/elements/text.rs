@@ -14,6 +14,8 @@ pub const WRAP_NO: u8 = 0;
 pub const WRAP: u8 = 1;
 pub const WRAP_TRIM: u8 = 2;
 
+const EXPECTED: &str = "expected a string, ui.Line, ui.Span or a table of them";
+
 #[derive(Clone, Default, FromLua)]
 pub struct Text {
 	pub area: Rect,
@@ -54,29 +56,45 @@ impl TryFrom<Value<'_>> for Text {
 	type Error = mlua::Error;
 
 	fn try_from(value: Value) -> mlua::Result<Self> {
-		match value {
-			Value::String(s) => {
-				Ok(Self { inner: s.to_string_lossy().into_owned().into(), ..Default::default() })
-			}
+		let inner = match value {
+			Value::Table(tb) => return Self::try_from(tb),
+			Value::String(s) => s.to_string_lossy().into_owned().into(),
 			Value::UserData(ud) => {
-				let inner: ratatui::text::Text = if let Ok(line) = ud.take::<Line>() {
+				if let Ok(line) = ud.take::<Line>() {
 					line.0.into()
 				} else if let Ok(span) = ud.take::<Span>() {
 					span.0.into()
 				} else {
-					return Err("expected a String, Line or Span".into_lua_err());
-				};
-				Ok(Self { inner, ..Default::default() })
-			}
-			Value::Table(tb) => {
-				let mut lines = Vec::with_capacity(tb.raw_len());
-				for v in tb.sequence_values::<Value>() {
-					lines.extend(Self::try_from(v?)?.inner.lines);
+					Err(EXPECTED.into_lua_err())?
 				}
-				Ok(Self { inner: lines.into(), ..Default::default() })
 			}
-			_ => Err("expected a String, Line, Span or a Table of them".into_lua_err()),
+			_ => Err(EXPECTED.into_lua_err())?,
+		};
+		Ok(Self { inner, ..Default::default() })
+	}
+}
+
+impl TryFrom<Table<'_>> for Text {
+	type Error = mlua::Error;
+
+	fn try_from(tb: Table<'_>) -> Result<Self, Self::Error> {
+		let mut lines = Vec::with_capacity(tb.raw_len());
+		for v in tb.sequence_values() {
+			match v? {
+				Value::String(s) => lines.push(s.to_string_lossy().into_owned().into()),
+				Value::UserData(ud) => {
+					if let Ok(span) = ud.take::<Span>() {
+						lines.push(span.0.into());
+					} else if let Ok(line) = ud.take::<Line>() {
+						lines.push(line.0);
+					} else {
+						return Err(EXPECTED.into_lua_err());
+					}
+				}
+				_ => Err(EXPECTED.into_lua_err())?,
+			}
 		}
+		Ok(Self { inner: lines.into(), ..Default::default() })
 	}
 }
 
@@ -86,7 +104,7 @@ impl From<Text> for ratatui::text::Text<'static> {
 
 impl From<Text> for ratatui::widgets::Paragraph<'static> {
 	fn from(value: Text) -> Self {
-		let align = value.inner.alignment.unwrap_or(ratatui::layout::Alignment::Left);
+		let align = value.inner.alignment.unwrap_or_default();
 		let mut p = ratatui::widgets::Paragraph::new(value.inner);
 
 		if value.wrap != WRAP_NO {

@@ -22,9 +22,8 @@ pub struct Border {
 
 impl Border {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		let new = lua.create_function(|_, (_, area, position): (Table, Rect, u8)| {
+		let new = lua.create_function(|_, (_, position): (Table, u8)| {
 			Ok(Border {
-				area,
 				position: ratatui::widgets::Borders::from_bits_truncate(position),
 				..Default::default()
 			})
