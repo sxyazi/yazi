@@ -7,7 +7,7 @@ use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::
 use yazi_config::{TASKS, open::Opener, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
 use yazi_proxy::ManagerProxy;
-use yazi_shared::{Throttle, event::Data, fs::{Url, remove_dir_clean, unique_name}};
+use yazi_shared::{Throttle, event::Data, fs::{Url, must_be_dir, remove_dir_clean, unique_name}};
 
 use super::{Ongoing, TaskProg, TaskStage};
 use crate::{HIGH, LOW, NORMAL, TaskKind, TaskOp, file::{File, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, prework::{Prework, PreworkOpFetch, PreworkOpLoad, PreworkOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}};
@@ -97,7 +97,7 @@ impl Scheduler {
 		let file = self.file.clone();
 		self.send_micro(id, LOW, async move {
 			if !force {
-				to = unique_name(to).await?;
+				to = unique_name(to, must_be_dir(&from)).await?;
 			}
 			file.paste(FileOpPaste { id, from, to, cha: None, cut: true, follow: false, retry: 0 }).await
 		});
@@ -114,7 +114,7 @@ impl Scheduler {
 		let file = self.file.clone();
 		self.send_micro(id, LOW, async move {
 			if !force {
-				to = unique_name(to).await?;
+				to = unique_name(to, must_be_dir(&from)).await?;
 			}
 			file.paste(FileOpPaste { id, from, to, cha: None, cut: false, follow, retry: 0 }).await
 		});
@@ -126,7 +126,7 @@ impl Scheduler {
 		let file = self.file.clone();
 		self.send_micro(id, LOW, async move {
 			if !force {
-				to = unique_name(to).await?;
+				to = unique_name(to, must_be_dir(&from)).await?;
 			}
 			file
 				.link(FileOpLink { id, from, to, cha: None, resolve: false, relative, delete: false })
@@ -145,7 +145,7 @@ impl Scheduler {
 		let file = self.file.clone();
 		self.send_micro(id, LOW, async move {
 			if !force {
-				to = unique_name(to).await?;
+				to = unique_name(to, must_be_dir(&from)).await?;
 			}
 			file.hardlink(FileOpHardlink { id, from, to, cha: None, follow }).await
 		});
