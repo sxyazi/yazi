@@ -42,6 +42,8 @@ impl From<Metadata> for Cha {
 		let mut kind = ChaKind::empty();
 		if m.is_dir() {
 			kind |= ChaKind::DIR;
+		} else if m.is_symlink() {
+			kind |= ChaKind::LINK;
 		}
 
 		Self {
@@ -91,7 +93,7 @@ impl From<FileType> for Cha {
 				kind |= ChaKind::DIR;
 				libc::S_IFDIR
 			} else if t.is_symlink() {
-				kind |= ChaKind::ORPHAN;
+				kind |= ChaKind::LINK;
 				libc::S_IFLNK
 			} else if t.is_block_device() {
 				libc::S_IFBLK
@@ -130,8 +132,11 @@ impl Cha {
 		let mut attached = ChaKind::empty();
 
 		if meta.is_symlink() {
+			attached |= ChaKind::LINK;
 			meta = tokio::fs::metadata(path).await.unwrap_or(meta);
-			attached |= if meta.is_symlink() { ChaKind::ORPHAN } else { ChaKind::LINK };
+		}
+		if meta.is_symlink() {
+			attached |= ChaKind::ORPHAN;
 		}
 
 		let mut cha = Self::new_nofollow(path, meta);
@@ -186,9 +191,6 @@ impl Cha {
 
 	#[inline]
 	pub const fn is_orphan(&self) -> bool { self.kind.contains(ChaKind::ORPHAN) }
-
-	#[inline]
-	pub const fn is_linkable(&self) -> bool { self.is_link() || self.is_orphan() }
 
 	#[inline]
 	pub const fn is_dummy(&self) -> bool { self.kind.contains(ChaKind::DUMMY) }

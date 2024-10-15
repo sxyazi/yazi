@@ -2,6 +2,8 @@
 
 For breaking changes, see [Migrating to Yazi v0.4.0](https://github.com/sxyazi/yazi/issues/1772).
 
+<br><br>
+
 <div align="center">
   <img src="assets/logo.png" alt="Yazi logo" width="20%">
 </div>
@@ -56,7 +58,7 @@ https://github.com/sxyazi/yazi/assets/17523360/92ff23fa-0cd5-4f04-b387-894c12265
 | [VSCode](https://github.com/microsoft/vscode)                               | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ✅ Built-in                                                    |
 | [Tabby](https://github.com/Eugeny/tabby)                                    | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ✅ Built-in                                                    |
 | [Hyper](https://github.com/vercel/hyper)                                    | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ✅ Built-in                                                    |
-| [Rio](https://github.com/raphamorim/rio)                                    | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ✅ Built-in                                                    |
+| [Rio](https://github.com/raphamorim/rio)                                    | [Inline images protocol](https://iterm2.com/documentation-images.html)                                | ❌ Rio doesn't correctly clear images (#1786)                  |
 | X11 / Wayland                                                               | Window system protocol                                                                                | ☑️ [Überzug++](https://github.com/jstkdng/ueberzugpp) required |
 | Fallback                                                                    | [ASCII art (Unicode block)](https://en.wikipedia.org/wiki/ASCII_art)                                  | ☑️ [Chafa](https://hpjansson.org/chafa/) required              |
 

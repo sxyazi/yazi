@@ -163,7 +163,7 @@ impl File {
 			let id = task.id;
 			self.prog.send(TaskProg::New(id, cha.len))?;
 
-			if cha.is_linkable() {
+			if cha.is_orphan() || (cha.is_link() && !task.follow) {
 				self.queue(FileOp::Link(task.into()), NORMAL).await?;
 			} else {
 				self.queue(FileOp::Paste(task), LOW).await?;
@@ -208,7 +208,7 @@ impl File {
 				let to = dest.join(from.file_name().unwrap());
 				self.prog.send(TaskProg::New(task.id, cha.len))?;
 
-				if cha.is_linkable() {
+				if cha.is_orphan() || (cha.is_link() && !task.follow) {
 					self.queue(FileOp::Link(task.spawn(from, to, cha).into()), NORMAL).await?;
 				} else {
 					self.queue(FileOp::Paste(task.spawn(from, to, cha)), LOW).await?;

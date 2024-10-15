@@ -1,4 +1,4 @@
-use std::{borrow::Cow, env, ffi::OsString, io, path::{Component, Path, PathBuf}};
+use std::{borrow::Cow, env, ffi::OsString, future::Future, io, path::{Component, Path, PathBuf}};
 
 use tokio::fs;
 
@@ -74,38 +74,51 @@ fn _expand_path(p: &Path) -> PathBuf {
 	}
 }
 
-pub async fn unique_name(mut u: Url) -> io::Result<Url> {
+pub async fn unique_name<F>(u: Url, append: F) -> io::Result<Url>
+where
+	F: Future<Output = bool>,
+{
+	match fs::symlink_metadata(&u).await {
+		Ok(_) => _unique_name(u, append.await).await,
+		Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(u),
+		Err(e) => Err(e),
+	}
+}
+
+async fn _unique_name(mut u: Url, append: bool) -> io::Result<Url> {
 	let Some(stem) = u.file_stem().map(|s| s.to_owned()) else {
 		return Err(io::Error::new(io::ErrorKind::InvalidInput, "empty file stem"));
 	};
 
-	let ext = u
-		.extension()
-		.map(|s| {
-			let mut n = OsString::with_capacity(s.len() + 1);
-			n.push(".");
-			n.push(s);
-			n
-		})
-		.unwrap_or_default();
+	let dot_ext = u.extension().map_or_else(OsString::new, |e| {
+		let mut s = OsString::with_capacity(e.len() + 1);
+		s.push(".");
+		s.push(e);
+		s
+	});
 
 	let mut i = 1u64;
 	let mut p = u.to_path();
 	loop {
+		let mut name = OsString::with_capacity(stem.len() + dot_ext.len() + 5);
+		name.push(&stem);
+
+		if append {
+			name.push(&dot_ext);
+			name.push("_");
+			name.push(i.to_string());
+		} else {
+			name.push("_");
+			name.push(i.to_string());
+			name.push(&dot_ext);
+		}
+
+		p.set_file_name(name);
 		match fs::symlink_metadata(&p).await {
-			Ok(_) => {}
+			Ok(_) => i += 1,
 			Err(e) if e.kind() == io::ErrorKind::NotFound => break,
 			Err(e) => return Err(e),
 		}
-
-		let mut name = OsString::with_capacity(stem.len() + ext.len() + 5);
-		name.push(&stem);
-		name.push("_");
-		name.push(i.to_string());
-		name.push(&ext);
-
-		p.set_file_name(name);
-		i += 1;
 	}
 
 	u.set_loc(Loc::from(u.base(), p));
