@@ -100,9 +100,9 @@ pub async fn unique_name(mut u: Url) -> io::Result<Url> {
 
 		let mut name = OsString::with_capacity(stem.len() + ext.len() + 5);
 		name.push(&stem);
-		name.push("_");
-		name.push(i.to_string());
-		name.push(&ext);
+        name.push(&ext);
+        name.push("_");
+        name.push(i.to_string());
 
 		p.set_file_name(name);
 		i += 1;
