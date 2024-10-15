@@ -1,7 +1,9 @@
-use std::{borrow::Cow, collections::{HashMap, HashSet, VecDeque}, ffi::{OsStr, OsString}, fs::Metadata, path::{Path, PathBuf}};
+use std::{borrow::Cow, collections::{HashMap, HashSet, VecDeque}, ffi::{OsStr, OsString}, path::{Path, PathBuf}};
 
 use anyhow::{Result, bail};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
+
+use super::Cha;
 
 #[inline]
 pub async fn must_exists(p: impl AsRef<Path>) -> bool { fs::symlink_metadata(p).await.is_ok() }
@@ -175,7 +177,7 @@ pub async fn calculate_size(path: &Path) -> u64 {
 pub fn copy_with_progress(
 	from: &Path,
 	to: &Path,
-	meta: &Metadata,
+	cha: Cha,
 ) -> mpsc::Receiver<Result<u64, io::Error>> {
 	let (tx, rx) = mpsc::channel(1);
 	let (tick_tx, mut tick_rx) = oneshot::channel();
@@ -184,17 +186,17 @@ pub fn copy_with_progress(
 		let (from, to) = (from.to_owned(), to.to_owned());
 
 		let mut ft = std::fs::FileTimes::new();
-		meta.accessed().map(|t| ft = ft.set_accessed(t)).ok();
-		meta.modified().map(|t| ft = ft.set_modified(t)).ok();
+		cha.atime.map(|t| ft = ft.set_accessed(t));
+		cha.mtime.map(|t| ft = ft.set_modified(t));
 		#[cfg(target_os = "macos")]
 		{
 			use std::os::macos::fs::FileTimesExt;
-			meta.created().map(|t| ft = ft.set_created(t)).ok();
+			cha.btime.map(|t| ft = ft.set_created(t));
 		}
 		#[cfg(windows)]
 		{
 			use std::os::windows::fs::FileTimesExt;
-			meta.created().map(|t| ft = ft.set_created(t)).ok();
+			cha.btime.map(|t| ft = ft.set_created(t));
 		}
 
 		async move {

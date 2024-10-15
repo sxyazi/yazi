@@ -136,7 +136,7 @@ impl Watcher {
 				};
 
 				let u = &file.url;
-				let eq = (!file.is_link() && fs::canonicalize(u).await.is_ok_and(|p| p == ***u))
+				let eq = (!file.is_linkable() && fs::canonicalize(u).await.is_ok_and(|p| p == ***u))
 					|| realname_unchecked(u, &mut cached).await.is_ok_and(|s| urn.as_urn() == s);
 
 				if !eq {
