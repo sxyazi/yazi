@@ -101,14 +101,13 @@ pub async fn unique_name(mut u: Url) -> io::Result<Url> {
 		let mut name = OsString::with_capacity(stem.len() + ext.len() + 5);
 		name.push(&stem);
 		
-		// Check if it's a directory
+		
 		if p.is_dir() {
-			// For directories, append the index at the end
+			
 			name.push("_");
 			name.push(i.to_string());
 			name.push(&ext);
-		} else {
-			// For files, keep the existing behavior
+		} else 
 			name.push("_");
 			name.push(i.to_string());
 			name.push(&ext);
