@@ -141,20 +141,22 @@ impl Cha {
 
 	#[inline]
 	pub fn new_nofollow(path: &Path, meta: Metadata) -> Self {
-		let mut cha = Self::from(meta);
+		let mut attached = ChaKind::empty();
 
 		#[cfg(unix)]
 		if Urn::new(path).is_hidden() {
-			cha.kind |= ChaKind::HIDDEN;
+			attached |= ChaKind::HIDDEN;
 		}
 		#[cfg(windows)]
 		{
 			use std::os::windows::fs::MetadataExt;
 			if meta.file_attributes() & 2 != 0 {
-				cha.kind |= ChaKind::HIDDEN;
+				attached |= ChaKind::HIDDEN;
 			}
 		}
 
+		let mut cha = Self::from(meta);
+		cha.kind |= attached;
 		cha
 	}
 
