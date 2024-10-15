@@ -1,7 +1,9 @@
-use std::{fs::{FileType, Metadata}, time::SystemTime};
+use std::{fs::{FileType, Metadata}, path::Path, time::SystemTime};
 
 use bitflags::bitflags;
 use yazi_macro::unix_either;
+
+use super::Urn;
 
 bitflags! {
 	#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -37,40 +39,40 @@ pub struct Cha {
 
 impl From<Metadata> for Cha {
 	fn from(m: Metadata) -> Self {
-		let mut ck = ChaKind::empty();
+		let mut kind = ChaKind::empty();
 		if m.is_dir() {
-			ck |= ChaKind::DIR;
+			kind |= ChaKind::DIR;
 		}
 
 		Self {
-			kind:               ck,
-			len:                m.len(),
-			atime:              m.accessed().ok(),
-			btime:              m.created().ok(),
+			kind,
+			len: m.len(),
+			atime: m.accessed().ok(),
+			btime: m.created().ok(),
 			#[cfg(unix)]
-			ctime:              {
+			ctime: {
 				use std::{os::unix::fs::MetadataExt, time::{Duration, UNIX_EPOCH}};
 				UNIX_EPOCH.checked_add(Duration::new(m.ctime() as u64, m.ctime_nsec() as u32))
 			},
-			mtime:              m.modified().ok(),
+			mtime: m.modified().ok(),
 
 			#[cfg(unix)]
-			perm:               {
+			perm: {
 				use std::os::unix::prelude::PermissionsExt;
 				m.permissions().mode() as _
 			},
 			#[cfg(unix)]
-			uid:                {
+			uid: {
 				use std::os::unix::fs::MetadataExt;
 				m.uid() as _
 			},
 			#[cfg(unix)]
-			gid:                {
+			gid: {
 				use std::os::unix::fs::MetadataExt;
 				m.gid() as _
 			},
 			#[cfg(unix)]
-			nlink:              {
+			nlink: {
 				use std::os::unix::fs::MetadataExt;
 				m.nlink() as _
 			},
@@ -89,7 +91,7 @@ impl From<FileType> for Cha {
 				kind |= ChaKind::DIR;
 				libc::S_IFDIR
 			} else if t.is_symlink() {
-				kind |= ChaKind::LINK;
+				kind |= ChaKind::ORPHAN;
 				libc::S_IFLNK
 			} else if t.is_block_device() {
 				libc::S_IFBLK
@@ -124,13 +126,40 @@ impl From<FileType> for Cha {
 
 impl Cha {
 	#[inline]
-	pub fn dummy() -> Self { Self { kind: ChaKind::DUMMY, ..Default::default() } }
+	pub async fn new(path: &Path, mut meta: Metadata) -> Self {
+		let mut attached = ChaKind::empty();
+
+		if meta.is_symlink() {
+			meta = tokio::fs::metadata(path).await.unwrap_or(meta);
+			attached |= if meta.is_symlink() { ChaKind::ORPHAN } else { ChaKind::LINK };
+		}
+
+		let mut cha = Self::new_nofollow(path, meta);
+		cha.kind |= attached;
+		cha
+	}
 
 	#[inline]
-	pub fn with_kind(mut self, kind: ChaKind) -> Self {
-		self.kind |= kind;
-		self
+	pub fn new_nofollow(path: &Path, meta: Metadata) -> Self {
+		let mut cha = Self::from(meta);
+
+		#[cfg(unix)]
+		if Urn::new(path).is_hidden() {
+			cha.kind |= ChaKind::HIDDEN;
+		}
+		#[cfg(windows)]
+		{
+			use std::os::windows::fs::MetadataExt;
+			if meta.file_attributes() & 2 != 0 {
+				cha.kind |= ChaKind::HIDDEN;
+			}
+		}
+
+		cha
 	}
+
+	#[inline]
+	pub fn dummy() -> Self { Self { kind: ChaKind::DUMMY, ..Default::default() } }
 
 	#[inline]
 	pub fn hits(self, c: Self) -> bool {
@@ -155,6 +184,9 @@ impl Cha {
 
 	#[inline]
 	pub const fn is_orphan(&self) -> bool { self.kind.contains(ChaKind::ORPHAN) }
+
+	#[inline]
+	pub const fn is_linkable(&self) -> bool { self.is_link() || self.is_orphan() }
 
 	#[inline]
 	pub const fn is_dummy(&self) -> bool { self.kind.contains(ChaKind::DUMMY) }

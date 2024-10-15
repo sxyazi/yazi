@@ -1,10 +1,10 @@
-use std::{borrow::Cow, collections::VecDeque, fs::Metadata, path::{Path, PathBuf}};
+use std::{borrow::Cow, collections::VecDeque, path::{Path, PathBuf}};
 
 use anyhow::{Result, anyhow};
-use tokio::{fs, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
+use tokio::{fs::{self, DirEntry}, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::TASKS;
-use yazi_shared::fs::{Url, calculate_size, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to};
+use yazi_shared::fs::{Cha, Url, calculate_size, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to};
 
 use super::{FileOp, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpTrash};
 use crate::{LOW, NORMAL, TaskOp, TaskProg};
@@ -26,7 +26,7 @@ impl File {
 		match op {
 			FileOp::Paste(mut task) => {
 				ok_or_not_found(fs::remove_file(&task.to).await)?;
-				let mut it = copy_with_progress(&task.from, &task.to, task.meta.as_ref().unwrap());
+				let mut it = copy_with_progress(&task.from, &task.to, task.cha.unwrap());
 
 				while let Some(res) = it.recv().await {
 					match res {
@@ -58,14 +58,14 @@ impl File {
 				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 			}
 			FileOp::Link(task) => {
-				let meta = task.meta.as_ref().unwrap();
+				let cha = task.cha.unwrap();
 
 				let src = if task.resolve {
 					match fs::read_link(&task.from).await {
 						Ok(p) => Cow::Owned(p),
 						Err(e) if e.kind() == NotFound => {
 							warn!("Link task partially done: {task:?}");
-							return Ok(self.prog.send(TaskProg::Adv(task.id, 1, meta.len()))?);
+							return Ok(self.prog.send(TaskProg::Adv(task.id, 1, cha.len))?);
 						}
 						Err(e) => Err(e)?,
 					}
@@ -86,7 +86,7 @@ impl File {
 				}
 				#[cfg(windows)]
 				{
-					if meta.is_dir() {
+					if cha.is_dir() {
 						fs::symlink_dir(src, &task.to).await?;
 					} else {
 						fs::symlink_file(src, &task.to).await?;
@@ -96,10 +96,10 @@ impl File {
 				if task.delete {
 					fs::remove_file(&task.from).await.ok();
 				}
-				self.prog.send(TaskProg::Adv(task.id, 1, meta.len()))?;
+				self.prog.send(TaskProg::Adv(task.id, 1, cha.len))?;
 			}
 			FileOp::Hardlink(task) => {
-				let meta = task.meta.as_ref().unwrap();
+				let cha = task.cha.unwrap();
 				let src = if !task.follow {
 					Cow::Borrowed(task.from.as_path())
 				} else if let Ok(p) = fs::canonicalize(&task.from).await {
@@ -116,7 +116,7 @@ impl File {
 					v => v?,
 				}
 
-				self.prog.send(TaskProg::Adv(task.id, 1, meta.len()))?;
+				self.prog.send(TaskProg::Adv(task.id, 1, cha.len))?;
 			}
 			FileOp::Delete(task) => {
 				if let Err(e) = fs::remove_file(&task.target).await {
@@ -154,19 +154,19 @@ impl File {
 			return self.succ(task.id);
 		}
 
-		if task.meta.is_none() {
-			task.meta = Some(Self::metadata(&task.from, task.follow).await?);
+		if task.cha.is_none() {
+			task.cha = Some(Self::cha(&task.from, task.follow).await?);
 		}
 
-		let meta = task.meta.as_ref().unwrap();
-		if !meta.is_dir() {
+		let cha = task.cha.unwrap();
+		if !cha.is_dir() {
 			let id = task.id;
-			self.prog.send(TaskProg::New(id, meta.len()))?;
+			self.prog.send(TaskProg::New(id, cha.len))?;
 
-			if meta.is_file() {
-				self.queue(FileOp::Paste(task), LOW).await?;
-			} else if meta.is_symlink() {
+			if cha.is_linkable() {
 				self.queue(FileOp::Link(task.into()), NORMAL).await?;
+			} else {
+				self.queue(FileOp::Paste(task), LOW).await?;
 			}
 			return self.succ(id);
 		}
@@ -198,20 +198,20 @@ impl File {
 			let mut it = continue_unless_ok!(fs::read_dir(&src).await);
 			while let Ok(Some(entry)) = it.next_entry().await {
 				let from = Url::from(entry.path());
-				let meta = continue_unless_ok!(Self::metadata(&from, task.follow).await);
+				let cha = continue_unless_ok!(Self::cha_from(entry, &from, task.follow).await);
 
-				if meta.is_dir() {
+				if cha.is_dir() {
 					dirs.push_back(from);
 					continue;
 				}
 
 				let to = dest.join(from.file_name().unwrap());
-				self.prog.send(TaskProg::New(task.id, meta.len()))?;
+				self.prog.send(TaskProg::New(task.id, cha.len))?;
 
-				if meta.is_file() {
-					self.queue(FileOp::Paste(task.spawn(from, to, meta)), LOW).await?;
-				} else if meta.is_symlink() {
-					self.queue(FileOp::Link(task.spawn(from, to, meta).into()), NORMAL).await?;
+				if cha.is_linkable() {
+					self.queue(FileOp::Link(task.spawn(from, to, cha).into()), NORMAL).await?;
+				} else {
+					self.queue(FileOp::Paste(task.spawn(from, to, cha)), LOW).await?;
 				}
 			}
 		}
@@ -220,24 +220,24 @@ impl File {
 
 	pub async fn link(&self, mut task: FileOpLink) -> Result<()> {
 		let id = task.id;
-		if task.meta.is_none() {
-			task.meta = Some(fs::symlink_metadata(&task.from).await?);
+		if task.cha.is_none() {
+			task.cha = Some(Self::cha(&task.from, false).await?);
 		}
 
-		self.prog.send(TaskProg::New(id, task.meta.as_ref().unwrap().len()))?;
+		self.prog.send(TaskProg::New(id, task.cha.unwrap().len))?;
 		self.queue(FileOp::Link(task), NORMAL).await?;
 		self.succ(id)
 	}
 
 	pub async fn hardlink(&self, mut task: FileOpHardlink) -> Result<()> {
-		if task.meta.is_none() {
-			task.meta = Some(Self::metadata(&task.from, task.follow).await?);
+		if task.cha.is_none() {
+			task.cha = Some(Self::cha(&task.from, task.follow).await?);
 		}
 
-		let meta = task.meta.as_ref().unwrap();
-		if !meta.is_dir() {
+		let cha = task.cha.unwrap();
+		if !cha.is_dir() {
 			let id = task.id;
-			self.prog.send(TaskProg::New(id, meta.len()))?;
+			self.prog.send(TaskProg::New(id, cha.len))?;
 			self.queue(FileOp::Hardlink(task), NORMAL).await?;
 			return self.succ(id);
 		}
@@ -269,16 +269,16 @@ impl File {
 			let mut it = continue_unless_ok!(fs::read_dir(&src).await);
 			while let Ok(Some(entry)) = it.next_entry().await {
 				let from = Url::from(entry.path());
-				let meta = continue_unless_ok!(Self::metadata(&from, task.follow).await);
+				let cha = continue_unless_ok!(Self::cha_from(entry, &from, task.follow).await);
 
-				if meta.is_dir() {
+				if cha.is_dir() {
 					dirs.push_back(from);
 					continue;
 				}
 
 				let to = dest.join(from.file_name().unwrap());
-				self.prog.send(TaskProg::New(task.id, meta.len()))?;
-				self.queue(FileOp::Hardlink(task.spawn(from, to, meta)), NORMAL).await?;
+				self.prog.send(TaskProg::New(task.id, cha.len))?;
+				self.queue(FileOp::Hardlink(task.spawn(from, to, cha)), NORMAL).await?;
 			}
 		}
 		self.succ(task.id)
@@ -325,13 +325,18 @@ impl File {
 	}
 
 	#[inline]
-	async fn metadata(path: &Path, follow: bool) -> io::Result<Metadata> {
-		if !follow {
-			return fs::symlink_metadata(path).await;
-		}
+	async fn cha(path: &Path, follow: bool) -> io::Result<Cha> {
+		let meta = fs::symlink_metadata(path).await?;
+		Ok(if follow { Cha::new(path, meta).await } else { Cha::new_nofollow(path, meta) })
+	}
 
-		let meta = fs::metadata(path).await;
-		if meta.is_ok() { meta } else { fs::symlink_metadata(path).await }
+	#[inline]
+	async fn cha_from(entry: DirEntry, path: &Path, follow: bool) -> io::Result<Cha> {
+		Ok(if follow {
+			Cha::new(path, entry.metadata().await?).await
+		} else {
+			Cha::new_nofollow(path, entry.metadata().await?)
+		})
 	}
 }
 
