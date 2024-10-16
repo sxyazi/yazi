@@ -29,7 +29,6 @@ impl Tabs {
 		tabs
 	}
 
-	#[inline]
 	pub(super) fn absolute(&self, rel: isize) -> usize {
 		if rel > 0 {
 			(self.cursor + rel as usize).min(self.items.len() - 1)
@@ -44,10 +43,6 @@ impl Tabs {
 	}
 
 	pub(super) fn set_idx(&mut self, idx: usize) {
-		if self.cursor == idx {
-			return;
-		}
-
 		// Reset the preview of the last active tab
 		if let Some(active) = self.items.get_mut(self.cursor) {
 			active.preview.reset_image();
