@@ -1,4 +1,11 @@
-use ratatui::{buffer::Buffer, layout::{Alignment, Constraint, Layout, Margin, Rect}, style::{Style, Stylize}, text::Line, widgets::{Block, BorderType, Widget}};
+use ratatui::{
+	buffer::Buffer,
+	layout::{Alignment, Constraint, Layout, Margin, Rect},
+	text::Line,
+	widgets::{Block, BorderType, Widget},
+};
+
+use yazi_config::THEME;
 
 use crate::Ctx;
 
@@ -7,7 +14,9 @@ pub(crate) struct Confirm<'a> {
 }
 
 impl<'a> Confirm<'a> {
-	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
+	pub(crate) fn new(cx: &'a Ctx) -> Self {
+		Self { cx }
+	}
 }
 
 impl<'a> Widget for Confirm<'a> {
@@ -19,16 +28,20 @@ impl<'a> Widget for Confirm<'a> {
 
 		Block::bordered()
 			.border_type(BorderType::Rounded)
-			.border_style(Style::new().blue())
-			.title(Line::styled(&confirm.title, Style::new().blue()))
+			.border_style(THEME.confirm.border)
+			.title(Line::styled(&confirm.title, THEME.confirm.title))
 			.title_alignment(Alignment::Center)
 			.render(area, buf);
 
 		let content = confirm.content.clone();
-		let content_height = content.line_count(area.width).saturating_add(1) as u16;
+		let mut content_height = content.line_count(area.width) as u16;
+
+		if THEME.confirm.show_separators && content_height > 0 {
+			content_height = content_height.saturating_add(1);
+		}
 
 		let chunks = Layout::vertical([
-			Constraint::Length(if content_height == 1 { 0 } else { content_height }),
+			Constraint::Length(content_height),
 			Constraint::Fill(1),
 			Constraint::Length(1),
 		])

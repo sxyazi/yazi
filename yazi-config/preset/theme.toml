@@ -98,6 +98,22 @@ selected = { reversed = true }
 # : }}}
 
 
+# : Confirm {{{
+
+[confirm]
+show_separators = true
+show_scrollbar  = true
+button_yes      = "  [Y]es  "
+button_no       = "  (N)o  "
+border          = { fg = "blue" }
+title           = { fg = "blue" }
+content         = { }
+list            = { }
+buttons         = { reversed = true }
+
+# : }}}
+
+
 # : Completion {{{
 
 [completion]
