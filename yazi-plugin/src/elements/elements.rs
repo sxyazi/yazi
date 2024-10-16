@@ -16,6 +16,7 @@ pub fn pour(lua: &Lua) -> mlua::Result<()> {
 	super::Line::install(lua, &ui)?;
 	super::List::install(lua, &ui)?;
 	super::Padding::install(lua, &ui)?;
+	super::Paragraph::install(lua, &ui)?;
 	super::Position::install(lua, &ui)?;
 	super::Rect::install(lua, &ui)?;
 	super::Span::install(lua, &ui)?;
