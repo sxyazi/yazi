@@ -22,10 +22,7 @@ impl<'a> Widget for Content<'a> {
 		let inner = area.inner(Margin::new(1, 0));
 
 		// Bottom border
-		let mut block = Block::new();
-		if THEME.confirm.show_separators {
-			block = block.borders(Borders::BOTTOM).border_style(THEME.confirm.border);
-		}
+		let block = Block::new().borders(Borders::BOTTOM).border_style(THEME.confirm.border);
 		block.clone().render(area.inner(Margin::new(1, 0)), buf);
 
 		self

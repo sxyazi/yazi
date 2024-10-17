@@ -26,10 +26,7 @@ impl<'a> Widget for List<'a> {
 		let inner = area.inner(Margin::new(2, 0));
 
 		// Bottom border
-		let mut block = Block::new();
-		if THEME.confirm.show_separators {
-			block = block.borders(Borders::BOTTOM).border_style(THEME.confirm.border);
-		}
+		let block = Block::new().borders(Borders::BOTTOM).border_style(THEME.confirm.border);
 		block.clone().render(area.inner(Margin::new(1, 0)), buf);
 
 		let list = self
@@ -43,18 +40,14 @@ impl<'a> Widget for List<'a> {
 			.wrap(Wrap { trim: false });
 
 		// Vertical scrollbar
-		if THEME.confirm.show_scrollbar {
-			let lines = list.line_count(inner.width);
-			if lines >= inner.height as usize {
-				if THEME.confirm.show_separators {
-					area.height = area.height.saturating_sub(1);
-				}
-				Scrollbar::new(ScrollbarOrientation::VerticalRight).render(
-					area,
-					buf,
-					&mut ScrollbarState::new(lines).position(self.cx.confirm.offset),
-				);
-			}
+		let lines = list.line_count(inner.width);
+		if lines >= inner.height as usize {
+			area.height = area.height.saturating_sub(1);
+			Scrollbar::new(ScrollbarOrientation::VerticalRight).render(
+				area,
+				buf,
+				&mut ScrollbarState::new(lines).position(self.cx.confirm.offset),
+			);
 		}
 
 		list.render(inner, buf);

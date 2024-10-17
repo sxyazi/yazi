@@ -117,8 +117,6 @@ pub struct Input {
 
 #[derive(Deserialize, Serialize)]
 pub struct Confirm {
-	pub show_separators: bool,
-	pub show_scrollbar:  bool,
 	pub button_yes:      String,
 	pub button_no:       String,
 	pub border:          Style,

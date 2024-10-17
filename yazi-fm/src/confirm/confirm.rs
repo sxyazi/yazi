@@ -34,14 +34,10 @@ impl<'a> Widget for Confirm<'a> {
 			.render(area, buf);
 
 		let content = confirm.content.clone();
-		let mut content_height = content.line_count(area.width) as u16;
-
-		if THEME.confirm.show_separators && content_height > 0 {
-			content_height = content_height.saturating_add(1);
-		}
+		let content_height = content.line_count(area.width).saturating_add(1) as u16;
 
 		let chunks = Layout::vertical([
-			Constraint::Length(content_height),
+			Constraint::Length(if content_height == 1 { 0 } else { content_height }),
 			Constraint::Fill(1),
 			Constraint::Length(1),
 		])
