@@ -117,13 +117,13 @@ pub struct Input {
 
 #[derive(Deserialize, Serialize)]
 pub struct Confirm {
-	pub button_labels: [String; 2],
-	pub border:        Style,
-	pub title:         Style,
-	pub content:       Style,
-	pub list:          Style,
-	pub button_yes:    Style,
-	pub button_no:     Style,
+	pub border:     Style,
+	pub title:      Style,
+	pub content:    Style,
+	pub list:       Style,
+	pub btn_yes:    Style,
+	pub btn_no:     Style,
+	pub btn_labels: [String; 2],
 }
 
 #[derive(Deserialize, Serialize)]

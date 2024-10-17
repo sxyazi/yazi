@@ -101,13 +101,13 @@ selected = { reversed = true }
 # : Confirm {{{
 
 [confirm]
-button_labels = ["  [Y]es  ", "  (N)o  "]
-border        = { fg = "blue" }
-title         = { fg = "blue" }
-content       = { }
-list          = { }
-button_yes    = { reversed = true }
-button_no     = { }
+border     = { fg = "blue" }
+title      = { fg = "blue" }
+content    = {}
+list       = {}
+btn_yes    = { reversed = true }
+btn_no     = {}
+btn_labels = [ "  [Y]es  ", "  (N)o  " ]
 
 # : }}}
 
