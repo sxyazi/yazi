@@ -1,9 +1,10 @@
 use ratatui::layout::Rect;
-use yazi_core::{completion::Completion, confirm::Confirm, help::Help, input::Input, manager::Manager, notify::Notify, pick::Pick, tasks::Tasks, which::Which};
+use yazi_core::{completion::Completion, confirm::Confirm, help::Help, input::Input, manager::Manager, notify::Notify, pick::Pick, spot::Spot, tasks::Tasks, which::Which};
 
 pub struct Ctx {
 	pub manager:    Manager,
 	pub tasks:      Tasks,
+	pub spot:       Spot,
 	pub pick:       Pick,
 	pub input:      Input,
 	pub confirm:    Confirm,
@@ -18,6 +19,7 @@ impl Ctx {
 		Self {
 			manager:    Manager::make(),
 			tasks:      Tasks::serve(),
+			spot:       Default::default(),
 			pick:       Default::default(),
 			input:      Default::default(),
 			confirm:    Default::default(),

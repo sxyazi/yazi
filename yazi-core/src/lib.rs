@@ -6,7 +6,7 @@
 	clippy::unit_arg
 )]
 
-yazi_macro::mod_pub!(completion confirm help input manager notify pick tab tasks which);
+yazi_macro::mod_pub!(completion confirm help input manager notify pick spot tab tasks which);
 
 pub fn init() {
 	manager::WATCHED.with(<_>::default);

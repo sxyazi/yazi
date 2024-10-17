@@ -30,12 +30,12 @@ impl Preloader {
 #[derive(Debug, Clone)]
 pub struct PreloaderProps {
 	pub id:   u8,
-	pub name: String,
+	pub name: &'static str,
 	pub prio: Priority,
 }
 
-impl From<&Preloader> for PreloaderProps {
-	fn from(preloader: &Preloader) -> Self {
-		Self { id: preloader.idx, name: preloader.run.name.to_owned(), prio: preloader.prio }
+impl From<&'static Preloader> for PreloaderProps {
+	fn from(preloader: &'static Preloader) -> Self {
+		Self { id: preloader.idx, name: &preloader.run.name, prio: preloader.prio }
 	}
 }
