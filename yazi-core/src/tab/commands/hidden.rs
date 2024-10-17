@@ -5,10 +5,10 @@ use crate::tab::Tab;
 
 impl Tab {
 	pub fn hidden(&mut self, mut c: Cmd) {
-		self.conf.show_hidden = match c.take_first_str().as_deref() {
+		self.pref.show_hidden = match c.take_first_str().as_deref() {
 			Some("show") => true,
 			Some("hide") => false,
-			_ => !self.conf.show_hidden,
+			_ => !self.pref.show_hidden,
 		};
 
 		let hovered = self.hovered().map(|f| f.url_owned());

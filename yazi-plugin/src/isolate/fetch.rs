@@ -1,4 +1,4 @@
-use mlua::{ExternalError, ExternalResult, ObjectLike, Table};
+use mlua::{ExternalError, ExternalResult, IntoLua, ObjectLike, Table};
 use tokio::runtime::Handle;
 use yazi_config::LAYOUT;
 
@@ -20,16 +20,20 @@ pub async fn fetch(name: &str, files: Vec<yazi_shared::fs::File>) -> mlua::Resul
 			return Err("unloaded plugin".into_lua_err());
 		};
 
-		let files = files.into_iter().filter_map(|f| File::cast(&lua, f).ok()).collect::<Vec<_>>();
-		if files.is_empty() {
-			return Err("no files".into_lua_err());
+		let files =
+			lua.create_sequence_from(files.into_iter().filter_map(|f| File::cast(&lua, f).ok()))?;
+
+		if files.raw_len() == 0 {
+			return Ok(1);
 		}
 
-		plugin.raw_set("skip", 0)?;
-		plugin.raw_set("area", Rect::from(LAYOUT.get().preview))?;
-		plugin.raw_set("files", files)?;
-
-		Handle::current().block_on(plugin.call_async_method("fetch", ()))
+		Handle::current().block_on(plugin.call_async_method(
+			"fetch",
+			lua.create_table_from([
+				("area", Rect::from(LAYOUT.get().preview).into_lua(&lua)?),
+				("files", files.into_lua(&lua)?),
+			])?,
+		))
 	})
 	.await
 	.into_lua_err()?

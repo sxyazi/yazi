@@ -47,9 +47,9 @@ function ya.readable_path(path)
 	end
 end
 
-function ya.child_at(position, children)
+function ya.child_at(pos, children)
 	for i = #children, 1, -1 do
-		if children[i]._area:contains(position) then
+		if children[i]._area:contains(pos) then
 			return children[i]
 		end
 	end

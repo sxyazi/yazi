@@ -35,6 +35,14 @@ impl Cmd {
 	}
 
 	#[inline]
+	pub fn with_opt(mut self, name: impl ToString, value: Option<impl ToString>) -> Self {
+		if let Some(v) = value {
+			self.args.insert(name.to_string(), Data::String(v.to_string()));
+		}
+		self
+	}
+
+	#[inline]
 	pub fn with_bool(mut self, name: impl ToString, state: bool) -> Self {
 		self.args.insert(name.to_string(), Data::Boolean(state));
 		self

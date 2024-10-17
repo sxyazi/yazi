@@ -18,9 +18,9 @@ pub fn peek(
 	skip: usize,
 ) -> CancellationToken {
 	let ct = CancellationToken::new();
+	let (ct1, ct2) = (ct.clone(), ct.clone());
 
 	let name = cmd.name.to_owned();
-	let (ct1, ct2) = (ct.clone(), ct.clone());
 	tokio::task::spawn_blocking(move || {
 		let future = async {
 			LOADER.ensure(&name).await.into_lua_err()?;
@@ -43,10 +43,12 @@ pub fn peek(
 				return Err("unloaded plugin".into_lua_err());
 			};
 			plugin.raw_set("file", File::cast(&lua, file)?)?;
-			plugin.raw_set("_mime", mime)?;
+			plugin.raw_set("mime", mime)?;
 			plugin.raw_set("skip", skip)?;
 			plugin.raw_set("area", Rect::from(LAYOUT.get().preview))?;
-			plugin.raw_set("window", Window::default())?;
+			// TODO: remove this as it's not safe in async context,
+			// there may be race conditions between the `window` and `area`
+			plugin.raw_set("window", Window::get())?;
 
 			if ct2.is_cancelled() { Ok(()) } else { plugin.call_async_method("peek", ()).await }
 		};
@@ -71,10 +73,12 @@ pub fn peek(
 pub fn peek_sync(cmd: &Cmd, file: yazi_shared::fs::File, mime: Cow<'static, str>, skip: usize) {
 	let cb: PluginCallback = Box::new(move |_, plugin| {
 		plugin.raw_set("file", File::cast(&LUA, file)?)?;
-		plugin.raw_set("_mime", mime)?;
+		plugin.raw_set("mime", mime)?;
 		plugin.raw_set("skip", skip)?;
 		plugin.raw_set("area", Rect::from(LAYOUT.get().preview))?;
-		plugin.raw_set("window", Window::default())?;
+		// TODO: remove this as it's not safe in async context,
+		// there may be race conditions between the `window` and `area`
+		plugin.raw_set("window", Window::get())?;
 		plugin.call_method("peek", ())
 	});
 

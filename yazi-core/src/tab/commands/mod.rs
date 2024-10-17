@@ -20,7 +20,6 @@ yazi_macro::mod_flat!(
 	select_all
 	shell
 	sort
-	spot
 	toggle
 	toggle_all
 	update_peeked

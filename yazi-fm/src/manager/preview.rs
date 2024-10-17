@@ -1,4 +1,5 @@
 use ratatui::{buffer::Buffer, widgets::Widget};
+use yazi_config::LAYOUT;
 
 use crate::Ctx;
 
@@ -12,18 +13,17 @@ impl<'a> Preview<'a> {
 }
 
 impl Widget for Preview<'_> {
-	fn render(self, area: ratatui::layout::Rect, buf: &mut Buffer) {
-		let preview = &self.cx.manager.active().preview;
-		let Some(lock) = &preview.lock else {
+	fn render(self, _: ratatui::layout::Rect, buf: &mut Buffer) {
+		let Some(lock) = &self.cx.active().preview.lock else {
 			return;
 		};
 
-		if (lock.window.rows, lock.window.cols) != (area.height, area.width) {
+		if *lock.area != LAYOUT.get().preview {
 			return;
 		}
 
 		for w in &lock.data {
-			w.clone_render(buf);
+			w.clone().render(buf, |p| self.cx.manager.area(p));
 		}
 	}
 }

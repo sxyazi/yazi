@@ -31,7 +31,7 @@ impl Prework {
 		match op {
 			PreworkOp::Fetch(task) => {
 				let urls: Vec<_> = task.targets.iter().map(|f| f.url_owned()).collect();
-				let result = isolate::fetch(&task.plugin.name, task.targets).await;
+				let result = isolate::fetch(task.plugin.name, task.targets).await;
 				if let Err(e) = result {
 					self.fail(
 						task.id,
@@ -62,7 +62,7 @@ impl Prework {
 			}
 			PreworkOp::Load(task) => {
 				let url = task.target.url_owned();
-				let result = isolate::preload(&task.plugin.name, task.target).await;
+				let result = isolate::preload(task.plugin.name, task.target).await;
 				if let Err(e) = result {
 					self.fail(
 						task.id,

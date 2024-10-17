@@ -19,6 +19,7 @@ pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Table> {
 			b"input_emit" => Utils::input_emit(lua)?,
 
 			// Image
+			b"image_info" => Utils::image_info(lua)?,
 			b"image_show" => Utils::image_show(lua)?,
 			b"image_precache" => Utils::image_precache(lua)?,
 
@@ -34,6 +35,10 @@ pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Table> {
 			// Preview
 			b"preview_code" => Utils::preview_code(lua)?,
 			b"preview_widgets" => Utils::preview_widgets(lua)?,
+
+			// Spot
+			b"spot_table" => Utils::spot_table(lua)?,
+			b"spot_widgets" => Utils::spot_widgets(lua)?,
 
 			// Sync
 			b"sync" => Utils::sync(lua, isolate)?,

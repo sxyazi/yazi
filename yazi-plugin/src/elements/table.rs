@@ -1,33 +1,38 @@
-use mlua::{AnyUserData, FromLua, Lua, UserData};
+use mlua::{AnyUserData, Lua, UserData, Value};
 use ratatui::widgets::StatefulWidget;
 
-use super::{Rect, Renderable, Text};
-use crate::elements::Constraint;
+use super::{Area, Row};
+use crate::elements::{Constraint, Style};
 
 // --- Table
 #[derive(Clone, Default)]
 pub struct Table {
-	area: Rect,
+	pub(crate) area: Area,
 
-	rows:                Vec<ratatui::widgets::Row<'static>>,
-	header:              Option<ratatui::widgets::Row<'static>>,
-	footer:              Option<ratatui::widgets::Row<'static>>,
-	widths:              Vec<ratatui::layout::Constraint>,
-	column_spacing:      u16,
-	block:               Option<ratatui::widgets::Block<'static>>,
-	style:               ratatui::style::Style,
-	row_highlight_style: ratatui::style::Style,
-	highlight_symbol:    ratatui::text::Text<'static>,
-	highlight_spacing:   ratatui::widgets::HighlightSpacing,
-	flex:                ratatui::layout::Flex,
+	rows:           Vec<Row>,
+	header:         Option<ratatui::widgets::Row<'static>>,
+	footer:         Option<ratatui::widgets::Row<'static>>,
+	widths:         Vec<ratatui::layout::Constraint>,
+	column_spacing: u16,
+	block:          Option<ratatui::widgets::Block<'static>>, // TODO
+
+	style:                  ratatui::style::Style,
+	row_highlight_style:    ratatui::style::Style,
+	column_highlight_style: ratatui::style::Style,
+	cell_highlight_style:   ratatui::style::Style,
+
+	highlight_symbol:  ratatui::text::Text<'static>, // TODO
+	highlight_spacing: ratatui::widgets::HighlightSpacing, // TODO
+
+	flex: ratatui::layout::Flex,
 
 	state: ratatui::widgets::TableState,
 }
 
 impl Table {
 	pub fn compose(lua: &Lua) -> mlua::Result<mlua::Table> {
-		let new = lua.create_function(|_, (_, area, rows): (mlua::Table, Rect, Vec<TableRow>)| {
-			Ok(Self { area, rows: rows.into_iter().map(Into::into).collect(), ..Default::default() })
+		let new = lua.create_function(|_, (_, rows): (mlua::Table, Vec<Row>)| {
+			Ok(Self { rows, ..Default::default() })
 		})?;
 
 		let table = lua.create_table()?;
@@ -35,35 +40,24 @@ impl Table {
 
 		Ok(table)
 	}
-}
 
-impl UserData for Table {
-	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
-		crate::impl_area_method!(methods);
-
-		methods.add_function_mut("header", |_, (ud, row): (AnyUserData, TableRow)| {
-			ud.borrow_mut::<Self>()?.header = Some(row.into());
-			Ok(ud)
-		});
-		methods.add_function_mut("footer", |_, (ud, row): (AnyUserData, TableRow)| {
-			ud.borrow_mut::<Self>()?.footer = Some(row.into());
-			Ok(ud)
-		});
-		methods.add_function_mut("widths", |_, (ud, widths): (AnyUserData, Vec<Constraint>)| {
-			ud.borrow_mut::<Self>()?.widths = widths.into_iter().map(Into::into).collect();
-			Ok(ud)
-		});
+	pub fn selected_cell(&self) -> Option<&ratatui::text::Text> {
+		let row = &self.rows[self.selected()?];
+		let col = self.state.selected_column()?;
+		if row.cells.is_empty() { None } else { Some(&row.cells[col.min(row.cells.len() - 1)].text) }
 	}
-}
 
-impl Renderable for Table {
-	fn area(&self) -> ratatui::layout::Rect { *self.area }
-
-	fn render(mut self: Box<Self>, buf: &mut ratatui::buffer::Buffer) {
+	pub(super) fn render(
+		mut self,
+		buf: &mut ratatui::buffer::Buffer,
+		trans: impl FnOnce(yazi_config::popup::Position) -> ratatui::layout::Rect,
+	) {
 		let mut table = ratatui::widgets::Table::new(self.rows, self.widths)
 			.column_spacing(self.column_spacing)
 			.style(self.style)
 			.row_highlight_style(self.row_highlight_style)
+			.column_highlight_style(self.column_highlight_style)
+			.cell_highlight_style(self.cell_highlight_style)
 			.highlight_symbol(self.highlight_symbol)
 			.highlight_spacing(self.highlight_spacing)
 			.flex(self.flex);
@@ -78,59 +72,70 @@ impl Renderable for Table {
 			table = table.block(block);
 		}
 
-		table.render(*self.area, buf, &mut self.state);
+		table.render(self.area.transform(trans), buf, &mut self.state);
 	}
 
-	fn clone_render(&self, buf: &mut ratatui::buffer::Buffer) { Box::new(self.clone()).render(buf) }
-}
+	pub(crate) fn select(&mut self, idx: Option<usize>) {
+		self
+			.state
+			.select(idx.map(|i| if self.rows.is_empty() { 0 } else { i.min(self.rows.len() - 1) }));
+	}
 
-// --- TableRow
-#[derive(Clone, Default, FromLua)]
-pub struct TableRow {
-	cells:         Vec<ratatui::widgets::Cell<'static>>,
-	height:        u16,
-	top_margin:    u16,
-	bottom_margin: u16,
-	style:         ratatui::style::Style,
-}
-
-impl TableRow {
-	pub fn compose(lua: &Lua) -> mlua::Result<mlua::Table> {
-		let new = lua.create_function(|_, (_, cols): (mlua::Table, Vec<Text>)| {
-			Ok(Self { cells: cols.into_iter().map(Into::into).collect(), ..Default::default() })
-		})?;
-
-		let row = lua.create_table()?;
-		row.set_metatable(Some(lua.create_table_from([("__call", new)])?));
-
-		Ok(row)
+	pub(crate) fn selected(&self) -> Option<usize> {
+		if self.rows.is_empty() { None } else { Some(self.state.selected()?.min(self.rows.len() - 1)) }
 	}
 }
 
-impl From<TableRow> for ratatui::widgets::Row<'static> {
-	fn from(value: TableRow) -> Self {
-		Self::new(value.cells)
-			.height(value.height)
-			.top_margin(value.top_margin)
-			.bottom_margin(value.bottom_margin)
-			.style(value.style)
-	}
+impl TryFrom<AnyUserData> for Table {
+	type Error = mlua::Error;
+
+	fn try_from(value: AnyUserData) -> Result<Self, Self::Error> { value.take() }
 }
 
-impl UserData for TableRow {
+impl UserData for Table {
 	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
-		crate::impl_style_method!(methods, style);
+		crate::impl_area_method!(methods);
 
-		methods.add_function_mut("height", |_, (ud, value): (AnyUserData, u16)| {
-			ud.borrow_mut::<Self>()?.height = value;
+		methods.add_function_mut("header", |_, (ud, row): (AnyUserData, Row)| {
+			ud.borrow_mut::<Self>()?.header = Some(row.into());
 			Ok(ud)
 		});
-		methods.add_function_mut("margin_t", |_, (ud, value): (AnyUserData, u16)| {
-			ud.borrow_mut::<Self>()?.top_margin = value;
+		methods.add_function_mut("footer", |_, (ud, row): (AnyUserData, Row)| {
+			ud.borrow_mut::<Self>()?.footer = Some(row.into());
 			Ok(ud)
 		});
-		methods.add_function_mut("margin_b", |_, (ud, value): (AnyUserData, u16)| {
-			ud.borrow_mut::<Self>()?.bottom_margin = value;
+		methods.add_function_mut("widths", |_, (ud, widths): (AnyUserData, Vec<Constraint>)| {
+			ud.borrow_mut::<Self>()?.widths = widths.into_iter().map(Into::into).collect();
+			Ok(ud)
+		});
+		methods.add_function_mut("spacing", |_, (ud, spacing): (AnyUserData, u16)| {
+			ud.borrow_mut::<Self>()?.column_spacing = spacing;
+			Ok(ud)
+		});
+
+		methods.add_function_mut("row", |_, (ud, idx): (AnyUserData, Option<usize>)| {
+			ud.borrow_mut::<Self>()?.state.select(idx);
+			Ok(ud)
+		});
+		methods.add_function_mut("col", |_, (ud, idx): (AnyUserData, Option<usize>)| {
+			ud.borrow_mut::<Self>()?.state.select_column(idx);
+			Ok(ud)
+		});
+
+		methods.add_function_mut("style", |_, (ud, value): (AnyUserData, Value)| {
+			ud.borrow_mut::<Self>()?.style = Style::try_from(value)?.0;
+			Ok(ud)
+		});
+		methods.add_function_mut("row_style", |_, (ud, value): (AnyUserData, Value)| {
+			ud.borrow_mut::<Self>()?.row_highlight_style = Style::try_from(value)?.0;
+			Ok(ud)
+		});
+		methods.add_function_mut("col_style", |_, (ud, value): (AnyUserData, Value)| {
+			ud.borrow_mut::<Self>()?.column_highlight_style = Style::try_from(value)?.0;
+			Ok(ud)
+		});
+		methods.add_function_mut("cell_style", |_, (ud, value): (AnyUserData, Value)| {
+			ud.borrow_mut::<Self>()?.cell_highlight_style = Style::try_from(value)?.0;
 			Ok(ud)
 		});
 	}

@@ -42,10 +42,6 @@ keymap = [
 	{ on = "H", run = "back",    desc = "Go back to the previous directory" },
 	{ on = "L", run = "forward", desc = "Go forward to the next directory" },
 
-	# Seeking
-	{ on = "K", run = "seek -5", desc = "Seek up 5 units in the preview" },
-	{ on = "J", run = "seek 5",  desc = "Seek down 5 units in the preview" },
-
 	# Toggle
 	{ on = "<Space>", run = [ "toggle", "arrow 1" ], desc = "Toggle the current selection state" },
 	{ on = "<C-a>",   run = "toggle_all on",         desc = "Select all files" },
@@ -54,6 +50,13 @@ keymap = [
 	# Visual mode
 	{ on = "v", run = "visual_mode",         desc = "Enter visual mode (selection mode)" },
 	{ on = "V", run = "visual_mode --unset", desc = "Enter visual mode (unset mode)" },
+
+	# Seeking
+	{ on = "K", run = "seek -5", desc = "Seek up 5 units in the preview" },
+	{ on = "J", run = "seek 5",  desc = "Seek down 5 units in the preview" },
+
+	# Spotting
+	{ on = "<Tab>", run = "spot", desc = "Spot hovered file" },
 
 	# Operation
 	{ on = "o",         run = "open",                        desc = "Open selected files" },
@@ -169,6 +172,32 @@ keymap = [
 
 	{ on = "<Enter>", run = "inspect", desc = "Inspect the task" },
 	{ on = "x",       run = "cancel",  desc = "Cancel the task" },
+
+	# Help
+	{ on = "~",    run = "help", desc = "Open help" },
+	{ on = "<F1>", run = "help", desc = "Open help" },
+]
+
+[spot]
+
+keymap = [
+	{ on = "<Esc>", run = "close", desc = "Close the spot" },
+	{ on = "<C-[>", run = "close", desc = "Close the spot" },
+	{ on = "<C-c>", run = "close", desc = "Close the spot" },
+	{ on = "<Tab>", run = "close", desc = "Close the spot" },
+
+	{ on = "k", run = "arrow -1", desc = "Move cursor up" },
+	{ on = "j", run = "arrow 1",  desc = "Move cursor down" },
+	{ on = "h", run = "swipe -1", desc = "Swipe to the next file" },
+	{ on = "l", run = "swipe 1",  desc = "Swipe to the previous file" },
+
+	{ on = "<Up>",    run = "arrow -1", desc = "Move cursor up" },
+	{ on = "<Down>",  run = "arrow 1",  desc = "Move cursor down" },
+	{ on = "<Left>",  run = "swipe -1", desc = "Swipe to the next file" },
+	{ on = "<Right>", run = "swipe 1",  desc = "Swipe to the previous file" },
+
+	# Copy
+	{ on = [ "c", "c" ], run = "copy cell", desc = "Copy selected cell" },
 
 	# Help
 	{ on = "~",    run = "help", desc = "Open help" },

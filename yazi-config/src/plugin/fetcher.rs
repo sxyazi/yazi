@@ -32,12 +32,12 @@ impl Fetcher {
 #[derive(Debug, Clone)]
 pub struct FetcherProps {
 	pub id:   u8,
-	pub name: String,
+	pub name: &'static str,
 	pub prio: Priority,
 }
 
-impl From<&Fetcher> for FetcherProps {
-	fn from(fetcher: &Fetcher) -> Self {
-		Self { id: fetcher.idx, name: fetcher.run.name.to_owned(), prio: fetcher.prio }
+impl From<&'static Fetcher> for FetcherProps {
+	fn from(fetcher: &'static Fetcher) -> Self {
+		Self { id: fetcher.idx, name: &fetcher.run.name, prio: fetcher.prio }
 	}
 }

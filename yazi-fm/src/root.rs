@@ -1,9 +1,9 @@
 use mlua::{ObjectLike, Table};
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 use tracing::error;
-use yazi_plugin::{LUA, elements::render_widgets};
+use yazi_plugin::{LUA, elements::render_once};
 
-use super::{completion, confirm, help, input, manager, pick, tasks, which};
+use super::{completion, confirm, help, input, manager, pick, spot, tasks, which};
 use crate::Ctx;
 
 pub(super) struct Root<'a> {
@@ -26,7 +26,7 @@ impl Widget for Root<'_> {
 			let area = yazi_plugin::elements::Rect::from(area);
 			let root = LUA.globals().raw_get::<Table>("Root")?.call_method::<Table>("new", area)?;
 
-			render_widgets(root.call_method("redraw", ())?, buf);
+			render_once(root.call_method("redraw", ())?, buf, |p| self.cx.manager.area(p));
 			Ok::<_, mlua::Error>(())
 		};
 		if let Err(e) = f() {
@@ -37,6 +37,10 @@ impl Widget for Root<'_> {
 
 		if self.cx.tasks.visible {
 			tasks::Tasks::new(self.cx).render(area, buf);
+		}
+
+		if self.cx.active().spot.visible() {
+			spot::Spot::new(self.cx).render(area, buf);
 		}
 
 		if self.cx.pick.visible {

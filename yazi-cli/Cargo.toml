@@ -27,7 +27,7 @@ toml_edit  = "0.22.22"
 # External build dependencies
 anyhow                = { workspace = true }
 clap                  = { workspace = true }
-clap_complete         = "4.5.37"
+clap_complete         = "4.5.38"
 clap_complete_fig     = "4.5.2"
 clap_complete_nushell = "4.5.4"
 serde_json            = { workspace = true }

@@ -13,6 +13,7 @@ yazi_macro::mod_flat!(
 	remove
 	rename
 	seek
+	spot
 	suspend
 	tab_close
 	tab_create

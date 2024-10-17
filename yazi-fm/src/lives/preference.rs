@@ -4,24 +4,24 @@ use mlua::{AnyUserData, UserData, UserDataFields};
 
 use super::Lives;
 
-pub(super) struct Config {
-	inner: *const yazi_core::tab::Config,
+pub(super) struct Preference {
+	inner: *const yazi_core::tab::Preference,
 }
 
-impl Deref for Config {
-	type Target = yazi_core::tab::Config;
+impl Deref for Preference {
+	type Target = yazi_core::tab::Preference;
 
 	fn deref(&self) -> &Self::Target { unsafe { &*self.inner } }
 }
 
-impl Config {
+impl Preference {
 	#[inline]
-	pub(super) fn make(inner: &yazi_core::tab::Config) -> mlua::Result<AnyUserData> {
+	pub(super) fn make(inner: &yazi_core::tab::Preference) -> mlua::Result<AnyUserData> {
 		Lives::scoped_userdata(Self { inner })
 	}
 }
 
-impl UserData for Config {
+impl UserData for Preference {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("sort_by", |_, me| Ok(me.sort_by.to_string()));
 		fields.add_field_method_get("sort_sensitive", |_, me| Ok(me.sort_sensitive));

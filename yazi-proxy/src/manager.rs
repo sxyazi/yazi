@@ -7,6 +7,11 @@ pub struct ManagerProxy;
 
 impl ManagerProxy {
 	#[inline]
+	pub fn spot(skip: Option<usize>) {
+		emit!(Call(Cmd::new("spot").with_opt("skip", skip), Layer::Manager));
+	}
+
+	#[inline]
 	pub fn peek(force: bool) {
 		emit!(Call(Cmd::new("peek").with_bool("force", force), Layer::Manager));
 	}

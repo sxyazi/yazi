@@ -45,7 +45,7 @@ impl Tab {
 		}
 
 		let cwd = self.cwd().to_search(&opt.subject);
-		let hidden = self.conf.show_hidden;
+		let hidden = self.pref.show_hidden;
 
 		self.search = Some(tokio::spawn(async move {
 			let rx = if opt.via == SearchOptVia::Rg {

@@ -22,4 +22,6 @@ function M:preload()
 	return ya.image_precache(self.file.url, cache) and 1 or 2
 end
 
+function M:spot(args) require("file"):spot(args) end
+
 return M

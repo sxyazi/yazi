@@ -12,6 +12,7 @@ use crate::Preset;
 pub struct Keymap {
 	pub manager:    Vec<Chord>,
 	pub tasks:      Vec<Chord>,
+	pub spot:       Vec<Chord>,
 	pub pick:       Vec<Chord>,
 	pub input:      Vec<Chord>,
 	pub confirm:    Vec<Chord>,
@@ -26,6 +27,7 @@ impl Keymap {
 			Layer::App => unreachable!(),
 			Layer::Manager => &self.manager,
 			Layer::Tasks => &self.tasks,
+			Layer::Spot => &self.spot,
 			Layer::Pick => &self.pick,
 			Layer::Input => &self.input,
 			Layer::Confirm => &self.confirm,
@@ -53,6 +55,7 @@ impl<'de> Deserialize<'de> for Keymap {
 		struct Shadow {
 			manager:    Inner,
 			tasks:      Inner,
+			spot:       Inner,
 			pick:       Inner,
 			input:      Inner,
 			confirm:    Inner,
@@ -90,7 +93,9 @@ impl<'de> Deserialize<'de> for Keymap {
 			#[rustfmt::skip]
 			tasks:      mix(shadow.tasks.prepend_keymap, shadow.tasks.keymap, shadow.tasks.append_keymap),
 			#[rustfmt::skip]
-			pick:     mix(shadow.pick.prepend_keymap, shadow.pick.keymap, shadow.pick.append_keymap),
+			spot:       mix(shadow.spot.prepend_keymap, shadow.spot.keymap, shadow.spot.append_keymap),
+			#[rustfmt::skip]
+			pick:       mix(shadow.pick.prepend_keymap, shadow.pick.keymap, shadow.pick.append_keymap),
 			#[rustfmt::skip]
 			input:      mix(shadow.input.prepend_keymap, shadow.input.keymap, shadow.input.append_keymap),
 			#[rustfmt::skip]

@@ -1,7 +1,7 @@
 use std::{borrow::Cow, io::Cursor, mem, path::{Path, PathBuf}, sync::OnceLock};
 
 use anyhow::{Result, anyhow};
-use ratatui::{layout::Rect, text::{Line, Span, Text}};
+use ratatui::{layout::Size, text::{Line, Span, Text}};
 use syntect::{LoadingError, dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
 use tokio::{fs::File, io::{AsyncBufReadExt, BufReader}};
 use yazi_config::{PREVIEW, THEME, preview::PreviewWrap};
@@ -36,14 +36,14 @@ impl Highlighter {
 	#[inline]
 	pub fn abort() { INCR.next(); }
 
-	pub async fn highlight(&self, skip: usize, area: Rect) -> Result<Text<'static>, PeekError> {
+	pub async fn highlight(&self, skip: usize, size: Size) -> Result<Text<'static>, PeekError> {
 		let mut reader = BufReader::new(File::open(&self.path).await?);
 
 		let syntax = Self::find_syntax(&self.path).await;
 		let mut plain = syntax.is_err();
 
 		let mut before = Vec::with_capacity(if plain { 0 } else { skip });
-		let mut after = Vec::with_capacity(area.height as _);
+		let mut after = Vec::with_capacity(size.height as _);
 
 		let mut i = 0;
 		let mut buf = vec![];
@@ -67,24 +67,24 @@ impl Highlighter {
 			i += if i >= skip {
 				buf.iter_mut().for_each(Self::carriage_return_to_line_feed);
 				after.push(String::from_utf8_lossy(&buf).into_owned());
-				Self::line_height(&after[after.len() - 1], area.width)
+				Self::line_height(&after[after.len() - 1], size.width)
 			} else if !plain {
 				before.push(String::from_utf8_lossy(&buf).into_owned());
-				Self::line_height(&before[before.len() - 1], area.width)
+				Self::line_height(&before[before.len() - 1], size.width)
 			} else if PREVIEW.wrap == PreviewWrap::Yes {
-				Self::line_height(&String::from_utf8_lossy(&buf), area.width)
+				Self::line_height(&String::from_utf8_lossy(&buf), size.width)
 			} else {
 				1
 			};
 
 			buf.clear();
-			if i > skip + area.height as usize {
+			if i > skip + size.height as usize {
 				break;
 			}
 		}
 
-		if skip > 0 && i < skip + area.height as usize {
-			return Err(PeekError::Exceed(i.saturating_sub(area.height as _)));
+		if skip > 0 && i < skip + size.height as usize {
+			return Err(PeekError::Exceed(i.saturating_sub(size.height as _)));
 		}
 
 		Ok(if plain {

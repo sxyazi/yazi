@@ -9,7 +9,7 @@ use yazi_proxy::{AppProxy, InputProxy};
 use yazi_shared::{Debounce, Layer, event::Cmd};
 
 use super::Utils;
-use crate::bindings::{InputRx, Position};
+use crate::{bindings::InputRx, elements::Pos};
 
 impl Utils {
 	pub(super) fn which(lua: &Lua) -> mlua::Result<Function> {
@@ -46,7 +46,7 @@ impl Utils {
 				title: t.raw_get("title")?,
 				value: t.raw_get("value").unwrap_or_default(),
 				cursor: None, // TODO
-				position: Position::try_from(t.raw_get::<Table>("position")?)?.into(),
+				position: Pos::new_input(t.raw_get::<Table>("position")?)?.into(),
 				realtime,
 				completion: false,
 				highlight: false,

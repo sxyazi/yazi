@@ -15,10 +15,10 @@ impl From<()> for Opt {
 impl App {
 	#[yazi_codegen::command]
 	pub fn resize(&mut self, _: Opt) {
-		self.cx.manager.active_mut().preview.reset();
+		self.cx.active_mut().preview.reset();
 		self.reflow(());
 
-		self.cx.manager.current_mut().sync_page(true);
+		self.cx.current_mut().sync_page(true);
 		self.cx.manager.hover(None);
 	}
 }

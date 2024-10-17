@@ -47,16 +47,16 @@ end
 
 -- Mouse events
 function Tab:click(event, up)
-	local c = ya.child_at(ui.Position { x = event.x, y = event.y }, self._children)
+	local c = ya.child_at(ui.Rect { x = event.x, y = event.y }, self._children)
 	return c and c:click(event, up)
 end
 
 function Tab:scroll(event, step)
-	local c = ya.child_at(ui.Position { x = event.x, y = event.y }, self._children)
+	local c = ya.child_at(ui.Rect { x = event.x, y = event.y }, self._children)
 	return c and c:scroll(event, step)
 end
 
 function Tab:touch(event, step)
-	local c = ya.child_at(ui.Position { x = event.x, y = event.y }, self._children)
+	local c = ya.child_at(ui.Rect { x = event.x, y = event.y }, self._children)
 	return c and c:touch(event, step)
 end

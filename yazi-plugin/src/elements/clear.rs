@@ -3,23 +3,31 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use mlua::{Lua, Table, UserData};
 use yazi_adapter::ADAPTOR;
 
-use super::{Rect, Renderable};
+use super::Area;
 
 pub static COLLISION: AtomicBool = AtomicBool::new(false);
 
 #[derive(Clone, Copy, Default)]
 pub struct Clear {
-	pub area: Rect,
+	pub area: Area,
 }
 
 impl Clear {
 	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
-		let new = lua.create_function(|_, (_, area): (Table, Rect)| Ok(Clear { area }))?;
+		let new = lua.create_function(|_, (_, area): (Table, Area)| Ok(Clear { area }))?;
 
 		let clear = lua.create_table()?;
 		clear.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
 		Ok(clear)
+	}
+
+	pub(super) fn render(
+		self,
+		buf: &mut ratatui::buffer::Buffer,
+		trans: impl FnOnce(yazi_config::popup::Position) -> ratatui::layout::Rect,
+	) {
+		<Self as ratatui::widgets::Widget>::render(Default::default(), self.area.transform(trans), buf);
 	}
 }
 
@@ -42,16 +50,6 @@ impl ratatui::widgets::Widget for Clear {
 			}
 		}
 	}
-}
-
-impl Renderable for Clear {
-	fn area(&self) -> ratatui::layout::Rect { *self.area }
-
-	fn render(self: Box<Self>, buf: &mut ratatui::buffer::Buffer) {
-		<Self as ratatui::widgets::Widget>::render(Default::default(), *self.area, buf);
-	}
-
-	fn clone_render(&self, buf: &mut ratatui::buffer::Buffer) { Box::new(*self).render(buf); }
 }
 
 impl UserData for Clear {

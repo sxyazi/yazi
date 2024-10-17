@@ -9,9 +9,9 @@ local function match_mimetype(s)
 	end
 end
 
-function M:fetch()
+function M:fetch(args)
 	local urls = {}
-	for _, file in ipairs(self.files) do
+	for _, file in ipairs(args.files) do
 		urls[#urls + 1] = tostring(file.url)
 	end
 
