@@ -1,10 +1,4 @@
-use ratatui::{
-	buffer::Buffer,
-	layout::{Constraint, Rect},
-	text::Span,
-	widgets::{Paragraph, Widget},
-};
-
+use ratatui::{buffer::Buffer, layout::{Constraint, Rect}, text::Span, widgets::{Paragraph, Widget}};
 use yazi_config::THEME;
 
 pub(crate) struct Buttons;

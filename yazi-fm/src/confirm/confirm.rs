@@ -1,10 +1,4 @@
-use ratatui::{
-	buffer::Buffer,
-	layout::{Alignment, Constraint, Layout, Margin, Rect},
-	text::Line,
-	widgets::{Block, BorderType, Widget},
-};
-
+use ratatui::{buffer::Buffer, layout::{Alignment, Constraint, Layout, Margin, Rect}, text::Line, widgets::{Block, BorderType, Widget}};
 use yazi_config::THEME;
 
 use crate::Ctx;
@@ -14,9 +8,7 @@ pub(crate) struct Confirm<'a> {
 }
 
 impl<'a> Confirm<'a> {
-	pub(crate) fn new(cx: &'a Ctx) -> Self {
-		Self { cx }
-	}
+	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
 }
 
 impl<'a> Widget for Confirm<'a> {

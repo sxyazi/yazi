@@ -1,11 +1,4 @@
-use ratatui::{
-	buffer::Buffer,
-	layout::{Margin, Rect},
-	widgets::{
-		Block, Borders, Scrollbar, ScrollbarOrientation, ScrollbarState, StatefulWidget, Widget, Wrap,
-	},
-};
-
+use ratatui::{buffer::Buffer, layout::{Margin, Rect}, widgets::{Block, Borders, Scrollbar, ScrollbarOrientation, ScrollbarState, StatefulWidget, Widget, Wrap}};
 use yazi_config::THEME;
 
 use crate::Ctx;
@@ -15,9 +8,7 @@ pub(crate) struct List<'a> {
 }
 
 impl<'a> List<'a> {
-	pub(crate) fn new(cx: &'a Ctx) -> Self {
-		Self { cx }
-	}
+	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
 }
 
 impl<'a> Widget for List<'a> {

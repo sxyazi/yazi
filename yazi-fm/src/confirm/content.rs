@@ -1,9 +1,4 @@
-use ratatui::{
-	buffer::Buffer,
-	layout::{Margin, Rect},
-	widgets::{Block, Borders, Paragraph, Widget},
-};
-
+use ratatui::{buffer::Buffer, layout::{Margin, Rect}, widgets::{Block, Borders, Paragraph, Widget}};
 use yazi_config::THEME;
 
 pub(crate) struct Content<'a> {
@@ -11,9 +6,7 @@ pub(crate) struct Content<'a> {
 }
 
 impl<'a> Content<'a> {
-	pub(crate) fn new(p: Paragraph<'a>) -> Self {
-		Self { p }
-	}
+	pub(crate) fn new(p: Paragraph<'a>) -> Self { Self { p } }
 }
 
 impl<'a> Widget for Content<'a> {
