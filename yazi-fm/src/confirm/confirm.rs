@@ -1,4 +1,5 @@
-use ratatui::{buffer::Buffer, layout::{Alignment, Constraint, Layout, Margin, Rect}, style::{Style, Stylize}, text::Line, widgets::{Block, BorderType, Widget}};
+use ratatui::{buffer::Buffer, layout::{Alignment, Constraint, Layout, Margin, Rect}, text::Line, widgets::{Block, BorderType, Widget}};
+use yazi_config::THEME;
 
 use crate::Ctx;
 
@@ -19,8 +20,8 @@ impl<'a> Widget for Confirm<'a> {
 
 		Block::bordered()
 			.border_type(BorderType::Rounded)
-			.border_style(Style::new().blue())
-			.title(Line::styled(&confirm.title, Style::new().blue()))
+			.border_style(THEME.confirm.border)
+			.title(Line::styled(&confirm.title, THEME.confirm.title))
 			.title_alignment(Alignment::Center)
 			.render(area, buf);
 
