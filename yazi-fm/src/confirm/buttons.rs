@@ -14,10 +14,10 @@ impl Widget for Buttons {
 		let chunks =
 			ratatui::layout::Layout::horizontal([Constraint::Fill(1), Constraint::Fill(1)]).split(area);
 
-		Paragraph::new(Span::raw(&THEME.confirm.button_yes).style(THEME.confirm.buttons))
+		Paragraph::new(Span::raw(&THEME.confirm.button_labels[0]).style(THEME.confirm.buttons))
 			.centered()
 			.render(chunks[0], buf);
-		Paragraph::new(Span::raw(&THEME.confirm.button_no).style(THEME.confirm.buttons))
+		Paragraph::new(Span::raw(&THEME.confirm.button_labels[1]).style(THEME.confirm.buttons))
 			.centered()
 			.render(chunks[1], buf);
 	}
