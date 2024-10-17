@@ -122,7 +122,8 @@ pub struct Confirm {
 	pub title:         Style,
 	pub content:       Style,
 	pub list:          Style,
-	pub buttons:       Style,
+	pub button_yes:    Style,
+	pub button_no:     Style,
 }
 
 #[derive(Deserialize, Serialize)]
