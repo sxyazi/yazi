@@ -54,7 +54,7 @@ async fn _paths_to_same_file(a: &Path, b: &Path) -> std::io::Result<bool> {
 	use windows_sys::Win32::{Foundation::{HANDLE, MAX_PATH}, Storage::FileSystem::{FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, GetFinalPathNameByHandleW, VOLUME_NAME_DOS}};
 
 	async fn final_name(p: &Path) -> std::io::Result<PathBuf> {
-		let file = tokio::fs::OpenOptions::new()
+		let file = fs::OpenOptions::new()
 			.access_mode(0)
 			.custom_flags(FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT)
 			.open(p)
@@ -190,31 +190,8 @@ pub fn copy_with_progress(
 	tokio::spawn({
 		let (from, to) = (from.to_owned(), to.to_owned());
 
-		let mut ft = std::fs::FileTimes::new();
-		cha.atime.map(|t| ft = ft.set_accessed(t));
-		cha.mtime.map(|t| ft = ft.set_modified(t));
-		#[cfg(target_os = "macos")]
-		{
-			use std::os::macos::fs::FileTimesExt;
-			cha.btime.map(|t| ft = ft.set_created(t));
-		}
-		#[cfg(windows)]
-		{
-			use std::os::windows::fs::FileTimesExt;
-			cha.btime.map(|t| ft = ft.set_created(t));
-		}
-
 		async move {
-			_ = match fs::copy(&from, &to).await {
-				Ok(len) => {
-					_ = tokio::task::spawn_blocking(move || {
-						std::fs::File::options().write(true).open(to).and_then(|f| f.set_times(ft)).ok();
-					})
-					.await;
-					tick_tx.send(Ok(len))
-				}
-				Err(e) => tick_tx.send(Err(e)),
-			};
+			tick_tx.send(_copy_with_progress(from, to, cha).await).ok();
 		}
 	});
 
@@ -257,6 +234,57 @@ pub fn copy_with_progress(
 	});
 
 	rx
+}
+
+async fn _copy_with_progress(from: PathBuf, to: PathBuf, cha: Cha) -> io::Result<u64> {
+	let mut ft = std::fs::FileTimes::new();
+	cha.atime.map(|t| ft = ft.set_accessed(t));
+	cha.mtime.map(|t| ft = ft.set_modified(t));
+	#[cfg(target_os = "macos")]
+	{
+		use std::os::macos::fs::FileTimesExt;
+		cha.btime.map(|t| ft = ft.set_created(t));
+	}
+	#[cfg(windows)]
+	{
+		use std::os::windows::fs::FileTimesExt;
+		cha.btime.map(|t| ft = ft.set_created(t));
+	}
+
+	let written;
+	#[cfg(any(target_os = "linux", target_os = "android"))]
+	{
+		use std::os::fd::AsRawFd;
+
+		let mut reader = fs::File::open(from).await?;
+		let mut writer = fs::OpenOptions::new()
+			.mode(cha.perm as u32)
+			.write(true)
+			.create(true)
+			.truncate(true)
+			.open(to)
+			.await?;
+
+		written = io::copy(&mut reader, &mut writer).await?;
+		let writer = writer.into_std().await;
+
+		_ = tokio::task::spawn_blocking(move || {
+			unsafe { libc::fchmod(writer.as_raw_fd(), cha.perm) };
+			writer.set_times(ft).ok();
+		})
+		.await;
+	}
+
+	#[cfg(not(any(target_os = "linux", target_os = "android")))]
+	{
+		written = fs::copy(from, &to).await?;
+		_ = tokio::task::spawn_blocking(move || {
+			std::fs::File::options().write(true).open(to).and_then(|f| f.set_times(ft)).ok();
+		})
+		.await;
+	}
+
+	Ok(written)
 }
 
 pub async fn remove_dir_clean(dir: &Path) {
