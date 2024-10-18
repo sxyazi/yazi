@@ -158,3 +158,23 @@ impl Manager {
 		sorted
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_sort() {
+		let old = vec!["1", "2", "3", "4", "5"].into_iter().map(PathBuf::from).collect();
+		let new = vec!["2", "3", "4", "5", "6"].into_iter().map(PathBuf::from).collect();
+
+		let mut sorted = Manager::sort(old, new).into_iter();
+
+		assert_eq!(sorted.next(), Some((PathBuf::from("5"), PathBuf::from("6"))));
+		assert_eq!(sorted.next(), Some((PathBuf::from("4"), PathBuf::from("5"))));
+		assert_eq!(sorted.next(), Some((PathBuf::from("3"), PathBuf::from("4"))));
+		assert_eq!(sorted.next(), Some((PathBuf::from("2"), PathBuf::from("3"))));
+		assert_eq!(sorted.next(), Some((PathBuf::from("1"), PathBuf::from("2"))));
+		assert_eq!(sorted.next(), None);
+	}
+}
