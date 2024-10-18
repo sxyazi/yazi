@@ -53,7 +53,7 @@ impl Manager {
 			return Ok(());
 		}
 
-		let todo: Vec<_> = old.into_iter().zip(new).filter(|(o, n)| o != n).collect();
+		let todo = Self::sort(old, new);
 		if todo.is_empty() {
 			return Ok(());
 		}
@@ -116,5 +116,65 @@ impl Manager {
 
 		stdin().read_exact(&mut [0]).await?;
 		Ok(())
+	}
+
+	fn sort(old: Vec<PathBuf>, new: Vec<PathBuf>) -> Vec<(PathBuf, PathBuf)> {
+		let mut income_map: HashMap<PathBuf, bool> =
+			old.iter().map(|path| (path.clone(), false)).collect();
+		let mut todos: HashMap<PathBuf, PathBuf> = old
+			.into_iter()
+			.zip(new)
+			.map(|(old, new)| {
+				if let Some(has_income) = income_map.get_mut(&new) {
+					*has_income = true;
+				}
+				(old, new)
+			})
+			.collect();
+
+		let mut sorted = vec![];
+		while !todos.is_empty() {
+			let mut has_no_incomes = vec![];
+			income_map.iter().for_each(|(old, has_income)| {
+				if !has_income {
+					has_no_incomes.push(old.clone())
+				}
+			});
+
+			if has_no_incomes.is_empty() {
+				todo!("Consider cycle")
+			}
+
+			for old in has_no_incomes {
+				income_map.remove(&old);
+				let Some(new) = todos.remove(&old) else { unreachable!("") };
+				if let Some(has_income) = income_map.get_mut(&new) {
+					*has_income = false;
+				}
+				sorted.push((old, new));
+			}
+		}
+		sorted.reverse();
+		sorted
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_sort() {
+		let old = vec!["1", "2", "3", "4", "5"].into_iter().map(PathBuf::from).collect();
+		let new = vec!["2", "3", "4", "5", "6"].into_iter().map(PathBuf::from).collect();
+
+		let mut sorted = Manager::sort(old, new).into_iter();
+
+		assert_eq!(sorted.next(), Some((PathBuf::from("5"), PathBuf::from("6"))));
+		assert_eq!(sorted.next(), Some((PathBuf::from("4"), PathBuf::from("5"))));
+		assert_eq!(sorted.next(), Some((PathBuf::from("3"), PathBuf::from("4"))));
+		assert_eq!(sorted.next(), Some((PathBuf::from("2"), PathBuf::from("3"))));
+		assert_eq!(sorted.next(), Some((PathBuf::from("1"), PathBuf::from("2"))));
+		assert_eq!(sorted.next(), None);
 	}
 }
