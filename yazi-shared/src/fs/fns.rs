@@ -54,7 +54,7 @@ async fn _paths_to_same_file(a: &Path, b: &Path) -> std::io::Result<bool> {
 	use windows_sys::Win32::{Foundation::{HANDLE, MAX_PATH}, Storage::FileSystem::{FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, GetFinalPathNameByHandleW, VOLUME_NAME_DOS}};
 
 	async fn final_name(p: &Path) -> std::io::Result<PathBuf> {
-		let file = tokio::fs::OpenOptions::new()
+		let file = fs::OpenOptions::new()
 			.access_mode(0)
 			.custom_flags(FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT)
 			.open(p)
@@ -254,8 +254,10 @@ async fn _copy_with_progress(from: PathBuf, to: PathBuf, cha: Cha) -> io::Result
 	let written;
 	#[cfg(any(target_os = "linux", target_os = "android"))]
 	{
-		let mut reader = tokio::fs::File::open(from).await?;
-		let mut writer = tokio::fs::OpenOptions::new()
+		use std::os::fd::AsRawFd;
+
+		let mut reader = fs::File::open(from).await?;
+		let mut writer = fs::OpenOptions::new()
 			.mode(cha.perm as u32)
 			.write(true)
 			.create(true)
@@ -264,8 +266,8 @@ async fn _copy_with_progress(from: PathBuf, to: PathBuf, cha: Cha) -> io::Result
 			.await?;
 
 		written = io::copy(&mut reader, &mut writer).await?;
-		tokio::task::spawn_blocking(move || {
-			_ = unsafe { libc::fchmod(writer.as_raw_fd(), cha.perm) };
+		_ = tokio::task::spawn_blocking(move || {
+			unsafe { libc::fchmod(writer.as_raw_fd(), cha.perm) };
 			std::fs::File::options().write(true).open(to).and_then(|f| f.set_times(ft)).ok();
 		})
 		.await;
