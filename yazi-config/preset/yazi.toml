@@ -92,6 +92,10 @@ fetchers = [
 	# Mimetype
 	{ id = "mime", name = "*", run = "mime", if = "!mime", prio = "high" },
 ]
+spotters = [
+	# Fallback
+	{ name = "*", run = "file" }
+]
 preloaders = [
 	# Image
 	{ mime = "image/{avif,hei?,jxl,svg+xml}", run = "magick" },

@@ -9,7 +9,7 @@ use yazi_fs::{Folder, FolderStage};
 use yazi_macro::render;
 use yazi_shared::fs::{File, Url};
 
-use super::{Backstack, Config, Finder, History, Mode, Preview};
+use super::{Backstack, Config, Finder, History, Mode, Preview, Spot};
 use crate::tab::Selected;
 
 #[derive(Default)]
@@ -24,6 +24,7 @@ pub struct Tab {
 	pub history:   History,
 	pub selected:  Selected,
 
+	pub spot:    Spot,
 	pub preview: Preview,
 	pub finder:  Option<Finder>,
 	pub search:  Option<JoinHandle<Result<()>>>,

@@ -13,6 +13,7 @@ pub fn install(lua: &'static mlua::Lua) -> mlua::Result<()> {
 	Utils::layer(lua, &ya)?;
 	Utils::log(lua, &ya)?;
 	Utils::preview(lua, &ya)?;
+	Utils::spot(lua, &ya)?;
 	Utils::sync(lua, &ya)?;
 	Utils::target(lua, &ya)?;
 	Utils::text(lua, &ya)?;
@@ -32,6 +33,7 @@ pub fn install_isolate(lua: &mlua::Lua) -> mlua::Result<()> {
 	Utils::layer(lua, &ya)?;
 	Utils::log(lua, &ya)?;
 	Utils::preview(lua, &ya)?;
+	Utils::spot(lua, &ya)?;
 	Utils::sync_isolate(lua, &ya)?;
 	Utils::target(lua, &ya)?;
 	Utils::text(lua, &ya)?;

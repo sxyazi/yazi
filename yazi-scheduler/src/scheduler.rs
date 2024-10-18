@@ -223,7 +223,7 @@ impl Scheduler {
 		self.plugin.macro_(PluginOpEntry { id, name, args }).ok();
 	}
 
-	pub fn fetch_paged(&self, fetcher: &Fetcher, targets: Vec<yazi_shared::fs::File>) {
+	pub fn fetch_paged(&self, fetcher: &'static Fetcher, targets: Vec<yazi_shared::fs::File>) {
 		let id = self.ongoing.lock().add(
 			TaskKind::Preload,
 			format!("Run fetcher `{}` with {} target(s)", fetcher.run.name, targets.len()),
@@ -236,7 +236,7 @@ impl Scheduler {
 		});
 	}
 
-	pub fn preload_paged(&self, preloader: &Preloader, target: &yazi_shared::fs::File) {
+	pub fn preload_paged(&self, preloader: &'static Preloader, target: &yazi_shared::fs::File) {
 		let id =
 			self.ongoing.lock().add(TaskKind::Preload, format!("Run preloader `{}`", preloader.run.name));
 
