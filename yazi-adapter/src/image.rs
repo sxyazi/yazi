@@ -1,8 +1,7 @@
-use std::{fs::File, io::BufReader, path::{Path, PathBuf}};
+use std::path::{Path, PathBuf};
 
 use anyhow::Result;
-use exif::{In, Tag};
-use image::{DynamicImage, ExtendedColorType, ImageEncoder, ImageError, Limits, codecs::{jpeg::JpegEncoder, png::PngEncoder}, imageops::{self, FilterType}};
+use image::{DynamicImage, ExtendedColorType, ImageDecoder, ImageEncoder, ImageError, ImageReader, ImageResult, Limits, codecs::{jpeg::JpegEncoder, png::PngEncoder}, imageops::FilterType, metadata::Orientation};
 use ratatui::layout::Rect;
 use yazi_config::{PREVIEW, TASKS};
 
@@ -12,27 +11,18 @@ pub struct Image;
 
 impl Image {
 	pub async fn precache(path: &Path, cache: PathBuf) -> Result<()> {
-		let orientation = Self::orientation(path).await?;
-
-		let path = path.to_owned();
-		let mut img = tokio::task::spawn_blocking(move || {
-			Self::set_limits(image::ImageReader::open(path)?.with_guessed_format()?).decode()
-		})
-		.await??;
-
-		let (mut w, mut h) = (PREVIEW.max_width, PREVIEW.max_height);
-		if (5..=8).contains(&orientation) {
-			(w, h) = (h, w);
-		}
+		let (mut img, orientation) = Self::decode_from(path).await?;
+		let (w, h) = Self::flip_size(orientation, (PREVIEW.max_width, PREVIEW.max_height));
 
 		let buf = tokio::task::spawn_blocking(move || {
 			if img.width() > w || img.height() > h {
 				img = img.resize(w, h, Self::filter());
 			}
+			if orientation != Orientation::NoTransforms {
+				img.apply_orientation(orientation);
+			}
 
 			let mut buf = Vec::new();
-			img = Self::rotate(img, orientation);
-
 			if img.color().has_alpha() {
 				let rgba = img.into_rgba8();
 				PngEncoder::new(&mut buf).write_image(
@@ -54,31 +44,26 @@ impl Image {
 	}
 
 	pub(super) async fn downscale(path: &Path, rect: Rect) -> Result<DynamicImage> {
-		let orientation = Self::orientation(path).await?;
-
-		let path = path.to_owned();
-		let mut img = tokio::task::spawn_blocking(move || {
-			Self::set_limits(image::ImageReader::open(path)?.with_guessed_format()?).decode()
-		})
-		.await??;
-
-		let (mut w, mut h) = Self::max_pixel(rect);
-		if (5..=8).contains(&orientation) {
-			(w, h) = (h, w);
-		}
+		let (mut img, orientation) = Self::decode_from(path).await?;
+		let (w, h) = Self::flip_size(orientation, Self::max_pixel(rect));
 
 		// Fast path.
-		if img.width() <= w && img.height() <= h && orientation <= 1 {
+		if img.width() <= w && img.height() <= h && orientation == Orientation::NoTransforms {
 			return Ok(img);
 		}
 
-		tokio::task::spawn_blocking(move || {
+		let img = tokio::task::spawn_blocking(move || {
 			if img.width() > w || img.height() > h {
 				img = img.resize(w, h, Self::filter())
 			}
-			Ok(Self::rotate(img, orientation))
+			if orientation != Orientation::NoTransforms {
+				img.apply_orientation(orientation);
+			}
+			img
 		})
-		.await?
+		.await?;
+
+		Ok(img)
 	}
 
 	pub(super) fn max_pixel(rect: Rect) -> (u32, u32) {
@@ -113,53 +98,7 @@ impl Image {
 		}
 	}
 
-	async fn orientation(path: &Path) -> Result<u8> {
-		// We don't want to read the orientation of the cached image that has been
-		// rotated in the `Self::precache()` step.
-		if path.parent() == Some(&PREVIEW.cache_dir) {
-			return Ok(0);
-		}
-
-		let path = path.to_owned();
-		tokio::task::spawn_blocking(move || {
-			let file = std::fs::File::open(path)?;
-
-			let mut reader = std::io::BufReader::new(&file);
-			let Ok(exif) = exif::Reader::new().read_from_container(&mut reader) else {
-				return Ok(0);
-			};
-
-			Ok(match exif.get_field(Tag::Orientation, In::PRIMARY) {
-				Some(orientation) => match orientation.value.get_uint(0) {
-					Some(v @ 1..=8) => v as u8,
-					_ => 1,
-				},
-				None => 1,
-			})
-		})
-		.await?
-	}
-
-	// https://magnushoff.com/articles/jpeg-orientation/
-	fn rotate(mut img: DynamicImage, orientation: u8) -> DynamicImage {
-		let alpha = img.color().has_alpha();
-		img = match orientation {
-			2 => DynamicImage::ImageRgba8(imageops::flip_horizontal(&img)),
-			3 => DynamicImage::ImageRgba8(imageops::rotate180(&img)),
-			4 => DynamicImage::ImageRgba8(imageops::flip_vertical(&img)),
-			5 => DynamicImage::ImageRgba8(imageops::flip_horizontal(&imageops::rotate90(&img))),
-			6 => DynamicImage::ImageRgba8(imageops::rotate90(&img)),
-			7 => DynamicImage::ImageRgba8(imageops::flip_horizontal(&imageops::rotate270(&img))),
-			8 => DynamicImage::ImageRgba8(imageops::rotate270(&img)),
-			_ => img,
-		};
-		if !alpha {
-			img = DynamicImage::ImageRgb8(img.into_rgb8());
-		}
-		img
-	}
-
-	fn set_limits(mut r: image::ImageReader<BufReader<File>>) -> image::ImageReader<BufReader<File>> {
+	async fn decode_from(path: &Path) -> ImageResult<(DynamicImage, Orientation)> {
 		let mut limits = Limits::no_limits();
 		if TASKS.image_alloc > 0 {
 			limits.max_alloc = Some(TASKS.image_alloc as u64);
@@ -170,7 +109,26 @@ impl Image {
 		if TASKS.image_bound[1] > 0 {
 			limits.max_image_height = Some(TASKS.image_bound[1] as u32);
 		}
-		r.limits(limits);
-		r
+
+		let path = path.to_owned();
+		tokio::task::spawn_blocking(move || {
+			let mut reader = ImageReader::open(path)?;
+			reader.limits(limits);
+
+			let mut decoder = reader.with_guessed_format()?.into_decoder()?;
+			let orientation = decoder.orientation().unwrap_or(Orientation::NoTransforms);
+
+			Ok((DynamicImage::from_decoder(decoder)?, orientation))
+		})
+		.await
+		.map_err(|e| ImageError::IoError(e.into()))?
+	}
+
+	fn flip_size(orientation: Orientation, (w, h): (u32, u32)) -> (u32, u32) {
+		use image::metadata::Orientation::{Rotate90, Rotate90FlipH, Rotate270, Rotate270FlipH};
+		match orientation {
+			Rotate90 | Rotate270 | Rotate90FlipH | Rotate270FlipH => (h, w),
+			_ => (w, h),
+		}
 	}
 }
