@@ -165,16 +165,32 @@ mod tests {
 
 	#[test]
 	fn test_sort() {
-		let old = vec!["1", "2", "3", "4", "5"].into_iter().map(PathBuf::from).collect();
-		let new = vec!["2", "3", "4", "5", "6"].into_iter().map(PathBuf::from).collect();
+		fn cmp(input: &[(&str, &str)], expected: &[(&str, &str)]) {
+			let sorted = Manager::sort(
+				input.iter().map(|&(o, _)| o.into()).collect(),
+				input.iter().map(|&(_, n)| n.into()).collect(),
+			);
+			let sorted: Vec<_> =
+				sorted.iter().map(|(o, n)| (o.to_str().unwrap(), n.to_str().unwrap())).collect();
+			assert_eq!(sorted, expected);
+		}
 
-		let mut sorted = Manager::sort(old, new).into_iter();
+		#[rustfmt::skip]
+		cmp(
+			&[("2", "3"), ("1", "2"), ("3", "4")],
+			&[("3", "4"), ("2", "3"), ("1", "2")]
+		);
 
-		assert_eq!(sorted.next(), Some((PathBuf::from("5"), PathBuf::from("6"))));
-		assert_eq!(sorted.next(), Some((PathBuf::from("4"), PathBuf::from("5"))));
-		assert_eq!(sorted.next(), Some((PathBuf::from("3"), PathBuf::from("4"))));
-		assert_eq!(sorted.next(), Some((PathBuf::from("2"), PathBuf::from("3"))));
-		assert_eq!(sorted.next(), Some((PathBuf::from("1"), PathBuf::from("2"))));
-		assert_eq!(sorted.next(), None);
+		#[rustfmt::skip]
+		cmp(
+			&[("1", "3"), ("2", "3"), ("3", "4")],
+			&[("3", "4"), ("2", "3"), ("1", "3")]
+		);
+
+		#[rustfmt::skip]
+		cmp(
+			&[("1", "2"), ("2", "1")],
+			&[("2", "1"), ("1", "2")]
+		);
 	}
 }
