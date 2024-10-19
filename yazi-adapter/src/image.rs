@@ -11,7 +11,7 @@ pub struct Image;
 
 impl Image {
 	pub async fn precache(path: &Path, cache: PathBuf) -> Result<()> {
-		let (mut img, orientation) = Self::decode_from(path).await?;
+		let (mut img, orientation, icc) = Self::decode_from(path).await?;
 		let (w, h) = Self::flip_size(orientation, (PREVIEW.max_width, PREVIEW.max_height));
 
 		let buf = tokio::task::spawn_blocking(move || {
@@ -25,15 +25,13 @@ impl Image {
 			let mut buf = Vec::new();
 			if img.color().has_alpha() {
 				let rgba = img.into_rgba8();
-				PngEncoder::new(&mut buf).write_image(
-					&rgba,
-					rgba.width(),
-					rgba.height(),
-					ExtendedColorType::Rgba8,
-				)?;
+				let mut encoder = PngEncoder::new(&mut buf);
+				icc.map(|b| encoder.set_icc_profile(b));
+				encoder.write_image(&rgba, rgba.width(), rgba.height(), ExtendedColorType::Rgba8)?;
 			} else {
-				JpegEncoder::new_with_quality(&mut buf, PREVIEW.image_quality)
-					.encode_image(&img.into_rgb8())?;
+				let mut encoder = JpegEncoder::new_with_quality(&mut buf, PREVIEW.image_quality);
+				icc.map(|b| encoder.set_icc_profile(b));
+				encoder.encode_image(&img.into_rgb8())?;
 			}
 
 			Ok::<_, ImageError>(buf)
@@ -44,7 +42,7 @@ impl Image {
 	}
 
 	pub(super) async fn downscale(path: &Path, rect: Rect) -> Result<DynamicImage> {
-		let (mut img, orientation) = Self::decode_from(path).await?;
+		let (mut img, orientation, _) = Self::decode_from(path).await?;
 		let (w, h) = Self::flip_size(orientation, Self::max_pixel(rect));
 
 		// Fast path.
@@ -98,7 +96,7 @@ impl Image {
 		}
 	}
 
-	async fn decode_from(path: &Path) -> ImageResult<(DynamicImage, Orientation)> {
+	async fn decode_from(path: &Path) -> ImageResult<(DynamicImage, Orientation, Option<Vec<u8>>)> {
 		let mut limits = Limits::no_limits();
 		if TASKS.image_alloc > 0 {
 			limits.max_alloc = Some(TASKS.image_alloc as u64);
@@ -117,8 +115,9 @@ impl Image {
 
 			let mut decoder = reader.with_guessed_format()?.into_decoder()?;
 			let orientation = decoder.orientation().unwrap_or(Orientation::NoTransforms);
+			let icc = decoder.icc_profile().unwrap_or_default();
 
-			Ok((DynamicImage::from_decoder(decoder)?, orientation))
+			Ok((DynamicImage::from_decoder(decoder)?, orientation, icc))
 		})
 		.await
 		.map_err(|e| ImageError::IoError(e.into()))?
