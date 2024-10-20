@@ -142,9 +142,15 @@ impl Manager {
 			});
 
 			if has_no_incomes.is_empty() {
-				todo!("Consider cycle")
+				// Remaining rename set has cycle, so we cannot sort, just return them all
+				let mut remain = todos.drain().collect::<Vec<_>>();
+				remain.sort();
+				sorted.reverse();
+				sorted.extend(remain);
+				return sorted;
 			}
 
+			has_no_incomes.sort();
 			for old in has_no_incomes {
 				income_map.remove(&old);
 				let Some(new) = todos.remove(&old) else { unreachable!("") };
@@ -189,8 +195,14 @@ mod tests {
 
 		#[rustfmt::skip]
 		cmp(
-			&[("1", "2"), ("2", "1")],
-			&[("2", "1"), ("1", "2")]
+			&[("2", "1"), ("1", "2")],
+			&[("1", "2"), ("2", "1")]
+		);
+
+		#[rustfmt::skip]
+		cmp(
+			&[("3", "2"), ("2", "1"), ("1", "3"), ("a", "b"), ("b", "c")],
+			&[("b", "c"), ("a", "b"), ("1", "3"), ("2", "1"), ("3", "2")]
 		);
 	}
 }
