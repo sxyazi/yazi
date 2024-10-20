@@ -48,7 +48,7 @@ function M:try_with(from, pwd, to)
 	end
 
 	local archive = require("archive")
-	local child, code = archive.spawn_7z { "x", "-aou", "-p" .. pwd, "-o" .. tostring(tmp), tostring(from) }
+	local child, code = archive.spawn_7z { "x", "-aou", "-sccUTF-8", "-p" .. pwd, "-o" .. tostring(tmp), tostring(from) }
 	if not child then
 		fail("Spawn `7z` and `7zz` both commands failed, error code %s", code)
 	end

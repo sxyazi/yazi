@@ -3,8 +3,6 @@ use std::{fs::{FileType, Metadata}, path::Path, time::SystemTime};
 use bitflags::bitflags;
 use yazi_macro::unix_either;
 
-use super::Urn;
-
 bitflags! {
 	#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 	pub struct ChaKind: u8 {
@@ -149,7 +147,7 @@ impl Cha {
 		let mut attached = ChaKind::empty();
 
 		#[cfg(unix)]
-		if Urn::new(path).is_hidden() {
+		if super::Urn::new(path).is_hidden() {
 			attached |= ChaKind::HIDDEN;
 		}
 		#[cfg(windows)]

@@ -26,21 +26,19 @@ impl Child {
 impl UserData for Child {
 	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
 		#[inline]
-		// TODO: return mlua::String instead of String
-		async fn read_line(me: &mut Child) -> (String, u8) {
-			async fn read(r: Option<impl AsyncBufReadExt + Unpin>) -> Option<String> {
-				let mut r = r?;
-				let mut buf = String::new();
-				match r.read_line(&mut buf).await {
+		async fn read_line(me: &mut Child) -> (Option<Vec<u8>>, u8) {
+			async fn read(r: Option<impl AsyncBufReadExt + Unpin>) -> Option<Vec<u8>> {
+				let mut buf = Vec::new();
+				match r?.read_until(b'\n', &mut buf).await {
 					Ok(0) | Err(_) => None,
 					Ok(_) => Some(buf),
 				}
 			}
 
 			select! {
-				Some(r) = read(me.stdout.as_mut()) => (r, 0u8),
-				Some(r) = read(me.stderr.as_mut()) => (r, 1u8),
-				else => (String::new(), 2u8),
+				r @ Some(_) = read(me.stdout.as_mut()) => (r, 0u8),
+				r @ Some(_) = read(me.stderr.as_mut()) => (r, 1u8),
+				else => (None, 2u8),
 			}
 		}
 
@@ -61,12 +59,20 @@ impl UserData for Child {
 				else => (vec![], 2u8)
 			})
 		});
-		methods.add_async_method_mut("read_line", |_, me, ()| async move { Ok(read_line(me).await) });
-		methods.add_async_method_mut("read_line_with", |_, me, options: Table| async move {
-			let timeout: u64 = options.raw_get("timeout")?;
-			match tokio::time::timeout(Duration::from_millis(timeout), read_line(me)).await {
-				Ok(value) => Ok(value),
-				Err(_) => Ok((String::new(), 3u8)),
+		methods.add_async_method_mut("read_line", |lua, me, ()| async move {
+			match read_line(me).await {
+				(Some(b), event) => (lua.create_string(b)?, event).into_lua_multi(lua),
+				(None, event) => (Value::Nil, event).into_lua_multi(lua),
+			}
+		});
+		methods.add_async_method_mut("read_line_with", |lua, me, options: Table| async move {
+			let timeout = Duration::from_millis(options.raw_get("timeout")?);
+			let Ok(result) = tokio::time::timeout(timeout, read_line(me)).await else {
+				return (Value::Nil, 3u8).into_lua_multi(lua);
+			};
+			match result {
+				(Some(b), event) => (lua.create_string(b)?, event).into_lua_multi(lua),
+				(None, event) => (Value::Nil, event).into_lua_multi(lua),
 			}
 		});
 

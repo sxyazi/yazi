@@ -79,7 +79,7 @@ end
 ---  2: wrong password
 ---  3: partial success
 function M.list_files(args, skip, limit)
-	local child = M.spawn_7z { "l", "-ba", "-slt", table.unpack(args) }
+	local child = M.spawn_7z { "l", "-ba", "-slt", "-sccUTF-8", table.unpack(args) }
 	if not child then
 		return {}, 0, 1
 	end
@@ -136,7 +136,7 @@ end
 ---  2: wrong password
 ---  3: partial success
 function M.list_meta(args)
-	local child = M.spawn_7z { "l", "-slt", table.unpack(args) }
+	local child = M.spawn_7z { "l", "-slt", "-sccUTF-8", table.unpack(args) }
 	if not child then
 		return nil, 1
 	end
