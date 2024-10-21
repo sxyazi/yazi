@@ -7,8 +7,8 @@ use super::Package;
 
 impl Package {
 	pub(crate) async fn add_to_config(use_: &str) -> Result<()> {
-		let mut package = Self::new(use_, None);
-		let Some(name) = package.name() else { bail!("Invalid package `use`") };
+		let mut package = Self::new(use_, None).context("Invalid package `use`")?;
+		let name = package.name();
 
 		let path = Xdg::config_dir().join("package.toml");
 		let mut doc = Self::ensure_config(&fs::read_to_string(&path).await.unwrap_or_default())?;
@@ -49,7 +49,7 @@ impl Package {
 			let use_ = dep.get("use").and_then(|d| d.as_str()).context("Missing `use` field")?;
 			let rev = dep.get("rev").and_then(|d| d.as_str());
 
-			let mut package = Package::new(use_, rev);
+			let mut package = Package::new(use_, rev)?;
 			if upgrade {
 				package.upgrade().await?;
 			} else {
@@ -117,10 +117,9 @@ impl Package {
 	fn ensure_unique(doc: &DocumentMut, name: &str) -> Result<()> {
 		#[inline]
 		fn same(v: &Value, name: &str) -> bool {
-			v.as_inline_table()
-				.and_then(|t| t.get("use"))
-				.and_then(|v| v.as_str())
-				.is_some_and(|s| Package::new(s, None).name() == Some(name))
+			v.as_inline_table().and_then(|t| t.get("use")).and_then(|v| v.as_str()).is_some_and(|s| {
+				if let Ok(pkg) = Package::new(s, None) { pkg.name() == name } else { false }
+			})
 		}
 
 		if doc["plugin"]["deps"].as_array().unwrap().into_iter().any(|v| same(v, name)) {
