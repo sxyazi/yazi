@@ -251,40 +251,37 @@ async fn _copy_with_progress(from: PathBuf, to: PathBuf, cha: Cha) -> io::Result
 		cha.btime.map(|t| ft = ft.set_created(t));
 	}
 
-	let written;
 	#[cfg(any(target_os = "linux", target_os = "android"))]
 	{
-		use std::os::fd::AsRawFd;
+		use std::os::{fd::AsRawFd, unix::fs::OpenOptionsExt};
 
-		let mut reader = fs::File::open(from).await?;
-		let mut writer = fs::OpenOptions::new()
-			.mode(cha.perm as u32)
-			.write(true)
-			.create(true)
-			.truncate(true)
-			.open(to)
-			.await?;
+		tokio::task::spawn_blocking(move || {
+			let mut reader = std::fs::File::open(from)?;
+			let mut writer = std::fs::OpenOptions::new()
+				.mode(cha.perm as u32)
+				.write(true)
+				.create(true)
+				.truncate(true)
+				.open(to)?;
 
-		written = io::copy(&mut reader, &mut writer).await?;
-		let writer = writer.into_std().await;
-
-		_ = tokio::task::spawn_blocking(move || {
+			let written = std::io::copy(&mut reader, &mut writer)?;
 			unsafe { libc::fchmod(writer.as_raw_fd(), cha.perm) };
 			writer.set_times(ft).ok();
+
+			Ok(written)
 		})
-		.await;
+		.await?
 	}
 
 	#[cfg(not(any(target_os = "linux", target_os = "android")))]
 	{
-		written = fs::copy(from, &to).await?;
-		_ = tokio::task::spawn_blocking(move || {
+		tokio::task::spawn_blocking(move || {
+			let written = std::fs::copy(from, &to)?;
 			std::fs::File::options().write(true).open(to).and_then(|f| f.set_times(ft)).ok();
+			Ok(written)
 		})
-		.await;
+		.await?
 	}
-
-	Ok(written)
 }
 
 pub async fn remove_dir_clean(dir: &Path) {
