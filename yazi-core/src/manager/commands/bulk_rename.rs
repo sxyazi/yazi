@@ -53,7 +53,7 @@ impl Manager {
 			return Ok(());
 		}
 
-		let todo: Vec<_> = old.into_iter().zip(new).filter(|(o, n)| o != n).collect();
+		let todo = Self::sort(old, new);
 		if todo.is_empty() {
 			return Ok(());
 		}
@@ -116,5 +116,93 @@ impl Manager {
 
 		stdin().read_exact(&mut [0]).await?;
 		Ok(())
+	}
+
+	fn sort(old: Vec<PathBuf>, new: Vec<PathBuf>) -> Vec<(PathBuf, PathBuf)> {
+		let mut income_map: HashMap<PathBuf, bool> =
+			old.iter().map(|path| (path.clone(), false)).collect();
+		let mut todos: HashMap<PathBuf, PathBuf> = old
+			.into_iter()
+			.zip(new)
+			.map(|(old, new)| {
+				if let Some(has_income) = income_map.get_mut(&new) {
+					*has_income = true;
+				}
+				(old, new)
+			})
+			.collect();
+
+		let mut sorted = vec![];
+		while !todos.is_empty() {
+			let mut has_no_incomes = vec![];
+			income_map.iter().for_each(|(old, has_income)| {
+				if !has_income {
+					has_no_incomes.push(old.clone())
+				}
+			});
+
+			if has_no_incomes.is_empty() {
+				// Remaining rename set has cycle, so we cannot sort, just return them all
+				let mut remain = todos.drain().collect::<Vec<_>>();
+				remain.sort();
+				sorted.reverse();
+				sorted.extend(remain);
+				return sorted;
+			}
+
+			has_no_incomes.sort();
+			for old in has_no_incomes {
+				income_map.remove(&old);
+				let Some(new) = todos.remove(&old) else { unreachable!("") };
+				if let Some(has_income) = income_map.get_mut(&new) {
+					*has_income = false;
+				}
+				sorted.push((old, new));
+			}
+		}
+		sorted.reverse();
+		sorted
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_sort() {
+		fn cmp(input: &[(&str, &str)], expected: &[(&str, &str)]) {
+			let sorted = Manager::sort(
+				input.iter().map(|&(o, _)| o.into()).collect(),
+				input.iter().map(|&(_, n)| n.into()).collect(),
+			);
+			let sorted: Vec<_> =
+				sorted.iter().map(|(o, n)| (o.to_str().unwrap(), n.to_str().unwrap())).collect();
+			assert_eq!(sorted, expected);
+		}
+
+		#[rustfmt::skip]
+		cmp(
+			&[("2", "3"), ("1", "2"), ("3", "4")],
+			&[("3", "4"), ("2", "3"), ("1", "2")]
+		);
+
+		#[rustfmt::skip]
+		cmp(
+			&[("1", "3"), ("2", "3"), ("3", "4")],
+			&[("3", "4"), ("2", "3"), ("1", "3")]
+		);
+
+		#[rustfmt::skip]
+		cmp(
+			&[("2", "1"), ("1", "2")],
+			&[("1", "2"), ("2", "1")]
+		);
+
+		#[rustfmt::skip]
+		cmp(
+			&[("3", "2"), ("2", "1"), ("1", "3"), ("a", "b"), ("b", "c")],
+			&[("b", "c"), ("a", "b"), ("1", "3"), ("2", "1"), ("3", "2")]
+		);
 	}
 }
