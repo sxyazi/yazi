@@ -2,12 +2,13 @@ use std::{collections::HashSet, path::Path, str::FromStr};
 
 use serde::Deserialize;
 
-use super::{Fetcher, Preloader, Previewer};
+use super::{Fetcher, Preloader, Previewer, Spotter};
 use crate::{Preset, plugin::MAX_PREWORKERS};
 
 #[derive(Deserialize)]
 pub struct Plugin {
 	pub fetchers:   Vec<Fetcher>,
+	pub spotters:   Vec<Spotter>,
 	pub preloaders: Vec<Preloader>,
 	pub previewers: Vec<Previewer>,
 }
@@ -35,10 +36,10 @@ impl Plugin {
 	}
 
 	pub fn preloaders<'a>(
-		&'a self,
+		&'static self,
 		path: &'a Path,
 		mime: &'a str,
-	) -> impl Iterator<Item = &'a Preloader> {
+	) -> impl Iterator<Item = &'static Preloader> + use<'a> {
 		let mut next = true;
 		self.preloaders.iter().filter(move |&p| {
 			if !next || !p.matches(path, mime) {
@@ -71,6 +72,12 @@ impl FromStr for Plugin {
 			#[serde(default)]
 			append_fetchers:  Vec<Fetcher>,
 
+			spotters:         Vec<Spotter>,
+			#[serde(default)]
+			prepend_spotters: Vec<Spotter>,
+			#[serde(default)]
+			append_spotters:  Vec<Spotter>,
+
 			preloaders:         Vec<Preloader>,
 			#[serde(default)]
 			prepend_preloaders: Vec<Preloader>,
@@ -85,6 +92,12 @@ impl FromStr for Plugin {
 		}
 
 		let mut shadow = toml::from_str::<Outer>(s)?.plugin;
+		if shadow.append_spotters.iter().any(|r| r.any_file()) {
+			shadow.spotters.retain(|r| !r.any_file());
+		}
+		if shadow.append_spotters.iter().any(|r| r.any_dir()) {
+			shadow.spotters.retain(|r| !r.any_dir());
+		}
 		if shadow.append_previewers.iter().any(|r| r.any_file()) {
 			shadow.previewers.retain(|r| !r.any_file());
 		}
@@ -94,6 +107,8 @@ impl FromStr for Plugin {
 
 		shadow.fetchers =
 			Preset::mix(shadow.fetchers, shadow.prepend_fetchers, shadow.append_fetchers).collect();
+		shadow.spotters =
+			Preset::mix(shadow.spotters, shadow.prepend_spotters, shadow.append_spotters).collect();
 		shadow.preloaders =
 			Preset::mix(shadow.preloaders, shadow.prepend_preloaders, shadow.append_preloaders).collect();
 		shadow.previewers =
@@ -112,6 +127,7 @@ impl FromStr for Plugin {
 
 		Ok(Self {
 			fetchers:   shadow.fetchers,
+			spotters:   shadow.spotters,
 			preloaders: shadow.preloaders,
 			previewers: shadow.previewers,
 		})
