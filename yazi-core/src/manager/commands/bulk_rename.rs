@@ -1,12 +1,24 @@
-use std::{borrow::Cow, collections::HashMap, ffi::{OsStr, OsString}, io::{BufWriter, Write, stderr}, path::PathBuf};
+use std::{
+	borrow::Cow,
+	collections::HashMap,
+	ffi::{OsStr, OsString},
+	io::{stderr, BufWriter, Write},
+	path::PathBuf,
+};
 
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use scopeguard::defer;
-use tokio::{fs::{self, OpenOptions}, io::{AsyncReadExt, AsyncWriteExt, stdin}};
+use tokio::{
+	fs::{self, OpenOptions},
+	io::{stdin, AsyncReadExt, AsyncWriteExt},
+};
 use yazi_config::{OPEN, PREVIEW};
 use yazi_dds::Pubsub;
-use yazi_proxy::{AppProxy, HIDER, TasksProxy, WATCHER};
-use yazi_shared::{fs::{File, FilesOp, Url, max_common_root, maybe_exists, paths_to_same_file}, terminal_clear};
+use yazi_proxy::{AppProxy, TasksProxy, HIDER, WATCHER};
+use yazi_shared::{
+	fs::{max_common_root, maybe_exists, paths_to_same_file, File, FilesOp, Url},
+	terminal_clear,
+};
 
 use crate::manager::Manager;
 
@@ -119,16 +131,16 @@ impl Manager {
 	}
 
 	fn sort(old: Vec<PathBuf>, new: Vec<PathBuf>) -> Vec<(PathBuf, PathBuf)> {
-		let mut income_map: HashMap<PathBuf, bool> =
-			old.iter().map(|path| (path.clone(), false)).collect();
-		let mut todos: HashMap<PathBuf, PathBuf> = old
-			.into_iter()
+		let user_order: HashMap<_, _> = old.iter().enumerate().map(|(idx, path)| (path, idx)).collect();
+		let mut income_map: HashMap<_, _> = old.iter().map(|path| (path.clone(), false)).collect();
+		let mut todos: HashMap<_, _> = old
+			.iter()
 			.zip(new)
 			.map(|(old, new)| {
 				if let Some(has_income) = income_map.get_mut(&new) {
 					*has_income = true;
 				}
-				(old, new)
+				(old.clone(), new)
 			})
 			.collect();
 
@@ -144,13 +156,13 @@ impl Manager {
 			if has_no_incomes.is_empty() {
 				// Remaining rename set has cycle, so we cannot sort, just return them all
 				let mut remain = todos.drain().collect::<Vec<_>>();
-				remain.sort();
+				remain.sort_by(|(a, _), (b, _)| user_order[a].cmp(&user_order[b]));
 				sorted.reverse();
 				sorted.extend(remain);
 				return sorted;
 			}
 
-			has_no_incomes.sort();
+			has_no_incomes.sort_by(|a, b| user_order[b].cmp(&user_order[a]));
 			for old in has_no_incomes {
 				income_map.remove(&old);
 				let Some(new) = todos.remove(&old) else { unreachable!("") };
@@ -190,19 +202,25 @@ mod tests {
 		#[rustfmt::skip]
 		cmp(
 			&[("1", "3"), ("2", "3"), ("3", "4")],
-			&[("3", "4"), ("2", "3"), ("1", "3")]
+			&[("3", "4"), ("1", "3"), ("2", "3")]
 		);
 
 		#[rustfmt::skip]
 		cmp(
 			&[("2", "1"), ("1", "2")],
-			&[("1", "2"), ("2", "1")]
+			&[("2", "1"), ("1", "2")]
 		);
 
 		#[rustfmt::skip]
 		cmp(
 			&[("3", "2"), ("2", "1"), ("1", "3"), ("a", "b"), ("b", "c")],
-			&[("b", "c"), ("a", "b"), ("1", "3"), ("2", "1"), ("3", "2")]
+			&[("b", "c"), ("a", "b"), ("3", "2"), ("2", "1"), ("1", "3")]
+		);
+
+		#[rustfmt::skip]
+		cmp(
+			&[("b", "b_"), ("a", "a_"), ("c", "c_")],
+			&[("b", "b_"), ("a", "a_"), ("c", "c_")],
 		);
 	}
 }
