@@ -7,7 +7,7 @@ pub struct Id(usize);
 
 impl Id {
 	#[inline]
-	pub fn as_usize(&self) -> usize { self.0 }
+	pub fn get(&self) -> usize { self.0 }
 }
 
 impl Display for Id {

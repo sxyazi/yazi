@@ -32,11 +32,11 @@ impl IntoLua<'_> for BodyHover<'static> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		if let Some(Cow::Owned(url)) = self.url {
 			lua.create_table_from([
-				("tab", self.tab.as_usize().into_lua(lua)?),
+				("tab", self.tab.get().into_lua(lua)?),
 				("url", lua.create_any_userdata(url)?.into_lua(lua)?),
 			])?
 		} else {
-			lua.create_table_from([("tab", self.tab.as_usize())])?
+			lua.create_table_from([("tab", self.tab.get())])?
 		}
 		.into_lua(lua)
 	}

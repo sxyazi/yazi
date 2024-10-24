@@ -43,7 +43,7 @@ impl FilesOp {
 
 	pub fn prepare(cwd: &Url) -> Id {
 		let ticket = FILES_TICKET.next();
-		Self::Part(cwd.clone(), vec![], FILES_TICKET.next()).emit();
+		Self::Part(cwd.clone(), vec![], ticket).emit();
 		ticket
 	}
 
