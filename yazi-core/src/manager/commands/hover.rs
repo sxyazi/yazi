@@ -2,21 +2,18 @@ use std::{collections::HashSet, path::PathBuf};
 
 use yazi_dds::Pubsub;
 use yazi_macro::render;
-use yazi_shared::{event::{Cmd, Data}, fs::{Url, Urn}};
+use yazi_shared::{Id, event::{Cmd, Data}, fs::{Url, Urn}};
 
 use crate::manager::Manager;
 
 struct Opt {
 	url: Option<Url>,
-	tab: Option<usize>,
+	tab: Option<Id>,
 }
 
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
-		Self {
-			url: c.take_first().and_then(Data::into_url),
-			tab: c.get("tab").and_then(Data::as_usize),
-		}
+		Self { url: c.take_first().and_then(Data::into_url), tab: c.get("tab").and_then(Data::as_id) }
 	}
 }
 impl From<Option<Url>> for Opt {
@@ -49,10 +46,10 @@ impl Manager {
 		self.watcher.watch(to_watch);
 
 		// Publish through DDS
-		Pubsub::pub_from_hover(self.active().idx, self.hovered().map(|h| &h.url));
+		Pubsub::pub_from_hover(self.active().id, self.hovered().map(|h| &h.url));
 	}
 
-	fn hover_do(&mut self, url: Url, tab: Option<usize>) {
+	fn hover_do(&mut self, url: Url, tab: Option<Id>) {
 		// Hover on the file
 		if let Ok(p) = url.strip_prefix(&self.current_or(tab).url).map(PathBuf::from) {
 			render!(self.current_or_mut(tab).repos(Some(Urn::new(&p))));

@@ -30,7 +30,6 @@ impl Tabs {
 			self.set_idx(self.absolute(1));
 		}
 
-		self.reorder();
 		render!();
 	}
 }

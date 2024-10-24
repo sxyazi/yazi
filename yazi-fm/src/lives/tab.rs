@@ -23,7 +23,7 @@ impl Tab {
 
 	pub(super) fn register(lua: &Lua) -> mlua::Result<()> {
 		lua.register_userdata_type::<Self>(|reg| {
-			reg.add_field_method_get("idx", |_, me| Ok(me.idx + 1));
+			reg.add_field_method_get("id", |_, me| Ok(me.id.as_usize()));
 			reg.add_method("name", |lua, me, ()| {
 				lua.create_string(me.current.url.name().as_encoded_bytes())
 			});
