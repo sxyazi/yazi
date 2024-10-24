@@ -66,7 +66,7 @@ impl Tab {
 			self.backstack.push(opt.target.clone());
 		}
 
-		Pubsub::pub_from_cd(self.idx, self.cwd());
+		Pubsub::pub_from_cd(self.id, self.cwd());
 		ManagerProxy::refresh();
 		render!();
 	}

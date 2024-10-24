@@ -21,7 +21,6 @@ impl Tabs {
 
 		self.items.swap(self.cursor, idx);
 		self.set_idx(idx);
-		self.reorder();
 		render!();
 	}
 }

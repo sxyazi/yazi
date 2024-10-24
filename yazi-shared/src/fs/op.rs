@@ -1,15 +1,15 @@
-use std::{collections::{HashMap, HashSet}, sync::atomic::{AtomicU64, Ordering}};
+use std::collections::{HashMap, HashSet};
 
 use super::{Cha, File, UrnBuf};
-use crate::{Layer, event::Cmd, fs::Url};
+use crate::{Id, Ids, Layer, event::Cmd, fs::Url};
 
-pub static FILES_TICKET: AtomicU64 = AtomicU64::new(0);
+pub static FILES_TICKET: Ids = Ids::new();
 
 #[derive(Clone, Debug)]
 pub enum FilesOp {
 	Full(Url, Vec<File>, Cha),
-	Part(Url, Vec<File>, u64),
-	Done(Url, Cha, u64),
+	Part(Url, Vec<File>, Id),
+	Done(Url, Cha, Id),
 	Size(Url, HashMap<UrnBuf, u64>),
 	IOErr(Url, std::io::ErrorKind),
 
@@ -41,8 +41,8 @@ impl FilesOp {
 		crate::event::Event::Call(Cmd::new("update_files").with_any("op", self), Layer::Manager).emit();
 	}
 
-	pub fn prepare(cwd: &Url) -> u64 {
-		let ticket = FILES_TICKET.fetch_add(1, Ordering::Relaxed);
+	pub fn prepare(cwd: &Url) -> Id {
+		let ticket = FILES_TICKET.next();
 		Self::Part(cwd.clone(), vec![], ticket).emit();
 		ticket
 	}

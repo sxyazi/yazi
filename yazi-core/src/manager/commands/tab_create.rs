@@ -36,8 +36,7 @@ impl Tabs {
 			return;
 		}
 
-		let mut tab = Tab { idx: self.cursor + 1, ..Default::default() };
-
+		let mut tab = Tab::default();
 		if !opt.current {
 			tab.cd(opt.url);
 		} else if let Some(h) = self.active().hovered() {
@@ -52,7 +51,6 @@ impl Tabs {
 
 		self.items.insert(self.cursor + 1, tab);
 		self.set_idx(self.cursor + 1);
-		self.reorder();
 		render!();
 	}
 }

@@ -15,7 +15,7 @@ impl Tab {
 		self.apply_files_attrs();
 
 		if hovered.as_ref() != self.hovered().map(|f| &f.url) {
-			ManagerProxy::hover(hovered, self.idx);
+			ManagerProxy::hover(hovered, self.id);
 		} else if self.hovered().is_some_and(|f| f.is_dir()) {
 			ManagerProxy::peek(true);
 		}

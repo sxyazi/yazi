@@ -1,13 +1,13 @@
-use std::{borrow::Cow, io::Cursor, mem, path::{Path, PathBuf}, sync::atomic::{AtomicUsize, Ordering}};
+use std::{borrow::Cow, io::Cursor, mem, path::{Path, PathBuf}};
 
 use anyhow::{Result, anyhow};
 use ratatui::{layout::Rect, text::{Line, Span, Text}};
 use syntect::{LoadingError, dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
 use tokio::{fs::File, io::{AsyncBufReadExt, BufReader}, sync::OnceCell};
 use yazi_config::{PREVIEW, THEME, preview::PreviewWrap};
-use yazi_shared::{errors::PeekError, replace_to_printable};
+use yazi_shared::{Ids, errors::PeekError, replace_to_printable};
 
-static INCR: AtomicUsize = AtomicUsize::new(0);
+static INCR: Ids = Ids::new();
 static SYNTECT: OnceCell<(Theme, SyntaxSet)> = OnceCell::const_new();
 
 pub struct Highlighter {
@@ -39,7 +39,7 @@ impl Highlighter {
 	}
 
 	#[inline]
-	pub fn abort() { INCR.fetch_add(1, Ordering::Relaxed); }
+	pub fn abort() { INCR.next(); }
 
 	pub async fn highlight(&self, skip: usize, area: Rect) -> Result<Text<'static>, PeekError> {
 		let mut reader = BufReader::new(File::open(&self.path).await?);
@@ -104,13 +104,13 @@ impl Highlighter {
 		after: Vec<String>,
 		syntax: &'static SyntaxReference,
 	) -> Result<Text<'static>, PeekError> {
-		let ticket = INCR.load(Ordering::Relaxed);
+		let ticket = INCR.current();
 		let (theme, syntaxes) = Self::init().await;
 
 		tokio::task::spawn_blocking(move || {
 			let mut h = HighlightLines::new(syntax, theme);
 			for line in before {
-				if ticket != INCR.load(Ordering::Relaxed) {
+				if ticket != INCR.current() {
 					return Err("Highlighting cancelled".into());
 				}
 				h.highlight_line(&line, syntaxes).map_err(|e| anyhow!(e))?;
@@ -119,7 +119,7 @@ impl Highlighter {
 			let indent = PREVIEW.indent();
 			let mut lines = Vec::with_capacity(after.len());
 			for line in after {
-				if ticket != INCR.load(Ordering::Relaxed) {
+				if ticket != INCR.current() {
 					return Err("Highlighting cancelled".into());
 				}
 

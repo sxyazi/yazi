@@ -1,15 +1,15 @@
-use std::{collections::{HashMap, HashSet}, mem, ops::Deref, sync::atomic::Ordering};
+use std::{collections::{HashMap, HashSet}, mem, ops::Deref};
 
 use tokio::{fs::{self, DirEntry}, select, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_config::{MANAGER, manager::SortBy};
-use yazi_shared::fs::{Cha, FILES_TICKET, File, FilesOp, Url, Urn, UrnBuf, maybe_exists};
+use yazi_shared::{Id, fs::{Cha, FILES_TICKET, File, FilesOp, Url, Urn, UrnBuf, maybe_exists}};
 
 use super::{FilesSorter, Filter};
 
 pub struct Files {
 	hidden:       Vec<File>,
 	items:        Vec<File>,
-	ticket:       u64,
+	ticket:       Id,
 	version:      u64,
 	pub revision: u64,
 
@@ -118,7 +118,7 @@ impl Files {
 
 impl Files {
 	pub fn update_full(&mut self, files: Vec<File>) {
-		self.ticket = FILES_TICKET.fetch_add(1, Ordering::Relaxed);
+		self.ticket = FILES_TICKET.next();
 
 		(self.hidden, self.items) = self.split_files(files);
 		if !self.items.is_empty() {
@@ -126,7 +126,7 @@ impl Files {
 		}
 	}
 
-	pub fn update_part(&mut self, files: Vec<File>, ticket: u64) {
+	pub fn update_part(&mut self, files: Vec<File>, ticket: Id) {
 		if !files.is_empty() {
 			if ticket != self.ticket {
 				return;
@@ -162,7 +162,7 @@ impl Files {
 	}
 
 	pub fn update_ioerr(&mut self) {
-		self.ticket = FILES_TICKET.fetch_add(1, Ordering::Relaxed);
+		self.ticket = FILES_TICKET.next();
 		self.hidden.clear();
 		self.items.clear();
 	}
@@ -349,7 +349,7 @@ impl Files {
 
 	// --- Ticket
 	#[inline]
-	pub fn ticket(&self) -> u64 { self.ticket }
+	pub fn ticket(&self) -> Id { self.ticket }
 
 	// --- Sorter
 	#[inline]

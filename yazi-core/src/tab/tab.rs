@@ -7,14 +7,13 @@ use yazi_adapter::Dimension;
 use yazi_config::{LAYOUT, popup::{Origin, Position}};
 use yazi_fs::{Folder, FolderStage};
 use yazi_macro::render;
-use yazi_shared::fs::{File, Url};
+use yazi_shared::{Id, Ids, fs::{File, Url}};
 
 use super::{Backstack, Config, Finder, History, Mode, Preview};
 use crate::tab::Selected;
 
-#[derive(Default)]
 pub struct Tab {
-	pub idx:     usize,
+	pub id:      Id,
 	pub mode:    Mode,
 	pub conf:    Config,
 	pub current: Folder,
@@ -27,6 +26,28 @@ pub struct Tab {
 	pub preview: Preview,
 	pub finder:  Option<Finder>,
 	pub search:  Option<JoinHandle<Result<()>>>,
+}
+
+impl Default for Tab {
+	fn default() -> Self {
+		static IDS: Ids = Ids::new();
+
+		Self {
+			id:      IDS.next(),
+			mode:    Default::default(),
+			conf:    Default::default(),
+			current: Default::default(),
+			parent:  Default::default(),
+
+			backstack: Default::default(),
+			history:   Default::default(),
+			selected:  Default::default(),
+
+			preview: Default::default(),
+			finder:  Default::default(),
+			search:  Default::default(),
+		}
+	}
 }
 
 impl Tab {
