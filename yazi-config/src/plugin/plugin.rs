@@ -1,11 +1,11 @@
 use std::{collections::HashSet, path::Path, str::FromStr};
 
-use serde::Deserialize;
+use anyhow::Context;
+use serde::{Deserialize, Deserializer};
 
 use super::{Fetcher, Preloader, Previewer};
 use crate::{Preset, plugin::MAX_PREWORKERS};
 
-#[derive(Deserialize)]
 pub struct Plugin {
 	pub fetchers:   Vec<Fetcher>,
 	pub preloaders: Vec<Preloader>,
@@ -55,9 +55,18 @@ impl Plugin {
 }
 
 impl FromStr for Plugin {
-	type Err = toml::de::Error;
+	type Err = anyhow::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		toml::from_str(s).context("Failed to parse the [plugin] section in your yazi.toml")
+	}
+}
+
+impl<'de> Deserialize<'de> for Plugin {
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+	where
+		D: Deserializer<'de>,
+	{
 		#[derive(Deserialize)]
 		struct Outer {
 			plugin: Shadow,
@@ -84,7 +93,7 @@ impl FromStr for Plugin {
 			append_previewers:  Vec<Previewer>,
 		}
 
-		let mut shadow = toml::from_str::<Outer>(s)?.plugin;
+		let mut shadow = Outer::deserialize(deserializer)?.plugin;
 		if shadow.append_previewers.iter().any(|r| r.any_file()) {
 			shadow.previewers.retain(|r| !r.any_file());
 		}

@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use anyhow::Context;
 use serde::Deserialize;
 
 use super::{Offset, Origin};
@@ -49,7 +50,7 @@ impl Input {
 }
 
 impl FromStr for Input {
-	type Err = toml::de::Error;
+	type Err = anyhow::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		#[derive(Deserialize)]
@@ -57,7 +58,10 @@ impl FromStr for Input {
 			input: Input,
 		}
 
-		Ok(toml::from_str::<Outer>(s)?.input)
+		let outer = toml::from_str::<Outer>(s)
+			.context("Failed to parse the [input] section in your yazi.toml")?;
+
+		Ok(outer.input)
 	}
 }
 
