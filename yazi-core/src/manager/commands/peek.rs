@@ -1,3 +1,4 @@
+use yazi_proxy::HIDER;
 use yazi_shared::{event::{Cmd, Data}, fs::Url};
 
 use crate::manager::Manager;
@@ -27,6 +28,10 @@ impl From<bool> for Opt {
 impl Manager {
 	#[yazi_codegen::command]
 	pub fn peek(&mut self, opt: Opt) {
+		if HIDER.try_acquire().is_err() {
+			return self.active_mut().preview.reset_image();
+		}
+
 		let Some(hovered) = self.hovered().cloned() else {
 			return self.active_mut().preview.reset();
 		};
