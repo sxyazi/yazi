@@ -1,7 +1,3 @@
-name: 🐞 Bug Report
-description: Create a report to help us improve
-labels: [bug]
-assignees: []
 body:
   - type: dropdown
     id: os
@@ -36,18 +32,9 @@ body:
   - type: textarea
     id: description
     attributes:
-      label: Describe the bug
-      description: A clear and concise description of what the bug is
-      placeholder: Tell us what happened
-    validations:
-      required: true
-  - type: textarea
-    id: reproducer
-    attributes:
-      label: Minimal reproducer
-      description: A [minimal reproducer](https://stackoverflow.com/help/minimal-reproducible-example) is required, otherwise the issue might be closed without further notice.
-      placeholder: |
-        Please include as much information as possible that can help to reproduce and understand the issue.
+      label: Describe the question
+      description: A clear and concise description of what the question is
+      placeholder: Tell us what you want to know
     validations:
       required: true
   - type: textarea
@@ -63,8 +50,5 @@ body:
       label: Validations
       description: Before submitting the issue, please make sure you have completed the following
       options:
-        - label: I tried the [latest nightly build](https://yazi-rs.github.io/docs/installation#official-binaries), and the issue is still reproducible
+        - label: I have searched the existing discussions/issues
           required: true
-        - label: I updated the debug information (`yazi --debug`) input box to the nightly that I tried
-          required: true
-        - label: I can reproduce it after disabling all custom configs/plugins (`mv ~/.config/yazi ~/.config/yazi-backup`)

@@ -59,7 +59,7 @@ pub fn install(lua: &Lua) -> mlua::Result<()> {
 						Some(
 							GlobBuilder::new(s.to_str()?)
 								.case_insensitive(true)
-								.literal_separator(false)
+								.literal_separator(true)
 								.backslash_escape(false)
 								.empty_alternates(true)
 								.build()

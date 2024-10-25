@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{path::Path, str::FromStr};
 
 use globset::GlobBuilder;
 use serde::Deserialize;
@@ -29,16 +29,16 @@ impl Pattern {
 	pub fn any_dir(&self) -> bool { self.is_star && self.is_dir }
 }
 
-impl TryFrom<&str> for Pattern {
-	type Error = anyhow::Error;
+impl FromStr for Pattern {
+	type Err = globset::Error;
 
-	fn try_from(s: &str) -> Result<Self, Self::Error> {
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		let a = s.trim_start_matches("\\s");
 		let b = a.trim_end_matches('/');
 
 		let inner = GlobBuilder::new(b)
 			.case_insensitive(a.len() == s.len())
-			.literal_separator(false)
+			.literal_separator(true)
 			.backslash_escape(false)
 			.empty_alternates(true)
 			.build()?
@@ -49,7 +49,7 @@ impl TryFrom<&str> for Pattern {
 }
 
 impl TryFrom<String> for Pattern {
-	type Error = anyhow::Error;
+	type Error = globset::Error;
 
-	fn try_from(s: String) -> Result<Self, Self::Error> { Self::try_from(s.as_str()) }
+	fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(s.as_str()) }
 }

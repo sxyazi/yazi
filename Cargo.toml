@@ -11,7 +11,7 @@ strip         = true
 
 [workspace.dependencies]
 ansi-to-tui   = "6.0.0"
-anyhow        = "1.0.90"
+anyhow        = "1.0.91"
 arc-swap      = "1.7.1"
 base64        = "0.22.1"
 bitflags      = "2.6.0"
@@ -25,14 +25,14 @@ md-5          = "0.10.6"
 mlua          = { version = "0.9.9", features = [ "lua54", "serialize", "macros", "async" ] }
 parking_lot   = "0.12.3"
 ratatui       = { version = "0.28.1", features = [ "unstable-rendered-line-info" ] }
-regex         = "1.11.0"
+regex         = "1.11.1"
 scopeguard    = "1.2.0"
-serde         = { version = "1.0.210", features = [ "derive" ] }
+serde         = { version = "1.0.213", features = [ "derive" ] }
 serde_json    = "1.0.132"
 shell-words   = "1.1.0"
-tokio         = { version = "1.40.0", features = [ "full" ] }
+tokio         = { version = "1.41.0", features = [ "full" ] }
 tokio-stream  = "0.1.16"
 tokio-util    = "0.7.12"
 tracing       = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_warn" ] }
-unicode-width = "0.1.14"
+unicode-width = "0.2.0"
 uzers         = "0.12.1"
