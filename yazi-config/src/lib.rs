@@ -23,46 +23,6 @@ pub static CONFIRM: RoCell<popup::Confirm> = RoCell::new();
 pub static PICK: RoCell<popup::Pick> = RoCell::new();
 pub static WHICH: RoCell<which::Which> = RoCell::new();
 
-fn try_init(merge: bool) -> anyhow::Result<()> {
-	let (yazi_toml, keymap_toml, theme_toml) = if merge {
-		let p = Xdg::config_dir();
-		(Preset::yazi(&p)?, Preset::keymap(&p)?, Preset::theme(&p)?)
-	} else {
-		use yazi_macro::config_preset as preset;
-		(preset!("yazi"), preset!("keymap"), preset!("theme"))
-	};
-
-	let keymap = <_>::from_str(&keymap_toml)?;
-	let log = <_>::from_str(&yazi_toml)?;
-	let manager = <_>::from_str(&yazi_toml)?;
-	let open = <_>::from_str(&yazi_toml)?;
-	let plugin = <_>::from_str(&yazi_toml)?;
-	let preview = <_>::from_str(&yazi_toml)?;
-	let tasks = <_>::from_str(&yazi_toml)?;
-	let theme = <_>::from_str(&theme_toml)?;
-	let input = <_>::from_str(&yazi_toml)?;
-	let confirm = <_>::from_str(&yazi_toml)?;
-	let pick = <_>::from_str(&yazi_toml)?;
-	let which = <_>::from_str(&yazi_toml)?;
-
-	LAYOUT.with(<_>::default);
-
-	KEYMAP.init(keymap);
-	LOG.init(log);
-	MANAGER.init(manager);
-	OPEN.init(open);
-	PLUGIN.init(plugin);
-	PREVIEW.init(preview);
-	TASKS.init(tasks);
-	THEME.init(theme);
-	INPUT.init(input);
-	CONFIRM.init(confirm);
-	PICK.init(pick);
-	WHICH.init(which);
-
-	Ok(())
-}
-
 pub fn init() -> anyhow::Result<()> {
 	if let Err(e) = try_init(true) {
 		eprintln!("{e}");
@@ -115,6 +75,46 @@ Please change `create_title = "Create:"` to `create_title = ["Create:", "Create 
 "#
 		);
 	}
+
+	Ok(())
+}
+
+fn try_init(merge: bool) -> anyhow::Result<()> {
+	let (yazi_toml, keymap_toml, theme_toml) = if merge {
+		let p = Xdg::config_dir();
+		(Preset::yazi(&p)?, Preset::keymap(&p)?, Preset::theme(&p)?)
+	} else {
+		use yazi_macro::config_preset as preset;
+		(preset!("yazi"), preset!("keymap"), preset!("theme"))
+	};
+
+	let keymap = <_>::from_str(&keymap_toml)?;
+	let log = <_>::from_str(&yazi_toml)?;
+	let manager = <_>::from_str(&yazi_toml)?;
+	let open = <_>::from_str(&yazi_toml)?;
+	let plugin = <_>::from_str(&yazi_toml)?;
+	let preview = <_>::from_str(&yazi_toml)?;
+	let tasks = <_>::from_str(&yazi_toml)?;
+	let theme = <_>::from_str(&theme_toml)?;
+	let input = <_>::from_str(&yazi_toml)?;
+	let confirm = <_>::from_str(&yazi_toml)?;
+	let pick = <_>::from_str(&yazi_toml)?;
+	let which = <_>::from_str(&yazi_toml)?;
+
+	LAYOUT.with(<_>::default);
+
+	KEYMAP.init(keymap);
+	LOG.init(log);
+	MANAGER.init(manager);
+	OPEN.init(open);
+	PLUGIN.init(plugin);
+	PREVIEW.init(preview);
+	TASKS.init(tasks);
+	THEME.init(theme);
+	INPUT.init(input);
+	CONFIRM.init(confirm);
+	PICK.init(pick);
+	WHICH.init(which);
 
 	Ok(())
 }
