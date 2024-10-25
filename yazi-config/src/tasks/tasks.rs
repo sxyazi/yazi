@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use anyhow::Context;
 use serde::Deserialize;
 use validator::Validate;
 
@@ -27,9 +28,10 @@ impl FromStr for Tasks {
 			tasks: Tasks,
 		}
 
-		let tasks = toml::from_str::<Outer>(s)?.tasks;
-		tasks.validate()?;
+		let outer = toml::from_str::<Outer>(s)
+			.context("Failed to parse the [tasks] section in your yazi.toml")?;
+		outer.tasks.validate()?;
 
-		Ok(tasks)
+		Ok(outer.tasks)
 	}
 }

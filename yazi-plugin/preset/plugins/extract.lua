@@ -105,7 +105,7 @@ function M:tidy(from, to, tmp)
 	fs.remove("dir", tmp)
 end
 
-function M.tmp_name(url) return ".tmp_" .. ya.md5(string.format("extract//%s//%.10f", url, ya.time())) end
+function M.tmp_name(url) return ".tmp_" .. ya.hash(string.format("extract//%s//%.10f", url, ya.time())) end
 
 function M.trim_ext(name)
 	-- stylua: ignore

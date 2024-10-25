@@ -1,5 +1,6 @@
 use std::{collections::HashMap, path::Path, str::FromStr};
 
+use anyhow::Context;
 use indexmap::IndexSet;
 use serde::{Deserialize, Deserializer};
 use yazi_shared::MIME_DIR;
@@ -55,9 +56,11 @@ impl Open {
 }
 
 impl FromStr for Open {
-	type Err = toml::de::Error;
+	type Err = anyhow::Error;
 
-	fn from_str(s: &str) -> Result<Self, Self::Err> { toml::from_str(s) }
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		toml::from_str(s).context("Failed to parse the [open] or [opener] section in your yazi.toml")
+	}
 }
 
 impl<'de> Deserialize<'de> for Open {

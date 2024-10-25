@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use anyhow::Context;
 use serde::{Deserialize, Deserializer};
 
 #[derive(Debug)]
@@ -8,9 +9,11 @@ pub struct Log {
 }
 
 impl FromStr for Log {
-	type Err = toml::de::Error;
+	type Err = anyhow::Error;
 
-	fn from_str(s: &str) -> Result<Self, Self::Err> { toml::from_str(s) }
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		toml::from_str(s).context("Failed to parse the [log] section in your yazi.toml")
+	}
 }
 
 impl<'de> Deserialize<'de> for Log {

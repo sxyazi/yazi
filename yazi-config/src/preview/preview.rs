@@ -1,7 +1,7 @@
 use std::{borrow::Cow, path::PathBuf, str::FromStr, time::{SystemTime, UNIX_EPOCH}};
 
 use anyhow::Context;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use validator::Validate;
 use yazi_shared::fs::expand_path;
 
@@ -49,6 +49,20 @@ impl FromStr for Preview {
 	type Err = anyhow::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		let preview: Self =
+			toml::from_str(s).context("Failed to parse the [preview] section in your yazi.toml")?;
+
+		std::fs::create_dir_all(&preview.cache_dir).context("Failed to create cache directory")?;
+
+		Ok(preview)
+	}
+}
+
+impl<'de> Deserialize<'de> for Preview {
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+	where
+		D: Deserializer<'de>,
+	{
 		#[derive(Deserialize)]
 		struct Outer {
 			preview: Shadow,
@@ -74,27 +88,26 @@ impl FromStr for Preview {
 			ueberzug_offset: (f32, f32, f32, f32),
 		}
 
-		let preview = toml::from_str::<Outer>(s)?.preview;
-		preview.validate()?;
-
-		let cache_dir =
-			preview.cache_dir.filter(|p| !p.is_empty()).map_or_else(Xdg::cache_dir, expand_path);
-		std::fs::create_dir_all(&cache_dir).context("Failed to create cache directory")?;
+		let preview = Outer::deserialize(deserializer)?.preview;
+		preview.validate().map_err(serde::de::Error::custom)?;
 
 		Ok(Preview {
-			wrap: preview.wrap,
-			tab_size: preview.tab_size,
-			max_width: preview.max_width,
+			wrap:       preview.wrap,
+			tab_size:   preview.tab_size,
+			max_width:  preview.max_width,
 			max_height: preview.max_height,
 
-			cache_dir,
+			cache_dir: preview
+				.cache_dir
+				.filter(|p| !p.is_empty())
+				.map_or_else(Xdg::cache_dir, expand_path),
 
-			image_delay: preview.image_delay,
-			image_filter: preview.image_filter,
-			image_quality: preview.image_quality,
+			image_delay:    preview.image_delay,
+			image_filter:   preview.image_filter,
+			image_quality:  preview.image_quality,
 			sixel_fraction: preview.sixel_fraction,
 
-			ueberzug_scale: preview.ueberzug_scale,
+			ueberzug_scale:  preview.ueberzug_scale,
 			ueberzug_offset: preview.ueberzug_offset,
 		})
 	}

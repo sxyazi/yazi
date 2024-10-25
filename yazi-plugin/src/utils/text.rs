@@ -9,8 +9,16 @@ use crate::CLIPBOARD;
 
 impl Utils {
 	pub(super) fn text(lua: &Lua, ya: &Table) -> mlua::Result<()> {
+		// TODO: deprecate this in the future
 		ya.raw_set(
 			"md5",
+			lua.create_async_function(|_, s: mlua::String| async move {
+				Ok(format!("{:x}", Md5::new_with_prefix(s.as_bytes()).finalize()))
+			})?,
+		)?;
+
+		ya.raw_set(
+			"hash",
 			lua.create_async_function(|_, s: mlua::String| async move {
 				Ok(format!("{:x}", Md5::new_with_prefix(s.as_bytes()).finalize()))
 			})?,

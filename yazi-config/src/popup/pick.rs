@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use anyhow::Context;
 use serde::Deserialize;
 
 use super::{Offset, Origin};
@@ -17,7 +18,7 @@ impl Pick {
 }
 
 impl FromStr for Pick {
-	type Err = toml::de::Error;
+	type Err = anyhow::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		#[derive(Deserialize)]
@@ -25,6 +26,9 @@ impl FromStr for Pick {
 			pick: Pick,
 		}
 
-		Ok(toml::from_str::<Outer>(s)?.pick)
+		let outer =
+			toml::from_str::<Outer>(s).context("Failed to parse the [pick] section in your yazi.toml")?;
+
+		Ok(outer.pick)
 	}
 }
