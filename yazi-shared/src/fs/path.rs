@@ -170,6 +170,26 @@ pub fn path_relative_to<'a>(path: &'a Path, root: &Path) -> Cow<'a, Path> {
 	Cow::from(buf)
 }
 
+pub fn backslash_to_slash(p: &Path) -> Cow<Path> {
+	let bytes = p.as_os_str().as_encoded_bytes();
+
+	// Fast path to skip if there are no backslashes
+	let skip_len = bytes.iter().take_while(|&&b| b != b'\\').count();
+	if skip_len >= bytes.len() {
+		return Cow::Borrowed(p);
+	}
+
+	let (skip, rest) = bytes.split_at(skip_len);
+	let mut out = Vec::new();
+	out.try_reserve_exact(bytes.len()).unwrap_or_else(|_| panic!());
+	out.extend(skip);
+
+	for &b in rest {
+		out.push(if b == b'\\' { b'/' } else { b });
+	}
+	Cow::Owned(PathBuf::from(unsafe { OsString::from_encoded_bytes_unchecked(out) }))
+}
+
 #[cfg(test)]
 mod tests {
 	use std::{borrow::Cow, path::Path};
