@@ -23,6 +23,9 @@ jobs:
 
       - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: rust
+          shared-key: ${{ matrix.os }}@debug
 
       - name: Build
         run: cargo build --verbose

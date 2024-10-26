@@ -67,7 +67,7 @@ impl Cha {
 			reg.add_method("perm", |_, _me, ()| {
 				Ok(
 					#[cfg(unix)]
-					Some(yazi_shared::fs::permissions(_me.perm, _me.is_dummy())),
+					Some(yazi_shared::fs::permissions(_me.mode, _me.is_dummy())),
 					#[cfg(windows)]
 					None::<String>,
 				)
@@ -95,7 +95,7 @@ impl Cha {
 					warn_deprecated(lua.named_registry_value::<RtRef>("rt")?.current());
 					Ok(
 						#[cfg(unix)]
-						Some(yazi_shared::fs::permissions(_me.perm, _me.is_dummy())),
+						Some(yazi_shared::fs::permissions(_me.mode, _me.is_dummy())),
 						#[cfg(windows)]
 						None::<String>,
 					)
@@ -131,7 +131,7 @@ impl Cha {
 					ctime: parse_time(t.raw_get("ctime").ok())?,
 					mtime: parse_time(t.raw_get("mtime").ok())?,
 					#[cfg(unix)]
-					perm: t.raw_get("permissions").unwrap_or_default(),
+					mode: t.raw_get("mode").unwrap_or_default(),
 					#[cfg(unix)]
 					uid: t.raw_get("uid").unwrap_or_default(),
 					#[cfg(unix)]

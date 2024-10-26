@@ -19,6 +19,9 @@ jobs:
 
       - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: rust
+          shared-key: ubuntu-latest@debug
 
       - name: Clippy
         run: cargo clippy --all
@@ -36,6 +39,9 @@ jobs:
 
       - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: rust
+          shared-key: ubuntu-latest@debug
 
       - name: Rustfmt
         run: cargo +nightly fmt --all -- --check
