@@ -39,6 +39,7 @@ tokio-stream  = { workspace = true }
 tokio-util    = { workspace = true }
 tracing       = { workspace = true }
 unicode-width = { workspace = true }
+which = "6.0.3"
 yazi-prebuild = "0.1.2"
 
 [target."cfg(unix)".dependencies]

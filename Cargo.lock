@@ -3398,6 +3398,7 @@ dependencies = [
  "tracing",
  "unicode-width 0.2.0",
  "uzers",
+ "which",
  "yazi-adapter",
  "yazi-boot",
  "yazi-config",

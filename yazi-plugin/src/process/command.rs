@@ -23,12 +23,17 @@ impl Command {
 			Ok(Self { inner })
 		})?;
 
+		let which = lua.create_function(|_, (program,): (String,)| {
+			Ok(which::which(program).ok().and_then(|path| path.to_str().map(str::to_string)))
+		})?;
+
 		let command = lua.create_table_from([
 			// Stdio
 			("NULL", NULL),
 			("PIPED", PIPED),
 			("INHERIT", INHERIT),
 		])?;
+		command.raw_set("which", which)?;
 
 		command.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
