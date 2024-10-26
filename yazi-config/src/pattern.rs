@@ -84,6 +84,7 @@ mod tests {
 		Pattern::from_str(glob).unwrap().match_path(path, false)
 	}
 
+	#[cfg(unix)]
 	#[test]
 	fn test_unix() {
 		// Wildcard
@@ -117,6 +118,7 @@ mod tests {
 		assert!(!matches("/*.md", "/foo/bar.md"));
 	}
 
+	#[cfg(windows)]
 	#[test]
 	fn test_windows() {
 		// Wildcard
