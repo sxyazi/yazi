@@ -258,14 +258,14 @@ async fn _copy_with_progress(from: PathBuf, to: PathBuf, cha: Cha) -> io::Result
 		tokio::task::spawn_blocking(move || {
 			let mut reader = std::fs::File::open(from)?;
 			let mut writer = std::fs::OpenOptions::new()
-				.mode(cha.perm as u32)
+				.mode(cha.mode as u32)
 				.write(true)
 				.create(true)
 				.truncate(true)
 				.open(to)?;
 
 			let written = std::io::copy(&mut reader, &mut writer)?;
-			unsafe { libc::fchmod(writer.as_raw_fd(), cha.perm) };
+			unsafe { libc::fchmod(writer.as_raw_fd(), cha.mode) };
 			writer.set_times(ft).ok();
 
 			Ok(written)
