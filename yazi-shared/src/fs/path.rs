@@ -170,6 +170,7 @@ pub fn path_relative_to<'a>(path: &'a Path, root: &Path) -> Cow<'a, Path> {
 	Cow::from(buf)
 }
 
+#[cfg(windows)]
 pub fn backslash_to_slash(p: &Path) -> Cow<Path> {
 	let bytes = p.as_os_str().as_encoded_bytes();
 
