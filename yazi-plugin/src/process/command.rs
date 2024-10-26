@@ -14,13 +14,13 @@ const INHERIT: u8 = 2;
 
 impl Command {
     pub fn install(lua: &Lua) -> mlua::Result<()> {
-        let new = lua.create_function(|lua, (table, program): (Table, String)| {
+        let new = lua.create_function(|_, (_, program): (Table, String)| {
             let mut inner = tokio::process::Command::new(program);
             inner.kill_on_drop(true)
                 .stdin(Stdio::null())
                 .stdout(Stdio::null())
                 .stderr(Stdio::null());
-            Ok(Command { inner })
+            Ok(Self { inner })
         })?;
 
         let command = lua.create_table_from([
@@ -30,21 +30,20 @@ impl Command {
         ])?;
         
         command.set_metatable(Some(lua.create_table_from([("__call", new)])?));
-        lua.globals().set("Command", command)
+        lua.globals().raw_set("Command", command)
     }
 }
 
 impl UserData for Command {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+        #[inline]
         fn make_stdio(v: Value) -> mlua::Result<Stdio> {
             match v {
-                Value::Integer(n) => {
-                    Ok(match n as u8 {
-                        PIPED => Stdio::piped(),
-                        INHERIT => Stdio::inherit(),
-                        _ => Stdio::null(),
-                    })
-                }
+                Value::Integer(n) => Ok(match n as u8 {
+                    PIPED => Stdio::piped(),
+                    INHERIT => Stdio::inherit(),
+                    _ => Stdio::null(),
+                }),
                 Value::UserData(ud) => {
                     if let Ok(stdin) = ud.take::<ChildStdin>() {
                         Ok(stdin.try_into()?)
@@ -57,21 +56,20 @@ impl UserData for Command {
                     }
                 }
                 _ => Err(
-                    "must be one of Command.NULL, Command.PIPED, Command.INHERIT, or a ChildStdin, ChildStdout, or ChildStderr".into_lua_err(),
-                )
+                    "must be one of Command.NULL, Command.PIPED, Command.INHERIT, or a ChildStdin, ChildStdout, or ChildStderr"
+                        .into_lua_err(),
+                ),
             }
         }
 
         methods.add_function_mut("arg", |_, (ud, arg): (AnyUserData, mlua::String)| {
-            ud.borrow_mut::<Self>()?.inner.arg(arg.to_str()?);
+            ud.borrow_mut::<Self>()?.inner.arg(arg.to_string_lossy());
             Ok(ud)
         });
 
         methods.add_function_mut("args", |_, (ud, args): (AnyUserData, Vec<mlua::String>)| {
-            let mut me = ud.borrow_mut::<Self>()?;
-            for arg in args {
-                me.inner.arg(arg.to_str()?);
-            }
+            let args: Vec<_> = args.iter().map(|arg| arg.to_string_lossy()).collect();
+            ud.borrow_mut::<Self>()?.inner.args(&args);
             Ok(ud)
         });
 
@@ -85,7 +83,7 @@ impl UserData for Command {
             |_, (ud, key, value): (AnyUserData, mlua::String, mlua::String)| {
                 ud.borrow_mut::<Self>()?
                     .inner
-                    .env(key.to_str()?, value.to_str()?);
+                    .env(key.to_string_lossy(), value.to_string_lossy());
                 Ok(ud)
             },
         );
