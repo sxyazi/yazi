@@ -26,7 +26,7 @@ pub struct Cha {
 	pub ctime: Option<SystemTime>,
 	pub mtime: Option<SystemTime>,
 	#[cfg(unix)]
-	pub perm:  libc::mode_t,
+	pub mode:  libc::mode_t,
 	#[cfg(unix)]
 	pub uid:   libc::uid_t,
 	#[cfg(unix)]
@@ -57,7 +57,7 @@ impl From<Metadata> for Cha {
 			mtime: m.modified().ok(),
 
 			#[cfg(unix)]
-			perm: {
+			mode: {
 				use std::os::unix::prelude::PermissionsExt;
 				m.permissions().mode() as _
 			},
@@ -85,7 +85,7 @@ impl From<FileType> for Cha {
 		let mut kind = ChaKind::DUMMY;
 
 		#[cfg(unix)]
-		let perm = {
+		let mode = {
 			use std::os::unix::fs::FileTypeExt;
 			if t.is_dir() {
 				kind |= ChaKind::DIR;
@@ -118,7 +118,7 @@ impl From<FileType> for Cha {
 		Self {
 			kind,
 			#[cfg(unix)]
-			perm,
+			mode,
 			..Default::default()
 		}
 	}
@@ -173,7 +173,7 @@ impl Cha {
 			&& unix_either!(self.ctime == c.ctime, true)
 			&& self.btime == c.btime
 			&& self.kind == c.kind
-			&& unix_either!(self.perm == c.perm, true)
+			&& unix_either!(self.mode == c.mode, true)
 	}
 }
 
@@ -195,27 +195,27 @@ impl Cha {
 
 	#[inline]
 	pub const fn is_block(&self) -> bool {
-		unix_either!(self.perm & libc::S_IFMT == libc::S_IFBLK, false)
+		unix_either!(self.mode & libc::S_IFMT == libc::S_IFBLK, false)
 	}
 
 	#[inline]
 	pub const fn is_char(&self) -> bool {
-		unix_either!(self.perm & libc::S_IFMT == libc::S_IFCHR, false)
+		unix_either!(self.mode & libc::S_IFMT == libc::S_IFCHR, false)
 	}
 
 	#[inline]
 	pub const fn is_fifo(&self) -> bool {
-		unix_either!(self.perm & libc::S_IFMT == libc::S_IFIFO, false)
+		unix_either!(self.mode & libc::S_IFMT == libc::S_IFIFO, false)
 	}
 
 	#[inline]
 	pub const fn is_sock(&self) -> bool {
-		unix_either!(self.perm & libc::S_IFMT == libc::S_IFSOCK, false)
+		unix_either!(self.mode & libc::S_IFMT == libc::S_IFSOCK, false)
 	}
 
 	#[inline]
-	pub const fn is_exec(&self) -> bool { unix_either!(self.perm & libc::S_IXUSR != 0, false) }
+	pub const fn is_exec(&self) -> bool { unix_either!(self.mode & libc::S_IXUSR != 0, false) }
 
 	#[inline]
-	pub const fn is_sticky(&self) -> bool { unix_either!(self.perm & libc::S_ISVTX != 0, false) }
+	pub const fn is_sticky(&self) -> bool { unix_either!(self.mode & libc::S_ISVTX != 0, false) }
 }
