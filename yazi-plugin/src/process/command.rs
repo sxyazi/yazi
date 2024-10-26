@@ -1,4 +1,5 @@
 use std::process::Stdio;
+use std::ffi::OsString;
 use mlua::{AnyUserData, ExternalError, IntoLuaMulti, Lua, Table, UserData, Value};
 use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
 use super::{Child, output::Output};
@@ -63,27 +64,32 @@ impl UserData for Command {
         }
 
         methods.add_function_mut("arg", |_, (ud, arg): (AnyUserData, mlua::String)| {
-            ud.borrow_mut::<Self>()?.inner.arg(arg.to_string_lossy());
+            let arg = OsString::from(arg.to_str()?);
+            ud.borrow_mut::<Self>()?.inner.arg(arg);
             Ok(ud)
         });
 
         methods.add_function_mut("args", |_, (ud, args): (AnyUserData, Vec<mlua::String>)| {
-            let args: Vec<_> = args.iter().map(|arg| arg.to_string_lossy()).collect();
+            let args: Vec<OsString> = args
+                .iter()
+                .map(|arg| OsString::from(arg.to_str().unwrap()))
+                .collect();
             ud.borrow_mut::<Self>()?.inner.args(&args);
             Ok(ud)
         });
 
         methods.add_function_mut("cwd", |_, (ud, dir): (AnyUserData, mlua::String)| {
-            ud.borrow_mut::<Self>()?.inner.current_dir(dir.to_str()?);
+            let dir = OsString::from(dir.to_str()?);
+            ud.borrow_mut::<Self>()?.inner.current_dir(dir);
             Ok(ud)
         });
 
         methods.add_function_mut(
             "env",
             |_, (ud, key, value): (AnyUserData, mlua::String, mlua::String)| {
-                ud.borrow_mut::<Self>()?
-                    .inner
-                    .env(key.to_string_lossy(), value.to_string_lossy());
+                let key = OsString::from(key.to_str()?);
+                let value = OsString::from(value.to_str()?);
+                ud.borrow_mut::<Self>()?.inner.env(key, value);
                 Ok(ud)
             },
         );
