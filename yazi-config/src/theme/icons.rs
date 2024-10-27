@@ -27,6 +27,7 @@ impl Icons {
 		let f = |s: &str| match s {
 			"dir" => file.is_dir(),
 			"hidden" => file.is_hidden(),
+			"hidden_dir" => file.is_hidden() && file.is_dir(),
 			"link" => file.is_link(),
 			"orphan" => file.is_orphan(),
 			"dummy" => file.is_dummy(),
