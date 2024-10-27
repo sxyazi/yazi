@@ -25,7 +25,7 @@ impl Layout {
 }
 
 impl UserData for Layout {
-	fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_function_mut("direction", |_, (ud, value): (AnyUserData, bool)| {
 			ud.borrow_mut::<Self>()?.direction = value;
 			Ok(ud)

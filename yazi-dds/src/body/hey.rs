@@ -23,8 +23,8 @@ impl From<BodyHey> for Body<'_> {
 	fn from(value: BodyHey) -> Self { Self::Hey(value) }
 }
 
-impl IntoLua<'_> for BodyHey {
-	fn into_lua(self, _: &Lua) -> mlua::Result<Value<'_>> {
+impl IntoLua for BodyHey {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> {
 		Err("BodyHey cannot be converted to Lua").into_lua_err()
 	}
 }

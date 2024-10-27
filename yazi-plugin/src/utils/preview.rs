@@ -16,7 +16,7 @@ pub struct PreviewLock {
 	pub data:   Vec<Box<dyn Renderable + Send>>,
 }
 
-impl<'a> TryFrom<Table<'a>> for PreviewLock {
+impl TryFrom<Table> for PreviewLock {
 	type Error = mlua::Error;
 
 	fn try_from(t: Table) -> Result<Self, Self::Error> {
@@ -43,9 +43,9 @@ impl Utils {
 
 				let inner = match Highlighter::new(&lock.url).highlight(lock.skip, *area).await {
 					Ok(text) => text,
-					Err(e @ PeekError::Exceed(max)) => return (e.to_string(), max).into_lua_multi(lua),
+					Err(e @ PeekError::Exceed(max)) => return (e.to_string(), max).into_lua_multi(&lua),
 					Err(e @ PeekError::Unexpected(_)) => {
-						return (e.to_string(), Value::Nil).into_lua_multi(lua);
+						return (e.to_string(), Value::Nil).into_lua_multi(&lua);
 					}
 				};
 
@@ -56,7 +56,7 @@ impl Utils {
 				})];
 
 				emit!(Call(Cmd::new("update_peeked").with_any("lock", lock), Layer::Manager));
-				(Value::Nil, Value::Nil).into_lua_multi(lua)
+				(Value::Nil, Value::Nil).into_lua_multi(&lua)
 			})?,
 		)?;
 

@@ -20,7 +20,8 @@ impl Line {
 		let new = lua.create_function(|_, (_, value): (Table, Value)| Line::try_from(value))?;
 
 		let parse = lua.create_function(|_, code: mlua::String| {
-			let Some(line) = code.as_bytes().split_inclusive(|&b| b == b'\n').next() else {
+			let code = code.as_bytes();
+			let Some(line) = code.split_inclusive(|&b| b == b'\n').next() else {
 				return Ok(Line(Default::default()));
 			};
 
@@ -46,13 +47,13 @@ impl Line {
 	}
 }
 
-impl TryFrom<Value<'_>> for Line {
+impl TryFrom<Value> for Line {
 	type Error = mlua::Error;
 
 	fn try_from(value: Value) -> Result<Self, Self::Error> {
 		Ok(Self(match value {
 			Value::Table(tb) => return Self::try_from(tb),
-			Value::String(s) => s.to_string_lossy().into_owned().into(),
+			Value::String(s) => s.to_string_lossy().into(),
 			Value::UserData(ud) => {
 				if let Ok(Span(span)) = ud.take() {
 					span.into()
@@ -68,14 +69,14 @@ impl TryFrom<Value<'_>> for Line {
 	}
 }
 
-impl TryFrom<Table<'_>> for Line {
+impl TryFrom<Table> for Line {
 	type Error = mlua::Error;
 
 	fn try_from(tb: Table) -> Result<Self, Self::Error> {
 		let mut spans = Vec::with_capacity(tb.raw_len());
 		for v in tb.sequence_values() {
 			match v? {
-				Value::String(s) => spans.push(s.to_string_lossy().into_owned().into()),
+				Value::String(s) => spans.push(s.to_string_lossy().into()),
 				Value::UserData(ud) => {
 					if let Ok(Span(span)) = ud.take() {
 						spans.push(span);
@@ -94,7 +95,7 @@ impl TryFrom<Table<'_>> for Line {
 }
 
 impl UserData for Line {
-	fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		crate::impl_style_method!(methods, 0.style);
 		crate::impl_style_shorthands!(methods, 0.style);
 

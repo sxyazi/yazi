@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use mlua::{ExternalError, ExternalResult, HookTriggers, Table, TableExt};
+use mlua::{ExternalError, ExternalResult, HookTriggers, ObjectLike, Table, VmState};
 use tokio::{runtime::Handle, select};
 use tokio_util::sync::CancellationToken;
 use tracing::error;
@@ -29,7 +29,11 @@ pub fn peek(
 			lua.set_hook(
 				HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
 				move |_, _| {
-					if ct1.is_cancelled() { Err("Peek task cancelled".into_lua_err()) } else { Ok(()) }
+					if ct1.is_cancelled() {
+						Err("Peek task cancelled".into_lua_err())
+					} else {
+						Ok(VmState::Continue)
+					}
 				},
 			);
 

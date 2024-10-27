@@ -17,16 +17,16 @@ impl Style {
 	}
 }
 
-impl<'a> TryFrom<Table<'a>> for Style {
+impl TryFrom<Table> for Style {
 	type Error = mlua::Error;
 
-	fn try_from(value: Table<'a>) -> Result<Self, Self::Error> {
+	fn try_from(value: Table) -> Result<Self, Self::Error> {
 		let mut style = ratatui::style::Style::default();
-		if let Ok(fg) = value.raw_get::<_, mlua::String>("fg") {
-			style.fg = Some(Color::from_str(fg.to_str()?).into_lua_err()?.into());
+		if let Ok(fg) = value.raw_get::<mlua::String>("fg") {
+			style.fg = Some(Color::from_str(&fg.to_str()?).into_lua_err()?.into());
 		}
-		if let Ok(bg) = value.raw_get::<_, mlua::String>("bg") {
-			style.bg = Some(Color::from_str(bg.to_str()?).into_lua_err()?.into());
+		if let Ok(bg) = value.raw_get::<mlua::String>("bg") {
+			style.bg = Some(Color::from_str(&bg.to_str()?).into_lua_err()?.into());
 		}
 		style.add_modifier =
 			ratatui::style::Modifier::from_bits_truncate(value.raw_get("modifier").unwrap_or_default());
@@ -34,10 +34,10 @@ impl<'a> TryFrom<Table<'a>> for Style {
 	}
 }
 
-impl<'a> TryFrom<Value<'a>> for Style {
+impl TryFrom<Value> for Style {
 	type Error = mlua::Error;
 
-	fn try_from(value: Value<'a>) -> Result<Self, Self::Error> {
+	fn try_from(value: Value) -> Result<Self, Self::Error> {
 		Ok(Self(match value {
 			Value::Nil => Default::default(),
 			Value::Table(tb) => Self::try_from(tb)?.0,
@@ -52,7 +52,7 @@ impl From<yazi_shared::theme::Style> for Style {
 }
 
 impl UserData for Style {
-	fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		crate::impl_style_shorthands!(methods, 0);
 
 		methods.add_function_mut("patch", |_, (ud, value): (AnyUserData, Value)| {

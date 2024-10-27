@@ -23,10 +23,10 @@ impl App {
 			return;
 		};
 
-		_ = Lives::scope(&self.cx, |_| {
+		_ = Lives::scope(&self.cx, || {
 			let body = payload.body.into_lua(&LUA)?;
 			for f in map.values() {
-				if let Err(e) = f.call::<_, ()>(body.clone()) {
+				if let Err(e) = f.call::<()>(body.clone()) {
 					error!("Failed to call `{kind}` handler: {e}");
 				}
 			}

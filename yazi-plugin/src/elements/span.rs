@@ -12,12 +12,12 @@ impl Span {
 	}
 }
 
-impl TryFrom<Value<'_>> for Span {
+impl TryFrom<Value> for Span {
 	type Error = mlua::Error;
 
-	fn try_from(value: Value<'_>) -> Result<Self, Self::Error> {
+	fn try_from(value: Value) -> Result<Self, Self::Error> {
 		Ok(Self(match value {
-			Value::String(s) => s.to_string_lossy().into_owned().into(),
+			Value::String(s) => s.to_string_lossy().into(),
 			Value::UserData(ud) => {
 				if let Ok(Span(span)) = ud.take() {
 					span
@@ -31,7 +31,7 @@ impl TryFrom<Value<'_>> for Span {
 }
 
 impl UserData for Span {
-	fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		crate::impl_style_method!(methods, 0.style);
 		crate::impl_style_shorthands!(methods, 0.style);
 

@@ -28,8 +28,8 @@ impl<T: StreamExt<Item = Result<String, InputError>>> InputRx<T> {
 }
 
 impl<T: StreamExt<Item = Result<String, InputError>> + 'static> UserData for InputRx<T> {
-	fn add_methods<'lua, M: LuaUserDataMethods<'lua, Self>>(methods: &mut M) {
-		methods.add_async_method_mut("recv", |_, me, ()| async move {
+	fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
+		methods.add_async_method_mut("recv", |_, mut me, ()| async move {
 			let mut inner = unsafe { Pin::new_unchecked(&mut me.inner) };
 			Ok(inner.next().await.map(Self::parse).unwrap_or((None, 0)))
 		});

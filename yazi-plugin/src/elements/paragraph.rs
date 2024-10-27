@@ -41,7 +41,7 @@ impl Paragraph {
 						.load(mlua::chunk! {
 							return ui.Text($lines):area($area)
 						})
-						.call::<_, MultiValue>(())
+						.call::<MultiValue>(())
 				})?,
 			),
 			(
@@ -52,7 +52,7 @@ impl Paragraph {
 						.load(mlua::chunk! {
 							return ui.Text[$key]
 						})
-						.call::<_, MultiValue>(())
+						.call::<MultiValue>(())
 				})?,
 			),
 		])?;

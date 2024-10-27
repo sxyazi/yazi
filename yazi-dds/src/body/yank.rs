@@ -32,8 +32,8 @@ impl<'a> From<BodyYank<'a>> for Body<'a> {
 	fn from(value: BodyYank<'a>) -> Self { Self::Yank(value) }
 }
 
-impl IntoLua<'_> for BodyYank<'static> {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value<'_>> {
+impl IntoLua for BodyYank<'static> {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		if let Some(Cow::Owned(urls)) = Some(self.urls).filter(|_| !self.dummy) {
 			BodyYankIter { cut: self.cut, urls: urls.into_iter().collect() }.into_lua(lua)
 		} else {
@@ -49,11 +49,11 @@ pub struct BodyYankIter {
 }
 
 impl UserData for BodyYankIter {
-	fn add_fields<'lua, F: mlua::UserDataFields<'lua, Self>>(fields: &mut F) {
+	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("cut", |_, me| Ok(me.cut));
 	}
 
-	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.urls.len()));
 
 		methods.add_meta_method(MetaMethod::Index, |lua, me, idx: usize| {

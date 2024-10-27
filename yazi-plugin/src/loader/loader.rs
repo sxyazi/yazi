@@ -63,9 +63,9 @@ impl Loader {
 		Ok(())
 	}
 
-	pub fn load<'a>(&self, lua: &'a Lua, id: &str) -> mlua::Result<Table<'a>> {
-		let loaded: Table = lua.globals().raw_get::<_, Table>("package")?.raw_get("loaded")?;
-		if let Ok(t) = loaded.raw_get::<_, Table>(id) {
+	pub fn load(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
+		let loaded: Table = lua.globals().raw_get::<Table>("package")?.raw_get("loaded")?;
+		if let Ok(t) = loaded.raw_get::<Table>(id) {
 			return Ok(t);
 		}
 
@@ -79,14 +79,14 @@ impl Loader {
 		Ok(t)
 	}
 
-	pub fn try_load<'a>(&self, lua: &'a Lua, id: &str) -> mlua::Result<Table<'a>> {
-		let loaded: Table = lua.globals().raw_get::<_, Table>("package")?.raw_get("loaded")?;
+	pub fn try_load(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
+		let loaded: Table = lua.globals().raw_get::<Table>("package")?.raw_get("loaded")?;
 		loaded.raw_get(id)
 	}
 
-	pub fn load_with<'a>(&self, lua: &'a Lua, id: &str, chunk: &Chunk) -> mlua::Result<Table<'a>> {
-		let loaded: Table = lua.globals().raw_get::<_, Table>("package")?.raw_get("loaded")?;
-		if let Ok(t) = loaded.raw_get::<_, Table>(id) {
+	pub fn load_with(&self, lua: &Lua, id: &str, chunk: &Chunk) -> mlua::Result<Table> {
+		let loaded: Table = lua.globals().raw_get::<Table>("package")?.raw_get("loaded")?;
+		if let Ok(t) = loaded.raw_get::<Table>(id) {
 			return Ok(t);
 		}
 

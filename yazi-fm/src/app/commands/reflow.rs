@@ -23,7 +23,7 @@ impl App {
 		let Some(size) = self.term.as_ref().and_then(|t| t.size().ok()) else { return };
 		let mut layout = LAYOUT.get();
 
-		let result = Lives::scope(&self.cx, |_| {
+		let result = Lives::scope(&self.cx, || {
 			let comps = Root::reflow((Position::ORIGIN, size).into())?;
 
 			for v in comps.sequence_values::<Value>() {
@@ -33,10 +33,10 @@ impl App {
 				};
 
 				let id: mlua::String = t.get("_id")?;
-				match id.to_str()? {
-					"current" => layout.current = *t.raw_get::<_, yazi_plugin::elements::Rect>("_area")?,
-					"preview" => layout.preview = *t.raw_get::<_, yazi_plugin::elements::Rect>("_area")?,
-					"progress" => layout.progress = *t.raw_get::<_, yazi_plugin::elements::Rect>("_area")?,
+				match id.to_str()?.as_ref() {
+					"current" => layout.current = *t.raw_get::<yazi_plugin::elements::Rect>("_area")?,
+					"preview" => layout.preview = *t.raw_get::<yazi_plugin::elements::Rect>("_area")?,
+					"progress" => layout.progress = *t.raw_get::<yazi_plugin::elements::Rect>("_area")?,
 					_ => {}
 				}
 			}

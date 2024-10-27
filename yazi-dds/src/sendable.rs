@@ -44,6 +44,7 @@ impl Sendable {
 				}
 			}
 			Value::Error(_) => Err("error is not supported".into_lua_err())?,
+			Value::Other(..) => Err("unknown data is not supported".into_lua_err())?,
 		})
 	}
 
@@ -117,6 +118,7 @@ impl Sendable {
 				}
 			}
 			Value::Error(_) => Err("error is not supported".into_lua_err())?,
+			Value::Other(..) => Err("unknown data is not supported".into_lua_err())?,
 		})
 	}
 

@@ -1,4 +1,4 @@
-use mlua::{ExternalError, ExternalResult, Table, TableExt};
+use mlua::{ExternalError, ExternalResult, ObjectLike, Table};
 use tokio::runtime::Handle;
 use yazi_config::LAYOUT;
 

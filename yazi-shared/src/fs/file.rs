@@ -21,11 +21,6 @@ impl Deref for File {
 	fn deref(&self) -> &Self::Target { &self.cha }
 }
 
-impl AsRef<File> for File {
-	#[inline]
-	fn as_ref(&self) -> &File { self }
-}
-
 impl File {
 	#[inline]
 	pub async fn from(url: Url) -> Result<Self> {

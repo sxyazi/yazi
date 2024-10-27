@@ -19,7 +19,7 @@ impl App {
 		let collision = COLLISION.swap(false, Ordering::Relaxed);
 		let frame = term
 			.draw(|f| {
-				_ = Lives::scope(&self.cx, |_| Ok(f.render_widget(Root::new(&self.cx), f.area())));
+				_ = Lives::scope(&self.cx, || Ok(f.render_widget(Root::new(&self.cx), f.area())));
 
 				if let Some(pos) = self.cx.cursor() {
 					f.set_cursor_position(pos);
@@ -48,7 +48,7 @@ impl App {
 
 		let frame = term
 			.draw_partial(|f| {
-				_ = Lives::scope(&self.cx, |_| {
+				_ = Lives::scope(&self.cx, || {
 					f.render_widget(crate::tasks::Progress, f.area());
 					f.render_widget(crate::notify::Notify::new(&self.cx), f.area());
 					Ok(())

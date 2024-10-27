@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use mlua::{AnyUserData, Lua, MetaMethod, UserDataMethods};
+use mlua::{AnyUserData, MetaMethod, UserData, UserDataMethods};
 
 use super::SCOPE;
 
@@ -16,13 +16,13 @@ impl Deref for Finder {
 
 impl Finder {
 	#[inline]
-	pub(super) fn make(inner: &yazi_core::tab::Finder) -> mlua::Result<AnyUserData<'static>> {
-		SCOPE.create_any_userdata(Self { inner })
+	pub(super) fn make(inner: &yazi_core::tab::Finder) -> mlua::Result<AnyUserData> {
+		SCOPE.create_userdata(Self { inner })
 	}
+}
 
-	pub(super) fn register(lua: &Lua) -> mlua::Result<()> {
-		lua.register_userdata_type::<Self>(|reg| {
-			reg.add_meta_method(MetaMethod::ToString, |_, me, ()| Ok(me.filter.to_string()));
-		})
+impl UserData for Finder {
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		methods.add_meta_method(MetaMethod::ToString, |_, me, ()| Ok(me.filter.to_string()));
 	}
 }

@@ -2,7 +2,7 @@ use mlua::{AnyUserData, ExternalError, Lua, MetaMethod, UserDataFields, UserData
 
 use crate::bindings::Cast;
 
-pub type UrlRef<'lua> = UserDataRef<'lua, yazi_shared::fs::Url>;
+pub type UrlRef = UserDataRef<yazi_shared::fs::Url>;
 
 pub struct Url;
 
@@ -27,7 +27,7 @@ impl Url {
 			});
 			reg.add_method("join", |lua, me, other: Value| {
 				Self::cast(lua, match other {
-					Value::String(s) => me.join(s.to_str()?),
+					Value::String(s) => me.join(s.to_str()?.as_ref()),
 					Value::UserData(ud) => me.join(&*ud.borrow::<yazi_shared::fs::Url>()?),
 					_ => Err("must be a string or a Url".into_lua_err())?,
 				})
@@ -37,21 +37,21 @@ impl Url {
 			});
 			reg.add_method("starts_with", |_, me, base: Value| {
 				Ok(match base {
-					Value::String(s) => me.starts_with(s.to_str()?),
+					Value::String(s) => me.starts_with(s.to_str()?.as_ref()),
 					Value::UserData(ud) => me.starts_with(&*ud.borrow::<yazi_shared::fs::Url>()?),
 					_ => Err("must be a string or a Url".into_lua_err())?,
 				})
 			});
 			reg.add_method("ends_with", |_, me, child: Value| {
 				Ok(match child {
-					Value::String(s) => me.ends_with(s.to_str()?),
+					Value::String(s) => me.ends_with(s.to_str()?.as_ref()),
 					Value::UserData(ud) => me.ends_with(&*ud.borrow::<yazi_shared::fs::Url>()?),
 					_ => Err("must be a string or a Url".into_lua_err())?,
 				})
 			});
 			reg.add_method("strip_prefix", |lua, me, base: Value| {
 				let path = match base {
-					Value::String(s) => me.strip_prefix(s.to_str()?),
+					Value::String(s) => me.strip_prefix(s.to_str()?.as_ref()),
 					Value::UserData(ud) => me.strip_prefix(&*ud.borrow::<yazi_shared::fs::Url>()?),
 					_ => Err("must be a string or a Url".into_lua_err())?,
 				};
@@ -68,7 +68,7 @@ impl Url {
 
 				let mut out = Vec::with_capacity(me.len() + other.len());
 				out.extend_from_slice(me);
-				out.extend_from_slice(other);
+				out.extend_from_slice(&other);
 				lua.create_string(out)
 			});
 		})
@@ -78,7 +78,7 @@ impl Url {
 		lua.globals().raw_set(
 			"Url",
 			lua.create_function(|lua, url: mlua::String| {
-				Self::cast(lua, yazi_shared::fs::Url::from(url.to_str()?))
+				Self::cast(lua, yazi_shared::fs::Url::from(url.to_str()?.as_ref()))
 			})?,
 		)
 	}

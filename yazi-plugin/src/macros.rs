@@ -78,3 +78,46 @@ macro_rules! impl_style_shorthands {
 		});
 	};
 }
+
+#[macro_export]
+macro_rules! impl_file_fields {
+	($fields:ident) => {
+		use mlua::UserDataFields;
+		use $crate::bindings::Cast;
+
+		$fields.add_field_method_get("cha", |lua, me| $crate::cha::Cha::cast(lua, me.cha));
+		$fields.add_field_method_get("url", |lua, me| $crate::url::Url::cast(lua, me.url_owned()));
+		$fields.add_field_method_get("link_to", |lua, me| {
+			me.link_to.clone().map(|u| $crate::url::Url::cast(lua, u)).transpose()
+		});
+
+		$fields.add_field_method_get("name", |lua, me| {
+			Some(me.name())
+				.filter(|s| !s.is_empty())
+				.map(|s| lua.create_string(s.as_encoded_bytes()))
+				.transpose()
+		});
+	};
+}
+
+#[macro_export]
+macro_rules! impl_file_methods {
+	($methods:ident) => {
+		use mlua::UserDataMethods;
+
+		$methods.add_method("icon", |lua, me, ()| {
+			use yazi_shared::theme::IconCache;
+			use $crate::bindings::{Cast, Icon};
+
+			match me.icon.get() {
+				IconCache::Missing => {
+					let matched = yazi_config::THEME.icons.matches(me);
+					me.icon.set(matched.map_or(IconCache::Undefined, IconCache::Icon));
+					matched.map(|i| Icon::cast(lua, i)).transpose()
+				}
+				IconCache::Undefined => Ok(None),
+				IconCache::Icon(cached) => Some(Icon::cast(lua, cached)).transpose(),
+			}
+		});
+	};
+}

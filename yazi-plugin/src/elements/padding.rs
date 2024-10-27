@@ -49,7 +49,7 @@ impl Padding {
 }
 
 impl UserData for Padding {
-	fn add_fields<'lua, F: mlua::UserDataFields<'lua, Self>>(fields: &mut F) {
+	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("left", |_, me| Ok(me.left));
 		fields.add_field_method_get("right", |_, me| Ok(me.right));
 		fields.add_field_method_get("top", |_, me| Ok(me.top));

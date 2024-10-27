@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use mlua::{AnyUserData, Lua, LuaSerdeExt, UserDataFields};
+use mlua::{AnyUserData, LuaSerdeExt, UserData, UserDataFields};
 
 use super::SCOPE;
 
@@ -16,15 +16,13 @@ impl Deref for Tasks {
 
 impl Tasks {
 	#[inline]
-	pub(super) fn make(inner: &yazi_core::tasks::Tasks) -> mlua::Result<AnyUserData<'static>> {
-		SCOPE.create_any_userdata(Self { inner })
+	pub(super) fn make(inner: &yazi_core::tasks::Tasks) -> mlua::Result<AnyUserData> {
+		SCOPE.create_userdata(Self { inner })
 	}
+}
 
-	pub(super) fn register(lua: &Lua) -> mlua::Result<()> {
-		lua.register_userdata_type::<Self>(|reg| {
-			reg.add_field_method_get("progress", |lua, me| lua.to_value(&me.progress))
-		})?;
-
-		Ok(())
+impl UserData for Tasks {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+		fields.add_field_method_get("progress", |lua, me| lua.to_value(&me.progress))
 	}
 }

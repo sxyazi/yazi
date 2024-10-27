@@ -1,4 +1,4 @@
-use mlua::TableExt;
+use mlua::ObjectLike;
 use yazi_config::LAYOUT;
 use yazi_proxy::{AppProxy, options::{PluginCallback, PluginOpt}};
 use yazi_shared::event::Cmd;

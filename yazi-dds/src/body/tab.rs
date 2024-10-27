@@ -17,7 +17,7 @@ impl<'a> From<BodyTab> for Body<'a> {
 	fn from(value: BodyTab) -> Self { Self::Tab(value) }
 }
 
-impl IntoLua<'_> for BodyTab {
+impl IntoLua for BodyTab {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua.create_table_from([("idx", self.idx)])?.into_lua(lua)
 	}

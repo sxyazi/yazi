@@ -7,15 +7,13 @@ use yazi_shared::{Id, RoCell, fs::Url};
 
 use crate::{Client, ID, PEERS, body::{Body, BodyBulk, BodyCd, BodyDelete, BodyHi, BodyHover, BodyMove, BodyMoveItem, BodyRename, BodyTab, BodyTrash, BodyYank}};
 
-pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function<'static>>>>> =
-	RoCell::new();
+pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function>>>> = RoCell::new();
 
-pub static REMOTE: RoCell<RwLock<HashMap<String, HashMap<String, Function<'static>>>>> =
-	RoCell::new();
+pub static REMOTE: RoCell<RwLock<HashMap<String, HashMap<String, Function>>>> = RoCell::new();
 
 macro_rules! sub {
 	($var:ident) => {
-		|plugin: &str, kind: &str, f: Function<'static>| {
+		|plugin: &str, kind: &str, f: Function| {
 			let mut var = $var.write();
 			let Some(map) = var.get_mut(kind) else {
 				var.insert(kind.to_owned(), HashMap::from_iter([(plugin.to_owned(), f)]));
@@ -51,11 +49,9 @@ macro_rules! unsub {
 pub struct Pubsub;
 
 impl Pubsub {
-	pub fn sub(plugin: &str, kind: &str, f: Function<'static>) -> bool {
-		sub!(LOCAL)(plugin, kind, f)
-	}
+	pub fn sub(plugin: &str, kind: &str, f: Function) -> bool { sub!(LOCAL)(plugin, kind, f) }
 
-	pub fn sub_remote(plugin: &str, kind: &str, f: Function<'static>) -> bool {
+	pub fn sub_remote(plugin: &str, kind: &str, f: Function) -> bool {
 		sub!(REMOTE)(plugin, kind, f) && Self::pub_from_hi()
 	}
 

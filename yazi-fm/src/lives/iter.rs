@@ -1,4 +1,4 @@
-use mlua::AnyUserData;
+use mlua::{AnyUserData, UserData};
 
 use super::SCOPE;
 
@@ -9,8 +9,8 @@ pub(super) struct Iter<I: Iterator<Item = T>, T> {
 
 impl<I: Iterator<Item = T> + 'static, T: 'static> Iter<I, T> {
 	#[inline]
-	pub(super) fn make(inner: I) -> mlua::Result<AnyUserData<'static>> {
-		SCOPE.create_any_userdata(Self { inner, count: 0 })
+	pub(super) fn make(inner: I) -> mlua::Result<AnyUserData> {
+		SCOPE.create_userdata(Self { inner, count: 0 })
 	}
 }
 
@@ -23,3 +23,5 @@ impl<I: Iterator<Item = T>, T> Iterator for Iter<I, T> {
 		Some((self.count, next))
 	}
 }
+
+impl<I: Iterator<Item = T>, T> UserData for Iter<I, T> {}

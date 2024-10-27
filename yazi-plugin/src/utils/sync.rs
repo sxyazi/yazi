@@ -11,7 +11,7 @@ impl Utils {
 	pub(super) fn sync(lua: &'static Lua, ya: &Table) -> mlua::Result<()> {
 		ya.raw_set(
 			"sync",
-			lua.create_function(|lua, f: Function<'static>| {
+			lua.create_function(|lua, f: Function| {
 				let mut rt = lua.named_registry_value::<RtRef>("rt")?;
 				if !rt.put_block(f.clone()) {
 					return Err("`ya.sync()` must be called in a plugin").into_lua_err();
@@ -20,7 +20,7 @@ impl Utils {
 				let cur = rt.current().unwrap().to_owned();
 				lua.create_function(move |lua, mut args: MultiValue| {
 					args.push_front(Value::Table(LOADER.try_load(lua, &cur)?));
-					f.call::<_, MultiValue>(args)
+					f.call::<MultiValue>(args)
 				})
 			})?,
 		)?;
@@ -38,7 +38,7 @@ impl Utils {
 
 				lua.create_async_function(move |lua, args: MultiValue| async move {
 					if let Some(cur) = lua.named_registry_value::<RtRef>("rt")?.current() {
-						Sendable::list_to_values(lua, Self::retrieve(cur, block, args).await?)
+						Sendable::list_to_values(&lua, Self::retrieve(cur, block, args).await?)
 					} else {
 						Err("block spawned by `ya.sync()` must be called in a plugin").into_lua_err()
 					}
@@ -49,7 +49,7 @@ impl Utils {
 		Ok(())
 	}
 
-	async fn retrieve(id: &str, calls: usize, args: MultiValue<'_>) -> mlua::Result<Vec<Data>> {
+	async fn retrieve(id: &str, calls: usize, args: MultiValue) -> mlua::Result<Vec<Data>> {
 		let args = Sendable::values_to_vec(args)?;
 		let (tx, rx) = oneshot::channel::<Vec<Data>>();
 
@@ -65,7 +65,8 @@ impl Utils {
 					.chain(args.into_iter().map(|d| Sendable::data_to_value(lua, d)))
 					.collect::<mlua::Result<_>>()?;
 
-				let values = Sendable::values_to_vec(block.call(MultiValue::from_vec(args))?)?;
+				// TODO: avoid unnecessary allocation
+				let values = Sendable::values_to_vec(block.call(MultiValue::from_iter(args))?)?;
 				tx.send(values).map_err(|_| "send failed".into_lua_err())
 			})
 		};

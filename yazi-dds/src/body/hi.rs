@@ -31,8 +31,8 @@ impl<'a> From<BodyHi<'a>> for Body<'a> {
 	fn from(value: BodyHi<'a>) -> Self { Self::Hi(value) }
 }
 
-impl IntoLua<'_> for BodyHi<'_> {
-	fn into_lua(self, _: &Lua) -> mlua::Result<Value<'_>> {
+impl IntoLua for BodyHi<'_> {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> {
 		Err("BodyHi cannot be converted to Lua").into_lua_err()
 	}
 }

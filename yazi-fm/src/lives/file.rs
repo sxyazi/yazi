@@ -1,11 +1,12 @@
 use std::ops::Deref;
 
-use mlua::{AnyUserData, IntoLua, Lua, UserDataFields, UserDataMethods};
+use mlua::{AnyUserData, IntoLua, UserData, UserDataFields, UserDataMethods};
 use yazi_config::THEME;
 use yazi_plugin::{bindings::Range, elements::Style};
 use yazi_shared::MIME_DIR;
 
-use super::{CtxRef, SCOPE};
+use super::SCOPE;
+use crate::Ctx;
 
 pub(super) struct File {
 	idx:    usize,
@@ -29,71 +30,86 @@ impl File {
 		idx: usize,
 		folder: &yazi_fs::Folder,
 		tab: &yazi_core::tab::Tab,
-	) -> mlua::Result<AnyUserData<'static>> {
-		SCOPE.create_any_userdata(Self { idx, folder, tab })
+	) -> mlua::Result<AnyUserData> {
+		SCOPE.create_userdata(Self { idx, folder, tab })
 	}
 
-	pub(super) fn register(lua: &Lua) -> mlua::Result<()> {
-		lua.register_userdata_type::<Self>(|reg| {
-			yazi_plugin::file::File::register_with(reg);
+	#[inline]
+	fn folder(&self) -> &yazi_fs::Folder { unsafe { &*self.folder } }
 
-			reg.add_field_method_get("idx", |_, me| Ok(me.idx + 1));
-			reg.add_method("size", |_, me, ()| {
-				Ok(if me.is_dir() { me.folder().files.sizes.get(me.urn()).copied() } else { Some(me.len) })
-			});
-			reg.add_method("mime", |lua, me, ()| {
-				let cx = lua.named_registry_value::<CtxRef>("cx")?;
-				Ok(cx.manager.mimetype.get_owned(&me.url))
-			});
-			reg.add_method("prefix", |lua, me, ()| {
-				if !me.folder().url.is_search() {
-					return Ok(None);
-				}
+	#[inline]
+	fn tab(&self) -> &yazi_core::tab::Tab { unsafe { &*self.tab } }
+}
 
-				let mut p = me.url.strip_prefix(&me.folder().url).unwrap_or(&me.url).components();
-				p.next_back();
-				Some(lua.create_string(p.as_path().as_os_str().as_encoded_bytes())).transpose()
-			});
-			reg.add_method("style", |lua, me, ()| {
-				let cx = lua.named_registry_value::<CtxRef>("cx")?;
+impl UserData for File {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+		yazi_plugin::impl_file_fields!(fields);
+
+		fields.add_field_method_get("idx", |_, me| Ok(me.idx + 1));
+	}
+
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		yazi_plugin::impl_file_methods!(methods);
+
+		methods.add_method("size", |_, me, ()| {
+			Ok(if me.is_dir() { me.folder().files.sizes.get(me.urn()).copied() } else { Some(me.len) })
+		});
+		methods.add_method("mime", |lua, me, ()| {
+			lua
+				.named_registry_value::<AnyUserData>("cx")?
+				.borrow_scoped(|cx: &Ctx| cx.manager.mimetype.get_owned(&me.url))
+		});
+		methods.add_method("prefix", |lua, me, ()| {
+			if !me.folder().url.is_search() {
+				return Ok(None);
+			}
+
+			let mut p = me.url.strip_prefix(&me.folder().url).unwrap_or(&me.url).components();
+			p.next_back();
+			Some(lua.create_string(p.as_path().as_os_str().as_encoded_bytes())).transpose()
+		});
+		methods.add_method("style", |lua, me, ()| {
+			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|cx: &Ctx| {
 				let mime =
 					if me.is_dir() { MIME_DIR } else { cx.manager.mimetype.get(&me.url).unwrap_or_default() };
 
-				Ok(THEME.filetypes.iter().find(|&x| x.matches(me, mime)).map(|x| Style::from(x.style)))
-			});
-			reg.add_method("is_hovered", |_, me, ()| Ok(me.idx == me.folder().cursor));
-			reg.add_method("is_yanked", |lua, me, ()| {
-				let cx = lua.named_registry_value::<CtxRef>("cx")?;
-				Ok(if !cx.manager.yanked.contains(&me.url) {
+				THEME.filetypes.iter().find(|&x| x.matches(me, mime)).map(|x| Style::from(x.style))
+			})
+		});
+		methods.add_method("is_hovered", |_, me, ()| Ok(me.idx == me.folder().cursor));
+		methods.add_method("is_yanked", |lua, me, ()| {
+			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|cx: &Ctx| {
+				if !cx.manager.yanked.contains(&me.url) {
 					0u8
 				} else if cx.manager.yanked.cut {
 					2u8
 				} else {
 					1u8
-				})
-			});
-			reg.add_method("is_marked", |_, me, ()| {
-				use yazi_core::tab::Mode::*;
-				if !me.tab().mode.is_visual() || me.folder().url != me.tab().current.url {
-					return Ok(0u8);
 				}
+			})
+		});
+		methods.add_method("is_marked", |_, me, ()| {
+			use yazi_core::tab::Mode::*;
+			if !me.tab().mode.is_visual() || me.folder().url != me.tab().current.url {
+				return Ok(0u8);
+			}
 
-				Ok(match &me.tab().mode {
-					Select(_, indices) if indices.contains(&me.idx) => 1u8,
-					Unset(_, indices) if indices.contains(&me.idx) => 2u8,
-					_ => 0u8,
-				})
-			});
-			reg.add_method("is_selected", |_, me, ()| Ok(me.tab().selected.contains_key(&me.url)));
-			reg.add_method("in_parent", |_, me, ()| {
-				Ok(me.tab().parent.as_ref().is_some_and(|f| me.folder().url == f.url))
-			});
-			reg.add_method("in_current", |_, me, ()| Ok(me.folder().url == me.tab().current.url));
-			reg.add_method("in_preview", |_, me, ()| {
-				Ok(me.tab().hovered().is_some_and(|f| f.url == me.folder().url))
-			});
-			reg.add_method("found", |lua, me, ()| {
-				let cx = lua.named_registry_value::<CtxRef>("cx")?;
+			Ok(match &me.tab().mode {
+				Select(_, indices) if indices.contains(&me.idx) => 1u8,
+				Unset(_, indices) if indices.contains(&me.idx) => 2u8,
+				_ => 0u8,
+			})
+		});
+		methods.add_method("is_selected", |_, me, ()| Ok(me.tab().selected.contains_key(&me.url)));
+		methods.add_method("in_parent", |_, me, ()| {
+			Ok(me.tab().parent.as_ref().is_some_and(|f| me.folder().url == f.url))
+		});
+		methods.add_method("in_current", |_, me, ()| Ok(me.folder().url == me.tab().current.url));
+		methods.add_method("in_preview", |_, me, ()| {
+			Ok(me.tab().hovered().is_some_and(|f| f.url == me.folder().url))
+		});
+		methods.add_method("found", |lua, me, ()| {
+			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|cx: &Ctx| {
 				let Some(finder) = &cx.manager.active().finder else {
 					return Ok(None);
 				};
@@ -104,29 +120,20 @@ impl File {
 
 				Some(lua.create_sequence_from([idx.into_lua(lua)?, finder.matched().len().into_lua(lua)?]))
 					.transpose()
-			});
-			reg.add_method("highlights", |lua, me, ()| {
-				let cx = lua.named_registry_value::<CtxRef>("cx")?;
+			})
+		});
+		methods.add_method("highlights", |lua, me, ()| {
+			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|cx: &Ctx| {
 				let Some(finder) = &cx.manager.active().finder else {
-					return Ok(None);
+					return None;
 				};
 				if me.folder().url != me.tab().current.url {
-					return Ok(None);
+					return None;
 				}
-				let Some(h) = finder.filter.highlighted(me.name()) else {
-					return Ok(None);
-				};
 
-				Ok(Some(h.into_iter().map(Range::from).collect::<Vec<_>>()))
-			});
-		})?;
-
-		Ok(())
+				let h = finder.filter.highlighted(me.name())?;
+				Some(h.into_iter().map(Range::from).collect::<Vec<_>>())
+			})
+		});
 	}
-
-	#[inline]
-	fn folder(&self) -> &yazi_fs::Folder { unsafe { &*self.folder } }
-
-	#[inline]
-	fn tab(&self) -> &yazi_core::tab::Tab { unsafe { &*self.tab } }
 }

@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use mlua::TableExt;
+use mlua::ObjectLike;
 use scopeguard::defer;
 use tracing::warn;
 use yazi_dds::Sendable;
@@ -62,7 +62,7 @@ impl App {
 		};
 		drop(loader);
 
-		_ = Lives::scope(&self.cx, |_| {
+		_ = Lives::scope(&self.cx, || {
 			if let Some(cb) = opt.cb {
 				cb(&LUA, plugin)
 			} else {

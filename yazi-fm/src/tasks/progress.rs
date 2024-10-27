@@ -1,4 +1,4 @@
-use mlua::{Table, TableExt};
+use mlua::{ObjectLike, Table};
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 use tracing::error;
 use yazi_config::LAYOUT;
@@ -11,7 +11,7 @@ impl Widget for Progress {
 		let mut f = || {
 			let area = yazi_plugin::elements::Rect::from(LAYOUT.get().progress);
 			let progress =
-				LUA.globals().raw_get::<_, Table>("Progress")?.call_method::<_, Table>("use", area)?;
+				LUA.globals().raw_get::<Table>("Progress")?.call_method::<Table>("use", area)?;
 
 			render_widgets(progress.call_method("redraw", ())?, buf);
 			Ok::<_, mlua::Error>(())
