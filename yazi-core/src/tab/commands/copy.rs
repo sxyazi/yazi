@@ -35,6 +35,11 @@ impl Tab {
 			}
 		}
 
+		// Copy the CWD path regardless even if the directory is empty
+		if s.is_empty() && opt.type_ == "dirname" {
+			s.push(self.cwd());
+		}
+
 		futures::executor::block_on(CLIPBOARD.set(s));
 	}
 }

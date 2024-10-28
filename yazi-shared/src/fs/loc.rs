@@ -1,4 +1,4 @@
-use std::{cmp, ffi::OsStr, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
+use std::{cmp, ffi::{OsStr, OsString}, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
 
 use super::{Urn, UrnBuf};
 
@@ -49,14 +49,29 @@ impl Debug for Loc {
 
 impl Loc {
 	pub fn new(path: PathBuf) -> Self {
-		let name = path.file_name().map_or(0, |s| s.len());
-		Self { path, urn: name, name }
+		let Some(name) = path.file_name() else {
+			let urn = path.as_os_str().len();
+			return Self { path, urn, name: 0 };
+		};
+
+		let name_len = name.len();
+		let prefix_len = unsafe {
+			name.as_encoded_bytes().as_ptr().offset_from(path.as_os_str().as_encoded_bytes().as_ptr())
+		};
+
+		let mut bytes = path.into_os_string().into_encoded_bytes();
+		bytes.truncate(name_len + prefix_len as usize);
+		Self {
+			path: PathBuf::from(unsafe { OsString::from_encoded_bytes_unchecked(bytes) }),
+			urn:  name_len,
+			name: name_len,
+		}
 	}
 
 	pub fn from(base: &Path, path: PathBuf) -> Self {
-		let urn = path.strip_prefix(base).unwrap_or(&path).as_os_str().len();
-		let name = path.file_name().map_or(0, |s| s.len());
-		Self { path, urn, name }
+		let mut loc = Self::new(path);
+		loc.urn = loc.path.strip_prefix(base).unwrap_or(&loc.path).as_os_str().len();
+		loc
 	}
 
 	#[inline]
@@ -103,4 +118,45 @@ impl Loc {
 
 	#[inline]
 	fn bytes(&self) -> &[u8] { self.path.as_os_str().as_encoded_bytes() }
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_new() {
+		let loc = Loc::new("/".into());
+		assert_eq!(loc.urn(), Urn::new("/"));
+		assert_eq!(loc.name(), OsStr::new(""));
+		assert_eq!(loc.base(), Path::new(""));
+
+		let loc = Loc::new("/root".into());
+		assert_eq!(loc.urn(), Urn::new("root"));
+		assert_eq!(loc.name(), OsStr::new("root"));
+		assert_eq!(loc.base(), Path::new("/"));
+
+		let loc = Loc::new("/root/code/foo/".into());
+		assert_eq!(loc.urn(), Urn::new("foo"));
+		assert_eq!(loc.name(), OsStr::new("foo"));
+		assert_eq!(loc.base(), Path::new("/root/code/"));
+	}
+
+	#[test]
+	fn test_from() {
+		let loc = Loc::from(Path::new("/"), "/".into());
+		assert_eq!(loc.urn(), Urn::new(""));
+		assert_eq!(loc.name(), OsStr::new(""));
+		assert_eq!(loc.base(), Path::new("/"));
+
+		let loc = Loc::from(Path::new("/root/"), "/root/code/".into());
+		assert_eq!(loc.urn(), Urn::new("code"));
+		assert_eq!(loc.name(), OsStr::new("code"));
+		assert_eq!(loc.base(), Path::new("/root"));
+
+		let loc = Loc::from(Path::new("/root//"), "/root/code/foo//".into());
+		assert_eq!(loc.urn(), Urn::new("code/foo"));
+		assert_eq!(loc.name(), OsStr::new("foo"));
+		assert_eq!(loc.base(), Path::new("/root"));
+	}
 }
