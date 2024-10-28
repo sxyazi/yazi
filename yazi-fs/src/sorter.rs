@@ -22,7 +22,11 @@ impl FilesSorter {
 			if self.sensitive {
 				self.cmp(a.name(), b.name(), self.promote(a, b))
 			} else {
-				self.cmp(a.name().to_ascii_uppercase(), b.name().to_ascii_uppercase(), self.promote(a, b))
+				self.cmp_insensitive(
+					a.name().as_encoded_bytes(),
+					b.name().as_encoded_bytes(),
+					self.promote(a, b),
+				)
 			}
 		};
 
@@ -40,9 +44,9 @@ impl FilesSorter {
 				let ord = if self.sensitive {
 					self.cmp(a.url.extension(), b.url.extension(), self.promote(a, b))
 				} else {
-					self.cmp(
-						a.url.extension().map(|s| s.to_ascii_lowercase()),
-						b.url.extension().map(|s| s.to_ascii_lowercase()),
+					self.cmp_insensitive(
+						a.url.extension().map_or(&[], |s| s.as_encoded_bytes()),
+						b.url.extension().map_or(&[], |s| s.as_encoded_bytes()),
 						self.promote(a, b),
 					)
 				};
@@ -97,6 +101,25 @@ impl FilesSorter {
 		} else {
 			if self.reverse { b.cmp(&a) } else { a.cmp(&b) }
 		}
+	}
+
+	#[inline(always)]
+	fn cmp_insensitive(&self, a: &[u8], b: &[u8], promote: Ordering) -> Ordering {
+		if promote != Ordering::Equal {
+			return promote;
+		}
+
+		let l = a.len().min(b.len());
+		let (lhs, rhs) = if self.reverse { (&b[..l], &a[..l]) } else { (&a[..l], &b[..l]) };
+
+		for i in 0..l {
+			match lhs[i].to_ascii_lowercase().cmp(&rhs[i].to_ascii_lowercase()) {
+				Ordering::Equal => (),
+				not_eq => return not_eq,
+			}
+		}
+
+		if self.reverse { b.len().cmp(&a.len()) } else { a.len().cmp(&b.len()) }
 	}
 
 	#[inline(always)]
