@@ -20,6 +20,7 @@ function Status:new(area, tab)
 	return setmetatable({
 		_area = area,
 		_tab = tab,
+		_current = tab.current,
 	}, { __index = self })
 end
 
@@ -45,7 +46,7 @@ function Status:mode()
 end
 
 function Status:size()
-	local h = self._tab.current.hovered
+	local h = self._current.hovered
 	if not h then
 		return ui.Line {}
 	end
@@ -58,7 +59,7 @@ function Status:size()
 end
 
 function Status:name()
-	local h = self._tab.current.hovered
+	local h = self._current.hovered
 	if not h then
 		return ui.Line {}
 	end
@@ -67,7 +68,7 @@ function Status:name()
 end
 
 function Status:permissions()
-	local h = self._tab.current.hovered
+	local h = self._current.hovered
 	if not h then
 		return ui.Line {}
 	end
@@ -97,8 +98,8 @@ end
 
 function Status:percentage()
 	local percent = 0
-	local cursor = self._tab.current.cursor
-	local length = #self._tab.current.files
+	local cursor = self._current.cursor
+	local length = #self._current.files
 	if cursor ~= 0 and length ~= 0 then
 		percent = math.floor((cursor + 1) * 100 / length)
 	end
@@ -119,8 +120,8 @@ function Status:percentage()
 end
 
 function Status:position()
-	local cursor = self._tab.current.cursor
-	local length = #self._tab.current.files
+	local cursor = self._current.cursor
+	local length = #self._current.files
 
 	local style = self:style()
 	return ui.Line {
