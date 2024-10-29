@@ -53,7 +53,7 @@ impl Manager {
 			return Ok(());
 		}
 
-		let todo = Self::sort(old, new);
+		let todo = Self::prioritized_paths(old, new);
 		if todo.is_empty() {
 			return Ok(());
 		}
@@ -118,46 +118,38 @@ impl Manager {
 		Ok(())
 	}
 
-	fn sort(old: Vec<PathBuf>, new: Vec<PathBuf>) -> Vec<(PathBuf, PathBuf)> {
-		let user_order: HashMap<_, _> = old.iter().enumerate().map(|(idx, path)| (path, idx)).collect();
-		let mut income_map: HashMap<_, _> = old.iter().map(|path| (path.clone(), false)).collect();
+	fn prioritized_paths(old: Vec<PathBuf>, new: Vec<PathBuf>) -> Vec<(PathBuf, PathBuf)> {
+		let orders: HashMap<_, _> = old.iter().enumerate().map(|(i, p)| (p, i)).collect();
+		let mut incomes: HashMap<_, _> = old.iter().map(|p| (p, false)).collect();
 		let mut todos: HashMap<_, _> = old
 			.iter()
 			.zip(new)
-			.map(|(old, new)| {
-				if let Some(has_income) = income_map.get_mut(&new) {
-					*has_income = true;
-				}
-				(old.clone(), new)
+			.map(|(o, n)| {
+				incomes.get_mut(&n).map(|b| *b = true);
+				(o, n)
 			})
 			.collect();
 
-		let mut sorted = vec![];
+		let mut sorted = Vec::with_capacity(old.len());
 		while !todos.is_empty() {
-			let mut has_no_incomes = vec![];
-			income_map.iter().for_each(|(old, has_income)| {
-				if !has_income {
-					has_no_incomes.push(old.clone())
-				}
-			});
+			// Paths that are non-incomes and don't need to be prioritized in this round
+			let mut outcomes: Vec<_> = incomes.iter().filter(|(_, &b)| !b).map(|(&p, _)| p).collect();
+			outcomes.sort_unstable_by(|a, b| orders[b].cmp(&orders[a]));
 
-			if has_no_incomes.is_empty() {
-				// Remaining rename set has cycle, so we cannot sort, just return them all
-				let mut remain = todos.drain().collect::<Vec<_>>();
-				remain.sort_by(|(a, _), (b, _)| user_order[a].cmp(&user_order[b]));
+			// If there're no outcomes, it means there are cycles in the renaming
+			if outcomes.is_empty() {
+				let mut remain: Vec<_> = todos.into_iter().map(|(o, n)| (o.clone(), n)).collect();
+				remain.sort_unstable_by(|(a, _), (b, _)| orders[a].cmp(&orders[b]));
 				sorted.reverse();
 				sorted.extend(remain);
 				return sorted;
 			}
 
-			has_no_incomes.sort_by(|a, b| user_order[b].cmp(&user_order[a]));
-			for old in has_no_incomes {
-				income_map.remove(&old);
-				let Some(new) = todos.remove(&old) else { unreachable!("") };
-				if let Some(has_income) = income_map.get_mut(&new) {
-					*has_income = false;
-				}
-				sorted.push((old, new));
+			for old in outcomes {
+				let Some(new) = todos.remove(old) else { unreachable!() };
+				incomes.remove(&old);
+				incomes.get_mut(&new).map(|b| *b = false);
+				sorted.push((old.clone(), new));
 			}
 		}
 		sorted.reverse();
@@ -172,7 +164,7 @@ mod tests {
 	#[test]
 	fn test_sort() {
 		fn cmp(input: &[(&str, &str)], expected: &[(&str, &str)]) {
-			let sorted = Manager::sort(
+			let sorted = Manager::prioritized_paths(
 				input.iter().map(|&(o, _)| o.into()).collect(),
 				input.iter().map(|&(_, n)| n.into()).collect(),
 			);
