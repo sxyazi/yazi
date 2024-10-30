@@ -37,7 +37,7 @@ impl Utils {
 		)?;
 
 		ya.raw_set(
-			"render_with",
+			"redraw_with",
 			lua.create_function(|lua, c: Table| {
 				let id: mlua::String = c.get("_id")?;
 				let id = id.to_str()?;
@@ -58,9 +58,9 @@ impl Utils {
 					_ => {}
 				}
 
-				match c.call_method::<_, Table>("render", ()) {
+				match c.call_method::<_, Table>("redraw", ()) {
 					Err(e) => {
-						error!("Failed to `render()` the `{id}` component:\n{e}");
+						error!("Failed to `redraw()` the `{id}` component:\n{e}");
 						lua.create_table()
 					}
 					ok => ok,

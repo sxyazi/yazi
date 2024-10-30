@@ -76,7 +76,7 @@ function Entity:symlink()
 	return to and ui.Line(" -> " .. tostring(to)):italic() or ui.Line {}
 end
 
-function Entity:render()
+function Entity:redraw()
 	local lines = {}
 	for _, c in ipairs(self._children) do
 		lines[#lines + 1] = (type(c[1]) == "string" and self[c[1]] or c[1])(self)

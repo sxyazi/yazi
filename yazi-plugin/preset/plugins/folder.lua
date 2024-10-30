@@ -17,14 +17,14 @@ function M:peek()
 		})
 	end
 
-	local items = {}
+	local entities = {}
 	for _, f in ipairs(folder.window) do
-		items[#items + 1] = Entity:new(f):render()
+		entities[#entities + 1] = Entity:new(f):redraw()
 	end
 
 	ya.preview_widgets(self, {
-		ui.List(items):area(self.area),
-		table.unpack(Marker:new(self.area, folder):render()),
+		ui.List(entities):area(self.area),
+		table.unpack(Marker:new(self.area, folder):redraw()),
 	})
 end
 

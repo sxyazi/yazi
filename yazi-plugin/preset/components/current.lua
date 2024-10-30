@@ -23,7 +23,9 @@ function Current:empty()
 	}
 end
 
-function Current:render()
+function Current:reflow() return { self } end
+
+function Current:redraw()
 	local files = self._folder.window
 	if #files == 0 then
 		return self:empty()
@@ -31,8 +33,8 @@ function Current:render()
 
 	local entities, linemodes = {}, {}
 	for _, f in ipairs(files) do
-		entities[#entities + 1] = Entity:new(f):render()
-		linemodes[#linemodes + 1] = Linemode:new(f):render()
+		entities[#entities + 1] = Entity:new(f):redraw()
+		linemodes[#linemodes + 1] = Linemode:new(f):redraw()
 	end
 
 	return {

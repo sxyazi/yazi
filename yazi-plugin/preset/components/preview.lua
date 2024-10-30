@@ -10,7 +10,9 @@ function Preview:new(area, tab)
 	}, { __index = self })
 end
 
-function Preview:render() return {} end
+function Preview:reflow() return { self } end
+
+function Preview:redraw() return {} end
 
 -- Mouse events
 function Preview:click(event, up)
