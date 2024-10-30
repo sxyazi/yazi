@@ -12,6 +12,12 @@ pub(super) struct Root<'a> {
 
 impl<'a> Root<'a> {
 	pub(super) fn new(cx: &'a Ctx) -> Self { Self { cx } }
+
+	pub(super) fn reflow<'lua>(area: Rect) -> mlua::Result<Table<'lua>> {
+		let area = yazi_plugin::elements::Rect::from(area);
+		let root = LUA.globals().raw_get::<_, Table>("Root")?.call_method::<_, Table>("new", area)?;
+		root.call_method("reflow", ())
+	}
 }
 
 impl<'a> Widget for Root<'a> {

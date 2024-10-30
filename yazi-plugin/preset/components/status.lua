@@ -131,6 +131,8 @@ function Status:position()
 	}
 end
 
+function Status:reflow() return { self } end
+
 function Status:redraw()
 	local left = self:children_redraw(self.LEFT)
 
