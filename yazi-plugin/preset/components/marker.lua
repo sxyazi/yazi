@@ -9,7 +9,7 @@ function Marker:new(area, folder)
 	}, { __index = self })
 end
 
-function Marker:render()
+function Marker:redraw()
 	if self._area.w * self._area.h == 0 then
 		return {}
 	elseif not self._folder or #self._folder.window == 0 then

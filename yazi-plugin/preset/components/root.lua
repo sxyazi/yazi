@@ -29,12 +29,20 @@ function Root:build()
 	}
 end
 
-function Root:render()
-	local children = self._base or {}
+function Root:reflow()
+	local components = { self }
 	for _, child in ipairs(self._children) do
-		children = ya.list_merge(children, ya.render_with(child))
+		components = ya.list_merge(components, child:reflow())
 	end
-	return children
+	return components
+end
+
+function Root:redraw()
+	local elements = self._base or {}
+	for _, child in ipairs(self._children) do
+		elements = ya.list_merge(elements, ya.redraw_with(child))
+	end
+	return elements
 end
 
 -- Mouse events

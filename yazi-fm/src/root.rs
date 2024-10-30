@@ -20,11 +20,11 @@ impl<'a> Widget for Root<'a> {
 			let area = yazi_plugin::elements::Rect::from(area);
 			let root = LUA.globals().raw_get::<_, Table>("Root")?.call_method::<_, Table>("new", area)?;
 
-			render_widgets(root.call_method("render", ())?, buf);
+			render_widgets(root.call_method("redraw", ())?, buf);
 			Ok::<_, mlua::Error>(())
 		};
 		if let Err(e) = f() {
-			error!("Failed to render the `Root` component:\n{e}");
+			error!("Failed to redraw the `Root` component:\n{e}");
 		}
 
 		components::Preview::new(self.cx).render(area, buf);

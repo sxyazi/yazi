@@ -95,11 +95,13 @@ function Header:tabs()
 	return ui.Line(spans)
 end
 
-function Header:render()
-	local right = self:children_render(self.RIGHT)
+function Header:reflow() return { self } end
+
+function Header:redraw()
+	local right = self:children_redraw(self.RIGHT)
 	self._right_width = right:width()
 
-	local left = self:children_render(self.LEFT)
+	local left = self:children_redraw(self.LEFT)
 
 	return {
 		ui.Text(left):area(self._area),
@@ -135,7 +137,7 @@ function Header:children_remove(id, side)
 	end
 end
 
-function Header:children_render(side)
+function Header:children_redraw(side)
 	local lines = {}
 	for _, c in ipairs(side == self.RIGHT and self._right or self._left) do
 		lines[#lines + 1] = (type(c[1]) == "string" and self[c[1]] or c[1])(self)

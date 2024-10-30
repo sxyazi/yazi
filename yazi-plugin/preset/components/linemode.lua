@@ -62,7 +62,7 @@ function Linemode:owner()
 	return ui.Line(string.format("%s:%s", user or "-", group or "-"))
 end
 
-function Linemode:render()
+function Linemode:redraw()
 	local lines = {}
 	for _, c in ipairs(self._children) do
 		lines[#lines + 1] = (type(c[1]) == "string" and self[c[1]] or c[1])(self)

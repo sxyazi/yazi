@@ -131,16 +131,16 @@ function Status:position()
 	}
 end
 
-function Status:render()
-	local left = self:children_render(self.LEFT)
+function Status:redraw()
+	local left = self:children_redraw(self.LEFT)
 
-	local right = self:children_render(self.RIGHT)
+	local right = self:children_redraw(self.RIGHT)
 	local right_width = right:width()
 
 	return {
 		ui.Text(left):area(self._area),
 		ui.Text(right):area(self._area):align(ui.Text.RIGHT),
-		table.unpack(Progress:render(self._area, right_width)),
+		table.unpack(Progress:redraw(self._area, right_width)),
 	}
 end
 
@@ -172,7 +172,7 @@ function Status:children_remove(id, side)
 	end
 end
 
-function Status:children_render(side)
+function Status:children_redraw(side)
 	local lines = {}
 	for _, c in ipairs(side == self.RIGHT and self._right or self._left) do
 		lines[#lines + 1] = (type(c[1]) == "string" and self[c[1]] or c[1])(self)
