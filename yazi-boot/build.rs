@@ -22,11 +22,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 	let out = "completions";
 
 	std::fs::create_dir_all(out)?;
-	generate_to(Shell::Bash, cmd, bin, out)?;
-	generate_to(Shell::Fish, cmd, bin, out)?;
-	generate_to(Shell::Zsh, cmd, bin, out)?;
-	generate_to(Shell::Elvish, cmd, bin, out)?;
-	generate_to(Shell::PowerShell, cmd, bin, out)?;
+	for sh in [Shell::Bash, Shell::Fish, Shell::Zsh, Shell::Elvish, Shell::PowerShell] {
+		generate_to(sh, cmd, bin, out)?;
+	}
+
 	generate_to(clap_complete_nushell::Nushell, cmd, bin, out)?;
 	generate_to(clap_complete_fig::Fig, cmd, bin, out)?;
 
