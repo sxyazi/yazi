@@ -149,7 +149,7 @@ impl Folder {
 		self.offset = if self.cursor < (self.offset + limit).min(len).saturating_sub(scrolloff) {
 			len.saturating_sub(limit).min(self.offset)
 		} else {
-			len.saturating_sub(limit).min(self.cursor.saturating_sub(limit) + scrolloff)
+			len.saturating_sub(limit).min(self.cursor.saturating_sub(limit) + 1 + scrolloff)
 		};
 
 		old != self.offset
