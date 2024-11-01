@@ -94,7 +94,7 @@ impl Folder {
 	}
 
 	pub fn sync_page(&mut self, force: bool) {
-		let limit = LAYOUT.load().current.height as usize;
+		let limit = LAYOUT.get().current.height as usize;
 		if limit == 0 {
 			return;
 		}
@@ -109,7 +109,7 @@ impl Folder {
 		let old = (self.cursor, self.offset);
 		let len = self.files.len();
 
-		let limit = LAYOUT.load().current.height as usize;
+		let limit = LAYOUT.get().current.height as usize;
 		let scrolloff = (limit / 2).min(MANAGER.scrolloff as usize);
 
 		self.cursor = step.add(self.cursor, limit).min(len.saturating_sub(1));
@@ -126,7 +126,7 @@ impl Folder {
 		let old = (self.cursor, self.offset);
 		let max = self.files.len().saturating_sub(1);
 
-		let limit = LAYOUT.load().current.height as usize;
+		let limit = LAYOUT.get().current.height as usize;
 		let scrolloff = (limit / 2).min(MANAGER.scrolloff as usize);
 
 		self.cursor = step.add(self.cursor, limit).min(max);
@@ -143,7 +143,7 @@ impl Folder {
 		let old = self.offset;
 		let len = self.files.len();
 
-		let limit = LAYOUT.load().current.height as usize;
+		let limit = LAYOUT.get().current.height as usize;
 		let scrolloff = (limit / 2).min(MANAGER.scrolloff as usize);
 
 		self.offset = if self.cursor < (self.offset + limit).min(len).saturating_sub(scrolloff) {
@@ -162,7 +162,7 @@ impl Folder {
 
 	pub fn paginate(&self, page: usize) -> &[File] {
 		let len = self.files.len();
-		let limit = LAYOUT.load().current.height as usize;
+		let limit = LAYOUT.get().current.height as usize;
 
 		let start = (page.saturating_sub(1) * limit).min(len.saturating_sub(1));
 		let end = ((page + 2) * limit).min(len);

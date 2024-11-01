@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use mlua::Value;
 use ratatui::layout::Position;
 use tracing::error;
@@ -23,7 +21,7 @@ impl App {
 	#[yazi_codegen::command]
 	pub fn reflow(&mut self, _: Opt) {
 		let Some(size) = self.term.as_ref().and_then(|t| t.size().ok()) else { return };
-		let mut layout = *LAYOUT.load_full();
+		let mut layout = LAYOUT.get();
 
 		let result = Lives::scope(&self.cx, |_| {
 			let comps = Root::reflow((Position::ORIGIN, size).into())?;
@@ -38,14 +36,15 @@ impl App {
 				match id.to_str()? {
 					"current" => layout.current = *t.raw_get::<_, yazi_plugin::elements::Rect>("_area")?,
 					"preview" => layout.preview = *t.raw_get::<_, yazi_plugin::elements::Rect>("_area")?,
+					"progress" => layout.progress = *t.raw_get::<_, yazi_plugin::elements::Rect>("_area")?,
 					_ => {}
 				}
 			}
 			Ok(())
 		});
 
-		if layout != *LAYOUT.load_full() {
-			LAYOUT.store(Arc::new(layout));
+		if layout != LAYOUT.get() {
+			LAYOUT.set(layout);
 			render!();
 		}
 

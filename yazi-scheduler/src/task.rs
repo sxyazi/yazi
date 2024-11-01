@@ -31,7 +31,7 @@ pub enum TaskKind {
 	Preload,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct TaskSummary {
 	pub name: String,
 

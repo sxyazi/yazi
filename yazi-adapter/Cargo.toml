@@ -16,7 +16,6 @@ yazi-shared = { path = "../yazi-shared", version = "0.3.3" }
 # External dependencies
 ansi-to-tui = { workspace = true }
 anyhow      = { workspace = true }
-arc-swap    = { workspace = true }
 base64      = { workspace = true }
 color_quant = "1.1.0"
 crossterm   = { workspace = true }

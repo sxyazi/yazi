@@ -31,7 +31,7 @@ impl App {
 			Self::patch(frame, self.cx.cursor());
 		}
 		if !self.cx.notify.messages.is_empty() {
-			self.render_notify();
+			self.render_partially();
 		}
 
 		// Reload preview if collision is resolved
@@ -40,18 +40,19 @@ impl App {
 		}
 	}
 
-	pub(crate) fn render_notify(&mut self) {
-		let Some(term) = &mut self.term else {
-			return;
-		};
-
+	pub(crate) fn render_partially(&mut self) {
+		let Some(term) = &mut self.term else { return };
 		if !term.can_partial() {
 			return self.render();
 		}
 
 		let frame = term
 			.draw_partial(|f| {
-				f.render_widget(crate::notify::Layout::new(&self.cx), f.area());
+				_ = Lives::scope(&self.cx, |_| {
+					f.render_widget(crate::tasks::Progress, f.area());
+					f.render_widget(crate::notify::Notify::new(&self.cx), f.area());
+					Ok(())
+				});
 
 				if let Some(pos) = self.cx.cursor() {
 					f.set_cursor_position(pos);

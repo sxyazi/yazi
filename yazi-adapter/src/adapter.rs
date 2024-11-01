@@ -1,4 +1,4 @@
-use std::{env, fmt::Display, path::Path, sync::Arc};
+use std::{env, fmt::Display, path::Path};
 
 use anyhow::Result;
 use ratatui::layout::Rect;
@@ -52,7 +52,7 @@ impl Adapter {
 	}
 
 	pub fn image_hide(self) -> Result<()> {
-		if let Some(area) = SHOWN.swap(None) { self.image_erase(*area) } else { Ok(()) }
+		if let Some(area) = SHOWN.replace(None) { self.image_erase(area) } else { Ok(()) }
 	}
 
 	pub fn image_erase(self, area: Rect) -> Result<()> {
@@ -67,10 +67,10 @@ impl Adapter {
 	}
 
 	#[inline]
-	pub fn shown_load(self) -> Option<Rect> { SHOWN.load_full().map(|r| *r) }
+	pub fn shown_load(self) -> Option<Rect> { SHOWN.get() }
 
 	#[inline]
-	pub(super) fn shown_store(area: Rect) { SHOWN.store(Some(Arc::new(area))); }
+	pub(super) fn shown_store(area: Rect) { SHOWN.set(Some(area)); }
 
 	pub(super) fn start(self) { Ueberzug::start(self); }
 

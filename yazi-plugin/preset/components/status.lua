@@ -10,8 +10,8 @@ Status = {
 		{ "name", id = 3, order = 3000 },
 	},
 	_right = {
-		{ "permissions", id = 4, order = 1000 },
-		{ "percentage", id = 5, order = 2000 },
+		{ "perm", id = 4, order = 1000 },
+		{ "percent", id = 5, order = 2000 },
 		{ "position", id = 6, order = 3000 },
 	},
 }
@@ -67,7 +67,7 @@ function Status:name()
 	return ui.Line(" " .. h.name)
 end
 
-function Status:permissions()
+function Status:perm()
 	local h = self._current.hovered
 	if not h then
 		return ui.Line {}
@@ -96,7 +96,7 @@ function Status:permissions()
 	return ui.Line(spans)
 end
 
-function Status:percentage()
+function Status:percent()
 	local percent = 0
 	local cursor = self._current.cursor
 	local length = #self._current.files
@@ -142,7 +142,7 @@ function Status:redraw()
 	return {
 		ui.Text(left):area(self._area),
 		ui.Text(right):area(self._area):align(ui.Text.RIGHT),
-		table.unpack(Progress:redraw(self._area, right_width)),
+		table.unpack(ya.redraw_with(Progress:new(self._area, right_width))),
 	}
 end
 

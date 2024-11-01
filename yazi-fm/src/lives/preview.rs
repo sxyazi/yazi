@@ -28,7 +28,7 @@ impl Preview {
 				me.tab()
 					.hovered_folder()
 					.map(|f| {
-						let limit = LAYOUT.load().preview.height as usize;
+						let limit = LAYOUT.get().preview.height as usize;
 						Folder::make(Some(me.skip..f.files.len().min(me.skip + limit)), f, me.tab())
 					})
 					.transpose()

@@ -12,7 +12,6 @@ strip         = true
 [workspace.dependencies]
 ansi-to-tui   = "7.0.0"
 anyhow        = "1.0.91"
-arc-swap      = "1.7.1"
 base64        = "0.22.1"
 bitflags      = "2.6.0"
 clap          = { version = "4.5.20", features = [ "derive" ] }

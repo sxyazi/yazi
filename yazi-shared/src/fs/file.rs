@@ -1,17 +1,17 @@
-use std::{cell::Cell, ffi::OsStr, fs::{FileType, Metadata}, ops::Deref};
+use std::{ffi::OsStr, fs::{FileType, Metadata}, ops::Deref};
 
 use anyhow::Result;
 use tokio::fs;
 
 use super::{Urn, UrnBuf};
-use crate::{fs::{Cha, Url}, theme::IconCache};
+use crate::{SyncCell, fs::{Cha, Url}, theme::IconCache};
 
 #[derive(Clone, Debug, Default)]
 pub struct File {
 	pub url:     Url,
 	pub cha:     Cha,
 	pub link_to: Option<Url>,
-	pub icon:    Cell<IconCache>,
+	pub icon:    SyncCell<IconCache>,
 }
 
 impl Deref for File {

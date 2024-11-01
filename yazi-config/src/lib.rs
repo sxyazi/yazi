@@ -6,9 +6,7 @@ yazi_macro::mod_flat!(layout pattern preset priority);
 
 use std::str::FromStr;
 
-use yazi_shared::{RoCell, Xdg};
-
-pub static LAYOUT: RoCell<arc_swap::ArcSwap<Layout>> = RoCell::new();
+use yazi_shared::{RoCell, SyncCell, Xdg};
 
 pub static KEYMAP: RoCell<keymap::Keymap> = RoCell::new();
 pub static LOG: RoCell<log::Log> = RoCell::new();
@@ -22,6 +20,8 @@ pub static INPUT: RoCell<popup::Input> = RoCell::new();
 pub static CONFIRM: RoCell<popup::Confirm> = RoCell::new();
 pub static PICK: RoCell<popup::Pick> = RoCell::new();
 pub static WHICH: RoCell<which::Which> = RoCell::new();
+
+pub static LAYOUT: SyncCell<Layout> = SyncCell::new(Layout::default());
 
 pub fn init() -> anyhow::Result<()> {
 	if let Err(e) = try_init(true) {
@@ -100,8 +100,6 @@ fn try_init(merge: bool) -> anyhow::Result<()> {
 	let confirm = <_>::from_str(&yazi_toml)?;
 	let pick = <_>::from_str(&yazi_toml)?;
 	let which = <_>::from_str(&yazi_toml)?;
-
-	LAYOUT.with(<_>::default);
 
 	KEYMAP.init(keymap);
 	LOG.init(log);
