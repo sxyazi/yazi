@@ -97,25 +97,34 @@ fn path_to_os_str(path: &Path, separator: PathSeparator) -> Cow<'_, OsStr> {
 
 	use std::path::Component;
 
-	let mut s = OsString::with_capacity(path.as_os_str().len());
+	let mut s = String::with_capacity(path.as_os_str().len());
 	for component in path.components() {
 		match component {
 			Component::RootDir => {}
-			Component::CurDir => s.push("."),
-			Component::ParentDir => s.push(".."),
-			Component::Normal(path) => s.push(path),
+			Component::CurDir => s.push('.'),
+			Component::ParentDir => s.push_str(".."),
+			Component::Normal(path) => s.push_str(&path.to_string_lossy()),
 			Component::Prefix(prefix) => {
 				// "C:\foo" => [Prefix("C:"), RootDir, Normal(foo)]
-				s.push(prefix.as_os_str());
+				s.push_str(&prefix.as_os_str().to_string_lossy());
 				// If we push a "/" below, we will met a RootDir and push a "/"
 				// again resulting in "C://". So we need to skip that.
 				continue;
 			}
 		};
-		s.push("/");
+		s.push('/');
 	}
 
-	return Cow::Owned(s);
+	use std::os::windows::ffi::OsStrExt as _;
+	use std::path::MAIN_SEPARATOR;
+
+	let path_ends_with_main_sep =
+		path.as_os_str().encode_wide().last() == Some(MAIN_SEPARATOR as u16);
+	if !path_ends_with_main_sep && s != "/" && s.ends_with('/') {
+		s.pop();
+	}
+
+	return Cow::Owned(OsString::from(s));
 }
 
 #[cfg(test)]
