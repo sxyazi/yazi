@@ -1,6 +1,5 @@
+use std::borrow::Cow;
 use std::ffi::{OsStr, OsString};
-#[cfg(target_os = "windows")]
-use std::path::Component;
 use std::path::Path;
 
 use yazi_plugin::CLIPBOARD;
@@ -29,13 +28,31 @@ impl Tab {
 		let mut s = OsString::new();
 		let mut it = self.selected_or_hovered(true).peekable();
 		while let Some(u) = it.next() {
-			s.push(match opt.type_.as_str() {
-				"path" => path_to_os_str(u, opt.separator),
-				"dirname" => u.parent().map_or(OsStr::new(""), |p| path_to_os_str(p, opt.separator)),
-				"filename" => u.name(),
-				"name_without_ext" => u.file_stem().unwrap_or(OsStr::new("")),
+			match opt.type_.as_str() {
+				"path" => {
+					match path_to_os_str(u, opt.separator) {
+						Cow::Borrowed(p) => s.push(p),
+						Cow::Owned(p) => s.push(&p),
+					};
+				}
+				"dirname" => {
+					if let Some(parent) = u.parent() {
+						match path_to_os_str(parent, opt.separator) {
+							Cow::Borrowed(p) => s.push(p),
+							Cow::Owned(p) => s.push(&p),
+						};
+					}
+				}
+				"filename" => {
+					s.push(u.name());
+				}
+				"name_without_ext" => {
+					if let Some(stem) = u.file_stem() {
+						s.push(stem);
+					}
+				}
 				_ => return,
-			});
+			}
 			if it.peek().is_some() {
 				s.push("\n");
 			}
@@ -68,17 +85,19 @@ impl From<&Cmd> for PathSeparator {
 }
 
 #[cfg(not(target_os = "windows"))]
-fn path_to_os_str(path: &Path, _separator: PathSeparator) -> &OsStr {
-	return path.as_os_str();
+fn path_to_os_str(path: &Path, _separator: PathSeparator) -> Cow<'_, OsStr> {
+	return Cow::Borrowed(path.as_os_str());
 }
 
 #[cfg(target_os = "windows")]
-fn path_to_os_str(path: &Path, separator: PathSeparator) -> &OsStr {
+fn path_to_os_str(path: &Path, separator: PathSeparator) -> Cow<'_, OsStr> {
 	if let PathSeparator::Auto = separator {
-		return path.as_os_str();
+		return Cow::Borrowed(path.as_os_str());
 	};
 
-	let mut s = OsString::new();
+	use std::path::Component;
+
+	let mut s = OsString::with_capacity(path.as_os_str().len());
 	for component in path.components() {
 		match component {
 			Component::RootDir => {}
@@ -96,7 +115,7 @@ fn path_to_os_str(path: &Path, separator: PathSeparator) -> &OsStr {
 		s.push("/");
 	}
 
-	return s.as_os_str();
+	return Cow::Owned(s);
 }
 
 #[cfg(test)]
@@ -110,8 +129,8 @@ mod tests {
 	fn test_path_to_os_str_windows_auto() {
 		let path = PathBuf::from("C:\\Users\\JohnDoe\\Downloads\\image.png");
 		assert_eq!(
-			path_to_os_str(&path, PathSeparator::Auto),
-			"C:\\Users\\JohnDoe\\Downloads\\image.png",
+			path_to_os_str(&path, PathSeparator::Auto).to_str(),
+			Some("C:\\Users\\JohnDoe\\Downloads\\image.png"),
 			"windows-auto",
 		);
 	}
@@ -121,8 +140,8 @@ mod tests {
 	fn test_path_to_os_str_windows_unix() {
 		let path = PathBuf::from("C:\\Users\\JohnDoe\\Downloads\\image.png");
 		assert_eq!(
-			path_to_os_str(&path, PathSeparator::Unix),
-			"C:/Users/JohnDow/Downloads/image.png",
+			path_to_os_str(&path, PathSeparator::Unix).to_str(),
+			Some("C:/Users/JohnDow/Downloads/image.png"),
 			"windows-unix",
 		);
 	}
@@ -132,8 +151,8 @@ mod tests {
 	fn test_path_to_os_str_unix_auto() {
 		let path = PathBuf::from("/home/johndoe/Downloads/image.png");
 		assert_eq!(
-			path_to_os_str(&path, PathSeparator::Auto),
-			"/home/johndoe/Downloads/image.png",
+			path_to_os_str(&path, PathSeparator::Auto).to_str(),
+			Some("/home/johndoe/Downloads/image.png"),
 			"unix-auto"
 		);
 	}
@@ -143,8 +162,8 @@ mod tests {
 	fn test_path_to_os_str_unix_unix() {
 		let path = PathBuf::from("/home/johndoe/Downloads/image.png");
 		assert_eq!(
-			path_to_os_str(&path, PathSeparator::Unix),
-			"/home/johndoe/Downloads/image.png",
+			path_to_os_str(&path, PathSeparator::Unix).to_str(),
+			Some("/home/johndoe/Downloads/image.png"),
 			"unix-unix"
 		);
 	}
