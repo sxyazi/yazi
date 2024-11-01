@@ -150,7 +150,7 @@ mod tests {
 		let path = PathBuf::from("C:\\Users\\JohnDoe\\Downloads\\image.png");
 		assert_eq!(
 			path_to_os_str(&path, PathSeparator::Unix).to_str(),
-			Some("C:/Users/JohnDow/Downloads/image.png"),
+			Some("C:/Users/JohnDoe/Downloads/image.png"),
 			"windows-unix",
 		);
 	}
