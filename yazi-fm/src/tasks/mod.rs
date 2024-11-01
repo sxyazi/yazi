@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(layout);
+yazi_macro::mod_flat!(progress tasks);

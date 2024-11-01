@@ -1,7 +1,7 @@
 use serde::Serialize;
 use yazi_scheduler::Ongoing;
 
-#[derive(Clone, Copy, Default, Eq, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct TasksProgress {
 	pub total: u32,
 	pub succ:  u32,

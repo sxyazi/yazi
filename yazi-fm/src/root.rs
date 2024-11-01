@@ -3,8 +3,8 @@ use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 use tracing::error;
 use yazi_plugin::{LUA, elements::render_widgets};
 
-use super::{completion, confirm, input, pick, tasks, which};
-use crate::{Ctx, components, help};
+use super::{completion, confirm, help, input, manager, pick, tasks, which};
+use crate::Ctx;
 
 pub(super) struct Root<'a> {
 	cx: &'a Ctx,
@@ -33,10 +33,10 @@ impl<'a> Widget for Root<'a> {
 			error!("Failed to redraw the `Root` component:\n{e}");
 		}
 
-		components::Preview::new(self.cx).render(area, buf);
+		manager::Preview::new(self.cx).render(area, buf);
 
 		if self.cx.tasks.visible {
-			tasks::Layout::new(self.cx).render(area, buf);
+			tasks::Tasks::new(self.cx).render(area, buf);
 		}
 
 		if self.cx.pick.visible {
@@ -52,7 +52,7 @@ impl<'a> Widget for Root<'a> {
 		}
 
 		if self.cx.help.visible {
-			help::Layout::new(self.cx).render(area, buf);
+			help::Help::new(self.cx).render(area, buf);
 		}
 
 		if self.cx.completion.visible {

@@ -1,24 +1,30 @@
 Progress = {
-	_area = ui.Rect.default, -- TODO: remove this
+	_id = "progress",
 }
 
-function Progress:redraw(area, offset)
-	self._area = ui.Rect {
-		x = math.max(0, area.w - offset - 21),
-		y = area.y,
-		w = ya.clamp(0, area.w - offset - 1, 20),
-		h = math.min(1, area.h),
-	}
-	return self:partial_redraw()
+function Progress:new(area, offset)
+	local me = setmetatable({ _area = area, _offset = offset }, { __index = self })
+	me:layout()
+	return me
 end
 
--- Progress bars usually need frequent updates to report the latest task progress.
--- We use `partial_redraw()` to partially redraw it when there is progress change,
--- which has almost no cost compared to a full redraw by `redraw()`.
-function Progress:partial_redraw()
+function Progress:use(area) return setmetatable({ _area = area }, { __index = self }) end
+
+function Progress:layout()
+	self._area = ui.Rect {
+		x = math.max(0, self._area.w - self._offset - 21),
+		y = self._area.y,
+		w = ya.clamp(0, self._area.w - self._offset - 1, 20),
+		h = math.min(1, self._area.h),
+	}
+end
+
+function Progress:reflow() return { self } end
+
+function Progress:redraw()
 	local progress = cx.tasks.progress
 	if progress.total == 0 then
-		return { ui.Text {} }
+		return {}
 	end
 
 	local gauge = ui.Gauge():area(self._area)

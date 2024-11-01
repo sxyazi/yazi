@@ -69,7 +69,7 @@ impl Tab {
 	pub fn hovered_rect(&self) -> Option<Rect> {
 		let y = self.current.files.position(self.hovered()?.urn())? - self.current.offset;
 
-		let mut rect = LAYOUT.load().current;
+		let mut rect = LAYOUT.get().current;
 		rect.y = rect.y.saturating_sub(1) + y as u16;
 		rect.height = 1;
 		Some(rect)

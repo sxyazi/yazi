@@ -4,11 +4,11 @@ use yazi_core::tasks::TASKS_PERCENT;
 
 use crate::Ctx;
 
-pub(crate) struct Layout<'a> {
+pub(crate) struct Tasks<'a> {
 	cx: &'a Ctx,
 }
 
-impl<'a> Layout<'a> {
+impl<'a> Tasks<'a> {
 	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
 
 	pub(super) fn area(area: Rect) -> Rect {
@@ -28,7 +28,7 @@ impl<'a> Layout<'a> {
 	}
 }
 
-impl<'a> Widget for Layout<'a> {
+impl<'a> Widget for Tasks<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let area = Self::area(area);
 

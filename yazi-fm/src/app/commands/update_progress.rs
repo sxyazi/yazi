@@ -3,7 +3,7 @@ use yazi_core::tasks::TasksProgress;
 use yazi_macro::render;
 use yazi_shared::event::Cmd;
 
-use crate::{app::App, components::Progress, lives::Lives};
+use crate::{app::App, lives::Lives, tasks::Progress};
 
 pub struct Opt {
 	progress: TasksProgress,

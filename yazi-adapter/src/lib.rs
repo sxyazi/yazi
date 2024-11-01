@@ -4,7 +4,7 @@ yazi_macro::mod_flat!(
 	adapter chafa dimension emulator iip image kgp kgp_old mux sixel ueberzug
 );
 
-use yazi_shared::{RoCell, env_exists, in_wsl};
+use yazi_shared::{RoCell, SyncCell, env_exists, in_wsl};
 pub static ADAPTOR: RoCell<Adapter> = RoCell::new();
 
 // Tmux support
@@ -17,7 +17,7 @@ static CLOSE: RoCell<&'static str> = RoCell::new();
 pub static WSL: RoCell<bool> = RoCell::new();
 
 // Image state
-static SHOWN: RoCell<arc_swap::ArcSwapOption<ratatui::layout::Rect>> = RoCell::new();
+static SHOWN: SyncCell<Option<ratatui::layout::Rect>> = SyncCell::new(None);
 
 pub fn init() {
 	// Tmux support
@@ -37,9 +37,6 @@ pub fn init() {
 
 	// WSL support
 	WSL.init(in_wsl());
-
-	// Image state
-	SHOWN.with(<_>::default);
 
 	ADAPTOR.init(Adapter::matches());
 	ADAPTOR.start();

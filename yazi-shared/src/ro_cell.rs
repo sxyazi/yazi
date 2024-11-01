@@ -28,12 +28,6 @@ impl<T> RoCell<T> {
 	}
 
 	#[inline]
-	pub fn replace(&self, value: T) -> T {
-		debug_assert!(self.initialized());
-		unsafe { mem::replace(&mut *self.0.get(), Some(value)).unwrap_unchecked() }
-	}
-
-	#[inline]
 	pub fn drop(&self) -> T {
 		debug_assert!(self.initialized());
 		unsafe { mem::take(&mut *self.0.get()).unwrap_unchecked() }
