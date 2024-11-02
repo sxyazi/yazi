@@ -1,7 +1,9 @@
-use std::{borrow::Cow, collections::{HashMap, HashSet, VecDeque}, ffi::{OsStr, OsString}, fs::Metadata, path::{Path, PathBuf}};
+use std::{borrow::Cow, collections::{HashMap, HashSet, VecDeque}, ffi::{OsStr, OsString}, path::{Path, PathBuf}};
 
 use anyhow::{Result, bail};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
+
+use super::Cha;
 
 #[inline]
 pub async fn must_exists(p: impl AsRef<Path>) -> bool { fs::symlink_metadata(p).await.is_ok() }
@@ -12,6 +14,11 @@ pub async fn maybe_exists(p: impl AsRef<Path>) -> bool {
 		Ok(_) => true,
 		Err(e) => e.kind() != io::ErrorKind::NotFound,
 	}
+}
+
+#[inline]
+pub async fn must_be_dir(p: impl AsRef<Path>) -> bool {
+	fs::metadata(p).await.map_or(false, |m| m.is_dir())
 }
 
 #[inline]
@@ -47,7 +54,7 @@ async fn _paths_to_same_file(a: &Path, b: &Path) -> std::io::Result<bool> {
 	use windows_sys::Win32::{Foundation::{HANDLE, MAX_PATH}, Storage::FileSystem::{FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, GetFinalPathNameByHandleW, VOLUME_NAME_DOS}};
 
 	async fn final_name(p: &Path) -> std::io::Result<PathBuf> {
-		let file = tokio::fs::OpenOptions::new()
+		let file = fs::OpenOptions::new()
 			.access_mode(0)
 			.custom_flags(FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT)
 			.open(p)
@@ -175,7 +182,7 @@ pub async fn calculate_size(path: &Path) -> u64 {
 pub fn copy_with_progress(
 	from: &Path,
 	to: &Path,
-	meta: &Metadata,
+	cha: Cha,
 ) -> mpsc::Receiver<Result<u64, io::Error>> {
 	let (tx, rx) = mpsc::channel(1);
 	let (tick_tx, mut tick_rx) = oneshot::channel();
@@ -183,31 +190,8 @@ pub fn copy_with_progress(
 	tokio::spawn({
 		let (from, to) = (from.to_owned(), to.to_owned());
 
-		let mut ft = std::fs::FileTimes::new();
-		meta.accessed().map(|t| ft = ft.set_accessed(t)).ok();
-		meta.modified().map(|t| ft = ft.set_modified(t)).ok();
-		#[cfg(target_os = "macos")]
-		{
-			use std::os::macos::fs::FileTimesExt;
-			meta.created().map(|t| ft = ft.set_created(t)).ok();
-		}
-		#[cfg(windows)]
-		{
-			use std::os::windows::fs::FileTimesExt;
-			meta.created().map(|t| ft = ft.set_created(t)).ok();
-		}
-
 		async move {
-			_ = match fs::copy(&from, &to).await {
-				Ok(len) => {
-					_ = tokio::task::spawn_blocking(move || {
-						std::fs::File::options().write(true).open(to).and_then(|f| f.set_times(ft)).ok();
-					})
-					.await;
-					tick_tx.send(Ok(len))
-				}
-				Err(e) => tick_tx.send(Err(e)),
-			};
+			tick_tx.send(_copy_with_progress(from, to, cha).await).ok();
 		}
 	});
 
@@ -250,6 +234,54 @@ pub fn copy_with_progress(
 	});
 
 	rx
+}
+
+async fn _copy_with_progress(from: PathBuf, to: PathBuf, cha: Cha) -> io::Result<u64> {
+	let mut ft = std::fs::FileTimes::new();
+	cha.atime.map(|t| ft = ft.set_accessed(t));
+	cha.mtime.map(|t| ft = ft.set_modified(t));
+	#[cfg(target_os = "macos")]
+	{
+		use std::os::macos::fs::FileTimesExt;
+		cha.btime.map(|t| ft = ft.set_created(t));
+	}
+	#[cfg(windows)]
+	{
+		use std::os::windows::fs::FileTimesExt;
+		cha.btime.map(|t| ft = ft.set_created(t));
+	}
+
+	#[cfg(any(target_os = "linux", target_os = "android"))]
+	{
+		use std::os::{fd::AsRawFd, unix::fs::OpenOptionsExt};
+
+		tokio::task::spawn_blocking(move || {
+			let mut reader = std::fs::File::open(from)?;
+			let mut writer = std::fs::OpenOptions::new()
+				.mode(cha.mode as u32)
+				.write(true)
+				.create(true)
+				.truncate(true)
+				.open(to)?;
+
+			let written = std::io::copy(&mut reader, &mut writer)?;
+			unsafe { libc::fchmod(writer.as_raw_fd(), cha.mode) };
+			writer.set_times(ft).ok();
+
+			Ok(written)
+		})
+		.await?
+	}
+
+	#[cfg(not(any(target_os = "linux", target_os = "android")))]
+	{
+		tokio::task::spawn_blocking(move || {
+			let written = std::fs::copy(from, &to)?;
+			std::fs::File::options().write(true).open(to).and_then(|f| f.set_times(ft)).ok();
+			Ok(written)
+		})
+		.await?
+	}
 }
 
 pub async fn remove_dir_clean(dir: &Path) {

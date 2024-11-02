@@ -10,18 +10,20 @@ function Parent:new(area, tab)
 	}, { __index = self })
 end
 
-function Parent:render()
+function Parent:reflow() return { self } end
+
+function Parent:redraw()
 	if not self._folder then
 		return {}
 	end
 
-	local items = {}
+	local entities = {}
 	for _, f in ipairs(self._folder.window) do
-		items[#items + 1] = Entity:new(f):render()
+		entities[#entities + 1] = Entity:new(f):redraw()
 	end
 
 	return {
-		ui.List(items):area(self._area),
+		ui.List(entities):area(self._area),
 	}
 end
 

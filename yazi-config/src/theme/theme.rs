@@ -1,5 +1,6 @@
 use std::{path::PathBuf, str::FromStr};
 
+use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 use yazi_shared::{Xdg, fs::expand_path, theme::Style};
@@ -12,6 +13,7 @@ pub struct Theme {
 	pub manager:    Manager,
 	status:         Status,
 	pub input:      Input,
+	pub confirm:    Confirm,
 	pub pick:       Pick,
 	pub completion: Completion,
 	pub tasks:      Tasks,
@@ -30,7 +32,7 @@ impl FromStr for Theme {
 	type Err = anyhow::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		let mut theme: Self = toml::from_str(s)?;
+		let mut theme: Self = toml::from_str(s).context("Failed to parse your yazi.toml")?;
 		theme.manager.validate()?;
 		theme.which.validate()?;
 
@@ -112,6 +114,17 @@ pub struct Input {
 	pub title:    Style,
 	pub value:    Style,
 	pub selected: Style,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct Confirm {
+	pub border:     Style,
+	pub title:      Style,
+	pub content:    Style,
+	pub list:       Style,
+	pub btn_yes:    Style,
+	pub btn_no:     Style,
+	pub btn_labels: [String; 2],
 }
 
 #[derive(Deserialize, Serialize)]

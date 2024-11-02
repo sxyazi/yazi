@@ -17,6 +17,7 @@ function Header:new(area, tab)
 	return setmetatable({
 		_area = area,
 		_tab = tab,
+		_current = tab.current,
 	}, { __index = self })
 end
 
@@ -26,22 +27,26 @@ function Header:cwd()
 		return ui.Span("")
 	end
 
-	local s = ya.readable_path(tostring(self._tab.current.cwd)) .. self:flags()
+	local s = ya.readable_path(tostring(self._current.cwd)) .. self:flags()
 	return ui.Span(ya.truncate(s, { max = max, rtl = true })):style(THEME.manager.cwd)
 end
 
 function Header:flags()
-	local cwd = self._tab.current.cwd
-	local filter = self._tab.current.files.filter
+	local cwd = self._current.cwd
+	local filter = self._current.files.filter
+	local finder = self._tab.finder
 
-	local s = cwd.is_search and string.format(" (search: %s", cwd:frag()) or ""
-	if not filter then
-		return s == "" and s or s .. ")"
-	elseif s == "" then
-		return string.format(" (filter: %s)", tostring(filter))
-	else
-		return string.format("%s, filter: %s)", s, tostring(filter))
+	local t = {}
+	if cwd.is_search then
+		t[#t + 1] = string.format("search: %s", cwd:frag())
 	end
+	if filter then
+		t[#t + 1] = string.format("filter: %s", filter)
+	end
+	if finder then
+		t[#t + 1] = string.format("find: %s", finder)
+	end
+	return #t == 0 and "" or " (" .. table.concat(t, ", ") .. ")"
 end
 
 function Header:count()
@@ -65,7 +70,7 @@ function Header:count()
 
 	return ui.Line {
 		ui.Span(string.format(" %d ", count)):style(style),
-		ui.Span(" "),
+		" ",
 	}
 end
 
@@ -90,11 +95,14 @@ function Header:tabs()
 	return ui.Line(spans)
 end
 
-function Header:render()
-	local right = self:children_render(self.RIGHT)
+function Header:reflow() return { self } end
+
+function Header:redraw()
+	local right = self:children_redraw(self.RIGHT)
 	self._right_width = right:width()
 
-	local left = self:children_render(self.LEFT)
+	local left = self:children_redraw(self.LEFT)
+
 	return {
 		ui.Text(left):area(self._area),
 		ui.Text(right):area(self._area):align(ui.Text.RIGHT),
@@ -129,7 +137,7 @@ function Header:children_remove(id, side)
 	end
 end
 
-function Header:children_render(side)
+function Header:children_redraw(side)
 	local lines = {}
 	for _, c in ipairs(side == self.RIGHT and self._right or self._left) do
 		lines[#lines + 1] = (type(c[1]) == "string" and self[c[1]] or c[1])(self)

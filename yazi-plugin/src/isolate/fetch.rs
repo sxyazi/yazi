@@ -26,7 +26,7 @@ pub async fn fetch(name: &str, files: Vec<yazi_shared::fs::File>) -> mlua::Resul
 		}
 
 		plugin.raw_set("skip", 0)?;
-		plugin.raw_set("area", Rect::from(LAYOUT.load().preview))?;
+		plugin.raw_set("area", Rect::from(LAYOUT.get().preview))?;
 		plugin.raw_set("files", files)?;
 
 		Handle::current().block_on(plugin.call_async_method("fetch", ()))

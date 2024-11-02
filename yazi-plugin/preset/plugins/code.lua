@@ -6,7 +6,7 @@ function M:peek()
 		ya.manager_emit("peek", { bound, only_if = self.file.url, upper_bound = true })
 	elseif err and not err:find("cancelled", 1, true) then
 		ya.preview_widgets(self, {
-			ui.Text(ui.Line(err):reverse()):area(self.area),
+			ui.Text(err):area(self.area):reverse(),
 		})
 	end
 end

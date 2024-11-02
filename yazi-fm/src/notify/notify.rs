@@ -3,11 +3,11 @@ use yazi_core::notify::Message;
 
 use crate::Ctx;
 
-pub(crate) struct Layout<'a> {
+pub(crate) struct Notify<'a> {
 	cx: &'a Ctx,
 }
 
-impl<'a> Layout<'a> {
+impl<'a> Notify<'a> {
 	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
 
 	pub(crate) fn available(area: Rect) -> Rect {
@@ -38,7 +38,7 @@ impl<'a> Layout<'a> {
 	}
 }
 
-impl<'a> Widget for Layout<'a> {
+impl<'a> Widget for Notify<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let notify = &self.cx.notify;
 

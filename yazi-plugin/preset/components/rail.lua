@@ -11,8 +11,8 @@ end
 
 function Rail:build()
 	self._base = {
-		ui.Bar(self._chunks[1], ui.Bar.RIGHT):symbol(THEME.manager.border_symbol):style(THEME.manager.border_style),
-		ui.Bar(self._chunks[3], ui.Bar.LEFT):symbol(THEME.manager.border_symbol):style(THEME.manager.border_style),
+		ui.Bar(ui.Bar.RIGHT):area(self._chunks[1]):symbol(THEME.manager.border_symbol):style(THEME.manager.border_style),
+		ui.Bar(ui.Bar.LEFT):area(self._chunks[3]):symbol(THEME.manager.border_symbol):style(THEME.manager.border_style),
 	}
 	self._children = {
 		Marker:new(self._chunks[1], self._tab.parent),
@@ -20,12 +20,14 @@ function Rail:build()
 	}
 end
 
-function Rail:render()
-	local children = self._base or {}
+function Rail:reflow() return { self } end
+
+function Rail:redraw()
+	local elements = self._base or {}
 	for _, child in ipairs(self._children) do
-		children = ya.list_merge(children, ya.render_with(child))
+		elements = ya.list_merge(elements, ya.redraw_with(child))
 	end
-	return children
+	return elements
 end
 
 -- Mouse events

@@ -9,24 +9,54 @@ local set_state = ya.sync(function(st, empty) st.empty = empty end)
 
 local function fail(s, ...) ya.notify { title = "Zoxide", content = s:format(...), timeout = 5, level = "error" } end
 
-local function head(cwd)
-	local child = Command("zoxide"):args({ "query", "-l" }):stdout(Command.PIPED):spawn()
-	if not child then
-		return 0
+local function opts()
+	-- https://github.com/ajeetdsouza/zoxide/blob/main/src/cmd/query.rs#L92
+	local default = {
+		-- Search mode
+		"--exact",
+		-- Search result
+		"--no-sort",
+		-- Interface
+		"--bind=ctrl-z:ignore,btab:up,tab:down",
+		"--cycle",
+		"--keep-right",
+		-- Layout
+		"--layout=reverse",
+		"--height=50%",
+		"--border",
+		"--scrollbar=▌",
+		"--info=inline",
+		-- Display
+		"--tabstop=1",
+		-- Scripting
+		"--exit-0",
+	}
+
+	if ya.target_family() == "unix" then
+		default[#default + 1] = "--preview-window=down,30%,sharp"
+		if ya.target_os() == "linux" then
+			default[#default + 1] = [[--preview='\command -p ls -Cp --color=always --group-directories-first {2..}']]
+		else
+			default[#default + 1] = [[--preview='\command -p ls -Cp {2..}']]
+		end
 	end
 
-	local n = 0
-	repeat
-		local next, event = child:read_line()
-		if event ~= 0 then
-			break
-		elseif cwd ~= next:gsub("\n$", "") then
-			n = n + 1
-		end
-	until n >= 2
+	return (os.getenv("FZF_DEFAULT_OPTS") or "")
+		.. " "
+		.. table.concat(default, " ")
+		.. " "
+		.. (os.getenv("YAZI_ZOXIDE_OPTS") or "")
+end
 
+local function empty(cwd)
+	local child = Command("zoxide"):args({ "query", "-l", "--exclude" }):arg(cwd):stdout(Command.PIPED):spawn()
+	if not child then
+		return true
+	end
+
+	local first = child:read_line()
 	child:start_kill()
-	return n
+	return not first
 end
 
 local function setup(_, opts)
@@ -49,18 +79,22 @@ end
 local function entry()
 	local st = state()
 	if st.empty == nil then
-		st.empty = head(st.cwd) < 2
+		st.empty = empty(st.cwd)
 		set_state(st.empty)
 	end
 
 	if st.empty then
-		return fail("No directory history in the database, check out the `zoxide` docs to set it up.")
+		return fail("No directory history found, check Zoxide's doc to set it up and restart Yazi.")
 	end
 
 	local _permit = ya.hide()
 	local child, err = Command("zoxide")
 		:args({ "query", "-i", "--exclude" })
 		:arg(st.cwd)
+		:env("SHELL", "sh")
+		:env("CLICOLOR", "1")
+		:env("CLICOLOR_FORCE", "1")
+		:env("_ZO_FZF_OPTS", opts())
 		:stdin(Command.INHERIT)
 		:stdout(Command.PIPED)
 		:stderr(Command.INHERIT)

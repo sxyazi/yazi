@@ -48,7 +48,7 @@ function M:try_with(from, pwd, to)
 	end
 
 	local archive = require("archive")
-	local child, code = archive.spawn_7z { "x", "-aou", "-p" .. pwd, "-o" .. tostring(tmp), tostring(from) }
+	local child, code = archive.spawn_7z { "x", "-aou", "-sccUTF-8", "-p" .. pwd, "-o" .. tostring(tmp), tostring(from) }
 	if not child then
 		fail("Spawn `7z` and `7zz` both commands failed, error code %s", code)
 	end
@@ -105,7 +105,7 @@ function M:tidy(from, to, tmp)
 	fs.remove("dir", tmp)
 end
 
-function M.tmp_name(url) return ".tmp_" .. ya.md5(string.format("extract//%s//%.10f", url, ya.time())) end
+function M.tmp_name(url) return ".tmp_" .. ya.hash(string.format("extract//%s//%.10f", url, ya.time())) end
 
 function M.trim_ext(name)
 	-- stylua: ignore

@@ -6,33 +6,6 @@ use yazi_shared::Xdg;
 use super::Package;
 
 impl Package {
-	// TODO: remove this in the future
-	pub(crate) async fn migrate() -> Result<()> {
-		let path = Xdg::config_dir().join("package.toml");
-		let mut doc = Self::ensure_config(&fs::read_to_string(&path).await.unwrap_or_default())?;
-
-		fn impl_(deps: &mut Array) -> Result<()> {
-			for dep in deps.iter_mut() {
-				let dep = dep.as_inline_table_mut().context("Dependency must be an inline table")?;
-				let use_ = dep.get("use").and_then(|d| d.as_str()).context("Missing `use` field")?;
-				if use_.contains("#") {
-					dep["use"] = use_.replace("#", ":").into();
-				}
-				if let Some(commit) = dep.get("commit").map(ToOwned::to_owned) {
-					dep.remove("commit");
-					dep.insert("rev", commit);
-				}
-			}
-			Ok(())
-		}
-
-		impl_(doc["plugin"]["deps"].as_array_mut().unwrap())?;
-		impl_(doc["flavor"]["deps"].as_array_mut().unwrap())?;
-
-		fs::write(path, doc.to_string()).await?;
-		Ok(())
-	}
-
 	pub(crate) async fn add_to_config(use_: &str) -> Result<()> {
 		let mut package = Self::new(use_, None);
 		let Some(name) = package.name() else { bail!("Invalid package `use`") };

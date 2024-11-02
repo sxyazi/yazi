@@ -3,7 +3,7 @@ use ratatui::widgets::Borders;
 
 use super::{Rect, Renderable};
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Bar {
 	area: Rect,
 
@@ -14,14 +14,8 @@ pub struct Bar {
 
 impl Bar {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		let new = lua.create_function(|_, (_, area, direction): (Table, Rect, u8)| {
-			Ok(Self {
-				area,
-
-				direction: Borders::from_bits_truncate(direction),
-				symbol: Default::default(),
-				style: Default::default(),
-			})
+		let new = lua.create_function(|_, (_, direction): (Table, u8)| {
+			Ok(Self { direction: Borders::from_bits_truncate(direction), ..Default::default() })
 		})?;
 
 		let bar = lua.create_table_from([

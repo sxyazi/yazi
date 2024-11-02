@@ -1,17 +1,17 @@
-use std::{cell::Cell, ffi::OsStr, fs::{FileType, Metadata}, ops::Deref};
+use std::{ffi::OsStr, fs::{FileType, Metadata}, ops::Deref};
 
 use anyhow::Result;
 use tokio::fs;
 
 use super::{Urn, UrnBuf};
-use crate::{fs::{Cha, ChaKind, Url}, theme::IconCache};
+use crate::{SyncCell, fs::{Cha, Url}, theme::IconCache};
 
 #[derive(Clone, Debug, Default)]
 pub struct File {
 	pub url:     Url,
 	pub cha:     Cha,
 	pub link_to: Option<Url>,
-	pub icon:    Cell<IconCache>,
+	pub icon:    SyncCell<IconCache>,
 }
 
 impl Deref for File {
@@ -34,34 +34,13 @@ impl File {
 	}
 
 	#[inline]
-	pub async fn from_meta(url: Url, mut meta: Metadata) -> Self {
-		let mut ck = ChaKind::empty();
-		let (is_link, mut link_to) = (meta.is_symlink(), None);
+	pub async fn from_meta(url: Url, meta: Metadata) -> Self {
+		let link_to =
+			if meta.is_symlink() { fs::read_link(&url).await.map(Url::from).ok() } else { None };
 
-		if is_link {
-			meta = fs::metadata(&url).await.unwrap_or(meta);
-			link_to = fs::read_link(&url).await.map(Url::from).ok();
-		}
+		let cha = Cha::new(&url, meta).await;
 
-		if is_link && meta.is_symlink() {
-			ck |= ChaKind::ORPHAN;
-		} else if is_link {
-			ck |= ChaKind::LINK;
-		}
-
-		#[cfg(unix)]
-		if url.is_hidden() {
-			ck |= ChaKind::HIDDEN;
-		}
-		#[cfg(windows)]
-		{
-			use std::os::windows::fs::MetadataExt;
-			if meta.file_attributes() & 2 != 0 {
-				ck |= ChaKind::HIDDEN;
-			}
-		}
-
-		Self { url, cha: Cha::from(meta).with_kind(ck), link_to, icon: Default::default() }
+		Self { url, cha, link_to, icon: Default::default() }
 	}
 
 	#[inline]

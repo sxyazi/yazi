@@ -1,6 +1,6 @@
 local M = {}
 
-function M:msg(s) ya.preview_widgets(self, { ui.Text(ui.Line(s):reverse()):area(self.area):wrap(ui.Text.WRAP) }) end
+function M:msg(s) ya.preview_widgets(self, { ui.Text(s):area(self.area):reverse():wrap(ui.Text.WRAP) }) end
 
 function M:peek()
 	local path = tostring(self.file.url)

@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 use yazi_boot::BOOT;
 use yazi_dds::Pubsub;
 use yazi_proxy::ManagerProxy;
-use yazi_shared::fs::Url;
+use yazi_shared::{Id, fs::Url};
 
 use crate::tab::Tab;
 
@@ -16,7 +16,6 @@ impl Tabs {
 	pub fn make() -> Self {
 		let mut tabs =
 			Self { cursor: 0, items: (0..BOOT.cwds.len()).map(|_| Tab::default()).collect() };
-		tabs.reorder();
 
 		for (i, tab) in tabs.iter_mut().enumerate() {
 			let file = &BOOT.files[i];
@@ -29,7 +28,6 @@ impl Tabs {
 		tabs
 	}
 
-	#[inline]
 	pub(super) fn absolute(&self, rel: isize) -> usize {
 		if rel > 0 {
 			(self.cursor + rel as usize).min(self.items.len() - 1)
@@ -38,16 +36,7 @@ impl Tabs {
 		}
 	}
 
-	#[inline]
-	pub(super) fn reorder(&mut self) {
-		self.items.iter_mut().enumerate().for_each(|(i, tab)| tab.idx = i);
-	}
-
 	pub(super) fn set_idx(&mut self, idx: usize) {
-		if self.cursor == idx {
-			return;
-		}
-
 		// Reset the preview of the last active tab
 		if let Some(active) = self.items.get_mut(self.cursor) {
 			active.preview.reset_image();
@@ -68,16 +57,16 @@ impl Tabs {
 	pub(super) fn active_mut(&mut self) -> &mut Tab { &mut self.items[self.cursor] }
 
 	#[inline]
-	pub fn active_or(&self, idx: Option<usize>) -> &Tab {
-		idx.and_then(|i| self.items.get(i)).unwrap_or(&self.items[self.cursor])
+	pub fn active_or(&self, id: Option<Id>) -> &Tab {
+		id.and_then(|id| self.iter().find(|&t| t.id == id)).unwrap_or(self.active())
 	}
 
 	#[inline]
-	pub(super) fn active_or_mut(&mut self, idx: Option<usize>) -> &mut Tab {
-		if let Some(i) = idx.filter(|&i| i < self.items.len()) {
+	pub(super) fn active_or_mut(&mut self, id: Option<Id>) -> &mut Tab {
+		if let Some(i) = id.and_then(|id| self.iter().position(|t| t.id == id)) {
 			&mut self.items[i]
 		} else {
-			&mut self.items[self.cursor]
+			self.active_mut()
 		}
 	}
 }

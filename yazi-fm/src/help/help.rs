@@ -4,11 +4,11 @@ use yazi_config::{KEYMAP, THEME};
 use super::Bindings;
 use crate::Ctx;
 
-pub(crate) struct Layout<'a> {
+pub(crate) struct Help<'a> {
 	cx: &'a Ctx,
 }
 
-impl<'a> Layout<'a> {
+impl<'a> Help<'a> {
 	pub fn new(cx: &'a Ctx) -> Self { Self { cx } }
 
 	fn tips() -> String {
@@ -19,7 +19,7 @@ impl<'a> Layout<'a> {
 	}
 }
 
-impl<'a> Widget for Layout<'a> {
+impl<'a> Widget for Help<'a> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let help = &self.cx.help;
 		yazi_plugin::elements::Clear::default().render(area, buf);

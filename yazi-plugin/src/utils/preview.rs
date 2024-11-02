@@ -53,7 +53,6 @@ impl Utils {
 					area,
 					inner,
 					wrap: if PREVIEW.wrap == PreviewWrap::Yes { WRAP } else { WRAP_NO },
-					..Default::default()
 				})];
 
 				emit!(Call(Cmd::new("update_peeked").with_any("lock", lock), Layer::Manager));

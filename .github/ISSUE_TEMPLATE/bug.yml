@@ -15,6 +15,7 @@ body:
         - Windows WSL
         - FreeBSD X11
         - FreeBSD Wayland
+        - Android
     validations:
       required: true
   - type: input
@@ -32,15 +33,6 @@ body:
       render: Shell
     validations:
       required: true
-  - type: dropdown
-    id: tried_main
-    attributes:
-      label: Did you try the latest nightly build to see if the problem got fixed?
-      options:
-        - Yes, and I updated the debug information above (`yazi --debug`) to the nightly that I tried
-        - No, and I'll explain why below
-    validations:
-      required: true
   - type: textarea
     id: description
     attributes:
@@ -52,7 +44,7 @@ body:
   - type: textarea
     id: reproducer
     attributes:
-      label:  Minimal reproducer
+      label: Minimal reproducer
       description: A [minimal reproducer](https://stackoverflow.com/help/minimal-reproducible-example) is required, otherwise the issue might be closed without further notice.
       placeholder: |
         Please include as much information as possible that can help to reproduce and understand the issue.
@@ -65,3 +57,14 @@ body:
       description: |
         Add any other context about the problem here.  You can attach screenshots by clicking
         this area to highlight it and then drag the files in.
+  - type: checkboxes
+    id: validations
+    attributes:
+      label: Validations
+      description: Before submitting the issue, please make sure you have completed the following
+      options:
+        - label: I tried the [latest nightly build](https://yazi-rs.github.io/docs/installation#official-binaries), and the issue is still reproducible
+          required: true
+        - label: I updated the debug information (`yazi --debug`) input box to the nightly that I tried
+          required: true
+        - label: I can reproduce it after disabling all custom configs/plugins (`mv ~/.config/yazi ~/.config/yazi-backup`)

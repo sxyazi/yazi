@@ -7,7 +7,7 @@ use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::
 use yazi_config::{TASKS, open::Opener, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
 use yazi_proxy::ManagerProxy;
-use yazi_shared::{Throttle, event::Data, fs::{Url, remove_dir_clean, unique_name}};
+use yazi_shared::{Throttle, event::Data, fs::{Url, must_be_dir, remove_dir_clean, unique_name}};
 
 use super::{Ongoing, TaskProg, TaskStage};
 use crate::{HIGH, LOW, NORMAL, TaskKind, TaskOp, file::{File, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, prework::{Prework, PreworkOpFetch, PreworkOpLoad, PreworkOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}};
@@ -71,7 +71,7 @@ impl Scheduler {
 
 	pub fn file_cut(&self, from: Url, mut to: Url, force: bool) {
 		let mut ongoing = self.ongoing.lock();
-		let id = ongoing.add(TaskKind::User, format!("Cut {:?} to {:?}", from, to));
+		let id = ongoing.add(TaskKind::User, format!("Cut {from} to {to}"));
 
 		if to.starts_with(&from) && to != from {
 			self.new_and_fail(id, "Cannot cut directory into itself").ok();
@@ -97,9 +97,9 @@ impl Scheduler {
 		let file = self.file.clone();
 		self.send_micro(id, LOW, async move {
 			if !force {
-				to = unique_name(to).await?;
+				to = unique_name(to, must_be_dir(&from)).await?;
 			}
-			file.paste(FileOpPaste { id, from, to, meta: None, cut: true, follow: false, retry: 0 }).await
+			file.paste(FileOpPaste { id, from, to, cha: None, cut: true, follow: false, retry: 0 }).await
 		});
 	}
 
@@ -114,9 +114,9 @@ impl Scheduler {
 		let file = self.file.clone();
 		self.send_micro(id, LOW, async move {
 			if !force {
-				to = unique_name(to).await?;
+				to = unique_name(to, must_be_dir(&from)).await?;
 			}
-			file.paste(FileOpPaste { id, from, to, meta: None, cut: false, follow, retry: 0 }).await
+			file.paste(FileOpPaste { id, from, to, cha: None, cut: false, follow, retry: 0 }).await
 		});
 	}
 
@@ -126,10 +126,10 @@ impl Scheduler {
 		let file = self.file.clone();
 		self.send_micro(id, LOW, async move {
 			if !force {
-				to = unique_name(to).await?;
+				to = unique_name(to, must_be_dir(&from)).await?;
 			}
 			file
-				.link(FileOpLink { id, from, to, meta: None, resolve: false, relative, delete: false })
+				.link(FileOpLink { id, from, to, cha: None, resolve: false, relative, delete: false })
 				.await
 		});
 	}
@@ -145,9 +145,9 @@ impl Scheduler {
 		let file = self.file.clone();
 		self.send_micro(id, LOW, async move {
 			if !force {
-				to = unique_name(to).await?;
+				to = unique_name(to, must_be_dir(&from)).await?;
 			}
-			file.hardlink(FileOpHardlink { id, from, to, meta: None, follow }).await
+			file.hardlink(FileOpHardlink { id, from, to, cha: None, follow }).await
 		});
 	}
 

@@ -170,10 +170,6 @@ impl Url {
 	#[inline]
 	pub fn pair(&self) -> Option<(Self, UrnBuf)> { Some((self.parent_url()?, self.loc.urn_owned())) }
 
-	#[cfg(unix)]
-	#[inline]
-	pub fn is_hidden(&self) -> bool { self.loc.urn().is_hidden() }
-
 	#[inline]
 	pub fn rebase(&self, parent: &Path) -> Self {
 		debug_assert!(self.is_regular());

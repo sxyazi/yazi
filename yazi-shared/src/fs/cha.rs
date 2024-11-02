@@ -1,4 +1,4 @@
-use std::{fs::{FileType, Metadata}, time::SystemTime};
+use std::{fs::{FileType, Metadata}, path::Path, time::SystemTime};
 
 use bitflags::bitflags;
 use yazi_macro::unix_either;
@@ -26,7 +26,7 @@ pub struct Cha {
 	pub ctime: Option<SystemTime>,
 	pub mtime: Option<SystemTime>,
 	#[cfg(unix)]
-	pub perm:  libc::mode_t,
+	pub mode:  libc::mode_t,
 	#[cfg(unix)]
 	pub uid:   libc::uid_t,
 	#[cfg(unix)]
@@ -37,40 +37,42 @@ pub struct Cha {
 
 impl From<Metadata> for Cha {
 	fn from(m: Metadata) -> Self {
-		let mut ck = ChaKind::empty();
+		let mut kind = ChaKind::empty();
 		if m.is_dir() {
-			ck |= ChaKind::DIR;
+			kind |= ChaKind::DIR;
+		} else if m.is_symlink() {
+			kind |= ChaKind::LINK;
 		}
 
 		Self {
-			kind:               ck,
-			len:                m.len(),
-			atime:              m.accessed().ok(),
-			btime:              m.created().ok(),
+			kind,
+			len: m.len(),
+			atime: m.accessed().ok(),
+			btime: m.created().ok(),
 			#[cfg(unix)]
-			ctime:              {
+			ctime: {
 				use std::{os::unix::fs::MetadataExt, time::{Duration, UNIX_EPOCH}};
 				UNIX_EPOCH.checked_add(Duration::new(m.ctime() as u64, m.ctime_nsec() as u32))
 			},
-			mtime:              m.modified().ok(),
+			mtime: m.modified().ok(),
 
 			#[cfg(unix)]
-			perm:               {
+			mode: {
 				use std::os::unix::prelude::PermissionsExt;
 				m.permissions().mode() as _
 			},
 			#[cfg(unix)]
-			uid:                {
+			uid: {
 				use std::os::unix::fs::MetadataExt;
 				m.uid() as _
 			},
 			#[cfg(unix)]
-			gid:                {
+			gid: {
 				use std::os::unix::fs::MetadataExt;
 				m.gid() as _
 			},
 			#[cfg(unix)]
-			nlink:              {
+			nlink: {
 				use std::os::unix::fs::MetadataExt;
 				m.nlink() as _
 			},
@@ -83,7 +85,7 @@ impl From<FileType> for Cha {
 		let mut kind = ChaKind::DUMMY;
 
 		#[cfg(unix)]
-		let perm = {
+		let mode = {
 			use std::os::unix::fs::FileTypeExt;
 			if t.is_dir() {
 				kind |= ChaKind::DIR;
@@ -116,7 +118,7 @@ impl From<FileType> for Cha {
 		Self {
 			kind,
 			#[cfg(unix)]
-			perm,
+			mode,
 			..Default::default()
 		}
 	}
@@ -124,13 +126,45 @@ impl From<FileType> for Cha {
 
 impl Cha {
 	#[inline]
-	pub fn dummy() -> Self { Self { kind: ChaKind::DUMMY, ..Default::default() } }
+	pub async fn new(path: &Path, mut meta: Metadata) -> Self {
+		let mut attached = ChaKind::empty();
+
+		if meta.is_symlink() {
+			attached |= ChaKind::LINK;
+			meta = tokio::fs::metadata(path).await.unwrap_or(meta);
+		}
+		if meta.is_symlink() {
+			attached |= ChaKind::ORPHAN;
+		}
+
+		let mut cha = Self::new_nofollow(path, meta);
+		cha.kind |= attached;
+		cha
+	}
 
 	#[inline]
-	pub fn with_kind(mut self, kind: ChaKind) -> Self {
-		self.kind |= kind;
-		self
+	pub fn new_nofollow(path: &Path, meta: Metadata) -> Self {
+		let mut attached = ChaKind::empty();
+
+		#[cfg(unix)]
+		if super::Urn::new(path).is_hidden() {
+			attached |= ChaKind::HIDDEN;
+		}
+		#[cfg(windows)]
+		{
+			use std::os::windows::fs::MetadataExt;
+			if meta.file_attributes() & 2 != 0 {
+				attached |= ChaKind::HIDDEN;
+			}
+		}
+
+		let mut cha = Self::from(meta);
+		cha.kind |= attached;
+		cha
 	}
+
+	#[inline]
+	pub fn dummy() -> Self { Self { kind: ChaKind::DUMMY, ..Default::default() } }
 
 	#[inline]
 	pub fn hits(self, c: Self) -> bool {
@@ -139,7 +173,7 @@ impl Cha {
 			&& unix_either!(self.ctime == c.ctime, true)
 			&& self.btime == c.btime
 			&& self.kind == c.kind
-			&& unix_either!(self.perm == c.perm, true)
+			&& unix_either!(self.mode == c.mode, true)
 	}
 }
 
@@ -161,27 +195,27 @@ impl Cha {
 
 	#[inline]
 	pub const fn is_block(&self) -> bool {
-		unix_either!(self.perm & libc::S_IFMT == libc::S_IFBLK, false)
+		unix_either!(self.mode & libc::S_IFMT == libc::S_IFBLK, false)
 	}
 
 	#[inline]
 	pub const fn is_char(&self) -> bool {
-		unix_either!(self.perm & libc::S_IFMT == libc::S_IFCHR, false)
+		unix_either!(self.mode & libc::S_IFMT == libc::S_IFCHR, false)
 	}
 
 	#[inline]
 	pub const fn is_fifo(&self) -> bool {
-		unix_either!(self.perm & libc::S_IFMT == libc::S_IFIFO, false)
+		unix_either!(self.mode & libc::S_IFMT == libc::S_IFIFO, false)
 	}
 
 	#[inline]
 	pub const fn is_sock(&self) -> bool {
-		unix_either!(self.perm & libc::S_IFMT == libc::S_IFSOCK, false)
+		unix_either!(self.mode & libc::S_IFMT == libc::S_IFSOCK, false)
 	}
 
 	#[inline]
-	pub const fn is_exec(&self) -> bool { unix_either!(self.perm & libc::S_IXUSR != 0, false) }
+	pub const fn is_exec(&self) -> bool { unix_either!(self.mode & libc::S_IXUSR != 0, false) }
 
 	#[inline]
-	pub const fn is_sticky(&self) -> bool { unix_either!(self.perm & libc::S_ISVTX != 0, false) }
+	pub const fn is_sticky(&self) -> bool { unix_either!(self.mode & libc::S_ISVTX != 0, false) }
 }

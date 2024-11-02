@@ -7,9 +7,7 @@ function M:peek()
 	local files, bound, code = self.list_files({ "-p", tostring(self.file.url) }, self.skip, limit)
 	if code ~= 0 then
 		return ya.preview_widgets(self, {
-			ui.Text(
-				ui.Line(code == 2 and "File list in this archive is encrypted" or "Spawn `7z` and `7zz` both commands failed")
-			)
+			ui.Text(code == 2 and "File list in this archive is encrypted" or "Spawn `7z` and `7zz` both commands failed")
 				:area(self.area),
 		})
 	end
@@ -27,9 +25,9 @@ function M:peek()
 		end
 
 		if f.size > 0 then
-			sizes[#sizes + 1] = ui.Line(string.format(" %s ", ya.readable_size(f.size)))
+			sizes[#sizes + 1] = string.format(" %s ", ya.readable_size(f.size))
 		else
-			sizes[#sizes + 1] = ui.Line("")
+			sizes[#sizes + 1] = ""
 		end
 	end
 
@@ -81,7 +79,7 @@ end
 ---  2: wrong password
 ---  3: partial success
 function M.list_files(args, skip, limit)
-	local child = M.spawn_7z { "l", "-ba", "-slt", table.unpack(args) }
+	local child = M.spawn_7z { "l", "-ba", "-slt", "-sccUTF-8", table.unpack(args) }
 	if not child then
 		return {}, 0, 1
 	end
@@ -138,7 +136,7 @@ end
 ---  2: wrong password
 ---  3: partial success
 function M.list_meta(args)
-	local child = M.spawn_7z { "l", "-slt", table.unpack(args) }
+	local child = M.spawn_7z { "l", "-slt", "-sccUTF-8", table.unpack(args) }
 	if not child then
 		return nil, 1
 	end

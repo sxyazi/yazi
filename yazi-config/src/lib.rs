@@ -6,9 +6,7 @@ yazi_macro::mod_flat!(layout pattern preset priority);
 
 use std::str::FromStr;
 
-use yazi_shared::{RoCell, Xdg};
-
-pub static LAYOUT: RoCell<arc_swap::ArcSwap<Layout>> = RoCell::new();
+use yazi_shared::{RoCell, SyncCell, Xdg};
 
 pub static KEYMAP: RoCell<keymap::Keymap> = RoCell::new();
 pub static LOG: RoCell<log::Log> = RoCell::new();
@@ -23,26 +21,28 @@ pub static CONFIRM: RoCell<popup::Confirm> = RoCell::new();
 pub static PICK: RoCell<popup::Pick> = RoCell::new();
 pub static WHICH: RoCell<which::Which> = RoCell::new();
 
+pub static LAYOUT: SyncCell<Layout> = SyncCell::new(Layout::default());
+
 pub fn init() -> anyhow::Result<()> {
-	let config_dir = Xdg::config_dir();
-	let yazi_toml = &Preset::yazi(&config_dir)?;
-	let keymap_toml = &Preset::keymap(&config_dir)?;
-	let theme_toml = &Preset::theme(&config_dir)?;
+	if let Err(e) = try_init(true) {
+		eprintln!("{e}");
+		if let Some(src) = e.source() {
+			eprintln!("\nCaused by:\n{src}");
+		}
 
-	LAYOUT.with(<_>::default);
+		use crossterm::style::{Attribute, Print, SetAttributes};
+		crossterm::execute!(
+			std::io::stderr(),
+			SetAttributes(Attribute::Reverse.into()),
+			SetAttributes(Attribute::Bold.into()),
+			Print("Press <Enter> to continue with preset settings..."),
+			SetAttributes(Attribute::Reset.into()),
+			Print("\n"),
+		)?;
 
-	KEYMAP.init(<_>::from_str(keymap_toml)?);
-	LOG.init(<_>::from_str(yazi_toml)?);
-	MANAGER.init(<_>::from_str(yazi_toml)?);
-	OPEN.init(<_>::from_str(yazi_toml)?);
-	PLUGIN.init(<_>::from_str(yazi_toml)?);
-	PREVIEW.init(<_>::from_str(yazi_toml)?);
-	TASKS.init(<_>::from_str(yazi_toml)?);
-	THEME.init(<_>::from_str(theme_toml)?);
-	INPUT.init(<_>::from_str(yazi_toml)?);
-	CONFIRM.init(<_>::from_str(yazi_toml)?);
-	PICK.init(<_>::from_str(yazi_toml)?);
-	WHICH.init(<_>::from_str(yazi_toml)?);
+		std::io::stdin().read_line(&mut String::new())?;
+		try_init(false)?;
+	}
 
 	// TODO: Remove in v0.3.2
 	for c in &KEYMAP.manager {
@@ -75,6 +75,44 @@ Please change `create_title = "Create:"` to `create_title = ["Create:", "Create 
 "#
 		);
 	}
+
+	Ok(())
+}
+
+fn try_init(merge: bool) -> anyhow::Result<()> {
+	let (yazi_toml, keymap_toml, theme_toml) = if merge {
+		let p = Xdg::config_dir();
+		(Preset::yazi(&p)?, Preset::keymap(&p)?, Preset::theme(&p)?)
+	} else {
+		use yazi_macro::config_preset as preset;
+		(preset!("yazi"), preset!("keymap"), preset!("theme"))
+	};
+
+	let keymap = <_>::from_str(&keymap_toml)?;
+	let log = <_>::from_str(&yazi_toml)?;
+	let manager = <_>::from_str(&yazi_toml)?;
+	let open = <_>::from_str(&yazi_toml)?;
+	let plugin = <_>::from_str(&yazi_toml)?;
+	let preview = <_>::from_str(&yazi_toml)?;
+	let tasks = <_>::from_str(&yazi_toml)?;
+	let theme = <_>::from_str(&theme_toml)?;
+	let input = <_>::from_str(&yazi_toml)?;
+	let confirm = <_>::from_str(&yazi_toml)?;
+	let pick = <_>::from_str(&yazi_toml)?;
+	let which = <_>::from_str(&yazi_toml)?;
+
+	KEYMAP.init(keymap);
+	LOG.init(log);
+	MANAGER.init(manager);
+	OPEN.init(open);
+	PLUGIN.init(plugin);
+	PREVIEW.init(preview);
+	TASKS.init(tasks);
+	THEME.init(theme);
+	INPUT.init(input);
+	CONFIRM.init(confirm);
+	PICK.init(pick);
+	WHICH.init(which);
 
 	Ok(())
 }

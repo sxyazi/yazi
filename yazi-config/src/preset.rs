@@ -9,15 +9,15 @@ use crate::theme::Flavor;
 pub(crate) struct Preset;
 
 impl Preset {
-	pub(crate) fn yazi(p: &Path) -> Result<Cow<str>> {
+	pub(crate) fn yazi(p: &Path) -> Result<Cow<'static, str>> {
 		Self::merge_path(p.join("yazi.toml"), preset!("yazi"))
 	}
 
-	pub(crate) fn keymap(p: &Path) -> Result<Cow<str>> {
+	pub(crate) fn keymap(p: &Path) -> Result<Cow<'static, str>> {
 		Self::merge_path(p.join("keymap.toml"), preset!("keymap"))
 	}
 
-	pub(crate) fn theme(p: &Path) -> Result<Cow<str>> {
+	pub(crate) fn theme(p: &Path) -> Result<Cow<'static, str>> {
 		let Ok(user) = std::fs::read_to_string(p.join("theme.toml")) else {
 			return Ok(preset!("theme"));
 		};

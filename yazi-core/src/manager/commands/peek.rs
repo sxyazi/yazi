@@ -1,3 +1,4 @@
+use yazi_proxy::HIDER;
 use yazi_shared::{event::{Cmd, Data}, fs::Url};
 
 use crate::manager::Manager;
@@ -30,6 +31,9 @@ impl Manager {
 		let Some(hovered) = self.hovered().cloned() else {
 			return self.active_mut().preview.reset();
 		};
+		if HIDER.try_acquire().is_err() {
+			return self.active_mut().preview.reset_image();
+		}
 
 		let mime = self.mimetype.get_owned(&hovered.url).unwrap_or_default();
 		let folder = self.active().hovered_folder().map(|f| (f.offset, f.cha));

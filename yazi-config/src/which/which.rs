@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -23,6 +24,9 @@ impl FromStr for Which {
 			which: Which,
 		}
 
-		Ok(toml::from_str::<Outer>(s)?.which)
+		let outer = toml::from_str::<Outer>(s)
+			.context("Failed to parse the [which] section in your yazi.toml")?;
+
+		Ok(outer.which)
 	}
 }

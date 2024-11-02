@@ -110,7 +110,7 @@ pub fn install(lua: &Lua) -> mlua::Result<()> {
 						Some(
 							GlobBuilder::new(s.to_str()?)
 								.case_insensitive(true)
-								.literal_separator(false)
+								.literal_separator(true)
 								.backslash_escape(false)
 								.empty_alternates(true)
 								.build()
@@ -162,7 +162,7 @@ pub fn install(lua: &Lua) -> mlua::Result<()> {
 			(
 				"unique_name",
 				lua.create_async_function(|lua, url: UrlRef| async move {
-					match yazi_shared::fs::unique_name(url.clone()).await {
+					match yazi_shared::fs::unique_name(url.clone(), async { false }).await {
 						Ok(u) => (Url::cast(lua, u)?, Value::Nil).into_lua_multi(lua),
 						Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(lua),
 					}

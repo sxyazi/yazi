@@ -42,7 +42,7 @@ impl Tab {
 			}
 		}
 
-		ManagerProxy::hover(None, self.idx);
+		ManagerProxy::hover(None, self.id);
 		render!();
 	}
 }

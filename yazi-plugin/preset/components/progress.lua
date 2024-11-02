@@ -1,27 +1,33 @@
 Progress = {
-	_area = ui.Rect.default, -- TODO: remove this
+	_id = "progress",
 }
 
-function Progress:render(area, offset)
-	self._area = ui.Rect {
-		x = math.max(0, area.w - offset - 21),
-		y = area.y,
-		w = ya.clamp(0, area.w - offset - 1, 20),
-		h = math.min(1, area.h),
-	}
-	return self:partial_render()
+function Progress:new(area, offset)
+	local me = setmetatable({ _area = area, _offset = offset }, { __index = self })
+	me:layout()
+	return me
 end
 
--- Progress bars usually need frequent updates to report the latest task progress.
--- We use `partial_render()` to partially render it when there is progress change,
--- which has almost no cost compared to a full render by `render()`.
-function Progress:partial_render()
+function Progress:use(area) return setmetatable({ _area = area }, { __index = self }) end
+
+function Progress:layout()
+	self._area = ui.Rect {
+		x = math.max(0, self._area.w - self._offset - 21),
+		y = self._area.y,
+		w = ya.clamp(0, self._area.w - self._offset - 1, 20),
+		h = math.min(1, self._area.h),
+	}
+end
+
+function Progress:reflow() return { self } end
+
+function Progress:redraw()
 	local progress = cx.tasks.progress
 	if progress.total == 0 then
-		return { ui.Text {} }
+		return {}
 	end
 
-	local gauge = ui.Gauge(self._area)
+	local gauge = ui.Gauge():area(self._area)
 	if progress.fail == 0 then
 		gauge = gauge:gauge_style(THEME.status.progress_normal)
 	else

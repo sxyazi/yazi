@@ -1,4 +1,4 @@
-use std::{borrow::Cow, env, ffi::OsString, io, path::{Component, Path, PathBuf}};
+use std::{borrow::Cow, env, ffi::OsString, future::Future, io, path::{Component, Path, PathBuf}};
 
 use tokio::fs;
 
@@ -74,38 +74,51 @@ fn _expand_path(p: &Path) -> PathBuf {
 	}
 }
 
-pub async fn unique_name(mut u: Url) -> io::Result<Url> {
+pub async fn unique_name<F>(u: Url, append: F) -> io::Result<Url>
+where
+	F: Future<Output = bool>,
+{
+	match fs::symlink_metadata(&u).await {
+		Ok(_) => _unique_name(u, append.await).await,
+		Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(u),
+		Err(e) => Err(e),
+	}
+}
+
+async fn _unique_name(mut u: Url, append: bool) -> io::Result<Url> {
 	let Some(stem) = u.file_stem().map(|s| s.to_owned()) else {
 		return Err(io::Error::new(io::ErrorKind::InvalidInput, "empty file stem"));
 	};
 
-	let ext = u
-		.extension()
-		.map(|s| {
-			let mut n = OsString::with_capacity(s.len() + 1);
-			n.push(".");
-			n.push(s);
-			n
-		})
-		.unwrap_or_default();
+	let dot_ext = u.extension().map_or_else(OsString::new, |e| {
+		let mut s = OsString::with_capacity(e.len() + 1);
+		s.push(".");
+		s.push(e);
+		s
+	});
 
 	let mut i = 1u64;
 	let mut p = u.to_path();
 	loop {
+		let mut name = OsString::with_capacity(stem.len() + dot_ext.len() + 5);
+		name.push(&stem);
+
+		if append {
+			name.push(&dot_ext);
+			name.push("_");
+			name.push(i.to_string());
+		} else {
+			name.push("_");
+			name.push(i.to_string());
+			name.push(&dot_ext);
+		}
+
+		p.set_file_name(name);
 		match fs::symlink_metadata(&p).await {
-			Ok(_) => {}
+			Ok(_) => i += 1,
 			Err(e) if e.kind() == io::ErrorKind::NotFound => break,
 			Err(e) => return Err(e),
 		}
-
-		let mut name = OsString::with_capacity(stem.len() + ext.len() + 5);
-		name.push(&stem);
-		name.push("_");
-		name.push(i.to_string());
-		name.push(&ext);
-
-		p.set_file_name(name);
-		i += 1;
 	}
 
 	u.set_loc(Loc::from(u.base(), p));
@@ -155,6 +168,27 @@ pub fn path_relative_to<'a>(path: &'a Path, root: &Path) -> Cow<'a, Path> {
 	buf.extend(p_comps);
 
 	Cow::from(buf)
+}
+
+#[cfg(windows)]
+pub fn backslash_to_slash(p: &Path) -> Cow<Path> {
+	let bytes = p.as_os_str().as_encoded_bytes();
+
+	// Fast path to skip if there are no backslashes
+	let skip_len = bytes.iter().take_while(|&&b| b != b'\\').count();
+	if skip_len >= bytes.len() {
+		return Cow::Borrowed(p);
+	}
+
+	let (skip, rest) = bytes.split_at(skip_len);
+	let mut out = Vec::new();
+	out.try_reserve_exact(bytes.len()).unwrap_or_else(|_| panic!());
+	out.extend(skip);
+
+	for &b in rest {
+		out.push(if b == b'\\' { b'/' } else { b });
+	}
+	Cow::Owned(PathBuf::from(unsafe { OsString::from_encoded_bytes_unchecked(out) }))
 }
 
 #[cfg(test)]

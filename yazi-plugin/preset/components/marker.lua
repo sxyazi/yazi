@@ -9,7 +9,7 @@ function Marker:new(area, folder)
 	}, { __index = self })
 end
 
-function Marker:render()
+function Marker:redraw()
 	if self._area.w * self._area.h == 0 then
 		return {}
 	elseif not self._folder or #self._folder.window == 0 then
@@ -29,7 +29,7 @@ function Marker:render()
 			w = 1,
 			h = math.min(1 + last[2] - last[1], self._area.y + self._area.h - y),
 		}
-		elements[#elements + 1] = ui.Bar(rect, ui.Bar.LEFT):style(last[3])
+		elements[#elements + 1] = ui.Bar(ui.Bar.LEFT):area(rect):style(last[3])
 	end
 
 	local last = { 0, 0, nil } -- start, end, style

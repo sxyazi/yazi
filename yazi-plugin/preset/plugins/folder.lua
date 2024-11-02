@@ -13,18 +13,18 @@ function M:peek()
 
 	if #folder.files == 0 then
 		return ya.preview_widgets(self, {
-			ui.Text(ui.Line(folder.stage.is_loading and "Loading..." or "No items")):area(self.area):align(ui.Text.CENTER),
+			ui.Text(folder.stage.is_loading and "Loading..." or "No items"):area(self.area):align(ui.Text.CENTER),
 		})
 	end
 
-	local items = {}
+	local entities = {}
 	for _, f in ipairs(folder.window) do
-		items[#items + 1] = Entity:new(f):render()
+		entities[#entities + 1] = Entity:new(f):redraw()
 	end
 
 	ya.preview_widgets(self, {
-		ui.List(items):area(self.area),
-		table.unpack(Marker:new(self.area, folder):render()),
+		ui.List(entities):area(self.area),
+		table.unpack(Marker:new(self.area, folder):redraw()),
 	})
 end
 

@@ -9,17 +9,17 @@ use crate::elements::Constraint;
 pub struct Table {
 	area: Rect,
 
-	rows:              Vec<ratatui::widgets::Row<'static>>,
-	header:            Option<ratatui::widgets::Row<'static>>,
-	footer:            Option<ratatui::widgets::Row<'static>>,
-	widths:            Vec<ratatui::layout::Constraint>,
-	column_spacing:    u16,
-	block:             Option<ratatui::widgets::Block<'static>>,
-	style:             ratatui::style::Style,
-	highlight_style:   ratatui::style::Style,
-	highlight_symbol:  ratatui::text::Text<'static>,
-	highlight_spacing: ratatui::widgets::HighlightSpacing,
-	flex:              ratatui::layout::Flex,
+	rows:                Vec<ratatui::widgets::Row<'static>>,
+	header:              Option<ratatui::widgets::Row<'static>>,
+	footer:              Option<ratatui::widgets::Row<'static>>,
+	widths:              Vec<ratatui::layout::Constraint>,
+	column_spacing:      u16,
+	block:               Option<ratatui::widgets::Block<'static>>,
+	style:               ratatui::style::Style,
+	row_highlight_style: ratatui::style::Style,
+	highlight_symbol:    ratatui::text::Text<'static>,
+	highlight_spacing:   ratatui::widgets::HighlightSpacing,
+	flex:                ratatui::layout::Flex,
 
 	state: ratatui::widgets::TableState,
 }
@@ -61,7 +61,7 @@ impl Renderable for Table {
 		let mut table = ratatui::widgets::Table::new(self.rows, self.widths)
 			.column_spacing(self.column_spacing)
 			.style(self.style)
-			.highlight_style(self.highlight_style)
+			.row_highlight_style(self.row_highlight_style)
 			.highlight_symbol(self.highlight_symbol)
 			.highlight_spacing(self.highlight_spacing)
 			.flex(self.flex);

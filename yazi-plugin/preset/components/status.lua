@@ -10,8 +10,8 @@ Status = {
 		{ "name", id = 3, order = 3000 },
 	},
 	_right = {
-		{ "permissions", id = 4, order = 1000 },
-		{ "percentage", id = 5, order = 2000 },
+		{ "perm", id = 4, order = 1000 },
+		{ "percent", id = 5, order = 2000 },
 		{ "position", id = 6, order = 3000 },
 	},
 }
@@ -20,6 +20,7 @@ function Status:new(area, tab)
 	return setmetatable({
 		_area = area,
 		_tab = tab,
+		_current = tab.current,
 	}, { __index = self })
 end
 
@@ -45,7 +46,7 @@ function Status:mode()
 end
 
 function Status:size()
-	local h = self._tab.current.hovered
+	local h = self._current.hovered
 	if not h then
 		return ui.Line {}
 	end
@@ -58,7 +59,7 @@ function Status:size()
 end
 
 function Status:name()
-	local h = self._tab.current.hovered
+	local h = self._current.hovered
 	if not h then
 		return ui.Line {}
 	end
@@ -66,8 +67,8 @@ function Status:name()
 	return ui.Line(" " .. h.name)
 end
 
-function Status:permissions()
-	local h = self._tab.current.hovered
+function Status:perm()
+	local h = self._current.hovered
 	if not h then
 		return ui.Line {}
 	end
@@ -95,10 +96,10 @@ function Status:permissions()
 	return ui.Line(spans)
 end
 
-function Status:percentage()
+function Status:percent()
 	local percent = 0
-	local cursor = self._tab.current.cursor
-	local length = #self._tab.current.files
+	local cursor = self._current.cursor
+	local length = #self._current.files
 	if cursor ~= 0 and length ~= 0 then
 		percent = math.floor((cursor + 1) * 100 / length)
 	end
@@ -119,8 +120,8 @@ function Status:percentage()
 end
 
 function Status:position()
-	local cursor = self._tab.current.cursor
-	local length = #self._tab.current.files
+	local cursor = self._current.cursor
+	local length = #self._current.files
 
 	local style = self:style()
 	return ui.Line {
@@ -130,14 +131,18 @@ function Status:position()
 	}
 end
 
-function Status:render()
-	local left = self:children_render(self.LEFT)
-	local right = self:children_render(self.RIGHT)
+function Status:reflow() return { self } end
+
+function Status:redraw()
+	local left = self:children_redraw(self.LEFT)
+
+	local right = self:children_redraw(self.RIGHT)
 	local right_width = right:width()
+
 	return {
 		ui.Text(left):area(self._area),
 		ui.Text(right):area(self._area):align(ui.Text.RIGHT),
-		table.unpack(Progress:render(self._area, right_width)),
+		table.unpack(ya.redraw_with(Progress:new(self._area, right_width))),
 	}
 end
 
@@ -169,7 +174,7 @@ function Status:children_remove(id, side)
 	end
 end
 
-function Status:children_render(side)
+function Status:children_redraw(side)
 	local lines = {}
 	for _, c in ipairs(side == self.RIGHT and self._right or self._left) do
 		lines[#lines + 1] = (type(c[1]) == "string" and self[c[1]] or c[1])(self)

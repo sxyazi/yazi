@@ -2,7 +2,7 @@ use ratatui::layout::Rect;
 use yazi_adapter::Dimension;
 use yazi_config::popup::{Origin, Position};
 use yazi_fs::Folder;
-use yazi_shared::fs::{File, Url};
+use yazi_shared::{Id, fs::{File, Url}};
 
 use super::{Mimetype, Tabs, Watcher, Yanked};
 use crate::tab::Tab;
@@ -48,10 +48,10 @@ impl Manager {
 	pub fn active_mut(&mut self) -> &mut Tab { self.tabs.active_mut() }
 
 	#[inline]
-	pub fn active_or(&self, idx: Option<usize>) -> &Tab { self.tabs.active_or(idx) }
+	pub fn active_or(&self, id: Option<Id>) -> &Tab { self.tabs.active_or(id) }
 
 	#[inline]
-	pub fn active_or_mut(&mut self, idx: Option<usize>) -> &mut Tab { self.tabs.active_or_mut(idx) }
+	pub fn active_or_mut(&mut self, id: Option<Id>) -> &mut Tab { self.tabs.active_or_mut(id) }
 
 	#[inline]
 	pub fn current(&self) -> &Folder { &self.active().current }
@@ -60,10 +60,10 @@ impl Manager {
 	pub fn current_mut(&mut self) -> &mut Folder { &mut self.active_mut().current }
 
 	#[inline]
-	pub fn current_or(&self, idx: Option<usize>) -> &Folder { &self.active_or(idx).current }
+	pub fn current_or(&self, idx: Option<Id>) -> &Folder { &self.active_or(idx).current }
 
 	#[inline]
-	pub fn current_or_mut(&mut self, idx: Option<usize>) -> &mut Folder {
+	pub fn current_or_mut(&mut self, idx: Option<Id>) -> &mut Folder {
 		&mut self.active_or_mut(idx).current
 	}
 

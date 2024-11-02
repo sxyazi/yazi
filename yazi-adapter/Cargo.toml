@@ -14,20 +14,18 @@ yazi-macro  = { path = "../yazi-macro", version = "0.3.3" }
 yazi-shared = { path = "../yazi-shared", version = "0.3.3" }
 
 # External dependencies
-ansi-to-tui  = { workspace = true }
-anyhow       = { workspace = true }
-arc-swap     = { workspace = true }
-base64       = { workspace = true }
-color_quant  = "1.1.0"
-crossterm    = { workspace = true }
-futures      = { workspace = true }
-image        = { version = "0.25.2", default-features = false, features = [ "rayon", "avif", "bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "tga", "webp" ] }
-imagesize    = "0.13.0"
-kamadak-exif = "0.5.5"
-ratatui      = { workspace = true }
-scopeguard   = { workspace = true }
-tokio        = { workspace = true }
-tracing      = { workspace = true }
+ansi-to-tui = { workspace = true }
+anyhow      = { workspace = true }
+base64      = { workspace = true }
+color_quant = "1.1.0"
+crossterm   = { workspace = true }
+futures     = { workspace = true }
+image       = { version = "0.25.4", default-features = false, features = [ "rayon", "avif", "bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "tga", "webp" ] }
+imagesize   = "0.13.0"
+ratatui     = { workspace = true }
+scopeguard  = { workspace = true }
+tokio       = { workspace = true }
+tracing     = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }

@@ -2,16 +2,16 @@ local M = {}
 
 function M:peek()
 	local cmd = os.getenv("YAZI_FILE_ONE") or "file"
-	local output, code = Command(cmd):args({ "-bL", tostring(self.file.url) }):stdout(Command.PIPED):output()
+	local output, code = Command(cmd):args({ "-bL", "--", tostring(self.file.url) }):stdout(Command.PIPED):output()
 
-	local p
+	local text
 	if output then
-		p = ui.Text.parse("----- File Type Classification -----\n\n" .. output.stdout):area(self.area)
+		text = ui.Text.parse("----- File Type Classification -----\n\n" .. output.stdout)
 	else
-		p = ui.Text(string.format("Spawn `%s` command returns %s", cmd, code)):area(self.area)
+		text = ui.Text(string.format("Spawn `%s` command returns %s", cmd, code))
 	end
 
-	ya.preview_widgets(self, { p:wrap(ui.Text.WRAP) })
+	ya.preview_widgets(self, { text:area(self.area):wrap(ui.Text.WRAP) })
 end
 
 function M:seek() end

@@ -16,7 +16,7 @@ function M:fetch()
 	end
 
 	local cmd = os.getenv("YAZI_FILE_ONE") or "file"
-	local child, code = Command(cmd):args({ "-bL", "--mime-type" }):args(urls):stdout(Command.PIPED):spawn()
+	local child, code = Command(cmd):args({ "-bL", "--mime-type", "--" }):args(urls):stdout(Command.PIPED):spawn()
 	if not child then
 		ya.err(string.format("Spawn `%s` command returns %s", cmd, code))
 		return 0

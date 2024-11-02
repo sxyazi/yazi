@@ -22,8 +22,8 @@ function M:seek(units)
 end
 
 function M:preload()
-	local percentage = 5 + self.skip
-	if percentage > 95 then
+	local percent = 5 + self.skip
+	if percent > 95 then
 		ya.manager_emit("peek", { 90, only_if = self.file.url, upper_bound = true })
 		return 2
 	end
@@ -48,7 +48,7 @@ function M:preload()
 		"-o",
 		tostring(cache),
 		"-t",
-		tostring(percentage),
+		tostring(percent),
 		"-s",
 		tostring(PREVIEW.max_width),
 	}):spawn()

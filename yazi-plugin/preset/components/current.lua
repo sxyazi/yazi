@@ -11,19 +11,21 @@ function Current:new(area, tab)
 end
 
 function Current:empty()
-	local line
+	local text
 	if self._folder.files.filter then
-		line = ui.Line("No filter results")
+		text = ui.Text("No filter results")
 	else
-		line = ui.Line(self._folder.stage.is_loading and "Loading..." or "No items")
+		text = ui.Text(self._folder.stage.is_loading and "Loading..." or "No items")
 	end
 
 	return {
-		ui.Text(line):area(self._area):align(ui.Text.CENTER),
+		text:area(self._area):align(ui.Text.CENTER),
 	}
 end
 
-function Current:render()
+function Current:reflow() return { self } end
+
+function Current:redraw()
 	local files = self._folder.window
 	if #files == 0 then
 		return self:empty()
@@ -31,8 +33,8 @@ function Current:render()
 
 	local entities, linemodes = {}, {}
 	for _, f in ipairs(files) do
-		linemodes[#linemodes + 1] = Linemode:new(f):render()
-		entities[#entities + 1] = Entity:new(f):render()
+		entities[#entities + 1] = Entity:new(f):redraw()
+		linemodes[#linemodes + 1] = Linemode:new(f):redraw()
 	end
 
 	return {

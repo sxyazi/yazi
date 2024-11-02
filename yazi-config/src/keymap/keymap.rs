@@ -1,5 +1,6 @@
 use std::{collections::HashSet, str::FromStr};
 
+use anyhow::Context;
 use indexmap::IndexSet;
 use serde::{Deserialize, Deserializer};
 use yazi_shared::Layer;
@@ -20,7 +21,7 @@ pub struct Keymap {
 
 impl Keymap {
 	#[inline]
-	pub fn get(&self, layer: Layer) -> &Vec<Chord> {
+	pub fn get(&self, layer: Layer) -> &[Chord] {
 		match layer {
 			Layer::App => unreachable!(),
 			Layer::Manager => &self.manager,
@@ -36,9 +37,11 @@ impl Keymap {
 }
 
 impl FromStr for Keymap {
-	type Err = toml::de::Error;
+	type Err = anyhow::Error;
 
-	fn from_str(s: &str) -> Result<Self, Self::Err> { toml::from_str(s) }
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		toml::from_str(s).context("Failed to parse your keymap.toml")
+	}
 }
 
 impl<'de> Deserialize<'de> for Keymap {

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
 use mlua::{ExternalError, Lua, Table, TableExt, Value};
 use tracing::error;
@@ -37,30 +37,23 @@ impl Utils {
 		)?;
 
 		ya.raw_set(
-			"render_with",
+			"redraw_with",
 			lua.create_function(|lua, c: Table| {
 				let id: mlua::String = c.get("_id")?;
 				let id = id.to_str()?;
 
+				let mut layout = LAYOUT.get();
 				match id {
-					"current" => {
-						LAYOUT.store(Arc::new(yazi_config::Layout {
-							current: *c.raw_get::<_, crate::elements::Rect>("_area")?,
-							..*LAYOUT.load_full()
-						}));
-					}
-					"preview" => {
-						LAYOUT.store(Arc::new(yazi_config::Layout {
-							preview: *c.raw_get::<_, crate::elements::Rect>("_area")?,
-							..*LAYOUT.load_full()
-						}));
-					}
+					"current" => layout.current = *c.raw_get::<_, crate::elements::Rect>("_area")?,
+					"preview" => layout.preview = *c.raw_get::<_, crate::elements::Rect>("_area")?,
+					"progress" => layout.progress = *c.raw_get::<_, crate::elements::Rect>("_area")?,
 					_ => {}
 				}
 
-				match c.call_method::<_, Table>("render", ()) {
+				LAYOUT.set(layout);
+				match c.call_method::<_, Table>("redraw", ()) {
 					Err(e) => {
-						error!("Failed to `render()` the `{id}` component:\n{e}");
+						error!("Failed to `redraw()` the `{id}` component:\n{e}");
 						lua.create_table()
 					}
 					ok => ok,

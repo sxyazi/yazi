@@ -1,5 +1,5 @@
 use yazi_macro::emit;
-use yazi_shared::{Layer, event::Cmd, fs::Url};
+use yazi_shared::{Id, Layer, event::Cmd, fs::Url};
 
 use crate::options::OpenDoOpt;
 
@@ -12,7 +12,7 @@ impl ManagerProxy {
 	}
 
 	#[inline]
-	pub fn hover(url: Option<Url>, tab: usize) {
+	pub fn hover(url: Option<Url>, tab: Id) {
 		emit!(Call(
 			Cmd::args("hover", &url.map_or_else(Vec::new, |u| vec![u])).with("tab", tab),
 			Layer::Manager

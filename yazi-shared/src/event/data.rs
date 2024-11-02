@@ -143,3 +143,5 @@ impl_integer_as!(isize, as_isize);
 impl_integer_as!(i16, as_i16);
 
 impl_number_as!(f64, as_f64);
+
+impl_integer_as!(crate::Id, as_id);

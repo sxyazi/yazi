@@ -28,7 +28,7 @@ impl Folder {
 		let window = match window {
 			Some(w) => w,
 			None => {
-				let limit = LAYOUT.load().preview.height as usize;
+				let limit = LAYOUT.get().preview.height as usize;
 				inner.offset..inner.files.len().min(inner.offset + limit)
 			}
 		};

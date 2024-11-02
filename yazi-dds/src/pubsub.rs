@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 use mlua::Function;
 use parking_lot::RwLock;
 use yazi_boot::BOOT;
-use yazi_shared::{RoCell, fs::Url};
+use yazi_shared::{Id, RoCell, fs::Url};
 
 use crate::{Client, ID, PEERS, body::{Body, BodyBulk, BodyCd, BodyDelete, BodyHi, BodyHover, BodyMove, BodyMoveItem, BodyRename, BodyTab, BodyTrash, BodyYank}};
 
@@ -88,7 +88,7 @@ impl Pubsub {
 		true
 	}
 
-	pub fn pub_from_cd(tab: usize, url: &Url) {
+	pub fn pub_from_cd(tab: Id, url: &Url) {
 		if LOCAL.read().contains_key("cd") {
 			Self::pub_(BodyCd::dummy(tab));
 		}
@@ -100,7 +100,7 @@ impl Pubsub {
 		}
 	}
 
-	pub fn pub_from_hover(tab: usize, url: Option<&Url>) {
+	pub fn pub_from_hover(tab: Id, url: Option<&Url>) {
 		if LOCAL.read().contains_key("hover") {
 			Self::pub_(BodyHover::dummy(tab));
 		}

@@ -14,7 +14,6 @@ yazi-shared = { path = "../yazi-shared", version = "0.3.3" }
 
 # External dependencies
 anyhow    = { workspace = true }
-arc-swap  = { workspace = true }
 bitflags  = { workspace = true }
 crossterm = { workspace = true }
 globset   = { workspace = true }
