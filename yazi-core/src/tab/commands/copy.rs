@@ -84,47 +84,20 @@ impl From<&Cmd> for PathSeparator {
 	}
 }
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(unix)]
 fn path_to_os_str(path: &Path, _separator: PathSeparator) -> Cow<'_, OsStr> {
-	return Cow::Borrowed(path.as_os_str());
+	Cow::Borrowed(path.as_os_str())
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(windows)]
 fn path_to_os_str(path: &Path, separator: PathSeparator) -> Cow<'_, OsStr> {
-	if let PathSeparator::Auto = separator {
-		return Cow::Borrowed(path.as_os_str());
-	};
-
-	use std::path::Component;
-
-	let mut s = String::with_capacity(path.as_os_str().len());
-	for component in path.components() {
-		match component {
-			Component::RootDir => {}
-			Component::CurDir => s.push('.'),
-			Component::ParentDir => s.push_str(".."),
-			Component::Normal(path) => s.push_str(&path.to_string_lossy()),
-			Component::Prefix(prefix) => {
-				// "C:\foo" => [Prefix("C:"), RootDir, Normal(foo)]
-				s.push_str(&prefix.as_os_str().to_string_lossy());
-				// If we push a "/" below, we will met a RootDir and push a "/"
-				// again resulting in "C://". So we need to skip that.
-				continue;
-			}
-		};
-		s.push('/');
+	match separator {
+		PathSeparator::Auto => Cow::Borrowed(path.as_os_str()),
+		PathSeparator::Unix => match yazi_shared::fs::path::backslash_to_slash(path) {
+			Cow::Borrowed(path) => Cow::Borrowed(path.as_os_str()),
+			Cow::Owned(path) => Cow::Owned(OsString::from(path)),
+		},
 	}
-
-	use std::os::windows::ffi::OsStrExt as _;
-	use std::path::MAIN_SEPARATOR;
-
-	let path_ends_with_main_sep =
-		path.as_os_str().encode_wide().last() == Some(MAIN_SEPARATOR as u16);
-	if !path_ends_with_main_sep && s != "/" && s.ends_with('/') {
-		s.pop();
-	}
-
-	return Cow::Owned(OsString::from(s));
 }
 
 #[cfg(test)]
