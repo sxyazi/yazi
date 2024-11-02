@@ -121,10 +121,10 @@ keymap = [
 	{ on = [ ",", "r" ], run = "sort random --reverse=no",                      desc = "Sort randomly" },
 
 	# Goto
-	{ on = [ "g", "h" ],       run = "cd ~",             desc = "Go home" },
-	{ on = [ "g", "c" ],       run = "cd ~/.config",     desc = "Goto ~/.config" },
-	{ on = [ "g", "d" ],       run = "cd ~/Downloads",   desc = "Goto ~/Downloads" },
-	{ on = [ "g", "<Space>" ], run = "cd --interactive", desc = "Jump interactively" },
+	{ on = [ "g", "h" ],       run = "cd ~",                   desc = "Go home" },
+	{ on = [ "g", "c" ],       run = "cd $XDG_CONFIG_HOME",    desc = "Goto to configs" },
+	{ on = [ "g", "d" ],       run = "cd $XDG_DOWNLOAD_DIR",   desc = "Goto to downloads" },
+	{ on = [ "g", "<Space>" ], run = "cd --interactive",       desc = "Jump interactively" },
 
 	# Tabs
 	{ on = "t", run = "tab_create --current", desc = "Create a new tab with CWD" },
