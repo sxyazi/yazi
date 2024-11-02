@@ -91,9 +91,11 @@ fn path_to_os_str(path: &Path, _separator: PathSeparator) -> Cow<'_, OsStr> {
 
 #[cfg(windows)]
 fn path_to_os_str(path: &Path, separator: PathSeparator) -> Cow<'_, OsStr> {
+	use yazi_shared::fs::backslash_to_slash;
+
 	match separator {
 		PathSeparator::Auto => Cow::Borrowed(path.as_os_str()),
-		PathSeparator::Unix => match yazi_shared::fs::path::backslash_to_slash(path) {
+		PathSeparator::Unix => match backslash_to_slash(path) {
 			Cow::Borrowed(path) => Cow::Borrowed(path.as_os_str()),
 			Cow::Owned(path) => Cow::Owned(OsString::from(path)),
 		},
@@ -106,7 +108,7 @@ mod tests {
 
 	use super::*;
 
-	#[cfg(target_os = "windows")]
+	#[cfg(windows)]
 	#[test]
 	fn test_path_to_os_str_windows_auto() {
 		let path = PathBuf::from("C:\\Users\\JohnDoe\\Downloads\\image.png");
@@ -117,7 +119,7 @@ mod tests {
 		);
 	}
 
-	#[cfg(target_os = "windows")]
+	#[cfg(windows)]
 	#[test]
 	fn test_path_to_os_str_windows_unix() {
 		let path = PathBuf::from("C:\\Users\\JohnDoe\\Downloads\\image.png");
@@ -128,7 +130,7 @@ mod tests {
 		);
 	}
 
-	#[cfg(not(target_os = "windows"))]
+	#[cfg(unix)]
 	#[test]
 	fn test_path_to_os_str_unix_auto() {
 		let path = PathBuf::from("/home/johndoe/Downloads/image.png");
@@ -139,7 +141,7 @@ mod tests {
 		);
 	}
 
-	#[cfg(not(target_os = "windows"))]
+	#[cfg(unix)]
 	#[test]
 	fn test_path_to_os_str_unix_unix() {
 		let path = PathBuf::from("/home/johndoe/Downloads/image.png");
