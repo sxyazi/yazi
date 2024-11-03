@@ -70,8 +70,8 @@ impl Emulator {
 			("VSCODE_INJECTION", Self::VSCode),
 			("TABBY_CONFIG_DIRECTORY", Self::Tabby),
 		];
-		match vars.into_iter().find(|v| env_exists(v.0)) {
-			Some(var) => return var.1,
+		match vars.into_iter().find(|(env, _)| env_exists(env)) {
+			Some((_, emulator)) => return emulator,
 			None => warn!("[Adapter] No special environment variables detected"),
 		}
 

@@ -92,9 +92,9 @@ impl Signals {
 				if let Some(t) = &mut term {
 					select! {
 						biased;
-						Some(mut s) = rx.recv() => {
-							term = term.filter(|_| s.0);
-							s.1.take().map(|cb| cb.send(()));
+						Some((state, mut callback)) = rx.recv() => {
+							term = term.filter(|_| state);
+							callback.take().map(|cb| cb.send(()));
 						},
 						Some(n) = sys.next() => if !Self::handle_sys(n) { return },
 						Some(Ok(e)) = t.next() => Self::handle_term(e)
@@ -102,9 +102,9 @@ impl Signals {
 				} else {
 					select! {
 						biased;
-						Some(mut s) = rx.recv() => {
-							term = s.0.then(EventStream::new);
-							s.1.take().map(|cb| cb.send(()));
+						Some((state, mut callback)) = rx.recv() => {
+							term = state.then(EventStream::new);
+							callback.take().map(|cb| cb.send(()));
 						},
 						Some(n) = sys.next() => if !Self::handle_sys(n) { return },
 					}

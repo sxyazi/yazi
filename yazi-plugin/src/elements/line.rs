@@ -54,11 +54,11 @@ impl TryFrom<Value<'_>> for Line {
 			Value::Table(tb) => return Self::try_from(tb),
 			Value::String(s) => s.to_string_lossy().into_owned().into(),
 			Value::UserData(ud) => {
-				if let Ok(span) = ud.take::<Span>() {
-					span.0.into()
-				} else if let Ok(mut line) = ud.take::<Line>() {
-					line.0.spans.iter_mut().for_each(|s| s.style = line.0.style.patch(s.style));
-					line.0
+				if let Ok(Span(span)) = ud.take() {
+					span.into()
+				} else if let Ok(Line(mut line)) = ud.take() {
+					line.spans.iter_mut().for_each(|s| s.style = line.style.patch(s.style));
+					line
 				} else {
 					Err(EXPECTED.into_lua_err())?
 				}
@@ -77,11 +77,11 @@ impl TryFrom<Table<'_>> for Line {
 			match v? {
 				Value::String(s) => spans.push(s.to_string_lossy().into_owned().into()),
 				Value::UserData(ud) => {
-					if let Ok(span) = ud.take::<Span>() {
-						spans.push(span.0);
-					} else if let Ok(mut line) = ud.take::<Line>() {
-						line.0.spans.iter_mut().for_each(|s| s.style = line.0.style.patch(s.style));
-						spans.extend(line.0.spans);
+					if let Ok(Span(span)) = ud.take() {
+						spans.push(span);
+					} else if let Ok(Line(mut line)) = ud.take() {
+						line.spans.iter_mut().for_each(|s| s.style = line.style.patch(s.style));
+						spans.extend(line.spans);
 					} else {
 						return Err(EXPECTED.into_lua_err());
 					}
@@ -98,7 +98,7 @@ impl UserData for Line {
 		crate::impl_style_method!(methods, 0.style);
 		crate::impl_style_shorthands!(methods, 0.style);
 
-		methods.add_method("width", |_, me, ()| Ok(me.0.width()));
+		methods.add_method("width", |_, Line(me), ()| Ok(me.width()));
 		methods.add_function_mut("align", |_, (ud, align): (AnyUserData, u8)| {
 			ud.borrow_mut::<Self>()?.0.alignment = Some(match align {
 				CENTER => ratatui::layout::Alignment::Center,
@@ -107,8 +107,8 @@ impl UserData for Line {
 			});
 			Ok(ud)
 		});
-		methods.add_method("visible", |_, me, ()| {
-			Ok(me.0.iter().flat_map(|s| s.content.chars()).any(|c| c.width().unwrap_or(0) > 0))
+		methods.add_method("visible", |_, Line(me), ()| {
+			Ok(me.iter().flat_map(|s| s.content.chars()).any(|c| c.width().unwrap_or(0) > 0))
 		});
 	}
 }

@@ -60,10 +60,10 @@ impl TryFrom<Value<'_>> for Text {
 			Value::Table(tb) => return Self::try_from(tb),
 			Value::String(s) => s.to_string_lossy().into_owned().into(),
 			Value::UserData(ud) => {
-				if let Ok(line) = ud.take::<Line>() {
-					line.0.into()
-				} else if let Ok(span) = ud.take::<Span>() {
-					span.0.into()
+				if let Ok(Line(line)) = ud.take() {
+					line.into()
+				} else if let Ok(Span(span)) = ud.take() {
+					span.into()
 				} else {
 					Err(EXPECTED.into_lua_err())?
 				}
@@ -83,10 +83,10 @@ impl TryFrom<Table<'_>> for Text {
 			match v? {
 				Value::String(s) => lines.push(s.to_string_lossy().into_owned().into()),
 				Value::UserData(ud) => {
-					if let Ok(span) = ud.take::<Span>() {
-						lines.push(span.0.into());
-					} else if let Ok(line) = ud.take::<Line>() {
-						lines.push(line.0);
+					if let Ok(Span(span)) = ud.take() {
+						lines.push(span.into());
+					} else if let Ok(Line(line)) = ud.take() {
+						lines.push(line);
 					} else {
 						return Err(EXPECTED.into_lua_err());
 					}

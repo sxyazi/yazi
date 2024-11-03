@@ -19,8 +19,8 @@ impl TryFrom<Value<'_>> for Span {
 		Ok(Self(match value {
 			Value::String(s) => s.to_string_lossy().into_owned().into(),
 			Value::UserData(ud) => {
-				if let Ok(span) = ud.take::<Span>() {
-					span.0
+				if let Ok(Span(span)) = ud.take() {
+					span
 				} else {
 					Err(EXPECTED.into_lua_err())?
 				}
@@ -35,8 +35,8 @@ impl UserData for Span {
 		crate::impl_style_method!(methods, 0.style);
 		crate::impl_style_shorthands!(methods, 0.style);
 
-		methods.add_method("visible", |_, me, ()| {
-			Ok(me.0.content.chars().any(|c| c.width().unwrap_or(0) > 0))
+		methods.add_method("visible", |_, Span(me), ()| {
+			Ok(me.content.chars().any(|c| c.width().unwrap_or(0) > 0))
 		});
 	}
 }
