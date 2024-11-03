@@ -132,13 +132,13 @@ impl<'de> Deserialize<'de> for Icons {
 
 		let shadow = Shadow::deserialize(deserializer)?;
 
-		let globs = Preset::mix(shadow.globs, shadow.prepend_globs, shadow.append_globs)
+		let globs = Preset::mix(shadow.prepend_globs, shadow.globs, shadow.append_globs)
 			.map(|v| {
 				(v.name, Icon { text: v.text, style: Style { fg: v.fg_dark, ..Default::default() } })
 			})
 			.collect();
 
-		let conds = Preset::mix(shadow.conds, shadow.prepend_conds, shadow.append_conds)
+		let conds = Preset::mix(shadow.prepend_conds, shadow.conds, shadow.append_conds)
 			.map(|v| {
 				(v.if_, Icon { text: v.text, style: Style { fg: v.fg_dark, ..Default::default() } })
 			})
@@ -157,9 +157,9 @@ impl<'de> Deserialize<'de> for Icons {
 
 		Ok(Self {
 			globs,
-			dirs: as_map(Preset::mix(shadow.dirs, shadow.prepend_dirs, shadow.append_dirs)),
-			files: as_map(Preset::mix(shadow.files, shadow.prepend_files, shadow.append_files)),
-			exts: as_map(Preset::mix(shadow.exts, shadow.prepend_exts, shadow.append_exts)),
+			dirs: as_map(Preset::mix(shadow.prepend_dirs, shadow.dirs, shadow.append_dirs)),
+			files: as_map(Preset::mix(shadow.prepend_files, shadow.files, shadow.append_files)),
+			exts: as_map(Preset::mix(shadow.prepend_exts, shadow.exts, shadow.append_exts)),
 			conds,
 		})
 	}

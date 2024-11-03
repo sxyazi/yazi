@@ -99,7 +99,7 @@ impl<'de> Deserialize<'de> for Open {
 
 		Ok(Self {
 			#[rustfmt::skip]
-			rules: Preset::mix(outer.open.rules, outer.open.prepend_rules, outer.open.append_rules).collect(),
+			rules: Preset::mix(outer.open.prepend_rules, outer.open.rules, outer.open.append_rules).collect(),
 			openers,
 		})
 	}

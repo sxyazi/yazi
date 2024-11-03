@@ -102,11 +102,11 @@ impl<'de> Deserialize<'de> for Plugin {
 		}
 
 		shadow.fetchers =
-			Preset::mix(shadow.fetchers, shadow.prepend_fetchers, shadow.append_fetchers).collect();
+			Preset::mix(shadow.prepend_fetchers, shadow.fetchers, shadow.append_fetchers).collect();
 		shadow.preloaders =
-			Preset::mix(shadow.preloaders, shadow.prepend_preloaders, shadow.append_preloaders).collect();
+			Preset::mix(shadow.prepend_preloaders, shadow.preloaders, shadow.append_preloaders).collect();
 		shadow.previewers =
-			Preset::mix(shadow.previewers, shadow.prepend_previewers, shadow.append_previewers).collect();
+			Preset::mix(shadow.prepend_previewers, shadow.previewers, shadow.append_previewers).collect();
 
 		if shadow.fetchers.len() + shadow.preloaders.len() > MAX_PREWORKERS as usize {
 			panic!("Fetchers and preloaders exceed the limit of {MAX_PREWORKERS}");
