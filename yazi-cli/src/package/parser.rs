@@ -46,8 +46,8 @@ impl Package {
 		let deps = deps.as_array_mut().context("`deps` must be an array")?;
 		for dep in deps.iter_mut() {
 			let dep = dep.as_inline_table_mut().context("Dependency must be an inline table")?;
-			let use_ = dep.get("use").and_then(|d| d.as_str()).context("Missing `use` field")?;
-			let rev = dep.get("rev").and_then(|d| d.as_str());
+			let use_ = dep.get("use").and_then(Value::as_str).context("Missing `use` field")?;
+			let rev = dep.get("rev").and_then(Value::as_str);
 
 			let mut package = Package::new(use_, rev);
 			if upgrade {
@@ -81,8 +81,11 @@ impl Package {
 		println!("{section}s:");
 
 		for dep in deps {
-			if let Some(Value::String(use_)) = dep.as_inline_table().and_then(|t| t.get("use")) {
-				println!("\t{}", use_.value());
+			let Some(dep) = dep.as_inline_table() else { continue };
+			match (dep.get("use").and_then(Value::as_str), dep.get("rev").and_then(Value::as_str)) {
+				(Some(use_), None) => println!("\t{use_}"),
+				(Some(use_), Some(rev)) => println!("\t{use_} ({rev})"),
+				_ => {}
 			}
 		}
 		Ok(())
@@ -119,7 +122,7 @@ impl Package {
 		fn same(v: &Value, name: &str) -> bool {
 			v.as_inline_table()
 				.and_then(|t| t.get("use"))
-				.and_then(|v| v.as_str())
+				.and_then(Value::as_str)
 				.is_some_and(|s| Package::new(s, None).name() == Some(name))
 		}
 

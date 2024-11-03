@@ -57,20 +57,16 @@ impl Cmd {
 	pub fn get(&self, name: &str) -> Option<&Data> { self.args.get(name) }
 
 	#[inline]
-	pub fn str(&self, name: &str) -> Option<&str> { self.args.get(name).and_then(Data::as_str) }
+	pub fn str(&self, name: &str) -> Option<&str> { self.get(name).and_then(Data::as_str) }
 
 	#[inline]
-	pub fn bool(&self, name: &str) -> bool {
-		self.args.get(name).and_then(Data::as_bool).unwrap_or(false)
-	}
+	pub fn bool(&self, name: &str) -> bool { self.maybe_bool(name).unwrap_or(false) }
 
 	#[inline]
-	pub fn maybe_bool(&self, name: &str) -> Option<bool> {
-		self.args.get(name).and_then(Data::as_bool)
-	}
+	pub fn maybe_bool(&self, name: &str) -> Option<bool> { self.get(name).and_then(Data::as_bool) }
 
 	#[inline]
-	pub fn first(&self) -> Option<&Data> { self.args.get("0") }
+	pub fn first(&self) -> Option<&Data> { self.get("0") }
 
 	// --- Take
 	#[inline]
@@ -78,15 +74,15 @@ impl Cmd {
 
 	#[inline]
 	pub fn take_str(&mut self, name: &str) -> Option<String> {
-		if let Some(Data::String(s)) = self.args.remove(name) { Some(s) } else { None }
+		if let Some(Data::String(s)) = self.take(name) { Some(s) } else { None }
 	}
 
 	#[inline]
-	pub fn take_first(&mut self) -> Option<Data> { self.args.remove("0") }
+	pub fn take_first(&mut self) -> Option<Data> { self.take("0") }
 
 	#[inline]
 	pub fn take_first_str(&mut self) -> Option<String> {
-		if let Some(Data::String(s)) = self.args.remove("0") { Some(s) } else { None }
+		if let Some(Data::String(s)) = self.take_first() { Some(s) } else { None }
 	}
 
 	#[inline]
