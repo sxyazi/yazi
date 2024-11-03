@@ -1,4 +1,4 @@
-use std::ffi::{OsStr, OsString};
+use std::{borrow::Cow, ffi::{OsStr, OsString}, path::Path};
 
 use yazi_plugin::CLIPBOARD;
 use yazi_shared::event::Cmd;
@@ -6,11 +6,17 @@ use yazi_shared::event::Cmd;
 use crate::tab::Tab;
 
 struct Opt {
-	type_: String,
+	type_:     String,
+	separator: Separator,
 }
 
 impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self { Self { type_: c.take_first_str().unwrap_or_default() } }
+	fn from(mut c: Cmd) -> Self {
+		Self {
+			type_:     c.take_first_str().unwrap_or_default(),
+			separator: c.str("separator").unwrap_or_default().into(),
+		}
+	}
 }
 
 impl Tab {
@@ -24,10 +30,10 @@ impl Tab {
 		let mut it = self.selected_or_hovered(true).peekable();
 		while let Some(u) = it.next() {
 			s.push(match opt.type_.as_str() {
-				"path" => u.as_os_str(),
-				"dirname" => u.parent().map_or(OsStr::new(""), |p| p.as_os_str()),
-				"filename" => u.name(),
-				"name_without_ext" => u.file_stem().unwrap_or(OsStr::new("")),
+				"path" => opt.separator.transform(u),
+				"dirname" => opt.separator.transform(u.parent().unwrap_or(Path::new(""))),
+				"filename" => opt.separator.transform(u.name()),
+				"name_without_ext" => opt.separator.transform(u.file_stem().unwrap_or_default()),
 				_ => return,
 			});
 			if it.peek().is_some() {
@@ -41,5 +47,34 @@ impl Tab {
 		}
 
 		futures::executor::block_on(CLIPBOARD.set(s));
+	}
+}
+
+// --- Separator
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Separator {
+	Auto,
+	Unix,
+}
+
+impl From<&str> for Separator {
+	fn from(value: &str) -> Self {
+		match value {
+			"unix" => Self::Unix,
+			_ => Self::Auto,
+		}
+	}
+}
+
+impl Separator {
+	fn transform<T: AsRef<Path> + ?Sized>(self, p: &T) -> Cow<OsStr> {
+		#[cfg(windows)]
+		if self == Self::Unix {
+			return match yazi_shared::fs::backslash_to_slash(p.as_ref()) {
+				Cow::Owned(p) => Cow::Owned(p.into_os_string()),
+				Cow::Borrowed(p) => Cow::Borrowed(p.as_os_str()),
+			};
+		}
+		Cow::Borrowed(p.as_ref().as_os_str())
 	}
 }
