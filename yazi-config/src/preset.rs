@@ -33,11 +33,13 @@ impl Preset {
 	}
 
 	#[inline]
-	pub(crate) fn mix<T, E>(a: T, b: T, c: T) -> impl Iterator<Item = E>
+	pub(crate) fn mix<E, A, B, C>(a: A, b: B, c: C) -> impl Iterator<Item = E>
 	where
-		T: IntoIterator<Item = E>,
+		A: IntoIterator<Item = E>,
+		B: IntoIterator<Item = E>,
+		C: IntoIterator<Item = E>,
 	{
-		b.into_iter().chain(a).chain(c)
+		a.into_iter().chain(b).chain(c)
 	}
 
 	#[inline]

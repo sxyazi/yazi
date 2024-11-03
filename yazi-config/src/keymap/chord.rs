@@ -43,6 +43,10 @@ impl Chord {
 	pub fn desc_or_run(&self) -> Cow<str> { self.desc().unwrap_or_else(|| self.run().into()) }
 
 	#[inline]
+	pub fn noop(&self) -> bool {
+		self.run.len() == 1 && self.run[0].name == "noop" && self.run[0].args.is_empty()
+	}
+
 	pub fn contains(&self, s: &str) -> bool {
 		let s = s.to_lowercase();
 		self.desc().map(|d| d.to_lowercase().contains(&s)) == Some(true)

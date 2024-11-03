@@ -68,31 +68,37 @@ impl<'de> Deserialize<'de> for Keymap {
 			append_keymap:  IndexSet<Chord>,
 		}
 
-		fn mix(mut a: IndexSet<Chord>, b: IndexSet<Chord>, c: IndexSet<Chord>) -> Vec<Chord> {
-			let mut seen = HashSet::new();
-			b.iter().filter(|&v| v.on.len() > 1).for_each(|v| _ = seen.insert(&v.on[..2]));
-			c.iter().filter(|&v| v.on.len() > 1).for_each(|v| _ = seen.insert(&v.on[..2]));
+		fn mix(a: IndexSet<Chord>, b: IndexSet<Chord>, c: IndexSet<Chord>) -> Vec<Chord> {
+			let a_seen: HashSet<_> =
+				a.iter().filter(|&v| v.on.len() > 1).map(|v| [v.on[0], v.on[1]]).collect();
+			let b_seen: HashSet<_> =
+				b.iter().filter(|&v| v.on.len() > 1).map(|v| [v.on[0], v.on[1]]).collect();
 
-			a.retain(|v| v.on.len() < 2 || !seen.contains(&v.on[..2]));
-			Preset::mix(a, b, c).collect()
+			Preset::mix(
+				a,
+				b.into_iter().filter(|v| v.on.len() < 2 || !a_seen.contains(&v.on[..2])),
+				c.into_iter().filter(|v| v.on.len() < 2 || !b_seen.contains(&v.on[..2])),
+			)
+			.filter(|c| !c.noop())
+			.collect()
 		}
 
 		let shadow = Shadow::deserialize(deserializer)?;
 		Ok(Self {
 			#[rustfmt::skip]
-			manager:    mix(shadow.manager.keymap, shadow.manager.prepend_keymap, shadow.manager.append_keymap),
+			manager:    mix(shadow.manager.prepend_keymap, shadow.manager.keymap, shadow.manager.append_keymap),
 			#[rustfmt::skip]
-			tasks:      mix(shadow.tasks.keymap, shadow.tasks.prepend_keymap, shadow.tasks.append_keymap),
+			tasks:      mix(shadow.tasks.prepend_keymap, shadow.tasks.keymap, shadow.tasks.append_keymap),
 			#[rustfmt::skip]
-			pick:     mix(shadow.pick.keymap, shadow.pick.prepend_keymap, shadow.pick.append_keymap),
+			pick:     mix(shadow.pick.prepend_keymap, shadow.pick.keymap, shadow.pick.append_keymap),
 			#[rustfmt::skip]
-			input:      mix(shadow.input.keymap, shadow.input.prepend_keymap, shadow.input.append_keymap),
+			input:      mix(shadow.input.prepend_keymap, shadow.input.keymap, shadow.input.append_keymap),
 			#[rustfmt::skip]
-			confirm:    mix(shadow.confirm.keymap, shadow.confirm.prepend_keymap, shadow.confirm.append_keymap),
+			confirm:    mix(shadow.confirm.prepend_keymap, shadow.confirm.keymap, shadow.confirm.append_keymap),
 			#[rustfmt::skip]
-			help:       mix(shadow.help.keymap, shadow.help.prepend_keymap, shadow.help.append_keymap),
+			help:       mix(shadow.help.prepend_keymap, shadow.help.keymap, shadow.help.append_keymap),
 			#[rustfmt::skip]
-			completion: mix(shadow.completion.keymap, shadow.completion.prepend_keymap, shadow.completion.append_keymap),
+			completion: mix(shadow.completion.prepend_keymap, shadow.completion.keymap, shadow.completion.append_keymap),
 		})
 	}
 }

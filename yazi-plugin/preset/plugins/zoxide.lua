@@ -22,7 +22,7 @@ local function opts()
 		"--keep-right",
 		-- Layout
 		"--layout=reverse",
-		"--height=50%",
+		"--height=100%",
 		"--border",
 		"--scrollbar=▌",
 		"--info=inline",
