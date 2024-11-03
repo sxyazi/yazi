@@ -81,9 +81,13 @@ impl Package {
 		println!("{section}s:");
 
 		for dep in deps {
-			if let Some(Value::String(use_)) = dep.as_inline_table().and_then(|t| t.get("use")) {
-				println!("\t{}", use_.value());
-			}
+			let Some(Value::String(use_)) = dep.as_inline_table().and_then(|t| t.get("use")) else {
+				return Ok(());
+			};
+			let Some(Value::String(rev)) = dep.as_inline_table().and_then(|t| t.get("rev")) else {
+				return Ok(());
+			};
+			println!("\t{} ({})", use_.value(), rev.value());
 		}
 		Ok(())
 	}
