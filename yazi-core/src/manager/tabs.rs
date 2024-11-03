@@ -69,6 +69,9 @@ impl Tabs {
 			self.active_mut()
 		}
 	}
+
+	#[inline]
+	pub fn find_mut(&mut self, id: Id) -> Option<&mut Tab> { self.iter_mut().find(|t| t.id == id) }
 }
 
 impl Deref for Tabs {
