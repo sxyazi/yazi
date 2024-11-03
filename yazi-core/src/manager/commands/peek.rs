@@ -59,7 +59,7 @@ impl Manager {
 		}
 
 		if hovered.is_dir() {
-			self.active_mut().preview.go_folder(hovered, folder.map(|f| f.1), opt.force);
+			self.active_mut().preview.go_folder(hovered, folder.map(|(_, cha)| cha), opt.force);
 		} else {
 			self.active_mut().preview.go(hovered, mime.into(), opt.force);
 		}

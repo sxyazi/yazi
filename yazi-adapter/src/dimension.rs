@@ -12,9 +12,9 @@ impl Dimension {
 		}
 
 		if size.rows == 0 || size.columns == 0 {
-			if let Ok(s) = crossterm::terminal::size() {
-				size.columns = s.0;
-				size.rows = s.1;
+			if let Ok((cols, rows)) = crossterm::terminal::size() {
+				size.columns = cols;
+				size.rows = rows;
 			}
 		}
 

@@ -91,7 +91,7 @@ impl Tab {
 			Box::new(self.selected.keys())
 		} else {
 			let mut vec: Vec<_> = self.selected.iter().collect();
-			vec.sort_unstable_by(|a, b| a.1.cmp(b.1));
+			vec.sort_unstable_by(|(_, a), (_, b)| a.cmp(b));
 			Box::new(vec.into_iter().map(|(k, _)| k))
 		}
 	}
@@ -105,7 +105,7 @@ impl Tab {
 			Box::new([&h.url].into_iter().chain(self.selected.keys()))
 		} else {
 			let mut vec: Vec<_> = self.selected.iter().collect();
-			vec.sort_unstable_by(|a, b| a.1.cmp(b.1));
+			vec.sort_unstable_by(|(_, a), (_, b)| a.cmp(b));
 			Box::new([&h.url].into_iter().chain(vec.into_iter().map(|(k, _)| k)))
 		}
 	}
