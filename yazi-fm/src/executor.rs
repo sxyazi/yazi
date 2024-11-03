@@ -55,7 +55,13 @@ impl<'a> Executor<'a> {
 			};
 			(ACTIVE, $name:ident $(,$args:expr)*) => {
 				if cmd.name == stringify!($name) {
-					return self.app.cx.manager.active_mut().$name(cmd, $($args),*);
+					return if let Some(tab) = cmd.get("tab") {
+						let Some(id) = tab.as_id() else { return };
+						let Some(tab) = self.app.cx.manager.tabs.find_mut(id) else { return };
+						tab.$name(cmd, $($args),*)
+					} else {
+						self.app.cx.manager.active_mut().$name(cmd, $($args),*)
+					};
 				}
 			};
 			(TABS, $name:ident) => {

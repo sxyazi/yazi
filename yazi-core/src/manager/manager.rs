@@ -60,11 +60,11 @@ impl Manager {
 	pub fn current_mut(&mut self) -> &mut Folder { &mut self.active_mut().current }
 
 	#[inline]
-	pub fn current_or(&self, idx: Option<Id>) -> &Folder { &self.active_or(idx).current }
+	pub fn current_or(&self, id: Option<Id>) -> &Folder { &self.active_or(id).current }
 
 	#[inline]
-	pub fn current_or_mut(&mut self, idx: Option<Id>) -> &mut Folder {
-		&mut self.active_or_mut(idx).current
+	pub fn current_or_mut(&mut self, id: Option<Id>) -> &mut Folder {
+		&mut self.active_or_mut(id).current
 	}
 
 	#[inline]
