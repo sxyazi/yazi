@@ -28,13 +28,18 @@ impl Actions {
 		writeln!(s, "    Adapter.matches: {:?}", yazi_adapter::Adapter::matches())?;
 
 		writeln!(s, "\nDesktop")?;
-		writeln!(s, "    XDG_SESSION_TYPE           : {:?}", env::var_os("XDG_SESSION_TYPE"))?;
-		writeln!(s, "    WAYLAND_DISPLAY            : {:?}", env::var_os("WAYLAND_DISPLAY"))?;
-		writeln!(s, "    DISPLAY                    : {:?}", env::var_os("DISPLAY"))?;
-		writeln!(s, "    SWAYSOCK                   : {:?}", env::var_os("SWAYSOCK"))?;
-		#[rustfmt::skip]
-		writeln!(s, "    HYPRLAND_INSTANCE_SIGNATURE: {:?}", env::var_os("HYPRLAND_INSTANCE_SIGNATURE"))?;
-		writeln!(s, "    WAYFIRE_SOCKET             : {:?}", env::var_os("WAYFIRE_SOCKET"))?;
+		let vars = [
+			"XDG_SESSION_TYPE",
+			"WAYLAND_DISPLAY",
+			"DISPLAY",
+			"SWAYLOCK",
+			"HYPRLAND_INSTANCE_SIGNATURE",
+			"WAYFIRE_SOCKET",
+		];
+		let width = vars.iter().map(|x| x.len()).max().unwrap();
+		for var in &vars {
+			writeln!(s, "    {:width$}: {:?}", var, env::var_os(var))?;
+		}
 
 		writeln!(s, "\nSSH")?;
 		writeln!(s, "    shared.in_ssh_connection: {:?}", yazi_shared::in_ssh_connection())?;
@@ -43,11 +48,11 @@ impl Actions {
 		writeln!(s, "    WSL: {:?}", *yazi_adapter::WSL)?;
 
 		writeln!(s, "\nVariables")?;
-		writeln!(s, "    SHELL              : {:?}", env::var_os("SHELL"))?;
-		writeln!(s, "    EDITOR             : {:?}", env::var_os("EDITOR"))?;
-		writeln!(s, "    VISUAL             : {:?}", env::var_os("VISUAL"))?;
-		writeln!(s, "    YAZI_FILE_ONE      : {:?}", env::var_os("YAZI_FILE_ONE"))?;
-		writeln!(s, "    YAZI_CONFIG_HOME   : {:?}", env::var_os("YAZI_CONFIG_HOME"))?;
+		let vars = ["SHELL", "EDITOR", "VISUAL", "YAZI_FILE_ONE", "YAZI_CONFIG_HOME"];
+		let width = vars.iter().map(|x| x.len()).max().unwrap();
+		for var in &vars {
+			writeln!(s, "    {:width$}: {:?}", var, env::var_os(var))?;
+		}
 
 		writeln!(s, "\nText Opener")?;
 		writeln!(
@@ -74,22 +79,29 @@ impl Actions {
 		writeln!(s, "    Zellij version     : {}", Self::process_output("zellij", "--version"))?;
 
 		writeln!(s, "\nDependencies")?;
+		let depends = [
+			("ueberzugpp", "--version"),
+			("ffmpegthumbnailer", "-v"),
+			("magick", "--version"),
+			("fzf", "--version"),
+			("fd", "--version"),
+			("rg", "--version"),
+			("chafa", "--version"),
+			("zoxide", "--version"),
+			("7z", "i"),
+			("7zz", "i"),
+			("jq", "--version"),
+		];
+		let width = depends.iter().map(|(cmd, _)| cmd.len()).max().unwrap();
 		writeln!(
 			s,
-			"    file             : {}",
+			"    {:width$}: {}",
+			"file",
 			Self::process_output(env::var_os("YAZI_FILE_ONE").unwrap_or("file".into()), "--version")
 		)?;
-		writeln!(s, "    ueberzugpp       : {}", Self::process_output("ueberzugpp", "--version"))?;
-		writeln!(s, "    ffmpegthumbnailer: {}", Self::process_output("ffmpegthumbnailer", "-v"))?;
-		writeln!(s, "    magick           : {}", Self::process_output("magick", "--version"))?;
-		writeln!(s, "    fzf              : {}", Self::process_output("fzf", "--version"))?;
-		writeln!(s, "    fd               : {}", Self::process_output("fd", "--version"))?;
-		writeln!(s, "    rg               : {}", Self::process_output("rg", "--version"))?;
-		writeln!(s, "    chafa            : {}", Self::process_output("chafa", "--version"))?;
-		writeln!(s, "    zoxide           : {}", Self::process_output("zoxide", "--version"))?;
-		writeln!(s, "    7z               : {}", Self::process_output("7z", "i"))?;
-		writeln!(s, "    7zz              : {}", Self::process_output("7zz", "i"))?;
-		writeln!(s, "    jq               : {}", Self::process_output("jq", "--version"))?;
+		for (cmd, arg) in &depends {
+			writeln!(s, "    {:width$}: {}", cmd, Self::process_output(cmd, arg))?;
+		}
 
 		writeln!(s, "\n\n--------------------------------------------------")?;
 		writeln!(
