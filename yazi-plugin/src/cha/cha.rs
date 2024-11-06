@@ -18,7 +18,7 @@ fn warn_deprecated(id: Option<&str>) {
 		};
 		let s = "The `created`, `modified`, `accessed`, `length`, and `permissions` properties of `Cha` have been renamed in Yazi v0.4.
 
-Please use the new `btime`, `mtime`, `atime`, `len`, and `perm` instead, in your {id}. See https://github.com/sxyazi/yazi/pull/1761 for details.";
+Please use the new `btime`, `mtime`, `atime`, `len`, and `perm` instead, in your {id}. See #1772 for details: https://github.com/sxyazi/yazi/issues/1772";
 		yazi_proxy::AppProxy::notify(yazi_proxy::options::NotifyOpt {
 			title:   "Deprecated API".to_owned(),
 			content: s.replace("{id}", &id),

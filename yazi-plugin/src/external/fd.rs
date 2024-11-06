@@ -1,7 +1,7 @@
 use std::process::Stdio;
 
 use anyhow::Result;
-use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command, sync::mpsc::{self, UnboundedReceiver}};
+use tokio::{io::{AsyncBufReadExt, BufReader}, process::{Child, Command}, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_shared::fs::{File, Url};
 
 pub struct FdOpt {
@@ -12,17 +12,7 @@ pub struct FdOpt {
 }
 
 pub fn fd(opt: FdOpt) -> Result<UnboundedReceiver<File>> {
-	let mut child = Command::new("fd")
-		.arg("--base-directory")
-		.arg(&opt.cwd)
-		.arg("--regex")
-		.arg(if opt.hidden { "--hidden" } else { "--no-hidden" })
-		.args(opt.args)
-		.arg(opt.subject)
-		.kill_on_drop(true)
-		.stdout(Stdio::piped())
-		.stderr(Stdio::null())
-		.spawn()?;
+	let mut child = spawn("fd", &opt).or_else(|_| spawn("fdfind", &opt))?;
 
 	let mut it = BufReader::new(child.stdout.take().unwrap()).lines();
 	let (tx, rx) = mpsc::unbounded_channel();
@@ -36,4 +26,18 @@ pub fn fd(opt: FdOpt) -> Result<UnboundedReceiver<File>> {
 		child.wait().await.ok();
 	});
 	Ok(rx)
+}
+
+fn spawn(program: &str, opt: &FdOpt) -> std::io::Result<Child> {
+	Command::new(program)
+		.arg("--base-directory")
+		.arg(&opt.cwd)
+		.arg("--regex")
+		.arg(if opt.hidden { "--hidden" } else { "--no-hidden" })
+		.args(&opt.args)
+		.arg(&opt.subject)
+		.kill_on_drop(true)
+		.stdout(Stdio::piped())
+		.stderr(Stdio::null())
+		.spawn()
 }

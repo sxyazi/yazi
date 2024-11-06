@@ -22,7 +22,7 @@ impl Tab {
 			title:   "Deprecated command".to_owned(),
 			content: "`select` and `select_all` command has been renamed to `toggle` and `toggle_all` in Yazi v0.4
 
-Please change it in your keymap.toml, see #1773 for details: https://github.com/sxyazi/yazi/pull/1773".to_owned(),
+Please change it in your keymap.toml, see #1772 for details: https://github.com/sxyazi/yazi/issues/1772".to_owned(),
 			level:   yazi_proxy::options::NotifyLevel::Error,
 			timeout: Duration::from_secs(20),
 		});
