@@ -61,7 +61,7 @@ impl Tab {
 					hidden,
 					subject: opt.subject,
 					args: opt.args,
-				})
+				}).await
 			}?;
 
 			let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(300));

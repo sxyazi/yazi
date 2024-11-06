@@ -1,18 +1,24 @@
 use std::process::Stdio;
 
 use anyhow::Result;
-use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command, sync::mpsc::{self, UnboundedReceiver}};
+use tokio::{
+	io::{AsyncBufReadExt, BufReader},
+	process::Command,
+	sync::mpsc::{self, UnboundedReceiver},
+};
 use yazi_shared::fs::{File, Url};
 
 pub struct FdOpt {
-	pub cwd:     Url,
-	pub hidden:  bool,
+	pub cwd: Url,
+	pub hidden: bool,
 	pub subject: String,
-	pub args:    Vec<String>,
+	pub args: Vec<String>,
 }
 
-pub fn fd(opt: FdOpt) -> Result<UnboundedReceiver<File>> {
-	let mut child = Command::new("fd")
+pub async fn fd(opt: FdOpt) -> Result<UnboundedReceiver<File>> {
+	let cmd_name = if Command::new("fd").arg("-V").status().await.is_ok() { "fd" } else { "fdfind" };
+
+	let mut child = Command::new(cmd_name)
 		.arg("--base-directory")
 		.arg(&opt.cwd)
 		.arg("--regex")

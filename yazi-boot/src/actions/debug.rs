@@ -84,6 +84,7 @@ impl Actions {
 		writeln!(s, "    magick           : {}", Self::process_output("magick", "--version"))?;
 		writeln!(s, "    fzf              : {}", Self::process_output("fzf", "--version"))?;
 		writeln!(s, "    fd               : {}", Self::process_output("fd", "--version"))?;
+		writeln!(s, "    fdfind           : {}", Self::process_output("fdfind", "--version"))?;
 		writeln!(s, "    rg               : {}", Self::process_output("rg", "--version"))?;
 		writeln!(s, "    chafa            : {}", Self::process_output("chafa", "--version"))?;
 		writeln!(s, "    zoxide           : {}", Self::process_output("zoxide", "--version"))?;
