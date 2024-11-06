@@ -13,9 +13,10 @@ impl Deref for Padding {
 
 impl Padding {
 	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		let new = lua.create_function(|_, (_, left, right, top, bottom): (Table, u16, u16, u16, u16)| {
-			Ok(Self(ratatui::widgets::Padding::new(left, right, top, bottom)))
-		})?;
+		let new =
+			lua.create_function(|_, (_, left, right, top, bottom): (Table, u16, u16, u16, u16)| {
+				Ok(Self(ratatui::widgets::Padding::new(left, right, top, bottom)))
+			})?;
 
 		let padding = lua.create_table_from([
 			(
