@@ -35,7 +35,7 @@ impl Highlighter {
 		};
 
 		let (theme, syntaxes) = SYNTECT.get_or_init(|| fut).await;
-		(&theme, &syntaxes)
+		(theme, syntaxes)
 	}
 
 	#[inline]

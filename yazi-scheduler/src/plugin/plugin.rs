@@ -32,7 +32,7 @@ impl Plugin {
 
 		if let Err(e) = isolate::entry(task.name, task.args).await {
 			self.fail(task.id, format!("Micro plugin failed:\n{e}"))?;
-			return Err(e.into());
+			return Ok(());
 		}
 
 		self.prog.send(TaskProg::Adv(task.id, 1, 0))?;

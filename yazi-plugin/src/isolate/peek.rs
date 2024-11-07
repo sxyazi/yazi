@@ -5,11 +5,11 @@ use tokio::{runtime::Handle, select};
 use tokio_util::sync::CancellationToken;
 use tracing::error;
 use yazi_config::LAYOUT;
-use yazi_macro::emit;
-use yazi_shared::{Layer, event::Cmd};
+use yazi_proxy::{AppProxy, options::{PluginCallback, PluginOpt}};
+use yazi_shared::event::Cmd;
 
 use super::slim_lua;
-use crate::{LUA, Opt, OptCallback, bindings::{Cast, Window}, elements::Rect, file::File, loader::LOADER};
+use crate::{LUA, bindings::{Cast, Window}, elements::Rect, file::File, loader::LOADER};
 
 pub fn peek(
 	cmd: &Cmd,
@@ -34,7 +34,7 @@ pub fn peek(
 			);
 
 			let plugin: Table = if let Some(b) = LOADER.read().get(&name) {
-				lua.load(b.as_ref()).set_name(name).call(())?
+				lua.load(b.as_bytes()).set_name(name).call(())?
 			} else {
 				return Err("unloaded plugin".into_lua_err());
 			};
@@ -65,7 +65,7 @@ pub fn peek(
 }
 
 pub fn peek_sync(cmd: &Cmd, file: yazi_shared::fs::File, mime: Cow<'static, str>, skip: usize) {
-	let cb: OptCallback = Box::new(move |_, plugin| {
+	let cb: PluginCallback = Box::new(move |_, plugin| {
 		plugin.raw_set("file", File::cast(&LUA, file)?)?;
 		plugin.raw_set("_mime", mime)?;
 		plugin.raw_set("skip", skip)?;
@@ -74,8 +74,5 @@ pub fn peek_sync(cmd: &Cmd, file: yazi_shared::fs::File, mime: Cow<'static, str>
 		plugin.call_method("peek", ())
 	});
 
-	let cmd: Cmd =
-		Opt { id: cmd.name.to_owned(), sync: true, cb: Some(cb), ..Default::default() }.into();
-
-	emit!(Call(cmd.with_name("plugin"), Layer::App));
+	AppProxy::plugin(PluginOpt::new_callback(&cmd.name, cb));
 }

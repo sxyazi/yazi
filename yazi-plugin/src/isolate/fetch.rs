@@ -15,7 +15,7 @@ pub async fn fetch(name: &str, files: Vec<yazi_shared::fs::File>) -> mlua::Resul
 	tokio::task::spawn_blocking(move || {
 		let lua = slim_lua(&name)?;
 		let plugin: Table = if let Some(b) = LOADER.read().get(&name) {
-			lua.load(b.as_ref()).set_name(name).call(())?
+			lua.load(b.as_bytes()).set_name(name).call(())?
 		} else {
 			return Err("unloaded plugin".into_lua_err());
 		};

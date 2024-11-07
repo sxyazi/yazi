@@ -46,12 +46,6 @@ impl Cmd {
 		self
 	}
 
-	#[inline]
-	pub fn with_name(mut self, name: impl ToString) -> Self {
-		self.name = name.to_string();
-		self
-	}
-
 	// --- Get
 	#[inline]
 	pub fn get(&self, name: &str) -> Option<&Data> { self.args.get(name) }
