@@ -4,7 +4,7 @@ use tokio::sync::oneshot;
 use yazi_macro::emit;
 use yazi_shared::{Layer, event::Cmd};
 
-use crate::options::{NotifyLevel, NotifyOpt};
+use crate::options::{NotifyLevel, NotifyOpt, PluginOpt};
 
 pub struct AppProxy;
 
@@ -44,5 +44,15 @@ impl AppProxy {
 			level:   NotifyLevel::Error,
 			timeout: Duration::from_secs(10),
 		});
+	}
+
+	#[inline]
+	pub fn plugin(opt: PluginOpt) {
+		emit!(Call(Cmd::new("plugin").with_any("opt", opt), Layer::App));
+	}
+
+	#[inline]
+	pub fn plugin_do(opt: PluginOpt) {
+		emit!(Call(Cmd::new("plugin_do").with_any("opt", opt), Layer::App));
 	}
 }

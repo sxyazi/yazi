@@ -141,13 +141,13 @@ impl<'a> Executor<'a> {
 		on!(TABS, switch);
 		on!(TABS, swap);
 
-		match cmd.name.as_bytes() {
+		match cmd.name.as_str() {
 			// Tasks
-			b"tasks_show" => self.app.cx.tasks.toggle(()),
+			"tasks_show" => self.app.cx.tasks.toggle(()),
 			// Help
-			b"help" => self.app.cx.help.toggle(Layer::Manager),
+			"help" => self.app.cx.help.toggle(Layer::Manager),
 			// Plugin
-			b"plugin" => self.app.plugin(cmd),
+			"plugin" => self.app.plugin(cmd),
 			_ => {}
 		}
 	}

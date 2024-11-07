@@ -103,18 +103,18 @@ impl Require {
 		mut args: MultiValue<'a>,
 	) -> mlua::Result<(Table<'a>, MultiValue<'a>)> {
 		let Some(front) = args.pop_front() else {
-			return Ok((LOADER.load(lua, id)?, args));
+			return Ok((LOADER.try_load(lua, id)?, args));
 		};
 		let Value::Table(tbl) = front else {
 			args.push_front(front);
-			return Ok((LOADER.load(lua, id)?, args));
+			return Ok((LOADER.try_load(lua, id)?, args));
 		};
 		Ok(if let Ok(mod_) = tbl.raw_get::<_, Table>("__mod") {
 			args.push_front(Value::Table(mod_.clone()));
 			(mod_, args)
 		} else {
 			args.push_front(Value::Table(tbl));
-			(LOADER.load(lua, id)?, args)
+			(LOADER.try_load(lua, id)?, args)
 		})
 	}
 }

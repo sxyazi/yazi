@@ -1,11 +1,11 @@
 use mlua::{ExternalError, ExternalResult, Function, Lua, MultiValue, Table, Value};
 use tokio::sync::oneshot;
 use yazi_dds::Sendable;
-use yazi_macro::emit;
-use yazi_shared::{Layer, event::{Cmd, Data}};
+use yazi_proxy::{AppProxy, options::{PluginCallback, PluginOpt}};
+use yazi_shared::event::Data;
 
 use super::Utils;
-use crate::{OptCallback, loader::LOADER, runtime::RtRef};
+use crate::{loader::LOADER, runtime::RtRef};
 
 impl Utils {
 	pub(super) fn sync(lua: &'static Lua, ya: &Table) -> mlua::Result<()> {
@@ -19,7 +19,7 @@ impl Utils {
 
 				let cur = rt.current().unwrap().to_owned();
 				lua.create_function(move |lua, mut args: MultiValue| {
-					args.push_front(Value::Table(LOADER.load(lua, &cur)?));
+					args.push_front(Value::Table(LOADER.try_load(lua, &cur)?));
 					f.call::<_, MultiValue>(args)
 				})
 			})?,
@@ -49,14 +49,14 @@ impl Utils {
 		Ok(())
 	}
 
-	async fn retrieve(name: &str, calls: usize, args: MultiValue<'_>) -> mlua::Result<Vec<Data>> {
+	async fn retrieve(id: &str, calls: usize, args: MultiValue<'_>) -> mlua::Result<Vec<Data>> {
 		let args = Sendable::values_to_vec(args)?;
 		let (tx, rx) = oneshot::channel::<Vec<Data>>();
 
-		let callback: OptCallback = {
-			let name = name.to_owned();
+		let callback: PluginCallback = {
+			let id = id.to_owned();
 			Box::new(move |lua, plugin| {
-				let Some(block) = lua.named_registry_value::<RtRef>("rt")?.get_block(&name, calls) else {
+				let Some(block) = lua.named_registry_value::<RtRef>("rt")?.get_block(&id, calls) else {
 					return Err("sync block not found".into_lua_err());
 				};
 
@@ -70,13 +70,9 @@ impl Utils {
 			})
 		};
 
-		emit!(Call(
-			Cmd::args("plugin", &[name]).with_bool("sync", true).with_any("callback", callback),
-			Layer::App
-		));
+		AppProxy::plugin(PluginOpt::new_callback(id, callback));
 
-		rx.await.map_err(|_| {
-			format!("Failed to execute sync block-{calls} in `{name}` plugin").into_lua_err()
-		})
+		rx.await
+			.map_err(|_| format!("Failed to execute sync block-{calls} in `{id}` plugin").into_lua_err())
 	}
 }

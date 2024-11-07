@@ -36,9 +36,7 @@ pub fn replace_to_printable(s: &[String], tab_size: u8) -> String {
 		match b {
 			b'\n' => buf.push(b'\n'),
 			b'\t' => {
-				for _ in 0..tab_size {
-					buf.push(b' ');
-				}
+				buf.extend((0..tab_size).map(|_| b' '));
 			}
 			b'\0'..=b'\x1F' => {
 				buf.push(b'^');
