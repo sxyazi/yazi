@@ -3,7 +3,7 @@ use std::ops::Deref;
 use mlua::{AnyUserData, UserData, UserDataFields, UserDataMethods};
 use yazi_plugin::url::UrlRef;
 
-use super::{Config, Finder, Folder, Mode, Preview, SCOPE, Selected};
+use super::{Config, Finder, Folder, Lives, Mode, Preview, Selected};
 
 pub(super) struct Tab {
 	inner: *const yazi_core::tab::Tab,
@@ -18,7 +18,7 @@ impl Deref for Tab {
 impl Tab {
 	#[inline]
 	pub(super) fn make(inner: &yazi_core::tab::Tab) -> mlua::Result<AnyUserData> {
-		SCOPE.create_userdata(Self { inner })
+		Lives::scoped_userdata(Self { inner })
 	}
 }
 

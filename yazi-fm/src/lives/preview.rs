@@ -3,7 +3,7 @@ use std::ops::Deref;
 use mlua::{AnyUserData, UserData, UserDataFields};
 use yazi_config::LAYOUT;
 
-use super::{Folder, SCOPE};
+use super::{Folder, Lives};
 
 pub(super) struct Preview {
 	tab: *const yazi_core::tab::Tab,
@@ -18,7 +18,7 @@ impl Deref for Preview {
 impl Preview {
 	#[inline]
 	pub(super) fn make(tab: &yazi_core::tab::Tab) -> mlua::Result<AnyUserData> {
-		SCOPE.create_userdata(Self { tab })
+		Lives::scoped_userdata(Self { tab })
 	}
 
 	#[inline]

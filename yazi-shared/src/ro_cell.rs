@@ -12,6 +12,9 @@ impl<T> RoCell<T> {
 	pub const fn new() -> Self { Self(UnsafeCell::new(None)) }
 
 	#[inline]
+	pub const fn new_const(value: T) -> Self { Self(UnsafeCell::new(Some(value))) }
+
+	#[inline]
 	pub fn init(&self, value: T) {
 		debug_assert!(!self.initialized());
 		unsafe {

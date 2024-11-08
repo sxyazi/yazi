@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use mlua::{AnyUserData, LuaSerdeExt, UserData, UserDataFields};
 
-use super::SCOPE;
+use super::Lives;
 
 pub(super) struct Tasks {
 	inner: *const yazi_core::tasks::Tasks,
@@ -17,7 +17,7 @@ impl Deref for Tasks {
 impl Tasks {
 	#[inline]
 	pub(super) fn make(inner: &yazi_core::tasks::Tasks) -> mlua::Result<AnyUserData> {
-		SCOPE.create_userdata(Self { inner })
+		Lives::scoped_userdata(Self { inner })
 	}
 }
 

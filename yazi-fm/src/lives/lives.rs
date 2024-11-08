@@ -1,13 +1,13 @@
-use std::mem;
+use std::cell::RefCell;
 
-use scopeguard::defer;
+use mlua::{AnyUserData, UserData};
 use tracing::error;
 use yazi_plugin::LUA;
 use yazi_shared::RoCell;
 
 use crate::Ctx;
 
-pub(super) static SCOPE: RoCell<&mlua::Scope> = RoCell::new();
+static TO_DESTROY: RoCell<RefCell<Vec<AnyUserData>>> = RoCell::new_const(RefCell::new(Vec::new()));
 
 pub(crate) struct Lives;
 
@@ -20,14 +20,14 @@ impl Lives {
 
 	pub(crate) fn scope<T>(cx: &Ctx, f: impl FnOnce() -> mlua::Result<T>) -> mlua::Result<T> {
 		let result = LUA.scope(|scope| {
-			defer! { SCOPE.drop(); }
-			SCOPE.init(*unsafe {
-				mem::transmute::<&&mut mlua::Scope<'_, '_>, &&mut mlua::Scope<'static, 'static>>(&scope)
+			scope.add_destructor(|| {
+				for ud in TO_DESTROY.borrow_mut().drain(..) {
+					ud.destroy().expect("failed to destruct scoped userdata");
+				}
 			});
-			LUA.set_named_registry_value("cx", scope.create_any_userdata_ref(cx)?)?;
 
-			let globals = LUA.globals();
-			globals.raw_set(
+			LUA.set_named_registry_value("cx", scope.create_any_userdata_ref(cx)?)?;
+			LUA.globals().raw_set(
 				"cx",
 				LUA.create_table_from([
 					("active", super::Tab::make(cx.manager.active())?),
@@ -44,5 +44,15 @@ impl Lives {
 			error!("{e}");
 		}
 		result
+	}
+
+	#[inline]
+	pub(crate) fn scoped_userdata<T>(data: T) -> mlua::Result<AnyUserData>
+	where
+		T: UserData + 'static,
+	{
+		let ud = LUA.create_userdata(data)?;
+		TO_DESTROY.borrow_mut().push(ud.clone());
+		Ok(ud)
 	}
 }

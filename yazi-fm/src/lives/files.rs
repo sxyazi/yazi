@@ -2,7 +2,7 @@ use std::ops::{Deref, Range};
 
 use mlua::{AnyUserData, MetaMethod, UserData, UserDataFields, UserDataMethods};
 
-use super::{File, Filter, SCOPE};
+use super::{File, Filter, Lives};
 
 pub(super) struct Files {
 	window: Range<usize>,
@@ -23,7 +23,7 @@ impl Files {
 		folder: &yazi_fs::Folder,
 		tab: &yazi_core::tab::Tab,
 	) -> mlua::Result<AnyUserData> {
-		SCOPE.create_userdata(Self { window, folder, tab })
+		Lives::scoped_userdata(Self { window, folder, tab })
 	}
 
 	#[inline]

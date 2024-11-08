@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use mlua::{AnyUserData, MetaMethod, UserData, UserDataFields, UserDataMethods};
 
-use super::SCOPE;
+use super::Lives;
 
 pub(super) struct Mode {
 	inner: *const yazi_core::tab::Mode,
@@ -17,7 +17,7 @@ impl Deref for Mode {
 impl Mode {
 	#[inline]
 	pub(super) fn make(inner: &yazi_core::tab::Mode) -> mlua::Result<AnyUserData> {
-		SCOPE.create_userdata(Self { inner })
+		Lives::scoped_userdata(Self { inner })
 	}
 }
 

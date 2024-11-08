@@ -1,6 +1,6 @@
 use mlua::{AnyUserData, UserData};
 
-use super::SCOPE;
+use super::Lives;
 
 pub(super) struct Iter<I: Iterator<Item = T>, T> {
 	inner: I,
@@ -10,7 +10,7 @@ pub(super) struct Iter<I: Iterator<Item = T>, T> {
 impl<I: Iterator<Item = T> + 'static, T: 'static> Iter<I, T> {
 	#[inline]
 	pub(super) fn make(inner: I) -> mlua::Result<AnyUserData> {
-		SCOPE.create_userdata(Self { inner, count: 0 })
+		Lives::scoped_userdata(Self { inner, count: 0 })
 	}
 }
 

@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use mlua::{AnyUserData, UserData, UserDataFields};
 
-use super::SCOPE;
+use super::Lives;
 
 pub(super) struct Config {
 	inner: *const yazi_core::tab::Config,
@@ -17,7 +17,7 @@ impl Deref for Config {
 impl Config {
 	#[inline]
 	pub(super) fn make(inner: &yazi_core::tab::Config) -> mlua::Result<AnyUserData> {
-		SCOPE.create_userdata(Self { inner })
+		Lives::scoped_userdata(Self { inner })
 	}
 }
 

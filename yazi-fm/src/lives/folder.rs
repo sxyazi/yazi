@@ -4,7 +4,7 @@ use mlua::{AnyUserData, Lua, UserData, UserDataFields};
 use yazi_config::LAYOUT;
 use yazi_plugin::{bindings::Cast, url::Url};
 
-use super::{File, Files, SCOPE};
+use super::{File, Files, Lives};
 
 pub(super) struct Folder {
 	window: Range<usize>,
@@ -33,7 +33,7 @@ impl Folder {
 			}
 		};
 
-		SCOPE.create_userdata(Self { window, inner, tab })
+		Lives::scoped_userdata(Self { window, inner, tab })
 	}
 
 	pub(super) fn register(lua: &Lua) -> mlua::Result<()> {

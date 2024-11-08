@@ -5,7 +5,7 @@ use yazi_config::THEME;
 use yazi_plugin::{bindings::Range, elements::Style};
 use yazi_shared::MIME_DIR;
 
-use super::SCOPE;
+use super::Lives;
 use crate::Ctx;
 
 pub(super) struct File {
@@ -31,7 +31,7 @@ impl File {
 		folder: &yazi_fs::Folder,
 		tab: &yazi_core::tab::Tab,
 	) -> mlua::Result<AnyUserData> {
-		SCOPE.create_userdata(Self { idx, folder, tab })
+		Lives::scoped_userdata(Self { idx, folder, tab })
 	}
 
 	#[inline]

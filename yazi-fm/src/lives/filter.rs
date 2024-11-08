@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use mlua::{AnyUserData, MetaMethod, UserData, UserDataMethods};
 
-use super::SCOPE;
+use super::Lives;
 
 pub(super) struct Filter {
 	inner: *const yazi_fs::Filter,
@@ -17,7 +17,7 @@ impl Deref for Filter {
 impl Filter {
 	#[inline]
 	pub(super) fn make(inner: &yazi_fs::Filter) -> mlua::Result<AnyUserData> {
-		SCOPE.create_userdata(Self { inner })
+		Lives::scoped_userdata(Self { inner })
 	}
 }
 

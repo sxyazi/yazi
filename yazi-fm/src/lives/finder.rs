@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use mlua::{AnyUserData, MetaMethod, UserData, UserDataMethods};
 
-use super::SCOPE;
+use super::Lives;
 
 pub(super) struct Finder {
 	inner: *const yazi_core::tab::Finder,
@@ -17,7 +17,7 @@ impl Deref for Finder {
 impl Finder {
 	#[inline]
 	pub(super) fn make(inner: &yazi_core::tab::Finder) -> mlua::Result<AnyUserData> {
-		SCOPE.create_userdata(Self { inner })
+		Lives::scoped_userdata(Self { inner })
 	}
 }
 
