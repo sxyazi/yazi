@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use mlua::{ExternalError, Lua, Table, TableExt, Value};
+use mlua::{ExternalError, Lua, ObjectLike, Table, Value};
 use tracing::error;
 use yazi_config::LAYOUT;
 use yazi_dds::Sendable;
@@ -43,15 +43,15 @@ impl Utils {
 				let id = id.to_str()?;
 
 				let mut layout = LAYOUT.get();
-				match id {
-					"current" => layout.current = *c.raw_get::<_, crate::elements::Rect>("_area")?,
-					"preview" => layout.preview = *c.raw_get::<_, crate::elements::Rect>("_area")?,
-					"progress" => layout.progress = *c.raw_get::<_, crate::elements::Rect>("_area")?,
+				match id.as_ref() {
+					"current" => layout.current = *c.raw_get::<crate::elements::Rect>("_area")?,
+					"preview" => layout.preview = *c.raw_get::<crate::elements::Rect>("_area")?,
+					"progress" => layout.progress = *c.raw_get::<crate::elements::Rect>("_area")?,
 					_ => {}
 				}
 
 				LAYOUT.set(layout);
-				match c.call_method::<_, Table>("redraw", ()) {
+				match c.call_method::<Table>("redraw", ()) {
 					Err(e) => {
 						error!("Failed to `redraw()` the `{id}` component:\n{e}");
 						lua.create_table()

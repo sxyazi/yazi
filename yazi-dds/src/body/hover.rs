@@ -28,7 +28,7 @@ impl<'a> From<BodyHover<'a>> for Body<'a> {
 	fn from(value: BodyHover<'a>) -> Self { Self::Hover(value) }
 }
 
-impl IntoLua<'_> for BodyHover<'static> {
+impl IntoLua for BodyHover<'static> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		if let Some(Cow::Owned(url)) = self.url {
 			lua.create_table_from([

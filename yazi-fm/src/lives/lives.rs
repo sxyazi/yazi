@@ -1,49 +1,33 @@
-use std::mem;
+use std::cell::RefCell;
 
-use mlua::Scope;
-use scopeguard::defer;
+use mlua::{AnyUserData, UserData};
 use tracing::error;
 use yazi_plugin::LUA;
 use yazi_shared::RoCell;
 
 use crate::Ctx;
 
-pub(super) static SCOPE: RoCell<&mlua::Scope> = RoCell::new();
+static TO_DESTROY: RoCell<RefCell<Vec<AnyUserData>>> = RoCell::new_const(RefCell::new(Vec::new()));
 
 pub(crate) struct Lives;
 
 impl Lives {
 	pub(crate) fn register() -> mlua::Result<()> {
-		super::Config::register(&LUA)?;
-		super::File::register(&LUA)?;
-		super::Files::register(&LUA)?;
-		super::Filter::register(&LUA)?;
-		super::Finder::register(&LUA)?;
 		super::Folder::register(&LUA)?;
-		super::Mode::register(&LUA)?;
-		super::Preview::register(&LUA)?;
-		super::Selected::register(&LUA)?;
-		super::Tab::register(&LUA)?;
-		super::Tabs::register(&LUA)?;
-		super::Tasks::register(&LUA)?;
-		super::Yanked::register(&LUA)?;
 
 		Ok(())
 	}
 
-	pub(crate) fn scope<'a, T>(
-		cx: &'a Ctx,
-		f: impl FnOnce(&Scope<'a, 'a>) -> mlua::Result<T>,
-	) -> mlua::Result<T> {
+	pub(crate) fn scope<T>(cx: &Ctx, f: impl FnOnce() -> mlua::Result<T>) -> mlua::Result<T> {
 		let result = LUA.scope(|scope| {
-			defer! { SCOPE.drop(); }
-			SCOPE.init(unsafe {
-				mem::transmute::<&mlua::Scope<'a, 'a>, &mlua::Scope<'static, 'static>>(scope)
+			scope.add_destructor(|| {
+				for ud in TO_DESTROY.borrow_mut().drain(..) {
+					ud.destroy().expect("failed to destruct scoped userdata");
+				}
 			});
-			LUA.set_named_registry_value("cx", scope.create_any_userdata_ref(cx)?)?;
 
-			let globals = LUA.globals();
-			globals.raw_set(
+			LUA.set_named_registry_value("cx", scope.create_any_userdata_ref(cx)?)?;
+			LUA.globals().raw_set(
 				"cx",
 				LUA.create_table_from([
 					("active", super::Tab::make(cx.manager.active())?),
@@ -53,12 +37,22 @@ impl Lives {
 				])?,
 			)?;
 
-			f(scope)
+			f()
 		});
 
 		if let Err(ref e) = result {
 			error!("{e}");
 		}
 		result
+	}
+
+	#[inline]
+	pub(crate) fn scoped_userdata<T>(data: T) -> mlua::Result<AnyUserData>
+	where
+		T: UserData + 'static,
+	{
+		let ud = LUA.create_userdata(data)?;
+		TO_DESTROY.borrow_mut().push(ud.clone());
+		Ok(ud)
 	}
 }

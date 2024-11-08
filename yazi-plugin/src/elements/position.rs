@@ -30,7 +30,7 @@ impl Position {
 }
 
 impl UserData for Position {
-	fn add_fields<'lua, F: UserDataFields<'lua, Self>>(fields: &mut F) {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("x", |_, me| Ok(me.x));
 		fields.add_field_method_get("y", |_, me| Ok(me.y));
 	}

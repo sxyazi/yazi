@@ -14,7 +14,7 @@ impl From<Constraint> for ratatui::layout::Constraint {
 }
 
 impl UserData for Constraint {
-	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
 		use ratatui::layout::Constraint as C;
 
 		methods.add_function("Min", |_, n: u16| Ok(Self(C::Min(n))));

@@ -32,7 +32,7 @@ impl<'a> From<BodyCd<'a>> for Body<'a> {
 	fn from(value: BodyCd<'a>) -> Self { Self::Cd(value) }
 }
 
-impl IntoLua<'_> for BodyCd<'static> {
+impl IntoLua for BodyCd<'static> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		if let Some(Cow::Owned(url)) = Some(self.url).filter(|_| !self.dummy) {
 			lua.create_table_from([

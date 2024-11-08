@@ -1,6 +1,6 @@
 use std::{ops::Deref, str::FromStr};
 
-use mlua::{ExternalResult, IntoLua};
+use mlua::{ExternalResult, IntoLua, Lua};
 
 pub struct Position(yazi_config::popup::Position);
 
@@ -14,14 +14,14 @@ impl From<Position> for yazi_config::popup::Position {
 	fn from(value: Position) -> Self { value.0 }
 }
 
-impl<'a> TryFrom<mlua::Table<'a>> for Position {
+impl TryFrom<mlua::Table> for Position {
 	type Error = mlua::Error;
 
-	fn try_from(t: mlua::Table<'a>) -> Result<Self, Self::Error> {
+	fn try_from(t: mlua::Table) -> Result<Self, Self::Error> {
 		use yazi_config::popup::{Offset, Origin, Position};
 
 		Ok(Self(Position {
-			origin: Origin::from_str(t.raw_get::<_, mlua::String>(1)?.to_str()?).into_lua_err()?,
+			origin: Origin::from_str(&t.raw_get::<mlua::String>(1)?.to_str()?).into_lua_err()?,
 			offset: Offset {
 				x:      t.raw_get("x").unwrap_or_default(),
 				y:      t.raw_get("y").unwrap_or_default(),
@@ -32,8 +32,8 @@ impl<'a> TryFrom<mlua::Table<'a>> for Position {
 	}
 }
 
-impl IntoLua<'_> for Position {
-	fn into_lua(self, lua: &mlua::Lua) -> mlua::Result<mlua::Value> {
+impl IntoLua for Position {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<mlua::Value> {
 		lua
 			.create_table_from([
 				(1.into_lua(lua)?, self.origin.to_string().into_lua(lua)?),

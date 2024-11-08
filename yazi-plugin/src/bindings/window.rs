@@ -17,7 +17,7 @@ impl Default for Window {
 }
 
 impl UserData for Window {
-	fn add_fields<'lua, F: mlua::UserDataFields<'lua, Self>>(fields: &mut F) {
+	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("rows", |_, me| Ok(me.rows));
 		fields.add_field_method_get("cols", |_, me| Ok(me.cols));
 		fields.add_field_method_get("width", |_, me| Ok(me.width));

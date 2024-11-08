@@ -25,8 +25,8 @@ impl<'a> From<BodyTrash<'a>> for Body<'a> {
 	fn from(value: BodyTrash<'a>) -> Self { Self::Trash(value) }
 }
 
-impl IntoLua<'_> for BodyTrash<'static> {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value<'_>> {
+impl IntoLua for BodyTrash<'static> {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		let urls = lua.create_table_with_capacity(self.urls.len(), 0)?;
 
 		// In most cases, `self.urls` will be `Cow::Owned`, so

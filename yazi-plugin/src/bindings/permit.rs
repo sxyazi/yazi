@@ -3,7 +3,7 @@ use std::{mem, ops::Deref};
 use mlua::{UserData, prelude::LuaUserDataMethods};
 use tokio::sync::SemaphorePermit;
 
-pub type PermitRef<'lua, F> = mlua::UserDataRef<'lua, Permit<F>>;
+pub type PermitRef<F> = mlua::UserDataRef<Permit<F>>;
 
 pub struct Permit<F: FnOnce()> {
 	inner:    Option<SemaphorePermit<'static>>,
@@ -36,7 +36,7 @@ impl<F: FnOnce()> Drop for Permit<F> {
 }
 
 impl<F: FnOnce()> UserData for Permit<F> {
-	fn add_methods<'lua, M: LuaUserDataMethods<'lua, Self>>(methods: &mut M) {
+	fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
 		methods.add_method_mut("drop", |_, me, ()| Ok(me.dropping()));
 	}
 }

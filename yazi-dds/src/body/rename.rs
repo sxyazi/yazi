@@ -31,7 +31,7 @@ impl<'a> From<BodyRename<'a>> for Body<'a> {
 	fn from(value: BodyRename<'a>) -> Self { Self::Rename(value) }
 }
 
-impl IntoLua<'_> for BodyRename<'static> {
+impl IntoLua for BodyRename<'static> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua
 			.create_table_from([

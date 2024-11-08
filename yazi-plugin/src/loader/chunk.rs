@@ -11,12 +11,15 @@ impl Chunk {
 
 	fn analyze(&mut self) {
 		for line in self.bytes.split(|&b| b == b'\n') {
+			if line.trim_ascii().is_empty() {
+				continue;
+			};
+
 			let Some(rest) = line.strip_prefix(b"---") else { break };
-
 			let rest = rest.trim_ascii();
-			let Some(pos) = rest.iter().position(|&b| b == b' ' || b == b'\t') else { break };
 
-			match (rest[..pos].trim_ascii(), rest[pos..].trim_ascii()) {
+			let Some(i) = rest.iter().position(|&b| b == b' ' || b == b'\t') else { break };
+			match (rest[..i].trim_ascii(), rest[i..].trim_ascii()) {
 				(b"@sync", b"entry") => self.sync_entry = true,
 				(_, []) => break,
 				(b, _) if b.strip_prefix(b"@").unwrap_or(b"").is_empty() => break,

@@ -37,7 +37,7 @@ impl Command {
 }
 
 impl UserData for Command {
-	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
 		#[inline]
 		fn make_stdio(v: Value) -> mlua::Result<Stdio> {
 			match v {
@@ -66,28 +66,26 @@ impl UserData for Command {
 		}
 
 		methods.add_function_mut("arg", |_, (ud, arg): (AnyUserData, mlua::String)| {
-			ud.borrow_mut::<Self>()?.inner.arg(arg.to_string_lossy().as_ref());
+			ud.borrow_mut::<Self>()?.inner.arg(arg.to_string_lossy());
 			Ok(ud)
 		});
 		methods.add_function_mut("args", |_, (ud, args): (AnyUserData, Vec<mlua::String>)| {
 			{
 				let mut me = ud.borrow_mut::<Self>()?;
 				for arg in args {
-					me.inner.arg(arg.to_string_lossy().as_ref());
+					me.inner.arg(arg.to_string_lossy());
 				}
 			}
 			Ok(ud)
 		});
 		methods.add_function_mut("cwd", |_, (ud, dir): (AnyUserData, mlua::String)| {
-			ud.borrow_mut::<Self>()?.inner.current_dir(dir.to_str()?);
+			ud.borrow_mut::<Self>()?.inner.current_dir(dir.to_str()?.as_ref());
 			Ok(ud)
 		});
 		methods.add_function_mut(
 			"env",
 			|_, (ud, key, value): (AnyUserData, mlua::String, mlua::String)| {
-				ud.borrow_mut::<Self>()?
-					.inner
-					.env(key.to_string_lossy().as_ref(), value.to_string_lossy().as_ref());
+				ud.borrow_mut::<Self>()?.inner.env(key.to_string_lossy(), value.to_string_lossy());
 				Ok(ud)
 			},
 		);
@@ -107,16 +105,16 @@ impl UserData for Command {
 			Ok(child) => (Child::new(child), Value::Nil).into_lua_multi(lua),
 			Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(lua),
 		});
-		methods.add_async_method_mut("output", |lua, me, ()| async move {
+		methods.add_async_method_mut("output", |lua, mut me, ()| async move {
 			match me.inner.output().await {
-				Ok(output) => (Output::new(output), Value::Nil).into_lua_multi(lua),
-				Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(lua),
+				Ok(output) => (Output::new(output), Value::Nil).into_lua_multi(&lua),
+				Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(&lua),
 			}
 		});
-		methods.add_async_method_mut("status", |lua, me, ()| async move {
+		methods.add_async_method_mut("status", |lua, mut me, ()| async move {
 			match me.inner.status().await {
-				Ok(status) => (Status::new(status), Value::Nil).into_lua_multi(lua),
-				Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(lua),
+				Ok(status) => (Status::new(status), Value::Nil).into_lua_multi(&lua),
+				Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(&lua),
 			}
 		});
 	}

@@ -19,24 +19,24 @@ pub fn install(lua: &Lua) -> mlua::Result<()> {
 					};
 
 					match meta {
-						Ok(m) => (Cha::cast(lua, m)?, Value::Nil).into_lua_multi(lua),
-						Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(lua),
+						Ok(m) => (Cha::cast(&lua, m)?, Value::Nil).into_lua_multi(&lua),
+						Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(&lua),
 					}
 				})?,
 			),
 			(
 				"write",
 				lua.create_async_function(|lua, (url, data): (UrlRef, mlua::String)| async move {
-					match fs::write(&*url, data).await {
-						Ok(_) => (true, Value::Nil).into_lua_multi(lua),
-						Err(e) => (false, e.raw_os_error()).into_lua_multi(lua),
+					match fs::write(&*url, data.as_bytes()).await {
+						Ok(_) => (true, Value::Nil).into_lua_multi(&lua),
+						Err(e) => (false, e.raw_os_error()).into_lua_multi(&lua),
 					}
 				})?,
 			),
 			(
 				"remove",
 				lua.create_async_function(|lua, (type_, url): (mlua::String, UrlRef)| async move {
-					let result = match type_.to_str()? {
+					let result = match &*type_.to_str()? {
 						"file" => fs::remove_file(&*url).await,
 						"dir" => fs::remove_dir(&*url).await,
 						"dir_all" => fs::remove_dir_all(&*url).await,
@@ -47,17 +47,17 @@ pub fn install(lua: &Lua) -> mlua::Result<()> {
 					};
 
 					match result {
-						Ok(_) => (true, Value::Nil).into_lua_multi(lua),
-						Err(e) => (false, e.raw_os_error()).into_lua_multi(lua),
+						Ok(_) => (true, Value::Nil).into_lua_multi(&lua),
+						Err(e) => (false, e.raw_os_error()).into_lua_multi(&lua),
 					}
 				})?,
 			),
 			(
 				"read_dir",
 				lua.create_async_function(|lua, (dir, options): (UrlRef, Table)| async move {
-					let glob = if let Ok(s) = options.raw_get::<_, mlua::String>("glob") {
+					let glob = if let Ok(s) = options.raw_get::<mlua::String>("glob") {
 						Some(
-							GlobBuilder::new(s.to_str()?)
+							GlobBuilder::new(&s.to_str()?)
 								.case_insensitive(true)
 								.literal_separator(true)
 								.backslash_escape(false)
@@ -75,7 +75,7 @@ pub fn install(lua: &Lua) -> mlua::Result<()> {
 
 					let mut it = match fs::read_dir(&*dir).await {
 						Ok(it) => it,
-						Err(e) => return (Value::Nil, e.raw_os_error()).into_lua_multi(lua),
+						Err(e) => return (Value::Nil, e.raw_os_error()).into_lua_multi(&lua),
 					};
 
 					let mut files = vec![];
@@ -97,7 +97,7 @@ pub fn install(lua: &Lua) -> mlua::Result<()> {
 						} else {
 							yazi_shared::fs::File::from_dummy(url, next.file_type().await.ok())
 						};
-						files.push(File::cast(lua, file)?);
+						files.push(File::cast(&lua, file)?);
 					}
 
 					let tbl = lua.create_table_with_capacity(files.len(), 0)?;
@@ -105,15 +105,15 @@ pub fn install(lua: &Lua) -> mlua::Result<()> {
 						tbl.raw_push(f)?;
 					}
 
-					(tbl, Value::Nil).into_lua_multi(lua)
+					(tbl, Value::Nil).into_lua_multi(&lua)
 				})?,
 			),
 			(
 				"unique_name",
 				lua.create_async_function(|lua, url: UrlRef| async move {
 					match yazi_shared::fs::unique_name(url.clone(), async { false }).await {
-						Ok(u) => (Url::cast(lua, u)?, Value::Nil).into_lua_multi(lua),
-						Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(lua),
+						Ok(u) => (Url::cast(&lua, u)?, Value::Nil).into_lua_multi(&lua),
+						Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(&lua),
 					}
 				})?,
 			),

@@ -27,7 +27,7 @@ impl From<BodyCustom> for Body<'_> {
 	fn from(value: BodyCustom) -> Self { Self::Custom(value) }
 }
 
-impl IntoLua<'_> for BodyCustom {
+impl IntoLua for BodyCustom {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { Sendable::data_to_value(lua, self.data) }
 }
 

@@ -15,12 +15,12 @@ impl Utils {
 	fn parse_keys(value: Value) -> mlua::Result<Vec<Key>> {
 		Ok(match value {
 			Value::String(s) => {
-				vec![Key::from_str(s.to_str()?).into_lua_err()?]
+				vec![Key::from_str(&s.to_str()?).into_lua_err()?]
 			}
 			Value::Table(t) => {
 				let mut v = Vec::with_capacity(10);
 				for s in t.sequence_values::<mlua::String>() {
-					v.push(Key::from_str(s?.to_str()?).into_lua_err()?);
+					v.push(Key::from_str(&s?.to_str()?).into_lua_err()?);
 				}
 				v
 			}
@@ -35,7 +35,7 @@ impl Utils {
 				let (tx, mut rx) = mpsc::channel::<usize>(1);
 
 				let mut cands = Vec::with_capacity(30);
-				for (i, cand) in t.raw_get::<_, Table>("cands")?.sequence_values::<Table>().enumerate() {
+				for (i, cand) in t.raw_get::<Table>("cands")?.sequence_values::<Table>().enumerate() {
 					let cand = cand?;
 					cands.push(Chord {
 						on:   Self::parse_keys(cand.raw_get("on")?)?,
@@ -65,24 +65,24 @@ impl Utils {
 					title: t.raw_get("title")?,
 					value: t.raw_get("value").unwrap_or_default(),
 					cursor: None, // TODO
-					position: Position::try_from(t.raw_get::<_, Table>("position")?)?.into(),
+					position: Position::try_from(t.raw_get::<Table>("position")?)?.into(),
 					realtime,
 					completion: false,
 					highlight: false,
 				}));
 
 				if !realtime {
-					return InputRx::consume(rx).await.into_lua_multi(lua);
+					return InputRx::consume(rx).await.into_lua_multi(&lua);
 				}
 
-				let debounce = t.raw_get::<_, f64>("debounce").unwrap_or_default();
+				let debounce = t.raw_get::<f64>("debounce").unwrap_or_default();
 				if debounce < 0.0 {
 					Err("negative debounce duration".into_lua_err())
 				} else if debounce == 0.0 {
-					(InputRx::new(rx), Value::Nil).into_lua_multi(lua)
+					(InputRx::new(rx), Value::Nil).into_lua_multi(&lua)
 				} else {
 					(InputRx::new(Debounce::new(rx, Duration::from_secs_f64(debounce))), Value::Nil)
-						.into_lua_multi(lua)
+						.into_lua_multi(&lua)
 				}
 			})?,
 		)?;

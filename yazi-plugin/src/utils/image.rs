@@ -10,9 +10,9 @@ impl Utils {
 			"image_show",
 			lua.create_async_function(|lua, (url, rect): (UrlRef, Rect)| async move {
 				if let Ok(area) = ADAPTOR.image_show(&url, *rect).await {
-					Rect::from(area).into_lua(lua)
+					Rect::from(area).into_lua(&lua)
 				} else {
-					Value::Nil.into_lua(lua)
+					Value::Nil.into_lua(&lua)
 				}
 			})?,
 		)?;

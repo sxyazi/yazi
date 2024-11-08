@@ -107,7 +107,7 @@ impl<'a> Body<'a> {
 	pub fn with_sender(self, sender: u64) -> Payload<'a> { Payload::new(self).with_sender(sender) }
 }
 
-impl IntoLua<'_> for Body<'static> {
+impl IntoLua for Body<'static> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		match self {
 			Self::Hi(b) => b.into_lua(lua),

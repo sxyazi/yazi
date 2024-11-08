@@ -44,6 +44,7 @@ impl Sendable {
 				}
 			}
 			Value::Error(_) => Err("error is not supported".into_lua_err())?,
+			Value::Other(..) => Err("unknown data is not supported".into_lua_err())?,
 		})
 	}
 
@@ -87,7 +88,7 @@ impl Sendable {
 		for v in data {
 			vec.push(Self::data_to_value(lua, v)?);
 		}
-		Ok(MultiValue::from_iter(vec))
+		Ok(MultiValue::from_vec(vec))
 	}
 
 	pub fn values_to_vec(values: MultiValue) -> mlua::Result<Vec<Data>> {
@@ -117,6 +118,7 @@ impl Sendable {
 				}
 			}
 			Value::Error(_) => Err("error is not supported".into_lua_err())?,
+			Value::Other(..) => Err("unknown data is not supported".into_lua_err())?,
 		})
 	}
 

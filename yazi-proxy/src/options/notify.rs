@@ -18,16 +18,16 @@ impl TryFrom<Cmd> for NotifyOpt {
 	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> { c.take_any("option").ok_or(()) }
 }
 
-impl<'a> TryFrom<mlua::Table<'a>> for NotifyOpt {
+impl TryFrom<mlua::Table> for NotifyOpt {
 	type Error = mlua::Error;
 
 	fn try_from(t: mlua::Table) -> Result<Self, Self::Error> {
-		let timeout = t.raw_get::<_, f64>("timeout")?;
+		let timeout = t.raw_get("timeout")?;
 		if timeout < 0.0 {
 			return Err("timeout must be non-negative".into_lua_err());
 		}
 
-		let level = if let Ok(s) = t.raw_get::<_, mlua::String>("level") {
+		let level = if let Ok(s) = t.raw_get::<mlua::String>("level") {
 			s.to_str()?.parse().into_lua_err()?
 		} else {
 			Default::default()

@@ -43,7 +43,7 @@ impl Rect {
 }
 
 impl UserData for Rect {
-	fn add_fields<'lua, F: mlua::UserDataFields<'lua, Self>>(fields: &mut F) {
+	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("x", |_, me| Ok(me.x));
 		fields.add_field_method_get("y", |_, me| Ok(me.y));
 		fields.add_field_method_get("w", |_, me| Ok(me.width));
@@ -55,7 +55,7 @@ impl UserData for Rect {
 		fields.add_field_method_get("bottom", |_, me| Ok(me.bottom()));
 	}
 
-	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_method("padding", |_, me, padding: Padding| {
 			let mut r = **me;
 			r.x = r.x.saturating_add(padding.left);

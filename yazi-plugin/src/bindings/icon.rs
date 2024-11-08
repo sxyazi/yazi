@@ -17,10 +17,7 @@ impl Icon {
 }
 
 impl Cast<&'static yazi_shared::theme::Icon> for Icon {
-	fn cast<'lua>(
-		lua: &'lua Lua,
-		data: &'static yazi_shared::theme::Icon,
-	) -> mlua::Result<AnyUserData<'lua>> {
+	fn cast(lua: &Lua, data: &'static yazi_shared::theme::Icon) -> mlua::Result<AnyUserData> {
 		lua.create_any_userdata(data)
 	}
 }

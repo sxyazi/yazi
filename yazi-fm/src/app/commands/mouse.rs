@@ -1,5 +1,5 @@
 use crossterm::event::{MouseEvent, MouseEventKind};
-use mlua::{Table, TableExt};
+use mlua::{ObjectLike, Table};
 use tracing::error;
 use yazi_config::MANAGER;
 use yazi_plugin::{LUA, bindings::Cast};
@@ -21,9 +21,9 @@ impl App {
 		let Some(size) = self.term.as_ref().and_then(|t| t.size().ok()) else { return };
 		let Ok(evt) = yazi_plugin::bindings::MouseEvent::cast(&LUA, event) else { return };
 
-		let res = Lives::scope(&self.cx, move |_| {
+		let res = Lives::scope(&self.cx, move || {
 			let area = yazi_plugin::elements::Rect::from(size);
-			let root = LUA.globals().raw_get::<_, Table>("Root")?.call_method::<_, Table>("new", area)?;
+			let root = LUA.globals().raw_get::<Table>("Root")?.call_method::<Table>("new", area)?;
 
 			if matches!(event.kind, MouseEventKind::Down(_) if MANAGER.mouse_events.draggable()) {
 				root.raw_set("_drag_start", evt.clone())?;

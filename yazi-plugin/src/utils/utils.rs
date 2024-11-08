@@ -1,9 +1,11 @@
+use mlua::Lua;
+
 #[cfg(unix)]
 pub(super) static HOSTNAME_CACHE: std::sync::OnceLock<Option<String>> = std::sync::OnceLock::new();
 
 pub(super) struct Utils;
 
-pub fn install(lua: &'static mlua::Lua) -> mlua::Result<()> {
+pub fn install(lua: &'static Lua) -> mlua::Result<()> {
 	let ya = lua.create_table()?;
 
 	Utils::app(lua, &ya)?;
@@ -22,7 +24,7 @@ pub fn install(lua: &'static mlua::Lua) -> mlua::Result<()> {
 	lua.globals().raw_set("ya", ya)
 }
 
-pub fn install_isolate(lua: &mlua::Lua) -> mlua::Result<()> {
+pub fn install_isolate(lua: &Lua) -> mlua::Result<()> {
 	let ya = lua.create_table()?;
 
 	Utils::app(lua, &ya)?;

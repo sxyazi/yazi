@@ -36,7 +36,7 @@ impl Table {
 }
 
 impl UserData for Table {
-	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
 		crate::impl_area_method!(methods);
 
 		methods.add_function_mut("header", |_, (ud, row): (AnyUserData, TableRow)| {
@@ -114,7 +114,7 @@ impl From<TableRow> for ratatui::widgets::Row<'static> {
 }
 
 impl UserData for TableRow {
-	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
 		crate::impl_style_method!(methods, style);
 
 		methods.add_function_mut("height", |_, (ud, value): (AnyUserData, u16)| {

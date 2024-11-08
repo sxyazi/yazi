@@ -36,7 +36,7 @@ impl<'a> From<BodyBulk<'a>> for Body<'a> {
 	fn from(value: BodyBulk<'a>) -> Self { Self::Bulk(value) }
 }
 
-impl IntoLua<'_> for BodyBulk<'static> {
+impl IntoLua for BodyBulk<'static> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		BodyBulkIter { inner: self.changes.into_iter() }.into_lua(lua)
 	}
@@ -48,7 +48,7 @@ pub struct BodyBulkIter {
 }
 
 impl UserData for BodyBulkIter {
-	fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.inner.len()));
 
 		methods.add_meta_function(MetaMethod::Pairs, |lua, me: AnyUserData| {
