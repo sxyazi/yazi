@@ -29,9 +29,9 @@ rustPlatform.buildRustPackage rec {
 
   cargoLock = {
     lockFile = "${src}/Cargo.lock";
-    outputHashes = {
-      "mlua-0.10.0" = "sha256-Xg6/jc+UP8tbJJ6x1sbAgt8ZHt051xEBBcjmikQqYlw=";
-    };
+    #outputHashes = {
+    #  "mlua-0.10.0" = "sha256-Xg6/jc+UP8tbJJ6x1sbAgt8ZHt051xEBBcjmikQqYlw=";
+    #};
   };
 
   env = {
