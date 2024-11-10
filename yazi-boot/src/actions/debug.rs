@@ -79,6 +79,7 @@ impl Actions {
 		writeln!(s, "    file             : {}", Self::process_output(env::var_os("YAZI_FILE_ONE").unwrap_or("file".into()), "--version"))?;
 		writeln!(s, "    ueberzugpp       : {}", Self::process_output("ueberzugpp", "--version"))?;
 		writeln!(s, "    ffmpegthumbnailer: {}", Self::process_output("ffmpegthumbnailer", "-v"))?;
+		writeln!(s, "    pdftoppm         : {}", Self::process_output("pdftoppm", "--help"))?;
 		writeln!(s, "    magick           : {}", Self::process_output("magick", "--version"))?;
 		writeln!(s, "    fzf              : {}", Self::process_output("fzf", "--version"))?;
 		writeln!(s, "    fd               : {}", Self::process_output("fd", "--version"))?;
@@ -110,7 +111,12 @@ impl Actions {
 		match std::process::Command::new(&name).arg(arg).output() {
 			Ok(out) if out.status.success() => {
 				let line =
-					String::from_utf8_lossy(&out.stdout).trim().lines().next().unwrap_or_default().to_owned();
+					String::from_utf8_lossy(&if out.stdout.is_empty() { out.stderr } else { out.stdout })
+						.trim()
+						.lines()
+						.next()
+						.unwrap_or_default()
+						.to_owned();
 				if name.as_ref() == "ya" {
 					line.trim_start_matches("Ya ").to_owned()
 				} else {
