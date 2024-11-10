@@ -9,6 +9,7 @@ use super::Actions;
 impl Actions {
 	pub(super) fn debug() -> Result<String, std::fmt::Error> {
 		use std::env::consts::{ARCH, FAMILY, OS};
+		
 		let mut s = String::new();
 
 		writeln!(s, "\nYazi")?;
@@ -18,6 +19,9 @@ impl Actions {
 
 		writeln!(s, "\nYa")?;
 		writeln!(s, "    Version: {}", Self::process_output("ya", "--version"))?;
+
+		writeln!(s, "\nRust")?;
+		writeln!(s, "    Version: {}", Self::process_output("rustc", "--version"))?;
 
 		writeln!(s, "\nEmulator")?;
 		writeln!(s, "    Emulator.via_env: {:?}", yazi_adapter::Emulator::via_env())?;
@@ -48,6 +52,8 @@ impl Actions {
 		writeln!(s, "    VISUAL             : {:?}", env::var_os("VISUAL"))?;
 		writeln!(s, "    YAZI_FILE_ONE      : {:?}", env::var_os("YAZI_FILE_ONE"))?;
 		writeln!(s, "    YAZI_CONFIG_HOME   : {:?}", env::var_os("YAZI_CONFIG_HOME"))?;
+		writeln!(s, "    YAZI_ZOXIDE_OPTS   : {:?}", env::var_os("YAZI_ZOXIDE_OPTS"))?;
+		writeln!(s, "    FZF_DEFAULT_OPTS   : {:?}", env::var_os("FZF_DEFAULT_OPTS"))?;
 
 		writeln!(s, "\nText Opener")?;
 		writeln!(
@@ -81,6 +87,7 @@ impl Actions {
 		)?;
 		writeln!(s, "    ueberzugpp       : {}", Self::process_output("ueberzugpp", "--version"))?;
 		writeln!(s, "    ffmpegthumbnailer: {}", Self::process_output("ffmpegthumbnailer", "-v"))?;
+		writeln!(s, "    wl-clipboard     : {}", Self::process_output("wl-copy", "--version"))?;
 		writeln!(s, "    magick           : {}", Self::process_output("magick", "--version"))?;
 		writeln!(s, "    fzf              : {}", Self::process_output("fzf", "--version"))?;
 		writeln!(s, "    fd               : {}", Self::process_output("fd", "--version"))?;
@@ -91,6 +98,9 @@ impl Actions {
 		writeln!(s, "    7z               : {}", Self::process_output("7z", "i"))?;
 		writeln!(s, "    7zz              : {}", Self::process_output("7zz", "i"))?;
 		writeln!(s, "    jq               : {}", Self::process_output("jq", "--version"))?;
+		writeln!(s, "    xclip            : {}", Self::process_output("xclip", "-version"))?;
+		writeln!(s, "    xsel             : {}", Self::process_output("xsel", "--version"))?;
+		writeln!(s, "    poppler          : {}", Self::process_output("pdinfo", "--v"))?;
 
 		writeln!(s, "\n\n--------------------------------------------------")?;
 		writeln!(
