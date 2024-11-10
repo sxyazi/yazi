@@ -8,13 +8,12 @@ use super::Actions;
 
 impl Actions {
 	pub(super) fn debug() -> Result<String, std::fmt::Error> {
-		use std::env::consts::{ARCH, FAMILY, OS};
 		let mut s = String::new();
-
 		writeln!(s, "\nYazi")?;
 		writeln!(s, "    Version: {}", Self::version())?;
 		writeln!(s, "    Debug  : {}", cfg!(debug_assertions))?;
-		writeln!(s, "    OS     : {}-{} ({})", OS, ARCH, FAMILY)?;
+		writeln!(s, "    Triple : {}", Self::triple())?;
+		writeln!(s, "    Rustc  : {}", Self::rustc())?;
 
 		writeln!(s, "\nYa")?;
 		writeln!(s, "    Version: {}", Self::process_output("ya", "--version"))?;
@@ -43,13 +42,13 @@ impl Actions {
 		writeln!(s, "    WSL: {:?}", *yazi_adapter::WSL)?;
 
 		writeln!(s, "\nVariables")?;
-		writeln!(s, "    SHELL              : {:?}", env::var_os("SHELL"))?;
-		writeln!(s, "    EDITOR             : {:?}", env::var_os("EDITOR"))?;
-		writeln!(s, "    VISUAL             : {:?}", env::var_os("VISUAL"))?;
-		writeln!(s, "    YAZI_FILE_ONE      : {:?}", env::var_os("YAZI_FILE_ONE"))?;
-		writeln!(s, "    YAZI_CONFIG_HOME   : {:?}", env::var_os("YAZI_CONFIG_HOME"))?;
-		writeln!(s, "    YAZI_ZOXIDE_OPTS   : {:?}", env::var_os("YAZI_ZOXIDE_OPTS"))?;
-		writeln!(s, "    FZF_DEFAULT_OPTS   : {:?}", env::var_os("FZF_DEFAULT_OPTS"))?;
+		writeln!(s, "    SHELL           : {:?}", env::var_os("SHELL"))?;
+		writeln!(s, "    EDITOR          : {:?}", env::var_os("EDITOR"))?;
+		writeln!(s, "    VISUAL          : {:?}", env::var_os("VISUAL"))?;
+		writeln!(s, "    YAZI_FILE_ONE   : {:?}", env::var_os("YAZI_FILE_ONE"))?;
+		writeln!(s, "    YAZI_CONFIG_HOME: {:?}", env::var_os("YAZI_CONFIG_HOME"))?;
+		writeln!(s, "    YAZI_ZOXIDE_OPTS: {:?}", env::var_os("YAZI_ZOXIDE_OPTS"))?;
+		writeln!(s, "    FZF_DEFAULT_OPTS: {:?}", env::var_os("FZF_DEFAULT_OPTS"))?;
 
 		writeln!(s, "\nText Opener")?;
 		writeln!(
@@ -76,11 +75,8 @@ impl Actions {
 		writeln!(s, "    Zellij version     : {}", Self::process_output("zellij", "--version"))?;
 
 		writeln!(s, "\nDependencies")?;
-		writeln!(
-			s,
-			"    file             : {}",
-			Self::process_output(env::var_os("YAZI_FILE_ONE").unwrap_or("file".into()), "--version")
-		)?;
+		#[rustfmt::skip]
+		writeln!(s, "    file             : {}", Self::process_output(env::var_os("YAZI_FILE_ONE").unwrap_or("file".into()), "--version"))?;
 		writeln!(s, "    ueberzugpp       : {}", Self::process_output("ueberzugpp", "--version"))?;
 		writeln!(s, "    ffmpegthumbnailer: {}", Self::process_output("ffmpegthumbnailer", "-v"))?;
 		writeln!(s, "    magick           : {}", Self::process_output("magick", "--version"))?;
@@ -93,10 +89,12 @@ impl Actions {
 		writeln!(s, "    7z               : {}", Self::process_output("7z", "i"))?;
 		writeln!(s, "    7zz              : {}", Self::process_output("7zz", "i"))?;
 		writeln!(s, "    jq               : {}", Self::process_output("jq", "--version"))?;
-		writeln!(s, "    xclip            : {}", Self::process_output("xclip", "-version"))?;
-		writeln!(s, "    wl-clipboard     : {}", Self::process_output("wl-copy", "-v"))?;
-		writeln!(s, "    xsel             : {}", Self::process_output("xsel", "--version"))?;
-		writeln!(s, "    rustc            : {}", Self::process_output("rustc", "--version"))?;
+
+		writeln!(s, "\nClipboard")?;
+		#[rustfmt::skip]
+		writeln!(s, "    wl-copy/paste: {} / {}", Self::process_output("wl-copy", "--version"), Self::process_output("wl-paste", "--version"))?;
+		writeln!(s, "    xclip        : {}", Self::process_output("xclip", "-version"))?;
+		writeln!(s, "    xsel         : {}", Self::process_output("xsel", "--version"))?;
 
 		writeln!(s, "\n\n--------------------------------------------------")?;
 		writeln!(

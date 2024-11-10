@@ -24,4 +24,4 @@ clap                  = { workspace = true }
 clap_complete         = "4.5.37"
 clap_complete_fig     = "4.5.2"
 clap_complete_nushell = "4.5.4"
-vergen-gitcl          = { version = "1.0.1", features = [ "build" ] }
+vergen-gitcl          = { version = "1.0.1", features = [ "build", "rustc" ] }
