@@ -41,23 +41,29 @@ impl Ueberzug {
 		DEMON.init(Some(tx))
 	}
 
+	pub(super) async fn image_area(path: &Path, max: Rect) -> Result<Rect> {
+		let p = path.to_owned();
+		let ImageSize { width: w, height: h } =
+			tokio::task::spawn_blocking(move || imagesize::size(p)).await??;
+
+		Ok(
+			Dimension::ratio()
+				.map(|(r1, r2)| Rect {
+					x:      max.x,
+					y:      max.y,
+					width:  max.width.min((w.min(PREVIEW.max_width as _) as f64 / r1).ceil() as _),
+					height: max.height.min((h.min(PREVIEW.max_height as _) as f64 / r2).ceil() as _),
+				})
+				.unwrap_or(max),
+		)
+	}
+
 	pub(super) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
 		let Some(tx) = &*DEMON else {
 			bail!("uninitialized ueberzugpp");
 		};
 
-		let p = path.to_owned();
-		let ImageSize { width: w, height: h } =
-			tokio::task::spawn_blocking(move || imagesize::size(p)).await??;
-
-		let area = Dimension::ratio()
-			.map(|(r1, r2)| Rect {
-				x:      max.x,
-				y:      max.y,
-				width:  max.width.min((w.min(PREVIEW.max_width as _) as f64 / r1).ceil() as _),
-				height: max.height.min((h.min(PREVIEW.max_height as _) as f64 / r2).ceil() as _),
-			})
-			.unwrap_or(max);
+		let area = Self::image_area(path, max).await?;
 
 		tx.send(Some((path.to_owned(), area)))?;
 		Adapter::shown_store(area);

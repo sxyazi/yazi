@@ -5,7 +5,7 @@ use ratatui::layout::Rect;
 use tracing::warn;
 use yazi_shared::env_exists;
 
-use super::{Iip, Kgp, KgpOld};
+use super::{Iip, Image, Kgp, KgpOld};
 use crate::{Chafa, Emulator, SHOWN, Sixel, TMUX, Ueberzug, WSL};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -36,6 +36,20 @@ impl Display for Adapter {
 }
 
 impl Adapter {
+	pub async fn image_area(self, path: &Path, max: Rect) -> Result<Rect> {
+		if max.is_empty() {
+			return Ok(Rect::default());
+		}
+
+		match self {
+			Self::Kgp | Self::KgpOld | Self::Iip | Self::Sixel => {
+				Image::image_area(path, max).await.map(|(_img, area)| area)
+			}
+			Self::X11 | Self::Wayland => Ueberzug::image_area(path, max).await,
+			Self::Chafa => Chafa::image_area(path, max).await,
+		}
+	}
+
 	pub async fn image_show(self, path: &Path, max: Rect) -> Result<Rect> {
 		if max.is_empty() {
 			return Ok(Rect::default());

@@ -314,8 +314,7 @@ pub(super) struct Kgp;
 
 impl Kgp {
 	pub(super) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
-		let img = Image::downscale(path, max).await?;
-		let area = Image::pixel_area((img.width(), img.height()), max);
+		let (img, area) = Image::image_area(path, max).await?;
 
 		let b1 = Self::encode(img).await?;
 		let b2 = Self::place(&area)?;

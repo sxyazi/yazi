@@ -11,7 +11,11 @@ use crate::{Adapter, Emulator};
 pub(super) struct Chafa;
 
 impl Chafa {
-	pub(super) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+	async fn symbol_bytes_with<F: Fn((Vec<&[u8]>, Rect)) -> Result<Rect>>(
+		path: &Path,
+		max: Rect,
+		cb: F,
+	) -> Result<Rect> {
 		let output = Command::new("chafa")
 			.args([
 				"-f",
@@ -52,16 +56,26 @@ impl Chafa {
 			width:  first.width() as u16,
 			height: lines.len() as u16,
 		};
+		cb((lines, area))
+	}
 
-		Adapter::Chafa.image_hide()?;
-		Adapter::shown_store(area);
-		Emulator::move_lock((max.x, max.y), |stderr| {
-			for (i, line) in lines.into_iter().enumerate() {
-				stderr.write_all(line)?;
-				queue!(stderr, MoveTo(max.x, max.y + i as u16 + 1))?;
-			}
-			Ok(area)
+	pub(super) async fn image_area(path: &Path, max: Rect) -> Result<Rect> {
+		Self::symbol_bytes_with(path, max, |(_, area)| Ok(area)).await
+	}
+
+	pub(super) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+		Self::symbol_bytes_with(path, max, |(lines, area)| {
+			Adapter::Chafa.image_hide()?;
+			Adapter::shown_store(area);
+			Emulator::move_lock((max.x, max.y), |stderr| {
+				for (i, line) in lines.into_iter().enumerate() {
+					stderr.write_all(line)?;
+					queue!(stderr, MoveTo(max.x, max.y + i as u16 + 1))?;
+				}
+				Ok(area)
+			})
 		})
+		.await
 	}
 
 	pub(super) fn image_erase(area: Rect) -> Result<()> {

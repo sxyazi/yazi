@@ -85,6 +85,13 @@ impl Image {
 	}
 
 	#[inline]
+	pub(super) async fn image_area(path: &Path, max: Rect) -> Result<(DynamicImage, Rect)> {
+		let img = Self::downscale(path, max).await?;
+		let area = Self::pixel_area((img.width(), img.height()), max);
+		Ok((img, area))
+	}
+
+	#[inline]
 	fn filter() -> FilterType {
 		match PREVIEW.image_filter.as_str() {
 			"nearest" => FilterType::Nearest,

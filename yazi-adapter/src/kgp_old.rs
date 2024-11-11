@@ -13,8 +13,7 @@ pub(super) struct KgpOld;
 
 impl KgpOld {
 	pub(super) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
-		let img = Image::downscale(path, max).await?;
-		let area = Image::pixel_area((img.width(), img.height()), max);
+		let (img, area) = Image::image_area(path, max).await?;
 		let b = Self::encode(img).await?;
 
 		Adapter::KgpOld.image_hide()?;
