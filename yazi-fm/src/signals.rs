@@ -26,12 +26,13 @@ impl Signals {
 	#[cfg(unix)]
 	#[inline]
 	fn handle_sys(n: libc::c_int) -> bool {
-		use libc::{SIGCONT, SIGHUP, SIGQUIT, SIGSTOP, SIGTERM, SIGTSTP};
+		use libc::{SIGCONT, SIGHUP, SIGINT, SIGQUIT, SIGSTOP, SIGTERM, SIGTSTP};
 		use tracing::error;
 		use yazi_proxy::{AppProxy, HIDER};
 
 		match n {
-			SIGHUP | SIGTERM | SIGQUIT => {
+			SIGINT => { /* ignored */ }
+			SIGQUIT | SIGHUP | SIGTERM => {
 				Event::Quit(Default::default()).emit();
 				return false;
 			}
@@ -73,13 +74,17 @@ impl Signals {
 
 	fn spawn(mut rx: mpsc::UnboundedReceiver<(bool, Option<oneshot::Sender<()>>)>) -> Result<()> {
 		#[cfg(unix)]
-		use libc::{SIGCONT, SIGHUP, SIGQUIT, SIGTERM, SIGTSTP};
+		use libc::{SIGCONT, SIGHUP, SIGINT, SIGQUIT, SIGTERM, SIGTSTP};
 
 		#[cfg(unix)]
 		let mut sys = signal_hook_tokio::Signals::new([
-			// Terminating signals
-			SIGHUP, SIGTERM, SIGQUIT, //
-			// Job control signals
+			// Interrupt signals (Ctrl-C, Ctrl-\)
+			SIGINT, SIGQUIT, //
+			// Hangup signal (Terminal closed)
+			SIGHUP, //
+			// Termination signal (kill)
+			SIGTERM, //
+			// Job control signals (Ctrl-Z, fg/bg)
 			SIGTSTP, SIGCONT,
 		])?;
 		#[cfg(windows)]

@@ -10,8 +10,9 @@ use yazi_shared::{RoCell, env_exists};
 
 use crate::{Adapter, Dimension};
 
-#[allow(clippy::type_complexity)]
-static DEMON: RoCell<Option<UnboundedSender<Option<(PathBuf, Rect)>>>> = RoCell::new();
+type Cmd = Option<(PathBuf, Rect)>;
+
+static DEMON: RoCell<Option<UnboundedSender<Cmd>>> = RoCell::new();
 
 pub(super) struct Ueberzug;
 
@@ -34,7 +35,7 @@ impl Ueberzug {
 					child = Self::create_demon(adapter).ok();
 				}
 				if let Some(c) = &mut child {
-					Self::send_command(c, cmd).await.ok();
+					Self::send_command(adapter, c, cmd).await.ok();
 				}
 			}
 		});
@@ -108,30 +109,28 @@ impl Ueberzug {
 		rect
 	}
 
-	async fn send_command(child: &mut Child, cmd: Option<(PathBuf, Rect)>) -> Result<()> {
-		let stdin = child.stdin.as_mut().unwrap();
-		if let Some((path, rect)) = cmd {
+	async fn send_command(adapter: Adapter, child: &mut Child, cmd: Cmd) -> Result<()> {
+		let s = if let Some((path, rect)) = cmd {
 			debug!("ueberzugpp rect before adjustment: {:?}", rect);
 			let rect = Self::adjust_rect(rect);
 			debug!("ueberzugpp rect after adjustment: {:?}", rect);
 
-			let s = format!(
+			format!(
 				r#"{{"action":"add","identifier":"yazi","x":{},"y":{},"max_width":{},"max_height":{},"path":"{}"}}{}"#,
 				rect.x,
 				rect.y,
 				rect.width,
 				rect.height,
 				path.to_string_lossy(),
-				"\n"
-			);
-			debug!("ueberzugpp command: {}", s);
-			stdin.write_all(s.as_bytes()).await?;
+				'\n'
+			)
 		} else {
-			debug!("ueberzugpp command: remove");
-			stdin
-				.write_all(format!(r#"{{"action":"remove","identifier":"yazi"}}{}"#, "\n").as_bytes())
-				.await?;
-		}
+			format!(r#"{{"action":"remove","identifier":"yazi"}}{}"#, '\n')
+		};
+
+		debug!("`ueberzugpp layer -so {adapter}` command: {s}");
+		child.stdin.as_mut().unwrap().write_all(s.as_bytes()).await?;
+
 		Ok(())
 	}
 }
