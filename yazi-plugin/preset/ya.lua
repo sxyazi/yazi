@@ -1,7 +1,5 @@
 table.unpack = table.unpack or unpack
 
-ya = ya or {}
-
 function ya.clamp(min, x, max)
 	if x < min then
 		return min

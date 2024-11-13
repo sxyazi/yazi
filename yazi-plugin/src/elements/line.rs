@@ -16,7 +16,7 @@ const EXPECTED: &str = "expected a string, ui.Span, ui.Line, or a table of them"
 pub struct Line(pub(super) ratatui::text::Line<'static>);
 
 impl Line {
-	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 		let new = lua.create_function(|_, (_, value): (Table, Value)| Line::try_from(value))?;
 
 		let parse = lua.create_function(|_, code: mlua::String| {
@@ -42,8 +42,7 @@ impl Line {
 		])?;
 
 		line.set_metatable(Some(lua.create_table_from([("__call", new)])?));
-
-		ui.raw_set("Line", line)
+		Ok(line)
 	}
 }
 

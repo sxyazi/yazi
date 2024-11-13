@@ -13,13 +13,13 @@ pub struct Clear {
 }
 
 impl Clear {
-	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 		let new = lua.create_function(|_, (_, area): (Table, Rect)| Ok(Clear { area }))?;
 
 		let clear = lua.create_table()?;
 		clear.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
-		ui.raw_set("Clear", clear)
+		Ok(clear)
 	}
 }
 

@@ -1,4 +1,4 @@
-use mlua::{ExternalError, ExternalResult, Function, Lua, MultiValue, Table, Value};
+use mlua::{ExternalError, ExternalResult, Function, Lua, MultiValue, Value};
 use tokio::sync::oneshot;
 use yazi_dds::Sendable;
 use yazi_proxy::{AppProxy, options::{PluginCallback, PluginOpt}};
@@ -8,29 +8,8 @@ use super::Utils;
 use crate::{loader::LOADER, runtime::RtRef};
 
 impl Utils {
-	pub(super) fn sync(lua: &'static Lua, ya: &Table) -> mlua::Result<()> {
-		ya.raw_set(
-			"sync",
-			lua.create_function(|lua, f: Function| {
-				let mut rt = lua.named_registry_value::<RtRef>("rt")?;
-				if !rt.put_block(f.clone()) {
-					return Err("`ya.sync()` must be called in a plugin").into_lua_err();
-				}
-
-				let cur = rt.current().unwrap().to_owned();
-				lua.create_function(move |lua, mut args: MultiValue| {
-					args.push_front(Value::Table(LOADER.try_load(lua, &cur)?));
-					f.call::<MultiValue>(args)
-				})
-			})?,
-		)?;
-
-		Ok(())
-	}
-
-	pub(super) fn sync_isolate(lua: &Lua, ya: &Table) -> mlua::Result<()> {
-		ya.raw_set(
-			"sync",
+	pub(super) fn sync(lua: &Lua, isolate: bool) -> mlua::Result<Function> {
+		if isolate {
 			lua.create_function(|lua, ()| {
 				let Some(block) = lua.named_registry_value::<RtRef>("rt")?.next_block() else {
 					return Err("`ya.sync()` must be called in a plugin").into_lua_err();
@@ -43,10 +22,21 @@ impl Utils {
 						Err("block spawned by `ya.sync()` must be called in a plugin").into_lua_err()
 					}
 				})
-			})?,
-		)?;
+			})
+		} else {
+			lua.create_function(|lua, f: Function| {
+				let mut rt = lua.named_registry_value::<RtRef>("rt")?;
+				if !rt.put_block(f.clone()) {
+					return Err("`ya.sync()` must be called in a plugin").into_lua_err();
+				}
 
-		Ok(())
+				let cur = rt.current().unwrap().to_owned();
+				lua.create_function(move |lua, mut args: MultiValue| {
+					args.push_front(Value::Table(LOADER.try_load(lua, &cur)?));
+					f.call::<MultiValue>(args)
+				})
+			})
+		}
 	}
 
 	async fn retrieve(id: &str, calls: usize, args: MultiValue) -> mlua::Result<Vec<Data>> {

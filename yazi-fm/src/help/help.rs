@@ -19,7 +19,7 @@ impl<'a> Help<'a> {
 	}
 }
 
-impl<'a> Widget for Help<'a> {
+impl Widget for Help<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let help = &self.cx.help;
 		yazi_plugin::elements::Clear::default().render(area, buf);

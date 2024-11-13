@@ -27,7 +27,7 @@ pub struct Text {
 }
 
 impl Text {
-	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 		let new = lua.create_function(|_, (_, value): (Table, Value)| Text::try_from(value))?;
 
 		let parse = lua.create_function(|_, code: mlua::String| {
@@ -47,8 +47,7 @@ impl Text {
 		])?;
 
 		text.set_metatable(Some(lua.create_table_from([("__call", new)])?));
-
-		ui.raw_set("Text", text)
+		Ok(text)
 	}
 }
 

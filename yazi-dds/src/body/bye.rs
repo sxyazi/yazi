@@ -11,7 +11,7 @@ impl BodyBye {
 	pub fn owned() -> Body<'static> { Self.into() }
 }
 
-impl<'a> From<BodyBye> for Body<'a> {
+impl From<BodyBye> for Body<'_> {
 	fn from(value: BodyBye) -> Self { Self::Bye(value) }
 }
 

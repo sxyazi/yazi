@@ -11,7 +11,7 @@ impl<'a> List<'a> {
 	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
 }
 
-impl<'a> Widget for List<'a> {
+impl Widget for List<'_> {
 	fn render(self, mut area: Rect, buf: &mut Buffer) {
 		// List content area
 		let inner = area.inner(Margin::new(2, 0));

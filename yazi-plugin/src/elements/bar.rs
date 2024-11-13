@@ -13,7 +13,7 @@ pub struct Bar {
 }
 
 impl Bar {
-	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 		let new = lua.create_function(|_, (_, direction): (Table, u8)| {
 			Ok(Self { direction: Borders::from_bits_truncate(direction), ..Default::default() })
 		})?;
@@ -29,8 +29,7 @@ impl Bar {
 		])?;
 
 		bar.set_metatable(Some(lua.create_table_from([("__call", new)])?));
-
-		ui.raw_set("Bar", bar)
+		Ok(bar)
 	}
 }
 

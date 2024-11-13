@@ -38,7 +38,7 @@ impl<'a> Notify<'a> {
 	}
 }
 
-impl<'a> Widget for Notify<'a> {
+impl Widget for Notify<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let notify = &self.cx.notify;
 

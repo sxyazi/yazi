@@ -12,21 +12,23 @@ pub struct List {
 }
 
 impl List {
-	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		ui.raw_set(
-			"List",
-			lua.create_function(|_, tb: Table| {
-				let mut items = Vec::with_capacity(tb.raw_len());
-				for v in tb.sequence_values::<Value>() {
-					match v? {
-						Value::Table(_) => Err("Nested table not supported".into_lua_err())?,
-						v => items.push(Text::try_from(v)?),
-					}
+	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
+		let new = lua.create_function(|_, (_, seq): (Table, Table)| {
+			let mut items = Vec::with_capacity(seq.raw_len());
+			for v in seq.sequence_values::<Value>() {
+				match v? {
+					Value::Table(_) => Err("Nested table not supported".into_lua_err())?,
+					v => items.push(Text::try_from(v)?),
 				}
+			}
 
-				Ok(Self { inner: ratatui::widgets::List::new(items), ..Default::default() })
-			})?,
-		)
+			Ok(Self { inner: ratatui::widgets::List::new(items), ..Default::default() })
+		})?;
+
+		let list = lua.create_table()?;
+		list.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+
+		Ok(list)
 	}
 }
 

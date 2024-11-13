@@ -21,7 +21,7 @@ pub struct Border {
 }
 
 impl Border {
-	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 		let new = lua.create_function(|_, (_, position): (Table, u8)| {
 			Ok(Border {
 				position: ratatui::widgets::Borders::from_bits_truncate(position),
@@ -47,8 +47,7 @@ impl Border {
 		])?;
 
 		border.set_metatable(Some(lua.create_table_from([("__call", new)])?));
-
-		ui.raw_set("Border", border)
+		Ok(border)
 	}
 }
 

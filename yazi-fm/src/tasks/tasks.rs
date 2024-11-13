@@ -28,7 +28,7 @@ impl<'a> Tasks<'a> {
 	}
 }
 
-impl<'a> Widget for Tasks<'a> {
+impl Widget for Tasks<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let area = Self::area(area);
 

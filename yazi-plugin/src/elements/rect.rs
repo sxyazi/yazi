@@ -24,7 +24,7 @@ impl From<ratatui::layout::Size> for Rect {
 }
 
 impl Rect {
-	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 		let new = lua.create_function(|_, (_, args): (Table, Table)| {
 			Ok(Self(ratatui::layout::Rect {
 				x:      args.raw_get("x")?,
@@ -37,8 +37,7 @@ impl Rect {
 		let rect = lua.create_table_from([("default", Self(ratatui::layout::Rect::default()))])?;
 
 		rect.set_metatable(Some(lua.create_table_from([("__call", new)])?));
-
-		ui.raw_set("Rect", rect)
+		Ok(rect)
 	}
 }
 

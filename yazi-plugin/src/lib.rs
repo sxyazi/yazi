@@ -3,7 +3,7 @@
 mod macros;
 
 yazi_macro::mod_pub!(
-	bindings, cha, elements, external, file, fs, isolate, loader, process, pubsub, url, utils
+	bindings, elements, external, file, fs, isolate, loader, process, pubsub, url, utils
 );
 
 yazi_macro::mod_flat!(cast clipboard config lua runtime);

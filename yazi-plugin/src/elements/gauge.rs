@@ -15,8 +15,13 @@ pub struct Gauge {
 }
 
 impl Gauge {
-	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		ui.raw_set("Gauge", lua.create_function(|_, ()| Ok(Gauge::default()))?)
+	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
+		let new = lua.create_function(|_, _: Table| Ok(Gauge::default()))?;
+
+		let gauge = lua.create_table()?;
+		gauge.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+
+		Ok(gauge)
 	}
 }
 

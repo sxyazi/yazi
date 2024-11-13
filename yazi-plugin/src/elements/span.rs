@@ -7,8 +7,13 @@ const EXPECTED: &str = "expected a string or ui.Span";
 pub struct Span(pub(super) ratatui::text::Span<'static>);
 
 impl Span {
-	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
-		ui.raw_set("Span", lua.create_function(|_, value: Value| Span::try_from(value))?)
+	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
+		let new = lua.create_function(|_, (_, value): (Table, Value)| Span::try_from(value))?;
+
+		let span = lua.create_table()?;
+		span.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+
+		Ok(span)
 	}
 }
 
