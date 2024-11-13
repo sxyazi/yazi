@@ -20,20 +20,19 @@ impl Utils {
 	pub(super) fn redraw_with(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|lua, c: Table| {
 			let id: mlua::String = c.get("_id")?;
-			let id = id.to_str()?;
 
 			let mut layout = LAYOUT.get();
-			match id.as_ref() {
-				"current" => layout.current = *c.raw_get::<crate::elements::Rect>("_area")?,
-				"preview" => layout.preview = *c.raw_get::<crate::elements::Rect>("_area")?,
-				"progress" => layout.progress = *c.raw_get::<crate::elements::Rect>("_area")?,
+			match id.as_bytes().as_ref() {
+				b"current" => layout.current = *c.raw_get::<crate::elements::Rect>("_area")?,
+				b"preview" => layout.preview = *c.raw_get::<crate::elements::Rect>("_area")?,
+				b"progress" => layout.progress = *c.raw_get::<crate::elements::Rect>("_area")?,
 				_ => {}
 			}
 
 			LAYOUT.set(layout);
 			match c.call_method::<Table>("redraw", ()) {
 				Err(e) => {
-					error!("Failed to `redraw()` the `{id}` component:\n{e}");
+					error!("Failed to `redraw()` the `{}` component:\n{e}", id.display());
 					lua.create_table()
 				}
 				ok => ok,
