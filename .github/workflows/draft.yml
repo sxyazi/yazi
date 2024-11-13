@@ -8,6 +8,10 @@ on:
     - cron: "0 */6 * * *"
   workflow_dispatch:
 
+env:
+  SCCACHE_GHA_ENABLED: true
+  RUSTC_WRAPPER: sccache
+
 jobs:
   build-unix:
     strategy:
@@ -41,6 +45,9 @@ jobs:
           prefix-key: rust
           shared-key: ${{ matrix.target }}@release
 
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.6
+
       - name: Build
         run: ./scripts/build.sh ${{ matrix.target }}
 
@@ -70,6 +77,9 @@ jobs:
         with:
           prefix-key: rust
           shared-key: ${{ matrix.target }}@release
+
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.6
 
       - name: Build
         env:
@@ -119,6 +129,9 @@ jobs:
           prefix-key: rust
           shared-key: ${{ matrix.target }}@release
 
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.6
+
       - name: Build
         run: ./scripts/build.sh ${{ matrix.target }}
 
@@ -143,6 +156,9 @@ jobs:
         with:
           prefix-key: rust
           shared-key: ${{ matrix.target }}@release
+
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.6
 
       - name: Build
         uses: snapcore/action-build@v1
