@@ -85,7 +85,7 @@ macro_rules! impl_file_fields {
 		use mlua::UserDataFields;
 		use $crate::bindings::Cast;
 
-		$fields.add_field_method_get("cha", |lua, me| $crate::cha::Cha::cast(lua, me.cha));
+		$fields.add_field_method_get("cha", |_, me| Ok($crate::bindings::Cha::from(me.cha)));
 		$fields.add_field_method_get("url", |lua, me| $crate::url::Url::cast(lua, me.url_owned()));
 		$fields.add_field_method_get("link_to", |lua, me| {
 			me.link_to.clone().map(|u| $crate::url::Url::cast(lua, u)).transpose()
@@ -105,19 +105,19 @@ macro_rules! impl_file_methods {
 	($methods:ident) => {
 		use mlua::UserDataMethods;
 
-		$methods.add_method("icon", |lua, me, ()| {
+		$methods.add_method("icon", |_, me, ()| {
 			use yazi_shared::theme::IconCache;
-			use $crate::bindings::{Cast, Icon};
+			use $crate::bindings::Icon;
 
-			match me.icon.get() {
+			Ok(match me.icon.get() {
 				IconCache::Missing => {
 					let matched = yazi_config::THEME.icons.matches(me);
 					me.icon.set(matched.map_or(IconCache::Undefined, IconCache::Icon));
-					matched.map(|i| Icon::cast(lua, i)).transpose()
+					matched.map(Icon::from)
 				}
-				IconCache::Undefined => Ok(None),
-				IconCache::Icon(cached) => Some(Icon::cast(lua, cached)).transpose(),
-			}
+				IconCache::Undefined => None,
+				IconCache::Icon(cached) => Some(Icon::from(cached)),
+			})
 		});
 	};
 }

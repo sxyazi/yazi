@@ -21,7 +21,7 @@ impl<'a> Input<'a> {
 			bail!("Highlighting is disabled");
 		}
 
-		let (theme, syntaxes) = futures::executor::block_on(Highlighter::init());
+		let (theme, syntaxes) = Highlighter::init();
 		if let Some(syntax) = syntaxes.find_syntax_by_name("Bourne Again Shell (bash)") {
 			let mut h = HighlightLines::new(syntax, theme);
 			let regions = h.highlight_line(self.cx.input.value(), syntaxes)?;
@@ -31,7 +31,7 @@ impl<'a> Input<'a> {
 	}
 }
 
-impl<'a> Widget for Input<'a> {
+impl Widget for Input<'_> {
 	fn render(self, win: Rect, buf: &mut Buffer) {
 		let input = &self.cx.input;
 		let area = self.cx.manager.area(input.position);

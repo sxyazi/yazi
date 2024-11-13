@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use mlua::{ExternalError, Lua, ObjectLike, Table, Value};
+use mlua::{ExternalError, Function, Lua, ObjectLike, Table, Value};
 use tracing::error;
 use yazi_config::LAYOUT;
 use yazi_dds::Sendable;
@@ -10,6 +10,57 @@ use yazi_shared::{Layer, event::{Cmd, Data}};
 use super::Utils;
 
 impl Utils {
+	pub(super) fn render(lua: &Lua) -> mlua::Result<Function> {
+		lua.create_function(|_, ()| {
+			render!();
+			Ok(())
+		})
+	}
+
+	pub(super) fn redraw_with(lua: &Lua) -> mlua::Result<Function> {
+		lua.create_function(|lua, c: Table| {
+			let id: mlua::String = c.get("_id")?;
+
+			let mut layout = LAYOUT.get();
+			match id.as_bytes().as_ref() {
+				b"current" => layout.current = *c.raw_get::<crate::elements::Rect>("_area")?,
+				b"preview" => layout.preview = *c.raw_get::<crate::elements::Rect>("_area")?,
+				b"progress" => layout.progress = *c.raw_get::<crate::elements::Rect>("_area")?,
+				_ => {}
+			}
+
+			LAYOUT.set(layout);
+			match c.call_method::<Table>("redraw", ()) {
+				Err(e) => {
+					error!("Failed to `redraw()` the `{}` component:\n{e}", id.display());
+					lua.create_table()
+				}
+				ok => ok,
+			}
+		})
+	}
+
+	pub(super) fn app_emit(lua: &Lua) -> mlua::Result<Function> {
+		lua.create_function(|_, (name, args): (String, Table)| {
+			emit!(Call(Cmd { name, args: Self::parse_args(args)? }, Layer::App));
+			Ok(())
+		})
+	}
+
+	pub(super) fn manager_emit(lua: &Lua) -> mlua::Result<Function> {
+		lua.create_function(|_, (name, args): (String, Table)| {
+			emit!(Call(Cmd { name, args: Self::parse_args(args)? }, Layer::Manager));
+			Ok(())
+		})
+	}
+
+	pub(super) fn input_emit(lua: &Lua) -> mlua::Result<Function> {
+		lua.create_function(|_, (name, args): (String, Table)| {
+			emit!(Call(Cmd { name, args: Self::parse_args(args)? }, Layer::Input));
+			Ok(())
+		})
+	}
+
 	fn parse_args(t: Table) -> mlua::Result<HashMap<String, Data>> {
 		let mut args = HashMap::with_capacity(t.raw_len());
 		for pair in t.pairs::<Value, Value>() {
@@ -25,66 +76,5 @@ impl Utils {
 			}
 		}
 		Ok(args)
-	}
-
-	pub(super) fn call(lua: &Lua, ya: &Table) -> mlua::Result<()> {
-		ya.raw_set(
-			"render",
-			lua.create_function(|_, ()| {
-				render!();
-				Ok(())
-			})?,
-		)?;
-
-		ya.raw_set(
-			"redraw_with",
-			lua.create_function(|lua, c: Table| {
-				let id: mlua::String = c.get("_id")?;
-				let id = id.to_str()?;
-
-				let mut layout = LAYOUT.get();
-				match id.as_ref() {
-					"current" => layout.current = *c.raw_get::<crate::elements::Rect>("_area")?,
-					"preview" => layout.preview = *c.raw_get::<crate::elements::Rect>("_area")?,
-					"progress" => layout.progress = *c.raw_get::<crate::elements::Rect>("_area")?,
-					_ => {}
-				}
-
-				LAYOUT.set(layout);
-				match c.call_method::<Table>("redraw", ()) {
-					Err(e) => {
-						error!("Failed to `redraw()` the `{id}` component:\n{e}");
-						lua.create_table()
-					}
-					ok => ok,
-				}
-			})?,
-		)?;
-
-		ya.raw_set(
-			"app_emit",
-			lua.create_function(|_, (name, args): (String, Table)| {
-				emit!(Call(Cmd { name, args: Self::parse_args(args)? }, Layer::App));
-				Ok(())
-			})?,
-		)?;
-
-		ya.raw_set(
-			"manager_emit",
-			lua.create_function(|_, (name, args): (String, Table)| {
-				emit!(Call(Cmd { name, args: Self::parse_args(args)? }, Layer::Manager));
-				Ok(())
-			})?,
-		)?;
-
-		ya.raw_set(
-			"input_emit",
-			lua.create_function(|_, (name, args): (String, Table)| {
-				emit!(Call(Cmd { name, args: Self::parse_args(args)? }, Layer::Input));
-				Ok(())
-			})?,
-		)?;
-
-		Ok(())
 	}
 }

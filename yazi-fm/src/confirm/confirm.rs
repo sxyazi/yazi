@@ -11,7 +11,7 @@ impl<'a> Confirm<'a> {
 	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
 }
 
-impl<'a> Widget for Confirm<'a> {
+impl Widget for Confirm<'_> {
 	fn render(self, _win: Rect, buf: &mut Buffer) {
 		let confirm = &self.cx.confirm;
 		let area = self.cx.manager.area(confirm.position);

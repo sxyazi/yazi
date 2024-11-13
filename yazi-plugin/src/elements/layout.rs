@@ -13,14 +13,13 @@ pub struct Layout {
 }
 
 impl Layout {
-	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 		let new = lua.create_function(|_, _: Table| Ok(Self::default()))?;
 
 		let layout = lua.create_table_from([("HORIZONTAL", HORIZONTAL), ("VERTICAL", VERTICAL)])?;
-
 		layout.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
-		ui.raw_set("Layout", layout)
+		Ok(layout)
 	}
 }
 

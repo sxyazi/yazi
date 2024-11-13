@@ -12,7 +12,7 @@ impl Deref for Padding {
 }
 
 impl Padding {
-	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 		let new =
 			lua.create_function(|_, (_, left, right, top, bottom): (Table, u16, u16, u16, u16)| {
 				Ok(Self(ratatui::widgets::Padding::new(left, right, top, bottom)))
@@ -43,8 +43,7 @@ impl Padding {
 		])?;
 
 		padding.set_metatable(Some(lua.create_table_from([("__call", new)])?));
-
-		ui.raw_set("Padding", padding)
+		Ok(padding)
 	}
 }
 

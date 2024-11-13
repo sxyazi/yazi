@@ -31,7 +31,7 @@ Please use the new `ui.Text` instead, in your {id}. See #1772 for details: https
 pub struct Paragraph;
 
 impl Paragraph {
-	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 		let mt = lua.create_table_from([
 			(
 				"__call",
@@ -60,6 +60,6 @@ impl Paragraph {
 		let paragraph = lua.create_table()?;
 		paragraph.set_metatable(Some(mt));
 
-		ui.raw_set("Paragraph", paragraph)
+		Ok(paragraph)
 	}
 }

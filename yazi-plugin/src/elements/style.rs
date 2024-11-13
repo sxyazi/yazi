@@ -7,13 +7,13 @@ use yazi_shared::theme::Color;
 pub struct Style(pub(super) ratatui::style::Style);
 
 impl Style {
-	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 		let new = lua.create_function(|_, (_, value): (Table, Value)| Self::try_from(value))?;
 
 		let style = lua.create_table()?;
 		style.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
-		ui.raw_set("Style", style)
+		Ok(style)
 	}
 }
 

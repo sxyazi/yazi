@@ -20,7 +20,7 @@ impl<'a> Root<'a> {
 	}
 }
 
-impl<'a> Widget for Root<'a> {
+impl Widget for Root<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let mut f = || {
 			let area = yazi_plugin::elements::Rect::from(area);

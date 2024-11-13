@@ -25,13 +25,15 @@ pub struct Table {
 }
 
 impl Table {
-	pub fn install(lua: &Lua, ui: &mlua::Table) -> mlua::Result<()> {
-		ui.raw_set(
-			"Table",
-			lua.create_function(|_, (area, rows): (Rect, Vec<TableRow>)| {
-				Ok(Self { area, rows: rows.into_iter().map(Into::into).collect(), ..Default::default() })
-			})?,
-		)
+	pub fn compose(lua: &Lua) -> mlua::Result<mlua::Table> {
+		let new = lua.create_function(|_, (_, area, rows): (mlua::Table, Rect, Vec<TableRow>)| {
+			Ok(Self { area, rows: rows.into_iter().map(Into::into).collect(), ..Default::default() })
+		})?;
+
+		let table = lua.create_table()?;
+		table.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+
+		Ok(table)
 	}
 }
 
@@ -93,13 +95,15 @@ pub struct TableRow {
 }
 
 impl TableRow {
-	pub fn install(lua: &Lua, ui: &mlua::Table) -> mlua::Result<()> {
-		ui.raw_set(
-			"TableRow",
-			lua.create_function(|_, cols: Vec<Text>| {
-				Ok(Self { cells: cols.into_iter().map(Into::into).collect(), ..Default::default() })
-			})?,
-		)
+	pub fn compose(lua: &Lua) -> mlua::Result<mlua::Table> {
+		let new = lua.create_function(|_, (_, cols): (mlua::Table, Vec<Text>)| {
+			Ok(Self { cells: cols.into_iter().map(Into::into).collect(), ..Default::default() })
+		})?;
+
+		let row = lua.create_table()?;
+		row.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+
+		Ok(row)
 	}
 }
 

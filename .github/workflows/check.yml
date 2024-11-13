@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  SCCACHE_GHA_ENABLED: true
+  RUSTC_WRAPPER: sccache
+
 jobs:
   clippy:
     runs-on: ubuntu-latest
@@ -22,6 +26,9 @@ jobs:
         with:
           prefix-key: rust
           shared-key: ubuntu-latest@debug
+
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.6
 
       - name: Clippy
         run: cargo clippy --all
@@ -42,6 +49,9 @@ jobs:
         with:
           prefix-key: rust
           shared-key: ubuntu-latest@debug
+
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.6
 
       - name: Rustfmt
         run: cargo +nightly fmt --all -- --check

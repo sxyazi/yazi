@@ -16,7 +16,7 @@ impl From<ratatui::layout::Rect> for Position {
 }
 
 impl Position {
-	pub fn install(lua: &Lua, ui: &Table) -> mlua::Result<()> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 		let new = lua.create_function(|_, (_, args): (Table, Table)| {
 			Ok(Self(ratatui::layout::Position { x: args.raw_get("x")?, y: args.raw_get("y")? }))
 		})?;
@@ -24,8 +24,7 @@ impl Position {
 		let position = lua.create_table_from([("default", Self(Default::default()))])?;
 
 		position.set_metatable(Some(lua.create_table_from([("__call", new)])?));
-
-		ui.raw_set("Position", position)
+		Ok(position)
 	}
 }
 

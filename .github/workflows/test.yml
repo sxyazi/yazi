@@ -7,6 +7,8 @@ on:
     branches: [main]
 
 env:
+  SCCACHE_GHA_ENABLED: true
+  RUSTC_WRAPPER: sccache
   CARGO_TERM_COLOR: always
 
 jobs:
@@ -26,6 +28,9 @@ jobs:
         with:
           prefix-key: rust
           shared-key: ${{ matrix.os }}@debug
+
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.6
 
       - name: Build
         run: cargo build --verbose

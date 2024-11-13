@@ -33,10 +33,10 @@ impl App {
 				};
 
 				let id: mlua::String = t.get("_id")?;
-				match id.to_str()?.as_ref() {
-					"current" => layout.current = *t.raw_get::<yazi_plugin::elements::Rect>("_area")?,
-					"preview" => layout.preview = *t.raw_get::<yazi_plugin::elements::Rect>("_area")?,
-					"progress" => layout.progress = *t.raw_get::<yazi_plugin::elements::Rect>("_area")?,
+				match id.as_bytes().as_ref() {
+					b"current" => layout.current = *t.raw_get::<yazi_plugin::elements::Rect>("_area")?,
+					b"preview" => layout.preview = *t.raw_get::<yazi_plugin::elements::Rect>("_area")?,
+					b"progress" => layout.progress = *t.raw_get::<yazi_plugin::elements::Rect>("_area")?,
 					_ => {}
 				}
 			}

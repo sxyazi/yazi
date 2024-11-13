@@ -9,7 +9,7 @@ impl<'a> Content<'a> {
 	pub(crate) fn new(p: Paragraph<'a>) -> Self { Self { p } }
 }
 
-impl<'a> Widget for Content<'a> {
+impl Widget for Content<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		// Content area
 		let inner = area.inner(Margin::new(1, 0));

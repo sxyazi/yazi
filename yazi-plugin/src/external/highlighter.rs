@@ -1,14 +1,14 @@
-use std::{borrow::Cow, io::Cursor, mem, path::{Path, PathBuf}};
+use std::{borrow::Cow, io::Cursor, mem, path::{Path, PathBuf}, sync::OnceLock};
 
 use anyhow::{Result, anyhow};
 use ratatui::{layout::Rect, text::{Line, Span, Text}};
 use syntect::{LoadingError, dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
-use tokio::{fs::File, io::{AsyncBufReadExt, BufReader}, sync::OnceCell};
+use tokio::{fs::File, io::{AsyncBufReadExt, BufReader}};
 use yazi_config::{PREVIEW, THEME, preview::PreviewWrap};
 use yazi_shared::{Ids, errors::PeekError, replace_to_printable};
 
 static INCR: Ids = Ids::new();
-static SYNTECT: OnceCell<(Theme, SyntaxSet)> = OnceCell::const_new();
+static SYNTECT: OnceLock<(Theme, SyntaxSet)> = OnceLock::new();
 
 pub struct Highlighter {
 	path: PathBuf,
@@ -18,24 +18,19 @@ impl Highlighter {
 	#[inline]
 	pub fn new(path: &Path) -> Self { Self { path: path.to_owned() } }
 
-	pub async fn init() -> (&'static Theme, &'static SyntaxSet) {
-		let fut = async {
-			tokio::task::spawn_blocking(|| {
-				let theme = std::fs::File::open(&THEME.manager.syntect_theme)
-					.map_err(LoadingError::Io)
-					.and_then(|f| ThemeSet::load_from_reader(&mut std::io::BufReader::new(f)))
-					.or_else(|_| ThemeSet::load_from_reader(&mut Cursor::new(yazi_prebuild::ansi_theme())));
+	pub fn init() -> (&'static Theme, &'static SyntaxSet) {
+		let r = SYNTECT.get_or_init(|| {
+			let theme = std::fs::File::open(&THEME.manager.syntect_theme)
+				.map_err(LoadingError::Io)
+				.and_then(|f| ThemeSet::load_from_reader(&mut std::io::BufReader::new(f)))
+				.or_else(|_| ThemeSet::load_from_reader(&mut Cursor::new(yazi_prebuild::ansi_theme())));
 
-				let syntaxes = dumps::from_uncompressed_data(yazi_prebuild::syntaxes());
+			let syntaxes = dumps::from_uncompressed_data(yazi_prebuild::syntaxes());
 
-				(theme.unwrap(), syntaxes.unwrap())
-			})
-			.await
-			.unwrap()
-		};
+			(theme.unwrap(), syntaxes.unwrap())
+		});
 
-		let (theme, syntaxes) = SYNTECT.get_or_init(|| fut).await;
-		(theme, syntaxes)
+		(&r.0, &r.1)
 	}
 
 	#[inline]
@@ -105,7 +100,7 @@ impl Highlighter {
 		syntax: &'static SyntaxReference,
 	) -> Result<Text<'static>, PeekError> {
 		let ticket = INCR.current();
-		let (theme, syntaxes) = Self::init().await;
+		let (theme, syntaxes) = Self::init();
 
 		tokio::task::spawn_blocking(move || {
 			let mut h = HighlightLines::new(syntax, theme);
@@ -133,7 +128,7 @@ impl Highlighter {
 	}
 
 	async fn find_syntax(path: &Path) -> Result<&'static SyntaxReference> {
-		let (_, syntaxes) = Self::init().await;
+		let (_, syntaxes) = Self::init();
 		let name = path.file_name().map(|n| n.to_string_lossy()).unwrap_or_default();
 		if let Some(s) = syntaxes.find_syntax_by_extension(&name) {
 			return Ok(s);

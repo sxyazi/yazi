@@ -17,20 +17,22 @@ pub(super) fn init_lua() -> Result<()> {
 }
 
 fn stage_1(lua: &'static Lua) -> Result<()> {
+	lua.set_named_registry_value("rt", Runtime::default())?;
 	crate::Config::new(lua).install_boot()?.install_manager()?.install_theme()?;
-	crate::utils::install(lua)?;
 
 	// Base
-	lua.set_named_registry_value("rt", Runtime::default())?;
-	lua.load(preset!("ya")).set_name("ya.lua").exec()?;
-	crate::bindings::Icon::register(lua)?;
-	crate::bindings::MouseEvent::register(lua)?;
-	crate::elements::pour(lua)?;
+	let globals = lua.globals();
+	globals.raw_set("ui", crate::elements::compose(lua)?)?;
+	globals.raw_set("ya", crate::utils::compose(lua, false)?)?;
+	globals.raw_set("ps", crate::pubsub::compose(lua)?)?;
+
+	crate::bindings::Cha::install(lua)?;
 	crate::loader::install(lua)?;
-	crate::pubsub::install(lua)?;
-	crate::cha::pour(lua)?;
 	crate::file::pour(lua)?;
 	crate::url::pour(lua)?;
+
+	// Addons
+	lua.load(preset!("ya")).set_name("ya.lua").exec()?;
 
 	// Components
 	lua.load(preset!("components/current")).set_name("current.lua").exec()?;

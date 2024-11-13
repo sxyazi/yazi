@@ -13,7 +13,7 @@ impl BodyTab {
 	pub fn owned(idx: usize) -> Body<'static> { Self { idx }.into() }
 }
 
-impl<'a> From<BodyTab> for Body<'a> {
+impl From<BodyTab> for Body<'_> {
 	fn from(value: BodyTab) -> Self { Self::Tab(value) }
 }
 

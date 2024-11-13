@@ -1,31 +1,40 @@
-use mlua::{AnyUserData, Lua, Table};
+use mlua::{AnyUserData, IntoLua, Lua, Table, Value};
 use tracing::error;
 
 use crate::cast_to_renderable;
 
-pub fn pour(lua: &Lua) -> mlua::Result<()> {
-	let ui = lua.create_table()?;
+pub fn compose(lua: &Lua) -> mlua::Result<Table> {
+	let index = lua.create_function(|lua, (ts, key): (Table, mlua::String)| {
+		let value = match key.as_bytes().as_ref() {
+			b"Bar" => super::Bar::compose(lua)?,
+			b"Border" => super::Border::compose(lua)?,
+			b"Clear" => super::Clear::compose(lua)?,
+			b"Constraint" => super::Constraint::compose(lua)?,
+			b"Gauge" => super::Gauge::compose(lua)?,
+			b"Layout" => super::Layout::compose(lua)?,
+			b"Line" => super::Line::compose(lua)?,
+			b"List" => super::List::compose(lua)?,
+			b"Padding" => super::Padding::compose(lua)?,
+			b"Paragraph" => super::Paragraph::compose(lua)?,
+			b"Position" => super::Position::compose(lua)?,
+			b"Rect" => super::Rect::compose(lua)?,
+			b"Span" => super::Span::compose(lua)?,
+			b"Style" => super::Style::compose(lua)?,
+			b"Table" => super::Table::compose(lua)?,
+			b"TableRow" => super::TableRow::compose(lua)?,
+			b"Text" => super::Text::compose(lua)?,
+			_ => return Ok(Value::Nil),
+		}
+		.into_lua(lua)?;
 
-	// Install
-	super::Bar::install(lua, &ui)?;
-	super::Border::install(lua, &ui)?;
-	super::Clear::install(lua, &ui)?;
-	super::Constraint::install(lua, &ui)?;
-	super::Gauge::install(lua, &ui)?;
-	super::Layout::install(lua, &ui)?;
-	super::Line::install(lua, &ui)?;
-	super::List::install(lua, &ui)?;
-	super::Padding::install(lua, &ui)?;
-	super::Paragraph::install(lua, &ui)?;
-	super::Position::install(lua, &ui)?;
-	super::Rect::install(lua, &ui)?;
-	super::Span::install(lua, &ui)?;
-	super::Style::install(lua, &ui)?;
-	super::Table::install(lua, &ui)?;
-	super::TableRow::install(lua, &ui)?;
-	super::Text::install(lua, &ui)?;
+		ts.raw_set(key, value.clone())?;
+		Ok(value)
+	})?;
 
-	lua.globals().raw_set("ui", ui)
+	let ui = lua.create_table_with_capacity(0, 20)?;
+	ui.set_metatable(Some(lua.create_table_from([("__index", index)])?));
+
+	Ok(ui)
 }
 
 pub trait Renderable {

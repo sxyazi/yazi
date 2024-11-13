@@ -14,7 +14,7 @@ impl<'a> Completion<'a> {
 	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
 }
 
-impl<'a> Widget for Completion<'a> {
+impl Widget for Completion<'_> {
 	fn render(self, rect: Rect, buf: &mut Buffer) {
 		let items: Vec<_> = self
 			.cx

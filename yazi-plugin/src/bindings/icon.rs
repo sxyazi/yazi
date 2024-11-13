@@ -1,23 +1,24 @@
-use mlua::{AnyUserData, Lua, UserDataFields};
+use std::ops::Deref;
 
-use super::Cast;
+use mlua::{UserData, UserDataFields};
+
 use crate::elements::Style;
 
-pub struct Icon;
+pub struct Icon(&'static yazi_shared::theme::Icon);
 
-impl Icon {
-	pub fn register(lua: &Lua) -> mlua::Result<()> {
-		lua.register_userdata_type::<&yazi_shared::theme::Icon>(|reg| {
-			reg.add_field_method_get("text", |lua, me| lua.create_string(&me.text));
-			reg.add_field_method_get("style", |_, me| Ok(Style::from(me.style)));
-		})?;
+impl Deref for Icon {
+	type Target = yazi_shared::theme::Icon;
 
-		Ok(())
-	}
+	fn deref(&self) -> &Self::Target { self.0 }
 }
 
-impl Cast<&'static yazi_shared::theme::Icon> for Icon {
-	fn cast(lua: &Lua, data: &'static yazi_shared::theme::Icon) -> mlua::Result<AnyUserData> {
-		lua.create_any_userdata(data)
+impl From<&'static yazi_shared::theme::Icon> for Icon {
+	fn from(icon: &'static yazi_shared::theme::Icon) -> Self { Self(icon) }
+}
+
+impl UserData for Icon {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+		fields.add_field_method_get("text", |lua, me| lua.create_string(&me.text));
+		fields.add_field_method_get("style", |_, me| Ok(Style::from(me.style)));
 	}
 }

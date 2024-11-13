@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, IntoLuaMulti, Lua, Table, Value};
+use mlua::{AnyUserData, Function, IntoLuaMulti, Lua, Table, Value};
 use yazi_config::{PREVIEW, preview::PreviewWrap};
 use yazi_macro::emit;
 use yazi_shared::{Layer, errors::PeekError, event::Cmd};
@@ -34,43 +34,37 @@ impl TryFrom<Table> for PreviewLock {
 }
 
 impl Utils {
-	pub(super) fn preview(lua: &Lua, ya: &Table) -> mlua::Result<()> {
-		ya.raw_set(
-			"preview_code",
-			lua.create_async_function(|lua, t: Table| async move {
-				let area: Rect = t.raw_get("area")?;
-				let mut lock = PreviewLock::try_from(t)?;
+	pub(super) fn preview_code(lua: &Lua) -> mlua::Result<Function> {
+		lua.create_async_function(|lua, t: Table| async move {
+			let area: Rect = t.raw_get("area")?;
+			let mut lock = PreviewLock::try_from(t)?;
 
-				let inner = match Highlighter::new(&lock.url).highlight(lock.skip, *area).await {
-					Ok(text) => text,
-					Err(e @ PeekError::Exceed(max)) => return (e.to_string(), max).into_lua_multi(&lua),
-					Err(e @ PeekError::Unexpected(_)) => {
-						return (e.to_string(), Value::Nil).into_lua_multi(&lua);
-					}
-				};
+			let inner = match Highlighter::new(&lock.url).highlight(lock.skip, *area).await {
+				Ok(text) => text,
+				Err(e @ PeekError::Exceed(max)) => return (e.to_string(), max).into_lua_multi(&lua),
+				Err(e @ PeekError::Unexpected(_)) => {
+					return (e.to_string(), Value::Nil).into_lua_multi(&lua);
+				}
+			};
 
-				lock.data = vec![Box::new(Text {
-					area,
-					inner,
-					wrap: if PREVIEW.wrap == PreviewWrap::Yes { WRAP } else { WRAP_NO },
-				})];
+			lock.data = vec![Box::new(Text {
+				area,
+				inner,
+				wrap: if PREVIEW.wrap == PreviewWrap::Yes { WRAP } else { WRAP_NO },
+			})];
 
-				emit!(Call(Cmd::new("update_peeked").with_any("lock", lock), Layer::Manager));
-				(Value::Nil, Value::Nil).into_lua_multi(&lua)
-			})?,
-		)?;
+			emit!(Call(Cmd::new("update_peeked").with_any("lock", lock), Layer::Manager));
+			(Value::Nil, Value::Nil).into_lua_multi(&lua)
+		})
+	}
 
-		ya.raw_set(
-			"preview_widgets",
-			lua.create_async_function(|_, (t, widgets): (Table, Vec<AnyUserData>)| async move {
-				let mut lock = PreviewLock::try_from(t)?;
-				lock.data = widgets.into_iter().filter_map(|ud| cast_to_renderable(&ud)).collect();
+	pub(super) fn preview_widgets(lua: &Lua) -> mlua::Result<Function> {
+		lua.create_async_function(|_, (t, widgets): (Table, Vec<AnyUserData>)| async move {
+			let mut lock = PreviewLock::try_from(t)?;
+			lock.data = widgets.into_iter().filter_map(|ud| cast_to_renderable(&ud)).collect();
 
-				emit!(Call(Cmd::new("update_peeked").with_any("lock", lock), Layer::Manager));
-				Ok(())
-			})?,
-		)?;
-
-		Ok(())
+			emit!(Call(Cmd::new("update_peeked").with_any("lock", lock), Layer::Manager));
+			Ok(())
+		})
 	}
 }
