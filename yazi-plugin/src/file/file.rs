@@ -1,6 +1,6 @@
 use mlua::{AnyUserData, Lua, Table, UserDataRef};
 
-use crate::{bindings::Cast, impl_file_fields, impl_file_methods};
+use crate::{bindings::{Cast, Cha}, impl_file_fields, impl_file_methods};
 
 pub type FileRef = UserDataRef<yazi_shared::fs::File>;
 
@@ -21,7 +21,7 @@ impl File {
 			lua.create_function(|lua, t: Table| {
 				Self::cast(lua, yazi_shared::fs::File {
 					url: t.raw_get::<AnyUserData>("url")?.take()?,
-					cha: t.raw_get::<AnyUserData>("cha")?.take()?,
+					cha: *t.raw_get::<Cha>("cha")?,
 					..Default::default()
 				})
 			})?,

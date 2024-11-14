@@ -1,4 +1,7 @@
 [env]
+MACOSX_DEPLOYMENT_TARGET  = "10.11"
+JEMALLOC_SYS_WITH_LG_PAGE = "16"
+
 # environment variable for tikv-jemalloc-sys
 #
 # https://jemalloc.net/jemalloc.3.html#opt.narenas

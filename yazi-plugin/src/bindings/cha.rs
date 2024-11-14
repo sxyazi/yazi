@@ -1,10 +1,11 @@
 use std::{ops::Deref, time::{Duration, SystemTime, UNIX_EPOCH}};
 
-use mlua::{ExternalError, IntoLua, Lua, Table, UserData, UserDataFields, UserDataMethods};
+use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, UserData, UserDataFields, UserDataMethods};
 use yazi_shared::fs::ChaKind;
 
 use crate::RtRef;
 
+#[derive(Clone, Copy, FromLua)]
 pub struct Cha(yazi_shared::fs::Cha);
 
 impl Deref for Cha {

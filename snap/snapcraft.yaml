@@ -23,11 +23,34 @@ parts:
   yazi:
     plugin: rust
     source: https://github.com/sxyazi/yazi.git
+    build-packages:
+      - wget
     override-build: |
       craftctl default
       craftctl set version=$(git describe --tags --abbrev=0)
-      cargo install fd-find --root $CRAFT_PART_INSTALL
-      cargo install ripgrep --root $CRAFT_PART_INSTALL
-      cargo install zoxide --root $CRAFT_PART_INSTALL
-      git clone --depth 1 https://github.com/junegunn/fzf.git fzf
-      fzf/install --bin && mv fzf/bin/fzf $CRAFT_PART_INSTALL/bin/
+
+      wget ripgrep-14.1.1-aarch64-unknown-linux-gnu.tar.gz
+      tar fxz ripgrep-*.tar.gz
+      mv ripgrep-*/rg $CRAFT_PART_INSTALL/bin/
+
+      wget https://github.com/sharkdp/fd/releases/download/v10.2.0/fd-v10.2.0-aarch64-unknown-linux-gnu.tar.gz
+      tar fxz fd-*.tar.gz
+      mv fd-*/fd $CRAFT_PART_INSTALL/bin/
+
+      wget https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-amd64
+      mv jq-linux-amd64 $CRAFT_PART_INSTALL/bin/jq
+
+      wget https://imagemagick.org/archive/binaries/magick
+      mv magick $CRAFT_PART_INSTALL/bin/magick
+
+      wget https://github.com/junegunn/fzf/releases/download/v0.56.2/fzf-0.56.2-linux_amd64.tar.gz
+      tar fxz fzf-*.tar.gz
+      mv fzf $CRAFT_PART_INSTALL/bin/
+
+      wget https://www.7-zip.org/a/7z2408-linux-x64.tar.xz
+      tar fxz 7z*.tar.xz
+      mv 7zz 7zzs $CRAFT_PART_INSTALL/bin/
+
+      wget https://github.com/ajeetdsouza/zoxide/releases/download/v0.9.6/zoxide-0.9.6-x86_64-unknown-linux-musl.tar.gz
+      tar fxz zoxide-*.tar.gz
+      mv zoxide $CRAFT_PART_INSTALL/bin/

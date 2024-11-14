@@ -23,13 +23,7 @@ jobs:
       - name: Setup Rust toolchain
         run: rustup toolchain install stable --profile minimal
 
-      - name: Setup Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          prefix-key: rust
-          shared-key: ${{ matrix.os }}@debug
-
-      - name: Run sccache-cache
+      - name: Setup sccache
         uses: mozilla-actions/sccache-action@v0.0.6
 
       - name: Build
