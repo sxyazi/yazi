@@ -9,13 +9,13 @@ use yazi_fs::{Folder, FolderStage};
 use yazi_macro::render;
 use yazi_shared::{Id, Ids, fs::{File, Url}};
 
-use super::{Backstack, Config, Finder, History, Mode, Preview};
-use crate::tab::Selected;
+use super::{Backstack, Finder, History, Mode, Preference, Preview};
+use crate::{spot::Spot, tab::Selected};
 
 pub struct Tab {
 	pub id:      Id,
 	pub mode:    Mode,
-	pub conf:    Config,
+	pub pref:    Preference,
 	pub current: Folder,
 	pub parent:  Option<Folder>,
 
@@ -23,6 +23,7 @@ pub struct Tab {
 	pub history:   History,
 	pub selected:  Selected,
 
+	pub spot:    Spot,
 	pub preview: Preview,
 	pub finder:  Option<Finder>,
 	pub search:  Option<JoinHandle<Result<()>>>,
@@ -35,7 +36,7 @@ impl Default for Tab {
 		Self {
 			id:      IDS.next(),
 			mode:    Default::default(),
-			conf:    Default::default(),
+			pref:    Default::default(),
 			current: Default::default(),
 			parent:  Default::default(),
 
@@ -43,6 +44,7 @@ impl Default for Tab {
 			history:   Default::default(),
 			selected:  Default::default(),
 
+			spot:    Default::default(),
 			preview: Default::default(),
 			finder:  Default::default(),
 			search:  Default::default(),
@@ -123,8 +125,8 @@ impl Tab {
 			}
 
 			let hovered = f.hovered().filter(|_| f.tracing).map(|h| h.urn_owned());
-			f.files.set_show_hidden(self.conf.show_hidden);
-			f.files.set_sorter(self.conf.sorter());
+			f.files.set_show_hidden(self.pref.show_hidden);
+			f.files.set_sorter(self.pref.sorter());
 
 			render!(f.files.catchup_revision());
 			render!(f.repos(hovered.as_ref().map(|u| u.as_urn())));

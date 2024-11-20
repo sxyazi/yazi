@@ -1,8 +1,8 @@
 use ansi_to_tui::IntoText;
-use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, Table, UserData, Value};
+use mlua::{ExternalError, ExternalResult, FromLua, IntoLua, Lua, Table, UserData, Value};
 use ratatui::widgets::Widget;
 
-use super::{Line, Rect, Renderable, Span};
+use super::{Area, Line, Span};
 
 // Alignment
 pub(super) const LEFT: u8 = 0;
@@ -14,11 +14,11 @@ pub const WRAP_NO: u8 = 0;
 pub const WRAP: u8 = 1;
 pub const WRAP_TRIM: u8 = 2;
 
-const EXPECTED: &str = "expected a string, ui.Line, ui.Span or a table of them";
+const EXPECTED: &str = "expected a string, Line, Span, or a table of them";
 
 #[derive(Clone, Default, FromLua)]
 pub struct Text {
-	pub area: Rect,
+	pub area: Area,
 
 	// TODO: block
 	pub inner: ratatui::text::Text<'static>,
@@ -49,6 +49,16 @@ impl Text {
 		text.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 		Ok(text)
 	}
+
+	pub(super) fn render(
+		self,
+		buf: &mut ratatui::buffer::Buffer,
+		trans: impl Fn(yazi_config::popup::Position) -> ratatui::layout::Rect,
+	) {
+		let rect = self.area.transform(trans);
+		let p: ratatui::widgets::Paragraph = self.into();
+		p.render(rect, buf);
+	}
 }
 
 impl TryFrom<Value> for Text {
@@ -63,6 +73,8 @@ impl TryFrom<Value> for Text {
 					line.into()
 				} else if let Ok(Span(span)) = ud.take() {
 					span.into()
+				} else if let Ok(text) = ud.take() {
+					return Ok(text);
 				} else {
 					Err(EXPECTED.into_lua_err())?
 				}
@@ -131,24 +143,12 @@ impl UserData for Text {
 		methods.add_function_mut("wrap", |_, (ud, wrap): (AnyUserData, u8)| {
 			ud.borrow_mut::<Self>()?.wrap = match wrap {
 				w @ (WRAP | WRAP_TRIM | WRAP_NO) => w,
-				_ => return Err("expected a WRAP or WRAP_TRIM or WRAP_OFF".into_lua_err()),
+				_ => return Err("expected a WRAP, WRAP_TRIM or WRAP_NO".into_lua_err()),
 			};
 			Ok(ud)
 		});
 		methods.add_method("max_width", |_, me, ()| {
-			Ok(me.inner.lines.iter().take(me.area.height as usize).map(|l| l.width()).max())
+			Ok(me.inner.lines.iter().take(me.area.size().height as usize).map(|l| l.width()).max())
 		});
 	}
-}
-
-impl Renderable for Text {
-	fn area(&self) -> ratatui::layout::Rect { *self.area }
-
-	fn render(self: Box<Self>, buf: &mut ratatui::buffer::Buffer) {
-		let area = *self.area;
-		let p: ratatui::widgets::Paragraph = (*self).into();
-		p.render(area, buf);
-	}
-
-	fn clone_render(&self, buf: &mut ratatui::buffer::Buffer) { Box::new(self.clone()).render(buf) }
 }

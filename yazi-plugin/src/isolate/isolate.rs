@@ -6,7 +6,7 @@ use crate::runtime::Runtime;
 pub fn slim_lua(name: &str) -> mlua::Result<Lua> {
 	let lua = Lua::new();
 	lua.set_named_registry_value("rt", Runtime::new(name))?;
-	crate::Config::new(&lua).install_preview()?;
+	crate::config::Config::new(&lua).install_preview()?.install_plugin()?;
 
 	// Base
 	let globals = lua.globals();

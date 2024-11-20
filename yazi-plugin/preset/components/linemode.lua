@@ -11,7 +11,7 @@ function Linemode:new(file) return setmetatable({ _file = file }, { __index = se
 function Linemode:space() return ui.Line(" ") end
 
 function Linemode:solo()
-	local mode = cx.active.conf.linemode
+	local mode = cx.active.pref.linemode
 	if mode == "none" or mode == "solo" then
 		return ui.Line("")
 	elseif not self[mode] then

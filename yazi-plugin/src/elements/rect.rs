@@ -2,10 +2,10 @@ use std::ops::Deref;
 
 use mlua::{FromLua, Lua, Table, UserData};
 
-use super::{Padding, Position};
+use super::Pad;
 
 #[derive(Clone, Copy, Default, FromLua)]
-pub struct Rect(ratatui::layout::Rect);
+pub struct Rect(pub(super) ratatui::layout::Rect);
 
 impl Deref for Rect {
 	type Target = ratatui::layout::Rect;
@@ -27,10 +27,10 @@ impl Rect {
 	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 		let new = lua.create_function(|_, (_, args): (Table, Table)| {
 			Ok(Self(ratatui::layout::Rect {
-				x:      args.raw_get("x")?,
-				y:      args.raw_get("y")?,
-				width:  args.raw_get("w")?,
-				height: args.raw_get("h")?,
+				x:      args.raw_get("x").unwrap_or_default(),
+				y:      args.raw_get("y").unwrap_or_default(),
+				width:  args.raw_get("w").unwrap_or_default(),
+				height: args.raw_get("h").unwrap_or_default(),
 			}))
 		})?;
 
@@ -38,6 +38,16 @@ impl Rect {
 
 		rect.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 		Ok(rect)
+	}
+
+	pub(super) fn pad(self, pad: Pad) -> Self {
+		let mut r = *self;
+		r.x = r.x.saturating_add(pad.left);
+		r.y = r.y.saturating_add(pad.top);
+
+		r.width = r.width.saturating_sub(pad.left + pad.right);
+		r.height = r.height.saturating_sub(pad.top + pad.bottom);
+		Self(r)
 	}
 }
 
@@ -55,16 +65,9 @@ impl UserData for Rect {
 	}
 
 	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_method("padding", |_, me, padding: Padding| {
-			let mut r = **me;
-			r.x = r.x.saturating_add(padding.left);
-			r.y = r.y.saturating_add(padding.top);
-
-			r.width = r.width.saturating_sub(padding.left + padding.right);
-			r.height = r.height.saturating_sub(padding.top + padding.bottom);
-			Ok(Self(r))
-		});
-		methods.add_method("position", |_, me, ()| Ok(Position::from(**me)));
-		methods.add_method("contains", |_, me, position: Position| Ok(me.contains(*position)));
+		methods.add_method("pad", |_, me, pad: Pad| Ok(me.pad(pad)));
+		// TODO: deprecate this
+		methods.add_method("padding", |_, me, pad: Pad| Ok(me.pad(pad)));
+		methods.add_method("contains", |_, me, Rect(rect)| Ok(me.contains(rect.into())));
 	}
 }

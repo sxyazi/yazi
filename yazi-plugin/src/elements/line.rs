@@ -10,7 +10,7 @@ const LEFT: u8 = 0;
 const CENTER: u8 = 1;
 const RIGHT: u8 = 2;
 
-const EXPECTED: &str = "expected a string, ui.Span, ui.Line, or a table of them";
+const EXPECTED: &str = "expected a string, Span, Line, or a table of them";
 
 #[derive(Clone, FromLua)]
 pub struct Line(pub(super) ratatui::text::Line<'static>);

@@ -26,4 +26,6 @@ function M:seek(units)
 	})
 end
 
+function M:spot(args) require("file"):spot(args) end
+
 return M

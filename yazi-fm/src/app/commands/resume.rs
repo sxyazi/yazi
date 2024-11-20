@@ -4,7 +4,7 @@ use crate::{Term, app::App};
 
 impl App {
 	pub(crate) fn resume(&mut self, _: Cmd) {
-		self.cx.manager.active_mut().preview.reset_image();
+		self.cx.active_mut().preview.reset_image();
 		self.term = Some(Term::start().unwrap());
 
 		// While the app resumes, it's possible that the terminal size has changed.

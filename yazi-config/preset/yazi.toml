@@ -92,6 +92,19 @@ fetchers = [
 	# Mimetype
 	{ id = "mime", name = "*", run = "mime", if = "!mime", prio = "high" },
 ]
+spotters = [
+	{ name = "*/", run = "folder" },
+	# Code
+	{ mime = "text/*", run = "code" },
+	{ mime = "*/{xml,javascript,x-wine-extension-ini}", run = "code" },
+	# Image
+	{ mime = "image/{avif,hei?,jxl,svg+xml}", run = "magick" },
+	{ mime = "image/*", run = "image" },
+	# Video
+	{ mime = "video/*", run = "video" },
+	# Fallback
+	{ name = "*", run = "file" },
+]
 preloaders = [
 	# Image
 	{ mime = "image/{avif,hei?,jxl,svg+xml}", run = "magick" },

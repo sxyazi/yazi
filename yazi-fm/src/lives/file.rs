@@ -110,7 +110,7 @@ impl UserData for File {
 		});
 		methods.add_method("found", |lua, me, ()| {
 			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|cx: &Ctx| {
-				let Some(finder) = &cx.manager.active().finder else {
+				let Some(finder) = &cx.active().finder else {
 					return Ok(None);
 				};
 
@@ -124,7 +124,7 @@ impl UserData for File {
 		});
 		methods.add_method("highlights", |lua, me, ()| {
 			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|cx: &Ctx| {
-				let Some(finder) = &cx.manager.active().finder else {
+				let Some(finder) = &cx.active().finder else {
 					return None;
 				};
 				if me.folder().url != me.tab().current.url {

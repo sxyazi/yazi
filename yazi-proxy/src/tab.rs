@@ -17,6 +17,11 @@ impl TabProxy {
 	}
 
 	#[inline]
+	pub fn arrow(step: isize) {
+		emit!(Call(Cmd::args("arrow", &[step]), Layer::Manager));
+	}
+
+	#[inline]
 	pub fn search_do(opt: SearchOpt) {
 		emit!(Call(
 			Cmd::args("search_do", &[opt.subject]).with("via", opt.via).with("args", opt.args_raw),

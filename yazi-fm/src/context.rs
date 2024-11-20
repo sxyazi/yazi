@@ -1,5 +1,6 @@
 use ratatui::layout::Rect;
-use yazi_core::{completion::Completion, confirm::Confirm, help::Help, input::Input, manager::Manager, notify::Notify, pick::Pick, tasks::Tasks, which::Which};
+use yazi_core::{completion::Completion, confirm::Confirm, help::Help, input::Input, manager::Manager, notify::Notify, pick::Pick, tab::Tab, tasks::Tasks, which::Which};
+use yazi_fs::Folder;
 
 pub struct Ctx {
 	pub manager:    Manager,
@@ -39,4 +40,18 @@ impl Ctx {
 		}
 		None
 	}
+}
+
+impl Ctx {
+	#[inline]
+	pub fn active(&self) -> &Tab { self.manager.active() }
+
+	#[inline]
+	pub fn active_mut(&mut self) -> &mut Tab { self.manager.active_mut() }
+
+	#[inline]
+	pub fn current(&self) -> &Folder { self.manager.current() }
+
+	#[inline]
+	pub fn current_mut(&mut self) -> &mut Folder { self.manager.current_mut() }
 }

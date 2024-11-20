@@ -64,7 +64,7 @@ function Status:name()
 		return ui.Line {}
 	end
 
-	return ui.Line(" " .. h.name)
+	return ui.Line(" " .. h.name:gsub("\r", "?", 1))
 end
 
 function Status:perm()

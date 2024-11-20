@@ -1,7 +1,8 @@
-use mlua::{AnyUserData, Lua, Table, UserData};
+use mlua::{Lua, Table, UserData, Value};
 use ratatui::widgets::{Borders, Widget};
 
-use super::{Rect, Renderable};
+use super::Area;
+use crate::elements::Line;
 
 // Type
 const PLAIN: u8 = 0;
@@ -13,11 +14,13 @@ const QUADRANT_OUTSIDE: u8 = 5;
 
 #[derive(Clone, Default)]
 pub struct Border {
-	area: Rect,
+	pub(crate) area: Area,
 
-	position: ratatui::widgets::Borders,
-	type_:    ratatui::widgets::BorderType,
-	style:    ratatui::style::Style,
+	pub(crate) position: ratatui::widgets::Borders,
+	pub(crate) type_:    ratatui::widgets::BorderType,
+	pub(crate) style:    ratatui::style::Style,
+
+	pub(crate) titles: Vec<(ratatui::widgets::block::Position, ratatui::text::Line<'static>)>,
 }
 
 impl Border {
@@ -49,6 +52,26 @@ impl Border {
 		border.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 		Ok(border)
 	}
+
+	pub(super) fn render(
+		self,
+		buf: &mut ratatui::buffer::Buffer,
+		trans: impl FnOnce(yazi_config::popup::Position) -> ratatui::layout::Rect,
+	) {
+		let mut block = ratatui::widgets::Block::default()
+			.borders(self.position)
+			.border_type(self.type_)
+			.border_style(self.style);
+
+		for title in self.titles {
+			block = match title {
+				(ratatui::widgets::block::Position::Top, line) => block.title(line),
+				(ratatui::widgets::block::Position::Bottom, line) => block.title(line),
+			};
+		}
+
+		block.render(self.area.transform(trans), buf);
+	}
 }
 
 impl UserData for Border {
@@ -56,10 +79,6 @@ impl UserData for Border {
 		crate::impl_area_method!(methods);
 		crate::impl_style_method!(methods, style);
 
-		methods.add_function_mut("position", |_, (ud, position): (AnyUserData, u8)| {
-			ud.borrow_mut::<Self>()?.position = ratatui::widgets::Borders::from_bits_truncate(position);
-			Ok(ud)
-		});
 		methods.add_function_mut("type", |_, (ud, value): (AnyUserData, u8)| {
 			ud.borrow_mut::<Self>()?.type_ = match value {
 				ROUNDED => ratatui::widgets::BorderType::Rounded,
@@ -71,19 +90,22 @@ impl UserData for Border {
 			};
 			Ok(ud)
 		});
+		methods.add_function_mut(
+			"title",
+			|_, (ud, line, position): (AnyUserData, Value, Option<u8>)| {
+				let position = if position == Some(Borders::BOTTOM.bits()) {
+					ratatui::widgets::block::Position::Bottom
+				} else {
+					ratatui::widgets::block::Position::Top
+				};
+
+				ud.borrow_mut::<Self>()?.titles.push((position, Line::try_from(line)?.0));
+				Ok(ud)
+			},
+		);
+		methods.add_function_mut("position", |_, (ud, position): (AnyUserData, u8)| {
+			ud.borrow_mut::<Self>()?.position = ratatui::widgets::Borders::from_bits_truncate(position);
+			Ok(ud)
+		});
 	}
-}
-
-impl Renderable for Border {
-	fn area(&self) -> ratatui::layout::Rect { *self.area }
-
-	fn render(self: Box<Self>, buf: &mut ratatui::buffer::Buffer) {
-		ratatui::widgets::Block::default()
-			.borders(self.position)
-			.border_type(self.type_)
-			.border_style(self.style)
-			.render(*self.area, buf);
-	}
-
-	fn clone_render(&self, buf: &mut ratatui::buffer::Buffer) { Box::new(self.clone()).render(buf); }
 }

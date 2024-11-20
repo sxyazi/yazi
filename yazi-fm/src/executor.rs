@@ -17,6 +17,7 @@ impl<'a> Executor<'a> {
 			Layer::App => self.app(cmd),
 			Layer::Manager => self.manager(cmd),
 			Layer::Tasks => self.tasks(cmd),
+			Layer::Spot => self.spot(cmd),
 			Layer::Pick => self.pick(cmd),
 			Layer::Input => self.input(cmd),
 			Layer::Confirm => self.confirm(cmd),
@@ -79,7 +80,7 @@ impl<'a> Executor<'a> {
 		on!(MANAGER, hover);
 		on!(MANAGER, peek);
 		on!(MANAGER, seek);
-		on!(ACTIVE, spot);
+		on!(MANAGER, spot);
 		on!(MANAGER, refresh, &self.app.cx.tasks);
 		on!(MANAGER, quit, &self.app.cx.tasks);
 		on!(MANAGER, close, &self.app.cx.tasks);
@@ -176,6 +177,29 @@ impl<'a> Executor<'a> {
 		match cmd.name.as_str() {
 			// Help
 			"help" => self.app.cx.help.toggle(Layer::Tasks),
+			// Plugin
+			"plugin" => self.app.plugin(cmd),
+			_ => {}
+		}
+	}
+
+	fn spot(&mut self, cmd: Cmd) {
+		macro_rules! on {
+			($name:ident) => {
+				if cmd.name == stringify!($name) {
+					return self.app.cx.active_mut().spot.$name(cmd);
+				}
+			};
+		}
+
+		on!(arrow);
+		on!(close);
+		on!(swipe);
+		on!(copy);
+
+		match cmd.name.as_str() {
+			// Help
+			"help" => self.app.cx.help.toggle(Layer::Spot),
 			// Plugin
 			"plugin" => self.app.plugin(cmd),
 			_ => {}

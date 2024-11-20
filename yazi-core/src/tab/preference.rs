@@ -2,7 +2,7 @@ use yazi_config::{MANAGER, manager::SortBy};
 use yazi_fs::FilesSorter;
 
 #[derive(Clone, PartialEq)]
-pub struct Config {
+pub struct Preference {
 	// Sorting
 	pub sort_by:        SortBy,
 	pub sort_sensitive: bool,
@@ -15,7 +15,7 @@ pub struct Config {
 	pub show_hidden: bool,
 }
 
-impl Default for Config {
+impl Default for Preference {
 	fn default() -> Self {
 		Self {
 			// Sorting
@@ -32,7 +32,7 @@ impl Default for Config {
 	}
 }
 
-impl Config {
+impl Preference {
 	pub(super) fn patch<F: FnOnce(&mut Self)>(&mut self, f: F) -> bool {
 		let old = self.clone();
 		f(self);

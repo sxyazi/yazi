@@ -14,20 +14,20 @@ ansi-to-tui   = "7.0.0"
 anyhow        = "1.0.93"
 base64        = "0.22.1"
 bitflags      = "2.6.0"
-clap          = { version = "4.5.20", features = [ "derive" ] }
+clap          = { version = "4.5.21", features = [ "derive" ] }
 crossterm     = { version = "0.28.1", features = [ "event-stream" ] }
 dirs          = "5.0.1"
 futures       = "0.3.31"
 globset       = "0.4.15"
-libc          = "0.2.162"
+libc          = "0.2.164"
 md-5          = "0.10.6"
 mlua          = { version = "0.10.1", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serialize" ] }
 parking_lot   = "0.12.3"
 ratatui       = { version = "0.29.0", features = [ "unstable-rendered-line-info" ] }
 regex         = "1.11.1"
 scopeguard    = "1.2.0"
-serde         = { version = "1.0.214", features = [ "derive" ] }
-serde_json    = "1.0.132"
+serde         = { version = "1.0.215", features = [ "derive" ] }
+serde_json    = "1.0.133"
 shell-words   = "1.1.0"
 tokio         = { version = "1.41.1", features = [ "full" ] }
 tokio-stream  = "0.1.16"

@@ -1,12 +1,12 @@
-use mlua::{AnyUserData, ExternalError, Lua, Table, UserData, UserDataMethods, Value};
+use mlua::{ExternalError, Lua, Table, UserData, UserDataMethods, Value};
 use ratatui::widgets::Widget;
 
-use super::{Rect, Renderable, Span};
+use super::{Area, Span};
 use crate::elements::Style;
 
 #[derive(Clone, Default)]
 pub struct Gauge {
-	area: Rect,
+	area: Area,
 
 	ratio:       f64,
 	label:       Option<ratatui::text::Span<'static>>,
@@ -22,6 +22,23 @@ impl Gauge {
 		gauge.set_metatable(Some(lua.create_table_from([("__call", new)])?));
 
 		Ok(gauge)
+	}
+
+	pub(super) fn render(
+		self,
+		buf: &mut ratatui::buffer::Buffer,
+		trans: impl FnOnce(yazi_config::popup::Position) -> ratatui::layout::Rect,
+	) {
+		let mut gauge = ratatui::widgets::Gauge::default()
+			.ratio(self.ratio)
+			.style(self.style)
+			.gauge_style(self.gauge_style);
+
+		if let Some(s) = self.label {
+			gauge = gauge.label(s)
+		}
+
+		gauge.render(self.area.transform(trans), buf);
 	}
 }
 
@@ -58,23 +75,4 @@ impl UserData for Gauge {
 			Ok(ud)
 		});
 	}
-}
-
-impl Renderable for Gauge {
-	fn area(&self) -> ratatui::layout::Rect { *self.area }
-
-	fn render(self: Box<Self>, buf: &mut ratatui::buffer::Buffer) {
-		let mut gauge = ratatui::widgets::Gauge::default()
-			.ratio(self.ratio)
-			.style(self.style)
-			.gauge_style(self.gauge_style);
-
-		if let Some(s) = self.label {
-			gauge = gauge.label(s)
-		}
-
-		gauge.render(*self.area, buf);
-	}
-
-	fn clone_render(&self, buf: &mut ratatui::buffer::Buffer) { Box::new(self.clone()).render(buf) }
 }

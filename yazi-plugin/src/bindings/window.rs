@@ -9,10 +9,21 @@ pub struct Window {
 	pub height: u16,
 }
 
-impl Default for Window {
-	fn default() -> Self {
+impl Window {
+	pub fn get() -> Self {
 		let ws = Dimension::available();
 		Self { rows: ws.rows, cols: ws.columns, width: ws.width, height: ws.height }
+	}
+}
+
+impl From<Window> for crossterm::terminal::WindowSize {
+	fn from(value: Window) -> Self {
+		crossterm::terminal::WindowSize {
+			rows:    value.rows,
+			columns: value.cols,
+			width:   value.width,
+			height:  value.height,
+		}
 	}
 }
 
