@@ -34,10 +34,11 @@ function M:spot(args)
 		return
 	end
 
-	local spotter = PLUGIN.spotter(args.file.url, mime)
-	local previewer = PLUGIN.previewer(args.file.url, mime)
-	local fetchers = PLUGIN.fetchers(args.file.url, mime)
-	local preloaders = PLUGIN.preloaders(args.file.url, mime)
+	local file = args.file
+	local spotter = PLUGIN.spotter(file.url, mime)
+	local previewer = PLUGIN.previewer(file.url, mime)
+	local fetchers = PLUGIN.fetchers(file.url, mime)
+	local preloaders = PLUGIN.preloaders(file.url, mime)
 
 	for i, v in ipairs(fetchers) do
 		fetchers[i] = v.cmd
@@ -52,21 +53,25 @@ function M:spot(args)
 		rows[#rows + 1] = ui.Row({ key, value }):height(h)
 	end
 
-	row("Mime:", mime)
-	row("Spotter:", spotter and spotter.cmd or "-")
-	row("Previewer:", previewer and previewer.cmd or "-")
-	row("Fetchers:", #fetchers ~= 0 and fetchers or "-")
-	row("Preloaders:", #preloaders ~= 0 and preloaders or "-")
+	rows[#rows + 1] = ui.Row({ "Metadata", "" }):style(ui.Style():fg("red"))
+	row("  Created:", file.cha.btime and os.date("%y/%m/%d %H:%M", math.floor(file.cha.btime)) or "-")
+	row("  Modified:", file.cha.mtime and os.date("%y/%m/%d %H:%M", math.floor(file.cha.mtime)) or "-")
+	row("  Mimetype:", mime)
+	rows[#rows + 1] = ui.Row({ { "", "Plugins" }, "" }):height(2):style(ui.Style():fg("red"))
+	row("  Spotter:", spotter and spotter.cmd or "-")
+	row("  Previewer:", previewer and previewer.cmd or "-")
+	row("  Fetchers:", #fetchers ~= 0 and fetchers or "-")
+	row("  Preloaders:", #preloaders ~= 0 and preloaders or "-")
 
 	ya.spot_table(
 		args,
 		ui.Table(rows)
 			:area(ui.Pos { "center", w = 60, h = 20 })
-			:row(args.skip)
+			:row(1)
 			:col(1)
 			:col_style(ui.Style():fg("blue"))
 			:cell_style(ui.Style():fg("yellow"):reverse())
-			:widths { ui.Constraint.Length(12), ui.Constraint.Fill(1) }
+			:widths { ui.Constraint.Length(14), ui.Constraint.Fill(1) }
 	)
 end
 
