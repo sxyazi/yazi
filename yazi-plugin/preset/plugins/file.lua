@@ -16,6 +16,7 @@ end
 
 function M:seek() end
 
+-- TODO: remove this
 local hovered_mime = ya.sync(function()
 	local h = cx.active.current.hovered
 	if not h then
