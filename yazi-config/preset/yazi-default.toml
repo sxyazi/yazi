@@ -67,8 +67,15 @@ rules = [
 	# Media
 	{ mime = "{audio,video}/*", use = [ "play", "reveal" ] },
 	# Archive
-	{ mime = "application/{,g}zip", use = [ "extract", "reveal" ] },
-	{ mime = "application/{tar,bzip*,7z*,xz,rar}", use = [ "extract", "reveal" ] },
+	{ mime = "application/{zip,gzip,zstd,zlib,arj}", use = [ "extract", "reveal" ] },
+	{ mime = "application/{zip,gzip,x}-compressed", use = [ "extract", "reveal" ] },
+	{ mime = "application/x-{rar,tar,xz,bzip*,lzma,compress,archive,cpio,arj,deflate,xar}", use = [ "extract", "reveal" ] },
+	{ mime = "application/x-{zip,rar,7z,gzip,arj}-compressed", use = [ "extract", "reveal" ] },
+	{ mime = "application/x-{debian-package,redhat-package-manager,rpm}", use = [ "extract", "reveal" ] },
+	{ mime = "application/vnd.debian.binary-package", use = [ "extract", "reveal" ] },
+	{ mime = "application/vnd.android.package-archive", use = [ "extract", "reveal" ] },
+	{ mime = "application/vnd.ms-cab-compressed", use = [ "extract", "reveal" ] },
+	{ name = "*.{AppImage, appimage}", use = [ "extract", "reveal" ] },
 	# JSON
 	{ mime = "application/{json,ndjson}", use = [ "edit", "reveal" ] },
 	{ mime = "*/javascript", use = [ "edit", "reveal" ] },
@@ -132,8 +139,23 @@ previewers = [
 	# PDF
 	{ mime = "application/pdf", run = "pdf" },
 	# Archive
-	{ mime = "application/{,g}zip", run = "archive" },
-	{ mime = "application/{tar,bzip*,7z*,xz,rar,iso9660-image}", run = "archive" },
+	{ mime = "application/{zip,gzip,zstd,zlib,arj}", run = "archive" },
+	{ mime = "application/{zip,gzip,x}-compressed", run = "archive" },
+	{ mime = "application/x-{rar,tar,xz,bzip*,lzma,compress,archive,cpio,arj,deflate,xar}", run = "archive" },
+	{ mime = "application/x-{zip,rar,7z,gzip,arj}-compressed", run = "archive" },
+	{ mime = "application/x-{debian-package,redhat-package-manager,rpm}", run = "archive" },
+	{ mime = "application/vnd.debian.binary-package", run = "archive" },
+	{ mime = "application/vnd.android.package-archive", run = "archive" },
+	{ mime = "application/vnd.ms-cab-compressed", run = "archive" },
+	{ name = "*.{AppImage, appimage}", run = "archive" },
+	# Virtual Disk / Disk Image
+	{ mime = "application/x-iso9660-image", run = "archive" },
+	{ mime = "application/x-{qemu,vhd,vhdx,vdi,vmdk}-disk", run = "archive" },
+	{ mime = "application/x-{vhd,vmdk}", run = "archive" },
+	{ mime = "application/x-virtualbox-{vdi,vhd,vhdx,vmdk}", run = "archive" },
+	{ mime = "application/x-ms-wim", run = "archive" },
+	{ mime = "application/x-apple-diskimage", run = "archive" },
+	{ name = "*.{fat,ext,ext2,ext3,ext4,squashfs,ntfs,hfs,hfsx,img}", run = "archive" },
 	# Font
 	{ mime = "font/*", run = "font" },
 	{ mime = "application/ms-opentype", run = "font" },
