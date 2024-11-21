@@ -126,7 +126,7 @@ function Status:position()
 	local style = self:style()
 	return ui.Line {
 		ui.Span(THEME.status.separator_open):fg(style.bg):bg(THEME.status.separator_style.fg),
-		ui.Span(string.format(" %2d/%-2d ", cursor + 1, length)):style(style),
+		ui.Span(string.format(" %2d/%-2d ", math.min(cursor + 1, length), length)):style(style),
 		ui.Span(THEME.status.separator_close):fg(style.bg),
 	}
 end
