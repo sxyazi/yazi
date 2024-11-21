@@ -1,4 +1,4 @@
-# Contributor Covenant Code of Conduct
+# Code of Conduct
 
 ## Goal
 
@@ -21,7 +21,7 @@ Our standards are as follows:
 Examples of unacceptable behavior include:
 
 - Trolling, insulting or derogatory comments, and personal attacks
-- Harasing or bullying another person
+- Harassing or bullying another person
 - Publishing others' private information without their explicit permission
 - Posting things unrelated to the topic being discussed
 - Other conduct that could reasonably be considered inappropriate in a professional setting

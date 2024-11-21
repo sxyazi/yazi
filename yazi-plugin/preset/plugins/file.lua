@@ -28,13 +28,13 @@ local hovered_mime = ya.sync(function()
 	end
 end)
 
-function M:spot(args)
+function M:spot(job)
 	local mime = hovered_mime()
 	if not mime then
 		return
 	end
 
-	local file = args.file
+	local file = job.file
 	local spotter = PLUGIN.spotter(file.url, mime)
 	local previewer = PLUGIN.previewer(file.url, mime)
 	local fetchers = PLUGIN.fetchers(file.url, mime)
@@ -64,7 +64,7 @@ function M:spot(args)
 	row("  Preloaders:", #preloaders ~= 0 and preloaders or "-")
 
 	ya.spot_table(
-		args,
+		job,
 		ui.Table(rows)
 			:area(ui.Pos { "center", w = 60, h = 20 })
 			:row(1)

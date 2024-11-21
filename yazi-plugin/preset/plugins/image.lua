@@ -22,8 +22,8 @@ function M:preload()
 	return ya.image_precache(self.file.url, cache) and 1 or 2
 end
 
-function M:spot(args)
-	local info = ya.image_info(args.file.url)
+function M:spot(job)
+	local info = ya.image_info(job.file.url)
 
 	local rows = {}
 	local row = function(key, value)
@@ -37,10 +37,10 @@ function M:spot(args)
 	row("Color:", tostring(info.color))
 
 	ya.spot_table(
-		args,
+		job,
 		ui.Table(rows)
 			:area(ui.Pos { "center", w = 60, h = 20 })
-			:row(args.skip)
+			:row(job.skip)
 			:col(1)
 			:col_style(ui.Style():fg("blue"))
 			:cell_style(ui.Style():fg("yellow"):reverse())
