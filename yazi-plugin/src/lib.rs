@@ -6,7 +6,7 @@ yazi_macro::mod_pub!(
 	bindings, elements, external, file, fs, isolate, loader, process, pubsub, url, utils
 );
 
-yazi_macro::mod_flat!(clipboard config lua runtime);
+yazi_macro::mod_flat!(clipboard config error lua runtime);
 
 pub fn init() -> anyhow::Result<()> {
 	CLIPBOARD.with(<_>::default);

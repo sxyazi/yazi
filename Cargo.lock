@@ -3550,6 +3550,7 @@ dependencies = [
  "mlua",
  "parking_lot",
  "ratatui",
+ "serde_json",
  "shell-words",
  "syntect",
  "tokio",
