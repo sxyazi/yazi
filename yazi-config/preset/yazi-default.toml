@@ -73,7 +73,7 @@ rules = [
 	{ mime = "application/vnd.debian.binary-package", use = [ "extract", "reveal" ] },
 	{ mime = "application/vnd.android.package-archive", use = [ "extract", "reveal" ] },
 	{ mime = "application/vnd.ms-cab-compressed", use = [ "extract", "reveal" ] },
-	{ name = "*.{AppImage, appimage}", use = [ "extract", "reveal" ] },
+	{ name = "*.{AppImage,appimage}", use = [ "extract", "reveal" ] },
 	# JSON
 	{ mime = "application/{json,ndjson}", use = [ "edit", "reveal" ] },
 	{ mime = "*/javascript", use = [ "edit", "reveal" ] },
@@ -143,7 +143,7 @@ previewers = [
 	{ mime = "application/vnd.debian.binary-package", run = "archive" },
 	{ mime = "application/vnd.android.package-archive", run = "archive" },
 	{ mime = "application/vnd.ms-cab-compressed", run = "archive" },
-	{ name = "*.{AppImage, appimage}", run = "archive" },
+	{ name = "*.{AppImage,appimage}", run = "archive" },
 	# Virtual Disk / Disk Image
 	{ mime = "application/iso9660-image", run = "archive" },
 	{ mime = "application/{qemu,vhd,vhdx,vdi,vmdk}-disk", run = "archive" },
