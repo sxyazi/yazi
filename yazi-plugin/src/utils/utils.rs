@@ -23,6 +23,10 @@ pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Table> {
 			b"image_show" => Utils::image_show(lua)?,
 			b"image_precache" => Utils::image_precache(lua)?,
 
+			// JSON
+			b"json_encode" => Utils::json_encode(lua)?,
+			b"json_decode" => Utils::json_decode(lua)?,
+
 			// Layout
 			b"which" => Utils::which(lua)?,
 			b"input" => Utils::input(lua)?,

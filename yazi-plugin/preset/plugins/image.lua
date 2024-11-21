@@ -23,29 +23,30 @@ function M:preload()
 end
 
 function M:spot(job)
-	local info = ya.image_info(job.file.url)
-
-	local rows = {}
-	local row = function(key, value)
-		local h = type(value) == "table" and #value or 1
-		rows[#rows + 1] = ui.Row({ key, value }):height(h)
-	end
-
-	row("Format:", tostring(info.format))
-	row("Width:", string.format("%dpx", info.w))
-	row("Height:", string.format("%dpx", info.h))
-	row("Color:", tostring(info.color))
+	local rows = self:spot_base(job)
+	rows[#rows + 1] = ui.Row {}
 
 	ya.spot_table(
 		job,
-		ui.Table(rows)
+		ui.Table(ya.list_merge(rows, require("file"):spot_base(job)))
 			:area(ui.Pos { "center", w = 60, h = 20 })
 			:row(job.skip)
+			:row(1)
 			:col(1)
 			:col_style(ui.Style():fg("blue"))
 			:cell_style(ui.Style():fg("yellow"):reverse())
-			:widths { ui.Constraint.Length(12), ui.Constraint.Fill(1) }
+			:widths { ui.Constraint.Length(14), ui.Constraint.Fill(1) }
 	)
+end
+
+function M:spot_base(job)
+	local info = ya.image_info(job.file.url)
+	return {
+		ui.Row({ "Image" }):style(ui.Style():fg("green")),
+		ui.Row { "  Format:", tostring(info.format) },
+		ui.Row { "  Size:", string.format("%dx%d", info.w, info.h) },
+		ui.Row { "  Color:", tostring(info.color) },
+	}
 end
 
 return M

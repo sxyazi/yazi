@@ -16,29 +16,25 @@ end
 
 function M:seek() end
 
--- TODO: remove this
-local hovered_mime = ya.sync(function()
-	local h = cx.active.current.hovered
-	if not h then
-		return nil
-	elseif h.cha.is_dir then
-		return "inode/directory"
-	else
-		return h:mime()
-	end
-end)
-
 function M:spot(job)
-	local mime = hovered_mime()
-	if not mime then
-		return
-	end
+	ya.spot_table(
+		job,
+		ui.Table(self:spot_base(job))
+			:area(ui.Pos { "center", w = 60, h = 20 })
+			:row(1)
+			:col(1)
+			:col_style(ui.Style():fg("blue"))
+			:cell_style(ui.Style():fg("yellow"):reverse())
+			:widths { ui.Constraint.Length(14), ui.Constraint.Fill(1) }
+	)
+end
 
-	local file = job.file
-	local spotter = PLUGIN.spotter(file.url, mime)
-	local previewer = PLUGIN.previewer(file.url, mime)
-	local fetchers = PLUGIN.fetchers(file.url, mime)
-	local preloaders = PLUGIN.preloaders(file.url, mime)
+function M:spot_base(job)
+	local url, cha = job.file.url, job.file.cha
+	local spotter = PLUGIN.spotter(url, job.mime)
+	local previewer = PLUGIN.previewer(url, job.mime)
+	local fetchers = PLUGIN.fetchers(url, job.mime)
+	local preloaders = PLUGIN.preloaders(url, job.mime)
 
 	for i, v in ipairs(fetchers) do
 		fetchers[i] = v.cmd
@@ -47,32 +43,19 @@ function M:spot(job)
 		preloaders[i] = v.cmd
 	end
 
-	local rows = {}
-	local row = function(key, value)
-		local h = type(value) == "table" and #value or 1
-		rows[#rows + 1] = ui.Row({ key, value }):height(h)
-	end
+	return {
+		ui.Row({ "Base" }):style(ui.Style():fg("green")),
+		ui.Row { "  Created:", cha.btime and os.date("%y/%m/%d %H:%M", math.floor(cha.btime)) or "-" },
+		ui.Row { "  Modified:", cha.mtime and os.date("%y/%m/%d %H:%M", math.floor(cha.mtime)) or "-" },
+		ui.Row { "  Mimetype:", job.mime },
+		ui.Row {},
 
-	rows[#rows + 1] = ui.Row({ "Metadata", "" }):style(ui.Style():fg("red"))
-	row("  Created:", file.cha.btime and os.date("%y/%m/%d %H:%M", math.floor(file.cha.btime)) or "-")
-	row("  Modified:", file.cha.mtime and os.date("%y/%m/%d %H:%M", math.floor(file.cha.mtime)) or "-")
-	row("  Mimetype:", mime)
-	rows[#rows + 1] = ui.Row({ { "", "Plugins" }, "" }):height(2):style(ui.Style():fg("red"))
-	row("  Spotter:", spotter and spotter.cmd or "-")
-	row("  Previewer:", previewer and previewer.cmd or "-")
-	row("  Fetchers:", #fetchers ~= 0 and fetchers or "-")
-	row("  Preloaders:", #preloaders ~= 0 and preloaders or "-")
-
-	ya.spot_table(
-		job,
-		ui.Table(rows)
-			:area(ui.Pos { "center", w = 60, h = 20 })
-			:row(1)
-			:col(1)
-			:col_style(ui.Style():fg("blue"))
-			:cell_style(ui.Style():fg("yellow"):reverse())
-			:widths { ui.Constraint.Length(14), ui.Constraint.Fill(1) }
-	)
+		ui.Row({ "Plugins" }):style(ui.Style():fg("green")),
+		ui.Row { "  Spotter:", spotter and spotter.cmd or "-" },
+		ui.Row { "  Previewer:", previewer and previewer.cmd or "-" },
+		ui.Row { "  Fetchers:", #fetchers ~= 0 and fetchers or "-" },
+		ui.Row { "  Preloaders:", #preloaders ~= 0 and preloaders or "-" },
+	}
 end
 
 return M

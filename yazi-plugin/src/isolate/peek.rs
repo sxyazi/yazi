@@ -62,7 +62,7 @@ pub fn peek(
 
 		if let Err(e) = result {
 			if !e.to_string().contains("Peek task cancelled") {
-				error!("{e:?}");
+				error!("{e}");
 			}
 		}
 	});

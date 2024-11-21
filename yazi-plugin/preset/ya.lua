@@ -1,4 +1,5 @@
 table.unpack = table.unpack or unpack
+function Err(s, ...) return Error.custom(string.format(s, ...)) end
 
 function ya.clamp(min, x, max)
 	if x < min then

@@ -76,20 +76,21 @@ impl Actions {
 
 		writeln!(s, "\nDependencies")?;
 		#[rustfmt::skip]
-		writeln!(s, "    file             : {}", Self::process_output(env::var_os("YAZI_FILE_ONE").unwrap_or("file".into()), "--version"))?;
-		writeln!(s, "    ueberzugpp       : {}", Self::process_output("ueberzugpp", "--version"))?;
-		writeln!(s, "    ffmpegthumbnailer: {}", Self::process_output("ffmpegthumbnailer", "-v"))?;
-		writeln!(s, "    pdftoppm         : {}", Self::process_output("pdftoppm", "--help"))?;
-		writeln!(s, "    magick           : {}", Self::process_output("magick", "--version"))?;
-		writeln!(s, "    fzf              : {}", Self::process_output("fzf", "--version"))?;
-		writeln!(s, "    fd               : {}", Self::process_output("fd", "--version"))?;
-		writeln!(s, "    fdfind           : {}", Self::process_output("fdfind", "--version"))?;
-		writeln!(s, "    rg               : {}", Self::process_output("rg", "--version"))?;
-		writeln!(s, "    chafa            : {}", Self::process_output("chafa", "--version"))?;
-		writeln!(s, "    zoxide           : {}", Self::process_output("zoxide", "--version"))?;
-		writeln!(s, "    7z               : {}", Self::process_output("7z", "i"))?;
-		writeln!(s, "    7zz              : {}", Self::process_output("7zz", "i"))?;
-		writeln!(s, "    jq               : {}", Self::process_output("jq", "--version"))?;
+		writeln!(s, "    file          : {}", Self::process_output(env::var_os("YAZI_FILE_ONE").unwrap_or("file".into()), "--version"))?;
+		writeln!(s, "    ueberzugpp    : {}", Self::process_output("ueberzugpp", "--version"))?;
+		#[rustfmt::skip]
+		writeln!(s, "    ffmpeg/ffprobe: {} / {}", Self::process_output("ffmpeg", "-version"), Self::process_output("ffprobe", "-version"))?;
+		writeln!(s, "    pdftoppm      : {}", Self::process_output("pdftoppm", "--help"))?;
+		writeln!(s, "    magick        : {}", Self::process_output("magick", "--version"))?;
+		writeln!(s, "    fzf           : {}", Self::process_output("fzf", "--version"))?;
+		#[rustfmt::skip]
+		writeln!(s, "    fd/fdfind     : {} / {}", Self::process_output("fd", "--version"), Self::process_output("fdfind", "--version"))?;
+		writeln!(s, "    rg            : {}", Self::process_output("rg", "--version"))?;
+		writeln!(s, "    chafa         : {}", Self::process_output("chafa", "--version"))?;
+		writeln!(s, "    zoxide        : {}", Self::process_output("zoxide", "--version"))?;
+		#[rustfmt::skip]
+		writeln!(s, "    7z/7zz        : {} / {}", Self::process_output("7z", "i"), Self::process_output("7zz", "i"))?;
+		writeln!(s, "    jq            : {}", Self::process_output("jq", "--version"))?;
 
 		writeln!(s, "\nClipboard")?;
 		#[rustfmt::skip]

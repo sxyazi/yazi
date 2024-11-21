@@ -58,7 +58,7 @@ pub fn spot(
 
 		if let Err(e) = result {
 			if !e.to_string().contains("Spot task cancelled") {
-				error!("{e:?}");
+				error!("{e}");
 			}
 		}
 	});
