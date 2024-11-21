@@ -190,8 +190,11 @@ rules = [
 	{ mime = "{audio,video}/*", fg = "magenta" },
 
 	# Archives
-	{ mime = "application/{,g}zip", fg = "red" },
-	{ mime = "application/{tar,bzip*,7z-compressed,xz,rar}", fg = "red" },
+	{ mime = "application/{zip,gzip,zstd,zlib,arj}", fg = "red" },
+	{ mime = "application/{zip,gzip,x}-compressed", fg = "red" },
+	{ mime = "application/x-{rar,tar,xz,bzip*,lzma,compress,archive,cpio,arj,deflate,xar}", fg = "red" },
+	{ mime = "application/x-{zip,rar,7z,gzip,arj}-compressed", fg = "red" },
+	{ mime = "application/vnd.ms-cab-compressed", fg = "red" },
 
 	# Documents
 	{ mime = "application/{pdf,doc,rtf,vnd.*}", fg = "cyan" },
