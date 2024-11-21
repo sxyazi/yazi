@@ -41,6 +41,6 @@ function M:preload()
 	return status and status.success and 1 or 2
 end
 
-function M:spot(args) require("file"):spot(args) end
+function M:spot(job) require("file"):spot(job) end
 
 return M

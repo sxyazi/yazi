@@ -40,6 +40,6 @@ function M:seek(units)
 	end
 end
 
-function M:spot(args) require("file"):spot(args) end
+function M:spot(job) require("file"):spot(job) end
 
 return M

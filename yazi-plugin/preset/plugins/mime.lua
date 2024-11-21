@@ -3,15 +3,15 @@ local SUPPORTED_TYPES = "application/audio/biosig/chemical/font/image/inode/mess
 local M = {}
 
 local function match_mimetype(s)
-	local type, sub = s:match("([-a-z]+/)([+-.a-zA-Z0-9]+)%s*$")
-	if type and sub and SUPPORTED_TYPES:find(type, 1, true) then
-		return type .. sub
+	local type, sub = s:match("^([-a-z]+/)([+-.a-zA-Z0-9]+)%s*$")
+	if type and sub and SUPPORTED_TYPES:find(type, 1, true)  then
+		return type:gsub("^x%-", "", 1) .. sub:gsub("^x%-", "", 1)
 	end
 end
 
-function M:fetch(args)
+function M:fetch(job)
 	local urls = {}
-	for _, file in ipairs(args.files) do
+	for _, file in ipairs(job.files) do
 		urls[#urls + 1] = tostring(file.url)
 	end
 
@@ -44,9 +44,7 @@ function M:fetch(args)
 		end
 
 		valid = match_mimetype(line)
-		if valid and line:find(valid, 1, true) ~= 1 then
-			goto continue
-		elseif valid then
+		if valid then
 			j, updates[urls[i]] = j + 1, valid
 			flush(false)
 		end
