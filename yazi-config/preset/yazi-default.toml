@@ -67,7 +67,7 @@ rules = [
 	# Media
 	{ mime = "{audio,video}/*", use = [ "play", "reveal" ] },
 	# Archive
-	{ mime = "application/{zip,rar,tar,gzip,xz,zstd,bzip*,zlib,lzma,compress,compressed,archive,cpio,arj,deflate,xar}", use = [ "extract", "reveal" ] },
+	{ mime = "application/{zip,rar,tar,gzip,xz,zstd,bzip*,lzma,compress,compressed,archive,cpio,arj,deflate,xar}", use = [ "extract", "reveal" ] },
 	{ mime = "application/{zip,rar,7z,gzip,arj}-compressed", use = [ "extract", "reveal" ] },
 	{ mime = "application/{debian-package,redhat-package-manager,rpm}", use = [ "extract", "reveal" ] },
 	{ mime = "application/vnd.debian.binary-package", use = [ "extract", "reveal" ] },
@@ -137,7 +137,7 @@ previewers = [
 	# PDF
 	{ mime = "application/pdf", run = "pdf" },
 	# Archive
-	{ mime = "application/{zip,rar,tar,gzip,xz,zstd,bzip*,zlib,lzma,compress,compressed,archive,cpio,arj,deflate,xar}", run = "archive" },
+	{ mime = "application/{zip,rar,tar,gzip,xz,zstd,bzip*,lzma,compress,compressed,archive,cpio,arj,deflate,xar}", run = "archive" },
 	{ mime = "application/{zip,rar,7z,gzip,arj}-compressed", run = "archive" },
 	{ mime = "application/{debian-package,redhat-package-manager,rpm}", run = "archive" },
 	{ mime = "application/vnd.debian.binary-package", run = "archive" },
@@ -150,7 +150,7 @@ previewers = [
 	{ mime = "application/{vhd,vmdk}", run = "archive" },
 	{ mime = "application/virtualbox-{vdi,vhd,vhdx,vmdk}", run = "archive" },
 	{ mime = "application/{ms-wim,apple-diskimage}", run = "archive" },
-	{ name = "*.{fat,ext,ext2,ext3,ext4,squashfs,ntfs,hfs,hfsx,img}", run = "archive" },
+	{ name = "*.{dmg,DMG,img,fat,ext,ext2,ext3,ext4,squashfs,ntfs,hfs,hfsx}", run = "archive" },
 	# Font
 	{ mime = "font/*", run = "font" },
 	{ mime = "application/ms-opentype", run = "font" },
