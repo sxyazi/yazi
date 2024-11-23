@@ -65,8 +65,8 @@ impl UserData for Gauge {
 			Ok(ud)
 		});
 
-		methods.add_function_mut("label", |_, (ud, label): (AnyUserData, Span)| {
-			ud.borrow_mut::<Self>()?.label = Some(label.0);
+		methods.add_function_mut("label", |_, (ud, label): (AnyUserData, Value)| {
+			ud.borrow_mut::<Self>()?.label = Some(Span::try_from(label)?.0);
 			Ok(ud)
 		});
 

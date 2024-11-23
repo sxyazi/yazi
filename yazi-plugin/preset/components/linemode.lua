@@ -8,58 +8,58 @@ Linemode = {
 
 function Linemode:new(file) return setmetatable({ _file = file }, { __index = self }) end
 
-function Linemode:space() return ui.Line(" ") end
+function Linemode:space() return " " end
 
 function Linemode:solo()
 	local mode = cx.active.pref.linemode
 	if mode == "none" or mode == "solo" then
-		return ui.Line("")
+		return ""
 	elseif not self[mode] then
-		return ui.Line(" " .. mode)
+		return " " .. mode
 	else
-		local line = self[mode](self)
-		return line:visible() and ui.Line { ui.Span(" "), line } or line
+		local line = ui.Line(self[mode](self))
+		return line:visible() and ui.Line { " ", line } or line
 	end
 end
 
 function Linemode:size()
 	local size = self._file:size()
 	if size then
-		return ui.Line(ya.readable_size(size))
+		return ya.readable_size(size)
 	else
 		local folder = cx.active:history(self._file.url)
-		return ui.Line(folder and tostring(#folder.files) or "")
+		return folder and tostring(#folder.files) or ""
 	end
 end
 
 function Linemode:btime()
 	local time = math.floor(self._file.cha.btime or 0)
 	if time == 0 then
-		return ui.Line("")
+		return ""
 	elseif os.date("%Y", time) == os.date("%Y") then
-		return ui.Line(os.date("%m/%d %H:%M", time))
+		return os.date("%m/%d %H:%M", time)
 	else
-		return ui.Line(os.date("%m/%d  %Y", time))
+		return os.date("%m/%d  %Y", time)
 	end
 end
 
 function Linemode:mtime()
 	local time = math.floor(self._file.cha.mtime or 0)
 	if time == 0 then
-		return ui.Line("")
+		return ""
 	elseif os.date("%Y", time) == os.date("%Y") then
-		return ui.Line(os.date("%m/%d %H:%M", time))
+		return os.date("%m/%d %H:%M", time)
 	else
-		return ui.Line(os.date("%m/%d  %Y", time))
+		return os.date("%m/%d  %Y", time)
 	end
 end
 
-function Linemode:permissions() return ui.Line(self._file.cha:perm() or "") end
+function Linemode:permissions() return self._file.cha:perm() or "" end
 
 function Linemode:owner()
 	local user = self._file.cha.uid and ya.user_name(self._file.cha.uid) or self._file.cha.uid
 	local group = self._file.cha.gid and ya.group_name(self._file.cha.gid) or self._file.cha.gid
-	return ui.Line(string.format("%s:%s", user or "-", group or "-"))
+	return string.format("%s:%s", user or "-", group or "-")
 end
 
 function Linemode:redraw()

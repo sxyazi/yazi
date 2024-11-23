@@ -24,7 +24,7 @@ end
 function Header:cwd()
 	local max = self._area.w - self._right_width
 	if max <= 0 then
-		return ui.Span("")
+		return ""
 	end
 
 	local s = ya.readable_path(tostring(self._current.cwd)) .. self:flags()
@@ -65,7 +65,7 @@ function Header:count()
 	end
 
 	if count == 0 then
-		return ui.Line {}
+		return ""
 	end
 
 	return ui.Line {
@@ -77,7 +77,7 @@ end
 function Header:tabs()
 	local tabs = #cx.tabs
 	if tabs == 1 then
-		return ui.Line {}
+		return ""
 	end
 
 	local spans = {}
