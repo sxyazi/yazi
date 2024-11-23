@@ -3,7 +3,7 @@ use mlua::{ExternalError, ExternalResult, Function, IntoLua, IntoLuaMulti, Lua, 
 use tokio::fs;
 use yazi_shared::fs::remove_dir_clean;
 
-use crate::{bindings::{Cast, Cha}, file::File, url::{Url, UrlRef}};
+use crate::{Error, bindings::{Cast, Cha}, file::File, url::{Url, UrlRef}};
 
 pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 	let index = lua.create_function(|lua, (ts, key): (Table, mlua::String)| {
@@ -37,7 +37,7 @@ fn cha(lua: &Lua) -> mlua::Result<Function> {
 
 		match meta {
 			Ok(m) => (Cha::from(m), Value::Nil).into_lua_multi(&lua),
-			Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(&lua),
+			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
 }
@@ -46,7 +46,7 @@ fn write(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (url, data): (UrlRef, mlua::String)| async move {
 		match fs::write(&*url, data.as_bytes()).await {
 			Ok(_) => (true, Value::Nil).into_lua_multi(&lua),
-			Err(e) => (false, e.raw_os_error()).into_lua_multi(&lua),
+			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
 }
@@ -63,7 +63,7 @@ fn remove(lua: &Lua) -> mlua::Result<Function> {
 
 		match result {
 			Ok(_) => (true, Value::Nil).into_lua_multi(&lua),
-			Err(e) => (false, e.raw_os_error()).into_lua_multi(&lua),
+			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
 }
@@ -90,7 +90,7 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 
 		let mut it = match fs::read_dir(&*dir).await {
 			Ok(it) => it,
-			Err(e) => return (Value::Nil, e.raw_os_error()).into_lua_multi(&lua),
+			Err(e) => return (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		};
 
 		let mut files = vec![];
@@ -128,7 +128,7 @@ fn unique_name(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, url: UrlRef| async move {
 		match yazi_shared::fs::unique_name(url.clone(), async { false }).await {
 			Ok(u) => (Url::cast(&lua, u)?, Value::Nil).into_lua_multi(&lua),
-			Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(&lua),
+			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
 }
