@@ -25,9 +25,9 @@ impl Manager {
 			Cow::Owned(self.mimetype.get_owned(&hovered.url).unwrap_or_default())
 		};
 
-		if !self.active().spot.same_file(&hovered, &mime) {
-			// self.active_mut().spot.reset();
-		}
+		// if !self.active().spot.same_file(&hovered, &mime) {
+		// self.active_mut().spot.reset();
+		// }
 
 		if let Some(skip) = opt.skip {
 			self.active_mut().spot.skip = skip;

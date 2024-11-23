@@ -2,7 +2,6 @@ use std::borrow::Cow;
 
 use tokio_util::sync::CancellationToken;
 use yazi_config::PLUGIN;
-use yazi_macro::render;
 use yazi_plugin::{isolate, utils::SpotLock};
 use yazi_shared::fs::{File, Url};
 
@@ -23,9 +22,10 @@ impl Spot {
 		}
 
 		let Some(spotter) = PLUGIN.spotter(&file.url, &mime) else {
-			return self.reset();
+			return self.close(());
 		};
 
+		self.abort();
 		self.ct = Some(isolate::spot(&spotter.run, file, mime, self.skip));
 	}
 
@@ -33,10 +33,7 @@ impl Spot {
 	pub fn visible(&self) -> bool { self.lock.is_some() }
 
 	#[inline]
-	pub fn reset(&mut self) {
-		self.ct.take().map(|ct| ct.cancel());
-		render!(self.lock.take().is_some());
-	}
+	pub fn abort(&mut self) { self.ct.take().map(|ct| ct.cancel()); }
 
 	#[inline]
 	pub fn same_url(&self, url: &Url) -> bool { self.lock.as_ref().is_some_and(|l| *url == l.url) }

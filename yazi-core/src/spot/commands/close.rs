@@ -15,7 +15,7 @@ impl From<()> for Opt {
 impl Spot {
 	#[yazi_codegen::command]
 	pub fn close(&mut self, _: Opt) {
-		self.ct.take().map(|h| h.cancel());
+		self.abort();
 		render!(self.lock.take().is_some());
 	}
 }

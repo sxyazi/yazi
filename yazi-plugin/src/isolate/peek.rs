@@ -28,8 +28,8 @@ pub fn peek(
 			let lua = slim_lua(&name)?;
 			lua.set_hook(
 				HookTriggers::new().on_calls().on_returns().every_nth_instruction(2000),
-				move |_, _| {
-					if ct1.is_cancelled() {
+				move |_, dbg| {
+					if ct1.is_cancelled() && dbg.source().what != "C" {
 						Err("Peek task cancelled".into_lua_err())
 					} else {
 						Ok(VmState::Continue)

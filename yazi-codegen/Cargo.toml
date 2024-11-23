@@ -13,5 +13,5 @@ proc-macro = true
 
 [dependencies]
 # External dependencies
-syn   = "2.0.87"
+syn   = "2.0.89"
 quote = "1.0.37"
