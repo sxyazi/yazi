@@ -64,7 +64,7 @@ function M.spawn_7z(args)
 	end
 
 	if not child then
-		return ya.err("Both `7z` and `7zz` failed, error code: " .. tostring(last_error))
+		return ya.err("Starting both `7z` and `7zz` failed, error code: " .. tostring(last_error))
 	end
 	return child, last_error
 end
