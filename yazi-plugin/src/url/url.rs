@@ -63,13 +63,7 @@ impl Url {
 				lua.create_string(me.as_os_str().as_encoded_bytes())
 			});
 			reg.add_meta_method(MetaMethod::Concat, |lua, lhs, rhs: mlua::String| {
-				let me = lhs.as_os_str().as_encoded_bytes();
-				let other = rhs.as_bytes();
-
-				let mut out = Vec::with_capacity(me.len() + other.len());
-				out.extend_from_slice(me);
-				out.extend_from_slice(&other);
-				lua.create_string(out)
+				lua.create_string([lhs.as_os_str().as_encoded_bytes(), rhs.as_bytes().as_ref()].concat())
 			});
 		})
 	}
