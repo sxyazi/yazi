@@ -16,9 +16,9 @@ function M:fetch(job)
 	end
 
 	local cmd = os.getenv("YAZI_FILE_ONE") or "file"
-	local child, code = Command(cmd):args({ "-bL", "--mime-type", "--" }):args(urls):stdout(Command.PIPED):spawn()
+	local child, err = Command(cmd):args({ "-bL", "--mime-type", "--" }):args(urls):stdout(Command.PIPED):spawn()
 	if not child then
-		ya.err(string.format("Starting `%s` failed with error code %s", cmd, code))
+		ya.err(string.format("Failed to start `%s`, error: %s", cmd, err))
 		return 0
 	end
 

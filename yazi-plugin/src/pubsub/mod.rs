@@ -1,6 +1,6 @@
 #![allow(clippy::module_inception)]
 
-use mlua::{IntoLua, Lua, Table, Value};
+use mlua::{IntoLua, Lua, MetaMethod, Table, Value};
 
 yazi_macro::mod_flat!(pubsub);
 
@@ -22,7 +22,7 @@ pub(super) fn compose(lua: &Lua) -> mlua::Result<Table> {
 	})?;
 
 	let ps = lua.create_table_with_capacity(0, 10)?;
-	ps.set_metatable(Some(lua.create_table_from([("__index", index)])?));
+	ps.set_metatable(Some(lua.create_table_from([(MetaMethod::Index.name(), index)])?));
 
 	Ok(ps)
 }

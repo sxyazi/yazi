@@ -9,7 +9,7 @@ function M:peek()
 		return ya.preview_widgets(self, {
 			ui.Text(
 				code == 2 and "File list in this archive is encrypted"
-					or "Starting both `7z` and `7zz` failed. Do you have 7-zip installed?"
+					or "Failed to start both `7z` and `7zz`. Do you have 7-zip installed?"
 			):area(self.area),
 		})
 	end
@@ -46,12 +46,12 @@ end
 function M:seek(units) require("code").seek(self, units) end
 
 function M.spawn_7z(args)
-	local last_error = nil
+	local last_err = nil
 	local try = function(name)
 		local stdout = args[1] == "l" and Command.PIPED or Command.NULL
-		local child, code = Command(name):args(args):stdout(stdout):stderr(Command.PIPED):spawn()
+		local child, err = Command(name):args(args):stdout(stdout):stderr(Command.PIPED):spawn()
 		if not child then
-			last_error = code
+			last_err = err
 		end
 		return child
 	end
@@ -64,9 +64,9 @@ function M.spawn_7z(args)
 	end
 
 	if not child then
-		return ya.err("Starting both `7z` and `7zz` failed, error code: " .. tostring(last_error))
+		return ya.err("Failed to start both `7z` and `7zz`, error: " .. last_err)
 	end
-	return child, last_error
+	return child, last_err
 end
 
 ---List files in an archive

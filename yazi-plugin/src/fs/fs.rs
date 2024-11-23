@@ -1,9 +1,9 @@
 use globset::GlobBuilder;
-use mlua::{ExternalError, ExternalResult, Function, IntoLua, IntoLuaMulti, Lua, Table, Value};
+use mlua::{ExternalError, ExternalResult, Function, IntoLua, IntoLuaMulti, Lua, MetaMethod, Table, Value};
 use tokio::fs;
 use yazi_shared::fs::remove_dir_clean;
 
-use crate::{bindings::{Cast, Cha}, file::File, url::{Url, UrlRef}};
+use crate::{Error, bindings::{Cast, Cha}, file::File, url::{Url, UrlRef}};
 
 pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 	let index = lua.create_function(|lua, (ts, key): (Table, mlua::String)| {
@@ -22,7 +22,7 @@ pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 	})?;
 
 	let fs = lua.create_table_with_capacity(0, 10)?;
-	fs.set_metatable(Some(lua.create_table_from([("__index", index)])?));
+	fs.set_metatable(Some(lua.create_table_from([(MetaMethod::Index.name(), index)])?));
 
 	Ok(fs)
 }
@@ -37,7 +37,7 @@ fn cha(lua: &Lua) -> mlua::Result<Function> {
 
 		match meta {
 			Ok(m) => (Cha::from(m), Value::Nil).into_lua_multi(&lua),
-			Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(&lua),
+			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
 }
@@ -46,24 +46,24 @@ fn write(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (url, data): (UrlRef, mlua::String)| async move {
 		match fs::write(&*url, data.as_bytes()).await {
 			Ok(_) => (true, Value::Nil).into_lua_multi(&lua),
-			Err(e) => (false, e.raw_os_error()).into_lua_multi(&lua),
+			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
 }
 
 fn remove(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (type_, url): (mlua::String, UrlRef)| async move {
-		let result = match &*type_.to_str()? {
-			"file" => fs::remove_file(&*url).await,
-			"dir" => fs::remove_dir(&*url).await,
-			"dir_all" => fs::remove_dir_all(&*url).await,
-			"dir_clean" => Ok(remove_dir_clean(&url).await),
+		let result = match type_.as_bytes().as_ref() {
+			b"file" => fs::remove_file(&*url).await,
+			b"dir" => fs::remove_dir(&*url).await,
+			b"dir_all" => fs::remove_dir_all(&*url).await,
+			b"dir_clean" => Ok(remove_dir_clean(&url).await),
 			_ => Err("Removal type must be 'file', 'dir', 'dir_all', or 'dir_clean'".into_lua_err())?,
 		};
 
 		match result {
 			Ok(_) => (true, Value::Nil).into_lua_multi(&lua),
-			Err(e) => (false, e.raw_os_error()).into_lua_multi(&lua),
+			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
 }
@@ -90,7 +90,7 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 
 		let mut it = match fs::read_dir(&*dir).await {
 			Ok(it) => it,
-			Err(e) => return (Value::Nil, e.raw_os_error()).into_lua_multi(&lua),
+			Err(e) => return (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		};
 
 		let mut files = vec![];
@@ -128,7 +128,7 @@ fn unique_name(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, url: UrlRef| async move {
 		match yazi_shared::fs::unique_name(url.clone(), async { false }).await {
 			Ok(u) => (Url::cast(&lua, u)?, Value::Nil).into_lua_multi(&lua),
-			Err(e) => (Value::Nil, e.raw_os_error()).into_lua_multi(&lua),
+			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
 }

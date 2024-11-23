@@ -1,4 +1,4 @@
-use mlua::{IntoLua, Lua, LuaSerdeExt, SerializeOptions, Table, Value};
+use mlua::{IntoLua, Lua, LuaSerdeExt, MetaMethod, SerializeOptions, Table, Value};
 use yazi_boot::BOOT;
 use yazi_config::{MANAGER, PREVIEW, THEME};
 
@@ -50,7 +50,7 @@ impl<'a> Config<'a> {
 		})?;
 
 		let fetcher = self.lua.create_table()?;
-		fetcher.set_metatable(Some(self.lua.create_table_from([("__index", index)])?));
+		fetcher.set_metatable(Some(self.lua.create_table_from([(MetaMethod::Index.name(), index)])?));
 
 		self.lua.globals().raw_set("PLUGIN", fetcher)?;
 		Ok(self)

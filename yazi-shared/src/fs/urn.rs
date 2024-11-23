@@ -16,7 +16,7 @@ impl Urn {
 	#[cfg(unix)]
 	#[inline]
 	pub fn is_hidden(&self) -> bool {
-		self.name().map_or(false, |s| s.as_encoded_bytes().starts_with(b"."))
+		self.name().is_some_and(|s| s.as_encoded_bytes().starts_with(b"."))
 	}
 }
 

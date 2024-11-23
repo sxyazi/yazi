@@ -18,7 +18,7 @@ pub async fn maybe_exists(p: impl AsRef<Path>) -> bool {
 
 #[inline]
 pub async fn must_be_dir(p: impl AsRef<Path>) -> bool {
-	fs::metadata(p).await.map_or(false, |m| m.is_dir())
+	fs::metadata(p).await.is_ok_and(|m| m.is_dir())
 }
 
 #[inline]

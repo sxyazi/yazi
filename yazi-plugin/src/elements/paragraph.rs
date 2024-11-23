@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use mlua::{FromLua, Lua, MultiValue, Table, Value};
+use mlua::{FromLua, Lua, MetaMethod, MultiValue, Table, Value};
 
 use super::Rect;
 use crate::RtRef;
@@ -34,7 +34,7 @@ impl Paragraph {
 	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 		let mt = lua.create_table_from([
 			(
-				"__call",
+				MetaMethod::Call.name(),
 				lua.create_function(|lua, (_, area, lines): (Table, Rect, Value)| {
 					warn_deprecated(lua.named_registry_value::<RtRef>("rt")?.current());
 					lua
@@ -45,7 +45,7 @@ impl Paragraph {
 				})?,
 			),
 			(
-				"__index",
+				MetaMethod::Index.name(),
 				lua.create_function(|lua, (_, key): (Table, mlua::String)| {
 					warn_deprecated(lua.named_registry_value::<RtRef>("rt")?.current());
 					lua
