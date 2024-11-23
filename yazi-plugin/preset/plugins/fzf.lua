@@ -10,7 +10,7 @@ local function entry()
 		Command("fzf"):cwd(cwd):stdin(Command.INHERIT):stdout(Command.PIPED):stderr(Command.INHERIT):spawn()
 
 	if not child then
-		return fail("Spawn `fzf` failed with error code %s. Do you have it installed?", err)
+		return fail("Starting `fzf` failed with error code %s. Do you have it installed?", err)
 	end
 
 	local output, err = child:wait_with_output()

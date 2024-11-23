@@ -91,7 +91,7 @@ impl Ueberzug {
 			.spawn();
 
 		if let Err(ref e) = result {
-			warn!("ueberzugpp spawning failed: {e}");
+			warn!("Failed to start ueberzugpp: {e}");
 		}
 		Ok(result?)
 	}

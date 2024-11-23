@@ -7,8 +7,10 @@ function M:peek()
 	local files, bound, code = self.list_files({ "-p", tostring(self.file.url) }, self.skip, limit)
 	if code ~= 0 then
 		return ya.preview_widgets(self, {
-			ui.Text(code == 2 and "File list in this archive is encrypted" or "Spawn `7z` and `7zz` both commands failed")
-				:area(self.area),
+			ui.Text(
+				code == 2 and "File list in this archive is encrypted"
+					or "Starting both `7z` and `7zz` failed. Do you have 7-zip installed?"
+			):area(self.area),
 		})
 	end
 
@@ -62,7 +64,7 @@ function M.spawn_7z(args)
 	end
 
 	if not child then
-		return ya.err("spawn `7z` and `7zz` both commands failed, error code: " .. tostring(last_error))
+		return ya.err("Starting both `7z` and `7zz` failed, error code: " .. tostring(last_error))
 	end
 	return child, last_error
 end

@@ -101,7 +101,7 @@ local function entry()
 		:spawn()
 
 	if not child then
-		return fail("Spawn `zoxide` failed with error code %s. Do you have it installed?", err)
+		return fail("Starting `zoxide` failed with error code %s. Do you have it installed?", err)
 	end
 
 	local output, err = child:wait_with_output()
