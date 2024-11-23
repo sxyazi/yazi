@@ -48,7 +48,7 @@ end
 function Status:size()
 	local h = self._current.hovered
 	if not h then
-		return ui.Line {}
+		return ""
 	end
 
 	local style = self:style()
@@ -61,21 +61,21 @@ end
 function Status:name()
 	local h = self._current.hovered
 	if not h then
-		return ui.Line {}
+		return ""
 	end
 
-	return ui.Line(" " .. h.name:gsub("\r", "?", 1))
+	return " " .. h.name:gsub("\r", "?", 1)
 end
 
 function Status:perm()
 	local h = self._current.hovered
 	if not h then
-		return ui.Line {}
+		return ""
 	end
 
 	local perm = h.cha:perm()
 	if not perm then
-		return ui.Line {}
+		return ""
 	end
 
 	local spans = {}

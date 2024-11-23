@@ -12,14 +12,14 @@ Entity = {
 
 function Entity:new(file) return setmetatable({ _file = file }, { __index = self }) end
 
-function Entity:space() return ui.Line(" ") end
+function Entity:space() return " " end
 
 function Entity:icon()
 	local icon = self._file:icon()
 	if not icon then
-		return ui.Line("")
+		return ""
 	elseif self._file:is_hovered() then
-		return ui.Line(icon.text .. " ")
+		return icon.text .. " "
 	else
 		return ui.Line(icon.text .. " "):style(icon.style)
 	end
@@ -27,53 +27,53 @@ end
 
 function Entity:prefix()
 	local prefix = self._file:prefix() or ""
-	return ui.Line(prefix ~= "" and prefix .. "/" or "")
+	return prefix ~= "" and prefix .. "/" or ""
 end
 
 function Entity:highlights()
 	local name = self._file.name:gsub("\r", "?", 1)
 	local highlights = self._file:highlights()
 	if not highlights or #highlights == 0 then
-		return ui.Line(name)
+		return name
 	end
 
 	local spans, last = {}, 0
 	for _, h in ipairs(highlights) do
 		if h[1] > last then
-			spans[#spans + 1] = ui.Span(name:sub(last + 1, h[1]))
+			spans[#spans + 1] = name:sub(last + 1, h[1])
 		end
 		spans[#spans + 1] = ui.Span(name:sub(h[1] + 1, h[2])):style(THEME.manager.find_keyword)
 		last = h[2]
 	end
 	if last < #name then
-		spans[#spans + 1] = ui.Span(name:sub(last + 1))
+		spans[#spans + 1] = name:sub(last + 1)
 	end
 	return ui.Line(spans)
 end
 
 function Entity:found()
 	if not self._file:is_hovered() then
-		return ui.Line {}
+		return ""
 	end
 
 	local found = self._file:found()
 	if not found then
-		return ui.Line {}
+		return ""
 	end
 
 	return ui.Line {
-		ui.Span("  "),
+		"  ",
 		ui.Span(string.format("[%d/%d]", found[1] + 1, found[2])):style(THEME.manager.find_position),
 	}
 end
 
 function Entity:symlink()
 	if not MANAGER.show_symlink then
-		return ui.Line {}
+		return ""
 	end
 
 	local to = self._file.link_to
-	return to and ui.Line(" -> " .. tostring(to)):italic() or ui.Line {}
+	return to and ui.Span(string.format(" -> %s", to)):italic() or ""
 end
 
 function Entity:redraw()

@@ -21,9 +21,9 @@ function M:peek()
 		}):icon()
 
 		if icon then
-			paths[#paths + 1] = ui.Line { ui.Span(" " .. icon.text .. " "):style(icon.style), ui.Span(f.path) }
+			paths[#paths + 1] = ui.Line { ui.Span(" " .. icon.text .. " "):style(icon.style), f.path }
 		else
-			paths[#paths + 1] = ui.Line(f.path)
+			paths[#paths + 1] = f.path
 		end
 
 		if f.size > 0 then

@@ -16,7 +16,7 @@ function M:peek()
 			if i > self.skip + limit then
 				break
 			elseif i > self.skip then
-				lines[#lines + 1] = ui.Line(line)
+				lines[#lines + 1] = line
 			end
 		end
 	end)
