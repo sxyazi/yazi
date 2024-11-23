@@ -40,7 +40,7 @@ function M:preload()
 	}):spawn()
 
 	if not child then
-		ya.err("Starting `magick` failed, error: " .. err)
+		ya.err("Failed to start `magick`, error: " .. err)
 		return 0
 	end
 

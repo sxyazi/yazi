@@ -62,7 +62,7 @@ function M:preload()
 	}):spawn()
 
 	if not child then
-		ya.err("Starting `ffmpeg` failed, error: " .. err)
+		ya.err("Failed to start `ffmpeg`, error: " .. err)
 		return 0
 	end
 
@@ -116,14 +116,14 @@ function M.list_meta(url, entries)
 	local output, err =
 		Command("ffprobe"):args({ "-v", "quiet", "-show_entries", entries, "-of", "json=c=1", tostring(url) }):output()
 	if not output then
-		return nil, Err("Spawn `ffprobe` process returns %s", err)
+		return nil, Err("Failed to start `ffprobe`, error: " .. err)
 	end
 
 	local t = ya.json_decode(output.stdout)
 	if not t then
-		return nil, Err("Failed to decode `ffprobe` output: %s", output.stdout)
+		return nil, Err("Failed to decode `ffprobe` output: " .. output.stdout)
 	elseif type(t) ~= "table" then
-		return nil, Err("Invalid `ffprobe` output: %s", output.stdout)
+		return nil, Err("Invalid `ffprobe` output: " .. output.stdout)
 	end
 
 	t.format = t.format or {}

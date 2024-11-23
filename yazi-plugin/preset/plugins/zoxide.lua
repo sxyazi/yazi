@@ -101,7 +101,7 @@ local function entry()
 		:spawn()
 
 	if not child then
-		return fail("Starting `zoxide` failed, error: " .. err)
+		return fail("Failed to start `zoxide`, error: " .. err)
 	end
 
 	local output, err = child:wait_with_output()

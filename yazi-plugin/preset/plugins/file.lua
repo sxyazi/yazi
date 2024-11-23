@@ -2,13 +2,13 @@ local M = {}
 
 function M:peek()
 	local cmd = os.getenv("YAZI_FILE_ONE") or "file"
-	local output, code = Command(cmd):args({ "-bL", "--", tostring(self.file.url) }):stdout(Command.PIPED):output()
+	local output, err = Command(cmd):args({ "-bL", "--", tostring(self.file.url) }):stdout(Command.PIPED):output()
 
 	local text
 	if output then
 		text = ui.Text.parse("----- File Type Classification -----\n\n" .. output.stdout)
 	else
-		text = ui.Text(string.format("Starting `%s` failed with error code %s. Do you have file(1) installed?", cmd, code))
+		text = ui.Text(string.format("Failed to start `%s`, error: %s", cmd, err))
 	end
 
 	ya.preview_widgets(self, { text:area(self.area):wrap(ui.Text.WRAP) })

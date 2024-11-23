@@ -9,7 +9,7 @@ function M:peek()
 		return ya.preview_widgets(self, {
 			ui.Text(
 				code == 2 and "File list in this archive is encrypted"
-					or "Starting both `7z` and `7zz` failed. Do you have 7-zip installed?"
+					or "Failed to start both `7z` and `7zz`. Do you have 7-zip installed?"
 			):area(self.area),
 		})
 	end
@@ -64,7 +64,7 @@ function M.spawn_7z(args)
 	end
 
 	if not child then
-		return ya.err("Starting both `7z` and `7zz` failed, error: " .. last_err)
+		return ya.err("Failed to start both `7z` and `7zz`, error: " .. last_err)
 	end
 	return child, last_err
 end
