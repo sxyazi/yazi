@@ -50,7 +50,7 @@ function M:try_with(from, pwd, to)
 	local archive = require("archive")
 	local child, code = archive.spawn_7z { "x", "-aou", "-sccUTF-8", "-p" .. pwd, "-o" .. tostring(tmp), tostring(from) }
 	if not child then
-		fail("Spawn `7z` and `7zz` both commands failed, error code %s", code)
+		fail("Both `7z` and `7zz` commands failed with error code %s.\nDo you have 7-zip installed?", code)
 	end
 
 	local output, err = child:wait_with_output()

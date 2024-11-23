@@ -8,7 +8,7 @@ function M:peek()
 	if output then
 		text = ui.Text.parse("----- File Type Classification -----\n\n" .. output.stdout)
 	else
-		text = ui.Text(string.format("Spawn `%s` command returns %s", cmd, code))
+		text = ui.Text(string.format("`%s` command returns %s", cmd, code))
 	end
 
 	ya.preview_widgets(self, { text:area(self.area):wrap(ui.Text.WRAP) })
