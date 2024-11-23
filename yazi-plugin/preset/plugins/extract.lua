@@ -48,9 +48,9 @@ function M:try_with(from, pwd, to)
 	end
 
 	local archive = require("archive")
-	local child, code = archive.spawn_7z { "x", "-aou", "-sccUTF-8", "-p" .. pwd, "-o" .. tostring(tmp), tostring(from) }
+	local child, err = archive.spawn_7z { "x", "-aou", "-sccUTF-8", "-p" .. pwd, "-o" .. tostring(tmp), tostring(from) }
 	if not child then
-		fail("Starting both `7z` and `7zz` failed, error code %s. Do you have 7-zip installed?", code)
+		fail("Starting both `7z` and `7zz` failed, error: " .. err)
 	end
 
 	local output, err = child:wait_with_output()

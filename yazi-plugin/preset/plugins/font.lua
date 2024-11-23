@@ -21,7 +21,7 @@ function M:preload()
 		return 1
 	end
 
-	local child, code = Command("magick"):args({
+	local child, err = Command("magick"):args({
 		"-size",
 		"800x560",
 		"-gravity",
@@ -40,7 +40,7 @@ function M:preload()
 	}):spawn()
 
 	if not child then
-		ya.err(string.format("Starting `magick` failed with error code %s", code))
+		ya.err("Starting `magick` failed, error: " .. err)
 		return 0
 	end
 

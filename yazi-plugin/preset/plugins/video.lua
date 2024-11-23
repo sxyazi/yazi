@@ -49,7 +49,7 @@ function M:preload()
 	local ss = math.floor(meta.format.duration * percent / 100)
 	local qv = 31 - math.floor(PREVIEW.image_quality * 0.3)
 	-- stylua: ignore
-	local child, code = Command("ffmpeg"):args({
+	local child, err = Command("ffmpeg"):args({
 		"-v", "quiet", "-hwaccel", "auto",
 		"-skip_frame", "nokey", "-ss", ss,
 		"-an", "-sn", "-dn",
@@ -62,7 +62,7 @@ function M:preload()
 	}):spawn()
 
 	if not child then
-		ya.err("Starting `ffmpeg` failed with error code " .. tostring(code))
+		ya.err("Starting `ffmpeg` failed, error: " .. err)
 		return 0
 	end
 
