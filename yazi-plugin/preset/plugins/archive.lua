@@ -9,7 +9,7 @@ function M:peek()
 		return ya.preview_widgets(self, {
 			ui.Text(
 				code == 2 and "File list in this archive is encrypted"
-					or "Both `7z` and `7zz` commands failed to run.\nDo you have 7-zip installed?"
+					or "Starting both `7z` and `7zz` failed. Do you have 7-zip installed?"
 			):area(self.area),
 		})
 	end

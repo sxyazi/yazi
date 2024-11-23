@@ -62,7 +62,7 @@ function M:preload()
 	}):spawn()
 
 	if not child then
-		ya.err("`ffmpeg` command returns " .. tostring(code))
+		ya.err("Starting `ffmpeg` failed with error code " .. tostring(code))
 		return 0
 	end
 
