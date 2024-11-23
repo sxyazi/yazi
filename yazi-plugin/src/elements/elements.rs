@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, IntoLua, Lua, Table, Value};
+use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, Value};
 use tracing::error;
 
 use super::Renderable;
@@ -34,7 +34,7 @@ pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 	})?;
 
 	let ui = lua.create_table_with_capacity(0, 20)?;
-	ui.set_metatable(Some(lua.create_table_from([("__index", index)])?));
+	ui.set_metatable(Some(lua.create_table_from([(MetaMethod::Index.name(), index)])?));
 
 	Ok(ui)
 }

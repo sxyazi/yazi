@@ -1,4 +1,4 @@
-use mlua::{IntoLua, Lua, Table, Value};
+use mlua::{IntoLua, Lua, MetaMethod, Table, Value};
 
 pub(super) struct Utils;
 
@@ -83,7 +83,7 @@ pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Table> {
 	})?;
 
 	let ya = lua.create_table_with_capacity(0, 40)?;
-	ya.set_metatable(Some(lua.create_table_from([("__index", index)])?));
+	ya.set_metatable(Some(lua.create_table_from([(MetaMethod::Index.name(), index)])?));
 
 	Ok(ya)
 }

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use mlua::{ExternalResult, Function, IntoLua, Lua, MultiValue, ObjectLike, Table, Value};
+use mlua::{ExternalResult, Function, IntoLua, Lua, MetaMethod, MultiValue, ObjectLike, Table, Value};
 
 use super::LOADER;
 use crate::RtRef;
@@ -44,7 +44,7 @@ impl Require {
 		let id: Arc<str> = Arc::from(id);
 		let mt = lua.create_table_from([
 			(
-				"__index",
+				MetaMethod::Index.name(),
 				lua.create_function(move |lua, (ts, key): (Table, mlua::String)| {
 					match ts.raw_get::<Table>("__mod")?.raw_get::<Value>(&key)? {
 						Value::Function(_) => {
@@ -55,7 +55,7 @@ impl Require {
 				})?,
 			),
 			(
-				"__newindex",
+				MetaMethod::NewIndex.name(),
 				lua.create_function(move |_, (ts, key, value): (Table, mlua::String, Value)| {
 					ts.raw_get::<Table>("__mod")?.raw_set(key, value)
 				})?,

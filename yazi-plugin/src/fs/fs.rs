@@ -1,5 +1,5 @@
 use globset::GlobBuilder;
-use mlua::{ExternalError, ExternalResult, Function, IntoLua, IntoLuaMulti, Lua, Table, Value};
+use mlua::{ExternalError, ExternalResult, Function, IntoLua, IntoLuaMulti, Lua, MetaMethod, Table, Value};
 use tokio::fs;
 use yazi_shared::fs::remove_dir_clean;
 
@@ -22,7 +22,7 @@ pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 	})?;
 
 	let fs = lua.create_table_with_capacity(0, 10)?;
-	fs.set_metatable(Some(lua.create_table_from([("__index", index)])?));
+	fs.set_metatable(Some(lua.create_table_from([(MetaMethod::Index.name(), index)])?));
 
 	Ok(fs)
 }
@@ -53,11 +53,11 @@ fn write(lua: &Lua) -> mlua::Result<Function> {
 
 fn remove(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (type_, url): (mlua::String, UrlRef)| async move {
-		let result = match &*type_.to_str()? {
-			"file" => fs::remove_file(&*url).await,
-			"dir" => fs::remove_dir(&*url).await,
-			"dir_all" => fs::remove_dir_all(&*url).await,
-			"dir_clean" => Ok(remove_dir_clean(&url).await),
+		let result = match type_.as_bytes().as_ref() {
+			b"file" => fs::remove_file(&*url).await,
+			b"dir" => fs::remove_dir(&*url).await,
+			b"dir_all" => fs::remove_dir_all(&*url).await,
+			b"dir_clean" => Ok(remove_dir_clean(&url).await),
 			_ => Err("Removal type must be 'file', 'dir', 'dir_all', or 'dir_clean'".into_lua_err())?,
 		};
 
