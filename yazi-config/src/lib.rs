@@ -1,6 +1,6 @@
 #![allow(clippy::module_inception)]
 
-yazi_macro::mod_pub!(keymap log manager open plugin popup preview tasks theme which);
+yazi_macro::mod_pub!(keymap manager open plugin popup preview tasks theme which);
 
 yazi_macro::mod_flat!(layout pattern preset priority);
 
@@ -9,7 +9,6 @@ use std::str::FromStr;
 use yazi_shared::{RoCell, SyncCell, Xdg};
 
 pub static KEYMAP: RoCell<keymap::Keymap> = RoCell::new();
-pub static LOG: RoCell<log::Log> = RoCell::new();
 pub static MANAGER: RoCell<manager::Manager> = RoCell::new();
 pub static OPEN: RoCell<open::Open> = RoCell::new();
 pub static PLUGIN: RoCell<plugin::Plugin> = RoCell::new();
@@ -89,7 +88,6 @@ fn try_init(merge: bool) -> anyhow::Result<()> {
 	};
 
 	let keymap = <_>::from_str(&keymap_toml)?;
-	let log = <_>::from_str(&yazi_toml)?;
 	let manager = <_>::from_str(&yazi_toml)?;
 	let open = <_>::from_str(&yazi_toml)?;
 	let plugin = <_>::from_str(&yazi_toml)?;
@@ -102,7 +100,6 @@ fn try_init(merge: bool) -> anyhow::Result<()> {
 	let which = <_>::from_str(&yazi_toml)?;
 
 	KEYMAP.init(keymap);
-	LOG.init(log);
 	MANAGER.init(manager);
 	OPEN.init(open);
 	PLUGIN.init(plugin);

@@ -1,9 +1,9 @@
-use std::{borrow::Cow, path::PathBuf, str::FromStr, time::{SystemTime, UNIX_EPOCH}};
+use std::{borrow::Cow, path::PathBuf, str::FromStr};
 
 use anyhow::Context;
 use serde::{Deserialize, Deserializer, Serialize};
 use validator::Validate;
-use yazi_shared::fs::expand_path;
+use yazi_shared::{fs::expand_path, timestamp_us};
 
 use super::PreviewWrap;
 use crate::Xdg;
@@ -32,8 +32,7 @@ pub struct Preview {
 impl Preview {
 	#[inline]
 	pub fn tmpfile(&self, prefix: &str) -> PathBuf {
-		let time = SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards");
-		self.cache_dir.join(format!("{prefix}-{}", time.as_nanos() / 1000))
+		self.cache_dir.join(format!("{prefix}-{}", timestamp_us()))
 	}
 
 	#[inline]
