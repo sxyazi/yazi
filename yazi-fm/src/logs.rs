@@ -22,10 +22,10 @@ impl Logs {
 			.with_context(|| format!("failed to create state directory: {state_dir:?}"))?;
 
 		let log_path = state_dir.join("yazi.log");
-		let file = File::create(&log_path)
+		let log_file = File::create(&log_path)
 			.with_context(|| format!("failed to create log file: {log_path:?}"))?;
 
-		let (non_blocking, guard) = tracing_appender::non_blocking(file);
+		let (non_blocking, guard) = tracing_appender::non_blocking(log_file);
 		tracing_subscriber::fmt()
 			.pretty()
 			.with_env_filter(EnvFilter::new(&level))
