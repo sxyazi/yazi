@@ -117,7 +117,9 @@ impl Emulator {
 		execute!(
 			LineWriter::new(stderr()),
 			SavePosition,
-			Print(Mux::csi("\x1b[>q\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[c")),
+			Print(Mux::csi("\x1b[>q")), // Request terminal version
+			Print(Mux::csi("\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\")), // Detect KGP
+			Print(Mux::csi("\x1b[c")),  // Request device attributes
 			RestorePosition
 		)?;
 

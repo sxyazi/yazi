@@ -7,8 +7,7 @@ use crossterm::{cursor::MoveTo, queue};
 use image::DynamicImage;
 use ratatui::layout::Rect;
 
-use super::image::Image;
-use crate::{CLOSE, ESCAPE, Emulator, START, adapter::Adapter};
+use crate::{CLOSE, ESCAPE, Emulator, START, adapter::Adapter, image::Image};
 
 static DIACRITICS: [char; 297] = [
 	'\u{0305}',
@@ -310,10 +309,10 @@ static DIACRITICS: [char; 297] = [
 	'\u{1D244}',
 ];
 
-pub(super) struct Kgp;
+pub(crate) struct Kgp;
 
 impl Kgp {
-	pub(super) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+	pub(crate) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
 		let img = Image::downscale(path, max).await?;
 		let area = Image::pixel_area((img.width(), img.height()), max);
 
@@ -329,7 +328,7 @@ impl Kgp {
 		})
 	}
 
-	pub(super) fn image_erase(area: Rect) -> Result<()> {
+	pub(crate) fn image_erase(area: Rect) -> Result<()> {
 		let s = " ".repeat(area.width as usize);
 		Emulator::move_lock((0, 0), |stderr| {
 			for y in area.top()..area.bottom() {

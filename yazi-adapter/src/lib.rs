@@ -1,8 +1,8 @@
 #![allow(clippy::unit_arg)]
 
-yazi_macro::mod_flat!(
-	adapter chafa dimension emulator iip image info kgp kgp_old mux sixel ueberzug
-);
+yazi_macro::mod_pub!(drivers);
+
+yazi_macro::mod_flat!(adapter dimension emulator image info mux);
 
 use yazi_shared::{RoCell, SyncCell, env_exists, in_wsl};
 pub static ADAPTOR: RoCell<Adapter> = RoCell::new();

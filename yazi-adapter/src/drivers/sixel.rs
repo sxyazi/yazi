@@ -9,10 +9,10 @@ use yazi_config::PREVIEW;
 
 use crate::{CLOSE, ESCAPE, Emulator, Image, START, adapter::Adapter};
 
-pub(super) struct Sixel;
+pub(crate) struct Sixel;
 
 impl Sixel {
-	pub(super) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+	pub(crate) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
 		let img = Image::downscale(path, max).await?;
 		let area = Image::pixel_area((img.width(), img.height()), max);
 		let b = Self::encode(img).await?;
@@ -25,7 +25,7 @@ impl Sixel {
 		})
 	}
 
-	pub(super) fn image_erase(area: Rect) -> Result<()> {
+	pub(crate) fn image_erase(area: Rect) -> Result<()> {
 		let s = " ".repeat(area.width as usize);
 		Emulator::move_lock((0, 0), |stderr| {
 			for y in area.top()..area.bottom() {

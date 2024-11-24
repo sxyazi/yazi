@@ -5,8 +5,7 @@ use ratatui::layout::Rect;
 use tracing::warn;
 use yazi_shared::env_exists;
 
-use super::{Iip, Kgp, KgpOld};
-use crate::{Chafa, Emulator, SHOWN, Sixel, TMUX, Ueberzug, WSL};
+use crate::{Emulator, SHOWN, TMUX, WSL, drivers};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Adapter {
@@ -42,12 +41,12 @@ impl Adapter {
 		}
 
 		match self {
-			Self::Kgp => Kgp::image_show(path, max).await,
-			Self::KgpOld => KgpOld::image_show(path, max).await,
-			Self::Iip => Iip::image_show(path, max).await,
-			Self::Sixel => Sixel::image_show(path, max).await,
-			Self::X11 | Self::Wayland => Ueberzug::image_show(path, max).await,
-			Self::Chafa => Chafa::image_show(path, max).await,
+			Self::Kgp => drivers::Kgp::image_show(path, max).await,
+			Self::KgpOld => drivers::KgpOld::image_show(path, max).await,
+			Self::Iip => drivers::Iip::image_show(path, max).await,
+			Self::Sixel => drivers::Sixel::image_show(path, max).await,
+			Self::X11 | Self::Wayland => drivers::Ueberzug::image_show(path, max).await,
+			Self::Chafa => drivers::Chafa::image_show(path, max).await,
 		}
 	}
 
@@ -57,12 +56,12 @@ impl Adapter {
 
 	pub fn image_erase(self, area: Rect) -> Result<()> {
 		match self {
-			Self::Kgp => Kgp::image_erase(area),
-			Self::KgpOld => KgpOld::image_erase(area),
-			Self::Iip => Iip::image_erase(area),
-			Self::Sixel => Sixel::image_erase(area),
-			Self::X11 | Self::Wayland => Ueberzug::image_erase(area),
-			Self::Chafa => Chafa::image_erase(area),
+			Self::Kgp => drivers::Kgp::image_erase(area),
+			Self::KgpOld => drivers::KgpOld::image_erase(area),
+			Self::Iip => drivers::Iip::image_erase(area),
+			Self::Sixel => drivers::Sixel::image_erase(area),
+			Self::X11 | Self::Wayland => drivers::Ueberzug::image_erase(area),
+			Self::Chafa => drivers::Chafa::image_erase(area),
 		}
 	}
 
@@ -72,7 +71,7 @@ impl Adapter {
 	#[inline]
 	pub(super) fn shown_store(area: Rect) { SHOWN.set(Some(area)); }
 
-	pub(super) fn start(self) { Ueberzug::start(self); }
+	pub(super) fn start(self) { drivers::Ueberzug::start(self); }
 
 	#[inline]
 	pub(super) fn needs_ueberzug(self) -> bool {
@@ -101,7 +100,7 @@ impl Adapter {
 			return *p;
 		}
 
-		let supported_compositor = Ueberzug::supported_compositor();
+		let supported_compositor = drivers::Ueberzug::supported_compositor();
 		match env::var("XDG_SESSION_TYPE").unwrap_or_default().as_str() {
 			"x11" => return Self::X11,
 			"wayland" if supported_compositor => return Self::Wayland,

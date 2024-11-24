@@ -8,10 +8,10 @@ use tokio::process::Command;
 
 use crate::{Adapter, Emulator};
 
-pub(super) struct Chafa;
+pub(crate) struct Chafa;
 
 impl Chafa {
-	pub(super) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+	pub(crate) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
 		let output = Command::new("chafa")
 			.args([
 				"-f",
@@ -64,7 +64,7 @@ impl Chafa {
 		})
 	}
 
-	pub(super) fn image_erase(area: Rect) -> Result<()> {
+	pub(crate) fn image_erase(area: Rect) -> Result<()> {
 		let s = " ".repeat(area.width as usize);
 		Emulator::move_lock((0, 0), |stderr| {
 			for y in area.top()..area.bottom() {
