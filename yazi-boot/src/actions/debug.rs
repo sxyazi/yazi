@@ -2,7 +2,6 @@ use std::{env, ffi::OsStr, fmt::Write};
 
 use regex::Regex;
 use yazi_adapter::Mux;
-use yazi_shared::Xdg;
 
 use super::Actions;
 
@@ -97,13 +96,6 @@ impl Actions {
 		writeln!(s, "    wl-copy/paste: {} / {}", Self::process_output("wl-copy", "--version"), Self::process_output("wl-paste", "--version"))?;
 		writeln!(s, "    xclip        : {}", Self::process_output("xclip", "-version"))?;
 		writeln!(s, "    xsel         : {}", Self::process_output("xsel", "--version"))?;
-
-		writeln!(s, "\n\n--------------------------------------------------")?;
-		writeln!(
-			s,
-			"When reporting a bug, please also upload the `yazi.log` log file - only upload the most recent content by time."
-		)?;
-		writeln!(s, "You can find it in the {:?} directory.", Xdg::state_dir())?;
 
 		Ok(s)
 	}
