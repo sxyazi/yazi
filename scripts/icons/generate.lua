@@ -21,16 +21,25 @@ function dump(map)
 		list[#list + 1] = { name = k, text = v.icon, fg_dark = v.fg_dark, fg_light = v.fg_light }
 	end
 	table.sort(list, function(a, b) return a.name:lower() < b.name:lower() end)
+	local dark, light = "", ""
 	for _, v in ipairs(list) do
 		-- stylua: ignore
-		print(string.format('\t{ name = "%s", text = "%s", fg_dark = "%s", fg_light = "%s" },', v.name, v.text, v.fg_dark, v.fg_light))
+		dark = dark .. string.format('\t{ name = "%s", text = "%s", fg = "%s" },\n', v.name, v.text, v.fg_dark)
+		light = light .. string.format('\t{ name = "%s", text = "%s", fg = "%s" },\n', v.name, v.text, v.fg_light)
 	end
+	return dark, light
 end
 
-print("files = [")
-dump(rearrange("files"))
-print("]")
+function save(typ, files, exts)
+	local p = string.format("../../yazi-config/preset/flavor-%s.toml", typ)
+	local s = io.open(p, "r"):read("*a")
+	s = s:gsub("files = %[\n(.-)\n%]", string.format("files = [\n%s]", files))
+	s = s:gsub("exts = %[\n(.-)\n%]", string.format("exts = [\n%s]", exts))
+	io.open(p, "w"):write(s)
+end
 
-print("exts = [")
-dump(rearrange("exts"))
-print("]")
+local dark_files, light_files = dump(rearrange("files"))
+local dark_exts, light_exts = dump(rearrange("exts"))
+
+save("dark", dark_files, dark_exts)
+save("light", light_files, light_exts)
