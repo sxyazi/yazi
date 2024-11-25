@@ -106,42 +106,32 @@ impl<'de> Deserialize<'de> for Icons {
 		}
 		#[derive(Deserialize)]
 		pub struct ShadowPat {
-			name:     Pattern,
-			text:     String,
-			fg_dark:  Option<Color>,
-			#[allow(dead_code)]
-			fg_light: Option<Color>,
+			name: Pattern,
+			text: String,
+			fg:   Option<Color>,
 		}
 		#[derive(Deserialize)]
 		pub struct ShadowStr {
-			name:     String,
-			text:     String,
-			fg_dark:  Option<Color>,
-			#[allow(dead_code)]
-			fg_light: Option<Color>,
+			name: String,
+			text: String,
+			fg:   Option<Color>,
 		}
 		#[derive(Deserialize)]
 		pub struct ShadowCond {
 			#[serde(rename = "if")]
-			if_:      Condition,
-			text:     String,
-			fg_dark:  Option<Color>,
-			#[allow(dead_code)]
-			fg_light: Option<Color>,
+			if_:  Condition,
+			text: String,
+			fg:   Option<Color>,
 		}
 
 		let shadow = Shadow::deserialize(deserializer)?;
 
 		let globs = Preset::mix(shadow.prepend_globs, shadow.globs, shadow.append_globs)
-			.map(|v| {
-				(v.name, Icon { text: v.text, style: Style { fg: v.fg_dark, ..Default::default() } })
-			})
+			.map(|v| (v.name, Icon { text: v.text, style: Style { fg: v.fg, ..Default::default() } }))
 			.collect();
 
 		let conds = Preset::mix(shadow.prepend_conds, shadow.conds, shadow.append_conds)
-			.map(|v| {
-				(v.if_, Icon { text: v.text, style: Style { fg: v.fg_dark, ..Default::default() } })
-			})
+			.map(|v| (v.if_, Icon { text: v.text, style: Style { fg: v.fg, ..Default::default() } }))
 			.collect();
 
 		fn as_map(it: impl Iterator<Item = ShadowStr>) -> HashMap<String, Icon> {
@@ -149,7 +139,7 @@ impl<'de> Deserialize<'de> for Icons {
 			for v in it {
 				map
 					.entry(v.name)
-					.or_insert(Icon { text: v.text, style: Style { fg: v.fg_dark, ..Default::default() } });
+					.or_insert(Icon { text: v.text, style: Style { fg: v.fg, ..Default::default() } });
 			}
 			map.shrink_to_fit();
 			map

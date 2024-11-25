@@ -24,8 +24,8 @@ impl FromStr for Which {
 			which: Which,
 		}
 
-		let outer = toml::from_str::<Outer>(s)
-			.context("Failed to parse the [which] section in your yazi.toml")?;
+		let outer: Outer =
+			toml::from_str(s).context("Failed to parse the [which] section in your yazi.toml")?;
 
 		Ok(outer.which)
 	}

@@ -3,7 +3,7 @@ use std::{path::PathBuf, str::FromStr};
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
-use yazi_shared::{Xdg, fs::expand_path, theme::Style};
+use yazi_shared::theme::Style;
 
 use super::{Filetype, Flavor, Icons};
 
@@ -32,16 +32,9 @@ impl FromStr for Theme {
 	type Err = anyhow::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		let mut theme: Self = toml::from_str(s).context("Failed to parse your yazi.toml")?;
+		let theme: Self = toml::from_str(s).context("Failed to parse your theme.toml")?;
 		theme.manager.validate()?;
 		theme.which.validate()?;
-
-		if theme.flavor.use_.is_empty() {
-			theme.manager.syntect_theme = expand_path(&theme.manager.syntect_theme);
-		} else {
-			theme.manager.syntect_theme =
-				Xdg::config_dir().join(format!("flavors/{}.yazi/tmtheme.xml", theme.flavor.use_));
-		}
 
 		Ok(theme)
 	}

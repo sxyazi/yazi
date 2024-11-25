@@ -13,10 +13,10 @@ type Cmd = Option<(PathBuf, Rect)>;
 
 static DEMON: RoCell<Option<UnboundedSender<Cmd>>> = RoCell::new();
 
-pub(super) struct Ueberzug;
+pub(crate) struct Ueberzug;
 
 impl Ueberzug {
-	pub(super) fn start(adapter: Adapter) {
+	pub(crate) fn start(adapter: Adapter) {
 		if !adapter.needs_ueberzug() {
 			return DEMON.init(None);
 		}
@@ -41,7 +41,7 @@ impl Ueberzug {
 		DEMON.init(Some(tx))
 	}
 
-	pub(super) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+	pub(crate) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
 		let Some(tx) = &*DEMON else {
 			bail!("uninitialized ueberzugpp");
 		};
@@ -63,7 +63,7 @@ impl Ueberzug {
 		Ok(area)
 	}
 
-	pub(super) fn image_erase(_: Rect) -> Result<()> {
+	pub(crate) fn image_erase(_: Rect) -> Result<()> {
 		if let Some(tx) = &*DEMON {
 			Ok(tx.send(None)?)
 		} else {
@@ -74,7 +74,7 @@ impl Ueberzug {
 	// Currently Überzug++'s Wayland output only supports Sway, Hyprland and Wayfire
 	// as it requires information from specific compositor socket directly.
 	// These environment variables are from ueberzugpp src/canvas/wayland/config.cpp
-	pub(super) fn supported_compositor() -> bool {
+	pub(crate) fn supported_compositor() -> bool {
 		env_exists("SWAYSOCK")
 			|| env_exists("HYPRLAND_INSTANCE_SIGNATURE")
 			|| env_exists("WAYFIRE_SOCKET")

@@ -28,10 +28,11 @@ impl Term {
 		enable_raw_mode()?;
 		execute!(
 			BufWriter::new(stderr()),
-			Print(Mux::csi("\x1b[?12$p")), // Request cursor blink status (DECSET)
-			Print(Mux::csi("\x1bP$q q\x1b\\")), // Request cursor shape (DECRQM)
-			Print(Mux::csi("\x1b[?u\x1b[0c")), // Request keyboard enhancement flags (CSI u)
 			EnterAlternateScreen,
+			Print(Mux::csi("\x1bP$q q\x1b\\")), // Request cursor shape (DECRQM)
+			Print(Mux::csi("\x1b[?12$p")),      // Request cursor blink status (DECSET)
+			Print("\x1b[?u"),                   // Request keyboard enhancement flags (CSI u)
+			Print(Mux::csi("\x1b[0c")),         // Request device attributes
 			EnableBracketedPaste,
 			mouse::SetMouse(true),
 		)?;

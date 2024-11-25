@@ -24,22 +24,7 @@ pub static LAYOUT: SyncCell<Layout> = SyncCell::new(Layout::default());
 
 pub fn init() -> anyhow::Result<()> {
 	if let Err(e) = try_init(true) {
-		eprintln!("{e}");
-		if let Some(src) = e.source() {
-			eprintln!("\nCaused by:\n{src}");
-		}
-
-		use crossterm::style::{Attribute, Print, SetAttributes};
-		crossterm::execute!(
-			std::io::stderr(),
-			SetAttributes(Attribute::Reverse.into()),
-			SetAttributes(Attribute::Bold.into()),
-			Print("Press <Enter> to continue with preset settings..."),
-			SetAttributes(Attribute::Reset.into()),
-			Print("\n"),
-		)?;
-
-		std::io::stdin().read_line(&mut String::new())?;
+		wait_for_key(e)?;
 		try_init(false)?;
 	}
 
@@ -78,13 +63,29 @@ Please change `create_title = "Create:"` to `create_title = ["Create:", "Create 
 	Ok(())
 }
 
+pub fn init_flavor(light: bool) -> anyhow::Result<()> {
+	let mut flavor_toml = Preset::flavor(light, true);
+	if let Err(e) = flavor_toml {
+		wait_for_key(e)?;
+		flavor_toml = Preset::flavor(light, false);
+	}
+
+	let mut theme: theme::Theme = <_>::from_str(&flavor_toml.unwrap())?;
+	theme.manager.syntect_theme = theme
+		.flavor
+		.syntect_path(light)
+		.unwrap_or_else(|| yazi_shared::fs::expand_path(&theme.manager.syntect_theme));
+
+	THEME.init(theme);
+	Ok(())
+}
+
 fn try_init(merge: bool) -> anyhow::Result<()> {
-	let (yazi_toml, keymap_toml, theme_toml) = if merge {
+	let (yazi_toml, keymap_toml) = if merge {
 		let p = Xdg::config_dir();
-		(Preset::yazi(&p)?, Preset::keymap(&p)?, Preset::theme(&p)?)
+		(Preset::yazi(&p)?, Preset::keymap(&p)?)
 	} else {
-		use yazi_macro::config_preset as preset;
-		(preset!("yazi"), preset!("keymap"), preset!("theme"))
+		(yazi_macro::config_preset!("yazi"), yazi_macro::config_preset!("keymap"))
 	};
 
 	let keymap = <_>::from_str(&keymap_toml)?;
@@ -93,7 +94,6 @@ fn try_init(merge: bool) -> anyhow::Result<()> {
 	let plugin = <_>::from_str(&yazi_toml)?;
 	let preview = <_>::from_str(&yazi_toml)?;
 	let tasks = <_>::from_str(&yazi_toml)?;
-	let theme = <_>::from_str(&theme_toml)?;
 	let input = <_>::from_str(&yazi_toml)?;
 	let confirm = <_>::from_str(&yazi_toml)?;
 	let pick = <_>::from_str(&yazi_toml)?;
@@ -105,11 +105,30 @@ fn try_init(merge: bool) -> anyhow::Result<()> {
 	PLUGIN.init(plugin);
 	PREVIEW.init(preview);
 	TASKS.init(tasks);
-	THEME.init(theme);
 	INPUT.init(input);
 	CONFIRM.init(confirm);
 	PICK.init(pick);
 	WHICH.init(which);
 
+	Ok(())
+}
+
+fn wait_for_key(e: anyhow::Error) -> anyhow::Result<()> {
+	eprintln!("{e}");
+	if let Some(src) = e.source() {
+		eprintln!("\nCaused by:\n{src}");
+	}
+
+	use crossterm::style::{Attribute, Print, SetAttributes};
+	crossterm::execute!(
+		std::io::stderr(),
+		SetAttributes(Attribute::Reverse.into()),
+		SetAttributes(Attribute::Bold.into()),
+		Print("Press <Enter> to continue with preset settings..."),
+		SetAttributes(Attribute::Reset.into()),
+		Print("\n"),
+	)?;
+
+	std::io::stdin().read_line(&mut String::new())?;
 	Ok(())
 }
