@@ -7,8 +7,8 @@
 # : Flavor {{{
 
 [flavor]
-dark  = "dark"
-light = "light"
+dark  = ""
+light = ""
 
 # : }}}
 
