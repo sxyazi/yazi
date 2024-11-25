@@ -5,7 +5,7 @@ use ratatui::layout::Rect;
 use tracing::warn;
 use yazi_shared::env_exists;
 
-use crate::{Emulator, SHOWN, TMUX, WSL, drivers};
+use crate::{Brand, Emulator, SHOWN, TMUX, WSL, drivers};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Adapter {
@@ -80,15 +80,14 @@ impl Adapter {
 }
 
 impl Adapter {
-	pub fn matches() -> Self {
-		let emulator = Emulator::detect();
-		if matches!(emulator, Emulator::Microsoft) {
+	pub fn matches(emulator: Emulator) -> Self {
+		if matches!(emulator.kind.left(), Some(Brand::Microsoft)) {
 			return Self::Sixel;
-		} else if *WSL && matches!(emulator, Emulator::WezTerm) {
+		} else if *WSL && matches!(emulator.kind.left(), Some(Brand::WezTerm)) {
 			return Self::KgpOld;
 		}
 
-		let mut protocols = emulator.adapters();
+		let mut protocols = emulator.adapters().to_owned();
 		#[cfg(windows)]
 		protocols.retain(|p| *p == Self::Iip);
 		if env_exists("ZELLIJ_SESSION_NAME") {

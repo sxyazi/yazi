@@ -17,13 +17,14 @@ impl Actions {
 		writeln!(s, "\nYa")?;
 		writeln!(s, "    Version: {}", Self::process_output("ya", "--version"))?;
 
+		let emulator = yazi_adapter::Emulator::detect();
 		writeln!(s, "\nEmulator")?;
-		writeln!(s, "    Emulator.via_env: {:?}", yazi_adapter::Emulator::via_env())?;
-		writeln!(s, "    Emulator.via_csi: {:?}", yazi_adapter::Emulator::via_csi())?;
-		writeln!(s, "    Emulator.detect : {:?}", yazi_adapter::Emulator::detect())?;
+		writeln!(s, "    Brand.from_env      : {:?}", yazi_adapter::Brand::from_env())?;
+		writeln!(s, "    Emulator.detect     : {:?}", emulator)?;
+		writeln!(s, "    Emulator.detect_full: {:?}", yazi_adapter::Emulator::detect_full())?;
 
 		writeln!(s, "\nAdapter")?;
-		writeln!(s, "    Adapter.matches: {:?}", yazi_adapter::Adapter::matches())?;
+		writeln!(s, "    Adapter.matches: {:?}", yazi_adapter::Adapter::matches(emulator))?;
 
 		writeln!(s, "\nDesktop")?;
 		writeln!(s, "    XDG_SESSION_TYPE           : {:?}", env::var_os("XDG_SESSION_TYPE"))?;

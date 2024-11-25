@@ -214,16 +214,3 @@ rules = [
 ]
 
 # : }}}
-
-
-# : Icons {{{
-
-[icon]
-
-globs = []
-dirs  = []
-files = []
-exts  = []
-conds = []
-
-# : }}}

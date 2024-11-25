@@ -1,8 +1,8 @@
-use std::{borrow::Cow, path::{Path, PathBuf}};
+use std::{borrow::Cow, path::{Path, PathBuf}, str::FromStr};
 
 use anyhow::{Context, Result};
 use toml::{Table, Value};
-use yazi_macro::config_preset as preset;
+use yazi_shared::Xdg;
 
 use crate::theme::Flavor;
 
@@ -10,26 +10,26 @@ pub(crate) struct Preset;
 
 impl Preset {
 	pub(crate) fn yazi(p: &Path) -> Result<Cow<'static, str>> {
-		Self::merge_path(p.join("yazi.toml"), preset!("yazi"))
+		Self::merge_path(p.join("yazi.toml"), yazi_macro::config_preset!("yazi"))
 	}
 
 	pub(crate) fn keymap(p: &Path) -> Result<Cow<'static, str>> {
-		Self::merge_path(p.join("keymap.toml"), preset!("keymap"))
+		Self::merge_path(p.join("keymap.toml"), yazi_macro::config_preset!("keymap"))
 	}
 
-	pub(crate) fn theme(p: &Path) -> Result<Cow<'static, str>> {
-		let Ok(user) = std::fs::read_to_string(p.join("theme.toml")) else {
-			return Ok(preset!("theme"));
-		};
-		let Some(use_) = Flavor::parse_use(&user) else {
-			return Self::merge_str(&user, &preset!("theme"));
+	pub(crate) fn flavor(light: bool, merge: bool) -> Result<Cow<'static, str>> {
+		let theme = if merge {
+			std::fs::read_to_string(Xdg::config_dir().join("theme.toml")).unwrap_or_default()
+		} else {
+			Default::default()
 		};
 
-		let p = p.join(format!("flavors/{use_}.yazi/flavor.toml"));
-		let flavor =
-			std::fs::read_to_string(&p).with_context(|| format!("failed to load flavor {p:?}"))?;
+		let flavor = Flavor::from_str(&theme)?;
 
-		Self::merge_str(&user, &Self::merge_str(&flavor, &preset!("theme"))?)
+		let preset =
+			if light { yazi_macro::theme_preset!("light") } else { yazi_macro::theme_preset!("dark") };
+
+		Self::merge_str(&theme, &Self::merge_str(&flavor.read(light)?, &preset)?)
 	}
 
 	#[inline]

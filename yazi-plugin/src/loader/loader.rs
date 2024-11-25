@@ -57,7 +57,7 @@ impl Loader {
 
 		let p = BOOT.plugin_dir.join(format!("{name}.yazi/init.lua"));
 		let chunk =
-			fs::read(&p).await.with_context(|| format!("failed to load plugin from {p:?}"))?.into();
+			fs::read(&p).await.with_context(|| format!("Failed to load plugin from {p:?}"))?.into();
 
 		self.cache.write().insert(name.to_owned(), chunk);
 		Ok(())
