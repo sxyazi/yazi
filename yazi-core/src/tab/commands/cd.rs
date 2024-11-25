@@ -17,16 +17,20 @@ struct Opt {
 
 impl From<Cmd> for Opt {
 	fn from(mut c: Cmd) -> Self {
-		let mut target = c.take_first().and_then(Data::into_url).unwrap_or_default();
+		Self {
+			interactive: c.bool("interactive"),
+			..Self::from(c.take_first().and_then(Data::into_url).unwrap_or_default())
+		}
+	}
+}
+
+impl From<Url> for Opt {
+	fn from(mut target: Url) -> Self {
 		if target.is_regular() {
 			target = Url::from(expand_path(&target));
 		}
-
-		Self { target, interactive: c.bool("interactive") }
+		Self { target, interactive: false }
 	}
-}
-impl From<Url> for Opt {
-	fn from(target: Url) -> Self { Self { target, interactive: false } }
 }
 
 impl Tab {
