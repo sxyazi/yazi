@@ -16,7 +16,8 @@ light = ""
 # : Manager {{{
 
 [manager]
-cwd = { fg = "cyan" }
+cwd  = { fg = "cyan" }
+flag = { fg = "cyan" }
 
 # Hovered
 hovered         = { reversed = true }
