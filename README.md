@@ -23,7 +23,7 @@ Yazi (means "duck") is a terminal file manager written in Rust, based on non-blo
 - 📦 **Package Manager**: Install plugins and themes with one command, keeping them up to date, or pin them to a specific version.
 - 🧰 Integration with ripgrep, fd, fzf, zoxide
 - 💫 Vim-like input/pick/confirm/which/notify component, auto-completion for cd paths
-- 🏷️ Multi-Tab Support, Cross-directory selection, Scrollable Preview (for videos, PDFs, archives, code, fonts, etc.)
+- 🏷️ Multi-Tab Support, Cross-directory selection, Scrollable Preview (for videos, PDFs, archives, code, directories, etc.)
 - 🔄 Bulk Renaming, Visual Mode, File Chooser
 - 🎨 Theme System, Mouse Support, Trash Bin, Custom Layouts, CSI u
 - ... and more!
