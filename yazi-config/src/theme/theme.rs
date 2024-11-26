@@ -101,11 +101,11 @@ struct Status {
 	pub progress_error:  Style,
 
 	// Permissions
-	pub permissions_t: Style,
-	pub permissions_r: Style,
-	pub permissions_w: Style,
-	pub permissions_x: Style,
-	pub permissions_s: Style,
+	pub perm_sep:   Style,
+	pub perm_type:  Style,
+	pub perm_read:  Style,
+	pub perm_write: Style,
+	pub perm_exec:  Style,
 }
 
 #[derive(Deserialize, Serialize)]

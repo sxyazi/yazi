@@ -82,15 +82,15 @@ function Status:perm()
 	local spans = {}
 	for i = 1, #perm do
 		local c = perm:sub(i, i)
-		local style = THEME.status.permissions_t
+		local style = THEME.status.perm_type
 		if c == "-" or c == "?" then
-			style = THEME.status.permissions_s
+			style = THEME.status.perm_sep
 		elseif c == "r" then
-			style = THEME.status.permissions_r
+			style = THEME.status.perm_read
 		elseif c == "w" then
-			style = THEME.status.permissions_w
+			style = THEME.status.perm_write
 		elseif c == "x" or c == "s" or c == "S" or c == "t" or c == "T" then
-			style = THEME.status.permissions_x
+			style = THEME.status.perm_exec
 		end
 		spans[i] = ui.Span(c):style(style)
 	end
