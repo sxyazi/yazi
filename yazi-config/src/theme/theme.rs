@@ -44,6 +44,7 @@ impl FromStr for Theme {
 #[derive(Deserialize, Serialize, Validate)]
 pub struct Manager {
 	cwd: Style,
+	flag: Style,
 
 	// Hovered
 	hovered:         Style,
