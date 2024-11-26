@@ -1,5 +1,6 @@
-# A TOML linter such as https://taplo.tamasfe.dev/ can use this schema to validate your config.
-# If you encounter any issues, please make an issue at https://github.com/yazi-rs/schemas.
+# If the user's terminal is in dark mode, Yazi will use the content from `theme-base.toml` + `theme+dark.toml` as the default theme;
+# if it's in light mode, use `theme-base.toml` + `theme+light.toml` instead.
+# Users can always override and adjust the default theme in their own `theme.toml` configuration file.
 "$schema" = "https://yazi-rs.github.io/schemas/theme.json"
 
 # vim:fileencoding=utf-8:foldmethod=marker
@@ -51,17 +52,29 @@ syntect_theme = ""
 # : }}}
 
 
-# : Status {{{
+# : Mode {{{
+
+[mode]
+
+normal_main = { bg = "blue", bold = true }
+normal_alt  = { fg = "blue", bg = "gray" }
+
+# Select mode
+select_main = { bg = "red", bold = true }
+select_alt  = { fg = "red", bg = "gray" }
+
+# Unset mode
+unset_main = { bg = "red", bold = true }
+unset_alt  = { fg = "red", bg = "gray" }
+
+# : }}}
+
+
+# : Status bar {{{
 
 [status]
 separator_open  = ""
 separator_close = ""
-separator_style = { fg = "gray", bg = "gray" }
-
-# Mode
-mode_normal = { bg = "blue", bold = true }
-mode_select = { bg = "red", bold = true }
-mode_unset  = { bg = "red", bold = true }
 
 # Progress
 progress_label  = { bold = true }
@@ -69,11 +82,11 @@ progress_normal = { fg = "blue", bg = "black" }
 progress_error  = { fg = "red", bg = "black" }
 
 # Permissions
-permissions_t = { fg = "green" }
-permissions_r = { fg = "yellow" }
-permissions_w = { fg = "red" }
-permissions_x = { fg = "cyan" }
-permissions_s = { fg = "darkgray" }
+perm_sep   = { fg = "darkgray" }
+perm_type  = { fg = "green" }
+perm_read  = { fg = "yellow" }
+perm_write = { fg = "red" }
+perm_exec  = { fg = "cyan" }
 
 # : }}}
 

@@ -11,6 +11,7 @@ use super::{Filetype, Flavor, Icons};
 pub struct Theme {
 	pub flavor:     Flavor,
 	pub manager:    Manager,
+	mode:           Mode,
 	status:         Status,
 	pub input:      Input,
 	pub confirm:    Confirm,
@@ -78,15 +79,21 @@ pub struct Manager {
 }
 
 #[derive(Deserialize, Serialize)]
+struct Mode {
+	pub normal_main: Style,
+	pub normal_alt:  Style,
+
+	pub select_main: Style,
+	pub select_alt:  Style,
+
+	pub unset_main: Style,
+	pub unset_alt:  Style,
+}
+
+#[derive(Deserialize, Serialize)]
 struct Status {
 	pub separator_open:  String,
 	pub separator_close: String,
-	pub separator_style: Style,
-
-	// Mode
-	pub mode_normal: Style,
-	pub mode_select: Style,
-	pub mode_unset:  Style,
 
 	// Progress
 	pub progress_label:  Style,
@@ -94,11 +101,11 @@ struct Status {
 	pub progress_error:  Style,
 
 	// Permissions
-	pub permissions_t: Style,
-	pub permissions_r: Style,
-	pub permissions_w: Style,
-	pub permissions_x: Style,
-	pub permissions_s: Style,
+	pub perm_sep:   Style,
+	pub perm_type:  Style,
+	pub perm_read:  Style,
+	pub perm_write: Style,
+	pub perm_exec:  Style,
 }
 
 #[derive(Deserialize, Serialize)]
