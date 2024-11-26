@@ -25,6 +25,11 @@ impl Input {
 				snap.op = InputOp::None;
 			}
 			InputMode::Insert => {
+				if snap.value.trim().is_empty() {
+					self.close(false);
+					return;
+				}
+
 				snap.mode = InputMode::Normal;
 				self.move_(-1);
 
