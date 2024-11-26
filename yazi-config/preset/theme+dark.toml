@@ -1,5 +1,6 @@
-# `theme+dark.toml` and `theme+light.toml` are additions to `theme.toml` and are considered part of it.
-# If your terminal is in dark mode, `theme+dark.toml` will be applied *after* `theme.toml`; if it's in light mode, then `theme+light.toml` instead.
+# If the user's terminal is in dark mode, Yazi will use the content from `theme-base.toml` + `theme+dark.toml` as the default theme;
+# if it's in light mode, use `theme-base.toml` + `theme+light.toml` instead.
+# Users can always override and adjust the default theme in their own `theme.toml` configuration file.
 "$schema" = "https://yazi-rs.github.io/schemas/theme.json"
 
 # vim:fileencoding=utf-8:foldmethod=marker

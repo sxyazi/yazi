@@ -25,12 +25,13 @@ function Status:new(area, tab)
 end
 
 function Status:style()
+	local m = THEME.mode
 	if self._tab.mode.is_select then
-		return THEME.status.mode_select
+		return { main = m.select_main, alt = m.select_alt }
 	elseif self._tab.mode.is_unset then
-		return THEME.status.mode_unset
+		return { main = m.unset_main, alt = m.unset_alt }
 	else
-		return THEME.status.mode_normal
+		return { main = m.normal_main, alt = m.normal_alt }
 	end
 end
 
@@ -39,9 +40,9 @@ function Status:mode()
 
 	local style = self:style()
 	return ui.Line {
-		ui.Span(THEME.status.separator_open):fg(style.bg),
-		ui.Span(" " .. mode .. " "):style(style),
-		ui.Span(THEME.status.separator_close):fg(style.bg):bg(THEME.status.separator_style.fg),
+		ui.Span(THEME.status.separator_open):fg(style.main.bg),
+		ui.Span(" " .. mode .. " "):style(style.main),
+		ui.Span(THEME.status.separator_close):fg(style.main.bg):bg(style.alt.bg),
 	}
 end
 
@@ -53,8 +54,8 @@ function Status:size()
 
 	local style = self:style()
 	return ui.Line {
-		ui.Span(" " .. ya.readable_size(h:size() or h.cha.len) .. " "):fg(style.bg):bg(THEME.status.separator_style.bg),
-		ui.Span(THEME.status.separator_close):fg(THEME.status.separator_style.fg),
+		ui.Span(" " .. ya.readable_size(h:size() or h.cha.len) .. " "):style(style.alt),
+		ui.Span(THEME.status.separator_close):fg(style.alt.bg),
 	}
 end
 
@@ -114,8 +115,8 @@ function Status:percent()
 
 	local style = self:style()
 	return ui.Line {
-		ui.Span(" " .. THEME.status.separator_open):fg(THEME.status.separator_style.fg),
-		ui.Span(percent):fg(style.bg):bg(THEME.status.separator_style.bg),
+		ui.Span(" " .. THEME.status.separator_open):fg(style.alt.bg),
+		ui.Span(percent):style(style.alt),
 	}
 end
 
@@ -125,9 +126,9 @@ function Status:position()
 
 	local style = self:style()
 	return ui.Line {
-		ui.Span(THEME.status.separator_open):fg(style.bg):bg(THEME.status.separator_style.fg),
-		ui.Span(string.format(" %2d/%-2d ", math.min(cursor + 1, length), length)):style(style),
-		ui.Span(THEME.status.separator_close):fg(style.bg),
+		ui.Span(THEME.status.separator_open):fg(style.main.bg):bg(style.alt.bg),
+		ui.Span(string.format(" %2d/%-2d ", math.min(cursor + 1, length), length)):style(style.main),
+		ui.Span(THEME.status.separator_close):fg(style.main.bg),
 	}
 end
 
