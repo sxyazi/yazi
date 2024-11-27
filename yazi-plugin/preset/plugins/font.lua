@@ -21,7 +21,7 @@ function M:preload()
 		return 1
 	end
 
-	local child, err = Command("magick"):args({
+	local status, err = Command("magick"):args({
 		"-size",
 		"800x560",
 		"-gravity",
@@ -37,15 +37,14 @@ function M:preload()
 		"+0+0",
 		TEXT,
 		"JPG:" .. tostring(cache),
-	}):spawn()
+	}):status()
 
-	if not child then
+	if status then
+		return status.success and 1 or 2
+	else
 		ya.err("Failed to start `magick`, error: " .. err)
 		return 0
 	end
-
-	local status = child:wait()
-	return status and status.success and 1 or 2
 end
 
 return M

@@ -2,7 +2,7 @@ use anyhow::bail;
 use mlua::{Lua, Table};
 use yazi_shared::event::{Cmd, Data};
 
-pub type PluginCallback = Box<dyn FnOnce(&Lua, Table) -> mlua::Result<()> + Send>;
+pub type PluginCallback = Box<dyn FnOnce(&Lua, Table) -> mlua::Result<()> + Send + Sync>;
 
 #[derive(Default)]
 pub struct PluginOpt {

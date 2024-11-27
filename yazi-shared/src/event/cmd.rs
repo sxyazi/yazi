@@ -49,7 +49,7 @@ impl Cmd {
 	}
 
 	#[inline]
-	pub fn with_any(mut self, name: impl ToString, data: impl Any + Send) -> Self {
+	pub fn with_any(mut self, name: impl ToString, data: impl Any + Send + Sync) -> Self {
 		self.args.insert(name.to_string(), Data::Any(Box::new(data)));
 		self
 	}

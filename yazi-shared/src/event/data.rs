@@ -18,7 +18,7 @@ pub enum Data {
 	#[serde(skip_deserializing)]
 	Url(Url),
 	#[serde(skip)]
-	Any(Box<dyn Any + Send>),
+	Any(Box<dyn Any + Send + Sync>),
 }
 
 impl Data {

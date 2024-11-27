@@ -49,7 +49,7 @@ function M:preload()
 	local ss = math.floor(meta.format.duration * percent / 100)
 	local qv = 31 - math.floor(PREVIEW.image_quality * 0.3)
 	-- stylua: ignore
-	local child, err = Command("ffmpeg"):args({
+	local status, err = Command("ffmpeg"):args({
 		"-v", "quiet", "-hwaccel", "auto",
 		"-skip_frame", "nokey", "-ss", ss,
 		"-an", "-sn", "-dn",
@@ -59,15 +59,14 @@ function M:preload()
 		"-vf", string.format("scale=%d:-2:flags=fast_bilinear", PREVIEW.max_width),
 		"-f", "image2",
 		"-y", tostring(cache),
-	}):spawn()
+	}):status()
 
-	if not child then
+	if status then
+		return status.success and 1 or 2
+	else
 		ya.err("Failed to start `ffmpeg`, error: " .. err)
 		return 0
 	end
-
-	local status = child:wait()
-	return status and status.success and 1 or 2
 end
 
 function M:spot(job)

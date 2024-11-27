@@ -19,7 +19,7 @@ function M:preload()
 		return 1
 	end
 
-	local child, err = Command("magick"):args({
+	local status, err = Command("magick"):args({
 		"-density",
 		"200",
 		tostring(self.file.url),
@@ -30,15 +30,14 @@ function M:preload()
 		tostring(PREVIEW.image_quality),
 		"-auto-orient",
 		"JPG:" .. tostring(cache),
-	}):spawn()
+	}):status()
 
-	if not child then
+	if status then
+		return status.success and 1 or 2
+	else
 		ya.err("Failed to start `magick`, error: " .. err)
 		return 0
 	end
-
-	local status = child:wait()
-	return status and status.success and 1 or 2
 end
 
 function M:spot(job) require("file"):spot(job) end
