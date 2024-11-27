@@ -4,7 +4,7 @@ macro_rules! emit {
 		yazi_shared::event::Event::Quit($opt).emit();
 	};
 	(Call($cmd:expr, $layer:expr)) => {
-		yazi_shared::event::Event::Call($cmd, $layer).emit();
+		yazi_shared::event::Event::Call(yazi_shared::event::CmdCow::from($cmd), $layer).emit();
 	};
 	(Seq($cmds:expr, $layer:expr)) => {
 		yazi_shared::event::Event::Seq($cmds, $layer).emit();

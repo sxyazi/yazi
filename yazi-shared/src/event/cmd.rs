@@ -4,6 +4,7 @@ use anyhow::bail;
 use serde::{Deserialize, de};
 
 use super::Data;
+use crate::fs::Url;
 
 #[derive(Debug, Default)]
 pub struct Cmd {
@@ -49,7 +50,7 @@ impl Cmd {
 	}
 
 	#[inline]
-	pub fn with_any(mut self, name: impl ToString, data: impl Any + Send) -> Self {
+	pub fn with_any(mut self, name: impl ToString, data: impl Any + Send + Sync) -> Self {
 		self.args.insert(name.to_string(), Data::Any(Box::new(data)));
 		self
 	}
@@ -70,6 +71,9 @@ impl Cmd {
 	#[inline]
 	pub fn first(&self) -> Option<&Data> { self.get("0") }
 
+	#[inline]
+	pub fn first_str(&self) -> Option<&str> { self.str("0") }
+
 	// --- Take
 	#[inline]
 	pub fn take(&mut self, name: &str) -> Option<Data> { self.args.remove(name) }
@@ -88,20 +92,11 @@ impl Cmd {
 	}
 
 	#[inline]
+	pub fn take_first_url(&mut self) -> Option<Url> { self.take_first()?.into_url() }
+
+	#[inline]
 	pub fn take_any<T: 'static>(&mut self, name: &str) -> Option<T> {
 		self.args.remove(name).and_then(|d| d.into_any())
-	}
-
-	// --- Clone
-	pub fn shallow_clone(&self) -> Self {
-		Self {
-			name: self.name.clone(),
-			args: self
-				.args
-				.iter()
-				.filter_map(|(k, v)| v.shallow_clone().map(|v| (k.clone(), v)))
-				.collect(),
-		}
 	}
 }
 

@@ -1,5 +1,5 @@
 use yazi_macro::render;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use crate::manager::{Manager, Yanked};
 
@@ -7,8 +7,8 @@ struct Opt {
 	cut: bool,
 }
 
-impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { cut: c.bool("cut") } }
+impl From<CmdCow> for Opt {
+	fn from(c: CmdCow) -> Self { Self { cut: c.bool("cut") } }
 }
 
 impl Manager {

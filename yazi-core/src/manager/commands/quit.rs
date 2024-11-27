@@ -4,7 +4,7 @@ use tokio::{select, time};
 use yazi_config::popup::ConfirmCfg;
 use yazi_macro::emit;
 use yazi_proxy::ConfirmProxy;
-use yazi_shared::event::{Cmd, EventQuit};
+use yazi_shared::event::{CmdCow, EventQuit};
 
 use crate::{manager::Manager, tasks::Tasks};
 
@@ -15,8 +15,8 @@ struct Opt {
 impl From<()> for Opt {
 	fn from(_: ()) -> Self { Self::default() }
 }
-impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { no_cwd_file: c.bool("no-cwd-file") } }
+impl From<CmdCow> for Opt {
+	fn from(c: CmdCow) -> Self { Self { no_cwd_file: c.bool("no-cwd-file") } }
 }
 
 impl Manager {

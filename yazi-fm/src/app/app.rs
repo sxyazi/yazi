@@ -5,7 +5,7 @@ use crossterm::event::KeyEvent;
 use yazi_config::keymap::Key;
 use yazi_core::input::InputMode;
 use yazi_macro::emit;
-use yazi_shared::{Layer, event::{Cmd, Event, NEED_RENDER}};
+use yazi_shared::{Layer, event::{CmdCow, Event, NEED_RENDER}};
 
 use crate::{Ctx, Executor, Router, Signals, Term, lives::Lives};
 
@@ -66,10 +66,12 @@ impl App {
 	}
 
 	#[inline]
-	fn dispatch_call(&mut self, cmd: Cmd, layer: Layer) { Executor::new(self).execute(cmd, layer); }
+	fn dispatch_call(&mut self, cmd: CmdCow, layer: Layer) {
+		Executor::new(self).execute(cmd, layer);
+	}
 
 	#[inline]
-	fn dispatch_seq(&mut self, mut cmds: VecDeque<Cmd>, layer: Layer) {
+	fn dispatch_seq(&mut self, mut cmds: VecDeque<CmdCow>, layer: Layer) {
 		if let Some(cmd) = cmds.pop_front() {
 			Executor::new(self).execute(cmd, layer);
 		}

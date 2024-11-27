@@ -1,7 +1,7 @@
-use std::path::MAIN_SEPARATOR_STR;
+use std::{borrow::Cow, path::MAIN_SEPARATOR_STR};
 
 use yazi_macro::render;
-use yazi_shared::event::{Cmd, Data};
+use yazi_shared::event::{CmdCow, Data};
 
 use crate::input::Input;
 
@@ -12,12 +12,12 @@ const SEPARATOR: [char; 2] = ['/', '\\'];
 const SEPARATOR: char = std::path::MAIN_SEPARATOR;
 
 struct Opt {
-	word:   String,
+	word:   Cow<'static, str>,
 	ticket: usize,
 }
 
-impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self {
+impl From<CmdCow> for Opt {
+	fn from(mut c: CmdCow) -> Self {
 		Self {
 			word:   c.take_first_str().unwrap_or_default(),
 			ticket: c.get("ticket").and_then(Data::as_usize).unwrap_or(0),

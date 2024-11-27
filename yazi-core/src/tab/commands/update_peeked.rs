@@ -1,6 +1,6 @@
 use yazi_macro::render;
 use yazi_plugin::utils::PreviewLock;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use crate::tab::Tab;
 
@@ -8,10 +8,10 @@ pub struct Opt {
 	lock: PreviewLock,
 }
 
-impl TryFrom<Cmd> for Opt {
+impl TryFrom<CmdCow> for Opt {
 	type Error = ();
 
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
 		Ok(Self { lock: c.take_any("lock").ok_or(())? })
 	}
 }

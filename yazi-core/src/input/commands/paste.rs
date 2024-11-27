@@ -1,6 +1,6 @@
 use yazi_macro::render;
 use yazi_plugin::CLIPBOARD;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use crate::input::{Input, op::InputOp};
 
@@ -8,8 +8,8 @@ struct Opt {
 	before: bool,
 }
 
-impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { before: c.bool("before") } }
+impl From<CmdCow> for Opt {
+	fn from(c: CmdCow) -> Self { Self { before: c.bool("before") } }
 }
 
 impl Input {

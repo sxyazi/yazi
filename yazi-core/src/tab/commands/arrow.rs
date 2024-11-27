@@ -1,7 +1,7 @@
 use yazi_fs::Step;
 use yazi_macro::render;
 use yazi_proxy::ManagerProxy;
-use yazi_shared::event::{Cmd, Data};
+use yazi_shared::event::{CmdCow, Data};
 
 use crate::tab::Tab;
 
@@ -9,10 +9,10 @@ struct Opt {
 	step: Step,
 }
 
-impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self {
-		let step = match c.take_first() {
-			Some(Data::Integer(i)) => Step::from(i as isize),
+impl From<CmdCow> for Opt {
+	fn from(c: CmdCow) -> Self {
+		let step = match c.first() {
+			Some(Data::Integer(i)) => Step::from(*i as isize),
 			Some(Data::String(s)) => s.parse().unwrap_or_default(),
 			_ => Step::default(),
 		};

@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::VecDeque, hash::{Hash, Hasher}, sync::OnceLock};
+use std::{borrow::Cow, hash::{Hash, Hasher}, sync::OnceLock};
 
 use regex::Regex;
 use serde::Deserialize;
@@ -53,7 +53,4 @@ impl Chord {
 			|| self.run().to_lowercase().contains(&s)
 			|| self.on().to_lowercase().contains(&s)
 	}
-
-	#[inline]
-	pub fn to_seq(&self) -> VecDeque<Cmd> { self.run.iter().map(|c| c.shallow_clone()).collect() }
 }

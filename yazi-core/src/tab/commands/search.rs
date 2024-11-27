@@ -1,4 +1,4 @@
-use std::{mem, time::Duration};
+use std::{borrow::Cow, mem, time::Duration};
 
 use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
@@ -29,7 +29,7 @@ impl Tab {
 				InputProxy::show(InputCfg::search(&opt.via.to_string()).with_value(opt.subject));
 
 			if let Some(Ok(subject)) = input.recv().await {
-				opt.subject = subject;
+				opt.subject = Cow::Owned(subject);
 				TabProxy::search_do(opt);
 			}
 		});
@@ -52,14 +52,14 @@ impl Tab {
 				external::rg(external::RgOpt {
 					cwd: cwd.clone(),
 					hidden,
-					subject: opt.subject,
+					subject: opt.subject.into_owned(),
 					args: opt.args,
 				})
 			} else {
 				external::fd(external::FdOpt {
 					cwd: cwd.clone(),
 					hidden,
-					subject: opt.subject,
+					subject: opt.subject.into_owned(),
 					args: opt.args,
 				})
 			}?;

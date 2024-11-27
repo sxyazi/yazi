@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::OsString};
 
 use tokio::sync::oneshot;
 use yazi_config::open::Opener;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 // --- Exec
 pub struct ProcessExecOpt {
@@ -11,8 +11,8 @@ pub struct ProcessExecOpt {
 	pub done:   oneshot::Sender<()>,
 }
 
-impl TryFrom<Cmd> for ProcessExecOpt {
+impl TryFrom<CmdCow> for ProcessExecOpt {
 	type Error = ();
 
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> { c.take_any("option").ok_or(()) }
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> { c.take_any("option").ok_or(()) }
 }

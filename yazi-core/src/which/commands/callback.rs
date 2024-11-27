@@ -1,6 +1,6 @@
 use tokio::sync::mpsc;
 use tracing::error;
-use yazi_shared::event::{Cmd, Data};
+use yazi_shared::event::{CmdCow, Data};
 
 use crate::which::Which;
 
@@ -9,10 +9,10 @@ pub struct Opt {
 	idx: usize,
 }
 
-impl TryFrom<Cmd> for Opt {
+impl TryFrom<CmdCow> for Opt {
 	type Error = ();
 
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
 		Ok(Self {
 			tx:  c.take_any("tx").ok_or(())?,
 			idx: c.first().and_then(Data::as_usize).ok_or(())?,

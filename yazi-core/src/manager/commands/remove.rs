@@ -1,6 +1,6 @@
 use yazi_config::popup::ConfirmCfg;
 use yazi_proxy::{ConfirmProxy, ManagerProxy};
-use yazi_shared::{event::Cmd, fs::Url};
+use yazi_shared::{event::CmdCow, fs::Url};
 
 use crate::{manager::Manager, tasks::Tasks};
 
@@ -11,8 +11,8 @@ struct Opt {
 	targets:     Vec<Url>,
 }
 
-impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self {
+impl From<CmdCow> for Opt {
+	fn from(mut c: CmdCow) -> Self {
 		Self {
 			force:       c.bool("force"),
 			permanently: c.bool("permanently"),

@@ -3,12 +3,12 @@ use std::{borrow::Cow, fmt::Display};
 use anyhow::bail;
 use yazi_config::{open::Opener, popup::InputCfg};
 use yazi_proxy::{AppProxy, InputProxy, TasksProxy};
-use yazi_shared::event::{Cmd, Data};
+use yazi_shared::event::{CmdCow, Data};
 
 use crate::tab::Tab;
 
 pub struct Opt {
-	run:         String,
+	run:         Cow<'static, str>,
 	block:       bool,
 	orphan:      bool,
 	confirm:     bool,
@@ -16,10 +16,10 @@ pub struct Opt {
 	cursor:      Option<usize>,
 }
 
-impl TryFrom<Cmd> for Opt {
+impl TryFrom<CmdCow> for Opt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
 		let me = Self {
 			run:         c.take_first_str().unwrap_or_default(),
 			block:       c.bool("block"),
@@ -71,7 +71,7 @@ Please replace e.g. `shell` with `shell --interactive`, `shell "my-template"` wi
 				let mut result =
 					InputProxy::show(InputCfg::shell(opt.block).with_value(opt.run).with_cursor(opt.cursor));
 				match result.recv().await {
-					Some(Ok(e)) => opt.run = e,
+					Some(Ok(e)) => opt.run = Cow::Owned(e),
 					_ => return,
 				}
 			}
@@ -79,7 +79,7 @@ Please replace e.g. `shell` with `shell --interactive`, `shell "my-template"` wi
 			TasksProxy::open_with(
 				selected,
 				Cow::Owned(Opener {
-					run:    opt.run,
+					run:    opt.run.into_owned(),
 					block:  opt.block,
 					orphan: opt.orphan,
 					desc:   Default::default(),

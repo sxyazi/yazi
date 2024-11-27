@@ -16,6 +16,7 @@ impl PluginOp {
 #[derive(Debug)]
 pub struct PluginOpEntry {
 	pub id:   usize,
+	// TODO: remove these fields and use `CmdCow` instead
 	pub name: String,
 	pub args: Vec<Data>,
 }

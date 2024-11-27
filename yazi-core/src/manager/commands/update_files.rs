@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use yazi_fs::Folder;
 use yazi_macro::render;
 use yazi_proxy::ManagerProxy;
-use yazi_shared::{event::Cmd, fs::FilesOp};
+use yazi_shared::{event::CmdCow, fs::FilesOp};
 
 use crate::{manager::{LINKED, Manager}, tab::Tab, tasks::Tasks};
 
@@ -11,10 +11,10 @@ pub struct Opt {
 	op: FilesOp,
 }
 
-impl TryFrom<Cmd> for Opt {
+impl TryFrom<CmdCow> for Opt {
 	type Error = ();
 
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
 		Ok(Self { op: c.take_any("op").ok_or(())? })
 	}
 }

@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, ops::Deref};
 
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use super::Chord;
 
@@ -10,12 +10,12 @@ pub enum ChordCow {
 	Borrowed(&'static Chord),
 }
 
-impl From<&'static Chord> for ChordCow {
-	fn from(c: &'static Chord) -> Self { Self::Borrowed(c) }
-}
-
 impl From<Chord> for ChordCow {
 	fn from(c: Chord) -> Self { Self::Owned(c) }
+}
+
+impl From<&'static Chord> for ChordCow {
+	fn from(c: &'static Chord) -> Self { Self::Borrowed(c) }
 }
 
 impl Deref for ChordCow {
@@ -34,10 +34,10 @@ impl Default for ChordCow {
 }
 
 impl ChordCow {
-	pub fn into_seq(self) -> VecDeque<Cmd> {
+	pub fn into_seq(self) -> VecDeque<CmdCow> {
 		match self {
-			Self::Owned(c) => c.run.into(),
-			Self::Borrowed(c) => c.to_seq(),
+			Self::Owned(c) => c.run.into_iter().map(|c| c.into()).collect(),
+			Self::Borrowed(c) => c.run.iter().map(|c| c.into()).collect(),
 		}
 	}
 }

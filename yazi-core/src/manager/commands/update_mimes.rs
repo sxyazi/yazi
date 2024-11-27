@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use tracing::error;
 use yazi_macro::render;
-use yazi_shared::{event::Cmd, fs::Url};
+use yazi_shared::{event::CmdCow, fs::Url};
 
 use crate::{manager::{LINKED, Manager}, tasks::Tasks};
 
@@ -10,11 +10,11 @@ pub struct Opt {
 	updates: HashMap<String, String>,
 }
 
-impl TryFrom<Cmd> for Opt {
+impl TryFrom<CmdCow> for Opt {
 	type Error = ();
 
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
-		Ok(Self { updates: c.take("updates").ok_or(())?.into_dict_string() })
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
+		Ok(Self { updates: c.try_take("updates").ok_or(())?.into_dict_string() })
 	}
 }
 

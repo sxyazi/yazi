@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use yazi_macro::render;
-use yazi_shared::{event::Cmd, fs::Url};
+use yazi_shared::{event::CmdCow, fs::Url};
 
 use crate::manager::{Manager, Yanked};
 
@@ -11,10 +11,10 @@ pub struct Opt {
 	urls: HashSet<Url>,
 }
 
-impl TryFrom<Cmd> for Opt {
+impl TryFrom<CmdCow> for Opt {
 	type Error = ();
 
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
 		if let Some(iter) = c.take_any::<yazi_dds::body::BodyYankIter>("urls") {
 			Ok(Self { urls: iter.urls.into_iter().collect(), cut: iter.cut })
 		} else {

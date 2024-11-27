@@ -1,5 +1,5 @@
 use tokio::sync::oneshot;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use crate::app::App;
 
@@ -7,8 +7,8 @@ struct Opt {
 	tx: Option<oneshot::Sender<()>>,
 }
 
-impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self { Self { tx: c.take_any("tx") } }
+impl From<CmdCow> for Opt {
+	fn from(mut c: CmdCow) -> Self { Self { tx: c.take_any("tx") } }
 }
 
 impl App {

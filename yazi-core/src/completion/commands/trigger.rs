@@ -2,7 +2,7 @@ use std::{borrow::Cow, mem, path::{MAIN_SEPARATOR, MAIN_SEPARATOR_STR}};
 
 use tokio::fs;
 use yazi_macro::{emit, render};
-use yazi_shared::{Layer, event::{Cmd, Data}};
+use yazi_shared::{Layer, event::{Cmd, CmdCow, Data}};
 
 use crate::completion::Completion;
 
@@ -13,12 +13,12 @@ const SEPARATOR: [char; 2] = ['/', '\\'];
 const SEPARATOR: char = std::path::MAIN_SEPARATOR;
 
 struct Opt {
-	word:   String,
+	word:   Cow<'static, str>,
 	ticket: usize,
 }
 
-impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self {
+impl From<CmdCow> for Opt {
+	fn from(mut c: CmdCow) -> Self {
 		Self {
 			word:   c.take_first_str().unwrap_or_default(),
 			ticket: c.get("ticket").and_then(Data::as_usize).unwrap_or(0),
@@ -40,7 +40,7 @@ impl Completion {
 
 		if self.caches.contains_key(&parent) {
 			return self.show(
-				Cmd::new("show").with("cache-name", parent).with("word", child).with("ticket", opt.ticket),
+				Cmd::default().with("cache-name", parent).with("word", child).with("ticket", opt.ticket),
 			);
 		}
 

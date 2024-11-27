@@ -1,4 +1,4 @@
-use yazi_shared::{event::Cmd, fs::Url};
+use yazi_shared::{event::CmdCow, fs::Url};
 
 use crate::manager::Manager;
 
@@ -6,10 +6,10 @@ pub struct Opt {
 	urls: Vec<Url>,
 }
 
-impl TryFrom<Cmd> for Opt {
+impl TryFrom<CmdCow> for Opt {
 	type Error = ();
 
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
 		Ok(Self { urls: c.take_any("urls").ok_or(())? })
 	}
 }

@@ -1,21 +1,23 @@
+use std::borrow::Cow;
+
 use anyhow::bail;
 use mlua::{Lua, Table};
-use yazi_shared::event::{Cmd, Data};
+use yazi_shared::event::{CmdCow, Data};
 
-pub type PluginCallback = Box<dyn FnOnce(&Lua, Table) -> mlua::Result<()> + Send>;
+pub type PluginCallback = Box<dyn FnOnce(&Lua, Table) -> mlua::Result<()> + Send + Sync>;
 
 #[derive(Default)]
 pub struct PluginOpt {
-	pub id:   String,
+	pub id:   Cow<'static, str>,
 	pub mode: PluginMode,
 	pub args: Vec<Data>,
 	pub cb:   Option<PluginCallback>,
 }
 
-impl TryFrom<Cmd> for PluginOpt {
+impl TryFrom<CmdCow> for PluginOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
 		if let Some(opt) = c.take_any("opt") {
 			return Ok(opt);
 		}
@@ -50,7 +52,7 @@ Please add `--- @sync entry` metadata at the head of your `{id}` plugin instead.
 
 impl PluginOpt {
 	pub fn new_callback(id: &str, cb: PluginCallback) -> Self {
-		Self { id: id.to_owned(), mode: PluginMode::Sync, cb: Some(cb), ..Default::default() }
+		Self { id: id.to_owned().into(), mode: PluginMode::Sync, cb: Some(cb), ..Default::default() }
 	}
 }
 

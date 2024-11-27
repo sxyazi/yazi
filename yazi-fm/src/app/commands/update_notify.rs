@@ -1,12 +1,12 @@
 use crossterm::terminal::WindowSize;
 use ratatui::layout::Rect;
 use yazi_adapter::Dimension;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use crate::{app::App, notify};
 
 impl App {
-	pub(crate) fn update_notify(&mut self, cmd: Cmd) {
+	pub(crate) fn update_notify(&mut self, cmd: CmdCow) {
 		let WindowSize { rows, columns, .. } = Dimension::available();
 		let area =
 			notify::Notify::available(Rect { x: 0, y: 0, width: columns, height: rows });

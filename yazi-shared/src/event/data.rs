@@ -18,7 +18,7 @@ pub enum Data {
 	#[serde(skip_deserializing)]
 	Url(Url),
 	#[serde(skip)]
-	Any(Box<dyn Any + Send>),
+	Any(Box<dyn Any + Send + Sync>),
 }
 
 impl Data {
@@ -36,14 +36,6 @@ impl Data {
 	pub fn as_str(&self) -> Option<&str> {
 		match self {
 			Self::String(s) => Some(s),
-			_ => None,
-		}
-	}
-
-	#[inline]
-	pub fn as_any<T: 'static>(&self) -> Option<&T> {
-		match self {
-			Self::Any(b) => b.downcast_ref::<T>(),
 			_ => None,
 		}
 	}
@@ -80,10 +72,10 @@ impl Data {
 	}
 
 	#[inline]
-	pub fn shallow_clone(&self) -> Option<Self> {
+	pub fn to_url(&self) -> Option<Url> {
 		match self {
-			Self::Boolean(b) => Some(Self::Boolean(*b)),
-			Self::String(s) => Some(Self::String(s.clone())),
+			Self::String(s) => Some(Url::from(s)),
+			Self::Url(u) => Some(u.clone()),
 			_ => None,
 		}
 	}

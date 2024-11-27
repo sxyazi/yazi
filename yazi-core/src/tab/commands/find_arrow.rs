@@ -1,5 +1,5 @@
 use yazi_macro::render;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use crate::tab::Tab;
 
@@ -7,8 +7,8 @@ struct Opt {
 	prev: bool,
 }
 
-impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { prev: c.bool("previous") } }
+impl From<CmdCow> for Opt {
+	fn from(c: CmdCow) -> Self { Self { prev: c.bool("previous") } }
 }
 
 impl Tab {

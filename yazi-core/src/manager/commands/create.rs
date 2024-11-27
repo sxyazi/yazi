@@ -4,7 +4,7 @@ use anyhow::Result;
 use tokio::fs;
 use yazi_config::popup::{ConfirmCfg, InputCfg};
 use yazi_proxy::{ConfirmProxy, InputProxy, TabProxy, WATCHER};
-use yazi_shared::{event::Cmd, fs::{File, FilesOp, Url, UrnBuf, maybe_exists, ok_or_not_found, realname}};
+use yazi_shared::{event::CmdCow, fs::{File, FilesOp, Url, UrnBuf, maybe_exists, ok_or_not_found, realname}};
 
 use crate::manager::Manager;
 
@@ -13,8 +13,8 @@ struct Opt {
 	force: bool,
 }
 
-impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { dir: c.bool("dir"), force: c.bool("force") } }
+impl From<CmdCow> for Opt {
+	fn from(c: CmdCow) -> Self { Self { dir: c.bool("dir"), force: c.bool("force") } }
 }
 
 impl Manager {

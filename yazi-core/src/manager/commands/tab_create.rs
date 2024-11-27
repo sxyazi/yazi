@@ -1,7 +1,7 @@
 use yazi_boot::BOOT;
 use yazi_macro::render;
 use yazi_proxy::AppProxy;
-use yazi_shared::{event::{Cmd, Data}, fs::Url};
+use yazi_shared::{event::CmdCow, fs::Url};
 
 use crate::{manager::Tabs, tab::Tab};
 
@@ -12,16 +12,13 @@ struct Opt {
 	current: bool,
 }
 
-impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self {
+impl From<CmdCow> for Opt {
+	fn from(mut c: CmdCow) -> Self {
 		if c.bool("current") {
 			Self { url: Default::default(), current: true }
 		} else {
 			Self {
-				url:     c
-					.take_first()
-					.and_then(Data::into_url)
-					.unwrap_or_else(|| Url::from(&BOOT.cwds[0])),
+				url:     c.take_first_url().unwrap_or_else(|| Url::from(&BOOT.cwds[0])),
 				current: false,
 			}
 		}

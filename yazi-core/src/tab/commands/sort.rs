@@ -2,12 +2,12 @@ use std::str::FromStr;
 
 use yazi_config::manager::SortBy;
 use yazi_proxy::ManagerProxy;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use crate::{tab::Tab, tasks::Tasks};
 
 impl Tab {
-	pub fn sort(&mut self, mut c: Cmd, tasks: &Tasks) {
+	pub fn sort(&mut self, mut c: CmdCow, tasks: &Tasks) {
 		let pref = &mut self.pref;
 		if let Some(by) = c.take_first_str() {
 			pref.sort_by = SortBy::from_str(&by).unwrap_or_default();

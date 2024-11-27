@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use yazi_shared::{MIME_DIR, event::{Cmd, Data}};
+use yazi_shared::{MIME_DIR, event::{CmdCow, Data}};
 
 use crate::manager::Manager;
 
@@ -8,8 +8,8 @@ struct Opt {
 	skip: Option<usize>,
 }
 
-impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { skip: c.get("skip").and_then(Data::as_usize) } }
+impl From<CmdCow> for Opt {
+	fn from(c: CmdCow) -> Self { Self { skip: c.get("skip").and_then(Data::as_usize) } }
 }
 
 impl Manager {

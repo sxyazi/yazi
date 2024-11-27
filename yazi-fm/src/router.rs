@@ -1,4 +1,4 @@
-use yazi_config::{KEYMAP, keymap::{Chord, Key}};
+use yazi_config::{KEYMAP, keymap::{Chord, ChordCow, Key}};
 use yazi_macro::emit;
 use yazi_shared::Layer;
 
@@ -47,7 +47,7 @@ impl<'a> Router<'a> {
 
 	#[inline]
 	fn matches(&mut self, layer: Layer, key: Key) -> bool {
-		for ctrl @ Chord { on, .. } in KEYMAP.get(layer) {
+		for chord @ Chord { on, .. } in KEYMAP.get(layer) {
 			if on.is_empty() || on[0] != key {
 				continue;
 			}
@@ -55,7 +55,7 @@ impl<'a> Router<'a> {
 			if on.len() > 1 {
 				self.app.cx.which.show_with(key, layer);
 			} else {
-				emit!(Seq(ctrl.to_seq(), layer));
+				emit!(Seq(ChordCow::from(chord).into_seq(), layer));
 			}
 			return true;
 		}

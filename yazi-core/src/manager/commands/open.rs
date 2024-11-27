@@ -7,7 +7,7 @@ use yazi_fs::Folder;
 use yazi_macro::emit;
 use yazi_plugin::isolate;
 use yazi_proxy::{ManagerProxy, TasksProxy, options::OpenDoOpt};
-use yazi_shared::{MIME_DIR, event::{Cmd, EventQuit}, fs::{File, Url}};
+use yazi_shared::{MIME_DIR, event::{CmdCow, EventQuit}, fs::{File, Url}};
 
 use crate::{manager::Manager, tasks::Tasks};
 
@@ -17,8 +17,8 @@ struct Opt {
 	hovered:     bool,
 }
 
-impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self {
+impl From<CmdCow> for Opt {
+	fn from(c: CmdCow) -> Self {
 		Self { interactive: c.bool("interactive"), hovered: c.bool("hovered") }
 	}
 }

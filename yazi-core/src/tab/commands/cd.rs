@@ -6,7 +6,7 @@ use yazi_config::popup::InputCfg;
 use yazi_dds::Pubsub;
 use yazi_macro::render;
 use yazi_proxy::{CompletionProxy, InputProxy, ManagerProxy, TabProxy};
-use yazi_shared::{Debounce, errors::InputError, event::{Cmd, Data}, fs::{Url, expand_path}};
+use yazi_shared::{Debounce, errors::InputError, event::CmdCow, fs::{Url, expand_path}};
 
 use crate::tab::Tab;
 
@@ -15,11 +15,11 @@ struct Opt {
 	interactive: bool,
 }
 
-impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self {
+impl From<CmdCow> for Opt {
+	fn from(mut c: CmdCow) -> Self {
 		Self {
 			interactive: c.bool("interactive"),
-			..Self::from(c.take_first().and_then(Data::into_url).unwrap_or_default())
+			..Self::from(c.take_first_url().unwrap_or_default())
 		}
 	}
 }

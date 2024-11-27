@@ -1,5 +1,5 @@
 use yazi_proxy::ManagerProxy;
-use yazi_shared::{event::{Cmd, Data}, fs::{File, FilesOp, Url, expand_path}};
+use yazi_shared::{event::CmdCow, fs::{File, FilesOp, Url, expand_path}};
 
 use crate::tab::Tab;
 
@@ -7,9 +7,9 @@ struct Opt {
 	target: Url,
 }
 
-impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self {
-		let mut target = c.take_first().and_then(Data::into_url).unwrap_or_default();
+impl From<CmdCow> for Opt {
+	fn from(mut c: CmdCow) -> Self {
+		let mut target = c.take_first_url().unwrap_or_default();
 		if target.is_regular() {
 			target = Url::from(expand_path(&target));
 		}

@@ -1,17 +1,17 @@
 use std::{borrow::Cow, ffi::{OsStr, OsString}, path::Path};
 
 use yazi_plugin::CLIPBOARD;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use crate::tab::Tab;
 
 struct Opt {
-	type_:     String,
+	type_:     Cow<'static, str>,
 	separator: Separator,
 }
 
-impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self {
+impl From<CmdCow> for Opt {
+	fn from(mut c: CmdCow) -> Self {
 		Self {
 			type_:     c.take_first_str().unwrap_or_default(),
 			separator: c.str("separator").unwrap_or_default().into(),
@@ -29,7 +29,7 @@ impl Tab {
 		let mut s = OsString::new();
 		let mut it = self.selected_or_hovered(true).peekable();
 		while let Some(u) = it.next() {
-			s.push(match opt.type_.as_str() {
+			s.push(match opt.type_.as_ref() {
 				"path" => opt.separator.transform(u),
 				"dirname" => opt.separator.transform(u.parent().unwrap_or(Path::new(""))),
 				"filename" => opt.separator.transform(u.name()),
