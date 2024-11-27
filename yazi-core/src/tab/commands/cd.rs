@@ -26,7 +26,7 @@ impl From<Cmd> for Opt {
 
 impl From<Url> for Opt {
 	fn from(mut target: Url) -> Self {
-		if target.is_regular() {
+		if target.is_regular() && target.to_string() != "-" {
 			target = Url::from(expand_path(&target));
 		}
 		Self { target, interactive: false }
@@ -45,6 +45,15 @@ impl Tab {
 		}
 
 		if opt.target == *self.cwd() {
+			return;
+		}
+
+		if opt.target.to_string() == "-" {
+			if let Some(last_cwd) = self.backstack.shift_backward() {
+				TabProxy::cd(&last_cwd);
+			}
+
+			self.backstack.push(self.cwd().clone());
 			return;
 		}
 
