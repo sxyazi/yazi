@@ -71,7 +71,7 @@ Please replace e.g. `shell` with `shell --interactive`, `shell "my-template"` wi
 				let mut result =
 					InputProxy::show(InputCfg::shell(opt.block).with_value(opt.run).with_cursor(opt.cursor));
 				match result.recv().await {
-					Some(Ok(e)) => opt.run = e.into(),
+					Some(Ok(e)) => opt.run = Cow::Owned(e),
 					_ => return,
 				}
 			}

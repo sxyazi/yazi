@@ -23,7 +23,7 @@ impl App {
 		}
 
 		if opt.mode == PluginMode::Async {
-			return self.cx.tasks.plugin_micro(opt.id.as_ref().to_owned(), opt.args);
+			return self.cx.tasks.plugin_micro(opt.id.into_owned(), opt.args);
 		} else if opt.mode == PluginMode::Sync && hits {
 			return self.plugin_do(opt);
 		}
@@ -47,7 +47,7 @@ impl App {
 		};
 
 		if opt.mode.auto_then(chunk.sync_entry) != PluginMode::Sync {
-			return self.cx.tasks.plugin_micro(opt.id.as_ref().to_owned(), opt.args);
+			return self.cx.tasks.plugin_micro(opt.id.into_owned(), opt.args);
 		}
 
 		match LUA.named_registry_value::<RtRef>("rt") {
