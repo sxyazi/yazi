@@ -1,14 +1,16 @@
+use std::borrow::Cow;
+
 use yazi_plugin::CLIPBOARD;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use crate::spot::Spot;
 
 struct Opt {
-	type_: String,
+	type_: Cow<'static, str>,
 }
 
-impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self { Self { type_: c.take_first_str().unwrap_or_default() } }
+impl From<CmdCow> for Opt {
+	fn from(mut c: CmdCow) -> Self { Self { type_: c.take_first_str().unwrap_or_default() } }
 }
 
 impl Spot {
@@ -18,7 +20,7 @@ impl Spot {
 		let Some(table) = lock.table() else { return };
 
 		let mut s = String::new();
-		match opt.type_.as_str() {
+		match opt.type_.as_ref() {
 			"cell" => {
 				let Some(cell) = table.selected_cell() else { return };
 				s = cell.to_string();

@@ -1,10 +1,10 @@
 use yazi_macro::render;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use crate::input::{Input, op::InputOp};
 
 impl Input {
-	pub fn yank(&mut self, _: Cmd) {
+	pub fn yank(&mut self, _: CmdCow) {
 		match self.snap().op {
 			InputOp::None => {
 				self.snap_mut().op = InputOp::Yank(self.snap().cursor);

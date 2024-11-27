@@ -1,5 +1,5 @@
 use yazi_core::input::InputMode;
-use yazi_shared::{Layer, event::Cmd};
+use yazi_shared::{Layer, event::CmdCow};
 
 use crate::app::App;
 
@@ -12,7 +12,7 @@ impl<'a> Executor<'a> {
 	pub(super) fn new(app: &'a mut App) -> Self { Self { app } }
 
 	#[inline]
-	pub(super) fn execute(&mut self, cmd: Cmd, layer: Layer) {
+	pub(super) fn execute(&mut self, cmd: CmdCow, layer: Layer) {
 		match layer {
 			Layer::App => self.app(cmd),
 			Layer::Manager => self.manager(cmd),
@@ -27,7 +27,7 @@ impl<'a> Executor<'a> {
 		}
 	}
 
-	fn app(&mut self, cmd: Cmd) {
+	fn app(&mut self, cmd: CmdCow) {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
@@ -47,7 +47,7 @@ impl<'a> Executor<'a> {
 		on!(resume);
 	}
 
-	fn manager(&mut self, cmd: Cmd) {
+	fn manager(&mut self, cmd: CmdCow) {
 		macro_rules! on {
 			(MANAGER, $name:ident $(,$args:expr)*) => {
 				if cmd.name == stringify!($name) {
@@ -153,7 +153,7 @@ impl<'a> Executor<'a> {
 		}
 	}
 
-	fn tasks(&mut self, cmd: Cmd) {
+	fn tasks(&mut self, cmd: CmdCow) {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
@@ -183,7 +183,7 @@ impl<'a> Executor<'a> {
 		}
 	}
 
-	fn spot(&mut self, cmd: Cmd) {
+	fn spot(&mut self, cmd: CmdCow) {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
@@ -206,7 +206,7 @@ impl<'a> Executor<'a> {
 		}
 	}
 
-	fn pick(&mut self, cmd: Cmd) {
+	fn pick(&mut self, cmd: CmdCow) {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
@@ -228,7 +228,7 @@ impl<'a> Executor<'a> {
 		}
 	}
 
-	fn input(&mut self, cmd: Cmd) {
+	fn input(&mut self, cmd: CmdCow) {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
@@ -284,7 +284,7 @@ impl<'a> Executor<'a> {
 		}
 	}
 
-	fn confirm(&mut self, cmd: Cmd) {
+	fn confirm(&mut self, cmd: CmdCow) {
 		macro_rules! on {
 			($name:ident $(,$args:expr)*) => {
 				if cmd.name == stringify!($name) {
@@ -298,7 +298,7 @@ impl<'a> Executor<'a> {
 		on!(close);
 	}
 
-	fn help(&mut self, cmd: Cmd) {
+	fn help(&mut self, cmd: CmdCow) {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
@@ -319,7 +319,7 @@ impl<'a> Executor<'a> {
 		}
 	}
 
-	fn completion(&mut self, cmd: Cmd) {
+	fn completion(&mut self, cmd: CmdCow) {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
@@ -343,7 +343,7 @@ impl<'a> Executor<'a> {
 		}
 	}
 
-	fn which(&mut self, cmd: Cmd) {
+	fn which(&mut self, cmd: CmdCow) {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {

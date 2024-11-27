@@ -1,5 +1,5 @@
 use yazi_macro::render;
-use yazi_shared::event::{Cmd, Data};
+use yazi_shared::event::{CmdCow, Data};
 
 use crate::manager::Tabs;
 
@@ -7,8 +7,8 @@ struct Opt {
 	idx: usize,
 }
 
-impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { idx: c.first().and_then(Data::as_usize).unwrap_or(0) } }
+impl From<CmdCow> for Opt {
+	fn from(c: CmdCow) -> Self { Self { idx: c.first().and_then(Data::as_usize).unwrap_or(0) } }
 }
 
 impl From<usize> for Opt {

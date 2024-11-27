@@ -1,6 +1,6 @@
 use yazi_core::tasks::TasksProgress;
 use yazi_macro::render;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use crate::app::App;
 
@@ -8,10 +8,10 @@ pub struct Opt {
 	progress: TasksProgress,
 }
 
-impl TryFrom<Cmd> for Opt {
+impl TryFrom<CmdCow> for Opt {
 	type Error = ();
 
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
 		Ok(Self { progress: c.take_any("progress").ok_or(())? })
 	}
 }

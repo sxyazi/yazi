@@ -1,7 +1,7 @@
 use tokio::sync::mpsc;
 use yazi_config::popup::InputCfg;
 use yazi_macro::render;
-use yazi_shared::{errors::InputError, event::Cmd};
+use yazi_shared::{errors::InputError, event::CmdCow};
 
 use crate::input::Input;
 
@@ -10,10 +10,10 @@ pub struct Opt {
 	tx:  mpsc::UnboundedSender<Result<String, InputError>>,
 }
 
-impl TryFrom<Cmd> for Opt {
+impl TryFrom<CmdCow> for Opt {
 	type Error = ();
 
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
 		Ok(Self { cfg: c.take_any("cfg").ok_or(())?, tx: c.take_any("tx").ok_or(())? })
 	}
 }

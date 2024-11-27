@@ -1,5 +1,5 @@
 use yazi_macro::render;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use crate::input::Input;
 
@@ -7,8 +7,8 @@ struct Opt {
 	under: bool,
 }
 
-impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { under: c.bool("under") } }
+impl From<CmdCow> for Opt {
+	fn from(c: CmdCow) -> Self { Self { under: c.bool("under") } }
 }
 impl From<bool> for Opt {
 	fn from(under: bool) -> Self { Self { under } }

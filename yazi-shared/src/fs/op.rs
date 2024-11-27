@@ -38,7 +38,8 @@ impl FilesOp {
 
 	#[inline]
 	pub fn emit(self) {
-		crate::event::Event::Call(Cmd::new("update_files").with_any("op", self), Layer::Manager).emit();
+		crate::event::Event::Call(Cmd::new("update_files").with_any("op", self).into(), Layer::Manager)
+			.emit();
 	}
 
 	pub fn prepare(cwd: &Url) -> Id {

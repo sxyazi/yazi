@@ -1,5 +1,5 @@
 use yazi_proxy::HIDER;
-use yazi_shared::{event::{Cmd, Data}, fs::Url};
+use yazi_shared::{event::{CmdCow, Data}, fs::Url};
 
 use crate::manager::Manager;
 
@@ -11,12 +11,12 @@ struct Opt {
 	upper_bound: bool,
 }
 
-impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self {
+impl From<CmdCow> for Opt {
+	fn from(mut c: CmdCow) -> Self {
 		Self {
 			skip:        c.first().and_then(Data::as_usize),
 			force:       c.bool("force"),
-			only_if:     c.take("only-if").and_then(Data::into_url),
+			only_if:     c.take_url("only-if"),
 			upper_bound: c.bool("upper-bound"),
 		}
 	}

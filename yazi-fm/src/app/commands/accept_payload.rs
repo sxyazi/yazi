@@ -2,12 +2,12 @@ use mlua::IntoLua;
 use tracing::error;
 use yazi_dds::{LOCAL, Payload, REMOTE};
 use yazi_plugin::LUA;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use crate::{app::App, lives::Lives};
 
 impl App {
-	pub(crate) fn accept_payload(&mut self, mut cmd: Cmd) {
+	pub(crate) fn accept_payload(&mut self, mut cmd: CmdCow) {
 		let Some(payload) = cmd.take_any::<Payload>("payload") else {
 			return;
 		};

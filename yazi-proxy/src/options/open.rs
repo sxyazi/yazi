@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use yazi_config::open::Opener;
-use yazi_shared::{event::Cmd, fs::Url};
+use yazi_shared::{event::CmdCow, fs::Url};
 
 // --- Open
 #[derive(Default)]
@@ -11,8 +11,8 @@ pub struct OpenDoOpt {
 	pub interactive: bool,
 }
 
-impl From<Cmd> for OpenDoOpt {
-	fn from(mut c: Cmd) -> Self { c.take_any("option").unwrap_or_default() }
+impl From<CmdCow> for OpenDoOpt {
+	fn from(mut c: CmdCow) -> Self { c.take_any("option").unwrap_or_default() }
 }
 
 // --- Open with
@@ -21,8 +21,8 @@ pub struct OpenWithOpt {
 	pub opener:  Cow<'static, Opener>,
 }
 
-impl TryFrom<Cmd> for OpenWithOpt {
+impl TryFrom<CmdCow> for OpenWithOpt {
 	type Error = ();
 
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> { c.take_any("option").ok_or(()) }
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> { c.take_any("option").ok_or(()) }
 }

@@ -1,6 +1,6 @@
 use yazi_macro::render_and;
 use yazi_proxy::AppProxy;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use crate::tab::Tab;
 
@@ -8,8 +8,8 @@ struct Opt {
 	state: Option<bool>,
 }
 
-impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self {
+impl From<CmdCow> for Opt {
+	fn from(mut c: CmdCow) -> Self {
 		Self {
 			state: match c.take_first_str().as_deref() {
 				Some("on") => Some(true),

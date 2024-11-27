@@ -1,23 +1,23 @@
-use std::ops::RangeBounds;
+use std::{borrow::Cow, ops::RangeBounds};
 
 use yazi_macro::render;
-use yazi_shared::{CharKind, event::Cmd};
+use yazi_shared::{CharKind, event::CmdCow};
 
 use crate::input::Input;
 
 struct Opt {
-	kind: String,
+	kind: Cow<'static, str>,
 }
 
-impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self { Self { kind: c.take_first_str().unwrap_or_default() } }
+impl From<CmdCow> for Opt {
+	fn from(mut c: CmdCow) -> Self { Self { kind: c.take_first_str().unwrap_or_default() } }
 }
 
 impl Input {
 	#[yazi_codegen::command]
 	pub fn kill(&mut self, opt: Opt) {
 		let snap = self.snap_mut();
-		match opt.kind.as_str() {
+		match opt.kind.as_ref() {
 			"all" => self.kill_range(..),
 			"bol" => {
 				let end = snap.idx(snap.cursor).unwrap_or(snap.len());

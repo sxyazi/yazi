@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{borrow::Cow, time::Duration};
 
 use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
@@ -6,22 +6,22 @@ use yazi_config::popup::InputCfg;
 use yazi_fs::FilterCase;
 use yazi_macro::emit;
 use yazi_proxy::InputProxy;
-use yazi_shared::{Debounce, Layer, errors::InputError, event::Cmd};
+use yazi_shared::{Debounce, Layer, errors::InputError, event::{Cmd, CmdCow}};
 
 use crate::tab::Tab;
 
 #[derive(Default)]
 pub(super) struct Opt {
-	pub query: String,
+	pub query: Cow<'static, str>,
 	pub case:  FilterCase,
 	pub done:  bool,
 }
 
-impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self {
+impl From<CmdCow> for Opt {
+	fn from(mut c: CmdCow) -> Self {
 		Self {
 			query: c.take_first_str().unwrap_or_default(),
-			case:  FilterCase::from(&c),
+			case:  FilterCase::from(&*c),
 			done:  c.bool("done"),
 		}
 	}

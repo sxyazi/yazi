@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 
 use yazi_macro::render;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use crate::tab::{Mode, Tab};
 
@@ -9,8 +9,8 @@ struct Opt {
 	unset: bool,
 }
 
-impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { unset: c.bool("unset") } }
+impl From<CmdCow> for Opt {
+	fn from(c: CmdCow) -> Self { Self { unset: c.bool("unset") } }
 }
 
 impl Tab {

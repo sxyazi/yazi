@@ -3,14 +3,14 @@ use ratatui::layout::Position;
 use tracing::error;
 use yazi_config::LAYOUT;
 use yazi_macro::render;
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use crate::{Root, app::App, lives::Lives};
 
 struct Opt;
 
-impl From<Cmd> for Opt {
-	fn from(_: Cmd) -> Self { Self }
+impl From<CmdCow> for Opt {
+	fn from(_: CmdCow) -> Self { Self }
 }
 
 impl From<()> for Opt {

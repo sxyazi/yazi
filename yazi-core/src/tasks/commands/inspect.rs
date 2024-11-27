@@ -4,12 +4,12 @@ use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use scopeguard::defer;
 use tokio::{io::{AsyncReadExt, stdin}, select, sync::mpsc, time};
 use yazi_proxy::{AppProxy, HIDER};
-use yazi_shared::{event::Cmd, terminal_clear};
+use yazi_shared::{event::CmdCow, terminal_clear};
 
 use crate::tasks::Tasks;
 
 impl Tasks {
-	pub fn inspect(&self, _: Cmd) {
+	pub fn inspect(&self, _: CmdCow) {
 		let ongoing = self.ongoing().clone();
 		let Some(id) = ongoing.lock().get_id(self.cursor) else {
 			return;

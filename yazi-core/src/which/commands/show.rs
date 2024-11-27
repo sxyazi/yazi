@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use yazi_config::{KEYMAP, keymap::{Chord, Key}};
 use yazi_macro::render;
-use yazi_shared::{Layer, event::Cmd};
+use yazi_shared::{Layer, event::CmdCow};
 
 use crate::which::{Which, WhichSorter};
 
@@ -12,10 +12,10 @@ pub struct Opt {
 	silent: bool,
 }
 
-impl TryFrom<Cmd> for Opt {
+impl TryFrom<CmdCow> for Opt {
 	type Error = anyhow::Error;
 
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
 		Ok(Self {
 			cands:  c.take_any("candidates").unwrap_or_default(),
 			layer:  Layer::from_str(&c.take_str("layer").unwrap_or_default())?,

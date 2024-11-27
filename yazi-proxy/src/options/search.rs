@@ -1,23 +1,29 @@
-use std::fmt::Display;
+use std::{borrow::Cow, fmt::Display};
 
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 pub struct SearchOpt {
 	pub via:      SearchOptVia,
-	pub subject:  String,
+	pub subject:  Cow<'static, str>,
 	pub args:     Vec<String>,
-	pub args_raw: String,
+	pub args_raw: Cow<'static, str>,
 }
 
-impl TryFrom<Cmd> for SearchOpt {
+impl TryFrom<CmdCow> for SearchOpt {
 	type Error = ();
 
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> {
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
+		// TODO: remove this
+		let (via, subject) = if let Some(s) = c.take_str("via") {
+			(s.as_ref().into(), c.take_first_str().unwrap_or_default())
+		} else {
+			(c.take_first_str().unwrap_or_default().as_ref().into(), "".into())
+		};
+
 		Ok(Self {
-			// TODO: remove `c.take_first_str()` in the future
-			via:      c.take_str("via").or_else(|| c.take_first_str()).unwrap_or_default().into(),
-			subject:  c.take_first_str().unwrap_or_default(),
-			args:     shell_words::split(c.str("args").unwrap_or_default()).map_err(|_| ())?,
+			via,
+			subject,
+			args: shell_words::split(c.str("args").unwrap_or_default()).map_err(|_| ())?,
 			args_raw: c.take_str("args").unwrap_or_default(),
 		})
 	}
@@ -32,9 +38,9 @@ pub enum SearchOptVia {
 	Fd,
 }
 
-impl From<String> for SearchOptVia {
-	fn from(value: String) -> Self {
-		match value.as_str() {
+impl From<&str> for SearchOptVia {
+	fn from(value: &str) -> Self {
+		match value {
 			"rg" => Self::Rg,
 			"fd" => Self::Fd,
 			_ => Self::None,

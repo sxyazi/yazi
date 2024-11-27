@@ -1,23 +1,23 @@
-use std::collections::{HashMap, HashSet};
+use std::{borrow::Cow, collections::{HashMap, HashSet}};
 
 use anyhow::Result;
 use tokio::fs;
 use yazi_config::popup::{ConfirmCfg, InputCfg};
 use yazi_dds::Pubsub;
 use yazi_proxy::{ConfirmProxy, InputProxy, TabProxy, WATCHER};
-use yazi_shared::{event::Cmd, fs::{File, FilesOp, Url, UrnBuf, maybe_exists, ok_or_not_found, paths_to_same_file, realname}};
+use yazi_shared::{event::CmdCow, fs::{File, FilesOp, Url, UrnBuf, maybe_exists, ok_or_not_found, paths_to_same_file, realname}};
 
 use crate::manager::Manager;
 
 struct Opt {
 	hovered: bool,
 	force:   bool,
-	empty:   String,
-	cursor:  String,
+	empty:   Cow<'static, str>,
+	cursor:  Cow<'static, str>,
 }
 
-impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self {
+impl From<CmdCow> for Opt {
+	fn from(mut c: CmdCow) -> Self {
 		Self {
 			hovered: c.bool("hovered"),
 			force:   c.bool("force"),
@@ -42,7 +42,7 @@ impl Manager {
 		}
 
 		let name = Self::empty_url_part(&hovered, &opt.empty);
-		let cursor = match opt.cursor.as_str() {
+		let cursor = match opt.cursor.as_ref() {
 			"start" => Some(0),
 			"before_ext" => name
 				.chars()

@@ -1,7 +1,7 @@
 use bitflags::bitflags;
 use yazi_macro::{render, render_and};
 use yazi_proxy::{AppProxy, ManagerProxy};
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use crate::tab::Tab;
 
@@ -15,8 +15,8 @@ bitflags! {
 	}
 }
 
-impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self {
+impl From<CmdCow> for Opt {
+	fn from(c: CmdCow) -> Self {
 		c.args.iter().fold(Opt::empty(), |acc, (k, v)| {
 			match (k.as_str(), v.as_bool().unwrap_or(false)) {
 				("all", true) => Self::all(),

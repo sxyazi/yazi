@@ -1,9 +1,9 @@
-use yazi_shared::{CharKind, event::Cmd};
+use yazi_shared::{CharKind, event::CmdCow};
 
 use crate::input::Input;
 
 impl Input {
-	pub fn backward(&mut self, _: Cmd) {
+	pub fn backward(&mut self, _: CmdCow) {
 		let snap = self.snap();
 		if snap.cursor == 0 {
 			return self.move_(0);

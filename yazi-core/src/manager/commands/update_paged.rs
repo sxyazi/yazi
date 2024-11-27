@@ -1,4 +1,4 @@
-use yazi_shared::{event::{Cmd, Data}, fs::Url};
+use yazi_shared::{event::{CmdCow, Data}, fs::Url};
 
 use crate::{manager::Manager, tasks::Tasks};
 
@@ -8,12 +8,9 @@ pub struct Opt {
 	only_if: Option<Url>,
 }
 
-impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self {
-		Self {
-			page:    c.first().and_then(Data::as_usize),
-			only_if: c.take("only-if").and_then(Data::into_url),
-		}
+impl From<CmdCow> for Opt {
+	fn from(mut c: CmdCow) -> Self {
+		Self { page: c.first().and_then(Data::as_usize), only_if: c.take_url("only-if") }
 	}
 }
 

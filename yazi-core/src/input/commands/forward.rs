@@ -1,4 +1,4 @@
-use yazi_shared::{CharKind, event::Cmd};
+use yazi_shared::{CharKind, event::CmdCow};
 
 use crate::input::{Input, op::InputOp};
 
@@ -6,8 +6,8 @@ struct Opt {
 	end_of_word: bool,
 }
 
-impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { end_of_word: c.bool("end-of-word") } }
+impl From<CmdCow> for Opt {
+	fn from(c: CmdCow) -> Self { Self { end_of_word: c.bool("end-of-word") } }
 }
 
 impl Input {

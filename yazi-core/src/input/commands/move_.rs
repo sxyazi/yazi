@@ -1,6 +1,6 @@
 use unicode_width::UnicodeWidthStr;
 use yazi_macro::render;
-use yazi_shared::event::{Cmd, Data};
+use yazi_shared::event::{CmdCow, Data};
 
 use crate::input::{Input, op::InputOp, snap::InputSnap};
 
@@ -9,8 +9,8 @@ struct Opt {
 	in_operating: bool,
 }
 
-impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self {
+impl From<CmdCow> for Opt {
+	fn from(c: CmdCow) -> Self {
 		Self {
 			step:         c.first().and_then(Data::as_isize).unwrap_or(0),
 			in_operating: c.bool("in-operating"),

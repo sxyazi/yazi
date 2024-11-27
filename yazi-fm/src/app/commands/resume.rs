@@ -1,9 +1,9 @@
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use crate::{Term, app::App};
 
 impl App {
-	pub(crate) fn resume(&mut self, _: Cmd) {
+	pub(crate) fn resume(&mut self, _: CmdCow) {
 		self.cx.active_mut().preview.reset_image();
 		self.term = Some(Term::start().unwrap());
 

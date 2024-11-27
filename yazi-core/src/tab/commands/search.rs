@@ -29,7 +29,7 @@ impl Tab {
 				InputProxy::show(InputCfg::search(&opt.via.to_string()).with_value(opt.subject));
 
 			if let Some(Ok(subject)) = input.recv().await {
-				opt.subject = subject;
+				opt.subject = subject.into();
 				TabProxy::search_do(opt);
 			}
 		});
@@ -52,14 +52,14 @@ impl Tab {
 				external::rg(external::RgOpt {
 					cwd: cwd.clone(),
 					hidden,
-					subject: opt.subject,
+					subject: opt.subject.into(),
 					args: opt.args,
 				})
 			} else {
 				external::fd(external::FdOpt {
 					cwd: cwd.clone(),
 					hidden,
-					subject: opt.subject,
+					subject: opt.subject.into(),
 					args: opt.args,
 				})
 			}?;

@@ -3,7 +3,7 @@ use std::{str::FromStr, time::Duration};
 use anyhow::bail;
 use mlua::{ExternalError, ExternalResult};
 use yazi_config::THEME;
-use yazi_shared::{event::Cmd, theme::Style};
+use yazi_shared::{event::CmdCow, theme::Style};
 
 pub struct NotifyOpt {
 	pub title:   String,
@@ -12,10 +12,10 @@ pub struct NotifyOpt {
 	pub timeout: Duration,
 }
 
-impl TryFrom<Cmd> for NotifyOpt {
+impl TryFrom<CmdCow> for NotifyOpt {
 	type Error = ();
 
-	fn try_from(mut c: Cmd) -> Result<Self, Self::Error> { c.take_any("option").ok_or(()) }
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> { c.take_any("option").ok_or(()) }
 }
 
 impl TryFrom<mlua::Table> for NotifyOpt {

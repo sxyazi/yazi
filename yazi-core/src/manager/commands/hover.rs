@@ -2,7 +2,7 @@ use std::{collections::HashSet, path::PathBuf};
 
 use yazi_dds::Pubsub;
 use yazi_macro::render;
-use yazi_shared::{Id, event::{Cmd, Data}, fs::{Url, Urn}};
+use yazi_shared::{Id, event::{CmdCow, Data}, fs::{Url, Urn}};
 
 use crate::manager::Manager;
 
@@ -11,9 +11,9 @@ struct Opt {
 	tab: Option<Id>,
 }
 
-impl From<Cmd> for Opt {
-	fn from(mut c: Cmd) -> Self {
-		Self { url: c.take_first().and_then(Data::into_url), tab: c.get("tab").and_then(Data::as_id) }
+impl From<CmdCow> for Opt {
+	fn from(mut c: CmdCow) -> Self {
+		Self { url: c.take_first_url(), tab: c.get("tab").and_then(Data::as_id) }
 	}
 }
 impl From<Option<Url>> for Opt {

@@ -17,13 +17,13 @@ impl App {
 		};
 
 		let mut hits = false;
-		if let Some(chunk) = LOADER.read().get(&opt.id) {
+		if let Some(chunk) = LOADER.read().get(opt.id.as_ref()) {
 			hits = true;
 			opt.mode = opt.mode.auto_then(chunk.sync_entry);
 		}
 
 		if opt.mode == PluginMode::Async {
-			return self.cx.tasks.plugin_micro(opt.id, opt.args);
+			return self.cx.tasks.plugin_micro(opt.id.as_ref().to_owned(), opt.args);
 		} else if opt.mode == PluginMode::Sync && hits {
 			return self.plugin_do(opt);
 		}
@@ -42,12 +42,12 @@ impl App {
 		};
 
 		let loader = LOADER.read();
-		let Some(chunk) = loader.get(&opt.id) else {
+		let Some(chunk) = loader.get(opt.id.as_ref()) else {
 			return warn!("plugin `{}` not found", opt.id);
 		};
 
 		if opt.mode.auto_then(chunk.sync_entry) != PluginMode::Sync {
-			return self.cx.tasks.plugin_micro(opt.id, opt.args);
+			return self.cx.tasks.plugin_micro(opt.id.as_ref().to_owned(), opt.args);
 		}
 
 		match LUA.named_registry_value::<RtRef>("rt") {

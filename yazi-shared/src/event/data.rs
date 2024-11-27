@@ -41,14 +41,6 @@ impl Data {
 	}
 
 	#[inline]
-	pub fn as_any<T: 'static>(&self) -> Option<&T> {
-		match self {
-			Self::Any(b) => b.downcast_ref::<T>(),
-			_ => None,
-		}
-	}
-
-	#[inline]
 	pub fn into_any<T: 'static>(self) -> Option<T> {
 		match self {
 			Self::Any(b) => b.downcast::<T>().ok().map(|b| *b),
@@ -80,10 +72,10 @@ impl Data {
 	}
 
 	#[inline]
-	pub fn shallow_clone(&self) -> Option<Self> {
+	pub fn to_url(&self) -> Option<Url> {
 		match self {
-			Self::Boolean(b) => Some(Self::Boolean(*b)),
-			Self::String(s) => Some(Self::String(s.clone())),
+			Self::String(s) => Some(Url::from(s)),
+			Self::Url(u) => Some(u.clone()),
 			_ => None,
 		}
 	}

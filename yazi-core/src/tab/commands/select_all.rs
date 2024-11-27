@@ -1,11 +1,11 @@
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use crate::tab::Tab;
 
 struct Opt;
 
-impl From<Cmd> for Opt {
-	fn from(_: Cmd) -> Self { Self }
+impl From<CmdCow> for Opt {
+	fn from(_: CmdCow) -> Self { Self }
 }
 
 impl Tab {

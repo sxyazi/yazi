@@ -1,4 +1,4 @@
-use yazi_shared::event::Cmd;
+use yazi_shared::event::CmdCow;
 
 use crate::{manager::Manager, tasks::Tasks};
 
@@ -7,8 +7,8 @@ struct Opt {
 	follow: bool,
 }
 
-impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self { force: c.bool("force"), follow: c.bool("follow") } }
+impl From<CmdCow> for Opt {
+	fn from(c: CmdCow) -> Self { Self { force: c.bool("force"), follow: c.bool("follow") } }
 }
 
 impl Manager {
