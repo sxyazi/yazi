@@ -21,7 +21,7 @@ impl Plugin {
 	pub async fn work(&self, op: PluginOp) -> Result<()> {
 		match op {
 			PluginOp::Entry(task) => {
-				isolate::entry(task.name, task.args).await?;
+				isolate::entry(task.opt).await?;
 			}
 		}
 		Ok(())
@@ -30,7 +30,7 @@ impl Plugin {
 	pub async fn micro(&self, task: PluginOpEntry) -> Result<()> {
 		self.prog.send(TaskProg::New(task.id, 0))?;
 
-		if let Err(e) = isolate::entry(task.name, task.args).await {
+		if let Err(e) = isolate::entry(task.opt).await {
 			self.fail(task.id, format!("Micro plugin failed:\n{e}"))?;
 			return Ok(());
 		}

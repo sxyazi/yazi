@@ -43,6 +43,7 @@ impl IntoLua for BodyYank<'static> {
 }
 
 // --- Iterator
+#[derive(Clone)]
 pub struct BodyYankIter {
 	pub cut:  bool,
 	pub urls: Vec<Url>,

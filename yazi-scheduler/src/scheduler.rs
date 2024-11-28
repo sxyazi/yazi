@@ -6,8 +6,8 @@ use parking_lot::Mutex;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
 use yazi_config::{TASKS, open::Opener, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
-use yazi_proxy::ManagerProxy;
-use yazi_shared::{Throttle, event::Data, fs::{Url, must_be_dir, remove_dir_clean, unique_name}};
+use yazi_proxy::{ManagerProxy, options::PluginOpt};
+use yazi_shared::{Throttle, fs::{Url, must_be_dir, remove_dir_clean, unique_name}};
 
 use super::{Ongoing, TaskProg, TaskStage};
 use crate::{HIGH, LOW, NORMAL, TaskKind, TaskOp, file::{File, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, prework::{Prework, PreworkOpFetch, PreworkOpLoad, PreworkOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}};
@@ -206,21 +206,17 @@ impl Scheduler {
 		})
 	}
 
-	pub fn plugin_micro(&self, name: String, args: Vec<Data>) {
-		let id = self.ongoing.lock().add(TaskKind::User, format!("Run micro plugin `{name}`"));
+	pub fn plugin_micro(&self, opt: PluginOpt) {
+		let id = self.ongoing.lock().add(TaskKind::User, format!("Run micro plugin `{}`", opt.id));
 
 		let plugin = self.plugin.clone();
-		self.send_micro(
-			id,
-			NORMAL,
-			async move { plugin.micro(PluginOpEntry { id, name, args }).await },
-		);
+		self.send_micro(id, NORMAL, async move { plugin.micro(PluginOpEntry { id, opt }).await });
 	}
 
-	pub fn plugin_macro(&self, name: String, args: Vec<Data>) {
-		let id = self.ongoing.lock().add(TaskKind::User, format!("Run macro plugin `{name}`"));
+	pub fn plugin_macro(&self, opt: PluginOpt) {
+		let id = self.ongoing.lock().add(TaskKind::User, format!("Run macro plugin `{}`", opt.id));
 
-		self.plugin.macro_(PluginOpEntry { id, name, args }).ok();
+		self.plugin.macro_(PluginOpEntry { id, opt }).ok();
 	}
 
 	pub fn fetch_paged(&self, fetcher: &'static Fetcher, targets: Vec<yazi_shared::fs::File>) {
@@ -229,10 +225,9 @@ impl Scheduler {
 			format!("Run fetcher `{}` with {} target(s)", fetcher.run.name, targets.len()),
 		);
 
-		let plugin = fetcher.into();
 		let prework = self.prework.clone();
 		self.send_micro(id, NORMAL, async move {
-			prework.fetch(PreworkOpFetch { id, plugin, targets }).await
+			prework.fetch(PreworkOpFetch { id, plugin: fetcher, targets }).await
 		});
 	}
 
@@ -240,14 +235,11 @@ impl Scheduler {
 		let id =
 			self.ongoing.lock().add(TaskKind::Preload, format!("Run preloader `{}`", preloader.run.name));
 
-		let plugin = preloader.into();
 		let target = target.clone();
 		let prework = self.prework.clone();
-		self.send_micro(
-			id,
-			NORMAL,
-			async move { prework.load(PreworkOpLoad { id, plugin, target }).await },
-		);
+		self.send_micro(id, NORMAL, async move {
+			prework.load(PreworkOpLoad { id, plugin: preloader, target }).await
+		});
 	}
 
 	pub fn prework_size(&self, targets: Vec<&Url>) {

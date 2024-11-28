@@ -21,7 +21,7 @@ impl<'a> Input<'a> {
 			bail!("Highlighting is disabled");
 		}
 
-		let (theme, syntaxes) = futures::executor::block_on(Highlighter::init());
+		let (theme, syntaxes) = Highlighter::init();
 		if let Some(syntax) = syntaxes.find_syntax_by_name("Bourne Again Shell (bash)") {
 			let mut h = HighlightLines::new(syntax, theme);
 			let regions = h.highlight_line(self.cx.input.value(), syntaxes)?;

@@ -1,8 +1,8 @@
 local M = {}
 
-function M:peek()
+function M:peek(job)
 	local cmd = os.getenv("YAZI_FILE_ONE") or "file"
-	local output, err = Command(cmd):args({ "-bL", "--", tostring(self.file.url) }):stdout(Command.PIPED):output()
+	local output, err = Command(cmd):args({ "-bL", "--", tostring(job.file.url) }):stdout(Command.PIPED):output()
 
 	local text
 	if output then
@@ -11,7 +11,7 @@ function M:peek()
 		text = ui.Text(string.format("Failed to start `%s`, error: %s", cmd, err))
 	end
 
-	ya.preview_widgets(self, { text:area(self.area):wrap(ui.Text.WRAP) })
+	ya.preview_widgets(job, { text:area(job.area):wrap(ui.Text.WRAP) })
 end
 
 function M:seek() end
@@ -33,7 +33,7 @@ function M:spot_base(job)
 	local url, cha = job.file.url, job.file.cha
 	local spotter = PLUGIN.spotter(url, job.mime)
 	local previewer = PLUGIN.previewer(url, job.mime)
-	local fetchers = PLUGIN.fetchers(url, job.mime)
+	local fetchers = PLUGIN.fetchers(job.file, job.mime)
 	local preloaders = PLUGIN.preloaders(url, job.mime)
 
 	for i, v in ipairs(fetchers) do

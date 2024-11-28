@@ -1,25 +1,25 @@
 local M = {}
 
-function M:peek()
-	local start, url = os.clock(), ya.file_cache(self)
+function M:peek(job)
+	local start, url = os.clock(), ya.file_cache(job)
 	if not url or not fs.cha(url) then
-		url = self.file.url
+		url = job.file.url
 	end
 
 	ya.sleep(math.max(0, PREVIEW.image_delay / 1000 + start - os.clock()))
-	ya.image_show(url, self.area)
-	ya.preview_widgets(self, {})
+	ya.image_show(url, job.area)
+	ya.preview_widgets(job, {})
 end
 
 function M:seek() end
 
-function M:preload()
-	local cache = ya.file_cache(self)
+function M:preload(job)
+	local cache = ya.file_cache(job)
 	if not cache or fs.cha(cache) then
 		return 1
 	end
 
-	return ya.image_precache(self.file.url, cache) and 1 or 2
+	return ya.image_precache(job.file.url, cache) and 1 or 2
 end
 
 function M:spot(job)

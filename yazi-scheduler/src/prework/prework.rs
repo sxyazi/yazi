@@ -6,7 +6,7 @@ use tokio::sync::mpsc;
 use tracing::error;
 use yazi_config::Priority;
 use yazi_plugin::isolate;
-use yazi_shared::fs::{FilesOp, Url, calculate_size};
+use yazi_shared::{event::CmdCow, fs::{FilesOp, Url, calculate_size}};
 
 use super::{PreworkOp, PreworkOpFetch, PreworkOpLoad, PreworkOpSize};
 use crate::{HIGH, NORMAL, TaskOp, TaskProg};
@@ -31,13 +31,13 @@ impl Prework {
 		match op {
 			PreworkOp::Fetch(task) => {
 				let urls: Vec<_> = task.targets.iter().map(|f| f.url_owned()).collect();
-				let result = isolate::fetch(task.plugin.name, task.targets).await;
+				let result = isolate::fetch(CmdCow::from(&task.plugin.run), task.targets).await;
 				if let Err(e) = result {
 					self.fail(
 						task.id,
 						format!(
 							"Failed to run fetcher `{}` with:\n{}\n\nError message:\n{e}",
-							task.plugin.name,
+							task.plugin.run.name,
 							urls.iter().map(ToString::to_string).collect::<Vec<_>>().join("\n")
 						),
 					)?;
@@ -48,36 +48,36 @@ impl Prework {
 				if code & 1 == 0 {
 					error!(
 						"Returned {code} when running fetcher `{}` with:\n{}",
-						task.plugin.name,
+						task.plugin.run.name,
 						urls.iter().map(ToString::to_string).collect::<Vec<_>>().join("\n")
 					);
 				}
 				if code & 2 != 0 {
 					let mut loaded = self.loaded.lock();
 					for url in urls {
-						loaded.get_mut(&url).map(|x| *x &= !(1 << task.plugin.id));
+						loaded.get_mut(&url).map(|x| *x &= !(1 << task.plugin.idx));
 					}
 				}
 				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 			}
 			PreworkOp::Load(task) => {
 				let url = task.target.url_owned();
-				let result = isolate::preload(task.plugin.name, task.target).await;
+				let result = isolate::preload(&task.plugin.run, task.target).await;
 				if let Err(e) = result {
 					self.fail(
 						task.id,
-						format!("Failed to run preloader `{}` with `{url}`:\n{e}", task.plugin.name),
+						format!("Failed to run preloader `{}` with `{url}`:\n{e}", task.plugin.run.name),
 					)?;
 					return Err(e.into());
 				};
 
 				let code = result.unwrap();
 				if code & 1 == 0 {
-					error!("Returned {code} when running preloader `{}` with `{url}`", task.plugin.name);
+					error!("Returned {code} when running preloader `{}` with `{url}`", task.plugin.run.name);
 				}
 				if code & 2 != 0 {
 					let mut loaded = self.loaded.lock();
-					loaded.get_mut(&url).map(|x| *x &= !(1 << task.plugin.id));
+					loaded.get_mut(&url).map(|x| *x &= !(1 << task.plugin.idx));
 				}
 				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 			}

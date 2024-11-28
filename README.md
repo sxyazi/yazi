@@ -57,7 +57,6 @@ https://github.com/sxyazi/yazi/assets/17523360/92ff23fa-0cd5-4f04-b387-894c12265
 | [Tabby](https://github.com/Eugeny/tabby)                                    | [Inline images protocol][iip]          | ✅ Built-in                                   |
 | [VSCode](https://github.com/microsoft/vscode)                               | [Inline images protocol][iip]          | ✅ Built-in                                   |
 | [Rio](https://github.com/raphamorim/rio)                                    | [Inline images protocol][iip]          | ❌ Rio doesn't correctly clear images (#1786) |
-| [Mintty](https://github.com/mintty/mintty) (Git Bash)                       | [Inline images protocol][iip]          | ✅ Built-in                                   |
 | [Black Box](https://gitlab.gnome.org/raggesilver/blackbox)                  | [Sixel graphics format][sixel]         | ✅ Built-in                                   |
 | [Hyper](https://github.com/vercel/hyper)                                    | [Inline images protocol][iip]          | ✅ Built-in                                   |
 | X11 / Wayland                                                               | Window system protocol                 | ☑️ [Überzug++][ueberzug] required             |

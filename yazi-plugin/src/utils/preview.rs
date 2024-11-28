@@ -20,14 +20,15 @@ impl TryFrom<Table> for PreviewLock {
 	type Error = mlua::Error;
 
 	fn try_from(t: Table) -> Result<Self, Self::Error> {
-		let file: FileRef = t.raw_get("file")?;
+		// TODO: use `raw_get` instead of `get`
+		let file: FileRef = t.get("file")?;
 		Ok(Self {
 			url:  file.url_owned(),
 			cha:  file.cha,
-			mime: t.raw_get("mime")?,
+			mime: t.get("mime")?,
 
-			skip: t.raw_get("skip")?,
-			area: t.raw_get("area")?,
+			skip: t.get("skip")?,
+			area: t.get("area")?,
 			data: Default::default(),
 		})
 	}
@@ -36,7 +37,7 @@ impl TryFrom<Table> for PreviewLock {
 impl Utils {
 	pub(super) fn preview_code(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_async_function(|lua, t: Table| async move {
-			let area: Area = t.raw_get("area")?;
+			let area: Area = t.get("area")?; // TODO: use `raw_get` instead of `get`
 			let mut lock = PreviewLock::try_from(t)?;
 
 			let inner = match Highlighter::new(&lock.url).highlight(lock.skip, area.size()).await {

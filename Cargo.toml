@@ -19,7 +19,7 @@ crossterm     = { version = "0.28.1", features = [ "event-stream" ] }
 dirs          = "5.0.1"
 futures       = "0.3.31"
 globset       = "0.4.15"
-libc          = "0.2.164"
+libc          = "0.2.166"
 md-5          = "0.10.6"
 mlua          = { version = "0.10.1", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serialize" ] }
 parking_lot   = "0.12.3"
@@ -32,6 +32,6 @@ shell-words   = "1.1.0"
 tokio         = { version = "1.41.1", features = [ "full" ] }
 tokio-stream  = "0.1.16"
 tokio-util    = "0.7.12"
-tracing       = { version = "0.1.40", features = [ "max_level_debug", "release_max_level_debug" ] }
+tracing       = { version = "0.1.41", features = [ "max_level_debug", "release_max_level_debug" ] }
 unicode-width = "0.2.0"
 uzers         = "0.12.1"

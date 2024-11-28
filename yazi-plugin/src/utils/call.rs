@@ -1,11 +1,11 @@
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap};
 
 use mlua::{ExternalError, Function, Lua, ObjectLike, Table, Value};
 use tracing::error;
 use yazi_config::LAYOUT;
 use yazi_dds::Sendable;
 use yazi_macro::{emit, render};
-use yazi_shared::{Layer, event::{Cmd, Data}};
+use yazi_shared::{Layer, event::{Cmd, Data, DataKey}};
 
 use super::Utils;
 
@@ -61,16 +61,19 @@ impl Utils {
 		})
 	}
 
-	fn parse_args(t: Table) -> mlua::Result<HashMap<String, Data>> {
+	fn parse_args(t: Table) -> mlua::Result<HashMap<DataKey, Data>> {
 		let mut args = HashMap::with_capacity(t.raw_len());
 		for pair in t.pairs::<Value, Value>() {
 			let (k, v) = pair?;
 			match k {
 				Value::Integer(i) if i > 0 => {
-					args.insert((i - 1).to_string(), Sendable::value_to_data(v)?);
+					args.insert(DataKey::Integer(i), Sendable::value_to_data(v)?);
 				}
 				Value::String(s) => {
-					args.insert(s.to_str()?.replace('_', "-"), Sendable::value_to_data(v)?);
+					args.insert(
+						DataKey::String(Cow::Owned(s.to_str()?.replace('_', "-"))),
+						Sendable::value_to_data(v)?,
+					);
 				}
 				_ => return Err("invalid key in cmd".into_lua_err()),
 			}

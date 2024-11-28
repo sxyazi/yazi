@@ -28,16 +28,3 @@ impl Fetcher {
 				|| self.name.as_ref().is_some_and(|p| p.match_path(path, mime == MIME_DIR)))
 	}
 }
-
-#[derive(Debug, Clone)]
-pub struct FetcherProps {
-	pub id:   u8,
-	pub name: &'static str,
-	pub prio: Priority,
-}
-
-impl From<&'static Fetcher> for FetcherProps {
-	fn from(fetcher: &'static Fetcher) -> Self {
-		Self { id: fetcher.idx, name: &fetcher.run.name, prio: fetcher.prio }
-	}
-}

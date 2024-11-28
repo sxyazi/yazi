@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, ops::Deref};
+use std::ops::Deref;
 
 use yazi_shared::event::CmdCow;
 
@@ -34,10 +34,10 @@ impl Default for ChordCow {
 }
 
 impl ChordCow {
-	pub fn into_seq(self) -> VecDeque<CmdCow> {
+	pub fn into_seq(self) -> Vec<CmdCow> {
 		match self {
-			Self::Owned(c) => c.run.into_iter().map(|c| c.into()).collect(),
-			Self::Borrowed(c) => c.run.iter().map(|c| c.into()).collect(),
+			Self::Owned(c) => c.run.into_iter().rev().map(|c| c.into()).collect(),
+			Self::Borrowed(c) => c.run.iter().rev().map(|c| c.into()).collect(),
 		}
 	}
 }

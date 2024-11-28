@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, ffi::OsString};
+use std::ffi::OsString;
 
 use crossterm::event::{KeyEvent, MouseEvent};
 use tokio::sync::mpsc;
@@ -12,7 +12,7 @@ static RX: RoCell<mpsc::UnboundedReceiver<Event>> = RoCell::new();
 #[derive(Debug)]
 pub enum Event {
 	Call(CmdCow, Layer),
-	Seq(VecDeque<CmdCow>, Layer),
+	Seq(Vec<CmdCow>, Layer),
 	Render,
 	Key(KeyEvent),
 	Mouse(MouseEvent),

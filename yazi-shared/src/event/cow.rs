@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ops::Deref};
 
-use super::{Cmd, Data};
+use super::{Cmd, Data, DataKey};
 use crate::fs::Url;
 
 #[derive(Debug)]
@@ -30,7 +30,7 @@ impl Deref for CmdCow {
 
 impl CmdCow {
 	#[inline]
-	pub fn try_take(&mut self, name: &str) -> Option<Data> {
+	pub fn try_take(&mut self, name: impl Into<DataKey>) -> Option<Data> {
 		match self {
 			Self::Owned(c) => c.take(name),
 			Self::Borrowed(_) => None,
@@ -38,7 +38,7 @@ impl CmdCow {
 	}
 
 	#[inline]
-	pub fn take_str(&mut self, name: &str) -> Option<Cow<'static, str>> {
+	pub fn take_str(&mut self, name: impl Into<DataKey>) -> Option<Cow<'static, str>> {
 		match self {
 			Self::Owned(c) => c.take_str(name).map(Cow::Owned),
 			Self::Borrowed(c) => c.str(name).map(Cow::Borrowed),
@@ -46,7 +46,7 @@ impl CmdCow {
 	}
 
 	#[inline]
-	pub fn take_url(&mut self, name: &str) -> Option<Url> {
+	pub fn take_url(&mut self, name: impl Into<DataKey>) -> Option<Url> {
 		match self {
 			Self::Owned(c) => c.take(name).and_then(Data::into_url),
 			Self::Borrowed(c) => c.get(name).and_then(Data::to_url),
@@ -69,7 +69,7 @@ impl CmdCow {
 	}
 
 	#[inline]
-	pub fn take_any<T: 'static>(&mut self, name: &str) -> Option<T> {
+	pub fn take_any<T: 'static>(&mut self, name: impl Into<DataKey>) -> Option<T> {
 		match self {
 			Self::Owned(c) => c.take_any(name),
 			Self::Borrowed(_) => None,
