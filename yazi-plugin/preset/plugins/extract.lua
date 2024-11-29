@@ -11,17 +11,19 @@ function M:setup()
 	end)
 end
 
-function M:entry(args)
-	if not args[1] then
+function M:entry(job)
+	local from = job.args[1] and Url(job.args[1])
+	local to = job.args[2] ~= "" and Url(job.args[2]) or nil
+	if not from then
 		fail("No URL provided")
 	end
 
-	local from, to, pwd = Url(args[1]), args[2] ~= "" and Url(args[2]) or nil, ""
+	local pwd = ""
 	while true do
 		if not M:try_with(from, pwd, to) then
 			break
-		elseif args[3] ~= "--noisy" then
-			fail("'%s' is password-protected, please extract it individually and enter the password", args[1])
+		elseif not job.args.noisy then
+			fail("'%s' is password-protected, please extract it individually and enter the password", from)
 		end
 
 		local value, event = ya.input {
@@ -78,7 +80,7 @@ function M:tidy(from, to, tmp)
 
 	local only = #outs == 1
 	if only and not outs[1].cha.is_dir and require("archive").is_tar(outs[1].url) then
-		self:entry { tostring(outs[1].url), tostring(to) }
+		self:entry { args = { tostring(outs[1].url), tostring(to) } }
 		fs.remove("file", outs[1].url)
 		fs.remove("dir", tmp)
 		return
