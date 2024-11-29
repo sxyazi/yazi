@@ -1,16 +1,16 @@
 local M = {}
 
-function M:peek()
-	local limit = self.area.h
+function M:peek(job)
+	local limit = job.area.h
 	local paths, sizes = {}, {}
 
-	local files, bound, code = self.list_files({ "-p", tostring(self.file.url) }, self.skip, limit)
+	local files, bound, code = self.list_files({ "-p", tostring(job.file.url) }, job.skip, limit)
 	if code ~= 0 then
-		return ya.preview_widgets(self, {
+		return ya.preview_widgets(job, {
 			ui.Text(
 				code == 2 and "File list in this archive is encrypted"
 					or "Failed to start both `7z` and `7zz`. Do you have 7-zip installed?"
-			):area(self.area),
+			):area(job.area),
 		})
 	end
 
@@ -33,17 +33,17 @@ function M:peek()
 		end
 	end
 
-	if self.skip > 0 and bound < self.skip + limit then
-		ya.manager_emit("peek", { math.max(0, bound - limit), only_if = self.file.url, upper_bound = true })
+	if job.skip > 0 and bound < job.skip + limit then
+		ya.manager_emit("peek", { math.max(0, bound - limit), only_if = job.file.url, upper_bound = true })
 	else
-		ya.preview_widgets(self, {
-			ui.Text(paths):area(self.area),
-			ui.Text(sizes):area(self.area):align(ui.Text.RIGHT),
+		ya.preview_widgets(job, {
+			ui.Text(paths):area(job.area),
+			ui.Text(sizes):area(job.area):align(ui.Text.RIGHT),
 		})
 	end
 end
 
-function M:seek(units) require("code").seek(self, units) end
+function M:seek(job) require("code"):seek(job) end
 
 function M.spawn_7z(args)
 	local last_err = nil

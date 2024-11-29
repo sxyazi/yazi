@@ -9,7 +9,7 @@ use tracing::error;
 use yazi_fs::{Files, Folder};
 use yazi_plugin::isolate;
 use yazi_proxy::WATCHER;
-use yazi_shared::{RoCell, fs::{Cha, File, FilesOp, Url, realname_unchecked}};
+use yazi_shared::{RoCell, event::Cmd, fs::{Cha, File, FilesOp, Url, realname_unchecked}};
 
 use super::Linked;
 
@@ -151,7 +151,7 @@ impl Watcher {
 			}
 
 			FilesOp::mutate(ops);
-			if let Err(e) = isolate::fetch("mime", reload).await {
+			if let Err(e) = isolate::fetch(Cmd::new("mime").into(), reload).await {
 				error!("Fetch `mime` failed in watcher: {e}");
 			}
 		}

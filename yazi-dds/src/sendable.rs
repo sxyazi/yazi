@@ -1,7 +1,7 @@
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap};
 
 use mlua::{ExternalError, Lua, MultiValue, Table, Value};
-use yazi_shared::{OrderedFloat, event::{Data, DataKey}};
+use yazi_shared::{OrderedFloat, event::{Data, DataKey}, replace_cow};
 
 pub struct Sendable;
 
@@ -11,7 +11,7 @@ impl Sendable {
 			Value::Nil => Data::Nil,
 			Value::Boolean(b) => Data::Boolean(b),
 			Value::LightUserData(_) => Err("light userdata is not supported".into_lua_err())?,
-			Value::Integer(n) => Data::Integer(n),
+			Value::Integer(i) => Data::Integer(i),
 			Value::Number(n) => Data::Number(n),
 			Value::String(s) => Data::String(s.to_str()?.to_owned()),
 			Value::Table(t) => {
@@ -50,24 +50,59 @@ impl Sendable {
 
 	pub fn data_to_value(lua: &Lua, data: Data) -> mlua::Result<Value> {
 		Ok(match data {
-			Data::Nil => Value::Nil,
-			Data::Boolean(v) => Value::Boolean(v),
-			Data::Integer(v) => Value::Integer(v),
-			Data::Number(v) => Value::Number(v),
-			Data::String(v) => Value::String(lua.create_string(v)?),
-			Data::List(v) => Value::Table(Self::list_to_table(lua, v)?),
-			Data::Dict(t) => {
-				let seq_len = t.keys().filter(|&k| !k.is_integer()).count();
-				let table = lua.create_table_with_capacity(seq_len, t.len() - seq_len)?;
-				for (k, v) in t {
-					table.raw_set(Self::key_to_value(lua, k)?, Self::data_to_value(lua, v)?)?;
+			Data::List(l) => {
+				let mut vec = Vec::with_capacity(l.len());
+				for v in l.into_iter() {
+					vec.push(Self::data_to_value(lua, v)?);
 				}
-				Value::Table(table)
+				Value::Table(lua.create_sequence_from(vec)?)
 			}
-			Data::Url(v) => Value::UserData(lua.create_any_userdata(v)?),
-			Data::Any(v) => {
-				if let Ok(t) = v.downcast::<super::body::BodyYankIter>() {
+			Data::Dict(d) => {
+				let seq_len = d.keys().filter(|&k| k.is_integer()).count();
+				let tbl = lua.create_table_with_capacity(seq_len, d.len() - seq_len)?;
+				for (k, v) in d {
+					tbl.raw_set(Self::key_to_value(lua, k)?, Self::data_to_value(lua, v)?)?;
+				}
+				Value::Table(tbl)
+			}
+			Data::Url(u) => Value::UserData(lua.create_any_userdata(u)?),
+			Data::Any(a) => {
+				if let Ok(t) = a.downcast::<super::body::BodyYankIter>() {
 					Value::UserData(lua.create_userdata(*t)?)
+				} else {
+					Err("unsupported userdata included".into_lua_err())?
+				}
+			}
+			data => Self::data_to_value_ref(lua, &data)?,
+		})
+	}
+
+	pub fn data_to_value_ref(lua: &Lua, data: &Data) -> mlua::Result<Value> {
+		Ok(match data {
+			Data::Nil => Value::Nil,
+			Data::Boolean(b) => Value::Boolean(*b),
+			Data::Integer(i) => Value::Integer(*i),
+			Data::Number(n) => Value::Number(*n),
+			Data::String(s) => Value::String(lua.create_string(s)?),
+			Data::List(l) => {
+				let mut vec = Vec::with_capacity(l.len());
+				for v in l {
+					vec.push(Self::data_to_value_ref(lua, v)?);
+				}
+				Value::Table(lua.create_sequence_from(vec)?)
+			}
+			Data::Dict(d) => {
+				let seq_len = d.keys().filter(|&k| k.is_integer()).count();
+				let tbl = lua.create_table_with_capacity(seq_len, d.len() - seq_len)?;
+				for (k, v) in d {
+					tbl.raw_set(Self::key_to_value_ref(lua, k)?, Self::data_to_value_ref(lua, v)?)?;
+				}
+				Value::Table(tbl)
+			}
+			Data::Url(u) => Value::UserData(lua.create_any_userdata(u.clone())?),
+			Data::Any(a) => {
+				if let Some(t) = a.downcast_ref::<super::body::BodyYankIter>() {
+					Value::UserData(lua.create_userdata(t.clone())?)
 				} else {
 					Err("unsupported userdata included".into_lua_err())?
 				}
@@ -75,12 +110,52 @@ impl Sendable {
 		})
 	}
 
-	pub fn list_to_table(lua: &Lua, data: Vec<Data>) -> mlua::Result<Table> {
-		let mut vec = Vec::with_capacity(data.len());
-		for v in data.into_iter() {
-			vec.push(Self::data_to_value(lua, v)?);
+	pub fn table_to_args(t: Table) -> mlua::Result<HashMap<DataKey, Data>> {
+		let mut args = HashMap::with_capacity(t.raw_len());
+		for pair in t.pairs::<Value, Value>() {
+			let (k, v) = pair?;
+			match k {
+				Value::Integer(i) if i > 0 => {
+					args.insert(DataKey::Integer(i - 1), Self::value_to_data(v)?);
+				}
+				Value::String(s) => {
+					args.insert(
+						DataKey::String(Cow::Owned(s.to_str()?.replace('_', "-"))),
+						Self::value_to_data(v)?,
+					);
+				}
+				_ => return Err("invalid key in Cmd".into_lua_err()),
+			}
 		}
-		lua.create_sequence_from(vec)
+		Ok(args)
+	}
+
+	pub fn args_to_table(lua: &Lua, args: HashMap<DataKey, Data>) -> mlua::Result<Table> {
+		let seq_len = args.keys().filter(|&k| k.is_integer()).count();
+		let tbl = lua.create_table_with_capacity(seq_len, args.len() - seq_len)?;
+		for (k, v) in args {
+			match k {
+				DataKey::Integer(i) => tbl.raw_set(i + 1, Self::data_to_value(lua, v)?),
+				DataKey::String(s) => tbl.raw_set(replace_cow(&s, "-", "_"), Self::data_to_value(lua, v)?),
+				_ => Err("invalid key in Data".into_lua_err()),
+			}?;
+		}
+		Ok(tbl)
+	}
+
+	pub fn args_to_table_ref(lua: &Lua, args: &HashMap<DataKey, Data>) -> mlua::Result<Table> {
+		let seq_len = args.keys().filter(|&k| k.is_integer()).count();
+		let tbl = lua.create_table_with_capacity(seq_len, args.len() - seq_len)?;
+		for (k, v) in args {
+			match k {
+				DataKey::Integer(i) => tbl.raw_set(i + 1, Self::data_to_value_ref(lua, v)?),
+				DataKey::String(s) => {
+					tbl.raw_set(replace_cow(s, "-", "_"), Self::data_to_value_ref(lua, v)?)
+				}
+				_ => Err("invalid key in Data".into_lua_err()),
+			}?;
+		}
+		Ok(tbl)
 	}
 
 	pub fn list_to_values(lua: &Lua, data: Vec<Data>) -> mlua::Result<MultiValue> {
@@ -91,14 +166,16 @@ impl Sendable {
 		Ok(MultiValue::from_vec(vec))
 	}
 
-	pub fn values_to_vec(values: MultiValue) -> mlua::Result<Vec<Data>> {
+	pub fn values_to_list(values: MultiValue) -> mlua::Result<Vec<Data>> {
 		let mut vec = Vec::with_capacity(values.len());
 		for value in values {
 			vec.push(Self::value_to_data(value)?);
 		}
 		Ok(vec)
 	}
+}
 
+impl Sendable {
 	fn value_to_key(value: Value) -> mlua::Result<DataKey> {
 		Ok(match value {
 			Value::Nil => DataKey::Nil,
@@ -106,7 +183,7 @@ impl Sendable {
 			Value::LightUserData(_) => Err("light userdata is not supported".into_lua_err())?,
 			Value::Integer(v) => DataKey::Integer(v),
 			Value::Number(v) => DataKey::Number(OrderedFloat::new(v)),
-			Value::String(v) => DataKey::String(v.to_str()?.to_owned()),
+			Value::String(v) => DataKey::String(Cow::Owned(v.to_str()?.to_owned())),
 			Value::Table(_) => Err("table is not supported".into_lua_err())?,
 			Value::Function(_) => Err("function is not supported".into_lua_err())?,
 			Value::Thread(_) => Err("thread is not supported".into_lua_err())?,
@@ -124,12 +201,19 @@ impl Sendable {
 
 	fn key_to_value(lua: &Lua, key: DataKey) -> mlua::Result<Value> {
 		Ok(match key {
+			DataKey::Url(u) => Value::UserData(lua.create_any_userdata(u)?),
+			key => Self::key_to_value_ref(lua, &key)?,
+		})
+	}
+
+	fn key_to_value_ref(lua: &Lua, key: &DataKey) -> mlua::Result<Value> {
+		Ok(match key {
 			DataKey::Nil => Value::Nil,
-			DataKey::Boolean(k) => Value::Boolean(k),
-			DataKey::Integer(k) => Value::Integer(k),
-			DataKey::Number(k) => Value::Number(k.get()),
-			DataKey::String(k) => Value::String(lua.create_string(k)?),
-			DataKey::Url(k) => Value::UserData(lua.create_any_userdata(k)?),
+			DataKey::Boolean(b) => Value::Boolean(*b),
+			DataKey::Integer(i) => Value::Integer(*i),
+			DataKey::Number(n) => Value::Number(n.get()),
+			DataKey::String(s) => Value::String(lua.create_string(s.as_ref())?),
+			DataKey::Url(u) => Value::UserData(lua.create_any_userdata(u.clone())?),
 		})
 	}
 }

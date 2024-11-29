@@ -13,6 +13,7 @@ impl Tasks {
 			let mime = if f.is_dir() { MIME_DIR } else { mimetype.get(&f.url).unwrap_or_default() };
 			let factors = |s: &str| match s {
 				"mime" => !mime.is_empty(),
+				"dummy" => f.cha.is_dummy(),
 				_ => false,
 			};
 

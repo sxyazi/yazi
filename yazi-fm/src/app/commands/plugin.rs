@@ -23,7 +23,7 @@ impl App {
 		}
 
 		if opt.mode == PluginMode::Async {
-			return self.cx.tasks.plugin_micro(opt.id.into_owned(), opt.args);
+			return self.cx.tasks.plugin_micro(opt);
 		} else if opt.mode == PluginMode::Sync && hits {
 			return self.plugin_do(opt);
 		}
@@ -47,7 +47,7 @@ impl App {
 		};
 
 		if opt.mode.auto_then(chunk.sync_entry) != PluginMode::Sync {
-			return self.cx.tasks.plugin_micro(opt.id.into_owned(), opt.args);
+			return self.cx.tasks.plugin_micro(opt);
 		}
 
 		match LUA.named_registry_value::<RtRef>("rt") {
@@ -66,7 +66,12 @@ impl App {
 			if let Some(cb) = opt.cb {
 				cb(&LUA, plugin)
 			} else {
-				plugin.call_method("entry", Sendable::list_to_table(&LUA, opt.args)?)
+				let job = LUA.create_table_from([("args", Sendable::args_to_table(&LUA, opt.args)?)])?;
+
+				// TODO: remove this
+				yazi_plugin::isolate::install_entry_warn(&LUA, &job, opt._old_args).ok();
+
+				plugin.call_method("entry", job)
 			}
 		});
 	}

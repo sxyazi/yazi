@@ -26,16 +26,3 @@ impl Preloader {
 			|| self.name.as_ref().is_some_and(|p| p.match_path(path, mime == MIME_DIR))
 	}
 }
-
-#[derive(Debug, Clone)]
-pub struct PreloaderProps {
-	pub id:   u8,
-	pub name: &'static str,
-	pub prio: Priority,
-}
-
-impl From<&'static Preloader> for PreloaderProps {
-	fn from(preloader: &'static Preloader) -> Self {
-		Self { id: preloader.idx, name: &preloader.run.name, prio: preloader.prio }
-	}
-}

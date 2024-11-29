@@ -7,7 +7,7 @@ use yazi_fs::Folder;
 use yazi_macro::emit;
 use yazi_plugin::isolate;
 use yazi_proxy::{ManagerProxy, TasksProxy, options::OpenDoOpt};
-use yazi_shared::{MIME_DIR, event::{CmdCow, EventQuit}, fs::{File, Url}};
+use yazi_shared::{MIME_DIR, event::{Cmd, CmdCow, EventQuit}, fs::{File, Url}};
 
 use crate::{manager::Manager, tasks::Tasks};
 
@@ -65,7 +65,7 @@ impl Manager {
 			}
 
 			done.extend(files.iter().map(|f| (f.url_owned(), String::new())));
-			if let Err(e) = isolate::fetch("mime", files).await {
+			if let Err(e) = isolate::fetch(Cmd::new("mime").into(), files).await {
 				error!("Fetch `mime` failed in opening: {e}");
 			}
 

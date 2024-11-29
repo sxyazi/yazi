@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap};
 
 use tracing::error;
 use yazi_macro::render;
@@ -7,7 +7,7 @@ use yazi_shared::{event::CmdCow, fs::Url};
 use crate::{manager::{LINKED, Manager}, tasks::Tasks};
 
 pub struct Opt {
-	updates: HashMap<String, String>,
+	updates: HashMap<Cow<'static, str>, String>,
 }
 
 impl TryFrom<CmdCow> for Opt {
@@ -28,7 +28,7 @@ impl Manager {
 		let updates = opt
 			.updates
 			.into_iter()
-			.map(|(url, mime)| (Url::from(url), mime))
+			.map(|(url, mime)| (Url::from(url.into_owned()), mime))
 			.filter(|(url, mime)| self.mimetype.get(url) != Some(mime))
 			.fold(HashMap::new(), |mut map, (u, m)| {
 				for u in linked.from_file(&u) {

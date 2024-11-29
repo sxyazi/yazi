@@ -40,7 +40,7 @@ impl Utils {
 	}
 
 	async fn retrieve(id: &str, calls: usize, args: MultiValue) -> mlua::Result<Vec<Data>> {
-		let args = Sendable::values_to_vec(args)?;
+		let args = Sendable::values_to_list(args)?;
 		let (tx, rx) = oneshot::channel::<Vec<Data>>();
 
 		let callback: PluginCallback = {
@@ -55,7 +55,7 @@ impl Utils {
 					.chain(args.into_iter().map(|d| Sendable::data_to_value(lua, d)))
 					.collect::<mlua::Result<_>>()?;
 
-				let values = Sendable::values_to_vec(block.call(MultiValue::from_vec(args))?)?;
+				let values = Sendable::values_to_list(block.call(MultiValue::from_vec(args))?)?;
 				tx.send(values).map_err(|_| "send failed".into_lua_err())
 			})
 		};

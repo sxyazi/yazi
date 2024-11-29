@@ -1,15 +1,15 @@
-use std::{any::Any, collections::HashMap, fmt::{self, Display}, mem, str::FromStr};
+use std::{any::Any, borrow::Cow, collections::HashMap, fmt::{self, Display}, mem, str::FromStr};
 
-use anyhow::bail;
+use anyhow::{Result, bail};
 use serde::{Deserialize, de};
 
-use super::Data;
+use super::{Data, DataKey};
 use crate::fs::Url;
 
 #[derive(Debug, Default)]
 pub struct Cmd {
 	pub name: String,
-	pub args: HashMap<String, Data>,
+	pub args: HashMap<DataKey, Data>,
 }
 
 impl Cmd {
@@ -23,68 +23,74 @@ impl Cmd {
 			args: args
 				.iter()
 				.enumerate()
-				.map(|(i, s)| (i.to_string(), Data::String(s.to_string())))
+				.map(|(i, s)| (DataKey::Integer(i as i64), Data::String(s.to_string())))
 				.collect(),
 		}
 	}
 
 	// --- With
 	#[inline]
-	pub fn with(mut self, name: impl ToString, value: impl ToString) -> Self {
-		self.args.insert(name.to_string(), Data::String(value.to_string()));
+	pub fn with(mut self, name: impl Into<DataKey>, value: impl ToString) -> Self {
+		self.args.insert(name.into(), Data::String(value.to_string()));
 		self
 	}
 
 	#[inline]
-	pub fn with_opt(mut self, name: impl ToString, value: Option<impl ToString>) -> Self {
+	pub fn with_opt(mut self, name: impl Into<DataKey>, value: Option<impl ToString>) -> Self {
 		if let Some(v) = value {
-			self.args.insert(name.to_string(), Data::String(v.to_string()));
+			self.args.insert(name.into(), Data::String(v.to_string()));
 		}
 		self
 	}
 
 	#[inline]
-	pub fn with_bool(mut self, name: impl ToString, state: bool) -> Self {
-		self.args.insert(name.to_string(), Data::Boolean(state));
+	pub fn with_bool(mut self, name: impl Into<DataKey>, state: bool) -> Self {
+		self.args.insert(name.into(), Data::Boolean(state));
 		self
 	}
 
 	#[inline]
-	pub fn with_any(mut self, name: impl ToString, data: impl Any + Send + Sync) -> Self {
-		self.args.insert(name.to_string(), Data::Any(Box::new(data)));
+	pub fn with_any(mut self, name: impl Into<DataKey>, data: impl Any + Send + Sync) -> Self {
+		self.args.insert(name.into(), Data::Any(Box::new(data)));
 		self
 	}
 
 	// --- Get
 	#[inline]
-	pub fn get(&self, name: &str) -> Option<&Data> { self.args.get(name) }
+	pub fn get(&self, name: impl Into<DataKey>) -> Option<&Data> { self.args.get(&name.into()) }
 
 	#[inline]
-	pub fn str(&self, name: &str) -> Option<&str> { self.get(name).and_then(Data::as_str) }
+	pub fn str(&self, name: impl Into<DataKey>) -> Option<&str> {
+		self.get(name).and_then(Data::as_str)
+	}
 
 	#[inline]
-	pub fn bool(&self, name: &str) -> bool { self.maybe_bool(name).unwrap_or(false) }
+	pub fn bool(&self, name: impl Into<DataKey>) -> bool { self.maybe_bool(name).unwrap_or(false) }
 
 	#[inline]
-	pub fn maybe_bool(&self, name: &str) -> Option<bool> { self.get(name).and_then(Data::as_bool) }
+	pub fn maybe_bool(&self, name: impl Into<DataKey>) -> Option<bool> {
+		self.get(name).and_then(Data::as_bool)
+	}
 
 	#[inline]
-	pub fn first(&self) -> Option<&Data> { self.get("0") }
+	pub fn first(&self) -> Option<&Data> { self.get(0) }
 
 	#[inline]
-	pub fn first_str(&self) -> Option<&str> { self.str("0") }
+	pub fn first_str(&self) -> Option<&str> { self.str(0) }
 
 	// --- Take
 	#[inline]
-	pub fn take(&mut self, name: &str) -> Option<Data> { self.args.remove(name) }
+	pub fn take(&mut self, name: impl Into<DataKey>) -> Option<Data> {
+		self.args.remove(&name.into())
+	}
 
 	#[inline]
-	pub fn take_str(&mut self, name: &str) -> Option<String> {
+	pub fn take_str(&mut self, name: impl Into<DataKey>) -> Option<String> {
 		if let Some(Data::String(s)) = self.take(name) { Some(s) } else { None }
 	}
 
 	#[inline]
-	pub fn take_first(&mut self) -> Option<Data> { self.take("0") }
+	pub fn take_first(&mut self) -> Option<Data> { self.take(0) }
 
 	#[inline]
 	pub fn take_first_str(&mut self) -> Option<String> {
@@ -95,8 +101,35 @@ impl Cmd {
 	pub fn take_first_url(&mut self) -> Option<Url> { self.take_first()?.into_url() }
 
 	#[inline]
-	pub fn take_any<T: 'static>(&mut self, name: &str) -> Option<T> {
-		self.args.remove(name).and_then(|d| d.into_any())
+	pub fn take_any<T: 'static>(&mut self, name: impl Into<DataKey>) -> Option<T> {
+		self.args.remove(&name.into()).and_then(|d| d.into_any())
+	}
+
+	// Parse
+	pub fn parse_args(words: impl Iterator<Item = String>) -> Result<HashMap<DataKey, Data>> {
+		let mut i = 0i64;
+		words
+			.into_iter()
+			.map(|word| {
+				let Some(arg) = word.strip_prefix("--") else {
+					i += 1;
+					return Ok((DataKey::Integer(i - 1), Data::String(word)));
+				};
+
+				let mut parts = arg.splitn(2, '=');
+				let Some(key) = parts.next().map(|s| s.to_owned()) else {
+					bail!("invalid argument: {arg}");
+				};
+
+				let val = if let Some(val) = parts.next() {
+					Data::String(val.to_owned())
+				} else {
+					Data::Boolean(true)
+				};
+
+				Ok((DataKey::String(Cow::Owned(key)), val))
+			})
+			.collect()
 	}
 }
 
@@ -104,14 +137,20 @@ impl Display for Cmd {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "{}", self.name)?;
 		for (k, v) in &self.args {
-			if k.as_bytes().first().is_some_and(|b| b.is_ascii_digit()) {
-				if let Some(s) = v.as_str() {
-					write!(f, " {s}")?;
+			match k {
+				DataKey::Integer(_) => {
+					if let Some(s) = v.as_str() {
+						write!(f, " {s}")?;
+					}
 				}
-			} else if v.as_bool().is_some_and(|b| b) {
-				write!(f, " --{k}")?;
-			} else if let Some(s) = v.as_str() {
-				write!(f, " --{k}={s}")?;
+				DataKey::String(k) => {
+					if v.as_bool().is_some_and(|b| b) {
+						write!(f, " --{k}")?;
+					} else if let Some(s) = v.as_str() {
+						write!(f, " --{k}={s}")?;
+					}
+				}
+				_ => {}
 			}
 		}
 		Ok(())
@@ -128,27 +167,7 @@ impl FromStr for Cmd {
 			bail!("command name cannot be empty");
 		}
 
-		let mut cmd = Cmd { name: mem::take(&mut args[0]), ..Default::default() };
-		let mut i = 0usize;
-		for arg in args.into_iter().skip(1) {
-			let Some(arg) = arg.strip_prefix("--") else {
-				cmd.args.insert(i.to_string(), Data::String(arg));
-				i += 1;
-				continue;
-			};
-
-			let mut parts = arg.splitn(2, '=');
-			let Some(key) = parts.next().map(|s| s.to_owned()) else {
-				bail!("invalid argument: {arg}");
-			};
-
-			if let Some(val) = parts.next() {
-				cmd.args.insert(key, Data::String(val.to_owned()));
-			} else {
-				cmd.args.insert(key, Data::Boolean(true));
-			}
-		}
-		Ok(cmd)
+		Ok(Cmd { name: mem::take(&mut args[0]), args: Cmd::parse_args(args.into_iter().skip(1))? })
 	}
 }
 

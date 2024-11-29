@@ -1,4 +1,4 @@
-use yazi_shared::event::Data;
+use yazi_proxy::options::PluginOpt;
 
 #[derive(Debug)]
 pub enum PluginOp {
@@ -15,8 +15,6 @@ impl PluginOp {
 
 #[derive(Debug)]
 pub struct PluginOpEntry {
-	pub id:   usize,
-	// TODO: remove these fields and use `CmdCow` instead
-	pub name: String,
-	pub args: Vec<Data>,
+	pub id:  usize,
+	pub opt: PluginOpt,
 }

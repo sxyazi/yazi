@@ -1,4 +1,4 @@
-use std::{any::Any, collections::HashMap};
+use std::{any::Any, borrow::Cow, collections::HashMap};
 
 use serde::{Deserialize, Serialize};
 
@@ -57,7 +57,7 @@ impl Data {
 		}
 	}
 
-	pub fn into_dict_string(self) -> HashMap<String, String> {
+	pub fn into_dict_string(self) -> HashMap<Cow<'static, str>, String> {
 		let Self::Dict(dict) = self else {
 			return Default::default();
 		};
@@ -89,7 +89,7 @@ pub enum DataKey {
 	Boolean(bool),
 	Integer(i64),
 	Number(OrderedFloat),
-	String(String),
+	String(Cow<'static, str>),
 	#[serde(skip_deserializing)]
 	Url(Url),
 }
@@ -97,6 +97,26 @@ pub enum DataKey {
 impl DataKey {
 	#[inline]
 	pub fn is_integer(&self) -> bool { matches!(self, Self::Integer(_)) }
+
+	#[inline]
+	pub fn as_str(&self) -> Option<&str> {
+		match self {
+			Self::String(s) => Some(s),
+			_ => None,
+		}
+	}
+}
+
+impl From<usize> for DataKey {
+	fn from(value: usize) -> Self { Self::Integer(value as i64) }
+}
+
+impl From<&'static str> for DataKey {
+	fn from(value: &'static str) -> Self { Self::String(Cow::Borrowed(value)) }
+}
+
+impl From<String> for DataKey {
+	fn from(value: String) -> Self { Self::String(Cow::Owned(value)) }
 }
 
 // --- Macros

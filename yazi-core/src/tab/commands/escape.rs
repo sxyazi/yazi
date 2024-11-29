@@ -18,7 +18,7 @@ bitflags! {
 impl From<CmdCow> for Opt {
 	fn from(c: CmdCow) -> Self {
 		c.args.iter().fold(Opt::empty(), |acc, (k, v)| {
-			match (k.as_str(), v.as_bool().unwrap_or(false)) {
+			match (k.as_str().unwrap_or(""), v.as_bool().unwrap_or(false)) {
 				("all", true) => Self::all(),
 				("find", true) => acc | Self::FIND,
 				("visual", true) => acc | Self::VISUAL,

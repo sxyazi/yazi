@@ -1,34 +1,34 @@
 local M = {}
 
-function M:peek()
-	local start, cache = os.clock(), ya.file_cache(self)
-	if not cache or self:preload() ~= 1 then
+function M:peek(job)
+	local start, cache = os.clock(), ya.file_cache(job)
+	if not cache or self:preload(job) ~= 1 then
 		return
 	end
 
 	ya.sleep(math.max(0, PREVIEW.image_delay / 1000 + start - os.clock()))
-	ya.image_show(cache, self.area)
-	ya.preview_widgets(self, {})
+	ya.image_show(cache, job.area)
+	ya.preview_widgets(job, {})
 end
 
-function M:seek(units)
+function M:seek(job)
 	local h = cx.active.current.hovered
-	if h and h.url == self.file.url then
+	if h and h.url == job.file.url then
 		ya.manager_emit("peek", {
-			math.max(0, cx.active.preview.skip + units),
-			only_if = self.file.url,
+			math.max(0, cx.active.preview.skip + job.units),
+			only_if = job.file.url,
 		})
 	end
 end
 
-function M:preload()
-	local percent = 5 + self.skip
+function M:preload(job)
+	local percent = 5 + job.skip
 	if percent > 95 then
-		ya.manager_emit("peek", { 90, only_if = self.file.url, upper_bound = true })
+		ya.manager_emit("peek", { 90, only_if = job.file.url, upper_bound = true })
 		return 2
 	end
 
-	local cache = ya.file_cache(self)
+	local cache = ya.file_cache(job)
 	if not cache then
 		return 1
 	end
@@ -38,7 +38,7 @@ function M:preload()
 		return 1
 	end
 
-	local meta, err = self.list_meta(self.file.url, "format=duration")
+	local meta, err = self.list_meta(job.file.url, "format=duration")
 	if not meta then
 		ya.err(tostring(err))
 		return 0
@@ -53,7 +53,7 @@ function M:preload()
 		"-v", "quiet", "-hwaccel", "auto",
 		"-skip_frame", "nokey", "-ss", ss,
 		"-an", "-sn", "-dn",
-		"-i", tostring(self.file.url),
+		"-i", tostring(job.file.url),
 		"-vframes", 1,
 		"-q:v", qv,
 		"-vf", string.format("scale=%d:-2:flags=fast_bilinear", PREVIEW.max_width),

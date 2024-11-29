@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use yazi_config::plugin::{FetcherProps, PreloaderProps};
+use yazi_config::plugin::{Fetcher, Preloader};
 use yazi_shared::{Throttle, fs::Url};
 
 #[derive(Debug)]
@@ -20,17 +20,17 @@ impl PreworkOp {
 	}
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct PreworkOpFetch {
 	pub id:      usize,
-	pub plugin:  FetcherProps,
+	pub plugin:  &'static Fetcher,
 	pub targets: Vec<yazi_shared::fs::File>,
 }
 
 #[derive(Clone, Debug)]
 pub struct PreworkOpLoad {
 	pub id:     usize,
-	pub plugin: PreloaderProps,
+	pub plugin: &'static Preloader,
 	pub target: yazi_shared::fs::File,
 }
 

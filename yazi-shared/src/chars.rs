@@ -1,4 +1,5 @@
 use core::str;
+use std::borrow::Cow;
 
 pub const MIME_DIR: &str = "inode/directory";
 
@@ -26,6 +27,37 @@ pub fn strip_trailing_newline(mut s: String) -> String {
 		s.pop();
 	}
 	s
+}
+
+pub fn replace_cow<'a>(s: &'a str, from: &str, to: &str) -> Cow<'a, str> {
+	replace_cow_impl(s, s.match_indices(from), to)
+}
+
+pub fn replacen_cow<'a>(s: &'a str, from: &str, to: &str, n: usize) -> Cow<'a, str> {
+	replace_cow_impl(s, s.match_indices(from).take(n), to)
+}
+
+fn replace_cow_impl<'s>(
+	src: &'s str,
+	mut indices: impl Iterator<Item = (usize, &'s str)>,
+	to: &str,
+) -> Cow<'s, str> {
+	let Some((first_idx, first_sub)) = indices.next() else {
+		return Cow::Borrowed(src);
+	};
+
+	let mut result = Cow::Owned(String::with_capacity(src.len()));
+	result += unsafe { src.get_unchecked(..first_idx) };
+	result.to_mut().push_str(to);
+
+	let mut last = first_idx + first_sub.len();
+	for (idx, sub) in indices {
+		result += unsafe { src.get_unchecked(last..idx) };
+		result.to_mut().push_str(to);
+		last = idx + sub.len();
+	}
+
+	result + unsafe { src.get_unchecked(last..) }
 }
 
 pub fn replace_to_printable(s: &[String], tab_size: u8) -> String {

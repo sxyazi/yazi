@@ -1,11 +1,9 @@
-use std::collections::HashMap;
-
-use mlua::{ExternalError, Function, Lua, ObjectLike, Table, Value};
+use mlua::{Function, Lua, ObjectLike, Table};
 use tracing::error;
 use yazi_config::LAYOUT;
 use yazi_dds::Sendable;
 use yazi_macro::{emit, render};
-use yazi_shared::{Layer, event::{Cmd, Data}};
+use yazi_shared::{Layer, event::Cmd};
 
 use super::Utils;
 
@@ -42,39 +40,22 @@ impl Utils {
 
 	pub(super) fn app_emit(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, (name, args): (String, Table)| {
-			emit!(Call(Cmd { name, args: Self::parse_args(args)? }, Layer::App));
+			emit!(Call(Cmd { name, args: Sendable::table_to_args(args)? }, Layer::App));
 			Ok(())
 		})
 	}
 
 	pub(super) fn manager_emit(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, (name, args): (String, Table)| {
-			emit!(Call(Cmd { name, args: Self::parse_args(args)? }, Layer::Manager));
+			emit!(Call(Cmd { name, args: Sendable::table_to_args(args)? }, Layer::Manager));
 			Ok(())
 		})
 	}
 
 	pub(super) fn input_emit(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, (name, args): (String, Table)| {
-			emit!(Call(Cmd { name, args: Self::parse_args(args)? }, Layer::Input));
+			emit!(Call(Cmd { name, args: Sendable::table_to_args(args)? }, Layer::Input));
 			Ok(())
 		})
-	}
-
-	fn parse_args(t: Table) -> mlua::Result<HashMap<String, Data>> {
-		let mut args = HashMap::with_capacity(t.raw_len());
-		for pair in t.pairs::<Value, Value>() {
-			let (k, v) = pair?;
-			match k {
-				Value::Integer(i) if i > 0 => {
-					args.insert((i - 1).to_string(), Sendable::value_to_data(v)?);
-				}
-				Value::String(s) => {
-					args.insert(s.to_str()?.replace('_', "-"), Sendable::value_to_data(v)?);
-				}
-				_ => return Err("invalid key in cmd".into_lua_err()),
-			}
-		}
-		Ok(args)
 	}
 }

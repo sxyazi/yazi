@@ -1,17 +1,20 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, collections::HashMap, fmt::Debug};
 
 use anyhow::bail;
 use mlua::{Lua, Table};
-use yazi_shared::event::{CmdCow, Data};
+use yazi_shared::event::{Cmd, CmdCow, Data, DataKey};
 
 pub type PluginCallback = Box<dyn FnOnce(&Lua, Table) -> mlua::Result<()> + Send + Sync>;
 
 #[derive(Default)]
 pub struct PluginOpt {
 	pub id:   Cow<'static, str>,
+	pub args: HashMap<DataKey, Data>,
 	pub mode: PluginMode,
-	pub args: Vec<Data>,
 	pub cb:   Option<PluginCallback>,
+
+	// TODO: remove this
+	pub _old_args: Vec<Data>,
 }
 
 impl TryFrom<CmdCow> for PluginOpt {
@@ -26,10 +29,13 @@ impl TryFrom<CmdCow> for PluginOpt {
 			bail!("plugin id cannot be empty");
 		};
 
-		let args = if let Some(s) = c.str("args") {
-			shell_words::split(s)?.into_iter().map(Data::String).collect()
+		let (args, _old_args) = if let Some(s) = c.str("args") {
+			(
+				Cmd::parse_args(shell_words::split(s)?.into_iter())?,
+				shell_words::split(s)?.into_iter().map(Data::String).collect(),
+			)
 		} else {
-			vec![]
+			(Default::default(), Default::default())
 		};
 
 		let mut mode = c.str("mode").map(Into::into).unwrap_or_default();
@@ -46,7 +52,18 @@ Please add `--- @sync entry` metadata at the head of your `{id}` plugin instead.
 			});
 		}
 
-		Ok(Self { id, mode, args, cb: c.take_any("callback") })
+		Ok(Self { id, args, mode, cb: c.take_any("callback"), _old_args })
+	}
+}
+
+impl Debug for PluginOpt {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_struct("PluginOpt")
+			.field("id", &self.id)
+			.field("args", &self.args)
+			.field("mode", &self.mode)
+			.field("cb", &self.cb.is_some())
+			.finish()
 	}
 }
 

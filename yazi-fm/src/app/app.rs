@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, sync::atomic::Ordering};
+use std::sync::atomic::Ordering;
 
 use anyhow::Result;
 use crossterm::event::KeyEvent;
@@ -71,9 +71,9 @@ impl App {
 	}
 
 	#[inline]
-	fn dispatch_seq(&mut self, mut cmds: VecDeque<CmdCow>, layer: Layer) {
-		if let Some(cmd) = cmds.pop_front() {
-			Executor::new(self).execute(cmd, layer);
+	fn dispatch_seq(&mut self, mut cmds: Vec<CmdCow>, layer: Layer) {
+		if let Some(last) = cmds.pop() {
+			Executor::new(self).execute(last, layer);
 		}
 		if !cmds.is_empty() {
 			emit!(Seq(cmds, layer));
