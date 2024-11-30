@@ -17,13 +17,13 @@ impl Tasks {
 				_ => false,
 			};
 
-			for p in PLUGIN.fetchers(&f.url, mime, factors) {
+			for g in PLUGIN.fetchers(&f.url, mime, factors) {
 				match loaded.get_mut(&f.url) {
-					Some(n) if *n & (1 << p.idx) != 0 => continue,
-					Some(n) => *n |= 1 << p.idx,
-					None => _ = loaded.insert(f.url_owned(), 1 << p.idx),
+					Some(n) if *n & (1 << g.idx) != 0 => continue,
+					Some(n) => *n |= 1 << g.idx,
+					None => _ = loaded.insert(f.url_owned(), 1 << g.idx),
 				}
-				tasks[p.idx as usize].push(f.clone());
+				tasks[g.idx as usize].push(f.clone());
 			}
 		}
 

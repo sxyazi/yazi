@@ -2,6 +2,8 @@ use std::{collections::HashSet, path::Path, str::FromStr};
 
 use anyhow::Context;
 use serde::{Deserialize, Deserializer};
+use tracing::warn;
+use yazi_shared::fs::File;
 
 use super::{Fetcher, Preloader, Previewer, Spotter};
 use crate::{Preset, plugin::MAX_PREWORKERS};
@@ -27,6 +29,27 @@ impl Plugin {
 			}
 			seen.insert(&f.id);
 			true
+		})
+	}
+
+	pub fn mime_fetchers(&self, files: Vec<File>) -> impl Iterator<Item = (&Fetcher, Vec<File>)> {
+		let mut tasks: [Vec<_>; MAX_PREWORKERS as usize] = Default::default();
+		for f in files {
+			let factors = |s: &str| match s {
+				"dummy" => f.cha.is_dummy(),
+				_ => false,
+			};
+
+			let found = self.fetchers.iter().find(|&g| g.id == "mime" && g.matches(&f.url, "", factors));
+			if let Some(g) = found {
+				tasks[g.idx as usize].push(f);
+			} else {
+				warn!("No mime fetcher for {f:?}");
+			}
+		}
+
+		tasks.into_iter().enumerate().filter_map(|(i, tasks)| {
+			if tasks.is_empty() { None } else { Some((&self.fetchers[i], tasks)) }
 		})
 	}
 

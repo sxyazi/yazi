@@ -22,6 +22,7 @@ ratatui   = { workspace = true }
 regex     = { workspace = true }
 serde     = { workspace = true }
 toml      = { version = "0.8.19", features = [ "preserve_order" ] }
+tracing   = { workspace = true }
 validator = { version = "0.19.0", features = [ "derive" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
