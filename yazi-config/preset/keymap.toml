@@ -195,6 +195,9 @@ keymap = [
 	{ on = "<Up>",   run = "arrow -1", desc = "Move cursor up" },
 	{ on = "<Down>", run = "arrow 1",  desc = "Move cursor down" },
 
+	{ on = "<Enter>", run = "mountpoint_cd", desc = "Change directory to selected mountpoint" },
+	{ on = "l", run = "mountpoint_cd",  desc = "Change directory to selected mountpoint" },
+
 	# Help
 	{ on = "~",    run = "help", desc = "Open help" },
 	{ on = "<F1>", run = "help", desc = "Open help" },
