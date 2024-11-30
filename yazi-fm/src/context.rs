@@ -1,5 +1,5 @@
 use ratatui::layout::Rect;
-use yazi_core::{completion::Completion, confirm::Confirm, help::Help, input::Input, manager::Manager, notify::Notify, pick::Pick, tab::Tab, tasks::Tasks, which::Which};
+use yazi_core::{completion::Completion, confirm::Confirm, help::Help, input::Input, manager::Manager, notify::Notify, pick::Pick, tab::Tab, tasks::Tasks, which::Which, mount::Mount};
 use yazi_fs::Folder;
 
 pub struct Ctx {
@@ -12,20 +12,22 @@ pub struct Ctx {
 	pub completion: Completion,
 	pub which:      Which,
 	pub notify:     Notify,
+	pub mount:      Mount,
 }
 
 impl Ctx {
 	pub fn make() -> Self {
 		Self {
-			manager:    Manager::make(),
-			tasks:      Tasks::serve(),
-			pick:       Default::default(),
-			input:      Default::default(),
-			confirm:    Default::default(),
-			help:       Default::default(),
+			manager: Manager::make(),
+			tasks: Tasks::serve(),
+			pick: Default::default(),
+			input: Default::default(),
+			confirm: Default::default(),
+			help: Default::default(),
 			completion: Default::default(),
-			which:      Default::default(),
-			notify:     Default::default(),
+			which: Default::default(),
+			notify: Default::default(),
+			mount: Default::default(),
 		}
 	}
 

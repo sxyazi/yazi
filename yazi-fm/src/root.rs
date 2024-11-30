@@ -39,6 +39,10 @@ impl Widget for Root<'_> {
 			tasks::Tasks::new(self.cx).render(area, buf);
 		}
 
+		if self.cx.mount.visible {
+			tasks::Mount::new(self.cx).render(area, buf);
+		}
+
 		if self.cx.active().spot.visible() {
 			spot::Spot::new(self.cx).render(area, buf);
 		}

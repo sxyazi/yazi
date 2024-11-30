@@ -151,6 +151,9 @@ keymap = [
 	# Tasks
 	{ on = "w", run = "tasks_show", desc = "Show task manager" },
 
+        # Mount manager
+	{ on = "M", run = "mount_show", desc = "Show mount manager" },
+
 	# Help
 	{ on = "~",    run = "help", desc = "Open help" },
 	{ on = "<F1>", run = "help", desc = "Open help" },
@@ -172,6 +175,25 @@ keymap = [
 
 	{ on = "<Enter>", run = "inspect", desc = "Inspect the task" },
 	{ on = "x",       run = "cancel",  desc = "Cancel the task" },
+
+	# Help
+	{ on = "~",    run = "help", desc = "Open help" },
+	{ on = "<F1>", run = "help", desc = "Open help" },
+]
+
+[mount]
+
+keymap = [
+	{ on = "<Esc>", run = "close", desc = "Close mount manager" },
+	{ on = "<C-[>", run = "close", desc = "Close mount manager" },
+	{ on = "<C-c>", run = "close", desc = "Close mount manager" },
+	{ on = "M",     run = "close", desc = "Close mount manager" },
+
+	{ on = "k", run = "arrow -1", desc = "Move cursor up" },
+	{ on = "j", run = "arrow 1",  desc = "Move cursor down" },
+
+	{ on = "<Up>",   run = "arrow -1", desc = "Move cursor up" },
+	{ on = "<Down>", run = "arrow 1",  desc = "Move cursor down" },
 
 	# Help
 	{ on = "~",    run = "help", desc = "Open help" },
