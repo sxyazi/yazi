@@ -258,7 +258,7 @@ async fn _copy_with_progress(from: PathBuf, to: PathBuf, cha: Cha) -> io::Result
 		tokio::task::spawn_blocking(move || {
 			let mut reader = std::fs::File::open(from)?;
 			let mut writer = std::fs::OpenOptions::new()
-				.mode(cha.mode as u32)
+				.mode(cha.mode)
 				.write(true)
 				.create(true)
 				.truncate(true)
@@ -296,6 +296,23 @@ pub async fn remove_dir_clean(dir: &Path) {
 	}
 
 	fs::remove_dir(dir).await.ok();
+}
+
+pub async fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> {
+	fs::create_dir_all(&dst).await?;
+	let mut entries = fs::read_dir(src).await?;
+
+	while let Some(entry) = entries.next_entry().await? {
+		let file_type = entry.file_type().await?;
+		let dest_path = dst.as_ref().join(entry.file_name());
+
+		if file_type.is_dir() {
+			Box::pin(copy_dir_all(entry.path(), dest_path)).await?;
+		} else {
+			fs::copy(entry.path(), dest_path).await.ok();
+		}
+	}
+	Ok(())
 }
 
 // Convert a file mode to a string representation

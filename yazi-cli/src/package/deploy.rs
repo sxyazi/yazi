@@ -1,6 +1,6 @@
 use anyhow::{Context, Result, bail};
 use tokio::fs;
-use yazi_shared::{Xdg, fs::{maybe_exists, must_exists}};
+use yazi_shared::{Xdg, fs::{copy_dir_all, maybe_exists, must_exists}};
 
 use super::Package;
 
@@ -36,12 +36,26 @@ For safety, please manually delete it from your plugin/flavor directory and re-r
 			&["init.lua", "README.md", "LICENSE"][..]
 		};
 
+		let dirs = &["assets"][..];
+
 		for file in files {
 			let (from, to) = (from.join(file), to.join(file));
 
 			fs::copy(&from, &to)
 				.await
 				.with_context(|| format!("failed to copy `{}` to `{}`", from.display(), to.display()))?;
+		}
+
+		for dir in dirs {
+			let (from, to) = (from.join(dir), to.join(dir));
+
+			if !from.exists() {
+				continue;
+			}
+
+			copy_dir_all(&from, &to).await.with_context(|| {
+				format!("failed to copy dir `{}` to `{}`", from.display(), to.display())
+			})?;
 		}
 
 		println!("Done!");
