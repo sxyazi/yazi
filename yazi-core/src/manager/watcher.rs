@@ -6,10 +6,11 @@ use parking_lot::RwLock;
 use tokio::{fs, pin, sync::{mpsc::{self, UnboundedReceiver}, watch}};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tracing::error;
+use yazi_config::PLUGIN;
 use yazi_fs::{Files, Folder};
 use yazi_plugin::isolate;
 use yazi_proxy::WATCHER;
-use yazi_shared::{RoCell, event::Cmd, fs::{Cha, File, FilesOp, Url, realname_unchecked}};
+use yazi_shared::{RoCell, event::CmdCow, fs::{Cha, File, FilesOp, Url, realname_unchecked}};
 
 use super::Linked;
 
@@ -151,8 +152,10 @@ impl Watcher {
 			}
 
 			FilesOp::mutate(ops);
-			if let Err(e) = isolate::fetch(Cmd::new("mime").into(), reload).await {
-				error!("Fetch `mime` failed in watcher: {e}");
+			for (fetcher, files) in PLUGIN.mime_fetchers(reload) {
+				if let Err(e) = isolate::fetch(CmdCow::from(&fetcher.run), files).await {
+					error!("Fetch mime failed in watcher: {e}");
+				}
 			}
 		}
 	}

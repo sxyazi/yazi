@@ -2,12 +2,12 @@ use std::{borrow::Cow, ffi::OsString};
 
 use tracing::error;
 use yazi_boot::ARGS;
-use yazi_config::{OPEN, popup::PickCfg};
+use yazi_config::{OPEN, PLUGIN, popup::PickCfg};
 use yazi_fs::Folder;
 use yazi_macro::emit;
 use yazi_plugin::isolate;
 use yazi_proxy::{ManagerProxy, TasksProxy, options::OpenDoOpt};
-use yazi_shared::{MIME_DIR, event::{Cmd, CmdCow, EventQuit}, fs::{File, Url}};
+use yazi_shared::{MIME_DIR, event::{CmdCow, EventQuit}, fs::{File, Url}};
 
 use crate::{manager::Manager, tasks::Tasks};
 
@@ -65,8 +65,10 @@ impl Manager {
 			}
 
 			done.extend(files.iter().map(|f| (f.url_owned(), String::new())));
-			if let Err(e) = isolate::fetch(Cmd::new("mime").into(), files).await {
-				error!("Fetch `mime` failed in opening: {e}");
+			for (fetcher, files) in PLUGIN.mime_fetchers(files) {
+				if let Err(e) = isolate::fetch(CmdCow::from(&fetcher.run), files).await {
+					error!("Fetch mime failed on opening: {e}");
+				}
 			}
 
 			ManagerProxy::open_do(OpenDoOpt { hovered, targets: done, interactive: opt.interactive });
