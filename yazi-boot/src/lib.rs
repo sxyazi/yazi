@@ -10,7 +10,7 @@ pub static BOOT: RoCell<Boot> = RoCell::new();
 
 pub fn init() {
 	ARGS.with(<_>::parse);
-	BOOT.init(From::from(&*ARGS));
+	BOOT.init(<_>::from(&*ARGS));
 
 	actions::Actions::act(&ARGS);
 }

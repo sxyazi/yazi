@@ -2,6 +2,7 @@ use std::borrow::Cow;
 
 use anyhow::{Result, bail};
 use clap::{Parser, Subcommand, command};
+use yazi_shared::event::Cmd;
 
 #[derive(Parser)]
 #[command(name = "Ya", about, long_about = None)]
@@ -16,14 +17,55 @@ pub(super) struct Args {
 
 #[derive(Subcommand)]
 pub(super) enum Command {
+	/// Emit a command to be executed by the current instance.
+	Emit(CommandEmit),
+	/// Emit a command to be executed by the specified instance.
+	EmitTo(CommandEmitTo),
+	/// Manage packages.
+	Pack(CommandPack),
 	/// Publish a message to the current instance.
 	Pub(CommandPub),
 	/// Publish a message to the specified instance.
 	PubTo(CommandPubTo),
 	/// Subscribe to messages from all remote instances.
 	Sub(CommandSub),
-	/// Manage packages.
-	Pack(CommandPack),
+}
+
+#[derive(clap::Args)]
+pub(super) struct CommandEmit {
+	/// The name of the command.
+	pub(super) name: String,
+	/// The arguments of the command.
+	#[arg(allow_hyphen_values = true, trailing_var_arg = true)]
+	pub(super) args: Vec<String>,
+}
+
+#[derive(clap::Args)]
+pub(super) struct CommandEmitTo {
+	/// The receiver ID.
+	pub(super) receiver: u64,
+	/// The name of the command.
+	pub(super) name:     String,
+	/// The arguments of the command.
+	#[arg(allow_hyphen_values = true, trailing_var_arg = true)]
+	pub(super) args:     Vec<String>,
+}
+
+#[derive(clap::Args)]
+#[command(arg_required_else_help = true)]
+pub(super) struct CommandPack {
+	/// Add a package.
+	#[arg(short = 'a', long)]
+	pub(super) add:     Option<String>,
+	/// Install all packages.
+	#[arg(short = 'i', long)]
+	pub(super) install: bool,
+	/// List all packages.
+	#[arg(short = 'l', long)]
+	pub(super) list:    bool,
+	/// Upgrade all packages.
+	#[arg(short = 'u', long)]
+	pub(super) upgrade: bool,
 }
 
 #[derive(clap::Args)]
@@ -44,7 +86,7 @@ pub(super) struct CommandPub {
 
 impl CommandPub {
 	#[allow(dead_code)]
-	pub(super) fn receiver(&self) -> Result<u64> {
+	pub(super) fn receiver() -> Result<u64> {
 		if let Some(s) = std::env::var("YAZI_PID").ok().filter(|s| !s.is_empty()) {
 			Ok(s.parse()?)
 		} else {
@@ -79,42 +121,39 @@ pub(super) struct CommandSub {
 	pub(super) kinds: String,
 }
 
-#[derive(clap::Args)]
-#[command(arg_required_else_help = true)]
-pub(super) struct CommandPack {
-	/// Add a package.
-	#[arg(short = 'a', long)]
-	pub(super) add:     Option<String>,
-	/// Install all packages.
-	#[arg(short = 'i', long)]
-	pub(super) install: bool,
-	/// List all packages.
-	#[arg(short = 'l', long)]
-	pub(super) list:    bool,
-	/// Upgrade all packages.
-	#[arg(short = 'u', long)]
-	pub(super) upgrade: bool,
-}
-
 // --- Macros
-macro_rules! impl_body {
+macro_rules! impl_emit_body {
 	($name:ident) => {
 		impl $name {
 			#[allow(dead_code)]
-			pub(super) fn body(&self) -> Result<Cow<str>> {
-				if let Some(json) = &self.json {
-					Ok(json.into())
-				} else if let Some(str) = &self.str {
-					Ok(serde_json::to_string(str)?.into())
-				} else if !self.list.is_empty() {
-					Ok(serde_json::to_string(&self.list)?.into())
-				} else {
-					Ok("".into())
-				}
+			pub(super) fn body(self) -> Result<String> {
+				Ok(serde_json::to_string(&(self.name, Cmd::parse_args(self.args.into_iter(), false)?))?)
 			}
 		}
 	};
 }
 
-impl_body!(CommandPub);
-impl_body!(CommandPubTo);
+macro_rules! impl_pub_body {
+	($name:ident) => {
+		impl $name {
+			#[allow(dead_code)]
+			pub(super) fn body(&self) -> Result<Cow<str>> {
+				Ok(if let Some(json) = &self.json {
+					json.into()
+				} else if let Some(str) = &self.str {
+					serde_json::to_string(str)?.into()
+				} else if !self.list.is_empty() {
+					serde_json::to_string(&self.list)?.into()
+				} else {
+					"".into()
+				})
+			}
+		}
+	};
+}
+
+impl_emit_body!(CommandEmit);
+impl_emit_body!(CommandEmitTo);
+
+impl_pub_body!(CommandPub);
+impl_pub_body!(CommandPubTo);

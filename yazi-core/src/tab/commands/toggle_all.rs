@@ -9,9 +9,9 @@ struct Opt {
 }
 
 impl From<CmdCow> for Opt {
-	fn from(mut c: CmdCow) -> Self {
+	fn from(c: CmdCow) -> Self {
 		Self {
-			state: match c.take_first_str().as_deref() {
+			state: match c.str("state") {
 				Some("on") => Some(true),
 				Some("off") => Some(false),
 				_ => None,
