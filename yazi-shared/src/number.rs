@@ -1,8 +1,8 @@
 use std::hash::{Hash, Hasher};
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Serialize)]
 #[serde(transparent)]
 pub struct OrderedFloat(f64);
 
@@ -26,3 +26,17 @@ impl PartialEq for OrderedFloat {
 }
 
 impl Eq for OrderedFloat {}
+
+impl<'de> Deserialize<'de> for OrderedFloat {
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+	where
+		D: Deserializer<'de>,
+	{
+		let f = f64::deserialize(deserializer)?;
+		if f.is_nan() {
+			Err(serde::de::Error::custom("NaN is not a valid OrderedFloat"))
+		} else {
+			Ok(Self::new(f))
+		}
+	}
+}

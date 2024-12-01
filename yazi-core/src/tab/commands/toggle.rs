@@ -1,17 +1,19 @@
 use yazi_macro::render_and;
 use yazi_proxy::AppProxy;
-use yazi_shared::event::CmdCow;
+use yazi_shared::{event::CmdCow, fs::Url};
 
 use crate::tab::Tab;
 
 struct Opt {
+	url:   Option<Url>,
 	state: Option<bool>,
 }
 
 impl From<CmdCow> for Opt {
 	fn from(mut c: CmdCow) -> Self {
 		Self {
-			state: match c.take_first_str().as_deref() {
+			url:   c.take_first_url(),
+			state: match c.str("state") {
 				Some("on") => Some(true),
 				Some("off") => Some(false),
 				_ => None,
@@ -23,7 +25,7 @@ impl From<CmdCow> for Opt {
 impl Tab {
 	#[yazi_codegen::command]
 	pub fn toggle(&mut self, opt: Opt) {
-		let Some(url) = self.current.hovered().map(|h| &h.url) else {
+		let Some(url) = opt.url.as_ref().or(self.current.hovered().map(|h| &h.url)) else {
 			return;
 		};
 

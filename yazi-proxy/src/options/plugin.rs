@@ -31,7 +31,7 @@ impl TryFrom<CmdCow> for PluginOpt {
 
 		let (args, _old_args) = if let Some(s) = c.str("args") {
 			(
-				Cmd::parse_args(shell_words::split(s)?.into_iter())?,
+				Cmd::parse_args(shell_words::split(s)?.into_iter(), true)?,
 				shell_words::split(s)?.into_iter().map(Data::String).collect(),
 			)
 		} else {

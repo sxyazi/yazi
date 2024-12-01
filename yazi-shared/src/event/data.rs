@@ -1,6 +1,6 @@
 use std::{any::Any, borrow::Cow, collections::HashMap};
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de};
 
 use crate::{OrderedFloat, fs::Url};
 
@@ -87,6 +87,7 @@ impl Data {
 pub enum DataKey {
 	Nil,
 	Boolean(bool),
+	#[serde(deserialize_with = "Self::deserialize_integer")]
 	Integer(i64),
 	Number(OrderedFloat),
 	String(Cow<'static, str>),
@@ -104,6 +105,32 @@ impl DataKey {
 			Self::String(s) => Some(s),
 			_ => None,
 		}
+	}
+
+	fn deserialize_integer<'de, D>(deserializer: D) -> Result<i64, D::Error>
+	where
+		D: de::Deserializer<'de>,
+	{
+		struct Visitor;
+
+		impl de::Visitor<'_> for Visitor {
+			type Value = i64;
+
+			fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+				formatter.write_str("an integer or a string of an integer")
+			}
+
+			fn visit_i64<E>(self, value: i64) -> Result<i64, E> { Ok(value) }
+
+			fn visit_str<E>(self, value: &str) -> Result<i64, E>
+			where
+				E: de::Error,
+			{
+				value.parse().map_err(de::Error::custom)
+			}
+		}
+
+		deserializer.deserialize_any(Visitor)
 	}
 }
 

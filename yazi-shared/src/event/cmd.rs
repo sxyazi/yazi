@@ -106,14 +106,17 @@ impl Cmd {
 	}
 
 	// Parse
-	pub fn parse_args(words: impl Iterator<Item = String>) -> Result<HashMap<DataKey, Data>> {
+	pub fn parse_args(
+		words: impl Iterator<Item = String>,
+		obase: bool,
+	) -> Result<HashMap<DataKey, Data>> {
 		let mut i = 0i64;
 		words
 			.into_iter()
 			.map(|word| {
 				let Some(arg) = word.strip_prefix("--") else {
 					i += 1;
-					return Ok((DataKey::Integer(i - 1), Data::String(word)));
+					return Ok((DataKey::Integer(i - obase as i64), Data::String(word)));
 				};
 
 				let mut parts = arg.splitn(2, '=');
@@ -167,7 +170,10 @@ impl FromStr for Cmd {
 			bail!("command name cannot be empty");
 		}
 
-		Ok(Cmd { name: mem::take(&mut args[0]), args: Cmd::parse_args(args.into_iter().skip(1))? })
+		Ok(Cmd {
+			name: mem::take(&mut args[0]),
+			args: Cmd::parse_args(args.into_iter().skip(1), true)?,
+		})
 	}
 }
 
