@@ -258,7 +258,7 @@ async fn _copy_with_progress(from: PathBuf, to: PathBuf, cha: Cha) -> io::Result
 		tokio::task::spawn_blocking(move || {
 			let mut reader = std::fs::File::open(from)?;
 			let mut writer = std::fs::OpenOptions::new()
-				.mode(cha.mode as u32)
+				.mode(cha.mode)
 				.write(true)
 				.create(true)
 				.truncate(true)

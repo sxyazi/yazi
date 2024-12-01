@@ -1,6 +1,8 @@
+use std::path::PathBuf;
+
 use anyhow::{Context, Result, bail};
 use tokio::fs;
-use yazi_shared::{Xdg, fs::{maybe_exists, must_exists}};
+use yazi_shared::{Xdg, fs::{maybe_exists, must_exists, remove_dir_clean}};
 
 use super::Package;
 
@@ -44,7 +46,42 @@ For safety, please manually delete it from your plugin/flavor directory and re-r
 				.with_context(|| format!("failed to copy `{}` to `{}`", from.display(), to.display()))?;
 		}
 
+		Self::deploy_assets(from.join("assets"), to.join("assets")).await?;
+
 		println!("Done!");
+		Ok(())
+	}
+
+	async fn deploy_assets(from: PathBuf, to: PathBuf) -> Result<()> {
+		use std::io::ErrorKind::NotFound;
+
+		match fs::read_dir(&to).await {
+			Ok(mut it) => {
+				while let Some(entry) = it.next_entry().await? {
+					fs::remove_file(entry.path())
+						.await
+						.with_context(|| format!("failed to remove `{}`", entry.path().display()))?;
+				}
+			}
+			Err(e) if e.kind() == NotFound => {}
+			Err(e) => Err(e).context(format!("failed to read `{}`", to.display()))?,
+		};
+
+		remove_dir_clean(&to).await;
+		match fs::read_dir(&from).await {
+			Ok(mut it) => {
+				fs::create_dir_all(&to).await?;
+				while let Some(entry) = it.next_entry().await? {
+					let (src, dist) = (entry.path(), to.join(entry.file_name()));
+					fs::copy(&src, &dist).await.with_context(|| {
+						format!("failed to copy `{}` to `{}`", src.display(), dist.display())
+					})?;
+				}
+			}
+			Err(e) if e.kind() == NotFound => {}
+			Err(e) => Err(e).context(format!("failed to read `{}`", from.display()))?,
+		}
+
 		Ok(())
 	}
 }
