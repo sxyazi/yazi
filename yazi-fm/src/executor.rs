@@ -24,6 +24,7 @@ impl<'a> Executor<'a> {
 			Layer::Help => self.help(cmd),
 			Layer::Completion => self.completion(cmd),
 			Layer::Which => self.which(cmd),
+			Layer::Mount => self.mount(cmd),
 		}
 	}
 
@@ -145,6 +146,8 @@ impl<'a> Executor<'a> {
 		match cmd.name.as_str() {
 			// Tasks
 			"tasks_show" => self.app.cx.tasks.toggle(()),
+			// Mount
+			"mount_show" => self.app.cx.mount.toggle(()),
 			// Help
 			"help" => self.app.cx.help.toggle(Layer::Manager),
 			// Plugin
@@ -354,5 +357,32 @@ impl<'a> Executor<'a> {
 
 		on!(show);
 		on!(callback);
+	}
+
+	fn mount(&mut self, cmd: CmdCow) {
+		macro_rules! on {
+			($name:ident) => {
+				if cmd.name == stringify!($name) {
+					return self.app.cx.mount.$name(cmd);
+				}
+			};
+			($name:ident, $alias:literal) => {
+				if cmd.name == $alias {
+					return self.app.cx.mount.$name(cmd);
+				}
+			};
+		}
+
+		on!(toggle, "close");
+		on!(arrow);
+		on!(mountpoint_cd);
+
+		match cmd.name.as_str() {
+			// Help
+			"help" => self.app.cx.help.toggle(Layer::Mount),
+			// Plugin
+			"plugin" => self.app.plugin(cmd),
+			_ => {}
+		}
 	}
 }

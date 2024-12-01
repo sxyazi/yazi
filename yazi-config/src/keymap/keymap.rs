@@ -18,6 +18,7 @@ pub struct Keymap {
 	pub confirm:    Vec<Chord>,
 	pub help:       Vec<Chord>,
 	pub completion: Vec<Chord>,
+	pub mount:      Vec<Chord>,
 }
 
 impl Keymap {
@@ -34,6 +35,7 @@ impl Keymap {
 			Layer::Help => &self.help,
 			Layer::Completion => &self.completion,
 			Layer::Which => unreachable!(),
+			Layer::Mount => &self.mount,
 		}
 	}
 }
@@ -61,6 +63,7 @@ impl<'de> Deserialize<'de> for Keymap {
 			confirm:    Inner,
 			help:       Inner,
 			completion: Inner,
+			mount:      Inner,
 		}
 		#[derive(Deserialize)]
 		struct Inner {
@@ -104,6 +107,8 @@ impl<'de> Deserialize<'de> for Keymap {
 			help:       mix(shadow.help.prepend_keymap, shadow.help.keymap, shadow.help.append_keymap),
 			#[rustfmt::skip]
 			completion: mix(shadow.completion.prepend_keymap, shadow.completion.keymap, shadow.completion.append_keymap),
+			#[rustfmt::skip]
+			mount:      mix(shadow.mount.prepend_keymap, shadow.mount.keymap, shadow.mount.append_keymap),
 		})
 	}
 }

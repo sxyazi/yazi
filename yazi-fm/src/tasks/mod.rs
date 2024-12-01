@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(progress tasks);
+yazi_macro::mod_flat!(progress tasks mount);

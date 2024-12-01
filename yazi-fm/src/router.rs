@@ -40,6 +40,8 @@ impl<'a> Router<'a> {
 			self.matches(Layer::Spot, key)
 		} else if cx.tasks.visible {
 			self.matches(Layer::Tasks, key)
+		} else if cx.mount.visible {
+			self.matches(Layer::Mount, key)
 		} else {
 			self.matches(Layer::Manager, key)
 		}

@@ -15,6 +15,7 @@ pub enum Layer {
 	Help,
 	Completion,
 	Which,
+	Mount,
 }
 
 impl Display for Layer {
@@ -30,6 +31,7 @@ impl Display for Layer {
 			Self::Help => "help",
 			Self::Completion => "completion",
 			Self::Which => "which",
+			Self::Mount => "mount",
 		})
 	}
 }
@@ -49,6 +51,7 @@ impl FromStr for Layer {
 			"help" => Self::Help,
 			"completion" => Self::Completion,
 			"which" => Self::Which,
+			"mount" => Self::Mount,
 			_ => bail!("invalid layer: {s}"),
 		})
 	}
