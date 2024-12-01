@@ -24,7 +24,6 @@ impl App {
 		};
 
 		_ = Lives::scope(&self.cx, || {
-			tracing::debug!("Accepting payload: {payload}");
 			let body = payload.body.into_lua(&LUA)?;
 			for f in map.values() {
 				if let Err(e) = f.call::<()>(body.clone()) {
