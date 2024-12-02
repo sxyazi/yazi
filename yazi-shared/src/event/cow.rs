@@ -1,7 +1,7 @@
 use std::{borrow::Cow, ops::Deref};
 
 use super::{Cmd, Data, DataKey};
-use crate::fs::Url;
+use crate::url::Url;
 
 #[derive(Debug)]
 pub enum CmdCow {

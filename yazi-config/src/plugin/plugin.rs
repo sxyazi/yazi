@@ -3,7 +3,7 @@ use std::{collections::HashSet, path::Path, str::FromStr};
 use anyhow::Context;
 use serde::{Deserialize, Deserializer};
 use tracing::warn;
-use yazi_shared::fs::File;
+use yazi_fs::File;
 
 use super::{Fetcher, Preloader, Previewer, Spotter};
 use crate::{Preset, plugin::MAX_PREWORKERS};

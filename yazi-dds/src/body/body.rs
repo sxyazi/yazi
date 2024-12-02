@@ -2,7 +2,7 @@ use anyhow::{Result, bail};
 use mlua::{ExternalResult, IntoLua, Lua, Value};
 use serde::Serialize;
 
-use super::{BodyBulk, BodyBye, BodyCd, BodyCustom, BodyDelete, BodyHey, BodyHi, BodyHover, BodyMove, BodyRename, BodyTab, BodyTrash, BodyYank};
+use super::{BodyBulk, BodyBye, BodyCd, BodyCustom, BodyDelete, BodyHey, BodyHi, BodyHover, BodyLoad, BodyMove, BodyRename, BodyTab, BodyTrash, BodyYank};
 use crate::Payload;
 
 #[derive(Debug, Serialize)]
@@ -11,9 +11,10 @@ pub enum Body<'a> {
 	Hi(BodyHi<'a>),
 	Hey(BodyHey),
 	Bye(BodyBye),
-	Cd(BodyCd<'a>),
-	Hover(BodyHover<'a>),
 	Tab(BodyTab),
+	Cd(BodyCd<'a>),
+	Load(BodyLoad<'a>),
+	Hover(BodyHover<'a>),
 	Rename(BodyRename<'a>),
 	Bulk(BodyBulk<'a>),
 	Yank(BodyYank<'a>),
@@ -29,9 +30,10 @@ impl Body<'static> {
 			"hi" => Self::Hi(serde_json::from_str(body)?),
 			"hey" => Self::Hey(serde_json::from_str(body)?),
 			"bye" => Self::Bye(serde_json::from_str(body)?),
-			"cd" => Self::Cd(serde_json::from_str(body)?),
-			"hover" => Self::Hover(serde_json::from_str(body)?),
 			"tab" => Self::Tab(serde_json::from_str(body)?),
+			"cd" => Self::Cd(serde_json::from_str(body)?),
+			"load" => Self::Load(serde_json::from_str(body)?),
+			"hover" => Self::Hover(serde_json::from_str(body)?),
 			"rename" => Self::Rename(serde_json::from_str(body)?),
 			"bulk" => Self::Bulk(serde_json::from_str(body)?),
 			"@yank" => Self::Yank(serde_json::from_str(body)?),
@@ -53,9 +55,10 @@ impl Body<'static> {
 			"hi"
 				| "hey"
 				| "bye"
-				| "cd"
-				| "hover"
 				| "tab"
+				| "cd"
+				| "load"
+				| "hover"
 				| "rename"
 				| "bulk"
 				| "@yank"
@@ -85,9 +88,10 @@ impl<'a> Body<'a> {
 			Self::Hi(_) => "hi",
 			Self::Hey(_) => "hey",
 			Self::Bye(_) => "bye",
-			Self::Cd(_) => "cd",
-			Self::Hover(_) => "hover",
 			Self::Tab(_) => "tab",
+			Self::Cd(_) => "cd",
+			Self::Load(_) => "load",
+			Self::Hover(_) => "hover",
 			Self::Rename(_) => "rename",
 			Self::Bulk(_) => "bulk",
 			Self::Yank(_) => "@yank",
@@ -114,6 +118,7 @@ impl IntoLua for Body<'static> {
 			Self::Hey(b) => b.into_lua(lua),
 			Self::Bye(b) => b.into_lua(lua),
 			Self::Cd(b) => b.into_lua(lua),
+			Self::Load(b) => b.into_lua(lua),
 			Self::Hover(b) => b.into_lua(lua),
 			Self::Tab(b) => b.into_lua(lua),
 			Self::Rename(b) => b.into_lua(lua),

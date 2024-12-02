@@ -2,8 +2,9 @@ use std::borrow::Cow;
 
 use tokio_util::sync::CancellationToken;
 use yazi_config::PLUGIN;
+use yazi_fs::File;
 use yazi_plugin::{isolate, utils::SpotLock};
-use yazi_shared::fs::{File, Url};
+use yazi_shared::url::Url;
 
 #[derive(Default)]
 pub struct Spot {

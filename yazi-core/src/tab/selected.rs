@@ -1,6 +1,7 @@
 use std::{collections::HashMap, ops::Deref};
 
-use yazi_shared::{fs::{FilesOp, Url}, timestamp_us};
+use yazi_fs::FilesOp;
+use yazi_shared::{timestamp_us, url::Url};
 
 #[derive(Default)]
 pub struct Selected {

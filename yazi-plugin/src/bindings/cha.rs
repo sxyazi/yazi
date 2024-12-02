@@ -1,20 +1,20 @@
 use std::{ops::Deref, time::{Duration, SystemTime, UNIX_EPOCH}};
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, UserData, UserDataFields, UserDataMethods};
-use yazi_shared::fs::ChaKind;
+use yazi_fs::ChaKind;
 
 use crate::RtRef;
 
 #[derive(Clone, Copy, FromLua)]
-pub struct Cha(yazi_shared::fs::Cha);
+pub struct Cha(yazi_fs::Cha);
 
 impl Deref for Cha {
-	type Target = yazi_shared::fs::Cha;
+	type Target = yazi_fs::Cha;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-impl<T: Into<yazi_shared::fs::Cha>> From<T> for Cha {
+impl<T: Into<yazi_fs::Cha>> From<T> for Cha {
 	fn from(cha: T) -> Self { Self(cha.into()) }
 }
 
@@ -56,7 +56,7 @@ impl Cha {
 				let kind =
 					ChaKind::from_bits(t.raw_get("kind")?).ok_or_else(|| "Invalid kind".into_lua_err())?;
 
-				Self::from(yazi_shared::fs::Cha {
+				Self::from(yazi_fs::Cha {
 					kind,
 					len: t.raw_get("len").unwrap_or_default(),
 					atime: parse_time(t.raw_get("atime").ok())?,
@@ -140,7 +140,7 @@ impl UserData for Cha {
 		methods.add_method("perm", |_, _me, ()| {
 			Ok(
 				#[cfg(unix)]
-				Some(yazi_shared::fs::permissions(_me.mode, _me.is_dummy())),
+				Some(yazi_fs::permissions(_me.mode, _me.is_dummy())),
 				#[cfg(windows)]
 				None::<String>,
 			)
@@ -151,7 +151,7 @@ impl UserData for Cha {
 			warn_deprecated(lua.named_registry_value::<RtRef>("rt")?.current());
 			Ok(
 				#[cfg(unix)]
-				Some(yazi_shared::fs::permissions(_me.mode, _me.is_dummy())),
+				Some(yazi_fs::permissions(_me.mode, _me.is_dummy())),
 				#[cfg(windows)]
 				None::<String>,
 			)

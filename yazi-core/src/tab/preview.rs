@@ -5,10 +5,10 @@ use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tokio_util::sync::CancellationToken;
 use yazi_adapter::ADAPTOR;
 use yazi_config::PLUGIN;
-use yazi_fs::Files;
+use yazi_fs::{Cha, File, Files, FilesOp};
 use yazi_macro::render;
 use yazi_plugin::{external::Highlighter, isolate, utils::PreviewLock};
-use yazi_shared::{MIME_DIR, fs::{Cha, File, FilesOp, Url}};
+use yazi_shared::{MIME_DIR, url::Url};
 
 #[derive(Default)]
 pub struct Preview {

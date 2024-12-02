@@ -4,9 +4,10 @@ use tokio::{fs, pin};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
 use yazi_dds::Pubsub;
+use yazi_fs::expand_path;
 use yazi_macro::render;
 use yazi_proxy::{CompletionProxy, InputProxy, ManagerProxy, TabProxy};
-use yazi_shared::{Debounce, errors::InputError, event::CmdCow, fs::{Url, expand_path}};
+use yazi_shared::{Debounce, errors::InputError, event::CmdCow, url::Url};
 
 use crate::tab::Tab;
 

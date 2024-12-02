@@ -1,5 +1,5 @@
 use yazi_macro::emit;
-use yazi_shared::{Id, Layer, event::Cmd, fs::Url};
+use yazi_shared::{Id, Layer, event::Cmd, url::Url};
 
 use crate::options::OpenDoOpt;
 

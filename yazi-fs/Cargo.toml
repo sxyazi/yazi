@@ -9,13 +9,21 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
-yazi-config = { path = "../yazi-config", version = "0.3.3" }
 yazi-macro  = { path = "../yazi-macro", version = "0.3.3" }
-yazi-proxy  = { path = "../yazi-proxy", version = "0.3.3" }
 yazi-shared = { path = "../yazi-shared", version = "0.3.3" }
 
 # External dependencies
-anyhow  = { workspace = true }
-futures = { workspace = true }
-regex   = { workspace = true }
-tokio   = { workspace = true }
+anyhow   = { workspace = true }
+bitflags = { workspace = true }
+dirs     = { workspace = true }
+futures  = { workspace = true }
+regex    = { workspace = true }
+tokio    = { workspace = true }
+serde    = { workspace = true }
+
+[target."cfg(unix)".dependencies]
+libc  = { workspace = true }
+uzers = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59.0", features = [ "Win32_Storage_FileSystem" ] }

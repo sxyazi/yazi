@@ -1,6 +1,6 @@
 use std::{collections::HashMap, ops::{Deref, DerefMut}};
 
-use yazi_shared::fs::Url;
+use yazi_shared::url::Url;
 
 #[derive(Default)]
 pub struct Linked(HashMap<Url, Url> /* from ==> to */);

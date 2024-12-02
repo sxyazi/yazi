@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use yazi_config::open::Opener;
-use yazi_shared::{event::CmdCow, fs::Url};
+use yazi_shared::{event::CmdCow, url::Url};
 
 // --- Open
 #[derive(Default)]

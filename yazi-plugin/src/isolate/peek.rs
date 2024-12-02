@@ -14,7 +14,7 @@ use crate::{RtRef, bindings::Cast, elements::Rect, file::File, loader::LOADER};
 
 pub fn peek(
 	cmd: &'static Cmd,
-	file: yazi_shared::fs::File,
+	file: yazi_fs::File,
 	mime: Cow<'static, str>,
 	skip: usize,
 ) -> CancellationToken {
@@ -74,12 +74,7 @@ pub fn peek(
 	ct
 }
 
-pub fn peek_sync(
-	cmd: &'static Cmd,
-	file: yazi_shared::fs::File,
-	mime: Cow<'static, str>,
-	skip: usize,
-) {
+pub fn peek_sync(cmd: &'static Cmd, file: yazi_fs::File, mime: Cow<'static, str>, skip: usize) {
 	let cb: PluginCallback = Box::new(move |lua, plugin| {
 		let job = lua.create_table_from([
 			("area", Rect::from(LAYOUT.get().preview).into_lua(lua)?),

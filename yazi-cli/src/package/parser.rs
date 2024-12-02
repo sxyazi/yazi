@@ -1,7 +1,7 @@
 use anyhow::{Context, Result, bail};
 use tokio::fs;
 use toml_edit::{Array, DocumentMut, InlineTable, Item, Value};
-use yazi_shared::Xdg;
+use yazi_fs::Xdg;
 
 use super::Package;
 

@@ -3,7 +3,8 @@ use std::{env, fs::File};
 use anyhow::Context;
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::EnvFilter;
-use yazi_shared::{RoCell, Xdg};
+use yazi_fs::Xdg;
+use yazi_shared::RoCell;
 
 static _GUARD: RoCell<WorkerGuard> = RoCell::new();
 

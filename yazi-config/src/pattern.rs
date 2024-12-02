@@ -29,7 +29,7 @@ impl Pattern {
 
 		#[cfg(windows)]
 		let path = if self.sep_lit {
-			yazi_shared::fs::backslash_to_slash(path.as_ref())
+			yazi_fs::backslash_to_slash(path.as_ref())
 		} else {
 			std::borrow::Cow::Borrowed(path.as_ref())
 		};

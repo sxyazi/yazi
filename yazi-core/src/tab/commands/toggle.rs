@@ -1,6 +1,6 @@
 use yazi_macro::render_and;
 use yazi_proxy::AppProxy;
-use yazi_shared::{event::CmdCow, fs::Url};
+use yazi_shared::{event::CmdCow, url::Url};
 
 use crate::tab::Tab;
 

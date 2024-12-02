@@ -1,4 +1,5 @@
-use yazi_shared::fs::{Cha, Url};
+use yazi_fs::Cha;
+use yazi_shared::url::Url;
 
 #[derive(Debug)]
 pub enum FileOp {

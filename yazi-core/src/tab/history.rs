@@ -1,7 +1,8 @@
 use std::{collections::HashMap, ops::{Deref, DerefMut}};
 
-use yazi_fs::Folder;
-use yazi_shared::fs::Url;
+use yazi_shared::url::Url;
+
+use super::Folder;
 
 #[derive(Default)]
 pub struct History(HashMap<Url, Folder>);

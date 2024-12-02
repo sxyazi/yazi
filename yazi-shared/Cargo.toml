@@ -14,24 +14,21 @@ yazi-macro = { path = "../yazi-macro", version = "0.3.3" }
 
 # External dependencies
 anyhow           = { workspace = true }
-bitflags         = { workspace = true }
 crossterm        = { workspace = true }
-dirs             = { workspace = true }
 futures          = { workspace = true }
-libc             = { workspace = true }
 parking_lot      = { workspace = true }
 percent-encoding = "2.3.1"
 ratatui          = { workspace = true }
-regex            = { workspace = true }
 serde            = { workspace = true }
 shell-words      = { workspace = true }
 tokio            = { workspace = true }
 
 [target."cfg(unix)".dependencies]
+libc  = { workspace = true }
 uzers = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.59.0", features = [ "Win32_Storage_FileSystem", "Win32_UI_Shell" ] }
+windows-sys = { version = "0.59.0", features = [ "Win32_UI_Shell" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }

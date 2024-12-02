@@ -2,7 +2,7 @@ use std::{borrow::Cow, path::PathBuf, str::FromStr};
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use yazi_shared::Xdg;
+use yazi_fs::Xdg;
 
 #[derive(Default, Deserialize, Serialize)]
 pub struct Flavor {

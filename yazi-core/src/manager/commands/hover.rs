@@ -2,7 +2,7 @@ use std::{collections::HashSet, path::PathBuf};
 
 use yazi_dds::Pubsub;
 use yazi_macro::render;
-use yazi_shared::{Id, event::{CmdCow, Data}, fs::{Url, Urn}};
+use yazi_shared::{Id, event::{CmdCow, Data}, url::{Url, Urn}};
 
 use crate::manager::Manager;
 

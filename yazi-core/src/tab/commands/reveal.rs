@@ -1,5 +1,6 @@
+use yazi_fs::{File, FilesOp, expand_path};
 use yazi_proxy::ManagerProxy;
-use yazi_shared::{event::CmdCow, fs::{File, FilesOp, Url, expand_path}};
+use yazi_shared::{event::CmdCow, url::Url};
 
 use crate::tab::Tab;
 

@@ -3,8 +3,9 @@ use std::collections::{HashMap, HashSet};
 use anyhow::Result;
 use tokio::fs;
 use yazi_config::popup::{ConfirmCfg, InputCfg};
+use yazi_fs::{File, FilesOp, maybe_exists, ok_or_not_found, realname};
 use yazi_proxy::{ConfirmProxy, InputProxy, TabProxy, WATCHER};
-use yazi_shared::{event::CmdCow, fs::{File, FilesOp, Url, UrnBuf, maybe_exists, ok_or_not_found, realname}};
+use yazi_shared::{event::CmdCow, url::{Url, UrnBuf}};
 
 use crate::manager::Manager;
 

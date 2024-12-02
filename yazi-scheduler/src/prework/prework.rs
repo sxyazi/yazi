@@ -5,8 +5,9 @@ use parking_lot::{Mutex, RwLock};
 use tokio::sync::mpsc;
 use tracing::error;
 use yazi_config::Priority;
+use yazi_fs::{FilesOp, calculate_size};
 use yazi_plugin::isolate;
-use yazi_shared::{event::CmdCow, fs::{FilesOp, Url, calculate_size}};
+use yazi_shared::{event::CmdCow, url::Url};
 
 use super::{PreworkOp, PreworkOpFetch, PreworkOpLoad, PreworkOpSize};
 use crate::{HIGH, NORMAL, TaskOp, TaskProg};

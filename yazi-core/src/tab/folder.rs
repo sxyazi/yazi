@@ -1,11 +1,10 @@
 use std::mem;
 
 use yazi_config::{LAYOUT, MANAGER};
+use yazi_dds::Pubsub;
+use yazi_fs::{Cha, File, Files, FilesOp, FolderStage, Step};
 use yazi_proxy::ManagerProxy;
-use yazi_shared::fs::{Cha, File, FilesOp, Url, Urn};
-
-use super::FolderStage;
-use crate::{Files, Step};
+use yazi_shared::{Id, url::{Url, Urn}};
 
 #[derive(Default)]
 pub struct Folder {
@@ -59,6 +58,16 @@ impl Folder {
 
 		self.arrow(0);
 		(stage, revision) != (self.stage, self.files.revision)
+	}
+
+	pub fn update_pub(&mut self, tab: Id, op: FilesOp) -> bool {
+		let old = self.stage;
+		if !self.update(op) {
+			return false;
+		} else if self.stage != old {
+			Pubsub::pub_from_load(tab, &self.url, self.stage);
+		}
+		true
 	}
 
 	pub fn arrow(&mut self, step: impl Into<Step>) -> bool {

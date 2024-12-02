@@ -1,11 +1,12 @@
 use std::{collections::{HashMap, HashSet}, mem, ops::Deref};
 
 use tokio::{fs::{self, DirEntry}, select, sync::mpsc::{self, UnboundedReceiver}};
-use yazi_config::{MANAGER, manager::SortBy};
-use yazi_shared::{Id, fs::{Cha, FILES_TICKET, File, FilesOp, Url, Urn, UrnBuf, maybe_exists}};
+use yazi_shared::{Id, url::{Url, Urn, UrnBuf}};
 
 use super::{FilesSorter, Filter};
+use crate::{Cha, FILES_TICKET, File, FilesOp, SortBy, maybe_exists};
 
+#[derive(Default)]
 pub struct Files {
 	hidden:       Vec<File>,
 	items:        Vec<File>,
@@ -18,24 +19,6 @@ pub struct Files {
 	sorter:      FilesSorter,
 	filter:      Option<Filter>,
 	show_hidden: bool,
-}
-
-impl Default for Files {
-	fn default() -> Self {
-		Self {
-			items:    Default::default(),
-			hidden:   Default::default(),
-			ticket:   Default::default(),
-			version:  Default::default(),
-			revision: Default::default(),
-
-			sizes: Default::default(),
-
-			sorter:      Default::default(),
-			filter:      Default::default(),
-			show_hidden: MANAGER.show_hidden,
-		}
-	}
 }
 
 impl Deref for Files {

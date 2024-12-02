@@ -6,7 +6,7 @@ yazi_macro::mod_flat!(layout pattern preset priority);
 
 use std::str::FromStr;
 
-use yazi_shared::{RoCell, SyncCell, Xdg};
+use yazi_shared::{RoCell, SyncCell};
 
 pub static KEYMAP: RoCell<keymap::Keymap> = RoCell::new();
 pub static MANAGER: RoCell<manager::Manager> = RoCell::new();
@@ -74,7 +74,7 @@ pub fn init_flavor(light: bool) -> anyhow::Result<()> {
 	theme.manager.syntect_theme = theme
 		.flavor
 		.syntect_path(light)
-		.unwrap_or_else(|| yazi_shared::fs::expand_path(&theme.manager.syntect_theme));
+		.unwrap_or_else(|| yazi_fs::expand_path(&theme.manager.syntect_theme));
 
 	THEME.init(theme);
 	Ok(())
@@ -82,7 +82,7 @@ pub fn init_flavor(light: bool) -> anyhow::Result<()> {
 
 fn try_init(merge: bool) -> anyhow::Result<()> {
 	let (yazi_toml, keymap_toml) = if merge {
-		let p = Xdg::config_dir();
+		let p = yazi_fs::Xdg::config_dir();
 		(Preset::yazi(&p)?, Preset::keymap(&p)?)
 	} else {
 		(yazi_macro::config_preset!("yazi"), yazi_macro::config_preset!("keymap"))

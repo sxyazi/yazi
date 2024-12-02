@@ -6,8 +6,9 @@ use parking_lot::Mutex;
 use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
 use yazi_config::{TASKS, open::Opener, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
+use yazi_fs::{must_be_dir, remove_dir_clean, unique_name};
 use yazi_proxy::{ManagerProxy, options::PluginOpt};
-use yazi_shared::{Throttle, fs::{Url, must_be_dir, remove_dir_clean, unique_name}};
+use yazi_shared::{Throttle, url::Url};
 
 use super::{Ongoing, TaskProg, TaskStage};
 use crate::{HIGH, LOW, NORMAL, TaskKind, TaskOp, file::{File, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, prework::{Prework, PreworkOpFetch, PreworkOpLoad, PreworkOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}};
@@ -219,7 +220,7 @@ impl Scheduler {
 		self.plugin.macro_(PluginOpEntry { id, opt }).ok();
 	}
 
-	pub fn fetch_paged(&self, fetcher: &'static Fetcher, targets: Vec<yazi_shared::fs::File>) {
+	pub fn fetch_paged(&self, fetcher: &'static Fetcher, targets: Vec<yazi_fs::File>) {
 		let id = self.ongoing.lock().add(
 			TaskKind::Preload,
 			format!("Run fetcher `{}` with {} target(s)", fetcher.run.name, targets.len()),
@@ -231,7 +232,7 @@ impl Scheduler {
 		});
 	}
 
-	pub fn preload_paged(&self, preloader: &'static Preloader, target: &yazi_shared::fs::File) {
+	pub fn preload_paged(&self, preloader: &'static Preloader, target: &yazi_fs::File) {
 		let id =
 			self.ongoing.lock().add(TaskKind::Preload, format!("Run preloader `{}`", preloader.run.name));
 

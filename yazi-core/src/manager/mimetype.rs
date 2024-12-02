@@ -1,6 +1,6 @@
 use std::{collections::HashMap, path::PathBuf};
 
-use yazi_shared::fs::{Url, UrlScheme};
+use yazi_shared::url::{Url, UrlScheme};
 
 #[derive(Default)]
 pub struct Mimetype(HashMap<PathBuf, String>);

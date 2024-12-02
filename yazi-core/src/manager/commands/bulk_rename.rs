@@ -5,8 +5,9 @@ use scopeguard::defer;
 use tokio::{fs::{self, OpenOptions}, io::{AsyncReadExt, AsyncWriteExt, stdin}};
 use yazi_config::{OPEN, PREVIEW};
 use yazi_dds::Pubsub;
+use yazi_fs::{File, FilesOp, max_common_root, maybe_exists, paths_to_same_file};
 use yazi_proxy::{AppProxy, HIDER, TasksProxy, WATCHER};
-use yazi_shared::{fs::{File, FilesOp, Url, max_common_root, maybe_exists, paths_to_same_file}, terminal_clear};
+use yazi_shared::{terminal_clear, url::Url};
 
 use crate::manager::Manager;
 

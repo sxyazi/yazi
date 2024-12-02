@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use anyhow::bail;
 use serde::Deserialize;
-use yazi_shared::fs::Cha;
+use yazi_fs::Cha;
 
 #[derive(Default, Deserialize)]
 #[serde(try_from = "String")]

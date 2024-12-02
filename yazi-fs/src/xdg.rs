@@ -1,6 +1,6 @@
 use std::{env, path::PathBuf};
 
-use crate::fs::expand_path;
+use crate::expand_path;
 
 pub struct Xdg;
 
@@ -48,7 +48,7 @@ impl Xdg {
 		#[cfg(unix)]
 		let s = {
 			use uzers::Users;
-			format!("yazi-{}", crate::USERS_CACHE.get_current_uid())
+			format!("yazi-{}", yazi_shared::USERS_CACHE.get_current_uid())
 		};
 
 		#[cfg(windows)]

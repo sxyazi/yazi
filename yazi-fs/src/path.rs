@@ -1,9 +1,7 @@
 use std::{borrow::Cow, env, ffi::OsString, future::Future, io, path::{Component, Path, PathBuf}};
 
 use tokio::fs;
-
-use super::Loc;
-use crate::fs::Url;
+use yazi_shared::url::{Loc, Url};
 
 pub fn current_cwd() -> Option<PathBuf> {
 	env::var_os("PWD")

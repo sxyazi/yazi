@@ -1,7 +1,8 @@
 use std::{collections::HashSet, ops::Deref};
 
 use yazi_dds::Pubsub;
-use yazi_shared::fs::{FilesOp, Url};
+use yazi_fs::FilesOp;
+use yazi_shared::url::Url;
 
 #[derive(Default)]
 pub struct Yanked {

@@ -2,7 +2,7 @@ use std::{borrow::Cow, collections::{HashMap, hash_map}};
 
 use mlua::{AnyUserData, IntoLua, IntoLuaMulti, Lua, MetaMethod, UserData, UserDataRefMut, Value};
 use serde::{Deserialize, Serialize};
-use yazi_shared::fs::Url;
+use yazi_shared::url::Url;
 
 use super::Body;
 

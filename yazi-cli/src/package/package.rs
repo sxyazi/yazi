@@ -2,7 +2,7 @@ use std::{borrow::Cow, io::BufWriter, path::PathBuf};
 
 use anyhow::Result;
 use md5::{Digest, Md5};
-use yazi_shared::Xdg;
+use yazi_fs::Xdg;
 
 pub(crate) struct Package {
 	pub(crate) repo:      String,

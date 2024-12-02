@@ -7,7 +7,7 @@ use yazi_shared::event::Cmd;
 use super::slim_lua;
 use crate::{bindings::Cast, elements::Rect, file::File, loader::LOADER};
 
-pub async fn preload(cmd: &'static Cmd, file: yazi_shared::fs::File) -> mlua::Result<u8> {
+pub async fn preload(cmd: &'static Cmd, file: yazi_fs::File) -> mlua::Result<u8> {
 	LOADER.ensure(&cmd.name).await.into_lua_err()?;
 
 	tokio::task::spawn_blocking(move || {

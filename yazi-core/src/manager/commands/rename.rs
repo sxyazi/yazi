@@ -4,8 +4,9 @@ use anyhow::Result;
 use tokio::fs;
 use yazi_config::popup::{ConfirmCfg, InputCfg};
 use yazi_dds::Pubsub;
+use yazi_fs::{File, FilesOp, maybe_exists, ok_or_not_found, paths_to_same_file, realname};
 use yazi_proxy::{ConfirmProxy, InputProxy, TabProxy, WATCHER};
-use yazi_shared::{event::CmdCow, fs::{File, FilesOp, Url, UrnBuf, maybe_exists, ok_or_not_found, paths_to_same_file, realname}};
+use yazi_shared::{Id, event::CmdCow, url::{Url, UrnBuf}};
 
 use crate::manager::Manager;
 
@@ -53,7 +54,7 @@ impl Manager {
 			_ => None,
 		};
 
-		let tab = self.tabs.cursor;
+		let tab = self.tabs.active().id;
 		tokio::spawn(async move {
 			let mut result = InputProxy::show(InputCfg::rename().with_value(name).with_cursor(cursor));
 			let Some(Ok(name)) = result.recv().await else {
@@ -73,7 +74,7 @@ impl Manager {
 		});
 	}
 
-	async fn rename_do(tab: usize, old: Url, new: Url) -> Result<()> {
+	async fn rename_do(tab: Id, old: Url, new: Url) -> Result<()> {
 		let Some((p_old, n_old)) = old.pair() else { return Ok(()) };
 		let Some((p_new, n_new)) = new.pair() else { return Ok(()) };
 		let _permit = WATCHER.acquire().await.unwrap();

@@ -1,6 +1,5 @@
 use ratatui::layout::Rect;
-use yazi_core::{completion::Completion, confirm::Confirm, help::Help, input::Input, manager::Manager, notify::Notify, pick::Pick, tab::Tab, tasks::Tasks, which::Which};
-use yazi_fs::Folder;
+use yazi_core::{completion::Completion, confirm::Confirm, help::Help, input::Input, manager::Manager, notify::Notify, pick::Pick, tab::{Folder, Tab}, tasks::Tasks, which::Which};
 
 pub struct Ctx {
 	pub manager:    Manager,

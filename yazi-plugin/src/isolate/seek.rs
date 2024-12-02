@@ -5,7 +5,7 @@ use yazi_shared::event::Cmd;
 
 use crate::{bindings::Cast, elements::Rect, file::File};
 
-pub fn seek_sync(cmd: &Cmd, file: yazi_shared::fs::File, units: i16) {
+pub fn seek_sync(cmd: &Cmd, file: yazi_fs::File, units: i16) {
 	let cb: PluginCallback = Box::new(move |lua, plugin| {
 		let job = lua.create_table_from([
 			("file", File::cast(lua, file)?.into_lua(lua)?),

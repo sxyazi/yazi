@@ -3,10 +3,10 @@ use std::{borrow::Cow, path::PathBuf, str::FromStr};
 use anyhow::Context;
 use serde::{Deserialize, Deserializer, Serialize};
 use validator::Validate;
-use yazi_shared::{fs::expand_path, timestamp_us};
+use yazi_fs::{Xdg, expand_path};
+use yazi_shared::timestamp_us;
 
 use super::PreviewWrap;
-use crate::Xdg;
 
 #[rustfmt::skip]
 const TABS: &[&str] = &["", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ", "         ", "          ", "           ", "            ", "             ", "              ", "               ", "                "];

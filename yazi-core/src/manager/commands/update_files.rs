@@ -1,11 +1,11 @@
 use std::borrow::Cow;
 
-use yazi_fs::Folder;
+use yazi_fs::FilesOp;
 use yazi_macro::render;
 use yazi_proxy::ManagerProxy;
-use yazi_shared::{event::CmdCow, fs::FilesOp};
+use yazi_shared::event::CmdCow;
 
-use crate::{manager::{LINKED, Manager}, tab::Tab, tasks::Tasks};
+use crate::{manager::{LINKED, Manager}, tab::{Folder, Tab}, tasks::Tasks};
 
 pub struct Opt {
 	op: FilesOp,
@@ -64,7 +64,7 @@ impl Manager {
 		let leave = matches!(*op, FilesOp::Deleting(_, ref urns) if urns.contains(&urn));
 
 		if let Some(f) = tab.parent.as_mut() {
-			render!(f.update(op.into_owned()));
+			render!(f.update_pub(tab.id, op.into_owned()));
 			render!(f.hover(urn.as_urn()));
 		}
 
@@ -78,7 +78,7 @@ impl Manager {
 		let calc = !matches!(*op, FilesOp::Size(..) | FilesOp::Deleting(..));
 
 		let foreign = matches!(op, Cow::Borrowed(_));
-		if !tab.current.update(op.into_owned()) {
+		if !tab.current.update_pub(tab.id, op.into_owned()) {
 			return;
 		}
 
@@ -99,7 +99,7 @@ impl Manager {
 		let folder = tab.history.entry(url.clone()).or_insert_with(|| Folder::from(url));
 
 		let foreign = matches!(op, Cow::Borrowed(_));
-		if !folder.update(op.into_owned()) {
+		if !folder.update_pub(tab.id, op.into_owned()) {
 			return;
 		}
 
@@ -115,7 +115,7 @@ impl Manager {
 
 		let folder = tab.history.entry(op.cwd().clone()).or_insert_with(|| Folder::from(op.cwd()));
 		let hovered = folder.hovered().filter(|_| folder.tracing).map(|h| h.urn_owned());
-		if folder.update(op.into_owned()) {
+		if folder.update_pub(tab.id, op.into_owned()) {
 			folder.repos(hovered.as_ref().map(|u| u.as_urn()));
 		}
 
