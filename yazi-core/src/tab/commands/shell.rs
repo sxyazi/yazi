@@ -11,7 +11,6 @@ pub struct Opt {
 	run:         Cow<'static, str>,
 	block:       bool,
 	orphan:      bool,
-	confirm:     bool,
 	interactive: bool,
 	cursor:      Option<usize>,
 }
@@ -24,7 +23,6 @@ impl TryFrom<CmdCow> for Opt {
 			run:         c.take_first_str().unwrap_or_default(),
 			block:       c.bool("block"),
 			orphan:      c.bool("orphan"),
-			confirm:     c.bool("confirm"),
 			interactive: c.bool("interactive"),
 			cursor:      c.get("cursor").and_then(Data::as_usize),
 		};
@@ -48,32 +46,18 @@ impl Tab {
 			Err(e) => return AppProxy::notify_warn("`shell` command", e),
 		};
 
-		// TODO: Remove in v0.3.2
-		if !opt.interactive && !opt.confirm {
-			AppProxy::notify_error(
-				"`shell` command",
-				r#"WARNING: In Yazi v0.3, the behavior of the interactive `shell` (i.e., shell templates) must be explicitly specified with either `--interactive` or `--confirm`.
-
-Please replace e.g. `shell` with `shell --interactive`, `shell "my-template"` with `shell "my-template" --interactive`, in your keymap.toml"#,
-			);
-			return;
-		} else if opt.interactive && opt.confirm {
-			AppProxy::notify_error(
-				"`shell` command",
-				"The `shell` command cannot specify both `--confirm` and `--interactive` at the same time.",
-			);
-			return;
-		}
-
 		let selected = self.hovered_and_selected(true).cloned().collect();
 		tokio::spawn(async move {
-			if !opt.confirm || opt.run.is_empty() {
+			if opt.interactive {
 				let mut result =
 					InputProxy::show(InputCfg::shell(opt.block).with_value(opt.run).with_cursor(opt.cursor));
 				match result.recv().await {
 					Some(Ok(e)) => opt.run = Cow::Owned(e),
 					_ => return,
 				}
+			}
+			if opt.run.is_empty() {
+				return;
 			}
 
 			TasksProxy::open_with(

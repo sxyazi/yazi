@@ -13,7 +13,13 @@ impl Sendable {
 			Value::LightUserData(_) => Err("light userdata is not supported".into_lua_err())?,
 			Value::Integer(i) => Data::Integer(i),
 			Value::Number(n) => Data::Number(n),
-			Value::String(s) => Data::String(s.to_str()?.to_owned()),
+			Value::String(b) => {
+				if let Ok(s) = b.to_str() {
+					Data::String(s.to_owned())
+				} else {
+					Data::Bytes(b.as_bytes().to_owned())
+				}
+			}
 			Value::Table(t) => {
 				let (mut i, mut map) = (1, HashMap::with_capacity(t.raw_len()));
 				for result in t.pairs::<Value, Value>() {
@@ -100,6 +106,7 @@ impl Sendable {
 				Value::Table(tbl)
 			}
 			Data::Url(u) => Value::UserData(lua.create_any_userdata(u.clone())?),
+			Data::Bytes(b) => Value::String(lua.create_string(b)?),
 			Data::Any(a) => {
 				if let Some(t) = a.downcast_ref::<super::body::BodyYankIter>() {
 					Value::UserData(lua.create_userdata(t.clone())?)

@@ -28,28 +28,6 @@ pub fn init() -> anyhow::Result<()> {
 		try_init(false)?;
 	}
 
-	// TODO: Remove in v0.3.2
-	for c in &KEYMAP.manager {
-		for r in &c.run {
-			if r.name != "shell" {
-				continue;
-			}
-			if !r.bool("confirm") && !r.bool("interactive") {
-				let s = format!("`{}` ({})", c.on(), c.desc_or_run());
-				eprintln!(
-					r#"WARNING: In Yazi v0.3, the behavior of the interactive `shell` (i.e., shell templates) must be explicitly specified with either `--interactive` or `--confirm`.
-
-Please replace e.g. `shell` with `shell --interactive`, `shell "my-template"` with `shell "my-template" --interactive`, in your keymap.toml for the key: {s}"#
-				);
-				return Ok(());
-			} else if r.bool("confirm") && r.bool("interactive") {
-				eprintln!(
-					"The `shell` command cannot specify both `--confirm` and `--interactive` at the same time.",
-				);
-			}
-		}
-	}
-
 	// TODO: Remove in v0.3.6
 	if matches!(INPUT.create_title, popup::InputCreateTitle::One(_)) {
 		eprintln!(
