@@ -1,5 +1,5 @@
 use yazi_config::PREVIEW;
-use yazi_shared::Xdg;
+use yazi_fs::Xdg;
 
 use super::Actions;
 

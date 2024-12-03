@@ -3,8 +3,9 @@ use std::str::FromStr;
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
+use yazi_fs::SortBy;
 
-use super::{ManagerRatio, MouseEvents, SortBy};
+use super::{ManagerRatio, MouseEvents};
 
 #[derive(Debug, Deserialize, Serialize, Validate)]
 pub struct Manager {

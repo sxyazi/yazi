@@ -147,7 +147,7 @@ impl Cha {
 		let mut attached = ChaKind::empty();
 
 		#[cfg(unix)]
-		if super::Urn::new(path).is_hidden() {
+		if yazi_shared::url::Urn::new(path).is_hidden() {
 			attached |= ChaKind::HIDDEN;
 		}
 		#[cfg(windows)]

@@ -19,9 +19,9 @@ crossterm     = { version = "0.28.1", features = [ "event-stream" ] }
 dirs          = "5.0.1"
 futures       = "0.3.31"
 globset       = "0.4.15"
-libc          = "0.2.166"
+libc          = "0.2.167"
 md-5          = "0.10.6"
-mlua          = { version = "0.10.1", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serialize" ] }
+mlua          = { version = "0.10.2", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serialize" ] }
 parking_lot   = "0.12.3"
 ratatui       = { version = "0.29.0", features = [ "unstable-rendered-line-info" ] }
 regex         = "1.11.1"

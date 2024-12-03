@@ -1,7 +1,7 @@
 use mlua::IntoLua;
 use tracing::error;
 use yazi_dds::{LOCAL, Payload, REMOTE};
-use yazi_plugin::LUA;
+use yazi_plugin::{LUA, RtRef};
 use yazi_shared::event::CmdCow;
 
 use crate::{app::App, lives::Lives};
@@ -13,22 +13,25 @@ impl App {
 		};
 
 		let kind = payload.body.kind().to_owned();
-		let map = if payload.receiver == 0 || payload.receiver != payload.sender {
+		let lock = if payload.receiver == 0 || payload.receiver != payload.sender {
 			REMOTE.read()
 		} else {
 			LOCAL.read()
 		};
 
-		let Some(map) = map.get(&kind).filter(|&m| !m.is_empty()) else {
+		let Some(handlers) = lock.get(&kind).filter(|&m| !m.is_empty()).cloned() else {
 			return;
 		};
+		drop(lock);
 
 		_ = Lives::scope(&self.cx, || {
 			let body = payload.body.into_lua(&LUA)?;
-			for f in map.values() {
-				if let Err(e) = f.call::<()>(body.clone()) {
-					error!("Failed to call `{kind}` handler: {e}");
+			for (id, cb) in handlers {
+				LUA.named_registry_value::<RtRef>("rt")?.push(&id);
+				if let Err(e) = cb.call::<()>(body.clone()) {
+					error!("Failed to run `{kind}` event handler in your `{id}` plugin: {e}");
 				}
+				LUA.named_registry_value::<RtRef>("rt")?.pop();
 			}
 			Ok(())
 		});

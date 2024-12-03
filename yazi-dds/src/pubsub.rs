@@ -3,9 +3,10 @@ use std::collections::{HashMap, HashSet};
 use mlua::Function;
 use parking_lot::RwLock;
 use yazi_boot::BOOT;
-use yazi_shared::{Id, RoCell, fs::Url};
+use yazi_fs::FolderStage;
+use yazi_shared::{Id, RoCell, url::Url};
 
-use crate::{Client, ID, PEERS, body::{Body, BodyBulk, BodyCd, BodyDelete, BodyHi, BodyHover, BodyMove, BodyMoveItem, BodyRename, BodyTab, BodyTrash, BodyYank}};
+use crate::{Client, ID, PEERS, body::{Body, BodyBulk, BodyCd, BodyDelete, BodyHi, BodyHover, BodyLoad, BodyMove, BodyMoveItem, BodyRename, BodyTab, BodyTrash, BodyYank}};
 
 pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function>>>> = RoCell::new();
 
@@ -84,6 +85,18 @@ impl Pubsub {
 		true
 	}
 
+	pub fn pub_from_tab(idx: Id) {
+		if LOCAL.read().contains_key("tab") {
+			Self::pub_(BodyTab::owned(idx));
+		}
+		if PEERS.read().values().any(|p| p.able("tab")) {
+			Client::push(BodyTab::owned(idx));
+		}
+		if BOOT.local_events.contains("tab") {
+			BodyTab::owned(idx).with_receiver(*ID).flush();
+		}
+	}
+
 	pub fn pub_from_cd(tab: Id, url: &Url) {
 		if LOCAL.read().contains_key("cd") {
 			Self::pub_(BodyCd::dummy(tab));
@@ -93,6 +106,18 @@ impl Pubsub {
 		}
 		if BOOT.local_events.contains("cd") {
 			BodyCd::borrowed(tab, url).with_receiver(*ID).flush();
+		}
+	}
+
+	pub fn pub_from_load(tab: Id, url: &Url, stage: FolderStage) {
+		if LOCAL.read().contains_key("load") {
+			Self::pub_(BodyLoad::dummy(tab, url, stage));
+		}
+		if PEERS.read().values().any(|p| p.able("load")) {
+			Client::push(BodyLoad::borrowed(tab, url, stage));
+		}
+		if BOOT.local_events.contains("load") {
+			BodyLoad::borrowed(tab, url, stage).with_receiver(*ID).flush();
 		}
 	}
 
@@ -108,19 +133,7 @@ impl Pubsub {
 		}
 	}
 
-	pub fn pub_from_tab(idx: usize) {
-		if LOCAL.read().contains_key("tab") {
-			Self::pub_(BodyTab::owned(idx));
-		}
-		if PEERS.read().values().any(|p| p.able("tab")) {
-			Client::push(BodyTab::owned(idx));
-		}
-		if BOOT.local_events.contains("tab") {
-			BodyTab::owned(idx).with_receiver(*ID).flush();
-		}
-	}
-
-	pub fn pub_from_rename(tab: usize, from: &Url, to: &Url) {
+	pub fn pub_from_rename(tab: Id, from: &Url, to: &Url) {
 		if LOCAL.read().contains_key("rename") {
 			Self::pub_(BodyRename::dummy(tab, from, to));
 		}

@@ -2,7 +2,8 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 use serde::{Deserialize, Deserializer};
-use yazi_shared::{Condition, fs::File, theme::{Color, Icon, Style}};
+use yazi_fs::File;
+use yazi_shared::{Condition, theme::{Color, Icon, Style}};
 
 use crate::{Pattern, Preset};
 

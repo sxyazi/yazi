@@ -2,7 +2,7 @@ use std::{borrow::Cow, path::{Path, PathBuf}, str::FromStr};
 
 use anyhow::{Context, Result};
 use toml::{Table, Value};
-use yazi_shared::Xdg;
+use yazi_fs::Xdg;
 
 use crate::theme::Flavor;
 

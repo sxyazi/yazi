@@ -35,7 +35,7 @@ impl Sendable {
 			Value::Function(_) => Err("function is not supported".into_lua_err())?,
 			Value::Thread(_) => Err("thread is not supported".into_lua_err())?,
 			Value::UserData(ud) => {
-				if let Ok(t) = ud.take::<yazi_shared::fs::Url>() {
+				if let Ok(t) = ud.take::<yazi_shared::url::Url>() {
 					Data::Url(t)
 				} else if let Ok(t) = ud.take::<super::body::BodyYankIter>() {
 					Data::Any(Box::new(t))
@@ -188,7 +188,7 @@ impl Sendable {
 			Value::Function(_) => Err("function is not supported".into_lua_err())?,
 			Value::Thread(_) => Err("thread is not supported".into_lua_err())?,
 			Value::UserData(ud) => {
-				if let Ok(t) = ud.take::<yazi_shared::fs::Url>() {
+				if let Ok(t) = ud.take::<yazi_shared::url::Url>() {
 					DataKey::Url(t)
 				} else {
 					Err("unsupported userdata included".into_lua_err())?

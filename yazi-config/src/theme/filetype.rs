@@ -1,5 +1,6 @@
 use serde::{Deserialize, Deserializer};
-use yazi_shared::{fs::File, theme::{Color, Style, StyleShadow}};
+use yazi_fs::File;
+use yazi_shared::theme::{Color, Style, StyleShadow};
 
 use super::Is;
 use crate::Pattern;

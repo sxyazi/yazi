@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result, bail};
 use tokio::fs;
-use yazi_shared::{Xdg, fs::{maybe_exists, must_exists, remove_dir_clean}};
+use yazi_fs::{Xdg, maybe_exists, must_exists, remove_dir_clean};
 
 use super::Package;
 

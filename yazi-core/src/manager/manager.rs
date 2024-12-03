@@ -1,11 +1,11 @@
 use ratatui::layout::Rect;
 use yazi_adapter::Dimension;
 use yazi_config::popup::{Origin, Position};
-use yazi_fs::Folder;
-use yazi_shared::{Id, fs::{File, Url}};
+use yazi_fs::File;
+use yazi_shared::{Id, url::Url};
 
 use super::{Mimetype, Tabs, Watcher, Yanked};
-use crate::tab::Tab;
+use crate::tab::{Folder, Tab};
 
 pub struct Manager {
 	pub tabs:   Tabs,

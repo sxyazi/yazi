@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use yazi_config::manager::SortBy;
+use yazi_fs::SortBy;
 use yazi_proxy::ManagerProxy;
 use yazi_shared::event::CmdCow;
 

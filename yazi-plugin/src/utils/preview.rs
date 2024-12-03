@@ -7,8 +7,8 @@ use super::Utils;
 use crate::{elements::{Area, Rect, Renderable, Text, WRAP, WRAP_NO}, external::Highlighter, file::FileRef};
 
 pub struct PreviewLock {
-	pub url:  yazi_shared::fs::Url,
-	pub cha:  yazi_shared::fs::Cha,
+	pub url:  yazi_shared::url::Url,
+	pub cha:  yazi_fs::Cha,
 	pub mime: String,
 
 	pub skip: usize,

@@ -4,7 +4,7 @@ use anyhow::{Result, bail};
 use serde::{Deserialize, de};
 
 use super::{Data, DataKey};
-use crate::fs::Url;
+use crate::url::Url;
 
 #[derive(Debug, Default)]
 pub struct Cmd {

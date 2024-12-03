@@ -1,6 +1,6 @@
 use yazi_config::popup::ConfirmCfg;
 use yazi_proxy::{ConfirmProxy, ManagerProxy};
-use yazi_shared::{event::CmdCow, fs::Url};
+use yazi_shared::{event::CmdCow, url::Url};
 
 use crate::{manager::Manager, tasks::Tasks};
 

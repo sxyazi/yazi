@@ -3,7 +3,8 @@ use std::{ffi::OsStr, fmt::{Debug, Display, Formatter}, ops::Deref, path::{Path,
 use percent_encoding::{AsciiSet, CONTROLS, percent_decode_str, percent_encode};
 use serde::{Deserialize, Serialize};
 
-use super::{Loc, UrnBuf};
+use super::UrnBuf;
+use crate::url::Loc;
 
 const ENCODE_SET: &AsciiSet = &CONTROLS.add(b'#');
 

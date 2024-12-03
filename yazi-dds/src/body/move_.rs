@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
-use yazi_shared::fs::Url;
+use yazi_shared::url::Url;
 
 use super::Body;
 

@@ -12,7 +12,7 @@ use crate::{bindings::Cast, file::File, loader::LOADER};
 
 pub fn spot(
 	cmd: &'static Cmd,
-	file: yazi_shared::fs::File,
+	file: yazi_fs::File,
 	mime: Cow<'static, str>,
 	skip: usize,
 ) -> CancellationToken {

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use yazi_shared::fs::must_exists;
+use yazi_fs::must_exists;
 
 use super::{Git, Package};
 

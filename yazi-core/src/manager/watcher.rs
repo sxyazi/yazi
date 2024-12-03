@@ -7,12 +7,13 @@ use tokio::{fs, pin, sync::{mpsc::{self, UnboundedReceiver}, watch}};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tracing::error;
 use yazi_config::PLUGIN;
-use yazi_fs::{Files, Folder};
+use yazi_fs::{Cha, File, Files, FilesOp, realname_unchecked};
 use yazi_plugin::isolate;
 use yazi_proxy::WATCHER;
-use yazi_shared::{RoCell, event::CmdCow, fs::{Cha, File, FilesOp, Url, realname_unchecked}};
+use yazi_shared::{RoCell, event::CmdCow, url::Url};
 
 use super::Linked;
+use crate::tab::Folder;
 
 pub(crate) static WATCHED: RoCell<RwLock<HashSet<Url>>> = RoCell::new();
 pub static LINKED: RoCell<RwLock<Linked>> = RoCell::new();

@@ -6,7 +6,7 @@ use super::{File, Filter, Lives};
 
 pub(super) struct Files {
 	window: Range<usize>,
-	folder: *const yazi_fs::Folder,
+	folder: *const yazi_core::tab::Folder,
 	tab:    *const yazi_core::tab::Tab,
 }
 
@@ -20,14 +20,14 @@ impl Files {
 	#[inline]
 	pub(super) fn make(
 		window: Range<usize>,
-		folder: &yazi_fs::Folder,
+		folder: &yazi_core::tab::Folder,
 		tab: &yazi_core::tab::Tab,
 	) -> mlua::Result<AnyUserData> {
 		Lives::scoped_userdata(Self { window, folder, tab })
 	}
 
 	#[inline]
-	fn folder(&self) -> &yazi_fs::Folder { unsafe { &*self.folder } }
+	fn folder(&self) -> &yazi_core::tab::Folder { unsafe { &*self.folder } }
 
 	#[inline]
 	fn tab(&self) -> &yazi_core::tab::Tab { unsafe { &*self.tab } }

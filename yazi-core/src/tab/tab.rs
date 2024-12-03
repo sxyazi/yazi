@@ -5,11 +5,11 @@ use ratatui::layout::Rect;
 use tokio::task::JoinHandle;
 use yazi_adapter::Dimension;
 use yazi_config::{LAYOUT, popup::{Origin, Position}};
-use yazi_fs::{Folder, FolderStage};
+use yazi_fs::{File, FolderStage};
 use yazi_macro::render;
-use yazi_shared::{Id, Ids, fs::{File, Url}};
+use yazi_shared::{Id, Ids, url::Url};
 
-use super::{Backstack, Finder, History, Mode, Preference, Preview};
+use super::{Backstack, Finder, Folder, History, Mode, Preference, Preview};
 use crate::{spot::Spot, tab::Selected};
 
 pub struct Tab {
@@ -126,7 +126,7 @@ impl Tab {
 
 			let hovered = f.hovered().filter(|_| f.tracing).map(|h| h.urn_owned());
 			f.files.set_show_hidden(self.pref.show_hidden);
-			f.files.set_sorter(self.pref.sorter());
+			f.files.set_sorter(<_>::from(&self.pref));
 
 			render!(f.files.catchup_revision());
 			render!(f.repos(hovered.as_ref().map(|u| u.as_urn())));

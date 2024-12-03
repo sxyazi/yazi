@@ -91,7 +91,11 @@ pub fn split(s: &str) -> std::io::Result<Vec<String>> {
 fn split_slice(s: &[u16]) -> std::io::Result<Vec<String>> {
 	use std::mem::MaybeUninit;
 
-	use windows_sys::Win32::{Foundation::LocalFree, UI::Shell::CommandLineToArgvW};
+	use windows_sys::{Win32::{Foundation::LocalFree, UI::Shell::CommandLineToArgvW}, core::PCWSTR};
+
+	extern "C" {
+		fn wcslen(s: PCWSTR) -> usize;
+	}
 
 	let mut argc = MaybeUninit::<i32>::uninit();
 	let argv_p = unsafe { CommandLineToArgvW(s.as_ptr(), argc.as_mut_ptr()) };
@@ -102,7 +106,7 @@ fn split_slice(s: &[u16]) -> std::io::Result<Vec<String>> {
 	let argv = unsafe { std::slice::from_raw_parts(argv_p, argc.assume_init() as usize) };
 	let mut res = vec![];
 	for &arg in argv {
-		let len = unsafe { libc::wcslen(arg) };
+		let len = unsafe { wcslen(arg) };
 		res.push(String::from_utf16_lossy(unsafe { std::slice::from_raw_parts(arg, len) }));
 	}
 

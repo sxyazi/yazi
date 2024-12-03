@@ -1,5 +1,5 @@
-use yazi_config::{MANAGER, manager::SortBy};
-use yazi_fs::FilesSorter;
+use yazi_config::MANAGER;
+use yazi_fs::{FilesSorter, SortBy};
 
 #[derive(Clone, PartialEq)]
 pub struct Preference {
@@ -38,15 +38,16 @@ impl Preference {
 		f(self);
 		*self != old
 	}
+}
 
-	#[inline]
-	pub(super) fn sorter(&self) -> FilesSorter {
+impl From<&Preference> for FilesSorter {
+	fn from(value: &Preference) -> Self {
 		FilesSorter {
-			by:        self.sort_by,
-			sensitive: self.sort_sensitive,
-			reverse:   self.sort_reverse,
-			dir_first: self.sort_dir_first,
-			translit:  self.sort_translit,
+			by:        value.sort_by,
+			sensitive: value.sort_sensitive,
+			reverse:   value.sort_reverse,
+			dir_first: value.sort_dir_first,
+			translit:  value.sort_translit,
 		}
 	}
 }

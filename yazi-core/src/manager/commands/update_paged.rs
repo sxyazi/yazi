@@ -1,4 +1,4 @@
-use yazi_shared::{event::{CmdCow, Data}, fs::Url};
+use yazi_shared::{event::{CmdCow, Data}, url::Url};
 
 use crate::{manager::Manager, tasks::Tasks};
 

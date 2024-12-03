@@ -2,9 +2,9 @@ use std::{ffi::OsStr, fs::{FileType, Metadata}, ops::Deref};
 
 use anyhow::Result;
 use tokio::fs;
+use yazi_shared::{SyncCell, theme::IconCache, url::{Url, Urn, UrnBuf}};
 
-use super::{Urn, UrnBuf};
-use crate::{SyncCell, fs::{Cha, Url}, theme::IconCache};
+use crate::Cha;
 
 #[derive(Clone, Debug, Default)]
 pub struct File {

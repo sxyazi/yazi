@@ -1,7 +1,7 @@
 use globset::GlobBuilder;
 use mlua::{ExternalError, ExternalResult, Function, IntoLua, IntoLuaMulti, Lua, MetaMethod, Table, Value};
 use tokio::fs;
-use yazi_shared::fs::remove_dir_clean;
+use yazi_fs::remove_dir_clean;
 
 use crate::{Error, bindings::{Cast, Cha}, file::File, url::{Url, UrlRef}};
 
@@ -104,13 +104,13 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 				continue;
 			}
 
-			let url = yazi_shared::fs::Url::from(path);
+			let url = yazi_shared::url::Url::from(path);
 			let file = if !resolve {
-				yazi_shared::fs::File::from_dummy(url, next.file_type().await.ok())
+				yazi_fs::File::from_dummy(url, next.file_type().await.ok())
 			} else if let Ok(meta) = next.metadata().await {
-				yazi_shared::fs::File::from_meta(url, meta).await
+				yazi_fs::File::from_meta(url, meta).await
 			} else {
-				yazi_shared::fs::File::from_dummy(url, next.file_type().await.ok())
+				yazi_fs::File::from_dummy(url, next.file_type().await.ok())
 			};
 			files.push(File::cast(&lua, file)?);
 		}
@@ -126,7 +126,7 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 
 fn unique_name(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, url: UrlRef| async move {
-		match yazi_shared::fs::unique_name(url.clone(), async { false }).await {
+		match yazi_fs::unique_name(url.clone(), async { false }).await {
 			Ok(u) => (Url::cast(&lua, u)?, Value::Nil).into_lua_multi(&lua),
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}

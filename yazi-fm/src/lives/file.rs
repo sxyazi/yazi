@@ -10,32 +10,32 @@ use crate::Ctx;
 
 pub(super) struct File {
 	idx:    usize,
-	folder: *const yazi_fs::Folder,
+	folder: *const yazi_core::tab::Folder,
 	tab:    *const yazi_core::tab::Tab,
 }
 
 impl Deref for File {
-	type Target = yazi_shared::fs::File;
+	type Target = yazi_fs::File;
 
 	fn deref(&self) -> &Self::Target { &self.folder().files[self.idx] }
 }
 
-impl AsRef<yazi_shared::fs::File> for File {
-	fn as_ref(&self) -> &yazi_shared::fs::File { self }
+impl AsRef<yazi_fs::File> for File {
+	fn as_ref(&self) -> &yazi_fs::File { self }
 }
 
 impl File {
 	#[inline]
 	pub(super) fn make(
 		idx: usize,
-		folder: &yazi_fs::Folder,
+		folder: &yazi_core::tab::Folder,
 		tab: &yazi_core::tab::Tab,
 	) -> mlua::Result<AnyUserData> {
 		Lives::scoped_userdata(Self { idx, folder, tab })
 	}
 
 	#[inline]
-	fn folder(&self) -> &yazi_fs::Folder { unsafe { &*self.folder } }
+	fn folder(&self) -> &yazi_core::tab::Folder { unsafe { &*self.folder } }
 
 	#[inline]
 	fn tab(&self) -> &yazi_core::tab::Tab { unsafe { &*self.tab } }

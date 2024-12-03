@@ -3,13 +3,13 @@ use std::{borrow::Cow, ffi::OsString};
 use tracing::error;
 use yazi_boot::ARGS;
 use yazi_config::{OPEN, PLUGIN, popup::PickCfg};
-use yazi_fs::Folder;
+use yazi_fs::File;
 use yazi_macro::emit;
 use yazi_plugin::isolate;
 use yazi_proxy::{ManagerProxy, TasksProxy, options::OpenDoOpt};
-use yazi_shared::{MIME_DIR, event::{CmdCow, EventQuit}, fs::{File, Url}};
+use yazi_shared::{MIME_DIR, event::{CmdCow, EventQuit}, url::Url};
 
-use crate::{manager::Manager, tasks::Tasks};
+use crate::{manager::Manager, tab::Folder, tasks::Tasks};
 
 #[derive(Clone, Copy)]
 struct Opt {

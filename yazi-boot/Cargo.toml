@@ -11,6 +11,7 @@ repository  = "https://github.com/sxyazi/yazi"
 [dependencies]
 yazi-adapter = { path = "../yazi-adapter", version = "0.3.3" }
 yazi-config  = { path = "../yazi-config", version = "0.3.3" }
+yazi-fs      = { path = "../yazi-fs", version = "0.3.3" }
 yazi-macro   = { path = "../yazi-macro", version = "0.3.3" }
 yazi-shared  = { path = "../yazi-shared", version = "0.3.3" }
 

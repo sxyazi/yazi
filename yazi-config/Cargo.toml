@@ -9,6 +9,7 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
+yazi-fs     = { path = "../yazi-fs", version = "0.3.3" }
 yazi-macro  = { path = "../yazi-macro", version = "0.3.3" }
 yazi-shared = { path = "../yazi-shared", version = "0.3.3" }
 
@@ -17,7 +18,7 @@ anyhow    = { workspace = true }
 bitflags  = { workspace = true }
 crossterm = { workspace = true }
 globset   = { workspace = true }
-indexmap  = { version = "2.6.0", features = [ "serde" ] }
+indexmap  = { version = "2.7.0", features = [ "serde" ] }
 ratatui   = { workspace = true }
 regex     = { workspace = true }
 serde     = { workspace = true }

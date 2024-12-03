@@ -2,7 +2,7 @@ use std::{borrow::Cow, collections::HashMap};
 
 use tracing::error;
 use yazi_macro::render;
-use yazi_shared::{event::CmdCow, fs::Url};
+use yazi_shared::{event::CmdCow, url::Url};
 
 use crate::{manager::{LINKED, Manager}, tasks::Tasks};
 

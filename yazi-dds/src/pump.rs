@@ -4,7 +4,7 @@ use parking_lot::Mutex;
 use tokio::{pin, select, sync::mpsc};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tokio_util::sync::CancellationToken;
-use yazi_shared::{RoCell, fs::Url};
+use yazi_shared::{RoCell, url::Url};
 
 use crate::{Pubsub, body::BodyMoveItem};
 

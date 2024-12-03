@@ -8,12 +8,12 @@ use super::{File, Files, Lives};
 
 pub(super) struct Folder {
 	window: Range<usize>,
-	inner:  *const yazi_fs::Folder,
+	inner:  *const yazi_core::tab::Folder,
 	tab:    *const yazi_core::tab::Tab,
 }
 
 impl Deref for Folder {
-	type Target = yazi_fs::Folder;
+	type Target = yazi_core::tab::Folder;
 
 	fn deref(&self) -> &Self::Target { unsafe { &*self.inner } }
 }
@@ -22,7 +22,7 @@ impl Folder {
 	#[inline]
 	pub(super) fn make(
 		window: Option<Range<usize>>,
-		inner: &yazi_fs::Folder,
+		inner: &yazi_core::tab::Folder,
 		tab: &yazi_core::tab::Tab,
 	) -> mlua::Result<AnyUserData> {
 		let window = match window {

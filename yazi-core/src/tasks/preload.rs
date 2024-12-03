@@ -1,6 +1,6 @@
-use yazi_config::{PLUGIN, manager::SortBy, plugin::MAX_PREWORKERS};
-use yazi_fs::Files;
-use yazi_shared::{MIME_DIR, fs::File};
+use yazi_config::{PLUGIN, plugin::MAX_PREWORKERS};
+use yazi_fs::{File, Files, SortBy};
+use yazi_shared::MIME_DIR;
 
 use super::Tasks;
 use crate::manager::Mimetype;

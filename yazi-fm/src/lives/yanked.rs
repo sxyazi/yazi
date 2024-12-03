@@ -35,7 +35,7 @@ impl UserData for Yanked {
 
 		methods.add_meta_method(MetaMethod::Pairs, |lua, me, ()| {
 			let iter = lua.create_function(
-				|lua, mut iter: UserDataRefMut<Iter<hash_set::Iter<yazi_shared::fs::Url>, _>>| {
+				|lua, mut iter: UserDataRefMut<Iter<hash_set::Iter<yazi_shared::url::Url>, _>>| {
 					if let Some(next) = iter.next() {
 						(next.0, Url::cast(lua, next.1.clone())?).into_lua_multi(lua)
 					} else {

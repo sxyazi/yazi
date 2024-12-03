@@ -1,7 +1,8 @@
 use std::collections::{HashMap, HashSet};
 
-use super::{Cha, File, UrnBuf};
-use crate::{Id, Ids, Layer, event::Cmd, fs::Url};
+use yazi_shared::{Id, Ids, Layer, event::Cmd, url::{Url, UrnBuf}};
+
+use super::{Cha, File};
 
 pub static FILES_TICKET: Ids = Ids::new();
 
@@ -38,8 +39,11 @@ impl FilesOp {
 
 	#[inline]
 	pub fn emit(self) {
-		crate::event::Event::Call(Cmd::new("update_files").with_any("op", self).into(), Layer::Manager)
-			.emit();
+		yazi_shared::event::Event::Call(
+			Cmd::new("update_files").with_any("op", self).into(),
+			Layer::Manager,
+		)
+		.emit();
 	}
 
 	pub fn prepare(cwd: &Url) -> Id {

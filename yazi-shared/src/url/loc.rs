@@ -1,6 +1,6 @@
 use std::{cmp, ffi::{OsStr, OsString}, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
 
-use super::{Urn, UrnBuf};
+use crate::url::{Urn, UrnBuf};
 
 #[derive(Clone, Default)]
 pub struct Loc {

@@ -7,7 +7,7 @@ use yazi_shared::event::CmdCow;
 use super::slim_lua;
 use crate::{bindings::Cast, elements::Rect, file::File, loader::LOADER};
 
-pub async fn fetch(cmd: CmdCow, files: Vec<yazi_shared::fs::File>) -> mlua::Result<u8> {
+pub async fn fetch(cmd: CmdCow, files: Vec<yazi_fs::File>) -> mlua::Result<u8> {
 	if files.is_empty() {
 		return Ok(1);
 	}
