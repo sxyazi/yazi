@@ -14,18 +14,21 @@ impl<'a> Notify<'a> {
 		let chunks = layout::Layout::horizontal([Constraint::Fill(1), Constraint::Min(80)]).split(area);
 
 		let chunks =
-			layout::Layout::vertical([Constraint::Max(1), Constraint::Fill(1)]).split(chunks[1]);
+			layout::Layout::vertical([Constraint::Fill(1), Constraint::Max(1)]).split(chunks[1]);
 
-		chunks[1]
+		chunks[0]
 	}
 
-	fn tile(area: Rect, messages: &[Message]) -> Vec<Rect> {
+	fn tiles<'m>(area: Rect, messages: impl Iterator<Item = &'m Message> + Clone) -> Vec<Rect> {
 		layout::Layout::vertical(
-			messages.iter().map(|m| Constraint::Length(m.height(area.width) as u16)),
+			[Constraint::Fill(1)]
+				.into_iter()
+				.chain(messages.clone().map(|m| Constraint::Length(m.height(area.width) as u16))),
 		)
 		.spacing(1)
 		.split(area)
 		.iter()
+		.skip(1)
 		.zip(messages)
 		.map(|(&(mut r), m)| {
 			if r.width > m.max_width as u16 {
@@ -41,15 +44,15 @@ impl<'a> Notify<'a> {
 impl Widget for Notify<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let notify = &self.cx.notify;
-
 		let available = Self::available(area);
-		let limit = notify.limit(available);
-		let tile = Self::tile(available, &notify.messages[..limit]);
 
-		for (i, m) in notify.messages.iter().enumerate().take(limit) {
+		let messages = notify.messages.iter().take(notify.limit(available)).rev();
+		let tiles = Self::tiles(available, messages.clone());
+
+		for (i, m) in messages.enumerate() {
 			let mut rect =
-				tile[i].offset(Offset { x: (100 - m.percent) as i32 * tile[i].width as i32 / 100, y: 0 });
-			rect.width -= rect.x - tile[i].x;
+				tiles[i].offset(Offset { x: (100 - m.percent) as i32 * tiles[i].width as i32 / 100, y: 0 });
+			rect.width -= rect.x - tiles[i].x;
 
 			yazi_plugin::elements::Clear::default().render(rect, buf);
 			Paragraph::new(m.content.as_str())
