@@ -18,6 +18,8 @@ pub enum Data {
 	#[serde(skip_deserializing)]
 	Url(Url),
 	#[serde(skip)]
+	Bytes(Vec<u8>),
+	#[serde(skip)]
 	Any(Box<dyn Any + Send + Sync>),
 }
 
