@@ -34,9 +34,7 @@ impl Watcher {
 			if event.kind.is_access() {
 				return;
 			}
-			for path in event.paths {
-				out_tx_.send(Url::from(path)).ok();
-			}
+			Self::push_files_impl(&out_tx_, event.paths.into_iter().map(Url::from));
 		};
 
 		let config = notify::Config::default().with_poll_interval(Duration::from_millis(500));
@@ -55,11 +53,23 @@ impl Watcher {
 		self.in_tx.send(new.into_iter().cloned().collect()).ok();
 	}
 
-	pub(super) fn push_files(&self, url: Vec<Url>) {
-		let watched = WATCHED.read();
-		for u in url {
-			if u.parent_url().is_some_and(|p| watched.contains(&p)) {
-				self.out_tx.send(u).ok();
+	pub(super) fn push_files(&self, urls: Vec<Url>) {
+		Self::push_files_impl(&self.out_tx, urls.into_iter());
+	}
+
+	fn push_files_impl(out_tx: &mpsc::UnboundedSender<Url>, urls: impl Iterator<Item = Url>) {
+		let (mut parents, watched) = (HashSet::new(), WATCHED.read());
+		for u in urls {
+			let Some(p) = u.parent_url() else { continue };
+			if !watched.contains(&p)
+				&& LINKED.read().from_dir(&p).find(|&u| watched.contains(u)).is_none()
+			{
+				continue;
+			}
+			out_tx.send(u).ok();
+			if !parents.contains(&p) {
+				out_tx.send(p.clone()).ok();
+				parents.insert(p);
 			}
 		}
 	}

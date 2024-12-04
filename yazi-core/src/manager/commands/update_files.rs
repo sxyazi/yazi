@@ -25,12 +25,8 @@ impl Manager {
 			return;
 		};
 
-		let mut ops = vec![opt.op];
-		for u in LINKED.read().from_dir(ops[0].cwd()) {
-			ops.push(ops[0].rebase(u));
-		}
-
-		for op in ops {
+		let linked: Vec<_> = LINKED.read().from_dir(opt.op.cwd()).map(|u| opt.op.rebase(u)).collect();
+		for op in [opt.op].into_iter().chain(linked) {
 			let idx = self.tabs.cursor;
 			self.yanked.apply_op(&op);
 

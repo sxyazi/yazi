@@ -1,4 +1,3 @@
-table.unpack = table.unpack or unpack
 function Err(s, ...) return Error.custom(string.format(s, ...)) end
 
 function ya.clamp(min, x, max)
@@ -30,11 +29,11 @@ end
 function ya.readable_size(size)
 	local units = { "B", "K", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q" }
 	local i = 1
-	while size > 1024.0 and i < #units do
-		size = size / 1024.0
+	while size > 1024 and i < #units do
+		size = size / 1024
 		i = i + 1
 	end
-	return string.format("%.1f%s", size, units[i])
+	return string.format("%.1f%s", size, units[i]):gsub("[.,]0", "", 1)
 end
 
 function ya.readable_path(path)

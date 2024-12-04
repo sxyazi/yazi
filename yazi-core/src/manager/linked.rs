@@ -16,29 +16,27 @@ impl DerefMut for Linked {
 }
 
 impl Linked {
-	pub fn from_dir(&self, url: &Url) -> Vec<&Url> {
+	pub fn from_dir<'a, 'b>(&'a self, url: &'b Url) -> Box<dyn Iterator<Item = &'a Url> + 'b>
+	where
+		'a: 'b,
+	{
 		if let Some(to) = self.get(url) {
-			self.iter().filter(|(k, v)| *v == to && *k != url).map(|(k, _)| k).collect()
+			Box::new(self.iter().filter(move |(k, v)| *v == to && *k != url).map(|(k, _)| k))
 		} else {
-			self.iter().filter(|(_, v)| *v == url).map(|(k, _)| k).collect()
+			Box::new(self.iter().filter(move |(_, v)| *v == url).map(|(k, _)| k))
 		}
 	}
 
 	pub fn from_file(&self, url: &Url) -> Vec<Url> {
 		if self.is_empty() {
-			return Default::default();
+			return vec![];
 		}
 
 		let Some(p) = url.parent_url() else {
-			return Default::default();
+			return vec![];
 		};
 
-		let relatives = self.from_dir(&p);
-		if relatives.is_empty() {
-			return Default::default();
-		}
-
 		let name = url.file_name().unwrap();
-		relatives.into_iter().map(|u| u.join(name)).collect()
+		self.from_dir(&p).map(|u| u.join(name)).collect()
 	}
 }
