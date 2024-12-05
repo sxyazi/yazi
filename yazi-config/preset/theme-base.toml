@@ -205,7 +205,7 @@ rules = [
 
 	# Archives
 	{ mime = "application/{,g}zip", fg = "red" },
-	{ mime = "application/{tar,bzip*,7z-compressed,xz,rar}", fg = "red" },
+	{ mime = "application/{tar,bzip*,7z-compressed,xz,rar,vnd.rar}", fg = "red" },
 
 	# Documents
 	{ mime = "application/{pdf,doc,rtf,vnd.*}", fg = "cyan" },
