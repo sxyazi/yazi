@@ -43,22 +43,24 @@ macro_rules! theme_preset {
 	($name:literal) => {{
 		#[cfg(debug_assertions)]
 		{
-			let append = std::fs::read_to_string(concat!(
-				env!("CARGO_MANIFEST_DIR"),
-				"/preset/theme+",
-				$name,
-				".toml"
-			))
-			.expect(concat!("Failed to read 'yazi-config/preset/theme+", $name, ".toml'"));
-			std::borrow::Cow::from(format!("{}\n{append}", &$crate::config_preset!("theme-base")))
+			std::borrow::Cow::from(
+				std::fs::read_to_string(concat!(
+					env!("CARGO_MANIFEST_DIR"),
+					"/preset/theme-",
+					$name,
+					".toml"
+				))
+				.expect(concat!("Failed to read 'yazi-config/preset/theme-", $name, ".toml'")),
+			)
 		}
 		#[cfg(not(debug_assertions))]
 		{
-			std::borrow::Cow::from(concat!(
-				include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/preset/theme-base.toml")),
-				"\n",
-				include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/preset/theme+", $name, ".toml"))
-			))
+			std::borrow::Cow::from(include_str!(concat!(
+				env!("CARGO_MANIFEST_DIR"),
+				"/preset/theme-",
+				$name,
+				".toml"
+			)))
 		}
 	}};
 }
