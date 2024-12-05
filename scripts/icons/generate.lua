@@ -31,7 +31,7 @@ function dump(map)
 end
 
 function save(typ, files, exts)
-	local p = string.format("../../yazi-config/preset/theme+%s.toml", typ)
+	local p = string.format("../../yazi-config/preset/theme-%s.toml", typ)
 	local s = io.open(p, "r"):read("*a")
 	s = s:gsub("files = %[\n(.-)\n%]", string.format("files = [\n%s]", files))
 	s = s:gsub("exts = %[\n(.-)\n%]", string.format("exts = [\n%s]", exts))

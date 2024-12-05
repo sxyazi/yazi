@@ -5,7 +5,7 @@ local M = {}
 local function match_mimetype(s)
 	local type, sub = s:match("^([-a-z]+/)([+-.a-zA-Z0-9]+)%s*$")
 	if type and sub and SUPPORTED_TYPES:find(type, 1, true)  then
-		return type:gsub("^x%-", "", 1) .. sub:gsub("^x%-", "", 1)
+		return type:gsub("^x%-", "", 1) .. sub:gsub("^x%-", "", 1):gsub("^vnd%.", "", 1)
 	end
 end
 
