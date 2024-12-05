@@ -2,7 +2,7 @@ use mlua::{AnyUserData, FromLua, Lua, Table, UserData};
 
 use super::Cell;
 
-#[derive(Clone, Default, FromLua)]
+#[derive(Clone, Debug, Default, FromLua)]
 pub struct Row {
 	pub(super) cells: Vec<Cell>,
 	height:           u16,

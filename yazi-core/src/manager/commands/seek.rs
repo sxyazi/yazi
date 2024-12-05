@@ -1,6 +1,6 @@
 use yazi_config::PLUGIN;
 use yazi_plugin::isolate;
-use yazi_shared::{MIME_DIR, event::{CmdCow, Data}};
+use yazi_shared::event::{CmdCow, Data};
 
 use crate::manager::Manager;
 
@@ -20,11 +20,7 @@ impl Manager {
 			return self.active_mut().preview.reset();
 		};
 
-		let mime = if hovered.is_dir() {
-			MIME_DIR
-		} else if let Some(s) = self.mimetype.get(&hovered.url) {
-			s
-		} else {
+		let Some(mime) = self.mimetype.by_file(hovered) else {
 			return self.active_mut().preview.reset();
 		};
 

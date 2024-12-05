@@ -12,7 +12,7 @@ const THICK: u8 = 3;
 const QUADRANT_INSIDE: u8 = 4;
 const QUADRANT_OUTSIDE: u8 = 5;
 
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Border {
 	pub(crate) area: Area,
 

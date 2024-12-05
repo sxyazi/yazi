@@ -1,6 +1,4 @@
-use std::borrow::Cow;
-
-use yazi_shared::{MIME_DIR, event::{CmdCow, Data}};
+use yazi_shared::event::{CmdCow, Data};
 
 use crate::manager::Manager;
 
@@ -19,12 +17,7 @@ impl Manager {
 			return;
 		};
 
-		let mime = if hovered.is_dir() {
-			Cow::Borrowed(MIME_DIR)
-		} else {
-			Cow::Owned(self.mimetype.get_owned(&hovered.url).unwrap_or_default())
-		};
-
+		let mime = self.mimetype.by_file_owned(&hovered).unwrap_or_default();
 		// if !self.active().spot.same_file(&hovered, &mime) {
 		// self.active_mut().spot.reset();
 		// }

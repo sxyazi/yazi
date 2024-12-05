@@ -38,9 +38,9 @@ body:
       label: Additional context
       description: Add any other context or screenshots about the feature request here.
   - type: checkboxes
-    id: validations
+    id: checklist
     attributes:
-      label: Validations
+      label: Checklist
       description: Before submitting the issue, please make sure you have completed the following
       options:
         - label: I have searched the existing issues/discussions

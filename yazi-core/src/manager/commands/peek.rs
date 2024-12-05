@@ -35,7 +35,7 @@ impl Manager {
 			return self.active_mut().preview.reset_image();
 		}
 
-		let mime = self.mimetype.get_owned(&hovered.url).unwrap_or_default();
+		let mime = self.mimetype.by_file_owned(&hovered).unwrap_or_default();
 		let folder = self.active().hovered_folder().map(|f| (f.offset, f.cha));
 
 		if !self.active().preview.same_url(&hovered.url) {
@@ -61,7 +61,7 @@ impl Manager {
 		if hovered.is_dir() {
 			self.active_mut().preview.go_folder(hovered, folder.map(|(_, cha)| cha), opt.force);
 		} else {
-			self.active_mut().preview.go(hovered, mime.into(), opt.force);
+			self.active_mut().preview.go(hovered, mime, opt.force);
 		}
 	}
 }

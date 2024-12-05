@@ -29,7 +29,7 @@ impl Manager {
 			.updates
 			.into_iter()
 			.map(|(url, mime)| (Url::from(url.into_owned()), mime))
-			.filter(|(url, mime)| self.mimetype.get(url) != Some(mime))
+			.filter(|(url, mime)| self.mimetype.by_url(url) != Some(mime))
 			.fold(HashMap::new(), |mut map, (u, m)| {
 				for u in linked.from_file(&u) {
 					map.insert(u, m.clone());

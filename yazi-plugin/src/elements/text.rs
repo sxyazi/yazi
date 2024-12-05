@@ -16,7 +16,7 @@ pub const WRAP_TRIM: u8 = 2;
 
 const EXPECTED: &str = "expected a string, Line, Span, or a table of them";
 
-#[derive(Clone, Default, FromLua)]
+#[derive(Clone, Debug, Default, FromLua)]
 pub struct Text {
 	pub area: Area,
 

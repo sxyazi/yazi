@@ -20,9 +20,7 @@ impl Deref for Yanked {
 }
 
 impl Yanked {
-	pub fn new(cut: bool, urls: HashSet<Url>) -> Self {
-		Self { cut, urls, version: 0, ..Default::default() }
-	}
+	pub fn new(cut: bool, urls: HashSet<Url>) -> Self { Self { cut, urls, ..Default::default() } }
 
 	pub fn remove(&mut self, url: &Url) {
 		if self.urls.remove(url) {
@@ -37,6 +35,13 @@ impl Yanked {
 
 		self.urls.clear();
 		self.revision += 1;
+	}
+
+	pub fn contains_in(&self, dir: &Url) -> bool {
+		self.urls.iter().any(|u| {
+			let mut it = u.components();
+			it.next_back().is_some() && it == dir.components() && u.parent_url().as_ref() == Some(dir)
+		})
 	}
 
 	pub fn apply_op(&mut self, op: &FilesOp) {

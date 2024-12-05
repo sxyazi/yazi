@@ -4,7 +4,7 @@ use mlua::{FromLua, Lua, Table, UserData};
 
 use super::Pad;
 
-#[derive(Clone, Copy, Default, FromLua)]
+#[derive(Clone, Copy, Debug, Default, FromLua)]
 pub struct Rect(pub(super) ratatui::layout::Rect);
 
 impl Deref for Rect {

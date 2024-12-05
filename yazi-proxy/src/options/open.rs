@@ -7,7 +7,7 @@ use yazi_shared::{event::CmdCow, url::Url};
 #[derive(Default)]
 pub struct OpenDoOpt {
 	pub hovered:     Url,
-	pub targets:     Vec<(Url, String)>,
+	pub targets:     Vec<(Url, Cow<'static, str>)>,
 	pub interactive: bool,
 }
 
