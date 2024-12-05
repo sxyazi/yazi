@@ -3,7 +3,7 @@ use ratatui::widgets::Borders;
 
 use super::Area;
 
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Bar {
 	area: Area,
 

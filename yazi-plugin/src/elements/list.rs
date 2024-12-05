@@ -6,7 +6,7 @@ use super::{Area, Text};
 const EXPECTED: &str = "expected a table of strings, Texts, Lines or Spans";
 
 // --- List
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct List {
 	area: Area,
 

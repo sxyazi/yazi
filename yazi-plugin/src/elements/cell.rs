@@ -4,7 +4,7 @@ use super::Text;
 
 const EXPECTED: &str = "expected a table of strings, Texts, Lines or Spans";
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Cell {
 	pub(super) text: ratatui::text::Text<'static>,
 }

@@ -1,6 +1,5 @@
 use yazi_config::{PLUGIN, plugin::MAX_PREWORKERS};
 use yazi_fs::{File, Files, SortBy};
-use yazi_shared::MIME_DIR;
 
 use super::Tasks;
 use crate::manager::Mimetype;
@@ -10,7 +9,7 @@ impl Tasks {
 		let mut loaded = self.scheduler.prework.loaded.lock();
 		let mut tasks: [Vec<_>; MAX_PREWORKERS as usize] = Default::default();
 		for f in paged {
-			let mime = if f.is_dir() { MIME_DIR } else { mimetype.get(&f.url).unwrap_or_default() };
+			let mime = mimetype.by_file(f).unwrap_or_default();
 			let factors = |s: &str| match s {
 				"mime" => !mime.is_empty(),
 				"dummy" => f.cha.is_dummy(),
@@ -38,7 +37,7 @@ impl Tasks {
 	pub fn preload_paged(&self, paged: &[File], mimetype: &Mimetype) {
 		let mut loaded = self.scheduler.prework.loaded.lock();
 		for f in paged {
-			let mime = if f.is_dir() { MIME_DIR } else { mimetype.get(&f.url).unwrap_or_default() };
+			let mime = mimetype.by_file(f).unwrap_or_default();
 			for p in PLUGIN.preloaders(&f.url, mime) {
 				match loaded.get_mut(&f.url) {
 					Some(n) if *n & (1 << p.idx) != 0 => continue,

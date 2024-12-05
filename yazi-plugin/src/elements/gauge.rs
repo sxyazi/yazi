@@ -4,7 +4,7 @@ use ratatui::widgets::Widget;
 use super::{Area, Span};
 use crate::elements::Style;
 
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Gauge {
 	area: Area,
 

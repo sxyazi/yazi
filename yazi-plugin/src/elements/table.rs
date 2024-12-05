@@ -5,7 +5,7 @@ use super::{Area, Row};
 use crate::elements::{Constraint, Style};
 
 // --- Table
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Table {
 	pub(crate) area: Area,
 

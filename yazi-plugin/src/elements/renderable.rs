@@ -2,7 +2,7 @@ use mlua::{AnyUserData, ExternalError};
 
 use super::{Bar, Border, Clear, Gauge, List, Table, Text};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Renderable {
 	Text(Text),
 	List(List),

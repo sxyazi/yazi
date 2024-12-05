@@ -45,9 +45,9 @@ body:
         Add any other context about the problem here.  You can attach screenshots by clicking
         this area to highlight it and then drag the files in.
   - type: checkboxes
-    id: validations
+    id: checklist
     attributes:
-      label: Validations
+      label: Checklist
       description: Before submitting the post, please make sure you have completed the following
       options:
         - label: I have searched the existing discussions/issues

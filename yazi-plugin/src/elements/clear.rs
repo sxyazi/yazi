@@ -7,7 +7,7 @@ use super::Area;
 
 pub static COLLISION: AtomicBool = AtomicBool::new(false);
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Clear {
 	pub area: Area,
 }

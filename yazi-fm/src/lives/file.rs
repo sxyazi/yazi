@@ -3,7 +3,6 @@ use std::ops::Deref;
 use mlua::{AnyUserData, IntoLua, UserData, UserDataFields, UserDataMethods};
 use yazi_config::THEME;
 use yazi_plugin::{bindings::Range, elements::Style};
-use yazi_shared::MIME_DIR;
 
 use super::Lives;
 use crate::Ctx;
@@ -55,9 +54,9 @@ impl UserData for File {
 			Ok(if me.is_dir() { me.folder().files.sizes.get(me.urn()).copied() } else { Some(me.len) })
 		});
 		methods.add_method("mime", |lua, me, ()| {
-			lua
-				.named_registry_value::<AnyUserData>("cx")?
-				.borrow_scoped(|cx: &Ctx| cx.manager.mimetype.get_owned(&me.url))
+			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|cx: &Ctx| {
+				cx.manager.mimetype.by_url(&me.url).map(|s| lua.create_string(s)).transpose()
+			})?
 		});
 		methods.add_method("prefix", |lua, me, ()| {
 			if !me.folder().url.is_search() {
@@ -70,9 +69,7 @@ impl UserData for File {
 		});
 		methods.add_method("style", |lua, me, ()| {
 			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|cx: &Ctx| {
-				let mime =
-					if me.is_dir() { MIME_DIR } else { cx.manager.mimetype.get(&me.url).unwrap_or_default() };
-
+				let mime = cx.manager.mimetype.by_file(me).unwrap_or_default();
 				THEME.filetypes.iter().find(|&x| x.matches(me, mime)).map(|x| Style::from(x.style))
 			})
 		});

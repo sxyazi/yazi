@@ -61,9 +61,7 @@ impl Watcher {
 		let (mut parents, watched) = (HashSet::new(), WATCHED.read());
 		for u in urls {
 			let Some(p) = u.parent_url() else { continue };
-			if !watched.contains(&p)
-				&& LINKED.read().from_dir(&p).find(|&u| watched.contains(u)).is_none()
-			{
+			if !watched.contains(&p) && !LINKED.read().from_dir(&p).any(|u| watched.contains(u)) {
 				continue;
 			}
 			out_tx.send(u).ok();

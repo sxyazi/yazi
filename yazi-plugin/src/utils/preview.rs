@@ -6,6 +6,7 @@ use yazi_shared::{Layer, errors::PeekError, event::Cmd};
 use super::Utils;
 use crate::{elements::{Area, Rect, Renderable, Text, WRAP, WRAP_NO}, external::Highlighter, file::FileRef};
 
+#[derive(Debug)]
 pub struct PreviewLock {
 	pub url:  yazi_shared::url::Url,
 	pub cha:  yazi_fs::Cha,
