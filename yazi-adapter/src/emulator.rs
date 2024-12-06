@@ -11,18 +11,21 @@ use crate::{Adapter, Brand, Mux, TMUX, Unknown};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Emulator {
-	pub kind:  Either<Brand, Unknown>,
-	pub light: bool,
+	pub kind:      Either<Brand, Unknown>,
+	pub light:     bool,
+	pub cell_size: Option<(u16, u16)>,
 }
 
 impl Default for Emulator {
-	fn default() -> Self { Self { kind: Either::Right(Unknown::default()), light: false } }
+	fn default() -> Self {
+		Self { kind: Either::Right(Unknown::default()), light: false, cell_size: None }
+	}
 }
 
 impl Emulator {
 	pub fn detect() -> Self {
 		if let Some(brand) = Brand::from_env() {
-			Self { kind: Either::Left(brand), light: Self::detect_base().unwrap_or_default().light }
+			Self { kind: Either::Left(brand), ..Self::detect_base().unwrap_or_default() }
 		} else {
 			Self::detect_full().unwrap_or_default()
 		}
@@ -37,6 +40,7 @@ impl Emulator {
 			SavePosition,
 			Print(Mux::csi("\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\")), // Detect KGP
 			Print(Mux::csi("\x1b[>q")),                                    // Request terminal version
+			Print("\x1b[16t"),                                             // Request cell size
 			Print("\x1b]11;?\x07"),                                        // Request background color
 			Print(Mux::csi("\x1b[0c")),                                    // Request device attributes
 			RestorePosition
@@ -52,7 +56,11 @@ impl Emulator {
 			})
 		};
 
-		Ok(Self { kind, light: Self::light_bg(&resp).unwrap_or_default() })
+		Ok(Self {
+			kind,
+			light: Self::light_bg(&resp).unwrap_or_default(),
+			cell_size: Self::cell_size(&resp),
+		})
 	}
 
 	pub fn adapters(self) -> &'static [Adapter] {
@@ -117,7 +125,7 @@ impl Emulator {
 		match timeout(Duration::from_secs(10), read).await {
 			Err(e) => error!("read_until_da1 timed out: {buf:?}, error: {e:?}"),
 			Ok(Err(e)) => error!("read_until_da1 failed: {buf:?}, error: {e:?}"),
-			Ok(Ok(())) => {}
+			Ok(Ok(())) => debug!("read_until_da1: {buf:?}"),
 		}
 		String::from_utf8_lossy(&buf).into_owned()
 	}
@@ -128,12 +136,30 @@ impl Emulator {
 
 		execute!(
 			LineWriter::new(stderr()),
+			Print("\x1b[16t"),          // Request cell size
 			Print("\x1b]11;?\x07"),     // Request background color
 			Print(Mux::csi("\x1b[0c")), // Request device attributes
 		)?;
 
 		let resp = futures::executor::block_on(Self::read_until_da1());
-		Ok(Self { light: Self::light_bg(&resp).unwrap_or_default(), ..Default::default() })
+		Ok(Self {
+			light: Self::light_bg(&resp).unwrap_or_default(),
+			cell_size: Self::cell_size(&resp),
+			..Default::default()
+		})
+	}
+
+	fn cell_size(resp: &str) -> Option<(u16, u16)> {
+		let b = resp.split_at(resp.find("\x1b[6;")? + 4).1.as_bytes();
+
+		let h: Vec<_> = b.iter().copied().take_while(|&c| c.is_ascii_digit()).collect();
+		b.get(h.len()).filter(|&&c| c == b';')?;
+
+		let w: Vec<_> = b[h.len() + 1..].iter().copied().take_while(|&c| c.is_ascii_digit()).collect();
+		b.get(h.len() + 1 + w.len()).filter(|&&c| c == b't')?;
+
+		let (w, h) = unsafe { (String::from_utf8_unchecked(w), String::from_utf8_unchecked(h)) };
+		Some((w.parse().ok()?, h.parse().ok()?))
 	}
 
 	fn light_bg(resp: &str) -> Result<bool> {
