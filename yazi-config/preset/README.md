@@ -26,10 +26,15 @@ However, if you want to customize certain configurations:
 
 For the user's `theme.toml` file, you can only apply the same color scheme to both the light and dark themes.
 
-If you want more granular control over colors, specify two different flavors for light and dark modes under the `[flavor]` section of your `theme.toml`, and override them there instead.
+If you want more granular control over colors, specify two different flavors for light and dark modes under the `[flavor]` section of your `theme.toml`, and override them in your respective flavor instead.
 
 [shipped]: https://github.com/sxyazi/yazi/tree/shipped
 [yazi-default]: yazi-default.toml
 [keymap-default]: keymap-default.toml
 [theme-dark]: theme-dark.toml
 [theme-light]: theme-light.toml
+
+## Learn more
+
+- [Configuration documentation](https://yazi-rs.github.io/docs/configuration/overview)
+- [Flavors documentation](https://yazi-rs.github.io/docs/flavors/overview)
