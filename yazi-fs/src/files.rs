@@ -103,10 +103,12 @@ impl Files {
 	pub fn update_full(&mut self, files: Vec<File>) {
 		self.ticket = FILES_TICKET.next();
 
-		(self.hidden, self.items) = self.split_files(files);
-		if !self.items.is_empty() {
+		let (hidden, items) = self.split_files(files);
+		if !(items.is_empty() && self.items.is_empty()) {
 			self.revision += 1;
 		}
+
+		(self.hidden, self.items) = (hidden, items);
 	}
 
 	pub fn update_part(&mut self, files: Vec<File>, ticket: Id) {
