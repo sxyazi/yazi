@@ -150,7 +150,7 @@ impl Emulator {
 	}
 
 	fn cell_size(resp: &str) -> Option<(u16, u16)> {
-		let b = resp.split_at(resp.find("\x1b[6;")? + 4).1.as_bytes();
+		let b = resp.split_once("\x1b[6;")?.1.as_bytes();
 
 		let h: Vec<_> = b.iter().copied().take_while(|&c| c.is_ascii_digit()).collect();
 		b.get(h.len()).filter(|&&c| c == b';')?;
