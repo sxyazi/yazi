@@ -1,5 +1,5 @@
 use mlua::{AnyUserData, Function, Lua, Table};
-use ratatui::style::Stylize;
+use yazi_config::THEME;
 use yazi_macro::emit;
 use yazi_shared::{Layer, event::Cmd};
 
@@ -70,10 +70,10 @@ impl Utils {
 					area,
 					position: ratatui::widgets::Borders::ALL,
 					type_: ratatui::widgets::BorderType::Rounded,
-					style: ratatui::style::Style::default().blue(),
+					style: ratatui::style::Style::from(THEME.spot.border),
 					titles: vec![(
 						ratatui::widgets::block::Position::Top,
-						ratatui::text::Line::raw(lock.url.name().to_string_lossy().into_owned()).centered(),
+						ratatui::text::Line::raw(lock.url.name().to_string_lossy().into_owned()).centered().style(THEME.spot.title),
 					)],
 				}),
 				Renderable::Table(table),
