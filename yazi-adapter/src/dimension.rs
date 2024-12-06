@@ -2,6 +2,8 @@ use std::mem;
 
 use crossterm::terminal::WindowSize;
 
+use crate::EMULATOR;
+
 pub struct Dimension;
 
 impl Dimension {
@@ -27,9 +29,10 @@ impl Dimension {
 	#[inline]
 	pub fn ratio() -> Option<(f64, f64)> {
 		let s = Self::available();
-		if s.width == 0 || s.height == 0 {
-			return None;
-		}
-		Some((f64::from(s.width) / f64::from(s.columns), f64::from(s.height) / f64::from(s.rows)))
+		Some(if s.width == 0 || s.height == 0 {
+			(EMULATOR.cell_size?.0 as f64, EMULATOR.cell_size?.1 as f64)
+		} else {
+			(f64::from(s.width) / f64::from(s.columns), f64::from(s.height) / f64::from(s.rows))
+		})
 	}
 }
