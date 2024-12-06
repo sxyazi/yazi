@@ -1,11 +1,14 @@
-# Yazi Default Configuration
+# Default Configuration
+
+> [!IMPORTANT]
+> If you're using a stable release of Yazi instead of the latest nightly build, make sure you're checking these files from [the shipped tag][shipped], not the latest main branch.
 
 This directory contains the default configuration files for Yazi:
 
 - [`yazi-default.toml`][yazi-default]: General configuration
 - [`keymap-default.toml`][keymap-default]: Keybindings configuration
-- [`theme-dark.toml`][theme-dark]: Dark color scheme configuration (loaded when your terminal is in dark mode)
-- [`theme-light.toml`][theme-light]: Light color scheme configuration (loaded when your terminal is in light mode)
+- [`theme-dark.toml`][theme-dark]: Dark color scheme (loaded when your terminal is in dark mode)
+- [`theme-light.toml`][theme-light]: Light color scheme (loaded when your terminal is in light mode)
 
 These files are already included with Yazi when you install the release, so you don't need to manually download or copy them to your Yazi configuration directory.
 
@@ -25,6 +28,7 @@ For the user's `theme.toml` file, you can only apply the same color scheme to bo
 
 If you want more granular control over colors, specify two different flavors for light and dark modes under the `[flavor]` section of your `theme.toml`, and override them there instead.
 
+[shipped]: https://github.com/sxyazi/yazi/tree/shipped
 [yazi-default]: yazi-default.toml
 [keymap-default]: keymap-default.toml
 [theme-dark]: theme-dark.toml
