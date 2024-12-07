@@ -14,11 +14,11 @@ pub struct RgOpt {
 
 pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {
 	let mut child = Command::new("rg")
-		.current_dir(&opt.cwd)
 		.args(["--color=never", "--files-with-matches", "--smart-case"])
 		.arg(if opt.hidden { "--hidden" } else { "--no-hidden" })
 		.args(opt.args)
 		.arg(opt.subject)
+		.current_dir(&opt.cwd)
 		.kill_on_drop(true)
 		.stdout(Stdio::piped())
 		.stderr(Stdio::null())

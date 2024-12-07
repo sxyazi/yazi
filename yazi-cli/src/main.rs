@@ -7,6 +7,7 @@ use clap::Parser;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
 	yazi_shared::init();
+	yazi_fs::init();
 
 	if std::env::args_os().nth(1).is_some_and(|s| s == "-V" || s == "--version") {
 		println!(

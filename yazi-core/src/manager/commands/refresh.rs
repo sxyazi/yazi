@@ -1,16 +1,15 @@
-use std::{env, path::MAIN_SEPARATOR};
+use std::path::MAIN_SEPARATOR;
 
 use crossterm::{execute, terminal::SetTitle};
 use yazi_config::MANAGER;
+use yazi_fs::CWD;
 use yazi_shared::event::CmdCow;
 
 use crate::{manager::Manager, tasks::Tasks};
 
 impl Manager {
 	pub fn refresh(&mut self, _: CmdCow, tasks: &Tasks) {
-		env::set_current_dir(self.cwd()).ok();
-		env::set_var("PWD", self.cwd());
-
+		CWD.set(self.cwd());
 		if !MANAGER.title_format.is_empty() {
 			execute!(std::io::stderr(), SetTitle(self.title())).ok();
 		}

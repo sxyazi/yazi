@@ -2,6 +2,7 @@ use std::{ffi::OsString, process::Stdio};
 
 use anyhow::Result;
 use tokio::process::{Child, Command};
+use yazi_fs::CWD;
 
 #[derive(Default)]
 pub struct ShellOpt {
@@ -29,6 +30,7 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 	return Ok(unsafe {
 		Command::new("sh")
 			.arg("-c")
+			.current_dir(CWD.load().as_ref())
 			.stdin(opt.stdio())
 			.stdout(opt.stdio())
 			.stderr(opt.stdio())
@@ -50,6 +52,7 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 			Command::new("cmd.exe")
 				.raw_arg("/C")
 				.raw_arg(parser::parse(&opt.cmd, &opt.args))
+				.current_dir(CWD.load().as_ref())
 				.stdin(opt.stdio())
 				.stdout(opt.stdio())
 				.stderr(opt.stdio())

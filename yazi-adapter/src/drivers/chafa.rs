@@ -12,7 +12,7 @@ pub(crate) struct Chafa;
 
 impl Chafa {
 	pub(crate) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
-		let output = Command::new("chafa")
+		let child = Command::new("chafa")
 			.args([
 				"-f",
 				"symbols",
@@ -32,9 +32,9 @@ impl Chafa {
 			.stdout(Stdio::piped())
 			.stderr(Stdio::null())
 			.kill_on_drop(true)
-			.output()
-			.await?;
+			.spawn()?;
 
+		let output = child.wait_with_output().await?;
 		if !output.status.success() {
 			bail!("chafa failed with status: {}", output.status);
 		} else if output.stdout.is_empty() {
