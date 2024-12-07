@@ -2,7 +2,7 @@ use std::process::Stdio;
 
 use anyhow::Result;
 use tokio::{io::{AsyncBufReadExt, BufReader}, process::{Child, Command}, sync::mpsc::{self, UnboundedReceiver}};
-use yazi_fs::File;
+use yazi_fs::{CWD, File};
 use yazi_shared::url::Url;
 
 pub struct FdOpt {
@@ -37,6 +37,7 @@ fn spawn(program: &str, opt: &FdOpt) -> std::io::Result<Child> {
 		.arg(if opt.hidden { "--hidden" } else { "--no-hidden" })
 		.args(&opt.args)
 		.arg(&opt.subject)
+		.current_dir(CWD.load().as_ref())
 		.kill_on_drop(true)
 		.stdout(Stdio::piped())
 		.stderr(Stdio::null())

@@ -3,12 +3,7 @@ use std::{borrow::Cow, env, ffi::OsString, future::Future, io, path::{Component,
 use tokio::fs;
 use yazi_shared::url::{Loc, Url};
 
-pub fn current_cwd() -> Option<PathBuf> {
-	env::var_os("PWD")
-		.map(PathBuf::from)
-		.filter(|p| p.is_absolute())
-		.or_else(|| env::current_dir().ok())
-}
+use crate::CWD;
 
 #[inline]
 pub fn clean_path(path: impl AsRef<Path>) -> PathBuf { _clean_path(path.as_ref()) }
@@ -65,10 +60,8 @@ fn _expand_path(p: &Path) -> PathBuf {
 		clean_path(dirs::home_dir().unwrap_or_default().join(rest))
 	} else if p.is_absolute() {
 		clean_path(p)
-	} else if let Some(cwd) = current_cwd() {
-		clean_path(cwd.join(p))
 	} else {
-		clean_path(p)
+		clean_path(CWD.load().join(p))
 	}
 }
 

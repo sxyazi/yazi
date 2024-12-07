@@ -12,11 +12,11 @@ impl Git {
 	}
 
 	pub(super) async fn fetch(path: &Path) -> Result<()> {
-		Self::exec(|c| c.current_dir(path).arg("fetch")).await
+		Self::exec(|c| c.arg("fetch").current_dir(path)).await
 	}
 
 	pub(super) async fn checkout(path: &Path, rev: &str) -> Result<()> {
-		Self::exec(|c| c.current_dir(path).args(["checkout", rev])).await
+		Self::exec(|c| c.args(["checkout", rev]).current_dir(path)).await
 	}
 
 	pub(super) async fn pull(path: &Path) -> Result<()> {
@@ -27,8 +27,8 @@ impl Git {
 
 	pub(super) async fn hash(path: &Path) -> Result<String> {
 		let output = Command::new("git")
-			.current_dir(path)
 			.args(["rev-parse", "--short", "HEAD"])
+			.current_dir(path)
 			.output()
 			.await
 			.context("Failed to get current revision")?;

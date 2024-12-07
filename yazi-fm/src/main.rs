@@ -18,6 +18,8 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_shared::init();
 
+	yazi_fs::init();
+
 	yazi_config::init()?;
 
 	yazi_adapter::init()?;

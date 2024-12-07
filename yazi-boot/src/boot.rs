@@ -1,7 +1,7 @@
 use std::{collections::HashSet, ffi::OsString, path::PathBuf};
 
 use serde::Serialize;
-use yazi_fs::{Xdg, current_cwd, expand_path};
+use yazi_fs::{CWD, Xdg, expand_path};
 
 #[derive(Debug, Default, Serialize)]
 pub struct Boot {
@@ -20,7 +20,7 @@ pub struct Boot {
 impl Boot {
 	fn parse_entries(entries: &[PathBuf]) -> (Vec<PathBuf>, Vec<OsString>) {
 		if entries.is_empty() {
-			return (vec![current_cwd().unwrap()], vec![OsString::new()]);
+			return (vec![CWD.load().to_path_buf()], vec![OsString::new()]);
 		}
 
 		let mut cwds = Vec::with_capacity(entries.len());

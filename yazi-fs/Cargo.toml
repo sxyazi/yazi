@@ -14,12 +14,13 @@ yazi-shared = { path = "../yazi-shared", version = "0.3.3" }
 
 # External dependencies
 anyhow   = { workspace = true }
+arc-swap = "1.7.1"
 bitflags = { workspace = true }
 dirs     = { workspace = true }
 futures  = { workspace = true }
 regex    = { workspace = true }
-tokio    = { workspace = true }
 serde    = { workspace = true }
+tokio    = { workspace = true }
 
 [target."cfg(unix)".dependencies]
 libc  = { workspace = true }
