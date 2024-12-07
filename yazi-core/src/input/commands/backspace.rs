@@ -20,7 +20,7 @@ impl Input {
 		let snap = self.snaps.current_mut();
 		if !opt.under && snap.cursor < 1 {
 			return;
-		} else if opt.under && snap.cursor >= snap.value.len() {
+		} else if opt.under && snap.cursor >= snap.count() {
 			return;
 		}
 
