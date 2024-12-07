@@ -30,9 +30,9 @@ function M:preload(job)
 			"-singlefile",
 			"-jpeg",
 			"-jpegopt",
-			"quality=" .. tostring(PREVIEW.image_quality),
+			"quality=" .. PREVIEW.image_quality,
 			"-f",
-			tostring(job.skip + 1),
+			job.skip + 1,
 			tostring(job.file.url),
 		})
 		:stdout(Command.PIPED)

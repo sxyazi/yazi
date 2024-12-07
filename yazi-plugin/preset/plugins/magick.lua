@@ -27,7 +27,7 @@ function M:preload(job)
 		"-resize",
 		string.format("%dx%d^", PREVIEW.max_width, PREVIEW.max_height),
 		"-quality",
-		tostring(PREVIEW.image_quality),
+		PREVIEW.image_quality,
 		"-auto-orient",
 		"JPG:" .. tostring(cache),
 	}):status()
