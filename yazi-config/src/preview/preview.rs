@@ -6,7 +6,7 @@ use validator::Validate;
 use yazi_fs::{Xdg, expand_path};
 use yazi_shared::timestamp_us;
 
-use super::PreviewWrap;
+use super::{Alignment, PreviewWrap};
 
 #[rustfmt::skip]
 const TABS: &[&str] = &["", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ", "         ", "          ", "           ", "            ", "             ", "              ", "               ", "                "];
@@ -17,6 +17,7 @@ pub struct Preview {
 	pub tab_size:   u8,
 	pub max_width:  u32,
 	pub max_height: u32,
+	pub alignment:  Alignment,
 
 	pub cache_dir: PathBuf,
 
@@ -72,6 +73,8 @@ impl<'de> Deserialize<'de> for Preview {
 			tab_size:   u8,
 			max_width:  u32,
 			max_height: u32,
+			#[serde(default)]
+			alignment:  Alignment,
 
 			cache_dir: Option<String>,
 
@@ -95,6 +98,7 @@ impl<'de> Deserialize<'de> for Preview {
 			tab_size:   preview.tab_size,
 			max_width:  preview.max_width,
 			max_height: preview.max_height,
+			alignment:  preview.alignment,
 
 			cache_dir: preview
 				.cache_dir
