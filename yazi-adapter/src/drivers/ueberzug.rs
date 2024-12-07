@@ -1,13 +1,13 @@
 use std::{path::{Path, PathBuf}, process::Stdio};
 
 use anyhow::{Result, bail};
-use ratatui::layout::Rect;
+use ratatui::layout::{Rect, Size};
 use tokio::{io::AsyncWriteExt, process::{Child, Command}, sync::mpsc::{self, UnboundedSender}};
 use tracing::{debug, warn};
 use yazi_config::PREVIEW;
 use yazi_shared::{RoCell, env_exists};
 
-use crate::{Adapter, Dimension};
+use crate::{Adapter, Dimension, Offset};
 
 type Cmd = Option<(PathBuf, Rect)>;
 
@@ -41,7 +41,7 @@ impl Ueberzug {
 		DEMON.init(Some(tx))
 	}
 
-	pub(crate) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+	pub(crate) async fn image_show(path: &Path, max: Rect, offset: Option<Offset>) -> Result<Rect> {
 		let Some(tx) = &*DEMON else {
 			bail!("uninitialized ueberzugpp");
 		};
@@ -50,11 +50,13 @@ impl Ueberzug {
 		let (w, h) = tokio::task::spawn_blocking(move || image::image_dimensions(p)).await??;
 
 		let area = Dimension::ratio()
-			.map(|(r1, r2)| Rect {
-				x:      max.x,
-				y:      max.y,
-				width:  max.width.min((w.min(PREVIEW.max_width as _) as f64 / r1).ceil() as _),
-				height: max.height.min((h.min(PREVIEW.max_height as _) as f64 / r2).ceil() as _),
+			.map(|(r1, r2)| {
+				let width = max.width.min((w.min(PREVIEW.max_width as _) as f64 / r1).ceil() as _);
+				let height = max.height.min((h.min(PREVIEW.max_height as _) as f64 / r2).ceil() as _);
+				let offset = offset.unwrap_or_else(|| {
+					Offset::from((Size { width, height }, Size { width: max.width, height: max.height }))
+				});
+				Rect { x: max.x + offset.x, y: max.y + offset.y, width, height }
 			})
 			.unwrap_or(max);
 

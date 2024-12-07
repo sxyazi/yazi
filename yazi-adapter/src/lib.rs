@@ -2,7 +2,7 @@
 
 yazi_macro::mod_pub!(drivers);
 
-yazi_macro::mod_flat!(adapter brand dimension emulator image info mux unknown);
+yazi_macro::mod_flat!(adapter brand dimension emulator image info mux offset unknown);
 
 use yazi_shared::{RoCell, SyncCell, env_exists, in_wsl};
 
