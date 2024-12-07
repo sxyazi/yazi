@@ -5,7 +5,7 @@ use ratatui::layout::Rect;
 use tracing::warn;
 use yazi_shared::env_exists;
 
-use crate::{Brand, Emulator, SHOWN, TMUX, WSL, drivers};
+use crate::{Brand, Emulator, Offset, SHOWN, TMUX, WSL, drivers};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Adapter {
@@ -35,18 +35,18 @@ impl Display for Adapter {
 }
 
 impl Adapter {
-	pub async fn image_show(self, path: &Path, max: Rect) -> Result<Rect> {
+	pub async fn image_show(self, path: &Path, max: Rect, offset: Option<Offset>) -> Result<Rect> {
 		if max.is_empty() {
 			return Ok(Rect::default());
 		}
 
 		match self {
-			Self::Kgp => drivers::Kgp::image_show(path, max).await,
-			Self::KgpOld => drivers::KgpOld::image_show(path, max).await,
-			Self::Iip => drivers::Iip::image_show(path, max).await,
-			Self::Sixel => drivers::Sixel::image_show(path, max).await,
-			Self::X11 | Self::Wayland => drivers::Ueberzug::image_show(path, max).await,
-			Self::Chafa => drivers::Chafa::image_show(path, max).await,
+			Self::Kgp => drivers::Kgp::image_show(path, max, offset).await,
+			Self::KgpOld => drivers::KgpOld::image_show(path, max, offset).await,
+			Self::Iip => drivers::Iip::image_show(path, max, offset).await,
+			Self::Sixel => drivers::Sixel::image_show(path, max, offset).await,
+			Self::X11 | Self::Wayland => drivers::Ueberzug::image_show(path, max, offset).await,
+			Self::Chafa => drivers::Chafa::image_show(path, max, offset).await,
 		}
 	}
 

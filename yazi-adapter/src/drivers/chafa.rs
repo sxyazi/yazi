@@ -3,15 +3,15 @@ use std::{io::Write, path::Path, process::Stdio};
 use ansi_to_tui::IntoText;
 use anyhow::{Result, bail};
 use crossterm::{cursor::MoveTo, queue};
-use ratatui::layout::Rect;
+use ratatui::layout::{Rect, Size};
 use tokio::process::Command;
 
-use crate::{Adapter, Emulator};
+use crate::{Adapter, Emulator, Offset};
 
 pub(crate) struct Chafa;
 
 impl Chafa {
-	pub(crate) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+	pub(crate) async fn image_show(path: &Path, max: Rect, offset: Option<Offset>) -> Result<Rect> {
 		let child = Command::new("chafa")
 			.args([
 				"-f",
@@ -46,11 +46,13 @@ impl Chafa {
 			bail!("failed to parse chafa output");
 		};
 
-		let area = Rect {
-			x:      max.x,
-			y:      max.y,
-			width:  first.width() as u16,
-			height: lines.len() as u16,
+		let area = {
+			let width = first.width() as u16;
+			let height = lines.len() as u16;
+			let offset = offset.unwrap_or_else(|| {
+				Offset::from((Size { width, height }, Size { width: max.width, height: max.height }))
+			});
+			Rect { x: max.x + offset.x, y: max.y + offset.y, width, height }
 		};
 
 		Adapter::Chafa.image_hide()?;
