@@ -56,7 +56,7 @@ function M:preload(job)
 		"-i", tostring(job.file.url),
 		"-vframes", 1,
 		"-q:v", qv,
-		"-vf", string.format("scale=%d:-2:flags=fast_bilinear", PREVIEW.max_width),
+		"-vf", string.format("scale=-1:'min(%d,ih)':flags=fast_bilinear", PREVIEW.max_height),
 		"-f", "image2",
 		"-y", tostring(cache),
 	}):status()
