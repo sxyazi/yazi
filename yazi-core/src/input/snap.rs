@@ -32,7 +32,7 @@ impl InputSnap {
 
 	#[inline]
 	pub(super) fn reset(&mut self, limit: usize) {
-		self.cursor = self.cursor.min(self.value.chars().count().saturating_sub(self.mode.delta()));
+		self.cursor = self.cursor.min(self.count().saturating_sub(self.mode.delta()));
 		self.offset =
 			self.offset.min(self.cursor.saturating_sub(Self::find_window(&self.rev(), 0, limit).end));
 	}
