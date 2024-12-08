@@ -54,9 +54,8 @@ impl Default for Tab {
 
 impl Tab {
 	pub fn shutdown(&mut self) {
-		if let Some(handle) = self.search.take() {
-			handle.abort();
-		}
+		self.search.take().map(|h| h.abort());
+		self.preview.reset();
 	}
 }
 

@@ -1,9 +1,3 @@
-## The main branch is the upcoming v0.4 development version. Please see [the `shipped` tag](https://github.com/sxyazi/yazi/tree/shipped) for the stable version of Yazi.
-
-For breaking changes, see [Migrating to Yazi v0.4.0](https://github.com/sxyazi/yazi/issues/1772).
-
-<br><br>
-
 <div align="center">
   <img src="assets/logo.png" alt="Yazi logo" width="20%">
 </div>
