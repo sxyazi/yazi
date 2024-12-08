@@ -18,13 +18,15 @@ impl<'a> BodyHi<'a> {
 	pub fn borrowed(abilities: HashSet<&'a str>) -> Body<'a> {
 		Self {
 			abilities: abilities.into_iter().map(Cow::Borrowed).collect(),
-			version:   Self::version(),
+			version:   Self::version().to_string(),
 		}
 		.into()
 	}
 
 	#[inline]
-	pub fn version() -> String { format!("{} {}", env!("CARGO_PKG_VERSION"), env!("VERGEN_GIT_SHA")) }
+	pub fn version() -> &'static str {
+		concat!(env!("CARGO_PKG_VERSION"), " ", env!("VERGEN_GIT_SHA"))
+	}
 }
 
 impl<'a> From<BodyHi<'a>> for Body<'a> {
