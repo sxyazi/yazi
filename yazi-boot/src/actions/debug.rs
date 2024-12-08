@@ -41,6 +41,10 @@ impl Actions {
 		writeln!(s, "\nWSL")?;
 		writeln!(s, "    WSL: {:?}", *yazi_adapter::WSL)?;
 
+		writeln!(s, "\nNVIM")?;
+		writeln!(s, "    NVIM          : {:?}", *yazi_adapter::NVIM)?;
+		writeln!(s, "    Neovim version: {:?}", Self::process_output("nvim", "--version"))?;
+
 		writeln!(s, "\nVariables")?;
 		writeln!(s, "    SHELL           : {:?}", env::var_os("SHELL"))?;
 		writeln!(s, "    EDITOR          : {:?}", env::var_os("EDITOR"))?;

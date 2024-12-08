@@ -21,6 +21,9 @@ static CLOSE: RoCell<&'static str> = RoCell::new();
 // WSL support
 pub static WSL: RoCell<bool> = RoCell::new();
 
+// Neovim support
+pub static NVIM: RoCell<bool> = RoCell::new();
+
 pub fn init() -> anyhow::Result<()> {
 	// Tmux support
 	TMUX.init(env_exists("TMUX_PANE") && env_exists("TMUX"));
@@ -39,6 +42,9 @@ pub fn init() -> anyhow::Result<()> {
 
 	// WSL support
 	WSL.init(in_wsl());
+
+	// Neovim support
+	NVIM.init(env_exists("NVIM_LOG_FILE") && env_exists("NVIM"));
 
 	EMULATOR.init(Emulator::detect());
 	yazi_config::init_flavor(EMULATOR.light)?;

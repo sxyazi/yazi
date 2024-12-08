@@ -1,7 +1,7 @@
 use tracing::warn;
 use yazi_shared::env_exists;
 
-use crate::Mux;
+use crate::{Mux, NVIM};
 
 #[derive(Clone, Copy, Debug)]
 pub enum Brand {
@@ -27,7 +27,7 @@ impl Brand {
 	pub fn from_env() -> Option<Self> {
 		use Brand as B;
 
-		if env_exists("NVIM_LOG_FILE") && env_exists("NVIM") {
+		if *NVIM {
 			return Some(Self::Neovim);
 		}
 

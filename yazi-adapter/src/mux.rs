@@ -1,10 +1,10 @@
-use crate::{CLOSE, ESCAPE, START, TMUX};
+use crate::{CLOSE, ESCAPE, NVIM, START, TMUX};
 
 pub struct Mux;
 
 impl Mux {
 	pub fn csi(s: &str) -> std::borrow::Cow<str> {
-		if *TMUX {
+		if *TMUX && !*NVIM {
 			std::borrow::Cow::Owned(format!(
 				"{}{}{}",
 				*START,
