@@ -128,6 +128,18 @@ btn_labels = [ "  [Y]es  ", "  (N)o  " ]
 # : }}}
 
 
+# : Spot {{{
+
+[spot]
+border   = { fg = "blue" }
+title    = { fg = "blue" }
+headers  = { fg = "green" }
+keys     = {}
+values   = { fg = "blue" }
+selected = { fg = "yellow", reversed = true }
+
+# : }}}
+
 # : Completion {{{
 
 [completion]
