@@ -41,6 +41,10 @@ impl Actions {
 		writeln!(s, "\nWSL")?;
 		writeln!(s, "    WSL: {:?}", *yazi_adapter::WSL)?;
 
+		writeln!(s, "\nNVIM")?;
+		writeln!(s, "    NVIM          : {:?}", *yazi_adapter::NVIM)?;
+		writeln!(s, "    Neovim version: {}", Self::process_output("nvim", "--version"))?;
+
 		writeln!(s, "\nVariables")?;
 		writeln!(s, "    SHELL           : {:?}", env::var_os("SHELL"))?;
 		writeln!(s, "    EDITOR          : {:?}", env::var_os("EDITOR"))?;
@@ -68,7 +72,7 @@ impl Actions {
 		)?;
 
 		writeln!(s, "\nMultiplexers")?;
-		writeln!(s, "    TMUX               : {:?}", *yazi_adapter::TMUX)?;
+		writeln!(s, "    TMUX               : {}", *yazi_adapter::TMUX)?;
 		writeln!(s, "    tmux version       : {}", Self::process_output("tmux", "-V"))?;
 		writeln!(s, "    tmux build flags   : enable-sixel={}", Mux::tmux_sixel_flag())?;
 		writeln!(s, "    ZELLIJ_SESSION_NAME: {:?}", env::var_os("ZELLIJ_SESSION_NAME"))?;

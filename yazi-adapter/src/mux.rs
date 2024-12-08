@@ -1,10 +1,13 @@
-use crate::{CLOSE, ESCAPE, START, TMUX};
+use tracing::error;
+use yazi_shared::env_exists;
+
+use crate::{CLOSE, ESCAPE, NVIM, START, TMUX};
 
 pub struct Mux;
 
 impl Mux {
 	pub fn csi(s: &str) -> std::borrow::Cow<str> {
-		if *TMUX {
+		if *TMUX == 2 && !*NVIM {
 			std::borrow::Cow::Owned(format!(
 				"{}{}{}",
 				*START,
@@ -14,6 +17,34 @@ impl Mux {
 		} else {
 			std::borrow::Cow::Borrowed(s)
 		}
+	}
+
+	pub fn tmux_passthrough() -> u8 {
+		if !env_exists("TMUX_PANE") || !env_exists("TMUX") {
+			return 0;
+		}
+
+		let child = std::process::Command::new("tmux")
+			.args(["set", "-p", "allow-passthrough", "all"])
+			.stdin(std::process::Stdio::null())
+			.stdout(std::process::Stdio::null())
+			.stderr(std::process::Stdio::piped())
+			.spawn();
+
+		match child.and_then(|c| c.wait_with_output()) {
+			Ok(output) if output.status.success() => return 2,
+			Ok(output) => {
+				error!(
+					"Running `tmux set -p allow-passthrough all` failed: {:?}, {}",
+					output.status,
+					String::from_utf8_lossy(&output.stderr)
+				);
+			}
+			Err(err) => {
+				error!("Failed to spawn `tmux set -p allow-passthrough all`: {err}");
+			}
+		}
+		1
 	}
 
 	pub fn tmux_sixel_flag() -> &'static str {
@@ -33,7 +64,7 @@ impl Mux {
 
 	pub(super) fn term_program() -> (Option<String>, Option<String>) {
 		let (mut term, mut program) = (None, None);
-		if !*TMUX {
+		if *TMUX == 0 {
 			return (term, program);
 		}
 		let Ok(output) = std::process::Command::new("tmux").arg("show-environment").output() else {

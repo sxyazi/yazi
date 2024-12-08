@@ -258,7 +258,7 @@ async fn _copy_with_progress(from: PathBuf, to: PathBuf, cha: Cha) -> io::Result
 		tokio::task::spawn_blocking(move || {
 			let mut reader = std::fs::File::open(from)?;
 			let mut writer = std::fs::OpenOptions::new()
-				.mode(cha.mode)
+				.mode(cha.mode as u32)  // Do not remove `as u32`, https://github.com/termux/termux-packages/pull/22481
 				.write(true)
 				.create(true)
 				.truncate(true)

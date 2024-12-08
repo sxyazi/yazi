@@ -13,7 +13,7 @@ pub static ADAPTOR: RoCell<Adapter> = RoCell::new();
 static SHOWN: SyncCell<Option<ratatui::layout::Rect>> = SyncCell::new(None);
 
 // Tmux support
-pub static TMUX: RoCell<bool> = RoCell::new();
+pub static TMUX: RoCell<u8> = RoCell::new();
 static ESCAPE: RoCell<&'static str> = RoCell::new();
 static START: RoCell<&'static str> = RoCell::new();
 static CLOSE: RoCell<&'static str> = RoCell::new();
@@ -21,24 +21,21 @@ static CLOSE: RoCell<&'static str> = RoCell::new();
 // WSL support
 pub static WSL: RoCell<bool> = RoCell::new();
 
+// Neovim support
+pub static NVIM: RoCell<bool> = RoCell::new();
+
 pub fn init() -> anyhow::Result<()> {
 	// Tmux support
-	TMUX.init(env_exists("TMUX_PANE") && env_exists("TMUX"));
-	ESCAPE.init(if *TMUX { "\x1b\x1b" } else { "\x1b" });
-	START.init(if *TMUX { "\x1bPtmux;\x1b\x1b" } else { "\x1b" });
-	CLOSE.init(if *TMUX { "\x1b\\" } else { "" });
-
-	if *TMUX {
-		_ = std::process::Command::new("tmux")
-			.args(["set", "-p", "allow-passthrough", "all"])
-			.stdin(std::process::Stdio::null())
-			.stdout(std::process::Stdio::null())
-			.stderr(std::process::Stdio::null())
-			.status();
-	}
+	TMUX.init(Mux::tmux_passthrough());
+	ESCAPE.init(if *TMUX == 2 { "\x1b\x1b" } else { "\x1b" });
+	START.init(if *TMUX == 2 { "\x1bPtmux;\x1b\x1b" } else { "\x1b" });
+	CLOSE.init(if *TMUX == 2 { "\x1b\\" } else { "" });
 
 	// WSL support
 	WSL.init(in_wsl());
+
+	// Neovim support
+	NVIM.init(env_exists("NVIM_LOG_FILE") && env_exists("NVIM"));
 
 	EMULATOR.init(Emulator::detect());
 	yazi_config::init_flavor(EMULATOR.light)?;

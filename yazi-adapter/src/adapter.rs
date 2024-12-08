@@ -92,7 +92,7 @@ impl Adapter {
 		protocols.retain(|p| *p == Self::Iip);
 		if env_exists("ZELLIJ_SESSION_NAME") {
 			protocols.retain(|p| *p == Self::Sixel);
-		} else if *TMUX {
+		} else if *TMUX != 0 {
 			protocols.retain(|p| *p != Self::KgpOld);
 		}
 		if let Some(p) = protocols.first() {
