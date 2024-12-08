@@ -15,7 +15,7 @@ pub struct BodyHey {
 impl BodyHey {
 	#[inline]
 	pub fn owned(peers: HashMap<u64, Peer>) -> Body<'static> {
-		Self { peers, version: BodyHi::version() }.into()
+		Self { peers, version: BodyHi::version().to_string() }.into()
 	}
 }
 
