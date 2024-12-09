@@ -110,7 +110,7 @@ function M.list_files(args, skip, limit)
 			goto continue
 		end
 
-		key, value = next:match("^(%u%l+) = (.+)[\r\n]+")
+		key, value = next:match("^(%u%l+) = (.-)[\r\n]+")
 		if key == "Path" then
 			files[#files].path = value
 		elseif key == "Size" then
