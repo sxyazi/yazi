@@ -10,7 +10,7 @@ use super::Body;
 pub struct BodyHi<'a> {
 	/// Specifies the kinds of events that the client can handle
 	pub abilities: HashSet<Cow<'a, str>>,
-	pub version:   String,
+	pub version:   Cow<'static, str>,
 }
 
 impl<'a> BodyHi<'a> {
@@ -18,13 +18,15 @@ impl<'a> BodyHi<'a> {
 	pub fn borrowed(abilities: HashSet<&'a str>) -> Body<'a> {
 		Self {
 			abilities: abilities.into_iter().map(Cow::Borrowed).collect(),
-			version:   Self::version(),
+			version:   Self::version().into(),
 		}
 		.into()
 	}
 
 	#[inline]
-	pub fn version() -> String { format!("{} {}", env!("CARGO_PKG_VERSION"), env!("VERGEN_GIT_SHA")) }
+	pub fn version() -> &'static str {
+		concat!(env!("CARGO_PKG_VERSION"), " ", env!("VERGEN_GIT_SHA"))
+	}
 }
 
 impl<'a> From<BodyHi<'a>> for Body<'a> {
