@@ -7,14 +7,14 @@ use image::DynamicImage;
 use ratatui::layout::Rect;
 use yazi_config::PREVIEW;
 
-use crate::{CLOSE, ESCAPE, Emulator, Image, START, adapter::Adapter};
+use crate::{CLOSE, ESCAPE, Emulator, Image, Offset, START, adapter::Adapter};
 
 pub(crate) struct Sixel;
 
 impl Sixel {
-	pub(crate) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+	pub(crate) async fn image_show(path: &Path, max: Rect, offset: Option<Offset>) -> Result<Rect> {
 		let img = Image::downscale(path, max).await?;
-		let area = Image::pixel_area((img.width(), img.height()), max);
+		let area = Image::pixel_area((img.width(), img.height()), max, offset);
 		let b = Self::encode(img).await?;
 
 		Adapter::Sixel.image_hide()?;

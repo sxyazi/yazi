@@ -2,10 +2,10 @@ use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use image::{DynamicImage, ExtendedColorType, ImageDecoder, ImageEncoder, ImageError, ImageReader, ImageResult, Limits, codecs::{jpeg::JpegEncoder, png::PngEncoder}, imageops::FilterType, metadata::Orientation};
-use ratatui::layout::Rect;
+use ratatui::layout::{Rect, Size};
 use yazi_config::{PREVIEW, TASKS};
 
-use crate::Dimension;
+use crate::{Dimension, Offset};
 
 pub struct Image;
 
@@ -73,13 +73,15 @@ impl Image {
 			.unwrap_or((PREVIEW.max_width, PREVIEW.max_height))
 	}
 
-	pub(super) fn pixel_area(size: (u32, u32), rect: Rect) -> Rect {
+	pub(super) fn pixel_area(size: (u32, u32), rect: Rect, offset: Option<Offset>) -> Rect {
 		Dimension::ratio()
-			.map(|(r1, r2)| Rect {
-				x:      rect.x,
-				y:      rect.y,
-				width:  (size.0 as f64 / r1).ceil() as u16,
-				height: (size.1 as f64 / r2).ceil() as u16,
+			.map(|(r1, r2)| {
+				let width = (size.0 as f64 / r1).ceil() as u16;
+				let height = (size.1 as f64 / r2).ceil() as u16;
+				let offset = offset.unwrap_or_else(|| {
+					Offset::from((Size { width, height }, Size { width: rect.width, height: rect.height }))
+				});
+				Rect { x: rect.x + offset.x, y: rect.y + offset.y, width, height }
 			})
 			.unwrap_or(rect)
 	}

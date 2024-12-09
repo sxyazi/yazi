@@ -7,14 +7,14 @@ use image::{DynamicImage, ExtendedColorType, ImageEncoder, codecs::{jpeg::JpegEn
 use ratatui::layout::Rect;
 use yazi_config::PREVIEW;
 
-use crate::{CLOSE, Emulator, Image, START, adapter::Adapter};
+use crate::{CLOSE, Emulator, Image, Offset, START, adapter::Adapter};
 
 pub(crate) struct Iip;
 
 impl Iip {
-	pub(crate) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+	pub(crate) async fn image_show(path: &Path, max: Rect, offset: Option<Offset>) -> Result<Rect> {
 		let img = Image::downscale(path, max).await?;
-		let area = Image::pixel_area((img.width(), img.height()), max);
+		let area = Image::pixel_area((img.width(), img.height()), max, offset);
 		let b = Self::encode(img).await?;
 
 		Adapter::Iip.image_hide()?;
