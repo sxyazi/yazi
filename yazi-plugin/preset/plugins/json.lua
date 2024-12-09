@@ -2,12 +2,7 @@ local M = {}
 
 function M:peek(job)
 	local child = Command("jq")
-		:args({
-			"-C",
-			"--tab",
-			".",
-			tostring(job.file.url),
-		})
+		:args({ "-b", "-C", "--tab", ".", tostring(job.file.url) })
 		:stdout(Command.PIPED)
 		:stderr(Command.PIPED)
 		:spawn()
