@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap};
 
 use mlua::{ExternalResult, IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
@@ -9,13 +9,13 @@ use crate::Peer;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BodyHey {
 	pub peers:   HashMap<u64, Peer>,
-	pub version: String,
+	pub version: Cow<'static, str>,
 }
 
 impl BodyHey {
 	#[inline]
 	pub fn owned(peers: HashMap<u64, Peer>) -> Body<'static> {
-		Self { peers, version: BodyHi::version().to_string() }.into()
+		Self { peers, version: BodyHi::version().into() }.into()
 	}
 }
 
