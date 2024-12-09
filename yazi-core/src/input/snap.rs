@@ -87,4 +87,25 @@ impl InputSnap {
 		}
 		*v.first().unwrap()..v.last().unwrap() + 1
 	}
+
+	#[inline]
+	pub(super) fn find_window_backward(s: &str, offset: usize, limit: usize) -> Range<usize> {
+		let mut width = 0;
+		let len = s.chars().count();
+		let v: Vec<_> = s
+			.chars()
+			.rev()
+			.enumerate()
+			.skip(len.saturating_sub(offset + 1))
+			.map_while(|(i, c)| {
+				width += c.width().unwrap_or(0);
+				if width < limit { Some(len.saturating_sub(i + 1)) } else { None }
+			})
+			.collect();
+
+		if v.is_empty() {
+			return 0..0;
+		}
+		*v.last().unwrap()..v.first().unwrap() + 1
+	}
 }
