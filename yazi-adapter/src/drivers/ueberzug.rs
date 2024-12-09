@@ -1,6 +1,7 @@
 use std::{path::{Path, PathBuf}, process::Stdio};
 
 use anyhow::{Result, bail};
+use image::ImageReader;
 use ratatui::layout::Rect;
 use tokio::{io::AsyncWriteExt, process::{Child, Command}, sync::mpsc::{self, UnboundedSender}};
 use tracing::{debug, warn};
@@ -47,7 +48,10 @@ impl Ueberzug {
 		};
 
 		let p = path.to_owned();
-		let (w, h) = tokio::task::spawn_blocking(move || image::image_dimensions(p)).await??;
+		let (w, h) = tokio::task::spawn_blocking(move || {
+			ImageReader::open(p)?.with_guessed_format()?.into_dimensions()
+		})
+		.await??;
 
 		let area = Dimension::ratio()
 			.map(|(r1, r2)| Rect {

@@ -14,13 +14,13 @@ These files are already included with Yazi when you install the release, so you 
 
 However, if you want to customize certain configurations:
 
-- Create a `yazi.toml` in your config directory to override the settings in [`yazi-default.toml`][yazi-default], so either:
+- Create a `yazi.toml` in your config directory to override certain settings in [`yazi-default.toml`][yazi-default], so either:
   - `~/.config/yazi/yazi.toml` on Unix-like systems
   - `C:\Users\USERNAME\AppData\Roaming\yazi\config\yazi.toml` on Windows
-- Create a `keymap.toml` in your config directory to override the settings in [`keymap-default.toml`][keymap-default], so either:
+- Create a `keymap.toml` in your config directory to override certain settings in [`keymap-default.toml`][keymap-default], so either:
   - `~/.config/yazi/keymap.toml` on Unix-like systems
   - `C:\Users\USERNAME\AppData\Roaming\yazi\config\keymap.toml` on Windows
-- Create a `theme.toml` in your config directory to override the settings in [`theme-light.toml`][theme-light] and [`theme-dark.toml`][theme-dark], so either:
+- Create a `theme.toml` in your config directory to override certain settings in [`theme-light.toml`][theme-light] and [`theme-dark.toml`][theme-dark], so either:
   - `~/.config/yazi/theme.toml` on Unix-like systems
   - `C:\Users\USERNAME\AppData\Roaming\yazi\config\theme.toml` on Windows
 
