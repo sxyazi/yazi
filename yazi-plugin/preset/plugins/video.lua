@@ -50,7 +50,7 @@ function M:preload(job)
 	local qv = 31 - math.floor(PREVIEW.image_quality * 0.3)
 	-- stylua: ignore
 	local status, err = Command("ffmpeg"):args({
-		"-v", "quiet", "-hwaccel", "auto",
+		"-v", "quiet", "-threads", 1, "-hwaccel", "auto",
 		"-skip_frame", "nokey", "-ss", ss,
 		"-an", "-sn", "-dn",
 		"-i", tostring(job.file.url),
