@@ -1,8 +1,8 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, path::PathBuf};
 
 #[derive(Default)]
 pub struct Completion {
-	pub(super) caches: HashMap<String, Vec<String>>,
+	pub(super) caches: HashMap<PathBuf, Vec<String>>,
 	pub(super) cands:  Vec<String>,
 	pub(super) offset: usize,
 	pub cursor:        usize,
