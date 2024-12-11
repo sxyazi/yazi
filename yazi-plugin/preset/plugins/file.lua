@@ -23,8 +23,8 @@ function M:spot(job)
 			:area(ui.Pos { "center", w = 60, h = 20 })
 			:row(1)
 			:col(1)
-			:col_style(ui.Style():fg("blue"))
-			:cell_style(ui.Style():fg("yellow"):reverse())
+			:col_style(THEME.spot.values)
+			:cell_style(THEME.spot.selected)
 			:widths { ui.Constraint.Length(14), ui.Constraint.Fill(1) }
 	)
 end
