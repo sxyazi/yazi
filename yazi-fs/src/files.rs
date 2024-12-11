@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, mem, ops::Deref};
+use std::{collections::{HashMap, HashSet}, mem, ops::{Deref, Not}};
 
 use tokio::{fs::{self, DirEntry}, select, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_shared::{Id, url::{Url, Urn, UrnBuf}};
@@ -182,19 +182,9 @@ impl Files {
 	}
 
 	#[cfg(unix)]
-	pub fn update_deleting(&mut self, urns: HashSet<UrnBuf>) {
+	pub fn update_deleting(&mut self, urns: HashSet<UrnBuf>) -> Vec<usize> {
 		if urns.is_empty() {
-			return;
-		}
-
-		macro_rules! go {
-			($dist:expr, $src:expr, $inc:literal) => {
-				let len = $dist.len();
-				$dist.retain(|f| !$src.remove(f.urn()));
-				if $dist.len() != len {
-					self.revision += $inc;
-				}
-			};
+			return vec![];
 		}
 
 		let (mut hidden, mut items) = if let Some(filter) = &self.filter {
@@ -208,32 +198,46 @@ impl Files {
 			urns.into_iter().partition(|u| u.as_urn().is_hidden())
 		};
 
+		let mut deleted = Vec::with_capacity(items.len());
 		if !items.is_empty() {
-			go!(self.items, items, 1);
+			let mut i = 0;
+			self.items.retain(|f| {
+				let b = items.remove(f.urn());
+				if b {
+					deleted.push(i);
+				}
+				i += 1;
+				!b
+			});
 		}
 		if !hidden.is_empty() {
-			go!(self.hidden, hidden, 0);
+			self.hidden.retain(|f| !hidden.remove(f.urn()));
 		}
+
+		self.revision += deleted.is_empty().not() as u64;
+		deleted
 	}
 
 	#[cfg(windows)]
-	pub fn update_deleting(&mut self, mut urns: HashSet<UrnBuf>) {
-		macro_rules! go {
-			($dist:expr, $src:expr, $inc:literal) => {
-				let len = $dist.len();
-				$dist.retain(|f| !$src.remove(f.urn()));
-				if $dist.len() != len {
-					self.revision += $inc;
+	pub fn update_deleting(&mut self, mut urns: HashSet<UrnBuf>) -> Vec<usize> {
+		let mut deleted = Vec::with_capacity(urns.len());
+		if !urns.is_empty() {
+			let mut i = 0;
+			self.items.retain(|f| {
+				let b = urns.remove(f.urn());
+				if b {
+					deleted.push(i)
 				}
-			};
+				i += 1;
+				!b
+			});
+		}
+		if !urns.is_empty() {
+			self.hidden.retain(|f| !urns.remove(f.urn()));
 		}
 
-		if !urns.is_empty() {
-			go!(self.items, urns, 1);
-		}
-		if !urns.is_empty() {
-			go!(self.hidden, urns, 0);
-		}
+		self.revision += deleted.is_empty().not() as u64;
+		deleted
 	}
 
 	pub fn update_updating(
