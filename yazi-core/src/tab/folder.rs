@@ -51,7 +51,10 @@ impl Folder {
 			FilesOp::IOErr(..) => self.files.update_ioerr(),
 
 			FilesOp::Creating(_, files) => self.files.update_creating(files),
-			FilesOp::Deleting(_, urns) => self.files.update_deleting(urns),
+			FilesOp::Deleting(_, urns) => {
+				let deleted = self.files.update_deleting(urns);
+				self.cursor -= deleted.into_iter().filter(|&i| i < self.cursor).count();
+			}
 			FilesOp::Updating(_, files) => _ = self.files.update_updating(files),
 			FilesOp::Upserting(_, files) => self.files.update_upserting(files),
 		}
