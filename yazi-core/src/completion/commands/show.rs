@@ -1,4 +1,4 @@
-use std::{borrow::Cow, mem, ops::ControlFlow};
+use std::{borrow::Cow, mem, ops::ControlFlow, path::PathBuf};
 
 use yazi_macro::render;
 use yazi_shared::event::{Cmd, CmdCow, Data};
@@ -9,7 +9,7 @@ const LIMIT: usize = 30;
 
 struct Opt {
 	cache:      Vec<String>,
-	cache_name: Cow<'static, str>,
+	cache_name: PathBuf,
 	word:       Cow<'static, str>,
 	ticket:     usize,
 }
@@ -18,7 +18,7 @@ impl From<CmdCow> for Opt {
 	fn from(mut c: CmdCow) -> Self {
 		Self {
 			cache:      c.take_any("cache").unwrap_or_default(),
-			cache_name: c.take_str("cache-name").unwrap_or_default(),
+			cache_name: c.take_any("cache-name").unwrap_or_default(),
 			word:       c.take_str("word").unwrap_or_default(),
 			ticket:     c.get("ticket").and_then(Data::as_usize).unwrap_or(0),
 		}
@@ -37,9 +37,9 @@ impl Completion {
 		}
 
 		if !opt.cache.is_empty() {
-			self.caches.insert(opt.cache_name.as_ref().to_owned(), opt.cache);
+			self.caches.insert(opt.cache_name.clone(), opt.cache);
 		}
-		let Some(cache) = self.caches.get(opt.cache_name.as_ref()) else {
+		let Some(cache) = self.caches.get(&opt.cache_name) else {
 			return;
 		};
 

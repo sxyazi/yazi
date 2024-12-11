@@ -1,16 +1,11 @@
-use std::{borrow::Cow, mem, path::{MAIN_SEPARATOR, MAIN_SEPARATOR_STR}};
+use std::{borrow::Cow, mem, path::{MAIN_SEPARATOR_STR, PathBuf}};
 
 use tokio::fs;
+use yazi_fs::{CWD, expand_path};
 use yazi_macro::{emit, render};
 use yazi_shared::{Layer, event::{Cmd, CmdCow, Data}};
 
 use crate::completion::Completion;
-
-#[cfg(windows)]
-const SEPARATOR: [char; 2] = ['/', '\\'];
-
-#[cfg(not(windows))]
-const SEPARATOR: char = std::path::MAIN_SEPARATOR;
 
 struct Opt {
 	word:   Cow<'static, str>,
@@ -34,13 +29,13 @@ impl Completion {
 		}
 
 		self.ticket = opt.ticket;
-		let Some((parent, child)) = Self::split_path(&opt.word) else {
+		let Some((parent, word)) = Self::split_path(&opt.word) else {
 			return self.close(false);
 		};
 
 		if self.caches.contains_key(&parent) {
 			return self.show(
-				Cmd::default().with("cache-name", parent).with("word", child).with("ticket", opt.ticket),
+				Cmd::default().with_any("cache-name", parent).with("word", word).with("ticket", opt.ticket),
 			);
 		}
 
@@ -62,8 +57,8 @@ impl Completion {
 				emit!(Call(
 					Cmd::new("show")
 						.with_any("cache", cache)
-						.with("cache-name", parent)
-						.with("word", child)
+						.with_any("cache-name", parent)
+						.with("word", word)
 						.with("ticket", ticket),
 					Layer::Completion
 				));
@@ -75,40 +70,42 @@ impl Completion {
 		render!(mem::replace(&mut self.visible, false));
 	}
 
-	fn split_path(s: &str) -> Option<(String, String)> {
+	fn split_path(s: &str) -> Option<(PathBuf, String)> {
 		if s == "~" {
 			return None; // We don't autocomplete a `~`, but `~/`
 		}
 
-		let s = if let Some(rest) = s.strip_prefix("~") {
-			Cow::Owned(format!(
-				"{}{rest}",
-				dirs::home_dir().unwrap_or_default().to_string_lossy().trim_end_matches(SEPARATOR),
-			))
-		} else {
-			Cow::Borrowed(s)
-		};
+		#[cfg(windows)]
+		const SEP: [char; 2] = ['/', '\\'];
+		#[cfg(not(windows))]
+		const SEP: char = std::path::MAIN_SEPARATOR;
 
-		Some(match s.rsplit_once(SEPARATOR) {
-			Some((p, c)) => (format!("{p}{}", MAIN_SEPARATOR), c.to_owned()),
-			None => (".".to_owned(), s.into_owned()),
+		Some(match s.rsplit_once(SEP) {
+			Some(("", c)) => (PathBuf::from(MAIN_SEPARATOR_STR), c.to_owned()),
+			Some((p, c)) => (expand_path(p), c.to_owned()),
+			None => (CWD.load().to_path_buf(), s.to_owned()),
 		})
 	}
 }
 
 #[cfg(test)]
 mod tests {
+	use std::path::Path;
+
 	use super::*;
 
 	fn compare(s: &str, parent: &str, child: &str) -> bool {
-		matches!(Completion::split_path(s), Some((p, c)) if p == parent && c == child)
+		let (p, c) = Completion::split_path(s).unwrap();
+		let p = p.strip_prefix(yazi_fs::CWD.load().as_ref()).unwrap_or(&p);
+		p == Path::new(parent) && c == child
 	}
 
 	#[cfg(unix)]
 	#[test]
 	fn test_split() {
-		assert!(compare("", ".", ""));
-		assert!(compare(" ", ".", " "));
+		yazi_fs::init();
+		assert!(compare("", "", ""));
+		assert!(compare(" ", "", " "));
 		assert!(compare("/", "/", ""));
 		assert!(compare("//", "//", ""));
 		assert!(compare("/foo", "/", "foo"));
@@ -119,7 +116,8 @@ mod tests {
 	#[cfg(windows)]
 	#[test]
 	fn test_split() {
-		assert!(compare("foo", ".", "foo"));
+		yazi_fs::init();
+		assert!(compare("foo", "", "foo"));
 		assert!(compare("foo\\", "foo\\", ""));
 		assert!(compare("foo\\bar", "foo\\", "bar"));
 		assert!(compare("foo\\bar\\", "foo\\bar\\", ""));
