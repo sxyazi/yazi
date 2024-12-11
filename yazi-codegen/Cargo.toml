@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-codegen"
-version     = "0.4.1"
+version     = "0.4.2"
 edition     = "2021"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
