@@ -18,10 +18,9 @@ impl<T: Into<yazi_fs::Cha>> From<T> for Cha {
 	fn from(cha: T) -> Self { Self(cha.into()) }
 }
 
-static WARNED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-
 #[inline]
 fn warn_deprecated(id: Option<&str>) {
+	static WARNED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 	if !WARNED.swap(true, std::sync::atomic::Ordering::Relaxed) {
 		let id = match id {
 			Some(id) => format!("`{id}.yazi` plugin"),
