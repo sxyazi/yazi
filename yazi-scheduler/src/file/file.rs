@@ -1,10 +1,10 @@
-use std::{borrow::Cow, collections::VecDeque, path::{Path, PathBuf}};
+use std::{borrow::Cow, collections::VecDeque, path::Path};
 
 use anyhow::{Result, anyhow};
 use tokio::{fs::{self, DirEntry}, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::TASKS;
-use yazi_fs::{Cha, calculate_size, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to};
+use yazi_fs::{Cha, calculate_size, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to, skip_path};
 use yazi_shared::url::Url;
 
 use super::{FileOp, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpTrash};
@@ -190,7 +190,7 @@ impl File {
 		let mut dirs = VecDeque::from([task.from.clone()]);
 
 		while let Some(src) = dirs.pop_front() {
-			let dest = root.join(src.components().skip(skip).collect::<PathBuf>());
+			let dest = root.join(skip_path(&src, skip));
 			continue_unless_ok!(match fs::create_dir(&dest).await {
 				Err(e) if e.kind() != AlreadyExists => Err(e),
 				_ => Ok(()),
@@ -261,7 +261,7 @@ impl File {
 		let mut dirs = VecDeque::from([task.from.clone()]);
 
 		while let Some(src) = dirs.pop_front() {
-			let dest = root.join(src.components().skip(skip).collect::<PathBuf>());
+			let dest = root.join(skip_path(&src, skip));
 			continue_unless_ok!(match fs::create_dir(&dest).await {
 				Err(e) if e.kind() != AlreadyExists => Err(e),
 				_ => Ok(()),

@@ -65,6 +65,16 @@ fn _expand_path(p: &Path) -> PathBuf {
 	}
 }
 
+pub fn skip_path(p: &Path, u: usize) -> &Path {
+	let mut it = p.components();
+	for _ in 0..u {
+		if it.next().is_none() {
+			return Path::new("");
+		}
+	}
+	it.as_path()
+}
+
 pub async fn unique_name<F>(u: Url, append: F) -> io::Result<Url>
 where
 	F: Future<Output = bool>,
