@@ -2,7 +2,14 @@
 pub static USERS_CACHE: crate::RoCell<uzers::UsersCache> = crate::RoCell::new();
 
 #[cfg(unix)]
-pub fn hostname() -> Result<String, std::io::Error> {
+pub fn hostname() -> Option<&'static str> {
+	static CACHE: std::sync::OnceLock<Option<String>> = std::sync::OnceLock::new();
+
+	CACHE.get_or_init(|| hostname_impl().ok()).as_deref()
+}
+
+#[cfg(unix)]
+fn hostname_impl() -> Result<String, std::io::Error> {
 	use std::io::{Error, ErrorKind};
 
 	use libc::{gethostname, strlen};

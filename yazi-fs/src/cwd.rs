@@ -1,18 +1,16 @@
-use std::{ops::Deref, path::PathBuf, sync::Arc};
+use std::{env::{current_dir, set_current_dir}, ops::Deref, path::PathBuf, sync::{Arc, atomic::{self, AtomicBool}}};
 
 use arc_swap::ArcSwap;
 use yazi_shared::{RoCell, url::Url};
 
 pub static CWD: RoCell<Cwd> = RoCell::new();
 
-pub struct Cwd {
-	inner: ArcSwap<Url>,
-}
+pub struct Cwd(ArcSwap<Url>);
 
 impl Deref for Cwd {
 	type Target = ArcSwap<Url>;
 
-	fn deref(&self) -> &Self::Target { &self.inner }
+	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl Default for Cwd {
@@ -20,16 +18,40 @@ impl Default for Cwd {
 		let p = std::env::var_os("PWD")
 			.map(PathBuf::from)
 			.filter(|p| p.is_absolute())
-			.or_else(|| std::env::current_dir().ok())
+			.or_else(|| current_dir().ok())
 			.expect("failed to get current working directory");
 
-		Self { inner: ArcSwap::new(Arc::new(Url::from(p))) }
+		Self(ArcSwap::new(Arc::new(Url::from(p))))
 	}
 }
 
 impl Cwd {
-	pub fn set(&self, url: &Url) {
-		self.inner.store(Arc::new(url.clone()));
-		std::env::set_var("PWD", self.inner.load().as_ref());
+	pub fn set(&self, url: &Url) -> bool {
+		if self.load().as_ref() == url {
+			return false;
+		}
+
+		self.store(Arc::new(url.clone()));
+		std::env::set_var("PWD", url);
+
+		Self::sync_cwd();
+		true
+	}
+
+	fn sync_cwd() {
+		static SYNCING: AtomicBool = AtomicBool::new(false);
+		if SYNCING.swap(true, atomic::Ordering::Relaxed) {
+			return;
+		}
+
+		tokio::task::spawn_blocking(move || {
+			_ = set_current_dir(CWD.load().as_ref());
+			let p = current_dir().unwrap_or_default();
+
+			SYNCING.store(false, atomic::Ordering::Relaxed);
+			if p != CWD.load().as_path() {
+				set_current_dir(CWD.load().as_ref()).ok();
+			}
+		});
 	}
 }
