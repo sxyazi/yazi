@@ -2,9 +2,6 @@ use mlua::{Function, Lua};
 
 use super::Utils;
 
-#[cfg(unix)]
-static HOSTNAME_CACHE: std::sync::OnceLock<Option<String>> = std::sync::OnceLock::new();
-
 impl Utils {
 	#[cfg(unix)]
 	pub(super) fn uid(lua: &Lua) -> mlua::Result<Function> {
@@ -46,12 +43,6 @@ impl Utils {
 
 	#[cfg(unix)]
 	pub(super) fn host_name(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|lua, ()| {
-			HOSTNAME_CACHE
-				.get_or_init(|| yazi_shared::hostname().ok())
-				.as_ref()
-				.map(|s| lua.create_string(s))
-				.transpose()
-		})
+		lua.create_function(|lua, ()| yazi_shared::hostname().map(|s| lua.create_string(s)).transpose())
 	}
 }

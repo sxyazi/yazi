@@ -9,8 +9,7 @@ use crate::{manager::Manager, tasks::Tasks};
 
 impl Manager {
 	pub fn refresh(&mut self, _: CmdCow, tasks: &Tasks) {
-		CWD.set(self.cwd());
-		if !MANAGER.title_format.is_empty() {
+		if CWD.set(self.cwd()) && !MANAGER.title_format.is_empty() {
 			execute!(std::io::stderr(), SetTitle(self.title())).ok();
 		}
 
