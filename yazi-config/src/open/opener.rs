@@ -13,11 +13,9 @@ pub struct Opener {
 impl Opener {
 	pub fn take(mut self) -> Option<Self> {
 		if let Some(for_) = self.for_.take() {
-			match for_.as_bytes() {
-				b"unix" if cfg!(unix) => {}
-				b"windows" if cfg!(windows) => {}
-				b"linux" if cfg!(target_os = "linux") => {}
-				b"macos" if cfg!(target_os = "macos") => {}
+			match for_.as_str() {
+				"unix" if cfg!(unix) => {}
+				os if os == std::env::consts::OS => {}
 				_ => return None,
 			}
 		}
