@@ -68,7 +68,6 @@ local function setup(_, opts)
 			function()
 				ya.manager_emit("shell", {
 					orphan = true,
-					confirm = true,
 					"zoxide add " .. ya.quote(tostring(cx.active.current.cwd)),
 				})
 			end

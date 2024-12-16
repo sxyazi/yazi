@@ -6,7 +6,6 @@ use yazi_fs::{Cha, File, Files, FilesOp, FolderStage, Step};
 use yazi_proxy::ManagerProxy;
 use yazi_shared::{Id, url::{Url, Urn}};
 
-#[derive(Default)]
 pub struct Folder {
 	pub url:   Url,
 	pub cha:   Cha,
@@ -18,6 +17,21 @@ pub struct Folder {
 
 	pub page:    usize,
 	pub tracing: bool,
+}
+
+impl Default for Folder {
+	fn default() -> Self {
+		Self {
+			url:     Default::default(),
+			cha:     Default::default(),
+			files:   Files::new(MANAGER.show_hidden),
+			stage:   Default::default(),
+			offset:  Default::default(),
+			cursor:  Default::default(),
+			page:    Default::default(),
+			tracing: Default::default(),
+		}
+	}
 }
 
 impl From<&Url> for Folder {
