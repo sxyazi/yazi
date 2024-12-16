@@ -47,6 +47,8 @@ impl Emulator {
 		)?;
 
 		let resp = futures::executor::block_on(Self::read_until_da1());
+		Mux::tmux_drain()?;
+
 		let kind = if let Some(brand) = Brand::from_csi(&resp) {
 			Either::Left(brand)
 		} else {
@@ -130,6 +132,31 @@ impl Emulator {
 		String::from_utf8_lossy(&buf).into_owned()
 	}
 
+	pub async fn read_until_dsr() -> String {
+		let mut buf: Vec<u8> = Vec::with_capacity(200);
+		let read = async {
+			let mut stdin = BufReader::new(tokio::io::stdin());
+			loop {
+				let mut c = [0; 1];
+				if stdin.read(&mut c).await? == 0 {
+					bail!("unexpected EOF");
+				}
+				buf.push(c[0]);
+				if c[0] == b'n' && (buf.ends_with(b"\x1b[0n") || buf.ends_with(b"\x1b[3n")) {
+					break;
+				}
+			}
+			Ok(())
+		};
+
+		match timeout(Duration::from_secs(10), read).await {
+			Err(e) => error!("read_until_dsr timed out: {buf:?}, error: {e:?}"),
+			Ok(Err(e)) => error!("read_until_dsr failed: {buf:?}, error: {e:?}"),
+			Ok(Ok(())) => debug!("read_until_dsr: {buf:?}"),
+		}
+		String::from_utf8_lossy(&buf).into_owned()
+	}
+
 	fn detect_base() -> Result<Self> {
 		defer! { disable_raw_mode().ok(); }
 		enable_raw_mode()?;
@@ -142,6 +169,8 @@ impl Emulator {
 		)?;
 
 		let resp = futures::executor::block_on(Self::read_until_da1());
+		Mux::tmux_drain()?;
+
 		Ok(Self {
 			light: Self::light_bg(&resp).unwrap_or_default(),
 			cell_size: Self::cell_size(&resp),

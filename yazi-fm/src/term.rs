@@ -42,6 +42,8 @@ impl Term {
 		)?;
 
 		let da = futures::executor::block_on(Emulator::read_until_da1());
+		Mux::tmux_drain()?;
+
 		CSI_U.store(da.contains("\x1b[?0u"), Ordering::Relaxed);
 		BLINK.store(da.contains("\x1b[?12;1$y"), Ordering::Relaxed);
 		SHAPE.store(
