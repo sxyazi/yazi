@@ -1,7 +1,8 @@
+use anyhow::Result;
 use tracing::error;
 use yazi_shared::env_exists;
 
-use crate::{CLOSE, ESCAPE, NVIM, START, TMUX};
+use crate::{CLOSE, ESCAPE, Emulator, NVIM, START, TMUX};
 
 pub struct Mux;
 
@@ -45,6 +46,14 @@ impl Mux {
 			}
 		}
 		1
+	}
+
+	pub fn tmux_drain() -> Result<()> {
+		if *TMUX == 2 && !*NVIM {
+			crossterm::execute!(std::io::stderr(), crossterm::style::Print(Mux::csi("\x1b[5n")))?;
+			_ = futures::executor::block_on(Emulator::read_until_dsr());
+		}
+		Ok(())
 	}
 
 	pub fn tmux_sixel_flag() -> &'static str {
