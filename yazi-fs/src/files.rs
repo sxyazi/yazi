@@ -28,6 +28,8 @@ impl Deref for Files {
 }
 
 impl Files {
+	pub fn new(show_hidden: bool) -> Self { Self { show_hidden, ..Default::default() } }
+
 	pub async fn from_dir(dir: &Url) -> std::io::Result<UnboundedReceiver<File>> {
 		let mut it = fs::read_dir(dir).await?;
 		let (tx, rx) = mpsc::unbounded_channel();
