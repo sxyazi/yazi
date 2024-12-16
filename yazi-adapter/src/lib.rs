@@ -25,6 +25,18 @@ pub static WSL: RoCell<bool> = RoCell::new();
 pub static NVIM: RoCell<bool> = RoCell::new();
 
 pub fn init() -> anyhow::Result<()> {
+	init_default();
+
+	EMULATOR.init(Emulator::detect());
+	yazi_config::init_flavor(EMULATOR.light)?;
+
+	ADAPTOR.init(Adapter::matches(*EMULATOR));
+	ADAPTOR.start();
+
+	Ok(())
+}
+
+pub fn init_default() {
 	// Tmux support
 	TMUX.init(Mux::tmux_passthrough());
 	ESCAPE.init(if *TMUX == 2 { "\x1b\x1b" } else { "\x1b" });
@@ -36,12 +48,4 @@ pub fn init() -> anyhow::Result<()> {
 
 	// Neovim support
 	NVIM.init(env_exists("NVIM_LOG_FILE") && env_exists("NVIM"));
-
-	EMULATOR.init(Emulator::detect());
-	yazi_config::init_flavor(EMULATOR.light)?;
-
-	ADAPTOR.init(Adapter::matches(*EMULATOR));
-	ADAPTOR.start();
-
-	Ok(())
 }
