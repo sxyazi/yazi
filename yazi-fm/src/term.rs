@@ -26,13 +26,17 @@ impl Term {
 		};
 
 		enable_raw_mode()?;
+		if *yazi_adapter::TMUX != 0 {
+			yazi_adapter::Mux::tmux_passthrough();
+		}
+
 		execute!(
 			BufWriter::new(stderr()),
-			EnterAlternateScreen,
 			Print(Mux::csi("\x1bP$q q\x1b\\")), // Request cursor shape (DECRQM)
 			Print(Mux::csi("\x1b[?12$p")),      // Request cursor blink status (DECSET)
 			Print("\x1b[?u"),                   // Request keyboard enhancement flags (CSI u)
 			Print(Mux::csi("\x1b[0c")),         // Request device attributes
+			EnterAlternateScreen,
 			EnableBracketedPaste,
 			mouse::SetMouse(true),
 		)?;

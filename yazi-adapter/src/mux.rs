@@ -25,7 +25,7 @@ impl Mux {
 		}
 
 		let child = std::process::Command::new("tmux")
-			.args(["set", "-p", "allow-passthrough", "all"])
+			.args(["set", "-p", "allow-passthrough", "on"])
 			.stdin(std::process::Stdio::null())
 			.stdout(std::process::Stdio::null())
 			.stderr(std::process::Stdio::piped())
@@ -35,13 +35,13 @@ impl Mux {
 			Ok(output) if output.status.success() => return 2,
 			Ok(output) => {
 				error!(
-					"Running `tmux set -p allow-passthrough all` failed: {:?}, {}",
+					"Running `tmux set -p allow-passthrough on` failed: {:?}, {}",
 					output.status,
 					String::from_utf8_lossy(&output.stderr)
 				);
 			}
 			Err(err) => {
-				error!("Failed to spawn `tmux set -p allow-passthrough all`: {err}");
+				error!("Failed to spawn `tmux set -p allow-passthrough on`: {err}");
 			}
 		}
 		1
