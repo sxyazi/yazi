@@ -69,11 +69,7 @@ rules = [
 	# Archive
 	{ mime = "application/{zip,rar,tar,gzip,xz,zstd,bzip*,lzma,compress,compressed,archive,cpio,arj,deflate,xar}", use = [ "extract", "reveal" ] },
 	{ mime = "application/{zip,rar,7z,gzip,arj}-compressed", use = [ "extract", "reveal" ] },
-	{ mime = "application/{debian-package,redhat-package-manager,rpm}", use = [ "extract", "reveal" ] },
-	{ mime = "application/vnd.debian.binary-package", use = [ "extract", "reveal" ] },
-	{ mime = "application/vnd.android.package-archive", use = [ "extract", "reveal" ] },
 	{ mime = "application/vnd.ms-cab-compressed", use = [ "extract", "reveal" ] },
-	{ name = "*.{AppImage,appimage}", use = [ "extract", "reveal" ] },
 	# JSON
 	{ mime = "application/{json,ndjson}", use = [ "edit", "reveal" ] },
 	{ mime = "*/javascript", use = [ "edit", "reveal" ] },
