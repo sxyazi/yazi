@@ -11,18 +11,23 @@ pub struct TasksProxy;
 
 impl TasksProxy {
 	#[inline]
-	pub fn open_with(targets: Vec<Url>, opener: Cow<'static, Opener>) {
+	pub fn open_with(opener: Cow<'static, Opener>, cwd: Url, targets: Vec<Url>) {
 		emit!(Call(
-			Cmd::new("open_with").with_any("option", OpenWithOpt { targets, opener }),
+			Cmd::new("open_with").with_any("option", OpenWithOpt { opener, cwd, targets }),
 			Layer::Tasks
 		));
 	}
 
 	#[inline]
-	pub async fn process_exec(args: Vec<OsString>, opener: Cow<'static, Opener>) {
+	pub async fn process_exec(opener: Cow<'static, Opener>, cwd: Url, args: Vec<OsString>) {
 		let (tx, rx) = oneshot::channel();
 		emit!(Call(
-			Cmd::new("process_exec").with_any("option", ProcessExecOpt { args, opener, done: tx }),
+			Cmd::new("process_exec").with_any("option", ProcessExecOpt {
+				cwd,
+				opener,
+				args,
+				done: Some(tx)
+			}),
 			Layer::Tasks
 		));
 		rx.await.ok();

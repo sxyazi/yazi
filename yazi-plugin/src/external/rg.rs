@@ -18,7 +18,7 @@ pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {
 		.arg(if opt.hidden { "--hidden" } else { "--no-hidden" })
 		.args(opt.args)
 		.arg(opt.subject)
-		.current_dir(&opt.cwd)
+		.arg(&opt.cwd)
 		.kill_on_drop(true)
 		.stdout(Stdio::piped())
 		.stderr(Stdio::null())

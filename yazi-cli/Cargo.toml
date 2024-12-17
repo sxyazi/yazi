@@ -30,7 +30,7 @@ yazi-shared = { path = "../yazi-shared", version = "0.4.2" }
 # External build dependencies
 anyhow                = { workspace = true }
 clap                  = { workspace = true }
-clap_complete         = "4.5.38"
+clap_complete         = "4.5.39"
 clap_complete_fig     = "4.5.2"
 clap_complete_nushell = "4.5.4"
 serde_json            = { workspace = true }

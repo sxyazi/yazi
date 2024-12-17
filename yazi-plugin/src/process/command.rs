@@ -2,7 +2,6 @@ use std::process::Stdio;
 
 use mlua::{AnyUserData, ExternalError, IntoLuaMulti, Lua, Table, UserData, Value};
 use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
-use yazi_fs::CWD;
 
 use super::{Child, output::Output};
 use crate::{Error, process::Status};
@@ -19,12 +18,7 @@ impl Command {
 	pub fn install(lua: &Lua) -> mlua::Result<()> {
 		let new = lua.create_function(|_, (_, program): (Table, String)| {
 			let mut inner = tokio::process::Command::new(program);
-			inner
-				.current_dir(CWD.load().as_ref())
-				.kill_on_drop(true)
-				.stdin(Stdio::null())
-				.stdout(Stdio::null())
-				.stderr(Stdio::null());
+			inner.kill_on_drop(true).stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
 
 			Ok(Self { inner })
 		})?;

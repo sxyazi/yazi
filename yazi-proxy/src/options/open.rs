@@ -6,6 +6,7 @@ use yazi_shared::{event::CmdCow, url::Url};
 // --- Open
 #[derive(Default)]
 pub struct OpenDoOpt {
+	pub cwd:         Url,
 	pub hovered:     Url,
 	pub targets:     Vec<(Url, Cow<'static, str>)>,
 	pub interactive: bool,
@@ -17,8 +18,9 @@ impl From<CmdCow> for OpenDoOpt {
 
 // --- Open with
 pub struct OpenWithOpt {
-	pub targets: Vec<Url>,
 	pub opener:  Cow<'static, Opener>,
+	pub cwd:     Url,
+	pub targets: Vec<Url>,
 }
 
 impl TryFrom<CmdCow> for OpenWithOpt {

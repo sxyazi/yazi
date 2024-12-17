@@ -1,13 +1,13 @@
-use std::{borrow::Cow, ffi::OsString, future::Future, sync::Arc, time::Duration};
+use std::{ffi::OsString, future::Future, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use futures::{FutureExt, future::BoxFuture};
 use parking_lot::Mutex;
-use tokio::{fs, select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
-use yazi_config::{TASKS, open::Opener, plugin::{Fetcher, Preloader}};
+use tokio::{fs, select, sync::mpsc::{self, UnboundedReceiver}, task::JoinHandle};
+use yazi_config::{TASKS, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
 use yazi_fs::{must_be_dir, remove_dir_clean, unique_name};
-use yazi_proxy::{ManagerProxy, options::PluginOpt};
+use yazi_proxy::{ManagerProxy, options::{PluginOpt, ProcessExecOpt}};
 use yazi_shared::{Throttle, url::Url};
 
 use super::{Ongoing, TaskProg, TaskStage};
@@ -259,12 +259,7 @@ impl Scheduler {
 		}
 	}
 
-	pub fn process_open(
-		&self,
-		opener: Cow<'static, Opener>,
-		args: Vec<OsString>,
-		done: Option<oneshot::Sender<()>>,
-	) {
+	pub fn process_open(&self, ProcessExecOpt { cwd, opener, args, done }: ProcessExecOpt) {
 		let name = {
 			let args = args.iter().map(|a| a.to_string_lossy()).collect::<Vec<_>>().join(" ");
 			if args.is_empty() {
@@ -299,11 +294,11 @@ impl Scheduler {
 		let process = self.process.clone();
 		self.send_micro(id, NORMAL, async move {
 			if opener.block {
-				process.block(ProcessOpBlock { id, cmd, args }).await
+				process.block(ProcessOpBlock { id, cwd, cmd, args }).await
 			} else if opener.orphan {
-				process.orphan(ProcessOpOrphan { id, cmd, args }).await
+				process.orphan(ProcessOpOrphan { id, cwd, cmd, args }).await
 			} else {
-				process.bg(ProcessOpBg { id, cmd, args, cancel: cancel_rx }).await
+				process.bg(ProcessOpBg { id, cwd, cmd, args, cancel: cancel_rx }).await
 			}
 		});
 	}
