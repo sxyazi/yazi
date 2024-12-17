@@ -2,10 +2,10 @@ use std::{ffi::OsString, process::Stdio};
 
 use anyhow::Result;
 use tokio::process::{Child, Command};
-use yazi_fs::CWD;
+use yazi_shared::url::Url;
 
-#[derive(Default)]
 pub struct ShellOpt {
+	pub cwd:    Url,
 	pub cmd:    OsString,
 	pub args:   Vec<OsString>,
 	pub piped:  bool,
@@ -30,12 +30,12 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 	return Ok(unsafe {
 		Command::new("sh")
 			.arg("-c")
-			.current_dir(CWD.load().as_ref())
 			.stdin(opt.stdio())
 			.stdout(opt.stdio())
 			.stderr(opt.stdio())
 			.arg(opt.cmd)
 			.args(opt.args)
+			.current_dir(opt.cwd)
 			.kill_on_drop(!opt.orphan)
 			.pre_exec(move || {
 				if opt.orphan && libc::setpgid(0, 0) < 0 {
@@ -52,10 +52,10 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 			Command::new("cmd.exe")
 				.raw_arg("/C")
 				.raw_arg(parser::parse(&opt.cmd, &opt.args))
-				.current_dir(CWD.load().as_ref())
 				.stdin(opt.stdio())
 				.stdout(opt.stdio())
 				.stderr(opt.stdio())
+				.current_dir(opt.cwd)
 				.kill_on_drop(!opt.orphan)
 				.spawn()?,
 		)

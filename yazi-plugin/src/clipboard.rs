@@ -16,7 +16,6 @@ impl Clipboard {
 		use std::os::unix::prelude::OsStringExt;
 
 		use tokio::process::Command;
-		use yazi_fs::CWD;
 		use yazi_shared::in_ssh_connection;
 
 		if in_ssh_connection() {
@@ -31,13 +30,7 @@ impl Clipboard {
 		];
 
 		for (bin, args) in all {
-			let Ok(output) = Command::new(bin)
-				.args(args)
-				.current_dir(CWD.load().as_ref())
-				.kill_on_drop(true)
-				.output()
-				.await
-			else {
+			let Ok(output) = Command::new(bin).args(args).kill_on_drop(true).output().await else {
 				continue;
 			};
 			if output.status.success() {
@@ -65,7 +58,6 @@ impl Clipboard {
 
 		use crossterm::execute;
 		use tokio::{io::AsyncWriteExt, process::Command};
-		use yazi_fs::CWD;
 
 		s.as_ref().clone_into(&mut self.content.lock());
 		execute!(BufWriter::new(stderr()), osc52::SetClipboard::new(s.as_ref())).ok();
@@ -80,7 +72,6 @@ impl Clipboard {
 		for (bin, args) in all {
 			let cmd = Command::new(bin)
 				.args(args)
-				.current_dir(CWD.load().as_ref())
 				.stdin(Stdio::piped())
 				.stdout(Stdio::null())
 				.stderr(Stdio::null())

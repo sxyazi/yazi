@@ -8,6 +8,7 @@ use crate::{Error, bindings::{Cast, Cha}, file::File, url::{Url, UrlRef}};
 pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 	let index = lua.create_function(|lua, (ts, key): (Table, mlua::String)| {
 		let value = match key.as_bytes().as_ref() {
+			b"cwd" => cwd(lua)?,
 			b"cha" => cha(lua)?,
 			b"write" => write(lua)?,
 			b"remove" => remove(lua)?,
@@ -25,6 +26,13 @@ pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 	fs.set_metatable(Some(lua.create_table_from([(MetaMethod::Index.name(), index)])?));
 
 	Ok(fs)
+}
+
+fn cwd(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_function(|lua, ()| match std::env::current_dir() {
+		Ok(p) => (Url::cast(lua, p)?, Value::Nil).into_lua_multi(lua),
+		Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(lua),
+	})
 }
 
 fn cha(lua: &Lua) -> mlua::Result<Function> {

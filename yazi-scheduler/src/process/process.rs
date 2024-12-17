@@ -53,8 +53,13 @@ impl Process {
 
 	pub async fn bg(&self, task: ProcessOpBg) -> Result<()> {
 		self.prog.send(TaskProg::New(task.id, 0))?;
-		let mut child =
-			super::shell(ShellOpt { cmd: task.cmd, args: task.args, piped: true, ..Default::default() })?;
+		let mut child = super::shell(ShellOpt {
+			cwd:    task.cwd,
+			cmd:    task.cmd,
+			args:   task.args,
+			piped:  true,
+			orphan: false,
+		})?;
 
 		let mut stdout = BufReader::new(child.stdout.take().unwrap()).lines();
 		let mut stderr = BufReader::new(child.stderr.take().unwrap()).lines();

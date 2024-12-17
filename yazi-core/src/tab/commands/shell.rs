@@ -3,16 +3,19 @@ use std::{borrow::Cow, fmt::Display};
 use anyhow::bail;
 use yazi_config::{open::Opener, popup::InputCfg};
 use yazi_proxy::{AppProxy, InputProxy, TasksProxy};
-use yazi_shared::event::{CmdCow, Data};
+use yazi_shared::{event::{CmdCow, Data}, url::Url};
 
 use crate::tab::Tab;
 
 pub struct Opt {
-	run:         Cow<'static, str>,
+	run: Cow<'static, str>,
+	cwd: Option<Url>,
+
 	block:       bool,
 	orphan:      bool,
 	interactive: bool,
-	cursor:      Option<usize>,
+
+	cursor: Option<usize>,
 }
 
 impl TryFrom<CmdCow> for Opt {
@@ -20,11 +23,14 @@ impl TryFrom<CmdCow> for Opt {
 
 	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
 		let me = Self {
-			run:         c.take_first_str().unwrap_or_default(),
+			run: c.take_first_str().unwrap_or_default(),
+			cwd: c.take_url("cwd"),
+
 			block:       c.bool("block"),
 			orphan:      c.bool("orphan"),
 			interactive: c.bool("interactive"),
-			cursor:      c.get("cursor").and_then(Data::as_usize),
+
+			cursor: c.get("cursor").and_then(Data::as_usize),
 		};
 
 		if me.cursor.is_some_and(|c| c > me.run.chars().count()) {
@@ -46,6 +52,7 @@ impl Tab {
 			Err(e) => return AppProxy::notify_warn("`shell` command", e),
 		};
 
+		let cwd = opt.cwd.take().unwrap_or_else(|| self.cwd().clone());
 		let selected = self.hovered_and_selected(true).cloned().collect();
 		tokio::spawn(async move {
 			if opt.interactive {
@@ -61,7 +68,6 @@ impl Tab {
 			}
 
 			TasksProxy::open_with(
-				selected,
 				Cow::Owned(Opener {
 					run:    opt.run.into_owned(),
 					block:  opt.block,
@@ -70,6 +76,8 @@ impl Tab {
 					for_:   None,
 					spread: true,
 				}),
+				cwd,
+				selected,
 			);
 		});
 	}

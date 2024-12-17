@@ -22,6 +22,7 @@ impl Manager {
 		let root = max_common_root(&old);
 		let old: Vec<_> = old.into_iter().map(|p| p.strip_prefix(&root).unwrap().to_owned()).collect();
 
+		let cwd = self.cwd().clone();
 		tokio::spawn(async move {
 			let tmp = PREVIEW.tmpfile("bulk");
 			let s = old.iter().map(|o| o.as_os_str()).collect::<Vec<_>>().join(OsStr::new("\n"));
@@ -34,8 +35,11 @@ impl Manager {
 				.await?;
 
 			defer! { tokio::spawn(fs::remove_file(tmp.clone())); }
-			TasksProxy::process_exec(vec![OsString::new(), tmp.to_owned().into()], Cow::Borrowed(opener))
-				.await;
+			TasksProxy::process_exec(Cow::Borrowed(opener), cwd, vec![
+				OsString::new(),
+				tmp.to_owned().into(),
+			])
+			.await;
 
 			let _permit = HIDER.acquire().await.unwrap();
 			defer!(AppProxy::resume());

@@ -24,6 +24,7 @@ fn stage_1(lua: &'static Lua) -> Result<()> {
 	let globals = lua.globals();
 	globals.raw_set("ui", crate::elements::compose(lua)?)?;
 	globals.raw_set("ya", crate::utils::compose(lua, false)?)?;
+	globals.raw_set("fs", crate::fs::compose(lua)?)?;
 	globals.raw_set("ps", crate::pubsub::compose(lua)?)?;
 
 	crate::Error::install(lua)?;

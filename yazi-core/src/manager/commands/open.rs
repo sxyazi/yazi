@@ -40,6 +40,7 @@ impl Manager {
 			return;
 		}
 
+		let cwd = self.cwd().clone();
 		let (mut done, mut todo) = (Vec::with_capacity(selected.len()), vec![]);
 		for u in selected {
 			if self.mimetype.contains(u) {
@@ -53,7 +54,7 @@ impl Manager {
 
 		if todo.is_empty() {
 			return self
-				.open_do(OpenDoOpt { hovered, targets: done, interactive: opt.interactive }, tasks);
+				.open_do(OpenDoOpt { cwd, hovered, targets: done, interactive: opt.interactive }, tasks);
 		}
 
 		tokio::spawn(async move {
@@ -71,7 +72,12 @@ impl Manager {
 				}
 			}
 
-			ManagerProxy::open_do(OpenDoOpt { hovered, targets: done, interactive: opt.interactive });
+			ManagerProxy::open_do(OpenDoOpt {
+				cwd,
+				hovered,
+				targets: done,
+				interactive: opt.interactive,
+			});
 		});
 	}
 
@@ -88,7 +94,7 @@ impl Manager {
 		if targets.is_empty() {
 			return;
 		} else if !opt.interactive {
-			return tasks.process_from_files(opt.hovered, targets);
+			return tasks.process_from_files(opt.cwd, opt.hovered, targets);
 		}
 
 		let openers: Vec<_> = OPEN.common_openers(&targets);
@@ -102,7 +108,7 @@ impl Manager {
 				openers.iter().map(|o| o.desc.clone()).collect(),
 			));
 			if let Ok(choice) = result.await {
-				TasksProxy::open_with(urls, Cow::Borrowed(openers[choice]));
+				TasksProxy::open_with(Cow::Borrowed(openers[choice]), opt.cwd, urls);
 			}
 		});
 	}
