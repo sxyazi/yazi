@@ -6,7 +6,7 @@ use serde::{Deserialize, Deserializer};
 use yazi_shared::Layer;
 
 use super::Chord;
-use crate::Preset;
+use crate::{Preset, keymap::Key};
 
 #[derive(Debug)]
 pub struct Keymap {
@@ -72,17 +72,20 @@ impl<'de> Deserialize<'de> for Keymap {
 		}
 
 		fn mix(a: IndexSet<Chord>, b: IndexSet<Chord>, c: IndexSet<Chord>) -> Vec<Chord> {
-			let a_seen: HashSet<_> =
-				a.iter().filter(|&v| v.on.len() > 1).map(|v| [v.on[0], v.on[1]]).collect();
-			let b_seen: HashSet<_> =
-				b.iter().filter(|&v| v.on.len() > 1).map(|v| [v.on[0], v.on[1]]).collect();
+			#[inline]
+			fn on(Chord { on, .. }: &Chord) -> [Key; 2] {
+				[on.first().copied().unwrap_or_default(), on.get(1).copied().unwrap_or_default()]
+			}
+
+			let a_seen: HashSet<_> = a.iter().map(on).collect();
+			let b_seen: HashSet<_> = b.iter().map(on).collect();
 
 			Preset::mix(
 				a,
-				b.into_iter().filter(|v| v.on.len() < 2 || !a_seen.contains(&v.on[..2])),
-				c.into_iter().filter(|v| v.on.len() < 2 || !b_seen.contains(&v.on[..2])),
+				b.into_iter().filter(|v| !a_seen.contains(&on(v))),
+				c.into_iter().filter(|v| !b_seen.contains(&on(v))),
 			)
-			.filter(|c| !c.noop())
+			.filter(|chord| !chord.noop())
 			.collect()
 		}
 
