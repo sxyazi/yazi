@@ -19,28 +19,12 @@ const TRUNCATE: u8 = 8;
 const CREATE: u8 = 16;
 const CREATE_NEW: u8 = 32;
 
-pub struct OpenOpts;
-
-impl OpenOpts {
-	pub fn install(lua: &Lua) -> mlua::Result<()> {
-		let open_options = lua.create_table_from([
-			("READ", READ),
-			("WRITE", WRITE),
-			("APPEND", APPEND),
-			("TRUNCATE", TRUNCATE),
-			("CREATE", CREATE),
-			("CREATE_NEW", CREATE_NEW),
-		])?;
-
-		lua.globals().raw_set("OpenOpts", open_options)
-	}
-}
-
 pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 	let index = lua.create_function(|lua, (ts, key): (Table, mlua::String)| {
 		let value = match key.as_bytes().as_ref() {
 			b"cwd" => cwd(lua)?,
 			b"cha" => cha(lua)?,
+			b"open" => open(lua)?,
 			b"write" => write(lua)?,
 			b"remove" => remove(lua)?,
 			b"create_dir" => create_dir(lua)?,
@@ -53,6 +37,17 @@ pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 		ts.raw_set(key, value.clone())?;
 		Ok(value)
 	})?;
+
+	let open_options = lua.create_table_from([
+		("READ", READ),
+		("WRITE", WRITE),
+		("APPEND", APPEND),
+		("TRUNCATE", TRUNCATE),
+		("CREATE", CREATE),
+		("CREATE_NEW", CREATE_NEW),
+	])?;
+
+	lua.globals().raw_set("OpenOpts", open_options)?;
 
 	let fs = lua.create_table_with_capacity(0, 10)?;
 	fs.set_metatable(Some(lua.create_table_from([(MetaMethod::Index.name(), index)])?));
@@ -118,9 +113,11 @@ fn open(lua: &Lua) -> mlua::Result<Function> {
 		}
 
 		let result = open_opts.open(&*url).await;
-
 		match result {
-			Ok(file) => (File::cast(&lua, file)?, Value::Nil).into_lua_multi(&lua),
+			Ok(_) => match File::cast(&lua, yazi_fs::File::from_dummy(url.clone(), None)) {
+				Ok(f) => (f, Value::Nil).into_lua_multi(&lua),
+				Err(e) => (Value::Nil, e).into_lua_multi(&lua),
+			},
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
