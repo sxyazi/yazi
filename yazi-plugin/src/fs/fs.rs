@@ -113,12 +113,15 @@ fn open(lua: &Lua) -> mlua::Result<Function> {
 		}
 
 		let result = open_opts.open(&*url).await;
-		match result {
-			Ok(_) => match File::cast(&lua, yazi_fs::File::from_dummy(url.clone(), None)) {
-				Ok(f) => (f, Value::Nil).into_lua_multi(&lua),
-				Err(e) => (Value::Nil, e).into_lua_multi(&lua),
-			},
-			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
+		let yazi_file = yazi_fs::File::from(url.clone()).await;
+
+		match (result, yazi_file) {
+			(Ok(_), Ok(f)) => match File::cast(&lua, f) {
+				Ok(file) => (file, Value::Nil).into_lua_multi(&lua),
+				Err(e) => (Value::Nil, e).into_lua_multi(&lua)
+			}
+			(Err(e), _) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
+			(_, Err(e)) => (Value::Nil, e).into_lua_multi(&lua)
 		}
 	})
 }
