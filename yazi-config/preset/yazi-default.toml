@@ -146,7 +146,7 @@ previewers = [
 	{ mime = "application/{vhd,vmdk}", run = "archive" },
 	{ mime = "application/virtualbox-{vdi,vhd,vhdx,vmdk}", run = "archive" },
 	{ mime = "application/{ms-wim,apple-diskimage}", run = "archive" },
-	{ name = "*.{dmg,DMG,img,fat,ext,ext2,ext3,ext4,squashfs,ntfs,hfs,hfsx}", run = "archive" },
+	{ name = "*.{img,fat,ext,ext2,ext3,ext4,squashfs,ntfs,hfs,hfsx}", run = "archive" },
 	# Font
 	{ mime = "font/*", run = "font" },
 	{ mime = "application/ms-opentype", run = "font" },
