@@ -15,6 +15,7 @@ pub struct Theme {
 	status:         Status,
 	pub input:      Input,
 	pub confirm:    Confirm,
+	pub spot:       Spot,
 	pub pick:       Pick,
 	pub completion: Completion,
 	pub tasks:      Tasks,
@@ -125,6 +126,16 @@ pub struct Confirm {
 	pub btn_yes:    Style,
 	pub btn_no:     Style,
 	pub btn_labels: [String; 2],
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct Spot {
+	pub border:   Style,
+	pub title:    Style,
+	pub headers:  Style,
+	pub keys:     Style,
+	pub values:   Style,
+	pub selected: Style,
 }
 
 #[derive(Deserialize, Serialize)]
