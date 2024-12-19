@@ -206,7 +206,7 @@ rules = [
 	{ mime = "{audio,video}/*", fg = "magenta" },
 
 	# Archives
-	{ mime = "application/{zip,rar,tar,gzip,xz,zstd,bzip*,zlib,lzma,compress,archive,cpio,arj,deflate,xar}", fg = "red" },
+	{ mime = "application/{zip,rar,tar,gzip,xz,zstd,bzip*,zlib,lzma,compress,archive,cpio,arj,xar}", fg = "red" },
 	{ mime = "application/7z*", fg = "red" },
 	{ mime = "application/ms-cab-compressed", fg = "red" },
 
