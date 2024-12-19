@@ -69,7 +69,7 @@ rules = [
 	# Archive
 	{ mime = "application/{zip,rar,tar,gzip,xz,zstd,bzip*,lzma,compress,compressed,archive,cpio,arj,deflate,xar}", use = [ "extract", "reveal" ] },
 	{ mime = "application/{zip,rar,7z,gzip,arj}-compressed", use = [ "extract", "reveal" ] },
-	{ mime = "application/vnd.ms-cab-compressed", use = [ "extract", "reveal" ] },
+	{ mime = "application/ms-cab-compressed", use = [ "extract", "reveal" ] },
 	# JSON
 	{ mime = "application/{json,ndjson}", use = [ "edit", "reveal" ] },
 	{ mime = "*/javascript", use = [ "edit", "reveal" ] },
@@ -136,9 +136,9 @@ previewers = [
 	{ mime = "application/{zip,rar,tar,gzip,xz,zstd,bzip*,lzma,compress,compressed,archive,cpio,arj,deflate,xar}", run = "archive" },
 	{ mime = "application/{zip,rar,7z,gzip,arj}-compressed", run = "archive" },
 	{ mime = "application/{debian-package,redhat-package-manager,rpm}", run = "archive" },
-	{ mime = "application/vnd.debian.binary-package", run = "archive" },
-	{ mime = "application/vnd.android.package-archive", run = "archive" },
-	{ mime = "application/vnd.ms-cab-compressed", run = "archive" },
+	{ mime = "application/debian.binary-package", run = "archive" },
+	{ mime = "application/android.package-archive", run = "archive" },
+	{ mime = "application/ms-cab-compressed", run = "archive" },
 	{ name = "*.{AppImage,appimage}", run = "archive" },
 	# Virtual Disk / Disk Image
 	{ mime = "application/iso9660-image", run = "archive" },
