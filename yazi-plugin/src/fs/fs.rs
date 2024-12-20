@@ -78,10 +78,13 @@ fn remove(lua: &Lua) -> mlua::Result<Function> {
 }
 
 fn create_dir(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_async_function(|lua, (dir, recursive): (UrlRef, Option<bool>)| async move {
-		let is_recursive = recursive.unwrap_or(false);
-		let result =
-			if is_recursive { fs::create_dir_all(&*dir).await } else { fs::create_dir(&*dir).await };
+	lua.create_async_function(|lua, (url, recursive): (UrlRef, Option<bool>)| async move {
+		let result = if recursive.unwrap_or(false) {
+			fs::create_dir_all(&*url).await
+		} else {
+			fs::create_dir(&*url).await
+		};
+
 		match result {
 			Ok(_) => (true, Value::Nil).into_lua_multi(&lua),
 			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
