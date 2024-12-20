@@ -54,7 +54,7 @@ fn cha(lua: &Lua) -> mlua::Result<Function> {
 fn write(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (url, data): (UrlRef, mlua::String)| async move {
 		match fs::write(&*url, data.as_bytes()).await {
-			Ok(_) => (true, Value::Nil).into_lua_multi(&lua),
+			Ok(()) => (true, Value::Nil).into_lua_multi(&lua),
 			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
@@ -71,7 +71,7 @@ fn remove(lua: &Lua) -> mlua::Result<Function> {
 		};
 
 		match result {
-			Ok(_) => (true, Value::Nil).into_lua_multi(&lua),
+			Ok(()) => (true, Value::Nil).into_lua_multi(&lua),
 			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
@@ -86,7 +86,7 @@ fn create_dir(lua: &Lua) -> mlua::Result<Function> {
 		};
 
 		match result {
-			Ok(_) => (true, Value::Nil).into_lua_multi(&lua),
+			Ok(()) => (true, Value::Nil).into_lua_multi(&lua),
 			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
