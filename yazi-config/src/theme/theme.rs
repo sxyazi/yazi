@@ -13,15 +13,15 @@ pub struct Theme {
 	pub manager:    Manager,
 	mode:           Mode,
 	status:         Status,
-	pub input:      Input,
+	pub which:      Which,
 	pub confirm:    Confirm,
 	pub spot:       Spot,
+	pub notify:     Notify,
 	pub pick:       Pick,
+	pub input:      Input,
 	pub completion: Completion,
 	pub tasks:      Tasks,
-	pub which:      Which,
 	pub help:       Help,
-	pub notify:     Notify,
 
 	// File-specific styles
 	#[serde(rename = "filetype", deserialize_with = "Filetype::deserialize", skip_serializing)]
@@ -109,12 +109,17 @@ struct Status {
 	pub perm_exec:  Style,
 }
 
-#[derive(Deserialize, Serialize)]
-pub struct Input {
-	pub border:   Style,
-	pub title:    Style,
-	pub value:    Style,
-	pub selected: Style,
+#[derive(Deserialize, Serialize, Validate)]
+pub struct Which {
+	#[validate(range(min = 1, max = 3, message = "Must be between 1 and 3"))]
+	pub cols: u8,
+	pub mask: Style,
+	pub cand: Style,
+	pub rest: Style,
+	pub desc: Style,
+
+	pub separator:       String,
+	pub separator_style: Style,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -135,10 +140,29 @@ pub struct Spot {
 }
 
 #[derive(Deserialize, Serialize)]
+pub struct Notify {
+	pub title_info:  Style,
+	pub title_warn:  Style,
+	pub title_error: Style,
+
+	pub icon_info:  String,
+	pub icon_warn:  String,
+	pub icon_error: String,
+}
+
+#[derive(Deserialize, Serialize)]
 pub struct Pick {
 	pub border:   Style,
 	pub active:   Style,
 	pub inactive: Style,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct Input {
+	pub border:   Style,
+	pub title:    Style,
+	pub value:    Style,
+	pub selected: Style,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -159,19 +183,6 @@ pub struct Tasks {
 	pub hovered: Style,
 }
 
-#[derive(Deserialize, Serialize, Validate)]
-pub struct Which {
-	#[validate(range(min = 1, max = 3, message = "Must be between 1 and 3"))]
-	pub cols: u8,
-	pub mask: Style,
-	pub cand: Style,
-	pub rest: Style,
-	pub desc: Style,
-
-	pub separator:       String,
-	pub separator_style: Style,
-}
-
 #[derive(Deserialize, Serialize)]
 pub struct Help {
 	pub on:   Style,
@@ -180,15 +191,4 @@ pub struct Help {
 
 	pub hovered: Style,
 	pub footer:  Style,
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct Notify {
-	pub title_info:  Style,
-	pub title_warn:  Style,
-	pub title_error: Style,
-
-	pub icon_info:  String,
-	pub icon_warn:  String,
-	pub icon_error: String,
 }

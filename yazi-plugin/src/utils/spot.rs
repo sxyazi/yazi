@@ -70,10 +70,12 @@ impl Utils {
 					area,
 					position: ratatui::widgets::Borders::ALL,
 					type_: ratatui::widgets::BorderType::Rounded,
-					style: ratatui::style::Style::from(THEME.spot.border),
+					style: THEME.spot.border.into(),
 					titles: vec![(
 						ratatui::widgets::block::Position::Top,
-						ratatui::text::Line::raw(lock.url.name().to_string_lossy().into_owned()).centered().style(THEME.spot.title),
+						ratatui::text::Line::raw(lock.url.name().to_string_lossy().into_owned())
+							.centered()
+							.style(THEME.spot.title),
 					)],
 				}),
 				Renderable::Table(table),
