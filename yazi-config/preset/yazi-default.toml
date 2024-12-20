@@ -69,7 +69,7 @@ rules = [
 	# Archive
 	{ mime = "application/{zip,rar,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar}", use = [ "extract", "reveal" ] },
 	{ mime = "application/7z*", use = [ "extract", "reveal" ] },
-	{ mime = "application/ms-cab-compressed", use = [ "extract", "reveal" ] },
+	{ mime = "application/ms-cab*", use = [ "extract", "reveal" ] },
 	# JSON
 	{ mime = "application/{json,ndjson}", use = [ "edit", "reveal" ] },
 	{ mime = "*/javascript", use = [ "edit", "reveal" ] },
@@ -138,7 +138,7 @@ previewers = [
 	{ mime = "application/{debian-package,redhat-package-manager,rpm}", run = "archive" },
 	{ mime = "application/debian.binary-package", run = "archive" },
 	{ mime = "application/android.package-archive", run = "archive" },
-	{ mime = "application/ms-cab-compressed", run = "archive" },
+	{ mime = "application/ms-cab*", run = "archive" },
 	{ name = "*.{AppImage,appimage}", run = "archive" },
 	# Virtual Disk / Disk Image
 	{ mime = "application/iso9660-image", run = "archive" },

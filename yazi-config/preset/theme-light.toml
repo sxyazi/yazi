@@ -208,7 +208,7 @@ rules = [
 	# Archives
 	{ mime = "application/{zip,rar,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar}", fg = "red" },
 	{ mime = "application/7z*", fg = "red" },
-	{ mime = "application/ms-cab-compressed", fg = "red" },
+	{ mime = "application/ms-cab*", fg = "red" },
 
 	# Documents
 	{ mime = "application/{pdf,doc,rtf}", fg = "cyan" },
