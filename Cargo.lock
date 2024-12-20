@@ -333,9 +333,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.4"
+version = "1.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9157bbaa6b165880c27a4293a474c91cdcf265cc68cc829bf10be0964a391caf"
+checksum = "c31a0499c1dc64f458ad13872de75c0eb7e3fdb0e67964610c914b034fc5956e"
 dependencies = [
  "jobserver",
  "libc",
@@ -394,9 +394,9 @@ dependencies = [
 
 [[package]]
 name = "clap_complete"
-version = "4.5.39"
+version = "4.5.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd4db298d517d5fa00b2b84bbe044efd3fde43874a41db0d46f91994646a2da4"
+checksum = "ac2e663e3e3bed2d32d065a8404024dad306e699a04263ec59919529f803aee9"
 dependencies = [
  "clap",
 ]
@@ -841,9 +841,9 @@ checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
 name = "foldhash"
-version = "0.1.3"
+version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f81ec6369c545a7d40e4589b5597581fa1c441fe1cce96dd1de43159910a36a2"
+checksum = "a0d2fde1f7b3d48b8395d5f2de76c18a528bd6a9cdde438df747bfcba3e05d6f"
 
 [[package]]
 name = "form_urlencoded"
@@ -1397,9 +1397,9 @@ checksum = "03087c2bad5e1034e8cace5926dec053fb3790248370865f5117a7d0213354c8"
 
 [[package]]
 name = "libc"
-version = "0.2.168"
+version = "0.2.169"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5aaeb2981e0606ca11d79718f8bb01164f1d6ed75080182d3abf017e6d244b6d"
+checksum = "b5aba8db14291edd000dfcc4d620c7ebfb122c613afb886ca8803fa4e128a20a"
 
 [[package]]
 name = "libfuzzer-sys"
@@ -1529,9 +1529,9 @@ checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
 
 [[package]]
 name = "miniz_oxide"
-version = "0.8.0"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2d80299ef12ff69b16a84bb182e3b9df68b5a91574d3d4fa6e41b65deec4df1"
+checksum = "4ffbe83022cedc1d264172192511ae958937694cd57ce297164951b8b3568394"
 dependencies = [
  "adler2",
  "simd-adler32",
@@ -1640,9 +1640,9 @@ dependencies = [
 
 [[package]]
 name = "notify-types"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7393c226621f817964ffb3dc5704f9509e107a8b024b489cc2c1b217378785df"
+checksum = "585d3cb5e12e01aed9e8a1f70d5c6b5e86fe2a6e48fc8cd0b3e0b8df6f6eb174"
 dependencies = [
  "instant",
 ]
@@ -1888,9 +1888,9 @@ dependencies = [
 
 [[package]]
 name = "png"
-version = "0.17.15"
+version = "0.17.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b67582bd5b65bdff614270e2ea89a1cf15bef71245cc1e5f7ea126977144211d"
+checksum = "82151a2fc869e011c153adc57cf2789ccb8d9906ce52c0b39a6b5697749d7526"
 dependencies = [
  "bitflags 1.3.2",
  "crc32fast",
@@ -3342,7 +3342,7 @@ checksum = "cfe53a6657fd280eaa890a3bc59152892ffa3e30101319d168b781ed6529b049"
 
 [[package]]
 name = "yazi-adapter"
-version = "0.4.2"
+version = "0.4.3"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -3362,7 +3362,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-boot"
-version = "0.4.2"
+version = "0.4.3"
 dependencies = [
  "clap",
  "clap_complete",
@@ -3380,7 +3380,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-cli"
-version = "0.4.2"
+version = "0.4.3"
 dependencies = [
  "anyhow",
  "clap",
@@ -3402,7 +3402,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-codegen"
-version = "0.4.2"
+version = "0.4.3"
 dependencies = [
  "quote",
  "syn",
@@ -3410,7 +3410,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-config"
-version = "0.4.2"
+version = "0.4.3"
 dependencies = [
  "anyhow",
  "bitflags 2.6.0",
@@ -3430,7 +3430,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-core"
-version = "0.4.2"
+version = "0.4.3"
 dependencies = [
  "anyhow",
  "bitflags 2.6.0",
@@ -3463,7 +3463,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-dds"
-version = "0.4.2"
+version = "0.4.3"
 dependencies = [
  "anyhow",
  "mlua",
@@ -3484,7 +3484,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fm"
-version = "0.4.2"
+version = "0.4.3"
 dependencies = [
  "anyhow",
  "better-panic",
@@ -3518,7 +3518,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fs"
-version = "0.4.2"
+version = "0.4.3"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -3537,11 +3537,11 @@ dependencies = [
 
 [[package]]
 name = "yazi-macro"
-version = "0.4.2"
+version = "0.4.3"
 
 [[package]]
 name = "yazi-plugin"
-version = "0.4.2"
+version = "0.4.3"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -3581,7 +3581,7 @@ checksum = "f4b6c8e12e39ac0f79fa96f36e5b88e0da8d230691abd729eec709b43c74f632"
 
 [[package]]
 name = "yazi-proxy"
-version = "0.4.2"
+version = "0.4.3"
 dependencies = [
  "anyhow",
  "mlua",
@@ -3594,7 +3594,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-scheduler"
-version = "0.4.2"
+version = "0.4.3"
 dependencies = [
  "anyhow",
  "async-priority-channel",
@@ -3616,7 +3616,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-shared"
-version = "0.4.2"
+version = "0.4.3"
 dependencies = [
  "anyhow",
  "crossterm",
