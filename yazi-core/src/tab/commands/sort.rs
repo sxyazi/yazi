@@ -7,10 +7,10 @@ use yazi_shared::event::CmdCow;
 use crate::{tab::Tab, tasks::Tasks};
 
 impl Tab {
-	pub fn sort(&mut self, mut c: CmdCow, tasks: &Tasks) {
+	pub fn sort(&mut self, c: CmdCow, tasks: &Tasks) {
 		let pref = &mut self.pref;
-		if let Some(by) = c.take_first_str() {
-			pref.sort_by = SortBy::from_str(&by).unwrap_or_default();
+		if let Some(by) = c.first_str() {
+			pref.sort_by = SortBy::from_str(by).unwrap_or_default();
 		}
 
 		pref.sort_reverse = c.maybe_bool("reverse").unwrap_or(pref.sort_reverse);
@@ -19,6 +19,8 @@ impl Tab {
 		pref.sort_translit = c.maybe_bool("translit").unwrap_or(pref.sort_translit);
 
 		self.apply_files_attrs();
+
+		ManagerProxy::hover(None, self.id);
 		ManagerProxy::update_paged();
 
 		tasks.prework_sorted(&self.current.files);
