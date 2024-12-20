@@ -11,6 +11,7 @@ pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 			b"cwd" => cwd(lua)?,
 			b"cha" => cha(lua)?,
 			b"write" => write(lua)?,
+			b"create" => create(lua)?,
 			b"remove" => remove(lua)?,
 			b"read_dir" => read_dir(lua)?,
 			b"unique_name" => unique_name(lua)?,
@@ -53,7 +54,22 @@ fn cha(lua: &Lua) -> mlua::Result<Function> {
 fn write(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (url, data): (UrlRef, mlua::String)| async move {
 		match fs::write(&*url, data.as_bytes()).await {
-			Ok(_) => (true, Value::Nil).into_lua_multi(&lua),
+			Ok(()) => (true, Value::Nil).into_lua_multi(&lua),
+			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
+		}
+	})
+}
+
+fn create(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_async_function(|lua, (type_, url): (mlua::String, UrlRef)| async move {
+		let result = match type_.as_bytes().as_ref() {
+			b"dir" => fs::create_dir(&*url).await,
+			b"dir_all" => fs::create_dir_all(&*url).await,
+			_ => Err("Creation type must be 'dir' or 'dir_all'".into_lua_err())?,
+		};
+
+		match result {
+			Ok(()) => (true, Value::Nil).into_lua_multi(&lua),
 			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
@@ -70,7 +86,7 @@ fn remove(lua: &Lua) -> mlua::Result<Function> {
 		};
 
 		match result {
-			Ok(_) => (true, Value::Nil).into_lua_multi(&lua),
+			Ok(()) => (true, Value::Nil).into_lua_multi(&lua),
 			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
