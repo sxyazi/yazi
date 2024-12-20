@@ -1,16 +1,9 @@
 use globset::GlobBuilder;
-use mlua::{
-	ExternalError, ExternalResult, Function, IntoLua, IntoLuaMulti, Lua, MetaMethod, Table, Value,
-};
+use mlua::{ExternalError, ExternalResult, Function, IntoLua, IntoLuaMulti, Lua, MetaMethod, Table, Value};
 use tokio::fs;
 use yazi_fs::remove_dir_clean;
 
-use crate::{
-	Error,
-	bindings::{Cast, Cha},
-	file::File,
-	url::{Url, UrlRef},
-};
+use crate::{Error, bindings::{Cast, Cha}, file::File, url::{Url, UrlRef}};
 
 pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 	let index = lua.create_function(|lua, (ts, key): (Table, mlua::String)| {
