@@ -11,8 +11,8 @@ pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 			b"cwd" => cwd(lua)?,
 			b"cha" => cha(lua)?,
 			b"write" => write(lua)?,
+			b"create" => create(lua)?,
 			b"remove" => remove(lua)?,
-			b"create_dir" => create_dir(lua)?,
 			b"read_dir" => read_dir(lua)?,
 			b"unique_name" => unique_name(lua)?,
 			_ => return Ok(Value::Nil),
@@ -60,14 +60,12 @@ fn write(lua: &Lua) -> mlua::Result<Function> {
 	})
 }
 
-fn remove(lua: &Lua) -> mlua::Result<Function> {
+fn create(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (type_, url): (mlua::String, UrlRef)| async move {
 		let result = match type_.as_bytes().as_ref() {
-			b"file" => fs::remove_file(&*url).await,
-			b"dir" => fs::remove_dir(&*url).await,
-			b"dir_all" => fs::remove_dir_all(&*url).await,
-			b"dir_clean" => Ok(remove_dir_clean(&url).await),
-			_ => Err("Removal type must be 'file', 'dir', 'dir_all', or 'dir_clean'".into_lua_err())?,
+			b"dir" => fs::create_dir(&*url).await,
+			b"dir_all" => fs::create_dir_all(&*url).await,
+			_ => Err("Creation type must be 'dir' or 'dir_all'".into_lua_err())?,
 		};
 
 		match result {
@@ -77,12 +75,14 @@ fn remove(lua: &Lua) -> mlua::Result<Function> {
 	})
 }
 
-fn create_dir(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_async_function(|lua, (url, recursive): (UrlRef, Option<bool>)| async move {
-		let result = if recursive.unwrap_or(false) {
-			fs::create_dir_all(&*url).await
-		} else {
-			fs::create_dir(&*url).await
+fn remove(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_async_function(|lua, (type_, url): (mlua::String, UrlRef)| async move {
+		let result = match type_.as_bytes().as_ref() {
+			b"file" => fs::remove_file(&*url).await,
+			b"dir" => fs::remove_dir(&*url).await,
+			b"dir_all" => fs::remove_dir_all(&*url).await,
+			b"dir_clean" => Ok(remove_dir_clean(&url).await),
+			_ => Err("Removal type must be 'file', 'dir', 'dir_all', or 'dir_clean'".into_lua_err())?,
 		};
 
 		match result {
