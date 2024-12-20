@@ -1,3 +1,4 @@
+use yazi_macro::render;
 use yazi_shared::event::CmdCow;
 
 use crate::{Term, app::App};
@@ -12,5 +13,7 @@ impl App {
 		self.resize(());
 
 		self.signals.resume(None);
+
+		render!();
 	}
 }
