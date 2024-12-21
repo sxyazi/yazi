@@ -111,7 +111,7 @@ function M.tmp_name(url) return ".tmp_" .. ya.hash(string.format("extract//%s//%
 
 function M.trim_ext(name)
 	-- stylua: ignore
-	local exts = { ["7z"] = true, apk = true, bz2 = true, bzip2 = true, exe = true, gz = true, gzip = true, iso = true, jar = true, rar = true, tar = true, tgz = true, xz = true, zip = true, zst = true }
+	local exts = { ["7z"] = true, apk = true, bz2 = true, bzip2 = true, cbz = true, cbr = true, exe = true, gz = true, gzip = true, iso = true, jar = true, rar = true, tar = true, tgz = true, xz = true, zip = true, zst = true }
 
 	while true do
 		local s = name:gsub("%.([a-zA-Z0-9]+)$", function(s) return (exts[s] or exts[s:lower()]) and "" end)
