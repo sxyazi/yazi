@@ -22,6 +22,7 @@ ratatui          = { workspace = true }
 serde            = { workspace = true }
 shell-words      = { workspace = true }
 tokio            = { workspace = true }
+rayon            = "1.10.0"
 
 [target."cfg(unix)".dependencies]
 libc  = { workspace = true }

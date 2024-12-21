@@ -1,7 +1,8 @@
-use std::{borrow::Cow, collections::{HashMap, HashSet, VecDeque}, ffi::{OsStr, OsString}, path::{Path, PathBuf}};
+use std::{borrow::Cow, collections::{HashMap, HashSet}, ffi::{OsStr, OsString}, path::{Path, PathBuf}};
 
 use anyhow::{Result, bail};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
+use rayon::prelude::*;
 
 use super::Cha;
 
@@ -155,28 +156,28 @@ pub async fn realname_unchecked<'a>(
 	}
 }
 
-pub async fn calculate_size(path: &Path) -> u64 {
-	let mut total = 0;
-	let mut stack = VecDeque::from([path.to_path_buf()]);
-	while let Some(path) = stack.pop_front() {
-		let Ok(meta) = fs::symlink_metadata(&path).await else { continue };
-		if !meta.is_dir() {
-			total += meta.len();
-			continue;
-		}
+pub async fn calculate_size(path: &Path) -> io::Result<u64> {
+	let path = path.to_path_buf();
+	tokio::task::spawn_blocking(move || _calculate_size(&path)).await?
+}
 
-		let Ok(mut it) = fs::read_dir(path).await else { continue };
-		while let Ok(Some(entry)) = it.next_entry().await {
-			let Ok(meta) = entry.metadata().await else { continue };
+fn _calculate_size(path: &Path) -> io::Result<u64> {
+	let entries: Vec<_> = std::fs::read_dir(&path)?.collect();
 
-			if meta.is_dir() {
-				stack.push_back(entry.path());
-			} else {
-				total += meta.len();
-			}
+	let total = entries.par_iter().filter_map(|entry| {
+		match entry {
+			Ok(entry) => {
+				match entry.metadata() {
+					Ok(meta) if meta.is_file() => Some(meta.len()),
+					Ok(meta) if meta.is_dir() => _calculate_size(&entry.path()).ok(),
+					_ => None,
+				}
+			},
+			_ => None,
 		}
-	}
-	total
+	}).sum();
+
+	Ok(total)
 }
 
 pub fn copy_with_progress(
@@ -284,18 +285,25 @@ async fn _copy_with_progress(from: PathBuf, to: PathBuf, cha: Cha) -> io::Result
 	}
 }
 
-pub async fn remove_dir_clean(dir: &Path) {
-	let Ok(mut it) = fs::read_dir(dir).await else { return };
+pub async fn remove_dir_clean(dir: &Path) -> io::Result<()> {
+	let dir = dir.to_path_buf();
+	tokio::task::spawn_blocking(move || _remove_dir_clean(&dir)).await?
+}
 
-	while let Ok(Some(entry)) = it.next_entry().await {
-		if entry.file_type().await.is_ok_and(|t| t.is_dir()) {
-			let path = entry.path();
-			Box::pin(remove_dir_clean(&path)).await;
-			fs::remove_dir(path).await.ok();
+fn _remove_dir_clean(dir: &Path) -> io::Result<()> {
+	let entries: Vec<_> = std::fs::read_dir(&dir)?.collect();
+
+	entries.par_iter().for_each(|entry| {
+		match entry {
+			Ok(entry) if entry.file_type().is_ok_and(|t| t.is_dir()) => {
+				let _ = _remove_dir_clean(&entry.path());
+				let _ = std::fs::remove_dir(&entry.path());
+			}
+			_ => (),
 		}
-	}
+	});
 
-	fs::remove_dir(dir).await.ok();
+	std::fs::remove_dir(&dir)
 }
 
 // Convert a file mode to a string representation

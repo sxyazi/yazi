@@ -86,7 +86,7 @@ impl Scheduler {
 			Box::new(move |canceled: bool| {
 				async move {
 					if !canceled {
-						remove_dir_clean(&from).await;
+						let _ = remove_dir_clean(&from).await;
 						Pump::push_move(from, to);
 					}
 					ongoing.lock().try_remove(id, TaskStage::Hooked);
