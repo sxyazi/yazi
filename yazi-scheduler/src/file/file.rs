@@ -318,7 +318,7 @@ impl File {
 
 	pub async fn trash(&self, mut task: FileOpTrash) -> Result<()> {
 		let id = task.id;
-		task.length = calculate_size(&task.target).await;
+		task.length = calculate_size(&task.target).await?;
 
 		self.prog.send(TaskProg::New(id, task.length))?;
 		self.queue(FileOp::Trash(task), LOW).await?;

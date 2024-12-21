@@ -81,7 +81,7 @@ fn remove(lua: &Lua) -> mlua::Result<Function> {
 			b"file" => fs::remove_file(&*url).await,
 			b"dir" => fs::remove_dir(&*url).await,
 			b"dir_all" => fs::remove_dir_all(&*url).await,
-			b"dir_clean" => Ok(remove_dir_clean(&url).await),
+			b"dir_clean" => Ok(remove_dir_clean(&url).await?),
 			_ => Err("Removal type must be 'file', 'dir', 'dir_all', or 'dir_clean'".into_lua_err())?,
 		};
 
