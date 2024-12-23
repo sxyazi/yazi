@@ -1,4 +1,7 @@
 use std::{borrow::{Borrow, Cow}, ffi::OsStr, ops::Deref, path::{Path, PathBuf}};
+use regex::Regex;
+
+use yazi_config::MANAGER;
 
 #[derive(Debug, Eq, PartialEq, Hash)]
 #[repr(transparent)]
@@ -16,7 +19,9 @@ impl Urn {
 	#[cfg(unix)]
 	#[inline]
 	pub fn is_hidden(&self) -> bool {
-		self.name().is_some_and(|s| s.as_encoded_bytes().starts_with(b"."))
+		// let re = Regex::new(r"^\.|^lost\+found$").unwrap();
+		let re = Regex::new(MANAGER.hidden_rule).unwrap();
+		self.name().is_some_and(|s| re.is_match(&String::from_utf8_lossy(s.as_encoded_bytes())))
 	}
 }
 

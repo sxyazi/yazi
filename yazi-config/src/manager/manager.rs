@@ -26,6 +26,7 @@ pub struct Manager {
 	pub scrolloff:    u8,
 	pub mouse_events: MouseEvents,
 	pub title_format: String,
+  pub hidden_rule:  String,
 
 	// TODO: remove this in Yazi 0.4.2
 	#[serde(default)]
