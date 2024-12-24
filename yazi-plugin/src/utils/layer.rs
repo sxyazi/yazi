@@ -3,13 +3,13 @@ use std::{str::FromStr, time::Duration};
 use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, Table, Value};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use yazi_config::{keymap::{Chord, Key}, popup::InputCfg};
+use yazi_config::{keymap::{Chord, Key}, popup::{ConfirmCfg, InputCfg}};
 use yazi_macro::emit;
-use yazi_proxy::{AppProxy, InputProxy};
+use yazi_proxy::{AppProxy, ConfirmProxy, InputProxy};
 use yazi_shared::{Debounce, Layer, event::Cmd};
 
 use super::Utils;
-use crate::{bindings::InputRx, elements::Pos};
+use crate::{bindings::InputRx, elements::{Line, Pos, Text}};
 
 impl Utils {
 	pub(super) fn which(lua: &Lua) -> mlua::Result<Function> {
@@ -68,17 +68,26 @@ impl Utils {
 		})
 	}
 
-	// TODO: redesign the confirm API
-	// pub(super) fn confirm(lua: &Lua, ya: &Table) -> mlua::Result<Function> {
-	// 	lua.create_async_function(|_, t: Table| async move {
-	// 		let result = ConfirmProxy::show(ConfirmCfg {
-	// 			title:    t.raw_get("title")?,
-	// 			content:  t.raw_get("content")?,
-	// 			position: Position::try_from(t.raw_get::<_, Table>("position")?)?.into(),
-	// 		});
-	// 		Ok(result.await)
-	// 	})
-	// }
+	pub(super) fn confirm(lua: &Lua) -> mlua::Result<Function> {
+		fn content(t: &Table) -> mlua::Result<ratatui::widgets::Paragraph<'static>> {
+			Ok(match t.raw_get::<Value>("content") {
+				Ok(v) if v.is_nil() => Default::default(),
+				Ok(v) => Text::try_from(v)?.into(),
+				Err(e) => Err(e)?,
+			})
+		}
+
+		lua.create_async_function(|_, t: Table| async move {
+			let result = ConfirmProxy::show(ConfirmCfg {
+				position: Pos::try_from(t.raw_get::<Table>("pos")?)?.into(),
+				title:    Line::try_from(t.raw_get::<Value>("title")?)?.into(),
+				content:  content(&t)?,
+				list:     Default::default(), // TODO
+			});
+
+			Ok(result.await)
+		})
+	}
 
 	pub(super) fn notify(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, t: Table| {

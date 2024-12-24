@@ -204,7 +204,7 @@ overwrite_offset  = [ 0, 0, 50, 15 ]
 
 # quit
 quit_title   = "Quit?"
-quit_content = "The following task is still running, are you sure you want to quit?"
+quit_content = "The following tasks are still running, are you sure you want to quit?"
 quit_origin  = "center"
 quit_offset  = [ 0, 0, 50, 15 ]
 

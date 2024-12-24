@@ -93,6 +93,10 @@ impl TryFrom<Table> for Line {
 	}
 }
 
+impl From<Line> for ratatui::text::Line<'static> {
+	fn from(value: Line) -> Self { value.0 }
+}
+
 impl UserData for Line {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		crate::impl_style_method!(methods, 0.style);

@@ -1,28 +1,37 @@
-use ratatui::{buffer::Buffer, layout::{Margin, Rect}, widgets::{Block, Borders, Paragraph, Widget}};
+use ratatui::{buffer::Buffer, layout::{Margin, Rect}, style::Styled, widgets::{Block, Borders, Widget}};
 use yazi_config::THEME;
 
+use crate::Ctx;
+
 pub(crate) struct Content<'a> {
-	p: Paragraph<'a>,
+	cx:     &'a Ctx,
+	border: bool,
 }
 
 impl<'a> Content<'a> {
-	pub(crate) fn new(p: Paragraph<'a>) -> Self { Self { p } }
+	pub(crate) fn new(cx: &'a Ctx, border: bool) -> Self { Self { cx, border } }
 }
 
 impl Widget for Content<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
+		let confirm = &self.cx.confirm;
+
 		// Content area
 		let inner = area.inner(Margin::new(1, 0));
 
-		// Bottom border
-		let block = Block::new().borders(Borders::BOTTOM).border_style(THEME.confirm.border);
-		block.clone().render(area.inner(Margin::new(1, 0)), buf);
+		// Border
+		let block = if self.border {
+			Block::new().borders(Borders::BOTTOM).border_style(THEME.confirm.border)
+		} else {
+			Block::new()
+		};
 
-		self
-			.p
+		confirm
+			.content
+			.clone()
 			.alignment(ratatui::layout::Alignment::Center)
 			.block(block)
-			.style(THEME.confirm.content)
+			.style(THEME.confirm.content.derive(Styled::style(&confirm.content)))
 			.render(inner, buf);
 	}
 }

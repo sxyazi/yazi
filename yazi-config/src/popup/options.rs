@@ -1,4 +1,4 @@
-use ratatui::{text::Text, widgets::{Paragraph, Wrap}};
+use ratatui::{text::{Line, Text}, widgets::{Paragraph, Wrap}};
 use yazi_shared::url::Url;
 
 use super::{Offset, Origin, Position};
@@ -24,8 +24,8 @@ pub struct PickCfg {
 
 #[derive(Default)]
 pub struct ConfirmCfg {
-	pub title:    String,
 	pub position: Position,
+	pub title:    Line<'static>,
 	pub content:  Paragraph<'static>,
 	pub list:     Paragraph<'static>,
 }
@@ -112,10 +112,10 @@ impl ConfirmCfg {
 		list: Option<Text<'static>>,
 	) -> Self {
 		Self {
-			title,
 			position: Position::new(origin, offset),
-			content: content.map(|c| Paragraph::new(c).wrap(Wrap { trim: false })).unwrap_or_default(),
-			list: list.map(|l| Paragraph::new(l).wrap(Wrap { trim: false })).unwrap_or_default(),
+			title:    Line::raw(title),
+			content:  content.map(|c| Paragraph::new(c).wrap(Wrap { trim: false })).unwrap_or_default(),
+			list:     list.map(|l| Paragraph::new(l).wrap(Wrap { trim: false })).unwrap_or_default(),
 		}
 	}
 

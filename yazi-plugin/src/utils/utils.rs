@@ -30,6 +30,7 @@ pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Table> {
 			// Layout
 			b"which" => Utils::which(lua)?,
 			b"input" => Utils::input(lua)?,
+			b"confirm" => Utils::confirm(lua)?,
 			b"notify" => Utils::notify(lua)?,
 
 			// Log
