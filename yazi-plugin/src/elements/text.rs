@@ -1,3 +1,5 @@
+use std::mem;
+
 use ansi_to_tui::IntoText;
 use mlua::{ExternalError, ExternalResult, FromLua, IntoLua, Lua, Table, UserData, Value};
 use ratatui::widgets::Widget;
@@ -56,8 +58,11 @@ impl Text {
 		trans: impl Fn(yazi_config::popup::Position) -> ratatui::layout::Rect,
 	) {
 		let rect = self.area.transform(trans);
-		let p: ratatui::widgets::Paragraph = self.into();
-		p.render(rect, buf);
+		if self.wrap == WRAP_NO {
+			self.inner.render(rect, buf);
+		} else {
+			ratatui::widgets::Paragraph::from(self).render(rect, buf);
+		}
 	}
 }
 
@@ -114,15 +119,18 @@ impl From<Text> for ratatui::text::Text<'static> {
 }
 
 impl From<Text> for ratatui::widgets::Paragraph<'static> {
-	fn from(value: Text) -> Self {
-		let align = value.inner.alignment.unwrap_or_default();
-		let mut p = ratatui::widgets::Paragraph::new(value.inner);
+	fn from(mut value: Text) -> Self {
+		let align = value.inner.alignment.take();
+		let style = mem::take(&mut value.inner.style);
 
+		let mut p = ratatui::widgets::Paragraph::new(value.inner).style(style);
+		if let Some(align) = align {
+			p = p.alignment(align);
+		}
 		if value.wrap != WRAP_NO {
 			p = p.wrap(ratatui::widgets::Wrap { trim: value.wrap == WRAP_TRIM });
 		}
-
-		p.alignment(align)
+		p
 	}
 }
 
