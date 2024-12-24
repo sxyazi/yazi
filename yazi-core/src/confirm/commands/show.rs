@@ -29,8 +29,8 @@ impl Confirm {
 		self.content = opt.cfg.content;
 		self.list = opt.cfg.list;
 
-		self.offset = 0;
 		self.position = opt.cfg.position;
+		self.offset = 0;
 
 		self.callback = Some(opt.tx);
 		self.visible = true;
