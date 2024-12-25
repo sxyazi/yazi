@@ -5,9 +5,7 @@ function M:peek(job)
 	if bound then
 		ya.manager_emit("peek", { bound, only_if = job.file.url, upper_bound = true })
 	elseif err and not err:find("cancelled", 1, true) then
-		ya.preview_widgets(job, {
-			ui.Text(err):area(job.area):reverse(),
-		})
+		require("empty").msg(job, err)
 	end
 end
 

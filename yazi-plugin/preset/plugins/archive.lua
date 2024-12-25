@@ -6,12 +6,11 @@ function M:peek(job)
 
 	local files, bound, code = self.list_files({ "-p", tostring(job.file.url) }, job.skip, limit)
 	if code ~= 0 then
-		return ya.preview_widgets(job, {
-			ui.Text(
-				code == 2 and "File list in this archive is encrypted"
-					or "Failed to start both `7z` and `7zz`. Do you have 7-zip installed?"
-			):area(job.area),
-		})
+		return require("empty").msg(
+			job,
+			code == 2 and "File list in this archive is encrypted"
+				or "Failed to start both `7z` and `7zz`. Do you have 7-zip installed?"
+		)
 	end
 
 	for _, f in ipairs(files) do
