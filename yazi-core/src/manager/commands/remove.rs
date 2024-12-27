@@ -28,14 +28,13 @@ impl Manager {
 		if !self.active_mut().try_escape_visual() {
 			return;
 		}
-		let Some(hovered) = self.hovered().map(|h| &h.url) else {
-			return;
-		};
 
-		opt.targets = if opt.hovered {
-			vec![hovered.clone()]
-		} else {
+		opt.targets = if !opt.hovered {
 			self.selected_or_hovered(true).cloned().collect()
+		} else if let Some(h) = self.hovered() {
+			vec![h.url.clone()]
+		} else {
+			return;
 		};
 
 		if opt.force {
