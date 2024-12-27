@@ -29,15 +29,15 @@ impl Manager {
 			return;
 		}
 
-		opt.targets = if !opt.hovered {
-			self.selected_or_hovered(true).cloned().collect()
-		} else if let Some(h) = self.hovered() {
-			vec![h.url.clone()]
+		opt.targets = if opt.hovered {
+			self.hovered().map_or(vec![], |h| vec![h.url.clone()])
 		} else {
-			return;
+			self.selected_or_hovered(true).cloned().collect()
 		};
 
-		if opt.force {
+		if opt.targets.is_empty() {
+			return;
+		} else if opt.force {
 			return self.remove_do(opt, tasks);
 		}
 
