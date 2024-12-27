@@ -28,17 +28,16 @@ impl Manager {
 		if !self.active_mut().try_escape_visual() {
 			return;
 		}
-		let Some(hovered) = self.hovered().map(|h| &h.url) else {
-			return;
-		};
 
 		opt.targets = if opt.hovered {
-			vec![hovered.clone()]
+			self.hovered().map_or(vec![], |h| vec![h.url.clone()])
 		} else {
 			self.selected_or_hovered(true).cloned().collect()
 		};
 
-		if opt.force {
+		if opt.targets.is_empty() {
+			return;
+		} else if opt.force {
 			return self.remove_do(opt, tasks);
 		}
 
