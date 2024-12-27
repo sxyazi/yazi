@@ -38,23 +38,23 @@ https://github.com/sxyazi/yazi/assets/17523360/92ff23fa-0cd5-4f04-b387-894c12265
 
 ## Image Preview
 
-| Platform                                                                    | Protocol                               | Support                                       |
-| --------------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------- |
-| [kitty](https://github.com/kovidgoyal/kitty)                                | [Kitty unicode placeholders][kgp]      | ✅ Built-in                                   |
-| [iTerm2](https://iterm2.com)                                                | [Inline images protocol][iip]          | ✅ Built-in                                   |
-| [WezTerm](https://github.com/wez/wezterm)                                   | [Inline images protocol][iip]          | ✅ Built-in                                   |
-| [Konsole](https://invent.kde.org/utilities/konsole)                         | [Kitty old protocol][kgp-old]          | ✅ Built-in                                   |
-| [foot](https://codeberg.org/dnkl/foot)                                      | [Sixel graphics format][sixel]         | ✅ Built-in                                   |
-| [Ghostty](https://github.com/ghostty-org/ghostty)                                    | [Kitty unicode placeholders][kgp]      | ✅ Built-in                                   |
-| [Windows Terminal](https://github.com/microsoft/terminal) (>= v1.22.2702.0) | [Sixel graphics format][sixel]         | ✅ Built-in                                   |
-| [st with Sixel patch](https://github.com/bakkeby/st-flexipatch)             | [Sixel graphics format][sixel]         | ✅ Built-in                                   |
-| [Tabby](https://github.com/Eugeny/tabby)                                    | [Inline images protocol][iip]          | ✅ Built-in                                   |
-| [VSCode](https://github.com/microsoft/vscode)                               | [Inline images protocol][iip]          | ✅ Built-in                                   |
+| Platform                                                                    | Protocol                               | Support                                                                                   |
+| --------------------------------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [kitty](https://github.com/kovidgoyal/kitty)                                | [Kitty unicode placeholders][kgp]      | ✅ Built-in                                                                               |
+| [iTerm2](https://iterm2.com)                                                | [Inline images protocol][iip]          | ✅ Built-in                                                                               |
+| [WezTerm](https://github.com/wez/wezterm)                                   | [Inline images protocol][iip]          | ✅ Built-in                                                                               |
+| [Konsole](https://invent.kde.org/utilities/konsole)                         | [Kitty old protocol][kgp-old]          | ✅ Built-in                                                                               |
+| [foot](https://codeberg.org/dnkl/foot)                                      | [Sixel graphics format][sixel]         | ✅ Built-in                                                                               |
+| [Ghostty](https://github.com/ghostty-org/ghostty)                           | [Kitty unicode placeholders][kgp]      | ✅ Built-in                                                                               |
+| [Windows Terminal](https://github.com/microsoft/terminal) (>= v1.22.2702.0) | [Sixel graphics format][sixel]         | ✅ Built-in                                                                               |
+| [st with Sixel patch](https://github.com/bakkeby/st-flexipatch)             | [Sixel graphics format][sixel]         | ✅ Built-in                                                                               |
+| [Tabby](https://github.com/Eugeny/tabby)                                    | [Inline images protocol][iip]          | ✅ Built-in                                                                               |
+| [VSCode](https://github.com/microsoft/vscode)                               | [Inline images protocol][iip]          | ✅ Built-in                                                                               |
 | [Rio](https://github.com/raphamorim/rio)                                    | [Inline images protocol][iip]          | ❌ Rio doesn't correctly clear images [#1786](https://github.com/sxyazi/yazi/issues/1786) |
-| [Black Box](https://gitlab.gnome.org/raggesilver/blackbox)                  | [Sixel graphics format][sixel]         | ✅ Built-in                                   |
-| [Hyper](https://github.com/vercel/hyper)                                    | [Inline images protocol][iip]          | ✅ Built-in                                   |
-| X11 / Wayland                                                               | Window system protocol                 | ☑️ [Überzug++][ueberzug] required             |
-| Fallback                                                                    | [ASCII art (Unicode block)][ascii-art] | ☑️ [Chafa][chafa] required                    |
+| [Black Box](https://gitlab.gnome.org/raggesilver/blackbox)                  | [Sixel graphics format][sixel]         | ✅ Built-in                                                                               |
+| [Hyper](https://github.com/vercel/hyper)                                    | [Inline images protocol][iip]          | ✅ Built-in                                                                               |
+| X11 / Wayland                                                               | Window system protocol                 | ☑️ [Überzug++][ueberzug] required                                                         |
+| Fallback                                                                    | [ASCII art (Unicode block)][ascii-art] | ☑️ [Chafa][chafa] required                                                                |
 
 See https://yazi-rs.github.io/docs/image-preview for details.
 
