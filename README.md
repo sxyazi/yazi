@@ -45,7 +45,7 @@ https://github.com/sxyazi/yazi/assets/17523360/92ff23fa-0cd5-4f04-b387-894c12265
 | [WezTerm](https://github.com/wez/wezterm)                                   | [Inline images protocol][iip]          | ✅ Built-in                                   |
 | [Konsole](https://invent.kde.org/utilities/konsole)                         | [Kitty old protocol][kgp-old]          | ✅ Built-in                                   |
 | [foot](https://codeberg.org/dnkl/foot)                                      | [Sixel graphics format][sixel]         | ✅ Built-in                                   |
-| [Ghostty](https://ghostty.org)                                    | [Kitty unicode placeholders][kgp]      | ✅ Built-in                                   |
+| [Ghostty](https://github.com/ghostty-org/ghostty)                                    | [Kitty unicode placeholders][kgp]      | ✅ Built-in                                   |
 | [Windows Terminal](https://github.com/microsoft/terminal) (>= v1.22.2702.0) | [Sixel graphics format][sixel]         | ✅ Built-in                                   |
 | [st with Sixel patch](https://github.com/bakkeby/st-flexipatch)             | [Sixel graphics format][sixel]         | ✅ Built-in                                   |
 | [Tabby](https://github.com/Eugeny/tabby)                                    | [Inline images protocol][iip]          | ✅ Built-in                                   |
