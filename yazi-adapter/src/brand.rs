@@ -13,6 +13,7 @@ pub enum Brand {
 	Ghostty,
 	Microsoft,
 	Rio,
+	Alacritty,
 	BlackBox,
 	VSCode,
 	Tabby,
@@ -38,6 +39,7 @@ impl Brand {
 			("WEZTERM_EXECUTABLE", B::WezTerm),
 			("GHOSTTY_RESOURCES_DIR", B::Ghostty),
 			("WT_Session", B::Microsoft),
+			("ALACRITTY_WINDOW_ID", B::Alacritty),
 			("VSCODE_INJECTION", B::VSCode),
 			("TABBY_CONFIG_DIRECTORY", B::Tabby),
 		];
@@ -66,6 +68,7 @@ impl Brand {
 			"foot-extra" => return Some(B::Foot),
 			"xterm-ghostty" => return Some(B::Ghostty),
 			"rio" => return Some(B::Rio),
+			"alacritty" => return Some(B::Alacritty),
 			"rxvt-unicode-256color" => return Some(B::Urxvt),
 			_ => warn!("[Adapter] Unknown TERM: {term}"),
 		}
@@ -98,6 +101,7 @@ impl Brand {
 			B::Ghostty => &[A::Kgp],
 			B::Microsoft => &[A::Sixel],
 			B::Rio => &[A::Iip, A::Sixel],
+			B::Alacritty => &[],
 			B::BlackBox => &[A::Sixel],
 			B::VSCode => &[A::Iip, A::Sixel],
 			B::Tabby => &[A::Iip, A::Sixel],
