@@ -89,12 +89,6 @@ local function entry()
 
 	local _permit = ya.hide()
 
-	local fzf, _err = Command("fzf"):arg("--version"):stdout(Command.PIPED):stderr(Command.PIPED):output()
-
-	if not fzf then
-		return fail(string.format("%s\n%s", "`fzf` is required for the `zoxide` plugin.", "Please install `fzf`."))
-	end
-
 	local child, err = Command("zoxide")
 		:args({ "query", "-i", "--exclude" })
 		:arg(st.cwd)
@@ -114,6 +108,8 @@ local function entry()
 	local output, error = child:wait_with_output()
 	if not output then
 		return fail("Cannot read `zoxide` output, error: " .. error)
+	elseif output.stderr:find("could not find") then
+		return fail(output.stderr)
 	elseif not output.status.success and output.status.code ~= 130 then
 		return fail("`zoxide` exited with error code %s", output.status.code)
 	end
