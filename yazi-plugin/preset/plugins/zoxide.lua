@@ -59,10 +59,10 @@ local function empty(cwd)
 	return not first
 end
 
-local function setup(_, opts)
-	opts = opts or {}
+local function setup(_, options)
+	options = options or {}
 
-	if opts.update_db then
+	if options.update_db then
 		ps.sub(
 			"cd",
 			function()
@@ -88,6 +88,13 @@ local function entry()
 	end
 
 	local _permit = ya.hide()
+
+	local fzf, _err = Command("fzf"):arg("--version"):stdout(Command.PIPED):stderr(Command.PIPED):output()
+
+	if not fzf then
+		return fail(string.format("%s\n%s", "`fzf` is required for the `zoxide` plugin.", "Please install `fzf`."))
+	end
+
 	local child, err = Command("zoxide")
 		:args({ "query", "-i", "--exclude" })
 		:arg(st.cwd)
@@ -104,9 +111,9 @@ local function entry()
 		return fail("Failed to start `zoxide`, error: " .. err)
 	end
 
-	local output, err = child:wait_with_output()
+	local output, error = child:wait_with_output()
 	if not output then
-		return fail("Cannot read `zoxide` output, error: " .. err)
+		return fail("Cannot read `zoxide` output, error: " .. error)
 	elseif not output.status.success and output.status.code ~= 130 then
 		return fail("`zoxide` exited with error code %s", output.status.code)
 	end
