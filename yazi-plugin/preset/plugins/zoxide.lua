@@ -9,7 +9,7 @@ local set_state = ya.sync(function(st, empty) st.empty = empty end)
 
 local function fail(s, ...) ya.notify { title = "Zoxide", content = s:format(...), timeout = 5, level = "error" } end
 
-local function opts()
+local function options()
 	-- https://github.com/ajeetdsouza/zoxide/blob/main/src/cmd/query.rs#L92
 	local default = {
 		-- Search mode
@@ -88,27 +88,27 @@ local function entry()
 	end
 
 	local _permit = ya.hide()
-	local child, err = Command("zoxide")
+	local child, err1 = Command("zoxide")
 		:args({ "query", "-i", "--exclude" })
 		:arg(st.cwd)
 		:env("SHELL", "sh")
 		:env("CLICOLOR", "1")
 		:env("CLICOLOR_FORCE", "1")
-		:env("_ZO_FZF_OPTS", opts())
+		:env("_ZO_FZF_OPTS", options())
 		:stdin(Command.INHERIT)
 		:stdout(Command.PIPED)
-		:stderr(Command.INHERIT)
+		:stderr(Command.PIPED)
 		:spawn()
 
 	if not child then
-		return fail("Failed to start `zoxide`, error: " .. err)
+		return fail("Failed to start `zoxide`, error: " .. err1)
 	end
 
-	local output, err = child:wait_with_output()
+	local output, err2 = child:wait_with_output()
 	if not output then
-		return fail("Cannot read `zoxide` output, error: " .. err)
+		return fail("Cannot read `zoxide` output, error: " .. err2)
 	elseif not output.status.success and output.status.code ~= 130 then
-		return fail("`zoxide` exited with error code %s", output.status.code)
+		return fail("`zoxide` exited with code %s: %s", output.status.code, output.stderr:gsub("^zoxide:%s*", ""))
 	end
 
 	local target = output.stdout:gsub("\n$", "")
