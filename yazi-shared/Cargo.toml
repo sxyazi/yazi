@@ -11,6 +11,7 @@ rust-version = "1.78.0"
 
 [dependencies]
 yazi-macro = { path = "../yazi-macro", version = "0.4.3" }
+yazi-config = { path = "../yazi-config", version = "0.4.3" }
 
 # External dependencies
 anyhow           = { workspace = true }
@@ -22,6 +23,7 @@ ratatui          = { workspace = true }
 serde            = { workspace = true }
 shell-words      = { workspace = true }
 tokio            = { workspace = true }
+regex            = { workspace = true }
 
 [target."cfg(unix)".dependencies]
 libc  = { workspace = true }
