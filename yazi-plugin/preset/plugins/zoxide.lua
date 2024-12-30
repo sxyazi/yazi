@@ -88,7 +88,6 @@ local function entry()
 	end
 
 	local _permit = ya.hide()
-
 	local child, err1 = Command("zoxide")
 		:args({ "query", "-i", "--exclude" })
 		:arg(st.cwd)
