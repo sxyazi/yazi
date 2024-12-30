@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use anyhow::{Context, Result, bail};
 use tokio::fs;
 use yazi_fs::{Xdg, maybe_exists, must_exists, remove_dir_clean};
+use yazi_macro::outln;
 
 use super::Package;
 
@@ -48,7 +49,7 @@ For safety, please manually delete it from your plugin/flavor directory and re-r
 
 		Self::deploy_assets(from.join("assets"), to.join("assets")).await?;
 
-		println!("Done!");
+		outln!("Done!")?;
 		Ok(())
 	}
 

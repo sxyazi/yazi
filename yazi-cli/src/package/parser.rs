@@ -1,9 +1,8 @@
-use std::io::{self, Write};
-
 use anyhow::{Context, Result, bail};
 use tokio::fs;
 use toml_edit::{Array, DocumentMut, InlineTable, Item, Value};
 use yazi_fs::Xdg;
+use yazi_macro::outln;
 
 use super::Package;
 
@@ -80,13 +79,13 @@ impl Package {
 		};
 
 		let deps = deps.as_array().context("`deps` must be an array")?;
-		writeln!(io::stdout(), "{section}s:")?;
+		outln!("{section}s:")?;
 
 		for dep in deps {
 			let Some(dep) = dep.as_inline_table() else { continue };
 			match (dep.get("use").and_then(Value::as_str), dep.get("rev").and_then(Value::as_str)) {
-				(Some(use_), None) => writeln!(io::stdout(), "\t{use_}")?,
-				(Some(use_), Some(rev)) => writeln!(io::stdout(), "\t{use_} ({rev})")?,
+				(Some(use_), None) => outln!("\t{use_}")?,
+				(Some(use_), Some(rev)) => outln!("\t{use_} ({rev})")?,
 				_ => {}
 			}
 		}
