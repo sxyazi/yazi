@@ -108,7 +108,7 @@ local function entry()
 	if not output then
 		return fail("Cannot read `zoxide` output, error: " .. err2)
 	elseif not output.status.success and output.status.code ~= 130 then
-		return fail("`zoxide` exited with code %s: %s", output.status.code, output.stderr:gsub("^zoxide:%s+", ""))
+		return fail("`zoxide` exited with code %s: %s", output.status.code, output.stderr:gsub("^zoxide:%s*", ""))
 	end
 
 	local target = output.stdout:gsub("\n$", "")
