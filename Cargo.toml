@@ -11,7 +11,7 @@ strip         = true
 
 [workspace.dependencies]
 ansi-to-tui   = "7.0.0"
-anyhow        = "1.0.94"
+anyhow        = "1.0.95"
 base64        = "0.22.1"
 bitflags      = "2.6.0"
 clap          = { version = "4.5.23", features = [ "derive" ] }
@@ -26,8 +26,8 @@ parking_lot   = "0.12.3"
 ratatui       = { version = "0.29.0", features = [ "unstable-rendered-line-info" ] }
 regex         = "1.11.1"
 scopeguard    = "1.2.0"
-serde         = { version = "1.0.216", features = [ "derive" ] }
-serde_json    = "1.0.133"
+serde         = { version = "1.0.217", features = [ "derive" ] }
+serde_json    = "1.0.134"
 shell-words   = "1.1.0"
 tokio         = { version = "1.42.0", features = [ "full" ] }
 tokio-stream  = "0.1.17"
