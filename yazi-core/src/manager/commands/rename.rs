@@ -37,22 +37,21 @@ impl Manager {
 			return self.bulk_rename();
 		}
 
-		let Some(hovered) = self.hovered().map(|h| h.url_owned()) else {
-			return;
-		};
-
-		let name = Self::empty_url_part(&hovered, &opt.empty);
+		let Some(hovered) = self.hovered() else { return };
+		let name = Self::empty_url_part(&hovered.url, &opt.empty);
 		let cursor = match opt.cursor.as_ref() {
 			"start" => Some(0),
 			"before_ext" => name
 				.chars()
 				.rev()
 				.position(|c| c == '.')
+				.filter(|_| !hovered.is_dir())
 				.map(|i| name.chars().count() - i - 1)
 				.filter(|&i| i != 0),
 			_ => None,
 		};
 
+		let old = hovered.url_owned();
 		let tab = self.tabs.active().id;
 		tokio::spawn(async move {
 			let mut result = InputProxy::show(InputCfg::rename().with_value(name).with_cursor(cursor));
@@ -64,11 +63,11 @@ impl Manager {
 				return;
 			}
 
-			let new = Url::from(hovered.parent().unwrap().join(name));
-			if opt.force || !maybe_exists(&new).await || paths_to_same_file(&hovered, &new).await {
-				Self::rename_do(tab, hovered, new).await.ok();
+			let new = Url::from(old.parent().unwrap().join(name));
+			if opt.force || !maybe_exists(&new).await || paths_to_same_file(&old, &new).await {
+				Self::rename_do(tab, old, new).await.ok();
 			} else if ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await {
-				Self::rename_do(tab, hovered, new).await.ok();
+				Self::rename_do(tab, old, new).await.ok();
 			}
 		});
 	}
