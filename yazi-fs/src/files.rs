@@ -61,7 +61,7 @@ impl Files {
 		let (first, rest) = entries.split_at(entries.len() / 3);
 		let (second, third) = rest.split_at(entries.len() / 3);
 		async fn go(entries: &[DirEntry]) -> Vec<File> {
-			let mut files = Vec::with_capacity(entries.len() / 3 + 1);
+			let mut files = Vec::with_capacity(entries.len());
 			for entry in entries {
 				let url = Url::from(entry.path());
 				files.push(match entry.metadata().await {
