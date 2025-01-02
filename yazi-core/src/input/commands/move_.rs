@@ -5,20 +5,56 @@ use yazi_shared::event::{CmdCow, Data};
 use crate::input::{Input, op::InputOp, snap::InputSnap};
 
 struct Opt {
-	step:         isize,
+	step:         Step,
 	in_operating: bool,
+}
+
+enum Step {
+	Offset(isize),
+	Bol,
+	Eol,
+	FirstChar,
+	LastChar,
+}
+
+impl TryFrom<&Data> for Step {
+	type Error = ();
+
+	fn try_from(d: &Data) -> Result<Self, Self::Error> {
+		if let Some(offset) = d.as_isize() {
+			return Ok(Step::Offset(offset));
+		};
+		if let Some(s) = d.as_str() {
+			if let Ok(offset) = s.parse() {
+				return Ok(Step::Offset(offset));
+			};
+			match s.as_ref() {
+				"bol" => return Ok(Step::Bol),
+				"eol" => return Ok(Step::Eol),
+				"first-char" => return Ok(Step::FirstChar),
+				"last-char" => return Ok(Step::LastChar),
+				_ => (),
+			}
+		}
+		Err(())
+	}
 }
 
 impl From<CmdCow> for Opt {
 	fn from(c: CmdCow) -> Self {
 		Self {
-			step:         c.first().and_then(Data::as_isize).unwrap_or(0),
+			step: c.get(0).unwrap().try_into().unwrap(),
 			in_operating: c.bool("in-operating"),
 		}
 	}
 }
 impl From<isize> for Opt {
-	fn from(step: isize) -> Self { Self { step, in_operating: false } }
+	fn from(step: isize) -> Self {
+		Self {
+			step:         Step::Offset(step),
+			in_operating: false,
+		}
+	}
 }
 
 impl Input {
@@ -29,14 +65,35 @@ impl Input {
 			return;
 		}
 
-		render!(self.handle_op(
-			if opt.step <= 0 {
-				snap.cursor.saturating_sub(opt.step.unsigned_abs())
-			} else {
-				snap.count().min(snap.cursor + opt.step as usize)
-			},
-			false,
-		));
+		let position = match opt.step {
+			Step::Offset(offset) =>
+				if offset <= 0 {
+					snap.cursor.saturating_sub(offset.unsigned_abs())
+				} else {
+					snap.count().min(snap.cursor + offset as usize)
+				},
+			Step::Bol => 0,
+			Step::Eol => snap.count(),
+			Step::FirstChar => snap
+				.value
+				.chars()
+				.enumerate()
+				.filter(|(_, ch)| !ch.is_whitespace())
+				.map(|(i, _)| i)
+				.next()
+				.unwrap_or(0),
+			Step::LastChar => snap
+				.value
+				.chars()
+				.rev()
+				.enumerate()
+				.filter(|(_, ch)| !ch.is_whitespace())
+				.map(|(i, _)| i)
+				.next()
+				.unwrap_or(0),
+		};
+
+		render!(self.handle_op(position, false));
 
 		let (limit, snap) = (self.limit(), self.snap_mut());
 		if snap.offset > snap.cursor {
