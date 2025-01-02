@@ -3,6 +3,7 @@ pub enum InputMode {
 	Normal,
 	#[default]
 	Insert,
+	Replace,
 }
 
 impl InputMode {

@@ -32,6 +32,9 @@ impl Input {
 					CompletionProxy::close();
 				}
 			}
+			InputMode::Replace => {
+				snap.mode = InputMode::Normal;
+			}
 		}
 
 		self.snaps.tag(self.limit());
