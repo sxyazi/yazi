@@ -259,6 +259,7 @@ impl<'a> Executor<'a> {
 			InputMode::Normal => {
 				on!(insert);
 				on!(visual);
+				on!(replace);
 
 				on!(delete);
 				on!(yank);
@@ -279,6 +280,7 @@ impl<'a> Executor<'a> {
 				on!(backspace);
 				on!(kill);
 			}
+			InputMode::Replace => {}
 		}
 	}
 

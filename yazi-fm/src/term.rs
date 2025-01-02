@@ -159,6 +159,16 @@ impl Term {
 			queue!(stderr(), SetCursorStyle::SteadyBar)?
 		})
 	}
+
+	#[inline]
+	pub(super) fn set_cursor_underscore() -> Result<()> {
+		use crossterm::cursor::SetCursorStyle;
+		Ok(if INPUT.cursor_blink {
+			queue!(stderr(), SetCursorStyle::BlinkingUnderScore)?
+		} else {
+			queue!(stderr(), SetCursorStyle::SteadyUnderScore)?
+		})
+	}
 }
 
 impl Drop for Term {

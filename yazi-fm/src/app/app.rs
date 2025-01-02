@@ -93,6 +93,9 @@ impl App {
 			if input.mode() == InputMode::Insert {
 				input.type_str(&str);
 			}
+			if input.mode() == InputMode::Replace {
+				input.replace_str(&str);
+			}
 		}
 	}
 }

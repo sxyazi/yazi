@@ -238,6 +238,7 @@ keymap = [
 	{ on = "A", run = [ "move 999", "insert --append" ],     desc = "Move to the EOL, and enter append mode" },
 	{ on = "v", run = "visual",                              desc = "Enter visual mode" },
 	{ on = "V", run = [ "move -999", "visual", "move 999" ], desc = "Enter visual mode and select all" },
+	{ on = "r", run = "replace",                             desc = "Enter replace mode" },
 
 	# Character-wise movement
 	{ on = "h",       run = "move -1", desc = "Move back a character" },
