@@ -4,10 +4,16 @@ use crate::input::{Input, op::InputOp};
 
 struct Opt {
 	end_of_word: bool,
+	big: bool,
 }
 
 impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { end_of_word: c.bool("end-of-word") } }
+	fn from(c: CmdCow) -> Self {
+		Self {
+			end_of_word: c.bool("end-of-word"),
+			big:         c.bool("big"),
+		}
+	}
 }
 
 impl Input {
@@ -22,10 +28,15 @@ impl Input {
 
 		for (i, c) in it {
 			let c = CharKind::new(c);
-			let b = if opt.end_of_word {
-				prev != CharKind::Space && prev != c && i != 1
+			let new_char_kind = if opt.big {
+				(c == CharKind::Space) != (prev == CharKind::Space)
 			} else {
-				c != CharKind::Space && c != prev
+				c != prev
+			};
+			let b = if opt.end_of_word {
+				prev != CharKind::Space && new_char_kind && i != 1
+			} else {
+				c != CharKind::Space && new_char_kind
 			};
 			if b && !matches!(snap.op, InputOp::None | InputOp::Select(_)) {
 				return self.move_(i as isize);
