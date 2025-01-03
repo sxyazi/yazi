@@ -237,7 +237,7 @@ keymap = [
 	{ on = "I", run = [ "move first-char", "insert" ],             desc = "Move to the BOL, and enter insert mode" },
 	{ on = "A", run = [ "move eol", "insert --append" ],           desc = "Move to the EOL, and enter append mode" },
 	{ on = "v", run = "visual",                                    desc = "Enter visual mode" },
-	{ on = "V", run = [ "move first-char", "visual", "move eol" ], desc = "Enter visual mode and select all" },
+	{ on = "V", run = [ "move bol", "visual", "move eol" ], desc = "Enter visual mode and select all" },
 	{ on = "r", run = "replace",                                   desc = "Replace a single character" },
 
 	# Character-wise movement
