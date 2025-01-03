@@ -249,11 +249,14 @@ keymap = [
 	{ on = "<C-f>",   run = "move 1",  desc = "Move forward a character" },
 
 	# Word-wise movement
-	{ on = "b",     run = "backward",              desc = "Move back to the start of the current or previous word" },
-	{ on = "w",     run = "forward",               desc = "Move forward to the start of the next word" },
-	{ on = "e",     run = "forward --end-of-word", desc = "Move forward to the end of the current or next word" },
-	{ on = "<A-b>", run = "backward",              desc = "Move back to the start of the current or previous word" },
-	{ on = "<A-f>", run = "forward --end-of-word", desc = "Move forward to the end of the current or next word" },
+	{ on = "b",     run = "backward",                    desc = "Move back to the start of the current or previous word" },
+	{ on = "w",     run = "forward",                     desc = "Move forward to the start of the next word" },
+	{ on = "e",     run = "forward --end-of-word",       desc = "Move forward to the end of the current or next word" },
+	{ on = "B",     run = "backward --big",              desc = "Move back to the start of the current or previous WORD" },
+	{ on = "W",     run = "forward --big",               desc = "Move forward to the start of the next WORD" },
+	{ on = "E",     run = "forward --big --end-of-word", desc = "Move forward to the end of the current or next WORD" },
+	{ on = "<A-b>", run = "backward",                    desc = "Move back to the start of the current or previous word" },
+	{ on = "<A-f>", run = "forward --end-of-word",       desc = "Move forward to the end of the current or next word" },
 
 	# Line-wise movement
 	{ on = "0",      run = "move bol",        desc = "Move to the BOL" },
