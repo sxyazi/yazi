@@ -45,5 +45,5 @@ body:
       options:
         - label: I have searched the existing issues/discussions
           required: true
-        - label: The [latest nightly build](https://yazi-rs.github.io/docs/installation/#official-binaries) doesn't already have this feature
+        - label: The [latest nightly build](https://yazi-rs.github.io/docs/installation/#binaries) doesn't already have this feature
           required: true

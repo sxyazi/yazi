@@ -3,8 +3,6 @@ use std::{ops::Deref, time::{Duration, SystemTime, UNIX_EPOCH}};
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, UserData, UserDataFields, UserDataMethods};
 use yazi_fs::ChaKind;
 
-use crate::RtRef;
-
 #[derive(Clone, Copy, FromLua)]
 pub struct Cha(yazi_fs::Cha);
 
@@ -16,26 +14,6 @@ impl Deref for Cha {
 
 impl<T: Into<yazi_fs::Cha>> From<T> for Cha {
 	fn from(cha: T) -> Self { Self(cha.into()) }
-}
-
-#[inline]
-fn warn_deprecated(id: Option<&str>) {
-	static WARNED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-	if !WARNED.swap(true, std::sync::atomic::Ordering::Relaxed) {
-		let id = match id {
-			Some(id) => format!("`{id}.yazi` plugin"),
-			None => "`init.lua` config".to_owned(),
-		};
-		let s = "The `created`, `modified`, `accessed`, `length`, and `permissions` properties of `Cha` have been renamed in Yazi v0.4.
-
-Please use the new `btime`, `mtime`, `atime`, `len`, and `perm` instead, in your {id}. See #1772 for details: https://github.com/sxyazi/yazi/issues/1772";
-		yazi_proxy::AppProxy::notify(yazi_proxy::options::NotifyOpt {
-			title:   "Deprecated API".to_owned(),
-			content: s.replace("{id}", &id),
-			level:   yazi_proxy::options::NotifyLevel::Warn,
-			timeout: Duration::from_secs(20),
-		});
-	}
 }
 
 impl Cha {
@@ -113,41 +91,10 @@ impl UserData for Cha {
 		fields.add_field_method_get("mtime", |_, me| {
 			Ok(me.mtime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
 		});
-
-		// TODO: remove these deprecated properties in the future
-		{
-			fields.add_field_method_get("length", |lua, me| {
-				warn_deprecated(lua.named_registry_value::<RtRef>("rt")?.current());
-				Ok(me.len)
-			});
-			fields.add_field_method_get("created", |lua, me| {
-				warn_deprecated(lua.named_registry_value::<RtRef>("rt")?.current());
-				Ok(me.btime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
-			});
-			fields.add_field_method_get("modified", |lua, me| {
-				warn_deprecated(lua.named_registry_value::<RtRef>("rt")?.current());
-				Ok(me.mtime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
-			});
-			fields.add_field_method_get("accessed", |lua, me| {
-				warn_deprecated(lua.named_registry_value::<RtRef>("rt")?.current());
-				Ok(me.atime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
-			});
-		}
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_method("perm", |_, _me, ()| {
-			Ok(
-				#[cfg(unix)]
-				Some(yazi_fs::permissions(_me.mode, _me.is_dummy())),
-				#[cfg(windows)]
-				None::<String>,
-			)
-		});
-
-		// TODO: remove these deprecated properties in the future
-		methods.add_method("permissions", |lua, _me, ()| {
-			warn_deprecated(lua.named_registry_value::<RtRef>("rt")?.current());
 			Ok(
 				#[cfg(unix)]
 				Some(yazi_fs::permissions(_me.mode, _me.is_dummy())),

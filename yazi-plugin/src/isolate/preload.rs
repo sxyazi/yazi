@@ -25,9 +25,6 @@ pub async fn preload(cmd: &'static Cmd, file: yazi_fs::File) -> mlua::Result<u8>
 			("skip", 0.into_lua(&lua)?),
 		])?;
 
-		// TODO: remove this
-		super::install_warn_mt(&lua, &plugin, job.clone()).ok();
-
 		Handle::current().block_on(plugin.call_async_method("preload", job))
 	})
 	.await

@@ -26,10 +26,6 @@ pub struct Manager {
 	pub scrolloff:    u8,
 	pub mouse_events: MouseEvents,
 	pub title_format: String,
-
-	// TODO: remove this in Yazi 0.4.2
-	#[serde(default)]
-	pub _v4_suppress_deprecation_warnings: bool,
 }
 
 impl FromStr for Manager {

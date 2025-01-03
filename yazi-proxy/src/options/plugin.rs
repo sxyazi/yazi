@@ -12,9 +12,6 @@ pub struct PluginOpt {
 	pub args: HashMap<DataKey, Data>,
 	pub mode: PluginMode,
 	pub cb:   Option<PluginCallback>,
-
-	// TODO: remove this
-	pub _old_args: Vec<Data>,
 }
 
 impl TryFrom<CmdCow> for PluginOpt {
@@ -29,13 +26,10 @@ impl TryFrom<CmdCow> for PluginOpt {
 			bail!("plugin id cannot be empty");
 		};
 
-		let (args, _old_args) = if let Some(s) = c.str("args") {
-			(
-				Cmd::parse_args(shell_words::split(s)?.into_iter(), true)?,
-				shell_words::split(s)?.into_iter().map(Data::String).collect(),
-			)
+		let args = if let Some(s) = c.str("args") {
+			Cmd::parse_args(shell_words::split(s)?.into_iter(), true)?
 		} else {
-			(Default::default(), Default::default())
+			Default::default()
 		};
 
 		let mut mode = c.str("mode").map(Into::into).unwrap_or_default();
@@ -52,7 +46,7 @@ Please add `--- @sync entry` metadata at the head of your `{id}` plugin instead.
 			});
 		}
 
-		Ok(Self { id, args, mode, cb: c.take_any("callback"), _old_args })
+		Ok(Self { id, args, mode, cb: c.take_any("callback") })
 	}
 }
 

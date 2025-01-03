@@ -11,3 +11,17 @@ macro_rules! unix_either {
 		}
 	}};
 }
+
+#[macro_export]
+macro_rules! win_either {
+	($a:expr, $b:expr) => {{
+		#[cfg(windows)]
+		{
+			$a
+		}
+		#[cfg(not(windows))]
+		{
+			$b
+		}
+	}};
+}

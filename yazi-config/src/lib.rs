@@ -28,16 +28,6 @@ pub fn init() -> anyhow::Result<()> {
 		try_init(false)?;
 	}
 
-	// TODO: Remove in v0.3.6
-	if matches!(INPUT.create_title, popup::InputCreateTitle::One(_)) {
-		eprintln!(
-			r#"WARNING: The `create_title` under `[input]` now accepts an array instead of a string to support different titles for `create` and `create --dir` command.
-
-Please change `create_title = "Create:"` to `create_title = ["Create:", "Create (dir):"]` in your yazi.toml.
-"#
-		);
-	}
-
 	Ok(())
 }
 

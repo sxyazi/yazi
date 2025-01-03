@@ -42,7 +42,7 @@ impl InputCfg {
 
 	pub fn create(dir: bool) -> Self {
 		Self {
-			title: INPUT.create_title.as_array()[dir as usize].to_owned(),
+			title: INPUT.create_title[dir as usize].to_owned(),
 			position: Position::new(INPUT.create_origin, INPUT.create_offset),
 			..Default::default()
 		}

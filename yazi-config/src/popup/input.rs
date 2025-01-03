@@ -15,7 +15,7 @@ pub struct Input {
 	pub cd_offset: Offset,
 
 	// create
-	pub create_title:  InputCreateTitle,
+	pub create_title:  [String; 2],
 	pub create_origin: Origin,
 	pub create_offset: Offset,
 
@@ -62,22 +62,5 @@ impl FromStr for Input {
 			.context("Failed to parse the [input] section in your yazi.toml")?;
 
 		Ok(outer.input)
-	}
-}
-
-// TODO: Remove in v0.3.6
-#[derive(Deserialize)]
-#[serde(untagged)]
-pub enum InputCreateTitle {
-	One(String),
-	Two([String; 2]),
-}
-
-impl InputCreateTitle {
-	pub fn as_array(&self) -> [&str; 2] {
-		match self {
-			Self::One(s) => [s, "Create (dir):"],
-			Self::Two(a) => [&a[0], &a[1]],
-		}
 	}
 }
