@@ -13,5 +13,5 @@ proc-macro = true
 
 [dependencies]
 # External dependencies
-syn   = { version = "2.0.93", features = [ "full" ] }
+syn   = { version = "2.0.94", features = [ "full" ] }
 quote = "1.0.38"
