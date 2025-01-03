@@ -20,15 +20,15 @@ enum OptStep {
 impl TryFrom<&Data> for OptStep {
 	type Error = ();
 
-	fn try_from(d: &Data) -> Result<Self, Self::Error> {
-		if let Some(offset) = d.as_isize() {
+	fn try_from(data: &Data) -> Result<Self, Self::Error> {
+		if let Some(offset) = data.as_isize() {
 			return Ok(OptStep::Offset(offset));
 		};
-		if let Some(s) = d.as_str() {
-			if let Ok(offset) = s.parse() {
+		if let Some(string) = data.as_str() {
+			if let Ok(offset) = string.parse() {
 				return Ok(OptStep::Offset(offset));
 			};
-			match s.as_ref() {
+			match string.as_ref() {
 				"bol" => return Ok(OptStep::Bol),
 				"eol" => return Ok(OptStep::Eol),
 				"first-char" => return Ok(OptStep::FirstChar),
