@@ -43,7 +43,7 @@ impl TryFrom<&Data> for OptStep {
 impl From<CmdCow> for Opt {
 	fn from(c: CmdCow) -> Self {
 		Self {
-			step: c.get(0).unwrap().try_into().unwrap(),
+			step: c.get(0).unwrap().try_into().unwrap_or(OptStep::Offset(0)),
 			in_operating: c.bool("in-operating"),
 		}
 	}
