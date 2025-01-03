@@ -5,11 +5,11 @@ use yazi_shared::event::{CmdCow, Data};
 use crate::input::{Input, op::InputOp, snap::InputSnap};
 
 struct Opt {
-	step:         Step,
+	step:         OptStep,
 	in_operating: bool,
 }
 
-enum Step {
+enum OptStep {
 	Offset(isize),
 	Bol,
 	Eol,
@@ -17,22 +17,22 @@ enum Step {
 	LastChar,
 }
 
-impl TryFrom<&Data> for Step {
+impl TryFrom<&Data> for OptStep {
 	type Error = ();
 
 	fn try_from(d: &Data) -> Result<Self, Self::Error> {
 		if let Some(offset) = d.as_isize() {
-			return Ok(Step::Offset(offset));
+			return Ok(OptStep::Offset(offset));
 		};
 		if let Some(s) = d.as_str() {
 			if let Ok(offset) = s.parse() {
-				return Ok(Step::Offset(offset));
+				return Ok(OptStep::Offset(offset));
 			};
 			match s.as_ref() {
-				"bol" => return Ok(Step::Bol),
-				"eol" => return Ok(Step::Eol),
-				"first-char" => return Ok(Step::FirstChar),
-				"last-char" => return Ok(Step::LastChar),
+				"bol" => return Ok(OptStep::Bol),
+				"eol" => return Ok(OptStep::Eol),
+				"first-char" => return Ok(OptStep::FirstChar),
+				"last-char" => return Ok(OptStep::LastChar),
 				_ => (),
 			}
 		}
@@ -51,7 +51,7 @@ impl From<CmdCow> for Opt {
 impl From<isize> for Opt {
 	fn from(step: isize) -> Self {
 		Self {
-			step:         Step::Offset(step),
+			step:         OptStep::Offset(step),
 			in_operating: false,
 		}
 	}
@@ -66,15 +66,15 @@ impl Input {
 		}
 
 		let position = match opt.step {
-			Step::Offset(offset) =>
+			OptStep::Offset(offset) =>
 				if offset <= 0 {
 					snap.cursor.saturating_sub(offset.unsigned_abs())
 				} else {
 					snap.count().min(snap.cursor + offset as usize)
 				},
-			Step::Bol => 0,
-			Step::Eol => snap.count(),
-			Step::FirstChar => snap
+			OptStep::Bol => 0,
+			OptStep::Eol => snap.count(),
+			OptStep::FirstChar => snap
 				.value
 				.chars()
 				.enumerate()
@@ -82,7 +82,7 @@ impl Input {
 				.map(|(i, _)| i)
 				.next()
 				.unwrap_or(0),
-			Step::LastChar => snap
+			OptStep::LastChar => snap
 				.value
 				.chars()
 				.rev()
