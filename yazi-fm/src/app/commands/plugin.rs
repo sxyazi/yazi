@@ -68,9 +68,6 @@ impl App {
 			} else {
 				let job = LUA.create_table_from([("args", Sendable::args_to_table(&LUA, opt.args)?)])?;
 
-				// TODO: remove this
-				yazi_plugin::isolate::install_entry_warn(&LUA, &job, opt._old_args).ok();
-
 				plugin.call_method("entry", job)
 			}
 		});

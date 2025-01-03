@@ -63,7 +63,7 @@ body:
       label: Checklist
       description: Before submitting the issue, please make sure you have completed the following
       options:
-        - label: I tried the [latest nightly build](https://yazi-rs.github.io/docs/installation#official-binaries), and the issue is still reproducible
+        - label: I tried the [latest nightly build](https://yazi-rs.github.io/docs/installation#binaries), and the issue is still reproducible
           required: true
         - label: I updated the debug information (`yazi --debug`) input box to the nightly that I tried
           required: true

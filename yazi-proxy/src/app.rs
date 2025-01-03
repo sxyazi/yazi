@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 use tokio::sync::oneshot;
-use yazi_config::MANAGER;
 use yazi_macro::emit;
 use yazi_shared::{Layer, event::Cmd};
 
@@ -24,10 +23,6 @@ impl AppProxy {
 
 	#[inline]
 	pub fn notify(opt: NotifyOpt) {
-		if MANAGER._v4_suppress_deprecation_warnings && opt.title.contains("Deprecated") {
-			return;
-		}
-
 		emit!(Call(Cmd::new("notify").with_any("option", opt), Layer::App));
 	}
 

@@ -16,8 +16,6 @@ yazi_macro::mod_flat!(
 	linemode
 	reveal
 	search
-	select
-	select_all
 	shell
 	sort
 	toggle

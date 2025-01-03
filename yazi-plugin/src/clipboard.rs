@@ -24,6 +24,7 @@ impl Clipboard {
 
 		let all = [
 			("pbpaste", &[][..]),
+			("termux-clipboard-get", &[]),
 			("wl-paste", &[]),
 			("xclip", &["-o", "-selection", "clipboard"]),
 			("xsel", &["-ob"]),
@@ -64,6 +65,7 @@ impl Clipboard {
 
 		let all = [
 			("pbcopy", &[][..]),
+			("termux-clipboard-set", &[]),
 			("wl-copy", &[]),
 			("xclip", &["-selection", "clipboard"]),
 			("xsel", &["-ib"]),

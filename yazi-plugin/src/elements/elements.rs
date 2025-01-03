@@ -17,7 +17,6 @@ pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 			b"Pad" => super::Pad::compose(lua, true)?,
 			// TODO: deprecate this
 			b"Padding" => super::Pad::compose(lua, false)?,
-			b"Paragraph" => super::Paragraph::compose(lua)?,
 			b"Pos" => super::Pos::compose(lua)?,
 			b"Rect" => super::Rect::compose(lua)?,
 			b"Row" => super::Row::compose(lua)?,

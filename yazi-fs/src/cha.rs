@@ -1,7 +1,7 @@
 use std::{fs::{FileType, Metadata}, path::Path, time::SystemTime};
 
 use bitflags::bitflags;
-use yazi_macro::unix_either;
+use yazi_macro::{unix_either, win_either};
 
 bitflags! {
 	#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -13,6 +13,8 @@ bitflags! {
 		const ORPHAN = 0b00001000;
 
 		const DUMMY  = 0b00010000;
+		#[cfg(windows)]
+		const SYSTEM = 0b00100000;
 	}
 }
 
@@ -153,8 +155,13 @@ impl Cha {
 		#[cfg(windows)]
 		{
 			use std::os::windows::fs::MetadataExt;
-			if meta.file_attributes() & 2 != 0 {
+
+			use windows_sys::Win32::Storage::FileSystem::{FILE_ATTRIBUTE_HIDDEN, FILE_ATTRIBUTE_SYSTEM};
+			if meta.file_attributes() & FILE_ATTRIBUTE_HIDDEN != 0 {
 				attached |= ChaKind::HIDDEN;
+			}
+			if meta.file_attributes() & FILE_ATTRIBUTE_SYSTEM != 0 {
+				attached |= ChaKind::SYSTEM;
 			}
 		}
 
@@ -182,7 +189,9 @@ impl Cha {
 	pub const fn is_dir(&self) -> bool { self.kind.contains(ChaKind::DIR) }
 
 	#[inline]
-	pub const fn is_hidden(&self) -> bool { self.kind.contains(ChaKind::HIDDEN) }
+	pub const fn is_hidden(&self) -> bool {
+		self.kind.contains(ChaKind::HIDDEN) || win_either!(self.kind.contains(ChaKind::SYSTEM), false)
+	}
 
 	#[inline]
 	pub const fn is_link(&self) -> bool { self.kind.contains(ChaKind::LINK) }

@@ -1,6 +1,6 @@
-use std::{borrow::Cow, time::Duration};
+use std::borrow::Cow;
 
-use mlua::{ExternalError, ExternalResult, HookTriggers, IntoLua, Lua, MetaMethod, MultiValue, ObjectLike, Table, VmState};
+use mlua::{ExternalError, ExternalResult, HookTriggers, IntoLua, ObjectLike, Table, VmState};
 use tokio::{runtime::Handle, select};
 use tokio_util::sync::CancellationToken;
 use tracing::error;
@@ -10,7 +10,7 @@ use yazi_proxy::{AppProxy, options::{PluginCallback, PluginOpt}};
 use yazi_shared::event::Cmd;
 
 use super::slim_lua;
-use crate::{RtRef, bindings::Cast, elements::Rect, file::File, loader::LOADER};
+use crate::{bindings::Cast, elements::Rect, file::File, loader::LOADER};
 
 pub fn peek(
 	cmd: &'static Cmd,
@@ -51,9 +51,6 @@ pub fn peek(
 				("skip", skip.into_lua(&lua)?),
 			])?;
 
-			// TODO: remove this
-			install_warn_mt(&lua, &plugin, job.clone()).ok();
-
 			if ct2.is_cancelled() { Ok(()) } else { plugin.call_async_method("peek", job).await }
 		};
 
@@ -84,58 +81,8 @@ pub fn peek_sync(cmd: &'static Cmd, file: yazi_fs::File, mime: Cow<'static, str>
 			("skip", skip.into_lua(lua)?),
 		])?;
 
-		// TODO: remove this
-		install_warn_mt(lua, &plugin, job.clone()).ok();
-
 		plugin.call_method("peek", job)
 	});
 
 	AppProxy::plugin(PluginOpt::new_callback(&cmd.name, cb));
-}
-
-pub(super) fn install_warn_mt(lua: &Lua, plugin: &Table, job: Table) -> mlua::Result<()> {
-	let mt = lua.create_table_from([(
-		MetaMethod::Index.name(),
-		lua.create_function(|lua, (ts, key): (Table, mlua::String)| {
-			let b = key.as_bytes() == b"file"
-				|| key.as_bytes() == b"mime"
-				|| key.as_bytes() == b"skip"
-				|| key.as_bytes() == b"area";
-			if b {
-				warn_deprecated(lua.named_registry_value::<RtRef>("rt")?.current());
-			}
-			lua
-				.load(mlua::chunk! {
-					if $b then
-						return rawget($ts, "__unsafe_job")[$key]
-					else
-						return rawget($ts, $key)
-					end
-				})
-				.call::<MultiValue>(())
-		})?,
-	)])?;
-	plugin.set_metatable(Some(mt));
-	plugin.raw_set("__unsafe_job", job.clone())?;
-	Ok(())
-}
-
-#[inline]
-fn warn_deprecated(id: Option<&str>) {
-	static WARNED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-	if !WARNED.swap(true, std::sync::atomic::Ordering::Relaxed) {
-		let id = match id {
-			Some(id) => format!("`{id}.yazi` plugin"),
-			None => "`init.lua` config".to_owned(),
-		};
-		let s = "The file list for peek() and preload() method has been moved from `self` to the first parameter `job` of the method to avoid conflicts with the plugin's own attributes.
-
-Please use the new `job` parameter in your {id} instead of `self`. See #1966 for details: https://github.com/sxyazi/yazi/pull/1966";
-		yazi_proxy::AppProxy::notify(yazi_proxy::options::NotifyOpt {
-			title:   "Deprecated API".to_owned(),
-			content: s.replace("{id}", &id),
-			level:   yazi_proxy::options::NotifyLevel::Warn,
-			timeout: Duration::from_secs(20),
-		});
-	}
 }
