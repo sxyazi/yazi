@@ -83,7 +83,7 @@ impl Prework {
 				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 			}
 			PreworkOp::Size(task) => {
-				let length = calculate_size(&task.target).await;
+				let length = calculate_size(&task.target).await?;
 				task.throttle.done((task.target, length), |buf| {
 					{
 						let mut loading = self.size_loading.write();

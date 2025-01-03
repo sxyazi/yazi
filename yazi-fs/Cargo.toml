@@ -21,6 +21,7 @@ futures  = { workspace = true }
 regex    = { workspace = true }
 serde    = { workspace = true }
 tokio    = { workspace = true }
+rayon    = "1.10.0"
 
 [target."cfg(unix)".dependencies]
 libc  = { workspace = true }
