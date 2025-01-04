@@ -60,13 +60,8 @@ enum OptStep {
 impl OptStep {
 	fn cursor(self, snap: &InputSnap) -> usize {
 		match self {
-			Self::Offset(n) => {
-				if n <= 0 {
-					snap.cursor.saturating_add_signed(n)
-				} else {
-					snap.count().min(snap.cursor + n as usize)
-				}
-			}
+			Self::Offset(n) if n <= 0 => snap.cursor.saturating_add_signed(n),
+			Self::Offset(n) => snap.count().min(snap.cursor + n as usize),
 			Self::Bol => 0,
 			Self::Eol => snap.count(),
 			Self::FirstChar => {
