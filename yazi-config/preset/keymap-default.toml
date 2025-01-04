@@ -260,12 +260,12 @@ keymap = [
 
 	# Line-wise movement
 	{ on = "0",      run = "move bol",        desc = "Move to the BOL" },
+	{ on = "$",      run = "move eol",        desc = "Move to the EOL" },
 	{ on = "_",      run = "move first-char", desc = "Move to the first non-whitespace character" },
 	{ on = "^",      run = "move first-char", desc = "Move to the first non-whitespace character" },
-	{ on = "$",      run = "move eol",        desc = "Move to the EOL" },
-	{ on = "<C-a>",  run = "move first-char", desc = "Move to the BOL" },
+	{ on = "<C-a>",  run = "move bol",        desc = "Move to the BOL" },
 	{ on = "<C-e>",  run = "move eol",        desc = "Move to the EOL" },
-	{ on = "<Home>", run = "move first-char", desc = "Move to the BOL" },
+	{ on = "<Home>", run = "move bol",        desc = "Move to the BOL" },
 	{ on = "<End>",  run = "move eol",        desc = "Move to the EOL" },
 
 	# Delete
