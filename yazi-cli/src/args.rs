@@ -79,7 +79,7 @@ pub(super) struct CommandPub {
 	/// Send the message with a JSON body.
 	#[arg(long)]
 	pub(super) json: Option<String>,
-	/// Send the message as string of list.
+	/// Send the message as a list of strings.
 	#[arg(long, num_args = 0..)]
 	pub(super) list: Vec<String>,
 }
@@ -109,7 +109,7 @@ pub(super) struct CommandPubTo {
 	/// Send the message with a JSON body.
 	#[arg(long)]
 	pub(super) json:     Option<String>,
-	/// Send the message as string of list.
+	/// Send the message as a list of strings.
 	#[arg(long, num_args = 0..)]
 	pub(super) list:     Vec<String>,
 }
