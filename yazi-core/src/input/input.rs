@@ -3,7 +3,6 @@ use std::ops::Range;
 use tokio::sync::mpsc::UnboundedSender;
 use unicode_width::UnicodeWidthStr;
 use yazi_config::{INPUT, popup::Position};
-use yazi_macro::render;
 use yazi_plugin::CLIPBOARD;
 use yazi_shared::errors::InputError;
 
@@ -35,7 +34,7 @@ impl Input {
 
 	pub(super) fn handle_op(&mut self, cursor: usize, include: bool) -> bool {
 		let old = self.snap().clone();
-		let snap = self.snaps.current_mut();
+		let snap = self.snap_mut();
 
 		match snap.op {
 			InputOp::None | InputOp::Select(_) => {
