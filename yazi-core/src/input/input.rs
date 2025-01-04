@@ -33,30 +33,6 @@ impl Input {
 		self.position.offset.width.saturating_sub(INPUT.border()) as usize
 	}
 
-	pub fn type_str(&mut self, s: &str) {
-		let snap = self.snaps.current_mut();
-		if snap.cursor < 1 {
-			snap.value.insert_str(0, s);
-		} else {
-			snap.value.insert_str(snap.idx(snap.cursor).unwrap(), s);
-		}
-
-		self.move_(s.chars().count() as isize);
-		self.flush_value();
-		render!();
-	}
-
-	pub fn replace_str(&mut self, s: &str) {
-		let snap = self.snaps.current_mut();
-
-		let start = snap.idx(snap.cursor).unwrap();
-		let end = snap.idx(snap.cursor + 1).unwrap();
-		snap.value.replace_range(start..end, s);
-
-		self.flush_value();
-		render!();
-	}
-
 	pub(super) fn handle_op(&mut self, cursor: usize, include: bool) -> bool {
 		let old = self.snap().clone();
 		let snap = self.snaps.current_mut();

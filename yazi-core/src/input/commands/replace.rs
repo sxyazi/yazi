@@ -13,4 +13,15 @@ impl Input {
 			render!();
 		}
 	}
+
+	pub fn replace_str(&mut self, s: &str) {
+		let snap = self.snaps.current_mut();
+
+		let start = snap.idx(snap.cursor).unwrap();
+		let end = snap.idx(snap.cursor + 1).unwrap();
+		snap.value.replace_range(start..end, s);
+
+		self.flush_value();
+		render!();
+	}
 }
