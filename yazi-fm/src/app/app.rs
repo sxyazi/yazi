@@ -92,6 +92,8 @@ impl App {
 			let input = &mut self.cx.input;
 			if input.mode() == InputMode::Insert {
 				input.type_str(&str);
+			} else if input.mode() == InputMode::Replace {
+				input.replace_str(&str);
 			}
 		}
 	}

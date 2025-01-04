@@ -59,6 +59,7 @@ impl Widget for Input<'_> {
 
 		_ = match input.mode() {
 			InputMode::Insert => Term::set_cursor_bar(),
+			InputMode::Replace => Term::set_cursor_underscore(),
 			_ => Term::set_cursor_block(),
 		};
 	}
