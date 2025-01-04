@@ -10,11 +10,7 @@ impl Input {
 		if snap.mode == InputMode::Normal {
 			snap.op = InputOp::None;
 			snap.mode = InputMode::Replace;
-		} else {
-			return;
+			render!();
 		}
-
-		render!();
 	}
 }
-

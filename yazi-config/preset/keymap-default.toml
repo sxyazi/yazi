@@ -232,13 +232,13 @@ keymap = [
 	{ on = "<C-[>",   run = "escape",         desc = "Go back the normal mode, or cancel input" },
 
 	# Mode
-	{ on = "i", run = "insert",                                    desc = "Enter insert mode" },
-	{ on = "a", run = "insert --append",                           desc = "Enter append mode" },
-	{ on = "I", run = [ "move first-char", "insert" ],             desc = "Move to the BOL, and enter insert mode" },
-	{ on = "A", run = [ "move eol", "insert --append" ],           desc = "Move to the EOL, and enter append mode" },
-	{ on = "v", run = "visual",                                    desc = "Enter visual mode" },
+	{ on = "i", run = "insert",                             desc = "Enter insert mode" },
+	{ on = "I", run = [ "move first-char", "insert" ],      desc = "Move to the BOL, and enter insert mode" },
+	{ on = "a", run = "insert --append",                    desc = "Enter append mode" },
+	{ on = "A", run = [ "move eol", "insert --append" ],    desc = "Move to the EOL, and enter append mode" },
+	{ on = "v", run = "visual",                             desc = "Enter visual mode" },
 	{ on = "V", run = [ "move bol", "visual", "move eol" ], desc = "Enter visual mode and select all" },
-	{ on = "r", run = "replace",                                   desc = "Replace a single character" },
+	{ on = "r", run = "replace",                            desc = "Replace a single character" },
 
 	# Character-wise movement
 	{ on = "h",       run = "move -1", desc = "Move back a character" },
@@ -250,10 +250,10 @@ keymap = [
 
 	# Word-wise movement
 	{ on = "b",     run = "backward",                    desc = "Move back to the start of the current or previous word" },
-	{ on = "w",     run = "forward",                     desc = "Move forward to the start of the next word" },
-	{ on = "e",     run = "forward --end-of-word",       desc = "Move forward to the end of the current or next word" },
 	{ on = "B",     run = "backward --big",              desc = "Move back to the start of the current or previous WORD" },
+	{ on = "w",     run = "forward",                     desc = "Move forward to the start of the next word" },
 	{ on = "W",     run = "forward --big",               desc = "Move forward to the start of the next WORD" },
+	{ on = "e",     run = "forward --end-of-word",       desc = "Move forward to the end of the current or next word" },
 	{ on = "E",     run = "forward --big --end-of-word", desc = "Move forward to the end of the current or next WORD" },
 	{ on = "<A-b>", run = "backward",                    desc = "Move back to the start of the current or previous word" },
 	{ on = "<A-f>", run = "forward --end-of-word",       desc = "Move forward to the end of the current or next word" },
