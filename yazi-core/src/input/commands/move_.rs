@@ -14,7 +14,7 @@ struct Opt {
 impl From<CmdCow> for Opt {
 	fn from(c: CmdCow) -> Self {
 		Self {
-			step:         c.get(0).and_then(|d| d.try_into().ok()).unwrap_or_default(),
+			step:         c.first().and_then(|d| d.try_into().ok()).unwrap_or_default(),
 			in_operating: c.bool("in-operating"),
 		}
 	}
