@@ -39,7 +39,7 @@ impl Input {
 			format!("{}{after}", opt.word).replace(SEPARATOR, MAIN_SEPARATOR_STR)
 		};
 
-		let snap = self.snaps.current_mut();
+		let snap = self.snap_mut();
 		if new == snap.value {
 			return;
 		}

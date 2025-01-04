@@ -14,11 +14,15 @@ impl Input {
 		}
 	}
 
+	// FIXME: need to create a new snap for each replace operation, otherwise we
+	// can't undo/redo it with `u` and `Ctrl-r`
 	pub fn replace_str(&mut self, s: &str) {
-		let snap = self.snaps.current_mut();
+		let snap = self.snap_mut();
 
 		let start = snap.idx(snap.cursor).unwrap();
-		let end = snap.idx(snap.cursor + 1).unwrap();
+		let end = snap.idx(snap.cursor + 1).unwrap(); // FIXME: panic if the input is empty while in replace mode
+
+		snap.mode = InputMode::Normal;
 		snap.value.replace_range(start..end, s);
 
 		self.flush_value();

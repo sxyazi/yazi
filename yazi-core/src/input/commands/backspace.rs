@@ -17,7 +17,7 @@ impl From<bool> for Opt {
 impl Input {
 	#[yazi_codegen::command]
 	pub fn backspace(&mut self, opt: Opt) {
-		let snap = self.snaps.current_mut();
+		let snap = self.snap_mut();
 		if !opt.under && snap.cursor < 1 {
 			return;
 		} else if opt.under && snap.cursor >= snap.count() {
