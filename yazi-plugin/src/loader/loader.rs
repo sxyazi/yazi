@@ -55,6 +55,7 @@ impl Loader {
 			return Ok(());
 		}
 
+		// TODO: init.lua
 		let p = BOOT.plugin_dir.join(format!("{name}.yazi/init.lua"));
 		let chunk =
 			fs::read(&p).await.with_context(|| format!("Failed to load plugin from {p:?}"))?.into();

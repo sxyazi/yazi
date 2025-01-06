@@ -1,6 +1,6 @@
 #![allow(clippy::module_inception)]
 
-yazi_macro::mod_flat!(add deploy git install package parser upgrade);
+yazi_macro::mod_flat!(add dependency deploy git install package upgrade);
 
 use anyhow::Context;
 use yazi_fs::Xdg;

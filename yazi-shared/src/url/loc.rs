@@ -145,18 +145,18 @@ mod tests {
 	#[test]
 	fn test_from() {
 		let loc = Loc::from(Path::new("/"), "/".into());
-		assert_eq!(loc.urn(), Urn::new(""));
+		assert_eq!(loc.urn().as_os_str(), OsStr::new(""));
 		assert_eq!(loc.name(), OsStr::new(""));
-		assert_eq!(loc.base(), Path::new("/"));
+		assert_eq!(loc.base().as_os_str(), OsStr::new("/"));
 
 		let loc = Loc::from(Path::new("/root/"), "/root/code/".into());
-		assert_eq!(loc.urn(), Urn::new("code"));
+		assert_eq!(loc.urn().as_os_str(), OsStr::new("code"));
 		assert_eq!(loc.name(), OsStr::new("code"));
-		assert_eq!(loc.base(), Path::new("/root"));
+		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 
 		let loc = Loc::from(Path::new("/root//"), "/root/code/foo//".into());
-		assert_eq!(loc.urn(), Urn::new("code/foo"));
+		assert_eq!(loc.urn().as_os_str(), OsStr::new("code/foo"));
 		assert_eq!(loc.name(), OsStr::new("foo"));
-		assert_eq!(loc.base(), Path::new("/root"));
+		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 	}
 }
