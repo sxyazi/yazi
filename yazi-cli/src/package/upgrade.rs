@@ -1,8 +1,8 @@
 use anyhow::Result;
 
-use super::Package;
+use super::Dependency;
 
-impl Package {
+impl Dependency {
 	pub(super) async fn upgrade(&mut self) -> Result<()> {
 		if self.rev.starts_with('=') { Ok(()) } else { self.add().await }
 	}

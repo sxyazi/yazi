@@ -1,9 +1,9 @@
 use anyhow::Result;
 use yazi_fs::must_exists;
 
-use super::{Git, Package};
+use super::{Dependency, Git};
 
-impl Package {
+impl Dependency {
 	pub(super) async fn install(&mut self) -> Result<()> {
 		self.header("Installing package `{name}`")?;
 

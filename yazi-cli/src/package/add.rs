@@ -1,9 +1,9 @@
 use anyhow::Result;
 use yazi_fs::must_exists;
 
-use super::{Git, Package};
+use super::{Dependency, Git};
 
-impl Package {
+impl Dependency {
 	pub(super) async fn add(&mut self) -> Result<()> {
 		self.header("Upgrading package `{name}`")?;
 

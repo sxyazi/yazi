@@ -63,16 +63,13 @@ async fn run() -> anyhow::Result<()> {
 		Command::Pack(cmd) => {
 			package::init()?;
 			if cmd.install {
-				package::Package::install_from_config("plugin", false).await?;
-				package::Package::install_from_config("flavor", false).await?;
+				package::Package::load().await?.install(false).await?;
 			} else if cmd.list {
-				package::Package::list_from_config("plugin").await?;
-				package::Package::list_from_config("flavor").await?;
+				package::Package::load().await?.print()?;
 			} else if cmd.upgrade {
-				package::Package::install_from_config("plugin", true).await?;
-				package::Package::install_from_config("flavor", true).await?;
+				package::Package::load().await?.install(true).await?;
 			} else if let Some(repo) = cmd.add {
-				package::Package::add_to_config(&repo).await?;
+				package::Package::load().await?.add(&repo).await?;
 			}
 		}
 

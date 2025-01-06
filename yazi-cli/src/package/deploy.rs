@@ -5,11 +5,11 @@ use tokio::fs;
 use yazi_fs::{Xdg, maybe_exists, must_exists, remove_dir_clean};
 use yazi_macro::outln;
 
-use super::Package;
+use super::Dependency;
 
 const TRACKER: &str = "DO_NOT_MODIFY_ANYTHING_IN_THIS_DIRECTORY";
 
-impl Package {
+impl Dependency {
 	pub(super) async fn deploy(&mut self) -> Result<()> {
 		let Some(name) = self.name().map(ToOwned::to_owned) else { bail!("Invalid package url") };
 		let from = self.local().join(&self.child);
@@ -36,6 +36,7 @@ For safety, please manually delete it from your plugin/flavor directory and re-r
 		let files = if self.is_flavor {
 			&["flavor.toml", "tmtheme.xml", "README.md", "preview.png", "LICENSE", "LICENSE-tmtheme"][..]
 		} else {
+			// TODO: init.lua
 			&["init.lua", "README.md", "LICENSE"][..]
 		};
 

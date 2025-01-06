@@ -32,20 +32,7 @@ impl TryFrom<CmdCow> for PluginOpt {
 			Default::default()
 		};
 
-		let mut mode = c.str("mode").map(Into::into).unwrap_or_default();
-		if c.bool("sync") {
-			mode = PluginMode::Sync;
-			let s = "The `--sync` option for the `plugin` command has been deprecated in Yazi v0.4.
-
-Please add `--- @sync entry` metadata at the head of your `{id}` plugin instead. See #1891 for details: https://github.com/sxyazi/yazi/pull/1891";
-			crate::AppProxy::notify(crate::options::NotifyOpt {
-				title:   "Deprecated API".to_owned(),
-				content: s.replace("{id}", &id),
-				level:   crate::options::NotifyLevel::Warn,
-				timeout: std::time::Duration::from_secs(20),
-			});
-		}
-
+		let mode = c.str("mode").map(Into::into).unwrap_or_default();
 		Ok(Self { id, args, mode, cb: c.take_any("callback") })
 	}
 }

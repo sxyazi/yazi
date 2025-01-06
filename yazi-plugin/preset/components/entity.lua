@@ -59,12 +59,12 @@ function Entity:found()
 	local found = self._file:found()
 	if not found then
 		return ""
+	elseif found[1] >= 99 then
+		return ""
 	end
 
-	return ui.Line {
-		"  ",
-		ui.Span(string.format("[%d/%d]", found[1] + 1, found[2])):style(THEME.manager.find_position),
-	}
+	local s = string.format("[%d/%s]", found[1] + 1, found[2] >= 100 and "99+" or found[2])
+	return ui.Line { "  ", ui.Span(s):style(THEME.manager.find_position) }
 end
 
 function Entity:symlink()

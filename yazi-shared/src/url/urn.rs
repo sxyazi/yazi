@@ -13,6 +13,9 @@ impl Urn {
 	#[inline]
 	pub fn name(&self) -> Option<&OsStr> { self.0.file_name() }
 
+	#[inline]
+	pub fn encoded_bytes(&self) -> &[u8] { self.0.as_os_str().as_encoded_bytes() }
+
 	#[cfg(unix)]
 	#[inline]
 	pub fn is_hidden(&self) -> bool {
