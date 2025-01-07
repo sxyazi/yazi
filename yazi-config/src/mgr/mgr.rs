@@ -26,6 +26,7 @@ pub struct Mgr {
 	pub scrolloff:    u8,
 	pub mouse_events: MouseEvents,
 	pub title_format: String,
+	pub ignore_rule:  String,
 }
 
 impl FromStr for Mgr {

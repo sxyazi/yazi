@@ -18,6 +18,7 @@ pub struct Files {
 
 	sorter:      FilesSorter,
 	filter:      Option<Filter>,
+	ignore_filter: Option<Filter>,
 	show_hidden: bool,
 }
 
@@ -28,7 +29,7 @@ impl Deref for Files {
 }
 
 impl Files {
-	pub fn new(show_hidden: bool) -> Self { Self { show_hidden, ..Default::default() } }
+	pub fn new(show_hidden: bool, ignore_filter: Option<Filter>) -> Self { Self { show_hidden, ignore_filter, ..Default::default() } }
 
 	pub async fn from_dir(dir: &Url) -> std::io::Result<UnboundedReceiver<File>> {
 		let mut it = fs::read_dir(dir).await?;
@@ -320,6 +321,13 @@ impl Files {
 	}
 
 	fn split_files(&self, files: impl IntoIterator<Item = File>) -> (Vec<File>, Vec<File>) {
+		let mut files: Vec<File> = files.into_iter().collect();
+		if let Some(ignore_filter) = &self.ignore_filter {
+			files = files
+				.into_iter()
+				.filter(|f| !ignore_filter.matches(f.name()))
+				.collect();
+		}
 		if let Some(filter) = &self.filter {
 			files
 				.into_iter()
@@ -371,6 +379,26 @@ impl Files {
 				self.items.extend(items);
 				self.sorter.sort(&mut self.items, &self.sizes);
 			}
+			return true;
+		}
+
+		let it = mem::take(&mut self.items).into_iter().chain(mem::take(&mut self.hidden));
+		(self.hidden, self.items) = self.split_files(it);
+		self.sorter.sort(&mut self.items, &self.sizes);
+		true
+	}
+
+	// --- Ignore Filter
+	#[inline]
+	pub fn ignore_filter(&self) -> Option<&Filter> { self.ignore_filter.as_ref() }
+
+	pub fn set_ignore_filter(&mut self, filter: Option<Filter>) -> bool {
+		if self.ignore_filter == filter {
+			return false;
+		}
+
+		self.ignore_filter = filter;
+		if self.ignore_filter.is_none() {
 			return true;
 		}
 
