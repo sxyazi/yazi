@@ -22,13 +22,11 @@ impl Input {
 		let mut it = snap.value[..idx].chars().rev().enumerate();
 		let mut prev = CharKind::new(it.next().unwrap().1);
 		for (i, c) in it {
-			let c = CharKind::new(c);
-			let new_char_kind =
-				if opt.far { (c == CharKind::Space) != (prev == CharKind::Space) } else { c != prev };
-			if prev != CharKind::Space && new_char_kind {
+			let k = CharKind::new(c);
+			if prev != CharKind::Space && prev.vary(k, opt.far) {
 				return self.move_(-(i as isize));
 			}
-			prev = c;
+			prev = k;
 		}
 
 		if prev != CharKind::Space {
