@@ -2,8 +2,17 @@ use yazi_shared::{CharKind, event::CmdCow};
 
 use crate::input::Input;
 
+struct Opt {
+	far: bool,
+}
+
+impl From<CmdCow> for Opt {
+	fn from(c: CmdCow) -> Self { Self { far: c.bool("far") } }
+}
+
 impl Input {
-	pub fn backward(&mut self, _: CmdCow) {
+	#[yazi_codegen::command]
+	pub fn backward(&mut self, opt: Opt) {
 		let snap = self.snap();
 		if snap.cursor == 0 {
 			return self.move_(0);
@@ -13,11 +22,11 @@ impl Input {
 		let mut it = snap.value[..idx].chars().rev().enumerate();
 		let mut prev = CharKind::new(it.next().unwrap().1);
 		for (i, c) in it {
-			let c = CharKind::new(c);
-			if prev != CharKind::Space && prev != c {
+			let k = CharKind::new(c);
+			if prev != CharKind::Space && prev.vary(k, opt.far) {
 				return self.move_(-(i as isize));
 			}
-			prev = c;
+			prev = k;
 		}
 
 		if prev != CharKind::Space {

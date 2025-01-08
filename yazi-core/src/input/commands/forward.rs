@@ -3,11 +3,12 @@ use yazi_shared::{CharKind, event::CmdCow};
 use crate::input::{Input, op::InputOp};
 
 struct Opt {
+	far:         bool,
 	end_of_word: bool,
 }
 
 impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { end_of_word: c.bool("end-of-word") } }
+	fn from(c: CmdCow) -> Self { Self { far: c.bool("far"), end_of_word: c.bool("end-of-word") } }
 }
 
 impl Input {
@@ -21,18 +22,18 @@ impl Input {
 		};
 
 		for (i, c) in it {
-			let c = CharKind::new(c);
+			let k = CharKind::new(c);
 			let b = if opt.end_of_word {
-				prev != CharKind::Space && prev != c && i != 1
+				prev != CharKind::Space && prev.vary(k, opt.far) && i != 1
 			} else {
-				c != CharKind::Space && c != prev
+				k != CharKind::Space && k.vary(prev, opt.far)
 			};
 			if b && !matches!(snap.op, InputOp::None | InputOp::Select(_)) {
 				return self.move_(i as isize);
 			} else if b {
 				return self.move_(if opt.end_of_word { i - 1 } else { i } as isize);
 			}
-			prev = c;
+			prev = k;
 		}
 
 		self.move_(snap.len() as isize)

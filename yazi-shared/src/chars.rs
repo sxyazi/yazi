@@ -20,6 +20,10 @@ impl CharKind {
 			Self::Other
 		}
 	}
+
+	pub fn vary(self, other: Self, far: bool) -> bool {
+		if far { (self == Self::Space) != (other == Self::Space) } else { self != other }
+	}
 }
 
 pub fn strip_trailing_newline(mut s: String) -> String {
