@@ -19,11 +19,11 @@ yazi-shared = { path = "../yazi-shared", version = "0.4.3" }
 anyhow     = { workspace = true }
 clap       = { workspace = true }
 crossterm  = { workspace = true }
-md-5       = { workspace = true }
 serde      = { workspace = true }
 serde_json = { workspace = true }
 tokio      = { workspace = true }
-toml       = { version = "0.8.19" }
+toml       = { workspace = true }
+twox-hash  = { workspace = true }
 
 [build-dependencies]
 yazi-shared = { path = "../yazi-shared", version = "0.4.3" }

@@ -1,63 +1,36 @@
-use std::{borrow::Cow, io::BufWriter, path::PathBuf};
+use std::{io::BufWriter, path::PathBuf, str::FromStr};
 
-use anyhow::Result;
-use md5::{Digest, Md5};
+use anyhow::{Result, bail};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use twox_hash::XxHash3_128;
 use yazi_fs::Xdg;
 
+#[derive(Default)]
 pub(crate) struct Dependency {
-	pub(crate) repo:      String,
-	pub(crate) child:     String,
-	pub(crate) rev:       String,
+	pub(crate) use_: String, // owner/repo:child
+	pub(crate) name: String, // child.yazi
+
+	pub(crate) parent: String, // owner/repo
+	pub(crate) child:  String, // child
+
+	pub(crate) rev:  String,
+	pub(crate) hash: String,
+
 	pub(super) is_flavor: bool,
 }
 
 impl Dependency {
-	pub(super) fn new(url: &str, rev: Option<&str>) -> Self {
-		let mut parts = url.splitn(2, ':');
-
-		let mut repo = parts.next().unwrap_or_default().to_owned();
-		let child = if let Some(s) = parts.next() {
-			format!("{s}.yazi")
-		} else {
-			repo.push_str(".yazi");
-			String::new()
-		};
-
-		Self { repo, child, rev: rev.unwrap_or_default().to_owned(), is_flavor: false }
-	}
-
-	#[inline]
-	pub(super) fn use_(&self) -> Cow<str> {
-		if self.child.is_empty() {
-			self.repo.trim_end_matches(".yazi").into()
-		} else {
-			format!("{}:{}", self.repo, self.child.trim_end_matches(".yazi")).into()
-		}
-	}
-
-	#[inline]
-	pub(super) fn name(&self) -> Option<&str> {
-		let s = if self.child.is_empty() {
-			self.repo.split('/').last().filter(|s| !s.is_empty())
-		} else {
-			Some(self.child.as_str())
-		};
-
-		s.filter(|s| s.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'z' | b'-' | b'.')))
-	}
-
 	#[inline]
 	pub(super) fn local(&self) -> PathBuf {
 		Xdg::state_dir()
 			.join("packages")
-			.join(format!("{:x}", Md5::new_with_prefix(self.remote()).finalize()))
+			.join(format!("{:x}", XxHash3_128::oneshot(self.remote().as_bytes())))
 	}
 
 	#[inline]
 	pub(super) fn remote(&self) -> String {
 		// Support more Git hosting services in the future
-		format!("https://github.com/{}.git", self.repo)
+		format!("https://github.com/{}.git", self.parent)
 	}
 
 	pub(super) fn header(&self, s: &str) -> Result<()> {
@@ -69,12 +42,40 @@ impl Dependency {
 			SetAttributes(Attribute::Reverse.into()),
 			SetAttributes(Attribute::Bold.into()),
 			Print("  "),
-			Print(s.replacen("{name}", self.name().unwrap_or_default(), 1)),
+			Print(s.replacen("{name}", &self.name, 1)),
 			Print("  "),
 			SetAttributes(Attribute::Reset.into()),
 			Print("\n\n"),
 		)?;
 		Ok(())
+	}
+}
+
+impl FromStr for Dependency {
+	type Err = anyhow::Error;
+
+	fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+		let mut parts = s.splitn(2, ':');
+
+		let Some(parent) = parts.next() else { bail!("Package url cannot be empty") };
+		let child = parts.next().unwrap_or_default();
+
+		let Some((_, repo)) = parent.split_once('/') else {
+			bail!("Package url `{parent}` must be in the format `owner/repo`")
+		};
+
+		let name = if child.is_empty() { repo } else { child };
+		if !name.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'z' | b'-')) {
+			bail!("Package name `{name}` must be in kebab-case")
+		}
+
+		Ok(Self {
+			use_: s.to_owned(),
+			name: format!("{name}.yazi"),
+			parent: format!("{parent}{}", if child.is_empty() { ".yazi" } else { "" }),
+			child: child.to_owned(),
+			..Default::default()
+		})
 	}
 }
 
@@ -87,11 +88,18 @@ impl<'de> Deserialize<'de> for Dependency {
 		struct Shadow {
 			#[serde(rename = "use")]
 			use_: String,
-			rev:  Option<String>,
+			#[serde(default)]
+			rev:  String,
+			#[serde(default)]
+			hash: String,
 		}
 
 		let outer = Shadow::deserialize(deserializer)?;
-		Ok(Self::new(&outer.use_, outer.rev.as_deref()))
+		Ok(Self {
+			rev: outer.rev,
+			hash: outer.hash,
+			..Self::from_str(&outer.use_).map_err(serde::de::Error::custom)?
+		})
 	}
 }
 
@@ -103,11 +111,11 @@ impl Serialize for Dependency {
 		#[derive(Serialize)]
 		struct Shadow<'a> {
 			#[serde(rename = "use")]
-			use_: Cow<'a, str>,
-			rev:  Option<&'a String>,
+			use_: &'a str,
+			rev:  &'a str,
+			hash: &'a str,
 		}
 
-		Shadow { use_: self.use_(), rev: Some(&self.rev).filter(|&s| !s.is_empty()) }
-			.serialize(serializer)
+		Shadow { use_: &self.use_, rev: &self.rev, hash: &self.hash }.serialize(serializer)
 	}
 }

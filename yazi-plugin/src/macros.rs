@@ -120,3 +120,22 @@ macro_rules! impl_file_methods {
 		});
 	};
 }
+
+#[macro_export]
+macro_rules! deprecate {
+	($lua:ident, $tt:tt) => {{
+		static WARNED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+		if !WARNED.swap(true, std::sync::atomic::Ordering::Relaxed) {
+			let id = match $lua.named_registry_value::<$crate::RtRef>("rt")?.current() {
+				Some(id) => &format!("`{id}.yazi` plugin"),
+				None => "`init.lua` config",
+			};
+			yazi_proxy::AppProxy::notify(yazi_proxy::options::NotifyOpt {
+				title:   "Deprecated API".to_owned(),
+				content: format!($tt, id),
+				level:   yazi_proxy::options::NotifyLevel::Warn,
+				timeout: std::time::Duration::from_secs(20),
+			});
+		}
+	}};
+}

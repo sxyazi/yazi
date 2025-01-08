@@ -2,15 +2,24 @@ use std::ops::ControlFlow;
 
 use md5::{Digest, Md5};
 use mlua::{Function, Lua, Table};
+use twox_hash::XxHash3_128;
 use unicode_width::UnicodeWidthChar;
 
 use super::Utils;
 use crate::CLIPBOARD;
 
 impl Utils {
-	pub(super) fn hash(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_async_function(|_, s: mlua::String| async move {
-			Ok(format!("{:x}", Md5::new_with_prefix(s.as_bytes()).finalize()))
+	pub(super) fn hash(lua: &Lua, deprecated: bool) -> mlua::Result<Function> {
+		lua.create_async_function(move |lua, s: mlua::String| async move {
+			if deprecated {
+				crate::deprecate!(
+					lua,
+					"The `ya.md5()` function is deprecated, please use `ya.hash()` instead, in your {}"
+				);
+				Ok(format!("{:x}", Md5::new_with_prefix(s.as_bytes()).finalize()))
+			} else {
+				Ok(format!("{:x}", XxHash3_128::oneshot(s.as_bytes().as_ref())))
+			}
 		})
 	}
 

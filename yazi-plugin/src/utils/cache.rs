@@ -1,5 +1,5 @@
-use md5::{Digest, Md5};
 use mlua::{Function, Lua, Table};
+use twox_hash::XxHash3_128;
 use yazi_config::PREVIEW;
 
 use super::Utils;
@@ -14,9 +14,10 @@ impl Utils {
 			}
 
 			let hex = {
-				let mut digest = Md5::new_with_prefix(file.url.as_os_str().as_encoded_bytes());
-				digest.update(format!("//{:?}//{}", file.cha.mtime, t.raw_get("skip").unwrap_or(0)));
-				format!("{:x}", digest.finalize())
+				let mut h = XxHash3_128::new();
+				h.write(file.url.as_os_str().as_encoded_bytes());
+				h.write(format!("//{:?}//{}", file.cha.mtime, t.raw_get("skip").unwrap_or(0)).as_bytes());
+				format!("{:x}", h.finish_128())
 			};
 
 			Some(Url::cast(lua, PREVIEW.cache_dir.join(hex))).transpose()
