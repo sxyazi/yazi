@@ -3,12 +3,11 @@ use yazi_shared::{CharKind, event::CmdCow};
 use crate::input::Input;
 
 struct Opt {
-	big: bool,
+	far: bool,
 }
 
 impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { big: c.bool("big") }
-	}
+	fn from(c: CmdCow) -> Self { Self { far: c.bool("far") } }
 }
 
 impl Input {
@@ -24,11 +23,8 @@ impl Input {
 		let mut prev = CharKind::new(it.next().unwrap().1);
 		for (i, c) in it {
 			let c = CharKind::new(c);
-			let new_char_kind = if opt.big {
-				(c == CharKind::Space) != (prev == CharKind::Space)
-			} else {
-				c != prev
-			};
+			let new_char_kind =
+				if opt.far { (c == CharKind::Space) != (prev == CharKind::Space) } else { c != prev };
 			if prev != CharKind::Space && new_char_kind {
 				return self.move_(-(i as isize));
 			}

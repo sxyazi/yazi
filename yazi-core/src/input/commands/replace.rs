@@ -16,20 +16,17 @@ impl Input {
 
 	pub fn replace_str(&mut self, s: &str) {
 		let snap = self.snap_mut();
-
-		if snap.value.is_empty() {
-			snap.mode = InputMode::Normal;
-			render!();
-			return;
-		}
+		snap.mode = InputMode::Normal;
 
 		let start = snap.idx(snap.cursor).unwrap();
-		let end = snap.idx(snap.cursor + 1).unwrap();
+		let mut it = snap.value[start..].char_indices();
+		match (it.next(), it.next()) {
+			(None, _) => {}
+			(Some(_), None) => snap.value.replace_range(start..snap.len(), s),
+			(Some(_), Some((len, _))) => snap.value.replace_range(start..start + len, s),
+		}
 
-		snap.mode = InputMode::Normal;
-		snap.value.replace_range(start..end, s);
-
-		self.snaps.tag(self.limit()).then(|| self.flush_value());
 		render!();
+		self.snaps.tag(self.limit()).then(|| self.flush_value());
 	}
 }

@@ -3,17 +3,12 @@ use yazi_shared::{CharKind, event::CmdCow};
 use crate::input::{Input, op::InputOp};
 
 struct Opt {
+	far:         bool,
 	end_of_word: bool,
-	big: bool,
 }
 
 impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self {
-		Self {
-			end_of_word: c.bool("end-of-word"),
-			big:         c.bool("big"),
-		}
-	}
+	fn from(c: CmdCow) -> Self { Self { far: c.bool("far"), end_of_word: c.bool("end-of-word") } }
 }
 
 impl Input {
@@ -28,11 +23,8 @@ impl Input {
 
 		for (i, c) in it {
 			let c = CharKind::new(c);
-			let new_char_kind = if opt.big {
-				(c == CharKind::Space) != (prev == CharKind::Space)
-			} else {
-				c != prev
-			};
+			let new_char_kind =
+				if opt.far { (c == CharKind::Space) != (prev == CharKind::Space) } else { c != prev };
 			let b = if opt.end_of_word {
 				prev != CharKind::Space && new_char_kind && i != 1
 			} else {
