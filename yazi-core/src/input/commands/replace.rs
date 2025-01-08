@@ -17,8 +17,14 @@ impl Input {
 	pub fn replace_str(&mut self, s: &str) {
 		let snap = self.snap_mut();
 
+		if snap.value.is_empty() {
+			snap.mode = InputMode::Normal;
+			render!();
+			return;
+		}
+
 		let start = snap.idx(snap.cursor).unwrap();
-		let end = snap.idx(snap.cursor + 1).unwrap(); // FIXME: panic if the input is empty while in replace mode
+		let end = snap.idx(snap.cursor + 1).unwrap();
 
 		snap.mode = InputMode::Normal;
 		snap.value.replace_range(start..end, s);
