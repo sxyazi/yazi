@@ -1,7 +1,7 @@
 use std::{borrow::Cow, collections::{HashMap, HashSet, VecDeque}, ffi::{OsStr, OsString}, path::{Path, PathBuf}};
 
 use anyhow::{Result, bail};
-use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
+use tokio::{fs, io::{self, AsyncWriteExt}, select, sync::{mpsc, oneshot}, time};
 
 use super::Cha;
 
@@ -22,10 +22,10 @@ pub async fn must_be_dir(p: impl AsRef<Path>) -> bool {
 }
 
 #[inline]
-pub fn ok_or_not_found(result: io::Result<()>) -> io::Result<()> {
+pub fn ok_or_not_found<T: Default>(result: io::Result<T>) -> io::Result<T> {
 	match result {
-		Ok(()) => Ok(()),
-		Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(()),
+		Ok(t) => Ok(t),
+		Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(T::default()),
 		Err(_) => result,
 	}
 }
@@ -81,6 +81,24 @@ async fn _paths_to_same_file(a: &Path, b: &Path) -> std::io::Result<bool> {
 	}
 
 	Ok(final_name(a).await? == final_name(b).await?)
+}
+
+#[inline]
+pub async fn copy_and_seal(from: &Path, to: &Path) -> io::Result<()> {
+	create_and_seal(to, &fs::read(from).await?).await
+}
+
+pub async fn create_and_seal(p: &Path, b: &[u8]) -> io::Result<()> {
+	ok_or_not_found(fs::remove_file(p).await)?;
+
+	let mut file = fs::OpenOptions::new().create_new(true).write(true).truncate(true).open(p).await?;
+	file.write_all(b).await?;
+
+	let mut perm = file.metadata().await?.permissions();
+	perm.set_readonly(true);
+	file.set_permissions(perm).await?;
+
+	Ok(())
 }
 
 pub async fn realname(p: &Path) -> Option<OsString> {

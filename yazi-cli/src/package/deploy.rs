@@ -2,48 +2,51 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result, bail};
 use tokio::fs;
-use yazi_fs::{Xdg, maybe_exists, must_exists, remove_dir_clean};
+use yazi_fs::{Xdg, copy_and_seal, maybe_exists, remove_dir_clean};
 use yazi_macro::outln;
 
 use super::Dependency;
 
-const TRACKER: &str = "DO_NOT_MODIFY_ANYTHING_IN_THIS_DIRECTORY";
-
 impl Dependency {
 	pub(super) async fn deploy(&mut self) -> Result<()> {
-		let Some(name) = self.name().map(ToOwned::to_owned) else { bail!("Invalid package url") };
 		let from = self.local().join(&self.child);
 
 		self.header("Deploying package `{name}`")?;
 		self.is_flavor = maybe_exists(&from.join("flavor.toml")).await;
 		let to = if self.is_flavor {
-			Xdg::config_dir().join(format!("flavors/{name}"))
+			Xdg::config_dir().join(format!("flavors/{}", self.name))
 		} else {
-			Xdg::config_dir().join(format!("plugins/{name}"))
+			Xdg::config_dir().join(format!("plugins/{}", self.name))
 		};
 
-		let tracker = to.join(TRACKER);
-		if maybe_exists(&to).await && !must_exists(&tracker).await {
+		if maybe_exists(&to).await && self.hash != self.hash().await? {
 			bail!(
-				"A user package with the same name `{name}` already exists.
-For safety, please manually delete it from your plugin/flavor directory and re-run the command."
+				"The user has modified the contents of the `{}` package. For safety, the operation has been aborted.
+Please manually delete it from your plugins/flavors directory and re-run the command.",
+				self.name
 			);
 		}
 
 		fs::create_dir_all(&to).await?;
-		fs::write(tracker, []).await?;
-
 		let files = if self.is_flavor {
 			&["flavor.toml", "tmtheme.xml", "README.md", "preview.png", "LICENSE", "LICENSE-tmtheme"][..]
 		} else {
-			// TODO: init.lua
-			&["init.lua", "README.md", "LICENSE"][..]
+			&["main.lua", "README.md", "LICENSE"][..]
 		};
 
 		for file in files {
-			let (from, to) = (from.join(file), to.join(file));
+			// TODO: remove this
+			let (from, to) = if *file == "main.lua" {
+				if maybe_exists(from.join(file)).await {
+					(from.join(file), to.join(file))
+				} else {
+					(from.join("init.lua"), to.join("main.lua"))
+				}
+			} else {
+				(from.join(file), to.join(file))
+			};
 
-			fs::copy(&from, &to)
+			copy_and_seal(&from, &to)
 				.await
 				.with_context(|| format!("failed to copy `{}` to `{}`", from.display(), to.display()))?;
 		}
@@ -75,7 +78,7 @@ For safety, please manually delete it from your plugin/flavor directory and re-r
 				fs::create_dir_all(&to).await?;
 				while let Some(entry) = it.next_entry().await? {
 					let (src, dist) = (entry.path(), to.join(entry.file_name()));
-					fs::copy(&src, &dist).await.with_context(|| {
+					copy_and_seal(&src, &dist).await.with_context(|| {
 						format!("failed to copy `{}` to `{}`", src.display(), dist.display())
 					})?;
 				}

@@ -2771,6 +2771,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "twox-hash"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e7b17f197b3050ba473acf9181f7b1d3b66d1cf7356c6cc57886662276e65908"
+dependencies = [
+ "rand",
+]
+
+[[package]]
 name = "typeid"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3364,11 +3373,11 @@ dependencies = [
  "clap_complete_fig",
  "clap_complete_nushell",
  "crossterm",
- "md-5",
  "serde",
  "serde_json",
  "tokio",
  "toml",
+ "twox-hash",
  "vergen-gitcl",
  "yazi-boot",
  "yazi-dds",
@@ -3537,6 +3546,7 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
+ "twox-hash",
  "unicode-width 0.2.0",
  "uzers",
  "yazi-adapter",

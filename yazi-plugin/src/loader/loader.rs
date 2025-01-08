@@ -55,12 +55,32 @@ impl Loader {
 			return Ok(());
 		}
 
-		// TODO: init.lua
-		let p = BOOT.plugin_dir.join(format!("{name}.yazi/init.lua"));
-		let chunk =
-			fs::read(&p).await.with_context(|| format!("Failed to load plugin from {p:?}"))?.into();
+		// TODO: remove this
+		let p = BOOT.plugin_dir.join(format!("{name}.yazi/main.lua"));
+		let chunk = match fs::read(&p).await {
+			Ok(b) => b,
+			Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+				static WARNED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+				if !WARNED.swap(true, std::sync::atomic::Ordering::Relaxed) {
+					yazi_proxy::AppProxy::notify(yazi_proxy::options::NotifyOpt {
+						title:   "Deprecated entry file".to_owned(),
+						content: format!(
+							"The plugin entry file `init.lua` has been deprecated in v0.4.3 in favor of the new `main.lua`, and it will be fully removed in the next major version 0.5.
 
-		self.cache.write().insert(name.to_owned(), chunk);
+Please run `ya pack -m` to automatically migrate all plugins, or manually rename your `{name}.yazi/init.lua` to `{name}.yazi/main.lua`."
+						),
+						level:   yazi_proxy::options::NotifyLevel::Warn,
+						timeout: std::time::Duration::from_secs(25),
+					});
+				}
+
+				let p = BOOT.plugin_dir.join(format!("{name}.yazi/init.lua"));
+				fs::read(&p).await.with_context(|| format!("Failed to load plugin from {p:?}"))?
+			}
+			Err(e) => Err(e).with_context(|| format!("Failed to load plugin from {p:?}"))?,
+		};
+
+		self.cache.write().insert(name.to_owned(), chunk.into());
 		Ok(())
 	}
 

@@ -53,8 +53,8 @@ pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Table> {
 			b"target_family" => Utils::target_family(lua)?,
 
 			// Text
-			b"md5" => Utils::hash(lua)?, // TODO: deprecate this in the future
-			b"hash" => Utils::hash(lua)?,
+			b"md5" => Utils::hash(lua, true)?, // TODO: deprecate this in the future
+			b"hash" => Utils::hash(lua, false)?,
 			b"quote" => Utils::quote(lua)?,
 			b"truncate" => Utils::truncate(lua)?,
 			b"clipboard" => Utils::clipboard(lua)?,
