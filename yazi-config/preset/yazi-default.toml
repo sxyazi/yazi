@@ -97,7 +97,7 @@ spotters = [
 	{ name = "*/", run = "folder" },
 	# Code
 	{ mime = "text/*", run = "code" },
-	{ mime = "*/{xml,javascript,wine-extension-ini}", run = "code" },
+	{ mime = "application/{mbox,javascript,wine-extension-ini}", run = "code" },
 	# Image
 	{ mime = "image/{avif,hei?,jxl,svg+xml}", run = "magick" },
 	{ mime = "image/*", run = "image" },
@@ -122,7 +122,7 @@ previewers = [
 	{ name = "*/", run = "folder", sync = true },
 	# Code
 	{ mime = "text/*", run = "code" },
-	{ mime = "*/{xml,javascript,wine-extension-ini}", run = "code" },
+	{ mime = "application/{mbox,javascript,wine-extension-ini}", run = "code" },
 	# JSON
 	{ mime = "application/{json,ndjson}", run = "json" },
 	# Image
