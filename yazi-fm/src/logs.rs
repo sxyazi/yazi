@@ -1,10 +1,10 @@
-use std::{env, fs::File};
+use std::fs::File;
 
 use anyhow::Context;
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::EnvFilter;
 use yazi_fs::Xdg;
-use yazi_shared::RoCell;
+use yazi_shared::{LOG_LEVEL, LogLevel, RoCell};
 
 static _GUARD: RoCell<WorkerGuard> = RoCell::new();
 
@@ -12,9 +12,8 @@ pub(super) struct Logs;
 
 impl Logs {
 	pub(super) fn start() -> anyhow::Result<()> {
-		let mut level = env::var("YAZI_LOG").unwrap_or_default();
-		level.make_ascii_uppercase();
-		if !matches!(level.as_str(), "ERROR" | "WARN" | "INFO" | "DEBUG") {
+		let level = LOG_LEVEL.get();
+		if LOG_LEVEL.get() == LogLevel::None {
 			return Ok(());
 		}
 
@@ -29,7 +28,7 @@ impl Logs {
 		let (non_blocking, guard) = tracing_appender::non_blocking(log_file);
 		tracing_subscriber::fmt()
 			.pretty()
-			.with_env_filter(EnvFilter::new(&level))
+			.with_env_filter(EnvFilter::new(level))
 			.with_writer(non_blocking)
 			.with_ansi(cfg!(debug_assertions))
 			.init();

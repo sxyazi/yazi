@@ -12,11 +12,10 @@ yazi_macro::mod_flat!(context executor logs panic root router signals term);
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
 	Panic::install();
-	Logs::start()?;
-
-	_ = fdlimit::raise_fd_limit();
-
 	yazi_shared::init();
+
+	Logs::start()?;
+	_ = fdlimit::raise_fd_limit();
 
 	yazi_fs::init();
 
