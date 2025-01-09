@@ -79,7 +79,7 @@ A brief overview of the project's structure:
 3. Run the tests:
 
    ```sh
-   cargo test
+   cargo test --workspace
    ```
 
 4. Format the code (requires `rustfmt` nightly):
