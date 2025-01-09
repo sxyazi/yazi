@@ -4,7 +4,7 @@ use anyhow::Context;
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::EnvFilter;
 use yazi_fs::Xdg;
-use yazi_shared::{LOG_LEVEL, LogLevel, RoCell};
+use yazi_shared::{LOG_LEVEL, RoCell};
 
 static _GUARD: RoCell<WorkerGuard> = RoCell::new();
 
