@@ -57,6 +57,9 @@ pub(super) struct CommandPack {
 	/// Add a package.
 	#[arg(short = 'a', long)]
 	pub(super) add:     Option<String>,
+	/// Delete a package.
+	#[arg(short = 'd', long)]
+	pub(super) delete:  Option<String>,
 	/// Install all packages.
 	#[arg(short = 'i', long)]
 	pub(super) install: bool,

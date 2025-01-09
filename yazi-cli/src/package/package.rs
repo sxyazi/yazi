@@ -25,11 +25,10 @@ impl Package {
 
 	pub(crate) async fn add(&mut self, use_: &str) -> Result<()> {
 		let mut dep = Dependency::from_str(use_)?;
-		if self.plugins.iter().any(|d| d.parent == dep.parent && d.child == dep.child) {
-			bail!("Plugin `{}` already exists in package.toml", dep.name);
-		}
-		if self.flavors.iter().any(|d| d.parent == dep.parent && d.child == dep.child) {
-			bail!("Flavor `{}` already exists in package.toml", dep.name);
+
+		if let Some(existing_dep) = self.find_dep_in_package(&dep) {
+			let package_type = if existing_dep.is_flavor { "Flavor" } else { "Plugin" };
+			bail!("{} `{}` already exists in package.toml", package_type, dep.name)
 		}
 
 		dep.add().await?;
@@ -37,6 +36,25 @@ impl Package {
 			self.flavors.push(dep);
 		} else {
 			self.plugins.push(dep);
+		}
+
+		let s = toml::to_string_pretty(self)?;
+		create_and_seal(&Self::toml(), s.as_bytes()).await.context("Failed to write package.toml")
+	}
+
+	pub(crate) async fn delete(&mut self, use_: &str) -> Result<()> {
+		let dep_to_find = Dependency::from_str(use_)?;
+
+		let dep = match self.find_dep_in_package(&dep_to_find) {
+			Some(d) => d,
+			None => bail!("`{}` was not found in package.toml", use_),
+		};
+
+		dep.delete().await?;
+		if dep.is_flavor {
+			self.flavors.retain(|f| f.use_ != use_);
+		} else {
+			self.plugins.retain(|f| f.use_ != use_);
 		}
 
 		let s = toml::to_string_pretty(self)?;
@@ -163,6 +181,11 @@ impl Package {
 
 		let s = toml::to_string_pretty(self)?;
 		create_and_seal(&Self::toml(), s.as_bytes()).await.context("Failed to write package.toml")
+	}
+
+	#[inline]
+	fn find_dep_in_package(&self, dep: &Dependency) -> Option<&Dependency> {
+		return self.plugins.iter().chain(self.flavors.iter()).find(|d| d.use_ == dep.use_);
 	}
 
 	#[inline]

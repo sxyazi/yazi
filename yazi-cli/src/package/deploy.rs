@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result, bail};
 use tokio::fs;
-use yazi_fs::{Xdg, copy_and_seal, maybe_exists, remove_dir_clean};
+use yazi_fs::{copy_and_seal, maybe_exists, remove_dir_clean};
 use yazi_macro::outln;
 
 use super::Dependency;
@@ -13,11 +13,8 @@ impl Dependency {
 
 		self.header("Deploying package `{name}`")?;
 		self.is_flavor = maybe_exists(&from.join("flavor.toml")).await;
-		let to = if self.is_flavor {
-			Xdg::config_dir().join(format!("flavors/{}", self.name))
-		} else {
-			Xdg::config_dir().join(format!("plugins/{}", self.name))
-		};
+
+		let to = self.deployed_directory();
 
 		if maybe_exists(&to).await && self.hash != self.hash().await? {
 			bail!(

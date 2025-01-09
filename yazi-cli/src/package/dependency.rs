@@ -28,6 +28,15 @@ impl Dependency {
 	}
 
 	#[inline]
+	pub(super) fn deployed_directory(&self) -> PathBuf {
+		return if self.is_flavor {
+			Xdg::config_dir().join(format!("flavors/{}", self.name))
+		} else {
+			Xdg::config_dir().join(format!("plugins/{}", self.name))
+		};
+	}
+
+	#[inline]
 	pub(super) fn remote(&self) -> String {
 		// Support more Git hosting services in the future
 		format!("https://github.com/{}.git", self.parent)
