@@ -6,7 +6,7 @@ use ratatui::layout::Rect;
 use tokio::{io::AsyncWriteExt, process::{Child, Command}, sync::mpsc::{self, UnboundedSender}};
 use tracing::{debug, warn};
 use yazi_config::PREVIEW;
-use yazi_shared::{LOG_LEVEL, LogLevel, RoCell, env_exists};
+use yazi_shared::{LOG_LEVEL, RoCell, env_exists};
 
 use crate::{Adapter, Dimension};
 
@@ -87,7 +87,7 @@ impl Ueberzug {
 	fn create_demon(adapter: Adapter) -> Result<Child> {
 		let result = Command::new("ueberzugpp")
 			.args(["layer", "-so", &adapter.to_string()])
-			.env("SPDLOG_LEVEL", if LOG_LEVEL.get() != LogLevel::None { "debug" } else { "" })
+			.env("SPDLOG_LEVEL", if LOG_LEVEL.get().is_none() { "" } else { "debug" })
 			.kill_on_drop(true)
 			.stdin(Stdio::piped())
 			.stdout(Stdio::null())

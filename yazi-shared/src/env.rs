@@ -32,6 +32,11 @@ pub enum LogLevel {
 	Debug,
 }
 
+impl LogLevel {
+	#[inline]
+	pub fn is_none(self) -> bool { self == Self::None }
+}
+
 impl From<String> for LogLevel {
 	fn from(mut s: String) -> Self {
 		s.make_ascii_uppercase();
