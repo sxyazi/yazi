@@ -30,4 +30,4 @@ jobs:
         run: cargo build --verbose
 
       - name: Test
-        run: cargo test --all --verbose
+        run: cargo test --workspace --verbose
