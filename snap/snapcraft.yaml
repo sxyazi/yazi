@@ -11,7 +11,7 @@ confinement: classic
 
 platforms:
   amd64:
-  # arm64:
+  arm64:
 
 apps:
   yazi:
