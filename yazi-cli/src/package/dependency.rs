@@ -73,7 +73,7 @@ impl FromStr for Dependency {
 			use_: s.to_owned(),
 			name: format!("{name}.yazi"),
 			parent: format!("{parent}{}", if child.is_empty() { ".yazi" } else { "" }),
-			child: child.to_owned(),
+			child: if child.is_empty() { String::new() } else { format!("{child}.yazi") },
 			..Default::default()
 		})
 	}

@@ -43,8 +43,10 @@ impl Git {
 	}
 
 	async fn exec(f: impl FnOnce(&mut Command) -> &mut Command) -> Result<()> {
-		let status =
-			f(&mut Command::new("git")).status().await.context("Failed to execute `git` command")?;
+		let status = f(Command::new("git").args(["-c", "advice.detachedHead=false"]))
+			.status()
+			.await
+			.context("Failed to execute `git` command")?;
 
 		if !status.success() {
 			bail!("`git` command failed: {status}");

@@ -9,11 +9,7 @@ use super::Dependency;
 
 impl Dependency {
 	pub(super) async fn deploy(&mut self) -> Result<()> {
-		let from = if self.child.is_empty() {
-			self.local().join(&self.child)
-		} else {
-			self.local().join(format!("{}.yazi", self.child))
-		};
+		let from = self.local().join(&self.child);
 
 		self.header("Deploying package `{name}`")?;
 		self.is_flavor = maybe_exists(&from.join("flavor.toml")).await;
