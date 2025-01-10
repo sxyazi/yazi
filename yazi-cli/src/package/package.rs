@@ -185,7 +185,7 @@ impl Package {
 
 	#[inline]
 	fn find_dep_in_package(&self, dep: &Dependency) -> Option<&Dependency> {
-		return self.plugins.iter().chain(self.flavors.iter()).find(|d| d.use_ == dep.use_);
+		self.plugins.iter().chain(self.flavors.iter()).find(|d| d.use_ == dep.use_)
 	}
 
 	#[inline]

@@ -29,11 +29,11 @@ impl Dependency {
 
 	#[inline]
 	pub(super) fn deployed_directory(&self) -> PathBuf {
-		return if self.is_flavor {
+		if self.is_flavor {
 			Xdg::config_dir().join(format!("flavors/{}", self.name))
 		} else {
 			Xdg::config_dir().join(format!("plugins/{}", self.name))
-		};
+		}
 	}
 
 	#[inline]
