@@ -34,6 +34,8 @@ parts:
     override-build: |
       craftctl default
       craftctl set version=$(git describe --tags --abbrev=0)
+    build-attributes:
+      - enable-patchelf
     organize:
       # Ubuntu's `fd` package installs a binary named `fdfind`. Rename it in the snap.
       usr/bin/fdfind: usr/bin/fd
