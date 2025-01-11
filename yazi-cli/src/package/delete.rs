@@ -9,10 +9,9 @@ impl Dependency {
 	pub(super) async fn delete(&self) -> Result<()> {
 		self.header("Deleting package `{name}`")?;
 
-		let path = self.deployed_directory();
-
-		if must_exists(&path).await {
-			fs::remove_dir_all(&path).await?;
+		let dir = self.target();
+		if must_exists(&dir).await {
+			fs::remove_dir_all(&dir).await?;
 		} else {
 			bail!(
 				"The package.toml file states that `{}` exists, but the directory was not found. The entry will be removed from package.toml.",

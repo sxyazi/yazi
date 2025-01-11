@@ -7,8 +7,7 @@ use super::Dependency;
 
 impl Dependency {
 	pub(crate) async fn hash(&self) -> Result<String> {
-		let dir = self.deployed_directory();
-
+		let dir = self.target();
 		let files = if self.is_flavor {
 			&[
 				"LICENSE",

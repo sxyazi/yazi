@@ -20,26 +20,23 @@ pub(crate) struct Dependency {
 }
 
 impl Dependency {
-	#[inline]
 	pub(super) fn local(&self) -> PathBuf {
 		Xdg::state_dir()
 			.join("packages")
 			.join(format!("{:x}", XxHash3_128::oneshot(self.remote().as_bytes())))
 	}
 
-	#[inline]
-	pub(super) fn deployed_directory(&self) -> PathBuf {
+	pub(super) fn remote(&self) -> String {
+		// Support more Git hosting services in the future
+		format!("https://github.com/{}.git", self.parent)
+	}
+
+	pub(super) fn target(&self) -> PathBuf {
 		if self.is_flavor {
 			Xdg::config_dir().join(format!("flavors/{}", self.name))
 		} else {
 			Xdg::config_dir().join(format!("plugins/{}", self.name))
 		}
-	}
-
-	#[inline]
-	pub(super) fn remote(&self) -> String {
-		// Support more Git hosting services in the future
-		format!("https://github.com/{}.git", self.parent)
 	}
 
 	pub(super) fn header(&self, s: &str) -> Result<()> {
