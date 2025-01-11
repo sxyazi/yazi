@@ -27,11 +27,14 @@ parts:
       - jq
     stage-packages:
       - 7zip
+      - chafa
       - fd-find
       - ffmpeg
       - fzf
       - libpoppler-cpp0t64
       - ripgrep
+      - wl-clipboard
+      - xclip
       - zoxide
     override-build: |
       craftctl default
