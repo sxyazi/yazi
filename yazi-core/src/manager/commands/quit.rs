@@ -10,7 +10,7 @@ use crate::{manager::Manager, tasks::Tasks};
 
 #[derive(Default)]
 pub(super) struct Opt {
-	pub no_cwd_file: bool,
+	pub(super) no_cwd_file: bool,
 }
 impl From<CmdCow> for Opt {
 	fn from(c: CmdCow) -> Self { Self { no_cwd_file: c.bool("no-cwd-file") } }
