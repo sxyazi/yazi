@@ -1,18 +1,13 @@
 use anyhow::{Context, Result};
 use tokio::fs;
 use twox_hash::XxHash3_128;
-use yazi_fs::{Xdg, ok_or_not_found};
+use yazi_fs::ok_or_not_found;
 
 use super::Dependency;
 
 impl Dependency {
 	pub(crate) async fn hash(&self) -> Result<String> {
-		let dir = if self.is_flavor {
-			Xdg::config_dir().join(format!("flavors/{}", self.name))
-		} else {
-			Xdg::config_dir().join(format!("plugins/{}", self.name))
-		};
-
+		let dir = self.target();
 		let files = if self.is_flavor {
 			&[
 				"LICENSE",

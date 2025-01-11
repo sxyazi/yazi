@@ -5,13 +5,13 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use twox_hash::XxHash3_128;
 use yazi_fs::Xdg;
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(crate) struct Dependency {
 	pub(crate) use_: String, // owner/repo:child
 	pub(crate) name: String, // child.yazi
 
 	pub(crate) parent: String, // owner/repo
-	pub(crate) child:  String, // child
+	pub(crate) child:  String, // child.yazi
 
 	pub(crate) rev:  String,
 	pub(crate) hash: String,
@@ -20,17 +20,28 @@ pub(crate) struct Dependency {
 }
 
 impl Dependency {
-	#[inline]
 	pub(super) fn local(&self) -> PathBuf {
 		Xdg::state_dir()
 			.join("packages")
 			.join(format!("{:x}", XxHash3_128::oneshot(self.remote().as_bytes())))
 	}
 
-	#[inline]
 	pub(super) fn remote(&self) -> String {
 		// Support more Git hosting services in the future
 		format!("https://github.com/{}.git", self.parent)
+	}
+
+	pub(super) fn target(&self) -> PathBuf {
+		if self.is_flavor {
+			Xdg::config_dir().join(format!("flavors/{}", self.name))
+		} else {
+			Xdg::config_dir().join(format!("plugins/{}", self.name))
+		}
+	}
+
+	#[inline]
+	pub(super) fn identical(&self, other: &Self) -> bool {
+		self.parent == other.parent && self.child == other.child
 	}
 
 	pub(super) fn header(&self, s: &str) -> Result<()> {

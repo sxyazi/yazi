@@ -73,6 +73,8 @@ async fn run() -> anyhow::Result<()> {
 				package::Package::load().await?.install(true).await?;
 			} else if let Some(repo) = cmd.add {
 				package::Package::load().await?.add(&repo).await?;
+			} else if let Some(repo) = cmd.delete {
+				package::Package::load().await?.delete(&repo).await?;
 			}
 		}
 

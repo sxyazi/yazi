@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result, bail};
 use tokio::fs;
-use yazi_fs::{Xdg, copy_and_seal, maybe_exists, remove_dir_clean};
+use yazi_fs::{copy_and_seal, maybe_exists};
 use yazi_macro::outln;
 
 use super::Dependency;
@@ -13,17 +13,15 @@ impl Dependency {
 
 		self.header("Deploying package `{name}`")?;
 		self.is_flavor = maybe_exists(&from.join("flavor.toml")).await;
-		let to = if self.is_flavor {
-			Xdg::config_dir().join(format!("flavors/{}", self.name))
-		} else {
-			Xdg::config_dir().join(format!("plugins/{}", self.name))
-		};
 
+		let to = self.target();
 		if maybe_exists(&to).await && self.hash != self.hash().await? {
 			bail!(
-				"The user has modified the contents of the `{}` package. For safety, the operation has been aborted.
-Please manually delete it from your plugins/flavors directory and re-run the command.",
-				self.name
+				"You have modified the contents of the `{}` {}. For safety, the operation has been aborted.
+Please manually delete it from `{}` and re-run the command.",
+				self.name,
+				if self.is_flavor { "flavor" } else { "plugin" },
+				to.display()
 			);
 		}
 
@@ -51,28 +49,16 @@ Please manually delete it from your plugins/flavors directory and re-run the com
 				.with_context(|| format!("failed to copy `{}` to `{}`", from.display(), to.display()))?;
 		}
 
+		self.delete_assets().await?;
 		Self::deploy_assets(from.join("assets"), to.join("assets")).await?;
 
+		self.hash = self.hash().await?;
 		outln!("Done!")?;
+
 		Ok(())
 	}
 
 	async fn deploy_assets(from: PathBuf, to: PathBuf) -> Result<()> {
-		use std::io::ErrorKind::NotFound;
-
-		match fs::read_dir(&to).await {
-			Ok(mut it) => {
-				while let Some(entry) = it.next_entry().await? {
-					fs::remove_file(entry.path())
-						.await
-						.with_context(|| format!("failed to remove `{}`", entry.path().display()))?;
-				}
-			}
-			Err(e) if e.kind() == NotFound => {}
-			Err(e) => Err(e).context(format!("failed to read `{}`", to.display()))?,
-		};
-
-		remove_dir_clean(&to).await;
 		match fs::read_dir(&from).await {
 			Ok(mut it) => {
 				fs::create_dir_all(&to).await?;
@@ -83,10 +69,9 @@ Please manually delete it from your plugins/flavors directory and re-run the com
 					})?;
 				}
 			}
-			Err(e) if e.kind() == NotFound => {}
+			Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
 			Err(e) => Err(e).context(format!("failed to read `{}`", from.display()))?,
 		}
-
 		Ok(())
 	}
 }
