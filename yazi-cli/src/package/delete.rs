@@ -1,6 +1,6 @@
-use anyhow::{Result, bail};
+use anyhow::{Context, Result, bail};
 use tokio::fs;
-use yazi_fs::maybe_exists;
+use yazi_fs::{maybe_exists, ok_or_not_found, remove_dir_clean};
 use yazi_macro::outln;
 
 use super::Dependency;
@@ -24,7 +24,45 @@ Please manually delete it from: {}",
 			);
 		}
 
-		fs::remove_dir_all(&dir).await?;
+		let files = if self.is_flavor {
+			&["flavor.toml", "tmtheme.xml", "README.md", "preview.png", "LICENSE", "LICENSE-tmtheme"][..]
+		} else {
+			&["main.lua", "README.md", "LICENSE"][..]
+		};
+		for p in files.iter().map(|&f| dir.join(f)) {
+			ok_or_not_found(fs::remove_file(&p).await)
+				.with_context(|| format!("failed to delete `{}`", p.display()))?;
+		}
+
+		self.delete_assets().await?;
+		if ok_or_not_found(fs::remove_dir(&dir).await).is_ok() {
+			outln!("Done!")?;
+		} else {
+			outln!(
+				"Done!
+For safety, user data has been preserved, please manually delete them within: {}",
+				dir.display()
+			)?;
+		}
+
+		Ok(())
+	}
+
+	pub(super) async fn delete_assets(&self) -> Result<()> {
+		let assets = self.target().join("assets");
+		match fs::read_dir(&assets).await {
+			Ok(mut it) => {
+				while let Some(entry) = it.next_entry().await? {
+					fs::remove_file(entry.path())
+						.await
+						.with_context(|| format!("failed to remove `{}`", entry.path().display()))?;
+				}
+			}
+			Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+			Err(e) => Err(e).context(format!("failed to read `{}`", assets.display()))?,
+		};
+
+		remove_dir_clean(&assets).await;
 		Ok(())
 	}
 }

@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result, bail};
 use tokio::fs;
-use yazi_fs::{copy_and_seal, maybe_exists, remove_dir_clean};
+use yazi_fs::{copy_and_seal, maybe_exists};
 use yazi_macro::outln;
 
 use super::Dependency;
@@ -49,6 +49,7 @@ Please manually delete it from `{}` and re-run the command.",
 				.with_context(|| format!("failed to copy `{}` to `{}`", from.display(), to.display()))?;
 		}
 
+		self.delete_assets().await?;
 		Self::deploy_assets(from.join("assets"), to.join("assets")).await?;
 
 		outln!("Done!")?;
@@ -56,21 +57,6 @@ Please manually delete it from `{}` and re-run the command.",
 	}
 
 	async fn deploy_assets(from: PathBuf, to: PathBuf) -> Result<()> {
-		use std::io::ErrorKind::NotFound;
-
-		match fs::read_dir(&to).await {
-			Ok(mut it) => {
-				while let Some(entry) = it.next_entry().await? {
-					fs::remove_file(entry.path())
-						.await
-						.with_context(|| format!("failed to remove `{}`", entry.path().display()))?;
-				}
-			}
-			Err(e) if e.kind() == NotFound => {}
-			Err(e) => Err(e).context(format!("failed to read `{}`", to.display()))?,
-		};
-
-		remove_dir_clean(&to).await;
 		match fs::read_dir(&from).await {
 			Ok(mut it) => {
 				fs::create_dir_all(&to).await?;
@@ -81,10 +67,9 @@ Please manually delete it from `{}` and re-run the command.",
 					})?;
 				}
 			}
-			Err(e) if e.kind() == NotFound => {}
+			Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
 			Err(e) => Err(e).context(format!("failed to read `{}`", from.display()))?,
 		}
-
 		Ok(())
 	}
 }
