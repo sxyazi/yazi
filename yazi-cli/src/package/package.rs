@@ -45,18 +45,15 @@ impl Package {
 	}
 
 	pub(crate) async fn delete(&mut self, use_: &str) -> Result<()> {
-		let dep_to_find = Dependency::from_str(use_)?;
-
-		let dep = match self.identical(&dep_to_find) {
-			Some(d) => d,
-			None => bail!("`{}` was not found in package.toml", use_),
+		let Some(dep) = self.identical(&Dependency::from_str(use_)?).cloned() else {
+			bail!("`{}` was not found in package.toml", use_)
 		};
 
 		dep.delete().await?;
 		if dep.is_flavor {
-			self.flavors.retain(|f| f.use_ != use_);
+			self.flavors.retain(|d| !d.identical(&dep));
 		} else {
-			self.plugins.retain(|f| f.use_ != use_);
+			self.plugins.retain(|d| !d.identical(&dep));
 		}
 
 		let s = toml::to_string_pretty(self)?;
@@ -189,12 +186,8 @@ impl Package {
 	fn toml() -> PathBuf { Xdg::config_dir().join("package.toml") }
 
 	#[inline]
-	fn identical(&self, dep: &Dependency) -> Option<&Dependency> {
-		self
-			.plugins
-			.iter()
-			.chain(&self.flavors)
-			.find(|d| d.parent == dep.parent && d.child == dep.child)
+	fn identical(&self, other: &Dependency) -> Option<&Dependency> {
+		self.plugins.iter().chain(&self.flavors).find(|d| d.identical(other))
 	}
 }
 

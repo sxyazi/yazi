@@ -5,7 +5,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use twox_hash::XxHash3_128;
 use yazi_fs::Xdg;
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(crate) struct Dependency {
 	pub(crate) use_: String, // owner/repo:child
 	pub(crate) name: String, // child.yazi
@@ -37,6 +37,11 @@ impl Dependency {
 		} else {
 			Xdg::config_dir().join(format!("plugins/{}", self.name))
 		}
+	}
+
+	#[inline]
+	pub(super) fn identical(&self, other: &Self) -> bool {
+		self.parent == other.parent && self.child == other.child
 	}
 
 	pub(super) fn header(&self, s: &str) -> Result<()> {
