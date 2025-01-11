@@ -9,11 +9,8 @@ use yazi_shared::event::{CmdCow, EventQuit};
 use crate::{manager::Manager, tasks::Tasks};
 
 #[derive(Default)]
-pub struct Opt {
+pub(super) struct Opt {
 	pub no_cwd_file: bool,
-}
-impl From<()> for Opt {
-	fn from(_: ()) -> Self { Self::default() }
 }
 impl From<CmdCow> for Opt {
 	fn from(c: CmdCow) -> Self { Self { no_cwd_file: c.bool("no-cwd-file") } }
