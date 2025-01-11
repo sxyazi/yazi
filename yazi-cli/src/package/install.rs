@@ -5,7 +5,7 @@ use super::{Dependency, Git};
 
 impl Dependency {
 	pub(super) async fn install(&mut self) -> Result<()> {
-		self.header("Installing package `{name}`")?;
+		self.header("Fetching package `{name}`")?;
 
 		let path = self.local();
 		if !must_exists(&path).await {
