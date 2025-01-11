@@ -52,7 +52,9 @@ Please manually delete it from `{}` and re-run the command.",
 		self.delete_assets().await?;
 		Self::deploy_assets(from.join("assets"), to.join("assets")).await?;
 
+		self.hash = self.hash().await?;
 		outln!("Done!")?;
+
 		Ok(())
 	}
 
