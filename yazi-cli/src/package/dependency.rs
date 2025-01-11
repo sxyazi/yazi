@@ -11,7 +11,7 @@ pub(crate) struct Dependency {
 	pub(crate) name: String, // child.yazi
 
 	pub(crate) parent: String, // owner/repo
-	pub(crate) child:  String, // child
+	pub(crate) child:  String, // child.yazi
 
 	pub(crate) rev:  String,
 	pub(crate) hash: String,
