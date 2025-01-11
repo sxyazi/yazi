@@ -1,12 +1,24 @@
 use yazi_shared::event::CmdCow;
 
-use crate::{manager::Manager, tasks::Tasks};
+use crate::{manager::{Manager, commands::quit}, tasks::Tasks};
+
+#[derive(Default)]
+struct Opt {
+	no_cwd_file: bool,
+}
+impl From<CmdCow> for Opt {
+	fn from(c: CmdCow) -> Self { Self { no_cwd_file: c.bool("no-cwd-file") } }
+}
+impl From<Opt> for quit::Opt {
+	fn from(value: Opt) -> Self { Self { no_cwd_file: value.no_cwd_file } }
+}
 
 impl Manager {
-	pub fn close(&mut self, _: CmdCow, tasks: &Tasks) {
+	#[yazi_codegen::command]
+	pub fn close(&mut self, opt: Opt, tasks: &Tasks) {
 		if self.tabs.len() > 1 {
 			return self.tabs.close(self.tabs.cursor);
 		}
-		self.quit((), tasks);
+		self.quit(opt, tasks);
 	}
 }
