@@ -26,7 +26,7 @@ parts:
     stage-snaps:
       - jq
     stage-packages:
-      - 7zip
+      - 7zip-standalone
       - chafa
       - fd-find
       - ffmpeg
@@ -58,3 +58,17 @@ parts:
       - --prefix=/usr
     build-attributes:
       - enable-patchelf
+
+  # This is a bit of hack to work around a bug in latest snapcraft.
+  # This should be done in `override-prime` of the `yazi` part, but doing
+  # so seems to disable the automatic ELF patching, meaning none of the bins
+  # work correctly!
+  #
+  # Ubuntu's /usr/bin/7zz is a simple bash wrapper that just exec's
+  # /usr/lib/7zip/7zz - this just shortcuts that and places the actual
+  # executable at $SNAP/usr/bin/7zz.
+  fix-7z:
+    after: [yazi]
+    plugin: nil
+    override-prime: |
+      mv $CRAFT_PRIME/usr/lib/7zip/7zz $CRAFT_PRIME/usr/bin/7zz
