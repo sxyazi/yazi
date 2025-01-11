@@ -1,6 +1,6 @@
 use anyhow::{Result, bail};
 use tokio::fs;
-use yazi_fs::must_exists;
+use yazi_fs::maybe_exists;
 use yazi_macro::outln;
 
 use super::Dependency;
@@ -10,16 +10,21 @@ impl Dependency {
 		self.header("Deleting package `{name}`")?;
 
 		let dir = self.target();
-		if must_exists(&dir).await {
-			fs::remove_dir_all(&dir).await?;
-		} else {
+		if !maybe_exists(&dir).await {
+			return Ok(outln!("Not found, skipping")?);
+		}
+
+		if self.hash != self.hash().await? {
 			bail!(
-				"The package.toml file states that `{}` exists, but the directory was not found. The entry will be removed from package.toml.",
-				self.name
+				"You have modified the contents of the `{}` {}. For safety, the operation has been aborted.
+Please manually delete it from: {}",
+				self.name,
+				if self.is_flavor { "flavor" } else { "plugin" },
+				dir.display()
 			);
 		}
 
-		outln!("Done!")?;
+		fs::remove_dir_all(&dir).await?;
 		Ok(())
 	}
 }

@@ -17,9 +17,11 @@ impl Dependency {
 		let to = self.target();
 		if maybe_exists(&to).await && self.hash != self.hash().await? {
 			bail!(
-				"The user has modified the contents of the `{}` package. For safety, the operation has been aborted.
-Please manually delete it from your plugins/flavors directory and re-run the command.",
-				self.name
+				"You have modified the contents of the `{}` {}. For safety, the operation has been aborted.
+Please manually delete it from `{}` and re-run the command.",
+				self.name,
+				if self.is_flavor { "flavor" } else { "plugin" },
+				to.display()
 			);
 		}
 
