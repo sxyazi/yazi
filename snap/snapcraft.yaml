@@ -28,7 +28,9 @@ parts:
     stage-packages:
       - 7zip
       - fd-find
+      - ffmpeg
       - fzf
+      - libpoppler-cpp0t64
       - ripgrep
       - zoxide
     override-build: |
