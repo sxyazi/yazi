@@ -188,8 +188,8 @@ keymap = [
 
 	{ on = "k", run = "arrow -1", desc = "Move cursor up" },
 	{ on = "j", run = "arrow 1",  desc = "Move cursor down" },
-	{ on = "h", run = "swipe -1", desc = "Swipe to the next file" },
-	{ on = "l", run = "swipe 1",  desc = "Swipe to the previous file" },
+	{ on = "h", run = "swipe -1", desc = "Swipe to the previous file" },
+	{ on = "l", run = "swipe 1",  desc = "Swipe to the next file" },
 
 	{ on = "<Up>",    run = "arrow -1", desc = "Move cursor up" },
 	{ on = "<Down>",  run = "arrow 1",  desc = "Move cursor down" },
