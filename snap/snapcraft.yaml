@@ -31,7 +31,7 @@ parts:
       - fd-find
       - ffmpeg
       - fzf
-      - libpoppler-cpp0t64
+      - poppler-utils
       - ripgrep
       - wl-clipboard
       - xclip
