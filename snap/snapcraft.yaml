@@ -31,6 +31,8 @@ parts:
       - fd-find
       - ffmpeg
       - fzf
+      - libglu1-mesa
+      - libglut3.12
       - poppler-utils
       - ripgrep
       - wl-clipboard
@@ -44,6 +46,73 @@ parts:
     organize:
       # Ubuntu's `fd` package installs a binary named `fdfind`. Rename it in the snap.
       usr/bin/fdfind: usr/bin/fd
+    prime:
+      # Remove unused items bought in by dependency packages
+      - -usr/bin/fc-*
+      - -usr/bin/ffplay
+      - -usr/bin/pdfattach
+      - -usr/bin/pdfdetach
+      - -usr/bin/pdffonts
+      - -usr/bin/pdfimages
+      - -usr/bin/pdfinfo
+      - -usr/bin/pdfseparate
+      - -usr/bin/pdfsig
+      - -usr/bin/pdftocairo
+      - -usr/bin/pdftohtml
+      - -usr/bin/pdftops
+      - -usr/bin/pdftotext
+      - -usr/bin/pdfunite
+      # Remove unused libraries identified by snapcraft's linter
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libabsl_bad_*
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libabsl_civil_time.so.*
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libabsl_cord*
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libabsl_examine_stack.so.*
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libabsl_exponential_biased.so.*
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libabsl_failure_signal_handler.so.*
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libabsl_flags*
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libabsl_hash*
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libabsl_log_severity.so.*
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libabsl_periodic_sampler.so.*
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libabsl_random*
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libabsl_raw_hash_set.so.*
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libabsl_scoped_set_env.so.*
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libabsl_statusor.so.*
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libabsl_status.so.*
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libabsl_strerror.so.*
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libabsl_str_format_internal.so.*
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libcaca++.so.0.99.20
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libcjson_utils.so.1.7.17
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libfftw3_omp.so.3.6.10
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libfftw3_threads.so.3.6.10
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libflite_cmu_grapheme_lang.so.2.2
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libflite_cmu_grapheme_lex.so.2.2
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libflite_cmu_indic_lang.so.2.2
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libflite_cmu_indic_lex.so.2.2
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libflite_cmu_time_awb.so.2.2
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libfreebl3.so
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libfreeblpriv3.so
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libGLX_mesa.so.0.0.0
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libhwy_contrib.so.1.0.7
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libhwy_test.so.1.0.7
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libicui18n.so.74.2
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libicuio.so.74.2
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libicutest.so.74.2
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libicutu.so.74.2
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libjacknet.so.0.1.0
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libjackserver.so.0.1.0
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libnssckbi.so
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libnssdbm3.so
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libpulse-simple.so.0.1.1
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libsoftokn3.so
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libsphinxad.so.3.0.0
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libssl3.so
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libtheora.so.0.3.10
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libxcb-dri2.so.0.0.0
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libxcb-glx.so.0.0.0
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libxcb-present.so.0.0.0
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libxcb-sync.so.1.0.0
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libxshmfence.so.1.0.0
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libzvbi-chains.so.0.0.0
 
   # The Ubuntu `imagemagick` package does not ship a `magick` binary,
   # which `yazi` looks for. Building the package oursleves yields the
@@ -58,17 +127,37 @@ parts:
       - --prefix=/usr
     build-attributes:
       - enable-patchelf
+    prime:
+      - usr/bin/magick
+      - usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libgomp.so.1
+      - usr/lib/libMagickCore-7.Q16HDRI.so*
+      - usr/lib/libMagickWand-7.Q16HDRI.so*
 
-  # This is a bit of hack to work around a bug in latest snapcraft.
-  # This should be done in `override-prime` of the `yazi` part, but doing
-  # so seems to disable the automatic ELF patching, meaning none of the bins
-  # work correctly!
-  #
-  # Ubuntu's /usr/bin/7zz is a simple bash wrapper that just exec's
-  # /usr/lib/7zip/7zz - this just shortcuts that and places the actual
-  # executable at $SNAP/usr/bin/7zz.
-  fix-7z:
-    after: [yazi]
+  # Most of what is done here should be done in the `yazi` part, but using
+  # `override-prime` there stops snapcraft from automatically patching ELF
+  # binaries (due to a bug), so we do that work here in a separate part.
+  cleanup:
+    after: [yazi, magick]
     plugin: nil
+    build-packages:
+      - patchelf
+    build-snaps:
+      - core24
     override-prime: |
+      # Ubuntu's /usr/bin/7zz is a simple bash wrapper that just exec's
+      # /usr/lib/7zip/7zz - this just shortcuts that and places the actual
+      # executable at $SNAP/usr/bin/7zz.
       mv $CRAFT_PRIME/usr/lib/7zip/7zz $CRAFT_PRIME/usr/bin/7zz
+
+      # The snapcraft linter highlighted issues with the rpath of these two libraries,
+      # so we fix them up manually here after they are primed in the yazi part.
+      patchelf --force-rpath --set-rpath "\$ORIGIN:\$ORIGIN/pulseaudio:/snap/core24/current/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR" $CRAFT_PRIME/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libpulse.so.0.24.2
+      patchelf --force-rpath --set-rpath "\$ORIGIN/lapack:\$ORIGIN/blas:\$ORIGIN:/snap/core24/current/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR" $CRAFT_PRIME/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libsphinxbase.so.3.0.0
+      patchelf --force-rpath --set-rpath "\$ORIGIN/../lib:\$ORIGIN/../lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR:/snap/core24/current/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR" $CRAFT_PRIME/usr/bin/magick
+      patchelf --force-rpath --set-rpath "\$ORIGIN/$CRAFT_ARCH_TRIPLET_BUILD_FOR:/snap/core24/current/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR" $CRAFT_PRIME/usr/lib/libMagickCore-7.Q16HDRI.so.10.0.2
+      patchelf --force-rpath --set-rpath "\$ORIGIN:\$ORIGIN/$CRAFT_ARCH_TRIPLET_BUILD_FOR:/snap/core24/current/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR" $CRAFT_PRIME/usr/lib/libMagickWand-7.Q16HDRI.so.10.0.2
+
+      # Ensure we don't ship duplicates of files that exist in the core24
+      # snap.
+      cd /snap/core24/current
+      find . -type f,l -exec rm -rf "${CRAFT_PRIME}/{}" \;
