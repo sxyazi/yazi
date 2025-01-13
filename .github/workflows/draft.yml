@@ -182,7 +182,7 @@ jobs:
           snapcraft remote-build --launchpad-accept-public-upload
 
           # Output the build logs from the remote-build
-          cat snapcraft-${name}*${arch}*.txt || echo "Could not find build log"
+          cat snapcraft-yazi*.txt || echo "Could not find build log"
 
       - name: Rename snap
         run: mv yazi_*.snap yazi-${{ matrix.target }}.snap
