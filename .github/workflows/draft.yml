@@ -158,7 +158,7 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.6
 
       - name: Setup LXD
-        uses: canonical/setup-lxd@v1
+        uses: canonical/setup-lxd@v0.1.2
 
       - name: Setup snapcraft
         run: |
