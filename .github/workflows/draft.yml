@@ -185,13 +185,13 @@ jobs:
           cat snapcraft-yazi*.txt || echo "Could not find build log"
 
       - name: Rename snap
-        run: mv yazi_*.snap yazi-${{ matrix.target }}.snap
+        run: mv yazi_*.snap yazi-${{ matrix.arch }}.snap
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: yazi-${{ matrix.target }}.snap
-          path: yazi-${{ matrix.target }}.snap
+          name: yazi-${{ matrix.arch }}.snap
+          path: yazi-${{ matrix.arch }}.snap
 
   draft:
     if: startsWith(github.ref, 'refs/tags/')
