@@ -9,3 +9,5 @@ result-*
 
 .idea/
 .vscode/
+
+*.snap
