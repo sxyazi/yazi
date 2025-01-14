@@ -150,15 +150,11 @@ jobs:
         arch:
           - amd64
           - arm64
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.6
-
-      - name: Setup LXD
-        uses: canonical/setup-lxd@v1
+      - uses: canonical/setup-lxd@v0.1.2
 
       - name: Setup snapcraft
         run: |
@@ -185,13 +181,13 @@ jobs:
           cat snapcraft-yazi*.txt || echo "Could not find build log"
 
       - name: Rename snap
-        run: mv yazi_*.snap yazi-${{ matrix.target }}.snap
+        run: mv yazi_*.snap yazi-${{ matrix.arch }}.snap
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: yazi-${{ matrix.target }}.snap
-          path: yazi-${{ matrix.target }}.snap
+          name: yazi-${{ matrix.arch }}.snap
+          path: yazi-${{ matrix.arch }}.snap
 
   draft:
     if: startsWith(github.ref, 'refs/tags/')
