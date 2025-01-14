@@ -91,6 +91,7 @@ impl Display for Payload<'_> {
 			Body::Move(b) => serde_json::to_string(b),
 			Body::Trash(b) => serde_json::to_string(b),
 			Body::Delete(b) => serde_json::to_string(b),
+			Body::Mount(b) => serde_json::to_string(b),
 			Body::Custom(b) => serde_json::to_string(b),
 		};
 

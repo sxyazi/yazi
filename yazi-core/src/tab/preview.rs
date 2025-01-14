@@ -46,9 +46,7 @@ impl Preview {
 		let Some(cwd) = cwd else { return };
 		self.folder_loader.take().map(|h| h.abort());
 		self.folder_loader = Some(tokio::spawn(async move {
-			let Some(new) = Files::assert_stale(&cwd, dir.unwrap_or(Cha::dummy())).await else {
-				return;
-			};
+			let Some(new) = Files::assert_stale(&cwd, dir.unwrap_or(Cha::dummy())).await else { return };
 			let Ok(rx) = Files::from_dir(&cwd).await else { return };
 
 			let stream =

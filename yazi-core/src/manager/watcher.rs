@@ -7,7 +7,8 @@ use tokio::{fs, pin, sync::{mpsc::{self, UnboundedReceiver}, watch}};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tracing::error;
 use yazi_config::PLUGIN;
-use yazi_fs::{Cha, File, Files, FilesOp, realname_unchecked};
+use yazi_dds::Pubsub;
+use yazi_fs::{Cha, File, Files, FilesOp, mounts::PARTITIONS, realname_unchecked};
 use yazi_plugin::isolate;
 use yazi_proxy::WATCHER;
 use yazi_shared::{RoCell, event::CmdCow, url::Url};
@@ -43,6 +44,9 @@ impl Watcher {
 		} else {
 			tokio::spawn(Self::fan_in(in_rx, RecommendedWatcher::new(handler, config).unwrap()));
 		}
+
+		#[cfg(any(target_os = "linux", target_os = "macos"))]
+		yazi_fs::mounts::Partitions::monitor(PARTITIONS.clone(), Pubsub::pub_from_mount);
 
 		tokio::spawn(Self::fan_out(out_rx));
 		Self { in_tx, out_tx }

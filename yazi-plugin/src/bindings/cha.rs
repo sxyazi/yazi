@@ -1,4 +1,4 @@
-use std::{ops::Deref, time::{Duration, SystemTime, UNIX_EPOCH}};
+use std::{ops::{Deref, Not}, time::{Duration, SystemTime, UNIX_EPOCH}};
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, UserData, UserDataFields, UserDataMethods};
 use yazi_fs::ChaKind;
@@ -44,6 +44,8 @@ impl Cha {
 					#[cfg(unix)]
 					mode: t.raw_get("mode").unwrap_or_default(),
 					#[cfg(unix)]
+					dev: t.raw_get("dev").unwrap_or_default(),
+					#[cfg(unix)]
 					uid: t.raw_get("uid").unwrap_or_default(),
 					#[cfg(unix)]
 					gid: t.raw_get("gid").unwrap_or_default(),
@@ -72,9 +74,10 @@ impl UserData for Cha {
 
 		#[cfg(unix)]
 		{
-			fields.add_field_method_get("uid", |_, me| Ok((!me.is_dummy()).then_some(me.uid)));
-			fields.add_field_method_get("gid", |_, me| Ok((!me.is_dummy()).then_some(me.gid)));
-			fields.add_field_method_get("nlink", |_, me| Ok((!me.is_dummy()).then_some(me.nlink)));
+			fields.add_field_method_get("dev", |_, me| Ok(me.is_dummy().not().then_some(me.dev)));
+			fields.add_field_method_get("uid", |_, me| Ok(me.is_dummy().not().then_some(me.uid)));
+			fields.add_field_method_get("gid", |_, me| Ok(me.is_dummy().not().then_some(me.gid)));
+			fields.add_field_method_get("nlink", |_, me| Ok(me.is_dummy().not().then_some(me.nlink)));
 		}
 
 		fields.add_field_method_get("len", |_, me| Ok(me.len));

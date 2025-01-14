@@ -9,18 +9,22 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
+yazi-ffi    = { path = "../yazi-ffi", version = "0.4.3" }
 yazi-macro  = { path = "../yazi-macro", version = "0.4.3" }
 yazi-shared = { path = "../yazi-shared", version = "0.4.3" }
 
 # External dependencies
-anyhow   = { workspace = true }
-arc-swap = "1.7.1"
-bitflags = { workspace = true }
-dirs     = { workspace = true }
-futures  = { workspace = true }
-regex    = { workspace = true }
-serde    = { workspace = true }
-tokio    = { workspace = true }
+anyhow      = { workspace = true }
+arc-swap    = "1.7.1"
+bitflags    = { workspace = true }
+dirs        = { workspace = true }
+futures     = { workspace = true }
+parking_lot = { workspace = true }
+regex       = { workspace = true }
+scopeguard  = { workspace = true }
+serde       = { workspace = true }
+tokio       = { workspace = true }
+tracing     = { workspace = true }
 
 [target."cfg(unix)".dependencies]
 libc  = { workspace = true }
@@ -28,3 +32,7 @@ uzers = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59.0", features = [ "Win32_Storage_FileSystem" ] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation-sys = { workspace = true }
+objc                = { workspace = true }

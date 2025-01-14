@@ -15,13 +15,7 @@ function Modal:reflow()
 	return components
 end
 
-function Modal:redraw()
-	local elements = {}
-	for _, child in ipairs(self._children) do
-		elements = ya.list_merge(elements, ya.redraw_with(child[1]:new(self._area)))
-	end
-	return elements
-end
+function Modal:redraw() return {} end
 
 -- Children
 function Modal:children_add(tbl, order)
@@ -39,4 +33,12 @@ function Modal:children_remove(id)
 			break
 		end
 	end
+end
+
+function Modal:children_redraw()
+	local elements = {}
+	for _, child in ipairs(self._children) do
+		elements = ya.list_merge(elements, ya.redraw_with(child[1]:new(self._area)))
+	end
+	return elements
 end

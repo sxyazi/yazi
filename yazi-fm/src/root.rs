@@ -34,6 +34,7 @@ impl Widget for Root<'_> {
 		}
 
 		manager::Preview::new(self.cx).render(area, buf);
+		manager::Modal::new(self.cx).render(area, buf);
 
 		if self.cx.tasks.visible {
 			tasks::Tasks::new(self.cx).render(area, buf);

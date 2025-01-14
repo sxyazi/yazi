@@ -31,11 +31,11 @@ yazi-shared = { path = "../yazi-shared", version = "0.4.3" }
 # External build dependencies
 anyhow                = { workspace = true }
 clap                  = { workspace = true }
-clap_complete         = "4.5.40"
+clap_complete         = "4.5.42"
 clap_complete_fig     = "4.5.2"
 clap_complete_nushell = "4.5.5"
 serde_json            = { workspace = true }
-vergen-gitcl          = { version = "1.0.2", features = [ "build" ] }
+vergen-gitcl          = { version = "1.0.5", features = [ "build" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }
