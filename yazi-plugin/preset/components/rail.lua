@@ -1,6 +1,5 @@
 Rail = {
 	_id = "rail",
-	_area = ui.Rect.default,
 }
 
 function Rail:new(chunks, tab)
@@ -20,7 +19,7 @@ function Rail:build()
 	}
 end
 
-function Rail:reflow() return { self } end
+function Rail:reflow() return {} end
 
 function Rail:redraw()
 	local elements = self._base or {}
