@@ -145,7 +145,6 @@ jobs:
           path: yazi-${{ matrix.target }}.zip
 
   build-snap:
-    if: false # Can't make CI pass, disable for now
     strategy:
       matrix:
         arch:

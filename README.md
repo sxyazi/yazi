@@ -53,6 +53,7 @@ https://github.com/sxyazi/yazi/assets/17523360/92ff23fa-0cd5-4f04-b387-894c12265
 | [Rio](https://github.com/raphamorim/rio)                                    | [Inline images protocol][iip]          | ❌ Rio doesn't correctly clear images [#709][rio-bug] |
 | [Black Box](https://gitlab.gnome.org/raggesilver/blackbox)                  | [Sixel graphics format][sixel]         | ✅ Built-in                                           |
 | [Hyper](https://github.com/vercel/hyper)                                    | [Inline images protocol][iip]          | ✅ Built-in                                           |
+| [Bobcat](https://github.com/ismail-yilmaz/Bobcat)                           | [Inline images protocol][iip]          | ✅ Built-in                                           |
 | X11 / Wayland                                                               | Window system protocol                 | ☑️ [Überzug++][ueberzug] required                     |
 | Fallback                                                                    | [ASCII art (Unicode block)][ascii-art] | ☑️ [Chafa][chafa] required                            |
 
