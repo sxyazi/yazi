@@ -1,11 +1,12 @@
-use mlua::{ExternalError, ExternalResult, Function, Lua, MultiValue, Value};
+use futures::future::join_all;
+use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, MultiValue, Value, Variadic};
 use tokio::sync::oneshot;
 use yazi_dds::Sendable;
 use yazi_proxy::{AppProxy, options::{PluginCallback, PluginOpt}};
 use yazi_shared::event::Data;
 
 use super::Utils;
-use crate::{loader::LOADER, runtime::RtRef};
+use crate::{bindings::{MpscRx, MpscTx, MpscUnboundedRx, MpscUnboundedTx, OneshotRx, OneshotTx}, loader::LOADER, runtime::RtRef};
 
 impl Utils {
 	pub(super) fn sync(lua: &Lua, isolate: bool) -> mlua::Result<Function> {
@@ -37,6 +38,44 @@ impl Utils {
 				})
 			})
 		}
+	}
+
+	pub(super) fn chan(lua: &Lua) -> mlua::Result<Function> {
+		lua.create_function(|lua, (type_, buffer): (mlua::String, Option<usize>)| {
+			match (&*type_.as_bytes(), buffer) {
+				(b"mpsc", Some(buffer)) if buffer < 1 => {
+					Err("Buffer size must be greater than 0".into_lua_err())
+				}
+				(b"mpsc", Some(buffer)) => {
+					let (tx, rx) = tokio::sync::mpsc::channel::<Value>(buffer);
+					(MpscTx(tx), MpscRx(rx)).into_lua_multi(lua)
+				}
+				(b"mpsc", None) => {
+					let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<Value>();
+					(MpscUnboundedTx(tx), MpscUnboundedRx(rx)).into_lua_multi(lua)
+				}
+				(b"oneshot", _) => {
+					let (tx, rx) = tokio::sync::oneshot::channel::<Value>();
+					(OneshotTx(Some(tx)), OneshotRx(Some(rx))).into_lua_multi(lua)
+				}
+				_ => Err("Channel type must be `mpsc` or `oneshot`".into_lua_err()),
+			}
+		})
+	}
+
+	pub(super) fn join(lua: &Lua) -> mlua::Result<Function> {
+		lua.create_async_function(|_, fns: Variadic<Function>| async move {
+			let mut results = MultiValue::with_capacity(fns.len());
+			for r in join_all(fns.into_iter().map(|f| f.call_async::<MultiValue>(()))).await {
+				results.extend(r?);
+			}
+			Ok(results)
+		})
+	}
+
+	// TODO
+	pub(super) fn select(lua: &Lua) -> mlua::Result<Function> {
+		lua.create_async_function(|_lua, _futs: MultiValue| async move { Ok(()) })
 	}
 
 	async fn retrieve(id: &str, calls: usize, args: MultiValue) -> mlua::Result<Vec<Data>> {

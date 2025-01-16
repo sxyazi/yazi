@@ -47,6 +47,9 @@ pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Table> {
 
 			// Sync
 			b"sync" => Utils::sync(lua, isolate)?,
+			b"chan" => Utils::chan(lua)?,
+			b"join" => Utils::join(lua)?,
+			b"select" => Utils::select(lua)?,
 
 			// Target
 			b"target_os" => Utils::target_os(lua)?,
