@@ -43,17 +43,20 @@ impl Utils {
 	pub(super) fn chan(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|lua, (type_, buffer): (mlua::String, Option<usize>)| {
 			match (&*type_.as_bytes(), buffer) {
+				(b"mpsc", Some(buffer)) if buffer < 1 => {
+					Err("Buffer size must be greater than 0".into_lua_err())
+				}
 				(b"mpsc", Some(buffer)) => {
 					let (tx, rx) = tokio::sync::mpsc::channel::<Value>(buffer);
-					(MpscTx(tx), MpscRx(rx)).into_lua_multi(&lua)
+					(MpscTx(tx), MpscRx(rx)).into_lua_multi(lua)
 				}
 				(b"mpsc", None) => {
 					let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<Value>();
-					(MpscUnboundedTx(tx), MpscUnboundedRx(rx)).into_lua_multi(&lua)
+					(MpscUnboundedTx(tx), MpscUnboundedRx(rx)).into_lua_multi(lua)
 				}
 				(b"oneshot", _) => {
 					let (tx, rx) = tokio::sync::oneshot::channel::<Value>();
-					(OneshotTx(Some(tx)), OneshotRx(Some(rx))).into_lua_multi(&lua)
+					(OneshotTx(Some(tx)), OneshotRx(Some(rx))).into_lua_multi(lua)
 				}
 				_ => Err("Channel type must be `mpsc` or `oneshot`".into_lua_err()),
 			}
