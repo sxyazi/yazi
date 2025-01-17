@@ -1,7 +1,7 @@
 use globset::GlobBuilder;
 use mlua::{ExternalError, ExternalResult, Function, IntoLua, IntoLuaMulti, Lua, MetaMethod, Table, Value};
 use tokio::fs;
-use yazi_fs::remove_dir_clean;
+use yazi_fs::{mounts::PARTITIONS, remove_dir_clean};
 
 use crate::{Error, bindings::{Cast, Cha}, file::File, url::{Url, UrlRef}};
 
@@ -15,6 +15,7 @@ pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 			b"remove" => remove(lua)?,
 			b"read_dir" => read_dir(lua)?,
 			b"unique_name" => unique_name(lua)?,
+			b"partitions" => partitions(lua)?,
 			_ => return Ok(Value::Nil),
 		}
 		.into_lua(lua)?;
@@ -154,5 +155,23 @@ fn unique_name(lua: &Lua) -> mlua::Result<Function> {
 			Ok(u) => (Url::cast(&lua, u)?, Value::Nil).into_lua_multi(&lua),
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
+	})
+}
+
+fn partitions(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_async_function(|lua, ()| async move {
+		PARTITIONS
+			.read()
+			.iter()
+			.filter(|&p| !p.systemic())
+			.map(|p| {
+				lua.create_table_from([
+					("src", p.src.clone().into_lua(&lua)?),
+					("dist", p.dist.clone().into_lua(&lua)?),
+					("label", p.label.clone().into_lua(&lua)?),
+					("fstype", p.fstype.clone().into_lua(&lua)?),
+				])
+			})
+			.collect::<mlua::Result<Vec<Table>>>()
 	})
 }

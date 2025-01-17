@@ -2,7 +2,7 @@ use anyhow::{Result, bail};
 use mlua::{ExternalResult, IntoLua, Lua, Value};
 use serde::Serialize;
 
-use super::{BodyBulk, BodyBye, BodyCd, BodyCustom, BodyDelete, BodyHey, BodyHi, BodyHover, BodyLoad, BodyMove, BodyRename, BodyTab, BodyTrash, BodyYank};
+use super::{BodyBulk, BodyBye, BodyCd, BodyCustom, BodyDelete, BodyHey, BodyHi, BodyHover, BodyLoad, BodyMount, BodyMove, BodyRename, BodyTab, BodyTrash, BodyYank};
 use crate::Payload;
 
 #[derive(Debug, Serialize)]
@@ -21,6 +21,7 @@ pub enum Body<'a> {
 	Move(BodyMove<'a>),
 	Trash(BodyTrash<'a>),
 	Delete(BodyDelete<'a>),
+	Mount(BodyMount),
 	Custom(BodyCustom),
 }
 
@@ -40,6 +41,7 @@ impl Body<'static> {
 			"move" => Self::Move(serde_json::from_str(body)?),
 			"trash" => Self::Trash(serde_json::from_str(body)?),
 			"delete" => Self::Delete(serde_json::from_str(body)?),
+			"mount" => Self::Mount(serde_json::from_str(body)?),
 			_ => BodyCustom::from_str(kind, body)?,
 		})
 	}
@@ -65,6 +67,7 @@ impl Body<'static> {
 				| "move"
 				| "trash"
 				| "delete"
+				| "mount"
 		) {
 			bail!("Cannot construct system event");
 		}
@@ -98,6 +101,7 @@ impl<'a> Body<'a> {
 			Self::Move(_) => "move",
 			Self::Trash(_) => "trash",
 			Self::Delete(_) => "delete",
+			Self::Mount(_) => "mount",
 			Self::Custom(b) => b.kind.as_str(),
 		}
 	}
@@ -127,6 +131,7 @@ impl IntoLua for Body<'static> {
 			Self::Move(b) => b.into_lua(lua),
 			Self::Trash(b) => b.into_lua(lua),
 			Self::Delete(b) => b.into_lua(lua),
+			Self::Mount(b) => b.into_lua(lua),
 			Self::Custom(b) => b.into_lua(lua),
 		}
 	}

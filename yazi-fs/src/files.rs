@@ -4,7 +4,7 @@ use tokio::{fs::{self, DirEntry}, select, sync::mpsc::{self, UnboundedReceiver}}
 use yazi_shared::{Id, url::{Url, Urn, UrnBuf}};
 
 use super::{FilesSorter, Filter};
-use crate::{Cha, FILES_TICKET, File, FilesOp, SortBy, maybe_exists};
+use crate::{Cha, FILES_TICKET, File, FilesOp, SortBy, maybe_exists, mounts::PARTITIONS};
 
 #[derive(Default)]
 pub struct Files {
@@ -84,10 +84,9 @@ impl Files {
 	pub async fn assert_stale(cwd: &Url, cha: Cha) -> Option<Cha> {
 		match fs::metadata(cwd).await.map(Cha::from) {
 			Ok(c) if !c.is_dir() => {
-				// TODO: use `ErrorKind::NotADirectory` instead once it gets stabilized
-				FilesOp::IOErr(cwd.clone(), std::io::ErrorKind::AlreadyExists).emit();
+				FilesOp::IOErr(cwd.clone(), std::io::ErrorKind::NotADirectory).emit();
 			}
-			Ok(c) if c.hits(cha) => {}
+			Ok(c) if c.hits(cha) && PARTITIONS.read().heuristic(cha) => {}
 			Ok(c) => return Some(c),
 			Err(e) => {
 				if maybe_exists(cwd).await {

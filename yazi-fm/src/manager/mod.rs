@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(preview);
+yazi_macro::mod_flat!(modal preview);

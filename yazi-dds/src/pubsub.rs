@@ -6,7 +6,7 @@ use yazi_boot::BOOT;
 use yazi_fs::FolderStage;
 use yazi_shared::{Id, RoCell, url::Url};
 
-use crate::{Client, ID, PEERS, body::{Body, BodyBulk, BodyCd, BodyDelete, BodyHi, BodyHover, BodyLoad, BodyMove, BodyMoveItem, BodyRename, BodyTab, BodyTrash, BodyYank}};
+use crate::{Client, ID, PEERS, body::{Body, BodyBulk, BodyCd, BodyDelete, BodyHi, BodyHover, BodyLoad, BodyMount, BodyMove, BodyMoveItem, BodyRename, BodyTab, BodyTrash, BodyYank}};
 
 pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function>>>> = RoCell::new();
 
@@ -202,6 +202,18 @@ impl Pubsub {
 		}
 		if LOCAL.read().contains_key("delete") {
 			Self::pub_(BodyDelete::owned(urls));
+		}
+	}
+
+	pub fn pub_from_mount() {
+		if LOCAL.read().contains_key("mount") {
+			Self::pub_(BodyMount::owned());
+		}
+		if PEERS.read().values().any(|p| p.able("mount")) {
+			Client::push(BodyMount::owned());
+		}
+		if BOOT.local_events.contains("mount") {
+			BodyMount::owned().with_receiver(*ID).flush();
 		}
 	}
 
