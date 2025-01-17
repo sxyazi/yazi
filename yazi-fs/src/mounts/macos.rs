@@ -17,6 +17,10 @@ impl Partitions {
 	{
 		tokio::task::spawn_blocking(move || {
 			let session = unsafe { DASessionCreate(kCFAllocatorDefault) };
+			if session.is_null() {
+				return error!("Cannot create a disk arbitration session");
+			}
+			defer! { unsafe { CFRelease(session) } };
 
 			extern "C" fn on_appeared(_disk: *const c_void, context: *mut c_void) {
 				let boxed = context as *mut Box<dyn Fn()>;
@@ -85,6 +89,10 @@ impl Partitions {
 
 	fn all_partitions(names: Vec<CString>) -> Result<Vec<Partition>> {
 		let session = unsafe { DASessionCreate(kCFAllocatorDefault) };
+		if session.is_null() {
+			bail!("Cannot create a disk arbitration session");
+		}
+		defer! { unsafe { CFRelease(session) } };
 
 		let mut disks = Vec::with_capacity(names.len());
 		for name in names {
@@ -93,7 +101,7 @@ impl Partitions {
 				continue;
 			}
 
-			defer! { unsafe { CFRelease(disk as _) } };
+			defer! { unsafe { CFRelease(disk) } };
 			let Ok(dict) = CFDict::take(unsafe { DADiskCopyDescription(disk) }) else {
 				continue;
 			};
@@ -120,7 +128,7 @@ impl Partitions {
 		};
 
 		if result != 0 {
-			bail!("IOServiceGetMatchingServices failed");
+			bail!("Cannot get the IO matching services");
 		}
 		defer! { unsafe { IOObjectRelease(iterator); } };
 

@@ -11,7 +11,7 @@ pub struct CFDict(CFDictionaryRef);
 impl CFDict {
 	pub fn take(dict: CFDictionaryRef) -> Result<Self> {
 		if dict.is_null() {
-			bail!("Null pointer");
+			bail!("Cannot take a null pointer");
 		}
 		Ok(Self(dict))
 	}
@@ -19,7 +19,9 @@ impl CFDict {
 	pub fn value(&self, key: &str) -> Result<*const c_void> {
 		let key_ = CFString::new(key)?;
 		let mut value = std::ptr::null();
-		if unsafe { CFDictionaryGetValueIfPresent(self.0, key_.as_void_ptr(), &mut value) } == 0 {
+		if unsafe { CFDictionaryGetValueIfPresent(self.0, key_.as_void_ptr(), &mut value) } == 0
+			|| value.is_null()
+		{
 			bail!("Cannot get the value for the key `{key}`");
 		}
 		Ok(value)
