@@ -133,9 +133,6 @@ parts:
       - usr/lib/libMagickCore-7.Q16HDRI.so*
       - usr/lib/libMagickWand-7.Q16HDRI.so*
 
-  # Most of what is done here should be done in the `yazi` part, but using
-  # `override-prime` there stops snapcraft from automatically patching ELF
-  # binaries (due to a bug), so we do that work here in a separate part.
   cleanup:
     after: [yazi, magick]
     plugin: nil
@@ -148,14 +145,6 @@ parts:
       # /usr/lib/7zip/7zz - this just shortcuts that and places the actual
       # executable at $SNAP/usr/bin/7zz.
       mv $CRAFT_PRIME/usr/lib/7zip/7zz $CRAFT_PRIME/usr/bin/7zz
-
-      # The snapcraft linter highlighted issues with the rpath of these two libraries,
-      # so we fix them up manually here after they are primed in the yazi part.
-      patchelf --force-rpath --set-rpath "\$ORIGIN:\$ORIGIN/pulseaudio:/snap/core24/current/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR" $CRAFT_PRIME/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libpulse.so.0.24.2
-      patchelf --force-rpath --set-rpath "\$ORIGIN/lapack:\$ORIGIN/blas:\$ORIGIN:/snap/core24/current/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR" $CRAFT_PRIME/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libsphinxbase.so.3.0.0
-      patchelf --force-rpath --set-rpath "\$ORIGIN/../lib:\$ORIGIN/../lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR:/snap/core24/current/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR" $CRAFT_PRIME/usr/bin/magick
-      patchelf --force-rpath --set-rpath "\$ORIGIN/$CRAFT_ARCH_TRIPLET_BUILD_FOR:/snap/core24/current/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR" $CRAFT_PRIME/usr/lib/libMagickCore-7.Q16HDRI.so.10.0.2
-      patchelf --force-rpath --set-rpath "\$ORIGIN:\$ORIGIN/$CRAFT_ARCH_TRIPLET_BUILD_FOR:/snap/core24/current/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR" $CRAFT_PRIME/usr/lib/libMagickWand-7.Q16HDRI.so.10.0.2
 
       # Ensure we don't ship duplicates of files that exist in the core24
       # snap.
