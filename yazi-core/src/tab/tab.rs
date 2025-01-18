@@ -123,22 +123,18 @@ impl Tab {
 				return render!();
 			}
 
-			let hovered = f.hovered().filter(|_| f.tracing).map(|h| h.urn_owned());
 			f.files.set_show_hidden(self.pref.show_hidden);
 			f.files.set_sorter(<_>::from(&self.pref));
 
 			render!(f.files.catchup_revision());
-			render!(f.repos(hovered.as_ref().map(|u| u.as_urn())));
+			render!(f.repos(f.trace.clone()));
 		};
 
 		apply(&mut self.current);
 
 		if let Some(parent) = &mut self.parent {
 			apply(parent);
-
-			// The parent should always track the CWD
-			parent.hover(self.current.url.urn());
-			parent.tracing = parent.hovered().map(|h| &h.url) == Some(&self.current.url);
+			parent.hover(self.current.url.urn()); // The parent should always track the CWD
 		}
 
 		self

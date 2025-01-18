@@ -1,4 +1,4 @@
-use std::{collections::HashSet, path::PathBuf};
+use std::collections::HashSet;
 
 use yazi_dds::Pubsub;
 use yazi_macro::render;
@@ -26,7 +26,7 @@ impl Manager {
 		if let Some(u) = opt.url {
 			self.hover_do(u, opt.tab);
 		} else {
-			self.current_or_mut(opt.tab).repos(None);
+			self.current_or_mut(opt.tab).arrow(0);
 		}
 
 		// Repeek
@@ -51,15 +51,15 @@ impl Manager {
 
 	fn hover_do(&mut self, url: Url, tab: Option<Id>) {
 		// Hover on the file
-		if let Ok(p) = url.strip_prefix(&self.current_or(tab).url).map(PathBuf::from) {
-			render!(self.current_or_mut(tab).repos(Some(Urn::new(&p))));
+		if let Ok(p) = url.strip_prefix(&self.current_or(tab).url) {
+			render!(self.current_or_mut(tab).hover(Urn::new(p)));
 		}
 
 		// Turn on tracing
-		if self.current_or(tab).hovered().is_some_and(|f| url == f.url) {
+		if self.current_or(tab).hovered().is_some_and(|h| h.url == url) {
 			// `hover(Some)` occurs after user actions, such as create, rename, reveal, etc.
-			// At this point, it's intuitive to track the location of this file regardless.
-			self.current_or_mut(tab).tracing = true;
+			// At this point, it's intuitive to track the location of the file regardless.
+			self.current_or_mut(tab).trace = Some(url.urn_owned());
 		}
 	}
 }

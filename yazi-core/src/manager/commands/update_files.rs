@@ -70,16 +70,12 @@ impl Manager {
 	}
 
 	fn update_current(tab: &mut Tab, op: Cow<FilesOp>, tasks: &Tasks) {
-		let hovered = tab.hovered().filter(|_| tab.current.tracing).map(|h| h.urn_owned());
 		let calc = !matches!(*op, FilesOp::Size(..) | FilesOp::Deleting(..));
-
 		let foreign = matches!(op, Cow::Borrowed(_));
+
 		if !tab.current.update_pub(tab.id, op.into_owned()) {
 			return;
-		}
-
-		tab.current.repos(hovered.as_ref().map(|u| u.as_urn()));
-		if foreign {
+		} else if foreign {
 			return;
 		}
 
@@ -109,11 +105,11 @@ impl Manager {
 			|(p, n)| matches!(*op, FilesOp::Deleting(ref parent, ref urns) if *parent == p && urns.contains(n)),
 		);
 
-		let folder = tab.history.entry(op.cwd().clone()).or_insert_with(|| Folder::from(op.cwd()));
-		let hovered = folder.hovered().filter(|_| folder.tracing).map(|h| h.urn_owned());
-		if folder.update_pub(tab.id, op.into_owned()) {
-			folder.repos(hovered.as_ref().map(|u| u.as_urn()));
-		}
+		tab
+			.history
+			.entry(op.cwd().clone())
+			.or_insert_with(|| Folder::from(op.cwd()))
+			.update_pub(tab.id, op.into_owned());
 
 		if leave {
 			tab.leave(());

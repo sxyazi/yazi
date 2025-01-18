@@ -4,7 +4,7 @@ use yazi_config::{LAYOUT, MANAGER};
 use yazi_dds::Pubsub;
 use yazi_fs::{Cha, File, Files, FilesOp, FolderStage, Step};
 use yazi_proxy::ManagerProxy;
-use yazi_shared::{Id, url::{Url, Urn}};
+use yazi_shared::{Id, url::{Url, Urn, UrnBuf}};
 
 pub struct Folder {
 	pub url:   Url,
@@ -15,21 +15,21 @@ pub struct Folder {
 	pub offset: usize,
 	pub cursor: usize,
 
-	pub page:    usize,
-	pub tracing: bool,
+	pub page:  usize,
+	pub trace: Option<UrnBuf>,
 }
 
 impl Default for Folder {
 	fn default() -> Self {
 		Self {
-			url:     Default::default(),
-			cha:     Default::default(),
-			files:   Files::new(MANAGER.show_hidden),
-			stage:   Default::default(),
-			offset:  Default::default(),
-			cursor:  Default::default(),
-			page:    Default::default(),
-			tracing: Default::default(),
+			url:    Default::default(),
+			cha:    Default::default(),
+			files:  Files::new(MANAGER.show_hidden),
+			stage:  Default::default(),
+			offset: Default::default(),
+			cursor: Default::default(),
+			page:   Default::default(),
+			trace:  Default::default(),
 		}
 	}
 }
@@ -44,6 +44,9 @@ impl Folder {
 		match op {
 			FilesOp::Full(_, _, cha) => {
 				(self.cha, self.stage) = (cha, FolderStage::Loaded);
+			}
+			FilesOp::Part(_, ref files, _) if files.is_empty() => {
+				self.stage = FolderStage::Loading;
 			}
 			FilesOp::Part(_, _, ticket) if ticket == self.files.ticket() => {
 				self.stage = FolderStage::Loading;
@@ -73,7 +76,9 @@ impl Folder {
 			FilesOp::Upserting(_, files) => self.files.update_upserting(files),
 		}
 
-		self.arrow(0);
+		self.trace = self.trace.take_if(|_| !self.files.is_empty() || self.stage.is_loading());
+		self.repos(self.trace.clone());
+
 		(stage, revision) != (self.stage, self.files.revision)
 	}
 
@@ -90,15 +95,14 @@ impl Folder {
 	pub fn arrow(&mut self, step: impl Into<Step>) -> bool {
 		let step = step.into() as Step;
 		let mut b = if self.files.is_empty() {
-			(self.cursor, self.offset, self.tracing) = (0, 0, false);
-			false
+			(mem::take(&mut self.cursor), mem::take(&mut self.offset)) != (0, 0)
 		} else if step.is_positive() {
 			self.next(step)
 		} else {
 			self.prev(step)
 		};
 
-		self.tracing |= b;
+		self.trace = self.hovered().filter(|_| b).map(|h| h.urn_owned()).or(self.trace.take());
 		b |= self.squeeze_offset();
 
 		self.sync_page(false);
@@ -107,7 +111,7 @@ impl Folder {
 
 	pub fn hover(&mut self, urn: &Urn) -> bool {
 		if self.hovered().map(|h| h.urn()) == Some(urn) {
-			return false;
+			return self.arrow(0);
 		}
 
 		let new = self.files.position(urn).unwrap_or(self.cursor) as isize;
@@ -115,8 +119,8 @@ impl Folder {
 	}
 
 	#[inline]
-	pub fn repos(&mut self, url: Option<&Urn>) -> bool {
-		if let Some(u) = url { self.hover(u) } else { self.arrow(0) }
+	pub fn repos(&mut self, urn: Option<impl AsRef<Urn>>) -> bool {
+		if let Some(u) = urn { self.hover(u.as_ref()) } else { self.arrow(0) }
 	}
 
 	pub fn sync_page(&mut self, force: bool) {

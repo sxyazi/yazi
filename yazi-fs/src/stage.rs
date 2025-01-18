@@ -8,6 +8,11 @@ pub enum FolderStage {
 	Failed(std::io::ErrorKind),
 }
 
+impl FolderStage {
+	#[inline]
+	pub fn is_loading(self) -> bool { self == Self::Loading }
+}
+
 impl Serialize for FolderStage {
 	fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
 		let mut map = serializer.serialize_map(Some(2))?;
