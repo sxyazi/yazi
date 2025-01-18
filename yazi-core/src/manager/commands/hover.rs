@@ -56,10 +56,10 @@ impl Manager {
 		}
 
 		// Turn on tracing
-		if self.current_or(tab).hovered().is_some_and(|f| url == f.url) {
+		if self.current_or(tab).hovered().is_some_and(|h| h.url == url) {
 			// `hover(Some)` occurs after user actions, such as create, rename, reveal, etc.
 			// At this point, it's intuitive to track the location of this file regardless.
-			self.current_or_mut(tab).tracing = true;
+			self.current_or_mut(tab).trace = Some(url.urn_owned());
 		}
 	}
 }
