@@ -145,43 +145,27 @@ jobs:
           path: yazi-${{ matrix.target }}.zip
 
   build-snap:
-    if: false # Can't make CI pass, disable for now
     strategy:
       matrix:
-        arch:
-          - amd64
-          - arm64
-    runs-on: ubuntu-latest
+        include:
+          - os: ubuntu-24.04
+            arch: amd64
+          - os: ubuntu-24.04
+            arch: arm64
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: canonical/setup-lxd@v0.1.2
+      - name: Setup LXD
+        uses: canonical/setup-lxd@v0.1.2
 
       - name: Setup snapcraft
-        run: |
-          sudo snap install --classic snapcraft
-
-          mkdir -p ~/.local/share/snapcraft
-          echo "${{ secrets.LP_TOKEN }}" > ~/.local/share/snapcraft/launchpad-credentials
-
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "Github Actions"
+        run: sudo snap install --classic snapcraft
 
       - name: Build snap
-        env:
-          arch: ${{ matrix.arch }}
-        run: |
-          # Modify the `platforms` to use a single arch only, but run this in a matrix so they
-          # all get hit
-          yq -i '.platforms |= {env(arch): {"build-on": env(arch)}}' snap/snapcraft.yaml
-
-          # Now run a remote-build, targeting just the single arch specified
-          snapcraft remote-build --launchpad-accept-public-upload
-
-          # Output the build logs from the remote-build
-          cat snapcraft-yazi*.txt || echo "Could not find build log"
+        run: snapcraft --verbose
 
       - name: Rename snap
         run: mv yazi_*.snap yazi-${{ matrix.arch }}.snap
