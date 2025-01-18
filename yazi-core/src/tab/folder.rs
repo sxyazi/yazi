@@ -73,7 +73,9 @@ impl Folder {
 			FilesOp::Upserting(_, files) => self.files.update_upserting(files),
 		}
 
+		self.trace = self.trace.take_if(|_| !self.files.is_empty() || self.stage.is_loading());
 		self.repos(self.trace.clone().as_ref().map(|u| u.as_urn()));
+
 		(stage, revision) != (self.stage, self.files.revision)
 	}
 
@@ -97,7 +99,7 @@ impl Folder {
 			self.prev(step)
 		};
 
-		self.trace = self.hovered().filter(|_| b).map(|h| h.urn_owned()).or(mem::take(&mut self.trace));
+		self.trace = self.hovered().filter(|_| b).map(|h| h.urn_owned()).or(self.trace.take());
 		b |= self.squeeze_offset();
 
 		self.sync_page(false);

@@ -131,8 +131,10 @@ impl Tab {
 		};
 
 		apply(&mut self.current);
+
 		if let Some(parent) = &mut self.parent {
 			apply(parent);
+			parent.hover(self.current.url.urn()); // The parent should always track the CWD
 		}
 
 		self
