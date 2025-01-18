@@ -21,21 +21,12 @@
       let
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [
-            rust-overlay.overlays.default
-            (
-              final: prev:
-              let
-                toolchain = final.rust-bin.stable.latest.default;
-              in
-              {
-                rustPlatform = prev.makeRustPlatform {
-                  cargo = toolchain;
-                  rustc = toolchain;
-                };
-              }
-            )
-          ];
+          overlays = [ rust-overlay.overlays.default ];
+        };
+        toolchain = pkgs.rust-bin.stable.latest.default;
+        rustPlatform = pkgs.makeRustPlatform {
+          cargo = toolchain;
+          rustc = toolchain;
         };
 
         rev = self.shortRev or self.dirtyShortRev or "dirty";
@@ -46,7 +37,14 @@
       in
       {
         packages = {
-          yazi-unwrapped = pkgs.callPackage ./nix/yazi-unwrapped.nix { inherit version rev date; };
+          yazi-unwrapped = pkgs.callPackage ./nix/yazi-unwrapped.nix {
+            inherit
+              version
+              rev
+              date
+              rustPlatform
+              ;
+          };
           yazi = pkgs.callPackage ./nix/yazi.nix { inherit (self.packages.${system}) yazi-unwrapped; };
           default = self.packages.${system}.yazi;
         };
