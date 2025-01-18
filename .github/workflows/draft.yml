@@ -150,7 +150,7 @@ jobs:
         include:
           - os: ubuntu-24.04
             arch: amd64
-          - os: ubuntu-24.04
+          - os: ubuntu-24.04-arm
             arch: arm64
     runs-on: ${{ matrix.os }}
     steps:
