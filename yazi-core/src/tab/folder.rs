@@ -116,8 +116,8 @@ impl Folder {
 	}
 
 	#[inline]
-	pub fn repos(&mut self, url: Option<impl AsRef<Urn>>) -> bool {
-		if let Some(u) = url { self.hover(u.as_ref()) } else { self.arrow(0) }
+	pub fn repos(&mut self, urn: Option<impl AsRef<Urn>>) -> bool {
+		if let Some(u) = urn { self.hover(u.as_ref()) } else { self.arrow(0) }
 	}
 
 	pub fn sync_page(&mut self, force: bool) {
