@@ -55,6 +55,10 @@ impl Borrow<Urn> for UrnBuf {
 	fn borrow(&self) -> &Urn { Urn::new(&self.0) }
 }
 
+impl AsRef<Urn> for UrnBuf {
+	fn as_ref(&self) -> &Urn { self.borrow() }
+}
+
 impl AsRef<Path> for UrnBuf {
 	fn as_ref(&self) -> &Path { &self.0 }
 }

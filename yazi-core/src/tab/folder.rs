@@ -74,7 +74,7 @@ impl Folder {
 		}
 
 		self.trace = self.trace.take_if(|_| !self.files.is_empty() || self.stage.is_loading());
-		self.repos(self.trace.clone().as_ref().map(|u| u.as_urn()));
+		self.repos(self.trace.clone());
 
 		(stage, revision) != (self.stage, self.files.revision)
 	}
@@ -116,8 +116,8 @@ impl Folder {
 	}
 
 	#[inline]
-	pub fn repos(&mut self, url: Option<&Urn>) -> bool {
-		if let Some(u) = url { self.hover(u) } else { self.arrow(0) }
+	pub fn repos(&mut self, url: Option<impl AsRef<Urn>>) -> bool {
+		if let Some(u) = url { self.hover(u.as_ref()) } else { self.arrow(0) }
 	}
 
 	pub fn sync_page(&mut self, force: bool) {

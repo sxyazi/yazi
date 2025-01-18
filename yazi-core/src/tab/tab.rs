@@ -127,7 +127,7 @@ impl Tab {
 			f.files.set_sorter(<_>::from(&self.pref));
 
 			render!(f.files.catchup_revision());
-			render!(f.repos(f.trace.clone().as_ref().map(|u| u.as_urn())));
+			render!(f.repos(f.trace.clone()));
 		};
 
 		apply(&mut self.current);

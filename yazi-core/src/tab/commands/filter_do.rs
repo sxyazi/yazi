@@ -25,7 +25,7 @@ impl Tab {
 			return;
 		}
 
-		self.current.repos(hovered.as_ref().map(|u| u.as_urn()));
+		self.current.repos(hovered.as_ref());
 		if self.hovered().map(|f| f.urn()) != hovered.as_ref().map(|u| u.as_urn()) {
 			ManagerProxy::hover(None, self.id);
 		}
