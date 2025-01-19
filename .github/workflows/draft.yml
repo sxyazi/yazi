@@ -148,9 +148,9 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-24.04
+          - os: ubuntu-latest
             arch: amd64
-          - os: ubuntu-24.04
+          - os: ubuntu-24.04-arm
             arch: arm64
     runs-on: ${{ matrix.os }}
     steps:
@@ -181,7 +181,7 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    needs: [build-unix, build-windows, build-musl]
+    needs: [build-unix, build-windows, build-musl, build-snap]
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -201,7 +201,7 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    needs: [build-unix, build-windows, build-musl]
+    needs: [build-unix, build-windows, build-musl, build-snap]
     steps:
       - uses: actions/download-artifact@v4
         with:
