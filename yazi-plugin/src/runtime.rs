@@ -2,18 +2,20 @@ use std::collections::{HashMap, VecDeque};
 
 use mlua::{Function, UserData};
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Runtime {
 	frames: VecDeque<RuntimeFrame>,
 	blocks: HashMap<String, Vec<Function>>,
 }
 
+#[derive(Debug)]
 struct RuntimeFrame {
 	id:    String,
 	calls: usize,
 }
 
-pub type RtRef = mlua::UserDataRefMut<Runtime>;
+pub type RtRef = mlua::UserDataRef<Runtime>;
+pub type RtRefMut = mlua::UserDataRefMut<Runtime>;
 
 impl Runtime {
 	pub fn new(id: &str) -> Self {
@@ -30,6 +32,8 @@ impl Runtime {
 	pub fn pop(&mut self) { self.frames.pop_back(); }
 
 	pub fn current(&self) -> Option<&str> { self.frames.back().map(|f| f.id.as_str()) }
+
+	pub fn current_owned(&self) -> Option<String> { self.current().map(ToOwned::to_owned) }
 
 	pub fn next_block(&mut self) -> Option<usize> {
 		self.frames.back_mut().map(|f| {

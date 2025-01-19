@@ -2,9 +2,9 @@ use std::fmt::Display;
 
 use mlua::ObjectLike;
 use scopeguard::defer;
-use tracing::warn;
+use tracing::{error, warn};
 use yazi_dds::Sendable;
-use yazi_plugin::{LUA, RtRef, loader::LOADER};
+use yazi_plugin::{LUA, RtRefMut, loader::LOADER};
 use yazi_proxy::{AppProxy, options::{PluginMode, PluginOpt}};
 
 use crate::{app::App, lives::Lives};
@@ -50,11 +50,11 @@ impl App {
 			return self.cx.tasks.plugin_micro(opt);
 		}
 
-		match LUA.named_registry_value::<RtRef>("rt") {
+		match LUA.named_registry_value::<RtRefMut>("rt") {
 			Ok(mut r) => r.push(&opt.id),
 			Err(e) => return warn!("{e}"),
 		}
-		defer! { _ = LUA.named_registry_value::<RtRef>("rt").map(|mut r| r.pop()) }
+		defer! { _ = LUA.named_registry_value::<RtRefMut>("rt").map(|mut r| r.pop()) }
 
 		let plugin = match LOADER.load_with(&LUA, &opt.id, chunk) {
 			Ok(plugin) => plugin,
@@ -62,14 +62,16 @@ impl App {
 		};
 		drop(loader);
 
-		_ = Lives::scope(&self.cx, || {
+		let result = Lives::scope(&self.cx, || {
 			if let Some(cb) = opt.cb {
 				cb(&LUA, plugin)
 			} else {
 				let job = LUA.create_table_from([("args", Sendable::args_to_table(&LUA, opt.args)?)])?;
-
 				plugin.call_method("entry", job)
 			}
 		});
+		if let Err(e) = result {
+			error!("Sync plugin `{}` failed: {e}", opt.id);
+		}
 	}
 }

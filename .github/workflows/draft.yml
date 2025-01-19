@@ -203,15 +203,23 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-unix, build-windows, build-musl, build-snap]
     steps:
-      - uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
-
       - run: |
           echo 'NIGHTLY_BODY<<EOF' >> $GITHUB_ENV
           echo "From commit: ${GITHUB_SHA:0:8}" >> $GITHUB_ENV
           echo "Generated on: $(date -u +"%Y-%m-%d %H:%M") UTC" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Update the tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag --force nightly && git push --force origin tag nightly
 
       - name: Nightly
         uses: softprops/action-gh-release@v1
@@ -223,3 +231,4 @@ jobs:
             yazi-*.snap
           name: Nightly Build
           body: ${{ env.NIGHTLY_BODY }}
+          target_commitish: ${{ github.sha }}
