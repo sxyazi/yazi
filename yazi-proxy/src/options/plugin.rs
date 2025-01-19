@@ -49,8 +49,8 @@ impl Debug for PluginOpt {
 }
 
 impl PluginOpt {
-	pub fn new_callback(id: &str, cb: PluginCallback) -> Self {
-		Self { id: id.to_owned().into(), mode: PluginMode::Sync, cb: Some(cb), ..Default::default() }
+	pub fn new_callback(id: impl Into<Cow<'static, str>>, cb: PluginCallback) -> Self {
+		Self { id: id.into(), mode: PluginMode::Sync, cb: Some(cb), ..Default::default() }
 	}
 }
 
