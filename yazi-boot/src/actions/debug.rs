@@ -19,6 +19,9 @@ impl Actions {
 
 		let emulator = yazi_adapter::Emulator::detect();
 		writeln!(s, "\nEmulator")?;
+		writeln!(s, "    TERM                : {:?}", env::var_os("TERM"))?;
+		writeln!(s, "    TERM_PROGRAM        : {:?}", env::var_os("TERM_PROGRAM"))?;
+		writeln!(s, "    TERM_PROGRAM_VERSION: {:?}", env::var_os("TERM_PROGRAM_VERSION"))?;
 		writeln!(s, "    Brand.from_env      : {:?}", yazi_adapter::Brand::from_env())?;
 		writeln!(s, "    Emulator.detect     : {:?}", emulator)?;
 		writeln!(s, "    Emulator.detect_full: {:?}", yazi_adapter::Emulator::detect_full())?;
@@ -41,8 +44,8 @@ impl Actions {
 		writeln!(s, "\nWSL")?;
 		writeln!(s, "    WSL: {:?}", *yazi_adapter::WSL)?;
 
-		writeln!(s, "\nNVIM")?;
-		writeln!(s, "    NVIM          : {:?}", *yazi_adapter::NVIM)?;
+		writeln!(s, "\nNeovim")?;
+		writeln!(s, "    NVIM          : {}", *yazi_adapter::NVIM)?;
 		writeln!(s, "    Neovim version: {}", Self::process_output("nvim", "--version"))?;
 
 		writeln!(s, "\nVariables")?;
@@ -93,7 +96,7 @@ impl Actions {
 		writeln!(s, "    chafa         : {}", Self::process_output("chafa", "--version"))?;
 		writeln!(s, "    zoxide        : {}", Self::process_output("zoxide", "--version"))?;
 		#[rustfmt::skip]
-		writeln!(s, "    7z/7zz        : {} / {}", Self::process_output("7z", "i"), Self::process_output("7zz", "i"))?;
+		writeln!(s, "    7zz/7z        : {} / {}", Self::process_output("7zz", "i"), Self::process_output("7z", "i"))?;
 		writeln!(s, "    jq            : {}", Self::process_output("jq", "--version"))?;
 
 		writeln!(s, "\nClipboard")?;

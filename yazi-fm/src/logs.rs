@@ -1,6 +1,7 @@
 use std::fs::File;
 
 use anyhow::Context;
+use crossterm::style::{Color, Print, ResetColor, SetForegroundColor};
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::EnvFilter;
 use yazi_fs::Xdg;
@@ -34,8 +35,11 @@ impl Logs {
 			.init();
 
 		_GUARD.init(guard);
-		eprintln!("Running with log level `{level}`, logs are written to {log_path:?}");
-
-		Ok(())
+		Ok(crossterm::execute!(
+			std::io::stderr(),
+			SetForegroundColor(Color::Yellow),
+			Print(format!("Running with log level `{level}`, logs are written to {log_path:?}\n")),
+			ResetColor
+		)?)
 	}
 }

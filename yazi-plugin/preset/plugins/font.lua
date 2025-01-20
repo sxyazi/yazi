@@ -29,7 +29,7 @@ function M:preload(job)
 		"-font",
 		tostring(job.file.url),
 		"-pointsize",
-		"64",
+		64,
 		"xc:white",
 		"-fill",
 		"black",

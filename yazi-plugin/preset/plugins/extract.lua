@@ -52,7 +52,7 @@ function M:try_with(from, pwd, to)
 	local archive = require("archive")
 	local child, err = archive.spawn_7z { "x", "-aou", "-sccUTF-8", "-p" .. pwd, "-o" .. tostring(tmp), tostring(from) }
 	if not child then
-		fail("Failed to start both `7z` and `7zz`, error: " .. err)
+		fail("Failed to start both `7zz` and `7z`, error: " .. err)
 	end
 
 	local output, err = child:wait_with_output()
