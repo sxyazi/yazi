@@ -19,18 +19,21 @@ function M:preload(job)
 		return 1
 	end
 
-	local status, err = Command("magick"):args({
-		"-density",
-		"200",
-		tostring(job.file.url),
-		"-flatten",
-		"-resize",
-		string.format("%dx%d^", PREVIEW.max_width, PREVIEW.max_height),
-		"-quality",
-		PREVIEW.image_quality,
-		"-auto-orient",
-		"JPG:" .. tostring(cache),
-	}):status()
+	local status, err = Command("magick")
+		:args({
+			"-density",
+			200,
+			tostring(job.file.url),
+			"-flatten",
+			"-resize",
+			string.format("%dx%d^", PREVIEW.max_width, PREVIEW.max_height),
+			"-quality",
+			PREVIEW.image_quality,
+			"-auto-orient",
+			"JPG:" .. tostring(cache),
+		})
+		:env("MAGICK_THREAD_LIMIT", 1)
+		:status()
 
 	if status then
 		return status.success and 1 or 2

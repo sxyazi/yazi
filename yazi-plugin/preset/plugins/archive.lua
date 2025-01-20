@@ -9,7 +9,7 @@ function M:peek(job)
 		return require("empty").msg(
 			job,
 			code == 2 and "File list in this archive is encrypted"
-				or "Failed to start both `7z` and `7zz`. Do you have 7-zip installed?"
+				or "Failed to start both `7zz` and `7z`. Do you have 7-zip installed?"
 		)
 	end
 
@@ -55,15 +55,9 @@ function M.spawn_7z(args)
 		return child
 	end
 
-	local child
-	if ya.target_os() == "macos" then
-		child = try("7zz") or try("7z")
-	else
-		child = try("7z") or try("7zz")
-	end
-
+	local child = try("7zz") or try("7z")
 	if not child then
-		return ya.err("Failed to start both `7z` and `7zz`, error: " .. last_err)
+		return ya.err("Failed to start both `7zz` and `7z`, error: " .. last_err)
 	end
 	return child, last_err
 end

@@ -1,7 +1,7 @@
 use std::{io::{self, BufWriter, Stderr, stderr}, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, AtomicU8, Ordering}};
 
 use anyhow::Result;
-use crossterm::{event::{DisableBracketedPaste, EnableBracketedPaste, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{EnterAlternateScreen, LeaveAlternateScreen, SetTitle, disable_raw_mode, enable_raw_mode}};
+use crossterm::{event::{DisableBracketedPaste, EnableBracketedPaste, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{LeaveAlternateScreen, SetTitle, disable_raw_mode, enable_raw_mode}};
 use cursor::RestoreCursor;
 use ratatui::{CompletedFrame, Frame, Terminal, backend::CrosstermBackend, buffer::Buffer, layout::Rect};
 use yazi_adapter::{Emulator, Mux};
@@ -26,17 +26,18 @@ impl Term {
 		};
 
 		enable_raw_mode()?;
-		if *yazi_adapter::TMUX != 0 {
+		if *yazi_adapter::TMUX {
 			yazi_adapter::Mux::tmux_passthrough();
 		}
 
 		execute!(
 			BufWriter::new(stderr()),
+			screen::SetScreen(true),
 			Print(Mux::csi("\x1bP$q q\x1b\\")), // Request cursor shape (DECRQM)
 			Print(Mux::csi("\x1b[?12$p")),      // Request cursor blink status (DECSET)
 			Print("\x1b[?u"),                   // Request keyboard enhancement flags (CSI u)
 			Print(Mux::csi("\x1b[0c")),         // Request device attributes
-			EnterAlternateScreen,
+			screen::SetScreen(false),
 			EnableBracketedPaste,
 			mouse::SetMouse(true),
 		)?;
@@ -256,5 +257,26 @@ mod cursor {
 
 		#[cfg(windows)]
 		fn execute_winapi(&self) -> std::io::Result<()> { Ok(()) }
+	}
+}
+
+mod screen {
+	use crossterm::terminal::EnterAlternateScreen;
+	use yazi_adapter::TMUX;
+
+	pub struct SetScreen(pub bool);
+
+	impl crossterm::Command for SetScreen {
+		fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+			if self.0 == *TMUX { Ok(()) } else { EnterAlternateScreen.write_ansi(f) }
+		}
+
+		#[cfg(windows)]
+		fn execute_winapi(&self) -> std::io::Result<()> {
+			if self.0 == *TMUX { Ok(()) } else { EnterAlternateScreen.execute_winapi() }
+		}
+
+		#[cfg(windows)]
+		fn is_ansi_code_supported(&self) -> bool { EnterAlternateScreen.is_ansi_code_supported() }
 	}
 }

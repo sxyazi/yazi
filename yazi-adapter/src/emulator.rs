@@ -1,4 +1,4 @@
-use std::{io::{LineWriter, stderr}, time::Duration};
+use std::{io::{LineWriter, Read, stderr}, time::Duration};
 
 use anyhow::{Result, bail};
 use crossterm::{cursor::{RestorePosition, SavePosition}, execute, style::Print, terminal::{disable_raw_mode, enable_raw_mode}};
@@ -84,7 +84,7 @@ impl Emulator {
 
 		// I really don't want to add this,
 		// But tmux and ConPTY sometimes cause the cursor position to get out of sync.
-		if *TMUX != 0 || cfg!(windows) {
+		if *TMUX || cfg!(windows) {
 			execute!(buf, SavePosition, MoveTo(x, y), Show)?;
 			execute!(buf, MoveTo(x, y), Show)?;
 			execute!(buf, MoveTo(x, y), Show)?;
@@ -94,7 +94,7 @@ impl Emulator {
 		}
 
 		let result = cb(&mut buf);
-		if *TMUX != 0 || cfg!(windows) {
+		if *TMUX || cfg!(windows) {
 			queue!(buf, Hide, RestorePosition)?;
 		} else {
 			queue!(buf, RestorePosition)?;
@@ -124,10 +124,16 @@ impl Emulator {
 			Ok(())
 		};
 
-		match timeout(Duration::from_secs(10), read).await {
-			Err(e) => error!("read_until_da1 timed out: {buf:?}, error: {e:?}"),
-			Ok(Err(e)) => error!("read_until_da1 failed: {buf:?}, error: {e:?}"),
+		match timeout(Duration::from_secs(5), read).await {
 			Ok(Ok(())) => debug!("read_until_da1: {buf:?}"),
+			Err(e) => {
+				error!("read_until_da1 timed out: {buf:?}, error: {e:?}");
+				Self::error_to_user().ok();
+			}
+			Ok(Err(e)) => {
+				error!("read_until_da1 failed: {buf:?}, error: {e:?}");
+				Self::error_to_user().ok();
+			}
 		}
 		String::from_utf8_lossy(&buf).into_owned()
 	}
@@ -149,12 +155,43 @@ impl Emulator {
 			Ok(())
 		};
 
-		match timeout(Duration::from_secs(10), read).await {
-			Err(e) => error!("read_until_dsr timed out: {buf:?}, error: {e:?}"),
-			Ok(Err(e)) => error!("read_until_dsr failed: {buf:?}, error: {e:?}"),
+		match timeout(Duration::from_secs(5), read).await {
 			Ok(Ok(())) => debug!("read_until_dsr: {buf:?}"),
+			Err(e) => {
+				error!("read_until_dsr timed out: {buf:?}, error: {e:?}");
+				Self::error_to_user().ok();
+			}
+			Ok(Err(e)) => {
+				error!("read_until_dsr failed: {buf:?}, error: {e:?}");
+				Self::error_to_user().ok();
+			}
 		}
 		String::from_utf8_lossy(&buf).into_owned()
+	}
+
+	fn error_to_user() -> Result<()> {
+		use crossterm::style::{Attribute, Color, Print, ResetColor, SetAttributes, SetForegroundColor};
+		crossterm::execute!(
+			std::io::stderr(),
+			SetForegroundColor(Color::Red),
+			SetAttributes(Attribute::Bold.into()),
+			Print("\r\nTerminal response timeout: "),
+			ResetColor,
+			SetAttributes(Attribute::Reset.into()),
+			//
+			Print("The request sent by Yazi didn't receive a correct response.\r\n"),
+			Print(
+				"Please check your terminal environment as per: https://yazi-rs.github.io/docs/faq#trt\r\n"
+			),
+			//
+			SetAttributes(Attribute::Bold.into()),
+			SetAttributes(Attribute::Reverse.into()),
+			Print("Press any key to continue...\r\n"),
+			SetAttributes(Attribute::Reset.into()),
+		)?;
+
+		std::io::stdin().read_exact(&mut [0])?;
+		Ok(())
 	}
 
 	fn detect_base() -> Result<Self> {
