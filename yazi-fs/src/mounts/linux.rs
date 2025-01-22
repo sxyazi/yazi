@@ -3,7 +3,7 @@ use std::{borrow::Cow, collections::{HashMap, HashSet}, ffi::{OsStr, OsString}, 
 use anyhow::Result;
 use tokio::{io::{Interest, unix::AsyncFd}, time::sleep};
 use tracing::error;
-use yazi_shared::{replace_cow, replace_vec_cow};
+use yazi_shared::{natsort, replace_cow, replace_vec_cow};
 
 use super::{Locked, Partition, Partitions};
 
@@ -77,6 +77,7 @@ impl Partitions {
 			let mut set: HashSet<&OsStr> = set.iter().map(AsRef::as_ref).collect();
 			mounts.iter().filter_map(|p| p.dev_name()).for_each(|s| _ = set.remove(s));
 			mounts.extend(set.into_iter().map(Partition::new));
+			mounts.sort_unstable_by(|a, b| natsort(a.src.as_bytes(), b.src.as_bytes(), false));
 		};
 
 		let labels = Self::labels()?;

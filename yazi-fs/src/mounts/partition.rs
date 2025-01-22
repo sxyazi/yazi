@@ -22,7 +22,7 @@ impl Partition {
 		let b: &[u8] = self.fstype.as_ref().map_or(b"", |s| s.as_encoded_bytes());
 		#[cfg(target_os = "linux")]
 		{
-			matches!(b, b"autofs" | b"binfmt_misc" | b"bpf" | b"cgroup2" | b"configfs" | b"debugfs" | b"devpts" | b"devtmpfs" | b"fuse.gvfsd-fuse" | b"fusectl" | b"hugetlbfs" | b"mqueue" | b"proc" | b"ramfs" | b"securityfs" | b"sysfs" | b"tmpfs")
+			matches!(b, b"autofs" | b"binfmt_misc" | b"bpf" | b"cgroup2" | b"configfs" | b"debugfs" | b"devpts" | b"devtmpfs" | b"fuse.gvfsd-fuse" | b"fusectl" | b"hugetlbfs" | b"mqueue" | b"proc" | b"pstore" | b"ramfs" | b"securityfs" | b"sysfs" | b"tmpfs" | b"tracefs")
 		}
 		#[cfg(target_os = "macos")]
 		{

@@ -7,6 +7,7 @@ use objc::{msg_send, runtime::Object, sel, sel_impl};
 use scopeguard::defer;
 use tracing::error;
 use yazi_ffi::{CFDict, CFString, DADiskCopyDescription, DADiskCreateFromBSDName, DARegisterDiskAppearedCallback, DARegisterDiskDescriptionChangedCallback, DARegisterDiskDisappearedCallback, DASessionCreate, DASessionScheduleWithRunLoop, IOIteratorNext, IOObjectRelease, IORegistryEntryCreateCFProperty, IOServiceGetMatchingServices, IOServiceMatching};
+use yazi_shared::natsort;
 
 use super::{Locked, Partition, Partitions};
 
@@ -145,7 +146,7 @@ impl Partitions {
 			}
 		}
 
-		names.sort_unstable();
+		names.sort_unstable_by(|a, b| natsort(a.as_bytes(), b.as_bytes(), false));
 		Ok(names)
 	}
 
