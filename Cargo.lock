@@ -3591,6 +3591,7 @@ dependencies = [
  "crossterm",
  "futures",
  "libc",
+ "memchr",
  "parking_lot",
  "percent-encoding",
  "ratatui",
