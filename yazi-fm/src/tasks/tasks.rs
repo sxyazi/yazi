@@ -1,4 +1,10 @@
-use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Rect}, text::Line, widgets::{Block, BorderType, List, ListItem, Padding, Widget}};
+use ratatui::{
+	buffer::Buffer,
+	layout::{self, Alignment, Constraint, Rect},
+	text::{Line, Text},
+	widgets::{Block, BorderType, List, Padding, Widget},
+};
+use textwrap::Options;
 use yazi_config::THEME;
 use yazi_core::tasks::TASKS_PERCENT;
 
@@ -9,7 +15,9 @@ pub(crate) struct Tasks<'a> {
 }
 
 impl<'a> Tasks<'a> {
-	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
+	pub(crate) fn new(cx: &'a Ctx) -> Self {
+		Self { cx }
+	}
 
 	pub(super) fn area(area: Rect) -> Rect {
 		let chunk = layout::Layout::vertical([
@@ -48,7 +56,13 @@ impl Widget for Tasks<'_> {
 			.take(area.height.saturating_sub(2) as usize)
 			.enumerate()
 			.map(|(i, v)| {
-				let mut item = ListItem::new(v.name.clone());
+				let line_otions = Options::new(area.width as usize).subsequent_indent("  ");
+				let lines = textwrap::wrap(&v.name, line_otions)
+					.iter()
+					.map(|s| Line::from(s.clone()))
+					.collect::<Vec<Line>>();
+
+				let mut item = Text::from(lines);
 				if i == tasks.cursor {
 					item = item.style(THEME.tasks.hovered);
 				}
