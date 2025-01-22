@@ -1,9 +1,9 @@
-use std::{borrow::Cow, collections::{HashMap, HashSet}, ffi::{OsStr, OsString}, os::{fd::AsFd, unix::{ffi::OsStrExt, fs::MetadataExt}}, time::Duration};
+use std::{borrow::Cow, collections::{HashMap, HashSet}, ffi::{OsStr, OsString}, os::{fd::AsFd, unix::{ffi::{OsStrExt, OsStringExt}, fs::MetadataExt}}, time::Duration};
 
 use anyhow::Result;
 use tokio::{io::{Interest, unix::AsyncFd}, time::sleep};
 use tracing::error;
-use yazi_shared::replace_cow;
+use yazi_shared::{replace_cow, replace_vec};
 
 use super::{Locked, Partition, Partitions};
 
@@ -129,7 +129,10 @@ impl Partitions {
 		let mut map = HashMap::new();
 		for entry in std::fs::read_dir("/dev/disk/by-label")?.flatten() {
 			let meta = std::fs::metadata(entry.path())?;
-			map.insert((meta.dev(), meta.ino()), entry.file_name());
+			map.insert(
+				(meta.dev(), meta.ino()),
+				OsString::from_vec(replace_vec(entry.file_name().into_vec(), br"\x20", b" ")),
+			);
 		}
 		Ok(map)
 	}

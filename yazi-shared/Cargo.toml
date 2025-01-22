@@ -16,6 +16,7 @@ yazi-macro = { path = "../yazi-macro", version = "0.4.3" }
 anyhow           = { workspace = true }
 crossterm        = { workspace = true }
 futures          = { workspace = true }
+memchr           = "2.7.4"
 parking_lot      = { workspace = true }
 percent-encoding = "2.3.1"
 ratatui          = { workspace = true }

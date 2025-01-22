@@ -64,6 +64,25 @@ fn replace_cow_impl<'s>(
 	result + unsafe { src.get_unchecked(last..) }
 }
 
+pub fn replace_vec(v: Vec<u8>, from: &[u8], to: &[u8]) -> Vec<u8> {
+	let mut it = memchr::memmem::find_iter(&v, from);
+	let Some(mut last) = it.next() else { return v };
+
+	let mut out = Vec::with_capacity(v.len());
+	out.extend_from_slice(&v[..last]);
+	out.extend_from_slice(to);
+	last += from.len();
+
+	for idx in it {
+		out.extend_from_slice(&v[last..idx]);
+		out.extend_from_slice(to);
+		last = idx + from.len();
+	}
+
+	out.extend_from_slice(&v[last..]);
+	out
+}
+
 pub fn replace_to_printable(s: &[String], tab_size: u8) -> String {
 	let mut buf = Vec::new();
 	buf.try_reserve_exact(s.iter().map(|s| s.len()).sum::<usize>() | 15).unwrap_or_else(|_| panic!());
