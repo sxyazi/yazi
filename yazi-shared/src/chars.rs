@@ -64,9 +64,9 @@ fn replace_cow_impl<'s>(
 	result + unsafe { src.get_unchecked(last..) }
 }
 
-pub fn replace_vec(v: Vec<u8>, from: &[u8], to: &[u8]) -> Vec<u8> {
-	let mut it = memchr::memmem::find_iter(&v, from);
-	let Some(mut last) = it.next() else { return v };
+pub fn replace_vec_cow<'a>(v: &'a [u8], from: &[u8], to: &[u8]) -> Cow<'a, [u8]> {
+	let mut it = memchr::memmem::find_iter(v, from);
+	let Some(mut last) = it.next() else { return Cow::Borrowed(v) };
 
 	let mut out = Vec::with_capacity(v.len());
 	out.extend_from_slice(&v[..last]);
@@ -80,7 +80,7 @@ pub fn replace_vec(v: Vec<u8>, from: &[u8], to: &[u8]) -> Vec<u8> {
 	}
 
 	out.extend_from_slice(&v[last..]);
-	out
+	Cow::Owned(out)
 }
 
 pub fn replace_to_printable(s: &[String], tab_size: u8) -> String {
