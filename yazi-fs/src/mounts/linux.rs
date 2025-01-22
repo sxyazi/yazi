@@ -117,7 +117,7 @@ impl Partitions {
 			let mut it = line.split_whitespace();
 			let Some(Ok(_major)) = it.next().map(|s| s.parse::<u16>()) else { continue };
 			let Some(Ok(_minor)) = it.next().map(|s| s.parse::<u16>()) else { continue };
-			let Some(Ok(_blocks)) = it.next().map(|s| s.parse::<u16>()) else { continue };
+			let Some(Ok(_blocks)) = it.next().map(|s| s.parse::<u32>()) else { continue };
 			if let Some(name) = it.next() {
 				set.insert(Self::unmangle_octal(name).into_owned());
 			}
