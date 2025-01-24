@@ -4,7 +4,7 @@ use yazi_config::{MANAGER, PREVIEW, THEME};
 
 use super::Plugin;
 
-const OPTIONS: SerializeOptions =
+pub const SER_OPTS: SerializeOptions =
 	SerializeOptions::new().serialize_none_to_null(false).serialize_unit_to_null(false);
 
 pub struct Config<'a> {
@@ -15,22 +15,22 @@ impl<'a> Config<'a> {
 	pub fn new(lua: &'a Lua) -> Self { Self { lua } }
 
 	pub fn install_boot(self) -> mlua::Result<Self> {
-		self.lua.globals().raw_set("BOOT", self.lua.to_value_with(&*BOOT, OPTIONS)?)?;
+		self.lua.globals().raw_set("BOOT", self.lua.to_value_with(&*BOOT, SER_OPTS)?)?;
 		Ok(self)
 	}
 
 	pub fn install_manager(self) -> mlua::Result<Self> {
-		self.lua.globals().raw_set("MANAGER", self.lua.to_value_with(&*MANAGER, OPTIONS)?)?;
+		self.lua.globals().raw_set("MANAGER", self.lua.to_value_with(&*MANAGER, SER_OPTS)?)?;
 		Ok(self)
 	}
 
 	pub fn install_theme(self) -> mlua::Result<Self> {
-		self.lua.globals().raw_set("THEME", self.lua.to_value_with(&*THEME, OPTIONS)?)?;
+		self.lua.globals().raw_set("THEME", self.lua.to_value_with(&*THEME, SER_OPTS)?)?;
 		Ok(self)
 	}
 
 	pub fn install_preview(self) -> mlua::Result<Self> {
-		self.lua.globals().raw_set("PREVIEW", self.lua.to_value_with(&*PREVIEW, OPTIONS)?)?;
+		self.lua.globals().raw_set("PREVIEW", self.lua.to_value_with(&*PREVIEW, SER_OPTS)?)?;
 		Ok(self)
 	}
 
