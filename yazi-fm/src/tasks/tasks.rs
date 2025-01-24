@@ -1,9 +1,4 @@
-use ratatui::{
-	buffer::Buffer,
-	layout::{self, Alignment, Constraint, Rect},
-	text::{Line, Text},
-	widgets::{Block, BorderType, List, Padding, Widget},
-};
+use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Rect}, text::{Line, Text}, widgets::{Block, BorderType, List, Padding, Widget}};
 use textwrap::Options;
 use yazi_config::THEME;
 use yazi_core::tasks::TASKS_PERCENT;
@@ -15,9 +10,7 @@ pub(crate) struct Tasks<'a> {
 }
 
 impl<'a> Tasks<'a> {
-	pub(crate) fn new(cx: &'a Ctx) -> Self {
-		Self { cx }
-	}
+	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
 
 	pub(super) fn area(area: Rect) -> Rect {
 		let chunk = layout::Layout::vertical([

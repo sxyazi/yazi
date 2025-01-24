@@ -18,13 +18,13 @@ anyhow    = { workspace = true }
 bitflags  = { workspace = true }
 crossterm = { workspace = true }
 globset   = { workspace = true }
-indexmap  = { version = "2.7.0", features = [ "serde" ] }
+indexmap  = { version = "2.7.1", features = [ "serde" ] }
 ratatui   = { workspace = true }
 regex     = { workspace = true }
 serde     = { workspace = true }
 toml      = { workspace = true }
 tracing   = { workspace = true }
-validator = { version = "0.19.0", features = [ "derive" ] }
+validator = { version = "0.20.0", features = [ "derive" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }

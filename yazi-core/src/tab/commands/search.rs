@@ -4,9 +4,9 @@ use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tracing::error;
 use yazi_config::popup::InputCfg;
+use yazi_fs::{Cha, FilesOp};
 use yazi_plugin::external;
 use yazi_proxy::{AppProxy, InputProxy, ManagerProxy, TabProxy, options::{SearchOpt, SearchOptVia}};
-use yazi_fs::{Cha, FilesOp};
 
 use crate::tab::Tab;
 
