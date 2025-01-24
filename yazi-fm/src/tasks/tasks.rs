@@ -39,11 +39,11 @@ impl Widget for Tasks<'_> {
 			.padding(Padding::symmetric(1, 1))
 			.border_type(BorderType::Rounded)
 			.border_style(THEME.tasks.border);
-		block.clone().render(area, buf);
 
 		let inner = block.inner(area);
-		let tasks = &self.cx.tasks;
+		block.render(area, buf);
 
+		let tasks = &self.cx.tasks;
 		let items = tasks.summaries.iter().take(inner.height as usize).enumerate().map(|(i, v)| {
 			let mut item =
 				Text::from_iter(textwrap::wrap(&v.name, inner.width as usize).into_iter().map(Line::from));
@@ -52,6 +52,7 @@ impl Widget for Tasks<'_> {
 			}
 			item
 		});
-		List::new(items).render(block.inner(area), buf);
+
+		List::new(items).render(inner, buf);
 	}
 }
