@@ -18,7 +18,7 @@ pub(super) fn init_lua() -> Result<()> {
 
 fn stage_1(lua: &'static Lua) -> Result<()> {
 	lua.set_named_registry_value("rt", Runtime::default())?;
-	crate::Config::new(lua).install_boot()?.install_manager()?.install_theme()?;
+	crate::config::Config::new(lua).install_boot()?.install_manager()?.install_theme()?;
 
 	// Base
 	let globals = lua.globals();
