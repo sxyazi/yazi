@@ -1,4 +1,4 @@
-use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Rect}, text::Line, widgets::{Block, BorderType, List, ListItem, Padding, Widget}};
+use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Rect}, text::{Line, Text}, widgets::{Block, BorderType, List, Padding, Widget}};
 use yazi_config::THEME;
 use yazi_core::tasks::TASKS_PERCENT;
 
@@ -39,23 +39,20 @@ impl Widget for Tasks<'_> {
 			.padding(Padding::symmetric(1, 1))
 			.border_type(BorderType::Rounded)
 			.border_style(THEME.tasks.border);
-		block.clone().render(area, buf);
+
+		let inner = block.inner(area);
+		block.render(area, buf);
 
 		let tasks = &self.cx.tasks;
-		let items = tasks
-			.summaries
-			.iter()
-			.take(area.height.saturating_sub(2) as usize)
-			.enumerate()
-			.map(|(i, v)| {
-				let mut item = ListItem::new(v.name.clone());
-				if i == tasks.cursor {
-					item = item.style(THEME.tasks.hovered);
-				}
-				item
-			})
-			.collect::<Vec<_>>();
+		let items = tasks.summaries.iter().take(inner.height as usize).enumerate().map(|(i, v)| {
+			let mut item =
+				Text::from_iter(textwrap::wrap(&v.name, inner.width as usize).into_iter().map(Line::from));
+			if i == tasks.cursor {
+				item = item.style(THEME.tasks.hovered);
+			}
+			item
+		});
 
-		List::new(items).render(block.inner(area), buf);
+		List::new(items).render(inner, buf);
 	}
 }
