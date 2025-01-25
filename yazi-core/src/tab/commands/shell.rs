@@ -53,7 +53,7 @@ impl Tab {
 		};
 
 		let cwd = opt.cwd.take().unwrap_or_else(|| self.cwd().clone());
-		let selected = self.hovered_and_selected(true).cloned().collect();
+		let selected = self.hovered_and_selected().cloned().collect();
 		tokio::spawn(async move {
 			if opt.interactive {
 				let mut result =

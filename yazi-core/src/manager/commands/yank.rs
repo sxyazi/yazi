@@ -18,7 +18,7 @@ impl Manager {
 			return;
 		}
 
-		self.yanked = Yanked::new(opt.cut, self.selected_or_hovered(false).cloned().collect());
+		self.yanked = Yanked::new(opt.cut, self.selected_or_hovered().cloned().collect());
 		render!(self.yanked.catchup_revision(true));
 
 		self.active_mut().escape_select();

@@ -85,29 +85,20 @@ impl Tab {
 		}
 	}
 
-	pub fn selected_or_hovered(&self, reorder: bool) -> Box<dyn Iterator<Item = &Url> + '_> {
+	pub fn selected_or_hovered(&self) -> Box<dyn Iterator<Item = &Url> + '_> {
 		if self.selected.is_empty() {
 			Box::new(self.hovered().map(|h| vec![&h.url]).unwrap_or_default().into_iter())
-		} else if !reorder {
-			Box::new(self.selected.keys())
 		} else {
-			let mut vec: Vec<_> = self.selected.iter().collect();
-			vec.sort_unstable_by(|(_, a), (_, b)| a.cmp(b));
-			Box::new(vec.into_iter().map(|(k, _)| k))
+			Box::new(self.selected.keys())
 		}
 	}
 
-	pub fn hovered_and_selected(&self, reorder: bool) -> Box<dyn Iterator<Item = &Url> + '_> {
+	pub fn hovered_and_selected(&self) -> Box<dyn Iterator<Item = &Url> + '_> {
 		let Some(h) = self.hovered() else { return Box::new(iter::empty()) };
-
 		if self.selected.is_empty() {
 			Box::new([&h.url, &h.url].into_iter())
-		} else if !reorder {
-			Box::new([&h.url].into_iter().chain(self.selected.keys()))
 		} else {
-			let mut vec: Vec<_> = self.selected.iter().collect();
-			vec.sort_unstable_by(|(_, a), (_, b)| a.cmp(b));
-			Box::new([&h.url].into_iter().chain(vec.into_iter().map(|(k, _)| k)))
+			Box::new([&h.url].into_iter().chain(self.selected.keys()))
 		}
 	}
 

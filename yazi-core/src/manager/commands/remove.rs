@@ -32,7 +32,7 @@ impl Manager {
 		opt.targets = if opt.hovered {
 			self.hovered().map_or(vec![], |h| vec![h.url.clone()])
 		} else {
-			self.selected_or_hovered(true).cloned().collect()
+			self.selected_or_hovered().cloned().collect()
 		};
 
 		if opt.targets.is_empty() {

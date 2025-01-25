@@ -1,16 +1,17 @@
 use std::{collections::HashMap, ops::Deref};
 
+use indexmap::IndexMap;
 use yazi_fs::FilesOp;
 use yazi_shared::{timestamp_us, url::Url};
 
 #[derive(Default)]
 pub struct Selected {
-	inner:   HashMap<Url, u64>,
+	inner:   IndexMap<Url, u64>,
 	parents: HashMap<Url, usize>,
 }
 
 impl Deref for Selected {
-	type Target = HashMap<Url, u64>;
+	type Target = IndexMap<Url, u64>;
 
 	fn deref(&self) -> &Self::Target { &self.inner }
 }
@@ -66,21 +67,26 @@ impl Selected {
 	pub fn remove(&mut self, url: &Url) -> bool { self.remove_same(&[url]) == 1 }
 
 	pub fn remove_many(&mut self, urls: &[impl AsRef<Url>], same: bool) -> usize {
-		if same {
-			return self.remove_same(urls);
-		}
-
-		let mut grouped: HashMap<_, Vec<_>> = Default::default();
-		for u in urls {
-			if let Some(p) = u.as_ref().parent_url() {
-				grouped.entry(p).or_default().push(u);
+		let affected = if same {
+			self.remove_same(urls)
+		} else {
+			let mut grouped: HashMap<_, Vec<_>> = Default::default();
+			for u in urls {
+				if let Some(p) = u.as_ref().parent_url() {
+					grouped.entry(p).or_default().push(u);
+				}
 			}
+			grouped.into_values().map(|v| self.remove_same(&v)).sum()
+		};
+
+		if affected > 0 {
+			self.inner.sort_unstable_by(|_, a, _, b| a.cmp(b));
 		}
-		grouped.into_values().map(|v| self.remove_same(&v)).sum()
+		affected
 	}
 
 	fn remove_same(&mut self, urls: &[impl AsRef<Url>]) -> usize {
-		let count = urls.iter().filter_map(|u| self.inner.remove(u.as_ref())).count();
+		let count = urls.iter().filter_map(|u| self.inner.swap_remove(u.as_ref())).count();
 		if count == 0 {
 			return 0;
 		}
