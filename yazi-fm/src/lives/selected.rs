@@ -1,5 +1,6 @@
-use std::{collections::{HashMap, hash_map}, ops::Deref};
+use std::ops::Deref;
 
+use indexmap::{IndexMap, map::Keys};
 use mlua::{AnyUserData, IntoLuaMulti, MetaMethod, UserData, UserDataMethods, UserDataRefMut};
 use yazi_plugin::{bindings::Cast, url::Url};
 
@@ -7,23 +8,23 @@ use super::{Iter, Lives};
 
 #[derive(Clone, Copy)]
 pub(super) struct Selected {
-	inner: *const HashMap<yazi_shared::url::Url, u64>,
+	inner: *const IndexMap<yazi_shared::url::Url, u64>,
 }
 
 impl Deref for Selected {
-	type Target = HashMap<yazi_shared::url::Url, u64>;
+	type Target = IndexMap<yazi_shared::url::Url, u64>;
 
 	fn deref(&self) -> &Self::Target { self.inner() }
 }
 
 impl Selected {
 	#[inline]
-	pub(super) fn make(inner: &HashMap<yazi_shared::url::Url, u64>) -> mlua::Result<AnyUserData> {
+	pub(super) fn make(inner: &IndexMap<yazi_shared::url::Url, u64>) -> mlua::Result<AnyUserData> {
 		Lives::scoped_userdata(Self { inner })
 	}
 
 	#[inline]
-	fn inner(&self) -> &'static HashMap<yazi_shared::url::Url, u64> { unsafe { &*self.inner } }
+	fn inner(&self) -> &'static IndexMap<yazi_shared::url::Url, u64> { unsafe { &*self.inner } }
 }
 
 impl UserData for Selected {
@@ -32,7 +33,7 @@ impl UserData for Selected {
 
 		methods.add_meta_method(MetaMethod::Pairs, |lua, me, ()| {
 			let iter = lua.create_function(
-				|lua, mut iter: UserDataRefMut<Iter<hash_map::Keys<yazi_shared::url::Url, u64>, _>>| {
+				|lua, mut iter: UserDataRefMut<Iter<Keys<yazi_shared::url::Url, u64>, _>>| {
 					if let Some(next) = iter.next() {
 						(next.0, Url::cast(lua, next.1.clone())?).into_lua_multi(lua)
 					} else {

@@ -20,6 +20,7 @@ crossterm           = { version = "0.28.1", features = [ "event-stream" ] }
 dirs                = "6.0.0"
 futures             = "0.3.31"
 globset             = "0.4.15"
+indexmap            = { version = "2.7.1", features = [ "serde" ] }
 libc                = "0.2.169"
 md-5                = "0.10.6"
 mlua                = { version = "0.10.2", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serialize" ] }

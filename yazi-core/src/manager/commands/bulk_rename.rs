@@ -17,7 +17,7 @@ impl Manager {
 			return AppProxy::notify_warn("Bulk rename", "No text opener found");
 		};
 
-		let old: Vec<_> = self.selected_or_hovered(true).collect();
+		let old: Vec<_> = self.selected_or_hovered().collect();
 
 		let root = max_common_root(&old);
 		let old: Vec<_> = old.into_iter().map(|p| p.strip_prefix(&root).unwrap().to_owned()).collect();
