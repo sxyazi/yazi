@@ -1,4 +1,4 @@
-use mlua::{ExternalError, Lua, Table, UserData, UserDataMethods, Value};
+use mlua::{ExternalError, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use ratatui::widgets::Widget;
 
 use super::{Area, Span};
@@ -19,7 +19,7 @@ impl Gauge {
 		let new = lua.create_function(|_, _: Table| Ok(Gauge::default()))?;
 
 		let gauge = lua.create_table()?;
-		gauge.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+		gauge.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 
 		Ok(gauge)
 	}

@@ -1,4 +1,4 @@
-use mlua::{ExternalError, Lua, Table, UserData, Value};
+use mlua::{ExternalError, Lua, MetaMethod, Table, UserData, Value};
 use ratatui::widgets::Widget;
 
 use super::{Area, Text};
@@ -25,7 +25,7 @@ impl List {
 		})?;
 
 		let list = lua.create_table()?;
-		list.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+		list.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 
 		Ok(list)
 	}

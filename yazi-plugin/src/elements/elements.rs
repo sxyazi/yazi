@@ -1,11 +1,12 @@
-use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, Value};
+use mlua::{AnyUserData, IntoLua, Lua, Table, Value};
 use tracing::error;
 
 use super::Renderable;
+use crate::Composer;
 
-pub fn compose(lua: &Lua) -> mlua::Result<Table> {
-	let index = lua.create_function(|lua, (ts, key): (Table, mlua::String)| {
-		let value = match key.as_bytes().as_ref() {
+pub fn compose(lua: &Lua) -> mlua::Result<Value> {
+	Composer::make(lua, 20, |lua, key| {
+		match key {
 			b"Bar" => super::Bar::compose(lua)?,
 			b"Border" => super::Border::compose(lua)?,
 			b"Clear" => super::Clear::compose(lua)?,
@@ -26,16 +27,8 @@ pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 			b"Text" => super::Text::compose(lua)?,
 			_ => return Ok(Value::Nil),
 		}
-		.into_lua(lua)?;
-
-		ts.raw_set(key, value.clone())?;
-		Ok(value)
-	})?;
-
-	let ui = lua.create_table_with_capacity(0, 20)?;
-	ui.set_metatable(Some(lua.create_table_from([(MetaMethod::Index.name(), index)])?));
-
-	Ok(ui)
+		.into_lua(lua)
+	})
 }
 
 pub fn render_once<F>(widgets: Table, buf: &mut ratatui::buffer::Buffer, trans: F)

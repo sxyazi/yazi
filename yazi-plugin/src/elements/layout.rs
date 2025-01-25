@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, Lua, Table, UserData, UserDataMethods};
+use mlua::{AnyUserData, Lua, MetaMethod, Table, UserData, UserDataMethods};
 
 use super::{Constraint, Rect};
 
@@ -17,7 +17,7 @@ impl Layout {
 		let new = lua.create_function(|_, _: Table| Ok(Self::default()))?;
 
 		let layout = lua.create_table_from([("HORIZONTAL", HORIZONTAL), ("VERTICAL", VERTICAL)])?;
-		layout.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+		layout.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 
 		Ok(layout)
 	}

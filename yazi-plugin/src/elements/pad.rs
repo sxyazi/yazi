@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign, Deref};
 
-use mlua::{FromLua, Lua, Table, UserData};
+use mlua::{FromLua, Lua, MetaMethod, Table, UserData};
 
 #[derive(Clone, Copy, Default, FromLua)]
 pub struct Pad(ratatui::widgets::Padding);
@@ -51,7 +51,7 @@ impl Pad {
 			),
 		])?;
 
-		pad.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+		pad.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 		Ok(pad)
 	}
 }

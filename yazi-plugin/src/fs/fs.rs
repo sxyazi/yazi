@@ -1,13 +1,13 @@
 use globset::GlobBuilder;
-use mlua::{ExternalError, ExternalResult, Function, IntoLua, IntoLuaMulti, Lua, MetaMethod, Table, Value};
+use mlua::{ExternalError, ExternalResult, Function, IntoLua, IntoLuaMulti, Lua, Table, Value};
 use tokio::fs;
 use yazi_fs::{mounts::PARTITIONS, remove_dir_clean};
 
-use crate::{Error, bindings::{Cast, Cha}, file::File, url::{Url, UrlRef}};
+use crate::{Composer, Error, bindings::{Cast, Cha}, file::File, url::{Url, UrlRef}};
 
-pub fn compose(lua: &Lua) -> mlua::Result<Table> {
-	let index = lua.create_function(|lua, (ts, key): (Table, mlua::String)| {
-		let value = match key.as_bytes().as_ref() {
+pub fn compose(lua: &Lua) -> mlua::Result<Value> {
+	Composer::make(lua, 10, |lua, key| {
+		match key {
 			b"cwd" => cwd(lua)?,
 			b"cha" => cha(lua)?,
 			b"write" => write(lua)?,
@@ -18,16 +18,8 @@ pub fn compose(lua: &Lua) -> mlua::Result<Table> {
 			b"partitions" => partitions(lua)?,
 			_ => return Ok(Value::Nil),
 		}
-		.into_lua(lua)?;
-
-		ts.raw_set(key, value.clone())?;
-		Ok(value)
-	})?;
-
-	let fs = lua.create_table_with_capacity(0, 10)?;
-	fs.set_metatable(Some(lua.create_table_from([(MetaMethod::Index.name(), index)])?));
-
-	Ok(fs)
+		.into_lua(lua)
+	})
 }
 
 fn cwd(lua: &Lua) -> mlua::Result<Function> {

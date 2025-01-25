@@ -1,5 +1,6 @@
 use ratatui::layout::Rect;
 use yazi_core::{completion::Completion, confirm::Confirm, help::Help, input::Input, manager::Manager, notify::Notify, pick::Pick, tab::{Folder, Tab}, tasks::Tasks, which::Which};
+use yazi_shared::Layer;
 
 pub struct Ctx {
 	pub manager:    Manager,
@@ -38,6 +39,29 @@ impl Ctx {
 			return Some((x, y));
 		}
 		None
+	}
+
+	#[inline]
+	pub fn layer(&self) -> Layer {
+		if self.which.visible {
+			Layer::Which
+		} else if self.completion.visible {
+			Layer::Completion
+		} else if self.help.visible {
+			Layer::Help
+		} else if self.confirm.visible {
+			Layer::Confirm
+		} else if self.input.visible {
+			Layer::Input
+		} else if self.pick.visible {
+			Layer::Pick
+		} else if self.active().spot.visible() {
+			Layer::Spot
+		} else if self.tasks.visible {
+			Layer::Tasks
+		} else {
+			Layer::Manager
+		}
 	}
 }
 

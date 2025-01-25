@@ -15,10 +15,8 @@ impl<'a> Router<'a> {
 	#[inline]
 	pub(super) fn route(&mut self, key: Key) -> bool {
 		let cx = &mut self.app.cx;
+		let layer = cx.layer();
 
-		if cx.which.visible {
-			return cx.which.type_(key);
-		}
 		if cx.help.visible && cx.help.type_(&key) {
 			return true;
 		}
@@ -26,22 +24,14 @@ impl<'a> Router<'a> {
 			return true;
 		}
 
-		if cx.completion.visible {
-			self.matches(Layer::Completion, key) || self.matches(Layer::Input, key)
-		} else if cx.help.visible {
-			self.matches(Layer::Help, key)
-		} else if cx.input.visible {
-			self.matches(Layer::Input, key)
-		} else if cx.confirm.visible {
-			self.matches(Layer::Confirm, key)
-		} else if cx.pick.visible {
-			self.matches(Layer::Pick, key)
-		} else if cx.active().spot.visible() {
-			self.matches(Layer::Spot, key)
-		} else if cx.tasks.visible {
-			self.matches(Layer::Tasks, key)
-		} else {
-			self.matches(Layer::Manager, key)
+		use Layer as L;
+		match layer {
+			L::App => unreachable!(),
+			L::Manager | L::Tasks | L::Spot | L::Pick | L::Input | L::Confirm | L::Help => {
+				self.matches(layer, key)
+			}
+			L::Completion => self.matches(L::Completion, key) || self.matches(L::Input, key),
+			L::Which => cx.which.type_(key),
 		}
 	}
 

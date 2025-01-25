@@ -1,6 +1,6 @@
 use std::process::Stdio;
 
-use mlua::{AnyUserData, ExternalError, IntoLuaMulti, Lua, Table, UserData, Value};
+use mlua::{AnyUserData, ExternalError, IntoLuaMulti, Lua, MetaMethod, Table, UserData, Value};
 use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
 
 use super::{Child, output::Output};
@@ -30,7 +30,7 @@ impl Command {
 			("INHERIT", INHERIT),
 		])?;
 
-		command.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+		command.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 
 		lua.globals().raw_set("Command", command)
 	}

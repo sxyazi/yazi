@@ -1,10 +1,12 @@
-use mlua::{IntoLua, Lua, MetaMethod, Table, Value};
+use mlua::{IntoLua, Lua, Value};
+
+use crate::Composer;
 
 pub(super) struct Utils;
 
-pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Table> {
-	let index = lua.create_function(move |lua, (ts, key): (Table, mlua::String)| {
-		let value = match key.as_bytes().as_ref() {
+pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Value> {
+	Composer::make(lua, 40, move |lua, key| {
+		match key {
 			// App
 			b"hide" => Utils::hide(lua)?,
 
@@ -80,14 +82,6 @@ pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Table> {
 
 			_ => return Ok(Value::Nil),
 		}
-		.into_lua(lua)?;
-
-		ts.raw_set(key, value.clone())?;
-		Ok(value)
-	})?;
-
-	let ya = lua.create_table_with_capacity(0, 40)?;
-	ya.set_metatable(Some(lua.create_table_from([(MetaMethod::Index.name(), index)])?));
-
-	Ok(ya)
+		.into_lua(lua)
+	})
 }

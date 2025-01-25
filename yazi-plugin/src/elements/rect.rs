@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use mlua::{FromLua, Lua, Table, UserData};
+use mlua::{FromLua, Lua, MetaMethod, Table, UserData};
 
 use super::Pad;
 
@@ -36,7 +36,7 @@ impl Rect {
 
 		let rect = lua.create_table_from([("default", Self(ratatui::layout::Rect::default()))])?;
 
-		rect.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+		rect.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 		Ok(rect)
 	}
 

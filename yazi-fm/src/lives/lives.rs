@@ -27,16 +27,7 @@ impl Lives {
 			});
 
 			LUA.set_named_registry_value("cx", scope.create_any_userdata_ref(cx)?)?;
-			LUA.globals().raw_set(
-				"cx",
-				LUA.create_table_from([
-					("active", super::Tab::make(cx.active())?),
-					("tabs", super::Tabs::make(&cx.manager.tabs)?),
-					("tasks", super::Tasks::make(&cx.tasks)?),
-					("yanked", super::Yanked::make(&cx.manager.yanked)?),
-				])?,
-			)?;
-
+			LUA.globals().raw_set("cx", super::Ctx::make(cx)?)?;
 			f()
 		});
 
