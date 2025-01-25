@@ -3,7 +3,7 @@ use std::{path::{Path, PathBuf}, str::FromStr};
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use tokio::fs;
-use yazi_fs::{Xdg, create_and_seal, ok_or_not_found, unique_name};
+use yazi_fs::{Xdg, ok_or_not_found, unique_name};
 use yazi_macro::outln;
 
 use super::Dependency;
@@ -41,7 +41,7 @@ impl Package {
 		}
 
 		let s = toml::to_string_pretty(self)?;
-		create_and_seal(&Self::toml(), s.as_bytes()).await.context("Failed to write package.toml")
+		fs::write(Self::toml(), s).await.context("Failed to write package.toml")
 	}
 
 	pub(crate) async fn delete(&mut self, use_: &str) -> Result<()> {
@@ -57,7 +57,7 @@ impl Package {
 		}
 
 		let s = toml::to_string_pretty(self)?;
-		create_and_seal(&Self::toml(), s.as_bytes()).await.context("Failed to write package.toml")
+		fs::write(Self::toml(), s).await.context("Failed to write package.toml")
 	}
 
 	pub(crate) async fn install(&mut self, upgrade: bool) -> Result<()> {
@@ -77,7 +77,7 @@ impl Package {
 		}
 
 		let s = toml::to_string_pretty(self)?;
-		create_and_seal(&Self::toml(), s.as_bytes()).await.context("Failed to write package.toml")
+		fs::write(Self::toml(), s).await.context("Failed to write package.toml")
 	}
 
 	pub(crate) fn print(&self) -> Result<()> {
@@ -179,7 +179,7 @@ impl Package {
 		}
 
 		let s = toml::to_string_pretty(self)?;
-		create_and_seal(&Self::toml(), s.as_bytes()).await.context("Failed to write package.toml")
+		fs::write(Self::toml(), s).await.context("Failed to write package.toml")
 	}
 
 	#[inline]
