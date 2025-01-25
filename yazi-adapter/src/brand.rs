@@ -22,6 +22,7 @@ pub enum Brand {
 	Neovim,
 	Apple,
 	Urxvt,
+	Bobcat,
 }
 
 impl Brand {
@@ -83,6 +84,7 @@ impl Brand {
 			("WezTerm", Self::WezTerm),
 			("foot", Self::Foot),
 			("ghostty", Self::Ghostty),
+			("Bobcat", Self::Bobcat),
 		];
 		names.into_iter().find(|&(n, _)| resp.contains(n)).map(|(_, b)| b)
 	}
@@ -110,6 +112,7 @@ impl Brand {
 			B::Neovim => &[],
 			B::Apple => &[],
 			B::Urxvt => &[],
+			B::Bobcat => &[A::Iip, A::Sixel],
 		}
 	}
 
