@@ -1,4 +1,4 @@
-use mlua::{ExternalError, FromLua, Lua, Table, UserData, UserDataMethods, Value};
+use mlua::{ExternalError, FromLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use unicode_width::UnicodeWidthChar;
 
 const EXPECTED: &str = "expected a string or Span";
@@ -11,7 +11,7 @@ impl Span {
 		let new = lua.create_function(|_, (_, value): (Table, Value)| Span::try_from(value))?;
 
 		let span = lua.create_table()?;
-		span.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+		span.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 
 		Ok(span)
 	}

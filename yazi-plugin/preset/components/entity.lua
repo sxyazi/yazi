@@ -1,7 +1,7 @@
 Entity = {
 	_inc = 1000,
 	_children = {
-		{ "space", id = 1, order = 1000 },
+		{ "spacer", id = 1, order = 1000 },
 		{ "icon", id = 2, order = 2000 },
 		{ "prefix", id = 3, order = 3000 },
 		{ "highlights", id = 4, order = 4000 },
@@ -12,7 +12,7 @@ Entity = {
 
 function Entity:new(file) return setmetatable({ _file = file }, { __index = self }) end
 
-function Entity:space() return " " end
+function Entity:spacer() return " " end
 
 function Entity:icon()
 	local icon = self._file:icon()

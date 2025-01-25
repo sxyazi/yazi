@@ -1,7 +1,7 @@
 use std::mem;
 
 use ansi_to_tui::IntoText;
-use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, Table, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use unicode_width::UnicodeWidthChar;
 
 use super::Span;
@@ -41,7 +41,7 @@ impl Line {
 			("RIGHT", RIGHT.into_lua(lua)?),
 		])?;
 
-		line.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+		line.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 		Ok(line)
 	}
 }

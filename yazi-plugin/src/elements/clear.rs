@@ -1,6 +1,6 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use mlua::{Lua, Table, UserData};
+use mlua::{Lua, MetaMethod, Table, UserData};
 use yazi_adapter::ADAPTOR;
 
 use super::Area;
@@ -17,7 +17,7 @@ impl Clear {
 		let new = lua.create_function(|_, (_, area): (Table, Area)| Ok(Clear { area }))?;
 
 		let clear = lua.create_table()?;
-		clear.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+		clear.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 
 		Ok(clear)
 	}

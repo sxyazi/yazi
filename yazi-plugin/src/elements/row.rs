@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, FromLua, Lua, Table, UserData};
+use mlua::{AnyUserData, FromLua, Lua, MetaMethod, Table, UserData};
 
 use super::Cell;
 
@@ -18,7 +18,7 @@ impl Row {
 		})?;
 
 		let row = lua.create_table()?;
-		row.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+		row.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 
 		Ok(row)
 	}

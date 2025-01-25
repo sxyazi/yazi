@@ -1,7 +1,7 @@
 use std::mem;
 
 use ansi_to_tui::IntoText;
-use mlua::{ExternalError, ExternalResult, FromLua, IntoLua, Lua, Table, UserData, Value};
+use mlua::{ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, Value};
 use ratatui::widgets::Widget;
 
 use super::{Area, Line, Span};
@@ -48,7 +48,7 @@ impl Text {
 			("WRAP_TRIM", WRAP_TRIM.into_lua(lua)?),
 		])?;
 
-		text.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+		text.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 		Ok(text)
 	}
 

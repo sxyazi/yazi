@@ -1,4 +1,4 @@
-use mlua::{Lua, Table, UserData};
+use mlua::{Lua, MetaMethod, Table, UserData};
 use ratatui::widgets::Borders;
 
 use super::Area;
@@ -28,7 +28,7 @@ impl Bar {
 			("ALL", Borders::ALL.bits()),
 		])?;
 
-		bar.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+		bar.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 		Ok(bar)
 	}
 

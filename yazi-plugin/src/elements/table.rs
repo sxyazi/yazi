@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, Lua, UserData, Value};
+use mlua::{AnyUserData, Lua, MetaMethod, UserData, Value};
 use ratatui::widgets::StatefulWidget;
 
 use super::{Area, Row};
@@ -36,7 +36,7 @@ impl Table {
 		})?;
 
 		let table = lua.create_table()?;
-		table.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+		table.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 
 		Ok(table)
 	}

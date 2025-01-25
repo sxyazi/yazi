@@ -2,13 +2,13 @@ Linemode = {
 	_inc = 1000,
 	_children = {
 		{ "solo", id = 1, order = 1000 },
-		{ "space", id = 2, order = 2000 },
+		{ "spacer", id = 2, order = 2000 },
 	},
 }
 
 function Linemode:new(file) return setmetatable({ _file = file }, { __index = self }) end
 
-function Linemode:space() return " " end
+function Linemode:spacer() return " " end
 
 function Linemode:solo()
 	local mode = cx.active.pref.linemode

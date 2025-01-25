@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use mlua::{AnyUserData, ExternalError, ExternalResult, Lua, Table, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, ExternalError, ExternalResult, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use yazi_shared::theme::Color;
 
 #[derive(Clone, Copy, Default)]
@@ -11,7 +11,7 @@ impl Style {
 		let new = lua.create_function(|_, (_, value): (Table, Value)| Self::try_from(value))?;
 
 		let style = lua.create_table()?;
-		style.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+		style.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 
 		Ok(style)
 	}

@@ -1,4 +1,4 @@
-use mlua::{Lua, Table, UserData, Value};
+use mlua::{Lua, MetaMethod, Table, UserData, Value};
 use ratatui::widgets::{Borders, Widget};
 
 use super::Area;
@@ -49,7 +49,7 @@ impl Border {
 			("QUADRANT_OUTSIDE", QUADRANT_OUTSIDE),
 		])?;
 
-		border.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+		border.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 		Ok(border)
 	}
 

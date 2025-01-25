@@ -1,6 +1,6 @@
 use std::{ops::Deref, str::FromStr};
 
-use mlua::{AnyUserData, ExternalResult, Lua, Table, UserData};
+use mlua::{AnyUserData, ExternalResult, Lua, MetaMethod, Table, UserData};
 
 use super::Pad;
 
@@ -50,7 +50,7 @@ impl Pos {
 		let new = lua.create_function(|_, (_, t): (Table, Table)| Self::try_from(t))?;
 
 		let position = lua.create_table()?;
-		position.set_metatable(Some(lua.create_table_from([("__call", new)])?));
+		position.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 
 		Ok(position)
 	}
