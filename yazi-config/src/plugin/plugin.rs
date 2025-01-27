@@ -20,11 +20,10 @@ impl Plugin {
 		&'b self,
 		path: &'a Path,
 		mime: &'a str,
-		factor: impl Fn(&str) -> bool + Copy + 'a,
 	) -> impl Iterator<Item = &'b Fetcher> + 'a {
 		let mut seen = HashSet::new();
 		self.fetchers.iter().filter(move |&f| {
-			if seen.contains(&f.id) || !f.matches(path, mime, factor) {
+			if seen.contains(&f.id) || !f.matches(path, mime) {
 				return false;
 			}
 			seen.insert(&f.id);
@@ -35,12 +34,7 @@ impl Plugin {
 	pub fn mime_fetchers(&self, files: Vec<File>) -> impl Iterator<Item = (&Fetcher, Vec<File>)> {
 		let mut tasks: [Vec<_>; MAX_PREWORKERS as usize] = Default::default();
 		for f in files {
-			let factors = |s: &str| match s {
-				"dummy" => f.cha.is_dummy(),
-				_ => false,
-			};
-
-			let found = self.fetchers.iter().find(|&g| g.id == "mime" && g.matches(&f.url, "", factors));
+			let found = self.fetchers.iter().find(|&g| g.id == "mime" && g.matches(&f.url, ""));
 			if let Some(g) = found {
 				tasks[g.idx as usize].push(f);
 			} else {
@@ -51,11 +45,6 @@ impl Plugin {
 		tasks.into_iter().enumerate().filter_map(|(i, tasks)| {
 			if tasks.is_empty() { None } else { Some((&self.fetchers[i], tasks)) }
 		})
-	}
-
-	#[inline]
-	pub fn fetchers_mask(&self) -> u32 {
-		self.fetchers.iter().fold(0, |n, f| if f.mime.is_some() { n } else { n | 1 << f.idx as u32 })
 	}
 
 	pub fn spotter(&self, path: &Path, mime: &str) -> Option<&Spotter> {

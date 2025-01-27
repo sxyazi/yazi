@@ -6,12 +6,10 @@ use parking_lot::RwLock;
 use tokio::{fs, pin, sync::{mpsc::{self, UnboundedReceiver}, watch}};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tracing::error;
-use yazi_config::PLUGIN;
 use yazi_dds::Pubsub;
 use yazi_fs::{Cha, File, Files, FilesOp, mounts::PARTITIONS, realname_unchecked};
-use yazi_plugin::isolate;
 use yazi_proxy::WATCHER;
-use yazi_shared::{RoCell, event::CmdCow, url::Url};
+use yazi_shared::{RoCell, url::Url};
 
 use super::Linked;
 use crate::tab::Folder;
@@ -129,7 +127,6 @@ impl Watcher {
 
 			let _permit = WATCHER.acquire().await.unwrap();
 			let mut ops = Vec::with_capacity(urls.len());
-			let mut reload = Vec::with_capacity(urls.len());
 
 			for u in urls {
 				let Some((parent, urn)) = u.pair() else { continue };
@@ -147,18 +144,10 @@ impl Watcher {
 					continue;
 				}
 
-				if !file.is_dir() {
-					reload.push(file.clone());
-				}
 				ops.push(FilesOp::Upserting(parent, HashMap::from_iter([(urn, file)])));
 			}
 
 			FilesOp::mutate(ops);
-			for (fetcher, files) in PLUGIN.mime_fetchers(reload) {
-				if let Err(e) = isolate::fetch(CmdCow::from(&fetcher.run), files).await {
-					error!("Fetch mime failed in watcher: {e}");
-				}
-			}
 		}
 	}
 

@@ -2,7 +2,7 @@ use std::ops::{Deref, Range};
 
 use mlua::{AnyUserData, Lua, UserData, UserDataFields};
 use yazi_config::LAYOUT;
-use yazi_plugin::{bindings::Cast, url::Url};
+use yazi_plugin::url::Url;
 
 use super::{File, Files, Lives};
 
@@ -50,7 +50,7 @@ impl Folder {
 
 impl UserData for Folder {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		fields.add_field_method_get("cwd", |lua, me| Url::cast(lua, me.url.to_owned()));
+		fields.add_field_method_get("cwd", |_, me| Ok(Url(me.url.to_owned())));
 		fields.add_field_method_get("files", |_, me| Files::make(0..me.files.len(), me, me.tab()));
 		fields.add_field_method_get("stage", |lua, me| lua.create_any_userdata(me.stage));
 		fields.add_field_method_get("window", |_, me| Files::make(me.window.clone(), me, me.tab()));

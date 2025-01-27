@@ -16,10 +16,10 @@ function M:seek() end
 function M:preload(job)
 	local cache = ya.file_cache(job)
 	if not cache or fs.cha(cache) then
-		return 1
+		return true
 	end
 
-	return ya.image_precache(job.file.url, cache) and 1 or 2
+	return ya.image_precache(job.file.url, cache)
 end
 
 function M:spot(job)

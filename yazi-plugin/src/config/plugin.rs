@@ -8,12 +8,7 @@ pub(super) struct Plugin;
 impl Plugin {
 	pub(super) fn fetchers(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|lua, (file, mime): (FileRef, mlua::String)| {
-			let factors = |s: &str| match s {
-				"mime" => !mime.as_bytes().is_empty(),
-				"dummy" => file.cha.is_dummy(),
-				_ => false,
-			};
-			lua.create_sequence_from(PLUGIN.fetchers(&file.url, &mime.to_str()?, factors).map(Fetcher))
+			lua.create_sequence_from(PLUGIN.fetchers(&file.url, &mime.to_str()?).map(Fetcher))
 		})
 	}
 

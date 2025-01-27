@@ -3,11 +3,11 @@ use twox_hash::XxHash3_128;
 use yazi_config::PREVIEW;
 
 use super::Utils;
-use crate::{bindings::Cast, file::FileRef, url::Url};
+use crate::{file::FileRef, url::Url};
 
 impl Utils {
 	pub(super) fn file_cache(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|lua, t: Table| {
+		lua.create_function(|_, t: Table| {
 			let file: FileRef = t.raw_get("file")?;
 			if file.url.parent() == Some(&PREVIEW.cache_dir) {
 				return Ok(None);
@@ -20,7 +20,7 @@ impl Utils {
 				format!("{:x}", h.finish_128())
 			};
 
-			Some(Url::cast(lua, PREVIEW.cache_dir.join(hex))).transpose()
+			Ok(Some(Url::from(PREVIEW.cache_dir.join(hex))))
 		})
 	}
 }

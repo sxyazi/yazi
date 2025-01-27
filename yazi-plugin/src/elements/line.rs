@@ -1,7 +1,7 @@
 use std::mem;
 
 use ansi_to_tui::IntoText;
-use mlua::{AnyUserData, ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use unicode_width::UnicodeWidthChar;
 
 use super::Span;
@@ -12,7 +12,6 @@ const RIGHT: u8 = 2;
 
 const EXPECTED: &str = "expected a string, Span, Line, or a table of them";
 
-#[derive(Clone, FromLua)]
 pub struct Line(pub(super) ratatui::text::Line<'static>);
 
 impl Line {

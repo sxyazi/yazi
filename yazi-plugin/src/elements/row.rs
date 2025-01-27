@@ -1,8 +1,10 @@
-use mlua::{AnyUserData, FromLua, Lua, MetaMethod, Table, UserData};
+use mlua::{AnyUserData, ExternalError, Lua, MetaMethod, Table, UserData, Value};
 
 use super::Cell;
 
-#[derive(Clone, Debug, Default, FromLua)]
+const EXPECTED: &str = "expected a Row";
+
+#[derive(Clone, Debug, Default)]
 pub struct Row {
 	pub(super) cells: Vec<Cell>,
 	height:           u16,
@@ -31,6 +33,23 @@ impl From<Row> for ratatui::widgets::Row<'static> {
 			.top_margin(value.top_margin)
 			.bottom_margin(value.bottom_margin)
 			.style(value.style)
+	}
+}
+
+impl TryFrom<Value> for Row {
+	type Error = mlua::Error;
+
+	fn try_from(value: Value) -> Result<Self, Self::Error> {
+		Ok(match value {
+			Value::UserData(ud) => {
+				if let Ok(row) = ud.take() {
+					row
+				} else {
+					Err(EXPECTED.into_lua_err())?
+				}
+			}
+			_ => Err(EXPECTED.into_lua_err())?,
+		})
 	}
 }
 

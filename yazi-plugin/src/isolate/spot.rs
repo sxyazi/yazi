@@ -8,7 +8,7 @@ use yazi_dds::Sendable;
 use yazi_shared::event::Cmd;
 
 use super::slim_lua;
-use crate::{bindings::Cast, file::File, loader::LOADER};
+use crate::{file::File, loader::LOADER};
 
 pub fn spot(
 	cmd: &'static Cmd,
@@ -43,7 +43,7 @@ pub fn spot(
 
 			let job = lua.create_table_from([
 				("args", Sendable::args_to_table_ref(&lua, &cmd.args)?.into_lua(&lua)?),
-				("file", File::cast(&lua, file)?.into_lua(&lua)?),
+				("file", File(file).into_lua(&lua)?),
 				("mime", mime.into_lua(&lua)?),
 				("skip", skip.into_lua(&lua)?),
 			])?;

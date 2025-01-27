@@ -3,7 +3,7 @@ use mlua::{ExternalError, ExternalResult, Function, IntoLua, IntoLuaMulti, Lua, 
 use tokio::fs;
 use yazi_fs::{mounts::PARTITIONS, remove_dir_clean};
 
-use crate::{Composer, Error, bindings::{Cast, Cha}, file::File, url::{Url, UrlRef}};
+use crate::{Composer, Error, bindings::Cha, file::File, url::{Url, UrlRef}};
 
 pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 	Composer::make(lua, 10, |lua, key| {
@@ -24,7 +24,7 @@ pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 
 fn cwd(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_function(|lua, ()| match std::env::current_dir() {
-		Ok(p) => (Url::cast(lua, p)?, Value::Nil).into_lua_multi(lua),
+		Ok(p) => (Url::from(p), Value::Nil).into_lua_multi(lua),
 		Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(lua),
 	})
 }
@@ -129,7 +129,7 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 			} else {
 				yazi_fs::File::from_dummy(url, next.file_type().await.ok())
 			};
-			files.push(File::cast(&lua, file)?);
+			files.push(File(file));
 		}
 
 		let tbl = lua.create_table_with_capacity(files.len(), 0)?;
@@ -144,7 +144,7 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 fn unique_name(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, url: UrlRef| async move {
 		match yazi_fs::unique_name(url.clone(), async { false }).await {
-			Ok(u) => (Url::cast(&lua, u)?, Value::Nil).into_lua_multi(&lua),
+			Ok(u) => (Url(u), Value::Nil).into_lua_multi(&lua),
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
