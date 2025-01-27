@@ -1,7 +1,7 @@
 use std::mem;
 
 use ansi_to_tui::IntoText;
-use mlua::{ExternalError, ExternalResult, FromLua, IntoLua, Lua, MetaMethod, Table, UserData, Value};
+use mlua::{ExternalError, ExternalResult, IntoLua, Lua, MetaMethod, Table, UserData, Value};
 use ratatui::widgets::Widget;
 
 use super::{Area, Line, Span};
@@ -18,7 +18,7 @@ pub const WRAP_TRIM: u8 = 2;
 
 const EXPECTED: &str = "expected a string, Line, Span, or a table of them";
 
-#[derive(Clone, Debug, Default, FromLua)]
+#[derive(Clone, Debug, Default)]
 pub struct Text {
 	pub area: Area,
 

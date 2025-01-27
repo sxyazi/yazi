@@ -82,13 +82,11 @@ macro_rules! impl_style_shorthands {
 macro_rules! impl_file_fields {
 	($fields:ident) => {
 		use mlua::UserDataFields;
-		use $crate::bindings::Cast;
 
 		$fields.add_field_method_get("cha", |_, me| Ok($crate::bindings::Cha::from(me.cha)));
-		$fields.add_field_method_get("url", |lua, me| $crate::url::Url::cast(lua, me.url_owned()));
-		$fields.add_field_method_get("link_to", |lua, me| {
-			me.link_to.clone().map(|u| $crate::url::Url::cast(lua, u)).transpose()
-		});
+		$fields.add_field_method_get("url", |_, me| Ok($crate::url::Url(me.url_owned())));
+		$fields
+			.add_field_method_get("link_to", |_, me| Ok(me.link_to.clone().map(|u| $crate::url::Url(u))));
 
 		$fields.add_field_method_get("name", |lua, me| {
 			Some(me.name())

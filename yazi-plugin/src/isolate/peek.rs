@@ -10,7 +10,7 @@ use yazi_proxy::{AppProxy, options::{PluginCallback, PluginOpt}};
 use yazi_shared::event::Cmd;
 
 use super::slim_lua;
-use crate::{bindings::Cast, elements::Rect, file::File, loader::LOADER};
+use crate::{elements::Rect, file::File, loader::LOADER};
 
 pub fn peek(
 	cmd: &'static Cmd,
@@ -46,7 +46,7 @@ pub fn peek(
 			let job = lua.create_table_from([
 				("area", Rect::from(LAYOUT.get().preview).into_lua(&lua)?),
 				("args", Sendable::args_to_table_ref(&lua, &cmd.args)?.into_lua(&lua)?),
-				("file", File::cast(&lua, file)?.into_lua(&lua)?),
+				("file", File(file).into_lua(&lua)?),
 				("mime", mime.into_lua(&lua)?),
 				("skip", skip.into_lua(&lua)?),
 			])?;
@@ -76,7 +76,7 @@ pub fn peek_sync(cmd: &'static Cmd, file: yazi_fs::File, mime: Cow<'static, str>
 		let job = lua.create_table_from([
 			("area", Rect::from(LAYOUT.get().preview).into_lua(lua)?),
 			("args", Sendable::args_to_table_ref(lua, &cmd.args)?.into_lua(lua)?),
-			("file", File::cast(lua, file)?.into_lua(lua)?),
+			("file", File(file).into_lua(lua)?),
 			("mime", mime.into_lua(lua)?),
 			("skip", skip.into_lua(lua)?),
 		])?;

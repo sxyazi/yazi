@@ -18,8 +18,7 @@ function M:fetch(job)
 	local cmd = os.getenv("YAZI_FILE_ONE") or "file"
 	local child, err = Command(cmd):args({ "-bL", "--mime-type", "--" }):args(urls):stdout(Command.PIPED):spawn()
 	if not child then
-		ya.err(string.format("Failed to start `%s`, error: %s", cmd, err))
-		return 0
+		return true, Err("Failed to start `%s`, error: %s", cmd, err)
 	end
 
 	local updates, last = {}, ya.time()
@@ -33,7 +32,7 @@ function M:fetch(job)
 		end
 	end
 
-	local i, j, valid = 1, 0, nil
+	local i, valid, state = 1, nil, {}
 	repeat
 		local line, event = child:read_line_with { timeout = 300 }
 		if event == 3 then
@@ -45,8 +44,10 @@ function M:fetch(job)
 
 		valid = match_mimetype(line)
 		if valid then
-			j, updates[urls[i]] = j + 1, valid
+			updates[urls[i]], state[i] = valid, true
 			flush(false)
+		else
+			state[i] = false
 		end
 
 		i = i + 1
@@ -54,7 +55,7 @@ function M:fetch(job)
 	until i > #urls
 
 	flush(true)
-	return j == #urls and 3 or 2
+	return state
 end
 
 return M

@@ -1,6 +1,8 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt::Display};
 
-use mlua::{ExternalError, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, Value};
+use mlua::{ExternalError, FromLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, Value};
+
+const EXPECTED: &str = "expected a Error";
 
 pub enum Error {
 	Io(std::io::Error),
@@ -20,6 +22,25 @@ impl Error {
 			Error::Io(e) => Cow::Owned(e.to_string()),
 			Error::Serde(e) => Cow::Owned(e.to_string()),
 			Error::Custom(s) => Cow::Borrowed(s),
+		}
+	}
+}
+
+impl Display for Error {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Error::Io(e) => write!(f, "{e}"),
+			Error::Serde(e) => write!(f, "{e}"),
+			Error::Custom(s) => write!(f, "{s}"),
+		}
+	}
+}
+
+impl FromLua for Error {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+		match value {
+			Value::UserData(ud) => ud.take(),
+			_ => Err(EXPECTED.into_lua_err()),
 		}
 	}
 }

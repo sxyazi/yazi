@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, fs::{FileType, Metadata}, ops::Deref};
+use std::{ffi::OsStr, fs::{FileType, Metadata}, hash::{BuildHasher, Hash, Hasher}, ops::Deref};
 
 use anyhow::Result;
 use tokio::fs;
@@ -46,6 +46,19 @@ impl File {
 			link_to: None,
 			icon: Default::default(),
 		}
+	}
+
+	#[inline]
+	pub fn hash(&self) -> u64 {
+		let mut h = foldhash::fast::FixedState::default().build_hasher();
+		self.url.hash(&mut h);
+		h.write_u8(0);
+		self.cha.len.hash(&mut h);
+		h.write_u8(0);
+		self.cha.mtime.hash(&mut h);
+		h.write_u8(0);
+		self.cha.btime.hash(&mut h);
+		h.finish()
 	}
 
 	#[inline]

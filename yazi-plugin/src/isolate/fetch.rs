@@ -1,15 +1,18 @@
-use mlua::{ExternalError, ExternalResult, IntoLua, ObjectLike, Table};
+use mlua::{ExternalError, ExternalResult, FromLua, IntoLua, Lua, ObjectLike, Table, Value};
 use tokio::runtime::Handle;
 use yazi_config::LAYOUT;
 use yazi_dds::Sendable;
 use yazi_shared::event::CmdCow;
 
 use super::slim_lua;
-use crate::{bindings::Cast, elements::Rect, file::File, loader::LOADER};
+use crate::{Error, elements::Rect, file::File, loader::LOADER};
 
-pub async fn fetch(cmd: CmdCow, files: Vec<yazi_fs::File>) -> mlua::Result<u8> {
+pub async fn fetch(
+	cmd: CmdCow,
+	files: Vec<yazi_fs::File>,
+) -> mlua::Result<(FetchState, Option<Error>)> {
 	if files.is_empty() {
-		return Ok(1);
+		return Ok((FetchState::Bool(true), None));
 	}
 	LOADER.ensure(&cmd.name).await.into_lua_err()?;
 
@@ -21,22 +24,45 @@ pub async fn fetch(cmd: CmdCow, files: Vec<yazi_fs::File>) -> mlua::Result<u8> {
 			return Err("unloaded plugin".into_lua_err());
 		};
 
-		let files =
-			lua.create_sequence_from(files.into_iter().filter_map(|f| File::cast(&lua, f).ok()))?;
-
-		if files.raw_len() == 0 {
-			return Ok(1);
-		}
-
 		Handle::current().block_on(plugin.call_async_method(
 			"fetch",
 			lua.create_table_from([
 				("area", Rect::from(LAYOUT.get().preview).into_lua(&lua)?),
 				("args", Sendable::args_to_table_ref(&lua, &cmd.args)?.into_lua(&lua)?),
-				("files", files.into_lua(&lua)?),
+				("files", lua.create_sequence_from(files.into_iter().map(File))?.into_lua(&lua)?),
 			])?,
 		))
 	})
 	.await
 	.into_lua_err()?
+}
+
+// --- State
+pub enum FetchState {
+	Bool(bool),
+	Vec(Vec<bool>),
+}
+
+impl FetchState {
+	#[inline]
+	pub fn get(&self, idx: usize) -> bool {
+		match self {
+			Self::Bool(b) => *b,
+			Self::Vec(v) => v.get(idx).copied().unwrap_or(false),
+		}
+	}
+}
+
+impl FromLua for FetchState {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+		Ok(match value {
+			Value::Boolean(b) => Self::Bool(b),
+			Value::Table(tbl) => Self::Vec(tbl.sequence_values().collect::<mlua::Result<_>>()?),
+			_ => Err(mlua::Error::FromLuaConversionError {
+				from:    value.type_name(),
+				to:      "FetchState".to_owned(),
+				message: Some("expected a boolean or a table of booleans".to_owned()),
+			})?,
+		})
+	}
 }

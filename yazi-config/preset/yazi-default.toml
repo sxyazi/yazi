@@ -91,7 +91,7 @@ suppress_preload = false
 
 fetchers = [
 	# Mimetype
-	{ id = "mime", name = "*", run = "mime", if = "!mime", prio = "high" },
+	{ id = "mime", name = "*", run = "mime", prio = "high" },
 ]
 spotters = [
 	{ name = "*/", run = "folder" },

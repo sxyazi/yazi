@@ -1,10 +1,8 @@
-use mlua::{AnyUserData, ExternalError, Lua, MetaMethod, UserDataFields, UserDataMethods, UserDataRef, Value};
-
-use crate::bindings::Cast;
+use mlua::{ExternalError, IntoLua, Lua, MetaMethod, UserDataFields, UserDataMethods, UserDataRef, Value};
 
 pub type UrlRef = UserDataRef<yazi_shared::url::Url>;
 
-pub struct Url;
+pub struct Url(pub yazi_shared::url::Url);
 
 impl Url {
 	pub fn register(lua: &Lua) -> mlua::Result<()> {
@@ -25,16 +23,14 @@ impl Url {
 			reg.add_method("ext", |lua, me, ()| {
 				me.extension().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
 			});
-			reg.add_method("join", |lua, me, other: Value| {
-				Self::cast(lua, match other {
+			reg.add_method("join", |_, me, other: Value| {
+				Ok(Self(match other {
 					Value::String(s) => me.join(s.to_str()?.as_ref()),
 					Value::UserData(ud) => me.join(&*ud.borrow::<yazi_shared::url::Url>()?),
 					_ => Err("must be a string or a Url".into_lua_err())?,
-				})
+				}))
 			});
-			reg.add_method("parent", |lua, me, ()| {
-				me.parent_url().map(|u| Self::cast(lua, u)).transpose()
-			});
+			reg.add_method("parent", |_, me, ()| Ok(me.parent_url().map(Self)));
 			reg.add_method("starts_with", |_, me, base: Value| {
 				Ok(match base {
 					Value::String(s) => me.starts_with(s.to_str()?.as_ref()),
@@ -49,13 +45,13 @@ impl Url {
 					_ => Err("must be a string or a Url".into_lua_err())?,
 				})
 			});
-			reg.add_method("strip_prefix", |lua, me, base: Value| {
+			reg.add_method("strip_prefix", |_, me, base: Value| {
 				let path = match base {
 					Value::String(s) => me.strip_prefix(s.to_str()?.as_ref()),
 					Value::UserData(ud) => me.strip_prefix(&*ud.borrow::<yazi_shared::url::Url>()?),
 					_ => Err("must be a string or a Url".into_lua_err())?,
 				};
-				path.ok().map(|p| Self::cast(lua, yazi_shared::url::Url::from(p))).transpose()
+				Ok(path.ok().map(Self::from))
 			});
 
 			reg.add_meta_method(MetaMethod::Eq, |_, me, other: UrlRef| Ok(me == &*other));
@@ -71,13 +67,17 @@ impl Url {
 	pub fn install(lua: &Lua) -> mlua::Result<()> {
 		lua.globals().raw_set(
 			"Url",
-			lua.create_function(|lua, url: mlua::String| {
-				Self::cast(lua, yazi_shared::url::Url::from(url.to_str()?.as_ref()))
-			})?,
+			lua.create_function(|_, url: mlua::String| Ok(Self::from(url.to_str()?.as_ref())))?,
 		)
 	}
 }
 
-impl<T: Into<yazi_shared::url::Url>> Cast<T> for Url {
-	fn cast(lua: &Lua, data: T) -> mlua::Result<AnyUserData> { lua.create_any_userdata(data.into()) }
+impl<T: Into<yazi_shared::url::Url>> From<T> for Url {
+	fn from(value: T) -> Self { Self(value.into()) }
+}
+
+impl IntoLua for Url {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
+		lua.create_any_userdata(self.0)?.into_lua(lua)
+	}
 }

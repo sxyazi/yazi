@@ -1,9 +1,8 @@
-use mlua::{ExternalError, FromLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
+use mlua::{ExternalError, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use unicode_width::UnicodeWidthChar;
 
 const EXPECTED: &str = "expected a string or Span";
 
-#[derive(Clone, FromLua)]
 pub struct Span(pub(super) ratatui::text::Span<'static>);
 
 impl Span {

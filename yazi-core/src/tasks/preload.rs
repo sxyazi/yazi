@@ -9,18 +9,12 @@ impl Tasks {
 		let mut loaded = self.scheduler.prework.loaded.lock();
 		let mut tasks: [Vec<_>; MAX_PREWORKERS as usize] = Default::default();
 		for f in paged {
-			let mime = mimetype.by_file(f).unwrap_or_default();
-			let factors = |s: &str| match s {
-				"mime" => !mime.is_empty(),
-				"dummy" => f.cha.is_dummy(),
-				_ => false,
-			};
-
-			for g in PLUGIN.fetchers(&f.url, mime, factors) {
-				match loaded.get_mut(&f.url) {
+			let hash = f.hash();
+			for g in PLUGIN.fetchers(&f.url, mimetype.by_file(f).unwrap_or_default()) {
+				match loaded.get_mut(&hash) {
 					Some(n) if *n & (1 << g.idx) != 0 => continue,
 					Some(n) => *n |= 1 << g.idx,
-					None => _ = loaded.insert(f.url_owned(), 1 << g.idx),
+					None => _ = loaded.put(hash, 1 << g.idx),
 				}
 				tasks[g.idx as usize].push(f.clone());
 			}
@@ -37,29 +31,16 @@ impl Tasks {
 	pub fn preload_paged(&self, paged: &[File], mimetype: &Mimetype) {
 		let mut loaded = self.scheduler.prework.loaded.lock();
 		for f in paged {
-			let mime = mimetype.by_file(f).unwrap_or_default();
-			for p in PLUGIN.preloaders(&f.url, mime) {
-				match loaded.get_mut(&f.url) {
+			let hash = f.hash();
+			for p in PLUGIN.preloaders(&f.url, mimetype.by_file(f).unwrap_or_default()) {
+				match loaded.get_mut(&hash) {
 					Some(n) if *n & (1 << p.idx) != 0 => continue,
 					Some(n) => *n |= 1 << p.idx,
-					None => _ = loaded.insert(f.url_owned(), 1 << p.idx),
+					None => _ = loaded.put(hash, 1 << p.idx),
 				}
 				self.scheduler.preload_paged(p, f);
 			}
 		}
-	}
-
-	pub fn prework_affected(&self, affected: &[File], mimetype: &Mimetype) {
-		let mask = PLUGIN.fetchers_mask();
-		{
-			let mut loaded = self.scheduler.prework.loaded.lock();
-			for f in affected {
-				loaded.get_mut(&f.url).map(|n| *n &= mask);
-			}
-		}
-
-		self.fetch_paged(affected, mimetype);
-		self.preload_paged(affected, mimetype);
 	}
 
 	pub fn prework_sorted(&self, targets: &Files) {

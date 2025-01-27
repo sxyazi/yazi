@@ -2,7 +2,12 @@ local M = {}
 
 function M:peek(job)
 	local start, cache = os.clock(), ya.file_cache(job)
-	if not cache or self:preload(job) ~= 1 then
+	if not cache then
+		return
+	end
+
+	local ok, err = self:preload(job)
+	if not ok or err then
 		return
 	end
 
@@ -25,25 +30,24 @@ function M:preload(job)
 	local percent = 5 + job.skip
 	if percent > 95 then
 		ya.manager_emit("peek", { 90, only_if = job.file.url, upper_bound = true })
-		return 2
+		return false
 	end
 
 	local cache = ya.file_cache(job)
 	if not cache then
-		return 1
+		return true
 	end
 
 	local cha = fs.cha(cache)
 	if cha and cha.len > 0 then
-		return 1
+		return true
 	end
 
 	local meta, err = self.list_meta(job.file.url, "format=duration")
 	if not meta then
-		ya.err(tostring(err))
-		return 0
+		return true, err
 	elseif not meta.format.duration then
-		return 0
+		return true, Err("Failed to get video duration")
 	end
 
 	local ss = math.floor(meta.format.duration * percent / 100)
@@ -62,10 +66,9 @@ function M:preload(job)
 	}):status()
 
 	if status then
-		return status.success and 1 or 2
+		return status.success
 	else
-		ya.err("Failed to start `ffmpeg`, error: " .. err)
-		return 0
+		return true, Err("Failed to start `ffmpeg`, error: %s", err)
 	end
 end
 
@@ -115,14 +118,14 @@ function M.list_meta(url, entries)
 	local output, err =
 		Command("ffprobe"):args({ "-v", "quiet", "-show_entries", entries, "-of", "json=c=1", tostring(url) }):output()
 	if not output then
-		return nil, Err("Failed to start `ffprobe`, error: " .. err)
+		return nil, Err("Failed to start `ffprobe`, error: %s", err)
 	end
 
 	local t = ya.json_decode(output.stdout)
 	if not t then
-		return nil, Err("Failed to decode `ffprobe` output: " .. output.stdout)
+		return nil, Err("Failed to decode `ffprobe` output: %s", output.stdout)
 	elseif type(t) ~= "table" then
-		return nil, Err("Invalid `ffprobe` output: " .. output.stdout)
+		return nil, Err("Invalid `ffprobe` output: %s", output.stdout)
 	end
 
 	t.format = t.format or {}

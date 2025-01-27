@@ -4,7 +4,12 @@ local M = {}
 
 function M:peek(job)
 	local start, cache = os.clock(), ya.file_cache(job)
-	if not cache or self:preload(job) ~= 1 then
+	if not cache then
+		return
+	end
+
+	local ok, err = self:preload(job)
+	if not ok or err then
 		return
 	end
 
@@ -18,7 +23,7 @@ function M:seek() end
 function M:preload(job)
 	local cache = ya.file_cache(job)
 	if not cache or fs.cha(cache) then
-		return 1
+		return true
 	end
 
 	local status, err = Command("magick"):args({
@@ -40,10 +45,9 @@ function M:preload(job)
 	}):status()
 
 	if status then
-		return status.success and 1 or 2
+		return status.success
 	else
-		ya.err("Failed to start `magick`, error: " .. err)
-		return 0
+		return true, Err("Failed to start `magick`, error: %s", err)
 	end
 end
 

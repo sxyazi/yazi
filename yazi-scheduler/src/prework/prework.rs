@@ -1,6 +1,7 @@
-use std::collections::{HashMap, HashSet};
+use std::{collections::{HashMap, HashSet}, num::NonZeroUsize};
 
 use anyhow::{Result, anyhow};
+use lru::LruCache;
 use parking_lot::{Mutex, RwLock};
 use tokio::sync::mpsc;
 use tracing::error;
@@ -16,7 +17,7 @@ pub struct Prework {
 	macro_: async_priority_channel::Sender<TaskOp, u8>,
 	prog:   mpsc::UnboundedSender<TaskProg>,
 
-	pub loaded:       Mutex<HashMap<Url, u32>>,
+	pub loaded:       Mutex<LruCache<u64, u32>>,
 	pub size_loading: RwLock<HashSet<Url>>,
 }
 
@@ -25,60 +26,49 @@ impl Prework {
 		macro_: async_priority_channel::Sender<TaskOp, u8>,
 		prog: mpsc::UnboundedSender<TaskProg>,
 	) -> Self {
-		Self { macro_, prog, loaded: Default::default(), size_loading: Default::default() }
+		Self {
+			macro_,
+			prog,
+			loaded: Mutex::new(LruCache::new(NonZeroUsize::new(4096).unwrap())),
+			size_loading: Default::default(),
+		}
 	}
 
 	pub async fn work(&self, op: PreworkOp) -> Result<()> {
 		match op {
 			PreworkOp::Fetch(task) => {
-				let urls: Vec<_> = task.targets.iter().map(|f| f.url_owned()).collect();
+				let hashes: Vec<_> = task.targets.iter().map(|f| f.hash()).collect();
 				let result = isolate::fetch(CmdCow::from(&task.plugin.run), task.targets).await;
 				if let Err(e) = result {
-					self.fail(
-						task.id,
-						format!(
-							"Failed to run fetcher `{}` with:\n{}\n\nError message:\n{e}",
-							task.plugin.run.name,
-							urls.iter().map(ToString::to_string).collect::<Vec<_>>().join("\n")
-						),
-					)?;
+					self.fail(task.id, format!("Failed to run fetcher `{}`:\n{e}", task.plugin.run.name))?;
 					return Err(e.into());
 				};
 
-				let code = result.unwrap();
-				if code & 1 == 0 {
-					error!(
-						"Returned {code} when running fetcher `{}` with:\n{}",
-						task.plugin.run.name,
-						urls.iter().map(ToString::to_string).collect::<Vec<_>>().join("\n")
-					);
+				let (state, err) = result.unwrap();
+				let mut loaded = self.loaded.lock();
+				for (_, h) in hashes.into_iter().enumerate().filter(|&(i, _)| !state.get(i)) {
+					loaded.get_mut(&h).map(|x| *x &= !(1 << task.plugin.idx));
 				}
-				if code & 2 != 0 {
-					let mut loaded = self.loaded.lock();
-					for url in urls {
-						loaded.get_mut(&url).map(|x| *x &= !(1 << task.plugin.idx));
-					}
+				if let Some(e) = err {
+					error!("Error when running fetcher `{}`:\n{e}", task.plugin.run.name);
 				}
 				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 			}
 			PreworkOp::Load(task) => {
-				let url = task.target.url_owned();
+				let hash = task.target.hash();
 				let result = isolate::preload(&task.plugin.run, task.target).await;
 				if let Err(e) = result {
-					self.fail(
-						task.id,
-						format!("Failed to run preloader `{}` with `{url}`:\n{e}", task.plugin.run.name),
-					)?;
+					self
+						.fail(task.id, format!("Failed to run preloader `{}`:\n{e}", task.plugin.run.name))?;
 					return Err(e.into());
 				};
 
-				let code = result.unwrap();
-				if code & 1 == 0 {
-					error!("Returned {code} when running preloader `{}` with `{url}`", task.plugin.run.name);
+				let (ok, err) = result.unwrap();
+				if !ok {
+					self.loaded.lock().get_mut(&hash).map(|x| *x &= !(1 << task.plugin.idx));
 				}
-				if code & 2 != 0 {
-					let mut loaded = self.loaded.lock();
-					loaded.get_mut(&url).map(|x| *x &= !(1 << task.plugin.idx));
+				if let Some(e) = err {
+					error!("Error when running preloader `{}`:\n{e}", task.plugin.run.name);
 				}
 				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 			}

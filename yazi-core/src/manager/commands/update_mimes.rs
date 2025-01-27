@@ -57,7 +57,9 @@ impl Manager {
 		if repeek {
 			self.peek(false);
 		}
-		tasks.prework_affected(&affected, &self.mimetype);
+		tasks.fetch_paged(&affected, &self.mimetype);
+		tasks.preload_paged(&affected, &self.mimetype);
+
 		render!();
 	}
 }
