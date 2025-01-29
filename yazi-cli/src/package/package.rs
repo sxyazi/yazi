@@ -23,41 +23,24 @@ impl Package {
 		})
 	}
 
-	pub(crate) async fn add(&mut self, use_: &str) -> Result<()> {
-		let mut dep = Dependency::from_str(use_)?;
-		if let Some(d) = self.identical(&dep) {
-			bail!(
-				"{} `{}` already exists in package.toml",
-				if d.is_flavor { "Flavor" } else { "Plugin" },
-				dep.name
-			)
+	pub(crate) async fn add_many(&mut self, uses: &[String]) -> Result<()> {
+		for u in uses {
+			if let Err(e) = self.add(u).await {
+				self.save().await?;
+				return Err(e);
+			}
 		}
-
-		dep.add().await?;
-		if dep.is_flavor {
-			self.flavors.push(dep);
-		} else {
-			self.plugins.push(dep);
-		}
-
-		let s = toml::to_string_pretty(self)?;
-		fs::write(Self::toml(), s).await.context("Failed to write package.toml")
+		self.save().await
 	}
 
-	pub(crate) async fn delete(&mut self, use_: &str) -> Result<()> {
-		let Some(dep) = self.identical(&Dependency::from_str(use_)?).cloned() else {
-			bail!("`{}` was not found in package.toml", use_)
-		};
-
-		dep.delete().await?;
-		if dep.is_flavor {
-			self.flavors.retain(|d| !d.identical(&dep));
-		} else {
-			self.plugins.retain(|d| !d.identical(&dep));
+	pub(crate) async fn delete_many(&mut self, uses: &[String]) -> Result<()> {
+		for u in uses {
+			if let Err(e) = self.delete(u).await {
+				self.save().await?;
+				return Err(e);
+			}
 		}
-
-		let s = toml::to_string_pretty(self)?;
-		fs::write(Self::toml(), s).await.context("Failed to write package.toml")
+		self.save().await
 	}
 
 	pub(crate) async fn install(&mut self, upgrade: bool) -> Result<()> {
@@ -76,8 +59,7 @@ impl Package {
 			}
 		}
 
-		let s = toml::to_string_pretty(self)?;
-		fs::write(Self::toml(), s).await.context("Failed to write package.toml")
+		self.save().await
 	}
 
 	pub(crate) fn print(&self) -> Result<()> {
@@ -178,6 +160,43 @@ impl Package {
 			}
 		}
 
+		self.save().await
+	}
+
+	async fn add(&mut self, use_: &str) -> Result<()> {
+		let mut dep = Dependency::from_str(use_)?;
+		if let Some(d) = self.identical(&dep) {
+			bail!(
+				"{} `{}` already exists in package.toml",
+				if d.is_flavor { "Flavor" } else { "Plugin" },
+				dep.name
+			)
+		}
+
+		dep.add().await?;
+		if dep.is_flavor {
+			self.flavors.push(dep);
+		} else {
+			self.plugins.push(dep);
+		}
+		Ok(())
+	}
+
+	async fn delete(&mut self, use_: &str) -> Result<()> {
+		let Some(dep) = self.identical(&Dependency::from_str(use_)?).cloned() else {
+			bail!("`{}` was not found in package.toml", use_)
+		};
+
+		dep.delete().await?;
+		if dep.is_flavor {
+			self.flavors.retain(|d| !d.identical(&dep));
+		} else {
+			self.plugins.retain(|d| !d.identical(&dep));
+		}
+		Ok(())
+	}
+
+	async fn save(&self) -> Result<()> {
 		let s = toml::to_string_pretty(self)?;
 		fs::write(Self::toml(), s).await.context("Failed to write package.toml")
 	}

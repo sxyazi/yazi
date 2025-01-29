@@ -33,7 +33,7 @@ impl Term {
 		execute!(
 			BufWriter::new(stderr()),
 			screen::SetScreen(true),
-			Print(Mux::csi("\x1bP$q q\x1b\\")), // Request cursor shape (DECRQM)
+			Print(Mux::csi("\x1bP$q q\x1b\\")), // Request cursor shape (DECRQSS query for DECSCUSR)
 			Print(Mux::csi("\x1b[?12$p")),      // Request cursor blink status (DECSET)
 			Print("\x1b[?u"),                   // Request keyboard enhancement flags (CSI u)
 			Print(Mux::csi("\x1b[0c")),         // Request device attributes

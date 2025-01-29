@@ -37,9 +37,9 @@ impl Manager {
 			let mut rx = ConfirmProxy::show_rx(ConfirmCfg::quit(left, left_names));
 			loop {
 				select! {
-					_ = time::sleep(Duration::from_millis(100)) => {
+					_ = time::sleep(Duration::from_millis(50)) => {
 						i += 1;
-						if i > 30 { break }
+						if i > 40 { break }
 						else if ongoing.lock().len() == 0 {
 							emit!(Quit(opt));
 							return;

@@ -54,12 +54,12 @@ pub(super) struct CommandEmitTo {
 #[derive(clap::Args)]
 #[command(arg_required_else_help = true)]
 pub(super) struct CommandPack {
-	/// Add a package.
-	#[arg(short = 'a', long)]
-	pub(super) add:     Option<String>,
-	/// Delete a package.
-	#[arg(short = 'd', long)]
-	pub(super) delete:  Option<String>,
+	/// Add packages.
+	#[arg(short = 'a', long, num_args = 1..)]
+	pub(super) add:     Option<Vec<String>>,
+	/// Delete packages.
+	#[arg(short = 'd', long, num_args = 1..)]
+	pub(super) delete:  Option<Vec<String>>,
 	/// Install all packages.
 	#[arg(short = 'i', long)]
 	pub(super) install: bool,
