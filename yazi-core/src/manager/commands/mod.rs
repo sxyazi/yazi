@@ -1,4 +1,5 @@
 yazi_macro::mod_flat!(
+	bulk_create
 	bulk_rename
 	close
 	create
