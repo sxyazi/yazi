@@ -1,18 +1,26 @@
-use std::{borrow::Cow, collections::{HashMap, HashSet}, ffi::{OsStr, OsString}, io::{BufWriter, Write, stderr}, path::PathBuf};
+use std::{borrow::Cow, collections::{HashMap, HashSet}, ffi::OsString, io::{BufWriter, Write, stderr}, path::PathBuf};
 
 use anyhow::{Result, anyhow};
 use scopeguard::defer;
-use tokio::{fs, io::{AsyncReadExt, AsyncWriteExt, stdin}};
+use tokio::{fs, io::{AsyncReadExt, stdin}};
 use yazi_config::{OPEN, PREVIEW};
 use yazi_dds::Pubsub;
-use yazi_fs::{File, FilesOp, max_common_root, maybe_exists, ok_or_not_found, paths_to_same_file, realname};
+use yazi_fs::{File, FilesOp, ok_or_not_found, realname};
 use yazi_proxy::{AppProxy, HIDER, TasksProxy, WATCHER};
-use yazi_shared::{terminal_clear, url::{Url, UrnBuf}};
+use yazi_shared::{event::CmdCow, terminal_clear, url::{Url, UrnBuf}};
 
 use crate::manager::Manager;
+struct Opt {
+
+}
+
+impl From<CmdCow> for Opt {
+	fn from(_c: CmdCow) -> Self { Self { } }
+}
 
 impl Manager {
-	pub(super) fn bulk_create(&self) {
+	#[yazi_codegen::command]
+	pub fn bulk_create(&self,_opt: Opt) {
 		let Some(opener) = OPEN.block_opener("bulk-create.txt", "text/plain") else {
 			return AppProxy::notify_warn("Bulk create", "No text opener found");
 		};
