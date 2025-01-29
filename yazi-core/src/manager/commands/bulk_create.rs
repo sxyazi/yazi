@@ -1,16 +1,15 @@
-use std::{borrow::Cow, collections::{HashMap, HashSet}, ffi::{OsStr, OsString}, io::{stderr, BufWriter, Write}, path::PathBuf};
+use std::{borrow::Cow, collections::{HashMap, HashSet}, ffi::{OsStr, OsString}, io::{BufWriter, Write, stderr}, path::PathBuf};
 
 use anyhow::{Result, anyhow};
 use scopeguard::defer;
-use tokio::{io::{AsyncReadExt, AsyncWriteExt, stdin}};
-use tokio::fs;
+use tokio::{fs, io::{AsyncReadExt, AsyncWriteExt, stdin}};
 use yazi_config::{OPEN, PREVIEW};
 use yazi_dds::Pubsub;
-use yazi_fs::{max_common_root, maybe_exists, ok_or_not_found, paths_to_same_file, realname, File, FilesOp};
+use yazi_fs::{File, FilesOp, max_common_root, maybe_exists, ok_or_not_found, paths_to_same_file, realname};
 use yazi_proxy::{AppProxy, HIDER, TasksProxy, WATCHER};
 use yazi_shared::{terminal_clear, url::{Url, UrnBuf}};
 
-use crate::manager:: Manager;
+use crate::manager::Manager;
 
 impl Manager {
 	pub(super) fn bulk_create(&self) {
@@ -32,12 +31,12 @@ impl Manager {
 			defer!(AppProxy::resume());
 			AppProxy::stop().await;
 
-			let new: Vec<_> = fs::read_to_string(&tmp).await?.lines().map(Url::from).collect();			
-			Self::bulk_create_do( new).await
+			let new: Vec<_> = fs::read_to_string(&tmp).await?.lines().map(Url::from).collect();
+			Self::bulk_create_do(new).await
 		});
 	}
 
-	async fn bulk_create_do(new:Vec<Url>) -> Result<()> {
+	async fn bulk_create_do(new: Vec<Url>) -> Result<()> {
 		terminal_clear(&mut stderr())?;
 		if new.is_empty() {
 			return Ok(());
@@ -48,7 +47,7 @@ impl Manager {
 			for n in &new {
 				if n.to_str().unwrap().ends_with('/') || n.to_str().unwrap().ends_with('\\') {
 					writeln!(stderr, "create new dir-> {}", n.display())?;
-				}else{
+				} else {
 					writeln!(stderr, "create new file-> {}", n.display())?;
 				}
 			}
@@ -64,43 +63,41 @@ impl Manager {
 
 		let permit = WATCHER.acquire().await.unwrap();
 		let (mut failed, mut succeeded) = (Vec::new(), HashMap::with_capacity(new.len()));
-        for n in new {
-            let Some(parent) = n.parent_url() else { return Ok(()) };
-            let dir = n.to_str().unwrap().ends_with('/') || n.to_str().unwrap().ends_with('\\');
-            
-            if dir {
-                if let Err(e) = fs::create_dir_all(&n).await {
-                    failed.push((PathBuf::new(), n.into(), e.into()));
-                } else if let Ok(f) = File::from(n.clone()).await {
-                    succeeded.insert(n.clone(), f);
-                } else {
-                    failed.push((PathBuf::new(), n, anyhow!("Failed to retrieve file info")));
-                }
-            } else {
-                fs::create_dir_all(&parent).await.ok();
-                if let Some(real) = realname(&n).await {
-                    if let Err(e) = ok_or_not_found(fs::remove_file(&n).await) {
-                        failed.push((PathBuf::new(), n.into(), e.into()));
-                        continue;
-                    }
-                    FilesOp::Deleting(parent.clone(), HashSet::from_iter([UrnBuf::from(real)])).emit();
-                }
-                
-                if let Err(e) = fs::File::create(&n).await {
-                    failed.push((PathBuf::new(), n.into(), e.into()));
-                } else if let Ok(f) = File::from(n.clone()).await {
-                    succeeded.insert(n.clone(), f);
-                } else {
-                    failed.push((PathBuf::new(), n.into(), anyhow!("Failed to retrieve file info")));
-                }
-            }
-        }
-		
-		
+		for n in new {
+			let Some(parent) = n.parent_url() else { return Ok(()) };
+			let dir = n.to_str().unwrap().ends_with('/') || n.to_str().unwrap().ends_with('\\');
+
+			if dir {
+				if let Err(e) = fs::create_dir_all(&n).await {
+					failed.push((PathBuf::new(), n.into(), e.into()));
+				} else if let Ok(f) = File::from(n.clone()).await {
+					succeeded.insert(n.clone(), f);
+				} else {
+					failed.push((PathBuf::new(), n, anyhow!("Failed to retrieve file info")));
+				}
+			} else {
+				fs::create_dir_all(&parent).await.ok();
+				if let Some(real) = realname(&n).await {
+					if let Err(e) = ok_or_not_found(fs::remove_file(&n).await) {
+						failed.push((PathBuf::new(), n.into(), e.into()));
+						continue;
+					}
+					FilesOp::Deleting(parent.clone(), HashSet::from_iter([UrnBuf::from(real)])).emit();
+				}
+
+				if let Err(e) = fs::File::create(&n).await {
+					failed.push((PathBuf::new(), n.into(), e.into()));
+				} else if let Ok(f) = File::from(n.clone()).await {
+					succeeded.insert(n.clone(), f);
+				} else {
+					failed.push((PathBuf::new(), n.into(), anyhow!("Failed to retrieve file info")));
+				}
+			}
+		}
 
 		if !succeeded.is_empty() {
 			Pubsub::pub_from_bulk(succeeded.iter().map(|(o, n)| (o, &n.url)).collect());
-            FilesOp::create(succeeded.into_values().collect());
+			FilesOp::create(succeeded.into_values().collect());
 		}
 		drop(permit);
 
