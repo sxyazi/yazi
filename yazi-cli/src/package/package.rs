@@ -23,37 +23,18 @@ impl Package {
 		})
 	}
 
-	pub(crate) async fn add(&mut self, use_: &str) -> Result<()> {
-		let mut dep = Dependency::from_str(use_)?;
-		if let Some(d) = self.identical(&dep) {
-			bail!(
-				"{} `{}` already exists in package.toml",
-				if d.is_flavor { "Flavor" } else { "Plugin" },
-				dep.name
-			)
-		}
-
-		dep.add().await?;
-		if dep.is_flavor {
-			self.flavors.push(dep);
-		} else {
-			self.plugins.push(dep);
+	pub(crate) async fn add_many(&mut self, uses: &[String]) -> Result<()> {
+		for use_ in uses {
+			self.add(use_).await?;
 		}
 
 		let s = toml::to_string_pretty(self)?;
 		fs::write(Self::toml(), s).await.context("Failed to write package.toml")
 	}
 
-	pub(crate) async fn delete(&mut self, use_: &str) -> Result<()> {
-		let Some(dep) = self.identical(&Dependency::from_str(use_)?).cloned() else {
-			bail!("`{}` was not found in package.toml", use_)
-		};
-
-		dep.delete().await?;
-		if dep.is_flavor {
-			self.flavors.retain(|d| !d.identical(&dep));
-		} else {
-			self.plugins.retain(|d| !d.identical(&dep));
+	pub(crate) async fn delete_many(&mut self, uses: &[String]) -> Result<()> {
+		for use_ in uses {
+			self.delete(use_).await?;
 		}
 
 		let s = toml::to_string_pretty(self)?;
@@ -180,6 +161,39 @@ impl Package {
 
 		let s = toml::to_string_pretty(self)?;
 		fs::write(Self::toml(), s).await.context("Failed to write package.toml")
+	}
+
+	async fn add(&mut self, use_: &str) -> Result<()> {
+		let mut dep = Dependency::from_str(use_)?;
+		if let Some(d) = self.identical(&dep) {
+			bail!(
+				"{} `{}` already exists in package.toml",
+				if d.is_flavor { "Flavor" } else { "Plugin" },
+				dep.name
+			)
+		}
+
+		dep.add().await?;
+		if dep.is_flavor {
+			self.flavors.push(dep);
+		} else {
+			self.plugins.push(dep);
+		}
+		Ok(())
+	}
+
+	async fn delete(&mut self, use_: &str) -> Result<()> {
+		let Some(dep) = self.identical(&Dependency::from_str(use_)?).cloned() else {
+			bail!("`{}` was not found in package.toml", use_)
+		};
+
+		dep.delete().await?;
+		if dep.is_flavor {
+			self.flavors.retain(|d| !d.identical(&dep));
+		} else {
+			self.plugins.retain(|d| !d.identical(&dep));
+		}
+		Ok(())
 	}
 
 	#[inline]

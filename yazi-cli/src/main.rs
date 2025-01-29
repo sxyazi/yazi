@@ -71,16 +71,10 @@ async fn run() -> anyhow::Result<()> {
 				package::Package::load().await?.print()?;
 			} else if cmd.upgrade {
 				package::Package::load().await?.install(true).await?;
-			} else if let Some(repos) = cmd.add {
-				let mut package = package::Package::load().await?;
-				for repo in repos {
-					package.add(&repo).await?;
-				}
-			} else if let Some(repos) = cmd.delete {
-				let mut package = package::Package::load().await?;
-				for repo in repos {
-					package.delete(&repo).await?;
-				}
+			} else if let Some(uses) = cmd.add {
+				package::Package::load().await?.add_many(&uses).await?;
+			} else if let Some(uses) = cmd.delete {
+				package::Package::load().await?.delete_many(&uses).await?;
 			}
 		}
 

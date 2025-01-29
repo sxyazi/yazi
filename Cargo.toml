@@ -23,16 +23,16 @@ futures             = "0.3.31"
 globset             = "0.4.15"
 indexmap            = { version = "2.7.1", features = [ "serde" ] }
 libc                = "0.2.169"
-lru                 = "0.12.5"
+lru                 = "0.13.0"
 md-5                = "0.10.6"
-mlua                = { version = "0.10.2", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serialize" ] }
+mlua                = { version = "0.10.3", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serialize" ] }
 objc                = "0.2.7"
 parking_lot         = "0.12.3"
 ratatui             = { version = "0.29.0", features = [ "unstable-rendered-line-info" ] }
 regex               = "1.11.1"
 scopeguard          = "1.2.0"
 serde               = { version = "1.0.217", features = [ "derive" ] }
-serde_json          = "1.0.137"
+serde_json          = "1.0.138"
 shell-words         = "1.1.0"
 tokio               = { version = "1.43.0", features = [ "full" ] }
 tokio-stream        = "0.1.17"

@@ -22,7 +22,7 @@ serde = { workspace = true }
 
 [build-dependencies]
 clap                  = { workspace = true }
-clap_complete         = "4.5.42"
+clap_complete         = "4.5.44"
 clap_complete_fig     = "4.5.2"
 clap_complete_nushell = "4.5.5"
 vergen-gitcl          = { version = "1.0.5", features = [ "build", "rustc" ] }

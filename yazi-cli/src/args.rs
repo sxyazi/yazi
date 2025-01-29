@@ -57,8 +57,8 @@ pub(super) struct CommandPack {
 	/// Add packages.
 	#[arg(short = 'a', long, num_args = 1..)]
 	pub(super) add:     Option<Vec<String>>,
-	/// Delete a package.
-	#[arg(short = 'd', long,num_args = 1..)]
+	/// Delete packages.
+	#[arg(short = 'd', long, num_args = 1..)]
 	pub(super) delete:  Option<Vec<String>>,
 	/// Install all packages.
 	#[arg(short = 'i', long)]
