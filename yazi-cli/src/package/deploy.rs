@@ -12,6 +12,11 @@ impl Dependency {
 		let from = self.local().join(&self.child);
 
 		self.header("Deploying package `{name}`")?;
+		// TODO: maybe need to be removed
+		let plugin_exists = maybe_exists(&from).await;
+		if !plugin_exists {
+			bail!("Plugin `{}` not found", self.name);
+		}
 		self.is_flavor = maybe_exists(&from.join("flavor.toml")).await;
 
 		let to = self.target();
