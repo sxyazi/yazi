@@ -20,5 +20,6 @@ impl App {
 
 		self.cx.current_mut().sync_page(true);
 		self.cx.manager.hover(None);
+		self.cx.manager.parent_mut().map(|f| f.arrow(0));
 	}
 }
