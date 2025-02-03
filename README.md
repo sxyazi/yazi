@@ -2,19 +2,18 @@
 
 <div align="center" markdown="1">
 
-[![Warp](https://github.com/user-attachments/assets/0c3b132c-8984-49cf-918a-db6f6abe2c01)](https://www.warp.dev/?utm_source=github&utm_medium=referral&utm_campaign=inquirer)<br>
+[![Warp](https://github.com/user-attachments/assets/0c3b132c-8984-49cf-918a-db6f6abe2c01)](https://www.warp.dev/?utm_source=github&utm_medium=referral&utm_campaign=yazi)<br>
 
 ### [Warp, the intelligent terminal for developers](https://www.warp.dev/?utm_source=github&utm_medium=referral&utm_campaign=inquirer)
 
-[Yazi's terminal of choice!](https://www.warp.dev/?utm_source=github&utm_medium=referral&utm_campaign=inquirer)<br>
-[Available for MacOS and Linux](https://www.warp.dev/?utm_source=github&utm_medium=referral&utm_campaign=inquirer)<br>
+[Yazi's terminal of choice!](https://www.warp.dev/?utm_source=github&utm_medium=referral&utm_campaign=yazi)<br>
+[Available for MacOS and Linux](https://www.warp.dev/?utm_source=github&utm_medium=referral&utm_campaign=yazi)<br>
 
 </div>
-
+<br/>
 <div align="center">
   <img src="assets/logo.png" alt="Yazi logo" width="20%">
 </div>
-<br/>
 
 ## Yazi - ⚡️ Blazing Fast Terminal File Manager
 
