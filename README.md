@@ -1,19 +1,18 @@
-## Special Thanks
-
-<div align="center" markdown="1">
-
-[![Warp](https://github.com/user-attachments/assets/0c3b132c-8984-49cf-918a-db6f6abe2c01)](https://www.warp.dev/?utm_source=github&utm_medium=referral&utm_campaign=yazi)<br>
-
-### [Warp, the intelligent terminal for developers](https://www.warp.dev/?utm_source=github&utm_medium=referral&utm_campaign=inquirer)
-
-[Yazi's terminal of choice!](https://www.warp.dev/?utm_source=github&utm_medium=referral&utm_campaign=yazi)<br>
-[Available for MacOS and Linux](https://www.warp.dev/?utm_source=github&utm_medium=referral&utm_campaign=yazi)<br>
-
-</div>
-<br/>
 <div align="center">
-  <img src="assets/logo.png" alt="Yazi logo" width="20%">
+  <sup>Special thanks to:</sup>
+  <br><br>
+  <a href="https://www.warp.dev/?utm_source=github&utm_medium=referral&utm_campaign=yazi" target="_blank">
+    <img alt="Warp sponsorship" width="300" src="https://github.com/user-attachments/assets/bd99f841-16ef-4ebb-9448-2481e261e73a">
+    <br>
+    <b>Warp, the intelligent terminal</b>
+    <br>
+    <sup>
+      Yazi's AI-powered terminal of choice!<br>Available for macOS and Linux
+    </sup>
+  </a>
 </div>
+
+<br/>
 
 ## Yazi - ⚡️ Blazing Fast Terminal File Manager
 
