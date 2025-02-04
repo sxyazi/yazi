@@ -1,6 +1,16 @@
 <div align="center">
-  <img src="assets/logo.png" alt="Yazi logo" width="20%">
+  <sup>Special thanks to:</sup>
+  <br><br>
+  <a href="https://www.warp.dev/?utm_source=github&utm_medium=referral&utm_campaign=yazi" target="_blank">
+    <img alt="Warp sponsorship" width="300" src="https://github.com/user-attachments/assets/c7f141e7-9751-407d-bb0e-d6f2c487b34f">
+    <br>
+    <b>Warp, the intelligent terminal</b>
+    <br>
+    <sup>Yazi's AI-powered terminal of choice!<br>Available for macOS and Linux</sup>
+  </a>
 </div>
+
+<br>
 
 ## Yazi - ⚡️ Blazing Fast Terminal File Manager
 
