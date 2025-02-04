@@ -6,13 +6,11 @@
     <br>
     <b>Warp, the intelligent terminal</b>
     <br>
-    <sup>
-      Yazi's AI-powered terminal of choice!<br>Available for macOS and Linux
-    </sup>
+    <sup>Yazi's AI-powered terminal of choice!<br>Available for macOS and Linux</sup>
   </a>
 </div>
 
-<br/>
+<br>
 
 ## Yazi - ⚡️ Blazing Fast Terminal File Manager
 
