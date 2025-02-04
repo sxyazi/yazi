@@ -9,8 +9,10 @@ lto           = true
 panic         = "abort"
 strip         = true
 
-[target.'cfg(windows)'.profile.release]
-panic = "unwind"
+[profile.release-windows]
+codegen-units = 1
+lto           = true
+strip         = true
 
 [workspace.dependencies]
 ansi-to-tui         = "7.0.0"

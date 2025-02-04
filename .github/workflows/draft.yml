@@ -96,7 +96,7 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.6
 
       - name: Build
-        run: cargo build --release --locked --target ${{ matrix.target }}
+        run: cargo build --profile release-windows --locked --target ${{ matrix.target }}
 
       - name: Pack artifact
         env:
