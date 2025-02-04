@@ -1,4 +1,4 @@
-use std::{borrow::Cow, iter::repeat};
+use std::{borrow::Cow, iter::repeat_n};
 
 pub fn escape_str(s: &str) -> Cow<str> {
 	let bytes = s.as_bytes();
@@ -6,8 +6,8 @@ pub fn escape_str(s: &str) -> Cow<str> {
 		return Cow::Borrowed(s);
 	}
 
-	let mut escaped = String::with_capacity(bytes.len() + 2);
-	escaped.push('"');
+	let mut escaped = Vec::with_capacity(bytes.len() + 2);
+	escaped.push(b'"');
 
 	let mut chars = bytes.iter().copied().peekable();
 	loop {
@@ -18,24 +18,24 @@ pub fn escape_str(s: &str) -> Cow<str> {
 		match chars.next() {
 			Some(b'"') => {
 				escaped.reserve(slashes * 2 + 2);
-				escaped.extend(repeat('\\').take(slashes * 2 + 1));
-				escaped.push('"');
+				escaped.extend(repeat_n(b'\\', slashes * 2 + 1));
+				escaped.push(b'"');
 			}
-			Some(c) => {
+			Some(b) => {
 				escaped.reserve(slashes + 1);
-				escaped.extend(repeat('\\').take(slashes));
-				escaped.push(c as _);
+				escaped.extend(repeat_n(b'\\', slashes));
+				escaped.push(b);
 			}
 			None => {
 				escaped.reserve(slashes * 2);
-				escaped.extend(repeat('\\').take(slashes * 2));
+				escaped.extend(repeat_n(b'\\', slashes * 2));
 				break;
 			}
 		}
 	}
 
-	escaped.push('"');
-	escaped.into()
+	escaped.push(b'"');
+	Cow::Owned(unsafe { String::from_utf8_unchecked(escaped) })
 }
 
 #[cfg(windows)]
@@ -137,6 +137,8 @@ mod tests {
 		assert_eq!(escape_str(r#"--features="default""#), r#""--features=\"default\"""#);
 		assert_eq!(escape_str(r#""--features=\"default\"""#), r#""\"--features=\\\"default\\\"\"""#);
 		assert_eq!(escape_str("linker=gcc -L/foo -Wl,bar"), r#""linker=gcc -L/foo -Wl,bar""#);
+
+		assert_eq!(escape_str("이것은 테스트"), r#""이것은 테스트""#);
 	}
 
 	#[cfg(windows)]
