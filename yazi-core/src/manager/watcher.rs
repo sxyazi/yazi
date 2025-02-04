@@ -6,8 +6,7 @@ use parking_lot::RwLock;
 use tokio::{fs, pin, sync::{mpsc::{self, UnboundedReceiver}, watch}};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tracing::error;
-use yazi_dds::Pubsub;
-use yazi_fs::{Cha, File, Files, FilesOp, mounts::PARTITIONS, realname_unchecked};
+use yazi_fs::{Cha, File, Files, FilesOp, realname_unchecked};
 use yazi_proxy::WATCHER;
 use yazi_shared::{RoCell, url::Url};
 
@@ -44,7 +43,10 @@ impl Watcher {
 		}
 
 		#[cfg(any(target_os = "linux", target_os = "macos"))]
-		yazi_fs::mounts::Partitions::monitor(PARTITIONS.clone(), Pubsub::pub_from_mount);
+		yazi_fs::mounts::Partitions::monitor(
+			yazi_fs::mounts::PARTITIONS.clone(),
+			yazi_dds::Pubsub::pub_from_mount,
+		);
 
 		tokio::spawn(Self::fan_out(out_rx));
 		Self { in_tx, out_tx }

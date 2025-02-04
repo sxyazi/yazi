@@ -9,6 +9,10 @@ lto           = true
 panic         = "abort"
 strip         = true
 
+[profile.release-windows]
+inherits = "release"
+panic    = "unwind"
+
 [workspace.dependencies]
 ansi-to-tui         = "7.0.0"
 anyhow              = "1.0.95"

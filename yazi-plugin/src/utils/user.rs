@@ -1,3 +1,4 @@
+#[cfg(unix)]
 use mlua::{Function, Lua};
 
 use super::Utils;

@@ -32,10 +32,10 @@ impl Partitions {
 		self.inner.iter().find(|p| p.rdev == Some(dev))
 	}
 
-	pub fn heuristic(&self, cha: Cha) -> bool {
+	pub fn heuristic(&self, _cha: Cha) -> bool {
 		#[cfg(any(target_os = "linux", target_os = "macos"))]
 		{
-			self.by_dev(cha.dev).is_none_or(|p| p.heuristic())
+			self.by_dev(_cha.dev).is_none_or(|p| p.heuristic())
 		}
 		#[cfg(not(any(target_os = "linux", target_os = "macos")))]
 		{

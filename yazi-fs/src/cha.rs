@@ -152,11 +152,11 @@ impl Cha {
 	}
 
 	#[inline]
-	pub fn new_nofollow(path: &Path, meta: Metadata) -> Self {
+	pub fn new_nofollow(_path: &Path, meta: Metadata) -> Self {
 		let mut attached = ChaKind::empty();
 
 		#[cfg(unix)]
-		if yazi_shared::url::Urn::new(path).is_hidden() {
+		if yazi_shared::url::Urn::new(_path).is_hidden() {
 			attached |= ChaKind::HIDDEN;
 		}
 		#[cfg(windows)]

@@ -1,4 +1,4 @@
-use std::{ops::{Deref, Not}, time::{Duration, SystemTime, UNIX_EPOCH}};
+use std::{ops::Deref, time::{Duration, SystemTime, UNIX_EPOCH}};
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, UserData, UserDataFields, UserDataMethods};
 use yazi_fs::ChaKind;
@@ -74,6 +74,7 @@ impl UserData for Cha {
 
 		#[cfg(unix)]
 		{
+			use std::ops::Not;
 			fields.add_field_method_get("dev", |_, me| Ok(me.is_dummy().not().then_some(me.dev)));
 			fields.add_field_method_get("uid", |_, me| Ok(me.is_dummy().not().then_some(me.uid)));
 			fields.add_field_method_get("gid", |_, me| Ok(me.is_dummy().not().then_some(me.gid)));

@@ -1,4 +1,4 @@
-use std::{ffi::{OsStr, OsString}, path::PathBuf};
+use std::{ffi::OsString, path::PathBuf};
 
 #[derive(Debug, Default)]
 pub struct Partition {
@@ -19,14 +19,14 @@ impl Partition {
 
 	#[rustfmt::skip]
 	pub fn systemic(&self) -> bool {
-		let b: &[u8] = self.fstype.as_ref().map_or(b"", |s| s.as_encoded_bytes());
+		let _b: &[u8] = self.fstype.as_ref().map_or(b"", |s| s.as_encoded_bytes());
 		#[cfg(target_os = "linux")]
 		{
-			matches!(b, b"autofs" | b"binfmt_misc" | b"bpf" | b"cgroup2" | b"configfs" | b"debugfs" | b"devpts" | b"devtmpfs" | b"fuse.gvfsd-fuse" | b"fusectl" | b"hugetlbfs" | b"mqueue" | b"proc" | b"pstore" | b"ramfs" | b"securityfs" | b"sysfs" | b"tmpfs" | b"tracefs")
+			matches!(_b, b"autofs" | b"binfmt_misc" | b"bpf" | b"cgroup2" | b"configfs" | b"debugfs" | b"devpts" | b"devtmpfs" | b"fuse.gvfsd-fuse" | b"fusectl" | b"hugetlbfs" | b"mqueue" | b"proc" | b"pstore" | b"ramfs" | b"securityfs" | b"sysfs" | b"tmpfs" | b"tracefs")
 		}
 		#[cfg(target_os = "macos")]
 		{
-			b.is_empty()
+			_b.is_empty()
 		}
 		#[cfg(not(any(target_os = "linux", target_os = "macos")))]
 		{
@@ -38,13 +38,13 @@ impl Partition {
 impl Partition {
 	#[inline]
 	#[cfg(any(target_os = "linux", target_os = "macos"))]
-	pub(super) fn new(name: &OsStr) -> Self {
+	pub(super) fn new(name: &std::ffi::OsStr) -> Self {
 		Self { src: std::path::Path::new("/dev/").join(name).into(), ..Default::default() }
 	}
 
 	#[inline]
 	#[cfg(target_os = "linux")]
-	pub(super) fn dev_name(&self) -> Option<&OsStr> {
+	pub(super) fn dev_name(&self) -> Option<&std::ffi::OsStr> {
 		std::path::Path::new(&self.src).strip_prefix("/dev/").ok().map(|p| p.as_os_str())
 	}
 }
