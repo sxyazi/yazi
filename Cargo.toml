@@ -10,9 +10,8 @@ panic         = "abort"
 strip         = true
 
 [profile.release-windows]
-codegen-units = 1
-lto           = true
-strip         = true
+inherits = "release"
+panic    = "unwind"
 
 [workspace.dependencies]
 ansi-to-tui         = "7.0.0"
