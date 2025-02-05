@@ -42,7 +42,7 @@ impl TryFrom<mlua::Table> for NotifyOpt {
 	}
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Eq, PartialEq)]
 pub enum NotifyLevel {
 	#[default]
 	Info,

@@ -39,15 +39,16 @@ impl From<NotifyOpt> for Message {
 impl Message {
 	#[inline]
 	pub fn height(&self, width: u16) -> usize {
-		if width == 0 {
-			return 0; // In case we can't get the width of the terminal
-		}
-
-		let mut lines = 0;
-		for line in self.content.lines() {
-			lines += (line.width() + 1).div_ceil(width as usize)
-		}
+		let lines = ratatui::widgets::Paragraph::new(self.content.as_str())
+			.wrap(ratatui::widgets::Wrap { trim: false })
+			.line_count(width);
 
 		lines + NOTIFY_BORDER as usize
+	}
+}
+
+impl PartialEq for Message {
+	fn eq(&self, other: &Self) -> bool {
+		self.level == other.level && self.content == other.content && self.title == other.title
 	}
 }

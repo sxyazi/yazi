@@ -240,7 +240,7 @@ mod cursor {
 		fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
 			let (shape, shape_blink) = match SHAPE.load(Ordering::Relaxed) {
 				u8::MAX => (0, false),
-				n => ((n.max(1) + 1) / 2, n.max(1) & 1 == 1),
+				n => (n.max(1).div_ceil(2), n.max(1) & 1 == 1),
 			};
 
 			let blink = BLINK.load(Ordering::Relaxed) ^ shape_blink;

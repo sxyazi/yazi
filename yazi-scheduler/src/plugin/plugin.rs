@@ -31,7 +31,7 @@ impl Plugin {
 		self.prog.send(TaskProg::New(task.id, 0))?;
 
 		if let Err(e) = isolate::entry(task.opt).await {
-			self.fail(task.id, format!("Micro plugin failed:\n{e}"))?;
+			self.fail(task.id, format!("Failed to run the plugin:\n{e}"))?;
 			return Ok(());
 		}
 

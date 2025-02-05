@@ -1,6 +1,6 @@
 use std::process;
 
-pub(crate) struct Actions;
+pub struct Actions;
 
 impl Actions {
 	pub(crate) fn act(args: &crate::Args) {

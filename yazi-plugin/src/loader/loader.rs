@@ -1,6 +1,6 @@
 use std::{collections::HashMap, ops::Deref};
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use mlua::{ExternalError, Lua, Table};
 use parking_lot::RwLock;
 use tokio::fs;
@@ -51,8 +51,8 @@ impl Default for Loader {
 
 impl Loader {
 	pub async fn ensure(&self, name: &str) -> Result<()> {
-		if self.cache.read().contains_key(name) {
-			return Ok(());
+		if let Some(chunk) = self.cache.read().get(name) {
+			return Self::compatible_or_error(name, chunk);
 		}
 
 		// TODO: remove this
@@ -80,13 +80,14 @@ Please run `ya pack -m` to automatically migrate all plugins, or manually rename
 			Err(e) => Err(e).with_context(|| format!("Failed to load plugin from {p:?}"))?,
 		};
 
-		self.cache.write().insert(name.to_owned(), chunk.into());
-		Ok(())
+		let mut cache = self.cache.write();
+		cache.insert(name.to_owned(), chunk.into());
+		Self::compatible_or_error(name, cache.get(name).unwrap())
 	}
 
 	pub fn load(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
 		let loaded: Table = lua.globals().raw_get::<Table>("package")?.raw_get("loaded")?;
-		if let Ok(t) = loaded.raw_get::<Table>(id) {
+		if let Ok(t) = loaded.raw_get(id) {
 			return Ok(t);
 		}
 
@@ -101,13 +102,12 @@ Please run `ya pack -m` to automatically migrate all plugins, or manually rename
 	}
 
 	pub fn try_load(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
-		let loaded: Table = lua.globals().raw_get::<Table>("package")?.raw_get("loaded")?;
-		loaded.raw_get(id)
+		lua.globals().raw_get::<Table>("package")?.raw_get::<Table>("loaded")?.raw_get(id)
 	}
 
 	pub fn load_with(&self, lua: &Lua, id: &str, chunk: &Chunk) -> mlua::Result<Table> {
 		let loaded: Table = lua.globals().raw_get::<Table>("package")?.raw_get("loaded")?;
-		if let Ok(t) = loaded.raw_get::<Table>(id) {
+		if let Ok(t) = loaded.raw_get(id) {
 			return Ok(t);
 		}
 
@@ -116,5 +116,17 @@ Please run `ya pack -m` to automatically migrate all plugins, or manually rename
 
 		loaded.raw_set(id, t.clone())?;
 		Ok(t)
+	}
+
+	pub fn compatible_or_error(name: &str, chunk: &Chunk) -> Result<()> {
+		if chunk.compatible() {
+			return Ok(());
+		}
+
+		bail!(
+			"Plugin `{name}` requires at least Yazi {}, but your current version is Yazi {}.",
+			chunk.since,
+			yazi_boot::actions::Actions::version()
+		);
 	}
 }

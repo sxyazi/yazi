@@ -11,8 +11,10 @@ impl Notify {
 
 		let instant = Instant::now();
 		msg.timeout += instant - self.messages.first().map_or(instant, |m| m.instant);
-		self.messages.push(msg);
 
-		emit!(Call(Cmd::args("update_notify", &[0]), Layer::App));
+		if self.messages.iter().all(|m| m != &msg) {
+			self.messages.push(msg);
+			emit!(Call(Cmd::args("update_notify", &[0]), Layer::App));
+		}
 	}
 }
