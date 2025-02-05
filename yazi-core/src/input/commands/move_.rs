@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{num::ParseIntError, str::FromStr};
 
 use unicode_width::UnicodeWidthStr;
 use yazi_macro::render;
@@ -76,14 +76,14 @@ impl Default for OptStep {
 }
 
 impl FromStr for OptStep {
-	type Err = ();
+	type Err = ParseIntError;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		Ok(match s {
 			"bol" => Self::Bol,
 			"eol" => Self::Eol,
 			"first-char" => Self::FirstChar,
-			s => Self::Offset(s.parse().map_err(|_| ())?),
+			s => Self::Offset(s.parse()?),
 		})
 	}
 }
