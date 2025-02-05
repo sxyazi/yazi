@@ -40,7 +40,7 @@ impl Manager {
 					_ = time::sleep(Duration::from_millis(50)) => {
 						i += 1;
 						if i > 40 { break }
-						else if ongoing.lock().len() == 0 {
+						else if ongoing.lock().is_empty() {
 							emit!(Quit(opt));
 							return;
 						}

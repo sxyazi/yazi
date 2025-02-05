@@ -1,7 +1,7 @@
 use super::Actions;
 
 impl Actions {
-	pub(super) fn version() -> &'static str {
+	pub fn version() -> &'static str {
 		concat!(
 			env!("CARGO_PKG_VERSION"),
 			" (",

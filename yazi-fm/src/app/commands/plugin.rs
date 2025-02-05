@@ -4,7 +4,7 @@ use mlua::ObjectLike;
 use scopeguard::defer;
 use tracing::{error, warn};
 use yazi_dds::Sendable;
-use yazi_plugin::{LUA, RtRefMut, loader::LOADER};
+use yazi_plugin::{LUA, RtRefMut, loader::{LOADER, Loader}};
 use yazi_proxy::{AppProxy, options::{PluginMode, PluginOpt}};
 
 use crate::{app::App, lives::Lives};
@@ -29,8 +29,9 @@ impl App {
 		}
 
 		tokio::spawn(async move {
-			if LOADER.ensure(&opt.id).await.is_ok() {
-				AppProxy::plugin_do(opt);
+			match LOADER.ensure(&opt.id).await {
+				Ok(()) => AppProxy::plugin_do(opt),
+				Err(e) => AppProxy::notify_error("Plugin load failed", e),
 			}
 		});
 	}
@@ -46,6 +47,10 @@ impl App {
 			return warn!("plugin `{}` not found", opt.id);
 		};
 
+		if let Err(e) = Loader::compatible_or_error(&opt.id, chunk) {
+			return AppProxy::notify_error("Incompatible plugin", e);
+		}
+
 		if opt.mode.auto_then(chunk.sync_entry) != PluginMode::Sync {
 			return self.cx.tasks.plugin_micro(opt);
 		}
@@ -57,7 +62,7 @@ impl App {
 		defer! { _ = LUA.named_registry_value::<RtRefMut>("rt").map(|mut r| r.pop()) }
 
 		let plugin = match LOADER.load_with(&LUA, &opt.id, chunk) {
-			Ok(plugin) => plugin,
+			Ok(t) => t,
 			Err(e) => return warn!("{e}"),
 		};
 		drop(loader);

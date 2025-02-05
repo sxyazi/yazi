@@ -102,6 +102,8 @@ macro_rules! impl_file_methods {
 	($methods:ident) => {
 		use mlua::UserDataMethods;
 
+		$methods.add_method("hash", |_, me, ()| Ok(me.hash()));
+
 		$methods.add_method("icon", |_, me, ()| {
 			use yazi_shared::theme::IconCache;
 			use $crate::bindings::Icon;
