@@ -35,7 +35,7 @@ pub fn init() -> anyhow::Result<()> {
 		{
 			eprintln!("Deprecated command: `arrow -99999999` and `arrow 99999999` have been deprecated, please use `arrow top` and `arrow bot` instead, in your `keymap.toml`.
 
-See #2262 for more details: https://github.com/sxyazi/yazi/pull/2262");
+See #2294 for more details: https://github.com/sxyazi/yazi/pull/2294");
 		}
 	}
 
