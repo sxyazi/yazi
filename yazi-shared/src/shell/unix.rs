@@ -227,10 +227,4 @@ mod tests {
 
 		from_bytes(&[0x66, 0x6f, 0x80, 0x6f], &[b'\'', 0x66, 0x6f, 0x80, 0x6f, b'\'']);
 	}
-
-	#[test]
-	fn test_split() {
-		let x = split("plugin --sync fzf -- 'echo {}' --preview").unwrap();
-		println!("{x:?}");
-	}
 }
