@@ -23,6 +23,7 @@ impl TryFrom<CmdCow> for SearchOpt {
 		Ok(Self {
 			via,
 			subject,
+			// TODO: use second positional argument instead of `args` parameter
 			args: yazi_shared::shell::split_unix(c.str("args").unwrap_or_default()).map_err(|_| ())?,
 			args_raw: c.take_str("args").unwrap_or_default(),
 		})
