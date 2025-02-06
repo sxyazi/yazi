@@ -8,8 +8,6 @@
 
 use std::{borrow::Cow, ffi::OsStr};
 
-use anyhow::anyhow;
-
 mod unix;
 mod windows;
 
@@ -45,7 +43,7 @@ pub fn escape_os_str(s: &OsStr) -> Cow<OsStr> {
 
 #[inline]
 pub fn split_unix(s: &str) -> anyhow::Result<Vec<String>> {
-	unix::split(s).map_err(|()| anyhow!("missing closing quote"))
+	unix::split(s).map_err(|()| anyhow::anyhow!("missing closing quote"))
 }
 
 #[cfg(windows)]
