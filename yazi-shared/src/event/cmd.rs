@@ -165,7 +165,7 @@ impl FromStr for Cmd {
 
 	#[allow(clippy::explicit_counter_loop)]
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		let mut args = shell_words::split(s)?;
+		let mut args = crate::shell::split_unix(s)?;
 		if args.is_empty() || args[0].is_empty() {
 			bail!("command name cannot be empty");
 		}

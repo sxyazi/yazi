@@ -21,7 +21,6 @@ parking_lot      = { workspace = true }
 percent-encoding = "2.3.1"
 ratatui          = { workspace = true }
 serde            = { workspace = true }
-shell-words      = { workspace = true }
 tokio            = { workspace = true }
 
 [target."cfg(unix)".dependencies]

@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, mem};
 
 pub fn escape_str(s: &str) -> Cow<str> {
 	match escape_slice(s.as_bytes()) {
@@ -44,6 +44,139 @@ fn escape_slice(s: &[u8]) -> Cow<[u8]> {
 
 fn allowed(b: u8) -> bool {
 	matches!(b, b'a'..=b'z' | b'A'..=b'Z' | b'0'..=b'9' | b'-' | b'_' | b'=' | b'/' | b',' | b'.' | b'+')
+}
+
+pub fn split(s: &str) -> Result<Vec<String>, ()> {
+	enum State {
+		/// Within a delimiter.
+		Delimiter,
+		/// After backslash, but before starting word.
+		Backslash,
+		/// Within an unquoted word.
+		Unquoted,
+		/// After backslash in an unquoted word.
+		UnquotedBackslash,
+		/// Within a single quoted word.
+		SingleQuoted,
+		/// Within a double quoted word.
+		DoubleQuoted,
+		/// After backslash inside a double quoted word.
+		DoubleQuotedBackslash,
+		/// Inside a comment.
+		Comment,
+	}
+	use State::*;
+
+	let mut words = Vec::new();
+	let mut word = String::new();
+	let mut chars = s.chars();
+	let mut state = Delimiter;
+
+	macro_rules! flush {
+		() => {
+			if word == "--" {
+				words.push(chars.collect());
+				break;
+			}
+			words.push(mem::take(&mut word));
+		};
+	}
+
+	loop {
+		let c = chars.next();
+		state = match state {
+			Delimiter => match c {
+				None => break,
+				Some('\'') => SingleQuoted,
+				Some('\"') => DoubleQuoted,
+				Some('\\') => Backslash,
+				Some('\t') | Some(' ') | Some('\n') => Delimiter,
+				Some('#') => Comment,
+				Some(c) => {
+					word.push(c);
+					Unquoted
+				}
+			},
+			Backslash => match c {
+				None => {
+					word.push('\\');
+					flush!();
+					break;
+				}
+				Some('\n') => Delimiter,
+				Some(c) => {
+					word.push(c);
+					Unquoted
+				}
+			},
+			Unquoted => match c {
+				None => {
+					flush!();
+					break;
+				}
+				Some('\'') => SingleQuoted,
+				Some('\"') => DoubleQuoted,
+				Some('\\') => UnquotedBackslash,
+				Some('\t') | Some(' ') | Some('\n') => {
+					flush!();
+					Delimiter
+				}
+				Some(c) => {
+					word.push(c);
+					Unquoted
+				}
+			},
+			UnquotedBackslash => match c {
+				None => {
+					word.push('\\');
+					flush!();
+					break;
+				}
+				Some('\n') => Unquoted,
+				Some(c) => {
+					word.push(c);
+					Unquoted
+				}
+			},
+			SingleQuoted => match c {
+				None => return Err(()),
+				Some('\'') => Unquoted,
+				Some(c) => {
+					word.push(c);
+					SingleQuoted
+				}
+			},
+			DoubleQuoted => match c {
+				None => return Err(()),
+				Some('\"') => Unquoted,
+				Some('\\') => DoubleQuotedBackslash,
+				Some(c) => {
+					word.push(c);
+					DoubleQuoted
+				}
+			},
+			DoubleQuotedBackslash => match c {
+				None => return Err(()),
+				Some('\n') => DoubleQuoted,
+				Some(c @ '$') | Some(c @ '`') | Some(c @ '"') | Some(c @ '\\') => {
+					word.push(c);
+					DoubleQuoted
+				}
+				Some(c) => {
+					word.push('\\');
+					word.push(c);
+					DoubleQuoted
+				}
+			},
+			Comment => match c {
+				None => break,
+				Some('\n') => Delimiter,
+				Some(_) => Comment,
+			},
+		}
+	}
+
+	Ok(words)
 }
 
 #[cfg(test)]
@@ -93,5 +226,11 @@ mod tests {
 		from_str(r#"'!\$`\\\n "#, r#"''\'''\!'\$`\\\n '"#);
 
 		from_bytes(&[0x66, 0x6f, 0x80, 0x6f], &[b'\'', 0x66, 0x6f, 0x80, 0x6f, b'\'']);
+	}
+
+	#[test]
+	fn test_split() {
+		let x = split("plugin --sync fzf -- 'echo {}' --preview").unwrap();
+		println!("{x:?}");
 	}
 }

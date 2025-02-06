@@ -27,7 +27,7 @@ impl TryFrom<CmdCow> for PluginOpt {
 		};
 
 		let args = if let Some(s) = c.str("args") {
-			Cmd::parse_args(shell_words::split(s)?.into_iter(), true)?
+			Cmd::parse_args(yazi_shared::shell::split_unix(s)?.into_iter(), true)?
 		} else {
 			Default::default()
 		};
