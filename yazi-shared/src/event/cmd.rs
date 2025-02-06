@@ -78,6 +78,12 @@ impl Cmd {
 	#[inline]
 	pub fn first_str(&self) -> Option<&str> { self.str(0) }
 
+	#[inline]
+	pub fn second(&self) -> Option<&Data> { self.get(1) }
+
+	#[inline]
+	pub fn second_str(&self) -> Option<&str> { self.str(1) }
+
 	// --- Take
 	#[inline]
 	pub fn take(&mut self, name: impl Into<DataKey>) -> Option<Data> {

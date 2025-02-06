@@ -5,7 +5,7 @@ use yazi_dds::Sendable;
 use yazi_shared::event::Cmd;
 
 use super::slim_lua;
-use crate::{Error, deprecate, elements::Rect, file::File, loader::LOADER};
+use crate::{Error, elements::Rect, file::File, loader::LOADER};
 
 pub async fn preload(
 	cmd: &'static Cmd,
@@ -35,7 +35,7 @@ pub async fn preload(
 		let ok = match ok {
 			Value::Boolean(b) => b,
 			Value::Integer(n) => {
-				deprecate!(lua, "The integer return value of `preload()` has been deprecated since 25.01.27, please use the new `(bool, error)` instead, in your {}.
+				crate::deprecate!(lua, "The integer return value of `preload()` has been deprecated since 25.01.27, please use the new `(bool, error)` instead, in your {}.
 
 See #2253 for more information: https://github.com/sxyazi/yazi/pull/2253");
 				if n as u8 & 1 == 0 {

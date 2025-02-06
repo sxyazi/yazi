@@ -24,6 +24,7 @@ impl TabProxy {
 	#[inline]
 	pub fn search_do(opt: SearchOpt) {
 		emit!(Call(
+			// TODO: use second positional argument instead of `args` parameter
 			Cmd::args("search_do", &[opt.subject]).with("via", opt.via).with("args", opt.args_raw),
 			Layer::Manager
 		));
