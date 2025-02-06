@@ -37,11 +37,10 @@ regex               = "1.11.1"
 scopeguard          = "1.2.0"
 serde               = { version = "1.0.217", features = [ "derive" ] }
 serde_json          = "1.0.138"
-shell-words         = "1.1.0"
 tokio               = { version = "1.43.0", features = [ "full" ] }
 tokio-stream        = "0.1.17"
 tokio-util          = "0.7.13"
-toml                = { version = "0.8.19" }
+toml                = { version = "0.8.20" }
 tracing             = { version = "0.1.41", features = [ "max_level_debug", "release_max_level_debug" ] }
 twox-hash           = { version = "2.1.0", default-features = false, features = [ "std", "random", "xxhash3_128" ] }
 unicode-width       = "0.2.0"

@@ -1,8 +1,9 @@
 //! Escape characters that may have special meaning in a shell, including
-//! spaces. This is a modified version of the [`shell-escape`] crate and [`this
-//! PR`].
+//! spaces. This is a modified version of the [`shell-escape`], [`shell-words`]
+//! and [`this PR`].
 //!
 //! [`shell-escape`]: https://crates.io/crates/shell-escape
+//! [`shell-words`]: https://crates.io/crates/shell-words
 //! [`this PR`]: https://github.com/sfackler/shell-escape/pull/9
 
 use std::{borrow::Cow, ffi::OsStr};
@@ -41,7 +42,9 @@ pub fn escape_os_str(s: &OsStr) -> Cow<OsStr> {
 }
 
 #[inline]
-pub fn split_unix(s: &str) -> anyhow::Result<Vec<String>> { Ok(shell_words::split(s)?) }
+pub fn split_unix(s: &str) -> anyhow::Result<Vec<String>> {
+	unix::split(s).map_err(|()| anyhow::anyhow!("missing closing quote"))
+}
 
 #[cfg(windows)]
 pub fn split_windows(s: &str) -> anyhow::Result<Vec<String>> { Ok(windows::split(s)?) }

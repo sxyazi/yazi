@@ -20,5 +20,4 @@ yazi-shared = { path = "../yazi-shared", version = "25.2.5" }
 # External dependencies
 anyhow      = { workspace = true }
 mlua        = { workspace = true }
-shell-words = { workspace = true }
 tokio       = { workspace = true }
