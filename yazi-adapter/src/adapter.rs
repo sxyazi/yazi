@@ -81,9 +81,9 @@ impl Adapter {
 
 impl Adapter {
 	pub fn matches(emulator: Emulator) -> Self {
-		if matches!(emulator.kind.left(), Some(Brand::Microsoft)) {
+		if emulator.kind.is_left_and(|&b| b == Brand::Microsoft) {
 			return Self::Sixel;
-		} else if WSL.get() && matches!(emulator.kind.left(), Some(Brand::WezTerm)) {
+		} else if WSL.get() && emulator.kind.is_left_and(|&b| b == Brand::WezTerm) {
 			return Self::KgpOld;
 		}
 
