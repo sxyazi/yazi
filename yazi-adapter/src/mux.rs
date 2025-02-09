@@ -7,25 +7,17 @@ pub struct Mux;
 
 impl Mux {
 	pub fn csi(s: &str) -> std::borrow::Cow<str> {
-		if *TMUX && !*NVIM {
+		if TMUX.get() && !NVIM.get() {
 			std::borrow::Cow::Owned(format!(
-				"{}{}{}",
-				*START,
-				s.trim_start_matches('\x1b').replace('\x1b', *ESCAPE),
-				*CLOSE
+				"{START}{}{CLOSE}",
+				s.trim_start_matches('\x1b').replace('\x1b', ESCAPE.get()),
 			))
 		} else {
 			std::borrow::Cow::Borrowed(s)
 		}
 	}
 
-	pub fn tmux_passthrough() -> bool {
-		if !std::env::var("TERM_PROGRAM").is_ok_and(|s| s == "tmux")
-			&& !std::env::var("TERM").is_ok_and(|s| s.starts_with("tmux"))
-		{
-			return false;
-		}
-
+	pub fn tmux_passthrough() {
 		let child = std::process::Command::new("tmux")
 			.args(["set", "-p", "allow-passthrough", "on"])
 			.stdin(std::process::Stdio::null())
@@ -46,11 +38,10 @@ impl Mux {
 				error!("Failed to spawn `tmux set -p allow-passthrough on`: {e}");
 			}
 		}
-		true
 	}
 
 	pub fn tmux_drain() -> Result<()> {
-		if *TMUX && !*NVIM {
+		if TMUX.get() && !NVIM.get() {
 			crossterm::execute!(std::io::stderr(), crossterm::style::Print(Mux::csi("\x1b[5n")))?;
 			_ = futures::executor::block_on(Emulator::read_until_dsr());
 		}
@@ -74,7 +65,7 @@ impl Mux {
 
 	pub(super) fn term_program() -> (Option<String>, Option<String>) {
 		let (mut term, mut program) = (None, None);
-		if !*TMUX {
+		if !TMUX.get() {
 			return (term, program);
 		}
 		let Ok(output) = std::process::Command::new("tmux").arg("show-environment").output() else {

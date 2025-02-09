@@ -53,14 +53,11 @@ impl Iip {
 
 			write!(
 				buf,
-				"{}]1337;File=inline=1;size={};width={}px;height={}px;doNotMoveCursor=1:",
-				START,
+				"{START}]1337;File=inline=1;size={};width={w}px;height={h}px;doNotMoveCursor=1:",
 				b.len(),
-				w,
-				h,
 			)?;
 			STANDARD.encode_string(b, &mut buf);
-			write!(buf, "\x07{}", CLOSE)?;
+			write!(buf, "\x07{CLOSE}")?;
 
 			Ok(buf.into_bytes())
 		})

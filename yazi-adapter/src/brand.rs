@@ -3,7 +3,7 @@ use yazi_shared::env_exists;
 
 use crate::{Mux, NVIM};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Brand {
 	Kitty,
 	Konsole,
@@ -19,6 +19,7 @@ pub enum Brand {
 	Tabby,
 	Hyper,
 	Mintty,
+	Tmux,
 	Neovim,
 	Apple,
 	Urxvt,
@@ -26,10 +27,24 @@ pub enum Brand {
 }
 
 impl Brand {
+	pub(super) fn from_csi(resp: &str) -> Option<Self> {
+		let names = [
+			("kitty", Self::Kitty),
+			("Konsole", Self::Konsole),
+			("iTerm2", Self::Iterm2),
+			("WezTerm", Self::WezTerm),
+			("foot", Self::Foot),
+			("ghostty", Self::Ghostty),
+			("tmux ", Self::Tmux),
+			("Bobcat", Self::Bobcat),
+		];
+		names.into_iter().find(|&(n, _)| resp.contains(n)).map(|(_, b)| b)
+	}
+
 	pub fn from_env() -> Option<Self> {
 		use Brand as B;
 
-		if *NVIM {
+		if NVIM.get() {
 			return Some(Self::Neovim);
 		}
 
@@ -76,19 +91,6 @@ impl Brand {
 		None
 	}
 
-	pub(super) fn from_csi(resp: &str) -> Option<Self> {
-		let names = [
-			("kitty", Self::Kitty),
-			("Konsole", Self::Konsole),
-			("iTerm2", Self::Iterm2),
-			("WezTerm", Self::WezTerm),
-			("foot", Self::Foot),
-			("ghostty", Self::Ghostty),
-			("Bobcat", Self::Bobcat),
-		];
-		names.into_iter().find(|&(n, _)| resp.contains(n)).map(|(_, b)| b)
-	}
-
 	pub(super) fn adapters(self) -> &'static [crate::Adapter] {
 		use Brand as B;
 
@@ -109,6 +111,7 @@ impl Brand {
 			B::Tabby => &[A::Iip, A::Sixel],
 			B::Hyper => &[A::Iip, A::Sixel],
 			B::Mintty => &[A::Iip],
+			B::Tmux => &[],
 			B::Neovim => &[],
 			B::Apple => &[],
 			B::Urxvt => &[],

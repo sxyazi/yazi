@@ -336,7 +336,7 @@ impl Kgp {
 				write!(stderr, "{s}")?;
 			}
 
-			write!(stderr, "{}_Gq=2,a=d,d=A{}\\{}", START, ESCAPE, CLOSE)?;
+			write!(stderr, "{START}_Gq=2,a=d,d=A{ESCAPE}\\{CLOSE}")?;
 			Ok(())
 		})
 	}
@@ -350,31 +350,21 @@ impl Kgp {
 			if let Some(first) = it.next() {
 				write!(
 					buf,
-					"{}_Gq=2,a=T,i=1,C=1,U=1,f={},s={},v={},m={};{}{}\\{}",
-					START,
-					format,
+					"{START}_Gq=2,a=T,i=1,C=1,U=1,f={format},s={},v={},m={};{}{ESCAPE}\\{CLOSE}",
 					size.0,
 					size.1,
 					it.peek().is_some() as u8,
 					unsafe { str::from_utf8_unchecked(first) },
-					ESCAPE,
-					CLOSE
 				)?;
 			}
 
 			while let Some(chunk) = it.next() {
-				write!(
-					buf,
-					"{}_Gm={};{}{}\\{}",
-					START,
-					it.peek().is_some() as u8,
-					unsafe { str::from_utf8_unchecked(chunk) },
-					ESCAPE,
-					CLOSE
-				)?;
+				write!(buf, "{START}_Gm={};{}{ESCAPE}\\{CLOSE}", it.peek().is_some() as u8, unsafe {
+					str::from_utf8_unchecked(chunk)
+				})?;
 			}
 
-			write!(buf, "{}", CLOSE)?;
+			write!(buf, "{CLOSE}")?;
 			Ok(buf)
 		}
 

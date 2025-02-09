@@ -17,40 +17,37 @@ pub struct Emulator {
 }
 
 impl Default for Emulator {
-	fn default() -> Self {
-		Self { kind: Either::Right(Unknown::default()), light: false, cell_size: None }
-	}
+	fn default() -> Self { Self::unknown() }
 }
 
 impl Emulator {
-	pub fn detect() -> Self {
-		if let Some(brand) = Brand::from_env() {
-			Self { kind: Either::Left(brand), ..Self::detect_base().unwrap_or_default() }
-		} else {
-			Self::detect_full().unwrap_or_default()
-		}
-	}
-
-	pub fn detect_full() -> Result<Self> {
+	pub fn detect() -> Result<Self> {
 		defer! { disable_raw_mode().ok(); }
 		enable_raw_mode()?;
+
+		let resort = Brand::from_env();
+		let kgp_seq = if resort.is_none() {
+			Mux::csi("\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\")
+		} else {
+			"".into()
+		};
 
 		execute!(
 			LineWriter::new(stderr()),
 			SavePosition,
-			Print(Mux::csi("\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\")), // Detect KGP
-			Print(Mux::csi("\x1b[>q")),                                    // Request terminal version
-			Print("\x1b[16t"),                                             // Request cell size
-			Print("\x1b]11;?\x07"),                                        // Request background color
-			Print(Mux::csi("\x1b[0c")),                                    // Request device attributes
+			Print(kgp_seq),             // Detect KGP
+			Print(Mux::csi("\x1b[>q")), // Request terminal version
+			Print("\x1b[16t"),          // Request cell size
+			Print("\x1b]11;?\x07"),     // Request background color
+			Print(Mux::csi("\x1b[0c")), // Request device attributes
 			RestorePosition
 		)?;
 
 		let resp = futures::executor::block_on(Self::read_until_da1());
 		Mux::tmux_drain()?;
 
-		let kind = if let Some(brand) = Brand::from_csi(&resp) {
-			Either::Left(brand)
+		let kind = if let Some(b) = Brand::from_csi(&resp).or(resort) {
+			Either::Left(b)
 		} else {
 			Either::Right(Unknown {
 				kgp:   resp.contains("\x1b_Gi=31;OK"),
@@ -63,6 +60,10 @@ impl Emulator {
 			light: Self::light_bg(&resp).unwrap_or_default(),
 			cell_size: Self::cell_size(&resp),
 		})
+	}
+
+	pub const fn unknown() -> Self {
+		Self { kind: Either::Right(Unknown::default()), light: false, cell_size: None }
 	}
 
 	pub fn adapters(self) -> &'static [Adapter] {
@@ -84,7 +85,7 @@ impl Emulator {
 
 		// I really don't want to add this,
 		// But tmux and ConPTY sometimes cause the cursor position to get out of sync.
-		if *TMUX || cfg!(windows) {
+		if TMUX.get() || cfg!(windows) {
 			execute!(buf, SavePosition, MoveTo(x, y), Show)?;
 			execute!(buf, MoveTo(x, y), Show)?;
 			execute!(buf, MoveTo(x, y), Show)?;
@@ -94,7 +95,7 @@ impl Emulator {
 		}
 
 		let result = cb(&mut buf);
-		if *TMUX || cfg!(windows) {
+		if TMUX.get() || cfg!(windows) {
 			queue!(buf, Hide, RestorePosition)?;
 		} else {
 			queue!(buf, RestorePosition)?;
@@ -192,27 +193,6 @@ impl Emulator {
 
 		std::io::stdin().read_exact(&mut [0])?;
 		Ok(())
-	}
-
-	fn detect_base() -> Result<Self> {
-		defer! { disable_raw_mode().ok(); }
-		enable_raw_mode()?;
-
-		execute!(
-			LineWriter::new(stderr()),
-			Print("\x1b[16t"),      // Request cell size
-			Print("\x1b]11;?\x07"), // Request background color
-			Print("\x1b[0c"),       // Request device attributes
-		)?;
-
-		let resp = futures::executor::block_on(Self::read_until_da1());
-		Mux::tmux_drain()?;
-
-		Ok(Self {
-			light: Self::light_bg(&resp).unwrap_or_default(),
-			cell_size: Self::cell_size(&resp),
-			..Default::default()
-		})
 	}
 
 	fn cell_size(resp: &str) -> Option<(u16, u16)> {

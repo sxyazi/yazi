@@ -1,4 +1,4 @@
-use std::{cell::Cell, fmt::{Debug, Formatter}, ops::Deref};
+use std::{cell::Cell, fmt::{Debug, Display, Formatter}, ops::Deref};
 
 /// [`SyncCell`], but [`Sync`].
 ///
@@ -33,4 +33,8 @@ impl<T: Copy + Debug> Debug for SyncCell<T> {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
 		f.debug_struct("SyncCell").field("value", &self.get()).finish()
 	}
+}
+
+impl<T: Copy + Display> Display for SyncCell<T> {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { Display::fmt(&self.get(), f) }
 }

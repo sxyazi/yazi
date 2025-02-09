@@ -70,14 +70,14 @@ impl Preview {
 	#[inline]
 	pub fn reset(&mut self) {
 		self.abort();
-		ADAPTOR.image_hide().ok();
+		ADAPTOR.get().image_hide().ok();
 		render!(self.lock.take().is_some())
 	}
 
 	#[inline]
 	pub fn reset_image(&mut self) {
 		self.abort();
-		ADAPTOR.image_hide().ok();
+		ADAPTOR.get().image_hide().ok();
 	}
 
 	#[inline]

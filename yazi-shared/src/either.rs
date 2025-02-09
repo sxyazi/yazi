@@ -33,6 +33,14 @@ impl<L, R> Either<L, R> {
 		}
 	}
 
+	pub fn is_left_and<F: FnOnce(&L) -> bool>(&self, f: F) -> bool {
+		self.left().map(f).unwrap_or(false)
+	}
+
+	pub fn is_right_and<F: FnOnce(&R) -> bool>(&self, f: F) -> bool {
+		self.right().map(f).unwrap_or(false)
+	}
+
 	pub fn into_left(self) -> Option<L> {
 		match self {
 			Either::Left(l) => Some(l),
