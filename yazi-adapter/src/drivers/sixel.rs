@@ -47,7 +47,7 @@ impl Sixel {
 			let nq = NeuQuant::new(PREVIEW.sixel_fraction as i32, 256 - alpha as usize, &img);
 
 			let mut buf: Vec<u8> = Vec::with_capacity(1 << 16);
-			write!(buf, "{}P0;1;8q\"1;1;{};{}", START, img.width(), img.height())?;
+			write!(buf, "{START}P0;1;8q\"1;1;{};{}", img.width(), img.height())?;
 
 			// Palette
 			for (i, c) in nq.color_map_rgba().chunks(4).enumerate() {
@@ -96,7 +96,7 @@ impl Sixel {
 				}
 			}
 
-			write!(buf, "{}\\{}", ESCAPE, CLOSE)?;
+			write!(buf, "{ESCAPE}\\{CLOSE}")?;
 			Ok(buf)
 		})
 		.await?

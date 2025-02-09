@@ -26,7 +26,7 @@ impl Term {
 		};
 
 		enable_raw_mode()?;
-		if *yazi_adapter::TMUX {
+		if yazi_adapter::TMUX.get() {
 			yazi_adapter::Mux::tmux_passthrough();
 		}
 
@@ -268,12 +268,12 @@ mod screen {
 
 	impl crossterm::Command for SetScreen {
 		fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
-			if self.0 == *TMUX { Ok(()) } else { EnterAlternateScreen.write_ansi(f) }
+			if self.0 == TMUX.get() { Ok(()) } else { EnterAlternateScreen.write_ansi(f) }
 		}
 
 		#[cfg(windows)]
 		fn execute_winapi(&self) -> std::io::Result<()> {
-			if self.0 == *TMUX { Ok(()) } else { EnterAlternateScreen.execute_winapi() }
+			if self.0 == TMUX.get() { Ok(()) } else { EnterAlternateScreen.execute_winapi() }
 		}
 
 		#[cfg(windows)]

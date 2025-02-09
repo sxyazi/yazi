@@ -4,48 +4,49 @@ yazi_macro::mod_pub!(drivers);
 
 yazi_macro::mod_flat!(adapter brand dimension emulator image info mux unknown);
 
-use yazi_shared::{RoCell, SyncCell, env_exists, in_wsl};
+use yazi_shared::{SyncCell, env_exists, in_wsl};
 
-pub static EMULATOR: RoCell<Emulator> = RoCell::new();
-pub static ADAPTOR: RoCell<Adapter> = RoCell::new();
+pub static EMULATOR: SyncCell<Emulator> = SyncCell::new(Emulator::unknown());
+pub static ADAPTOR: SyncCell<Adapter> = SyncCell::new(Adapter::Chafa);
 
 // Image state
 static SHOWN: SyncCell<Option<ratatui::layout::Rect>> = SyncCell::new(None);
 
-// Tmux support
-pub static TMUX: RoCell<bool> = RoCell::new();
-static ESCAPE: RoCell<&'static str> = RoCell::new();
-static START: RoCell<&'static str> = RoCell::new();
-static CLOSE: RoCell<&'static str> = RoCell::new();
-
 // WSL support
-pub static WSL: RoCell<bool> = RoCell::new();
+pub static WSL: SyncCell<bool> = SyncCell::new(false);
 
 // Neovim support
-pub static NVIM: RoCell<bool> = RoCell::new();
+pub static NVIM: SyncCell<bool> = SyncCell::new(false);
+
+// Tmux support
+pub static TMUX: SyncCell<bool> = SyncCell::new(false);
+static ESCAPE: SyncCell<&'static str> = SyncCell::new("\x1b");
+static START: SyncCell<&'static str> = SyncCell::new("\x1b");
+static CLOSE: SyncCell<&'static str> = SyncCell::new("");
 
 pub fn init() -> anyhow::Result<()> {
-	init_default();
-
-	EMULATOR.init(Emulator::detect());
-	yazi_config::init_flavor(EMULATOR.light)?;
-
-	ADAPTOR.init(Adapter::matches(*EMULATOR));
-	ADAPTOR.start();
-
-	Ok(())
-}
-
-pub fn init_default() {
-	// Tmux support
-	TMUX.init(Mux::tmux_passthrough());
-	ESCAPE.init(if *TMUX { "\x1b\x1b" } else { "\x1b" });
-	START.init(if *TMUX { "\x1bPtmux;\x1b\x1b" } else { "\x1b" });
-	CLOSE.init(if *TMUX { "\x1b\\" } else { "" });
-
 	// WSL support
-	WSL.init(in_wsl());
+	WSL.set(in_wsl());
 
 	// Neovim support
-	NVIM.init(env_exists("NVIM_LOG_FILE") && env_exists("NVIM"));
+	NVIM.set(env_exists("NVIM_LOG_FILE") && env_exists("NVIM"));
+
+	// Emulator detection
+	EMULATOR.set(Emulator::detect().unwrap_or_default());
+	TMUX.set(EMULATOR.get().kind.is_left_and(|&b| b == Brand::Tmux));
+
+	// Tmux support
+	if TMUX.get() {
+		ESCAPE.set("\x1b\x1b");
+		START.set("\x1bPtmux;\x1b\x1b");
+		CLOSE.set("\x1b\\");
+		Mux::tmux_passthrough();
+		EMULATOR.set(Emulator::detect().unwrap_or_default());
+	}
+
+	yazi_config::init_flavor(EMULATOR.get().light)?;
+
+	ADAPTOR.set(Adapter::matches(EMULATOR.get()));
+	ADAPTOR.get().start();
+	Ok(())
 }

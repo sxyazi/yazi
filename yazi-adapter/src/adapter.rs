@@ -83,7 +83,7 @@ impl Adapter {
 	pub fn matches(emulator: Emulator) -> Self {
 		if matches!(emulator.kind.left(), Some(Brand::Microsoft)) {
 			return Self::Sixel;
-		} else if *WSL && matches!(emulator.kind.left(), Some(Brand::WezTerm)) {
+		} else if WSL.get() && matches!(emulator.kind.left(), Some(Brand::WezTerm)) {
 			return Self::KgpOld;
 		}
 
@@ -92,7 +92,7 @@ impl Adapter {
 		protocols.retain(|p| *p == Self::Iip);
 		if env_exists("ZELLIJ_SESSION_NAME") {
 			protocols.retain(|p| *p == Self::Sixel);
-		} else if *TMUX {
+		} else if TMUX.get() {
 			protocols.retain(|p| *p != Self::KgpOld);
 		}
 		if let Some(p) = protocols.first() {

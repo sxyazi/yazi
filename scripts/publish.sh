@@ -1,6 +1,7 @@
 cargo publish -p yazi-macro && sleep 30
 cargo publish -p yazi-codegen && sleep 30
 cargo publish -p yazi-shared && sleep 30
+cargo publish -p yazi-ffi && sleep 30
 cargo publish -p yazi-fs && sleep 30
 cargo publish -p yazi-config && sleep 30
 cargo publish -p yazi-proxy && sleep 30

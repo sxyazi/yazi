@@ -38,11 +38,11 @@ impl ratatui::widgets::Widget for Clear {
 	{
 		ratatui::widgets::Clear.render(area, buf);
 
-		let Some(r) = ADAPTOR.shown_load().and_then(|r| overlap(area, r)) else {
+		let Some(r) = ADAPTOR.get().shown_load().and_then(|r| overlap(area, r)) else {
 			return;
 		};
 
-		ADAPTOR.image_erase(r).ok();
+		ADAPTOR.get().image_erase(r).ok();
 		COLLISION.store(true, Ordering::Relaxed);
 		for y in r.top()..r.bottom() {
 			for x in r.left()..r.right() {

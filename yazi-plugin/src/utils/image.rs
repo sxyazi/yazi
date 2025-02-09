@@ -17,7 +17,7 @@ impl Utils {
 
 	pub(super) fn image_show(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_async_function(|lua, (url, rect): (UrlRef, Rect)| async move {
-			if let Ok(area) = ADAPTOR.image_show(&url, *rect).await {
+			if let Ok(area) = ADAPTOR.get().image_show(&url, *rect).await {
 				Rect::from(area).into_lua(&lua)
 			} else {
 				Value::Nil.into_lua(&lua)

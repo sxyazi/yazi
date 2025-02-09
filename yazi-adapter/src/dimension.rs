@@ -30,7 +30,8 @@ impl Dimension {
 	pub fn ratio() -> Option<(f64, f64)> {
 		let s = Self::available();
 		Some(if s.width == 0 || s.height == 0 {
-			(EMULATOR.cell_size?.0 as f64, EMULATOR.cell_size?.1 as f64)
+			let s = EMULATOR.get().cell_size?;
+			(s.0 as f64, s.1 as f64)
 		} else {
 			(f64::from(s.width) / f64::from(s.columns), f64::from(s.height) / f64::from(s.rows))
 		})
