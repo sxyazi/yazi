@@ -1,11 +1,10 @@
 use mlua::{ExternalError, ExternalResult, FromLua, IntoLua, Lua, ObjectLike, Table, Value};
 use tokio::runtime::Handle;
-use yazi_config::LAYOUT;
 use yazi_dds::Sendable;
 use yazi_shared::event::CmdCow;
 
 use super::slim_lua;
-use crate::{Error, elements::Rect, file::File, loader::LOADER};
+use crate::{Error, file::File, loader::LOADER};
 
 pub async fn fetch(
 	cmd: CmdCow,
@@ -27,7 +26,6 @@ pub async fn fetch(
 		Handle::current().block_on(plugin.call_async_method(
 			"fetch",
 			lua.create_table_from([
-				("area", Rect::from(LAYOUT.get().preview).into_lua(&lua)?),
 				("args", Sendable::args_to_table_ref(&lua, &cmd.args)?.into_lua(&lua)?),
 				("files", lua.create_sequence_from(files.into_iter().map(File))?.into_lua(&lua)?),
 			])?,
