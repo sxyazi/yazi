@@ -19,7 +19,7 @@ async fn main() -> ExitCode {
 					}
 				}
 			}
-			errln!("{:#}", e).ok();
+			errln!("{e:#}").ok();
 			ExitCode::FAILURE
 		}
 	}

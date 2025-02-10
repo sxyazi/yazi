@@ -3,7 +3,7 @@ use std::{path::{Path, PathBuf}, str::FromStr};
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use tokio::fs;
-use yazi_fs::{Xdg, ok_or_not_found, unique_name};
+use yazi_fs::{Xdg, ok_or_not_found, remove_sealed, unique_name};
 use yazi_macro::outln;
 
 use super::Dependency;
@@ -134,7 +134,7 @@ impl Package {
 				if d.hash.is_empty() {
 					d.hash = d.hash().await?;
 				}
-				fs::remove_file(&tracker).await.ok();
+				remove_sealed(&tracker).await.ok();
 			}
 		}
 		for d in &mut self.flavors {
@@ -156,7 +156,7 @@ impl Package {
 				if d.hash.is_empty() {
 					d.hash = d.hash().await?;
 				}
-				fs::remove_file(&tracker).await.ok();
+				remove_sealed(&tracker).await.ok();
 			}
 		}
 

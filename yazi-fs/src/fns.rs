@@ -85,7 +85,7 @@ async fn _paths_to_same_file(a: &Path, b: &Path) -> std::io::Result<bool> {
 
 pub async fn copy_and_seal(from: &Path, to: &Path) -> io::Result<()> {
 	let b = fs::read(from).await?;
-	ok_or_not_found(fs::remove_file(to).await)?;
+	ok_or_not_found(remove_sealed(to).await)?;
 
 	let mut file =
 		fs::OpenOptions::new().create_new(true).write(true).truncate(true).open(to).await?;
@@ -96,6 +96,17 @@ pub async fn copy_and_seal(from: &Path, to: &Path) -> io::Result<()> {
 	file.set_permissions(perm).await?;
 
 	Ok(())
+}
+
+pub async fn remove_sealed(p: &Path) -> io::Result<()> {
+	#[cfg(windows)]
+	{
+		let mut perm = fs::metadata(p).await?.permissions();
+		perm.set_readonly(false);
+		fs::set_permissions(p, perm).await?;
+	}
+
+	fs::remove_file(p).await
 }
 
 pub async fn realname(p: &Path) -> Option<OsString> {

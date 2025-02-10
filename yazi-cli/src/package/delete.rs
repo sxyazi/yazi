@@ -1,6 +1,6 @@
 use anyhow::{Context, Result, bail};
 use tokio::fs;
-use yazi_fs::{maybe_exists, ok_or_not_found, remove_dir_clean};
+use yazi_fs::{maybe_exists, ok_or_not_found, remove_dir_clean, remove_sealed};
 use yazi_macro::outln;
 
 use super::Dependency;
@@ -30,7 +30,7 @@ Please manually delete it from: {}",
 			&["main.lua", "README.md", "LICENSE"][..]
 		};
 		for p in files.iter().map(|&f| dir.join(f)) {
-			ok_or_not_found(fs::remove_file(&p).await)
+			ok_or_not_found(remove_sealed(&p).await)
 				.with_context(|| format!("failed to delete `{}`", p.display()))?;
 		}
 
@@ -53,7 +53,7 @@ For safety, user data has been preserved, please manually delete them within: {}
 		match fs::read_dir(&assets).await {
 			Ok(mut it) => {
 				while let Some(entry) = it.next_entry().await? {
-					fs::remove_file(entry.path())
+					remove_sealed(&entry.path())
 						.await
 						.with_context(|| format!("failed to remove `{}`", entry.path().display()))?;
 				}
