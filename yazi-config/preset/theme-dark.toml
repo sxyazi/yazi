@@ -76,14 +76,9 @@ unset_alt  = { fg = "red", bg = "gray" }
 # : Status bar {{{
 
 [status]
-overall         = {}
-separator_open  = ""
-separator_close = ""
-
-# Progress
-progress_label  = { bold = true }
-progress_normal = { fg = "blue", bg = "black" }
-progress_error  = { fg = "red", bg = "black" }
+overall   = {}
+sep_left  = { open = "", close = "" }
+sep_right = { open = "", close = "" }
 
 # Permissions
 perm_sep   = { fg = "darkgray" }
@@ -91,6 +86,11 @@ perm_type  = { fg = "green" }
 perm_read  = { fg = "yellow" }
 perm_write = { fg = "red" }
 perm_exec  = { fg = "cyan" }
+
+# Progress
+progress_label  = { bold = true }
+progress_normal = { fg = "blue", bg = "black" }
+progress_error  = { fg = "red", bg = "black" }
 
 # : }}}
 
