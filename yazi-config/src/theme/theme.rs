@@ -93,6 +93,7 @@ struct Mode {
 
 #[derive(Deserialize, Serialize)]
 struct Status {
+	pub overall:         Style,
 	pub separator_open:  String,
 	pub separator_close: String,
 

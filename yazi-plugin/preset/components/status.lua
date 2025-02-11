@@ -40,7 +40,7 @@ function Status:mode()
 
 	local style = self:style()
 	return ui.Line {
-		ui.Span(THEME.status.separator_open):fg(style.main.bg),
+		ui.Span(THEME.status.separator_open):fg(style.main.bg):bg("reset"),
 		ui.Span(" " .. mode .. " "):style(style.main),
 		ui.Span(THEME.status.separator_close):fg(style.main.bg):bg(style.alt.bg),
 	}
@@ -128,7 +128,7 @@ function Status:position()
 	return ui.Line {
 		ui.Span(THEME.status.separator_open):fg(style.main.bg):bg(style.alt.bg),
 		ui.Span(string.format(" %2d/%-2d ", math.min(cursor + 1, length), length)):style(style.main),
-		ui.Span(THEME.status.separator_close):fg(style.main.bg),
+		ui.Span(THEME.status.separator_close):fg(style.main.bg):bg("reset"),
 	}
 end
 
@@ -141,6 +141,7 @@ function Status:redraw()
 	local right_width = right:width()
 
 	return {
+		ui.Text(""):area(self._area):style(THEME.status.overall),
 		ui.Text(left):area(self._area),
 		ui.Text(right):area(self._area):align(ui.Text.RIGHT),
 		table.unpack(ya.redraw_with(Progress:new(self._area, right_width))),
