@@ -58,6 +58,11 @@ impl UserData for Rect {
 		fields.add_field_method_get("w", |_, me| Ok(me.width));
 		fields.add_field_method_get("h", |_, me| Ok(me.height));
 
+		fields.add_field_method_set("x", |_, me, x| Ok(me.0.x = x));
+		fields.add_field_method_set("y", |_, me, y| Ok(me.0.y = y));
+		fields.add_field_method_set("w", |_, me, w| Ok(me.0.width = w));
+		fields.add_field_method_set("h", |_, me, h| Ok(me.0.height = h));
+
 		fields.add_field_method_get("left", |_, me| Ok(me.left()));
 		fields.add_field_method_get("right", |_, me| Ok(me.right()));
 		fields.add_field_method_get("top", |_, me| Ok(me.top()));

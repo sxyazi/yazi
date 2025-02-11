@@ -65,7 +65,7 @@ impl Loader {
 					yazi_proxy::AppProxy::notify(yazi_proxy::options::NotifyOpt {
 						title:   "Deprecated entry file".to_owned(),
 						content: format!(
-							"The plugin entry file `init.lua` has been deprecated in v0.4.3 in favor of the new `main.lua`, and it will be fully removed in the next major version 0.5.
+							"The plugin's entry file `init.lua` has been deprecated in favor of the new `main.lua` (user's own `init.lua` remains unchanged).
 
 Please run `ya pack -m` to automatically migrate all plugins, or manually rename your `{name}.yazi/init.lua` to `{name}.yazi/main.lua`."
 						),

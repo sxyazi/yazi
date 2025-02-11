@@ -76,6 +76,7 @@ unset_alt  = { fg = "red", bg = "gray" }
 # : Status bar {{{
 
 [status]
+overall         = {}
 separator_open  = ""
 separator_close = ""
 
