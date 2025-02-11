@@ -93,14 +93,9 @@ struct Mode {
 
 #[derive(Deserialize, Serialize)]
 struct Status {
-	pub overall:         Style,
-	pub separator_open:  String,
-	pub separator_close: String,
-
-	// Progress
-	pub progress_label:  Style,
-	pub progress_normal: Style,
-	pub progress_error:  Style,
+	pub overall:   Style,
+	pub sep_left:  StatusSep,
+	pub sep_right: StatusSep,
 
 	// Permissions
 	pub perm_sep:   Style,
@@ -108,6 +103,17 @@ struct Status {
 	pub perm_read:  Style,
 	pub perm_write: Style,
 	pub perm_exec:  Style,
+
+	// Progress
+	pub progress_label:  Style,
+	pub progress_normal: Style,
+	pub progress_error:  Style,
+}
+
+#[derive(Deserialize, Serialize)]
+struct StatusSep {
+	pub open:  String,
+	pub close: String,
 }
 
 #[derive(Deserialize, Serialize, Validate)]
