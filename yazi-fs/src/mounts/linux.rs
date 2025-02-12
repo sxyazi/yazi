@@ -1,6 +1,6 @@
 use std::{borrow::Cow, collections::{HashMap, HashSet}, ffi::{OsStr, OsString}, os::{fd::AsFd, unix::{ffi::{OsStrExt, OsStringExt}, fs::MetadataExt}}, time::Duration};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use tokio::{io::{Interest, unix::AsyncFd}, time::sleep};
 use tracing::error;
 use yazi_shared::{natsort, replace_cow, replace_vec_cow};
@@ -43,7 +43,7 @@ impl Partitions {
 		tokio::spawn(async move {
 			loop {
 				if let Err(e) = wait_mounts(me_.clone(), cb).await {
-					error!("Error encountered while monitoring `/proc/mounts`: {e:?}");
+					error!("Error encountered while monitoring /proc/mounts: {e:?}");
 				}
 				sleep(Duration::from_secs(5)).await;
 			}
@@ -52,7 +52,7 @@ impl Partitions {
 		tokio::spawn(async move {
 			loop {
 				if let Err(e) = wait_partitions(me.clone(), cb).await {
-					error!("Error encountered while monitoring `/proc/partitions`: {e:?}");
+					error!("Error encountered while monitoring /proc/partitions: {e:?}");
 				}
 				sleep(Duration::from_secs(5)).await;
 			}
@@ -71,7 +71,7 @@ impl Partitions {
 	}
 
 	fn all(&self) -> Result<Vec<Partition>> {
-		let mut mounts = Self::mounts()?;
+		let mut mounts = Self::mounts().context("Parsing /proc/mounts")?;
 		{
 			let set = &self.linux_cache;
 			let mut set: HashSet<&OsStr> = set.iter().map(AsRef::as_ref).collect();
@@ -80,7 +80,7 @@ impl Partitions {
 			mounts.sort_unstable_by(|a, b| natsort(a.src.as_bytes(), b.src.as_bytes(), false));
 		};
 
-		let labels = Self::labels()?;
+		let labels = Self::labels();
 		for mount in &mut mounts {
 			if !mount.src.as_bytes().starts_with(b"/dev/") {
 				continue;
@@ -126,10 +126,15 @@ impl Partitions {
 		Ok(set)
 	}
 
-	fn labels() -> Result<HashMap<(u64, u64), OsString>> {
+	fn labels() -> HashMap<(u64, u64), OsString> {
 		let mut map = HashMap::new();
-		for entry in std::fs::read_dir("/dev/disk/by-label")?.flatten() {
-			let meta = std::fs::metadata(entry.path())?;
+		let Ok(it) = std::fs::read_dir("/dev/disk/by-label") else {
+			error!("Cannot read /dev/disk/by-label");
+			return map;
+		};
+
+		for entry in it.flatten() {
+			let Ok(meta) = std::fs::metadata(entry.path()) else { continue };
 			let name = entry.file_name();
 			map.insert(
 				(meta.dev(), meta.ino()),
@@ -139,7 +144,7 @@ impl Partitions {
 				},
 			);
 		}
-		Ok(map)
+		map
 	}
 
 	// Unmangle '\t', '\n', ' ', '#', and r'\'
