@@ -1,7 +1,7 @@
 use tracing::warn;
 use yazi_shared::env_exists;
 
-use crate::{Mux, NVIM};
+use crate::Mux;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Brand {
@@ -20,7 +20,7 @@ pub enum Brand {
 	Hyper,
 	Mintty,
 	Tmux,
-	Neovim,
+	VTerm,
 	Apple,
 	Urxvt,
 	Bobcat,
@@ -36,6 +36,7 @@ impl Brand {
 			("foot", Self::Foot),
 			("ghostty", Self::Ghostty),
 			("tmux ", Self::Tmux),
+			("libvterm", Self::VTerm),
 			("Bobcat", Self::Bobcat),
 		];
 		names.into_iter().find(|&(n, _)| resp.contains(n)).map(|(_, b)| b)
@@ -43,10 +44,6 @@ impl Brand {
 
 	pub fn from_env() -> Option<Self> {
 		use Brand as B;
-
-		if NVIM.get() {
-			return Some(Self::Neovim);
-		}
 
 		let vars = [
 			("KITTY_WINDOW_ID", B::Kitty),
@@ -112,7 +109,7 @@ impl Brand {
 			B::Hyper => &[A::Iip, A::Sixel],
 			B::Mintty => &[A::Iip],
 			B::Tmux => &[],
-			B::Neovim => &[],
+			B::VTerm => &[],
 			B::Apple => &[],
 			B::Urxvt => &[],
 			B::Bobcat => &[A::Iip, A::Sixel],
