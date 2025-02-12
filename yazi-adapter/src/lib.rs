@@ -4,7 +4,7 @@ yazi_macro::mod_pub!(drivers);
 
 yazi_macro::mod_flat!(adapter brand dimension emulator image info mux unknown);
 
-use yazi_shared::{SyncCell, env_exists, in_wsl};
+use yazi_shared::{SyncCell, in_wsl};
 
 pub static EMULATOR: SyncCell<Emulator> = SyncCell::new(Emulator::unknown());
 pub static ADAPTOR: SyncCell<Adapter> = SyncCell::new(Adapter::Chafa);
@@ -15,9 +15,6 @@ static SHOWN: SyncCell<Option<ratatui::layout::Rect>> = SyncCell::new(None);
 // WSL support
 pub static WSL: SyncCell<bool> = SyncCell::new(false);
 
-// Neovim support
-pub static NVIM: SyncCell<bool> = SyncCell::new(false);
-
 // Tmux support
 pub static TMUX: SyncCell<bool> = SyncCell::new(false);
 static ESCAPE: SyncCell<&'static str> = SyncCell::new("\x1b");
@@ -27,9 +24,6 @@ static CLOSE: SyncCell<&'static str> = SyncCell::new("");
 pub fn init() -> anyhow::Result<()> {
 	// WSL support
 	WSL.set(in_wsl());
-
-	// Neovim support
-	NVIM.set(env_exists("NVIM_LOG_FILE") && env_exists("NVIM"));
 
 	// Emulator detection
 	EMULATOR.set(Emulator::detect().unwrap_or_default());

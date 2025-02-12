@@ -1,13 +1,13 @@
 use anyhow::Result;
 use tracing::error;
 
-use crate::{CLOSE, ESCAPE, Emulator, NVIM, START, TMUX};
+use crate::{CLOSE, ESCAPE, Emulator, START, TMUX};
 
 pub struct Mux;
 
 impl Mux {
 	pub fn csi(s: &str) -> std::borrow::Cow<str> {
-		if TMUX.get() && !NVIM.get() {
+		if TMUX.get() {
 			std::borrow::Cow::Owned(format!(
 				"{START}{}{CLOSE}",
 				s.trim_start_matches('\x1b').replace('\x1b', ESCAPE.get()),
@@ -41,7 +41,7 @@ impl Mux {
 	}
 
 	pub fn tmux_drain() -> Result<()> {
-		if TMUX.get() && !NVIM.get() {
+		if TMUX.get() {
 			crossterm::execute!(std::io::stderr(), crossterm::style::Print(Mux::csi("\x1b[5n")))?;
 			_ = futures::executor::block_on(Emulator::read_until_dsr());
 		}
