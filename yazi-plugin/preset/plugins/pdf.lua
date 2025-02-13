@@ -30,17 +30,18 @@ function M:preload(job)
 		return true
 	end
 
+	-- stylua: ignore
 	local output, err = Command("pdftoppm")
 		:args({
+			"-f", job.skip + 1,
+			"-l", job.skip + 1,
 			"-singlefile",
-			"-jpeg",
-			"-jpegopt",
-			"quality=" .. PREVIEW.image_quality,
-			"-f",
-			job.skip + 1,
+			"-jpeg", "-jpegopt", "quality=" .. PREVIEW.image_quality,
+			"-tiffcompression", "jpeg",
+			"-scale-to-x", PREVIEW.max_width, "-scale-to-y", "-1",
 			tostring(job.file.url),
+			tostring(cache),
 		})
-		:stdout(Command.PIPED)
 		:stderr(Command.PIPED)
 		:output()
 
@@ -54,7 +55,12 @@ function M:preload(job)
 		return true, Err("Failed to convert PDF to image, stderr: %s", output.stderr)
 	end
 
-	return fs.write(cache, output.stdout)
+	local ok, err = os.rename(string.format("%s.jpg", cache), tostring(cache))
+	if ok then
+		return true
+	else
+		return false, Err("Failed to rename `%s.jpg` to `%s`, error: %s", cache, cache, err)
+	end
 end
 
 return M
