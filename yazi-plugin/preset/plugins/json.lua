@@ -32,7 +32,10 @@ function M:peek(job)
 		ya.manager_emit("peek", { math.max(0, i - limit), only_if = job.file.url, upper_bound = true })
 	else
 		lines = lines:gsub("\t", string.rep(" ", PREVIEW.tab_size))
-		ya.preview_widgets(job, { ui.Text.parse(lines):area(job.area) })
+		ya.preview_widgets(
+			job,
+			{ ui.Text.parse(lines):area(job.area):wrap(PREVIEW.wrap == "Yes" and ui.Text.WRAP or ui.Text.WRAP_NO) }
+		)
 	end
 end
 
