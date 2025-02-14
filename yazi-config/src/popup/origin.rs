@@ -1,10 +1,9 @@
 use std::{fmt::Display, str::FromStr};
 
-use anyhow::bail;
 use serde::Deserialize;
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq)]
-#[serde(try_from = "String")]
+#[serde(rename_all = "kebab-case")]
 pub enum Origin {
 	#[default]
 	TopLeft,
@@ -17,32 +16,6 @@ pub enum Origin {
 
 	Center,
 	Hovered,
-}
-
-impl FromStr for Origin {
-	type Err = anyhow::Error;
-
-	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		Ok(match s {
-			"top-left" => Self::TopLeft,
-			"top-center" => Self::TopCenter,
-			"top-right" => Self::TopRight,
-
-			"bottom-left" => Self::BottomLeft,
-			"bottom-center" => Self::BottomCenter,
-			"bottom-right" => Self::BottomRight,
-
-			"center" => Self::Center,
-			"hovered" => Self::Hovered,
-			_ => bail!("Invalid `origin` value: {s}"),
-		})
-	}
-}
-
-impl TryFrom<String> for Origin {
-	type Error = anyhow::Error;
-
-	fn try_from(value: String) -> Result<Self, Self::Error> { Self::from_str(&value) }
 }
 
 impl Display for Origin {
@@ -59,5 +32,13 @@ impl Display for Origin {
 			Self::Center => "center",
 			Self::Hovered => "hovered",
 		})
+	}
+}
+
+impl FromStr for Origin {
+	type Err = serde::de::value::Error;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		Self::deserialize(serde::de::value::StrDeserializer::new(s))
 	}
 }

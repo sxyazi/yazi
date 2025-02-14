@@ -50,5 +50,7 @@ body:
       label: Checklist
       description: Before submitting the post, please make sure you have completed the following
       options:
+        - label: I have read all the documentation
+          required: true
         - label: I have searched the existing discussions/issues
           required: true
