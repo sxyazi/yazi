@@ -1,10 +1,9 @@
 use std::{fmt::Display, str::FromStr};
 
-use anyhow::bail;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
-#[serde(try_from = "String")]
+#[serde(rename_all = "kebab-case")]
 pub enum SortBy {
 	#[default]
 	None,
@@ -18,27 +17,11 @@ pub enum SortBy {
 }
 
 impl FromStr for SortBy {
-	type Err = anyhow::Error;
+	type Err = serde::de::value::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		Ok(match s {
-			"none" => Self::None,
-			"mtime" => Self::Mtime,
-			"btime" => Self::Btime,
-			"extension" => Self::Extension,
-			"alphabetical" => Self::Alphabetical,
-			"natural" => Self::Natural,
-			"size" => Self::Size,
-			"random" => Self::Random,
-			_ => bail!("invalid sort_by value: {s}"),
-		})
+		Self::deserialize(serde::de::value::StrDeserializer::new(s))
 	}
-}
-
-impl TryFrom<String> for SortBy {
-	type Error = anyhow::Error;
-
-	fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
 }
 
 impl Display for SortBy {

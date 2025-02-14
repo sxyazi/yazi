@@ -1,7 +1,7 @@
 use std::{str::FromStr, time::Duration};
 
-use anyhow::bail;
 use mlua::{ExternalError, ExternalResult};
+use serde::Deserialize;
 use yazi_config::THEME;
 use yazi_shared::{event::CmdCow, theme::Style};
 
@@ -42,7 +42,7 @@ impl TryFrom<mlua::Table> for NotifyOpt {
 	}
 }
 
-#[derive(Clone, Copy, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Default, Deserialize, Eq, PartialEq)]
 pub enum NotifyLevel {
 	#[default]
 	Info,
@@ -71,14 +71,9 @@ impl NotifyLevel {
 }
 
 impl FromStr for NotifyLevel {
-	type Err = anyhow::Error;
+	type Err = serde::de::value::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		Ok(match s {
-			"info" => Self::Info,
-			"warn" => Self::Warn,
-			"error" => Self::Error,
-			_ => bail!("Invalid notify level: {s}"),
-		})
+		Self::deserialize(serde::de::value::StrDeserializer::new(s))
 	}
 }

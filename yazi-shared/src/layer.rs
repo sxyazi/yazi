@@ -1,8 +1,9 @@
 use std::{fmt::Display, str::FromStr};
 
-use anyhow::bail;
+use serde::Deserialize;
 
-#[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Copy, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum Layer {
 	#[default]
 	App,
@@ -35,21 +36,9 @@ impl Display for Layer {
 }
 
 impl FromStr for Layer {
-	type Err = anyhow::Error;
+	type Err = serde::de::value::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		Ok(match s {
-			"app" => Self::App,
-			"manager" => Self::Manager,
-			"tasks" => Self::Tasks,
-			"spot" => Self::Spot,
-			"pick" => Self::Pick,
-			"input" => Self::Input,
-			"confirm" => Self::Confirm,
-			"help" => Self::Help,
-			"completion" => Self::Completion,
-			"which" => Self::Which,
-			_ => bail!("invalid layer: {s}"),
-		})
+		Self::deserialize(serde::de::value::StrDeserializer::new(s))
 	}
 }

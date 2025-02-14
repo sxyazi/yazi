@@ -1,11 +1,8 @@
-use std::str::FromStr;
-
-use anyhow::bail;
 use serde::Deserialize;
 use yazi_fs::Cha;
 
 #[derive(Default, Deserialize)]
-#[serde(try_from = "String")]
+#[serde(rename_all = "kebab-case")]
 pub enum Is {
 	#[default]
 	None,
@@ -19,32 +16,6 @@ pub enum Is {
 	Sock,
 	Exec,
 	Sticky,
-}
-
-impl FromStr for Is {
-	type Err = anyhow::Error;
-
-	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		Ok(match s {
-			"hidden" => Self::Hidden,
-			"link" => Self::Link,
-			"orphan" => Self::Orphan,
-			"dummy" => Self::Dummy,
-			"block" => Self::Block,
-			"char" => Self::Char,
-			"fifo" => Self::Fifo,
-			"sock" => Self::Sock,
-			"exec" => Self::Exec,
-			"sticky" => Self::Sticky,
-			_ => bail!("invalid filetype: {s}"),
-		})
-	}
-}
-
-impl TryFrom<String> for Is {
-	type Error = anyhow::Error;
-
-	fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
 }
 
 impl Is {
