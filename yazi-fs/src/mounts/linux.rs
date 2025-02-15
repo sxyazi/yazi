@@ -100,7 +100,6 @@ impl Partitions {
 		for (s, b) in &mut removable {
 			match std::fs::read(format!("/sys/block/{}/removable", s.to_string_lossy()))
 				.unwrap_or_default()
-				.as_slice()
 				.trim_ascii()
 			{
 				b"0" => *b = Some(false),
