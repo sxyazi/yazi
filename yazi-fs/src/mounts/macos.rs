@@ -115,6 +115,8 @@ impl Partitions {
 				fstype: dict.os_string("DAVolumeKind").ok(),
 				label: dict.os_string("DAVolumeName").ok(),
 				capacity: dict.integer("DAMediaSize").unwrap_or_default() as u64,
+				external: dict.bool("DADeviceInternal").ok().map(|b| !b),
+				removable: dict.bool("DAMediaRemovable").ok(),
 				..partition
 			});
 		}

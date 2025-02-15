@@ -162,6 +162,8 @@ fn partitions(lua: &Lua) -> mlua::Result<Function> {
 					("dist", p.dist.clone().into_lua(&lua)?),
 					("label", p.label.clone().into_lua(&lua)?),
 					("fstype", p.fstype.clone().into_lua(&lua)?),
+					("external", p.external.into_lua(&lua)?),
+					("removable", p.removable.into_lua(&lua)?),
 				])
 			})
 			.collect::<mlua::Result<Vec<Table>>>()

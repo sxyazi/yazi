@@ -27,6 +27,12 @@ impl CFDict {
 		Ok(value)
 	}
 
+	pub fn bool(&self, key: &str) -> Result<bool> {
+		let value = self.value(key)?;
+		#[allow(unexpected_cfgs)]
+		Ok(unsafe { msg_send![value as *const Object, boolValue] })
+	}
+
 	pub fn integer(&self, key: &str) -> Result<i64> {
 		let value = self.value(key)?;
 		#[allow(unexpected_cfgs)]
