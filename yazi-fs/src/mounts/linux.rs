@@ -59,6 +59,21 @@ impl Partitions {
 		});
 	}
 
+	fn partitions() -> Result<HashSet<String>> {
+		let mut set = HashSet::new();
+		let s = std::fs::read_to_string("/proc/partitions")?;
+		for line in s.lines().skip(2) {
+			let mut it = line.split_whitespace();
+			let Some(Ok(_major)) = it.next().map(|s| s.parse::<u16>()) else { continue };
+			let Some(Ok(_minor)) = it.next().map(|s| s.parse::<u16>()) else { continue };
+			let Some(Ok(_blocks)) = it.next().map(|s| s.parse::<u32>()) else { continue };
+			if let Some(name) = it.next() {
+				set.insert(Self::unmangle_octal(name).into_owned());
+			}
+		}
+		Ok(set)
+	}
+
 	async fn update(me: Locked) {
 		_ = tokio::task::spawn_blocking(move || {
 			let mut guard = me.write();
@@ -75,10 +90,23 @@ impl Partitions {
 		{
 			let set = &self.linux_cache;
 			let mut set: HashSet<&OsStr> = set.iter().map(AsRef::as_ref).collect();
-			mounts.iter().filter_map(|p| p.dev_name()).for_each(|s| _ = set.remove(s));
+			mounts.iter().filter_map(|p| p.dev_name(true)).for_each(|s| _ = set.remove(s));
 			mounts.extend(set.into_iter().map(Partition::new));
 			mounts.sort_unstable_by(|a, b| natsort(a.src.as_bytes(), b.src.as_bytes(), false));
 		};
+
+		let mut removable: HashMap<OsString, Option<bool>> =
+			mounts.iter().filter_map(|p| p.dev_name(false)).map(|s| (s.to_owned(), None)).collect();
+		for (s, b) in &mut removable {
+			match std::fs::read(format!("/sys/block/{}/removable", s.to_string_lossy()))
+				.unwrap_or_default()
+				.trim_ascii()
+			{
+				b"0" => *b = Some(false),
+				b"1" => *b = Some(true),
+				_ => (),
+			}
+		}
 
 		let labels = Self::labels();
 		for mount in &mut mounts {
@@ -88,6 +116,8 @@ impl Partitions {
 			if let Ok(meta) = std::fs::metadata(&mount.src) {
 				mount.rdev = Some(meta.rdev() as _);
 				mount.label = labels.get(&(meta.dev(), meta.ino())).cloned();
+				// TODO: mount.external
+				mount.removable = mount.dev_name(false).and_then(|s| removable.get(s).copied()).flatten();
 			}
 		}
 		Ok(mounts)
@@ -109,21 +139,6 @@ impl Partitions {
 			});
 		}
 		Ok(vec)
-	}
-
-	fn partitions() -> Result<HashSet<String>> {
-		let mut set = HashSet::new();
-		let s = std::fs::read_to_string("/proc/partitions")?;
-		for line in s.lines().skip(2) {
-			let mut it = line.split_whitespace();
-			let Some(Ok(_major)) = it.next().map(|s| s.parse::<u16>()) else { continue };
-			let Some(Ok(_minor)) = it.next().map(|s| s.parse::<u16>()) else { continue };
-			let Some(Ok(_blocks)) = it.next().map(|s| s.parse::<u32>()) else { continue };
-			if let Some(name) = it.next() {
-				set.insert(Self::unmangle_octal(name).into_owned());
-			}
-		}
-		Ok(set)
 	}
 
 	fn labels() -> HashMap<(u64, u64), OsString> {

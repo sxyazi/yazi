@@ -2,13 +2,15 @@ use std::{ffi::OsString, path::PathBuf};
 
 #[derive(Debug, Default)]
 pub struct Partition {
-	pub src:      OsString,
-	pub dist:     Option<PathBuf>,
+	pub src:       OsString,
+	pub dist:      Option<PathBuf>,
 	#[cfg(unix)]
-	pub rdev:     Option<libc::dev_t>,
-	pub label:    Option<OsString>,
-	pub fstype:   Option<OsString>,
-	pub capacity: u64,
+	pub rdev:      Option<libc::dev_t>,
+	pub label:     Option<OsString>,
+	pub fstype:    Option<OsString>,
+	pub capacity:  u64,
+	pub external:  Option<bool>,
+	pub removable: Option<bool>,
 }
 
 impl Partition {
@@ -44,7 +46,24 @@ impl Partition {
 
 	#[inline]
 	#[cfg(target_os = "linux")]
-	pub(super) fn dev_name(&self) -> Option<&std::ffi::OsStr> {
-		std::path::Path::new(&self.src).strip_prefix("/dev/").ok().map(|p| p.as_os_str())
+	pub(super) fn dev_name(&self, full: bool) -> Option<&std::ffi::OsStr> {
+		use std::os::unix::ffi::OsStrExt;
+
+		let s = std::path::Path::new(&self.src).strip_prefix("/dev/").ok()?.as_os_str();
+		if full {
+			return Some(s);
+		}
+
+		let b = s.as_bytes();
+		if b.len() < 3 {
+			None
+		} else if b.starts_with(b"sd") || b.starts_with(b"hd") || b.starts_with(b"vd") {
+			Some(std::ffi::OsStr::from_bytes(&b[..3]))
+		} else if b.starts_with(b"nvme") || b.starts_with(b"mmcblk") {
+			let n = b.iter().position(|&b| b == b'p').unwrap_or(b.len());
+			Some(std::ffi::OsStr::from_bytes(&b[..n]))
+		} else {
+			None
+		}
 	}
 }
