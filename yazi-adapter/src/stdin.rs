@@ -118,13 +118,14 @@ impl AsyncStdin {
 
 		let mut buf = 0;
 		let mut bytes = 0;
-
 		let success = unsafe {
 			ReadFile(std::io::stdin().as_raw_handle(), &mut buf, 1, &mut bytes, std::ptr::null_mut())
 		};
 
 		if success == 0 {
 			return Err(Error::last_os_error());
+		} else if bytes == 0 {
+			return Err(Error::new(ErrorKind::UnexpectedEof, "unexpected EOF"));
 		}
 		Ok(buf)
 	}
