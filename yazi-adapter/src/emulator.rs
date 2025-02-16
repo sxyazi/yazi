@@ -1,13 +1,13 @@
 use std::{io::{LineWriter, stderr}, time::Duration};
 
-use anyhow::{Result, bail};
+use anyhow::Result;
 use crossterm::{cursor::{RestorePosition, SavePosition}, execute, style::Print, terminal::{disable_raw_mode, enable_raw_mode}};
 use scopeguard::defer;
-use tokio::{io::{AsyncReadExt, BufReader}, time::{sleep, timeout}};
+use tokio::time::sleep;
 use tracing::{debug, error, warn};
 use yazi_shared::Either;
 
-use crate::{Adapter, Brand, Mux, TMUX, Unknown};
+use crate::{Adapter, AsyncStdin, Brand, Mux, TMUX, Unknown};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Emulator {
@@ -43,7 +43,7 @@ impl Emulator {
 			RestorePosition
 		)?;
 
-		let resp = futures::executor::block_on(Self::read_until_da1());
+		let resp = Self::read_until_da1();
 		Mux::tmux_drain()?;
 
 		let kind = if let Some(b) = Brand::from_csi(&resp).or(resort) {
@@ -105,63 +105,37 @@ impl Emulator {
 		result
 	}
 
-	pub async fn read_until_da1() -> String {
-		let mut buf: Vec<u8> = Vec::with_capacity(200);
-		let read = async {
-			let mut stdin = BufReader::new(tokio::io::stdin());
-			loop {
-				let mut c = [0; 1];
-				if stdin.read(&mut c).await? == 0 {
-					bail!("unexpected EOF");
-				}
-				buf.push(c[0]);
-				if c[0] != b'c' || !buf.contains(&0x1b) {
-					continue;
-				}
-				if buf.rsplitn(2, |&b| b == 0x1b).next().is_some_and(|s| s.starts_with(b"[?")) {
-					break;
-				}
-			}
-			Ok(())
-		};
-
+	pub fn read_until_da1() -> String {
 		let h = tokio::spawn(async move {
 			sleep(Duration::from_millis(300)).await;
 			Self::error_to_user().ok();
 		});
 
-		match timeout(Duration::from_secs(2), read).await {
-			Ok(Ok(())) => debug!("read_until_da1: {buf:?}"),
-			Err(e) => error!("read_until_da1 timed out: {buf:?}, error: {e:?}"),
-			Ok(Err(e)) => error!("read_until_da1 failed: {buf:?}, error: {e:?}"),
+		let (buf, result) = AsyncStdin::default().read_until(Duration::from_secs(5), |b, buf| {
+			b == b'c'
+				&& buf.contains(&0x1b)
+				&& buf.rsplitn(2, |&b| b == 0x1b).next().is_some_and(|s| s.starts_with(b"[?"))
+		});
+
+		match result {
+			Ok(()) => debug!("read_until_da1: {buf:?}"),
+			Err(e) => error!("read_until_da1 failed: {buf:?}, error: {e:?}"),
 		}
 
 		h.abort();
 		String::from_utf8_lossy(&buf).into_owned()
 	}
 
-	pub async fn read_until_dsr() -> String {
-		let mut buf: Vec<u8> = Vec::with_capacity(200);
-		let read = async {
-			let mut stdin = BufReader::new(tokio::io::stdin());
-			loop {
-				let mut c = [0; 1];
-				if stdin.read(&mut c).await? == 0 {
-					bail!("unexpected EOF");
-				}
-				buf.push(c[0]);
-				if c[0] == b'n' && (buf.ends_with(b"\x1b[0n") || buf.ends_with(b"\x1b[3n")) {
-					break;
-				}
-			}
-			Ok(())
-		};
+	pub fn read_until_dsr() -> String {
+		let (buf, result) = AsyncStdin::default().read_until(Duration::from_millis(500), |b, buf| {
+			b == b'n' && (buf.ends_with(b"\x1b[0n") || buf.ends_with(b"\x1b[3n"))
+		});
 
-		match timeout(Duration::from_millis(500), read).await {
-			Ok(Ok(())) => debug!("read_until_dsr: {buf:?}"),
-			Err(e) => error!("read_until_dsr timed out: {buf:?}, error: {e:?}"),
-			Ok(Err(e)) => error!("read_until_dsr failed: {buf:?}, error: {e:?}"),
+		match result {
+			Ok(()) => debug!("read_until_dsr: {buf:?}"),
+			Err(e) => error!("read_until_dsr failed: {buf:?}, error: {e:?}"),
 		}
+
 		String::from_utf8_lossy(&buf).into_owned()
 	}
 

@@ -42,13 +42,14 @@ impl Term {
 			mouse::SetMouse(true),
 		)?;
 
-		let da = futures::executor::block_on(Emulator::read_until_da1());
+		let resp = Emulator::read_until_da1();
 		Mux::tmux_drain()?;
 
-		CSI_U.store(da.contains("\x1b[?0u"), Ordering::Relaxed);
-		BLINK.store(da.contains("\x1b[?12;1$y"), Ordering::Relaxed);
+		CSI_U.store(resp.contains("\x1b[?0u"), Ordering::Relaxed);
+		BLINK.store(resp.contains("\x1b[?12;1$y"), Ordering::Relaxed);
 		SHAPE.store(
-			da.split_once("\x1bP1$r")
+			resp
+				.split_once("\x1bP1$r")
 				.and_then(|(_, s)| s.bytes().next())
 				.filter(|&b| matches!(b, b'0'..=b'6'))
 				.map_or(u8::MAX, |b| b - b'0'),
