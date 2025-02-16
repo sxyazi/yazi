@@ -1,8 +1,8 @@
-#![allow(clippy::unit_arg)]
+#![allow(clippy::unit_arg, clippy::option_map_unit_fn)]
 
 yazi_macro::mod_pub!(drivers);
 
-yazi_macro::mod_flat!(adapter brand dimension emulator image info mux unknown);
+yazi_macro::mod_flat!(adapter brand dimension emulator image info mux stdin unknown);
 
 use yazi_shared::{SyncCell, in_wsl};
 

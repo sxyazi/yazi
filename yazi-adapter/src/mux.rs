@@ -43,7 +43,7 @@ impl Mux {
 	pub fn tmux_drain() -> Result<()> {
 		if TMUX.get() {
 			crossterm::execute!(std::io::stderr(), crossterm::style::Print(Mux::csi("\x1b[5n")))?;
-			_ = futures::executor::block_on(Emulator::read_until_dsr());
+			_ = Emulator::read_until_dsr();
 		}
 		Ok(())
 	}
