@@ -17,7 +17,7 @@ impl AsyncStdin {
 			loop {
 				if now.elapsed() > timeout {
 					return Err(Error::new(ErrorKind::TimedOut, "timed out"));
-				} else if !self.poll(Duration::from_millis(50))? {
+				} else if !self.poll(Duration::from_millis(30))? {
 					continue;
 				}
 

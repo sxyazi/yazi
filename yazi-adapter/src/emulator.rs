@@ -106,28 +106,24 @@ impl Emulator {
 	}
 
 	pub fn read_until_da1() -> String {
-		let h = tokio::spawn(async move {
-			sleep(Duration::from_millis(300)).await;
-			Self::error_to_user().ok();
-		});
-
-		let (buf, result) = AsyncStdin::default().read_until(Duration::from_secs(5), |b, buf| {
+		let h = tokio::spawn(Self::error_to_user());
+		let (buf, result) = AsyncStdin::default().read_until(Duration::from_millis(300), |b, buf| {
 			b == b'c'
 				&& buf.contains(&0x1b)
 				&& buf.rsplitn(2, |&b| b == 0x1b).next().is_some_and(|s| s.starts_with(b"[?"))
 		});
 
+		h.abort();
 		match result {
 			Ok(()) => debug!("read_until_da1: {buf:?}"),
 			Err(e) => error!("read_until_da1 failed: {buf:?}, error: {e:?}"),
 		}
 
-		h.abort();
 		String::from_utf8_lossy(&buf).into_owned()
 	}
 
 	pub fn read_until_dsr() -> String {
-		let (buf, result) = AsyncStdin::default().read_until(Duration::from_millis(500), |b, buf| {
+		let (buf, result) = AsyncStdin::default().read_until(Duration::from_millis(100), |b, buf| {
 			b == b'n' && (buf.ends_with(b"\x1b[0n") || buf.ends_with(b"\x1b[3n"))
 		});
 
@@ -135,13 +131,14 @@ impl Emulator {
 			Ok(()) => debug!("read_until_dsr: {buf:?}"),
 			Err(e) => error!("read_until_dsr failed: {buf:?}, error: {e:?}"),
 		}
-
 		String::from_utf8_lossy(&buf).into_owned()
 	}
 
-	fn error_to_user() -> Result<(), std::io::Error> {
+	async fn error_to_user() {
 		use crossterm::style::{Attribute, Color, Print, ResetColor, SetAttributes, SetForegroundColor};
-		crossterm::execute!(
+
+		sleep(Duration::from_millis(200)).await;
+		_ = crossterm::execute!(
 			std::io::stderr(),
 			SetForegroundColor(Color::Red),
 			SetAttributes(Attribute::Bold.into()),
@@ -153,7 +150,7 @@ impl Emulator {
 			Print(
 				"Please check your terminal environment as per: https://yazi-rs.github.io/docs/faq#trt\r\n"
 			),
-		)
+		);
 	}
 
 	fn cell_size(resp: &str) -> Option<(u16, u16)> {
