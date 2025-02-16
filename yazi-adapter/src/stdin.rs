@@ -1,4 +1,4 @@
-use std::{io, ops::{Deref, DerefMut}, time::Duration};
+use std::{ops::{Deref, DerefMut}, time::Duration};
 
 pub struct AsyncStdin {
 	inner: std::io::StdinLock<'static>,
@@ -43,7 +43,7 @@ impl AsyncStdin {
 		};
 
 		match result {
-			-1 => Err(io::Error::last_os_error()),
+			-1 => Err(std::io::Error::last_os_error()),
 			0 => Ok(false),
 			_ => {
 				self.reset();
@@ -69,9 +69,11 @@ impl AsyncStdin {
 	pub fn poll(&mut self, timeout: Duration) -> std::io::Result<bool> {
 		use std::os::windows::io::AsRawHandle;
 
+		use windows_sys::Win32::{Foundation::WAIT_TIMEOUT, System::Threading::WaitForSingleObject};
+
 		let handle = self.inner.as_raw_handle();
 		let millis = timeout.as_millis();
-		match unsafe { WaitForSingleObject(handle, millis) } {
+		match unsafe { WaitForSingleObject(handle, millis as u32) } {
 			WAIT_TIMEOUT => Ok(false),
 			_ => Ok(true),
 		}
