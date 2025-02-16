@@ -7,7 +7,7 @@ end)
 
 local set_state = ya.sync(function(st, empty) st.empty = empty end)
 
-local function fail(s, ...) ya.notify { title = "Zoxide", content = s:format(...), timeout = 5, level = "error" } end
+local function fail(s, ...) ya.notify { title = "Zoxide", content = s:format(...), timeout = 5, level = "Error" } end
 
 local function options()
 	-- https://github.com/ajeetdsouza/zoxide/blob/main/src/cmd/query.rs#L92

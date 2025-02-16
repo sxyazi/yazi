@@ -1,6 +1,6 @@
 local state = ya.sync(function() return cx.active.current.cwd end)
 
-local function fail(s, ...) ya.notify { title = "Fzf", content = string.format(s, ...), timeout = 5, level = "error" } end
+local function fail(s, ...) ya.notify { title = "Fzf", content = string.format(s, ...), timeout = 5, level = "Error" } end
 
 local function entry()
 	local _permit = ya.hide()
