@@ -1,4 +1,4 @@
-use std::{io, ops::{Deref, DerefMut}};
+use std::{io, ops::{Deref, DerefMut}, time::Duration};
 
 pub struct AsyncStdin {
 	inner: std::io::StdinLock<'static>,
@@ -24,7 +24,7 @@ impl AsyncStdin {
 		me
 	}
 
-	pub fn poll(&mut self, timeout: std::time::Duration) -> std::io::Result<bool> {
+	pub fn poll(&mut self, timeout: Duration) -> std::io::Result<bool> {
 		use std::os::unix::io::AsRawFd;
 
 		let mut tv = libc::timeval {
@@ -66,10 +66,12 @@ impl AsyncStdin {
 impl AsyncStdin {
 	pub fn new(inner: std::io::StdinLock<'static>) -> Self { Self { inner } }
 
-	pub fn poll(&mut self) -> std::io::Result<bool> {
-		let handle = HANDLE(self.inner.as_raw_handle() as isize);
+	pub fn poll(&mut self, timeout: Duration) -> std::io::Result<bool> {
+		use std::os::windows::io::AsRawHandle;
 
-		match unsafe { WaitForSingleObject(handle, 5000) } {
+		let handle = self.inner.as_raw_handle();
+		let millis = timeout.as_millis();
+		match unsafe { WaitForSingleObject(handle, millis) } {
 			WAIT_TIMEOUT => Ok(false),
 			_ => Ok(true),
 		}
