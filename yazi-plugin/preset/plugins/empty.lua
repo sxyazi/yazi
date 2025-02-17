@@ -12,10 +12,25 @@ function M:peek(job)
 		return self.msg(job, "Empty file")
 	end
 
+	local i, j, lines = 0, 0, {}
+	local file = io.open(path, "r")
+	if not file then
+		return self.msg(job, "Failed to open file")
+	end
+
 	local limit = job.area.h
-	local i, lines = 0, {}
-	local ok, err = pcall(function()
-		for line in io.lines(path) do
+	while true do
+		local chunk = file:read(4096)
+		if not chunk then
+			break
+		end
+
+		j = j + #chunk
+		if j > 5242880 then
+			return self.msg(job, "File too large")
+		end
+
+		for line in chunk:gmatch("[^\n]*\n?") do
 			i = i + 1
 			if i > job.skip + limit then
 				break
@@ -23,11 +38,9 @@ function M:peek(job)
 				lines[#lines + 1] = line
 			end
 		end
-	end)
+	end
 
-	if not ok then
-		self.msg(job, err)
-	elseif job.skip > 0 and i < job.skip + limit then
+	if job.skip > 0 and i < job.skip + limit then
 		ya.manager_emit("peek", { math.max(0, i - limit), only_if = job.file.url, upper_bound = true })
 	else
 		ya.preview_widgets(job, { ui.Text(lines):area(job.area) })
