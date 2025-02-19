@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ops::Not, time::Duration};
+use std::{borrow::Cow, time::Duration};
 
 use tokio::{pin, task::JoinHandle};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
@@ -40,24 +40,30 @@ impl Preview {
 	}
 
 	pub fn go_folder(&mut self, file: File, dir: Option<Cha>, force: bool) {
-		let cwd = self.same_file(&file, MIME_DIR).not().then(|| file.url_owned());
-		self.go(file, Cow::Borrowed(MIME_DIR), force);
+		let same = self.same_file(&file, MIME_DIR);
+		let (wd, cha) = (file.url_owned(), file.cha);
 
-		let Some(cwd) = cwd else { return };
+		self.go(file, Cow::Borrowed(MIME_DIR), force);
+		if same {
+			return;
+		}
+
+		self.lock =
+			Some(PreviewLock { url: wd.clone(), cha, mime: MIME_DIR.to_owned(), ..Default::default() });
 		self.folder_loader.take().map(|h| h.abort());
 		self.folder_loader = Some(tokio::spawn(async move {
-			let Some(new) = Files::assert_stale(&cwd, dir.unwrap_or(Cha::dummy())).await else { return };
-			let Ok(rx) = Files::from_dir(&cwd).await else { return };
+			let Some(new) = Files::assert_stale(&wd, dir.unwrap_or(Cha::dummy())).await else { return };
+			let Ok(rx) = Files::from_dir(&wd).await else { return };
 
 			let stream =
 				UnboundedReceiverStream::new(rx).chunks_timeout(50000, Duration::from_millis(500));
 			pin!(stream);
 
-			let ticket = FilesOp::prepare(&cwd);
+			let ticket = FilesOp::prepare(&wd);
 			while let Some(chunk) = stream.next().await {
-				FilesOp::Part(cwd.clone(), chunk, ticket).emit();
+				FilesOp::Part(wd.clone(), chunk, ticket).emit();
 			}
-			FilesOp::Done(cwd, new, ticket).emit();
+			FilesOp::Done(wd, new, ticket).emit();
 		}));
 	}
 

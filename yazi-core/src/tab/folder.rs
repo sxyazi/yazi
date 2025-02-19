@@ -46,7 +46,7 @@ impl Folder {
 				(self.cha, self.stage) = (cha, FolderStage::Loaded);
 			}
 			FilesOp::Part(_, ref files, _) if files.is_empty() => {
-				self.stage = FolderStage::Loading;
+				(self.cha, self.stage) = (Cha::dummy(), FolderStage::Loading);
 			}
 			FilesOp::Part(_, _, ticket) if ticket == self.files.ticket() => {
 				self.stage = FolderStage::Loading;
