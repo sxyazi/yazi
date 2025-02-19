@@ -64,7 +64,7 @@ impl Tab {
 				})
 			}?;
 
-			let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(300));
+			let rx = UnboundedReceiverStream::new(rx).chunks_timeout(5000, Duration::from_millis(500));
 			pin!(rx);
 
 			let ((), ticket) = (TabProxy::cd(&cwd), FilesOp::prepare(&cwd));
