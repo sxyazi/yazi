@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, fmt::{Debug, Display, Formatter}, ops::Deref, path::{Path, PathBuf}};
+use std::{ffi::OsStr, fmt::{Debug, Display, Formatter}, hash::{Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
 
 use percent_encoding::{AsciiSet, CONTROLS, percent_decode_str, percent_encode};
 use serde::{Deserialize, Serialize};
@@ -8,7 +8,7 @@ use crate::url::Loc;
 
 const ENCODE_SET: &AsciiSet = &CONTROLS.add(b'#');
 
-#[derive(Clone, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Url {
 	loc:    Loc,
 	scheme: UrlScheme,
@@ -112,7 +112,7 @@ impl AsRef<OsStr> for Url {
 impl Display for Url {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
 		if matches!(self.scheme, UrlScheme::Regular | UrlScheme::SearchItem) {
-			return f.write_str(&self.loc.to_string_lossy());
+			return write!(f, "{}", self.loc.display());
 		}
 
 		let scheme = match self.scheme {
@@ -261,6 +261,20 @@ impl From<&str> for UrlScheme {
 			"search" => UrlScheme::Search,
 			"archive" => UrlScheme::Archive,
 			_ => UrlScheme::Regular,
+		}
+	}
+}
+
+impl Hash for Url {
+	fn hash<H: Hasher>(&self, state: &mut H) {
+		self.loc.hash(state);
+
+		match self.scheme {
+			UrlScheme::Regular | UrlScheme::SearchItem => {}
+			UrlScheme::Search | UrlScheme::Archive => {
+				self.scheme.hash(state);
+				self.frag.hash(state);
+			}
 		}
 	}
 }

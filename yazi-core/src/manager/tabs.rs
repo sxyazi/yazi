@@ -2,10 +2,11 @@ use std::ops::{Deref, DerefMut};
 
 use yazi_boot::BOOT;
 use yazi_dds::Pubsub;
+use yazi_fs::File;
 use yazi_proxy::ManagerProxy;
 use yazi_shared::{Id, url::Url};
 
-use crate::tab::Tab;
+use crate::tab::{Folder, Tab};
 
 pub struct Tabs {
 	pub cursor:       usize,
@@ -69,6 +70,12 @@ impl Tabs {
 			self.active_mut()
 		}
 	}
+
+	#[inline]
+	pub fn current(&self) -> &Folder { &self.active().current }
+
+	#[inline]
+	pub fn hovered(&self) -> Option<&File> { self.current().hovered() }
 
 	#[inline]
 	pub fn find_mut(&mut self, id: Id) -> Option<&mut Tab> { self.iter_mut().find(|t| t.id == id) }

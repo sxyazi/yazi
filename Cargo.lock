@@ -3415,6 +3415,7 @@ dependencies = [
  "futures",
  "indexmap",
  "libc",
+ "lru 0.13.0",
  "notify",
  "parking_lot",
  "ratatui",

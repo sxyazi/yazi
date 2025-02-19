@@ -7,7 +7,7 @@ use yazi_shared::url::Url;
 use super::Tasks;
 
 impl Tasks {
-	pub fn process_from_files(&self, cwd: Url, hovered: Url, targets: Vec<(Url, Cow<str>)>) {
+	pub fn process_from_files(&self, cwd: Url, hovered: Url, targets: Vec<(Url, &str)>) {
 		let mut openers = HashMap::new();
 		for (url, mime) in targets {
 			if let Some(opener) = OPEN.openers(&url, mime).and_then(|o| o.first().copied()) {
