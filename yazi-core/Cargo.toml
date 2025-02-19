@@ -28,6 +28,7 @@ crossterm     = { workspace = true }
 dirs          = { workspace = true }
 futures       = { workspace = true }
 indexmap      = { workspace = true }
+lru           = { workspace = true }
 notify        = { version = "8.0.0", default-features = false, features = [ "macos_fsevent" ] }
 parking_lot   = { workspace = true }
 ratatui       = { workspace = true }

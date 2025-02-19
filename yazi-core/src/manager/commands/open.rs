@@ -42,9 +42,9 @@ impl Manager {
 		let (mut done, mut todo) = (Vec::with_capacity(selected.len()), vec![]);
 		for u in selected {
 			if self.mimetype.contains(u) {
-				done.push((u.clone(), Cow::Borrowed("")));
+				done.push((u.clone(), ""));
 			} else if self.guess_folder(u) {
-				done.push((u.clone(), Cow::Borrowed(MIME_DIR)));
+				done.push((u.clone(), MIME_DIR));
 			} else {
 				todo.push(u.clone());
 			}
@@ -63,7 +63,7 @@ impl Manager {
 				}
 			}
 
-			done.extend(files.iter().map(|f| (f.url_owned(), Cow::Borrowed(""))));
+			done.extend(files.iter().map(|f| (f.url_owned(), "")));
 			for (fetcher, files) in PLUGIN.mime_fetchers(files) {
 				if let Err(e) = isolate::fetch(CmdCow::from(&fetcher.run), files).await {
 					error!("Fetch mime failed on opening: {e}");
@@ -85,7 +85,7 @@ impl Manager {
 			.targets
 			.into_iter()
 			.filter_map(|(u, m)| {
-				Some(m).filter(|m| !m.is_empty()).or_else(|| self.mimetype.by_url_owned(&u)).map(|m| (u, m))
+				Some(m).filter(|m| !m.is_empty()).or_else(|| self.mimetype.by_url(&u)).map(|m| (u, m))
 			})
 			.collect();
 

@@ -100,6 +100,11 @@ impl Actions {
 		writeln!(s, "    xclip        : {}", Self::process_output("xclip", "-version"))?;
 		writeln!(s, "    xsel         : {}", Self::process_output("xsel", "--version"))?;
 
+		writeln!(
+			s,
+			"\n\nSee https://yazi-rs.github.io/docs/plugins/overview#debugging on how to enable logging or debug runtime errors."
+		)?;
+
 		Ok(s)
 	}
 
