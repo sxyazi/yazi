@@ -30,9 +30,7 @@ impl<T: Copy> Clone for SyncCell<T> {
 }
 
 impl<T: Copy + Debug> Debug for SyncCell<T> {
-	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-		f.debug_struct("SyncCell").field("value", &self.get()).finish()
-	}
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { Debug::fmt(&self.get(), f) }
 }
 
 impl<T: Copy + Display> Display for SyncCell<T> {
