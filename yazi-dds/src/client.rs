@@ -94,7 +94,7 @@ impl Client {
 
 		if version.as_deref() != Some(BodyHi::version()) {
 			bail!(
-				"Incompatible version (Ya {}, Yazi {})",
+				"Incompatible version (Ya {}, Yazi {}), please restart all `ya` and `yazi` processes if you upgrade either one.",
 				BodyHi::version(),
 				version.as_deref().unwrap_or("Unknown")
 			);

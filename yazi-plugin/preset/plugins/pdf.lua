@@ -37,7 +37,6 @@ function M:preload(job)
 			"-l", job.skip + 1,
 			"-singlefile",
 			"-jpeg", "-jpegopt", "quality=" .. PREVIEW.image_quality,
-			"-tiffcompression", "jpeg",
 			"-scale-to-x", PREVIEW.max_width, "-scale-to-y", "-1",
 			tostring(job.file.url),
 			tostring(cache),

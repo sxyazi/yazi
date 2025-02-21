@@ -17,16 +17,15 @@ impl Actions {
 		writeln!(s, "\nYa")?;
 		writeln!(s, "    Version: {}", Self::process_output("ya", "--version"))?;
 
-		let emulator = yazi_adapter::Emulator::detect().unwrap_or_default();
 		writeln!(s, "\nEmulator")?;
 		writeln!(s, "    TERM                : {:?}", env::var_os("TERM"))?;
 		writeln!(s, "    TERM_PROGRAM        : {:?}", env::var_os("TERM_PROGRAM"))?;
 		writeln!(s, "    TERM_PROGRAM_VERSION: {:?}", env::var_os("TERM_PROGRAM_VERSION"))?;
 		writeln!(s, "    Brand.from_env      : {:?}", yazi_adapter::Brand::from_env())?;
-		writeln!(s, "    Emulator.detect     : {:?}", emulator)?;
+		writeln!(s, "    Emulator.detect     : {:?}", yazi_adapter::EMULATOR)?;
 
 		writeln!(s, "\nAdapter")?;
-		writeln!(s, "    Adapter.matches: {:?}", yazi_adapter::Adapter::matches(emulator))?;
+		writeln!(s, "    Adapter.matches: {:?}", yazi_adapter::ADAPTOR)?;
 
 		writeln!(s, "\nDesktop")?;
 		writeln!(s, "    XDG_SESSION_TYPE           : {:?}", env::var_os("XDG_SESSION_TYPE"))?;
@@ -41,7 +40,7 @@ impl Actions {
 		writeln!(s, "    shared.in_ssh_connection: {:?}", yazi_shared::in_ssh_connection())?;
 
 		writeln!(s, "\nWSL")?;
-		writeln!(s, "    WSL: {:?}", yazi_adapter::WSL.get())?;
+		writeln!(s, "    WSL: {:?}", yazi_adapter::WSL)?;
 
 		writeln!(s, "\nVariables")?;
 		writeln!(s, "    SHELL           : {:?}", env::var_os("SHELL"))?;
@@ -70,7 +69,7 @@ impl Actions {
 		)?;
 
 		writeln!(s, "\nMultiplexers")?;
-		writeln!(s, "    TMUX               : {}", yazi_adapter::TMUX.get())?;
+		writeln!(s, "    TMUX               : {}", yazi_adapter::TMUX)?;
 		writeln!(s, "    tmux version       : {}", Self::process_output("tmux", "-V"))?;
 		writeln!(s, "    tmux build flags   : enable-sixel={}", Mux::tmux_sixel_flag())?;
 		writeln!(s, "    ZELLIJ_SESSION_NAME: {:?}", env::var_os("ZELLIJ_SESSION_NAME"))?;
