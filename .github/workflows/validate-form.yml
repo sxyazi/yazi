@@ -1,0 +1,34 @@
+name: Validate Form
+
+on:
+  issues:
+    types: [opened, edited]
+  schedule:
+    - cron: "20 * * * *"
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-js: 20
+
+      - name: Install Dependencies
+        run: |
+          cd scripts/validate-form
+          npm ci
+
+      - name: Validate Form
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const script = require('./scripts/validate-form/main.js')
+            await script({github, context, core})
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
