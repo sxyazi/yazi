@@ -48,8 +48,9 @@ impl Tab {
 		let hidden = self.pref.show_hidden;
 
 		self.search = Some(tokio::spawn(async move {
-			let rx = if opt.via == SearchOptVia::Rg {
+			let rx = if opt.via == SearchOptVia::Rg || opt.via == SearchOptVia::Rga {
 				external::rg(external::RgOpt {
+					rga: SearchOptVia::Rga == opt.via,
 					cwd: cwd.clone(),
 					hidden,
 					subject: opt.subject.into_owned(),

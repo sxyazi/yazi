@@ -7,13 +7,15 @@ use yazi_shared::url::Url;
 
 pub struct RgOpt {
 	pub cwd:     Url,
+	pub rga:     bool,
 	pub hidden:  bool,
 	pub subject: String,
 	pub args:    Vec<String>,
 }
 
 pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {
-	let mut child = Command::new("rg")
+	let commandname = if opt.rga { "rga" } else { "rg" };
+	let mut child = Command::new(commandname)
 		.args(["--color=never", "--files-with-matches", "--smart-case"])
 		.arg(if opt.hidden { "--hidden" } else { "--no-hidden" })
 		.args(opt.args)

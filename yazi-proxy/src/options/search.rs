@@ -35,6 +35,7 @@ impl TryFrom<CmdCow> for SearchOpt {
 pub enum SearchOptVia {
 	// TODO: remove `None` in the future
 	None,
+	Rga,
 	Rg,
 	Fd,
 }
@@ -44,6 +45,7 @@ impl From<&str> for SearchOptVia {
 		match value {
 			"rg" => Self::Rg,
 			"fd" => Self::Fd,
+			"rga" => Self::Rga,
 			_ => Self::None,
 		}
 	}
@@ -53,6 +55,7 @@ impl Display for SearchOptVia {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.write_str(match self {
 			Self::Rg => "rg",
+			Self::Rga => "rga",
 			Self::Fd => "fd",
 			Self::None => "none",
 		})
