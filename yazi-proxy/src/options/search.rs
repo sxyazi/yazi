@@ -55,8 +55,8 @@ impl Display for SearchOptVia {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.write_str(match self {
 			Self::Rg => "rg",
-			Self::Rga => "rga",
 			Self::Fd => "fd",
+			Self::Rga => "rga",
 			Self::None => "none",
 		})
 	}
