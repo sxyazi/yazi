@@ -37,6 +37,7 @@ pub enum SearchOptVia {
 	None,
 	Rg,
 	Fd,
+	Rga,
 }
 
 impl From<&str> for SearchOptVia {
@@ -44,6 +45,7 @@ impl From<&str> for SearchOptVia {
 		match value {
 			"rg" => Self::Rg,
 			"fd" => Self::Fd,
+			"rga" => Self::Rga,
 			_ => Self::None,
 		}
 	}
@@ -54,6 +56,7 @@ impl Display for SearchOptVia {
 		f.write_str(match self {
 			Self::Rg => "rg",
 			Self::Fd => "fd",
+			Self::Rga => "rga",
 			Self::None => "none",
 		})
 	}
