@@ -131,10 +131,11 @@ pub struct Which {
 
 #[derive(Deserialize, Serialize)]
 pub struct Confirm {
-	pub border:     Style,
-	pub title:      Style,
-	pub content:    Style,
-	pub list:       Style,
+	pub border:  Style,
+	pub title:   Style,
+	pub content: Style,
+	pub list:    Style,
+
 	pub btn_yes:    Style,
 	pub btn_no:     Style,
 	pub btn_labels: [String; 2],
@@ -144,6 +145,9 @@ pub struct Confirm {
 pub struct Spot {
 	pub border: Style,
 	pub title:  Style,
+
+	pub tbl_col:  Style,
+	pub tbl_cell: Style,
 }
 
 #[derive(Deserialize, Serialize)]
