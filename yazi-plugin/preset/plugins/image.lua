@@ -33,8 +33,8 @@ function M:spot(job)
 			:row(job.skip)
 			:row(1)
 			:col(1)
-			:col_style(ui.Style():fg("blue"))
-			:cell_style(ui.Style():fg("yellow"):reverse())
+			:col_style(th.spot.tbl_col)
+			:cell_style(th.spot.tbl_cell)
 			:widths { ui.Constraint.Length(14), ui.Constraint.Fill(1) }
 	)
 end

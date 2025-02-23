@@ -1,4 +1,6 @@
 const LABEL_NAME = "needs info"
+const RE_VERSION = /Yazi\s+Version\s*:\s\d+\.\d+\.\d+\s\(/gm
+const RE_DEPENDENCIES = /Dependencies\s+[/a-z]+\s*:\s/gm
 const RE_CHECKLIST = /#{3}\s+Checklist\s+(?:^-\s+\[x]\s+.+?\n){2}/gm
 
 function bugReportBody(creator, content, hash) {
@@ -10,14 +12,14 @@ function bugReportBody(creator, content, hash) {
 
 - The bug can still be reproduced on the [newest nightly build](https://yazi-rs.github.io/docs/installation/#binaries).
 - The debug information (\`yazi --debug\`) is updated for the newest nightly.
-- All required fields in the checklist have been checked.
+- All *required* fields in the checklist have been checked.
 
 Issues with \`${LABEL_NAME}\` will be marked ready once edited with the proper content, or closed after 2 days of inactivity.
 `
 }
 
-function featureRequestBody(creator, content, hash) {
-	if (content.includes(` (${hash} `) && RE_CHECKLIST.test(content)) {
+function featureRequestBody(creator, content) {
+	if (RE_VERSION.test(content) && RE_DEPENDENCIES.test(content) && RE_CHECKLIST.test(content)) {
 		return null
 	}
 
@@ -25,7 +27,7 @@ function featureRequestBody(creator, content, hash) {
 
 - The requested feature does not exist in the [newest nightly build](https://yazi-rs.github.io/docs/installation/#binaries).
 - The debug information (\`yazi --debug\`) is updated for the newest nightly.
-- All required fields in the checklist have been checked.
+- All *required* fields in the checklist have been checked.
 
 Issues with \`${LABEL_NAME}\` will be marked ready once edited with the proper content, or closed after 2 days of inactivity.
 `
@@ -66,7 +68,7 @@ module.exports = async ({ github, context, core }) => {
 				await github.rest.issues.addLabels({
 					...context.repo,
 					issue_number: id,
-					labels: [LABEL_NAME],
+					labels      : [LABEL_NAME],
 				})
 				await github.rest.issues.createComment({
 					...context.repo,
@@ -77,7 +79,7 @@ module.exports = async ({ github, context, core }) => {
 				await github.rest.issues.removeLabel({
 					...context.repo,
 					issue_number: id,
-					name: LABEL_NAME,
+					name        : LABEL_NAME,
 				})
 			}
 		} catch (e) {
@@ -89,7 +91,7 @@ module.exports = async ({ github, context, core }) => {
 		try {
 			const { data: issues } = await github.rest.issues.listForRepo({
 				...context.repo,
-				state: "open",
+				state : "open",
 				labels: LABEL_NAME,
 			})
 
@@ -102,13 +104,13 @@ module.exports = async ({ github, context, core }) => {
 					await github.rest.issues.update({
 						...context.repo,
 						issue_number: issue.number,
-						state: "closed",
+						state       : "closed",
 						state_reason: "not_planned",
 					})
 					await github.rest.issues.createComment({
 						...context.repo,
 						issue_number: issue.number,
-						body: `This issue has been automatically closed because it was marked as \`${LABEL_NAME}\` for more than 2 days without updates.
+						body        : `This issue has been automatically closed because it was marked as \`${LABEL_NAME}\` for more than 2 days without updates.
 If the problem persists, please file a new issue and complete the issue template so we can capture all the details necessary to investigate further.`,
 					})
 				}
@@ -136,7 +138,7 @@ If the problem persists, please file a new issue and complete the issue template
 				const body = bugReportBody(creator, content, hash)
 				await updateLabels(id, !!body, body)
 			} else if (await hasLabel(id, "feature")) {
-				const body = featureRequestBody(creator, content, hash)
+				const body = featureRequestBody(creator, content)
 				await updateLabels(id, !!body, body)
 			}
 		}
