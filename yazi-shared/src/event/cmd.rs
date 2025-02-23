@@ -169,7 +169,6 @@ impl Display for Cmd {
 impl FromStr for Cmd {
 	type Err = anyhow::Error;
 
-	#[allow(clippy::explicit_counter_loop)]
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		let mut args = crate::shell::split_unix(s)?;
 		if args.is_empty() || args[0].is_empty() {

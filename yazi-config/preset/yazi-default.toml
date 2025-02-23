@@ -88,7 +88,6 @@ image_bound      = [ 0, 0 ]
 suppress_preload = false
 
 [plugin]
-
 fetchers = [
 	# Mimetype
 	{ id = "mime", name = "*", run = "mime", prio = "high" },

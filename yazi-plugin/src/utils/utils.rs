@@ -8,7 +8,6 @@ pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Value> {
 	Composer::make(lua, 40, move |lua, key| {
 		match key {
 			// App
-			b"__250127" => Utils::hide(lua)?, // TODO: remove this
 			b"hide" => Utils::hide(lua)?,
 
 			// Cache

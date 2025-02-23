@@ -50,16 +50,16 @@ end
 function Marker:style(file)
 	local marked = file:is_marked()
 	if marked == 1 then
-		return THEME.manager.marker_marked
+		return th.manager.marker_marked
 	elseif marked == 0 and file:is_selected() then
-		return THEME.manager.marker_selected
+		return th.manager.marker_selected
 	end
 
 	local yanked = file:is_yanked()
 	if yanked == 1 then
-		return THEME.manager.marker_copied
+		return th.manager.marker_copied
 	elseif yanked == 2 then
-		return THEME.manager.marker_cut
+		return th.manager.marker_cut
 	end
 end
 

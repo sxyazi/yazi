@@ -42,7 +42,7 @@ function Entity:highlights()
 		if h[1] > last then
 			spans[#spans + 1] = name:sub(last + 1, h[1])
 		end
-		spans[#spans + 1] = ui.Span(name:sub(h[1] + 1, h[2])):style(THEME.manager.find_keyword)
+		spans[#spans + 1] = ui.Span(name:sub(h[1] + 1, h[2])):style(th.manager.find_keyword)
 		last = h[2]
 	end
 	if last < #name then
@@ -64,11 +64,11 @@ function Entity:found()
 	end
 
 	local s = string.format("[%d/%s]", found[1] + 1, found[2] >= 100 and "99+" or found[2])
-	return ui.Line { "  ", ui.Span(s):style(THEME.manager.find_position) }
+	return ui.Line { "  ", ui.Span(s):style(th.manager.find_position) }
 end
 
 function Entity:symlink()
-	if not MANAGER.show_symlink then
+	if not cf.manager.show_symlink then
 		return ""
 	end
 
@@ -89,9 +89,9 @@ function Entity:style()
 	if not self._file:is_hovered() then
 		return s
 	elseif self._file:in_preview() then
-		return s and s:patch(THEME.manager.preview_hovered) or THEME.manager.preview_hovered
+		return s and s:patch(th.manager.preview_hovered) or th.manager.preview_hovered
 	else
-		return s and s:patch(THEME.manager.hovered) or THEME.manager.hovered
+		return s and s:patch(th.manager.hovered) or th.manager.hovered
 	end
 end
 

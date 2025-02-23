@@ -1,30 +1,43 @@
-use mlua::{Function, Lua, UserData};
+use mlua::{Function, IntoLua, Lua, UserData, Value};
 use yazi_config::PLUGIN;
 
-use crate::{file::FileRef, url::UrlRef};
+use crate::{Composer, file::FileRef, url::UrlRef};
 
 pub(super) struct Plugin;
 
 impl Plugin {
-	pub(super) fn fetchers(lua: &Lua) -> mlua::Result<Function> {
+	pub(super) fn compose(lua: &Lua) -> mlua::Result<Value> {
+		Composer::make(lua, 5, |lua, key| {
+			match key {
+				b"fetchers" => Plugin::fetchers(lua)?,
+				b"spotter" => Plugin::spotter(lua)?,
+				b"preloaders" => Plugin::preloaders(lua)?,
+				b"previewer" => Plugin::previewer(lua)?,
+				_ => return Ok(Value::Nil),
+			}
+			.into_lua(lua)
+		})
+	}
+
+	fn fetchers(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|lua, (file, mime): (FileRef, mlua::String)| {
 			lua.create_sequence_from(PLUGIN.fetchers(&file.url, &mime.to_str()?).map(Fetcher))
 		})
 	}
 
-	pub(super) fn spotter(lua: &Lua) -> mlua::Result<Function> {
+	fn spotter(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, (url, mime): (UrlRef, mlua::String)| {
 			Ok(PLUGIN.spotter(&url, &mime.to_str()?).map(Spotter))
 		})
 	}
 
-	pub(super) fn preloaders(lua: &Lua) -> mlua::Result<Function> {
+	fn preloaders(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|lua, (url, mime): (UrlRef, mlua::String)| {
 			lua.create_sequence_from(PLUGIN.preloaders(&url, &mime.to_str()?).map(Preloader))
 		})
 	}
 
-	pub(super) fn previewer(lua: &Lua) -> mlua::Result<Function> {
+	fn previewer(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, (url, mime): (UrlRef, mlua::String)| {
 			Ok(PLUGIN.previewer(&url, &mime.to_str()?).map(Previewer))
 		})

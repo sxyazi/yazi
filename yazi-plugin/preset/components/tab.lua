@@ -10,12 +10,13 @@ function Tab:new(area, tab)
 end
 
 function Tab:layout()
+	local ratio = cf.manager.ratio
 	self._chunks = ui.Layout()
 		:direction(ui.Layout.HORIZONTAL)
 		:constraints({
-			ui.Constraint.Ratio(MANAGER.ratio.parent, MANAGER.ratio.all),
-			ui.Constraint.Ratio(MANAGER.ratio.current, MANAGER.ratio.all),
-			ui.Constraint.Ratio(MANAGER.ratio.preview, MANAGER.ratio.all),
+			ui.Constraint.Ratio(ratio.parent, ratio.all),
+			ui.Constraint.Ratio(ratio.current, ratio.all),
+			ui.Constraint.Ratio(ratio.preview, ratio.all),
 		})
 		:split(self._area)
 end

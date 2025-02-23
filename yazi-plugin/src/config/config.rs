@@ -1,11 +1,9 @@
 use mlua::{IntoLua, Lua, LuaSerdeExt, SerializeOptions, Value};
-use yazi_boot::BOOT;
 use yazi_config::{MANAGER, PREVIEW, THEME};
 
-use super::Plugin;
 use crate::Composer;
 
-pub const SER_OPTS: SerializeOptions =
+pub const OPTS: SerializeOptions =
 	SerializeOptions::new().serialize_none_to_null(false).serialize_unit_to_null(false);
 
 pub struct Config<'a> {
@@ -13,42 +11,62 @@ pub struct Config<'a> {
 }
 
 impl<'a> Config<'a> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
+		Composer::make(lua, 5, |lua, key| {
+			match key {
+				b"manager" => Self::manager(lua)?,
+				b"plugin" => super::Plugin::compose(lua)?,
+				b"preview" => Self::preview(lua)?,
+				_ => return Ok(Value::Nil),
+			}
+			.into_lua(lua)
+		})
+	}
+
+	fn manager(lua: &Lua) -> mlua::Result<Value> {
+		Composer::make(lua, 5, |lua, key| {
+			match key {
+				b"ratio" => lua.to_value_with(&MANAGER.ratio, OPTS)?,
+				b"show_symlink" => lua.to_value_with(&MANAGER.show_symlink, OPTS)?,
+				_ => return Ok(Value::Nil),
+			}
+			.into_lua(lua)
+		})
+	}
+
+	fn preview(lua: &Lua) -> mlua::Result<Value> {
+		Composer::make(lua, 10, |lua, key| {
+			match key {
+				b"wrap" => lua.to_value_with(&PREVIEW.wrap, OPTS)?,
+				b"tab_size" => lua.to_value_with(&PREVIEW.tab_size, OPTS)?,
+				b"max_width" => lua.to_value_with(&PREVIEW.max_width, OPTS)?,
+				b"max_height" => lua.to_value_with(&PREVIEW.max_height, OPTS)?,
+
+				b"image_delay" => lua.to_value_with(&PREVIEW.image_delay, OPTS)?,
+				b"image_quality" => lua.to_value_with(&PREVIEW.image_quality, OPTS)?,
+				_ => return Ok(Value::Nil),
+			}
+			.into_lua(lua)
+		})
+	}
+
 	pub fn new(lua: &'a Lua) -> Self { Self { lua } }
 
-	pub fn install_boot(self) -> mlua::Result<Self> {
-		self.lua.globals().raw_set("BOOT", self.lua.to_value_with(&*BOOT, SER_OPTS)?)?;
-		Ok(self)
-	}
-
+	// TODO: remove this
 	pub fn install_manager(self) -> mlua::Result<Self> {
-		self.lua.globals().raw_set("MANAGER", self.lua.to_value_with(&*MANAGER, SER_OPTS)?)?;
+		self.lua.globals().raw_set("MANAGER", self.lua.to_value_with(&*MANAGER, OPTS)?)?;
 		Ok(self)
 	}
 
+	// TODO: remove this
 	pub fn install_theme(self) -> mlua::Result<Self> {
-		self.lua.globals().raw_set("THEME", self.lua.to_value_with(&*THEME, SER_OPTS)?)?;
+		self.lua.globals().raw_set("THEME", self.lua.to_value_with(&*THEME, OPTS)?)?;
 		Ok(self)
 	}
 
+	// TODO: remove this
 	pub fn install_preview(self) -> mlua::Result<Self> {
-		self.lua.globals().raw_set("PREVIEW", self.lua.to_value_with(&*PREVIEW, SER_OPTS)?)?;
-		Ok(self)
-	}
-
-	pub fn install_plugin(self) -> mlua::Result<Self> {
-		self.lua.globals().raw_set(
-			"PLUGIN",
-			Composer::make(self.lua, 5, |lua, name| {
-				match name {
-					b"fetchers" => Plugin::fetchers(lua)?,
-					b"spotter" => Plugin::spotter(lua)?,
-					b"preloaders" => Plugin::preloaders(lua)?,
-					b"previewer" => Plugin::previewer(lua)?,
-					_ => return Ok(Value::Nil),
-				}
-				.into_lua(lua)
-			})?,
-		)?;
+		self.lua.globals().raw_set("PREVIEW", self.lua.to_value_with(&*PREVIEW, OPTS)?)?;
 		Ok(self)
 	}
 }
