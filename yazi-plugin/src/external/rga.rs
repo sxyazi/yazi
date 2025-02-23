@@ -5,15 +5,15 @@ use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command, sync::mpsc::{sel
 use yazi_fs::File;
 use yazi_shared::url::Url;
 
-pub struct RgOpt {
+pub struct RgaOpt {
 	pub cwd:     Url,
 	pub hidden:  bool,
 	pub subject: String,
 	pub args:    Vec<String>,
 }
 
-pub fn rg(opt: RgOpt) -> Result<UnboundedReceiver<File>> {
-	let mut child = Command::new("rg")
+pub fn rga(opt: RgaOpt) -> Result<UnboundedReceiver<File>> {
+	let mut child = Command::new("rga")
 		.args(["--color=never", "--files-with-matches", "--smart-case"])
 		.arg(if opt.hidden { "--hidden" } else { "--no-hidden" })
 		.args(opt.args)
