@@ -11,7 +11,7 @@ function M:peek(job)
 		return
 	end
 
-	ya.sleep(math.max(0, PREVIEW.image_delay / 1000 + start - os.clock()))
+	ya.sleep(math.max(0, cf.preview.image_delay / 1000 + start - os.clock()))
 	ya.image_show(cache, job.area)
 	ya.preview_widgets(job, {})
 end
@@ -31,9 +31,9 @@ function M:preload(job)
 			tostring(job.file.url),
 			"-flatten",
 			"-resize",
-			string.format("%dx%d^", PREVIEW.max_width, PREVIEW.max_height),
+			string.format("%dx%d^", cf.preview.max_width, cf.preview.max_height),
 			"-quality",
-			PREVIEW.image_quality,
+			cf.preview.image_quality,
 			"-auto-orient",
 			"JPG:" .. tostring(cache),
 		})

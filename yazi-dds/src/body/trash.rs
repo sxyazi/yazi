@@ -28,11 +28,6 @@ impl<'a> From<BodyTrash<'a>> for Body<'a> {
 impl IntoLua for BodyTrash<'static> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		let urls = lua.create_table_with_capacity(self.urls.len(), 0)?;
-
-		// In most cases, `self.urls` will be `Cow::Owned`, so
-		// `.into_owned().into_iter()` can avoid any cloning, whereas
-		// `.iter().cloned()` will clone each element.
-		#[allow(clippy::unnecessary_to_owned)]
 		for (i, url) in self.urls.into_owned().into_iter().enumerate() {
 			urls.raw_set(i + 1, lua.create_any_userdata(url)?)?;
 		}

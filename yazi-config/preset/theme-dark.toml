@@ -58,7 +58,6 @@ syntect_theme = ""
 # : Mode {{{
 
 [mode]
-
 normal_main = { bg = "blue", bold = true }
 normal_alt  = { fg = "blue", bg = "gray" }
 
@@ -208,7 +207,6 @@ footer  = { fg = "black", bg = "white" }
 # : File-specific styles {{{
 
 [filetype]
-
 rules = [
 	# Images
 	{ mime = "image/*", fg = "yellow" },
@@ -244,7 +242,6 @@ rules = [
 # : Icons {{{
 
 [icon]
-
 globs = []
 dirs  = [
 	{ name = ".config", text = "" },

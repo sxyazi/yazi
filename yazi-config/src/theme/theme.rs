@@ -11,8 +11,8 @@ use super::{Filetype, Flavor, Icons};
 pub struct Theme {
 	pub flavor:     Flavor,
 	pub manager:    Manager,
-	mode:           Mode,
-	status:         Status,
+	pub mode:       Mode,
+	pub status:     Status,
 	pub which:      Which,
 	pub confirm:    Confirm,
 	pub spot:       Spot,
@@ -80,7 +80,7 @@ pub struct Manager {
 }
 
 #[derive(Deserialize, Serialize)]
-struct Mode {
+pub struct Mode {
 	pub normal_main: Style,
 	pub normal_alt:  Style,
 
@@ -92,7 +92,7 @@ struct Mode {
 }
 
 #[derive(Deserialize, Serialize)]
-struct Status {
+pub struct Status {
 	pub overall:   Style,
 	pub sep_left:  StatusSep,
 	pub sep_right: StatusSep,
@@ -111,7 +111,7 @@ struct Status {
 }
 
 #[derive(Deserialize, Serialize)]
-struct StatusSep {
+pub struct StatusSep {
 	pub open:  String,
 	pub close: String,
 }
