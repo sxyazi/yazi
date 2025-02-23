@@ -35,9 +35,9 @@ impl TryFrom<CmdCow> for SearchOpt {
 pub enum SearchOptVia {
 	// TODO: remove `None` in the future
 	None,
-	Rga,
 	Rg,
 	Fd,
+	Rga,
 }
 
 impl From<&str> for SearchOptVia {
