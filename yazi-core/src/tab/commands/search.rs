@@ -1,5 +1,6 @@
 use std::{borrow::Cow, mem, time::Duration};
 
+use anyhow::bail;
 use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tracing::error;
@@ -67,7 +68,7 @@ impl Tab {
 					subject: opt.subject.into_owned(),
 					args: opt.args,
 				}),
-				SearchOptVia::None => Result::Err(anyhow::anyhow!("Invalid `search` option")),
+				SearchOptVia::None => bail!("Invalid `via` option for `search` command"),
 			}?;
 
 			let rx = UnboundedReceiverStream::new(rx).chunks_timeout(5000, Duration::from_millis(500));
