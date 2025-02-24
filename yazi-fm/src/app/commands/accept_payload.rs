@@ -27,11 +27,11 @@ impl App {
 		_ = Lives::scope(&self.cx, || {
 			let body = payload.body.into_lua(&LUA)?;
 			for (id, cb) in handlers {
-				LUA.named_registry_value::<RtRefMut>("rt")?.push(&id);
+				LUA.named_registry_value::<RtRefMut>("ir")?.push(&id);
 				if let Err(e) = cb.call::<()>(body.clone()) {
 					error!("Failed to run `{kind}` event handler in your `{id}` plugin: {e}");
 				}
-				LUA.named_registry_value::<RtRefMut>("rt")?.pop();
+				LUA.named_registry_value::<RtRefMut>("ir")?.pop();
 			}
 			Ok(())
 		});

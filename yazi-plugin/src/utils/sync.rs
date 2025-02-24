@@ -12,12 +12,12 @@ impl Utils {
 	pub(super) fn sync(lua: &Lua, isolate: bool) -> mlua::Result<Function> {
 		if isolate {
 			lua.create_function(|lua, ()| {
-				let Some(block) = lua.named_registry_value::<RtRefMut>("rt")?.next_block() else {
+				let Some(block) = lua.named_registry_value::<RtRefMut>("ir")?.next_block() else {
 					return Err("`ya.sync()` must be called in a plugin").into_lua_err();
 				};
 
 				lua.create_async_function(move |lua, args: MultiValue| async move {
-					let Some(cur) = lua.named_registry_value::<RtRef>("rt")?.current_owned() else {
+					let Some(cur) = lua.named_registry_value::<RtRef>("ir")?.current_owned() else {
 						return Err("block spawned by `ya.sync()` must be called in a plugin").into_lua_err();
 					};
 					Sendable::list_to_values(&lua, Self::retrieve(cur, block, args).await?)
@@ -25,7 +25,7 @@ impl Utils {
 			})
 		} else {
 			lua.create_function(|lua, f: Function| {
-				let mut rt = lua.named_registry_value::<RtRefMut>("rt")?;
+				let mut rt = lua.named_registry_value::<RtRefMut>("ir")?;
 				if !rt.put_block(f.clone()) {
 					return Err("`ya.sync()` must be called in a plugin").into_lua_err();
 				}
@@ -84,7 +84,7 @@ impl Utils {
 		let callback: PluginCallback = {
 			let id_ = id.clone();
 			Box::new(move |lua, plugin| {
-				let Some(block) = lua.named_registry_value::<RtRef>("rt")?.get_block(&id_, calls) else {
+				let Some(block) = lua.named_registry_value::<RtRef>("ir")?.get_block(&id_, calls) else {
 					return Err("sync block not found".into_lua_err());
 				};
 

@@ -68,7 +68,7 @@ function Entity:found()
 end
 
 function Entity:symlink()
-	if not cf.manager.show_symlink then
+	if not rt.manager.show_symlink then
 		return ""
 	end
 

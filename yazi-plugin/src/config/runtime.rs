@@ -7,11 +7,11 @@ use crate::{Composer, url::Url};
 pub const OPTS: SerializeOptions =
 	SerializeOptions::new().serialize_none_to_null(false).serialize_unit_to_null(false);
 
-pub struct Config<'a> {
+pub struct Runtime<'a> {
 	lua: &'a Lua,
 }
 
-impl<'a> Config<'a> {
+impl<'a> Runtime<'a> {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		Composer::make(lua, 5, |lua, key| {
 			match key {

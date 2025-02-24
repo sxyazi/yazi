@@ -31,10 +31,10 @@ end
 
 function M:spot_base(job)
 	local url, cha = job.file.url, job.file.cha
-	local spotter = cf.plugin.spotter(url, job.mime)
-	local previewer = cf.plugin.previewer(url, job.mime)
-	local fetchers = cf.plugin.fetchers(job.file, job.mime)
-	local preloaders = cf.plugin.preloaders(url, job.mime)
+	local spotter = rt.plugin.spotter(url, job.mime)
+	local previewer = rt.plugin.previewer(url, job.mime)
+	local fetchers = rt.plugin.fetchers(job.file, job.mime)
+	local preloaders = rt.plugin.preloaders(url, job.mime)
 
 	for i, v in ipairs(fetchers) do
 		fetchers[i] = v.cmd
