@@ -75,6 +75,7 @@ impl UserData for Cha {
 		#[cfg(unix)]
 		{
 			use std::ops::Not;
+			fields.add_field_method_get("mode", |_, me| Ok(me.is_dummy().not().then_some(me.mode)));
 			fields.add_field_method_get("dev", |_, me| Ok(me.is_dummy().not().then_some(me.dev)));
 			fields.add_field_method_get("uid", |_, me| Ok(me.is_dummy().not().then_some(me.uid)));
 			fields.add_field_method_get("gid", |_, me| Ok(me.is_dummy().not().then_some(me.gid)));
