@@ -114,6 +114,8 @@ impl<'a> Executor<'a> {
 		on!(MANAGER, remove, &self.app.cx.tasks);
 		on!(MANAGER, remove_do, &self.app.cx.tasks);
 		on!(MANAGER, create);
+		on!(MANAGER, bulk_create);
+
 		on!(MANAGER, rename);
 		on!(ACTIVE, copy);
 		on!(ACTIVE, shell);

@@ -75,6 +75,18 @@ impl FilesOp {
 		}
 	}
 
+	pub fn create(files: Vec<File>) {
+		let mut parents: HashMap<_, Vec<_>> = Default::default();
+		for file in files {
+			let Some(parent) = file.url.parent_url() else { continue };
+			parents.entry(parent).or_default().push(file);
+		}
+
+		for (parent, files) in parents {
+			Self::Creating(parent, files).emit();
+		}
+	}
+
 	pub fn mutate(ops: Vec<Self>) {
 		let mut parents: HashMap<_, (HashMap<_, _>, HashSet<_>)> = Default::default();
 		for op in ops {
