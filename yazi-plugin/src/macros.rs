@@ -124,7 +124,7 @@ macro_rules! impl_file_methods {
 #[macro_export]
 macro_rules! deprecate {
 	($lua:ident, $tt:tt) => {{
-		let id = match $lua.named_registry_value::<$crate::RtRef>("rt")?.current() {
+		let id = match $lua.named_registry_value::<$crate::RtRef>("ir")?.current() {
 			Some(id) => &format!("`{id}.yazi` plugin"),
 			None => "`init.lua` config",
 		};

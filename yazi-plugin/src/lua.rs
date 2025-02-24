@@ -17,8 +17,8 @@ pub(super) fn init_lua() -> Result<()> {
 }
 
 fn stage_1(lua: &'static Lua) -> Result<()> {
-	lua.set_named_registry_value("rt", Runtime::default())?;
-	crate::config::Config::new(lua).install_manager()?.install_theme()?;
+	lua.set_named_registry_value("ir", Runtime::default())?;
+	crate::config::Runtime::new(lua).install_manager()?.install_theme()?;
 
 	// Base
 	let globals = lua.globals();
@@ -26,7 +26,7 @@ fn stage_1(lua: &'static Lua) -> Result<()> {
 	globals.raw_set("ya", crate::utils::compose(lua, false)?)?;
 	globals.raw_set("fs", crate::fs::compose(lua)?)?;
 	globals.raw_set("ps", crate::pubsub::compose(lua)?)?;
-	globals.raw_set("cf", crate::config::Config::compose(lua)?)?;
+	globals.raw_set("rt", crate::config::Runtime::compose(lua)?)?;
 	globals.raw_set("th", crate::config::Theme::compose(lua)?)?;
 
 	crate::Error::install(lua)?;

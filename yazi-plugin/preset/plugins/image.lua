@@ -6,7 +6,7 @@ function M:peek(job)
 		url = job.file.url
 	end
 
-	ya.sleep(math.max(0, cf.preview.image_delay / 1000 + start - os.clock()))
+	ya.sleep(math.max(0, rt.preview.image_delay / 1000 + start - os.clock()))
 	ya.image_show(url, job.area)
 	ya.preview_widgets(job, {})
 end

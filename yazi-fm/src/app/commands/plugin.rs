@@ -55,11 +55,11 @@ impl App {
 			return self.cx.tasks.plugin_micro(opt);
 		}
 
-		match LUA.named_registry_value::<RtRefMut>("rt") {
+		match LUA.named_registry_value::<RtRefMut>("ir") {
 			Ok(mut r) => r.push(&opt.id),
 			Err(e) => return warn!("{e}"),
 		}
-		defer! { _ = LUA.named_registry_value::<RtRefMut>("rt").map(|mut r| r.pop()) }
+		defer! { _ = LUA.named_registry_value::<RtRefMut>("ir").map(|mut r| r.pop()) }
 
 		let plugin = match LOADER.load_with(&LUA, &opt.id, chunk) {
 			Ok(t) => t,

@@ -13,7 +13,7 @@ function M:peek(job)
 		return
 	end
 
-	ya.sleep(math.max(0, cf.preview.image_delay / 1000 + start - os.clock()))
+	ya.sleep(math.max(0, rt.preview.image_delay / 1000 + start - os.clock()))
 	ya.image_show(cache, job.area)
 	ya.preview_widgets(job, {})
 end

@@ -5,15 +5,15 @@ use crate::runtime::Runtime;
 
 pub fn slim_lua(name: &str) -> mlua::Result<Lua> {
 	let lua = Lua::new();
-	lua.set_named_registry_value("rt", Runtime::new(name))?;
-	crate::config::Config::new(&lua).install_preview()?;
+	lua.set_named_registry_value("ir", Runtime::new(name))?;
+	crate::config::Runtime::new(&lua).install_preview()?;
 
 	// Base
 	let globals = lua.globals();
 	globals.raw_set("ui", crate::elements::compose(&lua)?)?;
 	globals.raw_set("ya", crate::utils::compose(&lua, true)?)?;
 	globals.raw_set("fs", crate::fs::compose(&lua)?)?;
-	globals.raw_set("cf", crate::config::Config::compose(&lua)?)?;
+	globals.raw_set("rt", crate::config::Runtime::compose(&lua)?)?;
 	globals.raw_set("th", crate::config::Theme::compose(&lua)?)?;
 
 	crate::bindings::Cha::install(&lua)?;

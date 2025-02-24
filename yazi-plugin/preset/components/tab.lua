@@ -10,7 +10,7 @@ function Tab:new(area, tab)
 end
 
 function Tab:layout()
-	local ratio = cf.manager.ratio
+	local ratio = rt.manager.ratio
 	self._chunks = ui.Layout()
 		:direction(ui.Layout.HORIZONTAL)
 		:constraints({
