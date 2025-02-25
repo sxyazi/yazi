@@ -5,7 +5,7 @@ use tokio::{task::JoinHandle, time::sleep};
 use yazi_adapter::Dimension;
 use yazi_macro::emit;
 use yazi_scheduler::{Ongoing, Scheduler, TaskSummary};
-use yazi_shared::{Layer, event::Cmd};
+use yazi_shared::event::Cmd;
 
 use super::{TASKS_BORDER, TASKS_PADDING, TASKS_PERCENT, TasksProgress};
 
@@ -32,7 +32,7 @@ impl Tasks {
 				let new = TasksProgress::from(&*ongoing.lock());
 				if last != new {
 					last = new;
-					emit!(Call(Cmd::new("update_progress").with_any("progress", new), Layer::App));
+					emit!(Call(Cmd::new("app:update_progress").with_any("progress", new)));
 				}
 			}
 		});

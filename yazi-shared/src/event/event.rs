@@ -4,15 +4,15 @@ use crossterm::event::{KeyEvent, MouseEvent};
 use tokio::sync::mpsc;
 
 use super::CmdCow;
-use crate::{Layer, RoCell};
+use crate::RoCell;
 
 static TX: RoCell<mpsc::UnboundedSender<Event>> = RoCell::new();
 static RX: RoCell<mpsc::UnboundedReceiver<Event>> = RoCell::new();
 
 #[derive(Debug)]
 pub enum Event {
-	Call(CmdCow, Layer),
-	Seq(Vec<CmdCow>, Layer),
+	Call(CmdCow),
+	Seq(Vec<CmdCow>),
 	Render,
 	Key(KeyEvent),
 	Mouse(MouseEvent),

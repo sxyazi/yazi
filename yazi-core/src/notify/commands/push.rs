@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 use yazi_macro::emit;
-use yazi_shared::{Layer, event::Cmd};
+use yazi_shared::event::Cmd;
 
 use crate::notify::{Message, Notify};
 
@@ -14,7 +14,7 @@ impl Notify {
 
 		if self.messages.iter().all(|m| m != &msg) {
 			self.messages.push(msg);
-			emit!(Call(Cmd::args("update_notify", &[0]), Layer::App));
+			emit!(Call(Cmd::args("app:update_notify", &[0])));
 		}
 	}
 }

@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use tokio::sync::oneshot;
 use yazi_macro::emit;
-use yazi_shared::{Layer, event::Cmd};
+use yazi_shared::event::Cmd;
 
 use crate::options::{NotifyLevel, NotifyOpt, PluginOpt};
 
@@ -12,18 +12,18 @@ impl AppProxy {
 	#[inline]
 	pub async fn stop() {
 		let (tx, rx) = oneshot::channel::<()>();
-		emit!(Call(Cmd::new("stop").with_any("tx", tx), Layer::App));
+		emit!(Call(Cmd::new("app:stop").with_any("tx", tx)));
 		rx.await.ok();
 	}
 
 	#[inline]
 	pub fn resume() {
-		emit!(Call(Cmd::new("resume"), Layer::App));
+		emit!(Call(Cmd::new("app:resume")));
 	}
 
 	#[inline]
 	pub fn notify(opt: NotifyOpt) {
-		emit!(Call(Cmd::new("notify").with_any("option", opt), Layer::App));
+		emit!(Call(Cmd::new("app:notify").with_any("option", opt)));
 	}
 
 	#[inline]
@@ -48,11 +48,11 @@ impl AppProxy {
 
 	#[inline]
 	pub fn plugin(opt: PluginOpt) {
-		emit!(Call(Cmd::new("plugin").with_any("opt", opt), Layer::App));
+		emit!(Call(Cmd::new("app:plugin").with_any("opt", opt)));
 	}
 
 	#[inline]
 	pub fn plugin_do(opt: PluginOpt) {
-		emit!(Call(Cmd::new("plugin_do").with_any("opt", opt), Layer::App));
+		emit!(Call(Cmd::new("app:plugin_do").with_any("opt", opt)));
 	}
 }

@@ -2,7 +2,7 @@ use std::{borrow::Cow, hash::{Hash, Hasher}, sync::OnceLock};
 
 use regex::Regex;
 use serde::Deserialize;
-use yazi_shared::event::Cmd;
+use yazi_shared::{Layer, event::Cmd};
 
 use super::Key;
 
@@ -42,15 +42,25 @@ impl Chord {
 
 	pub fn desc_or_run(&self) -> Cow<str> { self.desc().unwrap_or_else(|| self.run().into()) }
 
-	#[inline]
-	pub fn noop(&self) -> bool {
-		self.run.len() == 1 && self.run[0].name == "noop" && self.run[0].args.is_empty()
-	}
-
 	pub fn contains(&self, s: &str) -> bool {
 		let s = s.to_lowercase();
 		self.desc().map(|d| d.to_lowercase().contains(&s)) == Some(true)
 			|| self.run().to_lowercase().contains(&s)
 			|| self.on().to_lowercase().contains(&s)
+	}
+
+	#[inline]
+	pub(super) fn noop(&self) -> bool {
+		self.run.len() == 1 && self.run[0].name == "noop" && self.run[0].args.is_empty()
+	}
+
+	#[inline]
+	pub(super) fn with_layer(mut self, layer: Layer) -> Self {
+		for c in &mut self.run {
+			if c.layer == Default::default() {
+				c.layer = layer;
+			}
+		}
+		self
 	}
 }

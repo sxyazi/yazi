@@ -12,8 +12,8 @@ impl<'a> Executor<'a> {
 	pub(super) fn new(app: &'a mut App) -> Self { Self { app } }
 
 	#[inline]
-	pub(super) fn execute(&mut self, cmd: CmdCow, layer: Layer) {
-		match layer {
+	pub(super) fn execute(&mut self, cmd: CmdCow) {
+		match cmd.layer {
 			Layer::App => self.app(cmd),
 			Layer::Mgr => self.mgr(cmd),
 			Layer::Tasks => self.tasks(cmd),
@@ -22,7 +22,7 @@ impl<'a> Executor<'a> {
 			Layer::Input => self.input(cmd),
 			Layer::Confirm => self.confirm(cmd),
 			Layer::Help => self.help(cmd),
-			Layer::Completion => self.completion(cmd),
+			Layer::Cmp => self.cmp(cmd),
 			Layer::Which => self.which(cmd),
 		}
 	}
@@ -249,7 +249,7 @@ impl<'a> Executor<'a> {
 
 		if cmd.name.as_str() == "complete" {
 			return if cmd.bool("trigger") {
-				self.app.cx.completion.trigger(cmd)
+				self.app.cx.cmp.trigger(cmd)
 			} else {
 				self.app.cx.input.complete(cmd)
 			};
@@ -319,11 +319,11 @@ impl<'a> Executor<'a> {
 		}
 	}
 
-	fn completion(&mut self, cmd: CmdCow) {
+	fn cmp(&mut self, cmd: CmdCow) {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return self.app.cx.completion.$name(cmd);
+					return self.app.cx.cmp.$name(cmd);
 				}
 			};
 		}
@@ -336,7 +336,7 @@ impl<'a> Executor<'a> {
 		match cmd.name.as_str() {
 			"close_input" => self.app.cx.input.close(cmd),
 			// Help
-			"help" => self.app.cx.help.toggle(Layer::Completion),
+			"help" => self.app.cx.help.toggle(Layer::Cmp),
 			// Plugin
 			"plugin" => self.app.plugin(cmd),
 			_ => {}

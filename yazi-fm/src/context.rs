@@ -1,31 +1,31 @@
 use ratatui::layout::Rect;
-use yazi_core::{completion::Completion, confirm::Confirm, help::Help, input::Input, mgr::Mgr, notify::Notify, pick::Pick, tab::{Folder, Tab}, tasks::Tasks, which::Which};
+use yazi_core::{cmp::Cmp, confirm::Confirm, help::Help, input::Input, mgr::Mgr, notify::Notify, pick::Pick, tab::{Folder, Tab}, tasks::Tasks, which::Which};
 use yazi_shared::Layer;
 
 pub struct Ctx {
-	pub mgr:        Mgr,
-	pub tasks:      Tasks,
-	pub pick:       Pick,
-	pub input:      Input,
-	pub confirm:    Confirm,
-	pub help:       Help,
-	pub completion: Completion,
-	pub which:      Which,
-	pub notify:     Notify,
+	pub mgr:     Mgr,
+	pub tasks:   Tasks,
+	pub pick:    Pick,
+	pub input:   Input,
+	pub confirm: Confirm,
+	pub help:    Help,
+	pub cmp:     Cmp,
+	pub which:   Which,
+	pub notify:  Notify,
 }
 
 impl Ctx {
 	pub fn make() -> Self {
 		Self {
-			mgr:        Mgr::make(),
-			tasks:      Tasks::serve(),
-			pick:       Default::default(),
-			input:      Default::default(),
-			confirm:    Default::default(),
-			help:       Default::default(),
-			completion: Default::default(),
-			which:      Default::default(),
-			notify:     Default::default(),
+			mgr:     Mgr::make(),
+			tasks:   Tasks::serve(),
+			pick:    Default::default(),
+			input:   Default::default(),
+			confirm: Default::default(),
+			help:    Default::default(),
+			cmp:     Default::default(),
+			which:   Default::default(),
+			notify:  Default::default(),
 		}
 	}
 
@@ -45,8 +45,8 @@ impl Ctx {
 	pub fn layer(&self) -> Layer {
 		if self.which.visible {
 			Layer::Which
-		} else if self.completion.visible {
-			Layer::Completion
+		} else if self.cmp.visible {
+			Layer::Cmp
 		} else if self.help.visible {
 			Layer::Help
 		} else if self.confirm.visible {

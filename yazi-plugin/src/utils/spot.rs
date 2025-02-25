@@ -1,7 +1,7 @@
 use mlua::{AnyUserData, Function, Lua, Table};
 use yazi_config::THEME;
 use yazi_macro::emit;
-use yazi_shared::{Layer, event::Cmd};
+use yazi_shared::event::Cmd;
 
 use super::Utils;
 use crate::{elements::Renderable, file::FileRef};
@@ -80,7 +80,7 @@ impl Utils {
 				}),
 				Renderable::Table(table),
 			];
-			emit!(Call(Cmd::new("update_spotted").with_any("lock", lock), Layer::Mgr));
+			emit!(Call(Cmd::new("mgr:update_spotted").with_any("lock", lock)));
 
 			Ok(())
 		})
@@ -91,7 +91,7 @@ impl Utils {
 			let mut lock = SpotLock::try_from(t)?;
 			lock.data = widgets.into_iter().map(Renderable::try_from).collect::<mlua::Result<_>>()?;
 
-			emit!(Call(Cmd::new("update_spotted").with_any("lock", lock), Layer::Mgr));
+			emit!(Call(Cmd::new("mgr:update_spotted").with_any("lock", lock)));
 			Ok(())
 		})
 	}

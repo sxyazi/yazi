@@ -3,7 +3,7 @@ use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 use tracing::error;
 use yazi_plugin::{LUA, elements::render_once};
 
-use super::{completion, confirm, help, input, mgr, pick, spot, tasks, which};
+use super::{cmp, confirm, help, input, mgr, pick, spot, tasks, which};
 use crate::Ctx;
 
 pub(super) struct Root<'a> {
@@ -60,8 +60,8 @@ impl Widget for Root<'_> {
 			help::Help::new(self.cx).render(area, buf);
 		}
 
-		if self.cx.completion.visible {
-			completion::Completion::new(self.cx).render(area, buf);
+		if self.cx.cmp.visible {
+			cmp::Cmp::new(self.cx).render(area, buf);
 		}
 
 		if self.cx.which.visible {

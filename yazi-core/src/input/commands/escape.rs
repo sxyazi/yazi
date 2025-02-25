@@ -1,5 +1,5 @@
 use yazi_macro::render;
-use yazi_proxy::CompletionProxy;
+use yazi_proxy::CmpProxy;
 use yazi_shared::event::CmdCow;
 
 use crate::input::{Input, InputMode, op::InputOp};
@@ -29,7 +29,7 @@ impl Input {
 				self.move_(-1);
 
 				if self.completion {
-					CompletionProxy::close();
+					CmpProxy::close();
 				}
 			}
 			InputMode::Replace => {

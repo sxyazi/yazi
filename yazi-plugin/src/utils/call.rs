@@ -40,21 +40,21 @@ impl Utils {
 
 	pub(super) fn app_emit(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, (name, args): (String, Table)| {
-			emit!(Call(Cmd { name, args: Sendable::table_to_args(args)? }, Layer::App));
+			emit!(Call(Cmd { name, args: Sendable::table_to_args(args)?, layer: Layer::App }));
 			Ok(())
 		})
 	}
 
 	pub(super) fn mgr_emit(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, (name, args): (String, Table)| {
-			emit!(Call(Cmd { name, args: Sendable::table_to_args(args)? }, Layer::Mgr));
+			emit!(Call(Cmd { name, args: Sendable::table_to_args(args)?, layer: Layer::Mgr }));
 			Ok(())
 		})
 	}
 
 	pub(super) fn input_emit(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, (name, args): (String, Table)| {
-			emit!(Call(Cmd { name, args: Sendable::table_to_args(args)? }, Layer::Input));
+			emit!(Call(Cmd { name, args: Sendable::table_to_args(args)?, layer: Layer::Input }));
 			Ok(())
 		})
 	}
