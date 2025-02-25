@@ -1,6 +1,6 @@
 use yazi_fs::Step;
 use yazi_macro::render;
-use yazi_proxy::ManagerProxy;
+use yazi_proxy::MgrProxy;
 use yazi_shared::event::CmdCow;
 
 use crate::tab::Tab;
@@ -48,7 +48,7 @@ See #2294 for more details: https://github.com/sxyazi/yazi/pull/2294",
 			}
 		}
 
-		ManagerProxy::hover(None, self.id);
+		MgrProxy::hover(None, self.id);
 		render!();
 	}
 }

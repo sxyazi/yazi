@@ -45,7 +45,7 @@ impl Tab {
 						.with_bool("smart", opt.case == FilterCase::Smart)
 						.with_bool("insensitive", opt.case == FilterCase::Insensitive)
 						.with_bool("done", done),
-					Layer::Manager
+					Layer::Mgr
 				));
 			}
 		});

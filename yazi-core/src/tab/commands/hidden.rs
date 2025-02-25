@@ -1,4 +1,4 @@
-use yazi_proxy::ManagerProxy;
+use yazi_proxy::MgrProxy;
 use yazi_shared::event::CmdCow;
 
 use crate::tab::Tab;
@@ -15,10 +15,10 @@ impl Tab {
 		self.apply_files_attrs();
 
 		if hovered.as_ref() != self.hovered().map(|f| &f.url) {
-			ManagerProxy::hover(hovered, self.id);
+			MgrProxy::hover(hovered, self.id);
 		} else if self.hovered().is_some_and(|f| f.is_dir()) {
-			ManagerProxy::peek(true);
+			MgrProxy::peek(true);
 		}
-		ManagerProxy::update_paged();
+		MgrProxy::update_paged();
 	}
 }

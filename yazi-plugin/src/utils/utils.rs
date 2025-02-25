@@ -17,7 +17,8 @@ pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Value> {
 			b"render" => Utils::render(lua)?,
 			b"redraw_with" => Utils::redraw_with(lua)?,
 			b"app_emit" => Utils::app_emit(lua)?,
-			b"manager_emit" => Utils::manager_emit(lua)?,
+			b"mgr_emit" => Utils::mgr_emit(lua)?,
+			b"manager_emit" => Utils::mgr_emit(lua)?, // TODO: remove this in the future
 			b"input_emit" => Utils::input_emit(lua)?,
 
 			// Image

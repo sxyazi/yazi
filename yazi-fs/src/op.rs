@@ -41,7 +41,7 @@ impl FilesOp {
 	pub fn emit(self) {
 		yazi_shared::event::Event::Call(
 			Cmd::new("update_files").with_any("op", self).into(),
-			Layer::Manager,
+			Layer::Mgr,
 		)
 		.emit();
 	}

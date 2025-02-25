@@ -34,7 +34,7 @@ impl<'a> Input<'a> {
 impl Widget for Input<'_> {
 	fn render(self, win: Rect, buf: &mut Buffer) {
 		let input = &self.cx.input;
-		let area = self.cx.manager.area(input.position);
+		let area = self.cx.mgr.area(input.position);
 
 		yazi_plugin::elements::Clear::default().render(area, buf);
 		Paragraph::new(self.highlighted_value().unwrap_or_else(|_| Line::from(input.value())))

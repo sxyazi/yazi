@@ -40,7 +40,7 @@ impl Widget for Completion<'_> {
 			})
 			.collect();
 
-		let input_area = self.cx.manager.area(self.cx.input.position);
+		let input_area = self.cx.mgr.area(self.cx.input.position);
 		let mut area = Position::sticky(Dimension::available(), input_area, Offset {
 			x:      1,
 			y:      0,

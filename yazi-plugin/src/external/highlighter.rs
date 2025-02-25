@@ -20,7 +20,7 @@ impl Highlighter {
 
 	pub fn init() -> (&'static Theme, &'static SyntaxSet) {
 		let f = || {
-			let theme = std::fs::File::open(&THEME.manager.syntect_theme)
+			let theme = std::fs::File::open(&THEME.mgr.syntect_theme)
 				.map_err(LoadingError::Io)
 				.and_then(|f| ThemeSet::load_from_reader(&mut std::io::BufReader::new(f)))
 				.or_else(|_| ThemeSet::load_from_reader(&mut Cursor::new(yazi_prebuild::ansi_theme())));

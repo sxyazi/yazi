@@ -21,7 +21,7 @@ impl Widget for Progress<'_> {
 			let progress =
 				LUA.globals().raw_get::<Table>("Progress")?.call_method::<Table>("use", area)?;
 
-			render_once(progress.call_method("redraw", ())?, buf, |p| self.cx.manager.area(p));
+			render_once(progress.call_method("redraw", ())?, buf, |p| self.cx.mgr.area(p));
 			Ok::<_, mlua::Error>(())
 		};
 		if let Err(e) = f() {

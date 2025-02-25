@@ -1,6 +1,6 @@
 use bitflags::bitflags;
 use yazi_macro::{render, render_and};
-use yazi_proxy::{AppProxy, ManagerProxy};
+use yazi_proxy::{AppProxy, MgrProxy};
 use yazi_shared::event::CmdCow;
 
 use crate::tab::Tab;
@@ -87,7 +87,7 @@ impl Tab {
 
 		self.selected.clear();
 		if self.hovered().is_some_and(|h| h.is_dir()) {
-			ManagerProxy::peek(true);
+			MgrProxy::peek(true);
 		}
 		render_and!(true)
 	}

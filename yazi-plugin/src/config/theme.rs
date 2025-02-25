@@ -10,7 +10,7 @@ impl Theme {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		Composer::make(lua, 5, |lua, key| {
 			match key {
-				b"manager" => lua.to_value_with(&THEME.manager, OPTS)?,
+				b"mgr" => lua.to_value_with(&THEME.mgr, OPTS)?,
 				b"mode" => lua.to_value_with(&THEME.mode, OPTS)?,
 				b"status" => lua.to_value_with(&THEME.status, OPTS)?,
 				b"spot" => lua.to_value_with(&THEME.spot, OPTS)?,

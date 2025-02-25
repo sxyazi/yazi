@@ -33,7 +33,7 @@ function M:peek(job)
 	end
 
 	if job.skip > 0 and bound < job.skip + limit then
-		ya.manager_emit("peek", { math.max(0, bound - limit), only_if = job.file.url, upper_bound = true })
+		ya.mgr_emit("peek", { math.max(0, bound - limit), only_if = job.file.url, upper_bound = true })
 	else
 		ya.preview_widgets(job, {
 			ui.Text(paths):area(job.area),

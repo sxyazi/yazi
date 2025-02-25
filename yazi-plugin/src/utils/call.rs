@@ -45,9 +45,9 @@ impl Utils {
 		})
 	}
 
-	pub(super) fn manager_emit(lua: &Lua) -> mlua::Result<Function> {
+	pub(super) fn mgr_emit(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, (name, args): (String, Table)| {
-			emit!(Call(Cmd { name, args: Sendable::table_to_args(args)? }, Layer::Manager));
+			emit!(Call(Cmd { name, args: Sendable::table_to_args(args)? }, Layer::Mgr));
 			Ok(())
 		})
 	}

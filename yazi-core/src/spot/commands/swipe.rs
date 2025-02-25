@@ -1,4 +1,4 @@
-use yazi_proxy::{ManagerProxy, TabProxy};
+use yazi_proxy::{MgrProxy, TabProxy};
 use yazi_shared::event::{CmdCow, Data};
 
 use crate::spot::Spot;
@@ -15,6 +15,6 @@ impl Spot {
 	#[yazi_codegen::command]
 	pub fn swipe(&mut self, opt: Opt) {
 		TabProxy::arrow(opt.step);
-		ManagerProxy::spot(None);
+		MgrProxy::spot(None);
 	}
 }

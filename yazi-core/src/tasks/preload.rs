@@ -2,7 +2,7 @@ use yazi_config::{PLUGIN, plugin::MAX_PREWORKERS};
 use yazi_fs::{File, Files, SortBy};
 
 use super::Tasks;
-use crate::manager::Mimetype;
+use crate::mgr::Mimetype;
 
 impl Tasks {
 	pub fn fetch_paged(&self, paged: &[File], mimetype: &Mimetype) {

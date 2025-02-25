@@ -55,7 +55,7 @@ impl UserData for File {
 		});
 		methods.add_method("mime", |lua, me, ()| {
 			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|cx: &Ctx| {
-				cx.manager.mimetype.by_url(&me.url).map(|s| lua.create_string(s)).transpose()
+				cx.mgr.mimetype.by_url(&me.url).map(|s| lua.create_string(s)).transpose()
 			})?
 		});
 		methods.add_method("prefix", |lua, me, ()| {
@@ -69,16 +69,16 @@ impl UserData for File {
 		});
 		methods.add_method("style", |lua, me, ()| {
 			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|cx: &Ctx| {
-				let mime = cx.manager.mimetype.by_file(me).unwrap_or_default();
+				let mime = cx.mgr.mimetype.by_file(me).unwrap_or_default();
 				THEME.filetypes.iter().find(|&x| x.matches(me, mime)).map(|x| Style::from(x.style))
 			})
 		});
 		methods.add_method("is_hovered", |_, me, ()| Ok(me.idx == me.folder().cursor));
 		methods.add_method("is_yanked", |lua, me, ()| {
 			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|cx: &Ctx| {
-				if !cx.manager.yanked.contains(&me.url) {
+				if !cx.mgr.yanked.contains(&me.url) {
 					0u8
-				} else if cx.manager.yanked.cut {
+				} else if cx.mgr.yanked.cut {
 					2u8
 				} else {
 					1u8

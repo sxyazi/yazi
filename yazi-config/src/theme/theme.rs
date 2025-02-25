@@ -10,7 +10,8 @@ use super::{Filetype, Flavor, Icons};
 #[derive(Deserialize, Serialize)]
 pub struct Theme {
 	pub flavor:     Flavor,
-	pub manager:    Manager,
+	#[serde(rename = "manager")]
+	pub mgr:        Mgr, // TODO: Remove `serde(rename)`
 	pub mode:       Mode,
 	pub status:     Status,
 	pub which:      Which,
@@ -35,7 +36,7 @@ impl FromStr for Theme {
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		let theme: Self = toml::from_str(s).context("Failed to parse your theme.toml")?;
-		theme.manager.validate()?;
+		theme.mgr.validate()?;
 		theme.which.validate()?;
 
 		Ok(theme)
@@ -43,7 +44,7 @@ impl FromStr for Theme {
 }
 
 #[derive(Deserialize, Serialize, Validate)]
-pub struct Manager {
+pub struct Mgr {
 	cwd: Style,
 
 	// Hovered

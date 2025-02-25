@@ -5,18 +5,18 @@ use mlua::{AnyUserData, MetaMethod, UserData, UserDataFields, UserDataMethods};
 use super::{Lives, Tab};
 
 pub(super) struct Tabs {
-	inner: *const yazi_core::manager::Tabs,
+	inner: *const yazi_core::mgr::Tabs,
 }
 
 impl Deref for Tabs {
-	type Target = yazi_core::manager::Tabs;
+	type Target = yazi_core::mgr::Tabs;
 
 	fn deref(&self) -> &Self::Target { unsafe { &*self.inner } }
 }
 
 impl Tabs {
 	#[inline]
-	pub(super) fn make(inner: &yazi_core::manager::Tabs) -> mlua::Result<AnyUserData> {
+	pub(super) fn make(inner: &yazi_core::mgr::Tabs) -> mlua::Result<AnyUserData> {
 		Lives::scoped_userdata(Self { inner })
 	}
 }

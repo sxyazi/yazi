@@ -5,7 +5,7 @@ use crossterm::{event::{DisableBracketedPaste, EnableBracketedPaste, KeyboardEnh
 use cursor::RestoreCursor;
 use ratatui::{CompletedFrame, Frame, Terminal, backend::CrosstermBackend, buffer::Buffer, layout::Rect};
 use yazi_adapter::{Emulator, Mux};
-use yazi_config::{INPUT, MANAGER};
+use yazi_config::{INPUT, MGR};
 
 static CSI_U: AtomicBool = AtomicBool::new(false);
 static BLINK: AtomicBool = AtomicBool::new(false);
@@ -94,7 +94,7 @@ impl Term {
 			execute!(stderr(), PopKeyboardEnhancementFlags).ok();
 		}
 
-		if !MANAGER.title_format.is_empty() {
+		if !MGR.title_format.is_empty() {
 			execute!(stderr(), SetTitle("")).ok();
 		}
 
@@ -190,13 +190,13 @@ impl DerefMut for Term {
 // --- Mouse support
 mod mouse {
 	use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
-	use yazi_config::MANAGER;
+	use yazi_config::MGR;
 
 	pub struct SetMouse(pub bool);
 
 	impl crossterm::Command for SetMouse {
 		fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
-			if MANAGER.mouse_events.is_empty() {
+			if MGR.mouse_events.is_empty() {
 				Ok(())
 			} else if self.0 {
 				EnableMouseCapture.write_ansi(f)
@@ -207,7 +207,7 @@ mod mouse {
 
 		#[cfg(windows)]
 		fn execute_winapi(&self) -> std::io::Result<()> {
-			if MANAGER.mouse_events.is_empty() {
+			if MGR.mouse_events.is_empty() {
 				Ok(())
 			} else if self.0 {
 				EnableMouseCapture.execute_winapi()

@@ -26,9 +26,9 @@ impl UserData for Ctx {
 		methods.add_meta_method(MetaMethod::Index, |lua, me, key: mlua::String| {
 			match key.as_bytes().as_ref() {
 				b"active" => super::Tab::make(me.active())?,
-				b"tabs" => super::Tabs::make(&me.manager.tabs)?,
+				b"tabs" => super::Tabs::make(&me.mgr.tabs)?,
 				b"tasks" => super::Tasks::make(&me.tasks)?,
-				b"yanked" => super::Yanked::make(&me.manager.yanked)?,
+				b"yanked" => super::Yanked::make(&me.mgr.yanked)?,
 				b"layer" => return yazi_plugin::bindings::Layer::from(me.layer()).into_lua(lua),
 				_ => return Ok(Value::Nil),
 			}

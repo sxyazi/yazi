@@ -36,7 +36,7 @@ impl App {
 
 		// Reload preview if collision is resolved
 		if collision && !COLLISION.load(Ordering::Relaxed) {
-			self.cx.manager.peek(true);
+			self.cx.mgr.peek(true);
 		}
 	}
 

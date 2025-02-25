@@ -8,7 +8,7 @@ use crate::{Term, app::App};
 impl App {
 	pub(crate) fn quit(&mut self, opt: EventQuit) -> ! {
 		self.cx.tasks.shutdown();
-		self.cx.manager.shutdown();
+		self.cx.mgr.shutdown();
 		futures::executor::block_on(yazi_dds::shutdown());
 		futures::executor::block_on(yazi_dds::STATE.drain()).ok();
 
@@ -24,7 +24,7 @@ impl App {
 
 	fn cwd_to_file(&self) {
 		if let Some(p) = &ARGS.cwd_file {
-			let cwd = self.cx.manager.cwd().as_os_str();
+			let cwd = self.cx.mgr.cwd().as_os_str();
 			std::fs::write(p, cwd.as_encoded_bytes()).ok();
 		}
 	}

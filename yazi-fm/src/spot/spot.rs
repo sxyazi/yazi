@@ -17,7 +17,7 @@ impl Widget for Spot<'_> {
 		};
 
 		for w in &lock.data {
-			w.clone().render(buf, |p| self.cx.manager.area(p));
+			w.clone().render(buf, |p| self.cx.mgr.area(p));
 		}
 	}
 }
