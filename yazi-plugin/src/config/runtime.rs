@@ -1,6 +1,6 @@
 use mlua::{IntoLua, Lua, LuaSerdeExt, SerializeOptions, Value};
 use yazi_boot::ARGS;
-use yazi_config::{MANAGER, PREVIEW, THEME};
+use yazi_config::{MGR, PREVIEW, THEME};
 
 use crate::{Composer, url::Url};
 
@@ -16,7 +16,7 @@ impl<'a> Runtime<'a> {
 		Composer::make(lua, 5, |lua, key| {
 			match key {
 				b"args" => Self::args(lua)?,
-				b"manager" => Self::manager(lua)?,
+				b"mgr" => Self::mgr(lua)?,
 				b"plugin" => super::Plugin::compose(lua)?,
 				b"preview" => Self::preview(lua)?,
 				_ => return Ok(Value::Nil),
@@ -35,11 +35,11 @@ impl<'a> Runtime<'a> {
 		})
 	}
 
-	fn manager(lua: &Lua) -> mlua::Result<Value> {
+	fn mgr(lua: &Lua) -> mlua::Result<Value> {
 		Composer::make(lua, 5, |lua, key| {
 			match key {
-				b"ratio" => lua.to_value_with(&MANAGER.ratio, OPTS)?,
-				b"show_symlink" => lua.to_value_with(&MANAGER.show_symlink, OPTS)?,
+				b"ratio" => lua.to_value_with(&MGR.ratio, OPTS)?,
+				b"show_symlink" => lua.to_value_with(&MGR.show_symlink, OPTS)?,
 				_ => return Ok(Value::Nil),
 			}
 			.into_lua(lua)
@@ -66,7 +66,7 @@ impl<'a> Runtime<'a> {
 
 	// TODO: remove this
 	pub fn install_manager(self) -> mlua::Result<Self> {
-		self.lua.globals().raw_set("MANAGER", self.lua.to_value_with(&*MANAGER, OPTS)?)?;
+		self.lua.globals().raw_set("MANAGER", self.lua.to_value_with(&*MGR, OPTS)?)?;
 		Ok(self)
 	}
 

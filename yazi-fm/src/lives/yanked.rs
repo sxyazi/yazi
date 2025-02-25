@@ -6,23 +6,23 @@ use yazi_plugin::url::Url;
 use super::{Iter, Lives};
 
 pub(super) struct Yanked {
-	inner: *const yazi_core::manager::Yanked,
+	inner: *const yazi_core::mgr::Yanked,
 }
 
 impl Deref for Yanked {
-	type Target = yazi_core::manager::Yanked;
+	type Target = yazi_core::mgr::Yanked;
 
 	fn deref(&self) -> &Self::Target { self.inner() }
 }
 
 impl Yanked {
 	#[inline]
-	pub(super) fn make(inner: &yazi_core::manager::Yanked) -> mlua::Result<AnyUserData> {
+	pub(super) fn make(inner: &yazi_core::mgr::Yanked) -> mlua::Result<AnyUserData> {
 		Lives::scoped_userdata(Self { inner })
 	}
 
 	#[inline]
-	fn inner(&self) -> &'static yazi_core::manager::Yanked { unsafe { &*self.inner } }
+	fn inner(&self) -> &'static yazi_core::mgr::Yanked { unsafe { &*self.inner } }
 }
 
 impl UserData for Yanked {

@@ -10,8 +10,8 @@ end
 
 function Rail:build()
 	self._base = {
-		ui.Bar(ui.Bar.RIGHT):area(self._chunks[1]):symbol(th.manager.border_symbol):style(th.manager.border_style),
-		ui.Bar(ui.Bar.LEFT):area(self._chunks[3]):symbol(th.manager.border_symbol):style(th.manager.border_style),
+		ui.Bar(ui.Bar.RIGHT):area(self._chunks[1]):symbol(th.mgr.border_symbol):style(th.mgr.border_style),
+		ui.Bar(ui.Bar.LEFT):area(self._chunks[3]):symbol(th.mgr.border_symbol):style(th.mgr.border_style),
 	}
 	self._children = {
 		Marker:new(self._chunks[1], self._tab.parent),

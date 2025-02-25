@@ -55,12 +55,12 @@ function Current:click(event, up)
 		return
 	end
 
-	ya.manager_emit("arrow", { y + f.offset - f.hovered.idx })
+	ya.mgr_emit("arrow", { y + f.offset - f.hovered.idx })
 	if event.is_right then
-		ya.manager_emit("open", {})
+		ya.mgr_emit("open", {})
 	end
 end
 
-function Current:scroll(event, step) ya.manager_emit("arrow", { step }) end
+function Current:scroll(event, step) ya.mgr_emit("arrow", { step }) end
 
 function Current:touch(event, step) end

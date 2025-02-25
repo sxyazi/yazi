@@ -28,7 +28,7 @@ function Header:cwd()
 	end
 
 	local s = ya.readable_path(tostring(self._current.cwd)) .. self:flags()
-	return ui.Span(ya.truncate(s, { max = max, rtl = true })):style(th.manager.cwd)
+	return ui.Span(ya.truncate(s, { max = max, rtl = true })):style(th.mgr.cwd)
 end
 
 function Header:flags()
@@ -55,13 +55,13 @@ function Header:count()
 	local count, style
 	if yanked == 0 then
 		count = #self._tab.selected
-		style = th.manager.count_selected
+		style = th.mgr.count_selected
 	elseif cx.yanked.is_cut then
 		count = yanked
-		style = th.manager.count_cut
+		style = th.mgr.count_cut
 	else
 		count = yanked
-		style = th.manager.count_copied
+		style = th.mgr.count_copied
 	end
 
 	if count == 0 then
@@ -83,13 +83,13 @@ function Header:tabs()
 	local spans = {}
 	for i = 1, tabs do
 		local text = i
-		if th.manager.tab_width > 2 then
-			text = ya.truncate(text .. " " .. cx.tabs[i]:name(), { max = th.manager.tab_width })
+		if th.mgr.tab_width > 2 then
+			text = ya.truncate(text .. " " .. cx.tabs[i]:name(), { max = th.mgr.tab_width })
 		end
 		if i == cx.tabs.idx then
-			spans[#spans + 1] = ui.Span(" " .. text .. " "):style(th.manager.tab_active)
+			spans[#spans + 1] = ui.Span(" " .. text .. " "):style(th.mgr.tab_active)
 		else
-			spans[#spans + 1] = ui.Span(" " .. text .. " "):style(th.manager.tab_inactive)
+			spans[#spans + 1] = ui.Span(" " .. text .. " "):style(th.mgr.tab_inactive)
 		end
 	end
 	return ui.Line(spans)

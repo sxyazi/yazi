@@ -27,7 +27,7 @@ function M:fetch(job)
 			return
 		end
 		if next(updates) then
-			ya.manager_emit("update_mimes", { updates = updates })
+			ya.mgr_emit("update_mimes", { updates = updates })
 			updates, last = {}, ya.time()
 		end
 	end

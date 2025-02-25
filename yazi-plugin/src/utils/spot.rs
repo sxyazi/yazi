@@ -80,7 +80,7 @@ impl Utils {
 				}),
 				Renderable::Table(table),
 			];
-			emit!(Call(Cmd::new("update_spotted").with_any("lock", lock), Layer::Manager));
+			emit!(Call(Cmd::new("update_spotted").with_any("lock", lock), Layer::Mgr));
 
 			Ok(())
 		})
@@ -91,7 +91,7 @@ impl Utils {
 			let mut lock = SpotLock::try_from(t)?;
 			lock.data = widgets.into_iter().map(Renderable::try_from).collect::<mlua::Result<_>>()?;
 
-			emit!(Call(Cmd::new("update_spotted").with_any("lock", lock), Layer::Manager));
+			emit!(Call(Cmd::new("update_spotted").with_any("lock", lock), Layer::Mgr));
 			Ok(())
 		})
 	}

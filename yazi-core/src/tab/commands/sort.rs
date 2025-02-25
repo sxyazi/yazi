@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use yazi_fs::SortBy;
-use yazi_proxy::ManagerProxy;
+use yazi_proxy::MgrProxy;
 use yazi_shared::event::CmdCow;
 
 use crate::{tab::Tab, tasks::Tasks};
@@ -20,8 +20,8 @@ impl Tab {
 
 		self.apply_files_attrs();
 
-		ManagerProxy::hover(None, self.id);
-		ManagerProxy::update_paged();
+		MgrProxy::hover(None, self.id);
+		MgrProxy::update_paged();
 
 		tasks.prework_sorted(&self.current.files);
 	}

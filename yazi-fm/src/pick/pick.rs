@@ -14,7 +14,7 @@ impl<'a> Pick<'a> {
 impl Widget for Pick<'_> {
 	fn render(self, _: Rect, buf: &mut Buffer) {
 		let pick = &self.cx.pick;
-		let area = self.cx.manager.area(pick.position);
+		let area = self.cx.mgr.area(pick.position);
 
 		let items: Vec<_> = pick
 			.window()

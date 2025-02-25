@@ -6,7 +6,7 @@ function M:setup()
 	ps.sub_remote("extract", function(args)
 		local noisy = #args == 1 and ' "" --noisy' or ' ""'
 		for _, arg in ipairs(args) do
-			ya.manager_emit("plugin", { self._id, ya.quote(arg, true) .. noisy })
+			ya.mgr_emit("plugin", { self._id, ya.quote(arg, true) .. noisy })
 		end
 	end)
 end

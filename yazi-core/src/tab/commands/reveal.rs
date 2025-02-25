@@ -1,5 +1,5 @@
 use yazi_fs::{File, FilesOp, expand_path};
-use yazi_proxy::ManagerProxy;
+use yazi_proxy::MgrProxy;
 use yazi_shared::{event::CmdCow, url::Url};
 
 use crate::tab::Tab;
@@ -31,6 +31,6 @@ impl Tab {
 
 		self.cd(parent.clone());
 		FilesOp::Creating(parent, vec![File::from_dummy(opt.target.clone(), None)]).emit();
-		ManagerProxy::hover(Some(opt.target), self.id);
+		MgrProxy::hover(Some(opt.target), self.id);
 	}
 }

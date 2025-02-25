@@ -1,7 +1,7 @@
 use yazi_macro::render;
 use yazi_shared::event::{CmdCow, Data};
 
-use crate::{confirm::Confirm, manager::Manager};
+use crate::{confirm::Confirm, mgr::Mgr};
 
 struct Opt {
 	step: isize,
@@ -13,9 +13,9 @@ impl From<CmdCow> for Opt {
 
 impl Confirm {
 	#[yazi_codegen::command]
-	pub fn arrow(&mut self, opt: Opt, manager: &Manager) {
+	pub fn arrow(&mut self, opt: Opt, mgr: &Mgr) {
 		if opt.step > 0 {
-			self.next(opt.step as usize, manager.area(self.position).width)
+			self.next(opt.step as usize, mgr.area(self.position).width)
 		} else {
 			self.prev(opt.step.unsigned_abs())
 		}

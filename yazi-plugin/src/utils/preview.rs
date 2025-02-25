@@ -54,7 +54,7 @@ impl Utils {
 				wrap: if PREVIEW.wrap == PreviewWrap::Yes { WRAP } else { WRAP_NO },
 			})];
 
-			emit!(Call(Cmd::new("update_peeked").with_any("lock", lock), Layer::Manager));
+			emit!(Call(Cmd::new("update_peeked").with_any("lock", lock), Layer::Mgr));
 			(Value::Nil, Value::Nil).into_lua_multi(&lua)
 		})
 	}
@@ -64,7 +64,7 @@ impl Utils {
 			let mut lock = PreviewLock::try_from(t)?;
 			lock.data = widgets.into_iter().map(Renderable::try_from).collect::<mlua::Result<_>>()?;
 
-			emit!(Call(Cmd::new("update_peeked").with_any("lock", lock), Layer::Manager));
+			emit!(Call(Cmd::new("update_peeked").with_any("lock", lock), Layer::Mgr));
 			Ok(())
 		})
 	}

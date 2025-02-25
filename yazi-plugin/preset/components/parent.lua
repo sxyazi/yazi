@@ -36,9 +36,9 @@ function Parent:click(event, up)
 	local y = event.y - self._area.y + 1
 	local window = self._folder and self._folder.window or {}
 	if window[y] then
-		ya.manager_emit("reveal", { window[y].url })
+		ya.mgr_emit("reveal", { window[y].url })
 	else
-		ya.manager_emit("leave", {})
+		ya.mgr_emit("leave", {})
 	end
 end
 

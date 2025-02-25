@@ -1,9 +1,9 @@
 use std::mem;
 
-use yazi_config::{LAYOUT, MANAGER};
+use yazi_config::{LAYOUT, MGR};
 use yazi_dds::Pubsub;
 use yazi_fs::{Cha, File, Files, FilesOp, FolderStage, Step};
-use yazi_proxy::ManagerProxy;
+use yazi_proxy::MgrProxy;
 use yazi_shared::{Id, url::{Url, Urn, UrnBuf}};
 
 pub struct Folder {
@@ -24,7 +24,7 @@ impl Default for Folder {
 		Self {
 			url:    Default::default(),
 			cha:    Default::default(),
-			files:  Files::new(MANAGER.show_hidden),
+			files:  Files::new(MGR.show_hidden),
 			stage:  Default::default(),
 			offset: Default::default(),
 			cursor: Default::default(),
@@ -131,7 +131,7 @@ impl Folder {
 
 		let new = self.cursor / limit;
 		if mem::replace(&mut self.page, new) != new || force {
-			ManagerProxy::update_paged_by(new, &self.url);
+			MgrProxy::update_paged_by(new, &self.url);
 		}
 	}
 
@@ -140,7 +140,7 @@ impl Folder {
 		let len = self.files.len();
 
 		let limit = LAYOUT.get().current.height as usize;
-		let scrolloff = (limit / 2).min(MANAGER.scrolloff as usize);
+		let scrolloff = (limit / 2).min(MGR.scrolloff as usize);
 
 		self.cursor = step.add(self.cursor, limit).min(len.saturating_sub(1));
 		self.offset = if self.cursor < (self.offset + limit).min(len).saturating_sub(scrolloff) {
@@ -157,7 +157,7 @@ impl Folder {
 		let max = self.files.len().saturating_sub(1);
 
 		let limit = LAYOUT.get().current.height as usize;
-		let scrolloff = (limit / 2).min(MANAGER.scrolloff as usize);
+		let scrolloff = (limit / 2).min(MGR.scrolloff as usize);
 
 		self.cursor = step.add(self.cursor, limit).min(max);
 		self.offset = if self.cursor < self.offset + scrolloff {
@@ -174,7 +174,7 @@ impl Folder {
 		let len = self.files.len();
 
 		let limit = LAYOUT.get().current.height as usize;
-		let scrolloff = (limit / 2).min(MANAGER.scrolloff as usize);
+		let scrolloff = (limit / 2).min(MGR.scrolloff as usize);
 
 		self.offset = if self.cursor < (self.offset + limit).min(len).saturating_sub(scrolloff) {
 			len.saturating_sub(limit).min(self.offset)

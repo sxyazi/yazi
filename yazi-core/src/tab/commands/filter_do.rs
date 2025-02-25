@@ -1,6 +1,6 @@
 use yazi_fs::Filter;
 use yazi_macro::render;
-use yazi_proxy::ManagerProxy;
+use yazi_proxy::MgrProxy;
 
 use super::filter::Opt;
 use crate::tab::Tab;
@@ -17,7 +17,7 @@ impl Tab {
 		};
 
 		if opt.done {
-			ManagerProxy::update_paged(); // Update for paged files in next loop
+			MgrProxy::update_paged(); // Update for paged files in next loop
 		}
 
 		let hovered = self.hovered().map(|f| f.urn_owned());
@@ -27,7 +27,7 @@ impl Tab {
 
 		self.current.repos(hovered.as_ref());
 		if self.hovered().map(|f| f.urn()) != hovered.as_ref().map(|u| u.as_urn()) {
-			ManagerProxy::hover(None, self.id);
+			MgrProxy::hover(None, self.id);
 		}
 
 		render!();

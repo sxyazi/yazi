@@ -7,7 +7,7 @@ use tracing::error;
 use yazi_config::popup::InputCfg;
 use yazi_fs::{Cha, FilesOp};
 use yazi_plugin::external;
-use yazi_proxy::{AppProxy, InputProxy, ManagerProxy, TabProxy, options::{SearchOpt, SearchOptVia}};
+use yazi_proxy::{AppProxy, InputProxy, MgrProxy, TabProxy, options::{SearchOpt, SearchOptVia}};
 
 use crate::tab::Tab;
 
@@ -91,7 +91,7 @@ impl Tab {
 		if self.cwd().is_search() {
 			let rep = self.history.remove_or(&self.cwd().to_regular());
 			drop(mem::replace(&mut self.current, rep));
-			ManagerProxy::refresh();
+			MgrProxy::refresh();
 		}
 	}
 }

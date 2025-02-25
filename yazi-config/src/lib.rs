@@ -1,6 +1,6 @@
 #![allow(clippy::module_inception)]
 
-yazi_macro::mod_pub!(keymap manager open plugin popup preview tasks theme which);
+yazi_macro::mod_pub!(keymap mgr open plugin popup preview tasks theme which);
 
 yazi_macro::mod_flat!(layout pattern preset priority);
 
@@ -9,7 +9,7 @@ use std::str::FromStr;
 use yazi_shared::{RoCell, SyncCell};
 
 pub static KEYMAP: RoCell<keymap::Keymap> = RoCell::new();
-pub static MANAGER: RoCell<manager::Manager> = RoCell::new();
+pub static MGR: RoCell<mgr::Mgr> = RoCell::new();
 pub static OPEN: RoCell<open::Open> = RoCell::new();
 pub static PLUGIN: RoCell<plugin::Plugin> = RoCell::new();
 pub static PREVIEW: RoCell<preview::Preview> = RoCell::new();
@@ -29,7 +29,7 @@ pub fn init() -> anyhow::Result<()> {
 	}
 
 	// TODO: remove this
-	for c in KEYMAP.manager.iter().flat_map(|c| c.run.iter()) {
+	for c in KEYMAP.mgr.iter().flat_map(|c| c.run.iter()) {
 		if c.name == "arrow"
 			&& c.first_str().unwrap_or_default().parse::<isize>().is_ok_and(|n| n <= -999 || n >= 999)
 		{
@@ -50,10 +50,10 @@ pub fn init_flavor(light: bool) -> anyhow::Result<()> {
 	}
 
 	let mut theme: theme::Theme = <_>::from_str(&flavor_toml.unwrap())?;
-	theme.manager.syntect_theme = theme
+	theme.mgr.syntect_theme = theme
 		.flavor
 		.syntect_path(light)
-		.unwrap_or_else(|| yazi_fs::expand_path(&theme.manager.syntect_theme));
+		.unwrap_or_else(|| yazi_fs::expand_path(&theme.mgr.syntect_theme));
 
 	THEME.init(theme);
 	Ok(())
@@ -68,7 +68,7 @@ fn try_init(merge: bool) -> anyhow::Result<()> {
 	};
 
 	let keymap = <_>::from_str(&keymap_toml)?;
-	let manager = <_>::from_str(&yazi_toml)?;
+	let mgr = <_>::from_str(&yazi_toml)?;
 	let open = <_>::from_str(&yazi_toml)?;
 	let plugin = <_>::from_str(&yazi_toml)?;
 	let preview = <_>::from_str(&yazi_toml)?;
@@ -79,7 +79,7 @@ fn try_init(merge: bool) -> anyhow::Result<()> {
 	let which = <_>::from_str(&yazi_toml)?;
 
 	KEYMAP.init(keymap);
-	MANAGER.init(manager);
+	MGR.init(mgr);
 	OPEN.init(open);
 	PLUGIN.init(plugin);
 	PREVIEW.init(preview);

@@ -1,5 +1,5 @@
 use yazi_macro::render;
-use yazi_proxy::ManagerProxy;
+use yazi_proxy::MgrProxy;
 use yazi_shared::event::{CmdCow, Data};
 
 use crate::spot::Spot;
@@ -19,7 +19,7 @@ impl Spot {
 
 		let Some(old) = lock.selected() else {
 			let new = self.skip.saturating_add_signed(opt.step);
-			return ManagerProxy::spot(Some(new));
+			return MgrProxy::spot(Some(new));
 		};
 
 		lock.select(Some(old.saturating_add_signed(opt.step)));

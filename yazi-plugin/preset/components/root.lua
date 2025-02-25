@@ -48,7 +48,7 @@ end
 
 -- Mouse events
 function Root:click(event, up)
-	if tostring(cx.layer) ~= "manager" then
+	if tostring(cx.layer) ~= "mgr" then
 		return
 	end
 	local c = ya.child_at(ui.Rect { x = event.x, y = event.y }, self:reflow())
@@ -56,7 +56,7 @@ function Root:click(event, up)
 end
 
 function Root:scroll(event, step)
-	if tostring(cx.layer) ~= "manager" then
+	if tostring(cx.layer) ~= "mgr" then
 		return
 	end
 	local c = ya.child_at(ui.Rect { x = event.x, y = event.y }, self:reflow())
@@ -64,7 +64,7 @@ function Root:scroll(event, step)
 end
 
 function Root:touch(event, step)
-	if tostring(cx.layer) ~= "manager" then
+	if tostring(cx.layer) ~= "mgr" then
 		return
 	end
 	local c = ya.child_at(ui.Rect { x = event.x, y = event.y }, self:reflow())

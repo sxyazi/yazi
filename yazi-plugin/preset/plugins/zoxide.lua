@@ -66,7 +66,7 @@ local function setup(_, opts)
 		ps.sub(
 			"cd",
 			function()
-				ya.manager_emit("shell", {
+				ya.mgr_emit("shell", {
 					cwd = fs.cwd(),
 					orphan = true,
 					"zoxide add " .. ya.quote(tostring(cx.active.current.cwd)),
@@ -113,7 +113,7 @@ local function entry()
 
 	local target = output.stdout:gsub("\n$", "")
 	if target ~= "" then
-		ya.manager_emit("cd", { target })
+		ya.mgr_emit("cd", { target })
 	end
 end
 

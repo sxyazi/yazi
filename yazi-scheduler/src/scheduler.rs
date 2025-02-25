@@ -7,7 +7,7 @@ use tokio::{fs, select, sync::mpsc::{self, UnboundedReceiver}, task::JoinHandle}
 use yazi_config::{TASKS, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
 use yazi_fs::{must_be_dir, remove_dir_clean, unique_name};
-use yazi_proxy::{ManagerProxy, options::{PluginOpt, ProcessExecOpt}};
+use yazi_proxy::{MgrProxy, options::{PluginOpt, ProcessExecOpt}};
 use yazi_shared::{Throttle, url::Url};
 
 use super::{Ongoing, TaskProg, TaskStage};
@@ -164,7 +164,7 @@ impl Scheduler {
 				async move {
 					if !canceled {
 						fs::remove_dir_all(&target).await.ok();
-						ManagerProxy::update_tasks(&target);
+						MgrProxy::update_tasks(&target);
 						Pump::push_delete(target);
 					}
 					ongoing.lock().try_remove(id, TaskStage::Hooked);
@@ -192,7 +192,7 @@ impl Scheduler {
 			Box::new(move |canceled: bool| {
 				async move {
 					if !canceled {
-						ManagerProxy::update_tasks(&target);
+						MgrProxy::update_tasks(&target);
 						Pump::push_trash(target);
 					}
 					ongoing.lock().try_remove(id, TaskStage::Hooked);

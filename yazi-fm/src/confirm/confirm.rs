@@ -14,7 +14,7 @@ impl<'a> Confirm<'a> {
 impl Widget for Confirm<'_> {
 	fn render(self, _: Rect, buf: &mut Buffer) {
 		let confirm = &self.cx.confirm;
-		let area = self.cx.manager.area(confirm.position);
+		let area = self.cx.mgr.area(confirm.position);
 
 		yazi_plugin::elements::Clear::default().render(area, buf);
 
