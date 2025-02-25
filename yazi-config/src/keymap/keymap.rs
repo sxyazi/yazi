@@ -10,21 +10,21 @@ use crate::{Preset, keymap::Key};
 
 #[derive(Debug)]
 pub struct Keymap {
-	pub mgr:        Vec<Chord>,
-	pub tasks:      Vec<Chord>,
-	pub spot:       Vec<Chord>,
-	pub pick:       Vec<Chord>,
-	pub input:      Vec<Chord>,
-	pub confirm:    Vec<Chord>,
-	pub help:       Vec<Chord>,
-	pub completion: Vec<Chord>,
+	pub mgr:     Vec<Chord>,
+	pub tasks:   Vec<Chord>,
+	pub spot:    Vec<Chord>,
+	pub pick:    Vec<Chord>,
+	pub input:   Vec<Chord>,
+	pub confirm: Vec<Chord>,
+	pub help:    Vec<Chord>,
+	pub cmp:     Vec<Chord>,
 }
 
 impl Keymap {
 	#[inline]
 	pub fn get(&self, layer: Layer) -> &[Chord] {
 		match layer {
-			Layer::App => unreachable!(),
+			Layer::App => &[],
 			Layer::Mgr => &self.mgr,
 			Layer::Tasks => &self.tasks,
 			Layer::Spot => &self.spot,
@@ -32,8 +32,8 @@ impl Keymap {
 			Layer::Input => &self.input,
 			Layer::Confirm => &self.confirm,
 			Layer::Help => &self.help,
-			Layer::Completion => &self.completion,
-			Layer::Which => unreachable!(),
+			Layer::Cmp => &self.cmp,
+			Layer::Which => &[],
 		}
 	}
 }
@@ -54,14 +54,14 @@ impl<'de> Deserialize<'de> for Keymap {
 		#[derive(Deserialize)]
 		struct Shadow {
 			#[serde(rename = "manager")]
-			mgr:        Inner, // TODO: remove serde(rename)
-			tasks:      Inner,
-			spot:       Inner,
-			pick:       Inner,
-			input:      Inner,
-			confirm:    Inner,
-			help:       Inner,
-			completion: Inner,
+			mgr:     Inner, // TODO: remove serde(rename)
+			tasks:   Inner,
+			spot:    Inner,
+			pick:    Inner,
+			input:   Inner,
+			confirm: Inner,
+			help:    Inner,
+			cmp:     Inner,
 		}
 		#[derive(Deserialize)]
 		struct Inner {
@@ -72,7 +72,7 @@ impl<'de> Deserialize<'de> for Keymap {
 			append_keymap:  IndexSet<Chord>,
 		}
 
-		fn mix(a: IndexSet<Chord>, b: IndexSet<Chord>, c: IndexSet<Chord>) -> Vec<Chord> {
+		fn mix(l: Layer, a: IndexSet<Chord>, b: IndexSet<Chord>, c: IndexSet<Chord>) -> Vec<Chord> {
 			#[inline]
 			fn on(Chord { on, .. }: &Chord) -> [Key; 2] {
 				[on.first().copied().unwrap_or_default(), on.get(1).copied().unwrap_or_default()]
@@ -87,27 +87,28 @@ impl<'de> Deserialize<'de> for Keymap {
 				c.into_iter().filter(|v| !b_seen.contains(&on(v))),
 			)
 			.filter(|chord| !chord.noop())
+			.map(|chord| chord.with_layer(l))
 			.collect()
 		}
 
 		let shadow = Shadow::deserialize(deserializer)?;
 		Ok(Self {
 			#[rustfmt::skip]
-			mgr:        mix(shadow.mgr.prepend_keymap, shadow.mgr.keymap, shadow.mgr.append_keymap),
+			mgr:     mix(Layer::Mgr, shadow.mgr.prepend_keymap, shadow.mgr.keymap, shadow.mgr.append_keymap),
 			#[rustfmt::skip]
-			tasks:      mix(shadow.tasks.prepend_keymap, shadow.tasks.keymap, shadow.tasks.append_keymap),
+			tasks:   mix(Layer::Tasks, shadow.tasks.prepend_keymap, shadow.tasks.keymap, shadow.tasks.append_keymap),
 			#[rustfmt::skip]
-			spot:       mix(shadow.spot.prepend_keymap, shadow.spot.keymap, shadow.spot.append_keymap),
+			spot:    mix(Layer::Spot, shadow.spot.prepend_keymap, shadow.spot.keymap, shadow.spot.append_keymap),
 			#[rustfmt::skip]
-			pick:       mix(shadow.pick.prepend_keymap, shadow.pick.keymap, shadow.pick.append_keymap),
+			pick:    mix(Layer::Pick, shadow.pick.prepend_keymap, shadow.pick.keymap, shadow.pick.append_keymap),
 			#[rustfmt::skip]
-			input:      mix(shadow.input.prepend_keymap, shadow.input.keymap, shadow.input.append_keymap),
+			input:   mix(Layer::Input, shadow.input.prepend_keymap, shadow.input.keymap, shadow.input.append_keymap),
 			#[rustfmt::skip]
-			confirm:    mix(shadow.confirm.prepend_keymap, shadow.confirm.keymap, shadow.confirm.append_keymap),
+			confirm: mix(Layer::Confirm, shadow.confirm.prepend_keymap, shadow.confirm.keymap, shadow.confirm.append_keymap),
 			#[rustfmt::skip]
-			help:       mix(shadow.help.prepend_keymap, shadow.help.keymap, shadow.help.append_keymap),
+			help:    mix(Layer::Help, shadow.help.prepend_keymap, shadow.help.keymap, shadow.help.append_keymap),
 			#[rustfmt::skip]
-			completion: mix(shadow.completion.prepend_keymap, shadow.completion.keymap, shadow.completion.append_keymap),
+			cmp:     mix(Layer::Cmp, shadow.cmp.prepend_keymap, shadow.cmp.keymap, shadow.cmp.append_keymap),
 		})
 	}
 }

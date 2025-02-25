@@ -1,7 +1,7 @@
 use yazi_macro::render;
 use yazi_shared::event::{CmdCow, Data};
 
-use crate::completion::Completion;
+use crate::cmp::Cmp;
 
 struct Opt {
 	step: isize,
@@ -11,7 +11,7 @@ impl From<CmdCow> for Opt {
 	fn from(c: CmdCow) -> Self { Self { step: c.first().and_then(Data::as_isize).unwrap_or(0) } }
 }
 
-impl Completion {
+impl Cmp {
 	#[yazi_codegen::command]
 	pub fn arrow(&mut self, opt: Opt) {
 		if opt.step > 0 {

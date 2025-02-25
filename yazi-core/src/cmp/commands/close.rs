@@ -2,7 +2,7 @@ use yazi_macro::render;
 use yazi_proxy::InputProxy;
 use yazi_shared::event::CmdCow;
 
-use crate::completion::Completion;
+use crate::cmp::Cmp;
 
 struct Opt {
 	submit: bool,
@@ -15,7 +15,7 @@ impl From<bool> for Opt {
 	fn from(submit: bool) -> Self { Self { submit } }
 }
 
-impl Completion {
+impl Cmp {
 	#[yazi_codegen::command]
 	pub fn close(&mut self, opt: Opt) {
 		if let Some(s) = self.selected().filter(|_| opt.submit) {

@@ -1,31 +1,36 @@
-use std::{any::Any, borrow::Cow, collections::HashMap, fmt::{self, Display}, mem, str::FromStr};
+use std::{any::Any, borrow::Cow, collections::HashMap, fmt::{self, Display}, str::FromStr};
 
 use anyhow::{Result, bail};
 use serde::{Deserialize, de};
 
 use super::{Data, DataKey};
-use crate::url::Url;
+use crate::{Layer, url::Url};
 
 #[derive(Debug, Default)]
 pub struct Cmd {
-	pub name: String,
-	pub args: HashMap<DataKey, Data>,
+	pub name:  String,
+	pub args:  HashMap<DataKey, Data>,
+	pub layer: Layer,
 }
 
 impl Cmd {
-	#[inline]
-	pub fn new(name: &str) -> Self { Self { name: name.to_owned(), ..Default::default() } }
+	pub fn new(s: &str) -> Self {
+		let (layer, name) = match s.split_once(':') {
+			Some((l, n)) => (Layer::from_str(l).unwrap_or_default(), n),
+			None => (Layer::default(), s),
+		};
 
-	#[inline]
+		Self { name: name.to_owned(), args: Default::default(), layer }
+	}
+
 	pub fn args(name: &str, args: &[impl ToString]) -> Self {
-		Self {
-			name: name.to_owned(),
-			args: args
-				.iter()
-				.enumerate()
-				.map(|(i, s)| (DataKey::Integer(i as i64), Data::String(s.to_string())))
-				.collect(),
-		}
+		let mut me = Self::new(name);
+		me.args = args
+			.iter()
+			.enumerate()
+			.map(|(i, s)| (DataKey::Integer(i as i64), Data::String(s.to_string())))
+			.collect();
+		me
 	}
 
 	// --- With
@@ -170,15 +175,14 @@ impl FromStr for Cmd {
 	type Err = anyhow::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		let mut args = crate::shell::split_unix(s)?;
+		let args = crate::shell::split_unix(s)?;
 		if args.is_empty() || args[0].is_empty() {
 			bail!("command name cannot be empty");
 		}
 
-		Ok(Cmd {
-			name: mem::take(&mut args[0]),
-			args: Cmd::parse_args(args.into_iter().skip(1), true)?,
-		})
+		let mut me = Self::new(&args[0]);
+		me.args = Cmd::parse_args(args.into_iter().skip(1), true)?;
+		Ok(me)
 	}
 }
 

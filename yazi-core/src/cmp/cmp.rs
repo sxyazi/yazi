@@ -1,7 +1,7 @@
 use std::{collections::HashMap, path::PathBuf};
 
 #[derive(Default)]
-pub struct Completion {
+pub struct Cmp {
 	pub(super) caches: HashMap<PathBuf, Vec<String>>,
 	pub(super) cands:  Vec<String>,
 	pub(super) offset: usize,
@@ -11,7 +11,7 @@ pub struct Completion {
 	pub visible:       bool,
 }
 
-impl Completion {
+impl Cmp {
 	// --- Cands
 	#[inline]
 	pub fn window(&self) -> &[String] {

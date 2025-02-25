@@ -14,7 +14,7 @@ pub enum Layer {
 	Input,
 	Confirm,
 	Help,
-	Completion,
+	Cmp,
 	Which,
 }
 
@@ -29,7 +29,7 @@ impl Display for Layer {
 			Self::Input => "input",
 			Self::Confirm => "confirm",
 			Self::Help => "help",
-			Self::Completion => "completion",
+			Self::Cmp => "cmp",
 			Self::Which => "which",
 		})
 	}

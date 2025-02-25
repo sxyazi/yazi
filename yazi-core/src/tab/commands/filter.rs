@@ -6,7 +6,7 @@ use yazi_config::popup::InputCfg;
 use yazi_fs::FilterCase;
 use yazi_macro::emit;
 use yazi_proxy::InputProxy;
-use yazi_shared::{Debounce, Layer, errors::InputError, event::{Cmd, CmdCow}};
+use yazi_shared::{Debounce, errors::InputError, event::{Cmd, CmdCow}};
 
 use crate::tab::Tab;
 
@@ -41,11 +41,10 @@ impl Tab {
 				let (Ok(s) | Err(InputError::Typed(s))) = result else { continue };
 
 				emit!(Call(
-					Cmd::args("filter_do", &[s])
+					Cmd::args("mgr:filter_do", &[s])
 						.with_bool("smart", opt.case == FilterCase::Smart)
 						.with_bool("insensitive", opt.case == FilterCase::Insensitive)
-						.with_bool("done", done),
-					Layer::Mgr
+						.with_bool("done", done)
 				));
 			}
 		});

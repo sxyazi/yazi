@@ -3,11 +3,11 @@ macro_rules! emit {
 	(Quit($opt:expr)) => {
 		yazi_shared::event::Event::Quit($opt).emit();
 	};
-	(Call($cmd:expr, $layer:expr)) => {
-		yazi_shared::event::Event::Call(yazi_shared::event::CmdCow::from($cmd), $layer).emit();
+	(Call($cmd:expr)) => {
+		yazi_shared::event::Event::Call(yazi_shared::event::CmdCow::from($cmd)).emit();
 	};
-	(Seq($cmds:expr, $layer:expr)) => {
-		yazi_shared::event::Event::Seq($cmds, $layer).emit();
+	(Seq($cmds:expr)) => {
+		yazi_shared::event::Event::Seq($cmds).emit();
 	};
 	($event:ident) => {
 		yazi_shared::event::Event::$event.emit();

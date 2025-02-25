@@ -1,5 +1,5 @@
 use yazi_macro::emit;
-use yazi_shared::{Id, Layer, event::Cmd, url::Url};
+use yazi_shared::{Id, event::Cmd, url::Url};
 
 use crate::options::OpenDoOpt;
 
@@ -8,55 +8,48 @@ pub struct MgrProxy;
 impl MgrProxy {
 	#[inline]
 	pub fn spot(skip: Option<usize>) {
-		emit!(Call(Cmd::new("spot").with_opt("skip", skip), Layer::Mgr));
+		emit!(Call(Cmd::new("mgr:spot").with_opt("skip", skip)));
 	}
 
 	#[inline]
 	pub fn peek(force: bool) {
-		emit!(Call(Cmd::new("peek").with_bool("force", force), Layer::Mgr));
+		emit!(Call(Cmd::new("mgr:peek").with_bool("force", force)));
 	}
 
 	#[inline]
 	pub fn hover(url: Option<Url>, tab: Id) {
-		emit!(Call(
-			Cmd::args("hover", &url.map_or_else(Vec::new, |u| vec![u])).with("tab", tab),
-			Layer::Mgr
-		));
+		emit!(Call(Cmd::args("mgr:hover", &url.map_or_else(Vec::new, |u| vec![u])).with("tab", tab)));
 	}
 
 	#[inline]
 	pub fn refresh() {
-		emit!(Call(Cmd::new("refresh"), Layer::Mgr));
+		emit!(Call(Cmd::new("mgr:refresh")));
 	}
 
 	#[inline]
 	pub fn open_do(opt: OpenDoOpt) {
-		emit!(Call(Cmd::new("open_do").with_any("option", opt), Layer::Mgr));
+		emit!(Call(Cmd::new("mgr:open_do").with_any("option", opt)));
 	}
 
 	#[inline]
 	pub fn remove_do(targets: Vec<Url>, permanently: bool) {
 		emit!(Call(
-			Cmd::new("remove_do").with_bool("permanently", permanently).with_any("targets", targets),
-			Layer::Mgr
+			Cmd::new("mgr:remove_do").with_bool("permanently", permanently).with_any("targets", targets)
 		));
 	}
 
 	#[inline]
 	pub fn update_tasks(url: &Url) {
-		emit!(Call(Cmd::new("update_tasks").with_any("urls", vec![url.clone()]), Layer::Mgr));
+		emit!(Call(Cmd::new("mgr:update_tasks").with_any("urls", vec![url.clone()])));
 	}
 
 	#[inline]
 	pub fn update_paged() {
-		emit!(Call(Cmd::new("update_paged"), Layer::Mgr));
+		emit!(Call(Cmd::new("mgr:update_paged")));
 	}
 
 	#[inline]
 	pub fn update_paged_by(page: usize, only_if: &Url) {
-		emit!(Call(
-			Cmd::args("update_paged", &[page]).with_any("only-if", only_if.clone()),
-			Layer::Mgr
-		));
+		emit!(Call(Cmd::args("mgr:update_paged", &[page]).with_any("only-if", only_if.clone())));
 	}
 }

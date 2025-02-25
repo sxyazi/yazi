@@ -1,5 +1,5 @@
 use yazi_macro::render;
-use yazi_proxy::CompletionProxy;
+use yazi_proxy::CmpProxy;
 use yazi_shared::{errors::InputError, event::CmdCow};
 
 use crate::input::Input;
@@ -19,7 +19,7 @@ impl Input {
 	#[yazi_codegen::command]
 	pub fn close(&mut self, opt: Opt) {
 		if self.completion {
-			CompletionProxy::close();
+			CmpProxy::close();
 		}
 
 		if let Some(cb) = self.callback.take() {

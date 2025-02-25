@@ -3,7 +3,7 @@ use std::{fmt::Display, io::Write, str::FromStr};
 use anyhow::{Result, anyhow};
 use yazi_boot::BOOT;
 use yazi_macro::emit;
-use yazi_shared::{Layer, event::Cmd};
+use yazi_shared::event::Cmd;
 
 use crate::{ID, body::Body};
 
@@ -47,7 +47,7 @@ impl<'a> Payload<'a> {
 impl Payload<'static> {
 	pub(super) fn emit(self) {
 		self.try_flush();
-		emit!(Call(Cmd::new("accept_payload").with_any("payload", self), Layer::App));
+		emit!(Call(Cmd::new("app:accept_payload").with_any("payload", self)));
 	}
 }
 

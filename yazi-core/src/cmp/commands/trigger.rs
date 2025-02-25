@@ -3,9 +3,9 @@ use std::{borrow::Cow, mem, path::{MAIN_SEPARATOR_STR, PathBuf}};
 use tokio::fs;
 use yazi_fs::{CWD, expand_path};
 use yazi_macro::{emit, render};
-use yazi_shared::{Layer, event::{Cmd, CmdCow, Data}};
+use yazi_shared::event::{Cmd, CmdCow, Data};
 
-use crate::completion::Completion;
+use crate::cmp::Cmp;
 
 struct Opt {
 	word:   Cow<'static, str>,
@@ -21,7 +21,7 @@ impl From<CmdCow> for Opt {
 	}
 }
 
-impl Completion {
+impl Cmp {
 	#[yazi_codegen::command]
 	pub fn trigger(&mut self, opt: Opt) {
 		if opt.ticket < self.ticket {
@@ -55,12 +55,11 @@ impl Completion {
 
 			if !cache.is_empty() {
 				emit!(Call(
-					Cmd::new("show")
+					Cmd::new("cmp:show")
 						.with_any("cache", cache)
 						.with_any("cache-name", parent)
 						.with("word", word)
-						.with("ticket", ticket),
-					Layer::Completion
+						.with("ticket", ticket)
 				));
 			}
 
@@ -95,7 +94,7 @@ mod tests {
 	use super::*;
 
 	fn compare(s: &str, parent: &str, child: &str) -> bool {
-		let (p, c) = Completion::split_path(s).unwrap();
+		let (p, c) = Cmp::split_path(s).unwrap();
 		let p = p.strip_prefix(yazi_fs::CWD.load().as_ref()).unwrap_or(&p);
 		p == Path::new(parent) && c == child
 	}

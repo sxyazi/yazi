@@ -6,7 +6,7 @@ use tokio_stream::wrappers::UnboundedReceiverStream;
 use yazi_config::{keymap::{Chord, Key}, popup::{ConfirmCfg, InputCfg}};
 use yazi_macro::emit;
 use yazi_proxy::{AppProxy, ConfirmProxy, InputProxy};
-use yazi_shared::{Debounce, Layer, event::Cmd};
+use yazi_shared::{Debounce, event::Cmd};
 
 use super::Utils;
 use crate::{bindings::InputRx, elements::{Line, Pos, Text}};
@@ -21,18 +21,16 @@ impl Utils {
 				let cand = cand?;
 				cands.push(Chord {
 					on:   Self::parse_keys(cand.raw_get("on")?)?,
-					run:  vec![Cmd::args("callback", &[i]).with_any("tx", tx.clone())],
+					run:  vec![Cmd::args("which:callback", &[i]).with_any("tx", tx.clone())],
 					desc: cand.raw_get("desc").ok(),
 				});
 			}
 
 			drop(tx);
 			emit!(Call(
-				Cmd::new("show")
-					.with("layer", Layer::Which)
+				Cmd::new("which:show")
 					.with_any("candidates", cands)
-					.with_bool("silent", t.raw_get("silent").unwrap_or_default()),
-				Layer::Which
+					.with_bool("silent", t.raw_get("silent").unwrap_or_default())
 			));
 
 			Ok(rx.recv().await.map(|idx| idx + 1))

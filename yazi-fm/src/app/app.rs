@@ -5,7 +5,7 @@ use crossterm::event::KeyEvent;
 use yazi_config::keymap::Key;
 use yazi_core::input::InputMode;
 use yazi_macro::emit;
-use yazi_shared::{Layer, event::{CmdCow, Event, NEED_RENDER}};
+use yazi_shared::event::{CmdCow, Event, NEED_RENDER};
 
 use crate::{Ctx, Executor, Router, Signals, Term, lives::Lives};
 
@@ -53,8 +53,8 @@ impl App {
 	#[inline]
 	fn dispatch(&mut self, event: Event) -> Result<()> {
 		match event {
-			Event::Call(cmd, layer) => self.dispatch_call(cmd, layer),
-			Event::Seq(cmds, layer) => self.dispatch_seq(cmds, layer),
+			Event::Call(cmd) => self.dispatch_call(cmd),
+			Event::Seq(cmds) => self.dispatch_seq(cmds),
 			Event::Render => self.dispatch_render(),
 			Event::Key(key) => self.dispatch_key(key),
 			Event::Mouse(mouse) => self.mouse(mouse),
@@ -66,17 +66,15 @@ impl App {
 	}
 
 	#[inline]
-	fn dispatch_call(&mut self, cmd: CmdCow, layer: Layer) {
-		Executor::new(self).execute(cmd, layer);
-	}
+	fn dispatch_call(&mut self, cmd: CmdCow) { Executor::new(self).execute(cmd); }
 
 	#[inline]
-	fn dispatch_seq(&mut self, mut cmds: Vec<CmdCow>, layer: Layer) {
+	fn dispatch_seq(&mut self, mut cmds: Vec<CmdCow>) {
 		if let Some(last) = cmds.pop() {
-			Executor::new(self).execute(last, layer);
+			Executor::new(self).execute(last);
 		}
 		if !cmds.is_empty() {
-			emit!(Seq(cmds, layer));
+			emit!(Seq(cmds));
 		}
 	}
 

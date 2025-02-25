@@ -3,7 +3,7 @@ use std::{borrow::Cow, mem, ops::ControlFlow, path::PathBuf};
 use yazi_macro::render;
 use yazi_shared::event::{Cmd, CmdCow, Data};
 
-use crate::completion::Completion;
+use crate::cmp::Cmp;
 
 const LIMIT: usize = 30;
 
@@ -29,7 +29,7 @@ impl From<Cmd> for Opt {
 	fn from(c: Cmd) -> Self { Self::from(CmdCow::from(c)) }
 }
 
-impl Completion {
+impl Cmp {
 	#[yazi_codegen::command]
 	pub fn show(&mut self, opt: Opt) {
 		if self.ticket != opt.ticket {

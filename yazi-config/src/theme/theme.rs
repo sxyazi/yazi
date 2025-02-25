@@ -9,20 +9,20 @@ use super::{Filetype, Flavor, Icons};
 
 #[derive(Deserialize, Serialize)]
 pub struct Theme {
-	pub flavor:     Flavor,
+	pub flavor:  Flavor,
 	#[serde(rename = "manager")]
-	pub mgr:        Mgr, // TODO: Remove `serde(rename)`
-	pub mode:       Mode,
-	pub status:     Status,
-	pub which:      Which,
-	pub confirm:    Confirm,
-	pub spot:       Spot,
-	pub notify:     Notify,
-	pub pick:       Pick,
-	pub input:      Input,
-	pub completion: Completion,
-	pub tasks:      Tasks,
-	pub help:       Help,
+	pub mgr:     Mgr, // TODO: Remove `serde(rename)`
+	pub mode:    Mode,
+	pub status:  Status,
+	pub which:   Which,
+	pub confirm: Confirm,
+	pub spot:    Spot,
+	pub notify:  Notify,
+	pub pick:    Pick,
+	pub input:   Input,
+	pub cmp:     Cmp,
+	pub tasks:   Tasks,
+	pub help:    Help,
 
 	// File-specific styles
 	#[serde(rename = "filetype", deserialize_with = "Filetype::deserialize", skip_serializing)]
@@ -178,7 +178,7 @@ pub struct Input {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct Completion {
+pub struct Cmp {
 	pub border:   Style,
 	pub active:   Style,
 	pub inactive: Style,
