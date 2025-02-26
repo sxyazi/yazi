@@ -13,7 +13,15 @@ impl Theme {
 				b"mgr" => lua.to_value_with(&THEME.mgr, OPTS)?,
 				b"mode" => lua.to_value_with(&THEME.mode, OPTS)?,
 				b"status" => lua.to_value_with(&THEME.status, OPTS)?,
+				b"which" => lua.to_value_with(&THEME.which, OPTS)?,
+				b"confirm" => lua.to_value_with(&THEME.confirm, OPTS)?,
 				b"spot" => lua.to_value_with(&THEME.spot, OPTS)?,
+				b"notify" => lua.to_value_with(&THEME.notify, OPTS)?,
+				b"pick" => lua.to_value_with(&THEME.pick, OPTS)?,
+				b"input" => lua.to_value_with(&THEME.input, OPTS)?,
+				b"cmp" => lua.to_value_with(&THEME.cmp, OPTS)?,
+				b"tasks" => lua.to_value_with(&THEME.tasks, OPTS)?,
+				b"help" => lua.to_value_with(&THEME.help, OPTS)?,
 				_ => return Ok(Value::Nil),
 			}
 			.into_lua(lua)
