@@ -24,22 +24,24 @@ function M:preload(job)
 		return true
 	end
 
-	local status, err = Command("magick")
-		:args({
-			"-density",
-			200,
-			tostring(job.file.url),
-			"-flatten",
-			"-resize",
-			string.format("%dx%d^", rt.preview.max_width, rt.preview.max_height),
-			"-quality",
-			rt.preview.image_quality,
-			"-auto-orient",
-			"JPG:" .. tostring(cache),
-		})
-		:env("MAGICK_THREAD_LIMIT", 1)
-		:status()
+	local cmd = Command("magick"):args {
+		"-density",
+		200,
+		tostring(job.file.url),
+		"-flatten",
+		"-resize",
+		string.format("%dx%d^", rt.preview.max_width, rt.preview.max_height),
+		"-quality",
+		rt.preview.image_quality,
+		"-auto-orient",
+		"JPG:" .. tostring(cache),
+	}
 
+	if rt.tasks.image_alloc > 0 then
+		cmd = cmd:env("MAGICK_MEMORY_LIMIT", rt.tasks.image_alloc)
+	end
+
+	local status, err = cmd:env("MAGICK_THREAD_LIMIT", 1):status()
 	if status then
 		return status.success
 	else

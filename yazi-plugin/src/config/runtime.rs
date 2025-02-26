@@ -1,6 +1,6 @@
 use mlua::{IntoLua, Lua, LuaSerdeExt, SerializeOptions, Value};
 use yazi_boot::ARGS;
-use yazi_config::{MGR, PREVIEW, THEME};
+use yazi_config::{MGR, PREVIEW, TASKS, THEME};
 
 use crate::{Composer, url::Url};
 
@@ -19,6 +19,7 @@ impl<'a> Runtime<'a> {
 				b"mgr" => Self::mgr(lua)?,
 				b"plugin" => super::Plugin::compose(lua)?,
 				b"preview" => Self::preview(lua)?,
+				b"tasks" => Self::tasks(lua)?,
 				_ => return Ok(Value::Nil),
 			}
 			.into_lua(lua)
@@ -56,6 +57,16 @@ impl<'a> Runtime<'a> {
 
 				b"image_delay" => lua.to_value_with(&PREVIEW.image_delay, OPTS)?,
 				b"image_quality" => lua.to_value_with(&PREVIEW.image_quality, OPTS)?,
+				_ => return Ok(Value::Nil),
+			}
+			.into_lua(lua)
+		})
+	}
+
+	fn tasks(lua: &Lua) -> mlua::Result<Value> {
+		Composer::make(lua, 5, |lua, key| {
+			match key {
+				b"image_alloc" => lua.to_value_with(&TASKS.image_alloc, OPTS)?,
 				_ => return Ok(Value::Nil),
 			}
 			.into_lua(lua)
