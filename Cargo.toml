@@ -18,7 +18,7 @@ ansi-to-tui         = "7.0.0"
 anyhow              = "1.0.96"
 base64              = "0.22.1"
 bitflags            = "2.8.0"
-clap                = { version = "4.5.30", features = [ "derive" ] }
+clap                = { version = "4.5.31", features = [ "derive" ] }
 core-foundation-sys = "0.8.7"
 crossterm           = { version = "0.28.1", features = [ "event-stream" ] }
 dirs                = "6.0.0"

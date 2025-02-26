@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-dds"
-version     = "25.2.11"
+version     = "25.2.26"
 edition     = "2021"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -13,10 +13,10 @@ default      = [ "vendored-lua" ]
 vendored-lua = [ "mlua/vendored" ]
 
 [dependencies]
-yazi-boot   = { path = "../yazi-boot", version = "25.2.11" }
-yazi-fs     = { path = "../yazi-fs", version = "25.2.11" }
-yazi-macro  = { path = "../yazi-macro", version = "25.2.11" }
-yazi-shared = { path = "../yazi-shared", version = "25.2.11" }
+yazi-boot   = { path = "../yazi-boot", version = "25.2.26" }
+yazi-fs     = { path = "../yazi-fs", version = "25.2.26" }
+yazi-macro  = { path = "../yazi-macro", version = "25.2.26" }
+yazi-shared = { path = "../yazi-shared", version = "25.2.26" }
 
 # External dependencies
 anyhow       = { workspace = true }
