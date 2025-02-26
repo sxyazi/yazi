@@ -37,6 +37,7 @@ function M:preload(job)
 			"-auto-orient",
 			"JPG:" .. tostring(cache),
 		})
+		:env("MAGICK_MEMORY_LIMIT", rt.tasks.image_alloc)
 		:env("MAGICK_THREAD_LIMIT", 1)
 		:status()
 
