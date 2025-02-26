@@ -64,7 +64,7 @@ impl<'a> Runtime<'a> {
 	}
 
 	fn tasks(lua: &Lua) -> mlua::Result<Value> {
-		Composer::make(lua, 10, |lua, key| {
+		Composer::make(lua, 5, |lua, key| {
 			match key {
 				b"image_alloc" => lua.to_value_with(&TASKS.image_alloc, OPTS)?,
 				_ => return Ok(Value::Nil),
