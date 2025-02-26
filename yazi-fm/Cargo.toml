@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-fm"
-version     = "25.2.11"
+version     = "25.2.26"
 edition     = "2021"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -13,17 +13,17 @@ default      = [ "vendored-lua" ]
 vendored-lua = [ "mlua/vendored" ]
 
 [dependencies]
-yazi-adapter = { path = "../yazi-adapter", version = "25.2.11" }
-yazi-boot    = { path = "../yazi-boot", version = "25.2.11" }
-yazi-codegen = { path = "../yazi-codegen", version = "25.2.11" }
-yazi-config  = { path = "../yazi-config", version = "25.2.11" }
-yazi-core    = { path = "../yazi-core", version = "25.2.11" }
-yazi-dds     = { path = "../yazi-dds", version = "25.2.11" }
-yazi-fs      = { path = "../yazi-fs", version = "25.2.11" }
-yazi-macro   = { path = "../yazi-macro", version = "25.2.11" }
-yazi-plugin  = { path = "../yazi-plugin", version = "25.2.11" }
-yazi-proxy   = { path = "../yazi-proxy", version = "25.2.11" }
-yazi-shared  = { path = "../yazi-shared", version = "25.2.11" }
+yazi-adapter = { path = "../yazi-adapter", version = "25.2.26" }
+yazi-boot    = { path = "../yazi-boot", version = "25.2.26" }
+yazi-codegen = { path = "../yazi-codegen", version = "25.2.26" }
+yazi-config  = { path = "../yazi-config", version = "25.2.26" }
+yazi-core    = { path = "../yazi-core", version = "25.2.26" }
+yazi-dds     = { path = "../yazi-dds", version = "25.2.26" }
+yazi-fs      = { path = "../yazi-fs", version = "25.2.26" }
+yazi-macro   = { path = "../yazi-macro", version = "25.2.26" }
+yazi-plugin  = { path = "../yazi-plugin", version = "25.2.26" }
+yazi-proxy   = { path = "../yazi-proxy", version = "25.2.26" }
+yazi-shared  = { path = "../yazi-shared", version = "25.2.26" }
 
 # External dependencies
 anyhow       = { workspace = true }

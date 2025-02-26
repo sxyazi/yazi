@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-adapter"
-version     = "25.2.11"
+version     = "25.2.26"
 edition     = "2021"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -9,9 +9,9 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
-yazi-config = { path = "../yazi-config", version = "25.2.11" }
-yazi-macro  = { path = "../yazi-macro", version = "25.2.11" }
-yazi-shared = { path = "../yazi-shared", version = "25.2.11" }
+yazi-config = { path = "../yazi-config", version = "25.2.26" }
+yazi-macro  = { path = "../yazi-macro", version = "25.2.26" }
+yazi-shared = { path = "../yazi-shared", version = "25.2.26" }
 
 # External dependencies
 ansi-to-tui = { workspace = true }
@@ -19,7 +19,6 @@ anyhow      = { workspace = true }
 base64      = { workspace = true }
 color_quant = "1.1.0"
 crossterm   = { workspace = true }
-futures     = { workspace = true }
 image       = { version = "0.25.5", default-features = false, features = [ "avif", "bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "tga", "webp" ] }
 ratatui     = { workspace = true }
 scopeguard  = { workspace = true }
@@ -27,7 +26,7 @@ tokio       = { workspace = true }
 tracing     = { workspace = true }
 
 [target."cfg(unix)".dependencies]
-libc  = { workspace = true }
+libc = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59.0", features = [ "Win32_UI_Shell" ] }
