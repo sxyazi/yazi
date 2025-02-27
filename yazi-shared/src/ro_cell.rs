@@ -33,9 +33,9 @@ impl<T> RoCell<T> {
 	#[inline]
 	pub fn init(&self, value: T) {
 		unsafe {
-			debug_assert!(!*self.initialized.get());
+			#[cfg(debug_assertions)]
+			assert!(!self.initialized.get().replace(true));
 			*self.inner.get() = MaybeUninit::new(value);
-			*self.initialized.get() = true;
 		}
 	}
 
@@ -50,8 +50,8 @@ impl<T> RoCell<T> {
 	#[inline]
 	pub fn drop(&self) -> T {
 		unsafe {
-			debug_assert!(*self.initialized.get());
-			*self.initialized.get() = false;
+			#[cfg(debug_assertions)]
+			assert!(self.initialized.get().replace(false));
 			self.inner.get().replace(MaybeUninit::uninit()).assume_init()
 		}
 	}
@@ -66,7 +66,8 @@ impl<T> Deref for RoCell<T> {
 
 	fn deref(&self) -> &Self::Target {
 		unsafe {
-			debug_assert!(*self.initialized.get());
+			#[cfg(debug_assertions)]
+			assert!(*self.initialized.get());
 			(*self.inner.get()).assume_init_ref()
 		}
 	}
