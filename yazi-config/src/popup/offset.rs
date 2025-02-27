@@ -1,7 +1,7 @@
 use anyhow::bail;
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 
-#[derive(Clone, Copy, Debug, Default, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
 #[serde(try_from = "Vec<i16>")]
 pub struct Offset {
 	pub x:      i16,
