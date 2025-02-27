@@ -1,7 +1,7 @@
 const LABEL_NAME = "needs info"
 const RE_VERSION = /Yazi\s+Version\s*:\s\d+\.\d+\.\d+\s\(/gm
 const RE_DEPENDENCIES = /Dependencies\s+[/a-z]+\s*:\s/gm
-const RE_CHECKLIST = /#{3}\s+Checklist\s+(?:^-\s+\[x]\s+.+?\n){2}/gm
+const RE_CHECKLIST = /#{3}\s+Checklist\s+(?:^-\s+\[x]\s+.+?(?:\n|\r\n|$)){2}/gm
 
 function bugReportBody(creator, content, hash) {
 	if (content.includes(` (${hash} `) && RE_CHECKLIST.test(content)) {
