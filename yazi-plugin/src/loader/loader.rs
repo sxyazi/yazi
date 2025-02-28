@@ -20,7 +20,9 @@ impl Deref for Loader {
 	type Target = RwLock<HashMap<String, Chunk>>;
 
 	#[inline]
-	fn deref(&self) -> &Self::Target { &self.cache }
+	fn deref(&self) -> &Self::Target {
+		&self.cache
+	}
 }
 
 impl Default for Loader {
@@ -61,21 +63,28 @@ impl Loader {
 			Ok(b) => b,
 			Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
 				static WARNED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-				if !WARNED.swap(true, std::sync::atomic::Ordering::Relaxed) {
-					yazi_proxy::AppProxy::notify(yazi_proxy::options::NotifyOpt {
-						title:   "Deprecated entry file".to_owned(),
-						content: format!(
-							"The plugin's entry file `init.lua` has been deprecated in favor of the new `main.lua` (user's own `init.lua` remains unchanged).
-
-Please run `ya pack -m` to automatically migrate all plugins, or manually rename your `{name}.yazi/init.lua` to `{name}.yazi/main.lua`."
-						),
-						level:   yazi_proxy::options::NotifyLevel::Warn,
-						timeout: std::time::Duration::from_secs(25),
-					});
-				}
 
 				let p = BOOT.plugin_dir.join(format!("{name}.yazi/init.lua"));
-				fs::read(&p).await.with_context(|| format!("Failed to load plugin from {p:?}"))?
+
+				match fs::read(&p).await {
+					Err(e) => Err(e).with_context(|| format!("Failed to load plugin from {p:?}"))?,
+
+					Ok(b) => {
+						if !WARNED.swap(true, std::sync::atomic::Ordering::Relaxed) {
+							yazi_proxy::AppProxy::notify(yazi_proxy::options::NotifyOpt {
+								title:   "Deprecated entry file".to_owned(),
+								content: format!(
+									"The plugin's entry file `init.lua` has been deprecated in favor of the new `main.lua` (user's own `init.lua` remains unchanged).
+
+Please run `ya pack -m` to automatically migrate all plugins, or manually rename your `{name}.yazi/init.lua` to `{name}.yazi/main.lua`."
+								),
+								level:   yazi_proxy::options::NotifyLevel::Warn,
+								timeout: std::time::Duration::from_secs(25),
+							});
+						}
+						b
+					}
+				}
 			}
 			Err(e) => Err(e).with_context(|| format!("Failed to load plugin from {p:?}"))?,
 		};
