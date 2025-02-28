@@ -29,7 +29,7 @@ tracing     = { workspace = true }
 libc = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.59.0", features = [ "Win32_UI_Shell" ] }
+windows-sys = { version = "0.59.0", features = [ "Win32_Storage_FileSystem", "Win32_System_Threading" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }
