@@ -4,7 +4,7 @@ const RE_DEPENDENCIES = /Dependencies\s+[/a-z]+\s*:\s/gm
 const RE_CHECKLIST = /#{3}\s+Checklist\s+(?:^-\s+\[x]\s+.+?(?:\n|\r\n|$)){2}/gm
 
 function bugReportBody(creator, content, hash) {
-	if (content.includes(` (${hash} `) && RE_CHECKLIST.test(content)) {
+	if (RE_CHECKLIST.test(content) && new RegExp(` \\(${hash}[a-z]? `).test(content)) {
 		return null
 	}
 
