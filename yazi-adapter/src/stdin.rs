@@ -1,8 +1,25 @@
-use std::{io::{Error, ErrorKind}, time::{Duration, Instant}};
+use std::{io::{Error, ErrorKind}, ops::Deref, time::{Duration, Instant}};
 
 pub struct AsyncStdin {
+	fd:  Fd,
 	#[cfg(unix)]
 	fds: libc::fd_set,
+}
+
+impl Default for AsyncStdin {
+	fn default() -> Self {
+		let fd = Fd::new().expect("failed to open stdin");
+		#[cfg(unix)]
+		{
+			let mut me = Self { fd, fds: unsafe { std::mem::MaybeUninit::zeroed().assume_init() } };
+			me.reset();
+			me
+		}
+		#[cfg(windows)]
+		{
+			Self { fd }
+		}
+	}
 }
 
 impl AsyncStdin {
@@ -21,7 +38,7 @@ impl AsyncStdin {
 					continue;
 				}
 
-				let b = Self::read_u8()?;
+				let b = self.read_u8()?;
 				buf.push(b);
 
 				if predicate(b, &buf) {
@@ -36,15 +53,7 @@ impl AsyncStdin {
 	}
 }
 
-#[cfg(unix)]
-impl Default for AsyncStdin {
-	fn default() -> Self {
-		let mut me = Self { fds: unsafe { std::mem::MaybeUninit::zeroed().assume_init() } };
-		me.reset();
-		me
-	}
-}
-
+// --- Unix
 #[cfg(unix)]
 impl AsyncStdin {
 	pub fn poll(&mut self, timeout: Duration) -> std::io::Result<bool> {
@@ -54,13 +63,7 @@ impl AsyncStdin {
 		};
 
 		let result = unsafe {
-			libc::select(
-				libc::STDIN_FILENO + 1,
-				&mut self.fds,
-				std::ptr::null_mut(),
-				std::ptr::null_mut(),
-				&mut tv,
-			)
+			libc::select(*self.fd + 1, &mut self.fds, std::ptr::null_mut(), std::ptr::null_mut(), &mut tv)
 		};
 
 		match result {
@@ -73,9 +76,9 @@ impl AsyncStdin {
 		}
 	}
 
-	pub fn read_u8() -> std::io::Result<u8> {
+	pub fn read_u8(&mut self) -> std::io::Result<u8> {
 		let mut b = 0;
-		match unsafe { libc::read(libc::STDIN_FILENO, &mut b as *mut _ as *mut _, 1) } {
+		match unsafe { libc::read(*self.fd, &mut b as *mut _ as *mut _, 1) } {
 			-1 => Err(Error::last_os_error()),
 			0 => Err(Error::new(ErrorKind::UnexpectedEof, "unexpected EOF")),
 			_ => Ok(b),
@@ -85,42 +88,31 @@ impl AsyncStdin {
 	fn reset(&mut self) {
 		unsafe {
 			libc::FD_ZERO(&mut self.fds);
-			libc::FD_SET(libc::STDIN_FILENO, &mut self.fds);
+			libc::FD_SET(*self.fd, &mut self.fds);
 		}
 	}
 }
 
-#[cfg(windows)]
-impl Default for AsyncStdin {
-	fn default() -> Self { Self {} }
-}
-
+// --- Windows
 #[cfg(windows)]
 impl AsyncStdin {
 	pub fn poll(&mut self, timeout: Duration) -> std::io::Result<bool> {
-		use std::os::windows::io::AsRawHandle;
-
 		use windows_sys::Win32::{Foundation::{WAIT_FAILED, WAIT_OBJECT_0}, System::Threading::WaitForSingleObject};
 
-		let handle = std::io::stdin().as_raw_handle();
 		let millis = timeout.as_millis();
-		match unsafe { WaitForSingleObject(handle, millis as u32) } {
+		match unsafe { WaitForSingleObject(*self.fd, millis as u32) } {
 			WAIT_FAILED => Err(Error::last_os_error()),
 			WAIT_OBJECT_0 => Ok(true),
 			_ => Ok(false),
 		}
 	}
 
-	pub fn read_u8() -> std::io::Result<u8> {
-		use std::os::windows::io::AsRawHandle;
-
+	pub fn read_u8(&mut self) -> std::io::Result<u8> {
 		use windows_sys::Win32::Storage::FileSystem::ReadFile;
 
 		let mut buf = 0;
 		let mut bytes = 0;
-		let success = unsafe {
-			ReadFile(std::io::stdin().as_raw_handle(), &mut buf, 1, &mut bytes, std::ptr::null_mut())
-		};
+		let success = unsafe { ReadFile(*self.fd, &mut buf, 1, &mut bytes, std::ptr::null_mut()) };
 
 		if success == 0 {
 			return Err(Error::last_os_error());
@@ -128,5 +120,76 @@ impl AsyncStdin {
 			return Err(Error::new(ErrorKind::UnexpectedEof, "unexpected EOF"));
 		}
 		Ok(buf)
+	}
+}
+
+// --- Fd
+struct Fd {
+	#[cfg(unix)]
+	inner: std::os::fd::RawFd,
+	#[cfg(windows)]
+	inner: std::os::windows::io::RawHandle,
+	close: bool,
+}
+
+impl Deref for Fd {
+	#[cfg(unix)]
+	type Target = std::os::fd::RawFd;
+	#[cfg(windows)]
+	type Target = std::os::windows::io::RawHandle;
+
+	fn deref(&self) -> &Self::Target { &self.inner }
+}
+
+impl Drop for Fd {
+	fn drop(&mut self) {
+		#[cfg(unix)]
+		if self.close {
+			unsafe { libc::close(self.inner) };
+		}
+		#[cfg(windows)]
+		if self.close {
+			unsafe { windows_sys::Win32::Foundation::CloseHandle(self.inner) };
+		}
+	}
+}
+
+impl Fd {
+	#[cfg(unix)]
+	fn new() -> std::io::Result<Self> {
+		use std::{fs::OpenOptions, os::fd::IntoRawFd};
+
+		Ok(if unsafe { libc::isatty(libc::STDIN_FILENO) } == 1 {
+			Self { inner: libc::STDIN_FILENO, close: false }
+		} else {
+			Self {
+				inner: OpenOptions::new().read(true).write(true).open("/dev/tty")?.into_raw_fd(),
+				close: true,
+			}
+		})
+	}
+
+	#[cfg(windows)]
+	fn new() -> std::io::Result<Self> {
+		use windows_sys::Win32::{Foundation::{GENERIC_READ, GENERIC_WRITE, INVALID_HANDLE_VALUE}, Storage::FileSystem::{CreateFileW, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING}};
+
+		let name: Vec<u16> = "CONIN$\0".encode_utf16().collect();
+		let result = unsafe {
+			CreateFileW(
+				name.as_ptr(),
+				GENERIC_READ | GENERIC_WRITE,
+				FILE_SHARE_READ | FILE_SHARE_WRITE,
+				std::ptr::null_mut(),
+				OPEN_EXISTING,
+				0,
+				std::ptr::null_mut(),
+			)
+		};
+
+		if result == INVALID_HANDLE_VALUE {
+			Err(std::io::Error::last_os_error())
+		} else {
+			Ok(Self { inner: result, close: true })
+		}
 	}
 }
