@@ -1,8 +1,8 @@
 use std::{fmt::Display, str::FromStr};
 
-use serde::{Serialize, Deserialize};
+use serde::Deserialize;
 
-#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum Origin {
 	#[default]
