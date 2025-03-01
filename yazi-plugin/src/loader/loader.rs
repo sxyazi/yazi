@@ -20,9 +20,7 @@ impl Deref for Loader {
 	type Target = RwLock<HashMap<String, Chunk>>;
 
 	#[inline]
-	fn deref(&self) -> &Self::Target {
-		&self.cache
-	}
+	fn deref(&self) -> &Self::Target { &self.cache }
 }
 
 impl Default for Loader {
