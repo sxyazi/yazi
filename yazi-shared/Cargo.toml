@@ -1,6 +1,6 @@
 [package]
 name         = "yazi-shared"
-version      = "25.2.26"
+version      = "25.3.2"
 edition      = "2021"
 license      = "MIT"
 authors      = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -10,7 +10,7 @@ repository   = "https://github.com/sxyazi/yazi"
 rust-version = "1.83.0"
 
 [dependencies]
-yazi-macro = { path = "../yazi-macro", version = "25.2.26" }
+yazi-macro = { path = "../yazi-macro", version = "25.3.2" }
 
 # External dependencies
 anyhow           = { workspace = true }

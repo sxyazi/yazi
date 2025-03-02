@@ -243,9 +243,9 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bitflags"
-version = "2.8.0"
+version = "2.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f68f53c83ab957f72c32642f3868eec03eb974d1fb82e453128456482613d36"
+checksum = "5c8214115b7bf84099f1309324e63141d4c5d7cc26862f97a0a857dbefe165bd"
 
 [[package]]
 name = "bitstream-io"
@@ -334,9 +334,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.15"
+version = "1.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c736e259eea577f443d5c86c304f9f4ae0295c43f3ba05c21f1d66b5f06001af"
+checksum = "be714c154be609ec7f5dad223a33bf1482fff90472de28f7362806e6d4832b8c"
 dependencies = [
  "jobserver",
  "libc",
@@ -486,9 +486,9 @@ dependencies = [
 
 [[package]]
 name = "console"
-version = "0.15.10"
+version = "0.15.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea3c6ecd8059b57859df5c69830340ed3c41d30e3da0c1cbed90a96ac853041b"
+checksum = "054ccb5b10f9f2cbf51eb355ca1d05c2d279ce1804688d0db74b4733a5aeafd8"
 dependencies = [
  "encode_unicode",
  "libc",
@@ -551,7 +551,7 @@ version = "0.28.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "829d955a0bb380ef178a640b91779e3987da38c9aea133b20614cfed8cdea9c6"
 dependencies = [
- "bitflags 2.8.0",
+ "bitflags 2.9.0",
  "crossterm_winapi",
  "filedescriptor",
  "futures-core",
@@ -992,9 +992,9 @@ checksum = "07e28edb80900c19c28f1072f2e8aeca7fa06b23cd4169cefe1af5aa3260783f"
 
 [[package]]
 name = "globset"
-version = "0.4.15"
+version = "0.4.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15f1ce686646e7f1e19bf7d5533fe443a45dbfb990e00629110797578b42fb19"
+checksum = "54a1028dfc5f5df5da8a56a73e6c153c9a9708ec57232470703592a3f18e49f5"
 dependencies = [
  "aho-corasick",
  "bstr",
@@ -1258,7 +1258,7 @@ version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f37dccff2791ab604f9babef0ba14fbe0be30bd368dc541e2b08d07c8aa908f3"
 dependencies = [
- "bitflags 2.8.0",
+ "bitflags 2.9.0",
  "inotify-sys",
  "libc",
 ]
@@ -1399,7 +1399,7 @@ version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c0ff37bd590ca25063e35af745c343cb7a0271906fb7b37e4813e8f79f00268d"
 dependencies = [
- "bitflags 2.8.0",
+ "bitflags 2.9.0",
  "libc",
  "redox_syscall",
 ]
@@ -1625,7 +1625,7 @@ version = "8.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2fee8403b3d66ac7b26aee6e40a897d85dc5ce26f44da36b8b73e987cc52e943"
 dependencies = [
- "bitflags 2.8.0",
+ "bitflags 2.9.0",
  "filetime",
  "fsevent-sys",
  "inotify",
@@ -1756,7 +1756,7 @@ version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ee638a5da3799329310ad4cfa62fbf045d5f56e3ef5ba4149e7452dcf89d5a8"
 dependencies = [
- "bitflags 2.8.0",
+ "bitflags 2.9.0",
  "block2",
  "libc",
  "objc2",
@@ -2039,7 +2039,7 @@ version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eabd94c2f37801c20583fc49dd5cd6b0ba68c716787c2dd6ed18571e1e63117b"
 dependencies = [
- "bitflags 2.8.0",
+ "bitflags 2.9.0",
  "cassowary",
  "compact_str",
  "crossterm",
@@ -2119,7 +2119,7 @@ version = "0.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "82b568323e98e49e2a0899dcee453dd679fae22d69adf9b11dd508d1549b7e2f"
 dependencies = [
- "bitflags 2.8.0",
+ "bitflags 2.9.0",
 ]
 
 [[package]]
@@ -2210,7 +2210,7 @@ version = "0.38.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fdb5bc1ae2baa591800df16c9ca78619bf65c0488b41b96ccec5d11220d8c154"
 dependencies = [
- "bitflags 2.8.0",
+ "bitflags 2.9.0",
  "errno",
  "libc",
  "linux-raw-sys",
@@ -3321,7 +3321,7 @@ checksum = "1e9df38ee2d2c3c5948ea468a8406ff0db0b29ae1ffde1bcf20ef305bcc95c51"
 
 [[package]]
 name = "yazi-adapter"
-version = "25.2.26"
+version = "25.3.2"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -3342,7 +3342,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-boot"
-version = "25.2.26"
+version = "25.3.2"
 dependencies = [
  "clap",
  "clap_complete",
@@ -3360,7 +3360,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-cli"
-version = "25.2.26"
+version = "25.3.2"
 dependencies = [
  "anyhow",
  "clap",
@@ -3383,7 +3383,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-codegen"
-version = "25.2.26"
+version = "25.3.2"
 dependencies = [
  "quote",
  "syn",
@@ -3391,10 +3391,10 @@ dependencies = [
 
 [[package]]
 name = "yazi-config"
-version = "25.2.26"
+version = "25.3.2"
 dependencies = [
  "anyhow",
- "bitflags 2.8.0",
+ "bitflags 2.9.0",
  "crossterm",
  "globset",
  "indexmap",
@@ -3411,10 +3411,10 @@ dependencies = [
 
 [[package]]
 name = "yazi-core"
-version = "25.2.26"
+version = "25.3.2"
 dependencies = [
  "anyhow",
- "bitflags 2.8.0",
+ "bitflags 2.9.0",
  "crossterm",
  "dirs",
  "futures",
@@ -3445,7 +3445,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-dds"
-version = "25.2.26"
+version = "25.3.2"
 dependencies = [
  "anyhow",
  "mlua",
@@ -3466,7 +3466,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-ffi"
-version = "25.2.26"
+version = "25.3.2"
 dependencies = [
  "anyhow",
  "core-foundation-sys",
@@ -3477,7 +3477,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fm"
-version = "25.2.26"
+version = "25.3.2"
 dependencies = [
  "anyhow",
  "better-panic",
@@ -3513,11 +3513,11 @@ dependencies = [
 
 [[package]]
 name = "yazi-fs"
-version = "25.2.26"
+version = "25.3.2"
 dependencies = [
  "anyhow",
  "arc-swap",
- "bitflags 2.8.0",
+ "bitflags 2.9.0",
  "core-foundation-sys",
  "dirs",
  "foldhash",
@@ -3539,11 +3539,11 @@ dependencies = [
 
 [[package]]
 name = "yazi-macro"
-version = "25.2.26"
+version = "25.3.2"
 
 [[package]]
 name = "yazi-plugin"
-version = "25.2.26"
+version = "25.3.2"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -3584,7 +3584,7 @@ checksum = "f4b6c8e12e39ac0f79fa96f36e5b88e0da8d230691abd729eec709b43c74f632"
 
 [[package]]
 name = "yazi-proxy"
-version = "25.2.26"
+version = "25.3.2"
 dependencies = [
  "anyhow",
  "mlua",
@@ -3597,7 +3597,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-scheduler"
-version = "25.2.26"
+version = "25.3.2"
 dependencies = [
  "anyhow",
  "async-priority-channel",
@@ -3620,7 +3620,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-shared"
-version = "25.2.26"
+version = "25.3.2"
 dependencies = [
  "anyhow",
  "crossterm",
