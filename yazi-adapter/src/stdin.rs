@@ -1,25 +1,11 @@
 use std::{io::{Error, ErrorKind}, ops::Deref, time::{Duration, Instant}};
 
 pub struct AsyncStdin {
-	fd:  Fd,
-	#[cfg(unix)]
-	fds: libc::fd_set,
+	fd: Fd,
 }
 
 impl Default for AsyncStdin {
-	fn default() -> Self {
-		let fd = Fd::new().expect("failed to open stdin");
-		#[cfg(unix)]
-		{
-			let mut me = Self { fd, fds: unsafe { std::mem::MaybeUninit::zeroed().assume_init() } };
-			me.reset();
-			me
-		}
-		#[cfg(windows)]
-		{
-			Self { fd }
-		}
-	}
+	fn default() -> Self { Self { fd: Fd::new().expect("failed to open stdin") } }
 }
 
 impl AsyncStdin {
@@ -63,16 +49,16 @@ impl AsyncStdin {
 		};
 
 		let result = unsafe {
-			libc::select(*self.fd + 1, &mut self.fds, std::ptr::null_mut(), std::ptr::null_mut(), &mut tv)
+			let mut set: libc::fd_set = std::mem::zeroed();
+			libc::FD_ZERO(&mut set);
+			libc::FD_SET(*self.fd, &mut set);
+			libc::select(*self.fd + 1, &mut set, std::ptr::null_mut(), std::ptr::null_mut(), &mut tv)
 		};
 
 		match result {
 			-1 => Err(Error::last_os_error()),
 			0 => Ok(false),
-			_ => {
-				self.reset();
-				Ok(true)
-			}
+			_ => Ok(true),
 		}
 	}
 
@@ -82,13 +68,6 @@ impl AsyncStdin {
 			-1 => Err(Error::last_os_error()),
 			0 => Err(Error::new(ErrorKind::UnexpectedEof, "unexpected EOF")),
 			_ => Ok(b),
-		}
-	}
-
-	fn reset(&mut self) {
-		unsafe {
-			libc::FD_ZERO(&mut self.fds);
-			libc::FD_SET(*self.fd, &mut self.fds);
 		}
 	}
 }

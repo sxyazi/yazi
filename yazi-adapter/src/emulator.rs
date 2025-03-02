@@ -107,7 +107,7 @@ impl Emulator {
 
 	pub fn read_until_da1() -> String {
 		let h = tokio::spawn(Self::error_to_user());
-		let (buf, result) = AsyncStdin::default().read_until(Duration::from_millis(300), |b, buf| {
+		let (buf, result) = AsyncStdin::default().read_until(Duration::from_millis(500), |b, buf| {
 			b == b'c'
 				&& buf.contains(&0x1b)
 				&& buf.rsplitn(2, |&b| b == 0x1b).next().is_some_and(|s| s.starts_with(b"[?"))
@@ -137,7 +137,7 @@ impl Emulator {
 	async fn error_to_user() {
 		use crossterm::style::{Attribute, Color, Print, ResetColor, SetAttributes, SetForegroundColor};
 
-		sleep(Duration::from_millis(200)).await;
+		sleep(Duration::from_millis(400)).await;
 		_ = crossterm::execute!(
 			std::io::stderr(),
 			SetForegroundColor(Color::Red),
