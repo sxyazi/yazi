@@ -42,8 +42,8 @@ pub fn escape_os_str(s: &OsStr) -> Cow<OsStr> {
 }
 
 #[inline]
-pub fn split_unix(s: &str) -> anyhow::Result<Vec<String>> {
-	unix::split(s).map_err(|()| anyhow::anyhow!("missing closing quote"))
+pub fn split_unix(s: &str, eoo: bool) -> anyhow::Result<(Vec<String>, Option<String>)> {
+	unix::split(s, eoo).map_err(|()| anyhow::anyhow!("missing closing quote"))
 }
 
 #[cfg(windows)]
@@ -52,7 +52,7 @@ pub fn split_windows(s: &str) -> anyhow::Result<Vec<String>> { Ok(windows::split
 pub fn split_native(s: &str) -> anyhow::Result<Vec<String>> {
 	#[cfg(unix)]
 	{
-		split_unix(s)
+		Ok(split_unix(s, false)?.0)
 	}
 	#[cfg(windows)]
 	{

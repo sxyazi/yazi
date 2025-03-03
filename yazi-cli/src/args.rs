@@ -133,7 +133,10 @@ macro_rules! impl_emit_body {
 		impl $name {
 			#[allow(dead_code)]
 			pub(super) fn body(self) -> Result<String> {
-				Ok(serde_json::to_string(&(self.name, Cmd::parse_args(self.args.into_iter(), false)?))?)
+				Ok(serde_json::to_string(&(
+					self.name,
+					Cmd::parse_args(self.args.into_iter(), None, false)?,
+				))?)
 			}
 		}
 	};

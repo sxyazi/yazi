@@ -12,7 +12,7 @@ function bugReportBody(creator, content, hash) {
 
 - The bug can still be reproduced on the [newest nightly build](https://yazi-rs.github.io/docs/installation/#binaries).
 - The debug information (\`yazi --debug\`) is updated for the newest nightly.
-- The *required* fields in the checklist are checked.
+- The non-optional items in the checklist are checked.
 
 Issues with \`${LABEL_NAME}\` will be marked ready once edited with the proper content, or closed after 2 days of inactivity.
 `
@@ -27,7 +27,7 @@ function featureRequestBody(creator, content) {
 
 - The requested feature does not exist in the [newest nightly build](https://yazi-rs.github.io/docs/installation/#binaries).
 - The debug information (\`yazi --debug\`) is updated for the newest nightly.
-- The *required* fields in the checklist are checked.
+- The non-optional items in the checklist are checked.
 
 Issues with \`${LABEL_NAME}\` will be marked ready once edited with the proper content, or closed after 2 days of inactivity.
 `
