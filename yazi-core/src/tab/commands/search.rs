@@ -37,7 +37,7 @@ impl Tab {
 	}
 
 	pub fn search_do(&mut self, opt: impl TryInto<SearchOpt>) {
-		let Ok(opt) = opt.try_into() else {
+		let Ok(opt): Result<SearchOpt, _> = opt.try_into() else {
 			return error!("Failed to parse search option for `search_do`");
 		};
 

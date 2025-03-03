@@ -27,16 +27,8 @@ impl TryFrom<CmdCow> for PluginOpt {
 		};
 
 		let args = if let Some(s) = c.second_str() {
-			Cmd::parse_args(yazi_shared::shell::split_unix(s)?.into_iter(), true)?
-		} else if let Some(s) = c.str("args") {
-			crate::deprecate!(
-				format!("The `args` parameter of the `plugin` command has been deprecated. Please use the second positional argument of `plugin` instead.
-
-For example, replace `plugin test --args=foobar` with `plugin test foobar`, for your `plugin {}` command.
-
-See #2299 for more information: https://github.com/sxyazi/yazi/pull/2299", id)
-			);
-			Cmd::parse_args(yazi_shared::shell::split_unix(s)?.into_iter(), true)?
+			let (words, last) = yazi_shared::shell::split_unix(s, true)?;
+			Cmd::parse_args(words.into_iter(), last, true)?
 		} else {
 			Default::default()
 		};

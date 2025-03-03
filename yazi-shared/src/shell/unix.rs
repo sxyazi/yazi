@@ -46,7 +46,7 @@ fn allowed(b: u8) -> bool {
 	matches!(b, b'a'..=b'z' | b'A'..=b'Z' | b'0'..=b'9' | b'-' | b'_' | b'=' | b'/' | b',' | b'.' | b'+')
 }
 
-pub fn split(s: &str) -> Result<Vec<String>, ()> {
+pub fn split(s: &str, eoo: bool) -> Result<(Vec<String>, Option<String>), ()> {
 	enum State {
 		/// Within a delimiter.
 		Delimiter,
@@ -74,9 +74,8 @@ pub fn split(s: &str) -> Result<Vec<String>, ()> {
 
 	macro_rules! flush {
 		() => {
-			if word == "--" {
-				words.push(chars.collect());
-				break;
+			if word == "--" && eoo {
+				return Ok((words, Some(chars.collect())));
 			}
 			words.push(mem::take(&mut word));
 		};
@@ -176,7 +175,7 @@ pub fn split(s: &str) -> Result<Vec<String>, ()> {
 		}
 	}
 
-	Ok(words)
+	Ok((words, None))
 }
 
 #[cfg(test)]
