@@ -15,7 +15,7 @@ panic    = "unwind"
 
 [workspace.dependencies]
 ansi-to-tui         = "7.0.0"
-anyhow              = "1.0.96"
+anyhow              = "1.0.97"
 base64              = "0.22.1"
 bitflags            = "2.9.0"
 clap                = { version = "4.5.31", features = [ "derive" ] }
