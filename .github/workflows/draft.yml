@@ -187,6 +187,14 @@ jobs:
         with:
           merge-multiple: true
 
+      - name: Push snap to latest/candidate channel
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
+        run: |
+          for x in *.snap; do
+            snapcraft push -v --release latest/candidate $x
+          done
+
       - name: Draft
         uses: softprops/action-gh-release@v1
         with:
@@ -220,6 +228,14 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag --force nightly && git push --force origin tag nightly
+
+      - name: Push snap to latest/edge channel
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
+        run: |
+          for x in *.snap; do
+            snapcraft push -v --release latest/edge $x
+          done
 
       - name: Nightly
         uses: softprops/action-gh-release@v1
