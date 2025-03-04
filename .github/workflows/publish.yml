@@ -18,3 +18,10 @@ jobs:
           identifier: sxyazi.yazi
           installers-regex: 'yazi-(x86_64|aarch64)-pc-windows-msvc\.zip$'
           token: ${{ secrets.WINGET_TOKEN }}
+
+      - name: Promote snap to stable
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
+        run: |
+          sudo snap install --classic snapcraft
+          snapcraft promote yazi --from-channel latest/candidate --to-channel latest/stable --yes
