@@ -4,16 +4,15 @@ use yazi_shared::event::CmdCow;
 use crate::input::{Input, InputMode, op::InputOp};
 
 impl Input {
-	#[inline]
 	pub fn visual(&mut self, _: CmdCow) {
-		let snap = self.snap_mut();
-		if snap.mode != InputMode::Normal {
-			return;
-		} else if snap.value.is_empty() {
-			return;
+		if self.snap().mode != InputMode::Normal {
+			self.escape(());
 		}
 
-		snap.op = InputOp::Select(snap.cursor);
-		render!();
+		let snap = self.snap_mut();
+		if !snap.value.is_empty() {
+			snap.op = InputOp::Select(snap.cursor);
+			render!();
+		}
 	}
 }
