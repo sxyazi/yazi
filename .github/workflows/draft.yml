@@ -187,14 +187,6 @@ jobs:
         with:
           merge-multiple: true
 
-      - name: Push snap to latest/candidate channel
-        env:
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
-        run: |
-          for x in *.snap; do
-            snapcraft push -v --release latest/candidate $x
-          done
-
       - name: Draft
         uses: softprops/action-gh-release@v1
         with:
@@ -203,6 +195,12 @@ jobs:
             yazi-*.zip
             yazi-*.snap
           generate_release_notes: true
+
+      - name: Push snap to candidate channel
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
+        run: |
+          parallel 'snapcraft push -v --release latest/candidate {}' ::: *.snap
 
   nightly:
     if: ${{ !startsWith(github.ref, 'refs/tags/') }}
@@ -229,14 +227,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag --force nightly && git push --force origin tag nightly
 
-      - name: Push snap to latest/edge channel
-        env:
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
-        run: |
-          for x in *.snap; do
-            snapcraft push -v --release latest/edge $x
-          done
-
       - name: Nightly
         uses: softprops/action-gh-release@v1
         with:
@@ -248,3 +238,9 @@ jobs:
           name: Nightly Build
           body: ${{ env.NIGHTLY_BODY }}
           target_commitish: ${{ github.sha }}
+
+      - name: Push snap to edge channel
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
+        run: |
+          parallel 'snapcraft push -v --release latest/edge {}' ::: *.snap
