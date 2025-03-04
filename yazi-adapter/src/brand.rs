@@ -44,6 +44,7 @@ impl Brand {
 	pub fn from_env() -> Option<Self> {
 		use Brand as B;
 
+		let (term, program) = B::env();
 		let vars = [
 			("KITTY_WINDOW_ID", B::Kitty),
 			("KONSOLE_VERSION", B::Konsole),
@@ -54,12 +55,16 @@ impl Brand {
 			("VSCODE_INJECTION", B::VSCode),
 			("TABBY_CONFIG_DIRECTORY", B::Tabby),
 		];
-		match vars.into_iter().find(|&(s, _)| env_exists(s)) {
-			Some((_, brand)) => return Some(brand),
-			None => warn!("[Adapter] No special environment variables detected"),
-		}
 
-		let (term, program) = B::env();
+		match term.as_str() {
+			"xterm-kitty" => return Some(B::Kitty),
+			"foot" => return Some(B::Foot),
+			"foot-extra" => return Some(B::Foot),
+			"xterm-ghostty" => return Some(B::Ghostty),
+			"rio" => return Some(B::Rio),
+			"rxvt-unicode-256color" => return Some(B::Urxvt),
+			_ => warn!("[Adapter] Unknown TERM: {term}"),
+		}
 		match program.as_str() {
 			"iTerm.app" => return Some(B::Iterm2),
 			"WezTerm" => return Some(B::WezTerm),
@@ -73,15 +78,11 @@ impl Brand {
 			"Apple_Terminal" => return Some(B::Apple),
 			_ => warn!("[Adapter] Unknown TERM_PROGRAM: {program}"),
 		}
-		match term.as_str() {
-			"xterm-kitty" => return Some(B::Kitty),
-			"foot" => return Some(B::Foot),
-			"foot-extra" => return Some(B::Foot),
-			"xterm-ghostty" => return Some(B::Ghostty),
-			"rio" => return Some(B::Rio),
-			"rxvt-unicode-256color" => return Some(B::Urxvt),
-			_ => warn!("[Adapter] Unknown TERM: {term}"),
+		match vars.into_iter().find(|&(s, _)| env_exists(s)) {
+			Some((_, brand)) => return Some(brand),
+			None => warn!("[Adapter] No special environment variables detected"),
 		}
+
 		None
 	}
 
