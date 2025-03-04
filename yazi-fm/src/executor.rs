@@ -277,6 +277,8 @@ impl<'a> Executor<'a> {
 				}
 			}
 			InputMode::Insert => {
+				on!(visual);
+
 				on!(backspace);
 				on!(kill);
 			}

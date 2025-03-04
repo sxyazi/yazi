@@ -237,8 +237,12 @@ keymap = [
 	{ on = "a", run = "insert --append",                    desc = "Enter append mode" },
 	{ on = "A", run = [ "move eol", "insert --append" ],    desc = "Move to the EOL, and enter append mode" },
 	{ on = "v", run = "visual",                             desc = "Enter visual mode" },
-	{ on = "V", run = [ "move bol", "visual", "move eol" ], desc = "Enter visual mode and select all" },
 	{ on = "r", run = "replace",                            desc = "Replace a single character" },
+
+	# Selection
+	{ on = "V",      run = [ "move bol", "visual", "move eol" ], desc = "Select from BOL to EOL" },
+	{ on = "<C-A>",  run = [ "move eol", "visual", "move bol" ], desc = "Select from EOL to BOL" },
+	{ on = "<C-E>",  run = [ "move bol", "visual", "move eol" ], desc = "Select from BOL to EOL" },
 
 	# Character-wise movement
 	{ on = "h",       run = "move -1", desc = "Move back a character" },
