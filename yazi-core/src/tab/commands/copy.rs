@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ffi::{OsStr, OsString}, path::Path};
+use std::{borrow::Cow, ffi::{OsStr, OsString}, fs, path::Path};
 
 use yazi_plugin::CLIPBOARD;
 use yazi_shared::event::CmdCow;
@@ -34,6 +34,13 @@ impl Tab {
 				"dirname" => opt.separator.transform(u.parent().unwrap_or(Path::new(""))),
 				"filename" => opt.separator.transform(u.name()),
 				"name_without_ext" => opt.separator.transform(u.file_stem().unwrap_or_default()),
+				"content" => match fs::read_to_string(u.as_path()) {
+					Ok(content) => Cow::Owned(OsString::from(content)),
+					Err(err) => {
+						yazi_proxy::AppProxy::notify_error("Error reading content", err);
+						Cow::Borrowed(OsStr::new(""))
+					}
+				},
 				_ => return,
 			});
 			if it.peek().is_some() {
