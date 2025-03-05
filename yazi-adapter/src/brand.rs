@@ -1,4 +1,4 @@
-use tracing::warn;
+use tracing::debug;
 use yazi_shared::env_exists;
 
 use crate::Mux;
@@ -63,7 +63,7 @@ impl Brand {
 			"xterm-ghostty" => return Some(B::Ghostty),
 			"rio" => return Some(B::Rio),
 			"rxvt-unicode-256color" => return Some(B::Urxvt),
-			_ => warn!("[Adapter] Unknown TERM: {term}"),
+			_ => {}
 		}
 		match program.as_str() {
 			"iTerm.app" => return Some(B::Iterm2),
@@ -76,11 +76,11 @@ impl Brand {
 			"Hyper" => return Some(B::Hyper),
 			"mintty" => return Some(B::Mintty),
 			"Apple_Terminal" => return Some(B::Apple),
-			_ => warn!("[Adapter] Unknown TERM_PROGRAM: {program}"),
+			_ => {}
 		}
-		match vars.into_iter().find(|&(s, _)| env_exists(s)) {
-			Some((_, brand)) => return Some(brand),
-			None => warn!("[Adapter] No special environment variables detected"),
+		if let Some((var, brand)) = vars.into_iter().find(|&(s, _)| env_exists(s)) {
+			debug!("Detected special environment variable: {var}");
+			return Some(brand);
 		}
 
 		None
