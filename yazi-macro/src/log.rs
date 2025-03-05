@@ -1,10 +1,10 @@
 #[macro_export]
 macro_rules! time {
 	($expr:expr) => {
-		time!($expr, stringify!($expr))
+		$crate::time!(stringify!($expr), $expr)
 	};
 	($label:expr, $expr:expr) => {
-		time!($expr, "{}", $label)
+		$crate::time!($expr, "{}", $label)
 	};
 	($expr:expr, $fmt:expr, $($args:tt)*) => {{
 		if tracing::enabled!(tracing::Level::DEBUG) {
