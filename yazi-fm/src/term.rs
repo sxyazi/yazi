@@ -6,6 +6,7 @@ use cursor::RestoreCursor;
 use ratatui::{CompletedFrame, Frame, Terminal, backend::CrosstermBackend, buffer::Buffer, layout::Rect};
 use yazi_adapter::{Emulator, Mux};
 use yazi_config::{INPUT, MGR};
+use yazi_shared::SyncCell;
 
 static CSI_U: AtomicBool = AtomicBool::new(false);
 static BLINK: AtomicBool = AtomicBool::new(false);
@@ -19,6 +20,7 @@ pub(super) struct Term {
 
 impl Term {
 	pub(super) fn start() -> Result<Self> {
+		static SKIP: SyncCell<bool> = SyncCell::new(false);
 		let mut term = Self {
 			inner:       Terminal::new(CrosstermBackend::new(BufWriter::new(stderr())))?,
 			last_area:   Default::default(),
@@ -26,7 +28,7 @@ impl Term {
 		};
 
 		enable_raw_mode()?;
-		if yazi_adapter::TMUX.get() {
+		if SKIP.replace(true) && yazi_adapter::TMUX.get() {
 			yazi_adapter::Mux::tmux_passthrough();
 		}
 

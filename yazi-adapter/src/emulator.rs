@@ -106,7 +106,9 @@ impl Emulator {
 	}
 
 	pub fn read_until_da1() -> String {
+		let now = std::time::Instant::now();
 		let h = tokio::spawn(Self::error_to_user());
+
 		let (buf, result) = AsyncStdin::default().read_until(Duration::from_millis(500), |b, buf| {
 			b == b'c'
 				&& buf.contains(&0x1b)
@@ -115,21 +117,26 @@ impl Emulator {
 
 		h.abort();
 		match result {
-			Ok(()) => debug!("read_until_da1: {buf:?}"),
-			Err(e) => error!("read_until_da1 failed: {buf:?}, error: {e:?}"),
+			Ok(()) => debug!("Terminal responded to DA1 in {:?}: {buf:?}", now.elapsed()),
+			Err(e) => {
+				error!("Terminal failed to respond to DA1 in {:?}: {buf:?}, error: {e:?}", now.elapsed())
+			}
 		}
 
 		String::from_utf8_lossy(&buf).into_owned()
 	}
 
 	pub fn read_until_dsr() -> String {
+		let now = std::time::Instant::now();
 		let (buf, result) = AsyncStdin::default().read_until(Duration::from_millis(100), |b, buf| {
 			b == b'n' && (buf.ends_with(b"\x1b[0n") || buf.ends_with(b"\x1b[3n"))
 		});
 
 		match result {
-			Ok(()) => debug!("read_until_dsr: {buf:?}"),
-			Err(e) => error!("read_until_dsr failed: {buf:?}, error: {e:?}"),
+			Ok(()) => debug!("Terminal responded to DSR in {:?}: {buf:?}", now.elapsed()),
+			Err(e) => {
+				error!("Terminal failed to respond to DSR in {:?}: {buf:?}, error: {e:?}", now.elapsed())
+			}
 		}
 		String::from_utf8_lossy(&buf).into_owned()
 	}
