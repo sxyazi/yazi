@@ -48,13 +48,11 @@ end
 
 function Status:size()
 	local h = self._current.hovered
-	if not h then
-		return ""
-	end
+	local size = h and (h:size() or h.cha.len) or 0
 
 	local style = self:style()
 	return ui.Line {
-		ui.Span(" " .. ya.readable_size(h:size() or h.cha.len) .. " "):style(style.alt),
+		ui.Span(" " .. ya.readable_size(size) .. " "):style(style.alt),
 		ui.Span(th.status.sep_left.close):fg(style.alt.bg),
 	}
 end
