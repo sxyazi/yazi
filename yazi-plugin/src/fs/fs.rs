@@ -8,6 +8,7 @@ use crate::{Composer, Error, bindings::Cha, file::File, url::{Url, UrlRef}};
 pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 	Composer::make(lua, 10, |lua, key| {
 		match key {
+			b"op" => op(lua)?,
 			b"cwd" => cwd(lua)?,
 			b"cha" => cha(lua)?,
 			b"write" => write(lua)?,
@@ -19,6 +20,14 @@ pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 			_ => return Ok(Value::Nil),
 		}
 		.into_lua(lua)
+	})
+}
+
+fn op(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_function(|lua, (name, t): (mlua::String, Table)| match name.as_bytes().as_ref() {
+		b"part" => super::FilesOp::part(lua, t),
+		b"done" => super::FilesOp::done(lua, t),
+		_ => Err("Unknown operation".into_lua_err())?,
 	})
 }
 

@@ -8,6 +8,7 @@ pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Value> {
 	Composer::make(lua, 45, move |lua, key| {
 		match key {
 			// App
+			b"id" => Utils::id(lua)?,
 			b"hide" => Utils::hide(lua)?,
 
 			// Cache
