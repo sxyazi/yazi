@@ -43,6 +43,8 @@ impl Sendable {
 			Value::UserData(ud) => {
 				if let Ok(t) = ud.take::<yazi_shared::url::Url>() {
 					Data::Url(t)
+				} else if let Ok(t) = ud.take::<yazi_fs::FilesOp>() {
+					Data::Any(Box::new(t))
 				} else if let Ok(t) = ud.take::<super::body::BodyYankIter>() {
 					Data::Any(Box::new(t))
 				} else {
@@ -72,13 +74,13 @@ impl Sendable {
 				Value::Table(tbl)
 			}
 			Data::Url(u) => Value::UserData(lua.create_any_userdata(u)?),
-			Data::Any(a) => {
-				if let Ok(t) = a.downcast::<super::body::BodyYankIter>() {
-					Value::UserData(lua.create_userdata(*t)?)
-				} else {
-					Err("unsupported userdata included".into_lua_err())?
-				}
-			}
+			Data::Any(a) => Value::UserData(if a.is::<yazi_fs::FilesOp>() {
+				lua.create_any_userdata(*a.downcast::<yazi_fs::FilesOp>().unwrap())?
+			} else if a.is::<super::body::BodyYankIter>() {
+				lua.create_userdata(*a.downcast::<super::body::BodyYankIter>().unwrap())?
+			} else {
+				Err("unsupported userdata included".into_lua_err())?
+			}),
 			data => Self::data_to_value_ref(lua, &data)?,
 		})
 	}
@@ -107,13 +109,13 @@ impl Sendable {
 			}
 			Data::Url(u) => Value::UserData(lua.create_any_userdata(u.clone())?),
 			Data::Bytes(b) => Value::String(lua.create_string(b)?),
-			Data::Any(a) => {
-				if let Some(t) = a.downcast_ref::<super::body::BodyYankIter>() {
-					Value::UserData(lua.create_userdata(t.clone())?)
-				} else {
-					Err("unsupported userdata included".into_lua_err())?
-				}
-			}
+			Data::Any(a) => Value::UserData(if let Some(t) = a.downcast_ref::<yazi_fs::FilesOp>() {
+				lua.create_any_userdata(t.clone())?
+			} else if let Some(t) = a.downcast_ref::<super::body::BodyYankIter>() {
+				lua.create_userdata(t.clone())?
+			} else {
+				Err("unsupported userdata included".into_lua_err())?
+			}),
 		})
 	}
 

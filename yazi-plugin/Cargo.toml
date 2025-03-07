@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-plugin"
-version     = "25.3.2"
+version     = "25.3.7"
 edition     = "2021"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -13,14 +13,14 @@ default      = [ "vendored-lua" ]
 vendored-lua = [ "mlua/vendored" ]
 
 [dependencies]
-yazi-adapter = { path = "../yazi-adapter", version = "25.3.2" }
-yazi-boot    = { path = "../yazi-boot", version = "25.3.2" }
-yazi-config  = { path = "../yazi-config", version = "25.3.2" }
-yazi-dds     = { path = "../yazi-dds", version = "25.3.2" }
-yazi-fs      = { path = "../yazi-fs", version = "25.3.2" }
-yazi-macro   = { path = "../yazi-macro", version = "25.3.2" }
-yazi-proxy   = { path = "../yazi-proxy", version = "25.3.2" }
-yazi-shared  = { path = "../yazi-shared", version = "25.3.2" }
+yazi-adapter = { path = "../yazi-adapter", version = "25.3.7" }
+yazi-boot    = { path = "../yazi-boot", version = "25.3.7" }
+yazi-config  = { path = "../yazi-config", version = "25.3.7" }
+yazi-dds     = { path = "../yazi-dds", version = "25.3.7" }
+yazi-fs      = { path = "../yazi-fs", version = "25.3.7" }
+yazi-macro   = { path = "../yazi-macro", version = "25.3.7" }
+yazi-proxy   = { path = "../yazi-proxy", version = "25.3.7" }
+yazi-shared  = { path = "../yazi-shared", version = "25.3.7" }
 
 # External dependencies
 ansi-to-tui   = { workspace = true }

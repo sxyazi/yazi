@@ -1,4 +1,4 @@
-use mlua::{ExternalError, IntoLua, Lua, MetaMethod, UserDataFields, UserDataMethods, UserDataRef, Value};
+use mlua::{ExternalError, FromLua, IntoLua, Lua, MetaMethod, UserDataFields, UserDataMethods, UserDataRef, Value};
 
 pub type UrlRef = UserDataRef<yazi_shared::url::Url>;
 
@@ -54,6 +54,10 @@ impl Url {
 				Ok(path.ok().map(Self::from))
 			});
 
+			reg.add_method("to_search", |_, me, frag: mlua::String| {
+				Ok(Self(me.to_search(&frag.to_str()?)))
+			});
+
 			reg.add_meta_method(MetaMethod::Eq, |_, me, other: UrlRef| Ok(me == &*other));
 			reg.add_meta_method(MetaMethod::ToString, |lua, me, ()| {
 				lua.create_string(me.as_os_str().as_encoded_bytes())
@@ -67,13 +71,28 @@ impl Url {
 	pub fn install(lua: &Lua) -> mlua::Result<()> {
 		lua.globals().raw_set(
 			"Url",
-			lua.create_function(|_, url: mlua::String| Ok(Self::from(url.to_str()?.as_ref())))?,
+			lua.create_function(|_, value: Value| {
+				Ok(match value {
+					Value::String(s) => Self::from(s.to_str()?.as_ref()),
+					Value::UserData(ud) => Self(ud.borrow::<yazi_shared::url::Url>()?.clone()),
+					_ => Err("Expected a string or a Url".into_lua_err())?,
+				})
+			})?,
 		)
 	}
 }
 
 impl<T: Into<yazi_shared::url::Url>> From<T> for Url {
 	fn from(value: T) -> Self { Self(value.into()) }
+}
+
+impl FromLua for Url {
+	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
+		match value {
+			Value::UserData(ud) => ud.take().map(Self),
+			_ => Err("Expected a Url".into_lua_err()),
+		}
+	}
 }
 
 impl IntoLua for Url {
