@@ -14,7 +14,7 @@ impl From<CmdCow> for Opt {
 impl Tabs {
 	#[yazi_codegen::command]
 	pub fn swap(&mut self, opt: Opt) {
-		let idx = self.absolute(opt.step);
+		let idx = opt.step.saturating_add_unsigned(self.cursor).rem_euclid(self.items.len() as _) as _;
 		if idx == self.cursor {
 			return;
 		}

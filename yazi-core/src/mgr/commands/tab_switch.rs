@@ -18,7 +18,7 @@ impl Tabs {
 	#[yazi_codegen::command]
 	pub fn switch(&mut self, opt: Opt) {
 		let idx = if opt.relative {
-			(self.cursor as isize + opt.step).rem_euclid(self.items.len() as isize) as usize
+			opt.step.saturating_add_unsigned(self.cursor).rem_euclid(self.items.len() as _) as _
 		} else {
 			opt.step as usize
 		};
