@@ -27,7 +27,7 @@ impl Tabs {
 		if opt.idx > self.cursor {
 			self.set_idx(self.cursor);
 		} else {
-			self.set_idx(self.absolute(1));
+			self.set_idx(usize::min(self.cursor + 1, self.items.len() - 1));
 		}
 
 		render!();
