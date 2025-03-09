@@ -1,10 +1,11 @@
 use core::str;
-use std::{io::{LineWriter, Write, stderr}, path::Path};
+use std::{io::Write, path::Path};
 
 use anyhow::Result;
 use base64::{Engine, engine::general_purpose};
 use image::DynamicImage;
 use ratatui::layout::Rect;
+use yazi_shared::tty::TTY;
 
 use crate::{CLOSE, ESCAPE, Emulator, Image, START, adapter::Adapter};
 
@@ -26,9 +27,9 @@ impl KgpOld {
 
 	#[inline]
 	pub(crate) fn image_erase(_: Rect) -> Result<()> {
-		let mut stderr = LineWriter::new(stderr());
-		write!(stderr, "{START}_Gq=2,a=d,d=A{ESCAPE}\\{CLOSE}")?;
-		stderr.flush()?;
+		let mut w = TTY.lockout();
+		write!(w, "{START}_Gq=2,a=d,d=A{ESCAPE}\\{CLOSE}")?;
+		w.flush()?;
 		Ok(())
 	}
 

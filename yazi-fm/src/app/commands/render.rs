@@ -1,10 +1,10 @@
-use std::{io::{BufWriter, stderr}, sync::atomic::Ordering};
+use std::sync::atomic::Ordering;
 
 use crossterm::{execute, queue, terminal::{BeginSynchronizedUpdate, EndSynchronizedUpdate}};
 use ratatui::{CompletedFrame, backend::{Backend, CrosstermBackend}, buffer::Buffer};
 use scopeguard::defer;
 use yazi_plugin::elements::COLLISION;
-use yazi_shared::event::NEED_RENDER;
+use yazi_shared::{event::NEED_RENDER, tty::TTY};
 
 use crate::{app::App, lives::Lives, root::Root};
 
@@ -13,8 +13,8 @@ impl App {
 		NEED_RENDER.store(false, Ordering::Relaxed);
 		let Some(term) = &mut self.term else { return };
 
-		queue!(stderr(), BeginSynchronizedUpdate).ok();
-		defer! { execute!(stderr(), EndSynchronizedUpdate).ok(); }
+		queue!(TTY.writer(), BeginSynchronizedUpdate).ok();
+		defer! { execute!(TTY.writer(), EndSynchronizedUpdate).ok(); }
 
 		let collision = COLLISION.swap(false, Ordering::Relaxed);
 		let frame = term
@@ -79,7 +79,9 @@ impl App {
 		}
 
 		let patches = frame.buffer.diff(&new);
-		let mut backend = CrosstermBackend::new(BufWriter::new(stderr().lock()));
+		let stdout = &mut *TTY.lockout();
+
+		let mut backend = CrosstermBackend::new(stdout);
 		backend.draw(patches.into_iter()).ok();
 		if let Some(pos) = cursor {
 			backend.show_cursor().ok();
