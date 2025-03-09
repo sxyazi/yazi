@@ -25,7 +25,8 @@ impl Actions {
 		writeln!(s, "    Emulator.detect     : {:?}", yazi_adapter::EMULATOR)?;
 
 		writeln!(s, "\nAdapter")?;
-		writeln!(s, "    Adapter.matches: {:?}", yazi_adapter::ADAPTOR)?;
+		writeln!(s, "    Adapter.matches    : {:?}", yazi_adapter::ADAPTOR)?;
+		writeln!(s, "    Dimension.available: {:?}", yazi_adapter::Dimension::available())?;
 
 		writeln!(s, "\nDesktop")?;
 		writeln!(s, "    XDG_SESSION_TYPE           : {:?}", env::var_os("XDG_SESSION_TYPE"))?;

@@ -1,10 +1,12 @@
 use std::io::Write;
 
-use crossterm::queue;
+use crossterm::execute;
 
 #[inline]
-pub fn terminal_clear(w: &mut impl Write) -> std::io::Result<()> {
-	queue!(w, crossterm::terminal::Clear(crossterm::terminal::ClearType::All))?;
-	writeln!(w)?;
-	w.flush()
+pub fn terminal_clear(mut w: impl Write) -> std::io::Result<()> {
+	execute!(
+		w,
+		crossterm::terminal::Clear(crossterm::terminal::ClearType::All),
+		crossterm::style::Print("\n")
+	)
 }

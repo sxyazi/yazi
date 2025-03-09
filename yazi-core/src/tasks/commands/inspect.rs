@@ -1,10 +1,10 @@
-use std::{io::{BufWriter, LineWriter, Write, stderr}, mem};
+use std::io::Write;
 
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use crossterm::{execute, terminal::{disable_raw_mode, enable_raw_mode}};
 use scopeguard::defer;
 use tokio::{io::{AsyncReadExt, stdin}, select, sync::mpsc, time};
 use yazi_proxy::{AppProxy, HIDER};
-use yazi_shared::{event::CmdCow, terminal_clear};
+use yazi_shared::{event::CmdCow, terminal_clear, tty::TTY};
 
 use crate::tasks::Tasks;
 
@@ -19,7 +19,7 @@ impl Tasks {
 			let _permit = HIDER.acquire().await.unwrap();
 			let (tx, mut rx) = mpsc::unbounded_channel();
 
-			let mut buffered = {
+			let buffered = {
 				let mut ongoing = ongoing.lock();
 				let Some(task) = ongoing.get_mut(id) else { return };
 
@@ -30,24 +30,22 @@ impl Tasks {
 			defer!(AppProxy::resume());
 			AppProxy::stop().await;
 
-			terminal_clear(&mut stderr()).ok();
-			BufWriter::new(stderr().lock()).write_all(mem::take(&mut buffered).as_bytes()).ok();
+			terminal_clear(TTY.writer()).ok();
+			TTY.writer().write_all(buffered.as_bytes()).ok();
 
 			defer! { disable_raw_mode().ok(); }
 			enable_raw_mode().ok();
 
-			let mut stdin = stdin();
+			let mut stdin = stdin(); // TODO: stdin
 			let mut answer = 0;
 			loop {
 				select! {
 					Some(line) = rx.recv() => {
-						let mut stderr = LineWriter::new(stderr().lock());
-						stderr.write_all(line.as_bytes()).ok();
-						stderr.write_all(b"\r\n").ok();
+						execute!(TTY.writer(), crossterm::style::Print(line), crossterm::style::Print("\r\n")).ok();
 					}
 					_ = time::sleep(time::Duration::from_millis(500)) => {
 						if ongoing.lock().get(id).is_none() {
-							stderr().write_all(b"Task finished, press `q` to quit\r\n").ok();
+							execute!(TTY.writer(), crossterm::style::Print("Task finished, press `q` to quit\r\n")).ok();
 							break;
 						}
 					},

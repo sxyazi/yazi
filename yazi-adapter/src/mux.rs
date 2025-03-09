@@ -1,6 +1,7 @@
 use anyhow::Result;
 use tracing::error;
 use yazi_macro::time;
+use yazi_shared::tty::TTY;
 
 use crate::{CLOSE, ESCAPE, Emulator, START, TMUX};
 
@@ -47,7 +48,7 @@ impl Mux {
 
 	pub fn tmux_drain() -> Result<()> {
 		if TMUX.get() {
-			crossterm::execute!(std::io::stderr(), crossterm::style::Print(Mux::csi("\x1b[5n")))?;
+			crossterm::execute!(TTY.writer(), crossterm::style::Print(Mux::csi("\x1b[5n")))?;
 			_ = Emulator::read_until_dsr();
 		}
 		Ok(())

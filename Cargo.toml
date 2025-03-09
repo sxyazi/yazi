@@ -37,7 +37,7 @@ regex               = "1.11.1"
 scopeguard          = "1.2.0"
 serde               = { version = "1.0.218", features = [ "derive" ] }
 serde_json          = "1.0.140"
-tokio               = { version = "1.43.0", features = [ "full" ] }
+tokio               = { version = "1.44.0", features = [ "full" ] }
 tokio-stream        = "0.1.17"
 tokio-util          = "0.7.13"
 toml                = { version = "0.8.20" }
