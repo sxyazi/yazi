@@ -11,6 +11,9 @@ pub struct Tty {
 
 impl Default for Tty {
 	fn default() -> Self {
+		#[cfg(windows)]
+		Self::set_code_page().expect("failed to set terminal code page");
+
 		let stdin = Handle::new(false).expect("failed to open stdin");
 		let stdout = Handle::new(true).expect("failed to open stdout");
 		Self { stdin: Mutex::new(stdin), stdout: Mutex::new(BufWriter::new(stdout)) }
@@ -54,6 +57,13 @@ impl Tty {
 
 		let result = read();
 		(buf, result)
+	}
+
+	#[cfg(windows)]
+	fn set_code_page() -> std::io::Result<()> {
+		use windows_sys::Win32::{Globalization::CP_UTF8, System::Console::SetConsoleOutputCP};
+
+		if unsafe { SetConsoleOutputCP(CP_UTF8) } == 0 { Err(Error::last_os_error()) } else { Ok(()) }
 	}
 }
 
