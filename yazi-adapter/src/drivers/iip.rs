@@ -19,18 +19,18 @@ impl Iip {
 
 		Adapter::Iip.image_hide()?;
 		Adapter::shown_store(area);
-		Emulator::move_lock((max.x, max.y), |stderr| {
-			stderr.write_all(&b)?;
+		Emulator::move_lock((max.x, max.y), |w| {
+			w.write_all(&b)?;
 			Ok(area)
 		})
 	}
 
 	pub(crate) fn image_erase(area: Rect) -> Result<()> {
 		let s = " ".repeat(area.width as usize);
-		Emulator::move_lock((0, 0), |stderr| {
+		Emulator::move_lock((0, 0), |w| {
 			for y in area.top()..area.bottom() {
-				queue!(stderr, MoveTo(area.x, y))?;
-				write!(stderr, "{s}")?;
+				queue!(w, MoveTo(area.x, y))?;
+				write!(w, "{s}")?;
 			}
 			Ok(())
 		})

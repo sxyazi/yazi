@@ -66,8 +66,8 @@ impl Mgr {
 
 		{
 			let mut w = TTY.lockout();
-			for (o, n) in &todo {
-				writeln!(w, "{} -> {}", o.display(), n.display())?;
+			for (old, new) in &todo {
+				writeln!(w, "{} -> {}", old.display(), new.display())?;
 			}
 			write!(w, "Continue to rename? (y/N): ")?;
 			w.flush()?;

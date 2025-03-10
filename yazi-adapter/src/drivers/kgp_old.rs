@@ -19,8 +19,8 @@ impl KgpOld {
 
 		Adapter::KgpOld.image_hide()?;
 		Adapter::shown_store(area);
-		Emulator::move_lock((area.x, area.y), |stderr| {
-			stderr.write_all(&b)?;
+		Emulator::move_lock((area.x, area.y), |w| {
+			w.write_all(&b)?;
 			Ok(area)
 		})
 	}
