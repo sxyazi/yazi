@@ -32,21 +32,6 @@ pub const fn utf8_char_width(b: u8) -> usize { UTF8_CHAR_WIDTH[b as usize] as us
 /// the character level and can still visually split graphemes, even though the
 /// underlying characters aren't split. For example, the emoji 🧑‍🔬 (scientist)
 /// could be split so that the string only includes 🧑 (person) instead.
-///
-/// [`is_char_boundary(x)`]: Self::is_char_boundary
-///
-/// # Examples
-///
-/// ```
-/// #![feature(round_char_boundary)]
-/// let s = "❤️🧡💛💚💙💜";
-/// assert_eq!(s.len(), 26);
-/// assert!(!s.is_char_boundary(13));
-///
-/// let closest = s.floor_char_boundary(13);
-/// assert_eq!(closest, 10);
-/// assert_eq!(&s[..closest], "❤️🧡");
-/// ```
 #[inline]
 pub fn floor_char_boundary(s: &str, index: usize) -> usize {
 	if index >= s.len() {
