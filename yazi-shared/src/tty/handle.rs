@@ -2,10 +2,14 @@ use std::{io::{Error, ErrorKind, Read, Write}, time::Duration};
 
 pub struct Handle {
 	#[cfg(unix)]
-	inner: std::os::fd::RawFd,
+	inner:           std::os::fd::RawFd,
 	#[cfg(windows)]
-	inner: std::os::windows::io::RawHandle,
-	close: bool,
+	inner:           std::os::windows::io::RawHandle,
+	close:           bool,
+	#[cfg(windows)]
+	out_utf8:        bool,
+	#[cfg(windows)]
+	incomplete_utf8: super::IncompleteUtf8,
 }
 
 impl Drop for Handle {
@@ -49,16 +53,20 @@ impl Write for Handle {
 			use std::os::{fd::IntoRawFd, unix::io::FromRawFd};
 			let mut f = unsafe { std::fs::File::from_raw_fd(self.inner) };
 			let result = f.write(buf);
-			self.inner = f.into_raw_fd();
+			_ = f.into_raw_fd();
 			result
 		}
 		#[cfg(windows)]
 		{
 			use std::os::windows::io::{FromRawHandle, IntoRawHandle};
-			let mut f = unsafe { std::fs::File::from_raw_handle(self.inner) };
-			let result = f.write(buf);
-			self.inner = f.into_raw_handle();
-			result
+			if self.out_utf8 {
+				let mut f = unsafe { std::fs::File::from_raw_handle(self.inner) };
+				let result = f.write(buf);
+				_ = f.into_raw_handle();
+				result
+			} else {
+				super::write_console_utf16(buf, &mut self.incomplete_utf8, self.inner)
+			}
 		}
 	}
 
@@ -114,7 +122,7 @@ impl Handle {
 #[cfg(windows)]
 impl Handle {
 	pub(super) fn new(out: bool) -> std::io::Result<Self> {
-		use windows_sys::Win32::{Foundation::{GENERIC_READ, GENERIC_WRITE, INVALID_HANDLE_VALUE}, Storage::FileSystem::{CreateFileW, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING}};
+		use windows_sys::Win32::{Foundation::{GENERIC_READ, GENERIC_WRITE, INVALID_HANDLE_VALUE}, Globalization::CP_UTF8, Storage::FileSystem::{CreateFileW, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING}, System::Console::GetConsoleOutputCP};
 
 		let name: Vec<u16> = if out { "CONOUT$\0" } else { "CONIN$\0" }.encode_utf16().collect();
 		let result = unsafe {
@@ -132,7 +140,12 @@ impl Handle {
 		if result == INVALID_HANDLE_VALUE {
 			Err(std::io::Error::last_os_error())
 		} else {
-			Ok(Self { inner: result, close: true })
+			Ok(Self {
+				inner:           result,
+				close:           true,
+				out_utf8:        unsafe { GetConsoleOutputCP() } == CP_UTF8,
+				incomplete_utf8: Default::default(),
+			})
 		}
 	}
 

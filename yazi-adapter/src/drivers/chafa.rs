@@ -55,10 +55,10 @@ impl Chafa {
 
 		Adapter::Chafa.image_hide()?;
 		Adapter::shown_store(area);
-		Emulator::move_lock((max.x, max.y), |stderr| {
+		Emulator::move_lock((max.x, max.y), |w| {
 			for (i, line) in lines.into_iter().enumerate() {
-				stderr.write_all(line)?;
-				queue!(stderr, MoveTo(max.x, max.y + i as u16 + 1))?;
+				w.write_all(line)?;
+				queue!(w, MoveTo(max.x, max.y + i as u16 + 1))?;
 			}
 			Ok(area)
 		})
@@ -66,10 +66,10 @@ impl Chafa {
 
 	pub(crate) fn image_erase(area: Rect) -> Result<()> {
 		let s = " ".repeat(area.width as usize);
-		Emulator::move_lock((0, 0), |stderr| {
+		Emulator::move_lock((0, 0), |w| {
 			for y in area.top()..area.bottom() {
-				queue!(stderr, MoveTo(area.x, y))?;
-				write!(stderr, "{s}")?;
+				queue!(w, MoveTo(area.x, y))?;
+				write!(w, "{s}")?;
 			}
 			Ok(())
 		})
