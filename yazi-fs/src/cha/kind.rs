@@ -32,10 +32,10 @@ impl ChaKind {
 
 			use windows_sys::Win32::Storage::FileSystem::{FILE_ATTRIBUTE_HIDDEN, FILE_ATTRIBUTE_SYSTEM};
 			if _meta.file_attributes() & FILE_ATTRIBUTE_HIDDEN != 0 {
-				attached |= Self::HIDDEN;
+				me |= Self::HIDDEN;
 			}
 			if _meta.file_attributes() & FILE_ATTRIBUTE_SYSTEM != 0 {
-				attached |= Self::SYSTEM;
+				me |= Self::SYSTEM;
 			}
 		}
 
