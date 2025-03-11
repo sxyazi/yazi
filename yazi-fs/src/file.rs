@@ -4,7 +4,7 @@ use anyhow::Result;
 use tokio::fs;
 use yazi_shared::{SyncCell, theme::IconCache, url::{Url, Urn, UrnBuf}};
 
-use crate::Cha;
+use crate::cha::Cha;
 
 #[derive(Clone, Debug, Default)]
 pub struct File {

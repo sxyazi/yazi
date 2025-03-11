@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use yazi_fs::Cha;
+use yazi_fs::cha::Cha;
 
 #[derive(Default, Deserialize)]
 #[serde(rename_all = "kebab-case")]

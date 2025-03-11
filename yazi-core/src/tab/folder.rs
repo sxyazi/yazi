@@ -2,7 +2,7 @@ use std::mem;
 
 use yazi_config::{LAYOUT, MGR};
 use yazi_dds::Pubsub;
-use yazi_fs::{Cha, File, Files, FilesOp, FolderStage, Step};
+use yazi_fs::{File, Files, FilesOp, FolderStage, Step, cha::Cha};
 use yazi_proxy::MgrProxy;
 use yazi_shared::{Id, url::{Url, Urn, UrnBuf}};
 

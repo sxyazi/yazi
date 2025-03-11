@@ -9,7 +9,7 @@ use crate::{elements::{Area, Rect, Renderable, Text, WRAP, WRAP_NO}, external::H
 #[derive(Debug, Default)]
 pub struct PreviewLock {
 	pub url:  yazi_shared::url::Url,
-	pub cha:  yazi_fs::Cha,
+	pub cha:  yazi_fs::cha::Cha,
 	pub mime: String,
 
 	pub skip: usize,
