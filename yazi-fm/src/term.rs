@@ -1,7 +1,7 @@
 use std::{io, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, AtomicU8, Ordering}};
 
 use anyhow::Result;
-use crossterm::{event::{DisableBracketedPaste, EnableBracketedPaste, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{LeaveAlternateScreen, SetTitle, disable_raw_mode, enable_raw_mode}};
+use crossterm::{Command, event::{DisableBracketedPaste, EnableBracketedPaste, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{LeaveAlternateScreen, SetTitle, disable_raw_mode, enable_raw_mode}};
 use cursor::RestoreCursor;
 use ratatui::{CompletedFrame, Frame, Terminal, backend::CrosstermBackend, buffer::Buffer, layout::Rect};
 use yazi_adapter::{Emulator, Mux};
@@ -59,13 +59,11 @@ impl Term {
 		);
 
 		if CSI_U.load(Ordering::Relaxed) {
-			queue!(
-				TTY.writer(),
-				PushKeyboardEnhancementFlags(
-					KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES
-						| KeyboardEnhancementFlags::REPORT_ALTERNATE_KEYS
-				)
-			)?;
+			PushKeyboardEnhancementFlags(
+				KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES
+					| KeyboardEnhancementFlags::REPORT_ALTERNATE_KEYS,
+			)
+			.write_ansi(&mut TTY.writer())?;
 		}
 
 		term.hide_cursor()?;
@@ -76,7 +74,7 @@ impl Term {
 
 	fn stop(&mut self) -> Result<()> {
 		if CSI_U.swap(false, Ordering::Relaxed) {
-			execute!(TTY.writer(), PopKeyboardEnhancementFlags)?;
+			PopKeyboardEnhancementFlags.write_ansi(&mut TTY.writer())?;
 		}
 
 		execute!(
@@ -93,7 +91,7 @@ impl Term {
 
 	pub(super) fn goodbye(f: impl FnOnce() -> bool) -> ! {
 		if CSI_U.swap(false, Ordering::Relaxed) {
-			execute!(TTY.writer(), PopKeyboardEnhancementFlags).ok();
+			PopKeyboardEnhancementFlags.write_ansi(&mut TTY.writer()).ok();
 		}
 
 		if !MGR.title_format.is_empty() {
