@@ -1,4 +1,4 @@
-use yazi_fs::Cha;
+use yazi_fs::cha::Cha;
 use yazi_shared::url::Url;
 
 #[derive(Debug)]

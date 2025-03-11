@@ -4,7 +4,7 @@ use parking_lot::RwLock;
 use yazi_shared::RoCell;
 
 use super::Partition;
-use crate::Cha;
+use crate::cha::Cha;
 
 pub(super) type Locked = Arc<RwLock<Partitions>>;
 

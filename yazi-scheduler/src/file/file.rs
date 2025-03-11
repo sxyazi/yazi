@@ -4,7 +4,7 @@ use anyhow::{Result, anyhow};
 use tokio::{fs::{self, DirEntry}, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::TASKS;
-use yazi_fs::{Cha, calculate_size, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to, skip_path};
+use yazi_fs::{calculate_size, cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to, skip_path};
 use yazi_shared::url::Url;
 
 use super::{FileOp, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpTrash};

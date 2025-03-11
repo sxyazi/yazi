@@ -4,7 +4,7 @@ use tokio::{fs::{self, DirEntry}, select, sync::mpsc::{self, UnboundedReceiver}}
 use yazi_shared::{Id, url::{Url, Urn, UrnBuf}};
 
 use super::{FilesSorter, Filter};
-use crate::{Cha, FILES_TICKET, File, FilesOp, SortBy, maybe_exists, mounts::PARTITIONS};
+use crate::{FILES_TICKET, File, FilesOp, SortBy, cha::Cha, maybe_exists, mounts::PARTITIONS};
 
 #[derive(Default)]
 pub struct Files {
