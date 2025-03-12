@@ -156,9 +156,9 @@ impl Handle {
 		}
 
 		error!(
-			"Failed to open {}, falling back to stdin/stdout: {err}",
+			"Failed to open {}, falling back to stdin/stdout: {}",
 			if out { "CONOUT$" } else { "CONIN$" },
-			Error::last_os_error(),
+			Error::last_os_error()
 		);
 		Self {
 			inner:           if out { stdout().as_raw_handle() } else { stdin().as_raw_handle() },
