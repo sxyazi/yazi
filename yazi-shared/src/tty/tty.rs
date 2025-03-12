@@ -11,9 +11,10 @@ pub struct Tty {
 
 impl Default for Tty {
 	fn default() -> Self {
-		let stdin = Handle::new(false).expect("failed to open stdin");
-		let stdout = Handle::new(true).expect("failed to open stdout");
-		Self { stdin: Mutex::new(stdin), stdout: Mutex::new(BufWriter::new(stdout)) }
+		Self {
+			stdin:  Mutex::new(Handle::new(false)),
+			stdout: Mutex::new(BufWriter::new(Handle::new(true))),
+		}
 	}
 }
 

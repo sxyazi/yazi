@@ -3624,6 +3624,7 @@ dependencies = [
  "ratatui",
  "serde",
  "tokio",
+ "tracing",
  "uzers",
  "windows-sys 0.59.0",
  "yazi-macro",
