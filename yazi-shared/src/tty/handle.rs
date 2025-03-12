@@ -1,5 +1,7 @@
 use std::{io::{Error, ErrorKind, Read, Write}, time::Duration};
 
+use tracing::error;
+
 pub struct Handle {
 	#[cfg(unix)]
 	inner:           std::os::fd::RawFd,
@@ -32,7 +34,7 @@ impl Read for Handle {
 			use std::os::{fd::IntoRawFd, unix::io::FromRawFd};
 			let mut f = unsafe { std::fs::File::from_raw_fd(self.inner) };
 			let result = f.read(buf);
-			self.inner = f.into_raw_fd();
+			_ = f.into_raw_fd();
 			result
 		}
 		#[cfg(windows)]
@@ -40,7 +42,7 @@ impl Read for Handle {
 			use std::os::windows::io::{FromRawHandle, IntoRawHandle};
 			let mut f = unsafe { std::fs::File::from_raw_handle(self.inner) };
 			let result = f.read(buf);
-			self.inner = f.into_raw_handle();
+			_ = f.into_raw_handle();
 			result
 		}
 	}
@@ -75,18 +77,23 @@ impl Write for Handle {
 
 #[cfg(unix)]
 impl Handle {
-	pub(super) fn new(out: bool) -> std::io::Result<Self> {
+	pub(super) fn new(out: bool) -> Self {
 		use std::{fs::OpenOptions, os::fd::IntoRawFd};
 
-		let fileno = if out { libc::STDOUT_FILENO } else { libc::STDIN_FILENO };
-		Ok(if unsafe { libc::isatty(fileno) } == 1 {
-			Self { inner: fileno, close: false }
-		} else {
-			Self {
-				inner: OpenOptions::new().read(!out).write(out).open("/dev/tty")?.into_raw_fd(),
-				close: true,
+		use libc::{STDIN_FILENO, STDOUT_FILENO};
+
+		let resort = Self { inner: if out { STDOUT_FILENO } else { STDIN_FILENO }, close: false };
+		if unsafe { libc::isatty(resort.inner) } == 1 {
+			return resort;
+		}
+
+		match OpenOptions::new().read(!out).write(out).open("/dev/tty") {
+			Ok(f) => Self { inner: f.into_raw_fd(), close: true },
+			Err(err) => {
+				error!("Failed to open /dev/tty, falling back to stdin/stdout: {err}");
+				resort
 			}
-		})
+		}
 	}
 
 	pub(super) fn poll(&mut self, timeout: Duration) -> std::io::Result<bool> {
@@ -121,7 +128,9 @@ impl Handle {
 
 #[cfg(windows)]
 impl Handle {
-	pub(super) fn new(out: bool) -> std::io::Result<Self> {
+	pub(super) fn new(out: bool) -> Self {
+		use std::{io::{Error, stdin, stdout}, os::windows::io::AsRawHandle};
+
 		use windows_sys::Win32::{Foundation::{GENERIC_READ, GENERIC_WRITE, INVALID_HANDLE_VALUE}, Globalization::CP_UTF8, Storage::FileSystem::{CreateFileW, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING}, System::Console::GetConsoleOutputCP};
 
 		let name: Vec<u16> = if out { "CONOUT$\0" } else { "CONIN$\0" }.encode_utf16().collect();
@@ -137,15 +146,25 @@ impl Handle {
 			)
 		};
 
-		if result == INVALID_HANDLE_VALUE {
-			Err(std::io::Error::last_os_error())
-		} else {
-			Ok(Self {
+		if result != INVALID_HANDLE_VALUE {
+			return Self {
 				inner:           result,
 				close:           true,
 				out_utf8:        unsafe { GetConsoleOutputCP() } == CP_UTF8,
 				incomplete_utf8: Default::default(),
-			})
+			};
+		}
+
+		error!(
+			"Failed to open {}, falling back to stdin/stdout: {}",
+			if out { "CONOUT$" } else { "CONIN$" },
+			Error::last_os_error()
+		);
+		Self {
+			inner:           if out { stdout().as_raw_handle() } else { stdin().as_raw_handle() },
+			close:           false,
+			out_utf8:        unsafe { GetConsoleOutputCP() } == CP_UTF8,
+			incomplete_utf8: Default::default(),
 		}
 	}
 

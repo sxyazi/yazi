@@ -15,6 +15,7 @@ pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 			b"create" => create(lua)?,
 			b"remove" => remove(lua)?,
 			b"read_dir" => read_dir(lua)?,
+			b"expand_url" => expand_url(lua)?,
 			b"unique_name" => unique_name(lua)?,
 			b"partitions" => partitions(lua)?,
 			_ => return Ok(Value::Nil),
@@ -147,6 +148,17 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 		}
 
 		(tbl, Value::Nil).into_lua_multi(&lua)
+	})
+}
+
+fn expand_url(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_function(|_, value: Value| {
+		use yazi_fs::expand_path;
+		Ok(Url::from(match value {
+			Value::String(s) => expand_path(s.to_str()?.as_ref()),
+			Value::UserData(ud) => expand_path(&*ud.borrow::<yazi_shared::url::Url>()?),
+			_ => Err("must be a string or a Url".into_lua_err())?,
+		}))
 	})
 }
 
