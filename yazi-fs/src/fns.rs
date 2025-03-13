@@ -3,7 +3,7 @@ use std::{borrow::Cow, collections::{HashMap, HashSet, VecDeque}, ffi::{OsStr, O
 use anyhow::{Result, bail};
 use tokio::{fs, io::{self, AsyncWriteExt}, select, sync::{mpsc, oneshot}, time};
 
-use super::Cha;
+use crate::cha::Cha;
 
 #[inline]
 pub async fn must_exists(p: impl AsRef<Path>) -> bool { fs::symlink_metadata(p).await.is_ok() }

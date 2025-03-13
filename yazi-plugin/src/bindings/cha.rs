@@ -1,18 +1,18 @@
 use std::{ops::Deref, time::{Duration, SystemTime, UNIX_EPOCH}};
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, UserData, UserDataFields, UserDataMethods};
-use yazi_fs::ChaKind;
+use yazi_fs::cha::ChaKind;
 
 #[derive(Clone, Copy, FromLua)]
-pub struct Cha(yazi_fs::Cha);
+pub struct Cha(yazi_fs::cha::Cha);
 
 impl Deref for Cha {
-	type Target = yazi_fs::Cha;
+	type Target = yazi_fs::cha::Cha;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-impl<T: Into<yazi_fs::Cha>> From<T> for Cha {
+impl<T: Into<yazi_fs::cha::Cha>> From<T> for Cha {
 	fn from(cha: T) -> Self { Self(cha.into()) }
 }
 
@@ -33,7 +33,7 @@ impl Cha {
 				let kind =
 					ChaKind::from_bits(t.raw_get("kind")?).ok_or_else(|| "Invalid kind".into_lua_err())?;
 
-				Self::from(yazi_fs::Cha {
+				Self::from(yazi_fs::cha::Cha {
 					kind,
 					len: t.raw_get("len").unwrap_or_default(),
 					atime: parse_time(t.raw_get("atime").ok())?,

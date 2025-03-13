@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-adapter"
-version     = "25.3.2"
+version     = "25.3.7"
 edition     = "2021"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -9,9 +9,9 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
-yazi-config = { path = "../yazi-config", version = "25.3.2" }
-yazi-macro  = { path = "../yazi-macro", version = "25.3.2" }
-yazi-shared = { path = "../yazi-shared", version = "25.3.2" }
+yazi-config = { path = "../yazi-config", version = "25.3.7" }
+yazi-macro  = { path = "../yazi-macro", version = "25.3.7" }
+yazi-shared = { path = "../yazi-shared", version = "25.3.7" }
 
 # External dependencies
 ansi-to-tui = { workspace = true }
@@ -24,12 +24,6 @@ ratatui     = { workspace = true }
 scopeguard  = { workspace = true }
 tokio       = { workspace = true }
 tracing     = { workspace = true }
-
-[target."cfg(unix)".dependencies]
-libc = { workspace = true }
-
-[target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.59.0", features = [ "Win32_Security", "Win32_Storage_FileSystem", "Win32_System_IO", "Win32_System_Threading" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }

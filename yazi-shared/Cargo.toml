@@ -1,6 +1,6 @@
 [package]
 name         = "yazi-shared"
-version      = "25.3.2"
+version      = "25.3.7"
 edition      = "2021"
 license      = "MIT"
 authors      = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -10,7 +10,7 @@ repository   = "https://github.com/sxyazi/yazi"
 rust-version = "1.83.0"
 
 [dependencies]
-yazi-macro = { path = "../yazi-macro", version = "25.3.2" }
+yazi-macro = { path = "../yazi-macro", version = "25.3.7" }
 
 # External dependencies
 anyhow           = { workspace = true }
@@ -22,13 +22,14 @@ percent-encoding = "2.3.1"
 ratatui          = { workspace = true }
 serde            = { workspace = true }
 tokio            = { workspace = true }
+tracing          = { workspace = true }
 
 [target."cfg(unix)".dependencies]
 libc  = { workspace = true }
 uzers = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.59.0", features = [ "Win32_UI_Shell" ] }
+windows-sys = { version = "0.59.0", features = [ "Win32_Globalization", "Win32_Security", "Win32_Storage_FileSystem", "Win32_System_Console", "Win32_System_IO", "Win32_System_Threading", "Win32_UI_Shell" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }

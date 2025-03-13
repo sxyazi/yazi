@@ -61,10 +61,49 @@ module.exports = async ({ github, context, core }) => {
 		}
 	}
 
+	async function lastLabeledAt(id) {
+		try {
+			const { data: events } = await github.rest.issues.listEvents({
+				...context.repo,
+				issue_number: id,
+				per_page    : 100,
+			})
+
+			const all = events.filter(v => v.event === "labeled" && v.label?.name === LABEL_NAME)
+			return all.at(-1)?.created_at
+		} catch (e) {
+			core.error(`Error getting label timestamp: ${e.message}`)
+			return null
+		}
+	}
+
+	async function removedLabelManually(id) {
+		try {
+			const { data: events } = await github.rest.issues.listEvents({
+				...context.repo,
+				issue_number: id,
+				per_page    : 100,
+			})
+
+			const all = events.filter(v => v.event === "unlabeled" && v.label?.name === LABEL_NAME)
+			return all.length === 0 ? false : !all.at(-1).actor.login.endsWith("[bot]")
+		} catch (e) {
+			core.error(`Error checking label removal history: ${e.message}`)
+			return false
+		}
+	}
+
 	async function updateLabels(id, mark, body) {
 		try {
 			const marked = await hasLabel(id, LABEL_NAME)
-			if (mark && !marked) {
+
+			if (!mark && marked) {
+				await github.rest.issues.removeLabel({
+					...context.repo,
+					issue_number: id,
+					name        : LABEL_NAME,
+				})
+			} else if (mark && !marked && !await removedLabelManually(id)) {
 				await github.rest.issues.addLabels({
 					...context.repo,
 					issue_number: id,
@@ -74,12 +113,6 @@ module.exports = async ({ github, context, core }) => {
 					...context.repo,
 					issue_number: id,
 					body,
-				})
-			} else if (!mark && marked) {
-				await github.rest.issues.removeLabel({
-					...context.repo,
-					issue_number: id,
-					name        : LABEL_NAME,
 				})
 			}
 		} catch (e) {
@@ -99,7 +132,7 @@ module.exports = async ({ github, context, core }) => {
 			const twoDaysAgo = new Date(now - 2 * 24 * 60 * 60 * 1000)
 
 			for (const issue of issues) {
-				const markedAt = new Date(issue.labels_at || issue.created_at)
+				const markedAt = new Date(await lastLabeledAt(issue.number) || issue.created_at)
 				if (markedAt < twoDaysAgo) {
 					await github.rest.issues.update({
 						...context.repo,

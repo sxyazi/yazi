@@ -8,7 +8,7 @@ use crate::{elements::Renderable, file::FileRef};
 
 pub struct SpotLock {
 	pub url:  yazi_shared::url::Url,
-	pub cha:  yazi_fs::Cha,
+	pub cha:  yazi_fs::cha::Cha,
 	pub mime: String,
 
 	pub skip: usize,

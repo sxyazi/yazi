@@ -1,22 +1,8 @@
 use std::{fs::{FileType, Metadata}, path::Path, time::SystemTime};
 
-use bitflags::bitflags;
 use yazi_macro::{unix_either, win_either};
 
-bitflags! {
-	#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-	pub struct ChaKind: u8 {
-		const DIR    = 0b00000001;
-
-		const HIDDEN = 0b00000010;
-		const LINK   = 0b00000100;
-		const ORPHAN = 0b00001000;
-
-		const DUMMY  = 0b00010000;
-		#[cfg(windows)]
-		const SYSTEM = 0b00100000;
-	}
-}
+use super::ChaKind;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Cha {
@@ -39,8 +25,8 @@ pub struct Cha {
 	pub nlink: libc::nlink_t,
 }
 
-impl From<Metadata> for Cha {
-	fn from(m: Metadata) -> Self {
+impl From<&Metadata> for Cha {
+	fn from(m: &Metadata) -> Self {
 		let mut kind = ChaKind::empty();
 		if m.is_dir() {
 			kind |= ChaKind::DIR;
@@ -89,6 +75,10 @@ impl From<Metadata> for Cha {
 	}
 }
 
+impl From<Metadata> for Cha {
+	fn from(m: Metadata) -> Self { Self::from(&m) }
+}
+
 impl From<FileType> for Cha {
 	fn from(t: FileType) -> Self {
 		let mut kind = ChaKind::DUMMY;
@@ -134,9 +124,8 @@ impl From<FileType> for Cha {
 }
 
 impl Cha {
-	#[inline]
 	pub async fn new(path: &Path, mut meta: Metadata) -> Self {
-		let mut attached = ChaKind::empty();
+		let mut attached = ChaKind::hidden(path, &meta);
 
 		if meta.is_symlink() {
 			attached |= ChaKind::LINK;
@@ -146,35 +135,16 @@ impl Cha {
 			attached |= ChaKind::ORPHAN;
 		}
 
-		let mut cha = Self::new_nofollow(path, meta);
-		cha.kind |= attached;
-		cha
+		let mut me = Self::from(meta);
+		me.kind |= attached;
+		me
 	}
 
 	#[inline]
 	pub fn new_nofollow(_path: &Path, meta: Metadata) -> Self {
-		let mut attached = ChaKind::empty();
-
-		#[cfg(unix)]
-		if yazi_shared::url::Urn::new(_path).is_hidden() {
-			attached |= ChaKind::HIDDEN;
-		}
-		#[cfg(windows)]
-		{
-			use std::os::windows::fs::MetadataExt;
-
-			use windows_sys::Win32::Storage::FileSystem::{FILE_ATTRIBUTE_HIDDEN, FILE_ATTRIBUTE_SYSTEM};
-			if meta.file_attributes() & FILE_ATTRIBUTE_HIDDEN != 0 {
-				attached |= ChaKind::HIDDEN;
-			}
-			if meta.file_attributes() & FILE_ATTRIBUTE_SYSTEM != 0 {
-				attached |= ChaKind::SYSTEM;
-			}
-		}
-
-		let mut cha = Self::from(meta);
-		cha.kind |= attached;
-		cha
+		let mut me = Self::from(&meta);
+		me.kind |= ChaKind::hidden(_path, &meta);
+		me
 	}
 
 	#[inline]

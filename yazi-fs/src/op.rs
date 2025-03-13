@@ -2,7 +2,8 @@ use std::collections::{HashMap, HashSet};
 
 use yazi_shared::{Id, Ids, event::Cmd, url::{Url, UrnBuf}};
 
-use super::{Cha, File};
+use super::File;
+use crate::cha::Cha;
 
 pub static FILES_TICKET: Ids = Ids::new();
 

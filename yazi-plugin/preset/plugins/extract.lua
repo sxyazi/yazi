@@ -57,7 +57,7 @@ function M:try_with(from, pwd, to)
 
 	local output, err = child:wait_with_output()
 	if output and output.status.code == 2 and archive.is_encrypted(output.stderr) then
-		fs.remove("dir_clean", tmp)
+		fs.remove("dir_all", tmp)
 		return true -- Need to retry
 	end
 

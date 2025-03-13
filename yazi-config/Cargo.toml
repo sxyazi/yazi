@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-config"
-version     = "25.3.2"
+version     = "25.3.7"
 edition     = "2021"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -9,9 +9,9 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
-yazi-fs     = { path = "../yazi-fs", version = "25.3.2" }
-yazi-macro  = { path = "../yazi-macro", version = "25.3.2" }
-yazi-shared = { path = "../yazi-shared", version = "25.3.2" }
+yazi-fs     = { path = "../yazi-fs", version = "25.3.7" }
+yazi-macro  = { path = "../yazi-macro", version = "25.3.7" }
+yazi-shared = { path = "../yazi-shared", version = "25.3.7" }
 
 # External dependencies
 anyhow    = { workspace = true }

@@ -10,8 +10,6 @@ pub fn hostname() -> Option<&'static str> {
 
 #[cfg(unix)]
 fn hostname_impl() -> Result<String, std::io::Error> {
-	use std::io::{Error, ErrorKind};
-
 	use libc::{gethostname, strlen};
 
 	let mut s = [0; 256];
@@ -24,6 +22,6 @@ fn hostname_impl() -> Result<String, std::io::Error> {
 	};
 
 	std::str::from_utf8(&s[..len])
-		.map_err(|_| Error::new(ErrorKind::Other, "invalid hostname"))
+		.map_err(|_| std::io::Error::other("invalid hostname"))
 		.map(|s| s.to_owned())
 }

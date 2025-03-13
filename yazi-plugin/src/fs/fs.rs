@@ -8,17 +8,27 @@ use crate::{Composer, Error, bindings::Cha, file::File, url::{Url, UrlRef}};
 pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 	Composer::make(lua, 10, |lua, key| {
 		match key {
+			b"op" => op(lua)?,
 			b"cwd" => cwd(lua)?,
 			b"cha" => cha(lua)?,
 			b"write" => write(lua)?,
 			b"create" => create(lua)?,
 			b"remove" => remove(lua)?,
 			b"read_dir" => read_dir(lua)?,
+			b"expand_url" => expand_url(lua)?,
 			b"unique_name" => unique_name(lua)?,
 			b"partitions" => partitions(lua)?,
 			_ => return Ok(Value::Nil),
 		}
 		.into_lua(lua)
+	})
+}
+
+fn op(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_function(|lua, (name, t): (mlua::String, Table)| match name.as_bytes().as_ref() {
+		b"part" => super::FilesOp::part(lua, t),
+		b"done" => super::FilesOp::done(lua, t),
+		_ => Err("Unknown operation".into_lua_err())?,
 	})
 }
 
@@ -138,6 +148,17 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 		}
 
 		(tbl, Value::Nil).into_lua_multi(&lua)
+	})
+}
+
+fn expand_url(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_function(|_, value: Value| {
+		use yazi_fs::expand_path;
+		Ok(Url::from(match value {
+			Value::String(s) => expand_path(s.to_str()?.as_ref()),
+			Value::UserData(ud) => expand_path(&*ud.borrow::<yazi_shared::url::Url>()?),
+			_ => Err("must be a string or a Url".into_lua_err())?,
+		}))
 	})
 }
 
