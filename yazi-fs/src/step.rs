@@ -2,10 +2,12 @@ use std::{num::ParseIntError, str::FromStr};
 
 use yazi_shared::event::Data;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum Step {
 	Top,
 	Bot,
+	Prev,
+	Next,
 	Fixed(isize),
 	Percent(i8),
 }
@@ -25,6 +27,8 @@ impl FromStr for Step {
 		Ok(match s {
 			"top" => Self::Top,
 			"bot" => Self::Bot,
+			"prev" => Self::Prev,
+			"next" => Self::Next,
 			s if s.ends_with('%') => Self::Percent(s[..s.len() - 1].parse()?),
 			s => Self::Fixed(s.parse()?),
 		})
@@ -44,24 +48,29 @@ impl TryFrom<&Data> for Step {
 }
 
 impl Step {
-	#[inline]
-	pub fn add(self, pos: usize, limit: usize) -> usize {
+	pub fn add(self, pos: usize, len: usize, limit: usize) -> usize {
+		if len == 0 {
+			return 0;
+		}
+
 		let fixed = match self {
 			Self::Top => return 0,
-			Self::Bot => return usize::MAX,
+			Self::Bot => return len - 1,
+			Self::Prev => -1,
+			Self::Next => 1,
 			Self::Fixed(n) => n,
 			Self::Percent(0) => 0,
 			Self::Percent(n) => n as isize * limit as isize / 100,
 		};
-		if fixed > 0 { pos + fixed as usize } else { pos.saturating_sub(fixed.unsigned_abs()) }
-	}
 
-	#[inline]
-	pub fn is_positive(self) -> bool {
-		match self {
-			Self::Top | Self::Bot => false,
-			Self::Fixed(n) => n > 0,
-			Self::Percent(n) => n > 0,
+		if fixed == 0 {
+			pos
+		} else if matches!(self, Self::Prev | Self::Next) {
+			fixed.saturating_add_unsigned(pos).rem_euclid(len as _) as _
+		} else if fixed > 0 {
+			pos + fixed as usize
+		} else {
+			pos.saturating_sub(fixed.unsigned_abs())
 		}
 	}
 }

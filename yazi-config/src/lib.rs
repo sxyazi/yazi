@@ -27,18 +27,6 @@ pub fn init() -> anyhow::Result<()> {
 		wait_for_key(e)?;
 		try_init(false)?;
 	}
-
-	// TODO: remove this
-	for c in KEYMAP.mgr.iter().flat_map(|c| c.run.iter()) {
-		if c.name == "arrow"
-			&& c.first_str().unwrap_or_default().parse::<isize>().is_ok_and(|n| n <= -999 || n >= 999)
-		{
-			eprintln!("Deprecated command: `arrow -99999999` and `arrow 99999999` have been deprecated, please use `arrow top` and `arrow bot` instead, in your `keymap.toml`.
-
-See #2294 for more details: https://github.com/sxyazi/yazi/pull/2294");
-		}
-	}
-
 	Ok(())
 }
 

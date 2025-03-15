@@ -93,13 +93,13 @@ impl Folder {
 	}
 
 	pub fn arrow(&mut self, step: impl Into<Step>) -> bool {
-		let step = step.into() as Step;
+		let new = (step.into() as Step).add(self.cursor, self.files.len(), LAYOUT.get().limit());
 		let mut b = if self.files.is_empty() {
 			(mem::take(&mut self.cursor), mem::take(&mut self.offset)) != (0, 0)
-		} else if step.is_positive() {
-			self.next(step)
+		} else if new > self.cursor {
+			self.next(new)
 		} else {
-			self.prev(step)
+			self.prev(new)
 		};
 
 		self.trace = self.hovered().filter(|_| b).map(|h| h.urn_owned()).or(self.trace.take());
@@ -124,7 +124,7 @@ impl Folder {
 	}
 
 	pub fn sync_page(&mut self, force: bool) {
-		let limit = LAYOUT.get().current.height as usize;
+		let limit = LAYOUT.get().limit();
 		if limit == 0 {
 			return;
 		}
@@ -135,14 +135,14 @@ impl Folder {
 		}
 	}
 
-	fn next(&mut self, step: Step) -> bool {
+	fn next(&mut self, new: usize) -> bool {
 		let old = (self.cursor, self.offset);
 		let len = self.files.len();
 
-		let limit = LAYOUT.get().current.height as usize;
+		let limit = LAYOUT.get().limit();
 		let scrolloff = (limit / 2).min(MGR.scrolloff as usize);
 
-		self.cursor = step.add(self.cursor, limit).min(len.saturating_sub(1));
+		self.cursor = new.min(len.saturating_sub(1));
 		self.offset = if self.cursor < (self.offset + limit).min(len).saturating_sub(scrolloff) {
 			self.offset.min(len.saturating_sub(1))
 		} else {
@@ -152,14 +152,14 @@ impl Folder {
 		old != (self.cursor, self.offset)
 	}
 
-	fn prev(&mut self, step: Step) -> bool {
+	fn prev(&mut self, new: usize) -> bool {
 		let old = (self.cursor, self.offset);
 		let max = self.files.len().saturating_sub(1);
 
-		let limit = LAYOUT.get().current.height as usize;
+		let limit = LAYOUT.get().limit();
 		let scrolloff = (limit / 2).min(MGR.scrolloff as usize);
 
-		self.cursor = step.add(self.cursor, limit).min(max);
+		self.cursor = new.min(max);
 		self.offset = if self.cursor < self.offset + scrolloff {
 			self.offset.saturating_sub(old.0 - self.cursor)
 		} else {
@@ -173,7 +173,7 @@ impl Folder {
 		let old = self.offset;
 		let len = self.files.len();
 
-		let limit = LAYOUT.get().current.height as usize;
+		let limit = LAYOUT.get().limit();
 		let scrolloff = (limit / 2).min(MGR.scrolloff as usize);
 
 		self.offset = if self.cursor < (self.offset + limit).min(len).saturating_sub(scrolloff) {
@@ -192,7 +192,7 @@ impl Folder {
 
 	pub fn paginate(&self, page: usize) -> &[File] {
 		let len = self.files.len();
-		let limit = LAYOUT.get().current.height as usize;
+		let limit = LAYOUT.get().limit();
 
 		let start = (page.saturating_sub(1) * limit).min(len.saturating_sub(1));
 		let end = ((page + 2) * limit).min(len);

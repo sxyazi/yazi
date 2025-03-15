@@ -5,19 +5,19 @@
 [manager]
 
 keymap = [
-	{ on = "<Esc>", run = "escape",             desc = "Exit visual mode, clear selected, or cancel search" },
-	{ on = "<C-[>", run = "escape",             desc = "Exit visual mode, clear selected, or cancel search" },
+	{ on = "<Esc>", run = "escape",             desc = "Exit visual mode, clear selection, or cancel search" },
+	{ on = "<C-[>", run = "escape",             desc = "Exit visual mode, clear selection, or cancel search" },
 	{ on = "q",     run = "quit",               desc = "Quit the process" },
-	{ on = "Q",     run = "quit --no-cwd-file", desc = "Quit the process without outputting cwd-file" },
+	{ on = "Q",     run = "quit --no-cwd-file", desc = "Quit without outputting cwd-file" },
 	{ on = "<C-c>", run = "close",              desc = "Close the current tab, or quit if it's last" },
 	{ on = "<C-z>", run = "suspend",            desc = "Suspend the process" },
 
 	# Hopping
-	{ on = "k", run = "arrow -1", desc = "Move cursor up" },
-	{ on = "j", run = "arrow 1",  desc = "Move cursor down" },
+	{ on = "k", run = "arrow prev", desc = "Go to previous file" },
+	{ on = "j", run = "arrow next", desc = "Go to next file" },
 
-	{ on = "<Up>",    run = "arrow -1", desc = "Move cursor up" },
-	{ on = "<Down>",  run = "arrow 1",  desc = "Move cursor down" },
+	{ on = "<Up>",   run = "arrow prev", desc = "Go to previous file" },
+	{ on = "<Down>", run = "arrow next", desc = "Go to next file" },
 
 	{ on = "<C-u>", run = "arrow -50%",  desc = "Move cursor up half page" },
 	{ on = "<C-d>", run = "arrow 50%",   desc = "Move cursor down half page" },
@@ -39,13 +39,13 @@ keymap = [
 	{ on = "<Left>",  run = "leave", desc = "Go back to the parent directory" },
 	{ on = "<Right>", run = "enter", desc = "Enter the child directory" },
 
-	{ on = "H", run = "back",    desc = "Go back to the previous directory" },
-	{ on = "L", run = "forward", desc = "Go forward to the next directory" },
+	{ on = "H", run = "back",    desc = "Back to previous directory" },
+	{ on = "L", run = "forward", desc = "Forward to next directory" },
 
 	# Toggle
-	{ on = "<Space>", run = [ "toggle", "arrow 1" ], desc = "Toggle the current selection state" },
-	{ on = "<C-a>",   run = "toggle_all --state=on", desc = "Select all files" },
-	{ on = "<C-r>",   run = "toggle_all",            desc = "Invert selection of all files" },
+	{ on = "<Space>", run = [ "toggle", "arrow next" ], desc = "Toggle the current selection state" },
+	{ on = "<C-a>",   run = "toggle_all --state=on",    desc = "Select all files" },
+	{ on = "<C-r>",   run = "toggle_all",               desc = "Invert selection of all files" },
 
 	# Visual mode
 	{ on = "v", run = "visual_mode",         desc = "Enter visual mode (selection mode)" },
@@ -105,8 +105,8 @@ keymap = [
 	# Find
 	{ on = "/", run = "find --smart",            desc = "Find next file" },
 	{ on = "?", run = "find --previous --smart", desc = "Find previous file" },
-	{ on = "n", run = "find_arrow",              desc = "Goto the next found" },
-	{ on = "N", run = "find_arrow --previous",   desc = "Goto the previous found" },
+	{ on = "n", run = "find_arrow",              desc = "Go to next found" },
+	{ on = "N", run = "find_arrow --previous",   desc = "Go to previous found" },
 
 	# Sorting
 	{ on = [ ",", "m" ], run = [ "sort mtime --reverse=no", "linemode mtime" ], desc = "Sort by modified time" },
@@ -125,25 +125,25 @@ keymap = [
 
 	# Goto
 	{ on = [ "g", "h" ],       run = "cd ~",             desc = "Go home" },
-	{ on = [ "g", "c" ],       run = "cd ~/.config",     desc = "Goto ~/.config" },
-	{ on = [ "g", "d" ],       run = "cd ~/Downloads",   desc = "Goto ~/Downloads" },
+	{ on = [ "g", "c" ],       run = "cd ~/.config",     desc = "Go ~/.config" },
+	{ on = [ "g", "d" ],       run = "cd ~/Downloads",   desc = "Go ~/Downloads" },
 	{ on = [ "g", "<Space>" ], run = "cd --interactive", desc = "Jump interactively" },
 
 	# Tabs
 	{ on = "t", run = "tab_create --current", desc = "Create a new tab with CWD" },
 
-	{ on = "1", run = "tab_switch 0", desc = "Switch to the first tab" },
-	{ on = "2", run = "tab_switch 1", desc = "Switch to the second tab" },
-	{ on = "3", run = "tab_switch 2", desc = "Switch to the third tab" },
-	{ on = "4", run = "tab_switch 3", desc = "Switch to the fourth tab" },
-	{ on = "5", run = "tab_switch 4", desc = "Switch to the fifth tab" },
-	{ on = "6", run = "tab_switch 5", desc = "Switch to the sixth tab" },
-	{ on = "7", run = "tab_switch 6", desc = "Switch to the seventh tab" },
-	{ on = "8", run = "tab_switch 7", desc = "Switch to the eighth tab" },
-	{ on = "9", run = "tab_switch 8", desc = "Switch to the ninth tab" },
+	{ on = "1", run = "tab_switch 0", desc = "Switch to first tab" },
+	{ on = "2", run = "tab_switch 1", desc = "Switch to second tab" },
+	{ on = "3", run = "tab_switch 2", desc = "Switch to third tab" },
+	{ on = "4", run = "tab_switch 3", desc = "Switch to fourth tab" },
+	{ on = "5", run = "tab_switch 4", desc = "Switch to fifth tab" },
+	{ on = "6", run = "tab_switch 5", desc = "Switch to sixth tab" },
+	{ on = "7", run = "tab_switch 6", desc = "Switch to seventh tab" },
+	{ on = "8", run = "tab_switch 7", desc = "Switch to eighth tab" },
+	{ on = "9", run = "tab_switch 8", desc = "Switch to ninth tab" },
 
-	{ on = "[", run = "tab_switch -1 --relative", desc = "Switch to the previous tab" },
-	{ on = "]", run = "tab_switch 1 --relative",  desc = "Switch to the next tab" },
+	{ on = "[", run = "tab_switch -1 --relative", desc = "Switch to previous tab" },
+	{ on = "]", run = "tab_switch 1 --relative",  desc = "Switch to next tab" },
 
 	{ on = "{", run = "tab_swap -1", desc = "Swap current tab with previous tab" },
 	{ on = "}", run = "tab_swap 1",  desc = "Swap current tab with next tab" },
@@ -188,13 +188,13 @@ keymap = [
 
 	{ on = "k", run = "arrow -1", desc = "Move cursor up" },
 	{ on = "j", run = "arrow 1",  desc = "Move cursor down" },
-	{ on = "h", run = "swipe -1", desc = "Swipe to the previous file" },
-	{ on = "l", run = "swipe 1",  desc = "Swipe to the next file" },
+	{ on = "h", run = "swipe -1", desc = "Swipe to previous file" },
+	{ on = "l", run = "swipe 1",  desc = "Swipe to next file" },
 
 	{ on = "<Up>",    run = "arrow -1", desc = "Move cursor up" },
 	{ on = "<Down>",  run = "arrow 1",  desc = "Move cursor down" },
-	{ on = "<Left>",  run = "swipe -1", desc = "Swipe to the next file" },
-	{ on = "<Right>", run = "swipe 1",  desc = "Swipe to the previous file" },
+	{ on = "<Left>",  run = "swipe -1", desc = "Swipe to next file" },
+	{ on = "<Right>", run = "swipe 1",  desc = "Swipe to previous file" },
 
 	# Copy
 	{ on = [ "c", "c" ], run = "copy cell", desc = "Copy selected cell" },

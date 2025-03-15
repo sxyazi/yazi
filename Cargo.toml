@@ -26,7 +26,7 @@ foldhash            = "0.1.4"
 futures             = "0.3.31"
 globset             = "0.4.16"
 indexmap            = { version = "2.8.0", features = [ "serde" ] }
-libc                = "0.2.170"
+libc                = "0.2.171"
 lru                 = "0.13.0"
 md-5                = "0.10.6"
 mlua                = { version = "0.10.3", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serialize" ] }
@@ -37,9 +37,9 @@ regex               = "1.11.1"
 scopeguard          = "1.2.0"
 serde               = { version = "1.0.219", features = [ "derive" ] }
 serde_json          = "1.0.140"
-tokio               = { version = "1.44.0", features = [ "full" ] }
+tokio               = { version = "1.44.1", features = [ "full" ] }
 tokio-stream        = "0.1.17"
-tokio-util          = "0.7.13"
+tokio-util          = "0.7.14"
 toml                = { version = "0.8.20" }
 tracing             = { version = "0.1.41", features = [ "max_level_debug", "release_max_level_debug" ] }
 twox-hash           = { version = "2.1.0", default-features = false, features = [ "std", "random", "xxhash3_128" ] }
