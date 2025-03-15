@@ -1,4 +1,4 @@
-use mlua::{ExternalError, ExternalResult, IntoLua, ObjectLike, Table, Value};
+use mlua::{ExternalError, ExternalResult, IntoLua, ObjectLike, Table};
 use tokio::runtime::Handle;
 use yazi_config::LAYOUT;
 use yazi_dds::Sendable;
@@ -28,25 +28,7 @@ pub async fn preload(
 			("skip", 0.into_lua(&lua)?),
 		])?;
 
-		let (ok, mut err): (Value, Option<Error>) =
-			Handle::current().block_on(plugin.call_async_method("preload", job))?;
-
-		// TODO: remove this
-		let ok = match ok {
-			Value::Boolean(b) => b,
-			Value::Integer(n) => {
-				crate::deprecate!(lua, "The integer return value of `preload()` has been deprecated since 25.01.27, please use the new `(bool, error)` instead, in your {}.
-
-See #2253 for more information: https://github.com/sxyazi/yazi/pull/2253");
-				if n as u8 & 1 == 0 {
-					err = Some(Error::Custom(format!("Returned {n} when running the preloader")));
-				}
-				n as u8 & 1 == 1
-			},
-			_ => Err("The first return value of `preload()` must be a bool".into_lua_err())?,
-		};
-
-		Ok((ok, err))
+		Handle::current().block_on(plugin.call_async_method("preload", job))
 	})
 	.await
 	.into_lua_err()?

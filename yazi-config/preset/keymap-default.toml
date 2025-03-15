@@ -5,19 +5,19 @@
 [manager]
 
 keymap = [
-	{ on = "<Esc>", run = "escape",             desc = "Exit visual mode, clear selected, or cancel search" },
-	{ on = "<C-[>", run = "escape",             desc = "Exit visual mode, clear selected, or cancel search" },
+	{ on = "<Esc>", run = "escape",             desc = "Exit visual mode, clear selection, or cancel search" },
+	{ on = "<C-[>", run = "escape",             desc = "Exit visual mode, clear selection, or cancel search" },
 	{ on = "q",     run = "quit",               desc = "Quit the process" },
 	{ on = "Q",     run = "quit --no-cwd-file", desc = "Quit the process without outputting cwd-file" },
 	{ on = "<C-c>", run = "close",              desc = "Close the current tab, or quit if it's last" },
 	{ on = "<C-z>", run = "suspend",            desc = "Suspend the process" },
 
 	# Hopping
-	{ on = "k", run = "arrow -1", desc = "Move cursor up" },
-	{ on = "j", run = "arrow 1",  desc = "Move cursor down" },
+	{ on = "k", run = "arrow prev", desc = "Move cursor to the previous file" },
+	{ on = "j", run = "arrow next", desc = "Move cursor to the next file" },
 
-	{ on = "<Up>",    run = "arrow -1", desc = "Move cursor up" },
-	{ on = "<Down>",  run = "arrow 1",  desc = "Move cursor down" },
+	{ on = "<Up>",   run = "arrow prev", desc = "Move cursor to the previous file" },
+	{ on = "<Down>", run = "arrow next", desc = "Move cursor to the next file" },
 
 	{ on = "<C-u>", run = "arrow -50%",  desc = "Move cursor up half page" },
 	{ on = "<C-d>", run = "arrow 50%",   desc = "Move cursor down half page" },
@@ -43,9 +43,9 @@ keymap = [
 	{ on = "L", run = "forward", desc = "Go forward to the next directory" },
 
 	# Toggle
-	{ on = "<Space>", run = [ "toggle", "arrow 1" ], desc = "Toggle the current selection state" },
-	{ on = "<C-a>",   run = "toggle_all --state=on", desc = "Select all files" },
-	{ on = "<C-r>",   run = "toggle_all",            desc = "Invert selection of all files" },
+	{ on = "<Space>", run = [ "toggle", "arrow next" ], desc = "Toggle the current selection state" },
+	{ on = "<C-a>",   run = "toggle_all --state=on",    desc = "Select all files" },
+	{ on = "<C-r>",   run = "toggle_all",               desc = "Invert selection of all files" },
 
 	# Visual mode
 	{ on = "v", run = "visual_mode",         desc = "Enter visual mode (selection mode)" },
