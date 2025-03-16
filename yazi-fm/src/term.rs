@@ -35,10 +35,10 @@ impl Term {
 		execute!(
 			TTY.writer(),
 			screen::SetScreen(true),
-			Print(Mux::csi("\x1bP$q q\x1b\\")), // Request cursor shape (DECRQSS query for DECSCUSR)
-			Print(Mux::csi("\x1b[?12$p")),      // Request cursor blink status (DECSET)
-			Print("\x1b[?u"),                   // Request keyboard enhancement flags (CSI u)
-			Print(Mux::csi("\x1b[0c")),         // Request device attributes
+			Print("\x1bP$q q\x1b\\"), // Request cursor shape (DECRQSS query for DECSCUSR)
+			Print(Mux::csi("\x1b[?12$p")), // Request cursor blink status (DECSET)
+			Print("\x1b[?u"),         // Request keyboard enhancement flags (CSI u)
+			Print(Mux::csi("\x1b[0c")), // Request device attributes
 			screen::SetScreen(false),
 			EnableBracketedPaste,
 			mouse::SetMouse(true),

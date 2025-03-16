@@ -1,3 +1,5 @@
+--- @sync peek
+
 local M = {}
 
 function M:peek(job)

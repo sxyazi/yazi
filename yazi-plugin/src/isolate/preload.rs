@@ -11,7 +11,7 @@ pub async fn preload(
 	cmd: &'static Cmd,
 	file: yazi_fs::File,
 ) -> mlua::Result<(bool, Option<Error>)> {
-	LOADER.ensure(&cmd.name).await.into_lua_err()?;
+	LOADER.ensure(&cmd.name, |_| ()).await.into_lua_err()?;
 
 	tokio::task::spawn_blocking(move || {
 		let lua = slim_lua(&cmd.name)?;

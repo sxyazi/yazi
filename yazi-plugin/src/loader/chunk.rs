@@ -5,6 +5,7 @@ use yazi_shared::natsort;
 pub struct Chunk {
 	pub bytes:      Cow<'static, [u8]>,
 	pub since:      String,
+	pub sync_peek:  bool,
 	pub sync_entry: bool,
 }
 
@@ -29,6 +30,7 @@ impl Chunk {
 
 			let Some(i) = rest.iter().position(|&b| b == b' ' || b == b'\t') else { break };
 			match (rest[..i].trim_ascii(), rest[i..].trim_ascii()) {
+				(b"@sync", b"peek") => self.sync_peek = true,
 				(b"@sync", b"entry") => self.sync_entry = true,
 
 				(b"@since", b"") => continue,
@@ -44,7 +46,8 @@ impl Chunk {
 
 impl From<Cow<'static, [u8]>> for Chunk {
 	fn from(b: Cow<'static, [u8]>) -> Self {
-		let mut chunk = Self { bytes: b, since: String::new(), sync_entry: false };
+		let mut chunk =
+			Self { bytes: b, since: String::new(), sync_entry: false, sync_peek: false };
 		chunk.analyze();
 		chunk
 	}

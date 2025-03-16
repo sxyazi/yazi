@@ -50,47 +50,23 @@ impl Default for Loader {
 }
 
 impl Loader {
-	pub async fn ensure(&self, name: &str) -> Result<()> {
-		if let Some(chunk) = self.cache.read().get(name) {
-			return Self::compatible_or_error(name, chunk);
-		}
-
-		// TODO: remove this
-		fn warn(name: &str) {
-			static WARNED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-			if !WARNED.swap(true, std::sync::atomic::Ordering::Relaxed) {
-				yazi_proxy::AppProxy::notify(yazi_proxy::options::NotifyOpt {
-								title:   "Deprecated entry file".to_owned(),
-								content: format!(
-									"The plugin's entry file `init.lua` has been deprecated in favor of the new `main.lua` (user's own `init.lua` remains unchanged).
-
-Please run `ya pack -m` to automatically migrate all plugins, or manually rename your `{name}.yazi/init.lua` to `{name}.yazi/main.lua`."
-								),
-								level:   yazi_proxy::options::NotifyLevel::Warn,
-								timeout: std::time::Duration::from_secs(25),
-							});
-			}
+	pub async fn ensure<F, T>(&self, name: &str, f: F) -> Result<T>
+	where
+		F: FnOnce(&Chunk) -> T,
+	{
+		if let Some(c) = self.cache.read().get(name) {
+			return Self::compatible_or_error(name, c).map(|_| f(c));
 		}
 
 		let p = BOOT.plugin_dir.join(format!("{name}.yazi/main.lua"));
-		let chunk = match fs::read(&p).await {
-			Ok(b) => b,
-			Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-				let p = BOOT.plugin_dir.join(format!("{name}.yazi/init.lua"));
-				match fs::read(&p).await {
-					Ok(b) => {
-						warn(name);
-						b
-					}
-					Err(e) => Err(e).with_context(|| format!("Failed to load plugin from {p:?}"))?,
-				}
-			}
-			Err(e) => Err(e).with_context(|| format!("Failed to load plugin from {p:?}"))?,
-		};
+		let chunk =
+			fs::read(&p).await.with_context(|| format!("Failed to load plugin from {p:?}"))?.into();
 
-		let mut cache = self.cache.write();
-		cache.insert(name.to_owned(), chunk.into());
-		Self::compatible_or_error(name, cache.get(name).unwrap())
+		let result = Self::compatible_or_error(name, &chunk);
+		let inspect = f(&chunk);
+
+		self.cache.write().insert(name.to_owned(), chunk);
+		result.map(|_| inspect)
 	}
 
 	pub fn load(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {

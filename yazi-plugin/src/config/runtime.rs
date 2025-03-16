@@ -29,16 +29,11 @@ impl<'a> Runtime<'a> {
 	}
 
 	fn args(lua: &Lua) -> mlua::Result<Value> {
-		Composer::make(lua, 5, |lua, key| {
-			match key {
-				b"entries" => {
-					lua.create_sequence_from(ARGS.entries.iter().map(Url::from))?.into_lua(lua)?
-				}
-				b"cwd_file" => ARGS.cwd_file.as_ref().map(Url::from).into_lua(lua)?,
-				b"chooser_file" => ARGS.chooser_file.as_ref().map(Url::from).into_lua(lua)?,
-				_ => return Ok(Value::Nil),
-			}
-			.into_lua(lua)
+		Composer::make(lua, 5, |lua, key| match key {
+			b"entries" => lua.create_sequence_from(ARGS.entries.iter().map(Url::from))?.into_lua(lua),
+			b"cwd_file" => ARGS.cwd_file.as_ref().map(Url::from).into_lua(lua),
+			b"chooser_file" => ARGS.chooser_file.as_ref().map(Url::from).into_lua(lua),
+			_ => Ok(Value::Nil),
 		})
 	}
 

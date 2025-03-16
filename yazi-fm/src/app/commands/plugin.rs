@@ -29,7 +29,7 @@ impl App {
 		}
 
 		tokio::spawn(async move {
-			match LOADER.ensure(&opt.id).await {
+			match LOADER.ensure(&opt.id, |_| ()).await {
 				Ok(()) => AppProxy::plugin_do(opt),
 				Err(e) => AppProxy::notify_error("Plugin load failed", e),
 			}
