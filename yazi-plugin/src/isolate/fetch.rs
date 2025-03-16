@@ -13,12 +13,12 @@ pub async fn fetch(
 	if files.is_empty() {
 		return Ok((FetchState::Bool(true), None));
 	}
-	LOADER.ensure(&cmd.name).await.into_lua_err()?;
+	LOADER.ensure(&cmd.name, |_| ()).await.into_lua_err()?;
 
 	tokio::task::spawn_blocking(move || {
 		let lua = slim_lua(&cmd.name)?;
-		let plugin: Table = if let Some(b) = LOADER.read().get(&cmd.name) {
-			lua.load(b.as_bytes()).set_name(&cmd.name).call(())?
+		let plugin: Table = if let Some(c) = LOADER.read().get(&cmd.name) {
+			lua.load(c.as_bytes()).set_name(&cmd.name).call(())?
 		} else {
 			return Err("unloaded plugin".into_lua_err());
 		};

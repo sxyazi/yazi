@@ -32,11 +32,7 @@ impl Preview {
 		};
 
 		self.abort();
-		if previewer.sync {
-			isolate::peek_sync(&previewer.run, file, mime, self.skip);
-		} else {
-			self.previewer_ct = Some(isolate::peek(&previewer.run, file, mime, self.skip));
-		}
+		self.previewer_ct = isolate::peek(&previewer.run, file, mime, self.skip);
 	}
 
 	pub fn go_folder(&mut self, file: File, dir: Option<Cha>, force: bool) {

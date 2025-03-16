@@ -13,7 +13,7 @@ impl Require {
 			"require",
 			lua.create_function(|lua, id: mlua::String| {
 				let s = &id.to_str()?;
-				futures::executor::block_on(LOADER.ensure(s)).into_lua_err()?;
+				futures::executor::block_on(LOADER.ensure(s, |_| ())).into_lua_err()?;
 
 				lua.named_registry_value::<RtRefMut>("ir")?.push(s);
 				let mod_ = LOADER.load(lua, s);
@@ -29,7 +29,7 @@ impl Require {
 			"require",
 			lua.create_async_function(|lua, id: mlua::String| async move {
 				let s = &id.to_str()?;
-				LOADER.ensure(s).await.into_lua_err()?;
+				LOADER.ensure(s, |_| ()).await.into_lua_err()?;
 
 				lua.named_registry_value::<RtRefMut>("ir")?.push(s);
 				let mod_ = LOADER.load(&lua, s);

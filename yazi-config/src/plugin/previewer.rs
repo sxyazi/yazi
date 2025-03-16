@@ -10,8 +10,6 @@ pub struct Previewer {
 	pub name: Option<Pattern>,
 	pub mime: Option<Pattern>,
 	pub run:  Cmd,
-	#[serde(default)]
-	pub sync: bool,
 }
 
 impl Previewer {

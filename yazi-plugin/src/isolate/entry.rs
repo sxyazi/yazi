@@ -7,12 +7,12 @@ use super::slim_lua;
 use crate::loader::LOADER;
 
 pub async fn entry(opt: PluginOpt) -> mlua::Result<()> {
-	LOADER.ensure(&opt.id).await.into_lua_err()?;
+	LOADER.ensure(&opt.id, |_| ()).await.into_lua_err()?;
 
 	tokio::task::spawn_blocking(move || {
 		let lua = slim_lua(&opt.id)?;
-		let plugin: Table = if let Some(b) = LOADER.read().get(opt.id.as_ref()) {
-			lua.load(b.as_bytes()).set_name(opt.id.as_ref()).call(())?
+		let plugin: Table = if let Some(c) = LOADER.read().get(opt.id.as_ref()) {
+			lua.load(c.as_bytes()).set_name(opt.id.as_ref()).call(())?
 		} else {
 			return Err("unloaded plugin".into_lua_err());
 		};

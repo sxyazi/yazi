@@ -21,7 +21,7 @@ pub fn spot(
 
 	tokio::task::spawn_blocking(move || {
 		let future = async {
-			LOADER.ensure(&cmd.name).await.into_lua_err()?;
+			LOADER.ensure(&cmd.name, |_| ()).await.into_lua_err()?;
 
 			let lua = slim_lua(&cmd.name)?;
 			lua.set_hook(
