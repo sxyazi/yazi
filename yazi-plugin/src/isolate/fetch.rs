@@ -1,4 +1,4 @@
-use mlua::{ExternalError, ExternalResult, FromLua, IntoLua, Lua, ObjectLike, Table, Value};
+use mlua::{ExternalResult, FromLua, IntoLua, Lua, ObjectLike, Value};
 use tokio::runtime::Handle;
 use yazi_dds::Sendable;
 use yazi_shared::event::CmdCow;
@@ -17,11 +17,7 @@ pub async fn fetch(
 
 	tokio::task::spawn_blocking(move || {
 		let lua = slim_lua(&cmd.name)?;
-		let plugin: Table = if let Some(c) = LOADER.read().get(&cmd.name) {
-			lua.load(c.as_bytes()).set_name(&cmd.name).call(())?
-		} else {
-			return Err("unloaded plugin".into_lua_err());
-		};
+		let plugin = LOADER.load_once(&lua, &cmd.name)?;
 
 		Handle::current().block_on(plugin.call_async_method(
 			"fetch",

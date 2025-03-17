@@ -1,7 +1,7 @@
-use std::{collections::HashMap, ops::Deref};
+use std::{borrow::Cow, collections::HashMap, ops::Deref};
 
 use anyhow::{Context, Result, bail};
-use mlua::{ExternalError, Lua, Table};
+use mlua::{ChunkMode, ExternalError, Lua, Table};
 use parking_lot::RwLock;
 use tokio::fs;
 use yazi_boot::BOOT;
@@ -75,14 +75,32 @@ impl Loader {
 			return Ok(t);
 		}
 
-		let t: Table = match self.read().get(id) {
-			Some(c) => lua.load(c.as_bytes()).set_name(id).call(())?,
-			None => Err(format!("plugin `{id}` not found").into_lua_err())?,
-		};
-
+		let t = self.load_once(lua, id)?;
 		t.raw_set("_id", lua.create_string(id)?)?;
+
 		loaded.raw_set(id, t.clone())?;
 		Ok(t)
+	}
+
+	pub fn load_once(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
+		let mut mode = ChunkMode::Text;
+		let f = match self.read().get(id) {
+			Some(c) => {
+				mode = c.mode;
+				lua.load(c).set_name(id).into_function()
+			}
+			None => Err(format!("plugin `{id}` not found").into_lua_err()),
+		}?;
+
+		if mode != ChunkMode::Binary {
+			let b = f.dump(true);
+			if let Some(c) = self.write().get_mut(id) {
+				c.mode = ChunkMode::Binary;
+				c.bytes = Cow::Owned(b);
+			}
+		}
+
+		f.call(())
 	}
 
 	pub fn try_load(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
@@ -95,7 +113,7 @@ impl Loader {
 			return Ok(t);
 		}
 
-		let t: Table = lua.load(chunk.as_bytes()).set_name(id).call(())?;
+		let t: Table = lua.load(chunk).set_name(id).call(())?;
 		t.raw_set("_id", lua.create_string(id)?)?;
 
 		loaded.raw_set(id, t.clone())?;

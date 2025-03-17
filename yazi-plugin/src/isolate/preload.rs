@@ -1,4 +1,4 @@
-use mlua::{ExternalError, ExternalResult, IntoLua, ObjectLike, Table};
+use mlua::{ExternalResult, IntoLua, ObjectLike};
 use tokio::runtime::Handle;
 use yazi_config::LAYOUT;
 use yazi_dds::Sendable;
@@ -15,11 +15,7 @@ pub async fn preload(
 
 	tokio::task::spawn_blocking(move || {
 		let lua = slim_lua(&cmd.name)?;
-		let plugin: Table = if let Some(b) = LOADER.read().get(&cmd.name) {
-			lua.load(b.as_bytes()).set_name(&cmd.name).call(())?
-		} else {
-			return Err("unloaded plugin".into_lua_err());
-		};
+		let plugin = LOADER.load_once(&lua, &cmd.name)?;
 
 		let job = lua.create_table_from([
 			("area", Rect::from(LAYOUT.get().preview).into_lua(&lua)?),
