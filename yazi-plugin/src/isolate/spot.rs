@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use mlua::{ExternalError, ExternalResult, HookTriggers, IntoLua, ObjectLike, Table, VmState};
+use mlua::{ExternalError, ExternalResult, HookTriggers, IntoLua, ObjectLike, VmState};
 use tokio::{runtime::Handle, select};
 use tokio_util::sync::CancellationToken;
 use tracing::error;
@@ -35,18 +35,14 @@ pub fn spot(
 				},
 			);
 
-			let plugin: Table = if let Some(b) = LOADER.read().get(&cmd.name) {
-				lua.load(b.as_bytes()).set_name(&cmd.name).call(())?
-			} else {
-				return Err("unloaded plugin".into_lua_err());
-			};
-
+			let plugin = LOADER.load_once(&lua, &cmd.name)?;
 			let job = lua.create_table_from([
 				("args", Sendable::args_to_table_ref(&lua, &cmd.args)?.into_lua(&lua)?),
 				("file", File(file).into_lua(&lua)?),
 				("mime", mime.into_lua(&lua)?),
 				("skip", skip.into_lua(&lua)?),
 			])?;
+
 			if ct2.is_cancelled() { Ok(()) } else { plugin.call_async_method("spot", job).await }
 		};
 

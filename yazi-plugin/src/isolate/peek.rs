@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use mlua::{ExternalError, HookTriggers, IntoLua, ObjectLike, Table, VmState};
+use mlua::{ExternalError, HookTriggers, IntoLua, ObjectLike, VmState};
 use tokio::{runtime::Handle, select};
 use tokio_util::sync::CancellationToken;
 use tracing::error;
@@ -84,12 +84,7 @@ fn peek_async(
 				},
 			);
 
-			let plugin: Table = if let Some(c) = LOADER.read().get(&cmd.name) {
-				lua.load(c.as_bytes()).set_name(&cmd.name).call(())?
-			} else {
-				return Err("unloaded plugin".into_lua_err());
-			};
-
+			let plugin = LOADER.load_once(&lua, &cmd.name)?;
 			let job = lua.create_table_from([
 				("area", Rect::from(LAYOUT.get().preview).into_lua(&lua)?),
 				("args", Sendable::args_to_table_ref(&lua, &cmd.args)?.into_lua(&lua)?),

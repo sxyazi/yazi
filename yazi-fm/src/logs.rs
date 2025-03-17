@@ -14,7 +14,7 @@ pub(super) struct Logs;
 impl Logs {
 	pub(super) fn start() -> anyhow::Result<()> {
 		let level = LOG_LEVEL.get();
-		if LOG_LEVEL.get().is_none() {
+		if level.is_none() {
 			return Ok(());
 		}
 
