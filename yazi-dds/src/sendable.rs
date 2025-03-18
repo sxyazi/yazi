@@ -168,19 +168,11 @@ impl Sendable {
 	}
 
 	pub fn list_to_values(lua: &Lua, data: Vec<Data>) -> mlua::Result<MultiValue> {
-		let mut vec = Vec::with_capacity(data.len());
-		for v in data {
-			vec.push(Self::data_to_value(lua, v)?);
-		}
-		Ok(MultiValue::from_vec(vec))
+		data.into_iter().map(|d| Self::data_to_value(lua, d)).collect()
 	}
 
 	pub fn values_to_list(values: MultiValue) -> mlua::Result<Vec<Data>> {
-		let mut vec = Vec::with_capacity(values.len());
-		for value in values {
-			vec.push(Self::value_to_data(value)?);
-		}
-		Ok(vec)
+		values.into_iter().map(Self::value_to_data).collect()
 	}
 }
 

@@ -1,7 +1,7 @@
 # Default Configuration
 
 > [!IMPORTANT]
-> If you're using a stable release of Yazi instead of the latest nightly build, make sure you're checking these files from [the `shipped` tag][shipped], not the latest main branch.
+> If you're using a stable release of Yazi instead of the newest nightly build, make sure you're checking these files out from [the `shipped` tag][shipped], not the newest `main` branch.
 
 This directory contains the default configuration files for Yazi:
 

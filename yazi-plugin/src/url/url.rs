@@ -8,6 +8,9 @@ impl Url {
 	pub fn register(lua: &Lua) -> mlua::Result<()> {
 		lua.register_userdata_type::<yazi_shared::url::Url>(|reg| {
 			reg.add_method("frag", |lua, me, ()| lua.create_string(me.frag()));
+			reg.add_field_method_get("base", |_, me| {
+				Ok(if me.base().as_os_str().is_empty() { None } else { Some(Self::from(me.base())) })
+			});
 			reg.add_field_method_get("is_regular", |_, me| Ok(me.is_regular()));
 			reg.add_field_method_get("is_search", |_, me| Ok(me.is_search()));
 			reg.add_field_method_get("is_archive", |_, me| Ok(me.is_archive()));
@@ -15,7 +18,10 @@ impl Url {
 			reg.add_field_method_get("has_root", |_, me| Ok(me.has_root()));
 
 			reg.add_method("name", |lua, me, ()| {
-				me.file_name().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
+				Some(me.name())
+					.filter(|&s| !s.is_empty())
+					.map(|s| lua.create_string(s.as_encoded_bytes()))
+					.transpose()
 			});
 			reg.add_method("stem", |lua, me, ()| {
 				me.file_stem().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()

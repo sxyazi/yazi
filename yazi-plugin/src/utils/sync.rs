@@ -91,9 +91,9 @@ impl Utils {
 				let args = [Ok(Value::Table(plugin))]
 					.into_iter()
 					.chain(args.into_iter().map(|d| Sendable::data_to_value(lua, d)))
-					.collect::<mlua::Result<_>>()?;
+					.collect::<mlua::Result<MultiValue>>()?;
 
-				let values = Sendable::values_to_list(block.call(MultiValue::from_vec(args))?)?;
+				let values = Sendable::values_to_list(block.call(args)?)?;
 				tx.send(values).map_err(|_| "send failed".into_lua_err())
 			})
 		};
