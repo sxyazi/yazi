@@ -32,6 +32,7 @@ impl Tasks {
 
 			terminal_clear(TTY.writer()).ok();
 			TTY.writer().write_all(buffered.as_bytes()).ok();
+			TTY.writer().flush().ok();
 
 			defer! { disable_raw_mode().ok(); }
 			enable_raw_mode().ok();
