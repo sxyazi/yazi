@@ -36,7 +36,6 @@ indexmap     = { workspace = true }
 mlua         = { workspace = true }
 ratatui      = { workspace = true }
 scopeguard   = { workspace = true }
-syntect      = { version = "5.2.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
 tokio        = { workspace = true }
 tokio-stream = { workspace = true }
 

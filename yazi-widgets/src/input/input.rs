@@ -1,6 +1,8 @@
 use std::ops::Range;
 
+use ratatui::crossterm::cursor::SetCursorStyle;
 use unicode_width::UnicodeWidthStr;
+use yazi_config::INPUT;
 use yazi_plugin::CLIPBOARD;
 
 use super::{InputSnap, InputSnaps, mode::InputMode, op::InputOp};
@@ -70,7 +72,10 @@ impl Input {
 
 impl Input {
 	#[inline]
-	pub fn value(&self) -> &str { self.snap().slice(self.snap().window(self.limit)) }
+	pub fn value(&self) -> &str { &self.snap().value }
+
+	#[inline]
+	pub fn visible_value(&self) -> &str { self.snap().slice(self.snap().window(self.limit)) }
 
 	#[inline]
 	pub fn mode(&self) -> InputMode { self.snap().mode }
@@ -79,6 +84,20 @@ impl Input {
 	pub fn cursor(&self) -> u16 {
 		let snap = self.snap();
 		snap.slice(snap.offset..snap.cursor).width() as u16
+	}
+
+	pub fn cursor_shape(&self) -> SetCursorStyle {
+		use InputMode as M;
+
+		match self.mode() {
+			M::Normal if INPUT.cursor_blink => SetCursorStyle::BlinkingBlock,
+			M::Normal if !INPUT.cursor_blink => SetCursorStyle::SteadyBlock,
+			M::Insert if INPUT.cursor_blink => SetCursorStyle::BlinkingBar,
+			M::Insert if !INPUT.cursor_blink => SetCursorStyle::SteadyBar,
+			M::Replace if INPUT.cursor_blink => SetCursorStyle::BlinkingUnderScore,
+			M::Replace if !INPUT.cursor_blink => SetCursorStyle::SteadyUnderScore,
+			M::Normal | M::Insert | M::Replace => unreachable!(),
+		}
 	}
 
 	pub fn selected(&self) -> Option<Range<u16>> {

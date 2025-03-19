@@ -18,4 +18,5 @@ yazi-shared  = { path = "../yazi-shared", version = "25.3.7" }
 
 # External dependencies
 futures       = { workspace = true }
+ratatui       = { workspace = true }
 unicode-width = { workspace = true }

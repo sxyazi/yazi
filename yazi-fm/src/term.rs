@@ -1,11 +1,11 @@
 use std::{io, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, AtomicU8, Ordering}};
 
 use anyhow::Result;
-use crossterm::{Command, event::{DisableBracketedPaste, EnableBracketedPaste, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{LeaveAlternateScreen, SetTitle, disable_raw_mode, enable_raw_mode}};
+use crossterm::{Command, event::{DisableBracketedPaste, EnableBracketedPaste, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, style::Print, terminal::{LeaveAlternateScreen, SetTitle, disable_raw_mode, enable_raw_mode}};
 use cursor::RestoreCursor;
 use ratatui::{CompletedFrame, Frame, Terminal, backend::CrosstermBackend, buffer::Buffer, layout::Rect};
 use yazi_adapter::{Emulator, Mux};
-use yazi_config::{INPUT, MGR};
+use yazi_config::MGR;
 use yazi_shared::{SyncCell, tty::{TTY, TtyWriter}};
 
 static CSI_U: AtomicBool = AtomicBool::new(false);
@@ -140,36 +140,6 @@ impl Term {
 	#[inline]
 	pub(super) fn can_partial(&mut self) -> bool {
 		self.inner.autoresize().is_ok() && self.last_area == self.inner.get_frame().area()
-	}
-
-	#[inline]
-	pub(super) fn set_cursor_block() -> Result<()> {
-		use crossterm::cursor::SetCursorStyle;
-		Ok(if INPUT.cursor_blink {
-			queue!(TTY.writer(), SetCursorStyle::BlinkingBlock)?
-		} else {
-			queue!(TTY.writer(), SetCursorStyle::SteadyBlock)?
-		})
-	}
-
-	#[inline]
-	pub(super) fn set_cursor_bar() -> Result<()> {
-		use crossterm::cursor::SetCursorStyle;
-		Ok(if INPUT.cursor_blink {
-			queue!(TTY.writer(), SetCursorStyle::BlinkingBar)?
-		} else {
-			queue!(TTY.writer(), SetCursorStyle::SteadyBar)?
-		})
-	}
-
-	#[inline]
-	pub(super) fn set_cursor_underscore() -> Result<()> {
-		use crossterm::cursor::SetCursorStyle;
-		Ok(if INPUT.cursor_blink {
-			queue!(TTY.writer(), SetCursorStyle::BlinkingUnderScore)?
-		} else {
-			queue!(TTY.writer(), SetCursorStyle::SteadyUnderScore)?
-		})
 	}
 }
 

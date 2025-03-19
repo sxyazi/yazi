@@ -13,7 +13,7 @@ const SEPARATOR: char = std::path::MAIN_SEPARATOR;
 
 struct Opt {
 	word:    Cow<'static, str>,
-	_ticket: usize, // FIXME
+	_ticket: usize, // FIXME: not used
 }
 
 impl From<CmdCow> for Opt {

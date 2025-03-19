@@ -3483,7 +3483,6 @@ dependencies = [
  "ratatui",
  "scopeguard",
  "signal-hook-tokio",
- "syntect",
  "textwrap",
  "tikv-jemallocator",
  "tokio",
@@ -3637,6 +3636,7 @@ name = "yazi-widgets"
 version = "25.3.7"
 dependencies = [
  "futures",
+ "ratatui",
  "unicode-width 0.2.0",
  "yazi-codegen",
  "yazi-config",

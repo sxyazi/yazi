@@ -233,57 +233,30 @@ impl<'a> Executor<'a> {
 					return self.app.cx.input.$name(cmd);
 				}
 			};
-			($name:ident, $alias:literal) => {
-				if cmd.name == $alias {
-					return self.app.cx.input.$name(cmd);
-				}
-			};
 		}
 
+		on!(escape);
 		on!(show);
 		on!(close);
-		on!(escape);
-		on!(move_, "move");
-		on!(backward);
-		on!(forward);
-
-		if cmd.name.as_str() == "complete" {
-			return if cmd.bool("trigger") {
-				self.app.cx.cmp.trigger(cmd)
-			} else {
-				self.app.cx.input.complete(cmd)
-			};
-		}
 
 		match self.app.cx.input.mode() {
 			InputMode::Normal => {
-				on!(insert);
-				on!(visual);
-				on!(replace);
-
-				on!(delete);
-				on!(yank);
-				on!(paste);
-
-				on!(undo);
-				on!(redo);
-
 				match cmd.name.as_str() {
 					// Help
-					"help" => self.app.cx.help.toggle(Layer::Input),
+					"help" => return self.app.cx.help.toggle(Layer::Input),
 					// Plugin
-					"plugin" => self.app.plugin(cmd),
+					"plugin" => return self.app.plugin(cmd),
 					_ => {}
 				}
 			}
-			InputMode::Insert => {
-				on!(visual);
-
-				on!(backspace);
-				on!(kill);
-			}
+			InputMode::Insert => match cmd.name.as_str() {
+				"complete" if cmd.bool("trigger") => return self.app.cx.cmp.trigger(cmd),
+				_ => {}
+			},
 			InputMode::Replace => {}
-		}
+		};
+
+		self.app.cx.input.execute(cmd)
 	}
 
 	fn confirm(&mut self, cmd: CmdCow) {

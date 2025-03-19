@@ -37,6 +37,7 @@ regex               = "1.11.1"
 scopeguard          = "1.2.0"
 serde               = { version = "1.0.219", features = [ "derive" ] }
 serde_json          = "1.0.140"
+syntect             = { version = "5.2.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
 tokio               = { version = "1.44.1", features = [ "full" ] }
 tokio-stream        = "0.1.17"
 tokio-util          = "0.7.14"

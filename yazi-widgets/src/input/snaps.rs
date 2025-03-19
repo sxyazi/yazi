@@ -2,11 +2,21 @@ use std::mem;
 
 use super::InputSnap;
 
-#[derive(Default, PartialEq, Eq)]
+#[derive(PartialEq, Eq)]
 pub struct InputSnaps {
 	idx:      usize,
 	versions: Vec<InputSnap>,
 	current:  InputSnap,
+}
+
+impl Default for InputSnaps {
+	fn default() -> Self {
+		Self {
+			idx:      0,
+			versions: vec![InputSnap::new(String::new(), 0)],
+			current:  InputSnap::new(String::new(), 0),
+		}
+	}
 }
 
 impl InputSnaps {
