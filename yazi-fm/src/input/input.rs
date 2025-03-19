@@ -4,8 +4,8 @@ use anyhow::{Result, bail};
 use ratatui::{buffer::Buffer, layout::Rect, text::Line, widgets::{Block, BorderType, Paragraph, Widget}};
 use syntect::easy::HighlightLines;
 use yazi_config::{PREVIEW, THEME};
-use yazi_core::input::InputMode;
 use yazi_plugin::external::Highlighter;
+use yazi_widgets::input::InputMode;
 
 use crate::{Ctx, Term};
 

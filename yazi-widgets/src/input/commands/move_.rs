@@ -33,7 +33,7 @@ impl Input {
 
 		render!(self.handle_op(opt.step.cursor(snap), false));
 
-		let (limit, snap) = (self.limit(), self.snap_mut());
+		let (limit, snap) = (self.limit, self.snap_mut());
 		if snap.offset > snap.cursor {
 			snap.offset = snap.cursor;
 		} else if snap.value.is_empty() {

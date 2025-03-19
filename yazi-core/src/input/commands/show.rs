@@ -20,7 +20,7 @@ impl TryFrom<CmdCow> for Opt {
 
 impl Input {
 	pub fn show(&mut self, opt: impl TryInto<Opt>) {
-		let Ok(opt) = opt.try_into() else { return };
+		let Ok(opt): Result<Opt, _> = opt.try_into() else { return };
 
 		self.close(false);
 		self.visible = true;
@@ -28,17 +28,26 @@ impl Input {
 		self.position = opt.cfg.position;
 
 		// Typing
-		self.callback = Some(opt.tx);
-		self.realtime = opt.cfg.realtime;
-		self.completion = opt.cfg.completion;
+		self.tx = Some(opt.tx.clone());
 
 		// Shell
 		self.highlight = opt.cfg.highlight;
 
-		// Reset snaps
-		self.snaps.reset(opt.cfg.value, self.limit());
+		// Reset input
+		let ticket = self.ticket.clone();
+		let cb: Box<dyn Fn(&str, &str)> = Box::new(move |before, after| {
+			if opt.cfg.realtime {
+				opt.tx.send(Err(InputError::Typed(format!("{before}{after}")))).ok();
+			}
+
+			if opt.cfg.completion {
+				opt.tx.send(Err(InputError::Completed(before.to_owned(), ticket.current()))).ok();
+			}
+		});
+		self.inner = yazi_widgets::input::Input::new(opt.cfg.value, self.limit, cb);
 
 		// Set cursor after reset
+		// TODO: remove this
 		if let Some(cursor) = opt.cfg.cursor {
 			self.snap_mut().cursor = cursor;
 			self.move_(0);

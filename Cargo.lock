@@ -3433,6 +3433,7 @@ dependencies = [
  "yazi-proxy",
  "yazi-scheduler",
  "yazi-shared",
+ "yazi-widgets",
 ]
 
 [[package]]
@@ -3501,6 +3502,7 @@ dependencies = [
  "yazi-plugin",
  "yazi-proxy",
  "yazi-shared",
+ "yazi-widgets",
 ]
 
 [[package]]
@@ -3628,6 +3630,21 @@ dependencies = [
  "uzers",
  "windows-sys 0.59.0",
  "yazi-macro",
+]
+
+[[package]]
+name = "yazi-widgets"
+version = "25.3.7"
+dependencies = [
+ "futures",
+ "tokio",
+ "unicode-width 0.2.0",
+ "yazi-codegen",
+ "yazi-config",
+ "yazi-macro",
+ "yazi-plugin",
+ "yazi-proxy",
+ "yazi-shared",
 ]
 
 [[package]]

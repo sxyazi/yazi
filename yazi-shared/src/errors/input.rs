@@ -1,9 +1,11 @@
 use std::{error::Error, fmt::{self, Display}};
 
+use crate::Id;
+
 #[derive(Debug)]
 pub enum InputError {
 	Typed(String),
-	Completed(String, usize),
+	Completed(String, Id),
 	Canceled(String),
 }
 

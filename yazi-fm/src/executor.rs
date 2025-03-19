@@ -1,5 +1,5 @@
-use yazi_core::input::InputMode;
 use yazi_shared::{Layer, event::CmdCow};
+use yazi_widgets::input::InputMode;
 
 use crate::app::App;
 
