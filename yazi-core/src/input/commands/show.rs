@@ -1,7 +1,8 @@
 use tokio::sync::mpsc;
-use yazi_config::popup::InputCfg;
+use yazi_config::{INPUT, popup::InputCfg};
 use yazi_macro::render;
 use yazi_shared::{errors::InputError, event::CmdCow};
+use yazi_widgets::input::InputCallback;
 
 use crate::input::Input;
 
@@ -20,7 +21,7 @@ impl TryFrom<CmdCow> for Opt {
 
 impl Input {
 	pub fn show(&mut self, opt: impl TryInto<Opt>) {
-		let Ok(opt) = opt.try_into() else { return };
+		let Ok(opt): Result<Opt, _> = opt.try_into() else { return };
 
 		self.close(false);
 		self.visible = true;
@@ -28,17 +29,28 @@ impl Input {
 		self.position = opt.cfg.position;
 
 		// Typing
-		self.callback = Some(opt.tx);
-		self.realtime = opt.cfg.realtime;
-		self.completion = opt.cfg.completion;
+		self.tx = Some(opt.tx.clone());
+		let ticket = self.ticket.clone();
 
 		// Shell
 		self.highlight = opt.cfg.highlight;
 
-		// Reset snaps
-		self.snaps.reset(opt.cfg.value, self.limit());
+		// Reset input
+		let cb: InputCallback = Box::new(move |before, after| {
+			if opt.cfg.realtime {
+				opt.tx.send(Err(InputError::Typed(format!("{before}{after}")))).ok();
+			} else if opt.cfg.completion {
+				opt.tx.send(Err(InputError::Completed(before.to_owned(), ticket.current()))).ok();
+			}
+		});
+		self.inner = yazi_widgets::input::Input::new(
+			opt.cfg.value,
+			opt.cfg.position.offset.width.saturating_sub(INPUT.border()) as usize,
+			cb,
+		);
 
 		// Set cursor after reset
+		// TODO: remove this
 		if let Some(cursor) = opt.cfg.cursor {
 			self.snap_mut().cursor = cursor;
 			self.move_(0);

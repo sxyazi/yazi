@@ -20,6 +20,7 @@ yazi-plugin    = { path = "../yazi-plugin", version = "25.3.7" }
 yazi-proxy     = { path = "../yazi-proxy", version = "25.3.7" }
 yazi-scheduler = { path = "../yazi-scheduler", version = "25.3.7" }
 yazi-shared    = { path = "../yazi-shared", version = "25.3.7" }
+yazi-widgets   = { path = "../yazi-widgets", version = "25.3.7" }
 
 # External dependencies
 anyhow        = { workspace = true }

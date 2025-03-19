@@ -1,8 +1,9 @@
 use yazi_macro::render;
 use yazi_proxy::CmpProxy;
 use yazi_shared::event::CmdCow;
+use yazi_widgets::input::InputOp;
 
-use crate::input::{Input, InputMode, op::InputOp};
+use crate::input::Input;
 
 struct Opt;
 
@@ -16,28 +17,16 @@ impl From<()> for Opt {
 impl Input {
 	#[yazi_codegen::command]
 	pub fn escape(&mut self, _: Opt) {
-		let snap = self.snap_mut();
-		match snap.mode {
-			InputMode::Normal if snap.op == InputOp::None => {
-				self.close(false);
-			}
-			InputMode::Normal => {
-				snap.op = InputOp::None;
-			}
-			InputMode::Insert => {
-				snap.mode = InputMode::Normal;
-				self.move_(-1);
+		use yazi_widgets::input::InputMode as M;
 
-				if self.completion {
-					CmpProxy::close();
-				}
-			}
-			InputMode::Replace => {
-				snap.mode = InputMode::Normal;
-			}
+		let mode = self.snap().mode;
+		match mode {
+			M::Normal if self.snap_mut().op == InputOp::None => self.close(false),
+			M::Insert => CmpProxy::close(),
+			M::Normal | M::Replace => {}
 		}
 
-		self.snaps.tag(self.limit());
+		self.inner.escape(());
 		render!();
 	}
 }

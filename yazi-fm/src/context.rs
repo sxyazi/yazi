@@ -1,4 +1,5 @@
-use ratatui::layout::Rect;
+use crossterm::cursor::SetCursorStyle;
+use ratatui::layout::{Position, Rect};
 use yazi_core::{cmp::Cmp, confirm::Confirm, help::Help, input::Input, mgr::Mgr, notify::Notify, pick::Pick, tab::{Folder, Tab}, tasks::Tasks, which::Which};
 use yazi_shared::Layer;
 
@@ -30,13 +31,16 @@ impl Ctx {
 	}
 
 	#[inline]
-	pub fn cursor(&self) -> Option<(u16, u16)> {
+	pub fn cursor(&self) -> Option<(Position, SetCursorStyle)> {
 		if self.input.visible {
 			let Rect { x, y, .. } = self.mgr.area(self.input.position);
-			return Some((x + 1 + self.input.cursor(), y + 1));
+			return Some((
+				Position { x: x + 1 + self.input.cursor(), y: y + 1 },
+				self.input.cursor_shape(),
+			));
 		}
 		if let Some((x, y)) = self.help.cursor() {
-			return Some((x, y));
+			return Some((Position { x, y }, self.help.cursor_shape()));
 		}
 		None
 	}

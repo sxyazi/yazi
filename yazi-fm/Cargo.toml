@@ -24,6 +24,7 @@ yazi-macro   = { path = "../yazi-macro", version = "25.3.7" }
 yazi-plugin  = { path = "../yazi-plugin", version = "25.3.7" }
 yazi-proxy   = { path = "../yazi-proxy", version = "25.3.7" }
 yazi-shared  = { path = "../yazi-shared", version = "25.3.7" }
+yazi-widgets = { path = "../yazi-widgets", version = "25.3.7" }
 
 # External dependencies
 anyhow       = { workspace = true }
@@ -35,7 +36,6 @@ indexmap     = { workspace = true }
 mlua         = { workspace = true }
 ratatui      = { workspace = true }
 scopeguard   = { workspace = true }
-syntect      = { version = "5.2.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
 tokio        = { workspace = true }
 tokio-stream = { workspace = true }
 

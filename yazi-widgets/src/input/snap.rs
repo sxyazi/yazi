@@ -5,14 +5,14 @@ use unicode_width::UnicodeWidthChar;
 use super::{InputMode, InputOp};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub(super) struct InputSnap {
-	pub(super) value: String,
+pub struct InputSnap {
+	pub value: String,
 
-	pub(super) op: InputOp,
+	pub op: InputOp,
 
-	pub(super) mode:   InputMode,
-	pub(super) offset: usize,
-	pub(super) cursor: usize,
+	pub mode:   InputMode,
+	pub offset: usize,
+	pub cursor: usize,
 }
 
 impl InputSnap {
@@ -22,7 +22,7 @@ impl InputSnap {
 
 			op: Default::default(),
 
-			mode: Default::default(),
+			mode:   Default::default(),
 			offset: usize::MAX,
 			cursor: usize::MAX,
 		};

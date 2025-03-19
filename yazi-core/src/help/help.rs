@@ -1,12 +1,11 @@
-use crossterm::event::KeyCode;
+use crossterm::{cursor::SetCursorStyle, event::KeyCode};
 use unicode_width::UnicodeWidthStr;
 use yazi_adapter::Dimension;
-use yazi_config::{KEYMAP, keymap::{Chord, Key}};
+use yazi_config::{INPUT, KEYMAP, keymap::{Chord, Key}};
 use yazi_macro::{render, render_and};
 use yazi_shared::Layer;
 
 use super::HELP_MARGIN;
-use crate::input::Input;
 
 #[derive(Default)]
 pub struct Help {
@@ -16,7 +15,7 @@ pub struct Help {
 
 	// Filter
 	pub(super) keyword:   String,
-	pub(super) in_filter: Option<Input>,
+	pub(super) in_filter: Option<yazi_widgets::input::Input>,
 
 	pub(super) offset: usize,
 	pub(super) cursor: usize,
@@ -89,7 +88,7 @@ impl Help {
 			.as_ref()
 			.map(|i| i.value())
 			.or(Some(self.keyword.as_str()).filter(|&s| !s.is_empty()))
-			.map(|s| format!("Filter: {}", s))
+			.map(|s| format!("Filter: {s}"))
 	}
 
 	// --- Bindings
@@ -113,4 +112,9 @@ impl Help {
 
 	#[inline]
 	pub fn rel_cursor(&self) -> usize { self.cursor - self.offset }
+
+	#[inline]
+	pub fn cursor_shape(&self) -> SetCursorStyle {
+		if INPUT.cursor_blink { SetCursorStyle::BlinkingBlock } else { SetCursorStyle::SteadyBlock }
+	}
 }

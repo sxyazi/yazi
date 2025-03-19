@@ -18,17 +18,15 @@ impl From<bool> for Opt {
 impl Input {
 	#[yazi_codegen::command]
 	pub fn close(&mut self, opt: Opt) {
-		if self.completion {
-			CmpProxy::close();
-		}
-
-		if let Some(cb) = self.callback.take() {
-			let value = self.snap_mut().value.clone();
-			_ = cb.send(if opt.submit { Ok(value) } else { Err(InputError::Canceled(value)) });
-		}
-
-		self.ticket = self.ticket.wrapping_add(1);
 		self.visible = false;
+		self.ticket.next();
+
+		if let Some(tx) = self.tx.take() {
+			let value = self.snap().value.clone();
+			_ = tx.send(if opt.submit { Ok(value) } else { Err(InputError::Canceled(value)) });
+		}
+
+		CmpProxy::close();
 		render!();
 	}
 }

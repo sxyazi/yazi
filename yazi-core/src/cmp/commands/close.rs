@@ -1,3 +1,5 @@
+use std::mem;
+
 use yazi_macro::render;
 use yazi_proxy::InputProxy;
 use yazi_shared::event::CmdCow;
@@ -23,7 +25,6 @@ impl Cmp {
 		}
 
 		self.caches.clear();
-		self.visible = false;
-		render!();
+		render!(mem::replace(&mut self.visible, false));
 	}
 }

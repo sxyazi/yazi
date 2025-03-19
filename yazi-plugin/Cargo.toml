@@ -34,7 +34,7 @@ mlua          = { workspace = true }
 parking_lot   = { workspace = true }
 ratatui       = { workspace = true }
 serde_json    = { workspace = true }
-syntect       = { version = "5.2.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
+syntect       = { workspace = true }
 tokio         = { workspace = true }
 tokio-stream  = { workspace = true }
 tokio-util    = { workspace = true }

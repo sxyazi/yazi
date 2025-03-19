@@ -12,15 +12,15 @@ const SEPARATOR: [char; 2] = ['/', '\\'];
 const SEPARATOR: char = std::path::MAIN_SEPARATOR;
 
 struct Opt {
-	word:   Cow<'static, str>,
-	ticket: usize,
+	word:    Cow<'static, str>,
+	_ticket: usize, // FIXME: not used
 }
 
 impl From<CmdCow> for Opt {
 	fn from(mut c: CmdCow) -> Self {
 		Self {
-			word:   c.take_first_str().unwrap_or_default(),
-			ticket: c.get("ticket").and_then(Data::as_usize).unwrap_or(0),
+			word:    c.take_first_str().unwrap_or_default(),
+			_ticket: c.get("ticket").and_then(Data::as_usize).unwrap_or(0),
 		}
 	}
 }
@@ -28,11 +28,7 @@ impl From<CmdCow> for Opt {
 impl Input {
 	#[yazi_codegen::command]
 	pub fn complete(&mut self, opt: Opt) {
-		if self.ticket != opt.ticket {
-			return;
-		}
-
-		let [before, after] = self.partition();
+		let (before, after) = self.partition();
 		let new = if let Some((prefix, _)) = before.rsplit_once(SEPARATOR) {
 			format!("{prefix}/{}{after}", opt.word).replace(SEPARATOR, MAIN_SEPARATOR_STR)
 		} else {

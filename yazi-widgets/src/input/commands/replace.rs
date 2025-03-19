@@ -27,6 +27,6 @@ impl Input {
 		}
 
 		render!();
-		self.snaps.tag(self.limit()).then(|| self.flush_value());
+		self.snaps.tag(self.limit).then(|| self.flush_value());
 	}
 }

@@ -1,5 +1,5 @@
 use yazi_macro::emit;
-use yazi_shared::event::Cmd;
+use yazi_shared::{Id, event::Cmd};
 
 pub struct CmpProxy;
 
@@ -10,7 +10,7 @@ impl CmpProxy {
 	}
 
 	#[inline]
-	pub fn trigger(word: &str, ticket: usize) {
+	pub fn trigger(word: &str, ticket: Id) {
 		emit!(Call(Cmd::args("cmp:trigger", &[word]).with("ticket", ticket)));
 	}
 }

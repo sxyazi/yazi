@@ -2,20 +2,27 @@ use std::mem;
 
 use super::InputSnap;
 
-#[derive(Default, PartialEq, Eq)]
-pub(super) struct InputSnaps {
+#[derive(PartialEq, Eq)]
+pub struct InputSnaps {
 	idx:      usize,
 	versions: Vec<InputSnap>,
 	current:  InputSnap,
 }
 
+impl Default for InputSnaps {
+	fn default() -> Self {
+		Self {
+			idx:      0,
+			versions: vec![InputSnap::new(String::new(), 0)],
+			current:  InputSnap::new(String::new(), 0),
+		}
+	}
+}
+
 impl InputSnaps {
-	#[inline]
-	pub(super) fn reset(&mut self, value: String, limit: usize) {
-		self.idx = 0;
-		self.versions.clear();
-		self.versions.push(InputSnap::new(value, limit));
-		self.current = self.versions[0].clone();
+	pub fn new(value: String, limit: usize) -> Self {
+		let current = InputSnap::new(value, limit);
+		Self { idx: 0, versions: vec![current.clone()], current }
 	}
 
 	pub(super) fn tag(&mut self, limit: usize) -> bool {
@@ -65,7 +72,7 @@ impl InputSnaps {
 
 impl InputSnaps {
 	#[inline]
-	pub(super) fn current(&self) -> &InputSnap { &self.current }
+	pub fn current(&self) -> &InputSnap { &self.current }
 
 	#[inline]
 	pub(super) fn current_mut(&mut self) -> &mut InputSnap { &mut self.current }
