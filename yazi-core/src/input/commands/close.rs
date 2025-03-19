@@ -21,9 +21,9 @@ impl Input {
 		self.visible = false;
 		self.ticket.next();
 
-		if let Some(cb) = self.tx.take() {
+		if let Some(tx) = self.tx.take() {
 			let value = self.snap().value.clone();
-			_ = cb.send(if opt.submit { Ok(value) } else { Err(InputError::Canceled(value)) });
+			_ = tx.send(if opt.submit { Ok(value) } else { Err(InputError::Canceled(value)) });
 		}
 
 		CmpProxy::close();

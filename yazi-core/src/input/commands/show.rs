@@ -1,7 +1,8 @@
 use tokio::sync::mpsc;
-use yazi_config::popup::InputCfg;
+use yazi_config::{INPUT, popup::InputCfg};
 use yazi_macro::render;
 use yazi_shared::{errors::InputError, event::CmdCow};
+use yazi_widgets::input::InputCallback;
 
 use crate::input::Input;
 
@@ -29,22 +30,24 @@ impl Input {
 
 		// Typing
 		self.tx = Some(opt.tx.clone());
+		let ticket = self.ticket.clone();
 
 		// Shell
 		self.highlight = opt.cfg.highlight;
 
 		// Reset input
-		let ticket = self.ticket.clone();
-		let cb: Box<dyn Fn(&str, &str)> = Box::new(move |before, after| {
+		let cb: InputCallback = Box::new(move |before, after| {
 			if opt.cfg.realtime {
 				opt.tx.send(Err(InputError::Typed(format!("{before}{after}")))).ok();
-			}
-
-			if opt.cfg.completion {
+			} else if opt.cfg.completion {
 				opt.tx.send(Err(InputError::Completed(before.to_owned(), ticket.current()))).ok();
 			}
 		});
-		self.inner = yazi_widgets::input::Input::new(opt.cfg.value, self.limit, cb);
+		self.inner = yazi_widgets::input::Input::new(
+			opt.cfg.value,
+			opt.cfg.position.offset.width.saturating_sub(INPUT.border()) as usize,
+			cb,
+		);
 
 		// Set cursor after reset
 		// TODO: remove this

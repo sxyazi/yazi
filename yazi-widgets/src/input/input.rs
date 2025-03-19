@@ -5,15 +5,17 @@ use yazi_plugin::CLIPBOARD;
 
 use super::{InputSnap, InputSnaps, mode::InputMode, op::InputOp};
 
+pub type InputCallback = Box<dyn Fn(&str, &str)>;
+
 #[derive(Default)]
 pub struct Input {
 	pub snaps:    InputSnaps,
 	pub limit:    usize,
-	pub callback: Option<Box<dyn Fn(&str, &str)>>,
+	pub callback: Option<InputCallback>,
 }
 
 impl Input {
-	pub fn new(value: String, limit: usize, callback: Box<dyn Fn(&str, &str)>) -> Self {
+	pub fn new(value: String, limit: usize, callback: InputCallback) -> Self {
 		Self { snaps: InputSnaps::new(value, limit), limit, callback: Some(callback) }
 	}
 
