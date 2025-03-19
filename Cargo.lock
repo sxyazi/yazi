@@ -3637,13 +3637,11 @@ name = "yazi-widgets"
 version = "25.3.7"
 dependencies = [
  "futures",
- "tokio",
  "unicode-width 0.2.0",
  "yazi-codegen",
  "yazi-config",
  "yazi-macro",
  "yazi-plugin",
- "yazi-proxy",
  "yazi-shared",
 ]
 
