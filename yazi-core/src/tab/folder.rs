@@ -2,7 +2,7 @@ use std::mem;
 
 use yazi_config::{LAYOUT, MGR};
 use yazi_dds::Pubsub;
-use yazi_fs::{File, Files, FilesOp, FolderStage, Step, cha::Cha};
+use yazi_fs::{File, Files, FilesOp, FolderStage, Step, cha::Cha, Filter};
 use yazi_proxy::MgrProxy;
 use yazi_shared::{Id, url::{Url, Urn, UrnBuf}};
 
@@ -24,7 +24,7 @@ impl Default for Folder {
 		Self {
 			url:    Default::default(),
 			cha:    Default::default(),
-			files:  Files::new(MGR.show_hidden),
+			files:  Files::new(MGR.show_hidden, Filter::new(MGR.ignore_rule.as_str(), yazi_fs::FilterCase::Smart).ok()),
 			stage:  Default::default(),
 			offset: Default::default(),
 			cursor: Default::default(),
