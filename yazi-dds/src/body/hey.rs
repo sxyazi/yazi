@@ -2,19 +2,20 @@ use std::{borrow::Cow, collections::HashMap};
 
 use mlua::{ExternalResult, IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
+use yazi_shared::Id;
 
 use super::{Body, BodyHi};
 use crate::Peer;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BodyHey {
-	pub peers:   HashMap<u64, Peer>,
+	pub peers:   HashMap<Id, Peer>,
 	pub version: Cow<'static, str>,
 }
 
 impl BodyHey {
 	#[inline]
-	pub fn owned(peers: HashMap<u64, Peer>) -> Body<'static> {
+	pub fn owned(peers: HashMap<Id, Peer>) -> Body<'static> {
 		Self { peers, version: BodyHi::version().into() }.into()
 	}
 }

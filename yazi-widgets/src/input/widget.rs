@@ -24,7 +24,7 @@ impl Widget for &Input {
 					height: area.height.min(1),
 				},
 				THEME.input.selected,
-			)
+			);
 		}
 	}
 }

@@ -1,5 +1,6 @@
 use mlua::{ExternalResult, Function, Lua, Value};
 use yazi_dds::body::Body;
+use yazi_shared::Id;
 
 use crate::runtime::RtRef;
 
@@ -15,7 +16,7 @@ impl Pubsub {
 
 	pub(super) fn pub_to(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, (receiver, kind, value): (u64, mlua::String, Value)| {
-			yazi_dds::Pubsub::pub_to(receiver, Body::from_lua(&kind.to_str()?, value)?);
+			yazi_dds::Pubsub::pub_to(Id(receiver), Body::from_lua(&kind.to_str()?, value)?);
 			Ok(())
 		})
 	}

@@ -64,7 +64,7 @@ impl Pubsub {
 
 	pub fn pub_(body: Body<'static>) { body.with_receiver(*ID).emit(); }
 
-	pub fn pub_to(receiver: u64, body: Body<'static>) {
+	pub fn pub_to(receiver: Id, body: Body<'static>) {
 		if receiver == *ID {
 			return Self::pub_(body);
 		}

@@ -3,11 +3,11 @@ use std::{collections::HashMap, str::FromStr, time::Duration};
 use anyhow::Result;
 use parking_lot::RwLock;
 use tokio::{io::{AsyncBufReadExt, AsyncWriteExt, BufReader}, select, sync::mpsc::{self, UnboundedReceiver}, task::JoinHandle, time};
-use yazi_shared::RoCell;
+use yazi_shared::{Id, RoCell};
 
 use crate::{Client, ClientWriter, Payload, Peer, STATE, Stream, body::{Body, BodyBye, BodyHey}};
 
-pub(super) static CLIENTS: RoCell<RwLock<HashMap<u64, Client>>> = RoCell::new();
+pub(super) static CLIENTS: RoCell<RwLock<HashMap<Id, Client>>> = RoCell::new();
 
 pub(super) struct Server;
 
@@ -87,7 +87,7 @@ impl Server {
 		}))
 	}
 
-	fn handle_hi(s: String, id: &mut Option<u64>, tx: mpsc::UnboundedSender<String>) {
+	fn handle_hi(s: String, id: &mut Option<Id>, tx: mpsc::UnboundedSender<String>) {
 		let Ok(payload) = Payload::from_str(&s) else { return };
 		let Body::Hi(hi) = payload.body else { return };
 
@@ -108,7 +108,7 @@ impl Server {
 		Self::handle_hey(&clients);
 	}
 
-	fn handle_hey(clients: &HashMap<u64, Client>) {
+	fn handle_hey(clients: &HashMap<Id, Client>) {
 		let payload = format!(
 			"{}\n",
 			Payload::new(BodyHey::owned(
@@ -118,7 +118,7 @@ impl Server {
 		clients.values().for_each(|c| _ = c.tx.send(payload.clone()));
 	}
 
-	async fn handle_bye(id: u64, mut rx: UnboundedReceiver<String>, mut writer: ClientWriter) {
+	async fn handle_bye(id: Id, mut rx: UnboundedReceiver<String>, mut writer: ClientWriter) {
 		while let Ok(payload) = rx.try_recv() {
 			if writer.write_all(payload.as_bytes()).await.is_err() {
 				break;
@@ -126,7 +126,7 @@ impl Server {
 		}
 
 		_ = writer
-			.write_all(BodyBye::owned().with_receiver(id).with_sender(0).to_string().as_bytes())
+			.write_all(BodyBye::owned().with_receiver(id).with_sender(Id(0)).to_string().as_bytes())
 			.await;
 
 		writer.flush().await.ok();

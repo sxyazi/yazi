@@ -42,8 +42,8 @@ impl Input {
 			let delta = snap.mode.delta();
 			let s = snap.slice(snap.offset..snap.cursor + delta);
 			if s.width() >= limit {
-				let s = s.chars().rev().collect::<String>();
-				snap.offset = snap.cursor - InputSnap::find_window(&s, 0, limit).end.saturating_sub(delta);
+				let range = InputSnap::find_window(s.chars().rev(), 0, limit);
+				snap.offset = snap.cursor - range.end.saturating_sub(delta);
 			}
 		}
 	}

@@ -36,7 +36,7 @@ impl InputSnaps {
 		let value = mem::take(&mut self.versions[self.idx].value);
 		self.versions[self.idx] = self.current.clone();
 		self.versions[self.idx].value = value;
-		self.versions[self.idx].reset(limit);
+		self.versions[self.idx].resize(limit);
 
 		// If the *current* value is the same as the *last* version
 		if self.versions[self.idx].value == self.current.value {

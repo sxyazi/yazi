@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{Parser, command};
+use yazi_shared::Id;
 
 #[derive(Debug, Default, Parser)]
 #[command(name = "yazi")]
@@ -22,7 +23,7 @@ pub struct Args {
 
 	/// Use the specified client ID, must be a globally unique number
 	#[arg(long)]
-	pub client_id:     Option<u64>,
+	pub client_id:     Option<Id>,
 	/// Report the specified local events to stdout
 	#[arg(long)]
 	pub local_events:  Option<String>,

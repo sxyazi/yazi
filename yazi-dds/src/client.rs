@@ -5,19 +5,19 @@ use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use tokio::{io::AsyncWriteExt, select, sync::mpsc, task::JoinHandle, time};
 use tracing::error;
-use yazi_shared::RoCell;
+use yazi_shared::{Id, RoCell};
 
 use crate::{ClientReader, ClientWriter, Payload, Pubsub, Server, Stream, body::{Body, BodyBye, BodyHi}};
 
-pub(super) static ID: RoCell<u64> = RoCell::new();
-pub(super) static PEERS: RoCell<RwLock<HashMap<u64, Peer>>> = RoCell::new();
+pub static ID: RoCell<Id> = RoCell::new();
+pub(super) static PEERS: RoCell<RwLock<HashMap<Id, Peer>>> = RoCell::new();
 
 pub(super) static QUEUE_TX: RoCell<mpsc::UnboundedSender<String>> = RoCell::new();
 pub(super) static QUEUE_RX: RoCell<mpsc::UnboundedReceiver<String>> = RoCell::new();
 
 #[derive(Debug)]
 pub struct Client {
-	pub(super) id:        u64,
+	pub(super) id:        Id,
 	pub(super) tx:        mpsc::UnboundedSender<String>,
 	pub(super) abilities: HashSet<String>,
 }

@@ -46,7 +46,7 @@ pub struct Input {
 }
 
 impl Input {
-	pub const fn border(&self) -> u16 { 1 }
+	pub const fn border(&self) -> u16 { 2 }
 }
 
 impl FromStr for Input {
