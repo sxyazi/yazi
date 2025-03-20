@@ -1,6 +1,7 @@
 use anyhow::{Result, bail};
 use mlua::{ExternalResult, IntoLua, Lua, Value};
 use serde::Serialize;
+use yazi_shared::Id;
 
 use super::{BodyBulk, BodyBye, BodyCd, BodyCustom, BodyDelete, BodyHey, BodyHi, BodyHover, BodyLoad, BodyMount, BodyMove, BodyRename, BodyTab, BodyTrash, BodyYank};
 use crate::Payload;
@@ -107,12 +108,12 @@ impl<'a> Body<'a> {
 	}
 
 	#[inline]
-	pub fn with_receiver(self, receiver: u64) -> Payload<'a> {
+	pub fn with_receiver(self, receiver: Id) -> Payload<'a> {
 		Payload::new(self).with_receiver(receiver)
 	}
 
 	#[inline]
-	pub fn with_sender(self, sender: u64) -> Payload<'a> { Payload::new(self).with_sender(sender) }
+	pub fn with_sender(self, sender: Id) -> Payload<'a> { Payload::new(self).with_sender(sender) }
 }
 
 impl IntoLua for Body<'static> {

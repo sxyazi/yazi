@@ -41,7 +41,7 @@ tokio-util    = { workspace = true }
 tracing       = { workspace = true }
 twox-hash     = { workspace = true }
 unicode-width = { workspace = true }
-yazi-prebuild = "0.1.2"
+yazi-prebuilt = "0.1.0"
 
 [target."cfg(unix)".dependencies]
 uzers = { workspace = true }

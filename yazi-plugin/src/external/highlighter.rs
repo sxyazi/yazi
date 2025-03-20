@@ -23,9 +23,9 @@ impl Highlighter {
 			let theme = std::fs::File::open(&THEME.mgr.syntect_theme)
 				.map_err(LoadingError::Io)
 				.and_then(|f| ThemeSet::load_from_reader(&mut std::io::BufReader::new(f)))
-				.or_else(|_| ThemeSet::load_from_reader(&mut Cursor::new(yazi_prebuild::ansi_theme())));
+				.or_else(|_| ThemeSet::load_from_reader(&mut Cursor::new(yazi_prebuilt::ansi_theme())));
 
-			let syntaxes = dumps::from_uncompressed_data(yazi_prebuild::syntaxes());
+			let syntaxes = dumps::from_uncompressed_data(yazi_prebuilt::syntaxes());
 
 			(theme.unwrap(), syntaxes.unwrap())
 		};

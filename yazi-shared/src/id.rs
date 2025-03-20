@@ -1,13 +1,15 @@
-use std::{fmt::Display, str::FromStr, sync::atomic::{AtomicUsize, Ordering}};
+use std::{fmt::Display, str::FromStr, sync::atomic::{AtomicU64, Ordering}};
 
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Default, Hash, Eq, PartialEq, Serialize, Deserialize)]
-pub struct Id(usize);
+pub struct Id(pub u64);
 
 impl Id {
 	#[inline]
-	pub fn get(&self) -> usize { self.0 }
+	pub const fn get(&self) -> u64 { self.0 }
+
+	pub fn unique() -> Self { Self(crate::timestamp_us()) }
 }
 
 impl Display for Id {
@@ -15,25 +17,29 @@ impl Display for Id {
 }
 
 impl FromStr for Id {
-	type Err = <usize as FromStr>::Err;
+	type Err = <u64 as FromStr>::Err;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> { s.parse().map(Self) }
 }
 
 impl TryFrom<i64> for Id {
-	type Error = <usize as TryFrom<i64>>::Error;
+	type Error = <u64 as TryFrom<i64>>::Error;
 
-	fn try_from(value: i64) -> Result<Self, Self::Error> { usize::try_from(value).map(Self) }
+	fn try_from(value: i64) -> Result<Self, Self::Error> { u64::try_from(value).map(Self) }
+}
+
+impl PartialEq<u64> for Id {
+	fn eq(&self, other: &u64) -> bool { self.0 == *other }
 }
 
 // --- Ids
 pub struct Ids {
-	next: AtomicUsize,
+	next: AtomicU64,
 }
 
 impl Ids {
 	#[inline]
-	pub const fn new() -> Self { Self { next: AtomicUsize::new(1) } }
+	pub const fn new() -> Self { Self { next: AtomicU64::new(1) } }
 
 	#[inline]
 	pub fn next(&self) -> Id {

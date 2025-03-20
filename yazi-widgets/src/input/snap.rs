@@ -22,19 +22,19 @@ impl InputSnap {
 
 			op: Default::default(),
 
-			mode:   Default::default(),
+			mode: Default::default(),
 			offset: usize::MAX,
 			cursor: usize::MAX,
 		};
-		snap.reset(limit);
+		snap.resize(limit);
 		snap
 	}
 
 	#[inline]
-	pub(super) fn reset(&mut self, limit: usize) {
+	pub(super) fn resize(&mut self, limit: usize) {
+		let range = Self::find_window(self.value.chars().rev(), 0, limit);
 		self.cursor = self.cursor.min(self.count().saturating_sub(self.mode.delta()));
-		self.offset =
-			self.offset.min(self.cursor.saturating_sub(Self::find_window(&self.rev(), 0, limit).end));
+		self.offset = self.offset.min(self.cursor.saturating_sub(range.end));
 	}
 }
 
@@ -62,29 +62,28 @@ impl InputSnap {
 	}
 
 	#[inline]
-	pub(super) fn rev(&self) -> String { self.value.chars().rev().collect::<String>() }
-
-	#[inline]
 	pub(super) fn window(&self, limit: usize) -> Range<usize> {
-		Self::find_window(&self.value, self.offset, limit)
+		Self::find_window(self.value.chars(), self.offset, limit)
 	}
 
 	#[inline]
-	pub(super) fn find_window(s: &str, offset: usize, limit: usize) -> Range<usize> {
+	pub(super) fn find_window<T>(it: T, offset: usize, limit: usize) -> Range<usize>
+	where
+		T: Iterator<Item = char>,
+	{
 		let mut width = 0;
-		let v: Vec<_> = s
-			.chars()
-			.enumerate()
-			.skip(offset)
-			.map_while(|(i, c)| {
-				width += c.width().unwrap_or(0);
-				if width < limit { Some(i) } else { None }
-			})
-			.collect();
+		let mut range = None;
 
-		if v.is_empty() {
-			return 0..0;
+		for (i, c) in it.enumerate().skip(offset) {
+			width += c.width().unwrap_or(0);
+			if width > limit {
+				break;
+			}
+			match range {
+				None => range = Some(i..i + 1),
+				Some(ref mut r) => r.end = i + 1,
+			}
 		}
-		*v.first().unwrap()..v.last().unwrap() + 1
+		range.unwrap_or(0..0)
 	}
 }

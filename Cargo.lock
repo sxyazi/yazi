@@ -389,9 +389,9 @@ dependencies = [
 
 [[package]]
 name = "clap_complete"
-version = "4.5.46"
+version = "4.5.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f5c5508ea23c5366f77e53f5a0070e5a84e51687ec3ef9e0464c86dc8d13ce98"
+checksum = "c06f5378ea264ad4f82bbc826628b5aad714a75abf6ece087e923010eb937fb6"
 dependencies = [
  "clap",
 ]
@@ -3564,16 +3564,16 @@ dependencies = [
  "yazi-dds",
  "yazi-fs",
  "yazi-macro",
- "yazi-prebuild",
+ "yazi-prebuilt",
  "yazi-proxy",
  "yazi-shared",
 ]
 
 [[package]]
-name = "yazi-prebuild"
-version = "0.1.2"
+name = "yazi-prebuilt"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4b6c8e12e39ac0f79fa96f36e5b88e0da8d230691abd729eec709b43c74f632"
+checksum = "33232d9116df6415ddfcdf72701b1b7439ce87f240a14723e8dd5d17e7ed5f98"
 
 [[package]]
 name = "yazi-proxy"

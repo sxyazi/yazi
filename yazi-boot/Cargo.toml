@@ -21,8 +21,11 @@ regex = { workspace = true }
 serde = { workspace = true }
 
 [build-dependencies]
+yazi-shared = { path = "../yazi-shared", version = "25.3.7" }
+
+# External dependencies
 clap                  = { workspace = true }
-clap_complete         = "4.5.46"
+clap_complete         = "4.5.47"
 clap_complete_fig     = "4.5.2"
 clap_complete_nushell = "4.5.5"
 vergen-gitcl          = { version = "1.0.5", features = [ "build", "rustc" ] }
