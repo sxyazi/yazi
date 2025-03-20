@@ -9,7 +9,7 @@ impl Id {
 	#[inline]
 	pub const fn get(&self) -> u64 { self.0 }
 
-	pub fn unique() -> Self { Id(crate::timestamp_us()) }
+	pub fn unique() -> Self { Self(crate::timestamp_us()) }
 }
 
 impl Display for Id {
