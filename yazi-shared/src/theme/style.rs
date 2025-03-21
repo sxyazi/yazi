@@ -4,47 +4,7 @@ use serde::{Deserialize, Serialize, Serializer, ser::SerializeMap};
 use super::Color;
 
 #[derive(Clone, Copy, Debug, Default, Deserialize)]
-#[serde(from = "StyleShadow")]
 pub struct Style {
-	pub fg:       Option<Color>,
-	pub bg:       Option<Color>,
-	pub modifier: Modifier,
-}
-
-impl Serialize for Style {
-	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-	where
-		S: Serializer,
-	{
-		let mut map = serializer.serialize_map(Some(3))?;
-		map.serialize_entry("fg", &self.fg)?;
-		map.serialize_entry("bg", &self.bg)?;
-		map.serialize_entry("modifier", &self.modifier.bits())?;
-		map.end()
-	}
-}
-
-impl From<Style> for ratatui::style::Style {
-	fn from(value: Style) -> Self {
-		ratatui::style::Style {
-			fg:              value.fg.map(Into::into),
-			bg:              value.bg.map(Into::into),
-			underline_color: None,
-			add_modifier:    value.modifier,
-			sub_modifier:    Modifier::empty(),
-		}
-	}
-}
-
-impl Style {
-	#[inline]
-	pub fn derive(self, other: ratatui::style::Style) -> ratatui::style::Style {
-		ratatui::style::Style::from(self).patch(other)
-	}
-}
-
-#[derive(Default, Deserialize)]
-pub struct StyleShadow {
 	#[serde(default)]
 	pub fg:          Option<Color>,
 	#[serde(default)]
@@ -69,8 +29,33 @@ pub struct StyleShadow {
 	pub crossed:     bool,
 }
 
-impl From<StyleShadow> for Style {
-	fn from(value: StyleShadow) -> Self {
+impl Serialize for Style {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: Serializer,
+	{
+		let mut map = serializer.serialize_map(Some(3))?;
+		map.serialize_entry("fg", &self.fg)?;
+		map.serialize_entry("bg", &self.bg)?;
+		map.serialize_entry("modifier", &Modifier::from(*self).bits())?;
+		map.end()
+	}
+}
+
+impl From<Style> for ratatui::style::Style {
+	fn from(value: Style) -> Self {
+		ratatui::style::Style {
+			fg:              value.fg.map(Into::into),
+			bg:              value.bg.map(Into::into),
+			underline_color: None,
+			add_modifier:    value.into(),
+			sub_modifier:    Modifier::empty(),
+		}
+	}
+}
+
+impl From<Style> for ratatui::style::Modifier {
+	fn from(value: Style) -> Self {
 		let mut modifier = Modifier::empty();
 		if value.bold {
 			modifier |= Modifier::BOLD;
@@ -99,7 +84,13 @@ impl From<StyleShadow> for Style {
 		if value.crossed {
 			modifier |= Modifier::CROSSED_OUT;
 		}
+		modifier
+	}
+}
 
-		Self { fg: value.fg, bg: value.bg, modifier }
+impl Style {
+	#[inline]
+	pub fn derive(self, other: ratatui::style::Style) -> ratatui::style::Style {
+		ratatui::style::Style::from(self).patch(other)
 	}
 }

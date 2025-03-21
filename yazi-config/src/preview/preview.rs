@@ -1,8 +1,8 @@
-use std::{borrow::Cow, path::PathBuf, str::FromStr};
+use std::{borrow::Cow, path::PathBuf};
 
-use anyhow::Context;
-use serde::{Deserialize, Deserializer, Serialize};
-use validator::Validate;
+use anyhow::{Context, Result, bail};
+use serde::{Deserialize, Serialize};
+use yazi_codegen::DeserializeOver2;
 use yazi_fs::{Xdg, expand_path};
 use yazi_shared::timestamp_us;
 
@@ -11,7 +11,7 @@ use super::PreviewWrap;
 #[rustfmt::skip]
 const TABS: &[&str] = &["", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ", "         ", "          ", "           ", "            ", "             ", "              ", "               ", "                "];
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Deserialize, DeserializeOver2, Serialize)]
 pub struct Preview {
 	pub wrap:       PreviewWrap,
 	pub tab_size:   u8,
@@ -44,70 +44,24 @@ impl Preview {
 	}
 }
 
-impl FromStr for Preview {
-	type Err = anyhow::Error;
-
-	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		let preview: Self =
-			toml::from_str(s).context("Failed to parse the [preview] section in your yazi.toml")?;
-
-		std::fs::create_dir_all(&preview.cache_dir).context("Failed to create cache directory")?;
-
-		Ok(preview)
-	}
-}
-
-impl<'de> Deserialize<'de> for Preview {
-	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-	where
-		D: Deserializer<'de>,
-	{
-		#[derive(Deserialize)]
-		struct Outer {
-			preview: Shadow,
-		}
-		#[derive(Deserialize, Validate)]
-		struct Shadow {
-			wrap:       PreviewWrap,
-			tab_size:   u8,
-			max_width:  u32,
-			max_height: u32,
-
-			cache_dir: Option<String>,
-
-			#[validate(range(min = 0, max = 100))]
-			image_delay:    u8,
-			image_filter:   String,
-			#[validate(range(min = 50, max = 90))]
-			image_quality:  u8,
-			#[validate(range(min = 10, max = 20))]
-			sixel_fraction: u8,
-
-			ueberzug_scale:  f32,
-			ueberzug_offset: (f32, f32, f32, f32),
+impl Preview {
+	pub(crate) fn reshape(mut self) -> Result<Self> {
+		if self.image_delay > 100 {
+			bail!("[preview].image_delay must be between 0 and 100.");
+		} else if self.image_quality < 50 || self.image_quality > 90 {
+			bail!("[preview].image_quality must be between 50 and 90.");
+		} else if self.sixel_fraction < 10 || self.sixel_fraction > 20 {
+			bail!("[preview].sixel_fraction must be between 10 and 20.");
 		}
 
-		let preview = Outer::deserialize(deserializer)?.preview;
-		preview.validate().map_err(serde::de::Error::custom)?;
+		self.cache_dir = if self.cache_dir.as_os_str().is_empty() {
+			Xdg::cache_dir()
+		} else {
+			expand_path(&self.cache_dir)
+		};
 
-		Ok(Preview {
-			wrap:       preview.wrap,
-			tab_size:   preview.tab_size,
-			max_width:  preview.max_width,
-			max_height: preview.max_height,
+		std::fs::create_dir_all(&self.cache_dir).context("Failed to create cache directory")?;
 
-			cache_dir: preview
-				.cache_dir
-				.filter(|p| !p.is_empty())
-				.map_or_else(Xdg::cache_dir, expand_path),
-
-			image_delay:    preview.image_delay,
-			image_filter:   preview.image_filter,
-			image_quality:  preview.image_quality,
-			sixel_fraction: preview.sixel_fraction,
-
-			ueberzug_scale:  preview.ueberzug_scale,
-			ueberzug_offset: preview.ueberzug_offset,
-		})
+		Ok(self)
 	}
 }

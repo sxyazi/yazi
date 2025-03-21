@@ -1,35 +1,25 @@
-use std::{borrow::Cow, path::{Path, PathBuf}, str::FromStr};
-
-use anyhow::{Context, Result};
-use toml::{Table, Value};
-use yazi_fs::Xdg;
-
-use crate::theme::Flavor;
+use crate::{Yazi, keymap::Keymap, theme::Theme};
 
 pub(crate) struct Preset;
 
 impl Preset {
-	pub(crate) fn yazi(p: &Path) -> Result<Cow<'static, str>> {
-		Self::merge_path(p.join("yazi.toml"), yazi_macro::config_preset!("yazi"))
+	#[inline]
+	pub(super) fn yazi() -> Result<Yazi, toml::de::Error> {
+		toml::from_str(&yazi_macro::config_preset!("yazi"))
 	}
 
-	pub(crate) fn keymap(p: &Path) -> Result<Cow<'static, str>> {
-		Self::merge_path(p.join("keymap.toml"), yazi_macro::config_preset!("keymap"))
+	#[inline]
+	pub(super) fn keymap() -> Result<Keymap, toml::de::Error> {
+		toml::from_str(&yazi_macro::config_preset!("keymap"))
 	}
 
-	pub(crate) fn flavor(light: bool, merge: bool) -> Result<Cow<'static, str>> {
-		let theme = if merge {
-			std::fs::read_to_string(Xdg::config_dir().join("theme.toml")).unwrap_or_default()
+	#[inline]
+	pub(super) fn theme(light: bool) -> Result<Theme, toml::de::Error> {
+		toml::from_str(&if light {
+			yazi_macro::theme_preset!("light")
 		} else {
-			Default::default()
-		};
-
-		let flavor = Flavor::from_str(&theme)?;
-
-		let preset =
-			if light { yazi_macro::theme_preset!("light") } else { yazi_macro::theme_preset!("dark") };
-
-		Self::merge_str(&theme, &Self::merge_str(&flavor.read(light)?, &preset)?)
+			yazi_macro::theme_preset!("dark")
+		})
 	}
 
 	#[inline]
@@ -40,44 +30,5 @@ impl Preset {
 		C: IntoIterator<Item = E>,
 	{
 		a.into_iter().chain(b).chain(c)
-	}
-
-	#[inline]
-	pub(crate) fn merge_str(user: &str, base: &str) -> Result<Cow<'static, str>> {
-		let mut t = user.parse()?;
-		Self::merge(&mut t, base.parse()?, 2);
-
-		Ok(t.to_string().into())
-	}
-
-	#[inline]
-	fn merge_path(user: PathBuf, base: Cow<str>) -> Result<Cow<str>> {
-		let s = std::fs::read_to_string(&user).unwrap_or_default();
-		if s.is_empty() {
-			return Ok(base);
-		}
-
-		Self::merge_str(&s, &base).with_context(|| format!("failed to parse config: {user:?}"))
-	}
-
-	fn merge(a: &mut Table, b: Table, max: u8) {
-		for (k, v) in b {
-			let Some(a) = a.get_mut(&k) else {
-				a.insert(k, v);
-				continue;
-			};
-
-			if max <= 1 {
-				continue;
-			}
-
-			if let Some(a) = a.as_table_mut() {
-				if let Value::Table(b) = v {
-					Self::merge(a, b, max - 1);
-					continue;
-				}
-			}
-			*a = v;
-		}
 	}
 }

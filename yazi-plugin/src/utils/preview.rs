@@ -1,5 +1,5 @@
 use mlua::{AnyUserData, Function, IntoLuaMulti, Lua, Table, Value};
-use yazi_config::{PREVIEW, preview::PreviewWrap};
+use yazi_config::{YAZI, preview::PreviewWrap};
 use yazi_macro::emit;
 use yazi_shared::{errors::PeekError, event::Cmd};
 
@@ -51,7 +51,7 @@ impl Utils {
 			lock.data = vec![Renderable::Text(Text {
 				area,
 				inner,
-				wrap: if PREVIEW.wrap == PreviewWrap::Yes { WRAP } else { WRAP_NO },
+				wrap: if YAZI.preview.wrap == PreviewWrap::Yes { WRAP } else { WRAP_NO },
 			})];
 
 			emit!(Call(Cmd::new("mgr:update_peeked").with_any("lock", lock)));

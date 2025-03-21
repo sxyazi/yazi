@@ -69,9 +69,6 @@ pub(super) struct CommandPack {
 	/// Upgrade all packages.
 	#[arg(short = 'u', long)]
 	pub(super) upgrade: bool,
-	/// Migrate all packages.
-	#[arg(short = 'm', long)]
-	pub(super) migrate: bool, // TODO: remove this
 }
 
 #[derive(clap::Args)]

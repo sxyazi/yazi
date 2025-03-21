@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use futures::future::BoxFuture;
-use yazi_config::TASKS;
+use yazi_config::YAZI;
 
 use super::{Task, TaskStage};
 use crate::TaskKind;
@@ -32,7 +32,7 @@ impl Ongoing {
 
 	#[inline]
 	pub fn len(&self) -> usize {
-		if TASKS.suppress_preload {
+		if YAZI.tasks.suppress_preload {
 			self.all.values().filter(|t| t.kind != TaskKind::Preload).count()
 		} else {
 			self.all.len()
@@ -44,7 +44,7 @@ impl Ongoing {
 
 	#[inline]
 	pub fn values(&self) -> Box<dyn Iterator<Item = &Task> + '_> {
-		if TASKS.suppress_preload {
+		if YAZI.tasks.suppress_preload {
 			Box::new(self.all.values().filter(|t| t.kind != TaskKind::Preload))
 		} else {
 			Box::new(self.all.values())

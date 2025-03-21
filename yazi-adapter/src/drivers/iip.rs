@@ -5,7 +5,7 @@ use base64::{Engine, engine::{Config, general_purpose::STANDARD}};
 use crossterm::{cursor::MoveTo, queue};
 use image::{DynamicImage, ExtendedColorType, ImageEncoder, codecs::{jpeg::JpegEncoder, png::PngEncoder}};
 use ratatui::layout::Rect;
-use yazi_config::PREVIEW;
+use yazi_config::YAZI;
 
 use crate::{CLOSE, Emulator, Image, START, adapter::Adapter};
 
@@ -44,7 +44,7 @@ impl Iip {
 			if img.color().has_alpha() {
 				PngEncoder::new(&mut b).write_image(&img.into_rgba8(), w, h, ExtendedColorType::Rgba8)?;
 			} else {
-				JpegEncoder::new_with_quality(&mut b, PREVIEW.image_quality).encode_image(&img)?;
+				JpegEncoder::new_with_quality(&mut b, YAZI.preview.image_quality).encode_image(&img)?;
 			};
 
 			let mut buf = String::with_capacity(

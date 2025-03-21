@@ -1,7 +1,7 @@
 use std::{borrow::Cow, ffi::OsString};
 
 use tokio::sync::oneshot;
-use yazi_config::open::Opener;
+use yazi_config::opener::OpenerRule;
 use yazi_macro::emit;
 use yazi_shared::{event::Cmd, url::Url};
 
@@ -11,7 +11,7 @@ pub struct TasksProxy;
 
 impl TasksProxy {
 	#[inline]
-	pub fn open_with(opener: Cow<'static, Opener>, cwd: Url, targets: Vec<Url>) {
+	pub fn open_with(opener: Cow<'static, OpenerRule>, cwd: Url, targets: Vec<Url>) {
 		emit!(Call(Cmd::new("tasks:open_with").with_any("option", OpenWithOpt {
 			opener,
 			cwd,
@@ -20,7 +20,7 @@ impl TasksProxy {
 	}
 
 	#[inline]
-	pub async fn process_exec(opener: Cow<'static, Opener>, cwd: Url, args: Vec<OsString>) {
+	pub async fn process_exec(opener: Cow<'static, OpenerRule>, cwd: Url, args: Vec<OsString>) {
 		let (tx, rx) = oneshot::channel();
 		emit!(Call(Cmd::new("tasks:process_exec").with_any("option", ProcessExecOpt {
 			cwd,

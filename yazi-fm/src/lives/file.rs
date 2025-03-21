@@ -70,7 +70,7 @@ impl UserData for File {
 		methods.add_method("style", |lua, me, ()| {
 			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|cx: &Ctx| {
 				let mime = cx.mgr.mimetype.by_file(me).unwrap_or_default();
-				THEME.filetypes.iter().find(|&x| x.matches(me, mime)).map(|x| Style::from(x.style))
+				THEME.filetype.iter().find(|&x| x.matches(me, mime)).map(|x| Style::from(x.style))
 			})
 		});
 		methods.add_method("is_hovered", |_, me, ()| Ok(me.idx == me.folder().cursor));

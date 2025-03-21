@@ -4,7 +4,7 @@ use anyhow::Result;
 use futures::{FutureExt, future::BoxFuture};
 use parking_lot::Mutex;
 use tokio::{fs, select, sync::mpsc::{self, UnboundedReceiver}, task::JoinHandle};
-use yazi_config::{TASKS, plugin::{Fetcher, Preloader}};
+use yazi_config::{YAZI, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
 use yazi_fs::{must_be_dir, remove_dir_clean, unique_name};
 use yazi_proxy::{MgrProxy, options::{PluginOpt, ProcessExecOpt}};
@@ -39,14 +39,16 @@ impl Scheduler {
 
 			micro:   micro_tx,
 			prog:    prog_tx,
-			handles: Vec::with_capacity(TASKS.micro_workers as usize + TASKS.macro_workers as usize + 1),
+			handles: Vec::with_capacity(
+				YAZI.tasks.micro_workers as usize + YAZI.tasks.macro_workers as usize + 1,
+			),
 			ongoing: Default::default(),
 		};
 
-		for _ in 0..TASKS.micro_workers {
+		for _ in 0..YAZI.tasks.micro_workers {
 			scheduler.handles.push(scheduler.schedule_micro(micro_rx.clone()));
 		}
-		for _ in 0..TASKS.macro_workers {
+		for _ in 0..YAZI.tasks.macro_workers {
 			scheduler.handles.push(scheduler.schedule_macro(micro_rx.clone(), macro_rx.clone()));
 		}
 		scheduler.progress(prog_rx);

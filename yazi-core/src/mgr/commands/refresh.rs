@@ -1,7 +1,7 @@
 use std::path::MAIN_SEPARATOR;
 
 use crossterm::{execute, terminal::SetTitle};
-use yazi_config::MGR;
+use yazi_config::YAZI;
 use yazi_fs::CWD;
 use yazi_shared::{event::CmdCow, tty::TTY};
 
@@ -9,7 +9,7 @@ use crate::{mgr::Mgr, tasks::Tasks};
 
 impl Mgr {
 	pub fn refresh(&mut self, _: CmdCow, tasks: &Tasks) {
-		if CWD.set(self.cwd()) && !MGR.title_format.is_empty() {
+		if CWD.set(self.cwd()) && !YAZI.mgr.title_format.is_empty() {
 			execute!(TTY.writer(), SetTitle(self.title())).ok();
 		}
 
@@ -35,6 +35,6 @@ impl Mgr {
 			format!("{}", self.cwd().display())
 		};
 
-		MGR.title_format.replace("{cwd}", &cwd)
+		YAZI.mgr.title_format.replace("{cwd}", &cwd)
 	}
 }

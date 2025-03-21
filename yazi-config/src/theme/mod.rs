@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(filetype flavor icons is theme);
+yazi_macro::mod_flat!(filetype flavor icon is theme);

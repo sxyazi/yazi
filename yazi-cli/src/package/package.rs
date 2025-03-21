@@ -1,9 +1,9 @@
-use std::{path::{Path, PathBuf}, str::FromStr};
+use std::{path::PathBuf, str::FromStr};
 
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use tokio::fs;
-use yazi_fs::{Xdg, ok_or_not_found, remove_sealed, unique_name};
+use yazi_fs::Xdg;
 use yazi_macro::outln;
 
 use super::Dependency;
@@ -82,85 +82,6 @@ impl Package {
 		}
 
 		Ok(())
-	}
-
-	// TODO: remove this
-	pub(crate) async fn sync(&mut self) -> Result<()> {
-		async fn make_readonly(p: &Path) -> Result<()> {
-			let mut perms = fs::metadata(p).await?.permissions();
-			perms.set_readonly(true);
-			fs::set_permissions(p, perms).await?;
-			Ok(())
-		}
-
-		match fs::read_dir(Xdg::config_dir().join("plugins")).await {
-			Ok(mut it) => {
-				while let Some(entry) = it.next_entry().await? {
-					let dir = entry.path();
-					if !dir.is_dir() || dir.extension().is_none_or(|s| s != "yazi") {
-						continue;
-					}
-
-					match fs::symlink_metadata(dir.join("init.lua")).await {
-						Ok(_) => {}
-						Err(e) if e.kind() == std::io::ErrorKind::NotFound => continue,
-						Err(e) => Err(e)?,
-					}
-
-					ok_or_not_found(
-						fs::rename(
-							dir.join("main.lua"),
-							unique_name(dir.join("main.lua.bak").into(), async { false }).await?,
-						)
-						.await,
-					)?;
-
-					ok_or_not_found(fs::rename(dir.join("init.lua"), dir.join("main.lua")).await)?;
-				}
-			}
-			Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
-			Err(e) => Err(e)
-				.context(format!("failed to read `{}`", Xdg::config_dir().join("plugins").display()))?,
-		}
-
-		for d in &mut self.plugins {
-			let dir = Xdg::config_dir().join(format!("plugins/{}", d.name));
-			for f in ["LICENSE", "README.md", "main.lua"] {
-				make_readonly(&dir.join(f)).await.ok();
-			}
-
-			let tracker = dir.join("DO_NOT_MODIFY_ANYTHING_IN_THIS_DIRECTORY");
-			if fs::read(&tracker).await.is_ok_and(|v| v.is_empty()) {
-				if d.hash.is_empty() {
-					d.hash = d.hash().await?;
-				}
-				remove_sealed(&tracker).await.ok();
-			}
-		}
-		for d in &mut self.flavors {
-			let dir = Xdg::config_dir().join(format!("flavors/{}", d.name));
-			for f in [
-				"LICENSE",
-				"LICENSE-tmtheme",
-				"README.md",
-				"filestyle.toml",
-				"flavor.toml",
-				"preview.png",
-				"tmtheme.xml",
-			] {
-				make_readonly(&dir.join(f)).await.ok();
-			}
-
-			let tracker = dir.join("DO_NOT_MODIFY_ANYTHING_IN_THIS_DIRECTORY");
-			if fs::read(&tracker).await.is_ok_and(|v| v.is_empty()) {
-				if d.hash.is_empty() {
-					d.hash = d.hash().await?;
-				}
-				remove_sealed(&tracker).await.ok();
-			}
-		}
-
-		self.save().await
 	}
 
 	async fn add(&mut self, use_: &str) -> Result<()> {

@@ -1,25 +1,16 @@
 #![allow(clippy::module_inception)]
 
-yazi_macro::mod_pub!(keymap mgr open plugin popup preview tasks theme which);
+yazi_macro::mod_pub!(keymap mgr open opener plugin popup preview tasks theme which);
 
-yazi_macro::mod_flat!(layout pattern preset priority);
+yazi_macro::mod_flat!(layout pattern preset priority yazi);
 
-use std::{io::{Read, Write}, str::FromStr};
+use std::io::{Read, Write};
 
 use yazi_shared::{RoCell, SyncCell, tty::TTY};
 
+pub static YAZI: RoCell<yazi::Yazi> = RoCell::new();
 pub static KEYMAP: RoCell<keymap::Keymap> = RoCell::new();
-pub static MGR: RoCell<mgr::Mgr> = RoCell::new();
-pub static OPEN: RoCell<open::Open> = RoCell::new();
-pub static PLUGIN: RoCell<plugin::Plugin> = RoCell::new();
-pub static PREVIEW: RoCell<preview::Preview> = RoCell::new();
-pub static TASKS: RoCell<tasks::Tasks> = RoCell::new();
 pub static THEME: RoCell<theme::Theme> = RoCell::new();
-pub static INPUT: RoCell<popup::Input> = RoCell::new();
-pub static CONFIRM: RoCell<popup::Confirm> = RoCell::new();
-pub static PICK: RoCell<popup::Pick> = RoCell::new();
-pub static WHICH: RoCell<which::Which> = RoCell::new();
-
 pub static LAYOUT: SyncCell<Layout> = SyncCell::new(Layout::default());
 
 pub fn init() -> anyhow::Result<()> {
@@ -30,53 +21,47 @@ pub fn init() -> anyhow::Result<()> {
 	Ok(())
 }
 
-pub fn init_flavor(light: bool) -> anyhow::Result<()> {
-	let mut flavor_toml = Preset::flavor(light, true);
-	if let Err(e) = flavor_toml {
-		wait_for_key(e)?;
-		flavor_toml = Preset::flavor(light, false);
+fn try_init(merge: bool) -> anyhow::Result<()> {
+	let mut yazi = Preset::yazi()?;
+	let mut keymap = Preset::keymap()?;
+
+	if merge {
+		let dir = yazi_fs::Xdg::config_dir();
+		yazi = yazi.deserialize_over(toml::Deserializer::new(
+			&std::fs::read_to_string(dir.join("yazi.toml")).unwrap_or_default(),
+		))?;
+		keymap = keymap.deserialize_over(toml::Deserializer::new(
+			&std::fs::read_to_string(dir.join("keymap.toml")).unwrap_or_default(),
+		))?;
 	}
 
-	let mut theme: theme::Theme = <_>::from_str(&flavor_toml.unwrap())?;
-	theme.mgr.syntect_theme = theme
-		.flavor
-		.syntect_path(light)
-		.unwrap_or_else(|| yazi_fs::expand_path(&theme.mgr.syntect_theme));
-
-	THEME.init(theme);
+	YAZI.init(yazi.reshape()?);
+	KEYMAP.init(keymap.reshape()?);
 	Ok(())
 }
 
-fn try_init(merge: bool) -> anyhow::Result<()> {
-	let (yazi_toml, keymap_toml) = if merge {
-		let p = yazi_fs::Xdg::config_dir();
-		(Preset::yazi(&p)?, Preset::keymap(&p)?)
-	} else {
-		(yazi_macro::config_preset!("yazi"), yazi_macro::config_preset!("keymap"))
-	};
+pub fn init_flavor(light: bool) -> anyhow::Result<()> {
+	if let Err(e) = try_init_flavor(light, true) {
+		wait_for_key(e)?;
+		try_init_flavor(light, false)?;
+	}
+	Ok(())
+}
 
-	let keymap = <_>::from_str(&keymap_toml)?;
-	let mgr = <_>::from_str(&yazi_toml)?;
-	let open = <_>::from_str(&yazi_toml)?;
-	let plugin = <_>::from_str(&yazi_toml)?;
-	let preview = <_>::from_str(&yazi_toml)?;
-	let tasks = <_>::from_str(&yazi_toml)?;
-	let input = <_>::from_str(&yazi_toml)?;
-	let confirm = <_>::from_str(&yazi_toml)?;
-	let pick = <_>::from_str(&yazi_toml)?;
-	let which = <_>::from_str(&yazi_toml)?;
+fn try_init_flavor(light: bool, merge: bool) -> anyhow::Result<()> {
+	let mut theme = Preset::theme(light)?;
 
-	KEYMAP.init(keymap);
-	MGR.init(mgr);
-	OPEN.init(open);
-	PLUGIN.init(plugin);
-	PREVIEW.init(preview);
-	TASKS.init(tasks);
-	INPUT.init(input);
-	CONFIRM.init(confirm);
-	PICK.init(pick);
-	WHICH.init(which);
+	if merge {
+		let shadow = theme::Theme::deserialize_shadow(toml::Deserializer::new(
+			&std::fs::read_to_string(yazi_fs::Xdg::config_dir().join("theme.toml")).unwrap_or_default(),
+		))?;
 
+		let flavor = shadow.flavor.as_ref().map(theme::Flavor::from).unwrap_or_default().read(light)?;
+		theme = theme.deserialize_over_with::<toml::Value>(shadow)?;
+		theme = theme.deserialize_over(toml::Deserializer::new(&flavor))?;
+	}
+
+	THEME.init(theme.reshape(light)?);
 	Ok(())
 }
 

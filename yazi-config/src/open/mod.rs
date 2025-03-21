@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(open opener rule);
+yazi_macro::mod_flat!(open rule);

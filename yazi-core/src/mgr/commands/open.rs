@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::OsString};
 
 use tracing::error;
 use yazi_boot::ARGS;
-use yazi_config::{OPEN, PLUGIN, popup::PickCfg};
+use yazi_config::{YAZI, popup::PickCfg};
 use yazi_fs::File;
 use yazi_macro::emit;
 use yazi_plugin::isolate;
@@ -64,7 +64,7 @@ impl Mgr {
 			}
 
 			done.extend(files.iter().map(|f| (f.url_owned(), "")));
-			for (fetcher, files) in PLUGIN.mime_fetchers(files) {
+			for (fetcher, files) in YAZI.plugin.mime_fetchers(files) {
 				if let Err(e) = isolate::fetch(CmdCow::from(&fetcher.run), files).await {
 					error!("Fetch mime failed on opening: {e}");
 				}
@@ -90,16 +90,16 @@ impl Mgr {
 			return tasks.process_from_files(opt.cwd, opt.hovered, targets);
 		}
 
-		let openers: Vec<_> = OPEN.common_openers(&targets);
+		let openers: Vec<_> = YAZI.opener.all(YAZI.open.common(&targets).into_iter());
 		if openers.is_empty() {
 			return;
 		}
 
 		let urls = [opt.hovered].into_iter().chain(targets.into_iter().map(|(u, _)| u)).collect();
 		tokio::spawn(async move {
-			let result = yazi_proxy::PickProxy::show(PickCfg::open(
-				openers.iter().map(|o| o.desc.clone()).collect(),
-			));
+			let result =
+				yazi_proxy::PickProxy::show(PickCfg::open(openers.iter().map(|o| o.desc()).collect()));
+
 			if let Ok(choice) = result.await {
 				TasksProxy::open_with(Cow::Borrowed(openers[choice]), opt.cwd, urls);
 			}

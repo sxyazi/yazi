@@ -1,6 +1,6 @@
 use anyhow::Result;
 use tokio::sync::oneshot::Sender;
-use yazi_config::{PICK, popup::Position};
+use yazi_config::{YAZI, popup::Position};
 
 #[derive(Default)]
 pub struct Pick {
@@ -24,7 +24,7 @@ impl Pick {
 
 	#[inline]
 	pub(super) fn limit(&self) -> usize {
-		self.position.offset.height.saturating_sub(PICK.border()) as usize
+		self.position.offset.height.saturating_sub(YAZI.pick.border()) as usize
 	}
 }
 

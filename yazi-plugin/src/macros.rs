@@ -110,7 +110,7 @@ macro_rules! impl_file_methods {
 
 			Ok(match me.icon.get() {
 				IconCache::Missing => {
-					let matched = yazi_config::THEME.icons.matches(me);
+					let matched = yazi_config::THEME.icon.matches(me);
 					me.icon.set(matched.map_or(IconCache::Undefined, IconCache::Icon));
 					matched.map(Icon::from)
 				}

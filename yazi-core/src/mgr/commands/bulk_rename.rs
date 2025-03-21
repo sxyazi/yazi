@@ -3,7 +3,7 @@ use std::{borrow::Cow, collections::HashMap, ffi::{OsStr, OsString}, io::{Read, 
 use anyhow::{Result, anyhow};
 use scopeguard::defer;
 use tokio::{fs::{self, OpenOptions}, io::AsyncWriteExt};
-use yazi_config::{OPEN, PREVIEW};
+use yazi_config::YAZI;
 use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp, max_common_root, maybe_exists, paths_to_same_file};
 use yazi_proxy::{AppProxy, HIDER, TasksProxy, WATCHER};
@@ -13,7 +13,7 @@ use crate::mgr::Mgr;
 
 impl Mgr {
 	pub(super) fn bulk_rename(&self) {
-		let Some(opener) = OPEN.block_opener("bulk-rename.txt", "text/plain") else {
+		let Some(opener) = YAZI.opener.block(YAZI.open.all("bulk-rename.txt", "text/plain")) else {
 			return AppProxy::notify_warn("Bulk rename", "No text opener found");
 		};
 
@@ -24,7 +24,7 @@ impl Mgr {
 
 		let cwd = self.cwd().clone();
 		tokio::spawn(async move {
-			let tmp = PREVIEW.tmpfile("bulk");
+			let tmp = YAZI.preview.tmpfile("bulk");
 			let s = old.iter().map(|o| o.as_os_str()).collect::<Vec<_>>().join(OsStr::new("\n"));
 			OpenOptions::new()
 				.write(true)

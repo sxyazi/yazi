@@ -1,18 +1,39 @@
-use std::{collections::HashSet, path::Path, str::FromStr};
+use std::{collections::HashSet, path::Path};
 
-use anyhow::Context;
-use serde::{Deserialize, Deserializer};
+use anyhow::Result;
+use serde::Deserialize;
 use tracing::warn;
+use yazi_codegen::DeserializeOver2;
 use yazi_fs::File;
 
 use super::{Fetcher, Preloader, Previewer, Spotter};
 use crate::{Preset, plugin::MAX_PREWORKERS};
 
+#[derive(Default, Deserialize, DeserializeOver2)]
 pub struct Plugin {
-	pub fetchers:   Vec<Fetcher>,
-	pub spotters:   Vec<Spotter>,
-	pub preloaders: Vec<Preloader>,
-	pub previewers: Vec<Previewer>,
+	pub fetchers:     Vec<Fetcher>,
+	#[serde(default)]
+	prepend_fetchers: Vec<Fetcher>,
+	#[serde(default)]
+	append_fetchers:  Vec<Fetcher>,
+
+	pub spotters:     Vec<Spotter>,
+	#[serde(default)]
+	prepend_spotters: Vec<Spotter>,
+	#[serde(default)]
+	append_spotters:  Vec<Spotter>,
+
+	pub preloaders:     Vec<Preloader>,
+	#[serde(default)]
+	prepend_preloaders: Vec<Preloader>,
+	#[serde(default)]
+	append_preloaders:  Vec<Preloader>,
+
+	pub previewers:     Vec<Previewer>,
+	#[serde(default)]
+	prepend_previewers: Vec<Previewer>,
+	#[serde(default)]
+	append_previewers:  Vec<Previewer>,
 }
 
 impl Plugin {
@@ -71,90 +92,48 @@ impl Plugin {
 	}
 }
 
-impl FromStr for Plugin {
-	type Err = anyhow::Error;
-
-	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		toml::from_str(s).context("Failed to parse the [plugin] section in your yazi.toml")
-	}
-}
-
-impl<'de> Deserialize<'de> for Plugin {
-	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-	where
-		D: Deserializer<'de>,
-	{
-		#[derive(Deserialize)]
-		struct Outer {
-			plugin: Shadow,
+impl Plugin {
+	// TODO: remove .retain() and .collect()
+	pub(crate) fn reshape(mut self) -> Result<Self> {
+		if self.append_spotters.iter().any(|r| r.any_file()) {
+			self.spotters.retain(|r| !r.any_file());
+		}
+		if self.append_spotters.iter().any(|r| r.any_dir()) {
+			self.spotters.retain(|r| !r.any_dir());
+		}
+		if self.append_previewers.iter().any(|r| r.any_file()) {
+			self.previewers.retain(|r| !r.any_file());
+		}
+		if self.append_previewers.iter().any(|r| r.any_dir()) {
+			self.previewers.retain(|r| !r.any_dir());
 		}
 
-		#[derive(Deserialize)]
-		struct Shadow {
-			fetchers:         Vec<Fetcher>,
-			#[serde(default)]
-			prepend_fetchers: Vec<Fetcher>,
-			#[serde(default)]
-			append_fetchers:  Vec<Fetcher>,
+		self.fetchers =
+			Preset::mix(self.prepend_fetchers, self.fetchers, self.append_fetchers).collect();
+		self.spotters =
+			Preset::mix(self.prepend_spotters, self.spotters, self.append_spotters).collect();
+		self.preloaders =
+			Preset::mix(self.prepend_preloaders, self.preloaders, self.append_preloaders).collect();
+		self.previewers =
+			Preset::mix(self.prepend_previewers, self.previewers, self.append_previewers).collect();
 
-			spotters:         Vec<Spotter>,
-			#[serde(default)]
-			prepend_spotters: Vec<Spotter>,
-			#[serde(default)]
-			append_spotters:  Vec<Spotter>,
-
-			preloaders:         Vec<Preloader>,
-			#[serde(default)]
-			prepend_preloaders: Vec<Preloader>,
-			#[serde(default)]
-			append_preloaders:  Vec<Preloader>,
-
-			previewers:         Vec<Previewer>,
-			#[serde(default)]
-			prepend_previewers: Vec<Previewer>,
-			#[serde(default)]
-			append_previewers:  Vec<Previewer>,
-		}
-
-		let mut shadow = Outer::deserialize(deserializer)?.plugin;
-		if shadow.append_spotters.iter().any(|r| r.any_file()) {
-			shadow.spotters.retain(|r| !r.any_file());
-		}
-		if shadow.append_spotters.iter().any(|r| r.any_dir()) {
-			shadow.spotters.retain(|r| !r.any_dir());
-		}
-		if shadow.append_previewers.iter().any(|r| r.any_file()) {
-			shadow.previewers.retain(|r| !r.any_file());
-		}
-		if shadow.append_previewers.iter().any(|r| r.any_dir()) {
-			shadow.previewers.retain(|r| !r.any_dir());
-		}
-
-		shadow.fetchers =
-			Preset::mix(shadow.prepend_fetchers, shadow.fetchers, shadow.append_fetchers).collect();
-		shadow.spotters =
-			Preset::mix(shadow.prepend_spotters, shadow.spotters, shadow.append_spotters).collect();
-		shadow.preloaders =
-			Preset::mix(shadow.prepend_preloaders, shadow.preloaders, shadow.append_preloaders).collect();
-		shadow.previewers =
-			Preset::mix(shadow.prepend_previewers, shadow.previewers, shadow.append_previewers).collect();
-
-		if shadow.fetchers.len() + shadow.preloaders.len() > MAX_PREWORKERS as usize {
+		if self.fetchers.len() + self.preloaders.len() > MAX_PREWORKERS as usize {
 			panic!("Fetchers and preloaders exceed the limit of {MAX_PREWORKERS}");
 		}
 
-		for (i, p) in shadow.fetchers.iter_mut().enumerate() {
+		for (i, p) in self.fetchers.iter_mut().enumerate() {
 			p.idx = i as u8;
 		}
-		for (i, p) in shadow.preloaders.iter_mut().enumerate() {
-			p.idx = shadow.fetchers.len() as u8 + i as u8;
+		for (i, p) in self.preloaders.iter_mut().enumerate() {
+			p.idx = self.fetchers.len() as u8 + i as u8;
 		}
 
 		Ok(Self {
-			fetchers:   shadow.fetchers,
-			spotters:   shadow.spotters,
-			preloaders: shadow.preloaders,
-			previewers: shadow.previewers,
+			fetchers: self.fetchers,
+			spotters: self.spotters,
+			preloaders: self.preloaders,
+			previewers: self.previewers,
+			..Default::default()
 		})
 	}
 }

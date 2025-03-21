@@ -62,10 +62,7 @@ async fn run() -> anyhow::Result<()> {
 
 		Command::Pack(cmd) => {
 			package::init()?;
-			package::Package::load().await?.sync().await.ok();
-			if cmd.migrate {
-				outln!("Migration successful")?;
-			} else if cmd.install {
+			if cmd.install {
 				package::Package::load().await?.install(false).await?;
 			} else if cmd.list {
 				package::Package::load().await?.print()?;

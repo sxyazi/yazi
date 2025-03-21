@@ -1,16 +1,11 @@
-use std::str::FromStr;
-
-use anyhow::Context;
+use anyhow::{Result, bail};
 use serde::Deserialize;
-use validator::Validate;
+use yazi_codegen::DeserializeOver2;
 
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Debug, Deserialize, DeserializeOver2)]
 pub struct Tasks {
-	#[validate(range(min = 1, message = "Cannot be less than 1"))]
 	pub micro_workers: u8,
-	#[validate(range(min = 1, message = "Cannot be less than 1"))]
 	pub macro_workers: u8,
-	#[validate(range(min = 1, message = "Cannot be less than 1"))]
 	pub bizarre_retry: u8,
 
 	pub image_alloc: u32,
@@ -19,19 +14,15 @@ pub struct Tasks {
 	pub suppress_preload: bool,
 }
 
-impl FromStr for Tasks {
-	type Err = anyhow::Error;
-
-	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		#[derive(Deserialize)]
-		struct Outer {
-			tasks: Tasks,
+impl Tasks {
+	pub(crate) fn reshape(self) -> Result<Self> {
+		if self.micro_workers < 1 {
+			bail!("[tasks].micro_workers must be at least 1.");
+		} else if self.macro_workers < 1 {
+			bail!("[tasks].macro_workers must be at least 1.");
+		} else if self.bizarre_retry < 1 {
+			bail!("[tasks].bizarre_retry` must be at least 1.");
 		}
-
-		let outer = toml::from_str::<Outer>(s)
-			.context("Failed to parse the [tasks] section in your yazi.toml")?;
-		outer.tasks.validate()?;
-
-		Ok(outer.tasks)
+		Ok(self)
 	}
 }
