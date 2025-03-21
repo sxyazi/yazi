@@ -1,7 +1,7 @@
 use std::{borrow::Cow, fmt::Display};
 
 use anyhow::bail;
-use yazi_config::{open::Opener, popup::InputCfg};
+use yazi_config::{opener::OpenerRule, popup::InputCfg};
 use yazi_proxy::{AppProxy, InputProxy, TasksProxy};
 use yazi_shared::{event::{CmdCow, Data}, url::Url};
 
@@ -68,7 +68,7 @@ impl Tab {
 			}
 
 			TasksProxy::open_with(
-				Cow::Owned(Opener {
+				Cow::Owned(OpenerRule {
 					run:    opt.run.into_owned(),
 					block:  opt.block,
 					orphan: opt.orphan,

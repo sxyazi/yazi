@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use ratatui::crossterm::cursor::SetCursorStyle;
 use unicode_width::UnicodeWidthStr;
-use yazi_config::INPUT;
+use yazi_config::YAZI;
 use yazi_plugin::CLIPBOARD;
 
 use super::{InputSnap, InputSnaps, mode::InputMode, op::InputOp};
@@ -90,12 +90,12 @@ impl Input {
 		use InputMode as M;
 
 		match self.mode() {
-			M::Normal if INPUT.cursor_blink => SetCursorStyle::BlinkingBlock,
-			M::Normal if !INPUT.cursor_blink => SetCursorStyle::SteadyBlock,
-			M::Insert if INPUT.cursor_blink => SetCursorStyle::BlinkingBar,
-			M::Insert if !INPUT.cursor_blink => SetCursorStyle::SteadyBar,
-			M::Replace if INPUT.cursor_blink => SetCursorStyle::BlinkingUnderScore,
-			M::Replace if !INPUT.cursor_blink => SetCursorStyle::SteadyUnderScore,
+			M::Normal if YAZI.input.cursor_blink => SetCursorStyle::BlinkingBlock,
+			M::Normal if !YAZI.input.cursor_blink => SetCursorStyle::SteadyBlock,
+			M::Insert if YAZI.input.cursor_blink => SetCursorStyle::BlinkingBar,
+			M::Insert if !YAZI.input.cursor_blink => SetCursorStyle::SteadyBar,
+			M::Replace if YAZI.input.cursor_blink => SetCursorStyle::BlinkingUnderScore,
+			M::Replace if !YAZI.input.cursor_blink => SetCursorStyle::SteadyUnderScore,
 			M::Normal | M::Insert | M::Replace => unreachable!(),
 		}
 	}

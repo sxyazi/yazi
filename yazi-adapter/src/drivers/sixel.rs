@@ -5,7 +5,7 @@ use color_quant::NeuQuant;
 use crossterm::{cursor::MoveTo, queue};
 use image::DynamicImage;
 use ratatui::layout::Rect;
-use yazi_config::PREVIEW;
+use yazi_config::YAZI;
 
 use crate::{CLOSE, ESCAPE, Emulator, Image, START, adapter::Adapter};
 
@@ -44,7 +44,7 @@ impl Sixel {
 
 		tokio::task::spawn_blocking(move || {
 			let img = img.into_rgba8();
-			let nq = NeuQuant::new(PREVIEW.sixel_fraction as i32, 256 - alpha as usize, &img);
+			let nq = NeuQuant::new(YAZI.preview.sixel_fraction as i32, 256 - alpha as usize, &img);
 
 			let mut buf: Vec<u8> = Vec::with_capacity(1 << 16);
 			write!(buf, "{START}P0;1;8q\"1;1;{};{}", img.width(), img.height())?;

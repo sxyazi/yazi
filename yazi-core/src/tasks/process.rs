@@ -1,6 +1,6 @@
 use std::{borrow::Cow, collections::HashMap, ffi::OsString, mem};
 
-use yazi_config::{OPEN, open::Opener};
+use yazi_config::{YAZI, opener::OpenerRule};
 use yazi_proxy::options::ProcessExecOpt;
 use yazi_shared::url::Url;
 
@@ -10,7 +10,7 @@ impl Tasks {
 	pub fn process_from_files(&self, cwd: Url, hovered: Url, targets: Vec<(Url, &str)>) {
 		let mut openers = HashMap::new();
 		for (url, mime) in targets {
-			if let Some(opener) = OPEN.openers(&url, mime).and_then(|o| o.first().copied()) {
+			if let Some(opener) = YAZI.opener.first(YAZI.open.all(&url, mime)) {
 				openers.entry(opener).or_insert_with(|| vec![hovered.clone()]).push(url);
 			}
 		}
@@ -26,7 +26,7 @@ impl Tasks {
 	pub fn process_from_opener(
 		&self,
 		cwd: Url,
-		opener: Cow<'static, Opener>,
+		opener: Cow<'static, OpenerRule>,
 		mut args: Vec<OsString>,
 	) {
 		if opener.spread {

@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 use image::{DynamicImage, ExtendedColorType, ImageDecoder, ImageEncoder, ImageError, ImageReader, ImageResult, Limits, codecs::{jpeg::JpegEncoder, png::PngEncoder}, imageops::FilterType, metadata::Orientation};
 use ratatui::layout::Rect;
-use yazi_config::{PREVIEW, TASKS};
+use yazi_config::YAZI;
 
 use crate::Dimension;
 
@@ -12,7 +12,7 @@ pub struct Image;
 impl Image {
 	pub async fn precache(path: &Path, cache: PathBuf) -> Result<()> {
 		let (mut img, orientation, icc) = Self::decode_from(path).await?;
-		let (w, h) = Self::flip_size(orientation, (PREVIEW.max_width, PREVIEW.max_height));
+		let (w, h) = Self::flip_size(orientation, (YAZI.preview.max_width, YAZI.preview.max_height));
 
 		let buf = tokio::task::spawn_blocking(move || {
 			if img.width() > w || img.height() > h {
@@ -29,7 +29,7 @@ impl Image {
 				icc.map(|b| encoder.set_icc_profile(b));
 				encoder.write_image(&rgba, rgba.width(), rgba.height(), ExtendedColorType::Rgba8)?;
 			} else {
-				let mut encoder = JpegEncoder::new_with_quality(&mut buf, PREVIEW.image_quality);
+				let mut encoder = JpegEncoder::new_with_quality(&mut buf, YAZI.preview.image_quality);
 				icc.map(|b| encoder.set_icc_profile(b));
 				encoder.encode_image(&img.into_rgb8())?;
 			}
@@ -68,9 +68,9 @@ impl Image {
 		Dimension::ratio()
 			.map(|(r1, r2)| {
 				let (w, h) = ((rect.width as f64 * r1) as u32, (rect.height as f64 * r2) as u32);
-				(w.min(PREVIEW.max_width), h.min(PREVIEW.max_height))
+				(w.min(YAZI.preview.max_width), h.min(YAZI.preview.max_height))
 			})
-			.unwrap_or((PREVIEW.max_width, PREVIEW.max_height))
+			.unwrap_or((YAZI.preview.max_width, YAZI.preview.max_height))
 	}
 
 	pub(super) fn pixel_area(size: (u32, u32), rect: Rect) -> Rect {
@@ -86,7 +86,7 @@ impl Image {
 
 	#[inline]
 	fn filter() -> FilterType {
-		match PREVIEW.image_filter.as_str() {
+		match YAZI.preview.image_filter.as_str() {
 			"nearest" => FilterType::Nearest,
 			"triangle" => FilterType::Triangle,
 			"catmull-rom" => FilterType::CatmullRom,
@@ -98,14 +98,14 @@ impl Image {
 
 	async fn decode_from(path: &Path) -> ImageResult<(DynamicImage, Orientation, Option<Vec<u8>>)> {
 		let mut limits = Limits::no_limits();
-		if TASKS.image_alloc > 0 {
-			limits.max_alloc = Some(TASKS.image_alloc as u64);
+		if YAZI.tasks.image_alloc > 0 {
+			limits.max_alloc = Some(YAZI.tasks.image_alloc as u64);
 		}
-		if TASKS.image_bound[0] > 0 {
-			limits.max_image_width = Some(TASKS.image_bound[0] as u32);
+		if YAZI.tasks.image_bound[0] > 0 {
+			limits.max_image_width = Some(YAZI.tasks.image_bound[0] as u32);
 		}
-		if TASKS.image_bound[1] > 0 {
-			limits.max_image_height = Some(TASKS.image_bound[1] as u32);
+		if YAZI.tasks.image_bound[1] > 0 {
+			limits.max_image_height = Some(YAZI.tasks.image_bound[1] as u32);
 		}
 
 		let path = path.to_owned();

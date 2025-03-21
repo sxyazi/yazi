@@ -1,4 +1,4 @@
-use yazi_config::PLUGIN;
+use yazi_config::YAZI;
 use yazi_plugin::isolate;
 use yazi_shared::event::{CmdCow, Data};
 
@@ -24,7 +24,7 @@ impl Mgr {
 			return self.active_mut().preview.reset();
 		};
 
-		let Some(previewer) = PLUGIN.previewer(&hovered.url, mime) else {
+		let Some(previewer) = YAZI.plugin.previewer(&hovered.url, mime) else {
 			return self.active_mut().preview.reset();
 		};
 

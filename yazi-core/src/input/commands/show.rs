@@ -1,5 +1,5 @@
 use tokio::sync::mpsc;
-use yazi_config::{INPUT, popup::InputCfg};
+use yazi_config::{YAZI, popup::InputCfg};
 use yazi_macro::render;
 use yazi_shared::{errors::InputError, event::CmdCow};
 use yazi_widgets::input::InputCallback;
@@ -45,7 +45,7 @@ impl Input {
 		});
 		self.inner = yazi_widgets::input::Input::new(
 			opt.cfg.value,
-			opt.cfg.position.offset.width.saturating_sub(INPUT.border()) as usize,
+			opt.cfg.position.offset.width.saturating_sub(YAZI.input.border()) as usize,
 			cb,
 		);
 

@@ -56,17 +56,17 @@ impl Actions {
 		writeln!(
 			s,
 			"    default     : {:?}",
-			yazi_config::OPEN.openers("f75a.txt", "text/plain").and_then(|a| a.first().cloned())
+			yazi_config::YAZI.opener.first(yazi_config::YAZI.open.all("f75a.txt", "text/plain"))
 		)?;
 		writeln!(
 			s,
 			"    block-create: {:?}",
-			yazi_config::OPEN.block_opener("bulk-create.txt", "text/plain")
+			yazi_config::YAZI.opener.block(yazi_config::YAZI.open.all("bulk-create.txt", "text/plain"))
 		)?;
 		writeln!(
 			s,
 			"    block-rename: {:?}",
-			yazi_config::OPEN.block_opener("bulk-rename.txt", "text/plain")
+			yazi_config::YAZI.opener.block(yazi_config::YAZI.open.all("bulk-rename.txt", "text/plain"))
 		)?;
 
 		writeln!(s, "\nMultiplexers")?;

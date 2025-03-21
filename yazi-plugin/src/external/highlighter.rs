@@ -4,7 +4,7 @@ use anyhow::{Result, anyhow};
 use ratatui::{layout::Size, text::{Line, Span, Text}};
 use syntect::{LoadingError, dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
 use tokio::{fs::File, io::{AsyncBufReadExt, BufReader}};
-use yazi_config::{PREVIEW, THEME, preview::PreviewWrap};
+use yazi_config::{THEME, YAZI, preview::PreviewWrap};
 use yazi_shared::{Ids, errors::PeekError, replace_to_printable};
 
 static INCR: Ids = Ids::new();
@@ -72,7 +72,7 @@ impl Highlighter {
 			} else if !plain {
 				before.push(String::from_utf8_lossy(&buf).into_owned());
 				Self::line_height(&before[before.len() - 1], size.width)
-			} else if PREVIEW.wrap == PreviewWrap::Yes {
+			} else if YAZI.preview.wrap == PreviewWrap::Yes {
 				Self::line_height(&String::from_utf8_lossy(&buf), size.width)
 			} else {
 				1
@@ -89,7 +89,7 @@ impl Highlighter {
 		}
 
 		Ok(if plain {
-			Text::from(replace_to_printable(&after, PREVIEW.tab_size))
+			Text::from(replace_to_printable(&after, YAZI.preview.tab_size))
 		} else {
 			Self::highlight_with(before, after, syntax.unwrap()).await?
 		})
@@ -113,7 +113,7 @@ impl Highlighter {
 				h.highlight_line(&line, syntaxes).map_err(|e| anyhow!(e))?;
 			}
 
-			let indent = PREVIEW.indent();
+			let indent = YAZI.preview.indent();
 			let mut lines = Vec::with_capacity(after.len());
 			for line in after {
 				if ticket != INCR.current() {
@@ -158,11 +158,12 @@ impl Highlighter {
 	}
 
 	fn line_height(s: &str, width: u16) -> usize {
-		if PREVIEW.wrap != PreviewWrap::Yes {
+		if YAZI.preview.wrap != PreviewWrap::Yes {
 			return 1;
 		}
 
-		let pad = PREVIEW
+		let pad = YAZI
+			.preview
 			.tab_size
 			.checked_sub(1)
 			.map(|n| s.bytes().filter(|&b| b == b'\t').count() * n as usize)

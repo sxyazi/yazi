@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use tokio_util::sync::CancellationToken;
-use yazi_config::PLUGIN;
+use yazi_config::YAZI;
 use yazi_fs::File;
 use yazi_plugin::{isolate, utils::SpotLock};
 use yazi_shared::url::Url;
@@ -22,7 +22,7 @@ impl Spot {
 			return;
 		}
 
-		let Some(spotter) = PLUGIN.spotter(&file.url, &mime) else {
+		let Some(spotter) = YAZI.plugin.spotter(&file.url, &mime) else {
 			return self.close(());
 		};
 

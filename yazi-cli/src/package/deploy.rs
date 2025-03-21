@@ -48,17 +48,7 @@ Please manually delete it from `{}` and re-run the command.",
 		};
 
 		for file in files {
-			// TODO: remove this
-			let (from, to) = if *file == "main.lua" {
-				if maybe_exists(from.join(file)).await {
-					(from.join(file), to.join(file))
-				} else {
-					(from.join("init.lua"), to.join("main.lua"))
-				}
-			} else {
-				(from.join(file), to.join(file))
-			};
-
+			let (from, to) = (from.join(file), to.join(file));
 			copy_and_seal(&from, &to)
 				.await
 				.with_context(|| format!("failed to copy `{}` to `{}`", from.display(), to.display()))?;

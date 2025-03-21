@@ -1,7 +1,7 @@
 use crossterm::event::{MouseEvent, MouseEventKind};
 use mlua::{ObjectLike, Table};
 use tracing::error;
-use yazi_config::MGR;
+use yazi_config::YAZI;
 use yazi_plugin::LUA;
 
 use crate::{app::App, lives::Lives};
@@ -24,7 +24,7 @@ impl App {
 			let area = yazi_plugin::elements::Rect::from(size);
 			let root = LUA.globals().raw_get::<Table>("Root")?.call_method::<Table>("new", area)?;
 
-			if matches!(event.kind, MouseEventKind::Down(_) if MGR.mouse_events.draggable()) {
+			if matches!(event.kind, MouseEventKind::Down(_) if YAZI.mgr.mouse_events.draggable()) {
 				root.raw_set("_drag_start", event)?;
 			}
 

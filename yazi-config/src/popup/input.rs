@@ -1,11 +1,9 @@
-use std::str::FromStr;
-
-use anyhow::Context;
 use serde::Deserialize;
+use yazi_codegen::DeserializeOver2;
 
 use super::{Offset, Origin};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, DeserializeOver2)]
 pub struct Input {
 	pub cursor_blink: bool,
 
@@ -47,20 +45,4 @@ pub struct Input {
 
 impl Input {
 	pub const fn border(&self) -> u16 { 2 }
-}
-
-impl FromStr for Input {
-	type Err = anyhow::Error;
-
-	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		#[derive(Deserialize)]
-		struct Outer {
-			input: Input,
-		}
-
-		let outer = toml::from_str::<Outer>(s)
-			.context("Failed to parse the [input] section in your yazi.toml")?;
-
-		Ok(outer.input)
-	}
 }

@@ -3,7 +3,7 @@ use std::{borrow::Cow, collections::VecDeque, path::Path};
 use anyhow::{Result, anyhow};
 use tokio::{fs::{self, DirEntry}, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
-use yazi_config::TASKS;
+use yazi_config::YAZI;
 use yazi_fs::{calculate_size, cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to, skip_path};
 use yazi_shared::url::Url;
 
@@ -45,7 +45,7 @@ impl File {
 						// Operation not permitted (os error 1)
 						// Attribute not found (os error 93)
 						Err(e)
-							if task.retry < TASKS.bizarre_retry
+							if task.retry < YAZI.tasks.bizarre_retry
 								&& matches!(e.raw_os_error(), Some(1) | Some(93)) =>
 						{
 							task.retry += 1;

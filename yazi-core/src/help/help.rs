@@ -1,7 +1,7 @@
 use crossterm::{cursor::SetCursorStyle, event::KeyCode};
 use unicode_width::UnicodeWidthStr;
 use yazi_adapter::Dimension;
-use yazi_config::{INPUT, KEYMAP, keymap::{Chord, Key}};
+use yazi_config::{KEYMAP, YAZI, keymap::{Chord, Key}};
 use yazi_macro::{render, render_and};
 use yazi_shared::Layer;
 
@@ -115,6 +115,10 @@ impl Help {
 
 	#[inline]
 	pub fn cursor_shape(&self) -> SetCursorStyle {
-		if INPUT.cursor_blink { SetCursorStyle::BlinkingBlock } else { SetCursorStyle::SteadyBlock }
+		if YAZI.input.cursor_blink {
+			SetCursorStyle::BlinkingBlock
+		} else {
+			SetCursorStyle::SteadyBlock
+		}
 	}
 }

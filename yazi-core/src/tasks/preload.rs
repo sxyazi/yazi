@@ -1,4 +1,4 @@
-use yazi_config::{PLUGIN, plugin::MAX_PREWORKERS};
+use yazi_config::{YAZI, plugin::MAX_PREWORKERS};
 use yazi_fs::{File, Files, SortBy};
 
 use super::Tasks;
@@ -10,7 +10,7 @@ impl Tasks {
 		let mut tasks: [Vec<_>; MAX_PREWORKERS as usize] = Default::default();
 		for f in paged {
 			let hash = f.hash();
-			for g in PLUGIN.fetchers(&f.url, mimetype.by_file(f).unwrap_or_default()) {
+			for g in YAZI.plugin.fetchers(&f.url, mimetype.by_file(f).unwrap_or_default()) {
 				match loaded.get_mut(&hash) {
 					Some(n) if *n & (1 << g.idx) != 0 => continue,
 					Some(n) => *n |= 1 << g.idx,
@@ -23,7 +23,7 @@ impl Tasks {
 		drop(loaded);
 		for (i, tasks) in tasks.into_iter().enumerate() {
 			if !tasks.is_empty() {
-				self.scheduler.fetch_paged(&PLUGIN.fetchers[i], tasks);
+				self.scheduler.fetch_paged(&YAZI.plugin.fetchers[i], tasks);
 			}
 		}
 	}
@@ -32,7 +32,7 @@ impl Tasks {
 		let mut loaded = self.scheduler.prework.loaded.lock();
 		for f in paged {
 			let hash = f.hash();
-			for p in PLUGIN.preloaders(&f.url, mimetype.by_file(f).unwrap_or_default()) {
+			for p in YAZI.plugin.preloaders(&f.url, mimetype.by_file(f).unwrap_or_default()) {
 				match loaded.get_mut(&hash) {
 					Some(n) if *n & (1 << p.idx) != 0 => continue,
 					Some(n) => *n |= 1 << p.idx,

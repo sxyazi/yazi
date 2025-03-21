@@ -2,7 +2,7 @@ use anyhow::Result;
 use crossterm::event::{Event as CrosstermEvent, EventStream, KeyEvent, KeyEventKind};
 use futures::StreamExt;
 use tokio::{select, sync::{mpsc, oneshot}};
-use yazi_config::MGR;
+use yazi_config::YAZI;
 use yazi_shared::event::Event;
 
 pub(super) struct Signals {
@@ -62,7 +62,7 @@ impl Signals {
 				Event::Key(key).emit()
 			}
 			CrosstermEvent::Mouse(mouse) => {
-				if MGR.mouse_events.contains(mouse.kind.into()) {
+				if YAZI.mgr.mouse_events.contains(mouse.kind.into()) {
 					Event::Mouse(mouse).emit();
 				}
 			}

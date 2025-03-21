@@ -1,6 +1,6 @@
 use mlua::{Function, Lua, Table};
 use twox_hash::XxHash3_128;
-use yazi_config::PREVIEW;
+use yazi_config::YAZI;
 
 use super::Utils;
 use crate::{file::FileRef, url::Url};
@@ -9,7 +9,7 @@ impl Utils {
 	pub(super) fn file_cache(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, t: Table| {
 			let file: FileRef = t.raw_get("file")?;
-			if file.url.parent() == Some(&PREVIEW.cache_dir) {
+			if file.url.parent() == Some(&YAZI.preview.cache_dir) {
 				return Ok(None);
 			}
 
@@ -20,7 +20,7 @@ impl Utils {
 				format!("{:x}", h.finish_128())
 			};
 
-			Ok(Some(Url::from(PREVIEW.cache_dir.join(hex))))
+			Ok(Some(Url::from(YAZI.preview.cache_dir.join(hex))))
 		})
 	}
 }

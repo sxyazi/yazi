@@ -2,7 +2,7 @@ use ratatui::{text::{Line, Text}, widgets::{Paragraph, Wrap}};
 use yazi_shared::url::Url;
 
 use super::{Offset, Origin, Position};
-use crate::{CONFIRM, INPUT, PICK};
+use crate::YAZI;
 
 #[derive(Default)]
 pub struct InputCfg {
@@ -33,8 +33,8 @@ pub struct ConfirmCfg {
 impl InputCfg {
 	pub fn cd() -> Self {
 		Self {
-			title: INPUT.cd_title.to_owned(),
-			position: Position::new(INPUT.cd_origin, INPUT.cd_offset),
+			title: YAZI.input.cd_title.to_owned(),
+			position: Position::new(YAZI.input.cd_origin, YAZI.input.cd_offset),
 			completion: true,
 			..Default::default()
 		}
@@ -42,24 +42,24 @@ impl InputCfg {
 
 	pub fn create(dir: bool) -> Self {
 		Self {
-			title: INPUT.create_title[dir as usize].to_owned(),
-			position: Position::new(INPUT.create_origin, INPUT.create_offset),
+			title: YAZI.input.create_title[dir as usize].to_owned(),
+			position: Position::new(YAZI.input.create_origin, YAZI.input.create_offset),
 			..Default::default()
 		}
 	}
 
 	pub fn rename() -> Self {
 		Self {
-			title: INPUT.rename_title.to_owned(),
-			position: Position::new(INPUT.rename_origin, INPUT.rename_offset),
+			title: YAZI.input.rename_title.to_owned(),
+			position: Position::new(YAZI.input.rename_origin, YAZI.input.rename_offset),
 			..Default::default()
 		}
 	}
 
 	pub fn filter() -> Self {
 		Self {
-			title: INPUT.filter_title.to_owned(),
-			position: Position::new(INPUT.filter_origin, INPUT.filter_offset),
+			title: YAZI.input.filter_title.to_owned(),
+			position: Position::new(YAZI.input.filter_origin, YAZI.input.filter_offset),
 			realtime: true,
 			..Default::default()
 		}
@@ -67,8 +67,8 @@ impl InputCfg {
 
 	pub fn find(prev: bool) -> Self {
 		Self {
-			title: INPUT.find_title[prev as usize].to_owned(),
-			position: Position::new(INPUT.find_origin, INPUT.find_offset),
+			title: YAZI.input.find_title[prev as usize].to_owned(),
+			position: Position::new(YAZI.input.find_origin, YAZI.input.find_offset),
 			realtime: true,
 			..Default::default()
 		}
@@ -76,16 +76,16 @@ impl InputCfg {
 
 	pub fn search(name: &str) -> Self {
 		Self {
-			title: INPUT.search_title.replace("{n}", name),
-			position: Position::new(INPUT.search_origin, INPUT.search_offset),
+			title: YAZI.input.search_title.replace("{n}", name),
+			position: Position::new(YAZI.input.search_origin, YAZI.input.search_offset),
 			..Default::default()
 		}
 	}
 
 	pub fn shell(block: bool) -> Self {
 		Self {
-			title: INPUT.shell_title[block as usize].to_owned(),
-			position: Position::new(INPUT.shell_origin, INPUT.shell_offset),
+			title: YAZI.input.shell_title[block as usize].to_owned(),
+			position: Position::new(YAZI.input.shell_origin, YAZI.input.shell_offset),
 			highlight: true,
 			..Default::default()
 		}
@@ -121,8 +121,8 @@ impl ConfirmCfg {
 
 	pub fn trash(urls: &[yazi_shared::url::Url]) -> Self {
 		Self::new(
-			Self::replace_number(&CONFIRM.trash_title, urls.len()),
-			(CONFIRM.trash_origin, CONFIRM.trash_offset),
+			Self::replace_number(&YAZI.confirm.trash_title, urls.len()),
+			(YAZI.confirm.trash_origin, YAZI.confirm.trash_offset),
 			None,
 			Self::truncate_list(urls.iter(), urls.len(), 100),
 		)
@@ -130,8 +130,8 @@ impl ConfirmCfg {
 
 	pub fn delete(urls: &[yazi_shared::url::Url]) -> Self {
 		Self::new(
-			Self::replace_number(&CONFIRM.delete_title, urls.len()),
-			(CONFIRM.delete_origin, CONFIRM.delete_offset),
+			Self::replace_number(&YAZI.confirm.delete_title, urls.len()),
+			(YAZI.confirm.delete_origin, YAZI.confirm.delete_offset),
 			None,
 			Self::truncate_list(urls.iter(), urls.len(), 100),
 		)
@@ -139,18 +139,18 @@ impl ConfirmCfg {
 
 	pub fn overwrite(url: &Url) -> Self {
 		Self::new(
-			CONFIRM.overwrite_title.to_owned(),
-			(CONFIRM.overwrite_origin, CONFIRM.overwrite_offset),
-			Some(Text::raw(&CONFIRM.overwrite_content)),
+			YAZI.confirm.overwrite_title.to_owned(),
+			(YAZI.confirm.overwrite_origin, YAZI.confirm.overwrite_offset),
+			Some(Text::raw(&YAZI.confirm.overwrite_content)),
 			Some(url.to_string().into()),
 		)
 	}
 
 	pub fn quit(len: usize, names: Vec<String>) -> Self {
 		Self::new(
-			Self::replace_number(&CONFIRM.quit_title, len),
-			(CONFIRM.quit_origin, CONFIRM.quit_offset),
-			Some(Text::raw(&CONFIRM.quit_content)),
+			Self::replace_number(&YAZI.confirm.quit_title, len),
+			(YAZI.confirm.quit_origin, YAZI.confirm.quit_offset),
+			Some(Text::raw(&YAZI.confirm.quit_content)),
 			Self::truncate_list(names.into_iter(), len, 10),
 		)
 	}
@@ -179,15 +179,18 @@ impl ConfirmCfg {
 impl PickCfg {
 	#[inline]
 	fn max_height(len: usize) -> u16 {
-		PICK.open_offset.height.min(PICK.border().saturating_add(len as u16))
+		YAZI.pick.open_offset.height.min(YAZI.pick.border().saturating_add(len as u16))
 	}
 
 	pub fn open(items: Vec<String>) -> Self {
 		let max_height = Self::max_height(items.len());
 		Self {
-			title: PICK.open_title.to_owned(),
+			title: YAZI.pick.open_title.to_owned(),
 			items,
-			position: Position::new(PICK.open_origin, Offset { height: max_height, ..PICK.open_offset }),
+			position: Position::new(YAZI.pick.open_origin, Offset {
+				height: max_height,
+				..YAZI.pick.open_offset
+			}),
 		}
 	}
 }
