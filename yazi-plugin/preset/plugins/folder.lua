@@ -14,8 +14,10 @@ function M:peek(job)
 	end
 
 	if #folder.files == 0 then
+		local done, err = folder.stage()
+		local s = not done and "Loading..." or not err and "No items" or string.format("Error: %s", err)
 		return ya.preview_widgets(job, {
-			ui.Text(folder.stage.is_loading and "Loading..." or "No items"):area(job.area):align(ui.Text.CENTER),
+			ui.Text(s):area(job.area):align(ui.Text.CENTER),
 		})
 	end
 

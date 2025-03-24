@@ -11,15 +11,16 @@ function Current:new(area, tab)
 end
 
 function Current:empty()
-	local text
+	local s
 	if self._folder.files.filter then
-		text = ui.Text("No filter results")
+		s = "No filter results"
 	else
-		text = ui.Text(self._folder.stage.is_loading and "Loading..." or "No items")
+		local done, err = self._folder.stage()
+		s = not done and "Loading..." or not err and "No items" or string.format("Error: %s", err)
 	end
 
 	return {
-		text:area(self._area):align(ui.Text.CENTER),
+		ui.Text(s):area(self._area):align(ui.Text.CENTER),
 	}
 end
 
