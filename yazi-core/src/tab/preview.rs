@@ -49,7 +49,11 @@ impl Preview {
 		self.folder_loader.take().map(|h| h.abort());
 		self.folder_loader = Some(tokio::spawn(async move {
 			let Some(new) = Files::assert_stale(&wd, dir.unwrap_or(Cha::dummy())).await else { return };
-			let Ok(rx) = Files::from_dir(&wd).await else { return };
+
+			let rx = match Files::from_dir(&wd).await {
+				Ok(rx) => rx,
+				Err(e) => return FilesOp::issue_error(&wd, e.kind()).await,
+			};
 
 			let stream =
 				UnboundedReceiverStream::new(rx).chunks_timeout(50000, Duration::from_millis(500));

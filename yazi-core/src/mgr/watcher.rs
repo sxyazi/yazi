@@ -86,8 +86,9 @@ impl Watcher {
 		async fn go(cwd: Url, cha: Cha) {
 			let Some(cha) = Files::assert_stale(&cwd, cha).await else { return };
 
-			if let Ok(files) = Files::from_dir_bulk(&cwd).await {
-				FilesOp::Full(cwd, files, cha).emit();
+			match Files::from_dir_bulk(&cwd).await {
+				Ok(files) => FilesOp::Full(cwd, files, cha).emit(),
+				Err(e) => FilesOp::issue_error(&cwd, e.kind()).await,
 			}
 		}
 

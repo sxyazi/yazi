@@ -6,6 +6,7 @@ const EXPECTED: &str = "expected a Error";
 
 pub enum Error {
 	Io(std::io::Error),
+	IoKind(std::io::ErrorKind),
 	Serde(serde_json::Error),
 	Custom(String),
 }
@@ -20,6 +21,7 @@ impl Error {
 	fn to_string(&self) -> Cow<str> {
 		match self {
 			Error::Io(e) => Cow::Owned(e.to_string()),
+			Error::IoKind(e) => Cow::Owned(e.to_string()),
 			Error::Serde(e) => Cow::Owned(e.to_string()),
 			Error::Custom(s) => Cow::Borrowed(s),
 		}
@@ -30,6 +32,7 @@ impl Display for Error {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			Error::Io(e) => write!(f, "{e}"),
+			Error::IoKind(e) => write!(f, "{e}"),
 			Error::Serde(e) => write!(f, "{e}"),
 			Error::Custom(s) => write!(f, "{s}"),
 		}

@@ -1,6 +1,6 @@
 use std::ops::{Deref, Range};
 
-use mlua::{AnyUserData, Lua, UserData, UserDataFields};
+use mlua::{AnyUserData, IntoLuaMulti, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods};
 use yazi_config::LAYOUT;
 use yazi_plugin::url::Url;
 
@@ -38,7 +38,13 @@ impl Folder {
 
 	pub(super) fn register(lua: &Lua) -> mlua::Result<()> {
 		lua.register_userdata_type::<yazi_fs::FolderStage>(|reg| {
-			reg.add_field_method_get("is_loading", |_, me| Ok(*me == yazi_fs::FolderStage::Loading));
+			use yazi_fs::FolderStage;
+
+			reg.add_meta_method(MetaMethod::Call, |lua, me, ()| match me {
+				FolderStage::Loading => false.into_lua_multi(lua),
+				FolderStage::Loaded => true.into_lua_multi(lua),
+				FolderStage::Failed(kind) => (true, yazi_plugin::Error::IoKind(*kind)).into_lua_multi(lua),
+			});
 		})?;
 
 		Ok(())
