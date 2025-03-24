@@ -5,6 +5,7 @@ use indexmap::IndexSet;
 use serde::Deserialize;
 
 use super::OpenerRule;
+use crate::check_for;
 
 #[derive(Debug, Deserialize)]
 pub struct Opener(HashMap<String, Vec<OpenerRule>>);
@@ -44,12 +45,7 @@ impl Opener {
 			*rules = mem::take(rules)
 				.into_iter()
 				.map(|mut r| (r.for_.take(), r))
-				.filter(|(for_, _)| match for_.as_ref().map(|s| s.as_str()) {
-					Some("unix") if cfg!(unix) => true,
-					Some(os) if os == std::env::consts::OS => true,
-					Some(_) => false,
-					None => true,
-				})
+				.filter(|(for_, _)| check_for(for_.as_deref()))
 				.map(|(_, r)| r.reshape())
 				.collect::<Result<IndexSet<_>>>()?
 				.into_iter()

@@ -23,6 +23,7 @@ impl Utils {
 					on:   Self::parse_keys(cand.raw_get("on")?)?,
 					run:  vec![Cmd::args("which:callback", &[i]).with_any("tx", tx.clone())],
 					desc: cand.raw_get("desc").ok(),
+					for_: None,
 				});
 			}
 

@@ -6,10 +6,10 @@ use yazi_codegen::DeserializeOver2;
 use yazi_shared::Layer;
 
 use super::Chord;
-use crate::{Preset, keymap::Key};
+use crate::{Preset, check_for, keymap::Key};
 
 #[derive(Default, Deserialize, DeserializeOver2)]
-pub struct KeymapRule {
+pub struct KeymapRules {
 	pub keymap:     Vec<Chord>,
 	#[serde(default)]
 	prepend_keymap: Vec<Chord>,
@@ -17,13 +17,13 @@ pub struct KeymapRule {
 	append_keymap:  Vec<Chord>,
 }
 
-impl Deref for KeymapRule {
+impl Deref for KeymapRules {
 	type Target = Vec<Chord>;
 
 	fn deref(&self) -> &Self::Target { &self.keymap }
 }
 
-impl KeymapRule {
+impl KeymapRules {
 	pub(crate) fn reshape(self, layer: Layer) -> Result<Self> {
 		#[inline]
 		fn on(Chord { on, .. }: &Chord) -> [Key; 2] {
@@ -38,9 +38,10 @@ impl KeymapRule {
 			self.keymap.into_iter().filter(|v| !a_seen.contains(&on(v))),
 			self.append_keymap.into_iter().filter(|v| !b_seen.contains(&on(v))),
 		)
-		.filter(|chord| !chord.noop())
-		.map(|chord| chord.with_layer(layer))
-		.collect();
+		.map(|mut chord| (chord.for_.take(), chord))
+		.filter(|(for_, chord)| !chord.noop() && check_for(for_.as_deref()))
+		.map(|(_, chord)| chord.reshape(layer))
+		.collect::<Result<_>>()?;
 
 		Ok(Self { keymap, ..Default::default() })
 	}

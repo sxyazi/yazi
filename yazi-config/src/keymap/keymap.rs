@@ -3,19 +3,19 @@ use serde::Deserialize;
 use yazi_codegen::DeserializeOver1;
 use yazi_shared::Layer;
 
-use super::{Chord, KeymapRule};
+use super::{Chord, KeymapRules};
 
 #[derive(Deserialize, DeserializeOver1)]
 pub struct Keymap {
 	#[serde(rename = "manager")]
-	pub mgr:     KeymapRule,
-	pub tasks:   KeymapRule,
-	pub spot:    KeymapRule,
-	pub pick:    KeymapRule,
-	pub input:   KeymapRule,
-	pub confirm: KeymapRule,
-	pub help:    KeymapRule,
-	pub cmp:     KeymapRule,
+	pub mgr:     KeymapRules,
+	pub tasks:   KeymapRules,
+	pub spot:    KeymapRules,
+	pub pick:    KeymapRules,
+	pub input:   KeymapRules,
+	pub confirm: KeymapRules,
+	pub help:    KeymapRules,
+	pub cmp:     KeymapRules,
 }
 
 impl Keymap {
