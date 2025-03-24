@@ -26,16 +26,12 @@ impl Mgr {
 		tokio::spawn(async move {
 			let tmp = YAZI.preview.tmpfile("bulk");
 			let s = old.iter().map(|o| o.as_os_str()).collect::<Vec<_>>().join(OsStr::new("\n"));
-			const DIVIDER: &str = "\n<↑ After ↑> <↓ Before ↓>\n";
-
-			let content = [&s, OsStr::new(&format!("{}", DIVIDER)), &s].join(OsStr::new(""));
-
 			OpenOptions::new()
 				.write(true)
 				.create_new(true)
 				.open(&tmp)
 				.await?
-				.write_all(content.as_encoded_bytes())
+				.write_all(s.as_encoded_bytes())
 				.await?;
 
 			defer! { tokio::spawn(fs::remove_file(tmp.clone())); }
@@ -49,10 +45,7 @@ impl Mgr {
 			defer!(AppProxy::resume());
 			AppProxy::stop().await;
 
-			let content = fs::read_to_string(&tmp).await?;
-
-			let new: Vec<_> =
-				content.split(DIVIDER).next().unwrap_or("").lines().map(PathBuf::from).collect();
+			let new: Vec<_> = fs::read_to_string(&tmp).await?.lines().map(PathBuf::from).collect();
 			Self::bulk_rename_do(root, old, new).await
 		});
 	}
