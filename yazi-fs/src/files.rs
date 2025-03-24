@@ -81,13 +81,13 @@ impl Files {
 		)
 	}
 
-	pub async fn assert_stale(cwd: &Url, cha: Cha) -> Option<Cha> {
+	pub async fn assert_stale(dir: &Url, cha: Cha) -> Option<Cha> {
 		use std::io::ErrorKind;
-		match fs::metadata(cwd).await.map(Cha::from) {
-			Ok(c) if !c.is_dir() => FilesOp::issue_error(cwd, ErrorKind::NotADirectory).await,
+		match fs::metadata(dir).await.map(Cha::from) {
+			Ok(c) if !c.is_dir() => FilesOp::issue_error(dir, ErrorKind::NotADirectory).await,
 			Ok(c) if c.hits(cha) && PARTITIONS.read().heuristic(cha) => {}
 			Ok(c) => return Some(c),
-			Err(e) => FilesOp::issue_error(cwd, e.kind()).await,
+			Err(e) => FilesOp::issue_error(dir, e.kind()).await,
 		}
 		None
 	}
