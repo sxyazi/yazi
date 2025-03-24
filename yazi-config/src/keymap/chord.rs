@@ -1,5 +1,6 @@
 use std::{borrow::Cow, hash::{Hash, Hasher}, sync::OnceLock};
 
+use anyhow::Result;
 use regex::Regex;
 use serde::Deserialize;
 use yazi_shared::{Layer, event::Cmd};
@@ -15,6 +16,8 @@ pub struct Chord {
 	#[serde(deserialize_with = "super::deserialize_run")]
 	pub run:  Vec<Cmd>,
 	pub desc: Option<String>,
+	#[serde(rename = "for")]
+	pub for_: Option<String>,
 }
 
 impl PartialEq for Chord {
@@ -53,14 +56,15 @@ impl Chord {
 	pub(super) fn noop(&self) -> bool {
 		self.run.len() == 1 && self.run[0].name == "noop" && self.run[0].args.is_empty()
 	}
+}
 
-	#[inline]
-	pub(super) fn with_layer(mut self, layer: Layer) -> Self {
-		for c in &mut self.run {
-			if c.layer == Default::default() {
-				c.layer = layer;
+impl Chord {
+	pub(super) fn reshape(mut self, layer: Layer) -> Result<Self> {
+		for cmd in &mut self.run {
+			if cmd.layer == Default::default() {
+				cmd.layer = layer;
 			}
 		}
-		self
+		Ok(self)
 	}
 }

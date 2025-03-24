@@ -23,7 +23,7 @@ where
 		where
 			A: de::SeqAccess<'de>,
 		{
-			let mut cmds = vec![];
+			let mut cmds = Vec::with_capacity(seq.size_hint().unwrap_or(0));
 			while let Some(value) = &seq.next_element::<String>()? {
 				cmds.push(Key::from_str(value).map_err(de::Error::custom)?);
 			}
@@ -61,7 +61,7 @@ where
 		where
 			A: de::SeqAccess<'de>,
 		{
-			let mut cmds = vec![];
+			let mut cmds = Vec::with_capacity(seq.size_hint().unwrap_or(0));
 			while let Some(value) = &seq.next_element::<String>()? {
 				cmds.push(Cmd::from_str(value).map_err(de::Error::custom)?);
 			}
