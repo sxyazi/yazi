@@ -52,11 +52,13 @@ impl Mgr {
 
 	async fn bulk_rename_do(root: PathBuf, old: Vec<PathBuf>, new: Vec<PathBuf>) -> Result<()> {
 		terminal_clear(TTY.writer())?;
-		if old.len() != new.len() {
-			TTY.writer().write_all(b"Number of old and new differ, press ENTER to exit")?;
+		if old.len() > new.len() {
+			TTY.writer().write_all(b"Number of old is greater than new, press ENTER to exit")?;
 			TTY.reader().read_exact(&mut [0])?;
 			return Ok(());
 		}
+
+		let new = if new.len() > old.len() { new.into_iter().take(old.len()).collect() } else { new };
 
 		let (old, new) = old.into_iter().zip(new).filter(|(o, n)| o != n).unzip();
 		let todo = Self::prioritized_paths(old, new);
