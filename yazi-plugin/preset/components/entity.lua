@@ -73,7 +73,7 @@ function Entity:symlink()
 	end
 
 	local to = self._file.link_to
-	return to and ui.Span(string.format(" -> %s", to)):italic() or ""
+	return to and ui.Span(string.format(" -> %s", to)):style(th.mgr.symlink_target) or ""
 end
 
 function Entity:redraw()

@@ -44,6 +44,9 @@ pub struct Mgr {
 	find_keyword:  Style,
 	find_position: Style,
 
+	// Symlink
+	symlink_target: Style,
+
 	// Marker
 	marker_copied:   Style,
 	marker_cut:      Style,
