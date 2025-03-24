@@ -1,6 +1,7 @@
 use std::{borrow::Cow, collections::HashMap, ffi::{OsStr, OsString}, io::{Read, Write}, path::PathBuf};
 
 use anyhow::{Result, anyhow};
+use crossterm::{execute, style::Print};
 use scopeguard::defer;
 use tokio::{fs::{self, OpenOptions}, io::AsyncWriteExt};
 use yazi_config::YAZI;
@@ -45,7 +46,8 @@ impl Mgr {
 			defer!(AppProxy::resume());
 			AppProxy::stop().await;
 
-			let new: Vec<_> = fs::read_to_string(&tmp).await?.lines().map(PathBuf::from).collect();
+			let new: Vec<_> =
+				fs::read_to_string(&tmp).await?.lines().take(old.len()).map(PathBuf::from).collect();
 			Self::bulk_rename_do(root, old, new).await
 		});
 	}
@@ -53,7 +55,10 @@ impl Mgr {
 	async fn bulk_rename_do(root: PathBuf, old: Vec<PathBuf>, new: Vec<PathBuf>) -> Result<()> {
 		terminal_clear(TTY.writer())?;
 		if old.len() != new.len() {
-			TTY.writer().write_all(b"Number of old and new differ, press ENTER to exit")?;
+			#[rustfmt::skip]
+			let s = format!("Number of new and old file names mismatch (New: {}, Old: {}).\nPress <Enter> to exit...", new.len(), old.len());
+			execute!(TTY.writer(), Print(s))?;
+
 			TTY.reader().read_exact(&mut [0])?;
 			return Ok(());
 		}
