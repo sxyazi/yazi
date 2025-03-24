@@ -1,6 +1,7 @@
 use std::{borrow::Cow, collections::HashMap, ffi::{OsStr, OsString}, io::{Read, Write}, path::PathBuf};
 
 use anyhow::{Result, anyhow};
+use crossterm::{execute, style::Print};
 use scopeguard::defer;
 use tokio::{fs::{self, OpenOptions}, io::AsyncWriteExt};
 use yazi_config::YAZI;
@@ -45,20 +46,22 @@ impl Mgr {
 			defer!(AppProxy::resume());
 			AppProxy::stop().await;
 
-			let new: Vec<_> = fs::read_to_string(&tmp).await?.lines().map(PathBuf::from).collect();
+			let new: Vec<_> =
+				fs::read_to_string(&tmp).await?.lines().take(old.len()).map(PathBuf::from).collect();
 			Self::bulk_rename_do(root, old, new).await
 		});
 	}
 
 	async fn bulk_rename_do(root: PathBuf, old: Vec<PathBuf>, new: Vec<PathBuf>) -> Result<()> {
 		terminal_clear(TTY.writer())?;
-		if old.len() > new.len() {
-			TTY.writer().write_all(b"Number of old is greater than new, press ENTER to exit")?;
+		if old.len() != new.len() {
+			#[rustfmt::skip]
+			let s = format!("Number of new and old file names mismatch (New: {}, Old: {}).\nPress <Enter> to exit...", new.len(), old.len());
+			execute!(TTY.writer(), Print(s))?;
+
 			TTY.reader().read_exact(&mut [0])?;
 			return Ok(());
 		}
-
-		let new = if new.len() > old.len() { new.into_iter().take(old.len()).collect() } else { new };
 
 		let (old, new) = old.into_iter().zip(new).filter(|(o, n)| o != n).unzip();
 		let todo = Self::prioritized_paths(old, new);
