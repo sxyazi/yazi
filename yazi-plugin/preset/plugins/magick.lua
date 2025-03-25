@@ -29,7 +29,7 @@ function M:preload(job)
 		"-auto-orient",
 		"-strip",
 		"-sample",
-		string.format("%dx", rt.preview.max_width),
+		string.format("%dx%d>", rt.preview.max_width, rt.preview.max_height),
 		"-flatten",
 		"-quality",
 		rt.preview.image_quality,
