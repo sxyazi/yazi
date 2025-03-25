@@ -25,15 +25,14 @@ function M:preload(job)
 	end
 
 	local cmd = Command("magick"):args {
-		"-density",
-		200,
 		tostring(job.file.url),
+		"-auto-orient",
+		"-strip",
+		"-sample",
+		string.format("%dx", rt.preview.max_width),
 		"-flatten",
-		"-resize",
-		string.format("%dx%d^", rt.preview.max_width, rt.preview.max_height),
 		"-quality",
 		rt.preview.image_quality,
-		"-auto-orient",
 		"JPG:" .. tostring(cache),
 	}
 
