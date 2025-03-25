@@ -14,14 +14,15 @@ impl From<()> for Opt {
 
 impl Tasks {
 	#[yazi_codegen::command]
-	pub fn toggle(&mut self, _: Opt) {
-		self.visible = !self.visible;
-
+	pub fn show(&mut self, _: Opt) {
 		if self.visible {
-			self.summaries = self.paginate();
-			self.arrow(0);
+			return;
 		}
 
+		self.visible = true;
+		self.summaries = self.paginate();
+
+		self.arrow(0);
 		render!();
 	}
 }
