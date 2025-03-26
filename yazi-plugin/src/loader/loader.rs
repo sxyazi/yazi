@@ -42,6 +42,7 @@ impl Default for Loader {
 			("noop".to_owned(), preset!("plugins/noop").into()),
 			("pdf".to_owned(), preset!("plugins/pdf").into()),
 			("session".to_owned(), preset!("plugins/session").into()),
+			("svg".to_owned(), preset!("plugins/svg").into()),
 			("video".to_owned(), preset!("plugins/video").into()),
 			("zoxide".to_owned(), preset!("plugins/zoxide").into()),
 		]);
