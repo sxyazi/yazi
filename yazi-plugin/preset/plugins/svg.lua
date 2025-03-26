@@ -28,7 +28,7 @@ function M:preload(job)
 	local cmd = require("magick").with_env():args {
 		"-density", 200,
 		tostring(job.file.url), "-strip",
-		"-sample", string.format("%dx%d^", rt.preview.max_width, rt.preview.max_height),
+		"-resize", string.format("%dx%d^", rt.preview.max_width, rt.preview.max_height),
 		"-quality", rt.preview.image_quality,
 		string.format("JPG:%s", cache),
 	}
