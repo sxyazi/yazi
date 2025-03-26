@@ -24,23 +24,28 @@ function M:preload(job)
 		return true
 	end
 
-	local cmd = Command("magick"):args {
-		tostring(job.file.url),
-		"-auto-orient",
-		"-strip",
-		"-sample",
-		string.format("%dx%d>", rt.preview.max_width, rt.preview.max_height),
-		"-flatten",
-		"-quality",
-		rt.preview.image_quality,
-		"JPG:" .. tostring(cache),
-	}
+	local cmd = Command("magick")
+	if job.args.flatten then
+		cmd = cmd:arg("-flatten")
+	end
 
+	cmd = cmd:args { tostring(job.file.url), "-auto-orient", "-strip" }
+	if job.mime:find("/svg%+xml") then
+		cmd = cmd:args { "-density", 200 }
+	end
+
+	cmd = cmd:env("MAGICK_THREAD_LIMIT", 1)
 	if rt.tasks.image_alloc > 0 then
 		cmd = cmd:env("MAGICK_MEMORY_LIMIT", rt.tasks.image_alloc)
 	end
 
-	local status, err = cmd:env("MAGICK_THREAD_LIMIT", 1):status()
+	-- stylua: ignore
+	local status, err = cmd:args {
+		"-sample", string.format("%dx%d>", rt.preview.max_width, rt.preview.max_height),
+		"-quality", rt.preview.image_quality,
+		string.format("JPG:%s", cache),
+	}:status()
+
 	if status then
 		return status.success
 	else
