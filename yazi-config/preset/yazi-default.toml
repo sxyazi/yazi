@@ -98,7 +98,8 @@ spotters = [
 	{ mime = "text/*", run = "code" },
 	{ mime = "application/{mbox,javascript,wine-extension-ini}", run = "code" },
 	# Image
-	{ mime = "image/{avif,hei?,jxl,svg+xml}", run = "magick" },
+	{ mime = "image/{avif,hei?,jxl}", run = "magick" },
+	{ mime = "image/svg+xml", run = "svg" },
 	{ mime = "image/*", run = "image" },
 	# Video
 	{ mime = "video/*", run = "video" },
@@ -107,7 +108,8 @@ spotters = [
 ]
 preloaders = [
 	# Image
-	{ mime = "image/{avif,hei?,jxl,svg+xml}", run = "magick" },
+	{ mime = "image/{avif,hei?,jxl}", run = "magick" },
+	{ mime = "image/svg+xml", run = "svg" },
 	{ mime = "image/*", run = "image" },
 	# Video
 	{ mime = "video/*", run = "video" },
@@ -125,7 +127,8 @@ previewers = [
 	# JSON
 	{ mime = "application/{json,ndjson}", run = "json" },
 	# Image
-	{ mime = "image/{avif,hei?,jxl,svg+xml}", run = "magick" },
+	{ mime = "image/{avif,hei?,jxl}", run = "magick" },
+	{ mime = "image/svg+xml", run = "svg" },
 	{ mime = "image/*", run = "image" },
 	# Video
 	{ mime = "video/*", run = "video" },

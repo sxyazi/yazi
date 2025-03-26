@@ -24,19 +24,16 @@ function M:preload(job)
 		return true
 	end
 
-	local cmd = M.with_env()
-	if job.args.flatten then
-		cmd = cmd:arg("-flatten")
-	end
-
 	-- stylua: ignore
-	local status, err = cmd:args {
-		tostring(job.file.url), "-auto-orient", "-strip",
-		"-sample", string.format("%dx%d>", rt.preview.max_width, rt.preview.max_height),
+	local cmd = require("magick").with_env():args {
+		"-density", 200,
+		tostring(job.file.url), "-strip",
+		"-resize", string.format("%dx%d^", rt.preview.max_width, rt.preview.max_height),
 		"-quality", rt.preview.image_quality,
 		string.format("JPG:%s", cache),
-	}:status()
+	}
 
+	local status, err = cmd:status()
 	if status then
 		return status.success
 	else
@@ -45,13 +42,5 @@ function M:preload(job)
 end
 
 function M:spot(job) require("file"):spot(job) end
-
-function M.with_env()
-	local cmd = Command("magick"):env("MAGICK_THREAD_LIMIT", 1)
-	if rt.tasks.image_alloc > 0 then
-		cmd = cmd:env("MAGICK_MEMORY_LIMIT", rt.tasks.image_alloc)
-	end
-	return cmd
-end
 
 return M
