@@ -17,12 +17,7 @@ impl From<CmdCow> for Opt {
 impl Pick {
 	#[yazi_codegen::command]
 	pub fn arrow(&mut self, opt: Opt) {
-		let len = self.items.len();
-		if len == 0 {
-			return;
-		}
-
-		let new = opt.step.add(self.cursor, len, self.limit());
+		let new = opt.step.add(self.cursor, self.items.len(), self.limit());
 		if new > self.cursor {
 			self.next(new);
 		} else {
@@ -31,25 +26,28 @@ impl Pick {
 	}
 
 	fn next(&mut self, new: usize) {
-		let len = self.items.len();
 		let old = self.cursor;
-		self.cursor = new.min(len - 1);
+		self.cursor = new;
 
-		let limit = self.limit();
-		if self.cursor >= len.min(self.offset + limit) {
-			self.offset = len.saturating_sub(limit).min(self.offset + self.cursor - old);
-		}
+		let (len, limit) = (self.items.len(), self.limit());
+		self.offset = if self.cursor < len.min(self.offset + limit) {
+			self.offset.min(len.saturating_sub(1))
+		} else {
+			len.saturating_sub(limit).min(self.offset + self.cursor - old)
+		};
 
 		render!(old != self.cursor);
 	}
 
 	fn prev(&mut self, new: usize) {
 		let old = self.cursor;
-		self.cursor = new.min(self.items.len().saturating_sub(1));
+		self.cursor = new;
 
-		if self.cursor < self.offset {
-			self.offset = self.offset.saturating_sub(old - self.cursor);
-		}
+		self.offset = if self.cursor < self.offset {
+			self.offset.saturating_sub(old - self.cursor)
+		} else {
+			self.offset.min(self.items.len().saturating_sub(1))
+		};
 
 		render!(old != self.cursor);
 	}

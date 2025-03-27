@@ -17,15 +17,11 @@ impl From<CmdCow> for Opt {
 impl Confirm {
 	#[yazi_codegen::command]
 	pub fn arrow(&mut self, opt: Opt, mgr: &Mgr) {
-		let width = mgr.area(self.position).width;
-		let height = self.list.line_count(width);
-		if height == 0 {
-			return;
-		}
+		let area = mgr.area(self.position);
+		let len = self.list.line_count(area.width);
 
 		let old = self.offset;
-		let new = opt.step.add(self.offset, height, height);
-		self.offset = new.min(height - 1);
+		self.offset = opt.step.add(self.offset, len, area.height as _);
 
 		render!(old != self.offset);
 	}

@@ -15,22 +15,15 @@ impl From<CmdCow> for Opt {
 }
 
 impl From<isize> for Opt {
-	fn from(step: isize) -> Self { Self { step: step.into() } }
+	fn from(n: isize) -> Self { Self { step: n.into() } }
 }
 
 impl Tasks {
 	#[yazi_codegen::command]
 	pub fn arrow(&mut self, opt: Opt) {
-		let max = Self::limit().min(self.summaries.len());
 		let old = self.cursor;
-		let new = opt.step.add(self.cursor, max, max);
-		if new > old {
-			self.cursor += 1;
-		} else {
-			self.cursor = self.cursor.saturating_sub(1);
-		}
+		self.cursor = opt.step.add(self.cursor, self.summaries.len(), Self::limit());
 
-		self.cursor = self.cursor.min(max.saturating_sub(1));
 		render!(self.cursor != old);
 	}
 }

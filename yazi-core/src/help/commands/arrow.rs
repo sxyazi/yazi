@@ -28,30 +28,29 @@ impl Help {
 		}
 	}
 
-	fn next(&mut self, step: usize) {
-		let len = self.bindings.len();
-		if len == 0 {
-			return;
-		}
-
+	fn next(&mut self, new: usize) {
 		let old = self.cursor;
-		self.cursor = (self.cursor + step).min(len - 1);
+		self.cursor = new;
 
-		let limit = Self::limit();
-		if self.cursor >= (self.offset + limit).min(len).saturating_sub(5) {
-			self.offset = len.saturating_sub(limit).min(self.offset + self.cursor - old);
-		}
+		let (len, limit) = (self.bindings.len(), Self::limit());
+		self.offset = if self.cursor < (self.offset + limit).min(len).saturating_sub(5) {
+			self.offset.min(len.saturating_sub(1))
+		} else {
+			len.saturating_sub(limit).min(self.offset + self.cursor - old)
+		};
 
 		render!(old != self.cursor);
 	}
 
-	fn prev(&mut self, step: usize) {
+	fn prev(&mut self, new: usize) {
 		let old = self.cursor;
-		self.cursor = self.cursor.saturating_sub(step);
+		self.cursor = new;
 
-		if self.cursor < self.offset + 5 {
-			self.offset = self.offset.saturating_sub(old - self.cursor);
-		}
+		self.offset = if self.cursor < self.offset + 5 {
+			self.offset.saturating_sub(old - self.cursor)
+		} else {
+			self.offset.min(self.bindings.len().saturating_sub(1))
+		};
 
 		render!(old != self.cursor);
 	}
