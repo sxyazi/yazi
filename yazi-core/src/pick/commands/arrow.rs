@@ -1,46 +1,53 @@
+use yazi_fs::Step;
 use yazi_macro::render;
-use yazi_shared::event::{CmdCow, Data};
+use yazi_shared::event::CmdCow;
 
 use crate::pick::Pick;
 
 struct Opt {
-	step: isize,
+	step: Step,
 }
 
 impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { step: c.first().and_then(Data::as_isize).unwrap_or(0) } }
+	fn from(c: CmdCow) -> Self {
+		Self { step: c.first().and_then(|d| d.try_into().ok()).unwrap_or_default() }
+	}
 }
 
 impl Pick {
 	#[yazi_codegen::command]
 	pub fn arrow(&mut self, opt: Opt) {
-		if opt.step > 0 { self.next(opt.step as usize) } else { self.prev(opt.step.unsigned_abs()) }
+		let new = opt.step.add(self.cursor, self.items.len(), self.limit());
+		if new > self.cursor {
+			self.next(new);
+		} else {
+			self.prev(new);
+		}
 	}
 
-	fn next(&mut self, step: usize) {
-		let len = self.items.len();
-		if len == 0 {
-			return;
-		}
-
+	fn next(&mut self, new: usize) {
 		let old = self.cursor;
-		self.cursor = (self.cursor + step).min(len - 1);
+		self.cursor = new;
 
-		let limit = self.limit();
-		if self.cursor >= len.min(self.offset + limit) {
-			self.offset = len.saturating_sub(limit).min(self.offset + self.cursor - old);
-		}
+		let (len, limit) = (self.items.len(), self.limit());
+		self.offset = if self.cursor < len.min(self.offset + limit) {
+			self.offset.min(len.saturating_sub(1))
+		} else {
+			len.saturating_sub(limit).min(self.offset + self.cursor - old)
+		};
 
 		render!(old != self.cursor);
 	}
 
-	fn prev(&mut self, step: usize) {
+	fn prev(&mut self, new: usize) {
 		let old = self.cursor;
-		self.cursor = self.cursor.saturating_sub(step);
+		self.cursor = new;
 
-		if self.cursor < self.offset {
-			self.offset = self.offset.saturating_sub(old - self.cursor);
-		}
+		self.offset = if self.cursor < self.offset {
+			self.offset.saturating_sub(old - self.cursor)
+		} else {
+			self.offset.min(self.items.len().saturating_sub(1))
+		};
 
 		render!(old != self.cursor);
 	}

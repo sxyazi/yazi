@@ -82,6 +82,9 @@ impl Table {
 		table.render(self.area.transform(trans), buf, &mut self.state);
 	}
 
+	#[inline]
+	pub(crate) fn len(&self) -> usize { self.rows.len() }
+
 	pub(crate) fn select(&mut self, idx: Option<usize>) {
 		self
 			.state

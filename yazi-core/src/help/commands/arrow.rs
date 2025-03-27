@@ -1,57 +1,57 @@
+use yazi_fs::Step;
 use yazi_macro::render;
-use yazi_shared::event::{CmdCow, Data};
+use yazi_shared::event::CmdCow;
 
 use crate::help::Help;
 
 struct Opt {
-	step: isize,
+	step: Step,
 }
 
 impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { step: c.first().and_then(Data::as_isize).unwrap_or(0) } }
+	fn from(c: CmdCow) -> Self {
+		Self { step: c.first().and_then(|d| d.try_into().ok()).unwrap_or_default() }
+	}
 }
+
 impl From<isize> for Opt {
-	fn from(step: isize) -> Self { Self { step } }
+	fn from(n: isize) -> Self { Self { step: n.into() } }
 }
 
 impl Help {
 	#[yazi_codegen::command]
 	pub fn arrow(&mut self, opt: Opt) {
-		let max = self.bindings.len().saturating_sub(1);
-		self.offset = self.offset.min(max);
-		self.cursor = self.cursor.min(max);
-
-		if opt.step > 0 {
-			self.next(opt.step as usize);
+		let new = opt.step.add(self.cursor, self.bindings.len(), Self::limit());
+		if new > self.cursor {
+			self.next(new);
 		} else {
-			self.prev(opt.step.unsigned_abs());
+			self.prev(new);
 		}
 	}
 
-	fn next(&mut self, step: usize) {
-		let len = self.bindings.len();
-		if len == 0 {
-			return;
-		}
-
+	fn next(&mut self, new: usize) {
 		let old = self.cursor;
-		self.cursor = (self.cursor + step).min(len - 1);
+		self.cursor = new;
 
-		let limit = Self::limit();
-		if self.cursor >= (self.offset + limit).min(len).saturating_sub(5) {
-			self.offset = len.saturating_sub(limit).min(self.offset + self.cursor - old);
-		}
+		let (len, limit) = (self.bindings.len(), Self::limit());
+		self.offset = if self.cursor < (self.offset + limit).min(len).saturating_sub(5) {
+			self.offset.min(len.saturating_sub(1))
+		} else {
+			len.saturating_sub(limit).min(self.offset + self.cursor - old)
+		};
 
 		render!(old != self.cursor);
 	}
 
-	fn prev(&mut self, step: usize) {
+	fn prev(&mut self, new: usize) {
 		let old = self.cursor;
-		self.cursor = self.cursor.saturating_sub(step);
+		self.cursor = new;
 
-		if self.cursor < self.offset + 5 {
-			self.offset = self.offset.saturating_sub(old - self.cursor);
-		}
+		self.offset = if self.cursor < self.offset + 5 {
+			self.offset.saturating_sub(old - self.cursor)
+		} else {
+			self.offset.min(self.bindings.len().saturating_sub(1))
+		};
 
 		render!(old != self.cursor);
 	}

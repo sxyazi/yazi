@@ -1,14 +1,16 @@
+use std::borrow::Cow;
+
 use yazi_proxy::{MgrProxy, TabProxy};
-use yazi_shared::event::{CmdCow, Data};
+use yazi_shared::event::CmdCow;
 
 use crate::spot::Spot;
 
 struct Opt {
-	step: isize,
+	step: Cow<'static, str>,
 }
 
 impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { step: c.first().and_then(Data::as_isize).unwrap_or(0) } }
+	fn from(mut c: CmdCow) -> Self { Self { step: c.take_first_str().unwrap_or_default() } }
 }
 
 impl Spot {

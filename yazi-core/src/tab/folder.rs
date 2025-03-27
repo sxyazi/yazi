@@ -142,7 +142,7 @@ impl Folder {
 		let limit = LAYOUT.get().limit();
 		let scrolloff = (limit / 2).min(YAZI.mgr.scrolloff as usize);
 
-		self.cursor = new.min(len.saturating_sub(1));
+		self.cursor = new;
 		self.offset = if self.cursor < (self.offset + limit).min(len).saturating_sub(scrolloff) {
 			self.offset.min(len.saturating_sub(1))
 		} else {
@@ -154,16 +154,15 @@ impl Folder {
 
 	fn prev(&mut self, new: usize) -> bool {
 		let old = (self.cursor, self.offset);
-		let max = self.files.len().saturating_sub(1);
 
 		let limit = LAYOUT.get().limit();
 		let scrolloff = (limit / 2).min(YAZI.mgr.scrolloff as usize);
 
-		self.cursor = new.min(max);
+		self.cursor = new;
 		self.offset = if self.cursor < self.offset + scrolloff {
 			self.offset.saturating_sub(old.0 - self.cursor)
 		} else {
-			self.offset.min(max)
+			self.offset.min(self.files.len().saturating_sub(1))
 		};
 
 		old != (self.cursor, self.offset)
