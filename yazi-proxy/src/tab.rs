@@ -17,8 +17,8 @@ impl TabProxy {
 	}
 
 	#[inline]
-	pub fn arrow(step: isize) {
-		emit!(Call(Cmd::args("mgr:arrow", &[step])));
+	pub fn arrow(step: impl AsRef<str>) {
+		emit!(Call(Cmd::args("mgr:arrow", &[step.as_ref()])));
 	}
 
 	#[inline]
