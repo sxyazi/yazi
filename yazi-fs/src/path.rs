@@ -6,6 +6,9 @@ use yazi_shared::url::{Loc, Url};
 use crate::CWD;
 
 #[inline]
+pub fn clean_url(url: &Url) -> Url { Url::from(clean_path(url)) }
+
+#[inline]
 pub fn clean_path(path: impl AsRef<Path>) -> PathBuf { _clean_path(path.as_ref()) }
 
 fn _clean_path(path: &Path) -> PathBuf {

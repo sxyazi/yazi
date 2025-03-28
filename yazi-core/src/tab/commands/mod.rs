@@ -23,4 +23,5 @@ yazi_macro::mod_flat!(
 	update_peeked
 	update_spotted
 	visual_mode
+	follow,
 );
