@@ -128,6 +128,7 @@ keymap = [
 	{ on = [ "g", "c" ],       run = "cd ~/.config",     desc = "Go ~/.config" },
 	{ on = [ "g", "d" ],       run = "cd ~/Downloads",   desc = "Go ~/Downloads" },
 	{ on = [ "g", "<Space>" ], run = "cd --interactive", desc = "Jump interactively" },
+	{ on = [ "g", "f" ],       run = "follow",           desc = "Follow hovered symlink" },
 
 	# Tabs
 	{ on = "t", run = "tab_create --current", desc = "Create a new tab with CWD" },
@@ -228,8 +229,8 @@ keymap = [
 keymap = [
 	{ on = "<C-c>",   run = "close",          desc = "Cancel input" },
 	{ on = "<Enter>", run = "close --submit", desc = "Submit input" },
-	{ on = "<Esc>",   run = "escape",         desc = "Go back the normal mode, or cancel input" },
-	{ on = "<C-[>",   run = "escape",         desc = "Go back the normal mode, or cancel input" },
+	{ on = "<Esc>",   run = "escape",         desc = "Back to normal mode, or cancel input" },
+	{ on = "<C-[>",   run = "escape",         desc = "Back to normal mode, or cancel input" },
 
 	# Mode
 	{ on = "i", run = "insert",                          desc = "Enter insert mode" },
@@ -285,14 +286,14 @@ keymap = [
 	{ on = "<A-d>", run = "kill forward",  desc = "Kill forwards to the end of the current word" },
 
 	# Cut/Yank/Paste
-	{ on = "d", run = "delete --cut",                              desc = "Cut the selected characters" },
-	{ on = "D", run = [ "delete --cut", "move eol" ],              desc = "Cut until the EOL" },
-	{ on = "c", run = "delete --cut --insert",                     desc = "Cut the selected characters, and enter insert mode" },
-	{ on = "C", run = [ "delete --cut --insert", "move eol" ],     desc = "Cut until the EOL, and enter insert mode" },
-	{ on = "x", run = [ "delete --cut", "move 1 --in-operating" ], desc = "Cut the current character" },
-	{ on = "y", run = "yank",                                      desc = "Copy the selected characters" },
-	{ on = "p", run = "paste",                                     desc = "Paste the copied characters after the cursor" },
-	{ on = "P", run = "paste --before",                            desc = "Paste the copied characters before the cursor" },
+	{ on = "d", run = "delete --cut",                              desc = "Cut selected characters" },
+	{ on = "D", run = [ "delete --cut", "move eol" ],              desc = "Cut until EOL" },
+	{ on = "c", run = "delete --cut --insert",                     desc = "Cut selected characters, and enter insert mode" },
+	{ on = "C", run = [ "delete --cut --insert", "move eol" ],     desc = "Cut until EOL, and enter insert mode" },
+	{ on = "x", run = [ "delete --cut", "move 1 --in-operating" ], desc = "Cut current character" },
+	{ on = "y", run = "yank",                                      desc = "Copy selected characters" },
+	{ on = "p", run = "paste",                                     desc = "Paste copied characters after the cursor" },
+	{ on = "P", run = "paste --before",                            desc = "Paste copied characters before the cursor" },
 
 	# Undo/Redo
 	{ on = "u",     run = "undo", desc = "Undo the last operation" },
@@ -361,5 +362,5 @@ keymap = [
 	{ on = "<Down>", run = "arrow next", desc = "Next line" },
 
 	# Filtering
-	{ on = "f", run = "filter", desc = "Apply a filter for the help items" },
+	{ on = "f", run = "filter", desc = "Filter help items" },
 ]

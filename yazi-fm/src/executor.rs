@@ -97,6 +97,7 @@ impl<'a> Executor<'a> {
 		on!(ACTIVE, forward);
 		on!(ACTIVE, cd);
 		on!(ACTIVE, reveal);
+		on!(ACTIVE, follow);
 
 		// Toggle
 		on!(ACTIVE, toggle);

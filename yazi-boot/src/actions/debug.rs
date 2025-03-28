@@ -2,6 +2,7 @@ use std::{env, ffi::OsStr, fmt::Write};
 
 use regex::Regex;
 use yazi_adapter::Mux;
+use yazi_shared::timestamp_us;
 
 use super::Actions;
 
@@ -100,6 +101,9 @@ impl Actions {
 		writeln!(s, "    xclip        : {}", Self::process_output("xclip", "-version"))?;
 		writeln!(s, "    xsel         : {}", Self::process_output("xsel", "--version"))?;
 
+		writeln!(s, "\nRoutine")?;
+		writeln!(s, "    `file -bL --mime-type`: {}", Self::file1_output())?;
+
 		writeln!(
 			s,
 			"\n\nSee https://yazi-rs.github.io/docs/plugins/overview#debugging on how to enable logging or debug runtime errors."
@@ -129,6 +133,21 @@ impl Actions {
 				}
 			}
 			Ok(out) => format!("{:?}, {:?}", out.status, String::from_utf8_lossy(&out.stderr)),
+			Err(e) => format!("{e}"),
+		}
+	}
+
+	fn file1_output() -> String {
+		use std::io::Write;
+
+		let p = env::temp_dir().join(format!("yazi-debug-{}", timestamp_us()));
+		std::fs::File::create_new(&p).map(|mut f| f.write_all(b"Hello, World!")).ok();
+
+		let cmd = env::var_os("YAZI_FILE_ONE").unwrap_or("file".into());
+		match std::process::Command::new(cmd).args(["-bL", "--mime-type"]).arg(&p).output() {
+			Ok(out) => {
+				String::from_utf8_lossy(&out.stdout).trim().lines().next().unwrap_or_default().to_owned()
+			}
 			Err(e) => format!("{e}"),
 		}
 	}
