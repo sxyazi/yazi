@@ -63,14 +63,13 @@ impl Step {
 			Self::Percent(n) => n as isize * limit as isize / 100,
 		};
 
-		if fixed == 0 {
-			pos
-		} else if matches!(self, Self::Prev | Self::Next) {
+		if matches!(self, Self::Prev | Self::Next) {
 			fixed.saturating_add_unsigned(pos).rem_euclid(len as _) as _
-		} else if fixed > 0 {
-			pos.saturating_add_signed(fixed).min(len - 1)
+		} else if fixed >= 0 {
+			pos.saturating_add_signed(fixed)
 		} else {
 			pos.saturating_sub(fixed.unsigned_abs())
 		}
+		.min(len - 1)
 	}
 }
