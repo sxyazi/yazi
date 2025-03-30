@@ -20,11 +20,7 @@ impl Selected {
 	#[inline]
 	pub fn add(&mut self, url: &Url) -> bool { self.add_same(&[url]) == 1 }
 
-	pub fn add_many(&mut self, urls: &[impl AsRef<Url>], same: bool) -> usize {
-		if same {
-			return self.add_same(urls);
-		}
-
+	pub fn add_many(&mut self, urls: &[impl AsRef<Url>]) -> usize {
 		let mut grouped: HashMap<_, Vec<_>> = Default::default();
 		for u in urls {
 			if let Some(p) = u.as_ref().parent_url() {
@@ -66,22 +62,19 @@ impl Selected {
 	#[inline]
 	pub fn remove(&mut self, url: &Url) -> bool { self.remove_same(&[url]) == 1 }
 
-	pub fn remove_many(&mut self, urls: &[impl AsRef<Url>], same: bool) -> usize {
-		let affected = if same {
-			self.remove_same(urls)
-		} else {
-			let mut grouped: HashMap<_, Vec<_>> = Default::default();
-			for u in urls {
-				if let Some(p) = u.as_ref().parent_url() {
-					grouped.entry(p).or_default().push(u);
-				}
+	pub fn remove_many(&mut self, urls: &[impl AsRef<Url>]) -> usize {
+		let mut grouped: HashMap<_, Vec<_>> = Default::default();
+		for u in urls {
+			if let Some(p) = u.as_ref().parent_url() {
+				grouped.entry(p).or_default().push(u);
 			}
-			grouped.into_values().map(|v| self.remove_same(&v)).sum()
-		};
+		}
 
+		let affected = grouped.into_values().map(|v| self.remove_same(&v)).sum();
 		if affected > 0 {
 			self.inner.sort_unstable_by(|_, a, _, b| a.cmp(b));
 		}
+
 		affected
 	}
 
@@ -113,10 +106,10 @@ impl Selected {
 	pub fn apply_op(&mut self, op: &FilesOp) {
 		let (removal, addition) = op.diff_recoverable(|u| self.contains_key(u));
 		if !removal.is_empty() {
-			self.remove_many(&removal, !op.cwd().is_search());
+			self.remove_many(&removal);
 		}
 		if !addition.is_empty() {
-			self.add_many(&addition, !op.cwd().is_search());
+			self.add_many(&addition);
 		}
 	}
 }

@@ -57,7 +57,7 @@ impl Mgr {
 	#[yazi_codegen::command]
 	pub fn remove_do(&mut self, opt: Opt, tasks: &Tasks) {
 		self.tabs.iter_mut().for_each(|t| {
-			t.selected.remove_many(&opt.targets, false);
+			t.selected.remove_many(&opt.targets);
 		});
 
 		for u in &opt.targets {
