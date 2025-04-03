@@ -101,7 +101,7 @@ impl Brand {
 			B::Foot => &[A::Sixel],
 			B::Ghostty => &[A::Kgp],
 			B::Microsoft => &[A::Sixel],
-			B::Warp => &[],
+			B::Warp => &[A::Iip, A::KgpOld],
 			B::Rio => &[A::Iip, A::Sixel],
 			B::BlackBox => &[A::Sixel],
 			B::VSCode => &[A::Iip, A::Sixel],
