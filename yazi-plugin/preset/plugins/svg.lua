@@ -26,7 +26,6 @@ function M:preload(job)
 
 	-- stylua: ignore
 	local cmd = require("magick").with_env():args {
-		"-density", 200,
 		tostring(job.file.url), "-strip",
 		"-resize", string.format("%dx%d^", rt.preview.max_width, rt.preview.max_height),
 		"-quality", rt.preview.image_quality,

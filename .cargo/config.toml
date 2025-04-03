@@ -11,3 +11,6 @@ JEMALLOC_SYS_WITH_LG_PAGE = "16"
 #
 # Improve memory efficiency by reducing fragmentation and ensuring all threads allocate from the same pool
 JEMALLOC_SYS_WITH_MALLOC_CONF = "narenas:1"
+
+[target.aarch64-apple-darwin]
+rustflags = [ "-Ctarget-cpu=apple-m1" ]
