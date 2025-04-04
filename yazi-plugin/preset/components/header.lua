@@ -38,7 +38,7 @@ function Header:flags()
 
 	local t = {}
 	if cwd.is_search then
-		t[#t + 1] = string.format("search: %s", cwd:frag())
+		t[#t + 1] = string.format("search: %s", cwd.frag)
 	end
 	if filter then
 		t[#t + 1] = string.format("filter: %s", filter)
@@ -84,7 +84,7 @@ function Header:tabs()
 	for i = 1, tabs do
 		local text = i
 		if th.mgr.tab_width > 2 then
-			text = ya.truncate(text .. " " .. cx.tabs[i]:name(), { max = th.mgr.tab_width })
+			text = ya.truncate(text .. " " .. cx.tabs[i].name, { max = th.mgr.tab_width })
 		end
 		if i == cx.tabs.idx then
 			spans[#spans + 1] = ui.Span(" " .. text .. " "):style(th.mgr.tab_active)

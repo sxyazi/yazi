@@ -37,8 +37,8 @@ impl IntoLua for BodyLoad<'static> {
 		lua
 			.create_table_from([
 				("tab", self.tab.get().into_lua(lua)?),
-				("url", lua.create_any_userdata(self.url.into_owned())?.into_lua(lua)?),
-				("stage", lua.create_any_userdata(self.stage)?.into_lua(lua)?),
+				("url", yazi_binding::Url::new(self.url.into_owned()).into_lua(lua)?),
+				("stage", yazi_binding::FolderStage::new(self.stage).into_lua(lua)?),
 			])?
 			.into_lua(lua)
 	}

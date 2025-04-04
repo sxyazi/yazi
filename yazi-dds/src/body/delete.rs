@@ -27,10 +27,8 @@ impl<'a> From<BodyDelete<'a>> for Body<'a> {
 
 impl IntoLua for BodyDelete<'static> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		let urls = lua.create_table_with_capacity(self.urls.len(), 0)?;
-		for (i, url) in self.urls.into_owned().into_iter().enumerate() {
-			urls.raw_set(i + 1, lua.create_any_userdata(url)?)?;
-		}
+		let urls =
+			lua.create_sequence_from(self.urls.into_owned().into_iter().map(yazi_binding::Url::new))?;
 
 		lua.create_table_from([("urls", urls)])?.into_lua(lua)
 	}

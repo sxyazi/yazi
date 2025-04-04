@@ -51,7 +51,7 @@ fn peek_sync(cmd: &'static Cmd, file: yazi_fs::File, mime: Cow<'static, str>, sk
 		let job = lua.create_table_from([
 			("area", Rect::from(LAYOUT.get().preview).into_lua(lua)?),
 			("args", Sendable::args_to_table_ref(lua, &cmd.args)?.into_lua(lua)?),
-			("file", File(file).into_lua(lua)?),
+			("file", File::new(file).into_lua(lua)?),
 			("mime", mime.into_lua(lua)?),
 			("skip", skip.into_lua(lua)?),
 		])?;
@@ -88,7 +88,7 @@ fn peek_async(
 			let job = lua.create_table_from([
 				("area", Rect::from(LAYOUT.get().preview).into_lua(&lua)?),
 				("args", Sendable::args_to_table_ref(&lua, &cmd.args)?.into_lua(&lua)?),
-				("file", File(file).into_lua(&lua)?),
+				("file", File::new(file).into_lua(&lua)?),
 				("mime", mime.into_lua(&lua)?),
 				("skip", skip.into_lua(&lua)?),
 			])?;

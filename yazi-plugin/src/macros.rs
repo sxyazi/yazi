@@ -81,14 +81,17 @@ macro_rules! impl_style_shorthands {
 #[macro_export]
 macro_rules! impl_file_fields {
 	($fields:ident) => {
-		use mlua::UserDataFields;
+		yazi_binding::cached_field!($fields, cha, |_, me: &Self| Ok($crate::bindings::Cha::from(
+			me.cha
+		)));
+		yazi_binding::cached_field!($fields, url, |_, me: &Self| Ok(yazi_binding::Url::new(
+			me.url_owned()
+		)));
+		yazi_binding::cached_field!($fields, link_to, |_, me: &Self| Ok(
+			me.link_to.clone().map(yazi_binding::Url::new)
+		));
 
-		$fields.add_field_method_get("cha", |_, me| Ok($crate::bindings::Cha::from(me.cha)));
-		$fields.add_field_method_get("url", |_, me| Ok($crate::url::Url(me.url_owned())));
-		$fields
-			.add_field_method_get("link_to", |_, me| Ok(me.link_to.clone().map(|u| $crate::url::Url(u))));
-
-		$fields.add_field_method_get("name", |lua, me| {
+		yazi_binding::cached_field!($fields, name, |lua: &mlua::Lua, me: &Self| {
 			Some(me.name())
 				.filter(|s| !s.is_empty())
 				.map(|s| lua.create_string(s.as_encoded_bytes()))
@@ -100,8 +103,6 @@ macro_rules! impl_file_fields {
 #[macro_export]
 macro_rules! impl_file_methods {
 	($methods:ident) => {
-		use mlua::UserDataMethods;
-
 		$methods.add_method("hash", |_, me, ()| Ok(me.hash()));
 
 		$methods.add_method("icon", |_, me, ()| {

@@ -2,29 +2,26 @@ use std::ops::Deref;
 
 use indexmap::{IndexMap, map::Keys};
 use mlua::{AnyUserData, IntoLuaMulti, MetaMethod, UserData, UserDataMethods, UserDataRefMut};
-use yazi_plugin::url::Url;
+use yazi_binding::Url;
 
-use super::{Iter, Lives};
+use super::{Iter, Lives, PtrCell};
 
 #[derive(Clone, Copy)]
 pub(super) struct Selected {
-	inner: *const IndexMap<yazi_shared::url::Url, u64>,
+	inner: PtrCell<IndexMap<yazi_shared::url::Url, u64>>,
 }
 
 impl Deref for Selected {
 	type Target = IndexMap<yazi_shared::url::Url, u64>;
 
-	fn deref(&self) -> &Self::Target { self.inner() }
+	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
 impl Selected {
 	#[inline]
 	pub(super) fn make(inner: &IndexMap<yazi_shared::url::Url, u64>) -> mlua::Result<AnyUserData> {
-		Lives::scoped_userdata(Self { inner })
+		Lives::scoped_userdata(Self { inner: inner.into() })
 	}
-
-	#[inline]
-	fn inner(&self) -> &'static IndexMap<yazi_shared::url::Url, u64> { unsafe { &*self.inner } }
 }
 
 impl UserData for Selected {
@@ -35,14 +32,14 @@ impl UserData for Selected {
 			let iter = lua.create_function(
 				|lua, mut iter: UserDataRefMut<Iter<Keys<yazi_shared::url::Url, u64>, _>>| {
 					if let Some(next) = iter.next() {
-						(next.0, Url(next.1.clone())).into_lua_multi(lua)
+						(next.0, Url::new(next.1.clone())).into_lua_multi(lua)
 					} else {
 						().into_lua_multi(lua)
 					}
 				},
 			)?;
 
-			Ok((iter, Iter::make(me.inner().keys())))
+			Ok((iter, Iter::make(me.inner.as_static().keys())))
 		});
 	}
 }

@@ -57,12 +57,12 @@ impl UserData for BodyYankIter {
 	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.urls.len()));
 
-		methods.add_meta_method(MetaMethod::Index, |lua, me, idx: usize| {
-			if idx > me.urls.len() || idx == 0 {
-				Ok(None)
+		methods.add_meta_method(MetaMethod::Index, |_, me, idx: usize| {
+			Ok(if idx > me.urls.len() || idx == 0 {
+				None
 			} else {
-				Some(lua.create_any_userdata(me.urls[idx - 1].clone())).transpose()
-			}
+				Some(yazi_binding::Url::new(me.urls[idx - 1].clone()))
+			})
 		});
 	}
 }

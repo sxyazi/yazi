@@ -1,6 +1,6 @@
 use std::{borrow::Cow, collections::HashMap};
 
-use mlua::{ExternalError, Lua, MultiValue, Table, Value};
+use mlua::{ExternalError, IntoLua, Lua, MultiValue, Table, Value};
 use yazi_shared::{OrderedFloat, event::{Data, DataKey}, replace_cow};
 
 pub struct Sendable;
@@ -41,8 +41,8 @@ impl Sendable {
 			Value::Function(_) => Err("function is not supported".into_lua_err())?,
 			Value::Thread(_) => Err("thread is not supported".into_lua_err())?,
 			Value::UserData(ud) => {
-				if let Ok(t) = ud.take::<yazi_shared::url::Url>() {
-					Data::Url(t)
+				if let Ok(t) = ud.take::<yazi_binding::Url>() {
+					Data::Url(t.into())
 				} else if let Ok(t) = ud.take::<yazi_fs::FilesOp>() {
 					Data::Any(Box::new(t))
 				} else if let Ok(t) = ud.take::<super::body::BodyYankIter>() {
@@ -73,7 +73,7 @@ impl Sendable {
 				}
 				Value::Table(tbl)
 			}
-			Data::Url(u) => Value::UserData(lua.create_any_userdata(u)?),
+			Data::Url(u) => yazi_binding::Url::new(u).into_lua(lua)?,
 			Data::Any(a) => Value::UserData(if a.is::<yazi_fs::FilesOp>() {
 				lua.create_any_userdata(*a.downcast::<yazi_fs::FilesOp>().unwrap())?
 			} else if a.is::<super::body::BodyYankIter>() {
@@ -107,7 +107,7 @@ impl Sendable {
 				}
 				Value::Table(tbl)
 			}
-			Data::Url(u) => Value::UserData(lua.create_any_userdata(u.clone())?),
+			Data::Url(u) => yazi_binding::Url::new(u.clone()).into_lua(lua)?,
 			Data::Bytes(b) => Value::String(lua.create_string(b)?),
 			Data::Any(a) => Value::UserData(if let Some(t) = a.downcast_ref::<yazi_fs::FilesOp>() {
 				lua.create_any_userdata(t.clone())?
@@ -189,8 +189,8 @@ impl Sendable {
 			Value::Function(_) => Err("function is not supported".into_lua_err())?,
 			Value::Thread(_) => Err("thread is not supported".into_lua_err())?,
 			Value::UserData(ud) => {
-				if let Ok(t) = ud.take::<yazi_shared::url::Url>() {
-					DataKey::Url(t)
+				if let Ok(t) = ud.take::<yazi_binding::Url>() {
+					DataKey::Url(t.into())
 				} else {
 					Err("unsupported userdata included".into_lua_err())?
 				}
@@ -202,7 +202,7 @@ impl Sendable {
 
 	fn key_to_value(lua: &Lua, key: DataKey) -> mlua::Result<Value> {
 		Ok(match key {
-			DataKey::Url(u) => Value::UserData(lua.create_any_userdata(u)?),
+			DataKey::Url(u) => yazi_binding::Url::new(u).into_lua(lua)?,
 			key => Self::key_to_value_ref(lua, &key)?,
 		})
 	}
@@ -214,7 +214,7 @@ impl Sendable {
 			DataKey::Integer(i) => Value::Integer(*i),
 			DataKey::Number(n) => Value::Number(n.get()),
 			DataKey::String(s) => Value::String(lua.create_string(s.as_ref())?),
-			DataKey::Url(u) => Value::UserData(lua.create_any_userdata(u.clone())?),
+			DataKey::Url(u) => yazi_binding::Url::new(u.clone()).into_lua(lua)?,
 		})
 	}
 }

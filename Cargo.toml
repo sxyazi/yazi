@@ -32,6 +32,7 @@ md-5                = "0.10.6"
 mlua                = { version = "0.10.3", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serialize" ] }
 objc                = "0.2.7"
 parking_lot         = "0.12.3"
+paste               = "1.0.15"
 ratatui             = { version = "0.29.0", features = [ "unstable-rendered-line-info" ] }
 regex               = "1.11.1"
 scopeguard          = "1.2.0"

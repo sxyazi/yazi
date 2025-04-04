@@ -24,6 +24,6 @@ impl FromLua for Id {
 
 impl UserData for Id {
 	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
-		fields.add_field_method_get("value", |_, me: &Self| Ok(me.0.get()));
+		fields.add_field_method_get("value", |_, me| Ok(me.0.get()));
 	}
 }

@@ -1,26 +1,44 @@
-use mlua::{AnyUserData, ExternalError, FromLua, IntoLua, Lua, Table, UserDataRef, Value};
+use std::ops::Deref;
+
+use mlua::{ExternalError, FromLua, Lua, Table, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
+use yazi_binding::Url;
 
 use crate::{bindings::Cha, impl_file_fields, impl_file_methods};
 
-pub type FileRef = UserDataRef<yazi_fs::File>;
+pub type FileRef = UserDataRef<File>;
 
-pub struct File(pub yazi_fs::File);
+pub struct File {
+	inner: yazi_fs::File,
+
+	v_cha:     Option<Value>,
+	v_url:     Option<Value>,
+	v_link_to: Option<Value>,
+	v_name:    Option<Value>,
+}
+
+impl Deref for File {
+	type Target = yazi_fs::File;
+
+	fn deref(&self) -> &Self::Target { &self.inner }
+}
+
+impl From<File> for yazi_fs::File {
+	fn from(value: File) -> Self { value.inner }
+}
 
 impl File {
-	#[inline]
-	pub fn register(lua: &Lua) -> mlua::Result<()> {
-		lua.register_userdata_type::<yazi_fs::File>(|reg| {
-			impl_file_fields!(reg);
-			impl_file_methods!(reg);
-		})
+	pub fn new(inner: yazi_fs::File) -> Self {
+		Self { inner, v_cha: None, v_url: None, v_link_to: None, v_name: None }
 	}
+}
 
+impl File {
 	pub fn install(lua: &Lua) -> mlua::Result<()> {
 		lua.globals().raw_set(
 			"File",
 			lua.create_function(|_, t: Table| {
-				Ok(Self(yazi_fs::File {
-					url: t.raw_get::<AnyUserData>("url")?.take()?,
+				Ok(Self::new(yazi_fs::File {
+					url: t.raw_get::<Url>("url")?.into(),
 					cha: *t.raw_get::<Cha>("cha")?,
 					..Default::default()
 				}))
@@ -32,14 +50,18 @@ impl File {
 impl FromLua for File {
 	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
 		match value {
-			Value::UserData(ud) => ud.take().map(Self),
+			Value::UserData(ud) => ud.take().map(Self::new),
 			_ => Err("Expected a File".into_lua_err()),
 		}
 	}
 }
 
-impl IntoLua for File {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		lua.create_any_userdata(self.0)?.into_lua(lua)
+impl UserData for File {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
+		impl_file_fields!(fields);
+	}
+
+	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		impl_file_methods!(methods);
 	}
 }
