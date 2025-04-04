@@ -1,18 +1,17 @@
 use mlua::{IntoLua, Lua, LuaSerdeExt, SerializeOptions, Value};
 use yazi_adapter::EMULATOR;
+use yazi_binding::Url;
 use yazi_boot::ARGS;
-use yazi_config::{THEME, YAZI};
+use yazi_config::YAZI;
 
-use crate::{Composer, url::Url};
+use crate::Composer;
 
 pub const OPTS: SerializeOptions =
 	SerializeOptions::new().serialize_none_to_null(false).serialize_unit_to_null(false);
 
-pub struct Runtime<'a> {
-	lua: &'a Lua,
-}
+pub struct Runtime;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		Composer::make(lua, 10, |lua, key| {
 			match key {
@@ -30,9 +29,9 @@ impl<'a> Runtime<'a> {
 
 	fn args(lua: &Lua) -> mlua::Result<Value> {
 		Composer::make(lua, 5, |lua, key| match key {
-			b"entries" => lua.create_sequence_from(ARGS.entries.iter().map(Url::from))?.into_lua(lua),
-			b"cwd_file" => ARGS.cwd_file.as_ref().map(Url::from).into_lua(lua),
-			b"chooser_file" => ARGS.chooser_file.as_ref().map(Url::from).into_lua(lua),
+			b"entries" => lua.create_sequence_from(ARGS.entries.iter().map(Url::new))?.into_lua(lua),
+			b"cwd_file" => ARGS.cwd_file.as_ref().map(Url::new).into_lua(lua),
+			b"chooser_file" => ARGS.chooser_file.as_ref().map(Url::new).into_lua(lua),
 			_ => Ok(Value::Nil),
 		})
 	}
@@ -105,25 +104,5 @@ impl<'a> Runtime<'a> {
 			}
 			.into_lua(lua)
 		})
-	}
-
-	pub fn new(lua: &'a Lua) -> Self { Self { lua } }
-
-	// TODO: remove this
-	pub fn install_manager(self) -> mlua::Result<Self> {
-		self.lua.globals().raw_set("MANAGER", self.lua.to_value_with(&YAZI.mgr, OPTS)?)?;
-		Ok(self)
-	}
-
-	// TODO: remove this
-	pub fn install_theme(self) -> mlua::Result<Self> {
-		self.lua.globals().raw_set("THEME", self.lua.to_value_with(&*THEME, OPTS)?)?;
-		Ok(self)
-	}
-
-	// TODO: remove this
-	pub fn install_preview(self) -> mlua::Result<Self> {
-		self.lua.globals().raw_set("PREVIEW", self.lua.to_value_with(&YAZI.preview, OPTS)?)?;
-		Ok(self)
 	}
 }

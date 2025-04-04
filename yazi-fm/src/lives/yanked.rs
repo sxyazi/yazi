@@ -1,7 +1,7 @@
 use std::{collections::hash_set, ops::Deref};
 
 use mlua::{AnyUserData, IntoLuaMulti, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRefMut};
-use yazi_plugin::url::Url;
+use yazi_binding::Url;
 
 use super::{Iter, Lives};
 
@@ -37,7 +37,7 @@ impl UserData for Yanked {
 			let iter = lua.create_function(
 				|lua, mut iter: UserDataRefMut<Iter<hash_set::Iter<yazi_shared::url::Url>, _>>| {
 					if let Some(next) = iter.next() {
-						(next.0, Url(next.1.clone())).into_lua_multi(lua)
+						(next.0, Url::new(next.1.clone())).into_lua_multi(lua)
 					} else {
 						().into_lua_multi(lua)
 					}

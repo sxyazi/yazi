@@ -7,7 +7,7 @@ use yazi_macro::emit;
 use yazi_shared::event::{CmdCow, Event, NEED_RENDER};
 use yazi_widgets::input::InputMode;
 
-use crate::{Ctx, Executor, Router, Signals, Term, lives::Lives};
+use crate::{Ctx, Executor, Router, Signals, Term};
 
 pub(crate) struct App {
 	pub(crate) cx:      Ctx,
@@ -20,7 +20,6 @@ impl App {
 		let term = Term::start()?;
 		let (mut rx, signals) = (Event::take(), Signals::start()?);
 
-		Lives::register()?;
 		let mut app = Self { cx: Ctx::make(), term: Some(term), signals };
 		app.render();
 

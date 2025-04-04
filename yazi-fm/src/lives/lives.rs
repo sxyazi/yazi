@@ -12,12 +12,6 @@ static TO_DESTROY: RoCell<RefCell<Vec<AnyUserData>>> = RoCell::new_const(RefCell
 pub(crate) struct Lives;
 
 impl Lives {
-	pub(crate) fn register() -> mlua::Result<()> {
-		super::Folder::register(&LUA)?;
-
-		Ok(())
-	}
-
 	pub(crate) fn scope<T>(cx: &Ctx, f: impl FnOnce() -> mlua::Result<T>) -> mlua::Result<T> {
 		let result = LUA.scope(|scope| {
 			scope.add_destructor(|| {

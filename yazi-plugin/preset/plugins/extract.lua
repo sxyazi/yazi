@@ -27,7 +27,7 @@ function M:entry(job)
 		end
 
 		local value, event = ya.input {
-			title = string.format('Password for "%s":', from:name()),
+			title = string.format('Password for "%s":', from.name),
 			position = { "center", w = 50 },
 		}
 		if event == 1 then
@@ -90,7 +90,7 @@ function M:tidy(from, to, tmp)
 	if only then
 		target = to:join(outs[1].name)
 	else
-		target = to:join(self.trim_ext(from:name()))
+		target = to:join(self.trim_ext(from.name))
 	end
 
 	target = fs.unique_name(target)

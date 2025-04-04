@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use indexmap::{IndexMap, map::Keys};
 use mlua::{AnyUserData, IntoLuaMulti, MetaMethod, UserData, UserDataMethods, UserDataRefMut};
-use yazi_plugin::url::Url;
+use yazi_binding::Url;
 
 use super::{Iter, Lives};
 
@@ -35,7 +35,7 @@ impl UserData for Selected {
 			let iter = lua.create_function(
 				|lua, mut iter: UserDataRefMut<Iter<Keys<yazi_shared::url::Url, u64>, _>>| {
 					if let Some(next) = iter.next() {
-						(next.0, Url(next.1.clone())).into_lua_multi(lua)
+						(next.0, Url::new(next.1.clone())).into_lua_multi(lua)
 					} else {
 						().into_lua_multi(lua)
 					}

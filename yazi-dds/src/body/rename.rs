@@ -36,8 +36,8 @@ impl IntoLua for BodyRename<'static> {
 		lua
 			.create_table_from([
 				("tab", self.tab.get().into_lua(lua)?),
-				("from", lua.create_any_userdata(self.from.into_owned())?.into_lua(lua)?),
-				("to", lua.create_any_userdata(self.to.into_owned())?.into_lua(lua)?),
+				("from", yazi_binding::Url::new(self.from.into_owned()).into_lua(lua)?),
+				("to", yazi_binding::Url::new(self.to.into_owned()).into_lua(lua)?),
 			])?
 			.into_lua(lua)
 	}

@@ -1,6 +1,7 @@
 use std::ops::{Deref, Range};
 
-use mlua::{AnyUserData, MetaMethod, UserData, UserDataFields, UserDataMethods};
+use mlua::{AnyUserData, MetaMethod, UserData, UserDataFields, UserDataMethods, Value};
+use yazi_binding::cached_field;
 
 use super::{File, Filter, Lives};
 
@@ -8,6 +9,8 @@ pub(super) struct Files {
 	window: Range<usize>,
 	folder: *const yazi_core::tab::Folder,
 	tab:    *const yazi_core::tab::Tab,
+
+	v_filter: Option<Value>,
 }
 
 impl Deref for Files {
@@ -23,7 +26,7 @@ impl Files {
 		folder: &yazi_core::tab::Folder,
 		tab: &yazi_core::tab::Tab,
 	) -> mlua::Result<AnyUserData> {
-		Lives::scoped_userdata(Self { window, folder, tab })
+		Lives::scoped_userdata(Self { window, folder, tab, v_filter: None })
 	}
 
 	#[inline]
@@ -35,7 +38,7 @@ impl Files {
 
 impl UserData for Files {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		fields.add_field_method_get("filter", |_, me| me.filter().map(Filter::make).transpose());
+		cached_field!(fields, filter, |_, me: &Self| me.filter().map(Filter::make).transpose());
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {

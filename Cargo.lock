@@ -725,9 +725,9 @@ dependencies = [
 
 [[package]]
 name = "errno"
-version = "0.3.10"
+version = "0.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33d852cb9b869c2a9b3df2f71a3074817f01e1844f839a144f5fcef059a4eb5d"
+checksum = "976dd42dc7e85965fe702eb8164f21f450704bdde31faefd6471dba214cb594e"
 dependencies = [
  "libc",
  "windows-sys 0.59.0",
@@ -3140,7 +3140,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-adapter"
-version = "25.3.7"
+version = "25.4.4"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -3158,8 +3158,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "yazi-binding"
+version = "25.4.4"
+dependencies = [
+ "mlua",
+ "paste",
+ "serde_json",
+ "yazi-fs",
+ "yazi-macro",
+ "yazi-shared",
+]
+
+[[package]]
 name = "yazi-boot"
-version = "25.3.7"
+version = "25.4.4"
 dependencies = [
  "clap",
  "clap_complete",
@@ -3177,7 +3189,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-cli"
-version = "25.3.7"
+version = "25.4.4"
 dependencies = [
  "anyhow",
  "clap",
@@ -3200,7 +3212,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-codegen"
-version = "25.3.7"
+version = "25.4.4"
 dependencies = [
  "quote",
  "syn",
@@ -3208,7 +3220,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-config"
-version = "25.3.7"
+version = "25.4.4"
 dependencies = [
  "anyhow",
  "bitflags 2.9.0",
@@ -3228,7 +3240,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-core"
-version = "25.3.7"
+version = "25.4.4"
 dependencies = [
  "anyhow",
  "bitflags 2.9.0",
@@ -3263,7 +3275,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-dds"
-version = "25.3.7"
+version = "25.4.4"
 dependencies = [
  "anyhow",
  "mlua",
@@ -3276,6 +3288,7 @@ dependencies = [
  "tracing",
  "uzers",
  "vergen-gitcl",
+ "yazi-binding",
  "yazi-boot",
  "yazi-fs",
  "yazi-macro",
@@ -3284,7 +3297,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-ffi"
-version = "25.3.7"
+version = "25.4.4"
 dependencies = [
  "anyhow",
  "core-foundation-sys",
@@ -3295,7 +3308,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fm"
-version = "25.3.7"
+version = "25.4.4"
 dependencies = [
  "anyhow",
  "better-panic",
@@ -3305,6 +3318,7 @@ dependencies = [
  "indexmap",
  "libc",
  "mlua",
+ "paste",
  "ratatui",
  "scopeguard",
  "signal-hook-tokio",
@@ -3316,6 +3330,7 @@ dependencies = [
  "tracing-appender",
  "tracing-subscriber",
  "yazi-adapter",
+ "yazi-binding",
  "yazi-boot",
  "yazi-codegen",
  "yazi-config",
@@ -3331,7 +3346,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fs"
-version = "25.3.7"
+version = "25.4.4"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -3357,11 +3372,11 @@ dependencies = [
 
 [[package]]
 name = "yazi-macro"
-version = "25.3.7"
+version = "25.4.4"
 
 [[package]]
 name = "yazi-plugin"
-version = "25.3.7"
+version = "25.4.4"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -3373,6 +3388,7 @@ dependencies = [
  "md-5",
  "mlua",
  "parking_lot",
+ "paste",
  "ratatui",
  "serde_json",
  "syntect",
@@ -3384,6 +3400,7 @@ dependencies = [
  "unicode-width 0.2.0",
  "uzers",
  "yazi-adapter",
+ "yazi-binding",
  "yazi-boot",
  "yazi-config",
  "yazi-dds",
@@ -3402,7 +3419,7 @@ checksum = "33232d9116df6415ddfcdf72701b1b7439ce87f240a14723e8dd5d17e7ed5f98"
 
 [[package]]
 name = "yazi-proxy"
-version = "25.3.7"
+version = "25.4.4"
 dependencies = [
  "anyhow",
  "mlua",
@@ -3415,7 +3432,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-scheduler"
-version = "25.3.7"
+version = "25.4.4"
 dependencies = [
  "anyhow",
  "async-priority-channel",
@@ -3438,7 +3455,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-shared"
-version = "25.3.7"
+version = "25.4.4"
 dependencies = [
  "anyhow",
  "crossterm",
@@ -3458,7 +3475,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-widgets"
-version = "25.3.7"
+version = "25.4.4"
 dependencies = [
  "futures",
  "ratatui",

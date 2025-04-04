@@ -37,7 +37,7 @@ impl IntoLua for BodyCd<'static> {
 		if let Some(Cow::Owned(url)) = Some(self.url).filter(|_| !self.dummy) {
 			lua.create_table_from([
 				("tab", self.tab.get().into_lua(lua)?),
-				("url", lua.create_any_userdata(url)?.into_lua(lua)?),
+				("url", yazi_binding::Url::new(url).into_lua(lua)?),
 			])?
 		} else {
 			lua.create_table_from([("tab", self.tab.get())])?

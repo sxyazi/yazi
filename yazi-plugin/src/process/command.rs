@@ -2,9 +2,10 @@ use std::process::Stdio;
 
 use mlua::{AnyUserData, ExternalError, IntoLuaMulti, Lua, MetaMethod, Table, UserData, Value};
 use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
+use yazi_binding::Error;
 
 use super::{Child, output::Output};
-use crate::{Error, process::Status};
+use crate::process::Status;
 
 pub struct Command {
 	inner: tokio::process::Command,

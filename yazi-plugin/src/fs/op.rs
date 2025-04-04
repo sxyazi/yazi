@@ -1,6 +1,7 @@
 use mlua::{IntoLua, Lua, Table};
+use yazi_binding::Url;
 
-use crate::{Id, bindings::Cha, file::File, url::Url};
+use crate::{Id, bindings::Cha, file::File};
 
 pub(super) struct FilesOp(yazi_fs::FilesOp);
 
@@ -11,8 +12,11 @@ impl FilesOp {
 		let files: Table = t.raw_get("files")?;
 
 		Ok(Self(yazi_fs::FilesOp::Part(
-			url.0,
-			files.sequence_values::<File>().map(|f| f.map(|f| f.0)).collect::<mlua::Result<Vec<_>>>()?,
+			url.into(),
+			files
+				.sequence_values::<File>()
+				.map(|f| f.map(Into::into))
+				.collect::<mlua::Result<Vec<_>>>()?,
 			*id,
 		)))
 	}
@@ -22,7 +26,7 @@ impl FilesOp {
 		let cha: Cha = t.raw_get("cha")?;
 		let url: Url = t.raw_get("url")?;
 
-		Ok(Self(yazi_fs::FilesOp::Done(url.0, *cha, *id)))
+		Ok(Self(yazi_fs::FilesOp::Done(url.into(), *cha, *id)))
 	}
 }
 

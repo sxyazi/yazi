@@ -1,6 +1,5 @@
 use mlua::{ExternalError, IntoLuaMulti, UserData, Value};
-
-use crate::Error;
+use yazi_binding::Error;
 
 pub struct MpscTx(pub tokio::sync::mpsc::Sender<Value>);
 pub struct MpscRx(pub tokio::sync::mpsc::Receiver<Value>);

@@ -64,6 +64,7 @@ impl Pos {
 
 impl UserData for Pos {
 	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
+		// TODO: cache
 		fields.add_field_method_get(1, |_, me| Ok(me.origin.to_string()));
 		fields.add_field_method_get("x", |_, me| Ok(me.offset.x));
 		fields.add_field_method_get("y", |_, me| Ok(me.offset.y));

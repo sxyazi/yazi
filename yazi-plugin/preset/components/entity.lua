@@ -18,7 +18,7 @@ function Entity:icon()
 	local icon = self._file:icon()
 	if not icon then
 		return ""
-	elseif self._file:is_hovered() then
+	elseif self._file.is_hovered then
 		return icon.text .. " "
 	else
 		return ui.Line(icon.text .. " "):style(icon.style)
@@ -52,7 +52,7 @@ function Entity:highlights()
 end
 
 function Entity:found()
-	if not self._file:is_hovered() then
+	if not self._file.is_hovered then
 		return ""
 	end
 
@@ -86,9 +86,9 @@ end
 
 function Entity:style()
 	local s = self._file:style()
-	if not self._file:is_hovered() then
+	if not self._file.is_hovered then
 		return s
-	elseif self._file:in_preview() then
+	elseif self._file.in_preview then
 		return s and s:patch(th.mgr.preview_hovered) or th.mgr.preview_hovered
 	else
 		return s and s:patch(th.mgr.hovered) or th.mgr.hovered
