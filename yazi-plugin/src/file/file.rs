@@ -49,10 +49,10 @@ impl File {
 
 impl FromLua for File {
 	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
-		match value {
-			Value::UserData(ud) => ud.take().map(Self::new),
-			_ => Err("Expected a File".into_lua_err()),
-		}
+		Ok(match value {
+			Value::UserData(ud) => Self::new(ud.take::<Self>()?.inner),
+			_ => Err("Expected a File".into_lua_err())?,
+		})
 	}
 }
 
