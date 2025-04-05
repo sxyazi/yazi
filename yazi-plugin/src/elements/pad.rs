@@ -17,6 +17,13 @@ impl From<ratatui::widgets::Padding> for Pad {
 
 impl Pad {
 	pub fn compose(lua: &Lua, v4: bool) -> mlua::Result<Table> {
+		if !v4 {
+			crate::deprecate!(
+				lua,
+				"The `ui.Padding` has been deprecated, please use `ui.Pad` instead, in your {}"
+			);
+		}
+
 		let new = if v4 {
 			lua.create_function(|_, (_, top, right, bottom, left): (Table, u16, u16, u16, u16)| {
 				Ok(Self(ratatui::widgets::Padding::new(left, right, top, bottom)))
