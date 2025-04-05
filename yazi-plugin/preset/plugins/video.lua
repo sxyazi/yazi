@@ -60,7 +60,7 @@ function M:preload(job)
 		"-i", tostring(job.file.url),
 		"-vframes", 1,
 		"-q:v", qv,
-		"-vf", string.format("scale=-1:'min(%d,ih)':flags=fast_bilinear", rt.preview.max_height),
+		"-vf", string.format("scale=w=%d:h=%d:force_original_aspect_ratio=decrease:flags=fast_bilinear", rt.preview.max_width , rt.preview.max_height),
 		"-f", "image2",
 		"-y", tostring(cache),
 	}):status()
