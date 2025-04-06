@@ -1,4 +1,4 @@
-use std::{borrow::Cow, fmt::Display};
+use std::borrow::Cow;
 
 use yazi_shared::event::CmdCow;
 
@@ -35,31 +35,27 @@ impl TryFrom<CmdCow> for SearchOpt {
 // Via
 #[derive(PartialEq, Eq)]
 pub enum SearchOptVia {
-	// TODO: remove `None` in the future
-	None,
 	Rg,
-	Fd,
 	Rga,
+	Fd,
 }
 
 impl From<&str> for SearchOptVia {
 	fn from(value: &str) -> Self {
 		match value {
 			"rg" => Self::Rg,
-			"fd" => Self::Fd,
 			"rga" => Self::Rga,
-			_ => Self::None,
+			_ => Self::Fd,
 		}
 	}
 }
 
-impl Display for SearchOptVia {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		f.write_str(match self {
+impl AsRef<str> for SearchOptVia {
+	fn as_ref(&self) -> &str {
+		match self {
 			Self::Rg => "rg",
-			Self::Fd => "fd",
 			Self::Rga => "rga",
-			Self::None => "none",
-		})
+			Self::Fd => "fd",
+		}
 	}
 }

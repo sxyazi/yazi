@@ -25,7 +25,9 @@ impl TabProxy {
 	pub fn search_do(opt: SearchOpt) {
 		emit!(Call(
 			// TODO: use second positional argument instead of `args` parameter
-			Cmd::args("mgr:search_do", &[opt.subject]).with("via", opt.via).with("args", opt.args_raw)
+			Cmd::args("mgr:search_do", &[opt.subject])
+				.with("via", opt.via.as_ref())
+				.with("args", opt.args_raw)
 		));
 	}
 }
