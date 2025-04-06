@@ -1,6 +1,5 @@
 use std::{borrow::Cow, mem, time::Duration};
 
-use anyhow::bail;
 use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tracing::error;
@@ -13,22 +12,18 @@ use crate::tab::Tab;
 
 impl Tab {
 	pub fn search(&mut self, opt: impl TryInto<SearchOpt>) {
-		let Ok(mut opt) = opt.try_into() else {
+		let Ok(mut opt): Result<SearchOpt, _> = opt.try_into() else {
 			return AppProxy::notify_error("Invalid `search` option", "Failed to parse search option");
 		};
-
-		if opt.via == SearchOptVia::None {
-			return self.search_stop();
-		}
 
 		if let Some(handle) = self.search.take() {
 			handle.abort();
 		}
 
-		tokio::spawn(async move {
-			let mut input =
-				InputProxy::show(InputCfg::search(&opt.via.to_string()).with_value(opt.subject));
+		let mut input =
+			InputProxy::show(InputCfg::search(opt.via.as_ref()).with_value(opt.subject.to_owned()));
 
+		tokio::spawn(async move {
 			if let Some(Ok(subject)) = input.recv().await {
 				opt.subject = Cow::Owned(subject);
 				TabProxy::search_do(opt);
@@ -68,7 +63,6 @@ impl Tab {
 					subject: opt.subject.into_owned(),
 					args: opt.args,
 				}),
-				SearchOptVia::None => bail!("Invalid `via` option for `search` command"),
 			}?;
 
 			let rx = UnboundedReceiverStream::new(rx).chunks_timeout(5000, Duration::from_millis(500));

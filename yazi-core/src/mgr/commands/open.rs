@@ -6,7 +6,7 @@ use yazi_config::{YAZI, popup::PickCfg};
 use yazi_fs::File;
 use yazi_macro::emit;
 use yazi_plugin::isolate;
-use yazi_proxy::{MgrProxy, TasksProxy, options::OpenDoOpt};
+use yazi_proxy::{MgrProxy, PickProxy, TasksProxy, options::OpenDoOpt};
 use yazi_shared::{MIME_DIR, event::{CmdCow, EventQuit}, url::Url};
 
 use crate::{mgr::Mgr, tab::Folder, tasks::Tasks};
@@ -95,12 +95,10 @@ impl Mgr {
 			return;
 		}
 
+		let pick = PickProxy::show(PickCfg::open(openers.iter().map(|o| o.desc()).collect()));
 		let urls = [opt.hovered].into_iter().chain(targets.into_iter().map(|(u, _)| u)).collect();
 		tokio::spawn(async move {
-			let result =
-				yazi_proxy::PickProxy::show(PickCfg::open(openers.iter().map(|o| o.desc()).collect()));
-
-			if let Ok(choice) = result.await {
+			if let Ok(choice) = pick.await {
 				TasksProxy::open_with(Cow::Borrowed(openers[choice]), opt.cwd, urls);
 			}
 		});

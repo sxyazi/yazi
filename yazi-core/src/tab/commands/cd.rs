@@ -77,10 +77,10 @@ impl Tab {
 	}
 
 	fn cd_interactive(&mut self) {
-		tokio::spawn(async move {
-			let rx = InputProxy::show(InputCfg::cd());
+		let input = InputProxy::show(InputCfg::cd());
 
-			let rx = Debounce::new(UnboundedReceiverStream::new(rx), Duration::from_millis(50));
+		tokio::spawn(async move {
+			let rx = Debounce::new(UnboundedReceiverStream::new(input), Duration::from_millis(50));
 			pin!(rx);
 
 			while let Some(result) = rx.next().await {

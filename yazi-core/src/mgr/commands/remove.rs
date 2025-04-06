@@ -41,14 +41,14 @@ impl Mgr {
 			return self.remove_do(opt, tasks);
 		}
 
-		tokio::spawn(async move {
-			let result = ConfirmProxy::show(if opt.permanently {
-				ConfirmCfg::delete(&opt.targets)
-			} else {
-				ConfirmCfg::trash(&opt.targets)
-			});
+		let confirm = ConfirmProxy::show(if opt.permanently {
+			ConfirmCfg::delete(&opt.targets)
+		} else {
+			ConfirmCfg::trash(&opt.targets)
+		});
 
-			if result.await {
+		tokio::spawn(async move {
+			if confirm.await {
 				MgrProxy::remove_do(opt.targets, opt.permanently);
 			}
 		});
