@@ -58,7 +58,7 @@ function M:preload(job)
 		"-skip_frame", "nokey", "-ss", ss,
 		"-an", "-sn", "-dn",
 		"-i", tostring(job.file.url),
-		"-vframes", 1,
+		"-map", "0:v", "-vframes", 1,
 		"-q:v", qv,
 		"-vf", string.format("scale=-1:'min(%d,ih)':flags=fast_bilinear", rt.preview.max_height),
 		"-f", "image2",
