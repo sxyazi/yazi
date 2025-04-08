@@ -109,8 +109,9 @@ impl Adapter {
 		if env_exists("WAYLAND_DISPLAY") {
 			return if supported_compositor { Self::Wayland } else { Self::Chafa };
 		}
-		if env_exists("DISPLAY") {
-			return Self::X11;
+		match env::var("DISPLAY").unwrap_or_default().as_str() {
+			s if !s.is_empty() && !s.contains("/org.xquartz") => return Self::X11,
+			_ => {}
 		}
 
 		warn!("[Adapter] Falling back to chafa");
