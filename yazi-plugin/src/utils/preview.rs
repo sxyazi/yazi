@@ -52,6 +52,7 @@ impl Utils {
 				area,
 				inner,
 				wrap: if YAZI.preview.wrap == PreviewWrap::Yes { WRAP } else { WRAP_NO },
+				scroll: Default::default(),
 			})];
 
 			emit!(Call(Cmd::new("mgr:update_peeked").with_any("lock", lock)));
