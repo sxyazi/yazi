@@ -49,6 +49,13 @@ pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Value> {
 			b"spot_table" => Utils::spot_table(lua)?,
 			b"spot_widgets" => Utils::spot_widgets(lua)?,
 
+			// Svg
+			b"load_font_file" => Utils::load_font_file(lua)?,
+			b"load_fonts_dir" => Utils::load_fonts_dir(lua)?,
+			b"load_system_fonts" => Utils::load_system_fonts(lua)?,
+			b"svg_info" => Utils::svg_info(lua)?,
+			b"set_svg_font_family" => Utils::set_svg_font_family(lua)?,
+
 			// Sync
 			b"sync" => Utils::sync(lua, isolate)?,
 			b"chan" => Utils::chan(lua)?,

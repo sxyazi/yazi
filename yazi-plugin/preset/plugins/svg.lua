@@ -1,45 +1,57 @@
 local M = {}
 
 function M:peek(job)
-	local start, cache = os.clock(), ya.file_cache(job)
-	if not cache then
-		return
-	end
-
-	local ok, err = self:preload(job)
-	if not ok or err then
-		return
-	end
-
+	local start = os.clock()
 	ya.sleep(math.max(0, rt.preview.image_delay / 1000 + start - os.clock()))
-	ya.image_show(cache, job.area)
+	ya.image_show(job.file.url, job.area)
 	ya.preview_widgets(job, {})
 end
 
 function M:seek() end
 
-function M:preload(job)
-	local cache = ya.file_cache(job)
-	if not cache or fs.cha(cache) then
-		return true
-	end
+function M:preload(job) end
 
-	-- stylua: ignore
-	local cmd = require("magick").with_env():args {
-		"-size", string.format("%dx%d^", rt.preview.max_width, rt.preview.max_height),
-		string.format("rsvg:%s", job.file.url), "-strip",
-		"-quality", rt.preview.image_quality,
-		string.format("JPG:%s", cache),
-	}
+function M:spot(job)
+	local rows = self:spot_base(job)
+	rows[#rows + 1] = ui.Row {}
 
-	local status, err = cmd:status()
-	if status then
-		return status.success
-	else
-		return true, Err("Failed to start `magick`, error: %s", err)
-	end
+	ya.spot_table(
+		job,
+		ui.Table(ya.list_merge(rows, require("file"):spot_base(job)))
+		:area(ui.Pos { "center", w = 60, h = 20 })
+		:row(job.skip)
+		:row(1)
+		:col(1)
+		:col_style(th.spot.tbl_col)
+		:cell_style(th.spot.tbl_cell)
+		:widths { ui.Constraint.Length(14), ui.Constraint.Fill(1) }
+	)
 end
 
-function M:spot(job) require("file"):spot(job) end
+function M:spot_base(job)
+	local info = ya.svg_info(job.file.url)
+	if not info then
+		return {}
+	end
+
+	local rows = {
+		ui.Row({ "SVG Image" }):style(ui.Style():fg("green")),
+		ui.Row { "  Size:", string.format("%.0fx%.0f", info.w, info.h) },
+	}
+
+	if #info.layers > 0 then
+		rows[#rows + 1] = ui.Row { "  Layers:", table.concat(info.layers, ", ") }
+	end
+
+	if #info.fonts > 0 then
+		rows[#rows + 1] = ui.Row({ "  Fonts:", tostring(info.fonts[1]) })
+
+		for i = 2, #info.fonts do
+			rows[#rows + 1] = ui.Row({ "", tostring(info.fonts[i]) })
+		end
+	end
+
+	return rows
+end
 
 return M

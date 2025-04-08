@@ -35,6 +35,7 @@ mlua          = { workspace = true }
 parking_lot   = { workspace = true }
 paste         = { workspace = true }
 ratatui       = { workspace = true }
+resvg         = { workspace = true }
 serde_json    = { workspace = true }
 syntect       = { workspace = true }
 tokio         = { workspace = true }
