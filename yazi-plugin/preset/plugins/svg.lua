@@ -18,13 +18,13 @@ function M:spot(job)
 	ya.spot_table(
 		job,
 		ui.Table(ya.list_merge(rows, require("file"):spot_base(job)))
-		:area(ui.Pos { "center", w = 60, h = 20 })
-		:row(job.skip)
-		:row(1)
-		:col(1)
-		:col_style(th.spot.tbl_col)
-		:cell_style(th.spot.tbl_cell)
-		:widths { ui.Constraint.Length(14), ui.Constraint.Fill(1) }
+			:area(ui.Pos { "center", w = 60, h = 20 })
+			:row(job.skip)
+			:row(1)
+			:col(1)
+			:col_style(th.spot.tbl_col)
+			:cell_style(th.spot.tbl_cell)
+			:widths { ui.Constraint.Length(14), ui.Constraint.Fill(1) }
 	)
 end
 
@@ -44,10 +44,10 @@ function M:spot_base(job)
 	end
 
 	if #info.fonts > 0 then
-		rows[#rows + 1] = ui.Row({ "  Fonts:", tostring(info.fonts[1]) })
+		rows[#rows + 1] = ui.Row { "  Fonts:", tostring(info.fonts[1]) }
 
 		for i = 2, #info.fonts do
-			rows[#rows + 1] = ui.Row({ "", tostring(info.fonts[i]) })
+			rows[#rows + 1] = ui.Row { "", tostring(info.fonts[i]) }
 		end
 	end
 
