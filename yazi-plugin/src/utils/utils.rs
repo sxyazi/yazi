@@ -45,9 +45,6 @@ pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Value> {
 			b"preview_code" => Utils::preview_code(lua)?,
 			b"preview_widgets" => Utils::preview_widgets(lua)?,
 
-			// Process
-			b"proc_info" => Utils::proc_info(lua)?,
-
 			// Spot
 			b"spot_table" => Utils::spot_table(lua)?,
 			b"spot_widgets" => Utils::spot_widgets(lua)?,
