@@ -1,7 +1,7 @@
 use std::{ops::DerefMut, process::ExitStatus, time::Duration};
 
 use futures::future::try_join3;
-use mlua::{AnyUserData, ExternalError, IntoLua, IntoLuaMulti, Table, UserData, UserDataFields, UserDataMethods, Value};
+use mlua::{AnyUserData, ExternalError, IntoLua, IntoLuaMulti, Table, UserData, UserDataMethods, Value};
 use tokio::{io::{self, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader, BufWriter}, process::{ChildStderr, ChildStdin, ChildStdout}, select};
 use yazi_binding::Error;
 
