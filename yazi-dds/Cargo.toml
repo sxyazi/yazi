@@ -31,7 +31,7 @@ tokio-util   = { workspace = true }
 tracing      = { workspace = true }
 
 [build-dependencies]
-vergen-gitcl = { version = "1.0.5", features = [ "build" ] }
+vergen-gitcl = { version = "1.0.7", features = [ "build" ] }
 
 [target."cfg(unix)".dependencies]
 uzers = { workspace = true }
