@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 cargo publish -p yazi-macro && sleep 30
 cargo publish -p yazi-codegen && sleep 30
 cargo publish -p yazi-shared && sleep 30

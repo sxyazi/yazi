@@ -57,8 +57,8 @@ fn try_init_flavor(light: bool, merge: bool) -> anyhow::Result<()> {
 		))?;
 
 		let flavor = shadow.flavor.as_ref().map(theme::Flavor::from).unwrap_or_default().read(light)?;
-		theme = theme.deserialize_over_with::<toml::Value>(shadow)?;
 		theme = theme.deserialize_over(toml::Deserializer::new(&flavor))?;
+		theme = theme.deserialize_over_with::<toml::Value>(shadow)?;
 	}
 
 	THEME.init(theme.reshape(light)?);
