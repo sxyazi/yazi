@@ -49,7 +49,7 @@ function M:spot(job) require("file"):spot(job) end
 function M.with_env()
 	local cmd = Command("magick"):env("MAGICK_THREAD_LIMIT", 1)
 	if rt.tasks.image_alloc > 0 then
-		cmd = cmd:env("MAGICK_MEMORY_LIMIT", rt.tasks.image_alloc)
+		cmd = cmd:env("MAGICK_MEMORY_LIMIT", rt.tasks.image_alloc):env("MAGICK_DISK_LIMIT", "1MiB")
 	end
 	return cmd
 end
