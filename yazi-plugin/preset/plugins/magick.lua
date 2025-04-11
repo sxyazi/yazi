@@ -24,7 +24,7 @@ function M:preload(job)
 		return true
 	end
 
-	local cmd = M.with_env()
+	local cmd = M.with_limit()
 	if job.args.flatten then
 		cmd = cmd:arg("-flatten")
 	end
@@ -46,10 +46,17 @@ end
 
 function M:spot(job) require("file"):spot(job) end
 
-function M.with_env()
-	local cmd = Command("magick"):env("MAGICK_THREAD_LIMIT", 1)
+function M.with_limit()
+	local cmd = Command("magick"):args { "-limit", "thread", 1 }
 	if rt.tasks.image_alloc > 0 then
-		cmd = cmd:env("MAGICK_MEMORY_LIMIT", rt.tasks.image_alloc):env("MAGICK_DISK_LIMIT", "1MiB")
+		cmd = cmd:args({ "-limit", "memory", rt.tasks.image_alloc }):args { "-limit", "disk", "1MiB" }
+	end
+	ya.dbg(rt.tasks.image_bound)
+	if rt.tasks.image_bound[1] > 0 then
+		cmd = cmd:args { "-limit", "width", rt.tasks.image_bound[1] }
+	end
+	if rt.tasks.image_bound[2] > 0 then
+		cmd = cmd:args { "-limit", "height", rt.tasks.image_bound[2] }
 	end
 	return cmd
 end
