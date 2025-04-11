@@ -51,7 +51,6 @@ function M.with_limit()
 	if rt.tasks.image_alloc > 0 then
 		cmd = cmd:args({ "-limit", "memory", rt.tasks.image_alloc }):args { "-limit", "disk", "1MiB" }
 	end
-	ya.dbg(rt.tasks.image_bound)
 	if rt.tasks.image_bound[1] > 0 then
 		cmd = cmd:args { "-limit", "width", rt.tasks.image_bound[1] }
 	end
