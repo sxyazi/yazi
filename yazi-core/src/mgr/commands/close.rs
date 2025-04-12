@@ -3,14 +3,10 @@ use yazi_shared::event::CmdCow;
 use crate::{mgr::{Mgr, commands::quit}, tasks::Tasks};
 
 #[derive(Default)]
-struct Opt {
-	no_cwd_file: bool,
-}
+struct Opt(quit::Opt);
+
 impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { no_cwd_file: c.bool("no-cwd-file") } }
-}
-impl From<Opt> for quit::Opt {
-	fn from(value: Opt) -> Self { Self { no_cwd_file: value.no_cwd_file } }
+	fn from(c: CmdCow) -> Self { Self(c.into()) }
 }
 
 impl Mgr {
@@ -19,6 +15,6 @@ impl Mgr {
 		if self.tabs.len() > 1 {
 			return self.tabs.close(self.tabs.cursor);
 		}
-		self.quit(opt, tasks);
+		self.quit(opt.0, tasks);
 	}
 }
