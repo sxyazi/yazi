@@ -182,6 +182,7 @@ macro_rules! impl_number_as {
 impl_integer_as!(usize, as_usize);
 impl_integer_as!(isize, as_isize);
 impl_integer_as!(i16, as_i16);
+impl_integer_as!(i32, as_i32);
 
 impl_number_as!(f64, as_f64);
 

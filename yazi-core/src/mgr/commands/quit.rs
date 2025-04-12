@@ -4,22 +4,29 @@ use tokio::{select, time};
 use yazi_config::popup::ConfirmCfg;
 use yazi_macro::emit;
 use yazi_proxy::ConfirmProxy;
-use yazi_shared::event::{CmdCow, EventQuit};
+use yazi_shared::event::{CmdCow, Data, EventQuit};
 
 use crate::{mgr::Mgr, tasks::Tasks};
 
 #[derive(Default)]
 pub(super) struct Opt {
 	pub(super) no_cwd_file: bool,
+	pub(super) exit_code:   i32,
 }
 impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { no_cwd_file: c.bool("no-cwd-file") } }
+	fn from(c: CmdCow) -> Self {
+		Self {
+			no_cwd_file: c.bool("no-cwd-file"),
+			exit_code:   c.get("exit_code").and_then(Data::as_i32).unwrap_or_default(),
+		}
+	}
 }
 
 impl Mgr {
 	#[yazi_codegen::command]
 	pub fn quit(&self, opt: Opt, tasks: &Tasks) {
-		let opt = EventQuit { no_cwd_file: opt.no_cwd_file, ..Default::default() };
+		let opt =
+			EventQuit { no_cwd_file: opt.no_cwd_file, exit_code: opt.exit_code, ..Default::default() };
 
 		let ongoing = tasks.ongoing().clone();
 		let (left, left_names) = {
