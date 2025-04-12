@@ -19,7 +19,7 @@ impl App {
 			self.selected_to_file(selected);
 		}
 
-		Term::goodbye(|| opt.exit_code);
+		Term::goodbye(|| opt.code);
 	}
 
 	fn cwd_to_file(&self) {
