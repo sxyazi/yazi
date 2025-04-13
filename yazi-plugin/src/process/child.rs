@@ -2,14 +2,18 @@ use std::{ops::DerefMut, time::Duration};
 
 use futures::future::try_join3;
 use mlua::{AnyUserData, ExternalError, IntoLua, IntoLuaMulti, Table, UserData, Value};
-use tokio::{io::{self, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader, BufWriter}, process::{ChildStderr, ChildStdin, ChildStdout}, select};
+use tokio::{
+	io::{self, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader, BufWriter},
+	process::{ChildStderr, ChildStdin, ChildStdout},
+	select,
+};
 
 use super::Status;
 use crate::{Error, process::Output};
 
 pub struct Child {
-	inner:  tokio::process::Child,
-	stdin:  Option<BufWriter<ChildStdin>>,
+	inner: tokio::process::Child,
+	stdin: Option<BufWriter<ChildStdin>>,
 	stdout: Option<BufReader<ChildStdout>>,
 	stderr: Option<BufReader<ChildStderr>>,
 }
@@ -147,6 +151,11 @@ impl UserData for Child {
 		});
 		methods.add_method_mut("take_stderr", |lua, me, ()| match me.stderr.take() {
 			Some(stderr) => lua.create_any_userdata(stderr.into_inner())?.into_lua(lua),
+			None => Ok(Value::Nil),
+		});
+
+		methods.add_method_mut("id", |_, me, ()| match me.inner.id() {
+			Some(id) => Ok(Value::Integer(id as i64)),
 			None => Ok(Value::Nil),
 		});
 	}
