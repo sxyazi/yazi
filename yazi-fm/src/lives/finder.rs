@@ -2,22 +2,22 @@ use std::ops::Deref;
 
 use mlua::{AnyUserData, MetaMethod, UserData, UserDataMethods};
 
-use super::Lives;
+use super::{Lives, PtrCell};
 
 pub(super) struct Finder {
-	inner: *const yazi_core::tab::Finder,
+	inner: PtrCell<yazi_core::tab::Finder>,
 }
 
 impl Deref for Finder {
 	type Target = yazi_core::tab::Finder;
 
-	fn deref(&self) -> &Self::Target { unsafe { &*self.inner } }
+	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
 impl Finder {
 	#[inline]
 	pub(super) fn make(inner: &yazi_core::tab::Finder) -> mlua::Result<AnyUserData> {
-		Lives::scoped_userdata(Self { inner })
+		Lives::scoped_userdata(Self { inner: inner.into() })
 	}
 }
 

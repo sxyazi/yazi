@@ -18,27 +18,28 @@ ansi-to-tui         = "7.0.0"
 anyhow              = "1.0.97"
 base64              = "0.22.1"
 bitflags            = "2.9.0"
-clap                = { version = "4.5.34", features = [ "derive" ] }
+clap                = { version = "4.5.35", features = [ "derive" ] }
 core-foundation-sys = "0.8.7"
 crossterm           = { version = "0.28.1", features = [ "event-stream" ] }
 dirs                = "6.0.0"
 foldhash            = "0.1.5"
 futures             = "0.3.31"
 globset             = "0.4.16"
-indexmap            = { version = "2.8.0", features = [ "serde" ] }
+indexmap            = { version = "2.9.0", features = [ "serde" ] }
 libc                = "0.2.171"
 lru                 = "0.13.0"
 md-5                = "0.10.6"
 mlua                = { version = "0.10.3", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serialize" ] }
 objc                = "0.2.7"
 parking_lot         = "0.12.3"
+paste               = "1.0.15"
 ratatui             = { version = "0.29.0", features = [ "unstable-rendered-line-info" ] }
 regex               = "1.11.1"
 scopeguard          = "1.2.0"
 serde               = { version = "1.0.219", features = [ "derive" ] }
 serde_json          = "1.0.140"
 syntect             = { version = "5.2.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
-tokio               = { version = "1.44.1", features = [ "full" ] }
+tokio               = { version = "1.44.2", features = [ "full" ] }
 tokio-stream        = "0.1.17"
 tokio-util          = "0.7.14"
 toml                = { version = "0.8.20" }

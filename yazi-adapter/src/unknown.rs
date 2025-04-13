@@ -13,8 +13,8 @@ impl Unknown {
 		use Adapter as A;
 
 		match (self.kgp, self.sixel) {
-			(true, true) => &[A::Kgp, A::Sixel],
-			(true, false) => &[A::Kgp],
+			(true, true) => &[A::Sixel, A::KgpOld],
+			(true, false) => &[A::KgpOld],
 			(false, true) => &[A::Sixel],
 			(false, false) => &[],
 		}

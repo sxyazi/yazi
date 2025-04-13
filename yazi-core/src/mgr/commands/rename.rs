@@ -53,12 +53,10 @@ impl Mgr {
 
 		let old = hovered.url_owned();
 		let tab = self.tabs.active().id;
-		tokio::spawn(async move {
-			let mut result = InputProxy::show(InputCfg::rename().with_value(name).with_cursor(cursor));
-			let Some(Ok(name)) = result.recv().await else {
-				return;
-			};
+		let mut input = InputProxy::show(InputCfg::rename().with_value(name).with_cursor(cursor));
 
+		tokio::spawn(async move {
+			let Some(Ok(name)) = input.recv().await else { return };
 			if name.is_empty() {
 				return;
 			}

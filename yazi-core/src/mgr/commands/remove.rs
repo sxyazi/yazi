@@ -41,14 +41,14 @@ impl Mgr {
 			return self.remove_do(opt, tasks);
 		}
 
-		tokio::spawn(async move {
-			let result = ConfirmProxy::show(if opt.permanently {
-				ConfirmCfg::delete(&opt.targets)
-			} else {
-				ConfirmCfg::trash(&opt.targets)
-			});
+		let confirm = ConfirmProxy::show(if opt.permanently {
+			ConfirmCfg::delete(&opt.targets)
+		} else {
+			ConfirmCfg::trash(&opt.targets)
+		});
 
-			if result.await {
+		tokio::spawn(async move {
+			if confirm.await {
 				MgrProxy::remove_do(opt.targets, opt.permanently);
 			}
 		});
@@ -57,7 +57,7 @@ impl Mgr {
 	#[yazi_codegen::command]
 	pub fn remove_do(&mut self, opt: Opt, tasks: &Tasks) {
 		self.tabs.iter_mut().for_each(|t| {
-			t.selected.remove_many(&opt.targets, false);
+			t.selected.remove_many(&opt.targets);
 		});
 
 		for u in &opt.targets {

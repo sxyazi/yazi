@@ -23,9 +23,9 @@ pub struct Text {
 	pub area: Area,
 
 	// TODO: block
-	pub inner: ratatui::text::Text<'static>,
-	pub wrap:  u8,
-	// TODO: scroll
+	pub inner:  ratatui::text::Text<'static>,
+	pub wrap:   u8,
+	pub scroll: ratatui::layout::Position,
 }
 
 impl Text {
@@ -58,7 +58,7 @@ impl Text {
 		trans: impl Fn(yazi_config::popup::Position) -> ratatui::layout::Rect,
 	) {
 		let rect = self.area.transform(trans);
-		if self.wrap == WRAP_NO {
+		if self.wrap == WRAP_NO && self.scroll == Default::default() {
 			self.inner.render(rect, buf);
 		} else {
 			ratatui::widgets::Paragraph::from(self).render(rect, buf);
@@ -130,7 +130,7 @@ impl From<Text> for ratatui::widgets::Paragraph<'static> {
 		if value.wrap != WRAP_NO {
 			p = p.wrap(ratatui::widgets::Wrap { trim: value.wrap == WRAP_TRIM });
 		}
-		p
+		p.scroll((value.scroll.y, value.scroll.x))
 	}
 }
 
@@ -153,6 +153,10 @@ impl UserData for Text {
 				w @ (WRAP | WRAP_TRIM | WRAP_NO) => w,
 				_ => return Err("expected a WRAP, WRAP_TRIM or WRAP_NO".into_lua_err()),
 			};
+			Ok(ud)
+		});
+		methods.add_function_mut("scroll", |_, (ud, x, y): (AnyUserData, u16, u16)| {
+			ud.borrow_mut::<Self>()?.scroll = ratatui::layout::Position { x, y };
 			Ok(ud)
 		});
 		methods.add_method("max_width", |_, me, ()| {

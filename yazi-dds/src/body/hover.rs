@@ -33,7 +33,7 @@ impl IntoLua for BodyHover<'static> {
 		if let Some(Cow::Owned(url)) = self.url {
 			lua.create_table_from([
 				("tab", self.tab.get().into_lua(lua)?),
-				("url", lua.create_any_userdata(url)?.into_lua(lua)?),
+				("url", yazi_binding::Url::new(url).into_lua(lua)?),
 			])?
 		} else {
 			lua.create_table_from([("tab", self.tab.get())])?

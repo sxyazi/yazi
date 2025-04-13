@@ -30,10 +30,10 @@ impl From<CmdCow> for Opt {
 impl Tab {
 	#[yazi_codegen::command]
 	pub fn filter(&mut self, opt: Opt) {
-		tokio::spawn(async move {
-			let rx = InputProxy::show(InputCfg::filter());
+		let input = InputProxy::show(InputCfg::filter());
 
-			let rx = Debounce::new(UnboundedReceiverStream::new(rx), Duration::from_millis(50));
+		tokio::spawn(async move {
+			let rx = Debounce::new(UnboundedReceiverStream::new(input), Duration::from_millis(50));
 			pin!(rx);
 
 			while let Some(result) = rx.next().await {

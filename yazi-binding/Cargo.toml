@@ -1,0 +1,19 @@
+[package]
+name        = "yazi-binding"
+version     = "25.4.8"
+edition     = "2021"
+license     = "MIT"
+authors     = [ "sxyazi <sxyazi@gmail.com>" ]
+description = "Yazi Lua bindings"
+homepage    = "https://yazi-rs.github.io"
+repository  = "https://github.com/sxyazi/yazi"
+
+[dependencies]
+yazi-fs     = { path = "../yazi-fs", version = "25.4.8" }
+yazi-macro  = { path = "../yazi-macro", version = "25.4.8" }
+yazi-shared = { path = "../yazi-shared", version = "25.4.8" }
+
+# External dependencies
+mlua       = { workspace = true }
+paste      = { workspace = true }
+serde_json = { workspace = true }

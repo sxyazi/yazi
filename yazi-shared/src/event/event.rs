@@ -23,6 +23,7 @@ pub enum Event {
 
 #[derive(Debug, Default)]
 pub struct EventQuit {
+	pub code:        i32,
 	pub no_cwd_file: bool,
 	pub selected:    Option<OsString>,
 }

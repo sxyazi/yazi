@@ -2,22 +2,22 @@ use std::ops::Deref;
 
 use mlua::{AnyUserData, MetaMethod, UserData, UserDataFields, UserDataMethods};
 
-use super::Lives;
+use super::{Lives, PtrCell};
 
 pub(super) struct Mode {
-	inner: *const yazi_core::tab::Mode,
+	inner: PtrCell<yazi_core::tab::Mode>,
 }
 
 impl Deref for Mode {
 	type Target = yazi_core::tab::Mode;
 
-	fn deref(&self) -> &Self::Target { unsafe { &*self.inner } }
+	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
 impl Mode {
 	#[inline]
 	pub(super) fn make(inner: &yazi_core::tab::Mode) -> mlua::Result<AnyUserData> {
-		Lives::scoped_userdata(Self { inner })
+		Lives::scoped_userdata(Self { inner: inner.into() })
 	}
 }
 

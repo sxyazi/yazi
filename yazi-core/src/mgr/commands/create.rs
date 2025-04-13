@@ -22,13 +22,12 @@ impl Mgr {
 	#[yazi_codegen::command]
 	pub fn create(&self, opt: Opt) {
 		let cwd = self.cwd().to_owned();
+		let mut input = InputProxy::show(InputCfg::create(opt.dir));
+
 		tokio::spawn(async move {
-			let mut result = InputProxy::show(InputCfg::create(opt.dir));
-			let Some(Ok(name)) = result.recv().await else {
-				return Ok(());
-			};
+			let Some(Ok(name)) = input.recv().await else { return };
 			if name.is_empty() {
-				return Ok(());
+				return;
 			}
 
 			let new = cwd.join(&name);
@@ -36,10 +35,10 @@ impl Mgr {
 				&& maybe_exists(&new).await
 				&& !ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await
 			{
-				return Ok(());
+				return;
 			}
 
-			Self::create_do(new, opt.dir || name.ends_with('/') || name.ends_with('\\')).await
+			_ = Self::create_do(new, opt.dir || name.ends_with('/') || name.ends_with('\\')).await;
 		});
 	}
 

@@ -1,9 +1,10 @@
 use mlua::{Function, Lua, Table};
 use twox_hash::XxHash3_128;
+use yazi_binding::Url;
 use yazi_config::YAZI;
 
 use super::Utils;
-use crate::{file::FileRef, url::Url};
+use crate::file::FileRef;
 
 impl Utils {
 	pub(super) fn file_cache(lua: &Lua) -> mlua::Result<Function> {
@@ -20,7 +21,7 @@ impl Utils {
 				format!("{:x}", h.finish_128())
 			};
 
-			Ok(Some(Url::from(YAZI.preview.cache_dir.join(hex))))
+			Ok(Some(Url::new(YAZI.preview.cache_dir.join(hex))))
 		})
 	}
 }

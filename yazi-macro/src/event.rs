@@ -24,6 +24,13 @@ macro_rules! render {
 			render!();
 		}
 	};
+	($left:expr, > $right:expr) => {{
+		let val = $left;
+		if val > $right {
+			render!();
+		}
+		val
+	}};
 }
 
 #[macro_export]

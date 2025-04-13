@@ -25,19 +25,44 @@ function M:preload(job)
 	end
 
 	-- stylua: ignore
-	local cmd = require("magick").with_env():args {
-		"-density", 200,
-		tostring(job.file.url), "-strip",
-		"-resize", string.format("%dx%d^", rt.preview.max_width, rt.preview.max_height),
-		"-quality", rt.preview.image_quality,
-		string.format("JPG:%s", cache),
+	local cmd = Command("resvg"):args {
+		"-w", rt.preview.max_width, "-h", rt.preview.max_height,
+		"--image-rendering", "optimizeSpeed",
+		tostring(job.file.url), tostring(cache)
 	}
+	if rt.tasks.image_alloc > 0 then
+		cmd = cmd:memory(rt.tasks.image_alloc)
+	end
 
-	local status, err = cmd:status()
+	local child, err = cmd:spawn()
+	if not child then
+		return true, Err("Failed to start `resvg`, error: %s", err)
+	end
+
+	local status, err
+	while true do
+		ya.sleep(0.2)
+
+		status, err = child:try_wait()
+		if status or err then
+			break
+		end
+
+		local id, mem = child:id(), nil
+		if id then
+			mem = ya.proc_info(id).mem_resident
+		end
+		if mem and mem > rt.tasks.image_alloc then
+			child:start_kill()
+			err = Err("memory limit exceeded, pid: %s, memory: %s", id, mem)
+			break
+		end
+	end
+
 	if status then
 		return status.success
 	else
-		return true, Err("Failed to start `magick`, error: %s", err)
+		return true, Err("Error while running `resvg`: %s", err)
 	end
 end
 

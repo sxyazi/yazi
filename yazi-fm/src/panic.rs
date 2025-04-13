@@ -10,7 +10,7 @@ impl Panic {
 		std::panic::set_hook(Box::new(move |info| {
 			Term::goodbye(|| {
 				hook(info);
-				true
+				1
 			});
 		}));
 	}

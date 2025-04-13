@@ -15,7 +15,7 @@ impl Dependency {
 		};
 
 		if self.rev.is_empty() {
-			self.rev = Git::hash(&path).await?;
+			self.rev = Git::revision(&path).await?;
 		} else {
 			Git::checkout(&path, self.rev.trim_start_matches('=')).await?;
 		}

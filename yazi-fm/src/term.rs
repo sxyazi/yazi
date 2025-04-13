@@ -89,7 +89,7 @@ impl Term {
 		Ok(disable_raw_mode()?)
 	}
 
-	pub(super) fn goodbye(f: impl FnOnce() -> bool) -> ! {
+	pub(super) fn goodbye(f: impl FnOnce() -> i32) -> ! {
 		if CSI_U.swap(false, Ordering::Relaxed) {
 			PopKeyboardEnhancementFlags.write_ansi(&mut TTY.writer()).ok();
 		}
@@ -111,7 +111,7 @@ impl Term {
 
 		disable_raw_mode().ok();
 
-		std::process::exit(f() as i32);
+		std::process::exit(f());
 	}
 
 	pub(super) fn draw(&mut self, f: impl FnOnce(&mut Frame)) -> io::Result<CompletedFrame> {

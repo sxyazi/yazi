@@ -33,6 +33,12 @@ impl Cmd {
 		me
 	}
 
+	#[inline]
+	pub fn len(&self) -> usize { self.args.len() }
+
+	#[inline]
+	pub fn is_empty(&self) -> bool { self.args.is_empty() }
+
 	// --- With
 	#[inline]
 	pub fn with(mut self, name: impl Into<DataKey>, value: impl ToString) -> Self {

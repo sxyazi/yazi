@@ -54,7 +54,7 @@ impl UserData for BodyBulkIter {
 		methods.add_meta_function(MetaMethod::Pairs, |lua, me: AnyUserData| {
 			let iter = lua.create_function(|lua, mut me: UserDataRefMut<Self>| {
 				if let Some((Cow::Owned(from), Cow::Owned(to))) = me.inner.next() {
-					(lua.create_any_userdata(from)?, lua.create_any_userdata(to)?).into_lua_multi(lua)
+					(yazi_binding::Url::new(from), yazi_binding::Url::new(to)).into_lua_multi(lua)
 				} else {
 					().into_lua_multi(lua)
 				}

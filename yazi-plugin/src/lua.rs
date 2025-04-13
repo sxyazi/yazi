@@ -18,7 +18,6 @@ pub(super) fn init_lua() -> Result<()> {
 
 fn stage_1(lua: &'static Lua) -> Result<()> {
 	lua.set_named_registry_value("ir", Runtime::default())?;
-	crate::config::Runtime::new(lua).install_manager()?.install_theme()?;
 
 	// Base
 	let globals = lua.globals();
@@ -29,11 +28,11 @@ fn stage_1(lua: &'static Lua) -> Result<()> {
 	globals.raw_set("rt", crate::config::Runtime::compose(lua)?)?;
 	globals.raw_set("th", crate::config::Theme::compose(lua)?)?;
 
-	crate::Error::install(lua)?;
+	yazi_binding::Error::install(lua)?;
 	crate::bindings::Cha::install(lua)?;
 	crate::loader::install(lua)?;
-	crate::file::pour(lua)?;
-	crate::url::pour(lua)?;
+	crate::file::File::install(lua)?;
+	yazi_binding::Url::install(lua)?;
 
 	// Addons
 	lua.load(preset!("ya")).set_name("ya.lua").exec()?;

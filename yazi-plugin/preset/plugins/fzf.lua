@@ -1,29 +1,73 @@
-local state = ya.sync(function() return cx.active.current.cwd end)
+local M = {}
 
-local function fail(s, ...) ya.notify { title = "Fzf", content = string.format(s, ...), timeout = 5, level = "error" } end
+local state = ya.sync(function()
+	local selected = {}
+	for _, url in pairs(cx.active.selected) do
+		selected[#selected + 1] = url
+	end
+	return cx.active.current.cwd, selected
+end)
 
-local function entry()
+function M:entry()
+	ya.mgr_emit("escape", { visual = true })
+
 	local _permit = ya.hide()
-	local cwd = tostring(state())
+	local cwd, selected = state()
 
-	local child, err =
-		Command("fzf"):cwd(cwd):stdin(Command.INHERIT):stdout(Command.PIPED):stderr(Command.INHERIT):spawn()
+	local output, err = M.run_with(cwd, selected)
+	if not output then
+		return ya.notify { title = "Fzf", content = tostring(err), timeout = 5, level = "error" }
+	end
+
+	local urls = M.split_urls(cwd, output)
+	if #urls == 1 then
+		local cha = #selected == 0 and fs.cha(urls[1])
+		ya.mgr_emit(cha and cha.is_dir and "cd" or "reveal", { urls[1] })
+	elseif #urls > 1 then
+		urls.state = #selected > 0 and "off" or "on"
+		ya.mgr_emit("toggle_all", urls)
+	end
+end
+
+function M.run_with(cwd, selected)
+	local child, err = Command("fzf")
+		:arg("-m")
+		:cwd(tostring(cwd))
+		:stdin(#selected > 0 and Command.PIPED or Command.INHERIT)
+		:stdout(Command.PIPED)
+		:spawn()
 
 	if not child then
-		return fail("Failed to start `fzf`, error: " .. err)
+		return nil, Err("Failed to start `fzf`, error: %s", err)
+	end
+
+	for _, u in ipairs(selected) do
+		child:write_all(string.format("%s\n", u))
+	end
+	if #selected > 0 then
+		child:flush()
 	end
 
 	local output, err = child:wait_with_output()
 	if not output then
-		return fail("Cannot read `fzf` output, error: " .. err)
+		return nil, Err("Cannot read `fzf` output, error: %s", err)
 	elseif not output.status.success and output.status.code ~= 130 then
-		return fail("`fzf` exited with error code %s", output.status.code)
+		return nil, Err("`fzf` exited with error code %s", output.status.code)
 	end
-
-	local target = output.stdout:gsub("\n$", "")
-	if target ~= "" then
-		ya.mgr_emit(target:find("[/\\]$") and "cd" or "reveal", { target })
-	end
+	return output.stdout, nil
 end
 
-return { entry = entry }
+function M.split_urls(cwd, output)
+	local t = {}
+	for line in output:gmatch("[^\r\n]+") do
+		local u = Url(line)
+		if u.is_absolute then
+			t[#t + 1] = u
+		else
+			t[#t + 1] = cwd:join(u)
+		end
+	end
+	return t
+end
+
+return M
