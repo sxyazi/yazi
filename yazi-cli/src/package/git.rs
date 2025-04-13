@@ -25,7 +25,7 @@ impl Git {
 		Ok(())
 	}
 
-	pub(super) async fn hash(path: &Path) -> Result<String> {
+	pub(super) async fn revision(path: &Path) -> Result<String> {
 		let output = Command::new("git")
 			.args(["rev-parse", "--short", "HEAD"])
 			.current_dir(path)

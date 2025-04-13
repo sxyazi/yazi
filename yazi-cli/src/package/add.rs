@@ -8,13 +8,13 @@ impl Dependency {
 		self.header("Upgrading package `{name}`")?;
 
 		let path = self.local();
-		if !must_exists(&path).await {
-			Git::clone(&self.remote(), &path).await?;
-		} else {
+		if must_exists(&path).await {
 			Git::pull(&path).await?;
+		} else {
+			Git::clone(&self.remote(), &path).await?;
 		};
 
-		self.rev = Git::hash(&path).await?;
+		self.rev = Git::revision(&path).await?;
 		self.deploy().await
 	}
 }

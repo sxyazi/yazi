@@ -25,41 +25,36 @@ impl Package {
 
 	pub(crate) async fn add_many(&mut self, uses: &[String]) -> Result<()> {
 		for u in uses {
-			if let Err(e) = self.add(u).await {
-				self.save().await?;
-				return Err(e);
-			}
+			let r = self.add(u).await;
+			self.save().await?;
+			r?;
 		}
-		self.save().await
+		Ok(())
 	}
 
 	pub(crate) async fn delete_many(&mut self, uses: &[String]) -> Result<()> {
 		for u in uses {
-			if let Err(e) = self.delete(u).await {
-				self.save().await?;
-				return Err(e);
-			}
+			let r = self.delete(u).await;
+			self.save().await?;
+			r?;
 		}
-		self.save().await
+		Ok(())
 	}
 
 	pub(crate) async fn install(&mut self, upgrade: bool) -> Result<()> {
-		for d in &mut self.plugins {
-			if upgrade {
-				d.upgrade().await?;
-			} else {
-				d.install().await?;
-			}
+		for i in 0..self.plugins.len() {
+			let r =
+				if upgrade { self.plugins[i].upgrade().await } else { self.plugins[i].install().await };
+			self.save().await?;
+			r?;
 		}
-		for d in &mut self.flavors {
-			if upgrade {
-				d.upgrade().await?;
-			} else {
-				d.install().await?;
-			}
+		for i in 0..self.flavors.len() {
+			let r =
+				if upgrade { self.flavors[i].upgrade().await } else { self.flavors[i].install().await };
+			self.save().await?;
+			r?;
 		}
-
-		self.save().await
+		Ok(())
 	}
 
 	pub(crate) fn print(&self) -> Result<()> {
