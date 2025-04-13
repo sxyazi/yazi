@@ -16,7 +16,7 @@ impl Dependency {
 
 		let to = self.target();
 		let exists = maybe_exists(&to).await;
-		if maybe_exists(&to).await {
+		if exists {
 			self.hash_check().await?;
 		}
 
@@ -25,13 +25,12 @@ impl Dependency {
 
 		let res1 = Self::deploy_assets(from.join("assets"), to.join("assets")).await;
 		let res2 = Self::deploy_sources(&from, &to, self.is_flavor).await;
-
-		remove_dir_clean(&to).await;
 		if !exists && (res2.is_err() || res1.is_err()) {
 			self.delete_assets().await?;
 			self.delete_sources().await?;
 		}
 
+		remove_dir_clean(&to).await;
 		self.hash = self.hash().await?;
 		res2?;
 		res1?;
