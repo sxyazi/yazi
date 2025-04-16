@@ -28,7 +28,7 @@ impl Preview {
 impl UserData for Preview {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("skip", |_, me| Ok(me.skip));
-		cached_field!(fields, folder, |_, me: &Self| {
+		cached_field!(fields, folder, |_, me| {
 			me.tab
 				.hovered_folder()
 				.map(|f| {

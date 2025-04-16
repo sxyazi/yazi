@@ -1,4 +1,4 @@
-use mlua::{Lua, UserData, Value};
+use mlua::{UserData, Value};
 use yazi_binding::cached_field;
 
 use super::Status;
@@ -19,8 +19,8 @@ impl Output {
 
 impl UserData for Output {
 	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
-		cached_field!(fields, status, |_, me: &Self| Ok(Status::new(me.inner.status)));
-		cached_field!(fields, stdout, |lua: &Lua, me: &Self| lua.create_string(&me.inner.stdout));
-		cached_field!(fields, stderr, |lua: &Lua, me: &Self| lua.create_string(&me.inner.stderr));
+		cached_field!(fields, status, |_, me| Ok(Status::new(me.inner.status)));
+		cached_field!(fields, stdout, |lua, me| lua.create_string(&me.inner.stdout));
+		cached_field!(fields, stderr, |lua, me| lua.create_string(&me.inner.stderr));
 	}
 }

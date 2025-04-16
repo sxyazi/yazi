@@ -1,6 +1,6 @@
 use std::ops::{Deref, Range};
 
-use mlua::{AnyUserData, Lua, UserData, UserDataFields, Value};
+use mlua::{AnyUserData, UserData, UserDataFields, Value};
 use yazi_binding::{FolderStage, Url, cached_field};
 use yazi_config::LAYOUT;
 
@@ -55,14 +55,14 @@ impl Folder {
 
 impl UserData for Folder {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		cached_field!(fields, cwd, |_, me: &Self| Ok(Url::new(me.url.to_owned())));
-		cached_field!(fields, files, |_, me: &Self| Files::make(0..me.files.len(), me, &me.tab));
-		cached_field!(fields, stage, |_: &Lua, me: &Self| Ok(FolderStage::new(me.stage)));
-		cached_field!(fields, window, |_, me: &Self| Files::make(me.window.clone(), me, &me.tab));
+		cached_field!(fields, cwd, |_, me| Ok(Url::new(me.url.to_owned())));
+		cached_field!(fields, files, |_, me| Files::make(0..me.files.len(), me, &me.tab));
+		cached_field!(fields, stage, |_, me| Ok(FolderStage::new(me.stage)));
+		cached_field!(fields, window, |_, me| Files::make(me.window.clone(), me, &me.tab));
 
 		fields.add_field_method_get("offset", |_, me| Ok(me.offset));
 		fields.add_field_method_get("cursor", |_, me| Ok(me.cursor));
-		cached_field!(fields, hovered, |_, me: &Self| {
+		cached_field!(fields, hovered, |_, me| {
 			me.hovered().map(|_| File::make(me.cursor, me, &me.tab)).transpose()
 		});
 	}
