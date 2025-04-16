@@ -14,7 +14,8 @@ impl Dependency {
 			Git::clone(&self.remote(), &path).await?;
 		};
 
+		self.deploy().await?;
 		self.rev = Git::revision(&path).await?;
-		self.deploy().await
+		Ok(())
 	}
 }

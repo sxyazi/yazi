@@ -8,18 +8,18 @@ impl Dependency {
 		self.header("Fetching package `{name}`")?;
 
 		let path = self.local();
-		if !must_exists(&path).await {
-			Git::clone(&self.remote(), &path).await?;
-		} else {
+		if must_exists(&path).await {
 			Git::fetch(&path).await?;
+		} else {
+			Git::clone(&self.remote(), &path).await?;
 		};
 
-		if self.rev.is_empty() {
-			self.rev = Git::revision(&path).await?;
-		} else {
+		if !self.rev.is_empty() {
 			Git::checkout(&path, self.rev.trim_start_matches('=')).await?;
 		}
 
-		self.deploy().await
+		self.deploy().await?;
+		self.rev = Git::revision(&path).await?;
+		Ok(())
 	}
 }

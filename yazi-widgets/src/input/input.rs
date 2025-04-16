@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use ratatui::crossterm::cursor::SetCursorStyle;
+use crossterm::cursor::SetCursorStyle;
 use unicode_width::UnicodeWidthStr;
 use yazi_config::YAZI;
 use yazi_plugin::CLIPBOARD;

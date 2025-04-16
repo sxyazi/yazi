@@ -61,7 +61,7 @@ jobs:
         run: rustup toolchain install stable --profile minimal --target ${{ matrix.target }}
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.6
+        uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: Build
         run: ./scripts/build.sh ${{ matrix.target }}
@@ -93,7 +93,7 @@ jobs:
         run: rustup toolchain install stable --profile minimal --target ${{ matrix.target }}
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.6
+        uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: Build
         run: cargo build --profile release-windows --locked --target ${{ matrix.target }}
@@ -133,7 +133,7 @@ jobs:
         run: rustup target add ${{ matrix.target }}
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.6
+        uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: Build
         run: ./scripts/build.sh ${{ matrix.target }}
@@ -214,7 +214,7 @@ jobs:
           merge-multiple: true
 
       - name: Draft
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           draft: true
           files: |
@@ -248,7 +248,7 @@ jobs:
           git tag --force nightly && git push --force origin tag nightly
 
       - name: Nightly
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: nightly
           prerelease: true
