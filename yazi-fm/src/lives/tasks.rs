@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use mlua::{AnyUserData, Lua, LuaSerdeExt, UserData, UserDataFields, Value};
+use mlua::{AnyUserData, LuaSerdeExt, UserData, UserDataFields, Value};
 use yazi_binding::cached_field;
 
 use super::{Lives, PtrCell};
@@ -26,6 +26,6 @@ impl Tasks {
 
 impl UserData for Tasks {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		cached_field!(fields, progress, |lua: &Lua, me: &Self| lua.to_value(&me.progress));
+		cached_field!(fields, progress, |lua, me| lua.to_value(&me.progress));
 	}
 }

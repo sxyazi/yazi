@@ -62,7 +62,7 @@ impl Url {
 impl FromLua for Url {
 	fn from_lua(value: Value, _: &Lua) -> mlua::Result<Self> {
 		Ok(match value {
-			Value::UserData(ud) => Self::new(ud.take::<Self>()?.inner),
+			Value::UserData(ud) => ud.take()?,
 			_ => Err("Expected a Url".into_lua_err())?,
 		})
 	}
@@ -70,23 +70,23 @@ impl FromLua for Url {
 
 impl UserData for Url {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		cached_field!(fields, name, |lua: &Lua, me: &Self| {
+		cached_field!(fields, name, |lua, me| {
 			Some(me.name())
 				.filter(|&s| !s.is_empty())
 				.map(|s| lua.create_string(s.as_encoded_bytes()))
 				.transpose()
 		});
-		cached_field!(fields, stem, |lua: &Lua, me: &Self| {
+		cached_field!(fields, stem, |lua, me| {
 			me.file_stem().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
 		});
-		cached_field!(fields, ext, |lua: &Lua, me: &Self| {
+		cached_field!(fields, ext, |lua, me| {
 			me.extension().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
 		});
-		cached_field!(fields, parent, |_, me: &Self| Ok(me.parent_url().map(Self::new)));
-		cached_field!(fields, base, |_, me: &Self| {
+		cached_field!(fields, parent, |_, me| Ok(me.parent_url().map(Self::new)));
+		cached_field!(fields, base, |_, me| {
 			Ok(if me.base().as_os_str().is_empty() { None } else { Some(Self::new(me.base())) })
 		});
-		cached_field!(fields, frag, |lua: &Lua, me: &Self| lua.create_string(me.frag()));
+		cached_field!(fields, frag, |lua, me| lua.create_string(me.frag()));
 
 		fields.add_field_method_get("is_regular", |_, me| Ok(me.is_regular()));
 		fields.add_field_method_get("is_search", |_, me| Ok(me.is_search()));

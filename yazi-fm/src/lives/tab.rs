@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use mlua::{AnyUserData, Lua, UserData, UserDataFields, UserDataMethods, Value};
+use mlua::{AnyUserData, UserData, UserDataFields, UserDataMethods, Value};
 use yazi_binding::{UrlRef, cached_field};
 use yazi_plugin::Id;
 
@@ -46,21 +46,21 @@ impl Tab {
 impl UserData for Tab {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("id", |_, me| Ok(Id(me.id)));
-		cached_field!(fields, name, |lua: &Lua, me: &Self| {
+		cached_field!(fields, name, |lua, me| {
 			lua.create_string(me.current.url.name().as_encoded_bytes())
 		});
 
-		cached_field!(fields, mode, |_, me: &Self| Mode::make(&me.mode));
-		cached_field!(fields, pref, |_, me: &Self| Preference::make(&me.pref));
-		cached_field!(fields, current, |_, me: &Self| Folder::make(None, &me.current, me));
-		cached_field!(fields, parent, |_, me: &Self| {
+		cached_field!(fields, mode, |_, me| Mode::make(&me.mode));
+		cached_field!(fields, pref, |_, me| Preference::make(&me.pref));
+		cached_field!(fields, current, |_, me| Folder::make(None, &me.current, me));
+		cached_field!(fields, parent, |_, me| {
 			me.parent.as_ref().map(|f| Folder::make(None, f, me)).transpose()
 		});
 
-		cached_field!(fields, selected, |_, me: &Self| Selected::make(&me.selected));
+		cached_field!(fields, selected, |_, me| Selected::make(&me.selected));
 
-		cached_field!(fields, preview, |_, me: &Self| Preview::make(me));
-		cached_field!(fields, finder, |_, me: &Self| me.finder.as_ref().map(Finder::make).transpose());
+		cached_field!(fields, preview, |_, me| Preview::make(me));
+		cached_field!(fields, finder, |_, me| me.finder.as_ref().map(Finder::make).transpose());
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {

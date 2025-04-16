@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use mlua::{Lua, UserData, UserDataFields, Value};
+use mlua::{UserData, UserDataFields, Value};
 use yazi_binding::cached_field;
 
 use crate::elements::Style;
@@ -26,7 +26,7 @@ impl From<&'static yazi_shared::theme::Icon> for Icon {
 
 impl UserData for Icon {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		cached_field!(fields, text, |lua: &Lua, me: &Self| lua.create_string(&me.text));
-		cached_field!(fields, style, |_, me: &Self| Ok(Style::from(me.style)));
+		cached_field!(fields, text, |lua, me| lua.create_string(&me.text));
+		cached_field!(fields, style, |_, me| Ok(Style::from(me.style)));
 	}
 }

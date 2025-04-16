@@ -32,7 +32,7 @@ impl Files {
 
 impl UserData for Files {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
-		cached_field!(fields, filter, |_, me: &Self| me.filter().map(Filter::make).transpose());
+		cached_field!(fields, filter, |_, me| me.filter().map(Filter::make).transpose());
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
