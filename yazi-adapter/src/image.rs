@@ -65,21 +65,21 @@ impl Image {
 	}
 
 	pub(super) fn max_pixel(rect: Rect) -> (u32, u32) {
-		Dimension::ratio()
-			.map(|(r1, r2)| {
-				let (w, h) = ((rect.width as f64 * r1) as u32, (rect.height as f64 * r2) as u32);
+		Dimension::cell_size()
+			.map(|(cw, ch)| {
+				let (w, h) = ((rect.width as f64 * cw) as u32, (rect.height as f64 * ch) as u32);
 				(w.min(YAZI.preview.max_width), h.min(YAZI.preview.max_height))
 			})
 			.unwrap_or((YAZI.preview.max_width, YAZI.preview.max_height))
 	}
 
 	pub(super) fn pixel_area(size: (u32, u32), rect: Rect) -> Rect {
-		Dimension::ratio()
-			.map(|(r1, r2)| Rect {
+		Dimension::cell_size()
+			.map(|(cw, ch)| Rect {
 				x:      rect.x,
 				y:      rect.y,
-				width:  (size.0 as f64 / r1).ceil() as u16,
-				height: (size.1 as f64 / r2).ceil() as u16,
+				width:  (size.0 as f64 / cw).ceil() as u16,
+				height: (size.1 as f64 / ch).ceil() as u16,
 			})
 			.unwrap_or(rect)
 	}

@@ -53,12 +53,12 @@ impl Ueberzug {
 		})
 		.await??;
 
-		let area = Dimension::ratio()
-			.map(|(r1, r2)| Rect {
+		let area = Dimension::cell_size()
+			.map(|(cw, ch)| Rect {
 				x:      max.x,
 				y:      max.y,
-				width:  max.width.min((w.min(YAZI.preview.max_width as _) as f64 / r1).ceil() as _),
-				height: max.height.min((h.min(YAZI.preview.max_height as _) as f64 / r2).ceil() as _),
+				width:  max.width.min((w.min(YAZI.preview.max_width as _) as f64 / cw).ceil() as _),
+				height: max.height.min((h.min(YAZI.preview.max_height as _) as f64 / ch).ceil() as _),
 			})
 			.unwrap_or(max);
 

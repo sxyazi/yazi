@@ -4,36 +4,61 @@ use crossterm::terminal::WindowSize;
 
 use crate::EMULATOR;
 
-pub struct Dimension;
+#[derive(Clone, Copy, Debug)]
+pub struct Dimension {
+	pub rows:    u16,
+	pub columns: u16,
+	pub width:   u16,
+	pub height:  u16,
+}
+
+impl From<WindowSize> for Dimension {
+	fn from(s: WindowSize) -> Self {
+		Self { rows: s.rows, columns: s.columns, width: s.width, height: s.height }
+	}
+}
+
+impl From<Dimension> for WindowSize {
+	fn from(d: Dimension) -> Self {
+		Self { rows: d.rows, columns: d.columns, width: d.width, height: d.height }
+	}
+}
 
 impl Dimension {
-	pub fn available() -> WindowSize {
+	pub fn available() -> Self {
 		let mut size = WindowSize { rows: 0, columns: 0, width: 0, height: 0 };
 		if let Ok(s) = crossterm::terminal::window_size() {
 			_ = mem::replace(&mut size, s);
 		}
 
-		if size.rows == 0 || size.columns == 0 {
+		if size.columns == 0 || size.rows == 0 {
 			if let Ok((cols, rows)) = crossterm::terminal::size() {
 				size.columns = cols;
 				size.rows = rows;
 			}
 		}
 
-		// TODO: Use `CSI 14 t` to get the actual size of the terminal
-		// if size.width == 0 || size.height == 0 {}
-
-		size
+		size.into()
 	}
 
-	#[inline]
-	pub fn ratio() -> Option<(f64, f64)> {
-		let s = Self::available();
-		Some(if s.width == 0 || s.height == 0 {
-			let s = EMULATOR.get().cell_size?;
-			(s.0 as f64, s.1 as f64)
+	pub fn ratio(self) -> Option<(f64, f64)> {
+		if self.rows == 0 || self.columns == 0 || self.width == 0 || self.height == 0 {
+			None
 		} else {
-			(f64::from(s.width) / f64::from(s.columns), f64::from(s.height) / f64::from(s.rows))
+			Some((self.width as f64 / self.columns as f64, self.height as f64 / self.rows as f64))
+		}
+	}
+
+	pub fn cell_size() -> Option<(f64, f64)> {
+		let emu = EMULATOR.get();
+		Some(if emu.force_16t {
+			(emu.csi_16t.0 as f64, emu.csi_16t.1 as f64)
+		} else if let Some(r) = Self::available().ratio() {
+			r
+		} else if emu.csi_16t.0 != 0 && emu.csi_16t.1 != 0 {
+			(emu.csi_16t.0 as f64, emu.csi_16t.1 as f64)
+		} else {
+			None?
 		})
 	}
 }

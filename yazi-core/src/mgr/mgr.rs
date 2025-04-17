@@ -30,7 +30,7 @@ impl Mgr {
 		if pos.origin == Origin::Hovered {
 			self.active().hovered_rect_based(pos)
 		} else {
-			pos.rect(Dimension::available())
+			pos.rect(Dimension::available().into())
 		}
 	}
 
