@@ -77,7 +77,7 @@ impl Tab {
 	}
 
 	pub fn hovered_rect_based(&self, pos: Position) -> Rect {
-		let ws = Dimension::available();
+		let ws = Dimension::available().into();
 		if let Some(r) = self.hovered_rect() {
 			Position::sticky(ws, r, pos.offset)
 		} else {

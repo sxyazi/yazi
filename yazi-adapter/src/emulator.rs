@@ -7,13 +7,14 @@ use tokio::time::sleep;
 use tracing::{debug, error, warn};
 use yazi_shared::{Either, tty::{Handle, TTY}};
 
-use crate::{Adapter, Brand, Mux, TMUX, Unknown};
+use crate::{Adapter, Brand, Dimension, Mux, TMUX, Unknown};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Emulator {
 	pub kind:      Either<Brand, Unknown>,
 	pub light:     bool,
-	pub cell_size: Option<(u16, u16)>,
+	pub csi_16t:   (u16, u16),
+	pub force_16t: bool,
 }
 
 impl Default for Emulator {
@@ -55,15 +56,22 @@ impl Emulator {
 			})
 		};
 
+		let csi_16t = Self::csi_16t(&resp).unwrap_or_default();
 		Ok(Self {
 			kind,
 			light: Self::light_bg(&resp).unwrap_or_default(),
-			cell_size: Self::cell_size(&resp),
+			csi_16t,
+			force_16t: Self::force_16t(csi_16t),
 		})
 	}
 
 	pub const fn unknown() -> Self {
-		Self { kind: Either::Right(Unknown::default()), light: false, cell_size: None }
+		Self {
+			kind:      Either::Right(Unknown::default()),
+			light:     false,
+			csi_16t:   (0, 0),
+			force_16t: false,
+		}
 	}
 
 	pub fn adapters(self) -> &'static [Adapter] {
@@ -160,7 +168,7 @@ impl Emulator {
 		);
 	}
 
-	fn cell_size(resp: &str) -> Option<(u16, u16)> {
+	fn csi_16t(resp: &str) -> Option<(u16, u16)> {
 		let b = resp.split_once("\x1b[6;")?.1.as_bytes();
 
 		let h: Vec<_> = b.iter().copied().take_while(|&c| c.is_ascii_digit()).collect();
@@ -188,5 +196,15 @@ impl Emulator {
 				Ok(false)
 			}
 		}
+	}
+
+	fn force_16t((w, h): (u16, u16)) -> bool {
+		if w == 0 || h == 0 {
+			return false;
+		}
+
+		Dimension::available()
+			.ratio()
+			.is_none_or(|(rw, rh)| rw.floor() as u16 != w || rh.floor() as u16 != h)
 	}
 }
