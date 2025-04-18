@@ -17,39 +17,27 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
           - os: ubuntu-latest
-            target: i686-unknown-linux-gnu
-            gcc: gcc-i686-linux-gnu
-          - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
             gcc: gcc-aarch64-linux-gnu
+          - os: ubuntu-latest
+            target: i686-unknown-linux-gnu
+            gcc: gcc-i686-linux-gnu
           - os: ubuntu-latest
             target: riscv64gc-unknown-linux-gnu
             gcc: gcc-riscv64-linux-gnu
           - os: ubuntu-latest
-            target: powerpc64-unknown-linux-gnu
-            gcc: gcc-powerpc64-linux-gnu
-          - os: ubuntu-latest
-            target: powerpc64le-unknown-linux-gnu
-            gcc: gcc-powerpc64le-linux-gnu
-          - os: ubuntu-latest
             target: sparc64-unknown-linux-gnu
             gcc: gcc-sparc64-linux-gnu
-          - os: ubuntu-latest
-            target: s390x-unknown-linux-gnu
-            gcc: gcc-s390x-linux-gnu
           - os: macos-latest
             target: x86_64-apple-darwin
           - os: macos-latest
             target: aarch64-apple-darwin
     runs-on: ${{ matrix.os }}
     env:
-      CARGO_TARGET_I686_UNKNOWN_LINUX_GNU_LINKER: i686-linux-gnu-gcc
       CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+      CARGO_TARGET_I686_UNKNOWN_LINUX_GNU_LINKER: i686-linux-gnu-gcc
       CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_GNU_LINKER: riscv64-linux-gnu-gcc
-      CARGO_TARGET_POWERPC64_UNKNOWN_LINUX_GNU_LINKER: powerpc64-linux-gnu-gcc
-      CARGO_TARGET_POWERPC64LE_UNKNOWN_LINUX_GNU_LINKER: powerpc64le-linux-gnu-gcc
       CARGO_TARGET_SPARC64_UNKNOWN_LINUX_GNU_LINKER: sparc64-linux-gnu-gcc
-      CARGO_TARGET_S390X_UNKNOWN_LINUX_GNU_LINKER: s390x-linux-gnu-gcc
     steps:
       - uses: actions/checkout@v4
 

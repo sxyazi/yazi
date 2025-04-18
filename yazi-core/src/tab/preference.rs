@@ -32,14 +32,6 @@ impl Default for Preference {
 	}
 }
 
-impl Preference {
-	pub(super) fn patch<F: FnOnce(&mut Self)>(&mut self, f: F) -> bool {
-		let old = self.clone();
-		f(self);
-		*self != old
-	}
-}
-
 impl From<&Preference> for FilesSorter {
 	fn from(value: &Preference) -> Self {
 		FilesSorter {

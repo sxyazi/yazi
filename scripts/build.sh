@@ -5,6 +5,7 @@ export ARTIFACT_NAME="yazi-$1"
 export YAZI_GEN_COMPLETIONS=1
 
 # Build for the target
+git config --global --add safe.directory "*"
 cargo build --release --locked --target "$1"
 
 # Create the artifact
