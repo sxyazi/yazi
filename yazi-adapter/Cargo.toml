@@ -21,6 +21,7 @@ color_quant = "1.1.0"
 crossterm   = { workspace = true }
 image       = { version = "0.25.6", default-features = false, features = [ "avif", "bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "tga", "webp" ] }
 ratatui     = { workspace = true }
+resvg       = { workspace = true }
 scopeguard  = { workspace = true }
 tokio       = { workspace = true }
 tracing     = { workspace = true }
