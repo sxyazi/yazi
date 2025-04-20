@@ -1,11 +1,8 @@
-use std::borrow::Cow;
-
 use yazi_fs::FilesOp;
 use yazi_macro::render;
-use yazi_proxy::MgrProxy;
 use yazi_shared::event::CmdCow;
 
-use crate::{mgr::{LINKED, Mgr}, tab::{Folder, Tab}, tasks::Tasks};
+use crate::{mgr::{LINKED, Mgr}, tab::Folder, tasks::Tasks};
 
 pub struct Opt {
 	op: FilesOp,
@@ -27,41 +24,38 @@ impl Mgr {
 
 		let linked: Vec<_> = LINKED.read().from_dir(opt.op.cwd()).map(|u| opt.op.rebase(u)).collect();
 		for op in [opt.op].into_iter().chain(linked) {
-			let idx = self.tabs.cursor;
 			self.yanked.apply_op(&op);
-
-			for (_, tab) in self.tabs.iter_mut().enumerate().filter(|(i, _)| *i != idx) {
-				Self::update_tab(tab, Cow::Borrowed(&op), tasks);
-			}
-			Self::update_tab(self.active_mut(), Cow::Owned(op), tasks);
+			self.update_tab(op, tasks);
 		}
 
 		render!(self.yanked.catchup_revision(false));
 		self.active_mut().apply_files_attrs();
 	}
 
-	fn update_tab(tab: &mut Tab, op: Cow<FilesOp>, tasks: &Tasks) {
+	fn update_tab(&mut self, op: FilesOp, tasks: &Tasks) {
 		let url = op.cwd();
-		tab.selected.apply_op(&op);
+		self.active_mut().selected.apply_op(&op);
 
-		if url == tab.cwd() {
-			Self::update_current(tab, op, tasks);
-		} else if matches!(&tab.parent, Some(p) if *url == p.url) {
-			Self::update_parent(tab, op);
-		} else if matches!(tab.hovered(), Some(h) if *url == h.url) {
-			Self::update_hovered(tab, op);
+		if url == self.cwd() {
+			self.update_current(op, tasks);
+		} else if matches!(self.parent(), Some(p) if *url == p.url) {
+			self.update_parent(op);
+		} else if matches!(self.hovered(), Some(h) if *url == h.url) {
+			self.update_hovered(op);
 		} else {
-			Self::update_history(tab, op);
+			self.update_history(op);
 		}
 	}
 
-	fn update_parent(tab: &mut Tab, op: Cow<FilesOp>) {
-		let urn = tab.cwd().urn_owned();
-		let leave = matches!(*op, FilesOp::Deleting(_, ref urns) if urns.contains(&urn));
+	fn update_parent(&mut self, op: FilesOp) {
+		let tab = self.active_mut();
+
+		let urn = tab.current.url.urn();
+		let leave = matches!(op, FilesOp::Deleting(_, ref urns) if urns.contains(urn));
 
 		if let Some(f) = tab.parent.as_mut() {
-			render!(f.update_pub(tab.id, op.into_owned()));
-			render!(f.hover(urn.as_urn()));
+			render!(f.update_pub(tab.id, op));
+			render!(f.hover(urn));
 		}
 
 		if leave {
@@ -69,47 +63,41 @@ impl Mgr {
 		}
 	}
 
-	fn update_current(tab: &mut Tab, op: Cow<FilesOp>, tasks: &Tasks) {
-		let calc = !matches!(*op, FilesOp::Size(..) | FilesOp::Deleting(..));
-		let foreign = matches!(op, Cow::Borrowed(_));
+	fn update_current(&mut self, op: FilesOp, tasks: &Tasks) {
+		let calc = !matches!(op, FilesOp::Size(..) | FilesOp::Deleting(..));
 
-		if !tab.current.update_pub(tab.id, op.into_owned()) {
-			return;
-		} else if foreign {
+		let id = self.active().id;
+		if !self.current_mut().update_pub(id, op) {
 			return;
 		}
 
-		MgrProxy::hover(None, tab.id); // Re-hover in next loop
-		MgrProxy::update_paged(); // Update for paged files in next loop
+		self.hover(None); // Re-hover
+		self.update_paged((), tasks); // Update for paged files
 		if calc {
-			tasks.prework_sorted(&tab.current.files);
+			tasks.prework_sorted(&self.current().files);
 		}
 	}
 
-	fn update_hovered(tab: &mut Tab, op: Cow<FilesOp>) {
-		let url = op.cwd();
-		let folder = tab.history.entry(url.clone()).or_insert_with(|| Folder::from(url));
+	fn update_hovered(&mut self, op: FilesOp) {
+		let (id, url) = (self.active().id, op.cwd());
+		let folder = self.active_mut().history.entry(url.clone()).or_insert_with(|| Folder::from(url));
 
-		let foreign = matches!(op, Cow::Borrowed(_));
-		if !folder.update_pub(tab.id, op.into_owned()) {
-			return;
-		}
-
-		if !foreign {
-			MgrProxy::peek(true);
+		if folder.update_pub(id, op) {
+			self.peek(true);
 		}
 	}
 
-	fn update_history(tab: &mut Tab, op: Cow<FilesOp>) {
+	fn update_history(&mut self, op: FilesOp) {
+		let tab = &mut self.active_mut();
 		let leave = tab.parent.as_ref().and_then(|f| f.url.parent_url().map(|p| (p, f.url.urn()))).is_some_and(
-			|(p, n)| matches!(*op, FilesOp::Deleting(ref parent, ref urns) if *parent == p && urns.contains(n)),
+			|(p, n)| matches!(op, FilesOp::Deleting(ref parent, ref urns) if *parent == p && urns.contains(n)),
 		);
 
 		tab
 			.history
 			.entry(op.cwd().clone())
 			.or_insert_with(|| Folder::from(op.cwd()))
-			.update_pub(tab.id, op.into_owned());
+			.update_pub(tab.id, op);
 
 		if leave {
 			tab.leave(());
