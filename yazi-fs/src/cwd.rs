@@ -32,7 +32,7 @@ impl Cwd {
 		}
 
 		self.store(Arc::new(url.clone()));
-		std::env::set_var("PWD", url);
+		unsafe { std::env::set_var("PWD", url) };
 
 		Self::sync_cwd();
 		true

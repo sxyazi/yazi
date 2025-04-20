@@ -22,14 +22,16 @@ pub fn init() {
 	REMOTE.with(<_>::default);
 
 	// Env
-	if let Some(s) = std::env::var("YAZI_ID").ok().filter(|s| !s.is_empty()) {
-		std::env::set_var("YAZI_PID", s);
+	unsafe {
+		if let Some(s) = std::env::var("YAZI_ID").ok().filter(|s| !s.is_empty()) {
+			std::env::set_var("YAZI_PID", s);
+		}
+		std::env::set_var("YAZI_ID", ID.to_string());
+		std::env::set_var(
+			"YAZI_LEVEL",
+			(std::env::var("YAZI_LEVEL").unwrap_or_default().parse().unwrap_or(0u16) + 1).to_string(),
+		);
 	}
-	std::env::set_var("YAZI_ID", ID.to_string());
-	std::env::set_var(
-		"YAZI_LEVEL",
-		(std::env::var("YAZI_LEVEL").unwrap_or_default().parse().unwrap_or(0u16) + 1).to_string(),
-	);
 }
 
 pub fn serve() {

@@ -3,7 +3,7 @@ use std::ffi::{c_char, c_void};
 use core_foundation_sys::{array::CFArrayRef, base::CFAllocatorRef, dictionary::CFDictionaryRef, runloop::CFRunLoopRef, string::CFStringRef};
 
 #[link(name = "DiskArbitration", kind = "framework")]
-extern "C" {
+unsafe extern "C" {
 	pub fn DASessionCreate(allocator: CFAllocatorRef) -> *const c_void;
 
 	pub fn DADiskCreateFromBSDName(

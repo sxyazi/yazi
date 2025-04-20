@@ -142,7 +142,7 @@ impl Mgr {
 		let mut sorted = Vec::with_capacity(old.len());
 		while !todos.is_empty() {
 			// Paths that are non-incomes and don't need to be prioritized in this round
-			let mut outcomes: Vec<_> = incomes.iter().filter(|(_, &b)| !b).map(|(&p, _)| p).collect();
+			let mut outcomes: Vec<_> = incomes.iter().filter(|&(_, b)| !b).map(|(&p, _)| p).collect();
 			outcomes.sort_unstable_by(|a, b| orders[b].cmp(&orders[a]));
 
 			// If there're no outcomes, it means there are cycles in the renaming
