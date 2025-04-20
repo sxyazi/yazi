@@ -76,6 +76,7 @@ impl Watcher {
 		}
 	}
 
+	// TODO: performance improvement
 	pub(super) fn trigger_dirs(&self, folders: &[&Folder]) {
 		let todo: Vec<_> =
 			folders.iter().filter(|&f| f.url.is_regular()).map(|&f| (f.url.to_owned(), f.cha)).collect();
