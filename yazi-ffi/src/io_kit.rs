@@ -4,7 +4,7 @@ use core_foundation_sys::{base::{CFAllocatorRef, CFTypeRef, mach_port_t}, dictio
 use libc::kern_return_t;
 
 #[link(name = "IOKit", kind = "framework")]
-extern "C" {
+unsafe extern "C" {
 	pub fn IOServiceGetMatchingServices(
 		mainPort: mach_port_t,
 		matching: CFMutableDictionaryRef,

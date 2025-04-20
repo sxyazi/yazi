@@ -56,9 +56,7 @@ impl Tab {
 		let selected = self.hovered_and_selected().cloned().collect();
 
 		let input = opt.interactive.then(|| {
-			InputProxy::show(
-				InputCfg::shell(opt.block).with_value(opt.run.to_owned()).with_cursor(opt.cursor),
-			)
+			InputProxy::show(InputCfg::shell(opt.block).with_value(&*opt.run).with_cursor(opt.cursor))
 		});
 
 		tokio::spawn(async move {

@@ -93,7 +93,7 @@ fn split_slice(s: &[u16]) -> std::io::Result<Vec<String>> {
 
 	use windows_sys::{Win32::{Foundation::LocalFree, UI::Shell::CommandLineToArgvW}, core::PCWSTR};
 
-	extern "C" {
+	unsafe extern "C" {
 		fn wcslen(s: PCWSTR) -> usize;
 	}
 
