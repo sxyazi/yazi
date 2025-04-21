@@ -23,12 +23,12 @@ function Preview:click(event, up)
 	local y = event.y - self._area.y + 1
 	local window = self._folder and self._folder.window or {}
 	if window[y] then
-		ya.mgr_emit("reveal", { window[y].url })
+		ya.emit("reveal", { window[y].url })
 	else
-		ya.mgr_emit("enter", {})
+		ya.emit("enter", {})
 	end
 end
 
-function Preview:scroll(event, step) ya.mgr_emit("seek", { step }) end
+function Preview:scroll(event, step) ya.emit("seek", { step }) end
 
 function Preview:touch(event, step) end

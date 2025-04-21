@@ -10,7 +10,7 @@ function M:peek(job)
 
 	local bound = math.max(0, #folder.files - job.area.h)
 	if job.skip > bound then
-		return ya.mgr_emit("peek", { bound, only_if = job.file.url, upper_bound = true })
+		return ya.emit("peek", { bound, only_if = job.file.url, upper_bound = true })
 	end
 
 	if #folder.files == 0 then
@@ -37,7 +37,7 @@ function M:seek(job)
 	if folder and folder.cwd == job.file.url then
 		local step = math.floor(job.units * job.area.h / 10)
 		local bound = math.max(0, #folder.files - job.area.h)
-		ya.mgr_emit("peek", {
+		ya.emit("peek", {
 			ya.clamp(0, cx.active.preview.skip + step, bound),
 			only_if = job.file.url,
 		})
