@@ -77,7 +77,6 @@ impl<'a> Executor<'a> {
 		on!(MGR, update_mimes, &self.app.cx.tasks);
 		on!(MGR, update_paged, &self.app.cx.tasks);
 		on!(MGR, update_yanked);
-		on!(MGR, hover);
 		on!(MGR, watch);
 		on!(MGR, peek);
 		on!(MGR, seek);

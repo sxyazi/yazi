@@ -19,11 +19,11 @@ impl Tab {
 		pref.sort_translit = c.maybe_bool("translit").unwrap_or(pref.sort_translit);
 
 		self.apply_files_attrs();
-
-		MgrProxy::hover(None, self.id);
-		MgrProxy::peek(false);
-		MgrProxy::update_paged();
-
+		self.hover(None);
 		tasks.prework_sorted(&self.current.files);
+
+		MgrProxy::peek(false);
+		MgrProxy::watch();
+		MgrProxy::update_paged();
 	}
 }

@@ -3,7 +3,6 @@ yazi_macro::mod_flat!(
 	close
 	create
 	hardlink
-	hover
 	link
 	open
 	paste

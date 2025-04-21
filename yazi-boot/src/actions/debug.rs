@@ -93,6 +93,7 @@ impl Actions {
 		writeln!(s, "    zoxide        : {}", Self::process_output("zoxide", "--version"))?;
 		#[rustfmt::skip]
 		writeln!(s, "    7zz/7z        : {} / {}", Self::process_output("7zz", "i"), Self::process_output("7z", "i"))?;
+		writeln!(s, "    resvg         : {}", Self::process_output("resvg", "--version"))?;
 		writeln!(s, "    jq            : {}", Self::process_output("jq", "--version"))?;
 
 		writeln!(s, "\nClipboard")?;
