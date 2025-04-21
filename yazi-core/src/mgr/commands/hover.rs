@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use yazi_dds::Pubsub;
 use yazi_macro::render;
 use yazi_shared::{Id, event::{CmdCow, Data}, url::{Url, Urn}};
@@ -29,21 +27,8 @@ impl Mgr {
 			self.current_or_mut(opt.tab).arrow(0);
 		}
 
-		// Repeek
-		self.peek(false);
-
 		// Refresh watcher
-		let mut to_watch = HashSet::with_capacity(3 * self.tabs.len());
-		for tab in self.tabs.iter() {
-			to_watch.insert(tab.cwd());
-			if let Some(ref p) = tab.parent {
-				to_watch.insert(&p.url);
-			}
-			if let Some(h) = tab.hovered().filter(|&h| h.is_dir()) {
-				to_watch.insert(&h.url);
-			}
-		}
-		self.watcher.watch(to_watch);
+		self.watch(());
 
 		// Publish through DDS
 		Pubsub::pub_from_hover(self.active().id, self.hovered().map(|h| &h.url));

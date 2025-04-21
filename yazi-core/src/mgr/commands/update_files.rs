@@ -22,6 +22,7 @@ impl Mgr {
 			return;
 		};
 
+		let revision = self.current().files.revision;
 		let linked: Vec<_> = LINKED.read().from_dir(opt.op.cwd()).map(|u| opt.op.rebase(u)).collect();
 		for op in [opt.op].into_iter().chain(linked) {
 			self.yanked.apply_op(&op);
@@ -29,7 +30,12 @@ impl Mgr {
 		}
 
 		render!(self.yanked.catchup_revision(false));
-		self.active_mut().apply_files_attrs();
+		if revision != self.current().files.revision {
+			self.active_mut().apply_files_attrs();
+			self.hover(None);
+			self.peek(false);
+			self.update_paged((), tasks);
+		}
 	}
 
 	fn update_tab(&mut self, op: FilesOp, tasks: &Tasks) {
@@ -71,8 +77,6 @@ impl Mgr {
 			return;
 		}
 
-		self.hover(None); // Re-hover
-		self.update_paged((), tasks); // Update for paged files
 		if calc {
 			tasks.prework_sorted(&self.current().files);
 		}

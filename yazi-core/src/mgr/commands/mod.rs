@@ -25,5 +25,6 @@ yazi_macro::mod_flat!(
 	update_paged
 	update_tasks
 	update_yanked
+	watch
 	yank
 );

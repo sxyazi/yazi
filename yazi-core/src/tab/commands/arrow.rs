@@ -37,6 +37,7 @@ impl Tab {
 		}
 
 		MgrProxy::hover(None, self.id);
+		MgrProxy::peek(false);
 		render!();
 	}
 }

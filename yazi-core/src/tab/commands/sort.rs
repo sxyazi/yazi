@@ -21,6 +21,7 @@ impl Tab {
 		self.apply_files_attrs();
 
 		MgrProxy::hover(None, self.id);
+		MgrProxy::peek(false);
 		MgrProxy::update_paged();
 
 		tasks.prework_sorted(&self.current.files);

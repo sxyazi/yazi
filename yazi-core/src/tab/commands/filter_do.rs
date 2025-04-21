@@ -28,6 +28,7 @@ impl Tab {
 		self.current.repos(hovered.as_ref());
 		if self.hovered().map(|f| f.urn()) != hovered.as_ref().map(|u| u.as_urn()) {
 			MgrProxy::hover(None, self.id);
+			MgrProxy::peek(false);
 		}
 
 		render!();

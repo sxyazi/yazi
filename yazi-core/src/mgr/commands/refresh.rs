@@ -21,7 +21,8 @@ impl Mgr {
 			self.watcher.trigger_dirs(&[self.current()]);
 		}
 
-		self.hover(None);
+		self.watch(());
+		self.peek(false);
 		self.update_paged((), tasks);
 
 		tasks.prework_sorted(&self.current().files);

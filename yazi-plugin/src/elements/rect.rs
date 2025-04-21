@@ -71,11 +71,6 @@ impl UserData for Rect {
 
 	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_method("pad", |_, me, pad: Pad| Ok(me.pad(pad)));
-		// TODO: deprecate this
-		methods.add_method("padding", |lua, me, pad: Pad| {
-			crate::deprecate!(lua, "The `padding()` method of `ui.Rect` has been deprecated, please use `pad()` instead, in your {}");
-			Ok(me.pad(pad))
-		});
 		methods.add_method("contains", |_, me, Rect(rect)| Ok(me.contains(rect.into())));
 	}
 }
