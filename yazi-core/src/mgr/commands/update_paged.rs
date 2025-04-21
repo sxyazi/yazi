@@ -20,7 +20,7 @@ impl From<()> for Opt {
 
 impl Mgr {
 	pub fn update_paged(&mut self, opt: impl TryInto<Opt>, tasks: &Tasks) {
-		let Ok(opt) = opt.try_into() else {
+		let Ok(opt): Result<Opt, _> = opt.try_into() else {
 			return;
 		};
 
@@ -29,7 +29,9 @@ impl Mgr {
 		}
 
 		let targets = self.current().paginate(opt.page.unwrap_or(self.current().page));
-		tasks.fetch_paged(targets, &self.mimetype);
-		tasks.preload_paged(targets, &self.mimetype);
+		if !targets.is_empty() {
+			tasks.fetch_paged(targets, &self.mimetype);
+			tasks.preload_paged(targets, &self.mimetype);
+		}
 	}
 }

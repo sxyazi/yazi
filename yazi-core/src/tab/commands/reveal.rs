@@ -30,7 +30,9 @@ impl Tab {
 		};
 
 		self.cd(parent.clone());
+		// TODO
 		FilesOp::Creating(parent, vec![File::from_dummy(opt.target.clone(), None)]).emit();
 		MgrProxy::hover(Some(opt.target), self.id);
+		MgrProxy::peek(false);
 	}
 }

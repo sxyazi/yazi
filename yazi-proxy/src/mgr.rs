@@ -22,6 +22,11 @@ impl MgrProxy {
 	}
 
 	#[inline]
+	pub fn watch() {
+		emit!(Call(Cmd::new("mgr:watch")));
+	}
+
+	#[inline]
 	pub fn refresh() {
 		emit!(Call(Cmd::new("mgr:refresh")));
 	}
