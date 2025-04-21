@@ -25,14 +25,20 @@ impl From<Url> for Opt {
 impl Tab {
 	#[yazi_codegen::command]
 	pub fn reveal(&mut self, opt: Opt) {
-		let Some(parent) = opt.target.parent_url() else {
+		let Some((parent, child)) = opt.target.pair() else {
 			return;
 		};
 
 		self.cd(parent.clone());
-		// TODO
-		FilesOp::Creating(parent, vec![File::from_dummy(opt.target.clone(), None)]).emit();
-		MgrProxy::hover(Some(opt.target), self.id);
+		self.current.hover(child.as_urn());
+
+		if self.hovered().is_none_or(|f| &child != f.urn()) {
+			let op = FilesOp::Creating(parent, vec![File::from_dummy(opt.target.clone(), None)]);
+			self.current.update_pub(self.id, op);
+		}
+
+		self.hover(Some(opt.target));
 		MgrProxy::peek(false);
+		MgrProxy::watch();
 	}
 }

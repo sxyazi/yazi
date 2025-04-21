@@ -32,8 +32,9 @@ impl Mgr {
 		render!(self.yanked.catchup_revision(false));
 		if revision != self.current().files.revision {
 			self.active_mut().apply_files_attrs();
-			self.hover(None);
+			self.active_mut().hover(None);
 			self.peek(false);
+			self.watch(());
 			self.update_paged((), tasks);
 		}
 	}

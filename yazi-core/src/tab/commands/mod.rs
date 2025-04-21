@@ -10,8 +10,10 @@ yazi_macro::mod_flat!(
 	find
 	find_arrow
 	find_do
+	follow
 	forward
 	hidden
+	hover
 	leave
 	linemode
 	reveal
@@ -23,5 +25,4 @@ yazi_macro::mod_flat!(
 	update_peeked
 	update_spotted
 	visual_mode
-	follow,
 );

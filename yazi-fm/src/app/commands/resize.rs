@@ -19,7 +19,7 @@ impl App {
 		self.reflow(());
 
 		self.cx.current_mut().sync_page(true);
-		self.cx.mgr.hover(None);
+		self.cx.current_mut().arrow(0);
 		self.cx.mgr.peek(false);
 		self.cx.mgr.parent_mut().map(|f| f.arrow(0));
 	}
