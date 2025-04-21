@@ -9,7 +9,7 @@ local state = ya.sync(function()
 end)
 
 function M:entry()
-	ya.mgr_emit("escape", { visual = true })
+	ya.emit("escape", { visual = true })
 
 	local _permit = ya.hide()
 	local cwd, selected = state()
@@ -22,10 +22,10 @@ function M:entry()
 	local urls = M.split_urls(cwd, output)
 	if #urls == 1 then
 		local cha = #selected == 0 and fs.cha(urls[1])
-		ya.mgr_emit(cha and cha.is_dir and "cd" or "reveal", { urls[1] })
+		ya.emit(cha and cha.is_dir and "cd" or "reveal", { urls[1] })
 	elseif #urls > 1 then
 		urls.state = #selected > 0 and "off" or "on"
-		ya.mgr_emit("toggle_all", urls)
+		ya.emit("toggle_all", urls)
 	end
 end
 

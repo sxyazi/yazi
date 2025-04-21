@@ -15,12 +15,17 @@ pub struct Cmd {
 
 impl Cmd {
 	pub fn new(s: &str) -> Self {
+		Self::new_or(s, Default::default())
+			.unwrap_or_else(|_| Self { name: "null".to_owned(), ..Default::default() })
+	}
+
+	pub fn new_or(s: &str, default: Layer) -> Result<Self> {
 		let (layer, name) = match s.split_once(':') {
-			Some((l, n)) => (Layer::from_str(l).unwrap_or_default(), n),
-			None => (Layer::default(), s),
+			Some((l, n)) => (l.parse()?, n),
+			None => (default, s),
 		};
 
-		Self { name: name.to_owned(), args: Default::default(), layer }
+		Ok(Self { name: name.to_owned(), args: Default::default(), layer })
 	}
 
 	pub fn args(name: &str, args: &[impl ToString]) -> Self {

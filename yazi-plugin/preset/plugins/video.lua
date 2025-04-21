@@ -19,7 +19,7 @@ end
 function M:seek(job)
 	local h = cx.active.current.hovered
 	if h and h.url == job.file.url then
-		ya.mgr_emit("peek", {
+		ya.emit("peek", {
 			math.max(0, cx.active.preview.skip + job.units),
 			only_if = job.file.url,
 		})
@@ -47,7 +47,7 @@ function M:preload(job)
 	local pic = M.has_pic(meta)
 	local percent = (pic and 0 or 5) + job.skip
 	if percent > 95 then
-		ya.mgr_emit("peek", { pic and 95 or 90, only_if = job.file.url, upper_bound = true })
+		ya.emit("peek", { pic and 95 or 90, only_if = job.file.url, upper_bound = true })
 		return false
 	end
 
