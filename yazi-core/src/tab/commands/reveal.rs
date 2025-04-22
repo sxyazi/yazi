@@ -5,7 +5,8 @@ use yazi_shared::{event::CmdCow, url::Url};
 use crate::tab::Tab;
 
 struct Opt {
-	target: Url,
+	target:   Url,
+	no_dummy: bool,
 }
 
 impl From<CmdCow> for Opt {
@@ -15,11 +16,11 @@ impl From<CmdCow> for Opt {
 			target = Url::from(expand_path(&target));
 		}
 
-		Self { target }
+		Self { target, no_dummy: c.bool("no-dummy") }
 	}
 }
 impl From<Url> for Opt {
-	fn from(target: Url) -> Self { Self { target } }
+	fn from(target: Url) -> Self { Self { target, no_dummy: false } }
 }
 
 impl Tab {
@@ -32,7 +33,7 @@ impl Tab {
 		self.cd(parent.clone());
 		self.current.hover(child.as_urn());
 
-		if self.hovered().is_none_or(|f| &child != f.urn()) {
+		if !opt.no_dummy && self.hovered().is_none_or(|f| &child != f.urn()) {
 			let op = FilesOp::Creating(parent, vec![File::from_dummy(opt.target.clone(), None)]);
 			self.current.update_pub(self.id, op);
 		}
