@@ -32,9 +32,6 @@ impl Input {
 		self.tx = Some(opt.tx.clone());
 		let ticket = self.ticket.clone();
 
-		// Shell
-		self.highlight = opt.cfg.highlight;
-
 		// Reset input
 		let cb: InputCallback = Box::new(move |before, after| {
 			if opt.cfg.realtime {
@@ -46,6 +43,7 @@ impl Input {
 		self.inner = yazi_widgets::input::Input::new(
 			opt.cfg.value,
 			opt.cfg.position.offset.width.saturating_sub(YAZI.input.border()) as usize,
+			opt.cfg.obscure,
 			cb,
 		);
 

@@ -9,10 +9,10 @@ pub struct InputCfg {
 	pub title:      String,
 	pub value:      String,
 	pub cursor:     Option<usize>,
+	pub obscure:    bool,
 	pub position:   Position,
 	pub realtime:   bool,
 	pub completion: bool,
-	pub highlight:  bool,
 }
 
 #[derive(Default)]
@@ -86,7 +86,6 @@ impl InputCfg {
 		Self {
 			title: YAZI.input.shell_title[block as usize].to_owned(),
 			position: Position::new(YAZI.input.shell_origin, YAZI.input.shell_offset),
-			highlight: true,
 			..Default::default()
 		}
 	}

@@ -13,15 +13,15 @@ impl Default for InputSnaps {
 	fn default() -> Self {
 		Self {
 			idx:      0,
-			versions: vec![InputSnap::new(String::new(), 0)],
-			current:  InputSnap::new(String::new(), 0),
+			versions: vec![InputSnap::new(String::new(), false, 0)],
+			current:  InputSnap::new(String::new(), false, 0),
 		}
 	}
 }
 
 impl InputSnaps {
-	pub fn new(value: String, limit: usize) -> Self {
-		let current = InputSnap::new(value, limit);
+	pub fn new(value: String, obscure: bool, limit: usize) -> Self {
+		let current = InputSnap::new(value, obscure, limit);
 		Self { idx: 0, versions: vec![current.clone()], current }
 	}
 
