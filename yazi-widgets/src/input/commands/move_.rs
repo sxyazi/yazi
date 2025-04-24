@@ -1,6 +1,5 @@
 use std::{num::ParseIntError, str::FromStr};
 
-use unicode_width::UnicodeWidthStr;
 use yazi_macro::render;
 use yazi_shared::event::{CmdCow, Data};
 
@@ -40,10 +39,10 @@ impl Input {
 			snap.offset = 0;
 		} else {
 			let delta = snap.mode.delta();
-			let s = snap.slice(snap.offset..snap.cursor + delta);
-			if s.width() >= limit {
-				let range = InputSnap::find_window(s.chars().rev(), 0, limit);
-				snap.offset = snap.cursor - range.end.saturating_sub(delta);
+			let range = snap.offset..snap.cursor + delta;
+			if snap.width(range.clone()) >= limit as u16 {
+				let it = snap.slice(range).chars().rev().map(|c| if snap.obscure { '•' } else { c });
+				snap.offset = snap.cursor - InputSnap::find_window(it, 0, limit).end.saturating_sub(delta);
 			}
 		}
 	}

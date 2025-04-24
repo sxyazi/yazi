@@ -1,7 +1,6 @@
-use std::ops::Range;
+use std::{borrow::Cow, ops::Range};
 
 use crossterm::cursor::SetCursorStyle;
-use unicode_width::UnicodeWidthStr;
 use yazi_config::YAZI;
 use yazi_plugin::CLIPBOARD;
 
@@ -12,14 +11,14 @@ pub type InputCallback = Box<dyn Fn(&str, &str)>;
 #[derive(Default)]
 pub struct Input {
 	pub snaps:    InputSnaps,
-	pub limit:    usize,
+	pub limit:    usize, // FIXME
 	pub obscure:  bool,
 	pub callback: Option<InputCallback>,
 }
 
 impl Input {
 	pub fn new(value: String, limit: usize, obscure: bool, callback: InputCallback) -> Self {
-		Self { snaps: InputSnaps::new(value, limit), limit, obscure, callback: Some(callback) }
+		Self { snaps: InputSnaps::new(value, obscure, limit), limit, obscure, callback: Some(callback) }
 	}
 
 	pub(super) fn handle_op(&mut self, cursor: usize, include: bool) -> bool {
@@ -78,9 +77,9 @@ impl Input {
 	#[inline]
 	pub fn display(&self) -> Cow<str> {
 		if self.obscure {
-			"•".repeat(self.window(self.limit).len()).into()
+			"•".repeat(self.snap().window(self.limit).len()).into()
 		} else {
-			self.snap().slice(self.window(self.limit)).into()
+			self.snap().slice(self.snap().window(self.limit)).into()
 		}
 	}
 
@@ -88,10 +87,7 @@ impl Input {
 	pub fn mode(&self) -> InputMode { self.snap().mode }
 
 	#[inline]
-	pub fn cursor(&self) -> u16 {
-		let snap = self.snap();
-		snap.slice(snap.offset..snap.cursor).width() as u16
-	}
+	pub fn cursor(&self) -> u16 { self.snap().width(self.snap().offset..self.snap().cursor) }
 
 	pub fn cursor_shape(&self) -> SetCursorStyle {
 		use InputMode as M;
@@ -117,8 +113,8 @@ impl Input {
 		let win = snap.window(self.limit);
 		let Range { start, end } = start.max(win.start)..end.min(win.end);
 
-		let s = snap.slice(snap.offset..start).width() as u16;
-		Some(s..s + snap.slice(start..end).width() as u16)
+		let s = snap.width(snap.offset..start);
+		Some(s..s + snap.width(start..end))
 	}
 
 	#[inline]
