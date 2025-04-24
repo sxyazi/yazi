@@ -13,12 +13,13 @@ pub type InputCallback = Box<dyn Fn(&str, &str)>;
 pub struct Input {
 	pub snaps:    InputSnaps,
 	pub limit:    usize,
+	pub obscure:  bool,
 	pub callback: Option<InputCallback>,
 }
 
 impl Input {
-	pub fn new(value: String, limit: usize, callback: InputCallback) -> Self {
-		Self { snaps: InputSnaps::new(value, limit), limit, callback: Some(callback) }
+	pub fn new(value: String, limit: usize, obscure: bool, callback: InputCallback) -> Self {
+		Self { snaps: InputSnaps::new(value, limit), limit, obscure, callback: Some(callback) }
 	}
 
 	pub(super) fn handle_op(&mut self, cursor: usize, include: bool) -> bool {
@@ -75,7 +76,13 @@ impl Input {
 	pub fn value(&self) -> &str { &self.snap().value }
 
 	#[inline]
-	pub fn visible_value(&self) -> &str { self.snap().slice(self.snap().window(self.limit)) }
+	pub fn display(&self) -> Cow<str> {
+		if self.obscure {
+			"•".repeat(self.window(self.limit).len()).into()
+		} else {
+			self.snap().slice(self.window(self.limit)).into()
+		}
+	}
 
 	#[inline]
 	pub fn mode(&self) -> InputMode { self.snap().mode }

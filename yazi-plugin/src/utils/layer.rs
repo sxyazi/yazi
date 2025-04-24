@@ -45,10 +45,10 @@ impl Utils {
 				title: t.raw_get("title")?,
 				value: t.raw_get("value").unwrap_or_default(),
 				cursor: None, // TODO
+				obscure: t.raw_get("obscure").unwrap_or_default(),
 				position: Pos::new_input(t.raw_get::<Table>("position")?)?.into(),
 				realtime,
 				completion: false,
-				highlight: false,
 			}));
 
 			if !realtime {

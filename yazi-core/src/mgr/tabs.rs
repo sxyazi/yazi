@@ -50,20 +50,6 @@ impl Tabs {
 	pub(super) fn active_mut(&mut self) -> &mut Tab { &mut self.items[self.cursor] }
 
 	#[inline]
-	pub fn active_or(&self, id: Option<Id>) -> &Tab {
-		id.and_then(|id| self.iter().find(|&t| t.id == id)).unwrap_or(self.active())
-	}
-
-	#[inline]
-	pub(super) fn active_or_mut(&mut self, id: Option<Id>) -> &mut Tab {
-		if let Some(i) = id.and_then(|id| self.iter().position(|t| t.id == id)) {
-			&mut self.items[i]
-		} else {
-			self.active_mut()
-		}
-	}
-
-	#[inline]
 	pub fn current(&self) -> &Folder { &self.active().current }
 
 	#[inline]

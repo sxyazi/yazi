@@ -12,7 +12,7 @@ impl Widget for &Input {
 	{
 		yazi_plugin::elements::Clear::default().render(area, buf);
 
-		Line::styled(self.visible_value(), THEME.input.value).render(area, buf);
+		Line::styled(self.display(), THEME.input.value).render(area, buf);
 
 		if let Some(Range { start, end }) = self.selected() {
 			let s = start.min(area.width);

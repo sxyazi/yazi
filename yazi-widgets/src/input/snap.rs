@@ -66,7 +66,6 @@ impl InputSnap {
 		Self::find_window(self.value.chars(), self.offset, limit)
 	}
 
-	#[inline]
 	pub(super) fn find_window<T>(it: T, offset: usize, limit: usize) -> Range<usize>
 	where
 		T: Iterator<Item = char>,

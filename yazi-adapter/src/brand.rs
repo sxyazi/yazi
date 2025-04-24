@@ -53,6 +53,7 @@ impl Brand {
 			("WEZTERM_EXECUTABLE", B::WezTerm),
 			("GHOSTTY_RESOURCES_DIR", B::Ghostty),
 			("WT_Session", B::Microsoft),
+			("WARP_HONOR_PS1", B::Warp),
 			("VSCODE_INJECTION", B::VSCode),
 			("TABBY_CONFIG_DIRECTORY", B::Tabby),
 		];

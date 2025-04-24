@@ -15,9 +15,6 @@ pub struct Input {
 	// Typing
 	pub(super) tx:     Option<UnboundedSender<Result<String, InputError>>>,
 	pub(super) ticket: Rc<Ids>,
-
-	// Shell
-	pub highlight: bool,
 }
 
 impl Deref for Input {

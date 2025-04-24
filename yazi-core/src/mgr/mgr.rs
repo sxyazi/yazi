@@ -2,7 +2,7 @@ use ratatui::layout::Rect;
 use yazi_adapter::Dimension;
 use yazi_config::popup::{Origin, Position};
 use yazi_fs::File;
-use yazi_shared::{Id, url::Url};
+use yazi_shared::url::Url;
 
 use super::{Mimetype, Tabs, Watcher, Yanked};
 use crate::tab::{Folder, Tab};
@@ -48,24 +48,10 @@ impl Mgr {
 	pub fn active_mut(&mut self) -> &mut Tab { self.tabs.active_mut() }
 
 	#[inline]
-	pub fn active_or(&self, id: Option<Id>) -> &Tab { self.tabs.active_or(id) }
-
-	#[inline]
-	pub fn active_or_mut(&mut self, id: Option<Id>) -> &mut Tab { self.tabs.active_or_mut(id) }
-
-	#[inline]
 	pub fn current(&self) -> &Folder { &self.active().current }
 
 	#[inline]
 	pub fn current_mut(&mut self) -> &mut Folder { &mut self.active_mut().current }
-
-	#[inline]
-	pub fn current_or(&self, id: Option<Id>) -> &Folder { &self.active_or(id).current }
-
-	#[inline]
-	pub fn current_or_mut(&mut self, id: Option<Id>) -> &mut Folder {
-		&mut self.active_or_mut(id).current
-	}
 
 	#[inline]
 	pub fn parent(&self) -> Option<&Folder> { self.active().parent.as_ref() }

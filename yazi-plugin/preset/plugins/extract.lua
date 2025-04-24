@@ -28,6 +28,7 @@ function M:entry(job)
 
 		local value, event = ya.input {
 			title = string.format('Password for "%s":', from.name),
+			obscure = true,
 			position = { "center", w = 50 },
 		}
 		if event == 1 then
