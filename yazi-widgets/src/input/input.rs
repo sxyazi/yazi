@@ -11,7 +11,7 @@ pub type InputCallback = Box<dyn Fn(&str, &str)>;
 #[derive(Default)]
 pub struct Input {
 	pub snaps:    InputSnaps,
-	pub limit:    usize, // FIXME
+	pub limit:    usize,
 	pub obscure:  bool,
 	pub callback: Option<InputCallback>,
 }
