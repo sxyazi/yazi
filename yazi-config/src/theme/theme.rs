@@ -10,26 +10,26 @@ use super::{Filetype, Flavor, Icon};
 
 #[derive(Deserialize, DeserializeOver1, Serialize)]
 pub struct Theme {
-	pub flavor:  Flavor,
+	pub flavor: Flavor,
 	#[serde(rename = "manager")]
-	pub mgr:     Mgr, // TODO: Remove `serde(rename)`
-	pub mode:    Mode,
-	pub status:  Status,
-	pub which:   Which,
+	pub mgr: Mgr, // TODO: Remove `serde(rename)`
+	pub mode: Mode,
+	pub status: Status,
+	pub which: Which,
 	pub confirm: Confirm,
-	pub spot:    Spot,
-	pub notify:  Notify,
-	pub pick:    Pick,
-	pub input:   Input,
-	pub cmp:     Cmp,
-	pub tasks:   Tasks,
-	pub help:    Help,
+	pub spot: Spot,
+	pub notify: Notify,
+	pub pick: Pick,
+	pub input: Input,
+	pub cmp: Cmp,
+	pub tasks: Tasks,
+	pub help: Help,
 
 	// File-specific styles
 	#[serde(skip_serializing)]
 	pub filetype: Filetype,
 	#[serde(skip_serializing)]
-	pub icon:     Icon,
+	pub icon: Icon,
 }
 
 #[derive(Deserialize, DeserializeOver2, Serialize)]
@@ -37,35 +37,35 @@ pub struct Mgr {
 	cwd: Style,
 
 	// Hovered
-	hovered:         Style,
+	hovered: Style,
 	preview_hovered: Style,
 
 	// Find
-	find_keyword:  Style,
+	find_keyword: Style,
 	find_position: Style,
 
 	// Symlink
 	symlink_target: Style,
 
 	// Marker
-	marker_copied:   Style,
-	marker_cut:      Style,
-	marker_marked:   Style,
+	marker_copied: Style,
+	marker_cut: Style,
+	marker_marked: Style,
 	marker_selected: Style,
 
 	// Tab
-	tab_active:   Style,
+	tab_active: Style,
 	tab_inactive: Style,
-	tab_width:    u8,
+	tab_width: u8,
 
 	// Count
-	count_copied:   Style,
-	count_cut:      Style,
+	count_copied: Style,
+	count_cut: Style,
 	count_selected: Style,
 
 	// Border
 	pub border_symbol: String,
-	pub border_style:  Style,
+	pub border_style: Style,
 
 	// Highlighting
 	pub syntect_theme: PathBuf,
@@ -74,37 +74,37 @@ pub struct Mgr {
 #[derive(Deserialize, DeserializeOver2, Serialize)]
 pub struct Mode {
 	pub normal_main: Style,
-	pub normal_alt:  Style,
+	pub normal_alt: Style,
 
 	pub select_main: Style,
-	pub select_alt:  Style,
+	pub select_alt: Style,
 
 	pub unset_main: Style,
-	pub unset_alt:  Style,
+	pub unset_alt: Style,
 }
 
 #[derive(Deserialize, DeserializeOver2, Serialize)]
 pub struct Status {
-	pub overall:   Style,
-	pub sep_left:  StatusSep,
+	pub overall: Style,
+	pub sep_left: StatusSep,
 	pub sep_right: StatusSep,
 
 	// Permissions
-	pub perm_sep:   Style,
-	pub perm_type:  Style,
-	pub perm_read:  Style,
+	pub perm_sep: Style,
+	pub perm_type: Style,
+	pub perm_read: Style,
 	pub perm_write: Style,
-	pub perm_exec:  Style,
+	pub perm_exec: Style,
 
 	// Progress
-	pub progress_label:  Style,
+	pub progress_label: Style,
 	pub progress_normal: Style,
-	pub progress_error:  Style,
+	pub progress_error: Style,
 }
 
 #[derive(Deserialize, DeserializeOver2, Serialize)]
 pub struct StatusSep {
-	pub open:  String,
+	pub open: String,
 	pub close: String,
 }
 
@@ -116,83 +116,83 @@ pub struct Which {
 	pub rest: Style,
 	pub desc: Style,
 
-	pub separator:       String,
+	pub separator: String,
 	pub separator_style: Style,
 }
 
 #[derive(Deserialize, DeserializeOver2, Serialize)]
 pub struct Confirm {
-	pub border:  Style,
-	pub title:   Style,
+	pub border: BorderStyle,
+	pub title: Style,
 	pub content: Style,
-	pub list:    Style,
+	pub list: Style,
 
-	pub btn_yes:    Style,
-	pub btn_no:     Style,
+	pub btn_yes: Style,
+	pub btn_no: Style,
 	pub btn_labels: [String; 2],
 }
 
 #[derive(Deserialize, DeserializeOver2, Serialize)]
 pub struct Spot {
-	pub border: Style,
-	pub title:  Style,
+	pub border: BorderStyle,
+	pub title: Style,
 
-	pub tbl_col:  Style,
+	pub tbl_col: Style,
 	pub tbl_cell: Style,
 }
 
 #[derive(Deserialize, DeserializeOver2, Serialize)]
 pub struct Notify {
-	pub title_info:  Style,
-	pub title_warn:  Style,
+	pub title_info: Style,
+	pub title_warn: Style,
 	pub title_error: Style,
 
-	pub icon_info:  String,
-	pub icon_warn:  String,
+	pub icon_info: String,
+	pub icon_warn: String,
 	pub icon_error: String,
 }
 
 #[derive(Deserialize, DeserializeOver2, Serialize)]
 pub struct Pick {
-	pub border:   Style,
-	pub active:   Style,
+	pub border: BorderStyle,
+	pub active: Style,
 	pub inactive: Style,
 }
 
 #[derive(Deserialize, DeserializeOver2, Serialize)]
 pub struct Input {
-	pub border:   Style,
-	pub title:    Style,
-	pub value:    Style,
+	pub border: BorderStyle,
+	pub title: Style,
+	pub value: Style,
 	pub selected: Style,
 }
 
 #[derive(Deserialize, DeserializeOver2, Serialize)]
 pub struct Cmp {
-	pub border:   Style,
-	pub active:   Style,
+	pub border: BorderStyle,
+	pub active: Style,
 	pub inactive: Style,
 
-	pub icon_file:    String,
-	pub icon_folder:  String,
+	pub icon_file: String,
+	pub icon_folder: String,
 	pub icon_command: String,
 }
 
 #[derive(Deserialize, DeserializeOver2, Serialize)]
 pub struct Tasks {
-	pub border:  Style,
-	pub title:   Style,
+	pub border: BorderStyle,
+	pub title: Style,
 	pub hovered: Style,
 }
 
 #[derive(Deserialize, DeserializeOver2, Serialize)]
 pub struct Help {
-	pub on:   Style,
-	pub run:  Style,
+	pub on: Style,
+	pub run: Style,
 	pub desc: Style,
 
 	pub hovered: Style,
-	pub footer:  Style,
+	pub footer: Style,
 }
 
 impl Theme {
