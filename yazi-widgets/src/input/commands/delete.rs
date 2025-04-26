@@ -25,7 +25,7 @@ impl Input {
 				self.move_(0);
 			}
 			InputOp::Delete(..) => {
-				self.snap_mut().op = InputOp::Delete(opt.cut, opt.insert, 0);
+				self.snap_mut().op = InputOp::Delete(opt.cut, opt.insert, self.snap().value.chars().enumerate().find(|(_, c)| !c.is_whitespace()).map_or(0, |(i, _)| i));
 				self.move_(self.snap().len() as isize);
 			}
 			_ => {}
