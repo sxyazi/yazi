@@ -13,6 +13,12 @@ strip         = true
 inherits = "release"
 panic    = "unwind"
 
+[profile.dev-opt]
+inherits      = "release"
+codegen-units = 256
+incremental   = true
+lto           = false
+
 [workspace.dependencies]
 ansi-to-tui         = "7.0.0"
 anyhow              = "1.0.98"
@@ -41,8 +47,8 @@ serde_json          = "1.0.140"
 syntect             = { version = "5.2.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
 tokio               = { version = "1.44.2", features = [ "full" ] }
 tokio-stream        = "0.1.17"
-tokio-util          = "0.7.14"
-toml                = { version = "0.8.20" }
+tokio-util          = "0.7.15"
+toml                = { version = "0.8.21" }
 tracing             = { version = "0.1.41", features = [ "max_level_debug", "release_max_level_debug" ] }
 twox-hash           = { version = "2.1.0", default-features = false, features = [ "std", "random", "xxhash3_128" ] }
 unicode-width       = "0.2.0"

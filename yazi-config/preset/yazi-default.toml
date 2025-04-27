@@ -25,7 +25,7 @@ cache_dir       = ""
 image_delay     = 30
 image_filter    = "triangle"
 image_quality   = 75
-sixel_fraction  = 15
+sixel_fraction  = 20
 ueberzug_scale  = 1
 ueberzug_offset = [ 0, 0, 0, 0 ]
 
