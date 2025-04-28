@@ -4,7 +4,7 @@ use anyhow::{Result, anyhow};
 use tokio::{fs::{self, DirEntry}, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::YAZI;
-use yazi_fs::{calculate_size, cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to, skip_path};
+use yazi_fs::{SizeCalculator, cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to, skip_path};
 use yazi_shared::url::Url;
 
 use super::{FileOp, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpTrash};
@@ -49,7 +49,7 @@ impl File {
 								&& matches!(e.raw_os_error(), Some(1) | Some(93)) =>
 						{
 							task.retry += 1;
-							self.log(task.id, format!("Paste task retry: {:?}", task))?;
+							self.log(task.id, format!("Paste task retry: {task:?}"))?;
 							self.queue(FileOp::Paste(task), LOW).await?;
 							return Ok(());
 						}
@@ -122,7 +122,7 @@ impl File {
 			FileOp::Delete(task) => {
 				if let Err(e) = fs::remove_file(&task.target).await {
 					if e.kind() != NotFound && maybe_exists(&task.target).await {
-						self.fail(task.id, format!("Delete task failed: {:?}, {e}", task))?;
+						self.fail(task.id, format!("Delete task failed: {task:?}, {e}"))?;
 						Err(e)?
 					}
 				}
@@ -318,7 +318,7 @@ impl File {
 
 	pub async fn trash(&self, mut task: FileOpTrash) -> Result<()> {
 		let id = task.id;
-		task.length = calculate_size(&task.target).await;
+		task.length = SizeCalculator::total(&task.target).await?;
 
 		self.prog.send(TaskProg::New(id, task.length))?;
 		self.queue(FileOp::Trash(task), LOW).await?;

@@ -198,6 +198,6 @@ impl Display for Key {
 			_ => "Unknown",
 		};
 
-		write!(f, "{}>", code)
+		write!(f, "{code}>")
 	}
 }
