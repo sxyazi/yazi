@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::{HashMap, HashSet, VecDeque}, ffi::{OsStr, OsString}, path::{Path, PathBuf}};
+use std::{borrow::Cow, collections::{HashMap, HashSet}, ffi::{OsStr, OsString}, path::{Path, PathBuf}};
 
 use anyhow::{Result, bail};
 use tokio::{fs, io::{self, AsyncWriteExt}, select, sync::{mpsc, oneshot}, time};
@@ -179,30 +179,6 @@ pub async fn realname_unchecked<'a>(
 	} else {
 		bail!("no such file")
 	}
-}
-
-pub async fn calculate_size(path: &Path) -> u64 {
-	let mut total = 0;
-	let mut stack = VecDeque::from([path.to_path_buf()]);
-	while let Some(path) = stack.pop_front() {
-		let Ok(meta) = fs::symlink_metadata(&path).await else { continue };
-		if !meta.is_dir() {
-			total += meta.len();
-			continue;
-		}
-
-		let Ok(mut it) = fs::read_dir(path).await else { continue };
-		while let Ok(Some(entry)) = it.next_entry().await {
-			let Ok(meta) = entry.metadata().await else { continue };
-
-			if meta.is_dir() {
-				stack.push_back(entry.path());
-			} else {
-				total += meta.len();
-			}
-		}
-	}
-	total
 }
 
 pub fn copy_with_progress(

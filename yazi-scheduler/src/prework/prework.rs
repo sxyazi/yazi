@@ -6,7 +6,7 @@ use parking_lot::{Mutex, RwLock};
 use tokio::sync::mpsc;
 use tracing::error;
 use yazi_config::Priority;
-use yazi_fs::{FilesOp, calculate_size};
+use yazi_fs::{FilesOp, SizeCalculator};
 use yazi_plugin::isolate;
 use yazi_shared::{event::CmdCow, url::Url};
 
@@ -73,7 +73,7 @@ impl Prework {
 				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 			}
 			PreworkOp::Size(task) => {
-				let length = calculate_size(&task.target).await;
+				let length = SizeCalculator::total(&task.target).await?;
 				task.throttle.done((task.target, length), |buf| {
 					{
 						let mut loading = self.size_loading.write();
