@@ -13,7 +13,12 @@ pub enum SizeCalculator {
 impl SizeCalculator {
 	pub async fn new(path: impl AsRef<Path>) -> std::io::Result<Self> {
 		let p = path.as_ref().to_owned();
-		tokio::task::spawn_blocking(|| {
+		tokio::task::spawn_blocking(move || {
+			let meta = std::fs::symlink_metadata(&p)?;
+			if !meta.is_dir() {
+				return Ok(Self::Idle((VecDeque::new(), Some(meta.len()))));
+			}
+
 			let mut buf = VecDeque::from([Either::Right(std::fs::read_dir(p)?)]);
 			let size = Self::next_chunk(&mut buf);
 			Ok(Self::Idle((buf, size)))
@@ -87,8 +92,8 @@ impl SizeCalculator {
 			let Ok(ft) = ent.file_type() else { continue };
 			if ft.is_dir() {
 				buf.push_back(Either::Left(ent.path()));
-			} else {
-				size += ent.metadata().map(|m| m.len()).unwrap_or(0);
+			} else if let Ok(meta) = ent.metadata() {
+				size += meta.len();
 			}
 		}
 		Some(size)
