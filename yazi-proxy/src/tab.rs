@@ -26,8 +26,8 @@ impl TabProxy {
 		emit!(Call(
 			// TODO: use second positional argument instead of `args` parameter
 			Cmd::args("mgr:search_do", &[opt.subject])
-				.with("via", opt.via.as_ref())
-				.with("args", opt.args_raw)
+				.with("via", opt.via.as_ref().to_owned())
+				.with("args", opt.args_raw.into_owned())
 		));
 	}
 }

@@ -1,8 +1,9 @@
 use mlua::{AnyUserData, ExternalError, Function, Lua};
+use yazi_binding::Id;
 use yazi_proxy::{AppProxy, HIDER};
 
 use super::Utils;
-use crate::{Id, bindings::{Permit, PermitRef}};
+use crate::bindings::{Permit, PermitRef};
 
 impl Utils {
 	pub(super) fn id(lua: &Lua) -> mlua::Result<Function> {

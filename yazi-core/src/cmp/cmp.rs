@@ -1,5 +1,7 @@
 use std::{collections::HashMap, path::PathBuf};
 
+use yazi_shared::Id;
+
 #[derive(Default)]
 pub struct Cmp {
 	pub(super) caches: HashMap<PathBuf, Vec<String>>,
@@ -7,7 +9,7 @@ pub struct Cmp {
 	pub(super) offset: usize,
 	pub cursor:        usize,
 
-	pub(super) ticket: usize,
+	pub(super) ticket: Id,
 	pub visible:       bool,
 }
 

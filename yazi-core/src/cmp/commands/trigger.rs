@@ -3,20 +3,20 @@ use std::{borrow::Cow, mem, path::{MAIN_SEPARATOR_STR, PathBuf}};
 use tokio::fs;
 use yazi_fs::{CWD, expand_path};
 use yazi_macro::{emit, render};
-use yazi_shared::event::{Cmd, CmdCow, Data};
+use yazi_shared::{Id, event::{Cmd, CmdCow, Data}};
 
 use crate::cmp::Cmp;
 
 struct Opt {
 	word:   Cow<'static, str>,
-	ticket: usize,
+	ticket: Id,
 }
 
 impl From<CmdCow> for Opt {
 	fn from(mut c: CmdCow) -> Self {
 		Self {
 			word:   c.take_first_str().unwrap_or_default(),
-			ticket: c.get("ticket").and_then(Data::as_usize).unwrap_or(0),
+			ticket: c.get("ticket").and_then(Data::as_id).unwrap_or_default(),
 		}
 	}
 }

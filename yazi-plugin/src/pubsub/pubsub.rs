@@ -1,7 +1,8 @@
 use mlua::{ExternalResult, Function, Lua, Value};
+use yazi_binding::Id;
 use yazi_dds::body::Body;
 
-use crate::{Id, runtime::RtRef};
+use crate::runtime::RtRef;
 
 pub struct Pubsub;
 

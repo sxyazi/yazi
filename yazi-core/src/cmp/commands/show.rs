@@ -1,7 +1,7 @@
 use std::{borrow::Cow, mem, ops::ControlFlow, path::PathBuf};
 
 use yazi_macro::render;
-use yazi_shared::event::{Cmd, CmdCow, Data};
+use yazi_shared::{Id, event::{Cmd, CmdCow, Data}};
 
 use crate::cmp::Cmp;
 
@@ -11,7 +11,7 @@ struct Opt {
 	cache:      Vec<String>,
 	cache_name: PathBuf,
 	word:       Cow<'static, str>,
-	ticket:     usize,
+	ticket:     Id,
 }
 
 impl From<CmdCow> for Opt {
@@ -20,7 +20,7 @@ impl From<CmdCow> for Opt {
 			cache:      c.take_any("cache").unwrap_or_default(),
 			cache_name: c.take_any("cache-name").unwrap_or_default(),
 			word:       c.take_str("word").unwrap_or_default(),
-			ticket:     c.get("ticket").and_then(Data::as_usize).unwrap_or(0),
+			ticket:     c.get("ticket").and_then(Data::as_id).unwrap_or_default(),
 		}
 	}
 }

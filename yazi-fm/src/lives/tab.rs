@@ -1,8 +1,7 @@
 use std::ops::Deref;
 
 use mlua::{AnyUserData, UserData, UserDataFields, UserDataMethods, Value};
-use yazi_binding::{UrlRef, cached_field};
-use yazi_plugin::Id;
+use yazi_binding::{Id, UrlRef, cached_field};
 
 use super::{Finder, Folder, Lives, Mode, Preference, Preview, PtrCell, Selected};
 

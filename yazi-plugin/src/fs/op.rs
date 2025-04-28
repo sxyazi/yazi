@@ -1,7 +1,7 @@
 use mlua::{IntoLua, Lua, Table};
-use yazi_binding::Url;
+use yazi_binding::{Id, Url};
 
-use crate::{Id, bindings::Cha, file::File};
+use crate::{bindings::Cha, file::File};
 
 pub(super) struct FilesOp(yazi_fs::FilesOp);
 
