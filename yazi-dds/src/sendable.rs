@@ -191,7 +191,7 @@ impl Sendable {
 			Value::Table(_) => Err("table is not supported".into_lua_err())?,
 			Value::Function(_) => Err("function is not supported".into_lua_err())?,
 			Value::Thread(_) => Err("thread is not supported".into_lua_err())?,
-			Value::UserData(_) => Err("unsupported userdata included".into_lua_err())?,
+			Value::UserData(_) => Err("userdata is not supported".into_lua_err())?,
 			Value::Error(_) => Err("error is not supported".into_lua_err())?,
 			Value::Other(..) => Err("unknown data is not supported".into_lua_err())?,
 		})
