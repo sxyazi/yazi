@@ -4,7 +4,7 @@ use tokio::fs;
 use yazi_binding::{Error, Url, UrlRef};
 use yazi_fs::{mounts::PARTITIONS, remove_dir_clean};
 
-use crate::{Composer, bindings::Cha, file::File};
+use crate::{Composer, bindings::{Cha, SizeCalculator}, file::File};
 
 pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 	Composer::make(lua, 10, |lua, key| {
@@ -16,6 +16,7 @@ pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 			b"create" => create(lua)?,
 			b"remove" => remove(lua)?,
 			b"read_dir" => read_dir(lua)?,
+			b"calc_size" => calc_size(lua)?,
 			b"expand_url" => expand_url(lua)?,
 			b"unique_name" => unique_name(lua)?,
 			b"partitions" => partitions(lua)?,
@@ -149,6 +150,15 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 		}
 
 		(tbl, Value::Nil).into_lua_multi(&lua)
+	})
+}
+
+fn calc_size(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_async_function(|lua, url: UrlRef| async move {
+		match yazi_fs::SizeCalculator::new(&*url).await {
+			Ok(it) => SizeCalculator(it).into_lua_multi(&lua),
+			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
+		}
 	})
 }
 
