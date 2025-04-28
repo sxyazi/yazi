@@ -1,10 +1,10 @@
 use globset::GlobBuilder;
-use mlua::{ExternalError, ExternalResult, Function, IntoLua, IntoLuaMulti, Lua, Table, UserData, UserDataMethods, Value};
+use mlua::{ExternalError, ExternalResult, Function, IntoLua, IntoLuaMulti, Lua, Table, Value};
 use tokio::fs;
 use yazi_binding::{Error, Url, UrlRef};
-use yazi_fs::{SizeCalculator, mounts::PARTITIONS, remove_dir_clean};
+use yazi_fs::{mounts::PARTITIONS, remove_dir_clean};
 
-use crate::{Composer, bindings::Cha, file::File};
+use crate::{Composer, bindings::{Cha, SizeCalculator}, file::File};
 
 pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 	Composer::make(lua, 10, |lua, key| {
@@ -155,20 +155,8 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 
 fn calc_size(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, url: UrlRef| async move {
-		struct Wrapper(SizeCalculator);
-		impl UserData for Wrapper {
-			fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-				methods.add_async_method_mut("recv", |lua, mut me, ()| async move {
-					match me.0.next().await {
-						Ok(value) => (value, Value::Nil).into_lua_multi(&lua),
-						Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
-					}
-				});
-			}
-		}
-
-		match SizeCalculator::new(&*url).await {
-			Ok(it) => Wrapper(it).into_lua_multi(&lua),
+		match yazi_fs::SizeCalculator::new(&*url).await {
+			Ok(it) => SizeCalculator(it).into_lua_multi(&lua),
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
