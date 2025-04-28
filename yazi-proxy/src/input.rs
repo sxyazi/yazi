@@ -1,7 +1,7 @@
 use tokio::sync::mpsc;
 use yazi_config::popup::InputCfg;
 use yazi_macro::emit;
-use yazi_shared::{errors::InputError, event::Cmd};
+use yazi_shared::{Id, errors::InputError, event::Cmd};
 
 pub struct InputProxy;
 
@@ -14,7 +14,7 @@ impl InputProxy {
 	}
 
 	#[inline]
-	pub fn complete(word: &str, ticket: usize) {
+	pub fn complete(word: &str, ticket: Id) {
 		emit!(Call(Cmd::args("input:complete", &[word]).with("ticket", ticket)));
 	}
 }

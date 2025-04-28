@@ -2,7 +2,9 @@ use std::{fmt::Display, str::FromStr, sync::atomic::{AtomicU64, Ordering}};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug, Default, Hash, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(
+	Clone, Copy, Debug, Default, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize, Deserialize,
+)]
 pub struct Id(pub u64);
 
 impl Id {
@@ -20,6 +22,14 @@ impl FromStr for Id {
 	type Err = <u64 as FromStr>::Err;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> { s.parse().map(Self) }
+}
+
+impl From<u64> for Id {
+	fn from(value: u64) -> Self { Self(value) }
+}
+
+impl From<usize> for Id {
+	fn from(value: usize) -> Self { Self(value as u64) }
 }
 
 impl TryFrom<i64> for Id {

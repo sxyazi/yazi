@@ -46,15 +46,15 @@ impl Cmd {
 
 	// --- With
 	#[inline]
-	pub fn with(mut self, name: impl Into<DataKey>, value: impl ToString) -> Self {
-		self.args.insert(name.into(), Data::String(value.to_string()));
+	pub fn with(mut self, name: impl Into<DataKey>, value: impl Into<Data>) -> Self {
+		self.args.insert(name.into(), value.into());
 		self
 	}
 
 	#[inline]
-	pub fn with_opt(mut self, name: impl Into<DataKey>, value: Option<impl ToString>) -> Self {
+	pub fn with_opt(mut self, name: impl Into<DataKey>, value: Option<impl Into<Data>>) -> Self {
 		if let Some(v) = value {
-			self.args.insert(name.into(), Data::String(v.to_string()));
+			self.args.insert(name.into(), v.into());
 		}
 		self
 	}
