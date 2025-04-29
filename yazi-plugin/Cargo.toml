@@ -35,6 +35,7 @@ mlua          = { workspace = true }
 parking_lot   = { workspace = true }
 paste         = { workspace = true }
 ratatui       = { workspace = true }
+resvg         = { workspace = true }
 serde_json    = { workspace = true }
 syntect       = { workspace = true }
 tokio         = { workspace = true }
@@ -46,12 +47,10 @@ unicode-width = { workspace = true }
 yazi-prebuilt = "0.1.0"
 
 [target."cfg(unix)".dependencies]
-libc  = { workspace = true }
 uzers = { workspace = true }
 
 [target."cfg(windows)".dependencies]
 clipboard-win = "5.4.0"
-windows-sys   = { version = "0.59.0", features = [ "Win32_Security", "Win32_System_JobObjects", "Win32_System_Threading" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }
