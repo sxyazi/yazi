@@ -19,10 +19,10 @@ impl TryFrom<CmdCow> for Opt {
 impl Tab {
 	pub fn update_spotted(&mut self, opt: impl TryInto<Opt>) {
 		let Some(hovered) = self.hovered().map(|h| &h.url) else {
-			return self.preview.reset();
+			return self.spot.reset();
 		};
 
-		let Ok(opt) = opt.try_into() else {
+		let Ok(mut opt): Result<Opt, _> = opt.try_into() else {
 			return;
 		};
 
@@ -30,7 +30,14 @@ impl Tab {
 			return;
 		}
 
-		self.spot.skip = opt.lock.selected().unwrap_or_default();
+		if self.spot.lock.as_ref().is_none_or(|l| l.id != opt.lock.id) {
+			self.spot.skip = opt.lock.selected().unwrap_or_default();
+		} else if let Some(s) = opt.lock.selected() {
+			self.spot.skip = s;
+		} else {
+			opt.lock.select(Some(self.spot.skip));
+		}
+
 		self.spot.lock = Some(opt.lock);
 		render!();
 	}

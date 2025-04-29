@@ -2,7 +2,7 @@ use std::{ops::Deref, path::Path};
 
 use mlua::{AnyUserData, ExternalError, FromLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
 
-use crate::cached_field;
+use crate::{Urn, cached_field};
 
 pub type UrlRef = UserDataRef<Url>;
 
@@ -12,6 +12,7 @@ pub struct Url {
 	v_name:   Option<Value>,
 	v_stem:   Option<Value>,
 	v_ext:    Option<Value>,
+	v_urn:    Option<Value>,
 	v_base:   Option<Value>,
 	v_parent: Option<Value>,
 	v_frag:   Option<Value>,
@@ -39,6 +40,7 @@ impl Url {
 			v_name:   None,
 			v_stem:   None,
 			v_ext:    None,
+			v_urn:    None,
 			v_base:   None,
 			v_parent: None,
 			v_frag:   None,
@@ -83,6 +85,7 @@ impl UserData for Url {
 			me.extension().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
 		});
 		cached_field!(fields, parent, |_, me| Ok(me.parent_url().map(Self::new)));
+		cached_field!(fields, urn, |_, me| Ok(Urn::new(me.urn_owned())));
 		cached_field!(fields, base, |_, me| {
 			Ok(if me.base().as_os_str().is_empty() { None } else { Some(Self::new(me.base())) })
 		});

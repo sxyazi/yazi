@@ -1,5 +1,7 @@
 use std::{borrow::{Borrow, Cow}, ffi::OsStr, ops::Deref, path::{Path, PathBuf}};
 
+use serde::Serialize;
+
 #[derive(Debug, Eq, PartialEq, Hash)]
 #[repr(transparent)]
 pub struct Urn(Path);
@@ -48,7 +50,7 @@ impl PartialEq<Cow<'_, OsStr>> for &Urn {
 }
 
 // --- UrnBuf
-#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize)]
 pub struct UrnBuf(PathBuf);
 
 impl Borrow<Urn> for UrnBuf {

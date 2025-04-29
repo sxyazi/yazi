@@ -30,6 +30,7 @@ fn op(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_function(|lua, (name, t): (mlua::String, Table)| match name.as_bytes().as_ref() {
 		b"part" => super::FilesOp::part(lua, t),
 		b"done" => super::FilesOp::done(lua, t),
+		b"size" => super::FilesOp::size(lua, t),
 		_ => Err("Unknown operation".into_lua_err())?,
 	})
 }

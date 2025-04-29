@@ -34,9 +34,9 @@ pub fn peek(
 			_ = ct_.cancelled() => {},
 			Ok(b) = LOADER.ensure(&cmd.name, |c| c.sync_peek) => {
 				if b {
-					peek_sync(cmd, file, mime, skip);
+					peek_sync( cmd, file, mime, skip);
 				} else {
-					peek_async(cmd, file, mime, skip, ct_);
+					peek_async( cmd, file, mime, skip, ct_);
 				}
 			},
 			else => {}

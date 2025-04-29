@@ -20,7 +20,7 @@ impl TryFrom<CmdCow> for Opt {
 
 impl Mgr {
 	pub fn update_mimes(&mut self, opt: impl TryInto<Opt>, tasks: &Tasks) {
-		let Ok(opt) = opt.try_into() else {
+		let Ok(opt): Result<Opt, _> = opt.try_into() else {
 			return error!("invalid arguments for update_mimes");
 		};
 

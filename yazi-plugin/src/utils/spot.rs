@@ -1,7 +1,7 @@
 use mlua::{AnyUserData, Function, Lua, Table};
 use yazi_config::THEME;
 use yazi_macro::emit;
-use yazi_shared::event::Cmd;
+use yazi_shared::{Id, event::Cmd};
 
 use super::Utils;
 use crate::{elements::Renderable, file::FileRef};
@@ -11,6 +11,7 @@ pub struct SpotLock {
 	pub cha:  yazi_fs::cha::Cha,
 	pub mime: String,
 
+	pub id:   Id,
 	pub skip: usize,
 	pub data: Vec<Renderable>,
 }
@@ -25,6 +26,7 @@ impl TryFrom<Table> for SpotLock {
 			cha:  file.cha,
 			mime: t.raw_get("mime")?,
 
+			id:   *t.raw_get::<yazi_binding::Id>("id")?,
 			skip: t.raw_get("skip")?,
 			data: Default::default(),
 		})

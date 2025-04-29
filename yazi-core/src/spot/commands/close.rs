@@ -1,4 +1,3 @@
-use yazi_macro::render;
 use yazi_shared::event::CmdCow;
 
 use crate::spot::Spot;
@@ -14,8 +13,5 @@ impl From<()> for Opt {
 
 impl Spot {
 	#[yazi_codegen::command]
-	pub fn close(&mut self, _: Opt) {
-		self.abort();
-		render!(self.lock.take().is_some());
-	}
+	pub fn close(&mut self, _: Opt) { self.reset(); }
 }
