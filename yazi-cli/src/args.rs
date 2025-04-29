@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use anyhow::{Result, bail};
 use clap::{Parser, Subcommand, command};
-use yazi_shared::event::Cmd;
+use yazi_shared::{Id, event::Cmd};
 
 #[derive(Parser)]
 #[command(name = "Ya", about, long_about = None)]
@@ -43,7 +43,7 @@ pub(super) struct CommandEmit {
 #[derive(clap::Args)]
 pub(super) struct CommandEmitTo {
 	/// The receiver ID.
-	pub(super) receiver: u64,
+	pub(super) receiver: Id,
 	/// The name of the command.
 	pub(super) name:     String,
 	/// The arguments of the command.
@@ -89,7 +89,7 @@ pub(super) struct CommandPub {
 
 impl CommandPub {
 	#[allow(dead_code)]
-	pub(super) fn receiver() -> Result<u64> {
+	pub(super) fn receiver() -> Result<Id> {
 		if let Some(s) = std::env::var("YAZI_PID").ok().filter(|s| !s.is_empty()) {
 			Ok(s.parse()?)
 		} else {
@@ -102,7 +102,7 @@ impl CommandPub {
 pub(super) struct CommandPubTo {
 	/// The receiver ID.
 	#[arg(index = 1)]
-	pub(super) receiver: u64,
+	pub(super) receiver: Id,
 	/// The kind of message.
 	#[arg(index = 2)]
 	pub(super) kind:     String,
