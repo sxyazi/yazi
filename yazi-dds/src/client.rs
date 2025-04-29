@@ -65,7 +65,7 @@ impl Client {
 	}
 
 	/// Connect to an existing server to send a single message.
-	pub async fn shot(kind: &str, receiver: u64, body: &str) -> Result<()> {
+	pub async fn shot(kind: &str, receiver: Id, body: &str) -> Result<()> {
 		Body::validate(kind)?;
 
 		let payload = format!(
@@ -79,12 +79,12 @@ impl Client {
 		writer.flush().await?;
 		drop(writer);
 
-		let mut version = None;
+		let (mut peers, mut version) = Default::default();
 		while let Ok(Some(line)) = lines.next_line().await {
 			match line.split(',').next() {
-				Some("hey") if version.is_none() => {
+				Some("hey") => {
 					if let Ok(Body::Hey(hey)) = Payload::from_str(&line).map(|p| p.body) {
-						version = Some(hey.version);
+						(peers, version) = (hey.peers, Some(hey.version));
 					}
 				}
 				Some("bye") => break,
@@ -94,11 +94,20 @@ impl Client {
 
 		if version.as_deref() != Some(BodyHi::version()) {
 			bail!(
-				"Incompatible version (Ya {}, Yazi {}), please restart all `ya` and `yazi` processes if you upgrade either one.",
+				"Incompatible version (Ya {}, Yazi {}). Restart all `ya` and `yazi` processes if you upgrade either one.",
 				BodyHi::version(),
 				version.as_deref().unwrap_or("Unknown")
 			);
 		}
+
+		match peers.get(&receiver).map(|p| p.able(kind)) {
+			Some(true) => {}
+			Some(false) => {
+				bail!("Receiver `{receiver}` does not have the ability to receive `{kind}` messages.")
+			}
+			None => bail!("Receiver `{receiver}` not found. Check if the receiver is running."),
+		}
+
 		Ok(())
 	}
 
