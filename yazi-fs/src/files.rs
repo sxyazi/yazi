@@ -129,7 +129,11 @@ impl Files {
 		}
 	}
 
-	pub fn update_size(&mut self, sizes: HashMap<UrnBuf, u64>) {
+	pub fn update_size(&mut self, mut sizes: HashMap<UrnBuf, u64>) {
+		if sizes.len() <= 50 {
+			sizes.retain(|k, v| self.sizes.get(k) != Some(v));
+		}
+
 		if sizes.is_empty() {
 			return;
 		}

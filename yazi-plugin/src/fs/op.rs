@@ -1,5 +1,5 @@
 use mlua::{IntoLua, Lua, Table};
-use yazi_binding::{Id, Url};
+use yazi_binding::{Id, Url, Urn};
 
 use crate::{bindings::Cha, file::File};
 
@@ -27,6 +27,19 @@ impl FilesOp {
 		let url: Url = t.raw_get("url")?;
 
 		Ok(Self(yazi_fs::FilesOp::Done(url.into(), *cha, *id)))
+	}
+
+	pub(super) fn size(_: &Lua, t: Table) -> mlua::Result<Self> {
+		let url: Url = t.raw_get("url")?;
+		let sizes: Table = t.raw_get("sizes")?;
+
+		Ok(Self(yazi_fs::FilesOp::Size(
+			url.into(),
+			sizes
+				.pairs::<Urn, u64>()
+				.map(|r| r.map(|(urn, size)| (urn.into(), size)))
+				.collect::<mlua::Result<_>>()?,
+		)))
 	}
 }
 

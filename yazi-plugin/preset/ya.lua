@@ -33,7 +33,8 @@ function ya.readable_size(size)
 		size = size / 1024
 		i = i + 1
 	end
-	return string.format("%.1f%s", size, units[i]):gsub("[.,]0", "", 1)
+	local s = string.format("%.1f%s", size, units[i]):gsub("[.,]0", "", 1)
+	return s
 end
 
 function ya.readable_path(path)

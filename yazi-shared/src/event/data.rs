@@ -2,7 +2,7 @@ use std::{any::Any, borrow::Cow, collections::HashMap};
 
 use serde::{Deserialize, Serialize, de};
 
-use crate::{Id, OrderedFloat, url::Url};
+use crate::{Id, OrderedFloat, url::{Url, UrnBuf}};
 
 // --- Data
 #[derive(Debug, Serialize, Deserialize)]
@@ -18,6 +18,8 @@ pub enum Data {
 	Id(Id),
 	#[serde(skip_deserializing)]
 	Url(Url),
+	#[serde(skip_deserializing)]
+	Urn(UrnBuf),
 	#[serde(skip)]
 	Bytes(Vec<u8>),
 	#[serde(skip)]
@@ -106,6 +108,11 @@ pub enum DataKey {
 	Integer(i64),
 	Number(OrderedFloat),
 	String(Cow<'static, str>),
+	Id(Id),
+	#[serde(skip_deserializing)]
+	Url(Url),
+	#[serde(skip_deserializing)]
+	Urn(UrnBuf),
 }
 
 impl DataKey {

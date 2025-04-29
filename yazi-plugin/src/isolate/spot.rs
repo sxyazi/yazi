@@ -4,11 +4,14 @@ use mlua::{ExternalError, ExternalResult, HookTriggers, IntoLua, ObjectLike, VmS
 use tokio::{runtime::Handle, select};
 use tokio_util::sync::CancellationToken;
 use tracing::error;
+use yazi_binding::Id;
 use yazi_dds::Sendable;
-use yazi_shared::event::Cmd;
+use yazi_shared::{Ids, event::Cmd};
 
 use super::slim_lua;
 use crate::{file::File, loader::LOADER};
+
+static IDS: Ids = Ids::new();
 
 pub fn spot(
 	cmd: &'static Cmd,
@@ -37,6 +40,7 @@ pub fn spot(
 
 			let plugin = LOADER.load_once(&lua, &cmd.name)?;
 			let job = lua.create_table_from([
+				("id", Id(IDS.next()).into_lua(&lua)?),
 				("args", Sendable::args_to_table_ref(&lua, &cmd.args)?.into_lua(&lua)?),
 				("file", File::new(file).into_lua(&lua)?),
 				("mime", mime.into_lua(&lua)?),
