@@ -286,16 +286,16 @@ keymap = [
 	{ on = "<A-d>", run = "kill forward",  desc = "Kill forwards to the end of the current word" },
 
 	# Cut/Yank/Paste
-	{ on = "d", run = "delete --cut",                                     desc = "Cut selected characters" },
-	{ on = "D", run = [ "delete --cut", "move eol" ],                     desc = "Cut until EOL" },
-	{ on = "c", run = "delete --cut --insert",                            desc = "Cut selected characters, and enter insert mode" },
-	{ on = "C", run = [ "delete --cut --insert", "move eol" ],            desc = "Cut until EOL, and enter insert mode" },
-	{ on = "x", run = [ "delete --cut", "move 1 --in-operating" ],        desc = "Cut current character" },
-	{ on = "s", run = [ "delete --cut --insert", "move 1" ],              desc = "Cut current character, and enter insert mode" },
-	{ on = "S", run = [ "move bol", "delete --cut --insert", "move eol"], desc = "Cut from BOL until EOL, and enter insert mode" },
-	{ on = "y", run = "yank",                                             desc = "Copy selected characters" },
-	{ on = "p", run = "paste",                                            desc = "Paste copied characters after the cursor" },
-	{ on = "P", run = "paste --before",                                   desc = "Paste copied characters before the cursor" },
+	{ on = "d", run = "delete --cut",                                      desc = "Cut selected characters" },
+	{ on = "D", run = [ "delete --cut", "move eol" ],                      desc = "Cut until EOL" },
+	{ on = "c", run = "delete --cut --insert",                             desc = "Cut selected characters, and enter insert mode" },
+	{ on = "C", run = [ "delete --cut --insert", "move eol" ],             desc = "Cut until EOL, and enter insert mode" },
+	{ on = "s", run = [ "delete --cut --insert", "move 1" ],               desc = "Cut current character, and enter insert mode" },
+	{ on = "S", run = [ "move bol", "delete --cut --insert", "move eol" ], desc = "Cut from BOL until EOL, and enter insert mode" },
+	{ on = "x", run = [ "delete --cut", "move 1 --in-operating" ],         desc = "Cut current character" },
+	{ on = "y", run = "yank",                                              desc = "Copy selected characters" },
+	{ on = "p", run = "paste",                                             desc = "Paste copied characters after the cursor" },
+	{ on = "P", run = "paste --before",                                    desc = "Paste copied characters before the cursor" },
 
 	# Undo/Redo
 	{ on = "u",     run = "undo", desc = "Undo the last operation" },
