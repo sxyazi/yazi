@@ -22,3 +22,6 @@ parking_lot = { workspace = true }
 
 [target."cfg(unix)".dependencies]
 libc = { workspace = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }
