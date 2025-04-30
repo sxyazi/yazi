@@ -3579,6 +3579,7 @@ dependencies = [
  "libc",
  "parking_lot",
  "tracing",
+ "windows-sys 0.59.0",
  "yazi-macro",
  "yazi-shared",
 ]
