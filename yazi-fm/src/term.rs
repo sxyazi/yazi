@@ -5,7 +5,8 @@ use crossterm::{Command, event::{DisableBracketedPaste, DisableMouseCapture, Ena
 use ratatui::{CompletedFrame, Frame, Terminal, backend::CrosstermBackend, buffer::Buffer, layout::Rect};
 use yazi_adapter::{Emulator, Mux, TMUX};
 use yazi_config::YAZI;
-use yazi_shared::{SyncCell, tty::{TTY, TtyWriter}};
+use yazi_shared::SyncCell;
+use yazi_term::tty::{TTY, TtyWriter};
 
 static CSI_U: AtomicBool = AtomicBool::new(false);
 

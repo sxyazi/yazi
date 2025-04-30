@@ -1,7 +1,7 @@
 use anyhow::Result;
 use tracing::error;
 use yazi_macro::time;
-use yazi_shared::tty::TTY;
+use yazi_term::tty::TTY;
 
 use crate::{CLOSE, ESCAPE, Emulator, START, TMUX};
 

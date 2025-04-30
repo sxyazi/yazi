@@ -1,7 +1,8 @@
 use crossterm::{execute, terminal::SetTitle};
 use yazi_config::YAZI;
 use yazi_fs::CWD;
-use yazi_shared::{event::CmdCow, tty::TTY};
+use yazi_shared::event::CmdCow;
+use yazi_term::tty::TTY;
 
 use crate::{mgr::Mgr, tasks::Tasks};
 

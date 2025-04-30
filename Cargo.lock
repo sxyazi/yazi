@@ -3244,6 +3244,7 @@ dependencies = [
  "yazi-config",
  "yazi-macro",
  "yazi-shared",
+ "yazi-term",
 ]
 
 [[package]]
@@ -3326,6 +3327,7 @@ dependencies = [
  "yazi-fs",
  "yazi-macro",
  "yazi-shared",
+ "yazi-term",
 ]
 
 [[package]]
@@ -3360,6 +3362,7 @@ dependencies = [
  "yazi-proxy",
  "yazi-scheduler",
  "yazi-shared",
+ "yazi-term",
  "yazi-widgets",
 ]
 
@@ -3503,6 +3506,7 @@ dependencies = [
  "yazi-prebuilt",
  "yazi-proxy",
  "yazi-shared",
+ "yazi-term",
 ]
 
 [[package]]
@@ -3572,7 +3576,12 @@ name = "yazi-term"
 version = "25.4.8"
 dependencies = [
  "crossterm 0.29.0",
+ "libc",
+ "parking_lot",
+ "tracing",
+ "windows-sys 0.59.0",
  "yazi-macro",
+ "yazi-shared",
 ]
 
 [[package]]

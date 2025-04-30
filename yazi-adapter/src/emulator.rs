@@ -5,7 +5,8 @@ use crossterm::{cursor::{RestorePosition, SavePosition}, execute, style::Print, 
 use scopeguard::defer;
 use tokio::time::sleep;
 use tracing::{debug, error, warn};
-use yazi_shared::{Either, tty::{Handle, TTY}};
+use yazi_shared::Either;
+use yazi_term::tty::{Handle, TTY};
 
 use crate::{Adapter, Brand, Dimension, Mux, TMUX, Unknown};
 

@@ -8,7 +8,8 @@ use yazi_config::YAZI;
 use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp, max_common_root, maybe_exists, paths_to_same_file};
 use yazi_proxy::{AppProxy, HIDER, TasksProxy, WATCHER};
-use yazi_shared::{terminal_clear, tty::TTY, url::Url};
+use yazi_shared::{terminal_clear, url::Url};
+use yazi_term::tty::TTY;
 
 use crate::mgr::Mgr;
 

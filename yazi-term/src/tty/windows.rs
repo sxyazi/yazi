@@ -3,8 +3,7 @@
 use std::{mem::MaybeUninit, os::windows::io::RawHandle, str};
 
 use windows_sys::Win32::{Globalization::{CP_UTF8, MB_ERR_INVALID_CHARS, MultiByteToWideChar}, System::Console::WriteConsoleW};
-
-use crate::{floor_char_boundary, utf8_char_width};
+use yazi_shared::{floor_char_boundary, utf8_char_width};
 
 // Apparently Windows doesn't handle large reads on stdin or writes to
 // stdout/stderr well (see #13304 for details).
