@@ -100,15 +100,28 @@ impl Client {
 			);
 		}
 
-		match peers.get(&receiver).map(|p| p.able(kind)) {
-			Some(true) => {}
+		if receiver == 0 {
+			// check if any peer is able to receive the message
+			let any_able =
+				peers.keys().any(|peer| Self::receiver_able(kind, peer, &peers).is_ok()).then_some(());
+			if any_able.is_none() {
+				bail!("No peer is able to receive `{kind}` messages.");
+			}
+		} else {
+			Self::receiver_able(kind, &receiver, &peers)?;
+		}
+
+		Ok(())
+	}
+
+	fn receiver_able(kind: &str, receiver: &Id, peers: &HashMap<Id, Peer>) -> Result<()> {
+		match peers.get(receiver).map(|p| p.able(kind)) {
+			Some(true) => Ok(()),
 			Some(false) => {
 				bail!("Receiver `{receiver}` does not have the ability to receive `{kind}` messages.")
 			}
 			None => bail!("Receiver `{receiver}` not found. Check if the receiver is running."),
 		}
-
-		Ok(())
 	}
 
 	/// Connect to an existing server and listen in on the messages that are being
