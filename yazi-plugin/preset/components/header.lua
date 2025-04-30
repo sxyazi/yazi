@@ -110,7 +110,36 @@ function Header:redraw()
 end
 
 -- Mouse events
-function Header:click(event, up) end
+function Header:click(event, up)
+	local tab_count = #cx.tabs
+	if up or tab_count == 1 then
+		return
+	end
+
+	local idx = 0
+	local x_offset = self._area.w - event.x - 1
+
+	if th.mgr.tab_width > 2 then
+		for i = tab_count, 1, -1 do
+			-- 3 units for each tab padding, 1 unit for the index, 4 units in total.
+			local current_tab_width = math.min(th.mgr.tab_width + 1, #cx.tabs[i].name + 4)
+			if x_offset < current_tab_width then
+				idx = i - 1
+				break
+			end
+			x_offset = x_offset - current_tab_width
+		end
+	else
+		-- 2 units for each tab padding, 1 unit for the index, 3 units in total.
+		-- early return if x-offset is greater than the number of tabs.
+		if x_offset > tab_count * 3 then
+			return
+		end
+		idx = tab_count - (x_offset // 3 + 1)
+	end
+
+	ya.emit("tab_switch", { idx, false })
+end
 
 function Header:scroll(event, step) end
 
