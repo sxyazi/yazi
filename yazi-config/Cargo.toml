@@ -18,6 +18,7 @@ yazi-shared  = { path = "../yazi-shared", version = "25.4.8" }
 anyhow    = { workspace = true }
 bitflags  = { workspace = true }
 crossterm = { workspace = true }
+dirs      = { workspace = true }
 globset   = { workspace = true }
 indexmap  = { workspace = true }
 ratatui   = { workspace = true }

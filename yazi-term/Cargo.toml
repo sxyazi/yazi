@@ -1,0 +1,16 @@
+[package]
+name         = "yazi-term"
+version      = "25.4.8"
+edition      = "2024"
+license      = "MIT"
+authors      = [ "sxyazi <sxyazi@gmail.com>" ]
+description  = "Yazi terminal extensions"
+homepage     = "https://yazi-rs.github.io"
+repository   = "https://github.com/sxyazi/yazi"
+rust-version = "1.85.0"
+
+[dependencies]
+yazi-macro   = { path = "../yazi-macro", version = "25.4.8" }
+
+# External dependencies
+crossterm = { workspace = true }
