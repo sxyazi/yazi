@@ -6,7 +6,8 @@ yazi_macro::mod_flat!(layout pattern platform preset priority yazi);
 
 use std::io::{Read, Write};
 
-use yazi_shared::{RoCell, SyncCell, tty::TTY};
+use yazi_shared::{RoCell, SyncCell};
+use yazi_term::tty::TTY;
 
 pub static YAZI: RoCell<yazi::Yazi> = RoCell::new();
 pub static KEYMAP: RoCell<keymap::Keymap> = RoCell::new();

@@ -3,7 +3,8 @@ use std::sync::atomic::{AtomicU8, Ordering};
 use crossterm::{cursor::{MoveTo, SetCursorStyle, Show}, execute, queue, terminal::{BeginSynchronizedUpdate, EndSynchronizedUpdate}};
 use ratatui::{CompletedFrame, backend::{Backend, CrosstermBackend}, buffer::Buffer, layout::Position};
 use yazi_plugin::elements::COLLISION;
-use yazi_shared::{event::NEED_RENDER, tty::TTY};
+use yazi_shared::event::NEED_RENDER;
+use yazi_term::tty::TTY;
 
 use crate::{app::App, lives::Lives, root::Root};
 

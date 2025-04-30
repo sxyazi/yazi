@@ -4,7 +4,8 @@ use crossterm::{execute, terminal::{disable_raw_mode, enable_raw_mode}};
 use scopeguard::defer;
 use tokio::{io::{AsyncReadExt, stdin}, select, sync::mpsc, time};
 use yazi_proxy::{AppProxy, HIDER};
-use yazi_shared::{event::CmdCow, terminal_clear, tty::TTY};
+use yazi_shared::{event::CmdCow, terminal_clear};
+use yazi_term::tty::TTY;
 
 use crate::tasks::Tasks;
 
