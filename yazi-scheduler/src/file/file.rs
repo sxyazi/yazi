@@ -4,10 +4,15 @@ use anyhow::{Result, anyhow};
 use tokio::{fs::{self, DirEntry}, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::YAZI;
-use yazi_fs::{SizeCalculator, cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to, skip_path};
+use yazi_fs::{
+	SizeCalculator, cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to,
+	paths_to_same_file, skip_path,
+};
 use yazi_shared::url::Url;
 
-use super::{FileOp, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpTrash};
+use super::{
+	FileOp, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpRename, FileOpTrash,
+};
 use crate::{LOW, NORMAL, TaskOp, TaskProg};
 
 pub struct File {
@@ -145,6 +150,26 @@ impl File {
 				})
 				.await??;
 				self.prog.send(TaskProg::Adv(task.id, 1, task.length))?;
+			}
+			FileOp::Rename(task) => {
+				if maybe_exists(&task.to).await && !paths_to_same_file(&task.from, &task.to).await {
+					let e = anyhow!("Destination already exists");
+					self.fail(task.id, format!("An error occurred while renaming: {e:?}"))?;
+					return Err(e);
+				}
+
+				if let Err(e) = fs::rename(&task.from, &task.to).await {
+					self.fail(task.id, format!("An error occurred while renaming: {e}"))?;
+					return Err(e.into());
+				}
+
+				if yazi_fs::File::from(task.to).await.is_err() {
+					let e = anyhow!("Failed to retrieve file info");
+					self.fail(task.id, format!("An error occurred while renaming: {e:?}"))?;
+					return Err(e);
+				}
+
+				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 			}
 		}
 		Ok(())
@@ -322,6 +347,14 @@ impl File {
 
 		self.prog.send(TaskProg::New(id, task.length))?;
 		self.queue(FileOp::Trash(task), LOW).await?;
+		self.succ(id)
+	}
+
+	pub async fn rename(&self, task: FileOpRename) -> Result<()> {
+		let id = task.id;
+
+		self.prog.send(TaskProg::New(id, 0))?;
+		self.queue(FileOp::Rename(task), NORMAL).await?;
 		self.succ(id)
 	}
 

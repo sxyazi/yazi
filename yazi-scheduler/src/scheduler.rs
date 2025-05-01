@@ -1,4 +1,4 @@
-use std::{ffi::OsString, future::Future, sync::Arc, time::Duration};
+use std::{ffi::OsString, future::Future, path::Path, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use futures::{FutureExt, future::BoxFuture};
@@ -11,7 +11,7 @@ use yazi_proxy::{MgrProxy, options::{PluginOpt, ProcessExecOpt}};
 use yazi_shared::{Throttle, url::Url};
 
 use super::{Ongoing, TaskProg, TaskStage};
-use crate::{HIGH, LOW, NORMAL, TaskKind, TaskOp, file::{File, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, prework::{Prework, PreworkOpFetch, PreworkOpLoad, PreworkOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}};
+use crate::{file::{File, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpRename, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, prework::{Prework, PreworkOpFetch, PreworkOpLoad, PreworkOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
 
 pub struct Scheduler {
 	pub file:    Arc<File>,
@@ -207,6 +207,18 @@ impl Scheduler {
 		self.send_micro(id, LOW, async move {
 			file.trash(FileOpTrash { id, target: target.clone(), length: 0 }).await
 		})
+	}
+
+	pub fn file_rename_at(&self, root: &Path, old: &Path, new: &Path) {
+		let id = self.ongoing.lock().add(
+			TaskKind::User,
+			format!("Rename at {}: {} -> {} ", root.display(), old.display(), new.display()),
+		);
+
+		let (from, to): (Url, Url) = (root.join(old).into(), root.join(new).into());
+
+		let file = self.file.clone();
+		self.send_micro(id, LOW, async move { file.rename(FileOpRename { id, from, to }).await });
 	}
 
 	pub fn plugin_micro(&self, opt: PluginOpt) {

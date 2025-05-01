@@ -8,7 +8,7 @@ use yazi_fs::{File, FilesOp, maybe_exists, ok_or_not_found, paths_to_same_file, 
 use yazi_proxy::{ConfirmProxy, InputProxy, TabProxy, WATCHER};
 use yazi_shared::{Id, event::CmdCow, url::{Url, UrnBuf}};
 
-use crate::mgr::Mgr;
+use crate::{mgr::Mgr, tasks::Tasks};
 
 struct Opt {
 	hovered: bool,
@@ -30,11 +30,11 @@ impl From<CmdCow> for Opt {
 
 impl Mgr {
 	#[yazi_codegen::command]
-	pub fn rename(&mut self, opt: Opt) {
+	pub fn rename(&mut self, opt: Opt, tasks: &Tasks) {
 		if !self.active_mut().try_escape_visual() {
 			return;
 		} else if !opt.hovered && !self.active().selected.is_empty() {
-			return self.bulk_rename();
+			return self.bulk_rename(tasks.scheduler.clone());
 		}
 
 		let Some(hovered) = self.hovered() else { return };

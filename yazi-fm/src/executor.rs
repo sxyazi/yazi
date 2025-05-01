@@ -115,7 +115,7 @@ impl<'a> Executor<'a> {
 		on!(MGR, remove, &self.app.cx.tasks);
 		on!(MGR, remove_do, &self.app.cx.tasks);
 		on!(MGR, create);
-		on!(MGR, rename);
+		on!(MGR, rename, &self.app.cx.tasks);
 		on!(ACTIVE, copy);
 		on!(ACTIVE, shell);
 		on!(ACTIVE, hidden);
