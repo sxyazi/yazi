@@ -210,12 +210,31 @@ impl Scheduler {
 	}
 
 	pub fn file_rename_at(&self, root: &Path, old: &Path, new: &Path) {
-		let id = self.ongoing.lock().add(
+		let mut ongoing = self.ongoing.lock();
+		let id = ongoing.add(
 			TaskKind::User,
 			format!("Rename at {}: {} -> {} ", root.display(), old.display(), new.display()),
 		);
 
 		let (from, to): (Url, Url) = (root.join(old).into(), root.join(new).into());
+
+		ongoing.hooks.insert(id, {
+			let from = from.clone();
+			let to = to.clone();
+			let ongoing = self.ongoing.clone();
+
+			Box::new(move |canceled: bool| {
+				async move {
+					if !canceled {
+						if let Ok(to) = yazi_fs::File::from(to).await {
+							Pump::push_bulk_rename_pair(from, to);
+						}
+					}
+					ongoing.lock().try_remove(id, TaskStage::Hooked);
+				}
+				.boxed()
+			})
+		});
 
 		let file = self.file.clone();
 		self.send_micro(id, LOW, async move { file.rename(FileOpRename { id, from, to }).await });
