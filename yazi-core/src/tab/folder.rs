@@ -70,7 +70,8 @@ impl Folder {
 			FilesOp::Creating(_, files) => self.files.update_creating(files),
 			FilesOp::Deleting(_, urns) => {
 				let deleted = self.files.update_deleting(urns);
-				self.cursor -= deleted.into_iter().filter(|&i| i < self.cursor).count();
+				let delta = deleted.into_iter().filter(|&i| i < self.cursor).count() as isize;
+				self.arrow(-delta);
 			}
 			FilesOp::Updating(_, files) => _ = self.files.update_updating(files),
 			FilesOp::Upserting(_, files) => self.files.update_upserting(files),
