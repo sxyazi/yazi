@@ -11,7 +11,7 @@ use super::{TASKS_BORDER, TASKS_PADDING, TASKS_PERCENT, TasksProgress};
 
 pub struct Tasks {
 	pub scheduler: Arc<Scheduler>,
-	handle:               JoinHandle<()>,
+	handle:        JoinHandle<()>,
 
 	pub visible:   bool,
 	pub cursor:    usize,

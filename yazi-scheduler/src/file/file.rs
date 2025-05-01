@@ -4,15 +4,10 @@ use anyhow::{Result, anyhow};
 use tokio::{fs::{self, DirEntry}, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::YAZI;
-use yazi_fs::{
-	SizeCalculator, cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to,
-	paths_to_same_file, skip_path,
-};
+use yazi_fs::{SizeCalculator, cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to, paths_to_same_file, skip_path};
 use yazi_shared::url::Url;
 
-use super::{
-	FileOp, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpRename, FileOpTrash,
-};
+use super::{FileOp, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpRename, FileOpTrash};
 use crate::{LOW, NORMAL, TaskOp, TaskProg};
 
 pub struct File {

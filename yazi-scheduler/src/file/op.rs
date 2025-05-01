@@ -110,7 +110,7 @@ pub struct FileOpTrash {
 // --- Rename
 #[derive(Clone, Debug)]
 pub struct FileOpRename {
-	pub id: usize,
+	pub id:   usize,
 	pub from: Url,
-	pub to: Url,
+	pub to:   Url,
 }

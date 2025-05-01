@@ -1,17 +1,8 @@
-use std::{
-	borrow::Cow,
-	collections::HashMap,
-	ffi::{OsStr, OsString},
-	path::PathBuf,
-	sync::Arc,
-};
+use std::{borrow::Cow, collections::HashMap, ffi::{OsStr, OsString}, path::PathBuf, sync::Arc};
 
 use anyhow::Result;
 use scopeguard::defer;
-use tokio::{
-	fs::{self, OpenOptions},
-	io::AsyncWriteExt,
-};
+use tokio::{fs::{self, OpenOptions}, io::AsyncWriteExt};
 use yazi_config::{YAZI, popup::ConfirmCfg};
 use yazi_fs::max_common_root;
 use yazi_proxy::{AppProxy, ConfirmProxy, TasksProxy};
@@ -43,11 +34,10 @@ impl Mgr {
 				.await?;
 
 			defer! { tokio::spawn(fs::remove_file(tmp.clone())); }
-			TasksProxy::process_exec(
-				Cow::Borrowed(opener),
-				cwd,
-				vec![OsString::new(), tmp.to_owned().into()],
-			)
+			TasksProxy::process_exec(Cow::Borrowed(opener), cwd, vec![
+				OsString::new(),
+				tmp.to_owned().into(),
+			])
 			.await;
 
 			let new: Vec<_> =

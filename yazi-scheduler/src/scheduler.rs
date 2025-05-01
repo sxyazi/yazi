@@ -11,7 +11,7 @@ use yazi_proxy::{MgrProxy, options::{PluginOpt, ProcessExecOpt}};
 use yazi_shared::{Throttle, url::Url};
 
 use super::{Ongoing, TaskProg, TaskStage};
-use crate::{file::{File, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpRename, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, prework::{Prework, PreworkOpFetch, PreworkOpLoad, PreworkOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}, TaskKind, TaskOp, HIGH, LOW, NORMAL};
+use crate::{HIGH, LOW, NORMAL, TaskKind, TaskOp, file::{File, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpRename, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, prework::{Prework, PreworkOpFetch, PreworkOpLoad, PreworkOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}};
 
 pub struct Scheduler {
 	pub file:    Arc<File>,
