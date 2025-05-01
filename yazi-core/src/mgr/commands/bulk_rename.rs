@@ -52,13 +52,15 @@ impl Mgr {
 	}
 
 	async fn bulk_rename_do(root: PathBuf, old: Vec<PathBuf>, new: Vec<PathBuf>) -> Result<()> {
-		terminal_clear(TTY.writer())?;
 		if old.len() != new.len() {
-			#[rustfmt::skip]
-			let s = format!("Number of new and old file names mismatch (New: {}, Old: {}).\nPress <Enter> to exit...", new.len(), old.len());
-			execute!(TTY.writer(), Print(s))?;
-
-			TTY.reader().read_exact(&mut [0])?;
+			AppProxy::notify_error(
+				"Bulk rename",
+				format!(
+					"Number of new and old file names mismatch (New: {}, Old: {})",
+					new.len(),
+					old.len()
+				),
+			);
 			return Ok(());
 		}
 
