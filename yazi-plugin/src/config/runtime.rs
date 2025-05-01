@@ -78,7 +78,6 @@ impl Runtime {
 				b"image_delay" => lua.to_value_with(&p.image_delay, OPTS)?,
 				b"image_filter" => lua.to_value_with(&p.image_filter, OPTS)?,
 				b"image_quality" => lua.to_value_with(&p.image_quality, OPTS)?,
-				b"sixel_fraction" => lua.to_value_with(&p.sixel_fraction, OPTS)?,
 
 				b"ueberzug_scale" => lua.to_value_with(&p.ueberzug_scale, OPTS)?,
 				b"ueberzug_offset" => lua.to_value_with(&p.ueberzug_offset, OPTS)?,

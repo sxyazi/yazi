@@ -1,7 +1,7 @@
 use std::mem;
 
 use ansi_to_tui::IntoText;
-use mlua::{ExternalError, ExternalResult, IntoLua, Lua, MetaMethod, ObjectLike, Table, UserData, Value};
+use mlua::{ExternalError, ExternalResult, IntoLua, Lua, MetaMethod, Table, UserData, Value};
 use ratatui::widgets::Widget;
 
 use super::{Area, Line, Span};

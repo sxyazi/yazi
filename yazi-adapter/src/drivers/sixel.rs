@@ -1,11 +1,11 @@
 use std::{io::Write, path::Path};
 
 use anyhow::{Result, bail};
-use color_quant::NeuQuant;
 use crossterm::{cursor::MoveTo, queue};
-use image::DynamicImage;
+use image::{DynamicImage, GenericImageView, RgbImage};
+use palette::{Srgb, cast::ComponentsAs};
+use quantette::{ColorSlice, PaletteSize, QuantizeOutput, wu::UIntBinner};
 use ratatui::layout::Rect;
-use yazi_config::YAZI;
 
 use crate::{CLOSE, ESCAPE, Emulator, Image, START, adapter::Adapter};
 
@@ -42,22 +42,25 @@ impl Sixel {
 			bail!("image is empty");
 		}
 
-		tokio::task::spawn_blocking(move || {
-			let img = img.into_rgba8();
-			let nq = NeuQuant::new(YAZI.preview.sixel_fraction as i32, 256 - alpha as usize, &img);
+		let (qo, img) = tokio::task::spawn_blocking(move || match &img {
+			DynamicImage::ImageRgb8(rgb) => Self::quantify(rgb, false).map(|q| (q, img)),
+			_ => Self::quantify(&img.to_rgb8(), alpha).map(|q| (q, img)),
+		})
+		.await??;
 
-			let mut buf: Vec<u8> = Vec::with_capacity(1 << 16);
+		tokio::task::spawn_blocking(move || {
+			let mut buf = vec![];
 			write!(buf, "{START}P0;1;8q\"1;1;{};{}", img.width(), img.height())?;
 
 			// Palette
-			for (i, c) in nq.color_map_rgba().chunks(4).enumerate() {
+			for (i, c) in qo.palette.iter().enumerate() {
 				write!(
 					buf,
 					"#{};2;{};{};{}",
 					i + alpha as usize,
-					c[0] as u16 * 100 / 255,
-					c[1] as u16 * 100 / 255,
-					c[2] as u16 * 100 / 255
+					c.red as u16 * 100 / 255,
+					c.green as u16 * 100 / 255,
+					c.blue as u16 * 100 / 255
 				)?;
 			}
 
@@ -67,8 +70,11 @@ impl Sixel {
 				let mut last = 0;
 				let mut repeat = 0usize;
 				for x in 0..img.width() {
-					let pixel = img.get_pixel(x, y).0;
-					let idx = if pixel[3] == 0 { 0 } else { nq.index_of(&pixel) as u8 + alpha as u8 };
+					let idx = if img.get_pixel(x, y)[3] == 0 {
+						0
+					} else {
+						qo.indices[y as usize * img.width() as usize + x as usize] + alpha as u8
+					};
 
 					if idx == last || repeat == 0 {
 						(last, repeat) = (idx, repeat + 1);
@@ -100,5 +106,16 @@ impl Sixel {
 			Ok(buf)
 		})
 		.await?
+	}
+
+	fn quantify(rgb: &RgbImage, alpha: bool) -> Result<QuantizeOutput<Srgb<u8>>> {
+		let buf = &rgb.as_raw()[..(rgb.pixels().len() * 3)];
+		let slice: ColorSlice<Srgb<u8>> = buf.components_as().try_into()?;
+
+		Ok(quantette::wu::indexed_palette(
+			&slice,
+			PaletteSize::try_from(256u16 - alpha as u16)?,
+			&UIntBinner::<32>,
+		))
 	}
 }
