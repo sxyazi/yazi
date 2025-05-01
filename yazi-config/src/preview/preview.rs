@@ -20,10 +20,9 @@ pub struct Preview {
 
 	pub cache_dir: PathBuf,
 
-	pub image_delay:    u8,
-	pub image_filter:   String,
-	pub image_quality:  u8,
-	pub sixel_fraction: u8,
+	pub image_delay:   u8,
+	pub image_filter:  String,
+	pub image_quality: u8,
 
 	pub ueberzug_scale:  f32,
 	pub ueberzug_offset: (f32, f32, f32, f32),
@@ -50,8 +49,6 @@ impl Preview {
 			bail!("[preview].image_delay must be between 0 and 100.");
 		} else if self.image_quality < 50 || self.image_quality > 90 {
 			bail!("[preview].image_quality must be between 50 and 90.");
-		} else if self.sixel_fraction < 10 || self.sixel_fraction > 30 {
-			bail!("[preview].sixel_fraction must be between 10 and 30.");
 		}
 
 		self.cache_dir = if self.cache_dir.as_os_str().is_empty() {
