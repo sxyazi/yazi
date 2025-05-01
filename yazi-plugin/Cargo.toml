@@ -43,6 +43,7 @@ tokio-util    = { workspace = true }
 tracing       = { workspace = true }
 twox-hash     = { workspace = true }
 unicode-width = { workspace = true }
+serde        = { workspace = true }
 yazi-prebuilt = "0.1.0"
 
 [target."cfg(unix)".dependencies]
