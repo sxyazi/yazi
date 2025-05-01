@@ -3486,6 +3486,7 @@ dependencies = [
  "parking_lot",
  "paste",
  "ratatui",
+ "serde",
  "serde_json",
  "syntect",
  "tokio",
