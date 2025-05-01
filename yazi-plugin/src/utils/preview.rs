@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, Function, IntoLuaMulti, Lua, Table, Value};
+use mlua::{AnyUserData, ExternalError, Function, IntoLuaMulti, Lua, Table, Value};
 use yazi_config::{YAZI, preview::PreviewWrap};
 use yazi_macro::emit;
 use yazi_shared::{errors::PeekError, event::Cmd};
@@ -44,7 +44,7 @@ impl Utils {
 				Ok(text) => text,
 				Err(e @ PeekError::Exceed(max)) => return (e.to_string(), max).into_lua_multi(&lua),
 				Err(e @ PeekError::Unexpected(_)) => {
-					return (e.to_string(), Value::Nil).into_lua_multi(&lua);
+					return e.to_string().into_lua_multi(&lua);
 				}
 			};
 
@@ -56,14 +56,22 @@ impl Utils {
 			})];
 
 			emit!(Call(Cmd::new("mgr:update_peeked").with_any("lock", lock)));
-			(Value::Nil, Value::Nil).into_lua_multi(&lua)
+			().into_lua_multi(&lua)
 		})
 	}
 
-	pub(super) fn preview_widgets(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_async_function(|_, (t, widgets): (Table, Vec<AnyUserData>)| async move {
+	pub(super) fn preview_widget(lua: &Lua) -> mlua::Result<Function> {
+		lua.create_async_function(|_, (t, value): (Table, Value)| async move {
 			let mut lock = PreviewLock::try_from(t)?;
-			lock.data = widgets.into_iter().map(Renderable::try_from).collect::<mlua::Result<_>>()?;
+			lock.data = match value {
+				Value::Nil => vec![],
+				Value::Table(tbl) => tbl
+					.sequence_values::<AnyUserData>()
+					.map(|ud| ud.and_then(Renderable::try_from))
+					.collect::<mlua::Result<_>>()?,
+				Value::UserData(ud) => vec![Renderable::try_from(ud)?],
+				_ => Err("preview widget must be a renderable element or a table of them".into_lua_err())?,
+			};
 
 			emit!(Call(Cmd::new("mgr:update_peeked").with_any("lock", lock)));
 			Ok(())

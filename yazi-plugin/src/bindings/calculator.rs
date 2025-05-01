@@ -7,7 +7,7 @@ impl UserData for SizeCalculator {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_async_method_mut("recv", |lua, mut me, ()| async move {
 			match me.0.next().await {
-				Ok(value) => (value, Value::Nil).into_lua_multi(&lua),
+				Ok(value) => value.into_lua_multi(&lua),
 				Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 			}
 		});

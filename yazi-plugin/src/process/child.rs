@@ -139,7 +139,7 @@ impl UserData for Child {
 				return Err("stdin is not piped".into_lua_err());
 			};
 			match stdin.write_all(&src.as_bytes()).await {
-				Ok(()) => (true, Value::Nil).into_lua_multi(&lua),
+				Ok(()) => true.into_lua_multi(&lua),
 				Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
 			}
 		});
@@ -148,32 +148,32 @@ impl UserData for Child {
 				return Err("stdin is not piped".into_lua_err());
 			};
 			match stdin.flush().await {
-				Ok(()) => (true, Value::Nil).into_lua_multi(&lua),
+				Ok(()) => true.into_lua_multi(&lua),
 				Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
 			}
 		});
 
 		methods.add_async_method_mut("wait", |lua, mut me, ()| async move {
 			match me.wait().await {
-				Ok(status) => (Status::new(status), Value::Nil).into_lua_multi(&lua),
+				Ok(status) => Status::new(status).into_lua_multi(&lua),
 				Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 			}
 		});
 		methods.add_async_function("wait_with_output", |lua, ud: AnyUserData| async move {
 			match ud.take::<Self>()?.wait_with_output().await {
-				Ok(output) => (Output::new(output), Value::Nil).into_lua_multi(&lua),
+				Ok(output) => Output::new(output).into_lua_multi(&lua),
 				Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 			}
 		});
 		methods.add_async_method_mut("try_wait", |lua, mut me, ()| async move {
 			match me.inner.try_wait() {
-				Ok(Some(status)) => (Status::new(status), Value::Nil).into_lua_multi(&lua),
-				Ok(None) => (Value::Nil, Value::Nil).into_lua_multi(&lua),
+				Ok(Some(status)) => Status::new(status).into_lua_multi(&lua),
+				Ok(None) => Value::Nil.into_lua_multi(&lua),
 				Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 			}
 		});
 		methods.add_method_mut("start_kill", |lua, me, ()| match me.inner.start_kill() {
-			Ok(_) => (true, Value::Nil).into_lua_multi(lua),
+			Ok(_) => true.into_lua_multi(lua),
 			Err(e) => (false, Error::Io(e)).into_lua_multi(lua),
 		});
 

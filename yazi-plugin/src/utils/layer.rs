@@ -59,10 +59,9 @@ impl Utils {
 			if debounce < 0.0 {
 				Err("negative debounce duration".into_lua_err())
 			} else if debounce == 0.0 {
-				(InputRx::new(rx), Value::Nil).into_lua_multi(&lua)
+				InputRx::new(rx).into_lua_multi(&lua)
 			} else {
-				(InputRx::new(Debounce::new(rx, Duration::from_secs_f64(debounce))), Value::Nil)
-					.into_lua_multi(&lua)
+				InputRx::new(Debounce::new(rx, Duration::from_secs_f64(debounce))).into_lua_multi(&lua)
 			}
 		})
 	}

@@ -11,7 +11,7 @@ function M:peek(job)
 		text = ui.Text(string.format("Failed to start `%s`, error: %s", cmd, err))
 	end
 
-	ya.preview_widgets(job, { text:area(job.area):wrap(ui.Text.WRAP) })
+	ya.preview_widget(job, text:area(job.area):wrap(ui.Text.WRAP))
 end
 
 function M:seek() end

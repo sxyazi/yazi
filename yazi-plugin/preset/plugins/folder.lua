@@ -16,9 +16,7 @@ function M:peek(job)
 	if #folder.files == 0 then
 		local done, err = folder.stage()
 		local s = not done and "Loading..." or not err and "No items" or string.format("Error: %s", err)
-		return ya.preview_widgets(job, {
-			ui.Text(s):area(job.area):align(ui.Text.CENTER),
-		})
+		return ya.preview_widget(job, ui.Text(s):area(job.area):align(ui.Text.CENTER))
 	end
 
 	local entities = {}
@@ -26,7 +24,7 @@ function M:peek(job)
 		entities[#entities + 1] = Entity:new(f):redraw()
 	end
 
-	ya.preview_widgets(job, {
+	ya.preview_widget(job, {
 		ui.List(entities):area(job.area),
 		table.unpack(Marker:new(job.area, folder):redraw()),
 	})

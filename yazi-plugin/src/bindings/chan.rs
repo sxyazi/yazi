@@ -8,7 +8,7 @@ impl UserData for MpscTx {
 	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_async_method("send", |lua, me, value: Value| async move {
 			match me.0.send(value).await {
-				Ok(()) => (true, Value::Nil).into_lua_multi(&lua),
+				Ok(()) => true.into_lua_multi(&lua),
 				Err(e) => (false, Error::Custom(e.to_string())).into_lua_multi(&lua),
 			}
 		});
@@ -32,7 +32,7 @@ pub struct MpscUnboundedRx(pub tokio::sync::mpsc::UnboundedReceiver<Value>);
 impl UserData for MpscUnboundedTx {
 	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_method("send", |lua, me, value: Value| match me.0.send(value) {
-			Ok(()) => (true, Value::Nil).into_lua_multi(lua),
+			Ok(()) => true.into_lua_multi(lua),
 			Err(e) => (false, Error::Custom(e.to_string())).into_lua_multi(lua),
 		});
 	}
@@ -59,7 +59,7 @@ impl UserData for OneshotTx {
 				return Err("Oneshot sender already used".into_lua_err());
 			};
 			match tx.send(value) {
-				Ok(()) => (true, Value::Nil).into_lua_multi(lua),
+				Ok(()) => true.into_lua_multi(lua),
 				Err(_) => (false, Error::Custom("Oneshot receiver closed".to_string())).into_lua_multi(lua),
 			}
 		});
@@ -73,7 +73,7 @@ impl UserData for OneshotRx {
 				return Err("Oneshot receiver already used".into_lua_err());
 			};
 			match rx.await {
-				Ok(value) => (value, Value::Nil).into_lua_multi(&lua),
+				Ok(value) => value.into_lua_multi(&lua),
 				Err(e) => (Value::Nil, Error::Custom(e.to_string())).into_lua_multi(&lua),
 			}
 		});
