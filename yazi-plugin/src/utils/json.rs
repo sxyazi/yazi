@@ -1,8 +1,11 @@
 use mlua::{
-	Function, IntoLuaMulti, Lua, LuaSerdeExt, MetaMethod, UserData, UserDataMethods, Value,
+	Error as MluaError, Function, IntoLuaMulti, Lua, LuaSerdeExt, MetaMethod, UserData,
+	UserDataFields, UserDataMethods, Value,
 };
 
 use serde::Serialize;
+use serde::Serializer;
+use serde::ser::Error as SerdeError;
 use serde_json::value::Value as JsonValue;
 
 use std::cell::{Ref, RefCell, RefMut};
@@ -28,7 +31,7 @@ struct OrderedTable {
 impl Serialize for OrderedTable {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
-		S: serde::Serializer,
+		S: Serializer,
 	{
 		use OrderedTableIndex::*;
 		let current = self.data.borrow();
@@ -37,14 +40,13 @@ impl Serialize for OrderedTable {
 		for index in &self.path {
 			match index {
 				Key(key) => {
-					value = value
-						.get(key)
-						.ok_or_else(|| serde::ser::Error::custom(format!("Key '{}' not found", key)))?;
+					value =
+						value.get(key).ok_or_else(|| SerdeError::custom(format!("Key '{}' not found", key)))?;
 				}
 				Index(i) => {
 					value = value
 						.get(*i)
-						.ok_or_else(|| serde::ser::Error::custom(format!("Index {} out of bounds", i)))?;
+						.ok_or_else(|| SerdeError::custom(format!("Index {} out of bounds", i)))?;
 				}
 			}
 		}
@@ -106,7 +108,7 @@ impl OrderedTable {
 }
 
 impl UserData for OrderedTable {
-	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
+	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_meta_field("__ordered", true);
 	}
 
@@ -137,7 +139,7 @@ impl UserData for OrderedTable {
 
 		methods.add_meta_method_mut(MetaMethod::Pairs, |lua, this: &mut OrderedTable, ()| {
 			let curr =
-				this.get_current_mut().ok_or_else(|| mlua::Error::RuntimeError("invalid path".into()))?;
+				this.get_current_mut().ok_or_else(|| MluaError::RuntimeError("invalid path".into()))?;
 
 			let keys = match &*curr {
 				JsonValue::Object(obj) => {
@@ -188,28 +190,28 @@ impl UserData for OrderedTable {
 		methods.add_meta_method_mut(
 			MetaMethod::NewIndex,
 			|_, this: &mut OrderedTable, (key, value): (Value, Value)| {
-				let value = serde_json::to_value(value).map_err(mlua::Error::external)?;
+				let value = serde_json::to_value(value).map_err(MluaError::external)?;
 				let mut curr =
-					this.get_current_mut().ok_or_else(|| mlua::Error::RuntimeError("invalid path".into()))?;
+					this.get_current_mut().ok_or_else(|| MluaError::RuntimeError("invalid path".into()))?;
 
 				match &mut *curr {
 					JsonValue::Object(obj) => {
 						let k = key
 							.as_str()
-							.ok_or_else(|| mlua::Error::RuntimeError("object key must be string".into()))?;
+							.ok_or_else(|| MluaError::RuntimeError("object key must be string".into()))?;
 						obj.insert(k.to_string(), value);
 					}
 					JsonValue::Array(arr) => {
 						let i = key
 							.as_integer()
-							.ok_or_else(|| mlua::Error::RuntimeError("array index must be integer".into()))?;
+							.ok_or_else(|| MluaError::RuntimeError("array index must be integer".into()))?;
 						let idx = (i - 1) as usize;
 						if idx < arr.len() {
 							arr[idx] = value;
 						}
 					}
 					_ => {
-						return Err(mlua::Error::RuntimeError("not an object or array".into()));
+						return Err(MluaError::RuntimeError("not an object or array".into()));
 					}
 				}
 
@@ -226,7 +228,7 @@ impl Utils {
 				Value::UserData(ud) => {
 					let table = ud
 						.borrow::<OrderedTable>()
-						.map_err(|_| mlua::Error::RuntimeError("Unknown userdata type".into()))?;
+						.map_err(|_| MluaError::RuntimeError("Unknown userdata type".into()))?;
 					serde_json::to_string(&*table).map_err(Error::Serde)
 				}
 				_ => serde_json::to_string(&value).map_err(Error::Serde),
