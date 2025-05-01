@@ -176,18 +176,18 @@ impl UserData for Command {
 			Ok(ud)
 		});
 		methods.add_method_mut("spawn", |lua, me, ()| match me.spawn() {
-			Ok(child) => (child, Value::Nil).into_lua_multi(lua),
+			Ok(child) => child.into_lua_multi(lua),
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(lua),
 		});
 		methods.add_async_method_mut("output", |lua, mut me, ()| async move {
 			match me.output().await {
-				Ok(output) => (Output::new(output), Value::Nil).into_lua_multi(&lua),
+				Ok(output) => Output::new(output).into_lua_multi(&lua),
 				Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 			}
 		});
 		methods.add_async_method_mut("status", |lua, mut me, ()| async move {
 			match me.status().await {
-				Ok(status) => (Status::new(status), Value::Nil).into_lua_multi(&lua),
+				Ok(status) => Status::new(status).into_lua_multi(&lua),
 				Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 			}
 		});

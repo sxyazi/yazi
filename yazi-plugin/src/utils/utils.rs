@@ -44,7 +44,8 @@ pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Value> {
 
 			// Preview
 			b"preview_code" => Utils::preview_code(lua)?,
-			b"preview_widgets" => Utils::preview_widgets(lua)?,
+			b"preview_widget" => Utils::preview_widget(lua)?,
+			b"preview_widgets" => Utils::preview_widget(lua)?, // TODO: remove this in the future
 
 			// Process
 			b"proc_info" => Utils::proc_info(lua)?,

@@ -37,7 +37,7 @@ fn op(lua: &Lua) -> mlua::Result<Function> {
 
 fn cwd(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_function(|lua, ()| match std::env::current_dir() {
-		Ok(p) => (Url::new(p), Value::Nil).into_lua_multi(lua),
+		Ok(p) => Url::new(p).into_lua_multi(lua),
 		Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(lua),
 	})
 }
@@ -51,7 +51,7 @@ fn cha(lua: &Lua) -> mlua::Result<Function> {
 		};
 
 		match meta {
-			Ok(m) => (Cha::from(m), Value::Nil).into_lua_multi(&lua),
+			Ok(m) => Cha::from(m).into_lua_multi(&lua),
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
@@ -60,7 +60,7 @@ fn cha(lua: &Lua) -> mlua::Result<Function> {
 fn write(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (url, data): (UrlRef, mlua::String)| async move {
 		match fs::write(&*url, data.as_bytes()).await {
-			Ok(()) => (true, Value::Nil).into_lua_multi(&lua),
+			Ok(()) => true.into_lua_multi(&lua),
 			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
@@ -75,7 +75,7 @@ fn create(lua: &Lua) -> mlua::Result<Function> {
 		};
 
 		match result {
-			Ok(()) => (true, Value::Nil).into_lua_multi(&lua),
+			Ok(()) => true.into_lua_multi(&lua),
 			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
@@ -92,7 +92,7 @@ fn remove(lua: &Lua) -> mlua::Result<Function> {
 		};
 
 		match result {
-			Ok(()) => (true, Value::Nil).into_lua_multi(&lua),
+			Ok(()) => true.into_lua_multi(&lua),
 			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
@@ -150,7 +150,7 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 			tbl.raw_push(f)?;
 		}
 
-		(tbl, Value::Nil).into_lua_multi(&lua)
+		tbl.into_lua_multi(&lua)
 	})
 }
 
@@ -177,7 +177,7 @@ fn expand_url(lua: &Lua) -> mlua::Result<Function> {
 fn unique_name(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, url: UrlRef| async move {
 		match yazi_fs::unique_name(url.clone(), async { false }).await {
-			Ok(u) => (Url::new(u), Value::Nil).into_lua_multi(&lua),
+			Ok(u) => Url::new(u).into_lua_multi(&lua),
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
