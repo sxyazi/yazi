@@ -79,12 +79,11 @@ impl App {
 
 	fn routine(push: bool, cursor: Option<(Position, SetCursorStyle)>) {
 		static COUNT: AtomicU8 = AtomicU8::new(0);
-		if push && COUNT.fetch_add(1, Ordering::Relaxed) != 0 {
-			return;
-		} else if !push && COUNT.fetch_sub(1, Ordering::Relaxed) != 1 {
+		if (push && COUNT.fetch_add(1, Ordering::Relaxed) != 0)
+			|| (!push && COUNT.fetch_sub(1, Ordering::Relaxed) != 1)
+		{
 			return;
 		}
-
 		_ = if push {
 			queue!(TTY.writer(), BeginSynchronizedUpdate)
 		} else if let Some((Position { x, y }, shape)) = cursor {

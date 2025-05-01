@@ -44,8 +44,6 @@ impl Mgr {
 			.await;
 
 			let _permit = HIDER.acquire().await.unwrap();
-			defer!(AppProxy::resume());
-			AppProxy::stop().await;
 
 			let new: Vec<_> =
 				fs::read_to_string(&tmp).await?.lines().take(old.len()).map(PathBuf::from).collect();
@@ -70,18 +68,7 @@ impl Mgr {
 			return Ok(());
 		}
 
-		{
-			let mut w = TTY.lockout();
-			for (old, new) in &todo {
-				writeln!(w, "{} -> {}", old.display(), new.display())?;
-			}
-			write!(w, "Continue to rename? (y/N): ")?;
-			w.flush()?;
-		}
-
-		let mut buf = [0; 10];
-		_ = TTY.reader().read(&mut buf)?;
-		if buf[0] != b'y' && buf[0] != b'Y' {
+		if !ConfirmProxy::show(ConfirmCfg::bulk_rename(&todo)).await {
 			return Ok(());
 		}
 

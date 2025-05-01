@@ -26,6 +26,10 @@ pub struct Confirm {
 	pub quit_content: String,
 	pub quit_origin:  Origin,
 	pub quit_offset:  Offset,
+	// bulk rename
+	pub bulk_rename_title: String,
+	pub bulk_rename_origin: Origin,
+	pub bulk_rename_offset: Offset,
 }
 
 impl Confirm {
