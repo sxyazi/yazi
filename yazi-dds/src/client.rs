@@ -100,28 +100,25 @@ impl Client {
 			);
 		}
 
-		if receiver == 0 {
-			// check if any peer is able to receive the message
-			let any_able =
-				peers.keys().any(|peer| Self::receiver_able(kind, peer, &peers).is_ok()).then_some(());
-			if any_able.is_none() {
-				bail!("No peer is able to receive `{kind}` messages.");
+		match (receiver, peers.get(&receiver).map(|p| p.able(kind))) {
+			// Send to all receivers
+			(Id(0), _) if peers.is_empty() => {
+				bail!("No receiver found. Check if any receivers are running.")
 			}
-		} else {
-			Self::receiver_able(kind, &receiver, &peers)?;
+			(Id(0), _) if peers.values().all(|p| !p.able(kind)) => {
+				bail!("No receiver has the ability to receive `{kind}` messages.")
+			}
+			(Id(0), _) => {}
+
+			// Send to a specific receiver
+			(_, Some(true)) => {}
+			(_, Some(false)) => {
+				bail!("Receiver `{receiver}` does not have the ability to receive `{kind}` messages.")
+			}
+			(_, None) => bail!("Receiver `{receiver}` not found. Check if the receiver is running."),
 		}
 
 		Ok(())
-	}
-
-	fn receiver_able(kind: &str, receiver: &Id, peers: &HashMap<Id, Peer>) -> Result<()> {
-		match peers.get(receiver).map(|p| p.able(kind)) {
-			Some(true) => Ok(()),
-			Some(false) => {
-				bail!("Receiver `{receiver}` does not have the ability to receive `{kind}` messages.")
-			}
-			None => bail!("Receiver `{receiver}` not found. Check if the receiver is running."),
-		}
 	}
 
 	/// Connect to an existing server and listen in on the messages that are being
