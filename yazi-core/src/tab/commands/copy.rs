@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ffi::{OsStr, OsString}, path::Path};
+use std::{borrow::Cow, ffi::{OsStr, OsString}, path::Path, iter::once};
 
 use yazi_plugin::CLIPBOARD;
 use yazi_shared::event::CmdCow;
@@ -8,6 +8,7 @@ use crate::tab::Tab;
 struct Opt {
 	type_:     Cow<'static, str>,
 	separator: Separator,
+	hovered:   bool,
 }
 
 impl From<CmdCow> for Opt {
@@ -15,6 +16,7 @@ impl From<CmdCow> for Opt {
 		Self {
 			type_:     c.take_first_str().unwrap_or_default(),
 			separator: c.str("separator").unwrap_or_default().into(),
+			hovered:   c.bool("hovered"),
 		}
 	}
 }
@@ -27,7 +29,8 @@ impl Tab {
 		}
 
 		let mut s = OsString::new();
-		let mut it = self.selected_or_hovered().peekable();
+		let Some(hovered) = self.hovered() else { if opt.hovered { return } };
+		let mut it = (if opt.hovered { once(hovered) } else { self.selected_or_hovered() }).peekable();
 		while let Some(u) = it.next() {
 			s.push(match opt.type_.as_ref() {
 				"path" => opt.separator.transform(u),
