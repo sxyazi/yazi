@@ -31,8 +31,8 @@ impl Tab {
 		let mut s = OsString::new();
 		let mut it = self.selected_or_hovered().peekable();
 		if opt.hovered {
-			if let Some(hovered) = self.hovered() {
-				it = Box::new(hovered.map(|h| vec![&h.url]).into_iter());
+			if let Some(h) = self.hovered() {
+				it = Box::new([&h.url, &h.url].into_iter());
 			} else { return };
 		}
 		while let Some(u) = it.next() {
