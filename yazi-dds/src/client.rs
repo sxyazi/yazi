@@ -100,12 +100,22 @@ impl Client {
 			);
 		}
 
-		match peers.get(&receiver).map(|p| p.able(kind)) {
-			Some(true) => {}
-			Some(false) => {
+		match (receiver, peers.get(&receiver).map(|p| p.able(kind))) {
+			// Send to all receivers
+			(Id(0), _) if peers.is_empty() => {
+				bail!("No receiver found. Check if any receivers are running.")
+			}
+			(Id(0), _) if peers.values().all(|p| !p.able(kind)) => {
+				bail!("No receiver has the ability to receive `{kind}` messages.")
+			}
+			(Id(0), _) => {}
+
+			// Send to a specific receiver
+			(_, Some(true)) => {}
+			(_, Some(false)) => {
 				bail!("Receiver `{receiver}` does not have the ability to receive `{kind}` messages.")
 			}
-			None => bail!("Receiver `{receiver}` not found. Check if the receiver is running."),
+			(_, None) => bail!("Receiver `{receiver}` not found. Check if the receiver is running."),
 		}
 
 		Ok(())
