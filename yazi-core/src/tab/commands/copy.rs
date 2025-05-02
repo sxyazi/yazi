@@ -32,7 +32,7 @@ impl Tab {
 		let mut it = self.selected_or_hovered().peekable();
 		if opt.hovered {
 			if let Some(h) = self.hovered() {
-				it = Box::new([&h.url, &h.url].into_iter()).peekable();
+				it = Box::new([&h.url, &h.url].into_iter()).peekable() as Box<dyn Iterator<Item = &Url> + '_>;
 			} else { return };
 		}
 		while let Some(u) = it.next() {
