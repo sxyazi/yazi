@@ -29,8 +29,12 @@ impl Tab {
 		}
 
 		let mut s = OsString::new();
-		let Some(hovered) = self.hovered() else { if opt.hovered { return } };
-		let mut it = (if opt.hovered { once(hovered) } else { self.selected_or_hovered() }).peekable();
+		let mut it = self.selected_or_hovered().peekable();
+		if opt.hovered {
+			if let Some(hovered) = self.hovered {
+				it = once(hovered).peekable();
+			} else { return };
+		}
 		while let Some(u) = it.next() {
 			s.push(match opt.type_.as_ref() {
 				"path" => opt.separator.transform(u),
