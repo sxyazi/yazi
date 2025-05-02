@@ -1,7 +1,7 @@
 use std::{borrow::Cow, ffi::{OsStr, OsString}, path::Path};
 
 use yazi_plugin::CLIPBOARD;
-use yazi_shared::{event::CmdCow, url::Url};
+use yazi_shared::event::CmdCow;
 
 use crate::tab::Tab;
 
@@ -29,12 +29,13 @@ impl Tab {
 		}
 
 		let mut s = OsString::new();
-		let mut it = self.selected_or_hovered().peekable();
-		if opt.hovered {
-			if let Some(h) = self.hovered() {
-				it = (Box::new(vec![&h.url].into_iter()) as Box<dyn Iterator<Item = &Url> + '_>).peekable();
-			} else { return };
+		let mut it = if opt.hovered {
+			Box::new(self.hovered().map(|h| &h.url).into_iter())
+		} else {
+			self.selected_or_hovered()
 		}
+		.peekable();
+
 		while let Some(u) = it.next() {
 			s.push(match opt.type_.as_ref() {
 				"path" => opt.separator.transform(u),
