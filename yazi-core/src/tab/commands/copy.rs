@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ffi::{OsStr, OsString}, path::Path, iter::once};
+use std::{borrow::Cow, ffi::{OsStr, OsString}, path::Path};
 
 use yazi_plugin::CLIPBOARD;
 use yazi_shared::event::CmdCow;
@@ -32,7 +32,7 @@ impl Tab {
 		let mut it = self.selected_or_hovered().peekable();
 		if opt.hovered {
 			if let Some(hovered) = self.hovered() {
-				it = once(hovered).peekable();
+				it = Box::new(hovered.map(|h| vec![&h.url]).into_iter());
 			} else { return };
 		}
 		while let Some(u) = it.next() {
