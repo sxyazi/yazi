@@ -31,7 +31,7 @@ impl Tab {
 		let mut s = OsString::new();
 		let mut it = self.selected_or_hovered().peekable();
 		if opt.hovered {
-			if let Some(hovered) = self.hovered {
+			if let Some(hovered) = self.hovered() {
 				it = once(hovered).peekable();
 			} else { return };
 		}
