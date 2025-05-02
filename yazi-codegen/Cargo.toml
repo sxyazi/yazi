@@ -4,7 +4,7 @@ version     = "25.4.8"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
-description = "Yazi codegen"
+description = "Yazi code generator"
 homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 

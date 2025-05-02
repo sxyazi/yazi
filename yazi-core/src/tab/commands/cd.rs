@@ -68,7 +68,7 @@ impl Tab {
 
 		// Backstack
 		if opt.target.is_regular() {
-			self.backstack.push(opt.target.clone());
+			self.backstack.push(&opt.target);
 		}
 
 		Pubsub::pub_from_cd(self.id, self.cwd());
