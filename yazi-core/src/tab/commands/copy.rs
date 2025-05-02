@@ -1,7 +1,7 @@
 use std::{borrow::Cow, ffi::{OsStr, OsString}, path::Path};
 
 use yazi_plugin::CLIPBOARD;
-use yazi_shared::event::CmdCow;
+use yazi_shared::{event::CmdCow, url::Url};
 
 use crate::tab::Tab;
 
