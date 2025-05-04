@@ -8,13 +8,13 @@ local state = ya.sync(function()
 	return cx.active.current.cwd, selected
 end)
 
-function M:entry()
+function M:entry(job)
 	ya.emit("escape", { visual = true })
 
 	local _permit = ya.hide()
 	local cwd, selected = state()
 
-	local output, err = M.run_with(cwd, selected)
+	local output, err = M.run_with(cwd, selected, job)
 	if not output then
 		return ya.notify { title = "Fzf", content = tostring(err), timeout = 5, level = "error" }
 	end
@@ -29,9 +29,15 @@ function M:entry()
 	end
 end
 
-function M.run_with(cwd, selected)
+function M.run_with(cwd, selected, job)
+	local args = {"-m"}
+
+	if job.args.walker then
+		table.insert(args, "--walker="..job.args.walker)
+	end
+
 	local child, err = Command("fzf")
-		:arg("-m")
+		:args(args)
 		:cwd(tostring(cwd))
 		:stdin(#selected > 0 and Command.PIPED or Command.INHERIT)
 		:stdout(Command.PIPED)
