@@ -1,5 +1,6 @@
 use std::{mem, time::Duration};
 
+use serde::Deserialize;
 use tokio::{fs, pin};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
@@ -13,12 +14,14 @@ use crate::tab::Tab;
 
 struct Opt {
 	target:      Url,
+	source:      OptSource,
 	interactive: bool,
 }
 
 impl From<CmdCow> for Opt {
 	fn from(mut c: CmdCow) -> Self {
 		Self {
+			source: OptSource::Cd,
 			interactive: c.bool("interactive"),
 			..Self::from(c.take_first_url().unwrap_or_default())
 		}
@@ -26,11 +29,15 @@ impl From<CmdCow> for Opt {
 }
 
 impl From<Url> for Opt {
-	fn from(mut target: Url) -> Self {
+	fn from(target: Url) -> Self { Self::from((target, OptSource::Cd)) }
+}
+
+impl From<(Url, OptSource)> for Opt {
+	fn from((mut target, source): (Url, OptSource)) -> Self {
 		if target.is_regular() {
 			target = Url::from(expand_path(&target));
 		}
-		Self { target, interactive: false }
+		Self { target, source, interactive: false }
 	}
 }
 
@@ -67,7 +74,7 @@ impl Tab {
 		}
 
 		// Backstack
-		if opt.target.is_regular() {
+		if opt.source.big_jump() && opt.target.is_regular() {
 			self.backstack.push(&opt.target);
 		}
 
@@ -107,4 +114,20 @@ impl Tab {
 			}
 		});
 	}
+}
+
+// --- OptSource
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum OptSource {
+	Cd,
+	Enter,
+	Leave,
+	Forward,
+	Back,
+	Reveal,
+}
+
+impl OptSource {
+	#[inline]
+	fn big_jump(self) -> bool { self != Self::Enter && self != Self::Leave }
 }
