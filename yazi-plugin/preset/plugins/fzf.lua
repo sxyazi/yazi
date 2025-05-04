@@ -30,10 +30,10 @@ function M:entry(job)
 end
 
 function M.run_with(cwd, selected, job)
-	local args = {"-m"}
+	local args = { "-m" }
 
 	if job.args.walker then
-		table.insert(args, "--walker="..job.args.walker)
+		table.insert(args, "--walker=" .. job.args.walker)
 	end
 
 	local child, err = Command("fzf")
