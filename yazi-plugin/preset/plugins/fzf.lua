@@ -32,8 +32,13 @@ end
 function M.run_with(cwd, selected, job)
 	local args = { "-m" }
 
-	if job.args.walker then
-		table.insert(args, "--walker=" .. job.args.walker)
+	for cmd, option in pairs(job.args) do
+		local c = cmd:gsub("_", "-")
+		if type(option) == "boolean" then
+			table.insert(args, "--" .. c)
+		else
+			table.insert(args, "--" .. c .. "=" .. option)
+		end
 	end
 
 	local child, err = Command("fzf")
