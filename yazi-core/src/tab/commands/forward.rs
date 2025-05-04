@@ -4,6 +4,11 @@ use crate::tab::Tab;
 
 impl Tab {
 	pub fn forward(&mut self, _: CmdCow) {
-		self.backstack.shift_forward().cloned().map(|u| self.cd(u));
+		if self.current.url.is_regular() {
+			self.backstack.push(&self.current.url);
+		}
+		if let Some(u) = self.backstack.shift_forward().cloned() {
+			self.cd((u, super::cd::OptSource::Forward));
+		}
 	}
 }

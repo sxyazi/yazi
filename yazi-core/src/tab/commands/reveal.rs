@@ -30,7 +30,7 @@ impl Tab {
 			return;
 		};
 
-		self.cd(parent.clone());
+		self.cd((parent.clone(), super::cd::OptSource::Reveal));
 		self.current.hover(child.as_urn());
 
 		if !opt.no_dummy && self.hovered().is_none_or(|f| &child != f.urn()) {
