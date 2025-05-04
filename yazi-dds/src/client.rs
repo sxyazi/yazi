@@ -144,11 +144,10 @@ impl Client {
 					}
 				}
 				None => loop {
+					time::sleep(time::Duration::from_secs(1)).await;
 					if let Ok(new) = make(&kinds).await {
 						lines = new;
 						break;
-					} else {
-						time::sleep(time::Duration::from_secs(1)).await;
 					}
 				},
 			}

@@ -72,6 +72,8 @@ impl Tab {
 		}
 
 		Pubsub::pub_from_cd(self.id, self.cwd());
+		self.hover(None);
+
 		MgrProxy::refresh();
 		render!();
 	}
