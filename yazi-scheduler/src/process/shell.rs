@@ -38,7 +38,7 @@ pub fn shell(opt: ShellOpt) -> Result<Child> {
 			.current_dir(opt.cwd)
 			.kill_on_drop(!opt.orphan)
 			.pre_exec(move || {
-				if opt.orphan && libc::setpgid(0, 0) < 0 {
+				if (opt.piped || opt.orphan) && libc::setsid() < 0 {
 					return Err(std::io::Error::last_os_error());
 				}
 				Ok(())
