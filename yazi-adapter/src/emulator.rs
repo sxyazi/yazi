@@ -88,7 +88,7 @@ impl Emulator {
 	{
 		use std::{io::Write, thread, time::Duration};
 
-		use crossterm::{cursor::{Hide, MoveTo, RestorePosition, SavePosition, Show}, queue};
+		use crossterm::{cursor::{Hide, MoveTo, Show}, queue};
 
 		let mut w = TTY.lockout();
 
