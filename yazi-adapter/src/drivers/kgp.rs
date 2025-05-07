@@ -379,14 +379,14 @@ impl Kgp {
 
 	fn place(area: &Rect) -> Result<Vec<u8>> {
 		let mut buf = Vec::with_capacity(area.width as usize * area.height as usize * 3 + 50);
+		write!(buf, "\x1b[38;2;0;0;1m")?;
 		for y in 0..area.height {
-			write!(buf, "\x1b[{};{}H\x1b[38;5;1m", area.y + y + 1, area.x + 1)?;
+			write!(buf, "\x1b[{};{}H", area.y + y + 1, area.x + 1)?;
 			for x in 0..area.width {
 				write!(buf, "\u{10EEEE}")?;
 				write!(buf, "{}", *DIACRITICS.get(y as usize).unwrap_or(&DIACRITICS[0]))?;
 				write!(buf, "{}", *DIACRITICS.get(x as usize).unwrap_or(&DIACRITICS[0]))?;
 			}
-			write!(buf, "\x1b[0m")?;
 		}
 		Ok(buf)
 	}

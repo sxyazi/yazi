@@ -28,12 +28,8 @@ impl Tab {
 
 		// Visual selection
 		if let Some((start, items)) = self.mode.visual_mut() {
-			let after = self.current.cursor;
-
-			items.clear();
-			for i in start.min(after)..=after.max(start) {
-				items.insert(i);
-			}
+			let end = self.current.cursor;
+			*items = (start.min(end)..=end.max(start)).collect();
 		}
 
 		self.hover(None);

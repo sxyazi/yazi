@@ -32,12 +32,12 @@ impl Term {
 
 		execute!(
 			TTY.writer(),
-			yazi_term::If(TMUX.get(), EnterAlternateScreen),
+			yazi_term::If(!TMUX.get(), EnterAlternateScreen),
 			Print("\x1bP$q q\x1b\\"), // Request cursor shape (DECRQSS query for DECSCUSR)
 			Print(Mux::csi("\x1b[?12$p")), // Request cursor blink status (DECSET)
 			Print("\x1b[?u"),         // Request keyboard enhancement flags (CSI u)
 			Print(Mux::csi("\x1b[0c")), // Request device attributes
-			yazi_term::If(!TMUX.get(), EnterAlternateScreen),
+			yazi_term::If(TMUX.get(), EnterAlternateScreen),
 			EnableBracketedPaste,
 			yazi_term::If(!YAZI.mgr.mouse_events.is_empty(), EnableMouseCapture),
 		)?;
