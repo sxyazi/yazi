@@ -8,6 +8,7 @@ pub enum FileOp {
 	Hardlink(FileOpHardlink),
 	Delete(FileOpDelete),
 	Trash(FileOpTrash),
+	Rename(FileOpRename),
 }
 
 impl FileOp {
@@ -18,6 +19,7 @@ impl FileOp {
 			Self::Hardlink(op) => op.id,
 			Self::Delete(op) => op.id,
 			Self::Trash(op) => op.id,
+			Self::Rename(op) => op.id,
 		}
 	}
 }
@@ -104,4 +106,11 @@ pub struct FileOpTrash {
 	pub id:     usize,
 	pub target: Url,
 	pub length: u64,
+}
+// --- Rename
+#[derive(Clone, Debug)]
+pub struct FileOpRename {
+	pub id:   usize,
+	pub from: Url,
+	pub to:   Url,
 }

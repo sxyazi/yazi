@@ -22,10 +22,14 @@ pub struct Confirm {
 	pub overwrite_offset:  Offset,
 
 	// quit
-	pub quit_title:   String,
-	pub quit_content: String,
-	pub quit_origin:  Origin,
-	pub quit_offset:  Offset,
+	pub quit_title:         String,
+	pub quit_content:       String,
+	pub quit_origin:        Origin,
+	pub quit_offset:        Offset,
+	// bulk rename
+	pub bulk_rename_title:  String,
+	pub bulk_rename_origin: Origin,
+	pub bulk_rename_offset: Offset,
 }
 
 impl Confirm {
