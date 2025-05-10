@@ -1,7 +1,7 @@
 use std::mem;
 
 use ansi_to_tui::IntoText;
-use mlua::{ExternalError, ExternalResult, IntoLua, Lua, MetaMethod, Table, UserData, Value};
+use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, MetaMethod, Table, UserData, Value};
 use ratatui::widgets::Widget;
 
 use super::{Area, Line, Span};
@@ -74,7 +74,7 @@ impl TryFrom<Value> for Text {
 			Value::Table(tb) => return Self::try_from(tb),
 			Value::String(s) => s.to_string_lossy().into(),
 			Value::UserData(ud) => {
-				if let Ok(Line(line)) = ud.take() {
+				if let Ok(Line { inner: line, .. }) = ud.take() {
 					line.into()
 				} else if let Ok(Span(span)) = ud.take() {
 					span.into()
@@ -101,7 +101,7 @@ impl TryFrom<Table> for Text {
 				Value::UserData(ud) => {
 					if let Ok(Span(span)) = ud.take() {
 						lines.push(span.into());
-					} else if let Ok(Line(line)) = ud.take() {
+					} else if let Ok(Line { inner: line, .. }) = ud.take() {
 						lines.push(line);
 					} else {
 						return Err(EXPECTED.into_lua_err());

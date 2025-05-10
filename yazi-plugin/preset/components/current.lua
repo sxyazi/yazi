@@ -20,7 +20,7 @@ function Current:empty()
 	end
 
 	return {
-		ui.Text(s):area(self._area):align(ui.Text.CENTER),
+		ui.Line(s):area(self._area):align(ui.Line.CENTER),
 	}
 end
 

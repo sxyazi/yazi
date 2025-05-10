@@ -26,14 +26,14 @@ Before you begin, ensure you have met the following requirements:
 1. Fork the [Yazi repository](https://github.com/sxyazi/yazi) to your GitHub account.
 2. Clone your fork to your local machine:
 
-	```sh
-	git clone https://github.com/<your-username>/yazi.git
-	```
+   ```sh
+   git clone https://github.com/<your-username>/yazi.git
+   ```
 
 3. Set up the upstream remote:
-	```sh
-	git remote add upstream https://github.com/sxyazi/yazi.git
-	```
+   ```sh
+   git remote add upstream https://github.com/sxyazi/yazi.git
+   ```
 
 ## Project Structure
 
@@ -72,29 +72,29 @@ A brief overview of the project's structure:
 
 1. Ensure the latest stable Rust is installed:
 
-	```sh
-	rustc --version
-	cargo --version
-	```
+   ```sh
+   rustc --version
+   cargo --version
+   ```
 
 2. Build the project:
 
-	```sh
-	cargo build
-	```
+   ```sh
+   cargo build
+   ```
 
 3. Run the tests:
 
-	```sh
-	cargo test --workspace --verbose
-	```
+   ```sh
+   cargo test --workspace --verbose
+   ```
 
 4. Format the code (requires `rustfmt` nightly):
 
-	```sh
-	rustup component add rustfmt --toolchain nightly
-	rustfmt +nightly **/*.rs
-	```
+   ```sh
+   rustup component add rustfmt --toolchain nightly
+   rustfmt +nightly **/*.rs
+   ```
 
 ## How to Contribute
 
@@ -120,22 +120,22 @@ Contributions related to the icon should be made upstream to facilitate easier a
 
 1. Create a new branch for your changes:
 
-	```sh
-	git checkout -b your-branch-name
-	```
+   ```sh
+   git checkout -b your-branch-name
+   ```
 
 2. Make your changes. Ensure that your code follows the project's [coding style](https://github.com/sxyazi/yazi/blob/main/rustfmt.toml) and passes all tests.
 3. Commit your changes with a descriptive commit message:
 
-	```sh
-	git commit -m "feat: an awesome feature"
-	```
+   ```sh
+   git commit -m "feat: an awesome feature"
+   ```
 
 4. Push your changes to your fork:
 
-	```sh
-	git push origin your-branch-name
-	```
+   ```sh
+   git push origin your-branch-name
+   ```
 
 ## Pull Requests
 
@@ -147,20 +147,20 @@ We want you to succeed, and it can be discouraging to find that a lot of re-work
 
 1. Ensure your fork is up-to-date with the upstream repository:
 
-	```sh
-	git fetch upstream
-	git checkout main
-	git merge upstream/main
-	```
+   ```sh
+   git fetch upstream
+   git checkout main
+   git merge upstream/main
+   ```
 
 2. Rebase your feature branch onto the `main` branch:
 
-	```sh
-	git checkout your-branch-name
-	git rebase main
-	```
+   ```sh
+   git checkout your-branch-name
+   git rebase main
+   ```
 
 3. Create a pull request to the `main` branch of the upstream repository. Follow the pull request template and ensure that:
-	- Your code passes all tests and lints.
-	- Your pull request description clearly explains the changes and why they are needed.
+   - Your code passes all tests and lints.
+   - Your pull request description clearly explains the changes and why they are needed.
 4. Address any review comments. Make sure to push updates to the same branch on your fork.

@@ -104,8 +104,8 @@ function Header:redraw()
 	local left = self:children_redraw(self.LEFT)
 
 	return {
-		ui.Text(left):area(self._area),
-		ui.Text(right):area(self._area):align(ui.Text.RIGHT),
+		ui.Line(left):area(self._area),
+		ui.Line(right):area(self._area):align(ui.Line.RIGHT),
 	}
 end
 

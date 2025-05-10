@@ -1,4 +1,4 @@
-use mlua::{Lua, MetaMethod, Table, UserData, Value};
+use mlua::{AnyUserData, Lua, MetaMethod, Table, UserData, Value};
 use ratatui::widgets::{Borders, Widget};
 
 use super::Area;
@@ -99,7 +99,7 @@ impl UserData for Border {
 					ratatui::widgets::block::Position::Top
 				};
 
-				ud.borrow_mut::<Self>()?.titles.push((position, Line::try_from(line)?.0));
+				ud.borrow_mut::<Self>()?.titles.push((position, Line::try_from(line)?.inner));
 				Ok(ud)
 			},
 		);
