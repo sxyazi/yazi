@@ -11,16 +11,18 @@ macro_rules! impl_style_method {
 #[macro_export]
 macro_rules! impl_area_method {
 	($methods:ident) => {
-		use mlua::{AnyUserData, IntoLua};
-
-		$methods.add_function_mut("area", |lua, (ud, area): (AnyUserData, Option<AnyUserData>)| {
-			if let Some(v) = area {
-				ud.borrow_mut::<Self>()?.area = $crate::elements::Area::try_from(v)?;
-				ud.into_lua(lua)
-			} else {
-				ud.borrow::<Self>()?.area.into_lua(lua)
-			}
-		});
+		$methods.add_function_mut(
+			"area",
+			|lua, (ud, area): (mlua::AnyUserData, Option<mlua::AnyUserData>)| {
+				use mlua::IntoLua;
+				if let Some(v) = area {
+					ud.borrow_mut::<Self>()?.area = $crate::elements::Area::try_from(v)?;
+					ud.into_lua(lua)
+				} else {
+					ud.borrow::<Self>()?.area.into_lua(lua)
+				}
+			},
+		);
 	};
 }
 

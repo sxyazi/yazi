@@ -140,8 +140,8 @@ function Status:redraw()
 
 	return {
 		ui.Text(""):area(self._area):style(th.status.overall),
-		ui.Text(left):area(self._area),
-		ui.Text(right):area(self._area):align(ui.Text.RIGHT),
+		ui.Line(left):area(self._area),
+		ui.Line(right):area(self._area):align(ui.Line.RIGHT),
 		table.unpack(ya.redraw_with(Progress:new(self._area, right_width))),
 	}
 end

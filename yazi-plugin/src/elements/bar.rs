@@ -1,4 +1,4 @@
-use mlua::{Lua, MetaMethod, Table, UserData};
+use mlua::{AnyUserData, Lua, MetaMethod, Table, UserData};
 use ratatui::widgets::Borders;
 
 use super::Area;

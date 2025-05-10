@@ -1,9 +1,10 @@
 use mlua::{AnyUserData, ExternalError};
 
-use super::{Bar, Border, Clear, Gauge, List, Table, Text};
+use super::{Bar, Border, Clear, Gauge, Line, List, Table, Text};
 
 #[derive(Clone, Debug)]
 pub enum Renderable {
+	Line(Line),
 	Text(Text),
 	List(List),
 	Bar(Bar),
@@ -20,6 +21,7 @@ impl Renderable {
 		trans: impl Fn(yazi_config::popup::Position) -> ratatui::layout::Rect,
 	) {
 		match self {
+			Self::Line(line) => line.render(buf, trans),
 			Self::Text(text) => text.render(buf, trans),
 			Self::List(list) => list.render(buf, trans),
 			Self::Bar(bar) => bar.render(buf, trans),
@@ -35,7 +37,9 @@ impl TryFrom<AnyUserData> for Renderable {
 	type Error = mlua::Error;
 
 	fn try_from(ud: AnyUserData) -> Result<Self, Self::Error> {
-		Ok(if let Ok(c) = ud.take::<crate::elements::Text>() {
+		Ok(if let Ok(c) = ud.take::<crate::elements::Line>() {
+			Self::Line(c)
+		} else if let Ok(c) = ud.take::<crate::elements::Text>() {
 			Self::Text(c)
 		} else if let Ok(c) = ud.take::<crate::elements::List>() {
 			Self::List(c)
