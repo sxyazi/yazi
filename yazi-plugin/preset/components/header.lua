@@ -9,7 +9,6 @@ Header = {
 	},
 	_right = {
 		{ "count", id = 1, order = 1000 },
-		{ "tabs", id = 2, order = 2000 },
 	},
 }
 
@@ -72,27 +71,6 @@ function Header:count()
 		ui.Span(string.format(" %d ", count)):style(style),
 		" ",
 	}
-end
-
-function Header:tabs()
-	local tabs = #cx.tabs
-	if tabs == 1 then
-		return ""
-	end
-
-	local spans = {}
-	for i = 1, tabs do
-		local text = i
-		if th.mgr.tab_width > 2 then
-			text = ya.truncate(text .. " " .. cx.tabs[i].name, { max = th.mgr.tab_width })
-		end
-		if i == cx.tabs.idx then
-			spans[#spans + 1] = ui.Span(" " .. text .. " "):style(th.mgr.tab_active)
-		else
-			spans[#spans + 1] = ui.Span(" " .. text .. " "):style(th.mgr.tab_inactive)
-		end
-	end
-	return ui.Line(spans)
 end
 
 function Header:reflow() return { self } end

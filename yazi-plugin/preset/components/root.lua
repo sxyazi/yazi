@@ -15,6 +15,7 @@ function Root:layout()
 		:direction(ui.Layout.VERTICAL)
 		:constraints({
 			ui.Constraint.Length(1),
+			ui.Constraint.Length(#cx.tabs > 1 and 1 or 0),
 			ui.Constraint.Fill(1),
 			ui.Constraint.Length(1),
 		})
@@ -24,8 +25,9 @@ end
 function Root:build()
 	self._children = {
 		Header:new(self._chunks[1], cx.active),
-		Tab:new(self._chunks[2], cx.active),
-		Status:new(self._chunks[3], cx.active),
+		Tabs:new(self._chunks[2]),
+		Tab:new(self._chunks[3], cx.active),
+		Status:new(self._chunks[4], cx.active),
 		Modal:new(self._area),
 	}
 end

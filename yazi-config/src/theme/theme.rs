@@ -13,6 +13,7 @@ pub struct Theme {
 	pub flavor:  Flavor,
 	#[serde(rename = "manager")]
 	pub mgr:     Mgr, // TODO: Remove `serde(rename)`
+	pub tabs:    Tabs,
 	pub mode:    Mode,
 	pub status:  Status,
 	pub which:   Which,
@@ -53,11 +54,6 @@ pub struct Mgr {
 	marker_marked:   Style,
 	marker_selected: Style,
 
-	// Tab
-	tab_active:   Style,
-	tab_inactive: Style,
-	tab_width:    u8,
-
 	// Count
 	count_copied:   Style,
 	count_cut:      Style,
@@ -69,6 +65,21 @@ pub struct Mgr {
 
 	// Highlighting
 	pub syntect_theme: PathBuf,
+}
+
+#[derive(Deserialize, DeserializeOver2, Serialize)]
+pub struct Tabs {
+	pub active:   Style,
+	pub inactive: Style,
+
+	pub sep_inner: TabsSep,
+	pub sep_outer: TabsSep,
+}
+
+#[derive(Deserialize, DeserializeOver2, Serialize)]
+pub struct TabsSep {
+	pub open:  String,
+	pub close: String,
 }
 
 #[derive(Deserialize, DeserializeOver2, Serialize)]
@@ -197,9 +208,7 @@ pub struct Help {
 
 impl Theme {
 	pub(crate) fn reshape(mut self, light: bool) -> Result<Self> {
-		if self.mgr.tab_width < 1 {
-			bail!("[mgr].tab_width must be greater than 0");
-		} else if self.which.cols < 1 || self.which.cols > 3 {
+		if self.which.cols < 1 || self.which.cols > 3 {
 			bail!("[which].cols must be between 1 and 3");
 		}
 

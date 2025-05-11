@@ -11,6 +11,7 @@ impl Theme {
 		Composer::make(lua, 15, |lua, key| {
 			match key {
 				b"mgr" => lua.to_value_with(&THEME.mgr, OPTS)?,
+				b"tabs" => lua.to_value_with(&THEME.tabs, OPTS)?,
 				b"mode" => lua.to_value_with(&THEME.mode, OPTS)?,
 				b"status" => lua.to_value_with(&THEME.status, OPTS)?,
 				b"which" => lua.to_value_with(&THEME.which, OPTS)?,
