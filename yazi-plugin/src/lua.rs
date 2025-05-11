@@ -52,6 +52,7 @@ fn stage_1(lua: &'static Lua) -> Result<()> {
 	lua.load(preset!("components/root")).set_name("root.lua").exec()?;
 	lua.load(preset!("components/status")).set_name("status.lua").exec()?;
 	lua.load(preset!("components/tab")).set_name("tab.lua").exec()?;
+	lua.load(preset!("components/tabs")).set_name("tabs.lua").exec()?;
 
 	Ok(())
 }
