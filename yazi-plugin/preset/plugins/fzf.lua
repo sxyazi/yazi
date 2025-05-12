@@ -8,11 +8,9 @@ local state = ya.sync(function()
 	return cx.active.current.cwd, selected
 end)
 
-function M:setup(tbl)
-	tbl = tbl or {}
-	if tbl.opts then
-		self.opts = table.concat(tbl.opts, " ")
-	end
+function M:setup(opts)
+	opts = opts or {}
+	self.args = opts.args
 end
 
 function M:entry()
@@ -37,17 +35,14 @@ function M:entry()
 end
 
 function M:run_with(cwd, selected)
-	local cmd = Command("fzf")
+	local child, err = Command("fzf")
 		:arg("-m")
+		:args(self.args or {})
 		:cwd(tostring(cwd))
 		:stdin(#selected > 0 and Command.PIPED or Command.INHERIT)
 		:stdout(Command.PIPED)
+		:spawn()
 
-	if self.opts then
-		cmd:env("FZF_DEFAULT_OPTS", self.opts)
-	end
-
-	local child, err = cmd:spawn()
 	if not child then
 		return nil, Err("Failed to start `fzf`, error: %s", err)
 	end
