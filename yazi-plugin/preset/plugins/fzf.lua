@@ -8,13 +8,20 @@ local state = ya.sync(function()
 	return cx.active.current.cwd, selected
 end)
 
-function M:entry(job)
+function M:setup(tbl)
+	tbl = tbl or {}
+	if tbl.opts then
+		self.opts = table.concat(tbl.opts, " ")
+	end
+end
+
+function M:entry()
 	ya.emit("escape", { visual = true })
 
 	local _permit = ya.hide()
 	local cwd, selected = state()
 
-	local output, err = M.run_with(cwd, selected, job)
+	local output, err = self:run_with(cwd, selected)
 	if not output then
 		return ya.notify { title = "Fzf", content = tostring(err), timeout = 5, level = "error" }
 	end
@@ -29,25 +36,18 @@ function M:entry(job)
 	end
 end
 
-function M.run_with(cwd, selected, job)
-	local args = { "-m" }
-
-	for cmd, option in pairs(job.args) do
-		local c = cmd:gsub("_", "-")
-		if type(option) == "boolean" then
-			table.insert(args, "--" .. c)
-		else
-			table.insert(args, "--" .. c .. "=" .. option)
-		end
-	end
-
-	local child, err = Command("fzf")
-		:args(args)
+function M:run_with(cwd, selected)
+	local cmd = Command("fzf")
+		:arg("-m")
 		:cwd(tostring(cwd))
 		:stdin(#selected > 0 and Command.PIPED or Command.INHERIT)
 		:stdout(Command.PIPED)
-		:spawn()
 
+	if self.opts then
+		cmd:env("FZF_DEFAULT_OPTS", self.opts)
+	end
+
+	local child, err = cmd:spawn()
 	if not child then
 		return nil, Err("Failed to start `fzf`, error: %s", err)
 	end
