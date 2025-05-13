@@ -33,7 +33,7 @@ function M:preload(job)
 
 	-- stylua: ignore
 	local output, err = Command("pdftoppm")
-		:args({
+		:arg({
 			"-f", job.skip + 1,
 			"-l", job.skip + 1,
 			"-singlefile",

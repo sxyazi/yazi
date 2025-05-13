@@ -27,7 +27,7 @@ function M:preload(job)
 		return true
 	end
 
-	local status, err = Command("magick"):args({
+	local status, err = Command("magick"):arg({
 		"-size",
 		"800x560",
 		"-gravity",

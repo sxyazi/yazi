@@ -2,7 +2,7 @@ local M = {}
 
 function M:peek(job)
 	local cmd = os.getenv("YAZI_FILE_ONE") or "file"
-	local output, err = Command(cmd):args({ "-bL", "--", tostring(job.file.url) }):stdout(Command.PIPED):output()
+	local output, err = Command(cmd):arg({ "-bL", "--", tostring(job.file.url) }):stdout(Command.PIPED):output()
 
 	local text
 	if output then

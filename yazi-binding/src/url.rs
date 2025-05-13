@@ -138,7 +138,7 @@ impl UserData for Url {
 			lua.create_string(me.as_os_str().as_encoded_bytes())
 		});
 		methods.add_meta_method(MetaMethod::Concat, |lua, lhs, rhs: mlua::String| {
-			lua.create_string([lhs.as_os_str().as_encoded_bytes(), rhs.as_bytes().as_ref()].concat())
+			lua.create_string([lhs.as_os_str().as_encoded_bytes(), &rhs.as_bytes()].concat())
 		});
 	}
 }

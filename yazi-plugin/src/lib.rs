@@ -1,4 +1,4 @@
-#![allow(clippy::unit_arg)]
+#![allow(clippy::if_same_then_else, clippy::unit_arg)]
 
 mod macros;
 

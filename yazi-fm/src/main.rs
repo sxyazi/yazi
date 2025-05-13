@@ -1,4 +1,4 @@
-#![allow(clippy::module_inception, clippy::unit_arg)]
+#![allow(clippy::if_same_then_else, clippy::module_inception, clippy::unit_arg)]
 
 #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
 #[global_allocator]

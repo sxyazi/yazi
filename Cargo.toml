@@ -34,7 +34,6 @@ globset             = "0.4.16"
 indexmap            = { version = "2.9.0", features = [ "serde" ] }
 libc                = "0.2.172"
 lru                 = "0.14.0"
-md-5                = "0.10.6"
 mlua                = { version = "0.10.3", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serialize" ] }
 objc                = "0.2.7"
 parking_lot         = "0.12.3"

@@ -49,7 +49,7 @@ local function options()
 end
 
 local function empty(cwd)
-	local child = Command("zoxide"):args({ "query", "-l", "--exclude" }):arg(cwd):stdout(Command.PIPED):spawn()
+	local child = Command("zoxide"):arg({ "query", "-l", "--exclude", cwd }):stdout(Command.PIPED):spawn()
 	if not child then
 		return true
 	end
@@ -89,8 +89,7 @@ local function entry()
 
 	local _permit = ya.hide()
 	local child, err1 = Command("zoxide")
-		:args({ "query", "-i", "--exclude" })
-		:arg(st.cwd)
+		:arg({ "query", "-i", "--exclude", st.cwd })
 		:env("SHELL", "sh")
 		:env("CLICOLOR", 1)
 		:env("CLICOLOR_FORCE", 1)
