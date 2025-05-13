@@ -17,13 +17,13 @@ function Parent:redraw()
 		return {}
 	end
 
-	local entities = {}
+	local items = {}
 	for _, f in ipairs(self._folder.window) do
-		entities[#entities + 1] = Entity:new(f):redraw()
+		items[#items + 1] = Entity:new(f):redraw():truncate { max = self._area.w }
 	end
 
 	return {
-		ui.List(entities):area(self._area),
+		ui.List(items):area(self._area),
 	}
 end
 

@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-core"
-version     = "25.4.8"
+version     = "25.5.14"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -9,19 +9,19 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
-yazi-adapter   = { path = "../yazi-adapter", version = "25.4.8" }
-yazi-boot      = { path = "../yazi-boot", version = "25.4.8" }
-yazi-codegen   = { path = "../yazi-codegen", version = "25.4.8" }
-yazi-config    = { path = "../yazi-config", version = "25.4.8" }
-yazi-dds       = { path = "../yazi-dds", version = "25.4.8" }
-yazi-fs        = { path = "../yazi-fs", version = "25.4.8" }
-yazi-macro     = { path = "../yazi-macro", version = "25.4.8" }
-yazi-plugin    = { path = "../yazi-plugin", version = "25.4.8" }
-yazi-proxy     = { path = "../yazi-proxy", version = "25.4.8" }
-yazi-scheduler = { path = "../yazi-scheduler", version = "25.4.8" }
-yazi-shared    = { path = "../yazi-shared", version = "25.4.8" }
-yazi-term      = { path = "../yazi-term", version = "25.4.8" }
-yazi-widgets   = { path = "../yazi-widgets", version = "25.4.8" }
+yazi-adapter   = { path = "../yazi-adapter", version = "25.5.14" }
+yazi-boot      = { path = "../yazi-boot", version = "25.5.14" }
+yazi-codegen   = { path = "../yazi-codegen", version = "25.5.14" }
+yazi-config    = { path = "../yazi-config", version = "25.5.14" }
+yazi-dds       = { path = "../yazi-dds", version = "25.5.14" }
+yazi-fs        = { path = "../yazi-fs", version = "25.5.14" }
+yazi-macro     = { path = "../yazi-macro", version = "25.5.14" }
+yazi-plugin    = { path = "../yazi-plugin", version = "25.5.14" }
+yazi-proxy     = { path = "../yazi-proxy", version = "25.5.14" }
+yazi-scheduler = { path = "../yazi-scheduler", version = "25.5.14" }
+yazi-shared    = { path = "../yazi-shared", version = "25.5.14" }
+yazi-term      = { path = "../yazi-term", version = "25.5.14" }
+yazi-widgets   = { path = "../yazi-widgets", version = "25.5.14" }
 
 # External dependencies
 anyhow        = { workspace = true }

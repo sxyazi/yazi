@@ -26,7 +26,7 @@ function M:preload(job)
 	end
 
 	-- stylua: ignore
-	local cmd = Command("resvg"):args {
+	local cmd = Command("resvg"):arg {
 		"-w", rt.preview.max_width, "-h", rt.preview.max_height,
 		"--image-rendering", "optimizeSpeed",
 		tostring(job.file.url), tostring(cache)

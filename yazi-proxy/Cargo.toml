@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-proxy"
-version     = "25.4.8"
+version     = "25.5.14"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -13,9 +13,9 @@ default      = [ "vendored-lua" ]
 vendored-lua = [ "mlua/vendored" ]
 
 [dependencies]
-yazi-config = { path = "../yazi-config", version = "25.4.8" }
-yazi-macro  = { path = "../yazi-macro", version = "25.4.8" }
-yazi-shared = { path = "../yazi-shared", version = "25.4.8" }
+yazi-config = { path = "../yazi-config", version = "25.5.14" }
+yazi-macro  = { path = "../yazi-macro", version = "25.5.14" }
+yazi-shared = { path = "../yazi-shared", version = "25.5.14" }
 
 # External dependencies
 anyhow = { workspace = true }

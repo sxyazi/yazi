@@ -1,4 +1,4 @@
-use std::mem;
+use std::{borrow::Cow, mem};
 
 use ansi_to_tui::IntoText;
 use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
@@ -130,6 +130,31 @@ impl UserData for Line {
 		});
 		methods.add_method("visible", |_, me, ()| {
 			Ok(me.inner.iter().flat_map(|s| s.content.chars()).any(|c| c.width().unwrap_or(0) > 0))
+		});
+		methods.add_function_mut("truncate", |_, (ud, t): (AnyUserData, Table)| {
+			let mut me = ud.borrow_mut::<Self>()?;
+			let max = t.raw_get("max")?;
+
+			let mut width = 0;
+			'outer: for (x, span) in me.inner.iter_mut().enumerate() {
+				for (y, c) in span.content.char_indices() {
+					width += c.width().unwrap_or(0);
+					if width < max {
+						continue;
+					} else if width == max && span.content[y..].chars().nth(1).is_none() {
+						continue;
+					}
+
+					match &mut span.content {
+						Cow::Borrowed(s) => span.content = Cow::Borrowed(&s[..y]),
+						Cow::Owned(s) => s.truncate(y),
+					}
+					me.inner.spans.truncate(x + 1);
+					me.inner.spans.push(ratatui::text::Span::raw("…"));
+					break 'outer;
+				}
+			}
+			Ok(ud)
 		});
 	}
 }

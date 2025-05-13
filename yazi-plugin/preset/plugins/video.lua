@@ -60,11 +60,11 @@ function M:preload(job)
 	})
 
 	if percent ~= 0 then
-		cmd:args { "-ss", math.floor(meta.format.duration * percent / 100) }
+		cmd:arg { "-ss", math.floor(meta.format.duration * percent / 100) }
 	end
-	cmd:args { "-i", tostring(job.file.url) }
+	cmd:arg { "-i", tostring(job.file.url) }
 	if percent == 0 then
-		cmd:args { "-map", "disp:attached_pic" }
+		cmd:arg { "-map", "disp:attached_pic" }
 	end
 
 	-- stylua: ignore
@@ -126,9 +126,9 @@ function M:spot_base(job)
 end
 
 function M.list_meta(url, entries)
-	local cmd = Command("ffprobe"):args { "-v", "quiet" }
+	local cmd = Command("ffprobe"):arg { "-v", "quiet" }
 	if not entries:find("attached_pic", 1, true) then
-		cmd = cmd:args { "-select_streams", "v" }
+		cmd:arg { "-select_streams", "v" }
 	end
 
 	local output, err = cmd:arg({ "-show_entries", entries, "-of", "json=c=1", tostring(url) }):output()

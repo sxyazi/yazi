@@ -31,7 +31,7 @@ function M:preload(job)
 	end
 
 	-- stylua: ignore
-	local status, err = cmd:args {
+	local status, err = cmd:arg {
 		tostring(job.file.url), "-auto-orient", "-strip",
 		"-sample", string.format("%dx%d>", rt.preview.max_width, rt.preview.max_height),
 		"-quality", rt.preview.image_quality,
@@ -48,7 +48,7 @@ end
 function M:spot(job) require("file"):spot(job) end
 
 function M.with_limit()
-	local cmd = Command("magick"):args { "-limit", "thread", 1 }
+	local cmd = Command("magick"):arg { "-limit", "thread", 1 }
 	if rt.tasks.image_alloc > 0 then
 		cmd:arg { "-limit", "memory", rt.tasks.image_alloc, "-limit", "disk", "1MiB" }
 	end

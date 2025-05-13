@@ -32,15 +32,16 @@ function Current:redraw()
 		return self:empty()
 	end
 
-	local entities, linemodes = {}, {}
+	local left, right = {}, {}
 	for _, f in ipairs(files) do
-		entities[#entities + 1] = Entity:new(f):redraw()
-		linemodes[#linemodes + 1] = Linemode:new(f):redraw()
+		left[#left + 1] = Entity:new(f):redraw()
+		right[#right + 1] = Linemode:new(f):redraw()
+		left[#left]:truncate { max = math.max(0, self._area.w - right[#right]:width()) }
 	end
 
 	return {
-		ui.List(entities):area(self._area),
-		ui.Text(linemodes):area(self._area):align(ui.Text.RIGHT),
+		ui.List(left):area(self._area),
+		ui.Text(right):area(self._area):align(ui.Text.RIGHT),
 	}
 end
 
