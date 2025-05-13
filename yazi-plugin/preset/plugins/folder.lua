@@ -19,13 +19,13 @@ function M:peek(job)
 		return ya.preview_widget(job, ui.Line(s):area(job.area):align(ui.Line.CENTER))
 	end
 
-	local entities = {}
+	local items = {}
 	for _, f in ipairs(folder.window) do
-		entities[#entities + 1] = Entity:new(f):redraw()
+		items[#items + 1] = Entity:new(f):redraw():truncate { max = job.area.w }
 	end
 
 	ya.preview_widget(job, {
-		ui.List(entities):area(job.area),
+		ui.List(items):area(job.area),
 		table.unpack(Marker:new(job.area, folder):redraw()),
 	})
 end
