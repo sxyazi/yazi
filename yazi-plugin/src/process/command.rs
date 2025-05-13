@@ -156,7 +156,7 @@ impl UserData for Command {
 		methods.add_function_mut("args", |lua, (ud, args): (AnyUserData, Vec<mlua::String>)| {
 			crate::deprecate!(
 				lua,
-				"The `args()` method on `Command` is deprecated, use `arg()` instead in your {}\n\nSee #2653 for more details: https://github.com/sxyazi/yazi/pull/2653"
+				"The `args()` method on `Command` is deprecated, use `arg()` instead in your {}\n\nSee #2752 for more details: https://github.com/sxyazi/yazi/pull/2752"
 			);
 
 			{
