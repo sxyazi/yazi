@@ -1,4 +1,3 @@
-use std::ops::ControlFlow;
 use mlua::{Function, Lua, Table};
 use twox_hash::XxHash3_128;
 use unicode_width::UnicodeWidthChar;
@@ -26,32 +25,55 @@ impl Utils {
 	}
 
 	pub(super) fn truncate(lua: &Lua) -> mlua::Result<Function> {
-		fn truncate_impl(mut chars: impl Iterator<Item = char>, max: usize) -> Vec<char> {
+		fn idx_and_width(it: impl Iterator<Item = (usize, char)>, max: usize) -> (usize, usize) {
 			let mut width = 0;
-			let flow = chars.try_fold(Vec::with_capacity(max), |mut v, c| {
+			let idx = it
+				.take_while(|(_, c)| {
 					width += c.width().unwrap_or(0);
-				if width < max {
-					v.push(c);
-					ControlFlow::Continue(v)
-				} else {
-					ControlFlow::Break(v)
+					width <= max
+				})
+				.map(|(i, _)| i)
+				.last()
+				.unwrap();
+			(idx, width)
 		}
-			});
 
-			match flow {
-				ControlFlow::Break(v) => v,
-				ControlFlow::Continue(v) => v,
+		lua.create_function(|lua, (s, t): (mlua::String, Table)| {
+			let b = s.as_bytes();
+			if b.is_empty() {
+				return Ok(s);
 			}
+
+			let max = t.raw_get("max")?;
+			if b.len() <= max {
+				return Ok(s);
+			} else if max < 1 {
+				return lua.create_string("");
 			}
 
-		lua.create_function(|_, (text, t): (mlua::String, Table)| {
-			let (max, text) = (t.raw_get("max")?, text.to_string_lossy());
-
-			Ok(if t.raw_get("rtl").unwrap_or(false) {
-				truncate_impl(text.chars().rev(), max).into_iter().rev().collect()
+			let lossy = String::from_utf8_lossy(&b);
+			let rtl = t.raw_get("rtl").unwrap_or(false);
+			let (idx, width) = if rtl {
+				idx_and_width(lossy.char_indices().rev(), max)
 			} else {
-				truncate_impl(text.chars(), max).into_iter().collect::<String>()
-			})
+				idx_and_width(lossy.char_indices(), max)
+			};
+
+			if width <= max {
+				return Ok(s);
+			} else if rtl && idx == 0 {
+				return Ok(s);
+			} else if !rtl && lossy[idx..].chars().nth(1).is_none() {
+				return Ok(s);
+			}
+
+			let result: Vec<_> = if rtl {
+				let i = lossy[idx..].char_indices().nth(1).map(|(i, _)| idx + i).unwrap_or(lossy.len());
+				"…".bytes().chain(lossy[i..].bytes()).collect()
+			} else {
+				lossy[..idx].bytes().chain("…".bytes()).collect()
+			};
+			lua.create_string(result)
 		})
 	}
 
