@@ -65,7 +65,7 @@ pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Value> {
 			b"target_family" => Utils::target_family(lua)?,
 
 			// Text
-			b"hash" => Utils::hash(lua, false)?,
+			b"hash" => Utils::hash(lua)?,
 			b"quote" => Utils::quote(lua)?,
 			b"truncate" => Utils::truncate(lua)?,
 			b"clipboard" => Utils::clipboard(lua)?,

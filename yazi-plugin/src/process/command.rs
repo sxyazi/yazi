@@ -135,11 +135,30 @@ impl UserData for Command {
 			)
 		}
 
-		methods.add_function_mut("arg", |_, (ud, arg): (AnyUserData, mlua::String)| {
-			ud.borrow_mut::<Self>()?.inner.arg(arg.to_string_lossy());
+		methods.add_function_mut("arg", |_, (ud, arg): (AnyUserData, Value)| {
+			{
+				let mut me = ud.borrow_mut::<Self>()?;
+				match arg {
+					Value::String(s) => {
+						me.inner.arg(String::from_utf8_lossy(&s.as_bytes()).as_ref());
+					}
+					Value::Table(t) => {
+						for s in t.sequence_values::<mlua::String>() {
+							me.inner.arg(String::from_utf8_lossy(&s?.as_bytes()).as_ref());
+						}
+					}
+					_ => return Err("arg must be a string or table of strings".into_lua_err()),
+				}
+			}
 			Ok(ud)
 		});
-		methods.add_function_mut("args", |_, (ud, args): (AnyUserData, Vec<mlua::String>)| {
+		// TODO: remove this
+		methods.add_function_mut("args", |lua, (ud, args): (AnyUserData, Vec<mlua::String>)| {
+			crate::deprecate!(
+				lua,
+				"The `args()` method on `Command` is deprecated, use `arg()` instead in your {}\n\nSee #2653 for more details: https://github.com/sxyazi/yazi/pull/2653"
+			);
+
 			{
 				let mut me = ud.borrow_mut::<Self>()?;
 				for arg in args {
@@ -155,7 +174,10 @@ impl UserData for Command {
 		methods.add_function_mut(
 			"env",
 			|_, (ud, key, value): (AnyUserData, mlua::String, mlua::String)| {
-				ud.borrow_mut::<Self>()?.inner.env(key.to_string_lossy(), value.to_string_lossy());
+				ud.borrow_mut::<Self>()?.inner.env(
+					String::from_utf8_lossy(&key.as_bytes()).as_ref(),
+					String::from_utf8_lossy(&value.as_bytes()).as_ref(),
+				);
 				Ok(ud)
 			},
 		);

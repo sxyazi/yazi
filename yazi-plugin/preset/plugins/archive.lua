@@ -48,7 +48,7 @@ function M.spawn_7z(args)
 	local last_err = nil
 	local try = function(name)
 		local stdout = args[1] == "l" and Command.PIPED or Command.NULL
-		local child, err = Command(name):args(args):stdout(stdout):stderr(Command.PIPED):spawn()
+		local child, err = Command(name):arg(args):stdout(stdout):stderr(Command.PIPED):spawn()
 		if not child then
 			last_err = err
 		end

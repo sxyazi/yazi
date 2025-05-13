@@ -31,7 +31,6 @@ base64        = { workspace = true }
 crossterm     = { workspace = true }
 futures       = { workspace = true }
 globset       = { workspace = true }
-md-5          = { workspace = true }
 mlua          = { workspace = true }
 parking_lot   = { workspace = true }
 paste         = { workspace = true }

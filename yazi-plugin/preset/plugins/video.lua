@@ -53,7 +53,7 @@ function M:preload(job)
 	end
 
 	-- stylua: ignore
-	local cmd = Command("ffmpeg"):args({
+	local cmd = Command("ffmpeg"):arg({
 		"-v", "quiet", "-threads", 1, "-hwaccel", "auto",
 		"-skip_frame", "nokey",
 		"-an", "-sn", "-dn",
@@ -68,7 +68,7 @@ function M:preload(job)
 	end
 
 	-- stylua: ignore
-	local status, err = cmd:args({
+	local status, err = cmd:arg({
 		"-vframes", 1,
 		"-q:v", 31 - math.floor(rt.preview.image_quality * 0.3),
 		"-vf", string.format("scale='min(%d,iw)':'min(%d,ih)':force_original_aspect_ratio=decrease:flags=fast_bilinear", rt.preview.max_width, rt.preview.max_height),
@@ -131,7 +131,7 @@ function M.list_meta(url, entries)
 		cmd = cmd:args { "-select_streams", "v" }
 	end
 
-	local output, err = cmd:args({ "-show_entries", entries, "-of", "json=c=1", tostring(url) }):output()
+	local output, err = cmd:arg({ "-show_entries", entries, "-of", "json=c=1", tostring(url) }):output()
 	if not output then
 		return nil, Err("Failed to start `ffprobe`, error: %s", err)
 	end

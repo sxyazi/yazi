@@ -8,7 +8,7 @@ impl Composer {
 		F: Fn(&Lua, &[u8]) -> mlua::Result<Value> + 'static,
 	{
 		let index = lua.create_function(move |lua, (ts, key): (Table, mlua::String)| {
-			let v = f(lua, key.as_bytes().as_ref())?;
+			let v = f(lua, &key.as_bytes())?;
 			ts.raw_set(key, v.clone())?;
 			Ok(v)
 		})?;
