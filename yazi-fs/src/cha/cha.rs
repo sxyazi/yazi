@@ -167,7 +167,7 @@ impl Cha {
 
 	#[inline]
 	pub const fn is_hidden(&self) -> bool {
-		self.kind.contains(ChaKind::HIDDEN) || win_either!(self.kind.contains(ChaKind::SYSTEM), false)
+		win_either!(self.kind.contains(ChaKind::SYSTEM), self.kind.contains(ChaKind::HIDDEN))
 	}
 
 	#[inline]
