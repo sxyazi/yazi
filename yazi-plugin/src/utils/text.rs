@@ -25,17 +25,20 @@ impl Utils {
 	}
 
 	pub(super) fn truncate(lua: &Lua) -> mlua::Result<Function> {
-		fn idx_and_width(it: impl Iterator<Item = (usize, char)>, max: usize) -> (usize, usize) {
-			let mut width = 0;
+		fn traverse(
+			it: impl Iterator<Item = (usize, char)>,
+			max: usize,
+		) -> (Option<usize>, usize, bool) {
+			let (mut adv, mut last) = (0, 0);
 			let idx = it
-				.take_while(|(_, c)| {
-					width += c.width().unwrap_or(0);
-					width <= max
+				.take_while(|&(_, c)| {
+					last = adv;
+					adv += c.width().unwrap_or(0);
+					adv <= max
 				})
 				.map(|(i, _)| i)
-				.last()
-				.unwrap();
-			(idx, width)
+				.last();
+			(idx, last, adv > max)
 		}
 
 		lua.create_function(|lua, (s, t): (mlua::String, Table)| {
@@ -53,25 +56,28 @@ impl Utils {
 
 			let lossy = String::from_utf8_lossy(&b);
 			let rtl = t.raw_get("rtl").unwrap_or(false);
-			let (idx, width) = if rtl {
-				idx_and_width(lossy.char_indices().rev(), max)
+			let (idx, width, remain) = if rtl {
+				traverse(lossy.char_indices().rev(), max)
 			} else {
-				idx_and_width(lossy.char_indices(), max)
+				traverse(lossy.char_indices(), max)
 			};
 
-			if width <= max {
-				return Ok(s);
-			} else if rtl && idx == 0 {
-				return Ok(s);
-			} else if !rtl && lossy[idx..].chars().nth(1).is_none() {
+			let Some(idx) = idx else { return lua.create_string("…") };
+			if !remain {
 				return Ok(s);
 			}
 
-			let result: Vec<_> = if rtl {
-				let i = lossy[idx..].char_indices().nth(1).map(|(i, _)| idx + i).unwrap_or(lossy.len());
-				"…".bytes().chain(lossy[i..].bytes()).collect()
-			} else {
-				lossy[..idx].bytes().chain("…".bytes()).collect()
+			let result: Vec<_> = match (rtl, width == max) {
+				(false, false) => {
+					let len = lossy[idx..].chars().next().map_or(0, |c| c.len_utf8());
+					lossy[..idx + len].bytes().chain("…".bytes()).collect()
+				}
+				(false, true) => lossy[..idx].bytes().chain("…".bytes()).collect(),
+				(true, false) => "…".bytes().chain(lossy[idx..].bytes()).collect(),
+				(true, true) => {
+					let len = lossy[idx..].chars().next().map_or(0, |c| c.len_utf8());
+					"…".bytes().chain(lossy[idx + len..].bytes()).collect()
+				}
 			};
 			lua.create_string(result)
 		})
@@ -86,5 +92,78 @@ impl Utils {
 				Some(lua.create_string(CLIPBOARD.get().await.as_encoded_bytes())).transpose()
 			}
 		})
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use mlua::Value;
+
+	use super::*;
+
+	fn truncate(s: &str, max: usize, rtl: bool) -> String {
+		let lua = Lua::new();
+		let t = lua
+			.create_table_from([("max", Value::Integer(max as i64)), ("rtl", Value::Boolean(rtl))])
+			.unwrap();
+
+		Utils::truncate(&lua).unwrap().call((s, t)).unwrap()
+	}
+
+	#[test]
+	fn test_truncate() {
+		assert_eq!(truncate("你好，world", 0, false), "");
+		assert_eq!(truncate("你好，world", 1, false), "…");
+		assert_eq!(truncate("你好，world", 2, false), "…");
+
+		assert_eq!(truncate("你好，世界", 3, false), "你…");
+		assert_eq!(truncate("你好，世界", 4, false), "你…");
+		assert_eq!(truncate("你好，世界", 5, false), "你好…");
+
+		assert_eq!(truncate("Hello, world", 5, false), "Hell…");
+		assert_eq!(truncate("Ni好，世界", 3, false), "Ni…");
+	}
+
+	#[test]
+	fn test_truncate_rtl() {
+		assert_eq!(truncate("world，你好", 0, true), "");
+		assert_eq!(truncate("world，你好", 1, true), "…");
+		assert_eq!(truncate("world，你好", 2, true), "…");
+
+		assert_eq!(truncate("你好，世界", 3, true), "…界");
+		assert_eq!(truncate("你好，世界", 4, true), "…界");
+		assert_eq!(truncate("你好，世界", 5, true), "…世界");
+
+		assert_eq!(truncate("Hello, world", 5, true), "…orld");
+		assert_eq!(truncate("你好，Shi界", 3, true), "…界");
+	}
+
+	#[test]
+	fn test_truncate_oboe() {
+		assert_eq!(truncate("Hello, world", 11, false), "Hello, wor…");
+		assert_eq!(truncate("你好，世界", 9, false), "你好，世…");
+		assert_eq!(truncate("你好，世Jie", 9, false), "你好，世…");
+
+		assert_eq!(truncate("Hello, world", 11, true), "…llo, world");
+		assert_eq!(truncate("你好，世界", 9, true), "…好，世界");
+		assert_eq!(truncate("Ni好，世界", 9, true), "…好，世界");
+	}
+
+	#[test]
+	fn test_truncate_exact() {
+		assert_eq!(truncate("Hello, world", 12, false), "Hello, world");
+		assert_eq!(truncate("你好，世界", 10, false), "你好，世界");
+
+		assert_eq!(truncate("Hello, world", 12, true), "Hello, world");
+		assert_eq!(truncate("你好，世界", 10, true), "你好，世界");
+	}
+
+	#[test]
+	fn test_truncate_overflow() {
+		assert_eq!(truncate("Hello, world", 13, false), "Hello, world");
+		assert_eq!(truncate("你好，世界", 11, false), "你好，世界");
+
+		assert_eq!(truncate("Hello, world", 13, true), "Hello, world");
+		assert_eq!(truncate("你好，世界", 11, true), "你好，世界");
 	}
 }
