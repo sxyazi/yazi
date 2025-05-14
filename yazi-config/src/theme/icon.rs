@@ -101,13 +101,13 @@ impl Icon {
 				self.prepend_globs.0.into_iter().chain(self.globs.0).chain(self.append_globs.0).collect(),
 			),
 			dirs: StrIcons(
-				self.prepend_dirs.0.into_iter().chain(self.dirs.0).chain(self.append_dirs.0).collect(),
+				self.append_dirs.0.into_iter().chain(self.dirs.0).chain(self.prepend_dirs.0).collect(),
 			),
 			files: StrIcons(
-				self.prepend_files.0.into_iter().chain(self.files.0).chain(self.append_files.0).collect(),
+				self.append_files.0.into_iter().chain(self.files.0).chain(self.prepend_files.0).collect(),
 			),
 			exts: StrIcons(
-				self.prepend_exts.0.into_iter().chain(self.exts.0).chain(self.append_exts.0).collect(),
+				self.append_exts.0.into_iter().chain(self.exts.0).chain(self.prepend_exts.0).collect(),
 			),
 			conds: CondIcons(
 				self.prepend_conds.0.into_iter().chain(self.conds.0).chain(self.append_conds.0).collect(),
