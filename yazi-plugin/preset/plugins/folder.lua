@@ -21,7 +21,11 @@ function M:peek(job)
 
 	local items = {}
 	for _, f in ipairs(folder.window) do
-		items[#items + 1] = Entity:new(f):redraw():truncate { max = job.area.w }
+		local entity = Entity:new(f)
+		items[#items + 1] = entity:redraw():truncate {
+			max = job.area.w,
+			ellipsis = entity:ellipsis(job.area.w),
+		}
 	end
 
 	ya.preview_widget(job, {

@@ -133,27 +133,46 @@ impl UserData for Line {
 		});
 		methods.add_function_mut("truncate", |_, (ud, t): (AnyUserData, Table)| {
 			let mut me = ud.borrow_mut::<Self>()?;
-			let max = t.raw_get("max")?;
 
-			let mut width = 0;
+			let max = t.raw_get("max")?;
+			if max < 1 {
+				me.inner.spans.clear();
+				return Ok(ud);
+			}
+
+			let ellipsis = match t.raw_get::<Value>("ellipsis")? {
+				Value::Nil => (1, ratatui::text::Span::raw("…")),
+				v => {
+					let mut span = Span::try_from(v)?;
+					(span.truncate(max), span.0)
+				}
+			};
+
+			let (mut width, mut last) = (0, None);
 			'outer: for (x, span) in me.inner.iter_mut().enumerate() {
 				for (y, c) in span.content.char_indices() {
 					width += c.width().unwrap_or(0);
-					if width < max {
-						continue;
-					} else if width == max && span.content[y..].chars().nth(1).is_none() {
-						continue;
+					match last {
+						None if width > max - ellipsis.0 => last = Some((false, x, y)),
+						Some((false, x, y)) if width > max => {
+							last = Some((true, x, y));
+							break 'outer;
+						}
+						_ => {}
 					}
-
-					match &mut span.content {
-						Cow::Borrowed(s) => span.content = Cow::Borrowed(&s[..y]),
-						Cow::Owned(s) => s.truncate(y),
-					}
-					me.inner.spans.truncate(x + 1);
-					me.inner.spans.push(ratatui::text::Span::raw("…"));
-					break 'outer;
 				}
 			}
+
+			if let Some((true, x, y)) = last {
+				let spans = &mut me.inner.spans;
+				match &mut spans[x].content {
+					Cow::Borrowed(s) => spans[x].content = Cow::Borrowed(&s[..y]),
+					Cow::Owned(s) => s.truncate(y),
+				}
+				spans.truncate(x + 1);
+				spans.push(ellipsis.1);
+			}
+
 			Ok(ud)
 		});
 	}

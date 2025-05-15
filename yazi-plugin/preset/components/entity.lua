@@ -79,7 +79,8 @@ end
 function Entity:redraw()
 	local lines = {}
 	for _, c in ipairs(self._children) do
-		lines[#lines + 1] = (type(c[1]) == "string" and self[c[1]] or c[1])(self)
+		local line = ui.Line((type(c[1]) == "string" and self[c[1]] or c[1])(self))
+		c.width, lines[#lines + 1] = line:width(), line
 	end
 	return ui.Line(lines):style(self:style())
 end
@@ -93,6 +94,19 @@ function Entity:style()
 	else
 		return s and s:patch(th.mgr.hovered) or th.mgr.hovered
 	end
+end
+
+function Entity:ellipsis(max)
+	local adv, f = 0, self._file
+	for _, child in ipairs(self._children) do
+		adv = adv + child.width
+		if adv > max then
+			return not f.cha.is_dir and f.url.ext and "…." .. f.url.ext or "…"
+		elseif child.id == 4 then
+			break
+		end
+	end
+	return "…"
 end
 
 -- Children

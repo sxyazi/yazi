@@ -34,9 +34,11 @@ function Current:redraw()
 
 	local left, right = {}, {}
 	for _, f in ipairs(files) do
-		left[#left + 1] = Entity:new(f):redraw()
-		right[#right + 1] = Linemode:new(f):redraw()
-		left[#left]:truncate { max = math.max(0, self._area.w - right[#right]:width()) }
+		local entity = Entity:new(f)
+		left[#left + 1], right[#right + 1] = entity:redraw(), Linemode:new(f):redraw()
+
+		local max = math.max(0, self._area.w - right[#right]:width())
+		left[#left]:truncate { max = max, ellipsis = entity:ellipsis(max) }
 	end
 
 	return {
