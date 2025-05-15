@@ -1,4 +1,6 @@
-use mlua::{ExternalError, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
+use std::borrow::Cow;
+
+use mlua::{AnyUserData, ExternalError, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use unicode_width::UnicodeWidthChar;
 
 const EXPECTED: &str = "expected a string or Span";
@@ -13,6 +15,36 @@ impl Span {
 		span.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 
 		Ok(span)
+	}
+
+	pub(super) fn truncate(&mut self, max: usize) -> usize {
+		if max < 1 {
+			match &mut self.0.content {
+				Cow::Borrowed(_) => self.0.content = Cow::Borrowed(""),
+				Cow::Owned(s) => s.clear(),
+			}
+			return 0;
+		}
+
+		let mut adv = 0;
+		let mut last;
+		for (i, c) in self.0.content.char_indices() {
+			(last, adv) = (adv, adv + c.width().unwrap_or(0));
+			if adv < max {
+				continue;
+			} else if adv == max && self.0.content[i..].chars().nth(1).is_none() {
+				return max;
+			}
+			match &mut self.0.content {
+				Cow::Borrowed(s) => self.0.content = format!("{}…", &s[..i]).into(),
+				Cow::Owned(s) => {
+					s.truncate(i);
+					s.push('…');
+				}
+			}
+			return last + 1;
+		}
+		adv
 	}
 }
 
@@ -41,6 +73,10 @@ impl UserData for Span {
 
 		methods.add_method("visible", |_, Span(me), ()| {
 			Ok(me.content.chars().any(|c| c.width().unwrap_or(0) > 0))
+		});
+		methods.add_function_mut("truncate", |_, (ud, t): (AnyUserData, Table)| {
+			ud.borrow_mut::<Self>()?.truncate(t.raw_get("max")?);
+			Ok(ud)
 		});
 	}
 }

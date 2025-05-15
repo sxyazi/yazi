@@ -19,7 +19,11 @@ function Parent:redraw()
 
 	local items = {}
 	for _, f in ipairs(self._folder.window) do
-		items[#items + 1] = Entity:new(f):redraw():truncate { max = self._area.w }
+		local entity = Entity:new(f)
+		items[#items + 1] = entity:redraw():truncate {
+			max = self._area.w,
+			ellipsis = entity:ellipsis(self._area.w),
+		}
 	end
 
 	return {

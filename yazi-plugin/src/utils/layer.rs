@@ -68,10 +68,9 @@ impl Utils {
 
 	pub(super) fn confirm(lua: &Lua) -> mlua::Result<Function> {
 		fn content(t: &Table) -> mlua::Result<ratatui::widgets::Paragraph<'static>> {
-			Ok(match t.raw_get::<Value>("content") {
-				Ok(v) if v.is_nil() => Default::default(),
-				Ok(v) => Text::try_from(v)?.into(),
-				Err(e) => Err(e)?,
+			Ok(match t.raw_get::<Value>("content")? {
+				Value::Nil => Default::default(),
+				v => Text::try_from(v)?.into(),
 			})
 		}
 
