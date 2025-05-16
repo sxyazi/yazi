@@ -3,6 +3,8 @@ use yazi_config::popup::InputCfg;
 use yazi_macro::emit;
 use yazi_shared::{Id, errors::InputError, event::Cmd};
 
+use crate::options::CmpItem;
+
 pub struct InputProxy;
 
 impl InputProxy {
@@ -14,7 +16,7 @@ impl InputProxy {
 	}
 
 	#[inline]
-	pub fn complete(word: &str, ticket: Id) {
-		emit!(Call(Cmd::args("input:complete", &[word]).with("ticket", ticket)));
+	pub fn complete(item: &CmpItem, ticket: Id) {
+		emit!(Call(Cmd::new("input:complete").with_any("item", item.clone()).with("ticket", ticket)));
 	}
 }

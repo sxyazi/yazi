@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(notify open plugin process search);
+yazi_macro::mod_flat!(cmp notify open plugin process search);

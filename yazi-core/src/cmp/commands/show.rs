@@ -1,14 +1,15 @@
 use std::{borrow::Cow, mem, ops::ControlFlow, path::PathBuf};
 
 use yazi_macro::render;
-use yazi_shared::{Id, event::{Cmd, CmdCow, Data}};
+use yazi_proxy::options::CmpItem;
+use yazi_shared::{Id, event::{Cmd, CmdCow, Data}, osstr_contains, osstr_starts_with};
 
 use crate::cmp::Cmp;
 
 const LIMIT: usize = 30;
 
 struct Opt {
-	cache:      Vec<String>,
+	cache:      Vec<CmpItem>,
 	cache_name: PathBuf,
 	word:       Cow<'static, str>,
 	ticket:     Id,
@@ -55,34 +56,28 @@ impl Cmp {
 		render!();
 	}
 
-	fn match_candidates(word: &str, cache: &[String]) -> Vec<String> {
+	fn match_candidates(word: &str, cache: &[CmpItem]) -> Vec<CmpItem> {
 		let smart = !word.bytes().any(|c| c.is_ascii_uppercase());
 
-		let flow = cache.iter().try_fold(
-			(Vec::with_capacity(LIMIT), Vec::with_capacity(LIMIT)),
-			|(mut prefixed, mut fuzzy), s| {
-				if (smart && s.to_lowercase().starts_with(word)) || (!smart && s.starts_with(word)) {
-					if s != word {
-						prefixed.push(s);
-						if prefixed.len() >= LIMIT {
-							return ControlFlow::Break((prefixed, fuzzy));
-						}
-					}
-				} else if fuzzy.len() < LIMIT - prefixed.len() && s.contains(word) {
-					// here we don't break the control flow, since we want more exact matching.
-					fuzzy.push(s)
+		let flow = cache.iter().try_fold((Vec::new(), Vec::new()), |(mut exact, mut fuzzy), item| {
+			if osstr_starts_with(&item.name, word, smart) {
+				exact.push(item);
+				if exact.len() >= LIMIT {
+					return ControlFlow::Break((exact, fuzzy));
 				}
-				ControlFlow::Continue((prefixed, fuzzy))
-			},
-		);
+			} else if fuzzy.len() < LIMIT - exact.len() && osstr_contains(&item.name, word) {
+				// Here we don't break the control flow, since we want more exact matching.
+				fuzzy.push(item)
+			}
+			ControlFlow::Continue((exact, fuzzy))
+		});
 
-		let (mut prefixed, fuzzy) = match flow {
+		let (exact, fuzzy) = match flow {
 			ControlFlow::Continue(v) => v,
 			ControlFlow::Break(v) => v,
 		};
-		if prefixed.len() < LIMIT {
-			prefixed.extend(fuzzy.into_iter().take(LIMIT - prefixed.len()))
-		}
-		prefixed.into_iter().map(ToOwned::to_owned).collect()
+
+		let it = fuzzy.into_iter().take(LIMIT - exact.len());
+		exact.into_iter().chain(it).cloned().collect()
 	}
 }
