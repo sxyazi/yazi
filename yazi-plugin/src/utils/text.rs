@@ -32,8 +32,7 @@ impl Utils {
 			let (mut adv, mut last) = (0, 0);
 			let idx = it
 				.take_while(|&(_, c)| {
-					last = adv;
-					adv += c.width().unwrap_or(0);
+					(last, adv) = (adv, adv + c.width().unwrap_or(0));
 					adv <= max
 				})
 				.map(|(i, _)| i)
