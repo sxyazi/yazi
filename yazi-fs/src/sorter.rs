@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, collections::HashMap, mem};
+use std::{cmp::Ordering, collections::HashMap};
 
 use yazi_shared::{LcgRng, natsort, translit::Transliterator, url::UrnBuf};
 
@@ -14,7 +14,7 @@ pub struct FilesSorter {
 }
 
 impl FilesSorter {
-	pub(super) fn sort(&self, items: &mut Vec<File>, sizes: &HashMap<UrnBuf, u64>) {
+	pub(super) fn sort(&self, items: &mut [File], sizes: &HashMap<UrnBuf, u64>) {
 		if items.is_empty() {
 			return;
 		}
@@ -64,11 +64,8 @@ impl FilesSorter {
 		}
 	}
 
-	fn sort_naturally(&self, items: &mut Vec<File>) {
-		let mut indices: Vec<usize> = (0..items.len()).collect();
-		indices.sort_unstable_by(|&a, &b| {
-			let (a, b) = (&items[a], &items[b]);
-
+	fn sort_naturally(&self, items: &mut [File]) {
+		items.sort_unstable_by(|a, b| {
 			let promote = self.promote(a, b);
 			if promote != Ordering::Equal {
 				return promote;
@@ -86,8 +83,6 @@ impl FilesSorter {
 
 			if self.reverse { ordering.reverse() } else { ordering }
 		});
-
-		*items = indices.into_iter().map(|i| mem::take(&mut items[i])).collect();
 	}
 
 	#[inline(always)]

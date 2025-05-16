@@ -100,7 +100,7 @@ function Entity:ellipsis(max)
 	local adv, f = 0, self._file
 	for _, child in ipairs(self._children) do
 		adv = adv + child.width
-		if adv > max then
+		if adv >= max then
 			return not f.cha.is_dir and f.url.ext and "…." .. f.url.ext or "…"
 		elseif child.id == 4 then
 			break

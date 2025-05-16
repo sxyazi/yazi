@@ -1,5 +1,11 @@
-local dark = require("icons-default")
-local light = require("icons-light")
+local dark = {
+	icons_by_filename = require("default.icons_by_filename"),
+	icons_by_file_extension = require("default.icons_by_file_extension"),
+}
+local light = {
+	icons_by_filename = require("light.icons_by_filename"),
+	icons_by_file_extension = require("light.icons_by_file_extension"),
+}
 
 function rearrange(by)
 	local map = {}
