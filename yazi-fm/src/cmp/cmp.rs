@@ -1,4 +1,4 @@
-use std::path::MAIN_SEPARATOR_STR;
+use std::path::{MAIN_SEPARATOR_STR, Path};
 
 use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, List, ListItem, Widget}};
 use yazi_adapter::Dimension;
@@ -26,7 +26,8 @@ impl Widget for Cmp<'_> {
 				let icon = if x.is_dir { &THEME.cmp.icon_folder } else { &THEME.cmp.icon_file };
 				let slash = if x.is_dir { MAIN_SEPARATOR_STR } else { "" };
 
-				let mut item = ListItem::new(format!(" {icon} {}{slash}", x.name.display()));
+				// FIXME: Bump Rust to 1.87.0 and use `OsStr::display()` instead
+				let mut item = ListItem::new(format!(" {icon} {}{slash}", Path::new(&x.name).display()));
 				if i == self.cx.cmp.rel_cursor() {
 					item = item.style(THEME.cmp.active);
 				} else {
