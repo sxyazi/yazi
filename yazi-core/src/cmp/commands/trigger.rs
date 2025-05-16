@@ -3,7 +3,8 @@ use std::{borrow::Cow, mem, path::{MAIN_SEPARATOR_STR, PathBuf}};
 use tokio::fs;
 use yazi_fs::{CWD, expand_path};
 use yazi_macro::{emit, render};
-use yazi_shared::{Id, event::{Cmd, CmdCow, Data}};
+use yazi_proxy::options::CmpItem;
+use yazi_shared::{Id, event::{Cmd, CmdCow, Data}, natsort};
 
 use crate::cmp::Cmp;
 
@@ -43,17 +44,16 @@ impl Cmp {
 		tokio::spawn(async move {
 			let mut dir = fs::read_dir(&parent).await?;
 			let mut cache = vec![];
-			while let Ok(Some(f)) = dir.next_entry().await {
-				let Ok(meta) = f.metadata().await else { continue };
-
-				cache.push(format!(
-					"{}{}",
-					f.file_name().to_string_lossy(),
-					if meta.is_dir() { MAIN_SEPARATOR_STR } else { "" },
-				));
+			while let Ok(Some(ent)) = dir.next_entry().await {
+				if let Ok(ft) = ent.file_type().await {
+					cache.push(CmpItem { name: ent.file_name(), is_dir: ft.is_dir() });
+				}
 			}
 
 			if !cache.is_empty() {
+				cache.sort_unstable_by(|a, b| {
+					natsort(a.name.as_encoded_bytes(), b.name.as_encoded_bytes(), false)
+				});
 				emit!(Call(
 					Cmd::new("cmp:show")
 						.with_any("cache", cache)

@@ -1,5 +1,5 @@
 use core::str;
-use std::borrow::Cow;
+use std::{borrow::Cow, ffi::OsStr};
 
 pub const MIME_DIR: &str = "inode/directory";
 
@@ -105,4 +105,24 @@ pub fn replace_to_printable(s: &[String], tab_size: u8) -> String {
 		}
 	}
 	unsafe { String::from_utf8_unchecked(buf) }
+}
+
+pub fn osstr_contains(s: impl AsRef<OsStr>, needle: impl AsRef<OsStr>) -> bool {
+	memchr::memmem::find(s.as_ref().as_encoded_bytes(), needle.as_ref().as_encoded_bytes()).is_some()
+}
+
+pub fn osstr_starts_with(
+	s: impl AsRef<OsStr>,
+	prefix: impl AsRef<OsStr>,
+	insensitive: bool,
+) -> bool {
+	let (s, prefix) = (s.as_ref().as_encoded_bytes(), prefix.as_ref().as_encoded_bytes());
+	if s.len() < prefix.len() {
+		return false;
+	}
+	if insensitive {
+		s[..prefix.len()].eq_ignore_ascii_case(prefix)
+	} else {
+		s[..prefix.len()] == *prefix
+	}
 }

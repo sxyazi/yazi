@@ -3659,6 +3659,7 @@ dependencies = [
  "yazi-config",
  "yazi-macro",
  "yazi-plugin",
+ "yazi-proxy",
  "yazi-shared",
 ]
 
