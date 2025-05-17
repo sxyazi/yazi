@@ -10,8 +10,8 @@ use yazi_shared::event::Cmd;
 use super::{TASKS_BORDER, TASKS_PADDING, TASKS_PERCENT, TasksProgress};
 
 pub struct Tasks {
-	pub(super) scheduler: Arc<Scheduler>,
-	handle:               JoinHandle<()>,
+	pub scheduler: Arc<Scheduler>,
+	handle:        JoinHandle<()>,
 
 	pub visible:   bool,
 	pub cursor:    usize,
