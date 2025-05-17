@@ -56,6 +56,7 @@ impl State {
 			return Ok(());
 		}
 
+		fs::create_dir_all(&BOOT.state_dir).await?;
 		let mut buf = BufWriter::new(
 			OpenOptions::new()
 				.write(true)
