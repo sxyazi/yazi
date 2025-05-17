@@ -22,7 +22,11 @@ pub(super) enum Command {
 	/// Emit a command to be executed by the specified instance.
 	EmitTo(CommandEmitTo),
 	/// Manage packages.
-	Pack(CommandPack),
+	#[command(subcommand)]
+	Pkg(CommandPkg),
+	#[command(hide = true)]
+	/// Manage packages.
+	Pack(CommandPack), // TODO: remove
 	/// Publish a message to the current instance.
 	Pub(CommandPub),
 	/// Publish a message to the specified instance.
@@ -49,6 +53,30 @@ pub(super) struct CommandEmitTo {
 	/// The arguments of the command.
 	#[arg(allow_hyphen_values = true, trailing_var_arg = true)]
 	pub(super) args:     Vec<String>,
+}
+
+#[derive(Subcommand)]
+pub(super) enum CommandPkg {
+	/// Add packages.
+	#[command(arg_required_else_help = true)]
+	Add {
+		/// The packages to add.
+		#[arg(index = 1, num_args = 1..)]
+		ids: Vec<String>,
+	},
+	/// Delete packages.
+	#[command(arg_required_else_help = true)]
+	Delete {
+		/// The packages to delete.
+		#[arg(index = 1, num_args = 1..)]
+		ids: Vec<String>,
+	},
+	/// Install all packages.
+	Install,
+	/// List all packages.
+	List,
+	/// Upgrade all packages.
+	Upgrade,
 }
 
 #[derive(clap::Args)]
