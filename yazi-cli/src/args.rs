@@ -64,7 +64,7 @@ pub(super) enum CommandPkg {
 		#[arg(index = 1, num_args = 1..)]
 		ids: Vec<String>,
 	},
-	/// Remove packages.
+	/// Delete packages.
 	#[command(arg_required_else_help = true)]
 	Delete {
 		/// The packages to delete.
