@@ -50,6 +50,12 @@ impl Cmp {
 				}
 			}
 
+			// "/" is both a directory separator and the root directory per se
+			// As there's no parent directory for the FS root, it is a special case
+			if parent.as_path() == std::path::Path::new("/") {
+				cache.push(CmpItem { name: "".into(), is_dir: true });
+			}
+
 			if !cache.is_empty() {
 				cache.sort_unstable_by(|a, b| {
 					natsort(a.name.as_encoded_bytes(), b.name.as_encoded_bytes(), false)
