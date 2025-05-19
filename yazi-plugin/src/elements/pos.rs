@@ -1,6 +1,6 @@
 use std::{ops::Deref, str::FromStr};
 
-use mlua::{AnyUserData, ExternalResult, Lua, MetaMethod, Table, UserData};
+use mlua::{AnyUserData, ExternalResult, IntoLua, Lua, MetaMethod, Table, UserData, Value};
 
 use super::Pad;
 
@@ -46,13 +46,13 @@ impl TryFrom<mlua::Table> for Pos {
 }
 
 impl Pos {
-	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, (_, t): (Table, Table)| Self::try_from(t))?;
 
 		let position = lua.create_table()?;
 		position.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 
-		Ok(position)
+		position.into_lua(lua)
 	}
 
 	pub fn new_input(t: mlua::Table) -> mlua::Result<Self> {

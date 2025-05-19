@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, ExternalError, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, ExternalError, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use ratatui::widgets::Widget;
 
 use super::{Area, Span};
@@ -15,13 +15,13 @@ pub struct Gauge {
 }
 
 impl Gauge {
-	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, _: Table| Ok(Gauge::default()))?;
 
 		let gauge = lua.create_table()?;
 		gauge.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 
-		Ok(gauge)
+		gauge.into_lua(lua)
 	}
 
 	pub(super) fn render(

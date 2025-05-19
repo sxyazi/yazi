@@ -1,4 +1,4 @@
-use mlua::{ExternalError, Lua, MetaMethod, Table, UserData, Value};
+use mlua::{ExternalError, IntoLua, Lua, MetaMethod, Table, UserData, Value};
 use ratatui::widgets::Widget;
 
 use super::{Area, Text};
@@ -14,7 +14,7 @@ pub struct List {
 }
 
 impl List {
-	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, (_, seq): (Table, Table)| {
 			let mut items = Vec::with_capacity(seq.raw_len());
 			for v in seq.sequence_values::<Value>() {
@@ -27,7 +27,7 @@ impl List {
 		let list = lua.create_table()?;
 		list.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 
-		Ok(list)
+		list.into_lua(lua)
 	}
 
 	pub(super) fn render(

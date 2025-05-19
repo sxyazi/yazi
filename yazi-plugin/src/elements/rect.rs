@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use mlua::{FromLua, Lua, MetaMethod, Table, UserData};
+use mlua::{FromLua, IntoLua, Lua, MetaMethod, Table, UserData, Value};
 
 use super::Pad;
 
@@ -24,7 +24,7 @@ impl From<ratatui::layout::Size> for Rect {
 }
 
 impl Rect {
-	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, (_, args): (Table, Table)| {
 			Ok(Self(ratatui::layout::Rect {
 				x:      args.raw_get("x").unwrap_or_default(),
@@ -37,7 +37,7 @@ impl Rect {
 		let rect = lua.create_table_from([("default", Self(ratatui::layout::Rect::default()))])?;
 
 		rect.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
-		Ok(rect)
+		rect.into_lua(lua)
 	}
 
 	pub(super) fn pad(self, pad: Pad) -> Self {

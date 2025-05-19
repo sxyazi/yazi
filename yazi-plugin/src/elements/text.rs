@@ -29,7 +29,7 @@ pub struct Text {
 }
 
 impl Text {
-	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, (_, value): (Table, Value)| Text::try_from(value))?;
 
 		let parse = lua.create_function(|_, code: mlua::String| {
@@ -49,7 +49,7 @@ impl Text {
 		])?;
 
 		text.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
-		Ok(text)
+		text.into_lua(lua)
 	}
 
 	pub(super) fn render(

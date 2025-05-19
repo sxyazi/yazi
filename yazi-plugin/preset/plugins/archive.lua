@@ -2,7 +2,6 @@ local M = {}
 
 function M:peek(job)
 	local limit = job.area.h
-	local paths, sizes = {}, {}
 
 	local files, bound, code = self.list_files({ "-p", tostring(job.file.url) }, job.skip, limit)
 	if code ~= 0 then
@@ -13,31 +12,40 @@ function M:peek(job)
 		)
 	end
 
+	local left, right = {}, {}
 	for _, f in ipairs(files) do
 		local icon = File({
 			url = Url(f.path),
 			cha = Cha { kind = f.attr:sub(1, 1) == "D" and 1 or 0 },
 		}):icon()
 
-		if icon then
-			paths[#paths + 1] = ui.Line { ui.Span(" " .. icon.text .. " "):style(icon.style), f.path }
+		if f.size > 0 then
+			right[#right + 1] = string.format(" %s ", ya.readable_size(f.size))
 		else
-			paths[#paths + 1] = f.path
+			right[#right + 1] = " "
 		end
 
-		if f.size > 0 then
-			sizes[#sizes + 1] = string.format(" %s ", ya.readable_size(f.size))
+		if icon then
+			left[#left + 1] = ui.Span(" " .. icon.text .. " "):style(icon.style)
 		else
-			sizes[#sizes + 1] = ""
+			left[#left + 1] = " "
 		end
+
+		left[#left] = ui.Line {
+			left[#left],
+			ya.truncate(f.path, {
+				rtl = true,
+				max = math.max(0, job.area.w - ui.width(left[#left]) - ui.width(right[#right])),
+			}),
+		}
 	end
 
 	if job.skip > 0 and bound < job.skip + limit then
 		ya.emit("peek", { math.max(0, bound - limit), only_if = job.file.url, upper_bound = true })
 	else
 		ya.preview_widget(job, {
-			ui.Text(paths):area(job.area),
-			ui.Text(sizes):area(job.area):align(ui.Text.RIGHT),
+			ui.Text(left):area(job.area),
+			ui.Text(right):area(job.area):align(ui.Text.RIGHT),
 		})
 	end
 end

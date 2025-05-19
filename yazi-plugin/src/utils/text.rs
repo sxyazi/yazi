@@ -96,17 +96,20 @@ impl Utils {
 
 #[cfg(test)]
 mod tests {
-	use mlua::Value;
+	use mlua::chunk;
 
 	use super::*;
 
 	fn truncate(s: &str, max: usize, rtl: bool) -> String {
 		let lua = Lua::new();
-		let t = lua
-			.create_table_from([("max", Value::Integer(max as i64)), ("rtl", Value::Boolean(rtl))])
-			.unwrap();
+		let f = Utils::truncate(&lua).unwrap();
 
-		Utils::truncate(&lua).unwrap().call((s, t)).unwrap()
+		lua
+			.load(chunk! {
+				return $f($s, { max = $max, rtl = $rtl })
+			})
+			.call(())
+			.unwrap()
 	}
 
 	#[test]

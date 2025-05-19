@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, ExternalError, Lua, MetaMethod, UserData, Value};
+use mlua::{AnyUserData, ExternalError, IntoLua, Lua, MetaMethod, UserData, Value};
 use ratatui::widgets::StatefulWidget;
 
 use super::{Area, Row};
@@ -32,7 +32,7 @@ pub struct Table {
 }
 
 impl Table {
-	pub fn compose(lua: &Lua) -> mlua::Result<mlua::Table> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, (_, seq): (mlua::Table, mlua::Table)| {
 			let mut rows = Vec::with_capacity(seq.raw_len());
 			for v in seq.sequence_values::<Value>() {
@@ -45,7 +45,7 @@ impl Table {
 		let table = lua.create_table()?;
 		table.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 
-		Ok(table)
+		table.into_lua(lua)
 	}
 
 	pub fn selected_cell(&self) -> Option<&ratatui::text::Text> {

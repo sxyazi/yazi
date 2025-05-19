@@ -1,19 +1,19 @@
 use std::str::FromStr;
 
-use mlua::{AnyUserData, ExternalError, ExternalResult, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use yazi_shared::theme::Color;
 
 #[derive(Clone, Copy, Default)]
 pub struct Style(pub(super) ratatui::style::Style);
 
 impl Style {
-	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, (_, value): (Table, Value)| Self::try_from(value))?;
 
 		let style = lua.create_table()?;
 		style.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 
-		Ok(style)
+		style.into_lua(lua)
 	}
 }
 

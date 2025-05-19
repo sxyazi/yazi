@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, Lua, MetaMethod, Table, UserData, UserDataMethods};
+use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 
 use super::{Constraint, Rect};
 
@@ -13,13 +13,13 @@ pub struct Layout {
 }
 
 impl Layout {
-	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, _: Table| Ok(Self::default()))?;
 
 		let layout = lua.create_table_from([("HORIZONTAL", HORIZONTAL), ("VERTICAL", VERTICAL)])?;
 		layout.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 
-		Ok(layout)
+		layout.into_lua(lua)
 	}
 }
 
