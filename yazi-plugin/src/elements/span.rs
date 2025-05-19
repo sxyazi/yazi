@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use mlua::{AnyUserData, ExternalError, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
+use mlua::{AnyUserData, ExternalError, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use unicode_width::UnicodeWidthChar;
 
 const EXPECTED: &str = "expected a string or Span";
@@ -8,13 +8,13 @@ const EXPECTED: &str = "expected a string or Span";
 pub struct Span(pub(super) ratatui::text::Span<'static>);
 
 impl Span {
-	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, (_, value): (Table, Value)| Span::try_from(value))?;
 
 		let span = lua.create_table()?;
 		span.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 
-		Ok(span)
+		span.into_lua(lua)
 	}
 
 	pub(super) fn truncate(&mut self, max: usize) -> usize {

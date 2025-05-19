@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, Lua, MetaMethod, Table, UserData};
+use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, Value};
 use ratatui::widgets::Borders;
 
 use super::Area;
@@ -13,7 +13,7 @@ pub struct Bar {
 }
 
 impl Bar {
-	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, (_, direction): (Table, u8)| {
 			Ok(Self { direction: Borders::from_bits_truncate(direction), ..Default::default() })
 		})?;
@@ -29,7 +29,7 @@ impl Bar {
 		])?;
 
 		bar.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
-		Ok(bar)
+		bar.into_lua(lua)
 	}
 
 	pub(super) fn render(

@@ -79,8 +79,8 @@ end
 function Entity:redraw()
 	local lines = {}
 	for _, c in ipairs(self._children) do
-		local line = ui.Line((type(c[1]) == "string" and self[c[1]] or c[1])(self))
-		c.width, lines[#lines + 1] = line:width(), line
+		local line = (type(c[1]) == "string" and self[c[1]] or c[1])(self)
+		c.width, lines[#lines + 1] = ui.width(line), line
 	end
 	return ui.Line(lines):style(self:style())
 end
@@ -101,12 +101,11 @@ function Entity:ellipsis(max)
 	for _, child in ipairs(self._children) do
 		adv = adv + child.width
 		if adv >= max then
-			return not f.cha.is_dir and f.url.ext and "…." .. f.url.ext or "…"
+			return not f.cha.is_dir and f.url.ext and "…." .. f.url.ext or nil
 		elseif child.id == 4 then
 			break
 		end
 	end
-	return "…"
 end
 
 -- Children

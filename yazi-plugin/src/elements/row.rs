@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, ExternalError, Lua, MetaMethod, Table, UserData, Value};
+use mlua::{AnyUserData, ExternalError, IntoLua, Lua, MetaMethod, Table, UserData, Value};
 
 use super::Cell;
 
@@ -14,7 +14,7 @@ pub struct Row {
 }
 
 impl Row {
-	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, (_, cells): (Table, Vec<Cell>)| {
 			Ok(Self { cells, ..Default::default() })
 		})?;
@@ -22,7 +22,7 @@ impl Row {
 		let row = lua.create_table()?;
 		row.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 
-		Ok(row)
+		row.into_lua(lua)
 	}
 }
 

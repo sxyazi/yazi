@@ -21,7 +21,7 @@ pub struct Line {
 }
 
 impl Line {
-	pub fn compose(lua: &Lua) -> mlua::Result<Table> {
+	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, (_, value): (Table, Value)| Line::try_from(value))?;
 
 		let parse = lua.create_function(|_, code: mlua::String| {
@@ -47,7 +47,7 @@ impl Line {
 		])?;
 
 		line.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
-		Ok(line)
+		line.into_lua(lua)
 	}
 
 	pub(super) fn render(
@@ -148,26 +148,70 @@ impl UserData for Line {
 				}
 			};
 
-			let (mut width, mut last) = (0, None);
-			'outer: for (x, span) in me.inner.iter_mut().enumerate() {
-				for (y, c) in span.content.char_indices() {
-					width += c.width().unwrap_or(0);
-					match last {
-						None if width > max - ellipsis.0 => last = Some((false, x, y)),
-						Some((false, x, y)) if width > max => {
-							last = Some((true, x, y));
-							break 'outer;
-						}
-						_ => {}
+			fn traverse(
+				max: usize,
+				threshold: usize,
+				it: impl Iterator<Item = (usize, usize, char)>,
+			) -> (Option<(usize, usize, usize)>, bool) {
+				let (mut adv, mut cut) = (0, None);
+				for (x, y, c) in it {
+					adv += c.width().unwrap_or(0);
+					if adv <= threshold {
+						cut = Some((x, y, adv));
+					} else if adv > max {
+						break;
 					}
 				}
+				(cut, adv > max)
 			}
 
-			if let Some((true, x, y)) = last {
-				let spans = &mut me.inner.spans;
+			let rtl = t.raw_get("rtl")?;
+			let (cut, remain) = if rtl {
+				traverse(
+					max,
+					max - ellipsis.0,
+					me.inner
+						.iter()
+						.enumerate()
+						.rev()
+						.flat_map(|(x, s)| s.content.char_indices().rev().map(move |(y, c)| (x, y, c))),
+				)
+			} else {
+				traverse(
+					max,
+					max - ellipsis.0,
+					me.inner
+						.iter()
+						.enumerate()
+						.flat_map(|(x, s)| s.content.char_indices().map(move |(y, c)| (x, y, c))),
+				)
+			};
+
+			let Some((x, y, width)) = cut else {
+				me.inner.spans.clear();
+				me.inner.spans.push(ellipsis.1);
+				return Ok(ud);
+			};
+			if !remain {
+				return Ok(ud);
+			}
+
+			let spans = &mut me.inner.spans;
+			let len = match (rtl, width == max) {
+				(a, b) if a == b => spans[x].content[y..].chars().next().map_or(0, |c| c.len_utf8()),
+				_ => 0,
+			};
+
+			if rtl {
 				match &mut spans[x].content {
-					Cow::Borrowed(s) => spans[x].content = Cow::Borrowed(&s[..y]),
-					Cow::Owned(s) => s.truncate(y),
+					Cow::Borrowed(s) => spans[x].content = Cow::Borrowed(&s[y + len..]),
+					Cow::Owned(s) => _ = s.drain(..y + len),
+				}
+				spans.splice(..x, [ellipsis.1]);
+			} else {
+				match &mut spans[x].content {
+					Cow::Borrowed(s) => spans[x].content = Cow::Borrowed(&s[..y + len]),
+					Cow::Owned(s) => s.truncate(y + len),
 				}
 				spans.truncate(x + 1);
 				spans.push(ellipsis.1);
@@ -175,5 +219,82 @@ impl UserData for Line {
 
 			Ok(ud)
 		});
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use mlua::{UserDataRef, chunk};
+
+	use super::*;
+
+	fn truncate(s: &str, max: usize, rtl: bool) -> String {
+		let lua = Lua::new();
+		let comp = Line::compose(&lua).unwrap();
+		let line: UserDataRef<Line> = lua
+			.load(chunk! {
+				return $comp($s):truncate { max = $max, rtl = $rtl }
+			})
+			.call(())
+			.unwrap();
+
+		line.inner.spans.iter().map(|s| s.content.as_ref()).collect()
+	}
+
+	#[test]
+	fn test_truncate() {
+		assert_eq!(truncate("你好，world", 0, false), "");
+		assert_eq!(truncate("你好，world", 1, false), "…");
+		assert_eq!(truncate("你好，world", 2, false), "…");
+
+		assert_eq!(truncate("你好，世界", 3, false), "你…");
+		assert_eq!(truncate("你好，世界", 4, false), "你…");
+		assert_eq!(truncate("你好，世界", 5, false), "你好…");
+
+		assert_eq!(truncate("Hello, world", 5, false), "Hell…");
+		assert_eq!(truncate("Ni好，世界", 3, false), "Ni…");
+	}
+
+	#[test]
+	fn test_truncate_rtl() {
+		assert_eq!(truncate("world，你好", 0, true), "");
+		assert_eq!(truncate("world，你好", 1, true), "…");
+		assert_eq!(truncate("world，你好", 2, true), "…");
+
+		assert_eq!(truncate("你好，世界", 3, true), "…界");
+		assert_eq!(truncate("你好，世界", 4, true), "…界");
+		assert_eq!(truncate("你好，世界", 5, true), "…世界");
+
+		assert_eq!(truncate("Hello, world", 5, true), "…orld");
+		assert_eq!(truncate("你好，Shi界", 3, true), "…界");
+	}
+
+	#[test]
+	fn test_truncate_oboe() {
+		assert_eq!(truncate("Hello, world", 11, false), "Hello, wor…");
+		assert_eq!(truncate("你好，世界", 9, false), "你好，世…");
+		assert_eq!(truncate("你好，世Jie", 9, false), "你好，世…");
+
+		assert_eq!(truncate("Hello, world", 11, true), "…llo, world");
+		assert_eq!(truncate("你好，世界", 9, true), "…好，世界");
+		assert_eq!(truncate("Ni好，世界", 9, true), "…好，世界");
+	}
+
+	#[test]
+	fn test_truncate_exact() {
+		assert_eq!(truncate("Hello, world", 12, false), "Hello, world");
+		assert_eq!(truncate("你好，世界", 10, false), "你好，世界");
+
+		assert_eq!(truncate("Hello, world", 12, true), "Hello, world");
+		assert_eq!(truncate("你好，世界", 10, true), "你好，世界");
+	}
+
+	#[test]
+	fn test_truncate_overflow() {
+		assert_eq!(truncate("Hello, world", 13, false), "Hello, world");
+		assert_eq!(truncate("你好，世界", 11, false), "你好，世界");
+
+		assert_eq!(truncate("Hello, world", 13, true), "Hello, world");
+		assert_eq!(truncate("你好，世界", 11, true), "你好，世界");
 	}
 }

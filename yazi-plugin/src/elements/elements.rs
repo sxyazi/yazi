@@ -23,6 +23,8 @@ pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 			b"Style" => super::Style::compose(lua)?,
 			b"Table" => super::Table::compose(lua)?,
 			b"Text" => super::Text::compose(lua)?,
+
+			b"width" => super::Utils::width(lua)?,
 			_ => return Ok(Value::Nil),
 		}
 		.into_lua(lua)
