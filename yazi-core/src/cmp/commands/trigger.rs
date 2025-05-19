@@ -1,4 +1,4 @@
-use std::{borrow::Cow, mem, path::{MAIN_SEPARATOR_STR, PathBuf}};
+use std::{borrow::Cow, ffi::OsString, mem, path::{MAIN_SEPARATOR_STR, Path, PathBuf}};
 
 use tokio::fs;
 use yazi_fs::{CWD, expand_path};
@@ -44,16 +44,17 @@ impl Cmp {
 		tokio::spawn(async move {
 			let mut dir = fs::read_dir(&parent).await?;
 			let mut cache = vec![];
+
+			// "/" is both a directory separator and the root directory per se
+			// As there's no parent directory for the FS root, it is a special case
+			if parent == Path::new("/") {
+				cache.push(CmpItem { name: OsString::new(), is_dir: true });
+			}
+
 			while let Ok(Some(ent)) = dir.next_entry().await {
 				if let Ok(ft) = ent.file_type().await {
 					cache.push(CmpItem { name: ent.file_name(), is_dir: ft.is_dir() });
 				}
-			}
-
-			// "/" is both a directory separator and the root directory per se
-			// As there's no parent directory for the FS root, it is a special case
-			if parent.as_path() == std::path::Path::new("/") {
-				cache.push(CmpItem { name: "".into(), is_dir: true });
 			}
 
 			if !cache.is_empty() {
