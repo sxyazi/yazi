@@ -211,6 +211,11 @@ quit_content = "The following tasks are still running, are you sure you want to 
 quit_origin  = "center"
 quit_offset  = [ 0, 0, 50, 15 ]
 
+# bulk rename
+bulk_rename_title = "Rename {n} file{s}?"
+bulk_rename_origin = "center"
+bulk_rename_offset = [0, 0, 70, 30]
+
 [pick]
 open_title  = "Open with:"
 open_origin = "hovered"

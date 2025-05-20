@@ -1,20 +1,17 @@
-use std::{borrow::Cow, collections::HashMap, ffi::{OsStr, OsString}, io::{Read, Write}, path::PathBuf};
+use std::{borrow::Cow, collections::HashMap, ffi::{OsStr, OsString}, path::PathBuf, sync::Arc};
 
-use anyhow::{Result, anyhow};
-use crossterm::{execute, style::Print};
+use anyhow::Result;
 use scopeguard::defer;
 use tokio::{fs::{self, OpenOptions}, io::AsyncWriteExt};
-use yazi_config::YAZI;
-use yazi_dds::Pubsub;
-use yazi_fs::{File, FilesOp, max_common_root, maybe_exists, paths_to_same_file};
-use yazi_proxy::{AppProxy, HIDER, TasksProxy, WATCHER};
-use yazi_shared::{terminal_clear, url::Url};
-use yazi_term::tty::TTY;
+use yazi_config::{YAZI, popup::ConfirmCfg};
+use yazi_fs::max_common_root;
+use yazi_proxy::{AppProxy, ConfirmProxy, TasksProxy};
+use yazi_scheduler::Scheduler;
 
 use crate::mgr::Mgr;
 
 impl Mgr {
-	pub(super) fn bulk_rename(&self) {
+	pub(super) fn bulk_rename(&self, sched: Arc<Scheduler>) {
 		let Some(opener) = YAZI.opener.block(YAZI.open.all("bulk-rename.txt", "text/plain")) else {
 			return AppProxy::notify_warn("Bulk rename", "No text opener found");
 		};
@@ -43,24 +40,27 @@ impl Mgr {
 			])
 			.await;
 
-			let _permit = HIDER.acquire().await.unwrap();
-			defer!(AppProxy::resume());
-			AppProxy::stop().await;
-
 			let new: Vec<_> =
 				fs::read_to_string(&tmp).await?.lines().take(old.len()).map(PathBuf::from).collect();
-			Self::bulk_rename_do(root, old, new).await
+			Self::bulk_rename_do(root, old, new, sched).await
 		});
 	}
 
-	async fn bulk_rename_do(root: PathBuf, old: Vec<PathBuf>, new: Vec<PathBuf>) -> Result<()> {
-		terminal_clear(TTY.writer())?;
+	async fn bulk_rename_do(
+		root: PathBuf,
+		old: Vec<PathBuf>,
+		new: Vec<PathBuf>,
+		sched: Arc<Scheduler>,
+	) -> Result<()> {
 		if old.len() != new.len() {
-			#[rustfmt::skip]
-			let s = format!("Number of new and old file names mismatch (New: {}, Old: {}).\nPress <Enter> to exit...", new.len(), old.len());
-			execute!(TTY.writer(), Print(s))?;
-
-			TTY.reader().read_exact(&mut [0])?;
+			AppProxy::notify_error(
+				"Bulk rename",
+				format!(
+					"Number of new and old file names mismatch (New: {}, Old: {})",
+					new.len(),
+					old.len()
+				),
+			);
 			return Ok(());
 		}
 
@@ -70,61 +70,14 @@ impl Mgr {
 			return Ok(());
 		}
 
-		{
-			let mut w = TTY.lockout();
-			for (old, new) in &todo {
-				writeln!(w, "{} -> {}", old.display(), new.display())?;
-			}
-			write!(w, "Continue to rename? (y/N): ")?;
-			w.flush()?;
-		}
-
-		let mut buf = [0; 10];
-		_ = TTY.reader().read(&mut buf)?;
-		if buf[0] != b'y' && buf[0] != b'Y' {
+		if !ConfirmProxy::show(ConfirmCfg::bulk_rename(&todo)).await {
 			return Ok(());
 		}
 
-		let permit = WATCHER.acquire().await.unwrap();
-		let (mut failed, mut succeeded) = (Vec::new(), HashMap::with_capacity(todo.len()));
-		for (o, n) in todo {
-			let (old, new) = (root.join(&o), root.join(&n));
-
-			if maybe_exists(&new).await && !paths_to_same_file(&old, &new).await {
-				failed.push((o, n, anyhow!("Destination already exists")));
-			} else if let Err(e) = fs::rename(&old, &new).await {
-				failed.push((o, n, e.into()));
-			} else if let Ok(f) = File::from(new.into()).await {
-				succeeded.insert(Url::from(old), f);
-			} else {
-				failed.push((o, n, anyhow!("Failed to retrieve file info")));
-			}
+		for (old, new) in todo {
+			sched.file_rename_at(&root, &old, &new);
 		}
 
-		if !succeeded.is_empty() {
-			Pubsub::pub_from_bulk(succeeded.iter().map(|(o, n)| (o, &n.url)).collect());
-			FilesOp::rename(succeeded);
-		}
-		drop(permit);
-
-		if !failed.is_empty() {
-			Self::output_failed(failed).await?;
-		}
-		Ok(())
-	}
-
-	async fn output_failed(failed: Vec<(PathBuf, PathBuf, anyhow::Error)>) -> Result<()> {
-		let mut stdout = TTY.lockout();
-		terminal_clear(&mut *stdout)?;
-
-		writeln!(stdout, "Failed to rename:")?;
-		for (old, new, err) in failed {
-			writeln!(stdout, "{} -> {}: {err}", old.display(), new.display())?;
-		}
-		writeln!(stdout, "\nPress ENTER to exit")?;
-
-		stdout.flush()?;
-		TTY.reader().read_exact(&mut [0])?;
 		Ok(())
 	}
 

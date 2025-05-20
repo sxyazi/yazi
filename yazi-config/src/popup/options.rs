@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use ratatui::{text::{Line, Text}, widgets::{Paragraph, Wrap}};
 use yazi_shared::url::Url;
 
@@ -151,6 +153,19 @@ impl ConfirmCfg {
 			(YAZI.confirm.quit_origin, YAZI.confirm.quit_offset),
 			Some(Text::raw(&YAZI.confirm.quit_content)),
 			Self::truncate_list(names.into_iter(), len, 10),
+		)
+	}
+
+	pub fn bulk_rename(todo: &[(PathBuf, PathBuf)]) -> Self {
+		let count = todo.len();
+
+		Self::new(
+			Self::replace_number(&YAZI.confirm.bulk_rename_title, count),
+			(YAZI.confirm.bulk_rename_origin, YAZI.confirm.bulk_rename_offset),
+			None,
+			Some(Text::from_iter(
+				todo.iter().map(|(old, new)| format!("{} -> {}", old.display(), new.display())),
+			)),
 		)
 	}
 
