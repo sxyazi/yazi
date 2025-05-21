@@ -1,5 +1,7 @@
-use mlua::{ExternalError, IntoLua, Lua, Value};
+use mlua::{ExternalError, IntoLua, Lua, ObjectLike, Table, Value};
+use tracing::error;
 use unicode_width::UnicodeWidthStr;
+use yazi_config::LAYOUT;
 
 use super::{Line, Span};
 
@@ -28,6 +30,35 @@ impl Utils {
 				}
 			}
 			_ => Err("expected a string, Line, or Span".into_lua_err())?,
+		})?;
+
+		f.into_lua(lua)
+	}
+
+	pub(super) fn redraw(lua: &Lua) -> mlua::Result<Value> {
+		let f = lua.create_function(|lua, c: Table| {
+			let id: mlua::String = c.get("_id")?;
+
+			let mut layout = LAYOUT.get();
+			match id.as_bytes().as_ref() {
+				b"current" => layout.current = *c.raw_get::<crate::elements::Rect>("_area")?,
+				b"preview" => layout.preview = *c.raw_get::<crate::elements::Rect>("_area")?,
+				b"progress" => layout.progress = *c.raw_get::<crate::elements::Rect>("_area")?,
+				_ => {}
+			}
+
+			LAYOUT.set(layout);
+			match c.call_method::<Value>("redraw", ())? {
+				Value::Table(tbl) => Ok(tbl),
+				Value::UserData(ud) => lua.create_sequence_from([ud]),
+				_ => {
+					error!(
+						"Failed to `redraw()` the `{}` component: expected a table or UserData",
+						id.display(),
+					);
+					lua.create_table()
+				}
+			}
 		})?;
 
 		f.into_lua(lua)

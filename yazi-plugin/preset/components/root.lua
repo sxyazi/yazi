@@ -15,7 +15,7 @@ function Root:layout()
 		:direction(ui.Layout.VERTICAL)
 		:constraints({
 			ui.Constraint.Length(1),
-			ui.Constraint.Length(#cx.tabs > 1 and 1 or 0),
+			ui.Constraint.Length(Tabs.height()),
 			ui.Constraint.Fill(1),
 			ui.Constraint.Length(1),
 		})
@@ -43,7 +43,7 @@ end
 function Root:redraw()
 	local elements = self._base or {}
 	for _, child in ipairs(self._children) do
-		elements = ya.list_merge(elements, ya.redraw_with(child))
+		elements = ya.list_merge(elements, ui.redraw(child))
 	end
 	return elements
 end

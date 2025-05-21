@@ -1,4 +1,4 @@
-use mlua::{AnyUserData, IntoLua, Lua, Table, Value};
+use mlua::{AnyUserData, IntoLua, Lua, Value};
 use tracing::error;
 
 use super::Renderable;
@@ -25,25 +25,35 @@ pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 			b"Text" => super::Text::compose(lua)?,
 
 			b"width" => super::Utils::width(lua)?,
+			b"redraw" => super::Utils::redraw(lua)?,
 			_ => return Ok(Value::Nil),
 		}
 		.into_lua(lua)
 	})
 }
 
-pub fn render_once<F>(widgets: Table, buf: &mut ratatui::buffer::Buffer, trans: F)
+pub fn render_once<F>(value: Value, buf: &mut ratatui::buffer::Buffer, trans: F)
 where
 	F: Fn(yazi_config::popup::Position) -> ratatui::layout::Rect + Copy,
 {
-	for widget in widgets.sequence_values::<AnyUserData>() {
-		let Ok(widget) = widget else {
-			error!("Failed to convert to renderable UserData: {}", widget.unwrap_err());
-			continue;
-		};
+	match value {
+		Value::Table(tbl) => {
+			for widget in tbl.sequence_values::<AnyUserData>() {
+				let Ok(widget) = widget else {
+					error!("Failed to convert to renderable UserData: {}", widget.unwrap_err());
+					continue;
+				};
 
-		match Renderable::try_from(widget) {
+				match Renderable::try_from(widget) {
+					Ok(w) => w.render(buf, trans),
+					Err(e) => error!("{e}"),
+				}
+			}
+		}
+		Value::UserData(ud) => match Renderable::try_from(ud) {
 			Ok(w) => w.render(buf, trans),
 			Err(e) => error!("{e}"),
-		}
+		},
+		_ => error!("Expected a renderable UserData, or a table of them, got: {value:?}"),
 	}
 }

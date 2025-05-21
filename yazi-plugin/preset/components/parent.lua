@@ -26,9 +26,7 @@ function Parent:redraw()
 		}
 	end
 
-	return {
-		ui.List(items):area(self._area),
-	}
+	return ui.List(items):area(self._area)
 end
 
 -- Mouse events

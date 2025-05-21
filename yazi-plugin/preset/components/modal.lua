@@ -38,7 +38,7 @@ end
 function Modal:children_redraw()
 	local elements = {}
 	for _, child in ipairs(self._children) do
-		elements = ya.list_merge(elements, ya.redraw_with(child[1]:new(self._area)))
+		elements = ya.list_merge(elements, ui.redraw(child[1]:new(self._area)))
 	end
 	return elements
 end

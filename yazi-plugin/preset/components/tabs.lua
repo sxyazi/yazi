@@ -38,8 +38,10 @@ function Tabs:redraw()
 	end
 
 	lines[#lines + 1] = ui.Line(th.tabs.sep_outer.close):fg(th.tabs.inactive.bg)
-	return { ui.Line(lines):area(self._area) }
+	return ui.Line(lines):area(self._area)
 end
+
+function Tabs.height() return #cx.tabs > 1 and 1 or 0 end
 
 function Tabs:inner_width()
 	local si, so = th.tabs.sep_inner, th.tabs.sep_outer
