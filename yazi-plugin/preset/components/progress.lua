@@ -40,9 +40,7 @@ function Progress:redraw()
 	end
 
 	local left = progress.total - progress.succ
-	return {
-		gauge
-			:percent(percent)
-			:label(ui.Span(string.format("%3d%%, %d left", percent, left)):style(th.status.progress_label)),
-	}
+	return gauge
+		:percent(percent)
+		:label(ui.Span(string.format("%3d%%, %d left", percent, left)):style(th.status.progress_label))
 end

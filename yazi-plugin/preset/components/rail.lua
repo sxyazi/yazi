@@ -24,7 +24,7 @@ function Rail:reflow() return {} end
 function Rail:redraw()
 	local elements = self._base or {}
 	for _, child in ipairs(self._children) do
-		elements = ya.list_merge(elements, ya.redraw_with(child))
+		elements = ya.list_merge(elements, ui.redraw(child))
 	end
 	return elements
 end

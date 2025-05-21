@@ -142,7 +142,7 @@ function Status:redraw()
 		ui.Text(""):area(self._area):style(th.status.overall),
 		ui.Line(left):area(self._area),
 		ui.Line(right):area(self._area):align(ui.Line.RIGHT),
-		table.unpack(ya.redraw_with(Progress:new(self._area, right_width))),
+		table.unpack(ui.redraw(Progress:new(self._area, right_width))),
 	}
 end
 

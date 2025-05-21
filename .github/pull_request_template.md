@@ -13,5 +13,5 @@ Resolves #
 <!--
 A clear and concise description of the rationale of the changes, to help our reviewers understand your intent and why it is necessary.
 
-If it already been detailed in the associated issue, please skip this section.
+If it has already been detailed in the associated issue, please skip this section.
 -->
