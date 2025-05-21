@@ -62,11 +62,11 @@ impl Pubsub {
 		unsub!(REMOTE)(plugin, kind) && Self::pub_from_hi()
 	}
 
-	pub fn pub_(body: Body<'static>) { body.with_receiver(*ID).emit(); }
+	pub fn r#pub(body: Body<'static>) { body.with_receiver(*ID).emit(); }
 
 	pub fn pub_to(receiver: Id, body: Body<'static>) {
 		if receiver == *ID {
-			return Self::pub_(body);
+			return Self::r#pub(body);
 		}
 
 		let kind = body.kind();
@@ -87,7 +87,7 @@ impl Pubsub {
 
 	pub fn pub_from_tab(idx: Id) {
 		if LOCAL.read().contains_key("tab") {
-			Self::pub_(BodyTab::owned(idx));
+			Self::r#pub(BodyTab::owned(idx));
 		}
 		if PEERS.read().values().any(|p| p.able("tab")) {
 			Client::push(BodyTab::owned(idx));
@@ -99,7 +99,7 @@ impl Pubsub {
 
 	pub fn pub_from_cd(tab: Id, url: &Url) {
 		if LOCAL.read().contains_key("cd") {
-			Self::pub_(BodyCd::dummy(tab));
+			Self::r#pub(BodyCd::dummy(tab));
 		}
 		if PEERS.read().values().any(|p| p.able("cd")) {
 			Client::push(BodyCd::borrowed(tab, url));
@@ -111,7 +111,7 @@ impl Pubsub {
 
 	pub fn pub_from_load(tab: Id, url: &Url, stage: FolderStage) {
 		if LOCAL.read().contains_key("load") {
-			Self::pub_(BodyLoad::dummy(tab, url, stage));
+			Self::r#pub(BodyLoad::dummy(tab, url, stage));
 		}
 		if PEERS.read().values().any(|p| p.able("load")) {
 			Client::push(BodyLoad::borrowed(tab, url, stage));
@@ -123,7 +123,7 @@ impl Pubsub {
 
 	pub fn pub_from_hover(tab: Id, url: Option<&Url>) {
 		if LOCAL.read().contains_key("hover") {
-			Self::pub_(BodyHover::dummy(tab));
+			Self::r#pub(BodyHover::dummy(tab));
 		}
 		if PEERS.read().values().any(|p| p.able("hover")) {
 			Client::push(BodyHover::borrowed(tab, url));
@@ -135,7 +135,7 @@ impl Pubsub {
 
 	pub fn pub_from_rename(tab: Id, from: &Url, to: &Url) {
 		if LOCAL.read().contains_key("rename") {
-			Self::pub_(BodyRename::dummy(tab, from, to));
+			Self::r#pub(BodyRename::dummy(tab, from, to));
 		}
 		if PEERS.read().values().any(|p| p.able("rename")) {
 			Client::push(BodyRename::borrowed(tab, from, to));
@@ -147,7 +147,7 @@ impl Pubsub {
 
 	pub fn pub_from_bulk(changes: HashMap<&Url, &Url>) {
 		if LOCAL.read().contains_key("bulk") {
-			Self::pub_(BodyBulk::owned(&changes));
+			Self::r#pub(BodyBulk::owned(&changes));
 		}
 		if PEERS.read().values().any(|p| p.able("bulk")) {
 			Client::push(BodyBulk::borrowed(&changes));
@@ -159,7 +159,7 @@ impl Pubsub {
 
 	pub fn pub_from_yank(cut: bool, urls: &HashSet<Url>) {
 		if LOCAL.read().contains_key("@yank") {
-			Self::pub_(BodyYank::dummy());
+			Self::r#pub(BodyYank::dummy());
 		}
 		if Self::any_remote_own("@yank") {
 			Client::push(BodyYank::borrowed(cut, urls));
@@ -177,7 +177,7 @@ impl Pubsub {
 			BodyMove::borrowed(&items).with_receiver(*ID).flush();
 		}
 		if LOCAL.read().contains_key("move") {
-			Self::pub_(BodyMove::owned(items));
+			Self::r#pub(BodyMove::owned(items));
 		}
 	}
 
@@ -189,7 +189,7 @@ impl Pubsub {
 			BodyTrash::borrowed(&urls).with_receiver(*ID).flush();
 		}
 		if LOCAL.read().contains_key("trash") {
-			Self::pub_(BodyTrash::owned(urls));
+			Self::r#pub(BodyTrash::owned(urls));
 		}
 	}
 
@@ -201,13 +201,13 @@ impl Pubsub {
 			BodyDelete::borrowed(&urls).with_receiver(*ID).flush();
 		}
 		if LOCAL.read().contains_key("delete") {
-			Self::pub_(BodyDelete::owned(urls));
+			Self::r#pub(BodyDelete::owned(urls));
 		}
 	}
 
 	pub fn pub_from_mount() {
 		if LOCAL.read().contains_key("mount") {
-			Self::pub_(BodyMount::owned());
+			Self::r#pub(BodyMount::owned());
 		}
 		if PEERS.read().values().any(|p| p.able("mount")) {
 			Client::push(BodyMount::owned());

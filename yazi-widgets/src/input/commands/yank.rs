@@ -12,11 +12,11 @@ impl Input {
 			InputOp::Select(start) => {
 				self.snap_mut().op = InputOp::Yank(start);
 				render!(self.handle_op(self.snap().cursor, true));
-				self.move_(0);
+				self.r#move(0);
 			}
 			InputOp::Yank(_) => {
 				self.snap_mut().op = InputOp::Yank(0);
-				self.move_(self.snap().len() as isize);
+				self.r#move(self.snap().len() as isize);
 			}
 			_ => {}
 		}

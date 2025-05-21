@@ -74,7 +74,7 @@ impl Utils {
 				Renderable::Border(crate::elements::Border {
 					area,
 					position: ratatui::widgets::Borders::ALL,
-					type_: ratatui::widgets::BorderType::Rounded,
+					r#type: ratatui::widgets::BorderType::Rounded,
 					style: THEME.spot.border.into(),
 					titles: vec![(
 						ratatui::widgets::block::Position::Top,

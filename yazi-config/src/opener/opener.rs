@@ -44,8 +44,8 @@ impl Opener {
 		for rules in self.0.values_mut() {
 			*rules = mem::take(rules)
 				.into_iter()
-				.map(|mut r| (r.for_.take(), r))
-				.filter(|(for_, _)| check_for(for_.as_deref()))
+				.map(|mut r| (r.r#for.take(), r))
+				.filter(|(r#for, _)| check_for(r#for.as_deref()))
 				.map(|(_, r)| r.reshape())
 				.collect::<Result<IndexSet<_>>>()?
 				.into_iter()

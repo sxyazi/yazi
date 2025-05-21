@@ -17,7 +17,7 @@ impl Input {
 			};
 		}
 
-		on!(move_, "move");
+		on!(r#move, "move");
 		on!(backward);
 		on!(forward);
 

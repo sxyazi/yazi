@@ -9,7 +9,7 @@ yazi_macro::mod_flat!(pubsub);
 pub(super) fn compose(lua: &Lua) -> mlua::Result<Value> {
 	Composer::make(lua, 10, |lua, key| {
 		match key {
-			b"pub" => Pubsub::pub_(lua)?,
+			b"pub" => Pubsub::r#pub(lua)?,
 			b"pub_to" => Pubsub::pub_to(lua)?,
 			b"sub" => Pubsub::sub(lua)?,
 			b"sub_remote" => Pubsub::sub_remote(lua)?,

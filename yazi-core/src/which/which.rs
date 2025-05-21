@@ -12,7 +12,7 @@ pub struct Which {
 }
 
 impl Which {
-	pub fn type_(&mut self, key: Key) -> bool {
+	pub fn r#type(&mut self, key: Key) -> bool {
 		self.cands.retain(|c| c.on.len() > self.times && c.on[self.times] == key);
 		self.times += 1;
 

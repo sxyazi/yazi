@@ -4,38 +4,38 @@ use yazi_config::plugin::{Fetcher, Preloader};
 use yazi_shared::{Throttle, url::Url};
 
 #[derive(Debug)]
-pub enum PreworkOp {
-	Fetch(PreworkOpFetch),
-	Load(PreworkOpLoad),
-	Size(PreworkOpSize),
+pub enum PreworkIn {
+	Fetch(PreworkInFetch),
+	Load(PreworkInLoad),
+	Size(PreworkInSize),
 }
 
-impl PreworkOp {
+impl PreworkIn {
 	pub fn id(&self) -> usize {
 		match self {
-			Self::Fetch(op) => op.id,
-			Self::Load(op) => op.id,
-			Self::Size(op) => op.id,
+			Self::Fetch(r#in) => r#in.id,
+			Self::Load(r#in) => r#in.id,
+			Self::Size(r#in) => r#in.id,
 		}
 	}
 }
 
 #[derive(Debug)]
-pub struct PreworkOpFetch {
+pub struct PreworkInFetch {
 	pub id:      usize,
 	pub plugin:  &'static Fetcher,
 	pub targets: Vec<yazi_fs::File>,
 }
 
 #[derive(Clone, Debug)]
-pub struct PreworkOpLoad {
+pub struct PreworkInLoad {
 	pub id:     usize,
 	pub plugin: &'static Preloader,
 	pub target: yazi_fs::File,
 }
 
 #[derive(Debug)]
-pub struct PreworkOpSize {
+pub struct PreworkInSize {
 	pub id:       usize,
 	pub target:   Url,
 	pub throttle: Arc<Throttle<(Url, u64)>>,

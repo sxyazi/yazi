@@ -15,7 +15,7 @@ impl Input {
 	pub fn backward(&mut self, opt: Opt) {
 		let snap = self.snap();
 		if snap.cursor == 0 {
-			return self.move_(0);
+			return self.r#move(0);
 		}
 
 		let idx = snap.idx(snap.cursor).unwrap_or(snap.len());
@@ -24,13 +24,13 @@ impl Input {
 		for (i, c) in it {
 			let k = CharKind::new(c);
 			if prev != CharKind::Space && prev.vary(k, opt.far) {
-				return self.move_(-(i as isize));
+				return self.r#move(-(i as isize));
 			}
 			prev = k;
 		}
 
 		if prev != CharKind::Space {
-			self.move_(-(snap.len() as isize));
+			self.r#move(-(snap.len() as isize));
 		}
 	}
 }

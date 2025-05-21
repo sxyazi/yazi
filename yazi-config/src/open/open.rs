@@ -38,7 +38,7 @@ impl Open {
 				r.mime.as_ref().is_some_and(|p| p.match_mime(&mime))
 					|| r.name.as_ref().is_some_and(|p| p.match_path(&path, is_dir))
 			})
-			.flat_map(|r| &r.use_)
+			.flat_map(|r| &r.r#use)
 			.map(String::as_str)
 	}
 

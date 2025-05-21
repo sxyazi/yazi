@@ -67,8 +67,8 @@ fn write(lua: &Lua) -> mlua::Result<Function> {
 }
 
 fn create(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_async_function(|lua, (type_, url): (mlua::String, UrlRef)| async move {
-		let result = match type_.as_bytes().as_ref() {
+	lua.create_async_function(|lua, (r#type, url): (mlua::String, UrlRef)| async move {
+		let result = match r#type.as_bytes().as_ref() {
 			b"dir" => fs::create_dir(&*url).await,
 			b"dir_all" => fs::create_dir_all(&*url).await,
 			_ => Err("Creation type must be 'dir' or 'dir_all'".into_lua_err())?,
@@ -82,8 +82,8 @@ fn create(lua: &Lua) -> mlua::Result<Function> {
 }
 
 fn remove(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_async_function(|lua, (type_, url): (mlua::String, UrlRef)| async move {
-		let result = match type_.as_bytes().as_ref() {
+	lua.create_async_function(|lua, (r#type, url): (mlua::String, UrlRef)| async move {
+		let result = match r#type.as_bytes().as_ref() {
 			b"file" => fs::remove_file(&*url).await,
 			b"dir" => fs::remove_dir(&*url).await,
 			b"dir_all" => fs::remove_dir_all(&*url).await,

@@ -11,7 +11,7 @@ use yazi_proxy::{MgrProxy, options::{PluginOpt, ProcessExecOpt}};
 use yazi_shared::{Throttle, url::Url};
 
 use super::{Ongoing, TaskProg, TaskStage};
-use crate::{HIGH, LOW, NORMAL, TaskKind, TaskOp, file::{File, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpTrash}, plugin::{Plugin, PluginOpEntry}, prework::{Prework, PreworkOpFetch, PreworkOpLoad, PreworkOpSize}, process::{Process, ProcessOpBg, ProcessOpBlock, ProcessOpOrphan}};
+use crate::{HIGH, LOW, NORMAL, TaskKind, TaskOp, file::{File, FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash}, plugin::{Plugin, PluginInEntry}, prework::{Prework, PreworkInFetch, PreworkInLoad, PreworkInSize}, process::{Process, ProcessInBg, ProcessInBlock, ProcessInOrphan}};
 
 pub struct Scheduler {
 	pub file:    Arc<File>,
@@ -102,7 +102,7 @@ impl Scheduler {
 			if !force {
 				to = unique_name(to, must_be_dir(&from)).await?;
 			}
-			file.paste(FileOpPaste { id, from, to, cha: None, cut: true, follow: false, retry: 0 }).await
+			file.paste(FileInPaste { id, from, to, cha: None, cut: true, follow: false, retry: 0 }).await
 		});
 	}
 
@@ -119,7 +119,7 @@ impl Scheduler {
 			if !force {
 				to = unique_name(to, must_be_dir(&from)).await?;
 			}
-			file.paste(FileOpPaste { id, from, to, cha: None, cut: false, follow, retry: 0 }).await
+			file.paste(FileInPaste { id, from, to, cha: None, cut: false, follow, retry: 0 }).await
 		});
 	}
 
@@ -132,7 +132,7 @@ impl Scheduler {
 				to = unique_name(to, must_be_dir(&from)).await?;
 			}
 			file
-				.link(FileOpLink { id, from, to, cha: None, resolve: false, relative, delete: false })
+				.link(FileInLink { id, from, to, cha: None, resolve: false, relative, delete: false })
 				.await
 		});
 	}
@@ -150,7 +150,7 @@ impl Scheduler {
 			if !force {
 				to = unique_name(to, must_be_dir(&from)).await?;
 			}
-			file.hardlink(FileOpHardlink { id, from, to, cha: None, follow }).await
+			file.hardlink(FileInHardlink { id, from, to, cha: None, follow }).await
 		});
 	}
 
@@ -179,7 +179,7 @@ impl Scheduler {
 		self.send_micro(
 			id,
 			LOW,
-			async move { file.delete(FileOpDelete { id, target, length: 0 }).await },
+			async move { file.delete(FileInDelete { id, target, length: 0 }).await },
 		);
 	}
 
@@ -205,7 +205,7 @@ impl Scheduler {
 
 		let file = self.file.clone();
 		self.send_micro(id, LOW, async move {
-			file.trash(FileOpTrash { id, target: target.clone(), length: 0 }).await
+			file.trash(FileInTrash { id, target: target.clone(), length: 0 }).await
 		})
 	}
 
@@ -213,13 +213,13 @@ impl Scheduler {
 		let id = self.ongoing.lock().add(TaskKind::User, format!("Run micro plugin `{}`", opt.id));
 
 		let plugin = self.plugin.clone();
-		self.send_micro(id, NORMAL, async move { plugin.micro(PluginOpEntry { id, opt }).await });
+		self.send_micro(id, NORMAL, async move { plugin.micro(PluginInEntry { id, opt }).await });
 	}
 
 	pub fn plugin_macro(&self, opt: PluginOpt) {
 		let id = self.ongoing.lock().add(TaskKind::User, format!("Run macro plugin `{}`", opt.id));
 
-		self.plugin.macro_(PluginOpEntry { id, opt }).ok();
+		self.plugin.r#macro(PluginInEntry { id, opt }).ok();
 	}
 
 	pub fn fetch_paged(&self, fetcher: &'static Fetcher, targets: Vec<yazi_fs::File>) {
@@ -230,7 +230,7 @@ impl Scheduler {
 
 		let prework = self.prework.clone();
 		self.send_micro(id, NORMAL, async move {
-			prework.fetch(PreworkOpFetch { id, plugin: fetcher, targets }).await
+			prework.fetch(PreworkInFetch { id, plugin: fetcher, targets }).await
 		});
 	}
 
@@ -241,7 +241,7 @@ impl Scheduler {
 		let target = target.clone();
 		let prework = self.prework.clone();
 		self.send_micro(id, NORMAL, async move {
-			prework.load(PreworkOpLoad { id, plugin: preloader, target }).await
+			prework.load(PreworkInLoad { id, plugin: preloader, target }).await
 		});
 	}
 
@@ -256,7 +256,7 @@ impl Scheduler {
 
 			let prework = self.prework.clone();
 			self.send_micro(id, NORMAL, async move {
-				prework.size(PreworkOpSize { id, target, throttle }).await
+				prework.size(PreworkInSize { id, target, throttle }).await
 			});
 		}
 	}
@@ -296,11 +296,11 @@ impl Scheduler {
 		let process = self.process.clone();
 		self.send_micro(id, NORMAL, async move {
 			if opener.block {
-				process.block(ProcessOpBlock { id, cwd, cmd, args }).await
+				process.block(ProcessInBlock { id, cwd, cmd, args }).await
 			} else if opener.orphan {
-				process.orphan(ProcessOpOrphan { id, cwd, cmd, args }).await
+				process.orphan(ProcessInOrphan { id, cwd, cmd, args }).await
 			} else {
-				process.bg(ProcessOpBg { id, cwd, cmd, args, cancel: cancel_rx }).await
+				process.bg(ProcessInBg { id, cwd, cmd, args, cancel: cancel_rx }).await
 			}
 		});
 	}
@@ -321,7 +321,7 @@ impl Scheduler {
 	fn schedule_macro(
 		&self,
 		micro: async_priority_channel::Receiver<BoxFuture<'static, ()>, u8>,
-		macro_: async_priority_channel::Receiver<TaskOp, u8>,
+		r#macro: async_priority_channel::Receiver<TaskOp, u8>,
 	) -> JoinHandle<()> {
 		let file = self.file.clone();
 		let plugin = self.plugin.clone();
@@ -336,16 +336,16 @@ impl Scheduler {
 					Ok((fut, _)) = micro.recv() => {
 						fut.await;
 					}
-					Ok((op, _)) = macro_.recv() => {
-						let id = op.id();
+					Ok((r#in, _)) = r#macro.recv() => {
+						let id = r#in.id();
 						if !ongoing.lock().exists(id) {
 							continue;
 						}
 
-						let result = match op {
-							TaskOp::File(op) => file.work(*op).await,
-							TaskOp::Plugin(op) => plugin.work(*op).await,
-							TaskOp::Prework(op) => prework.work(*op).await,
+						let result = match r#in {
+							TaskOp::File(r#in) => file.work(*r#in).await,
+							TaskOp::Plugin(r#in) => plugin.work(*r#in).await,
+							TaskOp::Prework(r#in) => prework.work(*r#in).await,
 						};
 
 						if let Err(e) = result {
@@ -362,8 +362,8 @@ impl Scheduler {
 		let ongoing = self.ongoing.clone();
 
 		tokio::spawn(async move {
-			while let Some(op) = rx.recv().await {
-				match op {
+			while let Some(r#in) = rx.recv().await {
+				match r#in {
 					TaskProg::New(id, size) => {
 						if let Some(task) = ongoing.lock().get_mut(id) {
 							task.total += 1;

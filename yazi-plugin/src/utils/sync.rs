@@ -40,8 +40,8 @@ impl Utils {
 	}
 
 	pub(super) fn chan(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|lua, (type_, buffer): (mlua::String, Option<usize>)| {
-			match (&*type_.as_bytes(), buffer) {
+		lua.create_function(|lua, (r#type, buffer): (mlua::String, Option<usize>)| {
+			match (&*r#type.as_bytes(), buffer) {
 				(b"mpsc", Some(buffer)) if buffer < 1 => {
 					Err("Buffer size must be greater than 0".into_lua_err())
 				}
@@ -82,9 +82,9 @@ impl Utils {
 		let (tx, rx) = oneshot::channel::<Vec<Data>>();
 
 		let callback: PluginCallback = {
-			let id_ = id.clone();
+			let id = id.clone();
 			Box::new(move |lua, plugin| {
-				let Some(block) = lua.named_registry_value::<RtRef>("ir")?.get_block(&id_, calls) else {
+				let Some(block) = lua.named_registry_value::<RtRef>("ir")?.get_block(&id, calls) else {
 					return Err("sync block not found".into_lua_err());
 				};
 

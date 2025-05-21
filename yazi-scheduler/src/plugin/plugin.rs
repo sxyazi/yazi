@@ -2,32 +2,32 @@ use anyhow::{Result, anyhow};
 use tokio::sync::mpsc;
 use yazi_plugin::isolate;
 
-use super::{PluginOp, PluginOpEntry};
+use super::{PluginIn, PluginInEntry};
 use crate::{HIGH, TaskOp, TaskProg};
 
 pub struct Plugin {
-	macro_: async_priority_channel::Sender<TaskOp, u8>,
-	prog:   mpsc::UnboundedSender<TaskProg>,
+	r#macro: async_priority_channel::Sender<TaskOp, u8>,
+	prog:    mpsc::UnboundedSender<TaskProg>,
 }
 
 impl Plugin {
 	pub fn new(
-		macro_: async_priority_channel::Sender<TaskOp, u8>,
+		r#macro: async_priority_channel::Sender<TaskOp, u8>,
 		prog: mpsc::UnboundedSender<TaskProg>,
 	) -> Self {
-		Self { macro_, prog }
+		Self { r#macro, prog }
 	}
 
-	pub async fn work(&self, op: PluginOp) -> Result<()> {
-		match op {
-			PluginOp::Entry(task) => {
+	pub async fn work(&self, r#in: PluginIn) -> Result<()> {
+		match r#in {
+			PluginIn::Entry(task) => {
 				isolate::entry(task.opt).await?;
 			}
 		}
 		Ok(())
 	}
 
-	pub async fn micro(&self, task: PluginOpEntry) -> Result<()> {
+	pub async fn micro(&self, task: PluginInEntry) -> Result<()> {
 		self.prog.send(TaskProg::New(task.id, 0))?;
 
 		if let Err(e) = isolate::entry(task.opt).await {
@@ -39,11 +39,11 @@ impl Plugin {
 		self.succ(task.id)
 	}
 
-	pub fn macro_(&self, task: PluginOpEntry) -> Result<()> {
+	pub fn r#macro(&self, task: PluginInEntry) -> Result<()> {
 		let id = task.id;
 
 		self.prog.send(TaskProg::New(id, 0))?;
-		self.queue(PluginOp::Entry(task), HIGH)?;
+		self.queue(PluginIn::Entry(task), HIGH)?;
 		self.succ(id)
 	}
 }
@@ -58,7 +58,7 @@ impl Plugin {
 	}
 
 	#[inline]
-	fn queue(&self, op: impl Into<TaskOp>, priority: u8) -> Result<()> {
-		self.macro_.try_send(op.into(), priority).map_err(|_| anyhow!("Failed to send task"))
+	fn queue(&self, r#in: impl Into<TaskOp>, priority: u8) -> Result<()> {
+		self.r#macro.try_send(r#in.into(), priority).map_err(|_| anyhow!("Failed to send task"))
 	}
 }

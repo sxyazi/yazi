@@ -47,7 +47,7 @@ impl Input {
 		let delta = new.chars().count() as isize - snap.count() as isize;
 		snap.value = new;
 
-		self.move_(delta);
+		self.r#move(delta);
 		self.flush_value();
 		render!();
 	}

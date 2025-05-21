@@ -6,11 +6,11 @@ use yazi_shared::event::CmdCow;
 use crate::spot::Spot;
 
 struct Opt {
-	type_: Cow<'static, str>,
+	r#type: Cow<'static, str>,
 }
 
 impl From<CmdCow> for Opt {
-	fn from(mut c: CmdCow) -> Self { Self { type_: c.take_first_str().unwrap_or_default() } }
+	fn from(mut c: CmdCow) -> Self { Self { r#type: c.take_first_str().unwrap_or_default() } }
 }
 
 impl Spot {
@@ -20,7 +20,7 @@ impl Spot {
 		let Some(table) = lock.table() else { return };
 
 		let mut s = String::new();
-		match opt.type_.as_ref() {
+		match opt.r#type.as_ref() {
 			"cell" => {
 				let Some(cell) = table.selected_cell() else { return };
 				s = cell.to_string();

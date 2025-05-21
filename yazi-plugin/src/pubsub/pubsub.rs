@@ -7,9 +7,9 @@ use crate::runtime::RtRef;
 pub struct Pubsub;
 
 impl Pubsub {
-	pub(super) fn pub_(lua: &Lua) -> mlua::Result<Function> {
+	pub(super) fn r#pub(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, (kind, value): (mlua::String, Value)| {
-			yazi_dds::Pubsub::pub_(Body::from_lua(&kind.to_str()?, value)?);
+			yazi_dds::Pubsub::r#pub(Body::from_lua(&kind.to_str()?, value)?);
 			Ok(())
 		})
 	}

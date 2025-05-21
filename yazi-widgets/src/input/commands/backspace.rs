@@ -26,10 +26,10 @@ impl Input {
 
 		if opt.under {
 			snap.value.remove(snap.idx(snap.cursor).unwrap());
-			self.move_(0);
+			self.r#move(0);
 		} else {
 			snap.value.remove(snap.idx(snap.cursor - 1).unwrap());
-			self.move_(-1);
+			self.r#move(-1);
 		}
 
 		self.flush_value();

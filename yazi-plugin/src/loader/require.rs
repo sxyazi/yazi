@@ -40,7 +40,7 @@ impl Require {
 		)
 	}
 
-	fn create_mt(lua: &Lua, id: &str, mod_: Table, sync: bool) -> mlua::Result<Table> {
+	fn create_mt(lua: &Lua, id: &str, r#mod: Table, sync: bool) -> mlua::Result<Table> {
 		let id: Arc<str> = Arc::from(id);
 		let mt = lua.create_table_from([
 			(
@@ -62,7 +62,7 @@ impl Require {
 			),
 		])?;
 
-		let ts = lua.create_table_from([("__mod", mod_)])?;
+		let ts = lua.create_table_from([("__mod", r#mod)])?;
 		ts.set_metatable(Some(mt));
 		Ok(ts)
 	}
@@ -72,9 +72,9 @@ impl Require {
 
 		if sync {
 			lua.create_function(move |lua, args: MultiValue| {
-				let (mod_, args) = Self::split_mod_and_args(lua, &id, args)?;
+				let (r#mod, args) = Self::split_mod_and_args(lua, &id, args)?;
 				lua.named_registry_value::<RtRefMut>("ir")?.push(&id);
-				let result = mod_.call_function::<MultiValue>(&f, args);
+				let result = r#mod.call_function::<MultiValue>(&f, args);
 				lua.named_registry_value::<RtRefMut>("ir")?.pop();
 				result
 			})
@@ -82,9 +82,9 @@ impl Require {
 			lua.create_async_function(move |lua, args: MultiValue| {
 				let (id, f) = (id.clone(), f.clone());
 				async move {
-					let (mod_, args) = Self::split_mod_and_args(&lua, &id, args)?;
+					let (r#mod, args) = Self::split_mod_and_args(&lua, &id, args)?;
 					lua.named_registry_value::<RtRefMut>("ir")?.push(&id);
-					let result = mod_.call_async_function::<MultiValue>(&f, args).await;
+					let result = r#mod.call_async_function::<MultiValue>(&f, args).await;
 					lua.named_registry_value::<RtRefMut>("ir")?.pop();
 					result
 				}
@@ -104,9 +104,9 @@ impl Require {
 			args.push_front(front);
 			return Ok((LOADER.try_load(lua, id)?, args));
 		};
-		Ok(if let Ok(mod_) = tbl.raw_get::<Table>("__mod") {
-			args.push_front(Value::Table(mod_.clone()));
-			(mod_, args)
+		Ok(if let Ok(r#mod) = tbl.raw_get::<Table>("__mod") {
+			args.push_front(Value::Table(r#mod.clone()));
+			(r#mod, args)
 		} else {
 			args.push_front(Value::Table(tbl));
 			(LOADER.try_load(lua, id)?, args)

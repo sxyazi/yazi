@@ -61,26 +61,26 @@ impl Package {
 		outln!("Plugins:")?;
 		for d in &self.plugins {
 			if d.rev.is_empty() {
-				outln!("\t{}", d.use_)?;
+				outln!("\t{}", d.r#use)?;
 			} else {
-				outln!("\t{} ({})", d.use_, d.rev)?;
+				outln!("\t{} ({})", d.r#use, d.rev)?;
 			}
 		}
 
 		outln!("Flavors:")?;
 		for d in &self.flavors {
 			if d.rev.is_empty() {
-				outln!("\t{}", d.use_)?;
+				outln!("\t{}", d.r#use)?;
 			} else {
-				outln!("\t{} ({})", d.use_, d.rev)?;
+				outln!("\t{} ({})", d.r#use, d.rev)?;
 			}
 		}
 
 		Ok(())
 	}
 
-	async fn add(&mut self, use_: &str) -> Result<()> {
-		let mut dep = Dependency::from_str(use_)?;
+	async fn add(&mut self, r#use: &str) -> Result<()> {
+		let mut dep = Dependency::from_str(r#use)?;
 		if let Some(d) = self.identical(&dep) {
 			bail!(
 				"{} `{}` already exists in package.toml",
@@ -98,9 +98,9 @@ impl Package {
 		Ok(())
 	}
 
-	async fn delete(&mut self, use_: &str) -> Result<()> {
-		let Some(dep) = self.identical(&Dependency::from_str(use_)?).cloned() else {
-			bail!("`{}` was not found in package.toml", use_)
+	async fn delete(&mut self, r#use: &str) -> Result<()> {
+		let Some(dep) = self.identical(&Dependency::from_str(r#use)?).cloned() else {
+			bail!("`{}` was not found in package.toml", r#use)
 		};
 
 		dep.delete().await?;

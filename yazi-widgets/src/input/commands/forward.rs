@@ -18,7 +18,7 @@ impl Input {
 
 		let mut it = snap.value.chars().skip(snap.cursor).enumerate();
 		let Some(mut prev) = it.next().map(|(_, c)| CharKind::new(c)) else {
-			return self.move_(0);
+			return self.r#move(0);
 		};
 
 		for (i, c) in it {
@@ -29,13 +29,13 @@ impl Input {
 				k != CharKind::Space && k.vary(prev, opt.far)
 			};
 			if b && !matches!(snap.op, InputOp::None | InputOp::Select(_)) {
-				return self.move_(i as isize);
+				return self.r#move(i as isize);
 			} else if b {
-				return self.move_(if opt.end_of_word { i - 1 } else { i } as isize);
+				return self.r#move(if opt.end_of_word { i - 1 } else { i } as isize);
 			}
 			prev = k;
 		}
 
-		self.move_(snap.len() as isize)
+		self.r#move(snap.len() as isize)
 	}
 }

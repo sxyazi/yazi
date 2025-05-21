@@ -6,7 +6,7 @@ use yazi_shared::event::CmdCow;
 use crate::tab::Tab;
 
 struct Opt {
-	type_:     Cow<'static, str>,
+	r#type:    Cow<'static, str>,
 	separator: Separator,
 	hovered:   bool,
 }
@@ -14,7 +14,7 @@ struct Opt {
 impl From<CmdCow> for Opt {
 	fn from(mut c: CmdCow) -> Self {
 		Self {
-			type_:     c.take_first_str().unwrap_or_default(),
+			r#type:    c.take_first_str().unwrap_or_default(),
 			separator: c.str("separator").unwrap_or_default().into(),
 			hovered:   c.bool("hovered"),
 		}
@@ -37,7 +37,7 @@ impl Tab {
 		.peekable();
 
 		while let Some(u) = it.next() {
-			s.push(match opt.type_.as_ref() {
+			s.push(match opt.r#type.as_ref() {
 				"path" => opt.separator.transform(u),
 				"dirname" => opt.separator.transform(u.parent().unwrap_or(Path::new(""))),
 				"filename" => opt.separator.transform(u.name()),
@@ -50,7 +50,7 @@ impl Tab {
 		}
 
 		// Copy the CWD path regardless even if the directory is empty
-		if s.is_empty() && opt.type_ == "dirname" {
+		if s.is_empty() && opt.r#type == "dirname" {
 			s.push(self.cwd());
 		}
 

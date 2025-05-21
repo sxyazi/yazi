@@ -17,7 +17,7 @@ pub struct Border {
 	pub(crate) area: Area,
 
 	pub(crate) position: ratatui::widgets::Borders,
-	pub(crate) type_:    ratatui::widgets::BorderType,
+	pub(crate) r#type:   ratatui::widgets::BorderType,
 	pub(crate) style:    ratatui::style::Style,
 
 	pub(crate) titles: Vec<(ratatui::widgets::block::Position, ratatui::text::Line<'static>)>,
@@ -60,7 +60,7 @@ impl Border {
 	) {
 		let mut block = ratatui::widgets::Block::default()
 			.borders(self.position)
-			.border_type(self.type_)
+			.border_type(self.r#type)
 			.border_style(self.style);
 
 		for title in self.titles {
@@ -80,7 +80,7 @@ impl UserData for Border {
 		crate::impl_style_method!(methods, style);
 
 		methods.add_function_mut("type", |_, (ud, value): (AnyUserData, u8)| {
-			ud.borrow_mut::<Self>()?.type_ = match value {
+			ud.borrow_mut::<Self>()?.r#type = match value {
 				ROUNDED => ratatui::widgets::BorderType::Rounded,
 				DOUBLE => ratatui::widgets::BorderType::Double,
 				THICK => ratatui::widgets::BorderType::Thick,

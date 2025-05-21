@@ -52,7 +52,7 @@ impl Input {
 			return;
 		}
 
-		self.move_(0);
+		self.r#move(0);
 		self.flush_value();
 		render!();
 	}

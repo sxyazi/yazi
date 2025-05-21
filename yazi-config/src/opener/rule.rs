@@ -10,8 +10,7 @@ pub struct OpenerRule {
 	pub orphan: bool,
 	#[serde(default)]
 	pub desc:   String,
-	#[serde(rename = "for")]
-	pub for_:   Option<String>,
+	pub r#for:  Option<String>,
 	#[serde(skip)]
 	pub spread: bool,
 }

@@ -26,7 +26,7 @@ impl Input {
 		}
 
 		if opt.append {
-			self.move_(1);
+			self.r#move(1);
 		}
 
 		render!();

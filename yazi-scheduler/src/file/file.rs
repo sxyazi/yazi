@@ -7,25 +7,25 @@ use yazi_config::YAZI;
 use yazi_fs::{SizeCalculator, cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to, skip_path};
 use yazi_shared::url::Url;
 
-use super::{FileOp, FileOpDelete, FileOpHardlink, FileOpLink, FileOpPaste, FileOpTrash};
+use super::{FileIn, FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash};
 use crate::{LOW, NORMAL, TaskOp, TaskProg};
 
 pub struct File {
-	macro_: async_priority_channel::Sender<TaskOp, u8>,
-	prog:   mpsc::UnboundedSender<TaskProg>,
+	r#macro: async_priority_channel::Sender<TaskOp, u8>,
+	prog:    mpsc::UnboundedSender<TaskProg>,
 }
 
 impl File {
 	pub fn new(
-		macro_: async_priority_channel::Sender<TaskOp, u8>,
+		r#macro: async_priority_channel::Sender<TaskOp, u8>,
 		prog: mpsc::UnboundedSender<TaskProg>,
 	) -> Self {
-		Self { macro_, prog }
+		Self { r#macro, prog }
 	}
 
-	pub async fn work(&self, op: FileOp) -> Result<()> {
-		match op {
-			FileOp::Paste(mut task) => {
+	pub async fn work(&self, r#in: FileIn) -> Result<()> {
+		match r#in {
+			FileIn::Paste(mut task) => {
 				ok_or_not_found(fs::remove_file(&task.to).await)?;
 				let mut it = copy_with_progress(&task.from, &task.to, task.cha.unwrap());
 
@@ -50,7 +50,7 @@ impl File {
 						{
 							task.retry += 1;
 							self.log(task.id, format!("Paste task retry: {task:?}"))?;
-							self.queue(FileOp::Paste(task), LOW).await?;
+							self.queue(FileIn::Paste(task), LOW).await?;
 							return Ok(());
 						}
 						Err(e) => Err(e)?,
@@ -58,7 +58,7 @@ impl File {
 				}
 				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 			}
-			FileOp::Link(task) => {
+			FileIn::Link(task) => {
 				let cha = task.cha.unwrap();
 
 				let src = if task.resolve {
@@ -99,7 +99,7 @@ impl File {
 				}
 				self.prog.send(TaskProg::Adv(task.id, 1, cha.len))?;
 			}
-			FileOp::Hardlink(task) => {
+			FileIn::Hardlink(task) => {
 				let cha = task.cha.unwrap();
 				let src = if !task.follow {
 					Cow::Borrowed(task.from.as_path())
@@ -119,7 +119,7 @@ impl File {
 
 				self.prog.send(TaskProg::Adv(task.id, 1, cha.len))?;
 			}
-			FileOp::Delete(task) => {
+			FileIn::Delete(task) => {
 				if let Err(e) = fs::remove_file(&task.target).await {
 					if e.kind() != NotFound && maybe_exists(&task.target).await {
 						self.fail(task.id, format!("Delete task failed: {task:?}, {e}"))?;
@@ -128,7 +128,7 @@ impl File {
 				}
 				self.prog.send(TaskProg::Adv(task.id, 1, task.length))?
 			}
-			FileOp::Trash(task) => {
+			FileIn::Trash(task) => {
 				tokio::task::spawn_blocking(move || {
 					#[cfg(target_os = "macos")]
 					{
@@ -150,7 +150,7 @@ impl File {
 		Ok(())
 	}
 
-	pub async fn paste(&self, mut task: FileOpPaste) -> Result<()> {
+	pub async fn paste(&self, mut task: FileInPaste) -> Result<()> {
 		if task.cut && ok_or_not_found(fs::rename(&task.from, &task.to).await).is_ok() {
 			return self.succ(task.id);
 		}
@@ -165,9 +165,9 @@ impl File {
 			self.prog.send(TaskProg::New(id, cha.len))?;
 
 			if cha.is_orphan() || (cha.is_link() && !task.follow) {
-				self.queue(FileOp::Link(task.into()), NORMAL).await?;
+				self.queue(FileIn::Link(task.into()), NORMAL).await?;
 			} else {
-				self.queue(FileOp::Paste(task), LOW).await?;
+				self.queue(FileIn::Paste(task), LOW).await?;
 			}
 			return self.succ(id);
 		}
@@ -210,27 +210,27 @@ impl File {
 				self.prog.send(TaskProg::New(task.id, cha.len))?;
 
 				if cha.is_orphan() || (cha.is_link() && !task.follow) {
-					self.queue(FileOp::Link(task.spawn(from, to, cha).into()), NORMAL).await?;
+					self.queue(FileIn::Link(task.spawn(from, to, cha).into()), NORMAL).await?;
 				} else {
-					self.queue(FileOp::Paste(task.spawn(from, to, cha)), LOW).await?;
+					self.queue(FileIn::Paste(task.spawn(from, to, cha)), LOW).await?;
 				}
 			}
 		}
 		self.succ(task.id)
 	}
 
-	pub async fn link(&self, mut task: FileOpLink) -> Result<()> {
+	pub async fn link(&self, mut task: FileInLink) -> Result<()> {
 		let id = task.id;
 		if task.cha.is_none() {
 			task.cha = Some(Self::cha(&task.from, false).await?);
 		}
 
 		self.prog.send(TaskProg::New(id, task.cha.unwrap().len))?;
-		self.queue(FileOp::Link(task), NORMAL).await?;
+		self.queue(FileIn::Link(task), NORMAL).await?;
 		self.succ(id)
 	}
 
-	pub async fn hardlink(&self, mut task: FileOpHardlink) -> Result<()> {
+	pub async fn hardlink(&self, mut task: FileInHardlink) -> Result<()> {
 		if task.cha.is_none() {
 			task.cha = Some(Self::cha(&task.from, task.follow).await?);
 		}
@@ -239,7 +239,7 @@ impl File {
 		if !cha.is_dir() {
 			let id = task.id;
 			self.prog.send(TaskProg::New(id, cha.len))?;
-			self.queue(FileOp::Hardlink(task), NORMAL).await?;
+			self.queue(FileIn::Hardlink(task), NORMAL).await?;
 			return self.succ(id);
 		}
 
@@ -279,19 +279,19 @@ impl File {
 
 				let to = dest.join(from.file_name().unwrap());
 				self.prog.send(TaskProg::New(task.id, cha.len))?;
-				self.queue(FileOp::Hardlink(task.spawn(from, to, cha)), NORMAL).await?;
+				self.queue(FileIn::Hardlink(task.spawn(from, to, cha)), NORMAL).await?;
 			}
 		}
 		self.succ(task.id)
 	}
 
-	pub async fn delete(&self, mut task: FileOpDelete) -> Result<()> {
+	pub async fn delete(&self, mut task: FileInDelete) -> Result<()> {
 		let meta = fs::symlink_metadata(&task.target).await?;
 		if !meta.is_dir() {
 			let id = task.id;
 			task.length = meta.len();
 			self.prog.send(TaskProg::New(id, meta.len()))?;
-			self.queue(FileOp::Delete(task), NORMAL).await?;
+			self.queue(FileIn::Delete(task), NORMAL).await?;
 			return self.succ(id);
 		}
 
@@ -310,18 +310,18 @@ impl File {
 				task.target = Url::from(entry.path());
 				task.length = meta.len();
 				self.prog.send(TaskProg::New(task.id, meta.len()))?;
-				self.queue(FileOp::Delete(task.clone()), NORMAL).await?;
+				self.queue(FileIn::Delete(task.clone()), NORMAL).await?;
 			}
 		}
 		self.succ(task.id)
 	}
 
-	pub async fn trash(&self, mut task: FileOpTrash) -> Result<()> {
+	pub async fn trash(&self, mut task: FileInTrash) -> Result<()> {
 		let id = task.id;
 		task.length = SizeCalculator::total(&task.target).await?;
 
 		self.prog.send(TaskProg::New(id, task.length))?;
-		self.queue(FileOp::Trash(task), LOW).await?;
+		self.queue(FileIn::Trash(task), LOW).await?;
 		self.succ(id)
 	}
 
@@ -356,7 +356,7 @@ impl File {
 	}
 
 	#[inline]
-	async fn queue(&self, op: impl Into<TaskOp>, priority: u8) -> Result<()> {
-		self.macro_.send(op.into(), priority).await.map_err(|_| anyhow!("Failed to send task"))
+	async fn queue(&self, r#in: impl Into<TaskOp>, priority: u8) -> Result<()> {
+		self.r#macro.send(r#in.into(), priority).await.map_err(|_| anyhow!("Failed to send task"))
 	}
 }
