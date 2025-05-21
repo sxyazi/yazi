@@ -38,7 +38,7 @@ impl KeymapRules {
 			self.keymap.into_iter().filter(|v| !a_seen.contains(&on(v))),
 			self.append_keymap.into_iter().filter(|v| !b_seen.contains(&on(v))),
 		)
-		.map(|mut chord| (chord.for_.take(), chord))
+		.map(|mut chord| (chord.r#for.take(), chord))
 		.filter(|(for_, chord)| !chord.noop() && check_for(for_.as_deref()))
 		.map(|(_, chord)| chord.reshape(layer))
 		.collect::<Result<_>>()?;

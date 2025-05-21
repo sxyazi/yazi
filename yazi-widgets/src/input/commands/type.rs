@@ -11,7 +11,7 @@ impl From<CmdCow> for Opt {
 }
 
 impl Input {
-	pub fn type_(&mut self, key: &Key) -> bool {
+	pub fn r#type(&mut self, key: &Key) -> bool {
 		let Some(c) = key.plain() else { return false };
 
 		if self.mode() == InputMode::Insert {
@@ -33,7 +33,7 @@ impl Input {
 			snap.value.insert_str(snap.idx(snap.cursor).unwrap(), s);
 		}
 
-		self.move_(s.chars().count() as isize);
+		self.r#move(s.chars().count() as isize);
 		self.flush_value();
 		render!();
 	}

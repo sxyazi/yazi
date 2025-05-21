@@ -17,10 +17,10 @@ impl<'a> Router<'a> {
 		let cx = &mut self.app.cx;
 		let layer = cx.layer();
 
-		if cx.help.visible && cx.help.type_(&key) {
+		if cx.help.visible && cx.help.r#type(&key) {
 			return true;
 		}
-		if cx.input.visible && cx.input.type_(&key) {
+		if cx.input.visible && cx.input.r#type(&key) {
 			return true;
 		}
 
@@ -31,7 +31,7 @@ impl<'a> Router<'a> {
 				self.matches(layer, key)
 			}
 			L::Cmp => self.matches(L::Cmp, key) || self.matches(L::Input, key),
-			L::Which => cx.which.type_(key),
+			L::Which => cx.which.r#type(key),
 		}
 	}
 

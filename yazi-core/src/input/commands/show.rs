@@ -51,7 +51,7 @@ impl Input {
 		// TODO: remove this
 		if let Some(cursor) = opt.cfg.cursor {
 			self.snap_mut().cursor = cursor;
-			self.move_(0);
+			self.r#move(0);
 		}
 
 		render!();

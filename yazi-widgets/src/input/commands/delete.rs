@@ -22,11 +22,11 @@ impl Input {
 			InputOp::Select(start) => {
 				self.snap_mut().op = InputOp::Delete(opt.cut, opt.insert, start);
 				render!(self.handle_op(self.snap().cursor, true));
-				self.move_(0);
+				self.r#move(0);
 			}
 			InputOp::Delete(..) => {
 				self.snap_mut().op = InputOp::Delete(opt.cut, opt.insert, 0);
-				self.move_(self.snap().len() as isize);
+				self.r#move(self.snap().len() as isize);
 			}
 			_ => {}
 		}

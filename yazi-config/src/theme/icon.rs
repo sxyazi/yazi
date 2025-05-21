@@ -193,8 +193,7 @@ impl<'de> Deserialize<'de> for CondIcons {
 	{
 		#[derive(Deserialize)]
 		struct Shadow {
-			#[serde(rename = "if")]
-			if_:  Condition,
+			r#if: Condition,
 			text: String,
 			fg:   Option<Color>,
 		}
@@ -202,7 +201,7 @@ impl<'de> Deserialize<'de> for CondIcons {
 		Ok(Self(
 			<Vec<Shadow>>::deserialize(deserializer)?
 				.into_iter()
-				.map(|s| (s.if_, I { text: s.text, style: Style { fg: s.fg, ..Default::default() } }))
+				.map(|s| (s.r#if, I { text: s.text, style: Style { fg: s.fg, ..Default::default() } }))
 				.collect(),
 		))
 	}

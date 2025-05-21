@@ -10,12 +10,12 @@ use yazi_fs::{FilesOp, SizeCalculator};
 use yazi_plugin::isolate;
 use yazi_shared::{event::CmdCow, url::Url};
 
-use super::{PreworkOp, PreworkOpFetch, PreworkOpLoad, PreworkOpSize};
+use super::{PreworkIn, PreworkInFetch, PreworkInLoad, PreworkInSize};
 use crate::{HIGH, NORMAL, TaskOp, TaskProg};
 
 pub struct Prework {
-	macro_: async_priority_channel::Sender<TaskOp, u8>,
-	prog:   mpsc::UnboundedSender<TaskProg>,
+	r#macro: async_priority_channel::Sender<TaskOp, u8>,
+	prog:    mpsc::UnboundedSender<TaskProg>,
 
 	pub loaded:       Mutex<LruCache<u64, u32>>,
 	pub size_loading: RwLock<HashSet<Url>>,
@@ -23,20 +23,20 @@ pub struct Prework {
 
 impl Prework {
 	pub fn new(
-		macro_: async_priority_channel::Sender<TaskOp, u8>,
+		r#macro: async_priority_channel::Sender<TaskOp, u8>,
 		prog: mpsc::UnboundedSender<TaskProg>,
 	) -> Self {
 		Self {
-			macro_,
+			r#macro,
 			prog,
 			loaded: Mutex::new(LruCache::new(NonZeroUsize::new(4096).unwrap())),
 			size_loading: Default::default(),
 		}
 	}
 
-	pub async fn work(&self, op: PreworkOp) -> Result<()> {
-		match op {
-			PreworkOp::Fetch(task) => {
+	pub async fn work(&self, r#in: PreworkIn) -> Result<()> {
+		match r#in {
+			PreworkIn::Fetch(task) => {
 				let hashes: Vec<_> = task.targets.iter().map(|f| f.hash()).collect();
 				let result = isolate::fetch(CmdCow::from(&task.plugin.run), task.targets).await;
 				if let Err(e) = result {
@@ -54,7 +54,7 @@ impl Prework {
 				}
 				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 			}
-			PreworkOp::Load(task) => {
+			PreworkIn::Load(task) => {
 				let hash = task.target.hash();
 				let result = isolate::preload(&task.plugin.run, task.target).await;
 				if let Err(e) = result {
@@ -72,7 +72,7 @@ impl Prework {
 				}
 				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 			}
-			PreworkOp::Size(task) => {
+			PreworkIn::Size(task) => {
 				let length = SizeCalculator::total(&task.target).await.unwrap_or(0);
 				task.throttle.done((task.target, length), |buf| {
 					{
@@ -95,35 +95,35 @@ impl Prework {
 		Ok(())
 	}
 
-	pub async fn fetch(&self, task: PreworkOpFetch) -> Result<()> {
+	pub async fn fetch(&self, task: PreworkInFetch) -> Result<()> {
 		let id = task.id;
 		self.prog.send(TaskProg::New(id, 0))?;
 
 		match task.plugin.prio {
-			Priority::Low => self.queue(PreworkOp::Fetch(task), NORMAL).await?,
-			Priority::Normal => self.queue(PreworkOp::Fetch(task), HIGH).await?,
-			Priority::High => self.work(PreworkOp::Fetch(task)).await?,
+			Priority::Low => self.queue(PreworkIn::Fetch(task), NORMAL).await?,
+			Priority::Normal => self.queue(PreworkIn::Fetch(task), HIGH).await?,
+			Priority::High => self.work(PreworkIn::Fetch(task)).await?,
 		}
 		self.succ(id)
 	}
 
-	pub async fn load(&self, task: PreworkOpLoad) -> Result<()> {
+	pub async fn load(&self, task: PreworkInLoad) -> Result<()> {
 		let id = task.id;
 		self.prog.send(TaskProg::New(id, 0))?;
 
 		match task.plugin.prio {
-			Priority::Low => self.queue(PreworkOp::Load(task), NORMAL).await?,
-			Priority::Normal => self.queue(PreworkOp::Load(task), HIGH).await?,
-			Priority::High => self.work(PreworkOp::Load(task)).await?,
+			Priority::Low => self.queue(PreworkIn::Load(task), NORMAL).await?,
+			Priority::Normal => self.queue(PreworkIn::Load(task), HIGH).await?,
+			Priority::High => self.work(PreworkIn::Load(task)).await?,
 		}
 		self.succ(id)
 	}
 
-	pub async fn size(&self, task: PreworkOpSize) -> Result<()> {
+	pub async fn size(&self, task: PreworkInSize) -> Result<()> {
 		let id = task.id;
 
 		self.prog.send(TaskProg::New(id, 0))?;
-		self.work(PreworkOp::Size(task)).await?;
+		self.work(PreworkIn::Size(task)).await?;
 		self.succ(id)
 	}
 }
@@ -138,7 +138,7 @@ impl Prework {
 	}
 
 	#[inline]
-	async fn queue(&self, op: impl Into<TaskOp>, priority: u8) -> Result<()> {
-		self.macro_.send(op.into(), priority).await.map_err(|_| anyhow!("Failed to send task"))
+	async fn queue(&self, r#in: impl Into<TaskOp>, priority: u8) -> Result<()> {
+		self.r#macro.send(r#in.into(), priority).await.map_err(|_| anyhow!("Failed to send task"))
 	}
 }

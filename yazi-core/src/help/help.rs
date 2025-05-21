@@ -38,7 +38,7 @@ impl Help {
 		render!();
 	}
 
-	pub fn type_(&mut self, key: &Key) -> bool {
+	pub fn r#type(&mut self, key: &Key) -> bool {
 		let Some(input) = &mut self.in_filter else {
 			return false;
 		};
@@ -56,7 +56,7 @@ impl Help {
 				input.backspace(false);
 			}
 			_ => {
-				input.type_(key);
+				input.r#type(key);
 			}
 		}
 

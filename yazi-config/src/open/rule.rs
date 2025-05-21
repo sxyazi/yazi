@@ -6,11 +6,10 @@ use crate::pattern::Pattern;
 
 #[derive(Debug, Deserialize)]
 pub struct OpenRule {
-	pub name: Option<Pattern>,
-	pub mime: Option<Pattern>,
-	#[serde(rename = "use")]
+	pub name:  Option<Pattern>,
+	pub mime:  Option<Pattern>,
 	#[serde(deserialize_with = "OpenRule::deserialize")]
-	pub use_: Vec<String>,
+	pub r#use: Vec<String>,
 }
 
 impl OpenRule {

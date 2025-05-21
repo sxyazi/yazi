@@ -40,7 +40,7 @@ impl Require {
 		)
 	}
 
-	fn create_mt(lua: &Lua, id: &str, mod_: Table, sync: bool) -> mlua::Result<Table> {
+	fn create_mt(lua: &Lua, id: &str, r#mod: Table, sync: bool) -> mlua::Result<Table> {
 		let id: Arc<str> = Arc::from(id);
 		let mt = lua.create_table_from([
 			(
@@ -62,7 +62,7 @@ impl Require {
 			),
 		])?;
 
-		let ts = lua.create_table_from([("__mod", mod_)])?;
+		let ts = lua.create_table_from([("__mod", r#mod)])?;
 		ts.set_metatable(Some(mt));
 		Ok(ts)
 	}

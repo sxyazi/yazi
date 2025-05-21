@@ -76,7 +76,7 @@ impl Tab {
 					block:  opt.block,
 					orphan: opt.orphan,
 					desc:   Default::default(),
-					for_:   None,
+					r#for:  None,
 					spread: true,
 				}),
 				cwd,

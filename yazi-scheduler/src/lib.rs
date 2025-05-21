@@ -2,7 +2,7 @@
 
 yazi_macro::mod_pub!(file plugin prework process);
 
-yazi_macro::mod_flat!(ongoing op scheduler task);
+yazi_macro::mod_flat!(ongoing out r#in scheduler task);
 
 const LOW: u8 = yazi_config::Priority::Low as u8;
 const NORMAL: u8 = yazi_config::Priority::Normal as u8;

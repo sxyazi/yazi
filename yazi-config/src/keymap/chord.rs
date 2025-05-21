@@ -12,12 +12,11 @@ static RE: OnceLock<Regex> = OnceLock::new();
 #[derive(Debug, Default, Deserialize)]
 pub struct Chord {
 	#[serde(deserialize_with = "super::deserialize_on")]
-	pub on:   Vec<Key>,
+	pub on:    Vec<Key>,
 	#[serde(deserialize_with = "super::deserialize_run")]
-	pub run:  Vec<Cmd>,
-	pub desc: Option<String>,
-	#[serde(rename = "for")]
-	pub for_: Option<String>,
+	pub run:   Vec<Cmd>,
+	pub desc:  Option<String>,
+	pub r#for: Option<String>,
 }
 
 impl PartialEq for Chord {

@@ -20,10 +20,10 @@ impl Utils {
 			for (i, cand) in t.raw_get::<Table>("cands")?.sequence_values::<Table>().enumerate() {
 				let cand = cand?;
 				cands.push(Chord {
-					on:   Self::parse_keys(cand.raw_get("on")?)?,
-					run:  vec![Cmd::args("which:callback", &[i]).with_any("tx", tx.clone())],
-					desc: cand.raw_get("desc").ok(),
-					for_: None,
+					on:    Self::parse_keys(cand.raw_get("on")?)?,
+					run:   vec![Cmd::args("which:callback", &[i]).with_any("tx", tx.clone())],
+					desc:  cand.raw_get("desc").ok(),
+					r#for: None,
 				});
 			}
 

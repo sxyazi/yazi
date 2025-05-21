@@ -1,3 +1,3 @@
 #![allow(clippy::module_inception)]
 
-yazi_macro::mod_flat!(file op);
+yazi_macro::mod_flat!(file out r#in);

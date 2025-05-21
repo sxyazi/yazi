@@ -7,8 +7,8 @@ use yazi_fs::Xdg;
 
 #[derive(Clone, Default)]
 pub(crate) struct Dependency {
-	pub(crate) use_: String, // owner/repo:child
-	pub(crate) name: String, // child.yazi
+	pub(crate) r#use: String, // owner/repo:child
+	pub(crate) name:  String, // child.yazi
 
 	pub(crate) parent: String, // owner/repo
 	pub(crate) child:  String, // child.yazi
@@ -81,7 +81,7 @@ impl FromStr for Dependency {
 		}
 
 		Ok(Self {
-			use_: s.to_owned(),
+			r#use: s.to_owned(),
 			name: format!("{name}.yazi"),
 			parent: format!("{parent}{}", if child.is_empty() { ".yazi" } else { "" }),
 			child: if child.is_empty() { String::new() } else { format!("{child}.yazi") },
@@ -97,19 +97,18 @@ impl<'de> Deserialize<'de> for Dependency {
 	{
 		#[derive(Deserialize)]
 		struct Shadow {
-			#[serde(rename = "use")]
-			use_: String,
+			r#use: String,
 			#[serde(default)]
-			rev:  String,
+			rev:   String,
 			#[serde(default)]
-			hash: String,
+			hash:  String,
 		}
 
 		let outer = Shadow::deserialize(deserializer)?;
 		Ok(Self {
 			rev: outer.rev,
 			hash: outer.hash,
-			..Self::from_str(&outer.use_).map_err(serde::de::Error::custom)?
+			..Self::from_str(&outer.r#use).map_err(serde::de::Error::custom)?
 		})
 	}
 }
@@ -121,12 +120,11 @@ impl Serialize for Dependency {
 	{
 		#[derive(Serialize)]
 		struct Shadow<'a> {
-			#[serde(rename = "use")]
-			use_: &'a str,
-			rev:  &'a str,
-			hash: &'a str,
+			r#use: &'a str,
+			rev:   &'a str,
+			hash:  &'a str,
 		}
 
-		Shadow { use_: &self.use_, rev: &self.rev, hash: &self.hash }.serialize(serializer)
+		Shadow { r#use: &self.r#use, rev: &self.rev, hash: &self.hash }.serialize(serializer)
 	}
 }

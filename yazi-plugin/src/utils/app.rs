@@ -7,8 +7,8 @@ use crate::bindings::{Permit, PermitRef};
 
 impl Utils {
 	pub(super) fn id(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|_, type_: mlua::String| {
-			Ok(Id(match type_.as_bytes().as_ref() {
+		lua.create_function(|_, r#type: mlua::String| {
+			Ok(Id(match r#type.as_bytes().as_ref() {
 				b"app" => *yazi_dds::ID,
 				b"ft" => yazi_fs::FILES_TICKET.next(),
 				_ => Err("Invalid id type".into_lua_err())?,

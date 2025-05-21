@@ -16,7 +16,7 @@ impl Input {
 			}
 			InputMode::Insert => {
 				snap.mode = InputMode::Normal;
-				self.move_(-1);
+				self.r#move(-1);
 			}
 			InputMode::Replace => {
 				snap.mode = InputMode::Normal;

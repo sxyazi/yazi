@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::{Attribute, Data, DeriveInput, Fields, FnArg, ItemFn, parse_macro_input};
+use syn::{Attribute, Data, DeriveInput, Fields, FnArg, ItemFn, ext::IdentExt, parse_macro_input};
 
 #[proc_macro_attribute]
 pub fn command(_: TokenStream, item: TokenStream) -> TokenStream {
@@ -23,7 +23,7 @@ pub fn command(_: TokenStream, item: TokenStream) -> TokenStream {
 
 	// Add `__` prefix to the original function name
 	let name_ori = f.sig.ident;
-	f.sig.ident = format_ident!("__{name_ori}");
+	f.sig.ident = format_ident!("__{}", name_ori.unraw());
 	let name_new = &f.sig.ident;
 
 	// Collect the rest of the arguments

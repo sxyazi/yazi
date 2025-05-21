@@ -2,29 +2,29 @@ use yazi_fs::cha::Cha;
 use yazi_shared::url::Url;
 
 #[derive(Debug)]
-pub enum FileOp {
-	Paste(FileOpPaste),
-	Link(FileOpLink),
-	Hardlink(FileOpHardlink),
-	Delete(FileOpDelete),
-	Trash(FileOpTrash),
+pub enum FileIn {
+	Paste(FileInPaste),
+	Link(FileInLink),
+	Hardlink(FileInHardlink),
+	Delete(FileInDelete),
+	Trash(FileInTrash),
 }
 
-impl FileOp {
+impl FileIn {
 	pub fn id(&self) -> usize {
 		match self {
-			Self::Paste(op) => op.id,
-			Self::Link(op) => op.id,
-			Self::Hardlink(op) => op.id,
-			Self::Delete(op) => op.id,
-			Self::Trash(op) => op.id,
+			Self::Paste(r#in) => r#in.id,
+			Self::Link(r#in) => r#in.id,
+			Self::Hardlink(r#in) => r#in.id,
+			Self::Delete(r#in) => r#in.id,
+			Self::Trash(r#in) => r#in.id,
 		}
 	}
 }
 
 // --- Paste
 #[derive(Clone, Debug)]
-pub struct FileOpPaste {
+pub struct FileInPaste {
 	pub id:     usize,
 	pub from:   Url,
 	pub to:     Url,
@@ -34,7 +34,7 @@ pub struct FileOpPaste {
 	pub retry:  u8,
 }
 
-impl FileOpPaste {
+impl FileInPaste {
 	pub(super) fn spawn(&self, from: Url, to: Url, cha: Cha) -> Self {
 		Self {
 			id: self.id,
@@ -50,7 +50,7 @@ impl FileOpPaste {
 
 // --- Link
 #[derive(Clone, Debug)]
-pub struct FileOpLink {
+pub struct FileInLink {
 	pub id:       usize,
 	pub from:     Url,
 	pub to:       Url,
@@ -60,8 +60,8 @@ pub struct FileOpLink {
 	pub delete:   bool,
 }
 
-impl From<FileOpPaste> for FileOpLink {
-	fn from(value: FileOpPaste) -> Self {
+impl From<FileInPaste> for FileInLink {
+	fn from(value: FileInPaste) -> Self {
 		Self {
 			id:       value.id,
 			from:     value.from,
@@ -76,7 +76,7 @@ impl From<FileOpPaste> for FileOpLink {
 
 // --- Hardlink
 #[derive(Clone, Debug)]
-pub struct FileOpHardlink {
+pub struct FileInHardlink {
 	pub id:     usize,
 	pub from:   Url,
 	pub to:     Url,
@@ -84,7 +84,7 @@ pub struct FileOpHardlink {
 	pub follow: bool,
 }
 
-impl FileOpHardlink {
+impl FileInHardlink {
 	pub(super) fn spawn(&self, from: Url, to: Url, cha: Cha) -> Self {
 		Self { id: self.id, from, to, cha: Some(cha), follow: self.follow }
 	}
@@ -92,7 +92,7 @@ impl FileOpHardlink {
 
 // --- Delete
 #[derive(Clone, Debug)]
-pub struct FileOpDelete {
+pub struct FileInDelete {
 	pub id:     usize,
 	pub target: Url,
 	pub length: u64,
@@ -100,7 +100,7 @@ pub struct FileOpDelete {
 
 // --- Trash
 #[derive(Clone, Debug)]
-pub struct FileOpTrash {
+pub struct FileInTrash {
 	pub id:     usize,
 	pub target: Url,
 	pub length: u64,
