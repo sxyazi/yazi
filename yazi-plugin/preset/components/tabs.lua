@@ -12,8 +12,7 @@ end
 function Tabs:reflow() return { self } end
 
 function Tabs:redraw()
-	local len = #cx.tabs
-	if len < 2 then
+	if self.height() < 1 then
 		return {}
 	end
 
@@ -22,8 +21,8 @@ function Tabs:redraw()
 	}
 
 	local pos = lines[1]:width()
-	local max = math.floor(self:inner_width() / len)
-	for i = 1, len do
+	local max = math.floor(self:inner_width() / #cx.tabs)
+	for i = 1, #cx.tabs do
 		local name = ya.truncate(string.format(" %d %s ", i, cx.tabs[i].name), { max = max })
 		if i == cx.tabs.idx then
 			lines[#lines + 1] = ui.Line {
