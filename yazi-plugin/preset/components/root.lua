@@ -1,6 +1,6 @@
 Root = {
 	_id = "root",
-	_drag_start = ui.Rect.default,
+	_drag_start = ui.Rect {},
 }
 
 function Root:new(area)

@@ -34,7 +34,7 @@ globset             = "0.4.16"
 indexmap            = { version = "2.9.0", features = [ "serde" ] }
 libc                = "0.2.172"
 lru                 = "0.14.0"
-mlua                = { version = "0.10.3", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serialize" ] }
+mlua                = { version = "0.10.5", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serialize" ] }
 objc                = "0.2.7"
 parking_lot         = "0.12.3"
 paste               = "1.0.15"
@@ -44,7 +44,7 @@ scopeguard          = "1.2.0"
 serde               = { version = "1.0.219", features = [ "derive" ] }
 serde_json          = "1.0.140"
 syntect             = { version = "5.2.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
-tokio               = { version = "1.45.0", features = [ "full" ] }
+tokio               = { version = "1.45.1", features = [ "full" ] }
 tokio-stream        = "0.1.17"
 tokio-util          = "0.7.15"
 toml                = { version = "0.8.22" }
