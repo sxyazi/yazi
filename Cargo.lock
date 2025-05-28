@@ -3393,6 +3393,7 @@ dependencies = [
  "regex",
  "serde",
  "toml",
+ "toml_edit",
  "tracing",
  "yazi-codegen",
  "yazi-fs",
