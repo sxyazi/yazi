@@ -30,13 +30,11 @@ impl FromLua for Align {
 			0 => ratatui::layout::Alignment::Left,
 			1 => ratatui::layout::Alignment::Center,
 			2 => ratatui::layout::Alignment::Right,
-			_ => {
-				return Err(mlua::Error::FromLuaConversionError {
-					from:    value.type_name(),
-					to:      "Align".to_string(),
-					message: Some("invalid value for Align".to_string()),
-				});
-			}
+			_ => Err(mlua::Error::FromLuaConversionError {
+				from:    value.type_name(),
+				to:      "Align".to_string(),
+				message: Some("invalid value for Align".to_string()),
+			})?,
 		}))
 	}
 }

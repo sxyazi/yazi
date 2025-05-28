@@ -40,13 +40,11 @@ impl FromLua for Wrap {
 			0 => None,
 			1 => Some(ratatui::widgets::Wrap { trim: false }),
 			2 => Some(ratatui::widgets::Wrap { trim: true }),
-			_ => {
-				return Err(mlua::Error::FromLuaConversionError {
-					from:    value.type_name(),
-					to:      "Wrap".to_string(),
-					message: Some("invalid value for Wrap".to_string()),
-				});
-			}
+			_ => Err(mlua::Error::FromLuaConversionError {
+				from:    value.type_name(),
+				to:      "Wrap".to_string(),
+				message: Some("invalid value for Wrap".to_string()),
+			})?,
 		}))
 	}
 }
