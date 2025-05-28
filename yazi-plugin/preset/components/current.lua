@@ -20,7 +20,7 @@ function Current:empty()
 	end
 
 	return {
-		ui.Line(s):area(self._area):align(ui.Line.CENTER),
+		ui.Line(s):area(self._area):align(ui.Align.CENTER),
 	}
 end
 
@@ -43,7 +43,7 @@ function Current:redraw()
 
 	return {
 		ui.List(left):area(self._area),
-		ui.Text(right):area(self._area):align(ui.Text.RIGHT),
+		ui.Text(right):area(self._area):align(ui.Align.RIGHT),
 	}
 end
 

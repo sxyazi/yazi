@@ -6,10 +6,7 @@ use ratatui::widgets::Widget;
 use unicode_width::UnicodeWidthChar;
 
 use super::{Area, Span};
-
-const LEFT: u8 = 0;
-const CENTER: u8 = 1;
-const RIGHT: u8 = 2;
+use crate::elements::Align;
 
 const EXPECTED: &str = "expected a string, Span, Line, or a table of them";
 
@@ -40,10 +37,10 @@ impl Line {
 
 		let line = lua.create_table_from([
 			("parse", parse.into_lua(lua)?),
-			// Alignment
-			("LEFT", LEFT.into_lua(lua)?),
-			("CENTER", CENTER.into_lua(lua)?),
-			("RIGHT", RIGHT.into_lua(lua)?),
+			// TODO: remove these constants
+			("LEFT", 0.into_lua(lua)?),
+			("CENTER", 1.into_lua(lua)?),
+			("RIGHT", 2.into_lua(lua)?),
 		])?;
 
 		line.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
@@ -120,12 +117,8 @@ impl UserData for Line {
 		crate::impl_style_shorthands!(methods, inner.style);
 
 		methods.add_method("width", |_, me, ()| Ok(me.inner.width()));
-		methods.add_function_mut("align", |_, (ud, align): (AnyUserData, u8)| {
-			ud.borrow_mut::<Self>()?.inner.alignment = Some(match align {
-				CENTER => ratatui::layout::Alignment::Center,
-				RIGHT => ratatui::layout::Alignment::Right,
-				_ => ratatui::layout::Alignment::Left,
-			});
+		methods.add_function_mut("align", |_, (ud, align): (AnyUserData, Align)| {
+			ud.borrow_mut::<Self>()?.inner.alignment = Some(align.0);
 			Ok(ud)
 		});
 		methods.add_method("visible", |_, me, ()| {

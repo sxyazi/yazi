@@ -1,4 +1,5 @@
 Header = {
+	-- TODO: remove these two constants
 	LEFT = 0,
 	RIGHT = 1,
 
@@ -83,7 +84,7 @@ function Header:redraw()
 
 	return {
 		ui.Line(left):area(self._area),
-		ui.Line(right):area(self._area):align(ui.Line.RIGHT),
+		ui.Line(right):area(self._area):align(ui.Align.RIGHT),
 	}
 end
 
