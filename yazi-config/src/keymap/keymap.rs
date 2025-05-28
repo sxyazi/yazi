@@ -7,7 +7,6 @@ use super::{Chord, KeymapRules};
 
 #[derive(Deserialize, DeserializeOver1)]
 pub struct Keymap {
-	#[serde(rename = "manager")]
 	pub mgr:     KeymapRules,
 	pub tasks:   KeymapRules,
 	pub spot:    KeymapRules,

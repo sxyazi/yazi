@@ -11,8 +11,7 @@ use super::{Filetype, Flavor, Icon};
 #[derive(Deserialize, DeserializeOver1, Serialize)]
 pub struct Theme {
 	pub flavor:  Flavor,
-	#[serde(rename = "manager")]
-	pub mgr:     Mgr, // TODO: Remove `serde(rename)`
+	pub mgr:     Mgr,
 	pub tabs:    Tabs,
 	pub mode:    Mode,
 	pub status:  Status,

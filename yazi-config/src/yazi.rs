@@ -6,8 +6,7 @@ use crate::{mgr, open, opener, plugin, popup, preview, tasks, which};
 
 #[derive(Deserialize, DeserializeOver1)]
 pub struct Yazi {
-	#[serde(rename = "manager")]
-	pub mgr:     mgr::Mgr, // TODO: remove serde(rename)
+	pub mgr:     mgr::Mgr,
 	pub preview: preview::Preview,
 	pub opener:  opener::Opener,
 	pub open:    open::Open,
