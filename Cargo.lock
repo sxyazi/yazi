@@ -385,9 +385,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.5.38"
+version = "4.5.39"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed93b9805f8ba930df42c2590f05453d5ec36cbb85d018868a5b24d31f6ac000"
+checksum = "fd60e63e9be68e5fb56422e397cf9baddded06dae1d2e523401542383bc72a9f"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -395,9 +395,9 @@ dependencies = [
 
 [[package]]
 name = "clap_builder"
-version = "4.5.38"
+version = "4.5.39"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "379026ff283facf611b0ea629334361c4211d1b12ee01024eec1591133b04120"
+checksum = "89cc6392a1f72bbeb820d71f32108f61fdaf18bc526e1d23954168a67759ef51"
 dependencies = [
  "anstream",
  "anstyle",
@@ -407,9 +407,9 @@ dependencies = [
 
 [[package]]
 name = "clap_complete"
-version = "4.5.50"
+version = "4.5.51"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c91d3baa3bcd889d60e6ef28874126a0b384fd225ab83aa6d8a801c519194ce1"
+checksum = "8d2267df7f3c8e74e38268887ea5235d4dfadd39bfff2d56ab82d61776be355e"
 dependencies = [
  "clap",
 ]
@@ -426,9 +426,9 @@ dependencies = [
 
 [[package]]
 name = "clap_complete_nushell"
-version = "4.5.5"
+version = "4.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6a8b1593457dfc2fe539002b795710d022dc62a65bf15023f039f9760c7b18a"
+checksum = "9801fe85d7986742027c6d365728a6a4ecb6d2b09866de18be836fef7ebf7df1"
 dependencies = [
  "clap",
  "clap_complete",
@@ -3299,7 +3299,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-adapter"
-version = "25.5.14"
+version = "25.5.28"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -3320,7 +3320,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-binding"
-version = "25.5.14"
+version = "25.5.28"
 dependencies = [
  "mlua",
  "paste",
@@ -3332,7 +3332,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-boot"
-version = "25.5.14"
+version = "25.5.28"
 dependencies = [
  "clap",
  "clap_complete",
@@ -3350,7 +3350,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-cli"
-version = "25.5.14"
+version = "25.5.28"
 dependencies = [
  "anyhow",
  "clap",
@@ -3373,7 +3373,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-codegen"
-version = "25.5.14"
+version = "25.5.28"
 dependencies = [
  "quote",
  "syn",
@@ -3381,7 +3381,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-config"
-version = "25.5.14"
+version = "25.5.28"
 dependencies = [
  "anyhow",
  "bitflags 2.9.1",
@@ -3404,7 +3404,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-core"
-version = "25.5.14"
+version = "25.5.28"
 dependencies = [
  "anyhow",
  "bitflags 2.9.1",
@@ -3440,7 +3440,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-dds"
-version = "25.5.14"
+version = "25.5.28"
 dependencies = [
  "anyhow",
  "mlua",
@@ -3462,7 +3462,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-ffi"
-version = "25.5.14"
+version = "25.5.28"
 dependencies = [
  "anyhow",
  "core-foundation-sys",
@@ -3473,7 +3473,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fm"
-version = "25.5.14"
+version = "25.5.28"
 dependencies = [
  "anyhow",
  "better-panic",
@@ -3513,7 +3513,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fs"
-version = "25.5.14"
+version = "25.5.28"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -3539,11 +3539,11 @@ dependencies = [
 
 [[package]]
 name = "yazi-macro"
-version = "25.5.14"
+version = "25.5.28"
 
 [[package]]
 name = "yazi-plugin"
-version = "25.5.14"
+version = "25.5.28"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -3588,7 +3588,7 @@ checksum = "33232d9116df6415ddfcdf72701b1b7439ce87f240a14723e8dd5d17e7ed5f98"
 
 [[package]]
 name = "yazi-proxy"
-version = "25.5.14"
+version = "25.5.28"
 dependencies = [
  "anyhow",
  "mlua",
@@ -3601,7 +3601,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-scheduler"
-version = "25.5.14"
+version = "25.5.28"
 dependencies = [
  "anyhow",
  "async-priority-channel",
@@ -3624,7 +3624,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-shared"
-version = "25.5.14"
+version = "25.5.28"
 dependencies = [
  "anyhow",
  "crossterm 0.29.0",
@@ -3644,7 +3644,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-term"
-version = "25.5.14"
+version = "25.5.28"
 dependencies = [
  "crossterm 0.29.0",
  "libc",
@@ -3657,7 +3657,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-widgets"
-version = "25.5.14"
+version = "25.5.28"
 dependencies = [
  "crossterm 0.29.0",
  "futures",
