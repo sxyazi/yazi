@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-cli"
-version     = "25.5.14"
+version     = "25.5.28"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -9,11 +9,11 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
-yazi-boot   = { path = "../yazi-boot", version = "25.5.14" }
-yazi-dds    = { path = "../yazi-dds", version = "25.5.14" }
-yazi-fs     = { path = "../yazi-fs", version = "25.5.14" }
-yazi-macro  = { path = "../yazi-macro", version = "25.5.14" }
-yazi-shared = { path = "../yazi-shared", version = "25.5.14" }
+yazi-boot   = { path = "../yazi-boot", version = "25.5.28" }
+yazi-dds    = { path = "../yazi-dds", version = "25.5.28" }
+yazi-fs     = { path = "../yazi-fs", version = "25.5.28" }
+yazi-macro  = { path = "../yazi-macro", version = "25.5.28" }
+yazi-shared = { path = "../yazi-shared", version = "25.5.28" }
 
 # External dependencies
 anyhow     = { workspace = true }
@@ -26,14 +26,14 @@ toml       = { workspace = true }
 twox-hash  = { workspace = true }
 
 [build-dependencies]
-yazi-shared = { path = "../yazi-shared", version = "25.5.14" }
+yazi-shared = { path = "../yazi-shared", version = "25.5.28" }
 
 # External build dependencies
 anyhow                = { workspace = true }
 clap                  = { workspace = true }
-clap_complete         = "4.5.50"
+clap_complete         = "4.5.51"
 clap_complete_fig     = "4.5.2"
-clap_complete_nushell = "4.5.5"
+clap_complete_nushell = "4.5.6"
 serde_json            = { workspace = true }
 vergen-gitcl          = { version = "1.0.8", features = [ "build" ] }
 
