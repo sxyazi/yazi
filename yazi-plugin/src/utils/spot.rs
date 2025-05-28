@@ -4,7 +4,7 @@ use yazi_macro::emit;
 use yazi_shared::{Id, event::Cmd};
 
 use super::Utils;
-use crate::{elements::Renderable, file::FileRef};
+use crate::{elements::{Edge, Renderable}, file::FileRef};
 
 pub struct SpotLock {
 	pub url:  yazi_shared::url::Url,
@@ -73,7 +73,7 @@ impl Utils {
 				Renderable::Clear(crate::elements::Clear { area }),
 				Renderable::Border(crate::elements::Border {
 					area,
-					position: ratatui::widgets::Borders::ALL,
+					edge: Edge(ratatui::widgets::Borders::ALL),
 					r#type: ratatui::widgets::BorderType::Rounded,
 					style: THEME.spot.border.into(),
 					titles: vec![(

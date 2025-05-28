@@ -4,17 +4,8 @@ use ansi_to_tui::IntoText;
 use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, MetaMethod, Table, UserData, Value};
 use ratatui::widgets::Widget;
 
-use super::{Area, Line, Span};
-
-// Alignment
-pub(super) const LEFT: u8 = 0;
-pub(super) const CENTER: u8 = 1;
-pub(super) const RIGHT: u8 = 2;
-
-// Wrap
-pub const WRAP_NO: u8 = 0;
-pub const WRAP: u8 = 1;
-pub const WRAP_TRIM: u8 = 2;
+use super::{Area, Line, Span, Wrap};
+use crate::elements::Align;
 
 const EXPECTED: &str = "expected a string, Line, Span, or a table of them";
 
@@ -24,7 +15,7 @@ pub struct Text {
 
 	// TODO: block
 	pub inner:  ratatui::text::Text<'static>,
-	pub wrap:   u8,
+	pub wrap:   Wrap,
 	pub scroll: ratatui::layout::Position,
 }
 
@@ -38,14 +29,13 @@ impl Text {
 
 		let text = lua.create_table_from([
 			("parse", parse.into_lua(lua)?),
-			// Alignment
-			("LEFT", LEFT.into_lua(lua)?),
-			("CENTER", CENTER.into_lua(lua)?),
-			("RIGHT", RIGHT.into_lua(lua)?),
-			// Wrap
-			("WRAP_NO", WRAP_NO.into_lua(lua)?),
-			("WRAP", WRAP.into_lua(lua)?),
-			("WRAP_TRIM", WRAP_TRIM.into_lua(lua)?),
+			// TODO: remove these constants
+			("LEFT", 0.into_lua(lua)?),
+			("CENTER", 1.into_lua(lua)?),
+			("RIGHT", 2.into_lua(lua)?),
+			("WRAP_NO", 0.into_lua(lua)?),
+			("WRAP", 1.into_lua(lua)?),
+			("WRAP_TRIM", 2.into_lua(lua)?),
 		])?;
 
 		text.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
@@ -58,7 +48,7 @@ impl Text {
 		trans: impl Fn(yazi_config::popup::Position) -> ratatui::layout::Rect,
 	) {
 		let rect = self.area.transform(trans);
-		if self.wrap == WRAP_NO && self.scroll == Default::default() {
+		if self.wrap.is_none() && self.scroll == Default::default() {
 			self.inner.render(rect, buf);
 		} else {
 			ratatui::widgets::Paragraph::from(self).render(rect, buf);
@@ -127,8 +117,8 @@ impl From<Text> for ratatui::widgets::Paragraph<'static> {
 		if let Some(align) = align {
 			p = p.alignment(align);
 		}
-		if value.wrap != WRAP_NO {
-			p = p.wrap(ratatui::widgets::Wrap { trim: value.wrap == WRAP_TRIM });
+		if let Some(wrap) = value.wrap.0 {
+			p = p.wrap(wrap);
 		}
 		p.scroll((value.scroll.y, value.scroll.x))
 	}
@@ -140,19 +130,12 @@ impl UserData for Text {
 		crate::impl_style_method!(methods, inner.style);
 		crate::impl_style_shorthands!(methods, inner.style);
 
-		methods.add_function_mut("align", |_, (ud, align): (AnyUserData, u8)| {
-			ud.borrow_mut::<Self>()?.inner.alignment = Some(match align {
-				CENTER => ratatui::layout::Alignment::Center,
-				RIGHT => ratatui::layout::Alignment::Right,
-				_ => ratatui::layout::Alignment::Left,
-			});
+		methods.add_function_mut("align", |_, (ud, align): (AnyUserData, Align)| {
+			ud.borrow_mut::<Self>()?.inner.alignment = Some(align.0);
 			Ok(ud)
 		});
-		methods.add_function_mut("wrap", |_, (ud, wrap): (AnyUserData, u8)| {
-			ud.borrow_mut::<Self>()?.wrap = match wrap {
-				w @ (WRAP | WRAP_TRIM | WRAP_NO) => w,
-				_ => return Err("expected a WRAP, WRAP_TRIM or WRAP_NO".into_lua_err()),
-			};
+		methods.add_function_mut("wrap", |_, (ud, wrap): (AnyUserData, Wrap)| {
+			ud.borrow_mut::<Self>()?.wrap = wrap;
 			Ok(ud)
 		});
 		methods.add_function_mut("scroll", |_, (ud, x, y): (AnyUserData, u16, u16)| {

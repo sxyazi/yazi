@@ -1,10 +1,10 @@
 use mlua::{AnyUserData, ExternalError, Function, IntoLuaMulti, Lua, Table, Value};
-use yazi_config::{YAZI, preview::PreviewWrap};
+use yazi_config::YAZI;
 use yazi_macro::emit;
 use yazi_shared::{errors::PeekError, event::Cmd};
 
 use super::Utils;
-use crate::{elements::{Area, Rect, Renderable, Text, WRAP, WRAP_NO}, external::Highlighter, file::FileRef};
+use crate::{elements::{Area, Rect, Renderable, Text}, external::Highlighter, file::FileRef};
 
 #[derive(Debug, Default)]
 pub struct PreviewLock {
@@ -51,7 +51,7 @@ impl Utils {
 			lock.data = vec![Renderable::Text(Text {
 				area,
 				inner,
-				wrap: if YAZI.preview.wrap == PreviewWrap::Yes { WRAP } else { WRAP_NO },
+				wrap: YAZI.preview.wrap.into(),
 				scroll: Default::default(),
 			})];
 

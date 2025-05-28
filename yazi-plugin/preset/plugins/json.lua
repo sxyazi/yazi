@@ -34,7 +34,7 @@ function M:peek(job)
 		lines = lines:gsub("\t", string.rep(" ", rt.preview.tab_size))
 		ya.preview_widget(
 			job,
-			ui.Text.parse(lines):area(job.area):wrap(rt.preview.wrap == "yes" and ui.Text.WRAP or ui.Text.WRAP_NO)
+			ui.Text.parse(lines):area(job.area):wrap(rt.preview.wrap == "yes" and ui.Wrap.YES or ui.Wrap.NO)
 		)
 	end
 end

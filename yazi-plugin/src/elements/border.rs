@@ -1,7 +1,7 @@
 use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, Table, UserData, Value};
 use ratatui::widgets::{Borders, Widget};
 
-use super::Area;
+use super::{Area, Edge};
 use crate::elements::Line;
 
 // Type
@@ -16,24 +16,20 @@ const QUADRANT_OUTSIDE: u8 = 5;
 pub struct Border {
 	pub(crate) area: Area,
 
-	pub(crate) position: ratatui::widgets::Borders,
-	pub(crate) r#type:   ratatui::widgets::BorderType,
-	pub(crate) style:    ratatui::style::Style,
+	pub(crate) edge:   Edge,
+	pub(crate) r#type: ratatui::widgets::BorderType,
+	pub(crate) style:  ratatui::style::Style,
 
 	pub(crate) titles: Vec<(ratatui::widgets::block::Position, ratatui::text::Line<'static>)>,
 }
 
 impl Border {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
-		let new = lua.create_function(|_, (_, position): (Table, u8)| {
-			Ok(Border {
-				position: ratatui::widgets::Borders::from_bits_truncate(position),
-				..Default::default()
-			})
-		})?;
+		let new = lua
+			.create_function(|_, (_, edge): (Table, Edge)| Ok(Border { edge, ..Default::default() }))?;
 
 		let border = lua.create_table_from([
-			// Position
+			// TODO: remove these constants
 			("NONE", Borders::NONE.bits()),
 			("TOP", Borders::TOP.bits()),
 			("RIGHT", Borders::RIGHT.bits()),
@@ -59,7 +55,7 @@ impl Border {
 		trans: impl FnOnce(yazi_config::popup::Position) -> ratatui::layout::Rect,
 	) {
 		let mut block = ratatui::widgets::Block::default()
-			.borders(self.position)
+			.borders(self.edge.0)
 			.border_type(self.r#type)
 			.border_style(self.style);
 
@@ -103,8 +99,8 @@ impl UserData for Border {
 				Ok(ud)
 			},
 		);
-		methods.add_function_mut("position", |_, (ud, position): (AnyUserData, u8)| {
-			ud.borrow_mut::<Self>()?.position = ratatui::widgets::Borders::from_bits_truncate(position);
+		methods.add_function_mut("edge", |_, (ud, edge): (AnyUserData, Edge)| {
+			ud.borrow_mut::<Self>()?.edge = edge;
 			Ok(ud)
 		});
 	}

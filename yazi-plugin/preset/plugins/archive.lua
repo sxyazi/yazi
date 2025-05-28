@@ -45,7 +45,7 @@ function M:peek(job)
 	else
 		ya.preview_widget(job, {
 			ui.Text(left):area(job.area),
-			ui.Text(right):area(job.area):align(ui.Text.RIGHT),
+			ui.Text(right):area(job.area):align(ui.Align.RIGHT),
 		})
 	end
 end

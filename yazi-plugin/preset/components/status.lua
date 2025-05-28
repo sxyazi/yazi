@@ -1,4 +1,5 @@
 Status = {
+	-- TODO: remove these two constants
 	LEFT = 0,
 	RIGHT = 1,
 
@@ -141,7 +142,7 @@ function Status:redraw()
 	return {
 		ui.Text(""):area(self._area):style(th.status.overall),
 		ui.Line(left):area(self._area),
-		ui.Line(right):area(self._area):align(ui.Line.RIGHT),
+		ui.Line(right):area(self._area):align(ui.Align.RIGHT),
 		table.unpack(ui.redraw(Progress:new(self._area, right_width))),
 	}
 end

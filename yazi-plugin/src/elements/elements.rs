@@ -7,10 +7,12 @@ use crate::Composer;
 pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 	Composer::make(lua, 20, |lua, key| {
 		match key {
+			b"Align" => super::Align::compose(lua)?,
 			b"Bar" => super::Bar::compose(lua)?,
 			b"Border" => super::Border::compose(lua)?,
 			b"Clear" => super::Clear::compose(lua)?,
 			b"Constraint" => super::Constraint::compose(lua)?,
+			b"Edge" => super::Edge::compose(lua)?,
 			b"Gauge" => super::Gauge::compose(lua)?,
 			b"Layout" => super::Layout::compose(lua)?,
 			b"Line" => super::Line::compose(lua)?,
