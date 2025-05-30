@@ -83,7 +83,7 @@ macro_rules! impl_style_shorthands {
 #[macro_export]
 macro_rules! impl_file_fields {
 	($fields:ident) => {
-		yazi_binding::cached_field!($fields, cha, |_, me| Ok($crate::bindings::Cha::from(me.cha)));
+		yazi_binding::cached_field!($fields, cha, |_, me| Ok($crate::bindings::Cha(me.cha)));
 		yazi_binding::cached_field!($fields, url, |_, me| Ok(yazi_binding::Url::new(me.url_owned())));
 		yazi_binding::cached_field!($fields, link_to, |_, me| Ok(
 			me.link_to.clone().map(yazi_binding::Url::new)

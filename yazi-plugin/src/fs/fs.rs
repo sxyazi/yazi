@@ -51,7 +51,7 @@ fn cha(lua: &Lua) -> mlua::Result<Function> {
 		};
 
 		match meta {
-			Ok(m) => Cha::from(m).into_lua_multi(&lua),
+			Ok(m) => Cha(yazi_fs::cha::Cha::new(&url, m)).into_lua_multi(&lua),
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
@@ -138,7 +138,7 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 			let file = if !resolve {
 				yazi_fs::File::from_dummy(url, next.file_type().await.ok())
 			} else if let Ok(meta) = next.metadata().await {
-				yazi_fs::File::from_meta(url, meta).await
+				yazi_fs::File::from_follow(url, meta).await
 			} else {
 				yazi_fs::File::from_dummy(url, next.file_type().await.ok())
 			};

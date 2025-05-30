@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::{HashMap, HashSet}};
+use std::borrow::Cow;
 
 use anyhow::Result;
 use tokio::fs;
@@ -80,15 +80,15 @@ impl Mgr {
 
 		if let Some(o) = overwritten {
 			ok_or_not_found(fs::rename(p_new.join(&o), &new).await)?;
-			FilesOp::Deleting(p_new.clone(), HashSet::from_iter([UrnBuf::from(o)])).emit();
+			FilesOp::Deleting(p_new.clone(), [UrnBuf::from(o)].into()).emit();
 		}
 
-		let file = File::from(new.clone()).await?;
+		let file = File::new(new.clone()).await?;
 		if p_new == p_old {
-			FilesOp::Upserting(p_old, HashMap::from_iter([(n_old, file)])).emit();
+			FilesOp::Upserting(p_old, [(n_old, file)].into()).emit();
 		} else {
-			FilesOp::Deleting(p_old, HashSet::from_iter([n_old])).emit();
-			FilesOp::Upserting(p_new, HashMap::from_iter([(n_new, file)])).emit();
+			FilesOp::Deleting(p_old, [n_old].into()).emit();
+			FilesOp::Upserting(p_new, [(n_new, file)].into()).emit();
 		}
 
 		TabProxy::reveal(&new);

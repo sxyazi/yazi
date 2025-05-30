@@ -86,6 +86,10 @@ impl Data {
 	}
 }
 
+impl From<bool> for Data {
+	fn from(value: bool) -> Self { Self::Boolean(value) }
+}
+
 impl From<usize> for Data {
 	fn from(value: usize) -> Self { Self::Id(value.into()) }
 }

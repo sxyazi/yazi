@@ -70,7 +70,7 @@ impl Tab {
 			while let Some(chunk) = rx.next().await {
 				FilesOp::Part(cwd.clone(), chunk, ticket).emit();
 			}
-			FilesOp::Done(cwd, Cha::dummy(), ticket).emit();
+			FilesOp::Done(cwd, Cha::default(), ticket).emit();
 
 			Ok(())
 		}));

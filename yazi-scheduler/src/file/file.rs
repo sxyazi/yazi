@@ -328,15 +328,15 @@ impl File {
 	#[inline]
 	async fn cha(path: &Path, follow: bool) -> io::Result<Cha> {
 		let meta = fs::symlink_metadata(path).await?;
-		Ok(if follow { Cha::new(path, meta).await } else { Cha::new_nofollow(path, meta) })
+		Ok(if follow { Cha::from_follow(path, meta).await } else { Cha::new(path, meta) })
 	}
 
 	#[inline]
 	async fn cha_from(entry: DirEntry, path: &Path, follow: bool) -> io::Result<Cha> {
 		Ok(if follow {
-			Cha::new(path, entry.metadata().await?).await
+			Cha::from_follow(path, entry.metadata().await?).await
 		} else {
-			Cha::new_nofollow(path, entry.metadata().await?)
+			Cha::new(path, entry.metadata().await?)
 		})
 	}
 }

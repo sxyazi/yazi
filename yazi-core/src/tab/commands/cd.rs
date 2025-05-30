@@ -1,10 +1,10 @@
 use std::{mem, time::Duration};
 
-use tokio::{fs, pin};
+use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
 use yazi_dds::Pubsub;
-use yazi_fs::expand_path;
+use yazi_fs::{File, FilesOp, expand_path};
 use yazi_macro::render;
 use yazi_proxy::{CmpProxy, InputProxy, MgrProxy, TabProxy};
 use yazi_shared::{Debounce, errors::InputError, event::CmdCow, url::Url};
@@ -94,16 +94,17 @@ impl Tab {
 			while let Some(result) = rx.next().await {
 				match result {
 					Ok(s) => {
-						let u = Url::from(expand_path(s));
-						let Ok(meta) = fs::metadata(&u).await else {
-							return;
-						};
+						let url = Url::from(expand_path(s));
 
-						if meta.is_dir() {
-							TabProxy::cd(&u);
-						} else {
-							TabProxy::reveal(&u);
+						let Ok(file) = File::new(url.clone()).await else { return };
+						if file.is_dir() {
+							return TabProxy::cd(&url);
 						}
+
+						if let Some(p) = url.parent_url() {
+							FilesOp::Upserting(p, [(url.urn_owned(), file)].into()).emit();
+						}
+						TabProxy::reveal(&url);
 					}
 					Err(InputError::Completed(before, ticket)) => {
 						CmpProxy::trigger(&before, ticket);

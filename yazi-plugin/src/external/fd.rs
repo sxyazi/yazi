@@ -20,7 +20,7 @@ pub fn fd(opt: FdOpt) -> Result<UnboundedReceiver<File>> {
 
 	tokio::spawn(async move {
 		while let Ok(Some(line)) = it.next_line().await {
-			if let Ok(file) = File::from(opt.cwd.join(line)).await {
+			if let Ok(file) = File::new(opt.cwd.join(line)).await {
 				tx.send(file).ok();
 			}
 		}

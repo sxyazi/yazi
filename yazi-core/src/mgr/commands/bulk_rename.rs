@@ -94,7 +94,7 @@ impl Mgr {
 				failed.push((o, n, anyhow!("Destination already exists")));
 			} else if let Err(e) = fs::rename(&old, &new).await {
 				failed.push((o, n, e.into()));
-			} else if let Ok(f) = File::from(new.into()).await {
+			} else if let Ok(f) = File::new(new.into()).await {
 				succeeded.insert(Url::from(old), f);
 			} else {
 				failed.push((o, n, anyhow!("Failed to retrieve file info")));

@@ -125,7 +125,7 @@ impl FilesOp {
 		} else if maybe_exists(cwd).await {
 			Self::IOErr(cwd.clone(), kind).emit();
 		} else if let Some((p, n)) = cwd.pair() {
-			Self::Deleting(p, HashSet::from_iter([n])).emit();
+			Self::Deleting(p, [n].into()).emit();
 		}
 	}
 
