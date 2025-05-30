@@ -13,7 +13,7 @@ impl TabProxy {
 
 	#[inline]
 	pub fn reveal(target: &Url) {
-		emit!(Call(Cmd::args("mgr:reveal", &[target])));
+		emit!(Call(Cmd::args("mgr:reveal", &[target]).with("no-dummy", true)));
 	}
 
 	#[inline]

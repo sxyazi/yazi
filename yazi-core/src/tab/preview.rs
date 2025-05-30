@@ -48,7 +48,7 @@ impl Preview {
 			Some(PreviewLock { url: wd.clone(), cha, mime: MIME_DIR.to_owned(), ..Default::default() });
 		self.folder_loader.take().map(|h| h.abort());
 		self.folder_loader = Some(tokio::spawn(async move {
-			let Some(new) = Files::assert_stale(&wd, dir.unwrap_or(Cha::dummy())).await else { return };
+			let Some(new) = Files::assert_stale(&wd, dir.unwrap_or_default()).await else { return };
 
 			let rx = match Files::from_dir(&wd).await {
 				Ok(rx) => rx,

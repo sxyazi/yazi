@@ -41,7 +41,7 @@ impl Files {
 					result = item.metadata() => {
 						let url = Url::from(item.path());
 						_ = tx.send(match result {
-							Ok(meta) => File::from_meta(url, meta).await,
+							Ok(meta) => File::from_follow(url, meta).await,
 							Err(_) => File::from_dummy(url, item.file_type().await.ok())
 						});
 					}
@@ -65,7 +65,7 @@ impl Files {
 			for entry in entries {
 				let url = Url::from(entry.path());
 				files.push(match entry.metadata().await {
-					Ok(meta) => File::from_meta(url, meta).await,
+					Ok(meta) => File::from_follow(url, meta).await,
 					Err(_) => File::from_dummy(url, entry.file_type().await.ok()),
 				});
 			}
@@ -83,7 +83,7 @@ impl Files {
 
 	pub async fn assert_stale(dir: &Url, cha: Cha) -> Option<Cha> {
 		use std::io::ErrorKind;
-		match fs::metadata(dir).await.map(Cha::from) {
+		match Cha::from_url(dir).await {
 			Ok(c) if !c.is_dir() => FilesOp::issue_error(dir, ErrorKind::NotADirectory).await,
 			Ok(c) if c.hits(cha) && PARTITIONS.read().heuristic(cha) => {}
 			Ok(c) => return Some(c),

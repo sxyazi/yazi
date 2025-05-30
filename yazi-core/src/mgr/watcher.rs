@@ -134,8 +134,8 @@ impl Watcher {
 
 			for u in urls {
 				let Some((parent, urn)) = u.pair() else { continue };
-				let Ok(file) = File::from(u).await else {
-					ops.push(FilesOp::Deleting(parent, HashSet::from_iter([urn])));
+				let Ok(file) = File::new(u).await else {
+					ops.push(FilesOp::Deleting(parent, [urn].into()));
 					continue;
 				};
 
@@ -144,11 +144,11 @@ impl Watcher {
 					|| realname_unchecked(u, &mut cached).await.is_ok_and(|s| urn.as_urn() == s);
 
 				if !eq {
-					ops.push(FilesOp::Deleting(parent, HashSet::from_iter([urn])));
+					ops.push(FilesOp::Deleting(parent, [urn].into()));
 					continue;
 				}
 
-				ops.push(FilesOp::Upserting(parent, HashMap::from_iter([(urn, file)])));
+				ops.push(FilesOp::Upserting(parent, [(urn, file)].into()));
 			}
 
 			FilesOp::mutate(ops);

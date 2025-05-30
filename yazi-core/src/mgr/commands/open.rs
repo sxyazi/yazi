@@ -56,7 +56,7 @@ impl Mgr {
 		tokio::spawn(async move {
 			let mut files = Vec::with_capacity(todo.len());
 			for u in todo {
-				if let Ok(f) = File::from(u).await {
+				if let Ok(f) = File::new(u).await {
 					files.push(f);
 				}
 			}

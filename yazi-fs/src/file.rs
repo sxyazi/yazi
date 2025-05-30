@@ -23,29 +23,25 @@ impl Deref for File {
 
 impl File {
 	#[inline]
-	pub async fn from(url: Url) -> Result<Self> {
+	pub async fn new(url: Url) -> Result<Self> {
 		let meta = fs::symlink_metadata(&url).await?;
-		Ok(Self::from_meta(url, meta).await)
+		Ok(Self::from_follow(url, meta).await)
 	}
 
 	#[inline]
-	pub async fn from_meta(url: Url, meta: Metadata) -> Self {
+	pub async fn from_follow(url: Url, meta: Metadata) -> Self {
 		let link_to =
 			if meta.is_symlink() { fs::read_link(&url).await.map(Url::from).ok() } else { None };
 
-		let cha = Cha::new(&url, meta).await;
+		let cha = Cha::from_follow(&url, meta).await;
 
 		Self { url, cha, link_to, icon: Default::default() }
 	}
 
 	#[inline]
 	pub fn from_dummy(url: Url, ft: Option<FileType>) -> Self {
-		Self {
-			url,
-			cha: ft.map_or_else(Cha::dummy, Cha::from),
-			link_to: None,
-			icon: Default::default(),
-		}
+		let cha = Cha::from_dummy(&url, ft);
+		Self { url, cha, link_to: None, icon: Default::default() }
 	}
 
 	#[inline]

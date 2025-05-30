@@ -1,5 +1,3 @@
-use std::collections::{HashMap, HashSet};
-
 use anyhow::Result;
 use tokio::fs;
 use yazi_config::popup::{ConfirmCfg, InputCfg};
@@ -50,7 +48,7 @@ impl Mgr {
 			fs::create_dir_all(&new).await?;
 		} else if let Some(real) = realname(&new).await {
 			ok_or_not_found(fs::remove_file(&new).await)?;
-			FilesOp::Deleting(parent.clone(), HashSet::from_iter([UrnBuf::from(real)])).emit();
+			FilesOp::Deleting(parent.clone(), [UrnBuf::from(real)].into()).emit();
 			fs::File::create(&new).await?;
 		} else {
 			fs::create_dir_all(&parent).await.ok();
@@ -58,8 +56,8 @@ impl Mgr {
 			fs::File::create(&new).await?;
 		}
 
-		if let Ok(f) = File::from(new.clone()).await {
-			FilesOp::Upserting(parent, HashMap::from_iter([(f.urn_owned(), f)])).emit();
+		if let Ok(f) = File::new(new.clone()).await {
+			FilesOp::Upserting(parent, [(f.urn_owned(), f)].into()).emit();
 			TabProxy::reveal(&new)
 		}
 		Ok(())

@@ -46,7 +46,7 @@ impl Folder {
 				(self.cha, self.stage) = (cha, FolderStage::Loaded);
 			}
 			FilesOp::Part(_, ref files, _) if files.is_empty() => {
-				(self.cha, self.stage) = (Cha::dummy(), FolderStage::Loading);
+				(self.cha, self.stage) = (Cha::default(), FolderStage::Loading);
 			}
 			FilesOp::Part(_, _, ticket) if ticket == self.files.ticket() => {
 				self.stage = FolderStage::Loading;
@@ -55,7 +55,7 @@ impl Folder {
 				(self.cha, self.stage) = (cha, FolderStage::Loaded);
 			}
 			FilesOp::IOErr(_, kind) => {
-				(self.cha, self.stage) = (Cha::dummy(), FolderStage::Failed(kind));
+				(self.cha, self.stage) = (Cha::default(), FolderStage::Failed(kind));
 			}
 			_ => {}
 		}
