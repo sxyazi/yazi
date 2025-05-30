@@ -25,6 +25,7 @@ pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 			b"Style" => super::Style::compose(lua)?,
 			b"Table" => super::Table::compose(lua)?,
 			b"Text" => super::Text::compose(lua)?,
+			b"Wrap" => super::Wrap::compose(lua)?,
 
 			b"width" => super::Utils::width(lua)?,
 			b"redraw" => super::Utils::redraw(lua)?,
