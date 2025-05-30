@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-widgets"
-version     = "25.5.28"
+version     = "25.5.31"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -9,12 +9,12 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
-yazi-codegen = { path = "../yazi-codegen", version = "25.5.28" }
-yazi-config  = { path = "../yazi-config", version = "25.5.28" }
-yazi-macro   = { path = "../yazi-macro", version = "25.5.28" }
-yazi-plugin  = { path = "../yazi-plugin", version = "25.5.28" }
-yazi-proxy   = { path = "../yazi-proxy", version = "25.5.28" }
-yazi-shared  = { path = "../yazi-shared", version = "25.5.28" }
+yazi-codegen = { path = "../yazi-codegen", version = "25.5.31" }
+yazi-config  = { path = "../yazi-config", version = "25.5.31" }
+yazi-macro   = { path = "../yazi-macro", version = "25.5.31" }
+yazi-plugin  = { path = "../yazi-plugin", version = "25.5.31" }
+yazi-proxy   = { path = "../yazi-proxy", version = "25.5.31" }
+yazi-shared  = { path = "../yazi-shared", version = "25.5.31" }
 
 # External dependencies
 crossterm     = { workspace = true }

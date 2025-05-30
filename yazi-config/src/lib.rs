@@ -111,16 +111,16 @@ fn migrate(p: std::path::PathBuf) -> String {
 
 	if let Err(e) = std::fs::copy(&p, backup) {
 		_ = TTY.writer().write_all(
-			format!("WARNING: `[manager]` has been deprecated in favor of the new `[mgr]`, see #2803 for more details: https://github.com/sxyazi/yazi/pull/2803\n
-Trying to migrate your config automatically failed, please edit the file manually, error while backuping {p:?}: \n{e:?}\n").as_bytes(),
+			format!("WARNING: `[manager]` has been deprecated in favor of the new `[mgr]`, see #2803 for more details: https://github.com/sxyazi/yazi/pull/2803\r\n
+Trying to migrate your config automatically failed, please edit the file manually, error while backuping {p:?}: {e}\r\n").as_bytes(),
 		);
 		return new;
 	}
 
 	if let Err(e) = std::fs::write(&p, &new) {
 		_ = TTY.writer().write_all(
-			format!("WARNING: `[manager]` has been deprecated in favor of the new `[mgr]`, see #2803 for more details: https://github.com/sxyazi/yazi/pull/2803\n
-Trying to migrate your config automatically failed, please edit the file manually, error while writing {p:?}: \n{e:?}\n").as_bytes(),
+			format!("WARNING: `[manager]` has been deprecated in favor of the new `[mgr]`, see #2803 for more details: https://github.com/sxyazi/yazi/pull/2803\r\n
+Trying to migrate your config automatically failed, please edit the file manually, error while writing {p:?}: {e}\r\n").as_bytes(),
 		);
 	}
 	new
