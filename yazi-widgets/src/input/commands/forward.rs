@@ -31,7 +31,7 @@ impl Input {
 			if b && !matches!(snap.op, InputOp::None | InputOp::Select(_)) {
 				return self.r#move(i as isize);
 			} else if b {
-				return self.r#move(if opt.end_of_word { i - 1 } else { i } as isize);
+				return self.r#move(if opt.end_of_word { i - snap.mode.delta() } else { i } as isize);
 			}
 			prev = k;
 		}
