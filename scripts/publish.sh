@@ -5,6 +5,7 @@ cargo publish -p yazi-codegen && sleep 30
 cargo publish -p yazi-shared && sleep 30
 cargo publish -p yazi-ffi && sleep 30
 cargo publish -p yazi-fs && sleep 30
+cargo publish -p yazi-term && sleep 30
 cargo publish -p yazi-config && sleep 30
 cargo publish -p yazi-proxy && sleep 30
 cargo publish -p yazi-adapter && sleep 30
