@@ -1,7 +1,7 @@
 use std::{borrow::Cow, collections::HashMap, ffi::{OsStr, OsString}, io::{Read, Write}, path::PathBuf};
 
 use anyhow::{Result, anyhow};
-use crossterm::{execute, style::Print};
+use crossterm::{execute, style::Print, terminal};
 use scopeguard::defer;
 use tokio::{fs::{self, OpenOptions}, io::AsyncWriteExt};
 use yazi_config::YAZI;
@@ -12,6 +12,12 @@ use yazi_shared::{terminal_clear, url::Url};
 use yazi_term::tty::TTY;
 
 use crate::mgr::Mgr;
+
+mod counters;
+mod filename_template;
+mod name_generator;
+
+use name_generator::generate_names;
 
 impl Mgr {
 	pub(super) fn bulk_rename(&self) {
@@ -47,10 +53,44 @@ impl Mgr {
 			defer!(AppProxy::resume());
 			AppProxy::stop().await;
 
-			let new: Vec<_> =
-				fs::read_to_string(&tmp).await?.lines().take(old.len()).map(PathBuf::from).collect();
+			let new_names = fs::read_to_string(&tmp).await?;
+			let new = Self::parse_new_names(&new_names, old.len()).await?;
 			Self::bulk_rename_do(root, old, new).await
 		});
+	}
+
+	/// Reads a number of lines from a string, attempting to parse them as either
+	/// fixed filenames or counter-based templates.
+	///
+	/// The number of expected lines must match `expected_count`.
+	/// If parsing fails, displays all errors to the user and waits for ENTER
+	/// before returning an error.
+	async fn parse_new_names(new_names: &str, expected_count: usize) -> Result<Vec<PathBuf>> {
+		match generate_names(&mut new_names.lines().take(expected_count)) {
+			Ok(paths) => Ok(paths),
+			Err(errors) => {
+				let (width, _) = terminal::size().unwrap_or((80, 120));
+				let mut buffer = String::new();
+				errors.iter().for_each(|error| {
+					let _ = error.write_to(&mut buffer, width);
+				});
+
+				// Show all parse errors in TTY, then return an error
+				terminal_clear(TTY.writer())?;
+				{
+					let mut w = TTY.lockout();
+					writeln!(w, "Errors encountered while parsing rename lines:")?;
+					writeln!(w, "{buffer}")?;
+					writeln!(w, "\nPress ENTER to exit")?;
+					w.flush()?;
+				}
+				// Wait for user input
+				TTY.reader().read_exact(&mut [0])?;
+
+				// Return an error to skip further rename
+				Err(anyhow::anyhow!("Parsing errors in rename lines"))
+			}
+		}
 	}
 
 	async fn bulk_rename_do(root: PathBuf, old: Vec<PathBuf>, new: Vec<PathBuf>) -> Result<()> {
