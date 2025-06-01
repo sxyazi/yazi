@@ -122,7 +122,7 @@ impl Watcher {
 
 	async fn fan_out(rx: UnboundedReceiver<Url>) {
 		// TODO: revert this once a new notification is implemented
-		let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(100));
+		let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(350));
 		pin!(rx);
 
 		while let Some(chunk) = rx.next().await {

@@ -17,10 +17,8 @@ pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Value> {
 			// Call
 			b"render" => Utils::render(lua)?,
 			b"emit" => Utils::emit(lua)?,
-			b"app_emit" => Utils::app_emit(lua)?,
 			b"mgr_emit" => Utils::mgr_emit(lua)?,
 			b"manager_emit" => Utils::mgr_emit(lua)?, // TODO: remove this in the future
-			b"input_emit" => Utils::input_emit(lua)?,
 
 			// Image
 			b"image_info" => Utils::image_info(lua)?,
@@ -44,7 +42,6 @@ pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Value> {
 			// Preview
 			b"preview_code" => Utils::preview_code(lua)?,
 			b"preview_widget" => Utils::preview_widget(lua)?,
-			b"preview_widgets" => Utils::preview_widget(lua)?, // TODO: remove this in the future
 
 			// Process
 			b"proc_info" => Utils::proc_info(lua)?,

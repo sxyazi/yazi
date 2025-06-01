@@ -1,6 +1,6 @@
 local M = {}
 
-function M:peek() end
+function M:peek(job) ya.preview_widget(job, {}) end
 
 function M:seek() end
 

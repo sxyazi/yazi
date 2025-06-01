@@ -152,21 +152,6 @@ impl UserData for Command {
 			}
 			Ok(ud)
 		});
-		// TODO: remove this
-		methods.add_function_mut("args", |lua, (ud, args): (AnyUserData, Vec<mlua::String>)| {
-			crate::deprecate!(
-				lua,
-				"The `args()` method on `Command` is deprecated, use `arg()` instead in your {}\n\nSee #2752 for more details: https://github.com/sxyazi/yazi/pull/2752"
-			);
-
-			{
-				let mut me = ud.borrow_mut::<Self>()?;
-				for arg in args {
-					me.inner.arg(arg.to_string_lossy());
-				}
-			}
-			Ok(ud)
-		});
 		methods.add_function_mut("cwd", |_, (ud, dir): (AnyUserData, mlua::String)| {
 			ud.borrow_mut::<Self>()?.inner.current_dir(dir.to_str()?.as_ref());
 			Ok(ud)
