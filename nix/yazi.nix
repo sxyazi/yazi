@@ -17,6 +17,7 @@
   ffmpeg,
   fd,
   ripgrep,
+  resvg,
   fzf,
   zoxide,
   imagemagick,
@@ -43,6 +44,7 @@ let
     ffmpeg
     fd
     ripgrep
+    resvg
     fzf
     zoxide
     imagemagick
