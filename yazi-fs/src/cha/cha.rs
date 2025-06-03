@@ -76,10 +76,10 @@ impl Cha {
 	}
 
 	#[inline]
-	pub fn from_dummy(url: &Url, ft: Option<FileType>) -> Self {
+	pub fn from_dummy(_url: &Url, ft: Option<FileType>) -> Self {
 		let mut me = ft.map(Self::from_half_ft).unwrap_or_default();
 		#[cfg(unix)]
-		if yazi_shared::url::Urn::new(url).is_hidden() {
+		if yazi_shared::url::Urn::new(_url).is_hidden() {
 			me.kind |= ChaKind::HIDDEN;
 		}
 		me
@@ -182,7 +182,10 @@ impl Cha {
 
 	#[inline]
 	pub const fn is_hidden(&self) -> bool {
-		win_either!(self.kind.contains(ChaKind::SYSTEM), self.kind.contains(ChaKind::HIDDEN))
+		win_either!(
+			self.kind.contains(ChaKind::HIDDEN) || self.kind.contains(ChaKind::SYSTEM),
+			self.kind.contains(ChaKind::HIDDEN)
+		)
 	}
 
 	#[inline]
