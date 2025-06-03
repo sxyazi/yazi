@@ -14,9 +14,10 @@
   jq,
   poppler_utils,
   _7zz,
-  ffmpegthumbnailer,
+  ffmpeg,
   fd,
   ripgrep,
+  resvg,
   fzf,
   zoxide,
   imagemagick,
@@ -40,9 +41,10 @@ let
     jq
     poppler_utils
     _7zz
-    ffmpegthumbnailer
+    ffmpeg
     fd
     ripgrep
+    resvg
     fzf
     zoxide
     imagemagick
