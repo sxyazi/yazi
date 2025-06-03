@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::HashMap};
+use std::{any::TypeId, borrow::Cow, collections::HashMap};
 
 use mlua::{ExternalError, IntoLua, Lua, MultiValue, Table, Value};
 use yazi_shared::{OrderedFloat, event::{Data, DataKey}, replace_cow};
@@ -40,21 +40,24 @@ impl Sendable {
 			}
 			Value::Function(_) => Err("function is not supported".into_lua_err())?,
 			Value::Thread(_) => Err("thread is not supported".into_lua_err())?,
-			Value::UserData(ud) => {
-				if let Ok(t) = ud.take::<yazi_binding::Url>() {
-					Data::Url(t.into())
-				} else if let Ok(t) = ud.take::<yazi_binding::Urn>() {
-					Data::Urn(t.into())
-				} else if let Ok(t) = ud.borrow::<yazi_binding::Id>() {
-					Data::Id(**t)
-				} else if let Ok(t) = ud.take::<yazi_fs::FilesOp>() {
-					Data::Any(Box::new(t))
-				} else if let Ok(t) = ud.take::<super::body::BodyYankIter>() {
-					Data::Any(Box::new(t))
-				} else {
-					Err(format!("unsupported userdata included: {ud:?}").into_lua_err())?
+			Value::UserData(ud) => match ud.type_id() {
+				Some(t) if t == TypeId::of::<yazi_binding::Url>() => {
+					Data::Url(ud.take::<yazi_binding::Url>()?.into())
 				}
-			}
+				Some(t) if t == TypeId::of::<yazi_binding::Urn>() => {
+					Data::Urn(ud.take::<yazi_binding::Urn>()?.into())
+				}
+				Some(t) if t == TypeId::of::<yazi_binding::Id>() => {
+					Data::Id(**ud.borrow::<yazi_binding::Id>()?)
+				}
+				Some(t) if t == TypeId::of::<yazi_fs::FilesOp>() => {
+					Data::Any(Box::new(ud.take::<yazi_fs::FilesOp>()?))
+				}
+				Some(t) if t == TypeId::of::<super::body::BodyYankIter>() => {
+					Data::Any(Box::new(ud.take::<super::body::BodyYankIter>()?))
+				}
+				_ => Err(format!("unsupported userdata included: {ud:?}").into_lua_err())?,
+			},
 			Value::Error(_) => Err("error is not supported".into_lua_err())?,
 			Value::Other(..) => Err("unknown data is not supported".into_lua_err())?,
 		})
@@ -195,17 +198,18 @@ impl Sendable {
 			Value::Table(_) => Err("table is not supported".into_lua_err())?,
 			Value::Function(_) => Err("function is not supported".into_lua_err())?,
 			Value::Thread(_) => Err("thread is not supported".into_lua_err())?,
-			Value::UserData(ud) => {
-				if let Ok(t) = ud.take::<yazi_binding::Url>() {
-					DataKey::Url(t.into())
-				} else if let Ok(t) = ud.take::<yazi_binding::Urn>() {
-					DataKey::Urn(t.into())
-				} else if let Ok(t) = ud.borrow::<yazi_binding::Id>() {
-					DataKey::Id(**t)
-				} else {
-					Err(format!("unsupported userdata included: {ud:?}").into_lua_err())?
+			Value::UserData(ud) => match ud.type_id() {
+				Some(t) if t == TypeId::of::<yazi_binding::Url>() => {
+					DataKey::Url(ud.take::<yazi_binding::Url>()?.into())
 				}
-			}
+				Some(t) if t == TypeId::of::<yazi_binding::Urn>() => {
+					DataKey::Urn(ud.take::<yazi_binding::Urn>()?.into())
+				}
+				Some(t) if t == TypeId::of::<yazi_binding::Id>() => {
+					DataKey::Id(**ud.borrow::<yazi_binding::Id>()?)
+				}
+				_ => Err(format!("unsupported userdata included: {ud:?}").into_lua_err())?,
+			},
 			Value::Error(_) => Err("error is not supported".into_lua_err())?,
 			Value::Other(..) => Err("unknown data is not supported".into_lua_err())?,
 		})

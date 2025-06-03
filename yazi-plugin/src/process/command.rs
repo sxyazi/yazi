@@ -1,4 +1,4 @@
-use std::{io, process::Stdio};
+use std::{any::TypeId, io, process::Stdio};
 
 use mlua::{AnyUserData, ExternalError, IntoLuaMulti, Lua, MetaMethod, Table, UserData, Value};
 use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
@@ -118,15 +118,18 @@ impl UserData for Command {
 						_ => Stdio::null(),
 					});
 				}
-				Value::UserData(ud) => {
-					if let Ok(stdin) = ud.take::<ChildStdin>() {
-						return Ok(stdin.try_into()?);
-					} else if let Ok(stdout) = ud.take::<ChildStdout>() {
-						return Ok(stdout.try_into()?);
-					} else if let Ok(stderr) = ud.take::<ChildStderr>() {
-						return Ok(stderr.try_into()?);
+				Value::UserData(ud) => match ud.type_id() {
+					Some(t) if t == TypeId::of::<ChildStdin>() => {
+						return Ok(ud.take::<ChildStdin>()?.try_into()?);
 					}
-				}
+					Some(t) if t == TypeId::of::<ChildStdout>() => {
+						return Ok(ud.take::<ChildStdout>()?.try_into()?);
+					}
+					Some(t) if t == TypeId::of::<ChildStderr>() => {
+						return Ok(ud.take::<ChildStderr>()?.try_into()?);
+					}
+					_ => {}
+				},
 				_ => {}
 			}
 

@@ -1,3 +1,5 @@
+use std::any::TypeId;
+
 use mlua::{AnyUserData, ExternalError};
 
 use super::{Bar, Border, Clear, Gauge, Line, List, Table, Text};
@@ -6,12 +8,12 @@ use super::{Bar, Border, Clear, Gauge, Line, List, Table, Text};
 pub enum Renderable {
 	Line(Line),
 	Text(Text),
-	List(List),
+	List(Box<List>),
 	Bar(Bar),
 	Clear(Clear),
 	Border(Border),
-	Gauge(Gauge),
-	Table(Table),
+	Gauge(Box<Gauge>),
+	Table(Box<Table>),
 }
 
 impl Renderable {
@@ -37,26 +39,16 @@ impl TryFrom<AnyUserData> for Renderable {
 	type Error = mlua::Error;
 
 	fn try_from(ud: AnyUserData) -> Result<Self, Self::Error> {
-		Ok(if let Ok(c) = ud.take::<crate::elements::Line>() {
-			Self::Line(c)
-		} else if let Ok(c) = ud.take::<crate::elements::Text>() {
-			Self::Text(c)
-		} else if let Ok(c) = ud.take::<crate::elements::List>() {
-			Self::List(c)
-		} else if let Ok(c) = ud.take::<crate::elements::Bar>() {
-			Self::Bar(c)
-		} else if let Ok(c) = ud.take::<crate::elements::Clear>() {
-			Self::Clear(c)
-		} else if let Ok(c) = ud.take::<crate::elements::Border>() {
-			Self::Border(c)
-		} else if let Ok(c) = ud.take::<crate::elements::Gauge>() {
-			Self::Gauge(c)
-		} else if let Ok(c) = ud.take::<crate::elements::Table>() {
-			Self::Table(c)
-		} else {
-			return Err(
-				format!("expected a UserData of renderable element, not: {ud:#?}").into_lua_err(),
-			);
+		Ok(match ud.type_id() {
+			Some(t) if t == TypeId::of::<Line>() => Self::Line(ud.take()?),
+			Some(t) if t == TypeId::of::<Text>() => Self::Text(ud.take()?),
+			Some(t) if t == TypeId::of::<List>() => Self::List(Box::new(ud.take()?)),
+			Some(t) if t == TypeId::of::<Bar>() => Self::Bar(ud.take()?),
+			Some(t) if t == TypeId::of::<Clear>() => Self::Clear(ud.take()?),
+			Some(t) if t == TypeId::of::<Border>() => Self::Border(ud.take()?),
+			Some(t) if t == TypeId::of::<Gauge>() => Self::Gauge(Box::new(ud.take()?)),
+			Some(t) if t == TypeId::of::<Table>() => Self::Table(Box::new(ud.take()?)),
+			_ => Err(format!("expected a UserData of renderable element, not: {ud:#?}").into_lua_err())?,
 		})
 	}
 }

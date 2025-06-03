@@ -47,14 +47,14 @@ impl SpotLock {
 
 	pub fn table(&self) -> Option<&crate::elements::Table> {
 		self.data.iter().rev().find_map(|r| match r {
-			Renderable::Table(t) => Some(t),
+			Renderable::Table(t) => Some(t.as_ref()),
 			_ => None,
 		})
 	}
 
 	pub fn table_mut(&mut self) -> Option<&mut crate::elements::Table> {
 		self.data.iter_mut().rev().find_map(|r| match r {
-			Renderable::Table(t) => Some(t),
+			Renderable::Table(t) => Some(t.as_mut()),
 			_ => None,
 		})
 	}
@@ -83,7 +83,7 @@ impl Utils {
 							.style(THEME.spot.title),
 					)],
 				}),
-				Renderable::Table(table),
+				Renderable::Table(Box::new(table)),
 			];
 			emit!(Call(Cmd::new("mgr:update_spotted").with_any("lock", lock)));
 

@@ -29,13 +29,6 @@ impl Border {
 			.create_function(|_, (_, edge): (Table, Edge)| Ok(Border { edge, ..Default::default() }))?;
 
 		let border = lua.create_table_from([
-			// TODO: remove these constants
-			("NONE", Borders::NONE.bits()),
-			("TOP", Borders::TOP.bits()),
-			("RIGHT", Borders::RIGHT.bits()),
-			("BOTTOM", Borders::BOTTOM.bits()),
-			("LEFT", Borders::LEFT.bits()),
-			("ALL", Borders::ALL.bits()),
 			// Type
 			("PLAIN", PLAIN),
 			("ROUNDED", ROUNDED),

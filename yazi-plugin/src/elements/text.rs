@@ -27,17 +27,7 @@ impl Text {
 			Ok(Text { inner: code.as_bytes().into_text().into_lua_err()?, ..Default::default() })
 		})?;
 
-		let text = lua.create_table_from([
-			("parse", parse.into_lua(lua)?),
-			// TODO: remove these constants
-			("LEFT", 0.into_lua(lua)?),
-			("CENTER", 1.into_lua(lua)?),
-			("RIGHT", 2.into_lua(lua)?),
-			("WRAP_NO", 0.into_lua(lua)?),
-			("WRAP", 1.into_lua(lua)?),
-			("WRAP_TRIM", 2.into_lua(lua)?),
-		])?;
-
+		let text = lua.create_table_from([("parse", parse)])?;
 		text.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 		text.into_lua(lua)
 	}
