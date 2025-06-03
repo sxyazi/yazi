@@ -35,14 +35,7 @@ impl Line {
 			Ok(Line { inner: mem::take(&mut lines[0]), ..Default::default() })
 		})?;
 
-		let line = lua.create_table_from([
-			("parse", parse.into_lua(lua)?),
-			// TODO: remove these constants
-			("LEFT", 0.into_lua(lua)?),
-			("CENTER", 1.into_lua(lua)?),
-			("RIGHT", 2.into_lua(lua)?),
-		])?;
-
+		let line = lua.create_table_from([("parse", parse)])?;
 		line.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
 		line.into_lua(lua)
 	}
