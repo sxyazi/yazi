@@ -62,7 +62,7 @@ impl Tab {
 
 		// Backstack
 		if opt.source.big_jump() {
-			if self.current.url.is_regular() && self.current.url != Default::default() {
+			if self.current.url.is_regular() {
 				self.backstack.push(&self.current.url);
 			}
 			if opt.target.is_regular() {
