@@ -6,7 +6,7 @@ use yazi_fs::File;
 use yazi_proxy::MgrProxy;
 use yazi_shared::{Id, url::Url};
 
-use crate::tab::{Folder, Tab};
+use crate::tab::{Folder, Tab, commands::CdSource};
 
 pub struct Tabs {
 	pub cursor:       usize,
@@ -21,9 +21,9 @@ impl Tabs {
 		for (i, tab) in tabs.iter_mut().enumerate() {
 			let file = &BOOT.files[i];
 			if file.is_empty() {
-				tab.cd(Url::from(&BOOT.cwds[i]));
+				tab.cd((Url::from(&BOOT.cwds[i]), CdSource::Tab));
 			} else {
-				tab.reveal(Url::from(BOOT.cwds[i].join(file)));
+				tab.reveal((Url::from(BOOT.cwds[i].join(file)), CdSource::Tab));
 			}
 		}
 		tabs
