@@ -118,7 +118,7 @@ impl Emulator {
 		let now = std::time::Instant::now();
 		let h = tokio::spawn(Self::error_to_user());
 
-		let (buf, result) = TTY.read_until(Duration::from_millis(500), |b, buf| {
+		let (buf, result) = TTY.read_until(Duration::from_millis(1000), |b, buf| {
 			b == b'c'
 				&& buf.contains(&0x1b)
 				&& buf.rsplitn(2, |&b| b == 0x1b).next().is_some_and(|s| s.starts_with(b"[?"))
@@ -137,7 +137,7 @@ impl Emulator {
 
 	pub fn read_until_dsr() -> String {
 		let now = std::time::Instant::now();
-		let (buf, result) = TTY.read_until(Duration::from_millis(100), |b, buf| {
+		let (buf, result) = TTY.read_until(Duration::from_millis(200), |b, buf| {
 			b == b'n' && (buf.ends_with(b"\x1b[0n") || buf.ends_with(b"\x1b[3n"))
 		});
 
