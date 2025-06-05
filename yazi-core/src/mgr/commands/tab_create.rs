@@ -3,7 +3,7 @@ use yazi_macro::render;
 use yazi_proxy::AppProxy;
 use yazi_shared::{event::CmdCow, url::Url};
 
-use crate::{mgr::Tabs, tab::Tab};
+use crate::{mgr::Tabs, tab::{Tab, commands::CdSource}};
 
 const MAX_TABS: usize = 9;
 
@@ -35,15 +35,15 @@ impl Tabs {
 
 		let mut tab = Tab::default();
 		if !opt.current {
-			tab.cd(opt.url);
+			tab.cd((opt.url, CdSource::Tab));
 		} else if let Some(h) = self.active().hovered() {
 			tab.pref = self.active().pref.clone();
 			tab.apply_files_attrs();
-			tab.reveal(h.url.to_regular());
+			tab.reveal((h.url.to_regular(), CdSource::Tab));
 		} else {
 			tab.pref = self.active().pref.clone();
 			tab.apply_files_attrs();
-			tab.cd(self.active().cwd().to_regular());
+			tab.cd((self.active().cwd().to_regular(), CdSource::Tab));
 		}
 
 		self.items.insert(self.cursor + 1, tab);

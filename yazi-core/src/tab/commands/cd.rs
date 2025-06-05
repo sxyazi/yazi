@@ -13,14 +13,14 @@ use crate::tab::Tab;
 
 struct Opt {
 	target:      Url,
-	source:      OptSource,
+	source:      CdSource,
 	interactive: bool,
 }
 
 impl From<CmdCow> for Opt {
 	fn from(mut c: CmdCow) -> Self {
 		Self {
-			source: OptSource::Cd,
+			source: CdSource::Cd,
 			interactive: c.bool("interactive"),
 			..Self::from(c.take_first_url().unwrap_or_default())
 		}
@@ -28,11 +28,11 @@ impl From<CmdCow> for Opt {
 }
 
 impl From<Url> for Opt {
-	fn from(target: Url) -> Self { Self::from((target, OptSource::Cd)) }
+	fn from(target: Url) -> Self { Self::from((target, CdSource::Cd)) }
 }
 
-impl From<(Url, OptSource)> for Opt {
-	fn from((mut target, source): (Url, OptSource)) -> Self {
+impl From<(Url, CdSource)> for Opt {
+	fn from((mut target, source): (Url, CdSource)) -> Self {
 		if target.is_regular() {
 			target = Url::from(expand_path(&target));
 		}
@@ -60,6 +60,16 @@ impl Tab {
 			self.history.insert(rep.url.to_owned(), rep);
 		}
 
+		// Backstack
+		if opt.source.big_jump() {
+			if self.current.url.is_regular() && self.current.url != Default::default() {
+				self.backstack.push(&self.current.url);
+			}
+			if opt.target.is_regular() {
+				self.backstack.push(&opt.target);
+			}
+		}
+
 		// Current
 		let rep = self.history.remove_or(&opt.target);
 		let rep = mem::replace(&mut self.current, rep);
@@ -70,11 +80,6 @@ impl Tab {
 		// Parent
 		if let Some(parent) = opt.target.parent_url() {
 			self.parent = Some(self.history.remove_or(&parent));
-		}
-
-		// Backstack
-		if opt.source.big_jump() && opt.target.is_regular() {
-			self.backstack.push(&opt.target);
 		}
 
 		Pubsub::pub_from_cd(self.id, self.cwd());
@@ -118,7 +123,8 @@ impl Tab {
 
 // --- OptSource
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub(super) enum OptSource {
+pub enum CdSource {
+	Tab,
 	Cd,
 	Reveal,
 	Enter,
@@ -127,7 +133,7 @@ pub(super) enum OptSource {
 	Back,
 }
 
-impl OptSource {
+impl CdSource {
 	#[inline]
 	fn big_jump(self) -> bool { self == Self::Cd || self == Self::Reveal }
 }

@@ -1,5 +1,6 @@
 use yazi_shared::event::CmdCow;
 
+use super::cd::CdSource;
 use crate::tab::Tab;
 
 struct Opt;
@@ -19,6 +20,6 @@ impl Tab {
 			.and_then(|h| h.url.parent_url())
 			.filter(|u| u != self.cwd())
 			.or_else(|| self.cwd().parent_url())
-			.map(|u| self.cd((u.into_regular(), super::cd::OptSource::Leave)));
+			.map(|u| self.cd((u.into_regular(), CdSource::Leave)));
 	}
 }
