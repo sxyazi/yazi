@@ -76,7 +76,12 @@ pub(super) enum CommandPkg {
 	/// List all packages.
 	List,
 	/// Upgrade all packages.
-	Upgrade,
+	#[command(arg_required_else_help = true)]
+	Upgrade {
+		/// The packages to delete.
+		#[arg(index = 1, num_args = 1..)]
+		ids: Vec<String>,
+	},
 }
 
 #[derive(clap::Args)]

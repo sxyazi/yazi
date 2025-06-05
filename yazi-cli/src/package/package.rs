@@ -41,18 +41,40 @@ impl Package {
 		Ok(())
 	}
 
-	pub(crate) async fn install(&mut self, upgrade: bool) -> Result<()> {
+	pub(crate) async fn install(&mut self) -> Result<()> {
+		macro_rules! go {
+			($dep:expr) => {
+				let r = $dep.install().await;
+				self.save().await?;
+				r?;
+			};
+		}
+
 		for i in 0..self.plugins.len() {
-			let r =
-				if upgrade { self.plugins[i].upgrade().await } else { self.plugins[i].install().await };
-			self.save().await?;
-			r?;
+			go!(self.plugins[i]);
 		}
 		for i in 0..self.flavors.len() {
-			let r =
-				if upgrade { self.flavors[i].upgrade().await } else { self.flavors[i].install().await };
-			self.save().await?;
-			r?;
+			go!(self.flavors[i]);
+		}
+		Ok(())
+	}
+
+	pub(crate) async fn upgrade_many(&mut self, uses: &[String]) -> Result<()> {
+		macro_rules! go {
+			($dep:expr) => {
+				if uses.contains(&$dep.r#use) {
+					let r = $dep.upgrade().await;
+					self.save().await?;
+					r?;
+				}
+			};
+		}
+
+		for i in 0..self.plugins.len() {
+			go!(self.plugins[i]);
+		}
+		for i in 0..self.flavors.len() {
+			go!(self.flavors[i]);
 		}
 		Ok(())
 	}
