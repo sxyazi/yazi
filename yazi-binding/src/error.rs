@@ -8,22 +8,22 @@ pub enum Error {
 	Io(std::io::Error),
 	IoKind(std::io::ErrorKind),
 	Serde(serde_json::Error),
-	Custom(String),
+	Custom(Cow<'static, str>),
 }
 
 impl Error {
 	pub fn install(lua: &Lua) -> mlua::Result<()> {
-		let new = lua.create_function(|_, msg: String| Ok(Error::Custom(msg)))?;
+		let new = lua.create_function(|_, msg: String| Ok(Error::Custom(msg.into())))?;
 
 		lua.globals().raw_set("Error", lua.create_table_from([("custom", new)])?)
 	}
 
-	fn to_string(&self) -> Cow<str> {
+	pub fn into_string(self) -> Cow<'static, str> {
 		match self {
 			Error::Io(e) => Cow::Owned(e.to_string()),
 			Error::IoKind(e) => Cow::Owned(e.to_string()),
 			Error::Serde(e) => Cow::Owned(e.to_string()),
-			Error::Custom(s) => Cow::Borrowed(s),
+			Error::Custom(s) => s,
 		}
 	}
 }
@@ -60,7 +60,10 @@ impl UserData for Error {
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_meta_method(MetaMethod::ToString, |lua, me, ()| {
-			lua.create_string(me.to_string().as_ref())
+			Ok(match me {
+				Error::Io(_) | Error::IoKind(_) | Error::Serde(_) => lua.create_string(me.to_string()),
+				Error::Custom(s) => lua.create_string(s.as_ref()),
+			})
 		});
 		methods.add_meta_function(MetaMethod::Concat, |lua, (lhs, rhs): (Value, Value)| {
 			match (lhs, rhs) {

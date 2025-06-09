@@ -8,7 +8,7 @@ use crate::url::Loc;
 
 const ENCODE_SET: &AsciiSet = &CONTROLS.add(b'#');
 
-#[derive(Clone, Default, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Default, Eq, Ord, PartialOrd)]
 pub struct Url {
 	loc:    Loc,
 	scheme: UrlScheme,
@@ -275,6 +275,17 @@ impl Hash for Url {
 				self.scheme.hash(state);
 				self.frag.hash(state);
 			}
+		}
+	}
+}
+
+impl PartialEq for Url {
+	fn eq(&self, other: &Self) -> bool {
+		match (self.scheme, other.scheme) {
+			(UrlScheme::Regular | UrlScheme::SearchItem, UrlScheme::Regular | UrlScheme::SearchItem) => {
+				self.loc == other.loc
+			}
+			_ => self.loc == other.loc && self.scheme == other.scheme,
 		}
 	}
 }

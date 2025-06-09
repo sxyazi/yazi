@@ -1,8 +1,9 @@
-use std::mem;
+use std::{any::TypeId, mem};
 
 use ansi_to_tui::IntoText;
 use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, MetaMethod, Table, UserData, Value};
 use ratatui::widgets::Widget;
+use yazi_binding::Error;
 
 use super::{Area, Line, Span, Wrap};
 use crate::elements::Align;
@@ -53,17 +54,13 @@ impl TryFrom<Value> for Text {
 		let inner = match value {
 			Value::Table(tb) => return Self::try_from(tb),
 			Value::String(s) => s.to_string_lossy().into(),
-			Value::UserData(ud) => {
-				if let Ok(Line { inner: line, .. }) = ud.take() {
-					line.into()
-				} else if let Ok(Span(span)) = ud.take() {
-					span.into()
-				} else if let Ok(text) = ud.take() {
-					return Ok(text);
-				} else {
-					Err(EXPECTED.into_lua_err())?
-				}
-			}
+			Value::UserData(ud) => match ud.type_id() {
+				Some(t) if t == TypeId::of::<Line>() => ud.take::<Line>()?.inner.into(),
+				Some(t) if t == TypeId::of::<Span>() => ud.take::<Span>()?.0.into(),
+				Some(t) if t == TypeId::of::<Text>() => return ud.take(),
+				Some(t) if t == TypeId::of::<Error>() => ud.take::<Error>()?.into_string().into(),
+				_ => Err(EXPECTED.into_lua_err())?,
+			},
 			_ => Err(EXPECTED.into_lua_err())?,
 		};
 		Ok(Self { inner, ..Default::default() })
@@ -76,19 +73,16 @@ impl TryFrom<Table> for Text {
 	fn try_from(tb: Table) -> Result<Self, Self::Error> {
 		let mut lines = Vec::with_capacity(tb.raw_len());
 		for v in tb.sequence_values() {
-			match v? {
-				Value::String(s) => lines.push(s.to_string_lossy().into()),
-				Value::UserData(ud) => {
-					if let Ok(Span(span)) = ud.take() {
-						lines.push(span.into());
-					} else if let Ok(Line { inner: line, .. }) = ud.take() {
-						lines.push(line);
-					} else {
-						return Err(EXPECTED.into_lua_err());
-					}
-				}
+			lines.push(match v? {
+				Value::String(s) => s.to_string_lossy().into(),
+				Value::UserData(ud) => match ud.type_id() {
+					Some(t) if t == TypeId::of::<Span>() => ud.take::<Span>()?.0.into(),
+					Some(t) if t == TypeId::of::<Line>() => ud.take::<Line>()?.inner,
+					Some(t) if t == TypeId::of::<Error>() => ud.take::<Error>()?.into_string().into(),
+					_ => Err(EXPECTED.into_lua_err())?,
+				},
 				_ => Err(EXPECTED.into_lua_err())?,
-			}
+			})
 		}
 		Ok(Self { inner: lines.into(), ..Default::default() })
 	}

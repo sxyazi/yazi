@@ -37,20 +37,20 @@ pub(super) enum Command {
 
 #[derive(clap::Args)]
 pub(super) struct CommandEmit {
-	/// The name of the command.
+	/// Name of the command.
 	pub(super) name: String,
-	/// The arguments of the command.
+	/// Arguments of the command.
 	#[arg(allow_hyphen_values = true, trailing_var_arg = true)]
 	pub(super) args: Vec<String>,
 }
 
 #[derive(clap::Args)]
 pub(super) struct CommandEmitTo {
-	/// The receiver ID.
+	/// Receiver ID.
 	pub(super) receiver: Id,
-	/// The name of the command.
+	/// Name of the command.
 	pub(super) name:     String,
-	/// The arguments of the command.
+	/// Arguments of the command.
 	#[arg(allow_hyphen_values = true, trailing_var_arg = true)]
 	pub(super) args:     Vec<String>,
 }
@@ -60,14 +60,14 @@ pub(super) enum CommandPkg {
 	/// Add packages.
 	#[command(arg_required_else_help = true)]
 	Add {
-		/// The packages to add.
+		/// Packages to add.
 		#[arg(index = 1, num_args = 1..)]
 		ids: Vec<String>,
 	},
 	/// Delete packages.
 	#[command(arg_required_else_help = true)]
 	Delete {
-		/// The packages to delete.
+		/// Packages to delete.
 		#[arg(index = 1, num_args = 1..)]
 		ids: Vec<String>,
 	},
@@ -76,10 +76,9 @@ pub(super) enum CommandPkg {
 	/// List all packages.
 	List,
 	/// Upgrade all packages.
-	#[command(arg_required_else_help = true)]
 	Upgrade {
-		/// The packages to delete.
-		#[arg(index = 1, num_args = 1..)]
+		/// Packages to upgrade, upgrade all if unspecified.
+		#[arg(index = 1, num_args = 0..)]
 		ids: Vec<String>,
 	},
 }
@@ -106,7 +105,7 @@ pub(super) struct CommandPack {
 
 #[derive(clap::Args)]
 pub(super) struct CommandPub {
-	/// The kind of message.
+	/// Kind of message.
 	#[arg(index = 1)]
 	pub(super) kind: String,
 	/// Send the message with a string body.
@@ -133,10 +132,10 @@ impl CommandPub {
 
 #[derive(clap::Args)]
 pub(super) struct CommandPubTo {
-	/// The receiver ID.
+	/// Receiver ID.
 	#[arg(index = 1)]
 	pub(super) receiver: Id,
-	/// The kind of message.
+	/// Kind of message.
 	#[arg(index = 2)]
 	pub(super) kind:     String,
 	/// Send the message with a string body.
@@ -152,7 +151,7 @@ pub(super) struct CommandPubTo {
 
 #[derive(clap::Args)]
 pub(super) struct CommandSub {
-	/// The kind of messages to subscribe to, separated by commas if multiple.
+	/// Kind of messages to subscribe to, separated by commas if multiple.
 	#[arg(index = 1)]
 	pub(super) kinds: String,
 }
