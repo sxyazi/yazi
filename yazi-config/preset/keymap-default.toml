@@ -254,14 +254,16 @@ keymap = [
 	{ on = "<C-f>",   run = "move 1",  desc = "Move forward a character" },
 
 	# Word-wise movement
-	{ on = "b",     run = "backward",                    desc = "Move back to the start of the current or previous word" },
-	{ on = "B",     run = "backward --far",              desc = "Move back to the start of the current or previous WORD" },
-	{ on = "w",     run = "forward",                     desc = "Move forward to the start of the next word" },
-	{ on = "W",     run = "forward --far",               desc = "Move forward to the start of the next WORD" },
-	{ on = "e",     run = "forward --end-of-word",       desc = "Move forward to the end of the current or next word" },
-	{ on = "E",     run = "forward --far --end-of-word", desc = "Move forward to the end of the current or next WORD" },
-	{ on = "<A-b>", run = "backward",                    desc = "Move back to the start of the current or previous word" },
-	{ on = "<A-f>", run = "forward --end-of-word",       desc = "Move forward to the end of the current or next word" },
+	{ on = "b",         run = "backward",                    desc = "Move back to the start of the current or previous word" },
+	{ on = "B",         run = "backward --far",              desc = "Move back to the start of the current or previous WORD" },
+	{ on = "w",         run = "forward",                     desc = "Move forward to the start of the next word" },
+	{ on = "W",         run = "forward --far",               desc = "Move forward to the start of the next WORD" },
+	{ on = "e",         run = "forward --end-of-word",       desc = "Move forward to the end of the current or next word" },
+	{ on = "E",         run = "forward --far --end-of-word", desc = "Move forward to the end of the current or next WORD" },
+	{ on = "<A-b>",     run = "backward",                    desc = "Move back to the start of the current or previous word" },
+	{ on = "<A-f>",     run = "forward --end-of-word",       desc = "Move forward to the end of the current or next word" },
+	{ on = "<C-Left>",  run = "backward",                    desc = "Move back to the start of the current or previous word" },
+	{ on = "<C-Right>", run = "forward --end-of-word",       desc = "Move forward to the end of the current or next word" },
 
 	# Line-wise movement
 	{ on = "0",      run = "move bol",        desc = "Move to the BOL" },
@@ -280,10 +282,12 @@ keymap = [
 	{ on = "<C-d>",       run = "backspace --under", desc = "Delete the character under the cursor" },
 
 	# Kill
-	{ on = "<C-u>", run = "kill bol",      desc = "Kill backwards to the BOL" },
-	{ on = "<C-k>", run = "kill eol",      desc = "Kill forwards to the EOL" },
-	{ on = "<C-w>", run = "kill backward", desc = "Kill backwards to the start of the current word" },
-	{ on = "<A-d>", run = "kill forward",  desc = "Kill forwards to the end of the current word" },
+	{ on = "<C-u>",         run = "kill bol",      desc = "Kill backwards to the BOL" },
+	{ on = "<C-k>",         run = "kill eol",      desc = "Kill forwards to the EOL" },
+	{ on = "<C-w>",         run = "kill backward", desc = "Kill backwards to the start of the current word" },
+	{ on = "<A-d>",         run = "kill forward",  desc = "Kill forwards to the end of the current word" },
+	{ on = "<C-Backspace>", run = "kill backward", desc = "Kill backwards to the start of the current word" },
+	{ on = "<C-Delete>",    run = "kill forward",  desc = "Kill forwards to the end of the current word" },
 
 	# Cut/Yank/Paste
 	{ on = "d", run = "delete --cut",                                      desc = "Cut selected characters" },
