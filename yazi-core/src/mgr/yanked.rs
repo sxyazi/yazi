@@ -4,7 +4,7 @@ use yazi_dds::Pubsub;
 use yazi_fs::FilesOp;
 use yazi_shared::url::Url;
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Yanked {
 	pub cut: bool,
 	urls:    HashSet<Url>,

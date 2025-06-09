@@ -62,7 +62,7 @@ impl Package {
 	pub(crate) async fn upgrade_many(&mut self, uses: &[String]) -> Result<()> {
 		macro_rules! go {
 			($dep:expr) => {
-				if uses.contains(&$dep.r#use) {
+				if uses.is_empty() || uses.contains(&$dep.r#use) {
 					let r = $dep.upgrade().await;
 					self.save().await?;
 					r?;

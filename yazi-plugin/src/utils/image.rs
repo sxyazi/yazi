@@ -10,7 +10,7 @@ impl Utils {
 		lua.create_async_function(|lua, url: UrlRef| async move {
 			match yazi_adapter::ImageInfo::new(&url).await {
 				Ok(info) => ImageInfo::from(info).into_lua_multi(&lua),
-				Err(e) => (Value::Nil, Error::Custom(e.to_string())).into_lua_multi(&lua),
+				Err(e) => (Value::Nil, Error::Custom(e.to_string().into())).into_lua_multi(&lua),
 			}
 		})
 	}
@@ -19,7 +19,7 @@ impl Utils {
 		lua.create_async_function(|lua, (url, rect): (UrlRef, Rect)| async move {
 			match ADAPTOR.get().image_show(&url, *rect).await {
 				Ok(area) => Rect::from(area).into_lua_multi(&lua),
-				Err(e) => (Value::Nil, Error::Custom(e.to_string())).into_lua_multi(&lua),
+				Err(e) => (Value::Nil, Error::Custom(e.to_string().into())).into_lua_multi(&lua),
 			}
 		})
 	}
