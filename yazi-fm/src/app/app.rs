@@ -1,7 +1,8 @@
-use std::sync::atomic::Ordering;
+use std::{sync::atomic::Ordering, time::{Duration, Instant}};
 
 use anyhow::Result;
 use crossterm::event::KeyEvent;
+use tokio::{select, time::sleep};
 use yazi_config::keymap::Key;
 use yazi_macro::emit;
 use yazi_shared::event::{CmdCow, Event, NEED_RENDER};
@@ -23,27 +24,46 @@ impl App {
 		let mut app = Self { cx: Ctx::make(), term: Some(term), signals };
 		app.render();
 
-		let mut times = 0;
-		let mut events = Vec::with_capacity(200);
-		while rx.recv_many(&mut events, 50).await > 0 {
-			for event in events.drain(..) {
-				times += 1;
-				app.dispatch(event)?;
-			}
+		let mut events = Vec::with_capacity(50);
+		macro_rules! drain_events {
+			() => {
+				for event in events.drain(..) {
+					app.dispatch(event)?;
+					try_render!();
+				}
+			};
+		}
 
-			if !NEED_RENDER.swap(false, Ordering::Relaxed) {
-				continue;
-			}
+		let (mut timeout, mut last_render) = (None, Instant::now());
+		macro_rules! try_render {
+			() => {
+				if NEED_RENDER.load(Ordering::Relaxed) {
+					if let Some(sub) = Duration::from_millis(10).checked_sub(last_render.elapsed()) {
+						timeout = Some(sleep(sub));
+					} else {
+						app.render();
+						(timeout, last_render) = (None, Instant::now());
+					}
+				}
+			};
+		}
 
-			if times >= 50 {
-				times = 0;
-				app.render();
-			} else if let Ok(event) = rx.try_recv() {
-				events.push(event);
-				emit!(Render);
+		loop {
+			if let Some(t) = timeout.take() {
+				select! {
+					_ = t => {
+						app.render();
+						last_render = Instant::now();
+					}
+					n = rx.recv_many(&mut events, 50) => {
+						if n == 0 { break }
+						drain_events!();
+					}
+				}
+			} else if rx.recv_many(&mut events, 50).await > 0 {
+				drain_events!();
 			} else {
-				times = 0;
-				app.render();
+				break;
 			}
 		}
 		Ok(())
