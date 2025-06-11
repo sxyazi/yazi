@@ -15,7 +15,7 @@ impl Sendable {
 			Value::Number(n) => Data::Number(n),
 			Value::String(b) => {
 				if let Ok(s) = b.to_str() {
-					Data::String(s.to_owned())
+					Data::String(s.to_owned().into())
 				} else {
 					Data::Bytes(b.as_bytes().to_owned())
 				}
@@ -99,7 +99,7 @@ impl Sendable {
 			Data::Boolean(b) => Value::Boolean(*b),
 			Data::Integer(i) => Value::Integer(*i),
 			Data::Number(n) => Value::Number(*n),
-			Data::String(s) => Value::String(lua.create_string(s)?),
+			Data::String(s) => Value::String(lua.create_string(s.as_ref())?),
 			Data::List(l) => {
 				let mut vec = Vec::with_capacity(l.len());
 				for v in l {

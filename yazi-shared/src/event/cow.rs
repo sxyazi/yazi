@@ -40,7 +40,7 @@ impl CmdCow {
 	#[inline]
 	pub fn take_str(&mut self, name: impl Into<DataKey>) -> Option<Cow<'static, str>> {
 		match self {
-			Self::Owned(c) => c.take_str(name).map(Cow::Owned),
+			Self::Owned(c) => c.take_str(name),
 			Self::Borrowed(c) => c.str(name).map(Cow::Borrowed),
 		}
 	}
@@ -56,7 +56,7 @@ impl CmdCow {
 	#[inline]
 	pub fn take_first_str(&mut self) -> Option<Cow<'static, str>> {
 		match self {
-			Self::Owned(c) => c.take_first_str().map(Cow::Owned),
+			Self::Owned(c) => c.take_first_str(),
 			Self::Borrowed(c) => c.first_str().map(Cow::Borrowed),
 		}
 	}

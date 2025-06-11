@@ -41,10 +41,10 @@ impl Tab {
 				let (Ok(s) | Err(InputError::Typed(s))) = result else { continue };
 
 				emit!(Call(
-					Cmd::args("mgr:filter_do", &[s])
-						.with_bool("smart", opt.case == FilterCase::Smart)
-						.with_bool("insensitive", opt.case == FilterCase::Insensitive)
-						.with_bool("done", done)
+					Cmd::args("mgr:filter_do", [s])
+						.with("smart", opt.case == FilterCase::Smart)
+						.with("insensitive", opt.case == FilterCase::Insensitive)
+						.with("done", done)
 				));
 			}
 		});

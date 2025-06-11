@@ -12,7 +12,7 @@ pub enum Data {
 	Boolean(bool),
 	Integer(i64),
 	Number(f64),
-	String(String),
+	String(Cow<'static, str>),
 	List(Vec<Data>),
 	Dict(HashMap<DataKey, Data>),
 	Id(Id),
@@ -56,13 +56,13 @@ impl Data {
 	#[inline]
 	pub fn into_url(self) -> Option<Url> {
 		match self {
-			Data::String(s) => Some(Url::from(s)),
+			Data::String(s) => Some(Url::from(s.as_ref())),
 			Data::Url(u) => Some(u),
 			_ => None,
 		}
 	}
 
-	pub fn into_dict_string(self) -> HashMap<Cow<'static, str>, String> {
+	pub fn into_dict_string(self) -> HashMap<Cow<'static, str>, Cow<'static, str>> {
 		let Self::Dict(dict) = self else {
 			return Default::default();
 		};
@@ -79,7 +79,7 @@ impl Data {
 	#[inline]
 	pub fn to_url(&self) -> Option<Url> {
 		match self {
-			Self::String(s) => Some(Url::from(s)),
+			Self::String(s) => Some(Url::from(s.as_ref())),
 			Self::Url(u) => Some(u.clone()),
 			_ => None,
 		}
@@ -90,16 +90,32 @@ impl From<bool> for Data {
 	fn from(value: bool) -> Self { Self::Boolean(value) }
 }
 
+impl From<f64> for Data {
+	fn from(value: f64) -> Self { Self::Number(value) }
+}
+
 impl From<usize> for Data {
 	fn from(value: usize) -> Self { Self::Id(value.into()) }
 }
 
 impl From<String> for Data {
-	fn from(value: String) -> Self { Self::String(value) }
+	fn from(value: String) -> Self { Self::String(Cow::Owned(value)) }
+}
+
+impl From<Cow<'static, str>> for Data {
+	fn from(value: Cow<'static, str>) -> Self { Self::String(value) }
 }
 
 impl From<Id> for Data {
 	fn from(value: Id) -> Self { Self::Id(value) }
+}
+
+impl From<&Url> for Data {
+	fn from(value: &Url) -> Self { Self::Url(value.clone()) }
+}
+
+impl From<&str> for Data {
+	fn from(value: &str) -> Self { Self::String(Cow::Owned(value.to_owned())) }
 }
 
 // --- Key

@@ -14,7 +14,7 @@ impl Notify {
 
 		if self.messages.iter().all(|m| m != &msg) {
 			self.messages.push(msg);
-			emit!(Call(Cmd::args("app:update_notify", &[0])));
+			emit!(Call(Cmd::args("app:update_notify", [0])));
 		}
 	}
 }

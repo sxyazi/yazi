@@ -33,7 +33,7 @@ impl TryFrom<CmdCow> for SearchOpt {
 }
 
 // Via
-#[derive(PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum SearchOptVia {
 	Rg,
 	Rga,
@@ -50,8 +50,8 @@ impl From<&str> for SearchOptVia {
 	}
 }
 
-impl AsRef<str> for SearchOptVia {
-	fn as_ref(&self) -> &str {
+impl SearchOptVia {
+	pub fn into_str(self) -> &'static str {
 		match self {
 			Self::Rg => "rg",
 			Self::Rga => "rga",

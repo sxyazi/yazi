@@ -11,6 +11,6 @@ impl CmpProxy {
 
 	#[inline]
 	pub fn trigger(word: &str, ticket: Id) {
-		emit!(Call(Cmd::args("cmp:trigger", &[word]).with("ticket", ticket)));
+		emit!(Call(Cmd::args("cmp:trigger", [word]).with("ticket", ticket)));
 	}
 }
