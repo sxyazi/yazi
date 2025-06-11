@@ -3,11 +3,25 @@ use tracing::error;
 use unicode_width::UnicodeWidthStr;
 use yazi_config::LAYOUT;
 
-use super::{Line, Span};
+use super::{Line, Rect, Span};
 
 pub(super) struct Utils;
 
 impl Utils {
+	pub(super) fn area(lua: &Lua) -> mlua::Result<Value> {
+		let f = lua.create_function(|_, s: mlua::String| {
+			let layout = LAYOUT.get();
+			Ok(match s.as_bytes().as_ref() {
+				b"current" => Rect(layout.current),
+				b"preview" => Rect(layout.preview),
+				b"progress" => Rect(layout.progress),
+				_ => Err(format!("unknown area: {}", s.display()).into_lua_err())?,
+			})
+		})?;
+
+		f.into_lua(lua)
+	}
+
 	pub(super) fn width(lua: &Lua) -> mlua::Result<Value> {
 		let f = lua.create_function(|_, v: Value| match v {
 			Value::String(s) => {
