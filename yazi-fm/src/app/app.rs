@@ -25,24 +25,19 @@ impl App {
 		app.render();
 
 		let mut events = Vec::with_capacity(50);
+		let (mut timeout, mut last_render) = (None, Instant::now());
 		macro_rules! drain_events {
 			() => {
 				for event in events.drain(..) {
 					app.dispatch(event)?;
-					try_render!();
-				}
-			};
-		}
+					if !NEED_RENDER.load(Ordering::Relaxed) {
+						continue;
+					}
 
-		let (mut timeout, mut last_render) = (None, Instant::now());
-		macro_rules! try_render {
-			() => {
-				if NEED_RENDER.load(Ordering::Relaxed) {
-					if let Some(sub) = Duration::from_millis(10).checked_sub(last_render.elapsed()) {
-						timeout = timeout.or_else(|| Some(sleep(sub)));
-					} else {
+					timeout = Duration::from_millis(10).checked_sub(last_render.elapsed());
+					if timeout.is_none() {
 						app.render();
-						(timeout, last_render) = (None, Instant::now());
+						last_render = Instant::now();
 					}
 				}
 			};
@@ -51,7 +46,7 @@ impl App {
 		loop {
 			if let Some(t) = timeout.take() {
 				select! {
-					_ = t => {
+					_ = sleep(t) => {
 						app.render();
 						last_render = Instant::now();
 					}
