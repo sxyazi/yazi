@@ -1,5 +1,4 @@
 use mlua::{IntoLua, Lua, LuaSerdeExt, SerializeOptions, Value};
-use yazi_adapter::EMULATOR;
 use yazi_binding::Url;
 use yazi_boot::ARGS;
 use yazi_config::YAZI;
@@ -16,7 +15,7 @@ impl Runtime {
 		Composer::make(lua, 10, |lua, key| {
 			match key {
 				b"args" => Self::args(lua)?,
-				b"term" => Self::term(lua)?,
+				b"term" => super::Term::compose(lua)?,
 				b"mgr" => Self::mgr(lua)?,
 				b"plugin" => super::Plugin::compose(lua)?,
 				b"preview" => Self::preview(lua)?,
@@ -34,10 +33,6 @@ impl Runtime {
 			b"chooser_file" => ARGS.chooser_file.as_ref().map(Url::new).into_lua(lua),
 			_ => Ok(Value::Nil),
 		})
-	}
-
-	fn term(lua: &Lua) -> mlua::Result<Value> {
-		lua.create_table_from([("light", EMULATOR.get().light)])?.into_lua(lua)
 	}
 
 	fn mgr(lua: &Lua) -> mlua::Result<Value> {

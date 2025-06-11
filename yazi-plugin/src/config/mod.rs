@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(plugin runtime theme);
+yazi_macro::mod_flat!(plugin runtime term theme);

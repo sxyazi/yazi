@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-config"
-version     = "25.5.31"
+version     = "25.6.11"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]
@@ -9,11 +9,11 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
-yazi-codegen = { path = "../yazi-codegen", version = "25.5.31" }
-yazi-fs      = { path = "../yazi-fs", version = "25.5.31" }
-yazi-macro   = { path = "../yazi-macro", version = "25.5.31" }
-yazi-shared  = { path = "../yazi-shared", version = "25.5.31" }
-yazi-term    = { path = "../yazi-term", version = "25.5.31" }
+yazi-codegen = { path = "../yazi-codegen", version = "25.6.11" }
+yazi-fs      = { path = "../yazi-fs", version = "25.6.11" }
+yazi-macro   = { path = "../yazi-macro", version = "25.6.11" }
+yazi-shared  = { path = "../yazi-shared", version = "25.6.11" }
+yazi-term    = { path = "../yazi-term", version = "25.6.11" }
 
 # External dependencies
 anyhow    = { workspace = true }

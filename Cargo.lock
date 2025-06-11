@@ -3351,7 +3351,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-adapter"
-version = "25.5.31"
+version = "25.6.11"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -3372,7 +3372,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-binding"
-version = "25.5.31"
+version = "25.6.11"
 dependencies = [
  "mlua",
  "paste",
@@ -3384,7 +3384,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-boot"
-version = "25.5.31"
+version = "25.6.11"
 dependencies = [
  "clap",
  "clap_complete",
@@ -3402,7 +3402,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-cli"
-version = "25.5.31"
+version = "25.6.11"
 dependencies = [
  "anyhow",
  "clap",
@@ -3425,7 +3425,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-codegen"
-version = "25.5.31"
+version = "25.6.11"
 dependencies = [
  "quote",
  "syn",
@@ -3433,7 +3433,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-config"
-version = "25.5.31"
+version = "25.6.11"
 dependencies = [
  "anyhow",
  "bitflags 2.9.1",
@@ -3456,7 +3456,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-core"
-version = "25.5.31"
+version = "25.6.11"
 dependencies = [
  "anyhow",
  "bitflags 2.9.1",
@@ -3492,7 +3492,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-dds"
-version = "25.5.31"
+version = "25.6.11"
 dependencies = [
  "anyhow",
  "mlua",
@@ -3514,7 +3514,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-ffi"
-version = "25.5.31"
+version = "25.6.11"
 dependencies = [
  "anyhow",
  "core-foundation-sys",
@@ -3525,7 +3525,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fm"
-version = "25.5.31"
+version = "25.6.11"
 dependencies = [
  "anyhow",
  "better-panic",
@@ -3565,7 +3565,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-fs"
-version = "25.5.31"
+version = "25.6.11"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -3591,11 +3591,11 @@ dependencies = [
 
 [[package]]
 name = "yazi-macro"
-version = "25.5.31"
+version = "25.6.11"
 
 [[package]]
 name = "yazi-plugin"
-version = "25.5.31"
+version = "25.6.11"
 dependencies = [
  "ansi-to-tui",
  "anyhow",
@@ -3640,7 +3640,7 @@ checksum = "33232d9116df6415ddfcdf72701b1b7439ce87f240a14723e8dd5d17e7ed5f98"
 
 [[package]]
 name = "yazi-proxy"
-version = "25.5.31"
+version = "25.6.11"
 dependencies = [
  "anyhow",
  "mlua",
@@ -3653,7 +3653,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-scheduler"
-version = "25.5.31"
+version = "25.6.11"
 dependencies = [
  "anyhow",
  "async-priority-channel",
@@ -3676,7 +3676,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-shared"
-version = "25.5.31"
+version = "25.6.11"
 dependencies = [
  "anyhow",
  "crossterm 0.29.0",
@@ -3696,7 +3696,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-term"
-version = "25.5.31"
+version = "25.6.11"
 dependencies = [
  "crossterm 0.29.0",
  "libc",
@@ -3709,7 +3709,7 @@ dependencies = [
 
 [[package]]
 name = "yazi-widgets"
-version = "25.5.31"
+version = "25.6.11"
 dependencies = [
  "crossterm 0.29.0",
  "futures",

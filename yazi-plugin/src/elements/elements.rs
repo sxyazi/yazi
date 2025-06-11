@@ -27,6 +27,7 @@ pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 			b"Text" => super::Text::compose(lua)?,
 			b"Wrap" => super::Wrap::compose(lua)?,
 
+			b"area" => super::Utils::area(lua)?,
 			b"width" => super::Utils::width(lua)?,
 			b"redraw" => super::Utils::redraw(lua)?,
 			_ => return Ok(Value::Nil),
