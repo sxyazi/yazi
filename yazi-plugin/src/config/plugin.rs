@@ -58,7 +58,7 @@ impl Fetcher {
 
 impl UserData for Fetcher {
 	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
-		cached_field!(fields, cmd, |lua, me| lua.create_string(&me.inner.run.name));
+		cached_field!(fields, cmd, |lua, me| lua.create_string(me.inner.run.name.as_ref()));
 	}
 }
 
@@ -75,7 +75,7 @@ impl Spotter {
 
 impl UserData for Spotter {
 	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
-		cached_field!(fields, cmd, |lua, me| lua.create_string(&me.inner.run.name));
+		cached_field!(fields, cmd, |lua, me| lua.create_string(me.inner.run.name.as_ref()));
 	}
 }
 
@@ -92,7 +92,7 @@ impl Preloader {
 
 impl UserData for Preloader {
 	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
-		cached_field!(fields, cmd, |lua, me| lua.create_string(&me.inner.run.name));
+		cached_field!(fields, cmd, |lua, me| lua.create_string(me.inner.run.name.as_ref()));
 	}
 }
 
@@ -109,6 +109,6 @@ impl Previewer {
 
 impl UserData for Previewer {
 	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
-		cached_field!(fields, cmd, |lua, me| lua.create_string(&me.inner.run.name));
+		cached_field!(fields, cmd, |lua, me| lua.create_string(me.inner.run.name.as_ref()));
 	}
 }

@@ -141,7 +141,7 @@ impl<'a> Executor<'a> {
 		on!(TABS, switch);
 		on!(TABS, swap);
 
-		match cmd.name.as_str() {
+		match cmd.name.as_ref() {
 			// Help
 			"help" => self.app.cx.help.toggle(Layer::Mgr),
 			// Plugin
@@ -172,7 +172,7 @@ impl<'a> Executor<'a> {
 		on!(open_with);
 		on!(process_exec);
 
-		match cmd.name.as_str() {
+		match cmd.name.as_ref() {
 			// Help
 			"help" => self.app.cx.help.toggle(Layer::Tasks),
 			// Plugin
@@ -195,7 +195,7 @@ impl<'a> Executor<'a> {
 		on!(swipe);
 		on!(copy);
 
-		match cmd.name.as_str() {
+		match cmd.name.as_ref() {
 			// Help
 			"help" => self.app.cx.help.toggle(Layer::Spot),
 			// Plugin
@@ -217,7 +217,7 @@ impl<'a> Executor<'a> {
 		on!(close);
 		on!(arrow);
 
-		match cmd.name.as_str() {
+		match cmd.name.as_ref() {
 			// Help
 			"help" => self.app.cx.help.toggle(Layer::Pick),
 			// Plugin
@@ -241,7 +241,7 @@ impl<'a> Executor<'a> {
 
 		match self.app.cx.input.mode() {
 			InputMode::Normal => {
-				match cmd.name.as_str() {
+				match cmd.name.as_ref() {
 					// Help
 					"help" => return self.app.cx.help.toggle(Layer::Input),
 					// Plugin
@@ -249,7 +249,7 @@ impl<'a> Executor<'a> {
 					_ => {}
 				}
 			}
-			InputMode::Insert => match cmd.name.as_str() {
+			InputMode::Insert => match cmd.name.as_ref() {
 				"complete" if cmd.bool("trigger") => return self.app.cx.cmp.trigger(cmd),
 				_ => {}
 			},
@@ -286,7 +286,7 @@ impl<'a> Executor<'a> {
 		on!(arrow);
 		on!(filter);
 
-		match cmd.name.as_str() {
+		match cmd.name.as_ref() {
 			"close" => self.app.cx.help.toggle(Layer::Help),
 			// Plugin
 			"plugin" => self.app.plugin(cmd),
@@ -308,7 +308,7 @@ impl<'a> Executor<'a> {
 		on!(close);
 		on!(arrow);
 
-		match cmd.name.as_str() {
+		match cmd.name.as_ref() {
 			// Help
 			"help" => self.app.cx.help.toggle(Layer::Cmp),
 			// Plugin

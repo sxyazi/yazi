@@ -21,7 +21,7 @@ impl Utils {
 				let cand = cand?;
 				cands.push(Chord {
 					on:    Self::parse_keys(cand.raw_get("on")?)?,
-					run:   vec![Cmd::args("which:callback", &[i]).with_any("tx", tx.clone())],
+					run:   vec![Cmd::args("which:callback", [i]).with_any("tx", tx.clone())],
 					desc:  cand.raw_get("desc").ok(),
 					r#for: None,
 				});
@@ -31,7 +31,7 @@ impl Utils {
 			emit!(Call(
 				Cmd::new("which:show")
 					.with_any("candidates", cands)
-					.with_bool("silent", t.raw_get("silent").unwrap_or_default())
+					.with("silent", t.raw_get::<bool>("silent").unwrap_or_default())
 			));
 
 			Ok(rx.recv().await.map(|idx| idx + 1))

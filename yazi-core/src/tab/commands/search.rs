@@ -20,7 +20,8 @@ impl Tab {
 			handle.abort();
 		}
 
-		let mut input = InputProxy::show(InputCfg::search(opt.via.as_ref()).with_value(&*opt.subject));
+		let mut input =
+			InputProxy::show(InputCfg::search(opt.via.into_str()).with_value(&*opt.subject));
 		tokio::spawn(async move {
 			if let Some(Ok(subject)) = input.recv().await {
 				opt.subject = Cow::Owned(subject);

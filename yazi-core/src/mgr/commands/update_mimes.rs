@@ -7,7 +7,7 @@ use yazi_shared::{event::CmdCow, url::Url};
 use crate::{mgr::{LINKED, Mgr}, tasks::Tasks};
 
 pub struct Opt {
-	updates: HashMap<Cow<'static, str>, String>,
+	updates: HashMap<Cow<'static, str>, Cow<'static, str>>,
 }
 
 impl TryFrom<CmdCow> for Opt {
@@ -32,9 +32,9 @@ impl Mgr {
 			.filter(|(url, mime)| self.mimetype.by_url(url) != Some(mime))
 			.fold(HashMap::new(), |mut map, (u, m)| {
 				for u in linked.from_file(&u) {
-					map.insert(u, m.clone());
+					map.insert(u, m.to_string());
 				}
-				map.insert(u, m);
+				map.insert(u, m.into_owned());
 				map
 			});
 

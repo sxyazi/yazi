@@ -39,7 +39,7 @@ impl App {
 			() => {
 				if NEED_RENDER.load(Ordering::Relaxed) {
 					if let Some(sub) = Duration::from_millis(10).checked_sub(last_render.elapsed()) {
-						timeout = Some(sleep(sub));
+						timeout = timeout.or_else(|| Some(sleep(sub)));
 					} else {
 						app.render();
 						(timeout, last_render) = (None, Instant::now());

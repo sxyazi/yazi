@@ -13,7 +13,7 @@ impl MgrProxy {
 
 	#[inline]
 	pub fn peek(force: bool) {
-		emit!(Call(Cmd::new("mgr:peek").with_bool("force", force)));
+		emit!(Call(Cmd::new("mgr:peek").with("force", force)));
 	}
 
 	#[inline]
@@ -34,7 +34,7 @@ impl MgrProxy {
 	#[inline]
 	pub fn remove_do(targets: Vec<Url>, permanently: bool) {
 		emit!(Call(
-			Cmd::new("mgr:remove_do").with_bool("permanently", permanently).with_any("targets", targets)
+			Cmd::new("mgr:remove_do").with("permanently", permanently).with_any("targets", targets)
 		));
 	}
 
@@ -50,6 +50,6 @@ impl MgrProxy {
 
 	#[inline]
 	pub fn update_paged_by(page: usize, only_if: &Url) {
-		emit!(Call(Cmd::args("mgr:update_paged", &[page]).with_any("only-if", only_if.clone())));
+		emit!(Call(Cmd::args("mgr:update_paged", [page]).with_any("only-if", only_if.clone())));
 	}
 }

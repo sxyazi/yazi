@@ -19,7 +19,7 @@ pub fn peek(
 	skip: usize,
 ) -> Option<CancellationToken> {
 	let ct = CancellationToken::new();
-	if let Some(c) = LOADER.read().get(&cmd.name) {
+	if let Some(c) = LOADER.read().get(cmd.name.as_ref()) {
 		if c.sync_peek {
 			peek_sync(cmd, file, mime, skip);
 		} else {
@@ -59,7 +59,7 @@ fn peek_sync(cmd: &'static Cmd, file: yazi_fs::File, mime: Cow<'static, str>, sk
 		plugin.call_method("peek", job)
 	});
 
-	AppProxy::plugin(PluginOpt::new_callback(&cmd.name, cb));
+	AppProxy::plugin(PluginOpt::new_callback(cmd.name.as_ref(), cb));
 }
 
 fn peek_async(
