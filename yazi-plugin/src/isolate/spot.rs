@@ -50,18 +50,15 @@ pub fn spot(
 			if ct2.is_cancelled() { Ok(()) } else { plugin.call_async_method("spot", job).await }
 		};
 
-		let result = Handle::current().block_on(async {
+		Handle::current().block_on(async {
 			select! {
-				_ = ct2.cancelled() => Ok(()),
-				r = future => r,
+				_ = ct2.cancelled() => {},
+				Err(e) = future => if !e.to_string().contains("Spot task cancelled") {
+					error!("{e}");
+				},
+				else => {}
 			}
 		});
-
-		if let Err(e) = result {
-			if !e.to_string().contains("Spot task cancelled") {
-				error!("{e}");
-			}
-		}
 	});
 
 	ct

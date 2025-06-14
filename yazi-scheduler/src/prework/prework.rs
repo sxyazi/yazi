@@ -4,6 +4,7 @@ use anyhow::{Result, anyhow};
 use lru::LruCache;
 use parking_lot::{Mutex, RwLock};
 use tokio::sync::mpsc;
+use tokio_util::sync::CancellationToken;
 use tracing::error;
 use yazi_config::Priority;
 use yazi_fs::{FilesOp, SizeCalculator};
@@ -17,8 +18,9 @@ pub struct Prework {
 	r#macro: async_priority_channel::Sender<TaskOp, u8>,
 	prog:    mpsc::UnboundedSender<TaskProg>,
 
-	pub loaded:       Mutex<LruCache<u64, u32>>,
-	pub size_loading: RwLock<HashSet<Url>>,
+	pub loaded:  Mutex<LruCache<u64, u32>>,
+	pub loading: Mutex<LruCache<u64, CancellationToken>>,
+	pub sizing:  RwLock<HashSet<Url>>,
 }
 
 impl Prework {
@@ -30,14 +32,16 @@ impl Prework {
 			r#macro,
 			prog,
 			loaded: Mutex::new(LruCache::new(NonZeroUsize::new(4096).unwrap())),
-			size_loading: Default::default(),
+			loading: Mutex::new(LruCache::new(NonZeroUsize::new(256).unwrap())),
+			sizing: Default::default(),
 		}
 	}
 
 	pub async fn work(&self, r#in: PreworkIn) -> Result<()> {
+		let id = r#in.id();
 		match r#in {
 			PreworkIn::Fetch(task) => {
-				let hashes: Vec<_> = task.targets.iter().map(|f| f.hash()).collect();
+				let hashes: Vec<_> = task.targets.iter().map(|f| f.hash_u64()).collect();
 				let result = isolate::fetch(CmdCow::from(&task.plugin.run), task.targets).await;
 				if let Err(e) = result {
 					self.fail(task.id, format!("Failed to run fetcher `{}`:\n{e}", task.plugin.run.name))?;
@@ -52,11 +56,15 @@ impl Prework {
 				if let Some(e) = err {
 					error!("Error when running fetcher `{}`:\n{e}", task.plugin.run.name);
 				}
-				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 			}
 			PreworkIn::Load(task) => {
-				let hash = task.target.hash();
-				let result = isolate::preload(&task.plugin.run, task.target).await;
+				let ct = CancellationToken::new();
+				if let Some(ct) = self.loading.lock().put(task.target.url.hash_u64(), ct.clone()) {
+					ct.cancel();
+				}
+
+				let hash = task.target.hash_u64();
+				let result = isolate::preload(&task.plugin.run, task.target, ct).await;
 				if let Err(e) = result {
 					self
 						.fail(task.id, format!("Failed to run preloader `{}`:\n{e}", task.plugin.run.name))?;
@@ -70,13 +78,12 @@ impl Prework {
 				if let Some(e) = err {
 					error!("Error when running preloader `{}`:\n{e}", task.plugin.run.name);
 				}
-				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 			}
 			PreworkIn::Size(task) => {
 				let length = SizeCalculator::total(&task.target).await.unwrap_or(0);
 				task.throttle.done((task.target, length), |buf| {
 					{
-						let mut loading = self.size_loading.write();
+						let mut loading = self.sizing.write();
 						for (path, _) in &buf {
 							loading.remove(path);
 						}
@@ -89,10 +96,9 @@ impl Prework {
 					)
 					.emit();
 				});
-				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 			}
 		}
-		Ok(())
+		Ok(self.prog.send(TaskProg::Adv(id, 1, 0))?)
 	}
 
 	pub async fn fetch(&self, task: PreworkInFetch) -> Result<()> {
