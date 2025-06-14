@@ -9,6 +9,7 @@ pub(super) struct Hooks {
 }
 
 impl Hooks {
+	#[allow(dead_code)]
 	pub(super) fn add_sync<F>(&mut self, id: Id, f: F)
 	where
 		F: FnOnce(bool) + Send + Sync + 'static,
