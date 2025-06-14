@@ -235,7 +235,12 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag --force nightly && git push --force origin tag nightly
 
+      - name: "Checksum"
+        shell: bash
+        run: "for f in yazi-*.{zip,snap} ; do sha256sum $f > $f.sha256 ; done"
       - name: Nightly
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: nightly
@@ -243,6 +248,7 @@ jobs:
           files: |
             yazi-*.zip
             yazi-*.snap
+            yazi-*.{zip,snap}.sha256
           name: Nightly Build
           body: ${{ env.NIGHTLY_BODY }}
           target_commitish: ${{ github.sha }}
