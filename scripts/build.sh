@@ -22,3 +22,7 @@ then
 	sudo apt-get update && sudo apt-get install -yq zip
 fi
 zip -r "$ARTIFACT_NAME.zip" "$ARTIFACT_NAME"
+
+# build deb package (see https://crates.io/crates/cargo-deb)
+## run it after build
+cargo deb -p yazi-fm --no-build
