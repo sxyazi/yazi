@@ -1,8 +1,9 @@
 use tokio::sync::mpsc;
+use yazi_shared::Id;
 
 #[derive(Debug, Default)]
 pub struct Task {
-	pub id:    usize,
+	pub id:    Id,
 	pub kind:  TaskKind,
 	pub name:  String,
 	pub stage: TaskStage,
@@ -19,7 +20,7 @@ pub struct Task {
 }
 
 impl Task {
-	pub fn new(id: usize, kind: TaskKind, name: String) -> Self {
+	pub fn new(id: Id, kind: TaskKind, name: String) -> Self {
 		Self { id, kind, name, ..Default::default() }
 	}
 }
@@ -61,15 +62,15 @@ impl From<&Task> for TaskSummary {
 #[derive(Debug)]
 pub enum TaskProg {
 	// id, size
-	New(usize, u64),
+	New(Id, u64),
 	// id, processed, size
-	Adv(usize, u32, u64),
+	Adv(Id, u32, u64),
 	// id
-	Succ(usize),
+	Succ(Id),
 	// id
-	Fail(usize, String),
+	Fail(Id, String),
 	// id, line
-	Log(usize, String),
+	Log(Id, String),
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd)]

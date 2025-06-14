@@ -5,7 +5,7 @@ use tokio::{fs::{self, DirEntry}, io::{self, ErrorKind::{AlreadyExists, NotFound
 use tracing::warn;
 use yazi_config::YAZI;
 use yazi_fs::{SizeCalculator, cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to, skip_path};
-use yazi_shared::url::Url;
+use yazi_shared::{Id, url::Url};
 
 use super::{FileIn, FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash};
 use crate::{LOW, NORMAL, TaskOp, TaskProg};
@@ -343,17 +343,15 @@ impl File {
 
 impl File {
 	#[inline]
-	fn succ(&self, id: usize) -> Result<()> { Ok(self.prog.send(TaskProg::Succ(id))?) }
+	fn succ(&self, id: Id) -> Result<()> { Ok(self.prog.send(TaskProg::Succ(id))?) }
 
 	#[inline]
-	fn fail(&self, id: usize, reason: String) -> Result<()> {
+	fn fail(&self, id: Id, reason: String) -> Result<()> {
 		Ok(self.prog.send(TaskProg::Fail(id, reason))?)
 	}
 
 	#[inline]
-	fn log(&self, id: usize, line: String) -> Result<()> {
-		Ok(self.prog.send(TaskProg::Log(id, line))?)
-	}
+	fn log(&self, id: Id, line: String) -> Result<()> { Ok(self.prog.send(TaskProg::Log(id, line))?) }
 
 	#[inline]
 	async fn queue(&self, r#in: impl Into<TaskOp>, priority: u8) -> Result<()> {

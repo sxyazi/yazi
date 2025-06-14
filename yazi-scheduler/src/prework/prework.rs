@@ -8,7 +8,7 @@ use tracing::error;
 use yazi_config::Priority;
 use yazi_fs::{FilesOp, SizeCalculator};
 use yazi_plugin::isolate;
-use yazi_shared::{event::CmdCow, url::Url};
+use yazi_shared::{Id, event::CmdCow, url::Url};
 
 use super::{PreworkIn, PreworkInFetch, PreworkInLoad, PreworkInSize};
 use crate::{HIGH, NORMAL, TaskOp, TaskProg};
@@ -130,10 +130,10 @@ impl Prework {
 
 impl Prework {
 	#[inline]
-	fn succ(&self, id: usize) -> Result<()> { Ok(self.prog.send(TaskProg::Succ(id))?) }
+	fn succ(&self, id: Id) -> Result<()> { Ok(self.prog.send(TaskProg::Succ(id))?) }
 
 	#[inline]
-	fn fail(&self, id: usize, reason: String) -> Result<()> {
+	fn fail(&self, id: Id, reason: String) -> Result<()> {
 		Ok(self.prog.send(TaskProg::Fail(id, reason))?)
 	}
 
