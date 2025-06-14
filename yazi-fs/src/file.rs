@@ -45,7 +45,7 @@ impl File {
 	}
 
 	#[inline]
-	pub fn hash(&self) -> u64 {
+	pub fn hash_u64(&self) -> u64 {
 		let mut h = foldhash::fast::FixedState::default().build_hasher();
 		self.url.hash(&mut h);
 		h.write_u8(0);

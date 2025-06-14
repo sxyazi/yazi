@@ -5,11 +5,11 @@ use yazi_config::YAZI;
 use yazi_shared::{Id, Ids};
 
 use super::{Task, TaskStage};
-use crate::TaskKind;
+use crate::{Hooks, TaskKind};
 
 #[derive(Default)]
 pub struct Ongoing {
-	pub(super) hooks: HashMap<Id, Box<dyn (FnOnce(bool) -> BoxFuture<'static, ()>) + Send + Sync>>,
+	pub(super) hooks: Hooks,
 	pub(super) all:   HashMap<Id, Task>,
 }
 
@@ -67,8 +67,8 @@ impl Ongoing {
 					if task.succ < task.total {
 						return None;
 					}
-					if let Some(hook) = self.hooks.remove(&id) {
-						return Some(hook(false));
+					if let Some(fut) = self.hooks.run_or_pop(id, false) {
+						return Some(fut);
 					}
 				}
 				TaskStage::Hooked => {}
