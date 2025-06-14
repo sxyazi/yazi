@@ -1,6 +1,7 @@
 use anyhow::{Result, anyhow};
 use tokio::sync::mpsc;
 use yazi_plugin::isolate;
+use yazi_shared::Id;
 
 use super::{PluginIn, PluginInEntry};
 use crate::{HIGH, TaskOp, TaskProg};
@@ -50,10 +51,10 @@ impl Plugin {
 
 impl Plugin {
 	#[inline]
-	fn succ(&self, id: usize) -> Result<()> { Ok(self.prog.send(TaskProg::Succ(id))?) }
+	fn succ(&self, id: Id) -> Result<()> { Ok(self.prog.send(TaskProg::Succ(id))?) }
 
 	#[inline]
-	fn fail(&self, id: usize, reason: String) -> Result<()> {
+	fn fail(&self, id: Id, reason: String) -> Result<()> {
 		Ok(self.prog.send(TaskProg::Fail(id, reason))?)
 	}
 

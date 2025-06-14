@@ -2,6 +2,7 @@ use anyhow::Result;
 use scopeguard::defer;
 use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::mpsc};
 use yazi_proxy::{AppProxy, HIDER};
+use yazi_shared::Id;
 
 use super::{ProcessInBg, ProcessInBlock, ProcessInOrphan, ShellOpt};
 use crate::TaskProg;
@@ -97,15 +98,13 @@ impl Process {
 
 impl Process {
 	#[inline]
-	fn succ(&self, id: usize) -> Result<()> { Ok(self.prog.send(TaskProg::Succ(id))?) }
+	fn succ(&self, id: Id) -> Result<()> { Ok(self.prog.send(TaskProg::Succ(id))?) }
 
 	#[inline]
-	fn fail(&self, id: usize, reason: String) -> Result<()> {
+	fn fail(&self, id: Id, reason: String) -> Result<()> {
 		Ok(self.prog.send(TaskProg::Fail(id, reason))?)
 	}
 
 	#[inline]
-	fn log(&self, id: usize, line: String) -> Result<()> {
-		Ok(self.prog.send(TaskProg::Log(id, line))?)
-	}
+	fn log(&self, id: Id, line: String) -> Result<()> { Ok(self.prog.send(TaskProg::Log(id, line))?) }
 }

@@ -1,5 +1,5 @@
 use yazi_fs::cha::Cha;
-use yazi_shared::url::Url;
+use yazi_shared::{Id, url::Url};
 
 #[derive(Debug)]
 pub enum FileIn {
@@ -11,7 +11,7 @@ pub enum FileIn {
 }
 
 impl FileIn {
-	pub fn id(&self) -> usize {
+	pub fn id(&self) -> Id {
 		match self {
 			Self::Paste(r#in) => r#in.id,
 			Self::Link(r#in) => r#in.id,
@@ -25,7 +25,7 @@ impl FileIn {
 // --- Paste
 #[derive(Clone, Debug)]
 pub struct FileInPaste {
-	pub id:     usize,
+	pub id:     Id,
 	pub from:   Url,
 	pub to:     Url,
 	pub cha:    Option<Cha>,
@@ -51,7 +51,7 @@ impl FileInPaste {
 // --- Link
 #[derive(Clone, Debug)]
 pub struct FileInLink {
-	pub id:       usize,
+	pub id:       Id,
 	pub from:     Url,
 	pub to:       Url,
 	pub cha:      Option<Cha>,
@@ -77,7 +77,7 @@ impl From<FileInPaste> for FileInLink {
 // --- Hardlink
 #[derive(Clone, Debug)]
 pub struct FileInHardlink {
-	pub id:     usize,
+	pub id:     Id,
 	pub from:   Url,
 	pub to:     Url,
 	pub cha:    Option<Cha>,
@@ -93,7 +93,7 @@ impl FileInHardlink {
 // --- Delete
 #[derive(Clone, Debug)]
 pub struct FileInDelete {
-	pub id:     usize,
+	pub id:     Id,
 	pub target: Url,
 	pub length: u64,
 }
@@ -101,7 +101,7 @@ pub struct FileInDelete {
 // --- Trash
 #[derive(Clone, Debug)]
 pub struct FileInTrash {
-	pub id:     usize,
+	pub id:     Id,
 	pub target: Url,
 	pub length: u64,
 }

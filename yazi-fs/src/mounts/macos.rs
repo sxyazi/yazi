@@ -12,10 +12,7 @@ use yazi_shared::natsort;
 use super::{Locked, Partition, Partitions};
 
 impl Partitions {
-	pub fn monitor<F>(me: Locked, cb: F)
-	where
-		F: Fn() + Copy + Send + 'static,
-	{
+	pub fn monitor(me: Locked, cb: fn()) {
 		tokio::task::spawn_blocking(move || {
 			let session = unsafe { DASessionCreate(kCFAllocatorDefault) };
 			if session.is_null() {

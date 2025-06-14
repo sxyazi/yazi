@@ -8,7 +8,7 @@ use yazi_config::{YAZI, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
 use yazi_fs::{must_be_dir, remove_dir_clean, unique_name};
 use yazi_proxy::{MgrProxy, options::{PluginOpt, ProcessExecOpt}};
-use yazi_shared::{Throttle, url::Url};
+use yazi_shared::{Id, Throttle, url::Url};
 
 use super::{Ongoing, TaskProg, TaskStage};
 use crate::{HIGH, LOW, NORMAL, TaskKind, TaskOp, file::{File, FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash}, plugin::{Plugin, PluginInEntry}, prework::{Prework, PreworkInFetch, PreworkInLoad, PreworkInSize}, process::{Process, ProcessInBg, ProcessInBlock, ProcessInOrphan}};
@@ -55,7 +55,7 @@ impl Scheduler {
 		scheduler
 	}
 
-	pub fn cancel(&self, id: usize) -> bool {
+	pub fn cancel(&self, id: Id) -> bool {
 		let mut ongoing = self.ongoing.lock();
 
 		if let Some(hook) = ongoing.hooks.remove(&id) {
@@ -413,7 +413,7 @@ impl Scheduler {
 		})
 	}
 
-	fn send_micro<F>(&self, id: usize, priority: u8, f: F)
+	fn send_micro<F>(&self, id: Id, priority: u8, f: F)
 	where
 		F: Future<Output = Result<()>> + Send + 'static,
 	{
@@ -430,7 +430,7 @@ impl Scheduler {
 		);
 	}
 
-	fn new_and_fail(&self, id: usize, reason: &str) -> Result<()> {
+	fn new_and_fail(&self, id: Id, reason: &str) -> Result<()> {
 		self.prog.send(TaskProg::New(id, 0))?;
 		self.prog.send(TaskProg::Fail(id, reason.to_owned()))?;
 		Ok(())

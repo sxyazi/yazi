@@ -1,3 +1,5 @@
+use yazi_shared::Id;
+
 use crate::{file::FileIn, plugin::PluginIn, prework::PreworkIn};
 
 #[derive(Debug)]
@@ -8,7 +10,7 @@ pub enum TaskOp {
 }
 
 impl TaskOp {
-	pub fn id(&self) -> usize {
+	pub fn id(&self) -> Id {
 		match self {
 			TaskOp::File(r#in) => r#in.id(),
 			TaskOp::Plugin(r#in) => r#in.id(),

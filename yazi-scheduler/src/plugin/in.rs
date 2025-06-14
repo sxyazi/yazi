@@ -1,4 +1,5 @@
 use yazi_proxy::options::PluginOpt;
+use yazi_shared::Id;
 
 #[derive(Debug)]
 pub enum PluginIn {
@@ -6,7 +7,7 @@ pub enum PluginIn {
 }
 
 impl PluginIn {
-	pub fn id(&self) -> usize {
+	pub fn id(&self) -> Id {
 		match self {
 			Self::Entry(r#in) => r#in.id,
 		}
@@ -15,6 +16,6 @@ impl PluginIn {
 
 #[derive(Debug)]
 pub struct PluginInEntry {
-	pub id:  usize,
+	pub id:  Id,
 	pub opt: PluginOpt,
 }

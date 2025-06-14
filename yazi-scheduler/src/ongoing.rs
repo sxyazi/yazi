@@ -2,33 +2,34 @@ use std::collections::HashMap;
 
 use futures::future::BoxFuture;
 use yazi_config::YAZI;
+use yazi_shared::{Id, Ids};
 
 use super::{Task, TaskStage};
 use crate::TaskKind;
 
 #[derive(Default)]
 pub struct Ongoing {
-	incr: usize,
-
-	pub(super) hooks: HashMap<usize, Box<dyn (FnOnce(bool) -> BoxFuture<'static, ()>) + Send + Sync>>,
-	pub(super) all:   HashMap<usize, Task>,
+	pub(super) hooks: HashMap<Id, Box<dyn (FnOnce(bool) -> BoxFuture<'static, ()>) + Send + Sync>>,
+	pub(super) all:   HashMap<Id, Task>,
 }
 
 impl Ongoing {
-	pub fn add(&mut self, kind: TaskKind, name: String) -> usize {
-		self.incr += 1;
-		self.all.insert(self.incr, Task::new(self.incr, kind, name));
-		self.incr
+	pub fn add(&mut self, kind: TaskKind, name: String) -> Id {
+		static IDS: Ids = Ids::new();
+
+		let id = IDS.next();
+		self.all.insert(id, Task::new(id, kind, name));
+		id
 	}
 
 	#[inline]
-	pub fn get(&self, id: usize) -> Option<&Task> { self.all.get(&id) }
+	pub fn get(&self, id: Id) -> Option<&Task> { self.all.get(&id) }
 
 	#[inline]
-	pub fn get_mut(&mut self, id: usize) -> Option<&mut Task> { self.all.get_mut(&id) }
+	pub fn get_mut(&mut self, id: Id) -> Option<&mut Task> { self.all.get_mut(&id) }
 
 	#[inline]
-	pub fn get_id(&self, idx: usize) -> Option<usize> { self.values().nth(idx).map(|t| t.id) }
+	pub fn get_id(&self, idx: usize) -> Option<Id> { self.values().nth(idx).map(|t| t.id) }
 
 	#[inline]
 	pub fn len(&self) -> usize {
@@ -40,7 +41,7 @@ impl Ongoing {
 	}
 
 	#[inline]
-	pub fn exists(&self, id: usize) -> bool { self.all.contains_key(&id) }
+	pub fn exists(&self, id: Id) -> bool { self.all.contains_key(&id) }
 
 	#[inline]
 	pub fn values(&self) -> Box<dyn Iterator<Item = &Task> + '_> {
@@ -54,7 +55,7 @@ impl Ongoing {
 	#[inline]
 	pub fn is_empty(&self) -> bool { self.len() == 0 }
 
-	pub fn try_remove(&mut self, id: usize, stage: TaskStage) -> Option<BoxFuture<'static, ()>> {
+	pub fn try_remove(&mut self, id: Id, stage: TaskStage) -> Option<BoxFuture<'static, ()>> {
 		if let Some(task) = self.get_mut(id) {
 			if stage > task.stage {
 				task.stage = stage;

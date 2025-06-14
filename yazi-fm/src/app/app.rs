@@ -55,7 +55,7 @@ impl App {
 						drain_events!();
 					}
 				}
-			} else if rx.recv_many(&mut events, 50).await > 0 {
+			} else if rx.recv_many(&mut events, 50).await != 0 {
 				drain_events!();
 			} else {
 				break;
