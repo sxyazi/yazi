@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, fmt::{Debug, Display, Formatter}, hash::{Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
+use std::{ffi::OsStr, fmt::{Debug, Display, Formatter}, hash::{BuildHasher, Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
 
 use percent_encoding::{AsciiSet, CONTROLS, percent_decode_str, percent_encode};
 use serde::{Deserialize, Serialize};
@@ -170,6 +170,9 @@ impl Url {
 
 	#[inline]
 	pub fn pair(&self) -> Option<(Self, UrnBuf)> { Some((self.parent_url()?, self.loc.urn_owned())) }
+
+	#[inline]
+	pub fn hash_u64(&self) -> u64 { foldhash::fast::FixedState::default().hash_one(self) }
 
 	#[inline]
 	pub fn rebase(&self, parent: &Path) -> Self {

@@ -15,6 +15,7 @@ yazi-macro = { path = "../yazi-macro", version = "25.6.11" }
 # External dependencies
 anyhow           = { workspace = true }
 crossterm        = { workspace = true }
+foldhash         = { workspace = true }
 futures          = { workspace = true }
 memchr           = "2.7.5"
 parking_lot      = { workspace = true }

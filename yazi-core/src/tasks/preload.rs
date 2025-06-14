@@ -9,7 +9,7 @@ impl Tasks {
 		let mut loaded = self.scheduler.prework.loaded.lock();
 		let mut tasks: [Vec<_>; MAX_PREWORKERS as usize] = Default::default();
 		for f in paged {
-			let hash = f.hash();
+			let hash = f.hash_u64();
 			for g in YAZI.plugin.fetchers(&f.url, mimetype.by_file(f).unwrap_or_default()) {
 				match loaded.get_mut(&hash) {
 					Some(n) if *n & (1 << g.idx) != 0 => continue,
@@ -31,7 +31,7 @@ impl Tasks {
 	pub fn preload_paged(&self, paged: &[File], mimetype: &Mimetype) {
 		let mut loaded = self.scheduler.prework.loaded.lock();
 		for f in paged {
-			let hash = f.hash();
+			let hash = f.hash_u64();
 			for p in YAZI.plugin.preloaders(&f.url, mimetype.by_file(f).unwrap_or_default()) {
 				match loaded.get_mut(&hash) {
 					Some(n) if *n & (1 << p.idx) != 0 => continue,
@@ -49,7 +49,7 @@ impl Tasks {
 		}
 
 		let targets: Vec<_> = {
-			let loading = self.scheduler.prework.size_loading.read();
+			let loading = self.scheduler.prework.sizing.read();
 			targets
 				.iter()
 				.filter(|f| f.is_dir() && !targets.sizes.contains_key(f.urn()) && !loading.contains(&f.url))
@@ -60,7 +60,7 @@ impl Tasks {
 			return;
 		}
 
-		let mut loading = self.scheduler.prework.size_loading.write();
+		let mut loading = self.scheduler.prework.sizing.write();
 		for &target in &targets {
 			loading.insert(target.clone());
 		}

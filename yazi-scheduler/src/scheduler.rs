@@ -58,8 +58,8 @@ impl Scheduler {
 	pub fn cancel(&self, id: Id) -> bool {
 		let mut ongoing = self.ongoing.lock();
 
-		if let Some(hook) = ongoing.hooks.remove(&id) {
-			self.micro.try_send(hook(true), HIGH).ok();
+		if let Some(fut) = ongoing.hooks.run_or_pop(id, true) {
+			self.micro.try_send(fut, HIGH).ok();
 			return false;
 		}
 
@@ -81,11 +81,11 @@ impl Scheduler {
 			return;
 		}
 
-		ongoing.hooks.insert(id, {
+		ongoing.hooks.add_async(id, {
 			let ongoing = self.ongoing.clone();
 			let (from, to) = (from.clone(), to.clone());
 
-			Box::new(move |canceled: bool| {
+			move |canceled: bool| {
 				async move {
 					if !canceled {
 						remove_dir_clean(&from).await;
@@ -94,7 +94,7 @@ impl Scheduler {
 					ongoing.lock().try_remove(id, TaskStage::Hooked);
 				}
 				.boxed()
-			})
+			}
 		});
 
 		let file = self.file.clone();
@@ -158,11 +158,11 @@ impl Scheduler {
 		let mut ongoing = self.ongoing.lock();
 		let id = ongoing.add(TaskKind::User, format!("Delete {target}"));
 
-		ongoing.hooks.insert(id, {
+		ongoing.hooks.add_async(id, {
 			let target = target.clone();
 			let ongoing = self.ongoing.clone();
 
-			Box::new(move |canceled: bool| {
+			move |canceled: bool| {
 				async move {
 					if !canceled {
 						fs::remove_dir_all(&target).await.ok();
@@ -172,7 +172,7 @@ impl Scheduler {
 					ongoing.lock().try_remove(id, TaskStage::Hooked);
 				}
 				.boxed()
-			})
+			}
 		});
 
 		let file = self.file.clone();
@@ -187,11 +187,11 @@ impl Scheduler {
 		let mut ongoing = self.ongoing.lock();
 		let id = ongoing.add(TaskKind::User, format!("Trash {target}"));
 
-		ongoing.hooks.insert(id, {
+		ongoing.hooks.add_async(id, {
 			let target = target.clone();
 			let ongoing = self.ongoing.clone();
 
-			Box::new(move |canceled: bool| {
+			move |canceled: bool| {
 				async move {
 					if !canceled {
 						MgrProxy::update_tasks(&target);
@@ -200,7 +200,7 @@ impl Scheduler {
 					ongoing.lock().try_remove(id, TaskStage::Hooked);
 				}
 				.boxed()
-			})
+			}
 		});
 
 		let file = self.file.clone();
@@ -275,9 +275,9 @@ impl Scheduler {
 		let mut ongoing = self.ongoing.lock();
 
 		let id = ongoing.add(TaskKind::User, name);
-		ongoing.hooks.insert(id, {
+		ongoing.hooks.add_async(id, {
 			let ongoing = self.ongoing.clone();
-			Box::new(move |canceled: bool| {
+			move |canceled: bool| {
 				async move {
 					if canceled {
 						cancel_tx.send(()).await.ok();
@@ -289,7 +289,7 @@ impl Scheduler {
 					ongoing.lock().try_remove(id, TaskStage::Hooked);
 				}
 				.boxed()
-			})
+			}
 		});
 
 		let cmd = OsString::from(&opener.run);

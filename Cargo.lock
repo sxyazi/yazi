@@ -1308,9 +1308,9 @@ checksum = "03087c2bad5e1034e8cace5926dec053fb3790248370865f5117a7d0213354c8"
 
 [[package]]
 name = "libc"
-version = "0.2.172"
+version = "0.2.173"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d750af042f7ef4f724306de029d18836c26c1765a54a6a3f094cbd23a7267ffa"
+checksum = "d8cfeafaffdbc32176b64fb251369d52ea9f0a8fbc6f8759edffef7b525d64bb"
 
 [[package]]
 name = "libfuzzer-sys"
@@ -3735,6 +3735,7 @@ dependencies = [
  "parking_lot",
  "scopeguard",
  "tokio",
+ "tokio-util",
  "tracing",
  "trash",
  "yazi-config",
@@ -3752,6 +3753,7 @@ version = "25.6.11"
 dependencies = [
  "anyhow",
  "crossterm 0.29.0",
+ "foldhash",
  "futures",
  "libc",
  "memchr",
