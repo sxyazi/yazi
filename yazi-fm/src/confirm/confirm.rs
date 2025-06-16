@@ -25,9 +25,8 @@ impl Widget for Confirm<'_> {
 			.title_alignment(Alignment::Center)
 			.render(area, buf);
 
-		let content = confirm.content.clone();
 		let content_border = confirm.list.line_count(area.width) != 0;
-		let content_height = content.line_count(area.width) as u16;
+		let content_height = confirm.content.line_count(area.width) as u16;
 
 		let chunks = Layout::vertical([
 			Constraint::Length(if content_height == 0 {

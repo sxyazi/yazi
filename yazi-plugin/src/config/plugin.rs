@@ -8,7 +8,7 @@ pub(super) struct Plugin;
 
 impl Plugin {
 	pub(super) fn compose(lua: &Lua) -> mlua::Result<Value> {
-		Composer::make(lua, 5, |lua, key| {
+		Composer::make(lua, |lua, key| {
 			match key {
 				b"fetchers" => Plugin::fetchers(lua)?,
 				b"spotter" => Plugin::spotter(lua)?,

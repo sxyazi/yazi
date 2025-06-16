@@ -8,7 +8,7 @@ pub struct Theme;
 
 impl Theme {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
-		Composer::make(lua, 15, |lua, key| {
+		Composer::make(lua, |lua, key| {
 			match key {
 				b"mgr" => lua.to_value_with(&THEME.mgr, OPTS)?,
 				b"tabs" => lua.to_value_with(&THEME.tabs, OPTS)?,

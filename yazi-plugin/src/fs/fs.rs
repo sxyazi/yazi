@@ -7,7 +7,7 @@ use yazi_fs::{mounts::PARTITIONS, remove_dir_clean};
 use crate::{Composer, bindings::{Cha, SizeCalculator}, file::File};
 
 pub fn compose(lua: &Lua) -> mlua::Result<Value> {
-	Composer::make(lua, 10, |lua, key| {
+	Composer::make(lua, |lua, key| {
 		match key {
 			b"op" => op(lua)?,
 			b"cwd" => cwd(lua)?,
