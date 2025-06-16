@@ -41,9 +41,9 @@ function Status:mode()
 
 	local style = self:style()
 	return ui.Line {
-		ui.Span(th.status.sep_left.open):fg(style.main.bg):bg("reset"),
+		ui.Span(th.status.sep_left.open):fg(style.main:bg()):bg("reset"),
 		ui.Span(" " .. mode .. " "):style(style.main),
-		ui.Span(th.status.sep_left.close):fg(style.main.bg):bg(style.alt.bg),
+		ui.Span(th.status.sep_left.close):fg(style.main:bg()):bg(style.alt:bg()),
 	}
 end
 
@@ -54,7 +54,7 @@ function Status:size()
 	local style = self:style()
 	return ui.Line {
 		ui.Span(" " .. ya.readable_size(size) .. " "):style(style.alt),
-		ui.Span(th.status.sep_left.close):fg(style.alt.bg),
+		ui.Span(th.status.sep_left.close):fg(style.alt:bg()),
 	}
 end
 
@@ -114,7 +114,7 @@ function Status:percent()
 
 	local style = self:style()
 	return ui.Line {
-		ui.Span(" " .. th.status.sep_right.open):fg(style.alt.bg),
+		ui.Span(" " .. th.status.sep_right.open):fg(style.alt:bg()),
 		ui.Span(percent):style(style.alt),
 	}
 end
@@ -125,9 +125,9 @@ function Status:position()
 
 	local style = self:style()
 	return ui.Line {
-		ui.Span(th.status.sep_right.open):fg(style.main.bg):bg(style.alt.bg),
+		ui.Span(th.status.sep_right.open):fg(style.main:bg()):bg(style.alt:bg()),
 		ui.Span(string.format(" %2d/%-2d ", math.min(cursor + 1, length), length)):style(style.main),
-		ui.Span(th.status.sep_right.close):fg(style.main.bg):bg("reset"),
+		ui.Span(th.status.sep_right.close):fg(style.main:bg()):bg("reset"),
 	}
 end
 

@@ -1,8 +1,9 @@
 use mlua::{AnyUserData, ExternalError, IntoLua, Lua, MetaMethod, UserData, Value};
 use ratatui::widgets::StatefulWidget;
+use yazi_binding::Style;
 
 use super::{Area, Row};
-use crate::elements::{Constraint, Style};
+use crate::elements::Constraint;
 
 const EXPECTED: &str = "expected a table of Rows";
 

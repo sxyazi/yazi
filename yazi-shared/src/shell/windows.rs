@@ -39,7 +39,7 @@ pub fn escape_str(s: &str) -> Cow<'_, str> {
 }
 
 #[cfg(windows)]
-pub fn escape_os_str(s: &std::ffi::OsStr) -> Cow<std::ffi::OsStr> {
+pub fn escape_os_str(s: &std::ffi::OsStr) -> Cow<'_, std::ffi::OsStr> {
 	use std::os::windows::ffi::{OsStrExt, OsStringExt};
 
 	let wide = s.encode_wide();

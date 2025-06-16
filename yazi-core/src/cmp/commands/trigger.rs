@@ -100,36 +100,36 @@ mod tests {
 
 	use super::*;
 
-	fn compare(s: &str, parent: &str, child: &str) -> bool {
+	fn compare(s: &str, parent: &str, child: &str) {
 		let (p, c) = Cmp::split_path(s).unwrap();
 		let p = p.strip_prefix(yazi_fs::CWD.load().as_ref()).unwrap_or(&p);
-		p == Path::new(parent) && c == child
+		assert_eq!((p, c.as_str()), (Path::new(parent), child));
 	}
 
 	#[cfg(unix)]
 	#[test]
 	fn test_split() {
 		yazi_fs::init();
-		assert!(compare("", "", ""));
-		assert!(compare(" ", "", " "));
-		assert!(compare("/", "/", ""));
-		assert!(compare("//", "//", ""));
-		assert!(compare("/foo", "/", "foo"));
-		assert!(compare("/foo/", "/foo/", ""));
-		assert!(compare("/foo/bar", "/foo/", "bar"));
+		compare("", "", "");
+		compare(" ", "", " ");
+		compare("/", "/", "");
+		compare("//", "//", "");
+		compare("/foo", "/", "foo");
+		compare("/foo/", "/foo/", "");
+		compare("/foo/bar", "/foo/", "bar");
 	}
 
 	#[cfg(windows)]
 	#[test]
 	fn test_split() {
 		yazi_fs::init();
-		assert!(compare("foo", "", "foo"));
-		assert!(compare("foo\\", "foo\\", ""));
-		assert!(compare("foo\\bar", "foo\\", "bar"));
-		assert!(compare("foo\\bar\\", "foo\\bar\\", ""));
-		assert!(compare("C:\\", "C:\\", ""));
-		assert!(compare("C:\\foo", "C:\\", "foo"));
-		assert!(compare("C:\\foo\\", "C:\\foo\\", ""));
-		assert!(compare("C:\\foo\\bar", "C:\\foo\\", "bar"));
+		compare("foo", "", "foo");
+		compare("foo\\", "foo\\", "");
+		compare("foo\\bar", "foo\\", "bar");
+		compare("foo\\bar\\", "foo\\bar\\", "");
+		compare("C:\\", "C:\\", "");
+		compare("C:\\foo", "C:\\", "foo");
+		compare("C:\\foo\\", "C:\\foo\\", "");
+		compare("C:\\foo\\bar", "C:\\foo\\", "bar");
 	}
 }

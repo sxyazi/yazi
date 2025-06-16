@@ -4,9 +4,9 @@ use anyhow::Result;
 use serde::{Deserialize, Deserializer};
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::File;
-use yazi_shared::{Condition, theme::{Color, Icon as I, Style}};
+use yazi_shared::Condition;
 
-use crate::Pattern;
+use crate::{Color, Icon as I, Pattern, Style};
 
 #[derive(Default, Deserialize, DeserializeOver2)]
 pub struct Icon {

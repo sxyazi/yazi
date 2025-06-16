@@ -2,7 +2,7 @@ use std::{ffi::OsStr, fs::{FileType, Metadata}, hash::{BuildHasher, Hash, Hasher
 
 use anyhow::Result;
 use tokio::fs;
-use yazi_shared::{SyncCell, theme::IconCache, url::{Url, Urn, UrnBuf}};
+use yazi_shared::url::{Url, Urn, UrnBuf};
 
 use crate::cha::Cha;
 
@@ -11,7 +11,6 @@ pub struct File {
 	pub url:     Url,
 	pub cha:     Cha,
 	pub link_to: Option<Url>,
-	pub icon:    SyncCell<IconCache>,
 }
 
 impl Deref for File {
@@ -35,13 +34,13 @@ impl File {
 
 		let cha = Cha::from_follow(&url, meta).await;
 
-		Self { url, cha, link_to, icon: Default::default() }
+		Self { url, cha, link_to }
 	}
 
 	#[inline]
 	pub fn from_dummy(url: Url, ft: Option<FileType>) -> Self {
 		let cha = Cha::from_dummy(&url, ft);
-		Self { url, cha, link_to: None, icon: Default::default() }
+		Self { url, cha, link_to: None }
 	}
 
 	#[inline]
@@ -59,12 +58,7 @@ impl File {
 
 	#[inline]
 	pub fn rebase(&self, parent: &Url) -> Self {
-		Self {
-			url:     self.url.rebase(parent),
-			cha:     self.cha,
-			link_to: self.link_to.clone(),
-			icon:    Default::default(),
-		}
+		Self { url: self.url.rebase(parent), cha: self.cha, link_to: self.link_to.clone() }
 	}
 }
 

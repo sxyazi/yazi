@@ -69,7 +69,7 @@ impl TryFrom<Value> for Span {
 impl UserData for Span {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		crate::impl_style_method!(methods, 0.style);
-		crate::impl_style_shorthands!(methods, 0.style);
+		yazi_binding::impl_style_shorthands!(methods, 0.style);
 
 		methods.add_method("visible", |_, Span(me), ()| {
 			Ok(me.content.chars().any(|c| c.width().unwrap_or(0) > 0))

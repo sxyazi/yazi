@@ -17,8 +17,7 @@ cp yazi-boot/completions/* "$ARTIFACT_NAME/completions"
 cp README.md LICENSE "$ARTIFACT_NAME"
 
 # Zip the artifact
-if ! command -v zip &> /dev/null
-then
-	sudo apt-get update && sudo apt-get install -yq zip
+if ! command -v zip &> /dev/null; then
+	apt-get update && apt-get install -yq zip
 fi
 zip -r "$ARTIFACT_NAME.zip" "$ARTIFACT_NAME"

@@ -1,4 +1,5 @@
 use yazi_boot::BOOT;
+use yazi_fs::expand_path;
 use yazi_macro::render;
 use yazi_proxy::AppProxy;
 use yazi_shared::{event::CmdCow, url::Url};
@@ -8,20 +9,21 @@ use crate::{mgr::Tabs, tab::{Tab, commands::CdSource}};
 const MAX_TABS: usize = 9;
 
 struct Opt {
-	url:     Url,
-	current: bool,
+	wd: Option<Url>,
 }
 
 impl From<CmdCow> for Opt {
 	fn from(mut c: CmdCow) -> Self {
 		if c.bool("current") {
-			Self { url: Default::default(), current: true }
-		} else {
-			Self {
-				url:     c.take_first_url().unwrap_or_else(|| Url::from(&BOOT.cwds[0])),
-				current: false,
-			}
+			return Self { wd: None };
 		}
+		let Some(mut wd) = c.take_first_url() else {
+			return Self { wd: Some(Url::from(&BOOT.cwds[0])) };
+		};
+		if wd.is_regular() && !c.bool("raw") {
+			wd = Url::from(expand_path(wd));
+		}
+		Self { wd: Some(wd) }
 	}
 }
 
@@ -34,8 +36,8 @@ impl Tabs {
 		}
 
 		let mut tab = Tab::default();
-		if !opt.current {
-			tab.cd((opt.url, CdSource::Tab));
+		if let Some(wd) = opt.wd {
+			tab.cd((wd, CdSource::Tab));
 		} else if let Some(h) = self.active().hovered() {
 			tab.pref = self.active().pref.clone();
 			tab.apply_files_attrs();

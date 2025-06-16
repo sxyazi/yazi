@@ -1,25 +1,24 @@
 use std::ops::Deref;
 
 use mlua::{UserData, UserDataFields, Value};
-use yazi_binding::cached_field;
 
-use crate::elements::Style;
+use crate::{Style, cached_field};
 
 pub struct Icon {
-	inner: &'static yazi_shared::theme::Icon,
+	inner: &'static yazi_config::Icon,
 
 	v_text:  Option<Value>,
 	v_style: Option<Value>,
 }
 
 impl Deref for Icon {
-	type Target = yazi_shared::theme::Icon;
+	type Target = yazi_config::Icon;
 
 	fn deref(&self) -> &Self::Target { self.inner }
 }
 
-impl From<&'static yazi_shared::theme::Icon> for Icon {
-	fn from(icon: &'static yazi_shared::theme::Icon) -> Self {
+impl From<&'static yazi_config::Icon> for Icon {
+	fn from(icon: &'static yazi_config::Icon) -> Self {
 		Self { inner: icon, v_text: None, v_style: None }
 	}
 }
