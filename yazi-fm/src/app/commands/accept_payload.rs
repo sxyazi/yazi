@@ -1,7 +1,7 @@
 use mlua::IntoLua;
 use tracing::error;
 use yazi_dds::{LOCAL, Payload, REMOTE};
-use yazi_plugin::{LUA, RtRefMut};
+use yazi_plugin::{LUA, runtime_mut};
 use yazi_shared::event::CmdCow;
 
 use crate::{app::App, lives::Lives};
@@ -27,11 +27,11 @@ impl App {
 		_ = Lives::scope(&self.cx, || {
 			let body = payload.body.into_lua(&LUA)?;
 			for (id, cb) in handlers {
-				LUA.named_registry_value::<RtRefMut>("ir")?.push(&id);
+				runtime_mut!(LUA)?.push(&id);
 				if let Err(e) = cb.call::<()>(body.clone()) {
 					error!("Failed to run `{kind}` event handler in your `{id}` plugin: {e}");
 				}
-				LUA.named_registry_value::<RtRefMut>("ir")?.pop();
+				runtime_mut!(LUA)?.pop();
 			}
 			Ok(())
 		});

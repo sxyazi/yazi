@@ -4,7 +4,7 @@ use mlua::ObjectLike;
 use scopeguard::defer;
 use tracing::{error, warn};
 use yazi_dds::Sendable;
-use yazi_plugin::{LUA, RtRefMut, loader::{LOADER, Loader}};
+use yazi_plugin::{LUA, loader::{LOADER, Loader}, runtime_mut};
 use yazi_proxy::{AppProxy, options::{PluginMode, PluginOpt}};
 
 use crate::{app::App, lives::Lives};
@@ -55,11 +55,11 @@ impl App {
 			return self.cx.tasks.plugin_micro(opt);
 		}
 
-		match LUA.named_registry_value::<RtRefMut>("ir") {
+		match runtime_mut!(LUA) {
 			Ok(mut r) => r.push(&opt.id),
 			Err(e) => return warn!("{e}"),
 		}
-		defer! { _ = LUA.named_registry_value::<RtRefMut>("ir").map(|mut r| r.pop()) }
+		defer! { _ = runtime_mut!(LUA).map(|mut r| r.pop()) }
 
 		let plugin = match LOADER.load_with(&LUA, &opt.id, chunk) {
 			Ok(t) => t,

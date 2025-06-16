@@ -121,6 +121,22 @@ macro_rules! impl_file_methods {
 }
 
 #[macro_export]
+macro_rules! runtime {
+	($lua:ident) => {{
+		use mlua::ExternalError;
+		$lua.app_data_ref::<$crate::Runtime>().ok_or_else(|| "Runtime not found".into_lua_err())
+	}};
+}
+
+#[macro_export]
+macro_rules! runtime_mut {
+	($lua:ident) => {{
+		use mlua::ExternalError;
+		$lua.app_data_mut::<$crate::Runtime>().ok_or_else(|| "Runtime not found".into_lua_err())
+	}};
+}
+
+#[macro_export]
 macro_rules! deprecate {
 	($lua:ident, $tt:tt) => {{
 		let id = match $lua.named_registry_value::<$crate::RtRef>("ir")?.current() {
