@@ -41,7 +41,7 @@ impl<T: Eq + Clone> Backstack<T> {
 	}
 
 	pub fn shift_forward(&mut self) -> Option<&T> {
-		if self.cursor + 1 == self.stack.len() {
+		if self.cursor + 1 >= self.stack.len() {
 			None
 		} else {
 			self.cursor += 1;
@@ -56,7 +56,9 @@ mod tests {
 
 	#[test]
 	fn test_backstack() {
-		let mut bs = Backstack::default();
+		let mut bs: Backstack<u32> = Backstack::default();
+		assert_eq!(bs.shift_forward(), None);
+
 		bs.push(&1);
 		assert_eq!(bs.stack[bs.cursor], 1);
 
