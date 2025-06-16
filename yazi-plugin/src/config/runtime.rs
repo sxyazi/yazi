@@ -12,7 +12,7 @@ pub struct Runtime;
 
 impl Runtime {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
-		Composer::make(lua, 10, |lua, key| {
+		Composer::make(lua, |lua, key| {
 			match key {
 				b"args" => Self::args(lua)?,
 				b"term" => super::Term::compose(lua)?,
@@ -27,7 +27,7 @@ impl Runtime {
 	}
 
 	fn args(lua: &Lua) -> mlua::Result<Value> {
-		Composer::make(lua, 5, |lua, key| match key {
+		Composer::make(lua, |lua, key| match key {
 			b"entries" => lua.create_sequence_from(ARGS.entries.iter().map(Url::new))?.into_lua(lua),
 			b"cwd_file" => ARGS.cwd_file.as_ref().map(Url::new).into_lua(lua),
 			b"chooser_file" => ARGS.chooser_file.as_ref().map(Url::new).into_lua(lua),
@@ -36,7 +36,7 @@ impl Runtime {
 	}
 
 	fn mgr(lua: &Lua) -> mlua::Result<Value> {
-		Composer::make(lua, 15, |lua, key| {
+		Composer::make(lua, |lua, key| {
 			let m = &YAZI.mgr;
 			match key {
 				b"ratio" => lua.to_value_with(&m.ratio, OPTS)?,
@@ -60,7 +60,7 @@ impl Runtime {
 	}
 
 	fn preview(lua: &Lua) -> mlua::Result<Value> {
-		Composer::make(lua, 15, |lua, key| {
+		Composer::make(lua, |lua, key| {
 			let p = &YAZI.preview;
 			match key {
 				b"wrap" => lua.to_value_with(&p.wrap, OPTS)?,
@@ -83,7 +83,7 @@ impl Runtime {
 	}
 
 	fn tasks(lua: &Lua) -> mlua::Result<Value> {
-		Composer::make(lua, 10, |lua, key| {
+		Composer::make(lua, |lua, key| {
 			let t = &YAZI.tasks;
 			match key {
 				b"micro_workers" => lua.to_value_with(&t.micro_workers, OPTS)?,

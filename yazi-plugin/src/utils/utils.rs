@@ -5,7 +5,7 @@ use crate::Composer;
 pub(super) struct Utils;
 
 pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Value> {
-	Composer::make(lua, 45, move |lua, key| {
+	Composer::make(lua, move |lua, key| {
 		match key {
 			// App
 			b"id" => Utils::id(lua)?,

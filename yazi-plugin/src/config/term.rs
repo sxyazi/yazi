@@ -7,7 +7,7 @@ pub(super) struct Term;
 
 impl Term {
 	pub(super) fn compose(lua: &Lua) -> mlua::Result<Value> {
-		Composer::make(lua, 5, |lua, key| match key {
+		Composer::make(lua, |lua, key| match key {
 			b"light" => EMULATOR.get().light.into_lua(lua),
 			b"cell_size" => Self::cell_size(lua)?.into_lua(lua),
 			_ => Ok(Value::Nil),

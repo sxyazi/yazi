@@ -7,7 +7,7 @@ use crate::Composer;
 yazi_macro::mod_flat!(pubsub);
 
 pub(super) fn compose(lua: &Lua) -> mlua::Result<Value> {
-	Composer::make(lua, 10, |lua, key| {
+	Composer::make(lua, |lua, key| {
 		match key {
 			b"pub" => Pubsub::r#pub(lua)?,
 			b"pub_to" => Pubsub::pub_to(lua)?,

@@ -3,7 +3,7 @@ use mlua::{IntoLua, Lua, MetaMethod, Table, Value};
 pub struct Composer;
 
 impl Composer {
-	pub fn make<F>(lua: &Lua, cap: usize, f: F) -> mlua::Result<Value>
+	pub fn make<F>(lua: &Lua, f: F) -> mlua::Result<Value>
 	where
 		F: Fn(&Lua, &[u8]) -> mlua::Result<Value> + 'static,
 	{
@@ -13,7 +13,7 @@ impl Composer {
 			Ok(v)
 		})?;
 
-		let tbl = lua.create_table_with_capacity(0, cap)?;
+		let tbl = lua.create_table()?;
 		tbl.set_metatable(Some(lua.create_table_from([(MetaMethod::Index.name(), index)])?));
 		tbl.into_lua(lua)
 	}
