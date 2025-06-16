@@ -2,11 +2,11 @@ use core::str;
 use std::borrow::Cow;
 
 pub trait Transliterator {
-	fn transliterate(&self) -> Cow<str>;
+	fn transliterate(&self) -> Cow<'_, str>;
 }
 
 impl Transliterator for &[u8] {
-	fn transliterate(&self) -> Cow<str> {
+	fn transliterate(&self) -> Cow<'_, str> {
 		// Fast path to skip over ASCII chars at the beginning of the string
 		let ascii_len = self.iter().take_while(|&&c| c < 0x7f).count();
 		if ascii_len >= self.len() {

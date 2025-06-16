@@ -12,13 +12,13 @@ mod unix;
 mod windows;
 
 #[inline]
-pub fn escape_unix(s: &str) -> Cow<str> { unix::escape_str(s) }
+pub fn escape_unix(s: &str) -> Cow<'_, str> { unix::escape_str(s) }
 
 #[inline]
-pub fn escape_windows(s: &str) -> Cow<str> { windows::escape_str(s) }
+pub fn escape_windows(s: &str) -> Cow<'_, str> { windows::escape_str(s) }
 
 #[inline]
-pub fn escape_native(s: &str) -> Cow<str> {
+pub fn escape_native(s: &str) -> Cow<'_, str> {
 	#[cfg(unix)]
 	{
 		escape_unix(s)
@@ -30,7 +30,7 @@ pub fn escape_native(s: &str) -> Cow<str> {
 }
 
 #[inline]
-pub fn escape_os_str(s: &OsStr) -> Cow<OsStr> {
+pub fn escape_os_str(s: &OsStr) -> Cow<'_, OsStr> {
 	#[cfg(unix)]
 	{
 		unix::escape_os_str(s)

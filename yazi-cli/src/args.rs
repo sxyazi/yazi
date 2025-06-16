@@ -175,7 +175,7 @@ macro_rules! impl_pub_body {
 	($name:ident) => {
 		impl $name {
 			#[allow(dead_code)]
-			pub(super) fn body(&self) -> Result<Cow<str>> {
+			pub(super) fn body(&self) -> Result<Cow<'_, str>> {
 				Ok(if let Some(json) = &self.json {
 					json.into()
 				} else if let Some(str) = &self.str {

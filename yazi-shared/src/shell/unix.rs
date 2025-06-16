@@ -1,6 +1,6 @@
 use std::{borrow::Cow, mem};
 
-pub fn escape_str(s: &str) -> Cow<str> {
+pub fn escape_str(s: &str) -> Cow<'_, str> {
 	match escape_slice(s.as_bytes()) {
 		Cow::Borrowed(_) => Cow::Borrowed(s),
 		Cow::Owned(v) => String::from_utf8(v).expect("Invalid bytes returned by escape_slice()").into(),
@@ -8,7 +8,7 @@ pub fn escape_str(s: &str) -> Cow<str> {
 }
 
 #[cfg(unix)]
-pub fn escape_os_str(s: &std::ffi::OsStr) -> Cow<std::ffi::OsStr> {
+pub fn escape_os_str(s: &std::ffi::OsStr) -> Cow<'_, std::ffi::OsStr> {
 	use std::os::unix::ffi::{OsStrExt, OsStringExt};
 
 	match escape_slice(s.as_bytes()) {
@@ -17,7 +17,7 @@ pub fn escape_os_str(s: &std::ffi::OsStr) -> Cow<std::ffi::OsStr> {
 	}
 }
 
-fn escape_slice(s: &[u8]) -> Cow<[u8]> {
+fn escape_slice(s: &[u8]) -> Cow<'_, [u8]> {
 	if !s.is_empty() && s.iter().copied().all(allowed) {
 		return Cow::Borrowed(s);
 	}

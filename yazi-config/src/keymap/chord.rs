@@ -38,11 +38,11 @@ impl Chord {
 			.into_owned()
 	}
 
-	pub fn desc(&self) -> Option<Cow<str>> {
+	pub fn desc(&self) -> Option<Cow<'_, str>> {
 		self.desc.as_ref().map(|s| RE.get_or_init(|| Regex::new(r"\s+").unwrap()).replace_all(s, " "))
 	}
 
-	pub fn desc_or_run(&self) -> Cow<str> { self.desc().unwrap_or_else(|| self.run().into()) }
+	pub fn desc_or_run(&self) -> Cow<'_, str> { self.desc().unwrap_or_else(|| self.run().into()) }
 
 	pub fn contains(&self, s: &str) -> bool {
 		let s = s.to_lowercase();

@@ -110,7 +110,7 @@ impl Term {
 		std::process::exit(f());
 	}
 
-	pub(super) fn draw(&mut self, f: impl FnOnce(&mut Frame)) -> io::Result<CompletedFrame> {
+	pub(super) fn draw(&mut self, f: impl FnOnce(&mut Frame)) -> io::Result<CompletedFrame<'_>> {
 		let last = self.inner.draw(f)?;
 
 		self.last_area = last.area;
@@ -118,7 +118,10 @@ impl Term {
 		Ok(last)
 	}
 
-	pub(super) fn draw_partial(&mut self, f: impl FnOnce(&mut Frame)) -> io::Result<CompletedFrame> {
+	pub(super) fn draw_partial(
+		&mut self,
+		f: impl FnOnce(&mut Frame),
+	) -> io::Result<CompletedFrame<'_>> {
 		self.inner.draw(|frame| {
 			let buffer = frame.buffer_mut();
 			for y in self.last_area.top()..self.last_area.bottom() {

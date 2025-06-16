@@ -75,7 +75,7 @@ impl Input {
 	pub fn value(&self) -> &str { &self.snap().value }
 
 	#[inline]
-	pub fn display(&self) -> Cow<str> {
+	pub fn display(&self) -> Cow<'_, str> {
 		if self.obscure {
 			"•".repeat(self.snap().window(self.limit).len()).into()
 		} else {
