@@ -48,7 +48,7 @@ impl Table {
 		table.into_lua(lua)
 	}
 
-	pub fn selected_cell(&self) -> Option<&ratatui::text::Text> {
+	pub fn selected_cell(&self) -> Option<&ratatui::text::Text<'_>> {
 		let row = &self.rows[self.selected()?];
 		let col = self.state.selected_column()?;
 		if row.cells.is_empty() { None } else { Some(&row.cells[col.min(row.cells.len() - 1)].text) }

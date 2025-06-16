@@ -1,4 +1,4 @@
-#![allow(clippy::unit_arg, clippy::option_map_unit_fn)]
+#![allow(clippy::option_map_unit_fn, clippy::unit_arg)]
 
 yazi_macro::mod_pub!(drivers);
 

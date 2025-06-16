@@ -1,6 +1,6 @@
 use std::{borrow::Cow, iter::repeat_n};
 
-pub fn escape_str(s: &str) -> Cow<str> {
+pub fn escape_str(s: &str) -> Cow<'_, str> {
 	let bytes = s.as_bytes();
 	if !bytes.is_empty() && !bytes.iter().any(|&c| matches!(c, b' ' | b'"' | b'\n' | b'\t')) {
 		return Cow::Borrowed(s);

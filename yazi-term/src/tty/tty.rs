@@ -19,13 +19,13 @@ impl Default for Tty {
 }
 
 impl Tty {
-	pub const fn reader(&self) -> TtyReader { TtyReader(&self.stdin) }
+	pub const fn reader(&self) -> TtyReader<'_> { TtyReader(&self.stdin) }
 
-	pub const fn writer(&self) -> TtyWriter { TtyWriter(&self.stdout) }
+	pub const fn writer(&self) -> TtyWriter<'_> { TtyWriter(&self.stdout) }
 
-	pub fn lockin(&self) -> MutexGuard<Handle> { self.stdin.lock() }
+	pub fn lockin(&self) -> MutexGuard<'_, Handle> { self.stdin.lock() }
 
-	pub fn lockout(&self) -> MutexGuard<BufWriter<Handle>> { self.stdout.lock() }
+	pub fn lockout(&self) -> MutexGuard<'_, BufWriter<Handle>> { self.stdout.lock() }
 
 	pub fn read_until<P>(&self, timeout: Duration, predicate: P) -> (Vec<u8>, std::io::Result<()>)
 	where

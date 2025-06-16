@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use anyhow::Result;
 use tracing::error;
 use yazi_macro::time;
@@ -8,14 +10,14 @@ use crate::{CLOSE, ESCAPE, Emulator, START, TMUX};
 pub struct Mux;
 
 impl Mux {
-	pub fn csi(s: &str) -> std::borrow::Cow<str> {
+	pub fn csi(s: &str) -> Cow<'_, str> {
 		if TMUX.get() {
-			std::borrow::Cow::Owned(format!(
+			Cow::Owned(format!(
 				"{START}{}{CLOSE}",
 				s.trim_start_matches('\x1b').replace('\x1b', ESCAPE.get()),
 			))
 		} else {
-			std::borrow::Cow::Borrowed(s)
+			Cow::Borrowed(s)
 		}
 	}
 

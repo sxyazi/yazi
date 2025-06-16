@@ -75,7 +75,7 @@ impl From<&str> for Separator {
 }
 
 impl Separator {
-	fn transform<T: AsRef<Path> + ?Sized>(self, p: &T) -> Cow<OsStr> {
+	fn transform<T: AsRef<Path> + ?Sized>(self, p: &T) -> Cow<'_, OsStr> {
 		#[cfg(windows)]
 		if self == Self::Unix {
 			return match yazi_fs::backslash_to_slash(p.as_ref()) {
