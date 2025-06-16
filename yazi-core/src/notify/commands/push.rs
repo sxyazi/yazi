@@ -1,7 +1,6 @@
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
-use yazi_macro::emit;
-use yazi_shared::event::Cmd;
+use yazi_proxy::AppProxy;
 
 use crate::notify::{Message, Notify};
 
@@ -14,7 +13,7 @@ impl Notify {
 
 		if self.messages.iter().all(|m| m != &msg) {
 			self.messages.push(msg);
-			emit!(Call(Cmd::args("app:update_notify", [0])));
+			AppProxy::update_notify(Duration::ZERO);
 		}
 	}
 }

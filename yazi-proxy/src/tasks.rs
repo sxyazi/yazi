@@ -10,7 +10,6 @@ use crate::options::{OpenWithOpt, ProcessExecOpt};
 pub struct TasksProxy;
 
 impl TasksProxy {
-	#[inline]
 	pub fn open_with(opener: Cow<'static, OpenerRule>, cwd: Url, targets: Vec<Url>) {
 		emit!(Call(Cmd::new("tasks:open_with").with_any("option", OpenWithOpt {
 			opener,
@@ -19,7 +18,6 @@ impl TasksProxy {
 		})));
 	}
 
-	#[inline]
 	pub async fn process_exec(opener: Cow<'static, OpenerRule>, cwd: Url, args: Vec<OsString>) {
 		let (tx, rx) = oneshot::channel();
 		emit!(Call(Cmd::new("tasks:process_exec").with_any("option", ProcessExecOpt {

@@ -52,7 +52,6 @@ pub enum NotifyLevel {
 }
 
 impl NotifyLevel {
-	#[inline]
 	pub fn icon(self) -> &'static str {
 		match self {
 			Self::Info => &THEME.notify.icon_info,
@@ -61,7 +60,6 @@ impl NotifyLevel {
 		}
 	}
 
-	#[inline]
 	pub fn style(self) -> &'static Style {
 		match self {
 			Self::Info => &THEME.notify.title_info,
