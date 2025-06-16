@@ -22,7 +22,7 @@ function M:entry()
 	local urls = M.split_urls(cwd, output)
 	if #urls == 1 then
 		local cha = #selected == 0 and fs.cha(urls[1])
-		ya.emit(cha and cha.is_dir and "cd" or "reveal", { urls[1] })
+		ya.emit(cha and cha.is_dir and "cd" or "reveal", { urls[1], raw = true })
 	elseif #urls > 1 then
 		urls.state = #selected > 0 and "off" or "on"
 		ya.emit("toggle_all", urls)

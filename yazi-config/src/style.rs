@@ -1,7 +1,7 @@
 use ratatui::style::Modifier;
-use serde::{Deserialize, Serialize, Serializer, ser::SerializeMap};
+use serde::Deserialize;
 
-use super::Color;
+use crate::Color;
 
 #[derive(Clone, Copy, Debug, Default, Deserialize)]
 pub struct Style {
@@ -27,19 +27,6 @@ pub struct Style {
 	pub hidden:      bool,
 	#[serde(default)]
 	pub crossed:     bool,
-}
-
-impl Serialize for Style {
-	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-	where
-		S: Serializer,
-	{
-		let mut map = serializer.serialize_map(Some(3))?;
-		map.serialize_entry("fg", &self.fg)?;
-		map.serialize_entry("bg", &self.bg)?;
-		map.serialize_entry("modifier", &Modifier::from(*self).bits())?;
-		map.end()
-	}
 }
 
 impl From<Style> for ratatui::style::Style {

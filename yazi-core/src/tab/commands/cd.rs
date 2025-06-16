@@ -13,31 +13,22 @@ use crate::tab::Tab;
 
 struct Opt {
 	target:      Url,
-	source:      CdSource,
 	interactive: bool,
+	source:      CdSource,
 }
 
 impl From<CmdCow> for Opt {
 	fn from(mut c: CmdCow) -> Self {
-		Self {
-			source: CdSource::Cd,
-			interactive: c.bool("interactive"),
-			..Self::from(c.take_first_url().unwrap_or_default())
+		let mut target = c.take_first_url().unwrap_or_default();
+		if target.is_regular() && !c.bool("raw") {
+			target = Url::from(expand_path(target));
 		}
+		Self { target, interactive: c.bool("interactive"), source: CdSource::Cd }
 	}
-}
-
-impl From<Url> for Opt {
-	fn from(target: Url) -> Self { Self::from((target, CdSource::Cd)) }
 }
 
 impl From<(Url, CdSource)> for Opt {
-	fn from((mut target, source): (Url, CdSource)) -> Self {
-		if target.is_regular() {
-			target = Url::from(expand_path(&target));
-		}
-		Self { target, source, interactive: false }
-	}
+	fn from((target, source): (Url, CdSource)) -> Self { Self { target, interactive: false, source } }
 }
 
 impl Tab {

@@ -61,8 +61,8 @@ impl Widget for Notify<'_> {
 					Block::bordered()
 						.border_type(BorderType::Rounded)
 						.title(format!("{} {}", m.level.icon(), m.title))
-						.title_style(*m.level.style())
-						.border_style(*m.level.style()),
+						.title_style(m.level.style())
+						.border_style(m.level.style()),
 				)
 				.render(rect, buf);
 		}

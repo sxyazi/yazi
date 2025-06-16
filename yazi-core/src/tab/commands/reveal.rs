@@ -14,8 +14,8 @@ struct Opt {
 impl From<CmdCow> for Opt {
 	fn from(mut c: CmdCow) -> Self {
 		let mut target = c.take_first_url().unwrap_or_default();
-		if target.is_regular() {
-			target = Url::from(expand_path(&target));
+		if target.is_regular() && !c.bool("raw") {
+			target = Url::from(expand_path(target));
 		}
 
 		Self { target, source: CdSource::Reveal, no_dummy: c.bool("no-dummy") }

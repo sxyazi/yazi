@@ -112,7 +112,7 @@ impl UserData for Text {
 	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
 		crate::impl_area_method!(methods);
 		crate::impl_style_method!(methods, inner.style);
-		crate::impl_style_shorthands!(methods, inner.style);
+		yazi_binding::impl_style_shorthands!(methods, inner.style);
 
 		methods.add_function_mut("align", |_, (ud, align): (AnyUserData, Align)| {
 			ud.borrow_mut::<Self>()?.inner.alignment = Some(align.0);

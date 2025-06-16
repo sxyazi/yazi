@@ -112,7 +112,7 @@ local function entry()
 
 	local target = output.stdout:gsub("\n$", "")
 	if target ~= "" then
-		ya.emit("cd", { target })
+		ya.emit("cd", { target, raw = true })
 	end
 end
 

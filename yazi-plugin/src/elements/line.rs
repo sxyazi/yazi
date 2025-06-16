@@ -107,7 +107,7 @@ impl UserData for Line {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		crate::impl_area_method!(methods);
 		crate::impl_style_method!(methods, inner.style);
-		crate::impl_style_shorthands!(methods, inner.style);
+		yazi_binding::impl_style_shorthands!(methods, inner.style);
 
 		methods.add_method("width", |_, me, ()| Ok(me.inner.width()));
 		methods.add_function_mut("align", |_, (ud, align): (AnyUserData, Align)| {

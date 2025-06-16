@@ -1,4 +1,4 @@
-use std::{borrow::Cow, env, ffi::OsString, future::Future, io, path::{Component, Path, PathBuf}};
+use std::{borrow::Cow, env, ffi::{OsStr, OsString}, future::Future, io, path::{Component, Path, PathBuf}};
 
 use tokio::fs;
 use yazi_shared::url::{Loc, Url};
@@ -37,28 +37,29 @@ pub fn expand_path(p: impl AsRef<Path>) -> PathBuf { _expand_path(p.as_ref()) }
 fn _expand_path(p: &Path) -> PathBuf {
 	// ${HOME} or $HOME
 	#[cfg(unix)]
-	let re = regex::Regex::new(r"\$(?:\{([^}]+)\}|([a-zA-Z\d_]+))").unwrap();
+	let re = regex::bytes::Regex::new(r"\$(?:\{([^}]+)\}|([a-zA-Z\d_]+))").unwrap();
 
 	// %USERPROFILE%
 	#[cfg(windows)]
-	let re = regex::Regex::new(r"%([^%]+)%").unwrap();
+	let re = regex::bytes::Regex::new(r"%([^%]+)%").unwrap();
 
-	let s = p.to_string_lossy();
-	let s = re.replace_all(&s, |caps: &regex::Captures| {
+	let b = re.replace_all(p.as_os_str().as_encoded_bytes(), |caps: &regex::bytes::Captures| {
 		let name = caps.get(2).or_else(|| caps.get(1)).unwrap();
-		env::var(name.as_str()).unwrap_or_else(|_| caps.get(0).unwrap().as_str().to_owned())
+		str::from_utf8(name.as_bytes())
+			.ok()
+			.and_then(env::var_os)
+			.map_or_else(|| caps.get(0).unwrap().as_bytes().to_owned(), |s| s.into_encoded_bytes())
 	});
 
 	// Windows paths that only have a drive letter but no root, e.g. "D:"
 	#[cfg(windows)]
-	if s.len() == 2 {
-		let b = s.as_bytes();
+	if b.len() == 2 {
 		if b[1] == b':' && b[0].is_ascii_alphabetic() {
-			return PathBuf::from(s.to_uppercase() + "\\");
+			return PathBuf::from(format!("{}:\\", b[0].to_ascii_uppercase() as char));
 		}
 	}
 
-	let p = Path::new(s.as_ref());
+	let p = unsafe { Path::new(OsStr::from_encoded_bytes_unchecked(b.as_ref())) };
 	if let Ok(rest) = p.strip_prefix("~") {
 		clean_path(dirs::home_dir().unwrap_or_default().join(rest))
 	} else if p.is_absolute() {
@@ -175,7 +176,7 @@ pub fn path_relative_to<'a>(path: &'a Path, root: &Path) -> Cow<'a, Path> {
 }
 
 #[cfg(windows)]
-pub fn backslash_to_slash(p: &Path) -> Cow<Path> {
+pub fn backslash_to_slash(p: &Path) -> Cow<'_, Path> {
 	let bytes = p.as_os_str().as_encoded_bytes();
 
 	// Fast path to skip if there are no backslashes

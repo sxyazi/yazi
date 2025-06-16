@@ -9,7 +9,7 @@ pub struct TabProxy;
 
 impl TabProxy {
 	pub fn cd(target: &Url) {
-		emit!(Call(Cmd::args("mgr:cd", [target])));
+		emit!(Call(Cmd::args("mgr:cd", [target]).with("raw", true)));
 	}
 
 	pub fn reveal(target: &Url) {

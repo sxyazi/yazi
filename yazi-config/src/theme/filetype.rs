@@ -3,10 +3,9 @@ use std::ops::Deref;
 use serde::Deserialize;
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::File;
-use yazi_shared::theme::Style;
 
 use super::Is;
-use crate::Pattern;
+use crate::{Pattern, Style};
 
 #[derive(Deserialize, DeserializeOver2)]
 pub struct Filetype {

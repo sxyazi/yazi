@@ -1,14 +1,14 @@
 use std::path::PathBuf;
 
 use anyhow::{Result, bail};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use yazi_codegen::{DeserializeOver1, DeserializeOver2};
 use yazi_fs::expand_path;
-use yazi_shared::theme::Style;
 
 use super::{Filetype, Flavor, Icon};
+use crate::Style;
 
-#[derive(Deserialize, DeserializeOver1, Serialize)]
+#[derive(Deserialize, DeserializeOver1)]
 pub struct Theme {
 	pub flavor:  Flavor,
 	pub mgr:     Mgr,
@@ -32,31 +32,31 @@ pub struct Theme {
 	pub icon:     Icon,
 }
 
-#[derive(Deserialize, DeserializeOver2, Serialize)]
+#[derive(Deserialize, DeserializeOver2)]
 pub struct Mgr {
-	cwd: Style,
+	pub cwd: Style,
 
 	// Hovered
-	hovered:         Style,
-	preview_hovered: Style,
+	pub hovered:         Style,
+	pub preview_hovered: Style,
 
 	// Find
-	find_keyword:  Style,
-	find_position: Style,
+	pub find_keyword:  Style,
+	pub find_position: Style,
 
 	// Symlink
-	symlink_target: Style,
+	pub symlink_target: Style,
 
 	// Marker
-	marker_copied:   Style,
-	marker_cut:      Style,
-	marker_marked:   Style,
-	marker_selected: Style,
+	pub marker_copied:   Style,
+	pub marker_cut:      Style,
+	pub marker_marked:   Style,
+	pub marker_selected: Style,
 
 	// Count
-	count_copied:   Style,
-	count_cut:      Style,
-	count_selected: Style,
+	pub count_copied:   Style,
+	pub count_cut:      Style,
+	pub count_selected: Style,
 
 	// Border
 	pub border_symbol: String,
@@ -66,7 +66,7 @@ pub struct Mgr {
 	pub syntect_theme: PathBuf,
 }
 
-#[derive(Deserialize, DeserializeOver2, Serialize)]
+#[derive(Deserialize, DeserializeOver2)]
 pub struct Tabs {
 	pub active:   Style,
 	pub inactive: Style,
@@ -75,13 +75,13 @@ pub struct Tabs {
 	pub sep_outer: TabsSep,
 }
 
-#[derive(Deserialize, DeserializeOver2, Serialize)]
+#[derive(Deserialize, DeserializeOver2)]
 pub struct TabsSep {
 	pub open:  String,
 	pub close: String,
 }
 
-#[derive(Deserialize, DeserializeOver2, Serialize)]
+#[derive(Deserialize, DeserializeOver2)]
 pub struct Mode {
 	pub normal_main: Style,
 	pub normal_alt:  Style,
@@ -93,7 +93,7 @@ pub struct Mode {
 	pub unset_alt:  Style,
 }
 
-#[derive(Deserialize, DeserializeOver2, Serialize)]
+#[derive(Deserialize, DeserializeOver2)]
 pub struct Status {
 	pub overall:   Style,
 	pub sep_left:  StatusSep,
@@ -112,13 +112,13 @@ pub struct Status {
 	pub progress_error:  Style,
 }
 
-#[derive(Deserialize, DeserializeOver2, Serialize)]
+#[derive(Deserialize, DeserializeOver2)]
 pub struct StatusSep {
 	pub open:  String,
 	pub close: String,
 }
 
-#[derive(Deserialize, DeserializeOver2, Serialize)]
+#[derive(Deserialize, DeserializeOver2)]
 pub struct Which {
 	pub cols: u8,
 	pub mask: Style,
@@ -130,7 +130,7 @@ pub struct Which {
 	pub separator_style: Style,
 }
 
-#[derive(Deserialize, DeserializeOver2, Serialize)]
+#[derive(Deserialize, DeserializeOver2)]
 pub struct Confirm {
 	pub border:  Style,
 	pub title:   Style,
@@ -142,7 +142,7 @@ pub struct Confirm {
 	pub btn_labels: [String; 2],
 }
 
-#[derive(Deserialize, DeserializeOver2, Serialize)]
+#[derive(Deserialize, DeserializeOver2)]
 pub struct Spot {
 	pub border: Style,
 	pub title:  Style,
@@ -151,7 +151,7 @@ pub struct Spot {
 	pub tbl_cell: Style,
 }
 
-#[derive(Deserialize, DeserializeOver2, Serialize)]
+#[derive(Deserialize, DeserializeOver2)]
 pub struct Notify {
 	pub title_info:  Style,
 	pub title_warn:  Style,
@@ -162,14 +162,14 @@ pub struct Notify {
 	pub icon_error: String,
 }
 
-#[derive(Deserialize, DeserializeOver2, Serialize)]
+#[derive(Deserialize, DeserializeOver2)]
 pub struct Pick {
 	pub border:   Style,
 	pub active:   Style,
 	pub inactive: Style,
 }
 
-#[derive(Deserialize, DeserializeOver2, Serialize)]
+#[derive(Deserialize, DeserializeOver2)]
 pub struct Input {
 	pub border:   Style,
 	pub title:    Style,
@@ -177,7 +177,7 @@ pub struct Input {
 	pub selected: Style,
 }
 
-#[derive(Deserialize, DeserializeOver2, Serialize)]
+#[derive(Deserialize, DeserializeOver2)]
 pub struct Cmp {
 	pub border:   Style,
 	pub active:   Style,
@@ -188,14 +188,14 @@ pub struct Cmp {
 	pub icon_command: String,
 }
 
-#[derive(Deserialize, DeserializeOver2, Serialize)]
+#[derive(Deserialize, DeserializeOver2)]
 pub struct Tasks {
 	pub border:  Style,
 	pub title:   Style,
 	pub hovered: Style,
 }
 
-#[derive(Deserialize, DeserializeOver2, Serialize)]
+#[derive(Deserialize, DeserializeOver2)]
 pub struct Help {
 	pub on:   Style,
 	pub run:  Style,

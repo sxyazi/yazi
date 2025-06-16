@@ -3445,7 +3445,9 @@ version = "25.6.11"
 dependencies = [
  "mlua",
  "paste",
+ "ratatui",
  "serde_json",
+ "yazi-config",
  "yazi-fs",
  "yazi-macro",
  "yazi-shared",

@@ -1,8 +1,8 @@
 use mlua::{AnyUserData, ExternalError, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use ratatui::widgets::Widget;
+use yazi_binding::Style;
 
 use super::{Area, Span};
-use crate::elements::Style;
 
 #[derive(Clone, Debug, Default)]
 pub struct Gauge {

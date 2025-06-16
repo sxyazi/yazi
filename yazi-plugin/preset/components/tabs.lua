@@ -17,7 +17,7 @@ function Tabs:redraw()
 	end
 
 	local lines = {
-		ui.Line(th.tabs.sep_outer.open):fg(th.tabs.inactive.bg),
+		ui.Line(th.tabs.sep_outer.open):fg(th.tabs.inactive:bg()),
 	}
 
 	local pos = lines[1]:width()
@@ -36,7 +36,7 @@ function Tabs:redraw()
 		self._offsets[i], pos = pos, pos + lines[#lines]:width()
 	end
 
-	lines[#lines + 1] = ui.Line(th.tabs.sep_outer.close):fg(th.tabs.inactive.bg)
+	lines[#lines + 1] = ui.Line(th.tabs.sep_outer.close):fg(th.tabs.inactive:bg())
 	return ui.Line(lines):area(self._area)
 end
 

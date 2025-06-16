@@ -21,7 +21,8 @@ impl Urn {
 	#[cfg(unix)]
 	#[inline]
 	pub fn is_hidden(&self) -> bool {
-		self.name().is_some_and(|s| s.as_encoded_bytes().starts_with(b"."))
+		use std::os::unix::ffi::OsStrExt;
+		self.name().is_some_and(|s| s.as_bytes().starts_with(b"."))
 	}
 }
 

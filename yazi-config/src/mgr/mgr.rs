@@ -1,11 +1,11 @@
 use anyhow::{Result, bail};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::{CWD, SortBy};
 
 use super::{MgrRatio, MouseEvents};
 
-#[derive(Debug, Deserialize, DeserializeOver2, Serialize)]
+#[derive(Debug, Deserialize, DeserializeOver2)]
 pub struct Mgr {
 	pub ratio: MgrRatio,
 

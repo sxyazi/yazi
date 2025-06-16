@@ -164,7 +164,7 @@ impl Partitions {
 
 	// Unmangle '\t', '\n', ' ', '#', and r'\'
 	// https://elixir.bootlin.com/linux/v6.13-rc3/source/fs/proc_namespace.c#L89
-	fn unmangle_octal(s: &str) -> Cow<str> {
+	fn unmangle_octal(s: &str) -> Cow<'_, str> {
 		let mut s = Cow::Borrowed(s);
 		for (a, b) in
 			[(r"\011", "\t"), (r"\012", "\n"), (r"\040", " "), (r"\043", "#"), (r"\134", r"\")]

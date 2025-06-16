@@ -1,8 +1,9 @@
 use std::ops::Deref;
 
 use mlua::{AnyUserData, IntoLua, UserData, UserDataFields, UserDataMethods, Value};
+use yazi_binding::Style;
 use yazi_config::THEME;
-use yazi_plugin::{bindings::Range, elements::Style};
+use yazi_plugin::bindings::Range;
 
 use super::Lives;
 use crate::{Ctx, lives::PtrCell};

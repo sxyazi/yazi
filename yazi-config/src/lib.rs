@@ -2,7 +2,7 @@
 
 yazi_macro::mod_pub!(keymap mgr open opener plugin popup preview tasks theme which);
 
-yazi_macro::mod_flat!(layout pattern platform preset priority yazi);
+yazi_macro::mod_flat!(color icon layout pattern platform preset priority style yazi);
 
 use std::io::{Read, Write};
 
