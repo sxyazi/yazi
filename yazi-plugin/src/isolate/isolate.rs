@@ -5,7 +5,7 @@ use crate::runtime::Runtime;
 
 pub fn slim_lua(name: &str) -> mlua::Result<Lua> {
 	let lua = Lua::new();
-	lua.set_named_registry_value("ir", Runtime::new(name))?;
+	lua.set_app_data(Runtime::new(name));
 
 	// Base
 	let globals = lua.globals();

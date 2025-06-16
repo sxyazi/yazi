@@ -1,6 +1,6 @@
 use std::collections::{HashMap, VecDeque};
 
-use mlua::{Function, UserData};
+use mlua::Function;
 
 #[derive(Debug, Default)]
 pub struct Runtime {
@@ -13,9 +13,6 @@ struct RuntimeFrame {
 	id:    String,
 	calls: usize,
 }
-
-pub type RtRef = mlua::UserDataRef<Runtime>;
-pub type RtRefMut = mlua::UserDataRefMut<Runtime>;
 
 impl Runtime {
 	pub fn new(id: &str) -> Self {
@@ -56,5 +53,3 @@ impl Runtime {
 		true
 	}
 }
-
-impl UserData for Runtime {}

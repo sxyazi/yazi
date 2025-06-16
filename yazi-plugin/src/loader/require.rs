@@ -3,7 +3,7 @@ use std::sync::Arc;
 use mlua::{ExternalResult, Function, IntoLua, Lua, MetaMethod, MultiValue, ObjectLike, Table, Value};
 
 use super::LOADER;
-use crate::RtRefMut;
+use crate::runtime_mut;
 
 pub(super) struct Require;
 
@@ -15,9 +15,9 @@ impl Require {
 				let s = &id.to_str()?;
 				futures::executor::block_on(LOADER.ensure(s, |_| ())).into_lua_err()?;
 
-				lua.named_registry_value::<RtRefMut>("ir")?.push(s);
+				runtime_mut!(lua)?.push(s);
 				let mod_ = LOADER.load(lua, s);
-				lua.named_registry_value::<RtRefMut>("ir")?.pop();
+				runtime_mut!(lua)?.pop();
 
 				Self::create_mt(lua, s, mod_?, true)
 			})?,
@@ -31,9 +31,9 @@ impl Require {
 				let s = &id.to_str()?;
 				LOADER.ensure(s, |_| ()).await.into_lua_err()?;
 
-				lua.named_registry_value::<RtRefMut>("ir")?.push(s);
+				runtime_mut!(lua)?.push(s);
 				let mod_ = LOADER.load(&lua, s);
-				lua.named_registry_value::<RtRefMut>("ir")?.pop();
+				runtime_mut!(lua)?.pop();
 
 				Self::create_mt(&lua, s, mod_?, false)
 			})?,
@@ -73,9 +73,9 @@ impl Require {
 		if sync {
 			lua.create_function(move |lua, args: MultiValue| {
 				let (r#mod, args) = Self::split_mod_and_args(lua, &id, args)?;
-				lua.named_registry_value::<RtRefMut>("ir")?.push(&id);
+				runtime_mut!(lua)?.push(&id);
 				let result = r#mod.call_function::<MultiValue>(&f, args);
-				lua.named_registry_value::<RtRefMut>("ir")?.pop();
+				runtime_mut!(lua)?.pop();
 				result
 			})
 		} else {
@@ -83,9 +83,9 @@ impl Require {
 				let (id, f) = (id.clone(), f.clone());
 				async move {
 					let (r#mod, args) = Self::split_mod_and_args(&lua, &id, args)?;
-					lua.named_registry_value::<RtRefMut>("ir")?.push(&id);
+					runtime_mut!(lua)?.push(&id);
 					let result = r#mod.call_async_function::<MultiValue>(&f, args).await;
-					lua.named_registry_value::<RtRefMut>("ir")?.pop();
+					runtime_mut!(lua)?.pop();
 					result
 				}
 			})
