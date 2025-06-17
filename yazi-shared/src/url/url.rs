@@ -89,10 +89,6 @@ impl TryFrom<String> for Url {
 	fn try_from(value: String) -> Result<Self, Self::Error> { value.as_bytes().try_into() }
 }
 
-// impl From<&String> for Url {
-// 	fn from(path: &String) -> Self { path.as_str().into() }
-// }
-
 impl AsRef<Url> for Url {
 	fn as_ref(&self) -> &Url { self }
 }
@@ -111,14 +107,9 @@ impl Display for Url {
 			return write!(f, "{}", self.loc.display());
 		}
 
-		let scheme = match self.scheme {
-			Scheme::Regular | Scheme::SearchItem => unreachable!(),
-			Scheme::Search => "search://",
-			Scheme::Archive => "archive://",
-		};
-		let path = percent_encode(self.loc.as_os_str().as_encoded_bytes(), ENCODE_SET);
+		let loc = percent_encode(self.loc.as_os_str().as_encoded_bytes(), ENCODE_SET);
+		write!(f, "{}://{loc}", self.scheme)?;
 
-		write!(f, "{scheme}{path}")?;
 		if !self.frag.is_empty() {
 			write!(f, "#{}", percent_encode(self.frag.as_encoded_bytes(), ENCODE_SET))?;
 		}
