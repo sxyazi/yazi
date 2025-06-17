@@ -56,7 +56,7 @@ impl Data {
 	#[inline]
 	pub fn into_url(self) -> Option<Url> {
 		match self {
-			Data::String(s) => Some(Url::from(s.as_ref())),
+			Data::String(s) => Url::try_from(s.as_ref()).ok(),
 			Data::Url(u) => Some(u),
 			_ => None,
 		}
@@ -79,7 +79,7 @@ impl Data {
 	#[inline]
 	pub fn to_url(&self) -> Option<Url> {
 		match self {
-			Self::String(s) => Some(Url::from(s.as_ref())),
+			Self::String(s) => Url::try_from(s.as_ref()).ok(),
 			Self::Url(u) => Some(u.clone()),
 			_ => None,
 		}

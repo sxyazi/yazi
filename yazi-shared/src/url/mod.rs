@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(loc url urn);
+yazi_macro::mod_flat!(loc scheme url urn);

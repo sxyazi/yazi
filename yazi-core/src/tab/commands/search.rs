@@ -39,7 +39,7 @@ impl Tab {
 			handle.abort();
 		}
 
-		let cwd = self.cwd().to_search(&opt.subject);
+		let cwd = self.cwd().to_search(opt.subject.as_ref());
 		let hidden = self.pref.show_hidden;
 
 		self.search = Some(tokio::spawn(async move {
