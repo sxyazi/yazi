@@ -28,7 +28,7 @@ impl Mgr {
 		let updates = opt
 			.updates
 			.into_iter()
-			.map(|(url, mime)| (Url::from(url.as_ref()), mime))
+			.flat_map(|(url, mime)| Url::try_from(url.as_ref()).map(|u| (u, mime)))
 			.filter(|(url, mime)| self.mimetype.by_url(url) != Some(mime))
 			.fold(HashMap::new(), |mut map, (u, m)| {
 				for u in linked.from_file(&u) {

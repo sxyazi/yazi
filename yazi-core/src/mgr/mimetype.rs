@@ -1,7 +1,7 @@
 use std::{borrow::Cow, collections::HashMap, path::PathBuf};
 
 use yazi_fs::File;
-use yazi_shared::{MIME_DIR, url::{Url, UrlScheme}};
+use yazi_shared::{MIME_DIR, url::{Scheme, Url}};
 
 #[derive(Default)]
 pub struct Mimetype(HashMap<PathBuf, String>);
@@ -10,10 +10,10 @@ impl Mimetype {
 	#[inline]
 	pub fn by_url(&self, url: &Url) -> Option<&str> {
 		match url.scheme() {
-			UrlScheme::Regular => self.0.get(url.as_path()),
-			UrlScheme::Search => None,
-			UrlScheme::SearchItem => self.0.get(url.as_path()),
-			UrlScheme::Archive => None,
+			Scheme::Regular => self.0.get(url.as_path()),
+			Scheme::Search => None,
+			Scheme::SearchItem => self.0.get(url.as_path()),
+			Scheme::Archive => None,
 		}
 		.map(|s| s.as_str())
 	}
@@ -36,10 +36,10 @@ impl Mimetype {
 	#[inline]
 	pub fn contains(&self, url: &Url) -> bool {
 		match url.scheme() {
-			UrlScheme::Regular => self.0.contains_key(url.as_path()),
-			UrlScheme::Search => false,
-			UrlScheme::SearchItem => self.0.contains_key(url.as_path()),
-			UrlScheme::Archive => false,
+			Scheme::Regular => self.0.contains_key(url.as_path()),
+			Scheme::Search => false,
+			Scheme::SearchItem => self.0.contains_key(url.as_path()),
+			Scheme::Archive => false,
 		}
 	}
 
@@ -47,10 +47,10 @@ impl Mimetype {
 		self.0.extend(iter.into_iter().filter_map(|(u, s)| {
 			Some((
 				match u.scheme() {
-					UrlScheme::Regular => u.into_path(),
-					UrlScheme::Search => None?,
-					UrlScheme::SearchItem => u.into_path(),
-					UrlScheme::Archive => None?,
+					Scheme::Regular => u.into_path(),
+					Scheme::Search => None?,
+					Scheme::SearchItem => u.into_path(),
+					Scheme::Archive => None?,
 				},
 				s,
 			))

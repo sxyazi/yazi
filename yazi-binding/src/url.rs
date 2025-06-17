@@ -1,6 +1,7 @@
 use std::{ops::Deref, path::Path};
 
 use mlua::{AnyUserData, ExternalError, FromLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
+use yazi_shared::IntoOsStr;
 
 use crate::{Urn, cached_field};
 
@@ -32,6 +33,14 @@ impl From<Url> for yazi_shared::url::Url {
 	fn from(value: Url) -> Self { value.inner }
 }
 
+impl TryFrom<&[u8]> for Url {
+	type Error = mlua::Error;
+
+	fn try_from(value: &[u8]) -> mlua::Result<Self> {
+		Ok(Self::new(yazi_shared::url::Url::try_from(value)?))
+	}
+}
+
 impl Url {
 	pub fn new(url: impl Into<yazi_shared::url::Url>) -> Self {
 		Self {
@@ -52,7 +61,7 @@ impl Url {
 			"Url",
 			lua.create_function(|_, value: Value| {
 				Ok(match value {
-					Value::String(s) => Self::new(s.to_str()?.as_ref()),
+					Value::String(s) => Self::try_from(s.as_bytes().as_ref())?,
 					Value::UserData(ud) => Self::new(ud.borrow::<Self>()?.inner.clone()),
 					_ => Err("Expected a string or a Url".into_lua_err())?,
 				})
@@ -89,7 +98,7 @@ impl UserData for Url {
 		cached_field!(fields, base, |_, me| {
 			Ok(if me.base().as_os_str().is_empty() { None } else { Some(Self::new(me.base())) })
 		});
-		cached_field!(fields, frag, |lua, me| lua.create_string(me.frag()));
+		cached_field!(fields, frag, |lua, me| lua.create_string(me.frag().as_encoded_bytes()));
 
 		fields.add_field_method_get("is_regular", |_, me| Ok(me.is_regular()));
 		fields.add_field_method_get("is_search", |_, me| Ok(me.is_search()));
@@ -130,7 +139,7 @@ impl UserData for Url {
 		});
 
 		methods.add_function_mut("into_search", |_, (ud, frag): (AnyUserData, mlua::String)| {
-			Ok(Self::new(ud.take::<Self>()?.inner.into_search(&frag.to_str()?)))
+			Ok(Self::new(ud.take::<Self>()?.inner.into_search(frag.as_bytes().as_ref().into_os_str()?)))
 		});
 
 		methods.add_meta_method(MetaMethod::Eq, |_, me, other: UrlRef| Ok(me.inner == other.inner));
