@@ -5,7 +5,7 @@ use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
 use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp, expand_path};
-use yazi_macro::render;
+use yazi_macro::{err, render};
 use yazi_proxy::{CmpProxy, InputProxy, MgrProxy, TabProxy};
 use yazi_shared::{Debounce, errors::InputError, event::CmdCow, url::Url};
 
@@ -73,7 +73,7 @@ impl Tab {
 			self.parent = Some(self.history.remove_or(&parent));
 		}
 
-		Pubsub::pub_from_cd(self.id, self.cwd());
+		err!(Pubsub::pub_from_cd(self.id, self.cwd()));
 		self.hover(None);
 
 		MgrProxy::refresh();

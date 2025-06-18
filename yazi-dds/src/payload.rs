@@ -17,9 +17,12 @@ pub struct Payload<'a> {
 impl<'a> Payload<'a> {
 	pub(super) fn new(body: Body<'a>) -> Self { Self { receiver: Id(0), sender: *ID, body } }
 
-	pub(super) fn flush(&self) { writeln!(std::io::stdout(), "{self}").ok(); }
+	pub(super) fn flush(&self) -> Result<()> {
+		writeln!(std::io::stdout(), "{self}")?;
+		Ok(())
+	}
 
-	pub(super) fn try_flush(&self) {
+	pub(super) fn try_flush(&self) -> Result<()> {
 		let b = if self.receiver == 0 {
 			BOOT.remote_events.contains(self.body.kind())
 		} else if let Body::Custom(b) = &self.body {
@@ -27,10 +30,7 @@ impl<'a> Payload<'a> {
 		} else {
 			false
 		};
-
-		if b {
-			self.flush();
-		}
+		if b { self.flush() } else { Ok(()) }
 	}
 
 	pub(super) fn with_receiver(mut self, receiver: Id) -> Self {
@@ -45,9 +45,10 @@ impl<'a> Payload<'a> {
 }
 
 impl Payload<'static> {
-	pub(super) fn emit(self) {
-		self.try_flush();
+	pub(super) fn emit(self) -> Result<()> {
+		self.try_flush()?;
 		emit!(Call(Cmd::new("app:accept_payload").with_any("payload", self)));
+		Ok(())
 	}
 }
 

@@ -5,6 +5,7 @@ use tokio::fs;
 use yazi_config::popup::{ConfirmCfg, InputCfg};
 use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp, maybe_exists, ok_or_not_found, paths_to_same_file, realname};
+use yazi_macro::err;
 use yazi_proxy::{ConfirmProxy, InputProxy, TabProxy, WATCHER};
 use yazi_shared::{Id, event::CmdCow, url::{Url, UrnBuf}};
 
@@ -92,7 +93,7 @@ impl Mgr {
 		}
 
 		TabProxy::reveal(&new);
-		Pubsub::pub_from_rename(tab, &old, &new);
+		err!(Pubsub::pub_from_rename(tab, &old, &new));
 		Ok(())
 	}
 

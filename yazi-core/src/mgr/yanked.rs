@@ -2,6 +2,7 @@ use std::{collections::HashSet, ops::Deref};
 
 use yazi_dds::Pubsub;
 use yazi_fs::FilesOp;
+use yazi_macro::err;
 use yazi_shared::url::Url;
 
 #[derive(Debug, Default)]
@@ -65,7 +66,7 @@ impl Yanked {
 		}
 
 		self.version = self.revision;
-		Pubsub::pub_from_yank(self.cut, &self.urls);
+		err!(Pubsub::pub_from_yank(self.cut, &self.urls));
 		true
 	}
 }

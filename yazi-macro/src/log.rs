@@ -17,3 +17,18 @@ macro_rules! time {
 		}
 	}};
 }
+
+#[macro_export]
+macro_rules! err {
+	($expr:expr) => {
+		$crate::err!(stringify!($expr), $expr)
+	};
+	($label:expr, $expr:expr) => {
+		$crate::err!($expr, "{}", $label)
+	};
+	($expr:expr, $fmt:expr, $($args:tt)*) => {{
+		if let Err(e) = $expr {
+			tracing::error!("{} failed: {e}", format_args!($fmt, $($args)*));
+		}
+	}};
+}
