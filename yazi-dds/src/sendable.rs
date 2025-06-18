@@ -190,11 +190,17 @@ impl Sendable {
 	fn value_to_key(value: Value) -> mlua::Result<DataKey> {
 		Ok(match value {
 			Value::Nil => DataKey::Nil,
-			Value::Boolean(v) => DataKey::Boolean(v),
+			Value::Boolean(b) => DataKey::Boolean(b),
 			Value::LightUserData(_) => Err("light userdata is not supported".into_lua_err())?,
-			Value::Integer(v) => DataKey::Integer(v),
-			Value::Number(v) => DataKey::Number(OrderedFloat::new(v)),
-			Value::String(v) => DataKey::String(Cow::Owned(v.to_str()?.to_owned())),
+			Value::Integer(i) => DataKey::Integer(i),
+			Value::Number(n) => DataKey::Number(OrderedFloat::new(n)),
+			Value::String(s) => {
+				if let Ok(s) = s.to_str() {
+					DataKey::String(s.to_owned().into())
+				} else {
+					DataKey::Bytes(s.as_bytes().to_owned())
+				}
+			}
 			Value::Table(_) => Err("table is not supported".into_lua_err())?,
 			Value::Function(_) => Err("function is not supported".into_lua_err())?,
 			Value::Thread(_) => Err("thread is not supported".into_lua_err())?,
@@ -234,6 +240,7 @@ impl Sendable {
 			DataKey::Id(i) => yazi_binding::Id(*i).into_lua(lua)?,
 			DataKey::Url(u) => yazi_binding::Url::new(u.clone()).into_lua(lua)?,
 			DataKey::Urn(u) => yazi_binding::Urn::new(u.clone()).into_lua(lua)?,
+			DataKey::Bytes(b) => Value::String(lua.create_string(b)?),
 		})
 	}
 }

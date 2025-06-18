@@ -141,6 +141,8 @@ pub enum DataKey {
 	Url(Url),
 	#[serde(skip_deserializing)]
 	Urn(UrnBuf),
+	#[serde(skip)]
+	Bytes(Vec<u8>),
 }
 
 impl DataKey {
