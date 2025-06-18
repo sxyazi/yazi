@@ -20,15 +20,16 @@ yazi-macro   = { path = "../yazi-macro", version = "25.6.11" }
 yazi-shared  = { path = "../yazi-shared", version = "25.6.11" }
 
 # External dependencies
-anyhow       = { workspace = true }
-mlua         = { workspace = true }
-parking_lot  = { workspace = true }
-serde        = { workspace = true }
-serde_json   = { workspace = true }
-tokio        = { workspace = true }
-tokio-stream = { workspace = true }
-tokio-util   = { workspace = true }
-tracing      = { workspace = true }
+anyhow        = { workspace = true }
+mlua          = { workspace = true }
+ordered-float = { workspace = true }
+parking_lot   = { workspace = true }
+serde         = { workspace = true }
+serde_json    = { workspace = true }
+tokio         = { workspace = true }
+tokio-stream  = { workspace = true }
+tokio-util    = { workspace = true }
+tracing       = { workspace = true }
 
 [build-dependencies]
 vergen-gitcl = { version = "1.0.8", features = [ "build" ] }
