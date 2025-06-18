@@ -3,6 +3,7 @@ use std::{any::TypeId, io, process::Stdio};
 use mlua::{AnyUserData, ExternalError, IntoLuaMulti, Lua, MetaMethod, Table, UserData, Value};
 use tokio::process::{ChildStderr, ChildStdin, ChildStdout};
 use yazi_binding::Error;
+use yazi_shared::IntoOsStr;
 
 use super::{Child, output::Output};
 use crate::process::Status;
@@ -143,11 +144,11 @@ impl UserData for Command {
 				let mut me = ud.borrow_mut::<Self>()?;
 				match arg {
 					Value::String(s) => {
-						me.inner.arg(String::from_utf8_lossy(&s.as_bytes()).as_ref());
+						me.inner.arg(s.as_bytes().into_os_str()?);
 					}
 					Value::Table(t) => {
 						for s in t.sequence_values::<mlua::String>() {
-							me.inner.arg(String::from_utf8_lossy(&s?.as_bytes()).as_ref());
+							me.inner.arg(s?.as_bytes().into_os_str()?);
 						}
 					}
 					_ => return Err("arg must be a string or table of strings".into_lua_err()),
@@ -162,10 +163,9 @@ impl UserData for Command {
 		methods.add_function_mut(
 			"env",
 			|_, (ud, key, value): (AnyUserData, mlua::String, mlua::String)| {
-				ud.borrow_mut::<Self>()?.inner.env(
-					String::from_utf8_lossy(&key.as_bytes()).as_ref(),
-					String::from_utf8_lossy(&value.as_bytes()).as_ref(),
-				);
+				ud.borrow_mut::<Self>()?
+					.inner
+					.env(key.as_bytes().into_os_str()?, value.as_bytes().into_os_str()?);
 				Ok(ud)
 			},
 		);
