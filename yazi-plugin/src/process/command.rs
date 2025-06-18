@@ -146,8 +146,33 @@ impl UserData for Command {
 						me.inner.arg(String::from_utf8_lossy(&s.as_bytes()).as_ref());
 					}
 					Value::Table(t) => {
-						for s in t.sequence_values::<mlua::String>() {
-							me.inner.arg(String::from_utf8_lossy(&s?.as_bytes()).as_ref());
+						for v in t.sequence_values::<Value>() {
+							match &v? {
+								Value::String(s) => {
+									me.inner.arg(String::from_utf8_lossy(&s.as_bytes()).as_ref());
+								}
+								Value::UserData(ud) => {
+									if let Some(t) = ud.type_id() {
+										if t == TypeId::of::<yazi_binding::Url>() {
+											let url = ud.borrow::<yazi_binding::Url>()?;
+											me.inner.arg(url.as_os_str());
+										} else {
+											return Err(
+												"arg must be a string or Url, or table of strings or Urls.".into_lua_err(),
+											);
+										}
+									} else {
+										return Err(
+											"arg must be a string or Url, or table of strings or Urls.".into_lua_err(),
+										);
+									}
+								}
+								_ => {
+									return Err(
+										"arg must be a string or Url, or table of strings or Urls.".into_lua_err(),
+									);
+								}
+							}
 						}
 					}
 					_ => return Err("arg must be a string or table of strings".into_lua_err()),

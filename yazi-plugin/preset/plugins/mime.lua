@@ -12,7 +12,7 @@ end
 function M:fetch(job)
 	local urls = {}
 	for _, file in ipairs(job.files) do
-		urls[#urls + 1] = tostring(file.url)
+		urls[#urls + 1] = file.url
 	end
 
 	local cmd = os.getenv("YAZI_FILE_ONE") or "file"

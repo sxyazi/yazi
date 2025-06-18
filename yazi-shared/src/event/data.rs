@@ -63,14 +63,14 @@ impl Data {
 		}
 	}
 
-	pub fn into_dict_string(self) -> HashMap<Cow<'static, str>, Cow<'static, str>> {
+	pub fn into_dict(self) -> HashMap<Url, Cow<'static, str>> {
 		let Self::Dict(dict) = self else {
 			return Default::default();
 		};
 
 		let mut map = HashMap::with_capacity(dict.len());
 		for pair in dict {
-			if let (DataKey::String(k), Self::String(v)) = pair {
+			if let (DataKey::Url(k), Self::String(v)) = pair {
 				map.insert(k, v);
 			}
 		}
