@@ -7,6 +7,7 @@ use tokio::{fs::{self, OpenOptions}, io::AsyncWriteExt};
 use yazi_config::YAZI;
 use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp, max_common_root, maybe_exists, paths_to_same_file};
+use yazi_macro::err;
 use yazi_proxy::{AppProxy, HIDER, TasksProxy, WATCHER};
 use yazi_shared::{terminal_clear, url::Url};
 use yazi_term::tty::TTY;
@@ -102,7 +103,8 @@ impl Mgr {
 		}
 
 		if !succeeded.is_empty() {
-			Pubsub::pub_from_bulk(succeeded.iter().map(|(o, n)| (o, &n.url)).collect());
+			let map = succeeded.iter().map(|(o, n)| (o, &n.url)).collect();
+			err!(Pubsub::pub_from_bulk(map));
 			FilesOp::rename(succeeded);
 		}
 		drop(permit);

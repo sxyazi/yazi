@@ -3,6 +3,7 @@ use std::{collections::HashMap, str::FromStr, time::Duration};
 use anyhow::Result;
 use parking_lot::RwLock;
 use tokio::{io::{AsyncBufReadExt, AsyncWriteExt, BufReader}, select, sync::mpsc::{self, UnboundedReceiver}, task::JoinHandle, time};
+use yazi_macro::try_format;
 use yazi_shared::{Id, RoCell};
 
 use crate::{Client, ClientWriter, Payload, Peer, STATE, Stream, body::{Body, BodyBye, BodyHey}};
@@ -109,13 +110,12 @@ impl Server {
 	}
 
 	fn handle_hey(clients: &HashMap<Id, Client>) {
-		let payload = format!(
-			"{}\n",
-			Payload::new(BodyHey::owned(
-				clients.values().map(|c| (c.id, Peer::new(&c.abilities))).collect()
-			))
-		);
-		clients.values().for_each(|c| _ = c.tx.send(payload.clone()));
+		let payload = Payload::new(BodyHey::owned(
+			clients.values().map(|c| (c.id, Peer::new(&c.abilities))).collect(),
+		));
+		if let Ok(s) = try_format!("{payload}\n") {
+			clients.values().for_each(|c| _ = c.tx.send(s.clone()));
+		}
 	}
 
 	async fn handle_bye(id: Id, mut rx: UnboundedReceiver<String>, mut writer: ClientWriter) {
@@ -125,10 +125,10 @@ impl Server {
 			}
 		}
 
-		_ = writer
-			.write_all(BodyBye::owned().with_receiver(id).with_sender(Id(0)).to_string().as_bytes())
-			.await;
-
-		writer.flush().await.ok();
+		let bye = BodyBye::owned().with_receiver(id).with_sender(Id(0));
+		if let Ok(s) = try_format!("{bye}") {
+			writer.write_all(s.as_bytes()).await.ok();
+			writer.flush().await.ok();
+		}
 	}
 }

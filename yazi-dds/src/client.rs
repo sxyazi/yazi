@@ -5,6 +5,7 @@ use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use tokio::{io::AsyncWriteExt, select, sync::mpsc, task::JoinHandle, time};
 use tracing::error;
+use yazi_macro::try_format;
 use yazi_shared::{Id, RoCell};
 
 use crate::{ClientReader, ClientWriter, Payload, Pubsub, Server, Stream, body::{Body, BodyBye, BodyHi}};
@@ -55,7 +56,7 @@ impl Client {
 							continue;
 						} else if line.starts_with("hey,") {
 							Self::handle_hey(&line);
-						} else if let Err(e) = Payload::from_str(&line).map(|p| p.emit()) {
+						} else if let Err(e) = Payload::from_str(&line).and_then(|p| p.emit()) {
 							error!("Could not parse payload:\n{line}\n\nError:\n{e}");
 						}
 					}
@@ -68,11 +69,11 @@ impl Client {
 	pub async fn shot(kind: &str, receiver: Id, body: &str) -> Result<()> {
 		Body::validate(kind)?;
 
-		let payload = format!(
+		let payload = try_format!(
 			"{}\n{kind},{receiver},{ID},{body}\n{}\n",
 			Payload::new(BodyHi::borrowed(Default::default())),
 			Payload::new(BodyBye::owned())
-		);
+		)?;
 
 		let (mut lines, mut writer) = Stream::connect().await?;
 		writer.write_all(payload.as_bytes()).await?;
@@ -129,7 +130,7 @@ impl Client {
 		async fn make(kinds: &HashSet<&str>) -> Result<ClientReader> {
 			let (lines, mut writer) = Stream::connect().await?;
 			let hi = Payload::new(BodyHi::borrowed(kinds.clone()));
-			writer.write_all(format!("{hi}\n").as_bytes()).await?;
+			writer.write_all(try_format!("{hi}\n")?.as_bytes()).await?;
 			writer.flush().await?;
 			Ok(lines)
 		}
@@ -155,8 +156,8 @@ impl Client {
 	}
 
 	#[inline]
-	pub(super) fn push<'a>(payload: impl Into<Payload<'a>>) {
-		QUEUE_TX.send(format!("{}\n", payload.into())).ok();
+	pub(super) fn push<'a>(payload: impl Into<Payload<'a>>) -> Result<()> {
+		Ok(QUEUE_TX.send(try_format!("{}\n", payload.into())?)?)
 	}
 
 	#[inline]

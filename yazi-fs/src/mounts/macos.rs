@@ -12,7 +12,7 @@ use yazi_shared::natsort;
 use super::{Locked, Partition, Partitions};
 
 impl Partitions {
-	pub fn monitor(me: Locked, cb: fn()) {
+	pub fn monitor(me: Locked, cb: fn() -> Result<()>) {
 		tokio::task::spawn_blocking(move || {
 			let session = unsafe { DASessionCreate(kCFAllocatorDefault) };
 			if session.is_null() {
@@ -41,7 +41,7 @@ impl Partitions {
 					if mem::replace(&mut me.write().need_update, true) {
 						return;
 					}
-					Self::update(me.clone(), cb);
+					Self::update(me.clone(), move || _ = cb());
 				});
 				Box::into_raw(Box::new(boxed)) as *mut c_void
 			};

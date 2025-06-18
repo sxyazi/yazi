@@ -3,6 +3,7 @@ use std::ops::{Deref, DerefMut};
 use yazi_boot::BOOT;
 use yazi_dds::Pubsub;
 use yazi_fs::File;
+use yazi_macro::err;
 use yazi_proxy::MgrProxy;
 use yazi_shared::{Id, url::Url};
 
@@ -38,7 +39,7 @@ impl Tabs {
 		self.cursor = idx;
 		MgrProxy::refresh();
 		MgrProxy::peek(true);
-		Pubsub::pub_from_tab(self.active().id);
+		err!(Pubsub::pub_from_tab(self.active().id));
 	}
 }
 

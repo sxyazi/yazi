@@ -3,6 +3,7 @@ use std::mem;
 use yazi_config::{LAYOUT, YAZI};
 use yazi_dds::Pubsub;
 use yazi_fs::{File, Files, FilesOp, FolderStage, Step, cha::Cha};
+use yazi_macro::err;
 use yazi_proxy::MgrProxy;
 use yazi_shared::{Id, url::{Url, Urn, UrnBuf}};
 
@@ -88,7 +89,7 @@ impl Folder {
 		if !self.update(op) {
 			return false;
 		} else if self.stage != old {
-			Pubsub::pub_from_load(tab, &self.url, self.stage);
+			err!(Pubsub::pub_from_load(tab, &self.url, self.stage));
 		}
 		true
 	}

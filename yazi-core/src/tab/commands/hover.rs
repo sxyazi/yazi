@@ -1,5 +1,5 @@
 use yazi_dds::Pubsub;
-use yazi_macro::render;
+use yazi_macro::{err, render};
 use yazi_shared::{event::CmdCow, url::{Url, Urn}};
 
 use crate::tab::Tab;
@@ -25,7 +25,7 @@ impl Tab {
 		}
 
 		// Publish through DDS
-		Pubsub::pub_from_hover(self.id, self.hovered().map(|h| &h.url));
+		err!(Pubsub::pub_from_hover(self.id, self.hovered().map(|h| &h.url)));
 	}
 
 	fn hover_do(&mut self, url: Url) {

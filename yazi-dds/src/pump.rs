@@ -4,6 +4,7 @@ use parking_lot::Mutex;
 use tokio::{pin, select, sync::mpsc};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tokio_util::sync::CancellationToken;
+use yazi_macro::err;
 use yazi_shared::{RoCell, url::Url};
 
 use crate::{Pubsub, body::BodyMoveItem};
@@ -61,9 +62,9 @@ impl Pump {
 
 			loop {
 				select! {
-					Some(items) = move_rx.next() => Pubsub::pub_from_move(items),
-					Some(urls) = trash_rx.next() => Pubsub::pub_from_trash(urls),
-					Some(urls) = delete_rx.next() => Pubsub::pub_from_delete(urls),
+					Some(items) = move_rx.next() => err!(Pubsub::pub_from_move(items)),
+					Some(urls) = trash_rx.next() => err!(Pubsub::pub_from_trash(urls)),
+					Some(urls) = delete_rx.next() => err!(Pubsub::pub_from_delete(urls)),
 					else => {
 						CT.cancel();
 						break;
