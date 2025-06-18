@@ -1,20 +1,20 @@
-use std::{borrow::Cow, collections::HashMap};
+use std::collections::HashMap;
 
 use tracing::error;
 use yazi_macro::render;
-use yazi_shared::{event::CmdCow, url::Url};
+use yazi_shared::event::{CmdCow, Data, DataKey};
 
 use crate::{mgr::{LINKED, Mgr}, tasks::Tasks};
 
 pub struct Opt {
-	updates: HashMap<Cow<'static, str>, Cow<'static, str>>,
+	updates: HashMap<DataKey, Data>,
 }
 
 impl TryFrom<CmdCow> for Opt {
 	type Error = ();
 
 	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		Ok(Self { updates: c.try_take("updates").ok_or(())?.into_dict_string() })
+		Ok(Self { updates: c.try_take("updates").and_then(Data::into_dict).ok_or(())? })
 	}
 }
 
@@ -28,7 +28,7 @@ impl Mgr {
 		let updates = opt
 			.updates
 			.into_iter()
-			.flat_map(|(url, mime)| Url::try_from(url.as_ref()).map(|u| (u, mime)))
+			.flat_map(|(key, value)| key.into_url().zip(value.into_string()))
 			.filter(|(url, mime)| self.mimetype.by_url(url) != Some(mime))
 			.fold(HashMap::new(), |mut map, (u, m)| {
 				for u in linked.from_file(&u) {

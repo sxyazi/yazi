@@ -47,6 +47,32 @@ impl Data {
 	}
 
 	#[inline]
+	pub fn into_string(self) -> Option<Cow<'static, str>> {
+		match self {
+			Self::String(s) => Some(s),
+			_ => None,
+		}
+	}
+
+	#[inline]
+	pub fn into_dict(self) -> Option<HashMap<DataKey, Data>> {
+		match self {
+			Self::Dict(d) => Some(d),
+			_ => None,
+		}
+	}
+
+	#[inline]
+	pub fn into_url(self) -> Option<Url> {
+		match self {
+			Self::String(s) => Url::try_from(s.as_ref()).ok(),
+			Self::Url(u) => Some(u),
+			Self::Bytes(b) => Url::try_from(b.as_slice()).ok(),
+			_ => None,
+		}
+	}
+
+	#[inline]
 	pub fn into_any<T: 'static>(self) -> Option<T> {
 		match self {
 			Self::Any(b) => b.downcast::<T>().ok().map(|b| *b),
@@ -55,33 +81,11 @@ impl Data {
 	}
 
 	#[inline]
-	pub fn into_url(self) -> Option<Url> {
-		match self {
-			Data::String(s) => Url::try_from(s.as_ref()).ok(),
-			Data::Url(u) => Some(u),
-			_ => None,
-		}
-	}
-
-	pub fn into_dict_string(self) -> HashMap<Cow<'static, str>, Cow<'static, str>> {
-		let Self::Dict(dict) = self else {
-			return Default::default();
-		};
-
-		let mut map = HashMap::with_capacity(dict.len());
-		for pair in dict {
-			if let (DataKey::String(k), Self::String(v)) = pair {
-				map.insert(k, v);
-			}
-		}
-		map
-	}
-
-	#[inline]
 	pub fn to_url(&self) -> Option<Url> {
 		match self {
 			Self::String(s) => Url::try_from(s.as_ref()).ok(),
 			Self::Url(u) => Some(u.clone()),
+			Self::Bytes(b) => Url::try_from(b.as_slice()).ok(),
 			_ => None,
 		}
 	}
@@ -158,6 +162,16 @@ impl DataKey {
 		}
 	}
 
+	#[inline]
+	pub fn into_url(self) -> Option<Url> {
+		match self {
+			Self::String(s) => Url::try_from(s.as_ref()).ok(),
+			Self::Url(u) => Some(u),
+			Self::Bytes(b) => Url::try_from(b.as_slice()).ok(),
+			_ => None,
+		}
+	}
+
 	fn deserialize_integer<'de, D>(deserializer: D) -> Result<i64, D::Error>
 	where
 		D: de::Deserializer<'de>,
@@ -204,9 +218,9 @@ macro_rules! impl_as_integer {
 			#[inline]
 			pub fn $name(&self) -> Option<$t> {
 				match self {
-					Data::Integer(i) => <$t>::try_from(*i).ok(),
-					Data::String(s) => s.parse().ok(),
-					Data::Id(i) => <$t>::try_from(i.get()).ok(),
+					Self::Integer(i) => <$t>::try_from(*i).ok(),
+					Self::String(s) => s.parse().ok(),
+					Self::Id(i) => <$t>::try_from(i.get()).ok(),
 					_ => None,
 				}
 			}
@@ -220,10 +234,10 @@ macro_rules! impl_as_number {
 			#[inline]
 			pub fn $name(&self) -> Option<$t> {
 				match self {
-					Data::Integer(i) if *i == (*i as $t as _) => Some(*i as $t),
-					Data::Number(n) => <$t>::try_from(*n).ok(),
-					Data::String(s) => s.parse().ok(),
-					Data::Id(i) if i.0 == (i.0 as $t as _) => Some(i.0 as $t),
+					Self::Integer(i) if *i == (*i as $t as _) => Some(*i as $t),
+					Self::Number(n) => <$t>::try_from(*n).ok(),
+					Self::String(s) => s.parse().ok(),
+					Self::Id(i) if i.0 == (i.0 as $t as _) => Some(i.0 as $t),
 					_ => None,
 				}
 			}

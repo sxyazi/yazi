@@ -139,7 +139,7 @@ impl UserData for Url {
 		});
 
 		methods.add_function_mut("into_search", |_, (ud, frag): (AnyUserData, mlua::String)| {
-			Ok(Self::new(ud.take::<Self>()?.inner.into_search(frag.as_bytes().as_ref().into_os_str()?)))
+			Ok(Self::new(ud.take::<Self>()?.inner.into_search(frag.as_bytes().into_os_str()?)))
 		});
 
 		methods.add_meta_method(MetaMethod::Eq, |_, me, other: UrlRef| Ok(me.inner == other.inner));
