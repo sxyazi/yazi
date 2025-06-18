@@ -18,6 +18,7 @@ crossterm        = { workspace = true }
 foldhash         = { workspace = true }
 futures          = { workspace = true }
 memchr           = "2.7.5"
+ordered-float    = { workspace = true }
 parking_lot      = { workspace = true }
 percent-encoding = "2.3.1"
 ratatui          = { workspace = true }
