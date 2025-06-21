@@ -76,3 +76,22 @@ path = "src/main.rs"
 [package.metadata.binstall]
 pkg-url = "{repo}/releases/download/v{version}/yazi-{target}{archive-suffix}"
 bin-dir = "yazi-{target}/{bin}{binary-ext}"
+
+[package.metadata.deb]
+license-file = ["../LICENSE", "0"]
+extended-description = """
+Yazi is a terminal file manager written in Rust, based on non-blocking async 
+I/O. It aims to provide an efficient, user-friendly, and customizable file 
+management experience.
+"""
+depends = "file, ffmpeg, 7zip, jq, poppler-utils, fd-find, ripgrep, fzf, zoxide, imagemagick, xsel|xclip|wl-clipboard"
+recommends = "bash-completion"
+section = "utility"
+priority = "optional"
+assets = [
+    ["target/release/ya", "usr/bin/", "755"],
+    ["target/release/yazi", "usr/bin/", "755"],
+    { source = "../README.md", dest = "usr/share/doc/yazi-fm/README", mode = "644"},
+    { source = "../yazi-cli/completions/ya.bash", dest = "usr/share/bash-completion/completions/ya", mode = "644"},
+    { source = "../yazi-boot/completions/yazi.bash", dest = "usr/share/bash-completion/completions/yazi", mode = "644"},
+]
