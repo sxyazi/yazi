@@ -33,7 +33,7 @@ impl Flavor {
 			"" => String::new(),
 			name => {
 				let p = Xdg::config_dir().join(format!("flavors/{name}.yazi/flavor.toml"));
-				std::fs::read_to_string(&p).with_context(|| format!("Failed to load flavor {p:?}"))?
+				std::fs::read_to_string(&p).with_context(|| format!("Failed to read flavor {p:?}"))?
 			}
 		})
 	}
