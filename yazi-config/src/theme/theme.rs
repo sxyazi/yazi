@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use anyhow::{Result, bail};
 use serde::Deserialize;
 use yazi_codegen::{DeserializeOver1, DeserializeOver2};
-use yazi_fs::expand_path;
+use yazi_fs::{Xdg, expand_path, ok_or_not_found};
 
 use super::{Filetype, Flavor, Icon};
 use crate::Style;
@@ -206,6 +206,10 @@ pub struct Help {
 }
 
 impl Theme {
+	pub(crate) fn read() -> Result<String> {
+		Ok(ok_or_not_found(std::fs::read_to_string(Xdg::config_dir().join("theme.toml")))?)
+	}
+
 	pub(crate) fn reshape(mut self, light: bool) -> Result<Self> {
 		if self.which.cols < 1 || self.which.cols > 3 {
 			bail!("[which].cols must be between 1 and 3");

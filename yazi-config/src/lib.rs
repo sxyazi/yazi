@@ -27,9 +27,8 @@ fn try_init(merge: bool) -> anyhow::Result<()> {
 	let mut keymap = Preset::keymap()?;
 
 	if merge {
-		let dir = yazi_fs::Xdg::config_dir();
-		yazi = yazi.deserialize_over(toml::Deserializer::new(&migrate(dir.join("yazi.toml"))))?;
-		keymap = keymap.deserialize_over(toml::Deserializer::new(&migrate(dir.join("keymap.toml"))))?;
+		yazi = yazi.deserialize_over(toml::Deserializer::new(&yazi::Yazi::read()?))?;
+		keymap = keymap.deserialize_over(toml::Deserializer::new(&keymap::Keymap::read()?))?;
 	}
 
 	YAZI.init(yazi.reshape()?);
@@ -49,10 +48,7 @@ fn try_init_flavor(light: bool, merge: bool) -> anyhow::Result<()> {
 	let mut theme = Preset::theme(light)?;
 
 	if merge {
-		let shadow = theme::Theme::deserialize_shadow(toml::Deserializer::new(&migrate(
-			yazi_fs::Xdg::config_dir().join("theme.toml"),
-		)))?;
-
+		let shadow = theme::Theme::deserialize_shadow(toml::Deserializer::new(&theme::Theme::read()?))?;
 		let flavor = shadow.flavor.as_ref().map(theme::Flavor::from).unwrap_or_default().read(light)?;
 		theme = theme.deserialize_over(toml::Deserializer::new(&flavor))?;
 		theme = theme.deserialize_over_with::<toml::Value>(shadow)?;
@@ -82,46 +78,4 @@ fn wait_for_key(e: anyhow::Error) -> anyhow::Result<()> {
 
 	TTY.reader().read_exact(&mut [0])?;
 	Ok(())
-}
-
-// TODO: remove this in the future
-fn migrate(p: std::path::PathBuf) -> String {
-	let Ok(old) = std::fs::read_to_string(&p) else {
-		return String::new();
-	};
-	let Ok(mut doc) = old.parse::<toml_edit::DocumentMut>() else {
-		return old;
-	};
-	if doc.get("mgr").is_some() {
-		return old;
-	}
-	let Some(manager) = doc.remove("manager") else {
-		return old;
-	};
-
-	doc.insert("mgr", manager);
-	let new = doc.to_string();
-
-	let mut backup = p.clone();
-	backup.set_file_name(format!(
-		"{}-{}",
-		p.file_name().unwrap().to_str().unwrap(),
-		yazi_shared::timestamp_us()
-	));
-
-	if let Err(e) = std::fs::copy(&p, backup) {
-		_ = TTY.writer().write_all(
-			format!("WARNING: `[manager]` has been deprecated in favor of the new `[mgr]`, see #2803 for more details: https://github.com/sxyazi/yazi/pull/2803\r\n
-Trying to migrate your config automatically failed, please edit the file manually, error while backuping {p:?}: {e}\r\n").as_bytes(),
-		);
-		return new;
-	}
-
-	if let Err(e) = std::fs::write(&p, &new) {
-		_ = TTY.writer().write_all(
-			format!("WARNING: `[manager]` has been deprecated in favor of the new `[mgr]`, see #2803 for more details: https://github.com/sxyazi/yazi/pull/2803\r\n
-Trying to migrate your config automatically failed, please edit the file manually, error while writing {p:?}: {e}\r\n").as_bytes(),
-		);
-	}
-	new
 }
