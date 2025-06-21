@@ -1,6 +1,7 @@
 use anyhow::Result;
 use serde::Deserialize;
 use yazi_codegen::DeserializeOver1;
+use yazi_fs::{Xdg, ok_or_not_found};
 use yazi_shared::Layer;
 
 use super::{Chord, KeymapRules};
@@ -36,6 +37,10 @@ impl Keymap {
 }
 
 impl Keymap {
+	pub(crate) fn read() -> Result<String> {
+		Ok(ok_or_not_found(std::fs::read_to_string(Xdg::config_dir().join("keymap.toml")))?)
+	}
+
 	pub(crate) fn reshape(self) -> Result<Self> {
 		Ok(Self {
 			mgr:     self.mgr.reshape(Layer::Mgr)?,

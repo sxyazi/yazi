@@ -36,8 +36,7 @@ impl Hooks {
 }
 
 // --- Hook
-// TODO: remove Send + Sync bounds when not needed
 pub(super) enum Hook {
-	Sync(Box<dyn FnOnce(bool) + Send + Sync>),
-	Async(Box<dyn (FnOnce(bool) -> BoxFuture<'static, ()>) + Send + Sync>),
+	Sync(Box<dyn FnOnce(bool) + Send>),
+	Async(Box<dyn (FnOnce(bool) -> BoxFuture<'static, ()>) + Send>),
 }

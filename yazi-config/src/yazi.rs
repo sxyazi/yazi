@@ -1,6 +1,7 @@
 use anyhow::Result;
 use serde::Deserialize;
 use yazi_codegen::DeserializeOver1;
+use yazi_fs::{Xdg, ok_or_not_found};
 
 use crate::{mgr, open, opener, plugin, popup, preview, tasks, which};
 
@@ -19,6 +20,10 @@ pub struct Yazi {
 }
 
 impl Yazi {
+	pub(super) fn read() -> Result<String> {
+		Ok(ok_or_not_found(std::fs::read_to_string(Xdg::config_dir().join("yazi.toml")))?)
+	}
+
 	pub(super) fn reshape(self) -> Result<Self> {
 		Ok(Self {
 			mgr:     self.mgr.reshape()?,
