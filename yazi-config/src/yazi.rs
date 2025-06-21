@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use serde::Deserialize;
 use yazi_codegen::DeserializeOver1;
 use yazi_fs::{Xdg, ok_or_not_found};
@@ -21,7 +21,9 @@ pub struct Yazi {
 
 impl Yazi {
 	pub(super) fn read() -> Result<String> {
-		Ok(ok_or_not_found(std::fs::read_to_string(Xdg::config_dir().join("yazi.toml")))?)
+		let p = Xdg::config_dir().join("yazi.toml");
+		ok_or_not_found(std::fs::read_to_string(&p))
+			.with_context(|| format!("Failed to read config {p:?}"))
 	}
 
 	pub(super) fn reshape(self) -> Result<Self> {

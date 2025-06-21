@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use anyhow::{Result, bail};
+use anyhow::{Context, Result, bail};
 use serde::Deserialize;
 use yazi_codegen::{DeserializeOver1, DeserializeOver2};
 use yazi_fs::{Xdg, expand_path, ok_or_not_found};
@@ -207,7 +207,9 @@ pub struct Help {
 
 impl Theme {
 	pub(crate) fn read() -> Result<String> {
-		Ok(ok_or_not_found(std::fs::read_to_string(Xdg::config_dir().join("theme.toml")))?)
+		let p = Xdg::config_dir().join("theme.toml");
+		ok_or_not_found(std::fs::read_to_string(&p))
+			.with_context(|| format!("Failed to read theme {p:?}"))
 	}
 
 	pub(crate) fn reshape(mut self, light: bool) -> Result<Self> {
