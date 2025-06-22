@@ -1,8 +1,9 @@
+use yazi_config::YAZI;
 use yazi_fs::Step;
 use yazi_macro::render;
 use yazi_shared::event::CmdCow;
 
-use crate::pick::Pick;
+use crate::{Scrollable, pick::Pick};
 
 struct Opt {
 	step: Step,
@@ -17,38 +18,22 @@ impl From<CmdCow> for Opt {
 impl Pick {
 	#[yazi_codegen::command]
 	pub fn arrow(&mut self, opt: Opt) {
-		let new = opt.step.add(self.cursor, self.items.len(), self.limit());
-		if new > self.cursor {
-			self.next(new);
-		} else {
-			self.prev(new);
-		}
+		render!(self.scroll(opt.step));
+	}
+}
+
+impl Scrollable for Pick {
+	#[inline]
+	fn len(&self) -> usize { self.items.len() }
+
+	#[inline]
+	fn limit(&self) -> usize {
+		self.position.offset.height.saturating_sub(YAZI.pick.border()) as usize
 	}
 
-	fn next(&mut self, new: usize) {
-		let old = self.cursor;
-		self.cursor = new;
+	#[inline]
+	fn cursor_mut(&mut self) -> &mut usize { &mut self.cursor }
 
-		let (len, limit) = (self.items.len(), self.limit());
-		self.offset = if self.cursor < len.min(self.offset + limit) {
-			self.offset.min(len.saturating_sub(1))
-		} else {
-			len.saturating_sub(limit).min(self.offset + self.cursor - old)
-		};
-
-		render!(old != self.cursor);
-	}
-
-	fn prev(&mut self, new: usize) {
-		let old = self.cursor;
-		self.cursor = new;
-
-		self.offset = if self.cursor < self.offset {
-			self.offset.saturating_sub(old - self.cursor)
-		} else {
-			self.offset.min(self.items.len().saturating_sub(1))
-		};
-
-		render!(old != self.cursor);
-	}
+	#[inline]
+	fn offset_mut(&mut self) -> &mut usize { &mut self.offset }
 }

@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(pick);
+yazi_macro::mod_flat!(list pick);

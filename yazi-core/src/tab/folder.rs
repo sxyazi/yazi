@@ -7,6 +7,8 @@ use yazi_macro::err;
 use yazi_proxy::MgrProxy;
 use yazi_shared::{Id, url::{Url, Urn, UrnBuf}};
 
+use crate::Scrollable;
+
 pub struct Folder {
 	pub url:   Url,
 	pub cha:   Cha,
@@ -95,13 +97,10 @@ impl Folder {
 	}
 
 	pub fn arrow(&mut self, step: impl Into<Step>) -> bool {
-		let new = (step.into() as Step).add(self.cursor, self.files.len(), LAYOUT.get().limit());
 		let mut b = if self.files.is_empty() {
 			(mem::take(&mut self.cursor), mem::take(&mut self.offset)) != (0, 0)
-		} else if new > self.cursor {
-			self.next(new)
 		} else {
-			self.prev(new)
+			self.scroll(step.into())
 		};
 
 		self.trace = self.hovered().filter(|_| b).map(|h| h.urn_owned()).or(self.trace.take());
@@ -137,39 +136,6 @@ impl Folder {
 		}
 	}
 
-	fn next(&mut self, new: usize) -> bool {
-		let old = (self.cursor, self.offset);
-		let len = self.files.len();
-
-		let limit = LAYOUT.get().limit();
-		let scrolloff = (limit / 2).min(YAZI.mgr.scrolloff as usize);
-
-		self.cursor = new;
-		self.offset = if self.cursor < (self.offset + limit).min(len).saturating_sub(scrolloff) {
-			self.offset.min(len.saturating_sub(1))
-		} else {
-			len.saturating_sub(limit).min(self.offset + self.cursor - old.0)
-		};
-
-		old != (self.cursor, self.offset)
-	}
-
-	fn prev(&mut self, new: usize) -> bool {
-		let old = (self.cursor, self.offset);
-
-		let limit = LAYOUT.get().limit();
-		let scrolloff = (limit / 2).min(YAZI.mgr.scrolloff as usize);
-
-		self.cursor = new;
-		self.offset = if self.cursor < self.offset + scrolloff {
-			self.offset.saturating_sub(old.0 - self.cursor)
-		} else {
-			self.offset.min(self.files.len().saturating_sub(1))
-		};
-
-		old != (self.cursor, self.offset)
-	}
-
 	fn squeeze_offset(&mut self) -> bool {
 		let old = self.offset;
 		let len = self.files.len();
@@ -199,4 +165,21 @@ impl Folder {
 		let end = ((page + 2) * limit).min(len);
 		&self.files[start..end]
 	}
+}
+
+impl Scrollable for Folder {
+	#[inline]
+	fn len(&self) -> usize { self.files.len() }
+
+	#[inline]
+	fn limit(&self) -> usize { LAYOUT.get().limit() }
+
+	#[inline]
+	fn scrolloff(&self) -> usize { (self.limit() / 2).min(YAZI.mgr.scrolloff as usize) }
+
+	#[inline]
+	fn cursor_mut(&mut self) -> &mut usize { &mut self.cursor }
+
+	#[inline]
+	fn offset_mut(&mut self) -> &mut usize { &mut self.offset }
 }
