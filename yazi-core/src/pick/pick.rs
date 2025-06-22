@@ -26,8 +26,5 @@ impl Pick {
 
 impl Pick {
 	#[inline]
-	pub const fn len(&self) -> usize { self.items.len() }
-
-	#[inline]
 	pub fn title(&self) -> &str { &self.title }
 }
