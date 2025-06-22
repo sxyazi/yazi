@@ -3,6 +3,8 @@ use std::{collections::HashMap, path::PathBuf};
 use yazi_proxy::options::CmpItem;
 use yazi_shared::Id;
 
+use crate::Scrollable;
+
 #[derive(Default)]
 pub struct Cmp {
 	pub(super) caches: HashMap<PathBuf, Vec<CmpItem>>,
@@ -21,9 +23,6 @@ impl Cmp {
 		let end = (self.offset + self.limit()).min(self.cands.len());
 		&self.cands[self.offset..end]
 	}
-
-	#[inline]
-	pub fn limit(&self) -> usize { self.cands.len().min(10) }
 
 	#[inline]
 	pub fn selected(&self) -> Option<&CmpItem> { self.cands.get(self.cursor) }

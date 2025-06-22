@@ -5,7 +5,7 @@ use yazi_config::{KEYMAP, YAZI, keymap::{Chord, Key}};
 use yazi_macro::{render, render_and};
 use yazi_shared::Layer;
 
-use super::HELP_MARGIN;
+use crate::Scrollable;
 
 #[derive(Default)]
 pub struct Help {
@@ -22,9 +22,6 @@ pub struct Help {
 }
 
 impl Help {
-	#[inline]
-	pub fn limit() -> usize { Dimension::available().rows.saturating_sub(HELP_MARGIN) as usize }
-
 	pub fn toggle(&mut self, layer: Layer) {
 		self.visible = !self.visible;
 		self.layer = layer;
@@ -94,7 +91,7 @@ impl Help {
 	// --- Bindings
 	#[inline]
 	pub fn window(&self) -> &[&Chord] {
-		let end = (self.offset + Self::limit()).min(self.bindings.len());
+		let end = (self.offset + self.limit()).min(self.bindings.len());
 		&self.bindings[self.offset..end]
 	}
 

@@ -1,6 +1,8 @@
 use anyhow::Result;
 use tokio::sync::oneshot::Sender;
-use yazi_config::{YAZI, popup::Position};
+use yazi_config::popup::Position;
+
+use crate::Scrollable;
 
 #[derive(Default)]
 pub struct Pick {
@@ -9,7 +11,7 @@ pub struct Pick {
 	pub position:     Position,
 
 	pub(super) offset:   usize,
-	pub(super) cursor:   usize,
+	pub cursor:          usize,
 	pub(super) callback: Option<Sender<Result<usize>>>,
 
 	pub visible: bool,
@@ -17,21 +19,10 @@ pub struct Pick {
 
 impl Pick {
 	#[inline]
-	pub fn window(&self) -> &[String] {
-		let end = (self.offset + self.limit()).min(self.items.len());
-		&self.items[self.offset..end]
+	pub fn title(&self) -> &str { &self.title }
+
+	#[inline]
+	pub fn window(&self) -> impl Iterator<Item = (usize, &str)> {
+		self.items.iter().map(AsRef::as_ref).enumerate().skip(self.offset).take(self.limit())
 	}
-
-	#[inline]
-	pub(super) fn limit(&self) -> usize {
-		self.position.offset.height.saturating_sub(YAZI.pick.border()) as usize
-	}
-}
-
-impl Pick {
-	#[inline]
-	pub fn title(&self) -> String { self.title.clone() }
-
-	#[inline]
-	pub fn rel_cursor(&self) -> usize { self.cursor - self.offset }
 }
