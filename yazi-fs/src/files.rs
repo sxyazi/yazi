@@ -186,10 +186,9 @@ impl Files {
 		}
 
 		let (mut hidden, mut items) = if let Some(filter) = &self.filter {
-			urns.into_iter().partition(|u| {
-				(!self.show_hidden && u.as_urn().is_hidden())
-					|| !u.as_urn().name().is_some_and(|s| filter.matches(s))
-			})
+			urns
+				.into_iter()
+				.partition(|u| (!self.show_hidden && u.as_urn().is_hidden()) || !filter.matches(u.as_urn()))
 		} else if self.show_hidden {
 			(HashSet::new(), urns)
 		} else {
@@ -267,7 +266,7 @@ impl Files {
 		let (mut hidden, mut items) = if let Some(filter) = &self.filter {
 			files
 				.into_iter()
-				.partition(|(_, f)| (f.is_hidden() && !self.show_hidden) || !filter.matches(f.name()))
+				.partition(|(_, f)| (f.is_hidden() && !self.show_hidden) || !filter.matches(f.urn()))
 		} else if self.show_hidden {
 			(HashMap::new(), files)
 		} else {
@@ -320,7 +319,7 @@ impl Files {
 		if let Some(filter) = &self.filter {
 			files
 				.into_iter()
-				.partition(|f| (f.is_hidden() && !self.show_hidden) || !filter.matches(f.name()))
+				.partition(|f| (f.is_hidden() && !self.show_hidden) || !filter.matches(f.urn()))
 		} else if self.show_hidden {
 			(vec![], files.into_iter().collect())
 		} else {
