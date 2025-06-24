@@ -44,7 +44,7 @@ impl Partitions {
 					if mem::replace(&mut me.write().need_update, true) {
 						return;
 					}
-					Self::update(me.clone(), move || _ = cb());
+					Self::update(me.clone(), cb);
 				});
 				Box::into_raw(Box::new(boxed)) as *mut c_void
 			};
