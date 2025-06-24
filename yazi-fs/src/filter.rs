@@ -23,11 +23,13 @@ impl Filter {
 	}
 
 	#[inline]
-	pub fn matches(&self, name: &OsStr) -> bool { self.regex.is_match(name.as_encoded_bytes()) }
+	pub fn matches(&self, name: impl AsRef<OsStr>) -> bool {
+		self.regex.is_match(name.as_ref().as_encoded_bytes())
+	}
 
 	#[inline]
-	pub fn highlighted(&self, name: &OsStr) -> Option<Vec<Range<usize>>> {
-		self.regex.find(name.as_encoded_bytes()).map(|m| vec![m.range()])
+	pub fn highlighted(&self, name: impl AsRef<OsStr>) -> Option<Vec<Range<usize>>> {
+		self.regex.find(name.as_ref().as_encoded_bytes()).map(|m| vec![m.range()])
 	}
 }
 

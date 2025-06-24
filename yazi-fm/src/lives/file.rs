@@ -125,11 +125,11 @@ impl UserData for File {
 					return Ok(None);
 				};
 
-				let Some(idx) = finder.matched_idx(&me.url) else {
+				let Some(idx) = finder.matched_idx(&me.folder, me.urn()) else {
 					return Ok(None);
 				};
 
-				Some(lua.create_sequence_from([idx.into_lua(lua)?, finder.matched().len().into_lua(lua)?]))
+				Some(lua.create_sequence_from([idx.into_lua(lua)?, finder.matched.len().into_lua(lua)?]))
 					.transpose()
 			})
 		});

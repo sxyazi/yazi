@@ -18,7 +18,7 @@ impl Tab {
 			return;
 		};
 
-		render!(finder.catchup(&self.current.files));
+		render!(finder.catchup(&self.current));
 		if opt.prev {
 			finder.prev(&self.current.files, self.current.cursor, false).map(|s| self.arrow(s));
 		} else {
