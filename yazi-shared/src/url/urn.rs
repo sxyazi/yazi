@@ -36,6 +36,10 @@ impl AsRef<Path> for Urn {
 	fn as_ref(&self) -> &Path { &self.0 }
 }
 
+impl AsRef<OsStr> for Urn {
+	fn as_ref(&self) -> &OsStr { self.0.as_os_str() }
+}
+
 impl ToOwned for Urn {
 	type Owned = UrnBuf;
 
