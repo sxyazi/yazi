@@ -10,13 +10,13 @@ function M:peek(job)
 
 	local ok, err = self:preload(job)
 	if not ok or err then
-		return
+		return ya.preview_widget(job, err)
 	end
 
 	ya.sleep(math.max(0, rt.preview.image_delay / 1000 + start - os.clock()))
 
 	local _, err = ya.image_show(cache, job.area)
-	ya.preview_widget(job, err and ui.Text(err):area(job.area):wrap(ui.Wrap.YES))
+	ya.preview_widget(job, err)
 end
 
 function M:seek() end
@@ -45,10 +45,12 @@ function M:preload(job)
 		"JPG:" .. tostring(cache),
 	}):status()
 
-	if status then
-		return status.success
-	else
+	if not status then
 		return true, Err("Failed to start `magick`, error: %s", err)
+	elseif not status.success then
+		return false, Err("`magick` exited with error code: %s", status.code)
+	else
+		return true
 	end
 end
 

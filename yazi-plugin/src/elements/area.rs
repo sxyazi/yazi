@@ -50,6 +50,10 @@ impl Area {
 	}
 }
 
+impl From<Rect> for Area {
+	fn from(rect: Rect) -> Self { Self::Rect(rect) }
+}
+
 impl TryFrom<AnyUserData> for Area {
 	type Error = mlua::Error;
 

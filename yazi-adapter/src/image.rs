@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use anyhow::Result;
 use image::{DynamicImage, ExtendedColorType, ImageDecoder, ImageEncoder, ImageError, ImageReader, ImageResult, Limits, codecs::{jpeg::JpegEncoder, png::PngEncoder}, imageops::FilterType, metadata::Orientation};
@@ -10,7 +10,7 @@ use crate::Dimension;
 pub struct Image;
 
 impl Image {
-	pub async fn precache(path: &Path, cache: PathBuf) -> Result<()> {
+	pub async fn precache(path: &Path, cache: &Path) -> Result<()> {
 		let (mut img, orientation, icc) = Self::decode_from(path).await?;
 		let (w, h) = Self::flip_size(orientation, (YAZI.preview.max_width, YAZI.preview.max_height));
 

@@ -25,8 +25,11 @@ impl Utils {
 	}
 
 	pub(super) fn image_precache(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_async_function(|_, (src, dist): (UrlRef, UrlRef)| async move {
-			Ok(Image::precache(&src, dist.to_path_buf()).await.is_ok())
+		lua.create_async_function(|lua, (src, dist): (UrlRef, UrlRef)| async move {
+			match Image::precache(&src, &dist).await {
+				Ok(()) => true.into_lua_multi(&lua),
+				Err(e) => (false, Error::Custom(e.to_string().into())).into_lua_multi(&lua),
+			}
 		})
 	}
 }

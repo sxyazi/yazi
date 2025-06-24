@@ -18,6 +18,10 @@ impl Wrap {
 	}
 }
 
+impl From<ratatui::widgets::Wrap> for Wrap {
+	fn from(value: ratatui::widgets::Wrap) -> Self { Self(Some(value)) }
+}
+
 impl From<PreviewWrap> for Wrap {
 	fn from(value: PreviewWrap) -> Self {
 		Self(match value {

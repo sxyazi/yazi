@@ -1,4 +1,5 @@
 use mlua::{AnyUserData, ExternalError, Function, IntoLuaMulti, Lua, Table, Value};
+use yazi_binding::Error;
 use yazi_config::YAZI;
 use yazi_macro::emit;
 use yazi_shared::{errors::PeekError, event::Cmd};
@@ -69,7 +70,16 @@ impl Utils {
 					.sequence_values::<AnyUserData>()
 					.map(|ud| ud.and_then(Renderable::try_from))
 					.collect::<mlua::Result<_>>()?,
-				Value::UserData(ud) => vec![Renderable::try_from(ud)?],
+				Value::UserData(ud) => match Renderable::try_from(&ud) {
+					Ok(r) => vec![r],
+					Err(e) => {
+						if let Ok(err) = ud.take::<Error>() {
+							vec![(lock.area, err).into()]
+						} else {
+							Err(e)?
+						}
+					}
+				},
 				_ => Err("preview widget must be a renderable element or a table of them".into_lua_err())?,
 			};
 
