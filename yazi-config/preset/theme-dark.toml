@@ -124,7 +124,7 @@ separator_style = { fg = "darkgray" }
 [confirm]
 border     = { fg = "blue" }
 title      = { fg = "blue" }
-content    = {}
+body       = {}
 list       = {}
 btn_yes    = { reversed = true }
 btn_no     = {}

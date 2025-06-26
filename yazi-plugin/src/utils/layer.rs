@@ -9,7 +9,7 @@ use yazi_proxy::{AppProxy, ConfirmProxy, InputProxy};
 use yazi_shared::{Debounce, event::Cmd};
 
 use super::Utils;
-use crate::{bindings::InputRx, elements::{Line, Pos, Text}};
+use crate::{bindings::InputRx, deprecate, elements::{Line, Pos, Text}};
 
 impl Utils {
 	pub(super) fn which(lua: &Lua) -> mlua::Result<Function> {
@@ -40,13 +40,24 @@ impl Utils {
 
 	pub(super) fn input(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_async_function(|lua, t: Table| async move {
+			let mut pos = t.raw_get::<Value>("pos")?;
+			if pos.is_nil() {
+				pos = t.raw_get("position")?;
+				if !pos.is_nil() {
+					deprecate!(
+						lua,
+						"The `position` property of `ya.input()` is deprecated, use `pos` instead in your {}\nSee #2921 for more details: https://github.com/sxyazi/yazi/pull/2921"
+					);
+				}
+			}
+
 			let realtime = t.raw_get("realtime").unwrap_or_default();
 			let rx = UnboundedReceiverStream::new(InputProxy::show(InputCfg {
 				title: t.raw_get("title")?,
 				value: t.raw_get("value").unwrap_or_default(),
 				cursor: None, // TODO
 				obscure: t.raw_get("obscure").unwrap_or_default(),
-				position: Pos::new_input(t.raw_get::<Table>("position")?)?.into(),
+				position: Pos::new_input(pos)?.into(),
 				realtime,
 				completion: false,
 			}));
@@ -67,8 +78,8 @@ impl Utils {
 	}
 
 	pub(super) fn confirm(lua: &Lua) -> mlua::Result<Function> {
-		fn content(t: &Table) -> mlua::Result<ratatui::widgets::Paragraph<'static>> {
-			Ok(match t.raw_get::<Value>("content")? {
+		fn body(t: &Table) -> mlua::Result<ratatui::widgets::Paragraph<'static>> {
+			Ok(match t.raw_get::<Value>("body")? {
 				Value::Nil => Default::default(),
 				v => Text::try_from(v)?.into(),
 			})
@@ -76,9 +87,9 @@ impl Utils {
 
 		lua.create_async_function(|_, t: Table| async move {
 			let result = ConfirmProxy::show(ConfirmCfg {
-				position: Pos::try_from(t.raw_get::<Table>("pos")?)?.into(),
+				position: Pos::try_from(t.raw_get::<Value>("pos")?)?.into(),
 				title:    Line::try_from(t.raw_get::<Value>("title")?)?.into(),
-				content:  content(&t)?,
+				body:     body(&t)?,
 				list:     Default::default(), // TODO
 			});
 

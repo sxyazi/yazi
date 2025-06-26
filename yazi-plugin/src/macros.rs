@@ -76,7 +76,7 @@ macro_rules! runtime_mut {
 #[macro_export]
 macro_rules! deprecate {
 	($lua:ident, $tt:tt) => {{
-		let id = match $lua.named_registry_value::<$crate::RtRef>("ir")?.current() {
+		let id = match $crate::runtime!($lua)?.current() {
 			Some(id) => &format!("`{id}.yazi` plugin"),
 			None => "`init.lua` config",
 		};

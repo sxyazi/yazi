@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(buttons confirm content list);
+yazi_macro::mod_flat!(buttons confirm body list);

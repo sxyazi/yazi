@@ -26,7 +26,7 @@ impl Confirm {
 
 		self.close(false);
 		self.title = opt.cfg.title;
-		self.content = opt.cfg.content;
+		self.body = opt.cfg.body;
 		self.list = opt.cfg.list;
 
 		self.position = opt.cfg.position;

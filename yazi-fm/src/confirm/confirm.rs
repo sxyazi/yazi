@@ -25,21 +25,21 @@ impl Widget for Confirm<'_> {
 			.title_alignment(Alignment::Center)
 			.render(area, buf);
 
-		let content_border = confirm.list.line_count(area.width) != 0;
-		let content_height = confirm.content.line_count(area.width) as u16;
+		let body_border = confirm.list.line_count(area.width) != 0;
+		let body_height = confirm.body.line_count(area.width) as u16;
 
 		let chunks = Layout::vertical([
-			Constraint::Length(if content_height == 0 {
+			Constraint::Length(if body_height == 0 {
 				0
 			} else {
-				content_height.saturating_add(content_border as u16)
+				body_height.saturating_add(body_border as u16)
 			}),
 			Constraint::Fill(1),
 			Constraint::Length(1),
 		])
 		.split(area.inner(Margin::new(0, 1)));
 
-		super::Content::new(self.cx, content_border).render(chunks[0], buf);
+		super::Body::new(self.cx, body_border).render(chunks[0], buf);
 		super::List::new(self.cx).render(chunks[1], buf);
 		super::Buttons.render(chunks[2], buf);
 	}

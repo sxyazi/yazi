@@ -1,8 +1,10 @@
 use std::{ops::Deref, str::FromStr};
 
-use mlua::{AnyUserData, ExternalResult, IntoLua, Lua, MetaMethod, Table, UserData, Value};
+use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, MetaMethod, Table, UserData, Value};
 
 use super::Pad;
+
+const EXPECTED: &str = "expected a Pos";
 
 #[derive(Clone, Copy, Default)]
 pub struct Pos {
@@ -45,6 +47,24 @@ impl TryFrom<mlua::Table> for Pos {
 	}
 }
 
+impl TryFrom<Value> for Pos {
+	type Error = mlua::Error;
+
+	fn try_from(value: Value) -> Result<Self, Self::Error> {
+		Ok(match value {
+			Value::Table(tbl) => Self::try_from(tbl)?,
+			Value::UserData(ud) => {
+				if let Ok(pos) = ud.borrow() {
+					*pos
+				} else {
+					Err(EXPECTED.into_lua_err())?
+				}
+			}
+			_ => Err(EXPECTED.into_lua_err())?,
+		})
+	}
+}
+
 impl Pos {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 		let new = lua.create_function(|_, (_, t): (Table, Table)| Self::try_from(t))?;
@@ -55,8 +75,8 @@ impl Pos {
 		position.into_lua(lua)
 	}
 
-	pub fn new_input(t: mlua::Table) -> mlua::Result<Self> {
-		let mut p = Self::try_from(t)?;
+	pub fn new_input(v: Value) -> mlua::Result<Self> {
+		let mut p = Self::try_from(v)?;
 		p.inner.offset.height = 3;
 		Ok(p)
 	}
