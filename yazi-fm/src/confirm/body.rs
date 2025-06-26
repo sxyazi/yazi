@@ -3,20 +3,20 @@ use yazi_config::THEME;
 
 use crate::Ctx;
 
-pub(crate) struct Content<'a> {
+pub(crate) struct Body<'a> {
 	cx:     &'a Ctx,
 	border: bool,
 }
 
-impl<'a> Content<'a> {
+impl<'a> Body<'a> {
 	pub(crate) fn new(cx: &'a Ctx, border: bool) -> Self { Self { cx, border } }
 }
 
-impl Widget for Content<'_> {
+impl Widget for Body<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let confirm = &self.cx.confirm;
 
-		// Content area
+		// Inner area
 		let inner = area.inner(Margin::new(1, 0));
 
 		// Border
@@ -27,11 +27,11 @@ impl Widget for Content<'_> {
 		};
 
 		confirm
-			.content
+			.body
 			.clone()
 			.alignment(ratatui::layout::Alignment::Center)
 			.block(block)
-			.style(THEME.confirm.content.derive(Styled::style(&confirm.content)))
+			.style(THEME.confirm.body.derive(Styled::style(&confirm.body)))
 			.render(inner, buf);
 	}
 }

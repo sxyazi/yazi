@@ -26,7 +26,7 @@ pub struct PickCfg {
 pub struct ConfirmCfg {
 	pub position: Position,
 	pub title:    Line<'static>,
-	pub content:  Paragraph<'static>,
+	pub body:     Paragraph<'static>,
 	pub list:     Paragraph<'static>,
 }
 
@@ -107,13 +107,13 @@ impl ConfirmCfg {
 	fn new(
 		title: String,
 		(origin, offset): (Origin, Offset),
-		content: Option<Text<'static>>,
+		body: Option<Text<'static>>,
 		list: Option<Text<'static>>,
 	) -> Self {
 		Self {
 			position: Position::new(origin, offset),
 			title:    Line::raw(title),
-			content:  content.map(|c| Paragraph::new(c).wrap(Wrap { trim: false })).unwrap_or_default(),
+			body:     body.map(|c| Paragraph::new(c).wrap(Wrap { trim: false })).unwrap_or_default(),
 			list:     list.map(|l| Paragraph::new(l).wrap(Wrap { trim: false })).unwrap_or_default(),
 		}
 	}
@@ -140,7 +140,7 @@ impl ConfirmCfg {
 		Self::new(
 			YAZI.confirm.overwrite_title.to_owned(),
 			(YAZI.confirm.overwrite_origin, YAZI.confirm.overwrite_offset),
-			Some(Text::raw(&YAZI.confirm.overwrite_content)),
+			Some(Text::raw(&YAZI.confirm.overwrite_body)),
 			Some(url.to_string().into()),
 		)
 	}
@@ -149,7 +149,7 @@ impl ConfirmCfg {
 		Self::new(
 			Self::replace_number(&YAZI.confirm.quit_title, len),
 			(YAZI.confirm.quit_origin, YAZI.confirm.quit_offset),
-			Some(Text::raw(&YAZI.confirm.quit_content)),
+			Some(Text::raw(&YAZI.confirm.quit_body)),
 			Self::truncate_list(names.into_iter(), len, 10),
 		)
 	}

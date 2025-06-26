@@ -158,7 +158,7 @@ impl Theme {
 			match key {
 				b"border" => Style::from(t.border).into_lua(lua),
 				b"title" => Style::from(t.title).into_lua(lua),
-				b"content" => Style::from(t.content).into_lua(lua),
+				b"body" => Style::from(t.body).into_lua(lua),
 				b"list" => Style::from(t.list).into_lua(lua),
 
 				b"btn_yes" => Style::from(t.btn_yes).into_lua(lua),

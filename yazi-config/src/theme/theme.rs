@@ -132,10 +132,10 @@ pub struct Which {
 
 #[derive(Deserialize, DeserializeOver2)]
 pub struct Confirm {
-	pub border:  Style,
-	pub title:   Style,
-	pub content: Style,
-	pub list:    Style,
+	pub border: Style,
+	pub title:  Style,
+	pub body:   Style,
+	pub list:   Style,
 
 	pub btn_yes:    Style,
 	pub btn_no:     Style,
