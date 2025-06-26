@@ -1,10 +1,11 @@
+use std::hash::Hash;
+
 use mlua::{Function, Lua, Table};
-use twox_hash::XxHash3_128;
 use yazi_binding::Url;
 use yazi_config::YAZI;
 
 use super::Utils;
-use crate::file::FileRef;
+use crate::{Twox128, file::FileRef};
 
 impl Utils {
 	pub(super) fn file_cache(lua: &Lua) -> mlua::Result<Function> {
@@ -15,9 +16,9 @@ impl Utils {
 			}
 
 			let hex = {
-				let mut h = XxHash3_128::new();
-				h.write(file.url.as_os_str().as_encoded_bytes());
-				h.write(format!("//{:?}//{}", file.cha.mtime, t.raw_get("skip").unwrap_or(0)).as_bytes());
+				let mut h = Twox128::default();
+				file.hash(&mut h);
+				t.raw_get("skip").unwrap_or(0usize).hash(&mut h);
 				format!("{:x}", h.finish_128())
 			};
 

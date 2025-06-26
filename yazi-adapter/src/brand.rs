@@ -35,6 +35,7 @@ impl Brand {
 			("WezTerm", Self::WezTerm),
 			("foot", Self::Foot),
 			("ghostty", Self::Ghostty),
+			("Warp", Self::Warp),
 			("tmux ", Self::Tmux),
 			("libvterm", Self::VTerm),
 			("Bobcat", Self::Bobcat),
