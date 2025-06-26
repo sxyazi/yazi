@@ -44,17 +44,7 @@ impl File {
 	}
 
 	#[inline]
-	pub fn hash_u64(&self) -> u64 {
-		let mut h = foldhash::fast::FixedState::default().build_hasher();
-		self.url.hash(&mut h);
-		h.write_u8(0);
-		self.cha.len.hash(&mut h);
-		h.write_u8(0);
-		self.cha.mtime.hash(&mut h);
-		h.write_u8(0);
-		self.cha.btime.hash(&mut h);
-		h.finish()
-	}
+	pub fn hash_u64(&self) -> u64 { foldhash::fast::FixedState::default().hash_one(self) }
 
 	#[inline]
 	pub fn rebase(&self, parent: &Url) -> Self {
@@ -78,4 +68,13 @@ impl File {
 
 	#[inline]
 	pub fn stem(&self) -> Option<&OsStr> { self.url.file_stem() }
+}
+
+impl Hash for File {
+	fn hash<H: Hasher>(&self, state: &mut H) {
+		self.url.hash(state);
+		self.cha.len.hash(state);
+		self.cha.btime.hash(state);
+		self.cha.mtime.hash(state);
+	}
 }

@@ -27,9 +27,9 @@ function M:entry(job)
 		end
 
 		local value, event = ya.input {
+			pos = { "center", w = 50 },
 			title = string.format('Password for "%s":', from.name),
 			obscure = true,
-			position = { "center", w = 50 },
 		}
 		if event == 1 then
 			pwd = value

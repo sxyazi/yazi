@@ -4,7 +4,7 @@ mod macros;
 
 yazi_macro::mod_pub!(bindings config elements external file fs isolate loader process pubsub utils);
 
-yazi_macro::mod_flat!(clipboard composer lua runtime);
+yazi_macro::mod_flat!(clipboard composer lua runtime twox);
 
 pub fn init() -> anyhow::Result<()> {
 	CLIPBOARD.with(<_>::default);
