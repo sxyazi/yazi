@@ -108,6 +108,18 @@ function Entity:ellipsis(max)
 	end
 end
 
+-- Mouse events
+function Entity:click(event, up)
+	if up or event.is_middle then
+		return
+	end
+
+	ya.emit("reveal", { self._file.url })
+	if event.is_right then
+		ya.emit("open", {})
+	end
+end
+
 -- Children
 function Entity:children_add(fn, order)
 	self._inc = self._inc + 1

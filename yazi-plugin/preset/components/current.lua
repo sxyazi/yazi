@@ -49,19 +49,9 @@ end
 
 -- Mouse events
 function Current:click(event, up)
-	if up or event.is_middle then
-		return
-	end
-
-	local f = self._folder
 	local y = event.y - self._area.y + 1
-	if y > #f.window or not f.hovered then
-		return
-	end
-
-	ya.emit("arrow", { y + f.offset - f.hovered.idx })
-	if event.is_right then
-		ya.emit("open", {})
+	if self._folder.window[y] then
+		Entity:new(self._folder.window[y]):click(event, up)
 	end
 end
 
