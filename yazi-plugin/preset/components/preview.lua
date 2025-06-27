@@ -16,15 +16,11 @@ function Preview:redraw() return {} end
 
 -- Mouse events
 function Preview:click(event, up)
-	if up or not event.is_left then
-		return
-	end
-
 	local y = event.y - self._area.y + 1
 	local window = self._folder and self._folder.window or {}
 	if window[y] then
-		ya.emit("reveal", { window[y].url })
-	else
+		Entity:new(window[y]):click(event, up)
+	elseif not up and event.is_left then
 		ya.emit("enter", {})
 	end
 end
