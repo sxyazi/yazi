@@ -30,7 +30,7 @@ parts:
       - chafa
       - fd-find
       - ffmpeg
-      - fzf
+      # - fzf
       - libglu1-mesa
       - libglut3.12
       - poppler-utils

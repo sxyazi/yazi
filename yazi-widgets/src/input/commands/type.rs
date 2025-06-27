@@ -1,14 +1,7 @@
 use yazi_config::keymap::Key;
 use yazi_macro::render;
-use yazi_shared::event::CmdCow;
 
 use crate::input::{Input, InputMode};
-
-struct Opt;
-
-impl From<CmdCow> for Opt {
-	fn from(_: CmdCow) -> Self { Self }
-}
 
 impl Input {
 	pub fn r#type(&mut self, key: &Key) -> bool {

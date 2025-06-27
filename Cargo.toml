@@ -31,9 +31,9 @@ dirs                = "6.0.0"
 foldhash            = "0.1.5"
 futures             = "0.3.31"
 globset             = "0.4.16"
-indexmap            = { version = "2.9.0", features = [ "serde" ] }
+indexmap            = { version = "2.10.0", features = [ "serde" ] }
 libc                = "0.2.174"
-lru                 = "0.14.0"
+lru                 = "0.15.0"
 mlua                = { version = "0.10.5", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serialize" ] }
 objc                = "0.2.7"
 ordered-float       = { version = "5.0.0", features = [ "serde" ] }

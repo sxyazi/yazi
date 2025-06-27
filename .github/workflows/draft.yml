@@ -57,8 +57,10 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: yazi-${{ matrix.target }}.zip
-          path: yazi-${{ matrix.target }}.zip
+          name: ${{ matrix.target }}
+          path: |
+            yazi-${{ matrix.target }}.zip
+            yazi-${{ matrix.target }}.deb
 
   build-windows:
     strategy:
@@ -100,7 +102,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: yazi-${{ matrix.target }}.zip
+          name: ${{ matrix.target }}
           path: yazi-${{ matrix.target }}.zip
 
   build-musl:
@@ -128,8 +130,10 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: yazi-${{ matrix.target }}.zip
-          path: yazi-${{ matrix.target }}.zip
+          name: ${{ matrix.target }}
+          path: |
+            yazi-${{ matrix.target }}.zip
+            yazi-${{ matrix.target }}.deb
 
   build-snap:
     strategy:
@@ -160,7 +164,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: yazi-${{ matrix.arch }}.snap
+          name: snap-${{ matrix.arch }}
           path: yazi-${{ matrix.arch }}.snap
 
   snap:
@@ -169,7 +173,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          pattern: yazi-*.snap
+          pattern: snap-*
           merge-multiple: true
 
       - name: Setup snapcraft
@@ -180,14 +184,14 @@ jobs:
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
         run: |
-          parallel 'snapcraft push -v --release latest/candidate {}' ::: yazi-*.snap
+          parallel 'snapcraft push -v --release latest/candidate {}' ::: yazi-*.snap || true
 
       - name: Push snap to edge channel
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
         run: |
-          parallel 'snapcraft push -v --release latest/edge {}' ::: yazi-*.snap
+          parallel 'snapcraft push -v --release latest/edge {}' ::: yazi-*.snap || true
 
   draft:
     if: startsWith(github.ref, 'refs/tags/')
@@ -206,6 +210,7 @@ jobs:
           draft: true
           files: |
             yazi-*.zip
+            yazi-*.deb
             yazi-*.snap
           generate_release_notes: true
 
@@ -241,6 +246,7 @@ jobs:
           prerelease: true
           files: |
             yazi-*.zip
+            yazi-*.deb
             yazi-*.snap
           name: Nightly Build
           body: ${{ env.NIGHTLY_BODY }}

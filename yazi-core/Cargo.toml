@@ -27,7 +27,6 @@ yazi-widgets   = { path = "../yazi-widgets", version = "25.6.11" }
 anyhow        = { workspace = true }
 bitflags      = { workspace = true }
 crossterm     = { workspace = true }
-dirs          = { workspace = true }
 futures       = { workspace = true }
 indexmap      = { workspace = true }
 notify        = { version = "8.0.0", default-features = false, features = [ "macos_fsevent" ] }
