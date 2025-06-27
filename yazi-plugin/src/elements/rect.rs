@@ -38,7 +38,7 @@ impl Rect {
 		let index = lua.create_function(move |lua, (_, key): (Table, mlua::String)| {
 			Ok(match key.as_bytes().as_ref() {
 				b"default" => {
-					deprecate!(lua, "`ui.Rect.default` is deprecated, use `ui.Rect{{}}` instead, in your {}");
+					deprecate!(lua, "`ui.Rect.default` is deprecated, use `ui.Rect{{}}` instead, in your {}\nSee #2927 for more details: https://github.com/sxyazi/yazi/pull/2927");
 					Some(Self(Default::default()))
 				}
 				_ => None,
