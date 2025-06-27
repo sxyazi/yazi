@@ -164,7 +164,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: yazi-${{ matrix.arch }}.snap
+          name: ${{ matrix.arch }}
           path: yazi-${{ matrix.arch }}.snap
 
   snap:
