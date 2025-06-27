@@ -23,4 +23,5 @@ fi
 zip -r "$ARTIFACT_NAME.zip" "$ARTIFACT_NAME"
 
 # Package deb
+cargo install cargo-deb
 cargo deb -p yazi-packing --no-build -o "$ARTIFACT_NAME.deb"
