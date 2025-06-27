@@ -3679,6 +3679,10 @@ name = "yazi-macro"
 version = "25.6.11"
 
 [[package]]
+name = "yazi-packing"
+version = "25.5.28"
+
+[[package]]
 name = "yazi-plugin"
 version = "25.6.11"
 dependencies = [

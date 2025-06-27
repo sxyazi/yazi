@@ -22,6 +22,5 @@ if ! command -v zip &> /dev/null; then
 fi
 zip -r "$ARTIFACT_NAME.zip" "$ARTIFACT_NAME"
 
-# build deb package (see https://crates.io/crates/cargo-deb)
-## run it after build
-cargo deb -p yazi-fm --no-build
+# Package deb
+cargo deb -p yazi-packing --no-build -o "$ARTIFACT_NAME.deb"

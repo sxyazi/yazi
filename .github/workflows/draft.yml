@@ -57,8 +57,10 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: yazi-${{ matrix.target }}.zip
-          path: yazi-${{ matrix.target }}.zip
+          name: ${{ matrix.target }}
+          path: |
+            yazi-${{ matrix.target }}.zip
+            yazi-${{ matrix.target }}.deb
 
   build-windows:
     strategy:
@@ -100,7 +102,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: yazi-${{ matrix.target }}.zip
+          name: ${{ matrix.target }}
           path: yazi-${{ matrix.target }}.zip
 
   build-musl:
@@ -128,8 +130,10 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: yazi-${{ matrix.target }}.zip
-          path: yazi-${{ matrix.target }}.zip
+          name: ${{ matrix.target }}
+          path: |
+            yazi-${{ matrix.target }}.zip
+            yazi-${{ matrix.target }}.deb
 
   build-snap:
     strategy:
@@ -206,6 +210,7 @@ jobs:
           draft: true
           files: |
             yazi-*.zip
+            yazi-*.deb
             yazi-*.snap
           generate_release_notes: true
 
@@ -241,6 +246,7 @@ jobs:
           prerelease: true
           files: |
             yazi-*.zip
+            yazi-*.deb
             yazi-*.snap
           name: Nightly Build
           body: ${{ env.NIGHTLY_BODY }}
