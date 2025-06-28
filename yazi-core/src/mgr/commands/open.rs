@@ -37,38 +37,42 @@ impl Mgr {
 		}
 
 		let cwd = self.cwd().clone();
-		let (mut done, mut todo) = (Vec::with_capacity(selected.len()), vec![]);
-		for u in selected {
+		let (mut targets, mut todo) = (vec![Default::default(); selected.len()], vec![]);
+
+		for (i, u) in selected.into_iter().enumerate() {
 			if self.mimetype.contains(u) {
-				done.push((u.clone(), ""));
+				targets[i] = (u.clone(), "");
 			} else if self.guess_folder(u) {
-				done.push((u.clone(), MIME_DIR));
+				targets[i] = (u.clone(), MIME_DIR);
 			} else {
-				todo.push(u.clone());
+				targets[i] = (u.clone(), "");
+				todo.push(i);
 			}
 		}
 
 		if todo.is_empty() {
 			return self
-				.open_do(OpenDoOpt { cwd, hovered, targets: done, interactive: opt.interactive }, tasks);
+				.open_do(OpenDoOpt { cwd, hovered, targets, interactive: opt.interactive }, tasks);
 		}
 
 		tokio::spawn(async move {
 			let mut files = Vec::with_capacity(todo.len());
-			for u in todo {
-				if let Ok(f) = File::new(u).await {
+			for i in todo.into_iter().rev() {
+				if let Ok(f) = File::new(targets[i].0.clone()).await {
+					targets[i] = (f.url_owned(), "");
 					files.push(f);
+				} else {
+					targets.remove(i);
 				}
 			}
 
-			done.extend(files.iter().map(|f| (f.url_owned(), "")));
 			for (fetcher, files) in YAZI.plugin.mime_fetchers(files) {
 				if let Err(e) = isolate::fetch(CmdCow::from(&fetcher.run), files).await {
 					error!("Fetch mime failed on opening: {e}");
 				}
 			}
 
-			MgrProxy::open_do(OpenDoOpt { cwd, hovered, targets: done, interactive: opt.interactive });
+			MgrProxy::open_do(OpenDoOpt { cwd, hovered, targets, interactive: opt.interactive });
 		});
 	}
 
