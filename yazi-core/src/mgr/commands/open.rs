@@ -12,7 +12,7 @@ use crate::{mgr::Mgr, tab::Folder, tasks::Tasks};
 #[derive(Clone, Copy)]
 pub(super) struct Opt {
 	pub(super) interactive: bool,
-	pub(super) hovered: bool,
+	pub(super) hovered:     bool,
 }
 
 impl From<CmdCow> for Opt {
