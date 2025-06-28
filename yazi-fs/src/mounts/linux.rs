@@ -169,10 +169,7 @@ impl Partitions {
 		for (a, b) in
 			[(r"\011", "\t"), (r"\012", "\n"), (r"\040", " "), (r"\043", "#"), (r"\134", r"\")]
 		{
-			s = match replace_cow(&s, a, b) {
-				Cow::Borrowed(_) => s,
-				Cow::Owned(new) => Cow::Owned(new),
-			};
+			s = replace_cow(s, a, b);
 		}
 		s
 	}

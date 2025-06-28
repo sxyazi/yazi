@@ -1,5 +1,6 @@
 use yazi_config::keymap::Key;
 use yazi_macro::render;
+use yazi_shared::replace_cow;
 
 use crate::input::{Input, InputMode};
 
@@ -19,11 +20,13 @@ impl Input {
 	}
 
 	pub fn type_str(&mut self, s: &str) {
+		let s = replace_cow(replace_cow(s, "\r", " "), "\n", " ");
+
 		let snap = self.snap_mut();
 		if snap.cursor < 1 {
-			snap.value.insert_str(0, s);
+			snap.value.insert_str(0, &s);
 		} else {
-			snap.value.insert_str(snap.idx(snap.cursor).unwrap(), s);
+			snap.value.insert_str(snap.idx(snap.cursor).unwrap(), &s);
 		}
 
 		self.r#move(s.chars().count() as isize);
