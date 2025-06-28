@@ -12,7 +12,7 @@ use crate::{mgr::Mgr, tab::Folder, tasks::Tasks};
 #[derive(Clone, Copy)]
 pub(super) struct Opt {
 	pub(super) interactive: bool,
-	pub(super) hovered:     bool,
+	pub(super) hovered: bool,
 }
 
 impl From<CmdCow> for Opt {
@@ -37,15 +37,16 @@ impl Mgr {
 		}
 
 		let cwd = self.cwd().clone();
-		let (mut targets, mut todo) = (vec![Default::default(); selected.len()], vec![]);
+		let (mut targets, mut todo) =
+			(selected.into_iter().map(|u| (u.clone(), "")).collect::<Vec<_>>(), vec![]);
 
-		for (i, u) in selected.into_iter().enumerate() {
+		for (i, (u, mime)) in targets.iter_mut().enumerate() {
 			if self.mimetype.contains(u) {
-				targets[i] = (u.clone(), "");
-			} else if self.guess_folder(u) {
-				targets[i] = (u.clone(), MIME_DIR);
+				continue;
+			}
+			if self.guess_folder(u) {
+				*mime = MIME_DIR;
 			} else {
-				targets[i] = (u.clone(), "");
 				todo.push(i);
 			}
 		}
