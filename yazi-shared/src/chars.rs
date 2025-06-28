@@ -33,35 +33,48 @@ pub fn strip_trailing_newline(mut s: String) -> String {
 	s
 }
 
-pub fn replace_cow<'a>(s: &'a str, from: &str, to: &str) -> Cow<'a, str> {
-	replace_cow_impl(s, s.match_indices(from), to)
+pub fn replace_cow<'a, T>(s: T, from: &str, to: &str) -> Cow<'a, str>
+where
+	T: Into<Cow<'a, str>>,
+{
+	let cow = s.into();
+	match replace_cow_impl(&cow, cow.match_indices(from), to) {
+		Cow::Borrowed(_) => cow,
+		Cow::Owned(new) => Cow::Owned(new),
+	}
 }
 
-pub fn replacen_cow<'a>(s: &'a str, from: &str, to: &str, n: usize) -> Cow<'a, str> {
-	replace_cow_impl(s, s.match_indices(from).take(n), to)
+pub fn replacen_cow<'a, T>(s: T, from: &str, to: &str, n: usize) -> Cow<'a, str>
+where
+	T: Into<Cow<'a, str>>,
+{
+	let cow = s.into();
+	match replace_cow_impl(&cow, cow.match_indices(from).take(n), to) {
+		Cow::Borrowed(_) => cow,
+		Cow::Owned(now) => Cow::Owned(now),
+	}
 }
 
-fn replace_cow_impl<'s>(
-	src: &'s str,
-	mut indices: impl Iterator<Item = (usize, &'s str)>,
-	to: &str,
-) -> Cow<'s, str> {
+fn replace_cow_impl<'a, T>(src: &'a str, mut indices: T, to: &str) -> Cow<'a, str>
+where
+	T: Iterator<Item = (usize, &'a str)>,
+{
 	let Some((first_idx, first_sub)) = indices.next() else {
 		return Cow::Borrowed(src);
 	};
 
-	let mut result = Cow::Owned(String::with_capacity(src.len()));
+	let mut result = String::with_capacity(src.len());
 	result += unsafe { src.get_unchecked(..first_idx) };
-	result.to_mut().push_str(to);
+	result += to;
 
 	let mut last = first_idx + first_sub.len();
 	for (idx, sub) in indices {
 		result += unsafe { src.get_unchecked(last..idx) };
-		result.to_mut().push_str(to);
+		result += to;
 		last = idx + sub.len();
 	}
 
-	result + unsafe { src.get_unchecked(last..) }
+	Cow::Owned(result + unsafe { src.get_unchecked(last..) })
 }
 
 pub fn replace_vec_cow<'a>(v: &'a [u8], from: &[u8], to: &[u8]) -> Cow<'a, [u8]> {

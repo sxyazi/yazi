@@ -156,7 +156,7 @@ impl Sendable {
 		for (k, v) in args {
 			match k {
 				DataKey::Integer(i) => tbl.raw_set(i + 1, Self::data_to_value(lua, v)?),
-				DataKey::String(s) => tbl.raw_set(replace_cow(&s, "-", "_"), Self::data_to_value(lua, v)?),
+				DataKey::String(s) => tbl.raw_set(replace_cow(s, "-", "_"), Self::data_to_value(lua, v)?),
 				_ => Err("invalid key in Data".into_lua_err()),
 			}?;
 		}
@@ -170,7 +170,7 @@ impl Sendable {
 			match k {
 				DataKey::Integer(i) => tbl.raw_set(i + 1, Self::data_to_value_ref(lua, v)?),
 				DataKey::String(s) => {
-					tbl.raw_set(replace_cow(s, "-", "_"), Self::data_to_value_ref(lua, v)?)
+					tbl.raw_set(replace_cow(s.as_ref(), "-", "_"), Self::data_to_value_ref(lua, v)?)
 				}
 				_ => Err("invalid key in Data".into_lua_err()),
 			}?;
