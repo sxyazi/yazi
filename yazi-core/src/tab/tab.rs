@@ -87,7 +87,7 @@ impl Tab {
 
 	pub fn selected_or_hovered(&self) -> Box<dyn Iterator<Item = &Url> + '_> {
 		if self.selected.is_empty() {
-			Box::new(self.hovered().map(|h| vec![&h.url]).unwrap_or_default().into_iter())
+			Box::new(self.hovered().map(|h| &h.url).into_iter())
 		} else {
 			Box::new(self.selected.keys())
 		}
