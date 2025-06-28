@@ -74,12 +74,15 @@ impl Mgr {
 		});
 	}
 
-	pub(super) fn quit_with_selected(opt: super::open::Opt, selected: &[&Url]) -> bool {
+	pub(super) fn quit_with_selected<'a, I>(opt: super::open::Opt, selected: I) -> bool
+	where
+		I: Iterator<Item = &'a Url>,
+	{
 		if opt.interactive || ARGS.chooser_file.is_none() {
 			return false;
 		}
 
-		let paths = selected.iter().fold(OsString::new(), |mut s, &u| {
+		let paths = selected.fold(OsString::new(), |mut s, u| {
 			s.push(u.as_os_str());
 			s.push("\n");
 			s

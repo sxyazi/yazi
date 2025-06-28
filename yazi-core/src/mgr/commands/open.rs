@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, iter};
 
 use tracing::error;
 use yazi_config::{YAZI, popup::PickCfg};
@@ -31,57 +31,60 @@ impl Mgr {
 			return;
 		};
 
-		let selected = if opt.hovered { vec![&hovered] } else { self.selected_or_hovered().collect() };
-		if Self::quit_with_selected(opt, &selected) {
+		let mut selected =
+			if opt.hovered { Box::new(iter::once(&hovered)) } else { self.selected_or_hovered() };
+		if Self::quit_with_selected(opt, &mut selected) {
 			return;
 		}
 
-		let cwd = self.cwd().clone();
-		let (mut done, mut todo) = (Vec::with_capacity(selected.len()), vec![]);
-		for u in selected {
-			if self.mimetype.contains(u) {
-				done.push((u.clone(), ""));
-			} else if self.guess_folder(u) {
-				done.push((u.clone(), MIME_DIR));
-			} else {
-				todo.push(u.clone());
-			}
-		}
+		let mut todo = vec![];
+		let targets: Vec<_> = selected
+			.cloned()
+			.enumerate()
+			.map(|(i, u)| {
+				if self.mimetype.contains(&u) {
+					(u, "")
+				} else if self.guess_folder(&u) {
+					(u, MIME_DIR)
+				} else {
+					todo.push(i);
+					(u, "")
+				}
+			})
+			.collect();
 
+		let cwd = self.cwd().clone();
 		if todo.is_empty() {
 			return self
-				.open_do(OpenDoOpt { cwd, hovered, targets: done, interactive: opt.interactive }, tasks);
+				.open_do(OpenDoOpt { cwd, hovered, targets, interactive: opt.interactive }, tasks);
 		}
 
 		tokio::spawn(async move {
 			let mut files = Vec::with_capacity(todo.len());
-			for u in todo {
-				if let Ok(f) = File::new(u).await {
+			for i in todo {
+				if let Ok(f) = File::new(targets[i].0.clone()).await {
 					files.push(f);
 				}
 			}
 
-			done.extend(files.iter().map(|f| (f.url_owned(), "")));
 			for (fetcher, files) in YAZI.plugin.mime_fetchers(files) {
 				if let Err(e) = isolate::fetch(CmdCow::from(&fetcher.run), files).await {
 					error!("Fetch mime failed on opening: {e}");
 				}
 			}
 
-			MgrProxy::open_do(OpenDoOpt { cwd, hovered, targets: done, interactive: opt.interactive });
+			MgrProxy::open_do(OpenDoOpt { cwd, hovered, targets, interactive: opt.interactive });
 		});
 	}
 
 	#[yazi_codegen::command]
 	pub fn open_do(&mut self, opt: OpenDoOpt, tasks: &Tasks) {
-		let targets: Vec<_> = opt
-			.targets
-			.into_iter()
-			.filter_map(|(u, m)| {
-				Some(m).filter(|m| !m.is_empty()).or_else(|| self.mimetype.by_url(&u)).map(|m| (u, m))
-			})
-			.collect();
+		let mut targets = opt.targets;
+		targets.iter_mut().filter(|(_, m)| m.is_empty()).for_each(|(u, m)| {
+			*m = self.mimetype.by_url(u).unwrap_or_default();
+		});
 
+		targets.retain(|(_, m)| !m.is_empty());
 		if targets.is_empty() {
 			return;
 		} else if !opt.interactive {
