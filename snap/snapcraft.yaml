@@ -18,6 +18,10 @@ apps:
     command: yazi
     environment:
       PATH: $SNAP/bin:$SNAP/usr/bin:$PATH
+  ya:
+    command: ya
+    environment:
+      PATH: $SNAP/bin:$SNAP/usr/bin:$PATH
 
 parts:
   yazi:
