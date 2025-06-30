@@ -38,17 +38,17 @@ impl Input {
 			return snap.offset = 0;
 		}
 
-		let o_off = snap.offset;
+		let (o_off, scrolloff) = (snap.offset, 5.min(limit / 2));
 		snap.offset = if n_cur <= o_cur {
 			let it = snap.slice(0..n_cur).chars().rev().map(|c| if snap.obscure { '•' } else { c });
-			let pad = InputSnap::find_window(it, 0, 5).end;
+			let pad = InputSnap::find_window(it, 0, scrolloff).end;
 
 			if n_cur >= o_off { snap.offset.min(n_cur - pad) } else { n_cur - pad }
 		} else {
 			let count = snap.count();
 
 			let it = snap.slice(n_cur..count).chars().map(|c| if snap.obscure { '•' } else { c });
-			let pad = InputSnap::find_window(it, 0, 5 + snap.mode.delta()).end;
+			let pad = InputSnap::find_window(it, 0, scrolloff + snap.mode.delta()).end;
 
 			let it = snap.slice(0..n_cur + pad).chars().rev().map(|c| if snap.obscure { '•' } else { c });
 			let max = InputSnap::find_window(it, 0, limit).end;
