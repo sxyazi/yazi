@@ -8,9 +8,12 @@ impl Input {
 		if !self.snaps.undo() {
 			return;
 		}
+
+		self.r#move(0);
 		if self.snap().mode == InputMode::Insert {
 			self.escape(());
 		}
+
 		render!();
 	}
 }

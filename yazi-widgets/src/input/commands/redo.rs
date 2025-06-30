@@ -6,5 +6,7 @@ use crate::input::Input;
 impl Input {
 	pub fn redo(&mut self, _: CmdCow) {
 		render!(self.snaps.redo());
+
+		self.r#move(0);
 	}
 }

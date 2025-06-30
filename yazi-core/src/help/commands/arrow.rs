@@ -1,9 +1,9 @@
 use yazi_adapter::Dimension;
-use yazi_fs::Step;
 use yazi_macro::render;
 use yazi_shared::event::CmdCow;
+use yazi_widgets::{Scrollable, Step};
 
-use crate::{Scrollable, help::{HELP_MARGIN, Help}};
+use crate::help::{HELP_MARGIN, Help};
 
 struct Opt {
 	step: Step,
@@ -28,7 +28,7 @@ impl Help {
 
 impl Scrollable for Help {
 	#[inline]
-	fn len(&self) -> usize { self.bindings.len() }
+	fn total(&self) -> usize { self.bindings.len() }
 
 	#[inline]
 	fn limit(&self) -> usize { Dimension::available().rows.saturating_sub(HELP_MARGIN) as usize }

@@ -1,8 +1,8 @@
-use yazi_fs::Step;
 use yazi_macro::render;
 use yazi_shared::event::CmdCow;
+use yazi_widgets::{Scrollable, Step};
 
-use crate::{Scrollable, cmp::Cmp};
+use crate::cmp::Cmp;
 
 struct Opt {
 	step: Step,
@@ -23,7 +23,7 @@ impl Cmp {
 
 impl Scrollable for Cmp {
 	#[inline]
-	fn len(&self) -> usize { self.cands.len() }
+	fn total(&self) -> usize { self.cands.len() }
 
 	#[inline]
 	fn limit(&self) -> usize { self.cands.len().min(10) }

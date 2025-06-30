@@ -2,8 +2,7 @@ use std::{collections::HashMap, path::PathBuf};
 
 use yazi_proxy::options::CmpItem;
 use yazi_shared::Id;
-
-use crate::Scrollable;
+use yazi_widgets::Scrollable;
 
 #[derive(Default)]
 pub struct Cmp {

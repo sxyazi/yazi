@@ -2,12 +2,11 @@ use std::mem;
 
 use yazi_config::{LAYOUT, YAZI};
 use yazi_dds::Pubsub;
-use yazi_fs::{File, Files, FilesOp, FolderStage, Step, cha::Cha};
+use yazi_fs::{File, Files, FilesOp, FolderStage, cha::Cha};
 use yazi_macro::err;
 use yazi_proxy::MgrProxy;
 use yazi_shared::{Id, url::{Url, Urn, UrnBuf}};
-
-use crate::Scrollable;
+use yazi_widgets::{Scrollable, Step};
 
 pub struct Folder {
 	pub url:   Url,
@@ -100,7 +99,7 @@ impl Folder {
 		let mut b = if self.files.is_empty() {
 			(mem::take(&mut self.cursor), mem::take(&mut self.offset)) != (0, 0)
 		} else {
-			self.scroll(step.into())
+			self.scroll(step)
 		};
 
 		self.trace = self.hovered().filter(|_| b).map(|h| h.urn_owned()).or(self.trace.take());
@@ -169,7 +168,7 @@ impl Folder {
 
 impl Scrollable for Folder {
 	#[inline]
-	fn len(&self) -> usize { self.files.len() }
+	fn total(&self) -> usize { self.files.len() }
 
 	#[inline]
 	fn limit(&self) -> usize { LAYOUT.get().limit() }

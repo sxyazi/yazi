@@ -1,9 +1,9 @@
 use yazi_config::YAZI;
-use yazi_fs::Step;
 use yazi_macro::render;
 use yazi_shared::event::CmdCow;
+use yazi_widgets::{Scrollable, Step};
 
-use crate::{Scrollable, pick::Pick};
+use crate::pick::Pick;
 
 struct Opt {
 	step: Step,
@@ -24,7 +24,7 @@ impl Pick {
 
 impl Scrollable for Pick {
 	#[inline]
-	fn len(&self) -> usize { self.items.len() }
+	fn total(&self) -> usize { self.items.len() }
 
 	#[inline]
 	fn limit(&self) -> usize {

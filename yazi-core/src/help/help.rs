@@ -4,8 +4,7 @@ use yazi_adapter::Dimension;
 use yazi_config::{KEYMAP, YAZI, keymap::{Chord, Key}};
 use yazi_macro::{render, render_and};
 use yazi_shared::Layer;
-
-use crate::Scrollable;
+use yazi_widgets::Scrollable;
 
 #[derive(Default)]
 pub struct Help {

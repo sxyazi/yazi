@@ -1,8 +1,7 @@
 use anyhow::Result;
 use tokio::sync::oneshot::Sender;
 use yazi_config::popup::Position;
-
-use crate::Scrollable;
+use yazi_widgets::Scrollable;
 
 #[derive(Default)]
 pub struct Pick {
