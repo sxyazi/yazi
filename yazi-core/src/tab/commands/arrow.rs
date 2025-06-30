@@ -1,7 +1,7 @@
-use yazi_fs::Step;
 use yazi_macro::render;
 use yazi_proxy::MgrProxy;
 use yazi_shared::event::CmdCow;
+use yazi_widgets::Step;
 
 use crate::tab::Tab;
 

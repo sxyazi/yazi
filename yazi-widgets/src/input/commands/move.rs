@@ -30,21 +30,35 @@ impl Input {
 			return;
 		}
 
-		render!(self.handle_op(opt.step.cursor(snap), false));
+		let (o_cur, n_cur) = (snap.cursor, opt.step.cursor(snap));
+		render!(self.handle_op(n_cur, false));
 
 		let (limit, snap) = (self.limit, self.snap_mut());
-		if snap.offset > snap.cursor {
-			snap.offset = snap.cursor;
-		} else if snap.value.is_empty() {
-			snap.offset = 0;
-		} else {
-			let delta = snap.mode.delta();
-			let range = snap.offset..snap.cursor + delta;
-			if snap.width(range.clone()) >= limit as u16 {
-				let it = snap.slice(range).chars().rev().map(|c| if snap.obscure { '•' } else { c });
-				snap.offset = snap.cursor - InputSnap::find_window(it, 0, limit).end.saturating_sub(delta);
-			}
+		if snap.value.is_empty() {
+			return snap.offset = 0;
 		}
+
+		let o_off = snap.offset;
+		snap.offset = if n_cur <= o_cur {
+			let it = snap.slice(0..n_cur).chars().rev().map(|c| if snap.obscure { '•' } else { c });
+			let pad = InputSnap::find_window(it, 0, 5).end;
+
+			if n_cur >= o_off { snap.offset.min(n_cur - pad) } else { n_cur - pad }
+		} else {
+			let count = snap.count();
+
+			let it = snap.slice(n_cur..count).chars().map(|c| if snap.obscure { '•' } else { c });
+			let pad = InputSnap::find_window(it, 0, 5 + snap.mode.delta()).end;
+
+			let it = snap.slice(0..n_cur + pad).chars().rev().map(|c| if snap.obscure { '•' } else { c });
+			let max = InputSnap::find_window(it, 0, limit).end;
+
+			if snap.width(o_off..n_cur) < limit as u16 {
+				snap.offset.max(n_cur + pad - max)
+			} else {
+				n_cur + pad - max
+			}
+		};
 	}
 }
 

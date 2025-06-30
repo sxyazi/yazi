@@ -1,6 +1,6 @@
 use ratatui::{buffer::Buffer, layout::{Margin, Rect}, widgets::{ListItem, Scrollbar, ScrollbarOrientation, ScrollbarState, StatefulWidget, Widget}};
 use yazi_config::THEME;
-use yazi_core::Scrollable;
+use yazi_widgets::Scrollable;
 
 use crate::Ctx;
 
@@ -17,11 +17,11 @@ impl Widget for List<'_> {
 		let pick = &self.cx.pick;
 
 		// Vertical scrollbar
-		if pick.len() > pick.limit() {
+		if pick.total() > pick.limit() {
 			Scrollbar::new(ScrollbarOrientation::VerticalRight).render(
 				area,
 				buf,
-				&mut ScrollbarState::new(pick.len()).position(pick.cursor),
+				&mut ScrollbarState::new(pick.total()).position(pick.cursor),
 			);
 		}
 

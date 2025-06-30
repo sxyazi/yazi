@@ -8,16 +8,16 @@ pub enum Step {
 	Bot,
 	Prev,
 	Next,
-	Fixed(isize),
+	Offset(isize),
 	Percent(i8),
 }
 
 impl Default for Step {
-	fn default() -> Self { Self::Fixed(0) }
+	fn default() -> Self { Self::Offset(0) }
 }
 
 impl From<isize> for Step {
-	fn from(n: isize) -> Self { Self::Fixed(n) }
+	fn from(n: isize) -> Self { Self::Offset(n) }
 }
 
 impl FromStr for Step {
@@ -30,7 +30,7 @@ impl FromStr for Step {
 			"prev" => Self::Prev,
 			"next" => Self::Next,
 			s if s.ends_with('%') => Self::Percent(s[..s.len() - 1].parse()?),
-			s => Self::Fixed(s.parse()?),
+			s => Self::Offset(s.parse()?),
 		})
 	}
 }
@@ -53,22 +53,22 @@ impl Step {
 			return 0;
 		}
 
-		let fixed = match self {
+		let off = match self {
 			Self::Top => return 0,
 			Self::Bot => return len - 1,
 			Self::Prev => -1,
 			Self::Next => 1,
-			Self::Fixed(n) => n,
+			Self::Offset(n) => n,
 			Self::Percent(0) => 0,
 			Self::Percent(n) => n as isize * limit as isize / 100,
 		};
 
 		if matches!(self, Self::Prev | Self::Next) {
-			fixed.saturating_add_unsigned(pos).rem_euclid(len as _) as _
-		} else if fixed >= 0 {
-			pos.saturating_add_signed(fixed)
+			off.saturating_add_unsigned(pos).rem_euclid(len as _) as _
+		} else if off >= 0 {
+			pos.saturating_add_signed(off)
 		} else {
-			pos.saturating_sub(fixed.unsigned_abs())
+			pos.saturating_sub(off.unsigned_abs())
 		}
 		.min(len - 1)
 	}
