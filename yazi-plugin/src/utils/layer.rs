@@ -44,10 +44,7 @@ impl Utils {
 			if pos.is_nil() {
 				pos = t.raw_get("position")?;
 				if !pos.is_nil() {
-					deprecate!(
-						lua,
-						"The `position` property of `ya.input()` is deprecated, use `pos` instead in your {}\nSee #2921 for more details: https://github.com/sxyazi/yazi/pull/2921"
-					);
+					deprecate!(lua, "The `position` property of `ya.input()` is deprecated, use `pos` instead in your {}\nSee #2921 for more details: https://github.com/sxyazi/yazi/pull/2921");
 				}
 			}
 

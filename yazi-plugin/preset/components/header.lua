@@ -28,7 +28,7 @@ function Header:cwd()
 	end
 
 	local s = ya.readable_path(tostring(self._current.cwd)) .. self:flags()
-	return ui.Span(ya.truncate(s, { max = max, rtl = true })):style(th.mgr.cwd)
+	return ui.Span(ui.truncate(s, { max = max, rtl = true })):style(th.mgr.cwd)
 end
 
 function Header:flags()

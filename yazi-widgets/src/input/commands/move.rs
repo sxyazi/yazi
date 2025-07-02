@@ -30,8 +30,9 @@ impl Input {
 			return;
 		}
 
-		let (o_cur, n_cur) = (snap.cursor, opt.step.cursor(snap));
-		render!(self.handle_op(n_cur, false));
+		let o_cur = snap.cursor;
+		render!(self.handle_op(opt.step.cursor(snap), false));
+		let n_cur = self.snap().cursor;
 
 		let (limit, snap) = (self.limit, self.snap_mut());
 		if snap.value.is_empty() {

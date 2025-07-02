@@ -87,7 +87,7 @@ local function entry()
 		return fail("No directory history found, check Zoxide's doc to set it up and restart Yazi.")
 	end
 
-	local _permit = ya.hide()
+	local _permit = ui.hide()
 	local child, err1 = Command("zoxide")
 		:arg({ "query", "-i", "--exclude", st.cwd })
 		:env("SHELL", "sh")

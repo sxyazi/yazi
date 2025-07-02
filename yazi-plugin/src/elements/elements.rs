@@ -28,8 +28,11 @@ pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 			b"Wrap" => super::Wrap::compose(lua)?,
 
 			b"area" => super::Utils::area(lua)?,
+			b"hide" => super::Utils::hide(lua)?,
 			b"width" => super::Utils::width(lua)?,
 			b"redraw" => super::Utils::redraw(lua)?,
+			b"render" => super::Utils::render(lua)?,
+			b"truncate" => super::Utils::truncate(lua)?,
 			_ => return Ok(Value::Nil),
 		}
 		.into_lua(lua)

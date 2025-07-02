@@ -150,7 +150,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup LXD
-        uses: canonical/setup-lxd@v0.1.2
+        uses: canonical/setup-lxd@v0.1.3
 
       - name: Setup snapcraft
         run: sudo snap install --classic snapcraft

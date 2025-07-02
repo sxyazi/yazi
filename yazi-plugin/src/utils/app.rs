@@ -3,7 +3,7 @@ use yazi_binding::Id;
 use yazi_proxy::{AppProxy, HIDER};
 
 use super::Utils;
-use crate::bindings::{Permit, PermitRef};
+use crate::{bindings::{Permit, PermitRef}, deprecate};
 
 impl Utils {
 	pub(super) fn id(lua: &Lua) -> mlua::Result<Function> {
@@ -18,6 +18,8 @@ impl Utils {
 
 	pub(super) fn hide(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_async_function(|lua, ()| async move {
+			deprecate!(lua, "`ya.hide()` is deprecated, use `ui.hide()` instead, in your {}\nSee #2939 for more details: https://github.com/sxyazi/yazi/pull/2939");
+
 			if lua.named_registry_value::<PermitRef<fn()>>("HIDE_PERMIT").is_ok_and(|h| h.is_some()) {
 				return Err("Cannot hide while already hidden".into_lua_err());
 			}
