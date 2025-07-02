@@ -23,7 +23,7 @@ function Tabs:redraw()
 	local pos = lines[1]:width()
 	local max = math.floor(self:inner_width() / #cx.tabs)
 	for i = 1, #cx.tabs do
-		local name = ya.truncate(string.format(" %d %s ", i, cx.tabs[i].name), { max = max })
+		local name = ui.truncate(string.format(" %d %s ", i, cx.tabs[i].name), { max = max })
 		if i == cx.tabs.idx then
 			lines[#lines + 1] = ui.Line {
 				ui.Span(th.tabs.sep_inner.open):style(th.tabs.inactive),

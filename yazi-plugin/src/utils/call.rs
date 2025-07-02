@@ -4,10 +4,13 @@ use yazi_macro::{emit, render};
 use yazi_shared::{Layer, event::Cmd};
 
 use super::Utils;
+use crate::deprecate;
 
 impl Utils {
 	pub(super) fn render(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|_, ()| {
+		lua.create_function(|lua, ()| {
+			deprecate!(lua, "`ya.render()` is deprecated, use `ui.render()` instead, in your {}\nSee #2939 for more details: https://github.com/sxyazi/yazi/pull/2939");
+
 			render!();
 			Ok(())
 		})

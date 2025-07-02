@@ -3,7 +3,7 @@ use twox_hash::XxHash3_128;
 use unicode_width::UnicodeWidthChar;
 
 use super::Utils;
-use crate::CLIPBOARD;
+use crate::{CLIPBOARD, deprecate};
 
 impl Utils {
 	pub(super) fn hash(lua: &Lua) -> mlua::Result<Function> {
@@ -41,6 +41,8 @@ impl Utils {
 		}
 
 		lua.create_function(|lua, (s, t): (mlua::String, Table)| {
+			deprecate!(lua, "`ya.truncate()` is deprecated, use `ui.truncate()` instead, in your {}\nSee #2939 for more details: https://github.com/sxyazi/yazi/pull/2939");
+
 			let b = s.as_bytes();
 			if b.is_empty() {
 				return Ok(s);
@@ -91,81 +93,5 @@ impl Utils {
 				Some(lua.create_string(CLIPBOARD.get().await.as_encoded_bytes())).transpose()
 			}
 		})
-	}
-}
-
-#[cfg(test)]
-mod tests {
-	use mlua::chunk;
-
-	use super::*;
-
-	fn truncate(s: &str, max: usize, rtl: bool) -> String {
-		let lua = Lua::new();
-		let f = Utils::truncate(&lua).unwrap();
-
-		lua
-			.load(chunk! {
-				return $f($s, { max = $max, rtl = $rtl })
-			})
-			.call(())
-			.unwrap()
-	}
-
-	#[test]
-	fn test_truncate() {
-		assert_eq!(truncate("你好，world", 0, false), "");
-		assert_eq!(truncate("你好，world", 1, false), "…");
-		assert_eq!(truncate("你好，world", 2, false), "…");
-
-		assert_eq!(truncate("你好，世界", 3, false), "你…");
-		assert_eq!(truncate("你好，世界", 4, false), "你…");
-		assert_eq!(truncate("你好，世界", 5, false), "你好…");
-
-		assert_eq!(truncate("Hello, world", 5, false), "Hell…");
-		assert_eq!(truncate("Ni好，世界", 3, false), "Ni…");
-	}
-
-	#[test]
-	fn test_truncate_rtl() {
-		assert_eq!(truncate("world，你好", 0, true), "");
-		assert_eq!(truncate("world，你好", 1, true), "…");
-		assert_eq!(truncate("world，你好", 2, true), "…");
-
-		assert_eq!(truncate("你好，世界", 3, true), "…界");
-		assert_eq!(truncate("你好，世界", 4, true), "…界");
-		assert_eq!(truncate("你好，世界", 5, true), "…世界");
-
-		assert_eq!(truncate("Hello, world", 5, true), "…orld");
-		assert_eq!(truncate("你好，Shi界", 3, true), "…界");
-	}
-
-	#[test]
-	fn test_truncate_oboe() {
-		assert_eq!(truncate("Hello, world", 11, false), "Hello, wor…");
-		assert_eq!(truncate("你好，世界", 9, false), "你好，世…");
-		assert_eq!(truncate("你好，世Jie", 9, false), "你好，世…");
-
-		assert_eq!(truncate("Hello, world", 11, true), "…llo, world");
-		assert_eq!(truncate("你好，世界", 9, true), "…好，世界");
-		assert_eq!(truncate("Ni好，世界", 9, true), "…好，世界");
-	}
-
-	#[test]
-	fn test_truncate_exact() {
-		assert_eq!(truncate("Hello, world", 12, false), "Hello, world");
-		assert_eq!(truncate("你好，世界", 10, false), "你好，世界");
-
-		assert_eq!(truncate("Hello, world", 12, true), "Hello, world");
-		assert_eq!(truncate("你好，世界", 10, true), "你好，世界");
-	}
-
-	#[test]
-	fn test_truncate_overflow() {
-		assert_eq!(truncate("Hello, world", 13, false), "Hello, world");
-		assert_eq!(truncate("你好，世界", 11, false), "你好，世界");
-
-		assert_eq!(truncate("Hello, world", 13, true), "Hello, world");
-		assert_eq!(truncate("你好，世界", 11, true), "你好，世界");
 	}
 }

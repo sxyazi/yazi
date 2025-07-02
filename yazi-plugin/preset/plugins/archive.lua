@@ -33,7 +33,7 @@ function M:peek(job)
 
 		left[#left] = ui.Line {
 			left[#left],
-			ya.truncate(f.path, {
+			ui.truncate(f.path, {
 				rtl = true,
 				max = math.max(0, job.area.w - ui.width(left[#left]) - ui.width(right[#right])),
 			}),
