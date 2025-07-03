@@ -36,7 +36,7 @@ impl Watcher {
 		};
 
 		let config = notify::Config::default().with_poll_interval(Duration::from_millis(500));
-		if yazi_adapter::WSL.get() {
+		if yazi_adapter::WSL.get() || cfg!(target_os = "netbsd") {
 			tokio::spawn(Self::fan_in(in_rx, PollWatcher::new(handler, config).unwrap()));
 		} else {
 			tokio::spawn(Self::fan_in(in_rx, RecommendedWatcher::new(handler, config).unwrap()));
