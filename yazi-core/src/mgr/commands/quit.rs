@@ -4,35 +4,15 @@ use tokio::{select, time};
 use yazi_boot::ARGS;
 use yazi_config::popup::ConfirmCfg;
 use yazi_macro::emit;
+use yazi_parser::mgr::{OpenOpt, QuitOpt};
 use yazi_proxy::ConfirmProxy;
-use yazi_shared::{event::{CmdCow, Data, EventQuit}, url::Url};
+use yazi_shared::{event::EventQuit, url::Url};
 
 use crate::{mgr::Mgr, tasks::Tasks};
 
-#[derive(Default)]
-pub(super) struct Opt {
-	pub(super) code:        i32,
-	pub(super) no_cwd_file: bool,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self {
-		Self {
-			code:        c.get("code").and_then(Data::as_i32).unwrap_or_default(),
-			no_cwd_file: c.bool("no-cwd-file"),
-		}
-	}
-}
-
-impl From<Opt> for EventQuit {
-	fn from(value: Opt) -> Self {
-		EventQuit { code: value.code, no_cwd_file: value.no_cwd_file, ..Default::default() }
-	}
-}
-
 impl Mgr {
 	#[yazi_codegen::command]
-	pub fn quit(&self, opt: Opt, tasks: &Tasks) {
+	pub fn quit(&self, opt: QuitOpt, tasks: &Tasks) {
 		let event = opt.into();
 
 		let ongoing = tasks.ongoing().clone();
@@ -74,7 +54,7 @@ impl Mgr {
 		});
 	}
 
-	pub(super) fn quit_with_selected<'a, I>(opt: super::open::Opt, selected: I) -> bool
+	pub(super) fn quit_with_selected<'a, I>(opt: OpenOpt, selected: I) -> bool
 	where
 		I: Iterator<Item = &'a Url>,
 	{

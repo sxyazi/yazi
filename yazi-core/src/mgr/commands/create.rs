@@ -2,23 +2,15 @@ use anyhow::Result;
 use tokio::fs;
 use yazi_config::popup::{ConfirmCfg, InputCfg};
 use yazi_fs::{File, FilesOp, maybe_exists, ok_or_not_found, realname};
+use yazi_parser::mgr::CreateOpt;
 use yazi_proxy::{ConfirmProxy, InputProxy, TabProxy, WATCHER};
-use yazi_shared::{event::CmdCow, url::{Url, UrnBuf}};
+use yazi_shared::url::{Url, UrnBuf};
 
 use crate::mgr::Mgr;
 
-struct Opt {
-	dir:   bool,
-	force: bool,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { dir: c.bool("dir"), force: c.bool("force") } }
-}
-
 impl Mgr {
 	#[yazi_codegen::command]
-	pub fn create(&self, opt: Opt) {
+	pub fn create(&self, opt: CreateOpt) {
 		let cwd = self.cwd().to_owned();
 		let mut input = InputProxy::show(InputCfg::create(opt.dir));
 

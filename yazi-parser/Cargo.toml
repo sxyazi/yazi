@@ -1,0 +1,26 @@
+[package]
+name        = "yazi-parser"
+version     = "25.6.11"
+edition     = "2024"
+license     = "MIT"
+authors     = [ "sxyazi <sxyazi@gmail.com>" ]
+description = "Yazi command parser"
+homepage    = "https://yazi-rs.github.io"
+repository  = "https://github.com/sxyazi/yazi"
+
+[dependencies]
+yazi-binding = { path = "../yazi-binding", version = "25.6.11" }
+yazi-boot    = { path = "../yazi-boot", version = "25.6.11" }
+yazi-config  = { path = "../yazi-config", version = "25.6.11" }
+yazi-dds     = { path = "../yazi-dds", version = "25.6.11" }
+yazi-fs      = { path = "../yazi-fs", version = "25.6.11" }
+yazi-macro   = { path = "../yazi-macro", version = "25.6.11" }
+yazi-proxy   = { path = "../yazi-proxy", version = "25.6.11" }
+yazi-shared  = { path = "../yazi-shared", version = "25.6.11" }
+yazi-widgets = { path = "../yazi-widgets", version = "25.6.11" }
+
+# External dependencies
+anyhow   = { workspace = true }
+bitflags = { workspace = true }
+mlua     = { workspace = true }
+tokio    = { workspace = true }

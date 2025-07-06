@@ -4,7 +4,8 @@ use tokio_util::sync::CancellationToken;
 use yazi_config::YAZI;
 use yazi_fs::File;
 use yazi_macro::render;
-use yazi_plugin::{isolate, utils::SpotLock};
+use yazi_parser::tab::SpotLock;
+use yazi_plugin::isolate;
 use yazi_shared::url::Url;
 
 #[derive(Default)]

@@ -1,38 +1,17 @@
-use std::{borrow::Cow, mem, ops::ControlFlow, path::PathBuf};
+use std::{mem, ops::ControlFlow};
 
 use yazi_macro::render;
+use yazi_parser::cmp::ShowOpt;
 use yazi_proxy::options::CmpItem;
-use yazi_shared::{Id, event::{Cmd, CmdCow, Data}, osstr_contains, osstr_starts_with};
+use yazi_shared::{osstr_contains, osstr_starts_with};
 
 use crate::cmp::Cmp;
 
 const LIMIT: usize = 30;
 
-struct Opt {
-	cache:      Vec<CmpItem>,
-	cache_name: PathBuf,
-	word:       Cow<'static, str>,
-	ticket:     Id,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(mut c: CmdCow) -> Self {
-		Self {
-			cache:      c.take_any("cache").unwrap_or_default(),
-			cache_name: c.take_any("cache-name").unwrap_or_default(),
-			word:       c.take_str("word").unwrap_or_default(),
-			ticket:     c.get("ticket").and_then(Data::as_id).unwrap_or_default(),
-		}
-	}
-}
-
-impl From<Cmd> for Opt {
-	fn from(c: Cmd) -> Self { Self::from(CmdCow::from(c)) }
-}
-
 impl Cmp {
 	#[yazi_codegen::command]
-	pub fn show(&mut self, opt: Opt) {
+	pub fn show(&mut self, opt: ShowOpt) {
 		if self.ticket != opt.ticket {
 			return;
 		}

@@ -1,9 +1,7 @@
 use mlua::{IntoLua, Lua, LuaSerdeExt, SerializeOptions, Value};
-use yazi_binding::Url;
+use yazi_binding::{Composer, Url};
 use yazi_boot::ARGS;
 use yazi_config::YAZI;
-
-use crate::Composer;
 
 pub const OPTS: SerializeOptions =
 	SerializeOptions::new().serialize_none_to_null(false).serialize_unit_to_null(false);

@@ -1,21 +1,12 @@
 use std::collections::HashSet;
 
-use yazi_shared::event::CmdCow;
+use yazi_parser::mgr::WatchOpt;
 
 use crate::mgr::Mgr;
 
-struct Opt;
-
-impl From<CmdCow> for Opt {
-	fn from(_: CmdCow) -> Self { Self }
-}
-impl From<()> for Opt {
-	fn from((): ()) -> Self { Self }
-}
-
 impl Mgr {
 	#[yazi_codegen::command]
-	pub fn watch(&mut self, _: Opt) {
+	pub fn watch(&mut self, _: WatchOpt) {
 		let mut to_watch = HashSet::with_capacity(3 * self.tabs.len());
 		for tab in self.tabs.iter() {
 			to_watch.insert(tab.cwd());

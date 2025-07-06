@@ -16,7 +16,7 @@ impl Widget for Pick<'_> {
 		let pick = &self.cx.pick;
 		let area = self.cx.mgr.area(pick.position);
 
-		yazi_plugin::elements::Clear::default().render(area, buf);
+		yazi_binding::elements::Clear::default().render(area, buf);
 
 		Block::bordered()
 			.title(pick.title())

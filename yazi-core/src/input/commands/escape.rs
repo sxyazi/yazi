@@ -1,22 +1,13 @@
 use yazi_macro::render;
+use yazi_parser::input::EscapeOpt;
 use yazi_proxy::CmpProxy;
-use yazi_shared::event::CmdCow;
 use yazi_widgets::input::InputOp;
 
 use crate::input::Input;
 
-struct Opt;
-
-impl From<CmdCow> for Opt {
-	fn from(_: CmdCow) -> Self { Self }
-}
-impl From<()> for Opt {
-	fn from(_: ()) -> Self { Self }
-}
-
 impl Input {
 	#[yazi_codegen::command]
-	pub fn escape(&mut self, _: Opt) {
+	pub fn escape(&mut self, _: EscapeOpt) {
 		use yazi_widgets::input::InputMode as M;
 
 		let mode = self.snap().mode;

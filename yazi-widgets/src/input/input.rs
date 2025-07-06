@@ -2,9 +2,9 @@ use std::{borrow::Cow, ops::Range};
 
 use crossterm::cursor::SetCursorStyle;
 use yazi_config::YAZI;
-use yazi_plugin::CLIPBOARD;
 
 use super::{InputSnap, InputSnaps, mode::InputMode, op::InputOp};
+use crate::CLIPBOARD;
 
 pub type InputCallback = Box<dyn Fn(&str, &str)>;
 

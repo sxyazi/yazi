@@ -30,6 +30,8 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_dds::init();
 
+	yazi_widgets::init();
+
 	yazi_plugin::init()?;
 
 	yazi_core::init();

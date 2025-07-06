@@ -1,13 +1,13 @@
 use yazi_fs::Filter;
 use yazi_macro::render;
+use yazi_parser::tab::FilterOpt;
 use yazi_proxy::MgrProxy;
 
-use super::filter::Opt;
 use crate::tab::Tab;
 
 impl Tab {
 	#[yazi_codegen::command]
-	pub fn filter_do(&mut self, opt: Opt) {
+	pub fn filter_do(&mut self, opt: FilterOpt) {
 		let filter = if opt.query.is_empty() {
 			None
 		} else if let Ok(f) = Filter::new(&opt.query, opt.case) {

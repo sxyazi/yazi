@@ -1,39 +1,12 @@
-use bitflags::bitflags;
 use yazi_macro::{render, render_and};
+use yazi_parser::tab::{EscapeOpt, FilterOpt};
 use yazi_proxy::{AppProxy, MgrProxy};
-use yazi_shared::event::CmdCow;
 
 use crate::tab::Tab;
 
-bitflags! {
-	struct Opt: u8 {
-		const FIND   = 0b00001;
-		const VISUAL = 0b00010;
-		const FILTER = 0b00100;
-		const SELECT = 0b01000;
-		const SEARCH = 0b10000;
-	}
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self {
-		c.args.iter().fold(Opt::empty(), |acc, (k, v)| {
-			match (k.as_str().unwrap_or(""), v.as_bool().unwrap_or(false)) {
-				("all", true) => Self::all(),
-				("find", true) => acc | Self::FIND,
-				("visual", true) => acc | Self::VISUAL,
-				("filter", true) => acc | Self::FILTER,
-				("select", true) => acc | Self::SELECT,
-				("search", true) => acc | Self::SEARCH,
-				_ => acc,
-			}
-		})
-	}
-}
-
 impl Tab {
 	#[yazi_codegen::command]
-	pub fn escape(&mut self, opt: Opt) {
+	pub fn escape(&mut self, opt: EscapeOpt) {
 		if opt.is_empty() {
 			_ = self.escape_find()
 				|| self.escape_visual()
@@ -43,19 +16,19 @@ impl Tab {
 			return;
 		}
 
-		if opt.contains(Opt::FIND) {
+		if opt.contains(EscapeOpt::FIND) {
 			self.escape_find();
 		}
-		if opt.contains(Opt::VISUAL) {
+		if opt.contains(EscapeOpt::VISUAL) {
 			self.escape_visual();
 		}
-		if opt.contains(Opt::FILTER) {
+		if opt.contains(EscapeOpt::FILTER) {
 			self.escape_filter();
 		}
-		if opt.contains(Opt::SELECT) {
+		if opt.contains(EscapeOpt::SELECT) {
 			self.escape_select();
 		}
-		if opt.contains(Opt::SEARCH) {
+		if opt.contains(EscapeOpt::SEARCH) {
 			self.escape_search();
 		}
 	}
@@ -76,7 +49,7 @@ impl Tab {
 			return false;
 		}
 
-		self.filter_do(super::filter::Opt::default());
+		self.filter_do(FilterOpt::default());
 		render_and!(true)
 	}
 

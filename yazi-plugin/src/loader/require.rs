@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
 use mlua::{ExternalResult, Function, IntoLua, Lua, MetaMethod, MultiValue, ObjectLike, Table, Value};
+use yazi_binding::runtime_mut;
 
 use super::LOADER;
-use crate::runtime_mut;
 
 pub(super) struct Require;
 

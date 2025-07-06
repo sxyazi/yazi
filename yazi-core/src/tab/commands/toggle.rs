@@ -1,30 +1,12 @@
 use yazi_macro::render_and;
+use yazi_parser::tab::ToggleOpt;
 use yazi_proxy::AppProxy;
-use yazi_shared::{event::CmdCow, url::Url};
 
 use crate::tab::Tab;
 
-struct Opt {
-	url:   Option<Url>,
-	state: Option<bool>,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(mut c: CmdCow) -> Self {
-		Self {
-			url:   c.take_first_url(),
-			state: match c.str("state") {
-				Some("on") => Some(true),
-				Some("off") => Some(false),
-				_ => None,
-			},
-		}
-	}
-}
-
 impl Tab {
 	#[yazi_codegen::command]
-	pub fn toggle(&mut self, opt: Opt) {
+	pub fn toggle(&mut self, opt: ToggleOpt) {
 		let Some(url) = opt.url.as_ref().or(self.current.hovered().map(|h| &h.url)) else {
 			return;
 		};

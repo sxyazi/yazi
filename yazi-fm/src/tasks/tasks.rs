@@ -32,7 +32,7 @@ impl Widget for Tasks<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let area = Self::area(area);
 
-		yazi_plugin::elements::Clear::default().render(area, buf);
+		yazi_binding::elements::Clear::default().render(area, buf);
 		let block = Block::bordered()
 			.title(Line::styled("Tasks", THEME.tasks.title))
 			.title_alignment(Alignment::Center)

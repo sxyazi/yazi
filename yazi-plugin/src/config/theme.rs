@@ -1,8 +1,6 @@
 use mlua::{IntoLua, Lua, Value};
-use yazi_binding::{Style, Url};
+use yazi_binding::{Composer, Style, Url};
 use yazi_config::THEME;
-
-use crate::Composer;
 
 pub struct Theme;
 

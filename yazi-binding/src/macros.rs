@@ -1,4 +1,31 @@
 #[macro_export]
+macro_rules! runtime {
+	($lua:ident) => {{
+		use mlua::ExternalError;
+		$lua.app_data_ref::<$crate::Runtime>().ok_or_else(|| "Runtime not found".into_lua_err())
+	}};
+}
+
+#[macro_export]
+macro_rules! runtime_mut {
+	($lua:ident) => {{
+		use mlua::ExternalError;
+		$lua.app_data_mut::<$crate::Runtime>().ok_or_else(|| "Runtime not found".into_lua_err())
+	}};
+}
+
+#[macro_export]
+macro_rules! deprecate {
+	($lua:ident, $tt:tt) => {{
+		let id = match $crate::runtime!($lua)?.current() {
+			Some(id) => &format!("`{id}.yazi` plugin"),
+			None => "`init.lua` config",
+		};
+		yazi_proxy::deprecate!(format!($tt, id));
+	}};
+}
+
+#[macro_export]
 macro_rules! cached_field {
 	($fields:ident, $key:ident, $value:expr) => {
 		$fields.add_field_function_get(stringify!($key), |lua, ud| {
@@ -14,6 +41,34 @@ macro_rules! cached_field {
 					Ok(v)
 				}
 			})?
+		});
+	};
+}
+
+#[macro_export]
+macro_rules! impl_area_method {
+	($methods:ident) => {
+		$methods.add_function_mut(
+			"area",
+			|lua, (ud, area): (mlua::AnyUserData, Option<mlua::AnyUserData>)| {
+				use mlua::IntoLua;
+				if let Some(v) = area {
+					ud.borrow_mut::<Self>()?.area = $crate::elements::Area::try_from(v)?;
+					ud.into_lua(lua)
+				} else {
+					ud.borrow::<Self>()?.area.into_lua(lua)
+				}
+			},
+		);
+	};
+}
+
+#[macro_export]
+macro_rules! impl_style_method {
+	($methods:ident, $($field:tt).+) => {
+		$methods.add_function_mut("style", |_, (ud, value): (mlua::AnyUserData, mlua::Value)| {
+			ud.borrow_mut::<Self>()?.$($field).+ = $crate::Style::try_from(value)?.0;
+			Ok(ud)
 		});
 	};
 }
@@ -82,6 +137,35 @@ macro_rules! impl_style_shorthands {
 		$methods.add_function_mut("reset", |_, ud: mlua::AnyUserData| {
 			ud.borrow_mut::<Self>()?.$($field).+.add_modifier = ratatui::style::Modifier::empty();
 			Ok(ud)
+		});
+	};
+}
+
+#[macro_export]
+macro_rules! impl_file_fields {
+	($fields:ident) => {
+		$crate::cached_field!($fields, cha, |_, me| Ok($crate::Cha(me.cha)));
+		$crate::cached_field!($fields, url, |_, me| Ok($crate::Url::new(me.url_owned())));
+		$crate::cached_field!($fields, link_to, |_, me| Ok(me.link_to.clone().map($crate::Url::new)));
+
+		$crate::cached_field!($fields, name, |lua, me| {
+			Some(me.name())
+				.filter(|s| !s.is_empty())
+				.map(|s| lua.create_string(s.as_encoded_bytes()))
+				.transpose()
+		});
+	};
+}
+
+#[macro_export]
+macro_rules! impl_file_methods {
+	($methods:ident) => {
+		$methods.add_method("hash", |_, me, ()| Ok(me.hash_u64()));
+
+		$methods.add_method("icon", |_, me, ()| {
+			use $crate::Icon;
+			// TODO: use a cache
+			Ok(yazi_config::THEME.icon.matches(me).map(Icon::from))
 		});
 	};
 }

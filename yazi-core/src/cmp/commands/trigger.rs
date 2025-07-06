@@ -1,30 +1,17 @@
-use std::{borrow::Cow, ffi::OsString, mem, path::{MAIN_SEPARATOR_STR, Path, PathBuf}};
+use std::{ffi::OsString, mem, path::{MAIN_SEPARATOR_STR, Path, PathBuf}};
 
 use tokio::fs;
 use yazi_fs::{CWD, expand_path};
 use yazi_macro::{emit, render};
+use yazi_parser::cmp::TriggerOpt;
 use yazi_proxy::options::CmpItem;
-use yazi_shared::{Id, event::{Cmd, CmdCow, Data}, natsort};
+use yazi_shared::{event::Cmd, natsort};
 
 use crate::cmp::Cmp;
 
-struct Opt {
-	word:   Cow<'static, str>,
-	ticket: Id,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(mut c: CmdCow) -> Self {
-		Self {
-			word:   c.take_first_str().unwrap_or_default(),
-			ticket: c.get("ticket").and_then(Data::as_id).unwrap_or_default(),
-		}
-	}
-}
-
 impl Cmp {
 	#[yazi_codegen::command]
-	pub fn trigger(&mut self, opt: Opt) {
+	pub fn trigger(&mut self, opt: TriggerOpt) {
 		if opt.ticket < self.ticket {
 			return;
 		}

@@ -1,11 +1,11 @@
 use std::hash::Hash;
 
 use mlua::{Function, Lua, Table};
-use yazi_binding::Url;
+use yazi_binding::{FileRef, Url};
 use yazi_config::YAZI;
 
 use super::Utils;
-use crate::{Twox128, file::FileRef};
+use crate::Twox128;
 
 impl Utils {
 	pub(super) fn file_cache(lua: &Lua) -> mlua::Result<Function> {

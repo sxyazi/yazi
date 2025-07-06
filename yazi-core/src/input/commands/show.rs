@@ -1,27 +1,14 @@
-use tokio::sync::mpsc;
-use yazi_config::{YAZI, popup::InputCfg};
+use yazi_config::YAZI;
 use yazi_macro::render;
-use yazi_shared::{errors::InputError, event::CmdCow};
+use yazi_parser::input::ShowOpt;
+use yazi_shared::errors::InputError;
 use yazi_widgets::input::InputCallback;
 
 use crate::input::Input;
 
-pub struct Opt {
-	cfg: InputCfg,
-	tx:  mpsc::UnboundedSender<Result<String, InputError>>,
-}
-
-impl TryFrom<CmdCow> for Opt {
-	type Error = ();
-
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		Ok(Self { cfg: c.take_any("cfg").ok_or(())?, tx: c.take_any("tx").ok_or(())? })
-	}
-}
-
 impl Input {
-	pub fn show(&mut self, opt: impl TryInto<Opt>) {
-		let Ok(opt): Result<Opt, _> = opt.try_into() else { return };
+	pub fn show(&mut self, opt: impl TryInto<ShowOpt>) {
+		let Ok(opt): Result<ShowOpt, _> = opt.try_into() else { return };
 
 		self.close(false);
 		self.visible = true;

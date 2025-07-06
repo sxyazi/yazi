@@ -1,8 +1,7 @@
 #![allow(clippy::module_inception)]
 
 use mlua::{IntoLua, Lua, Value};
-
-use crate::Composer;
+use yazi_binding::Composer;
 
 yazi_macro::mod_flat!(pubsub);
 

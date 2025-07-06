@@ -4,10 +4,11 @@ use yazi_boot::BOOT;
 use yazi_dds::Pubsub;
 use yazi_fs::File;
 use yazi_macro::err;
+use yazi_parser::tab::CdSource;
 use yazi_proxy::MgrProxy;
 use yazi_shared::{Id, url::Url};
 
-use crate::tab::{Folder, Tab, commands::CdSource};
+use crate::tab::{Folder, Tab};
 
 pub struct Tabs {
 	pub cursor:       usize,

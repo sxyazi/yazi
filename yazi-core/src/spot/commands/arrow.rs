@@ -1,23 +1,12 @@
 use yazi_macro::render;
+use yazi_parser::spot::ArrowOpt;
 use yazi_proxy::MgrProxy;
-use yazi_shared::event::CmdCow;
-use yazi_widgets::Step;
 
 use crate::spot::Spot;
 
-struct Opt {
-	step: Step,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self {
-		Self { step: c.first().and_then(|d| d.try_into().ok()).unwrap_or_default() }
-	}
-}
-
 impl Spot {
 	#[yazi_codegen::command]
-	pub fn arrow(&mut self, opt: Opt) {
+	pub fn arrow(&mut self, opt: ArrowOpt) {
 		let Some(lock) = &mut self.lock else { return };
 
 		let new = opt.step.add(self.skip, lock.len().unwrap_or(u16::MAX as _), 0);

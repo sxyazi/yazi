@@ -1,19 +1,10 @@
-use yazi_shared::event::CmdCow;
+use yazi_parser::mgr::HardlinkOpt;
 
 use crate::{mgr::Mgr, tasks::Tasks};
 
-struct Opt {
-	force:  bool,
-	follow: bool,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { force: c.bool("force"), follow: c.bool("follow") } }
-}
-
 impl Mgr {
 	#[yazi_codegen::command]
-	pub fn hardlink(&mut self, opt: Opt, tasks: &Tasks) {
+	pub fn hardlink(&mut self, opt: HardlinkOpt, tasks: &Tasks) {
 		if self.yanked.cut {
 			return;
 		}

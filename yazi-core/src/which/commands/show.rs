@@ -1,24 +1,12 @@
-use yazi_config::{KEYMAP, keymap::{Chord, Key}};
+use yazi_config::{KEYMAP, keymap::Key};
 use yazi_macro::render;
-use yazi_shared::{Layer, event::CmdCow};
+use yazi_parser::which::ShowOpt;
+use yazi_shared::Layer;
 
 use crate::which::{Which, WhichSorter};
 
-pub struct Opt {
-	cands:  Vec<Chord>,
-	silent: bool,
-}
-
-impl TryFrom<CmdCow> for Opt {
-	type Error = anyhow::Error;
-
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		Ok(Self { cands: c.take_any("candidates").unwrap_or_default(), silent: c.bool("silent") })
-	}
-}
-
 impl Which {
-	pub fn show(&mut self, opt: impl TryInto<Opt>) {
+	pub fn show(&mut self, opt: impl TryInto<ShowOpt>) {
 		let Ok(opt) = opt.try_into() else {
 			return;
 		};

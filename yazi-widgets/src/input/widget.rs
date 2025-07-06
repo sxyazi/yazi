@@ -10,7 +10,7 @@ impl Widget for &Input {
 	where
 		Self: Sized,
 	{
-		yazi_plugin::elements::Clear::default().render(area, buf);
+		yazi_binding::elements::Clear::default().render(area, buf);
 
 		Line::styled(self.display(), THEME.input.value).render(area, buf);
 

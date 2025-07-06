@@ -1,6 +1,6 @@
+use yazi_parser::tab::CdSource;
 use yazi_shared::event::CmdCow;
 
-use super::cd::CdSource;
 use crate::tab::Tab;
 
 impl Tab {

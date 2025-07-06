@@ -1,21 +1,12 @@
 use yazi_config::YAZI;
+use yazi_parser::mgr::SeekOpt;
 use yazi_plugin::isolate;
-use yazi_shared::event::{CmdCow, Data};
 
 use crate::mgr::Mgr;
 
-#[derive(Debug)]
-struct Opt {
-	units: i16,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { units: c.first().and_then(Data::as_i16).unwrap_or(0) } }
-}
-
 impl Mgr {
 	#[yazi_codegen::command]
-	pub fn seek(&mut self, opt: Opt) {
+	pub fn seek(&mut self, opt: SeekOpt) {
 		let Some(hovered) = self.hovered() else {
 			return self.active_mut().preview.reset();
 		};

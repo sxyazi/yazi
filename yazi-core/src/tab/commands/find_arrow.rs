@@ -1,19 +1,11 @@
 use yazi_macro::render;
-use yazi_shared::event::CmdCow;
+use yazi_parser::tab::FindArrowOpt;
 
 use crate::tab::Tab;
 
-struct Opt {
-	prev: bool,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { prev: c.bool("previous") } }
-}
-
 impl Tab {
 	#[yazi_codegen::command]
-	pub fn find_arrow(&mut self, opt: Opt) {
+	pub fn find_arrow(&mut self, opt: FindArrowOpt) {
 		let Some(finder) = &mut self.finder else {
 			return;
 		};

@@ -1,9 +1,10 @@
 use mlua::{Function, Lua, Table};
 use twox_hash::XxHash3_128;
 use unicode_width::UnicodeWidthChar;
+use yazi_binding::deprecate;
+use yazi_widgets::CLIPBOARD;
 
 use super::Utils;
-use crate::{CLIPBOARD, deprecate};
 
 impl Utils {
 	pub(super) fn hash(lua: &Lua) -> mlua::Result<Function> {

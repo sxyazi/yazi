@@ -1,6 +1,5 @@
 use mlua::{IntoLua, Lua, Value};
-
-use crate::Composer;
+use yazi_binding::Composer;
 
 pub(super) struct Utils;
 

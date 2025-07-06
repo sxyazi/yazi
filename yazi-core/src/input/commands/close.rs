@@ -1,23 +1,13 @@
 use yazi_macro::render;
+use yazi_parser::input::CloseOpt;
 use yazi_proxy::CmpProxy;
-use yazi_shared::{errors::InputError, event::CmdCow};
+use yazi_shared::errors::InputError;
 
 use crate::input::Input;
 
-struct Opt {
-	submit: bool,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { submit: c.bool("submit") } }
-}
-impl From<bool> for Opt {
-	fn from(submit: bool) -> Self { Self { submit } }
-}
-
 impl Input {
 	#[yazi_codegen::command]
-	pub fn close(&mut self, opt: Opt) {
+	pub fn close(&mut self, opt: CloseOpt) {
 		self.visible = false;
 		self.ticket.next();
 

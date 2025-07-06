@@ -1,36 +1,13 @@
 use std::time::Duration;
 
 use ratatui::layout::Rect;
+use yazi_parser::notify::TickOpt;
 use yazi_proxy::AppProxy;
-use yazi_shared::event::{Cmd, CmdCow, Data};
 
 use crate::notify::Notify;
 
-pub struct Opt {
-	interval: Duration,
-}
-
-impl TryFrom<CmdCow> for Opt {
-	type Error = ();
-
-	fn try_from(c: CmdCow) -> Result<Self, Self::Error> {
-		let interval = c.first().and_then(Data::as_f64).ok_or(())?;
-		if interval < 0.0 {
-			return Err(());
-		}
-
-		Ok(Self { interval: Duration::from_secs_f64(interval) })
-	}
-}
-
-impl TryFrom<Cmd> for Opt {
-	type Error = ();
-
-	fn try_from(c: Cmd) -> Result<Self, Self::Error> { Self::try_from(CmdCow::from(c)) }
-}
-
 impl Notify {
-	pub fn tick(&mut self, opt: impl TryInto<Opt>, area: Rect) {
+	pub fn tick(&mut self, opt: impl TryInto<TickOpt>, area: Rect) {
 		self.tick_handle.take().map(|h| h.abort());
 		let Ok(opt) = opt.try_into() else {
 			return;

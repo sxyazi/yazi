@@ -1,22 +1,12 @@
 use yazi_macro::render;
-use yazi_shared::event::CmdCow;
-use yazi_widgets::{Scrollable, Step};
+use yazi_parser::cmp::ArrowOpt;
+use yazi_widgets::Scrollable;
 
 use crate::cmp::Cmp;
 
-struct Opt {
-	step: Step,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self {
-		Self { step: c.first().and_then(|d| d.try_into().ok()).unwrap_or_default() }
-	}
-}
-
 impl Cmp {
 	#[yazi_codegen::command]
-	pub fn arrow(&mut self, opt: Opt) {
+	pub fn arrow(&mut self, opt: ArrowOpt) {
 		render!(self.scroll(opt.step));
 	}
 }

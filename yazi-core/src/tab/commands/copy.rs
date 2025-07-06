@@ -1,29 +1,13 @@
-use std::{borrow::Cow, ffi::{OsStr, OsString}, path::Path};
+use std::{ffi::OsString, path::Path};
 
-use yazi_plugin::CLIPBOARD;
-use yazi_shared::event::CmdCow;
+use yazi_parser::tab::CopyOpt;
+use yazi_widgets::CLIPBOARD;
 
 use crate::tab::Tab;
 
-struct Opt {
-	r#type:    Cow<'static, str>,
-	separator: Separator,
-	hovered:   bool,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(mut c: CmdCow) -> Self {
-		Self {
-			r#type:    c.take_first_str().unwrap_or_default(),
-			separator: c.str("separator").unwrap_or_default().into(),
-			hovered:   c.bool("hovered"),
-		}
-	}
-}
-
 impl Tab {
 	#[yazi_codegen::command]
-	pub fn copy(&mut self, opt: Opt) {
+	pub fn copy(&mut self, opt: CopyOpt) {
 		if !self.try_escape_visual() {
 			return;
 		}
@@ -55,34 +39,5 @@ impl Tab {
 		}
 
 		futures::executor::block_on(CLIPBOARD.set(s));
-	}
-}
-
-// --- Separator
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum Separator {
-	Auto,
-	Unix,
-}
-
-impl From<&str> for Separator {
-	fn from(value: &str) -> Self {
-		match value {
-			"unix" => Self::Unix,
-			_ => Self::Auto,
-		}
-	}
-}
-
-impl Separator {
-	fn transform<T: AsRef<Path> + ?Sized>(self, p: &T) -> Cow<'_, OsStr> {
-		#[cfg(windows)]
-		if self == Self::Unix {
-			return match yazi_fs::backslash_to_slash(p.as_ref()) {
-				Cow::Owned(p) => Cow::Owned(p.into_os_string()),
-				Cow::Borrowed(p) => Cow::Borrowed(p.as_os_str()),
-			};
-		}
-		Cow::Borrowed(p.as_ref().as_os_str())
 	}
 }

@@ -136,7 +136,7 @@ impl<'a> Executor<'a> {
 		on!(ACTIVE, sort, &self.app.cx.tasks);
 
 		// Tabs
-		on!(TABS, create);
+		on!(TABS, create); // TODO: use `tab_create` instead
 		on!(TABS, close);
 		on!(TABS, switch);
 		on!(TABS, swap);

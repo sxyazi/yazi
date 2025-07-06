@@ -1,30 +1,19 @@
-use std::{borrow::Cow, time::Duration};
+use std::time::Duration;
 
 use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
 use yazi_fs::FilterCase;
 use yazi_macro::emit;
+use yazi_parser::tab::FindOpt;
 use yazi_proxy::InputProxy;
-use yazi_shared::{Debounce, errors::InputError, event::{Cmd, CmdCow}};
+use yazi_shared::{Debounce, errors::InputError, event::Cmd};
 
 use crate::tab::Tab;
 
-pub(super) struct Opt {
-	pub(super) query: Option<Cow<'static, str>>,
-	pub(super) prev:  bool,
-	pub(super) case:  FilterCase,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(mut c: CmdCow) -> Self {
-		Self { query: c.take_first_str(), prev: c.bool("previous"), case: FilterCase::from(&*c) }
-	}
-}
-
 impl Tab {
 	#[yazi_codegen::command]
-	pub fn find(&mut self, opt: Opt) {
+	pub fn find(&mut self, opt: FindOpt) {
 		let input = InputProxy::show(InputCfg::find(opt.prev));
 
 		tokio::spawn(async move {

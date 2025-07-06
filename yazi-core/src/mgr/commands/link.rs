@@ -1,19 +1,10 @@
-use yazi_shared::event::CmdCow;
+use yazi_parser::mgr::LinkOpt;
 
 use crate::{mgr::Mgr, tasks::Tasks};
 
-struct Opt {
-	relative: bool,
-	force:    bool,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { relative: c.bool("relative"), force: c.bool("force") } }
-}
-
 impl Mgr {
 	#[yazi_codegen::command]
-	pub fn link(&mut self, opt: Opt, tasks: &Tasks) {
+	pub fn link(&mut self, opt: LinkOpt, tasks: &Tasks) {
 		if self.yanked.cut {
 			return;
 		}

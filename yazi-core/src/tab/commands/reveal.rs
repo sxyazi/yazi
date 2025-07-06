@@ -1,38 +1,12 @@
-use yazi_fs::{File, FilesOp, expand_path};
+use yazi_fs::{File, FilesOp};
+use yazi_parser::tab::RevealOpt;
 use yazi_proxy::MgrProxy;
-use yazi_shared::{event::CmdCow, url::Url};
 
-use super::cd::CdSource;
 use crate::tab::Tab;
-
-struct Opt {
-	target:   Url,
-	source:   CdSource,
-	no_dummy: bool,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(mut c: CmdCow) -> Self {
-		let mut target = c.take_first_url().unwrap_or_default();
-		if target.is_regular() && !c.bool("raw") {
-			target = Url::from(expand_path(target));
-		}
-
-		Self { target, source: CdSource::Reveal, no_dummy: c.bool("no-dummy") }
-	}
-}
-
-impl From<Url> for Opt {
-	fn from(target: Url) -> Self { Self { target, source: CdSource::Reveal, no_dummy: false } }
-}
-
-impl From<(Url, CdSource)> for Opt {
-	fn from((target, source): (Url, CdSource)) -> Self { Self { target, source, no_dummy: false } }
-}
 
 impl Tab {
 	#[yazi_codegen::command]
-	pub fn reveal(&mut self, opt: Opt) {
+	pub fn reveal(&mut self, opt: RevealOpt) {
 		let Some((parent, child)) = opt.target.pair() else {
 			return;
 		};

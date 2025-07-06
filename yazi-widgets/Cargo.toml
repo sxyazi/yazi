@@ -9,18 +9,25 @@ homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
+yazi-binding = { path = "../yazi-binding", version = "25.6.11" }
 yazi-codegen = { path = "../yazi-codegen", version = "25.6.11" }
 yazi-config  = { path = "../yazi-config", version = "25.6.11" }
 yazi-macro   = { path = "../yazi-macro", version = "25.6.11" }
-yazi-plugin  = { path = "../yazi-plugin", version = "25.6.11" }
 yazi-proxy   = { path = "../yazi-proxy", version = "25.6.11" }
 yazi-shared  = { path = "../yazi-shared", version = "25.6.11" }
+yazi-term    = { path = "../yazi-term", version = "25.6.11" }
 
 # External dependencies
+base64        = { workspace = true }
 crossterm     = { workspace = true }
 futures       = { workspace = true }
+parking_lot   = { workspace = true }
 ratatui       = { workspace = true }
+tokio         = { workspace = true }
 unicode-width = { workspace = true }
+
+[target."cfg(windows)".dependencies]
+clipboard-win = "5.4.0"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }

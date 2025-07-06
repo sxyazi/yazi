@@ -4,13 +4,14 @@ use mlua::{ExternalError, HookTriggers, IntoLua, ObjectLike, VmState};
 use tokio::{runtime::Handle, select};
 use tokio_util::sync::CancellationToken;
 use tracing::error;
+use yazi_binding::{File, elements::Rect};
 use yazi_config::LAYOUT;
 use yazi_dds::Sendable;
 use yazi_proxy::{AppProxy, options::{PluginCallback, PluginOpt}};
 use yazi_shared::event::Cmd;
 
 use super::slim_lua;
-use crate::{elements::Rect, file::File, loader::LOADER};
+use crate::loader::LOADER;
 
 pub fn peek(
 	cmd: &'static Cmd,

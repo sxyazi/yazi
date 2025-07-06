@@ -1,18 +1,10 @@
-use yazi_shared::event::{CmdCow, Data};
+use yazi_parser::mgr::SpotOpt;
 
 use crate::mgr::Mgr;
 
-struct Opt {
-	skip: Option<usize>,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { skip: c.get("skip").and_then(Data::as_usize) } }
-}
-
 impl Mgr {
 	#[yazi_codegen::command]
-	pub fn spot(&mut self, opt: Opt) {
+	pub fn spot(&mut self, opt: SpotOpt) {
 		let Some(hovered) = self.hovered().cloned() else {
 			return;
 		};

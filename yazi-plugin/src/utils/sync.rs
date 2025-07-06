@@ -1,12 +1,13 @@
 use futures::future::join_all;
 use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, MultiValue, Value, Variadic};
 use tokio::sync::oneshot;
+use yazi_binding::{runtime, runtime_mut};
 use yazi_dds::Sendable;
 use yazi_proxy::{AppProxy, options::{PluginCallback, PluginOpt}};
 use yazi_shared::event::Data;
 
 use super::Utils;
-use crate::{bindings::{MpscRx, MpscTx, MpscUnboundedRx, MpscUnboundedTx, OneshotRx, OneshotTx}, loader::LOADER, runtime, runtime_mut};
+use crate::{bindings::{MpscRx, MpscTx, MpscUnboundedRx, MpscUnboundedTx, OneshotRx, OneshotTx}, loader::LOADER};
 
 impl Utils {
 	pub(super) fn sync(lua: &Lua, isolate: bool) -> mlua::Result<Function> {

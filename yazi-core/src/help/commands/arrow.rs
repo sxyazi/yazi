@@ -1,27 +1,13 @@
 use yazi_adapter::Dimension;
 use yazi_macro::render;
-use yazi_shared::event::CmdCow;
-use yazi_widgets::{Scrollable, Step};
+use yazi_parser::help::ArrowOpt;
+use yazi_widgets::Scrollable;
 
 use crate::help::{HELP_MARGIN, Help};
 
-struct Opt {
-	step: Step,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self {
-		Self { step: c.first().and_then(|d| d.try_into().ok()).unwrap_or_default() }
-	}
-}
-
-impl From<isize> for Opt {
-	fn from(n: isize) -> Self { Self { step: n.into() } }
-}
-
 impl Help {
 	#[yazi_codegen::command]
-	pub fn arrow(&mut self, opt: Opt) {
+	pub fn arrow(&mut self, opt: ArrowOpt) {
 		render!(self.scroll(opt.step));
 	}
 }
