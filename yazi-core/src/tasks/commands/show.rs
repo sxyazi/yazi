@@ -1,20 +1,11 @@
 use yazi_macro::render;
-use yazi_shared::event::CmdCow;
+use yazi_parser::tasks::ShowOpt;
 
 use crate::tasks::Tasks;
 
-struct Opt;
-
-impl From<CmdCow> for Opt {
-	fn from(_: CmdCow) -> Self { Self }
-}
-impl From<()> for Opt {
-	fn from(_: ()) -> Self { Self }
-}
-
 impl Tasks {
 	#[yazi_codegen::command]
-	pub fn show(&mut self, _: Opt) {
+	pub fn show(&mut self, _: ShowOpt) {
 		if self.visible {
 			return;
 		}

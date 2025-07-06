@@ -6,34 +6,15 @@ use yazi_config::popup::InputCfg;
 use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp, expand_path};
 use yazi_macro::{err, render};
+use yazi_parser::tab::CdOpt;
 use yazi_proxy::{CmpProxy, InputProxy, MgrProxy, TabProxy};
-use yazi_shared::{Debounce, errors::InputError, event::CmdCow, url::Url};
+use yazi_shared::{Debounce, errors::InputError, url::Url};
 
 use crate::tab::Tab;
 
-struct Opt {
-	target:      Url,
-	interactive: bool,
-	source:      CdSource,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(mut c: CmdCow) -> Self {
-		let mut target = c.take_first_url().unwrap_or_default();
-		if target.is_regular() && !c.bool("raw") {
-			target = Url::from(expand_path(target));
-		}
-		Self { target, interactive: c.bool("interactive"), source: CdSource::Cd }
-	}
-}
-
-impl From<(Url, CdSource)> for Opt {
-	fn from((target, source): (Url, CdSource)) -> Self { Self { target, interactive: false, source } }
-}
-
 impl Tab {
 	#[yazi_codegen::command]
-	pub fn cd(&mut self, opt: Opt) {
+	pub fn cd(&mut self, opt: CdOpt) {
 		if !self.try_escape_visual() {
 			return;
 		}
@@ -110,21 +91,4 @@ impl Tab {
 			}
 		});
 	}
-}
-
-// --- OptSource
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum CdSource {
-	Tab,
-	Cd,
-	Reveal,
-	Enter,
-	Leave,
-	Forward,
-	Back,
-}
-
-impl CdSource {
-	#[inline]
-	fn big_jump(self) -> bool { self == Self::Cd || self == Self::Reveal }
 }

@@ -1,10 +1,9 @@
 use anyhow::{Context, Result};
 use mlua::Lua;
+use yazi_binding::Runtime;
 use yazi_boot::BOOT;
 use yazi_macro::plugin_preset as preset;
 use yazi_shared::RoCell;
-
-use crate::runtime::Runtime;
 
 pub static LUA: RoCell<Lua> = RoCell::new();
 
@@ -21,7 +20,7 @@ fn stage_1(lua: &'static Lua) -> Result<()> {
 
 	// Base
 	let globals = lua.globals();
-	globals.raw_set("ui", crate::elements::compose(lua)?)?;
+	globals.raw_set("ui", yazi_binding::elements::compose(lua)?)?;
 	globals.raw_set("ya", crate::utils::compose(lua, false)?)?;
 	globals.raw_set("fs", crate::fs::compose(lua)?)?;
 	globals.raw_set("ps", crate::pubsub::compose(lua)?)?;
@@ -29,9 +28,9 @@ fn stage_1(lua: &'static Lua) -> Result<()> {
 	globals.raw_set("th", crate::config::Theme::compose(lua)?)?;
 
 	yazi_binding::Error::install(lua)?;
-	crate::bindings::Cha::install(lua)?;
+	yazi_binding::Cha::install(lua)?;
 	crate::loader::install(lua)?;
-	crate::file::File::install(lua)?;
+	yazi_binding::File::install(lua)?;
 	yazi_binding::Url::install(lua)?;
 
 	// Addons

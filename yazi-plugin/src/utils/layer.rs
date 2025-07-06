@@ -3,13 +3,14 @@ use std::{str::FromStr, time::Duration};
 use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, Table, Value};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
+use yazi_binding::{deprecate, elements::{Line, Pos, Text}};
 use yazi_config::{keymap::{Chord, Key}, popup::{ConfirmCfg, InputCfg}};
 use yazi_macro::emit;
 use yazi_proxy::{AppProxy, ConfirmProxy, InputProxy};
 use yazi_shared::{Debounce, event::Cmd};
 
 use super::Utils;
-use crate::{bindings::InputRx, deprecate, elements::{Line, Pos, Text}};
+use crate::bindings::InputRx;
 
 impl Utils {
 	pub(super) fn which(lua: &Lua) -> mlua::Result<Function> {

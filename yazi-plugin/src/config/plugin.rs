@@ -1,8 +1,6 @@
 use mlua::{Function, IntoLua, Lua, UserData, Value};
-use yazi_binding::{UrlRef, cached_field};
+use yazi_binding::{Composer, FileRef, UrlRef, cached_field};
 use yazi_config::YAZI;
-
-use crate::{Composer, file::FileRef};
 
 pub(super) struct Plugin;
 

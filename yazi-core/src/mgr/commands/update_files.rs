@@ -1,23 +1,11 @@
 use yazi_fs::FilesOp;
 use yazi_macro::render;
-use yazi_shared::event::CmdCow;
+use yazi_parser::mgr::UpdateFilesOpt;
 
 use crate::{mgr::{LINKED, Mgr}, tab::Folder, tasks::Tasks};
 
-pub struct Opt {
-	op: FilesOp,
-}
-
-impl TryFrom<CmdCow> for Opt {
-	type Error = ();
-
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		Ok(Self { op: c.take_any("op").ok_or(())? })
-	}
-}
-
 impl Mgr {
-	pub fn update_files(&mut self, opt: impl TryInto<Opt>, tasks: &Tasks) {
+	pub fn update_files(&mut self, opt: impl TryInto<UpdateFilesOpt>, tasks: &Tasks) {
 		let Ok(opt) = opt.try_into() else {
 			return;
 		};

@@ -1,20 +1,11 @@
 use yazi_macro::render;
-use yazi_shared::event::CmdCow;
+use yazi_parser::tasks::CloseOpt;
 
 use crate::tasks::Tasks;
 
-struct Opt;
-
-impl From<CmdCow> for Opt {
-	fn from(_: CmdCow) -> Self { Self }
-}
-impl From<()> for Opt {
-	fn from(_: ()) -> Self { Self }
-}
-
 impl Tasks {
 	#[yazi_codegen::command]
-	pub fn close(&mut self, _: Opt) {
+	pub fn close(&mut self, _: CloseOpt) {
 		if !self.visible {
 			return;
 		}

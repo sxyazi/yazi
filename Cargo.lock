@@ -194,9 +194,9 @@ dependencies = [
 
 [[package]]
 name = "avif-serialize"
-version = "0.8.4"
+version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19135c0c7a60bfee564dbe44ab5ce0557c6bf3884e5291a50be76a15640c4fbd"
+checksum = "2ea8ef51aced2b9191c08197f55450d830876d9933f8f48a429b354f1d496b42"
 dependencies = [
  "arrayvec",
 ]
@@ -349,9 +349,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.27"
+version = "1.2.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d487aa071b5f64da6f19a3e848e3578944b726ee5a4854b82172f02aa876bfdc"
+checksum = "5c1599538de2394445747c8cf7935946e3cc27e9625f889d979bfb2aaf569362"
 dependencies = [
  "jobserver",
  "libc",
@@ -880,18 +880,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "filetime"
-version = "0.2.25"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35c0522e981e68cbfa8c3f978441a5f34b30b96e146b33cd3359176b50fe8586"
-dependencies = [
- "cfg-if",
- "libc",
- "libredox",
- "windows-sys 0.59.0",
-]
-
-[[package]]
 name = "flate2"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1325,9 +1313,9 @@ checksum = "1171693293099992e19cddea4e8b849964e9846f4acee11b3948bcc337be8776"
 
 [[package]]
 name = "libfuzzer-sys"
-version = "0.4.9"
+version = "0.4.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf78f52d400cf2d84a3a973a78a592b4adc535739e0a5597a0da6f0c357adc75"
+checksum = "5037190e1f70cbeef565bd267599242926f724d3b8a9f510fd7e0b540cfa4404"
 dependencies = [
  "arbitrary",
  "cc",
@@ -1341,7 +1329,6 @@ checksum = "1580801010e535496706ba011c15f8532df6b42297d2e471fec38ceadd8c0638"
 dependencies = [
  "bitflags 2.9.1",
  "libc",
- "redox_syscall",
 ]
 
 [[package]]
@@ -1558,12 +1545,11 @@ checksum = "0676bb32a98c1a483ce53e500a81ad9c3d5b3f7c920c28c24e9cb0980d0b5bc8"
 
 [[package]]
 name = "notify"
-version = "8.0.0"
+version = "8.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2fee8403b3d66ac7b26aee6e40a897d85dc5ce26f44da36b8b73e987cc52e943"
+checksum = "3163f59cd3fa0e9ef8c32f242966a7b9994fd7378366099593e0e73077cd8c97"
 dependencies = [
  "bitflags 2.9.1",
- "filetime",
  "fsevent-sys",
  "inotify",
  "kqueue",
@@ -1572,7 +1558,7 @@ dependencies = [
  "mio",
  "notify-types",
  "walkdir",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -2677,9 +2663,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.46.0"
+version = "1.46.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1140bb80481756a8cbe10541f37433b459c5aa1e727b4c020fbfebdc25bf3ec4"
+checksum = "0cc3a2344dafbe23a245241fe8b09735b521110d30fcefbbd5feb1797ca35d17"
 dependencies = [
  "backtrace",
  "bytes",
@@ -3469,13 +3455,19 @@ dependencies = [
 name = "yazi-binding"
 version = "25.6.11"
 dependencies = [
+ "ansi-to-tui",
  "mlua",
  "paste",
  "ratatui",
  "serde_json",
+ "tokio",
+ "tracing",
+ "unicode-width 0.2.0",
+ "yazi-adapter",
  "yazi-config",
  "yazi-fs",
  "yazi-macro",
+ "yazi-proxy",
  "yazi-shared",
 ]
 
@@ -3555,7 +3547,6 @@ name = "yazi-core"
 version = "25.6.11"
 dependencies = [
  "anyhow",
- "bitflags 2.9.1",
  "crossterm 0.29.0",
  "futures",
  "indexmap",
@@ -3577,6 +3568,7 @@ dependencies = [
  "yazi-dds",
  "yazi-fs",
  "yazi-macro",
+ "yazi-parser",
  "yazi-plugin",
  "yazi-proxy",
  "yazi-scheduler",
@@ -3694,10 +3686,28 @@ name = "yazi-packing"
 version = "25.5.28"
 
 [[package]]
+name = "yazi-parser"
+version = "25.6.11"
+dependencies = [
+ "anyhow",
+ "bitflags 2.9.1",
+ "mlua",
+ "tokio",
+ "yazi-binding",
+ "yazi-boot",
+ "yazi-config",
+ "yazi-dds",
+ "yazi-fs",
+ "yazi-macro",
+ "yazi-proxy",
+ "yazi-shared",
+ "yazi-widgets",
+]
+
+[[package]]
 name = "yazi-plugin"
 version = "25.6.11"
 dependencies = [
- "ansi-to-tui",
  "anyhow",
  "base64",
  "clipboard-win",
@@ -3726,10 +3736,12 @@ dependencies = [
  "yazi-dds",
  "yazi-fs",
  "yazi-macro",
+ "yazi-parser",
  "yazi-prebuilt",
  "yazi-proxy",
  "yazi-shared",
  "yazi-term",
+ "yazi-widgets",
 ]
 
 [[package]]
@@ -3812,16 +3824,20 @@ dependencies = [
 name = "yazi-widgets"
 version = "25.6.11"
 dependencies = [
+ "base64",
  "crossterm 0.29.0",
  "futures",
+ "parking_lot",
  "ratatui",
+ "tokio",
  "unicode-width 0.2.0",
+ "yazi-binding",
  "yazi-codegen",
  "yazi-config",
  "yazi-macro",
- "yazi-plugin",
  "yazi-proxy",
  "yazi-shared",
+ "yazi-term",
 ]
 
 [[package]]
@@ -3861,9 +3877,9 @@ dependencies = [
 
 [[package]]
 name = "zune-jpeg"
-version = "0.4.18"
+version = "0.4.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7384255a918371b5af158218d131530f694de9ad3815ebdd0453a940485cb0fa"
+checksum = "2c9e525af0a6a658e031e95f14b7f889976b74a11ba0eca5a5fc9ac8a1c43a6a"
 dependencies = [
  "zune-core",
 ]

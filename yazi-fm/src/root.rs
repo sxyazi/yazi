@@ -1,7 +1,8 @@
 use mlua::{ObjectLike, Table};
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 use tracing::error;
-use yazi_plugin::{LUA, elements::render_once};
+use yazi_binding::elements::render_once;
+use yazi_plugin::LUA;
 
 use super::{cmp, confirm, help, input, mgr, pick, spot, tasks, which};
 use crate::Ctx;
@@ -14,7 +15,7 @@ impl<'a> Root<'a> {
 	pub(super) fn new(cx: &'a Ctx) -> Self { Self { cx } }
 
 	pub(super) fn reflow(area: Rect) -> mlua::Result<Table> {
-		let area = yazi_plugin::elements::Rect::from(area);
+		let area = yazi_binding::elements::Rect::from(area);
 		let root = LUA.globals().raw_get::<Table>("Root")?.call_method::<Table>("new", area)?;
 		root.call_method("reflow", ())
 	}
@@ -23,7 +24,7 @@ impl<'a> Root<'a> {
 impl Widget for Root<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
 		let mut f = || {
-			let area = yazi_plugin::elements::Rect::from(area);
+			let area = yazi_binding::elements::Rect::from(area);
 			let root = LUA.globals().raw_get::<Table>("Root")?.call_method::<Table>("new", area)?;
 
 			render_once(root.call_method("redraw", ())?, buf, |p| self.cx.mgr.area(p));

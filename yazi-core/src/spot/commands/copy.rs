@@ -1,21 +1,11 @@
-use std::borrow::Cow;
-
-use yazi_plugin::CLIPBOARD;
-use yazi_shared::event::CmdCow;
+use yazi_parser::spot::CopyOpt;
+use yazi_widgets::CLIPBOARD;
 
 use crate::spot::Spot;
 
-struct Opt {
-	r#type: Cow<'static, str>,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(mut c: CmdCow) -> Self { Self { r#type: c.take_first_str().unwrap_or_default() } }
-}
-
 impl Spot {
 	#[yazi_codegen::command]
-	pub fn copy(&mut self, opt: Opt) {
+	pub fn copy(&mut self, opt: CopyOpt) {
 		let Some(lock) = &self.lock else { return };
 		let Some(table) = lock.table() else { return };
 

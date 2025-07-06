@@ -1,35 +1,14 @@
-use yazi_boot::BOOT;
-use yazi_fs::expand_path;
 use yazi_macro::render;
+use yazi_parser::{mgr::TabCreateOpt, tab::CdSource};
 use yazi_proxy::AppProxy;
-use yazi_shared::{event::CmdCow, url::Url};
 
-use crate::{mgr::Tabs, tab::{Tab, commands::CdSource}};
+use crate::{mgr::Tabs, tab::Tab};
 
 const MAX_TABS: usize = 9;
 
-struct Opt {
-	wd: Option<Url>,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(mut c: CmdCow) -> Self {
-		if c.bool("current") {
-			return Self { wd: None };
-		}
-		let Some(mut wd) = c.take_first_url() else {
-			return Self { wd: Some(Url::from(&BOOT.cwds[0])) };
-		};
-		if wd.is_regular() && !c.bool("raw") {
-			wd = Url::from(expand_path(wd));
-		}
-		Self { wd: Some(wd) }
-	}
-}
-
 impl Tabs {
 	#[yazi_codegen::command]
-	pub fn create(&mut self, opt: Opt) {
+	pub fn create(&mut self, opt: TabCreateOpt) {
 		if self.items.len() >= MAX_TABS {
 			AppProxy::notify_warn("Too many tabs", "You can only open up to 9 tabs at the same time.");
 			return;

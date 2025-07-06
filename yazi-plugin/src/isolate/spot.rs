@@ -4,12 +4,12 @@ use mlua::{ExternalError, ExternalResult, HookTriggers, IntoLua, ObjectLike, VmS
 use tokio::{runtime::Handle, select};
 use tokio_util::sync::CancellationToken;
 use tracing::error;
-use yazi_binding::Id;
+use yazi_binding::{File, Id};
 use yazi_dds::Sendable;
 use yazi_shared::{Ids, event::Cmd};
 
 use super::slim_lua;
-use crate::{file::File, loader::LOADER};
+use crate::loader::LOADER;
 
 static IDS: Ids = Ids::new();
 

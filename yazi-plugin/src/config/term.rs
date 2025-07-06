@@ -1,7 +1,6 @@
 use mlua::{Function, IntoLua, IntoLuaMulti, Lua, Value};
 use yazi_adapter::{Dimension, EMULATOR};
-
-use crate::Composer;
+use yazi_binding::Composer;
 
 pub(super) struct Term;
 

@@ -1,11 +1,11 @@
 use yazi_macro::render;
+use yazi_parser::tab::FindOpt;
 
-use super::find::Opt;
 use crate::tab::{Finder, Tab};
 
 impl Tab {
 	#[yazi_codegen::command]
-	pub fn find_do(&mut self, opt: Opt) {
+	pub fn find_do(&mut self, opt: FindOpt) {
 		let Some(query) = opt.query else {
 			return;
 		};

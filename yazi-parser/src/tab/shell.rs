@@ -1,0 +1,38 @@
+use std::borrow::Cow;
+
+use anyhow::bail;
+use yazi_shared::{event::{CmdCow, Data}, url::Url};
+
+pub struct ShellOpt {
+	pub run: Cow<'static, str>,
+	pub cwd: Option<Url>,
+
+	pub block:       bool,
+	pub orphan:      bool,
+	pub interactive: bool,
+
+	pub cursor: Option<usize>,
+}
+
+impl TryFrom<CmdCow> for ShellOpt {
+	type Error = anyhow::Error;
+
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
+		let me = Self {
+			run: c.take_first_str().unwrap_or_default(),
+			cwd: c.take_url("cwd"),
+
+			block:       c.bool("block"),
+			orphan:      c.bool("orphan"),
+			interactive: c.bool("interactive"),
+
+			cursor: c.get("cursor").and_then(Data::as_usize),
+		};
+
+		if me.cursor.is_some_and(|c| c > me.run.chars().count()) {
+			bail!("The cursor position is out of bounds.");
+		}
+
+		Ok(me)
+	}
+}

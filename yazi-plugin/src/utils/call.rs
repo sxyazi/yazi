@@ -1,10 +1,10 @@
 use mlua::{Function, Lua, Table};
+use yazi_binding::deprecate;
 use yazi_dds::Sendable;
 use yazi_macro::{emit, render};
 use yazi_shared::{Layer, event::Cmd};
 
 use super::Utils;
-use crate::deprecate;
 
 impl Utils {
 	pub(super) fn render(lua: &Lua) -> mlua::Result<Function> {

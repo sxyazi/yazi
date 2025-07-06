@@ -3,8 +3,9 @@ use std::fmt::Display;
 use mlua::ObjectLike;
 use scopeguard::defer;
 use tracing::{error, warn};
+use yazi_binding::runtime_mut;
 use yazi_dds::Sendable;
-use yazi_plugin::{LUA, loader::{LOADER, Loader}, runtime_mut};
+use yazi_plugin::{LUA, loader::{LOADER, Loader}};
 use yazi_proxy::{AppProxy, options::{PluginMode, PluginOpt}};
 
 use crate::{app::App, lives::Lives};

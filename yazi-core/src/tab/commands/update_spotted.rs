@@ -1,28 +1,15 @@
 use yazi_macro::render;
-use yazi_plugin::utils::SpotLock;
-use yazi_shared::event::CmdCow;
+use yazi_parser::tab::UpdateSpottedOpt;
 
 use crate::tab::Tab;
 
-pub struct Opt {
-	lock: SpotLock,
-}
-
-impl TryFrom<CmdCow> for Opt {
-	type Error = ();
-
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		Ok(Self { lock: c.take_any("lock").ok_or(())? })
-	}
-}
-
 impl Tab {
-	pub fn update_spotted(&mut self, opt: impl TryInto<Opt>) {
+	pub fn update_spotted(&mut self, opt: impl TryInto<UpdateSpottedOpt>) {
 		let Some(hovered) = self.hovered().map(|h| &h.url) else {
 			return self.spot.reset();
 		};
 
-		let Ok(mut opt): Result<Opt, _> = opt.try_into() else {
+		let Ok(mut opt): Result<UpdateSpottedOpt, _> = opt.try_into() else {
 			return;
 		};
 

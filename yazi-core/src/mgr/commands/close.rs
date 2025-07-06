@@ -1,17 +1,10 @@
-use yazi_shared::event::CmdCow;
+use yazi_parser::mgr::CloseOpt;
 
-use crate::{mgr::{Mgr, commands::quit}, tasks::Tasks};
-
-#[derive(Default)]
-struct Opt(quit::Opt);
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self(c.into()) }
-}
+use crate::{mgr::Mgr, tasks::Tasks};
 
 impl Mgr {
 	#[yazi_codegen::command]
-	pub fn close(&mut self, opt: Opt, tasks: &Tasks) {
+	pub fn close(&mut self, opt: CloseOpt, tasks: &Tasks) {
 		if self.tabs.len() > 1 {
 			return self.tabs.close(self.tabs.cursor);
 		}

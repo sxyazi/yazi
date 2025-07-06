@@ -16,7 +16,7 @@ impl Widget for Input<'_> {
 		let input = &self.cx.input;
 		let area = self.cx.mgr.area(input.position);
 
-		yazi_plugin::elements::Clear::default().render(area, buf);
+		yazi_binding::elements::Clear::default().render(area, buf);
 
 		Block::bordered()
 			.border_type(BorderType::Rounded)

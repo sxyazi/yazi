@@ -16,7 +16,7 @@ impl Widget for Confirm<'_> {
 		let confirm = &self.cx.confirm;
 		let area = self.cx.mgr.area(confirm.position);
 
-		yazi_plugin::elements::Clear::default().render(area, buf);
+		yazi_binding::elements::Clear::default().render(area, buf);
 
 		Block::bordered()
 			.border_type(BorderType::Rounded)

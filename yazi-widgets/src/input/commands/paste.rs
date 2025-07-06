@@ -1,8 +1,7 @@
 use yazi_macro::render;
-use yazi_plugin::CLIPBOARD;
 use yazi_shared::event::CmdCow;
 
-use crate::input::{Input, op::InputOp};
+use crate::{CLIPBOARD, input::{Input, op::InputOp}};
 
 struct Opt {
 	before: bool,

@@ -1,9 +1,9 @@
 use mlua::{Function, IntoLuaMulti, Lua, Value};
 use yazi_adapter::{ADAPTOR, Image};
-use yazi_binding::{Error, UrlRef};
+use yazi_binding::{Error, UrlRef, elements::Rect};
 
 use super::Utils;
-use crate::{bindings::ImageInfo, elements::Rect};
+use crate::bindings::ImageInfo;
 
 impl Utils {
 	pub(super) fn image_info(lua: &Lua) -> mlua::Result<Function> {

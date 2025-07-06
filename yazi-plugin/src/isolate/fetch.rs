@@ -1,11 +1,11 @@
 use mlua::{ExternalResult, FromLua, IntoLua, Lua, ObjectLike, Value};
 use tokio::runtime::Handle;
-use yazi_binding::Error;
+use yazi_binding::{Error, File};
 use yazi_dds::Sendable;
 use yazi_shared::event::CmdCow;
 
 use super::slim_lua;
-use crate::{file::File, loader::LOADER};
+use crate::loader::LOADER;
 
 pub async fn fetch(
 	cmd: CmdCow,

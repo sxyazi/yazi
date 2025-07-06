@@ -1,8 +1,9 @@
 use mlua::{ObjectLike, Table};
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 use tracing::error;
+use yazi_binding::elements::render_once;
 use yazi_config::LAYOUT;
-use yazi_plugin::{LUA, elements::render_once};
+use yazi_plugin::LUA;
 
 use crate::Ctx;
 
@@ -17,7 +18,7 @@ impl<'a> Progress<'a> {
 impl Widget for Progress<'_> {
 	fn render(self, _: Rect, buf: &mut Buffer) {
 		let mut f = || {
-			let area = yazi_plugin::elements::Rect::from(LAYOUT.get().progress);
+			let area = yazi_binding::elements::Rect::from(LAYOUT.get().progress);
 			let progress =
 				LUA.globals().raw_get::<Table>("Progress")?.call_method::<Table>("use", area)?;
 

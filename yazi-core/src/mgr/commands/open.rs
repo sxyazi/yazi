@@ -3,27 +3,16 @@ use std::{borrow::Cow, iter};
 use tracing::error;
 use yazi_config::{YAZI, popup::PickCfg};
 use yazi_fs::File;
+use yazi_parser::mgr::OpenOpt;
 use yazi_plugin::isolate;
 use yazi_proxy::{MgrProxy, PickProxy, TasksProxy, options::OpenDoOpt};
 use yazi_shared::{MIME_DIR, event::CmdCow, url::Url};
 
 use crate::{mgr::Mgr, tab::Folder, tasks::Tasks};
 
-#[derive(Clone, Copy)]
-pub(super) struct Opt {
-	pub(super) interactive: bool,
-	pub(super) hovered:     bool,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self {
-		Self { interactive: c.bool("interactive"), hovered: c.bool("hovered") }
-	}
-}
-
 impl Mgr {
 	#[yazi_codegen::command]
-	pub fn open(&mut self, opt: Opt, tasks: &Tasks) {
+	pub fn open(&mut self, opt: OpenOpt, tasks: &Tasks) {
 		if !self.active_mut().try_escape_visual() {
 			return;
 		}

@@ -1,19 +1,11 @@
 use yazi_macro::render;
-use yazi_shared::event::CmdCow;
+use yazi_parser::mgr::YankOpt;
 
 use crate::mgr::{Mgr, Yanked};
 
-struct Opt {
-	cut: bool,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { cut: c.bool("cut") } }
-}
-
 impl Mgr {
 	#[yazi_codegen::command]
-	pub fn yank(&mut self, opt: Opt) {
+	pub fn yank(&mut self, opt: YankOpt) {
 		if !self.active_mut().try_escape_visual() {
 			return;
 		}

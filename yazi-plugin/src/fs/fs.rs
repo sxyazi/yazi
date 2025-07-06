@@ -1,10 +1,10 @@
 use globset::GlobBuilder;
 use mlua::{ExternalError, ExternalResult, Function, IntoLua, IntoLuaMulti, Lua, Table, Value};
 use tokio::fs;
-use yazi_binding::{Error, Url, UrlRef};
+use yazi_binding::{Cha, Composer, Error, File, Url, UrlRef};
 use yazi_fs::{mounts::PARTITIONS, remove_dir_clean};
 
-use crate::{Composer, bindings::{Cha, SizeCalculator}, file::File};
+use crate::bindings::SizeCalculator;
 
 pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 	Composer::make(lua, |lua, key| {

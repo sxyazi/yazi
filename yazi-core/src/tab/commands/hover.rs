@@ -1,23 +1,13 @@
 use yazi_dds::Pubsub;
 use yazi_macro::{err, render};
-use yazi_shared::{event::CmdCow, url::{Url, Urn}};
+use yazi_parser::tab::HoverOpt;
+use yazi_shared::url::{Url, Urn};
 
 use crate::tab::Tab;
 
-struct Opt {
-	url: Option<Url>,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(mut c: CmdCow) -> Self { Self { url: c.take_first_url() } }
-}
-impl From<Option<Url>> for Opt {
-	fn from(url: Option<Url>) -> Self { Self { url } }
-}
-
 impl Tab {
 	#[yazi_codegen::command]
-	pub fn hover(&mut self, opt: Opt) {
+	pub fn hover(&mut self, opt: HoverOpt) {
 		if let Some(u) = opt.url {
 			self.hover_do(u);
 		} else {

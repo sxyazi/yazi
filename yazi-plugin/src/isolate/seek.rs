@@ -1,9 +1,8 @@
 use mlua::{IntoLua, ObjectLike};
+use yazi_binding::{File, elements::Rect};
 use yazi_config::LAYOUT;
 use yazi_proxy::{AppProxy, options::{PluginCallback, PluginOpt}};
 use yazi_shared::event::Cmd;
-
-use crate::{elements::Rect, file::File};
 
 pub fn seek_sync(cmd: &'static Cmd, file: yazi_fs::File, units: i16) {
 	let cb: PluginCallback = Box::new(move |lua, plugin| {

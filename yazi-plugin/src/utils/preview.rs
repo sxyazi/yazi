@@ -1,39 +1,12 @@
 use mlua::{AnyUserData, ExternalError, Function, IntoLuaMulti, Lua, Table, Value};
-use yazi_binding::Error;
+use yazi_binding::{Error, elements::{Area, Renderable, Text}};
 use yazi_config::YAZI;
 use yazi_macro::emit;
+use yazi_parser::tab::PreviewLock;
 use yazi_shared::{errors::PeekError, event::Cmd};
 
 use super::Utils;
-use crate::{elements::{Area, Rect, Renderable, Text}, external::Highlighter, file::FileRef};
-
-#[derive(Debug, Default)]
-pub struct PreviewLock {
-	pub url:  yazi_shared::url::Url,
-	pub cha:  yazi_fs::cha::Cha,
-	pub mime: String,
-
-	pub skip: usize,
-	pub area: Rect,
-	pub data: Vec<Renderable>,
-}
-
-impl TryFrom<Table> for PreviewLock {
-	type Error = mlua::Error;
-
-	fn try_from(t: Table) -> Result<Self, Self::Error> {
-		let file: FileRef = t.raw_get("file")?;
-		Ok(Self {
-			url:  file.url_owned(),
-			cha:  file.cha,
-			mime: t.raw_get("mime")?,
-
-			skip: t.raw_get("skip")?,
-			area: t.raw_get("area")?,
-			data: Default::default(),
-		})
-	}
-}
+use crate::external::Highlighter;
 
 impl Utils {
 	pub(super) fn preview_code(lua: &Lua) -> mlua::Result<Function> {

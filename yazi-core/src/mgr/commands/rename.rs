@@ -1,37 +1,18 @@
-use std::borrow::Cow;
-
 use anyhow::Result;
 use tokio::fs;
 use yazi_config::popup::{ConfirmCfg, InputCfg};
 use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp, maybe_exists, ok_or_not_found, paths_to_same_file, realname};
 use yazi_macro::err;
+use yazi_parser::mgr::RenameOpt;
 use yazi_proxy::{ConfirmProxy, InputProxy, TabProxy, WATCHER};
-use yazi_shared::{Id, event::CmdCow, url::{Url, UrnBuf}};
+use yazi_shared::{Id, url::{Url, UrnBuf}};
 
 use crate::mgr::Mgr;
 
-struct Opt {
-	hovered: bool,
-	force:   bool,
-	empty:   Cow<'static, str>,
-	cursor:  Cow<'static, str>,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(mut c: CmdCow) -> Self {
-		Self {
-			hovered: c.bool("hovered"),
-			force:   c.bool("force"),
-			empty:   c.take_str("empty").unwrap_or_default(),
-			cursor:  c.take_str("cursor").unwrap_or_default(),
-		}
-	}
-}
-
 impl Mgr {
 	#[yazi_codegen::command]
-	pub fn rename(&mut self, opt: Opt) {
+	pub fn rename(&mut self, opt: RenameOpt) {
 		if !self.active_mut().try_escape_visual() {
 			return;
 		} else if !opt.hovered && !self.active().selected.is_empty() {

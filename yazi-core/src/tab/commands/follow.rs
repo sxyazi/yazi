@@ -1,17 +1,11 @@
 use yazi_fs::clean_url;
-use yazi_shared::event::CmdCow;
+use yazi_parser::tab::FollowOpt;
 
 use crate::tab::Tab;
 
-struct Opt;
-
-impl From<CmdCow> for Opt {
-	fn from(_: CmdCow) -> Self { Self }
-}
-
 impl Tab {
 	#[yazi_codegen::command]
-	pub fn follow(&mut self, _: Opt) {
+	pub fn follow(&mut self, _: FollowOpt) {
 		let Some(file) = self.hovered() else { return };
 		let Some(link_to) = &file.link_to else { return };
 

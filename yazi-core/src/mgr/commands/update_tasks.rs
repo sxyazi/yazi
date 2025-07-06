@@ -1,21 +1,9 @@
-use yazi_shared::{event::CmdCow, url::Url};
+use yazi_parser::mgr::UpdateTasksOpt;
 
 use crate::mgr::Mgr;
 
-pub struct Opt {
-	urls: Vec<Url>,
-}
-
-impl TryFrom<CmdCow> for Opt {
-	type Error = ();
-
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		Ok(Self { urls: c.take_any("urls").ok_or(())? })
-	}
-}
-
 impl Mgr {
-	pub fn update_tasks(&mut self, opt: impl TryInto<Opt>) {
+	pub fn update_tasks(&mut self, opt: impl TryInto<UpdateTasksOpt>) {
 		let Ok(opt) = opt.try_into() else {
 			return;
 		};

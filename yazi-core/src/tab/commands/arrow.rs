@@ -1,27 +1,12 @@
 use yazi_macro::render;
+use yazi_parser::tab::ArrowOpt;
 use yazi_proxy::MgrProxy;
-use yazi_shared::event::CmdCow;
-use yazi_widgets::Step;
 
 use crate::tab::Tab;
 
-struct Opt {
-	step: Step,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self {
-		Self { step: c.first().and_then(|d| d.try_into().ok()).unwrap_or_default() }
-	}
-}
-
-impl From<isize> for Opt {
-	fn from(n: isize) -> Self { Self { step: n.into() } }
-}
-
 impl Tab {
 	#[yazi_codegen::command]
-	pub fn arrow(&mut self, opt: Opt) {
+	pub fn arrow(&mut self, opt: ArrowOpt) {
 		if !self.current.arrow(opt.step) {
 			return;
 		}

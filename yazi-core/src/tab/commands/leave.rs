@@ -1,19 +1,10 @@
-use yazi_shared::event::CmdCow;
+use yazi_parser::tab::{CdSource, LeaveOpt};
 
-use super::cd::CdSource;
 use crate::tab::Tab;
-
-struct Opt;
-impl From<()> for Opt {
-	fn from(_: ()) -> Self { Self }
-}
-impl From<CmdCow> for Opt {
-	fn from(_: CmdCow) -> Self { Self }
-}
 
 impl Tab {
 	#[yazi_codegen::command]
-	pub fn leave(&mut self, _: Opt) {
+	pub fn leave(&mut self, _: LeaveOpt) {
 		self
 			.current
 			.hovered()

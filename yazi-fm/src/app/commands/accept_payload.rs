@@ -1,7 +1,8 @@
 use mlua::IntoLua;
 use tracing::error;
+use yazi_binding::runtime_mut;
 use yazi_dds::{LOCAL, Payload, REMOTE};
-use yazi_plugin::{LUA, runtime_mut};
+use yazi_plugin::LUA;
 use yazi_shared::event::CmdCow;
 
 use crate::{app::App, lives::Lives};

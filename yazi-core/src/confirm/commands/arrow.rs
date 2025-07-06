@@ -1,22 +1,11 @@
 use yazi_macro::render;
-use yazi_shared::event::CmdCow;
-use yazi_widgets::Step;
+use yazi_parser::confirm::ArrowOpt;
 
 use crate::{confirm::Confirm, mgr::Mgr};
 
-struct Opt {
-	step: Step,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self {
-		Self { step: c.first().and_then(|d| d.try_into().ok()).unwrap_or_default() }
-	}
-}
-
 impl Confirm {
 	#[yazi_codegen::command]
-	pub fn arrow(&mut self, opt: Opt, mgr: &Mgr) {
+	pub fn arrow(&mut self, opt: ArrowOpt, mgr: &Mgr) {
 		let area = mgr.area(self.position);
 		let len = self.list.line_count(area.width);
 

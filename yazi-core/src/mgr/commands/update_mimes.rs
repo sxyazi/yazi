@@ -2,25 +2,13 @@ use std::collections::HashMap;
 
 use tracing::error;
 use yazi_macro::render;
-use yazi_shared::event::{CmdCow, Data, DataKey};
+use yazi_parser::mgr::UpdateMimesOpt;
 
 use crate::{mgr::{LINKED, Mgr}, tasks::Tasks};
 
-pub struct Opt {
-	updates: HashMap<DataKey, Data>,
-}
-
-impl TryFrom<CmdCow> for Opt {
-	type Error = ();
-
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		Ok(Self { updates: c.try_take("updates").and_then(Data::into_dict).ok_or(())? })
-	}
-}
-
 impl Mgr {
-	pub fn update_mimes(&mut self, opt: impl TryInto<Opt>, tasks: &Tasks) {
-		let Ok(opt): Result<Opt, _> = opt.try_into() else {
+	pub fn update_mimes(&mut self, opt: impl TryInto<UpdateMimesOpt>, tasks: &Tasks) {
+		let Ok(opt): Result<UpdateMimesOpt, _> = opt.try_into() else {
 			return error!("invalid arguments for update_mimes");
 		};
 

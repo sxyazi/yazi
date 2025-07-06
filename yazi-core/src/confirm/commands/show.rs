@@ -1,26 +1,11 @@
-use tokio::sync::oneshot;
-use yazi_config::popup::ConfirmCfg;
 use yazi_macro::render;
-use yazi_shared::event::CmdCow;
+use yazi_parser::confirm::ShowOpt;
 
 use crate::confirm::Confirm;
 
-pub struct Opt {
-	cfg: ConfirmCfg,
-	tx:  oneshot::Sender<bool>,
-}
-
-impl TryFrom<CmdCow> for Opt {
-	type Error = ();
-
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		Ok(Self { cfg: c.take_any("cfg").ok_or(())?, tx: c.take_any("tx").ok_or(())? })
-	}
-}
-
 impl Confirm {
-	pub fn show(&mut self, opt: impl TryInto<Opt>) {
-		let Ok(opt): Result<Opt, _> = opt.try_into() else {
+	pub fn show(&mut self, opt: impl TryInto<ShowOpt>) {
+		let Ok(opt): Result<ShowOpt, _> = opt.try_into() else {
 			return;
 		};
 

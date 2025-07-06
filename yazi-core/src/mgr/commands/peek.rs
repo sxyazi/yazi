@@ -1,33 +1,11 @@
+use yazi_parser::mgr::PeekOpt;
 use yazi_proxy::HIDER;
-use yazi_shared::{event::{CmdCow, Data}, url::Url};
 
 use crate::mgr::Mgr;
 
-#[derive(Debug, Default)]
-struct Opt {
-	skip:        Option<usize>,
-	force:       bool,
-	only_if:     Option<Url>,
-	upper_bound: bool,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(mut c: CmdCow) -> Self {
-		Self {
-			skip:        c.first().and_then(Data::as_usize),
-			force:       c.bool("force"),
-			only_if:     c.take_url("only-if"),
-			upper_bound: c.bool("upper-bound"),
-		}
-	}
-}
-impl From<bool> for Opt {
-	fn from(force: bool) -> Self { Self { force, ..Default::default() } }
-}
-
 impl Mgr {
 	#[yazi_codegen::command]
-	pub fn peek(&mut self, opt: Opt) {
+	pub fn peek(&mut self, opt: PeekOpt) {
 		let Some(hovered) = self.hovered().cloned() else {
 			return self.active_mut().preview.reset();
 		};
