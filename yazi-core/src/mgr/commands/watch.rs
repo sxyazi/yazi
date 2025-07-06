@@ -6,7 +6,7 @@ use crate::mgr::Mgr;
 
 impl Mgr {
 	#[yazi_codegen::command]
-	pub fn watch(&mut self, _: Opt) {
+	pub fn watch(&mut self, _: WatchOpt) {
 		let it = iter::once(self.tabs.active().cwd())
 			.chain(self.tabs.parent().map(|p| &p.url))
 			.chain(self.tabs.hovered().filter(|h| h.is_dir()).map(|h| &h.url));

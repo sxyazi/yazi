@@ -52,7 +52,7 @@ impl Watcher {
 	}
 
 	pub(super) fn watch<'a>(&mut self, it: impl Iterator<Item = &'a Url>) {
-		self.in_tx.send(it.into_iter().filter(|u| u.is_regular()).cloned().collect()).ok();
+		self.in_tx.send(it.filter(|u| u.is_regular()).cloned().collect()).ok();
 	}
 
 	pub(super) fn push_files(&self, urls: Vec<Url>) {
