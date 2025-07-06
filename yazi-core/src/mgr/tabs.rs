@@ -52,6 +52,9 @@ impl Tabs {
 	pub(super) fn active_mut(&mut self) -> &mut Tab { &mut self.items[self.cursor] }
 
 	#[inline]
+	pub fn parent(&self) -> Option<&Folder> { self.active().parent.as_ref() }
+
+	#[inline]
 	pub fn current(&self) -> &Folder { &self.active().current }
 
 	#[inline]
