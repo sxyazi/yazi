@@ -4,11 +4,11 @@ use anyhow::{Result, bail};
 use serde::{Deserialize, de};
 
 use super::{Data, DataKey};
-use crate::{Layer, url::Url};
+use crate::{Layer, SStr, url::Url};
 
 #[derive(Debug, Default)]
 pub struct Cmd {
-	pub name:  Cow<'static, str>,
+	pub name:  SStr,
 	pub args:  HashMap<DataKey, Data>,
 	pub layer: Layer,
 }
@@ -16,7 +16,7 @@ pub struct Cmd {
 impl Cmd {
 	pub fn new<N>(name: N) -> Self
 	where
-		N: Into<Cow<'static, str>>,
+		N: Into<SStr>,
 	{
 		Self::new_or(name, Default::default())
 			.unwrap_or_else(|_| Self { name: "null".into(), ..Default::default() })
@@ -24,9 +24,9 @@ impl Cmd {
 
 	pub fn new_or<N>(name: N, default: Layer) -> Result<Self>
 	where
-		N: Into<Cow<'static, str>>,
+		N: Into<SStr>,
 	{
-		let cow: Cow<'static, str> = name.into();
+		let cow: SStr = name.into();
 		let (layer, name) = match cow.find(':') {
 			None => (default, cow),
 			Some(i) => (cow[..i].parse()?, match cow {
@@ -43,7 +43,7 @@ impl Cmd {
 
 	pub fn args<N, D, I>(name: N, args: I) -> Self
 	where
-		N: Into<Cow<'static, str>>,
+		N: Into<SStr>,
 		D: Into<Data>,
 		I: IntoIterator<Item = D>,
 	{
@@ -116,7 +116,7 @@ impl Cmd {
 	}
 
 	#[inline]
-	pub fn take_str(&mut self, name: impl Into<DataKey>) -> Option<Cow<'static, str>> {
+	pub fn take_str(&mut self, name: impl Into<DataKey>) -> Option<SStr> {
 		if let Some(Data::String(s)) = self.take(name) { Some(s) } else { None }
 	}
 
@@ -124,7 +124,7 @@ impl Cmd {
 	pub fn take_first(&mut self) -> Option<Data> { self.take(0) }
 
 	#[inline]
-	pub fn take_first_str(&mut self) -> Option<Cow<'static, str>> {
+	pub fn take_first_str(&mut self) -> Option<SStr> {
 		if let Some(Data::String(s)) = self.take_first() { Some(s) } else { None }
 	}
 

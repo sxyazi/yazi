@@ -1,14 +1,14 @@
-use std::{borrow::Cow, collections::HashMap, fmt::Debug};
+use std::{collections::HashMap, fmt::Debug};
 
 use anyhow::bail;
 use mlua::{Lua, Table};
-use yazi_shared::event::{Cmd, CmdCow, Data, DataKey};
+use yazi_shared::{SStr, event::{Cmd, CmdCow, Data, DataKey}};
 
 pub type PluginCallback = Box<dyn FnOnce(&Lua, Table) -> mlua::Result<()> + Send + Sync>;
 
 #[derive(Default)]
 pub struct PluginOpt {
-	pub id:   Cow<'static, str>,
+	pub id:   SStr,
 	pub args: HashMap<DataKey, Data>,
 	pub mode: PluginMode,
 	pub cb:   Option<PluginCallback>,
@@ -50,7 +50,7 @@ impl Debug for PluginOpt {
 }
 
 impl PluginOpt {
-	pub fn new_callback(id: impl Into<Cow<'static, str>>, cb: PluginCallback) -> Self {
+	pub fn new_callback(id: impl Into<SStr>, cb: PluginCallback) -> Self {
 		Self { id: id.into(), mode: PluginMode::Sync, cb: Some(cb), ..Default::default() }
 	}
 }

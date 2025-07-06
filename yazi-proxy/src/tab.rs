@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use yazi_macro::emit;
-use yazi_shared::{event::Cmd, url::Url};
+use yazi_shared::{SStr, event::Cmd, url::Url};
 
 use crate::options::SearchOpt;
 
@@ -16,7 +16,7 @@ impl TabProxy {
 		emit!(Call(Cmd::args("mgr:reveal", [target]).with("raw", true).with("no-dummy", true)));
 	}
 
-	pub fn arrow(step: impl Into<Cow<'static, str>>) {
+	pub fn arrow(step: impl Into<SStr>) {
 		emit!(Call(Cmd::args("mgr:arrow", [step.into()])));
 	}
 

@@ -1,9 +1,9 @@
 use std::{borrow::Cow, ffi::OsStr, path::Path};
 
-use yazi_shared::event::CmdCow;
+use yazi_shared::{SStr, event::CmdCow};
 
 pub struct CopyOpt {
-	pub r#type:    Cow<'static, str>,
+	pub r#type:    SStr,
 	pub separator: CopySeparator,
 	pub hovered:   bool,
 }

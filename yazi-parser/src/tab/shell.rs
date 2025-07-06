@@ -1,10 +1,8 @@
-use std::borrow::Cow;
-
 use anyhow::bail;
-use yazi_shared::{event::{CmdCow, Data}, url::Url};
+use yazi_shared::{SStr, event::{CmdCow, Data}, url::Url};
 
 pub struct ShellOpt {
-	pub run: Cow<'static, str>,
+	pub run: SStr,
 	pub cwd: Option<Url>,
 
 	pub block:       bool,

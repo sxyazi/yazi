@@ -1,12 +1,10 @@
-use std::borrow::Cow;
-
-use yazi_shared::event::CmdCow;
+use yazi_shared::{SStr, event::CmdCow};
 
 pub struct SearchOpt {
 	pub via:      SearchOptVia,
-	pub subject:  Cow<'static, str>,
+	pub subject:  SStr,
 	pub args:     Vec<String>,
-	pub args_raw: Cow<'static, str>,
+	pub args_raw: SStr,
 }
 
 impl TryFrom<CmdCow> for SearchOpt {

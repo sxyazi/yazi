@@ -4,7 +4,7 @@ use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::{Xdg, expand_path};
-use yazi_shared::timestamp_us;
+use yazi_shared::{SStr, timestamp_us};
 
 use super::PreviewWrap;
 
@@ -35,10 +35,10 @@ impl Preview {
 	}
 
 	#[inline]
-	pub fn indent(&self) -> Cow<'static, str> { Self::indent_with(self.tab_size as usize) }
+	pub fn indent(&self) -> SStr { Self::indent_with(self.tab_size as usize) }
 
 	#[inline]
-	pub fn indent_with(n: usize) -> Cow<'static, str> {
+	pub fn indent_with(n: usize) -> SStr {
 		if let Some(s) = TABS.get(n) { Cow::Borrowed(s) } else { Cow::Owned(" ".repeat(n)) }
 	}
 }

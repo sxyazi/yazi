@@ -1,10 +1,8 @@
-use std::borrow::Cow;
-
 use yazi_fs::FilterCase;
-use yazi_shared::event::CmdCow;
+use yazi_shared::{SStr, event::CmdCow};
 
 pub struct FindOpt {
-	pub query: Option<Cow<'static, str>>,
+	pub query: Option<SStr>,
 	pub prev:  bool,
 	pub case:  FilterCase,
 }

@@ -1,9 +1,7 @@
-use std::borrow::Cow;
-
-use yazi_shared::{Id, event::{CmdCow, Data}};
+use yazi_shared::{Id, SStr, event::{CmdCow, Data}};
 
 pub struct TriggerOpt {
-	pub word:   Cow<'static, str>,
+	pub word:   SStr,
 	pub ticket: Id,
 }
 

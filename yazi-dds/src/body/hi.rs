@@ -2,6 +2,7 @@ use std::{borrow::Cow, collections::HashSet};
 
 use mlua::{ExternalResult, IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
+use yazi_shared::SStr;
 
 use super::Body;
 
@@ -10,7 +11,7 @@ use super::Body;
 pub struct BodyHi<'a> {
 	/// Specifies the kinds of events that the client can handle
 	pub abilities: HashSet<Cow<'a, str>>,
-	pub version:   Cow<'static, str>,
+	pub version:   SStr,
 }
 
 impl<'a> BodyHi<'a> {

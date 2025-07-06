@@ -1,12 +1,10 @@
-use std::borrow::Cow;
-
-use yazi_shared::event::CmdCow;
+use yazi_shared::{SStr, event::CmdCow};
 
 pub struct RenameOpt {
 	pub hovered: bool,
 	pub force:   bool,
-	pub empty:   Cow<'static, str>,
-	pub cursor:  Cow<'static, str>,
+	pub empty:   SStr,
+	pub cursor:  SStr,
 }
 
 impl From<CmdCow> for RenameOpt {
