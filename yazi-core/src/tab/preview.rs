@@ -9,7 +9,7 @@ use yazi_fs::{File, Files, FilesOp, cha::Cha};
 use yazi_macro::render;
 use yazi_parser::tab::PreviewLock;
 use yazi_plugin::{external::Highlighter, isolate};
-use yazi_shared::{MIME_DIR, url::Url};
+use yazi_shared::{MIME_DIR, SStr, url::Url};
 
 #[derive(Default)]
 pub struct Preview {
@@ -21,7 +21,7 @@ pub struct Preview {
 }
 
 impl Preview {
-	pub fn go(&mut self, file: File, mime: Cow<'static, str>, force: bool) {
+	pub fn go(&mut self, file: File, mime: SStr, force: bool) {
 		if mime.is_empty() {
 			return; // Wait till mimetype is resolved to avoid flickering
 		} else if !force && self.same_lock(&file, &mime) {

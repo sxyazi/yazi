@@ -1,7 +1,7 @@
 use std::{borrow::Cow, collections::HashMap, path::PathBuf};
 
 use yazi_fs::File;
-use yazi_shared::{MIME_DIR, url::{Scheme, Url}};
+use yazi_shared::{MIME_DIR, SStr, url::{Scheme, Url}};
 
 #[derive(Default)]
 pub struct Mimetype(HashMap<PathBuf, String>);
@@ -19,7 +19,7 @@ impl Mimetype {
 	}
 
 	#[inline]
-	pub fn by_url_owned(&self, url: &Url) -> Option<Cow<'static, str>> {
+	pub fn by_url_owned(&self, url: &Url) -> Option<SStr> {
 		self.by_url(url).map(|s| Cow::Owned(s.to_owned()))
 	}
 
@@ -29,7 +29,7 @@ impl Mimetype {
 	}
 
 	#[inline]
-	pub fn by_file_owned(&self, file: &File) -> Option<Cow<'static, str>> {
+	pub fn by_file_owned(&self, file: &File) -> Option<SStr> {
 		if file.is_dir() { Some(Cow::Borrowed(MIME_DIR)) } else { self.by_url_owned(&file.url) }
 	}
 

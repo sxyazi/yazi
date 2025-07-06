@@ -3,7 +3,7 @@ use std::{any::Any, borrow::Cow, collections::HashMap};
 use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize, de};
 
-use crate::{Id, url::{Url, UrnBuf}};
+use crate::{Id, SStr, url::{Url, UrnBuf}};
 
 // --- Data
 #[derive(Debug, Serialize, Deserialize)]
@@ -13,7 +13,7 @@ pub enum Data {
 	Boolean(bool),
 	Integer(i64),
 	Number(f64),
-	String(Cow<'static, str>),
+	String(SStr),
 	List(Vec<Data>),
 	Dict(HashMap<DataKey, Data>),
 	Id(Id),
@@ -47,7 +47,7 @@ impl Data {
 	}
 
 	#[inline]
-	pub fn into_string(self) -> Option<Cow<'static, str>> {
+	pub fn into_string(self) -> Option<SStr> {
 		match self {
 			Self::String(s) => Some(s),
 			_ => None,
@@ -115,8 +115,8 @@ impl From<String> for Data {
 	fn from(value: String) -> Self { Self::String(Cow::Owned(value)) }
 }
 
-impl From<Cow<'static, str>> for Data {
-	fn from(value: Cow<'static, str>) -> Self { Self::String(value) }
+impl From<SStr> for Data {
+	fn from(value: SStr) -> Self { Self::String(value) }
 }
 
 impl From<Id> for Data {
@@ -140,7 +140,7 @@ pub enum DataKey {
 	#[serde(deserialize_with = "Self::deserialize_integer")]
 	Integer(i64),
 	Number(OrderedFloat<f64>),
-	String(Cow<'static, str>),
+	String(SStr),
 	Id(Id),
 	#[serde(skip_deserializing)]
 	Url(Url),

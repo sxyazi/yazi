@@ -1,12 +1,10 @@
-use std::borrow::Cow;
-
 use tokio_util::sync::CancellationToken;
 use yazi_config::YAZI;
 use yazi_fs::File;
 use yazi_macro::render;
 use yazi_parser::tab::SpotLock;
 use yazi_plugin::isolate;
-use yazi_shared::url::Url;
+use yazi_shared::{SStr, url::Url};
 
 #[derive(Default)]
 pub struct Spot {
@@ -17,7 +15,7 @@ pub struct Spot {
 }
 
 impl Spot {
-	pub fn go(&mut self, file: File, mime: Cow<'static, str>) {
+	pub fn go(&mut self, file: File, mime: SStr) {
 		if mime.is_empty() {
 			return; // Wait till mimetype is resolved to avoid flickering
 		} else if self.same_lock(&file, &mime) {

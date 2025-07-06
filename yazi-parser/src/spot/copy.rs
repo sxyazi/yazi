@@ -1,9 +1,7 @@
-use std::borrow::Cow;
-
-use yazi_shared::event::CmdCow;
+use yazi_shared::{SStr, event::CmdCow};
 
 pub struct CopyOpt {
-	pub r#type: Cow<'static, str>,
+	pub r#type: SStr,
 }
 
 impl From<CmdCow> for CopyOpt {

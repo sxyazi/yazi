@@ -1,9 +1,7 @@
-use std::borrow::Cow;
-
-use yazi_shared::event::CmdCow;
+use yazi_shared::{SStr, event::CmdCow};
 
 pub struct SwipeOpt {
-	pub step: Cow<'static, str>,
+	pub step: SStr,
 }
 
 impl From<CmdCow> for SwipeOpt {

@@ -1,6 +1,7 @@
 use std::{borrow::Cow, fmt::Display};
 
 use mlua::{ExternalError, FromLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, Value};
+use yazi_shared::SStr;
 
 const EXPECTED: &str = "expected a Error";
 
@@ -8,7 +9,7 @@ pub enum Error {
 	Io(std::io::Error),
 	IoKind(std::io::ErrorKind),
 	Serde(serde_json::Error),
-	Custom(Cow<'static, str>),
+	Custom(SStr),
 }
 
 impl Error {
@@ -18,7 +19,7 @@ impl Error {
 		lua.globals().raw_set("Error", lua.create_table_from([("custom", new)])?)
 	}
 
-	pub fn into_string(self) -> Cow<'static, str> {
+	pub fn into_string(self) -> SStr {
 		match self {
 			Error::Io(e) => Cow::Owned(e.to_string()),
 			Error::IoKind(e) => Cow::Owned(e.to_string()),

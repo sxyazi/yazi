@@ -1,8 +1,8 @@
-use std::{borrow::Cow, collections::HashMap};
+use std::collections::HashMap;
 
 use mlua::{ExternalResult, IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
-use yazi_shared::Id;
+use yazi_shared::{Id, SStr};
 
 use super::{Body, BodyHi};
 use crate::Peer;
@@ -10,7 +10,7 @@ use crate::Peer;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BodyHey {
 	pub peers:   HashMap<Id, Peer>,
-	pub version: Cow<'static, str>,
+	pub version: SStr,
 }
 
 impl BodyHey {

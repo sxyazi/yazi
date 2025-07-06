@@ -1,12 +1,12 @@
-use std::{borrow::Cow, path::PathBuf};
+use std::path::PathBuf;
 
 use yazi_proxy::options::CmpItem;
-use yazi_shared::{Id, event::{Cmd, CmdCow, Data}};
+use yazi_shared::{Id, SStr, event::{Cmd, CmdCow, Data}};
 
 pub struct ShowOpt {
 	pub cache:      Vec<CmpItem>,
 	pub cache_name: PathBuf,
-	pub word:       Cow<'static, str>,
+	pub word:       SStr,
 	pub ticket:     Id,
 }
 

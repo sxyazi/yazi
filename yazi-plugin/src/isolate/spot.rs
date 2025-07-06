@@ -1,24 +1,17 @@
-use std::borrow::Cow;
-
 use mlua::{ExternalError, ExternalResult, HookTriggers, IntoLua, ObjectLike, VmState};
 use tokio::{runtime::Handle, select};
 use tokio_util::sync::CancellationToken;
 use tracing::error;
 use yazi_binding::{File, Id};
 use yazi_dds::Sendable;
-use yazi_shared::{Ids, event::Cmd};
+use yazi_shared::{Ids, SStr, event::Cmd};
 
 use super::slim_lua;
 use crate::loader::LOADER;
 
 static IDS: Ids = Ids::new();
 
-pub fn spot(
-	cmd: &'static Cmd,
-	file: yazi_fs::File,
-	mime: Cow<'static, str>,
-	skip: usize,
-) -> CancellationToken {
+pub fn spot(cmd: &'static Cmd, file: yazi_fs::File, mime: SStr, skip: usize) -> CancellationToken {
 	let ct = CancellationToken::new();
 	let (ct1, ct2) = (ct.clone(), ct.clone());
 

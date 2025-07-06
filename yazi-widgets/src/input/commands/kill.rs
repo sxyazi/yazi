@@ -1,12 +1,12 @@
-use std::{borrow::Cow, ops::RangeBounds};
+use std::ops::RangeBounds;
 
 use yazi_macro::render;
-use yazi_shared::{CharKind, event::CmdCow};
+use yazi_shared::{CharKind, SStr, event::CmdCow};
 
 use crate::input::Input;
 
 struct Opt {
-	kind: Cow<'static, str>,
+	kind: SStr,
 }
 
 impl From<CmdCow> for Opt {
