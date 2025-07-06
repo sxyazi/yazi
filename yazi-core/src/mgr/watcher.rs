@@ -51,9 +51,8 @@ impl Watcher {
 		Self { in_tx, out_tx }
 	}
 
-	pub(super) fn watch(&mut self, mut new: HashSet<&Url>) {
-		new.retain(|&u| u.is_regular());
-		self.in_tx.send(new.into_iter().cloned().collect()).ok();
+	pub(super) fn watch<'a>(&mut self, it: impl Iterator<Item = &'a Url>) {
+		self.in_tx.send(it.into_iter().filter(|u| u.is_regular()).cloned().collect()).ok();
 	}
 
 	pub(super) fn push_files(&self, urls: Vec<Url>) {
