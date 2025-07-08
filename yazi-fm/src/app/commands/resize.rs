@@ -15,7 +15,6 @@ impl From<()> for Opt {
 impl App {
 	#[yazi_codegen::command]
 	pub fn resize(&mut self, _: Opt) {
-		self.cx.active_mut().preview.reset();
 		self.reflow(());
 
 		self.cx.current_mut().sync_page(true);

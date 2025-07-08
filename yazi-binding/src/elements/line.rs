@@ -12,7 +12,7 @@ const EXPECTED: &str = "expected a string, Span, Line, or a table of them";
 
 #[derive(Clone, Debug, Default)]
 pub struct Line {
-	area: Area,
+	pub(super) area: Area,
 
 	pub(super) inner: ratatui::text::Line<'static>,
 }
@@ -40,12 +40,7 @@ impl Line {
 		line.into_lua(lua)
 	}
 
-	pub(super) fn render(
-		self,
-		buf: &mut ratatui::buffer::Buffer,
-		trans: impl Fn(yazi_config::popup::Position) -> ratatui::layout::Rect,
-	) {
-		let rect = self.area.transform(trans);
+	pub(super) fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
 		self.inner.render(rect, buf);
 	}
 }

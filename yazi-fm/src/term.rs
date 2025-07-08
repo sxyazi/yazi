@@ -39,7 +39,7 @@ impl Term {
 			Print(Mux::csi("\x1b[0c")), // Request device attributes
 			yazi_term::If(TMUX.get(), EnterAlternateScreen),
 			EnableBracketedPaste,
-			yazi_term::If(!YAZI.mgr.mouse_events.is_empty(), EnableMouseCapture),
+			yazi_term::If(!YAZI.mgr.mouse_events.get().is_empty(), EnableMouseCapture),
 		)?;
 
 		let resp = Emulator::read_until_da1();
@@ -76,7 +76,7 @@ impl Term {
 
 		execute!(
 			TTY.writer(),
-			yazi_term::If(!YAZI.mgr.mouse_events.is_empty(), DisableMouseCapture),
+			yazi_term::If(!YAZI.mgr.mouse_events.get().is_empty(), DisableMouseCapture),
 			yazi_term::RestoreCursor,
 			DisableBracketedPaste,
 			LeaveAlternateScreen,
@@ -97,7 +97,7 @@ impl Term {
 
 		execute!(
 			TTY.writer(),
-			yazi_term::If(!YAZI.mgr.mouse_events.is_empty(), DisableMouseCapture),
+			yazi_term::If(!YAZI.mgr.mouse_events.get().is_empty(), DisableMouseCapture),
 			yazi_term::RestoreCursor,
 			DisableBracketedPaste,
 			LeaveAlternateScreen,

@@ -11,13 +11,16 @@ impl<'a> Spot<'a> {
 }
 
 impl Widget for Spot<'_> {
-	fn render(self, _: Rect, buf: &mut Buffer) {
+	fn render(self, win: Rect, buf: &mut Buffer) {
 		let Some(lock) = &self.cx.active().spot.lock else {
 			return;
 		};
 
 		for w in &lock.data {
-			w.clone().render(buf, |p| self.cx.mgr.area(p));
+			let rect = w.area().transform(|p| self.cx.mgr.area(p));
+			if win.intersects(rect) {
+				w.clone().render(rect, buf);
+			}
 		}
 	}
 }

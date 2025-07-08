@@ -13,7 +13,7 @@ impl<'a> Preview<'a> {
 }
 
 impl Widget for Preview<'_> {
-	fn render(self, _: ratatui::layout::Rect, buf: &mut Buffer) {
+	fn render(self, win: ratatui::layout::Rect, buf: &mut Buffer) {
 		let Some(lock) = &self.cx.active().preview.lock else {
 			return;
 		};
@@ -23,7 +23,10 @@ impl Widget for Preview<'_> {
 		}
 
 		for w in &lock.data {
-			w.clone().render(buf, |p| self.cx.mgr.area(p));
+			let rect = w.area().transform(|p| self.cx.mgr.area(p));
+			if win.intersects(rect) {
+				w.clone().render(rect, buf);
+			}
 		}
 	}
 }

@@ -2,45 +2,45 @@ use mlua::{Function, IntoLua, Lua, UserData, Value};
 use yazi_binding::{Composer, FileRef, UrlRef, cached_field};
 use yazi_config::YAZI;
 
-pub(super) struct Plugin;
-
-impl Plugin {
-	pub(super) fn compose(lua: &Lua) -> mlua::Result<Value> {
-		Composer::make(lua, |lua, key| {
-			match key {
-				b"fetchers" => Plugin::fetchers(lua)?,
-				b"spotter" => Plugin::spotter(lua)?,
-				b"preloaders" => Plugin::preloaders(lua)?,
-				b"previewer" => Plugin::previewer(lua)?,
-				_ => return Ok(Value::Nil),
-			}
-			.into_lua(lua)
-		})
+pub(super) fn plugin(lua: &Lua) -> mlua::Result<Value> {
+	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
+		match key {
+			b"fetchers" => fetchers(lua)?,
+			b"spotter" => spotter(lua)?,
+			b"preloaders" => preloaders(lua)?,
+			b"previewer" => previewer(lua)?,
+			_ => return Ok(Value::Nil),
+		}
+		.into_lua(lua)
 	}
 
-	fn fetchers(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|lua, (file, mime): (FileRef, mlua::String)| {
-			lua.create_sequence_from(YAZI.plugin.fetchers(&file.url, &mime.to_str()?).map(Fetcher::new))
-		})
-	}
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
-	fn spotter(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|_, (url, mime): (UrlRef, mlua::String)| {
-			Ok(YAZI.plugin.spotter(&url, &mime.to_str()?).map(Spotter::new))
-		})
-	}
+	Composer::make(lua, get, set)
+}
 
-	fn preloaders(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|lua, (url, mime): (UrlRef, mlua::String)| {
-			lua.create_sequence_from(YAZI.plugin.preloaders(&url, &mime.to_str()?).map(Preloader::new))
-		})
-	}
+fn fetchers(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_function(|lua, (file, mime): (FileRef, mlua::String)| {
+		lua.create_sequence_from(YAZI.plugin.fetchers(&file.url, &mime.to_str()?).map(Fetcher::new))
+	})
+}
 
-	fn previewer(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|_, (url, mime): (UrlRef, mlua::String)| {
-			Ok(YAZI.plugin.previewer(&url, &mime.to_str()?).map(Previewer::new))
-		})
-	}
+fn spotter(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_function(|_, (url, mime): (UrlRef, mlua::String)| {
+		Ok(YAZI.plugin.spotter(&url, &mime.to_str()?).map(Spotter::new))
+	})
+}
+
+fn preloaders(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_function(|lua, (url, mime): (UrlRef, mlua::String)| {
+		lua.create_sequence_from(YAZI.plugin.preloaders(&url, &mime.to_str()?).map(Preloader::new))
+	})
+}
+
+fn previewer(lua: &Lua) -> mlua::Result<Function> {
+	lua.create_function(|_, (url, mime): (UrlRef, mlua::String)| {
+		Ok(YAZI.plugin.previewer(&url, &mime.to_str()?).map(Previewer::new))
+	})
 }
 
 // --- Fetcher

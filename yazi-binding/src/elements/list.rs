@@ -8,7 +8,7 @@ const EXPECTED: &str = "expected a table of strings, Texts, Lines or Spans";
 // --- List
 #[derive(Clone, Debug, Default)]
 pub struct List {
-	area: Area,
+	pub(super) area: Area,
 
 	inner: ratatui::widgets::List<'static>,
 }
@@ -30,12 +30,8 @@ impl List {
 		list.into_lua(lua)
 	}
 
-	pub(super) fn render(
-		self,
-		buf: &mut ratatui::buffer::Buffer,
-		trans: impl FnOnce(yazi_config::popup::Position) -> ratatui::layout::Rect,
-	) {
-		self.inner.render(self.area.transform(trans), buf);
+	pub(super) fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
+		self.inner.render(rect, buf);
 	}
 }
 

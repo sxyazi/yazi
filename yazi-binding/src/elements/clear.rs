@@ -22,12 +22,8 @@ impl Clear {
 		clear.into_lua(lua)
 	}
 
-	pub(super) fn render(
-		self,
-		buf: &mut ratatui::buffer::Buffer,
-		trans: impl FnOnce(yazi_config::popup::Position) -> ratatui::layout::Rect,
-	) {
-		<Self as ratatui::widgets::Widget>::render(Default::default(), self.area.transform(trans), buf);
+	pub(super) fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
+		<Self as ratatui::widgets::Widget>::render(Default::default(), rect, buf);
 	}
 }
 

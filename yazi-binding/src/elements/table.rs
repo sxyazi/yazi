@@ -54,11 +54,7 @@ impl Table {
 		if row.cells.is_empty() { None } else { Some(&row.cells[col.min(row.cells.len() - 1)].text) }
 	}
 
-	pub(super) fn render(
-		mut self,
-		buf: &mut ratatui::buffer::Buffer,
-		trans: impl FnOnce(yazi_config::popup::Position) -> ratatui::layout::Rect,
-	) {
+	pub(super) fn render(mut self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
 		let mut table = ratatui::widgets::Table::new(self.rows, self.widths)
 			.column_spacing(self.column_spacing)
 			.style(self.style)
@@ -79,7 +75,7 @@ impl Table {
 			table = table.block(block);
 		}
 
-		table.render(self.area.transform(trans), buf, &mut self.state);
+		table.render(rect, buf, &mut self.state);
 	}
 
 	#[inline]

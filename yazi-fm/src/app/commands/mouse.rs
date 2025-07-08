@@ -24,7 +24,7 @@ impl App {
 			let area = yazi_binding::elements::Rect::from(size);
 			let root = LUA.globals().raw_get::<Table>("Root")?.call_method::<Table>("new", area)?;
 
-			if matches!(event.kind, MouseEventKind::Down(_) if YAZI.mgr.mouse_events.draggable()) {
+			if matches!(event.kind, MouseEventKind::Down(_) if YAZI.mgr.mouse_events.get().draggable()) {
 				root.raw_set("_drag_start", event)?;
 			}
 
