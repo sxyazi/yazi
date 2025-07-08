@@ -57,6 +57,7 @@ play = [
 	{ run = 'start "" "%1"', orphan = true, desc = "Play", for = "windows" },
 	{ run = 'termux-open "$1"',             desc = "Play", for = "android" },
 	{ run = '''mediainfo "$1"; echo "Press enter to exit"; read _''', block = true, desc = "Show media info", for = "unix" },
+	{ run = 'mediainfo.exe "%1" & pause', block = true, desc = "Show media info", for = "windows" },
 ]
 
 [open]
