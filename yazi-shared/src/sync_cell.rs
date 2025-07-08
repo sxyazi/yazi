@@ -1,5 +1,7 @@
 use std::{cell::Cell, fmt::{Debug, Display, Formatter}, ops::Deref};
 
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
 /// [`SyncCell`], but [`Sync`].
 ///
 /// This is just an `Cell`, except it implements `Sync`
@@ -35,4 +37,22 @@ impl<T: Copy + Debug> Debug for SyncCell<T> {
 
 impl<T: Copy + Display> Display for SyncCell<T> {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { Display::fmt(&self.get(), f) }
+}
+
+impl<T> Serialize for SyncCell<T>
+where
+	T: Copy + Serialize,
+{
+	fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+		self.0.serialize(serializer)
+	}
+}
+
+impl<'de, T> Deserialize<'de> for SyncCell<T>
+where
+	T: Copy + Deserialize<'de>,
+{
+	fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+		Ok(Self::new(T::deserialize(deserializer)?))
+	}
 }

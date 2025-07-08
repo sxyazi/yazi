@@ -42,11 +42,7 @@ impl Border {
 		border.into_lua(lua)
 	}
 
-	pub(super) fn render(
-		self,
-		buf: &mut ratatui::buffer::Buffer,
-		trans: impl FnOnce(yazi_config::popup::Position) -> ratatui::layout::Rect,
-	) {
+	pub(super) fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
 		let mut block = ratatui::widgets::Block::default()
 			.borders(self.edge.0)
 			.border_type(self.r#type)
@@ -59,7 +55,7 @@ impl Border {
 			};
 		}
 
-		block.render(self.area.transform(trans), buf);
+		block.render(rect, buf);
 	}
 }
 

@@ -5,7 +5,7 @@ use super::{Area, Edge};
 
 #[derive(Clone, Debug, Default)]
 pub struct Bar {
-	area: Area,
+	pub(super) area: Area,
 
 	edge:   Edge,
 	symbol: String,
@@ -22,12 +22,7 @@ impl Bar {
 		bar.into_lua(lua)
 	}
 
-	pub(super) fn render(
-		self,
-		buf: &mut ratatui::buffer::Buffer,
-		trans: impl FnOnce(yazi_config::popup::Position) -> ratatui::layout::Rect,
-	) {
-		let rect = self.area.transform(trans);
+	pub(super) fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
 		if rect.area() == 0 {
 			return;
 		}

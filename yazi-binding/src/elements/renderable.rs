@@ -3,7 +3,7 @@ use std::any::TypeId;
 use mlua::{AnyUserData, ExternalError};
 
 use super::{Bar, Border, Clear, Gauge, Line, List, Table, Text};
-use crate::{Error, elements::Rect};
+use crate::{Error, elements::{Area, Rect}};
 
 #[derive(Clone, Debug)]
 pub enum Renderable {
@@ -18,21 +18,38 @@ pub enum Renderable {
 }
 
 impl Renderable {
-	pub fn render(
-		self,
-		buf: &mut ratatui::buffer::Buffer,
-		trans: impl Fn(yazi_config::popup::Position) -> ratatui::layout::Rect,
-	) {
+	pub fn area(&self) -> Area {
 		match self {
-			Self::Line(line) => line.render(buf, trans),
-			Self::Text(text) => text.render(buf, trans),
-			Self::List(list) => list.render(buf, trans),
-			Self::Bar(bar) => bar.render(buf, trans),
-			Self::Clear(clear) => clear.render(buf, trans),
-			Self::Border(border) => border.render(buf, trans),
-			Self::Gauge(gauge) => gauge.render(buf, trans),
-			Self::Table(table) => table.render(buf, trans),
+			Self::Line(line) => line.area,
+			Self::Text(text) => text.area,
+			Self::List(list) => list.area,
+			Self::Bar(bar) => bar.area,
+			Self::Clear(clear) => clear.area,
+			Self::Border(border) => border.area,
+			Self::Gauge(gauge) => gauge.area,
+			Self::Table(table) => table.area,
 		}
+	}
+
+	pub fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
+		match self {
+			Self::Line(line) => line.render(rect, buf),
+			Self::Text(text) => text.render(rect, buf),
+			Self::List(list) => list.render(rect, buf),
+			Self::Bar(bar) => bar.render(rect, buf),
+			Self::Clear(clear) => clear.render(rect, buf),
+			Self::Border(border) => border.render(rect, buf),
+			Self::Gauge(gauge) => gauge.render(rect, buf),
+			Self::Table(table) => table.render(rect, buf),
+		}
+	}
+
+	pub fn render_with<T>(self, buf: &mut ratatui::buffer::Buffer, trans: T)
+	where
+		T: FnOnce(yazi_config::popup::Position) -> ratatui::layout::Rect,
+	{
+		let rect = self.area().transform(trans);
+		self.render(rect, buf);
 	}
 }
 

@@ -6,7 +6,7 @@ use crate::Style;
 
 #[derive(Clone, Debug, Default)]
 pub struct Gauge {
-	area: Area,
+	pub(super) area: Area,
 
 	ratio:       f64,
 	label:       Option<ratatui::text::Span<'static>>,
@@ -24,11 +24,7 @@ impl Gauge {
 		gauge.into_lua(lua)
 	}
 
-	pub(super) fn render(
-		self,
-		buf: &mut ratatui::buffer::Buffer,
-		trans: impl FnOnce(yazi_config::popup::Position) -> ratatui::layout::Rect,
-	) {
+	pub(super) fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
 		let mut gauge = ratatui::widgets::Gauge::default()
 			.ratio(self.ratio)
 			.style(self.style)
@@ -38,7 +34,7 @@ impl Gauge {
 			gauge = gauge.label(s)
 		}
 
-		gauge.render(self.area.transform(trans), buf);
+		gauge.render(rect, buf);
 	}
 }
 

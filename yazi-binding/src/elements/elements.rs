@@ -5,7 +5,7 @@ use super::Renderable;
 use crate::Composer;
 
 pub fn compose(lua: &Lua) -> mlua::Result<Value> {
-	Composer::make(lua, |lua, key| {
+	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"Align" => super::Align::compose(lua)?,
 			b"Bar" => super::Bar::compose(lua)?,
@@ -36,12 +36,16 @@ pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 			_ => return Ok(Value::Nil),
 		}
 		.into_lua(lua)
-	})
+	}
+
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+
+	Composer::make(lua, get, set)
 }
 
 pub fn render_once<F>(value: Value, buf: &mut ratatui::buffer::Buffer, trans: F)
 where
-	F: Fn(yazi_config::popup::Position) -> ratatui::layout::Rect + Copy,
+	F: FnOnce(yazi_config::popup::Position) -> ratatui::layout::Rect + Copy,
 {
 	match value {
 		Value::Table(tbl) => {
@@ -52,13 +56,13 @@ where
 				};
 
 				match Renderable::try_from(widget) {
-					Ok(w) => w.render(buf, trans),
+					Ok(w) => w.render_with(buf, trans),
 					Err(e) => error!("{e}"),
 				}
 			}
 		}
 		Value::UserData(ud) => match Renderable::try_from(ud) {
-			Ok(w) => w.render(buf, trans),
+			Ok(w) => w.render_with(buf, trans),
 			Err(e) => error!("{e}"),
 		},
 		_ => error!("Expected a renderable UserData, or a table of them, got: {value:?}"),

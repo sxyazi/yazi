@@ -4,7 +4,7 @@ use yazi_binding::Composer;
 pub(super) struct Utils;
 
 pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Value> {
-	Composer::make(lua, move |lua, key| {
+	fn get(lua: &Lua, key: &[u8], isolate: bool) -> mlua::Result<Value> {
 		match key {
 			// App
 			b"id" => Utils::id(lua)?,
@@ -84,5 +84,9 @@ pub fn compose(lua: &Lua, isolate: bool) -> mlua::Result<Value> {
 			_ => return Ok(Value::Nil),
 		}
 		.into_lua(lua)
-	})
+	}
+
+	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
+
+	Composer::make(lua, move |lua, key| get(lua, key, isolate), set)
 }

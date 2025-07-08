@@ -62,7 +62,7 @@ impl Signals {
 				Event::Key(key).emit()
 			}
 			CrosstermEvent::Mouse(mouse) => {
-				if YAZI.mgr.mouse_events.contains(mouse.kind.into()) {
+				if YAZI.mgr.mouse_events.get().contains(mouse.kind.into()) {
 					Event::Mouse(mouse).emit();
 				}
 			}

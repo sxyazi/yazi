@@ -2,7 +2,7 @@ use anyhow::bail;
 use serde::Deserialize;
 
 #[derive(Clone, Copy, Debug, Default, Deserialize)]
-#[serde(try_from = "Vec<i16>")]
+#[serde(try_from = "[i16; 4]")]
 pub struct Offset {
 	pub x:      i16,
 	pub y:      i16,
@@ -10,10 +10,10 @@ pub struct Offset {
 	pub height: u16,
 }
 
-impl TryFrom<Vec<i16>> for Offset {
+impl TryFrom<[i16; 4]> for Offset {
 	type Error = anyhow::Error;
 
-	fn try_from(values: Vec<i16>) -> Result<Self, Self::Error> {
+	fn try_from(values: [i16; 4]) -> Result<Self, Self::Error> {
 		if values.len() != 4 {
 			bail!("offset must have 4 values: {:?}", values);
 		}
