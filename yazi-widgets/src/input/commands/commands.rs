@@ -10,14 +10,9 @@ impl Input {
 					return self.$name(cmd);
 				}
 			};
-			($name:ident, $alias:literal) => {
-				if cmd.name == $alias {
-					return self.$name(cmd);
-				}
-			};
 		}
 
-		on!(r#move, "move");
+		on!(r#move);
 		on!(backward);
 		on!(forward);
 

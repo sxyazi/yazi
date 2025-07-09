@@ -12,18 +12,23 @@ use crate::cmp::Cmp;
 impl Cmp {
 	#[yazi_codegen::command]
 	pub fn trigger(&mut self, opt: TriggerOpt) {
-		if opt.ticket < self.ticket {
-			return;
+		if let Some(t) = opt.ticket {
+			if t < self.ticket {
+				return;
+			}
+			self.ticket = t;
 		}
 
-		self.ticket = opt.ticket;
 		let Some((parent, word)) = Self::split_path(&opt.word) else {
 			return self.close(false);
 		};
 
 		if self.caches.contains_key(&parent) {
 			return self.show(
-				Cmd::default().with_any("cache-name", parent).with("word", word).with("ticket", opt.ticket),
+				Cmd::default()
+					.with_any("cache-name", parent)
+					.with("word", word)
+					.with("ticket", self.ticket),
 			);
 		}
 
