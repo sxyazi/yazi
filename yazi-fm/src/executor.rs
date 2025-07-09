@@ -157,11 +157,6 @@ impl<'a> Executor<'a> {
 					return self.app.cx.tasks.$name(cmd);
 				}
 			};
-			($name:ident, $alias:literal) => {
-				if cmd.name == $alias {
-					return self.app.cx.tasks.$name(cmd);
-				}
-			};
 		}
 
 		on!(show);
@@ -249,11 +244,7 @@ impl<'a> Executor<'a> {
 					_ => {}
 				}
 			}
-			InputMode::Insert => match cmd.name.as_ref() {
-				"complete" if cmd.bool("trigger") => return self.app.cx.cmp.trigger(cmd),
-				_ => {}
-			},
-			InputMode::Replace => {}
+			InputMode::Insert | InputMode::Replace => {}
 		};
 
 		self.app.cx.input.execute(cmd)

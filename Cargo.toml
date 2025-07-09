@@ -33,7 +33,7 @@ futures             = "0.3.31"
 globset             = "0.4.16"
 indexmap            = { version = "2.10.0", features = [ "serde" ] }
 libc                = "0.2.174"
-lru                 = "0.15.0"
+lru                 = "0.16.0"
 mlua                = { version = "0.10.5", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serialize" ] }
 objc                = "0.2.7"
 ordered-float       = { version = "5.0.0", features = [ "serde" ] }
@@ -48,7 +48,7 @@ syntect             = { version = "5.2.0", default-features = false, features = 
 tokio               = { version = "1.46.1", features = [ "full" ] }
 tokio-stream        = "0.1.17"
 tokio-util          = "0.7.15"
-toml                = { version = "0.8.23" }
+toml                = { version = "0.9.0" }
 tracing             = { version = "0.1.41", features = [ "max_level_debug", "release_max_level_debug" ] }
 twox-hash           = { version = "2.1.1", default-features = false, features = [ "std", "random", "xxhash3_128" ] }
 unicode-width       = { version = "0.2.0", default-features = false }

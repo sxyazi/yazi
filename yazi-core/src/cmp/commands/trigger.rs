@@ -12,12 +12,11 @@ use crate::cmp::Cmp;
 impl Cmp {
 	#[yazi_codegen::command]
 	pub fn trigger(&mut self, opt: TriggerOpt) {
-		if let Some(ticket) = opt.ticket {
-			if ticket < self.ticket {
+		if let Some(t) = opt.ticket {
+			if t < self.ticket {
 				return;
-			} else {
-				self.ticket = ticket;
 			}
+			self.ticket = t;
 		}
 
 		let Some((parent, word)) = Self::split_path(&opt.word) else {

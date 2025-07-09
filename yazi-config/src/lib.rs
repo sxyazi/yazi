@@ -27,8 +27,8 @@ fn try_init(merge: bool) -> anyhow::Result<()> {
 	let mut keymap = Preset::keymap()?;
 
 	if merge {
-		yazi = yazi.deserialize_over(toml::Deserializer::new(&yazi::Yazi::read()?))?;
-		keymap = keymap.deserialize_over(toml::Deserializer::new(&keymap::Keymap::read()?))?;
+		yazi = yazi.deserialize_over(toml::Deserializer::parse(&yazi::Yazi::read()?)?)?;
+		keymap = keymap.deserialize_over(toml::Deserializer::parse(&keymap::Keymap::read()?)?)?;
 	}
 
 	YAZI.init(yazi.reshape()?);
@@ -48,9 +48,10 @@ fn try_init_flavor(light: bool, merge: bool) -> anyhow::Result<()> {
 	let mut theme = Preset::theme(light)?;
 
 	if merge {
-		let shadow = theme::Theme::deserialize_shadow(toml::Deserializer::new(&theme::Theme::read()?))?;
+		let shadow =
+			theme::Theme::deserialize_shadow(toml::Deserializer::parse(&theme::Theme::read()?)?)?;
 		let flavor = shadow.flavor.as_ref().map(theme::Flavor::from).unwrap_or_default().read(light)?;
-		theme = theme.deserialize_over(toml::Deserializer::new(&flavor))?;
+		theme = theme.deserialize_over(toml::Deserializer::parse(&flavor)?)?;
 		theme = theme.deserialize_over_with::<toml::Value>(shadow)?;
 	}
 
