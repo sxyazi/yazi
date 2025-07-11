@@ -15,16 +15,14 @@ pub struct BodyLoad<'a> {
 }
 
 impl<'a> BodyLoad<'a> {
-	#[inline]
 	pub fn borrowed(tab: Id, url: &'a Url, stage: FolderStage) -> Body<'a> {
-		Self { tab, url: Cow::Borrowed(url), stage }.into()
+		Self { tab, url: url.into(), stage }.into()
 	}
 }
 
 impl BodyLoad<'static> {
-	#[inline]
-	pub fn dummy(tab: Id, url: &Url, stage: FolderStage) -> Body<'static> {
-		Self { tab, url: Cow::Owned(url.clone()), stage }.into()
+	pub fn owned(tab: Id, url: &Url, stage: FolderStage) -> Body<'static> {
+		Self { tab, url: url.clone().into(), stage }.into()
 	}
 }
 
@@ -37,7 +35,7 @@ impl IntoLua for BodyLoad<'static> {
 		lua
 			.create_table_from([
 				("tab", self.tab.get().into_lua(lua)?),
-				("url", yazi_binding::Url::new(self.url.into_owned()).into_lua(lua)?),
+				("url", yazi_binding::Url::new(self.url).into_lua(lua)?),
 				("stage", yazi_binding::FolderStage::new(self.stage).into_lua(lua)?),
 			])?
 			.into_lua(lua)

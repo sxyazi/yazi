@@ -10,8 +10,9 @@ pub struct BodyTab {
 }
 
 impl BodyTab {
-	#[inline]
 	pub fn owned(id: Id) -> Body<'static> { Self { id }.into() }
+
+	pub fn borrowed(id: Id) -> Body<'static> { Self::owned(id) }
 }
 
 impl From<BodyTab> for Body<'_> {

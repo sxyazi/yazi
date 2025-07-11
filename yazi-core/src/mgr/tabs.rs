@@ -40,7 +40,7 @@ impl Tabs {
 		self.cursor = idx;
 		MgrProxy::refresh();
 		MgrProxy::peek(true);
-		err!(Pubsub::pub_from_tab(self.active().id));
+		err!(Pubsub::pub_after_tab(self.active().id));
 	}
 }
 

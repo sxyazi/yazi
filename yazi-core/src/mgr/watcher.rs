@@ -44,7 +44,7 @@ impl Watcher {
 
 		#[cfg(any(target_os = "linux", target_os = "macos"))]
 		yazi_fs::mounts::Partitions::monitor(yazi_fs::mounts::PARTITIONS.clone(), || {
-			yazi_macro::err!(yazi_dds::Pubsub::pub_from_mount())
+			yazi_macro::err!(yazi_dds::Pubsub::pub_after_mount())
 		});
 
 		tokio::spawn(Self::fan_out(out_rx));

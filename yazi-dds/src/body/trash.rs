@@ -12,12 +12,10 @@ pub struct BodyTrash<'a> {
 }
 
 impl<'a> BodyTrash<'a> {
-	#[inline]
 	pub fn borrowed(urls: &'a Vec<Url>) -> Body<'a> { Self { urls: Cow::Borrowed(urls) }.into() }
 }
 
 impl BodyTrash<'static> {
-	#[inline]
 	pub fn owned(urls: Vec<Url>) -> Body<'static> { Self { urls: Cow::Owned(urls) }.into() }
 }
 

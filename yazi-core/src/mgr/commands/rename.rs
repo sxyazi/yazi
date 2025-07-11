@@ -74,7 +74,7 @@ impl Mgr {
 		}
 
 		TabProxy::reveal(&new);
-		err!(Pubsub::pub_from_rename(tab, &old, &new));
+		err!(Pubsub::pub_after_rename(tab, &old, &new));
 		Ok(())
 	}
 

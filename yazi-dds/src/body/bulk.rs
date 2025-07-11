@@ -12,23 +12,21 @@ pub struct BodyBulk<'a> {
 }
 
 impl<'a> BodyBulk<'a> {
-	#[inline]
-	pub fn borrowed(changes: &HashMap<&'a Url, &'a Url>) -> Body<'a> {
-		let iter = changes.iter().map(|(&from, &to)| (Cow::Borrowed(from), Cow::Borrowed(to)));
-
-		Self { changes: iter.collect() }.into()
+	pub fn borrowed<I>(changes: I) -> Body<'a>
+	where
+		I: Iterator<Item = (&'a Url, &'a Url)>,
+	{
+		Self { changes: changes.map(|(from, to)| (from.into(), to.into())).collect() }.into()
 	}
 }
 
 impl BodyBulk<'static> {
-	#[inline]
-	pub fn owned(changes: &HashMap<&Url, &Url>) -> Body<'static> {
-		let changes = changes
-			.iter()
-			.map(|(&from, &to)| (Cow::Owned(from.clone()), Cow::Owned(to.clone())))
-			.collect();
-
-		Self { changes }.into()
+	pub fn owned<'a, I>(changes: I) -> Body<'static>
+	where
+		I: Iterator<Item = (&'a Url, &'a Url)>,
+	{
+		Self { changes: changes.map(|(from, to)| (from.clone().into(), to.clone().into())).collect() }
+			.into()
 	}
 }
 

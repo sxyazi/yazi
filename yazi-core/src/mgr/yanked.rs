@@ -66,7 +66,7 @@ impl Yanked {
 		}
 
 		self.version = self.revision;
-		err!(Pubsub::pub_from_yank(self.cut, &self.urls));
+		err!(Pubsub::pub_after_yank(self.cut, &self.urls));
 		true
 	}
 }

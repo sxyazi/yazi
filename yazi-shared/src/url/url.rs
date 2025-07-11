@@ -122,6 +122,18 @@ impl From<&Url> for String {
 	fn from(url: &Url) -> Self { url.to_string() }
 }
 
+impl<'a> From<&'a Url> for Cow<'a, Url> {
+	fn from(url: &'a Url) -> Self { Cow::Borrowed(url) }
+}
+
+impl From<Url> for Cow<'_, Url> {
+	fn from(url: Url) -> Self { Cow::Owned(url) }
+}
+
+impl From<Cow<'static, Url>> for Url {
+	fn from(url: Cow<'static, Url>) -> Self { url.into_owned() }
+}
+
 impl Url {
 	#[inline]
 	pub fn join(&self, path: impl AsRef<Path>) -> Self {

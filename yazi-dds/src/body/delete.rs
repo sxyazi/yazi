@@ -12,12 +12,10 @@ pub struct BodyDelete<'a> {
 }
 
 impl<'a> BodyDelete<'a> {
-	#[inline]
 	pub fn borrowed(urls: &'a Vec<Url>) -> Body<'a> { Self { urls: Cow::Borrowed(urls) }.into() }
 }
 
 impl BodyDelete<'static> {
-	#[inline]
 	pub fn owned(urls: Vec<Url>) -> Body<'static> { Self { urls: Cow::Owned(urls) }.into() }
 }
 

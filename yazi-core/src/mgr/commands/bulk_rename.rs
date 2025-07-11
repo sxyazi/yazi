@@ -103,8 +103,8 @@ impl Mgr {
 		}
 
 		if !succeeded.is_empty() {
-			let map = succeeded.iter().map(|(o, n)| (o, &n.url)).collect();
-			err!(Pubsub::pub_from_bulk(map));
+			let it = succeeded.iter().map(|(o, n)| (o, &n.url));
+			err!(Pubsub::pub_after_bulk(it));
 			FilesOp::rename(succeeded);
 		}
 		drop(permit);

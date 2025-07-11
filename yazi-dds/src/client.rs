@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, mem, str::FromStr};
+use std::{collections::{HashMap, HashSet}, iter, mem, str::FromStr};
 
 use anyhow::{Context, Result, bail};
 use parking_lot::RwLock;
@@ -71,7 +71,7 @@ impl Client {
 
 		let payload = try_format!(
 			"{}\n{kind},{receiver},{ID},{body}\n{}\n",
-			Payload::new(BodyHi::borrowed(Default::default())),
+			Payload::new(BodyHi::borrowed(iter::empty())),
 			Payload::new(BodyBye::owned())
 		)?;
 
@@ -129,7 +129,7 @@ impl Client {
 	pub async fn draw(kinds: HashSet<&str>) -> Result<()> {
 		async fn make(kinds: &HashSet<&str>) -> Result<ClientReader> {
 			let (lines, mut writer) = Stream::connect().await?;
-			let hi = Payload::new(BodyHi::borrowed(kinds.clone()));
+			let hi = Payload::new(BodyHi::borrowed(kinds.iter().copied()));
 			writer.write_all(try_format!("{hi}\n")?.as_bytes()).await?;
 			writer.flush().await?;
 			Ok(lines)
@@ -167,7 +167,7 @@ impl Client {
 		let mut first = true;
 		loop {
 			if let Ok(conn) = Stream::connect().await {
-				Pubsub::pub_from_hi();
+				Pubsub::pub_inner_hi();
 				return conn;
 			}
 

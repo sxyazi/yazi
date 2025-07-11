@@ -62,9 +62,9 @@ impl Pump {
 
 			loop {
 				select! {
-					Some(items) = move_rx.next() => err!(Pubsub::pub_from_move(items)),
-					Some(urls) = trash_rx.next() => err!(Pubsub::pub_from_trash(urls)),
-					Some(urls) = delete_rx.next() => err!(Pubsub::pub_from_delete(urls)),
+					Some(items) = move_rx.next() => err!(Pubsub::pub_after_move(items)),
+					Some(urls) = trash_rx.next() => err!(Pubsub::pub_after_trash(urls)),
+					Some(urls) = delete_rx.next() => err!(Pubsub::pub_after_delete(urls)),
 					else => {
 						CT.cancel();
 						break;

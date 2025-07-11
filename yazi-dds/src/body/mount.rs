@@ -7,8 +7,9 @@ use super::Body;
 pub struct BodyMount;
 
 impl BodyMount {
-	#[inline]
 	pub fn owned() -> Body<'static> { Self.into() }
+
+	pub fn borrowed() -> Body<'static> { Self::owned() }
 }
 
 impl From<BodyMount> for Body<'_> {
