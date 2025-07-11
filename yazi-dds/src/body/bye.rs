@@ -7,7 +7,6 @@ use super::Body;
 pub struct BodyBye;
 
 impl BodyBye {
-	#[inline]
 	pub fn owned() -> Body<'static> { Self.into() }
 }
 

@@ -15,16 +15,14 @@ pub struct BodyYank<'a> {
 }
 
 impl<'a> BodyYank<'a> {
-	#[inline]
 	pub fn borrowed(cut: bool, urls: &'a HashSet<Url>) -> Body<'a> {
 		Self { cut, urls: Cow::Borrowed(urls), dummy: false }.into()
 	}
 }
 
 impl BodyYank<'static> {
-	#[inline]
-	pub fn dummy() -> Body<'static> {
-		Self { cut: false, urls: Default::default(), dummy: true }.into()
+	pub fn owned(cut: bool, _: &HashSet<Url>) -> Body<'static> {
+		Self { cut, urls: Default::default(), dummy: true }.into()
 	}
 }
 

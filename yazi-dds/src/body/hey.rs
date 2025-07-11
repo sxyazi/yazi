@@ -7,6 +7,7 @@ use yazi_shared::{Id, SStr};
 use super::{Body, BodyHi};
 use crate::Peer;
 
+/// Server handshake
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BodyHey {
 	pub peers:   HashMap<Id, Peer>,
@@ -14,7 +15,6 @@ pub struct BodyHey {
 }
 
 impl BodyHey {
-	#[inline]
 	pub fn owned(peers: HashMap<Id, Peer>) -> Body<'static> {
 		Self { peers, version: BodyHi::version().into() }.into()
 	}

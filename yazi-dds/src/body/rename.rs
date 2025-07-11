@@ -14,16 +14,14 @@ pub struct BodyRename<'a> {
 }
 
 impl<'a> BodyRename<'a> {
-	#[inline]
 	pub fn borrowed(tab: Id, from: &'a Url, to: &'a Url) -> Body<'a> {
-		Self { tab, from: Cow::Borrowed(from), to: Cow::Borrowed(to) }.into()
+		Self { tab, from: from.into(), to: to.into() }.into()
 	}
 }
 
 impl BodyRename<'static> {
-	#[inline]
-	pub fn dummy(tab: Id, from: &Url, to: &Url) -> Body<'static> {
-		Self { tab, from: Cow::Owned(from.clone()), to: Cow::Owned(to.clone()) }.into()
+	pub fn owned(tab: Id, from: &Url, to: &Url) -> Body<'static> {
+		Self { tab, from: from.clone().into(), to: to.clone().into() }.into()
 	}
 }
 
@@ -36,8 +34,8 @@ impl IntoLua for BodyRename<'static> {
 		lua
 			.create_table_from([
 				("tab", self.tab.get().into_lua(lua)?),
-				("from", yazi_binding::Url::new(self.from.into_owned()).into_lua(lua)?),
-				("to", yazi_binding::Url::new(self.to.into_owned()).into_lua(lua)?),
+				("from", yazi_binding::Url::new(self.from).into_lua(lua)?),
+				("to", yazi_binding::Url::new(self.to).into_lua(lua)?),
 			])?
 			.into_lua(lua)
 	}

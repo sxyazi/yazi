@@ -12,14 +12,12 @@ pub struct BodyMove<'a> {
 }
 
 impl<'a> BodyMove<'a> {
-	#[inline]
 	pub fn borrowed(items: &'a Vec<BodyMoveItem>) -> Body<'a> {
 		Self { items: Cow::Borrowed(items) }.into()
 	}
 }
 
 impl BodyMove<'static> {
-	#[inline]
 	pub fn owned(items: Vec<BodyMoveItem>) -> Body<'static> {
 		Self { items: Cow::Owned(items) }.into()
 	}

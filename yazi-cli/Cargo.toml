@@ -41,9 +41,9 @@ yazi-shared = { path = "../yazi-shared", version = "25.6.11" }
 # External build dependencies
 anyhow                = { workspace = true }
 clap                  = { workspace = true }
-clap_complete         = "4.5.54"
+clap_complete         = "4.5.55"
 clap_complete_fig     = "4.5.2"
-clap_complete_nushell = "4.5.7"
+clap_complete_nushell = "4.5.8"
 serde_json            = { workspace = true }
 vergen-gitcl          = { version = "1.0.8", features = [ "build" ] }
 

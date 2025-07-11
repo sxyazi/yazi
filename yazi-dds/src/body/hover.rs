@@ -13,15 +13,13 @@ pub struct BodyHover<'a> {
 }
 
 impl<'a> BodyHover<'a> {
-	#[inline]
 	pub fn borrowed(tab: Id, url: Option<&'a Url>) -> Body<'a> {
-		Self { tab, url: url.map(Cow::Borrowed) }.into()
+		Self { tab, url: url.map(Into::into) }.into()
 	}
 }
 
 impl BodyHover<'static> {
-	#[inline]
-	pub fn dummy(tab: Id) -> Body<'static> { Self { tab, url: None }.into() }
+	pub fn owned(tab: Id, _: Option<&Url>) -> Body<'static> { Self { tab, url: None }.into() }
 }
 
 impl<'a> From<BodyHover<'a>> for Body<'a> {
@@ -30,14 +28,11 @@ impl<'a> From<BodyHover<'a>> for Body<'a> {
 
 impl IntoLua for BodyHover<'static> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		if let Some(Cow::Owned(url)) = self.url {
-			lua.create_table_from([
+		lua
+			.create_table_from([
 				("tab", self.tab.get().into_lua(lua)?),
-				("url", yazi_binding::Url::new(url).into_lua(lua)?),
+				("url", self.url.map(yazi_binding::Url::new).into_lua(lua)?),
 			])?
-		} else {
-			lua.create_table_from([("tab", self.tab.get())])?
-		}
-		.into_lua(lua)
+			.into_lua(lua)
 	}
 }

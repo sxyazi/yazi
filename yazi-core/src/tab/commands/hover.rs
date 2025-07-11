@@ -15,7 +15,7 @@ impl Tab {
 		}
 
 		// Publish through DDS
-		err!(Pubsub::pub_from_hover(self.id, self.hovered().map(|h| &h.url)));
+		err!(Pubsub::pub_after_hover(self.id, self.hovered().map(|h| &h.url)));
 	}
 
 	fn hover_do(&mut self, url: Url) {

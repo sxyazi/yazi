@@ -24,7 +24,7 @@ ansi-to-tui         = "7.0.0"
 anyhow              = "1.0.98"
 base64              = "0.22.1"
 bitflags            = "2.9.1"
-clap                = { version = "4.5.40", features = [ "derive" ] }
+clap                = { version = "4.5.41", features = [ "derive" ] }
 core-foundation-sys = "0.8.7"
 crossterm           = { version = "0.29.0", features = [ "event-stream" ] }
 dirs                = "6.0.0"
@@ -48,7 +48,7 @@ syntect             = { version = "5.2.0", default-features = false, features = 
 tokio               = { version = "1.46.1", features = [ "full" ] }
 tokio-stream        = "0.1.17"
 tokio-util          = "0.7.15"
-toml                = { version = "0.9.0" }
+toml                = { version = "0.9.1" }
 tracing             = { version = "0.1.41", features = [ "max_level_debug", "release_max_level_debug" ] }
 twox-hash           = { version = "2.1.1", default-features = false, features = [ "std", "random", "xxhash3_128" ] }
 unicode-width       = { version = "0.2.0", default-features = false }

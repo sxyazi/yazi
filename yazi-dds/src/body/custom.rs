@@ -12,12 +12,10 @@ pub struct BodyCustom {
 }
 
 impl BodyCustom {
-	#[inline]
 	pub fn from_str(kind: &str, data: &str) -> anyhow::Result<Body<'static>> {
 		Ok(Self { kind: kind.to_owned(), data: serde_json::from_str(data)? }.into())
 	}
 
-	#[inline]
 	pub fn from_lua(kind: &str, data: Value) -> mlua::Result<Body<'static>> {
 		Ok(Self { kind: kind.to_owned(), data: Sendable::value_to_data(data)? }.into())
 	}

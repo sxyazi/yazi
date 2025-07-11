@@ -90,7 +90,7 @@ impl Folder {
 		if !self.update(op) {
 			return false;
 		} else if self.stage != old {
-			err!(Pubsub::pub_from_load(tab, &self.url, self.stage));
+			err!(Pubsub::pub_after_load(tab, &self.url, self.stage));
 		}
 		true
 	}

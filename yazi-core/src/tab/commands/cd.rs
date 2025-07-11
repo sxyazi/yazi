@@ -54,7 +54,7 @@ impl Tab {
 			self.parent = Some(self.history.remove_or(&parent));
 		}
 
-		err!(Pubsub::pub_from_cd(self.id, self.cwd()));
+		err!(Pubsub::pub_after_cd(self.id, self.cwd()));
 		self.hover(None);
 
 		MgrProxy::refresh();

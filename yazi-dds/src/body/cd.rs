@@ -15,15 +15,13 @@ pub struct BodyCd<'a> {
 }
 
 impl<'a> BodyCd<'a> {
-	#[inline]
 	pub fn borrowed(tab: Id, url: &'a Url) -> Body<'a> {
-		Self { tab, url: Cow::Borrowed(url), dummy: false }.into()
+		Self { tab, url: url.into(), dummy: false }.into()
 	}
 }
 
 impl BodyCd<'static> {
-	#[inline]
-	pub fn dummy(tab: Id) -> Body<'static> {
+	pub fn owned(tab: Id, _: &Url) -> Body<'static> {
 		Self { tab, url: Default::default(), dummy: true }.into()
 	}
 }
@@ -34,14 +32,11 @@ impl<'a> From<BodyCd<'a>> for Body<'a> {
 
 impl IntoLua for BodyCd<'static> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		if let Some(Cow::Owned(url)) = Some(self.url).filter(|_| !self.dummy) {
-			lua.create_table_from([
+		lua
+			.create_table_from([
 				("tab", self.tab.get().into_lua(lua)?),
-				("url", yazi_binding::Url::new(url).into_lua(lua)?),
+				("url", Some(self.url).filter(|_| !self.dummy).map(yazi_binding::Url::new).into_lua(lua)?),
 			])?
-		} else {
-			lua.create_table_from([("tab", self.tab.get())])?
-		}
-		.into_lua(lua)
+			.into_lua(lua)
 	}
 }
