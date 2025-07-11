@@ -14,25 +14,25 @@ impl App {
 		let Some(term) = &mut self.term else { return };
 
 		Self::routine(true, None);
-		let _guard = scopeguard::guard(self.cx.cursor(), |c| Self::routine(false, c));
+		let _guard = scopeguard::guard(self.core.cursor(), |c| Self::routine(false, c));
 
 		let collision = COLLISION.swap(false, Ordering::Relaxed);
 		let frame = term
 			.draw(|f| {
-				_ = Lives::scope(&self.cx, || Ok(f.render_widget(Root::new(&self.cx), f.area())));
+				_ = Lives::scope(&self.core, || Ok(f.render_widget(Root::new(&self.core), f.area())));
 			})
 			.unwrap();
 
 		if COLLISION.load(Ordering::Relaxed) {
 			Self::patch(frame);
 		}
-		if !self.cx.notify.messages.is_empty() {
+		if !self.core.notify.messages.is_empty() {
 			self.render_partially();
 		}
 
 		// Reload preview if collision is resolved
 		if collision && !COLLISION.load(Ordering::Relaxed) {
-			self.cx.mgr.peek(true);
+			self.core.mgr.peek(true);
 		}
 	}
 
@@ -43,13 +43,13 @@ impl App {
 		}
 
 		Self::routine(true, None);
-		let _guard = scopeguard::guard(self.cx.cursor(), |c| Self::routine(false, c));
+		let _guard = scopeguard::guard(self.core.cursor(), |c| Self::routine(false, c));
 
 		let frame = term
 			.draw_partial(|f| {
-				_ = Lives::scope(&self.cx, || {
-					f.render_widget(crate::tasks::Progress::new(&self.cx), f.area());
-					f.render_widget(crate::notify::Notify::new(&self.cx), f.area());
+				_ = Lives::scope(&self.core, || {
+					f.render_widget(crate::tasks::Progress::new(&self.core), f.area());
+					f.render_widget(crate::notify::Notify::new(&self.core), f.area());
 					Ok(())
 				});
 			})

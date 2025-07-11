@@ -1,9 +1,10 @@
 use crossterm::cursor::SetCursorStyle;
 use ratatui::layout::{Position, Rect};
-use yazi_core::{cmp::Cmp, confirm::Confirm, help::Help, input::Input, mgr::Mgr, notify::Notify, pick::Pick, tab::{Folder, Tab}, tasks::Tasks, which::Which};
 use yazi_shared::Layer;
 
-pub struct Ctx {
+use crate::{cmp::Cmp, confirm::Confirm, help::Help, input::Input, mgr::Mgr, notify::Notify, pick::Pick, tab::{Folder, Tab}, tasks::Tasks, which::Which};
+
+pub struct Core {
 	pub mgr:     Mgr,
 	pub tasks:   Tasks,
 	pub pick:    Pick,
@@ -15,7 +16,7 @@ pub struct Ctx {
 	pub notify:  Notify,
 }
 
-impl Ctx {
+impl Core {
 	pub fn make() -> Self {
 		Self {
 			mgr:     Mgr::make(),
@@ -69,7 +70,7 @@ impl Ctx {
 	}
 }
 
-impl Ctx {
+impl Core {
 	#[inline]
 	pub fn active(&self) -> &Tab { self.mgr.active() }
 

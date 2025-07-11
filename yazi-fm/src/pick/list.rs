@@ -1,20 +1,19 @@
 use ratatui::{buffer::Buffer, layout::{Margin, Rect}, widgets::{ListItem, Scrollbar, ScrollbarOrientation, ScrollbarState, StatefulWidget, Widget}};
 use yazi_config::THEME;
+use yazi_core::Core;
 use yazi_widgets::Scrollable;
 
-use crate::Ctx;
-
 pub(crate) struct List<'a> {
-	cx: &'a Ctx,
+	core: &'a Core,
 }
 
 impl<'a> List<'a> {
-	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
+	pub(crate) fn new(core: &'a Core) -> Self { Self { core } }
 }
 
 impl Widget for List<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let pick = &self.cx.pick;
+		let pick = &self.core.pick;
 
 		// Vertical scrollbar
 		if pick.total() > pick.limit() {

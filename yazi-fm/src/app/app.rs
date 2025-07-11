@@ -8,10 +8,10 @@ use yazi_macro::emit;
 use yazi_shared::event::{CmdCow, Event, NEED_RENDER};
 use yazi_widgets::input::InputMode;
 
-use crate::{Ctx, Executor, Router, Signals, Term};
+use crate::{Executor, Router, Signals, Term};
 
 pub(crate) struct App {
-	pub(crate) cx:      Ctx,
+	pub(crate) core:    yazi_core::Core,
 	pub(crate) term:    Option<Term>,
 	pub(crate) signals: Signals,
 }
@@ -21,7 +21,7 @@ impl App {
 		let term = Term::start()?;
 		let (mut rx, signals) = (Event::take(), Signals::start()?);
 
-		let mut app = Self { cx: Ctx::make(), term: Some(term), signals };
+		let mut app = Self { core: yazi_core::Core::make(), term: Some(term), signals };
 		app.render();
 
 		let mut events = Vec::with_capacity(50);
@@ -100,8 +100,8 @@ impl App {
 
 	#[inline]
 	fn dispatch_paste(&mut self, str: String) {
-		if self.cx.input.visible {
-			let input = &mut self.cx.input;
+		if self.core.input.visible {
+			let input = &mut self.core.input;
 			if input.mode() == InputMode::Insert {
 				input.type_str(&str);
 			} else if input.mode() == InputMode::Replace {

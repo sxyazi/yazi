@@ -8,6 +8,6 @@ impl App {
 			return;
 		};
 
-		self.cx.notify.push(opt);
+		self.core.notify.push(opt);
 	}
 }

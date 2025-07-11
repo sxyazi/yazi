@@ -3,16 +3,15 @@ use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 use tracing::error;
 use yazi_binding::elements::render_once;
 use yazi_config::LAYOUT;
+use yazi_core::Core;
 use yazi_plugin::LUA;
 
-use crate::Ctx;
-
 pub(crate) struct Progress<'a> {
-	cx: &'a Ctx,
+	core: &'a Core,
 }
 
 impl<'a> Progress<'a> {
-	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
+	pub(crate) fn new(core: &'a Core) -> Self { Self { core } }
 }
 
 impl Widget for Progress<'_> {
@@ -22,7 +21,7 @@ impl Widget for Progress<'_> {
 			let progress =
 				LUA.globals().raw_get::<Table>("Progress")?.call_method::<Table>("use", area)?;
 
-			render_once(progress.call_method("redraw", ())?, buf, |p| self.cx.mgr.area(p));
+			render_once(progress.call_method("redraw", ())?, buf, |p| self.core.mgr.area(p));
 			Ok::<_, mlua::Error>(())
 		};
 		if let Err(e) = f() {

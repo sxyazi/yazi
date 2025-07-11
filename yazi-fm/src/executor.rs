@@ -51,39 +51,39 @@ impl<'a> Executor<'a> {
 		macro_rules! on {
 			(MGR, $name:ident $(,$args:expr)*) => {
 				if cmd.name == stringify!($name) {
-					return self.app.cx.mgr.$name(cmd, $($args),*);
+					return self.app.core.mgr.$name(cmd, $($args),*);
 				}
 			};
 			(ACTIVE, $name:ident $(,$args:expr)*) => {
 				if cmd.name == stringify!($name) {
 					return if let Some(tab) = cmd.get("tab") {
 						let Some(id) = tab.as_id() else { return };
-						let Some(tab) = self.app.cx.mgr.tabs.find_mut(id) else { return };
+						let Some(tab) = self.app.core.mgr.tabs.find_mut(id) else { return };
 						tab.$name(cmd, $($args),*)
 					} else {
-						self.app.cx.mgr.active_mut().$name(cmd, $($args),*)
+						self.app.core.mgr.active_mut().$name(cmd, $($args),*)
 					};
 				}
 			};
 			(TABS, $name:ident) => {
 				if cmd.name == concat!("tab_", stringify!($name)) {
-					return self.app.cx.mgr.tabs.$name(cmd);
+					return self.app.core.mgr.tabs.$name(cmd);
 				}
 			};
 		}
 
 		on!(MGR, update_tasks);
-		on!(MGR, update_files, &self.app.cx.tasks);
-		on!(MGR, update_mimes, &self.app.cx.tasks);
-		on!(MGR, update_paged, &self.app.cx.tasks);
+		on!(MGR, update_files, &self.app.core.tasks);
+		on!(MGR, update_mimes, &self.app.core.tasks);
+		on!(MGR, update_paged, &self.app.core.tasks);
 		on!(MGR, update_yanked);
 		on!(MGR, watch);
 		on!(MGR, peek);
 		on!(MGR, seek);
 		on!(MGR, spot);
-		on!(MGR, refresh, &self.app.cx.tasks);
-		on!(MGR, quit, &self.app.cx.tasks);
-		on!(MGR, close, &self.app.cx.tasks);
+		on!(MGR, refresh, &self.app.core.tasks);
+		on!(MGR, quit, &self.app.core.tasks);
+		on!(MGR, close, &self.app.core.tasks);
 		on!(MGR, suspend);
 		on!(ACTIVE, escape);
 		on!(ACTIVE, update_peeked);
@@ -105,15 +105,15 @@ impl<'a> Executor<'a> {
 		on!(ACTIVE, visual_mode);
 
 		// Operation
-		on!(MGR, open, &self.app.cx.tasks);
-		on!(MGR, open_do, &self.app.cx.tasks);
+		on!(MGR, open, &self.app.core.tasks);
+		on!(MGR, open_do, &self.app.core.tasks);
 		on!(MGR, yank);
 		on!(MGR, unyank);
-		on!(MGR, paste, &self.app.cx.tasks);
-		on!(MGR, link, &self.app.cx.tasks);
-		on!(MGR, hardlink, &self.app.cx.tasks);
-		on!(MGR, remove, &self.app.cx.tasks);
-		on!(MGR, remove_do, &self.app.cx.tasks);
+		on!(MGR, paste, &self.app.core.tasks);
+		on!(MGR, link, &self.app.core.tasks);
+		on!(MGR, hardlink, &self.app.core.tasks);
+		on!(MGR, remove, &self.app.core.tasks);
+		on!(MGR, remove_do, &self.app.core.tasks);
 		on!(MGR, create);
 		on!(MGR, rename);
 		on!(ACTIVE, copy);
@@ -133,7 +133,7 @@ impl<'a> Executor<'a> {
 		on!(ACTIVE, find_arrow);
 
 		// Sorting
-		on!(ACTIVE, sort, &self.app.cx.tasks);
+		on!(ACTIVE, sort, &self.app.core.tasks);
 
 		// Tabs
 		on!(TABS, create); // TODO: use `tab_create` instead
@@ -143,7 +143,7 @@ impl<'a> Executor<'a> {
 
 		match cmd.name.as_ref() {
 			// Help
-			"help" => self.app.cx.help.toggle(Layer::Mgr),
+			"help" => self.app.core.help.toggle(Layer::Mgr),
 			// Plugin
 			"plugin" => self.app.plugin(cmd),
 			_ => {}
@@ -154,7 +154,7 @@ impl<'a> Executor<'a> {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return self.app.cx.tasks.$name(cmd);
+					return self.app.core.tasks.$name(cmd);
 				}
 			};
 		}
@@ -169,7 +169,7 @@ impl<'a> Executor<'a> {
 
 		match cmd.name.as_ref() {
 			// Help
-			"help" => self.app.cx.help.toggle(Layer::Tasks),
+			"help" => self.app.core.help.toggle(Layer::Tasks),
 			// Plugin
 			"plugin" => self.app.plugin(cmd),
 			_ => {}
@@ -180,7 +180,7 @@ impl<'a> Executor<'a> {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return self.app.cx.active_mut().spot.$name(cmd);
+					return self.app.core.active_mut().spot.$name(cmd);
 				}
 			};
 		}
@@ -192,7 +192,7 @@ impl<'a> Executor<'a> {
 
 		match cmd.name.as_ref() {
 			// Help
-			"help" => self.app.cx.help.toggle(Layer::Spot),
+			"help" => self.app.core.help.toggle(Layer::Spot),
 			// Plugin
 			"plugin" => self.app.plugin(cmd),
 			_ => {}
@@ -203,7 +203,7 @@ impl<'a> Executor<'a> {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return self.app.cx.pick.$name(cmd);
+					return self.app.core.pick.$name(cmd);
 				}
 			};
 		}
@@ -214,7 +214,7 @@ impl<'a> Executor<'a> {
 
 		match cmd.name.as_ref() {
 			// Help
-			"help" => self.app.cx.help.toggle(Layer::Pick),
+			"help" => self.app.core.help.toggle(Layer::Pick),
 			// Plugin
 			"plugin" => self.app.plugin(cmd),
 			_ => {}
@@ -225,7 +225,7 @@ impl<'a> Executor<'a> {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return self.app.cx.input.$name(cmd);
+					return self.app.core.input.$name(cmd);
 				}
 			};
 		}
@@ -234,11 +234,11 @@ impl<'a> Executor<'a> {
 		on!(show);
 		on!(close);
 
-		match self.app.cx.input.mode() {
+		match self.app.core.input.mode() {
 			InputMode::Normal => {
 				match cmd.name.as_ref() {
 					// Help
-					"help" => return self.app.cx.help.toggle(Layer::Input),
+					"help" => return self.app.core.help.toggle(Layer::Input),
 					// Plugin
 					"plugin" => return self.app.plugin(cmd),
 					_ => {}
@@ -247,19 +247,19 @@ impl<'a> Executor<'a> {
 			InputMode::Insert | InputMode::Replace => {}
 		};
 
-		self.app.cx.input.execute(cmd)
+		self.app.core.input.execute(cmd)
 	}
 
 	fn confirm(&mut self, cmd: CmdCow) {
 		macro_rules! on {
 			($name:ident $(,$args:expr)*) => {
 				if cmd.name == stringify!($name) {
-					return self.app.cx.confirm.$name(cmd, $($args),*);
+					return self.app.core.confirm.$name(cmd, $($args),*);
 				}
 			};
 		}
 
-		on!(arrow, &self.app.cx.mgr);
+		on!(arrow, &self.app.core.mgr);
 		on!(show);
 		on!(close);
 	}
@@ -268,7 +268,7 @@ impl<'a> Executor<'a> {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return self.app.cx.help.$name(cmd);
+					return self.app.core.help.$name(cmd);
 				}
 			};
 		}
@@ -278,7 +278,7 @@ impl<'a> Executor<'a> {
 		on!(filter);
 
 		match cmd.name.as_ref() {
-			"close" => self.app.cx.help.toggle(Layer::Help),
+			"close" => self.app.core.help.toggle(Layer::Help),
 			// Plugin
 			"plugin" => self.app.plugin(cmd),
 			_ => {}
@@ -289,7 +289,7 @@ impl<'a> Executor<'a> {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return self.app.cx.cmp.$name(cmd);
+					return self.app.core.cmp.$name(cmd);
 				}
 			};
 		}
@@ -301,7 +301,7 @@ impl<'a> Executor<'a> {
 
 		match cmd.name.as_ref() {
 			// Help
-			"help" => self.app.cx.help.toggle(Layer::Cmp),
+			"help" => self.app.core.help.toggle(Layer::Cmp),
 			// Plugin
 			"plugin" => self.app.plugin(cmd),
 			_ => {}
@@ -312,7 +312,7 @@ impl<'a> Executor<'a> {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return self.app.cx.which.$name(cmd);
+					return self.app.core.which.$name(cmd);
 				}
 			};
 		}

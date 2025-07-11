@@ -1,14 +1,13 @@
 use ratatui::{buffer::Buffer, layout::{Margin, Rect}, widgets::{Block, Borders, Scrollbar, ScrollbarOrientation, ScrollbarState, StatefulWidget, Widget, Wrap}};
 use yazi_config::THEME;
-
-use crate::Ctx;
+use yazi_core::Core;
 
 pub(crate) struct List<'a> {
-	cx: &'a Ctx,
+	core: &'a Core,
 }
 
 impl<'a> List<'a> {
-	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
+	pub(crate) fn new(core: &'a Core) -> Self { Self { core } }
 }
 
 impl Widget for List<'_> {
@@ -21,11 +20,11 @@ impl Widget for List<'_> {
 		block.clone().render(area.inner(Margin::new(1, 0)), buf);
 
 		let list = self
-			.cx
+			.core
 			.confirm
 			.list
 			.clone()
-			.scroll((self.cx.confirm.offset as u16, 0))
+			.scroll((self.core.confirm.offset as u16, 0))
 			.block(block)
 			.style(THEME.confirm.list)
 			.wrap(Wrap { trim: false });
@@ -37,7 +36,7 @@ impl Widget for List<'_> {
 			Scrollbar::new(ScrollbarOrientation::VerticalRight).render(
 				area,
 				buf,
-				&mut ScrollbarState::new(lines).position(self.cx.confirm.offset),
+				&mut ScrollbarState::new(lines).position(self.core.confirm.offset),
 			);
 		}
 
