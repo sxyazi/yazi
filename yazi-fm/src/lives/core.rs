@@ -5,8 +5,8 @@ use paste::paste;
 
 use super::{Lives, PtrCell};
 
-pub(super) struct Ctx {
-	inner: PtrCell<crate::Ctx>,
+pub(super) struct Core {
+	inner: PtrCell<yazi_core::Core>,
 
 	c_active: Option<Value>,
 	c_tabs:   Option<Value>,
@@ -15,15 +15,15 @@ pub(super) struct Ctx {
 	c_layer:  Option<Value>,
 }
 
-impl Deref for Ctx {
-	type Target = crate::Ctx;
+impl Deref for Core {
+	type Target = yazi_core::Core;
 
 	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
-impl Ctx {
+impl Core {
 	#[inline]
-	pub(super) fn make(inner: &crate::Ctx) -> mlua::Result<AnyUserData> {
+	pub(super) fn make(inner: &yazi_core::Core) -> mlua::Result<AnyUserData> {
 		Lives::scoped_userdata(Self {
 			inner: inner.into(),
 
@@ -36,7 +36,7 @@ impl Ctx {
 	}
 }
 
-impl UserData for Ctx {
+impl UserData for Core {
 	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_meta_method_mut(MetaMethod::Index, |lua, me, key: mlua::String| {
 			macro_rules! reuse {

@@ -23,7 +23,7 @@ impl App {
 		let Some(size) = self.term.as_ref().and_then(|t| t.size().ok()) else { return };
 		let mut layout = LAYOUT.get();
 
-		let result = Lives::scope(&self.cx, || {
+		let result = Lives::scope(&self.core, || {
 			let comps = Root::reflow((Position::ORIGIN, size).into())?;
 
 			for v in comps.sequence_values::<Value>() {

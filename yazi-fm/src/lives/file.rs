@@ -6,7 +6,7 @@ use yazi_config::THEME;
 use yazi_plugin::bindings::Range;
 
 use super::Lives;
-use crate::{Ctx, lives::PtrCell};
+use crate::lives::PtrCell;
 
 pub(super) struct File {
 	idx:    usize,
@@ -76,8 +76,8 @@ impl UserData for File {
 			Ok(if me.is_dir() { me.folder.files.sizes.get(me.urn()).copied() } else { Some(me.len) })
 		});
 		methods.add_method("mime", |lua, me, ()| {
-			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|cx: &Ctx| {
-				cx.mgr.mimetype.by_url(&me.url).map(|s| lua.create_string(s)).transpose()
+			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|core: &yazi_core::Core| {
+				core.mgr.mimetype.by_url(&me.url).map(|s| lua.create_string(s)).transpose()
 			})?
 		});
 		methods.add_method("prefix", |lua, me, ()| {
@@ -90,16 +90,16 @@ impl UserData for File {
 			Some(lua.create_string(p.as_path().as_os_str().as_encoded_bytes())).transpose()
 		});
 		methods.add_method("style", |lua, me, ()| {
-			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|cx: &Ctx| {
-				let mime = cx.mgr.mimetype.by_file(me).unwrap_or_default();
+			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|core: &yazi_core::Core| {
+				let mime = core.mgr.mimetype.by_file(me).unwrap_or_default();
 				THEME.filetype.iter().find(|&x| x.matches(me, mime)).map(|x| Style::from(x.style))
 			})
 		});
 		methods.add_method("is_yanked", |lua, me, ()| {
-			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|cx: &Ctx| {
-				if !cx.mgr.yanked.contains(&me.url) {
+			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|core: &yazi_core::Core| {
+				if !core.mgr.yanked.contains(&me.url) {
 					0u8
-				} else if cx.mgr.yanked.cut {
+				} else if core.mgr.yanked.cut {
 					2u8
 				} else {
 					1u8
@@ -120,8 +120,8 @@ impl UserData for File {
 		});
 		methods.add_method("is_selected", |_, me, ()| Ok(me.tab.selected.contains_key(&me.url)));
 		methods.add_method("found", |lua, me, ()| {
-			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|cx: &Ctx| {
-				let Some(finder) = &cx.active().finder else {
+			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|core: &yazi_core::Core| {
+				let Some(finder) = &core.active().finder else {
 					return Ok(None);
 				};
 
@@ -134,8 +134,8 @@ impl UserData for File {
 			})
 		});
 		methods.add_method("highlights", |lua, me, ()| {
-			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|cx: &Ctx| {
-				let Some(finder) = &cx.active().finder else {
+			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|core: &yazi_core::Core| {
+				let Some(finder) = &core.active().finder else {
 					return None;
 				};
 				if me.folder.url != me.tab.current.url {

@@ -1,19 +1,18 @@
 use ratatui::{buffer::Buffer, layout::{self, Constraint, Rect}, widgets::{List, ListItem, Widget}};
 use yazi_config::THEME;
-
-use crate::Ctx;
+use yazi_core::Core;
 
 pub(super) struct Bindings<'a> {
-	cx: &'a Ctx,
+	core: &'a Core,
 }
 
 impl<'a> Bindings<'a> {
-	pub(super) fn new(cx: &'a Ctx) -> Self { Self { cx } }
+	pub(super) fn new(core: &'a Core) -> Self { Self { core } }
 }
 
 impl Widget for Bindings<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let bindings = &self.cx.help.window();
+		let bindings = &self.core.help.window();
 		if bindings.is_empty() {
 			return;
 		}
@@ -39,7 +38,7 @@ impl Widget for Bindings<'_> {
 		])
 		.split(area);
 
-		let cursor = self.cx.help.rel_cursor() as u16;
+		let cursor = self.core.help.rel_cursor() as u16;
 		buf.set_style(
 			Rect { x: area.x, y: area.y + cursor, width: area.width, height: 1 },
 			THEME.help.hovered,

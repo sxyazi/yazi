@@ -24,7 +24,7 @@ impl App {
 		}
 
 		if opt.mode == PluginMode::Async {
-			return self.cx.tasks.plugin_micro(opt);
+			return self.core.tasks.plugin_micro(opt);
 		} else if opt.mode == PluginMode::Sync && hits {
 			return self.plugin_do(opt);
 		}
@@ -53,7 +53,7 @@ impl App {
 		}
 
 		if opt.mode.auto_then(chunk.sync_entry) != PluginMode::Sync {
-			return self.cx.tasks.plugin_micro(opt);
+			return self.core.tasks.plugin_micro(opt);
 		}
 
 		match runtime_mut!(LUA) {
@@ -68,7 +68,7 @@ impl App {
 		};
 		drop(loader);
 
-		let result = Lives::scope(&self.cx, || {
+		let result = Lives::scope(&self.core, || {
 			if let Some(cb) = opt.cb {
 				cb(&LUA, plugin)
 			} else {

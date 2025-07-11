@@ -3,21 +3,20 @@ use std::path::MAIN_SEPARATOR_STR;
 use ratatui::{buffer::Buffer, layout::Rect, widgets::{Block, BorderType, List, ListItem, Widget}};
 use yazi_adapter::Dimension;
 use yazi_config::{THEME, popup::{Offset, Position}};
-
-use crate::Ctx;
+use yazi_core::Core;
 
 pub(crate) struct Cmp<'a> {
-	cx: &'a Ctx,
+	core: &'a Core,
 }
 
 impl<'a> Cmp<'a> {
-	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
+	pub(crate) fn new(core: &'a Core) -> Self { Self { core } }
 }
 
 impl Widget for Cmp<'_> {
 	fn render(self, rect: Rect, buf: &mut Buffer) {
 		let items: Vec<_> = self
-			.cx
+			.core
 			.cmp
 			.window()
 			.iter()
@@ -27,7 +26,7 @@ impl Widget for Cmp<'_> {
 				let slash = if x.is_dir { MAIN_SEPARATOR_STR } else { "" };
 
 				let mut item = ListItem::new(format!(" {icon} {}{slash}", x.name.display()));
-				if i == self.cx.cmp.rel_cursor() {
+				if i == self.core.cmp.rel_cursor() {
 					item = item.style(THEME.cmp.active);
 				} else {
 					item = item.style(THEME.cmp.inactive);
@@ -37,7 +36,7 @@ impl Widget for Cmp<'_> {
 			})
 			.collect();
 
-		let input_area = self.cx.mgr.area(self.cx.input.position);
+		let input_area = self.core.mgr.area(self.core.input.position);
 		let mut area = Position::sticky(Dimension::available().into(), input_area, Offset {
 			x:      1,
 			y:      0,

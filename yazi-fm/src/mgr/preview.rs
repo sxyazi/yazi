@@ -1,20 +1,19 @@
 use ratatui::{buffer::Buffer, widgets::Widget};
 use yazi_config::LAYOUT;
-
-use crate::Ctx;
+use yazi_core::Core;
 
 pub(crate) struct Preview<'a> {
-	cx: &'a Ctx,
+	core: &'a Core,
 }
 
 impl<'a> Preview<'a> {
 	#[inline]
-	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
+	pub(crate) fn new(core: &'a Core) -> Self { Self { core } }
 }
 
 impl Widget for Preview<'_> {
 	fn render(self, win: ratatui::layout::Rect, buf: &mut Buffer) {
-		let Some(lock) = &self.cx.active().preview.lock else {
+		let Some(lock) = &self.core.active().preview.lock else {
 			return;
 		};
 
@@ -23,7 +22,7 @@ impl Widget for Preview<'_> {
 		}
 
 		for w in &lock.data {
-			let rect = w.area().transform(|p| self.cx.mgr.area(p));
+			let rect = w.area().transform(|p| self.core.mgr.area(p));
 			if win.intersects(rect) {
 				w.clone().render(rect, buf);
 			}

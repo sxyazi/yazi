@@ -1,14 +1,12 @@
 use ratatui::{buffer::Buffer, layout::{self, Constraint, Offset, Rect}, widgets::{Block, BorderType, Paragraph, Widget, Wrap}};
-use yazi_core::notify::Message;
-
-use crate::Ctx;
+use yazi_core::{Core, notify::Message};
 
 pub(crate) struct Notify<'a> {
-	cx: &'a Ctx,
+	core: &'a Core,
 }
 
 impl<'a> Notify<'a> {
-	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
+	pub(crate) fn new(core: &'a Core) -> Self { Self { core } }
 
 	pub(crate) fn available(area: Rect) -> Rect {
 		let chunks = layout::Layout::horizontal([Constraint::Fill(1), Constraint::Min(80)]).split(area);
@@ -43,7 +41,7 @@ impl<'a> Notify<'a> {
 
 impl Widget for Notify<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let notify = &self.cx.notify;
+		let notify = &self.core.notify;
 		let available = Self::available(area);
 
 		let messages = notify.messages.iter().take(notify.limit(available)).rev();

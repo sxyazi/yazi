@@ -8,8 +8,8 @@ use crate::{Term, app::App};
 
 impl App {
 	pub(crate) fn quit(&mut self, opt: EventQuit) -> ! {
-		self.cx.tasks.shutdown();
-		self.cx.mgr.shutdown();
+		self.core.tasks.shutdown();
+		self.core.mgr.shutdown();
 
 		futures::executor::block_on(async {
 			_ = futures::join!(
@@ -25,7 +25,7 @@ impl App {
 
 	async fn cwd_to_file(&self, no: bool) {
 		if let Some(p) = ARGS.cwd_file.as_ref().filter(|_| !no) {
-			let cwd = self.cx.mgr.cwd().as_os_str();
+			let cwd = self.core.mgr.cwd().as_os_str();
 			fs::write(p, cwd.as_encoded_bytes()).await.ok();
 		}
 	}

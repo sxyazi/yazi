@@ -1,15 +1,13 @@
 use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Rect}, text::{Line, Text}, widgets::{Block, BorderType, List, Padding, Widget}};
 use yazi_config::THEME;
-use yazi_core::tasks::TASKS_PERCENT;
-
-use crate::Ctx;
+use yazi_core::{Core, tasks::TASKS_PERCENT};
 
 pub(crate) struct Tasks<'a> {
-	cx: &'a Ctx,
+	core: &'a Core,
 }
 
 impl<'a> Tasks<'a> {
-	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
+	pub(crate) fn new(core: &'a Core) -> Self { Self { core } }
 
 	pub(super) fn area(area: Rect) -> Rect {
 		let chunk = layout::Layout::vertical([
@@ -43,7 +41,7 @@ impl Widget for Tasks<'_> {
 		let inner = block.inner(area);
 		block.render(area, buf);
 
-		let tasks = &self.cx.tasks;
+		let tasks = &self.core.tasks;
 		let items = tasks.summaries.iter().take(inner.height as usize).enumerate().map(|(i, v)| {
 			let mut item =
 				Text::from_iter(textwrap::wrap(&v.name, inner.width as usize).into_iter().map(Line::from));

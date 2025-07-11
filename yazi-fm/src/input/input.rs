@@ -1,20 +1,19 @@
 use ratatui::{buffer::Buffer, layout::{Margin, Rect}, text::Line, widgets::{Block, BorderType, Widget}};
 use yazi_config::THEME;
-
-use crate::Ctx;
+use yazi_core::Core;
 
 pub(crate) struct Input<'a> {
-	cx: &'a Ctx,
+	core: &'a Core,
 }
 
 impl<'a> Input<'a> {
-	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
+	pub(crate) fn new(core: &'a Core) -> Self { Self { core } }
 }
 
 impl Widget for Input<'_> {
 	fn render(self, _: Rect, buf: &mut Buffer) {
-		let input = &self.cx.input;
-		let area = self.cx.mgr.area(input.position);
+		let input = &self.core.input;
+		let area = self.core.mgr.area(input.position);
 
 		yazi_binding::elements::Clear::default().render(area, buf);
 

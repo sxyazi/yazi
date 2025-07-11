@@ -21,7 +21,7 @@ impl App {
 		let Ok(opt) = opt.try_into() else { return };
 
 		// Update the progress of all tasks.
-		let tasks = &mut self.cx.tasks;
+		let tasks = &mut self.core.tasks;
 		let progressed = tasks.progress != opt.progress;
 		tasks.progress = opt.progress;
 

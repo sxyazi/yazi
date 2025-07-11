@@ -1,23 +1,23 @@
 use ratatui::{buffer::Buffer, layout, layout::{Constraint, Rect}, widgets::{Block, Widget}};
 use yazi_config::THEME;
+use yazi_core::Core;
 
 use super::Cand;
-use crate::Ctx;
 
 const PADDING_X: u16 = 1;
 const PADDING_Y: u16 = 1;
 
 pub(crate) struct Which<'a> {
-	cx: &'a Ctx,
+	core: &'a Core,
 }
 
 impl<'a> Which<'a> {
-	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
+	pub(crate) fn new(core: &'a Core) -> Self { Self { core } }
 }
 
 impl Widget for Which<'_> {
 	fn render(self, area: Rect, buf: &mut Buffer) {
-		let which = &self.cx.which;
+		let which = &self.core.which;
 		if which.silent {
 			return;
 		}

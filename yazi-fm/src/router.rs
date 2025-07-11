@@ -14,13 +14,13 @@ impl<'a> Router<'a> {
 
 	#[inline]
 	pub(super) fn route(&mut self, key: Key) -> bool {
-		let cx = &mut self.app.cx;
-		let layer = cx.layer();
+		let core = &mut self.app.core;
+		let layer = core.layer();
 
-		if cx.help.visible && cx.help.r#type(&key) {
+		if core.help.visible && core.help.r#type(&key) {
 			return true;
 		}
-		if cx.input.visible && cx.input.r#type(&key) {
+		if core.input.visible && core.input.r#type(&key) {
 			return true;
 		}
 
@@ -31,7 +31,7 @@ impl<'a> Router<'a> {
 				self.matches(layer, key)
 			}
 			L::Cmp => self.matches(L::Cmp, key) || self.matches(L::Input, key),
-			L::Which => cx.which.r#type(key),
+			L::Which => core.which.r#type(key),
 		}
 	}
 
@@ -43,7 +43,7 @@ impl<'a> Router<'a> {
 			}
 
 			if on.len() > 1 {
-				self.app.cx.which.show_with(key, layer);
+				self.app.core.which.show_with(key, layer);
 			} else {
 				emit!(Seq(ChordCow::from(chord).into_seq()));
 			}

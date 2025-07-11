@@ -10,9 +10,9 @@ impl App {
 		let area =
 			notify::Notify::available(Rect { x: 0, y: 0, width: columns, height: rows });
 
-		self.cx.notify.tick(cmd, area);
+		self.core.notify.tick(cmd, area);
 
-		if self.cx.notify.messages.is_empty() {
+		if self.core.notify.messages.is_empty() {
 			self.render();
 		} else {
 			self.render_partially();

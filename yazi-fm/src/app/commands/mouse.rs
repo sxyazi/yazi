@@ -20,7 +20,7 @@ impl App {
 		let event = yazi_plugin::bindings::MouseEvent::from(opt.event);
 		let Some(size) = self.term.as_ref().and_then(|t| t.size().ok()) else { return };
 
-		let res = Lives::scope(&self.cx, move || {
+		let res = Lives::scope(&self.core, move || {
 			let area = yazi_binding::elements::Rect::from(size);
 			let root = LUA.globals().raw_get::<Table>("Root")?.call_method::<Table>("new", area)?;
 

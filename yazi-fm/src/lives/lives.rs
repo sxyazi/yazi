@@ -7,8 +7,7 @@ use tracing::error;
 use yazi_plugin::LUA;
 use yazi_shared::RoCell;
 
-use super::PtrCell;
-use crate::Ctx;
+use super::{Core, PtrCell};
 
 static TO_DESTROY: RoCell<RefCell<Vec<AnyUserData>>> = RoCell::new_const(RefCell::new(Vec::new()));
 pub(super) static FILE_CACHE: RoCell<RefCell<HashMap<PtrCell<yazi_fs::File>, AnyUserData>>> =
@@ -17,7 +16,10 @@ pub(super) static FILE_CACHE: RoCell<RefCell<HashMap<PtrCell<yazi_fs::File>, Any
 pub(crate) struct Lives;
 
 impl Lives {
-	pub(crate) fn scope<T>(cx: &Ctx, f: impl FnOnce() -> mlua::Result<T>) -> mlua::Result<T> {
+	pub(crate) fn scope<T>(
+		core: &yazi_core::Core,
+		f: impl FnOnce() -> mlua::Result<T>,
+	) -> mlua::Result<T> {
 		FILE_CACHE.init(Default::default());
 		defer! { FILE_CACHE.drop(); }
 
@@ -28,8 +30,8 @@ impl Lives {
 				}
 			});
 
-			LUA.set_named_registry_value("cx", scope.create_any_userdata_ref(cx)?)?;
-			LUA.globals().raw_set("cx", super::Ctx::make(cx)?)?;
+			LUA.set_named_registry_value("cx", scope.create_any_userdata_ref(core)?)?;
+			LUA.globals().raw_set("cx", Core::make(core)?)?;
 			f()
 		});
 

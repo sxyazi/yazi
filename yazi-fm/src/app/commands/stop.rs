@@ -14,7 +14,7 @@ impl From<CmdCow> for Opt {
 impl App {
 	#[yazi_codegen::command]
 	pub fn stop(&mut self, opt: Opt) {
-		self.cx.active_mut().preview.reset_image();
+		self.core.active_mut().preview.reset_image();
 
 		// We need to destroy the `term` first before stopping the `signals`
 		// to prevent any signal from triggering the term to render again

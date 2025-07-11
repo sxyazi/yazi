@@ -1,20 +1,19 @@
 use ratatui::{buffer::Buffer, layout::{Alignment, Constraint, Layout, Margin, Rect}, widgets::{Block, BorderType, Widget}};
 use yazi_config::THEME;
-
-use crate::Ctx;
+use yazi_core::Core;
 
 pub(crate) struct Confirm<'a> {
-	cx: &'a Ctx,
+	core: &'a Core,
 }
 
 impl<'a> Confirm<'a> {
-	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
+	pub(crate) fn new(core: &'a Core) -> Self { Self { core } }
 }
 
 impl Widget for Confirm<'_> {
 	fn render(self, _: Rect, buf: &mut Buffer) {
-		let confirm = &self.cx.confirm;
-		let area = self.cx.mgr.area(confirm.position);
+		let confirm = &self.core.confirm;
+		let area = self.core.mgr.area(confirm.position);
 
 		yazi_binding::elements::Clear::default().render(area, buf);
 
@@ -39,8 +38,8 @@ impl Widget for Confirm<'_> {
 		])
 		.split(area.inner(Margin::new(0, 1)));
 
-		super::Body::new(self.cx, body_border).render(chunks[0], buf);
-		super::List::new(self.cx).render(chunks[1], buf);
+		super::Body::new(self.core, body_border).render(chunks[0], buf);
+		super::List::new(self.core).render(chunks[1], buf);
 		super::Buttons.render(chunks[2], buf);
 	}
 }

@@ -25,7 +25,7 @@ impl App {
 		};
 		drop(lock);
 
-		_ = Lives::scope(&self.cx, || {
+		_ = Lives::scope(&self.core, || {
 			let body = payload.body.into_lua(&LUA)?;
 			for (id, cb) in handlers {
 				runtime_mut!(LUA)?.push(&id);

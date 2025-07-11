@@ -1,20 +1,21 @@
 use ratatui::{buffer::Buffer, layout::{Margin, Rect}, widgets::{Block, BorderType, Widget}};
 use yazi_config::THEME;
+use yazi_core::Core;
 
-use crate::{Ctx, pick::List};
+use crate::pick::List;
 
 pub(crate) struct Pick<'a> {
-	cx: &'a Ctx,
+	core: &'a Core,
 }
 
 impl<'a> Pick<'a> {
-	pub(crate) fn new(cx: &'a Ctx) -> Self { Self { cx } }
+	pub(crate) fn new(core: &'a Core) -> Self { Self { core } }
 }
 
 impl Widget for Pick<'_> {
 	fn render(self, _: Rect, buf: &mut Buffer) {
-		let pick = &self.cx.pick;
-		let area = self.cx.mgr.area(pick.position);
+		let pick = &self.core.pick;
+		let area = self.core.mgr.area(pick.position);
 
 		yazi_binding::elements::Clear::default().render(area, buf);
 
@@ -24,6 +25,6 @@ impl Widget for Pick<'_> {
 			.border_style(THEME.pick.border)
 			.render(area, buf);
 
-		List::new(self.cx).render(area.inner(Margin::new(0, 1)), buf);
+		List::new(self.core).render(area.inner(Margin::new(0, 1)), buf);
 	}
 }
