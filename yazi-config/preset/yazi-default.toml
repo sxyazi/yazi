@@ -52,10 +52,10 @@ extract = [
 	{ run = 'ya pub extract --list %*',   desc = "Extract here", for = "windows" },
 ]
 play = [
-	{ run = 'xdg-open "$1"',                desc = "Play", for = "linux" },
-	{ run = 'open "$@"',                    desc = "Play", for = "macos" },
-	{ run = 'start "" "%1"', orphan = true, desc = "Play", for = "windows" },
-	{ run = 'termux-open "$1"',             desc = "Play", for = "android" },
+	{ run = 'xdg-open "$1"',              desc = "Play", for = "linux" },
+	{ run = 'open "$@"',                  desc = "Play", for = "macos" },
+	{ run = 'start "" %*', orphan = true, desc = "Play", for = "windows" },
+	{ run = 'termux-open "$1"',           desc = "Play", for = "android" },
 	{ run = '''mediainfo "$1"; echo "Press enter to exit"; read _''', block = true, desc = "Show media info", for = "unix" },
 	{ run = 'mediainfo "%1" & pause', block = true, desc = "Show media info", for = "windows" },
 ]
