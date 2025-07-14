@@ -15,7 +15,7 @@ impl Mgr {
 	pub fn rename(&mut self, opt: RenameOpt) {
 		if !self.active_mut().try_escape_visual() {
 			return;
-		} else if !opt.hovered && !self.active().selected.is_empty() {
+		} else if !opt.hovered || !self.active().selected.is_empty() {
 			return self.bulk_rename();
 		}
 
