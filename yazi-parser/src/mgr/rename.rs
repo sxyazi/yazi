@@ -10,7 +10,7 @@ pub struct RenameOpt {
 impl From<CmdCow> for RenameOpt {
 	fn from(mut c: CmdCow) -> Self {
 		Self {
-			hovered: c.bool("hovered"),
+			hovered: c.maybe_bool("hovered").unwrap_or(true),
 			force:   c.bool("force"),
 			empty:   c.take_str("empty").unwrap_or_default(),
 			cursor:  c.take_str("cursor").unwrap_or_default(),
