@@ -1,12 +1,14 @@
-use yazi_macro::render;
-use yazi_shared::event::CmdCow;
+use anyhow::Result;
+use yazi_macro::{act, render, succ};
+use yazi_parser::VoidOpt;
+use yazi_shared::event::Data;
 
 use crate::input::{Input, InputMode, op::InputOp};
 
 impl Input {
-	pub fn visual(&mut self, _: CmdCow) {
+	pub fn visual(&mut self, _: VoidOpt) -> Result<Data> {
 		if self.snap().mode != InputMode::Normal {
-			self.escape(());
+			act!(escape, self)?;
 		}
 
 		let snap = self.snap_mut();
@@ -14,5 +16,6 @@ impl Input {
 			snap.op = InputOp::Select(snap.cursor);
 			render!();
 		}
+		succ!();
 	}
 }

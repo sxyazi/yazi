@@ -1,4 +1,4 @@
-use crate::Step;
+use yazi_parser::Step;
 
 pub trait Scrollable {
 	fn total(&self) -> usize;

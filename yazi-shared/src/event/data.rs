@@ -91,6 +91,10 @@ impl Data {
 	}
 }
 
+impl From<()> for Data {
+	fn from(_: ()) -> Self { Self::Nil }
+}
+
 impl From<bool> for Data {
 	fn from(value: bool) -> Self { Self::Boolean(value) }
 }
@@ -129,6 +133,10 @@ impl From<&Url> for Data {
 
 impl From<&str> for Data {
 	fn from(value: &str) -> Self { Self::String(Cow::Owned(value.to_owned())) }
+}
+
+impl PartialEq<bool> for Data {
+	fn eq(&self, other: &bool) -> bool { self.as_bool() == Some(*other) }
 }
 
 // --- Key

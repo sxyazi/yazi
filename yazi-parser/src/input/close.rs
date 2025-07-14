@@ -1,5 +1,6 @@
 use yazi_shared::event::CmdCow;
 
+#[derive(Default)]
 pub struct CloseOpt {
 	pub submit: bool,
 }

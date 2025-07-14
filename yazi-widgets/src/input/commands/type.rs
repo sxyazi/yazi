@@ -1,6 +1,7 @@
+use anyhow::Result;
 use yazi_config::keymap::Key;
-use yazi_macro::render;
-use yazi_shared::replace_cow;
+use yazi_macro::{act, render, succ};
+use yazi_shared::{event::Data, replace_cow};
 
 use crate::input::{Input, InputMode};
 
@@ -19,7 +20,7 @@ impl Input {
 		false
 	}
 
-	pub fn type_str(&mut self, s: &str) {
+	pub fn type_str(&mut self, s: &str) -> Result<Data> {
 		let s = replace_cow(replace_cow(s, "\r", " "), "\n", " ");
 
 		let snap = self.snap_mut();
@@ -29,8 +30,8 @@ impl Input {
 			snap.value.insert_str(snap.idx(snap.cursor).unwrap(), &s);
 		}
 
-		self.r#move(s.chars().count() as isize);
+		act!(r#move, self, s.chars().count() as isize)?;
 		self.flush_value();
-		render!();
+		succ!(render!());
 	}
 }

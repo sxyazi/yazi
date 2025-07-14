@@ -1,4 +1,7 @@
-use yazi_shared::{Layer, event::CmdCow};
+use anyhow::Result;
+use yazi_actor::Ctx;
+use yazi_macro::{act, succ};
+use yazi_shared::{Layer, event::{CmdCow, Data}};
 use yazi_widgets::input::InputMode;
 
 use crate::app::App;
@@ -12,7 +15,7 @@ impl<'a> Executor<'a> {
 	pub(super) fn new(app: &'a mut App) -> Self { Self { app } }
 
 	#[inline]
-	pub(super) fn execute(&mut self, cmd: CmdCow) {
+	pub(super) fn execute(&mut self, cmd: CmdCow) -> Result<Data> {
 		match cmd.layer {
 			Layer::App => self.app(cmd),
 			Layer::Mgr => self.mgr(cmd),
@@ -27,11 +30,11 @@ impl<'a> Executor<'a> {
 		}
 	}
 
-	fn app(&mut self, cmd: CmdCow) {
+	fn app(&mut self, cmd: CmdCow) -> Result<Data> {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return self.app.$name(cmd);
+					return act!($name, self.app, cmd);
 				}
 			};
 		}
@@ -45,116 +48,107 @@ impl<'a> Executor<'a> {
 		on!(resize);
 		on!(stop);
 		on!(resume);
+
+		succ!();
 	}
 
-	fn mgr(&mut self, cmd: CmdCow) {
-		macro_rules! on {
-			(MGR, $name:ident $(,$args:expr)*) => {
-				if cmd.name == stringify!($name) {
-					return self.app.core.mgr.$name(cmd, $($args),*);
-				}
-			};
-			(ACTIVE, $name:ident $(,$args:expr)*) => {
-				if cmd.name == stringify!($name) {
-					return if let Some(tab) = cmd.get("tab") {
-						let Some(id) = tab.as_id() else { return };
-						let Some(tab) = self.app.core.mgr.tabs.find_mut(id) else { return };
-						tab.$name(cmd, $($args),*)
-					} else {
-						self.app.core.mgr.active_mut().$name(cmd, $($args),*)
-					};
-				}
-			};
-			(TABS, $name:ident) => {
-				if cmd.name == concat!("tab_", stringify!($name)) {
-					return self.app.core.mgr.tabs.$name(cmd);
-				}
-			};
-		}
+	fn mgr(&mut self, cmd: CmdCow) -> Result<Data> {
+		let cx = &mut Ctx::new(&mut self.app.core, cmd.id("tab"))?;
 
-		on!(MGR, update_tasks);
-		on!(MGR, update_files, &self.app.core.tasks);
-		on!(MGR, update_mimes, &self.app.core.tasks);
-		on!(MGR, update_paged, &self.app.core.tasks);
-		on!(MGR, update_yanked);
-		on!(MGR, watch);
-		on!(MGR, peek);
-		on!(MGR, seek);
-		on!(MGR, spot);
-		on!(MGR, refresh, &self.app.core.tasks);
-		on!(MGR, quit, &self.app.core.tasks);
-		on!(MGR, close, &self.app.core.tasks);
-		on!(MGR, suspend);
-		on!(ACTIVE, escape);
-		on!(ACTIVE, update_peeked);
-		on!(ACTIVE, update_spotted);
-
-		// Navigation
-		on!(ACTIVE, arrow);
-		on!(ACTIVE, leave);
-		on!(ACTIVE, enter);
-		on!(ACTIVE, back);
-		on!(ACTIVE, forward);
-		on!(ACTIVE, cd);
-		on!(ACTIVE, reveal);
-		on!(ACTIVE, follow);
-
-		// Toggle
-		on!(ACTIVE, toggle);
-		on!(ACTIVE, toggle_all);
-		on!(ACTIVE, visual_mode);
-
-		// Operation
-		on!(MGR, open, &self.app.core.tasks);
-		on!(MGR, open_do, &self.app.core.tasks);
-		on!(MGR, yank);
-		on!(MGR, unyank);
-		on!(MGR, paste, &self.app.core.tasks);
-		on!(MGR, link, &self.app.core.tasks);
-		on!(MGR, hardlink, &self.app.core.tasks);
-		on!(MGR, remove, &self.app.core.tasks);
-		on!(MGR, remove_do, &self.app.core.tasks);
-		on!(MGR, create);
-		on!(MGR, rename);
-		on!(ACTIVE, copy);
-		on!(ACTIVE, shell);
-		on!(ACTIVE, hidden);
-		on!(ACTIVE, linemode);
-		on!(ACTIVE, search);
-		on!(ACTIVE, search_do);
-
-		// Filter
-		on!(ACTIVE, filter);
-		on!(ACTIVE, filter_do);
-
-		// Find
-		on!(ACTIVE, find);
-		on!(ACTIVE, find_do);
-		on!(ACTIVE, find_arrow);
-
-		// Sorting
-		on!(ACTIVE, sort, &self.app.core.tasks);
-
-		// Tabs
-		on!(TABS, create); // TODO: use `tab_create` instead
-		on!(TABS, close);
-		on!(TABS, switch);
-		on!(TABS, swap);
-
-		match cmd.name.as_ref() {
-			// Help
-			"help" => self.app.core.help.toggle(Layer::Mgr),
-			// Plugin
-			"plugin" => self.app.plugin(cmd),
-			_ => {}
-		}
-	}
-
-	fn tasks(&mut self, cmd: CmdCow) {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return self.app.core.tasks.$name(cmd);
+					return act!(mgr:$name, cx, cmd);
+				}
+			};
+		}
+
+		on!(cd);
+		on!(update_tasks);
+		on!(update_yanked);
+
+		on!(update_files);
+		on!(update_mimes);
+		on!(update_paged);
+		on!(watch);
+		on!(peek);
+		on!(seek);
+		on!(spot);
+		on!(refresh);
+		on!(quit);
+		on!(close);
+		on!(suspend);
+		on!(escape);
+		on!(update_peeked);
+		on!(update_spotted);
+
+		// Navigation
+		on!(arrow);
+		on!(leave);
+		on!(enter);
+		on!(back);
+		on!(forward);
+		on!(reveal);
+		on!(follow);
+
+		// Toggle
+		on!(toggle);
+		on!(toggle_all);
+		on!(visual_mode);
+
+		// Operation
+		on!(open);
+		on!(open_do);
+		on!(yank);
+		on!(unyank);
+		on!(paste);
+		on!(link);
+		on!(hardlink);
+		on!(remove);
+		on!(remove_do);
+		on!(create);
+		on!(rename);
+		on!(copy);
+		on!(shell);
+		on!(hidden);
+		on!(linemode);
+		on!(search);
+		on!(search_do);
+
+		// Filter
+		on!(filter);
+		on!(filter_do);
+
+		// Find
+		on!(find);
+		on!(find_do);
+		on!(find_arrow);
+
+		// Sorting
+		on!(sort);
+
+		// Tabs
+		on!(tab_create);
+		on!(tab_close);
+		on!(tab_switch);
+		on!(tab_swap);
+
+		match cmd.name.as_ref() {
+			// Help
+			"help" => act!(help:toggle, cx, Layer::Mgr),
+			// Plugin
+			"plugin" => act!(plugin, self.app, cmd),
+			_ => succ!(),
+		}
+	}
+
+	fn tasks(&mut self, cmd: CmdCow) -> Result<Data> {
+		let cx = &mut Ctx::new(&mut self.app.core, cmd.id("tab"))?;
+
+		macro_rules! on {
+			($name:ident) => {
+				if cmd.name == stringify!($name) {
+					return act!(tasks:$name, cx, cmd);
 				}
 			};
 		}
@@ -169,18 +163,20 @@ impl<'a> Executor<'a> {
 
 		match cmd.name.as_ref() {
 			// Help
-			"help" => self.app.core.help.toggle(Layer::Tasks),
+			"help" => act!(help:toggle, cx, Layer::Tasks),
 			// Plugin
-			"plugin" => self.app.plugin(cmd),
-			_ => {}
+			"plugin" => act!(plugin, self.app, cmd),
+			_ => succ!(),
 		}
 	}
 
-	fn spot(&mut self, cmd: CmdCow) {
+	fn spot(&mut self, cmd: CmdCow) -> Result<Data> {
+		let cx = &mut Ctx::new(&mut self.app.core, cmd.id("tab"))?;
+
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return self.app.core.active_mut().spot.$name(cmd);
+					return act!(spot:$name, cx, cmd);
 				}
 			};
 		}
@@ -192,18 +188,20 @@ impl<'a> Executor<'a> {
 
 		match cmd.name.as_ref() {
 			// Help
-			"help" => self.app.core.help.toggle(Layer::Spot),
+			"help" => act!(help:toggle, cx, Layer::Spot),
 			// Plugin
-			"plugin" => self.app.plugin(cmd),
-			_ => {}
+			"plugin" => act!(plugin, self.app, cmd),
+			_ => succ!(),
 		}
 	}
 
-	fn pick(&mut self, cmd: CmdCow) {
+	fn pick(&mut self, cmd: CmdCow) -> Result<Data> {
+		let cx = &mut Ctx::new(&mut self.app.core, cmd.id("tab"))?;
+
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return self.app.core.pick.$name(cmd);
+					return act!(tasks:$name, cx, cmd);
 				}
 			};
 		}
@@ -214,18 +212,21 @@ impl<'a> Executor<'a> {
 
 		match cmd.name.as_ref() {
 			// Help
-			"help" => self.app.core.help.toggle(Layer::Pick),
+			"help" => act!(help:toggle, cx, Layer::Pick),
 			// Plugin
-			"plugin" => self.app.plugin(cmd),
-			_ => {}
+			"plugin" => act!(plugin, self.app, cmd),
+			_ => succ!(),
 		}
 	}
 
-	fn input(&mut self, cmd: CmdCow) {
+	fn input(&mut self, cmd: CmdCow) -> Result<Data> {
+		let mode = self.app.core.input.mode();
+		let cx = &mut Ctx::new(&mut self.app.core, cmd.id("tab"))?;
+
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return self.app.core.input.$name(cmd);
+					return act!(input:$name, cx, cmd);
 				}
 			};
 		}
@@ -234,13 +235,13 @@ impl<'a> Executor<'a> {
 		on!(show);
 		on!(close);
 
-		match self.app.core.input.mode() {
+		match mode {
 			InputMode::Normal => {
 				match cmd.name.as_ref() {
 					// Help
-					"help" => return self.app.core.help.toggle(Layer::Input),
+					"help" => return act!(help:toggle, cx, Layer::Input),
 					// Plugin
-					"plugin" => return self.app.plugin(cmd),
+					"plugin" => return act!(plugin, self.app, cmd),
 					_ => {}
 				}
 			}
@@ -250,25 +251,31 @@ impl<'a> Executor<'a> {
 		self.app.core.input.execute(cmd)
 	}
 
-	fn confirm(&mut self, cmd: CmdCow) {
+	fn confirm(&mut self, cmd: CmdCow) -> Result<Data> {
+		let cx = &mut Ctx::new(&mut self.app.core, cmd.id("tab"))?;
+
 		macro_rules! on {
-			($name:ident $(,$args:expr)*) => {
+			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return self.app.core.confirm.$name(cmd, $($args),*);
+					return act!(confirm:$name, cx, cmd);
 				}
 			};
 		}
 
-		on!(arrow, &self.app.core.mgr);
+		on!(arrow);
 		on!(show);
 		on!(close);
+
+		succ!();
 	}
 
-	fn help(&mut self, cmd: CmdCow) {
+	fn help(&mut self, cmd: CmdCow) -> Result<Data> {
+		let cx = &mut Ctx::new(&mut self.app.core, cmd.id("tab"))?;
+
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return self.app.core.help.$name(cmd);
+					return act!(help:$name, cx, cmd);
 				}
 			};
 		}
@@ -278,18 +285,21 @@ impl<'a> Executor<'a> {
 		on!(filter);
 
 		match cmd.name.as_ref() {
-			"close" => self.app.core.help.toggle(Layer::Help),
+			// Help
+			"close" => act!(help:toggle, cx, Layer::Help),
 			// Plugin
-			"plugin" => self.app.plugin(cmd),
-			_ => {}
+			"plugin" => act!(plugin, self.app, cmd),
+			_ => succ!(),
 		}
 	}
 
-	fn cmp(&mut self, cmd: CmdCow) {
+	fn cmp(&mut self, cmd: CmdCow) -> Result<Data> {
+		let cx = &mut Ctx::new(&mut self.app.core, cmd.id("tab"))?;
+
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return self.app.core.cmp.$name(cmd);
+					return act!(cmp:$name, cx, cmd);
 				}
 			};
 		}
@@ -301,23 +311,27 @@ impl<'a> Executor<'a> {
 
 		match cmd.name.as_ref() {
 			// Help
-			"help" => self.app.core.help.toggle(Layer::Cmp),
+			"help" => act!(help:toggle, cx, Layer::Cmp),
 			// Plugin
-			"plugin" => self.app.plugin(cmd),
-			_ => {}
+			"plugin" => act!(plugin, self.app, cmd),
+			_ => succ!(),
 		}
 	}
 
-	fn which(&mut self, cmd: CmdCow) {
+	fn which(&mut self, cmd: CmdCow) -> Result<Data> {
+		let cx = &mut Ctx::new(&mut self.app.core, cmd.id("tab"))?;
+
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return self.app.core.which.$name(cmd);
+					return act!(which:$name, cx, cmd);
 				}
 			};
 		}
 
 		on!(show);
 		on!(callback);
+
+		succ!();
 	}
 }

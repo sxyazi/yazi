@@ -6,7 +6,7 @@ static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
 yazi_macro::mod_pub!(app cmp confirm help input lives mgr notify pick spot tasks which);
 
-yazi_macro::mod_flat!(executor logs panic root router signals term);
+yazi_macro::mod_flat!(dispatcher executor logs panic root router signals term);
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

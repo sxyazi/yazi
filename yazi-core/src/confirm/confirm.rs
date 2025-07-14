@@ -11,6 +11,6 @@ pub struct Confirm {
 	pub position: Position,
 	pub offset:   usize,
 
-	pub(super) callback: Option<Sender<bool>>,
-	pub visible:         bool,
+	pub callback: Option<Sender<bool>>,
+	pub visible:  bool,
 }

@@ -1,19 +1,12 @@
-use yazi_macro::render;
-use yazi_shared::event::CmdCow;
+use anyhow::Result;
+use yazi_macro::{act, render, succ};
+use yazi_parser::input::PasteOpt;
+use yazi_shared::event::Data;
 
 use crate::{CLIPBOARD, input::{Input, op::InputOp}};
 
-struct Opt {
-	before: bool,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { before: c.bool("before") } }
-}
-
 impl Input {
-	#[yazi_codegen::command]
-	pub fn paste(&mut self, opt: Opt) {
+	pub fn paste(&mut self, opt: PasteOpt) -> Result<Data> {
 		if let Some(start) = self.snap().op.start() {
 			self.snap_mut().op = InputOp::Delete(false, false, start);
 			self.handle_op(self.snap().cursor, true);
@@ -21,12 +14,12 @@ impl Input {
 
 		let s = futures::executor::block_on(CLIPBOARD.get());
 		if s.is_empty() {
-			return;
+			succ!();
 		}
 
-		self.insert(!opt.before);
-		self.type_str(&s.to_string_lossy());
-		self.escape(());
-		render!();
+		act!(insert, self, !opt.before)?;
+		self.type_str(&s.to_string_lossy())?;
+		act!(escape, self)?;
+		succ!(render!());
 	}
 }

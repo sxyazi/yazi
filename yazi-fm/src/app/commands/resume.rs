@@ -1,19 +1,21 @@
-use yazi_macro::render;
-use yazi_shared::event::CmdCow;
+use anyhow::Result;
+use yazi_macro::{act, render, succ};
+use yazi_parser::VoidOpt;
+use yazi_shared::event::Data;
 
 use crate::{Term, app::App};
 
 impl App {
-	pub(crate) fn resume(&mut self, _: CmdCow) {
+	pub(crate) fn resume(&mut self, _: VoidOpt) -> Result<Data> {
 		self.core.active_mut().preview.reset_image();
 		self.term = Some(Term::start().unwrap());
 
 		// While the app resumes, it's possible that the terminal size has changed.
 		// We need to trigger a resize, and render the UI based on the resized area.
-		self.resize(());
+		act!(resize, self)?;
 
 		self.signals.resume(None);
 
-		render!();
+		succ!(render!());
 	}
 }

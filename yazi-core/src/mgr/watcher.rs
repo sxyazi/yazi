@@ -51,11 +51,11 @@ impl Watcher {
 		Self { in_tx, out_tx }
 	}
 
-	pub(super) fn watch<'a>(&mut self, it: impl Iterator<Item = &'a Url>) {
+	pub fn watch<'a>(&mut self, it: impl Iterator<Item = &'a Url>) {
 		self.in_tx.send(it.filter(|u| u.is_regular()).cloned().collect()).ok();
 	}
 
-	pub(super) fn push_files(&self, urls: Vec<Url>) {
+	pub fn push_files(&self, urls: Vec<Url>) {
 		Self::push_files_impl(&self.out_tx, urls.into_iter());
 	}
 
@@ -75,7 +75,7 @@ impl Watcher {
 	}
 
 	// TODO: performance improvement
-	pub(super) fn trigger_dirs(&self, folders: &[&Folder]) {
+	pub fn trigger_dirs(&self, folders: &[&Folder]) {
 		let todo: Vec<_> =
 			folders.iter().filter(|&f| f.url.is_regular()).map(|&f| (f.url.to_owned(), f.cha)).collect();
 		if todo.is_empty() {

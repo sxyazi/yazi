@@ -1,34 +1,24 @@
-use yazi_macro::render;
-use yazi_shared::event::CmdCow;
+use anyhow::Result;
+use yazi_macro::{act, render, succ};
+use yazi_parser::input::InsertOpt;
+use yazi_shared::event::Data;
 
 use crate::input::{Input, InputMode, op::InputOp};
 
-struct Opt {
-	append: bool,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { append: c.bool("append") } }
-}
-impl From<bool> for Opt {
-	fn from(append: bool) -> Self { Self { append } }
-}
-
 impl Input {
-	#[yazi_codegen::command]
-	pub fn insert(&mut self, opt: Opt) {
+	pub fn insert(&mut self, opt: InsertOpt) -> Result<Data> {
 		let snap = self.snap_mut();
 		if snap.mode == InputMode::Normal {
 			snap.op = InputOp::None;
 			snap.mode = InputMode::Insert;
 		} else {
-			return;
+			succ!();
 		}
 
 		if opt.append {
-			self.r#move(1);
+			act!(r#move, self, 1)?;
 		}
 
-		render!();
+		succ!(render!());
 	}
 }

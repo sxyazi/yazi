@@ -1,21 +1,14 @@
 use std::ops::RangeBounds;
 
-use yazi_macro::render;
-use yazi_shared::{CharKind, SStr, event::CmdCow};
+use anyhow::Result;
+use yazi_macro::{act, render, succ};
+use yazi_parser::input::KillOpt;
+use yazi_shared::{CharKind, event::Data};
 
 use crate::input::Input;
 
-struct Opt {
-	kind: SStr,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(mut c: CmdCow) -> Self { Self { kind: c.take_first_str().unwrap_or_default() } }
-}
-
 impl Input {
-	#[yazi_codegen::command]
-	pub fn kill(&mut self, opt: Opt) {
+	pub fn kill(&mut self, opt: KillOpt) -> Result<Data> {
 		let snap = self.snap_mut();
 		match opt.kind.as_ref() {
 			"all" => self.kill_range(..),
@@ -37,11 +30,11 @@ impl Input {
 				let end = start + Self::find_word_boundary(snap.value[start..].chars());
 				self.kill_range(start..end)
 			}
-			_ => {}
+			_ => succ!(),
 		}
 	}
 
-	fn kill_range(&mut self, range: impl RangeBounds<usize>) {
+	fn kill_range(&mut self, range: impl RangeBounds<usize>) -> Result<Data> {
 		let snap = self.snap_mut();
 		snap.cursor = match range.start_bound() {
 			std::ops::Bound::Included(i) => *i,
@@ -49,12 +42,12 @@ impl Input {
 			std::ops::Bound::Unbounded => 0,
 		};
 		if snap.value.drain(range).next().is_none() {
-			return;
+			succ!();
 		}
 
-		self.r#move(0);
+		act!(r#move, self)?;
 		self.flush_value();
-		render!();
+		succ!(render!());
 	}
 
 	/// Searches for a word boundary and returns the movement in the cursor

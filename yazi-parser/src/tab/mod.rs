@@ -1,5 +1,4 @@
 yazi_macro::mod_flat!(
-	arrow
 	back
 	cd
 	copy
@@ -10,12 +9,9 @@ yazi_macro::mod_flat!(
 	find
 	find_arrow
 	find_do
-	follow
 	forward
 	hidden
 	hover
-	leave
-	linemode
 	reveal
 	search
 	shell

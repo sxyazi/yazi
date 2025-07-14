@@ -1,10 +1,13 @@
+use anyhow::Result;
 use crossterm::{cursor::SetCursorStyle, event::KeyCode};
 use unicode_width::UnicodeWidthStr;
 use yazi_adapter::Dimension;
 use yazi_config::{KEYMAP, YAZI, keymap::{Chord, Key}};
-use yazi_macro::{render, render_and};
+use yazi_macro::{act, render, render_and};
 use yazi_shared::Layer;
 use yazi_widgets::Scrollable;
+
+use crate::help::HELP_MARGIN;
 
 #[derive(Default)]
 pub struct Help {
@@ -13,32 +16,16 @@ pub struct Help {
 	pub(super) bindings: Vec<&'static Chord>,
 
 	// Filter
-	pub(super) keyword:   String,
-	pub(super) in_filter: Option<yazi_widgets::input::Input>,
+	pub keyword:   String,
+	pub in_filter: Option<yazi_widgets::input::Input>,
 
-	pub(super) offset: usize,
-	pub(super) cursor: usize,
+	pub offset: usize,
+	pub cursor: usize,
 }
 
 impl Help {
-	pub fn toggle(&mut self, layer: Layer) {
-		self.visible = !self.visible;
-		self.layer = layer;
-
-		self.keyword = String::new();
-		self.in_filter = None;
-		self.filter_apply();
-
-		self.offset = 0;
-		self.cursor = 0;
-		render!();
-	}
-
-	pub fn r#type(&mut self, key: &Key) -> bool {
-		let Some(input) = &mut self.in_filter else {
-			return false;
-		};
-
+	pub fn r#type(&mut self, key: &Key) -> Result<bool> {
+		let Some(input) = &mut self.in_filter else { return Ok(false) };
 		match key {
 			Key { code: KeyCode::Esc, shift: false, ctrl: false, alt: false, super_: false } => {
 				self.in_filter = None;
@@ -46,10 +33,10 @@ impl Help {
 			}
 			Key { code: KeyCode::Enter, shift: false, ctrl: false, alt: false, super_: false } => {
 				self.in_filter = None;
-				return render_and!(true); // Don't do the `filter_apply` below, since we already have the filtered results.
+				return Ok(render_and!(true)); // Don't do the `filter_apply` below, since we already have the filtered results.
 			}
 			Key { code: KeyCode::Backspace, shift: false, ctrl: false, alt: false, super_: false } => {
-				input.backspace(false);
+				act!(backspace, input)?;
 			}
 			_ => {
 				input.r#type(key);
@@ -57,10 +44,10 @@ impl Help {
 		}
 
 		self.filter_apply();
-		true
+		Ok(true)
 	}
 
-	pub(super) fn filter_apply(&mut self) {
+	pub fn filter_apply(&mut self) {
 		let kw = self.in_filter.as_ref().map_or("", |i| i.value());
 
 		if kw.is_empty() {
@@ -71,7 +58,7 @@ impl Help {
 			self.bindings = KEYMAP.get(self.layer).iter().filter(|&c| c.contains(kw)).collect();
 		}
 
-		self.arrow(0);
+		render!(self.scroll(0));
 	}
 }
 
@@ -117,4 +104,18 @@ impl Help {
 			SetCursorStyle::SteadyBlock
 		}
 	}
+}
+
+impl Scrollable for Help {
+	#[inline]
+	fn total(&self) -> usize { self.bindings.len() }
+
+	#[inline]
+	fn limit(&self) -> usize { Dimension::available().rows.saturating_sub(HELP_MARGIN) as usize }
+
+	#[inline]
+	fn cursor_mut(&mut self) -> &mut usize { &mut self.cursor }
+
+	#[inline]
+	fn offset_mut(&mut self) -> &mut usize { &mut self.offset }
 }

@@ -1,3 +1,4 @@
+use anyhow::Result;
 use yazi_config::{KEYMAP, keymap::{Chord, ChordCow, Key}};
 use yazi_macro::emit;
 use yazi_shared::Layer;
@@ -13,26 +14,26 @@ impl<'a> Router<'a> {
 	pub(super) fn new(app: &'a mut App) -> Self { Self { app } }
 
 	#[inline]
-	pub(super) fn route(&mut self, key: Key) -> bool {
+	pub(super) fn route(&mut self, key: Key) -> Result<bool> {
 		let core = &mut self.app.core;
 		let layer = core.layer();
 
-		if core.help.visible && core.help.r#type(&key) {
-			return true;
+		if core.help.visible && core.help.r#type(&key)? {
+			return Ok(true);
 		}
 		if core.input.visible && core.input.r#type(&key) {
-			return true;
+			return Ok(true);
 		}
 
 		use Layer as L;
-		match layer {
+		Ok(match layer {
 			L::App => unreachable!(),
 			L::Mgr | L::Tasks | L::Spot | L::Pick | L::Input | L::Confirm | L::Help => {
 				self.matches(layer, key)
 			}
 			L::Cmp => self.matches(L::Cmp, key) || self.matches(L::Input, key),
 			L::Which => core.which.r#type(key),
-		}
+		})
 	}
 
 	#[inline]

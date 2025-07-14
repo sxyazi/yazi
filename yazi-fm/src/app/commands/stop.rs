@@ -1,19 +1,12 @@
-use tokio::sync::oneshot;
-use yazi_shared::event::CmdCow;
+use anyhow::Result;
+use yazi_macro::succ;
+use yazi_parser::app::StopOpt;
+use yazi_shared::event::Data;
 
 use crate::app::App;
 
-struct Opt {
-	tx: Option<oneshot::Sender<()>>,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(mut c: CmdCow) -> Self { Self { tx: c.take_any("tx") } }
-}
-
 impl App {
-	#[yazi_codegen::command]
-	pub fn stop(&mut self, opt: Opt) {
+	pub fn stop(&mut self, opt: StopOpt) -> Result<Data> {
 		self.core.active_mut().preview.reset_image();
 
 		// We need to destroy the `term` first before stopping the `signals`
@@ -22,5 +15,7 @@ impl App {
 		self.term = None;
 
 		self.signals.stop(opt.tx);
+
+		succ!();
 	}
 }

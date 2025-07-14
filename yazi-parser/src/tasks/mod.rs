@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(arrow cancel close inspect open_with process_exec show);
+yazi_macro::mod_flat!(cancel inspect open_with process_exec);

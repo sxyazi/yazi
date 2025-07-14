@@ -1,52 +1,35 @@
 use std::ops::{Deref, DerefMut};
 
-use yazi_boot::BOOT;
 use yazi_dds::Pubsub;
 use yazi_fs::File;
 use yazi_macro::err;
-use yazi_parser::tab::CdSource;
-use yazi_proxy::MgrProxy;
-use yazi_shared::{Id, url::Url};
 
 use crate::tab::{Folder, Tab};
 
 pub struct Tabs {
-	pub cursor:       usize,
-	pub(super) items: Vec<Tab>,
+	pub cursor: usize,
+	pub items:  Vec<Tab>,
+}
+
+impl Default for Tabs {
+	fn default() -> Self { Self { cursor: 0, items: vec![Default::default()] } }
 }
 
 impl Tabs {
-	pub fn make() -> Self {
-		let mut tabs =
-			Self { cursor: 0, items: (0..BOOT.cwds.len()).map(|_| Tab::default()).collect() };
-
-		for (i, tab) in tabs.iter_mut().enumerate() {
-			let file = &BOOT.files[i];
-			if file.is_empty() {
-				tab.cd((Url::from(&BOOT.cwds[i]), CdSource::Tab));
-			} else {
-				tab.reveal((Url::from(BOOT.cwds[i].join(file)), CdSource::Tab));
-			}
-		}
-		tabs
-	}
-
-	pub(super) fn set_idx(&mut self, idx: usize) {
+	pub fn set_idx(&mut self, idx: usize) {
 		// Reset the preview of the last active tab
 		if let Some(active) = self.items.get_mut(self.cursor) {
 			active.preview.reset_image();
 		}
 
 		self.cursor = idx;
-		MgrProxy::refresh();
-		MgrProxy::peek(true);
 		err!(Pubsub::pub_after_tab(self.active().id));
 	}
 }
 
 impl Tabs {
 	#[inline]
-	pub fn active(&self) -> &Tab { &self.items[self.cursor] }
+	pub fn active(&self) -> &Tab { &self[self.cursor] }
 
 	#[inline]
 	pub(super) fn active_mut(&mut self) -> &mut Tab { &mut self.items[self.cursor] }
@@ -59,9 +42,6 @@ impl Tabs {
 
 	#[inline]
 	pub fn hovered(&self) -> Option<&File> { self.current().hovered() }
-
-	#[inline]
-	pub fn find_mut(&mut self, id: Id) -> Option<&mut Tab> { self.iter_mut().find(|t| t.id == id) }
 }
 
 impl Deref for Tabs {

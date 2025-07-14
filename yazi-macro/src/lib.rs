@@ -1,3 +1,4 @@
+mod actor;
 mod asset;
 mod event;
 mod fmt;

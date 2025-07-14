@@ -3472,6 +3472,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "yazi-actor"
+version = "25.6.11"
+dependencies = [
+ "anyhow",
+ "crossterm 0.29.0",
+ "futures",
+ "libc",
+ "paste",
+ "scopeguard",
+ "tokio",
+ "tokio-stream",
+ "tracing",
+ "yazi-boot",
+ "yazi-config",
+ "yazi-core",
+ "yazi-dds",
+ "yazi-fs",
+ "yazi-macro",
+ "yazi-parser",
+ "yazi-plugin",
+ "yazi-proxy",
+ "yazi-shared",
+ "yazi-term",
+ "yazi-widgets",
+]
+
+[[package]]
 name = "yazi-adapter"
 version = "25.6.11"
 dependencies = [
@@ -3596,16 +3623,12 @@ dependencies = [
  "notify",
  "parking_lot",
  "ratatui",
- "scopeguard",
- "serde",
  "tokio",
  "tokio-stream",
  "tokio-util",
  "tracing",
  "unicode-width 0.2.0",
  "yazi-adapter",
- "yazi-boot",
- "yazi-codegen",
  "yazi-config",
  "yazi-dds",
  "yazi-fs",
@@ -3615,7 +3638,6 @@ dependencies = [
  "yazi-proxy",
  "yazi-scheduler",
  "yazi-shared",
- "yazi-term",
  "yazi-widgets",
 ]
 
@@ -3678,15 +3700,16 @@ dependencies = [
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
+ "yazi-actor",
  "yazi-adapter",
  "yazi-binding",
  "yazi-boot",
- "yazi-codegen",
  "yazi-config",
  "yazi-core",
  "yazi-dds",
  "yazi-fs",
  "yazi-macro",
+ "yazi-parser",
  "yazi-plugin",
  "yazi-proxy",
  "yazi-shared",
@@ -3734,7 +3757,9 @@ version = "25.6.11"
 dependencies = [
  "anyhow",
  "bitflags 2.9.1",
+ "crossterm 0.29.0",
  "mlua",
+ "serde",
  "tokio",
  "yazi-binding",
  "yazi-boot",
@@ -3744,7 +3769,6 @@ dependencies = [
  "yazi-macro",
  "yazi-proxy",
  "yazi-shared",
- "yazi-widgets",
 ]
 
 [[package]]
@@ -3752,7 +3776,6 @@ name = "yazi-plugin"
 version = "25.6.11"
 dependencies = [
  "anyhow",
- "base64",
  "crossterm 0.29.0",
  "futures",
  "globset",
@@ -3782,7 +3805,6 @@ dependencies = [
  "yazi-prebuilt",
  "yazi-proxy",
  "yazi-shared",
- "yazi-term",
  "yazi-widgets",
 ]
 
@@ -3824,6 +3846,7 @@ dependencies = [
  "yazi-dds",
  "yazi-fs",
  "yazi-macro",
+ "yazi-parser",
  "yazi-plugin",
  "yazi-proxy",
  "yazi-shared",
@@ -3866,6 +3889,7 @@ dependencies = [
 name = "yazi-widgets"
 version = "25.6.11"
 dependencies = [
+ "anyhow",
  "base64",
  "clipboard-win",
  "crossterm 0.29.0",
@@ -3875,10 +3899,9 @@ dependencies = [
  "tokio",
  "unicode-width 0.2.0",
  "yazi-binding",
- "yazi-codegen",
  "yazi-config",
  "yazi-macro",
- "yazi-proxy",
+ "yazi-parser",
  "yazi-shared",
  "yazi-term",
 ]

@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(arrow close copy swipe);
+yazi_macro::mod_flat!(copy);

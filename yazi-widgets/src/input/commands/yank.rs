@@ -1,10 +1,12 @@
-use yazi_macro::render;
-use yazi_shared::event::CmdCow;
+use anyhow::Result;
+use yazi_macro::{act, render, succ};
+use yazi_parser::VoidOpt;
+use yazi_shared::event::Data;
 
 use crate::input::{Input, op::InputOp};
 
 impl Input {
-	pub fn yank(&mut self, _: CmdCow) {
+	pub fn yank(&mut self, _: VoidOpt) -> Result<Data> {
 		match self.snap().op {
 			InputOp::None => {
 				self.snap_mut().op = InputOp::Yank(self.snap().cursor);
@@ -12,13 +14,14 @@ impl Input {
 			InputOp::Select(start) => {
 				self.snap_mut().op = InputOp::Yank(start);
 				render!(self.handle_op(self.snap().cursor, true));
-				self.r#move(0);
+				act!(r#move, self)?;
 			}
 			InputOp::Yank(_) => {
 				self.snap_mut().op = InputOp::Yank(0);
-				self.r#move(self.snap().len() as isize);
+				act!(r#move, self, self.snap().len() as isize)?;
 			}
 			_ => {}
 		}
+		succ!();
 	}
 }

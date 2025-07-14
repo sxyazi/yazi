@@ -4,9 +4,10 @@ use yazi_config::{LAYOUT, YAZI};
 use yazi_dds::Pubsub;
 use yazi_fs::{File, Files, FilesOp, FolderStage, cha::Cha};
 use yazi_macro::err;
+use yazi_parser::Step;
 use yazi_proxy::MgrProxy;
 use yazi_shared::{Id, url::{Url, Urn, UrnBuf}};
-use yazi_widgets::{Scrollable, Step};
+use yazi_widgets::Scrollable;
 
 pub struct Folder {
 	pub url:   Url,
