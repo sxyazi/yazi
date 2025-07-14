@@ -13,8 +13,8 @@ pub struct Input {
 	pub position: Position,
 
 	// Typing
-	pub(super) tx:     Option<UnboundedSender<Result<String, InputError>>>,
-	pub(super) ticket: Rc<Ids>,
+	pub tx:     Option<UnboundedSender<Result<String, InputError>>>,
+	pub ticket: Rc<Ids>,
 }
 
 impl Deref for Input {

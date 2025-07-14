@@ -1,18 +1,20 @@
-use yazi_shared::event::CmdCow;
+use anyhow::Result;
+use yazi_macro::{act, succ};
+use yazi_shared::event::{CmdCow, Data};
 
 use crate::input::{Input, InputMode};
 
 impl Input {
-	pub fn execute(&mut self, cmd: CmdCow) {
+	pub fn execute(&mut self, cmd: CmdCow) -> Result<Data> {
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return self.$name(cmd);
+					return act!($name, self, cmd);
 				}
 			};
 			($name:ident, $alias:literal) => {
 				if cmd.name == $alias {
-					return self.$name(cmd);
+					return act!($name, self, cmd);
 				}
 			};
 		}
@@ -44,5 +46,7 @@ impl Input {
 			}
 			InputMode::Replace => {}
 		}
+
+		succ!();
 	}
 }

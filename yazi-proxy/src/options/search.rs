@@ -1,3 +1,4 @@
+use anyhow::bail;
 use yazi_shared::{SStr, event::CmdCow};
 
 pub struct SearchOpt {
@@ -8,7 +9,7 @@ pub struct SearchOpt {
 }
 
 impl TryFrom<CmdCow> for SearchOpt {
-	type Error = ();
+	type Error = anyhow::Error;
 
 	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
 		// TODO: remove this
@@ -18,13 +19,15 @@ impl TryFrom<CmdCow> for SearchOpt {
 			(c.take_first_str().unwrap_or_default().as_ref().into(), "".into())
 		};
 
+		let Ok(args) = yazi_shared::shell::split_unix(c.str("args").unwrap_or_default(), false) else {
+			bail!("Invalid 'args' argument in SearchOpt");
+		};
+
 		Ok(Self {
 			via,
 			subject,
 			// TODO: use second positional argument instead of `args` parameter
-			args: yazi_shared::shell::split_unix(c.str("args").unwrap_or_default(), false)
-				.map_err(|_| ())?
-				.0,
+			args: args.0,
 			args_raw: c.take_str("args").unwrap_or_default(),
 		})
 	}

@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(arrow escape filter);
+yazi_macro::mod_flat!(escape filter toggle);

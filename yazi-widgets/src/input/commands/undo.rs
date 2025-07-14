@@ -1,19 +1,21 @@
-use yazi_macro::render;
-use yazi_shared::event::CmdCow;
+use anyhow::Result;
+use yazi_macro::{act, render, succ};
+use yazi_parser::VoidOpt;
+use yazi_shared::event::Data;
 
 use crate::input::{Input, InputMode};
 
 impl Input {
-	pub fn undo(&mut self, _: CmdCow) {
+	pub fn undo(&mut self, _: VoidOpt) -> Result<Data> {
 		if !self.snaps.undo() {
-			return;
+			succ!();
 		}
 
-		self.r#move(0);
+		act!(r#move, self)?;
 		if self.snap().mode == InputMode::Insert {
-			self.escape(());
+			act!(escape, self)?;
 		}
 
-		render!();
+		succ!(render!());
 	}
 }

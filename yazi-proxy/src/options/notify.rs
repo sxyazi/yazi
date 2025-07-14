@@ -1,5 +1,6 @@
 use std::{str::FromStr, time::Duration};
 
+use anyhow::anyhow;
 use mlua::{ExternalError, ExternalResult};
 use serde::Deserialize;
 use yazi_config::{Style, THEME};
@@ -13,9 +14,11 @@ pub struct NotifyOpt {
 }
 
 impl TryFrom<CmdCow> for NotifyOpt {
-	type Error = ();
+	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> { c.take_any("option").ok_or(()) }
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
+		c.take_any("option").ok_or_else(|| anyhow!("Invalid 'option' in NotifyOpt"))
+	}
 }
 
 impl TryFrom<mlua::Table> for NotifyOpt {

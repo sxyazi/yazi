@@ -1,25 +1,13 @@
-use yazi_core::tasks::TasksProgress;
-use yazi_macro::render;
-use yazi_shared::event::CmdCow;
+use anyhow::Result;
+use yazi_actor::Ctx;
+use yazi_macro::{act, render, succ};
+use yazi_parser::app::UpdateProgressOpt;
+use yazi_shared::event::Data;
 
 use crate::app::App;
 
-pub struct Opt {
-	progress: TasksProgress,
-}
-
-impl TryFrom<CmdCow> for Opt {
-	type Error = ();
-
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		Ok(Self { progress: c.take_any("progress").ok_or(())? })
-	}
-}
-
 impl App {
-	pub(crate) fn update_progress(&mut self, opt: impl TryInto<Opt>) {
-		let Ok(opt) = opt.try_into() else { return };
-
+	pub(crate) fn update_progress(&mut self, opt: UpdateProgressOpt) -> Result<Data> {
 		// Update the progress of all tasks.
 		let tasks = &mut self.core.tasks;
 		let progressed = tasks.progress != opt.progress;
@@ -30,16 +18,17 @@ impl App {
 			let new = tasks.paginate();
 			if tasks.summaries != new {
 				tasks.summaries = new;
-				tasks.arrow(0);
-				return render!();
+				act!(tasks:arrow, &mut Ctx::active(&mut self.core))?;
+				succ!(render!());
 			}
 		}
 
 		if !progressed {
+			succ!()
 		} else if tasks.progress.total == 0 {
-			render!();
+			succ!(render!())
 		} else {
-			self.render_partially();
+			act!(render_partially, self)
 		}
 	}
 }

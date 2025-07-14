@@ -1,3 +1,4 @@
+use anyhow::bail;
 use mlua::Table;
 use yazi_binding::{FileRef, elements::Renderable};
 use yazi_shared::{Id, event::CmdCow};
@@ -7,10 +8,14 @@ pub struct UpdateSpottedOpt {
 }
 
 impl TryFrom<CmdCow> for UpdateSpottedOpt {
-	type Error = ();
+	type Error = anyhow::Error;
 
 	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		Ok(Self { lock: c.take_any("lock").ok_or(())? })
+		let Some(lock) = c.take_any("lock") else {
+			bail!("Invalid 'lock' argument in UpdateSpottedOpt");
+		};
+
+		Ok(Self { lock })
 	}
 }
 

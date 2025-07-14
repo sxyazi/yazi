@@ -6,13 +6,13 @@ use yazi_widgets::Scrollable;
 
 #[derive(Default)]
 pub struct Cmp {
-	pub(super) caches: HashMap<PathBuf, Vec<CmpItem>>,
-	pub(super) cands:  Vec<CmpItem>,
-	pub(super) offset: usize,
-	pub cursor:        usize,
+	pub caches: HashMap<PathBuf, Vec<CmpItem>>,
+	pub cands:  Vec<CmpItem>,
+	pub offset: usize,
+	pub cursor: usize,
 
-	pub(super) ticket: Id,
-	pub visible:       bool,
+	pub ticket:  Id,
+	pub visible: bool,
 }
 
 impl Cmp {
@@ -29,4 +29,18 @@ impl Cmp {
 	// --- Cursor
 	#[inline]
 	pub fn rel_cursor(&self) -> usize { self.cursor - self.offset }
+}
+
+impl Scrollable for Cmp {
+	#[inline]
+	fn total(&self) -> usize { self.cands.len() }
+
+	#[inline]
+	fn limit(&self) -> usize { self.cands.len().min(10) }
+
+	#[inline]
+	fn cursor_mut(&mut self) -> &mut usize { &mut self.cursor }
+
+	#[inline]
+	fn offset_mut(&mut self) -> &mut usize { &mut self.offset }
 }

@@ -1,17 +1,21 @@
 use std::sync::atomic::{AtomicU8, Ordering};
 
+use anyhow::Result;
 use crossterm::{cursor::{MoveTo, SetCursorStyle, Show}, execute, queue, terminal::{BeginSynchronizedUpdate, EndSynchronizedUpdate}};
 use ratatui::{CompletedFrame, backend::{Backend, CrosstermBackend}, buffer::Buffer, layout::Position};
+use yazi_actor::Ctx;
 use yazi_binding::elements::COLLISION;
-use yazi_shared::event::NEED_RENDER;
+use yazi_macro::{act, succ};
+use yazi_parser::VoidOpt;
+use yazi_shared::event::{Data, NEED_RENDER};
 use yazi_term::tty::TTY;
 
 use crate::{app::App, lives::Lives, root::Root};
 
 impl App {
-	pub(crate) fn render(&mut self) {
+	pub(crate) fn render(&mut self, _: VoidOpt) -> Result<Data> {
 		NEED_RENDER.store(false, Ordering::Relaxed);
-		let Some(term) = &mut self.term else { return };
+		let Some(term) = &mut self.term else { succ!() };
 
 		Self::routine(true, None);
 		let _guard = scopeguard::guard(self.core.cursor(), |c| Self::routine(false, c));
@@ -27,19 +31,20 @@ impl App {
 			Self::patch(frame);
 		}
 		if !self.core.notify.messages.is_empty() {
-			self.render_partially();
+			act!(render_partially, self)?;
 		}
 
 		// Reload preview if collision is resolved
 		if collision && !COLLISION.load(Ordering::Relaxed) {
-			self.core.mgr.peek(true);
+			act!(mgr:peek, &mut Ctx::active(&mut self.core), true)?;
 		}
+		succ!();
 	}
 
-	pub(crate) fn render_partially(&mut self) {
-		let Some(term) = &mut self.term else { return };
+	pub(crate) fn render_partially(&mut self, _: VoidOpt) -> Result<Data> {
+		let Some(term) = &mut self.term else { succ!() };
 		if !term.can_partial() {
-			return self.render();
+			return act!(render, self);
 		}
 
 		Self::routine(true, None);
@@ -58,6 +63,7 @@ impl App {
 		if COLLISION.load(Ordering::Relaxed) {
 			Self::patch(frame);
 		}
+		succ!();
 	}
 
 	#[inline]

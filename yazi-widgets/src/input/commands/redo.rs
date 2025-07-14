@@ -1,12 +1,14 @@
-use yazi_macro::render;
-use yazi_shared::event::CmdCow;
+use anyhow::Result;
+use yazi_macro::{act, render};
+use yazi_parser::VoidOpt;
+use yazi_shared::event::Data;
 
 use crate::input::Input;
 
 impl Input {
-	pub fn redo(&mut self, _: CmdCow) {
+	pub fn redo(&mut self, _: VoidOpt) -> Result<Data> {
 		render!(self.snaps.redo());
 
-		self.r#move(0);
+		act!(r#move, self)
 	}
 }

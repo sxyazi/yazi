@@ -15,6 +15,16 @@ macro_rules! emit {
 }
 
 #[macro_export]
+macro_rules! succ {
+	($data:expr) => {
+		return Ok(yazi_shared::event::Data::from($data))
+	};
+	() => {
+		return Ok(yazi_shared::event::Data::Nil)
+	};
+}
+
+#[macro_export]
 macro_rules! render {
 	() => {
 		yazi_shared::event::NEED_RENDER.store(true, std::sync::atomic::Ordering::Relaxed);

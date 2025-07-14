@@ -1,25 +1,19 @@
-use yazi_shared::event::CmdCow;
+use anyhow::Result;
+use yazi_actor::Ctx;
+use yazi_macro::act;
+use yazi_parser::VoidOpt;
+use yazi_shared::event::Data;
 
 use crate::app::App;
 
-struct Opt;
-
-impl From<CmdCow> for Opt {
-	fn from(_: CmdCow) -> Self { Self }
-}
-
-impl From<()> for Opt {
-	fn from(_: ()) -> Self { Self }
-}
-
 impl App {
-	#[yazi_codegen::command]
-	pub fn resize(&mut self, _: Opt) {
-		self.reflow(());
+	pub fn resize(&mut self, _: VoidOpt) -> Result<Data> {
+		act!(reflow, self)?;
 
-		self.core.current_mut().sync_page(true);
 		self.core.current_mut().arrow(0);
-		self.core.mgr.peek(false);
-		self.core.mgr.parent_mut().map(|f| f.arrow(0));
+		self.core.parent_mut().map(|f| f.arrow(0));
+		self.core.current_mut().sync_page(true);
+
+		act!(mgr:peek, &mut Ctx::active(&mut self.core))
 	}
 }

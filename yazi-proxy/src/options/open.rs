@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+use anyhow::anyhow;
 use yazi_config::opener::OpenerRule;
 use yazi_shared::{event::CmdCow, url::Url};
 
@@ -24,7 +25,9 @@ pub struct OpenWithOpt {
 }
 
 impl TryFrom<CmdCow> for OpenWithOpt {
-	type Error = ();
+	type Error = anyhow::Error;
 
-	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> { c.take_any("option").ok_or(()) }
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
+		c.take_any("option").ok_or_else(|| anyhow!("Missing 'option' in OpenWithOpt"))
+	}
 }

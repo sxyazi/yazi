@@ -1,7 +1,6 @@
 use ratatui::layout::Rect;
 use yazi_adapter::Dimension;
 use yazi_config::popup::{Origin, Position};
-use yazi_fs::File;
 use yazi_shared::url::Url;
 
 use super::{Mimetype, Tabs, Watcher, Yanked};
@@ -11,14 +10,14 @@ pub struct Mgr {
 	pub tabs:   Tabs,
 	pub yanked: Yanked,
 
-	pub(super) watcher: Watcher,
-	pub mimetype:       Mimetype,
+	pub watcher:  Watcher,
+	pub mimetype: Mimetype,
 }
 
 impl Mgr {
 	pub fn make() -> Self {
 		Self {
-			tabs:   Tabs::make(),
+			tabs:   Default::default(),
 			yanked: Default::default(),
 
 			watcher:  Watcher::serve(),
@@ -48,30 +47,8 @@ impl Mgr {
 	pub fn active_mut(&mut self) -> &mut Tab { self.tabs.active_mut() }
 
 	#[inline]
-	pub fn current(&self) -> &Folder { &self.active().current }
-
-	#[inline]
 	pub fn current_mut(&mut self) -> &mut Folder { &mut self.active_mut().current }
 
 	#[inline]
-	pub fn parent(&self) -> Option<&Folder> { self.active().parent.as_ref() }
-
-	#[inline]
 	pub fn parent_mut(&mut self) -> Option<&mut Folder> { self.active_mut().parent.as_mut() }
-
-	#[inline]
-	pub fn hovered(&self) -> Option<&File> { self.active().hovered() }
-
-	#[inline]
-	pub fn hovered_folder(&self) -> Option<&Folder> { self.active().hovered_folder() }
-
-	#[inline]
-	pub fn selected_or_hovered(&self) -> Box<dyn Iterator<Item = &Url> + '_> {
-		self.tabs.active().selected_or_hovered()
-	}
-
-	#[inline]
-	pub fn hovered_and_selected(&self) -> Box<dyn Iterator<Item = &Url> + '_> {
-		self.tabs.active().hovered_and_selected()
-	}
 }

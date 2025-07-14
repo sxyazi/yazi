@@ -4,7 +4,7 @@ use anyhow::{Result, bail};
 use serde::{Deserialize, de};
 
 use super::{Data, DataKey};
-use crate::{Layer, SStr, url::Url};
+use crate::{Id, Layer, SStr, url::Url};
 
 #[derive(Debug, Default)]
 pub struct Cmd {
@@ -96,6 +96,9 @@ impl Cmd {
 	pub fn maybe_bool(&self, name: impl Into<DataKey>) -> Option<bool> {
 		self.get(name).and_then(Data::as_bool)
 	}
+
+	#[inline]
+	pub fn id(&self, name: impl Into<DataKey>) -> Option<Id> { self.get(name).and_then(Data::as_id) }
 
 	#[inline]
 	pub fn first(&self) -> Option<&Data> { self.get(0) }

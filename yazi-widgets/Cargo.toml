@@ -10,14 +10,14 @@ repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
 yazi-binding = { path = "../yazi-binding", version = "25.6.11" }
-yazi-codegen = { path = "../yazi-codegen", version = "25.6.11" }
 yazi-config  = { path = "../yazi-config", version = "25.6.11" }
 yazi-macro   = { path = "../yazi-macro", version = "25.6.11" }
-yazi-proxy   = { path = "../yazi-proxy", version = "25.6.11" }
+yazi-parser  = { path = "../yazi-parser", version = "25.6.11" }
 yazi-shared  = { path = "../yazi-shared", version = "25.6.11" }
 yazi-term    = { path = "../yazi-term", version = "25.6.11" }
 
 # External dependencies
+anyhow        = { workspace = true }
 base64        = { workspace = true }
 crossterm     = { workspace = true }
 futures       = { workspace = true }

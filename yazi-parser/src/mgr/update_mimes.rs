@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use anyhow::bail;
 use yazi_shared::event::{CmdCow, Data, DataKey};
 
 pub struct UpdateMimesOpt {
@@ -7,9 +8,13 @@ pub struct UpdateMimesOpt {
 }
 
 impl TryFrom<CmdCow> for UpdateMimesOpt {
-	type Error = ();
+	type Error = anyhow::Error;
 
 	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		Ok(Self { updates: c.try_take("updates").and_then(Data::into_dict).ok_or(())? })
+		let Some(updates) = c.try_take("updates").and_then(Data::into_dict) else {
+			bail!("Invalid 'updates' argument in UpdateMimesOpt");
+		};
+
+		Ok(Self { updates })
 	}
 }

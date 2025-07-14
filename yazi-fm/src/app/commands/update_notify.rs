@@ -1,21 +1,24 @@
+use anyhow::Result;
 use ratatui::layout::Rect;
 use yazi_adapter::Dimension;
-use yazi_shared::event::CmdCow;
+use yazi_macro::act;
+use yazi_parser::notify::TickOpt;
+use yazi_shared::event::Data;
 
 use crate::{app::App, notify};
 
 impl App {
-	pub(crate) fn update_notify(&mut self, cmd: CmdCow) {
+	pub(crate) fn update_notify(&mut self, opt: TickOpt) -> Result<Data> {
 		let Dimension { rows, columns, .. } = Dimension::available();
 		let area =
 			notify::Notify::available(Rect { x: 0, y: 0, width: columns, height: rows });
 
-		self.core.notify.tick(cmd, area);
+		self.core.notify.tick(opt, area);
 
 		if self.core.notify.messages.is_empty() {
-			self.render();
+			act!(render, self)
 		} else {
-			self.render_partially();
+			act!(render_partially, self)
 		}
 	}
 }

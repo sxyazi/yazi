@@ -1,38 +1,28 @@
-use yazi_macro::render;
-use yazi_shared::event::CmdCow;
+use anyhow::Result;
+use yazi_macro::{act, render, succ};
+use yazi_parser::input::BackspaceOpt;
+use yazi_shared::event::Data;
 
 use crate::input::Input;
 
-struct Opt {
-	under: bool,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { under: c.bool("under") } }
-}
-impl From<bool> for Opt {
-	fn from(under: bool) -> Self { Self { under } }
-}
-
 impl Input {
-	#[yazi_codegen::command]
-	pub fn backspace(&mut self, opt: Opt) {
+	pub fn backspace(&mut self, opt: BackspaceOpt) -> Result<Data> {
 		let snap = self.snap_mut();
 		if !opt.under && snap.cursor < 1 {
-			return;
+			succ!();
 		} else if opt.under && snap.cursor >= snap.count() {
-			return;
+			succ!();
 		}
 
 		if opt.under {
 			snap.value.remove(snap.idx(snap.cursor).unwrap());
-			self.r#move(0);
+			act!(r#move, self)?;
 		} else {
 			snap.value.remove(snap.idx(snap.cursor - 1).unwrap());
-			self.r#move(-1);
+			act!(r#move, self, -1)?;
 		}
 
 		self.flush_value();
-		render!();
+		succ!(render!());
 	}
 }

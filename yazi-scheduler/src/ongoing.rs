@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use futures::future::BoxFuture;
 use yazi_config::YAZI;
+use yazi_parser::app::TasksProgress;
 use yazi_shared::{Id, Ids};
 
 use super::{Task, TaskStage};
@@ -77,5 +78,22 @@ impl Ongoing {
 			self.all.remove(&id);
 		}
 		None
+	}
+
+	pub fn progress(&self) -> TasksProgress {
+		let mut progress = TasksProgress::default();
+		if self.is_empty() {
+			return progress;
+		}
+
+		for task in self.values() {
+			progress.total += task.total;
+			progress.succ += task.succ;
+			progress.fail += task.fail;
+
+			progress.found += task.found;
+			progress.processed += task.processed;
+		}
+		progress
 	}
 }

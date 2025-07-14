@@ -1,21 +1,15 @@
-use yazi_shared::{CharKind, event::CmdCow};
+use anyhow::Result;
+use yazi_macro::{act, succ};
+use yazi_parser::input::BackwardOpt;
+use yazi_shared::{CharKind, event::Data};
 
 use crate::input::Input;
 
-struct Opt {
-	far: bool,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { far: c.bool("far") } }
-}
-
 impl Input {
-	#[yazi_codegen::command]
-	pub fn backward(&mut self, opt: Opt) {
+	pub fn backward(&mut self, opt: BackwardOpt) -> Result<Data> {
 		let snap = self.snap();
 		if snap.cursor == 0 {
-			return self.r#move(0);
+			return act!(r#move, self);
 		}
 
 		let idx = snap.idx(snap.cursor).unwrap_or(snap.len());
@@ -24,13 +18,14 @@ impl Input {
 		for (i, c) in it {
 			let k = CharKind::new(c);
 			if prev != CharKind::Space && prev.vary(k, opt.far) {
-				return self.r#move(-(i as isize));
+				return act!(r#move, self, -(i as isize));
 			}
 			prev = k;
 		}
 
 		if prev != CharKind::Space {
-			self.r#move(-(snap.len() as isize));
+			act!(r#move, self, -(snap.len() as isize))?;
 		}
+		succ!();
 	}
 }

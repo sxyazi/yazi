@@ -10,8 +10,6 @@ repository  = "https://github.com/sxyazi/yazi"
 
 [dependencies]
 yazi-adapter   = { path = "../yazi-adapter", version = "25.6.11" }
-yazi-boot      = { path = "../yazi-boot", version = "25.6.11" }
-yazi-codegen   = { path = "../yazi-codegen", version = "25.6.11" }
 yazi-config    = { path = "../yazi-config", version = "25.6.11" }
 yazi-dds       = { path = "../yazi-dds", version = "25.6.11" }
 yazi-fs        = { path = "../yazi-fs", version = "25.6.11" }
@@ -21,7 +19,6 @@ yazi-plugin    = { path = "../yazi-plugin", version = "25.6.11" }
 yazi-proxy     = { path = "../yazi-proxy", version = "25.6.11" }
 yazi-scheduler = { path = "../yazi-scheduler", version = "25.6.11" }
 yazi-shared    = { path = "../yazi-shared", version = "25.6.11" }
-yazi-term      = { path = "../yazi-term", version = "25.6.11" }
 yazi-widgets   = { path = "../yazi-widgets", version = "25.6.11" }
 
 # External dependencies
@@ -32,8 +29,6 @@ indexmap      = { workspace = true }
 notify        = { version = "8.1.0", default-features = false, features = [ "macos_fsevent" ] }
 parking_lot   = { workspace = true }
 ratatui       = { workspace = true }
-scopeguard    = { workspace = true }
-serde         = { workspace = true }
 tokio         = { workspace = true }
 tokio-stream  = { workspace = true }
 tokio-util    = { workspace = true }

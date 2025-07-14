@@ -19,7 +19,7 @@ struct FinderLock {
 }
 
 impl Finder {
-	pub(super) fn new(s: &str, case: FilterCase) -> Result<Self> {
+	pub fn new(s: &str, case: FilterCase) -> Result<Self> {
 		Ok(Self {
 			filter:  Filter::new(s, case)?,
 			matched: Default::default(),
@@ -27,7 +27,7 @@ impl Finder {
 		})
 	}
 
-	pub(super) fn prev(&self, files: &Files, cursor: usize, include: bool) -> Option<isize> {
+	pub fn prev(&self, files: &Files, cursor: usize, include: bool) -> Option<isize> {
 		for i in !include as usize..files.len() {
 			let idx = (cursor + files.len() - i) % files.len();
 			if self.filter.matches(files[idx].name()) {
@@ -37,7 +37,7 @@ impl Finder {
 		None
 	}
 
-	pub(super) fn next(&self, files: &Files, cursor: usize, include: bool) -> Option<isize> {
+	pub fn next(&self, files: &Files, cursor: usize, include: bool) -> Option<isize> {
 		for i in !include as usize..files.len() {
 			let idx = (cursor + i) % files.len();
 			if self.filter.matches(files[idx].name()) {
@@ -47,7 +47,7 @@ impl Finder {
 		None
 	}
 
-	pub(super) fn catchup(&mut self, folder: &Folder) -> bool {
+	pub fn catchup(&mut self, folder: &Folder) -> bool {
 		if self.lock == *folder {
 			return false;
 		}

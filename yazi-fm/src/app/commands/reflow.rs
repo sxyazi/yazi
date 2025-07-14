@@ -1,26 +1,17 @@
+use anyhow::Result;
 use mlua::Value;
 use ratatui::layout::Position;
 use tracing::error;
 use yazi_config::LAYOUT;
-use yazi_macro::render;
-use yazi_shared::event::CmdCow;
+use yazi_macro::{render, succ};
+use yazi_parser::VoidOpt;
+use yazi_shared::event::Data;
 
 use crate::{Root, app::App, lives::Lives};
 
-struct Opt;
-
-impl From<CmdCow> for Opt {
-	fn from(_: CmdCow) -> Self { Self }
-}
-
-impl From<()> for Opt {
-	fn from(_: ()) -> Self { Self }
-}
-
 impl App {
-	#[yazi_codegen::command]
-	pub fn reflow(&mut self, _: Opt) {
-		let Some(size) = self.term.as_ref().and_then(|t| t.size().ok()) else { return };
+	pub fn reflow(&mut self, _: VoidOpt) -> Result<Data> {
+		let Some(size) = self.term.as_ref().and_then(|t| t.size().ok()) else { succ!() };
 		let mut layout = LAYOUT.get();
 
 		let result = Lives::scope(&self.core, || {
@@ -48,8 +39,9 @@ impl App {
 			render!();
 		}
 
-		if let Err(e) = result {
+		if let Err(ref e) = result {
 			error!("Failed to `reflow()` the `Root` component:\n{e}");
 		}
+		succ!();
 	}
 }

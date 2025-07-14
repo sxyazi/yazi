@@ -4,14 +4,15 @@ use parking_lot::Mutex;
 use tokio::{task::JoinHandle, time::sleep};
 use yazi_adapter::Dimension;
 use yazi_macro::emit;
+use yazi_parser::app::TasksProgress;
 use yazi_scheduler::{Ongoing, Scheduler, TaskSummary};
 use yazi_shared::event::Cmd;
 
-use super::{TASKS_BORDER, TASKS_PADDING, TASKS_PERCENT, TasksProgress};
+use super::{TASKS_BORDER, TASKS_PADDING, TASKS_PERCENT};
 
 pub struct Tasks {
-	pub(super) scheduler: Arc<Scheduler>,
-	handle:               JoinHandle<()>,
+	pub scheduler: Arc<Scheduler>,
+	handle:        JoinHandle<()>,
 
 	pub visible:   bool,
 	pub cursor:    usize,
@@ -29,7 +30,7 @@ impl Tasks {
 			loop {
 				sleep(Duration::from_millis(500)).await;
 
-				let new = TasksProgress::from(&*ongoing.lock());
+				let new = ongoing.lock().progress();
 				if last != new {
 					last = new;
 					emit!(Call(Cmd::new("app:update_progress").with_any("progress", new)));

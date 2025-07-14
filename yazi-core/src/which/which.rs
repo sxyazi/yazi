@@ -1,5 +1,8 @@
-use yazi_config::keymap::{ChordCow, Key};
-use yazi_macro::{emit, render_and};
+use yazi_config::{KEYMAP, keymap::{ChordCow, Key}};
+use yazi_macro::{emit, render, render_and};
+use yazi_shared::Layer;
+
+use crate::which::WhichSorter;
 
 #[derive(Default)]
 pub struct Which {
@@ -35,5 +38,20 @@ impl Which {
 
 		self.visible = false;
 		self.silent = false;
+	}
+
+	pub fn show_with(&mut self, key: Key, layer: Layer) {
+		self.times = 1;
+		self.cands = KEYMAP
+			.get(layer)
+			.iter()
+			.filter(|c| c.on.len() > 1 && c.on[0] == key)
+			.map(|c| c.into())
+			.collect();
+
+		WhichSorter::default().sort(&mut self.cands);
+		self.visible = true;
+		self.silent = false;
+		render!();
 	}
 }

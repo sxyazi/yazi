@@ -7,11 +7,8 @@ use yazi_proxy::AppProxy;
 use crate::notify::Notify;
 
 impl Notify {
-	pub fn tick(&mut self, opt: impl TryInto<TickOpt>, area: Rect) {
+	pub fn tick(&mut self, opt: TickOpt, area: Rect) {
 		self.tick_handle.take().map(|h| h.abort());
-		let Ok(opt) = opt.try_into() else {
-			return;
-		};
 
 		let limit = self.limit(area);
 		if limit == 0 {

@@ -1,20 +1,12 @@
-use yazi_macro::render;
-use yazi_shared::event::CmdCow;
+use anyhow::Result;
+use yazi_macro::{act, render, succ};
+use yazi_parser::input::DeleteOpt;
+use yazi_shared::event::Data;
 
 use crate::input::{Input, op::InputOp};
 
-struct Opt {
-	cut:    bool,
-	insert: bool,
-}
-
-impl From<CmdCow> for Opt {
-	fn from(c: CmdCow) -> Self { Self { cut: c.bool("cut"), insert: c.bool("insert") } }
-}
-
 impl Input {
-	#[yazi_codegen::command]
-	pub fn delete(&mut self, opt: Opt) {
+	pub fn delete(&mut self, opt: DeleteOpt) -> Result<Data> {
 		match self.snap().op {
 			InputOp::None => {
 				self.snap_mut().op = InputOp::Delete(opt.cut, opt.insert, self.snap().cursor);
@@ -22,13 +14,14 @@ impl Input {
 			InputOp::Select(start) => {
 				self.snap_mut().op = InputOp::Delete(opt.cut, opt.insert, start);
 				render!(self.handle_op(self.snap().cursor, true));
-				self.r#move(0);
+				act!(r#move, self)?;
 			}
 			InputOp::Delete(..) => {
 				self.snap_mut().op = InputOp::Delete(opt.cut, opt.insert, 0);
-				self.r#move(self.snap().len() as isize);
+				act!(r#move, self, self.snap().len() as isize)?;
 			}
 			_ => {}
 		}
+		succ!();
 	}
 }
