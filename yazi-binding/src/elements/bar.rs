@@ -18,7 +18,7 @@ impl Bar {
 			lua.create_function(|_, (_, edge): (Table, Edge)| Ok(Self { edge, ..Default::default() }))?;
 
 		let bar = lua.create_table()?;
-		bar.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
+		bar.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 		bar.into_lua(lua)
 	}
 

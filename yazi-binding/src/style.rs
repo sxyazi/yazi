@@ -8,7 +8,7 @@ impl Style {
 		let new = lua.create_function(|_, (_, value): (Table, Value)| Self::try_from(value))?;
 
 		let style = lua.create_table()?;
-		style.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
+		style.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 
 		style.into_lua(lua)
 	}

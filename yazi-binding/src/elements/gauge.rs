@@ -19,7 +19,7 @@ impl Gauge {
 		let new = lua.create_function(|_, _: Table| Ok(Gauge::default()))?;
 
 		let gauge = lua.create_table()?;
-		gauge.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
+		gauge.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 
 		gauge.into_lua(lua)
 	}

@@ -33,7 +33,7 @@ impl Command {
 			("INHERIT", INHERIT),
 		])?;
 
-		command.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
+		command.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 
 		lua.globals().raw_set("Command", command)
 	}

@@ -38,7 +38,7 @@ impl Border {
 			("QUADRANT_OUTSIDE", QUADRANT_OUTSIDE),
 		])?;
 
-		border.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
+		border.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 		border.into_lua(lua)
 	}
 

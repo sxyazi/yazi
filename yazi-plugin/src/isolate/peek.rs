@@ -81,7 +81,7 @@ fn peek_async(
 						Ok(VmState::Continue)
 					}
 				},
-			);
+			)?;
 
 			let plugin = LOADER.load_once(&lua, &cmd.name)?;
 			let job = lua.create_table_from([

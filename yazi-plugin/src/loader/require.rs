@@ -63,7 +63,7 @@ impl Require {
 		])?;
 
 		let ts = lua.create_table_from([("__mod", r#mod)])?;
-		ts.set_metatable(Some(mt));
+		ts.set_metatable(Some(mt))?;
 		Ok(ts)
 	}
 

@@ -20,7 +20,7 @@ impl Row {
 		})?;
 
 		let row = lua.create_table()?;
-		row.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
+		row.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 
 		row.into_lua(lua)
 	}
