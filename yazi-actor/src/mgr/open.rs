@@ -6,9 +6,9 @@ use yazi_config::{YAZI, popup::PickCfg};
 use yazi_core::tab::Folder;
 use yazi_fs::File;
 use yazi_macro::{act, succ};
-use yazi_parser::mgr::OpenOpt;
+use yazi_parser::mgr::{OpenDoOpt, OpenOpt};
 use yazi_plugin::isolate;
-use yazi_proxy::{MgrProxy, PickProxy, TasksProxy, options::OpenDoOpt};
+use yazi_proxy::{MgrProxy, PickProxy, TasksProxy};
 use yazi_shared::{MIME_DIR, event::{CmdCow, Data}, url::Url};
 
 use crate::{Actor, Ctx, mgr::Quit};

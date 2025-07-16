@@ -1,4 +1,4 @@
-use mlua::Lua;
+use mlua::{IntoLua, Lua};
 use yazi_binding::Runtime;
 use yazi_macro::plugin_preset as preset;
 
@@ -8,11 +8,11 @@ pub fn slim_lua(name: &str) -> mlua::Result<Lua> {
 
 	// Base
 	let globals = lua.globals();
-	globals.raw_set("ui", yazi_binding::elements::compose(&lua)?)?;
-	globals.raw_set("ya", crate::utils::compose(&lua, true)?)?;
-	globals.raw_set("fs", crate::fs::compose(&lua)?)?;
-	globals.raw_set("rt", crate::runtime::compose(&lua)?)?;
-	globals.raw_set("th", crate::theme::compose(&lua)?)?;
+	globals.raw_set("ui", crate::elements::compose())?;
+	globals.raw_set("ya", crate::utils::compose(true))?;
+	globals.raw_set("fs", crate::fs::compose())?;
+	globals.raw_set("rt", crate::runtime::compose())?;
+	globals.raw_set("th", crate::theme::compose().into_lua(&lua)?)?;
 
 	yazi_binding::Cha::install(&lua)?;
 	yazi_binding::File::install(&lua)?;

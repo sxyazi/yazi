@@ -120,11 +120,12 @@ impl File {
 				self.prog.send(TaskProg::Adv(task.id, 1, cha.len))?;
 			}
 			FileIn::Delete(task) => {
-				if let Err(e) = fs::remove_file(&task.target).await {
-					if e.kind() != NotFound && maybe_exists(&task.target).await {
-						self.fail(task.id, format!("Delete task failed: {task:?}, {e}"))?;
-						Err(e)?
-					}
+				if let Err(e) = fs::remove_file(&task.target).await
+					&& e.kind() != NotFound
+					&& maybe_exists(&task.target).await
+				{
+					self.fail(task.id, format!("Delete task failed: {task:?}, {e}"))?;
+					Err(e)?
 				}
 				self.prog.send(TaskProg::Adv(task.id, 1, task.length))?
 			}

@@ -1,4 +1,4 @@
-use yazi_proxy::options::PluginOpt;
+use yazi_parser::app::PluginOpt;
 
 use super::Tasks;
 

@@ -3,7 +3,8 @@ use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, MultiValu
 use tokio::sync::oneshot;
 use yazi_binding::{runtime, runtime_mut};
 use yazi_dds::Sendable;
-use yazi_proxy::{AppProxy, options::{PluginCallback, PluginOpt}};
+use yazi_parser::app::{PluginCallback, PluginOpt};
+use yazi_proxy::AppProxy;
 use yazi_shared::event::Data;
 
 use super::Utils;

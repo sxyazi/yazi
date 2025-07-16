@@ -1,7 +1,7 @@
 use mlua::{ExternalResult, ObjectLike};
 use tokio::runtime::Handle;
 use yazi_dds::Sendable;
-use yazi_proxy::options::PluginOpt;
+use yazi_parser::app::PluginOpt;
 
 use super::slim_lua;
 use crate::loader::LOADER;

@@ -4,8 +4,7 @@ use anyhow::Result;
 use tokio::fs;
 use yazi_fs::{CWD, expand_path};
 use yazi_macro::{act, emit, render, succ};
-use yazi_parser::cmp::{ShowOpt, TriggerOpt};
-use yazi_proxy::options::CmpItem;
+use yazi_parser::cmp::{CmpItem, ShowOpt, TriggerOpt};
 use yazi_shared::{event::{Cmd, Data}, natsort};
 
 use crate::{Actor, Ctx};

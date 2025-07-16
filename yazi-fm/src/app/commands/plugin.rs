@@ -5,8 +5,9 @@ use tracing::{error, warn};
 use yazi_binding::runtime_mut;
 use yazi_dds::Sendable;
 use yazi_macro::succ;
+use yazi_parser::app::{PluginMode, PluginOpt};
 use yazi_plugin::{LUA, loader::{LOADER, Loader}};
-use yazi_proxy::{AppProxy, options::{PluginMode, PluginOpt}};
+use yazi_proxy::AppProxy;
 use yazi_shared::event::Data;
 
 use crate::{app::App, lives::Lives};

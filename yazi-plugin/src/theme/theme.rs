@@ -1,33 +1,34 @@
 use mlua::{IntoLua, Lua, Value};
-use yazi_binding::{Composer, Style, Url};
+use yazi_binding::{Composer, ComposerGet, ComposerSet, Style, Url};
 use yazi_config::THEME;
 
-pub fn compose(lua: &Lua) -> mlua::Result<Value> {
+pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
-			b"mgr" => mgr(lua),
-			b"tabs" => tabs(lua),
-			b"mode" => mode(lua),
-			b"status" => status(lua),
-			b"which" => which(lua),
-			b"confirm" => confirm(lua),
-			b"spot" => spot(lua),
-			b"notify" => notify(lua),
-			b"pick" => pick(lua),
-			b"input" => input(lua),
-			b"cmp" => cmp(lua),
-			b"tasks" => tasks(lua),
-			b"help" => help(lua),
-			_ => Ok(Value::Nil),
+			b"mgr" => mgr(),
+			b"tabs" => tabs(),
+			b"mode" => mode(),
+			b"status" => status(),
+			b"which" => which(),
+			b"confirm" => confirm(),
+			b"spot" => spot(),
+			b"notify" => notify(),
+			b"pick" => pick(),
+			b"input" => input(),
+			b"cmp" => cmp(),
+			b"tasks" => tasks(),
+			b"help" => help(),
+			_ => return Ok(Value::Nil),
 		}
+		.into_lua(lua)
 	}
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
-	Composer::make(lua, get, set)
+	Composer::new(get, set)
 }
 
-fn mgr(lua: &Lua) -> mlua::Result<Value> {
+fn mgr() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let m = &THEME.mgr;
 		match key {
@@ -60,10 +61,10 @@ fn mgr(lua: &Lua) -> mlua::Result<Value> {
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
-	Composer::make(lua, get, set)
+	Composer::new(get, set)
 }
 
-fn tabs(lua: &Lua) -> mlua::Result<Value> {
+fn tabs() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.tabs;
 		match key {
@@ -89,10 +90,10 @@ fn tabs(lua: &Lua) -> mlua::Result<Value> {
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
-	Composer::make(lua, get, set)
+	Composer::new(get, set)
 }
 
-fn mode(lua: &Lua) -> mlua::Result<Value> {
+fn mode() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.mode;
 		match key {
@@ -111,10 +112,10 @@ fn mode(lua: &Lua) -> mlua::Result<Value> {
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
-	Composer::make(lua, get, set)
+	Composer::new(get, set)
 }
 
-fn status(lua: &Lua) -> mlua::Result<Value> {
+fn status() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.status;
 		match key {
@@ -148,10 +149,10 @@ fn status(lua: &Lua) -> mlua::Result<Value> {
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
-	Composer::make(lua, get, set)
+	Composer::new(get, set)
 }
 
-fn which(lua: &Lua) -> mlua::Result<Value> {
+fn which() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.which;
 		match key {
@@ -170,10 +171,10 @@ fn which(lua: &Lua) -> mlua::Result<Value> {
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
-	Composer::make(lua, get, set)
+	Composer::new(get, set)
 }
 
-fn confirm(lua: &Lua) -> mlua::Result<Value> {
+fn confirm() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.confirm;
 		match key {
@@ -197,10 +198,10 @@ fn confirm(lua: &Lua) -> mlua::Result<Value> {
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
-	Composer::make(lua, get, set)
+	Composer::new(get, set)
 }
 
-fn spot(lua: &Lua) -> mlua::Result<Value> {
+fn spot() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.spot;
 		match key {
@@ -216,10 +217,10 @@ fn spot(lua: &Lua) -> mlua::Result<Value> {
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
-	Composer::make(lua, get, set)
+	Composer::new(get, set)
 }
 
-fn notify(lua: &Lua) -> mlua::Result<Value> {
+fn notify() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.notify;
 		match key {
@@ -237,10 +238,10 @@ fn notify(lua: &Lua) -> mlua::Result<Value> {
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
-	Composer::make(lua, get, set)
+	Composer::new(get, set)
 }
 
-fn pick(lua: &Lua) -> mlua::Result<Value> {
+fn pick() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.pick;
 		match key {
@@ -254,10 +255,10 @@ fn pick(lua: &Lua) -> mlua::Result<Value> {
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
-	Composer::make(lua, get, set)
+	Composer::new(get, set)
 }
 
-fn input(lua: &Lua) -> mlua::Result<Value> {
+fn input() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.input;
 		match key {
@@ -272,10 +273,10 @@ fn input(lua: &Lua) -> mlua::Result<Value> {
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
-	Composer::make(lua, get, set)
+	Composer::new(get, set)
 }
 
-fn cmp(lua: &Lua) -> mlua::Result<Value> {
+fn cmp() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.cmp;
 		match key {
@@ -293,10 +294,10 @@ fn cmp(lua: &Lua) -> mlua::Result<Value> {
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
-	Composer::make(lua, get, set)
+	Composer::new(get, set)
 }
 
-fn tasks(lua: &Lua) -> mlua::Result<Value> {
+fn tasks() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.tasks;
 		match key {
@@ -310,10 +311,10 @@ fn tasks(lua: &Lua) -> mlua::Result<Value> {
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
-	Composer::make(lua, get, set)
+	Composer::new(get, set)
 }
 
-fn help(lua: &Lua) -> mlua::Result<Value> {
+fn help() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &THEME.help;
 		match key {
@@ -330,5 +331,5 @@ fn help(lua: &Lua) -> mlua::Result<Value> {
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
-	Composer::make(lua, get, set)
+	Composer::new(get, set)
 }

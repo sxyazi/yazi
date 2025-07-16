@@ -2,9 +2,8 @@ use std::time::Duration;
 
 use tokio::sync::oneshot;
 use yazi_macro::emit;
+use yazi_parser::app::{NotifyLevel, NotifyOpt, PluginOpt};
 use yazi_shared::event::Cmd;
-
-use crate::options::{NotifyLevel, NotifyOpt, PluginOpt};
 
 pub struct AppProxy;
 

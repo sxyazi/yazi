@@ -31,11 +31,11 @@ impl Dimension {
 			_ = mem::replace(&mut size, s);
 		}
 
-		if size.columns == 0 || size.rows == 0 {
-			if let Ok((cols, rows)) = crossterm::terminal::size() {
-				size.columns = cols;
-				size.rows = rows;
-			}
+		if (size.columns == 0 || size.rows == 0)
+			&& let Ok((cols, rows)) = crossterm::terminal::size()
+		{
+			size.columns = cols;
+			size.rows = rows;
 		}
 
 		size.into()

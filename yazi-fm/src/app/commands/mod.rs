@@ -1,6 +1,7 @@
 yazi_macro::mod_flat!(
 	accept_payload
 	bootstrap
+	deprecate
 	mouse
 	notify
 	plugin

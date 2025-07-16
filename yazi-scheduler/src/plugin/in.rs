@@ -1,4 +1,4 @@
-use yazi_proxy::options::PluginOpt;
+use yazi_parser::app::PluginOpt;
 use yazi_shared::Id;
 
 #[derive(Debug)]

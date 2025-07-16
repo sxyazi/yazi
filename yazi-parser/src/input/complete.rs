@@ -1,6 +1,7 @@
 use anyhow::bail;
-use yazi_proxy::options::CmpItem;
 use yazi_shared::{Id, event::CmdCow};
+
+use crate::cmp::CmpItem;
 
 pub struct CompleteOpt {
 	pub item:    CmpItem,

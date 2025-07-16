@@ -1,12 +1,12 @@
 use globset::GlobBuilder;
 use mlua::{ExternalError, ExternalResult, Function, IntoLua, IntoLuaMulti, Lua, Table, Value};
 use tokio::fs;
-use yazi_binding::{Cha, Composer, Error, File, Url, UrlRef};
+use yazi_binding::{Cha, Composer, ComposerGet, ComposerSet, Error, File, Url, UrlRef};
 use yazi_fs::{mounts::PARTITIONS, remove_dir_clean};
 
 use crate::bindings::SizeCalculator;
 
-pub fn compose(lua: &Lua) -> mlua::Result<Value> {
+pub fn compose() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"op" => op(lua)?,
@@ -27,7 +27,7 @@ pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
-	Composer::make(lua, get, set)
+	Composer::new(get, set)
 }
 
 fn op(lua: &Lua) -> mlua::Result<Function> {

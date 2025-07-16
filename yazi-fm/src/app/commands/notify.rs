@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::succ;
-use yazi_proxy::options::NotifyOpt;
+use yazi_parser::app::NotifyOpt;
 use yazi_shared::event::Data;
 
 use crate::app::App;

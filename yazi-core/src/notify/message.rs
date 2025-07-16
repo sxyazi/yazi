@@ -1,7 +1,7 @@
 use std::time::{Duration, Instant};
 
 use unicode_width::UnicodeWidthStr;
-use yazi_proxy::options::{NotifyLevel, NotifyOpt};
+use yazi_parser::app::{NotifyLevel, NotifyOpt};
 
 use super::NOTIFY_BORDER;
 

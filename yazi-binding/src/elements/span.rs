@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, ops::{Deref, DerefMut}};
 
 use mlua::{AnyUserData, ExternalError, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
 use unicode_width::UnicodeWidthChar;
@@ -6,6 +6,16 @@ use unicode_width::UnicodeWidthChar;
 const EXPECTED: &str = "expected a string or Span";
 
 pub struct Span(pub(super) ratatui::text::Span<'static>);
+
+impl Deref for Span {
+	type Target = ratatui::text::Span<'static>;
+
+	fn deref(&self) -> &Self::Target { &self.0 }
+}
+
+impl DerefMut for Span {
+	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+}
 
 impl Span {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {

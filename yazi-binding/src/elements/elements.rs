@@ -2,9 +2,9 @@ use mlua::{AnyUserData, IntoLua, Lua, Value};
 use tracing::error;
 
 use super::Renderable;
-use crate::Composer;
+use crate::{Composer, ComposerGet, ComposerSet};
 
-pub fn compose(lua: &Lua) -> mlua::Result<Value> {
+pub fn compose(p_get: ComposerGet, p_set: ComposerSet) -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"Align" => super::Align::compose(lua)?,
@@ -26,13 +26,6 @@ pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 			b"Table" => super::Table::compose(lua)?,
 			b"Text" => super::Text::compose(lua)?,
 			b"Wrap" => super::Wrap::compose(lua)?,
-
-			b"area" => super::Utils::area(lua)?,
-			b"hide" => super::Utils::hide(lua)?,
-			b"width" => super::Utils::width(lua)?,
-			b"redraw" => super::Utils::redraw(lua)?,
-			b"render" => super::Utils::render(lua)?,
-			b"truncate" => super::Utils::truncate(lua)?,
 			_ => return Ok(Value::Nil),
 		}
 		.into_lua(lua)
@@ -40,7 +33,7 @@ pub fn compose(lua: &Lua) -> mlua::Result<Value> {
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
-	Composer::make(lua, get, set)
+	Composer::with_parent(get, set, p_get, p_set)
 }
 
 pub fn render_once<F>(value: Value, buf: &mut ratatui::buffer::Buffer, trans: F)

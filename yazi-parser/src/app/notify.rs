@@ -45,6 +45,7 @@ impl TryFrom<mlua::Table> for NotifyOpt {
 	}
 }
 
+// --- Level
 #[derive(Clone, Copy, Default, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum NotifyLevel {

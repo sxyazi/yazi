@@ -1,9 +1,8 @@
 use std::borrow::Cow;
 
 use yazi_macro::emit;
+use yazi_parser::mgr::{OpenDoOpt, SearchOpt};
 use yazi_shared::{SStr, event::Cmd, url::Url};
-
-use crate::options::{OpenDoOpt, SearchOpt};
 
 pub struct MgrProxy;
 
