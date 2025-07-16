@@ -12,7 +12,7 @@ impl Span {
 		let new = lua.create_function(|_, (_, value): (Table, Value)| Span::try_from(value))?;
 
 		let span = lua.create_table()?;
-		span.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
+		span.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 
 		span.into_lua(lua)
 	}

@@ -17,7 +17,7 @@ impl Layout {
 		let new = lua.create_function(|_, _: Table| Ok(Self::default()))?;
 
 		let layout = lua.create_table_from([("HORIZONTAL", HORIZONTAL), ("VERTICAL", VERTICAL)])?;
-		layout.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
+		layout.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 
 		layout.into_lua(lua)
 	}

@@ -28,7 +28,7 @@ impl Text {
 		})?;
 
 		let text = lua.create_table_from([("parse", parse)])?;
-		text.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
+		text.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 		text.into_lua(lua)
 	}
 

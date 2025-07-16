@@ -48,7 +48,7 @@ impl Rect {
 		let rect = lua.create_table()?;
 		rect.set_metatable(Some(
 			lua.create_table_from([(MetaMethod::Call.name(), new), (MetaMethod::Index.name(), index)])?,
-		));
+		))?;
 		rect.into_lua(lua)
 	}
 

@@ -25,7 +25,7 @@ impl List {
 		})?;
 
 		let list = lua.create_table()?;
-		list.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
+		list.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 
 		list.into_lua(lua)
 	}

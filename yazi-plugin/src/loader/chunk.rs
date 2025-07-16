@@ -65,8 +65,13 @@ impl From<Vec<u8>> for Chunk {
 	fn from(b: Vec<u8>) -> Self { Self::from(Cow::Owned(b)) }
 }
 
-impl<'a> AsChunk<'a> for &'a Chunk {
-	fn source(self) -> std::io::Result<Cow<'a, [u8]>> { Ok(Cow::Borrowed(&self.bytes)) }
-
+impl AsChunk for &Chunk {
 	fn mode(&self) -> Option<ChunkMode> { Some(self.mode) }
+
+	fn source<'a>(&self) -> std::io::Result<Cow<'a, [u8]>>
+	where
+		Self: 'a,
+	{
+		Ok(Cow::Borrowed(&self.bytes))
+	}
 }

@@ -29,7 +29,7 @@ pub fn spot(cmd: &'static Cmd, file: yazi_fs::File, mime: SStr, skip: usize) -> 
 						Ok(VmState::Continue)
 					}
 				},
-			);
+			)?;
 
 			let plugin = LOADER.load_once(&lua, &cmd.name)?;
 			let job = lua.create_table_from([

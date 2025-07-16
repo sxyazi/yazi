@@ -43,7 +43,7 @@ impl Table {
 		})?;
 
 		let table = lua.create_table()?;
-		table.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
+		table.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 
 		table.into_lua(lua)
 	}

@@ -46,7 +46,7 @@ impl Pad {
 			),
 		])?;
 
-		pad.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
+		pad.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 		pad.into_lua(lua)
 	}
 }

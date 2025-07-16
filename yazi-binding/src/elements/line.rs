@@ -36,7 +36,7 @@ impl Line {
 		})?;
 
 		let line = lua.create_table_from([("parse", parse)])?;
-		line.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?));
+		line.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
 		line.into_lua(lua)
 	}
 
