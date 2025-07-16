@@ -48,12 +48,13 @@ impl<'a> Executor<'a> {
 		on!(resize);
 		on!(stop);
 		on!(resume);
+		on!(deprecate);
 
 		succ!();
 	}
 
 	fn mgr(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&mut self.app.core, cmd.id("tab"))?;
+		let cx = &mut Ctx::new(&mut self.app.core, &cmd)?;
 
 		macro_rules! on {
 			($name:ident) => {
@@ -143,7 +144,7 @@ impl<'a> Executor<'a> {
 	}
 
 	fn tasks(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&mut self.app.core, cmd.id("tab"))?;
+		let cx = &mut Ctx::new(&mut self.app.core, &cmd)?;
 
 		macro_rules! on {
 			($name:ident) => {
@@ -171,7 +172,7 @@ impl<'a> Executor<'a> {
 	}
 
 	fn spot(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&mut self.app.core, cmd.id("tab"))?;
+		let cx = &mut Ctx::new(&mut self.app.core, &cmd)?;
 
 		macro_rules! on {
 			($name:ident) => {
@@ -196,7 +197,7 @@ impl<'a> Executor<'a> {
 	}
 
 	fn pick(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&mut self.app.core, cmd.id("tab"))?;
+		let cx = &mut Ctx::new(&mut self.app.core, &cmd)?;
 
 		macro_rules! on {
 			($name:ident) => {
@@ -221,7 +222,7 @@ impl<'a> Executor<'a> {
 
 	fn input(&mut self, cmd: CmdCow) -> Result<Data> {
 		let mode = self.app.core.input.mode();
-		let cx = &mut Ctx::new(&mut self.app.core, cmd.id("tab"))?;
+		let cx = &mut Ctx::new(&mut self.app.core, &cmd)?;
 
 		macro_rules! on {
 			($name:ident) => {
@@ -252,7 +253,7 @@ impl<'a> Executor<'a> {
 	}
 
 	fn confirm(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&mut self.app.core, cmd.id("tab"))?;
+		let cx = &mut Ctx::new(&mut self.app.core, &cmd)?;
 
 		macro_rules! on {
 			($name:ident) => {
@@ -270,7 +271,7 @@ impl<'a> Executor<'a> {
 	}
 
 	fn help(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&mut self.app.core, cmd.id("tab"))?;
+		let cx = &mut Ctx::new(&mut self.app.core, &cmd)?;
 
 		macro_rules! on {
 			($name:ident) => {
@@ -294,7 +295,7 @@ impl<'a> Executor<'a> {
 	}
 
 	fn cmp(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&mut self.app.core, cmd.id("tab"))?;
+		let cx = &mut Ctx::new(&mut self.app.core, &cmd)?;
 
 		macro_rules! on {
 			($name:ident) => {
@@ -319,7 +320,7 @@ impl<'a> Executor<'a> {
 	}
 
 	fn which(&mut self, cmd: CmdCow) -> Result<Data> {
-		let cx = &mut Ctx::new(&mut self.app.core, cmd.id("tab"))?;
+		let cx = &mut Ctx::new(&mut self.app.core, &cmd)?;
 
 		macro_rules! on {
 			($name:ident) => {

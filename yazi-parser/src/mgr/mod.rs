@@ -11,6 +11,7 @@ yazi_macro::mod_flat!(
 	quit
 	remove
 	rename
+	search
 	seek
 	spot
 	tab_close

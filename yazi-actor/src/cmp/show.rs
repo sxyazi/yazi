@@ -2,8 +2,7 @@ use std::{mem, ops::ControlFlow};
 
 use anyhow::Result;
 use yazi_macro::{render, succ};
-use yazi_parser::cmp::ShowOpt;
-use yazi_proxy::options::CmpItem;
+use yazi_parser::cmp::{CmpItem, ShowOpt};
 use yazi_shared::{event::Data, osstr_contains, osstr_starts_with};
 
 use crate::{Actor, Ctx};

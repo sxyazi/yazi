@@ -1,7 +1,7 @@
 use std::{borrow::Cow, collections::HashMap, ffi::OsString, mem};
 
 use yazi_config::{YAZI, opener::OpenerRule};
-use yazi_proxy::options::ProcessExecOpt;
+use yazi_parser::tasks::ProcessExecOpt;
 use yazi_shared::url::Url;
 
 use super::Tasks;

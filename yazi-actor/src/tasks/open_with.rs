@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::succ;
-use yazi_proxy::options::OpenWithOpt;
+use yazi_parser::mgr::OpenWithOpt;
 use yazi_shared::event::Data;
 
 use crate::{Actor, Ctx};

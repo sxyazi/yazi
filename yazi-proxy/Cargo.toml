@@ -15,6 +15,7 @@ vendored-lua = [ "mlua/vendored" ]
 [dependencies]
 yazi-config = { path = "../yazi-config", version = "25.6.11" }
 yazi-macro  = { path = "../yazi-macro", version = "25.6.11" }
+yazi-parser = { path = "../yazi-parser", version = "25.6.11" }
 yazi-shared = { path = "../yazi-shared", version = "25.6.11" }
 
 # External dependencies

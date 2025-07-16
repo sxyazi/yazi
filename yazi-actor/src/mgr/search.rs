@@ -6,8 +6,9 @@ use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
 use yazi_fs::{FilesOp, cha::Cha};
 use yazi_macro::{act, succ};
+use yazi_parser::mgr::{SearchOpt, SearchOptVia};
 use yazi_plugin::external;
-use yazi_proxy::{InputProxy, MgrProxy, options::{SearchOpt, SearchOptVia}};
+use yazi_proxy::{InputProxy, MgrProxy};
 use yazi_shared::event::Data;
 
 use crate::{Actor, Ctx};

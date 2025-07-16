@@ -13,10 +13,10 @@ async fn main() -> ExitCode {
 		Ok(()) => ExitCode::SUCCESS,
 		Err(e) => {
 			for cause in e.chain() {
-				if let Some(ioerr) = cause.downcast_ref::<std::io::Error>() {
-					if ioerr.kind() == std::io::ErrorKind::BrokenPipe {
-						return ExitCode::from(0);
-					}
+				if let Some(ioerr) = cause.downcast_ref::<std::io::Error>()
+					&& ioerr.kind() == std::io::ErrorKind::BrokenPipe
+				{
+					return ExitCode::from(0);
 				}
 			}
 			errln!("{e:#}").ok();

@@ -1,6 +1,5 @@
-use std::path::PathBuf;
+use std::{ffi::OsString, path::{MAIN_SEPARATOR_STR, PathBuf}};
 
-use yazi_proxy::options::CmpItem;
 use yazi_shared::{Id, SStr, event::{Cmd, CmdCow}};
 
 #[derive(Default)]
@@ -24,4 +23,17 @@ impl From<CmdCow> for ShowOpt {
 
 impl From<Cmd> for ShowOpt {
 	fn from(c: Cmd) -> Self { Self::from(CmdCow::from(c)) }
+}
+
+// --- Item
+#[derive(Debug, Clone)]
+pub struct CmpItem {
+	pub name:   OsString,
+	pub is_dir: bool,
+}
+
+impl CmpItem {
+	pub fn completable(&self) -> String {
+		format!("{}{}", self.name.to_string_lossy(), if self.is_dir { MAIN_SEPARATOR_STR } else { "" })
+	}
 }

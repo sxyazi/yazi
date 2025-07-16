@@ -1,6 +1,6 @@
 use std::{collections::HashMap, path::PathBuf};
 
-use yazi_proxy::options::CmpItem;
+use yazi_parser::cmp::CmpItem;
 use yazi_shared::Id;
 use yazi_widgets::Scrollable;
 

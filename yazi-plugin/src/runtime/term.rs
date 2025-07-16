@@ -1,8 +1,8 @@
 use mlua::{Function, IntoLua, IntoLuaMulti, Lua, Value};
 use yazi_adapter::{Dimension, EMULATOR};
-use yazi_binding::Composer;
+use yazi_binding::{Composer, ComposerGet, ComposerSet};
 
-pub(super) fn term(lua: &Lua) -> mlua::Result<Value> {
+pub(super) fn term() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"light" => EMULATOR.get().light.into_lua(lua),
@@ -13,7 +13,7 @@ pub(super) fn term(lua: &Lua) -> mlua::Result<Value> {
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
-	Composer::make(lua, get, set)
+	Composer::new(get, set)
 }
 
 fn cell_size(lua: &Lua) -> mlua::Result<Function> {

@@ -1,6 +1,7 @@
 use std::time::{Duration, Instant};
 
-use yazi_proxy::{AppProxy, options::NotifyOpt};
+use yazi_parser::app::NotifyOpt;
+use yazi_proxy::AppProxy;
 
 use crate::notify::{Message, Notify};
 

@@ -3,9 +3,8 @@ use std::{borrow::Cow, ffi::OsString};
 use tokio::sync::oneshot;
 use yazi_config::opener::OpenerRule;
 use yazi_macro::emit;
+use yazi_parser::{mgr::OpenWithOpt, tasks::ProcessExecOpt};
 use yazi_shared::{event::Cmd, url::Url};
-
-use crate::options::{OpenWithOpt, ProcessExecOpt};
 
 pub struct TasksProxy;
 

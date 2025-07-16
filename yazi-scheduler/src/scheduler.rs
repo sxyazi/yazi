@@ -7,7 +7,8 @@ use tokio::{fs, select, sync::mpsc::{self, UnboundedReceiver}, task::JoinHandle}
 use yazi_config::{YAZI, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
 use yazi_fs::{must_be_dir, remove_dir_clean, unique_name};
-use yazi_proxy::{MgrProxy, options::{PluginOpt, ProcessExecOpt}};
+use yazi_parser::{app::PluginOpt, tasks::ProcessExecOpt};
+use yazi_proxy::MgrProxy;
 use yazi_shared::{Id, Throttle, url::Url};
 
 use super::{Ongoing, TaskProg, TaskStage};
@@ -376,10 +377,10 @@ impl Scheduler {
 							task.succ += succ;
 							task.processed += processed;
 						}
-						if succ > 0 {
-							if let Some(fut) = ongoing.try_remove(id, TaskStage::Pending) {
-								micro.try_send(fut, LOW).ok();
-							}
+						if succ > 0
+							&& let Some(fut) = ongoing.try_remove(id, TaskStage::Pending)
+						{
+							micro.try_send(fut, LOW).ok();
 						}
 					}
 					TaskProg::Succ(id) => {

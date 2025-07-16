@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::succ;
-use yazi_proxy::options::ProcessExecOpt;
+use yazi_parser::tasks::ProcessExecOpt;
 use yazi_shared::event::Data;
 
 use crate::{Actor, Ctx};

@@ -17,11 +17,16 @@ macro_rules! runtime_mut {
 #[macro_export]
 macro_rules! deprecate {
 	($lua:ident, $tt:tt) => {{
-		let id = match $crate::runtime!($lua)?.current() {
-			Some(id) => &format!("`{id}.yazi` plugin"),
-			None => "`init.lua` config",
-		};
-		yazi_proxy::deprecate!(format!($tt, id));
+		static WARNED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+		if !WARNED.swap(true, std::sync::atomic::Ordering::Relaxed) {
+			let id = match $crate::runtime!($lua)?.current() {
+				Some(id) => &format!("`{id}.yazi` plugin"),
+				None => "`init.lua` config",
+			};
+			yazi_macro::emit!(Call(
+				yazi_shared::event::Cmd::new("app:deprecate").with("content", format!($tt, id))
+			));
+		}
 	}};
 }
 

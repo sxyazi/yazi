@@ -1,4 +1,4 @@
-use std::{borrow::Cow, mem};
+use std::{borrow::Cow, mem, ops::{Deref, DerefMut}};
 
 use ansi_to_tui::IntoText;
 use mlua::{AnyUserData, ExternalError, ExternalResult, IntoLua, Lua, MetaMethod, Table, UserData, UserDataMethods, Value};
@@ -15,6 +15,16 @@ pub struct Line {
 	pub(super) area: Area,
 
 	pub(super) inner: ratatui::text::Line<'static>,
+}
+
+impl Deref for Line {
+	type Target = ratatui::text::Line<'static>;
+
+	fn deref(&self) -> &Self::Target { &self.inner }
+}
+
+impl DerefMut for Line {
+	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.inner }
 }
 
 impl Line {
@@ -101,23 +111,23 @@ impl From<Line> for ratatui::text::Line<'static> {
 impl UserData for Line {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		crate::impl_area_method!(methods);
-		crate::impl_style_method!(methods, inner.style);
-		crate::impl_style_shorthands!(methods, inner.style);
+		crate::impl_style_method!(methods, style);
+		crate::impl_style_shorthands!(methods, style);
 
-		methods.add_method("width", |_, me, ()| Ok(me.inner.width()));
+		methods.add_method("width", |_, me, ()| Ok(me.width()));
 		methods.add_function_mut("align", |_, (ud, align): (AnyUserData, Align)| {
-			ud.borrow_mut::<Self>()?.inner.alignment = Some(align.0);
+			ud.borrow_mut::<Self>()?.alignment = Some(align.0);
 			Ok(ud)
 		});
 		methods.add_method("visible", |_, me, ()| {
-			Ok(me.inner.iter().flat_map(|s| s.content.chars()).any(|c| c.width().unwrap_or(0) > 0))
+			Ok(me.iter().flat_map(|s| s.content.chars()).any(|c| c.width().unwrap_or(0) > 0))
 		});
 		methods.add_function_mut("truncate", |_, (ud, t): (AnyUserData, Table)| {
 			let mut me = ud.borrow_mut::<Self>()?;
 
 			let max = t.raw_get("max")?;
 			if max < 1 {
-				me.inner.spans.clear();
+				me.spans.clear();
 				return Ok(ud);
 			}
 
@@ -151,8 +161,7 @@ impl UserData for Line {
 				traverse(
 					max,
 					max - ellipsis.0,
-					me.inner
-						.iter()
+					me.iter()
 						.enumerate()
 						.rev()
 						.flat_map(|(x, s)| s.content.char_indices().rev().map(move |(y, c)| (x, y, c))),
@@ -161,23 +170,22 @@ impl UserData for Line {
 				traverse(
 					max,
 					max - ellipsis.0,
-					me.inner
-						.iter()
+					me.iter()
 						.enumerate()
 						.flat_map(|(x, s)| s.content.char_indices().map(move |(y, c)| (x, y, c))),
 				)
 			};
 
 			let Some((x, y, width)) = cut else {
-				me.inner.spans.clear();
-				me.inner.spans.push(ellipsis.1);
+				me.spans.clear();
+				me.spans.push(ellipsis.1);
 				return Ok(ud);
 			};
 			if !remain {
 				return Ok(ud);
 			}
 
-			let spans = &mut me.inner.spans;
+			let spans = &mut me.spans;
 			let len = match (rtl, width == max) {
 				(a, b) if a == b => spans[x].content[y..].chars().next().map_or(0, |c| c.len_utf8()),
 				_ => 0,
@@ -219,7 +227,7 @@ mod tests {
 			.call(())
 			.unwrap();
 
-		line.inner.spans.iter().map(|s| s.content.as_ref()).collect()
+		line.spans.iter().map(|s| s.content.as_ref()).collect()
 	}
 
 	#[test]

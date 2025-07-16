@@ -92,10 +92,10 @@ impl Server {
 		let Ok(payload) = Payload::from_str(&s) else { return };
 		let Body::Hi(hi) = payload.body else { return };
 
-		if id.is_none() {
-			if let Some(ref state) = *STATE.read() {
-				state.values().for_each(|s| _ = tx.send(s.clone()));
-			}
+		if id.is_none()
+			&& let Some(ref state) = *STATE.read()
+		{
+			state.values().for_each(|s| _ = tx.send(s.clone()));
 		}
 
 		let mut clients = CLIENTS.write();

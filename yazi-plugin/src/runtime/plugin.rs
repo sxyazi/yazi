@@ -1,8 +1,8 @@
 use mlua::{Function, IntoLua, Lua, UserData, Value};
-use yazi_binding::{Composer, FileRef, UrlRef, cached_field};
+use yazi_binding::{Composer, ComposerGet, ComposerSet, FileRef, UrlRef, cached_field};
 use yazi_config::YAZI;
 
-pub(super) fn plugin(lua: &Lua) -> mlua::Result<Value> {
+pub(super) fn plugin() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		match key {
 			b"fetchers" => fetchers(lua)?,
@@ -16,7 +16,7 @@ pub(super) fn plugin(lua: &Lua) -> mlua::Result<Value> {
 
 	fn set(_: &Lua, _: &[u8], value: Value) -> mlua::Result<Value> { Ok(value) }
 
-	Composer::make(lua, get, set)
+	Composer::new(get, set)
 }
 
 fn fetchers(lua: &Lua) -> mlua::Result<Function> {

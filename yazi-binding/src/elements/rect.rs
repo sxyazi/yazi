@@ -6,7 +6,7 @@ use super::Pad;
 use crate::deprecate;
 
 #[derive(Clone, Copy, Debug, Default, FromLua)]
-pub struct Rect(pub(super) ratatui::layout::Rect);
+pub struct Rect(pub ratatui::layout::Rect);
 
 impl Deref for Rect {
 	type Target = ratatui::layout::Rect;

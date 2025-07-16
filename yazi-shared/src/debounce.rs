@@ -35,10 +35,10 @@ where
 			(Pin::new(&mut me.stream), me.interval, Pin::new_unchecked(&mut me.sleep), &mut me.last)
 		};
 
-		if sleep.poll_unpin(cx).is_ready() {
-			if let Some(last) = last.take() {
-				return Poll::Ready(Some(last));
-			}
+		if sleep.poll_unpin(cx).is_ready()
+			&& let Some(last) = last.take()
+		{
+			return Poll::Ready(Some(last));
 		}
 
 		while let Poll::Ready(next) = stream.poll_next_unpin(cx) {
