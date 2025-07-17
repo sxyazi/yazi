@@ -10,6 +10,10 @@ impl TryFrom<CmdCow> for ShowOpt {
 	type Error = anyhow::Error;
 
 	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
+		if let Some(opt) = c.take_any2("opt") {
+			return opt;
+		}
+
 		Ok(Self { cands: c.take_any("candidates").unwrap_or_default(), silent: c.bool("silent") })
 	}
 }

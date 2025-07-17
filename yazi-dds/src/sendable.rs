@@ -7,7 +7,7 @@ use yazi_shared::{event::{Data, DataKey}, replace_cow};
 pub struct Sendable;
 
 impl Sendable {
-	pub fn value_to_data(value: Value) -> mlua::Result<Data> {
+	pub fn value_to_data(lua: &Lua, value: Value) -> mlua::Result<Data> {
 		Ok(match value {
 			Value::Nil => Data::Nil,
 			Value::Boolean(b) => Data::Boolean(b),
@@ -30,7 +30,7 @@ impl Sendable {
 					if k == DataKey::Integer(i) {
 						i += 1;
 					}
-					map.insert(k, Self::value_to_data(v)?);
+					map.insert(k, Self::value_to_data(lua, v)?);
 				}
 
 				if map.len() == i as usize - 1 {
@@ -54,8 +54,8 @@ impl Sendable {
 				Some(t) if t == TypeId::of::<yazi_fs::FilesOp>() => {
 					Data::Any(Box::new(ud.take::<yazi_fs::FilesOp>()?))
 				}
-				Some(t) if t == TypeId::of::<super::body::BodyYankIter>() => {
-					Data::Any(Box::new(ud.take::<super::body::BodyYankIter>()?))
+				Some(t) if t == TypeId::of::<yazi_parser::mgr::UpdateYankedIter>() => {
+					Data::Any(Box::new(ud.take::<yazi_parser::mgr::UpdateYankedIter>()?.into_opt(lua)?))
 				}
 				_ => Err(format!("unsupported userdata included: {ud:?}").into_lua_err())?,
 			},
@@ -83,13 +83,15 @@ impl Sendable {
 			}
 			Data::Url(u) => yazi_binding::Url::new(u).into_lua(lua)?,
 			Data::Urn(u) => yazi_binding::Urn::new(u).into_lua(lua)?,
-			Data::Any(a) => Value::UserData(if a.is::<yazi_fs::FilesOp>() {
-				lua.create_any_userdata(*a.downcast::<yazi_fs::FilesOp>().unwrap())?
-			} else if a.is::<super::body::BodyYankIter>() {
-				lua.create_userdata(*a.downcast::<super::body::BodyYankIter>().unwrap())?
-			} else {
-				Err("unsupported Data::Any included".into_lua_err())?
-			}),
+			Data::Any(a) => {
+				if a.is::<yazi_fs::FilesOp>() {
+					lua.create_any_userdata(*a.downcast::<yazi_fs::FilesOp>().unwrap())?.into_lua(lua)?
+				} else if a.is::<yazi_parser::mgr::UpdateYankedOpt>() {
+					a.downcast::<yazi_parser::mgr::UpdateYankedOpt>().unwrap().into_lua(lua)?
+				} else {
+					Err("unsupported Data::Any included".into_lua_err())?
+				}
+			}
 			data => Self::data_to_value_ref(lua, &data)?,
 		})
 	}
@@ -120,28 +122,30 @@ impl Sendable {
 			Data::Url(u) => yazi_binding::Url::new(u.clone()).into_lua(lua)?,
 			Data::Urn(u) => yazi_binding::Urn::new(u.clone()).into_lua(lua)?,
 			Data::Bytes(b) => Value::String(lua.create_string(b)?),
-			Data::Any(a) => Value::UserData(if let Some(t) = a.downcast_ref::<yazi_fs::FilesOp>() {
-				lua.create_any_userdata(t.clone())?
-			} else if let Some(t) = a.downcast_ref::<super::body::BodyYankIter>() {
-				lua.create_userdata(t.clone())?
-			} else {
-				Err("unsupported Data::Any included".into_lua_err())?
-			}),
+			Data::Any(a) => {
+				if let Some(t) = a.downcast_ref::<yazi_fs::FilesOp>() {
+					lua.create_any_userdata(t.clone())?.into_lua(lua)?
+				} else if let Some(t) = a.downcast_ref::<yazi_parser::mgr::UpdateYankedOpt>() {
+					t.clone().into_lua(lua)?
+				} else {
+					Err("unsupported Data::Any included".into_lua_err())?
+				}
+			}
 		})
 	}
 
-	pub fn table_to_args(t: Table) -> mlua::Result<HashMap<DataKey, Data>> {
+	pub fn table_to_args(lua: &Lua, t: Table) -> mlua::Result<HashMap<DataKey, Data>> {
 		let mut args = HashMap::with_capacity(t.raw_len());
 		for pair in t.pairs::<Value, Value>() {
 			let (k, v) = pair?;
 			match k {
 				Value::Integer(i) if i > 0 => {
-					args.insert(DataKey::Integer(i - 1), Self::value_to_data(v)?);
+					args.insert(DataKey::Integer(i - 1), Self::value_to_data(lua, v)?);
 				}
 				Value::String(s) => {
 					args.insert(
 						DataKey::String(Cow::Owned(s.to_str()?.replace('_', "-"))),
-						Self::value_to_data(v)?,
+						Self::value_to_data(lua, v)?,
 					);
 				}
 				_ => return Err("invalid key in Cmd".into_lua_err()),
@@ -182,8 +186,8 @@ impl Sendable {
 		data.into_iter().map(|d| Self::data_to_value(lua, d)).collect()
 	}
 
-	pub fn values_to_list(values: MultiValue) -> mlua::Result<Vec<Data>> {
-		values.into_iter().map(Self::value_to_data).collect()
+	pub fn values_to_list(lua: &Lua, values: MultiValue) -> mlua::Result<Vec<Data>> {
+		values.into_iter().map(|v| Self::value_to_data(lua, v)).collect()
 	}
 }
 

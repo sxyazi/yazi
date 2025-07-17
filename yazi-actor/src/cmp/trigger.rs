@@ -3,9 +3,10 @@ use std::{ffi::OsString, mem, path::{MAIN_SEPARATOR_STR, Path, PathBuf}};
 use anyhow::Result;
 use tokio::fs;
 use yazi_fs::{CWD, expand_path};
-use yazi_macro::{act, emit, render, succ};
+use yazi_macro::{act, render, succ};
 use yazi_parser::cmp::{CmpItem, ShowOpt, TriggerOpt};
-use yazi_shared::{event::{Cmd, Data}, natsort};
+use yazi_proxy::CmpProxy;
+use yazi_shared::{event::Data, natsort};
 
 use crate::{Actor, Ctx};
 
@@ -55,13 +56,7 @@ impl Actor for Trigger {
 				cache.sort_unstable_by(|a, b| {
 					natsort(a.name.as_encoded_bytes(), b.name.as_encoded_bytes(), false)
 				});
-				emit!(Call(
-					Cmd::new("cmp:show")
-						.with_any("cache", cache)
-						.with_any("cache-name", parent)
-						.with("word", word)
-						.with("ticket", ticket)
-				));
+				CmpProxy::show(ShowOpt { cache, cache_name: parent, word: word.into(), ticket });
 			}
 
 			Ok::<_, anyhow::Error>(())

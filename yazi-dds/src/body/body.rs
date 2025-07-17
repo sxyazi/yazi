@@ -47,9 +47,9 @@ impl Body<'static> {
 		})
 	}
 
-	pub fn from_lua(kind: &str, value: Value) -> mlua::Result<Self> {
+	pub fn from_lua(lua: &Lua, kind: &str, value: Value) -> mlua::Result<Self> {
 		Self::validate(kind).into_lua_err()?;
-		BodyCustom::from_lua(kind, value)
+		BodyCustom::from_lua(lua, kind, value)
 	}
 
 	pub fn validate(kind: &str) -> Result<()> {

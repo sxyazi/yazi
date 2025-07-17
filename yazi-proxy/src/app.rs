@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use tokio::sync::oneshot;
 use yazi_macro::emit;
-use yazi_parser::app::{NotifyLevel, NotifyOpt, PluginOpt};
+use yazi_parser::app::{NotifyLevel, NotifyOpt, PluginOpt, TasksProgress};
 use yazi_shared::event::Cmd;
 
 pub struct AppProxy;
@@ -50,5 +50,9 @@ impl AppProxy {
 
 	pub fn plugin_do(opt: PluginOpt) {
 		emit!(Call(Cmd::new("app:plugin_do").with_any("opt", opt)));
+	}
+
+	pub fn update_progress(progress: TasksProgress) {
+		emit!(Call(Cmd::new("app:update_progress").with_any("progress", progress)));
 	}
 }

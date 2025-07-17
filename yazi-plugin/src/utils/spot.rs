@@ -1,9 +1,8 @@
 use mlua::{AnyUserData, Function, Lua, Table};
 use yazi_binding::elements::{Edge, Renderable};
 use yazi_config::THEME;
-use yazi_macro::emit;
-use yazi_parser::tab::SpotLock;
-use yazi_shared::event::Cmd;
+use yazi_parser::tab::{SpotLock, UpdateSpottedOpt};
+use yazi_proxy::MgrProxy;
 
 use super::Utils;
 
@@ -32,7 +31,7 @@ impl Utils {
 				}),
 				Renderable::Table(Box::new(table)),
 			];
-			emit!(Call(Cmd::new("mgr:update_spotted").with_any("lock", lock)));
+			MgrProxy::update_spotted(UpdateSpottedOpt { lock });
 
 			Ok(())
 		})
@@ -43,7 +42,7 @@ impl Utils {
 			let mut lock = SpotLock::try_from(t)?;
 			lock.data = widgets.into_iter().map(Renderable::try_from).collect::<mlua::Result<_>>()?;
 
-			emit!(Call(Cmd::new("mgr:update_spotted").with_any("lock", lock)));
+			MgrProxy::update_spotted(UpdateSpottedOpt { lock });
 			Ok(())
 		})
 	}

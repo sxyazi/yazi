@@ -1,5 +1,6 @@
 use std::{any::Any, borrow::Cow, collections::HashMap};
 
+use anyhow::{Result, bail};
 use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize, de};
 
@@ -77,6 +78,18 @@ impl Data {
 		match self {
 			Self::Any(b) => b.downcast::<T>().ok().map(|b| *b),
 			_ => None,
+		}
+	}
+
+	// FIXME: find a better name
+	#[inline]
+	pub fn into_any2<T: 'static>(self) -> Result<T> {
+		if let Self::Any(b) = self
+			&& let Ok(t) = b.downcast::<T>()
+		{
+			Ok(*t)
+		} else {
+			bail!("Failed to downcast Data into {}", std::any::type_name::<T>())
 		}
 	}
 

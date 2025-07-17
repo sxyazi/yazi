@@ -1,9 +1,9 @@
 use mlua::{AnyUserData, ExternalError, Function, IntoLuaMulti, Lua, Table, Value};
 use yazi_binding::{Error, elements::{Area, Renderable, Text}};
 use yazi_config::YAZI;
-use yazi_macro::emit;
-use yazi_parser::tab::PreviewLock;
-use yazi_shared::{errors::PeekError, event::Cmd};
+use yazi_parser::tab::{PreviewLock, UpdatePeekedOpt};
+use yazi_proxy::MgrProxy;
+use yazi_shared::errors::PeekError;
 
 use super::Utils;
 use crate::external::Highlighter;
@@ -29,7 +29,7 @@ impl Utils {
 				scroll: Default::default(),
 			})];
 
-			emit!(Call(Cmd::new("mgr:update_peeked").with_any("lock", lock)));
+			MgrProxy::update_peeked(UpdatePeekedOpt { lock });
 			().into_lua_multi(&lua)
 		})
 	}
@@ -56,7 +56,7 @@ impl Utils {
 				_ => Err("preview widget must be a renderable element or a table of them".into_lua_err())?,
 			};
 
-			emit!(Call(Cmd::new("mgr:update_peeked").with_any("lock", lock)));
+			MgrProxy::update_peeked(UpdatePeekedOpt { lock });
 			Ok(())
 		})
 	}

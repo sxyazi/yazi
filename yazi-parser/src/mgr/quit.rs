@@ -1,6 +1,8 @@
+use mlua::{IntoLua, Lua, LuaSerdeExt, Value};
+use serde::{Deserialize, Serialize};
 use yazi_shared::event::{CmdCow, Data, EventQuit};
 
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize)]
 pub struct QuitOpt {
 	pub code:        i32,
 	pub no_cwd_file: bool,
@@ -19,4 +21,8 @@ impl From<QuitOpt> for EventQuit {
 	fn from(value: QuitOpt) -> Self {
 		EventQuit { code: value.code, no_cwd_file: value.no_cwd_file, ..Default::default() }
 	}
+}
+
+impl IntoLua for QuitOpt {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.to_value(&self) }
 }

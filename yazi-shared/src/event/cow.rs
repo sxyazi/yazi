@@ -1,5 +1,7 @@
 use std::{borrow::Cow, ops::Deref};
 
+use anyhow::Result;
+
 use super::{Cmd, Data, DataKey};
 use crate::{SStr, url::Url};
 
@@ -72,6 +74,14 @@ impl CmdCow {
 	pub fn take_any<T: 'static>(&mut self, name: impl Into<DataKey>) -> Option<T> {
 		match self {
 			Self::Owned(c) => c.take_any(name),
+			Self::Borrowed(_) => None,
+		}
+	}
+
+	#[inline]
+	pub fn take_any2<T: 'static>(&mut self, name: impl Into<DataKey>) -> Option<Result<T>> {
+		match self {
+			Self::Owned(c) => c.take_any2(name),
 			Self::Borrowed(_) => None,
 		}
 	}
