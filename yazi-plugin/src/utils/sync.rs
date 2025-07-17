@@ -22,7 +22,7 @@ impl Utils {
 					let Some(cur) = runtime!(lua)?.current_owned() else {
 						return Err("block spawned by `ya.sync()` must be called in a plugin").into_lua_err();
 					};
-					Sendable::list_to_values(&lua, Self::retrieve(cur, block, args).await?)
+					Sendable::list_to_values(&lua, Self::retrieve(&lua, cur, block, args).await?)
 				})
 			})
 		} else {
@@ -79,8 +79,13 @@ impl Utils {
 		lua.create_async_function(|_lua, _futs: MultiValue| async move { Ok(()) })
 	}
 
-	async fn retrieve(id: String, calls: usize, args: MultiValue) -> mlua::Result<Vec<Data>> {
-		let args = Sendable::values_to_list(args)?;
+	async fn retrieve(
+		lua: &Lua,
+		id: String,
+		calls: usize,
+		args: MultiValue,
+	) -> mlua::Result<Vec<Data>> {
+		let args = Sendable::values_to_list(lua, args)?;
 		let (tx, rx) = oneshot::channel::<Vec<Data>>();
 
 		let callback: PluginCallback = {
@@ -95,7 +100,7 @@ impl Utils {
 					.chain(args.into_iter().map(|d| Sendable::data_to_value(lua, d)))
 					.collect::<mlua::Result<MultiValue>>()?;
 
-				let values = Sendable::values_to_list(block.call(args)?)?;
+				let values = Sendable::values_to_list(lua, block.call(args)?)?;
 				tx.send(values).map_err(|_| "send failed".into_lua_err())
 			})
 		};

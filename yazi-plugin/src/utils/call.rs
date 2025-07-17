@@ -17,18 +17,18 @@ impl Utils {
 	}
 
 	pub(super) fn emit(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|_, (name, args): (String, Table)| {
+		lua.create_function(|lua, (name, args): (String, Table)| {
 			let mut cmd = Cmd::new_or(name, Layer::Mgr)?;
-			cmd.args = Sendable::table_to_args(args)?;
+			cmd.args = Sendable::table_to_args(lua, args)?;
 			Ok(emit!(Call(cmd)))
 		})
 	}
 
 	pub(super) fn mgr_emit(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|_, (name, args): (String, Table)| {
+		lua.create_function(|lua, (name, args): (String, Table)| {
 			emit!(Call(Cmd {
 				name:  name.into(),
-				args:  Sendable::table_to_args(args)?,
+				args:  Sendable::table_to_args(lua, args)?,
 				layer: Layer::Mgr,
 			}));
 			Ok(())

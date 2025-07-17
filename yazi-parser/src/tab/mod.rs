@@ -5,7 +5,6 @@ yazi_macro::mod_flat!(
 	enter
 	escape
 	filter
-	filter_do
 	find
 	find_arrow
 	find_do

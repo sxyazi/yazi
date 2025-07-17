@@ -6,14 +6,15 @@ pub struct Pubsub;
 
 impl Pubsub {
 	pub(super) fn r#pub(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|_, (kind, value): (mlua::String, Value)| {
-			yazi_dds::Pubsub::r#pub(Body::from_lua(&kind.to_str()?, value)?).into_lua_err()
+		lua.create_function(|lua, (kind, value): (mlua::String, Value)| {
+			yazi_dds::Pubsub::r#pub(Body::from_lua(lua, &kind.to_str()?, value)?).into_lua_err()
 		})
 	}
 
 	pub(super) fn pub_to(lua: &Lua) -> mlua::Result<Function> {
-		lua.create_function(|_, (receiver, kind, value): (Id, mlua::String, Value)| {
-			yazi_dds::Pubsub::pub_to(*receiver, Body::from_lua(&kind.to_str()?, value)?).into_lua_err()
+		lua.create_function(|lua, (receiver, kind, value): (Id, mlua::String, Value)| {
+			yazi_dds::Pubsub::pub_to(*receiver, Body::from_lua(lua, &kind.to_str()?, value)?)
+				.into_lua_err()
 		})
 	}
 

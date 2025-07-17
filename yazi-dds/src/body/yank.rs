@@ -1,28 +1,24 @@
 use std::{borrow::Cow, collections::HashSet};
 
-use mlua::{IntoLua, Lua, MetaMethod, UserData, Value};
+use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
+use yazi_parser::mgr::UpdateYankedOpt;
 use yazi_shared::url::Url;
 
 use super::Body;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct BodyYank<'a> {
-	pub cut:  bool,
-	pub urls: Cow<'a, HashSet<Url>>,
-	#[serde(skip)]
-	dummy:    bool,
-}
+pub struct BodyYank<'a>(UpdateYankedOpt<'a>);
 
 impl<'a> BodyYank<'a> {
 	pub fn borrowed(cut: bool, urls: &'a HashSet<Url>) -> Body<'a> {
-		Self { cut, urls: Cow::Borrowed(urls), dummy: false }.into()
+		Self(UpdateYankedOpt { cut, urls: Cow::Borrowed(urls) }).into()
 	}
 }
 
 impl BodyYank<'static> {
 	pub fn owned(cut: bool, _: &HashSet<Url>) -> Body<'static> {
-		Self { cut, urls: Default::default(), dummy: true }.into()
+		Self(UpdateYankedOpt { cut, urls: Default::default() }).into()
 	}
 }
 
@@ -31,36 +27,5 @@ impl<'a> From<BodyYank<'a>> for Body<'a> {
 }
 
 impl IntoLua for BodyYank<'static> {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		if let Some(Cow::Owned(urls)) = Some(self.urls).filter(|_| !self.dummy) {
-			BodyYankIter { cut: self.cut, urls: urls.into_iter().collect() }.into_lua(lua)
-		} else {
-			lua.create_table()?.into_lua(lua)
-		}
-	}
-}
-
-// --- Iterator
-#[derive(Clone)]
-pub struct BodyYankIter {
-	pub cut:  bool,
-	pub urls: Vec<Url>,
-}
-
-impl UserData for BodyYankIter {
-	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
-		fields.add_field_method_get("cut", |_, me| Ok(me.cut));
-	}
-
-	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.urls.len()));
-
-		methods.add_meta_method(MetaMethod::Index, |_, me, idx: usize| {
-			Ok(if idx > me.urls.len() || idx == 0 {
-				None
-			} else {
-				Some(yazi_binding::Url::new(me.urls[idx - 1].clone()))
-			})
-		});
-	}
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { self.0.into_lua(lua) }
 }

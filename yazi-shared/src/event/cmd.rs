@@ -85,20 +85,16 @@ impl Cmd {
 	pub fn get(&self, name: impl Into<DataKey>) -> Option<&Data> { self.args.get(&name.into()) }
 
 	#[inline]
-	pub fn str(&self, name: impl Into<DataKey>) -> Option<&str> {
-		self.get(name).and_then(Data::as_str)
-	}
+	pub fn str(&self, name: impl Into<DataKey>) -> Option<&str> { self.get(name)?.as_str() }
 
 	#[inline]
 	pub fn bool(&self, name: impl Into<DataKey>) -> bool { self.maybe_bool(name).unwrap_or(false) }
 
 	#[inline]
-	pub fn maybe_bool(&self, name: impl Into<DataKey>) -> Option<bool> {
-		self.get(name).and_then(Data::as_bool)
-	}
+	pub fn maybe_bool(&self, name: impl Into<DataKey>) -> Option<bool> { self.get(name)?.as_bool() }
 
 	#[inline]
-	pub fn id(&self, name: impl Into<DataKey>) -> Option<Id> { self.get(name).and_then(Data::as_id) }
+	pub fn id(&self, name: impl Into<DataKey>) -> Option<Id> { self.get(name)?.as_id() }
 
 	#[inline]
 	pub fn first(&self) -> Option<&Data> { self.get(0) }
@@ -136,7 +132,12 @@ impl Cmd {
 
 	#[inline]
 	pub fn take_any<T: 'static>(&mut self, name: impl Into<DataKey>) -> Option<T> {
-		self.args.remove(&name.into()).and_then(|d| d.into_any())
+		self.args.remove(&name.into())?.into_any()
+	}
+
+	#[inline]
+	pub fn take_any2<T: 'static>(&mut self, name: impl Into<DataKey>) -> Option<Result<T>> {
+		self.args.remove(&name.into()).map(Data::into_any2)
 	}
 
 	// Parse

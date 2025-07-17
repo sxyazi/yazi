@@ -9,7 +9,7 @@ use crate::{Actor, Ctx};
 pub struct UpdateYanked;
 
 impl Actor for UpdateYanked {
-	type Options = UpdateYankedOpt;
+	type Options = UpdateYankedOpt<'static>;
 
 	const NAME: &'static str = "update_yanked";
 
@@ -18,7 +18,7 @@ impl Actor for UpdateYanked {
 			succ!();
 		}
 
-		cx.mgr.yanked = Yanked::new(opt.cut, opt.urls);
+		cx.mgr.yanked = Yanked::new(opt.cut, opt.urls.into_owned());
 		succ!(render!());
 	}
 }

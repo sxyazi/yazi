@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use yazi_macro::emit;
-use yazi_parser::mgr::{OpenDoOpt, SearchOpt};
+use yazi_parser::{mgr::{OpenDoOpt, SearchOpt}, tab::{FilterOpt, FindDoOpt, UpdatePeekedOpt, UpdateSpottedOpt}};
 use yazi_shared::{SStr, event::Cmd, url::Url};
 
 pub struct MgrProxy;
@@ -29,6 +29,14 @@ impl MgrProxy {
 		));
 	}
 
+	pub fn find_do(opt: FindDoOpt) {
+		emit!(Call(Cmd::new("mgr:find_do").with_any("opt", opt)));
+	}
+
+	pub fn filter_do(opt: FilterOpt) {
+		emit!(Call(Cmd::new("mgr:filter_do").with_any("opt", opt)));
+	}
+
 	pub fn search_do(opt: SearchOpt) {
 		emit!(Call(
 			// TODO: use second positional argument instead of `args` parameter
@@ -36,6 +44,14 @@ impl MgrProxy {
 				.with("via", Cow::Borrowed(opt.via.into_str()))
 				.with("args", opt.args_raw.into_owned())
 		));
+	}
+
+	pub fn update_peeked(opt: UpdatePeekedOpt) {
+		emit!(Call(Cmd::new("mgr:update_peeked").with_any("opt", opt)));
+	}
+
+	pub fn update_spotted(opt: UpdateSpottedOpt) {
+		emit!(Call(Cmd::new("mgr:update_spotted").with_any("opt", opt)));
 	}
 
 	pub fn update_tasks(url: &Url) {

@@ -5,8 +5,8 @@ use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use yazi_binding::{deprecate, elements::{Line, Pos, Text}};
 use yazi_config::{keymap::{Chord, Key}, popup::{ConfirmCfg, InputCfg}};
-use yazi_macro::emit;
-use yazi_proxy::{AppProxy, ConfirmProxy, InputProxy};
+use yazi_parser::which::ShowOpt;
+use yazi_proxy::{AppProxy, ConfirmProxy, InputProxy, WhichProxy};
 use yazi_shared::{Debounce, event::Cmd};
 
 use super::Utils;
@@ -29,11 +29,7 @@ impl Utils {
 			}
 
 			drop(tx);
-			emit!(Call(
-				Cmd::new("which:show")
-					.with_any("candidates", cands)
-					.with("silent", t.raw_get::<bool>("silent").unwrap_or_default())
-			));
+			WhichProxy::show(ShowOpt { cands, silent: t.raw_get("silent").unwrap_or_default() });
 
 			Ok(rx.recv().await.map(|idx| idx + 1))
 		})

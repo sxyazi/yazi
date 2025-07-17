@@ -4,11 +4,10 @@ use anyhow::Result;
 use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
-use yazi_fs::FilterCase;
-use yazi_macro::{emit, succ};
-use yazi_parser::tab::FindOpt;
-use yazi_proxy::InputProxy;
-use yazi_shared::{Debounce, errors::InputError, event::{Cmd, Data}};
+use yazi_macro::succ;
+use yazi_parser::tab::{FindDoOpt, FindOpt};
+use yazi_proxy::{InputProxy, MgrProxy};
+use yazi_shared::{Debounce, errors::InputError, event::Data};
 
 use crate::{Actor, Ctx};
 
@@ -27,12 +26,7 @@ impl Actor for Find {
 			pin!(rx);
 
 			while let Some(Ok(s)) | Some(Err(InputError::Typed(s))) = rx.next().await {
-				emit!(Call(
-					Cmd::args("mgr:find_do", [s])
-						.with("previous", opt.prev)
-						.with("smart", opt.case == FilterCase::Smart)
-						.with("insensitive", opt.case == FilterCase::Insensitive)
-				));
+				MgrProxy::find_do(FindDoOpt { query: s.into(), prev: opt.prev, case: opt.case });
 			}
 		});
 		succ!();

@@ -1,6 +1,6 @@
 use std::{ffi::OsString, path::{MAIN_SEPARATOR_STR, PathBuf}};
 
-use yazi_shared::{Id, SStr, event::{Cmd, CmdCow}};
+use yazi_shared::{Id, SStr, event::CmdCow};
 
 #[derive(Default)]
 pub struct ShowOpt {
@@ -10,19 +10,21 @@ pub struct ShowOpt {
 	pub ticket:     Id,
 }
 
-impl From<CmdCow> for ShowOpt {
-	fn from(mut c: CmdCow) -> Self {
-		Self {
+impl TryFrom<CmdCow> for ShowOpt {
+	type Error = anyhow::Error;
+
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
+		if let Some(opt) = c.take_any2("opt") {
+			return opt;
+		}
+
+		Ok(Self {
 			cache:      c.take_any("cache").unwrap_or_default(),
 			cache_name: c.take_any("cache-name").unwrap_or_default(),
 			word:       c.take_str("word").unwrap_or_default(),
 			ticket:     c.id("ticket").unwrap_or_default(),
-		}
+		})
 	}
-}
-
-impl From<Cmd> for ShowOpt {
-	fn from(c: Cmd) -> Self { Self::from(CmdCow::from(c)) }
 }
 
 // --- Item

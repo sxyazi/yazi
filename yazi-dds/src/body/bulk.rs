@@ -41,6 +41,7 @@ impl IntoLua for BodyBulk<'static> {
 }
 
 // --- Iterator
+// TODO: use `yazi_binding::Iter` instead
 pub struct BodyBulkIter {
 	pub inner: hash_map::IntoIter<Cow<'static, Url>, Cow<'static, Url>>,
 }

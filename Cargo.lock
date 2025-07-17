@@ -3670,6 +3670,7 @@ dependencies = [
  "yazi-boot",
  "yazi-fs",
  "yazi-macro",
+ "yazi-parser",
  "yazi-shared",
 ]
 
@@ -3772,7 +3773,6 @@ dependencies = [
  "yazi-binding",
  "yazi-boot",
  "yazi-config",
- "yazi-dds",
  "yazi-fs",
  "yazi-macro",
  "yazi-shared",

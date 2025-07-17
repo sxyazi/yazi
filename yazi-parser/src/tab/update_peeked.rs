@@ -11,6 +11,10 @@ impl TryFrom<CmdCow> for UpdatePeekedOpt {
 	type Error = anyhow::Error;
 
 	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
+		if let Some(opt) = c.take_any2("opt") {
+			return opt;
+		}
+
 		let Some(lock) = c.take_any("lock") else {
 			bail!("Invalid 'lock' argument in UpdatePeekedOpt");
 		};
