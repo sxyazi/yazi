@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::{render, succ};
-use yazi_parser::tab::UpdateSpottedOpt;
+use yazi_parser::mgr::UpdateSpottedOpt;
 use yazi_shared::event::Data;
 
 use crate::{Actor, Ctx};
@@ -10,7 +10,7 @@ pub struct UpdateSpotted;
 impl Actor for UpdateSpotted {
 	type Options = UpdateSpottedOpt;
 
-	const NAME: &'static str = "update_spotted";
+	const NAME: &str = "update_spotted";
 
 	fn act(cx: &mut Ctx, mut opt: Self::Options) -> Result<Data> {
 		let tab = cx.tab_mut();

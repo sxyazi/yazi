@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_actor::Ctx;
 use yazi_boot::BOOT;
 use yazi_macro::{act, succ};
-use yazi_parser::{VoidOpt, tab::CdSource};
+use yazi_parser::{VoidOpt, mgr::CdSource};
 use yazi_shared::{event::Data, url::Url};
 
 use crate::app::App;

@@ -13,7 +13,7 @@ pub struct UpdateMimes;
 impl Actor for UpdateMimes {
 	type Options = UpdateMimesOpt;
 
-	const NAME: &'static str = "update_mimes";
+	const NAME: &str = "update_mimes";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let linked = LINKED.read();

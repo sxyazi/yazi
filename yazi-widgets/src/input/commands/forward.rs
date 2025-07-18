@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::act;
-use yazi_parser::tab::ForwardOpt;
+use yazi_parser::mgr::ForwardOpt;
 use yazi_shared::{CharKind, event::Data};
 
 use crate::input::{Input, op::InputOp};

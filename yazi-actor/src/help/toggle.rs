@@ -10,7 +10,7 @@ pub struct Toggle;
 impl Actor for Toggle {
 	type Options = ToggleOpt;
 
-	const NAME: &'static str = "toggle";
+	const NAME: &str = "toggle";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let help = &mut cx.help;

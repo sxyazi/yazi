@@ -10,7 +10,7 @@ pub struct Spot;
 impl Actor for Spot {
 	type Options = SpotOpt;
 
-	const NAME: &'static str = "spot";
+	const NAME: &str = "spot";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let Some(hovered) = cx.hovered().cloned() else { succ!() };

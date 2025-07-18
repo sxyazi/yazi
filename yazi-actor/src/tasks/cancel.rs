@@ -10,7 +10,7 @@ pub struct Cancel;
 impl Actor for Cancel {
 	type Options = VoidOpt;
 
-	const NAME: &'static str = "cancel";
+	const NAME: &str = "cancel";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		let tasks = &mut cx.tasks;

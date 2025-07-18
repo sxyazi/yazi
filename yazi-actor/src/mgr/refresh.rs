@@ -14,7 +14,7 @@ pub struct Refresh;
 impl Actor for Refresh {
 	type Options = VoidOpt;
 
-	const NAME: &'static str = "refresh";
+	const NAME: &str = "refresh";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		if let (_, Some(s)) = (CWD.set(cx.cwd()), YAZI.mgr.title()) {

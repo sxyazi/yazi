@@ -12,7 +12,7 @@ pub struct Watch;
 impl Actor for Watch {
 	type Options = VoidOpt;
 
-	const NAME: &'static str = "watch";
+	const NAME: &str = "watch";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		let it = iter::once(cx.core.mgr.tabs.active().cwd())

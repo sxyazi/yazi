@@ -2,7 +2,7 @@ use std::{ffi::OsString, path::Path};
 
 use anyhow::{Result, bail};
 use yazi_macro::{act, succ};
-use yazi_parser::tab::CopyOpt;
+use yazi_parser::mgr::CopyOpt;
 use yazi_shared::event::Data;
 use yazi_widgets::CLIPBOARD;
 
@@ -13,7 +13,7 @@ pub struct Copy;
 impl Actor for Copy {
 	type Options = CopyOpt;
 
-	const NAME: &'static str = "copy";
+	const NAME: &str = "copy";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;

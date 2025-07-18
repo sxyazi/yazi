@@ -10,7 +10,7 @@ pub struct Close;
 impl Actor for Close {
 	type Options = CloseOpt;
 
-	const NAME: &'static str = "close";
+	const NAME: &str = "close";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let pick = &mut cx.pick;

@@ -1,5 +1,6 @@
 use anyhow::Result;
-use yazi_actor::Ctx;
+use yazi_actor::{Actor, Ctx};
+use yazi_dds::body::Body;
 use yazi_macro::{act, succ};
 use yazi_shared::{Layer, event::{CmdCow, Data}};
 use yazi_widgets::input::InputMode;
@@ -56,10 +57,16 @@ impl<'a> Executor<'a> {
 	fn mgr(&mut self, cmd: CmdCow) -> Result<Data> {
 		let cx = &mut Ctx::new(&mut self.app.core, &cmd)?;
 
+		// FIXME: move the DDS part to `yazi-actor`
 		macro_rules! on {
 			($name:ident) => {
 				if cmd.name == stringify!($name) {
-					return act!(mgr:$name, cx, cmd);
+					let opt = <act!(mgr:$name) as Actor>::Options::try_from(cmd)?;
+					return if let Ok(body) = Body::try_from(&opt) && App::accept_payload2(cx.core, body)? == true {
+						succ!()
+					} else {
+						act!(mgr:$name, cx, opt)
+					};
 				}
 			};
 		}

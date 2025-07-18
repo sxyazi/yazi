@@ -10,7 +10,7 @@ pub struct Paste;
 impl Actor for Paste {
 	type Options = PasteOpt;
 
-	const NAME: &'static str = "paste";
+	const NAME: &str = "paste";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let mgr = &mut cx.core.mgr;

@@ -10,7 +10,7 @@ pub struct UpdatePaged;
 impl Actor for UpdatePaged {
 	type Options = UpdatePagedOpt;
 
-	const NAME: &'static str = "update_paged";
+	const NAME: &str = "update_paged";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		if opt.only_if.is_some_and(|u| u != *cx.cwd()) {

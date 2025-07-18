@@ -12,7 +12,7 @@ pub struct Seek;
 impl Actor for Seek {
 	type Options = SeekOpt;
 
-	const NAME: &'static str = "seek";
+	const NAME: &str = "seek";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let Some(hovered) = cx.hovered() else {

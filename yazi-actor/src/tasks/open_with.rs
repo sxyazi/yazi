@@ -10,7 +10,7 @@ pub struct OpenWith;
 impl Actor for OpenWith {
 	type Options = OpenWithOpt;
 
-	const NAME: &'static str = "open_with";
+	const NAME: &str = "open_with";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		succ!(cx.tasks.process_from_opener(

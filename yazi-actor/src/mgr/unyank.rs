@@ -10,7 +10,7 @@ pub struct Unyank;
 impl Actor for Unyank {
 	type Options = VoidOpt;
 
-	const NAME: &'static str = "unyank";
+	const NAME: &str = "unyank";
 
 	fn act(cx: &mut crate::Ctx, _: Self::Options) -> Result<Data> {
 		let repeek = cx.hovered().is_some_and(|f| f.is_dir() && cx.mgr.yanked.contains_in(&f.url));

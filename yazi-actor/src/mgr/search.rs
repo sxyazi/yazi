@@ -18,7 +18,7 @@ pub struct Search;
 impl Actor for Search {
 	type Options = SearchOpt;
 
-	const NAME: &'static str = "search";
+	const NAME: &str = "search";
 
 	fn act(cx: &mut Ctx, mut opt: Self::Options) -> Result<Data> {
 		if let Some(handle) = cx.tab_mut().search.take() {
@@ -44,7 +44,7 @@ pub struct SearchDo;
 impl Actor for SearchDo {
 	type Options = SearchOpt;
 
-	const NAME: &'static str = "search_do";
+	const NAME: &str = "search_do";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let tab = cx.tab_mut();
@@ -99,7 +99,7 @@ pub struct SearchStop;
 impl Actor for SearchStop {
 	type Options = ();
 
-	const NAME: &'static str = "search_stop";
+	const NAME: &str = "search_stop";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		let tab = cx.tab_mut();

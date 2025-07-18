@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_fs::Filter;
 use yazi_macro::{act, render, succ};
-use yazi_parser::tab::FilterOpt;
+use yazi_parser::mgr::FilterOpt;
 use yazi_shared::event::Data;
 
 use crate::{Actor, Ctx};
@@ -11,7 +11,7 @@ pub struct FilterDo;
 impl Actor for FilterDo {
 	type Options = FilterOpt;
 
-	const NAME: &'static str = "filter_do";
+	const NAME: &str = "filter_do";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let filter = if opt.query.is_empty() { None } else { Some(Filter::new(&opt.query, opt.case)?) };

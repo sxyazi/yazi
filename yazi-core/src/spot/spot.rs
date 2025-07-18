@@ -2,7 +2,7 @@ use tokio_util::sync::CancellationToken;
 use yazi_config::YAZI;
 use yazi_fs::File;
 use yazi_macro::render;
-use yazi_parser::tab::SpotLock;
+use yazi_parser::mgr::SpotLock;
 use yazi_plugin::isolate;
 use yazi_shared::{SStr, url::Url};
 

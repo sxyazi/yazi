@@ -5,7 +5,7 @@ use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
 use yazi_macro::succ;
-use yazi_parser::tab::FilterOpt;
+use yazi_parser::mgr::FilterOpt;
 use yazi_proxy::{InputProxy, MgrProxy};
 use yazi_shared::{Debounce, errors::InputError, event::Data};
 
@@ -16,7 +16,7 @@ pub struct Filter;
 impl Actor for Filter {
 	type Options = FilterOpt;
 
-	const NAME: &'static str = "filter";
+	const NAME: &str = "filter";
 
 	fn act(_: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let input = InputProxy::show(InputCfg::filter());

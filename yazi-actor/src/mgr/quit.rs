@@ -16,7 +16,7 @@ pub struct Quit;
 impl Actor for Quit {
 	type Options = QuitOpt;
 
-	const NAME: &'static str = "quit";
+	const NAME: &str = "quit";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let event = opt.into();

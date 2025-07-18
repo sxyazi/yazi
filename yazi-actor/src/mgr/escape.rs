@@ -1,6 +1,6 @@
 use anyhow::{Result, bail};
 use yazi_macro::{act, render, render_and, succ};
-use yazi_parser::{VoidOpt, tab::EscapeOpt};
+use yazi_parser::{VoidOpt, mgr::EscapeOpt};
 use yazi_proxy::AppProxy;
 use yazi_shared::event::Data;
 
@@ -11,7 +11,7 @@ pub struct Escape;
 impl Actor for Escape {
 	type Options = EscapeOpt;
 
-	const NAME: &'static str = "escape";
+	const NAME: &str = "escape";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		if opt.is_empty() {
@@ -48,7 +48,7 @@ pub struct EscapeFind;
 impl Actor for EscapeFind {
 	type Options = VoidOpt;
 
-	const NAME: &'static str = "escape_find";
+	const NAME: &str = "escape_find";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		succ!(render_and!(cx.tab_mut().finder.take().is_some()))
@@ -61,7 +61,7 @@ pub struct EscapeVisual;
 impl Actor for EscapeVisual {
 	type Options = VoidOpt;
 
-	const NAME: &'static str = "escape_visual";
+	const NAME: &str = "escape_visual";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		let tab = cx.tab_mut();
@@ -93,7 +93,7 @@ pub struct EscapeFilter;
 impl Actor for EscapeFilter {
 	type Options = VoidOpt;
 
-	const NAME: &'static str = "escape_filter";
+	const NAME: &str = "escape_filter";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		if cx.current_mut().files.filter().is_none() {
@@ -112,7 +112,7 @@ pub struct EscapeSelect;
 impl Actor for EscapeSelect {
 	type Options = VoidOpt;
 
-	const NAME: &'static str = "escape_select";
+	const NAME: &str = "escape_select";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		let tab = cx.tab_mut();
@@ -136,7 +136,7 @@ pub struct EscapeSearch;
 impl Actor for EscapeSearch {
 	type Options = VoidOpt;
 
-	const NAME: &'static str = "escape_search";
+	const NAME: &str = "escape_search";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		let b = cx.cwd().is_search();

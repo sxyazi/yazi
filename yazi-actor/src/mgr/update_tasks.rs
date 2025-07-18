@@ -10,7 +10,7 @@ pub struct UpdateTasks;
 impl Actor for UpdateTasks {
 	type Options = UpdateTasksOpt;
 
-	const NAME: &'static str = "update_tasks";
+	const NAME: &str = "update_tasks";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		cx.mgr.watcher.push_files(opt.urls);

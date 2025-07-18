@@ -1,8 +1,9 @@
 use anyhow::{Result, bail};
-use mlua::IntoLua;
+use mlua::{IntoLua, Value};
 use tracing::error;
 use yazi_binding::runtime_mut;
-use yazi_dds::{LOCAL, Payload, REMOTE};
+use yazi_core::Core;
+use yazi_dds::{LOCAL, Payload, REMOTE, body::Body};
 use yazi_macro::succ;
 use yazi_plugin::LUA;
 use yazi_shared::event::{CmdCow, Data};
@@ -10,7 +11,7 @@ use yazi_shared::event::{CmdCow, Data};
 use crate::{app::App, lives::Lives};
 
 impl App {
-	pub(crate) fn accept_payload(&mut self, mut c: CmdCow) -> Result<Data> {
+	pub(crate) fn accept_payload(&self, mut c: CmdCow) -> Result<Data> {
 		let Some(payload) = c.take_any2::<Payload>("payload").transpose()? else {
 			bail!("'payload' is required for accept_payload");
 		};
@@ -35,6 +36,34 @@ impl App {
 				runtime_mut!(LUA)?.pop();
 			}
 			Ok(())
+		})?);
+	}
+
+	// FIXME: find a better name
+	pub(crate) fn accept_payload2(core: &Core, body: Body<'static>) -> Result<Data> {
+		let kind = body.kind();
+		let Some(handlers) = LOCAL.read().get(kind).filter(|&m| !m.is_empty()).cloned() else {
+			succ!(false)
+		};
+
+		let kind = kind.to_owned();
+		succ!(Lives::scope(core, || {
+			let body = body.into_lua(&LUA)?;
+			for (id, cb) in handlers {
+				runtime_mut!(LUA)?.push(&id);
+				let result = cb.call::<Value>(body.clone());
+				runtime_mut!(LUA)?.pop();
+
+				match result {
+					Ok(Value::Boolean(true)) => return Ok(true),
+					Ok(Value::Nil | Value::Boolean(false)) => {}
+					Ok(v) => {
+						error!("Unexpected return type from `{kind}` event handler in `{id}` plugin: {v:?}")
+					}
+					Err(e) => error!("Failed to run `{kind}` event handler in `{id}` plugin: {e}"),
+				}
+			}
+			Ok(false)
 		})?);
 	}
 }

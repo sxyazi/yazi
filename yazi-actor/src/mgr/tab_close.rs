@@ -10,7 +10,7 @@ pub struct TabClose;
 impl Actor for TabClose {
 	type Options = TabCloseOpt;
 
-	const NAME: &'static str = "tab_close";
+	const NAME: &str = "tab_close";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let len = cx.tabs().len();

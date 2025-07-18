@@ -12,7 +12,7 @@ pub struct UpdateFiles;
 impl Actor for UpdateFiles {
 	type Options = UpdateFilesOpt;
 
-	const NAME: &'static str = "update_files";
+	const NAME: &str = "update_files";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let revision = cx.current().files.revision;

@@ -10,7 +10,7 @@ pub struct Link;
 impl Actor for Link {
 	type Options = LinkOpt;
 
-	const NAME: &'static str = "link";
+	const NAME: &str = "link";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let mgr = &mut cx.core.mgr;

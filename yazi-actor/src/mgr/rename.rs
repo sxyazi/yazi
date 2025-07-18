@@ -15,7 +15,7 @@ pub struct Rename;
 impl Actor for Rename {
 	type Options = RenameOpt;
 
-	const NAME: &'static str = "rename";
+	const NAME: &str = "rename";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;

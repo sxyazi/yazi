@@ -1,7 +1,7 @@
 use yazi_fs::expand_path;
 use yazi_shared::{event::CmdCow, url::Url};
 
-use crate::tab::CdSource;
+use crate::mgr::CdSource;
 
 pub struct RevealOpt {
 	pub target:   Url,

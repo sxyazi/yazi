@@ -14,7 +14,7 @@ pub struct Create;
 impl Actor for Create {
 	type Options = CreateOpt;
 
-	const NAME: &'static str = "create";
+	const NAME: &str = "create";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let cwd = cx.cwd().to_owned();

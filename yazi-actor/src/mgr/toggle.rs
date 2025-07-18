@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::{render_and, succ};
-use yazi_parser::tab::ToggleOpt;
+use yazi_parser::mgr::ToggleOpt;
 use yazi_proxy::AppProxy;
 use yazi_shared::event::Data;
 
@@ -11,7 +11,7 @@ pub struct Toggle;
 impl Actor for Toggle {
 	type Options = ToggleOpt;
 
-	const NAME: &'static str = "toggle";
+	const NAME: &str = "toggle";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let tab = cx.tab_mut();

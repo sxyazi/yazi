@@ -10,7 +10,7 @@ pub struct Hardlink;
 impl Actor for Hardlink {
 	type Options = HardlinkOpt;
 
-	const NAME: &'static str = "hardlink";
+	const NAME: &str = "hardlink";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let mgr = &mut cx.core.mgr;

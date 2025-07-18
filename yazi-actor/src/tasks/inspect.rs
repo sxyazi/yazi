@@ -17,7 +17,7 @@ pub struct Inspect;
 impl Actor for Inspect {
 	type Options = VoidOpt;
 
-	const NAME: &'static str = "inspect";
+	const NAME: &str = "inspect";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		let ongoing = cx.tasks.ongoing().clone();

@@ -12,7 +12,7 @@ pub struct Sort;
 impl Actor for Sort {
 	type Options = CmdCow;
 
-	const NAME: &'static str = "sort";
+	const NAME: &str = "sort";
 
 	fn act(cx: &mut Ctx, c: Self::Options) -> Result<Data> {
 		let mut new = cx.tab().pref.clone();

@@ -10,7 +10,7 @@ pub struct Arrow;
 impl Actor for Arrow {
 	type Options = ArrowOpt;
 
-	const NAME: &'static str = "arrow";
+	const NAME: &str = "arrow";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let tab = cx.tab_mut();

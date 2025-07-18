@@ -10,7 +10,7 @@ pub struct Filter;
 impl Actor for Filter {
 	type Options = VoidOpt;
 
-	const NAME: &'static str = "filter";
+	const NAME: &str = "filter";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		let help = &mut cx.help;

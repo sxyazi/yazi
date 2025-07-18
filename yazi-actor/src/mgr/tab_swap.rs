@@ -10,7 +10,7 @@ pub struct TabSwap;
 impl Actor for TabSwap {
 	type Options = ArrowOpt;
 
-	const NAME: &'static str = "tab_swap";
+	const NAME: &str = "tab_swap";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let tabs = cx.tabs_mut();
