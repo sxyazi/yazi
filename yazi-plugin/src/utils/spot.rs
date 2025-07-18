@@ -1,7 +1,7 @@
 use mlua::{AnyUserData, Function, Lua, Table};
 use yazi_binding::elements::{Edge, Renderable};
 use yazi_config::THEME;
-use yazi_parser::tab::{SpotLock, UpdateSpottedOpt};
+use yazi_parser::mgr::{SpotLock, UpdateSpottedOpt};
 use yazi_proxy::MgrProxy;
 
 use super::Utils;

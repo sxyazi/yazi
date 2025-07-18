@@ -10,7 +10,7 @@ pub struct Callback;
 impl Actor for Callback {
 	type Options = CallbackOpt;
 
-	const NAME: &'static str = "callback";
+	const NAME: &str = "callback";
 
 	fn act(_: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		opt.tx.try_send(opt.idx)?;

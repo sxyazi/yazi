@@ -11,7 +11,7 @@ pub struct Follow;
 impl Actor for Follow {
 	type Options = VoidOpt;
 
-	const NAME: &'static str = "follow";
+	const NAME: &str = "follow";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		let Some(file) = cx.hovered() else { succ!() };

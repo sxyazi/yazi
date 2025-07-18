@@ -4,4 +4,4 @@ mod macros;
 
 yazi_macro::mod_pub!(elements);
 
-yazi_macro::mod_flat!(cha color composer error file icon id iter permit runtime stage style url urn utils);
+yazi_macro::mod_flat!(cha color composer error file icon id iter permit runtime source stage style url urn utils);

@@ -6,7 +6,7 @@ use crate::Ctx;
 pub trait Actor {
 	type Options;
 
-	const NAME: &'static str;
+	const NAME: &str;
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data>;
 }

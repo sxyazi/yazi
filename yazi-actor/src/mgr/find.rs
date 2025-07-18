@@ -5,7 +5,7 @@ use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
 use yazi_macro::succ;
-use yazi_parser::tab::{FindDoOpt, FindOpt};
+use yazi_parser::mgr::{FindDoOpt, FindOpt};
 use yazi_proxy::{InputProxy, MgrProxy};
 use yazi_shared::{Debounce, errors::InputError, event::Data};
 
@@ -16,7 +16,7 @@ pub struct Find;
 impl Actor for Find {
 	type Options = FindOpt;
 
-	const NAME: &'static str = "find";
+	const NAME: &str = "find";
 
 	fn act(_: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let input = InputProxy::show(InputCfg::find(opt.prev));

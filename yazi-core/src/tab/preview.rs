@@ -7,7 +7,7 @@ use yazi_adapter::ADAPTOR;
 use yazi_config::{LAYOUT, YAZI};
 use yazi_fs::{File, Files, FilesOp, cha::Cha};
 use yazi_macro::render;
-use yazi_parser::tab::PreviewLock;
+use yazi_parser::mgr::PreviewLock;
 use yazi_plugin::{external::Highlighter, isolate};
 use yazi_shared::{MIME_DIR, SStr, url::Url};
 

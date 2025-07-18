@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
-use yazi_parser::tab::FindArrowOpt;
+use yazi_parser::mgr::FindArrowOpt;
 use yazi_shared::event::Data;
 
 use crate::{Actor, Ctx};
@@ -10,7 +10,7 @@ pub struct FindArrow;
 impl Actor for FindArrow {
 	type Options = FindArrowOpt;
 
-	const NAME: &'static str = "find_arrow";
+	const NAME: &str = "find_arrow";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let tab = cx.tab_mut();

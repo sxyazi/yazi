@@ -10,7 +10,7 @@ pub struct Linemode;
 impl Actor for Linemode {
 	type Options = LinemodeOpt;
 
-	const NAME: &'static str = "linemode";
+	const NAME: &str = "linemode";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let tab = cx.tab_mut();

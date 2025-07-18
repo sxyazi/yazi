@@ -10,7 +10,7 @@ pub struct Swipe;
 impl Actor for Swipe {
 	type Options = ArrowOpt;
 
-	const NAME: &'static str = "swipe";
+	const NAME: &str = "swipe";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		act!(mgr:arrow, cx, opt)?;

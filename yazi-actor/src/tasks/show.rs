@@ -10,7 +10,7 @@ pub struct Show;
 impl Actor for Show {
 	type Options = VoidOpt;
 
-	const NAME: &'static str = "show";
+	const NAME: &str = "show";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		let tasks = &mut cx.tasks;

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_core::tab::Tab;
 use yazi_macro::{act, render, succ};
-use yazi_parser::{mgr::TabCreateOpt, tab::CdSource};
+use yazi_parser::mgr::{CdSource, TabCreateOpt};
 use yazi_proxy::AppProxy;
 use yazi_shared::event::Data;
 
@@ -14,7 +14,7 @@ pub struct TabCreate;
 impl Actor for TabCreate {
 	type Options = TabCreateOpt;
 
-	const NAME: &'static str = "tab_create";
+	const NAME: &str = "tab_create";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		if cx.tabs().len() >= MAX_TABS {

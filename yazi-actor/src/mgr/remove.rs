@@ -12,7 +12,7 @@ pub struct Remove;
 impl Actor for Remove {
 	type Options = RemoveOpt;
 
-	const NAME: &'static str = "remove";
+	const NAME: &str = "remove";
 
 	fn act(cx: &mut Ctx, mut opt: Self::Options) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
@@ -50,7 +50,7 @@ pub struct RemoveDo;
 impl Actor for RemoveDo {
 	type Options = RemoveOpt;
 
-	const NAME: &'static str = "remove_do";
+	const NAME: &str = "remove_do";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let mgr = &mut cx.mgr;

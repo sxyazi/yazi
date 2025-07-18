@@ -10,7 +10,7 @@ pub struct Show;
 impl Actor for Show {
 	type Options = ShowOpt;
 
-	const NAME: &'static str = "show";
+	const NAME: &str = "show";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		act!(confirm:close, cx)?;

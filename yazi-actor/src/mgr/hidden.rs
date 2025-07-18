@@ -10,7 +10,7 @@ pub struct Hidden;
 impl Actor for Hidden {
 	type Options = HiddenOpt;
 
-	const NAME: &'static str = "hidden";
+	const NAME: &str = "hidden";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let tab = cx.tab_mut();

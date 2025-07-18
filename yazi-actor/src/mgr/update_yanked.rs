@@ -11,7 +11,7 @@ pub struct UpdateYanked;
 impl Actor for UpdateYanked {
 	type Options = UpdateYankedOpt<'static>;
 
-	const NAME: &'static str = "update_yanked";
+	const NAME: &str = "update_yanked";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		if opt.urls.is_empty() && cx.mgr.yanked.is_empty() {

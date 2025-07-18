@@ -20,7 +20,7 @@ pub struct BulkRename;
 impl Actor for BulkRename {
 	type Options = VoidOpt;
 
-	const NAME: &'static str = "bulk_rename";
+	const NAME: &str = "bulk_rename";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		let Some(opener) = YAZI.opener.block(YAZI.open.all("bulk-rename.txt", "text/plain")) else {

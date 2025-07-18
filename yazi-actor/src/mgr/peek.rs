@@ -11,7 +11,7 @@ pub struct Peek;
 impl Actor for Peek {
 	type Options = PeekOpt;
 
-	const NAME: &'static str = "peek";
+	const NAME: &str = "peek";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let Some(hovered) = cx.hovered().cloned() else {

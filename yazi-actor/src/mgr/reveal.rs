@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_fs::{File, FilesOp};
 use yazi_macro::{act, succ};
-use yazi_parser::tab::RevealOpt;
+use yazi_parser::mgr::RevealOpt;
 use yazi_shared::event::Data;
 
 use crate::{Actor, Ctx};
@@ -11,7 +11,7 @@ pub struct Reveal;
 impl Actor for Reveal {
 	type Options = RevealOpt;
 
-	const NAME: &'static str = "reveal";
+	const NAME: &str = "reveal";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let Some((parent, child)) = opt.target.pair() else { succ!() };

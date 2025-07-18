@@ -11,7 +11,7 @@ pub struct Yank;
 impl Actor for Yank {
 	type Options = YankOpt;
 
-	const NAME: &'static str = "yank";
+	const NAME: &str = "yank";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;

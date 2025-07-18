@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_dds::Pubsub;
 use yazi_macro::{act, err, render, succ};
-use yazi_parser::tab::{HoverDoOpt, HoverOpt};
+use yazi_parser::mgr::{HoverDoOpt, HoverOpt};
 use yazi_shared::{event::Data, url::Urn};
 
 use crate::{Actor, Ctx};
@@ -11,7 +11,7 @@ pub struct Hover;
 impl Actor for Hover {
 	type Options = HoverOpt;
 
-	const NAME: &'static str = "hover";
+	const NAME: &str = "hover";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		if let Some(u) = opt.url {
@@ -33,7 +33,7 @@ pub struct HoverDo;
 impl Actor for HoverDo {
 	type Options = HoverDoOpt;
 
-	const NAME: &'static str = "hover_do";
+	const NAME: &str = "hover_do";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		// Hover on the file

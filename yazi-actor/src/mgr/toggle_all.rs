@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::{render, succ};
-use yazi_parser::tab::ToggleAllOpt;
+use yazi_parser::mgr::ToggleAllOpt;
 use yazi_proxy::AppProxy;
 use yazi_shared::event::Data;
 
@@ -11,7 +11,7 @@ pub struct ToggleAll;
 impl Actor for ToggleAll {
 	type Options = ToggleAllOpt;
 
-	const NAME: &'static str = "toggle_all";
+	const NAME: &str = "toggle_all";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		use yazi_shared::Either::*;

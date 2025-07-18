@@ -11,7 +11,7 @@ pub struct Copy;
 impl Actor for Copy {
 	type Options = CopyOpt;
 
-	const NAME: &'static str = "copy";
+	const NAME: &str = "copy";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let spot = &cx.tab().spot;

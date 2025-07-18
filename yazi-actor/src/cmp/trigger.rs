@@ -15,7 +15,7 @@ pub struct Trigger;
 impl Actor for Trigger {
 	type Options = TriggerOpt;
 
-	const NAME: &'static str = "trigger";
+	const NAME: &str = "trigger";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let cmp = &mut cx.cmp;

@@ -18,7 +18,7 @@ pub struct Open;
 impl Actor for Open {
 	type Options = OpenOpt;
 
-	const NAME: &'static str = "open";
+	const NAME: &str = "open";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
@@ -78,7 +78,7 @@ pub struct OpenDo;
 impl Actor for OpenDo {
 	type Options = OpenDoOpt;
 
-	const NAME: &'static str = "open_do";
+	const NAME: &str = "open_do";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let mut targets = opt.targets;

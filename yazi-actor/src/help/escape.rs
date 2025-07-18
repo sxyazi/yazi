@@ -10,7 +10,7 @@ pub struct Escape;
 impl Actor for Escape {
 	type Options = VoidOpt;
 
-	const NAME: &'static str = "escape";
+	const NAME: &str = "escape";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		if cx.help.keyword().is_none() {

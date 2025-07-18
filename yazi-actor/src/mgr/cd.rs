@@ -7,7 +7,7 @@ use yazi_config::popup::InputCfg;
 use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp, expand_path};
 use yazi_macro::{act, err, render, succ};
-use yazi_parser::tab::CdOpt;
+use yazi_parser::mgr::CdOpt;
 use yazi_proxy::{CmpProxy, InputProxy, MgrProxy};
 use yazi_shared::{Debounce, errors::InputError, event::Data, url::Url};
 
@@ -18,7 +18,7 @@ pub struct Cd;
 impl Actor for Cd {
 	type Options = CdOpt;
 
-	const NAME: &'static str = "cd";
+	const NAME: &str = "cd";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;

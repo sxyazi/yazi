@@ -10,7 +10,7 @@ pub struct Suspend;
 impl Actor for Suspend {
 	type Options = VoidOpt;
 
-	const NAME: &'static str = "suspend";
+	const NAME: &str = "suspend";
 
 	fn act(_: &mut Ctx, _: Self::Options) -> Result<Data> {
 		#[cfg(unix)]

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_core::tab::Finder;
 use yazi_macro::{act, render, succ};
-use yazi_parser::tab::FindDoOpt;
+use yazi_parser::mgr::FindDoOpt;
 use yazi_shared::event::Data;
 
 use crate::{Actor, Ctx};
@@ -11,7 +11,7 @@ pub struct FindDo;
 impl Actor for FindDo {
 	type Options = FindDoOpt;
 
-	const NAME: &'static str = "find_do";
+	const NAME: &str = "find_do";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		if opt.query.is_empty() {

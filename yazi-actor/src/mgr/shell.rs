@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use anyhow::Result;
 use yazi_config::{opener::OpenerRule, popup::InputCfg};
 use yazi_macro::{act, succ};
-use yazi_parser::tab::ShellOpt;
+use yazi_parser::mgr::ShellOpt;
 use yazi_proxy::{InputProxy, TasksProxy};
 use yazi_shared::event::Data;
 
@@ -14,7 +14,7 @@ pub struct Shell;
 impl Actor for Shell {
 	type Options = ShellOpt;
 
-	const NAME: &'static str = "shell";
+	const NAME: &str = "shell";
 
 	fn act(cx: &mut Ctx, mut opt: Self::Options) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
