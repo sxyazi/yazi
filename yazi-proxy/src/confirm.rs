@@ -1,7 +1,6 @@
 use tokio::sync::oneshot;
 use yazi_config::popup::ConfirmCfg;
-use yazi_macro::emit;
-use yazi_shared::event::Cmd;
+use yazi_macro::{emit, relay};
 
 pub struct ConfirmProxy;
 
@@ -10,7 +9,7 @@ impl ConfirmProxy {
 
 	pub fn show_rx(cfg: ConfirmCfg) -> oneshot::Receiver<bool> {
 		let (tx, rx) = oneshot::channel();
-		emit!(Call(Cmd::new("confirm:show").with_any("tx", tx).with_any("cfg", cfg)));
+		emit!(Call(relay!(confirm:show).with_any("tx", tx).with_any("cfg", cfg)));
 		rx
 	}
 }

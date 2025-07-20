@@ -1,6 +1,8 @@
 use anyhow::bail;
+use mlua::{ExternalError, IntoLua, Lua, Value};
 use yazi_shared::{SStr, event::{CmdCow, Data}, url::Url};
 
+#[derive(Debug)]
 pub struct ShellOpt {
 	pub run: SStr,
 	pub cwd: Option<Url>,
@@ -33,4 +35,8 @@ impl TryFrom<CmdCow> for ShellOpt {
 
 		Ok(me)
 	}
+}
+
+impl IntoLua for &ShellOpt {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

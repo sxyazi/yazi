@@ -1,6 +1,7 @@
+use mlua::{ExternalError, IntoLua, Lua, Value};
 use yazi_shared::{event::{CmdCow, Data}, url::Url};
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct UpdatePagedOpt {
 	pub page:    Option<usize>,
 	pub only_if: Option<Url>,
@@ -14,4 +15,8 @@ impl From<CmdCow> for UpdatePagedOpt {
 
 impl From<()> for UpdatePagedOpt {
 	fn from(_: ()) -> Self { Self::default() }
+}
+
+impl IntoLua for &UpdatePagedOpt {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

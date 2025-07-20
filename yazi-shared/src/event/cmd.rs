@@ -1,34 +1,27 @@
 use std::{any::Any, borrow::Cow, collections::HashMap, fmt::{self, Display}, mem, str::FromStr};
 
-use anyhow::{Result, bail};
+use anyhow::{Result, anyhow, bail};
 use serde::{Deserialize, de};
 
 use super::{Data, DataKey};
-use crate::{Id, Layer, SStr, url::Url};
+use crate::{Id, Layer, SStr, Source, url::Url};
 
 #[derive(Debug, Default)]
 pub struct Cmd {
-	pub name:  SStr,
-	pub args:  HashMap<DataKey, Data>,
-	pub layer: Layer,
+	pub name:   SStr,
+	pub args:   HashMap<DataKey, Data>,
+	pub layer:  Layer,
+	pub source: Source,
 }
 
 impl Cmd {
-	pub fn new<N>(name: N) -> Self
-	where
-		N: Into<SStr>,
-	{
-		Self::new_or(name, Default::default())
-			.unwrap_or_else(|_| Self { name: "null".into(), ..Default::default() })
-	}
-
-	pub fn new_or<N>(name: N, default: Layer) -> Result<Self>
+	pub fn new<N>(name: N, source: Source, default: Option<Layer>) -> Result<Self>
 	where
 		N: Into<SStr>,
 	{
 		let cow: SStr = name.into();
 		let (layer, name) = match cow.find(':') {
-			None => (default, cow),
+			None => (default.ok_or_else(|| anyhow!("Cannot infer layer from command name: {cow}"))?, cow),
 			Some(i) => (cow[..i].parse()?, match cow {
 				Cow::Borrowed(s) => Cow::Borrowed(&s[i + 1..]),
 				Cow::Owned(mut s) => {
@@ -38,20 +31,30 @@ impl Cmd {
 			}),
 		};
 
-		Ok(Self { name, args: Default::default(), layer })
+		Ok(Self { name, args: Default::default(), layer, source })
 	}
 
-	pub fn args<N, D, I>(name: N, args: I) -> Self
+	pub fn new_relay<N>(name: N) -> Self
+	where
+		N: Into<SStr>,
+	{
+		Self::new(name, Source::Relay, None).unwrap_or(Self::null())
+	}
+
+	pub fn new_relay_args<N, D, I>(name: N, args: I) -> Self
 	where
 		N: Into<SStr>,
 		D: Into<Data>,
 		I: IntoIterator<Item = D>,
 	{
-		let mut me = Self::new(name);
-		me.args =
+		let mut cmd = Self::new(name, Source::Relay, None).unwrap_or(Self::null());
+		cmd.args =
 			args.into_iter().enumerate().map(|(i, a)| (DataKey::Integer(i as i64), a.into())).collect();
-		me
+		cmd
 	}
+
+	#[inline]
+	fn null() -> Self { Self { name: Cow::Borrowed("null"), ..Default::default() } }
 
 	#[inline]
 	pub fn len(&self) -> usize { self.args.len() }
@@ -207,7 +210,7 @@ impl FromStr for Cmd {
 			bail!("command name cannot be empty");
 		}
 
-		let mut me = Self::new(mem::take(&mut words[0]));
+		let mut me = Self::new(mem::take(&mut words[0]), Default::default(), Some(Default::default()))?;
 		me.args = Cmd::parse_args(words.into_iter().skip(1), last, true)?;
 		Ok(me)
 	}

@@ -1,9 +1,10 @@
 use anyhow::bail;
+use mlua::{ExternalError, IntoLua, Lua, Value};
 use yazi_shared::event::CmdCow;
 
 use crate::Step;
 
-#[derive(Default)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct ArrowOpt {
 	pub step: Step,
 }
@@ -22,4 +23,8 @@ impl TryFrom<CmdCow> for ArrowOpt {
 
 impl From<isize> for ArrowOpt {
 	fn from(n: isize) -> Self { Self { step: n.into() } }
+}
+
+impl IntoLua for ArrowOpt {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

@@ -23,7 +23,7 @@ impl<'a> From<BodyTrash<'a>> for Body<'a> {
 	fn from(value: BodyTrash<'a>) -> Self { Self::Trash(value) }
 }
 
-impl IntoLua for BodyTrash<'static> {
+impl IntoLua for BodyTrash<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		let urls =
 			lua.create_sequence_from(self.urls.into_owned().into_iter().map(yazi_binding::Url::new))?;

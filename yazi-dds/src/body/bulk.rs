@@ -1,6 +1,6 @@
-use std::{borrow::Cow, collections::{HashMap, hash_map}};
+use std::{borrow::Cow, collections::HashMap};
 
-use mlua::{AnyUserData, IntoLua, IntoLuaMulti, Lua, MetaMethod, UserData, UserDataRefMut, Value};
+use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 use yazi_shared::url::Url;
 
@@ -34,32 +34,15 @@ impl<'a> From<BodyBulk<'a>> for Body<'a> {
 	fn from(value: BodyBulk<'a>) -> Self { Self::Bulk(value) }
 }
 
-impl IntoLua for BodyBulk<'static> {
+impl IntoLua for BodyBulk<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
-		BodyBulkIter { inner: self.changes.into_iter() }.into_lua(lua)
-	}
-}
-
-// --- Iterator
-// TODO: use `yazi_binding::Iter` instead
-pub struct BodyBulkIter {
-	pub inner: hash_map::IntoIter<Cow<'static, Url>, Cow<'static, Url>>,
-}
-
-impl UserData for BodyBulkIter {
-	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
-		methods.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.inner.len()));
-
-		methods.add_meta_function(MetaMethod::Pairs, |lua, me: AnyUserData| {
-			let iter = lua.create_function(|lua, mut me: UserDataRefMut<Self>| {
-				if let Some((Cow::Owned(from), Cow::Owned(to))) = me.inner.next() {
-					(yazi_binding::Url::new(from), yazi_binding::Url::new(to)).into_lua_multi(lua)
-				} else {
-					().into_lua_multi(lua)
-				}
-			})?;
-
-			Ok((iter, me))
-		});
+		lua
+			.create_table_from(
+				self
+					.changes
+					.into_iter()
+					.map(|(from, to)| (yazi_binding::Url::new(from), yazi_binding::Url::new(to))),
+			)?
+			.into_lua(lua)
 	}
 }

@@ -27,7 +27,7 @@ impl Actor for TabClose {
 			tabs.set_idx(usize::min(tabs.cursor + 1, tabs.len() - 1));
 		}
 
-		let cx = &mut Ctx::active(cx.core);
+		let cx = &mut Ctx::renew(cx);
 		act!(mgr:refresh, cx)?;
 		act!(mgr:peek, cx, true)?;
 

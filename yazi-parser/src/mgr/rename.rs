@@ -1,5 +1,7 @@
+use mlua::{ExternalError, IntoLua, Lua, Value};
 use yazi_shared::{SStr, event::CmdCow};
 
+#[derive(Debug)]
 pub struct RenameOpt {
 	pub hovered: bool,
 	pub force:   bool,
@@ -16,4 +18,8 @@ impl From<CmdCow> for RenameOpt {
 			cursor:  c.take_str("cursor").unwrap_or_default(),
 		}
 	}
+}
+
+impl IntoLua for &RenameOpt {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

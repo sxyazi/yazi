@@ -1,7 +1,9 @@
+use mlua::{ExternalError, IntoLua, Lua, Value};
 use yazi_boot::BOOT;
 use yazi_fs::expand_path;
 use yazi_shared::{event::CmdCow, url::Url};
 
+#[derive(Debug)]
 pub struct TabCreateOpt {
 	pub wd: Option<Url>,
 }
@@ -19,4 +21,8 @@ impl From<CmdCow> for TabCreateOpt {
 		}
 		Self { wd: Some(wd) }
 	}
+}
+
+impl IntoLua for &TabCreateOpt {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

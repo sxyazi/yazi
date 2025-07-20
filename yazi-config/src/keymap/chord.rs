@@ -3,7 +3,7 @@ use std::{borrow::Cow, hash::{Hash, Hasher}, sync::OnceLock};
 use anyhow::Result;
 use regex::Regex;
 use serde::Deserialize;
-use yazi_shared::{Layer, event::Cmd};
+use yazi_shared::{Layer, Source, event::Cmd};
 
 use super::Key;
 
@@ -60,6 +60,7 @@ impl Chord {
 impl Chord {
 	pub(super) fn reshape(mut self, layer: Layer) -> Result<Self> {
 		for cmd in &mut self.run {
+			cmd.source = Source::Key;
 			if cmd.layer == Default::default() {
 				cmd.layer = layer;
 			}

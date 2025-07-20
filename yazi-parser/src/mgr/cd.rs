@@ -1,6 +1,8 @@
+use mlua::{ExternalError, IntoLua, Lua, Value};
 use yazi_fs::expand_path;
 use yazi_shared::{event::CmdCow, url::Url};
 
+#[derive(Debug)]
 pub struct CdOpt {
 	pub target:      Url,
 	pub interactive: bool,
@@ -21,8 +23,12 @@ impl From<(Url, CdSource)> for CdOpt {
 	fn from((target, source): (Url, CdSource)) -> Self { Self { target, interactive: false, source } }
 }
 
+impl IntoLua for &CdOpt {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
+}
+
 // --- Source
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CdSource {
 	Tab,
 	Cd,

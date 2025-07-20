@@ -1,29 +1,28 @@
 use std::time::Duration;
 
 use tokio::sync::oneshot;
-use yazi_macro::emit;
+use yazi_macro::{emit, relay};
 use yazi_parser::app::{NotifyLevel, NotifyOpt, PluginOpt, TasksProgress};
-use yazi_shared::event::Cmd;
 
 pub struct AppProxy;
 
 impl AppProxy {
 	pub async fn stop() {
 		let (tx, rx) = oneshot::channel::<()>();
-		emit!(Call(Cmd::new("app:stop").with_any("tx", tx)));
+		emit!(Call(relay!(app:stop).with_any("tx", tx)));
 		rx.await.ok();
 	}
 
 	pub fn resume() {
-		emit!(Call(Cmd::new("app:resume")));
+		emit!(Call(relay!(app:resume)));
 	}
 
 	pub fn notify(opt: NotifyOpt) {
-		emit!(Call(Cmd::new("app:notify").with_any("option", opt)));
+		emit!(Call(relay!(app:notify).with_any("option", opt)));
 	}
 
 	pub fn update_notify(dur: Duration) {
-		emit!(Call(Cmd::args("app:update_notify", [dur.as_secs_f64()])));
+		emit!(Call(relay!(app:update_notify, [dur.as_secs_f64()])));
 	}
 
 	pub fn notify_warn(title: &str, content: impl ToString) {
@@ -45,14 +44,14 @@ impl AppProxy {
 	}
 
 	pub fn plugin(opt: PluginOpt) {
-		emit!(Call(Cmd::new("app:plugin").with_any("opt", opt)));
+		emit!(Call(relay!(app:plugin).with_any("opt", opt)));
 	}
 
 	pub fn plugin_do(opt: PluginOpt) {
-		emit!(Call(Cmd::new("app:plugin_do").with_any("opt", opt)));
+		emit!(Call(relay!(app:plugin_do).with_any("opt", opt)));
 	}
 
 	pub fn update_progress(progress: TasksProgress) {
-		emit!(Call(Cmd::new("app:update_progress").with_any("progress", progress)));
+		emit!(Call(relay!(app:update_progress).with_any("progress", progress)));
 	}
 }

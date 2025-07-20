@@ -8,7 +8,12 @@ description = "Yazi actor model"
 homepage    = "https://yazi-rs.github.io"
 repository  = "https://github.com/sxyazi/yazi"
 
+[features]
+default      = [ "vendored-lua" ]
+vendored-lua = [ "mlua/vendored" ]
+
 [dependencies]
+yazi-binding = { path = "../yazi-binding", version = "25.6.11" }
 yazi-boot    = { path = "../yazi-boot", version = "25.6.11" }
 yazi-config  = { path = "../yazi-config", version = "25.6.11" }
 yazi-core    = { path = "../yazi-core", version = "25.6.11" }
@@ -25,7 +30,10 @@ yazi-widgets = { path = "../yazi-widgets", version = "25.6.11" }
 # External dependencies
 anyhow       = { workspace = true }
 crossterm    = { workspace = true }
+foldhash     = { workspace = true }
 futures      = { workspace = true }
+indexmap     = { workspace = true }
+mlua         = { workspace = true }
 paste        = { workspace = true }
 scopeguard   = { workspace = true }
 tokio        = { workspace = true }

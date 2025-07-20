@@ -25,7 +25,7 @@ impl Actor for TabSwitch {
 		}
 
 		tabs.set_idx(idx);
-		let cx = &mut Ctx::active(cx.core);
+		let cx = &mut Ctx::renew(cx);
 
 		act!(mgr:refresh, cx)?;
 		act!(mgr:peek, cx, true)?;

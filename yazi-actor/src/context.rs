@@ -3,11 +3,13 @@ use std::ops::{Deref, DerefMut};
 use anyhow::{Result, anyhow};
 use yazi_core::{Core, mgr::Tabs, tab::{Folder, Tab}, tasks::Tasks};
 use yazi_fs::File;
-use yazi_shared::{event::Cmd, url::Url};
+use yazi_shared::{Source, event::Cmd, url::Url};
 
 pub struct Ctx<'a> {
-	pub core: &'a mut Core,
-	pub tab:  usize,
+	pub core:   &'a mut Core,
+	pub tab:    usize,
+	pub level:  usize,
+	pub source: Source,
 }
 
 impl Deref for Ctx<'_> {
@@ -36,15 +38,23 @@ impl<'a> Ctx<'a> {
 			core.mgr.tabs.cursor
 		};
 
-		Ok(Self { core, tab })
+		Ok(Self { core, tab, level: 0, source: cmd.source })
+	}
+
+	#[inline]
+	pub fn renew<'b>(cx: &'a mut Ctx<'b>) -> Ctx<'a> {
+		let tab = cx.core.mgr.tabs.cursor;
+		Self { core: cx.core, tab, level: cx.level, source: cx.source }
 	}
 
 	#[inline]
 	pub fn active(core: &'a mut Core) -> Self {
 		let tab = core.mgr.tabs.cursor;
-		Self { core, tab }
+		Self { core, tab, level: 0, source: Source::Unknown }
 	}
+}
 
+impl<'a> Ctx<'a> {
 	#[inline]
 	pub fn tabs(&self) -> &Tabs { &self.mgr.tabs }
 
@@ -80,4 +90,15 @@ impl<'a> Ctx<'a> {
 
 	#[inline]
 	pub fn tasks(&self) -> &Tasks { &self.tasks }
+
+	#[inline]
+	pub fn source(&self) -> Source {
+		use Source::*;
+		match self.source {
+			Key if self.level != 1 => Ind,
+			Emit if self.level != 1 => EmitInd,
+			Relay if self.level != 1 => RelayInd,
+			s => s,
+		}
+	}
 }

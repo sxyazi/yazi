@@ -1,16 +1,13 @@
 yazi_macro::mod_flat!(
-	back
 	cd
 	close
 	copy
 	create
-	enter
 	escape
 	filter
 	find
 	find_arrow
 	find_do
-	forward
 	hardlink
 	hidden
 	hover
@@ -26,6 +23,7 @@ yazi_macro::mod_flat!(
 	search
 	seek
 	shell
+	sort
 	spot
 	tab_close
 	tab_create

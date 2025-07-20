@@ -3,7 +3,7 @@ use yazi_shared::env_exists;
 
 use crate::Mux;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Brand {
 	Kitty,
 	Konsole,

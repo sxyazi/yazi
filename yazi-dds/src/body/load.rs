@@ -30,7 +30,7 @@ impl<'a> From<BodyLoad<'a>> for Body<'a> {
 	fn from(value: BodyLoad<'a>) -> Self { Self::Load(value) }
 }
 
-impl IntoLua for BodyLoad<'static> {
+impl IntoLua for BodyLoad<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua
 			.create_table_from([

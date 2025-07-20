@@ -9,4 +9,6 @@ pub trait Actor {
 	const NAME: &str;
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data>;
+
+	fn hook(_cx: &Ctx, _opt: &Self::Options) -> Option<&'static str> { None }
 }

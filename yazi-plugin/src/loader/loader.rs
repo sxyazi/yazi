@@ -6,7 +6,7 @@ use parking_lot::RwLock;
 use tokio::fs;
 use yazi_boot::BOOT;
 use yazi_macro::plugin_preset as preset;
-use yazi_shared::RoCell;
+use yazi_shared::{LOG_LEVEL, RoCell};
 
 use super::Chunk;
 
@@ -94,7 +94,7 @@ impl Loader {
 		}?;
 
 		if mode != ChunkMode::Binary {
-			let b = f.dump(true);
+			let b = f.dump(LOG_LEVEL.get().is_none());
 			if let Some(c) = self.write().get_mut(id) {
 				c.mode = ChunkMode::Binary;
 				c.bytes = Cow::Owned(b);

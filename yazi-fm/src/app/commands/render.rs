@@ -3,14 +3,14 @@ use std::sync::atomic::{AtomicU8, Ordering};
 use anyhow::Result;
 use crossterm::{cursor::{MoveTo, SetCursorStyle, Show}, execute, queue, terminal::{BeginSynchronizedUpdate, EndSynchronizedUpdate}};
 use ratatui::{CompletedFrame, backend::{Backend, CrosstermBackend}, buffer::Buffer, layout::Position};
-use yazi_actor::Ctx;
+use yazi_actor::{Ctx, lives::Lives};
 use yazi_binding::elements::COLLISION;
 use yazi_macro::{act, succ};
 use yazi_parser::VoidOpt;
 use yazi_shared::event::{Data, NEED_RENDER};
 use yazi_term::tty::TTY;
 
-use crate::{app::App, lives::Lives, root::Root};
+use crate::{app::App, root::Root};
 
 impl App {
 	pub(crate) fn render(&mut self, _: VoidOpt) -> Result<Data> {
@@ -36,7 +36,8 @@ impl App {
 
 		// Reload preview if collision is resolved
 		if collision && !COLLISION.load(Ordering::Relaxed) {
-			act!(mgr:peek, &mut Ctx::active(&mut self.core), true)?;
+			let cx = &mut Ctx::active(&mut self.core);
+			act!(mgr:peek, cx, true)?;
 		}
 		succ!();
 	}

@@ -18,7 +18,8 @@ impl App {
 			let new = tasks.paginate();
 			if tasks.summaries != new {
 				tasks.summaries = new;
-				act!(tasks:arrow, &mut Ctx::active(&mut self.core))?;
+				let cx = &mut Ctx::active(&mut self.core);
+				act!(tasks:arrow, cx)?;
 				succ!(render!());
 			}
 		}

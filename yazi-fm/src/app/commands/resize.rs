@@ -14,6 +14,7 @@ impl App {
 		self.core.parent_mut().map(|f| f.arrow(0));
 		self.core.current_mut().sync_page(true);
 
-		act!(mgr:peek, &mut Ctx::active(&mut self.core))
+		let cx = &mut Ctx::active(&mut self.core);
+		act!(mgr:peek, cx)
 	}
 }

@@ -3,7 +3,7 @@ use std::{fmt::{Display, Write}, str::FromStr};
 use anyhow::bail;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Key {
 	pub code:   KeyCode,
 	pub shift:  bool,

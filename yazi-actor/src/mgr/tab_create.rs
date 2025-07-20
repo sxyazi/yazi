@@ -41,7 +41,7 @@ impl Actor for TabCreate {
 		tabs.items.insert(tabs.cursor + 1, tab);
 		tabs.set_idx(tabs.cursor + 1);
 
-		let cx = &mut Ctx::active(cx.core);
+		let cx = &mut Ctx::renew(cx);
 		if cd {
 			act!(mgr:cd, cx, (url, CdSource::Tab))?;
 		} else {

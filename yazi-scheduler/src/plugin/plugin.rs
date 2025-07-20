@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use anyhow::{Result, anyhow};
 use tokio::sync::mpsc;
 use yazi_plugin::isolate;
@@ -32,7 +34,7 @@ impl Plugin {
 		self.prog.send(TaskProg::New(task.id, 0))?;
 
 		if let Err(e) = isolate::entry(task.opt).await {
-			self.fail(task.id, format!("Failed to run the plugin:\n{e}"))?;
+			self.fail(task.id, e)?;
 			return Ok(());
 		}
 
@@ -54,8 +56,8 @@ impl Plugin {
 	fn succ(&self, id: Id) -> Result<()> { Ok(self.prog.send(TaskProg::Succ(id))?) }
 
 	#[inline]
-	fn fail(&self, id: Id, reason: String) -> Result<()> {
-		Ok(self.prog.send(TaskProg::Fail(id, reason))?)
+	fn fail(&self, id: Id, reason: impl Display) -> Result<()> {
+		Ok(self.prog.send(TaskProg::Fail(id, reason.to_string()))?)
 	}
 
 	#[inline]

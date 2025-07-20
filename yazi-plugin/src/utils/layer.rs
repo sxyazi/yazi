@@ -5,9 +5,10 @@ use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use yazi_binding::{deprecate, elements::{Line, Pos, Text}};
 use yazi_config::{keymap::{Chord, Key}, popup::{ConfirmCfg, InputCfg}};
+use yazi_macro::relay;
 use yazi_parser::which::ShowOpt;
 use yazi_proxy::{AppProxy, ConfirmProxy, InputProxy, WhichProxy};
-use yazi_shared::{Debounce, event::Cmd};
+use yazi_shared::Debounce;
 
 use super::Utils;
 use crate::bindings::InputRx;
@@ -22,7 +23,7 @@ impl Utils {
 				let cand = cand?;
 				cands.push(Chord {
 					on:    Self::parse_keys(cand.raw_get("on")?)?,
-					run:   vec![Cmd::args("which:callback", [i]).with_any("tx", tx.clone())],
+					run:   vec![relay!(which:callback, [i]).with_any("tx", tx.clone())],
 					desc:  cand.raw_get("desc").ok(),
 					r#for: None,
 				});

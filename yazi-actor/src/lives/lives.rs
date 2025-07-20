@@ -13,13 +13,10 @@ static TO_DESTROY: RoCell<RefCell<Vec<AnyUserData>>> = RoCell::new_const(RefCell
 pub(super) static FILE_CACHE: RoCell<RefCell<HashMap<PtrCell<yazi_fs::File>, AnyUserData>>> =
 	RoCell::new();
 
-pub(crate) struct Lives;
+pub struct Lives;
 
 impl Lives {
-	pub(crate) fn scope<T>(
-		core: &yazi_core::Core,
-		f: impl FnOnce() -> mlua::Result<T>,
-	) -> mlua::Result<T> {
+	pub fn scope<T>(core: &yazi_core::Core, f: impl FnOnce() -> mlua::Result<T>) -> mlua::Result<T> {
 		FILE_CACHE.init(Default::default());
 		defer! { FILE_CACHE.drop(); }
 

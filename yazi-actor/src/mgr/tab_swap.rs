@@ -23,7 +23,7 @@ impl Actor for TabSwap {
 		tabs.items.swap(tabs.cursor, new);
 		tabs.set_idx(new);
 
-		let cx = &mut Ctx::active(cx.core);
+		let cx = &mut Ctx::renew(cx);
 		act!(mgr:refresh, cx)?;
 		act!(mgr:peek, cx, true)?;
 

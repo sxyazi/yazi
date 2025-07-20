@@ -23,7 +23,7 @@ impl<'a> From<BodyDelete<'a>> for Body<'a> {
 	fn from(value: BodyDelete<'a>) -> Self { Self::Delete(value) }
 }
 
-impl IntoLua for BodyDelete<'static> {
+impl IntoLua for BodyDelete<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		let urls =
 			lua.create_sequence_from(self.urls.into_owned().into_iter().map(yazi_binding::Url::new))?;

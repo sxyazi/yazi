@@ -21,7 +21,6 @@ impl App {
 
 		let mut app = Self { core: Core::make(), term: Some(term), signals };
 		act!(bootstrap, app)?;
-		act!(render, app)?;
 
 		let mut events = Vec::with_capacity(50);
 		let (mut timeout, mut last_render) = (None, Instant::now());

@@ -2,12 +2,13 @@ use anyhow::Result;
 use mlua::Value;
 use ratatui::layout::Position;
 use tracing::error;
+use yazi_actor::lives::Lives;
 use yazi_config::LAYOUT;
 use yazi_macro::{render, succ};
 use yazi_parser::VoidOpt;
 use yazi_shared::event::Data;
 
-use crate::{Root, app::App, lives::Lives};
+use crate::{Root, app::App};
 
 impl App {
 	pub fn reflow(&mut self, _: VoidOpt) -> Result<Data> {
