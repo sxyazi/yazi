@@ -44,9 +44,7 @@ anyhow       = { workspace = true }
 better-panic = "0.3.0"
 crossterm    = { workspace = true }
 fdlimit      = "0.3.0"
-foldhash     = { workspace = true }
 futures      = { workspace = true }
-indexmap     = { workspace = true }
 mlua         = { workspace = true }
 paste        = { workspace = true }
 ratatui      = { workspace = true }

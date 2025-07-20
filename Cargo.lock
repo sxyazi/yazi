@@ -3700,9 +3700,7 @@ dependencies = [
  "better-panic",
  "crossterm 0.29.0",
  "fdlimit",
- "foldhash",
  "futures",
- "indexmap",
  "libc",
  "mlua",
  "paste",
@@ -3833,8 +3831,6 @@ name = "yazi-proxy"
 version = "25.6.11"
 dependencies = [
  "anyhow",
- "mlua",
- "serde",
  "tokio",
  "yazi-config",
  "yazi-macro",
@@ -3872,7 +3868,6 @@ name = "yazi-shared"
 version = "25.6.11"
 dependencies = [
  "anyhow",
- "bitflags 2.9.1",
  "crossterm 0.29.0",
  "foldhash",
  "futures",
