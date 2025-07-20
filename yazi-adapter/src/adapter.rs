@@ -7,7 +7,7 @@ use yazi_shared::env_exists;
 
 use crate::{Emulator, SHOWN, TMUX, drivers};
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Adapter {
 	Kgp,
 	KgpOld,

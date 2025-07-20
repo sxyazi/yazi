@@ -1,8 +1,10 @@
+use mlua::{ExternalError, IntoLua, Lua, Value};
 use yazi_fs::expand_path;
 use yazi_shared::{event::CmdCow, url::Url};
 
 use crate::mgr::CdSource;
 
+#[derive(Debug)]
 pub struct RevealOpt {
 	pub target:   Url,
 	pub source:   CdSource,
@@ -26,4 +28,8 @@ impl From<Url> for RevealOpt {
 
 impl From<(Url, CdSource)> for RevealOpt {
 	fn from((target, source): (Url, CdSource)) -> Self { Self { target, source, no_dummy: false } }
+}
+
+impl IntoLua for &RevealOpt {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

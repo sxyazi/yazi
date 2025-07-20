@@ -4,7 +4,7 @@ use crossterm::event::MouseEventKind;
 use serde::{Deserialize, Serialize};
 
 bitflags! {
-	#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
+	#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 	#[serde(try_from = "Vec<String>", into = "Vec<String>")]
 	pub struct MouseEvents: u8 {
 		const CLICK  = 0b00001;

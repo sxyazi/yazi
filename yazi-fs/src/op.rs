@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
-use yazi_shared::{Id, Ids, event::Cmd, url::{Url, UrnBuf}};
+use yazi_macro::relay;
+use yazi_shared::{Id, Ids, url::{Url, UrnBuf}};
 
 use super::File;
 use crate::{cha::Cha, maybe_exists};
@@ -40,8 +41,7 @@ impl FilesOp {
 
 	#[inline]
 	pub fn emit(self) {
-		yazi_shared::event::Event::Call(Cmd::new("mgr:update_files").with_any("op", self).into())
-			.emit();
+		yazi_shared::event::Event::Call(relay!(mgr:update_files).with_any("op", self).into()).emit();
 	}
 
 	pub fn prepare(cwd: &Url) -> Id {

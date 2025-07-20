@@ -1,6 +1,8 @@
 use anyhow::bail;
+use mlua::{ExternalError, IntoLua, Lua, Value};
 use yazi_shared::{SStr, event::CmdCow};
 
+#[derive(Debug)]
 pub struct LinemodeOpt {
 	pub new: SStr,
 }
@@ -19,4 +21,8 @@ impl TryFrom<CmdCow> for LinemodeOpt {
 
 		Ok(Self { new })
 	}
+}
+
+impl IntoLua for &LinemodeOpt {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

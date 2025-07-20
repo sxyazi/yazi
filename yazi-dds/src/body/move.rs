@@ -27,7 +27,7 @@ impl<'a> From<BodyMove<'a>> for Body<'a> {
 	fn from(value: BodyMove<'a>) -> Self { Self::Move(value) }
 }
 
-impl IntoLua for BodyMove<'static> {
+impl IntoLua for BodyMove<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua.create_table_from([("items", self.items.into_owned())])?.into_lua(lua)
 	}

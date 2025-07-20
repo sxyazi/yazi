@@ -26,7 +26,7 @@ impl<'a> From<BodyHover<'a>> for Body<'a> {
 	fn from(value: BodyHover<'a>) -> Self { Self::Hover(value) }
 }
 
-impl IntoLua for BodyHover<'static> {
+impl IntoLua for BodyHover<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua
 			.create_table_from([

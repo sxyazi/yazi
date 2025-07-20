@@ -1,8 +1,9 @@
 use anyhow::bail;
-use mlua::Table;
+use mlua::{ExternalError, IntoLua, Lua, Table, Value};
 use yazi_binding::{FileRef, elements::{Rect, Renderable}};
 use yazi_shared::event::CmdCow;
 
+#[derive(Debug)]
 pub struct UpdatePeekedOpt {
 	pub lock: PreviewLock,
 }
@@ -21,6 +22,10 @@ impl TryFrom<CmdCow> for UpdatePeekedOpt {
 
 		Ok(Self { lock })
 	}
+}
+
+impl IntoLua for &UpdatePeekedOpt {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }
 
 // --- Lock

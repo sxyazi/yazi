@@ -1,5 +1,7 @@
+use mlua::{ExternalError, IntoLua, Lua, Value};
 use yazi_shared::{event::CmdCow, url::Url};
 
+#[derive(Debug)]
 pub struct ToggleAllOpt {
 	pub urls:  Vec<Url>,
 	pub state: Option<bool>,
@@ -28,4 +30,8 @@ impl From<CmdCow> for ToggleAllOpt {
 
 impl From<Option<bool>> for ToggleAllOpt {
 	fn from(state: Option<bool>) -> Self { Self { urls: vec![], state } }
+}
+
+impl IntoLua for &ToggleAllOpt {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

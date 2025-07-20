@@ -59,6 +59,10 @@ impl Actor for Quit {
 		});
 		succ!();
 	}
+
+	fn hook(cx: &Ctx, _opt: &Self::Options) -> Option<&'static str> {
+		Some("key-quit").filter(|_| cx.source().is_key())
+	}
 }
 
 impl Quit {

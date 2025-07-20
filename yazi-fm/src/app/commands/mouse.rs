@@ -2,13 +2,14 @@ use anyhow::Result;
 use crossterm::event::MouseEventKind;
 use mlua::{ObjectLike, Table};
 use tracing::error;
+use yazi_actor::lives::Lives;
 use yazi_config::YAZI;
 use yazi_macro::succ;
 use yazi_parser::app::MouseOpt;
 use yazi_plugin::LUA;
 use yazi_shared::event::Data;
 
-use crate::{app::App, lives::Lives};
+use crate::app::App;
 
 impl App {
 	pub fn mouse(&mut self, opt: MouseOpt) -> Result<Data> {

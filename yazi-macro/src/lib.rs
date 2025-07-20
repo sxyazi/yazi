@@ -5,4 +5,5 @@ mod fmt;
 mod log;
 mod module;
 mod platform;
+mod render;
 mod stdio;

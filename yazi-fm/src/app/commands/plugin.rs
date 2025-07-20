@@ -2,6 +2,7 @@ use anyhow::Result;
 use mlua::ObjectLike;
 use scopeguard::defer;
 use tracing::{error, warn};
+use yazi_actor::lives::Lives;
 use yazi_binding::runtime_mut;
 use yazi_dds::Sendable;
 use yazi_macro::succ;
@@ -10,7 +11,7 @@ use yazi_plugin::{LUA, loader::{LOADER, Loader}};
 use yazi_proxy::AppProxy;
 use yazi_shared::event::Data;
 
-use crate::{app::App, lives::Lives};
+use crate::app::App;
 
 impl App {
 	pub(crate) fn plugin(&mut self, mut opt: PluginOpt) -> Result<Data> {

@@ -1,6 +1,6 @@
 use ratatui::layout::Rect;
 
-#[derive(Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Default, Eq, PartialEq)]
 pub struct Layout {
 	pub current:  Rect,
 	pub preview:  Rect,

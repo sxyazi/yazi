@@ -1,7 +1,8 @@
+use mlua::{ExternalError, IntoLua, Lua, Value};
 use yazi_fs::FilterCase;
 use yazi_shared::{SStr, event::CmdCow};
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct FilterOpt {
 	pub query: SStr,
 	pub case:  FilterCase,
@@ -22,4 +23,8 @@ impl TryFrom<CmdCow> for FilterOpt {
 			done:  c.bool("done"),
 		})
 	}
+}
+
+impl IntoLua for &FilterOpt {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

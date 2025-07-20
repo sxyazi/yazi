@@ -1,7 +1,9 @@
 use anyhow::bail;
+use mlua::{ExternalError, IntoLua, Lua, Value};
 use yazi_fs::FilesOp;
 use yazi_shared::event::CmdCow;
 
+#[derive(Debug)]
 pub struct UpdateFilesOpt {
 	pub op: FilesOp,
 }
@@ -16,4 +18,8 @@ impl TryFrom<CmdCow> for UpdateFilesOpt {
 
 		Ok(Self { op })
 	}
+}
+
+impl IntoLua for &UpdateFilesOpt {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

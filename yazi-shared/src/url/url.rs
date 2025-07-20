@@ -130,8 +130,8 @@ impl From<Url> for Cow<'_, Url> {
 	fn from(url: Url) -> Self { Cow::Owned(url) }
 }
 
-impl From<Cow<'static, Url>> for Url {
-	fn from(url: Cow<'static, Url>) -> Self { url.into_owned() }
+impl From<Cow<'_, Url>> for Url {
+	fn from(url: Cow<'_, Url>) -> Self { url.into_owned() }
 }
 
 impl Url {

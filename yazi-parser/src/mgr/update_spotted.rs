@@ -1,8 +1,9 @@
 use anyhow::bail;
-use mlua::Table;
+use mlua::{ExternalError, IntoLua, Lua, Table, Value};
 use yazi_binding::{FileRef, elements::Renderable};
 use yazi_shared::{Id, event::CmdCow};
 
+#[derive(Debug)]
 pub struct UpdateSpottedOpt {
 	pub lock: SpotLock,
 }
@@ -23,7 +24,12 @@ impl TryFrom<CmdCow> for UpdateSpottedOpt {
 	}
 }
 
+impl IntoLua for &UpdateSpottedOpt {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
+}
+
 // --- Lock
+#[derive(Debug)]
 pub struct SpotLock {
 	pub url:  yazi_shared::url::Url,
 	pub cha:  yazi_fs::cha::Cha,

@@ -24,7 +24,7 @@ macro_rules! deprecate {
 				None => "`init.lua` config",
 			};
 			yazi_macro::emit!(Call(
-				yazi_shared::event::Cmd::new("app:deprecate").with("content", format!($tt, id))
+				yazi_macro::relay!(app:deprecate).with("content", format!($tt, id))
 			));
 		}
 	}};

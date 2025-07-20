@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-#[derive(Default, Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum Priority {
 	Low    = 0,

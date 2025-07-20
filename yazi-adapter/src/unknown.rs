@@ -1,6 +1,6 @@
 use crate::Adapter;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Unknown {
 	pub kgp:   bool,
 	pub sixel: bool,

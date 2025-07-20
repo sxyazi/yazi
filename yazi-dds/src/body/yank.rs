@@ -26,6 +26,6 @@ impl<'a> From<BodyYank<'a>> for Body<'a> {
 	fn from(value: BodyYank<'a>) -> Self { Self::Yank(value) }
 }
 
-impl IntoLua for BodyYank<'static> {
+impl IntoLua for BodyYank<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { self.0.into_lua(lua) }
 }

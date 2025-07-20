@@ -1,6 +1,8 @@
 use anyhow::bail;
+use mlua::{ExternalError, IntoLua, Lua, Value};
 use yazi_shared::{SStr, event::CmdCow};
 
+#[derive(Debug)]
 pub struct SearchOpt {
 	pub via:      SearchOptVia,
 	pub subject:  SStr,
@@ -33,8 +35,12 @@ impl TryFrom<CmdCow> for SearchOpt {
 	}
 }
 
+impl IntoLua for &SearchOpt {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
+}
+
 // Via
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SearchOptVia {
 	Rg,
 	Rga,

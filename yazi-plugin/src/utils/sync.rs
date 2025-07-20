@@ -1,3 +1,4 @@
+use anyhow::Context;
 use futures::future::join_all;
 use mlua::{ExternalError, ExternalResult, Function, IntoLuaMulti, Lua, MultiValue, Value, Variadic};
 use tokio::sync::oneshot;
@@ -20,9 +21,14 @@ impl Utils {
 
 				lua.create_async_function(move |lua, args: MultiValue| async move {
 					let Some(cur) = runtime!(lua)?.current_owned() else {
-						return Err("block spawned by `ya.sync()` must be called in a plugin").into_lua_err();
+						return Err("`ya.sync()` block must be used within a plugin").into_lua_err();
 					};
-					Sendable::list_to_values(&lua, Self::retrieve(&lua, cur, block, args).await?)
+
+					Self::retrieve(&lua, &cur, block, args)
+						.await
+						.and_then(|data| Sendable::list_to_values(&lua, data))
+						.with_context(|| format!("Failed to execute sync block-{block} in `{cur}` plugin"))
+						.into_lua_err()
 				})
 			})
 		} else {
@@ -81,7 +87,7 @@ impl Utils {
 
 	async fn retrieve(
 		lua: &Lua,
-		id: String,
+		id: &str,
 		calls: usize,
 		args: MultiValue,
 	) -> mlua::Result<Vec<Data>> {
@@ -89,7 +95,7 @@ impl Utils {
 		let (tx, rx) = oneshot::channel::<Vec<Data>>();
 
 		let callback: PluginCallback = {
-			let id = id.clone();
+			let id = id.to_owned();
 			Box::new(move |lua, plugin| {
 				let Some(block) = runtime!(lua)?.get_block(&id, calls) else {
 					return Err("sync block not found".into_lua_err());
@@ -105,9 +111,8 @@ impl Utils {
 			})
 		};
 
-		AppProxy::plugin(PluginOpt::new_callback(id.clone(), callback));
+		AppProxy::plugin(PluginOpt::new_callback(id.to_owned(), callback));
 
-		rx.await
-			.map_err(|_| format!("Failed to execute sync block-{calls} in `{id}` plugin").into_lua_err())
+		rx.await.into_lua_err()
 	}
 }

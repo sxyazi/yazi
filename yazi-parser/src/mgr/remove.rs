@@ -1,5 +1,7 @@
+use mlua::{ExternalError, IntoLua, Lua, Value};
 use yazi_shared::{event::CmdCow, url::Url};
 
+#[derive(Debug)]
 pub struct RemoveOpt {
 	pub force:       bool,
 	pub permanently: bool,
@@ -16,4 +18,8 @@ impl From<CmdCow> for RemoveOpt {
 			targets:     c.take_any("targets").unwrap_or_default(),
 		}
 	}
+}
+
+impl IntoLua for &RemoveOpt {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

@@ -2,8 +2,8 @@ use std::{fmt::Display, io::Write, str::FromStr};
 
 use anyhow::{Result, anyhow};
 use yazi_boot::BOOT;
-use yazi_macro::emit;
-use yazi_shared::{Id, event::Cmd};
+use yazi_macro::{emit, relay};
+use yazi_shared::Id;
 
 use crate::{ID, body::Body};
 
@@ -47,7 +47,7 @@ impl<'a> Payload<'a> {
 impl Payload<'static> {
 	pub(super) fn emit(self) -> Result<()> {
 		self.try_flush()?;
-		emit!(Call(Cmd::new("app:accept_payload").with_any("payload", self)));
+		emit!(Call(relay!(app:accept_payload).with_any("payload", self)));
 		Ok(())
 	}
 }
@@ -93,8 +93,8 @@ impl Display for Payload<'_> {
 			Body::Trash(b) => serde_json::to_string(b),
 			Body::Delete(b) => serde_json::to_string(b),
 			Body::Mount(b) => serde_json::to_string(b),
-			Body::BeforeQuit(b) => serde_json::to_string(b),
 			Body::Custom(b) => serde_json::to_string(b),
+			_ => return Err(std::fmt::Error),
 		};
 
 		if let Ok(s) = result {

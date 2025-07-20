@@ -1,7 +1,7 @@
 use std::{borrow::Cow, collections::HashSet};
 
 use anyhow::bail;
-use mlua::{AnyUserData, IntoLua, Lua, MetaMethod, MultiValue, ObjectLike, UserData, UserDataFields, UserDataMethods, Value};
+use mlua::{AnyUserData, ExternalError, IntoLua, Lua, MetaMethod, MultiValue, ObjectLike, UserData, UserDataFields, UserDataMethods, Value};
 use serde::{Deserialize, Serialize};
 use yazi_binding::get_metatable;
 use yazi_shared::{event::CmdCow, url::Url};
@@ -29,12 +29,16 @@ impl TryFrom<CmdCow> for UpdateYankedOpt<'_> {
 	}
 }
 
-impl IntoLua for UpdateYankedOpt<'static> {
+impl IntoLua for UpdateYankedOpt<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		let len = self.urls.len();
 		let iter = Iter::new(self.urls.into_owned().into_iter().map(yazi_binding::Url::new), Some(len));
 		UpdateYankedIter { cut: self.cut, len, inner: lua.create_userdata(iter)? }.into_lua(lua)
 	}
+}
+
+impl IntoLua for &UpdateYankedOpt<'_> {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }
 
 // --- Iter
