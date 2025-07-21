@@ -25,3 +25,6 @@ fn hostname_impl() -> Result<String, std::io::Error> {
 		.map_err(|_| std::io::Error::other("invalid hostname"))
 		.map(|s| s.to_owned())
 }
+
+#[cfg(unix)]
+pub fn session_leader() -> bool { unsafe { libc::getsid(0) == libc::getpid() } }

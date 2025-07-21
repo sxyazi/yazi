@@ -8,8 +8,8 @@ macro_rules! act {
 	(@impl $layer:ident : $name:ident, $cx:ident, $opt:ident) => {{
 		$cx.level += 1;
 		let result = match act!(@pre $layer:$name, $cx, $opt) {
-			None | Some(Ok(yazi_shared::event::Data::Boolean(false))) => <act!($layer:$name) as yazi_actor::Actor>::act($cx, $opt),
-			Some(Ok(_)) => Err(anyhow::anyhow!("canceled on preflight")),
+			Some(Ok(yazi_shared::event::Data::Boolean(true))) => Err(anyhow::anyhow!("canceled on preflight")),
+			None | Some(Ok(_)) => <act!($layer:$name) as yazi_actor::Actor>::act($cx, $opt),
 			Some(e @ Err(_)) => e,
 		};
 		$cx.level -= 1;

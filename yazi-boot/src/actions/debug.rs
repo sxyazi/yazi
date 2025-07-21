@@ -39,7 +39,7 @@ impl Actions {
 		writeln!(s, "    WAYFIRE_SOCKET             : {:?}", env::var_os("WAYFIRE_SOCKET"))?;
 
 		writeln!(s, "\nSSH")?;
-		writeln!(s, "    shared.in_ssh_connection: {:?}", yazi_shared::in_ssh_connection())?;
+		writeln!(s, "    shared.in_ssh_connection: {}", yazi_shared::in_ssh_connection())?;
 
 		writeln!(s, "\nWSL")?;
 		writeln!(s, "    WSL: {:?}", yazi_adapter::WSL)?;

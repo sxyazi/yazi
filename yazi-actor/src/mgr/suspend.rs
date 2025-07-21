@@ -14,8 +14,10 @@ impl Actor for Suspend {
 
 	fn act(_: &mut Ctx, _: Self::Options) -> Result<Data> {
 		#[cfg(unix)]
-		unsafe {
-			libc::raise(libc::SIGTSTP);
+		if !yazi_shared::session_leader() {
+			unsafe {
+				libc::raise(libc::SIGTSTP);
+			}
 		}
 		succ!();
 	}
