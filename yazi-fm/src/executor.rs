@@ -98,6 +98,7 @@ impl<'a> Executor<'a> {
 		on!(visual_mode);
 
 		// Operation
+		on!(bulk_rename);
 		on!(open);
 		on!(open_do);
 		on!(yank);
