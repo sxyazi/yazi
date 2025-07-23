@@ -1,17 +1,19 @@
-use std::path::Path;
+use std::io::BufReader;
 
 use anyhow::Result;
-use image::{DynamicImage, ExtendedColorType, ImageDecoder, ImageEncoder, ImageError, ImageReader, ImageResult, Limits, codecs::{jpeg::JpegEncoder, png::PngEncoder}, imageops::FilterType, metadata::Orientation};
+use image::{DynamicImage, ExtendedColorType, ImageDecoder, ImageEncoder, ImageError, ImageFormat, ImageReader, ImageResult, Limits, codecs::{jpeg::JpegEncoder, png::PngEncoder}, imageops::FilterType, metadata::Orientation};
 use ratatui::layout::Rect;
 use yazi_config::YAZI;
+use yazi_fs::services;
+use yazi_shared::url::Url;
 
 use crate::Dimension;
 
 pub struct Image;
 
 impl Image {
-	pub async fn precache(path: &Path, cache: &Path) -> Result<()> {
-		let (mut img, orientation, icc) = Self::decode_from(path).await?;
+	pub async fn precache(src: &Url, cache: &Url) -> Result<()> {
+		let (mut img, orientation, icc) = Self::decode_from(src).await?;
 		let (w, h) = Self::flip_size(orientation, (YAZI.preview.max_width, YAZI.preview.max_height));
 
 		let buf = tokio::task::spawn_blocking(move || {
@@ -38,11 +40,11 @@ impl Image {
 		})
 		.await??;
 
-		Ok(tokio::fs::write(cache, buf).await?)
+		Ok(services::write(cache, buf).await?)
 	}
 
-	pub(super) async fn downscale(path: &Path, rect: Rect) -> Result<DynamicImage> {
-		let (mut img, orientation, _) = Self::decode_from(path).await?;
+	pub(super) async fn downscale(url: &Url, rect: Rect) -> Result<DynamicImage> {
+		let (mut img, orientation, _) = Self::decode_from(url).await?;
 		let (w, h) = Self::flip_size(orientation, Self::max_pixel(rect));
 
 		// Fast path.
@@ -96,7 +98,7 @@ impl Image {
 		}
 	}
 
-	async fn decode_from(path: &Path) -> ImageResult<(DynamicImage, Orientation, Option<Vec<u8>>)> {
+	async fn decode_from(url: &Url) -> ImageResult<(DynamicImage, Orientation, Option<Vec<u8>>)> {
 		let mut limits = Limits::no_limits();
 		if YAZI.tasks.image_alloc > 0 {
 			limits.max_alloc = Some(YAZI.tasks.image_alloc as u64);
@@ -108,11 +110,13 @@ impl Image {
 			limits.max_image_height = Some(YAZI.tasks.image_bound[1] as u32);
 		}
 
-		let path = path.to_owned();
-		tokio::task::spawn_blocking(move || {
-			let mut reader = ImageReader::open(path)?;
-			reader.limits(limits);
+		let mut reader = ImageReader::new(BufReader::new(services::open(&url).await?.into_std().await));
+		if let Ok(format) = ImageFormat::from_path(url) {
+			reader.set_format(format);
+		}
 
+		reader.limits(limits);
+		tokio::task::spawn_blocking(move || {
 			let mut decoder = reader.with_guessed_format()?.into_decoder()?;
 			let orientation = decoder.orientation().unwrap_or(Orientation::NoTransforms);
 			let icc = decoder.icc_profile().unwrap_or_default();

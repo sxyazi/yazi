@@ -3,8 +3,8 @@ use std::{borrow::Cow, collections::HashMap, ops::Deref};
 use anyhow::{Context, Result, bail};
 use mlua::{ChunkMode, ExternalError, Lua, Table};
 use parking_lot::RwLock;
-use tokio::fs;
 use yazi_boot::BOOT;
+use yazi_fs::services::Local;
 use yazi_macro::plugin_preset as preset;
 use yazi_shared::{LOG_LEVEL, RoCell};
 
@@ -61,7 +61,7 @@ impl Loader {
 
 		let p = BOOT.plugin_dir.join(format!("{name}.yazi/main.lua"));
 		let chunk =
-			fs::read(&p).await.with_context(|| format!("Failed to load plugin from {p:?}"))?.into();
+			Local::read(&p).await.with_context(|| format!("Failed to load plugin from {p:?}"))?.into();
 
 		let result = Self::compatible_or_error(name, &chunk);
 		let inspect = f(&chunk);

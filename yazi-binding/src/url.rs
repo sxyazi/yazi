@@ -25,6 +25,11 @@ impl Deref for Url {
 	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
+impl AsRef<yazi_shared::url::Url> for Url {
+	fn as_ref(&self) -> &yazi_shared::url::Url { &self.inner }
+}
+
+// FIXME: remove
 impl AsRef<Path> for Url {
 	fn as_ref(&self) -> &Path { self.inner.as_path() }
 }

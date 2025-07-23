@@ -1,10 +1,11 @@
 use core::str;
-use std::{io::Write, path::Path};
+use std::io::Write;
 
 use anyhow::Result;
 use base64::{Engine, engine::general_purpose};
 use image::DynamicImage;
 use ratatui::layout::Rect;
+use yazi_shared::url::Url;
 use yazi_term::tty::TTY;
 
 use crate::{CLOSE, ESCAPE, Emulator, Image, START, adapter::Adapter};
@@ -12,8 +13,8 @@ use crate::{CLOSE, ESCAPE, Emulator, Image, START, adapter::Adapter};
 pub(crate) struct KgpOld;
 
 impl KgpOld {
-	pub(crate) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
-		let img = Image::downscale(path, max).await?;
+	pub(crate) async fn image_show(url: &Url, max: Rect) -> Result<Rect> {
+		let img = Image::downscale(url, max).await?;
 		let area = Image::pixel_area((img.width(), img.height()), max);
 		let b = Self::encode(img).await?;
 

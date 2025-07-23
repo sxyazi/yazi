@@ -1,8 +1,7 @@
 use std::{ffi::OsString, mem, path::{MAIN_SEPARATOR_STR, Path, PathBuf}};
 
 use anyhow::Result;
-use tokio::fs;
-use yazi_fs::{CWD, expand_path};
+use yazi_fs::{CWD, expand_path, services::Local};
 use yazi_macro::{act, render, succ};
 use yazi_parser::cmp::{CmpItem, ShowOpt, TriggerOpt};
 use yazi_proxy::CmpProxy;
@@ -37,7 +36,8 @@ impl Actor for Trigger {
 
 		let ticket = cmp.ticket;
 		tokio::spawn(async move {
-			let mut dir = fs::read_dir(&parent).await?;
+			// TODO: support VFS
+			let mut dir = Local::read_dir(&parent).await?;
 			let mut cache = vec![];
 
 			// "/" is both a directory separator and the root directory per se

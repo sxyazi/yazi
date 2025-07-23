@@ -3530,6 +3530,7 @@ dependencies = [
  "tokio",
  "tracing",
  "yazi-config",
+ "yazi-fs",
  "yazi-macro",
  "yazi-shared",
  "yazi-term",
