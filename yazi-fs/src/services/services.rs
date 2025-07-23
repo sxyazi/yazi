@@ -31,7 +31,7 @@ pub async fn metadata(url: impl AsRef<Url>) -> io::Result<std::fs::Metadata> {
 
 #[inline]
 pub async fn open(url: impl AsRef<Url>) -> io::Result<tokio::fs::File> {
-	tokio::fs::File::open(url.as_ref()).await
+	Local::open(url.as_ref()).await
 }
 
 #[inline]
