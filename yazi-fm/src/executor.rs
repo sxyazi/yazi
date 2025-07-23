@@ -98,7 +98,6 @@ impl<'a> Executor<'a> {
 		on!(visual_mode);
 
 		// Operation
-		on!(bulk_rename);
 		on!(open);
 		on!(open_do);
 		on!(yank);
@@ -116,6 +115,7 @@ impl<'a> Executor<'a> {
 		on!(linemode);
 		on!(search);
 		on!(search_do);
+		on!(bulk_rename);
 
 		// Filter
 		on!(filter);

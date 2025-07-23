@@ -20,7 +20,7 @@ impl Actor for Rename {
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
 
-		if !opt.hovered && !cx.tab_mut().selected.is_empty() {
+		if !opt.hovered && !cx.tab().selected.is_empty() {
 			return act!(mgr:bulk_rename, cx);
 		}
 
