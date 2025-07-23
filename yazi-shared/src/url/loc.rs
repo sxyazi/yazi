@@ -138,6 +138,8 @@ impl Loc {
 
 #[cfg(test)]
 mod tests {
+	use std::path::MAIN_SEPARATOR;
+
 	use super::*;
 
 	#[test]
@@ -184,12 +186,12 @@ mod tests {
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 
 		loc.set_name("bar.txt");
-		assert_eq!(loc.urn().as_os_str(), OsStr::new("code/bar.txt"));
+		assert_eq!(loc.urn().as_os_str(), OsString::from(format!("code{MAIN_SEPARATOR}bar.txt")));
 		assert_eq!(loc.name(), OsStr::new("bar.txt"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 
 		loc.set_name("baz");
-		assert_eq!(loc.urn().as_os_str(), OsStr::new("code/baz"));
+		assert_eq!(loc.urn().as_os_str(), OsString::from(format!("code{MAIN_SEPARATOR}baz")));
 		assert_eq!(loc.name(), OsStr::new("baz"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 	}
