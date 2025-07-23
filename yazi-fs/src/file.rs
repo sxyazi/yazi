@@ -1,10 +1,9 @@
 use std::{ffi::OsStr, fs::{FileType, Metadata}, hash::{BuildHasher, Hash, Hasher}, ops::Deref};
 
 use anyhow::Result;
-use tokio::fs;
 use yazi_shared::url::{Url, Urn, UrnBuf};
 
-use crate::cha::Cha;
+use crate::{cha::Cha, services};
 
 #[derive(Clone, Debug, Default)]
 pub struct File {
@@ -23,14 +22,13 @@ impl Deref for File {
 impl File {
 	#[inline]
 	pub async fn new(url: Url) -> Result<Self> {
-		let meta = fs::symlink_metadata(&url).await?;
+		let meta = services::symlink_metadata(&url).await?;
 		Ok(Self::from_follow(url, meta).await)
 	}
 
 	#[inline]
 	pub async fn from_follow(url: Url, meta: Metadata) -> Self {
-		let link_to =
-			if meta.is_symlink() { fs::read_link(&url).await.map(Url::from).ok() } else { None };
+		let link_to = if meta.is_symlink() { services::read_link(&url).await.ok() } else { None };
 
 		let cha = Cha::from_follow(&url, meta).await;
 

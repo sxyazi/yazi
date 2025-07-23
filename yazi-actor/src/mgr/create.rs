@@ -1,7 +1,6 @@
 use anyhow::Result;
-use tokio::fs;
 use yazi_config::popup::{ConfirmCfg, InputCfg};
-use yazi_fs::{File, FilesOp, maybe_exists, ok_or_not_found, realname};
+use yazi_fs::{File, FilesOp, maybe_exists, ok_or_not_found, realname, services};
 use yazi_macro::succ;
 use yazi_parser::mgr::CreateOpt;
 use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy, WATCHER};
@@ -46,15 +45,15 @@ impl Create {
 		let _permit = WATCHER.acquire().await.unwrap();
 
 		if dir {
-			fs::create_dir_all(&new).await?;
+			services::create_dir_all(&new).await?;
 		} else if let Some(real) = realname(&new).await {
-			ok_or_not_found(fs::remove_file(&new).await)?;
+			ok_or_not_found(services::remove_file(&new).await)?;
 			FilesOp::Deleting(parent.clone(), [UrnBuf::from(real)].into()).emit();
-			fs::File::create(&new).await?;
+			services::create(&new).await?;
 		} else {
-			fs::create_dir_all(&parent).await.ok();
-			ok_or_not_found(fs::remove_file(&new).await)?;
-			fs::File::create(&new).await?;
+			services::create_dir_all(&parent).await.ok();
+			ok_or_not_found(services::remove_file(&new).await)?;
+			services::create(&new).await?;
 		}
 
 		if let Ok(f) = File::new(new.clone()).await {

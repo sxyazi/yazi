@@ -1,6 +1,5 @@
 use anyhow::{Context, Result};
-use tokio::fs;
-use yazi_fs::{maybe_exists, ok_or_not_found, remove_dir_clean, remove_sealed};
+use yazi_fs::{maybe_exists, ok_or_not_found, remove_dir_clean, remove_sealed, services::Local};
 use yazi_macro::outln;
 
 use super::Dependency;
@@ -23,7 +22,7 @@ impl Dependency {
 
 	pub(super) async fn delete_assets(&self) -> Result<()> {
 		let assets = self.target().join("assets");
-		match fs::read_dir(&assets).await {
+		match Local::read_dir(&assets).await {
 			Ok(mut it) => {
 				while let Some(entry) = it.next_entry().await? {
 					remove_sealed(&entry.path())
@@ -52,7 +51,7 @@ impl Dependency {
 				.with_context(|| format!("failed to delete `{}`", p.display()))?;
 		}
 
-		if ok_or_not_found(fs::remove_dir(&dir).await).is_ok() {
+		if ok_or_not_found(Local::remove_dir(&dir).await).is_ok() {
 			outln!("Done!")?;
 		} else {
 			outln!(

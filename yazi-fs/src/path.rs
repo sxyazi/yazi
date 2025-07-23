@@ -1,9 +1,8 @@
 use std::{borrow::Cow, env, ffi::{OsStr, OsString}, future::Future, io, path::{Component, Path, PathBuf}};
 
-use tokio::fs;
-use yazi_shared::url::{Loc, Url};
+use yazi_shared::url::Url;
 
-use crate::CWD;
+use crate::{CWD, services};
 
 #[inline]
 pub fn clean_url(url: &Url) -> Url { Url::from(clean_path(url)) }
@@ -83,19 +82,19 @@ pub async fn unique_name<F>(u: Url, append: F) -> io::Result<Url>
 where
 	F: Future<Output = bool>,
 {
-	match fs::symlink_metadata(&u).await {
+	match services::symlink_metadata(&u).await {
 		Ok(_) => _unique_name(u, append.await).await,
 		Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(u),
 		Err(e) => Err(e),
 	}
 }
 
-async fn _unique_name(mut u: Url, append: bool) -> io::Result<Url> {
-	let Some(stem) = u.file_stem().map(|s| s.to_owned()) else {
+async fn _unique_name(mut url: Url, append: bool) -> io::Result<Url> {
+	let Some(stem) = url.file_stem().map(|s| s.to_owned()) else {
 		return Err(io::Error::new(io::ErrorKind::InvalidInput, "empty file stem"));
 	};
 
-	let dot_ext = u.extension().map_or_else(OsString::new, |e| {
+	let dot_ext = url.extension().map_or_else(OsString::new, |e| {
 		let mut s = OsString::with_capacity(e.len() + 1);
 		s.push(".");
 		s.push(e);
@@ -103,9 +102,9 @@ async fn _unique_name(mut u: Url, append: bool) -> io::Result<Url> {
 	});
 
 	let mut i = 1u64;
-	let mut p = u.to_path();
+	let mut name = OsString::with_capacity(stem.len() + dot_ext.len() + 5);
 	loop {
-		let mut name = OsString::with_capacity(stem.len() + dot_ext.len() + 5);
+		name.clear();
 		name.push(&stem);
 
 		if append {
@@ -118,16 +117,15 @@ async fn _unique_name(mut u: Url, append: bool) -> io::Result<Url> {
 			name.push(&dot_ext);
 		}
 
-		p.set_file_name(name);
-		match fs::symlink_metadata(&p).await {
+		url.set_name(&name);
+		match services::symlink_metadata(&url).await {
 			Ok(_) => i += 1,
 			Err(e) if e.kind() == io::ErrorKind::NotFound => break,
 			Err(e) => return Err(e),
 		}
 	}
 
-	u.set_loc(Loc::from(u.base(), p));
-	Ok(u)
+	Ok(url)
 }
 
 // Parameters

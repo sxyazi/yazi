@@ -1,10 +1,11 @@
-use std::{borrow::Cow, collections::VecDeque, path::Path};
+// FIXME: VFS, depends on yazi_fs::fns
+use std::{borrow::Cow, collections::VecDeque};
 
 use anyhow::{Result, anyhow};
 use tokio::{fs::{self, DirEntry}, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::YAZI;
-use yazi_fs::{SizeCalculator, cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to, skip_path};
+use yazi_fs::{SizeCalculator, cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path_relative_to, services, skip_path};
 use yazi_shared::{Id, url::Url};
 
 use super::{FileIn, FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash};
@@ -327,17 +328,17 @@ impl File {
 	}
 
 	#[inline]
-	async fn cha(path: &Path, follow: bool) -> io::Result<Cha> {
-		let meta = fs::symlink_metadata(path).await?;
-		Ok(if follow { Cha::from_follow(path, meta).await } else { Cha::new(path, meta) })
+	async fn cha(url: &Url, follow: bool) -> io::Result<Cha> {
+		let meta = services::symlink_metadata(url).await?;
+		Ok(if follow { Cha::from_follow(url, meta).await } else { Cha::new(url, meta) })
 	}
 
 	#[inline]
-	async fn cha_from(entry: DirEntry, path: &Path, follow: bool) -> io::Result<Cha> {
+	async fn cha_from(entry: DirEntry, url: &Url, follow: bool) -> io::Result<Cha> {
 		Ok(if follow {
-			Cha::from_follow(path, entry.metadata().await?).await
+			Cha::from_follow(url, entry.metadata().await?).await
 		} else {
-			Cha::new(path, entry.metadata().await?)
+			Cha::new(url, entry.metadata().await?)
 		})
 	}
 }

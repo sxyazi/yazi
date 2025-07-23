@@ -168,6 +168,9 @@ impl Url {
 	}
 
 	#[inline]
+	pub fn set_name(&mut self, name: impl AsRef<OsStr>) { self.loc.set_name(name); }
+
+	#[inline]
 	pub fn pair(&self) -> Option<(Self, UrnBuf)> { Some((self.parent_url()?, self.loc.urn_owned())) }
 
 	#[inline]
@@ -240,9 +243,7 @@ impl Url {
 	#[inline]
 	pub fn set_loc(&mut self, loc: Loc) { self.loc = loc; }
 
-	#[inline]
-	pub fn to_path(&self) -> PathBuf { self.loc.to_path_buf() }
-
+	// FIXME: remove
 	#[inline]
 	pub fn into_path(self) -> PathBuf { self.loc.into_path() }
 

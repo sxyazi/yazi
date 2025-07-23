@@ -3,10 +3,10 @@ use std::{ffi::OsString, future::Future, sync::Arc, time::Duration};
 use anyhow::Result;
 use futures::{FutureExt, future::BoxFuture};
 use parking_lot::Mutex;
-use tokio::{fs, select, sync::mpsc::{self, UnboundedReceiver}, task::JoinHandle};
+use tokio::{select, sync::mpsc::{self, UnboundedReceiver}, task::JoinHandle};
 use yazi_config::{YAZI, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
-use yazi_fs::{must_be_dir, remove_dir_clean, unique_name};
+use yazi_fs::{must_be_dir, remove_dir_clean, services, unique_name};
 use yazi_parser::{app::PluginOpt, tasks::ProcessExecOpt};
 use yazi_proxy::MgrProxy;
 use yazi_shared::{Id, Throttle, url::Url};
@@ -166,7 +166,7 @@ impl Scheduler {
 			move |canceled: bool| {
 				async move {
 					if !canceled {
-						fs::remove_dir_all(&target).await.ok();
+						services::remove_dir_all(&target).await.ok();
 						MgrProxy::update_tasks(&target);
 						Pump::push_delete(target);
 					}

@@ -2,8 +2,9 @@ use std::{collections::HashMap, mem, ops::Deref, sync::atomic::{AtomicU64, Order
 
 use anyhow::Result;
 use parking_lot::RwLock;
-use tokio::{fs::{self, File, OpenOptions}, io::{AsyncBufReadExt, AsyncWriteExt, BufReader, BufWriter}};
+use tokio::{fs::OpenOptions, io::{AsyncBufReadExt, AsyncWriteExt, BufReader, BufWriter}};
 use yazi_boot::BOOT;
+use yazi_fs::services::Local;
 use yazi_shared::{RoCell, timestamp_us};
 
 use crate::CLIENTS;
@@ -56,8 +57,9 @@ impl State {
 			return Ok(());
 		}
 
-		fs::create_dir_all(&BOOT.state_dir).await?;
+		Local::create_dir_all(&BOOT.state_dir).await?;
 		let mut buf = BufWriter::new(
+			// TODO: VFS
 			OpenOptions::new()
 				.write(true)
 				.create(true)
@@ -77,7 +79,7 @@ impl State {
 	}
 
 	async fn load(&self) -> Result<()> {
-		let mut file = BufReader::new(File::open(BOOT.state_dir.join(".dds")).await?);
+		let mut file = BufReader::new(Local::open(BOOT.state_dir.join(".dds")).await?);
 		let mut buf = String::new();
 
 		let mut inner = HashMap::new();
@@ -101,7 +103,7 @@ impl State {
 	}
 
 	async fn skip(&self) -> Result<bool> {
-		let meta = fs::symlink_metadata(BOOT.state_dir.join(".dds")).await?;
+		let meta = Local::symlink_metadata(BOOT.state_dir.join(".dds")).await?;
 		let modified = meta.modified()?.duration_since(UNIX_EPOCH)?.as_micros();
 		Ok(modified >= self.last.load(Ordering::Relaxed) as u128)
 	}

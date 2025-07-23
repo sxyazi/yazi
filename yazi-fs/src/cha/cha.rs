@@ -1,10 +1,10 @@
-use std::{fs::{FileType, Metadata}, path::Path, time::SystemTime};
+use std::{fs::{FileType, Metadata}, time::SystemTime};
 
-use tokio::fs;
 use yazi_macro::{unix_either, win_either};
 use yazi_shared::url::Url;
 
 use super::ChaKind;
+use crate::services;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Cha {
@@ -53,20 +53,20 @@ impl Default for Cha {
 
 impl Cha {
 	#[inline]
-	pub fn new(path: &Path, meta: Metadata) -> Self {
-		Self::from_just_meta(&meta).attach(ChaKind::hidden(path, &meta))
+	pub fn new(url: &Url, meta: Metadata) -> Self {
+		Self::from_just_meta(&meta).attach(ChaKind::hidden(url, &meta))
 	}
 
 	#[inline]
 	pub async fn from_url(url: &Url) -> std::io::Result<Self> {
-		Ok(Self::from_follow(url, fs::symlink_metadata(url).await?).await)
+		Ok(Self::from_follow(url, services::symlink_metadata(url).await?).await)
 	}
 
-	pub async fn from_follow(path: &Path, mut meta: Metadata) -> Self {
-		let mut attached = ChaKind::hidden(path, &meta);
+	pub async fn from_follow(url: &Url, mut meta: Metadata) -> Self {
+		let mut attached = ChaKind::hidden(url, &meta);
 		if meta.is_symlink() {
 			attached |= ChaKind::LINK;
-			meta = fs::metadata(path).await.unwrap_or(meta);
+			meta = services::metadata(url).await.unwrap_or(meta);
 		}
 		if meta.is_symlink() {
 			attached |= ChaKind::ORPHAN;

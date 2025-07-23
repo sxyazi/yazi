@@ -3,10 +3,10 @@ use std::{collections::{HashMap, HashSet}, time::Duration};
 use anyhow::Result;
 use notify::{PollWatcher, RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
 use parking_lot::RwLock;
-use tokio::{fs, pin, sync::{mpsc::{self, UnboundedReceiver}, watch}};
+use tokio::{pin, sync::{mpsc::{self, UnboundedReceiver}, watch}};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tracing::error;
-use yazi_fs::{File, Files, FilesOp, cha::Cha, realname_unchecked};
+use yazi_fs::{File, Files, FilesOp, cha::Cha, realname_unchecked, services};
 use yazi_proxy::WATCHER;
 use yazi_shared::{RoCell, url::Url};
 
@@ -21,6 +21,7 @@ pub struct Watcher {
 	out_tx: mpsc::UnboundedSender<Url>,
 }
 
+// FIXME: VFS
 impl Watcher {
 	pub(super) fn serve() -> Self {
 		let (in_tx, in_rx) = watch::channel(Default::default());
@@ -138,7 +139,7 @@ impl Watcher {
 				};
 
 				let u = &file.url;
-				let eq = (!file.is_link() && fs::canonicalize(u).await.is_ok_and(|p| p == ***u))
+				let eq = (!file.is_link() && services::canonicalize(u).await.is_ok_and(|c| c == *u))
 					|| realname_unchecked(u, &mut cached).await.is_ok_and(|s| urn.as_urn() == s);
 
 				if !eq {
@@ -193,10 +194,10 @@ impl Watcher {
 
 		async fn go(todo: HashSet<Url>) {
 			for from in todo {
-				let Ok(to) = fs::canonicalize(&from).await else { continue };
+				let Ok(to) = services::canonicalize(&from).await else { continue };
 
-				if to != **from && WATCHED.read().contains(&from) {
-					LINKED.write().insert(from, Url::from(to));
+				if to != from && WATCHED.read().contains(&from) {
+					LINKED.write().insert(from, to);
 				}
 			}
 		}

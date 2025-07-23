@@ -95,6 +95,22 @@ impl Loc {
 		}
 	}
 
+	pub fn set_name(&mut self, name: impl AsRef<OsStr>) {
+		let name = name.as_ref();
+		if name == self.name() {
+			return;
+		}
+
+		if self.name > name.len() {
+			self.urn -= self.name - name.len();
+		} else {
+			self.urn += name.len() - self.name;
+		}
+
+		self.name = name.len();
+		self.path.set_file_name(name);
+	}
+
 	#[inline]
 	pub fn base(&self) -> &Path {
 		Path::new(unsafe {
@@ -157,6 +173,24 @@ mod tests {
 		let loc = Loc::from(Path::new("/root//"), "/root/code/foo//".into());
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("code/foo"));
 		assert_eq!(loc.name(), OsStr::new("foo"));
+		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
+	}
+
+	#[test]
+	fn test_set_name() {
+		let mut loc = Loc::from(Path::new("/root"), "/root/code/foo/".into());
+		assert_eq!(loc.urn().as_os_str(), OsStr::new("code/foo"));
+		assert_eq!(loc.name(), OsStr::new("foo"));
+		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
+
+		loc.set_name("bar.txt");
+		assert_eq!(loc.urn().as_os_str(), OsStr::new("code/bar.txt"));
+		assert_eq!(loc.name(), OsStr::new("bar.txt"));
+		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
+
+		loc.set_name("baz");
+		assert_eq!(loc.urn().as_os_str(), OsStr::new("code/baz"));
+		assert_eq!(loc.name(), OsStr::new("baz"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 	}
 }

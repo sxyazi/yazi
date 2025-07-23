@@ -22,6 +22,7 @@ impl Actor for BulkRename {
 
 	const NAME: &str = "bulk_rename";
 
+	// FIXME: VFS
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		let Some(opener) = YAZI.opener.block(YAZI.open.all("bulk-rename.txt", "text/plain")) else {
 			succ!(AppProxy::notify_warn("Bulk rename", "No text opener found"));

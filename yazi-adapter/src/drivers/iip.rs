@@ -1,4 +1,4 @@
-use std::{fmt::Write, io::Write as ioWrite, path::Path};
+use std::{fmt::Write, io::Write as ioWrite};
 
 use anyhow::Result;
 use base64::{Engine, engine::{Config, general_purpose::STANDARD}};
@@ -6,14 +6,15 @@ use crossterm::{cursor::MoveTo, queue};
 use image::{DynamicImage, ExtendedColorType, ImageEncoder, codecs::{jpeg::JpegEncoder, png::PngEncoder}};
 use ratatui::layout::Rect;
 use yazi_config::YAZI;
+use yazi_shared::url::Url;
 
 use crate::{CLOSE, Emulator, Image, START, adapter::Adapter};
 
 pub(crate) struct Iip;
 
 impl Iip {
-	pub(crate) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
-		let img = Image::downscale(path, max).await?;
+	pub(crate) async fn image_show(url: &Url, max: Rect) -> Result<Rect> {
+		let img = Image::downscale(url, max).await?;
 		let area = Image::pixel_area((img.width(), img.height()), max);
 		let b = Self::encode(img).await?;
 
