@@ -50,10 +50,7 @@ impl App {
 			succ!(self.core.tasks.plugin_micro(opt));
 		}
 
-		match runtime_mut!(LUA) {
-			Ok(mut r) => r.push(&opt.id),
-			Err(e) => succ!(warn!("{e}")),
-		}
+		runtime_mut!(LUA)?.push(&opt.id);
 		defer! { _ = runtime_mut!(LUA).map(|mut r| r.pop()) }
 
 		let plugin = match LOADER.load_with(&LUA, &opt.id, chunk) {

@@ -115,6 +115,7 @@ impl<'a> Executor<'a> {
 		on!(linemode);
 		on!(search);
 		on!(search_do);
+		on!(bulk_rename);
 
 		// Filter
 		on!(filter);
