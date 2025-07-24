@@ -17,6 +17,12 @@ use crate::{Actor, Ctx};
 
 pub struct BulkRename;
 
+mod counters;
+mod filename_template;
+mod name_generator;
+
+use name_generator::generate_names;
+
 impl Actor for BulkRename {
 	type Options = VoidOpt;
 
@@ -56,8 +62,8 @@ impl Actor for BulkRename {
 			defer!(AppProxy::resume());
 			AppProxy::stop().await;
 
-			let new: Vec<_> =
-				fs::read_to_string(&tmp).await?.lines().take(old.len()).map(PathBuf::from).collect();
+			let new_names = fs::read_to_string(&tmp).await?;
+			let new = Self::parse_new_names(&new_names, old.len()).await?;
 			Self::r#do(root, old, new).await
 		});
 		succ!();
@@ -65,6 +71,39 @@ impl Actor for BulkRename {
 }
 
 impl BulkRename {
+	/// Reads a number of lines from a string, attempting to parse them as either
+	/// fixed filenames or counter-based templates.
+	///
+	/// The number of expected lines must match `expected_count`.
+	/// If parsing fails, displays all errors to the user and waits for ENTER
+	/// before returning an error.
+	async fn parse_new_names(new_names: &str, expected_count: usize) -> Result<Vec<PathBuf>> {
+		match generate_names(&mut new_names.lines().take(expected_count)) {
+			Ok(paths) => Ok(paths),
+			Err(errors) => {
+				let mut buffer = String::new();
+				errors.iter().for_each(|error| {
+					let _ = error.write_to(&mut buffer);
+				});
+
+				// Show all parse errors in TTY, then return an error
+				terminal_clear(TTY.writer())?;
+				{
+					let mut w = TTY.lockout();
+					writeln!(w, "Errors encountered while parsing rename lines:")?;
+					writeln!(w, "{buffer}")?;
+					writeln!(w, "\nPress ENTER to exit")?;
+					w.flush()?;
+				}
+				// Wait for user input
+				TTY.reader().read_exact(&mut [0])?;
+
+				// Return an error to skip further rename
+				Err(anyhow::anyhow!("Parsing errors in rename lines"))
+			}
+		}
+	}
+
 	async fn r#do(root: PathBuf, old: Vec<PathBuf>, new: Vec<PathBuf>) -> Result<()> {
 		terminal_clear(TTY.writer())?;
 		if old.len() != new.len() {
