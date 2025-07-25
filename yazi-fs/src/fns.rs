@@ -3,24 +3,22 @@
 use std::{borrow::Cow, collections::{HashMap, HashSet}, ffi::{OsStr, OsString}, path::{Path, PathBuf}};
 
 use anyhow::{Result, bail};
-use tokio::{fs, io::{self, AsyncWriteExt}, select, sync::{mpsc, oneshot}, time};
+use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
+use yazi_shared::url::{Component, Url};
 
-use crate::cha::Cha;
-
-#[inline]
-pub async fn must_exists(p: impl AsRef<Path>) -> bool { fs::symlink_metadata(p).await.is_ok() }
+use crate::{cha::Cha, services};
 
 #[inline]
-pub async fn maybe_exists(p: impl AsRef<Path>) -> bool {
-	match fs::symlink_metadata(p).await {
+pub async fn maybe_exists(u: impl AsRef<Url>) -> bool {
+	match services::symlink_metadata(u).await {
 		Ok(_) => true,
 		Err(e) => e.kind() != io::ErrorKind::NotFound,
 	}
 }
 
 #[inline]
-pub async fn must_be_dir(p: impl AsRef<Path>) -> bool {
-	fs::metadata(p).await.is_ok_and(|m| m.is_dir())
+pub async fn must_be_dir(u: impl AsRef<Url>) -> bool {
+	services::metadata(u).await.is_ok_and(|m| m.is_dir())
 }
 
 #[inline]
@@ -85,39 +83,13 @@ async fn _paths_to_same_file(a: &Path, b: &Path) -> std::io::Result<bool> {
 	Ok(final_name(a).await? == final_name(b).await?)
 }
 
-pub async fn copy_and_seal(from: &Path, to: &Path) -> io::Result<()> {
-	let b = fs::read(from).await?;
-	ok_or_not_found(remove_sealed(to).await)?;
-
-	let mut file =
-		fs::OpenOptions::new().create_new(true).write(true).truncate(true).open(to).await?;
-	file.write_all(&b).await?;
-
-	let mut perm = file.metadata().await?.permissions();
-	perm.set_readonly(true);
-	file.set_permissions(perm).await?;
-
-	Ok(())
-}
-
-pub async fn remove_sealed(p: &Path) -> io::Result<()> {
-	#[cfg(windows)]
-	{
-		let mut perm = fs::metadata(p).await?.permissions();
-		perm.set_readonly(false);
-		fs::set_permissions(p, perm).await?;
-	}
-
-	fs::remove_file(p).await
-}
-
-pub async fn realname(p: &Path) -> Option<OsString> {
-	let name = p.file_name()?;
-	if p == fs::canonicalize(p).await.ok()? {
+pub async fn realname(u: &Url) -> Option<OsString> {
+	let name = u.file_name()?;
+	if *u == services::canonicalize(u).await.ok()? {
 		return None;
 	}
 
-	realname_unchecked(p, &mut HashMap::new())
+	realname_unchecked(u, &mut HashMap::new())
 		.await
 		.ok()
 		.filter(|s| s != name)
@@ -127,13 +99,15 @@ pub async fn realname(p: &Path) -> Option<OsString> {
 #[cfg(unix)]
 #[tokio::test]
 async fn test_realname_unchecked() {
-	fs::remove_dir_all("/tmp/issue-1173").await.ok();
-	fs::create_dir_all("/tmp/issue-1173/real-dir").await.unwrap();
-	fs::File::create("/tmp/issue-1173/A").await.unwrap();
-	fs::File::create("/tmp/issue-1173/b").await.unwrap();
-	fs::File::create("/tmp/issue-1173/real-dir/C").await.unwrap();
-	fs::symlink("/tmp/issue-1173/b", "/tmp/issue-1173/D").await.unwrap();
-	fs::symlink("real-dir", "/tmp/issue-1173/link-dir").await.unwrap();
+	use crate::services::Local;
+
+	Local::remove_dir_all("/tmp/issue-1173").await.ok();
+	Local::create_dir_all("/tmp/issue-1173/real-dir").await.unwrap();
+	Local::create("/tmp/issue-1173/A").await.unwrap();
+	Local::create("/tmp/issue-1173/b").await.unwrap();
+	Local::create("/tmp/issue-1173/real-dir/C").await.unwrap();
+	Local::symlink_file("/tmp/issue-1173/b", "/tmp/issue-1173/D").await.unwrap();
+	Local::symlink_dir("real-dir", "/tmp/issue-1173/link-dir").await.unwrap();
 
 	let c = &mut HashMap::new();
 	async fn check(a: &str, b: &str, c: &mut HashMap<PathBuf, HashSet<OsString>>) {
@@ -184,25 +158,22 @@ pub async fn realname_unchecked<'a>(
 }
 
 pub fn copy_with_progress(
-	from: &Path,
-	to: &Path,
+	from: &Url,
+	to: &Url,
 	cha: Cha,
 ) -> mpsc::Receiver<Result<u64, io::Error>> {
 	let (tx, rx) = mpsc::channel(1);
 	let (tick_tx, mut tick_rx) = oneshot::channel();
 
 	tokio::spawn({
-		let (from, to) = (from.to_owned(), to.to_owned());
-
+		let (from, to) = (from.clone(), to.clone());
 		async move {
 			tick_tx.send(_copy_with_progress(from, to, cha).await).ok();
 		}
 	});
 
 	tokio::spawn({
-		let tx = tx.clone();
-		let to = to.to_path_buf();
-
+		let (tx, to) = (tx.clone(), to.clone());
 		async move {
 			let mut last = 0;
 			let mut exit = None;
@@ -228,7 +199,7 @@ pub fn copy_with_progress(
 					None => {}
 				}
 
-				let len = fs::symlink_metadata(&to).await.map(|m| m.len()).unwrap_or(0);
+				let len = services::symlink_metadata(&to).await.map(|m| m.len()).unwrap_or(0);
 				if len > last {
 					tx.send(Ok(len - last)).await.ok();
 					last = len;
@@ -240,7 +211,7 @@ pub fn copy_with_progress(
 	rx
 }
 
-async fn _copy_with_progress(from: PathBuf, to: PathBuf, cha: Cha) -> io::Result<u64> {
+async fn _copy_with_progress(from: Url, to: Url, cha: Cha) -> io::Result<u64> {
 	let mut ft = std::fs::FileTimes::new();
 	cha.atime.map(|t| ft = ft.set_accessed(t));
 	cha.mtime.map(|t| ft = ft.set_modified(t));
@@ -288,18 +259,18 @@ async fn _copy_with_progress(from: PathBuf, to: PathBuf, cha: Cha) -> io::Result
 	}
 }
 
-pub async fn remove_dir_clean(dir: &Path) {
-	let Ok(mut it) = fs::read_dir(dir).await else { return };
+pub async fn remove_dir_clean(dir: &Url) {
+	let Ok(mut it) = services::read_dir(dir).await else { return };
 
 	while let Ok(Some(entry)) = it.next_entry().await {
 		if entry.file_type().await.is_ok_and(|t| t.is_dir()) {
-			let path = entry.path();
+			let path = entry.path().into();
 			Box::pin(remove_dir_clean(&path)).await;
-			fs::remove_dir(path).await.ok();
+			services::remove_dir(path).await.ok();
 		}
 	}
 
-	fs::remove_dir(dir).await.ok();
+	services::remove_dir(dir).await.ok();
 }
 
 // Convert a file mode to a string representation
@@ -355,50 +326,61 @@ pub fn permissions(m: libc::mode_t, dummy: bool) -> String {
 	s
 }
 
-// Find the max common root in a list of files
+// Find the max common root in a list of urls
 // e.g. /a/b/c, /a/b/d       -> /a/b
 //      /aa/bb/cc, /aa/dd/ee -> /aa
-pub fn max_common_root(files: &[impl AsRef<Path>]) -> PathBuf {
-	if files.is_empty() {
-		return PathBuf::new();
+pub fn max_common_root(urls: &[Url]) -> usize {
+	if urls.is_empty() {
+		return 0;
+	} else if urls.len() == 1 {
+		return urls[0].components().count().saturating_sub(1);
 	}
 
-	let mut it = files.iter().map(|p| p.as_ref().parent().unwrap_or(Path::new("")).components());
-	let mut root = it.next().unwrap().collect::<PathBuf>();
-	for components in it {
-		let mut new_root = PathBuf::new();
-		for (a, b) in root.components().zip(components) {
-			if a != b {
-				break;
-			}
-			new_root.push(a);
-		}
-		root = new_root;
+	let mut it = urls.iter().map(|u| u.parent_url());
+	let Some(first) = it.next().unwrap() else {
+		return 0; // The first URL has no parent
+	};
+
+	let mut min = first.components().count();
+	for parent in it {
+		let Some(parent) = parent else {
+			return 0; // One of the URLs has no parent
+		};
+
+		min = first
+			.components()
+			.zip(parent.components())
+			.take_while(|(a, b)| match (a, b) {
+				(Component::Scheme(a), Component::Scheme(b)) => a.covariant(b),
+				(a, b) => a == b,
+			})
+			.count()
+			.min(min);
 	}
-	root
+
+	min
 }
 
 #[cfg(unix)]
 #[test]
 fn test_max_common_root() {
-	assert_eq!(max_common_root(&[] as &[PathBuf]).as_os_str(), "");
-	assert_eq!(max_common_root(&["".into()] as &[PathBuf]).as_os_str(), "");
-	assert_eq!(max_common_root(&["a".into()] as &[PathBuf]).as_os_str(), "");
-	assert_eq!(max_common_root(&["/a".into()] as &[PathBuf]).as_os_str(), "/");
-	assert_eq!(max_common_root(&["/a/b".into()] as &[PathBuf]).as_os_str(), "/a");
-	assert_eq!(
-		max_common_root(&["/a/b/c".into(), "/a/b/d".into()] as &[PathBuf]).as_os_str(),
-		"/a/b"
-	);
-	assert_eq!(
-		max_common_root(&["/aa/bb/cc".into(), "/aa/dd/ee".into()] as &[PathBuf]).as_os_str(),
-		"/aa"
-	);
-	assert_eq!(
-		max_common_root(
-			&["/aa/bb/cc".into(), "/aa/bb/cc/dd/ee".into(), "/aa/bb/cc/ff".into()] as &[PathBuf]
-		)
-		.as_os_str(),
-		"/aa/bb"
-	);
+	fn assert(input: &[&str], expected: &str) {
+		let urls: Vec<_> = input.iter().copied().map(Url::try_from).collect::<Result<_>>().unwrap();
+
+		let mut comp = urls[0].components();
+		for _ in 0..comp.clone().count() - max_common_root(&urls) {
+			comp.next_back();
+		}
+		assert_eq!(comp.os_str(), OsStr::new(expected));
+	}
+
+	assert_eq!(max_common_root(&[]), 0);
+	assert(&[""], "");
+	assert(&["a"], "");
+
+	assert(&["/a"], "/");
+	assert(&["/a/b"], "/a");
+	assert(&["/a/b/c", "/a/b/d"], "/a/b");
+	assert(&["/aa/bb/cc", "/aa/dd/ee"], "/aa");
+	assert(&["/aa/bb/cc", "/aa/bb/cc/dd/ee", "/aa/bb/cc/ff"], "/aa/bb");
 }

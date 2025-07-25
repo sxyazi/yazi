@@ -1,22 +1,14 @@
-use std::{borrow::Cow, collections::HashMap, path::PathBuf};
+use std::{borrow::Cow, collections::HashMap};
 
 use yazi_fs::File;
-use yazi_shared::{MIME_DIR, SStr, url::{Scheme, Url}};
+use yazi_shared::{MIME_DIR, SStr, url::Url};
 
 #[derive(Default)]
-pub struct Mimetype(HashMap<PathBuf, String>);
+pub struct Mimetype(HashMap<Url, String>);
 
 impl Mimetype {
 	#[inline]
-	pub fn by_url(&self, url: &Url) -> Option<&str> {
-		match url.scheme() {
-			Scheme::Regular => self.0.get(url.as_path()),
-			Scheme::Search => None,
-			Scheme::SearchItem => self.0.get(url.as_path()),
-			Scheme::Archive => None,
-		}
-		.map(|s| s.as_str())
-	}
+	pub fn by_url(&self, url: &Url) -> Option<&str> { self.0.get(url).map(|s| s.as_str()) }
 
 	#[inline]
 	pub fn by_url_owned(&self, url: &Url) -> Option<SStr> {
@@ -34,26 +26,8 @@ impl Mimetype {
 	}
 
 	#[inline]
-	pub fn contains(&self, url: &Url) -> bool {
-		match url.scheme() {
-			Scheme::Regular => self.0.contains_key(url.as_path()),
-			Scheme::Search => false,
-			Scheme::SearchItem => self.0.contains_key(url.as_path()),
-			Scheme::Archive => false,
-		}
-	}
+	pub fn contains(&self, url: &Url) -> bool { self.0.contains_key(url) }
 
-	pub fn extend(&mut self, iter: impl IntoIterator<Item = (Url, String)>) {
-		self.0.extend(iter.into_iter().filter_map(|(u, s)| {
-			Some((
-				match u.scheme() {
-					Scheme::Regular => u.into_path(),
-					Scheme::Search => None?,
-					Scheme::SearchItem => u.into_path(),
-					Scheme::Archive => None?,
-				},
-				s,
-			))
-		}))
-	}
+	#[inline]
+	pub fn extend(&mut self, iter: impl IntoIterator<Item = (Url, String)>) { self.0.extend(iter) }
 }

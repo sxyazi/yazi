@@ -33,3 +33,28 @@ impl<'a> IntoOsStr<'a> for &'a [u8] {
 
 	fn into_os_str(self) -> Result<Cow<'a, OsStr>, Self::Error> { Cow::Borrowed(self).into_os_str() }
 }
+
+// --- OsStrJoin
+pub trait OsStrJoin {
+	fn join(&self, sep: &OsStr) -> OsString;
+}
+
+impl<T> OsStrJoin for Vec<T>
+where
+	T: AsRef<OsStr>,
+{
+	fn join(&self, sep: &OsStr) -> OsString {
+		if self.is_empty() {
+			return OsString::new();
+		}
+
+		let mut result = OsString::new();
+		for (i, item) in self.iter().enumerate() {
+			if i > 0 {
+				result.push(sep);
+			}
+			result.push(item.as_ref());
+		}
+		result
+	}
+}

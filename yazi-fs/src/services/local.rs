@@ -24,6 +24,11 @@ impl Local {
 	}
 
 	#[inline]
+	pub async fn hard_link(original: impl AsRef<Path>, link: impl AsRef<Path>) -> io::Result<()> {
+		tokio::fs::hard_link(original, link).await
+	}
+
+	#[inline]
 	pub async fn metadata(url: impl AsRef<Path>) -> io::Result<std::fs::Metadata> {
 		tokio::fs::metadata(url).await
 	}
@@ -39,6 +44,11 @@ impl Local {
 	#[inline]
 	pub async fn read_dir(path: impl AsRef<Path>) -> io::Result<tokio::fs::ReadDir> {
 		tokio::fs::read_dir(path).await
+	}
+
+	#[inline]
+	pub fn read_dir_sync(path: impl AsRef<Path>) -> io::Result<std::fs::ReadDir> {
+		std::fs::read_dir(path)
 	}
 
 	#[inline]
@@ -72,8 +82,37 @@ impl Local {
 	}
 
 	#[inline]
+	pub async fn symlink_dir(original: impl AsRef<Path>, link: impl AsRef<Path>) -> io::Result<()> {
+		#[cfg(unix)]
+		{
+			tokio::fs::symlink(original, link).await
+		}
+		#[cfg(windows)]
+		{
+			tokio::fs::symlink_dir(original, link).await
+		}
+	}
+
+	#[inline]
+	pub async fn symlink_file(original: impl AsRef<Path>, link: impl AsRef<Path>) -> io::Result<()> {
+		#[cfg(unix)]
+		{
+			tokio::fs::symlink(original, link).await
+		}
+		#[cfg(windows)]
+		{
+			tokio::fs::symlink_file(original, link).await
+		}
+	}
+
+	#[inline]
 	pub async fn symlink_metadata(path: impl AsRef<Path>) -> io::Result<std::fs::Metadata> {
 		tokio::fs::symlink_metadata(path).await
+	}
+
+	#[inline]
+	pub fn symlink_metadata_sync(path: impl AsRef<Path>) -> io::Result<std::fs::Metadata> {
+		std::fs::symlink_metadata(path)
 	}
 
 	#[inline]

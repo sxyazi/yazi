@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_dds::Pubsub;
 use yazi_macro::{act, err, render, succ};
 use yazi_parser::mgr::{HoverDoOpt, HoverOpt};
-use yazi_shared::{event::Data, url::Urn};
+use yazi_shared::event::Data;
 
 use crate::{Actor, Ctx};
 
@@ -37,8 +37,8 @@ impl Actor for HoverDo {
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		// Hover on the file
-		if let Ok(p) = opt.url.strip_prefix(cx.cwd()) {
-			render!(cx.current_mut().hover(Urn::new(p)));
+		if let Some(u) = opt.url.strip_prefix(cx.cwd()) {
+			render!(cx.current_mut().hover(u.urn()));
 		}
 
 		// Turn on tracing
