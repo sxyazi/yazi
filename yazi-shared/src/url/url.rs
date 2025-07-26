@@ -100,7 +100,7 @@ impl Display for Url {
 		}
 
 		let loc = percent_encode(self.loc.as_os_str().as_encoded_bytes(), ENCODE_SET);
-		write!(f, "{}://{loc}", self.scheme)?;
+		write!(f, "{}{loc}", self.scheme)?;
 
 		if !self.frag.is_empty() {
 			write!(f, "#{}", percent_encode(self.frag.as_encoded_bytes(), ENCODE_SET))?;

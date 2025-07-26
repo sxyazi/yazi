@@ -32,7 +32,7 @@ impl Scheme {
 				let (name, skip) = Self::parse_name(rest)?;
 				(Scheme::Sftp(name), 7 + skip)
 			}
-			_ => bail!("Could not parse scheme from URL: {}", String::from_utf8_lossy(bytes)),
+			_ => bail!("Could not parse protocol from URL: {}", String::from_utf8_lossy(bytes)),
 		})
 	}
 

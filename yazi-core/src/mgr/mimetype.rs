@@ -1,7 +1,7 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use yazi_fs::File;
-use yazi_shared::{MIME_DIR, SStr, url::{Scheme, Url}};
+use yazi_shared::{MIME_DIR, SStr, url::Url};
 
 #[derive(Default)]
 pub struct Mimetype(HashMap<Url, String>);
@@ -28,18 +28,6 @@ impl Mimetype {
 	#[inline]
 	pub fn contains(&self, url: &Url) -> bool { self.0.contains_key(url) }
 
-	pub fn extend(&mut self, iter: impl IntoIterator<Item = (Url, String)>) {
-		self.0.extend(iter.into_iter().filter_map(|(u, s)| {
-			Some((
-				match &u.scheme {
-					Scheme::Regular => u,
-					Scheme::Search => None?,
-					Scheme::SearchItem => u,
-					Scheme::Archive => None?,
-					Scheme::Sftp(_) => u,
-				},
-				s,
-			))
-		}))
-	}
+	#[inline]
+	pub fn extend(&mut self, iter: impl IntoIterator<Item = (Url, String)>) { self.0.extend(iter) }
 }
