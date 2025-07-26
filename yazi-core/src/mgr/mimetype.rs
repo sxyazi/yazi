@@ -35,7 +35,7 @@ impl Mimetype {
 					Scheme::Regular => u,
 					Scheme::Search => None?,
 					Scheme::SearchItem => u,
-					Scheme::Archive => None?, // FIXME
+					Scheme::Archive => None?,
 					Scheme::Sftp(_) => u,
 				},
 				s,

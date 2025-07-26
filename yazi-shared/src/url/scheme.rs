@@ -12,6 +12,7 @@ pub enum Scheme {
 	Search,
 	SearchItem,
 
+	// TODO: redefine
 	Archive,
 
 	Sftp(String),
