@@ -10,9 +10,9 @@ const ENCODE_SET: &AsciiSet = &CONTROLS.add(b'#');
 
 #[derive(Clone, Default, Eq, Ord, PartialOrd)]
 pub struct Url {
-	loc:    Loc,
-	scheme: Scheme,
-	frag:   OsString,
+	loc:        Loc,
+	pub scheme: Scheme,
+	pub frag:   OsString,
 }
 
 impl Deref for Url {
@@ -21,23 +21,26 @@ impl Deref for Url {
 	fn deref(&self) -> &Self::Target { &self.loc }
 }
 
+// FIXME: remove
 impl Debug for Url {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-		match self.scheme {
-			Scheme::Regular => write!(f, "Regular({:?})", self.loc),
-			Scheme::Search => write!(f, "Search({:?}, {})", self.loc, self.frag.display()),
-			Scheme::SearchItem => write!(f, "SearchItem({:?})", self.loc),
-			Scheme::Archive => write!(f, "Archive({:?})", self.loc),
+		let Self { scheme, loc, frag } = self;
+		match scheme {
+			Scheme::Regular => write!(f, "{scheme}{}", loc.display()),
+			Scheme::Search => write!(f, "{scheme}{}#{}", loc.display(), frag.display()),
+			Scheme::SearchItem => write!(f, "{scheme}{}", loc.display()),
+			Scheme::Archive => write!(f, "{scheme}{}", loc.display()),
+			Scheme::Sftp(_) => write!(f, "{scheme}{}", loc.display()),
 		}
 	}
 }
 
 impl From<Loc> for Url {
-	fn from(loc: Loc) -> Self { Self { loc, ..Default::default() } }
+	fn from(loc: Loc) -> Self { Self { loc, scheme: Scheme::Regular, frag: OsString::new() } }
 }
 
 impl From<PathBuf> for Url {
-	fn from(path: PathBuf) -> Self { Loc::new(path).into() }
+	fn from(path: PathBuf) -> Self { Loc::from(path).into() }
 }
 
 impl From<&PathBuf> for Url {
@@ -45,23 +48,18 @@ impl From<&PathBuf> for Url {
 }
 
 impl From<&Path> for Url {
-	fn from(path: &Path) -> Self { path.to_owned().into() }
+	fn from(path: &Path) -> Self { path.to_path_buf().into() }
 }
 
 impl TryFrom<&[u8]> for Url {
 	type Error = anyhow::Error;
 
-	fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-		let mut url = Url::default();
-		let Some((scheme, rest)) = value.split_by_seq(b"://") else {
-			url.loc = Loc::new(value.into_os_str()?.into_owned().into());
-			return Ok(url);
-		};
+	fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
+		let (scheme, skip) = Scheme::parse(bytes)?;
+		let rest = &bytes[skip..];
 
-		url.scheme = Scheme::try_from(scheme)?;
-		if url.scheme == Scheme::Regular {
-			url.loc = Loc::new(rest.into_os_str()?.into_owned().into());
-			return Ok(url);
+		if scheme == Scheme::Regular {
+			return Ok(Self { loc: rest.into_os_str()?.into(), scheme, frag: OsString::new() });
 		}
 
 		let (loc, frag) = match rest.split_by_seq(b"#") {
@@ -69,11 +67,7 @@ impl TryFrom<&[u8]> for Url {
 			Some((a, b)) => (a, b.into_os_str()?.into_owned()),
 		};
 
-		// FIXME: use `Loc::from(base, path)` instead
-		url.loc = Loc::new(Cow::from(percent_decode(loc)).into_os_str()?.into_owned().into());
-		url.frag = frag;
-
-		Ok(url)
+		Ok(Url { loc: Cow::from(percent_decode(loc)).into_os_str()?.into(), scheme, frag })
 	}
 }
 
@@ -93,14 +87,12 @@ impl AsRef<Url> for Url {
 	fn as_ref(&self) -> &Url { self }
 }
 
+// FIXME: remove
 impl AsRef<Path> for Url {
 	fn as_ref(&self) -> &Path { &self.loc }
 }
 
-impl AsRef<OsStr> for Url {
-	fn as_ref(&self) -> &OsStr { self.loc.as_os_str() }
-}
-
+// FIXME: remove
 impl Display for Url {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
 		if matches!(self.scheme, Scheme::Regular | Scheme::SearchItem) {
@@ -108,7 +100,7 @@ impl Display for Url {
 		}
 
 		let loc = percent_encode(self.loc.as_os_str().as_encoded_bytes(), ENCODE_SET);
-		write!(f, "{}://{loc}", self.scheme)?;
+		write!(f, "{}{loc}", self.scheme)?;
 
 		if !self.frag.is_empty() {
 			write!(f, "#{}", percent_encode(self.frag.as_encoded_bytes(), ENCODE_SET))?;
@@ -118,6 +110,7 @@ impl Display for Url {
 	}
 }
 
+// FIXME: remove
 impl From<&Url> for String {
 	fn from(url: &Url) -> Self { url.to_string() }
 }
@@ -136,35 +129,81 @@ impl From<Cow<'_, Url>> for Url {
 
 impl Url {
 	#[inline]
-	pub fn join(&self, path: impl AsRef<Path>) -> Self {
-		match self.scheme {
-			Scheme::Regular => Self::from(self.loc.join(path)),
-			Scheme::Search => {
-				let loc = Loc::from(&self.loc, self.loc.join(path));
-				Self::from(loc).into_search_item()
-			}
-			Scheme::SearchItem => {
-				let loc = Loc::from(self.loc.base(), self.loc.join(path));
-				Self::from(loc).into_search_item()
-			}
-			Scheme::Archive => Self::from(self.loc.join(path)).into_archive(),
+	pub fn base(&self) -> Url {
+		let loc: Loc = self.loc.base().into();
+		match &self.scheme {
+			Scheme::Regular => Self { loc, scheme: Scheme::Regular, frag: OsString::new() },
+			Scheme::Search => Self { loc, scheme: Scheme::Search, frag: OsString::new() },
+			Scheme::SearchItem => Self { loc, scheme: Scheme::Search, frag: OsString::new() },
+			Scheme::Archive => Self { loc, scheme: Scheme::Archive, frag: OsString::new() },
+			Scheme::Sftp(_) => Self { loc, scheme: self.scheme.clone(), frag: OsString::new() },
 		}
 	}
 
-	#[inline]
+	pub fn join(&self, path: impl AsRef<Path>) -> Self {
+		match self.scheme {
+			Scheme::Regular => Self {
+				loc:    self.loc.join(path).into(),
+				scheme: Scheme::Regular,
+				frag:   OsString::new(),
+			},
+			Scheme::Search => Self {
+				loc:    Loc::with(&self.loc, self.loc.join(path)),
+				scheme: Scheme::SearchItem,
+				frag:   OsString::new(),
+			},
+			Scheme::SearchItem => Self {
+				loc:    Loc::with(self.loc.base(), self.loc.join(path)),
+				scheme: Scheme::SearchItem,
+				frag:   OsString::new(),
+			},
+			Scheme::Archive => Self {
+				loc:    self.loc.join(path).into(),
+				scheme: Scheme::Archive,
+				frag:   OsString::new(),
+			},
+			Scheme::Sftp(_) => Self {
+				loc:    self.loc.join(path).into(),
+				scheme: self.scheme.clone(),
+				frag:   OsString::new(),
+			},
+		}
+	}
+
 	pub fn parent_url(&self) -> Option<Url> {
-		let p = self.loc.parent()?;
-		Some(match self.scheme {
-			Scheme::Regular | Scheme::Search => Self::from(p),
-			Scheme::SearchItem => {
-				if p == self.loc.base() {
-					Self::from(p).into_search("")
-				} else {
-					Self::from(p).into_search_item()
-				}
+		let parent = self.loc.parent()?;
+		let base = self.loc.base();
+
+		Some(match &self.scheme {
+			Scheme::Regular => {
+				Self { loc: parent.into(), scheme: Scheme::Regular, frag: OsString::new() }
 			}
-			Scheme::Archive => Self::from(p),
+			Scheme::Search => {
+				Self { loc: parent.into(), scheme: Scheme::Regular, frag: OsString::new() }
+			}
+			Scheme::SearchItem if parent == base => {
+				Self { loc: parent.into(), scheme: Scheme::Search, frag: OsString::new() }
+			}
+			Scheme::SearchItem => Self {
+				loc:    Loc::with(base, parent.to_owned()),
+				scheme: Scheme::SearchItem,
+				frag:   OsString::new(),
+			},
+			Scheme::Archive => {
+				Self { loc: parent.into(), scheme: Scheme::Regular, frag: OsString::new() }
+			}
+			Scheme::Sftp(_) => {
+				Self { loc: parent.into(), scheme: self.scheme.clone(), frag: OsString::new() }
+			}
 		})
+	}
+
+	#[inline]
+	pub fn as_path(&self) -> Option<&Path> {
+		match &self.scheme {
+			Scheme::Regular | Scheme::Search | Scheme::SearchItem => Some(&self.loc),
+			Scheme::Archive | Scheme::Sftp(_) => None,
+		}
 	}
 
 	#[inline]
@@ -189,7 +228,9 @@ impl Url {
 	pub fn is_regular(&self) -> bool { self.scheme == Scheme::Regular }
 
 	#[inline]
-	pub fn to_regular(&self) -> Self { Self { loc: self.loc.clone(), ..Default::default() } }
+	pub fn to_regular(&self) -> Self {
+		Self { loc: self.loc.clone(), scheme: Scheme::Regular, frag: OsString::new() }
+	}
 
 	#[inline]
 	pub fn into_regular(mut self) -> Self {
@@ -214,57 +255,31 @@ impl Url {
 		self
 	}
 
-	#[inline]
-	pub fn is_search_item(&self) -> bool { self.scheme == Scheme::SearchItem }
-
-	#[inline]
-	pub fn into_search_item(mut self) -> Self {
-		self.scheme = Scheme::SearchItem;
-		self.frag = OsString::new();
-		self
-	}
-
+	// --- Archive
 	#[inline]
 	pub fn is_archive(&self) -> bool { self.scheme == Scheme::Archive }
-
-	#[inline]
-	pub fn to_archive(&self) -> Self {
-		Self { loc: self.loc.clone(), scheme: Scheme::Archive, ..Default::default() }
-	}
-
-	#[inline]
-	pub fn into_archive(mut self) -> Self {
-		self.scheme = Scheme::Archive;
-		self.frag = OsString::new();
-		self
-	}
-
-	// --- Loc
-	#[inline]
-	pub fn set_loc(&mut self, loc: Loc) { self.loc = loc; }
 
 	// FIXME: remove
 	#[inline]
 	pub fn into_path(self) -> PathBuf { self.loc.into_path() }
-
-	// --- Scheme
-	#[inline]
-	pub fn scheme(&self) -> Scheme { self.scheme }
-
-	// --- Frag
-	#[inline]
-	pub fn frag(&self) -> &OsStr { &self.frag }
 }
 
 impl Hash for Url {
 	fn hash<H: Hasher>(&self, state: &mut H) {
 		self.loc.hash(state);
 
-		match self.scheme {
-			Scheme::Regular | Scheme::SearchItem => {}
-			Scheme::Search | Scheme::Archive => {
+		match &self.scheme {
+			Scheme::Regular => {}
+			Scheme::Search => {
 				self.scheme.hash(state);
 				self.frag.hash(state);
+			}
+			Scheme::SearchItem => {}
+			Scheme::Archive => {
+				self.scheme.hash(state);
+			}
+			Scheme::Sftp(_) => {
+				self.scheme.hash(state);
 			}
 		}
 	}
@@ -272,11 +287,16 @@ impl Hash for Url {
 
 impl PartialEq for Url {
 	fn eq(&self, other: &Self) -> bool {
-		match (self.scheme, other.scheme) {
-			(Scheme::Regular | Scheme::SearchItem, Scheme::Regular | Scheme::SearchItem) => {
-				self.loc == other.loc
+		if self.loc != other.loc {
+			return false;
+		}
+
+		match (&self.scheme, &other.scheme) {
+			(Scheme::Regular | Scheme::SearchItem, Scheme::Regular | Scheme::SearchItem) => true,
+			(Scheme::Search, _) | (_, Scheme::Search) => {
+				self.scheme == other.scheme && self.frag == other.frag
 			}
-			_ => self.loc == other.loc && self.scheme == other.scheme,
+			_ => self.scheme == other.scheme,
 		}
 	}
 }

@@ -1,4 +1,4 @@
-yazi_macro::mod_pub!(package);
+yazi_macro::mod_pub!(package shared);
 
 yazi_macro::mod_flat!(args);
 

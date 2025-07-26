@@ -1,7 +1,7 @@
 use anyhow::Result;
-use yazi_fs::must_exists;
 
 use super::{Dependency, Git};
+use crate::shared::must_exists;
 
 impl Dependency {
 	pub(super) async fn add(&mut self) -> Result<()> {

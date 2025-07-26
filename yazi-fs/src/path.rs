@@ -1,5 +1,6 @@
 use std::{borrow::Cow, env, ffi::{OsStr, OsString}, future::Future, io, path::{Component, Path, PathBuf}};
 
+use anyhow::{Result, bail};
 use yazi_shared::url::Url;
 
 use crate::{CWD, services};
@@ -32,6 +33,12 @@ fn _clean_path(path: &Path) -> PathBuf {
 
 #[inline]
 pub fn expand_path(p: impl AsRef<Path>) -> PathBuf { _expand_path(p.as_ref()) }
+
+#[inline]
+pub fn expand_url<'a>(url: impl Into<Cow<'a, Url>>) -> Cow<'a, Url> {
+	let u: Cow<'a, Url> = url.into();
+	if let Some(p) = u.as_path() { Url::from(_expand_path(p)).into() } else { u }
+}
 
 fn _expand_path(p: &Path) -> PathBuf {
 	// ${HOME} or $HOME
@@ -128,6 +135,7 @@ async fn _unique_name(mut url: Url, append: bool) -> io::Result<Url> {
 	Ok(url)
 }
 
+// TODO: support VFS
 // Parameters
 // * `path`: The absolute path(contains no `/./`) to get relative path.
 // * `root`: The absolute path(contains no `/./`) to be compared.
@@ -136,10 +144,14 @@ async fn _unique_name(mut url: Url, append: bool) -> io::Result<Url> {
 // * Unix: The relative format to `root` of `path`.
 // * Windows: The relative format to `root` of `path`; or `path` itself when
 //   `path` and `root` are both under different disk drives.
-pub fn path_relative_to<'a>(path: &'a Path, root: &Path) -> Cow<'a, Path> {
-	assert!(path.is_absolute());
-	assert!(root.is_absolute());
-	let mut p_comps = path.components();
+pub fn path_relative_to<'a>(url: &'a Url, root: &Url) -> Result<Cow<'a, Url>> {
+	if !url.is_regular() || !root.is_regular() {
+		bail!("Both urls must be local files: {:?} and {:?}", url, root);
+	} else if !url.is_absolute() || !root.is_absolute() {
+		bail!("Both urls must be absolute: {:?} and {:?}", url, root);
+	}
+
+	let mut p_comps = url.components();
 	let mut r_comps = root.components();
 
 	// 1. Ensure that the two paths have the same prefix.
@@ -155,7 +167,7 @@ pub fn path_relative_to<'a>(path: &'a Path, root: &Path) -> Cow<'a, Path> {
 			(Some(RootDir), Some(RootDir)) => (),
 			(Some(Prefix(a)), Some(Prefix(b))) if a == b => (),
 			(Some(Prefix(_) | RootDir), _) | (_, Some(Prefix(_) | RootDir)) => {
-				return Cow::from(path);
+				return Ok(url.into());
 			}
 			(None, None) => break (None, None),
 			(a, b) if a != b => break (a, b),
@@ -170,7 +182,7 @@ pub fn path_relative_to<'a>(path: &'a Path, root: &Path) -> Cow<'a, Path> {
 	buf.extend(walk_up);
 	buf.extend(p_comps);
 
-	Cow::from(buf)
+	Ok(Url::from(buf).into())
 }
 
 #[cfg(windows)]
@@ -196,35 +208,36 @@ pub fn backslash_to_slash(p: &Path) -> Cow<'_, Path> {
 
 #[cfg(test)]
 mod tests {
-	use std::{borrow::Cow, path::Path};
+	use std::borrow::Cow;
+
+	use yazi_shared::url::Url;
 
 	use super::path_relative_to;
 
-	#[cfg(unix)]
 	#[test]
 	fn test_path_relative_to() {
-		fn assert(path: &str, root: &str, res: &str) {
-			assert_eq!(path_relative_to(Path::new(path), Path::new(root)), Cow::Borrowed(Path::new(res)));
+		fn assert(path: &str, root: &str, ret: &str) {
+			assert_eq!(
+				path_relative_to(&Url::try_from(path).unwrap(), &Url::try_from(root).unwrap()).unwrap(),
+				Cow::Owned(Url::try_from(ret).unwrap())
+			);
 		}
 
-		assert("/a/b", "/a/b/c", "../");
-		assert("/a/b/c", "/a/b", "c");
-		assert("/a/b/c", "/a/b/d", "../c");
-		assert("/a", "/a/b/c", "../../");
-		assert("/a/a/b", "/a/b/b", "../../a/b");
-	}
-
-	#[cfg(windows)]
-	#[test]
-	fn test_path_relative_to() {
-		fn assert(path: &str, root: &str, res: &str) {
-			assert_eq!(path_relative_to(Path::new(path), Path::new(root)), Cow::Borrowed(Path::new(res)));
+		#[cfg(unix)]
+		{
+			assert("/a/b", "/a/b/c", "../");
+			assert("/a/b/c", "/a/b", "c");
+			assert("/a/b/c", "/a/b/d", "../c");
+			assert("/a", "/a/b/c", "../../");
+			assert("/a/a/b", "/a/b/b", "../../a/b");
 		}
-
-		assert("C:\\a\\b", "C:\\a\\b\\c", "..\\");
-		assert("C:\\a\\b\\c", "C:\\a\\b", "c");
-		assert("C:\\a\\b\\c", "C:\\a\\b\\d", "..\\c");
-		assert("C:\\a", "C:\\a\\b\\c", "..\\..\\");
-		assert("C:\\a\\a\\b", "C:\\a\\b\\b", "..\\..\\a\\b");
+		#[cfg(windows)]
+		{
+			assert(r"C:\a\b", r"C:\a\b\c", r"..\");
+			assert(r"C:\a\b\c", r"C:\a\b", "c");
+			assert(r"C:\a\b\c", r"C:\a\b\d", r"..\c");
+			assert(r"C:\a", r"C:\a\b\c", r"..\..\");
+			assert(r"C:\a\a\b", r"C:\a\b\b", r"..\..\a\b");
+		}
 	}
 }

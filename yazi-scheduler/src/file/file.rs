@@ -63,8 +63,8 @@ impl File {
 				let cha = task.cha.unwrap();
 
 				let src = if task.resolve {
-					match fs::read_link(&task.from).await {
-						Ok(p) => Cow::Owned(p),
+					match services::read_link(&task.from).await {
+						Ok(u) => Cow::Owned(u),
 						Err(e) if e.kind() == NotFound => {
 							warn!("Link task partially done: {task:?}");
 							return Ok(self.prog.send(TaskProg::Adv(task.id, 1, cha.len))?);
@@ -72,46 +72,39 @@ impl File {
 						Err(e) => Err(e)?,
 					}
 				} else {
-					Cow::Borrowed(task.from.as_path())
+					Cow::Borrowed(&task.from)
 				};
 
 				let src = if task.relative {
-					path_relative_to(&src, &fs::canonicalize(task.to.parent().unwrap()).await?)
+					path_relative_to(&src, &services::canonicalize(task.to.parent_url().unwrap()).await?)?
 				} else {
 					src
 				};
 
 				ok_or_not_found(fs::remove_file(&task.to).await)?;
-				#[cfg(unix)]
-				{
-					fs::symlink(src, &task.to).await?;
-				}
-				#[cfg(windows)]
-				{
-					if cha.is_dir() {
-						fs::symlink_dir(src, &task.to).await?;
-					} else {
-						fs::symlink_file(src, &task.to).await?;
-					}
+				if cha.is_dir() {
+					services::symlink_dir(src, &task.to).await?;
+				} else {
+					services::symlink_file(src, &task.to).await?;
 				}
 
 				if task.delete {
-					fs::remove_file(&task.from).await.ok();
+					services::remove_file(&task.from).await.ok();
 				}
 				self.prog.send(TaskProg::Adv(task.id, 1, cha.len))?;
 			}
 			FileIn::Hardlink(task) => {
 				let cha = task.cha.unwrap();
 				let src = if !task.follow {
-					Cow::Borrowed(task.from.as_path())
-				} else if let Ok(p) = fs::canonicalize(&task.from).await {
+					Cow::Borrowed(&task.from)
+				} else if let Ok(p) = services::canonicalize(&task.from).await {
 					Cow::Owned(p)
 				} else {
-					Cow::Borrowed(task.from.as_path())
+					Cow::Borrowed(&task.from)
 				};
 
 				ok_or_not_found(fs::remove_file(&task.to).await)?;
-				match fs::hard_link(src, &task.to).await {
+				match services::hard_link(src, &task.to).await {
 					Err(e) if e.kind() == NotFound => {
 						warn!("Hardlink task partially done: {task:?}");
 					}

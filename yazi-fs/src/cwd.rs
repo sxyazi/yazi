@@ -1,4 +1,4 @@
-use std::{env::{current_dir, set_current_dir}, ops::Deref, path::PathBuf, sync::{Arc, atomic::{self, AtomicBool}}};
+use std::{env::{current_dir, set_current_dir}, ops::Deref, path::PathBuf, sync::{Arc, atomic::{AtomicBool, Ordering}}};
 
 use arc_swap::ArcSwap;
 use yazi_shared::{RoCell, url::Url};
@@ -32,25 +32,32 @@ impl Cwd {
 		}
 
 		self.store(Arc::new(url.clone()));
-		unsafe { std::env::set_var("PWD", url) };
+		if let Some(p) = url.as_path() {
+			unsafe { std::env::set_var("PWD", p) };
+			Self::sync_cwd();
+		}
 
-		Self::sync_cwd();
 		true
 	}
 
 	fn sync_cwd() {
 		static SYNCING: AtomicBool = AtomicBool::new(false);
-		if SYNCING.swap(true, atomic::Ordering::Relaxed) {
+		if SYNCING.swap(true, Ordering::Relaxed) {
 			return;
 		}
 
 		tokio::task::spawn_blocking(move || {
-			_ = set_current_dir(CWD.load().as_ref());
-			let p = current_dir().unwrap_or_default();
+			if let Some(p) = CWD.load().as_path() {
+				_ = set_current_dir(p);
+			}
 
-			SYNCING.store(false, atomic::Ordering::Relaxed);
-			if p != CWD.load().as_path() {
-				set_current_dir(CWD.load().as_ref()).ok();
+			let cur = current_dir().unwrap_or_default();
+			SYNCING.store(false, Ordering::Relaxed);
+
+			if let Some(p) = CWD.load().as_path()
+				&& cur != p
+			{
+				set_current_dir(p).ok();
 			}
 		});
 	}

@@ -1,10 +1,11 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
-use yazi_fs::{copy_and_seal, maybe_exists, remove_dir_clean, services::Local};
+use yazi_fs::{copy_and_seal, remove_dir_clean, services::Local};
 use yazi_macro::outln;
 
 use super::Dependency;
+use crate::shared::maybe_exists;
 
 impl Dependency {
 	pub(super) async fn deploy(&mut self) -> Result<()> {

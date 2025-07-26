@@ -8,9 +8,6 @@ use tokio::{fs, io::{self, AsyncWriteExt}, select, sync::{mpsc, oneshot}, time};
 use crate::cha::Cha;
 
 #[inline]
-pub async fn must_exists(p: impl AsRef<Path>) -> bool { fs::symlink_metadata(p).await.is_ok() }
-
-#[inline]
 pub async fn maybe_exists(p: impl AsRef<Path>) -> bool {
 	match fs::symlink_metadata(p).await {
 		Ok(_) => true,

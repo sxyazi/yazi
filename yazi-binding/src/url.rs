@@ -1,4 +1,4 @@
-use std::{ops::Deref, path::Path};
+use std::{borrow::Cow, ops::Deref};
 
 use mlua::{AnyUserData, ExternalError, FromLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
 use yazi_shared::IntoOsStr;
@@ -29,13 +29,16 @@ impl AsRef<yazi_shared::url::Url> for Url {
 	fn as_ref(&self) -> &yazi_shared::url::Url { &self.inner }
 }
 
-// FIXME: remove
-impl AsRef<Path> for Url {
-	fn as_ref(&self) -> &Path { self.inner.as_path() }
-}
-
 impl From<Url> for yazi_shared::url::Url {
 	fn from(value: Url) -> Self { value.inner }
+}
+
+impl From<Url> for Cow<'_, yazi_shared::url::Url> {
+	fn from(value: Url) -> Self { Cow::Owned(value.inner) }
+}
+
+impl<'a> From<&'a Url> for Cow<'a, yazi_shared::url::Url> {
+	fn from(value: &'a Url) -> Self { Cow::Borrowed(&value.inner) }
 }
 
 impl TryFrom<&[u8]> for Url {
@@ -103,7 +106,7 @@ impl UserData for Url {
 		cached_field!(fields, base, |_, me| {
 			Ok(if me.base().as_os_str().is_empty() { None } else { Some(Self::new(me.base())) })
 		});
-		cached_field!(fields, frag, |lua, me| lua.create_string(me.frag().as_encoded_bytes()));
+		cached_field!(fields, frag, |lua, me| lua.create_string(me.frag.as_encoded_bytes()));
 
 		fields.add_field_method_get("is_regular", |_, me| Ok(me.is_regular()));
 		fields.add_field_method_get("is_search", |_, me| Ok(me.is_search()));

@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use globset::GlobBuilder;
 use mlua::{ExternalError, ExternalResult, Function, IntoLua, IntoLuaMulti, Lua, Table, Value};
 use yazi_binding::{Cha, Composer, ComposerGet, ComposerSet, Error, File, Url, UrlRef};
@@ -159,7 +161,7 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 
 fn calc_size(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, url: UrlRef| async move {
-		match yazi_fs::SizeCalculator::new(&*url).await {
+		match yazi_fs::SizeCalculator::new(&url).await {
 			Ok(it) => SizeCalculator(it).into_lua_multi(&lua),
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
@@ -167,13 +169,16 @@ fn calc_size(lua: &Lua) -> mlua::Result<Function> {
 }
 
 fn expand_url(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_function(|_, value: Value| {
-		use yazi_fs::expand_path;
-		Ok(Url::new(match value {
-			Value::String(s) => expand_path(s.to_str()?.as_ref()),
-			Value::UserData(ud) => expand_path(&*ud.borrow::<yazi_binding::Url>()?),
-			_ => Err("must be a string or a Url".into_lua_err())?,
-		}))
+	lua.create_function(|lua, value: Value| {
+		use yazi_fs::expand_url;
+		match &value {
+			Value::String(s) => Url::new(expand_url(Url::try_from(s.as_bytes().as_ref())?)).into_lua(lua),
+			Value::UserData(ud) => match expand_url(&*ud.borrow::<yazi_binding::Url>()?) {
+				Cow::Borrowed(_) => Ok(value),
+				Cow::Owned(u) => Url::new(u).into_lua(lua),
+			},
+			_ => Err("must be a string or a Url".into_lua_err()),
+		}
 	})
 }
 

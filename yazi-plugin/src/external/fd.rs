@@ -30,9 +30,16 @@ pub fn fd(opt: FdOpt) -> Result<UnboundedReceiver<File>> {
 }
 
 fn spawn(program: &str, opt: &FdOpt) -> std::io::Result<Child> {
+	let Some(path) = opt.cwd.as_path() else {
+		return Err(std::io::Error::new(
+			std::io::ErrorKind::InvalidInput,
+			"fd can only search local filesystem",
+		));
+	};
+
 	Command::new(program)
 		.arg("--base-directory")
-		.arg(&opt.cwd)
+		.arg(path)
 		.arg("--regex")
 		.arg(if opt.hidden { "--hidden" } else { "--no-hidden" })
 		.args(&opt.args)

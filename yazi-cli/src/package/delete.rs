@@ -1,8 +1,9 @@
 use anyhow::{Context, Result};
-use yazi_fs::{maybe_exists, ok_or_not_found, remove_dir_clean, remove_sealed, services::Local};
+use yazi_fs::{ok_or_not_found, remove_dir_clean, remove_sealed, services::Local};
 use yazi_macro::outln;
 
 use super::Dependency;
+use crate::shared::maybe_exists;
 
 impl Dependency {
 	pub(super) async fn delete(&self) -> Result<()> {
