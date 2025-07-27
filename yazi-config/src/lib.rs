@@ -1,6 +1,6 @@
 #![allow(clippy::module_inception)]
 
-yazi_macro::mod_pub!(keymap mgr open opener plugin popup preview tasks theme which);
+yazi_macro::mod_pub!(keymap mgr open opener plugin popup preview scheme tasks theme which);
 
 yazi_macro::mod_flat!(color icon layout pattern platform preset priority style yazi);
 

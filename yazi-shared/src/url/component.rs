@@ -1,0 +1,157 @@
+use std::{borrow::Cow, ffi::{OsStr, OsString}, iter::FusedIterator, ops::Not, path::{self, PathBuf, PrefixComponent}};
+
+use crate::url::{Scheme, Url};
+
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub enum Component<'a> {
+	Scheme(&'a Scheme),
+	Prefix(PrefixComponent<'a>),
+	RootDir,
+	CurDir,
+	ParentDir,
+	Normal(&'a OsStr),
+}
+
+impl<'a> From<path::Component<'a>> for Component<'a> {
+	fn from(comp: path::Component<'a>) -> Self {
+		match comp {
+			path::Component::Prefix(p) => Component::Prefix(p),
+			path::Component::RootDir => Component::RootDir,
+			path::Component::CurDir => Component::CurDir,
+			path::Component::ParentDir => Component::ParentDir,
+			path::Component::Normal(s) => Component::Normal(s),
+		}
+	}
+}
+
+impl<'a> FromIterator<Component<'a>> for Url {
+	fn from_iter<I: IntoIterator<Item = Component<'a>>>(iter: I) -> Self {
+		let mut scheme = Scheme::Regular;
+		let mut buf = PathBuf::new();
+		iter.into_iter().for_each(|c| match c {
+			Component::Scheme(s) => scheme = s.clone(),
+			Component::Prefix(p) => buf.push(path::Component::Prefix(p)),
+			Component::RootDir => buf.push(path::Component::RootDir),
+			Component::CurDir => buf.push(path::Component::CurDir),
+			Component::ParentDir => buf.push(path::Component::ParentDir),
+			Component::Normal(s) => buf.push(path::Component::Normal(s)),
+		});
+
+		Self { loc: buf.into(), scheme }
+	}
+}
+
+impl<'a> FromIterator<Component<'a>> for PathBuf {
+	fn from_iter<I: IntoIterator<Item = Component<'a>>>(iter: I) -> Self {
+		let mut buf = PathBuf::new();
+		iter.into_iter().for_each(|c| match c {
+			Component::Scheme(_) => {}
+			Component::Prefix(p) => buf.push(path::Component::Prefix(p)),
+			Component::RootDir => buf.push(path::Component::RootDir),
+			Component::CurDir => buf.push(path::Component::CurDir),
+			Component::ParentDir => buf.push(path::Component::ParentDir),
+			Component::Normal(s) => buf.push(path::Component::Normal(s)),
+		});
+		buf
+	}
+}
+
+// --- Components
+#[derive(Clone)]
+pub struct Components<'a> {
+	inner:          path::Components<'a>,
+	scheme:         &'a Scheme,
+	scheme_yielded: bool,
+}
+
+impl<'a> Components<'a> {
+	pub fn new(url: &'a Url) -> Self {
+		Self {
+			inner:          url.loc.components(),
+			scheme:         &url.scheme,
+			scheme_yielded: false,
+		}
+	}
+
+	pub fn os_str(&self) -> Cow<'a, OsStr> {
+		if !self.scheme.is_virtual() || self.scheme_yielded {
+			return Cow::Borrowed(self.inner.as_path().as_os_str());
+		}
+
+		let mut oss = OsString::from(format!("{}", self.scheme));
+		oss.push(self.inner.as_path());
+		Cow::Owned(oss)
+	}
+}
+
+impl<'a> Iterator for Components<'a> {
+	type Item = Component<'a>;
+
+	fn next(&mut self) -> Option<Self::Item> {
+		if !self.scheme_yielded {
+			self.scheme_yielded = true;
+			Some(Component::Scheme(self.scheme))
+		} else {
+			self.inner.next().map(Into::into)
+		}
+	}
+
+	fn size_hint(&self) -> (usize, Option<usize>) {
+		let (min, max) = self.inner.size_hint();
+		let scheme = self.scheme_yielded.not() as usize;
+
+		(min + scheme, max.map(|n| n + scheme))
+	}
+}
+
+impl<'a> DoubleEndedIterator for Components<'a> {
+	fn next_back(&mut self) -> Option<Self::Item> {
+		if let Some(comp) = self.inner.next_back() {
+			Some(comp.into())
+		} else if !self.scheme_yielded {
+			self.scheme_yielded = true;
+			Some(Component::Scheme(self.scheme))
+		} else {
+			None
+		}
+	}
+}
+
+impl<'a> FusedIterator for Components<'a> {}
+
+impl<'a> PartialEq for Components<'a> {
+	fn eq(&self, other: &Self) -> bool {
+		Some(self.scheme).filter(|_| !self.scheme_yielded)
+			== Some(other.scheme).filter(|_| !other.scheme_yielded)
+			&& self.inner == other.inner
+	}
+}
+
+// --- Tests
+#[cfg(test)]
+mod tests {
+	use std::path::Path;
+
+	use super::*;
+
+	#[test]
+	fn test_collect() {
+		let search = Url::try_from("search://keyword//root/projects/yazi").unwrap();
+		assert_eq!(search.scheme, Scheme::Search("keyword".to_owned()));
+
+		let item = search.join("main.rs");
+		assert_eq!(item.scheme, Scheme::SearchItem);
+
+		let u: Url = item.components().take(4).collect();
+		assert_eq!(u.scheme, Scheme::SearchItem);
+		assert_eq!(u.loc.as_path(), Path::new("/root/projects"));
+
+		let u: Url = item
+			.components()
+			.take(5)
+			.chain([Component::Normal(OsStr::new("target/release/yazi"))])
+			.collect();
+		assert_eq!(u.scheme, Scheme::SearchItem);
+		assert_eq!(u.loc.as_path(), Path::new("/root/projects/yazi/target/release/yazi"));
+	}
+}

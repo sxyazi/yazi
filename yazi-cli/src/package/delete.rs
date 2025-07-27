@@ -1,8 +1,10 @@
 use anyhow::{Context, Result};
-use yazi_fs::{maybe_exists, ok_or_not_found, remove_dir_clean, remove_sealed, services::Local};
+use yazi_fs::{ok_or_not_found, remove_dir_clean, services::Local};
 use yazi_macro::outln;
+use yazi_shared::url::Url;
 
 use super::Dependency;
+use crate::shared::{maybe_exists, remove_sealed};
 
 impl Dependency {
 	pub(super) async fn delete(&self) -> Result<()> {
@@ -34,7 +36,7 @@ impl Dependency {
 			Err(e) => Err(e).context(format!("failed to read `{}`", assets.display()))?,
 		};
 
-		remove_dir_clean(&assets).await;
+		remove_dir_clean(&assets.into()).await;
 		Ok(())
 	}
 

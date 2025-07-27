@@ -1,6 +1,6 @@
 use std::process::Stdio;
 
-use anyhow::Result;
+use anyhow::{Result, bail};
 use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_fs::File;
 use yazi_shared::url::Url;
@@ -13,12 +13,16 @@ pub struct RgaOpt {
 }
 
 pub fn rga(opt: RgaOpt) -> Result<UnboundedReceiver<File>> {
+	let Some(path) = opt.cwd.as_path() else {
+		bail!("rga can only search local filesystem");
+	};
+
 	let mut child = Command::new("rga")
 		.args(["--color=never", "--files-with-matches", "--smart-case"])
 		.arg(if opt.hidden { "--hidden" } else { "--no-hidden" })
 		.args(opt.args)
 		.arg(opt.subject)
-		.arg(&opt.cwd)
+		.arg(path)
 		.kill_on_drop(true)
 		.stdout(Stdio::piped())
 		.stderr(Stdio::null())

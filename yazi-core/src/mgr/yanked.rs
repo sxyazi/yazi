@@ -41,6 +41,7 @@ impl Yanked {
 	pub fn contains_in(&self, dir: &Url) -> bool {
 		self.urls.iter().any(|u| {
 			let mut it = u.components();
+			// FIXME
 			it.next_back().is_some() && it == dir.components() && u.parent_url().as_ref() == Some(dir)
 		})
 	}

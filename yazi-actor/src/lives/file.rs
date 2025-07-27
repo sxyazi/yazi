@@ -81,13 +81,16 @@ impl UserData for File {
 			})?
 		});
 		methods.add_method("prefix", |lua, me, ()| {
-			if !me.folder.url.is_search() {
+			if !me.url.has_base() {
 				return Ok(None);
 			}
+			let Some(path) = me.url.as_path() else {
+				return Ok(None);
+			};
 
-			let mut p = me.url.strip_prefix(&me.folder.url).unwrap_or(&me.url).components();
-			p.next_back();
-			Some(lua.create_string(p.as_path().as_os_str().as_encoded_bytes())).transpose()
+			let mut comp = path.strip_prefix(me.url.loc.base()).unwrap_or(path).components();
+			comp.next_back();
+			Some(lua.create_string(comp.as_path().as_os_str().as_encoded_bytes())).transpose()
 		});
 		methods.add_method("style", |lua, me, ()| {
 			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|core: &yazi_core::Core| {

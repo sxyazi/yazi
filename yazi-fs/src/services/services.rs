@@ -25,6 +25,11 @@ pub async fn create_dir_all(url: impl AsRef<Url>) -> io::Result<()> {
 }
 
 #[inline]
+pub async fn hard_link(original: impl AsRef<Url>, link: impl AsRef<Url>) -> io::Result<()> {
+	Local::hard_link(original.as_ref(), link.as_ref()).await
+}
+
+#[inline]
 pub async fn metadata(url: impl AsRef<Url>) -> io::Result<std::fs::Metadata> {
 	Local::metadata(url.as_ref()).await
 }
@@ -37,6 +42,11 @@ pub async fn open(url: impl AsRef<Url>) -> io::Result<tokio::fs::File> {
 #[inline]
 pub async fn read_dir(url: impl AsRef<Url>) -> io::Result<tokio::fs::ReadDir> {
 	Local::read_dir(url.as_ref()).await
+}
+
+#[inline]
+pub fn read_dir_sync(url: impl AsRef<Url>) -> io::Result<std::fs::ReadDir> {
+	Local::read_dir_sync(url.as_ref())
 }
 
 #[inline]
@@ -65,8 +75,22 @@ pub async fn rename(from: impl AsRef<Url>, to: impl AsRef<Url>) -> io::Result<()
 }
 
 #[inline]
+pub async fn symlink_dir(original: impl AsRef<Url>, link: impl AsRef<Url>) -> io::Result<()> {
+	Local::symlink_dir(original.as_ref(), link.as_ref()).await
+}
+
+#[inline]
+pub async fn symlink_file(original: impl AsRef<Url>, link: impl AsRef<Url>) -> io::Result<()> {
+	Local::symlink_file(original.as_ref(), link.as_ref()).await
+}
+
+#[inline]
 pub async fn symlink_metadata(url: impl AsRef<Url>) -> io::Result<std::fs::Metadata> {
 	Local::symlink_metadata(url.as_ref()).await
+}
+
+pub fn symlink_metadata_sync(url: impl AsRef<Url>) -> io::Result<std::fs::Metadata> {
+	Local::symlink_metadata_sync(url.as_ref())
 }
 
 #[inline]

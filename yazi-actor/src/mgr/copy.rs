@@ -1,3 +1,4 @@
+// FIXME: VFS
 use std::{ffi::OsString, path::Path};
 
 use anyhow::{Result, bail};
@@ -41,7 +42,7 @@ impl Actor for Copy {
 
 		// Copy the CWD path regardless even if the directory is empty
 		if s.is_empty() && opt.r#type == "dirname" {
-			s.push(cx.cwd());
+			s.push(opt.separator.transform(cx.cwd()));
 		}
 
 		futures::executor::block_on(CLIPBOARD.set(s));
