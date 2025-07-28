@@ -1,12 +1,10 @@
-use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Display, Formatter}, hash::{BuildHasher, Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
+use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, hash::{BuildHasher, Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
 
-use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+use percent_encoding::percent_decode;
 use serde::{Deserialize, Serialize};
 
 use super::UrnBuf;
-use crate::{IntoOsStr, url::{Components, Loc, Scheme}};
-
-const ENCODE_SET: &AsciiSet = &CONTROLS.add(b'#');
+use crate::{IntoOsStr, url::{Components, Display, Loc, Scheme}};
 
 #[derive(Clone, Default, Eq, Ord, PartialOrd)]
 pub struct Url {
@@ -53,9 +51,15 @@ impl TryFrom<&[u8]> for Url {
 	type Error = anyhow::Error;
 
 	fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
-		let (scheme, skip) = Scheme::parse(bytes)?;
+		let (scheme, skip, tilde) = Scheme::parse(bytes)?;
 
-		Ok(Url { loc: bytes[skip..].into_os_str()?.into(), scheme })
+		let rest = &bytes[skip + tilde as usize..];
+
+		Ok(if tilde {
+			Self { loc: Cow::from(percent_decode(rest)).into_os_str()?.into(), scheme }
+		} else {
+			Self { loc: rest.into_os_str()?.into(), scheme }
+		})
 	}
 }
 
@@ -78,25 +82,6 @@ impl AsRef<Url> for Url {
 // FIXME: remove
 impl AsRef<Path> for Url {
 	fn as_ref(&self) -> &Path { &self.loc }
-}
-
-// FIXME: remove
-impl Display for Url {
-	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-		if matches!(self.scheme, Scheme::Regular | Scheme::SearchItem) {
-			return write!(f, "{}", self.loc.display());
-		}
-
-		let loc = percent_encode(self.loc.as_os_str().as_encoded_bytes(), ENCODE_SET);
-		write!(f, "{}{loc}", self.scheme)?;
-
-		Ok(())
-	}
-}
-
-// FIXME: remove
-impl From<&Url> for String {
-	fn from(url: &Url) -> Self { url.to_string() }
 }
 
 impl<'a> From<&'a Url> for Cow<'a, Url> {
@@ -148,6 +133,12 @@ impl Url {
 	pub fn covariant(&self, other: &Self) -> bool {
 		self.scheme.covariant(&other.scheme) && self.loc == other.loc
 	}
+
+	#[inline]
+	pub fn display(&self) -> Display<'_> { Display::new(self) }
+
+	#[inline]
+	pub fn os_str(&self) -> Cow<'_, OsStr> { self.components().os_str() }
 
 	pub fn parent_url(&self) -> Option<Url> {
 		let parent = self.loc.parent()?;
@@ -273,7 +264,12 @@ impl PartialEq for Url {
 
 impl Serialize for Url {
 	fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-		serializer.collect_str(self)
+		let Url { scheme, loc } = self;
+		match (scheme.is_virtual(), loc.to_str()) {
+			(false, Some(s)) => serializer.serialize_str(s),
+			(true, Some(s)) => serializer.serialize_str(&format!("{scheme}{s}")),
+			(_, None) => serializer.serialize_str(&scheme.encode_tilded(loc)),
+		}
 	}
 }
 

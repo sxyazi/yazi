@@ -1,7 +1,7 @@
 use ratatui::{text::{Line, Text}, widgets::{Paragraph, Wrap}};
-use yazi_shared::url::Url;
+use yazi_shared::{IntoStringLossy, url::Url};
 
-use super::{Offset, Origin, Position};
+use super::{Offset, Position};
 use crate::YAZI;
 
 #[derive(Default)]
@@ -106,22 +106,22 @@ impl InputCfg {
 impl ConfirmCfg {
 	fn new(
 		title: String,
-		(origin, offset): (Origin, Offset),
+		position: Position,
 		body: Option<Text<'static>>,
 		list: Option<Text<'static>>,
 	) -> Self {
 		Self {
-			position: Position::new(origin, offset),
-			title:    Line::raw(title),
-			body:     body.map(|c| Paragraph::new(c).wrap(Wrap { trim: false })).unwrap_or_default(),
-			list:     list.map(|l| Paragraph::new(l).wrap(Wrap { trim: false })).unwrap_or_default(),
+			position,
+			title: Line::raw(title),
+			body: body.map(|b| Paragraph::new(b).wrap(Wrap { trim: false })).unwrap_or_default(),
+			list: list.map(|l| Paragraph::new(l).wrap(Wrap { trim: false })).unwrap_or_default(),
 		}
 	}
 
 	pub fn trash(urls: &[yazi_shared::url::Url]) -> Self {
 		Self::new(
 			Self::replace_number(&YAZI.confirm.trash_title, urls.len()),
-			(YAZI.confirm.trash_origin, YAZI.confirm.trash_offset),
+			YAZI.confirm.trash_position(),
 			None,
 			Self::truncate_list(urls.iter(), urls.len(), 100),
 		)
@@ -130,7 +130,7 @@ impl ConfirmCfg {
 	pub fn delete(urls: &[yazi_shared::url::Url]) -> Self {
 		Self::new(
 			Self::replace_number(&YAZI.confirm.delete_title, urls.len()),
-			(YAZI.confirm.delete_origin, YAZI.confirm.delete_offset),
+			YAZI.confirm.delete_position(),
 			None,
 			Self::truncate_list(urls.iter(), urls.len(), 100),
 		)
@@ -139,16 +139,16 @@ impl ConfirmCfg {
 	pub fn overwrite(url: &Url) -> Self {
 		Self::new(
 			YAZI.confirm.overwrite_title.to_owned(),
-			(YAZI.confirm.overwrite_origin, YAZI.confirm.overwrite_offset),
+			YAZI.confirm.overwrite_position(),
 			Some(Text::raw(&YAZI.confirm.overwrite_body)),
-			Some(url.to_string().into()),
+			Some(url.into_string_lossy().into()),
 		)
 	}
 
 	pub fn quit(len: usize, names: Vec<String>) -> Self {
 		Self::new(
 			Self::replace_number(&YAZI.confirm.quit_title, len),
-			(YAZI.confirm.quit_origin, YAZI.confirm.quit_offset),
+			YAZI.confirm.quit_position(),
 			Some(Text::raw(&YAZI.confirm.quit_body)),
 			Self::truncate_list(names.into_iter(), len, 10),
 		)
@@ -159,7 +159,7 @@ impl ConfirmCfg {
 	}
 
 	fn truncate_list(
-		it: impl Iterator<Item = impl Into<String>>,
+		it: impl Iterator<Item = impl IntoStringLossy>,
 		len: usize,
 		max: usize,
 	) -> Option<Text<'static>> {
@@ -169,7 +169,7 @@ impl ConfirmCfg {
 				lines.push(format!("... and {} more", len - max));
 				break;
 			}
-			lines.push(s.into());
+			lines.push(s.into_string_lossy());
 		}
 		Some(Text::from_iter(lines))
 	}

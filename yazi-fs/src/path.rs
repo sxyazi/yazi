@@ -8,6 +8,7 @@ use crate::{CWD, services};
 #[inline]
 pub fn clean_url(url: &Url) -> Url { Url::from(clean_path(url)) }
 
+// FIXME: VFS
 #[inline]
 pub fn clean_path(path: impl AsRef<Path>) -> PathBuf { _clean_path(path.as_ref()) }
 
@@ -30,9 +31,11 @@ fn _clean_path(path: &Path) -> PathBuf {
 	if out.is_empty() { PathBuf::from(".") } else { out.iter().collect() }
 }
 
+// FIXME: VFS
 #[inline]
 pub fn expand_path(p: impl AsRef<Path>) -> PathBuf { _expand_path(p.as_ref()) }
 
+// FIXME: keep the original scheme of the Url
 #[inline]
 pub fn expand_url<'a>(url: impl Into<Cow<'a, Url>>) -> Cow<'a, Url> {
 	let u: Cow<'a, Url> = url.into();

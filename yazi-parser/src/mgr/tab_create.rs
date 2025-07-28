@@ -1,6 +1,8 @@
+use std::borrow::Cow;
+
 use mlua::{ExternalError, IntoLua, Lua, Value};
 use yazi_boot::BOOT;
-use yazi_fs::expand_path;
+use yazi_fs::expand_url;
 use yazi_shared::{event::CmdCow, url::Url};
 
 #[derive(Debug)]
@@ -16,8 +18,10 @@ impl From<CmdCow> for TabCreateOpt {
 		let Some(mut wd) = c.take_first_url() else {
 			return Self { wd: Some(Url::from(&BOOT.cwds[0])) };
 		};
-		if wd.is_regular() && !c.bool("raw") {
-			wd = Url::from(expand_path(wd));
+		if !c.bool("raw")
+			&& let Cow::Owned(u) = expand_url(&wd)
+		{
+			wd = u;
 		}
 		Self { wd: Some(wd) }
 	}
