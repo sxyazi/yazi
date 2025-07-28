@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(component loc scheme url urn);
+yazi_macro::mod_flat!(component display loc scheme url urn);

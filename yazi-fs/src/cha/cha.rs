@@ -79,7 +79,7 @@ impl Cha {
 	pub fn from_dummy(_url: &Url, ft: Option<FileType>) -> Self {
 		let mut me = ft.map(Self::from_half_ft).unwrap_or_default();
 		#[cfg(unix)]
-		if yazi_shared::url::Urn::new(_url).is_hidden() {
+		if _url.urn().is_hidden() {
 			me.kind |= ChaKind::HIDDEN;
 		}
 		me

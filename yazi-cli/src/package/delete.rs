@@ -1,7 +1,6 @@
 use anyhow::{Context, Result};
 use yazi_fs::{ok_or_not_found, remove_dir_clean, services::Local};
 use yazi_macro::outln;
-use yazi_shared::url::Url;
 
 use super::Dependency;
 use crate::shared::{maybe_exists, remove_sealed};
