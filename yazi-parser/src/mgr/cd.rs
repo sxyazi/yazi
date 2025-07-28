@@ -1,5 +1,7 @@
+use std::borrow::Cow;
+
 use mlua::{ExternalError, IntoLua, Lua, Value};
-use yazi_fs::expand_path;
+use yazi_fs::expand_url;
 use yazi_shared::{event::CmdCow, url::Url};
 
 #[derive(Debug)]
@@ -12,9 +14,13 @@ pub struct CdOpt {
 impl From<CmdCow> for CdOpt {
 	fn from(mut c: CmdCow) -> Self {
 		let mut target = c.take_first_url().unwrap_or_default();
-		if target.is_regular() && !c.bool("raw") {
-			target = Url::from(expand_path(target));
+
+		if !c.bool("raw")
+			&& let Cow::Owned(u) = expand_url(&target)
+		{
+			target = u;
 		}
+
 		Self { target, interactive: c.bool("interactive"), source: CdSource::Cd }
 	}
 }
