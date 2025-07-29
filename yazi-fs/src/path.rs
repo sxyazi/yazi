@@ -1,7 +1,7 @@
 use std::{borrow::Cow, env, ffi::{OsStr, OsString}, future::Future, io, path::{Path, PathBuf}};
 
 use anyhow::{Result, bail};
-use yazi_shared::url::Url;
+use yazi_shared::url::{Loc, Url};
 
 use crate::{CWD, services};
 
@@ -35,11 +35,12 @@ fn _clean_path(path: &Path) -> PathBuf {
 #[inline]
 pub fn expand_path(p: impl AsRef<Path>) -> PathBuf { _expand_path(p.as_ref()) }
 
-// FIXME: keep the original scheme of the Url
 #[inline]
 pub fn expand_url<'a>(url: impl Into<Cow<'a, Url>>) -> Cow<'a, Url> {
 	let u: Cow<'a, Url> = url.into();
-	if let Some(p) = u.as_path() { Url::from(_expand_path(p)).into() } else { u }
+	let Some(p) = u.as_path() else { return u };
+
+	Url { loc: Loc::with(u.loc.base(), _expand_path(p)), scheme: u.scheme.clone() }.into()
 }
 
 fn _expand_path(p: &Path) -> PathBuf {

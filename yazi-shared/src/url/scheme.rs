@@ -1,7 +1,7 @@
 use std::{borrow::Cow, fmt::Display};
 
 use anyhow::{Result, bail};
-use percent_encoding::{CONTROLS, PercentEncode, percent_decode, percent_encode};
+use percent_encoding::{AsciiSet, CONTROLS, PercentEncode, percent_decode, percent_encode};
 
 use crate::{BytesExt, url::Loc};
 
@@ -73,7 +73,10 @@ impl Scheme {
 	}
 
 	#[inline]
-	fn encode_param<'a>(s: &'a str) -> PercentEncode<'a> { percent_encode(s.as_bytes(), CONTROLS) }
+	fn encode_param<'a>(s: &'a str) -> PercentEncode<'a> {
+		const SET: AsciiSet = CONTROLS.add(b'/');
+		percent_encode(s.as_bytes(), &SET)
+	}
 
 	pub fn encode_tilded(&self, loc: &Loc) -> String {
 		let loc = percent_encode(loc.as_os_str().as_encoded_bytes(), CONTROLS);
