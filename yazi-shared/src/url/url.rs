@@ -165,7 +165,7 @@ impl Url {
 		}
 
 		Some(Self {
-			loc:    self.loc.strip_prefix(base.loc.as_path()).ok()?.into(),
+			loc:    self.loc.strip_prefix(&base.loc).ok()?.into(),
 			scheme: self.scheme.clone(),
 		})
 	}

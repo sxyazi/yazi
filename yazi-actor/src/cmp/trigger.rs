@@ -115,12 +115,12 @@ mod tests {
 	fn test_split() {
 		yazi_fs::init();
 		compare("foo", "", "foo");
-		compare("foo\\", "foo\\", "");
-		compare("foo\\bar", "foo\\", "bar");
-		compare("foo\\bar\\", "foo\\bar\\", "");
-		compare("C:\\", "C:\\", "");
-		compare("C:\\foo", "C:\\", "foo");
-		compare("C:\\foo\\", "C:\\foo\\", "");
-		compare("C:\\foo\\bar", "C:\\foo\\", "bar");
+		compare(r"foo\", r"foo\", "");
+		compare(r"foo\bar", r"foo\", "bar");
+		compare(r"foo\bar\", r"foo\bar\", "");
+		compare(r"C:\", r"C:\", "");
+		compare(r"C:\foo", r"C:\", "foo");
+		compare(r"C:\foo\", r"C:\foo\", "");
+		compare(r"C:\foo\bar", r"C:\foo\", "bar");
 	}
 }

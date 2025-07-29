@@ -15,6 +15,10 @@ impl Deref for Loc {
 	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
+impl AsRef<Path> for Loc {
+	fn as_ref(&self) -> &Path { &self.inner }
+}
+
 impl PartialEq for Loc {
 	fn eq(&self, other: &Self) -> bool { self.inner == other.inner }
 }
