@@ -1,4 +1,7 @@
-use std::{fs::{FileType, Metadata}, time::SystemTime};
+use std::{
+	fs::{FileType, Metadata},
+	time::SystemTime,
+};
 
 use yazi_macro::{unix_either, win_either};
 use yazi_shared::url::Url;
@@ -8,21 +11,21 @@ use crate::services;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Cha {
-	pub kind:  ChaKind,
-	pub len:   u64,
+	pub kind: ChaKind,
+	pub len: u64,
 	pub atime: Option<SystemTime>,
 	pub btime: Option<SystemTime>,
 	#[cfg(unix)]
 	pub ctime: Option<SystemTime>,
 	pub mtime: Option<SystemTime>,
 	#[cfg(unix)]
-	pub mode:  libc::mode_t,
+	pub mode: libc::mode_t,
 	#[cfg(unix)]
-	pub dev:   libc::dev_t,
+	pub dev: libc::dev_t,
 	#[cfg(unix)]
-	pub uid:   libc::uid_t,
+	pub uid: libc::uid_t,
 	#[cfg(unix)]
-	pub gid:   libc::gid_t,
+	pub gid: libc::gid_t,
 	#[cfg(unix)]
 	pub nlink: libc::nlink_t,
 }
@@ -30,23 +33,23 @@ pub struct Cha {
 impl Default for Cha {
 	fn default() -> Self {
 		Self {
-			kind:               ChaKind::DUMMY,
-			len:                0,
-			atime:              None,
-			btime:              None,
+			kind: ChaKind::DUMMY,
+			len: 0,
+			atime: None,
+			btime: None,
 			#[cfg(unix)]
-			ctime:              None,
-			mtime:              None,
+			ctime: None,
+			mtime: None,
 			#[cfg(unix)]
-			mode:               0,
+			mode: 0,
 			#[cfg(unix)]
-			dev:                0,
+			dev: 0,
 			#[cfg(unix)]
-			uid:                0,
+			uid: 0,
 			#[cfg(unix)]
-			gid:                0,
+			gid: 0,
 			#[cfg(unix)]
-			nlink:              0,
+			nlink: 0,
 		}
 	}
 }
@@ -77,7 +80,7 @@ impl Cha {
 
 	#[inline]
 	pub fn from_dummy(_url: &Url, ft: Option<FileType>) -> Self {
-		let me = ft.map(Self::from_half_ft).unwrap_or_default();
+		let mut me = ft.map(Self::from_half_ft).unwrap_or_default();
 		#[cfg(unix)]
 		if _url.urn().is_hidden() {
 			me.kind |= ChaKind::HIDDEN;
@@ -129,7 +132,10 @@ impl Cha {
 
 	fn from_just_meta(m: &Metadata) -> Self {
 		#[cfg(unix)]
-		use std::{os::unix::{fs::MetadataExt, prelude::PermissionsExt}, time::{Duration, UNIX_EPOCH}};
+		use std::{
+			os::unix::{fs::MetadataExt, prelude::PermissionsExt},
+			time::{Duration, UNIX_EPOCH},
+		};
 
 		let mut kind = ChaKind::empty();
 		if m.is_dir() {
@@ -178,7 +184,9 @@ impl Cha {
 
 impl Cha {
 	#[inline]
-	pub const fn is_dir(&self) -> bool { self.kind.contains(ChaKind::DIR) }
+	pub const fn is_dir(&self) -> bool {
+		self.kind.contains(ChaKind::DIR)
+	}
 
 	#[inline]
 	pub const fn is_hidden(&self) -> bool {
@@ -189,13 +197,19 @@ impl Cha {
 	}
 
 	#[inline]
-	pub const fn is_link(&self) -> bool { self.kind.contains(ChaKind::LINK) }
+	pub const fn is_link(&self) -> bool {
+		self.kind.contains(ChaKind::LINK)
+	}
 
 	#[inline]
-	pub const fn is_orphan(&self) -> bool { self.kind.contains(ChaKind::ORPHAN) }
+	pub const fn is_orphan(&self) -> bool {
+		self.kind.contains(ChaKind::ORPHAN)
+	}
 
 	#[inline]
-	pub const fn is_dummy(&self) -> bool { self.kind.contains(ChaKind::DUMMY) }
+	pub const fn is_dummy(&self) -> bool {
+		self.kind.contains(ChaKind::DUMMY)
+	}
 
 	#[inline]
 	pub const fn is_block(&self) -> bool {
@@ -218,8 +232,12 @@ impl Cha {
 	}
 
 	#[inline]
-	pub const fn is_exec(&self) -> bool { unix_either!(self.mode & libc::S_IXUSR != 0, false) }
+	pub const fn is_exec(&self) -> bool {
+		unix_either!(self.mode & libc::S_IXUSR != 0, false)
+	}
 
 	#[inline]
-	pub const fn is_sticky(&self) -> bool { unix_either!(self.mode & libc::S_ISVTX != 0, false) }
+	pub const fn is_sticky(&self) -> bool {
+		unix_either!(self.mode & libc::S_ISVTX != 0, false)
+	}
 }
