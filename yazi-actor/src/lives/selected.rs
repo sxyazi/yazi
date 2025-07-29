@@ -1,4 +1,3 @@
-use indexmap::IndexMap;
 use mlua::AnyUserData;
 
 use super::Lives;
@@ -9,11 +8,11 @@ pub(super) struct Selected;
 
 impl Selected {
 	#[inline]
-	pub(super) fn make(inner: &IndexMap<yazi_shared::url::Url, u64>) -> mlua::Result<AnyUserData> {
+	pub(super) fn make(inner: &yazi_core::tab::Selected) -> mlua::Result<AnyUserData> {
 		let inner = PtrCell::from(inner);
 
 		Lives::scoped_userdata(yazi_binding::Iter::new(
-			inner.as_static().keys().cloned().map(yazi_binding::Url::new),
+			inner.as_static().values().cloned().map(yazi_binding::Url::new),
 			Some(inner.len()),
 		))
 	}

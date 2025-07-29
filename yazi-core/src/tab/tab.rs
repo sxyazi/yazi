@@ -89,7 +89,7 @@ impl Tab {
 		if self.selected.is_empty() {
 			Box::new(self.hovered().map(|h| &h.url).into_iter())
 		} else {
-			Box::new(self.selected.keys())
+			Box::new(self.selected.values())
 		}
 	}
 
@@ -98,7 +98,7 @@ impl Tab {
 		if self.selected.is_empty() {
 			Box::new([&h.url, &h.url].into_iter())
 		} else {
-			Box::new([&h.url].into_iter().chain(self.selected.keys()))
+			Box::new([&h.url].into_iter().chain(self.selected.values()))
 		}
 	}
 

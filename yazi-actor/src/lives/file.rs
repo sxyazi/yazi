@@ -121,7 +121,7 @@ impl UserData for File {
 				_ => 0u8,
 			})
 		});
-		methods.add_method("is_selected", |_, me, ()| Ok(me.tab.selected.contains_key(&me.url)));
+		methods.add_method("is_selected", |_, me, ()| Ok(me.tab.selected.contains(&me.url)));
 		methods.add_method("found", |lua, me, ()| {
 			lua.named_registry_value::<AnyUserData>("cx")?.borrow_scoped(|core: &yazi_core::Core| {
 				let Some(finder) = &core.active().finder else {

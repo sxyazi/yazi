@@ -159,10 +159,10 @@ impl UserData for Url {
 
 		methods.add_meta_method(MetaMethod::Eq, |_, me, other: UrlRef| Ok(me.inner == other.inner));
 		methods.add_meta_method(MetaMethod::ToString, |lua, me, ()| {
-			lua.create_string(me.as_os_str().as_encoded_bytes())
+			lua.create_string(me.os_str().as_encoded_bytes())
 		});
 		methods.add_meta_method(MetaMethod::Concat, |lua, lhs, rhs: mlua::String| {
-			lua.create_string([lhs.as_os_str().as_encoded_bytes(), &rhs.as_bytes()].concat())
+			lua.create_string([lhs.os_str().as_encoded_bytes(), &rhs.as_bytes()].concat())
 		});
 	}
 }

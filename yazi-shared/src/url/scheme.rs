@@ -47,17 +47,9 @@ impl Scheme {
 		})
 	}
 
+	#[inline]
 	pub fn covariant(&self, other: &Self) -> bool {
-		match (self, other) {
-			// Local files
-			(
-				Self::Regular | Self::Search(_) | Self::SearchItem,
-				Self::Regular | Self::Search(_) | Self::SearchItem,
-			) => true,
-
-			// Virtual files within the same namespace
-			(a, b) => a == b,
-		}
+		if self.is_virtual() || other.is_virtual() { self == other } else { true }
 	}
 
 	#[inline]
