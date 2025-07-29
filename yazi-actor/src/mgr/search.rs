@@ -6,7 +6,10 @@ use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
 use yazi_fs::{FilesOp, cha::Cha};
 use yazi_macro::{act, succ};
-use yazi_parser::{VoidOpt, mgr::{SearchOpt, SearchOptVia}};
+use yazi_parser::{
+	VoidOpt,
+	mgr::{SearchOpt, SearchOptVia},
+};
 use yazi_plugin::external;
 use yazi_proxy::{InputProxy, MgrProxy};
 use yazi_shared::event::Data;
@@ -70,6 +73,12 @@ impl Actor for SearchDo {
 					args: opt.args,
 				}),
 				SearchOptVia::Fd => external::fd(external::FdOpt {
+					cwd: cwd.clone(),
+					hidden,
+					subject: opt.subject.into_owned(),
+					args: opt.args,
+				}),
+				SearchOptVia::Es => external::es(external::EsOpt {
 					cwd: cwd.clone(),
 					hidden,
 					subject: opt.subject.into_owned(),

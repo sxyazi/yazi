@@ -1,0 +1,1 @@
+cargo build --profile release-windows --locked

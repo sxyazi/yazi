@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(fd highlighter rg rga);
+yazi_macro::mod_flat!(fd highlighter rg rga es);

@@ -1,37 +1,57 @@
-use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, hash::BuildHasher, ops::Deref, path::{Path, PathBuf}};
+use std::{
+	borrow::Cow,
+	ffi::OsStr,
+	fmt::{Debug, Formatter},
+	hash::BuildHasher,
+	ops::Deref,
+	path::{Path, PathBuf},
+};
 
 use percent_encoding::percent_decode;
 use serde::{Deserialize, Serialize};
 
 use super::UrnBuf;
-use crate::{IntoOsStr, url::{Components, Display, Loc, Scheme}};
+use crate::{
+	IntoOsStr,
+	url::{Components, Display, Loc, Scheme},
+};
 
 #[derive(Clone, Default, Eq, Ord, PartialOrd, PartialEq, Hash)]
 pub struct Url {
-	pub loc:    Loc,
+	pub loc: Loc,
 	pub scheme: Scheme,
 }
 
 impl Deref for Url {
 	type Target = Loc;
 
-	fn deref(&self) -> &Self::Target { &self.loc }
+	fn deref(&self) -> &Self::Target {
+		&self.loc
+	}
 }
 
 impl From<Loc> for Url {
-	fn from(loc: Loc) -> Self { Self { loc, scheme: Scheme::Regular } }
+	fn from(loc: Loc) -> Self {
+		Self { loc, scheme: Scheme::Regular }
+	}
 }
 
 impl From<PathBuf> for Url {
-	fn from(path: PathBuf) -> Self { Loc::from(path).into() }
+	fn from(path: PathBuf) -> Self {
+		Loc::from(path).into()
+	}
 }
 
 impl From<&PathBuf> for Url {
-	fn from(path: &PathBuf) -> Self { path.to_owned().into() }
+	fn from(path: &PathBuf) -> Self {
+		path.to_owned().into()
+	}
 }
 
 impl From<&Path> for Url {
-	fn from(path: &Path) -> Self { path.to_path_buf().into() }
+	fn from(path: &Path) -> Self {
+		path.to_path_buf().into()
+	}
 }
 
 impl TryFrom<&[u8]> for Url {
@@ -53,34 +73,48 @@ impl TryFrom<&[u8]> for Url {
 impl TryFrom<&str> for Url {
 	type Error = anyhow::Error;
 
-	fn try_from(value: &str) -> Result<Self, Self::Error> { value.as_bytes().try_into() }
+	fn try_from(value: &str) -> Result<Self, Self::Error> {
+		value.as_bytes().try_into()
+	}
 }
 
 impl TryFrom<String> for Url {
 	type Error = anyhow::Error;
 
-	fn try_from(value: String) -> Result<Self, Self::Error> { value.as_bytes().try_into() }
+	fn try_from(value: String) -> Result<Self, Self::Error> {
+		value.as_bytes().try_into()
+	}
 }
 
 impl AsRef<Url> for Url {
-	fn as_ref(&self) -> &Url { self }
+	fn as_ref(&self) -> &Url {
+		self
+	}
 }
 
 // FIXME: remove
 impl AsRef<Path> for Url {
-	fn as_ref(&self) -> &Path { &self.loc }
+	fn as_ref(&self) -> &Path {
+		&self.loc
+	}
 }
 
 impl<'a> From<&'a Url> for Cow<'a, Url> {
-	fn from(url: &'a Url) -> Self { Cow::Borrowed(url) }
+	fn from(url: &'a Url) -> Self {
+		Cow::Borrowed(url)
+	}
 }
 
 impl From<Url> for Cow<'_, Url> {
-	fn from(url: Url) -> Self { Cow::Owned(url) }
+	fn from(url: Url) -> Self {
+		Cow::Owned(url)
+	}
 }
 
 impl From<Cow<'_, Url>> for Url {
-	fn from(url: Cow<'_, Url>) -> Self { url.into_owned() }
+	fn from(url: Cow<'_, Url>) -> Self {
+		url.into_owned()
+	}
 }
 
 impl Url {
@@ -105,16 +139,16 @@ impl Url {
 			Scheme::SearchItem => {
 				Self { loc: Loc::with(self.loc.base(), self.loc.join(path)), scheme: Scheme::SearchItem }
 			}
-			Scheme::Archive(_) => {
-				Self { loc: self.loc.join(path).into(), scheme: self.scheme.clone() }
-			}
+			Scheme::Archive(_) => Self { loc: self.loc.join(path).into(), scheme: self.scheme.clone() },
 			Scheme::Sftp(_) => Self { loc: self.loc.join(path).into(), scheme: self.scheme.clone() },
 		}
 	}
 
 	// FIXME: check usages
 	#[inline]
-	pub fn components(&self) -> Components<'_> { Components::new(self) }
+	pub fn components(&self) -> Components<'_> {
+		Components::new(self)
+	}
 
 	#[inline]
 	pub fn covariant(&self, other: &Self) -> bool {
@@ -122,10 +156,14 @@ impl Url {
 	}
 
 	#[inline]
-	pub fn display(&self) -> Display<'_> { Display::new(self) }
+	pub fn display(&self) -> Display<'_> {
+		Display::new(self)
+	}
 
 	#[inline]
-	pub fn os_str(&self) -> Cow<'_, OsStr> { self.components().os_str() }
+	pub fn os_str(&self) -> Cow<'_, OsStr> {
+		self.components().os_str()
+	}
 
 	pub fn parent_url(&self) -> Option<Url> {
 		let parent = self.loc.parent()?;
@@ -151,10 +189,7 @@ impl Url {
 			return None;
 		}
 
-		Some(Self {
-			loc:    self.loc.strip_prefix(&base.loc).ok()?.into(),
-			scheme: self.scheme.clone(),
-		})
+		Some(Self { loc: self.loc.strip_prefix(&base.loc).ok()?.into(), scheme: self.scheme.clone() })
 	}
 
 	#[inline]
@@ -163,13 +198,19 @@ impl Url {
 	}
 
 	#[inline]
-	pub fn set_name(&mut self, name: impl AsRef<OsStr>) { self.loc.set_name(name); }
+	pub fn set_name(&mut self, name: impl AsRef<OsStr>) {
+		self.loc.set_name(name);
+	}
 
 	#[inline]
-	pub fn pair(&self) -> Option<(Self, UrnBuf)> { Some((self.parent_url()?, self.loc.urn_owned())) }
+	pub fn pair(&self) -> Option<(Self, UrnBuf)> {
+		Some((self.parent_url()?, self.loc.urn_owned()))
+	}
 
 	#[inline]
-	pub fn hash_u64(&self) -> u64 { foldhash::fast::FixedState::default().hash_one(self) }
+	pub fn hash_u64(&self) -> u64 {
+		foldhash::fast::FixedState::default().hash_one(self)
+	}
 
 	#[inline]
 	pub fn rebase(&self, parent: &Path) -> Self {
@@ -181,10 +222,14 @@ impl Url {
 impl Url {
 	// --- Regular
 	#[inline]
-	pub fn is_regular(&self) -> bool { self.scheme == Scheme::Regular }
+	pub fn is_regular(&self) -> bool {
+		self.scheme == Scheme::Regular
+	}
 
 	#[inline]
-	pub fn to_regular(&self) -> Self { Self { loc: self.loc.clone(), scheme: Scheme::Regular } }
+	pub fn to_regular(&self) -> Self {
+		Self { loc: self.loc.clone(), scheme: Scheme::Regular }
+	}
 
 	#[inline]
 	pub fn into_regular(mut self) -> Self {
@@ -194,7 +239,9 @@ impl Url {
 
 	// --- Search
 	#[inline]
-	pub fn is_search(&self) -> bool { matches!(self.scheme, Scheme::Search(_)) }
+	pub fn is_search(&self) -> bool {
+		matches!(self.scheme, Scheme::Search(_))
+	}
 
 	#[inline]
 	pub fn to_search(&self, frag: impl AsRef<str>) -> Self {
@@ -209,11 +256,15 @@ impl Url {
 
 	// --- Archive
 	#[inline]
-	pub fn is_archive(&self) -> bool { matches!(self.scheme, Scheme::Archive(_)) }
+	pub fn is_archive(&self) -> bool {
+		matches!(self.scheme, Scheme::Archive(_))
+	}
 
 	// FIXME: remove
 	#[inline]
-	pub fn into_path(self) -> PathBuf { self.loc.into_path() }
+	pub fn into_path(self) -> PathBuf {
+		self.loc.into_path()
+	}
 }
 
 impl Debug for Url {

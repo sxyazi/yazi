@@ -88,6 +88,7 @@ impl Actions {
 		writeln!(s, "    fzf           : {}", Self::process_output("fzf", "--version"))?;
 		#[rustfmt::skip]
 		writeln!(s, "    fd/fdfind     : {} / {}", Self::process_output("fd", "--version"), Self::process_output("fdfind", "--version"))?;
+		writeln!(s, "    es            : {}", Self::process_output("es", "--version"))?;
 		writeln!(s, "    rg            : {}", Self::process_output("rg", "--version"))?;
 		writeln!(s, "    chafa         : {}", Self::process_output("chafa", "--version"))?;
 		writeln!(s, "    zoxide        : {}", Self::process_output("zoxide", "--version"))?;
