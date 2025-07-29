@@ -157,8 +157,8 @@ impl UserData for Url {
 			Ok(url.map(Self::new))
 		});
 
-		methods.add_function_mut("into_search", |_, (ud, frag): (AnyUserData, String)| {
-			Ok(Self::new(ud.take::<Self>()?.inner.into_search(frag)))
+		methods.add_function_mut("into_search", |_, (ud, frag): (AnyUserData, mlua::String)| {
+			Ok(Self::new(ud.take::<Self>()?.inner.into_search(frag.to_str()?)))
 		});
 
 		methods.add_meta_method(MetaMethod::Eq, |_, me, other: UrlRef| Ok(me.inner == other.inner));
