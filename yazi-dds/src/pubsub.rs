@@ -5,7 +5,7 @@ use mlua::Function;
 use parking_lot::RwLock;
 use yazi_boot::BOOT;
 use yazi_fs::FolderStage;
-use yazi_shared::{Id, RoCell, url::Url};
+use yazi_shared::{Id, RoCell, url::{CovUrl, Url}};
 
 use crate::{Client, ID, PEERS, body::{Body, BodyBulk, BodyHi, BodyMoveItem}};
 
@@ -157,7 +157,7 @@ impl Pubsub {
 
 	pub_after!(rename(tab: Id, from: &Url, to: &Url), (tab, from, to));
 
-	pub_after!(@yank(cut: bool, urls: &HashSet<Url>), (cut, urls));
+	pub_after!(@yank(cut: bool, urls: &HashSet<CovUrl>), (cut, urls));
 
 	pub_after!(move(items: Vec<BodyMoveItem>), (&items), (items));
 

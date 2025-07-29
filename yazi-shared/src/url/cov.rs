@@ -1,8 +1,10 @@
 use std::{hash::{Hash, Hasher}, ops::Deref};
 
+use serde::{Deserialize, Serialize};
+
 use crate::url::Url;
 
-#[derive(Clone, Debug, Eq)]
+#[derive(Clone, Debug, Deserialize, Eq, Serialize)]
 #[repr(transparent)]
 pub struct CovUrl(pub Url);
 
@@ -10,6 +12,18 @@ impl Deref for CovUrl {
 	type Target = Url;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
+}
+
+impl AsRef<Url> for CovUrl {
+	fn as_ref(&self) -> &Url { &self.0 }
+}
+
+impl From<Url> for CovUrl {
+	fn from(value: Url) -> Self { Self(value) }
+}
+
+impl From<CovUrl> for Url {
+	fn from(value: CovUrl) -> Self { value.0 }
 }
 
 impl Hash for CovUrl {
@@ -23,6 +37,10 @@ impl Hash for CovUrl {
 
 impl PartialEq for CovUrl {
 	fn eq(&self, other: &Self) -> bool { self.covariant(other) }
+}
+
+impl PartialEq<Url> for CovUrl {
+	fn eq(&self, other: &Url) -> bool { self.covariant(other) }
 }
 
 impl CovUrl {

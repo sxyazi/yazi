@@ -1,7 +1,7 @@
 use std::{borrow::Cow, ops::Deref};
 
 use mlua::{AnyUserData, ExternalError, FromLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
-use yazi_shared::url::Scheme;
+use yazi_shared::url::{CovUrl, Scheme};
 
 use crate::{Urn, cached_field};
 
@@ -39,6 +39,10 @@ impl From<Url> for Cow<'_, yazi_shared::url::Url> {
 
 impl<'a> From<&'a Url> for Cow<'a, yazi_shared::url::Url> {
 	fn from(value: &'a Url) -> Self { Cow::Borrowed(&value.inner) }
+}
+
+impl From<Url> for yazi_shared::url::CovUrl {
+	fn from(value: Url) -> Self { CovUrl(value.inner) }
 }
 
 impl TryFrom<&[u8]> for Url {

@@ -84,6 +84,15 @@ impl<'a> Components<'a> {
 		s.push(path);
 		s.into()
 	}
+
+	pub fn covariant(&self, other: &Self) -> bool {
+		match (self.scheme_yielded, other.scheme_yielded) {
+			(false, false) => {}
+			(true, true) if self.scheme.covariant(other.scheme) => {}
+			_ => return false,
+		}
+		self.inner == other.inner
+	}
 }
 
 impl<'a> Iterator for Components<'a> {
