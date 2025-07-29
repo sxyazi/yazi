@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, hash::{BuildHasher, Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
+use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, hash::BuildHasher, ops::Deref, path::{Path, PathBuf}};
 
 use percent_encoding::percent_decode;
 use serde::{Deserialize, Serialize};
@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use super::UrnBuf;
 use crate::{IntoOsStr, url::{Components, Display, Loc, Scheme}};
 
-#[derive(Clone, Default, Eq, Ord, PartialOrd)]
+#[derive(Clone, Default, Eq, Ord, PartialOrd, PartialEq, Hash)]
 pub struct Url {
 	pub loc:    Loc,
 	pub scheme: Scheme,
@@ -16,19 +16,6 @@ impl Deref for Url {
 	type Target = Loc;
 
 	fn deref(&self) -> &Self::Target { &self.loc }
-}
-
-impl Debug for Url {
-	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-		let Self { scheme, loc } = self;
-		match scheme {
-			Scheme::Regular => write!(f, "{scheme}{}", loc.display()),
-			Scheme::Search(_) => write!(f, "{scheme}{}", loc.display()),
-			Scheme::SearchItem => write!(f, "{scheme}{}", loc.display()),
-			Scheme::Archive(_) => write!(f, "{scheme}{}", loc.display()),
-			Scheme::Sftp(_) => write!(f, "{scheme}{}", loc.display()),
-		}
-	}
 }
 
 impl From<Loc> for Url {
@@ -165,7 +152,7 @@ impl Url {
 		}
 
 		Some(Self {
-			loc:    self.loc.strip_prefix(base.loc.as_path()).ok()?.into(),
+			loc:    self.loc.strip_prefix(&base.loc).ok()?.into(),
 			scheme: self.scheme.clone(),
 		})
 	}
@@ -229,36 +216,9 @@ impl Url {
 	pub fn into_path(self) -> PathBuf { self.loc.into_path() }
 }
 
-impl Hash for Url {
-	fn hash<H: Hasher>(&self, state: &mut H) {
-		self.loc.hash(state);
-
-		match &self.scheme {
-			Scheme::Regular => {}
-			Scheme::Search(_) => {
-				self.scheme.hash(state);
-			}
-			Scheme::SearchItem => {}
-			Scheme::Archive(_) => {
-				self.scheme.hash(state);
-			}
-			Scheme::Sftp(_) => {
-				self.scheme.hash(state);
-			}
-		}
-	}
-}
-
-impl PartialEq for Url {
-	fn eq(&self, other: &Self) -> bool {
-		if self.loc != other.loc {
-			return false;
-		}
-
-		match (&self.scheme, &other.scheme) {
-			(Scheme::Regular | Scheme::SearchItem, Scheme::Regular | Scheme::SearchItem) => true,
-			_ => self.scheme == other.scheme,
-		}
+impl Debug for Url {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}{}", self.scheme, self.loc.display())
 	}
 }
 

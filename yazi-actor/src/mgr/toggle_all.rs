@@ -23,8 +23,8 @@ impl Actor for ToggleAll {
 			Some(true) => Right((vec![], opt.urls)),
 			Some(false) if opt.urls.is_empty() => Left((it.collect(), vec![])),
 			Some(false) => Right((opt.urls, vec![])),
-			None if opt.urls.is_empty() => Left(it.partition(|&u| tab.selected.contains_key(u))),
-			None => Right(opt.urls.into_iter().partition(|u| tab.selected.contains_key(u))),
+			None if opt.urls.is_empty() => Left(it.partition(|&u| tab.selected.contains(u))),
+			None => Right(opt.urls.into_iter().partition(|u| tab.selected.contains(u))),
 		};
 
 		let warn = match either {

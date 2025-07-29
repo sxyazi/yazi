@@ -2,21 +2,29 @@ use std::{collections::HashMap, ops::Deref};
 
 use indexmap::IndexMap;
 use yazi_fs::FilesOp;
-use yazi_shared::{timestamp_us, url::Url};
+use yazi_shared::{timestamp_us, url::{CovUrl, Url}};
 
 #[derive(Default)]
 pub struct Selected {
-	inner:   IndexMap<Url, u64>,
-	parents: HashMap<Url, usize>,
-}
-
-impl Deref for Selected {
-	type Target = IndexMap<Url, u64>;
-
-	fn deref(&self) -> &Self::Target { &self.inner }
+	inner:   IndexMap<CovUrl, u64>,
+	parents: HashMap<CovUrl, usize>,
 }
 
 impl Selected {
+	#[inline]
+	pub fn len(&self) -> usize { self.inner.len() }
+
+	#[inline]
+	pub fn is_empty(&self) -> bool { self.inner.is_empty() }
+
+	#[inline]
+	pub fn values(&self) -> impl Iterator<Item = &Url> { self.inner.keys().map(Deref::deref) }
+
+	#[inline]
+	pub fn contains(&self, url: impl AsRef<Url>) -> bool {
+		self.inner.contains_key(CovUrl::new(&url))
+	}
+
 	#[inline]
 	pub fn add(&mut self, url: &Url) -> bool { self.add_same(&[url]) == 1 }
 
@@ -33,7 +41,7 @@ impl Selected {
 	fn add_same(&mut self, urls: &[impl AsRef<Url>]) -> usize {
 		// If it has appeared as a parent
 		let urls: Vec<_> =
-			urls.iter().map(|u| u.as_ref()).filter(|&u| !self.parents.contains_key(u)).collect();
+			urls.iter().map(CovUrl::new).filter(|&u| !self.parents.contains_key(u)).collect();
 		if urls.is_empty() {
 			return 0;
 		}
@@ -79,12 +87,12 @@ impl Selected {
 	}
 
 	fn remove_same(&mut self, urls: &[impl AsRef<Url>]) -> usize {
-		let count = urls.iter().filter_map(|u| self.inner.swap_remove(u.as_ref())).count();
+		let count = urls.iter().filter_map(|u| self.inner.swap_remove(CovUrl::new(u))).count();
 		if count == 0 {
 			return 0;
 		}
 
-		let mut parent = urls[0].as_ref().parent_url();
+		let mut parent = CovUrl::new(&urls[0]).parent_url();
 		while let Some(u) = parent {
 			let n = self.parents.get_mut(&u).unwrap();
 
@@ -104,7 +112,7 @@ impl Selected {
 	}
 
 	pub fn apply_op(&mut self, op: &FilesOp) {
-		let (removal, addition) = op.diff_recoverable(|u| self.contains_key(u));
+		let (removal, addition) = op.diff_recoverable(|u| self.contains(u));
 		if !removal.is_empty() {
 			self.remove_many(&removal);
 		}

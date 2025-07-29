@@ -1,5 +1,4 @@
-// FIXME: VFS
-use std::{ffi::OsString, path::Path};
+use std::ffi::OsString;
 
 use anyhow::{Result, bail};
 use yazi_macro::{act, succ};
@@ -28,13 +27,24 @@ impl Actor for Copy {
 		.peekable();
 
 		while let Some(u) = it.next() {
-			s.push(match opt.r#type.as_ref() {
-				"path" => opt.separator.transform(u),
-				"dirname" => opt.separator.transform(u.parent().unwrap_or(Path::new(""))),
-				"filename" => opt.separator.transform(u.name()),
-				"name_without_ext" => opt.separator.transform(u.file_stem().unwrap_or_default()),
+			match opt.r#type.as_ref() {
+				// TODO: rename to "url"
+				"path" => {
+					s.push(opt.separator.transform(&u.os_str()));
+				}
+				"dirname" => {
+					if let Some(p) = u.parent_url() {
+						s.push(opt.separator.transform(&p.os_str()));
+					}
+				}
+				"filename" => {
+					s.push(opt.separator.transform(u.name()));
+				}
+				"name_without_ext" => {
+					s.push(opt.separator.transform(u.file_stem().unwrap_or_default()));
+				}
 				_ => bail!("Unknown copy type: {}", opt.r#type),
-			});
+			};
 			if it.peek().is_some() {
 				s.push("\n");
 			}
@@ -42,7 +52,7 @@ impl Actor for Copy {
 
 		// Copy the CWD path regardless even if the directory is empty
 		if s.is_empty() && opt.r#type == "dirname" {
-			s.push(opt.separator.transform(cx.cwd()));
+			s.push(opt.separator.transform(&cx.cwd().os_str()));
 		}
 
 		futures::executor::block_on(CLIPBOARD.set(s));

@@ -74,13 +74,24 @@ impl<'a> Components<'a> {
 	}
 
 	pub fn os_str(&self) -> Cow<'a, OsStr> {
+		let path = self.inner.as_path();
 		if !self.scheme.is_virtual() || self.scheme_yielded {
-			return Cow::Borrowed(self.inner.as_path().as_os_str());
+			return path.as_os_str().into();
 		}
 
-		let mut oss = OsString::from(format!("{}", self.scheme));
-		oss.push(self.inner.as_path());
-		Cow::Owned(oss)
+		let mut s = OsString::from(format!("{}", self.scheme));
+		s.reserve_exact(path.as_os_str().len());
+		s.push(path);
+		s.into()
+	}
+
+	pub fn covariant(&self, other: &Self) -> bool {
+		match (self.scheme_yielded, other.scheme_yielded) {
+			(false, false) => {}
+			(true, true) if self.scheme.covariant(other.scheme) => {}
+			_ => return false,
+		}
+		self.inner == other.inner
 	}
 }
 
