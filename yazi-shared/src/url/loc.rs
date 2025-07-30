@@ -47,16 +47,12 @@ impl Debug for Loc {
 	}
 }
 
-impl From<&Path> for Loc {
-	fn from(value: &Path) -> Self { Self::from(value.to_path_buf()) }
+impl From<OsString> for Loc {
+	fn from(value: OsString) -> Self { Self::from(PathBuf::from(value)) }
 }
 
-impl From<Cow<'_, Path>> for Loc {
-	fn from(value: Cow<'_, Path>) -> Self { Self::from(value.into_owned()) }
-}
-
-impl From<Cow<'_, OsStr>> for Loc {
-	fn from(value: Cow<'_, OsStr>) -> Self { Self::from(PathBuf::from(value.into_owned())) }
+impl From<String> for Loc {
+	fn from(value: String) -> Self { Self::from(PathBuf::from(value)) }
 }
 
 impl From<PathBuf> for Loc {
@@ -79,6 +75,14 @@ impl From<PathBuf> for Loc {
 			name:  name_len,
 		}
 	}
+}
+
+impl From<Cow<'_, Path>> for Loc {
+	fn from(value: Cow<'_, Path>) -> Self { Self::from(value.into_owned()) }
+}
+
+impl<T: ?Sized + AsRef<OsStr>> From<&T> for Loc {
+	fn from(value: &T) -> Self { Self::from(value.as_ref().to_os_string()) }
 }
 
 impl Loc {

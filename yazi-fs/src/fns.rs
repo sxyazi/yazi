@@ -333,7 +333,7 @@ pub fn max_common_root(urls: &[Url]) -> usize {
 	if urls.is_empty() {
 		return 0;
 	} else if urls.len() == 1 {
-		return urls[0].components().count().saturating_sub(1);
+		return urls[0].components().count() - 1;
 	}
 
 	let mut it = urls.iter().map(|u| u.parent_url());
@@ -341,13 +341,13 @@ pub fn max_common_root(urls: &[Url]) -> usize {
 		return 0; // The first URL has no parent
 	};
 
-	let mut min = first.components().count();
+	let mut common = first.components().count();
 	for parent in it {
 		let Some(parent) = parent else {
 			return 0; // One of the URLs has no parent
 		};
 
-		min = first
+		common = first
 			.components()
 			.zip(parent.components())
 			.take_while(|(a, b)| match (a, b) {
@@ -355,10 +355,14 @@ pub fn max_common_root(urls: &[Url]) -> usize {
 				(a, b) => a == b,
 			})
 			.count()
-			.min(min);
+			.min(common);
+
+		if common == 0 {
+			break; // No common root found
+		}
 	}
 
-	min
+	common
 }
 
 #[cfg(unix)]

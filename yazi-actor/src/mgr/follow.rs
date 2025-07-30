@@ -20,7 +20,7 @@ impl Actor for Follow {
 		if link_to.is_absolute() {
 			act!(mgr:reveal, cx, link_to.to_owned())
 		} else if let Some(p) = file.url.parent_url() {
-			act!(mgr:reveal, cx, clean_url(&p.join(link_to)))
+			act!(mgr:reveal, cx, clean_url(p.join(link_to)).into_owned())
 		} else {
 			succ!()
 		}

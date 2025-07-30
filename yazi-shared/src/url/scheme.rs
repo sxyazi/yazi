@@ -53,7 +53,7 @@ impl Scheme {
 	}
 
 	#[inline]
-	pub(super) fn is_virtual(&self) -> bool {
+	pub fn is_virtual(&self) -> bool {
 		match self {
 			Self::Regular | Self::Search(_) | Self::SearchItem => false,
 			Self::Archive(_) | Self::Sftp(_) => true,
