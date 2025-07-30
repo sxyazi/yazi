@@ -1,5 +1,6 @@
 use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, hash::BuildHasher, ops::Deref, path::{Path, PathBuf}};
 
+use anyhow::Result;
 use percent_encoding::percent_decode;
 use serde::{Deserialize, Serialize};
 
@@ -38,15 +39,8 @@ impl TryFrom<&[u8]> for Url {
 	type Error = anyhow::Error;
 
 	fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
-		let (scheme, skip, tilde) = Scheme::parse(bytes)?;
-
-		let rest = &bytes[skip + tilde as usize..];
-
-		Ok(if tilde {
-			Self { loc: Cow::from(percent_decode(rest)).into_os_str()?.into(), scheme }
-		} else {
-			Self { loc: rest.into_os_str()?.into(), scheme }
-		})
+		let (scheme, path) = Self::parse(bytes)?;
+		Ok(Self { loc: path.into(), scheme })
 	}
 }
 
@@ -85,14 +79,21 @@ impl From<Cow<'_, Url>> for Url {
 
 impl Url {
 	#[inline]
+	pub fn with(&self, loc: impl Into<Loc>) -> Self {
+		let loc: Loc = loc.into();
+		// FIXME: simplify this
+		Self { loc: Loc::with(self.loc.base(), loc.into_path()), scheme: self.scheme.clone() }
+	}
+
+	#[inline]
 	pub fn base(&self) -> Url {
 		let loc: Loc = self.loc.base().into();
 		match &self.scheme {
 			Scheme::Regular => Self { loc, scheme: Scheme::Regular },
-			Scheme::Search(_) => Self { loc, scheme: self.scheme.clone() },
+			Scheme::Search(_) => self.with(loc),
 			Scheme::SearchItem => Self { loc, scheme: Scheme::Search(String::new()) },
-			Scheme::Archive(_) => Self { loc, scheme: self.scheme.clone() },
-			Scheme::Sftp(_) => Self { loc, scheme: self.scheme.clone() },
+			Scheme::Archive(_) => self.with(loc),
+			Scheme::Sftp(_) => self.with(loc),
 		}
 	}
 
@@ -105,14 +106,11 @@ impl Url {
 			Scheme::SearchItem => {
 				Self { loc: Loc::with(self.loc.base(), self.loc.join(path)), scheme: Scheme::SearchItem }
 			}
-			Scheme::Archive(_) => {
-				Self { loc: self.loc.join(path).into(), scheme: self.scheme.clone() }
-			}
-			Scheme::Sftp(_) => Self { loc: self.loc.join(path).into(), scheme: self.scheme.clone() },
+			Scheme::Archive(_) => self.with(self.loc.join(path)),
+			Scheme::Sftp(_) => self.with(self.loc.join(path)),
 		}
 	}
 
-	// FIXME: check usages
 	#[inline]
 	pub fn components(&self) -> Components<'_> { Components::new(self) }
 
@@ -140,8 +138,8 @@ impl Url {
 			Scheme::SearchItem => {
 				Self { loc: Loc::with(base, parent.to_owned()), scheme: Scheme::SearchItem }
 			}
-			Scheme::Archive(_) => Self { loc: parent.into(), scheme: self.scheme.clone() },
-			Scheme::Sftp(_) => Self { loc: parent.into(), scheme: self.scheme.clone() },
+			Scheme::Archive(_) => self.with(parent),
+			Scheme::Sftp(_) => self.with(parent),
 		})
 	}
 
@@ -151,10 +149,7 @@ impl Url {
 			return None;
 		}
 
-		Some(Self {
-			loc:    self.loc.strip_prefix(&base.loc).ok()?.into(),
-			scheme: self.scheme.clone(),
-		})
+		Some(self.with(self.loc.strip_prefix(&base.loc).ok()?))
 	}
 
 	#[inline]
@@ -175,6 +170,19 @@ impl Url {
 	pub fn rebase(&self, parent: &Path) -> Self {
 		debug_assert!(self.is_regular());
 		self.loc.rebase(parent).into()
+	}
+
+	pub fn parse(bytes: &[u8]) -> Result<(Scheme, Cow<'_, Path>)> {
+		let (scheme, skip, tilde) = Scheme::parse(bytes)?;
+
+		let rest = &bytes[skip + tilde as usize..];
+		let rest =
+			if tilde { Cow::from(percent_decode(rest)).into_os_str()? } else { rest.into_os_str()? };
+
+		Ok((scheme, match rest {
+			Cow::Borrowed(s) => Path::new(s).into(),
+			Cow::Owned(s) => PathBuf::from(s).into(),
+		}))
 	}
 }
 

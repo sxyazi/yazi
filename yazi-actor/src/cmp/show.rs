@@ -1,4 +1,4 @@
-use std::{mem, ops::ControlFlow};
+use std::{ffi::OsStr, mem, ops::ControlFlow};
 
 use anyhow::Result;
 use yazi_macro::{render, succ};
@@ -30,7 +30,7 @@ impl Actor for Show {
 		};
 
 		cmp.ticket = opt.ticket;
-		cmp.cands = Self::match_candidates(&opt.word, cache);
+		cmp.cands = Self::match_candidates(opt.word.as_os_str(), cache);
 		if cmp.cands.is_empty() {
 			succ!(render!(mem::replace(&mut cmp.visible, false)));
 		}
@@ -43,8 +43,8 @@ impl Actor for Show {
 }
 
 impl Show {
-	fn match_candidates(word: &str, cache: &[CmpItem]) -> Vec<CmpItem> {
-		let smart = !word.bytes().any(|c| c.is_ascii_uppercase());
+	fn match_candidates(word: &OsStr, cache: &[CmpItem]) -> Vec<CmpItem> {
+		let smart = !word.as_encoded_bytes().iter().any(|c| c.is_ascii_uppercase());
 
 		let flow = cache.iter().try_fold((Vec::new(), Vec::new()), |(mut exact, mut fuzzy), item| {
 			if osstr_starts_with(&item.name, word, smart) {

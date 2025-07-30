@@ -1,12 +1,13 @@
-use std::{ffi::OsString, path::{MAIN_SEPARATOR_STR, PathBuf}};
+use std::{ffi::OsString, path::MAIN_SEPARATOR_STR};
 
-use yazi_shared::{Id, SStr, event::CmdCow};
+use anyhow::bail;
+use yazi_shared::{Id, event::CmdCow, url::{Url, UrnBuf}};
 
 #[derive(Default)]
 pub struct ShowOpt {
 	pub cache:      Vec<CmpItem>,
-	pub cache_name: PathBuf,
-	pub word:       SStr,
+	pub cache_name: Url,
+	pub word:       UrnBuf,
 	pub ticket:     Id,
 }
 
@@ -15,15 +16,10 @@ impl TryFrom<CmdCow> for ShowOpt {
 
 	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
 		if let Some(opt) = c.take_any2("opt") {
-			return opt;
+			opt
+		} else {
+			bail!("missing 'opt' argument");
 		}
-
-		Ok(Self {
-			cache:      c.take_any("cache").unwrap_or_default(),
-			cache_name: c.take_any("cache-name").unwrap_or_default(),
-			word:       c.take_str("word").unwrap_or_default(),
-			ticket:     c.id("ticket").unwrap_or_default(),
-		})
 	}
 }
 

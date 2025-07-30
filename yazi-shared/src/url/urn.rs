@@ -55,7 +55,7 @@ impl PartialEq<Cow<'_, OsStr>> for &Urn {
 }
 
 // --- UrnBuf
-#[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize)]
+#[derive(Clone, Debug, Default, Eq, Hash, PartialEq, Serialize)]
 pub struct UrnBuf(PathBuf);
 
 impl Borrow<Urn> for UrnBuf {
@@ -81,4 +81,7 @@ impl<T: Into<PathBuf>> From<T> for UrnBuf {
 impl UrnBuf {
 	#[inline]
 	pub fn as_urn(&self) -> &Urn { self.borrow() }
+
+	#[inline]
+	pub fn as_os_str(&self) -> &OsStr { self.0.as_os_str() }
 }

@@ -1,12 +1,12 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::collections::HashMap;
 
 use yazi_parser::cmp::CmpItem;
-use yazi_shared::Id;
+use yazi_shared::{Id, url::Url};
 use yazi_widgets::Scrollable;
 
 #[derive(Default)]
 pub struct Cmp {
-	pub caches: HashMap<PathBuf, Vec<CmpItem>>,
+	pub caches: HashMap<Url, Vec<CmpItem>>,
 	pub cands:  Vec<CmpItem>,
 	pub offset: usize,
 	pub cursor: usize,
