@@ -90,6 +90,6 @@ impl Pattern for char {
 	fn predicate(&self, byte: u8) -> bool { *self == byte as char }
 }
 
-impl Pattern for [char] {
+impl Pattern for &[char] {
 	fn predicate(&self, byte: u8) -> bool { self.contains(&(byte as char)) }
 }

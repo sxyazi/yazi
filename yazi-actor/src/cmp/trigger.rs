@@ -75,7 +75,7 @@ impl Trigger {
 		}
 
 		#[cfg(windows)]
-		const SEP: [char; 2] = ['/', '\\'];
+		const SEP: &[char] = &['/', '\\'];
 		#[cfg(not(windows))]
 		const SEP: char = std::path::MAIN_SEPARATOR;
 

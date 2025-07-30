@@ -75,17 +75,20 @@ fn _expand_url(url: &Url) -> Cow<'_, Url> {
 			.and_then(env::var_os)
 			.map_or_else(|| caps.get(0).unwrap().as_bytes().to_owned(), |s| s.into_encoded_bytes())
 	});
-	if matches!(b, Cow::Borrowed(_)) {
-		return url.into();
-	}
 
-	let p = unsafe { PathBuf::from(OsString::from_encoded_bytes_unchecked(b.into_owned())) };
-	if let Some(rest) = p.strip_prefix("~").ok().filter(|_| local) {
+	let path: Cow<_> = unsafe {
+		match b {
+			Cow::Borrowed(b) => Path::new(OsStr::from_encoded_bytes_unchecked(b)).into(),
+			Cow::Owned(b) => PathBuf::from(OsString::from_encoded_bytes_unchecked(b)).into(),
+		}
+	};
+
+	if let Some(rest) = path.strip_prefix("~").ok().filter(|_| local) {
 		url.with(clean_path(&dirs::home_dir().unwrap_or_default().join(rest))).into()
-	} else if p.is_absolute() {
-		url.with(clean_path(&p)).into()
+	} else if path.is_absolute() {
+		url.with(clean_path(&path)).into()
 	} else {
-		clean_url(CWD.load().join(p))
+		clean_url(CWD.load().join(path))
 	}
 }
 
