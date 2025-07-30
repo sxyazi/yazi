@@ -65,7 +65,7 @@ fn _expand_url(url: &Url) -> Cow<'_, Url> {
 	// Windows paths that only have a drive letter but no root, e.g. "D:"
 	#[cfg(windows)]
 	if local && b.len() == 2 && b[1] == b':' && b[0].is_ascii_alphabetic() {
-		url.with(format!(r"{}:\", b[0].to_ascii_uppercase() as char)).into();
+		return url.with(format!(r"{}:\", b[0].to_ascii_uppercase() as char)).into();
 	}
 
 	let b = re.replace_all(b, |caps: &regex::bytes::Captures| {
