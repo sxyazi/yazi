@@ -2,11 +2,7 @@ use std::path::Path;
 use std::process::Stdio;
 
 use anyhow::Result;
-use tokio::{
-	io::{AsyncBufReadExt, BufReader},
-	process::{Child, Command},
-	sync::mpsc::{self, UnboundedReceiver},
-};
+use tokio::{io::{AsyncBufReadExt, BufReader},process::{Child, Command},sync::mpsc::{self, UnboundedReceiver},};
 use yazi_fs::File;
 use yazi_shared::url::Url;
 

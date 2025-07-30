@@ -4,9 +4,9 @@ use yazi_shared::{SStr, event::CmdCow};
 
 #[derive(Debug)]
 pub struct SearchOpt {
-	pub via: SearchOptVia,
-	pub subject: SStr,
-	pub args: Vec<String>,
+	pub via:      SearchOptVia,
+	pub subject:  SStr,
+	pub args:     Vec<String>,
 	pub args_raw: SStr,
 }
 
@@ -36,9 +36,7 @@ impl TryFrom<CmdCow> for SearchOpt {
 }
 
 impl IntoLua for &SearchOpt {
-	fn into_lua(self, _: &Lua) -> mlua::Result<Value> {
-		Err("unsupported".into_lua_err())
-	}
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }
 
 // Via
