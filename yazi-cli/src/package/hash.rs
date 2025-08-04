@@ -1,6 +1,6 @@
 use anyhow::{Context, Result, bail};
 use twox_hash::XxHash3_128;
-use yazi_fs::{ok_or_not_found, services::Local};
+use yazi_fs::{ok_or_not_found, provider::local::Local};
 
 use super::Dependency;
 

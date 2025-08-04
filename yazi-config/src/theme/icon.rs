@@ -70,7 +70,7 @@ impl Icon {
 
 	#[inline]
 	fn match_by_glob(&self, file: &File) -> Option<&I> {
-		self.globs.iter().find(|(p, _)| p.match_path(&file.url, file.is_dir())).map(|(_, i)| i)
+		self.globs.iter().find(|(p, _)| p.match_url(&file.url, file.is_dir())).map(|(_, i)| i)
 	}
 
 	#[inline]

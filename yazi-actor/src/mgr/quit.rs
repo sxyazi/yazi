@@ -75,7 +75,7 @@ impl Quit {
 		}
 
 		let paths = selected.fold(OsString::new(), |mut s, u| {
-			s.push(u.as_os_str());
+			s.push(u.os_str());
 			s.push("\n");
 			s
 		});

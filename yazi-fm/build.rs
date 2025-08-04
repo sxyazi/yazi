@@ -9,7 +9,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 	//   C:\Users\Ika\AppData\Local\Temp\cargo-installTFU8cj\release\build\
 	// yazi-fm-45dffef2500eecd0\out
 
-	if dir.contains("\\release\\build\\yazi-fm-") {
+	if dir.contains(r"\release\build\yazi-fm-") {
 		panic!(
 			"Unwinding must be enabled for Windows. Please use `cargo build --profile release-windows --locked` instead to build Yazi."
 		);

@@ -66,9 +66,9 @@ impl Data {
 	#[inline]
 	pub fn into_url(self) -> Option<Url> {
 		match self {
-			Self::String(s) => Url::try_from(s.as_ref()).ok(),
+			Self::String(s) => s.parse().ok(),
 			Self::Url(u) => Some(u),
-			Self::Bytes(b) => Url::try_from(b.as_slice()).ok(),
+			Self::Bytes(b) => b.as_slice().try_into().ok(),
 			_ => None,
 		}
 	}
@@ -96,9 +96,9 @@ impl Data {
 	#[inline]
 	pub fn to_url(&self) -> Option<Url> {
 		match self {
-			Self::String(s) => Url::try_from(s.as_ref()).ok(),
+			Self::String(s) => s.parse().ok(),
 			Self::Url(u) => Some(u.clone()),
-			Self::Bytes(b) => Url::try_from(b.as_slice()).ok(),
+			Self::Bytes(b) => b.as_slice().try_into().ok(),
 			_ => None,
 		}
 	}
@@ -186,9 +186,9 @@ impl DataKey {
 	#[inline]
 	pub fn into_url(self) -> Option<Url> {
 		match self {
-			Self::String(s) => Url::try_from(s.as_ref()).ok(),
+			Self::String(s) => s.parse().ok(),
 			Self::Url(u) => Some(u),
-			Self::Bytes(b) => Url::try_from(b.as_slice()).ok(),
+			Self::Bytes(b) => b.as_slice().try_into().ok(),
 			_ => None,
 		}
 	}

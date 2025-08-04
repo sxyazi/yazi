@@ -16,7 +16,7 @@ impl From<CmdCow> for TabCreateOpt {
 			return Self { wd: None };
 		}
 		let Some(mut wd) = c.take_first_url() else {
-			return Self { wd: Some(Url::from(&BOOT.cwds[0])) };
+			return Self { wd: Some(BOOT.cwds[0].clone()) };
 		};
 		if !c.bool("raw")
 			&& let Cow::Owned(u) = expand_url(&wd)

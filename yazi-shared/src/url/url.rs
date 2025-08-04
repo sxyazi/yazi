@@ -1,11 +1,11 @@
-use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, hash::BuildHasher, ops::Deref, path::{Path, PathBuf}};
+use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, hash::BuildHasher, ops::Deref, path::{Path, PathBuf}, str::FromStr};
 
 use anyhow::Result;
 use percent_encoding::percent_decode;
 use serde::{Deserialize, Serialize};
 
 use super::UrnBuf;
-use crate::{IntoOsStr, url::{Components, Display, Loc, Scheme}};
+use crate::{IntoOsStr, url::{Components, Display, Encode, EncodeTilded, Loc, Scheme, Urn}};
 
 #[derive(Clone, Default, Eq, Ord, PartialOrd, PartialEq, Hash)]
 pub struct Url {
@@ -27,6 +27,10 @@ impl From<PathBuf> for Url {
 	fn from(path: PathBuf) -> Self { Loc::from(path).into() }
 }
 
+impl From<&Url> for Url {
+	fn from(url: &Url) -> Self { url.clone() }
+}
+
 impl From<&PathBuf> for Url {
 	fn from(path: &PathBuf) -> Self { path.to_owned().into() }
 }
@@ -39,15 +43,18 @@ impl TryFrom<&[u8]> for Url {
 	type Error = anyhow::Error;
 
 	fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
-		let (scheme, path) = Self::parse(bytes)?;
-		Ok(Self { loc: path.into(), scheme })
+		let (scheme, path, port) = Self::parse(bytes)?;
+
+		let loc = if let Some(urn) = port { Loc::with(urn, path)? } else { Loc::from(path) };
+
+		Ok(Self { loc, scheme })
 	}
 }
 
-impl TryFrom<&str> for Url {
-	type Error = anyhow::Error;
+impl FromStr for Url {
+	type Err = anyhow::Error;
 
-	fn try_from(value: &str) -> Result<Self, Self::Error> { value.as_bytes().try_into() }
+	fn from_str(s: &str) -> Result<Self, Self::Err> { s.as_bytes().try_into() }
 }
 
 impl TryFrom<String> for Url {
@@ -82,7 +89,7 @@ impl Url {
 	pub fn with(&self, loc: impl Into<Loc>) -> Self {
 		let loc: Loc = loc.into();
 		// FIXME: simplify this
-		Self { loc: Loc::with(self.loc.base(), loc.into_path()), scheme: self.scheme.clone() }
+		Self { loc: Loc::with_lossy(self.loc.base(), loc.into_path()), scheme: self.scheme.clone() }
 	}
 
 	#[inline]
@@ -91,7 +98,6 @@ impl Url {
 		match &self.scheme {
 			Scheme::Regular => Self { loc, scheme: Scheme::Regular },
 			Scheme::Search(_) => self.with(loc),
-			Scheme::SearchItem => Self { loc, scheme: Scheme::Search(String::new()) },
 			Scheme::Archive(_) => self.with(loc),
 			Scheme::Sftp(_) => self.with(loc),
 		}
@@ -100,12 +106,7 @@ impl Url {
 	pub fn join(&self, path: impl AsRef<Path>) -> Self {
 		match self.scheme {
 			Scheme::Regular => Self { loc: self.loc.join(path).into(), scheme: Scheme::Regular },
-			Scheme::Search(_) => {
-				Self { loc: Loc::with(&self.loc, self.loc.join(path)), scheme: Scheme::SearchItem }
-			}
-			Scheme::SearchItem => {
-				Self { loc: Loc::with(self.loc.base(), self.loc.join(path)), scheme: Scheme::SearchItem }
-			}
+			Scheme::Search(_) => self.with(self.loc.join(path)),
 			Scheme::Archive(_) => self.with(self.loc.join(path)),
 			Scheme::Sftp(_) => self.with(self.loc.join(path)),
 		}
@@ -127,17 +128,14 @@ impl Url {
 
 	pub fn parent_url(&self) -> Option<Url> {
 		let parent = self.loc.parent()?;
-		let base = self.loc.base();
+		let urn = self.loc.urn();
 
 		Some(match &self.scheme {
 			Scheme::Regular => Self { loc: parent.into(), scheme: Scheme::Regular },
-			Scheme::Search(_) => Self { loc: parent.into(), scheme: Scheme::Regular },
-			Scheme::SearchItem if parent == base => {
-				Self { loc: parent.into(), scheme: Scheme::Search(String::new()) }
+			Scheme::Search(_) if urn == Urn::new("") => {
+				Self { loc: parent.into(), scheme: Scheme::Regular }
 			}
-			Scheme::SearchItem => {
-				Self { loc: Loc::with(base, parent.to_owned()), scheme: Scheme::SearchItem }
-			}
+			Scheme::Search(_) => self.with(parent),
 			Scheme::Archive(_) => self.with(parent),
 			Scheme::Sftp(_) => self.with(parent),
 		})
@@ -172,17 +170,22 @@ impl Url {
 		self.loc.rebase(parent).into()
 	}
 
-	pub fn parse(bytes: &[u8]) -> Result<(Scheme, Cow<'_, Path>)> {
-		let (scheme, skip, tilde) = Scheme::parse(bytes)?;
+	pub fn parse(bytes: &[u8]) -> Result<(Scheme, PathBuf, Option<usize>)> {
+		let mut skip = 0;
+		let (scheme, tilde, port) = Scheme::parse(bytes, &mut skip)?;
 
-		let rest = &bytes[skip + tilde as usize..];
-		let rest =
-			if tilde { Cow::from(percent_decode(rest)).into_os_str()? } else { rest.into_os_str()? };
+		let rest = if tilde {
+			Cow::from(percent_decode(&bytes[skip..])).into_os_str()?
+		} else {
+			bytes[skip..].into_os_str()?
+		};
 
-		Ok((scheme, match rest {
-			Cow::Borrowed(s) => Path::new(s).into(),
-			Cow::Owned(s) => PathBuf::from(s).into(),
-		}))
+		let path = match rest {
+			Cow::Borrowed(s) => Path::new(s).to_owned(),
+			Cow::Owned(s) => PathBuf::from(s),
+		};
+
+		Ok((scheme, path, port))
 	}
 }
 
@@ -192,10 +195,13 @@ impl Url {
 	pub fn is_regular(&self) -> bool { self.scheme == Scheme::Regular }
 
 	#[inline]
-	pub fn to_regular(&self) -> Self { Self { loc: self.loc.clone(), scheme: Scheme::Regular } }
+	pub fn to_regular(&self) -> Self {
+		Self { loc: self.loc.to_path().into(), scheme: Scheme::Regular }
+	}
 
 	#[inline]
 	pub fn into_regular(mut self) -> Self {
+		self.loc = self.loc.into_path().into();
 		self.scheme = Scheme::Regular;
 		self
 	}
@@ -205,13 +211,17 @@ impl Url {
 	pub fn is_search(&self) -> bool { matches!(self.scheme, Scheme::Search(_)) }
 
 	#[inline]
-	pub fn to_search(&self, frag: impl AsRef<str>) -> Self {
-		Self { loc: self.loc.clone(), scheme: Scheme::Search(frag.as_ref().to_owned()) }
+	pub fn to_search(&self, domain: impl AsRef<str>) -> Self {
+		Self {
+			loc:    Loc::zeroed(self.loc.to_path()),
+			scheme: Scheme::Search(domain.as_ref().to_owned()),
+		}
 	}
 
 	#[inline]
-	pub fn into_search(mut self, frag: impl AsRef<str>) -> Self {
-		self.scheme = Scheme::Search(frag.as_ref().to_owned());
+	pub fn into_search(mut self, domain: impl AsRef<str>) -> Self {
+		self.loc = Loc::zeroed(self.loc.into_path());
+		self.scheme = Scheme::Search(domain.as_ref().to_owned());
 		self
 	}
 
@@ -226,7 +236,7 @@ impl Url {
 
 impl Debug for Url {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-		write!(f, "{}{}", self.scheme, self.loc.display())
+		write!(f, "{}{}", Encode::from(self), self.loc.display())
 	}
 }
 
@@ -235,8 +245,8 @@ impl Serialize for Url {
 		let Url { scheme, loc } = self;
 		match (scheme.is_virtual(), loc.to_str()) {
 			(false, Some(s)) => serializer.serialize_str(s),
-			(true, Some(s)) => serializer.serialize_str(&format!("{scheme}{s}")),
-			(_, None) => serializer.serialize_str(&scheme.encode_tilded(loc)),
+			(true, Some(s)) => serializer.serialize_str(&format!("{}{s}", Encode::from(self))),
+			(_, None) => serializer.collect_str(&EncodeTilded::from(self)),
 		}
 	}
 }
@@ -248,5 +258,42 @@ impl<'de> Deserialize<'de> for Url {
 	{
 		let s = String::deserialize(deserializer)?;
 		Self::try_from(s).map_err(serde::de::Error::custom)
+	}
+}
+
+// --- Tests
+#[cfg(test)]
+mod tests {
+	use anyhow::Result;
+
+	use super::*;
+
+	#[test]
+	fn test_search() -> Result<()> {
+		const S: char = std::path::MAIN_SEPARATOR;
+
+		let u: Url = "/root/project".parse()?;
+		assert_eq!(format!("{u:?}"), "regular:///root/project");
+
+		let u = u.into_search("readme");
+		assert_eq!(format!("{u:?}"), "search://readme//root/project");
+		assert_eq!(format!("{:?}", u.parent_url().unwrap()), "regular:///root");
+
+		let u = u.join("examples");
+		assert_eq!(format!("{u:?}"), format!("search://readme:1//root/project{S}examples"));
+
+		let u = u.join("README.md");
+		assert_eq!(format!("{u:?}"), format!("search://readme:2//root/project{S}examples{S}README.md"));
+
+		let u = u.parent_url().unwrap();
+		assert_eq!(format!("{u:?}"), format!("search://readme:1//root/project{S}examples"));
+
+		let u = u.parent_url().unwrap();
+		assert_eq!(format!("{u:?}"), "search://readme//root/project");
+
+		let u = u.parent_url().unwrap();
+		assert_eq!(format!("{u:?}"), "regular:///root");
+
+		Ok(())
 	}
 }

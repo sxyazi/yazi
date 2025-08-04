@@ -2,7 +2,7 @@ use std::io;
 
 use yazi_shared::url::Url;
 
-use crate::services::Local;
+use crate::provider::{ReadDir, ReadDirSync, RwFile, local::Local};
 
 #[inline]
 pub async fn canonicalize(url: impl AsRef<Url>) -> io::Result<Url> {
@@ -14,9 +14,9 @@ pub async fn canonicalize(url: impl AsRef<Url>) -> io::Result<Url> {
 }
 
 #[inline]
-pub async fn create(url: impl AsRef<Url>) -> io::Result<tokio::fs::File> {
+pub async fn create(url: impl AsRef<Url>) -> io::Result<RwFile> {
 	if let Some(path) = url.as_ref().as_path() {
-		Local::create(path).await
+		Local::create(path).await.map(Into::into)
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
@@ -59,27 +59,27 @@ pub async fn metadata(url: impl AsRef<Url>) -> io::Result<std::fs::Metadata> {
 }
 
 #[inline]
-pub async fn open(url: impl AsRef<Url>) -> io::Result<tokio::fs::File> {
+pub async fn open(url: impl AsRef<Url>) -> io::Result<RwFile> {
 	if let Some(path) = url.as_ref().as_path() {
-		Local::open(path).await
+		Local::open(path).await.map(Into::into)
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
 }
 
 #[inline]
-pub async fn read_dir(url: impl AsRef<Url>) -> io::Result<tokio::fs::ReadDir> {
+pub async fn read_dir(url: impl AsRef<Url>) -> io::Result<ReadDir> {
 	if let Some(path) = url.as_ref().as_path() {
-		Local::read_dir(path).await
+		Local::read_dir(path).await.map(Into::into)
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
 }
 
 #[inline]
-pub fn read_dir_sync(url: impl AsRef<Url>) -> io::Result<std::fs::ReadDir> {
+pub fn read_dir_sync(url: impl AsRef<Url>) -> io::Result<ReadDirSync> {
 	if let Some(path) = url.as_ref().as_path() {
-		Local::read_dir_sync(path)
+		Local::read_dir_sync(path).map(Into::into)
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}

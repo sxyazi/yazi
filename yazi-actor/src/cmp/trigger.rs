@@ -1,7 +1,7 @@
 use std::{ffi::OsString, mem, path::MAIN_SEPARATOR_STR};
 
 use anyhow::Result;
-use yazi_fs::{CWD, expand_url, services::Local};
+use yazi_fs::{CWD, expand_url, provider};
 use yazi_macro::{act, render, succ};
 use yazi_parser::cmp::{CmpItem, ShowOpt, TriggerOpt};
 use yazi_proxy::CmpProxy;
@@ -36,8 +36,7 @@ impl Actor for Trigger {
 
 		let ticket = cmp.ticket;
 		tokio::spawn(async move {
-			// TODO: support VFS
-			let mut dir = Local::read_dir(&parent).await?;
+			let mut dir = provider::read_dir(&parent).await?;
 			let mut cache = vec![];
 
 			// "/" is both a directory separator and the root directory per se
@@ -68,7 +67,7 @@ impl Actor for Trigger {
 
 impl Trigger {
 	fn split_url(s: &str) -> Option<(Url, UrnBuf)> {
-		let (scheme, path) = Url::parse(s.as_bytes()).ok()?;
+		let (scheme, path, _) = Url::parse(s.as_bytes()).ok()?;
 
 		if !scheme.is_virtual() && path.as_os_str() == "~" {
 			return None; // We don't autocomplete a `~`, but `~/`
@@ -96,7 +95,7 @@ mod tests {
 	fn compare(s: &str, parent: &str, child: &str) {
 		let (p, c) = Trigger::split_url(s).unwrap();
 		let p = p.strip_prefix(yazi_fs::CWD.load().as_ref()).unwrap_or(p);
-		assert_eq!((p, c.as_urn()), (parent.try_into().unwrap(), Urn::new(child)));
+		assert_eq!((p, c.as_urn()), (parent.parse().unwrap(), Urn::new(child)));
 	}
 
 	#[cfg(unix)]

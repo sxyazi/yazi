@@ -4,7 +4,7 @@ use yazi_macro::{unix_either, win_either};
 use yazi_shared::url::Url;
 
 use super::ChaKind;
-use crate::services;
+use crate::provider;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Cha {
@@ -59,14 +59,14 @@ impl Cha {
 
 	#[inline]
 	pub async fn from_url(url: &Url) -> std::io::Result<Self> {
-		Ok(Self::from_follow(url, services::symlink_metadata(url).await?).await)
+		Ok(Self::from_follow(url, provider::symlink_metadata(url).await?).await)
 	}
 
 	pub async fn from_follow(url: &Url, mut meta: Metadata) -> Self {
 		let mut attached = ChaKind::hidden(url, &meta);
 		if meta.is_symlink() {
 			attached |= ChaKind::LINK;
-			meta = services::metadata(url).await.unwrap_or(meta);
+			meta = provider::metadata(url).await.unwrap_or(meta);
 		}
 		if meta.is_symlink() {
 			attached |= ChaKind::ORPHAN;

@@ -1,9 +1,9 @@
 use std::{borrow::Cow, ops::Deref};
 
 use mlua::{AnyUserData, ExternalError, FromLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
-use yazi_shared::url::{CovUrl, Scheme};
+use yazi_shared::url::CovUrl;
 
-use crate::{Urn, cached_field};
+use crate::{Urn, cached_field, deprecate};
 
 pub type UrlRef = UserDataRef<Url>;
 
@@ -16,7 +16,7 @@ pub struct Url {
 	v_urn:    Option<Value>,
 	v_base:   Option<Value>,
 	v_parent: Option<Value>,
-	v_frag:   Option<Value>,
+	v_domain: Option<Value>,
 }
 
 impl Deref for Url {
@@ -64,7 +64,7 @@ impl Url {
 			v_urn:    None,
 			v_base:   None,
 			v_parent: None,
-			v_frag:   None,
+			v_domain: None,
 		}
 	}
 
@@ -94,10 +94,7 @@ impl FromLua for Url {
 impl UserData for Url {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		cached_field!(fields, name, |lua, me| {
-			Some(me.name())
-				.filter(|&s| !s.is_empty())
-				.map(|s| lua.create_string(s.as_encoded_bytes()))
-				.transpose()
+			me.file_name().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
 		});
 		cached_field!(fields, stem, |lua, me| {
 			me.file_stem().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
@@ -110,13 +107,13 @@ impl UserData for Url {
 		cached_field!(fields, base, |_, me| {
 			Ok(if me.base().as_os_str().is_empty() { None } else { Some(Self::new(me.base())) })
 		});
-		// TODO: remove
-		cached_field!(fields, frag, |lua, me| {
-			if let Scheme::Search(kw) = &me.scheme {
-				Some(lua.create_string(kw)).transpose()
-			} else {
-				Ok(None)
-			}
+		cached_field!(fields, domain, |lua, me| {
+			me.scheme.domain().map(|s| lua.create_string(s)).transpose()
+		});
+
+		fields.add_field_method_get("frag", |lua, me| {
+			deprecate!(lua, "`frag` property of Url is deprecated and renamed to `domain`, please use the new name instead, in your {}");
+			me.scheme.domain().map(|s| lua.create_string(s)).transpose()
 		});
 
 		fields.add_field_method_get("is_regular", |_, me| Ok(me.is_regular()));
@@ -157,8 +154,8 @@ impl UserData for Url {
 			Ok(url.map(Self::new))
 		});
 
-		methods.add_function_mut("into_search", |_, (ud, frag): (AnyUserData, mlua::String)| {
-			Ok(Self::new(ud.take::<Self>()?.inner.into_search(frag.to_str()?)))
+		methods.add_function_mut("into_search", |_, (ud, domain): (AnyUserData, mlua::String)| {
+			Ok(Self::new(ud.take::<Self>()?.inner.into_search(domain.to_str()?)))
 		});
 
 		methods.add_meta_method(MetaMethod::Eq, |_, me, other: UrlRef| Ok(me.inner == other.inner));

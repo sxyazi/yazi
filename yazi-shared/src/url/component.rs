@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ffi::{OsStr, OsString}, iter::FusedIterator, ops::Not, path::{self, PathBuf, PrefixComponent}};
 
-use crate::url::{Scheme, Url};
+use crate::url::{Encode, Loc, Scheme, Url};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum Component<'a> {
@@ -60,6 +60,7 @@ impl<'a> FromIterator<Component<'a>> for PathBuf {
 #[derive(Clone)]
 pub struct Components<'a> {
 	inner:          path::Components<'a>,
+	loc:            &'a Loc,
 	scheme:         &'a Scheme,
 	scheme_yielded: bool,
 }
@@ -68,6 +69,7 @@ impl<'a> Components<'a> {
 	pub fn new(url: &'a Url) -> Self {
 		Self {
 			inner:          url.loc.components(),
+			loc:            &url.loc,
 			scheme:         &url.scheme,
 			scheme_yielded: false,
 		}
@@ -79,7 +81,7 @@ impl<'a> Components<'a> {
 			return path.as_os_str().into();
 		}
 
-		let mut s = OsString::from(format!("{}", self.scheme));
+		let mut s = OsString::from(Encode::new(self.loc, self.scheme).to_string());
 		s.reserve_exact(path.as_os_str().len());
 		s.push(path);
 		s.into()
@@ -147,14 +149,16 @@ mod tests {
 
 	#[test]
 	fn test_collect() {
-		let search = Url::try_from("search://keyword//root/projects/yazi").unwrap();
+		let search: Url = "search://keyword//root/projects/yazi".parse().unwrap();
+		assert_eq!(search.loc.urn().as_os_str(), OsStr::new(""));
 		assert_eq!(search.scheme, Scheme::Search("keyword".to_owned()));
 
 		let item = search.join("main.rs");
-		assert_eq!(item.scheme, Scheme::SearchItem);
+		assert_eq!(item.loc.urn().as_os_str(), OsStr::new("main.rs"));
+		assert_eq!(item.scheme, Scheme::Search("keyword".to_owned()));
 
 		let u: Url = item.components().take(4).collect();
-		assert_eq!(u.scheme, Scheme::SearchItem);
+		assert_eq!(u.scheme, Scheme::Search("keyword".to_owned()));
 		assert_eq!(u.loc.as_path(), Path::new("/root/projects"));
 
 		let u: Url = item
@@ -162,7 +166,7 @@ mod tests {
 			.take(5)
 			.chain([Component::Normal(OsStr::new("target/release/yazi"))])
 			.collect();
-		assert_eq!(u.scheme, Scheme::SearchItem);
+		assert_eq!(u.scheme, Scheme::Search("keyword".to_owned()));
 		assert_eq!(u.loc.as_path(), Path::new("/root/projects/yazi/target/release/yazi"));
 	}
 }

@@ -3,9 +3,9 @@ use std::{borrow::Cow, io::Cursor, mem, path::{Path, PathBuf}, sync::OnceLock};
 use anyhow::{Result, anyhow};
 use ratatui::{layout::Size, text::{Line, Span, Text}};
 use syntect::{LoadingError, dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
-use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::io::AsyncBufReadExt;
 use yazi_config::{THEME, YAZI, preview::PreviewWrap};
-use yazi_fs::services::Local;
+use yazi_fs::provider::local::Local;
 use yazi_shared::{Ids, errors::PeekError, replace_to_printable};
 
 static INCR: Ids = Ids::new();
@@ -39,7 +39,7 @@ impl Highlighter {
 	pub fn abort() { INCR.next(); }
 
 	pub async fn highlight(&self, skip: usize, size: Size) -> Result<Text<'static>, PeekError> {
-		let mut reader = BufReader::new(Local::open(&self.path).await?);
+		let mut reader = Local::open(&self.path).await?.reader();
 
 		let syntax = Self::find_syntax(&self.path).await;
 		let mut plain = syntax.is_err();
@@ -143,7 +143,7 @@ impl Highlighter {
 		}
 
 		let mut line = String::new();
-		let mut reader = BufReader::new(Local::open(&path).await?);
+		let mut reader = Local::open(&path).await?.reader();
 		reader.read_line(&mut line).await?;
 		syntaxes.find_syntax_by_first_line(&line).ok_or_else(|| anyhow!("No syntax found"))
 	}

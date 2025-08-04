@@ -1,12 +1,15 @@
-use std::{path::Path, str::FromStr};
+use std::str::FromStr;
 
+use anyhow::Result;
 use globset::GlobBuilder;
 use serde::Deserialize;
+use yazi_shared::url::{Scheme, Url};
 
 #[derive(Debug, Deserialize)]
 #[serde(try_from = "String")]
 pub struct Pattern {
 	inner:   globset::GlobMatcher,
+	scheme:  PatternScheme,
 	is_dir:  bool,
 	is_star: bool,
 	#[cfg(windows)]
@@ -15,26 +18,33 @@ pub struct Pattern {
 
 impl Pattern {
 	#[inline]
-	pub fn match_mime(&self, mime: impl AsRef<str>) -> bool {
-		self.is_star || (!mime.as_ref().is_empty() && self.inner.is_match(mime.as_ref()))
-	}
+	pub fn match_url(&self, url: impl AsRef<Url>, is_dir: bool) -> bool {
+		let url = url.as_ref();
 
-	#[inline]
-	pub fn match_path(&self, path: impl AsRef<Path>, is_dir: bool) -> bool {
 		if is_dir != self.is_dir {
 			return false;
 		} else if self.is_star {
 			return true;
+		} else if !self.scheme.matches(&url.scheme) {
+			return false;
 		}
+
+		#[cfg(unix)]
+		let path = &url.loc;
 
 		#[cfg(windows)]
 		let path = if self.sep_lit {
-			yazi_fs::backslash_to_slash(path.as_ref())
+			yazi_fs::backslash_to_slash(&url.loc)
 		} else {
-			std::borrow::Cow::Borrowed(path.as_ref())
+			std::borrow::Cow::Borrowed(url.loc.as_path())
 		};
 
 		self.inner.is_match(path)
+	}
+
+	#[inline]
+	pub fn match_mime(&self, mime: impl AsRef<str>) -> bool {
+		self.is_star || (!mime.as_ref().is_empty() && self.inner.is_match(mime.as_ref()))
 	}
 
 	#[inline]
@@ -45,14 +55,23 @@ impl Pattern {
 }
 
 impl FromStr for Pattern {
-	type Err = globset::Error;
+	type Err = anyhow::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		let a = s.trim_start_matches("\\s");
-		let b = a.trim_end_matches('/');
-		let sep_lit = b.contains('/');
+		// Trim leading case-sensitive indicator
+		let a = s.trim_start_matches(r"\s");
 
-		let inner = GlobBuilder::new(b)
+		// Parse the URL scheme if present
+		let (scheme, skip) = PatternScheme::parse(a)?;
+		let b = &a[skip..];
+
+		// Trim the ending slash which indicates a directory
+		let c = b.trim_end_matches('/');
+
+		// Check whether it's a filename pattern or a full path pattern
+		let sep_lit = c.contains('/');
+
+		let inner = GlobBuilder::new(c)
 			.case_insensitive(a.len() == s.len())
 			.literal_separator(sep_lit)
 			.backslash_escape(false)
@@ -62,8 +81,9 @@ impl FromStr for Pattern {
 
 		Ok(Self {
 			inner,
-			is_dir: b.len() < a.len(),
-			is_star: b == "*",
+			scheme,
+			is_dir: c.len() < b.len(),
+			is_star: c == "*",
 			#[cfg(windows)]
 			sep_lit,
 		})
@@ -71,17 +91,40 @@ impl FromStr for Pattern {
 }
 
 impl TryFrom<String> for Pattern {
-	type Error = globset::Error;
+	type Error = anyhow::Error;
 
 	fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(s.as_str()) }
 }
 
+// --- Scheme
+#[derive(Debug)]
+struct PatternScheme(Option<&'static str>);
+
+impl PatternScheme {
+	fn parse(s: &str) -> Result<(Self, usize)> {
+		let mut me = Self(None);
+		let Some((protocol, _)) = s.split_once("://") else {
+			return Ok((me, 0));
+		};
+
+		if protocol != "*" {
+			me.0 = Some(Scheme::parse_kind(protocol.as_bytes())?);
+		}
+
+		Ok((me, protocol.len() + 3))
+	}
+
+	#[inline]
+	fn matches(&self, scheme: &Scheme) -> bool { self.0.is_none_or(|s| s == scheme.kind()) }
+}
+
+// --- Tests
 #[cfg(test)]
 mod tests {
 	use super::*;
 
-	fn matches(glob: &str, path: &str) -> bool {
-		Pattern::from_str(glob).unwrap().match_path(path, false)
+	fn matches(glob: &str, url: &str) -> bool {
+		Pattern::from_str(glob).unwrap().match_url(Url::from_str(url).unwrap(), false)
 	}
 
 	#[cfg(unix)]

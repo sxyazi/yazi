@@ -6,7 +6,7 @@ use parking_lot::RwLock;
 use tokio::{pin, sync::{mpsc::{self, UnboundedReceiver}, watch}};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tracing::error;
-use yazi_fs::{File, Files, FilesOp, cha::Cha, realname_unchecked, services};
+use yazi_fs::{File, Files, FilesOp, cha::Cha, provider, realname_unchecked};
 use yazi_proxy::WATCHER;
 use yazi_shared::{RoCell, url::Url};
 
@@ -139,7 +139,7 @@ impl Watcher {
 				};
 
 				let u = &file.url;
-				let eq = (!file.is_link() && services::canonicalize(u).await.is_ok_and(|c| c == *u))
+				let eq = (!file.is_link() && provider::canonicalize(u).await.is_ok_and(|c| c == *u))
 					|| realname_unchecked(u, &mut cached).await.is_ok_and(|s| urn.as_urn() == s);
 
 				if !eq {
@@ -194,7 +194,7 @@ impl Watcher {
 
 		async fn go(todo: HashSet<Url>) {
 			for from in todo {
-				let Ok(to) = services::canonicalize(&from).await else { continue };
+				let Ok(to) = provider::canonicalize(&from).await else { continue };
 
 				if to != from && WATCHED.read().contains(&from) {
 					LINKED.write().insert(from, to);

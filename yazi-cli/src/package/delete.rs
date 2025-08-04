@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use yazi_fs::{ok_or_not_found, remove_dir_clean, services::Local};
+use yazi_fs::{ok_or_not_found, provider::local::Local, remove_dir_clean};
 use yazi_macro::outln;
 
 use super::Dependency;

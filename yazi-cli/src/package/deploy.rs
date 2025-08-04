@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
-use yazi_fs::{remove_dir_clean, services::Local};
+use yazi_fs::{provider::local::Local, remove_dir_clean};
 use yazi_macro::outln;
 
 use super::Dependency;

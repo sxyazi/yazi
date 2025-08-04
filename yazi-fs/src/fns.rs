@@ -6,11 +6,11 @@ use anyhow::{Result, bail};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
 use yazi_shared::url::{Component, Url};
 
-use crate::{cha::Cha, services};
+use crate::{cha::Cha, provider};
 
 #[inline]
 pub async fn maybe_exists(u: impl AsRef<Url>) -> bool {
-	match services::symlink_metadata(u).await {
+	match provider::symlink_metadata(u).await {
 		Ok(_) => true,
 		Err(e) => e.kind() != io::ErrorKind::NotFound,
 	}
@@ -18,7 +18,7 @@ pub async fn maybe_exists(u: impl AsRef<Url>) -> bool {
 
 #[inline]
 pub async fn must_be_dir(u: impl AsRef<Url>) -> bool {
-	services::metadata(u).await.is_ok_and(|m| m.is_dir())
+	provider::metadata(u).await.is_ok_and(|m| m.is_dir())
 }
 
 #[inline]
@@ -85,7 +85,7 @@ async fn _paths_to_same_file(a: &Path, b: &Path) -> std::io::Result<bool> {
 
 pub async fn realname(u: &Url) -> Option<OsString> {
 	let name = u.file_name()?;
-	if *u == services::canonicalize(u).await.ok()? {
+	if *u == provider::canonicalize(u).await.ok()? {
 		return None;
 	}
 
@@ -98,16 +98,16 @@ pub async fn realname(u: &Url) -> Option<OsString> {
 
 #[cfg(unix)]
 #[tokio::test]
-async fn test_realname_unchecked() {
-	use crate::services::Local;
+async fn test_realname_unchecked() -> Result<()> {
+	use crate::provider::local::Local;
 
 	Local::remove_dir_all("/tmp/issue-1173").await.ok();
-	Local::create_dir_all("/tmp/issue-1173/real-dir").await.unwrap();
-	Local::create("/tmp/issue-1173/A").await.unwrap();
-	Local::create("/tmp/issue-1173/b").await.unwrap();
-	Local::create("/tmp/issue-1173/real-dir/C").await.unwrap();
-	Local::symlink_file("/tmp/issue-1173/b", "/tmp/issue-1173/D").await.unwrap();
-	Local::symlink_dir("real-dir", "/tmp/issue-1173/link-dir").await.unwrap();
+	Local::create_dir_all("/tmp/issue-1173/real-dir").await?;
+	Local::create("/tmp/issue-1173/A").await?;
+	Local::create("/tmp/issue-1173/b").await?;
+	Local::create("/tmp/issue-1173/real-dir/C").await?;
+	Local::symlink_file("/tmp/issue-1173/b", "/tmp/issue-1173/D").await?;
+	Local::symlink_dir("real-dir", "/tmp/issue-1173/link-dir").await?;
 
 	let c = &mut HashMap::new();
 	async fn check(a: &str, b: &str, c: &mut HashMap<PathBuf, HashSet<OsString>>) {
@@ -125,6 +125,7 @@ async fn test_realname_unchecked() {
 
 	check("/tmp/issue-1173/d", "D", c).await;
 	check("/tmp/issue-1173/D", "D", c).await;
+	Ok(())
 }
 
 // realpath(3) without resolving symlinks. This is useful for case-insensitive
@@ -199,7 +200,7 @@ pub fn copy_with_progress(
 					None => {}
 				}
 
-				let len = services::symlink_metadata(&to).await.map(|m| m.len()).unwrap_or(0);
+				let len = provider::symlink_metadata(&to).await.map(|m| m.len()).unwrap_or(0);
 				if len > last {
 					tx.send(Ok(len - last)).await.ok();
 					last = len;
@@ -260,17 +261,17 @@ async fn _copy_with_progress(from: Url, to: Url, cha: Cha) -> io::Result<u64> {
 }
 
 pub async fn remove_dir_clean(dir: &Url) {
-	let Ok(mut it) = services::read_dir(dir).await else { return };
+	let Ok(mut it) = provider::read_dir(dir).await else { return };
 
 	while let Ok(Some(entry)) = it.next_entry().await {
 		if entry.file_type().await.is_ok_and(|t| t.is_dir()) {
-			let path = entry.path().into();
-			Box::pin(remove_dir_clean(&path)).await;
-			services::remove_dir(path).await.ok();
+			let url = entry.url();
+			Box::pin(remove_dir_clean(&url)).await;
+			provider::remove_dir(url).await.ok();
 		}
 	}
 
-	services::remove_dir(dir).await.ok();
+	provider::remove_dir(dir).await.ok();
 }
 
 // Convert a file mode to a string representation
@@ -369,7 +370,8 @@ pub fn max_common_root(urls: &[Url]) -> usize {
 #[test]
 fn test_max_common_root() {
 	fn assert(input: &[&str], expected: &str) {
-		let urls: Vec<_> = input.iter().copied().map(Url::try_from).collect::<Result<_>>().unwrap();
+		use std::str::FromStr;
+		let urls: Vec<_> = input.iter().copied().map(Url::from_str).collect::<Result<_>>().unwrap();
 
 		let mut comp = urls[0].components();
 		for _ in 0..comp.clone().count() - max_common_root(&urls) {

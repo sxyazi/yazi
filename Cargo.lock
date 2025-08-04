@@ -3556,6 +3556,7 @@ dependencies = [
  "clap_complete",
  "clap_complete_fig",
  "clap_complete_nushell",
+ "futures",
  "regex",
  "serde",
  "vergen-gitcl",

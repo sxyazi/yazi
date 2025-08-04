@@ -1,12 +1,14 @@
-use std::{collections::HashSet, ffi::OsString, path::PathBuf};
+use std::{borrow::Cow, collections::HashSet, path::PathBuf};
 
+use futures::executor::block_on;
 use serde::Serialize;
-use yazi_fs::{CWD, Xdg, expand_path};
+use yazi_fs::{CWD, Xdg, expand_url, provider};
+use yazi_shared::url::{Url, UrnBuf};
 
 #[derive(Debug, Default, Serialize)]
 pub struct Boot {
-	pub cwds:  Vec<PathBuf>,
-	pub files: Vec<OsString>,
+	pub cwds:  Vec<Url>,
+	pub files: Vec<UrnBuf>,
 
 	pub local_events:  HashSet<String>,
 	pub remote_events: HashSet<String>,
@@ -18,31 +20,31 @@ pub struct Boot {
 }
 
 impl Boot {
-	fn parse_entries(entries: &[PathBuf]) -> (Vec<PathBuf>, Vec<OsString>) {
+	async fn parse_entries(entries: &[Url]) -> (Vec<Url>, Vec<UrnBuf>) {
 		if entries.is_empty() {
-			return (vec![CWD.load().to_path_buf()], vec![OsString::new()]);
+			return (vec![CWD.load().as_ref().clone()], vec![UrnBuf::default()]);
 		}
 
-		let mut cwds = Vec::with_capacity(entries.len());
-		let mut files = Vec::with_capacity(entries.len());
-		for entry in entries.iter().map(expand_path) {
-			if let Some(p) = entry.parent().filter(|_| !entry.is_dir()) {
-				cwds.push(p.to_owned());
-				files.push(entry.file_name().unwrap().to_owned());
+		async fn go<'a>(entry: Cow<'a, Url>) -> (Url, UrnBuf) {
+			let Some((parent, child)) = entry.pair() else {
+				return (entry.into_owned(), UrnBuf::default());
+			};
+
+			if provider::metadata(&entry).await.is_ok_and(|m| m.is_file()) {
+				(parent, child)
 			} else {
-				cwds.push(entry);
-				files.push(OsString::new());
+				(entry.into_owned(), UrnBuf::default())
 			}
 		}
 
-		(cwds, files)
+		futures::future::join_all(entries.iter().map(expand_url).map(go)).await.into_iter().unzip()
 	}
 }
 
 impl From<&crate::Args> for Boot {
 	fn from(args: &crate::Args) -> Self {
 		let config_dir = Xdg::config_dir();
-		let (cwds, files) = Self::parse_entries(&args.entries);
+		let (cwds, files) = block_on(Self::parse_entries(&args.entries));
 
 		let local_events = args
 			.local_events

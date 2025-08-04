@@ -1,5 +1,7 @@
 use std::{io, path::{Path, PathBuf}};
 
+use crate::provider::local::{Gate, ReadDir, ReadDirSync, RwFile};
+
 pub struct Local;
 
 impl Local {
@@ -9,8 +11,8 @@ impl Local {
 	}
 
 	#[inline]
-	pub async fn create(path: impl AsRef<Path>) -> io::Result<tokio::fs::File> {
-		tokio::fs::File::create(path).await
+	pub async fn create(path: impl AsRef<Path>) -> io::Result<RwFile> {
+		Gate::default().write(true).create(true).truncate(true).open(path).await.map(Into::into)
 	}
 
 	#[inline]
@@ -34,21 +36,21 @@ impl Local {
 	}
 
 	#[inline]
-	pub async fn open(path: impl AsRef<Path>) -> io::Result<tokio::fs::File> {
-		tokio::fs::File::open(path).await
+	pub async fn open(path: impl AsRef<Path>) -> io::Result<RwFile> {
+		Gate::default().read(true).open(path).await.map(Into::into)
 	}
 
 	#[inline]
 	pub async fn read(path: impl AsRef<Path>) -> io::Result<Vec<u8>> { tokio::fs::read(path).await }
 
 	#[inline]
-	pub async fn read_dir(path: impl AsRef<Path>) -> io::Result<tokio::fs::ReadDir> {
-		tokio::fs::read_dir(path).await
+	pub async fn read_dir(path: impl AsRef<Path>) -> io::Result<ReadDir> {
+		tokio::fs::read_dir(path).await.map(Into::into)
 	}
 
 	#[inline]
-	pub fn read_dir_sync(path: impl AsRef<Path>) -> io::Result<std::fs::ReadDir> {
-		std::fs::read_dir(path)
+	pub fn read_dir_sync(path: impl AsRef<Path>) -> io::Result<ReadDirSync> {
+		std::fs::read_dir(path).map(Into::into)
 	}
 
 	#[inline]

@@ -4,7 +4,7 @@ use anyhow::{Context, Result, bail};
 use mlua::{ChunkMode, ExternalError, Lua, Table};
 use parking_lot::RwLock;
 use yazi_boot::BOOT;
-use yazi_fs::services::Local;
+use yazi_fs::provider::local::Local;
 use yazi_macro::plugin_preset as preset;
 use yazi_shared::{LOG_LEVEL, RoCell};
 
