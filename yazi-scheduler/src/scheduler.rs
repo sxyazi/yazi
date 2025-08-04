@@ -6,7 +6,7 @@ use parking_lot::Mutex;
 use tokio::{select, sync::mpsc::{self, UnboundedReceiver}, task::JoinHandle};
 use yazi_config::{YAZI, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
-use yazi_fs::{must_be_dir, remove_dir_clean, services, unique_name};
+use yazi_fs::{must_be_dir, provider, remove_dir_clean, unique_name};
 use yazi_parser::{app::PluginOpt, tasks::ProcessExecOpt};
 use yazi_proxy::MgrProxy;
 use yazi_shared::{Id, Throttle, url::Url};
@@ -175,7 +175,7 @@ impl Scheduler {
 			move |canceled: bool| {
 				async move {
 					if !canceled {
-						services::remove_dir_all(&target).await.ok();
+						provider::remove_dir_all(&target).await.ok();
 						MgrProxy::update_tasks(&target);
 						Pump::push_delete(target);
 					}

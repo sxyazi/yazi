@@ -1,12 +1,12 @@
-use std::{borrow::Cow, collections::HashMap, ffi::{OsStr, OsString}, hash::Hash, io::{Read, Write}, ops::Deref};
+use std::{borrow::Cow, collections::HashMap, ffi::{OsStr, OsString}, hash::Hash, io::{Read, Write}, ops::Deref, path::Path};
 
 use anyhow::{Result, anyhow};
 use crossterm::{execute, style::Print};
 use scopeguard::defer;
 use tokio::io::AsyncWriteExt;
-use yazi_config::YAZI;
+use yazi_config::{YAZI, opener::OpenerRule};
 use yazi_dds::Pubsub;
-use yazi_fs::{File, FilesOp, max_common_root, maybe_exists, paths_to_same_file, services::{self, Local}, skip_url};
+use yazi_fs::{File, FilesOp, max_common_root, maybe_exists, paths_to_same_file, provider::{self, local::{Gate, Local}}, skip_url};
 use yazi_macro::{err, succ};
 use yazi_parser::VoidOpt;
 use yazi_proxy::{AppProxy, HIDER, TasksProxy, WATCHER};
@@ -23,7 +23,7 @@ impl Actor for BulkRename {
 	const NAME: &str = "bulk_rename";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
-		let Some(opener) = YAZI.opener.block(YAZI.open.all("bulk-rename.txt", "text/plain")) else {
+		let Some(opener) = Self::opener() else {
 			succ!(AppProxy::notify_warn("Bulk rename", "No text opener found"));
 		};
 
@@ -39,8 +39,7 @@ impl Actor for BulkRename {
 		let cwd = cx.cwd().clone();
 		tokio::spawn(async move {
 			let tmp = YAZI.preview.tmpfile("bulk");
-			// TODO: pull `OpenOptions` into `yazi_fs`
-			tokio::fs::OpenOptions::new()
+			Gate::default()
 				.write(true)
 				.create_new(true)
 				.open(&tmp)
@@ -116,7 +115,7 @@ impl BulkRename {
 
 			if maybe_exists(&new).await && !paths_to_same_file(&old, &new).await {
 				failed.push((o, n, anyhow!("Destination already exists")));
-			} else if let Err(e) = services::rename(&old, &new).await {
+			} else if let Err(e) = provider::rename(&old, &new).await {
 				failed.push((o, n, e.into()));
 			} else if let Ok(f) = File::new(new).await {
 				succeeded.insert(old, f);
@@ -136,6 +135,10 @@ impl BulkRename {
 			Self::output_failed(failed).await?;
 		}
 		Ok(())
+	}
+
+	fn opener() -> Option<&'static OpenerRule> {
+		YAZI.opener.block(YAZI.open.all(Url::from(Path::new("bulk-rename.txt")), "text/plain"))
 	}
 
 	async fn output_failed(failed: Vec<(Tuple, Tuple, anyhow::Error)>) -> Result<()> {

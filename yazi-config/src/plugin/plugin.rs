@@ -1,10 +1,11 @@
-use std::{collections::HashSet, path::Path};
+use std::collections::HashSet;
 
 use anyhow::Result;
 use serde::Deserialize;
 use tracing::warn;
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::File;
+use yazi_shared::url::Url;
 
 use super::{Fetcher, Preloader, Previewer, Spotter};
 use crate::{Preset, plugin::MAX_PREWORKERS};
@@ -39,12 +40,12 @@ pub struct Plugin {
 impl Plugin {
 	pub fn fetchers<'a, 'b: 'a>(
 		&'b self,
-		path: &'a Path,
+		url: &'a Url,
 		mime: &'a str,
 	) -> impl Iterator<Item = &'b Fetcher> + 'a {
 		let mut seen = HashSet::new();
 		self.fetchers.iter().filter(move |&f| {
-			if seen.contains(&f.id) || !f.matches(path, mime) {
+			if seen.contains(&f.id) || !f.matches(url, mime) {
 				return false;
 			}
 			seen.insert(&f.id);
@@ -68,18 +69,18 @@ impl Plugin {
 		})
 	}
 
-	pub fn spotter(&self, path: &Path, mime: &str) -> Option<&Spotter> {
-		self.spotters.iter().find(|&p| p.matches(path, mime))
+	pub fn spotter(&self, url: &Url, mime: &str) -> Option<&Spotter> {
+		self.spotters.iter().find(|&p| p.matches(url, mime))
 	}
 
 	pub fn preloaders<'a, 'b: 'a>(
 		&'b self,
-		path: &'a Path,
+		url: &'a Url,
 		mime: &'a str,
 	) -> impl Iterator<Item = &'b Preloader> + 'a {
 		let mut next = true;
 		self.preloaders.iter().filter(move |&p| {
-			if !next || !p.matches(path, mime) {
+			if !next || !p.matches(url, mime) {
 				return false;
 			}
 			next = p.next;
@@ -87,8 +88,8 @@ impl Plugin {
 		})
 	}
 
-	pub fn previewer(&self, path: &Path, mime: &str) -> Option<&Previewer> {
-		self.previewers.iter().find(|&p| p.matches(path, mime))
+	pub fn previewer(&self, url: &Url, mime: &str) -> Option<&Previewer> {
+		self.previewers.iter().find(|&p| p.matches(url, mime))
 	}
 }
 

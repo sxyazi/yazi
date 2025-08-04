@@ -1,14 +1,14 @@
 use std::path::PathBuf;
 
 use clap::{Parser, command};
-use yazi_shared::Id;
+use yazi_shared::{Id, url::Url};
 
 #[derive(Debug, Default, Parser)]
 #[command(name = "yazi")]
 pub struct Args {
 	/// Set the current working entry
 	#[arg(index = 1, num_args = 1..=9)]
-	pub entries: Vec<PathBuf>,
+	pub entries: Vec<Url>,
 
 	/// Write the cwd on exit to this file
 	#[arg(long)]

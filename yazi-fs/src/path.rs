@@ -3,7 +3,7 @@ use std::{borrow::Cow, env, ffi::{OsStr, OsString}, future::Future, io, path::{P
 use anyhow::{Result, bail};
 use yazi_shared::url::{Loc, Url};
 
-use crate::{CWD, services};
+use crate::{CWD, provider};
 
 pub fn clean_url<'a>(url: impl Into<Cow<'a, Url>>) -> Cow<'a, Url> {
 	let url = url.into();
@@ -12,7 +12,7 @@ pub fn clean_url<'a>(url: impl Into<Cow<'a, Url>>) -> Cow<'a, Url> {
 	if path.as_os_str() == url.loc.as_os_str() {
 		url
 	} else {
-		url.with(Loc::with(&clean_path(url.loc.base()), path)).into()
+		url.with(Loc::with_lossy(&clean_path(url.loc.base()), path)).into()
 	}
 }
 
@@ -106,7 +106,7 @@ pub async fn unique_name<F>(u: Url, append: F) -> io::Result<Url>
 where
 	F: Future<Output = bool>,
 {
-	match services::symlink_metadata(&u).await {
+	match provider::symlink_metadata(&u).await {
 		Ok(_) => _unique_name(u, append.await).await,
 		Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(u),
 		Err(e) => Err(e),
@@ -142,7 +142,7 @@ async fn _unique_name(mut url: Url, append: bool) -> io::Result<Url> {
 		}
 
 		url.set_name(&name);
-		match services::symlink_metadata(&url).await {
+		match provider::symlink_metadata(&url).await {
 			Ok(_) => i += 1,
 			Err(e) if e.kind() == io::ErrorKind::NotFound => break,
 			Err(e) => return Err(e),
@@ -214,16 +214,14 @@ pub fn backslash_to_slash(p: &Path) -> Cow<'_, Path> {
 mod tests {
 	use std::borrow::Cow;
 
-	use yazi_shared::url::Url;
-
 	use super::url_relative_to;
 
 	#[test]
 	fn test_path_relative_to() {
 		fn assert(from: &str, to: &str, ret: &str) {
 			assert_eq!(
-				url_relative_to(&Url::try_from(from).unwrap(), &Url::try_from(to).unwrap()).unwrap(),
-				Cow::Owned(Url::try_from(ret).unwrap())
+				url_relative_to(&from.parse().unwrap(), &to.parse().unwrap()).unwrap(),
+				Cow::Owned(ret.parse().unwrap())
 			);
 		}
 

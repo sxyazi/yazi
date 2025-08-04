@@ -126,7 +126,7 @@ impl Selected {
 mod tests {
 	use super::*;
 
-	fn url(s: &str) -> Url { Url::try_from(s).unwrap() }
+	fn url(s: &str) -> Url { s.parse().unwrap() }
 
 	#[test]
 	fn test_insert_non_conflicting() {

@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use globset::GlobBuilder;
 use mlua::{ExternalError, ExternalResult, Function, IntoLua, IntoLuaMulti, Lua, Table, Value};
 use yazi_binding::{Cha, Composer, ComposerGet, ComposerSet, Error, File, Url, UrlRef};
-use yazi_fs::{mounts::PARTITIONS, remove_dir_clean, services};
+use yazi_fs::{mounts::PARTITIONS, provider, remove_dir_clean};
 
 use crate::bindings::SizeCalculator;
 
@@ -50,9 +50,9 @@ fn cwd(lua: &Lua) -> mlua::Result<Function> {
 fn cha(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (url, follow): (UrlRef, Option<bool>)| async move {
 		let meta = if follow.unwrap_or(false) {
-			services::metadata(&*url).await
+			provider::metadata(&*url).await
 		} else {
-			services::symlink_metadata(&*url).await
+			provider::symlink_metadata(&*url).await
 		};
 
 		match meta {
@@ -64,7 +64,7 @@ fn cha(lua: &Lua) -> mlua::Result<Function> {
 
 fn write(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (url, data): (UrlRef, mlua::String)| async move {
-		match services::write(&*url, data.as_bytes()).await {
+		match provider::write(&*url, data.as_bytes()).await {
 			Ok(()) => true.into_lua_multi(&lua),
 			Err(e) => (false, Error::Io(e)).into_lua_multi(&lua),
 		}
@@ -74,8 +74,8 @@ fn write(lua: &Lua) -> mlua::Result<Function> {
 fn create(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (r#type, url): (mlua::String, UrlRef)| async move {
 		let result = match r#type.as_bytes().as_ref() {
-			b"dir" => services::create_dir(&*url).await,
-			b"dir_all" => services::create_dir_all(&*url).await,
+			b"dir" => provider::create_dir(&*url).await,
+			b"dir_all" => provider::create_dir_all(&*url).await,
 			_ => Err("Creation type must be 'dir' or 'dir_all'".into_lua_err())?,
 		};
 
@@ -89,9 +89,9 @@ fn create(lua: &Lua) -> mlua::Result<Function> {
 fn remove(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (r#type, url): (mlua::String, UrlRef)| async move {
 		let result = match r#type.as_bytes().as_ref() {
-			b"file" => services::remove_file(&*url).await,
-			b"dir" => services::remove_dir(&*url).await,
-			b"dir_all" => services::remove_dir_all(&*url).await,
+			b"file" => provider::remove_file(&*url).await,
+			b"dir" => provider::remove_dir(&*url).await,
+			b"dir_all" => provider::remove_dir_all(&*url).await,
 			b"dir_clean" => Ok(remove_dir_clean(&url).await),
 			_ => Err("Removal type must be 'file', 'dir', 'dir_all', or 'dir_clean'".into_lua_err())?,
 		};
@@ -105,7 +105,9 @@ fn remove(lua: &Lua) -> mlua::Result<Function> {
 
 fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (dir, options): (UrlRef, Table)| async move {
+		// FIXME: VFS
 		let glob = if let Ok(s) = options.raw_get::<mlua::String>("glob") {
+			return Err("`glob` is disabled temporarily".into_lua_err());
 			Some(
 				GlobBuilder::new(&s.to_str()?)
 					.case_insensitive(true)
@@ -123,7 +125,7 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 		let limit = options.raw_get("limit").unwrap_or(usize::MAX);
 		let resolve = options.raw_get("resolve").unwrap_or(false);
 
-		let mut it = match services::read_dir(&*dir).await {
+		let mut it = match provider::read_dir(&*dir).await {
 			Ok(it) => it,
 			Err(e) => return (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		};
@@ -134,12 +136,11 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 				break;
 			}
 
-			let path = next.path();
-			if glob.as_ref().is_some_and(|g| !g.is_match(&path)) {
-				continue;
-			}
+			let url = next.url();
+			// if glob.as_ref().is_some_and(|g| !g.is_match(&path)) {
+			// 	continue;
+			// }
 
-			let url = yazi_shared::url::Url::from(path);
 			let file = if !resolve {
 				yazi_fs::File::from_dummy(url, next.file_type().await.ok())
 			} else if let Ok(meta) = next.metadata().await {

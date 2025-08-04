@@ -1,7 +1,5 @@
-use std::path::Path;
-
 use serde::Deserialize;
-use yazi_shared::{MIME_DIR, event::Cmd};
+use yazi_shared::{MIME_DIR, event::Cmd, url::Url};
 
 use crate::{Pattern, Priority};
 
@@ -10,7 +8,7 @@ pub struct Preloader {
 	#[serde(skip)]
 	pub idx: u8,
 
-	pub name: Option<Pattern>,
+	pub url:  Option<Pattern>,
 	pub mime: Option<Pattern>,
 	pub run:  Cmd,
 	#[serde(default)]
@@ -21,8 +19,8 @@ pub struct Preloader {
 
 impl Preloader {
 	#[inline]
-	pub fn matches(&self, path: &Path, mime: &str) -> bool {
+	pub fn matches(&self, url: &Url, mime: &str) -> bool {
 		self.mime.as_ref().is_some_and(|p| p.match_mime(mime))
-			|| self.name.as_ref().is_some_and(|p| p.match_path(path, mime == MIME_DIR))
+			|| self.url.as_ref().is_some_and(|p| p.match_url(url, mime == MIME_DIR))
 	}
 }

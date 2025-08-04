@@ -145,7 +145,7 @@ impl UserData for File {
 					return None;
 				}
 
-				let h = finder.filter.highlighted(me.name())?;
+				let h = finder.filter.highlighted(me.url.file_name()?)?;
 				Some(h.into_iter().map(Range::from).collect::<Vec<_>>())
 			})
 		});

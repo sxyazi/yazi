@@ -1,11 +1,11 @@
-use std::{collections::VecDeque, fs::ReadDir, future::poll_fn, io, mem, pin::Pin, task::{Poll, ready}, time::{Duration, Instant}};
+use std::{collections::VecDeque, future::poll_fn, io, mem, pin::Pin, task::{Poll, ready}, time::{Duration, Instant}};
 
 use tokio::task::JoinHandle;
 use yazi_shared::{Either, url::Url};
 
-use crate::services;
+use crate::provider::{self, ReadDirSync};
 
-type Task = Either<Url, ReadDir>;
+type Task = Either<Url, ReadDirSync>;
 
 pub enum SizeCalculator {
 	Idle((VecDeque<Task>, Option<u64>)),
@@ -16,12 +16,12 @@ impl SizeCalculator {
 	pub async fn new(url: &Url) -> io::Result<Self> {
 		let u = url.to_owned();
 		tokio::task::spawn_blocking(move || {
-			let meta = services::symlink_metadata_sync(&u)?;
+			let meta = provider::symlink_metadata_sync(&u)?;
 			if !meta.is_dir() {
 				return Ok(Self::Idle((VecDeque::new(), Some(meta.len()))));
 			}
 
-			let mut buf = VecDeque::from([Either::Right(services::read_dir_sync(u)?)]);
+			let mut buf = VecDeque::from([Either::Right(provider::read_dir_sync(u)?)]);
 			let size = Self::next_chunk(&mut buf);
 			Ok(Self::Idle((buf, size)))
 		})
@@ -63,7 +63,7 @@ impl SizeCalculator {
 		.await
 	}
 
-	fn next_chunk(buf: &mut VecDeque<Either<Url, ReadDir>>) -> Option<u64> {
+	fn next_chunk(buf: &mut VecDeque<Either<Url, ReadDirSync>>) -> Option<u64> {
 		let (mut i, mut size, now) = (0, 0, Instant::now());
 		macro_rules! pop_and_continue {
 			() => {{
@@ -80,7 +80,7 @@ impl SizeCalculator {
 			let front = buf.front_mut()?;
 
 			if let Either::Left(u) = front {
-				*front = match services::read_dir_sync(u) {
+				*front = match provider::read_dir_sync(u) {
 					Ok(it) => Either::Right(it),
 					Err(_) => pop_and_continue!(),
 				};
@@ -93,7 +93,7 @@ impl SizeCalculator {
 			let Ok(ent) = next else { continue };
 			let Ok(ft) = ent.file_type() else { continue };
 			if ft.is_dir() {
-				buf.push_back(Either::Left(ent.path().into()));
+				buf.push_back(Either::Left(ent.url()));
 			} else if let Ok(meta) = ent.metadata() {
 				size += meta.len();
 			}

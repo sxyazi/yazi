@@ -1,10 +1,8 @@
-use std::io::BufReader;
-
 use anyhow::Result;
 use image::{DynamicImage, ExtendedColorType, ImageDecoder, ImageEncoder, ImageError, ImageFormat, ImageReader, ImageResult, Limits, codecs::{jpeg::JpegEncoder, png::PngEncoder}, imageops::FilterType, metadata::Orientation};
 use ratatui::layout::Rect;
 use yazi_config::YAZI;
-use yazi_fs::services;
+use yazi_fs::provider;
 use yazi_shared::url::Url;
 
 use crate::Dimension;
@@ -40,7 +38,7 @@ impl Image {
 		})
 		.await??;
 
-		Ok(services::write(cache, buf).await?)
+		Ok(provider::write(cache, buf).await?)
 	}
 
 	pub(super) async fn downscale(url: &Url, rect: Rect) -> Result<DynamicImage> {
@@ -110,7 +108,7 @@ impl Image {
 			limits.max_image_height = Some(YAZI.tasks.image_bound[1] as u32);
 		}
 
-		let mut reader = ImageReader::new(BufReader::new(services::open(&url).await?.into_std().await));
+		let mut reader = ImageReader::new(provider::open(&url).await?.reader_sync().await);
 		if let Ok(format) = ImageFormat::from_path(url) {
 			reader.set_format(format);
 		}

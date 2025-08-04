@@ -6,7 +6,7 @@ use crate::pattern::Pattern;
 
 #[derive(Debug, Deserialize)]
 pub struct OpenRule {
-	pub name:  Option<Pattern>,
+	pub url:   Option<Pattern>,
 	pub mime:  Option<Pattern>,
 	#[serde(deserialize_with = "OpenRule::deserialize")]
 	pub r#use: Vec<String>,
@@ -14,10 +14,10 @@ pub struct OpenRule {
 
 impl OpenRule {
 	#[inline]
-	pub fn any_file(&self) -> bool { self.name.as_ref().is_some_and(|p| p.any_file()) }
+	pub fn any_file(&self) -> bool { self.url.as_ref().is_some_and(|p| p.any_file()) }
 
 	#[inline]
-	pub fn any_dir(&self) -> bool { self.name.as_ref().is_some_and(|p| p.any_dir()) }
+	pub fn any_dir(&self) -> bool { self.url.as_ref().is_some_and(|p| p.any_dir()) }
 }
 
 impl OpenRule {

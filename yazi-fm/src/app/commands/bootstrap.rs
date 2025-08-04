@@ -3,7 +3,7 @@ use yazi_actor::Ctx;
 use yazi_boot::BOOT;
 use yazi_macro::act;
 use yazi_parser::{VoidOpt, mgr::CdSource};
-use yazi_shared::{event::Data, url::Url};
+use yazi_shared::event::Data;
 
 use crate::app::App;
 
@@ -18,10 +18,10 @@ impl App {
 			let cx = &mut Ctx::active(&mut self.core);
 			cx.tab = i;
 
-			if file.is_empty() {
-				act!(mgr:cd, cx, (Url::from(&BOOT.cwds[i]), CdSource::Tab))?;
+			if file.as_os_str().is_empty() {
+				act!(mgr:cd, cx, (BOOT.cwds[i].clone(), CdSource::Tab))?;
 			} else {
-				act!(mgr:reveal, cx, (Url::from(BOOT.cwds[i].join(file)), CdSource::Tab))?;
+				act!(mgr:reveal, cx, (BOOT.cwds[i].join(file), CdSource::Tab))?;
 			}
 		}
 

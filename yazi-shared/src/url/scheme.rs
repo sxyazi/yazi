@@ -1,9 +1,9 @@
-use std::{borrow::Cow, fmt::Display};
+use std::borrow::Cow;
 
 use anyhow::{Result, bail};
-use percent_encoding::{AsciiSet, CONTROLS, PercentEncode, percent_decode, percent_encode};
+use percent_encoding::percent_decode;
 
-use crate::{BytesExt, url::Loc};
+use crate::BytesExt;
 
 #[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum Scheme {
@@ -11,7 +11,6 @@ pub enum Scheme {
 	Regular,
 
 	Search(String),
-	SearchItem,
 
 	Archive(String),
 
@@ -19,32 +18,67 @@ pub enum Scheme {
 }
 
 impl Scheme {
-	pub(super) fn parse(bytes: &[u8]) -> Result<(Self, usize, bool)> {
+	#[inline]
+	pub const fn kind(&self) -> &'static str {
+		match self {
+			Self::Regular => "regular",
+			Self::Search(_) => "search",
+			Self::Archive(_) => "archive",
+			Self::Sftp(_) => "sftp",
+		}
+	}
+
+	#[inline]
+	pub fn domain(&self) -> Option<&str> {
+		match self {
+			Self::Regular => None,
+			Self::Search(s) | Self::Archive(s) | Self::Sftp(s) => Some(s),
+		}
+	}
+
+	pub(super) fn parse(bytes: &[u8], skip: &mut usize) -> Result<(Self, bool, Option<usize>)> {
 		let Some((mut protocol, rest)) = bytes.split_by_seq(b"://") else {
-			return Ok((Self::Regular, 0, false));
+			return Ok((Self::Regular, false, None));
 		};
 
+		// Advance to the beginning of the path
+		*skip += 3 + protocol.len();
+
+		// Tilded schemes
 		let tilde = protocol.ends_with(b"~");
 		if tilde {
 			protocol = &protocol[..protocol.len() - 1];
 		}
 
-		Ok(match protocol {
-			b"regular" => (Self::Regular, 10, tilde),
+		let (scheme, port) = match protocol {
+			b"regular" => (Self::Regular, None),
 			b"search" => {
-				let (name, skip) = Self::decode_param(rest)?;
-				(Self::Search(name), 9 + skip, tilde)
+				let (domain, port) = Self::decode_param(rest, skip)?;
+				(Self::Search(domain), Some(port))
 			}
 			b"archive" => {
-				let (name, skip) = Self::decode_param(rest)?;
-				(Self::Archive(name), 10 + skip, tilde)
+				let (domain, port) = Self::decode_param(rest, skip)?;
+				(Self::Archive(domain), Some(port))
 			}
 			b"sftp" => {
-				let (name, skip) = Self::decode_param(rest)?;
-				(Self::Sftp(name), 7 + skip, tilde)
+				let (domain, port) = Self::decode_param(rest, skip)?;
+				(Self::Sftp(domain), Some(port))
 			}
 			_ => bail!("Could not parse protocol from URL: {}", String::from_utf8_lossy(bytes)),
-		})
+		};
+
+		Ok((scheme, tilde, port))
+	}
+
+	#[inline]
+	pub fn parse_kind(bytes: &[u8]) -> Result<&'static str> {
+		match bytes {
+			b"regular" => Ok("regular"),
+			b"search" => Ok("search"),
+			b"archive" => Ok("archive"),
+			b"sftp" => Ok("sftp"),
+			_ => bail!("Could not parse protocol from URL: {}", String::from_utf8_lossy(bytes)),
+		}
 	}
 
 	#[inline]
@@ -55,49 +89,30 @@ impl Scheme {
 	#[inline]
 	pub fn is_virtual(&self) -> bool {
 		match self {
-			Self::Regular | Self::Search(_) | Self::SearchItem => false,
+			Self::Regular | Self::Search(_) => false,
 			Self::Archive(_) | Self::Sftp(_) => true,
 		}
 	}
 
-	fn decode_param(bytes: &[u8]) -> Result<(String, usize)> {
-		let len = bytes.iter().copied().take_while(|&b| b != b'/').count();
+	fn decode_param(bytes: &[u8], skip: &mut usize) -> Result<(String, usize)> {
+		let mut len = bytes.iter().copied().take_while(|&b| b != b'/').count();
+		let slash = bytes.get(len).is_some_and(|&b| b == b'/');
+		*skip += len + slash as usize;
 
-		let s = match Cow::from(percent_decode(&bytes[..len])) {
+		let port = Self::decode_port(&bytes[..len], &mut len)?;
+		let domain = match Cow::from(percent_decode(&bytes[..len])) {
 			Cow::Borrowed(b) => str::from_utf8(b)?.to_owned(),
 			Cow::Owned(b) => String::from_utf8(b)?,
 		};
 
-		let slash = bytes.get(len).is_some_and(|&b| b == b'/') as usize;
-		Ok((s, len + slash))
+		Ok((domain, port))
 	}
 
-	#[inline]
-	fn encode_param<'a>(s: &'a str) -> PercentEncode<'a> {
-		const SET: AsciiSet = CONTROLS.add(b'/');
-		percent_encode(s.as_bytes(), &SET)
-	}
+	fn decode_port(bytes: &[u8], skip: &mut usize) -> Result<usize> {
+		let Some(idx) = bytes.iter().rposition(|&b| b == b':') else { return Ok(0) };
+		let len = bytes.len() - idx;
 
-	pub fn encode_tilded(&self, loc: &Loc) -> String {
-		let loc = percent_encode(loc.as_os_str().as_encoded_bytes(), CONTROLS);
-		match self {
-			Self::Regular => format!("regular~://{loc}"),
-			Self::Search(kw) => format!("search~://{}/{loc}", Self::encode_param(kw)),
-			Self::SearchItem => format!("search-item~://{loc}"),
-			Self::Archive(id) => format!("archive~://{}/{loc}", Self::encode_param(id)),
-			Self::Sftp(id) => format!("sftp~://{}/{loc}", Self::encode_param(id)),
-		}
-	}
-}
-
-impl Display for Scheme {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		match self {
-			Self::Regular => write!(f, "regular://"),
-			Self::Search(kw) => write!(f, "search://{}/", Self::encode_param(kw)),
-			Self::SearchItem => write!(f, "search-item://"),
-			Self::Archive(id) => write!(f, "archive://{}/", Self::encode_param(id)),
-			Self::Sftp(id) => write!(f, "sftp://{}/", Self::encode_param(id)),
-		}
+		*skip -= len;
+		Ok(if len == 1 { 0 } else { str::from_utf8(&bytes[idx + 1..])?.parse()? })
 	}
 }

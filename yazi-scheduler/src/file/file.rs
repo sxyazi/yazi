@@ -1,10 +1,10 @@
 use std::{borrow::Cow, collections::VecDeque};
 
 use anyhow::{Result, anyhow};
-use tokio::{fs::DirEntry, io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
+use tokio::{io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::YAZI;
-use yazi_fs::{SizeCalculator, cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, services, skip_url, url_relative_to};
+use yazi_fs::{SizeCalculator, cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, provider::{self, DirEntry}, skip_url, url_relative_to};
 use yazi_shared::{Id, url::Url};
 
 use super::{FileIn, FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash};
@@ -26,14 +26,14 @@ impl File {
 	pub async fn work(&self, r#in: FileIn) -> Result<()> {
 		match r#in {
 			FileIn::Paste(mut task) => {
-				ok_or_not_found(services::remove_file(&task.to).await)?;
+				ok_or_not_found(provider::remove_file(&task.to).await)?;
 				let mut it = copy_with_progress(&task.from, &task.to, task.cha.unwrap());
 
 				while let Some(res) = it.recv().await {
 					match res {
 						Ok(0) => {
 							if task.cut {
-								services::remove_file(&task.from).await.ok();
+								provider::remove_file(&task.from).await.ok();
 							}
 							break;
 						}
@@ -62,7 +62,7 @@ impl File {
 				let cha = task.cha.unwrap();
 
 				let src = if task.resolve {
-					match services::read_link(&task.from).await {
+					match provider::read_link(&task.from).await {
 						Ok(u) => Cow::Owned(u),
 						Err(e) if e.kind() == NotFound => {
 							warn!("Link task partially done: {task:?}");
@@ -75,20 +75,20 @@ impl File {
 				};
 
 				let src = if task.relative {
-					url_relative_to(&services::canonicalize(task.to.parent_url().unwrap()).await?, &src)?
+					url_relative_to(&provider::canonicalize(task.to.parent_url().unwrap()).await?, &src)?
 				} else {
 					src
 				};
 
-				ok_or_not_found(services::remove_file(&task.to).await)?;
+				ok_or_not_found(provider::remove_file(&task.to).await)?;
 				if cha.is_dir() {
-					services::symlink_dir(src, &task.to).await?;
+					provider::symlink_dir(src, &task.to).await?;
 				} else {
-					services::symlink_file(src, &task.to).await?;
+					provider::symlink_file(src, &task.to).await?;
 				}
 
 				if task.delete {
-					services::remove_file(&task.from).await.ok();
+					provider::remove_file(&task.from).await.ok();
 				}
 				self.prog.send(TaskProg::Adv(task.id, 1, cha.len))?;
 			}
@@ -96,14 +96,14 @@ impl File {
 				let cha = task.cha.unwrap();
 				let src = if !task.follow {
 					Cow::Borrowed(&task.from)
-				} else if let Ok(p) = services::canonicalize(&task.from).await {
+				} else if let Ok(p) = provider::canonicalize(&task.from).await {
 					Cow::Owned(p)
 				} else {
 					Cow::Borrowed(&task.from)
 				};
 
-				ok_or_not_found(services::remove_file(&task.to).await)?;
-				match services::hard_link(src, &task.to).await {
+				ok_or_not_found(provider::remove_file(&task.to).await)?;
+				match provider::hard_link(src, &task.to).await {
 					Err(e) if e.kind() == NotFound => {
 						warn!("Hardlink task partially done: {task:?}");
 					}
@@ -113,7 +113,7 @@ impl File {
 				self.prog.send(TaskProg::Adv(task.id, 1, cha.len))?;
 			}
 			FileIn::Delete(task) => {
-				if let Err(e) = services::remove_file(&task.target).await
+				if let Err(e) = provider::remove_file(&task.target).await
 					&& e.kind() != NotFound
 					&& maybe_exists(&task.target).await
 				{
@@ -145,7 +145,7 @@ impl File {
 	}
 
 	pub async fn paste(&self, mut task: FileInPaste) -> Result<()> {
-		if task.cut && ok_or_not_found(services::rename(&task.from, &task.to).await).is_ok() {
+		if task.cut && ok_or_not_found(provider::rename(&task.from, &task.to).await).is_ok() {
 			return self.succ(task.id);
 		}
 
@@ -185,14 +185,14 @@ impl File {
 
 		while let Some(src) = dirs.pop_front() {
 			let dest = root.join(skip_url(&src, skip));
-			continue_unless_ok!(match services::create_dir(&dest).await {
+			continue_unless_ok!(match provider::create_dir(&dest).await {
 				Err(e) if e.kind() != AlreadyExists => Err(e),
 				_ => Ok(()),
 			});
 
-			let mut it = continue_unless_ok!(services::read_dir(&src).await);
+			let mut it = continue_unless_ok!(provider::read_dir(&src).await);
 			while let Ok(Some(entry)) = it.next_entry().await {
-				let from = Url::from(entry.path());
+				let from = entry.url();
 				let cha = continue_unless_ok!(Self::cha_from(entry, &from, task.follow).await);
 
 				if cha.is_dir() {
@@ -256,14 +256,14 @@ impl File {
 
 		while let Some(src) = dirs.pop_front() {
 			let dest = root.join(skip_url(&src, skip));
-			continue_unless_ok!(match services::create_dir(&dest).await {
+			continue_unless_ok!(match provider::create_dir(&dest).await {
 				Err(e) if e.kind() != AlreadyExists => Err(e),
 				_ => Ok(()),
 			});
 
-			let mut it = continue_unless_ok!(services::read_dir(&src).await);
+			let mut it = continue_unless_ok!(provider::read_dir(&src).await);
 			while let Ok(Some(entry)) = it.next_entry().await {
-				let from = Url::from(entry.path());
+				let from = entry.url();
 				let cha = continue_unless_ok!(Self::cha_from(entry, &from, task.follow).await);
 
 				if cha.is_dir() {
@@ -280,7 +280,7 @@ impl File {
 	}
 
 	pub async fn delete(&self, mut task: FileInDelete) -> Result<()> {
-		let meta = services::symlink_metadata(&task.target).await?;
+		let meta = provider::symlink_metadata(&task.target).await?;
 		if !meta.is_dir() {
 			let id = task.id;
 			task.length = meta.len();
@@ -291,17 +291,17 @@ impl File {
 
 		let mut dirs = VecDeque::from([task.target]);
 		while let Some(target) = dirs.pop_front() {
-			let Ok(mut it) = services::read_dir(target).await else { continue };
+			let Ok(mut it) = provider::read_dir(target).await else { continue };
 
 			while let Ok(Some(entry)) = it.next_entry().await {
 				let Ok(meta) = entry.metadata().await else { continue };
 
 				if meta.is_dir() {
-					dirs.push_front(Url::from(entry.path()));
+					dirs.push_front(entry.url());
 					continue;
 				}
 
-				task.target = Url::from(entry.path());
+				task.target = entry.url();
 				task.length = meta.len();
 				self.prog.send(TaskProg::New(task.id, meta.len()))?;
 				self.queue(FileIn::Delete(task.clone()), NORMAL).await?;
@@ -321,7 +321,7 @@ impl File {
 
 	#[inline]
 	async fn cha(url: &Url, follow: bool) -> io::Result<Cha> {
-		let meta = services::symlink_metadata(url).await?;
+		let meta = provider::symlink_metadata(url).await?;
 		Ok(if follow { Cha::from_follow(url, meta).await } else { Cha::new(url, meta) })
 	}
 

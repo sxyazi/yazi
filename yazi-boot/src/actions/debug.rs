@@ -1,8 +1,9 @@
-use std::{env, ffi::OsStr, fmt::Write};
+use std::{env, ffi::OsStr, fmt::Write, path::Path};
 
 use regex::Regex;
 use yazi_adapter::Mux;
-use yazi_shared::timestamp_us;
+use yazi_config::YAZI;
+use yazi_shared::{timestamp_us, url::Url};
 
 use super::Actions;
 
@@ -57,17 +58,17 @@ impl Actions {
 		writeln!(
 			s,
 			"    default     : {:?}",
-			yazi_config::YAZI.opener.first(yazi_config::YAZI.open.all("f75a.txt", "text/plain"))
+			YAZI.opener.first(YAZI.open.all(Url::from(Path::new("f75a.txt")), "text/plain"))
 		)?;
 		writeln!(
 			s,
 			"    block-create: {:?}",
-			yazi_config::YAZI.opener.block(yazi_config::YAZI.open.all("bulk-create.txt", "text/plain"))
+			YAZI.opener.block(YAZI.open.all(Url::from(Path::new("bulk-create.txt")), "text/plain"))
 		)?;
 		writeln!(
 			s,
 			"    block-rename: {:?}",
-			yazi_config::YAZI.opener.block(yazi_config::YAZI.open.all("bulk-rename.txt", "text/plain"))
+			YAZI.opener.block(YAZI.open.all(Url::from(Path::new("bulk-rename.txt")), "text/plain"))
 		)?;
 
 		writeln!(s, "\nMultiplexers")?;

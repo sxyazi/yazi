@@ -38,7 +38,7 @@ impl Stream {
 	pub(super) async fn bind() -> std::io::Result<ServerListener> {
 		let p = Self::socket_file();
 
-		yazi_fs::services::Local::remove_file(&p).await.ok();
+		yazi_fs::provider::local::Local::remove_file(&p).await.ok();
 		tokio::net::UnixListener::bind(p)
 	}
 
