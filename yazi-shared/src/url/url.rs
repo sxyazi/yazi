@@ -94,21 +94,26 @@ impl Url {
 
 	#[inline]
 	pub fn base(&self) -> Url {
+		use Scheme as S;
+
 		let loc: Loc = self.loc.base().into();
-		match &self.scheme {
-			Scheme::Regular => Self { loc, scheme: Scheme::Regular },
-			Scheme::Search(_) => self.with(loc),
-			Scheme::Archive(_) => self.with(loc),
-			Scheme::Sftp(_) => self.with(loc),
+		match self.scheme {
+			S::Regular => Self { loc, scheme: S::Regular },
+			S::Search(_) => self.with(loc),
+			S::Archive(_) => self.with(loc),
+			S::Sftp(_) => self.with(loc),
 		}
 	}
 
 	pub fn join(&self, path: impl AsRef<Path>) -> Self {
+		use Scheme as S;
+
+		let loc: Loc = self.loc.join(path).into();
 		match self.scheme {
-			Scheme::Regular => Self { loc: self.loc.join(path).into(), scheme: Scheme::Regular },
-			Scheme::Search(_) => self.with(self.loc.join(path)),
-			Scheme::Archive(_) => self.with(self.loc.join(path)),
-			Scheme::Sftp(_) => self.with(self.loc.join(path)),
+			S::Regular => Self { loc, scheme: S::Regular },
+			S::Search(_) => self.with(loc),
+			S::Archive(_) => self.with(loc),
+			S::Sftp(_) => Self { loc, scheme: self.scheme.clone() },
 		}
 	}
 
@@ -127,27 +132,55 @@ impl Url {
 	pub fn os_str(&self) -> Cow<'_, OsStr> { self.components().os_str() }
 
 	pub fn parent_url(&self) -> Option<Url> {
+		use Scheme as S;
+
 		let parent = self.loc.parent()?;
 		let urn = self.loc.urn();
 
-		Some(match &self.scheme {
-			Scheme::Regular => Self { loc: parent.into(), scheme: Scheme::Regular },
-			Scheme::Search(_) if urn == Urn::new("") => {
-				Self { loc: parent.into(), scheme: Scheme::Regular }
-			}
-			Scheme::Search(_) => self.with(parent),
-			Scheme::Archive(_) => self.with(parent),
-			Scheme::Sftp(_) => self.with(parent),
+		Some(match self.scheme {
+			S::Regular => Self { loc: parent.into(), scheme: S::Regular },
+
+			S::Search(_) if urn.is_empty() => Self { loc: parent.into(), scheme: S::Regular },
+			S::Search(_) => self.with(parent),
+
+			S::Archive(_) if urn.is_empty() => Self { loc: parent.into(), scheme: S::Regular },
+			S::Archive(_) => self.with(parent),
+
+			S::Sftp(_) => Self { loc: parent.into(), scheme: self.scheme.clone() },
 		})
 	}
 
-	pub fn strip_prefix(&self, base: impl AsRef<Url>) -> Option<Self> {
-		let base = base.as_ref();
-		if !self.scheme.covariant(&base.scheme) {
-			return None;
-		}
+	pub fn strip_prefix(&self, base: impl AsRef<Url>) -> Option<&Urn> {
+		use Scheme as S;
 
-		Some(self.with(self.loc.strip_prefix(&base.loc).ok()?))
+		let base = base.as_ref();
+		let prefix = self.loc.strip_prefix(&base.loc).ok()?;
+
+		Some(Urn::new(match (&self.scheme, &base.scheme) {
+			// Same scheme
+			(S::Regular, S::Regular) => Some(prefix),
+			(S::Search(_), S::Search(_)) => Some(prefix),
+			(S::Archive(a), S::Archive(b)) => Some(prefix).filter(|_| a == b),
+			(S::Sftp(a), S::Sftp(b)) => Some(prefix).filter(|_| a == b),
+
+			// Both are local files
+			(S::Regular, S::Search(_)) => Some(prefix),
+			(S::Search(_), S::Regular) => Some(prefix),
+
+			// Only the entry of archives is a local file
+			(S::Regular, S::Archive(_)) => Some(prefix).filter(|_| base.urn().is_empty()),
+			(S::Search(_), S::Archive(_)) => Some(prefix).filter(|_| base.urn().is_empty()),
+			(S::Archive(_), S::Regular) => Some(prefix).filter(|_| self.urn().is_empty()),
+			(S::Archive(_), S::Search(_)) => Some(prefix).filter(|_| self.urn().is_empty()),
+
+			// Independent virtual file space
+			(S::Regular, S::Sftp(_)) => None,
+			(S::Search(_), S::Sftp(_)) => None,
+			(S::Archive(_), S::Sftp(_)) => None,
+			(S::Sftp(_), S::Regular) => None,
+			(S::Sftp(_), S::Search(_)) => None,
+			(S::Sftp(_), S::Archive(_)) => None,
+		}?))
 	}
 
 	#[inline]

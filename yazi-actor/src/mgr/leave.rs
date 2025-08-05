@@ -19,6 +19,11 @@ impl Actor for Leave {
 			.filter(|u| u != cx.cwd())
 			.or_else(|| cx.cwd().parent_url());
 
-		if let Some(u) = url { act!(mgr:cd, cx, (u.into_regular(), CdSource::Leave)) } else { succ!() }
+		let Some(mut url) = url else { succ!() };
+		if url.is_search() {
+			url = url.into_regular();
+		}
+
+		act!(mgr:cd, cx, (url, CdSource::Leave))
 	}
 }

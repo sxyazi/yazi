@@ -8,12 +8,12 @@ use yazi_shared::url::{Scheme, Url};
 #[derive(Debug, Deserialize)]
 #[serde(try_from = "String")]
 pub struct Pattern {
-	inner:   globset::GlobMatcher,
-	scheme:  PatternScheme,
-	is_dir:  bool,
-	is_star: bool,
+	inner:      globset::GlobMatcher,
+	scheme:     PatternScheme,
+	pub is_dir: bool,
+	is_star:    bool,
 	#[cfg(windows)]
-	sep_lit: bool,
+	sep_lit:    bool,
 }
 
 impl Pattern {

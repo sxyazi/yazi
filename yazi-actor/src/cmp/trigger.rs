@@ -93,8 +93,10 @@ mod tests {
 	use super::*;
 
 	fn compare(s: &str, parent: &str, child: &str) {
-		let (p, c) = Trigger::split_url(s).unwrap();
-		let p = p.strip_prefix(yazi_fs::CWD.load().as_ref()).unwrap_or(p);
+		let (mut p, c) = Trigger::split_url(s).unwrap();
+		if let Some(u) = p.strip_prefix(yazi_fs::CWD.load().as_ref()) {
+			p = Url::from(&**u);
+		}
 		assert_eq!((p, c.as_urn()), (parent.parse().unwrap(), Urn::new(child)));
 	}
 

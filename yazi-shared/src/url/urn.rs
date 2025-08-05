@@ -24,6 +24,9 @@ impl Urn {
 		use std::os::unix::ffi::OsStrExt;
 		self.name().is_some_and(|s| s.as_bytes().starts_with(b"."))
 	}
+
+	#[inline]
+	pub fn is_empty(&self) -> bool { self.0.as_os_str().is_empty() }
 }
 
 impl Deref for Urn {

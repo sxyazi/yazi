@@ -7,7 +7,7 @@ use yazi_adapter::Dimension;
 use yazi_config::{LAYOUT, popup::{Origin, Position}};
 use yazi_fs::{File, FolderStage};
 use yazi_macro::render;
-use yazi_shared::{Id, Ids, url::Url};
+use yazi_shared::{Id, Ids, url::{Url, Urn}};
 
 use super::{Backstack, Finder, Folder, History, Mode, Preference, Preview};
 use crate::{spot::Spot, tab::Selected};
@@ -125,7 +125,9 @@ impl Tab {
 
 		if let Some(parent) = &mut self.parent {
 			apply(parent);
-			parent.hover(self.current.url.urn()); // The parent should always track the CWD
+
+			// The parent should always track the CWD
+			parent.hover(self.current.url.strip_prefix(&parent.url).unwrap_or(Urn::new("")));
 		}
 
 		self
