@@ -122,7 +122,7 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 		let mut files = vec![];
 		while let Ok(Some(next)) = it.next_entry().await {
 			let url = next.url();
-			if pat.as_ref().is_some_and(|p| !p.match_url(&url, false)) {
+			if pat.as_ref().is_some_and(|p| !p.match_url(&url, p.is_dir)) {
 				continue;
 			}
 
