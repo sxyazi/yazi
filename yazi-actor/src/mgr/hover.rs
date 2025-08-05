@@ -38,7 +38,7 @@ impl Actor for HoverDo {
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		// Hover on the file
 		if let Some(u) = opt.url.strip_prefix(cx.cwd()) {
-			render!(cx.current_mut().hover(u.urn()));
+			render!(cx.current_mut().hover(u));
 		}
 
 		// Turn on tracing

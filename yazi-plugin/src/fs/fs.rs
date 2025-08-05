@@ -1,8 +1,8 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, str::FromStr};
 
-use globset::GlobBuilder;
-use mlua::{ExternalError, ExternalResult, Function, IntoLua, IntoLuaMulti, Lua, Table, Value};
+use mlua::{ExternalError, Function, IntoLua, IntoLuaMulti, Lua, Table, Value};
 use yazi_binding::{Cha, Composer, ComposerGet, ComposerSet, Error, File, Url, UrlRef};
+use yazi_config::Pattern;
 use yazi_fs::{mounts::PARTITIONS, provider, remove_dir_clean};
 
 use crate::bindings::SizeCalculator;
@@ -105,19 +105,8 @@ fn remove(lua: &Lua) -> mlua::Result<Function> {
 
 fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (dir, options): (UrlRef, Table)| async move {
-		// FIXME: VFS
-		let glob = if let Ok(s) = options.raw_get::<mlua::String>("glob") {
-			return Err("`glob` is disabled temporarily".into_lua_err());
-			Some(
-				GlobBuilder::new(&s.to_str()?)
-					.case_insensitive(true)
-					.literal_separator(true)
-					.backslash_escape(false)
-					.empty_alternates(true)
-					.build()
-					.into_lua_err()?
-					.compile_matcher(),
-			)
+		let pat = if let Ok(s) = options.raw_get::<mlua::String>("glob") {
+			Some(Pattern::from_str(&s.to_str()?)?)
 		} else {
 			None
 		};
@@ -132,14 +121,10 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 
 		let mut files = vec![];
 		while let Ok(Some(next)) = it.next_entry().await {
-			if files.len() >= limit {
-				break;
-			}
-
 			let url = next.url();
-			// if glob.as_ref().is_some_and(|g| !g.is_match(&path)) {
-			// 	continue;
-			// }
+			if pat.as_ref().is_some_and(|p| !p.match_url(&url, false)) {
+				continue;
+			}
 
 			let file = if !resolve {
 				yazi_fs::File::from_dummy(url, next.file_type().await.ok())
@@ -148,15 +133,14 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 			} else {
 				yazi_fs::File::from_dummy(url, next.file_type().await.ok())
 			};
+
 			files.push(File::new(file));
+			if files.len() == limit {
+				break;
+			}
 		}
 
-		let tbl = lua.create_table_with_capacity(files.len(), 0)?;
-		for f in files {
-			tbl.raw_push(f)?;
-		}
-
-		tbl.into_lua_multi(&lua)
+		lua.create_sequence_from(files)?.into_lua_multi(&lua)
 	})
 }
 

@@ -146,12 +146,12 @@ impl UserData for Url {
 			})
 		});
 		methods.add_method("strip_prefix", |_, me, base: Value| {
-			let url = match base {
+			let urn = match base {
 				Value::String(s) => me.strip_prefix(Self::try_from(s.as_bytes().as_ref())?),
 				Value::UserData(ud) => me.strip_prefix(&ud.borrow::<Self>()?.inner),
 				_ => Err("must be a string or a Url".into_lua_err())?,
 			};
-			Ok(url.map(Self::new))
+			Ok(urn.map(Deref::deref).map(Self::new)) // TODO: return `Urn` instead of `Url`
 		});
 
 		methods.add_function_mut("into_search", |_, (ud, domain): (AnyUserData, mlua::String)| {
