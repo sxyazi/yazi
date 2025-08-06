@@ -9,6 +9,18 @@ use ratatui::layout::Rect;
 
 use crate::{CLOSE, ESCAPE, Emulator, START, adapter::Adapter, image::Image};
 
+// Generate unique image ID per Yazi instance to prevent tmux overlap
+// This ID is encoded in the foreground color of Unicode placeholders
+static INSTANCE_ID: OnceLock<u32> = OnceLock::new();
+
+fn get_image_id() -> u32 {
+	*INSTANCE_ID.get_or_init(|| {
+		// Use PID to get unique ID per instance
+		// Limit to 24-bit RGB color space (0xFFFFFF)
+		(std::process::id() % 0xFFFFFE) + 1
+	})
+}
+
 static DIACRITICS: [char; 297] = [
 	'\u{0305}',
 	'\u{030D}',
@@ -336,7 +348,8 @@ impl Kgp {
 				write!(w, "{s}")?;
 			}
 
-			write!(w, "{START}_Gq=2,a=d,d=A{ESCAPE}\\{CLOSE}")?;
+			// Delete only this instance's image by ID
+			write!(w, "{START}_Gq=2,a=d,d=i,i={}{ESCAPE}\\{CLOSE}", get_image_id())?;
 			Ok(())
 		})
 	}
@@ -350,7 +363,8 @@ impl Kgp {
 			if let Some(first) = it.next() {
 				write!(
 					buf,
-					"{START}_Gq=2,a=T,i=1,C=1,U=1,f={format},s={},v={},m={};{}{ESCAPE}\\{CLOSE}",
+					"{START}_Gq=2,a=T,i={},C=1,U=1,f={format},s={},v={},m={};{}{ESCAPE}\\{CLOSE}",
+					get_image_id(),
 					size.0,
 					size.1,
 					it.peek().is_some() as u8,
@@ -379,7 +393,12 @@ impl Kgp {
 
 	fn place(area: &Rect) -> Result<Vec<u8>> {
 		let mut buf = Vec::with_capacity(area.width as usize * area.height as usize * 3 + 50);
-		write!(buf, "\x1b[38;2;0;0;1m")?;
+		// Encode the image ID in the foreground color (RGB values)
+		let id = get_image_id();
+		let r = (id >> 16) & 0xFF;
+		let g = (id >> 8) & 0xFF;
+		let b = id & 0xFF;
+		write!(buf, "\x1b[38;2;{};{};{}m", r, g, b)?;
 		for y in 0..area.height {
 			write!(buf, "\x1b[{};{}H", area.y + y + 1, area.x + 1)?;
 			for x in 0..area.width {
