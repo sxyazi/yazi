@@ -8,7 +8,7 @@ use tracing::error;
 use yazi_macro::try_format;
 use yazi_shared::{Id, RoCell};
 
-use crate::{ClientReader, ClientWriter, Payload, Pubsub, Server, Stream, body::{Body, BodyBye, BodyHi}};
+use crate::{ClientReader, ClientWriter, Payload, Pubsub, Server, Stream, ember::{Ember, EmberBye, EmberHi}};
 
 pub static ID: RoCell<Id> = RoCell::new();
 pub(super) static PEERS: RoCell<RwLock<HashMap<Id, Peer>>> = RoCell::new();
@@ -67,12 +67,12 @@ impl Client {
 
 	/// Connect to an existing server to send a single message.
 	pub async fn shot(kind: &str, receiver: Id, body: &str) -> Result<()> {
-		Body::validate(kind)?;
+		Ember::validate(kind)?;
 
 		let payload = try_format!(
 			"{}\n{kind},{receiver},{ID},{body}\n{}\n",
-			Payload::new(BodyHi::borrowed(iter::empty())),
-			Payload::new(BodyBye::owned())
+			Payload::new(EmberHi::borrowed(iter::empty())),
+			Payload::new(EmberBye::owned())
 		)?;
 
 		let (mut lines, mut writer) = Stream::connect().await?;
@@ -84,7 +84,7 @@ impl Client {
 		while let Ok(Some(line)) = lines.next_line().await {
 			match line.split(',').next() {
 				Some("hey") => {
-					if let Ok(Body::Hey(hey)) = Payload::from_str(&line).map(|p| p.body) {
+					if let Ok(Ember::Hey(hey)) = Payload::from_str(&line).map(|p| p.body) {
 						(peers, version) = (hey.peers, Some(hey.version));
 					}
 				}
@@ -93,10 +93,10 @@ impl Client {
 			}
 		}
 
-		if version.as_deref() != Some(BodyHi::version()) {
+		if version.as_deref() != Some(EmberHi::version()) {
 			bail!(
 				"Incompatible version (Ya {}, Yazi {}). Restart all `ya` and `yazi` processes if you upgrade either one.",
-				BodyHi::version(),
+				EmberHi::version(),
 				version.as_deref().unwrap_or("Unknown")
 			);
 		}
@@ -129,7 +129,7 @@ impl Client {
 	pub async fn draw(kinds: HashSet<&str>) -> Result<()> {
 		async fn make(kinds: &HashSet<&str>) -> Result<ClientReader> {
 			let (lines, mut writer) = Stream::connect().await?;
-			let hi = Payload::new(BodyHi::borrowed(kinds.iter().copied()));
+			let hi = Payload::new(EmberHi::borrowed(kinds.iter().copied()));
 			writer.write_all(try_format!("{hi}\n")?.as_bytes()).await?;
 			writer.flush().await?;
 			Ok(lines)
@@ -192,7 +192,7 @@ impl Client {
 	}
 
 	fn handle_hey(s: &str) {
-		if let Ok(Body::Hey(mut hey)) = Payload::from_str(s).map(|p| p.body) {
+		if let Ok(Ember::Hey(mut hey)) = Payload::from_str(s).map(|p| p.body) {
 			hey.peers.retain(|&id, _| id != *ID);
 			*PEERS.write() = hey.peers;
 		}

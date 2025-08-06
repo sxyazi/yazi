@@ -1,5 +1,5 @@
 use anyhow::bail;
-use mlua::{ExternalError, IntoLua, Lua, Table, Value};
+use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, Value};
 use yazi_binding::{FileRef, elements::Renderable};
 use yazi_shared::{Id, event::CmdCow};
 
@@ -24,7 +24,11 @@ impl TryFrom<CmdCow> for UpdateSpottedOpt {
 	}
 }
 
-impl IntoLua for &UpdateSpottedOpt {
+impl FromLua for UpdateSpottedOpt {
+	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
+}
+
+impl IntoLua for UpdateSpottedOpt {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }
 

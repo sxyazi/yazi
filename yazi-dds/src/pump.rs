@@ -7,7 +7,7 @@ use tokio_util::sync::CancellationToken;
 use yazi_macro::err;
 use yazi_shared::{RoCell, url::Url};
 
-use crate::{Pubsub, body::BodyMoveItem};
+use crate::{Pubsub, ember::BodyMoveItem};
 
 static CT: RoCell<CancellationToken> = RoCell::new();
 static MOVE_TX: Mutex<Option<mpsc::UnboundedSender<BodyMoveItem>>> = Mutex::new(None);

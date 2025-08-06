@@ -5,17 +5,17 @@ use yazi_boot::BOOT;
 use yazi_macro::{emit, relay};
 use yazi_shared::Id;
 
-use crate::{ID, body::Body};
+use crate::{ID, ember::Ember};
 
 #[derive(Debug)]
 pub struct Payload<'a> {
 	pub receiver: Id,
 	pub sender:   Id,
-	pub body:     Body<'a>,
+	pub body:     Ember<'a>,
 }
 
 impl<'a> Payload<'a> {
-	pub(super) fn new(body: Body<'a>) -> Self { Self { receiver: Id(0), sender: *ID, body } }
+	pub(super) fn new(body: Ember<'a>) -> Self { Self { receiver: Id(0), sender: *ID, body } }
 
 	pub(super) fn flush(&self) -> Result<()> {
 		writeln!(std::io::stdout(), "{self}")?;
@@ -25,7 +25,7 @@ impl<'a> Payload<'a> {
 	pub(super) fn try_flush(&self) -> Result<()> {
 		let b = if self.receiver == 0 {
 			BOOT.remote_events.contains(self.body.kind())
-		} else if let Body::Custom(b) = &self.body {
+		} else if let Ember::Custom(b) = &self.body {
 			BOOT.local_events.contains(&b.kind)
 		} else {
 			false
@@ -68,33 +68,32 @@ impl FromStr for Payload<'static> {
 
 		let body = parts.next().ok_or_else(|| anyhow!("empty body"))?;
 
-		Ok(Self { receiver, sender, body: Body::from_str(kind, body)? })
+		Ok(Self { receiver, sender, body: Ember::from_str(kind, body)? })
 	}
 }
 
-impl<'a> From<Body<'a>> for Payload<'a> {
-	fn from(value: Body<'a>) -> Self { Self::new(value) }
+impl<'a> From<Ember<'a>> for Payload<'a> {
+	fn from(value: Ember<'a>) -> Self { Self::new(value) }
 }
 
 impl Display for Payload<'_> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		let result = match &self.body {
-			Body::Hi(b) => serde_json::to_string(b),
-			Body::Hey(b) => serde_json::to_string(b),
-			Body::Bye(b) => serde_json::to_string(b),
-			Body::Cd(b) => serde_json::to_string(b),
-			Body::Load(b) => serde_json::to_string(b),
-			Body::Hover(b) => serde_json::to_string(b),
-			Body::Tab(b) => serde_json::to_string(b),
-			Body::Rename(b) => serde_json::to_string(b),
-			Body::Bulk(b) => serde_json::to_string(b),
-			Body::Yank(b) => serde_json::to_string(b),
-			Body::Move(b) => serde_json::to_string(b),
-			Body::Trash(b) => serde_json::to_string(b),
-			Body::Delete(b) => serde_json::to_string(b),
-			Body::Mount(b) => serde_json::to_string(b),
-			Body::Custom(b) => serde_json::to_string(b),
-			_ => return Err(std::fmt::Error),
+			Ember::Hi(b) => serde_json::to_string(b),
+			Ember::Hey(b) => serde_json::to_string(b),
+			Ember::Bye(b) => serde_json::to_string(b),
+			Ember::Cd(b) => serde_json::to_string(b),
+			Ember::Load(b) => serde_json::to_string(b),
+			Ember::Hover(b) => serde_json::to_string(b),
+			Ember::Tab(b) => serde_json::to_string(b),
+			Ember::Rename(b) => serde_json::to_string(b),
+			Ember::Bulk(b) => serde_json::to_string(b),
+			Ember::Yank(b) => serde_json::to_string(b),
+			Ember::Move(b) => serde_json::to_string(b),
+			Ember::Trash(b) => serde_json::to_string(b),
+			Ember::Delete(b) => serde_json::to_string(b),
+			Ember::Mount(b) => serde_json::to_string(b),
+			Ember::Custom(b) => serde_json::to_string(b),
 		};
 
 		if let Ok(s) = result {

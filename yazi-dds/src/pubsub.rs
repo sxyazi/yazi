@@ -7,7 +7,7 @@ use yazi_boot::BOOT;
 use yazi_fs::FolderStage;
 use yazi_shared::{Id, RoCell, url::{CovUrl, Url}};
 
-use crate::{Client, ID, PEERS, body::{Body, BodyBulk, BodyHi, BodyMoveItem}};
+use crate::{Client, ID, PEERS, ember::{BodyMoveItem, Ember, EmberBulk, EmberHi}};
 
 pub static LOCAL: RoCell<RwLock<HashMap<String, HashMap<String, Function>>>> = RoCell::new();
 
@@ -52,7 +52,7 @@ macro_rules! pub_after {
 	(&impl $name:ident ($($param:ident: $param_ty:ty),*), ($($borrowed:expr),*), ($($owned:expr),*), $static:literal) => {
 		paste::paste! {
 			pub fn [<pub_after_ $name>]($($param: $param_ty),*) -> Result<()> {
-				use crate::body::[<Body $name:camel>] as B;
+				use crate::ember::[<Ember $name:camel>] as B;
 
 				let n = if $static { concat!("@", stringify!($name)) } else { stringify!($name) };
 				if BOOT.local_events.contains(n) {
@@ -97,9 +97,9 @@ impl Pubsub {
 		unsub!(REMOTE)(plugin, kind) && Self::pub_inner_hi()
 	}
 
-	pub fn r#pub(body: Body<'static>) -> Result<()> { body.with_receiver(*ID).emit() }
+	pub fn r#pub(body: Ember<'static>) -> Result<()> { body.with_receiver(*ID).emit() }
 
-	pub fn pub_to(receiver: Id, body: Body<'static>) -> Result<()> {
+	pub fn pub_to(receiver: Id, body: Ember<'static>) -> Result<()> {
 		if receiver == *ID {
 			return Self::r#pub(body);
 		}
@@ -118,7 +118,7 @@ impl Pubsub {
 		let abilities = BOOT.remote_events.union(&abilities).map(AsRef::as_ref);
 
 		// FIXME: handle error
-		Client::push(BodyHi::borrowed(abilities)).ok();
+		Client::push(EmberHi::borrowed(abilities)).ok();
 		true
 	}
 
@@ -127,13 +127,13 @@ impl Pubsub {
 		I: Iterator<Item = (&'a Url, &'a Url)> + Clone,
 	{
 		if BOOT.local_events.contains("bulk") {
-			BodyBulk::borrowed(changes.clone()).with_receiver(*ID).flush()?;
+			EmberBulk::borrowed(changes.clone()).with_receiver(*ID).flush()?;
 		}
 		if PEERS.read().values().any(|p| p.able("bulk")) {
-			Client::push(BodyBulk::borrowed(changes.clone()))?;
+			Client::push(EmberBulk::borrowed(changes.clone()))?;
 		}
 		if LOCAL.read().contains_key("bulk") {
-			Self::r#pub(BodyBulk::owned(changes))?;
+			Self::r#pub(EmberBulk::owned(changes))?;
 		}
 		Ok(())
 	}

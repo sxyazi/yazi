@@ -1,4 +1,4 @@
-use mlua::{IntoLua, Lua, LuaSerdeExt, Value};
+use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
 use yazi_shared::event::{CmdCow, Data, EventQuit};
 
@@ -23,6 +23,10 @@ impl From<QuitOpt> for EventQuit {
 	}
 }
 
-impl IntoLua for &QuitOpt {
-	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.to_value(self) }
+impl FromLua for QuitOpt {
+	fn from_lua(value: Value, lua: &Lua) -> mlua::Result<Self> { lua.from_value(value) }
+}
+
+impl IntoLua for QuitOpt {
+	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { lua.to_value(&self) }
 }

@@ -1,4 +1,4 @@
-use mlua::{ExternalError, IntoLua, Lua, Value};
+use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_shared::{SStr, event::CmdCow};
 
 #[derive(Debug)]
@@ -20,6 +20,10 @@ impl From<CmdCow> for RenameOpt {
 	}
 }
 
-impl IntoLua for &RenameOpt {
+impl FromLua for RenameOpt {
+	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
+}
+
+impl IntoLua for RenameOpt {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

@@ -5,27 +5,27 @@ use serde::{Deserialize, Serialize};
 use yazi_parser::mgr::UpdateYankedOpt;
 use yazi_shared::url::CovUrl;
 
-use super::Body;
+use super::Ember;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct BodyYank<'a>(UpdateYankedOpt<'a>);
+pub struct EmberYank<'a>(UpdateYankedOpt<'a>);
 
-impl<'a> BodyYank<'a> {
-	pub fn borrowed(cut: bool, urls: &'a HashSet<CovUrl>) -> Body<'a> {
+impl<'a> EmberYank<'a> {
+	pub fn borrowed(cut: bool, urls: &'a HashSet<CovUrl>) -> Ember<'a> {
 		Self(UpdateYankedOpt { cut, urls: Cow::Borrowed(urls) }).into()
 	}
 }
 
-impl BodyYank<'static> {
-	pub fn owned(cut: bool, _: &HashSet<CovUrl>) -> Body<'static> {
+impl EmberYank<'static> {
+	pub fn owned(cut: bool, _: &HashSet<CovUrl>) -> Ember<'static> {
 		Self(UpdateYankedOpt { cut, urls: Default::default() }).into()
 	}
 }
 
-impl<'a> From<BodyYank<'a>> for Body<'a> {
-	fn from(value: BodyYank<'a>) -> Self { Self::Yank(value) }
+impl<'a> From<EmberYank<'a>> for Ember<'a> {
+	fn from(value: EmberYank<'a>) -> Self { Self::Yank(value) }
 }
 
-impl IntoLua for BodyYank<'_> {
+impl IntoLua for EmberYank<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { self.0.into_lua(lua) }
 }

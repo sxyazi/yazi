@@ -4,32 +4,32 @@ use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 use yazi_shared::{Id, url::Url};
 
-use super::Body;
+use super::Ember;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct BodyRename<'a> {
+pub struct EmberRename<'a> {
 	pub tab:  Id,
 	pub from: Cow<'a, Url>,
 	pub to:   Cow<'a, Url>,
 }
 
-impl<'a> BodyRename<'a> {
-	pub fn borrowed(tab: Id, from: &'a Url, to: &'a Url) -> Body<'a> {
+impl<'a> EmberRename<'a> {
+	pub fn borrowed(tab: Id, from: &'a Url, to: &'a Url) -> Ember<'a> {
 		Self { tab, from: from.into(), to: to.into() }.into()
 	}
 }
 
-impl BodyRename<'static> {
-	pub fn owned(tab: Id, from: &Url, to: &Url) -> Body<'static> {
+impl EmberRename<'static> {
+	pub fn owned(tab: Id, from: &Url, to: &Url) -> Ember<'static> {
 		Self { tab, from: from.clone().into(), to: to.clone().into() }.into()
 	}
 }
 
-impl<'a> From<BodyRename<'a>> for Body<'a> {
-	fn from(value: BodyRename<'a>) -> Self { Self::Rename(value) }
+impl<'a> From<EmberRename<'a>> for Ember<'a> {
+	fn from(value: EmberRename<'a>) -> Self { Self::Rename(value) }
 }
 
-impl IntoLua for BodyRename<'_> {
+impl IntoLua for EmberRename<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua
 			.create_table_from([

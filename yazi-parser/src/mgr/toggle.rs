@@ -1,4 +1,4 @@
-use mlua::{ExternalError, IntoLua, Lua, Value};
+use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_shared::{event::CmdCow, url::Url};
 
 #[derive(Debug)]
@@ -20,6 +20,10 @@ impl From<CmdCow> for ToggleOpt {
 	}
 }
 
-impl IntoLua for &ToggleOpt {
+impl FromLua for ToggleOpt {
+	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
+}
+
+impl IntoLua for ToggleOpt {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

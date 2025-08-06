@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ffi::OsStr, path::Path};
 
-use mlua::{ExternalError, IntoLua, Lua, Value};
+use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_shared::{SStr, event::CmdCow};
 
 #[derive(Debug)]
@@ -20,7 +20,11 @@ impl From<CmdCow> for CopyOpt {
 	}
 }
 
-impl IntoLua for &CopyOpt {
+impl FromLua for CopyOpt {
+	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
+}
+
+impl IntoLua for CopyOpt {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }
 

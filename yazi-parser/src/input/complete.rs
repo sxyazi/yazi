@@ -1,8 +1,10 @@
 use anyhow::bail;
+use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_shared::{Id, event::CmdCow};
 
 use crate::cmp::CmpItem;
 
+#[derive(Debug)]
 pub struct CompleteOpt {
 	pub item:    CmpItem,
 	pub _ticket: Id, // FIXME: not used
@@ -18,4 +20,12 @@ impl TryFrom<CmdCow> for CompleteOpt {
 
 		Ok(Self { item, _ticket: c.id("ticket").unwrap_or_default() })
 	}
+}
+
+impl FromLua for CompleteOpt {
+	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
+}
+
+impl IntoLua for CompleteOpt {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

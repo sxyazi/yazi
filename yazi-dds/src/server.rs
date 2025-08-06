@@ -6,7 +6,7 @@ use tokio::{io::{AsyncBufReadExt, AsyncWriteExt, BufReader}, select, sync::mpsc:
 use yazi_macro::try_format;
 use yazi_shared::{Id, RoCell};
 
-use crate::{Client, ClientWriter, Payload, Peer, STATE, Stream, body::{Body, BodyBye, BodyHey}};
+use crate::{Client, ClientWriter, Payload, Peer, STATE, Stream, ember::{Ember, EmberBye, EmberHey}};
 
 pub(super) static CLIENTS: RoCell<RwLock<HashMap<Id, Client>>> = RoCell::new();
 
@@ -90,7 +90,7 @@ impl Server {
 
 	fn handle_hi(s: String, id: &mut Option<Id>, tx: mpsc::UnboundedSender<String>) {
 		let Ok(payload) = Payload::from_str(&s) else { return };
-		let Body::Hi(hi) = payload.body else { return };
+		let Ember::Hi(hi) = payload.body else { return };
 
 		if id.is_none()
 			&& let Some(ref state) = *STATE.read()
@@ -110,7 +110,7 @@ impl Server {
 	}
 
 	fn handle_hey(clients: &HashMap<Id, Client>) {
-		let payload = Payload::new(BodyHey::owned(
+		let payload = Payload::new(EmberHey::owned(
 			clients.values().map(|c| (c.id, Peer::new(&c.abilities))).collect(),
 		));
 		if let Ok(s) = try_format!("{payload}\n") {
@@ -125,7 +125,7 @@ impl Server {
 			}
 		}
 
-		let bye = BodyBye::owned().with_receiver(id).with_sender(Id(0));
+		let bye = EmberBye::owned().with_receiver(id).with_sender(Id(0));
 		if let Ok(s) = try_format!("{bye}") {
 			writer.write_all(s.as_bytes()).await.ok();
 			writer.flush().await.ok();
