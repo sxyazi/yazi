@@ -4,29 +4,29 @@ use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 use yazi_shared::{Id, url::Url};
 
-use super::Body;
+use super::Ember;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct BodyHover<'a> {
+pub struct EmberHover<'a> {
 	pub tab: Id,
 	pub url: Option<Cow<'a, Url>>,
 }
 
-impl<'a> BodyHover<'a> {
-	pub fn borrowed(tab: Id, url: Option<&'a Url>) -> Body<'a> {
+impl<'a> EmberHover<'a> {
+	pub fn borrowed(tab: Id, url: Option<&'a Url>) -> Ember<'a> {
 		Self { tab, url: url.map(Into::into) }.into()
 	}
 }
 
-impl BodyHover<'static> {
-	pub fn owned(tab: Id, _: Option<&Url>) -> Body<'static> { Self { tab, url: None }.into() }
+impl EmberHover<'static> {
+	pub fn owned(tab: Id, _: Option<&Url>) -> Ember<'static> { Self { tab, url: None }.into() }
 }
 
-impl<'a> From<BodyHover<'a>> for Body<'a> {
-	fn from(value: BodyHover<'a>) -> Self { Self::Hover(value) }
+impl<'a> From<EmberHover<'a>> for Ember<'a> {
+	fn from(value: EmberHover<'a>) -> Self { Self::Hover(value) }
 }
 
-impl IntoLua for BodyHover<'_> {
+impl IntoLua for EmberHover<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua
 			.create_table_from([

@@ -4,18 +4,18 @@ use mlua::{ExternalResult, IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 use yazi_shared::SStr;
 
-use super::Body;
+use super::Ember;
 
 /// Client handshake
 #[derive(Debug, Serialize, Deserialize)]
-pub struct BodyHi<'a> {
+pub struct EmberHi<'a> {
 	/// Kinds of events the client can handle
 	pub abilities: HashSet<Cow<'a, str>>,
 	pub version:   SStr,
 }
 
-impl<'a> BodyHi<'a> {
-	pub fn borrowed<I>(abilities: I) -> Body<'a>
+impl<'a> EmberHi<'a> {
+	pub fn borrowed<I>(abilities: I) -> Ember<'a>
 	where
 		I: Iterator<Item = &'a str>,
 	{
@@ -27,11 +27,11 @@ impl<'a> BodyHi<'a> {
 	}
 }
 
-impl<'a> From<BodyHi<'a>> for Body<'a> {
-	fn from(value: BodyHi<'a>) -> Self { Self::Hi(value) }
+impl<'a> From<EmberHi<'a>> for Ember<'a> {
+	fn from(value: EmberHi<'a>) -> Self { Self::Hi(value) }
 }
 
-impl IntoLua for BodyHi<'_> {
+impl IntoLua for EmberHi<'_> {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> {
 		Err("BodyHi cannot be converted to Lua").into_lua_err()
 	}

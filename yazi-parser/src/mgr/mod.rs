@@ -14,6 +14,8 @@ yazi_macro::mod_flat!(
 	linemode
 	link
 	open
+	open_do
+	open_with
 	paste
 	peek
 	quit

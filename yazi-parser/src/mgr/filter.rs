@@ -1,4 +1,4 @@
-use mlua::{ExternalError, IntoLua, Lua, Value};
+use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_fs::FilterCase;
 use yazi_shared::{SStr, event::CmdCow};
 
@@ -25,6 +25,10 @@ impl TryFrom<CmdCow> for FilterOpt {
 	}
 }
 
-impl IntoLua for &FilterOpt {
+impl FromLua for FilterOpt {
+	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
+}
+
+impl IntoLua for FilterOpt {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

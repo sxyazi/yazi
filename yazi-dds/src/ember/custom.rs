@@ -2,34 +2,34 @@ use mlua::{IntoLua, Lua, Value};
 use serde::Serialize;
 use yazi_shared::event::Data;
 
-use super::Body;
+use super::Ember;
 use crate::Sendable;
 
 #[derive(Debug)]
-pub struct BodyCustom {
+pub struct EmberCustom {
 	pub kind: String,
 	pub data: Data,
 }
 
-impl BodyCustom {
-	pub fn from_str(kind: &str, data: &str) -> anyhow::Result<Body<'static>> {
+impl EmberCustom {
+	pub fn from_str(kind: &str, data: &str) -> anyhow::Result<Ember<'static>> {
 		Ok(Self { kind: kind.to_owned(), data: serde_json::from_str(data)? }.into())
 	}
 
-	pub fn from_lua(lua: &Lua, kind: &str, data: Value) -> mlua::Result<Body<'static>> {
+	pub fn from_lua(lua: &Lua, kind: &str, data: Value) -> mlua::Result<Ember<'static>> {
 		Ok(Self { kind: kind.to_owned(), data: Sendable::value_to_data(lua, data)? }.into())
 	}
 }
 
-impl From<BodyCustom> for Body<'_> {
-	fn from(value: BodyCustom) -> Self { Self::Custom(value) }
+impl From<EmberCustom> for Ember<'_> {
+	fn from(value: EmberCustom) -> Self { Self::Custom(value) }
 }
 
-impl IntoLua for BodyCustom {
+impl IntoLua for EmberCustom {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> { Sendable::data_to_value(lua, self.data) }
 }
 
-impl Serialize for BodyCustom {
+impl Serialize for EmberCustom {
 	fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
 		serde::Serialize::serialize(&self.data, serializer)
 	}

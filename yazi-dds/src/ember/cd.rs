@@ -4,33 +4,33 @@ use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 use yazi_shared::{Id, url::Url};
 
-use super::Body;
+use super::Ember;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct BodyCd<'a> {
+pub struct EmberCd<'a> {
 	pub tab: Id,
 	pub url: Cow<'a, Url>,
 	#[serde(skip)]
 	dummy:   bool,
 }
 
-impl<'a> BodyCd<'a> {
-	pub fn borrowed(tab: Id, url: &'a Url) -> Body<'a> {
+impl<'a> EmberCd<'a> {
+	pub fn borrowed(tab: Id, url: &'a Url) -> Ember<'a> {
 		Self { tab, url: url.into(), dummy: false }.into()
 	}
 }
 
-impl BodyCd<'static> {
-	pub fn owned(tab: Id, _: &Url) -> Body<'static> {
+impl EmberCd<'static> {
+	pub fn owned(tab: Id, _: &Url) -> Ember<'static> {
 		Self { tab, url: Default::default(), dummy: true }.into()
 	}
 }
 
-impl<'a> From<BodyCd<'a>> for Body<'a> {
-	fn from(value: BodyCd<'a>) -> Self { Self::Cd(value) }
+impl<'a> From<EmberCd<'a>> for Ember<'a> {
+	fn from(value: EmberCd<'a>) -> Self { Self::Cd(value) }
 }
 
-impl IntoLua for BodyCd<'_> {
+impl IntoLua for EmberCd<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua
 			.create_table_from([

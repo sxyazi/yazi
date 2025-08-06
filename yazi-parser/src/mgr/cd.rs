@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use mlua::{ExternalError, IntoLua, Lua, Value};
+use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_fs::expand_url;
 use yazi_shared::{event::CmdCow, url::Url};
 
@@ -29,7 +29,11 @@ impl From<(Url, CdSource)> for CdOpt {
 	fn from((target, source): (Url, CdSource)) -> Self { Self { target, interactive: false, source } }
 }
 
-impl IntoLua for &CdOpt {
+impl FromLua for CdOpt {
+	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
+}
+
+impl IntoLua for CdOpt {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }
 

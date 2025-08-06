@@ -4,15 +4,15 @@ use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 use yazi_shared::url::Url;
 
-use super::Body;
+use super::Ember;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct BodyBulk<'a> {
+pub struct EmberBulk<'a> {
 	pub changes: HashMap<Cow<'a, Url>, Cow<'a, Url>>,
 }
 
-impl<'a> BodyBulk<'a> {
-	pub fn borrowed<I>(changes: I) -> Body<'a>
+impl<'a> EmberBulk<'a> {
+	pub fn borrowed<I>(changes: I) -> Ember<'a>
 	where
 		I: Iterator<Item = (&'a Url, &'a Url)>,
 	{
@@ -20,8 +20,8 @@ impl<'a> BodyBulk<'a> {
 	}
 }
 
-impl BodyBulk<'static> {
-	pub fn owned<'a, I>(changes: I) -> Body<'static>
+impl EmberBulk<'static> {
+	pub fn owned<'a, I>(changes: I) -> Ember<'static>
 	where
 		I: Iterator<Item = (&'a Url, &'a Url)>,
 	{
@@ -30,11 +30,11 @@ impl BodyBulk<'static> {
 	}
 }
 
-impl<'a> From<BodyBulk<'a>> for Body<'a> {
-	fn from(value: BodyBulk<'a>) -> Self { Self::Bulk(value) }
+impl<'a> From<EmberBulk<'a>> for Ember<'a> {
+	fn from(value: EmberBulk<'a>) -> Self { Self::Bulk(value) }
 }
 
-impl IntoLua for BodyBulk<'_> {
+impl IntoLua for EmberBulk<'_> {
 	fn into_lua(self, lua: &Lua) -> mlua::Result<Value> {
 		lua
 			.create_table_from(

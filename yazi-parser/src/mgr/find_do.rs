@@ -1,5 +1,5 @@
 use anyhow::bail;
-use mlua::{ExternalError, IntoLua, Lua, Value};
+use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_fs::FilterCase;
 use yazi_shared::{SStr, event::CmdCow};
 
@@ -26,6 +26,10 @@ impl TryFrom<CmdCow> for FindDoOpt {
 	}
 }
 
-impl IntoLua for &FindDoOpt {
+impl FromLua for FindDoOpt {
+	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
+}
+
+impl IntoLua for FindDoOpt {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

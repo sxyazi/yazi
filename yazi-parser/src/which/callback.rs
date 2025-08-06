@@ -1,7 +1,9 @@
 use anyhow::bail;
+use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use tokio::sync::mpsc;
 use yazi_shared::event::{CmdCow, Data};
 
+#[derive(Debug)]
 pub struct CallbackOpt {
 	pub tx:  mpsc::Sender<usize>,
 	pub idx: usize,
@@ -21,4 +23,12 @@ impl TryFrom<CmdCow> for CallbackOpt {
 
 		Ok(Self { tx, idx })
 	}
+}
+
+impl FromLua for CallbackOpt {
+	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
+}
+
+impl IntoLua for CallbackOpt {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

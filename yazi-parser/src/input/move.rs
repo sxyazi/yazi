@@ -1,9 +1,10 @@
 use std::{num::ParseIntError, str::FromStr};
 
 use anyhow::bail;
+use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_shared::event::{CmdCow, Data};
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct MoveOpt {
 	pub step:         MoveOptStep,
 	pub in_operating: bool,
@@ -22,7 +23,16 @@ impl From<isize> for MoveOpt {
 	fn from(step: isize) -> Self { Self { step: step.into(), in_operating: false } }
 }
 
+impl FromLua for MoveOpt {
+	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
+}
+
+impl IntoLua for MoveOpt {
+	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
+}
+
 // --- Step
+#[derive(Debug)]
 pub enum MoveOptStep {
 	Offset(isize),
 	Bol,

@@ -1,48 +1,45 @@
 use std::marker::PhantomData;
 
 use anyhow::Result;
-use mlua::{IntoLua, Value};
-use tracing::error;
+use mlua::{ErrorContext, ExternalError, IntoLua, Value};
 use yazi_binding::runtime_mut;
-use yazi_dds::{LOCAL, body::Body};
-use yazi_macro::succ;
+use yazi_dds::{LOCAL, spark::{Spark, SparkKind}};
 use yazi_plugin::LUA;
-use yazi_shared::event::Data;
 
-use crate::{Actor, Ctx, lives::Lives};
+use crate::{Ctx, lives::Lives};
 
 pub struct Preflight<'a> {
 	_lifetime: PhantomData<&'a ()>,
 }
 
-impl<'a> Actor for Preflight<'a> {
-	type Options = (&'static str, Body<'a>);
-
-	const NAME: &'static str = "preflight";
-
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
+impl<'a> Preflight<'a> {
+	pub fn act(cx: &mut Ctx, opt: (SparkKind, Spark<'a>)) -> Result<Spark<'a>> {
 		let kind = opt.0;
-		let Some(handlers) = LOCAL.read().get(kind).filter(|&m| !m.is_empty()).cloned() else {
-			succ!(false)
+		let Some(handlers) = LOCAL.read().get(kind.as_ref()).filter(|&m| !m.is_empty()).cloned() else {
+			return Ok(opt.1);
 		};
 
-		succ!(Lives::scope(cx.core, || {
-			let body = opt.1.into_lua(&LUA)?;
+		Ok(Lives::scope(cx.core, || {
+			let mut body = opt.1.into_lua(&LUA)?;
 			for (id, cb) in handlers {
 				runtime_mut!(LUA)?.push(&id);
-				let result = cb.call::<Value>(body.clone());
+				let result = cb.call::<Value>(&body);
 				runtime_mut!(LUA)?.pop();
 
 				match result {
-					Ok(Value::Boolean(true)) => return Ok(true),
-					Ok(Value::Nil | Value::Boolean(false)) => {}
-					Ok(v) => {
-						error!("Unexpected return type from `{kind}` event handler in `{id}` plugin: {v:?}")
-					}
-					Err(e) => error!("Failed to run `{kind}` event handler in `{id}` plugin: {e}"),
-				}
+					Ok(Value::Nil) => Err(
+						format!("Cancelled by `{kind}` event handler in `{id}` plugin on preflight")
+							.into_lua_err(),
+					)?,
+					Ok(v) => body = v,
+					Err(e) => Err(
+						format!("Failed to run `{kind}` event handler in `{id}` plugin: {e}").into_lua_err(),
+					)?,
+				};
 			}
-			Ok(false)
+
+			Spark::from_lua(&LUA, kind, body)
+				.with_context(|e| format!("Unexpected return type from `{kind}` event handlers: {e}"))
 		})?)
 	}
 }

@@ -1,4 +1,4 @@
-use mlua::{ExternalError, IntoLua, Lua, Value};
+use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_shared::event::CmdCow;
 
 #[derive(Debug)]
@@ -11,6 +11,10 @@ impl From<CmdCow> for PasteOpt {
 	fn from(c: CmdCow) -> Self { Self { force: c.bool("force"), follow: c.bool("follow") } }
 }
 
-impl IntoLua for &PasteOpt {
+impl FromLua for PasteOpt {
+	fn from_lua(_: Value, _: &Lua) -> mlua::Result<Self> { Err("unsupported".into_lua_err()) }
+}
+
+impl IntoLua for PasteOpt {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
 }

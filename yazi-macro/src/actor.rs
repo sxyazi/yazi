@@ -1,16 +1,17 @@
 #[macro_export]
 macro_rules! act {
 	(@pre $layer:ident : $name:ident, $cx:ident, $opt:ident) => {
-		<act!($layer:$name) as yazi_actor::Actor>::hook($cx, &$opt).map(|hook| {
-			<act!(core:preflight) as yazi_actor::Actor>::act($cx, (hook, yazi_dds::body!($layer:$name, &$opt)))
-		})
+		if let Some(hook) = <act!($layer:$name) as yazi_actor::Actor>::hook($cx, &$opt) {
+			<act!(core:preflight)>::act($cx, (hook, yazi_dds::spark!($layer:$name, $opt))).map(|spark| spark.try_into().unwrap())
+		} else {
+			Ok($opt)
+		}
 	};
 	(@impl $layer:ident : $name:ident, $cx:ident, $opt:ident) => {{
 		$cx.level += 1;
 		let result = match act!(@pre $layer:$name, $cx, $opt) {
-			Some(Ok(yazi_shared::event::Data::Boolean(true))) => Err(anyhow::anyhow!("canceled on preflight")),
-			None | Some(Ok(_)) => <act!($layer:$name) as yazi_actor::Actor>::act($cx, $opt),
-			Some(e @ Err(_)) => e,
+			Ok(opt) => <act!($layer:$name) as yazi_actor::Actor>::act($cx, opt),
+			Err(e) => Err(e),
 		};
 		$cx.level -= 1;
 		result
