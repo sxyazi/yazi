@@ -89,6 +89,11 @@ impl<'a> Ctx<'a> {
 	pub fn hovered_folder(&self) -> Option<&Folder> { self.tab().hovered_folder() }
 
 	#[inline]
+	pub fn hovered_folder_mut(&mut self) -> Option<&mut Folder> {
+		self.tab_mut().hovered_folder_mut()
+	}
+
+	#[inline]
 	pub fn tasks(&self) -> &Tasks { &self.tasks }
 
 	#[inline]

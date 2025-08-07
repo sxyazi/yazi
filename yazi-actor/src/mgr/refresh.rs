@@ -21,7 +21,7 @@ impl Actor for Refresh {
 			execute!(TTY.writer(), SetTitle(s)).ok();
 		}
 
-		cx.tab_mut().apply_files_attrs();
+		// cx.tab_mut().apply_files_attrs();
 
 		if let Some(p) = cx.parent() {
 			cx.mgr.watcher.trigger_dirs(&[cx.current(), p]);
@@ -29,7 +29,7 @@ impl Actor for Refresh {
 			cx.mgr.watcher.trigger_dirs(&[cx.current()]);
 		}
 
-		act!(mgr:peek, cx, false)?;
+		act!(mgr:peek, cx)?;
 		act!(mgr:watch, cx)?;
 		act!(mgr:update_paged, cx)?;
 

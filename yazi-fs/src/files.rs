@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, mem, ops::{Deref, Not}};
+use std::{collections::{HashMap, HashSet}, mem, ops::{Deref, DerefMut, Not}};
 
 use tokio::{select, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_shared::{Id, url::{Url, Urn, UrnBuf}};
@@ -25,6 +25,10 @@ impl Deref for Files {
 	type Target = Vec<File>;
 
 	fn deref(&self) -> &Self::Target { &self.items }
+}
+
+impl DerefMut for Files {
+	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.items }
 }
 
 impl Files {

@@ -4,7 +4,7 @@ use yazi_shared::{LcgRng, natsort, translit::Transliterator, url::UrnBuf};
 
 use crate::{File, SortBy};
 
-#[derive(Clone, Copy, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct FilesSorter {
 	pub by:        SortBy,
 	pub sensitive: bool,

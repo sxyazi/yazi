@@ -4,7 +4,7 @@ use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_fs::SortBy;
 use yazi_shared::event::CmdCow;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SortOpt {
 	pub by:        Option<SortBy>,
 	pub reverse:   Option<bool>,

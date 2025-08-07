@@ -17,12 +17,10 @@ impl Actor for FilterDo {
 		let filter = if opt.query.is_empty() { None } else { Some(Filter::new(&opt.query, opt.case)?) };
 
 		let hovered = cx.hovered().map(|f| f.urn_owned());
-		if cx.current_mut().files.set_filter(filter) {
-			cx.current_mut().repos(hovered.as_ref());
-		}
+		cx.current_mut().files.set_filter(filter);
 
-		if cx.hovered().map(|f| f.urn()) != hovered.as_ref().map(|u| u.as_urn()) {
-			act!(mgr:hover, cx)?;
+		if cx.hovered().map(|f| f.urn()) != hovered.as_deref() {
+			act!(mgr:hover, cx, hovered)?;
 			act!(mgr:peek, cx)?;
 			act!(mgr:watch, cx)?;
 		}

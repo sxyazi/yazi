@@ -107,11 +107,15 @@ impl Actor for SearchStop {
 			handle.abort();
 		}
 
-		if tab.cwd().is_search() {
-			let rep = tab.history.remove_or(&tab.cwd().to_regular());
-			drop(mem::replace(&mut tab.current, rep));
-			act!(mgr:refresh, cx)?;
+		if !tab.cwd().is_search() {
+			succ!();
 		}
-		succ!();
+
+		let rep = tab.history.remove_or(&tab.cwd().to_regular());
+		drop(mem::replace(&mut tab.current, rep));
+
+		act!(mgr:hidden, cx)?;
+		act!(mgr:sort, cx)?;
+		act!(mgr:refresh, cx)
 	}
 }
