@@ -23,7 +23,7 @@ impl Actor for Sort {
 		pref.sort_translit = opt.translit.unwrap_or(pref.sort_translit);
 
 		let sorter = FilesSorter::from(&*pref);
-		let hovered = cx.hovered().map(|f| f.url_owned());
+		let hovered = cx.hovered().map(|f| f.urn_owned());
 		let apply = |f: &mut Folder| {
 			if f.stage == FolderStage::Loading {
 				render!();
@@ -49,7 +49,7 @@ impl Actor for Sort {
 		{
 			render!(h.repos(None));
 			act!(mgr:peek, cx, true)?;
-		} else if hovered.as_ref() != cx.hovered().map(|f| &f.url) {
+		} else if hovered.as_deref() != cx.hovered().map(|f| f.urn()) {
 			act!(mgr:peek, cx)?;
 			act!(mgr:watch, cx)?;
 		}
