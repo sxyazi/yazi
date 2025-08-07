@@ -47,7 +47,7 @@ impl Actor for UpdateMimes {
 		cx.mgr.mimetype.extend(updates);
 
 		if repeek {
-			act!(mgr:peek, cx, false)?;
+			act!(mgr:peek, cx)?;
 		}
 		cx.tasks.fetch_paged(&affected, &cx.mgr.mimetype);
 		cx.tasks.preload_paged(&affected, &cx.mgr.mimetype);

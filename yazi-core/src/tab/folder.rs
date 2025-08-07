@@ -81,7 +81,7 @@ impl Folder {
 		}
 
 		self.trace = self.trace.take_if(|_| !self.files.is_empty() || self.stage.is_loading());
-		self.repos(self.trace.clone());
+		self.repos(None);
 
 		(stage, revision) != (self.stage, self.files.revision)
 	}
@@ -120,8 +120,14 @@ impl Folder {
 	}
 
 	#[inline]
-	pub fn repos(&mut self, urn: Option<impl AsRef<Urn>>) -> bool {
-		if let Some(u) = urn { self.hover(u.as_ref()) } else { self.arrow(0) }
+	pub fn repos(&mut self, urn: Option<&Urn>) -> bool {
+		if let Some(u) = urn {
+			self.hover(u)
+		} else if let Some(u) = &self.trace {
+			self.hover(u.clone().as_ref())
+		} else {
+			self.arrow(0)
+		}
 	}
 
 	pub fn sync_page(&mut self, force: bool) {
@@ -156,6 +162,9 @@ impl Folder {
 impl Folder {
 	#[inline]
 	pub fn hovered(&self) -> Option<&File> { self.files.get(self.cursor) }
+
+	#[inline]
+	pub fn hovered_mut(&mut self) -> Option<&mut File> { self.files.get_mut(self.cursor) }
 
 	pub fn paginate(&self, page: usize) -> &[File] {
 		let len = self.files.len();

@@ -5,9 +5,8 @@ use ratatui::layout::Rect;
 use tokio::task::JoinHandle;
 use yazi_adapter::Dimension;
 use yazi_config::{LAYOUT, popup::{Origin, Position}};
-use yazi_fs::{File, FolderStage};
-use yazi_macro::render;
-use yazi_shared::{Id, Ids, url::{Url, Urn}};
+use yazi_fs::File;
+use yazi_shared::{Id, Ids, url::Url};
 
 use super::{Backstack, Finder, Folder, History, Mode, Preference, Preview};
 use crate::{spot::Spot, tab::Selected};
@@ -67,6 +66,9 @@ impl Tab {
 	#[inline]
 	pub fn hovered(&self) -> Option<&File> { self.current.hovered() }
 
+	#[inline]
+	pub fn hovered_mut(&mut self) -> Option<&mut File> { self.current.hovered_mut() }
+
 	pub fn hovered_rect(&self) -> Option<Rect> {
 		let y = self.current.files.position(self.hovered()?.urn())? - self.current.offset;
 
@@ -108,33 +110,8 @@ impl Tab {
 		self.hovered().filter(|&h| h.is_dir()).and_then(|h| self.history.get(&h.url))
 	}
 
-	pub fn apply_files_attrs(&mut self) {
-		let apply = |f: &mut Folder| {
-			if f.stage == FolderStage::Loading {
-				return render!();
-			}
-
-			f.files.set_show_hidden(self.pref.show_hidden);
-			f.files.set_sorter(<_>::from(&self.pref));
-
-			render!(f.files.catchup_revision());
-			render!(f.repos(f.trace.clone()));
-		};
-
-		apply(&mut self.current);
-
-		if let Some(parent) = &mut self.parent {
-			apply(parent);
-
-			// The parent should always track the CWD
-			parent.hover(self.current.url.strip_prefix(&parent.url).unwrap_or(Urn::new("")));
-		}
-
-		self
-			.current
-			.hovered()
-			.filter(|h| h.is_dir())
-			.and_then(|h| self.history.get_mut(&h.url))
-			.map(apply);
+	#[inline]
+	pub fn hovered_folder_mut(&mut self) -> Option<&mut Folder> {
+		self.current.hovered_mut().filter(|h| h.is_dir()).and_then(|h| self.history.get_mut(&h.url))
 	}
 }

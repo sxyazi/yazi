@@ -1,5 +1,7 @@
 use anyhow::Result;
-use yazi_macro::{act, succ};
+use yazi_core::tab::Folder;
+use yazi_fs::FolderStage;
+use yazi_macro::{act, render, render_and, succ};
 use yazi_parser::mgr::HiddenOpt;
 use yazi_shared::event::Data;
 
@@ -13,21 +15,39 @@ impl Actor for Hidden {
 	const NAME: &str = "hidden";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		let tab = cx.tab_mut();
-		tab.pref.show_hidden = opt.state.unwrap_or(!tab.pref.show_hidden);
+		let state = opt.state.bool(cx.tab().pref.show_hidden);
+		cx.tab_mut().pref.show_hidden = state;
 
-		let hovered = tab.hovered().map(|f| f.url_owned());
-		tab.apply_files_attrs();
+		let hovered = cx.hovered().map(|f| f.urn_owned());
+		let apply = |f: &mut Folder| {
+			if f.stage == FolderStage::Loading {
+				render!();
+				false
+			} else {
+				f.files.set_show_hidden(state);
+				render_and!(f.files.catchup_revision())
+			}
+		};
 
-		if hovered.as_ref() != tab.hovered().map(|f| &f.url) {
-			act!(mgr:hover, cx, hovered)?;
-			act!(mgr:peek, cx)?;
-			act!(mgr:watch, cx)?;
-		} else if tab.hovered().is_some_and(|f| f.is_dir()) {
-			act!(mgr:peek, cx, true)?;
+		// Apply to CWD and parent
+		if let (a, Some(b)) = (apply(cx.current_mut()), cx.parent_mut().map(apply))
+			&& (a | b)
+		{
+			act!(mgr:hover, cx)?;
+			act!(mgr:update_paged, cx)?;
 		}
 
-		act!(mgr:update_paged, cx)?;
-		succ!();
+		// Apply to hovered
+		if let Some(h) = cx.hovered_folder_mut()
+			&& apply(h)
+		{
+			render!(h.repos(None));
+			act!(mgr:peek, cx, true)?;
+		} else if hovered.as_deref() != cx.hovered().map(|f| f.urn()) {
+			act!(mgr:peek, cx)?;
+			act!(mgr:watch, cx)?;
+		}
+
+		succ!()
 	}
 }

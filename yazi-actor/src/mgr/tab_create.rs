@@ -29,11 +29,9 @@ impl Actor for TabCreate {
 			(true, wd)
 		} else if let Some(h) = cx.hovered() {
 			tab.pref = cx.tab().pref.clone();
-			tab.apply_files_attrs();
 			(false, h.url.to_regular())
 		} else {
 			tab.pref = cx.tab().pref.clone();
-			tab.apply_files_attrs();
 			(true, cx.cwd().to_regular())
 		};
 

@@ -61,6 +61,12 @@ impl PartialEq<Cow<'_, OsStr>> for &Urn {
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq, Serialize)]
 pub struct UrnBuf(PathBuf);
 
+impl Deref for UrnBuf {
+	type Target = Urn;
+
+	fn deref(&self) -> &Self::Target { self.borrow() }
+}
+
 impl Borrow<Urn> for UrnBuf {
 	fn borrow(&self) -> &Urn { Urn::new(&self.0) }
 }
@@ -75,6 +81,10 @@ impl AsRef<Path> for UrnBuf {
 
 impl PartialEq<Urn> for UrnBuf {
 	fn eq(&self, other: &Urn) -> bool { self.0 == other.0 }
+}
+
+impl PartialEq<UrnBuf> for Urn {
+	fn eq(&self, other: &UrnBuf) -> bool { self.0 == other.0 }
 }
 
 impl<T: Into<PathBuf>> From<T> for UrnBuf {

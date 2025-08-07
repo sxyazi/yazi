@@ -1,5 +1,6 @@
 use anyhow::Result;
-use yazi_macro::{act, render, succ};
+use yazi_dds::Pubsub;
+use yazi_macro::{err, render, succ};
 use yazi_parser::ArrowOpt;
 use yazi_shared::event::Data;
 
@@ -21,12 +22,9 @@ impl Actor for TabSwap {
 		}
 
 		tabs.items.swap(tabs.cursor, new);
-		tabs.set_idx(new);
+		tabs.cursor = new;
 
-		let cx = &mut Ctx::renew(cx);
-		act!(mgr:refresh, cx)?;
-		act!(mgr:peek, cx, true)?;
-
+		err!(Pubsub::pub_after_tab(cx.active().id));
 		succ!(render!());
 	}
 }

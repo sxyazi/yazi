@@ -32,7 +32,6 @@ pub enum Spark<'a> {
 	Hardlink(yazi_parser::mgr::HardlinkOpt),
 	Hidden(yazi_parser::mgr::HiddenOpt),
 	Hover(yazi_parser::mgr::HoverOpt),
-	HoverDo(yazi_parser::mgr::HoverDoOpt),
 	Leave(yazi_parser::VoidOpt),
 	Linemode(yazi_parser::mgr::LinemodeOpt),
 	Link(yazi_parser::mgr::LinkOpt),
@@ -155,7 +154,6 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::Hardlink(b) => b.into_lua(lua),
 			Self::Hidden(b) => b.into_lua(lua),
 			Self::Hover(b) => b.into_lua(lua),
-			Self::HoverDo(b) => b.into_lua(lua),
 			Self::Leave(b) => b.into_lua(lua),
 			Self::Linemode(b) => b.into_lua(lua),
 			Self::Link(b) => b.into_lua(lua),
@@ -289,7 +287,6 @@ try_from_spark!(mgr::FindDoOpt, mgr:find_do);
 try_from_spark!(mgr::FindOpt, mgr:find);
 try_from_spark!(mgr::HardlinkOpt, mgr:hardlink);
 try_from_spark!(mgr::HiddenOpt, mgr:hidden);
-try_from_spark!(mgr::HoverDoOpt, mgr:hover_do);
 try_from_spark!(mgr::HoverOpt, mgr:hover);
 try_from_spark!(mgr::LinemodeOpt, mgr:linemode);
 try_from_spark!(mgr::LinkOpt, mgr:link);

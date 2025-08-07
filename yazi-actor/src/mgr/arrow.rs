@@ -24,7 +24,7 @@ impl Actor for Arrow {
 			*items = (start.min(end)..=end.max(start)).collect();
 		}
 
-		act!(mgr:hover, cx, None)?;
+		act!(mgr:hover, cx)?;
 		act!(mgr:peek, cx)?;
 		act!(mgr:watch, cx)?;
 

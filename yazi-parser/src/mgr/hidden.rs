@@ -1,20 +1,19 @@
+use std::str::FromStr;
+
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::{Deserialize, Serialize};
 use yazi_shared::event::CmdCow;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct HiddenOpt {
-	pub state: Option<bool>,
+	pub state: HiddenOptState,
 }
 
-impl From<CmdCow> for HiddenOpt {
-	fn from(c: CmdCow) -> Self {
-		let state = match c.first_str() {
-			Some("show") => Some(true),
-			Some("hide") => Some(false),
-			_ => None,
-		};
+impl TryFrom<CmdCow> for HiddenOpt {
+	type Error = anyhow::Error;
 
-		Self { state }
+	fn try_from(c: CmdCow) -> Result<Self, Self::Error> {
+		Ok(Self { state: c.first_str().map(FromStr::from_str).transpose()?.unwrap_or_default() })
 	}
 }
 
@@ -24,4 +23,34 @@ impl FromLua for HiddenOpt {
 
 impl IntoLua for HiddenOpt {
 	fn into_lua(self, _: &Lua) -> mlua::Result<Value> { Err("unsupported".into_lua_err()) }
+}
+
+// --- State
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum HiddenOptState {
+	#[default]
+	None,
+	Show,
+	Hide,
+	Toggle,
+}
+
+impl FromStr for HiddenOptState {
+	type Err = serde::de::value::Error;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		Self::deserialize(serde::de::value::StrDeserializer::new(s))
+	}
+}
+
+impl HiddenOptState {
+	pub fn bool(self, old: bool) -> bool {
+		match self {
+			Self::None => old,
+			Self::Show => true,
+			Self::Hide => false,
+			Self::Toggle => !old,
+		}
+	}
 }

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_dds::Pubsub;
-use yazi_macro::{act, err, render, succ};
-use yazi_parser::mgr::{HoverDoOpt, HoverOpt};
+use yazi_macro::{err, render, succ, tab};
+use yazi_parser::mgr::HoverOpt;
 use yazi_shared::event::Data;
 
 use crate::{Actor, Ctx};
@@ -14,39 +14,27 @@ impl Actor for Hover {
 	const NAME: &str = "hover";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		if let Some(u) = opt.url {
-			act!(mgr:hover_do, cx, u)?;
-		} else {
-			cx.current_mut().arrow(0);
+		let tab = tab!(cx);
+
+		// Parent should always track CWD
+		if let Some(p) = &mut tab.parent {
+			render!(p.repos(tab.current.url.strip_prefix(&p.url)));
+		}
+
+		// Repos CWD
+		tab.current.repos(opt.urn.as_deref());
+
+		// Turn on tracing
+		if let (Some(h), Some(u)) = (tab.hovered(), opt.urn)
+			&& *h.urn() == u
+		{
+			// `hover(Some)` occurs after user actions, such as create, rename, reveal, etc.
+			// At this point, it's intuitive to track the location of the file regardless.
+			tab.current.trace = Some(u.to_owned());
 		}
 
 		// Publish through DDS
-		let tab = cx.tab();
 		err!(Pubsub::pub_after_hover(tab.id, tab.hovered().map(|h| &h.url)));
-		succ!();
-	}
-}
-
-// --- Do
-pub struct HoverDo;
-
-impl Actor for HoverDo {
-	type Options = HoverDoOpt;
-
-	const NAME: &str = "hover_do";
-
-	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		// Hover on the file
-		if let Some(u) = opt.url.strip_prefix(cx.cwd()) {
-			render!(cx.current_mut().hover(u));
-		}
-
-		// Turn on tracing
-		if cx.hovered().is_some_and(|h| h.url == opt.url) {
-			// `hover(Some)` occurs after user actions, such as create, rename, reveal, etc.
-			// At this point, it's intuitive to track the location of the file regardless.
-			cx.current_mut().trace = Some(opt.url.urn_owned());
-		}
 		succ!();
 	}
 }

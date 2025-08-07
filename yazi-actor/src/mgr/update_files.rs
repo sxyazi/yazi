@@ -23,11 +23,12 @@ impl Actor for UpdateFiles {
 		}
 
 		render!(cx.mgr.yanked.catchup_revision(false));
-		cx.tab_mut().apply_files_attrs();
+		act!(mgr:hidden, cx)?;
+		act!(mgr:sort, cx)?;
 
 		if revision != cx.current().files.revision {
 			act!(mgr:hover, cx)?;
-			act!(mgr:peek, cx, false)?;
+			act!(mgr:peek, cx)?;
 			act!(mgr:watch, cx)?;
 			act!(mgr:update_paged, cx)?;
 		}
