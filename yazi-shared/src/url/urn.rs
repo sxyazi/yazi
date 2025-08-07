@@ -35,10 +35,6 @@ impl Deref for Urn {
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-impl AsRef<Urn> for Urn {
-	fn as_ref(&self) -> &Urn { self }
-}
-
 impl AsRef<Path> for Urn {
 	fn as_ref(&self) -> &Path { &self.0 }
 }
