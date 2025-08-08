@@ -225,7 +225,7 @@ impl Files {
 		if !urns.is_empty() {
 			let mut i = 0;
 			self.items.retain(|f| {
-				let b = urns.remove(f.urn());
+				let b = urns.remove(f.uri());
 				if b {
 					deleted.push(i)
 				}
@@ -234,7 +234,7 @@ impl Files {
 			});
 		}
 		if !urns.is_empty() {
-			self.hidden.retain(|f| !urns.remove(f.urn()));
+			self.hidden.retain(|f| !urns.remove(f.uri()));
 		}
 
 		self.revision += deleted.is_empty().not() as u64;
