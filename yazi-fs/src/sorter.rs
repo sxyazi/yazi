@@ -21,9 +21,9 @@ impl FilesSorter {
 
 		let by_alphabetical = |a: &File, b: &File| {
 			if self.sensitive {
-				self.cmp(a.urn().encoded_bytes(), b.urn().encoded_bytes(), self.promote(a, b))
+				self.cmp(a.uri().encoded_bytes(), b.uri().encoded_bytes(), self.promote(a, b))
 			} else {
-				self.cmp_insensitive(a.urn().encoded_bytes(), b.urn().encoded_bytes(), self.promote(a, b))
+				self.cmp_insensitive(a.uri().encoded_bytes(), b.uri().encoded_bytes(), self.promote(a, b))
 			}
 		};
 
@@ -52,8 +52,8 @@ impl FilesSorter {
 			SortBy::Alphabetical => items.sort_unstable_by(by_alphabetical),
 			SortBy::Natural => self.sort_naturally(items),
 			SortBy::Size => items.sort_unstable_by(|a, b| {
-				let aa = if a.is_dir() { sizes.get(a.urn()).copied() } else { None };
-				let bb = if b.is_dir() { sizes.get(b.urn()).copied() } else { None };
+				let aa = if a.is_dir() { sizes.get(a.uri()).copied() } else { None };
+				let bb = if b.is_dir() { sizes.get(b.uri()).copied() } else { None };
 				let ord = self.cmp(aa.unwrap_or(a.len), bb.unwrap_or(b.len), self.promote(a, b));
 				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
 			}),
@@ -73,12 +73,12 @@ impl FilesSorter {
 
 			let ordering = if self.translit {
 				natsort(
-					a.urn().encoded_bytes().transliterate().as_bytes(),
-					b.urn().encoded_bytes().transliterate().as_bytes(),
+					a.uri().encoded_bytes().transliterate().as_bytes(),
+					b.uri().encoded_bytes().transliterate().as_bytes(),
 					!self.sensitive,
 				)
 			} else {
-				natsort(a.urn().encoded_bytes(), b.urn().encoded_bytes(), !self.sensitive)
+				natsort(a.uri().encoded_bytes(), b.uri().encoded_bytes(), !self.sensitive)
 			};
 
 			if self.reverse { ordering.reverse() } else { ordering }

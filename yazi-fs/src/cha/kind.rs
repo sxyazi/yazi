@@ -24,7 +24,7 @@ impl ChaKind {
 		let mut me = Self::empty();
 
 		#[cfg(unix)]
-		if _url.urn().is_hidden() {
+		if _url.uri().is_hidden() {
 			me |= Self::HIDDEN;
 		}
 		#[cfg(windows)]

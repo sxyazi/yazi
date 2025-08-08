@@ -36,7 +36,7 @@ impl<'a> Encode<'a> {
 			}
 		}
 
-		D(loc.urn().components().count())
+		D(loc.uri().components().count())
 	}
 }
 

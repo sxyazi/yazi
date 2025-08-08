@@ -49,9 +49,7 @@ impl Actor for Cd {
 		// Current
 		let rep = tab.history.remove_or(&opt.target);
 		let rep = mem::replace(&mut tab.current, rep);
-		if rep.url.is_regular() {
-			tab.history.insert(rep.url.to_owned(), rep);
-		}
+		tab.history.insert(rep.url.to_owned(), rep);
 
 		// Parent
 		if let Some(parent) = opt.target.parent_url() {
@@ -86,7 +84,7 @@ impl Cd {
 						}
 
 						if let Some(p) = url.parent_url() {
-							FilesOp::Upserting(p, [(url.urn_owned(), file)].into()).emit();
+							FilesOp::Upserting(p, [(url.uri_owned(), file)].into()).emit();
 						}
 						MgrProxy::reveal(&url);
 					}

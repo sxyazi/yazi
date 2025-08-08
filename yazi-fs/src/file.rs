@@ -56,10 +56,10 @@ impl File {
 	pub fn url_owned(&self) -> Url { self.url.to_owned() }
 
 	#[inline]
-	pub fn urn(&self) -> &Urn { self.url.urn() }
+	pub fn uri(&self) -> &Urn { self.url.uri() }
 
 	#[inline]
-	pub fn urn_owned(&self) -> UrnBuf { self.url.urn_owned() }
+	pub fn uri_owned(&self) -> UrnBuf { self.url.uri_owned() }
 
 	#[inline]
 	pub fn name(&self) -> &OsStr { self.url.name() }

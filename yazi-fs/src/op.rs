@@ -56,9 +56,9 @@ impl FilesOp {
 			let Some(o_p) = o.parent_url() else { continue };
 			let Some(n_p) = n.url.parent_url() else { continue };
 			if o_p != n_p {
-				parents.entry(o_p).or_default().0.insert(o.urn_owned());
+				parents.entry(o_p).or_default().0.insert(o.uri_owned());
 			}
-			parents.entry(n_p).or_default().1.insert(n.urn_owned(), n);
+			parents.entry(n_p).or_default().1.insert(n.uri_owned(), n);
 		}
 		for (p, (o, n)) in parents {
 			match (o.is_empty(), n.is_empty()) {
@@ -134,7 +134,7 @@ impl FilesOp {
 			Self::Deleting(cwd, urns) => (urns.iter().map(|u| cwd.join(u)).collect(), vec![]),
 			Self::Updating(cwd, urns) | Self::Upserting(cwd, urns) => urns
 				.iter()
-				.filter(|&(u, f)| u != f.urn())
+				.filter(|&(u, f)| u != f.uri())
 				.map(|(u, f)| (cwd.join(u), f))
 				.filter(|(u, _)| contains(u))
 				.map(|(u, f)| (u, f.url_owned()))

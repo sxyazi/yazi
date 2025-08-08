@@ -117,7 +117,7 @@ impl Open {
 
 		let find = |folder: Option<&Folder>| {
 			folder.is_some_and(|folder| {
-				p == folder.url && folder.files.iter().any(|f| f.is_dir() && f.urn() == url.urn())
+				p == folder.url && folder.files.iter().any(|f| f.is_dir() && f.uri() == url.uri())
 			})
 		};
 
