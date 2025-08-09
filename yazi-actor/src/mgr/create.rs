@@ -57,7 +57,7 @@ impl Create {
 		}
 
 		if let Ok(f) = File::new(new.clone()).await {
-			FilesOp::Upserting(parent, [(f.urn_owned(), f)].into()).emit();
+			FilesOp::Upserting(parent, [(f.uri_owned(), f)].into()).emit();
 			MgrProxy::reveal(&new)
 		}
 		Ok(())

@@ -161,9 +161,9 @@ impl Files {
 
 		macro_rules! go {
 			($dist:expr, $src:expr, $inc:literal) => {
-				let mut todo: HashMap<_, _> = $src.into_iter().map(|f| (f.urn_owned(), f)).collect();
+				let mut todo: HashMap<_, _> = $src.into_iter().map(|f| (f.uri_owned(), f)).collect();
 				for f in &$dist {
-					if todo.remove(f.urn()).is_some() && todo.is_empty() {
+					if todo.remove(f.uri()).is_some() && todo.is_empty() {
 						break;
 					}
 				}
@@ -203,7 +203,7 @@ impl Files {
 		if !items.is_empty() {
 			let mut i = 0;
 			self.items.retain(|f| {
-				let b = items.remove(f.urn());
+				let b = items.remove(f.uri());
 				if b {
 					deleted.push(i);
 				}
@@ -212,7 +212,7 @@ impl Files {
 			});
 		}
 		if !hidden.is_empty() {
-			self.hidden.retain(|f| !hidden.remove(f.urn()));
+			self.hidden.retain(|f| !hidden.remove(f.uri()));
 		}
 
 		self.revision += deleted.is_empty().not() as u64;
@@ -225,7 +225,7 @@ impl Files {
 		if !urns.is_empty() {
 			let mut i = 0;
 			self.items.retain(|f| {
-				let b = urns.remove(f.urn());
+				let b = urns.remove(f.uri());
 				if b {
 					deleted.push(i)
 				}
@@ -234,7 +234,7 @@ impl Files {
 			});
 		}
 		if !urns.is_empty() {
-			self.hidden.retain(|f| !urns.remove(f.urn()));
+			self.hidden.retain(|f| !urns.remove(f.uri()));
 		}
 
 		self.revision += deleted.is_empty().not() as u64;
@@ -253,9 +253,9 @@ impl Files {
 			($dist:expr, $src:expr, $inc:literal) => {
 				let mut b = true;
 				for i in 0..$dist.len() {
-					if let Some(f) = $src.remove($dist[i].urn()) {
+					if let Some(f) = $src.remove($dist[i].uri()) {
 						b = b && $dist[i].cha.hits(f.cha);
-						b = b && $dist[i].urn() == f.urn();
+						b = b && $dist[i].uri() == f.uri();
 
 						$dist[i] = f;
 						if $src.is_empty() {
@@ -270,7 +270,7 @@ impl Files {
 		let (mut hidden, mut items) = if let Some(filter) = &self.filter {
 			files
 				.into_iter()
-				.partition(|(_, f)| (f.is_hidden() && !self.show_hidden) || !filter.matches(f.urn()))
+				.partition(|(_, f)| (f.is_hidden() && !self.show_hidden) || !filter.matches(f.uri()))
 		} else if self.show_hidden {
 			(HashMap::new(), files)
 		} else {
@@ -292,7 +292,7 @@ impl Files {
 		}
 
 		self.update_deleting(
-			files.iter().filter(|&(u, f)| u != f.urn()).map(|(_, f)| f.urn_owned()).collect(),
+			files.iter().filter(|&(u, f)| u != f.uri()).map(|(_, f)| f.uri_owned()).collect(),
 		);
 
 		let (hidden, items) = self.update_updating(files);
@@ -323,7 +323,7 @@ impl Files {
 		if let Some(filter) = &self.filter {
 			files
 				.into_iter()
-				.partition(|f| (f.is_hidden() && !self.show_hidden) || !filter.matches(f.urn()))
+				.partition(|f| (f.is_hidden() && !self.show_hidden) || !filter.matches(f.uri()))
 		} else if self.show_hidden {
 			(vec![], files.into_iter().collect())
 		} else {
@@ -335,7 +335,7 @@ impl Files {
 impl Files {
 	// --- Items
 	#[inline]
-	pub fn position(&self, urn: &Urn) -> Option<usize> { self.iter().position(|f| urn == f.urn()) }
+	pub fn position(&self, urn: &Urn) -> Option<usize> { self.iter().position(|f| urn == f.uri()) }
 
 	// --- Ticket
 	#[inline]

@@ -6,7 +6,7 @@ use parking_lot::Mutex;
 use tokio::{select, sync::mpsc::{self, UnboundedReceiver}, task::JoinHandle};
 use yazi_config::{YAZI, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
-use yazi_fs::{must_be_dir, provider, remove_dir_clean, unique_name};
+use yazi_fs::{must_be_dir, path::unique_name, provider, remove_dir_clean};
 use yazi_parser::{app::PluginOpt, tasks::ProcessExecOpt};
 use yazi_proxy::MgrProxy;
 use yazi_shared::{Id, Throttle, url::Url};

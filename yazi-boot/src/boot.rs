@@ -2,7 +2,7 @@ use std::{borrow::Cow, collections::HashSet, path::PathBuf};
 
 use futures::executor::block_on;
 use serde::Serialize;
-use yazi_fs::{CWD, Xdg, expand_url, provider};
+use yazi_fs::{CWD, Xdg, path::expand_url, provider};
 use yazi_shared::url::{Url, UrnBuf};
 
 #[derive(Debug, Default, Serialize)]

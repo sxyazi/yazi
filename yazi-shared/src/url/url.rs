@@ -45,7 +45,8 @@ impl TryFrom<&[u8]> for Url {
 	fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
 		let (scheme, path, port) = Self::parse(bytes)?;
 
-		let loc = if let Some(urn) = port { Loc::with(urn, path)? } else { Loc::from(path) };
+		let loc =
+			if let Some((uri, urn)) = port { Loc::with(path, uri, urn)? } else { Loc::from(path) };
 
 		Ok(Self { loc, scheme })
 	}
@@ -85,11 +86,13 @@ impl From<Cow<'_, Url>> for Url {
 }
 
 impl Url {
+	// FIXME: todo
 	#[inline]
 	pub fn with(&self, loc: impl Into<Loc>) -> Self {
 		let loc: Loc = loc.into();
-		// FIXME: simplify this
-		Self { loc: Loc::with_lossy(self.loc.base(), loc.into_path()), scheme: self.scheme.clone() }
+		todo!()
+		// Self { loc: Loc::lossy(self.loc.base(), loc.into_path()), scheme:
+		// self.scheme.clone() }
 	}
 
 	#[inline]
@@ -135,7 +138,7 @@ impl Url {
 		use Scheme as S;
 
 		let parent = self.loc.parent()?;
-		let urn = self.loc.urn();
+		let urn = self.loc.uri();
 
 		Some(match self.scheme {
 			S::Regular => Self { loc: parent.into(), scheme: S::Regular },
@@ -168,10 +171,10 @@ impl Url {
 			(S::Search(_), S::Regular) => Some(prefix),
 
 			// Only the entry of archives is a local file
-			(S::Regular, S::Archive(_)) => Some(prefix).filter(|_| base.urn().is_empty()),
-			(S::Search(_), S::Archive(_)) => Some(prefix).filter(|_| base.urn().is_empty()),
-			(S::Archive(_), S::Regular) => Some(prefix).filter(|_| self.urn().is_empty()),
-			(S::Archive(_), S::Search(_)) => Some(prefix).filter(|_| self.urn().is_empty()),
+			(S::Regular, S::Archive(_)) => Some(prefix).filter(|_| base.uri().is_empty()),
+			(S::Search(_), S::Archive(_)) => Some(prefix).filter(|_| base.uri().is_empty()),
+			(S::Archive(_), S::Regular) => Some(prefix).filter(|_| self.uri().is_empty()),
+			(S::Archive(_), S::Search(_)) => Some(prefix).filter(|_| self.uri().is_empty()),
 
 			// Independent virtual file space
 			(S::Regular, S::Sftp(_)) => None,
@@ -192,7 +195,7 @@ impl Url {
 	pub fn set_name(&mut self, name: impl AsRef<OsStr>) { self.loc.set_name(name); }
 
 	#[inline]
-	pub fn pair(&self) -> Option<(Self, UrnBuf)> { Some((self.parent_url()?, self.loc.urn_owned())) }
+	pub fn pair(&self) -> Option<(Self, UrnBuf)> { Some((self.parent_url()?, self.loc.uri_owned())) }
 
 	#[inline]
 	pub fn hash_u64(&self) -> u64 { foldhash::fast::FixedState::default().hash_one(self) }
@@ -203,7 +206,7 @@ impl Url {
 		self.loc.rebase(parent).into()
 	}
 
-	pub fn parse(bytes: &[u8]) -> Result<(Scheme, PathBuf, Option<usize>)> {
+	pub fn parse(bytes: &[u8]) -> Result<(Scheme, PathBuf, Option<(usize, usize)>)> {
 		let mut skip = 0;
 		let (scheme, tilde, port) = Scheme::parse(bytes, &mut skip)?;
 

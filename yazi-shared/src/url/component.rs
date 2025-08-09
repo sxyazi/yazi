@@ -150,11 +150,11 @@ mod tests {
 	#[test]
 	fn test_collect() {
 		let search: Url = "search://keyword//root/projects/yazi".parse().unwrap();
-		assert_eq!(search.loc.urn().as_os_str(), OsStr::new(""));
+		assert_eq!(search.loc.uri().as_os_str(), OsStr::new(""));
 		assert_eq!(search.scheme, Scheme::Search("keyword".to_owned()));
 
 		let item = search.join("main.rs");
-		assert_eq!(item.loc.urn().as_os_str(), OsStr::new("main.rs"));
+		assert_eq!(item.loc.uri().as_os_str(), OsStr::new("main.rs"));
 		assert_eq!(item.scheme, Scheme::Search("keyword".to_owned()));
 
 		let u: Url = item.components().take(4).collect();

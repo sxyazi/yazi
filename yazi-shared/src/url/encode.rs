@@ -25,18 +25,21 @@ impl<'a> Encode<'a> {
 
 	#[inline]
 	fn urn(loc: &'a Loc) -> impl Display {
-		struct D(usize);
+		struct D(usize, usize);
 
 		impl Display for D {
 			fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-				if self.0 != 0 {
-					write!(f, ":{}", self.0)?;
+				let (uri, urn) = (self.0, self.1);
+				match (uri != 0, urn != 0) {
+					(true, true) => write!(f, ":{uri}:{urn}"),
+					(true, false) => write!(f, ":{uri}"),
+					(false, true) => write!(f, "::{urn}"),
+					(false, false) => Ok(()),
 				}
-				Ok(())
 			}
 		}
 
-		D(loc.urn().components().count())
+		D(loc.uri().count(), loc.urn().count())
 	}
 }
 
