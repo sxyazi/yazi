@@ -64,9 +64,9 @@ mod tests {
 			("archive://:3:2//tmp/../../test.zip/foo/bar", "archive://:3:2//test.zip/foo/bar"),
 			("archive://:4:2//tmp/test.zip/../../foo/bar", "archive://:2:2//foo/bar"),
 			("archive://:5:2//tmp/test.zip/../../foo/bar", "archive://:3:2//foo/bar"),
-			("archive://:4:4//tmp/test.zip/foo/bar/../../", "archive://:1//tmp/test.zip"),
-			("archive://:5:4//tmp/test.zip/foo/bar/../../", "archive://:2//tmp/test.zip"),
-			("archive://:4:4//tmp/test.zip/foo/bar/../../../", "archive://::0//tmp"),
+			("archive://:4:4//tmp/test.zip/foo/bar/../../", "archive://:1:1//tmp/test.zip"),
+			("archive://:5:4//tmp/test.zip/foo/bar/../../", "archive://:2:1//tmp/test.zip"),
+			("archive://:4:4//tmp/test.zip/foo/bar/../../../", "archive:////tmp"),
 		];
 
 		for (input, expected) in cases {
