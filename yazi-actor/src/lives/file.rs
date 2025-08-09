@@ -81,14 +81,14 @@ impl UserData for File {
 			})?
 		});
 		methods.add_method("prefix", |lua, me, ()| {
-			if !me.url.has_base() {
+			if !me.url.has_trail() {
 				return Ok(None);
 			}
 			let Some(path) = me.url.as_path() else {
 				return Ok(None);
 			};
 
-			let mut comp = path.strip_prefix(me.url.loc.base()).unwrap_or(path).components();
+			let mut comp = path.strip_prefix(me.url.loc.trail()).unwrap_or(path).components();
 			comp.next_back();
 			Some(lua.create_string(comp.as_path().as_os_str().as_encoded_bytes())).transpose()
 		});

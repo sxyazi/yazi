@@ -45,7 +45,8 @@ impl TryFrom<&[u8]> for Url {
 	fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
 		let (scheme, path, port) = Self::parse(bytes)?;
 
-		let loc = if let Some(urn) = port { Loc::with(urn, path)? } else { Loc::from(path) };
+		let loc =
+			if let Some((uri, urn)) = port { Loc::with(path, uri, urn)? } else { Loc::from(path) };
 
 		Ok(Self { loc, scheme })
 	}
@@ -85,11 +86,13 @@ impl From<Cow<'_, Url>> for Url {
 }
 
 impl Url {
+	// FIXME: todo
 	#[inline]
 	pub fn with(&self, loc: impl Into<Loc>) -> Self {
 		let loc: Loc = loc.into();
-		// FIXME: simplify this
-		Self { loc: Loc::with_lossy(self.loc.base(), loc.into_path()), scheme: self.scheme.clone() }
+		todo!()
+		// Self { loc: Loc::lossy(self.loc.base(), loc.into_path()), scheme:
+		// self.scheme.clone() }
 	}
 
 	#[inline]
@@ -203,7 +206,7 @@ impl Url {
 		self.loc.rebase(parent).into()
 	}
 
-	pub fn parse(bytes: &[u8]) -> Result<(Scheme, PathBuf, Option<usize>)> {
+	pub fn parse(bytes: &[u8]) -> Result<(Scheme, PathBuf, Option<(usize, usize)>)> {
 		let mut skip = 0;
 		let (scheme, tilde, port) = Scheme::parse(bytes, &mut skip)?;
 
