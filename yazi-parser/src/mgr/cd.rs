@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_fs::expand_url;
+use yazi_fs::path::expand_url;
 use yazi_shared::{event::CmdCow, url::Url};
 
 #[derive(Debug)]

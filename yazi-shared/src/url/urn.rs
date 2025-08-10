@@ -1,4 +1,4 @@
-use std::{borrow::{Borrow, Cow}, ffi::OsStr, ops::Deref, path::{Path, PathBuf}};
+use std::{borrow::{Borrow, Cow}, ffi::OsStr, ops::Deref, path::{Component, Path, PathBuf}};
 
 use serde::Serialize;
 
@@ -14,6 +14,12 @@ impl Urn {
 
 	#[inline]
 	pub fn name(&self) -> Option<&OsStr> { self.0.file_name() }
+
+	#[inline]
+	pub fn count(&self) -> usize { self.0.components().count() }
+
+	#[inline]
+	pub fn nth(&self, n: usize) -> Option<Component<'_>> { self.0.components().nth(n) }
 
 	#[inline]
 	pub fn encoded_bytes(&self) -> &[u8] { self.0.as_os_str().as_encoded_bytes() }
@@ -49,8 +55,8 @@ impl ToOwned for Urn {
 	fn to_owned(&self) -> Self::Owned { UrnBuf(self.0.to_owned()) }
 }
 
-impl PartialEq<OsStr> for Urn {
-	fn eq(&self, other: &OsStr) -> bool { self.0 == other }
+impl<T: AsRef<OsStr>> PartialEq<T> for Urn {
+	fn eq(&self, other: &T) -> bool { self.0 == other.as_ref() }
 }
 
 impl PartialEq<Cow<'_, OsStr>> for &Urn {

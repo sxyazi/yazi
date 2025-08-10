@@ -56,6 +56,9 @@ impl File {
 	pub fn url_owned(&self) -> Url { self.url.to_owned() }
 
 	#[inline]
+	pub fn uri(&self) -> &Urn { self.url.uri() }
+
+	#[inline]
 	pub fn urn(&self) -> &Urn { self.url.urn() }
 
 	#[inline]

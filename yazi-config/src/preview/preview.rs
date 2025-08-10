@@ -3,7 +3,7 @@ use std::{borrow::Cow, path::PathBuf};
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use yazi_codegen::DeserializeOver2;
-use yazi_fs::{Xdg, expand_path};
+use yazi_fs::{Xdg, path::expand_path};
 use yazi_shared::{SStr, timestamp_us};
 
 use super::PreviewWrap;

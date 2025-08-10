@@ -45,7 +45,8 @@ impl TryFrom<&[u8]> for Url {
 	fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
 		let (scheme, path, port) = Self::parse(bytes)?;
 
-		let loc = if let Some(urn) = port { Loc::with(urn, path)? } else { Loc::from(path) };
+		let loc =
+			if let Some((uri, urn)) = port { Loc::with(path, uri, urn)? } else { Loc::from(path) };
 
 		Ok(Self { loc, scheme })
 	}
@@ -86,35 +87,31 @@ impl From<Cow<'_, Url>> for Url {
 
 impl Url {
 	#[inline]
-	pub fn with(&self, loc: impl Into<Loc>) -> Self {
-		let loc: Loc = loc.into();
-		// FIXME: simplify this
-		Self { loc: Loc::with_lossy(self.loc.base(), loc.into_path()), scheme: self.scheme.clone() }
-	}
-
-	#[inline]
 	pub fn base(&self) -> Url {
 		use Scheme as S;
 
 		let loc: Loc = self.loc.base().into();
 		match self.scheme {
 			S::Regular => Self { loc, scheme: S::Regular },
-			S::Search(_) => self.with(loc),
-			S::Archive(_) => self.with(loc),
-			S::Sftp(_) => self.with(loc),
+			S::Search(_) => Self { loc, scheme: self.scheme.clone() },
+			S::Archive(_) => Self { loc, scheme: self.scheme.clone() },
+			S::Sftp(_) => Self { loc, scheme: self.scheme.clone() },
 		}
 	}
 
 	pub fn join(&self, path: impl AsRef<Path>) -> Self {
 		use Scheme as S;
 
-		let loc: Loc = self.loc.join(path).into();
-		match self.scheme {
-			S::Regular => Self { loc, scheme: S::Regular },
-			S::Search(_) => self.with(loc),
-			S::Archive(_) => self.with(loc),
-			S::Sftp(_) => Self { loc, scheme: self.scheme.clone() },
-		}
+		let join = self.loc.join(path);
+
+		let loc = match self.scheme {
+			S::Regular => join.into(),
+			S::Search(_) => Loc::new(join, self.loc.base(), self.loc.base()),
+			S::Archive(_) => Loc::floated(join, self.loc.base()),
+			S::Sftp(_) => join.into(),
+		};
+
+		Self { loc, scheme: self.scheme.clone() }
 	}
 
 	#[inline]
@@ -135,17 +132,29 @@ impl Url {
 		use Scheme as S;
 
 		let parent = self.loc.parent()?;
-		let urn = self.loc.urn();
+		let uri = self.loc.uri();
 
 		Some(match self.scheme {
+			// Regular
 			S::Regular => Self { loc: parent.into(), scheme: S::Regular },
 
-			S::Search(_) if urn.is_empty() => Self { loc: parent.into(), scheme: S::Regular },
-			S::Search(_) => self.with(parent),
+			// Search
+			S::Search(_) if uri.is_empty() => Self { loc: parent.into(), scheme: S::Regular },
+			S::Search(_) => Self {
+				loc:    Loc::new(parent, self.loc.base(), self.loc.base()),
+				scheme: self.scheme.clone(),
+			},
 
-			S::Archive(_) if urn.is_empty() => Self { loc: parent.into(), scheme: S::Regular },
-			S::Archive(_) => self.with(parent),
+			// Archive
+			S::Archive(_) if uri.is_empty() => Self { loc: parent.into(), scheme: S::Regular },
+			S::Archive(_) if uri.nth(1).is_none() => {
+				Self { loc: Loc::zeroed(parent), scheme: self.scheme.clone() }
+			}
+			S::Archive(_) => {
+				Self { loc: Loc::floated(parent, self.loc.base()), scheme: self.scheme.clone() }
+			}
 
+			// SFTP
 			S::Sftp(_) => Self { loc: parent.into(), scheme: self.scheme.clone() },
 		})
 	}
@@ -168,10 +177,10 @@ impl Url {
 			(S::Search(_), S::Regular) => Some(prefix),
 
 			// Only the entry of archives is a local file
-			(S::Regular, S::Archive(_)) => Some(prefix).filter(|_| base.urn().is_empty()),
-			(S::Search(_), S::Archive(_)) => Some(prefix).filter(|_| base.urn().is_empty()),
-			(S::Archive(_), S::Regular) => Some(prefix).filter(|_| self.urn().is_empty()),
-			(S::Archive(_), S::Search(_)) => Some(prefix).filter(|_| self.urn().is_empty()),
+			(S::Regular, S::Archive(_)) => Some(prefix).filter(|_| base.uri().is_empty()),
+			(S::Search(_), S::Archive(_)) => Some(prefix).filter(|_| base.uri().is_empty()),
+			(S::Archive(_), S::Regular) => Some(prefix).filter(|_| self.uri().is_empty()),
+			(S::Archive(_), S::Search(_)) => Some(prefix).filter(|_| self.uri().is_empty()),
 
 			// Independent virtual file space
 			(S::Regular, S::Sftp(_)) => None,
@@ -203,7 +212,7 @@ impl Url {
 		self.loc.rebase(parent).into()
 	}
 
-	pub fn parse(bytes: &[u8]) -> Result<(Scheme, PathBuf, Option<usize>)> {
+	pub fn parse(bytes: &[u8]) -> Result<(Scheme, PathBuf, Option<(usize, usize)>)> {
 		let mut skip = 0;
 		let (scheme, tilde, port) = Scheme::parse(bytes, &mut skip)?;
 
@@ -302,30 +311,94 @@ mod tests {
 	use super::*;
 
 	#[test]
-	fn test_search() -> Result<()> {
+	fn test_join() -> anyhow::Result<()> {
+		let cases = [
+			// Regular
+			("/a", "b/c", "regular:///a/b/c"),
+			// Search
+			("search://kw//a", "b/c", "search://kw:2:2//a/b/c"),
+			("search://kw:2:2//a/b/c", "d/e", "search://kw:4:4//a/b/c/d/e"),
+			// Archive
+			("archive:////a/b.zip", "c/d", "archive://:2:1//a/b.zip/c/d"),
+			("archive://:2:1//a/b.zip/c/d", "e/f", "archive://:4:1//a/b.zip/c/d/e/f"),
+			("archive://:2:2//a/b.zip/c/d", "e/f", "archive://:4:1//a/b.zip/c/d/e/f"),
+			// SFTP
+			("sftp://remote//a", "b/c", "sftp://remote:1:1//a/b/c"),
+			("sftp://remote:1:1//a/b/c", "d/e", "sftp://remote:1:1//a/b/c/d/e"),
+			// Relative
+			("search://kw", "b/c", "search://kw:2:2/b/c"),
+			("search://kw/", "b/c", "search://kw:2:2/b/c"),
+		];
+
+		for (base, path, expected) in cases {
+			let base: Url = base.parse()?;
+			#[cfg(unix)]
+			assert_eq!(format!("{:?}", base.join(path)), expected);
+			#[cfg(windows)]
+			assert_eq!(format!("{:?}", base.join(path)).replace(r"\", "/"), expected.replace(r"\", "/"));
+		}
+
+		Ok(())
+	}
+
+	#[test]
+	fn test_parent_url() -> anyhow::Result<()> {
+		let cases = [
+			// Regular
+			("/a", Some("regular:///")),
+			("/", None),
+			// Search
+			("search://kw:2:2//a/b/c", Some("search://kw:1:1//a/b")),
+			("search://kw:1:1//a/b", Some("search://kw//a")),
+			("search://kw//a", Some("regular:///")),
+			// Archive
+			("archive://:2:1//a/b.zip/c/d", Some("archive://:1:1//a/b.zip/c")),
+			("archive://:1:1//a/b.zip/c", Some("archive:////a/b.zip")),
+			("archive:////a/b.zip", Some("regular:///a")),
+			// SFTP
+			("sftp://remote:1:1//a/b", Some("sftp://remote:1:1//a")),
+			("sftp://remote:1:1//a", Some("sftp://remote:1//")),
+			("sftp://remote:1//", None),
+			("sftp://remote//", None),
+			// Relative
+			("search://kw:2:2/a/b", Some("search://kw:1:1/a")),
+			("search://kw:1:1/a", Some("search://kw/")),
+			("search://kw/", None),
+		];
+
+		for (path, expected) in cases {
+			let path: Url = path.parse()?;
+			assert_eq!(path.parent_url().map(|u| format!("{:?}", u)).as_deref(), expected);
+		}
+
+		Ok(())
+	}
+
+	#[test]
+	fn test_into_search() -> Result<()> {
 		const S: char = std::path::MAIN_SEPARATOR;
 
-		let u: Url = "/root/project".parse()?;
-		assert_eq!(format!("{u:?}"), "regular:///root/project");
+		let u: Url = "/root".parse()?;
+		assert_eq!(format!("{u:?}"), "regular:///root");
 
-		let u = u.into_search("readme");
-		assert_eq!(format!("{u:?}"), "search://readme//root/project");
-		assert_eq!(format!("{:?}", u.parent_url().unwrap()), "regular:///root");
+		let u = u.into_search("kw");
+		assert_eq!(format!("{u:?}"), "search://kw//root");
+		assert_eq!(format!("{:?}", u.parent_url().unwrap()), "regular:///");
 
 		let u = u.join("examples");
-		assert_eq!(format!("{u:?}"), format!("search://readme:1//root/project{S}examples"));
+		assert_eq!(format!("{u:?}"), format!("search://kw:1:1//root{S}examples"));
 
 		let u = u.join("README.md");
-		assert_eq!(format!("{u:?}"), format!("search://readme:2//root/project{S}examples{S}README.md"));
+		assert_eq!(format!("{u:?}"), format!("search://kw:2:2//root{S}examples{S}README.md"));
 
 		let u = u.parent_url().unwrap();
-		assert_eq!(format!("{u:?}"), format!("search://readme:1//root/project{S}examples"));
+		assert_eq!(format!("{u:?}"), format!("search://kw:1:1//root{S}examples"));
 
 		let u = u.parent_url().unwrap();
-		assert_eq!(format!("{u:?}"), "search://readme//root/project");
+		assert_eq!(format!("{u:?}"), "search://kw//root");
 
 		let u = u.parent_url().unwrap();
-		assert_eq!(format!("{u:?}"), "regular:///root");
+		assert_eq!(format!("{u:?}"), "regular:///");
 
 		Ok(())
 	}

@@ -48,7 +48,7 @@ impl CopySeparator {
 	pub fn transform<T: AsRef<Path> + ?Sized>(self, p: &T) -> Cow<'_, OsStr> {
 		#[cfg(windows)]
 		if self == Self::Unix {
-			return match yazi_fs::backslash_to_slash(p.as_ref()) {
+			return match yazi_fs::path::backslash_to_slash(p.as_ref()) {
 				Cow::Owned(p) => Cow::Owned(p.into_os_string()),
 				Cow::Borrowed(p) => Cow::Borrowed(p.as_os_str()),
 			};

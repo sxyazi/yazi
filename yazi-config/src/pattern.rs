@@ -34,7 +34,7 @@ impl Pattern {
 
 		#[cfg(windows)]
 		let path = if self.sep_lit {
-			yazi_fs::backslash_to_slash(&url.loc)
+			yazi_fs::path::backslash_to_slash(&url.loc)
 		} else {
 			std::borrow::Cow::Borrowed(url.loc.as_path())
 		};

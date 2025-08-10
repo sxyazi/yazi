@@ -1,6 +1,6 @@
 use std::{env, path::PathBuf};
 
-use crate::expand_path;
+use crate::path::expand_path;
 
 pub struct Xdg;
 
