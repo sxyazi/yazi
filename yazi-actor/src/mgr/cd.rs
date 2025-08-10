@@ -5,7 +5,7 @@ use tokio::pin;
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_config::popup::InputCfg;
 use yazi_dds::Pubsub;
-use yazi_fs::{File, FilesOp, expand_url};
+use yazi_fs::{File, FilesOp, path::expand_url};
 use yazi_macro::{act, err, render, succ};
 use yazi_parser::mgr::CdOpt;
 use yazi_proxy::{CmpProxy, InputProxy, MgrProxy};
@@ -49,9 +49,7 @@ impl Actor for Cd {
 		// Current
 		let rep = tab.history.remove_or(&opt.target);
 		let rep = mem::replace(&mut tab.current, rep);
-		if rep.url.is_regular() {
-			tab.history.insert(rep.url.to_owned(), rep);
-		}
+		tab.history.insert(rep.url.to_owned(), rep);
 
 		// Parent
 		if let Some(parent) = opt.target.parent_url() {

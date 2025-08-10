@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use anyhow::{Context, Result, bail};
 use serde::Deserialize;
 use yazi_codegen::{DeserializeOver1, DeserializeOver2};
-use yazi_fs::{Xdg, expand_path, ok_or_not_found};
+use yazi_fs::{Xdg, ok_or_not_found, path::expand_path};
 
 use super::{Filetype, Flavor, Icon};
 use crate::Style;

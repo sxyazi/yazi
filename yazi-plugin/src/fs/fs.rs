@@ -155,7 +155,7 @@ fn calc_size(lua: &Lua) -> mlua::Result<Function> {
 
 fn expand_url(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_function(|lua, value: Value| {
-		use yazi_fs::expand_url;
+		use yazi_fs::path::expand_url;
 		match &value {
 			Value::String(s) => Url::new(expand_url(Url::try_from(s.as_bytes().as_ref())?)).into_lua(lua),
 			Value::UserData(ud) => match expand_url(&*ud.borrow::<yazi_binding::Url>()?) {
@@ -169,7 +169,7 @@ fn expand_url(lua: &Lua) -> mlua::Result<Function> {
 
 fn unique_name(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, url: UrlRef| async move {
-		match yazi_fs::unique_name(url.clone(), async { false }).await {
+		match yazi_fs::path::unique_name(url.clone(), async { false }).await {
 			Ok(u) => Url::new(u).into_lua_multi(&lua),
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}

@@ -1,7 +1,7 @@
 use std::{ffi::OsString, mem, path::MAIN_SEPARATOR_STR};
 
 use anyhow::Result;
-use yazi_fs::{CWD, expand_url, provider};
+use yazi_fs::{CWD, path::expand_url, provider};
 use yazi_macro::{act, render, succ};
 use yazi_parser::cmp::{CmpItem, ShowOpt, TriggerOpt};
 use yazi_proxy::CmpProxy;
@@ -67,7 +67,7 @@ impl Actor for Trigger {
 
 impl Trigger {
 	fn split_url(s: &str) -> Option<(Url, UrnBuf)> {
-		let (scheme, path, _) = Url::parse(s.as_bytes()).ok()?;
+		let (scheme, path, ..) = Url::parse(s.as_bytes()).ok()?;
 
 		if !scheme.is_virtual() && path.as_os_str() == "~" {
 			return None; // We don't autocomplete a `~`, but `~/`
