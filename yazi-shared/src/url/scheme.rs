@@ -1,6 +1,6 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, ops::Not, path::Path};
 
-use anyhow::{Result, bail};
+use anyhow::{Result, bail, ensure};
 use percent_encoding::percent_decode;
 
 use crate::BytesExt;
@@ -39,9 +39,9 @@ impl Scheme {
 	pub(super) fn parse(
 		bytes: &[u8],
 		skip: &mut usize,
-	) -> Result<(Self, bool, Option<(usize, usize)>)> {
+	) -> Result<(Self, bool, Option<usize>, Option<usize>)> {
 		let Some((mut protocol, rest)) = bytes.split_by_seq(b"://") else {
-			return Ok((Self::Regular, false, None));
+			return Ok((Self::Regular, false, None, None));
 		};
 
 		// Advance to the beginning of the path
@@ -53,24 +53,24 @@ impl Scheme {
 			protocol = &protocol[..protocol.len() - 1];
 		}
 
-		let (scheme, port) = match protocol {
-			b"regular" => (Self::Regular, None),
+		let (scheme, uri, urn) = match protocol {
+			b"regular" => (Self::Regular, None, None),
 			b"search" => {
 				let (domain, uri, urn) = Self::decode_param(rest, skip)?;
-				(Self::Search(domain), Some((uri, urn)))
+				(Self::Search(domain), uri, urn)
 			}
 			b"archive" => {
 				let (domain, uri, urn) = Self::decode_param(rest, skip)?;
-				(Self::Archive(domain), Some((uri, urn)))
+				(Self::Archive(domain), uri, urn)
 			}
 			b"sftp" => {
 				let (domain, uri, urn) = Self::decode_param(rest, skip)?;
-				(Self::Sftp(domain), Some((uri, urn)))
+				(Self::Sftp(domain), uri, urn)
 			}
 			_ => bail!("Could not parse protocol from URL: {}", String::from_utf8_lossy(bytes)),
 		};
 
-		Ok((scheme, tilde, port))
+		Ok((scheme, tilde, uri, urn))
 	}
 
 	#[inline]
@@ -90,6 +90,14 @@ impl Scheme {
 	}
 
 	#[inline]
+	pub fn is_builtin(&self) -> bool {
+		match self {
+			Self::Regular | Self::Search(_) | Self::Sftp(_) => true,
+			Self::Archive(_) => false,
+		}
+	}
+
+	#[inline]
 	pub fn is_virtual(&self) -> bool {
 		match self {
 			Self::Regular | Self::Search(_) => false,
@@ -97,12 +105,15 @@ impl Scheme {
 		}
 	}
 
-	fn decode_param(bytes: &[u8], skip: &mut usize) -> Result<(String, usize, usize)> {
+	fn decode_param(
+		bytes: &[u8],
+		skip: &mut usize,
+	) -> Result<(String, Option<usize>, Option<usize>)> {
 		let mut len = bytes.iter().copied().take_while(|&b| b != b'/').count();
 		let slash = bytes.get(len).is_some_and(|&b| b == b'/');
 		*skip += len + slash as usize;
 
-		let (uri, urn) = Self::decode_port(&bytes[..len], &mut len)?;
+		let (uri, urn) = Self::decode_ports(&bytes[..len], &mut len)?;
 		let domain = match Cow::from(percent_decode(&bytes[..len])) {
 			Cow::Borrowed(b) => str::from_utf8(b)?.to_owned(),
 			Cow::Owned(b) => String::from_utf8(b)?,
@@ -111,18 +122,46 @@ impl Scheme {
 		Ok((domain, uri, urn))
 	}
 
-	fn decode_port(bytes: &[u8], skip: &mut usize) -> anyhow::Result<(usize, usize)> {
-		let Some(a_idx) = bytes.iter().rposition(|&b| b == b':') else { return Ok((0, 0)) };
+	fn decode_ports(bytes: &[u8], skip: &mut usize) -> Result<(Option<usize>, Option<usize>)> {
+		let Some(a_idx) = bytes.iter().rposition(|&b| b == b':') else { return Ok((None, None)) };
 		let a_len = bytes.len() - a_idx;
 		*skip -= a_len;
-		let a = if a_len == 1 { 0 } else { str::from_utf8(&bytes[a_idx + 1..])?.parse()? };
+		let a = if a_len == 1 { None } else { Some(str::from_utf8(&bytes[a_idx + 1..])?.parse()?) };
 
-		let Some(b_idx) = bytes[..a_idx].iter().rposition(|&b| b == b':') else { return Ok((a, 0)) };
+		let Some(b_idx) = bytes[..a_idx].iter().rposition(|&b| b == b':') else {
+			return Ok((a, None));
+		};
 		let b_len = bytes[..a_idx].len() - b_idx;
 		*skip -= b_len;
-		let b = if b_len == 1 { 0 } else { str::from_utf8(&bytes[b_idx + 1..a_idx])?.parse()? };
+		let b =
+			if b_len == 1 { None } else { Some(str::from_utf8(&bytes[b_idx + 1..a_idx])?.parse()?) };
 
 		Ok((b, a))
+	}
+
+	pub(super) fn normalize_ports(
+		&self,
+		uri: Option<usize>,
+		urn: Option<usize>,
+		path: &Path,
+	) -> Result<Option<(usize, usize)>> {
+		Ok(match self {
+			Scheme::Regular => {
+				ensure!(uri.is_none() && urn.is_none(), "Regular scheme cannot have ports");
+				None
+			}
+			Scheme::Search(_) => {
+				let (uri, urn) = (uri.unwrap_or(0), urn.unwrap_or(0));
+				ensure!(uri == urn, "Search scheme requires URI and URN to be equal");
+				Some((uri, urn))
+			}
+			Scheme::Archive(_) => Some((uri.unwrap_or(0), urn.unwrap_or(0))),
+			Scheme::Sftp(_) => {
+				let uri = uri.unwrap_or(path.as_os_str().is_empty().not() as usize);
+				let urn = urn.unwrap_or(path.file_name().is_some() as usize);
+				Some((uri, urn))
+			}
+		})
 	}
 }
 
@@ -132,27 +171,27 @@ mod tests {
 
 	#[test]
 	fn test_decode_port() -> Result<()> {
-		fn assert(s: &str, uri: usize, urn: usize, len: usize) -> Result<()> {
+		fn assert(s: &str, len: usize, uri: Option<usize>, urn: Option<usize>) -> Result<()> {
 			let mut n = usize::MAX;
-			let port = Scheme::decode_port(s.as_bytes(), &mut n)?;
-			assert_eq!((port.0, port.1, usize::MAX - n), (uri, urn, len));
+			let port = Scheme::decode_ports(s.as_bytes(), &mut n)?;
+			assert_eq!((usize::MAX - n, port.0, port.1), (len, uri, urn));
 			Ok(())
 		}
 
 		// Zeros
-		assert("", 0, 0, 0)?;
-		assert(":", 0, 0, 1)?;
-		assert("::", 0, 0, 2)?;
+		assert("", 0, None, None)?;
+		assert(":", 1, None, None)?;
+		assert("::", 2, None, None)?;
 
 		// URI
-		assert(":2", 2, 0, 2)?;
-		assert(":2:", 2, 0, 3)?;
-		assert(":22:", 22, 0, 4)?;
+		assert(":2", 2, Some(2), None)?;
+		assert(":2:", 3, Some(2), None)?;
+		assert(":22:", 4, Some(22), None)?;
 
 		// URN
-		assert("::1", 0, 1, 3)?;
-		assert(":2:1", 2, 1, 4)?;
-		assert(":22:11", 22, 11, 6)?;
+		assert("::1", 3, None, Some(1))?;
+		assert(":2:1", 4, Some(2), Some(1))?;
+		assert(":22:11", 6, Some(22), Some(11))?;
 		Ok(())
 	}
 }

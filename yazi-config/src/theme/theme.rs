@@ -1,9 +1,10 @@
 use std::path::PathBuf;
 
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result, anyhow, bail};
 use serde::Deserialize;
 use yazi_codegen::{DeserializeOver1, DeserializeOver2};
-use yazi_fs::{Xdg, ok_or_not_found, path::expand_path};
+use yazi_fs::{Xdg, ok_or_not_found, path::expand_url};
+use yazi_shared::url::Url;
 
 use super::{Filetype, Flavor, Icon};
 use crate::Style;
@@ -219,8 +220,11 @@ impl Theme {
 
 		self.icon = self.icon.reshape()?;
 
-		self.mgr.syntect_theme =
-			self.flavor.syntect_path(light).unwrap_or_else(|| expand_path(&self.mgr.syntect_theme));
+		self.mgr.syntect_theme = self
+			.flavor
+			.syntect_path(light)
+			.or_else(|| expand_url(Url::from(&self.mgr.syntect_theme)).into_path())
+			.ok_or(anyhow!("[mgr].syntect_theme must be a path within local filesystem"))?;
 
 		Ok(self)
 	}

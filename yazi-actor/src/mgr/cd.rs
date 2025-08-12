@@ -78,7 +78,7 @@ impl Cd {
 					Ok(s) => {
 						let Ok(url) = Url::try_from(s).map(expand_url) else { return };
 
-						let Ok(file) = File::new(url.as_ref().clone()).await else { return };
+						let Ok(file) = File::new(url.clone()).await else { return };
 						if file.is_dir() {
 							return MgrProxy::cd(&url);
 						}

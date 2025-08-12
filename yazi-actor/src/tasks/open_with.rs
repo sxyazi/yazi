@@ -16,7 +16,7 @@ impl Actor for OpenWith {
 		succ!(cx.tasks.process_from_opener(
 			opt.cwd,
 			opt.opener,
-			opt.targets.into_iter().map(|u| u.into_path().into_os_string()).collect(),
+			opt.targets.into_iter().map(|u| u.into_path2().into_os_string()).collect(),
 		));
 	}
 }

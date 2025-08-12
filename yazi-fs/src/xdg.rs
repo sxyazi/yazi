@@ -1,12 +1,12 @@
 use std::{env, path::PathBuf};
 
-use crate::path::expand_path;
-
 pub struct Xdg;
 
 impl Xdg {
 	pub fn config_dir() -> PathBuf {
-		if let Some(p) = env::var_os("YAZI_CONFIG_HOME").map(expand_path).filter(|p| p.is_absolute()) {
+		if let Some(p) = env::var_os("YAZI_CONFIG_HOME").map(PathBuf::from)
+			&& p.is_absolute()
+		{
 			return p;
 		}
 

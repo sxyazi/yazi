@@ -1,4 +1,4 @@
-use std::fmt::{self, Display};
+use std::{fmt::{self, Display}, ops::Not};
 
 use percent_encoding::{AsciiSet, CONTROLS, PercentEncode, percent_encode};
 
@@ -23,23 +23,36 @@ impl<'a> Encode<'a> {
 		percent_encode(s.as_bytes(), SET)
 	}
 
-	#[inline]
-	fn urn(loc: &'a Loc) -> impl Display {
-		struct D(usize, usize);
+	fn urn(&self) -> impl Display {
+		struct D<'a>(&'a Encode<'a>);
 
-		impl Display for D {
+		impl Display for D<'_> {
 			fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-				let (uri, urn) = (self.0, self.1);
-				match (uri != 0, urn != 0) {
-					(true, true) => write!(f, ":{uri}:{urn}"),
-					(true, false) => write!(f, ":{uri}"),
-					(false, true) => write!(f, "::{urn}"),
-					(false, false) => Ok(()),
+				macro_rules! w {
+					($default_uri:expr, $default_urn:expr) => {{
+						let uri = self.0.loc.uri().count();
+						let urn = self.0.loc.urn().count();
+						match (uri != $default_uri, urn != $default_urn) {
+							(true, true) => write!(f, ":{uri}:{urn}"),
+							(true, false) => write!(f, ":{uri}"),
+							(false, true) => write!(f, "::{urn}"),
+							(false, false) => Ok(()),
+						}
+					}};
+				}
+
+				match self.0.scheme {
+					Scheme::Regular => Ok(()),
+					Scheme::Search(_) | Scheme::Archive(_) => w!(0, 0),
+					Scheme::Sftp(_) => w!(
+						self.0.loc.as_os_str().is_empty().not() as usize,
+						self.0.loc.file_name().is_some() as usize
+					),
 				}
 			}
 		}
 
-		D(loc.uri().count(), loc.urn().count())
+		D(self)
 	}
 }
 
@@ -47,9 +60,9 @@ impl Display for Encode<'_> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self.scheme {
 			Scheme::Regular => write!(f, "regular://"),
-			Scheme::Search(d) => write!(f, "search://{}{}/", Self::domain(d), Self::urn(self.loc)),
-			Scheme::Archive(d) => write!(f, "archive://{}{}/", Self::domain(d), Self::urn(self.loc)),
-			Scheme::Sftp(d) => write!(f, "sftp://{}{}/", Self::domain(d), Self::urn(self.loc)),
+			Scheme::Search(d) => write!(f, "search://{}{}/", Self::domain(d), self.urn()),
+			Scheme::Archive(d) => write!(f, "archive://{}{}/", Self::domain(d), self.urn()),
+			Scheme::Sftp(d) => write!(f, "sftp://{}{}/", Self::domain(d), self.urn()),
 		}
 	}
 }
@@ -64,6 +77,10 @@ impl<'a> From<&'a Url> for EncodeTilded<'a> {
 	fn from(url: &'a Url) -> Self { Self { loc: &url.loc, scheme: &url.scheme } }
 }
 
+impl<'a> From<&'a EncodeTilded<'a>> for Encode<'a> {
+	fn from(value: &'a EncodeTilded<'a>) -> Self { Self::new(value.loc, value.scheme) }
+}
+
 impl Display for EncodeTilded<'_> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		use Encode as E;
@@ -71,9 +88,9 @@ impl Display for EncodeTilded<'_> {
 		let loc = percent_encode(self.loc.as_os_str().as_encoded_bytes(), CONTROLS);
 		match self.scheme {
 			Scheme::Regular => write!(f, "regular~://{loc}"),
-			Scheme::Search(d) => write!(f, "search~://{}{}/{loc}", E::domain(d), E::urn(self.loc)),
-			Scheme::Archive(d) => write!(f, "archive~://{}{}/{loc}", E::domain(d), E::urn(self.loc)),
-			Scheme::Sftp(d) => write!(f, "sftp~://{}{}/{loc}", E::domain(d), E::urn(self.loc)),
+			Scheme::Search(d) => write!(f, "search~://{}{}/{loc}", E::domain(d), E::urn(&self.into())),
+			Scheme::Archive(d) => write!(f, "archive~://{}{}/{loc}", E::domain(d), E::urn(&self.into())),
+			Scheme::Sftp(d) => write!(f, "sftp~://{}{}/{loc}", E::domain(d), E::urn(&self.into())),
 		}
 	}
 }

@@ -1,8 +1,8 @@
-use std::{borrow::Cow, cmp, ffi::{OsStr, OsString}, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
+use std::{borrow::Cow, cmp, ffi::{OsStr, OsString}, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, mem, ops::Deref, path::{Path, PathBuf}};
 
 use anyhow::{Result, bail};
 
-use crate::url::{Urn, UrnBuf};
+use crate::url::{Uri, Urn, UrnBuf};
 
 #[derive(Clone, Default)]
 pub struct Loc {
@@ -143,8 +143,8 @@ impl Loc {
 	}
 
 	#[inline]
-	pub fn uri(&self) -> &Urn {
-		Urn::new(unsafe {
+	pub fn uri(&self) -> &Uri {
+		Uri::new(unsafe {
 			OsStr::from_encoded_bytes_unchecked(
 				self.bytes().get_unchecked(self.bytes().len() - self.uri..),
 			)
@@ -167,19 +167,28 @@ impl Loc {
 	pub fn name(&self) -> &OsStr { self.inner.file_name().unwrap_or(OsStr::new("")) }
 
 	pub fn set_name(&mut self, name: impl AsRef<OsStr>) {
-		let (old, new) = (self.name(), name.as_ref());
-		if old == new {
+		let old = self.bytes().len();
+		self.mutate(|path| path.set_file_name(name));
+
+		let new = self.bytes().len();
+		if new == old {
 			return;
 		}
 
-		if old.len() > new.len() {
-			let n = old.len() - new.len();
-			(self.uri, self.urn) = (self.uri - n, self.urn - n);
-		} else {
-			let n = new.len() - old.len();
-			(self.uri, self.urn) = (self.uri + n, self.urn + n);
+		if self.uri != 0 {
+			if new > old {
+				self.uri += new - old;
+			} else {
+				self.uri -= old - new;
+			}
 		}
-		self.inner.set_file_name(new);
+		if self.urn != 0 {
+			if new > old {
+				self.urn += new - old;
+			} else {
+				self.urn -= old - new;
+			}
+		}
 	}
 
 	#[inline]
@@ -240,11 +249,19 @@ impl Loc {
 
 	#[inline]
 	fn bytes(&self) -> &[u8] { self.inner.as_os_str().as_encoded_bytes() }
+
+	#[inline]
+	fn mutate<F: FnOnce(&mut PathBuf)>(&mut self, f: F) {
+		let mut inner = mem::take(&mut self.inner);
+		f(&mut inner);
+		self.inner = Self::from(inner).inner;
+	}
 }
 
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use crate::url::Url;
 
 	#[test]
 	fn test_new() {
@@ -318,22 +335,34 @@ mod tests {
 
 	#[test]
 	fn test_set_name() -> Result<()> {
-		const S: char = std::path::MAIN_SEPARATOR;
+		let cases = [
+			// Regular
+			("/", "a", "regular:///a"),
+			("/a/b", "c", "regular:///a/c"),
+			// Archive
+			("archive:////", "a.zip", "archive:////a.zip"),
+			("archive:////a.zip/b", "c", "archive:////a.zip/c"),
+			("archive://:2//a.zip/b", "c", "archive://:2//a.zip/c"),
+			("archive://:2:1//a.zip/b", "c", "archive://:2:1//a.zip/c"),
+			// Empty
+			("/a", "", "regular:///"),
+			("archive:////a.zip", "", "archive:////"),
+			("archive:////a.zip/b", "", "archive:////a.zip"),
+			("archive://:1:1//a.zip", "", "archive:////"),
+			("archive://:2//a.zip/b", "", "archive://:1//a.zip"),
+			("archive://:2:2//a.zip/b", "", "archive://:1:1//a.zip"),
+		];
 
-		let mut loc = Loc::with("/root/code/foo/".into(), 2, 1)?;
-		assert_eq!(loc.uri().as_os_str(), OsStr::new("code/foo"));
-		assert_eq!(loc.name(), OsStr::new("foo"));
-		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
+		for (input, name, expected) in cases {
+			let mut a: Url = input.parse()?;
+			let b: Url = expected.parse()?;
+			a.set_name(name);
+			assert_eq!(
+				(a.name(), format!("{a:?}").replace(r"\", "/")),
+				(b.name(), expected.replace(r"\", "/"))
+			);
+		}
 
-		loc.set_name("bar.txt");
-		assert_eq!(loc.uri().as_os_str(), OsString::from(format!("code{S}bar.txt")));
-		assert_eq!(loc.name(), OsStr::new("bar.txt"));
-		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
-
-		loc.set_name("baz");
-		assert_eq!(loc.uri().as_os_str(), OsString::from(format!("code{S}baz")));
-		assert_eq!(loc.name(), OsStr::new("baz"));
-		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 		Ok(())
 	}
 }

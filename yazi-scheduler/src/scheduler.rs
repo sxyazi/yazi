@@ -59,8 +59,8 @@ impl Scheduler {
 	pub fn cancel(&self, id: Id) -> bool {
 		let mut ongoing = self.ongoing.lock();
 
-		if let Some(fut) = ongoing.hooks.run_or_pop(id, true) {
-			self.micro.try_send(fut, HIGH).ok();
+		if let Some(hook) = ongoing.hooks.pop(id) {
+			self.micro.try_send(hook.call(true), HIGH).ok();
 			return false;
 		}
 
@@ -86,15 +86,12 @@ impl Scheduler {
 			let ongoing = self.ongoing.clone();
 			let (from, to) = (from.clone(), to.clone());
 
-			move |canceled: bool| {
-				async move {
-					if !canceled {
-						remove_dir_clean(&from).await;
-						Pump::push_move(from, to);
-					}
-					ongoing.lock().try_remove(id, TaskStage::Hooked);
+			move |canceled: bool| async move {
+				if !canceled {
+					remove_dir_clean(&from).await;
+					Pump::push_move(from, to);
 				}
-				.boxed()
+				ongoing.lock().try_remove(id, TaskStage::Hooked);
 			}
 		});
 
@@ -172,16 +169,13 @@ impl Scheduler {
 			let target = target.clone();
 			let ongoing = self.ongoing.clone();
 
-			move |canceled: bool| {
-				async move {
-					if !canceled {
-						provider::remove_dir_all(&target).await.ok();
-						MgrProxy::update_tasks(&target);
-						Pump::push_delete(target);
-					}
-					ongoing.lock().try_remove(id, TaskStage::Hooked);
+			move |canceled: bool| async move {
+				if !canceled {
+					provider::remove_dir_all(&target).await.ok();
+					MgrProxy::update_tasks(&target);
+					Pump::push_delete(target);
 				}
-				.boxed()
+				ongoing.lock().try_remove(id, TaskStage::Hooked);
 			}
 		});
 
@@ -201,15 +195,12 @@ impl Scheduler {
 			let target = target.clone();
 			let ongoing = self.ongoing.clone();
 
-			move |canceled: bool| {
-				async move {
-					if !canceled {
-						MgrProxy::update_tasks(&target);
-						Pump::push_trash(target);
-					}
-					ongoing.lock().try_remove(id, TaskStage::Hooked);
+			move |canceled: bool| async move {
+				if !canceled {
+					MgrProxy::update_tasks(&target);
+					Pump::push_trash(target);
 				}
-				.boxed()
+				ongoing.lock().try_remove(id, TaskStage::Hooked);
 			}
 		});
 
@@ -288,18 +279,15 @@ impl Scheduler {
 		let id = ongoing.add(TaskKind::User, name);
 		ongoing.hooks.add_async(id, {
 			let ongoing = self.ongoing.clone();
-			move |canceled: bool| {
-				async move {
-					if canceled {
-						cancel_tx.send(()).await.ok();
-						cancel_tx.closed().await;
-					}
-					if let Some(tx) = done {
-						tx.send(()).ok();
-					}
-					ongoing.lock().try_remove(id, TaskStage::Hooked);
+			move |canceled: bool| async move {
+				if canceled {
+					cancel_tx.send(()).await.ok();
+					cancel_tx.closed().await;
 				}
-				.boxed()
+				if let Some(tx) = done {
+					tx.send(()).ok();
+				}
+				ongoing.lock().try_remove(id, TaskStage::Hooked);
 			}
 		});
 
@@ -388,14 +376,14 @@ impl Scheduler {
 							task.processed += processed;
 						}
 						if succ > 0
-							&& let Some(fut) = ongoing.try_remove(id, TaskStage::Pending)
+							&& let Some(hook) = ongoing.try_remove(id, TaskStage::Pending)
 						{
-							micro.try_send(fut, LOW).ok();
+							micro.try_send(hook.call(false), LOW).ok();
 						}
 					}
 					TaskProg::Succ(id) => {
-						if let Some(fut) = ongoing.lock().try_remove(id, TaskStage::Dispatched) {
-							micro.try_send(fut, LOW).ok();
+						if let Some(hook) = ongoing.lock().try_remove(id, TaskStage::Dispatched) {
+							micro.try_send(hook.call(false), LOW).ok();
 						}
 					}
 					TaskProg::Fail(id, reason) => {

@@ -80,7 +80,7 @@ impl Trigger {
 
 		Some(match path.as_os_str().rsplit_once(SEP) {
 			Some((p, c)) if p.is_empty() => (Url { loc: MAIN_SEPARATOR_STR.into(), scheme }, c.into()),
-			Some((p, c)) => (expand_url(Url { loc: p.into(), scheme }).into_owned(), c.into()),
+			Some((p, c)) => (expand_url(Url { loc: p.into(), scheme }), c.into()),
 			None => (CWD.load().as_ref().clone(), path.into()),
 		})
 	}

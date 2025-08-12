@@ -4,7 +4,9 @@ local M = {}
 
 function M:peek(job)
 	local folder = cx.active.preview.folder
-	if not folder or folder.cwd ~= job.file.url then
+	if not folder then
+		return ya.preview_widget(job, ui.Line("Loading..."):area(job.area):align(ui.Align.CENTER))
+	elseif folder.cwd ~= job.file.url then
 		return
 	end
 

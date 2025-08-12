@@ -18,7 +18,7 @@ impl Tasks {
 			self.process_from_opener(
 				cwd.clone(),
 				Cow::Borrowed(opener),
-				args.into_iter().map(|u| u.into_path().into_os_string()).collect(),
+				args.into_iter().map(|u| u.into_path2().into_os_string()).collect(),
 			);
 		}
 	}
