@@ -1,12 +1,11 @@
 use std::collections::HashMap;
 
-use futures::future::BoxFuture;
 use yazi_config::YAZI;
 use yazi_parser::app::TasksProgress;
 use yazi_shared::{Id, Ids};
 
 use super::{Task, TaskStage};
-use crate::{Hooks, TaskKind};
+use crate::{Hook, Hooks, TaskKind};
 
 #[derive(Default)]
 pub struct Ongoing {
@@ -56,7 +55,7 @@ impl Ongoing {
 	#[inline]
 	pub fn is_empty(&self) -> bool { self.len() == 0 }
 
-	pub fn try_remove(&mut self, id: Id, stage: TaskStage) -> Option<BoxFuture<'static, ()>> {
+	pub fn try_remove(&mut self, id: Id, stage: TaskStage) -> Option<Box<dyn Hook>> {
 		if let Some(task) = self.get_mut(id) {
 			if stage > task.stage {
 				task.stage = stage;
@@ -68,8 +67,8 @@ impl Ongoing {
 					if task.succ < task.total {
 						return None;
 					}
-					if let Some(fut) = self.hooks.run_or_pop(id, false) {
-						return Some(fut);
+					if let Some(hook) = self.hooks.pop(id) {
+						return Some(hook);
 					}
 				}
 				TaskStage::Hooked => {}

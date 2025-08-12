@@ -2,22 +2,10 @@ use std::{borrow::Cow, ffi::{OsStr, OsString}, path::{Path, PathBuf}};
 
 use yazi_shared::url::{Loc, Url};
 
-use crate::CWD;
+use crate::{CWD, path::clean_url};
 
 #[inline]
-pub fn expand_url<'a>(url: impl Into<Cow<'a, Url>>) -> Cow<'a, Url> {
-	let cow = url.into();
-	match expand_url_impl(&cow) {
-		Cow::Borrowed(_) => cow,
-		Cow::Owned(url) => url.into(),
-	}
-}
-
-// FIXME: VFS
-#[inline]
-pub fn expand_path(p: impl AsRef<Path>) -> PathBuf {
-	expand_url(Url::from(p.as_ref())).into_owned().loc.into_path()
-}
+pub fn expand_url<'a>(url: impl AsRef<Url>) -> Url { clean_url(expand_url_impl(url.as_ref())) }
 
 fn expand_url_impl(url: &Url) -> Cow<'_, Url> {
 	let (o_base, o_rest, o_urn) = url.loc.triple();

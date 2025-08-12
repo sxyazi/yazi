@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::HashSet, path::PathBuf};
+use std::{collections::HashSet, path::PathBuf};
 
 use futures::executor::block_on;
 use serde::Serialize;
@@ -25,15 +25,15 @@ impl Boot {
 			return (vec![CWD.load().as_ref().clone()], vec![UrnBuf::default()]);
 		}
 
-		async fn go<'a>(entry: Cow<'a, Url>) -> (Url, UrnBuf) {
+		async fn go<'a>(entry: Url) -> (Url, UrnBuf) {
 			let Some((parent, child)) = entry.pair() else {
-				return (entry.into_owned(), UrnBuf::default());
+				return (entry, UrnBuf::default());
 			};
 
 			if provider::metadata(&entry).await.is_ok_and(|m| m.is_file()) {
 				(parent, child)
 			} else {
-				(entry.into_owned(), UrnBuf::default())
+				(entry, UrnBuf::default())
 			}
 		}
 

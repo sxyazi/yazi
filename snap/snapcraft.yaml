@@ -123,8 +123,10 @@ parts:
   # expected binary without much overhead, and works across platforms.
   magick:
     plugin: autotools
-    source: https://imagemagick.org/archive/ImageMagick.tar.gz
-    source-type: tar
+    source: https://github.com/ImageMagick/ImageMagick.git
+    source-type: git
+    source-tag: 7.1.2-0
+    source-depth: 1
     stage-packages:
       - libgomp1
     autotools-configure-parameters:

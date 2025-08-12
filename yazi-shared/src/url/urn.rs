@@ -1,4 +1,4 @@
-use std::{borrow::{Borrow, Cow}, ffi::OsStr, ops::Deref, path::{Component, Path, PathBuf}};
+use std::{borrow::{Borrow, Cow}, ffi::OsStr, ops::Deref, path::{Path, PathBuf}};
 
 use serde::Serialize;
 
@@ -19,9 +19,6 @@ impl Urn {
 	pub fn count(&self) -> usize { self.0.components().count() }
 
 	#[inline]
-	pub fn nth(&self, n: usize) -> Option<Component<'_>> { self.0.components().nth(n) }
-
-	#[inline]
 	pub fn encoded_bytes(&self) -> &[u8] { self.0.as_os_str().as_encoded_bytes() }
 
 	#[cfg(unix)]
@@ -30,9 +27,6 @@ impl Urn {
 		use std::os::unix::ffi::OsStrExt;
 		self.name().is_some_and(|s| s.as_bytes().starts_with(b"."))
 	}
-
-	#[inline]
-	pub fn is_empty(&self) -> bool { self.0.as_os_str().is_empty() }
 }
 
 impl Deref for Urn {

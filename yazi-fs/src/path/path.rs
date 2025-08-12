@@ -46,11 +46,9 @@ async fn _unique_name(mut url: Url, append: bool) -> io::Result<Url> {
 
 		if append {
 			name.push(&dot_ext);
-			name.push("_");
-			name.push(i.to_string());
+			name.push(format!("_{i}"));
 		} else {
-			name.push("_");
-			name.push(i.to_string());
+			name.push(format!("_{i}"));
 			name.push(&dot_ext);
 		}
 

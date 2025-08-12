@@ -1,7 +1,7 @@
 use std::{ffi::OsStr, fs::{FileType, Metadata}, hash::{BuildHasher, Hash, Hasher}, ops::Deref};
 
 use anyhow::Result;
-use yazi_shared::url::{Url, Urn, UrnBuf};
+use yazi_shared::url::{Uri, Url, Urn, UrnBuf};
 
 use crate::{cha::Cha, provider};
 
@@ -56,7 +56,7 @@ impl File {
 	pub fn url_owned(&self) -> Url { self.url.to_owned() }
 
 	#[inline]
-	pub fn uri(&self) -> &Urn { self.url.uri() }
+	pub fn uri(&self) -> &Uri { self.url.uri() }
 
 	#[inline]
 	pub fn urn(&self) -> &Urn { self.url.urn() }

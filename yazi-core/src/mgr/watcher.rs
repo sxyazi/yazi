@@ -77,12 +77,6 @@ impl Watcher {
 
 	// TODO: performance improvement
 	pub fn trigger_dirs(&self, folders: &[&Folder]) {
-		let todo: Vec<_> =
-			folders.iter().filter(|&f| f.url.is_regular()).map(|&f| (f.url.to_owned(), f.cha)).collect();
-		if todo.is_empty() {
-			return;
-		}
-
 		async fn go(cwd: Url, cha: Cha) {
 			let Some(cha) = Files::assert_stale(&cwd, cha).await else { return };
 
@@ -92,9 +86,15 @@ impl Watcher {
 			}
 		}
 
-		tokio::spawn(async move {
-			futures::future::join_all(todo.into_iter().map(|(cwd, cha)| go(cwd, cha))).await;
-		});
+		let futs: Vec<_> = folders
+			.iter()
+			.filter(|&f| f.url.scheme.is_builtin())
+			.map(|&f| go(f.url.to_owned(), f.cha))
+			.collect();
+
+		if !futs.is_empty() {
+			tokio::spawn(futures::future::join_all(futs));
+		}
 	}
 
 	async fn fan_in(

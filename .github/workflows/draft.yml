@@ -184,14 +184,14 @@ jobs:
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
         run: |
-          parallel 'snapcraft push -v --release latest/candidate {}' ::: yazi-*.snap || true
+          parallel 'snapcraft upload -v --release latest/candidate {}' ::: yazi-*.snap || true
 
       - name: Push snap to edge channel
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
         run: |
-          parallel 'snapcraft push -v --release latest/edge {}' ::: yazi-*.snap || true
+          parallel 'snapcraft upload -v --release latest/edge {}' ::: yazi-*.snap || true
 
   draft:
     if: startsWith(github.ref, 'refs/tags/')
