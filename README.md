@@ -87,10 +87,6 @@ See https://yazi-rs.github.io/docs/image-preview for details.
 [ueberzug]: https://github.com/jstkdng/ueberzugpp
 [chafa]: https://hpjansson.org/chafa/
 
-<!-- Rio bug -->
-
-[rio-bug]: https://github.com/raphamorim/rio/issues/709
-
 ## License
 
 Yazi is MIT-licensed. For more information check the [LICENSE](LICENSE) file.
