@@ -1,0 +1,22 @@
+[package]
+name        = "yazi-build"
+version     = "0.1.7"
+edition     = "2024"
+license     = "MIT"
+authors     = [ "sxyazi <sxyazi@gmail.com>" ]
+description = "Yazi build system"
+homepage    = "https://yazi-rs.github.io"
+repository  = "https://github.com/sxyazi/yazi"
+
+[profile.release]
+codegen-units = 1
+lto           = true
+panic         = "abort"
+strip         = true
+
+[build-dependencies]
+yazi-term = { path = "../yazi-term", version = "25.5.31" }
+
+[[bin]]
+name = "yazi-build"
+path = "src/main.rs"

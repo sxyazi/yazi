@@ -1,0 +1,16 @@
+[env]
+MACOSX_DEPLOYMENT_TARGET  = "10.12"
+JEMALLOC_SYS_WITH_LG_PAGE = "16"
+
+# environment variable for tikv-jemalloc-sys
+#
+# https://jemalloc.net/jemalloc.3.html#opt.narenas
+# narenas is the maximum number of arenas to use for automatic multiplexing
+# of threads and arenas. The default is four times the number of CPUs,
+# or one if there is a single CPU.
+#
+# Improve memory efficiency by reducing fragmentation and ensuring all threads allocate from the same pool
+JEMALLOC_SYS_WITH_MALLOC_CONF = "narenas:1"
+
+[target.aarch64-apple-darwin]
+rustflags = [ "-Ctarget-cpu=apple-m1" ]

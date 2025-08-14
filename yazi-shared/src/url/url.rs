@@ -206,16 +206,15 @@ impl Url {
 	pub fn set_name(&mut self, name: impl AsRef<OsStr>) { self.loc.set_name(name); }
 
 	#[inline]
+	pub fn rebase(&self, base: &Path) -> Self {
+		Self { loc: self.loc.rebase(base), scheme: self.scheme.clone() }
+	}
+
+	#[inline]
 	pub fn pair(&self) -> Option<(Self, UrnBuf)> { Some((self.parent_url()?, self.loc.urn_owned())) }
 
 	#[inline]
 	pub fn hash_u64(&self) -> u64 { foldhash::fast::FixedState::default().hash_one(self) }
-
-	#[inline]
-	pub fn rebase(&self, parent: &Path) -> Self {
-		debug_assert!(self.is_regular());
-		self.loc.rebase(parent).into()
-	}
 
 	pub fn parse(bytes: &[u8]) -> Result<(Scheme, PathBuf, Option<(usize, usize)>)> {
 		let mut skip = 0;
@@ -277,6 +276,16 @@ impl Url {
 	// --- Archive
 	#[inline]
 	pub fn is_archive(&self) -> bool { matches!(self.scheme, Scheme::Archive(_)) }
+
+	// --- Internal
+	#[inline]
+	pub fn is_internal(&self) -> bool {
+		match self.scheme {
+			Scheme::Regular | Scheme::Sftp(_) => true,
+			Scheme::Search(_) => !self.loc.uri().is_empty(),
+			Scheme::Archive(_) => false,
+		}
+	}
 
 	// FIXME: remove
 	#[inline]

@@ -47,14 +47,8 @@ clap_complete_nushell = "4.5.8"
 serde_json            = { workspace = true }
 vergen-gitcl          = { version = "1.0.8", features = [ "build" ] }
 
-[target.aarch64-apple-darwin]
-rustflags = [ "-Ctarget-cpu=apple-m1" ]
-
 [target.'cfg(target_os = "macos")'.dependencies]
 crossterm = { workspace = true, features = [ "use-dev-tty", "libc" ] }
-
-[env]
-MACOSX_DEPLOYMENT_TARGET = "10.11"
 
 [[bin]]
 name = "ya"
