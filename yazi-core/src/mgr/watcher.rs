@@ -88,7 +88,7 @@ impl Watcher {
 
 		let futs: Vec<_> = folders
 			.iter()
-			.filter(|&f| f.url.scheme.is_builtin())
+			.filter(|&f| f.url.is_internal())
 			.map(|&f| go(f.url.to_owned(), f.cha))
 			.collect();
 

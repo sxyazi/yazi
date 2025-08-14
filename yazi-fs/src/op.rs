@@ -95,26 +95,26 @@ impl FilesOp {
 		}
 	}
 
-	pub fn rebase(&self, new: &Url) -> Self {
+	pub fn chdir(&self, wd: &Url) -> Self {
 		macro_rules! files {
-			($files:expr) => {{ $files.iter().map(|f| f.rebase(new)).collect() }};
+			($files:expr) => {{ $files.iter().map(|file| file.chdir(wd)).collect() }};
 		}
 		macro_rules! map {
-			($map:expr) => {{ $map.iter().map(|(u, f)| (u.clone(), f.rebase(new))).collect() }};
+			($map:expr) => {{ $map.iter().map(|(urn, file)| (urn.clone(), file.chdir(wd))).collect() }};
 		}
 
-		let n = new.clone();
+		let w = wd.clone();
 		match self {
-			Self::Full(_, files, cha) => Self::Full(n, files!(files), *cha),
-			Self::Part(_, files, ticket) => Self::Part(n, files!(files), *ticket),
-			Self::Done(_, cha, ticket) => Self::Done(n, *cha, *ticket),
-			Self::Size(_, map) => Self::Size(n, map.iter().map(|(u, &s)| (u.clone(), s)).collect()),
-			Self::IOErr(_, err) => Self::IOErr(n, *err),
+			Self::Full(_, files, cha) => Self::Full(w, files!(files), *cha),
+			Self::Part(_, files, ticket) => Self::Part(w, files!(files), *ticket),
+			Self::Done(_, cha, ticket) => Self::Done(w, *cha, *ticket),
+			Self::Size(_, map) => Self::Size(w, map.iter().map(|(urn, &s)| (urn.clone(), s)).collect()),
+			Self::IOErr(_, err) => Self::IOErr(w, *err),
 
-			Self::Creating(_, files) => Self::Creating(n, files!(files)),
-			Self::Deleting(_, urns) => Self::Deleting(n, urns.clone()),
-			Self::Updating(_, map) => Self::Updating(n, map!(map)),
-			Self::Upserting(_, map) => Self::Upserting(n, map!(map)),
+			Self::Creating(_, files) => Self::Creating(w, files!(files)),
+			Self::Deleting(_, urns) => Self::Deleting(w, urns.clone()),
+			Self::Updating(_, map) => Self::Updating(w, map!(map)),
+			Self::Upserting(_, map) => Self::Upserting(w, map!(map)),
 		}
 	}
 

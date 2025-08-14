@@ -25,3 +25,7 @@ impl Deref for Uri {
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
+
+impl AsRef<Path> for Uri {
+	fn as_ref(&self) -> &Path { &self.0 }
+}

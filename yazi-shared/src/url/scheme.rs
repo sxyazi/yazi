@@ -90,14 +90,6 @@ impl Scheme {
 	}
 
 	#[inline]
-	pub fn is_builtin(&self) -> bool {
-		match self {
-			Self::Regular | Self::Search(_) | Self::Sftp(_) => true,
-			Self::Archive(_) => false,
-		}
-	}
-
-	#[inline]
 	pub fn is_virtual(&self) -> bool {
 		match self {
 			Self::Regular | Self::Search(_) => false,

@@ -201,6 +201,13 @@ impl Loc {
 	}
 
 	#[inline]
+	pub fn rebase(&self, base: &Path) -> Self {
+		let mut loc: Self = base.join(self.uri()).into();
+		(loc.uri, loc.urn) = (self.uri, self.urn);
+		loc
+	}
+
+	#[inline]
 	pub fn has_base(&self) -> bool { self.bytes().len() != self.uri }
 
 	#[inline]
@@ -214,15 +221,6 @@ impl Loc {
 
 	#[inline]
 	pub fn has_trail(&self) -> bool { self.bytes().len() != self.urn }
-
-	#[inline]
-	pub fn rebase(&self, parent: &Path) -> Self {
-		debug_assert!(self.uri == self.name().len());
-		let path = parent.join(self.name());
-
-		debug_assert!(path.file_name().is_some_and(|s| s.len() == self.name().len()));
-		Self { inner: path, uri: self.uri, urn: self.uri }
-	}
 
 	#[inline]
 	pub fn to_path(&self) -> PathBuf { self.inner.clone() }

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ops::{Deref, DerefMut}};
+use std::{collections::HashMap, iter, ops::{Deref, DerefMut}};
 
 use yazi_shared::url::Url;
 
@@ -20,7 +20,9 @@ impl Linked {
 	where
 		'a: 'b,
 	{
-		if let Some(to) = self.get(url) {
+		if url.scheme.is_virtual() {
+			Box::new(iter::empty())
+		} else if let Some(to) = self.get(url) {
 			Box::new(self.iter().filter(move |(k, v)| *v == to && *k != url).map(|(k, _)| k))
 		} else {
 			Box::new(self.iter().filter(move |(_, v)| *v == url).map(|(k, _)| k))
@@ -28,15 +30,12 @@ impl Linked {
 	}
 
 	pub fn from_file(&self, url: &Url) -> Vec<Url> {
-		if self.is_empty() {
-			return vec![];
+		if url.scheme.is_virtual() {
+			vec![]
+		} else if let Some((parent, urn)) = url.pair() {
+			self.from_dir(&parent).map(|u| u.join(&urn)).collect()
+		} else {
+			vec![]
 		}
-
-		let Some(p) = url.parent_url() else {
-			return vec![];
-		};
-
-		let name = url.file_name().unwrap();
-		self.from_dir(&p).map(|u| u.join(name)).collect()
 	}
 }

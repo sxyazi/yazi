@@ -15,5 +15,15 @@ fn main() -> Result<(), Box<dyn Error>> {
 		);
 	}
 
+	let manifest = env::var_os("CARGO_MANIFEST_DIR").unwrap().to_string_lossy().replace(r"\", "/");
+	if env::var_os("YAZI_CRATE_BUILD").is_none()
+		&& (manifest.contains("/git/checkouts/yazi-")
+			|| manifest.contains("/registry/src/index.crates.io-"))
+	{
+		panic!(
+			"Due to Cargo's limitations, the `yazi-fm` and `yazi-cli` crates on crates.io must be built with `cargo install --force yazi-build`"
+		);
+	}
+
 	Ok(())
 }
