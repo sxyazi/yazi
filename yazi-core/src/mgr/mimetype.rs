@@ -1,7 +1,7 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use yazi_fs::File;
-use yazi_shared::{MIME_DIR, SStr, url::{UrlCov, UrlBuf}};
+use yazi_shared::{MIME_DIR, SStr, url::{UrlBuf, UrlCov}};
 
 #[derive(Default)]
 pub struct Mimetype(HashMap<UrlCov, String>);

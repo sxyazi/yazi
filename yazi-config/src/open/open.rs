@@ -42,7 +42,10 @@ impl Open {
 			.map(String::as_str)
 	}
 
-	pub fn common<'a>(&'a self, targets: &[(impl AsRef<UrlBuf>, impl AsRef<str>)]) -> IndexSet<&'a str> {
+	pub fn common<'a>(
+		&'a self,
+		targets: &[(impl AsRef<UrlBuf>, impl AsRef<str>)],
+	) -> IndexSet<&'a str> {
 		let each: Vec<IndexSet<&str>> = targets
 			.iter()
 			.map(|(u, m)| self.all(u, m).collect::<IndexSet<_>>())

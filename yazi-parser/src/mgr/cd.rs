@@ -22,7 +22,9 @@ impl From<CmdCow> for CdOpt {
 }
 
 impl From<(UrlBuf, CdSource)> for CdOpt {
-	fn from((target, source): (UrlBuf, CdSource)) -> Self { Self { target, interactive: false, source } }
+	fn from((target, source): (UrlBuf, CdSource)) -> Self {
+		Self { target, interactive: false, source }
+	}
 }
 
 impl FromLua for CdOpt {

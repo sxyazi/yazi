@@ -2,7 +2,7 @@ use std::{collections::HashMap, ops::Deref};
 
 use indexmap::IndexMap;
 use yazi_fs::FilesOp;
-use yazi_shared::{timestamp_us, url::{UrlCov, UrlBuf}};
+use yazi_shared::{timestamp_us, url::{UrlBuf, UrlCov}};
 
 #[derive(Default)]
 pub struct Selected {

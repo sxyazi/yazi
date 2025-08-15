@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use tracing::debug;
-use yazi_shared::url::{UrlCov, UrlBuf};
+use yazi_shared::url::{UrlBuf, UrlCov};
 
 use super::Tasks;
 

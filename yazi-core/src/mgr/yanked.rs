@@ -3,7 +3,7 @@ use std::{collections::HashSet, ops::Deref};
 use yazi_dds::Pubsub;
 use yazi_fs::FilesOp;
 use yazi_macro::err;
-use yazi_shared::url::{UrlCov, UrlBuf};
+use yazi_shared::url::{UrlBuf, UrlCov};
 
 #[derive(Debug, Default)]
 pub struct Yanked {

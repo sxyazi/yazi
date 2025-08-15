@@ -140,7 +140,10 @@ pub async fn symlink_dir(original: impl AsRef<UrlBuf>, link: impl AsRef<UrlBuf>)
 }
 
 #[inline]
-pub async fn symlink_file(original: impl AsRef<UrlBuf>, link: impl AsRef<UrlBuf>) -> io::Result<()> {
+pub async fn symlink_file(
+	original: impl AsRef<UrlBuf>,
+	link: impl AsRef<UrlBuf>,
+) -> io::Result<()> {
 	if let (Some(original), Some(link)) = (original.as_ref().as_path(), link.as_ref().as_path()) {
 		Local::symlink_file(original, link).await
 	} else {

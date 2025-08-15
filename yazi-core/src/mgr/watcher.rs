@@ -154,7 +154,11 @@ impl Watcher {
 		}
 	}
 
-	async fn sync_watched<W>(mut watcher: W, to_unwatch: HashSet<UrlBuf>, to_watch: HashSet<UrlBuf>) -> W
+	async fn sync_watched<W>(
+		mut watcher: W,
+		to_unwatch: HashSet<UrlBuf>,
+		to_watch: HashSet<UrlBuf>,
+	) -> W
 	where
 		W: notify::Watcher + Send + 'static,
 	{

@@ -73,7 +73,12 @@ impl Actor for BulkRename {
 }
 
 impl BulkRename {
-	async fn r#do(root: usize, old: Vec<Tuple>, new: Vec<Tuple>, selected: Vec<UrlBuf>) -> Result<()> {
+	async fn r#do(
+		root: usize,
+		old: Vec<Tuple>,
+		new: Vec<Tuple>,
+		selected: Vec<UrlBuf>,
+	) -> Result<()> {
 		terminal_clear(TTY.writer())?;
 		if old.len() != new.len() {
 			#[rustfmt::skip]
