@@ -1,7 +1,7 @@
 use ratatui::layout::Rect;
 use yazi_adapter::Dimension;
 use yazi_config::popup::{Origin, Position};
-use yazi_shared::url::Url;
+use yazi_shared::url::UrlBuf;
 
 use super::{Mimetype, Tabs, Watcher, Yanked};
 use crate::tab::{Folder, Tab};
@@ -38,7 +38,7 @@ impl Mgr {
 
 impl Mgr {
 	#[inline]
-	pub fn cwd(&self) -> &Url { self.active().cwd() }
+	pub fn cwd(&self) -> &UrlBuf { self.active().cwd() }
 
 	#[inline]
 	pub fn active(&self) -> &Tab { self.tabs.active() }

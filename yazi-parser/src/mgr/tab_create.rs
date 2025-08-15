@@ -1,11 +1,11 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_boot::BOOT;
 use yazi_fs::path::expand_url;
-use yazi_shared::{event::CmdCow, url::Url};
+use yazi_shared::{event::CmdCow, url::UrlBuf};
 
 #[derive(Debug)]
 pub struct TabCreateOpt {
-	pub wd: Option<Url>,
+	pub wd: Option<UrlBuf>,
 }
 
 impl From<CmdCow> for TabCreateOpt {

@@ -4,7 +4,7 @@ use anyhow::{Context, Result, anyhow, bail};
 use serde::Deserialize;
 use yazi_codegen::{DeserializeOver1, DeserializeOver2};
 use yazi_fs::{Xdg, ok_or_not_found, path::expand_url};
-use yazi_shared::url::Url;
+use yazi_shared::url::UrlBuf;
 
 use super::{Filetype, Flavor, Icon};
 use crate::Style;
@@ -223,7 +223,7 @@ impl Theme {
 		self.mgr.syntect_theme = self
 			.flavor
 			.syntect_path(light)
-			.or_else(|| expand_url(Url::from(&self.mgr.syntect_theme)).into_path())
+			.or_else(|| expand_url(UrlBuf::from(&self.mgr.syntect_theme)).into_path())
 			.ok_or(anyhow!("[mgr].syntect_theme must be a path within local filesystem"))?;
 
 		Ok(self)

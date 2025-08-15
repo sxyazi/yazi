@@ -2,12 +2,12 @@ use std::{collections::HashMap, ops::Deref};
 
 use indexmap::IndexMap;
 use yazi_fs::FilesOp;
-use yazi_shared::{timestamp_us, url::{CovUrl, Url}};
+use yazi_shared::{timestamp_us, url::{UrlBuf, UrlCov}};
 
 #[derive(Default)]
 pub struct Selected {
-	inner:   IndexMap<CovUrl, u64>,
-	parents: HashMap<CovUrl, usize>,
+	inner:   IndexMap<UrlCov, u64>,
+	parents: HashMap<UrlCov, usize>,
 }
 
 impl Selected {
@@ -18,17 +18,17 @@ impl Selected {
 	pub fn is_empty(&self) -> bool { self.inner.is_empty() }
 
 	#[inline]
-	pub fn values(&self) -> impl Iterator<Item = &Url> { self.inner.keys().map(Deref::deref) }
+	pub fn values(&self) -> impl Iterator<Item = &UrlBuf> { self.inner.keys().map(Deref::deref) }
 
 	#[inline]
-	pub fn contains(&self, url: impl AsRef<Url>) -> bool {
-		self.inner.contains_key(CovUrl::new(&url))
+	pub fn contains(&self, url: impl AsRef<UrlBuf>) -> bool {
+		self.inner.contains_key(UrlCov::new(&url))
 	}
 
 	#[inline]
-	pub fn add(&mut self, url: &Url) -> bool { self.add_same(&[url]) == 1 }
+	pub fn add(&mut self, url: &UrlBuf) -> bool { self.add_same(&[url]) == 1 }
 
-	pub fn add_many(&mut self, urls: &[impl AsRef<Url>]) -> usize {
+	pub fn add_many(&mut self, urls: &[impl AsRef<UrlBuf>]) -> usize {
 		let mut grouped: HashMap<_, Vec<_>> = Default::default();
 		for u in urls {
 			if let Some(p) = u.as_ref().parent_url() {
@@ -38,10 +38,10 @@ impl Selected {
 		grouped.into_values().map(|v| self.add_same(&v)).sum()
 	}
 
-	fn add_same(&mut self, urls: &[impl AsRef<Url>]) -> usize {
+	fn add_same(&mut self, urls: &[impl AsRef<UrlBuf>]) -> usize {
 		// If it has appeared as a parent
 		let urls: Vec<_> =
-			urls.iter().map(CovUrl::new).filter(|&u| !self.parents.contains_key(u)).collect();
+			urls.iter().map(UrlCov::new).filter(|&u| !self.parents.contains_key(u)).collect();
 		if urls.is_empty() {
 			return 0;
 		}
@@ -68,9 +68,9 @@ impl Selected {
 	}
 
 	#[inline]
-	pub fn remove(&mut self, url: &Url) -> bool { self.remove_same(&[url]) == 1 }
+	pub fn remove(&mut self, url: &UrlBuf) -> bool { self.remove_same(&[url]) == 1 }
 
-	pub fn remove_many(&mut self, urls: &[impl AsRef<Url>]) -> usize {
+	pub fn remove_many(&mut self, urls: &[impl AsRef<UrlBuf>]) -> usize {
 		let mut grouped: HashMap<_, Vec<_>> = Default::default();
 		for u in urls {
 			if let Some(p) = u.as_ref().parent_url() {
@@ -86,13 +86,13 @@ impl Selected {
 		affected
 	}
 
-	fn remove_same(&mut self, urls: &[impl AsRef<Url>]) -> usize {
-		let count = urls.iter().filter_map(|u| self.inner.swap_remove(CovUrl::new(u))).count();
+	fn remove_same(&mut self, urls: &[impl AsRef<UrlBuf>]) -> usize {
+		let count = urls.iter().filter_map(|u| self.inner.swap_remove(UrlCov::new(u))).count();
 		if count == 0 {
 			return 0;
 		}
 
-		let mut parent = CovUrl::new(&urls[0]).parent_url();
+		let mut parent = UrlCov::new(&urls[0]).parent_url();
 		while let Some(u) = parent {
 			let n = self.parents.get_mut(&u).unwrap();
 
@@ -126,7 +126,7 @@ impl Selected {
 mod tests {
 	use super::*;
 
-	fn url(s: &str) -> Url { s.parse().unwrap() }
+	fn url(s: &str) -> UrlBuf { s.parse().unwrap() }
 
 	#[test]
 	fn test_insert_non_conflicting() {
@@ -196,7 +196,7 @@ mod tests {
 	fn insert_many_empty_urls_list() {
 		let mut s = Selected::default();
 
-		assert_eq!(0, s.add_same(&[] as &[&Url]));
+		assert_eq!(0, s.add_same(&[] as &[&UrlBuf]));
 	}
 
 	#[test]

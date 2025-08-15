@@ -1,10 +1,10 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_fs::path::expand_url;
-use yazi_shared::{event::CmdCow, url::Url};
+use yazi_shared::{event::CmdCow, url::UrlBuf};
 
 #[derive(Debug)]
 pub struct CdOpt {
-	pub target:      Url,
+	pub target:      UrlBuf,
 	pub interactive: bool,
 	pub source:      CdSource,
 }
@@ -21,8 +21,10 @@ impl From<CmdCow> for CdOpt {
 	}
 }
 
-impl From<(Url, CdSource)> for CdOpt {
-	fn from((target, source): (Url, CdSource)) -> Self { Self { target, interactive: false, source } }
+impl From<(UrlBuf, CdSource)> for CdOpt {
+	fn from((target, source): (UrlBuf, CdSource)) -> Self {
+		Self { target, interactive: false, source }
+	}
 }
 
 impl FromLua for CdOpt {

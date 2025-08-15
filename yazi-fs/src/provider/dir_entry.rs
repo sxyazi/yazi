@@ -1,6 +1,6 @@
 use std::{ffi::OsString, io};
 
-use yazi_shared::url::Url;
+use yazi_shared::url::UrlBuf;
 
 pub enum DirEntry {
 	Local(super::local::DirEntry),
@@ -8,7 +8,7 @@ pub enum DirEntry {
 
 impl DirEntry {
 	#[must_use]
-	pub fn url(&self) -> Url {
+	pub fn url(&self) -> UrlBuf {
 		match self {
 			DirEntry::Local(local) => local.url(),
 		}
@@ -41,7 +41,7 @@ pub enum DirEntrySync {
 
 impl DirEntrySync {
 	#[must_use]
-	pub fn url(&self) -> Url {
+	pub fn url(&self) -> UrlBuf {
 		match self {
 			DirEntrySync::Local(local) => local.url(),
 		}

@@ -1,7 +1,7 @@
 use std::{collections::{HashMap, HashSet}, mem, ops::{Deref, DerefMut, Not}};
 
 use tokio::{select, sync::mpsc::{self, UnboundedReceiver}};
-use yazi_shared::{Id, url::{Url, Urn, UrnBuf}};
+use yazi_shared::{Id, url::{UrlBuf, Urn, UrnBuf}};
 
 use super::{FilesSorter, Filter};
 use crate::{FILES_TICKET, File, FilesOp, SortBy, cha::Cha, mounts::PARTITIONS, provider::{self, DirEntry}};
@@ -34,7 +34,7 @@ impl DerefMut for Files {
 impl Files {
 	pub fn new(show_hidden: bool) -> Self { Self { show_hidden, ..Default::default() } }
 
-	pub async fn from_dir(dir: &Url) -> std::io::Result<UnboundedReceiver<File>> {
+	pub async fn from_dir(dir: &UrlBuf) -> std::io::Result<UnboundedReceiver<File>> {
 		let mut it = provider::read_dir(dir).await?;
 		let (tx, rx) = mpsc::unbounded_channel();
 
@@ -55,7 +55,7 @@ impl Files {
 		Ok(rx)
 	}
 
-	pub async fn from_dir_bulk(dir: &Url) -> std::io::Result<Vec<File>> {
+	pub async fn from_dir_bulk(dir: &UrlBuf) -> std::io::Result<Vec<File>> {
 		let mut it = provider::read_dir(dir).await?;
 		let mut entries = Vec::with_capacity(5000);
 		while let Ok(Some(entry)) = it.next_entry().await {
@@ -85,7 +85,7 @@ impl Files {
 		)
 	}
 
-	pub async fn assert_stale(dir: &Url, cha: Cha) -> Option<Cha> {
+	pub async fn assert_stale(dir: &UrlBuf, cha: Cha) -> Option<Cha> {
 		use std::io::ErrorKind;
 		match Cha::from_url(dir).await {
 			Ok(c) if !c.is_dir() => FilesOp::issue_error(dir, ErrorKind::NotADirectory).await,

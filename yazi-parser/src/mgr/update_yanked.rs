@@ -4,17 +4,17 @@ use anyhow::bail;
 use mlua::{AnyUserData, ExternalError, FromLua, IntoLua, Lua, MetaMethod, MultiValue, ObjectLike, UserData, UserDataFields, UserDataMethods, Value};
 use serde::{Deserialize, Serialize};
 use yazi_binding::get_metatable;
-use yazi_shared::{event::CmdCow, url::CovUrl};
+use yazi_shared::{event::CmdCow, url::UrlCov};
 
 type Iter = yazi_binding::Iter<
-	std::iter::Map<std::collections::hash_set::IntoIter<CovUrl>, fn(CovUrl) -> yazi_binding::Url>,
+	std::iter::Map<std::collections::hash_set::IntoIter<UrlCov>, fn(UrlCov) -> yazi_binding::Url>,
 	yazi_binding::Url,
 >;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct UpdateYankedOpt<'a> {
 	pub cut:  bool,
-	pub urls: Cow<'a, HashSet<CovUrl>>,
+	pub urls: Cow<'a, HashSet<UrlCov>>,
 }
 
 impl TryFrom<CmdCow> for UpdateYankedOpt<'_> {

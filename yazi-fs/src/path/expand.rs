@@ -1,13 +1,15 @@
 use std::{borrow::Cow, ffi::{OsStr, OsString}, path::{Path, PathBuf}};
 
-use yazi_shared::url::{Loc, Url};
+use yazi_shared::{loc::LocBuf, url::UrlBuf};
 
 use crate::{CWD, path::clean_url};
 
 #[inline]
-pub fn expand_url<'a>(url: impl AsRef<Url>) -> Url { clean_url(expand_url_impl(url.as_ref())) }
+pub fn expand_url<'a>(url: impl AsRef<UrlBuf>) -> UrlBuf {
+	clean_url(expand_url_impl(url.as_ref()))
+}
 
-fn expand_url_impl(url: &Url) -> Cow<'_, Url> {
+fn expand_url_impl(url: &UrlBuf) -> Cow<'_, UrlBuf> {
 	let (o_base, o_rest, o_urn) = url.loc.triple();
 
 	let n_base = expand_variables(o_base);
@@ -20,14 +22,14 @@ fn expand_url_impl(url: &Url) -> Cow<'_, Url> {
 	let uri_count = url.uri().count() as isize;
 	let urn_count = url.urn().count() as isize;
 
-	let loc = Loc::with(
+	let loc = LocBuf::with(
 		PathBuf::from_iter([n_base, n_rest, n_urn]),
 		(uri_count + rest_diff + urn_diff) as usize,
 		(urn_count + urn_diff) as usize,
 	)
 	.expect("Failed to create Loc from expanded path");
 
-	let url = Url { loc, scheme: url.scheme.clone() };
+	let url = UrlBuf { loc, scheme: url.scheme.clone() };
 	match absolute_url(&url) {
 		Cow::Borrowed(_) => url.into(),
 		Cow::Owned(u) => u.into(),
@@ -60,36 +62,36 @@ fn expand_variables(p: &Path) -> Cow<'_, Path> {
 	}
 }
 
-fn absolute_url(url: &Url) -> Cow<'_, Url> {
+fn absolute_url(url: &UrlBuf) -> Cow<'_, UrlBuf> {
 	let b = url.loc.as_os_str().as_encoded_bytes();
 	let local = !url.scheme.is_virtual();
 
 	if cfg!(windows) && local && b.len() == 2 && b[1] == b':' && b[0].is_ascii_alphabetic() {
-		let loc = Loc::with(
+		let loc = LocBuf::with(
 			format!(r"{}:\", b[0].to_ascii_uppercase() as char).into(),
 			if url.has_base() { 0 } else { 2 },
 			if url.has_trail() { 0 } else { 2 },
 		)
 		.expect("Failed to create Loc from drive letter");
-		Url { loc, scheme: url.scheme.clone() }.into()
+		UrlBuf { loc, scheme: url.scheme.clone() }.into()
 	} else if local
 		&& let Ok(rest) = url.loc.strip_prefix("~/")
 		&& let Some(home) = dirs::home_dir()
 		&& home.is_absolute()
 	{
 		let add = home.components().count() - 1; // Home root ("~") has offset by the absolute root ("/")
-		let loc = Loc::with(
+		let loc = LocBuf::with(
 			home.join(rest),
 			url.uri().count() + if url.has_base() { 0 } else { add },
 			url.urn().count() + if url.has_trail() { 0 } else { add },
 		)
 		.expect("Failed to create Loc from home directory");
-		Url { loc, scheme: url.scheme.clone() }.into()
+		UrlBuf { loc, scheme: url.scheme.clone() }.into()
 	} else if !url.is_absolute() {
 		let cwd = CWD.load();
-		let loc = Loc::with(cwd.loc.join(&url.loc), url.uri().count(), url.urn().count())
+		let loc = LocBuf::with(cwd.loc.join(&url.loc), url.uri().count(), url.urn().count())
 			.expect("Failed to create Loc from relative path");
-		Url { loc, scheme: cwd.scheme.clone() }.into()
+		UrlBuf { loc, scheme: cwd.scheme.clone() }.into()
 	} else {
 		url.into()
 	}
@@ -149,7 +151,7 @@ mod tests {
 		];
 
 		for (input, expected) in cases {
-			let u: Url = input.parse()?;
+			let u: UrlBuf = input.parse()?;
 			assert_eq!(format!("{:?}", expand_url(u)), expected);
 		}
 

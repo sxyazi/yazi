@@ -1,7 +1,7 @@
 use std::ffi::OsString;
 
 use tokio::sync::mpsc;
-use yazi_shared::{Id, url::Url};
+use yazi_shared::{Id, url::UrlBuf};
 
 use super::ShellOpt;
 
@@ -9,7 +9,7 @@ use super::ShellOpt;
 #[derive(Debug)]
 pub struct ProcessInBlock {
 	pub id:   Id,
-	pub cwd:  Url,
+	pub cwd:  UrlBuf,
 	pub cmd:  OsString,
 	pub args: Vec<OsString>,
 }
@@ -24,7 +24,7 @@ impl From<ProcessInBlock> for ShellOpt {
 #[derive(Debug)]
 pub struct ProcessInOrphan {
 	pub id:   Id,
-	pub cwd:  Url,
+	pub cwd:  UrlBuf,
 	pub cmd:  OsString,
 	pub args: Vec<OsString>,
 }
@@ -39,7 +39,7 @@ impl From<ProcessInOrphan> for ShellOpt {
 #[derive(Debug)]
 pub struct ProcessInBg {
 	pub id:     Id,
-	pub cwd:    Url,
+	pub cwd:    UrlBuf,
 	pub cmd:    OsString,
 	pub args:   Vec<OsString>,
 	pub cancel: mpsc::Receiver<()>,

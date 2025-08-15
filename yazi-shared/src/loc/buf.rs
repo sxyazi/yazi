@@ -5,43 +5,43 @@ use anyhow::{Result, bail};
 use crate::url::{Uri, Urn, UrnBuf};
 
 #[derive(Clone, Default)]
-pub struct Loc {
+pub struct LocBuf {
 	inner: PathBuf,
 	uri:   usize,
 	urn:   usize,
 }
 
-impl Deref for Loc {
+impl Deref for LocBuf {
 	type Target = PathBuf;
 
 	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
-impl AsRef<Path> for Loc {
+impl AsRef<Path> for LocBuf {
 	fn as_ref(&self) -> &Path { &self.inner }
 }
 
-impl PartialEq for Loc {
+impl PartialEq for LocBuf {
 	fn eq(&self, other: &Self) -> bool { self.inner == other.inner }
 }
 
-impl Eq for Loc {}
+impl Eq for LocBuf {}
 
-impl Ord for Loc {
+impl Ord for LocBuf {
 	fn cmp(&self, other: &Self) -> cmp::Ordering { self.inner.cmp(&other.inner) }
 }
 
-impl PartialOrd for Loc {
+impl PartialOrd for LocBuf {
 	fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> { Some(self.cmp(other)) }
 }
 
-impl Hash for Loc {
+impl Hash for LocBuf {
 	fn hash<H: Hasher>(&self, state: &mut H) { self.inner.hash(state) }
 }
 
-impl Debug for Loc {
+impl Debug for LocBuf {
 	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-		f.debug_struct("Loc")
+		f.debug_struct("LocBuf")
 			.field("path", &self.inner)
 			.field("uri", &self.uri())
 			.field("urn", &self.urn())
@@ -49,15 +49,15 @@ impl Debug for Loc {
 	}
 }
 
-impl From<OsString> for Loc {
+impl From<OsString> for LocBuf {
 	fn from(value: OsString) -> Self { Self::from(PathBuf::from(value)) }
 }
 
-impl From<String> for Loc {
+impl From<String> for LocBuf {
 	fn from(value: String) -> Self { Self::from(PathBuf::from(value)) }
 }
 
-impl From<PathBuf> for Loc {
+impl From<PathBuf> for LocBuf {
 	fn from(path: PathBuf) -> Self {
 		let Some(name) = path.file_name() else {
 			let uri = path.as_os_str().len();
@@ -82,15 +82,15 @@ impl From<PathBuf> for Loc {
 	}
 }
 
-impl From<Cow<'_, Path>> for Loc {
+impl From<Cow<'_, Path>> for LocBuf {
 	fn from(value: Cow<'_, Path>) -> Self { Self::from(value.into_owned()) }
 }
 
-impl<T: ?Sized + AsRef<OsStr>> From<&T> for Loc {
+impl<T: ?Sized + AsRef<OsStr>> From<&T> for LocBuf {
 	fn from(value: &T) -> Self { Self::from(value.as_ref().to_os_string()) }
 }
 
-impl Loc {
+impl LocBuf {
 	pub fn new(path: impl Into<PathBuf>, base: &Path, trail: &Path) -> Self {
 		let mut loc = Self::from(path.into());
 		loc.uri =
@@ -259,25 +259,25 @@ impl Loc {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use crate::url::Url;
+	use crate::url::UrlBuf;
 
 	#[test]
 	fn test_new() {
-		let loc: Loc = Path::new("/").into();
+		let loc: LocBuf = Path::new("/").into();
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("/"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new(""));
 		assert_eq!(loc.name(), OsStr::new(""));
 		assert_eq!(loc.base().as_os_str(), OsStr::new(""));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/"));
 
-		let loc: Loc = Path::new("/root").into();
+		let loc: LocBuf = Path::new("/root").into();
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("root"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("root"));
 		assert_eq!(loc.name(), OsStr::new("root"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/"));
 
-		let loc: Loc = Path::new("/root/code/foo/").into();
+		let loc: LocBuf = Path::new("/root/code/foo/").into();
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("foo"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("foo"));
 		assert_eq!(loc.name(), OsStr::new("foo"));
@@ -287,42 +287,42 @@ mod tests {
 
 	#[test]
 	fn test_with() -> Result<()> {
-		let loc = Loc::with("/".into(), 0, 0)?;
+		let loc = LocBuf::with("/".into(), 0, 0)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new(""));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new(""));
 		assert_eq!(loc.name(), OsStr::new(""));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/"));
 
-		let loc = Loc::with("/root/code/".into(), 1, 1)?;
+		let loc = LocBuf::with("/root/code/".into(), 1, 1)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("code"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("code"));
 		assert_eq!(loc.name(), OsStr::new("code"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/root/"));
 
-		let loc = Loc::with("/root/code/foo//".into(), 2, 1)?;
+		let loc = LocBuf::with("/root/code/foo//".into(), 2, 1)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("code/foo"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("foo"));
 		assert_eq!(loc.name(), OsStr::new("foo"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/root/code/"));
 
-		let loc = Loc::with("/root/code/foo//".into(), 2, 2)?;
+		let loc = LocBuf::with("/root/code/foo//".into(), 2, 2)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("code/foo"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("code/foo"));
 		assert_eq!(loc.name(), OsStr::new("foo"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/root/"));
 
-		let loc = Loc::with("/root/code/foo//bar/".into(), 2, 2)?;
+		let loc = LocBuf::with("/root/code/foo//bar/".into(), 2, 2)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("foo//bar"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("foo//bar"));
 		assert_eq!(loc.name(), OsStr::new("bar"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/code/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/root/code/"));
 
-		let loc = Loc::with("/root/code/foo//bar/".into(), 3, 2)?;
+		let loc = LocBuf::with("/root/code/foo//bar/".into(), 3, 2)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("code/foo//bar"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("foo//bar"));
 		assert_eq!(loc.name(), OsStr::new("bar"));
@@ -352,8 +352,8 @@ mod tests {
 		];
 
 		for (input, name, expected) in cases {
-			let mut a: Url = input.parse()?;
-			let b: Url = expected.parse()?;
+			let mut a: UrlBuf = input.parse()?;
+			let b: UrlBuf = expected.parse()?;
 			a.set_name(name);
 			assert_eq!(
 				(a.name(), format!("{a:?}").replace(r"\", "/")),

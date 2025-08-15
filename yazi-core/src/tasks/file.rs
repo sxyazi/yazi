@@ -1,12 +1,12 @@
 use std::collections::HashSet;
 
 use tracing::debug;
-use yazi_shared::url::{CovUrl, Url};
+use yazi_shared::url::{UrlBuf, UrlCov};
 
 use super::Tasks;
 
 impl Tasks {
-	pub fn file_cut(&self, src: &[&CovUrl], dest: &Url, force: bool) {
+	pub fn file_cut(&self, src: &[&UrlCov], dest: &UrlBuf, force: bool) {
 		for &u in src {
 			let to = dest.join(u.file_name().unwrap());
 			if force && *u == to {
@@ -17,7 +17,7 @@ impl Tasks {
 		}
 	}
 
-	pub fn file_copy(&self, src: &[&CovUrl], dest: &Url, force: bool, follow: bool) {
+	pub fn file_copy(&self, src: &[&UrlCov], dest: &UrlBuf, force: bool, follow: bool) {
 		for &u in src {
 			let to = dest.join(u.file_name().unwrap());
 			if force && *u == to {
@@ -28,7 +28,7 @@ impl Tasks {
 		}
 	}
 
-	pub fn file_link(&self, src: &HashSet<CovUrl>, dest: &Url, relative: bool, force: bool) {
+	pub fn file_link(&self, src: &HashSet<UrlCov>, dest: &UrlBuf, relative: bool, force: bool) {
 		for u in src {
 			let to = dest.join(u.file_name().unwrap());
 			if force && *u == to {
@@ -39,7 +39,7 @@ impl Tasks {
 		}
 	}
 
-	pub fn file_hardlink(&self, src: &HashSet<CovUrl>, dest: &Url, force: bool, follow: bool) {
+	pub fn file_hardlink(&self, src: &HashSet<UrlCov>, dest: &UrlBuf, force: bool, follow: bool) {
 		for u in src {
 			let to = dest.join(u.file_name().unwrap());
 			if force && *u == to {
@@ -50,7 +50,7 @@ impl Tasks {
 		}
 	}
 
-	pub fn file_remove(&self, targets: Vec<Url>, permanently: bool) {
+	pub fn file_remove(&self, targets: Vec<UrlBuf>, permanently: bool) {
 		for u in targets {
 			if permanently {
 				self.scheduler.file_delete(u);

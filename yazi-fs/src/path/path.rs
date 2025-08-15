@@ -1,11 +1,11 @@
 use std::{borrow::Cow, ffi::{OsStr, OsString}, future::Future, io, path::PathBuf};
 
 use anyhow::{Result, bail};
-use yazi_shared::url::{Loc, Url};
+use yazi_shared::{loc::LocBuf, url::UrlBuf};
 
 use crate::provider;
 
-pub fn skip_url(url: &Url, n: usize) -> Cow<'_, OsStr> {
+pub fn skip_url(url: &UrlBuf, n: usize) -> Cow<'_, OsStr> {
 	let mut it = url.components();
 	for _ in 0..n {
 		if it.next().is_none() {
@@ -15,7 +15,7 @@ pub fn skip_url(url: &Url, n: usize) -> Cow<'_, OsStr> {
 	it.os_str()
 }
 
-pub async fn unique_name<F>(u: Url, append: F) -> io::Result<Url>
+pub async fn unique_name<F>(u: UrlBuf, append: F) -> io::Result<UrlBuf>
 where
 	F: Future<Output = bool>,
 {
@@ -26,7 +26,7 @@ where
 	}
 }
 
-async fn _unique_name(mut url: Url, append: bool) -> io::Result<Url> {
+async fn _unique_name(mut url: UrlBuf, append: bool) -> io::Result<UrlBuf> {
 	let Some(stem) = url.file_stem().map(|s| s.to_owned()) else {
 		return Err(io::Error::new(io::ErrorKind::InvalidInput, "empty file stem"));
 	};
@@ -63,7 +63,7 @@ async fn _unique_name(mut url: Url, append: bool) -> io::Result<Url> {
 	Ok(url)
 }
 
-pub fn url_relative_to<'a>(from: &Url, to: &'a Url) -> Result<Cow<'a, Url>> {
+pub fn url_relative_to<'a>(from: &UrlBuf, to: &'a UrlBuf) -> Result<Cow<'a, UrlBuf>> {
 	use yazi_shared::url::Component::*;
 
 	if from.is_absolute() != to.is_absolute() {
@@ -75,7 +75,7 @@ pub fn url_relative_to<'a>(from: &Url, to: &'a Url) -> Result<Cow<'a, Url>> {
 	}
 
 	if from.covariant(to) {
-		return Ok(Url { loc: Loc::zeroed("."), scheme: to.scheme.clone() }.into());
+		return Ok(UrlBuf { loc: LocBuf::zeroed("."), scheme: to.scheme.clone() }.into());
 	}
 
 	let (mut f_it, mut t_it) = (from.components(), to.components());
@@ -97,7 +97,7 @@ pub fn url_relative_to<'a>(from: &Url, to: &'a Url) -> Result<Cow<'a, Url>> {
 	let rest = t_head.into_iter().chain(t_it);
 
 	let buf: PathBuf = dots.chain(rest).collect();
-	Ok(Url { loc: Loc::zeroed(buf), scheme: to.scheme.clone() }.into())
+	Ok(UrlBuf { loc: LocBuf::zeroed(buf), scheme: to.scheme.clone() }.into())
 }
 
 #[cfg(windows)]

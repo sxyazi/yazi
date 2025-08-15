@@ -35,7 +35,7 @@ impl IntoLua for UpdateSpottedOpt {
 // --- Lock
 #[derive(Debug)]
 pub struct SpotLock {
-	pub url:  yazi_shared::url::Url,
+	pub url:  yazi_shared::url::UrlBuf,
 	pub cha:  yazi_fs::cha::Cha,
 	pub mime: String,
 

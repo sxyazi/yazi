@@ -9,7 +9,7 @@ use yazi_dds::Pump;
 use yazi_fs::{must_be_dir, path::unique_name, provider, remove_dir_clean};
 use yazi_parser::{app::PluginOpt, tasks::ProcessExecOpt};
 use yazi_proxy::MgrProxy;
-use yazi_shared::{Id, Throttle, url::Url};
+use yazi_shared::{Id, Throttle, url::UrlBuf};
 
 use super::{Ongoing, TaskProg, TaskStage};
 use crate::{HIGH, LOW, NORMAL, TaskKind, TaskOp, file::{File, FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash}, plugin::{Plugin, PluginInEntry}, prework::{Prework, PreworkInFetch, PreworkInLoad, PreworkInSize}, process::{Process, ProcessInBg, ProcessInBlock, ProcessInOrphan}};
@@ -73,7 +73,7 @@ impl Scheduler {
 		}
 	}
 
-	pub fn file_cut(&self, from: Url, mut to: Url, force: bool) {
+	pub fn file_cut(&self, from: UrlBuf, mut to: UrlBuf, force: bool) {
 		let mut ongoing = self.ongoing.lock();
 		let id = ongoing.add(TaskKind::User, format!("Cut {} to {}", from.display(), to.display()));
 
@@ -104,7 +104,7 @@ impl Scheduler {
 		});
 	}
 
-	pub fn file_copy(&self, from: Url, mut to: Url, force: bool, follow: bool) {
+	pub fn file_copy(&self, from: UrlBuf, mut to: UrlBuf, force: bool, follow: bool) {
 		let id = self
 			.ongoing
 			.lock()
@@ -124,7 +124,7 @@ impl Scheduler {
 		});
 	}
 
-	pub fn file_link(&self, from: Url, mut to: Url, relative: bool, force: bool) {
+	pub fn file_link(&self, from: UrlBuf, mut to: UrlBuf, relative: bool, force: bool) {
 		let id = self
 			.ongoing
 			.lock()
@@ -141,7 +141,7 @@ impl Scheduler {
 		});
 	}
 
-	pub fn file_hardlink(&self, from: Url, mut to: Url, force: bool, follow: bool) {
+	pub fn file_hardlink(&self, from: UrlBuf, mut to: UrlBuf, force: bool, follow: bool) {
 		let id = self
 			.ongoing
 			.lock()
@@ -161,7 +161,7 @@ impl Scheduler {
 		});
 	}
 
-	pub fn file_delete(&self, target: Url) {
+	pub fn file_delete(&self, target: UrlBuf) {
 		let mut ongoing = self.ongoing.lock();
 		let id = ongoing.add(TaskKind::User, format!("Delete {}", target.display()));
 
@@ -187,7 +187,7 @@ impl Scheduler {
 		);
 	}
 
-	pub fn file_trash(&self, target: Url) {
+	pub fn file_trash(&self, target: UrlBuf) {
 		let mut ongoing = self.ongoing.lock();
 		let id = ongoing.add(TaskKind::User, format!("Trash {}", target.display()));
 
@@ -246,7 +246,7 @@ impl Scheduler {
 		});
 	}
 
-	pub fn prework_size(&self, targets: Vec<&Url>) {
+	pub fn prework_size(&self, targets: Vec<&UrlBuf>) {
 		let throttle = Arc::new(Throttle::new(targets.len(), Duration::from_millis(300)));
 		let mut ongoing = self.ongoing.lock();
 

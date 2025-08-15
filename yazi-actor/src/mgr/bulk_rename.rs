@@ -10,7 +10,7 @@ use yazi_fs::{File, FilesOp, max_common_root, maybe_exists, path::skip_url, path
 use yazi_macro::{err, succ};
 use yazi_parser::VoidOpt;
 use yazi_proxy::{AppProxy, HIDER, TasksProxy, WATCHER};
-use yazi_shared::{OsStrJoin, event::Data, terminal_clear, url::{Component, Url}};
+use yazi_shared::{OsStrJoin, event::Data, terminal_clear, url::{Component, UrlBuf}};
 use yazi_term::tty::TTY;
 
 use crate::{Actor, Ctx};
@@ -73,7 +73,12 @@ impl Actor for BulkRename {
 }
 
 impl BulkRename {
-	async fn r#do(root: usize, old: Vec<Tuple>, new: Vec<Tuple>, selected: Vec<Url>) -> Result<()> {
+	async fn r#do(
+		root: usize,
+		old: Vec<Tuple>,
+		new: Vec<Tuple>,
+		selected: Vec<UrlBuf>,
+	) -> Result<()> {
 		terminal_clear(TTY.writer())?;
 		if old.len() != new.len() {
 			#[rustfmt::skip]
@@ -108,7 +113,7 @@ impl BulkRename {
 		let permit = WATCHER.acquire().await.unwrap();
 		let (mut failed, mut succeeded) = (Vec::new(), HashMap::with_capacity(todo.len()));
 		for (o, n) in todo {
-			let (old, new): (Url, Url) = (
+			let (old, new): (UrlBuf, UrlBuf) = (
 				selected[o.0].components().take(root).chain([Component::Normal(&o)]).collect(),
 				selected[n.0].components().take(root).chain([Component::Normal(&n)]).collect(),
 			);
@@ -138,7 +143,7 @@ impl BulkRename {
 	}
 
 	fn opener() -> Option<&'static OpenerRule> {
-		YAZI.opener.block(YAZI.open.all(Url::from(Path::new("bulk-rename.txt")), "text/plain"))
+		YAZI.opener.block(YAZI.open.all(UrlBuf::from(Path::new("bulk-rename.txt")), "text/plain"))
 	}
 
 	async fn output_failed(failed: Vec<(Tuple, Tuple, anyhow::Error)>) -> Result<()> {

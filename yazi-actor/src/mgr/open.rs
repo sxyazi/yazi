@@ -9,7 +9,7 @@ use yazi_macro::{act, succ};
 use yazi_parser::mgr::{OpenDoOpt, OpenOpt};
 use yazi_plugin::isolate;
 use yazi_proxy::{MgrProxy, PickProxy, TasksProxy};
-use yazi_shared::{MIME_DIR, event::{CmdCow, Data}, url::Url};
+use yazi_shared::{MIME_DIR, event::{CmdCow, Data}, url::UrlBuf};
 
 use crate::{Actor, Ctx, mgr::Quit};
 
@@ -110,7 +110,7 @@ impl Actor for OpenDo {
 }
 
 impl Open {
-	fn guess_folder(cx: &Ctx, url: &Url) -> bool {
+	fn guess_folder(cx: &Ctx, url: &UrlBuf) -> bool {
 		let Some(p) = url.parent_url() else {
 			return true;
 		};

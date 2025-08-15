@@ -1,15 +1,15 @@
 use std::{borrow::Cow, path::{Path, PathBuf}};
 
-use yazi_shared::url::{Loc, Url};
+use yazi_shared::{loc::LocBuf, url::UrlBuf};
 
-pub fn clean_url<'a>(url: impl Into<Cow<'a, Url>>) -> Url {
+pub fn clean_url<'a>(url: impl Into<Cow<'a, UrlBuf>>) -> UrlBuf {
 	let cow = url.into();
 	let (path, uri, urn) = clean_path_impl(&cow.loc, cow.loc.base().count(), cow.loc.trail().count());
 
-	let loc = Loc::with(path, uri, urn).expect("Failed to create Loc from cleaned path");
+	let loc = LocBuf::with(path, uri, urn).expect("Failed to create Loc from cleaned path");
 	match cow {
-		Cow::Borrowed(u) => Url { loc, scheme: u.scheme.clone() },
-		Cow::Owned(u) => Url { loc, scheme: u.scheme },
+		Cow::Borrowed(u) => UrlBuf { loc, scheme: u.scheme.clone() },
+		Cow::Owned(u) => UrlBuf { loc, scheme: u.scheme },
 	}
 }
 
@@ -70,7 +70,7 @@ mod tests {
 		];
 
 		for (input, expected) in cases {
-			let input: Url = input.parse()?;
+			let input: UrlBuf = input.parse()?;
 			#[cfg(unix)]
 			assert_eq!(format!("{:?}", clean_url(input)), expected);
 			#[cfg(windows)]
