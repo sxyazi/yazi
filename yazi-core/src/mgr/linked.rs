@@ -1,12 +1,12 @@
 use std::{collections::HashMap, iter, ops::{Deref, DerefMut}};
 
-use yazi_shared::url::Url;
+use yazi_shared::url::UrlBuf;
 
 #[derive(Default)]
-pub struct Linked(HashMap<Url, Url> /* from ==> to */);
+pub struct Linked(HashMap<UrlBuf, UrlBuf> /* from ==> to */);
 
 impl Deref for Linked {
-	type Target = HashMap<Url, Url>;
+	type Target = HashMap<UrlBuf, UrlBuf>;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
@@ -16,7 +16,7 @@ impl DerefMut for Linked {
 }
 
 impl Linked {
-	pub fn from_dir<'a, 'b>(&'a self, url: &'b Url) -> Box<dyn Iterator<Item = &'a Url> + 'b>
+	pub fn from_dir<'a, 'b>(&'a self, url: &'b UrlBuf) -> Box<dyn Iterator<Item = &'a UrlBuf> + 'b>
 	where
 		'a: 'b,
 	{
@@ -29,7 +29,7 @@ impl Linked {
 		}
 	}
 
-	pub fn from_file(&self, url: &Url) -> Vec<Url> {
+	pub fn from_file(&self, url: &UrlBuf) -> Vec<UrlBuf> {
 		if url.scheme.is_virtual() {
 			vec![]
 		} else if let Some((parent, urn)) = url.pair() {

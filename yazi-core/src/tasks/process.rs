@@ -2,12 +2,12 @@ use std::{borrow::Cow, collections::HashMap, ffi::OsString, mem};
 
 use yazi_config::{YAZI, opener::OpenerRule};
 use yazi_parser::tasks::ProcessExecOpt;
-use yazi_shared::url::Url;
+use yazi_shared::url::UrlBuf;
 
 use super::Tasks;
 
 impl Tasks {
-	pub fn process_from_files(&self, cwd: Url, hovered: Url, targets: Vec<(Url, &str)>) {
+	pub fn process_from_files(&self, cwd: UrlBuf, hovered: UrlBuf, targets: Vec<(UrlBuf, &str)>) {
 		let mut openers = HashMap::new();
 		for (url, mime) in targets {
 			if let Some(opener) = YAZI.opener.first(YAZI.open.all(&url, mime)) {
@@ -25,7 +25,7 @@ impl Tasks {
 
 	pub fn process_from_opener(
 		&self,
-		cwd: Url,
+		cwd: UrlBuf,
 		opener: Cow<'static, OpenerRule>,
 		mut args: Vec<OsString>,
 	) {

@@ -4,12 +4,12 @@ use anyhow::anyhow;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use tokio::sync::oneshot;
 use yazi_config::opener::OpenerRule;
-use yazi_shared::{event::CmdCow, url::Url};
+use yazi_shared::{event::CmdCow, url::UrlBuf};
 
 // --- Exec
 #[derive(Debug)]
 pub struct ProcessExecOpt {
-	pub cwd:    Url,
+	pub cwd:    UrlBuf,
 	pub opener: Cow<'static, OpenerRule>,
 	pub args:   Vec<OsString>,
 	pub done:   Option<oneshot::Sender<()>>,

@@ -35,7 +35,7 @@ impl IntoLua for UpdatePeekedOpt {
 // --- Lock
 #[derive(Debug, Default)]
 pub struct PreviewLock {
-	pub url:  yazi_shared::url::Url,
+	pub url:  yazi_shared::url::UrlBuf,
 	pub cha:  yazi_fs::cha::Cha,
 	pub mime: String,
 

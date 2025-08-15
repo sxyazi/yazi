@@ -1,10 +1,10 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::CmdCow, url::Url};
+use yazi_shared::{event::CmdCow, url::UrlBuf};
 
 #[derive(Debug)]
 pub struct UpdateTasksOpt {
-	pub urls: Vec<Url>,
+	pub urls: Vec<UrlBuf>,
 }
 
 impl TryFrom<CmdCow> for UpdateTasksOpt {

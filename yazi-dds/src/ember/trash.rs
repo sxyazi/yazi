@@ -2,21 +2,21 @@ use std::borrow::Cow;
 
 use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
-use yazi_shared::url::Url;
+use yazi_shared::url::UrlBuf;
 
 use super::Ember;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EmberTrash<'a> {
-	pub urls: Cow<'a, Vec<Url>>,
+	pub urls: Cow<'a, Vec<UrlBuf>>,
 }
 
 impl<'a> EmberTrash<'a> {
-	pub fn borrowed(urls: &'a Vec<Url>) -> Ember<'a> { Self { urls: Cow::Borrowed(urls) }.into() }
+	pub fn borrowed(urls: &'a Vec<UrlBuf>) -> Ember<'a> { Self { urls: Cow::Borrowed(urls) }.into() }
 }
 
 impl EmberTrash<'static> {
-	pub fn owned(urls: Vec<Url>) -> Ember<'static> { Self { urls: Cow::Owned(urls) }.into() }
+	pub fn owned(urls: Vec<UrlBuf>) -> Ember<'static> { Self { urls: Cow::Owned(urls) }.into() }
 }
 
 impl<'a> From<EmberTrash<'a>> for Ember<'a> {

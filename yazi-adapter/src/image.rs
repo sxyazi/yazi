@@ -3,14 +3,14 @@ use image::{DynamicImage, ExtendedColorType, ImageDecoder, ImageEncoder, ImageEr
 use ratatui::layout::Rect;
 use yazi_config::YAZI;
 use yazi_fs::provider;
-use yazi_shared::url::Url;
+use yazi_shared::url::UrlBuf;
 
 use crate::Dimension;
 
 pub struct Image;
 
 impl Image {
-	pub async fn precache(src: &Url, cache: &Url) -> Result<()> {
+	pub async fn precache(src: &UrlBuf, cache: &UrlBuf) -> Result<()> {
 		let (mut img, orientation, icc) = Self::decode_from(src).await?;
 		let (w, h) = Self::flip_size(orientation, (YAZI.preview.max_width, YAZI.preview.max_height));
 
@@ -41,7 +41,7 @@ impl Image {
 		Ok(provider::write(cache, buf).await?)
 	}
 
-	pub(super) async fn downscale(url: &Url, rect: Rect) -> Result<DynamicImage> {
+	pub(super) async fn downscale(url: &UrlBuf, rect: Rect) -> Result<DynamicImage> {
 		let (mut img, orientation, _) = Self::decode_from(url).await?;
 		let (w, h) = Self::flip_size(orientation, Self::max_pixel(rect));
 
@@ -96,7 +96,7 @@ impl Image {
 		}
 	}
 
-	async fn decode_from(url: &Url) -> ImageResult<(DynamicImage, Orientation, Option<Vec<u8>>)> {
+	async fn decode_from(url: &UrlBuf) -> ImageResult<(DynamicImage, Orientation, Option<Vec<u8>>)> {
 		let mut limits = Limits::no_limits();
 		if YAZI.tasks.image_alloc > 0 {
 			limits.max_alloc = Some(YAZI.tasks.image_alloc as u64);

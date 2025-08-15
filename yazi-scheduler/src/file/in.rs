@@ -1,5 +1,5 @@
 use yazi_fs::cha::Cha;
-use yazi_shared::{Id, url::Url};
+use yazi_shared::{Id, url::UrlBuf};
 
 #[derive(Debug)]
 pub enum FileIn {
@@ -26,8 +26,8 @@ impl FileIn {
 #[derive(Clone, Debug)]
 pub struct FileInPaste {
 	pub id:     Id,
-	pub from:   Url,
-	pub to:     Url,
+	pub from:   UrlBuf,
+	pub to:     UrlBuf,
 	pub cha:    Option<Cha>,
 	pub cut:    bool,
 	pub follow: bool,
@@ -35,7 +35,7 @@ pub struct FileInPaste {
 }
 
 impl FileInPaste {
-	pub(super) fn spawn(&self, from: Url, to: Url, cha: Cha) -> Self {
+	pub(super) fn spawn(&self, from: UrlBuf, to: UrlBuf, cha: Cha) -> Self {
 		Self {
 			id: self.id,
 			from,
@@ -52,8 +52,8 @@ impl FileInPaste {
 #[derive(Clone, Debug)]
 pub struct FileInLink {
 	pub id:       Id,
-	pub from:     Url,
-	pub to:       Url,
+	pub from:     UrlBuf,
+	pub to:       UrlBuf,
 	pub cha:      Option<Cha>,
 	pub resolve:  bool,
 	pub relative: bool,
@@ -78,14 +78,14 @@ impl From<FileInPaste> for FileInLink {
 #[derive(Clone, Debug)]
 pub struct FileInHardlink {
 	pub id:     Id,
-	pub from:   Url,
-	pub to:     Url,
+	pub from:   UrlBuf,
+	pub to:     UrlBuf,
 	pub cha:    Option<Cha>,
 	pub follow: bool,
 }
 
 impl FileInHardlink {
-	pub(super) fn spawn(&self, from: Url, to: Url, cha: Cha) -> Self {
+	pub(super) fn spawn(&self, from: UrlBuf, to: UrlBuf, cha: Cha) -> Self {
 		Self { id: self.id, from, to, cha: Some(cha), follow: self.follow }
 	}
 }
@@ -94,7 +94,7 @@ impl FileInHardlink {
 #[derive(Clone, Debug)]
 pub struct FileInDelete {
 	pub id:     Id,
-	pub target: Url,
+	pub target: UrlBuf,
 	pub length: u64,
 }
 
@@ -102,6 +102,6 @@ pub struct FileInDelete {
 #[derive(Clone, Debug)]
 pub struct FileInTrash {
 	pub id:     Id,
-	pub target: Url,
+	pub target: UrlBuf,
 	pub length: u64,
 }

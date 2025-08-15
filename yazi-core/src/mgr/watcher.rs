@@ -8,17 +8,17 @@ use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tracing::error;
 use yazi_fs::{File, Files, FilesOp, cha::Cha, provider, realname_unchecked};
 use yazi_proxy::WATCHER;
-use yazi_shared::{RoCell, url::Url};
+use yazi_shared::{RoCell, url::UrlBuf};
 
 use super::Linked;
 use crate::tab::Folder;
 
-pub(crate) static WATCHED: RoCell<RwLock<HashSet<Url>>> = RoCell::new();
+pub(crate) static WATCHED: RoCell<RwLock<HashSet<UrlBuf>>> = RoCell::new();
 pub static LINKED: RoCell<RwLock<Linked>> = RoCell::new();
 
 pub struct Watcher {
-	in_tx:  watch::Sender<HashSet<Url>>,
-	out_tx: mpsc::UnboundedSender<Url>,
+	in_tx:  watch::Sender<HashSet<UrlBuf>>,
+	out_tx: mpsc::UnboundedSender<UrlBuf>,
 }
 
 // FIXME: VFS
@@ -33,7 +33,7 @@ impl Watcher {
 			if event.kind.is_access() {
 				return;
 			}
-			Self::push_files_impl(&out_tx_, event.paths.into_iter().map(Url::from));
+			Self::push_files_impl(&out_tx_, event.paths.into_iter().map(UrlBuf::from));
 		};
 
 		let config = notify::Config::default().with_poll_interval(Duration::from_millis(500));
@@ -52,15 +52,15 @@ impl Watcher {
 		Self { in_tx, out_tx }
 	}
 
-	pub fn watch<'a>(&mut self, it: impl Iterator<Item = &'a Url>) {
+	pub fn watch<'a>(&mut self, it: impl Iterator<Item = &'a UrlBuf>) {
 		self.in_tx.send(it.filter(|u| u.is_regular()).cloned().collect()).ok();
 	}
 
-	pub fn push_files(&self, urls: Vec<Url>) {
+	pub fn push_files(&self, urls: Vec<UrlBuf>) {
 		Self::push_files_impl(&self.out_tx, urls.into_iter());
 	}
 
-	fn push_files_impl(out_tx: &mpsc::UnboundedSender<Url>, urls: impl Iterator<Item = Url>) {
+	fn push_files_impl(out_tx: &mpsc::UnboundedSender<UrlBuf>, urls: impl Iterator<Item = UrlBuf>) {
 		let (mut parents, watched) = (HashSet::new(), WATCHED.read());
 		for u in urls {
 			let Some(p) = u.parent_url() else { continue };
@@ -77,7 +77,7 @@ impl Watcher {
 
 	// TODO: performance improvement
 	pub fn trigger_dirs(&self, folders: &[&Folder]) {
-		async fn go(cwd: Url, cha: Cha) {
+		async fn go(cwd: UrlBuf, cha: Cha) {
 			let Some(cha) = Files::assert_stale(&cwd, cha).await else { return };
 
 			match Files::from_dir_bulk(&cwd).await {
@@ -98,7 +98,7 @@ impl Watcher {
 	}
 
 	async fn fan_in(
-		mut rx: watch::Receiver<HashSet<Url>>,
+		mut rx: watch::Receiver<HashSet<UrlBuf>>,
 		mut watcher: impl notify::Watcher + Send + 'static,
 	) {
 		loop {
@@ -119,7 +119,7 @@ impl Watcher {
 		}
 	}
 
-	async fn fan_out(rx: UnboundedReceiver<Url>) {
+	async fn fan_out(rx: UnboundedReceiver<UrlBuf>) {
 		// TODO: revert this once a new notification is implemented
 		let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(250));
 		pin!(rx);
@@ -154,7 +154,11 @@ impl Watcher {
 		}
 	}
 
-	async fn sync_watched<W>(mut watcher: W, to_unwatch: HashSet<Url>, to_watch: HashSet<Url>) -> W
+	async fn sync_watched<W>(
+		mut watcher: W,
+		to_unwatch: HashSet<UrlBuf>,
+		to_watch: HashSet<UrlBuf>,
+	) -> W
 	where
 		W: notify::Watcher + Send + 'static,
 	{
@@ -192,7 +196,7 @@ impl Watcher {
 			linked.keys().cloned().collect()
 		};
 
-		async fn go(todo: HashSet<Url>) {
+		async fn go(todo: HashSet<UrlBuf>) {
 			for from in todo {
 				let Ok(to) = provider::canonicalize(&from).await else { continue };
 

@@ -6,14 +6,14 @@ use crossterm::{cursor::MoveTo, queue};
 use image::{DynamicImage, ExtendedColorType, ImageEncoder, codecs::{jpeg::JpegEncoder, png::PngEncoder}};
 use ratatui::layout::Rect;
 use yazi_config::YAZI;
-use yazi_shared::url::Url;
+use yazi_shared::url::UrlBuf;
 
 use crate::{CLOSE, Emulator, Image, START, adapter::Adapter};
 
 pub(crate) struct Iip;
 
 impl Iip {
-	pub(crate) async fn image_show(url: &Url, max: Rect) -> Result<Rect> {
+	pub(crate) async fn image_show(url: &UrlBuf, max: Rect) -> Result<Rect> {
 		let img = Image::downscale(url, max).await?;
 		let area = Image::pixel_area((img.width(), img.height()), max);
 		let b = Self::encode(img).await?;

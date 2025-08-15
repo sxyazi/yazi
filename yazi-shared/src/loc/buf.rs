@@ -1,47 +1,45 @@
-use std::{borrow::Cow, cmp, ffi::{OsStr, OsString}, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, mem, ops::Deref, path::{Path, PathBuf}};
+use std::{cmp, ffi::{OsStr, OsString}, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, mem, ops::Deref, path::{Path, PathBuf}};
 
-use anyhow::{Result, bail};
+use anyhow::Result;
 
-use crate::url::{Uri, Urn, UrnBuf};
+use crate::{loc::Loc, url::{Uri, Urn, UrnBuf}};
 
-#[derive(Clone, Default)]
-pub struct Loc {
-	inner: PathBuf,
-	uri:   usize,
-	urn:   usize,
+#[derive(Clone, Default, Eq)]
+pub struct LocBuf {
+	pub(super) inner: PathBuf,
+	pub(super) uri:   usize,
+	pub(super) urn:   usize,
 }
 
-impl Deref for Loc {
+impl Deref for LocBuf {
 	type Target = PathBuf;
 
 	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
-impl AsRef<Path> for Loc {
+impl AsRef<Path> for LocBuf {
 	fn as_ref(&self) -> &Path { &self.inner }
 }
 
-impl PartialEq for Loc {
+impl PartialEq for LocBuf {
 	fn eq(&self, other: &Self) -> bool { self.inner == other.inner }
 }
 
-impl Eq for Loc {}
-
-impl Ord for Loc {
+impl Ord for LocBuf {
 	fn cmp(&self, other: &Self) -> cmp::Ordering { self.inner.cmp(&other.inner) }
 }
 
-impl PartialOrd for Loc {
+impl PartialOrd for LocBuf {
 	fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> { Some(self.cmp(other)) }
 }
 
-impl Hash for Loc {
+impl Hash for LocBuf {
 	fn hash<H: Hasher>(&self, state: &mut H) { self.inner.hash(state) }
 }
 
-impl Debug for Loc {
+impl Debug for LocBuf {
 	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-		f.debug_struct("Loc")
+		f.debug_struct("LocBuf")
 			.field("path", &self.inner)
 			.field("uri", &self.uri())
 			.field("urn", &self.urn())
@@ -49,84 +47,40 @@ impl Debug for Loc {
 	}
 }
 
-impl From<OsString> for Loc {
-	fn from(value: OsString) -> Self { Self::from(PathBuf::from(value)) }
-}
-
-impl From<String> for Loc {
-	fn from(value: String) -> Self { Self::from(PathBuf::from(value)) }
-}
-
-impl From<PathBuf> for Loc {
+impl From<PathBuf> for LocBuf {
 	fn from(path: PathBuf) -> Self {
-		let Some(name) = path.file_name() else {
-			let uri = path.as_os_str().len();
-			return Self { inner: path, uri, urn: 0 };
-		};
-
-		let name_len = name.len();
-		let prefix_len = unsafe {
-			name
-				.as_encoded_bytes()
-				.as_ptr()
-				.offset_from_unsigned(path.as_os_str().as_encoded_bytes().as_ptr())
-		};
+		let Loc { inner, uri, urn } = Loc::from(path.as_path());
+		let len = inner.as_os_str().len();
 
 		let mut bytes = path.into_os_string().into_encoded_bytes();
-		bytes.truncate(prefix_len + name_len);
+		bytes.truncate(len);
 		Self {
 			inner: PathBuf::from(unsafe { OsString::from_encoded_bytes_unchecked(bytes) }),
-			uri:   name_len,
-			urn:   name_len,
+			uri,
+			urn,
 		}
 	}
 }
 
-impl From<Cow<'_, Path>> for Loc {
-	fn from(value: Cow<'_, Path>) -> Self { Self::from(value.into_owned()) }
+impl<T: ?Sized + AsRef<OsStr>> From<&T> for LocBuf {
+	fn from(value: &T) -> Self { Self::from(PathBuf::from(value)) }
 }
 
-impl<T: ?Sized + AsRef<OsStr>> From<&T> for Loc {
-	fn from(value: &T) -> Self { Self::from(value.as_ref().to_os_string()) }
-}
-
-impl Loc {
+impl LocBuf {
 	pub fn new(path: impl Into<PathBuf>, base: &Path, trail: &Path) -> Self {
-		let mut loc = Self::from(path.into());
-		loc.uri =
-			loc.inner.strip_prefix(base).expect("Loc must start with the given base").as_os_str().len();
-		loc.urn =
-			loc.inner.strip_prefix(trail).expect("Loc must start with the given trail").as_os_str().len();
-		loc
+		let loc = Self::from(path.into());
+		let Loc { inner, uri, urn } = Loc::new(&loc.inner, base, trail);
+
+		debug_assert!(inner.as_os_str() == loc.inner.as_os_str());
+		Self { inner: loc.inner, uri, urn }
 	}
 
 	pub fn with(path: PathBuf, uri: usize, urn: usize) -> Result<Self> {
-		if urn > uri {
-			bail!("URN cannot be longer than URI");
-		}
+		let loc = Self::from(path);
+		let Loc { inner, uri, urn } = Loc::with(&loc.inner, uri, urn)?;
 
-		let mut loc = Self::from(path);
-		if uri == 0 {
-			(loc.uri, loc.urn) = (0, 0);
-			return Ok(loc);
-		} else if urn == 0 {
-			loc.urn = 0;
-		}
-
-		let mut it = loc.inner.components();
-		for i in 1..=uri {
-			if it.next_back().is_none() {
-				bail!("URI exceeds the entire URL");
-			}
-			if i == urn {
-				loc.urn = loc.strip_prefix(it.clone()).unwrap().as_os_str().len();
-			}
-			if i == uri {
-				loc.uri = loc.strip_prefix(it).unwrap().as_os_str().len();
-				break;
-			}
-		}
-		Ok(loc)
+		debug_assert!(inner.as_os_str() == loc.inner.as_os_str());
+		Ok(Self { inner: loc.inner, uri, urn })
 	}
 
 	pub fn zeroed(path: impl Into<PathBuf>) -> Self {
@@ -143,28 +97,13 @@ impl Loc {
 	}
 
 	#[inline]
-	pub fn uri(&self) -> &Uri {
-		Uri::new(unsafe {
-			OsStr::from_encoded_bytes_unchecked(
-				self.bytes().get_unchecked(self.bytes().len() - self.uri..),
-			)
-		})
-	}
+	pub fn as_loc<'a>(&'a self) -> Loc<'a> { Loc::from(self) }
 
 	#[inline]
-	pub fn urn(&self) -> &Urn {
-		Urn::new(unsafe {
-			OsStr::from_encoded_bytes_unchecked(
-				self.bytes().get_unchecked(self.bytes().len() - self.urn..),
-			)
-		})
-	}
+	pub fn to_path(&self) -> PathBuf { self.inner.clone() }
 
 	#[inline]
-	pub fn urn_owned(&self) -> UrnBuf { self.urn().to_owned() }
-
-	#[inline]
-	pub fn name(&self) -> &OsStr { self.inner.file_name().unwrap_or(OsStr::new("")) }
+	pub fn into_path(self) -> PathBuf { self.inner }
 
 	pub fn set_name(&mut self, name: impl AsRef<OsStr>) {
 		let old = self.bytes().len();
@@ -192,41 +131,11 @@ impl Loc {
 	}
 
 	#[inline]
-	pub fn base(&self) -> &Urn {
-		Urn::new(unsafe {
-			OsStr::from_encoded_bytes_unchecked(
-				self.bytes().get_unchecked(..self.bytes().len() - self.uri),
-			)
-		})
-	}
-
-	#[inline]
 	pub fn rebase(&self, base: &Path) -> Self {
 		let mut loc: Self = base.join(self.uri()).into();
 		(loc.uri, loc.urn) = (self.uri, self.urn);
 		loc
 	}
-
-	#[inline]
-	pub fn has_base(&self) -> bool { self.bytes().len() != self.uri }
-
-	#[inline]
-	pub fn trail(&self) -> &Urn {
-		Urn::new(unsafe {
-			OsStr::from_encoded_bytes_unchecked(
-				self.bytes().get_unchecked(..self.bytes().len() - self.urn),
-			)
-		})
-	}
-
-	#[inline]
-	pub fn has_trail(&self) -> bool { self.bytes().len() != self.urn }
-
-	#[inline]
-	pub fn to_path(&self) -> PathBuf { self.inner.clone() }
-
-	#[inline]
-	pub fn into_path(self) -> PathBuf { self.inner }
 
 	#[inline]
 	pub fn triple(&self) -> (&Path, &Path, &Path) {
@@ -256,28 +165,55 @@ impl Loc {
 	}
 }
 
+// FIXME: macro
+impl LocBuf {
+	#[inline]
+	pub fn uri(&self) -> &Uri { self.as_loc().uri() }
+
+	#[inline]
+	pub fn urn(&self) -> &Urn { self.as_loc().urn() }
+
+	#[inline]
+	pub fn urn_owned(&self) -> UrnBuf { self.urn().to_owned() }
+
+	#[inline]
+	pub fn base(&self) -> &Urn { self.as_loc().base() }
+
+	#[inline]
+	pub fn has_base(&self) -> bool { self.as_loc().has_base() }
+
+	#[inline]
+	pub fn trail(&self) -> &Urn { self.as_loc().trail() }
+
+	#[inline]
+	pub fn has_trail(&self) -> bool { self.as_loc().has_trail() }
+
+	#[inline]
+	pub fn name(&self) -> &OsStr { self.as_loc().name() }
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use crate::url::Url;
+	use crate::url::UrlBuf;
 
 	#[test]
 	fn test_new() {
-		let loc: Loc = Path::new("/").into();
+		let loc: LocBuf = Path::new("/").into();
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("/"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new(""));
 		assert_eq!(loc.name(), OsStr::new(""));
 		assert_eq!(loc.base().as_os_str(), OsStr::new(""));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/"));
 
-		let loc: Loc = Path::new("/root").into();
+		let loc: LocBuf = Path::new("/root").into();
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("root"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("root"));
 		assert_eq!(loc.name(), OsStr::new("root"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/"));
 
-		let loc: Loc = Path::new("/root/code/foo/").into();
+		let loc: LocBuf = Path::new("/root/code/foo/").into();
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("foo"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("foo"));
 		assert_eq!(loc.name(), OsStr::new("foo"));
@@ -287,42 +223,42 @@ mod tests {
 
 	#[test]
 	fn test_with() -> Result<()> {
-		let loc = Loc::with("/".into(), 0, 0)?;
+		let loc = LocBuf::with("/".into(), 0, 0)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new(""));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new(""));
 		assert_eq!(loc.name(), OsStr::new(""));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/"));
 
-		let loc = Loc::with("/root/code/".into(), 1, 1)?;
+		let loc = LocBuf::with("/root/code/".into(), 1, 1)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("code"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("code"));
 		assert_eq!(loc.name(), OsStr::new("code"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/root/"));
 
-		let loc = Loc::with("/root/code/foo//".into(), 2, 1)?;
+		let loc = LocBuf::with("/root/code/foo//".into(), 2, 1)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("code/foo"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("foo"));
 		assert_eq!(loc.name(), OsStr::new("foo"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/root/code/"));
 
-		let loc = Loc::with("/root/code/foo//".into(), 2, 2)?;
+		let loc = LocBuf::with("/root/code/foo//".into(), 2, 2)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("code/foo"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("code/foo"));
 		assert_eq!(loc.name(), OsStr::new("foo"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/root/"));
 
-		let loc = Loc::with("/root/code/foo//bar/".into(), 2, 2)?;
+		let loc = LocBuf::with("/root/code/foo//bar/".into(), 2, 2)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("foo//bar"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("foo//bar"));
 		assert_eq!(loc.name(), OsStr::new("bar"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/code/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/root/code/"));
 
-		let loc = Loc::with("/root/code/foo//bar/".into(), 3, 2)?;
+		let loc = LocBuf::with("/root/code/foo//bar/".into(), 3, 2)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("code/foo//bar"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("foo//bar"));
 		assert_eq!(loc.name(), OsStr::new("bar"));
@@ -352,8 +288,8 @@ mod tests {
 		];
 
 		for (input, name, expected) in cases {
-			let mut a: Url = input.parse()?;
-			let b: Url = expected.parse()?;
+			let mut a: UrlBuf = input.parse()?;
+			let b: UrlBuf = expected.parse()?;
 			a.set_name(name);
 			assert_eq!(
 				(a.name(), format!("{a:?}").replace(r"\", "/")),

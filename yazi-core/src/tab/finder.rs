@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 use yazi_fs::{Files, Filter, FilterCase};
-use yazi_shared::url::{Url, Urn, UrnBuf};
+use yazi_shared::url::{UrlBuf, Urn, UrnBuf};
 
 use crate::tab::Folder;
 
@@ -14,7 +14,7 @@ pub struct Finder {
 
 #[derive(Default)]
 struct FinderLock {
-	cwd:      Url,
+	cwd:      UrlBuf,
 	revision: u64,
 }
 

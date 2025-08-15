@@ -1,12 +1,12 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::CmdCow, url::Url};
+use yazi_shared::{event::CmdCow, url::UrlBuf};
 
 #[derive(Debug)]
 pub struct RemoveOpt {
 	pub force:       bool,
 	pub permanently: bool,
 	pub hovered:     bool,
-	pub targets:     Vec<Url>,
+	pub targets:     Vec<UrlBuf>,
 }
 
 impl From<CmdCow> for RemoveOpt {

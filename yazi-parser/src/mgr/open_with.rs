@@ -3,13 +3,13 @@ use std::borrow::Cow;
 use anyhow::anyhow;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_config::opener::OpenerRule;
-use yazi_shared::{event::CmdCow, url::Url};
+use yazi_shared::{event::CmdCow, url::UrlBuf};
 
 #[derive(Debug)]
 pub struct OpenWithOpt {
 	pub opener:  Cow<'static, OpenerRule>,
-	pub cwd:     Url,
-	pub targets: Vec<Url>,
+	pub cwd:     UrlBuf,
+	pub targets: Vec<UrlBuf>,
 }
 
 impl TryFrom<CmdCow> for OpenWithOpt {

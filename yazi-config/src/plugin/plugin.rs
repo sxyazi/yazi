@@ -5,7 +5,7 @@ use serde::Deserialize;
 use tracing::warn;
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::File;
-use yazi_shared::url::Url;
+use yazi_shared::url::UrlBuf;
 
 use super::{Fetcher, Preloader, Previewer, Spotter};
 use crate::{Preset, plugin::MAX_PREWORKERS};
@@ -40,7 +40,7 @@ pub struct Plugin {
 impl Plugin {
 	pub fn fetchers<'a, 'b: 'a>(
 		&'b self,
-		url: &'a Url,
+		url: &'a UrlBuf,
 		mime: &'a str,
 	) -> impl Iterator<Item = &'b Fetcher> + 'a {
 		let mut seen = HashSet::new();
@@ -69,13 +69,13 @@ impl Plugin {
 		})
 	}
 
-	pub fn spotter(&self, url: &Url, mime: &str) -> Option<&Spotter> {
+	pub fn spotter(&self, url: &UrlBuf, mime: &str) -> Option<&Spotter> {
 		self.spotters.iter().find(|&p| p.matches(url, mime))
 	}
 
 	pub fn preloaders<'a, 'b: 'a>(
 		&'b self,
-		url: &'a Url,
+		url: &'a UrlBuf,
 		mime: &'a str,
 	) -> impl Iterator<Item = &'b Preloader> + 'a {
 		let mut next = true;
@@ -88,7 +88,7 @@ impl Plugin {
 		})
 	}
 
-	pub fn previewer(&self, url: &Url, mime: &str) -> Option<&Previewer> {
+	pub fn previewer(&self, url: &UrlBuf, mime: &str) -> Option<&Previewer> {
 		self.previewers.iter().find(|&p| p.matches(url, mime))
 	}
 }

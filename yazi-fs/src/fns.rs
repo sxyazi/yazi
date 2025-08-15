@@ -4,12 +4,12 @@ use std::{borrow::Cow, collections::{HashMap, HashSet}, ffi::{OsStr, OsString}, 
 
 use anyhow::{Result, bail};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
-use yazi_shared::url::{Component, Url};
+use yazi_shared::url::{Component, UrlBuf};
 
 use crate::{cha::Cha, provider};
 
 #[inline]
-pub async fn maybe_exists(u: impl AsRef<Url>) -> bool {
+pub async fn maybe_exists(u: impl AsRef<UrlBuf>) -> bool {
 	match provider::symlink_metadata(u).await {
 		Ok(_) => true,
 		Err(e) => e.kind() != io::ErrorKind::NotFound,
@@ -17,7 +17,7 @@ pub async fn maybe_exists(u: impl AsRef<Url>) -> bool {
 }
 
 #[inline]
-pub async fn must_be_dir(u: impl AsRef<Url>) -> bool {
+pub async fn must_be_dir(u: impl AsRef<UrlBuf>) -> bool {
 	provider::metadata(u).await.is_ok_and(|m| m.is_dir())
 }
 
@@ -83,7 +83,7 @@ async fn _paths_to_same_file(a: &Path, b: &Path) -> std::io::Result<bool> {
 	Ok(final_name(a).await? == final_name(b).await?)
 }
 
-pub async fn realname(u: &Url) -> Option<OsString> {
+pub async fn realname(u: &UrlBuf) -> Option<OsString> {
 	let name = u.file_name()?;
 	if *u == provider::canonicalize(u).await.ok()? {
 		return None;
@@ -159,8 +159,8 @@ pub async fn realname_unchecked<'a>(
 }
 
 pub fn copy_with_progress(
-	from: &Url,
-	to: &Url,
+	from: &UrlBuf,
+	to: &UrlBuf,
 	cha: Cha,
 ) -> mpsc::Receiver<Result<u64, io::Error>> {
 	let (tx, rx) = mpsc::channel(1);
@@ -212,7 +212,7 @@ pub fn copy_with_progress(
 	rx
 }
 
-async fn _copy_with_progress(from: Url, to: Url, cha: Cha) -> io::Result<u64> {
+async fn _copy_with_progress(from: UrlBuf, to: UrlBuf, cha: Cha) -> io::Result<u64> {
 	let mut ft = std::fs::FileTimes::new();
 	cha.atime.map(|t| ft = ft.set_accessed(t));
 	cha.mtime.map(|t| ft = ft.set_modified(t));
@@ -260,7 +260,7 @@ async fn _copy_with_progress(from: Url, to: Url, cha: Cha) -> io::Result<u64> {
 	}
 }
 
-pub async fn remove_dir_clean(dir: &Url) {
+pub async fn remove_dir_clean(dir: &UrlBuf) {
 	let Ok(mut it) = provider::read_dir(dir).await else { return };
 
 	while let Ok(Some(entry)) = it.next_entry().await {
@@ -330,7 +330,7 @@ pub fn permissions(m: libc::mode_t, dummy: bool) -> String {
 // Find the max common root in a list of urls
 // e.g. /a/b/c, /a/b/d       -> /a/b
 //      /aa/bb/cc, /aa/dd/ee -> /aa
-pub fn max_common_root(urls: &[Url]) -> usize {
+pub fn max_common_root(urls: &[UrlBuf]) -> usize {
 	if urls.is_empty() {
 		return 0;
 	} else if urls.len() == 1 {
@@ -371,7 +371,7 @@ pub fn max_common_root(urls: &[Url]) -> usize {
 fn test_max_common_root() {
 	fn assert(input: &[&str], expected: &str) {
 		use std::str::FromStr;
-		let urls: Vec<_> = input.iter().copied().map(Url::from_str).collect::<Result<_>>().unwrap();
+		let urls: Vec<_> = input.iter().copied().map(UrlBuf::from_str).collect::<Result<_>>().unwrap();
 
 		let mut comp = urls[0].components();
 		for _ in 0..comp.clone().count() - max_common_root(&urls) {

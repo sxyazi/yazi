@@ -9,7 +9,7 @@ use tracing::error;
 use yazi_config::Priority;
 use yazi_fs::{FilesOp, SizeCalculator};
 use yazi_plugin::isolate;
-use yazi_shared::{Id, event::CmdCow, url::Url};
+use yazi_shared::{Id, event::CmdCow, url::UrlBuf};
 
 use super::{PreworkIn, PreworkInFetch, PreworkInLoad, PreworkInSize};
 use crate::{HIGH, NORMAL, TaskOp, TaskProg};
@@ -20,7 +20,7 @@ pub struct Prework {
 
 	pub loaded:  Mutex<LruCache<u64, u32>>,
 	pub loading: Mutex<LruCache<u64, CancellationToken>>,
-	pub sizing:  RwLock<HashSet<Url>>,
+	pub sizing:  RwLock<HashSet<UrlBuf>>,
 }
 
 impl Prework {

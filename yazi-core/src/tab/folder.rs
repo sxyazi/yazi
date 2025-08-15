@@ -6,11 +6,11 @@ use yazi_fs::{File, Files, FilesOp, FolderStage, cha::Cha};
 use yazi_macro::err;
 use yazi_parser::Step;
 use yazi_proxy::MgrProxy;
-use yazi_shared::{Id, url::{Url, Urn, UrnBuf}};
+use yazi_shared::{Id, url::{UrlBuf, Urn, UrnBuf}};
 use yazi_widgets::Scrollable;
 
 pub struct Folder {
-	pub url:   Url,
+	pub url:   UrlBuf,
 	pub cha:   Cha,
 	pub files: Files,
 	pub stage: FolderStage,
@@ -37,8 +37,8 @@ impl Default for Folder {
 	}
 }
 
-impl From<&Url> for Folder {
-	fn from(url: &Url) -> Self { Self { url: url.clone(), ..Default::default() } }
+impl From<&UrlBuf> for Folder {
+	fn from(url: &UrlBuf) -> Self { Self { url: url.clone(), ..Default::default() } }
 }
 
 impl Folder {

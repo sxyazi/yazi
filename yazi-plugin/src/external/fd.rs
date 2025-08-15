@@ -3,10 +3,10 @@ use std::process::Stdio;
 use anyhow::Result;
 use tokio::{io::{AsyncBufReadExt, BufReader}, process::{Child, Command}, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_fs::File;
-use yazi_shared::url::Url;
+use yazi_shared::url::UrlBuf;
 
 pub struct FdOpt {
-	pub cwd:     Url,
+	pub cwd:     UrlBuf,
 	pub hidden:  bool,
 	pub subject: String,
 	pub args:    Vec<String>,

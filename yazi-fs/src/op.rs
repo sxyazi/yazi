@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use yazi_macro::relay;
-use yazi_shared::{Id, Ids, url::{Url, UrnBuf}};
+use yazi_shared::{Id, Ids, url::{UrlBuf, UrnBuf}};
 
 use super::File;
 use crate::{cha::Cha, maybe_exists};
@@ -10,21 +10,21 @@ pub static FILES_TICKET: Ids = Ids::new();
 
 #[derive(Clone, Debug)]
 pub enum FilesOp {
-	Full(Url, Vec<File>, Cha),
-	Part(Url, Vec<File>, Id),
-	Done(Url, Cha, Id),
-	Size(Url, HashMap<UrnBuf, u64>),
-	IOErr(Url, std::io::ErrorKind),
+	Full(UrlBuf, Vec<File>, Cha),
+	Part(UrlBuf, Vec<File>, Id),
+	Done(UrlBuf, Cha, Id),
+	Size(UrlBuf, HashMap<UrnBuf, u64>),
+	IOErr(UrlBuf, std::io::ErrorKind),
 
-	Creating(Url, Vec<File>),
-	Deleting(Url, HashSet<UrnBuf>),
-	Updating(Url, HashMap<UrnBuf, File>),
-	Upserting(Url, HashMap<UrnBuf, File>),
+	Creating(UrlBuf, Vec<File>),
+	Deleting(UrlBuf, HashSet<UrnBuf>),
+	Updating(UrlBuf, HashMap<UrnBuf, File>),
+	Upserting(UrlBuf, HashMap<UrnBuf, File>),
 }
 
 impl FilesOp {
 	#[inline]
-	pub fn cwd(&self) -> &Url {
+	pub fn cwd(&self) -> &UrlBuf {
 		match self {
 			Self::Full(u, ..) => u,
 			Self::Part(u, ..) => u,
@@ -44,13 +44,13 @@ impl FilesOp {
 		yazi_shared::event::Event::Call(relay!(mgr:update_files).with_any("op", self).into()).emit();
 	}
 
-	pub fn prepare(cwd: &Url) -> Id {
+	pub fn prepare(cwd: &UrlBuf) -> Id {
 		let ticket = FILES_TICKET.next();
 		Self::Part(cwd.clone(), vec![], ticket).emit();
 		ticket
 	}
 
-	pub fn rename(map: HashMap<Url, File>) {
+	pub fn rename(map: HashMap<UrlBuf, File>) {
 		let mut parents: HashMap<_, (HashSet<_>, HashMap<_, _>)> = Default::default();
 		for (o, n) in map {
 			let Some(o_p) = o.parent_url() else { continue };
@@ -95,7 +95,7 @@ impl FilesOp {
 		}
 	}
 
-	pub fn chdir(&self, wd: &Url) -> Self {
+	pub fn chdir(&self, wd: &UrlBuf) -> Self {
 		macro_rules! files {
 			($files:expr) => {{ $files.iter().map(|file| file.chdir(wd)).collect() }};
 		}
@@ -118,7 +118,7 @@ impl FilesOp {
 		}
 	}
 
-	pub async fn issue_error(cwd: &Url, kind: std::io::ErrorKind) {
+	pub async fn issue_error(cwd: &UrlBuf, kind: std::io::ErrorKind) {
 		use std::io::ErrorKind;
 		if kind != ErrorKind::NotFound {
 			Self::IOErr(cwd.clone(), kind).emit();
@@ -129,7 +129,7 @@ impl FilesOp {
 		}
 	}
 
-	pub fn diff_recoverable(&self, contains: impl Fn(&Url) -> bool) -> (Vec<Url>, Vec<Url>) {
+	pub fn diff_recoverable(&self, contains: impl Fn(&UrlBuf) -> bool) -> (Vec<UrlBuf>, Vec<UrlBuf>) {
 		match self {
 			Self::Deleting(cwd, urns) => (urns.iter().map(|u| cwd.join(u)).collect(), vec![]),
 			Self::Updating(cwd, urns) | Self::Upserting(cwd, urns) => urns

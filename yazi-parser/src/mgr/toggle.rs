@@ -1,9 +1,9 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::CmdCow, url::Url};
+use yazi_shared::{event::CmdCow, url::UrlBuf};
 
 #[derive(Debug)]
 pub struct ToggleOpt {
-	pub url:   Option<Url>,
+	pub url:   Option<UrlBuf>,
 	pub state: Option<bool>,
 }
 

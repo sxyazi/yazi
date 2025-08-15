@@ -9,7 +9,7 @@ use yazi_fs::{File, Files, FilesOp, cha::Cha};
 use yazi_macro::render;
 use yazi_parser::mgr::PreviewLock;
 use yazi_plugin::{external::Highlighter, isolate};
-use yazi_shared::{MIME_DIR, SStr, url::Url};
+use yazi_shared::{MIME_DIR, SStr, url::UrlBuf};
 
 #[derive(Default)]
 pub struct Preview {
@@ -88,7 +88,7 @@ impl Preview {
 	}
 
 	#[inline]
-	pub fn same_url(&self, url: &Url) -> bool { matches!(&self.lock, Some(l) if l.url == *url) }
+	pub fn same_url(&self, url: &UrlBuf) -> bool { matches!(&self.lock, Some(l) if l.url == *url) }
 
 	#[inline]
 	pub fn same_file(&self, file: &File, mime: &str) -> bool {
