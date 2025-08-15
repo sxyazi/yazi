@@ -9,7 +9,7 @@ use yazi_fs::{File, FilesOp, path::expand_url};
 use yazi_macro::{act, err, render, succ};
 use yazi_parser::mgr::CdOpt;
 use yazi_proxy::{CmpProxy, InputProxy, MgrProxy};
-use yazi_shared::{Debounce, errors::InputError, event::Data, url::Url};
+use yazi_shared::{Debounce, errors::InputError, event::Data, url::UrlBuf};
 
 use crate::{Actor, Ctx};
 
@@ -76,7 +76,7 @@ impl Cd {
 			while let Some(result) = rx.next().await {
 				match result {
 					Ok(s) => {
-						let Ok(url) = Url::try_from(s).map(expand_url) else { return };
+						let Ok(url) = UrlBuf::try_from(s).map(expand_url) else { return };
 
 						let Ok(file) = File::new(url.clone()).await else { return };
 						if file.is_dir() {

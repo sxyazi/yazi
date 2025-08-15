@@ -8,38 +8,38 @@ use super::UrnBuf;
 use crate::{IntoOsStr, url::{Components, Display, Encode, EncodeTilded, Loc, Scheme, Urn}};
 
 #[derive(Clone, Default, Eq, Ord, PartialOrd, PartialEq, Hash)]
-pub struct Url {
+pub struct UrlBuf {
 	pub loc:    Loc,
 	pub scheme: Scheme,
 }
 
-impl Deref for Url {
+impl Deref for UrlBuf {
 	type Target = Loc;
 
 	fn deref(&self) -> &Self::Target { &self.loc }
 }
 
-impl From<Loc> for Url {
+impl From<Loc> for UrlBuf {
 	fn from(loc: Loc) -> Self { Self { loc, scheme: Scheme::Regular } }
 }
 
-impl From<PathBuf> for Url {
+impl From<PathBuf> for UrlBuf {
 	fn from(path: PathBuf) -> Self { Loc::from(path).into() }
 }
 
-impl From<&Url> for Url {
-	fn from(url: &Url) -> Self { url.clone() }
+impl From<&UrlBuf> for UrlBuf {
+	fn from(url: &UrlBuf) -> Self { url.clone() }
 }
 
-impl From<&PathBuf> for Url {
+impl From<&PathBuf> for UrlBuf {
 	fn from(path: &PathBuf) -> Self { path.to_owned().into() }
 }
 
-impl From<&Path> for Url {
+impl From<&Path> for UrlBuf {
 	fn from(path: &Path) -> Self { path.to_path_buf().into() }
 }
 
-impl TryFrom<&[u8]> for Url {
+impl TryFrom<&[u8]> for UrlBuf {
 	type Error = anyhow::Error;
 
 	fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
@@ -52,42 +52,42 @@ impl TryFrom<&[u8]> for Url {
 	}
 }
 
-impl FromStr for Url {
+impl FromStr for UrlBuf {
 	type Err = anyhow::Error;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> { s.as_bytes().try_into() }
 }
 
-impl TryFrom<String> for Url {
+impl TryFrom<String> for UrlBuf {
 	type Error = anyhow::Error;
 
 	fn try_from(value: String) -> Result<Self, Self::Error> { value.as_bytes().try_into() }
 }
 
-impl AsRef<Url> for Url {
-	fn as_ref(&self) -> &Url { self }
+impl AsRef<UrlBuf> for UrlBuf {
+	fn as_ref(&self) -> &UrlBuf { self }
 }
 
 // FIXME: remove
-impl AsRef<Path> for Url {
+impl AsRef<Path> for UrlBuf {
 	fn as_ref(&self) -> &Path { &self.loc }
 }
 
-impl<'a> From<&'a Url> for Cow<'a, Url> {
-	fn from(url: &'a Url) -> Self { Cow::Borrowed(url) }
+impl<'a> From<&'a UrlBuf> for Cow<'a, UrlBuf> {
+	fn from(url: &'a UrlBuf) -> Self { Cow::Borrowed(url) }
 }
 
-impl From<Url> for Cow<'_, Url> {
-	fn from(url: Url) -> Self { Cow::Owned(url) }
+impl From<UrlBuf> for Cow<'_, UrlBuf> {
+	fn from(url: UrlBuf) -> Self { Cow::Owned(url) }
 }
 
-impl From<Cow<'_, Url>> for Url {
-	fn from(url: Cow<'_, Url>) -> Self { url.into_owned() }
+impl From<Cow<'_, UrlBuf>> for UrlBuf {
+	fn from(url: Cow<'_, UrlBuf>) -> Self { url.into_owned() }
 }
 
-impl Url {
+impl UrlBuf {
 	#[inline]
-	pub fn base(&self) -> Url {
+	pub fn base(&self) -> UrlBuf {
 		use Scheme as S;
 
 		let loc: Loc = self.loc.base().into();
@@ -128,7 +128,7 @@ impl Url {
 	#[inline]
 	pub fn os_str(&self) -> Cow<'_, OsStr> { self.components().os_str() }
 
-	pub fn parent_url(&self) -> Option<Url> {
+	pub fn parent_url(&self) -> Option<UrlBuf> {
 		use Scheme as S;
 
 		let parent = self.loc.parent()?;
@@ -159,7 +159,7 @@ impl Url {
 		})
 	}
 
-	pub fn strip_prefix(&self, base: impl AsRef<Url>) -> Option<&Urn> {
+	pub fn strip_prefix(&self, base: impl AsRef<UrlBuf>) -> Option<&Urn> {
 		use Scheme as S;
 
 		let base = base.as_ref();
@@ -237,7 +237,7 @@ impl Url {
 	}
 }
 
-impl Url {
+impl UrlBuf {
 	// --- Regular
 	#[inline]
 	pub fn is_regular(&self) -> bool { self.scheme == Scheme::Regular }
@@ -292,15 +292,15 @@ impl Url {
 	pub fn into_path2(self) -> PathBuf { self.loc.into_path() }
 }
 
-impl Debug for Url {
+impl Debug for UrlBuf {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
 		write!(f, "{}{}", Encode::from(self), self.loc.display())
 	}
 }
 
-impl Serialize for Url {
+impl Serialize for UrlBuf {
 	fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-		let Url { scheme, loc } = self;
+		let UrlBuf { scheme, loc } = self;
 		match (scheme.is_virtual(), loc.to_str()) {
 			(false, Some(s)) => serializer.serialize_str(s),
 			(true, Some(s)) => serializer.serialize_str(&format!("{}{s}", Encode::from(self))),
@@ -309,7 +309,7 @@ impl Serialize for Url {
 	}
 }
 
-impl<'de> Deserialize<'de> for Url {
+impl<'de> Deserialize<'de> for UrlBuf {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
 		D: serde::Deserializer<'de>,
@@ -347,7 +347,7 @@ mod tests {
 		];
 
 		for (base, path, expected) in cases {
-			let base: Url = base.parse()?;
+			let base: UrlBuf = base.parse()?;
 			#[cfg(unix)]
 			assert_eq!(format!("{:?}", base.join(path)), expected);
 			#[cfg(windows)]
@@ -383,7 +383,7 @@ mod tests {
 		];
 
 		for (path, expected) in cases {
-			let path: Url = path.parse()?;
+			let path: UrlBuf = path.parse()?;
 			assert_eq!(path.parent_url().map(|u| format!("{:?}", u)).as_deref(), expected);
 		}
 
@@ -394,7 +394,7 @@ mod tests {
 	fn test_into_search() -> Result<()> {
 		const S: char = std::path::MAIN_SEPARATOR;
 
-		let u: Url = "/root".parse()?;
+		let u: UrlBuf = "/root".parse()?;
 		assert_eq!(format!("{u:?}"), "regular:///root");
 
 		let u = u.into_search("kw");

@@ -2,12 +2,12 @@ use std::{ffi::OsString, path::MAIN_SEPARATOR_STR};
 
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{Id, event::CmdCow, url::{Url, UrnBuf}};
+use yazi_shared::{Id, event::CmdCow, url::{UrlBuf, UrnBuf}};
 
 #[derive(Debug, Default)]
 pub struct ShowOpt {
 	pub cache:      Vec<CmpItem>,
-	pub cache_name: Url,
+	pub cache_name: UrlBuf,
 	pub word:       UrnBuf,
 	pub ticket:     Id,
 }

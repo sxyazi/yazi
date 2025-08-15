@@ -2,31 +2,31 @@ use std::{hash::{Hash, Hasher}, ops::Deref};
 
 use serde::{Deserialize, Serialize};
 
-use crate::url::Url;
+use crate::url::UrlBuf;
 
 #[derive(Clone, Debug, Deserialize, Eq, Serialize)]
 #[repr(transparent)]
-pub struct CovUrl(pub Url);
+pub struct UrlCov(pub UrlBuf);
 
-impl Deref for CovUrl {
-	type Target = Url;
+impl Deref for UrlCov {
+	type Target = UrlBuf;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-impl AsRef<Url> for CovUrl {
-	fn as_ref(&self) -> &Url { &self.0 }
+impl AsRef<UrlBuf> for UrlCov {
+	fn as_ref(&self) -> &UrlBuf { &self.0 }
 }
 
-impl From<Url> for CovUrl {
-	fn from(value: Url) -> Self { Self(value) }
+impl From<UrlBuf> for UrlCov {
+	fn from(value: UrlBuf) -> Self { Self(value) }
 }
 
-impl From<CovUrl> for Url {
-	fn from(value: CovUrl) -> Self { value.0 }
+impl From<UrlCov> for UrlBuf {
+	fn from(value: UrlCov) -> Self { value.0 }
 }
 
-impl Hash for CovUrl {
+impl Hash for UrlCov {
 	fn hash<H: Hasher>(&self, state: &mut H) {
 		self.loc.hash(state);
 		if self.scheme.is_virtual() {
@@ -35,20 +35,20 @@ impl Hash for CovUrl {
 	}
 }
 
-impl PartialEq for CovUrl {
+impl PartialEq for UrlCov {
 	fn eq(&self, other: &Self) -> bool { self.covariant(other) }
 }
 
-impl PartialEq<Url> for CovUrl {
-	fn eq(&self, other: &Url) -> bool { self.covariant(other) }
+impl PartialEq<UrlBuf> for UrlCov {
+	fn eq(&self, other: &UrlBuf) -> bool { self.covariant(other) }
 }
 
-impl CovUrl {
+impl UrlCov {
 	#[inline]
-	pub fn new<T: AsRef<Url>>(u: &T) -> &Self {
-		unsafe { &*(u.as_ref() as *const Url as *const Self) }
+	pub fn new<T: AsRef<UrlBuf>>(u: &T) -> &Self {
+		unsafe { &*(u.as_ref() as *const UrlBuf as *const Self) }
 	}
 
 	#[inline]
-	pub fn parent_url(&self) -> Option<CovUrl> { self.0.parent_url().map(CovUrl) }
+	pub fn parent_url(&self) -> Option<UrlCov> { self.0.parent_url().map(UrlCov) }
 }

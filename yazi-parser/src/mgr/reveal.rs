@@ -1,12 +1,12 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_fs::path::expand_url;
-use yazi_shared::{event::CmdCow, url::Url};
+use yazi_shared::{event::CmdCow, url::UrlBuf};
 
 use crate::mgr::CdSource;
 
 #[derive(Debug)]
 pub struct RevealOpt {
-	pub target:   Url,
+	pub target:   UrlBuf,
 	pub source:   CdSource,
 	pub no_dummy: bool,
 }
@@ -23,12 +23,12 @@ impl From<CmdCow> for RevealOpt {
 	}
 }
 
-impl From<Url> for RevealOpt {
-	fn from(target: Url) -> Self { Self { target, source: CdSource::Reveal, no_dummy: false } }
+impl From<UrlBuf> for RevealOpt {
+	fn from(target: UrlBuf) -> Self { Self { target, source: CdSource::Reveal, no_dummy: false } }
 }
 
-impl From<(Url, CdSource)> for RevealOpt {
-	fn from((target, source): (Url, CdSource)) -> Self { Self { target, source, no_dummy: false } }
+impl From<(UrlBuf, CdSource)> for RevealOpt {
+	fn from((target, source): (UrlBuf, CdSource)) -> Self { Self { target, source, no_dummy: false } }
 }
 
 impl FromLua for RevealOpt {

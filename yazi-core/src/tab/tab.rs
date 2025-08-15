@@ -6,7 +6,7 @@ use tokio::task::JoinHandle;
 use yazi_adapter::Dimension;
 use yazi_config::{LAYOUT, popup::{Origin, Position}};
 use yazi_fs::File;
-use yazi_shared::{Id, Ids, url::Url};
+use yazi_shared::{Id, Ids, url::UrlBuf};
 
 use super::{Backstack, Finder, Folder, History, Mode, Preference, Preview};
 use crate::{spot::Spot, tab::Selected};
@@ -18,7 +18,7 @@ pub struct Tab {
 	pub current: Folder,
 	pub parent:  Option<Folder>,
 
-	pub backstack: Backstack<Url>,
+	pub backstack: Backstack<UrlBuf>,
 	pub history:   History,
 	pub selected:  Selected,
 
@@ -61,7 +61,7 @@ impl Tab {
 impl Tab {
 	// --- Current
 	#[inline]
-	pub fn cwd(&self) -> &Url { &self.current.url }
+	pub fn cwd(&self) -> &UrlBuf { &self.current.url }
 
 	#[inline]
 	pub fn hovered(&self) -> Option<&File> { self.current.hovered() }
@@ -87,7 +87,7 @@ impl Tab {
 		}
 	}
 
-	pub fn selected_or_hovered(&self) -> Box<dyn Iterator<Item = &Url> + '_> {
+	pub fn selected_or_hovered(&self) -> Box<dyn Iterator<Item = &UrlBuf> + '_> {
 		if self.selected.is_empty() {
 			Box::new(self.hovered().map(|h| &h.url).into_iter())
 		} else {
@@ -95,7 +95,7 @@ impl Tab {
 		}
 	}
 
-	pub fn hovered_and_selected(&self) -> Box<dyn Iterator<Item = &Url> + '_> {
+	pub fn hovered_and_selected(&self) -> Box<dyn Iterator<Item = &UrlBuf> + '_> {
 		let Some(h) = self.hovered() else { return Box::new(iter::empty()) };
 		if self.selected.is_empty() {
 			Box::new([&h.url, &h.url].into_iter())

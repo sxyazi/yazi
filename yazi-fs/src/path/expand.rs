@@ -1,13 +1,13 @@
 use std::{borrow::Cow, ffi::{OsStr, OsString}, path::{Path, PathBuf}};
 
-use yazi_shared::url::{Loc, Url};
+use yazi_shared::url::{Loc, UrlBuf};
 
 use crate::{CWD, path::clean_url};
 
 #[inline]
-pub fn expand_url<'a>(url: impl AsRef<Url>) -> Url { clean_url(expand_url_impl(url.as_ref())) }
+pub fn expand_url<'a>(url: impl AsRef<UrlBuf>) -> UrlBuf { clean_url(expand_url_impl(url.as_ref())) }
 
-fn expand_url_impl(url: &Url) -> Cow<'_, Url> {
+fn expand_url_impl(url: &UrlBuf) -> Cow<'_, UrlBuf> {
 	let (o_base, o_rest, o_urn) = url.loc.triple();
 
 	let n_base = expand_variables(o_base);
@@ -27,7 +27,7 @@ fn expand_url_impl(url: &Url) -> Cow<'_, Url> {
 	)
 	.expect("Failed to create Loc from expanded path");
 
-	let url = Url { loc, scheme: url.scheme.clone() };
+	let url = UrlBuf { loc, scheme: url.scheme.clone() };
 	match absolute_url(&url) {
 		Cow::Borrowed(_) => url.into(),
 		Cow::Owned(u) => u.into(),
@@ -60,7 +60,7 @@ fn expand_variables(p: &Path) -> Cow<'_, Path> {
 	}
 }
 
-fn absolute_url(url: &Url) -> Cow<'_, Url> {
+fn absolute_url(url: &UrlBuf) -> Cow<'_, UrlBuf> {
 	let b = url.loc.as_os_str().as_encoded_bytes();
 	let local = !url.scheme.is_virtual();
 
@@ -71,7 +71,7 @@ fn absolute_url(url: &Url) -> Cow<'_, Url> {
 			if url.has_trail() { 0 } else { 2 },
 		)
 		.expect("Failed to create Loc from drive letter");
-		Url { loc, scheme: url.scheme.clone() }.into()
+		UrlBuf { loc, scheme: url.scheme.clone() }.into()
 	} else if local
 		&& let Ok(rest) = url.loc.strip_prefix("~/")
 		&& let Some(home) = dirs::home_dir()
@@ -84,12 +84,12 @@ fn absolute_url(url: &Url) -> Cow<'_, Url> {
 			url.urn().count() + if url.has_trail() { 0 } else { add },
 		)
 		.expect("Failed to create Loc from home directory");
-		Url { loc, scheme: url.scheme.clone() }.into()
+		UrlBuf { loc, scheme: url.scheme.clone() }.into()
 	} else if !url.is_absolute() {
 		let cwd = CWD.load();
 		let loc = Loc::with(cwd.loc.join(&url.loc), url.uri().count(), url.urn().count())
 			.expect("Failed to create Loc from relative path");
-		Url { loc, scheme: cwd.scheme.clone() }.into()
+		UrlBuf { loc, scheme: cwd.scheme.clone() }.into()
 	} else {
 		url.into()
 	}
@@ -149,7 +149,7 @@ mod tests {
 		];
 
 		for (input, expected) in cases {
-			let u: Url = input.parse()?;
+			let u: UrlBuf = input.parse()?;
 			assert_eq!(format!("{:?}", expand_url(u)), expected);
 		}
 

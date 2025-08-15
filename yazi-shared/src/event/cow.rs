@@ -3,7 +3,7 @@ use std::{borrow::Cow, ops::Deref};
 use anyhow::Result;
 
 use super::{Cmd, Data, DataKey};
-use crate::{SStr, url::Url};
+use crate::{SStr, url::UrlBuf};
 
 #[derive(Debug)]
 pub enum CmdCow {
@@ -48,7 +48,7 @@ impl CmdCow {
 	}
 
 	#[inline]
-	pub fn take_url(&mut self, name: impl Into<DataKey>) -> Option<Url> {
+	pub fn take_url(&mut self, name: impl Into<DataKey>) -> Option<UrlBuf> {
 		match self {
 			Self::Owned(c) => c.take(name).and_then(Data::into_url),
 			Self::Borrowed(c) => c.get(name).and_then(Data::to_url),
@@ -63,7 +63,7 @@ impl CmdCow {
 		}
 	}
 
-	pub fn take_first_url(&mut self) -> Option<Url> {
+	pub fn take_first_url(&mut self) -> Option<UrlBuf> {
 		match self {
 			Self::Owned(c) => c.take_first_url(),
 			Self::Borrowed(c) => c.first().and_then(Data::to_url),

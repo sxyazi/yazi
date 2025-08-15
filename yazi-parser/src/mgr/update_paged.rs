@@ -1,10 +1,10 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::{CmdCow, Data}, url::Url};
+use yazi_shared::{event::{CmdCow, Data}, url::UrlBuf};
 
 #[derive(Debug, Default)]
 pub struct UpdatePagedOpt {
 	pub page:    Option<usize>,
-	pub only_if: Option<Url>,
+	pub only_if: Option<UrlBuf>,
 }
 
 impl From<CmdCow> for UpdatePagedOpt {

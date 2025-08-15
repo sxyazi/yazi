@@ -6,14 +6,14 @@ use image::{DynamicImage, GenericImageView, RgbImage};
 use palette::{Srgb, cast::ComponentsAs};
 use quantette::{ColorSlice, PaletteSize, QuantizeOutput, wu::UIntBinner};
 use ratatui::layout::Rect;
-use yazi_shared::url::Url;
+use yazi_shared::url::UrlBuf;
 
 use crate::{CLOSE, ESCAPE, Emulator, Image, START, adapter::Adapter};
 
 pub(crate) struct Sixel;
 
 impl Sixel {
-	pub(crate) async fn image_show(url: &Url, max: Rect) -> Result<Rect> {
+	pub(crate) async fn image_show(url: &UrlBuf, max: Rect) -> Result<Rect> {
 		let img = Image::downscale(url, max).await?;
 		let area = Image::pixel_area((img.width(), img.height()), max);
 		let b = Self::encode(img).await?;

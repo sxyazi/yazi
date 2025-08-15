@@ -1,11 +1,11 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{SStr, event::{CmdCow, Data}, url::Url};
+use yazi_shared::{SStr, event::{CmdCow, Data}, url::UrlBuf};
 
 #[derive(Debug)]
 pub struct ShellOpt {
 	pub run: SStr,
-	pub cwd: Option<Url>,
+	pub cwd: Option<UrlBuf>,
 
 	pub block:       bool,
 	pub orphan:      bool,

@@ -5,7 +5,7 @@ use yazi_fs::{CWD, path::expand_url, provider};
 use yazi_macro::{act, render, succ};
 use yazi_parser::cmp::{CmpItem, ShowOpt, TriggerOpt};
 use yazi_proxy::CmpProxy;
-use yazi_shared::{OsStrSplit, event::Data, natsort, url::{Url, UrnBuf}};
+use yazi_shared::{OsStrSplit, event::Data, natsort, url::{UrlBuf, UrnBuf}};
 
 use crate::{Actor, Ctx};
 
@@ -66,8 +66,8 @@ impl Actor for Trigger {
 }
 
 impl Trigger {
-	fn split_url(s: &str) -> Option<(Url, UrnBuf)> {
-		let (scheme, path, ..) = Url::parse(s.as_bytes()).ok()?;
+	fn split_url(s: &str) -> Option<(UrlBuf, UrnBuf)> {
+		let (scheme, path, ..) = UrlBuf::parse(s.as_bytes()).ok()?;
 
 		if !scheme.is_virtual() && path.as_os_str() == "~" {
 			return None; // We don't autocomplete a `~`, but `~/`
@@ -79,8 +79,8 @@ impl Trigger {
 		const SEP: char = std::path::MAIN_SEPARATOR;
 
 		Some(match path.as_os_str().rsplit_once(SEP) {
-			Some((p, c)) if p.is_empty() => (Url { loc: MAIN_SEPARATOR_STR.into(), scheme }, c.into()),
-			Some((p, c)) => (expand_url(Url { loc: p.into(), scheme }), c.into()),
+			Some((p, c)) if p.is_empty() => (UrlBuf { loc: MAIN_SEPARATOR_STR.into(), scheme }, c.into()),
+			Some((p, c)) => (expand_url(UrlBuf { loc: p.into(), scheme }), c.into()),
 			None => (CWD.load().as_ref().clone(), path.into()),
 		})
 	}
@@ -95,7 +95,7 @@ mod tests {
 	fn compare(s: &str, parent: &str, child: &str) {
 		let (mut p, c) = Trigger::split_url(s).unwrap();
 		if let Some(u) = p.strip_prefix(yazi_fs::CWD.load().as_ref()) {
-			p = Url::from(&**u);
+			p = UrlBuf::from(&**u);
 		}
 		assert_eq!((p, c.as_urn()), (parent.parse().unwrap(), Urn::new(child)));
 	}

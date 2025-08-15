@@ -4,7 +4,7 @@ use yazi_fs::File;
 use yazi_macro::render;
 use yazi_parser::mgr::SpotLock;
 use yazi_plugin::isolate;
-use yazi_shared::{SStr, url::Url};
+use yazi_shared::{SStr, url::UrlBuf};
 
 #[derive(Default)]
 pub struct Spot {
@@ -43,7 +43,7 @@ impl Spot {
 	}
 
 	#[inline]
-	pub fn same_url(&self, url: &Url) -> bool { self.lock.as_ref().is_some_and(|l| *url == l.url) }
+	pub fn same_url(&self, url: &UrlBuf) -> bool { self.lock.as_ref().is_some_and(|l| *url == l.url) }
 
 	#[inline]
 	pub fn same_file(&self, file: &File, mime: &str) -> bool {

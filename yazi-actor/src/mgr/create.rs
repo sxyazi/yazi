@@ -4,7 +4,7 @@ use yazi_fs::{File, FilesOp, maybe_exists, ok_or_not_found, provider, realname};
 use yazi_macro::succ;
 use yazi_parser::mgr::CreateOpt;
 use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy, WATCHER};
-use yazi_shared::{event::Data, url::{Url, UrnBuf}};
+use yazi_shared::{event::Data, url::{UrlBuf, UrnBuf}};
 
 use crate::{Actor, Ctx};
 
@@ -40,7 +40,7 @@ impl Actor for Create {
 }
 
 impl Create {
-	async fn r#do(new: Url, dir: bool) -> Result<()> {
+	async fn r#do(new: UrlBuf, dir: bool) -> Result<()> {
 		let Some(parent) = new.parent_url() else { return Ok(()) };
 		let _permit = WATCHER.acquire().await.unwrap();
 

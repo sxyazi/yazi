@@ -259,7 +259,7 @@ impl Loc {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use crate::url::Url;
+	use crate::url::UrlBuf;
 
 	#[test]
 	fn test_new() {
@@ -352,8 +352,8 @@ mod tests {
 		];
 
 		for (input, name, expected) in cases {
-			let mut a: Url = input.parse()?;
-			let b: Url = expected.parse()?;
+			let mut a: UrlBuf = input.parse()?;
+			let b: UrlBuf = expected.parse()?;
 			a.set_name(name);
 			assert_eq!(
 				(a.name(), format!("{a:?}").replace(r"\", "/")),

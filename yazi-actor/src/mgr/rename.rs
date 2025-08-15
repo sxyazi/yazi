@@ -5,7 +5,7 @@ use yazi_fs::{File, FilesOp, maybe_exists, ok_or_not_found, paths_to_same_file, 
 use yazi_macro::{act, err, succ};
 use yazi_parser::mgr::RenameOpt;
 use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy, WATCHER};
-use yazi_shared::{Id, event::Data, url::{Url, UrnBuf}};
+use yazi_shared::{Id, event::Data, url::{UrlBuf, UrnBuf}};
 
 use crate::{Actor, Ctx};
 
@@ -47,7 +47,7 @@ impl Actor for Rename {
 				return;
 			}
 
-			let new = Url::from(old.parent().unwrap().join(name));
+			let new = UrlBuf::from(old.parent().unwrap().join(name));
 			if opt.force || !maybe_exists(&new).await || paths_to_same_file(&old, &new).await {
 				Self::r#do(tab, old, new).await.ok();
 			} else if ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await {
@@ -59,7 +59,7 @@ impl Actor for Rename {
 }
 
 impl Rename {
-	async fn r#do(tab: Id, old: Url, new: Url) -> Result<()> {
+	async fn r#do(tab: Id, old: UrlBuf, new: UrlBuf) -> Result<()> {
 		let Some((p_old, n_old)) = old.pair() else { return Ok(()) };
 		let Some((p_new, n_new)) = new.pair() else { return Ok(()) };
 		let _permit = WATCHER.acquire().await.unwrap();
@@ -85,7 +85,7 @@ impl Rename {
 		Ok(())
 	}
 
-	fn empty_url_part(url: &Url, by: &str) -> String {
+	fn empty_url_part(url: &UrlBuf, by: &str) -> String {
 		if by == "all" {
 			return String::new();
 		}

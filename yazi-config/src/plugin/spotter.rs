@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use yazi_shared::{MIME_DIR, event::Cmd, url::Url};
+use yazi_shared::{MIME_DIR, event::Cmd, url::UrlBuf};
 
 use crate::Pattern;
 
@@ -12,7 +12,7 @@ pub struct Spotter {
 
 impl Spotter {
 	#[inline]
-	pub fn matches(&self, url: &Url, mime: &str) -> bool {
+	pub fn matches(&self, url: &UrlBuf, mime: &str) -> bool {
 		self.mime.as_ref().is_some_and(|p| p.match_mime(mime))
 			|| self.url.as_ref().is_some_and(|p| p.match_url(url, mime == MIME_DIR))
 	}

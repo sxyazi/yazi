@@ -1,5 +1,5 @@
 use ratatui::{text::{Line, Text}, widgets::{Paragraph, Wrap}};
-use yazi_shared::{IntoStringLossy, url::Url};
+use yazi_shared::{IntoStringLossy, url::UrlBuf};
 
 use super::{Offset, Position};
 use crate::YAZI;
@@ -118,7 +118,7 @@ impl ConfirmCfg {
 		}
 	}
 
-	pub fn trash(urls: &[yazi_shared::url::Url]) -> Self {
+	pub fn trash(urls: &[yazi_shared::url::UrlBuf]) -> Self {
 		Self::new(
 			Self::replace_number(&YAZI.confirm.trash_title, urls.len()),
 			YAZI.confirm.trash_position(),
@@ -127,7 +127,7 @@ impl ConfirmCfg {
 		)
 	}
 
-	pub fn delete(urls: &[yazi_shared::url::Url]) -> Self {
+	pub fn delete(urls: &[yazi_shared::url::UrlBuf]) -> Self {
 		Self::new(
 			Self::replace_number(&YAZI.confirm.delete_title, urls.len()),
 			YAZI.confirm.delete_position(),
@@ -136,7 +136,7 @@ impl ConfirmCfg {
 		)
 	}
 
-	pub fn overwrite(url: &Url) -> Self {
+	pub fn overwrite(url: &UrlBuf) -> Self {
 		Self::new(
 			YAZI.confirm.overwrite_title.to_owned(),
 			YAZI.confirm.overwrite_position(),

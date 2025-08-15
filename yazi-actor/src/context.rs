@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 use anyhow::{Result, anyhow};
 use yazi_core::{Core, mgr::Tabs, tab::{Folder, Tab}, tasks::Tasks};
 use yazi_fs::File;
-use yazi_shared::{Source, event::Cmd, url::Url};
+use yazi_shared::{Source, event::Cmd, url::UrlBuf};
 
 pub struct Ctx<'a> {
 	pub core:   &'a mut Core,
@@ -68,7 +68,7 @@ impl<'a> Ctx<'a> {
 	pub fn tab_mut(&mut self) -> &mut Tab { &mut self.core.mgr.tabs[self.tab] }
 
 	#[inline]
-	pub fn cwd(&self) -> &Url { self.tab().cwd() }
+	pub fn cwd(&self) -> &UrlBuf { self.tab().cwd() }
 
 	#[inline]
 	pub fn parent(&self) -> Option<&Folder> { self.tab().parent.as_ref() }
