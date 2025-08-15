@@ -5,26 +5,26 @@ use percent_encoding::percent_decode;
 use serde::{Deserialize, Serialize};
 
 use super::UrnBuf;
-use crate::{IntoOsStr, url::{Components, Display, Encode, EncodeTilded, Loc, Scheme, Urn}};
+use crate::{IntoOsStr, loc::LocBuf, url::{Components, Display, Encode, EncodeTilded, Scheme, Urn}};
 
 #[derive(Clone, Default, Eq, Ord, PartialOrd, PartialEq, Hash)]
 pub struct UrlBuf {
-	pub loc:    Loc,
+	pub loc:    LocBuf,
 	pub scheme: Scheme,
 }
 
 impl Deref for UrlBuf {
-	type Target = Loc;
+	type Target = LocBuf;
 
 	fn deref(&self) -> &Self::Target { &self.loc }
 }
 
-impl From<Loc> for UrlBuf {
-	fn from(loc: Loc) -> Self { Self { loc, scheme: Scheme::Regular } }
+impl From<LocBuf> for UrlBuf {
+	fn from(loc: LocBuf) -> Self { Self { loc, scheme: Scheme::Regular } }
 }
 
 impl From<PathBuf> for UrlBuf {
-	fn from(path: PathBuf) -> Self { Loc::from(path).into() }
+	fn from(path: PathBuf) -> Self { LocBuf::from(path).into() }
 }
 
 impl From<&UrlBuf> for UrlBuf {
@@ -46,7 +46,7 @@ impl TryFrom<&[u8]> for UrlBuf {
 		let (scheme, path, port) = Self::parse(bytes)?;
 
 		let loc =
-			if let Some((uri, urn)) = port { Loc::with(path, uri, urn)? } else { Loc::from(path) };
+			if let Some((uri, urn)) = port { LocBuf::with(path, uri, urn)? } else { LocBuf::from(path) };
 
 		Ok(Self { loc, scheme })
 	}
@@ -90,7 +90,7 @@ impl UrlBuf {
 	pub fn base(&self) -> UrlBuf {
 		use Scheme as S;
 
-		let loc: Loc = self.loc.base().into();
+		let loc: LocBuf = self.loc.base().into();
 		match self.scheme {
 			S::Regular => Self { loc, scheme: S::Regular },
 			S::Search(_) => Self { loc, scheme: self.scheme.clone() },
@@ -106,8 +106,8 @@ impl UrlBuf {
 
 		let loc = match self.scheme {
 			S::Regular => join.into(),
-			S::Search(_) => Loc::new(join, self.loc.base(), self.loc.base()),
-			S::Archive(_) => Loc::floated(join, self.loc.base()),
+			S::Search(_) => LocBuf::new(join, self.loc.base(), self.loc.base()),
+			S::Archive(_) => LocBuf::floated(join, self.loc.base()),
 			S::Sftp(_) => join.into(),
 		};
 
@@ -141,17 +141,17 @@ impl UrlBuf {
 			// Search
 			S::Search(_) if uri.is_empty() => Self { loc: parent.into(), scheme: S::Regular },
 			S::Search(_) => Self {
-				loc:    Loc::new(parent, self.loc.base(), self.loc.base()),
+				loc:    LocBuf::new(parent, self.loc.base(), self.loc.base()),
 				scheme: self.scheme.clone(),
 			},
 
 			// Archive
 			S::Archive(_) if uri.is_empty() => Self { loc: parent.into(), scheme: S::Regular },
 			S::Archive(_) if uri.nth(1).is_none() => {
-				Self { loc: Loc::zeroed(parent), scheme: self.scheme.clone() }
+				Self { loc: LocBuf::zeroed(parent), scheme: self.scheme.clone() }
 			}
 			S::Archive(_) => {
-				Self { loc: Loc::floated(parent, self.loc.base()), scheme: self.scheme.clone() }
+				Self { loc: LocBuf::floated(parent, self.loc.base()), scheme: self.scheme.clone() }
 			}
 
 			// SFTP
@@ -261,14 +261,14 @@ impl UrlBuf {
 	#[inline]
 	pub fn to_search(&self, domain: impl AsRef<str>) -> Self {
 		Self {
-			loc:    Loc::zeroed(self.loc.to_path()),
+			loc:    LocBuf::zeroed(self.loc.to_path()),
 			scheme: Scheme::Search(domain.as_ref().to_owned()),
 		}
 	}
 
 	#[inline]
 	pub fn into_search(mut self, domain: impl AsRef<str>) -> Self {
-		self.loc = Loc::zeroed(self.loc.into_path());
+		self.loc = LocBuf::zeroed(self.loc.into_path());
 		self.scheme = Scheme::Search(domain.as_ref().to_owned());
 		self
 	}

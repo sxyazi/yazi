@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ffi::{OsStr, OsString}, iter::FusedIterator, ops::Not, path::{self, PathBuf, PrefixComponent}};
 
-use crate::url::{Encode, Loc, Scheme, UrlBuf};
+use crate::{loc::LocBuf, url::{Encode, Scheme, UrlBuf}};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum Component<'a> {
@@ -60,7 +60,7 @@ impl<'a> FromIterator<Component<'a>> for PathBuf {
 #[derive(Clone)]
 pub struct Components<'a> {
 	inner:          path::Components<'a>,
-	loc:            &'a Loc,
+	loc:            &'a LocBuf,
 	scheme:         &'a Scheme,
 	scheme_yielded: bool,
 }

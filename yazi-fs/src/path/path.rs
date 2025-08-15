@@ -1,7 +1,7 @@
 use std::{borrow::Cow, ffi::{OsStr, OsString}, future::Future, io, path::PathBuf};
 
 use anyhow::{Result, bail};
-use yazi_shared::url::{Loc, UrlBuf};
+use yazi_shared::{loc::LocBuf, url::UrlBuf};
 
 use crate::provider;
 
@@ -75,7 +75,7 @@ pub fn url_relative_to<'a>(from: &UrlBuf, to: &'a UrlBuf) -> Result<Cow<'a, UrlB
 	}
 
 	if from.covariant(to) {
-		return Ok(UrlBuf { loc: Loc::zeroed("."), scheme: to.scheme.clone() }.into());
+		return Ok(UrlBuf { loc: LocBuf::zeroed("."), scheme: to.scheme.clone() }.into());
 	}
 
 	let (mut f_it, mut t_it) = (from.components(), to.components());
@@ -97,7 +97,7 @@ pub fn url_relative_to<'a>(from: &UrlBuf, to: &'a UrlBuf) -> Result<Cow<'a, UrlB
 	let rest = t_head.into_iter().chain(t_it);
 
 	let buf: PathBuf = dots.chain(rest).collect();
-	Ok(UrlBuf { loc: Loc::zeroed(buf), scheme: to.scheme.clone() }.into())
+	Ok(UrlBuf { loc: LocBuf::zeroed(buf), scheme: to.scheme.clone() }.into())
 }
 
 #[cfg(windows)]

@@ -2,10 +2,10 @@ use std::{fmt::{self, Display}, ops::Not};
 
 use percent_encoding::{AsciiSet, CONTROLS, PercentEncode, percent_encode};
 
-use crate::url::{Loc, Scheme, UrlBuf};
+use crate::{loc::LocBuf, url::{Scheme, UrlBuf}};
 
 pub struct Encode<'a> {
-	loc:    &'a Loc,
+	loc:    &'a LocBuf,
 	scheme: &'a Scheme,
 }
 
@@ -15,7 +15,7 @@ impl<'a> From<&'a UrlBuf> for Encode<'a> {
 
 impl<'a> Encode<'a> {
 	#[inline]
-	pub(super) fn new(loc: &'a Loc, scheme: &'a Scheme) -> Self { Self { loc, scheme } }
+	pub(super) fn new(loc: &'a LocBuf, scheme: &'a Scheme) -> Self { Self { loc, scheme } }
 
 	#[inline]
 	fn domain<'s>(s: &'s str) -> PercentEncode<'s> {
@@ -69,7 +69,7 @@ impl Display for Encode<'_> {
 
 // --- Tilded
 pub struct EncodeTilded<'a> {
-	loc:    &'a Loc,
+	loc:    &'a LocBuf,
 	scheme: &'a Scheme,
 }
 
