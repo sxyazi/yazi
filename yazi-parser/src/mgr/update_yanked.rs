@@ -1,20 +1,21 @@
-use std::{borrow::Cow, collections::HashSet};
+use std::borrow::Cow;
 
 use anyhow::bail;
+use hashbrown::HashSet;
 use mlua::{AnyUserData, ExternalError, FromLua, IntoLua, Lua, MetaMethod, MultiValue, ObjectLike, UserData, UserDataFields, UserDataMethods, Value};
 use serde::{Deserialize, Serialize};
 use yazi_binding::get_metatable;
-use yazi_shared::{event::CmdCow, url::UrlCov};
+use yazi_shared::{event::CmdCow, url::UrlBufCov};
 
 type Iter = yazi_binding::Iter<
-	std::iter::Map<std::collections::hash_set::IntoIter<UrlCov>, fn(UrlCov) -> yazi_binding::Url>,
+	std::iter::Map<hashbrown::hash_set::IntoIter<UrlBufCov>, fn(UrlBufCov) -> yazi_binding::Url>,
 	yazi_binding::Url,
 >;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct UpdateYankedOpt<'a> {
 	pub cut:  bool,
-	pub urls: Cow<'a, HashSet<UrlCov>>,
+	pub urls: Cow<'a, HashSet<UrlBufCov>>,
 }
 
 impl TryFrom<CmdCow> for UpdateYankedOpt<'_> {

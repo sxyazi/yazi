@@ -1,11 +1,12 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use anyhow::Result;
+use hashbrown::HashSet;
 use mlua::Function;
 use parking_lot::RwLock;
 use yazi_boot::BOOT;
 use yazi_fs::FolderStage;
-use yazi_shared::{Id, RoCell, url::{UrlBuf, UrlCov}};
+use yazi_shared::{Id, RoCell, url::{UrlBuf, UrlBufCov}};
 
 use crate::{Client, ID, PEERS, ember::{BodyMoveItem, Ember, EmberBulk, EmberHi}};
 
@@ -157,7 +158,7 @@ impl Pubsub {
 
 	pub_after!(rename(tab: Id, from: &UrlBuf, to: &UrlBuf), (tab, from, to));
 
-	pub_after!(@yank(cut: bool, urls: &HashSet<UrlCov>), (cut, urls));
+	pub_after!(@yank(cut: bool, urls: &HashSet<UrlBufCov>), (cut, urls));
 
 	pub_after!(move(items: Vec<BodyMoveItem>), (&items), (items));
 

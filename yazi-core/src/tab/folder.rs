@@ -37,8 +37,8 @@ impl Default for Folder {
 	}
 }
 
-impl From<&UrlBuf> for Folder {
-	fn from(url: &UrlBuf) -> Self { Self { url: url.clone(), ..Default::default() } }
+impl<T: Into<UrlBuf>> From<T> for Folder {
+	fn from(value: T) -> Self { Self { url: value.into(), ..Default::default() } }
 }
 
 impl Folder {

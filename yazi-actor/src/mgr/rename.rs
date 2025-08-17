@@ -68,7 +68,7 @@ impl Rename {
 		provider::rename(&old, &new).await?;
 
 		if let Some(o) = overwritten {
-			ok_or_not_found(provider::rename(p_new.join(&o), &new).await)?;
+			ok_or_not_found(provider::rename(&p_new.join(&o), &new).await)?;
 			FilesOp::Deleting(p_new.clone(), [UrnBuf::from(o)].into()).emit();
 		}
 

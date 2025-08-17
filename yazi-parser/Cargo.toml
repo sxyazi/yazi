@@ -24,6 +24,7 @@ yazi-shared  = { path = "../yazi-shared", version = "25.6.11" }
 anyhow    = { workspace = true }
 bitflags  = { workspace = true }
 crossterm = { workspace = true }
+hashbrown = { workspace = true }
 mlua      = { workspace = true }
 serde     = { workspace = true }
 tokio     = { workspace = true }

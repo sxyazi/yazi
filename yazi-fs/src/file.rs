@@ -36,7 +36,8 @@ impl File {
 	}
 
 	#[inline]
-	pub fn from_dummy(url: UrlBuf, ft: Option<FileType>) -> Self {
+	pub fn from_dummy(url: impl Into<UrlBuf>, ft: Option<FileType>) -> Self {
+		let url = url.into();
 		let cha = Cha::from_dummy(&url, ft);
 		Self { url, cha, link_to: None }
 	}

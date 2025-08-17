@@ -25,7 +25,7 @@ impl Boot {
 			return (vec![CWD.load().as_ref().clone()], vec![UrnBuf::default()]);
 		}
 
-		async fn go<'a>(entry: UrlBuf) -> (UrlBuf, UrnBuf) {
+		async fn go(entry: UrlBuf) -> (UrlBuf, UrnBuf) {
 			let Some((parent, child)) = entry.pair() else {
 				return (entry, UrnBuf::default());
 			};

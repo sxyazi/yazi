@@ -4,7 +4,7 @@ use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::{Xdg, path::expand_url};
-use yazi_shared::{SStr, timestamp_us, url::UrlBuf};
+use yazi_shared::{SStr, timestamp_us, url::Url};
 
 use super::PreviewWrap;
 
@@ -53,7 +53,7 @@ impl Preview {
 
 		self.cache_dir = if self.cache_dir.as_os_str().is_empty() {
 			Xdg::cache_dir()
-		} else if let Some(p) = expand_url(UrlBuf::from(&self.cache_dir)).into_path() {
+		} else if let Some(p) = expand_url(Url::regular(&self.cache_dir)).into_path() {
 			p
 		} else {
 			bail!("[preview].cache_dir must be a path within local filesystem.");

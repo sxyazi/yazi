@@ -31,6 +31,7 @@ dirs                = "6.0.0"
 foldhash            = "0.1.5"
 futures             = "0.3.31"
 globset             = "0.4.16"
+hashbrown           = { version = "0.15.5", features = [ "serde" ] }
 indexmap            = { version = "2.10.0", features = [ "serde" ] }
 libc                = "0.2.175"
 lru                 = "0.16.0"

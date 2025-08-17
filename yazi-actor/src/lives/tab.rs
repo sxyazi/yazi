@@ -64,7 +64,7 @@ impl UserData for Tab {
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_method("history", |_, me, url: UrlRef| {
-			me.history.get(&url).map(|f| Folder::make(None, f, me)).transpose()
+			me.history.get(url.as_ref()).map(|f| Folder::make(None, f, me)).transpose()
 		});
 	}
 }

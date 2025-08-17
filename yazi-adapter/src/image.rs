@@ -108,7 +108,7 @@ impl Image {
 			limits.max_image_height = Some(YAZI.tasks.image_bound[1] as u32);
 		}
 
-		let mut reader = ImageReader::new(provider::open(&url).await?.reader_sync().await);
+		let mut reader = ImageReader::new(provider::open(url).await?.reader_sync().await);
 		if let Ok(format) = ImageFormat::from_path(url) {
 			reader.set_format(format);
 		}

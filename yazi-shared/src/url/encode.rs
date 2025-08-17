@@ -2,20 +2,24 @@ use std::{fmt::{self, Display}, ops::Not};
 
 use percent_encoding::{AsciiSet, CONTROLS, PercentEncode, percent_encode};
 
-use crate::{loc::LocBuf, url::{Scheme, UrlBuf}};
+use crate::{loc::Loc, url::{Scheme, Url, UrlBuf}};
 
 pub struct Encode<'a> {
-	loc:    &'a LocBuf,
+	loc:    Loc<'a>,
 	scheme: &'a Scheme,
 }
 
+impl<'a> From<&'a Url<'a>> for Encode<'a> {
+	fn from(url: &'a Url<'a>) -> Self { Self::new(url.loc, &url.scheme) }
+}
+
 impl<'a> From<&'a UrlBuf> for Encode<'a> {
-	fn from(url: &'a UrlBuf) -> Self { Self::new(&url.loc, &url.scheme) }
+	fn from(url: &'a UrlBuf) -> Self { Self::new(url.loc.as_loc(), &url.scheme) }
 }
 
 impl<'a> Encode<'a> {
 	#[inline]
-	pub(super) fn new(loc: &'a LocBuf, scheme: &'a Scheme) -> Self { Self { loc, scheme } }
+	pub(super) fn new(loc: Loc<'a>, scheme: &'a Scheme) -> Self { Self { loc, scheme } }
 
 	#[inline]
 	fn domain<'s>(s: &'s str) -> PercentEncode<'s> {
@@ -69,12 +73,16 @@ impl Display for Encode<'_> {
 
 // --- Tilded
 pub struct EncodeTilded<'a> {
-	loc:    &'a LocBuf,
+	loc:    Loc<'a>,
 	scheme: &'a Scheme,
 }
 
+impl<'a> From<&'a Url<'a>> for EncodeTilded<'a> {
+	fn from(url: &'a Url<'a>) -> Self { Self { loc: url.loc, scheme: &url.scheme } }
+}
+
 impl<'a> From<&'a UrlBuf> for EncodeTilded<'a> {
-	fn from(url: &'a UrlBuf) -> Self { Self { loc: &url.loc, scheme: &url.scheme } }
+	fn from(url: &'a UrlBuf) -> Self { Self { loc: url.loc.as_loc(), scheme: &url.scheme } }
 }
 
 impl<'a> From<&'a EncodeTilded<'a>> for Encode<'a> {

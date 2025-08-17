@@ -4,7 +4,7 @@ use anyhow::{Result, bail};
 use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize, de};
 
-use crate::{Id, SStr, url::{UrlBuf, UrnBuf}};
+use crate::{Id, SStr, url::{UrlBuf, UrlCow, UrnBuf}};
 
 // --- Data
 #[derive(Debug, Serialize, Deserialize)]
@@ -64,11 +64,11 @@ impl Data {
 	}
 
 	#[inline]
-	pub fn into_url(self) -> Option<UrlBuf> {
+	pub fn into_url(self) -> Option<UrlCow<'static>> {
 		match self {
-			Self::String(s) => s.parse().ok(),
-			Self::Url(u) => Some(u),
-			Self::Bytes(b) => b.as_slice().try_into().ok(),
+			Self::String(s) => s.try_into().ok(),
+			Self::Url(u) => Some(u.into()),
+			Self::Bytes(b) => b.try_into().ok(),
 			_ => None,
 		}
 	}
@@ -94,10 +94,10 @@ impl Data {
 	}
 
 	#[inline]
-	pub fn to_url(&self) -> Option<UrlBuf> {
+	pub fn to_url(&self) -> Option<UrlCow<'_>> {
 		match self {
-			Self::String(s) => s.parse().ok(),
-			Self::Url(u) => Some(u.clone()),
+			Self::String(s) => s.as_ref().try_into().ok(),
+			Self::Url(u) => Some(u.into()),
 			Self::Bytes(b) => b.as_slice().try_into().ok(),
 			_ => None,
 		}
@@ -184,11 +184,11 @@ impl DataKey {
 	}
 
 	#[inline]
-	pub fn into_url(self) -> Option<UrlBuf> {
+	pub fn into_url(self) -> Option<UrlCow<'static>> {
 		match self {
-			Self::String(s) => s.parse().ok(),
-			Self::Url(u) => Some(u),
-			Self::Bytes(b) => b.as_slice().try_into().ok(),
+			Self::String(s) => s.try_into().ok(),
+			Self::Url(u) => Some(u.into()),
+			Self::Bytes(b) => b.try_into().ok(),
 			_ => None,
 		}
 	}

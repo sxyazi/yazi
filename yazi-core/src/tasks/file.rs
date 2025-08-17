@@ -1,13 +1,13 @@
-use std::collections::HashSet;
-
+use hashbrown::HashSet;
 use tracing::debug;
-use yazi_shared::url::{UrlBuf, UrlCov};
+use yazi_shared::url::{UrlBuf, UrlBufCov};
 
 use super::Tasks;
+use crate::mgr::Yanked;
 
 impl Tasks {
-	pub fn file_cut(&self, src: &[&UrlCov], dest: &UrlBuf, force: bool) {
-		for &u in src {
+	pub fn file_cut(&self, src: &Yanked, dest: &UrlBuf, force: bool) {
+		for u in src.iter() {
 			let to = dest.join(u.file_name().unwrap());
 			if force && *u == to {
 				debug!("file_cut: same file, skipping {:?}", to);
@@ -17,8 +17,8 @@ impl Tasks {
 		}
 	}
 
-	pub fn file_copy(&self, src: &[&UrlCov], dest: &UrlBuf, force: bool, follow: bool) {
-		for &u in src {
+	pub fn file_copy(&self, src: &Yanked, dest: &UrlBuf, force: bool, follow: bool) {
+		for u in src.iter() {
 			let to = dest.join(u.file_name().unwrap());
 			if force && *u == to {
 				debug!("file_copy: same file, skipping {:?}", to);
@@ -28,7 +28,7 @@ impl Tasks {
 		}
 	}
 
-	pub fn file_link(&self, src: &HashSet<UrlCov>, dest: &UrlBuf, relative: bool, force: bool) {
+	pub fn file_link(&self, src: &HashSet<UrlBufCov>, dest: &UrlBuf, relative: bool, force: bool) {
 		for u in src {
 			let to = dest.join(u.file_name().unwrap());
 			if force && *u == to {
@@ -39,7 +39,7 @@ impl Tasks {
 		}
 	}
 
-	pub fn file_hardlink(&self, src: &HashSet<UrlCov>, dest: &UrlBuf, force: bool, follow: bool) {
+	pub fn file_hardlink(&self, src: &HashSet<UrlBufCov>, dest: &UrlBuf, force: bool, follow: bool) {
 		for u in src {
 			let to = dest.join(u.file_name().unwrap());
 			if force && *u == to {

@@ -18,7 +18,7 @@ pub struct Tab {
 	pub current: Folder,
 	pub parent:  Option<Folder>,
 
-	pub backstack: Backstack<UrlBuf>,
+	pub backstack: Backstack,
 	pub history:   History,
 	pub selected:  Selected,
 

@@ -1,6 +1,6 @@
 use std::{collections::HashMap, iter, ops::{Deref, DerefMut}};
 
-use yazi_shared::url::UrlBuf;
+use yazi_shared::url::{Url, UrlBuf};
 
 #[derive(Default)]
 pub struct Linked(HashMap<UrlBuf, UrlBuf> /* from ==> to */);
@@ -29,7 +29,7 @@ impl Linked {
 		}
 	}
 
-	pub fn from_file(&self, url: &UrlBuf) -> Vec<UrlBuf> {
+	pub fn from_file(&self, url: Url) -> Vec<UrlBuf> {
 		if url.scheme.is_virtual() {
 			vec![]
 		} else if let Some((parent, urn)) = url.pair() {

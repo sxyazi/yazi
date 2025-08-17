@@ -1,11 +1,11 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::{CmdCow, Data}, url::UrlBuf};
+use yazi_shared::{event::{CmdCow, Data}, url::UrlCow};
 
 #[derive(Debug, Default)]
 pub struct PeekOpt {
 	pub skip:        Option<usize>,
 	pub force:       bool,
-	pub only_if:     Option<UrlBuf>,
+	pub only_if:     Option<UrlCow<'static>>,
 	pub upper_bound: bool,
 }
 

@@ -19,7 +19,7 @@ impl Actor for Shell {
 	fn act(cx: &mut Ctx, mut opt: Self::Options) -> Result<Data> {
 		act!(mgr:escape_visual, cx)?;
 
-		let cwd = opt.cwd.take().unwrap_or_else(|| cx.cwd().clone());
+		let cwd = opt.cwd.take().unwrap_or(cx.cwd().into()).into_owned();
 		let selected = cx.tab().hovered_and_selected().cloned().collect();
 
 		let input = opt.interactive.then(|| {

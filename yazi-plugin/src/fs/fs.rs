@@ -4,6 +4,7 @@ use mlua::{ExternalError, Function, IntoLua, IntoLuaMulti, Lua, Table, Value};
 use yazi_binding::{Cha, Composer, ComposerGet, ComposerSet, Error, File, Url, UrlRef};
 use yazi_config::Pattern;
 use yazi_fs::{mounts::PARTITIONS, provider, remove_dir_clean};
+use yazi_shared::url::UrlCow;
 
 use crate::bindings::SizeCalculator;
 
@@ -157,7 +158,7 @@ fn expand_url(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_function(|_, value: Value| {
 		use yazi_fs::path::expand_url;
 		Ok(Url::new(match value {
-			Value::String(s) => expand_url(Url::try_from(s.as_bytes().as_ref())?),
+			Value::String(s) => expand_url(UrlCow::try_from(s.as_bytes().as_ref())?),
 			Value::UserData(ud) => expand_url(&*ud.borrow::<yazi_binding::Url>()?),
 			_ => Err("must be a string or a Url".into_lua_err())?,
 		}))

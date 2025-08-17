@@ -29,8 +29,8 @@ impl Actor for ToggleAll {
 
 		let warn = match either {
 			Left((removal, addition)) => {
-				render!(tab.selected.remove_many(&removal) > 0);
-				render!(tab.selected.add_many(&addition), > 0) != addition.len()
+				render!(tab.selected.remove_many(removal) > 0);
+				addition.len() != render!(tab.selected.add_many(addition), > 0)
 			}
 			Right((removal, addition)) => {
 				render!(tab.selected.remove_many(&removal) > 0);
