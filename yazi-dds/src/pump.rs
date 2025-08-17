@@ -5,34 +5,34 @@ use tokio::{pin, select, sync::mpsc};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tokio_util::sync::CancellationToken;
 use yazi_macro::err;
-use yazi_shared::{RoCell, url::Url};
+use yazi_shared::{RoCell, url::UrlBuf};
 
 use crate::{Pubsub, ember::BodyMoveItem};
 
 static CT: RoCell<CancellationToken> = RoCell::new();
 static MOVE_TX: Mutex<Option<mpsc::UnboundedSender<BodyMoveItem>>> = Mutex::new(None);
-static TRASH_TX: Mutex<Option<mpsc::UnboundedSender<Url>>> = Mutex::new(None);
-static DELETE_TX: Mutex<Option<mpsc::UnboundedSender<Url>>> = Mutex::new(None);
+static TRASH_TX: Mutex<Option<mpsc::UnboundedSender<UrlBuf>>> = Mutex::new(None);
+static DELETE_TX: Mutex<Option<mpsc::UnboundedSender<UrlBuf>>> = Mutex::new(None);
 
 pub struct Pump;
 
 impl Pump {
 	#[inline]
-	pub fn push_move(from: Url, to: Url) {
+	pub fn push_move(from: UrlBuf, to: UrlBuf) {
 		if let Some(tx) = &*MOVE_TX.lock() {
 			tx.send(BodyMoveItem { from, to }).ok();
 		}
 	}
 
 	#[inline]
-	pub fn push_trash(target: Url) {
+	pub fn push_trash(target: UrlBuf) {
 		if let Some(tx) = &*TRASH_TX.lock() {
 			tx.send(target).ok();
 		}
 	}
 
 	#[inline]
-	pub fn push_delete(target: Url) {
+	pub fn push_delete(target: UrlBuf) {
 		if let Some(tx) = &*DELETE_TX.lock() {
 			tx.send(target).ok();
 		}

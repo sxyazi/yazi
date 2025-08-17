@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use yazi_config::plugin::{Fetcher, Preloader};
-use yazi_shared::{Id, Throttle, url::Url};
+use yazi_shared::{Id, Throttle, url::UrlBuf};
 
 #[derive(Debug)]
 pub enum PreworkIn {
@@ -37,6 +37,6 @@ pub struct PreworkInLoad {
 #[derive(Debug)]
 pub struct PreworkInSize {
 	pub id:       Id,
-	pub target:   Url,
-	pub throttle: Arc<Throttle<(Url, u64)>>,
+	pub target:   UrlBuf,
+	pub throttle: Arc<Throttle<(UrlBuf, u64)>>,
 }

@@ -1,15 +1,15 @@
 use std::{ffi::OsStr, fs::{FileType, Metadata}, hash::{BuildHasher, Hash, Hasher}, ops::Deref};
 
 use anyhow::Result;
-use yazi_shared::url::{Uri, Url, Urn, UrnBuf};
+use yazi_shared::url::{Uri, UrlBuf, Urn, UrnBuf};
 
 use crate::{cha::Cha, provider};
 
 #[derive(Clone, Debug, Default)]
 pub struct File {
-	pub url:     Url,
+	pub url:     UrlBuf,
 	pub cha:     Cha,
-	pub link_to: Option<Url>,
+	pub link_to: Option<UrlBuf>,
 }
 
 impl Deref for File {
@@ -21,13 +21,13 @@ impl Deref for File {
 
 impl File {
 	#[inline]
-	pub async fn new(url: Url) -> Result<Self> {
+	pub async fn new(url: UrlBuf) -> Result<Self> {
 		let meta = provider::symlink_metadata(&url).await?;
 		Ok(Self::from_follow(url, meta).await)
 	}
 
 	#[inline]
-	pub async fn from_follow(url: Url, meta: Metadata) -> Self {
+	pub async fn from_follow(url: UrlBuf, meta: Metadata) -> Self {
 		let link_to = if meta.is_symlink() { provider::read_link(&url).await.ok() } else { None };
 
 		let cha = Cha::from_follow(&url, meta).await;
@@ -36,7 +36,7 @@ impl File {
 	}
 
 	#[inline]
-	pub fn from_dummy(url: Url, ft: Option<FileType>) -> Self {
+	pub fn from_dummy(url: UrlBuf, ft: Option<FileType>) -> Self {
 		let cha = Cha::from_dummy(&url, ft);
 		Self { url, cha, link_to: None }
 	}
@@ -45,7 +45,7 @@ impl File {
 	pub fn hash_u64(&self) -> u64 { foldhash::fast::FixedState::default().hash_one(self) }
 
 	#[inline]
-	pub fn chdir(&self, wd: &Url) -> Self {
+	pub fn chdir(&self, wd: &UrlBuf) -> Self {
 		Self { url: self.url.rebase(wd), cha: self.cha, link_to: self.link_to.clone() }
 	}
 }
@@ -53,7 +53,7 @@ impl File {
 impl File {
 	// --- Url
 	#[inline]
-	pub fn url_owned(&self) -> Url { self.url.to_owned() }
+	pub fn url_owned(&self) -> UrlBuf { self.url.to_owned() }
 
 	#[inline]
 	pub fn uri(&self) -> &Uri { self.url.uri() }

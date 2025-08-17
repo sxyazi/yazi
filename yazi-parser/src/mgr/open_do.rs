@@ -1,11 +1,11 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::CmdCow, url::Url};
+use yazi_shared::{event::CmdCow, url::UrlBuf};
 
 #[derive(Debug, Default)]
 pub struct OpenDoOpt {
-	pub cwd:         Url,
-	pub hovered:     Url,
-	pub targets:     Vec<(Url, &'static str)>,
+	pub cwd:         UrlBuf,
+	pub hovered:     UrlBuf,
+	pub targets:     Vec<(UrlBuf, &'static str)>,
 	pub interactive: bool,
 }
 

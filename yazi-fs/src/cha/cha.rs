@@ -1,7 +1,7 @@
 use std::{fs::{FileType, Metadata}, time::SystemTime};
 
 use yazi_macro::{unix_either, win_either};
-use yazi_shared::url::Url;
+use yazi_shared::url::UrlBuf;
 
 use super::ChaKind;
 use crate::provider;
@@ -53,16 +53,16 @@ impl Default for Cha {
 
 impl Cha {
 	#[inline]
-	pub fn new(url: &Url, meta: Metadata) -> Self {
+	pub fn new(url: &UrlBuf, meta: Metadata) -> Self {
 		Self::from_just_meta(&meta).attach(ChaKind::hidden(url, &meta))
 	}
 
 	#[inline]
-	pub async fn from_url(url: &Url) -> std::io::Result<Self> {
+	pub async fn from_url(url: &UrlBuf) -> std::io::Result<Self> {
 		Ok(Self::from_follow(url, provider::symlink_metadata(url).await?).await)
 	}
 
-	pub async fn from_follow(url: &Url, mut meta: Metadata) -> Self {
+	pub async fn from_follow(url: &UrlBuf, mut meta: Metadata) -> Self {
 		let mut attached = ChaKind::hidden(url, &meta);
 		if meta.is_symlink() {
 			attached |= ChaKind::LINK;
@@ -76,7 +76,7 @@ impl Cha {
 	}
 
 	#[inline]
-	pub fn from_dummy(_url: &Url, ft: Option<FileType>) -> Self {
+	pub fn from_dummy(_url: &UrlBuf, ft: Option<FileType>) -> Self {
 		let mut me = ft.map(Self::from_half_ft).unwrap_or_default();
 		#[cfg(unix)]
 		if _url.urn().is_hidden() {

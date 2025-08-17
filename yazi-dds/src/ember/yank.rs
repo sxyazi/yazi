@@ -3,7 +3,7 @@ use std::{borrow::Cow, collections::HashSet};
 use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 use yazi_parser::mgr::UpdateYankedOpt;
-use yazi_shared::url::CovUrl;
+use yazi_shared::url::UrlCov;
 
 use super::Ember;
 
@@ -11,13 +11,13 @@ use super::Ember;
 pub struct EmberYank<'a>(UpdateYankedOpt<'a>);
 
 impl<'a> EmberYank<'a> {
-	pub fn borrowed(cut: bool, urls: &'a HashSet<CovUrl>) -> Ember<'a> {
+	pub fn borrowed(cut: bool, urls: &'a HashSet<UrlCov>) -> Ember<'a> {
 		Self(UpdateYankedOpt { cut, urls: Cow::Borrowed(urls) }).into()
 	}
 }
 
 impl EmberYank<'static> {
-	pub fn owned(cut: bool, _: &HashSet<CovUrl>) -> Ember<'static> {
+	pub fn owned(cut: bool, _: &HashSet<UrlCov>) -> Ember<'static> {
 		Self(UpdateYankedOpt { cut, urls: Default::default() }).into()
 	}
 }

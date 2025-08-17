@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
-use yazi_shared::url::Url;
+use yazi_shared::url::UrlBuf;
 
 use super::Ember;
 
@@ -36,8 +36,8 @@ impl IntoLua for EmberMove<'_> {
 // --- Item
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BodyMoveItem {
-	pub from: Url,
-	pub to:   Url,
+	pub from: UrlBuf,
+	pub to:   UrlBuf,
 }
 
 impl IntoLua for BodyMoveItem {

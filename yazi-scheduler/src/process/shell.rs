@@ -2,10 +2,10 @@ use std::{ffi::OsString, process::Stdio};
 
 use anyhow::Result;
 use tokio::process::{Child, Command};
-use yazi_shared::url::Url;
+use yazi_shared::url::UrlBuf;
 
 pub struct ShellOpt {
-	pub cwd:    Url,
+	pub cwd:    UrlBuf,
 	pub cmd:    OsString,
 	pub args:   Vec<OsString>,
 	pub piped:  bool,

@@ -1,14 +1,14 @@
 use std::{env::{current_dir, set_current_dir}, ops::Deref, path::PathBuf, sync::{Arc, atomic::{AtomicBool, Ordering}}};
 
 use arc_swap::ArcSwap;
-use yazi_shared::{RoCell, url::Url};
+use yazi_shared::{RoCell, url::UrlBuf};
 
 pub static CWD: RoCell<Cwd> = RoCell::new();
 
-pub struct Cwd(ArcSwap<Url>);
+pub struct Cwd(ArcSwap<UrlBuf>);
 
 impl Deref for Cwd {
-	type Target = ArcSwap<Url>;
+	type Target = ArcSwap<UrlBuf>;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
@@ -21,12 +21,12 @@ impl Default for Cwd {
 			.or_else(|| current_dir().ok())
 			.expect("failed to get current working directory");
 
-		Self(ArcSwap::new(Arc::new(Url::from(p))))
+		Self(ArcSwap::new(Arc::new(UrlBuf::from(p))))
 	}
 }
 
 impl Cwd {
-	pub fn set(&self, url: &Url) -> bool {
+	pub fn set(&self, url: &UrlBuf) -> bool {
 		if self.load().as_ref() == url {
 			return false;
 		}

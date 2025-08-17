@@ -2,19 +2,19 @@ use std::{borrow::Cow, collections::HashMap};
 
 use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
-use yazi_shared::url::Url;
+use yazi_shared::url::UrlBuf;
 
 use super::Ember;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EmberBulk<'a> {
-	pub changes: HashMap<Cow<'a, Url>, Cow<'a, Url>>,
+	pub changes: HashMap<Cow<'a, UrlBuf>, Cow<'a, UrlBuf>>,
 }
 
 impl<'a> EmberBulk<'a> {
 	pub fn borrowed<I>(changes: I) -> Ember<'a>
 	where
-		I: Iterator<Item = (&'a Url, &'a Url)>,
+		I: Iterator<Item = (&'a UrlBuf, &'a UrlBuf)>,
 	{
 		Self { changes: changes.map(|(from, to)| (from.into(), to.into())).collect() }.into()
 	}
@@ -23,7 +23,7 @@ impl<'a> EmberBulk<'a> {
 impl EmberBulk<'static> {
 	pub fn owned<'a, I>(changes: I) -> Ember<'static>
 	where
-		I: Iterator<Item = (&'a Url, &'a Url)>,
+		I: Iterator<Item = (&'a UrlBuf, &'a UrlBuf)>,
 	{
 		Self { changes: changes.map(|(from, to)| (from.clone().into(), to.clone().into())).collect() }
 			.into()

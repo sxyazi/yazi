@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ffi::{OsStr, OsString}, iter::FusedIterator, ops::Not, path::{self, PathBuf, PrefixComponent}};
 
-use crate::url::{Encode, Loc, Scheme, Url};
+use crate::{loc::LocBuf, url::{Encode, Scheme, UrlBuf}};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum Component<'a> {
@@ -24,7 +24,7 @@ impl<'a> From<path::Component<'a>> for Component<'a> {
 	}
 }
 
-impl<'a> FromIterator<Component<'a>> for Url {
+impl<'a> FromIterator<Component<'a>> for UrlBuf {
 	fn from_iter<I: IntoIterator<Item = Component<'a>>>(iter: I) -> Self {
 		let mut scheme = Scheme::Regular;
 		let mut buf = PathBuf::new();
@@ -60,13 +60,13 @@ impl<'a> FromIterator<Component<'a>> for PathBuf {
 #[derive(Clone)]
 pub struct Components<'a> {
 	inner:          path::Components<'a>,
-	loc:            &'a Loc,
+	loc:            &'a LocBuf,
 	scheme:         &'a Scheme,
 	scheme_yielded: bool,
 }
 
 impl<'a> Components<'a> {
-	pub fn new(url: &'a Url) -> Self {
+	pub fn new(url: &'a UrlBuf) -> Self {
 		Self {
 			inner:          url.loc.components(),
 			loc:            &url.loc,
@@ -149,7 +149,7 @@ mod tests {
 
 	#[test]
 	fn test_collect() {
-		let search: Url = "search://keyword//root/projects/yazi".parse().unwrap();
+		let search: UrlBuf = "search://keyword//root/projects/yazi".parse().unwrap();
 		assert_eq!(search.loc.uri().as_os_str(), OsStr::new(""));
 		assert_eq!(search.scheme, Scheme::Search("keyword".to_owned()));
 
@@ -157,11 +157,11 @@ mod tests {
 		assert_eq!(item.loc.uri().as_os_str(), OsStr::new("main.rs"));
 		assert_eq!(item.scheme, Scheme::Search("keyword".to_owned()));
 
-		let u: Url = item.components().take(4).collect();
+		let u: UrlBuf = item.components().take(4).collect();
 		assert_eq!(u.scheme, Scheme::Search("keyword".to_owned()));
 		assert_eq!(u.loc.as_path(), Path::new("/root/projects"));
 
-		let u: Url = item
+		let u: UrlBuf = item
 			.components()
 			.take(5)
 			.chain([Component::Normal(OsStr::new("target/release/yazi"))])

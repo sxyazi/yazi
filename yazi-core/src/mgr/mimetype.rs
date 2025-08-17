@@ -1,19 +1,19 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use yazi_fs::File;
-use yazi_shared::{MIME_DIR, SStr, url::{CovUrl, Url}};
+use yazi_shared::{MIME_DIR, SStr, url::{UrlBuf, UrlCov}};
 
 #[derive(Default)]
-pub struct Mimetype(HashMap<CovUrl, String>);
+pub struct Mimetype(HashMap<UrlCov, String>);
 
 impl Mimetype {
 	#[inline]
-	pub fn by_url(&self, url: &Url) -> Option<&str> {
-		self.0.get(CovUrl::new(url)).map(|s| s.as_str())
+	pub fn by_url(&self, url: &UrlBuf) -> Option<&str> {
+		self.0.get(UrlCov::new(url)).map(|s| s.as_str())
 	}
 
 	#[inline]
-	pub fn by_url_owned(&self, url: &Url) -> Option<SStr> {
+	pub fn by_url_owned(&self, url: &UrlBuf) -> Option<SStr> {
 		self.by_url(url).map(|s| Cow::Owned(s.to_owned()))
 	}
 
@@ -28,10 +28,10 @@ impl Mimetype {
 	}
 
 	#[inline]
-	pub fn contains(&self, url: &Url) -> bool { self.0.contains_key(CovUrl::new(url)) }
+	pub fn contains(&self, url: &UrlBuf) -> bool { self.0.contains_key(UrlCov::new(url)) }
 
 	#[inline]
-	pub fn extend(&mut self, iter: impl IntoIterator<Item = (Url, String)>) {
-		self.0.extend(iter.into_iter().map(|(u, m)| (CovUrl(u), m)));
+	pub fn extend(&mut self, iter: impl IntoIterator<Item = (UrlBuf, String)>) {
+		self.0.extend(iter.into_iter().map(|(u, m)| (UrlCov(u), m)));
 	}
 }

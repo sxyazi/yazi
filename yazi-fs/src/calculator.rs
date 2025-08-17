@@ -1,11 +1,11 @@
 use std::{collections::VecDeque, future::poll_fn, io, mem, pin::Pin, task::{Poll, ready}, time::{Duration, Instant}};
 
 use tokio::task::JoinHandle;
-use yazi_shared::{Either, url::Url};
+use yazi_shared::{Either, url::UrlBuf};
 
 use crate::provider::{self, ReadDirSync};
 
-type Task = Either<Url, ReadDirSync>;
+type Task = Either<UrlBuf, ReadDirSync>;
 
 pub enum SizeCalculator {
 	Idle((VecDeque<Task>, Option<u64>)),
@@ -13,7 +13,7 @@ pub enum SizeCalculator {
 }
 
 impl SizeCalculator {
-	pub async fn new(url: &Url) -> io::Result<Self> {
+	pub async fn new(url: &UrlBuf) -> io::Result<Self> {
 		let u = url.to_owned();
 		tokio::task::spawn_blocking(move || {
 			let meta = provider::symlink_metadata_sync(&u)?;
@@ -28,7 +28,7 @@ impl SizeCalculator {
 		.await?
 	}
 
-	pub async fn total(url: &Url) -> io::Result<u64> {
+	pub async fn total(url: &UrlBuf) -> io::Result<u64> {
 		let mut it = Self::new(url).await?;
 		let mut total = 0;
 		while let Some(n) = it.next().await? {
@@ -63,7 +63,7 @@ impl SizeCalculator {
 		.await
 	}
 
-	fn next_chunk(buf: &mut VecDeque<Either<Url, ReadDirSync>>) -> Option<u64> {
+	fn next_chunk(buf: &mut VecDeque<Either<UrlBuf, ReadDirSync>>) -> Option<u64> {
 		let (mut i, mut size, now) = (0, 0, Instant::now());
 		macro_rules! pop_and_continue {
 			() => {{

@@ -2,25 +2,25 @@ use std::borrow::Cow;
 
 use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
-use yazi_shared::{Id, url::Url};
+use yazi_shared::{Id, url::UrlBuf};
 
 use super::Ember;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EmberRename<'a> {
 	pub tab:  Id,
-	pub from: Cow<'a, Url>,
-	pub to:   Cow<'a, Url>,
+	pub from: Cow<'a, UrlBuf>,
+	pub to:   Cow<'a, UrlBuf>,
 }
 
 impl<'a> EmberRename<'a> {
-	pub fn borrowed(tab: Id, from: &'a Url, to: &'a Url) -> Ember<'a> {
+	pub fn borrowed(tab: Id, from: &'a UrlBuf, to: &'a UrlBuf) -> Ember<'a> {
 		Self { tab, from: from.into(), to: to.into() }.into()
 	}
 }
 
 impl EmberRename<'static> {
-	pub fn owned(tab: Id, from: &Url, to: &Url) -> Ember<'static> {
+	pub fn owned(tab: Id, from: &UrlBuf, to: &UrlBuf) -> Ember<'static> {
 		Self { tab, from: from.clone().into(), to: to.clone().into() }.into()
 	}
 }

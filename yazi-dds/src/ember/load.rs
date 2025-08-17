@@ -3,25 +3,25 @@ use std::borrow::Cow;
 use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 use yazi_fs::FolderStage;
-use yazi_shared::{Id, url::Url};
+use yazi_shared::{Id, url::UrlBuf};
 
 use super::Ember;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EmberLoad<'a> {
 	pub tab:   Id,
-	pub url:   Cow<'a, Url>,
+	pub url:   Cow<'a, UrlBuf>,
 	pub stage: FolderStage,
 }
 
 impl<'a> EmberLoad<'a> {
-	pub fn borrowed(tab: Id, url: &'a Url, stage: FolderStage) -> Ember<'a> {
+	pub fn borrowed(tab: Id, url: &'a UrlBuf, stage: FolderStage) -> Ember<'a> {
 		Self { tab, url: url.into(), stage }.into()
 	}
 }
 
 impl EmberLoad<'static> {
-	pub fn owned(tab: Id, url: &Url, stage: FolderStage) -> Ember<'static> {
+	pub fn owned(tab: Id, url: &UrlBuf, stage: FolderStage) -> Ember<'static> {
 		Self { tab, url: url.clone().into(), stage }.into()
 	}
 }

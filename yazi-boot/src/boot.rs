@@ -3,11 +3,11 @@ use std::{collections::HashSet, path::PathBuf};
 use futures::executor::block_on;
 use serde::Serialize;
 use yazi_fs::{CWD, Xdg, path::expand_url, provider};
-use yazi_shared::url::{Url, UrnBuf};
+use yazi_shared::url::{UrlBuf, UrnBuf};
 
 #[derive(Debug, Default, Serialize)]
 pub struct Boot {
-	pub cwds:  Vec<Url>,
+	pub cwds:  Vec<UrlBuf>,
 	pub files: Vec<UrnBuf>,
 
 	pub local_events:  HashSet<String>,
@@ -20,12 +20,12 @@ pub struct Boot {
 }
 
 impl Boot {
-	async fn parse_entries(entries: &[Url]) -> (Vec<Url>, Vec<UrnBuf>) {
+	async fn parse_entries(entries: &[UrlBuf]) -> (Vec<UrlBuf>, Vec<UrnBuf>) {
 		if entries.is_empty() {
 			return (vec![CWD.load().as_ref().clone()], vec![UrnBuf::default()]);
 		}
 
-		async fn go<'a>(entry: Url) -> (Url, UrnBuf) {
+		async fn go<'a>(entry: UrlBuf) -> (UrlBuf, UrnBuf) {
 			let Some((parent, child)) = entry.pair() else {
 				return (entry, UrnBuf::default());
 			};

@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use yazi_shared::url::Url;
+use yazi_shared::url::UrlBuf;
 
 pub struct DirEntry(tokio::fs::DirEntry);
 
@@ -20,7 +20,7 @@ impl From<DirEntry> for crate::provider::DirEntry {
 
 impl DirEntry {
 	#[must_use]
-	pub fn url(&self) -> Url { self.0.path().into() }
+	pub fn url(&self) -> UrlBuf { self.0.path().into() }
 }
 
 // --- DirEntrySync
@@ -42,5 +42,5 @@ impl From<DirEntrySync> for crate::provider::DirEntrySync {
 
 impl DirEntrySync {
 	#[must_use]
-	pub fn url(&self) -> Url { self.0.path().into() }
+	pub fn url(&self) -> UrlBuf { self.0.path().into() }
 }

@@ -4,7 +4,7 @@ use anyhow::Result;
 use indexmap::IndexSet;
 use serde::Deserialize;
 use yazi_codegen::DeserializeOver2;
-use yazi_shared::{MIME_DIR, url::Url};
+use yazi_shared::{MIME_DIR, url::UrlBuf};
 
 use crate::{Preset, open::OpenRule};
 
@@ -27,7 +27,7 @@ impl Open {
 	pub fn all<'a, 'b, P, M>(&'a self, url: P, mime: M) -> impl Iterator<Item = &'a str> + 'b
 	where
 		'a: 'b,
-		P: AsRef<Url> + 'b,
+		P: AsRef<UrlBuf> + 'b,
 		M: AsRef<str> + 'b,
 	{
 		let is_dir = mime.as_ref() == MIME_DIR;
@@ -42,7 +42,10 @@ impl Open {
 			.map(String::as_str)
 	}
 
-	pub fn common<'a>(&'a self, targets: &[(impl AsRef<Url>, impl AsRef<str>)]) -> IndexSet<&'a str> {
+	pub fn common<'a>(
+		&'a self,
+		targets: &[(impl AsRef<UrlBuf>, impl AsRef<str>)],
+	) -> IndexSet<&'a str> {
 		let each: Vec<IndexSet<&str>> = targets
 			.iter()
 			.map(|(u, m)| self.all(u, m).collect::<IndexSet<_>>())

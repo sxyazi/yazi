@@ -5,7 +5,7 @@ use tokio::{io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::YAZI;
 use yazi_fs::{SizeCalculator, cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path::{skip_url, url_relative_to}, provider::{self, DirEntry}};
-use yazi_shared::{Id, url::Url};
+use yazi_shared::{Id, url::UrlBuf};
 
 use super::{FileIn, FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash};
 use crate::{LOW, NORMAL, TaskOp, TaskProg};
@@ -320,13 +320,13 @@ impl File {
 	}
 
 	#[inline]
-	async fn cha(url: &Url, follow: bool) -> io::Result<Cha> {
+	async fn cha(url: &UrlBuf, follow: bool) -> io::Result<Cha> {
 		let meta = provider::symlink_metadata(url).await?;
 		Ok(if follow { Cha::from_follow(url, meta).await } else { Cha::new(url, meta) })
 	}
 
 	#[inline]
-	async fn cha_from(entry: DirEntry, url: &Url, follow: bool) -> io::Result<Cha> {
+	async fn cha_from(entry: DirEntry, url: &UrlBuf, follow: bool) -> io::Result<Cha> {
 		Ok(if follow {
 			Cha::from_follow(url, entry.metadata().await?).await
 		} else {

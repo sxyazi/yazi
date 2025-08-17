@@ -3,7 +3,7 @@ use std::{env, fmt::Display};
 use anyhow::Result;
 use ratatui::layout::Rect;
 use tracing::warn;
-use yazi_shared::{env_exists, url::Url};
+use yazi_shared::{env_exists, url::UrlBuf};
 
 use crate::{Emulator, SHOWN, TMUX, drivers};
 
@@ -35,7 +35,7 @@ impl Display for Adapter {
 }
 
 impl Adapter {
-	pub async fn image_show(self, url: &Url, max: Rect) -> Result<Rect> {
+	pub async fn image_show(self, url: &UrlBuf, max: Rect) -> Result<Rect> {
 		if max.is_empty() {
 			return Ok(Rect::default());
 		}

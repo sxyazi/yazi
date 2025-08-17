@@ -8,7 +8,7 @@ use yazi_dds::spark::SparkKind;
 use yazi_macro::{emit, succ};
 use yazi_parser::mgr::{OpenOpt, QuitOpt};
 use yazi_proxy::ConfirmProxy;
-use yazi_shared::{event::{Data, EventQuit}, url::Url};
+use yazi_shared::{event::{Data, EventQuit}, url::UrlBuf};
 
 use crate::{Actor, Ctx};
 
@@ -69,7 +69,7 @@ impl Actor for Quit {
 impl Quit {
 	pub(super) fn quit_with_selected<'a, I>(opt: OpenOpt, selected: I) -> bool
 	where
-		I: Iterator<Item = &'a Url>,
+		I: Iterator<Item = &'a UrlBuf>,
 	{
 		if opt.interactive || ARGS.chooser_file.is_none() {
 			return false;
