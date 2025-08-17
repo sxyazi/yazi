@@ -5,7 +5,7 @@ use yazi_fs::{CWD, path::expand_url, provider};
 use yazi_macro::{act, render, succ};
 use yazi_parser::cmp::{CmpItem, ShowOpt, TriggerOpt};
 use yazi_proxy::CmpProxy;
-use yazi_shared::{OsStrSplit, event::Data, natsort, url::{UrlBuf, UrnBuf}};
+use yazi_shared::{OsStrSplit, event::Data, natsort, url::{UrlBuf, UrlCow, UrnBuf}};
 
 use crate::{Actor, Ctx};
 
@@ -67,7 +67,7 @@ impl Actor for Trigger {
 
 impl Trigger {
 	fn split_url(s: &str) -> Option<(UrlBuf, UrnBuf)> {
-		let (scheme, path, ..) = UrlBuf::parse(s.as_bytes()).ok()?;
+		let (scheme, path, ..) = UrlCow::parse(s.as_bytes()).ok()?;
 
 		if !scheme.is_virtual() && path.as_os_str() == "~" {
 			return None; // We don't autocomplete a `~`, but `~/`

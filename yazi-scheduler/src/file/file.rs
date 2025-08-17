@@ -1,11 +1,11 @@
-use std::{borrow::Cow, collections::VecDeque};
+use std::collections::VecDeque;
 
 use anyhow::{Result, anyhow};
 use tokio::{io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::YAZI;
 use yazi_fs::{SizeCalculator, cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path::{skip_url, url_relative_to}, provider::{self, DirEntry}};
-use yazi_shared::{Id, url::UrlBuf};
+use yazi_shared::{Id, url::{UrlBuf, UrlCow}};
 
 use super::{FileIn, FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash};
 use crate::{LOW, NORMAL, TaskOp, TaskProg};
@@ -63,7 +63,7 @@ impl File {
 
 				let src = if task.resolve {
 					match provider::read_link(&task.from).await {
-						Ok(u) => Cow::Owned(u),
+						Ok(u) => UrlCow::from(u),
 						Err(e) if e.kind() == NotFound => {
 							warn!("Link task partially done: {task:?}");
 							return Ok(self.prog.send(TaskProg::Adv(task.id, 1, cha.len))?);
@@ -71,20 +71,20 @@ impl File {
 						Err(e) => Err(e)?,
 					}
 				} else {
-					Cow::Borrowed(&task.from)
+					UrlCow::from(&task.from)
 				};
 
 				let src = if task.relative {
-					url_relative_to(&provider::canonicalize(task.to.parent_url().unwrap()).await?, &src)?
+					url_relative_to(provider::canonicalize(&task.to.parent_url().unwrap()).await?, src)?
 				} else {
 					src
 				};
 
 				ok_or_not_found(provider::remove_file(&task.to).await)?;
 				if cha.is_dir() {
-					provider::symlink_dir(src, &task.to).await?;
+					provider::symlink_dir(&src, &task.to).await?;
 				} else {
-					provider::symlink_file(src, &task.to).await?;
+					provider::symlink_file(&src, &task.to).await?;
 				}
 
 				if task.delete {
@@ -95,15 +95,15 @@ impl File {
 			FileIn::Hardlink(task) => {
 				let cha = task.cha.unwrap();
 				let src = if !task.follow {
-					Cow::Borrowed(&task.from)
+					UrlCow::from(&task.from)
 				} else if let Ok(p) = provider::canonicalize(&task.from).await {
-					Cow::Owned(p)
+					UrlCow::from(p)
 				} else {
-					Cow::Borrowed(&task.from)
+					UrlCow::from(&task.from)
 				};
 
 				ok_or_not_found(provider::remove_file(&task.to).await)?;
-				match provider::hard_link(src, &task.to).await {
+				match provider::hard_link(&src, &task.to).await {
 					Err(e) if e.kind() == NotFound => {
 						warn!("Hardlink task partially done: {task:?}");
 					}
@@ -291,7 +291,7 @@ impl File {
 
 		let mut dirs = VecDeque::from([task.target]);
 		while let Some(target) = dirs.pop_front() {
-			let Ok(mut it) = provider::read_dir(target).await else { continue };
+			let Ok(mut it) = provider::read_dir(&target).await else { continue };
 
 			while let Ok(Some(entry)) = it.next_entry().await {
 				let Ok(meta) = entry.metadata().await else { continue };

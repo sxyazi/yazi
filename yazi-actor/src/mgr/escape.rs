@@ -74,8 +74,8 @@ impl Actor for EscapeVisual {
 			indices.into_iter().filter_map(|i| tab.current.files.get(i)).map(|f| &f.url).collect();
 
 		if !select {
-			tab.selected.remove_many(&urls);
-		} else if tab.selected.add_many(&urls) != urls.len() {
+			tab.selected.remove_many(urls);
+		} else if urls.len() != tab.selected.add_many(urls) {
 			AppProxy::notify_warn(
 				"Escape visual mode",
 				"Some files cannot be selected, due to path nesting conflict.",

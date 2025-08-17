@@ -1,9 +1,10 @@
-use std::{ffi::OsStr, ops::Deref, path::Path};
+use std::{ffi::OsStr, hash::{Hash, Hasher}, ops::Deref, path::Path};
 
 use anyhow::{Result, bail};
 
-use crate::{loc::LocBuf, url::{Uri, Urn}};
+use crate::{loc::LocBuf, url::{Uri, Urn, UrnBuf}};
 
+#[derive(Clone, Copy, Debug)]
 pub struct Loc<'a> {
 	pub(super) inner: &'a Path,
 	pub(super) uri:   usize,
@@ -20,6 +21,11 @@ impl<'a> From<&'a LocBuf> for Loc<'a> {
 	fn from(value: &'a LocBuf) -> Self {
 		Self { inner: &value.inner, uri: value.uri, urn: value.urn }
 	}
+}
+
+// --- Hash
+impl Hash for Loc<'_> {
+	fn hash<H: Hasher>(&self, state: &mut H) { self.inner.hash(state) }
 }
 
 impl<'a, T: ?Sized + AsRef<OsStr>> From<&'a T> for Loc<'a> {
@@ -54,6 +60,13 @@ impl From<Loc<'_>> for LocBuf {
 		Self { inner: value.inner.to_owned(), uri: value.uri, urn: value.urn }
 	}
 }
+
+// --- Eq
+impl PartialEq for Loc<'_> {
+	fn eq(&self, other: &Self) -> bool { self.inner == other.inner }
+}
+
+impl Eq for Loc<'_> {}
 
 impl<'a> Loc<'a> {
 	pub fn new<T>(path: &'a T, base: &Path, trail: &Path) -> Self
@@ -98,7 +111,10 @@ impl<'a> Loc<'a> {
 	}
 
 	#[inline]
-	pub fn uri(&self) -> &'a Uri {
+	pub fn as_loc(self) -> Loc<'a> { self }
+
+	#[inline]
+	pub fn uri(self) -> &'a Uri {
 		Uri::new(unsafe {
 			OsStr::from_encoded_bytes_unchecked(
 				self.bytes().get_unchecked(self.bytes().len() - self.uri..),
@@ -107,7 +123,7 @@ impl<'a> Loc<'a> {
 	}
 
 	#[inline]
-	pub fn urn(&self) -> &'a Urn {
+	pub fn urn(self) -> &'a Urn {
 		Urn::new(unsafe {
 			OsStr::from_encoded_bytes_unchecked(
 				self.bytes().get_unchecked(self.bytes().len() - self.urn..),
@@ -116,7 +132,10 @@ impl<'a> Loc<'a> {
 	}
 
 	#[inline]
-	pub fn base(&self) -> &'a Urn {
+	pub fn urn_owned(self) -> UrnBuf { self.urn().to_owned() }
+
+	#[inline]
+	pub fn base(self) -> &'a Urn {
 		Urn::new(unsafe {
 			OsStr::from_encoded_bytes_unchecked(
 				self.bytes().get_unchecked(..self.bytes().len() - self.uri),
@@ -125,10 +144,10 @@ impl<'a> Loc<'a> {
 	}
 
 	#[inline]
-	pub fn has_base(&self) -> bool { self.bytes().len() != self.uri }
+	pub fn has_base(self) -> bool { self.bytes().len() != self.uri }
 
 	#[inline]
-	pub fn trail(&self) -> &'a Urn {
+	pub fn trail(self) -> &'a Urn {
 		Urn::new(unsafe {
 			OsStr::from_encoded_bytes_unchecked(
 				self.bytes().get_unchecked(..self.bytes().len() - self.urn),
@@ -137,11 +156,28 @@ impl<'a> Loc<'a> {
 	}
 
 	#[inline]
-	pub fn has_trail(&self) -> bool { self.bytes().len() != self.urn }
+	pub fn has_trail(self) -> bool { self.bytes().len() != self.urn }
 
 	#[inline]
-	pub fn name(&self) -> &'a OsStr { self.inner.file_name().unwrap_or(OsStr::new("")) }
+	pub fn name(self) -> &'a OsStr { self.inner.file_name().unwrap_or(OsStr::new("")) }
 
 	#[inline]
-	fn bytes(&self) -> &'a [u8] { self.inner.as_os_str().as_encoded_bytes() }
+	pub fn triple(self) -> (&'a Path, &'a Path, &'a Path) {
+		let len = self.bytes().len();
+
+		let base = ..len - self.uri;
+		let rest = len - self.uri..len - self.urn;
+		let urn = len - self.urn..;
+
+		unsafe {
+			(
+				Path::new(OsStr::from_encoded_bytes_unchecked(self.bytes().get_unchecked(base))),
+				Path::new(OsStr::from_encoded_bytes_unchecked(self.bytes().get_unchecked(rest))),
+				Path::new(OsStr::from_encoded_bytes_unchecked(self.bytes().get_unchecked(urn))),
+			)
+		}
+	}
+
+	#[inline]
+	fn bytes(self) -> &'a [u8] { self.inner.as_os_str().as_encoded_bytes() }
 }

@@ -23,10 +23,10 @@ impl Actor for UpdateMimes {
 			.flat_map(|(key, value)| key.into_url().zip(value.into_string()))
 			.filter(|(url, mime)| cx.mgr.mimetype.by_url(url) != Some(mime))
 			.fold(HashMap::new(), |mut map, (u, m)| {
-				for u in linked.from_file(&u) {
+				for u in linked.from_file(u.as_url()) {
 					map.insert(u, m.to_string());
 				}
-				map.insert(u, m.into_owned());
+				map.insert(u.into_owned(), m.into_owned());
 				map
 			});
 

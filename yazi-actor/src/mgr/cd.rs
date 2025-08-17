@@ -39,10 +39,10 @@ impl Actor for Cd {
 		// Backstack
 		if opt.source.big_jump() {
 			if tab.current.url.is_regular() {
-				tab.backstack.push(&tab.current.url);
+				tab.backstack.push(tab.current.url.as_url());
 			}
 			if opt.target.is_regular() {
-				tab.backstack.push(&opt.target);
+				tab.backstack.push(opt.target.as_url());
 			}
 		}
 

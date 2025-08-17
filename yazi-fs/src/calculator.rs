@@ -21,7 +21,7 @@ impl SizeCalculator {
 				return Ok(Self::Idle((VecDeque::new(), Some(meta.len()))));
 			}
 
-			let mut buf = VecDeque::from([Either::Right(provider::read_dir_sync(u)?)]);
+			let mut buf = VecDeque::from([Either::Right(provider::read_dir_sync(&u)?)]);
 			let size = Self::next_chunk(&mut buf);
 			Ok(Self::Idle((buf, size)))
 		})

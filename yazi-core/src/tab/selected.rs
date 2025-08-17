@@ -1,13 +1,14 @@
-use std::{collections::HashMap, ops::Deref};
+use std::ops::Deref;
 
+use hashbrown::HashMap;
 use indexmap::IndexMap;
 use yazi_fs::FilesOp;
-use yazi_shared::{timestamp_us, url::{UrlBuf, UrlCov}};
+use yazi_shared::{timestamp_us, url::{Url, UrlBuf, UrlBufCov, UrlCov}};
 
 #[derive(Default)]
 pub struct Selected {
-	inner:   IndexMap<UrlCov, u64>,
-	parents: HashMap<UrlCov, usize>,
+	inner:   IndexMap<UrlBufCov, u64>,
+	parents: HashMap<UrlBufCov, usize>,
 }
 
 impl Selected {
@@ -21,27 +22,36 @@ impl Selected {
 	pub fn values(&self) -> impl Iterator<Item = &UrlBuf> { self.inner.keys().map(Deref::deref) }
 
 	#[inline]
-	pub fn contains(&self, url: impl AsRef<UrlBuf>) -> bool {
-		self.inner.contains_key(UrlCov::new(&url))
+	pub fn contains<'a>(&self, url: impl Into<Url<'a>>) -> bool {
+		self.inner.contains_key(&UrlCov::new(url))
 	}
 
 	#[inline]
-	pub fn add(&mut self, url: &UrlBuf) -> bool { self.add_same(&[url]) == 1 }
+	pub fn add<'a>(&mut self, url: impl Into<Url<'a>>) -> bool { self.add_same([url]) == 1 }
 
-	pub fn add_many(&mut self, urls: &[impl AsRef<UrlBuf>]) -> usize {
+	pub fn add_many<'a, I, T>(&mut self, urls: I) -> usize
+	where
+		I: IntoIterator<Item = T>,
+		T: Into<Url<'a>>,
+	{
 		let mut grouped: HashMap<_, Vec<_>> = Default::default();
-		for u in urls {
-			if let Some(p) = u.as_ref().parent_url() {
+		for url in urls {
+			let u = url.into();
+			if let Some(p) = u.parent_url() {
 				grouped.entry(p).or_default().push(u);
 			}
 		}
-		grouped.into_values().map(|v| self.add_same(&v)).sum()
+		grouped.into_values().map(|v| self.add_same(v)).sum()
 	}
 
-	fn add_same(&mut self, urls: &[impl AsRef<UrlBuf>]) -> usize {
+	fn add_same<'a, I, T>(&mut self, urls: I) -> usize
+	where
+		I: IntoIterator<Item = T>,
+		T: Into<Url<'a>>,
+	{
 		// If it has appeared as a parent
 		let urls: Vec<_> =
-			urls.iter().map(UrlCov::new).filter(|&u| !self.parents.contains_key(u)).collect();
+			urls.into_iter().map(UrlCov::new).filter(|u| !self.parents.contains_key(u)).collect();
 		if urls.is_empty() {
 			return 0;
 		}
@@ -50,7 +60,7 @@ impl Selected {
 		let mut parent = urls[0].parent_url();
 		let mut parents = vec![];
 		while let Some(u) = parent {
-			if self.inner.contains_key(&u) {
+			if self.inner.contains_key(&UrlCov::new(&u)) {
 				return 0;
 			}
 
@@ -59,26 +69,33 @@ impl Selected {
 		}
 
 		let (now, len) = (timestamp_us(), self.inner.len());
-		self.inner.extend(urls.iter().enumerate().map(|(i, &u)| (u.clone(), now + i as u64)));
+		self.inner.extend(urls.iter().enumerate().map(|(i, u)| (u.into(), now + i as u64)));
 
 		for u in parents {
-			*self.parents.entry(u).or_insert(0) += self.inner.len() - len;
+			*self.parents.entry(UrlBufCov(u)).or_insert(0) += self.inner.len() - len;
 		}
 		urls.len()
 	}
 
 	#[inline]
-	pub fn remove(&mut self, url: &UrlBuf) -> bool { self.remove_same(&[url]) == 1 }
+	pub fn remove<'a>(&mut self, url: impl Into<Url<'a>> + Clone) -> bool {
+		self.remove_same([url]) == 1
+	}
 
-	pub fn remove_many(&mut self, urls: &[impl AsRef<UrlBuf>]) -> usize {
+	pub fn remove_many<'a, I, T>(&mut self, urls: I) -> usize
+	where
+		I: IntoIterator<Item = T>,
+		T: Into<Url<'a>>,
+	{
 		let mut grouped: HashMap<_, Vec<_>> = Default::default();
-		for u in urls {
-			if let Some(p) = u.as_ref().parent_url() {
+		for url in urls {
+			let u = url.into();
+			if let Some(p) = u.parent_url() {
 				grouped.entry(p).or_default().push(u);
 			}
 		}
 
-		let affected = grouped.into_values().map(|v| self.remove_same(&v)).sum();
+		let affected = grouped.into_values().map(|v| self.remove_same(v)).sum();
 		if affected > 0 {
 			self.inner.sort_unstable_by(|_, a, _, b| a.cmp(b));
 		}
@@ -86,19 +103,27 @@ impl Selected {
 		affected
 	}
 
-	fn remove_same(&mut self, urls: &[impl AsRef<UrlBuf>]) -> usize {
-		let count = urls.iter().filter_map(|u| self.inner.swap_remove(UrlCov::new(u))).count();
+	fn remove_same<'a, I, T>(&mut self, urls: I) -> usize
+	where
+		I: IntoIterator<Item = T>,
+		T: Into<Url<'a>> + Clone,
+	{
+		let mut it = urls.into_iter().peekable();
+		let Some(first) = it.peek().cloned().map(UrlCov::new) else { return 0 };
+
+		let count = it.filter_map(|u| self.inner.swap_remove(&UrlCov::new(u))).count();
 		if count == 0 {
 			return 0;
 		}
 
-		let mut parent = UrlCov::new(&urls[0]).parent_url();
+		// FIXME: use UrlCov::parent_url() instead
+		let mut parent = first.parent_url();
 		while let Some(u) = parent {
-			let n = self.parents.get_mut(&u).unwrap();
+			let n = self.parents.get_mut(&UrlCov::new(&u)).unwrap();
 
 			*n -= count;
 			if *n == 0 {
-				self.parents.remove(&u);
+				self.parents.remove(&UrlCov::new(&u));
 			}
 
 			parent = u.parent_url();
@@ -124,9 +149,16 @@ impl Selected {
 
 #[cfg(test)]
 mod tests {
+	use yazi_shared::url::UrlCow;
+
 	use super::*;
 
-	fn url(s: &str) -> UrlBuf { s.parse().unwrap() }
+	fn url(s: &str) -> Url<'_> {
+		match UrlCow::try_from(s).unwrap() {
+			UrlCow::Borrowed(url) => url,
+			UrlCow::Owned(_) => unreachable!(),
+		}
+	}
 
 	#[test]
 	fn test_insert_non_conflicting() {
@@ -172,7 +204,7 @@ mod tests {
 
 		assert_eq!(
 			3,
-			s.add_same(&[&url("/parent/child1"), &url("/parent/child2"), &url("/parent/child3")])
+			s.add_same([&url("/parent/child1"), &url("/parent/child2"), &url("/parent/child3")])
 		);
 	}
 
@@ -181,7 +213,7 @@ mod tests {
 		let mut s = Selected::default();
 
 		s.add(&url("/parent"));
-		assert_eq!(0, s.add_same(&[&url("/parent/child1"), &url("/parent/child2")]));
+		assert_eq!(0, s.add_same([&url("/parent/child1"), &url("/parent/child2")]));
 	}
 
 	#[test]
@@ -189,14 +221,14 @@ mod tests {
 		let mut s = Selected::default();
 
 		s.add(&url("/parent/child1"));
-		assert_eq!(2, s.add_same(&[&url("/parent/child1"), &url("/parent/child2")]));
+		assert_eq!(2, s.add_same([&url("/parent/child1"), &url("/parent/child2")]));
 	}
 
 	#[test]
 	fn insert_many_empty_urls_list() {
 		let mut s = Selected::default();
 
-		assert_eq!(0, s.add_same(&[] as &[&UrlBuf]));
+		assert_eq!(0, s.add_same([] as [&Url; 0]));
 	}
 
 	#[test]
@@ -204,14 +236,14 @@ mod tests {
 		let mut s = Selected::default();
 
 		s.add(&url("/parent/child"));
-		assert_eq!(0, s.add_same(&[&url("/parent/child/child1"), &url("/parent/child/child2")]));
+		assert_eq!(0, s.add_same([&url("/parent/child/child1"), &url("/parent/child/child2")]));
 	}
 	#[test]
 	fn insert_many_with_direct_parent_fails() {
 		let mut s = Selected::default();
 
 		s.add(&url("/a"));
-		assert_eq!(0, s.add_same(&[&url("/a/b")]));
+		assert_eq!(0, s.add_same([&url("/a/b")]));
 	}
 
 	#[test]
@@ -219,15 +251,15 @@ mod tests {
 		let mut s = Selected::default();
 
 		s.add(&url("/a/b"));
-		assert_eq!(0, s.add_same(&[&url("/a")]));
-		assert_eq!(1, s.add_same(&[&url("/b"), &url("/a")]));
+		assert_eq!(0, s.add_same([&url("/a")]));
+		assert_eq!(1, s.add_same([&url("/b"), &url("/a")]));
 	}
 
 	#[test]
 	fn insert_many_sibling_directories_success() {
 		let mut s = Selected::default();
 
-		assert_eq!(2, s.add_same(&[&url("/a/b"), &url("/a/c")]));
+		assert_eq!(2, s.add_same([&url("/a/b"), &url("/a/c")]));
 	}
 
 	#[test]
@@ -235,7 +267,7 @@ mod tests {
 		let mut s = Selected::default();
 
 		s.add(&url("/a/b"));
-		assert_eq!(0, s.add_same(&[&url("/a/b/c")]));
+		assert_eq!(0, s.add_same([&url("/a/b/c")]));
 	}
 
 	#[test]
@@ -245,7 +277,7 @@ mod tests {
 		let child1 = url("/parent/child1");
 		let child2 = url("/parent/child2");
 		let child3 = url("/parent/child3");
-		assert_eq!(3, s.add_same(&[&child1, &child2, &child3]));
+		assert_eq!(3, s.add_same([&child1, &child2, &child3]));
 
 		assert!(s.remove(&child1));
 		assert_eq!(s.inner.len(), 2);

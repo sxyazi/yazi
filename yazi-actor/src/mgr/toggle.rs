@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_macro::{render_and, succ};
 use yazi_parser::mgr::ToggleOpt;
 use yazi_proxy::AppProxy;
-use yazi_shared::event::Data;
+use yazi_shared::{event::Data, url::UrlCow};
 
 use crate::{Actor, Ctx};
 
@@ -15,12 +15,14 @@ impl Actor for Toggle {
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let tab = cx.tab_mut();
-		let Some(url) = opt.url.as_ref().or(tab.current.hovered().map(|h| &h.url)) else { succ!() };
+		let Some(url) = opt.url.or(tab.current.hovered().map(|h| UrlCow::from(&h.url))) else {
+			succ!();
+		};
 
 		let b = match opt.state {
-			Some(true) => render_and!(tab.selected.add(url)),
-			Some(false) => render_and!(tab.selected.remove(url)) | true,
-			None => render_and!(tab.selected.remove(url) || tab.selected.add(url)),
+			Some(true) => render_and!(tab.selected.add(&url)),
+			Some(false) => render_and!(tab.selected.remove(&url)) | true,
+			None => render_and!(tab.selected.remove(&url) || tab.selected.add(&url)),
 		};
 
 		if !b {

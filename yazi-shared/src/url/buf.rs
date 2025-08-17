@@ -1,11 +1,10 @@
 use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, hash::BuildHasher, ops::Deref, path::{Path, PathBuf}, str::FromStr};
 
 use anyhow::Result;
-use percent_encoding::percent_decode;
 use serde::{Deserialize, Serialize};
 
 use super::UrnBuf;
-use crate::{IntoOsStr, loc::LocBuf, url::{Components, Display, Encode, EncodeTilded, Scheme, Url, Urn}};
+use crate::{loc::LocBuf, url::{Components, Display, Encode, EncodeTilded, Scheme, Url, UrlCow, Urn}};
 
 #[derive(Clone, Default, Eq, Ord, PartialOrd, PartialEq, Hash)]
 pub struct UrlBuf {
@@ -27,6 +26,14 @@ impl From<PathBuf> for UrlBuf {
 	fn from(path: PathBuf) -> Self { LocBuf::from(path).into() }
 }
 
+impl From<&Url<'_>> for UrlBuf {
+	fn from(url: &Url<'_>) -> Self { Self { loc: url.loc.into(), scheme: url.scheme.clone() } }
+}
+
+impl From<Url<'_>> for UrlBuf {
+	fn from(value: Url<'_>) -> Self { Self::from(&value) }
+}
+
 impl From<&UrlBuf> for UrlBuf {
 	fn from(url: &UrlBuf) -> Self { url.clone() }
 }
@@ -39,29 +46,18 @@ impl From<&Path> for UrlBuf {
 	fn from(path: &Path) -> Self { path.to_path_buf().into() }
 }
 
-impl TryFrom<&[u8]> for UrlBuf {
-	type Error = anyhow::Error;
-
-	fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
-		let (scheme, path, port) = Self::parse(bytes)?;
-
-		let loc =
-			if let Some((uri, urn)) = port { LocBuf::with(path, uri, urn)? } else { LocBuf::from(path) };
-
-		Ok(Self { loc, scheme })
-	}
-}
-
 impl FromStr for UrlBuf {
 	type Err = anyhow::Error;
 
-	fn from_str(s: &str) -> Result<Self, Self::Err> { s.as_bytes().try_into() }
+	fn from_str(s: &str) -> Result<Self, Self::Err> { Ok(UrlCow::try_from(s)?.into_owned()) }
 }
 
 impl TryFrom<String> for UrlBuf {
 	type Error = anyhow::Error;
 
-	fn try_from(value: String) -> Result<Self, Self::Error> { value.as_bytes().try_into() }
+	fn try_from(value: String) -> Result<Self, Self::Error> {
+		Ok(UrlCow::try_from(value)?.into_owned())
+	}
 }
 
 impl AsRef<UrlBuf> for UrlBuf {
@@ -85,6 +81,15 @@ impl From<Cow<'_, UrlBuf>> for UrlBuf {
 	fn from(url: Cow<'_, UrlBuf>) -> Self { url.into_owned() }
 }
 
+// --- Eq
+impl PartialEq<Url<'_>> for UrlBuf {
+	fn eq(&self, other: &Url) -> bool { self.as_url() == *other }
+}
+
+impl PartialEq<Url<'_>> for &UrlBuf {
+	fn eq(&self, other: &Url) -> bool { self.as_url() == *other }
+}
+
 impl UrlBuf {
 	pub fn join(&self, path: impl AsRef<Path>) -> Self {
 		use Scheme as S;
@@ -102,12 +107,10 @@ impl UrlBuf {
 	}
 
 	#[inline]
-	pub fn components(&self) -> Components<'_> { Components::new(self) }
+	pub fn components(&self) -> Components<'_> { Components::from(self) }
 
 	#[inline]
-	pub fn covariant(&self, other: &Self) -> bool {
-		self.scheme.covariant(&other.scheme) && self.loc == other.loc
-	}
+	pub fn covariant(&self, other: &Self) -> bool { self.as_url().covariant(other.as_url()) }
 
 	#[inline]
 	pub fn display(&self) -> Display<'_> { Display::new(self) }
@@ -115,36 +118,8 @@ impl UrlBuf {
 	#[inline]
 	pub fn os_str(&self) -> Cow<'_, OsStr> { self.components().os_str() }
 
-	pub fn parent_url(&self) -> Option<UrlBuf> {
-		use Scheme as S;
-
-		let parent = self.loc.parent()?;
-		let uri = self.loc.uri();
-
-		Some(match self.scheme {
-			// Regular
-			S::Regular => Self { loc: parent.into(), scheme: S::Regular },
-
-			// Search
-			S::Search(_) if uri.is_empty() => Self { loc: parent.into(), scheme: S::Regular },
-			S::Search(_) => Self {
-				loc:    LocBuf::new(parent, self.loc.base(), self.loc.base()),
-				scheme: self.scheme.clone(),
-			},
-
-			// Archive
-			S::Archive(_) if uri.is_empty() => Self { loc: parent.into(), scheme: S::Regular },
-			S::Archive(_) if uri.nth(1).is_none() => {
-				Self { loc: LocBuf::zeroed(parent), scheme: self.scheme.clone() }
-			}
-			S::Archive(_) => {
-				Self { loc: LocBuf::floated(parent, self.loc.base()), scheme: self.scheme.clone() }
-			}
-
-			// SFTP
-			S::Sftp(_) => Self { loc: parent.into(), scheme: self.scheme.clone() },
-		})
-	}
+	#[inline]
+	pub fn parent_url(&self) -> Option<UrlBuf> { self.as_url().parent_url() }
 
 	pub fn strip_prefix(&self, base: impl AsRef<UrlBuf>) -> Option<&Urn> {
 		use Scheme as S;
@@ -202,26 +177,6 @@ impl UrlBuf {
 
 	#[inline]
 	pub fn hash_u64(&self) -> u64 { foldhash::fast::FixedState::default().hash_one(self) }
-
-	pub fn parse(bytes: &[u8]) -> Result<(Scheme, PathBuf, Option<(usize, usize)>)> {
-		let mut skip = 0;
-		let (scheme, tilde, uri, urn) = Scheme::parse(bytes, &mut skip)?;
-
-		let rest = if tilde {
-			Cow::from(percent_decode(&bytes[skip..])).into_os_str()?
-		} else {
-			bytes[skip..].into_os_str()?
-		};
-
-		let path = match rest {
-			Cow::Borrowed(s) => Path::new(s).to_owned(),
-			Cow::Owned(s) => PathBuf::from(s),
-		};
-
-		let ports = scheme.normalize_ports(uri, urn, &path)?;
-
-		Ok((scheme, path, ports))
-	}
 }
 
 impl UrlBuf {
@@ -235,7 +190,7 @@ impl UrlBuf {
 impl UrlBuf {
 	// --- Regular
 	#[inline]
-	pub fn is_regular(&self) -> bool { self.scheme == Scheme::Regular }
+	pub fn is_regular(&self) -> bool { self.as_url().is_regular() }
 
 	#[inline]
 	pub fn to_regular(&self) -> Self {

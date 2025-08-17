@@ -4,7 +4,7 @@ use anyhow::{Result, anyhow, bail};
 use serde::{Deserialize, de};
 
 use super::{Data, DataKey};
-use crate::{Id, Layer, SStr, Source, url::UrlBuf};
+use crate::{Id, Layer, SStr, Source, url::UrlCow};
 
 #[derive(Debug, Default)]
 pub struct Cmd {
@@ -100,6 +100,9 @@ impl Cmd {
 	pub fn id(&self, name: impl Into<DataKey>) -> Option<Id> { self.get(name)?.as_id() }
 
 	#[inline]
+	pub fn url(&self, name: impl Into<DataKey>) -> Option<UrlCow<'_>> { self.get(name)?.to_url() }
+
+	#[inline]
 	pub fn first(&self) -> Option<&Data> { self.get(0) }
 
 	#[inline]
@@ -131,7 +134,7 @@ impl Cmd {
 	}
 
 	#[inline]
-	pub fn take_first_url(&mut self) -> Option<UrlBuf> { self.take_first()?.into_url() }
+	pub fn take_first_url(&mut self) -> Option<UrlCow<'static>> { self.take_first()?.into_url() }
 
 	#[inline]
 	pub fn take_any<T: 'static>(&mut self, name: impl Into<DataKey>) -> Option<T> {

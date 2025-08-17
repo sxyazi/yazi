@@ -33,8 +33,9 @@ impl PartialOrd for LocBuf {
 	fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> { Some(self.cmp(other)) }
 }
 
+// --- Hash
 impl Hash for LocBuf {
-	fn hash<H: Hasher>(&self, state: &mut H) { self.inner.hash(state) }
+	fn hash<H: Hasher>(&self, state: &mut H) { self.as_loc().hash(state) }
 }
 
 impl Debug for LocBuf {
@@ -138,23 +139,6 @@ impl LocBuf {
 	}
 
 	#[inline]
-	pub fn triple(&self) -> (&Path, &Path, &Path) {
-		let len = self.bytes().len();
-
-		let base = ..len - self.uri;
-		let rest = len - self.uri..len - self.urn;
-		let urn = len - self.urn..;
-
-		unsafe {
-			(
-				Path::new(OsStr::from_encoded_bytes_unchecked(self.bytes().get_unchecked(base))),
-				Path::new(OsStr::from_encoded_bytes_unchecked(self.bytes().get_unchecked(rest))),
-				Path::new(OsStr::from_encoded_bytes_unchecked(self.bytes().get_unchecked(urn))),
-			)
-		}
-	}
-
-	#[inline]
 	fn bytes(&self) -> &[u8] { self.inner.as_os_str().as_encoded_bytes() }
 
 	#[inline]
@@ -174,7 +158,7 @@ impl LocBuf {
 	pub fn urn(&self) -> &Urn { self.as_loc().urn() }
 
 	#[inline]
-	pub fn urn_owned(&self) -> UrnBuf { self.urn().to_owned() }
+	pub fn urn_owned(&self) -> UrnBuf { self.as_loc().urn_owned() }
 
 	#[inline]
 	pub fn base(&self) -> &Urn { self.as_loc().base() }

@@ -1,7 +1,7 @@
-use std::{borrow::Cow, ops::Deref};
+use std::ops::Deref;
 
 use mlua::{AnyUserData, ExternalError, FromLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
-use yazi_shared::url::UrlCov;
+use yazi_shared::url::{UrlBufCov, UrlCow};
 
 use crate::{Urn, cached_field, deprecate};
 
@@ -33,23 +33,23 @@ impl From<Url> for yazi_shared::url::UrlBuf {
 	fn from(value: Url) -> Self { value.inner }
 }
 
-impl From<Url> for Cow<'_, yazi_shared::url::UrlBuf> {
-	fn from(value: Url) -> Self { Cow::Owned(value.inner) }
+impl<'a> From<&'a Url> for yazi_shared::url::Url<'a> {
+	fn from(value: &'a Url) -> Self { value.as_url() }
 }
 
-impl<'a> From<&'a Url> for Cow<'a, yazi_shared::url::UrlBuf> {
-	fn from(value: &'a Url) -> Self { Cow::Borrowed(&value.inner) }
+impl<'a> From<&'a Url> for UrlCow<'a> {
+	fn from(value: &'a Url) -> Self { UrlCow::Borrowed(value.as_url()) }
 }
 
-impl From<Url> for yazi_shared::url::UrlCov {
-	fn from(value: Url) -> Self { UrlCov(value.inner) }
+impl From<Url> for yazi_shared::url::UrlBufCov {
+	fn from(value: Url) -> Self { UrlBufCov(value.inner) }
 }
 
 impl TryFrom<&[u8]> for Url {
 	type Error = mlua::Error;
 
 	fn try_from(value: &[u8]) -> mlua::Result<Self> {
-		Ok(Self::new(yazi_shared::url::UrlBuf::try_from(value)?))
+		Ok(Self::new(UrlCow::try_from(value)?.into_owned()))
 	}
 }
 

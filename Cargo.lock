@@ -1079,6 +1079,7 @@ dependencies = [
  "allocator-api2",
  "equivalent",
  "foldhash",
+ "serde",
 ]
 
 [[package]]
@@ -3534,6 +3535,7 @@ version = "25.6.11"
 dependencies = [
  "ansi-to-tui",
  "foldhash",
+ "hashbrown",
  "mlua",
  "paste",
  "ratatui",
@@ -3634,6 +3636,7 @@ dependencies = [
  "anyhow",
  "crossterm 0.29.0",
  "futures",
+ "hashbrown",
  "indexmap",
  "libc",
  "notify",
@@ -3662,6 +3665,7 @@ name = "yazi-dds"
 version = "25.6.11"
 dependencies = [
  "anyhow",
+ "hashbrown",
  "mlua",
  "ordered-float 5.0.0",
  "parking_lot",
@@ -3773,6 +3777,7 @@ dependencies = [
  "anyhow",
  "bitflags 2.9.1",
  "crossterm 0.29.0",
+ "hashbrown",
  "mlua",
  "serde",
  "tokio",
@@ -3872,6 +3877,7 @@ dependencies = [
  "crossterm 0.29.0",
  "foldhash",
  "futures",
+ "hashbrown",
  "libc",
  "memchr",
  "ordered-float 5.0.0",

@@ -22,6 +22,7 @@ yazi-shared  = { path = "../yazi-shared", version = "25.6.11" }
 
 # External dependencies
 anyhow        = { workspace = true }
+hashbrown     = { workspace = true }
 mlua          = { workspace = true }
 ordered-float = { workspace = true }
 parking_lot   = { workspace = true }

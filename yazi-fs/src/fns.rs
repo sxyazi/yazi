@@ -4,21 +4,21 @@ use std::{borrow::Cow, collections::{HashMap, HashSet}, ffi::{OsStr, OsString}, 
 
 use anyhow::{Result, bail};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
-use yazi_shared::url::{Component, UrlBuf};
+use yazi_shared::url::{Component, Url, UrlBuf};
 
 use crate::{cha::Cha, provider};
 
 #[inline]
-pub async fn maybe_exists(u: impl AsRef<UrlBuf>) -> bool {
-	match provider::symlink_metadata(u).await {
+pub async fn maybe_exists<'a>(url: impl Into<Url<'a>>) -> bool {
+	match provider::symlink_metadata(url).await {
 		Ok(_) => true,
 		Err(e) => e.kind() != io::ErrorKind::NotFound,
 	}
 }
 
 #[inline]
-pub async fn must_be_dir(u: impl AsRef<UrlBuf>) -> bool {
-	provider::metadata(u).await.is_ok_and(|m| m.is_dir())
+pub async fn must_be_dir<'a>(url: impl Into<Url<'a>>) -> bool {
+	provider::metadata(url).await.is_ok_and(|m| m.is_dir())
 }
 
 #[inline]
@@ -267,7 +267,7 @@ pub async fn remove_dir_clean(dir: &UrlBuf) {
 		if entry.file_type().await.is_ok_and(|t| t.is_dir()) {
 			let url = entry.url();
 			Box::pin(remove_dir_clean(&url)).await;
-			provider::remove_dir(url).await.ok();
+			provider::remove_dir(&url).await.ok();
 		}
 	}
 
