@@ -6,7 +6,7 @@ use yazi_shared::event::CmdCow;
 
 #[derive(Debug, Default)]
 pub struct SortOpt {
-	pub by:        Option<SortBy>,
+	pub by:        Option<Vec<SortBy>>,
 	pub reverse:   Option<bool>,
 	pub dir_first: Option<bool>,
 	pub sensitive: Option<bool>,
@@ -18,7 +18,8 @@ impl TryFrom<CmdCow> for SortOpt {
 
 	fn try_from(c: CmdCow) -> Result<Self, Self::Error> {
 		Ok(Self {
-			by:        c.first_str().map(SortBy::from_str).transpose()?,
+			// TODO(SuniRein): multiple sort by methods
+			by:        c.first_str().map(SortBy::from_str).transpose()?.map(|v| vec![v]),
 			reverse:   c.maybe_bool("reverse"),
 			dir_first: c.maybe_bool("dir-first"),
 			sensitive: c.maybe_bool("sensitive"),
