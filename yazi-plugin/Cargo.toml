@@ -29,7 +29,6 @@ yazi-widgets = { path = "../yazi-widgets", version = "25.6.11" }
 anyhow        = { workspace = true }
 crossterm     = { workspace = true }
 futures       = { workspace = true }
-globset       = { workspace = true }
 mlua          = { workspace = true }
 parking_lot   = { workspace = true }
 paste         = { workspace = true }

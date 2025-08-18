@@ -3,7 +3,7 @@ use std::{hash::{Hash, Hasher}, ops::Deref};
 use hashbrown::Equivalent;
 use serde::{Deserialize, Serialize};
 
-use crate::url::{Url, UrlBuf};
+use crate::url::{Url, UrlBuf, UrlCow};
 
 #[derive(Clone)]
 pub struct UrlCov<'a>(Url<'a>);
@@ -54,12 +54,16 @@ impl From<UrlBuf> for UrlBufCov {
 	fn from(value: UrlBuf) -> Self { Self(value) }
 }
 
-impl From<&UrlCov<'_>> for UrlBufCov {
-	fn from(value: &UrlCov<'_>) -> Self { Self(UrlBuf::from(&value.0)) }
-}
-
 impl From<UrlBufCov> for UrlBuf {
 	fn from(value: UrlBufCov) -> Self { value.0 }
+}
+
+impl From<UrlCow<'_>> for UrlBufCov {
+	fn from(value: UrlCow<'_>) -> Self { Self(value.into_owned()) }
+}
+
+impl From<&UrlCov<'_>> for UrlBufCov {
+	fn from(value: &UrlCov<'_>) -> Self { Self(UrlBuf::from(&value.0)) }
 }
 
 impl<'a> From<&'a UrlBufCov> for Url<'a> {

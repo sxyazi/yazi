@@ -164,8 +164,8 @@ mod tests {
 	fn test_insert_non_conflicting() {
 		let mut s = Selected::default();
 
-		assert!(s.add(&url("/a/b")));
-		assert!(s.add(&url("/c/d")));
+		assert!(s.add(url("/a/b")));
+		assert!(s.add(url("/c/d")));
 		assert_eq!(s.inner.len(), 2);
 	}
 
@@ -173,27 +173,27 @@ mod tests {
 	fn test_insert_conflicting_parent() {
 		let mut s = Selected::default();
 
-		assert!(s.add(&url("/a")));
-		assert!(!s.add(&url("/a/b")));
+		assert!(s.add(url("/a")));
+		assert!(!s.add(url("/a/b")));
 	}
 
 	#[test]
 	fn test_insert_conflicting_child() {
 		let mut s = Selected::default();
 
-		assert!(s.add(&url("/a/b/c")));
-		assert!(!s.add(&url("/a/b")));
-		assert!(s.add(&url("/a/b/d")));
+		assert!(s.add(url("/a/b/c")));
+		assert!(!s.add(url("/a/b")));
+		assert!(s.add(url("/a/b/d")));
 	}
 
 	#[test]
 	fn test_remove() {
 		let mut s = Selected::default();
 
-		assert!(s.add(&url("/a/b")));
-		assert!(!s.remove(&url("/a/c")));
-		assert!(s.remove(&url("/a/b")));
-		assert!(!s.remove(&url("/a/b")));
+		assert!(s.add(url("/a/b")));
+		assert!(!s.remove(url("/a/c")));
+		assert!(s.remove(url("/a/b")));
+		assert!(!s.remove(url("/a/b")));
 		assert!(s.inner.is_empty());
 		assert!(s.parents.is_empty());
 	}
@@ -204,7 +204,7 @@ mod tests {
 
 		assert_eq!(
 			3,
-			s.add_same([&url("/parent/child1"), &url("/parent/child2"), &url("/parent/child3")])
+			s.add_same([url("/parent/child1"), url("/parent/child2"), url("/parent/child3")])
 		);
 	}
 
@@ -212,62 +212,62 @@ mod tests {
 	fn insert_many_with_existing_parent_fails() {
 		let mut s = Selected::default();
 
-		s.add(&url("/parent"));
-		assert_eq!(0, s.add_same([&url("/parent/child1"), &url("/parent/child2")]));
+		s.add(url("/parent"));
+		assert_eq!(0, s.add_same([url("/parent/child1"), url("/parent/child2")]));
 	}
 
 	#[test]
 	fn insert_many_with_existing_child_fails() {
 		let mut s = Selected::default();
 
-		s.add(&url("/parent/child1"));
-		assert_eq!(2, s.add_same([&url("/parent/child1"), &url("/parent/child2")]));
+		s.add(url("/parent/child1"));
+		assert_eq!(2, s.add_same([url("/parent/child1"), url("/parent/child2")]));
 	}
 
 	#[test]
 	fn insert_many_empty_urls_list() {
 		let mut s = Selected::default();
 
-		assert_eq!(0, s.add_same([] as [&Url; 0]));
+		assert_eq!(0, s.add_same([] as [Url; 0]));
 	}
 
 	#[test]
 	fn insert_many_with_parent_as_child_of_another_url() {
 		let mut s = Selected::default();
 
-		s.add(&url("/parent/child"));
-		assert_eq!(0, s.add_same([&url("/parent/child/child1"), &url("/parent/child/child2")]));
+		s.add(url("/parent/child"));
+		assert_eq!(0, s.add_same([url("/parent/child/child1"), url("/parent/child/child2")]));
 	}
 	#[test]
 	fn insert_many_with_direct_parent_fails() {
 		let mut s = Selected::default();
 
-		s.add(&url("/a"));
-		assert_eq!(0, s.add_same([&url("/a/b")]));
+		s.add(url("/a"));
+		assert_eq!(0, s.add_same([url("/a/b")]));
 	}
 
 	#[test]
 	fn insert_many_with_nested_child_fails() {
 		let mut s = Selected::default();
 
-		s.add(&url("/a/b"));
-		assert_eq!(0, s.add_same([&url("/a")]));
-		assert_eq!(1, s.add_same([&url("/b"), &url("/a")]));
+		s.add(url("/a/b"));
+		assert_eq!(0, s.add_same([url("/a")]));
+		assert_eq!(1, s.add_same([url("/b"), url("/a")]));
 	}
 
 	#[test]
 	fn insert_many_sibling_directories_success() {
 		let mut s = Selected::default();
 
-		assert_eq!(2, s.add_same([&url("/a/b"), &url("/a/c")]));
+		assert_eq!(2, s.add_same([url("/a/b"), url("/a/c")]));
 	}
 
 	#[test]
 	fn insert_many_with_grandchild_fails() {
 		let mut s = Selected::default();
 
-		s.add(&url("/a/b"));
-		assert_eq!(0, s.add_same([&url("/a/b/c")]));
+		s.add(url("/a/b"));
+		assert_eq!(0, s.add_same([url("/a/b/c")]));
 	}
 
 	#[test]

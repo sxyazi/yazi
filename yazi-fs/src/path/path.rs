@@ -75,7 +75,7 @@ pub fn url_relative_to_impl<'a>(from: UrlCow<'a>, to: UrlCow<'a>) -> Result<UrlC
 
 	if from.is_absolute() != to.is_absolute() {
 		return if to.is_absolute() {
-			Ok(to.into())
+			Ok(to)
 		} else {
 			bail!("Urls must be both absolute or both relative: {from:?} and {to:?}");
 		};
@@ -92,7 +92,7 @@ pub fn url_relative_to_impl<'a>(from: UrlCow<'a>, to: UrlCow<'a>) -> Result<UrlC
 			(Some(RootDir), Some(RootDir)) => {}
 			(Some(Prefix(a)), Some(Prefix(b))) if a == b => {}
 			(Some(Scheme(_) | Prefix(_) | RootDir), _) | (_, Some(Scheme(_) | Prefix(_) | RootDir)) => {
-				return Ok(to.into());
+				return Ok(to);
 			}
 			(None, None) => break (None, None),
 			(a, b) if a != b => break (a, b),
