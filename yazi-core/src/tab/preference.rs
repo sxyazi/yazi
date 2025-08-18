@@ -1,5 +1,5 @@
 use yazi_config::YAZI;
-use yazi_fs::{FilesSorter, SortBy};
+use yazi_fs::{FilesSorter, SortBy, SortFallback};
 
 #[derive(Clone, PartialEq)]
 pub struct Preference {
@@ -14,6 +14,7 @@ pub struct Preference {
 	pub sort_reverse:   bool,
 	pub sort_dir_first: bool,
 	pub sort_translit:  bool,
+	pub sort_fallback:  SortFallback,
 }
 
 impl Default for Preference {
@@ -30,6 +31,7 @@ impl Default for Preference {
 			sort_reverse:   YAZI.mgr.sort_reverse.get(),
 			sort_dir_first: YAZI.mgr.sort_dir_first.get(),
 			sort_translit:  YAZI.mgr.sort_translit.get(),
+			sort_fallback:  YAZI.mgr.sort_fallback.get(),
 		}
 	}
 }
@@ -42,6 +44,7 @@ impl From<&Preference> for FilesSorter {
 			reverse:   value.sort_reverse,
 			dir_first: value.sort_dir_first,
 			translit:  value.sort_translit,
+			fallback:  value.sort_fallback,
 		}
 	}
 }

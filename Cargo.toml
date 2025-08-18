@@ -29,7 +29,7 @@ debug = false
 ansi-to-tui         = "8.0.1"
 anyhow              = "1.0.101"
 base64              = "0.22.1"
-bitflags            = { version = "2.10.0", features = [ "serde" ] }
+bitflags            = { version = "2.11.0", features = [ "serde" ] }
 clap                = { version = "4.5.58", features = [ "derive" ] }
 core-foundation-sys = "0.8.7"
 crossterm           = { version = "0.29.0", features = [ "event-stream" ] }
@@ -41,7 +41,7 @@ futures             = "0.3.31"
 globset             = "0.4.18"
 hashbrown           = { version = "0.16.1", features = [ "serde" ] }
 indexmap            = { version = "2.13.0", features = [ "serde" ] }
-libc                = "0.2.181"
+libc                = "0.2.182"
 lru                 = "0.16.3"
 mlua                = { version = "0.11.6", features = [ "anyhow", "async", "error-send", "lua55", "macros", "serde" ] }
 objc2               = "0.6.3"
