@@ -44,7 +44,7 @@ impl Tasks {
 	}
 
 	pub fn prework_sorted(&self, targets: &Files) {
-		if targets.sorter().by != SortBy::Size {
+		if targets.sorter().by.0.contains(&SortBy::Size) {
 			return;
 		}
 

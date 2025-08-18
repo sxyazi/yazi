@@ -1,7 +1,7 @@
 use anyhow::{Result, bail};
 use serde::Deserialize;
 use yazi_codegen::DeserializeOver2;
-use yazi_fs::{CWD, SortBy};
+use yazi_fs::{CWD, SortBys};
 use yazi_shared::{SyncCell, url::UrlBuf};
 
 use super::{MgrRatio, MouseEvents};
@@ -11,7 +11,7 @@ pub struct Mgr {
 	pub ratio: SyncCell<MgrRatio>,
 
 	// Sorting
-	pub sort_by:        SyncCell<SortBy>,
+	pub sort_by:        SortBys,
 	pub sort_sensitive: SyncCell<bool>,
 	pub sort_reverse:   SyncCell<bool>,
 	pub sort_dir_first: SyncCell<bool>,

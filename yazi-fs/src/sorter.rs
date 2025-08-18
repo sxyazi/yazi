@@ -2,11 +2,11 @@ use std::{cmp::Ordering, collections::HashMap};
 
 use yazi_shared::{LcgRng, natsort, translit::Transliterator, url::UrnBuf};
 
-use crate::{File, SortBy};
+use crate::{File, SortBy, SortBys};
 
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct FilesSorter {
-	pub by:        SortBy,
+	pub by:        SortBys,
 	pub sensitive: bool,
 	pub reverse:   bool,
 	pub dir_first: bool,
@@ -27,45 +27,7 @@ impl FilesSorter {
 			}
 		};
 
-		match self.by {
-			SortBy::None => {}
-			SortBy::Mtime => items.sort_unstable_by(|a, b| {
-				let ord = self.cmp(a.mtime, b.mtime, self.promote(a, b));
-				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
-			}),
-			SortBy::Btime => items.sort_unstable_by(|a, b| {
-				let ord = self.cmp(a.btime, b.btime, self.promote(a, b));
-				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
-			}),
-			SortBy::Extension => items.sort_unstable_by(|a, b| {
-				let ord = if self.sensitive {
-					self.cmp(a.url.extension(), b.url.extension(), self.promote(a, b))
-				} else {
-					self.cmp_insensitive(
-						a.url.extension().map_or(&[], |s| s.as_encoded_bytes()),
-						b.url.extension().map_or(&[], |s| s.as_encoded_bytes()),
-						self.promote(a, b),
-					)
-				};
-				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
-			}),
-			SortBy::Alphabetical => items.sort_unstable_by(by_alphabetical),
-			SortBy::Natural => self.sort_naturally(items),
-			SortBy::Size => items.sort_unstable_by(|a, b| {
-				let aa = if a.is_dir() { sizes.get(a.urn()).copied() } else { None };
-				let bb = if b.is_dir() { sizes.get(b.urn()).copied() } else { None };
-				let ord = self.cmp(aa.unwrap_or(a.len), bb.unwrap_or(b.len), self.promote(a, b));
-				if ord == Ordering::Equal { by_alphabetical(a, b) } else { ord }
-			}),
-			SortBy::Random => {
-				let mut rng = LcgRng::default();
-				items.sort_unstable_by(|a, b| self.cmp(rng.next(), rng.next(), self.promote(a, b)))
-			}
-		}
-	}
-
-	fn sort_naturally(&self, items: &mut [File]) {
-		items.sort_unstable_by(|a, b| {
+		let by_natural = |a: &File, b: &File| {
 			let promote = self.promote(a, b);
 			if promote != Ordering::Equal {
 				return promote;
@@ -82,6 +44,45 @@ impl FilesSorter {
 			};
 
 			if self.reverse { ordering.reverse() } else { ordering }
+		};
+
+		items.sort_unstable_by(|a, b| {
+			for key in &self.by.0 {
+				let ord = match key {
+					SortBy::None => Ordering::Equal,
+					SortBy::Mtime => self.cmp(a.mtime, b.mtime, self.promote(a, b)),
+					SortBy::Btime => self.cmp(a.btime, b.btime, self.promote(a, b)),
+					SortBy::Extension => {
+						if self.sensitive {
+							self.cmp(a.url.extension(), b.url.extension(), self.promote(a, b))
+						} else {
+							self.cmp_insensitive(
+								a.url.extension().map_or(&[], |s| s.as_encoded_bytes()),
+								b.url.extension().map_or(&[], |s| s.as_encoded_bytes()),
+								self.promote(a, b),
+							)
+						}
+					}
+					SortBy::Alphabetical => by_alphabetical(a, b),
+					SortBy::Natural => by_natural(a, b),
+					SortBy::Size => {
+						let aa = if a.is_dir() { sizes.get(a.urn()).copied() } else { None };
+						let bb = if b.is_dir() { sizes.get(b.urn()).copied() } else { None };
+						self.cmp(aa.unwrap_or(a.len), bb.unwrap_or(b.len), self.promote(a, b))
+					}
+					SortBy::Random => {
+						let mut rng = LcgRng::default();
+						self.cmp(rng.next(), rng.next(), self.promote(a, b))
+					}
+				};
+
+				if ord != Ordering::Equal {
+					return ord;
+				}
+			}
+
+			// fallback to alphabetical sorting if all other keys are equal
+			by_alphabetical(a, b)
 		});
 	}
 
