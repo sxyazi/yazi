@@ -47,7 +47,10 @@ impl Utils {
 					Ok(r) => vec![r],
 					Err(e) => {
 						if let Ok(err) = ud.take::<Error>() {
-							vec![(lock.area, err).into()]
+							vec![
+								Renderable::Clear(yazi_binding::elements::Clear { area: lock.area.into() }),
+								Renderable::from(err).with_area(lock.area),
+							]
 						} else {
 							Err(e)?
 						}

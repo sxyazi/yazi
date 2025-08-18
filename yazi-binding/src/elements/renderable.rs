@@ -3,7 +3,7 @@ use std::any::TypeId;
 use mlua::{AnyUserData, ExternalError};
 
 use super::{Bar, Border, Clear, Gauge, Line, List, Table, Text};
-use crate::{Error, elements::{Area, Rect}};
+use crate::{Error, elements::Area};
 
 #[derive(Clone, Debug)]
 pub enum Renderable {
@@ -29,6 +29,21 @@ impl Renderable {
 			Self::Gauge(gauge) => gauge.area,
 			Self::Table(table) => table.area,
 		}
+	}
+
+	pub fn with_area(mut self, area: impl Into<Area>) -> Self {
+		let area = area.into();
+		match &mut self {
+			Self::Line(line) => line.area = area,
+			Self::Text(text) => text.area = area,
+			Self::List(list) => list.area = area,
+			Self::Bar(bar) => bar.area = area,
+			Self::Clear(clear) => clear.area = area,
+			Self::Border(border) => border.area = area,
+			Self::Gauge(gauge) => gauge.area = area,
+			Self::Table(table) => table.area = area,
+		}
+		self
 	}
 
 	pub fn render(self, rect: ratatui::layout::Rect, buf: &mut ratatui::buffer::Buffer) {
@@ -77,10 +92,9 @@ impl TryFrom<AnyUserData> for Renderable {
 	fn try_from(ud: AnyUserData) -> Result<Self, Self::Error> { Self::try_from(&ud) }
 }
 
-impl From<(Rect, Error)> for Renderable {
-	fn from((area, error): (Rect, Error)) -> Self {
+impl From<Error> for Renderable {
+	fn from(error: Error) -> Self {
 		Self::Text(Text {
-			area: area.into(),
 			inner: error.into_string().into(),
 			wrap: ratatui::widgets::Wrap { trim: false }.into(),
 			..Default::default()
