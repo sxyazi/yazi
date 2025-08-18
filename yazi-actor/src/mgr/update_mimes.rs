@@ -1,10 +1,9 @@
-use std::collections::HashMap;
-
 use anyhow::Result;
+use hashbrown::HashMap;
 use yazi_core::mgr::LINKED;
 use yazi_macro::{act, render, succ};
 use yazi_parser::mgr::UpdateMimesOpt;
-use yazi_shared::event::Data;
+use yazi_shared::{event::Data, url::UrlCov};
 
 use crate::{Actor, Ctx};
 
@@ -24,9 +23,9 @@ impl Actor for UpdateMimes {
 			.filter(|(url, mime)| cx.mgr.mimetype.by_url(url) != Some(mime))
 			.fold(HashMap::new(), |mut map, (u, m)| {
 				for u in linked.from_file(u.as_url()) {
-					map.insert(u, m.to_string());
+					map.insert(u.into(), m.to_string());
 				}
-				map.insert(u.into_owned(), m.into_owned());
+				map.insert(u.into(), m.into_owned());
 				map
 			});
 
@@ -39,11 +38,11 @@ impl Actor for UpdateMimes {
 			.current()
 			.paginate(cx.current().page)
 			.iter()
-			.filter(|&f| updates.contains_key(&f.url))
+			.filter(|&f| updates.contains_key(&UrlCov::new(&f.url)))
 			.cloned()
 			.collect();
 
-		let repeek = cx.hovered().is_some_and(|f| updates.contains_key(&f.url));
+		let repeek = cx.hovered().is_some_and(|f| updates.contains_key(&UrlCov::new(&f.url)));
 		cx.mgr.mimetype.extend(updates);
 
 		if repeek {

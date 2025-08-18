@@ -33,4 +33,4 @@ tracing                = { workspace = true }
 libc = { workspace = true }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
-trash = "5.2.2"
+trash = "5.2.3"

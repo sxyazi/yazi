@@ -34,7 +34,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 	let profile = if target_os == "windows" { &["--profile", "release-windows"][..] } else { &[] };
 	let mut child = Command::new(env::var_os("CARGO").unwrap())
-		.args(&["install", "--force", "--locked"])
+		.args(["install", "--force", "--locked"])
 		.args(profile)
 		.args(crates)
 		.stdout(Stdio::piped())

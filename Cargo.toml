@@ -23,7 +23,7 @@ lto           = false
 ansi-to-tui         = "7.0.0"
 anyhow              = "1.0.99"
 base64              = "0.22.1"
-bitflags            = { version = "2.9.1", features = [ "serde" ] }
+bitflags            = { version = "2.9.2", features = [ "serde" ] }
 clap                = { version = "4.5.45", features = [ "derive" ] }
 core-foundation-sys = "0.8.7"
 crossterm           = { version = "0.29.0", features = [ "event-stream" ] }

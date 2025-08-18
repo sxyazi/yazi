@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use hashbrown::HashMap;
 use yazi_fs::File;
-use yazi_shared::{MIME_DIR, SStr, url::{Url, UrlBuf, UrlBufCov, UrlCov}};
+use yazi_shared::{MIME_DIR, SStr, url::{Url, UrlBufCov, UrlCov}};
 
 #[derive(Default)]
 pub struct Mimetype(HashMap<UrlBufCov, String>);
@@ -34,7 +34,7 @@ impl Mimetype {
 	}
 
 	#[inline]
-	pub fn extend(&mut self, iter: impl IntoIterator<Item = (UrlBuf, String)>) {
-		self.0.extend(iter.into_iter().map(|(u, m)| (UrlBufCov(u), m)));
+	pub fn extend(&mut self, iter: impl IntoIterator<Item = (UrlBufCov, String)>) {
+		self.0.extend(iter);
 	}
 }
