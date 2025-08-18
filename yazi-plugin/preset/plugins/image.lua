@@ -9,7 +9,7 @@ function M:peek(job)
 	ya.sleep(math.max(0, rt.preview.image_delay / 1000 + start - os.clock()))
 
 	local _, err = ya.image_show(url, job.area)
-	ya.preview_widget(job, err and ui.Text(err):area(job.area):wrap(ui.Wrap.YES))
+	ya.preview_widget(job, err)
 end
 
 function M:seek() end

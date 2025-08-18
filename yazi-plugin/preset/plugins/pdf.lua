@@ -6,8 +6,10 @@ function M:peek(job)
 		return
 	end
 
-	local ok, err = self:preload(job)
-	if not ok or err then
+	local ok, err, bound = self:preload(job)
+	if bound and bound > 0 then
+		return ya.emit("peek", { bound - 1, only_if = job.file.url, upper_bound = true })
+	elseif not ok or err then
 		return ya.preview_widget(job, err)
 	end
 
@@ -48,12 +50,8 @@ function M:preload(job)
 	if not output then
 		return true, Err("Failed to start `pdftoppm`, error: %s", err)
 	elseif not output.status.success then
-		local pages = tonumber(output.stderr:match("the last page %((%d+)%)")) or 0
-		if job.skip > 0 and pages > 0 then
-			ya.emit("peek", { math.max(0, pages - 1), only_if = job.file.url, upper_bound = true })
-			return false
-		end
-		return true, Err("Failed to convert PDF to image, stderr: %s", output.stderr)
+		local pages = job.skip > 0 and tonumber(output.stderr:match("the last page %((%d+)%)"))
+		return true, Err("Failed to convert PDF to image, stderr: %s", output.stderr), pages
 	end
 
 	local ok, err = os.rename(string.format("%s.jpg", cache), tostring(cache))
