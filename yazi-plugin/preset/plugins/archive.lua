@@ -2,14 +2,14 @@ local M = {}
 
 function M:peek(job)
 	local limit = job.area.h
+	local files, bound, err = self.list_files({ "-p", tostring(job.file.url) }, job.skip, limit)
 
-	local files, bound, code = self.list_files({ "-p", tostring(job.file.url) }, job.skip, limit)
-	if code ~= 0 then
-		return require("empty").msg(
-			job,
-			code == 2 and "File list in this archive is encrypted"
-				or "Failed to start either `7zz` or `7z`. Do you have 7-zip installed?"
-		)
+	if err then
+		return ya.preview_widget(job, err)
+	elseif job.skip > 0 and bound < job.skip + limit then
+		return ya.emit("peek", { math.max(0, bound - limit), only_if = job.file.url, upper_bound = true })
+	elseif #files == 0 then
+		files = { { path = job.file.url.stem, size = 0, attr = "" } }
 	end
 
 	local left, right = {}, {}
@@ -40,14 +40,10 @@ function M:peek(job)
 		}
 	end
 
-	if job.skip > 0 and bound < job.skip + limit then
-		ya.emit("peek", { math.max(0, bound - limit), only_if = job.file.url, upper_bound = true })
-	else
-		ya.preview_widget(job, {
-			ui.Text(left):area(job.area),
-			ui.Text(right):area(job.area):align(ui.Align.RIGHT),
-		})
-	end
+	ya.preview_widget(job, {
+		ui.Text(left):area(job.area),
+		ui.Text(right):area(job.area):align(ui.Align.RIGHT),
+	})
 end
 
 function M:seek(job) require("code"):seek(job) end
@@ -76,26 +72,22 @@ end
 ---@param limit integer
 ---@return table files
 ---@return integer bound
----@return integer code
----  0: success
----  1: failed to spawn
----  2: wrong password
----  3: partial success
+---@return Error? err
 function M.list_files(args, skip, limit)
 	local child = M.spawn_7z { "l", "-ba", "-slt", "-sccUTF-8", table.unpack(args) }
 	if not child then
-		return {}, 0, 1
+		return {}, 0, Err("Failed to start either `7zz` or `7z`. Do you have 7-zip installed?")
 	end
 
-	local i, files, code = 0, { { path = "", size = 0, attr = "" } }, 0
-	local key, value = "", ""
+	local i, files, err = 0, { { path = "", size = 0, attr = "" } }, nil
+	local key, value, stderr = "", "", {}
 	repeat
 		local next, event = child:read_line()
 		if event == 1 and M.is_encrypted(next) then
-			code = 2
+			err = Err("File list in this archive is encrypted")
 			break
 		elseif event == 1 then
-			code = 3
+			stderr[#stderr + 1] = next
 			goto continue
 		elseif event ~= 0 then
 			break
@@ -127,7 +119,10 @@ function M.list_files(args, skip, limit)
 	if files[#files].path == "" then
 		files[#files] = nil
 	end
-	return files, i, code
+	if #stderr ~= 0 then
+		err = Err("7-zip errored out while listing files, stderr: %s", table.concat(stderr, "\n"))
+	end
+	return files, i, err
 end
 
 ---List metadata of an archive

@@ -1,11 +1,17 @@
-local SUPPORTED_TYPES = "application/audio/biosig/chemical/font/image/inode/message/model/rinex/text/vector/video/x-epoc/"
+-- stylua: ignore
+local TYPE_PATS = { "text", "image", "video", "application", "audio", "font", "inode", "message", "model", "vector", "biosig", "chemical", "rinex", "x%-epoc" }
 
 local M = {}
 
 local function match_mimetype(s)
-	local type, sub = s:match("^([-a-z]+/)([+-.a-zA-Z0-9]+)%s*$")
-	if type and sub and SUPPORTED_TYPES:find(type, 1, true)  then
-		return type:gsub("^x%-", "", 1) .. sub:gsub("^x%-", "", 1):gsub("^vnd%.", "", 1)
+	for _, pat in ipairs(TYPE_PATS) do
+		local typ, sub = s:match(string.format("(%s/)([+-.a-z0-9]+)%%s+$", pat))
+		if not sub then
+		elseif s:find(typ .. sub, 1, true) == 1 then
+			return typ:gsub("^x%-", "", 1) .. sub:gsub("^x%-", "", 1):gsub("^vnd%.", "", 1)
+		else
+			return nil, true
+		end
 	end
 end
 
@@ -32,7 +38,7 @@ function M:fetch(job)
 		end
 	end
 
-	local i, valid, state = 1, nil, {}
+	local i, state, match, ignore = 1, {}, nil, nil
 	repeat
 		local line, event = child:read_line_with { timeout = 300 }
 		if event == 3 then
@@ -42,15 +48,13 @@ function M:fetch(job)
 			break
 		end
 
-		valid = match_mimetype(line)
-		if valid then
-			updates[urls[i]], state[i] = valid, true
+		match, ignore = match_mimetype(line)
+		if match then
+			updates[urls[i]], state[i], i = match, true, i + 1
 			flush(false)
-		else
-			state[i] = false
+		elseif not ignore then
+			state[i], i = false, i + 1
 		end
-
-		i = i + 1
 		::continue::
 	until i > #urls
 
