@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_fs::{File, FilesOp};
-use yazi_macro::{act, succ};
+use yazi_macro::{act, render, succ};
 use yazi_parser::mgr::RevealOpt;
 use yazi_shared::event::Data;
 
@@ -21,7 +21,7 @@ impl Actor for Reveal {
 
 		// Try to hover on the child file
 		let tab = cx.tab_mut();
-		tab.current.hover(child.as_urn());
+		render!(tab.current.hover(child.as_urn()));
 
 		// If the child is not hovered, which means it doesn't exist,
 		// create a dummy file

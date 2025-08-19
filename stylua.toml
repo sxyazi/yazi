@@ -1,3 +1,4 @@
+syntax                    = "Lua54"
 indent_width              = 2
 call_parentheses          = "NoSingleTable"
 collapse_simple_statement = "FunctionOnly"
