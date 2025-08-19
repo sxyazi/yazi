@@ -3,18 +3,18 @@ use std::{borrow::Cow, ops::Not, path::Path};
 use anyhow::{Result, bail, ensure};
 use percent_encoding::percent_decode;
 
-use crate::BytesExt;
+use crate::{BytesExt, pool::{InternStr, Symbol}};
 
 #[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum Scheme {
 	#[default]
 	Regular,
 
-	Search(String),
+	Search(Symbol<str>),
 
-	Archive(String),
+	Archive(Symbol<str>),
 
-	Sftp(String),
+	Sftp(Symbol<str>),
 }
 
 impl Scheme {
@@ -100,15 +100,15 @@ impl Scheme {
 	fn decode_param(
 		bytes: &[u8],
 		skip: &mut usize,
-	) -> Result<(String, Option<usize>, Option<usize>)> {
+	) -> Result<(Symbol<str>, Option<usize>, Option<usize>)> {
 		let mut len = bytes.iter().copied().take_while(|&b| b != b'/').count();
 		let slash = bytes.get(len).is_some_and(|&b| b == b'/');
 		*skip += len + slash as usize;
 
 		let (uri, urn) = Self::decode_ports(&bytes[..len], &mut len)?;
 		let domain = match Cow::from(percent_decode(&bytes[..len])) {
-			Cow::Borrowed(b) => str::from_utf8(b)?.to_owned(),
-			Cow::Owned(b) => String::from_utf8(b)?,
+			Cow::Borrowed(b) => str::from_utf8(b)?.intern(),
+			Cow::Owned(b) => String::from_utf8(b)?.intern(),
 		};
 
 		Ok((domain, uri, urn))

@@ -54,6 +54,7 @@ mod tests {
 
 	#[test]
 	fn test_clean_url() -> anyhow::Result<()> {
+		yazi_shared::init_tests();
 		let cases = [
 			// CurDir
 			("archive://:3//./tmp/test.zip/foo/bar", "archive://:3//tmp/test.zip/foo/bar"),

@@ -4,14 +4,19 @@ use tokio_util::sync::CancellationToken;
 use tracing::error;
 use yazi_binding::{File, Id};
 use yazi_dds::Sendable;
-use yazi_shared::{Ids, SStr, event::Cmd};
+use yazi_shared::{Ids, event::Cmd, pool::Symbol};
 
 use super::slim_lua;
 use crate::loader::LOADER;
 
 static IDS: Ids = Ids::new();
 
-pub fn spot(cmd: &'static Cmd, file: yazi_fs::File, mime: SStr, skip: usize) -> CancellationToken {
+pub fn spot(
+	cmd: &'static Cmd,
+	file: yazi_fs::File,
+	mime: Symbol<str>,
+	skip: usize,
+) -> CancellationToken {
 	let ct = CancellationToken::new();
 	let (ct1, ct2) = (ct.clone(), ct.clone());
 

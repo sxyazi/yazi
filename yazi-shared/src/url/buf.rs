@@ -4,7 +4,7 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 use super::UrnBuf;
-use crate::{loc::LocBuf, url::{Components, Display, Encode, EncodeTilded, Scheme, Url, UrlCow, Urn}};
+use crate::{loc::LocBuf, pool::Pool, url::{Components, Display, Encode, EncodeTilded, Scheme, Url, UrlCow, Urn}};
 
 #[derive(Clone, Default, Eq, Ord, PartialOrd, PartialEq, Hash)]
 pub struct UrlBuf {
@@ -212,14 +212,14 @@ impl UrlBuf {
 	pub fn to_search(&self, domain: impl AsRef<str>) -> Self {
 		Self {
 			loc:    LocBuf::zeroed(self.loc.to_path()),
-			scheme: Scheme::Search(domain.as_ref().to_owned()),
+			scheme: Scheme::Search(Pool::<str>::intern(domain)),
 		}
 	}
 
 	#[inline]
 	pub fn into_search(mut self, domain: impl AsRef<str>) -> Self {
 		self.loc = LocBuf::zeroed(self.loc.into_path());
-		self.scheme = Scheme::Search(domain.as_ref().to_owned());
+		self.scheme = Scheme::Search(Pool::<str>::intern(domain));
 		self
 	}
 
@@ -278,6 +278,7 @@ mod tests {
 
 	#[test]
 	fn test_join() -> anyhow::Result<()> {
+		crate::init_tests();
 		let cases = [
 			// Regular
 			("/a", "b/c", "regular:///a/b/c"),
@@ -309,6 +310,7 @@ mod tests {
 
 	#[test]
 	fn test_parent_url() -> anyhow::Result<()> {
+		crate::init_tests();
 		let cases = [
 			// Regular
 			("/a", Some("regular:///")),
@@ -342,6 +344,7 @@ mod tests {
 
 	#[test]
 	fn test_into_search() -> Result<()> {
+		crate::init_tests();
 		const S: char = std::path::MAIN_SEPARATOR;
 
 		let u: UrlBuf = "/root".parse()?;

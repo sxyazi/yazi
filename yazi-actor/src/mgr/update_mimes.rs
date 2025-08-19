@@ -3,7 +3,7 @@ use hashbrown::HashMap;
 use yazi_core::mgr::LINKED;
 use yazi_macro::{act, render, succ};
 use yazi_parser::mgr::UpdateMimesOpt;
-use yazi_shared::{event::Data, url::UrlCov};
+use yazi_shared::{event::Data, pool::InternStr, url::UrlCov};
 
 use crate::{Actor, Ctx};
 
@@ -23,9 +23,9 @@ impl Actor for UpdateMimes {
 			.filter(|(url, mime)| cx.mgr.mimetype.by_url(url) != Some(mime))
 			.fold(HashMap::new(), |mut map, (u, m)| {
 				for u in linked.from_file(u.as_url()) {
-					map.insert(u.into(), m.to_string());
+					map.insert(u.into(), m.intern());
 				}
-				map.insert(u.into(), m.into_owned());
+				map.insert(u.into(), m.intern());
 				map
 			});
 
