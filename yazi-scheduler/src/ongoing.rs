@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-
+use hashbrown::HashMap;
 use yazi_config::YAZI;
 use yazi_parser::app::TasksProgress;
 use yazi_shared::{Id, Ids};

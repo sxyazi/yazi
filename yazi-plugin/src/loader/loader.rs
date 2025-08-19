@@ -1,6 +1,7 @@
-use std::{borrow::Cow, collections::HashMap, ops::Deref};
+use std::{borrow::Cow, ops::Deref};
 
 use anyhow::{Context, Result, bail};
+use hashbrown::HashMap;
 use mlua::{ChunkMode, ExternalError, Lua, Table};
 use parking_lot::RwLock;
 use yazi_boot::BOOT;

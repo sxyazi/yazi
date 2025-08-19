@@ -1,5 +1,4 @@
-use std::collections::{HashMap, HashSet};
-
+use hashbrown::{HashMap, HashSet};
 use yazi_macro::relay;
 use yazi_shared::{Id, Ids, url::{UrlBuf, UrnBuf}};
 

@@ -1,6 +1,7 @@
-use std::{borrow::Cow, collections::{HashMap, HashSet}, ffi::{OsStr, OsString}, os::{fd::AsFd, unix::{ffi::{OsStrExt, OsStringExt}, fs::MetadataExt}}, time::Duration};
+use std::{borrow::Cow, ffi::{OsStr, OsString}, os::{fd::AsFd, unix::{ffi::{OsStrExt, OsStringExt}, fs::MetadataExt}}, time::Duration};
 
 use anyhow::{Context, Result};
+use hashbrown::{HashMap, HashSet};
 use tokio::{io::{Interest, unix::AsyncFd}, time::sleep};
 use tracing::error;
 use yazi_shared::{natsort, replace_cow, replace_vec_cow};

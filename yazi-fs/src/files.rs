@@ -1,5 +1,6 @@
-use std::{collections::{HashMap, HashSet}, mem, ops::{Deref, DerefMut, Not}};
+use std::{mem, ops::{Deref, DerefMut, Not}};
 
+use hashbrown::{HashMap, HashSet};
 use tokio::{select, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_shared::{Id, url::{UrlBuf, Urn, UrnBuf}};
 

@@ -1,6 +1,7 @@
-use std::{collections::{HashMap, HashSet}, iter, mem, str::FromStr};
+use std::{iter, mem, str::FromStr};
 
 use anyhow::{Context, Result, bail};
+use hashbrown::{HashMap, HashSet};
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use tokio::{io::AsyncWriteExt, select, sync::mpsc, task::JoinHandle, time};

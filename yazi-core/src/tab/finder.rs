@@ -1,6 +1,5 @@
-use std::collections::HashMap;
-
 use anyhow::Result;
+use hashbrown::HashMap;
 use yazi_fs::{Files, Filter, FilterCase};
 use yazi_shared::url::{UrlBuf, Urn, UrnBuf};
 

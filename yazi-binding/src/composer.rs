@@ -1,4 +1,4 @@
-use foldhash::HashMap;
+use hashbrown::HashMap;
 use mlua::{Lua, MetaMethod, UserData, UserDataMethods, Value};
 
 pub type ComposerGet = fn(&Lua, &[u8]) -> mlua::Result<Value>;

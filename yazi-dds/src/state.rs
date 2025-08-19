@@ -1,6 +1,7 @@
-use std::{collections::HashMap, mem, ops::Deref, sync::atomic::{AtomicU64, Ordering}, time::UNIX_EPOCH};
+use std::{mem, ops::Deref, sync::atomic::{AtomicU64, Ordering}, time::UNIX_EPOCH};
 
 use anyhow::Result;
+use hashbrown::HashMap;
 use parking_lot::RwLock;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufWriter};
 use yazi_boot::BOOT;

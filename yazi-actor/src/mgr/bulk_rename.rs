@@ -1,7 +1,8 @@
-use std::{borrow::Cow, collections::HashMap, ffi::{OsStr, OsString}, hash::Hash, io::{Read, Write}, ops::Deref, path::Path};
+use std::{borrow::Cow, ffi::{OsStr, OsString}, hash::Hash, io::{Read, Write}, ops::Deref, path::Path};
 
 use anyhow::{Result, anyhow};
 use crossterm::{execute, style::Print};
+use hashbrown::HashMap;
 use scopeguard::defer;
 use tokio::io::AsyncWriteExt;
 use yazi_config::{YAZI, opener::OpenerRule};

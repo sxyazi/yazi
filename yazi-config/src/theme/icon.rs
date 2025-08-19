@@ -1,6 +1,7 @@
-use std::{collections::HashMap, ops::Deref};
+use std::ops::Deref;
 
 use anyhow::Result;
+use hashbrown::HashMap;
 use serde::{Deserialize, Deserializer};
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::File;

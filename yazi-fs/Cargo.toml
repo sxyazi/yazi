@@ -20,6 +20,7 @@ bitflags    = { workspace = true }
 dirs        = { workspace = true }
 foldhash    = { workspace = true }
 futures     = { workspace = true }
+hashbrown   = { workspace = true }
 parking_lot = { workspace = true }
 regex       = { workspace = true }
 scopeguard  = { workspace = true }

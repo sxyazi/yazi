@@ -1,5 +1,6 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 
+use hashbrown::HashMap;
 use mlua::Function;
 
 #[derive(Debug, Default)]

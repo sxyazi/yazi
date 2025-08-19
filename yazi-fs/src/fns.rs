@@ -1,8 +1,9 @@
 // FIXME: VFS
 
-use std::{borrow::Cow, collections::{HashMap, HashSet}, ffi::{OsStr, OsString}, path::{Path, PathBuf}};
+use std::{borrow::Cow, ffi::{OsStr, OsString}, path::{Path, PathBuf}};
 
 use anyhow::{Result, bail};
+use hashbrown::{HashMap, HashSet};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
 use yazi_shared::url::{Component, Url, UrlBuf};
 

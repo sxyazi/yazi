@@ -36,7 +36,7 @@ impl File {
 		folder: &yazi_core::tab::Folder,
 		tab: &yazi_core::tab::Tab,
 	) -> mlua::Result<AnyUserData> {
-		use std::collections::hash_map::Entry;
+		use hashbrown::hash_map::Entry;
 
 		Ok(match super::FILE_CACHE.borrow_mut().entry(PtrCell(&folder.files[idx])) {
 			Entry::Occupied(oe) => oe.into_mut().clone(),

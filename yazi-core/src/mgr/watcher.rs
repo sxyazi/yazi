@@ -1,6 +1,7 @@
-use std::{collections::{HashMap, HashSet}, time::Duration};
+use std::time::Duration;
 
 use anyhow::Result;
+use hashbrown::{HashMap, HashSet};
 use notify::{PollWatcher, RecommendedWatcher, RecursiveMode, Watcher as _Watcher};
 use parking_lot::RwLock;
 use tokio::{pin, sync::{mpsc::{self, UnboundedReceiver}, watch}};

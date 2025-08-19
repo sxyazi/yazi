@@ -1,6 +1,7 @@
-use std::{collections::HashMap, str::FromStr, time::Duration};
+use std::{str::FromStr, time::Duration};
 
 use anyhow::Result;
+use hashbrown::HashMap;
 use parking_lot::RwLock;
 use tokio::{io::{AsyncBufReadExt, AsyncWriteExt, BufReader}, select, sync::mpsc::{self, UnboundedReceiver}, task::JoinHandle, time};
 use yazi_macro::try_format;
@@ -51,7 +52,7 @@ impl Server {
 
 								let mut parts = line.splitn(4, ',');
 								let Some(kind) = parts.next() else { continue };
-								let Some(receiver) = parts.next().and_then(|s| s.parse().ok()) else { continue };
+								let Some(receiver) = parts.next().and_then(|s| s.parse::<Id>().ok()) else { continue };
 								let Some(sender) = parts.next().and_then(|s| s.parse::<u64>().ok()) else { continue };
 
 								let clients = CLIENTS.read();

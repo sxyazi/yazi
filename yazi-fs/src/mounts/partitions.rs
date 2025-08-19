@@ -14,7 +14,7 @@ pub static PARTITIONS: RoCell<Locked> = RoCell::new();
 pub struct Partitions {
 	pub(super) inner:       Vec<Partition>,
 	#[cfg(target_os = "linux")]
-	pub(super) linux_cache: std::collections::HashSet<String>,
+	pub(super) linux_cache: hashbrown::HashSet<String>,
 	#[cfg(target_os = "macos")]
 	pub(super) need_update: bool,
 }

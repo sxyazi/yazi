@@ -1,5 +1,6 @@
-use std::{cmp::Ordering, collections::HashMap};
+use std::cmp::Ordering;
 
+use hashbrown::HashMap;
 use yazi_shared::{LcgRng, natsort, translit::Transliterator, url::UrnBuf};
 
 use crate::{File, SortBy};

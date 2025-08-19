@@ -21,7 +21,7 @@ yazi-shared  = { path = "../yazi-shared", version = "25.6.11" }
 
 # External dependencies
 ansi-to-tui   = { workspace = true }
-foldhash      = { workspace = true }
+hashbrown     = { workspace = true }
 mlua          = { workspace = true }
 paste         = { workspace = true }
 ratatui       = { workspace = true }

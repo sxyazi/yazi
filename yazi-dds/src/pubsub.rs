@@ -1,7 +1,5 @@
-use std::collections::HashMap;
-
 use anyhow::Result;
-use hashbrown::HashSet;
+use hashbrown::{HashMap, HashSet};
 use mlua::Function;
 use parking_lot::RwLock;
 use yazi_boot::BOOT;
