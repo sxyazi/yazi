@@ -168,19 +168,22 @@ mod tests {
 	use std::path::Path;
 
 	use super::*;
+	use crate::pool::InternStr;
 
 	#[test]
 	fn test_collect() {
+		crate::init_tests();
+
 		let search: UrlBuf = "search://keyword//root/projects/yazi".parse().unwrap();
 		assert_eq!(search.loc.uri().as_os_str(), OsStr::new(""));
-		assert_eq!(search.scheme, Scheme::Search("keyword".to_owned()));
+		assert_eq!(search.scheme, Scheme::Search("keyword".intern()));
 
 		let item = search.join("main.rs");
 		assert_eq!(item.loc.uri().as_os_str(), OsStr::new("main.rs"));
-		assert_eq!(item.scheme, Scheme::Search("keyword".to_owned()));
+		assert_eq!(item.scheme, Scheme::Search("keyword".intern()));
 
 		let u: UrlBuf = item.components().take(4).collect();
-		assert_eq!(u.scheme, Scheme::Search("keyword".to_owned()));
+		assert_eq!(u.scheme, Scheme::Search("keyword".intern()));
 		assert_eq!(u.loc.as_path(), Path::new("/root/projects"));
 
 		let u: UrlBuf = item
@@ -188,7 +191,7 @@ mod tests {
 			.take(5)
 			.chain([Component::Normal(OsStr::new("target/release/yazi"))])
 			.collect();
-		assert_eq!(u.scheme, Scheme::Search("keyword".to_owned()));
+		assert_eq!(u.scheme, Scheme::Search("keyword".intern()));
 		assert_eq!(u.loc.as_path(), Path::new("/root/projects/yazi/target/release/yazi"));
 	}
 }

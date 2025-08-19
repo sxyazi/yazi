@@ -7,7 +7,7 @@ use yazi_config::LAYOUT;
 use yazi_dds::Sendable;
 use yazi_parser::app::{PluginCallback, PluginOpt};
 use yazi_proxy::AppProxy;
-use yazi_shared::{SStr, event::Cmd};
+use yazi_shared::{event::Cmd, pool::Symbol};
 
 use super::slim_lua;
 use crate::loader::LOADER;
@@ -15,7 +15,7 @@ use crate::loader::LOADER;
 pub fn peek(
 	cmd: &'static Cmd,
 	file: yazi_fs::File,
-	mime: SStr,
+	mime: Symbol<str>,
 	skip: usize,
 ) -> Option<CancellationToken> {
 	let ct = CancellationToken::new();
@@ -46,7 +46,7 @@ pub fn peek(
 	Some(ct)
 }
 
-fn peek_sync(cmd: &'static Cmd, file: yazi_fs::File, mime: SStr, skip: usize) {
+fn peek_sync(cmd: &'static Cmd, file: yazi_fs::File, mime: Symbol<str>, skip: usize) {
 	let cb: PluginCallback = Box::new(move |lua, plugin| {
 		let job = lua.create_table_from([
 			("area", Rect::from(LAYOUT.get().preview).into_lua(lua)?),
@@ -65,7 +65,7 @@ fn peek_sync(cmd: &'static Cmd, file: yazi_fs::File, mime: SStr, skip: usize) {
 fn peek_async(
 	cmd: &'static Cmd,
 	file: yazi_fs::File,
-	mime: SStr,
+	mime: Symbol<str>,
 	skip: usize,
 	ct: CancellationToken,
 ) {

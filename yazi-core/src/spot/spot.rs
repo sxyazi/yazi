@@ -4,7 +4,7 @@ use yazi_fs::File;
 use yazi_macro::render;
 use yazi_parser::mgr::SpotLock;
 use yazi_plugin::isolate;
-use yazi_shared::{SStr, url::UrlBuf};
+use yazi_shared::{pool::Symbol, url::UrlBuf};
 
 #[derive(Default)]
 pub struct Spot {
@@ -15,7 +15,7 @@ pub struct Spot {
 }
 
 impl Spot {
-	pub fn go(&mut self, file: File, mime: SStr) {
+	pub fn go(&mut self, file: File, mime: Symbol<str>) {
 		if mime.is_empty() {
 			return; // Wait till mimetype is resolved to avoid flickering
 		} else if self.same_lock(&file, &mime) {

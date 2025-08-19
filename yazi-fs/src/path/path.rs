@@ -134,6 +134,8 @@ mod tests {
 
 	#[test]
 	fn test_path_relative_to() {
+		yazi_shared::init_tests();
+
 		fn assert(from: &str, to: &str, ret: &str) {
 			assert_eq!(
 				url_relative_to(&from.parse().unwrap(), &to.parse().unwrap()).unwrap(),

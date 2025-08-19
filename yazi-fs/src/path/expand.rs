@@ -106,6 +106,7 @@ mod tests {
 	#[cfg(unix)]
 	#[test]
 	fn test_expand_url() -> Result<()> {
+		yazi_shared::init_tests();
 		unsafe {
 			std::env::set_var("FOO", "foo");
 			std::env::set_var("BAR_BAZ", "bar/baz");

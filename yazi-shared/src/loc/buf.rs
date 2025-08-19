@@ -253,6 +253,7 @@ mod tests {
 
 	#[test]
 	fn test_set_name() -> Result<()> {
+		crate::init_tests();
 		let cases = [
 			// Regular
 			("/", "a", "regular:///a"),
