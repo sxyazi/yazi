@@ -1,6 +1,7 @@
-use std::{collections::{HashMap, HashSet}, num::NonZeroUsize};
+use std::num::NonZeroUsize;
 
 use anyhow::{Result, anyhow};
+use hashbrown::{HashMap, HashSet};
 use lru::LruCache;
 use parking_lot::{Mutex, RwLock};
 use tokio::sync::mpsc;

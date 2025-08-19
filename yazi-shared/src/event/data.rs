@@ -1,6 +1,7 @@
-use std::{any::Any, borrow::Cow, collections::HashMap};
+use std::{any::Any, borrow::Cow};
 
 use anyhow::{Result, bail};
+use hashbrown::HashMap;
 use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize, de};
 

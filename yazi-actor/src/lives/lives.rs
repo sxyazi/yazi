@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 
-use foldhash::HashMap;
+use hashbrown::HashMap;
 use mlua::{AnyUserData, UserData};
 use scopeguard::defer;
 use tracing::error;

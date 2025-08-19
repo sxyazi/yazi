@@ -1,5 +1,6 @@
-use std::{borrow::Cow, collections::HashMap, ffi::OsString, mem};
+use std::{borrow::Cow, ffi::OsString, mem};
 
+use hashbrown::HashMap;
 use yazi_config::{YAZI, opener::OpenerRule};
 use yazi_parser::tasks::ProcessExecOpt;
 use yazi_shared::url::UrlBuf;

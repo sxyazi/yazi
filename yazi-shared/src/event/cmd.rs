@@ -1,6 +1,7 @@
-use std::{any::Any, borrow::Cow, collections::HashMap, fmt::{self, Display}, mem, str::FromStr};
+use std::{any::Any, borrow::Cow, fmt::{self, Display}, mem, str::FromStr};
 
 use anyhow::{Result, anyhow, bail};
+use hashbrown::HashMap;
 use serde::{Deserialize, de};
 
 use super::{Data, DataKey};

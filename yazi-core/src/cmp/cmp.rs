@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-
+use hashbrown::HashMap;
 use yazi_parser::cmp::CmpItem;
 use yazi_shared::{Id, url::UrlBuf};
 use yazi_widgets::Scrollable;

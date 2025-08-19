@@ -1,6 +1,7 @@
-use std::{collections::HashMap, mem, ops::Deref};
+use std::{mem, ops::Deref};
 
 use anyhow::Result;
+use hashbrown::HashMap;
 use indexmap::IndexSet;
 use serde::Deserialize;
 

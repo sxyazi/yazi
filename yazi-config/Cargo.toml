@@ -21,6 +21,7 @@ bitflags  = { workspace = true }
 crossterm = { workspace = true }
 dirs      = { workspace = true }
 globset   = { workspace = true }
+hashbrown = { workspace = true }
 indexmap  = { workspace = true }
 ratatui   = { workspace = true }
 regex     = { workspace = true }

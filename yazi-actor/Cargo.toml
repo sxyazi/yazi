@@ -30,7 +30,6 @@ yazi-widgets = { path = "../yazi-widgets", version = "25.6.11" }
 # External dependencies
 anyhow       = { workspace = true }
 crossterm    = { workspace = true }
-foldhash     = { workspace = true }
 futures      = { workspace = true }
 hashbrown    = { workspace = true }
 mlua         = { workspace = true }

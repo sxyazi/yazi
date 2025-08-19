@@ -1,6 +1,5 @@
-use std::collections::HashSet;
-
 use anyhow::Result;
+use hashbrown::HashSet;
 use serde::Deserialize;
 use tracing::warn;
 use yazi_codegen::DeserializeOver2;

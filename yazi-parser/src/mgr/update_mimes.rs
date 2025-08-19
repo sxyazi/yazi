@@ -1,6 +1,5 @@
-use std::collections::HashMap;
-
 use anyhow::bail;
+use hashbrown::HashMap;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_shared::event::{CmdCow, Data, DataKey};
 

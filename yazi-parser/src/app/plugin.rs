@@ -1,6 +1,7 @@
-use std::{collections::HashMap, fmt::Debug};
+use std::fmt::Debug;
 
 use anyhow::bail;
+use hashbrown::HashMap;
 use mlua::{Lua, Table};
 use yazi_shared::{SStr, event::{Cmd, CmdCow, Data, DataKey}};
 

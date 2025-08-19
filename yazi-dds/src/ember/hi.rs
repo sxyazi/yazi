@@ -1,5 +1,6 @@
-use std::{borrow::Cow, collections::HashSet};
+use std::borrow::Cow;
 
+use hashbrown::HashSet;
 use mlua::{ExternalResult, IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 use yazi_shared::SStr;

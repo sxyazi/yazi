@@ -1,6 +1,7 @@
-use std::{collections::HashSet, path::PathBuf};
+use std::path::PathBuf;
 
 use futures::executor::block_on;
+use hashbrown::HashSet;
 use serde::Serialize;
 use yazi_fs::{CWD, Xdg, path::expand_url, provider};
 use yazi_shared::url::{UrlBuf, UrnBuf};

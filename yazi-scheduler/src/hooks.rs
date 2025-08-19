@@ -1,6 +1,5 @@
-use std::collections::HashMap;
-
 use futures::future::BoxFuture;
+use hashbrown::HashMap;
 use yazi_shared::Id;
 
 #[derive(Default)]

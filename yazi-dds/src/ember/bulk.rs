@@ -1,5 +1,6 @@
-use std::{borrow::Cow, collections::HashMap};
+use std::borrow::Cow;
 
+use hashbrown::HashMap;
 use mlua::{IntoLua, Lua, Value};
 use serde::{Deserialize, Serialize};
 use yazi_shared::url::UrlBuf;

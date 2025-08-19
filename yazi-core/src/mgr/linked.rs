@@ -1,5 +1,6 @@
-use std::{collections::HashMap, iter, ops::{Deref, DerefMut}};
+use std::{iter, ops::{Deref, DerefMut}};
 
+use hashbrown::HashMap;
 use yazi_shared::url::{Url, UrlBuf};
 
 #[derive(Default)]
