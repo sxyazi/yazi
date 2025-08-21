@@ -118,10 +118,10 @@ impl UrlCow<'_> {
 	pub fn into_owned(self) -> UrlBuf { self.as_url().into() }
 
 	#[inline]
-	pub fn parent_url(&self) -> Option<UrlBuf> { self.as_url().parent_url() }
+	pub fn parent_url(&self) -> Option<Url<'_>> { self.as_url().parent_url() }
 
 	#[inline]
-	pub fn pair(&self) -> Option<(UrlBuf, UrnBuf)> { self.as_url().pair() }
+	pub fn pair(&self) -> Option<(Url<'_>, UrnBuf)> { self.as_url().pair() }
 
 	pub fn parse(bytes: &[u8]) -> Result<(Scheme, Cow<'_, Path>, Option<(usize, usize)>)> {
 		let mut skip = 0;

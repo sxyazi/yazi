@@ -26,7 +26,7 @@ impl Actor for Reveal {
 		// If the child is not hovered, which means it doesn't exist,
 		// create a dummy file
 		if !opt.no_dummy && tab.hovered().is_none_or(|f| &child != f.urn()) {
-			let op = FilesOp::Creating(parent, vec![File::from_dummy(opt.target, None)]);
+			let op = FilesOp::Creating(parent.into(), vec![File::from_dummy(opt.target, None)]);
 			tab.current.update_pub(tab.id, op);
 		}
 

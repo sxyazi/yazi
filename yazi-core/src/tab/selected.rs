@@ -72,7 +72,7 @@ impl Selected {
 		self.inner.extend(urls.iter().enumerate().map(|(i, u)| (u.into(), now + i as u64)));
 
 		for u in parents {
-			*self.parents.entry(UrlBufCov(u)).or_insert(0) += self.inner.len() - len;
+			*self.parents.entry_ref(&UrlCov::new(u)).or_default() += self.inner.len() - len;
 		}
 		urls.len()
 	}

@@ -48,7 +48,7 @@ impl Create {
 			provider::create_dir_all(&new).await?;
 		} else if let Some(real) = realname(&new).await {
 			ok_or_not_found(provider::remove_file(&new).await)?;
-			FilesOp::Deleting(parent.clone(), [UrnBuf::from(real)].into()).emit();
+			FilesOp::Deleting(parent.to_owned(), [UrnBuf::from(real)].into()).emit();
 			provider::create(&new).await?;
 		} else {
 			provider::create_dir_all(&parent).await.ok();
@@ -56,8 +56,8 @@ impl Create {
 			provider::create(&new).await?;
 		}
 
-		if let Ok(f) = File::new(new.clone()).await {
-			FilesOp::Upserting(parent, [(f.urn_owned(), f)].into()).emit();
+		if let Ok(f) = File::new(&new).await {
+			FilesOp::Upserting(parent.into(), [(f.urn_owned(), f)].into()).emit();
 			MgrProxy::reveal(&new)
 		}
 		Ok(())

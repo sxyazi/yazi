@@ -62,6 +62,10 @@ impl From<UrlCow<'_>> for UrlBufCov {
 	fn from(value: UrlCow<'_>) -> Self { Self(value.into_owned()) }
 }
 
+impl From<Url<'_>> for UrlBufCov {
+	fn from(value: Url<'_>) -> Self { Self(value.to_owned()) }
+}
+
 impl From<&UrlCov<'_>> for UrlBufCov {
 	fn from(value: &UrlCov<'_>) -> Self { Self(UrlBuf::from(&value.0)) }
 }
@@ -87,5 +91,5 @@ impl UrlBufCov {
 	pub fn as_url(&self) -> UrlCov<'_> { UrlCov::from(self) }
 
 	#[inline]
-	pub fn parent_url(&self) -> Option<UrlBufCov> { self.0.parent_url().map(UrlBufCov) }
+	pub fn parent_url(&self) -> Option<UrlBufCov> { self.0.parent_url().map(Into::into) }
 }

@@ -17,13 +17,15 @@ impl DerefMut for Linked {
 }
 
 impl Linked {
-	pub fn from_dir<'a, 'b>(&'a self, url: &'b UrlBuf) -> Box<dyn Iterator<Item = &'a UrlBuf> + 'b>
+	pub fn from_dir<'a, 'b, T>(&'a self, url: T) -> Box<dyn Iterator<Item = &'a UrlBuf> + 'b>
 	where
 		'a: 'b,
+		T: Into<Url<'b>>,
 	{
+		let url = url.into();
 		if url.scheme.is_virtual() {
 			Box::new(iter::empty())
-		} else if let Some(to) = self.get(url) {
+		} else if let Some(to) = self.get(&url) {
 			Box::new(self.iter().filter(move |(k, v)| *v == to && *k != url).map(|(k, _)| k))
 		} else {
 			Box::new(self.iter().filter(move |(_, v)| *v == url).map(|(k, _)| k))
@@ -34,7 +36,7 @@ impl Linked {
 		if url.scheme.is_virtual() {
 			vec![]
 		} else if let Some((parent, urn)) = url.pair() {
-			self.from_dir(&parent).map(|u| u.join(&urn)).collect()
+			self.from_dir(parent).map(|u| u.join(&urn)).collect()
 		} else {
 			vec![]
 		}

@@ -68,9 +68,12 @@ impl Watcher {
 			if !watched.contains(&p) && !LINKED.read().from_dir(&p).any(|u| watched.contains(u)) {
 				continue;
 			}
-			out_tx.send(u).ok();
-			if !parents.contains(&p) {
-				out_tx.send(p.clone()).ok();
+			if parents.contains(&p) {
+				out_tx.send(u).ok();
+			} else {
+				let p = p.to_owned();
+				out_tx.send(u).ok();
+				out_tx.send(p.to_owned()).ok();
 				parents.insert(p);
 			}
 		}
@@ -134,8 +137,8 @@ impl Watcher {
 
 			for u in urls {
 				let Some((parent, urn)) = u.pair() else { continue };
-				let Ok(file) = File::new(u).await else {
-					ops.push(FilesOp::Deleting(parent, [urn].into()));
+				let Ok(file) = File::new(&u).await else {
+					ops.push(FilesOp::Deleting(parent.into(), [urn].into()));
 					continue;
 				};
 
@@ -144,11 +147,11 @@ impl Watcher {
 					|| realname_unchecked(u, &mut cached).await.is_ok_and(|s| urn.as_urn() == s);
 
 				if !eq {
-					ops.push(FilesOp::Deleting(parent, [urn].into()));
+					ops.push(FilesOp::Deleting(parent.into(), [urn].into()));
 					continue;
 				}
 
-				ops.push(FilesOp::Upserting(parent, [(urn, file)].into()));
+				ops.push(FilesOp::Upserting(parent.into(), [(urn, file)].into()));
 			}
 
 			FilesOp::mutate(ops);

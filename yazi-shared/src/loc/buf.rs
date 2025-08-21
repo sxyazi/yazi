@@ -85,16 +85,19 @@ impl LocBuf {
 	}
 
 	pub fn zeroed(path: impl Into<PathBuf>) -> Self {
-		let mut loc = Self::from(path.into());
-		(loc.uri, loc.urn) = (0, 0);
-		loc
+		let loc = Self::from(path.into());
+		let Loc { inner, uri, urn } = Loc::zeroed(&loc.inner);
+
+		debug_assert!(inner.as_os_str() == loc.inner.as_os_str());
+		Self { inner: loc.inner, uri, urn }
 	}
 
 	pub fn floated(path: impl Into<PathBuf>, base: &Path) -> Self {
-		let mut loc = Self::from(path.into());
-		loc.uri =
-			loc.inner.strip_prefix(base).expect("Loc must start with the given base").as_os_str().len();
-		loc
+		let loc = Self::from(path.into());
+		let Loc { inner, uri, urn } = Loc::floated(&loc.inner, base);
+
+		debug_assert!(inner.as_os_str() == loc.inner.as_os_str());
+		Self { inner: loc.inner, uri, urn }
 	}
 
 	#[inline]

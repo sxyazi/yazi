@@ -55,9 +55,9 @@ impl FilesOp {
 			let Some(o_p) = o.parent_url() else { continue };
 			let Some(n_p) = n.url.parent_url() else { continue };
 			if o_p != n_p {
-				parents.entry(o_p).or_default().0.insert(o.urn_owned());
+				parents.entry_ref(&o_p).or_default().0.insert(o.urn_owned());
 			}
-			parents.entry(n_p).or_default().1.insert(n.urn_owned(), n);
+			parents.entry_ref(&n_p).or_default().1.insert(n.urn_owned(), n);
 		}
 		for (p, (o, n)) in parents {
 			match (o.is_empty(), n.is_empty()) {
@@ -124,7 +124,7 @@ impl FilesOp {
 		} else if maybe_exists(cwd).await {
 			Self::IOErr(cwd.clone(), kind).emit();
 		} else if let Some((p, n)) = cwd.pair() {
-			Self::Deleting(p, [n].into()).emit();
+			Self::Deleting(p.into(), [n].into()).emit();
 		}
 	}
 
