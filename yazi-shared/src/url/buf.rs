@@ -31,7 +31,7 @@ impl From<&Url<'_>> for UrlBuf {
 }
 
 impl From<Url<'_>> for UrlBuf {
-	fn from(value: Url<'_>) -> Self { Self::from(&value) }
+	fn from(url: Url<'_>) -> Self { Self { loc: url.loc.into(), scheme: url.scheme } }
 }
 
 impl From<&UrlBuf> for UrlBuf {
@@ -91,35 +91,23 @@ impl PartialEq<Url<'_>> for &UrlBuf {
 }
 
 impl UrlBuf {
-	pub fn join(&self, path: impl AsRef<Path>) -> Self {
-		use Scheme as S;
-
-		let join = self.loc.join(path);
-
-		let loc = match self.scheme {
-			S::Regular => join.into(),
-			S::Search(_) => LocBuf::new(join, self.loc.base(), self.loc.base()),
-			S::Archive(_) => LocBuf::floated(join, self.loc.base()),
-			S::Sftp(_) => join.into(),
-		};
-
-		Self { loc, scheme: self.scheme.clone() }
-	}
+	#[inline]
+	pub fn join(&self, path: impl AsRef<Path>) -> Self { self.as_url().join(path) }
 
 	#[inline]
 	pub fn components(&self) -> Components<'_> { Components::from(self) }
 
 	#[inline]
-	pub fn covariant(&self, other: &Self) -> bool { self.as_url().covariant(other.as_url()) }
+	pub fn os_str(&self) -> Cow<'_, OsStr> { self.components().os_str() }
 
 	#[inline]
 	pub fn display(&self) -> Display<'_> { Display::new(self) }
 
 	#[inline]
-	pub fn os_str(&self) -> Cow<'_, OsStr> { self.components().os_str() }
+	pub fn covariant(&self, other: &Self) -> bool { self.as_url().covariant(other.as_url()) }
 
 	#[inline]
-	pub fn parent_url(&self) -> Option<UrlBuf> { self.as_url().parent_url() }
+	pub fn parent_url(&self) -> Option<Url<'_>> { self.as_url().parent_url() }
 
 	pub fn strip_prefix(&self, base: impl AsRef<UrlBuf>) -> Option<&Urn> {
 		use Scheme as S;
@@ -172,8 +160,11 @@ impl UrlBuf {
 		Self { loc: self.loc.rebase(base), scheme: self.scheme.clone() }
 	}
 
+	// TODO: use Urn instead of UrlBuf
 	#[inline]
-	pub fn pair(&self) -> Option<(Self, UrnBuf)> { Some((self.parent_url()?, self.loc.urn_owned())) }
+	pub fn pair(&self) -> Option<(Url<'_>, UrnBuf)> {
+		Some((self.parent_url()?, self.loc.urn_owned()))
+	}
 
 	#[inline]
 	pub fn hash_u64(&self) -> u64 { foldhash::fast::FixedState::default().hash_one(self) }
@@ -193,9 +184,7 @@ impl UrlBuf {
 	pub fn is_regular(&self) -> bool { self.as_url().is_regular() }
 
 	#[inline]
-	pub fn to_regular(&self) -> Self {
-		Self { loc: self.loc.to_path().into(), scheme: Scheme::Regular }
-	}
+	pub fn to_regular(&self) -> Self { self.as_url().into_regular().into() }
 
 	#[inline]
 	pub fn into_regular(mut self) -> Self {
@@ -243,9 +232,7 @@ impl UrlBuf {
 }
 
 impl Debug for UrlBuf {
-	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-		write!(f, "{}{}", Encode::from(self), self.loc.display())
-	}
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { self.as_url().fmt(f) }
 }
 
 impl Serialize for UrlBuf {

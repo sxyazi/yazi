@@ -110,8 +110,24 @@ impl<'a> Loc<'a> {
 		Ok(loc)
 	}
 
+	pub fn zeroed<T: AsRef<Path> + ?Sized>(path: &'a T) -> Self {
+		let mut loc = Self::from(path.as_ref());
+		(loc.uri, loc.urn) = (0, 0);
+		loc
+	}
+
+	pub fn floated<T: AsRef<Path> + ?Sized>(path: &'a T, base: &Path) -> Self {
+		let mut loc = Self::from(path.as_ref());
+		loc.uri =
+			loc.inner.strip_prefix(base).expect("Loc must start with the given base").as_os_str().len();
+		loc
+	}
+
 	#[inline]
 	pub fn as_loc(self) -> Loc<'a> { self }
+
+	#[inline]
+	pub fn as_path(self) -> &'a Path { self.inner }
 
 	#[inline]
 	pub fn uri(self) -> &'a Uri {
@@ -160,6 +176,9 @@ impl<'a> Loc<'a> {
 
 	#[inline]
 	pub fn name(self) -> &'a OsStr { self.inner.file_name().unwrap_or(OsStr::new("")) }
+
+	#[inline]
+	pub fn parent(self) -> Option<&'a Path> { self.inner.parent() }
 
 	#[inline]
 	pub fn triple(self) -> (&'a Path, &'a Path, &'a Path) {

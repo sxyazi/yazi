@@ -92,7 +92,7 @@ impl Prework {
 
 					let parent = buf[0].0.parent_url().unwrap();
 					FilesOp::Size(
-						parent,
+						parent.into(),
 						HashMap::from_iter(buf.into_iter().map(|(u, s)| (u.urn_owned(), s))),
 					)
 					.emit();

@@ -55,7 +55,7 @@ impl Actor for Open {
 		tokio::spawn(async move {
 			let mut files = Vec::with_capacity(todo.len());
 			for i in todo {
-				if let Ok(f) = File::new(targets[i].0.clone()).await {
+				if let Ok(f) = File::new(&targets[i].0).await {
 					files.push(f);
 				}
 			}

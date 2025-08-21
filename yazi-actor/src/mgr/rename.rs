@@ -69,15 +69,15 @@ impl Rename {
 
 		if let Some(o) = overwritten {
 			ok_or_not_found(provider::rename(&p_new.join(&o), &new).await)?;
-			FilesOp::Deleting(p_new.clone(), [UrnBuf::from(o)].into()).emit();
+			FilesOp::Deleting(p_new.to_owned(), [UrnBuf::from(o)].into()).emit();
 		}
 
-		let file = File::new(new.clone()).await?;
+		let file = File::new(&new).await?;
 		if p_new == p_old {
-			FilesOp::Upserting(p_old, [(n_old, file)].into()).emit();
+			FilesOp::Upserting(p_old.into(), [(n_old, file)].into()).emit();
 		} else {
-			FilesOp::Deleting(p_old, [n_old].into()).emit();
-			FilesOp::Upserting(p_new, [(n_new, file)].into()).emit();
+			FilesOp::Deleting(p_old.into(), [n_old].into()).emit();
+			FilesOp::Upserting(p_new.into(), [(n_new, file)].into()).emit();
 		}
 
 		MgrProxy::reveal(&new);

@@ -78,13 +78,13 @@ impl Cd {
 					Ok(s) => {
 						let Ok(url) = UrlBuf::try_from(s).map(expand_url) else { return };
 
-						let Ok(file) = File::new(url.clone()).await else { return };
+						let Ok(file) = File::new(&url).await else { return };
 						if file.is_dir() {
 							return MgrProxy::cd(&url);
 						}
 
 						if let Some(p) = url.parent_url() {
-							FilesOp::Upserting(p, [(url.urn_owned(), file)].into()).emit();
+							FilesOp::Upserting(p.into(), [(url.urn_owned(), file)].into()).emit();
 						}
 						MgrProxy::reveal(&url);
 					}

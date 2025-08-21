@@ -1,7 +1,7 @@
 use std::{ffi::OsStr, fs::{FileType, Metadata}, hash::{BuildHasher, Hash, Hasher}, ops::Deref};
 
 use anyhow::Result;
-use yazi_shared::url::{Uri, UrlBuf, Urn, UrnBuf};
+use yazi_shared::url::{Uri, UrlBuf, UrlCow, Urn, UrnBuf};
 
 use crate::{cha::Cha, provider};
 
@@ -21,9 +21,10 @@ impl Deref for File {
 
 impl File {
 	#[inline]
-	pub async fn new(url: UrlBuf) -> Result<Self> {
+	pub async fn new(url: impl Into<UrlCow<'_>>) -> Result<Self> {
+		let url = url.into();
 		let meta = provider::symlink_metadata(&url).await?;
-		Ok(Self::from_follow(url, meta).await)
+		Ok(Self::from_follow(url.into_owned(), meta).await)
 	}
 
 	#[inline]

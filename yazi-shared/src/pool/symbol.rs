@@ -1,6 +1,8 @@
 use std::{hash::{Hash, Hasher}, marker::PhantomData, mem::ManuallyDrop, ops::Deref, str};
 
-use crate::pool::{Pool, SYMBOLS, SymbolPtr};
+use hashbrown::hash_map::RawEntryMut;
+
+use crate::pool::{Pool, SYMBOLS, SymbolPtr, compute_hash};
 
 pub struct Symbol<T: ?Sized> {
 	ptr:      SymbolPtr,
@@ -13,22 +15,29 @@ unsafe impl<T: ?Sized> Sync for Symbol<T> {}
 
 impl<T: ?Sized> Clone for Symbol<T> {
 	fn clone(&self) -> Self {
-		*SYMBOLS.lock().get_mut(&self.ptr).unwrap() += 1;
+		let hash = compute_hash(&self.ptr);
+		match SYMBOLS.lock().raw_entry_mut().from_key_hashed_nocheck(hash, &self.ptr) {
+			RawEntryMut::Occupied(mut oe) => *oe.get_mut() += 1,
+			RawEntryMut::Vacant(_) => unreachable!(),
+		}
 		Symbol::new(self.ptr.clone())
 	}
 }
 
 impl<T: ?Sized> Drop for Symbol<T> {
 	fn drop(&mut self) {
-		let mut lock = SYMBOLS.lock();
-		let count = lock.get_mut(&self.ptr).unwrap();
+		let hash = compute_hash(&self.ptr);
+		match SYMBOLS.lock().raw_entry_mut().from_key_hashed_nocheck(hash, &self.ptr) {
+			RawEntryMut::Occupied(mut oe) => {
+				let count = oe.get_mut();
+				*count -= 1;
 
-		*count -= 1;
-		if *count == 0 {
-			lock.remove(&self.ptr);
-			unsafe {
-				drop(Box::from_raw(self.ptr.as_ptr()));
+				if *count == 0 {
+					oe.remove();
+					drop(unsafe { Box::from_raw(self.ptr.as_ptr()) });
+				}
 			}
+			RawEntryMut::Vacant(_) => unreachable!(),
 		}
 	}
 }
@@ -38,7 +47,7 @@ impl AsRef<[u8]> for Symbol<[u8]> {
 }
 
 impl AsRef<str> for Symbol<str> {
-	fn as_ref(&self) -> &str { unsafe { str::from_utf8_unchecked(self.ptr.as_ref()) } }
+	fn as_ref(&self) -> &str { unsafe { str::from_utf8_unchecked(self.ptr.bytes()) } }
 }
 
 impl Deref for Symbol<[u8]> {
@@ -74,19 +83,6 @@ impl<T: ?Sized> Hash for Symbol<T> {
 	fn hash<H: Hasher>(&self, state: &mut H) { self.ptr.as_ptr().hash(state); }
 }
 
-// --- PartialOrd
-impl PartialOrd for Symbol<[u8]> {
-	fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-		self.as_ref().partial_cmp(other.as_ref())
-	}
-}
-
-impl PartialOrd for Symbol<str> {
-	fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-		self.as_ref().partial_cmp(other.as_ref())
-	}
-}
-
 // --- Ord
 impl Ord for Symbol<[u8]> {
 	fn cmp(&self, other: &Self) -> std::cmp::Ordering { self.as_ref().cmp(other.as_ref()) }
@@ -94,6 +90,15 @@ impl Ord for Symbol<[u8]> {
 
 impl Ord for Symbol<str> {
 	fn cmp(&self, other: &Self) -> std::cmp::Ordering { self.as_ref().cmp(other.as_ref()) }
+}
+
+// --- PartialOrd
+impl PartialOrd for Symbol<[u8]> {
+	fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> { Some(self.cmp(other)) }
+}
+
+impl PartialOrd for Symbol<str> {
+	fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> { Some(self.cmp(other)) }
 }
 
 // --- Debug
