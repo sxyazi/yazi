@@ -33,7 +33,7 @@ impl Mgr {
 		}
 
 		let home = UrlBuf::from(dirs::home_dir().unwrap_or_default());
-		let cwd = if let Some(u) = CWD.load().strip_prefix(home) {
+		let cwd = if let Some(u) = CWD.load().strip_prefix(&home) {
 			format!("~{}{}", std::path::MAIN_SEPARATOR, u.display())
 		} else {
 			format!("{}", CWD.load().display())

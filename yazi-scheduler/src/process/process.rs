@@ -20,7 +20,7 @@ impl Process {
 		AppProxy::stop().await;
 
 		let (id, cmd) = (task.id, task.cmd.clone());
-		let result = super::shell(task.into());
+		let result = super::shell(task.into()).await;
 		if let Err(e) = result {
 			AppProxy::notify_warn(&cmd.to_string_lossy(), format!("Failed to start process: {e}"));
 			return self.succ(id);
@@ -41,7 +41,7 @@ impl Process {
 
 	pub async fn orphan(&self, task: ProcessInOrphan) -> Result<()> {
 		let id = task.id;
-		match super::shell(task.into()) {
+		match super::shell(task.into()).await {
 			Ok(_) => self.succ(id)?,
 			Err(e) => {
 				self.prog.send(TaskProg::New(id, 0))?;
@@ -60,7 +60,8 @@ impl Process {
 			args:   task.args,
 			piped:  true,
 			orphan: false,
-		})?;
+		})
+		.await?;
 
 		let mut stdout = BufReader::new(child.stdout.take().unwrap()).lines();
 		let mut stderr = BufReader::new(child.stderr.take().unwrap()).lines();

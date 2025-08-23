@@ -1,10 +1,10 @@
-use std::collections::VecDeque;
+use std::{borrow::Cow, collections::VecDeque};
 
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, bail};
 use tokio::{io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::YAZI;
-use yazi_fs::{SizeCalculator, cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path::{skip_url, url_relative_to}, provider::{self, DirEntry}};
+use yazi_fs::{SizeCalculator, cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path::{path_relative_to, skip_url}, provider::{self, DirEntry}};
 use yazi_shared::{Id, url::{UrlBuf, UrlCow}};
 
 use super::{FileIn, FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash};
@@ -61,21 +61,23 @@ impl File {
 			FileIn::Link(task) => {
 				let cha = task.cha.unwrap();
 
-				let src = if task.resolve {
+				let src: Cow<_> = if task.resolve {
 					match provider::read_link(&task.from).await {
-						Ok(u) => UrlCow::from(u),
+						Ok(p) => p.into(),
 						Err(e) if e.kind() == NotFound => {
 							warn!("Link task partially done: {task:?}");
 							return Ok(self.prog.send(TaskProg::Adv(task.id, 1, cha.len))?);
 						}
 						Err(e) => Err(e)?,
 					}
+				} else if task.from.scheme.covariant(&task.to.scheme) {
+					task.from.loc.as_path().into()
 				} else {
-					UrlCow::from(&task.from)
+					bail!("Source and target must be on the same filesystem: {task:?}")
 				};
 
 				let src = if task.relative {
-					url_relative_to(provider::canonicalize(&task.to.parent_url().unwrap()).await?, src)?
+					path_relative_to(provider::canonicalize(&task.to.parent_url().unwrap()).await?.loc, &src)?
 				} else {
 					src
 				};
@@ -123,21 +125,7 @@ impl File {
 				self.prog.send(TaskProg::Adv(task.id, 1, task.length))?
 			}
 			FileIn::Trash(task) => {
-				tokio::task::spawn_blocking(move || {
-					#[cfg(target_os = "macos")]
-					{
-						use trash::{TrashContext, macos::{DeleteMethod, TrashContextExtMacos}};
-						let mut ctx = TrashContext::default();
-						ctx.set_delete_method(DeleteMethod::NsFileManager);
-						ctx.delete(&task.target)?;
-					}
-					#[cfg(all(not(target_os = "macos"), not(target_os = "android")))]
-					{
-						trash::delete(&task.target)?;
-					}
-					Ok::<_, anyhow::Error>(())
-				})
-				.await??;
+				provider::trash(&task.target).await?;
 				self.prog.send(TaskProg::Adv(task.id, 1, task.length))?;
 			}
 		}

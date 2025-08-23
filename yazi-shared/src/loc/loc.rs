@@ -17,6 +17,10 @@ impl Deref for Loc<'_> {
 	fn deref(&self) -> &Self::Target { self.inner }
 }
 
+impl AsRef<Path> for Loc<'_> {
+	fn as_ref(&self) -> &Path { self.inner }
+}
+
 impl<'a> From<&'a LocBuf> for Loc<'a> {
 	fn from(value: &'a LocBuf) -> Self {
 		Self { inner: &value.inner, uri: value.uri, urn: value.urn }

@@ -27,7 +27,7 @@ impl<'a> Encode<'a> {
 		percent_encode(s.as_bytes(), SET)
 	}
 
-	fn urn(&self) -> impl Display {
+	fn ports(&self) -> impl Display {
 		struct D<'a>(&'a Encode<'a>);
 
 		impl Display for D<'_> {
@@ -64,9 +64,9 @@ impl Display for Encode<'_> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self.scheme {
 			Scheme::Regular => write!(f, "regular://"),
-			Scheme::Search(d) => write!(f, "search://{}{}/", Self::domain(d), self.urn()),
-			Scheme::Archive(d) => write!(f, "archive://{}{}/", Self::domain(d), self.urn()),
-			Scheme::Sftp(d) => write!(f, "sftp://{}{}/", Self::domain(d), self.urn()),
+			Scheme::Search(d) => write!(f, "search://{}{}/", Self::domain(d), self.ports()),
+			Scheme::Archive(d) => write!(f, "archive://{}{}/", Self::domain(d), self.ports()),
+			Scheme::Sftp(d) => write!(f, "sftp://{}{}/", Self::domain(d), self.ports()),
 		}
 	}
 }
@@ -85,8 +85,8 @@ impl<'a> From<&'a UrlBuf> for EncodeTilded<'a> {
 	fn from(url: &'a UrlBuf) -> Self { Self { loc: url.loc.as_loc(), scheme: &url.scheme } }
 }
 
-impl<'a> From<&'a EncodeTilded<'a>> for Encode<'a> {
-	fn from(value: &'a EncodeTilded<'a>) -> Self { Self::new(value.loc, value.scheme) }
+impl<'a> From<&EncodeTilded<'a>> for Encode<'a> {
+	fn from(value: &EncodeTilded<'a>) -> Self { Self::new(value.loc, value.scheme) }
 }
 
 impl Display for EncodeTilded<'_> {
@@ -96,9 +96,11 @@ impl Display for EncodeTilded<'_> {
 		let loc = percent_encode(self.loc.as_os_str().as_encoded_bytes(), CONTROLS);
 		match self.scheme {
 			Scheme::Regular => write!(f, "regular~://{loc}"),
-			Scheme::Search(d) => write!(f, "search~://{}{}/{loc}", E::domain(d), E::urn(&self.into())),
-			Scheme::Archive(d) => write!(f, "archive~://{}{}/{loc}", E::domain(d), E::urn(&self.into())),
-			Scheme::Sftp(d) => write!(f, "sftp~://{}{}/{loc}", E::domain(d), E::urn(&self.into())),
+			Scheme::Search(d) => write!(f, "search~://{}{}/{loc}", E::domain(d), E::ports(&self.into())),
+			Scheme::Archive(d) => {
+				write!(f, "archive~://{}{}/{loc}", E::domain(d), E::ports(&self.into()))
+			}
+			Scheme::Sftp(d) => write!(f, "sftp~://{}{}/{loc}", E::domain(d), E::ports(&self.into())),
 		}
 	}
 }

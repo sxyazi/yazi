@@ -186,6 +186,25 @@ If the problem persists, please file a new issue and complete the issue template
 		}
 	}
 
+	async function closeUnsupportedIssue(id) {
+		try {
+			await github.rest.issues.update({
+				...context.repo,
+				issue_number: id,
+				state       : "closed",
+				state_reason: "not_planned",
+			})
+			await github.rest.issues.createComment({
+				...context.repo,
+				issue_number: id,
+				body        : `Unsupported issue template.
+Either the [Bug Report](https://github.com/sxyazi/yazi/issues/new?template=bug.yml) or [Feature Request](https://github.com/sxyazi/yazi/issues/new?template=feature.yml) template should be used.`,
+			})
+		} catch (e) {
+			core.error(`Error closing unsupported issue: ${e.message}`)
+		}
+	}
+
 	async function main() {
 		const hash = await nightlyHash()
 		if (!hash) return
@@ -206,6 +225,8 @@ If the problem persists, please file a new issue and complete the issue template
 			} else if (await hasLabel(id, "feature")) {
 				const body = featureRequestBody(creator, content)
 				await updateLabels(id, !!body, body)
+			} else if (context.payload.action === "opened") {
+				await closeUnsupportedIssue(id)
 			}
 		}
 	}

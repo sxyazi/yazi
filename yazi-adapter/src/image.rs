@@ -1,16 +1,17 @@
+use std::path::Path;
+
 use anyhow::Result;
-use image::{DynamicImage, ExtendedColorType, ImageDecoder, ImageEncoder, ImageError, ImageFormat, ImageReader, ImageResult, Limits, codecs::{jpeg::JpegEncoder, png::PngEncoder}, imageops::FilterType, metadata::Orientation};
+use image::{DynamicImage, ExtendedColorType, ImageDecoder, ImageEncoder, ImageError, ImageReader, ImageResult, Limits, codecs::{jpeg::JpegEncoder, png::PngEncoder}, imageops::FilterType, metadata::Orientation};
 use ratatui::layout::Rect;
 use yazi_config::YAZI;
-use yazi_fs::provider;
-use yazi_shared::url::UrlBuf;
+use yazi_fs::provider::local::Local;
 
 use crate::Dimension;
 
 pub struct Image;
 
 impl Image {
-	pub async fn precache(src: &UrlBuf, cache: &UrlBuf) -> Result<()> {
+	pub async fn precache(src: &Path, cache: &Path) -> Result<()> {
 		let (mut img, orientation, icc) = Self::decode_from(src).await?;
 		let (w, h) = Self::flip_size(orientation, (YAZI.preview.max_width, YAZI.preview.max_height));
 
@@ -38,11 +39,11 @@ impl Image {
 		})
 		.await??;
 
-		Ok(provider::write(cache, buf).await?)
+		Ok(Local::write(cache, buf).await?)
 	}
 
-	pub(super) async fn downscale(url: &UrlBuf, rect: Rect) -> Result<DynamicImage> {
-		let (mut img, orientation, _) = Self::decode_from(url).await?;
+	pub(super) async fn downscale(path: &Path, rect: Rect) -> Result<DynamicImage> {
+		let (mut img, orientation, _) = Self::decode_from(path).await?;
 		let (w, h) = Self::flip_size(orientation, Self::max_pixel(rect));
 
 		// Fast path.
@@ -96,7 +97,7 @@ impl Image {
 		}
 	}
 
-	async fn decode_from(url: &UrlBuf) -> ImageResult<(DynamicImage, Orientation, Option<Vec<u8>>)> {
+	async fn decode_from(path: &Path) -> ImageResult<(DynamicImage, Orientation, Option<Vec<u8>>)> {
 		let mut limits = Limits::no_limits();
 		if YAZI.tasks.image_alloc > 0 {
 			limits.max_alloc = Some(YAZI.tasks.image_alloc as u64);
@@ -108,13 +109,11 @@ impl Image {
 			limits.max_image_height = Some(YAZI.tasks.image_bound[1] as u32);
 		}
 
-		let mut reader = ImageReader::new(provider::open(url).await?.reader_sync().await);
-		if let Ok(format) = ImageFormat::from_path(url) {
-			reader.set_format(format);
-		}
-
-		reader.limits(limits);
+		let path = path.to_owned();
 		tokio::task::spawn_blocking(move || {
+			let mut reader = ImageReader::open(path)?;
+			reader.limits(limits);
+
 			let mut decoder = reader.with_guessed_format()?.into_decoder()?;
 			let orientation = decoder.orientation().unwrap_or(Orientation::NoTransforms);
 			let icc = decoder.icc_profile().unwrap_or_default();

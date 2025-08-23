@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use mlua::{AnyUserData, ExternalError, FromLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
-use yazi_shared::url::{UrlBufCov, UrlCow};
+use yazi_shared::{IntoOsStr, url::{UrlBufCov, UrlCow}};
 
 use crate::{Urn, cached_field, deprecate};
 
@@ -124,32 +124,38 @@ impl UserData for Url {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_method("join", |_, me, other: Value| {
 			Ok(Self::new(match other {
-				Value::String(s) => me.join(s.to_str()?.as_ref()),
-				Value::UserData(ud) => me.join(&ud.borrow::<Self>()?.inner),
-				_ => Err("must be a string or a Url".into_lua_err())?,
+				Value::String(s) => me.join(s.as_bytes().into_os_str()?),
+				Value::UserData(ud) => {
+					let url = ud.borrow::<Self>()?;
+					if !me.scheme.covariant(&url.scheme) {
+						return Err("cannot join Urls with different schemes".into_lua_err());
+					}
+					me.join(&url.loc)
+				}
+				_ => Err("must be a string or Url".into_lua_err())?,
 			}))
 		});
 		methods.add_method("starts_with", |_, me, base: Value| {
 			Ok(match base {
-				Value::String(s) => me.starts_with(s.to_str()?.as_ref()),
-				Value::UserData(ud) => me.starts_with(&ud.borrow::<Self>()?.inner),
-				_ => Err("must be a string or a Url".into_lua_err())?,
+				Value::String(s) => me.loc.starts_with(s.as_bytes().into_os_str()?),
+				Value::UserData(ud) => me.starts_with(&*ud.borrow::<Self>()?),
+				_ => Err("must be a string or Url".into_lua_err())?,
 			})
 		});
 		methods.add_method("ends_with", |_, me, child: Value| {
 			Ok(match child {
-				Value::String(s) => me.ends_with(s.to_str()?.as_ref()),
-				Value::UserData(ud) => me.ends_with(&ud.borrow::<Self>()?.inner),
-				_ => Err("must be a string or a Url".into_lua_err())?,
+				Value::String(s) => me.loc.ends_with(s.as_bytes().into_os_str()?),
+				Value::UserData(ud) => me.ends_with(&*ud.borrow::<Self>()?),
+				_ => Err("must be a string or Url".into_lua_err())?,
 			})
 		});
 		methods.add_method("strip_prefix", |_, me, base: Value| {
-			let urn = match base {
-				Value::String(s) => me.strip_prefix(Self::try_from(s.as_bytes().as_ref())?),
-				Value::UserData(ud) => me.strip_prefix(&ud.borrow::<Self>()?.inner),
-				_ => Err("must be a string or a Url".into_lua_err())?,
+			let path = match base {
+				Value::String(s) => me.loc.strip_prefix(s.as_bytes().into_os_str()?).ok(),
+				Value::UserData(ud) => me.strip_prefix(&*ud.borrow::<Self>()?).map(AsRef::as_ref),
+				_ => Err("must be a string or Url".into_lua_err())?,
 			};
-			Ok(urn.map(Deref::deref).map(Self::new)) // TODO: return `Urn` instead of `Url`
+			Ok(path.map(Self::new)) // TODO: return `Path` instead of `Url`
 		});
 
 		methods.add_function_mut("into_search", |_, (ud, domain): (AnyUserData, mlua::String)| {

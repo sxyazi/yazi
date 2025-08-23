@@ -7,7 +7,7 @@ use scopeguard::defer;
 use tokio::io::AsyncWriteExt;
 use yazi_config::{YAZI, opener::OpenerRule};
 use yazi_dds::Pubsub;
-use yazi_fs::{File, FilesOp, max_common_root, maybe_exists, path::skip_url, paths_to_same_file, provider::{self, local::{Gate, Local}}};
+use yazi_fs::{File, FilesOp, max_common_root, maybe_exists, path::skip_url, provider::{self, local::{Gate, Local}}};
 use yazi_macro::{err, succ};
 use yazi_parser::VoidOpt;
 use yazi_proxy::{AppProxy, HIDER, TasksProxy, WATCHER};
@@ -119,7 +119,7 @@ impl BulkRename {
 				selected[n.0].components().take(root).chain([Component::Normal(&n)]).collect(),
 			);
 
-			if maybe_exists(&new).await && !paths_to_same_file(&old, &new).await {
+			if maybe_exists(&new).await && !provider::same(&old, &new).await.unwrap_or(false) {
 				failed.push((o, n, anyhow!("Destination already exists")));
 			} else if let Err(e) = provider::rename(&old, &new).await {
 				failed.push((o, n, e.into()));

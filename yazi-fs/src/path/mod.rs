@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(clean expand path);
+yazi_macro::mod_flat!(clean expand path relative);

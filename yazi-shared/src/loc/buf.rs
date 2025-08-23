@@ -259,15 +259,15 @@ mod tests {
 		crate::init_tests();
 		let cases = [
 			// Regular
-			("/", "a", "regular:///a"),
-			("/a/b", "c", "regular:///a/c"),
+			("/", "a", "/a"),
+			("/a/b", "c", "/a/c"),
 			// Archive
 			("archive:////", "a.zip", "archive:////a.zip"),
 			("archive:////a.zip/b", "c", "archive:////a.zip/c"),
 			("archive://:2//a.zip/b", "c", "archive://:2//a.zip/c"),
 			("archive://:2:1//a.zip/b", "c", "archive://:2:1//a.zip/c"),
 			// Empty
-			("/a", "", "regular:///"),
+			("/a", "", "/"),
 			("archive:////a.zip", "", "archive:////"),
 			("archive:////a.zip/b", "", "archive:////a.zip"),
 			("archive://:1:1//a.zip", "", "archive:////"),

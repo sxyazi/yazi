@@ -1,12 +1,11 @@
 use core::str;
-use std::io::Write;
+use std::{io::Write, path::Path};
 
 use anyhow::Result;
 use base64::{Engine, engine::general_purpose};
 use crossterm::{cursor::MoveTo, queue};
 use image::DynamicImage;
 use ratatui::layout::Rect;
-use yazi_shared::url::UrlBuf;
 
 use crate::{CLOSE, ESCAPE, Emulator, START, adapter::Adapter, image::Image};
 
@@ -313,8 +312,8 @@ static DIACRITICS: [char; 297] = [
 pub(crate) struct Kgp;
 
 impl Kgp {
-	pub(crate) async fn image_show(url: &UrlBuf, max: Rect) -> Result<Rect> {
-		let img = Image::downscale(url, max).await?;
+	pub(crate) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+		let img = Image::downscale(path, max).await?;
 		let area = Image::pixel_area((img.width(), img.height()), max);
 
 		let b1 = Self::encode(img).await?;
