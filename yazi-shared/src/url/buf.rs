@@ -64,11 +64,6 @@ impl AsRef<UrlBuf> for UrlBuf {
 	fn as_ref(&self) -> &UrlBuf { self }
 }
 
-// FIXME: remove
-impl AsRef<Path> for UrlBuf {
-	fn as_ref(&self) -> &Path { &self.loc }
-}
-
 impl<'a> From<&'a UrlBuf> for Cow<'a, UrlBuf> {
 	fn from(url: &'a UrlBuf) -> Self { Cow::Borrowed(url) }
 }
@@ -104,16 +99,24 @@ impl UrlBuf {
 	pub fn display(&self) -> Display<'_> { Display::new(self) }
 
 	#[inline]
-	pub fn covariant(&self, other: &Self) -> bool { self.as_url().covariant(other.as_url()) }
+	pub fn covariant(&self, other: &Self) -> bool { self.as_url().covariant(other) }
 
 	#[inline]
 	pub fn parent_url(&self) -> Option<Url<'_>> { self.as_url().parent_url() }
 
-	pub fn strip_prefix(&self, base: impl AsRef<UrlBuf>) -> Option<&Urn> {
+	#[inline]
+	pub fn starts_with<'a>(&self, base: impl Into<Url<'a>>) -> bool {
+		self.as_url().starts_with(base)
+	}
+
+	#[inline]
+	pub fn ends_with<'a>(&self, child: impl Into<Url<'a>>) -> bool { self.as_url().ends_with(child) }
+
+	pub fn strip_prefix<'a>(&self, base: impl Into<Url<'a>>) -> Option<&Urn> {
 		use Scheme as S;
 
-		let base = base.as_ref();
-		let prefix = self.loc.strip_prefix(&base.loc).ok()?;
+		let base = base.into();
+		let prefix = self.loc.strip_prefix(base.loc).ok()?;
 
 		Some(Urn::new(match (&self.scheme, &base.scheme) {
 			// Same scheme
@@ -268,7 +271,7 @@ mod tests {
 		crate::init_tests();
 		let cases = [
 			// Regular
-			("/a", "b/c", "regular:///a/b/c"),
+			("/a", "b/c", "/a/b/c"),
 			// Search
 			("search://kw//a", "b/c", "search://kw:2:2//a/b/c"),
 			("search://kw:2:2//a/b/c", "d/e", "search://kw:4:4//a/b/c/d/e"),
@@ -300,16 +303,16 @@ mod tests {
 		crate::init_tests();
 		let cases = [
 			// Regular
-			("/a", Some("regular:///")),
+			("/a", Some("/")),
 			("/", None),
 			// Search
 			("search://kw:2:2//a/b/c", Some("search://kw:1:1//a/b")),
 			("search://kw:1:1//a/b", Some("search://kw//a")),
-			("search://kw//a", Some("regular:///")),
+			("search://kw//a", Some("/")),
 			// Archive
 			("archive://:2:1//a/b.zip/c/d", Some("archive://:1:1//a/b.zip/c")),
 			("archive://:1:1//a/b.zip/c", Some("archive:////a/b.zip")),
-			("archive:////a/b.zip", Some("regular:///a")),
+			("archive:////a/b.zip", Some("/a")),
 			// SFTP
 			("sftp://remote:1:1//a/b", Some("sftp://remote//a")),
 			("sftp://remote:1:1//a", Some("sftp://remote//")),
@@ -335,11 +338,11 @@ mod tests {
 		const S: char = std::path::MAIN_SEPARATOR;
 
 		let u: UrlBuf = "/root".parse()?;
-		assert_eq!(format!("{u:?}"), "regular:///root");
+		assert_eq!(format!("{u:?}"), "/root");
 
 		let u = u.into_search("kw");
 		assert_eq!(format!("{u:?}"), "search://kw//root");
-		assert_eq!(format!("{:?}", u.parent_url().unwrap()), "regular:///");
+		assert_eq!(format!("{:?}", u.parent_url().unwrap()), "/");
 
 		let u = u.join("examples");
 		assert_eq!(format!("{u:?}"), format!("search://kw:1:1//root{S}examples"));
@@ -354,7 +357,7 @@ mod tests {
 		assert_eq!(format!("{u:?}"), "search://kw//root");
 
 		let u = u.parent_url().unwrap();
-		assert_eq!(format!("{u:?}"), "regular:///");
+		assert_eq!(format!("{u:?}"), "/");
 
 		Ok(())
 	}

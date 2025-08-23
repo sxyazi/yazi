@@ -1,7 +1,8 @@
-use std::{ffi::OsString, process::Stdio};
+use std::{borrow::Cow, ffi::OsString, process::Stdio};
 
-use anyhow::Result;
+use anyhow::{Result, bail};
 use tokio::process::{Child, Command};
+use yazi_fs::provider;
 use yazi_shared::url::UrlBuf;
 
 pub struct ShellOpt {
@@ -25,41 +26,51 @@ impl ShellOpt {
 	}
 }
 
-pub fn shell(opt: ShellOpt) -> Result<Child> {
-	#[cfg(unix)]
-	return Ok(unsafe {
-		Command::new("sh")
-			.arg("-c")
-			.stdin(opt.stdio())
-			.stdout(opt.stdio())
-			.stderr(opt.stdio())
-			.arg(opt.cmd)
-			.args(opt.args)
-			.current_dir(opt.cwd)
-			.kill_on_drop(!opt.orphan)
-			.pre_exec(move || {
-				if (opt.piped || opt.orphan) && libc::setsid() < 0 {
-					return Err(std::io::Error::last_os_error());
-				}
-				Ok(())
-			})
-			.spawn()?
-	});
+pub async fn shell(opt: ShellOpt) -> Result<Child> {
+	tokio::task::spawn_blocking(move || {
+		let cwd: Cow<_> = if let Some(path) = opt.cwd.as_path() {
+			path.into()
+		} else if let Some(cache) = provider::cache(&opt.cwd) {
+			std::fs::create_dir_all(&cache).ok();
+			cache.into()
+		} else {
+			bail!("failed to determine a working directory");
+		};
 
-	#[cfg(windows)]
-	{
-		Ok(
+		#[cfg(unix)]
+		return Ok(unsafe {
+			Command::new("sh")
+				.arg("-c")
+				.stdin(opt.stdio())
+				.stdout(opt.stdio())
+				.stderr(opt.stdio())
+				.arg(opt.cmd)
+				.args(opt.args)
+				.current_dir(cwd)
+				.kill_on_drop(!opt.orphan)
+				.pre_exec(move || {
+					if (opt.piped || opt.orphan) && libc::setsid() < 0 {
+						return Err(std::io::Error::last_os_error());
+					}
+					Ok(())
+				})
+				.spawn()?
+		});
+
+		#[cfg(windows)]
+		return Ok(
 			Command::new("cmd.exe")
 				.raw_arg("/C")
 				.raw_arg(parser::parse(&opt.cmd, &opt.args))
 				.stdin(opt.stdio())
 				.stdout(opt.stdio())
 				.stderr(opt.stdio())
-				.current_dir(opt.cwd)
+				.current_dir(cwd)
 				.kill_on_drop(!opt.orphan)
 				.spawn()?,
-		)
-	}
+		);
+	})
+	.await?
 }
 
 #[cfg(windows)]

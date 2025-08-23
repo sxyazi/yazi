@@ -44,7 +44,11 @@ impl Equivalent<UrlBuf> for Url<'_> {
 // --- Debug
 impl Debug for Url<'_> {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-		write!(f, "{}{}", Encode::from(self), self.loc.display())
+		if self.scheme == Scheme::Regular {
+			write!(f, "{}", self.loc.display())
+		} else {
+			write!(f, "{}{}", Encode::from(self), self.loc.display())
+		}
 	}
 }
 
@@ -131,6 +135,18 @@ impl<'a> Url<'a> {
 			// SFTP
 			S::Sftp(_) => Self { loc: parent.into(), scheme: self.scheme.clone() },
 		})
+	}
+
+	#[inline]
+	pub fn starts_with<'b>(&self, base: impl Into<Url<'b>>) -> bool {
+		let base: Url = base.into();
+		self.scheme.covariant(&base.scheme) && self.loc.starts_with(base.loc)
+	}
+
+	#[inline]
+	pub fn ends_with<'b>(&self, child: impl Into<Url<'b>>) -> bool {
+		let child: Url = child.into();
+		self.scheme.covariant(&child.scheme) && self.loc.ends_with(child.loc)
 	}
 
 	#[inline]

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_config::popup::{ConfirmCfg, InputCfg};
 use yazi_dds::Pubsub;
-use yazi_fs::{File, FilesOp, maybe_exists, ok_or_not_found, paths_to_same_file, provider, realname};
+use yazi_fs::{File, FilesOp, maybe_exists, ok_or_not_found, provider, realname};
 use yazi_macro::{act, err, succ};
 use yazi_parser::mgr::RenameOpt;
 use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy, WATCHER};
@@ -48,7 +48,8 @@ impl Actor for Rename {
 			}
 
 			let new = UrlBuf::from(old.parent().unwrap().join(name));
-			if opt.force || !maybe_exists(&new).await || paths_to_same_file(&old, &new).await {
+			if opt.force || !maybe_exists(&new).await || provider::same(&old, &new).await.unwrap_or(false)
+			{
 				Self::r#do(tab, old, new).await.ok();
 			} else if ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await {
 				Self::r#do(tab, old, new).await.ok();

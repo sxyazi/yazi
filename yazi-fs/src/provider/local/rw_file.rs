@@ -15,9 +15,4 @@ impl From<tokio::fs::File> for crate::provider::RwFile {
 impl RwFile {
 	#[inline]
 	pub fn reader(self) -> tokio::io::BufReader<tokio::fs::File> { tokio::io::BufReader::new(self.0) }
-
-	#[inline]
-	pub async fn reader_sync(self) -> std::io::BufReader<std::fs::File> {
-		std::io::BufReader::new(self.0.into_std().await)
-	}
 }

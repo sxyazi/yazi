@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, fs::{FileType, Metadata}, hash::{BuildHasher, Hash, Hasher}, ops::Deref};
+use std::{ffi::OsStr, fs::{FileType, Metadata}, hash::{BuildHasher, Hash, Hasher}, ops::Deref, path::PathBuf};
 
 use anyhow::Result;
 use yazi_shared::url::{Uri, UrlBuf, UrlCow, Urn, UrnBuf};
@@ -9,7 +9,7 @@ use crate::{cha::Cha, provider};
 pub struct File {
 	pub url:     UrlBuf,
 	pub cha:     Cha,
-	pub link_to: Option<UrlBuf>,
+	pub link_to: Option<PathBuf>,
 }
 
 impl Deref for File {

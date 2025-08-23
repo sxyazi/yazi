@@ -77,7 +77,7 @@ impl Scheduler {
 		let mut ongoing = self.ongoing.lock();
 		let id = ongoing.add(TaskKind::User, format!("Cut {} to {}", from.display(), to.display()));
 
-		if to.starts_with(&from) && to != from {
+		if to.starts_with(&from) && !to.covariant(&from) {
 			self.new_and_fail(id, "Cannot cut directory into itself").ok();
 			return;
 		}
@@ -110,7 +110,7 @@ impl Scheduler {
 			.lock()
 			.add(TaskKind::User, format!("Copy {} to {}", from.display(), to.display()));
 
-		if to.starts_with(&from) && to != from {
+		if to.starts_with(&from) && !to.covariant(&from) {
 			self.new_and_fail(id, "Cannot copy directory into itself").ok();
 			return;
 		}
@@ -147,7 +147,7 @@ impl Scheduler {
 			.lock()
 			.add(TaskKind::User, format!("Hardlink {} to {}", from.display(), to.display()));
 
-		if to.starts_with(&from) && to != from {
+		if to.starts_with(&from) && !to.covariant(&from) {
 			self.new_and_fail(id, "Cannot hardlink directory into itself").ok();
 			return;
 		}

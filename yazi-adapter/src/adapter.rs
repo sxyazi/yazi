@@ -1,9 +1,9 @@
-use std::{env, fmt::Display};
+use std::{env, fmt::Display, path::Path};
 
 use anyhow::Result;
 use ratatui::layout::Rect;
 use tracing::warn;
-use yazi_shared::{env_exists, url::UrlBuf};
+use yazi_shared::env_exists;
 
 use crate::{Emulator, SHOWN, TMUX, drivers};
 
@@ -35,18 +35,18 @@ impl Display for Adapter {
 }
 
 impl Adapter {
-	pub async fn image_show(self, url: &UrlBuf, max: Rect) -> Result<Rect> {
+	pub async fn image_show(self, path: &Path, max: Rect) -> Result<Rect> {
 		if max.is_empty() {
 			return Ok(Rect::default());
 		}
 
 		match self {
-			Self::Kgp => drivers::Kgp::image_show(url, max).await,
-			Self::KgpOld => drivers::KgpOld::image_show(url, max).await,
-			Self::Iip => drivers::Iip::image_show(url, max).await,
-			Self::Sixel => drivers::Sixel::image_show(url, max).await,
-			Self::X11 | Self::Wayland => drivers::Ueberzug::image_show(url, max).await,
-			Self::Chafa => drivers::Chafa::image_show(url, max).await,
+			Self::Kgp => drivers::Kgp::image_show(path, max).await,
+			Self::KgpOld => drivers::KgpOld::image_show(path, max).await,
+			Self::Iip => drivers::Iip::image_show(path, max).await,
+			Self::Sixel => drivers::Sixel::image_show(path, max).await,
+			Self::X11 | Self::Wayland => drivers::Ueberzug::image_show(path, max).await,
+			Self::Chafa => drivers::Chafa::image_show(path, max).await,
 		}
 	}
 

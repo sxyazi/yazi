@@ -1,7 +1,6 @@
-use std::{borrow::Cow, ffi::{OsStr, OsString}, future::Future, io, path::PathBuf};
+use std::{borrow::Cow, ffi::{OsStr, OsString}, future::Future, io};
 
-use anyhow::{Result, bail};
-use yazi_shared::{loc::LocBuf, url::{UrlBuf, UrlCow}};
+use yazi_shared::url::UrlBuf;
 
 use crate::provider;
 
@@ -63,50 +62,6 @@ async fn _unique_name(mut url: UrlBuf, append: bool) -> io::Result<UrlBuf> {
 	Ok(url)
 }
 
-pub fn url_relative_to<'a>(
-	from: impl Into<UrlCow<'a>>,
-	to: impl Into<UrlCow<'a>>,
-) -> Result<UrlCow<'a>> {
-	url_relative_to_impl(from.into(), to.into())
-}
-
-pub fn url_relative_to_impl<'a>(from: UrlCow<'a>, to: UrlCow<'a>) -> Result<UrlCow<'a>> {
-	use yazi_shared::url::Component::*;
-
-	if from.is_absolute() != to.is_absolute() {
-		return if to.is_absolute() {
-			Ok(to)
-		} else {
-			bail!("Urls must be both absolute or both relative: {from:?} and {to:?}");
-		};
-	}
-
-	if from.covariant(&to) {
-		return Ok(UrlBuf { loc: LocBuf::zeroed("."), scheme: to.scheme().clone() }.into());
-	}
-
-	let (mut f_it, mut t_it) = (from.components(), to.components());
-	let (f_head, t_head) = loop {
-		match (f_it.next(), t_it.next()) {
-			(Some(Scheme(a)), Some(Scheme(b))) if a.covariant(b) => {}
-			(Some(RootDir), Some(RootDir)) => {}
-			(Some(Prefix(a)), Some(Prefix(b))) if a == b => {}
-			(Some(Scheme(_) | Prefix(_) | RootDir), _) | (_, Some(Scheme(_) | Prefix(_) | RootDir)) => {
-				return Ok(to);
-			}
-			(None, None) => break (None, None),
-			(a, b) if a != b => break (a, b),
-			_ => (),
-		}
-	};
-
-	let dots = f_head.into_iter().chain(f_it).map(|_| ParentDir);
-	let rest = t_head.into_iter().chain(t_it);
-
-	let buf: PathBuf = dots.chain(rest).collect();
-	Ok(UrlBuf { loc: LocBuf::zeroed(buf), scheme: to.scheme().clone() }.into())
-}
-
 #[cfg(windows)]
 pub fn backslash_to_slash(p: &std::path::Path) -> Cow<'_, std::path::Path> {
 	let bytes = p.as_os_str().as_encoded_bytes();
@@ -125,63 +80,61 @@ pub fn backslash_to_slash(p: &std::path::Path) -> Cow<'_, std::path::Path> {
 	for &b in rest {
 		out.push(if b == b'\\' { b'/' } else { b });
 	}
-	Cow::Owned(PathBuf::from(unsafe { OsString::from_encoded_bytes_unchecked(out) }))
+	Cow::Owned(std::path::PathBuf::from(unsafe { OsString::from_encoded_bytes_unchecked(out) }))
 }
 
 #[cfg(test)]
 mod tests {
-	use super::url_relative_to;
+	use yazi_shared::url::UrlCow;
+
+	use crate::path::url_relative_to;
 
 	#[test]
-	fn test_path_relative_to() {
+	fn test_url_relative_to() {
 		yazi_shared::init_tests();
 
-		fn assert(from: &str, to: &str, ret: &str) {
-			assert_eq!(
-				url_relative_to(&from.parse().unwrap(), &to.parse().unwrap()).unwrap(),
-				ret.parse().unwrap()
-			);
-		}
-
 		#[cfg(unix)]
-		{
+		let cases = [
 			// Same urls
-			assert("", "", ".");
-			assert(".", ".", ".");
-			assert("/a", "/a", ".");
-			assert("regular:///", "/", ".");
-			assert("regular://", "regular://", ".");
-			assert("regular://", "search://kw/", "search://kw/.");
-			assert("regular:///b", "search://kw//b", "search://kw/.");
-
+			("", "", "."),
+			(".", ".", "."),
+			("/a", "/a", "."),
+			("regular:///", "/", "."),
+			("regular://", "regular://", "."),
+			("regular://", "search://kw/", "search://kw/."),
+			("regular:///b", "search://kw//b", "search://kw/."),
 			// Relative urls
-			assert("foo", "bar", "../bar");
-
+			("foo", "bar", "../bar"),
 			// Absolute urls
-			assert("/a/b/c", "/a/b", "../");
-			assert("/a/b", "/a/b/c", "c");
-			assert("/a/b/d", "/a/b/c", "../c");
-			assert("/a/b/c", "/a", "../../");
-			assert("/a/b/b", "/a/a/b", "../../a/b");
-
-			assert("regular:///a/b", "regular:///a/b/c", "c");
-			assert("/a/b/c/", "search://kw//a/d/", "search://kw/../../d");
-			assert("search://kw//a/b/c", "search://kw//a/b", "search://kw/../");
-
+			("/a/b/c", "/a/b", ".."),
+			("/a/b", "/a/b/c", "c"),
+			("/a/b/d", "/a/b/c", "../c"),
+			("/a/b/c", "/a", "../.."),
+			("/a/b/b", "/a/a/b", "../../a/b"),
+			("regular:///a/b", "regular:///a/b/c", "c"),
+			("/a/b/c/", "search://kw//a/d/", "search://kw/../../d"),
+			("search://kw//a/b/c", "search://kw//a/b", "search://kw/.."),
 			// Different schemes
-			assert("", "sftp://test/", "sftp://test/");
-			assert("a", "sftp://test/", "sftp://test/");
-			assert("a", "sftp://test/b", "sftp://test/b");
-			assert("/a", "sftp://test//b", "sftp://test//b");
-			assert("sftp://test//a/b", "sftp://test//a/d", "sftp://test/../d");
-		}
+			("", "sftp://test/", "sftp://test/"),
+			("a", "sftp://test/", "sftp://test/"),
+			("a", "sftp://test/b", "sftp://test/b"),
+			("/a", "sftp://test//b", "sftp://test//b"),
+			("sftp://test//a/b", "sftp://test//a/d", "sftp://test:0:0/../d"),
+		];
+
 		#[cfg(windows)]
-		{
-			assert(r"C:\a\b\c", r"C:\a\b", r"..\");
-			assert(r"C:\a\b", r"C:\a\b\c", "c");
-			assert(r"C:\a\b\d", r"C:\a\b\c", r"..\c");
-			assert(r"C:\a\b\c", r"C:\a", r"..\..\");
-			assert(r"C:\a\b\b", r"C:\a\a\b", r"..\..\a\b");
+		let cases = [
+			(r"C:\a\b\c", r"C:\a\b", r".."),
+			(r"C:\a\b", r"C:\a\b\c", "c"),
+			(r"C:\a\b\d", r"C:\a\b\c", r"..\c"),
+			(r"C:\a\b\c", r"C:\a", r"..\.."),
+			(r"C:\a\b\b", r"C:\a\a\b", r"..\..\a\b"),
+		];
+
+		for (from, to, expected) in cases {
+			let from: UrlCow = from.try_into().unwrap();
+			let to: UrlCow = to.try_into().unwrap();
+			assert_eq!(format!("{:?}", url_relative_to(from, to).unwrap().as_url()), expected);
 		}
 	}
 }
