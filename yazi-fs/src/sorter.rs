@@ -40,11 +40,11 @@ impl FilesSorter {
 			}),
 			SortBy::Extension => items.sort_unstable_by(|a, b| {
 				let ord = if self.sensitive {
-					self.cmp(a.url.extension(), b.url.extension(), self.promote(a, b))
+					self.cmp(a.url.ext(), b.url.ext(), self.promote(a, b))
 				} else {
 					self.cmp_insensitive(
-						a.url.extension().map_or(&[], |s| s.as_encoded_bytes()),
-						b.url.extension().map_or(&[], |s| s.as_encoded_bytes()),
+						a.url.ext().map_or(&[], |s| s.as_encoded_bytes()),
+						b.url.ext().map_or(&[], |s| s.as_encoded_bytes()),
 						self.promote(a, b),
 					)
 				};

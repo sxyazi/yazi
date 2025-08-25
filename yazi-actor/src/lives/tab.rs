@@ -46,7 +46,8 @@ impl UserData for Tab {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		fields.add_field_method_get("id", |_, me| Ok(Id(me.id)));
 		cached_field!(fields, name, |lua, me| {
-			lua.create_string(me.current.url.name().as_encoded_bytes())
+			let url = &me.current.url;
+			lua.create_string(url.name().unwrap_or(url.loc.as_os_str()).as_encoded_bytes())
 		});
 
 		cached_field!(fields, mode, |_, me| Mode::make(&me.mode));

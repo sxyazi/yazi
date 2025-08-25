@@ -84,7 +84,7 @@ impl Cd {
 						}
 
 						if let Some(p) = url.parent_url() {
-							FilesOp::Upserting(p.into(), [(url.urn_owned(), file)].into()).emit();
+							FilesOp::Upserting(p.into(), [(url.urn().to_owned(), file)].into()).emit();
 						}
 						MgrProxy::reveal(&url);
 					}

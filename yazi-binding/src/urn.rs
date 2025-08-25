@@ -17,7 +17,7 @@ impl From<Urn> for yazi_shared::url::UrnBuf {
 }
 
 impl Urn {
-	pub fn new(urn: yazi_shared::url::UrnBuf) -> Self { Self { inner: urn } }
+	pub fn new(urn: impl Into<yazi_shared::url::UrnBuf>) -> Self { Self { inner: urn.into() } }
 }
 
 impl FromLua for Urn {

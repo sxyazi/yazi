@@ -30,9 +30,9 @@ fn expand_url_impl<'a>(url: Url<'a>) -> UrlCow<'a> {
 	.expect("Failed to create Loc from expanded path");
 
 	let url = UrlBuf { loc, scheme: url.scheme.clone() };
-	match absolute_url(&url) {
-		Cow::Borrowed(_) => url.into(),
-		Cow::Owned(u) => u.into(),
+	match absolute_url(url.as_url()) {
+		UrlCow::Borrowed(_) => url.into(),
+		UrlCow::Owned(u) => u.into(),
 	}
 }
 
@@ -62,7 +62,7 @@ fn expand_variables(p: &Path) -> Cow<'_, Path> {
 	}
 }
 
-fn absolute_url(url: &UrlBuf) -> Cow<'_, UrlBuf> {
+fn absolute_url<'a>(url: Url<'a>) -> UrlCow<'a> {
 	let b = url.loc.as_os_str().as_encoded_bytes();
 	let local = !url.scheme.is_virtual();
 
@@ -89,7 +89,7 @@ fn absolute_url(url: &UrlBuf) -> Cow<'_, UrlBuf> {
 		UrlBuf { loc, scheme: url.scheme.clone() }.into()
 	} else if !url.is_absolute() {
 		let cwd = CWD.load();
-		let loc = LocBuf::with(cwd.loc.join(&url.loc), url.uri().count(), url.urn().count())
+		let loc = LocBuf::with(cwd.loc.join(url.loc), url.uri().count(), url.urn().count())
 			.expect("Failed to create Loc from relative path");
 		UrlBuf { loc, scheme: cwd.scheme.clone() }.into()
 	} else {

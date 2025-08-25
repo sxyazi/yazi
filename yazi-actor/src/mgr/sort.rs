@@ -23,7 +23,7 @@ impl Actor for Sort {
 		pref.sort_translit = opt.translit.unwrap_or(pref.sort_translit);
 
 		let sorter = FilesSorter::from(&*pref);
-		let hovered = cx.hovered().map(|f| f.urn_owned());
+		let hovered = cx.hovered().map(|f| f.urn().to_owned());
 		let apply = |f: &mut Folder| {
 			if f.stage == FolderStage::Loading {
 				render!();

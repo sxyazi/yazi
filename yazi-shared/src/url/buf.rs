@@ -1,21 +1,15 @@
-use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, hash::BuildHasher, ops::Deref, path::{Path, PathBuf}, str::FromStr};
+use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, hash::BuildHasher, path::{Path, PathBuf}, str::FromStr};
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 use super::UrnBuf;
-use crate::{loc::LocBuf, pool::Pool, url::{Components, Display, Encode, EncodeTilded, Scheme, Url, UrlCow, Urn}};
+use crate::{loc::LocBuf, pool::Pool, url::{Components, Display, Encode, EncodeTilded, Scheme, Uri, Url, UrlCow, Urn}};
 
 #[derive(Clone, Default, Eq, Ord, PartialOrd, PartialEq, Hash)]
 pub struct UrlBuf {
 	pub loc:    LocBuf,
 	pub scheme: Scheme,
-}
-
-impl Deref for UrlBuf {
-	type Target = LocBuf;
-
-	fn deref(&self) -> &Self::Target { &self.loc }
 }
 
 impl From<LocBuf> for UrlBuf {
@@ -146,9 +140,7 @@ impl UrlBuf {
 	}
 
 	#[inline]
-	pub fn as_path(&self) -> Option<&Path> {
-		Some(self.loc.as_path()).filter(|_| !self.scheme.is_virtual())
-	}
+	pub fn as_path(&self) -> Option<&Path> { self.as_url().as_path() }
 
 	#[inline]
 	pub fn into_path(self) -> Option<PathBuf> {
@@ -163,11 +155,8 @@ impl UrlBuf {
 		Self { loc: self.loc.rebase(base), scheme: self.scheme.clone() }
 	}
 
-	// TODO: use Urn instead of UrlBuf
 	#[inline]
-	pub fn pair(&self) -> Option<(Url<'_>, UrnBuf)> {
-		Some((self.parent_url()?, self.loc.urn_owned()))
-	}
+	pub fn pair(&self) -> Option<(Url<'_>, UrnBuf)> { self.as_url().pair() }
 
 	#[inline]
 	pub fn hash_u64(&self) -> u64 { foldhash::fast::FixedState::default().hash_one(self) }
@@ -232,6 +221,30 @@ impl UrlBuf {
 	// FIXME: remove
 	#[inline]
 	pub fn into_path2(self) -> PathBuf { self.loc.into_path() }
+
+	#[inline]
+	pub fn name(&self) -> Option<&OsStr> { self.as_url().name() }
+
+	#[inline]
+	pub fn stem(&self) -> Option<&OsStr> { self.as_url().stem() }
+
+	#[inline]
+	pub fn ext(&self) -> Option<&OsStr> { self.as_url().ext() }
+
+	#[inline]
+	pub fn uri(&self) -> &Uri { self.as_url().uri() }
+
+	#[inline]
+	pub fn urn(&self) -> &Urn { self.as_url().urn() }
+
+	#[inline]
+	pub fn is_absolute(&self) -> bool { self.as_url().is_absolute() }
+
+	#[inline]
+	pub fn has_root(&self) -> bool { self.as_url().has_root() }
+
+	#[inline]
+	pub fn has_trail(&self) -> bool { self.as_url().has_trail() }
 }
 
 impl Debug for UrlBuf {

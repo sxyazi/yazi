@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(linked mgr mimetype tabs watcher yanked);
+yazi_macro::mod_flat!(mgr mimetype tabs yanked);

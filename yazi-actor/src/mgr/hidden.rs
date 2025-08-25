@@ -18,7 +18,7 @@ impl Actor for Hidden {
 		let state = opt.state.bool(cx.tab().pref.show_hidden);
 		cx.tab_mut().pref.show_hidden = state;
 
-		let hovered = cx.hovered().map(|f| f.urn_owned());
+		let hovered = cx.hovered().map(|f| f.urn().to_owned());
 		let apply = |f: &mut Folder| {
 			if f.stage == FolderStage::Loading {
 				render!();

@@ -1,19 +1,13 @@
-use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, ops::Deref, path::Path};
+use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, path::Path};
 
 use hashbrown::Equivalent;
 
-use crate::{loc::{Loc, LocBuf}, url::{Components, Encode, Scheme, UrlBuf, UrnBuf}};
+use crate::{loc::{Loc, LocBuf}, url::{Components, Encode, Scheme, Uri, UrlBuf, Urn, UrnBuf}};
 
 #[derive(Clone, Eq, Hash, PartialEq)]
 pub struct Url<'a> {
 	pub loc:    Loc<'a>,
 	pub scheme: Scheme,
-}
-
-impl<'a> Deref for Url<'a> {
-	type Target = Loc<'a>;
-
-	fn deref(&self) -> &Self::Target { &self.loc }
 }
 
 // TODO: remove
@@ -70,6 +64,12 @@ impl<'a> Url<'a> {
 	pub fn is_search(&self) -> bool { matches!(self.scheme, Scheme::Search(_)) }
 
 	#[inline]
+	pub fn is_absolute(&self) -> bool { self.loc.is_absolute() }
+
+	#[inline]
+	pub fn has_root(&self) -> bool { self.loc.has_root() }
+
+	#[inline]
 	pub fn as_url(&'a self) -> Url<'a> { Self::from(self) }
 
 	#[inline]
@@ -89,6 +89,21 @@ impl<'a> Url<'a> {
 
 		UrlBuf { loc, scheme: self.scheme.clone() }
 	}
+
+	#[inline]
+	pub fn uri(&self) -> &'a Uri { self.loc.uri() }
+
+	#[inline]
+	pub fn urn(&self) -> &'a Urn { self.loc.urn() }
+
+	#[inline]
+	pub fn name(self) -> Option<&'a OsStr> { self.loc.name() }
+
+	#[inline]
+	pub fn stem(&self) -> Option<&'a OsStr> { self.loc.stem() }
+
+	#[inline]
+	pub fn ext(&self) -> Option<&'a OsStr> { self.loc.ext() }
 
 	pub fn base(&self) -> Option<Self> {
 		use Scheme as S;
@@ -163,9 +178,17 @@ impl<'a> Url<'a> {
 
 	#[inline]
 	pub fn pair(&self) -> Option<(Url<'a>, UrnBuf)> {
-		Some((self.parent_url()?, self.loc.urn_owned()))
+		Some((self.parent_url()?, self.loc.urn().to_owned()))
 	}
 
 	#[inline]
-	pub fn as_path(&self) -> Option<&Path> { Some(&*self.loc).filter(|_| !self.scheme.is_virtual()) }
+	pub fn as_path(&self) -> Option<&'a Path> {
+		Some(self.loc.as_path()).filter(|_| !self.scheme.is_virtual())
+	}
+
+	#[inline]
+	pub fn has_base(&self) -> bool { self.loc.has_base() }
+
+	#[inline]
+	pub fn has_trail(&self) -> bool { self.loc.has_trail() }
 }

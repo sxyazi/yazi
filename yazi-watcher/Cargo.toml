@@ -1,0 +1,27 @@
+[package]
+name        = "yazi-watcher"
+version     = "25.6.11"
+edition     = "2024"
+license     = "MIT"
+authors     = [ "sxyazi <sxyazi@gmail.com>" ]
+description = "Yazi file watcher"
+homepage    = "https://yazi-rs.github.io"
+repository  = "https://github.com/sxyazi/yazi"
+
+[dependencies]
+yazi-adapter = { path = "../yazi-adapter", version = "25.6.11" }
+yazi-dds     = { path = "../yazi-dds", version = "25.6.11" }
+yazi-fs      = { path = "../yazi-fs", version = "25.6.11" }
+yazi-macro   = { path = "../yazi-macro", version = "25.6.11" }
+yazi-shared  = { path = "../yazi-shared", version = "25.6.11" }
+
+# Logging
+tracing = { workspace = true }
+
+# External dependencies
+anyhow       = { workspace = true }
+hashbrown    = { workspace = true }
+notify       = { version = "8.2.0", default-features = false, features = [ "macos_fsevent" ] }
+parking_lot  = { workspace = true }
+tokio        = { workspace = true }
+tokio-stream = { workspace = true }

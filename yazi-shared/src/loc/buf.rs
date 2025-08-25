@@ -2,7 +2,7 @@ use std::{cmp, ffi::{OsStr, OsString}, fmt::{self, Debug, Formatter}, hash::{Has
 
 use anyhow::Result;
 
-use crate::{loc::Loc, url::{Uri, Urn, UrnBuf}};
+use crate::{loc::Loc, url::{Uri, Urn}};
 
 #[derive(Clone, Default, Eq)]
 pub struct LocBuf {
@@ -161,9 +161,6 @@ impl LocBuf {
 	pub fn urn(&self) -> &Urn { self.as_loc().urn() }
 
 	#[inline]
-	pub fn urn_owned(&self) -> UrnBuf { self.as_loc().urn_owned() }
-
-	#[inline]
 	pub fn base(&self) -> &Urn { self.as_loc().base() }
 
 	#[inline]
@@ -176,7 +173,13 @@ impl LocBuf {
 	pub fn has_trail(&self) -> bool { self.as_loc().has_trail() }
 
 	#[inline]
-	pub fn name(&self) -> &OsStr { self.as_loc().name() }
+	pub fn name(&self) -> Option<&OsStr> { self.as_loc().name() }
+
+	#[inline]
+	pub fn stem(&self) -> Option<&OsStr> { self.as_loc().stem() }
+
+	#[inline]
+	pub fn ext(&self) -> Option<&OsStr> { self.as_loc().ext() }
 }
 
 #[cfg(test)]
@@ -189,21 +192,21 @@ mod tests {
 		let loc: LocBuf = Path::new("/").into();
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("/"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new(""));
-		assert_eq!(loc.name(), OsStr::new(""));
+		assert_eq!(loc.name(), None);
 		assert_eq!(loc.base().as_os_str(), OsStr::new(""));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/"));
 
 		let loc: LocBuf = Path::new("/root").into();
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("root"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("root"));
-		assert_eq!(loc.name(), OsStr::new("root"));
+		assert_eq!(loc.name().unwrap(), OsStr::new("root"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/"));
 
 		let loc: LocBuf = Path::new("/root/code/foo/").into();
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("foo"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("foo"));
-		assert_eq!(loc.name(), OsStr::new("foo"));
+		assert_eq!(loc.name().unwrap(), OsStr::new("foo"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/code/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/root/code/"));
 	}
@@ -213,42 +216,42 @@ mod tests {
 		let loc = LocBuf::with("/".into(), 0, 0)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new(""));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new(""));
-		assert_eq!(loc.name(), OsStr::new(""));
+		assert_eq!(loc.name(), None);
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/"));
 
 		let loc = LocBuf::with("/root/code/".into(), 1, 1)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("code"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("code"));
-		assert_eq!(loc.name(), OsStr::new("code"));
+		assert_eq!(loc.name().unwrap(), OsStr::new("code"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/root/"));
 
 		let loc = LocBuf::with("/root/code/foo//".into(), 2, 1)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("code/foo"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("foo"));
-		assert_eq!(loc.name(), OsStr::new("foo"));
+		assert_eq!(loc.name().unwrap(), OsStr::new("foo"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/root/code/"));
 
 		let loc = LocBuf::with("/root/code/foo//".into(), 2, 2)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("code/foo"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("code/foo"));
-		assert_eq!(loc.name(), OsStr::new("foo"));
+		assert_eq!(loc.name().unwrap(), OsStr::new("foo"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/root/"));
 
 		let loc = LocBuf::with("/root/code/foo//bar/".into(), 2, 2)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("foo//bar"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("foo//bar"));
-		assert_eq!(loc.name(), OsStr::new("bar"));
+		assert_eq!(loc.name().unwrap(), OsStr::new("bar"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/code/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/root/code/"));
 
 		let loc = LocBuf::with("/root/code/foo//bar/".into(), 3, 2)?;
 		assert_eq!(loc.uri().as_os_str(), OsStr::new("code/foo//bar"));
 		assert_eq!(loc.urn().as_os_str(), OsStr::new("foo//bar"));
-		assert_eq!(loc.name(), OsStr::new("bar"));
+		assert_eq!(loc.name().unwrap(), OsStr::new("bar"));
 		assert_eq!(loc.base().as_os_str(), OsStr::new("/root/"));
 		assert_eq!(loc.trail().as_os_str(), OsStr::new("/root/code/"));
 		Ok(())

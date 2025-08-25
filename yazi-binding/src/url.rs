@@ -94,16 +94,16 @@ impl FromLua for Url {
 impl UserData for Url {
 	fn add_fields<F: UserDataFields<Self>>(fields: &mut F) {
 		cached_field!(fields, name, |lua, me| {
-			me.file_name().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
+			me.name().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
 		});
 		cached_field!(fields, stem, |lua, me| {
-			me.file_stem().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
+			me.stem().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
 		});
 		cached_field!(fields, ext, |lua, me| {
-			me.extension().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
+			me.ext().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
 		});
 		cached_field!(fields, parent, |_, me| Ok(me.parent_url().map(Self::new)));
-		cached_field!(fields, urn, |_, me| Ok(Urn::new(me.urn_owned())));
+		cached_field!(fields, urn, |_, me| Ok(Urn::new(me.urn())));
 		cached_field!(fields, base, |_, me| Ok(me.base().map(Self::new)));
 		cached_field!(fields, domain, |lua, me| {
 			me.scheme.domain().map(|s| lua.create_string(s)).transpose()

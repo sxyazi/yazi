@@ -24,9 +24,7 @@ impl Utils {
 					style: THEME.spot.border.into(),
 					titles: vec![(
 						ratatui::widgets::block::Position::Top,
-						ratatui::text::Line::raw(lock.url.name().to_string_lossy().into_owned())
-							.centered()
-							.style(THEME.spot.title),
+						ratatui::text::Line::raw("Spot").centered().style(THEME.spot.title),
 					)],
 				}),
 				Renderable::Table(Box::new(table)),

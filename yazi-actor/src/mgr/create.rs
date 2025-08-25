@@ -3,8 +3,9 @@ use yazi_config::popup::{ConfirmCfg, InputCfg};
 use yazi_fs::{File, FilesOp, maybe_exists, ok_or_not_found, provider, realname};
 use yazi_macro::succ;
 use yazi_parser::mgr::CreateOpt;
-use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy, WATCHER};
+use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy};
 use yazi_shared::{event::Data, url::{UrlBuf, UrnBuf}};
+use yazi_watcher::WATCHER;
 
 use crate::{Actor, Ctx};
 
@@ -57,7 +58,7 @@ impl Create {
 		}
 
 		if let Ok(f) = File::new(&new).await {
-			FilesOp::Upserting(parent.into(), [(f.urn_owned(), f)].into()).emit();
+			FilesOp::Upserting(parent.into(), [(f.urn().to_owned(), f)].into()).emit();
 			MgrProxy::reveal(&new)
 		}
 		Ok(())

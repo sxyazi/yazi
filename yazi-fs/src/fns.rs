@@ -7,7 +7,7 @@ use hashbrown::{HashMap, HashSet};
 use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
 use yazi_shared::url::{Component, Url, UrlBuf};
 
-use crate::{cha::Cha, provider};
+use crate::{cha::Cha, provider::{self, local::Local}};
 
 #[inline]
 pub async fn maybe_exists<'a>(url: impl Into<Url<'a>>) -> bool {
@@ -31,13 +31,13 @@ pub fn ok_or_not_found<T: Default>(result: io::Result<T>) -> io::Result<T> {
 	}
 }
 
-pub async fn realname(u: &UrlBuf) -> Option<OsString> {
-	let name = u.file_name()?;
-	if *u == provider::canonicalize(u).await.ok()? {
+pub async fn realname(url: &UrlBuf) -> Option<OsString> {
+	let (path, name) = (url.as_path()?, url.name()?);
+	if path == Local::canonicalize(path).await.ok()? {
 		return None;
 	}
 
-	realname_unchecked(u, &mut HashMap::new())
+	realname_unchecked(path, &mut HashMap::new())
 		.await
 		.ok()
 		.filter(|s| s != name)

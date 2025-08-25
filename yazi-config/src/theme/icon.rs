@@ -76,7 +76,7 @@ impl Icon {
 
 	#[inline]
 	fn match_by_name(&self, file: &File) -> Option<&I> {
-		let name = file.name().to_str()?;
+		let name = file.name()?.to_str()?;
 		if file.is_dir() {
 			self.dirs.get(name).or_else(|| self.dirs.get(&name.to_ascii_lowercase()))
 		} else {
@@ -90,7 +90,7 @@ impl Icon {
 
 	#[inline]
 	fn match_by_ext(&self, file: &File) -> Option<&I> {
-		let ext = file.url.extension()?.to_str()?;
+		let ext = file.url.ext()?.to_str()?;
 		self.exts.get(ext).or_else(|| self.exts.get(&ext.to_ascii_lowercase()))
 	}
 }

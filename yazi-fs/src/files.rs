@@ -162,7 +162,7 @@ impl Files {
 
 		macro_rules! go {
 			($dist:expr, $src:expr, $inc:literal) => {
-				let mut todo: HashMap<_, _> = $src.into_iter().map(|f| (f.urn_owned(), f)).collect();
+				let mut todo: HashMap<_, _> = $src.into_iter().map(|f| (f.urn().to_owned(), f)).collect();
 				for f in &$dist {
 					if todo.remove(f.urn()).is_some() && todo.is_empty() {
 						break;
@@ -293,7 +293,7 @@ impl Files {
 		}
 
 		self.update_deleting(
-			files.iter().filter(|&(u, f)| u != f.urn()).map(|(_, f)| f.urn_owned()).collect(),
+			files.iter().filter(|&(u, f)| u != f.urn()).map(|(_, f)| f.urn().to_owned()).collect(),
 		);
 
 		let (hidden, items) = self.update_updating(files);

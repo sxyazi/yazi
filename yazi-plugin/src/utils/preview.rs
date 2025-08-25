@@ -14,7 +14,11 @@ impl Utils {
 			let area: Area = t.raw_get("area")?;
 			let mut lock = PreviewLock::try_from(t)?;
 
-			let inner = match Highlighter::new(&lock.url).highlight(lock.skip, area.size()).await {
+			let Some(path) = lock.url.as_path() else {
+				return "Only local files are supported".into_lua_multi(&lua);
+			};
+
+			let inner = match Highlighter::new(path).highlight(lock.skip, area.size()).await {
 				Ok(text) => text,
 				Err(e @ PeekError::Exceed(max)) => return (e.to_string(), max).into_lua_multi(&lua),
 				Err(e @ PeekError::Unexpected(_)) => {

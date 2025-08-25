@@ -10,9 +10,10 @@ use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp, max_common_root, maybe_exists, path::skip_url, provider::{self, local::{Gate, Local}}};
 use yazi_macro::{err, succ};
 use yazi_parser::VoidOpt;
-use yazi_proxy::{AppProxy, HIDER, TasksProxy, WATCHER};
+use yazi_proxy::{AppProxy, HIDER, TasksProxy};
 use yazi_shared::{OsStrJoin, event::Data, terminal_clear, url::{Component, UrlBuf}};
 use yazi_term::tty::TTY;
+use yazi_watcher::WATCHER;
 
 use crate::{Actor, Ctx};
 
@@ -119,7 +120,7 @@ impl BulkRename {
 				selected[n.0].components().take(root).chain([Component::Normal(&n)]).collect(),
 			);
 
-			if maybe_exists(&new).await && !provider::same(&old, &new).await.unwrap_or(false) {
+			if maybe_exists(&new).await && !provider::must_identical(&old, &new).await {
 				failed.push((o, n, anyhow!("Destination already exists")));
 			} else if let Err(e) = provider::rename(&old, &new).await {
 				failed.push((o, n, e.into()));

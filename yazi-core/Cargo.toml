@@ -19,15 +19,14 @@ yazi-plugin    = { path = "../yazi-plugin", version = "25.6.11" }
 yazi-proxy     = { path = "../yazi-proxy", version = "25.6.11" }
 yazi-scheduler = { path = "../yazi-scheduler", version = "25.6.11" }
 yazi-shared    = { path = "../yazi-shared", version = "25.6.11" }
+yazi-watcher   = { path = "../yazi-watcher", version = "25.6.11" }
 yazi-widgets   = { path = "../yazi-widgets", version = "25.6.11" }
 
 # External dependencies
 anyhow        = { workspace = true }
 crossterm     = { workspace = true }
-futures       = { workspace = true }
 hashbrown     = { workspace = true }
 indexmap      = { workspace = true }
-notify        = { version = "8.2.0", default-features = false, features = [ "macos_fsevent" ] }
 parking_lot   = { workspace = true }
 ratatui       = { workspace = true }
 tokio         = { workspace = true }
