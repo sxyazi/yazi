@@ -1,9 +1,9 @@
 use anyhow::Result;
 use hashbrown::HashMap;
-use yazi_core::mgr::LINKED;
 use yazi_macro::{act, render, succ};
 use yazi_parser::mgr::UpdateMimesOpt;
 use yazi_shared::{event::Data, pool::InternStr, url::UrlCov};
+use yazi_watcher::LINKED;
 
 use crate::{Actor, Ctx};
 

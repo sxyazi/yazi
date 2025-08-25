@@ -1,4 +1,4 @@
-use std::{hash::{Hash, Hasher}, ops::Deref};
+use std::{hash::{Hash, Hasher}, ops::Deref, path::PathBuf};
 
 use hashbrown::Equivalent;
 use serde::{Deserialize, Serialize};
@@ -50,12 +50,16 @@ impl Deref for UrlBufCov {
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
+impl From<UrlBufCov> for UrlBuf {
+	fn from(value: UrlBufCov) -> Self { value.0 }
+}
+
 impl From<UrlBuf> for UrlBufCov {
 	fn from(value: UrlBuf) -> Self { Self(value) }
 }
 
-impl From<UrlBufCov> for UrlBuf {
-	fn from(value: UrlBufCov) -> Self { value.0 }
+impl From<PathBuf> for UrlBufCov {
+	fn from(value: PathBuf) -> Self { Self(UrlBuf::from(value)) }
 }
 
 impl From<UrlCow<'_>> for UrlBufCov {

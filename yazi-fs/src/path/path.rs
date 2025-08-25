@@ -26,11 +26,11 @@ where
 }
 
 async fn _unique_name(mut url: UrlBuf, append: bool) -> io::Result<UrlBuf> {
-	let Some(stem) = url.file_stem().map(|s| s.to_owned()) else {
+	let Some(stem) = url.stem().map(|s| s.to_owned()) else {
 		return Err(io::Error::new(io::ErrorKind::InvalidInput, "empty file stem"));
 	};
 
-	let dot_ext = url.extension().map_or_else(OsString::new, |e| {
+	let dot_ext = url.ext().map_or_else(OsString::new, |e| {
 		let mut s = OsString::with_capacity(e.len() + 1);
 		s.push(".");
 		s.push(e);

@@ -9,7 +9,7 @@ impl UserData for MpscTx {
 		methods.add_async_method("send", |lua, me, value: Value| async move {
 			match me.0.send(value).await {
 				Ok(()) => true.into_lua_multi(&lua),
-				Err(e) => (false, Error::Custom(e.to_string().into())).into_lua_multi(&lua),
+				Err(e) => (false, Error::custom(e.to_string())).into_lua_multi(&lua),
 			}
 		});
 	}
@@ -33,7 +33,7 @@ impl UserData for MpscUnboundedTx {
 	fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_method("send", |lua, me, value: Value| match me.0.send(value) {
 			Ok(()) => true.into_lua_multi(lua),
-			Err(e) => (false, Error::Custom(e.to_string().into())).into_lua_multi(lua),
+			Err(e) => (false, Error::custom(e.to_string())).into_lua_multi(lua),
 		});
 	}
 }
@@ -60,7 +60,7 @@ impl UserData for OneshotTx {
 			};
 			match tx.send(value) {
 				Ok(()) => true.into_lua_multi(lua),
-				Err(_) => (false, Error::Custom("Oneshot receiver closed".into())).into_lua_multi(lua),
+				Err(_) => (false, Error::custom("Oneshot receiver closed")).into_lua_multi(lua),
 			}
 		});
 	}
@@ -74,7 +74,7 @@ impl UserData for OneshotRx {
 			};
 			match rx.await {
 				Ok(value) => value.into_lua_multi(&lua),
-				Err(e) => (Value::Nil, Error::Custom(e.to_string().into())).into_lua_multi(&lua),
+				Err(e) => (Value::Nil, Error::custom(e.to_string())).into_lua_multi(&lua),
 			}
 		});
 	}

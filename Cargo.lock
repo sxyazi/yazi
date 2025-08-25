@@ -3485,6 +3485,7 @@ dependencies = [
  "yazi-proxy",
  "yazi-shared",
  "yazi-term",
+ "yazi-watcher",
  "yazi-widgets",
 ]
 
@@ -3617,10 +3618,8 @@ version = "25.6.11"
 dependencies = [
  "anyhow",
  "crossterm 0.29.0",
- "futures",
  "hashbrown",
  "indexmap",
- "notify",
  "parking_lot",
  "ratatui",
  "tokio",
@@ -3638,6 +3637,7 @@ dependencies = [
  "yazi-proxy",
  "yazi-scheduler",
  "yazi-shared",
+ "yazi-watcher",
  "yazi-widgets",
 ]
 
@@ -3714,6 +3714,7 @@ dependencies = [
  "yazi-proxy",
  "yazi-shared",
  "yazi-term",
+ "yazi-watcher",
  "yazi-widgets",
 ]
 
@@ -3882,6 +3883,24 @@ dependencies = [
  "parking_lot",
  "tracing",
  "windows-sys 0.60.2",
+ "yazi-macro",
+ "yazi-shared",
+]
+
+[[package]]
+name = "yazi-watcher"
+version = "25.6.11"
+dependencies = [
+ "anyhow",
+ "hashbrown",
+ "notify",
+ "parking_lot",
+ "tokio",
+ "tokio-stream",
+ "tracing",
+ "yazi-adapter",
+ "yazi-dds",
+ "yazi-fs",
  "yazi-macro",
  "yazi-shared",
 ]

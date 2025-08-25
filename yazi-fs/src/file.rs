@@ -1,7 +1,7 @@
-use std::{ffi::OsStr, fs::{FileType, Metadata}, hash::{BuildHasher, Hash, Hasher}, ops::Deref, path::PathBuf};
+use std::{ffi::OsStr, fs::{FileType, Metadata}, hash::{BuildHasher, Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
 
 use anyhow::Result;
-use yazi_shared::url::{Uri, UrlBuf, UrlCow, Urn, UrnBuf};
+use yazi_shared::url::{Uri, UrlBuf, UrlCow, Urn};
 
 use crate::{cha::Cha, provider};
 
@@ -47,7 +47,7 @@ impl File {
 	pub fn hash_u64(&self) -> u64 { foldhash::fast::FixedState::default().hash_one(self) }
 
 	#[inline]
-	pub fn chdir(&self, wd: &UrlBuf) -> Self {
+	pub fn chdir(&self, wd: &Path) -> Self {
 		Self { url: self.url.rebase(wd), cha: self.cha, link_to: self.link_to.clone() }
 	}
 }
@@ -64,13 +64,10 @@ impl File {
 	pub fn urn(&self) -> &Urn { self.url.urn() }
 
 	#[inline]
-	pub fn urn_owned(&self) -> UrnBuf { self.url.urn_owned() }
+	pub fn name(&self) -> Option<&OsStr> { self.url.name() }
 
 	#[inline]
-	pub fn name(&self) -> &OsStr { self.url.name() }
-
-	#[inline]
-	pub fn stem(&self) -> Option<&OsStr> { self.url.file_stem() }
+	pub fn stem(&self) -> Option<&OsStr> { self.url.stem() }
 }
 
 impl Hash for File {

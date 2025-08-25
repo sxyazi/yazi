@@ -4,8 +4,9 @@ use yazi_dds::Pubsub;
 use yazi_fs::{File, FilesOp, maybe_exists, ok_or_not_found, provider, realname};
 use yazi_macro::{act, err, succ};
 use yazi_parser::mgr::RenameOpt;
-use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy, WATCHER};
+use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy};
 use yazi_shared::{Id, event::Data, url::{UrlBuf, UrnBuf}};
+use yazi_watcher::WATCHER;
 
 use crate::{Actor, Ctx};
 
@@ -47,9 +48,8 @@ impl Actor for Rename {
 				return;
 			}
 
-			let new = UrlBuf::from(old.parent().unwrap().join(name));
-			if opt.force || !maybe_exists(&new).await || provider::same(&old, &new).await.unwrap_or(false)
-			{
+			let new = old.parent_url().unwrap().join(name);
+			if opt.force || !maybe_exists(&new).await || provider::must_identical(&old, &new).await {
 				Self::r#do(tab, old, new).await.ok();
 			} else if ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await {
 				Self::r#do(tab, old, new).await.ok();
@@ -91,12 +91,12 @@ impl Rename {
 			return String::new();
 		}
 
-		let ext = url.extension();
+		let ext = url.ext();
 		match by {
 			"stem" => ext.map_or_else(String::new, |s| format!(".{}", s.to_string_lossy())),
-			"ext" if ext.is_some() => format!("{}.", url.file_stem().unwrap().to_string_lossy()),
-			"dot_ext" if ext.is_some() => url.file_stem().unwrap().to_string_lossy().into_owned(),
-			_ => url.name().to_string_lossy().into_owned(),
+			"ext" if ext.is_some() => format!("{}.", url.stem().unwrap().to_string_lossy()),
+			"dot_ext" if ext.is_some() => url.stem().unwrap().to_string_lossy().into_owned(),
+			_ => url.name().unwrap_or_default().to_string_lossy().into_owned(),
 		}
 	}
 }

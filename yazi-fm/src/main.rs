@@ -32,9 +32,9 @@ async fn main() -> anyhow::Result<()> {
 
 	yazi_widgets::init();
 
-	yazi_plugin::init()?;
+	yazi_watcher::init();
 
-	yazi_core::init();
+	yazi_plugin::init()?;
 
 	yazi_dds::serve();
 	app::App::serve().await

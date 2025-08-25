@@ -29,7 +29,9 @@ impl Finder {
 	pub fn prev(&self, files: &Files, cursor: usize, include: bool) -> Option<isize> {
 		for i in !include as usize..files.len() {
 			let idx = (cursor + files.len() - i) % files.len();
-			if self.filter.matches(files[idx].name()) {
+			if let Some(s) = files[idx].name()
+				&& self.filter.matches(s)
+			{
 				return Some(idx as isize - cursor as isize);
 			}
 		}
@@ -39,7 +41,9 @@ impl Finder {
 	pub fn next(&self, files: &Files, cursor: usize, include: bool) -> Option<isize> {
 		for i in !include as usize..files.len() {
 			let idx = (cursor + i) % files.len();
-			if self.filter.matches(files[idx].name()) {
+			if let Some(s) = files[idx].name()
+				&& self.filter.matches(s)
+			{
 				return Some(idx as isize - cursor as isize);
 			}
 		}
@@ -54,11 +58,11 @@ impl Finder {
 
 		let mut i = 0u8;
 		for file in folder.files.iter() {
-			if !self.filter.matches(file.name()) {
+			if file.name().is_none_or(|s| !self.filter.matches(s)) {
 				continue;
 			}
 
-			self.matched.insert(file.urn_owned(), i);
+			self.matched.insert(file.urn().to_owned(), i);
 			if self.matched.len() > 99 {
 				break;
 			}

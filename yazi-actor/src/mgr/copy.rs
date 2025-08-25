@@ -38,10 +38,10 @@ impl Actor for Copy {
 					}
 				}
 				"filename" => {
-					s.push(opt.separator.transform(u.name()));
+					s.push(opt.separator.transform(u.name().unwrap_or_default()));
 				}
 				"name_without_ext" => {
-					s.push(opt.separator.transform(u.file_stem().unwrap_or_default()));
+					s.push(opt.separator.transform(u.stem().unwrap_or_default()));
 				}
 				_ => bail!("Unknown copy type: {}", opt.r#type),
 			};

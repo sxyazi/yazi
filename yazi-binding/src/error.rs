@@ -14,10 +14,13 @@ pub enum Error {
 
 impl Error {
 	pub fn install(lua: &Lua) -> mlua::Result<()> {
-		let new = lua.create_function(|_, msg: String| Ok(Error::Custom(msg.into())))?;
+		let new = lua.create_function(|_, msg: String| Ok(Error::custom(msg)))?;
 
 		lua.globals().raw_set("Error", lua.create_table_from([("custom", new)])?)
 	}
+
+	#[inline]
+	pub fn custom(msg: impl Into<SStr>) -> Self { Self::Custom(msg.into()) }
 
 	pub fn into_string(self) -> SStr {
 		match self {

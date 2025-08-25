@@ -2,8 +2,9 @@ use ratatui::layout::Rect;
 use yazi_adapter::Dimension;
 use yazi_config::popup::{Origin, Position};
 use yazi_shared::url::UrlBuf;
+use yazi_watcher::Watcher;
 
-use super::{Mimetype, Tabs, Watcher, Yanked};
+use super::{Mimetype, Tabs, Yanked};
 use crate::tab::{Folder, Tab};
 
 pub struct Mgr {

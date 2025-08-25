@@ -8,7 +8,7 @@ use crate::mgr::Yanked;
 impl Tasks {
 	pub fn file_cut(&self, src: &Yanked, dest: &UrlBuf, force: bool) {
 		for u in src.iter() {
-			let to = dest.join(u.file_name().unwrap());
+			let to = dest.join(u.name().unwrap());
 			if force && *u == to {
 				debug!("file_cut: same file, skipping {:?}", to);
 			} else {
@@ -19,7 +19,7 @@ impl Tasks {
 
 	pub fn file_copy(&self, src: &Yanked, dest: &UrlBuf, force: bool, follow: bool) {
 		for u in src.iter() {
-			let to = dest.join(u.file_name().unwrap());
+			let to = dest.join(u.name().unwrap());
 			if force && *u == to {
 				debug!("file_copy: same file, skipping {:?}", to);
 			} else {
@@ -30,7 +30,7 @@ impl Tasks {
 
 	pub fn file_link(&self, src: &HashSet<UrlBufCov>, dest: &UrlBuf, relative: bool, force: bool) {
 		for u in src {
-			let to = dest.join(u.file_name().unwrap());
+			let to = dest.join(u.name().unwrap());
 			if force && *u == to {
 				debug!("file_link: same file, skipping {:?}", to);
 			} else {
@@ -41,7 +41,7 @@ impl Tasks {
 
 	pub fn file_hardlink(&self, src: &HashSet<UrlBufCov>, dest: &UrlBuf, force: bool, follow: bool) {
 		for u in src {
-			let to = dest.join(u.file_name().unwrap());
+			let to = dest.join(u.name().unwrap());
 			if force && *u == to {
 				debug!("file_hardlink: same file, skipping {:?}", to);
 			} else {

@@ -16,7 +16,7 @@ impl Actor for FilterDo {
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let filter = if opt.query.is_empty() { None } else { Some(Filter::new(&opt.query, opt.case)?) };
 
-		let hovered = cx.hovered().map(|f| f.urn_owned());
+		let hovered = cx.hovered().map(|f| f.urn().to_owned());
 		cx.current_mut().files.set_filter(filter);
 
 		if cx.hovered().map(|f| f.urn()) != hovered.as_deref() {

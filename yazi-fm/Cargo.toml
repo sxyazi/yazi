@@ -37,6 +37,7 @@ yazi-plugin  = { path = "../yazi-plugin", version = "25.6.11" }
 yazi-proxy   = { path = "../yazi-proxy", version = "25.6.11" }
 yazi-shared  = { path = "../yazi-shared", version = "25.6.11" }
 yazi-term    = { path = "../yazi-term", version = "25.6.11" }
+yazi-watcher = { path = "../yazi-watcher", version = "25.6.11" }
 yazi-widgets = { path = "../yazi-widgets", version = "25.6.11" }
 
 # External dependencies

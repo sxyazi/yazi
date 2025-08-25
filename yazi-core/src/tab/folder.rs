@@ -103,7 +103,7 @@ impl Folder {
 			self.scroll(step)
 		};
 
-		self.trace = self.hovered().filter(|_| b).map(|h| h.urn_owned()).or(self.trace.take());
+		self.trace = self.hovered().filter(|_| b).map(|h| h.urn().to_owned()).or(self.trace.take());
 		b |= self.squeeze_offset();
 
 		self.sync_page(false);

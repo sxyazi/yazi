@@ -2,7 +2,7 @@ use std::{io, path::{Path, PathBuf}};
 
 use yazi_shared::url::{Url, UrlBuf};
 
-use crate::{cha::Cha, provider::{ReadDir, ReadDirSync, RwFile, local::Local}};
+use crate::{cha::Cha, provider::{ReadDir, ReadDirSync, RwFile, local::{self, Local}}};
 
 #[inline]
 pub fn cache<'a, U>(url: U) -> Option<PathBuf>
@@ -87,6 +87,19 @@ where
 }
 
 #[inline]
+pub async fn identical<'a, U, V>(a: U, b: V) -> io::Result<bool>
+where
+	U: Into<Url<'a>>,
+	V: Into<Url<'a>>,
+{
+	if let (Some(a), Some(b)) = (a.into().as_path(), b.into().as_path()) {
+		local::identical(a, b).await
+	} else {
+		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
+	}
+}
+
+#[inline]
 pub async fn metadata<'a, U>(url: U) -> io::Result<std::fs::Metadata>
 where
 	U: Into<Url<'a>>,
@@ -96,6 +109,15 @@ where
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
+}
+
+#[inline]
+pub async fn must_identical<'a, U, V>(a: U, b: V) -> bool
+where
+	U: Into<Url<'a>>,
+	V: Into<Url<'a>>,
+{
+	identical(a, b).await.unwrap_or(false)
 }
 
 #[inline]
@@ -190,19 +212,6 @@ where
 {
 	if let (Some(from), Some(to)) = (from.into().as_path(), to.into().as_path()) {
 		Local::rename(from, to).await
-	} else {
-		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
-	}
-}
-
-#[inline]
-pub async fn same<'a, U, V>(a: U, b: V) -> io::Result<bool>
-where
-	U: Into<Url<'a>>,
-	V: Into<Url<'a>>,
-{
-	if let (Some(a), Some(b)) = (a.into().as_path(), b.into().as_path()) {
-		Local::same(a, b).await
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}

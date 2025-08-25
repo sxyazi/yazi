@@ -154,10 +154,7 @@ macro_rules! impl_file_fields {
 		$crate::cached_field!($fields, link_to, |_, me| Ok(me.link_to.clone().map($crate::Url::new)));
 
 		$crate::cached_field!($fields, name, |lua, me| {
-			Some(me.name())
-				.filter(|s| !s.is_empty())
-				.map(|s| lua.create_string(s.as_encoded_bytes()))
-				.transpose()
+			me.name().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
 		});
 	};
 }
