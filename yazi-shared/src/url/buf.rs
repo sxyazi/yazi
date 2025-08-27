@@ -3,7 +3,6 @@ use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, hash::BuildHasher, p
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use super::UrnBuf;
 use crate::{loc::LocBuf, pool::Pool, url::{Components, Display, Encode, EncodeTilded, Scheme, Uri, Url, UrlCow, Urn}};
 
 #[derive(Clone, Default, Eq, Ord, PartialOrd, PartialEq, Hash)]
@@ -96,7 +95,7 @@ impl UrlBuf {
 	pub fn covariant(&self, other: &Self) -> bool { self.as_url().covariant(other) }
 
 	#[inline]
-	pub fn parent_url(&self) -> Option<Url<'_>> { self.as_url().parent_url() }
+	pub fn parent(&self) -> Option<Url<'_>> { self.as_url().parent() }
 
 	#[inline]
 	pub fn starts_with<'a>(&self, base: impl Into<Url<'a>>) -> bool {
@@ -156,7 +155,7 @@ impl UrlBuf {
 	}
 
 	#[inline]
-	pub fn pair(&self) -> Option<(Url<'_>, UrnBuf)> { self.as_url().pair() }
+	pub fn pair(&self) -> Option<(Url<'_>, &Urn)> { self.as_url().pair() }
 
 	#[inline]
 	pub fn hash_u64(&self) -> u64 { foldhash::fast::FixedState::default().hash_one(self) }
@@ -312,7 +311,7 @@ mod tests {
 	}
 
 	#[test]
-	fn test_parent_url() -> anyhow::Result<()> {
+	fn test_parent() -> anyhow::Result<()> {
 		crate::init_tests();
 		let cases = [
 			// Regular
@@ -339,7 +338,7 @@ mod tests {
 
 		for (path, expected) in cases {
 			let path: UrlBuf = path.parse()?;
-			assert_eq!(path.parent_url().map(|u| format!("{:?}", u)).as_deref(), expected);
+			assert_eq!(path.parent().map(|u| format!("{:?}", u)).as_deref(), expected);
 		}
 
 		Ok(())
@@ -355,7 +354,7 @@ mod tests {
 
 		let u = u.into_search("kw");
 		assert_eq!(format!("{u:?}"), "search://kw//root");
-		assert_eq!(format!("{:?}", u.parent_url().unwrap()), "/");
+		assert_eq!(format!("{:?}", u.parent().unwrap()), "/");
 
 		let u = u.join("examples");
 		assert_eq!(format!("{u:?}"), format!("search://kw:1:1//root{S}examples"));
@@ -363,13 +362,13 @@ mod tests {
 		let u = u.join("README.md");
 		assert_eq!(format!("{u:?}"), format!("search://kw:2:2//root{S}examples{S}README.md"));
 
-		let u = u.parent_url().unwrap();
+		let u = u.parent().unwrap();
 		assert_eq!(format!("{u:?}"), format!("search://kw:1:1//root{S}examples"));
 
-		let u = u.parent_url().unwrap();
+		let u = u.parent().unwrap();
 		assert_eq!(format!("{u:?}"), "search://kw//root");
 
-		let u = u.parent_url().unwrap();
+		let u = u.parent().unwrap();
 		assert_eq!(format!("{u:?}"), "/");
 
 		Ok(())

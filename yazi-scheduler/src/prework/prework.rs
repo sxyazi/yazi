@@ -90,7 +90,7 @@ impl Prework {
 						}
 					}
 
-					let parent = buf[0].0.parent_url().unwrap();
+					let parent = buf[0].0.parent().unwrap();
 					FilesOp::Size(
 						parent.into(),
 						HashMap::from_iter(buf.into_iter().map(|(u, s)| (u.urn().to_owned(), s))),

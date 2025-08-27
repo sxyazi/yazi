@@ -35,10 +35,9 @@ impl Selected {
 		T: Into<Url<'a>>,
 	{
 		let mut grouped: HashMap<_, Vec<_>> = Default::default();
-		for url in urls {
-			let u = url.into();
-			if let Some(p) = u.parent_url() {
-				grouped.entry(p).or_default().push(u);
+		for url in urls.into_iter().map(Into::into) {
+			if let Some(p) = url.parent() {
+				grouped.entry(p).or_default().push(url);
 			}
 		}
 		grouped.into_values().map(|v| self.add_same(v)).sum()
@@ -57,14 +56,14 @@ impl Selected {
 		}
 
 		// If it has appeared as a child
-		let mut parent = urls[0].parent_url();
+		let mut parent = urls[0].parent();
 		let mut parents = vec![];
 		while let Some(u) = parent {
 			if self.inner.contains_key(&UrlCov::new(&u)) {
 				return 0;
 			}
 
-			parent = u.parent_url();
+			parent = u.parent();
 			parents.push(u);
 		}
 
@@ -88,10 +87,9 @@ impl Selected {
 		T: Into<Url<'a>>,
 	{
 		let mut grouped: HashMap<_, Vec<_>> = Default::default();
-		for url in urls {
-			let u = url.into();
-			if let Some(p) = u.parent_url() {
-				grouped.entry(p).or_default().push(u);
+		for url in urls.into_iter().map(Into::into) {
+			if let Some(p) = url.parent() {
+				grouped.entry(p).or_default().push(url);
 			}
 		}
 
@@ -116,8 +114,8 @@ impl Selected {
 			return 0;
 		}
 
-		// FIXME: use UrlCov::parent_url() instead
-		let mut parent = first.parent_url();
+		// FIXME: use UrlCov::parent() instead
+		let mut parent = first.parent();
 		while let Some(u) = parent {
 			let n = self.parents.get_mut(&UrlCov::new(&u)).unwrap();
 
@@ -126,7 +124,7 @@ impl Selected {
 				self.parents.remove(&UrlCov::new(&u));
 			}
 
-			parent = u.parent_url();
+			parent = u.parent();
 		}
 		count
 	}

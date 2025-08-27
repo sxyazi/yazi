@@ -95,5 +95,5 @@ impl UrlBufCov {
 	pub fn as_url(&self) -> UrlCov<'_> { UrlCov::from(self) }
 
 	#[inline]
-	pub fn parent_url(&self) -> Option<UrlBufCov> { self.0.parent_url().map(Into::into) }
+	pub fn parent(&self) -> Option<UrlBufCov> { self.0.parent().map(Into::into) }
 }

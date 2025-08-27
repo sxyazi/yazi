@@ -162,7 +162,7 @@ mod tests {
 	use super::*;
 
 	#[test]
-	fn test_decode_port() -> Result<()> {
+	fn test_decode_ports() -> Result<()> {
 		fn assert(s: &str, len: usize, uri: Option<usize>, urn: Option<usize>) -> Result<()> {
 			let mut n = usize::MAX;
 			let port = Scheme::decode_ports(s.as_bytes(), &mut n)?;

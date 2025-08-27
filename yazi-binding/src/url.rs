@@ -102,7 +102,7 @@ impl UserData for Url {
 		cached_field!(fields, ext, |lua, me| {
 			me.ext().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
 		});
-		cached_field!(fields, parent, |_, me| Ok(me.parent_url().map(Self::new)));
+		cached_field!(fields, parent, |_, me| Ok(me.parent().map(Self::new)));
 		cached_field!(fields, urn, |_, me| Ok(Urn::new(me.urn())));
 		cached_field!(fields, base, |_, me| Ok(me.base().map(Self::new)));
 		cached_field!(fields, domain, |lua, me| {

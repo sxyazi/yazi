@@ -21,17 +21,17 @@ impl Actor for Reveal {
 
 		// Try to hover on the child file
 		let tab = cx.tab_mut();
-		render!(tab.current.hover(child.as_urn()));
+		render!(tab.current.hover(child));
 
 		// If the child is not hovered, which means it doesn't exist,
 		// create a dummy file
-		if !opt.no_dummy && tab.hovered().is_none_or(|f| &child != f.urn()) {
-			let op = FilesOp::Creating(parent.into(), vec![File::from_dummy(opt.target, None)]);
+		if !opt.no_dummy && tab.hovered().is_none_or(|f| child != f.urn()) {
+			let op = FilesOp::Creating(parent.into(), vec![File::from_dummy(&opt.target, None)]);
 			tab.current.update_pub(tab.id, op);
 		}
 
 		// Now, we can safely hover on the target
-		act!(mgr:hover, cx, Some(child))?;
+		act!(mgr:hover, cx, Some(child.into()))?;
 
 		act!(mgr:peek, cx)?;
 		act!(mgr:watch, cx)?;

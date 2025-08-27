@@ -52,7 +52,7 @@ impl Actor for Cd {
 		tab.history.insert(rep.url.to_owned(), rep);
 
 		// Parent
-		if let Some(parent) = opt.target.parent_url() {
+		if let Some(parent) = opt.target.parent() {
 			tab.parent = Some(tab.history.remove_or(&parent));
 		}
 
@@ -83,7 +83,7 @@ impl Cd {
 							return MgrProxy::cd(&url);
 						}
 
-						if let Some(p) = url.parent_url() {
+						if let Some(p) = url.parent() {
 							FilesOp::Upserting(p.into(), [(url.urn().to_owned(), file)].into()).emit();
 						}
 						MgrProxy::reveal(&url);

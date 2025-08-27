@@ -48,7 +48,7 @@ impl Actor for Rename {
 				return;
 			}
 
-			let new = old.parent_url().unwrap().join(name);
+			let new = old.parent().unwrap().join(name);
 			if opt.force || !maybe_exists(&new).await || provider::must_identical(&old, &new).await {
 				Self::r#do(tab, old, new).await.ok();
 			} else if ConfirmProxy::show(ConfirmCfg::overwrite(&new)).await {
@@ -72,7 +72,7 @@ impl Rename {
 			&& let Some((parent, urn)) = u.pair()
 		{
 			ok_or_not_found(provider::rename(&u, &new).await)?;
-			FilesOp::Deleting(parent.to_owned(), [urn].into()).emit();
+			FilesOp::Deleting(parent.to_owned(), [urn.into()].into()).emit();
 		}
 
 		let new = provider::casefold(&new).await?;
@@ -80,10 +80,10 @@ impl Rename {
 
 		let file = File::new(&new).await?;
 		if new_p == old_p {
-			FilesOp::Upserting(old_p.into(), [(old_n, file)].into()).emit();
+			FilesOp::Upserting(old_p.into(), [(old_n.into(), file)].into()).emit();
 		} else {
-			FilesOp::Deleting(old_p.into(), [old_n].into()).emit();
-			FilesOp::Upserting(new_p.into(), [(new_n, file)].into()).emit();
+			FilesOp::Deleting(old_p.into(), [old_n.into()].into()).emit();
+			FilesOp::Upserting(new_p.into(), [(new_n.into(), file)].into()).emit();
 		}
 
 		MgrProxy::reveal(&new);

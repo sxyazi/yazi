@@ -1,5 +1,3 @@
-// FIXME: VFS
-
 use anyhow::Result;
 use tokio::{io, select, sync::{mpsc, oneshot}, time};
 use yazi_shared::url::{Component, Url, UrlBuf};
@@ -159,7 +157,7 @@ pub fn max_common_root(urls: &[UrlBuf]) -> usize {
 		return urls[0].components().count() - 1;
 	}
 
-	let mut it = urls.iter().map(|u| u.parent_url());
+	let mut it = urls.iter().map(|u| u.parent());
 	let Some(first) = it.next().unwrap() else {
 		return 0; // The first URL has no parent
 	};

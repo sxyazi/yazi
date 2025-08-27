@@ -33,7 +33,7 @@ impl Actor for Copy {
 					s.push(opt.separator.transform(&u.os_str()));
 				}
 				"dirname" => {
-					if let Some(p) = u.parent_url() {
+					if let Some(p) = u.parent() {
 						s.push(opt.separator.transform(&p.os_str()));
 					}
 				}
