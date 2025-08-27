@@ -66,7 +66,7 @@ impl Watcher {
 				};
 
 				if let Some(p) = file.url.as_path()
-					&& !local::valid_name_case(p).await.unwrap_or(false)
+					&& !local::must_case_match(p).await
 				{
 					ops.push(FilesOp::Deleting(parent.into(), [urn].into()));
 					continue;

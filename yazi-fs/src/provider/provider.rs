@@ -25,6 +25,18 @@ where
 }
 
 #[inline]
+pub async fn casefold<'a, U>(url: U) -> io::Result<UrlBuf>
+where
+	U: Into<Url<'a>>,
+{
+	if let Some(path) = url.into().as_path() {
+		local::casefold(path).await.map(Into::into)
+	} else {
+		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
+	}
+}
+
+#[inline]
 pub async fn copy<'a, U, V>(from: U, to: V, cha: Cha) -> io::Result<u64>
 where
 	U: Into<Url<'a>>,

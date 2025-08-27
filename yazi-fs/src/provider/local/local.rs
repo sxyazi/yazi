@@ -114,11 +114,11 @@ impl Local {
 	}
 
 	#[inline]
-	pub async fn metadata<P>(url: P) -> io::Result<std::fs::Metadata>
+	pub async fn metadata<P>(path: P) -> io::Result<std::fs::Metadata>
 	where
 		P: AsRef<Path>,
 	{
-		tokio::fs::metadata(url).await
+		tokio::fs::metadata(path).await
 	}
 
 	#[inline]
@@ -154,11 +154,11 @@ impl Local {
 	}
 
 	#[inline]
-	pub async fn read_link<P>(url: P) -> io::Result<PathBuf>
+	pub async fn read_link<P>(path: P) -> io::Result<PathBuf>
 	where
 		P: AsRef<Path>,
 	{
-		tokio::fs::read_link(url).await
+		tokio::fs::read_link(path).await
 	}
 
 	#[inline]
