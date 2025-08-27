@@ -51,7 +51,7 @@ impl Yanked {
 			let mut it = u.components();
 			it.next_back().is_some()
 				&& it.covariant(&dir.components())
-				&& u.parent_url().is_some_and(|p| p == *dir)
+				&& u.parent().is_some_and(|p| p == *dir)
 		})
 	}
 

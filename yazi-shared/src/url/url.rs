@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, path::Path};
 
 use hashbrown::Equivalent;
 
-use crate::{loc::{Loc, LocBuf}, url::{Components, Encode, Scheme, Uri, UrlBuf, Urn, UrnBuf}};
+use crate::{loc::{Loc, LocBuf}, url::{Components, Encode, Scheme, Uri, UrlBuf, Urn}};
 
 #[derive(Clone, Eq, Hash, PartialEq)]
 pub struct Url<'a> {
@@ -121,7 +121,7 @@ impl<'a> Url<'a> {
 		})
 	}
 
-	pub fn parent_url(&self) -> Option<Self> {
+	pub fn parent(&self) -> Option<Self> {
 		use Scheme as S;
 
 		let parent = self.loc.parent()?;
@@ -177,9 +177,7 @@ impl<'a> Url<'a> {
 	}
 
 	#[inline]
-	pub fn pair(&self) -> Option<(Url<'a>, UrnBuf)> {
-		Some((self.parent_url()?, self.loc.urn().to_owned()))
-	}
+	pub fn pair(&self) -> Option<(Url<'a>, &'a Urn)> { Some((self.parent()?, self.loc.urn())) }
 
 	#[inline]
 	pub fn as_path(&self) -> Option<&'a Path> {

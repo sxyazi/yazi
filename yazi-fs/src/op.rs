@@ -54,8 +54,8 @@ impl FilesOp {
 	pub fn rename(map: HashMap<UrlBuf, File>) {
 		let mut parents: HashMap<_, (HashSet<_>, HashMap<_, _>)> = Default::default();
 		for (o, n) in map {
-			let Some(o_p) = o.parent_url() else { continue };
-			let Some(n_p) = n.url.parent_url() else { continue };
+			let Some(o_p) = o.parent() else { continue };
+			let Some(n_p) = n.url.parent() else { continue };
 			if o_p != n_p {
 				parents.entry_ref(&o_p).or_default().0.insert(o.urn().to_owned());
 			}
@@ -126,7 +126,7 @@ impl FilesOp {
 		} else if maybe_exists(cwd).await {
 			Self::IOErr(cwd.clone(), kind).emit();
 		} else if let Some((p, n)) = cwd.pair() {
-			Self::Deleting(p.into(), [n].into()).emit();
+			Self::Deleting(p.into(), [n.into()].into()).emit();
 		}
 	}
 

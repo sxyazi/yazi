@@ -111,7 +111,7 @@ impl Actor for OpenDo {
 
 impl Open {
 	fn guess_folder(cx: &Ctx, url: &UrlBuf) -> bool {
-		let Some(p) = url.parent_url() else {
+		let Some(p) = url.parent() else {
 			return true;
 		};
 

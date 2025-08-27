@@ -11,7 +11,7 @@ impl Utils {
 	pub(super) fn file_cache(lua: &Lua) -> mlua::Result<Function> {
 		lua.create_function(|_, t: Table| {
 			let file: FileRef = t.raw_get("file")?;
-			if file.url.parent_url() == Some(yazi_shared::url::Url::regular(&YAZI.preview.cache_dir)) {
+			if file.url.parent() == Some(yazi_shared::url::Url::regular(&YAZI.preview.cache_dir)) {
 				return Ok(None);
 			}
 

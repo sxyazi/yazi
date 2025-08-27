@@ -51,7 +51,7 @@ impl Backend {
 	{
 		let (mut todo, watched) = (HashSet::new(), WATCHED.read());
 		for url in urls.into_iter().map(Into::into) {
-			let Some(parent) = url.parent_url() else { continue };
+			let Some(parent) = url.parent() else { continue };
 			if todo.contains(&parent) {
 				todo.insert(url);
 			} else if watched.contains(&parent)

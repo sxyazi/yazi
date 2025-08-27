@@ -101,7 +101,7 @@ impl UpdateFiles {
 
 	fn update_history(cx: &mut Ctx, op: FilesOp) -> Result<Data> {
 		let tab = &mut cx.tab_mut();
-		let leave = tab.parent.as_ref().and_then(|f| f.url.parent_url().map(|p| (p, f.url.urn()))).is_some_and(
+		let leave = tab.parent.as_ref().and_then(|f| f.url.parent().map(|p| (p, f.url.urn()))).is_some_and(
 			|(p, n)| matches!(op, FilesOp::Deleting(ref parent, ref urns) if *parent == p && urns.contains(n)),
 		);
 

@@ -3,7 +3,7 @@ use std::{borrow::Cow, path::{Path, PathBuf}};
 use anyhow::Result;
 use percent_encoding::percent_decode;
 
-use crate::{IntoOsStr, loc::{Loc, LocBuf}, url::{Components, Scheme, Url, UrlBuf, UrnBuf}};
+use crate::{IntoOsStr, loc::{Loc, LocBuf}, url::{Components, Scheme, Url, UrlBuf, Urn}};
 
 #[derive(Debug)]
 pub enum UrlCow<'a> {
@@ -33,6 +33,10 @@ impl<'a> From<&'a UrlCow<'a>> for Url<'a> {
 
 impl From<UrlCow<'_>> for UrlBuf {
 	fn from(value: UrlCow<'_>) -> Self { value.into_owned() }
+}
+
+impl From<&UrlCow<'_>> for UrlBuf {
+	fn from(value: &UrlCow<'_>) -> Self { value.as_url().into() }
 }
 
 impl<'a> TryFrom<&'a [u8]> for UrlCow<'a> {
@@ -107,6 +111,7 @@ impl UrlCow<'_> {
 		}
 	}
 
+	#[inline]
 	pub fn as_url(&self) -> Url<'_> {
 		match self {
 			UrlCow::Borrowed(u) => u.as_url(),
@@ -115,13 +120,18 @@ impl UrlCow<'_> {
 	}
 
 	#[inline]
-	pub fn into_owned(self) -> UrlBuf { self.as_url().into() }
+	pub fn into_owned(self) -> UrlBuf {
+		match self {
+			UrlCow::Borrowed(u) => u.into(),
+			UrlCow::Owned(u) => u,
+		}
+	}
 
 	#[inline]
-	pub fn parent_url(&self) -> Option<Url<'_>> { self.as_url().parent_url() }
+	pub fn parent(&self) -> Option<Url<'_>> { self.as_url().parent() }
 
 	#[inline]
-	pub fn pair(&self) -> Option<(Url<'_>, UrnBuf)> { self.as_url().pair() }
+	pub fn pair(&self) -> Option<(Url<'_>, &Urn)> { self.as_url().pair() }
 
 	pub fn parse(bytes: &[u8]) -> Result<(Scheme, Cow<'_, Path>, Option<(usize, usize)>)> {
 		let mut skip = 0;
