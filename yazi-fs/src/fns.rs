@@ -1,13 +1,10 @@
 // FIXME: VFS
 
-use std::{borrow::Cow, ffi::{OsStr, OsString}, path::{Path, PathBuf}};
-
-use anyhow::{Result, bail};
-use hashbrown::{HashMap, HashSet};
-use tokio::{fs, io, select, sync::{mpsc, oneshot}, time};
+use anyhow::Result;
+use tokio::{io, select, sync::{mpsc, oneshot}, time};
 use yazi_shared::url::{Component, Url, UrlBuf};
 
-use crate::{cha::Cha, provider::{self, local::Local}};
+use crate::{cha::Cha, provider};
 
 #[inline]
 pub async fn maybe_exists<'a>(url: impl Into<Url<'a>>) -> bool {
@@ -28,81 +25,6 @@ pub fn ok_or_not_found<T: Default>(result: io::Result<T>) -> io::Result<T> {
 		Ok(t) => Ok(t),
 		Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(T::default()),
 		Err(_) => result,
-	}
-}
-
-pub async fn realname(url: &UrlBuf) -> Option<OsString> {
-	let (path, name) = (url.as_path()?, url.name()?);
-	if path == Local::canonicalize(path).await.ok()? {
-		return None;
-	}
-
-	realname_unchecked(path, &mut HashMap::new())
-		.await
-		.ok()
-		.filter(|s| s != name)
-		.map(|s| s.into_owned())
-}
-
-#[cfg(unix)]
-#[tokio::test]
-async fn test_realname_unchecked() -> Result<()> {
-	use crate::provider::local::Local;
-
-	Local::remove_dir_all("/tmp/issue-1173").await.ok();
-	Local::create_dir_all("/tmp/issue-1173/real-dir").await?;
-	Local::create("/tmp/issue-1173/A").await?;
-	Local::create("/tmp/issue-1173/b").await?;
-	Local::create("/tmp/issue-1173/real-dir/C").await?;
-	Local::symlink_file("/tmp/issue-1173/b", "/tmp/issue-1173/D").await?;
-	Local::symlink_dir("real-dir", "/tmp/issue-1173/link-dir").await?;
-
-	let c = &mut HashMap::new();
-	async fn check(a: &str, b: &str, c: &mut HashMap<PathBuf, HashSet<OsString>>) {
-		assert_eq!(realname_unchecked(Path::new(a), c).await.ok(), Some(OsStr::new(b).into()));
-	}
-
-	check("/tmp/issue-1173/a", "A", c).await;
-	check("/tmp/issue-1173/A", "A", c).await;
-
-	check("/tmp/issue-1173/b", "b", c).await;
-	check("/tmp/issue-1173/B", "b", c).await;
-
-	check("/tmp/issue-1173/link-dir/c", "C", c).await;
-	check("/tmp/issue-1173/link-dir/C", "C", c).await;
-
-	check("/tmp/issue-1173/d", "D", c).await;
-	check("/tmp/issue-1173/D", "D", c).await;
-	Ok(())
-}
-
-// realpath(3) without resolving symlinks. This is useful for case-insensitive
-// filesystems.
-//
-// Make sure the file of the path exists.
-pub async fn realname_unchecked<'a>(
-	path: &'a Path,
-	cached: &'a mut HashMap<PathBuf, HashSet<OsString>>,
-) -> Result<Cow<'a, OsStr>> {
-	let Some(name) = path.file_name() else { bail!("no filename") };
-	let Some(parent) = path.parent() else { return Ok(Cow::Borrowed(name)) };
-
-	if !cached.contains_key(parent) {
-		let mut set = HashSet::new();
-		let mut it = fs::read_dir(parent).await?;
-		while let Some(entry) = it.next_entry().await? {
-			set.insert(entry.file_name());
-		}
-		cached.insert(parent.to_owned(), set);
-	}
-
-	let c = &cached[parent];
-	if c.contains(name) {
-		Ok(Cow::Borrowed(name))
-	} else if let Some(n) = c.iter().find(|&n| n.eq_ignore_ascii_case(name)) {
-		Ok(Cow::Borrowed(n))
-	} else {
-		bail!("no such file")
 	}
 }
 
@@ -270,7 +192,7 @@ pub fn max_common_root(urls: &[UrlBuf]) -> usize {
 #[test]
 fn test_max_common_root() {
 	fn assert(input: &[&str], expected: &str) {
-		use std::str::FromStr;
+		use std::{ffi::OsStr, str::FromStr};
 		let urls: Vec<_> = input.iter().copied().map(UrlBuf::from_str).collect::<Result<_>>().unwrap();
 
 		let mut comp = urls[0].components();

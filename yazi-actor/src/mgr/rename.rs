@@ -1,11 +1,11 @@
 use anyhow::Result;
 use yazi_config::popup::{ConfirmCfg, InputCfg};
 use yazi_dds::Pubsub;
-use yazi_fs::{File, FilesOp, maybe_exists, ok_or_not_found, provider, realname};
+use yazi_fs::{File, FilesOp, maybe_exists, ok_or_not_found, provider};
 use yazi_macro::{act, err, succ};
 use yazi_parser::mgr::RenameOpt;
 use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy};
-use yazi_shared::{Id, event::Data, url::{UrlBuf, UrnBuf}};
+use yazi_shared::{Id, event::Data, url::UrlBuf};
 use yazi_watcher::WATCHER;
 
 use crate::{Actor, Ctx};
@@ -61,24 +61,29 @@ impl Actor for Rename {
 
 impl Rename {
 	async fn r#do(tab: Id, old: UrlBuf, new: UrlBuf) -> Result<()> {
-		let Some((p_old, n_old)) = old.pair() else { return Ok(()) };
-		let Some((p_new, n_new)) = new.pair() else { return Ok(()) };
+		let Some((old_p, old_n)) = old.pair() else { return Ok(()) };
+		let Some(_) = new.pair() else { return Ok(()) };
 		let _permit = WATCHER.acquire().await.unwrap();
 
-		let overwritten = realname(&new).await;
+		let overwritten = provider::casefold(&new).await;
 		provider::rename(&old, &new).await?;
 
-		if let Some(o) = overwritten {
-			ok_or_not_found(provider::rename(&p_new.join(&o), &new).await)?;
-			FilesOp::Deleting(p_new.to_owned(), [UrnBuf::from(o)].into()).emit();
+		if let Ok(u) = overwritten
+			&& let Some((parent, urn)) = u.pair()
+		{
+			ok_or_not_found(provider::rename(&u, &new).await)?;
+			FilesOp::Deleting(parent.to_owned(), [urn].into()).emit();
 		}
 
+		let new = provider::casefold(&new).await?;
+		let Some((new_p, new_n)) = new.pair() else { return Ok(()) };
+
 		let file = File::new(&new).await?;
-		if p_new == p_old {
-			FilesOp::Upserting(p_old.into(), [(n_old, file)].into()).emit();
+		if new_p == old_p {
+			FilesOp::Upserting(old_p.into(), [(old_n, file)].into()).emit();
 		} else {
-			FilesOp::Deleting(p_old.into(), [n_old].into()).emit();
-			FilesOp::Upserting(p_new.into(), [(n_new, file)].into()).emit();
+			FilesOp::Deleting(old_p.into(), [old_n].into()).emit();
+			FilesOp::Upserting(new_p.into(), [(new_n, file)].into()).emit();
 		}
 
 		MgrProxy::reveal(&new);

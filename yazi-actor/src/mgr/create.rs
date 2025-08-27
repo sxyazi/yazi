@@ -1,10 +1,10 @@
-use anyhow::Result;
+use anyhow::{Result, bail};
 use yazi_config::popup::{ConfirmCfg, InputCfg};
-use yazi_fs::{File, FilesOp, maybe_exists, ok_or_not_found, provider, realname};
+use yazi_fs::{File, FilesOp, maybe_exists, ok_or_not_found, provider};
 use yazi_macro::succ;
 use yazi_parser::mgr::CreateOpt;
 use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy};
-use yazi_shared::{event::Data, url::{UrlBuf, UrnBuf}};
+use yazi_shared::{event::Data, url::UrlBuf};
 use yazi_watcher::WATCHER;
 
 use crate::{Actor, Ctx};
@@ -42,25 +42,32 @@ impl Actor for Create {
 
 impl Create {
 	async fn r#do(new: UrlBuf, dir: bool) -> Result<()> {
-		let Some(parent) = new.parent_url() else { return Ok(()) };
 		let _permit = WATCHER.acquire().await.unwrap();
 
 		if dir {
 			provider::create_dir_all(&new).await?;
-		} else if let Some(real) = realname(&new).await {
+		} else if let Ok(real) = provider::casefold(&new).await
+			&& let Some((parent, urn)) = real.pair()
+		{
 			ok_or_not_found(provider::remove_file(&new).await)?;
-			FilesOp::Deleting(parent.to_owned(), [UrnBuf::from(real)].into()).emit();
+			FilesOp::Deleting(parent.into(), [urn].into()).emit();
 			provider::create(&new).await?;
-		} else {
+		} else if let Some(parent) = new.parent_url() {
 			provider::create_dir_all(&parent).await.ok();
 			ok_or_not_found(provider::remove_file(&new).await)?;
 			provider::create(&new).await?;
+		} else {
+			bail!("Cannot create file at root");
 		}
 
-		if let Ok(f) = File::new(&new).await {
-			FilesOp::Upserting(parent.into(), [(f.urn().to_owned(), f)].into()).emit();
-			MgrProxy::reveal(&new)
+		if let Ok(real) = provider::casefold(&new).await
+			&& let Some((parent, urn)) = real.pair()
+		{
+			let file = File::new(&real).await?;
+			FilesOp::Upserting(parent.into(), [(urn, file)].into()).emit();
+			MgrProxy::reveal(&real);
 		}
+
 		Ok(())
 	}
 }
