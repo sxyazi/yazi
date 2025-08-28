@@ -3,7 +3,7 @@ use std::str::FromStr;
 use anyhow::Result;
 use globset::GlobBuilder;
 use serde::Deserialize;
-use yazi_shared::url::{Scheme, UrlBuf};
+use yazi_shared::{scheme::{SchemeCow, SchemeRef}, url::UrlBuf};
 
 #[derive(Debug, Deserialize)]
 #[serde(try_from = "String")]
@@ -108,14 +108,16 @@ impl PatternScheme {
 		};
 
 		if protocol != "*" {
-			me.0 = Some(Scheme::parse_kind(protocol.as_bytes())?);
+			me.0 = Some(SchemeCow::parse_kind(protocol.as_bytes())?);
 		}
 
 		Ok((me, protocol.len() + 3))
 	}
 
 	#[inline]
-	fn matches(&self, scheme: &Scheme) -> bool { self.0.is_none_or(|s| s == scheme.kind()) }
+	fn matches<'a>(&self, scheme: impl Into<SchemeRef<'a>>) -> bool {
+		self.0.is_none_or(|s| s == scheme.into().kind())
+	}
 }
 
 // --- Tests

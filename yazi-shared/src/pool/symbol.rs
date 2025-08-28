@@ -78,6 +78,14 @@ impl<T: ?Sized> PartialEq for Symbol<T> {
 
 impl<T: ?Sized> Eq for Symbol<T> {}
 
+impl PartialEq<str> for Symbol<str> {
+	fn eq(&self, other: &str) -> bool { self.as_ref() == other }
+}
+
+impl PartialEq<[u8]> for Symbol<[u8]> {
+	fn eq(&self, other: &[u8]) -> bool { self.as_ref() == other }
+}
+
 // --- Hash
 impl<T: ?Sized> Hash for Symbol<T> {
 	fn hash<H: Hasher>(&self, state: &mut H) { self.ptr.as_ptr().hash(state); }

@@ -1,10 +1,10 @@
 use std::{borrow::Cow, ffi::{OsStr, OsString}, iter::FusedIterator, ops::Not, path::{self, PathBuf, PrefixComponent}};
 
-use crate::{loc::Loc, url::{Encode, Scheme, Url, UrlBuf, UrlCow}};
+use crate::{loc::Loc, scheme::{Scheme, SchemeRef}, url::{Encode, Url, UrlBuf, UrlCow}};
 
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Component<'a> {
-	Scheme(&'a Scheme),
+	Scheme(SchemeRef<'a>),
 	Prefix(PrefixComponent<'a>),
 	RootDir,
 	CurDir,
@@ -29,7 +29,7 @@ impl<'a> FromIterator<Component<'a>> for UrlBuf {
 		let mut scheme = Scheme::Regular;
 		let mut buf = PathBuf::new();
 		iter.into_iter().for_each(|c| match c {
-			Component::Scheme(s) => scheme = s.clone(),
+			Component::Scheme(s) => scheme = s.into(),
 			Component::Prefix(p) => buf.push(path::Component::Prefix(p)),
 			Component::RootDir => buf.push(path::Component::RootDir),
 			Component::CurDir => buf.push(path::Component::CurDir),
@@ -61,16 +61,16 @@ impl<'a> FromIterator<Component<'a>> for PathBuf {
 pub struct Components<'a> {
 	inner:          path::Components<'a>,
 	loc:            Loc<'a>,
-	scheme:         &'a Scheme,
+	scheme:         SchemeRef<'a>,
 	scheme_yielded: bool,
 }
 
-impl<'a> From<&'a Url<'a>> for Components<'a> {
-	fn from(value: &'a Url<'a>) -> Self {
+impl<'a> From<Url<'a>> for Components<'a> {
+	fn from(value: Url<'a>) -> Self {
 		Self {
-			inner:          value.loc.components(),
+			inner:          value.loc.as_path().components(),
 			loc:            value.loc,
-			scheme:         &value.scheme,
+			scheme:         value.scheme,
 			scheme_yielded: false,
 		}
 	}
@@ -81,19 +81,14 @@ impl<'a> From<&'a UrlBuf> for Components<'a> {
 		Self {
 			inner:          value.loc.components(),
 			loc:            value.loc.as_loc(),
-			scheme:         &value.scheme,
+			scheme:         value.scheme.as_ref(),
 			scheme_yielded: false,
 		}
 	}
 }
 
 impl<'a> From<&'a UrlCow<'a>> for Components<'a> {
-	fn from(value: &'a UrlCow<'a>) -> Self {
-		match value {
-			UrlCow::Borrowed(url) => Self::from(url),
-			UrlCow::Owned(url) => Self::from(url),
-		}
-	}
+	fn from(value: &'a UrlCow<'a>) -> Self { Self::from(value.as_url()) }
 }
 
 impl<'a> Components<'a> {

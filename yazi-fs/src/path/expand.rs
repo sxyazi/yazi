@@ -29,10 +29,10 @@ fn expand_url_impl<'a>(url: Url<'a>) -> UrlCow<'a> {
 	)
 	.expect("Failed to create Loc from expanded path");
 
-	let url = UrlBuf { loc, scheme: url.scheme.clone() };
+	let url = UrlBuf { loc, scheme: url.scheme.into() };
 	match absolute_url(url.as_url()) {
-		UrlCow::Borrowed(_) => url.into(),
-		UrlCow::Owned(u) => u.into(),
+		UrlCow::Borrowed { .. } => url.into(),
+		c @ UrlCow::Owned { .. } => c.into_owned().into(),
 	}
 }
 
@@ -73,7 +73,7 @@ fn absolute_url<'a>(url: Url<'a>) -> UrlCow<'a> {
 			if url.has_trail() { 0 } else { 2 },
 		)
 		.expect("Failed to create Loc from drive letter");
-		UrlBuf { loc, scheme: url.scheme.clone() }.into()
+		UrlBuf { loc, scheme: url.scheme.into() }.into()
 	} else if local
 		&& let Ok(rest) = url.loc.strip_prefix("~/")
 		&& let Some(home) = dirs::home_dir()
@@ -86,7 +86,7 @@ fn absolute_url<'a>(url: Url<'a>) -> UrlCow<'a> {
 			url.urn().count() + if url.has_trail() { 0 } else { add },
 		)
 		.expect("Failed to create Loc from home directory");
-		UrlBuf { loc, scheme: url.scheme.clone() }.into()
+		UrlBuf { loc, scheme: url.scheme.into() }.into()
 	} else if !url.is_absolute() {
 		let cwd = CWD.load();
 		let loc = LocBuf::with(cwd.loc.join(url.loc), url.uri().count(), url.urn().count())

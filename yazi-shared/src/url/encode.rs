@@ -2,24 +2,24 @@ use std::{fmt::{self, Display}, ops::Not};
 
 use percent_encoding::{AsciiSet, CONTROLS, PercentEncode, percent_encode};
 
-use crate::{loc::Loc, url::{Scheme, Url, UrlBuf}};
+use crate::{loc::Loc, scheme::SchemeRef, url::{Url, UrlBuf}};
 
 pub struct Encode<'a> {
 	loc:    Loc<'a>,
-	scheme: &'a Scheme,
+	scheme: SchemeRef<'a>,
 }
 
-impl<'a> From<&'a Url<'a>> for Encode<'a> {
-	fn from(url: &'a Url<'a>) -> Self { Self::new(url.loc, &url.scheme) }
+impl<'a> From<Url<'a>> for Encode<'a> {
+	fn from(url: Url<'a>) -> Self { Self::new(url.loc, url.scheme) }
 }
 
 impl<'a> From<&'a UrlBuf> for Encode<'a> {
-	fn from(url: &'a UrlBuf) -> Self { Self::new(url.loc.as_loc(), &url.scheme) }
+	fn from(url: &'a UrlBuf) -> Self { Self::new(url.loc.as_loc(), url.scheme.as_ref()) }
 }
 
 impl<'a> Encode<'a> {
 	#[inline]
-	pub(super) fn new(loc: Loc<'a>, scheme: &'a Scheme) -> Self { Self { loc, scheme } }
+	pub(super) fn new(loc: Loc<'a>, scheme: SchemeRef<'a>) -> Self { Self { loc, scheme } }
 
 	#[inline]
 	fn domain<'s>(s: &'s str) -> PercentEncode<'s> {
@@ -46,9 +46,9 @@ impl<'a> Encode<'a> {
 				}
 
 				match self.0.scheme {
-					Scheme::Regular => Ok(()),
-					Scheme::Search(_) | Scheme::Archive(_) => w!(0, 0),
-					Scheme::Sftp(_) => w!(
+					SchemeRef::Regular => Ok(()),
+					SchemeRef::Search(_) | SchemeRef::Archive(_) => w!(0, 0),
+					SchemeRef::Sftp(_) => w!(
 						self.0.loc.as_os_str().is_empty().not() as usize,
 						self.0.loc.file_name().is_some() as usize
 					),
@@ -62,11 +62,12 @@ impl<'a> Encode<'a> {
 
 impl Display for Encode<'_> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		use SchemeRef as S;
 		match self.scheme {
-			Scheme::Regular => write!(f, "regular://"),
-			Scheme::Search(d) => write!(f, "search://{}{}/", Self::domain(d), self.ports()),
-			Scheme::Archive(d) => write!(f, "archive://{}{}/", Self::domain(d), self.ports()),
-			Scheme::Sftp(d) => write!(f, "sftp://{}{}/", Self::domain(d), self.ports()),
+			S::Regular => write!(f, "regular://"),
+			S::Search(d) => write!(f, "search://{}{}/", Self::domain(d), self.ports()),
+			S::Archive(d) => write!(f, "archive://{}{}/", Self::domain(d), self.ports()),
+			S::Sftp(d) => write!(f, "sftp://{}{}/", Self::domain(d), self.ports()),
 		}
 	}
 }
@@ -74,15 +75,11 @@ impl Display for Encode<'_> {
 // --- Tilded
 pub struct EncodeTilded<'a> {
 	loc:    Loc<'a>,
-	scheme: &'a Scheme,
-}
-
-impl<'a> From<&'a Url<'a>> for EncodeTilded<'a> {
-	fn from(url: &'a Url<'a>) -> Self { Self { loc: url.loc, scheme: &url.scheme } }
+	scheme: SchemeRef<'a>,
 }
 
 impl<'a> From<&'a UrlBuf> for EncodeTilded<'a> {
-	fn from(url: &'a UrlBuf) -> Self { Self { loc: url.loc.as_loc(), scheme: &url.scheme } }
+	fn from(url: &'a UrlBuf) -> Self { Self { loc: url.loc.as_loc(), scheme: url.scheme.as_ref() } }
 }
 
 impl<'a> From<&EncodeTilded<'a>> for Encode<'a> {
@@ -92,15 +89,16 @@ impl<'a> From<&EncodeTilded<'a>> for Encode<'a> {
 impl Display for EncodeTilded<'_> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		use Encode as E;
+		use SchemeRef as S;
 
 		let loc = percent_encode(self.loc.as_os_str().as_encoded_bytes(), CONTROLS);
 		match self.scheme {
-			Scheme::Regular => write!(f, "regular~://{loc}"),
-			Scheme::Search(d) => write!(f, "search~://{}{}/{loc}", E::domain(d), E::ports(&self.into())),
-			Scheme::Archive(d) => {
+			S::Regular => write!(f, "regular~://{loc}"),
+			S::Search(d) => write!(f, "search~://{}{}/{loc}", E::domain(d), E::ports(&self.into())),
+			S::Archive(d) => {
 				write!(f, "archive~://{}{}/{loc}", E::domain(d), E::ports(&self.into()))
 			}
-			Scheme::Sftp(d) => write!(f, "sftp~://{}{}/{loc}", E::domain(d), E::ports(&self.into())),
+			S::Sftp(d) => write!(f, "sftp~://{}{}/{loc}", E::domain(d), E::ports(&self.into())),
 		}
 	}
 }

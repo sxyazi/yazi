@@ -54,8 +54,8 @@ impl Backend {
 			let Some(parent) = url.parent() else { continue };
 			if todo.contains(&parent) {
 				todo.insert(url);
-			} else if watched.contains(&parent)
-				|| LINKED.read().from_dir(&parent).any(|p| watched.contains(Url::regular(p)))
+			} else if watched.contains(parent)
+				|| LINKED.read().from_dir(parent).any(|p| watched.contains(Url::regular(p)))
 			{
 				todo.insert(parent.to_owned());
 				todo.insert(url);

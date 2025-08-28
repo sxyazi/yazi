@@ -3,45 +3,75 @@ use std::{borrow::Cow, ops::Not, path::Path};
 use anyhow::{Result, bail, ensure};
 use percent_encoding::percent_decode;
 
-use crate::{BytesExt, pool::{InternStr, Symbol}};
+use crate::{BytesExt, pool::InternStr, scheme::{Scheme, SchemeRef}};
 
-#[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub enum Scheme {
-	#[default]
-	Regular,
-
-	Search(Symbol<str>),
-
-	Archive(Symbol<str>),
-
-	Sftp(Symbol<str>),
+#[derive(Debug)]
+pub enum SchemeCow<'a> {
+	Borrowed(SchemeRef<'a>),
+	Owned(Scheme),
 }
 
-impl Scheme {
-	#[inline]
-	pub const fn kind(&self) -> &'static str {
-		match self {
-			Self::Regular => "regular",
-			Self::Search(_) => "search",
-			Self::Archive(_) => "archive",
-			Self::Sftp(_) => "sftp",
+impl Default for SchemeCow<'_> {
+	fn default() -> Self { Self::Borrowed(SchemeRef::Regular) }
+}
+
+impl From<Scheme> for SchemeCow<'_> {
+	fn from(value: Scheme) -> Self { Self::Owned(value) }
+}
+
+impl<'a> From<&'a Scheme> for SchemeCow<'a> {
+	fn from(value: &'a Scheme) -> Self { Self::Borrowed(value.as_ref()) }
+}
+
+impl<'a> From<SchemeRef<'a>> for SchemeCow<'a> {
+	fn from(value: SchemeRef<'a>) -> Self { Self::Borrowed(value) }
+}
+
+impl From<SchemeCow<'_>> for Scheme {
+	fn from(value: SchemeCow<'_>) -> Self {
+		match value {
+			SchemeCow::Borrowed(s) => s.into(),
+			SchemeCow::Owned(s) => s,
+		}
+	}
+}
+
+impl<'a> SchemeCow<'a> {
+	pub fn search(domain: impl Into<Cow<'a, str>>) -> Self {
+		match domain.into() {
+			Cow::Borrowed(s) => SchemeRef::Search(s).into(),
+			Cow::Owned(s) => Scheme::Search(s.intern()).into(),
+		}
+	}
+
+	pub fn archive(domain: impl Into<Cow<'a, str>>) -> Self {
+		match domain.into() {
+			Cow::Borrowed(s) => SchemeRef::Archive(s).into(),
+			Cow::Owned(s) => Scheme::Archive(s.intern()).into(),
+		}
+	}
+
+	pub fn sftp(domain: impl Into<Cow<'a, str>>) -> Self {
+		match domain.into() {
+			Cow::Borrowed(s) => SchemeRef::Sftp(s).into(),
+			Cow::Owned(s) => Scheme::Sftp(s.intern()).into(),
 		}
 	}
 
 	#[inline]
-	pub fn domain(&self) -> Option<&str> {
+	pub fn as_ref(&self) -> SchemeRef<'_> {
 		match self {
-			Self::Regular => None,
-			Self::Search(s) | Self::Archive(s) | Self::Sftp(s) => Some(s),
+			Self::Borrowed(s) => *s,
+			Self::Owned(s) => s.into(),
 		}
 	}
 
-	pub(super) fn parse(
-		bytes: &[u8],
+	pub(crate) fn parse(
+		bytes: &'a [u8],
 		skip: &mut usize,
 	) -> Result<(Self, bool, Option<usize>, Option<usize>)> {
 		let Some((mut protocol, rest)) = bytes.split_by_seq(b"://") else {
-			return Ok((Self::Regular, false, None, None));
+			return Ok((Self::default(), false, None, None));
 		};
 
 		// Advance to the beginning of the path
@@ -54,18 +84,18 @@ impl Scheme {
 		}
 
 		let (scheme, uri, urn) = match protocol {
-			b"regular" => (Self::Regular, None, None),
+			b"regular" => (Self::default(), None, None),
 			b"search" => {
 				let (domain, uri, urn) = Self::decode_param(rest, skip)?;
-				(Self::Search(domain), uri, urn)
+				(Self::search(domain), uri, urn)
 			}
 			b"archive" => {
 				let (domain, uri, urn) = Self::decode_param(rest, skip)?;
-				(Self::Archive(domain), uri, urn)
+				(Self::archive(domain), uri, urn)
 			}
 			b"sftp" => {
 				let (domain, uri, urn) = Self::decode_param(rest, skip)?;
-				(Self::Sftp(domain), uri, urn)
+				(Self::sftp(domain), uri, urn)
 			}
 			_ => bail!("Could not parse protocol from URL: {}", String::from_utf8_lossy(bytes)),
 		};
@@ -84,31 +114,18 @@ impl Scheme {
 		}
 	}
 
-	#[inline]
-	pub fn covariant(&self, other: &Self) -> bool {
-		if self.is_virtual() || other.is_virtual() { self == other } else { true }
-	}
-
-	#[inline]
-	pub fn is_virtual(&self) -> bool {
-		match self {
-			Self::Regular | Self::Search(_) => false,
-			Self::Archive(_) | Self::Sftp(_) => true,
-		}
-	}
-
 	fn decode_param(
-		bytes: &[u8],
+		bytes: &'a [u8],
 		skip: &mut usize,
-	) -> Result<(Symbol<str>, Option<usize>, Option<usize>)> {
+	) -> Result<(Cow<'a, str>, Option<usize>, Option<usize>)> {
 		let mut len = bytes.iter().copied().take_while(|&b| b != b'/').count();
 		let slash = bytes.get(len).is_some_and(|&b| b == b'/');
 		*skip += len + slash as usize;
 
 		let (uri, urn) = Self::decode_ports(&bytes[..len], &mut len)?;
 		let domain = match Cow::from(percent_decode(&bytes[..len])) {
-			Cow::Borrowed(b) => str::from_utf8(b)?.intern(),
-			Cow::Owned(b) => String::from_utf8(b)?.intern(),
+			Cow::Borrowed(b) => str::from_utf8(b)?.into(),
+			Cow::Owned(b) => String::from_utf8(b)?.into(),
 		};
 
 		Ok((domain, uri, urn))
@@ -131,30 +148,38 @@ impl Scheme {
 		Ok((b, a))
 	}
 
-	pub(super) fn normalize_ports(
+	pub(crate) fn normalize_ports(
 		&self,
 		uri: Option<usize>,
 		urn: Option<usize>,
 		path: &Path,
 	) -> Result<Option<(usize, usize)>> {
-		Ok(match self {
-			Scheme::Regular => {
+		Ok(match self.as_ref() {
+			SchemeRef::Regular => {
 				ensure!(uri.is_none() && urn.is_none(), "Regular scheme cannot have ports");
 				None
 			}
-			Scheme::Search(_) => {
+			SchemeRef::Search(_) => {
 				let (uri, urn) = (uri.unwrap_or(0), urn.unwrap_or(0));
 				ensure!(uri == urn, "Search scheme requires URI and URN to be equal");
 				Some((uri, urn))
 			}
-			Scheme::Archive(_) => Some((uri.unwrap_or(0), urn.unwrap_or(0))),
-			Scheme::Sftp(_) => {
+			SchemeRef::Archive(_) => Some((uri.unwrap_or(0), urn.unwrap_or(0))),
+			SchemeRef::Sftp(_) => {
 				let uri = uri.unwrap_or(path.as_os_str().is_empty().not() as usize);
 				let urn = urn.unwrap_or(path.file_name().is_some() as usize);
 				Some((uri, urn))
 			}
 		})
 	}
+}
+
+impl SchemeCow<'_> {
+	#[inline]
+	pub fn is_virtual(&self) -> bool { self.as_ref().is_virtual() }
+
+	#[inline]
+	pub fn into_owned(self) -> Scheme { self.into() }
 }
 
 #[cfg(test)]
@@ -165,7 +190,7 @@ mod tests {
 	fn test_decode_ports() -> Result<()> {
 		fn assert(s: &str, len: usize, uri: Option<usize>, urn: Option<usize>) -> Result<()> {
 			let mut n = usize::MAX;
-			let port = Scheme::decode_ports(s.as_bytes(), &mut n)?;
+			let port = SchemeCow::decode_ports(s.as_bytes(), &mut n)?;
 			assert_eq!((usize::MAX - n, port.0, port.1), (len, uri, urn));
 			Ok(())
 		}

@@ -17,7 +17,7 @@ impl Actor for Reveal {
 		let Some((parent, child)) = opt.target.pair() else { succ!() };
 
 		// Cd to the parent directory
-		act!(mgr:cd, cx, (parent.clone(), opt.source))?;
+		act!(mgr:cd, cx, (parent, opt.source))?;
 
 		// Try to hover on the child file
 		let tab = cx.tab_mut();

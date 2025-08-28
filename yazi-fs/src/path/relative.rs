@@ -8,8 +8,8 @@ pub fn path_relative_to<'a>(
 	to: &'a impl AsRef<Path>,
 ) -> Result<Cow<'a, Path>> {
 	Ok(match url_relative_to(Url::regular(&from).into(), Url::regular(to).into())? {
-		UrlCow::Borrowed(url) => Cow::Borrowed(url.loc.as_path()),
-		UrlCow::Owned(url) => Cow::Owned(url.loc.into_path()),
+		UrlCow::Borrowed { loc, .. } => Cow::Borrowed(loc.as_path()),
+		UrlCow::Owned { loc, .. } => Cow::Owned(loc.into_path()),
 	})
 }
 
@@ -25,7 +25,7 @@ pub(super) fn url_relative_to<'a>(from: UrlCow<'_>, to: UrlCow<'a>) -> Result<Ur
 	}
 
 	if from.covariant(&to) {
-		return Ok(UrlBuf { loc: LocBuf::zeroed("."), scheme: to.scheme().clone() }.into());
+		return Ok(UrlBuf { loc: LocBuf::zeroed("."), scheme: to.scheme().into() }.into());
 	}
 
 	let (mut f_it, mut t_it) = (from.components(), to.components());
@@ -47,5 +47,5 @@ pub(super) fn url_relative_to<'a>(from: UrlCow<'_>, to: UrlCow<'a>) -> Result<Ur
 	let rest = t_head.into_iter().chain(t_it);
 
 	let buf: PathBuf = dots.chain(rest).collect();
-	Ok(UrlBuf { loc: LocBuf::zeroed(buf), scheme: to.scheme().clone() }.into())
+	Ok(UrlBuf { loc: LocBuf::zeroed(buf), scheme: to.scheme().into() }.into())
 }

@@ -53,7 +53,7 @@ impl Actor for Cd {
 
 		// Parent
 		if let Some(parent) = opt.target.parent() {
-			tab.parent = Some(tab.history.remove_or(&parent));
+			tab.parent = Some(tab.history.remove_or(parent));
 		}
 
 		err!(Pubsub::pub_after_cd(tab.id, tab.cwd()));

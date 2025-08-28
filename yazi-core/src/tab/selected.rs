@@ -59,7 +59,7 @@ impl Selected {
 		let mut parent = urls[0].parent();
 		let mut parents = vec![];
 		while let Some(u) = parent {
-			if self.inner.contains_key(&UrlCov::new(&u)) {
+			if self.inner.contains_key(&UrlCov::new(u)) {
 				return 0;
 			}
 
@@ -117,11 +117,11 @@ impl Selected {
 		// FIXME: use UrlCov::parent() instead
 		let mut parent = first.parent();
 		while let Some(u) = parent {
-			let n = self.parents.get_mut(&UrlCov::new(&u)).unwrap();
+			let n = self.parents.get_mut(&UrlCov::new(u)).unwrap();
 
 			*n -= count;
 			if *n == 0 {
-				self.parents.remove(&UrlCov::new(&u));
+				self.parents.remove(&UrlCov::new(u));
 			}
 
 			parent = u.parent();
@@ -147,14 +147,14 @@ impl Selected {
 
 #[cfg(test)]
 mod tests {
-	use yazi_shared::url::UrlCow;
+	use yazi_shared::{scheme::SchemeCow, url::UrlCow};
 
 	use super::*;
 
 	fn url(s: &str) -> Url<'_> {
 		match UrlCow::try_from(s).unwrap() {
-			UrlCow::Borrowed(url) => url,
-			UrlCow::Owned(_) => unreachable!(),
+			UrlCow::Borrowed { loc, scheme: SchemeCow::Borrowed(scheme) } => Url { loc, scheme },
+			_ => unreachable!(),
 		}
 	}
 
@@ -275,16 +275,16 @@ mod tests {
 		let child1 = url("/parent/child1");
 		let child2 = url("/parent/child2");
 		let child3 = url("/parent/child3");
-		assert_eq!(3, s.add_same([&child1, &child2, &child3]));
+		assert_eq!(3, s.add_same([child1, child2, child3]));
 
-		assert!(s.remove(&child1));
+		assert!(s.remove(child1));
 		assert_eq!(s.inner.len(), 2);
 		assert!(!s.parents.is_empty());
 
-		assert!(s.remove(&child2));
+		assert!(s.remove(child2));
 		assert!(!s.parents.is_empty());
 
-		assert!(s.remove(&child3));
+		assert!(s.remove(child3));
 		assert!(s.inner.is_empty());
 		assert!(s.parents.is_empty());
 	}
