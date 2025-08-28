@@ -7,7 +7,6 @@
 
   installShellFiles,
   stdenv,
-  darwin,
   rust-jemalloc-sys,
 
   imagemagick,
