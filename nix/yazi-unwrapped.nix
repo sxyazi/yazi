@@ -7,7 +7,6 @@
 
   installShellFiles,
   stdenv,
-  darwin,
   rust-jemalloc-sys,
 
   imagemagick,
@@ -47,7 +46,7 @@ rustPlatform.buildRustPackage rec {
 
   buildInputs = [
     rust-jemalloc-sys
-  ] ++ lib.optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [ Foundation ]);
+  ];
 
   postInstall = ''
     installShellCompletion --cmd yazi \
