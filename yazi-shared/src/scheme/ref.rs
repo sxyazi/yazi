@@ -1,6 +1,6 @@
 use crate::{pool::InternStr, scheme::Scheme};
 
-#[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 pub enum SchemeRef<'a> {
 	#[default]
 	Regular,

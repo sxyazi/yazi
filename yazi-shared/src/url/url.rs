@@ -10,11 +10,6 @@ pub struct Url<'a> {
 	pub scheme: SchemeRef<'a>,
 }
 
-// TODO: remove
-impl<'a> From<&'a Url<'a>> for Url<'a> {
-	fn from(value: &'a Url) -> Self { Self { loc: value.loc.as_loc(), scheme: value.scheme } }
-}
-
 impl<'a> From<&'a UrlBuf> for Url<'a> {
 	fn from(value: &'a UrlBuf) -> Self {
 		Self { loc: value.loc.as_loc(), scheme: value.scheme.as_ref() }
@@ -41,7 +36,7 @@ impl Debug for Url<'_> {
 		if self.scheme == SchemeRef::Regular {
 			write!(f, "{}", self.loc.display())
 		} else {
-			write!(f, "{}{}", Encode::from(self), self.loc.display())
+			write!(f, "{}{}", Encode::from(*self), self.loc.display())
 		}
 	}
 }
@@ -68,9 +63,6 @@ impl<'a> Url<'a> {
 
 	#[inline]
 	pub fn has_root(self) -> bool { self.loc.has_root() }
-
-	#[inline]
-	pub fn as_url(self) -> Url<'a> { self }
 
 	#[inline]
 	pub fn to_owned(self) -> UrlBuf { self.into() }

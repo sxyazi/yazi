@@ -1,6 +1,8 @@
+use std::hash::{Hash, Hasher};
+
 use crate::{pool::Symbol, scheme::SchemeRef};
 
-#[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub enum Scheme {
 	#[default]
 	Regular,
@@ -10,6 +12,10 @@ pub enum Scheme {
 	Archive(Symbol<str>),
 
 	Sftp(Symbol<str>),
+}
+
+impl Hash for Scheme {
+	fn hash<H: Hasher>(&self, state: &mut H) { self.as_ref().hash(state); }
 }
 
 impl Scheme {

@@ -275,16 +275,16 @@ mod tests {
 		let child1 = url("/parent/child1");
 		let child2 = url("/parent/child2");
 		let child3 = url("/parent/child3");
-		assert_eq!(3, s.add_same([&child1, &child2, &child3]));
+		assert_eq!(3, s.add_same([child1, child2, child3]));
 
-		assert!(s.remove(&child1));
+		assert!(s.remove(child1));
 		assert_eq!(s.inner.len(), 2);
 		assert!(!s.parents.is_empty());
 
-		assert!(s.remove(&child2));
+		assert!(s.remove(child2));
 		assert!(!s.parents.is_empty());
 
-		assert!(s.remove(&child3));
+		assert!(s.remove(child3));
 		assert!(s.inner.is_empty());
 		assert!(s.parents.is_empty());
 	}

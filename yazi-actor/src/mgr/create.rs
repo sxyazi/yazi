@@ -53,7 +53,7 @@ impl Create {
 			FilesOp::Deleting(parent.into(), [urn.into()].into()).emit();
 			provider::create(&new).await?;
 		} else if let Some(parent) = new.parent() {
-			provider::create_dir_all(&parent).await.ok();
+			provider::create_dir_all(parent).await.ok();
 			ok_or_not_found(provider::remove_file(&new).await)?;
 			provider::create(&new).await?;
 		} else {

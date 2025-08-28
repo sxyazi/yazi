@@ -77,7 +77,7 @@ impl File {
 				};
 
 				let src = if task.relative {
-					path_relative_to(provider::canonicalize(&task.to.parent().unwrap()).await?.loc, &src)?
+					path_relative_to(provider::canonicalize(task.to.parent().unwrap()).await?.loc, &src)?
 				} else {
 					src
 				};

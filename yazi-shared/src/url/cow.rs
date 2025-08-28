@@ -3,12 +3,12 @@ use std::{borrow::Cow, path::{Path, PathBuf}};
 use anyhow::Result;
 use percent_encoding::percent_decode;
 
-use crate::{IntoOsStr, loc::{Loc, LocBuf}, scheme::{Scheme, SchemeCow, SchemeRef}, url::{Components, Url, UrlBuf, Urn}};
+use crate::{IntoOsStr, loc::{Loc, LocBuf}, scheme::{SchemeCow, SchemeRef}, url::{Components, Url, UrlBuf, Urn}};
 
 #[derive(Debug)]
 pub enum UrlCow<'a> {
 	Borrowed { loc: Loc<'a>, scheme: SchemeCow<'a> },
-	Owned { loc: LocBuf, scheme: Scheme },
+	Owned { loc: LocBuf, scheme: SchemeCow<'a> },
 }
 
 impl Default for UrlCow<'_> {
@@ -26,7 +26,7 @@ impl<'a> From<&'a UrlBuf> for UrlCow<'a> {
 }
 
 impl From<UrlBuf> for UrlCow<'_> {
-	fn from(value: UrlBuf) -> Self { Self::Owned { loc: value.loc, scheme: value.scheme } }
+	fn from(value: UrlBuf) -> Self { Self::Owned { loc: value.loc, scheme: value.scheme.into() } }
 }
 
 impl<'a> From<&'a UrlCow<'a>> for Url<'a> {
@@ -52,9 +52,9 @@ impl<'a> TryFrom<&'a [u8]> for UrlCow<'a> {
 			(Cow::Borrowed(p), Some((uri, urn))) => {
 				Self::Borrowed { loc: Loc::with(p, uri, urn)?, scheme }
 			}
-			(Cow::Owned(p), None) => Self::Owned { loc: LocBuf::from(p), scheme: scheme.into() },
+			(Cow::Owned(p), None) => Self::Owned { loc: LocBuf::from(p), scheme },
 			(Cow::Owned(p), Some((uri, urn))) => {
-				Self::Owned { loc: LocBuf::with(p, uri, urn)?, scheme: scheme.into() }
+				Self::Owned { loc: LocBuf::with(p, uri, urn)?, scheme }
 			}
 		})
 	}
@@ -98,7 +98,7 @@ impl PartialEq<UrlBuf> for UrlCow<'_> {
 	fn eq(&self, other: &UrlBuf) -> bool { self.as_url() == other.as_url() }
 }
 
-impl UrlCow<'_> {
+impl<'a> UrlCow<'a> {
 	#[inline]
 	pub fn loc(&self) -> Loc<'_> {
 		match self {
@@ -127,7 +127,15 @@ impl UrlCow<'_> {
 	pub fn into_owned(self) -> UrlBuf {
 		match self {
 			UrlCow::Borrowed { loc, scheme } => UrlBuf { loc: loc.into(), scheme: scheme.into() },
-			UrlCow::Owned { loc, scheme } => UrlBuf { loc, scheme },
+			UrlCow::Owned { loc, scheme } => UrlBuf { loc, scheme: scheme.into() },
+		}
+	}
+
+	#[inline]
+	pub fn into_scheme(self) -> SchemeCow<'a> {
+		match self {
+			UrlCow::Borrowed { scheme, .. } => scheme,
+			UrlCow::Owned { scheme, .. } => scheme,
 		}
 	}
 

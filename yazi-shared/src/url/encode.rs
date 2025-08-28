@@ -9,8 +9,8 @@ pub struct Encode<'a> {
 	scheme: SchemeRef<'a>,
 }
 
-impl<'a> From<&'a Url<'a>> for Encode<'a> {
-	fn from(url: &'a Url<'a>) -> Self { Self::new(url.loc, url.scheme) }
+impl<'a> From<Url<'a>> for Encode<'a> {
+	fn from(url: Url<'a>) -> Self { Self::new(url.loc, url.scheme) }
 }
 
 impl<'a> From<&'a UrlBuf> for Encode<'a> {
@@ -76,10 +76,6 @@ impl Display for Encode<'_> {
 pub struct EncodeTilded<'a> {
 	loc:    Loc<'a>,
 	scheme: SchemeRef<'a>,
-}
-
-impl<'a> From<&'a Url<'a>> for EncodeTilded<'a> {
-	fn from(url: &'a Url<'a>) -> Self { Self { loc: url.loc, scheme: url.scheme } }
 }
 
 impl<'a> From<&'a UrlBuf> for EncodeTilded<'a> {

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{loc::LocBuf, pool::Pool, scheme::{Scheme, SchemeRef}, url::{Components, Display, Encode, EncodeTilded, Uri, Url, UrlCow, Urn}};
 
-#[derive(Clone, Default, Eq, Ord, PartialOrd, PartialEq, Hash)]
+#[derive(Clone, Default, Eq, Hash, PartialEq)]
 pub struct UrlBuf {
 	pub loc:    LocBuf,
 	pub scheme: Scheme,

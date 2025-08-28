@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::{OsStr, OsString}, iter::FusedIterator, ops::Not, pa
 
 use crate::{loc::Loc, scheme::{Scheme, SchemeRef}, url::{Encode, Url, UrlBuf, UrlCow}};
 
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Component<'a> {
 	Scheme(SchemeRef<'a>),
 	Prefix(PrefixComponent<'a>),
