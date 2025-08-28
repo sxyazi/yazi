@@ -1,13 +1,13 @@
 <div align="center">
-  <sup>Special thanks to:</sup>
-  <br><br>
-  <a href="https://www.warp.dev/?utm_source=github&utm_medium=referral&utm_campaign=yazi" target="_blank">
-    <img alt="Warp sponsorship" width="300" src="https://github.com/user-attachments/assets/c7f141e7-9751-407d-bb0e-d6f2c487b34f">
-    <br>
-    <b>Warp, the intelligent terminal</b>
-    <br>
-    <sup>Yazi's AI-powered terminal of choice!<br>Available for macOS, Linux and Windows</sup>
-  </a>
+	<a href="https://go.warp.dev/yazi" target="_blank">
+		<sup>Special thanks to:</sup>
+		<br>
+		<img alt="Warp sponsorship" width="400" src="https://github.com/warpdotdev/brand-assets/blob/main/Github/Sponsor/Warp-Github-LG-02.png">
+		<br>
+		<h>Warp, built for coding with multiple AI agents</b>
+		<br>
+		<sup>Available for macOS, Linux and Windows</sup>
+	</a>
 </div>
 
 <br>
@@ -52,25 +52,25 @@ Yazi is currently in heavy development, expect breaking changes.
 
 ## Image Preview
 
-| Platform                                                                     | Protocol                               | Support                                               |
-| ---------------------------------------------------------------------------- | -------------------------------------- | ----------------------------------------------------- |
-| [kitty](https://github.com/kovidgoyal/kitty) (>= 0.28.0)                     | [Kitty unicode placeholders][kgp]      | ✅ Built-in                                           |
-| [iTerm2](https://iterm2.com)                                                 | [Inline images protocol][iip]          | ✅ Built-in                                           |
-| [WezTerm](https://github.com/wez/wezterm)                                    | [Inline images protocol][iip]          | ✅ Built-in                                           |
-| [Konsole](https://invent.kde.org/utilities/konsole)                          | [Kitty old protocol][kgp-old]          | ✅ Built-in                                           |
-| [foot](https://codeberg.org/dnkl/foot)                                       | [Sixel graphics format][sixel]         | ✅ Built-in                                           |
-| [Ghostty](https://github.com/ghostty-org/ghostty)                            | [Kitty unicode placeholders][kgp]      | ✅ Built-in                                           |
-| [Windows Terminal](https://github.com/microsoft/terminal) (>= v1.22.10352.0) | [Sixel graphics format][sixel]         | ✅ Built-in                                           |
-| [st with Sixel patch](https://github.com/bakkeby/st-flexipatch)              | [Sixel graphics format][sixel]         | ✅ Built-in                                           |
-| [Warp](https://www.warp.dev) (macOS/Linux only)                              | [Inline images protocol][iip]          | ✅ Built-in                                           |
-| [Tabby](https://github.com/Eugeny/tabby)                                     | [Inline images protocol][iip]          | ✅ Built-in                                           |
-| [VSCode](https://github.com/microsoft/vscode)                                | [Inline images protocol][iip]          | ✅ Built-in                                           |
-| [Rio](https://github.com/raphamorim/rio)                                     | [Inline images protocol][iip]          | ✅ Built-in                                           |
-| [Black Box](https://gitlab.gnome.org/raggesilver/blackbox)                   | [Sixel graphics format][sixel]         | ✅ Built-in                                           |
-| [Hyper](https://github.com/vercel/hyper)                                     | [Inline images protocol][iip]          | ✅ Built-in                                           |
-| [Bobcat](https://github.com/ismail-yilmaz/Bobcat)                            | [Inline images protocol][iip]          | ✅ Built-in                                           |
-| X11 / Wayland                                                                | Window system protocol                 | ☑️ [Überzug++][ueberzug] required                     |
-| Fallback                                                                     | [ASCII art (Unicode block)][ascii-art] | ☑️ [Chafa][chafa] required                            |
+| Platform                                                                     | Protocol                               | Support                           |
+| ---------------------------------------------------------------------------- | -------------------------------------- | --------------------------------- |
+| [kitty](https://github.com/kovidgoyal/kitty) (>= 0.28.0)                     | [Kitty unicode placeholders][kgp]      | ✅ Built-in                       |
+| [iTerm2](https://iterm2.com)                                                 | [Inline images protocol][iip]          | ✅ Built-in                       |
+| [WezTerm](https://github.com/wez/wezterm)                                    | [Inline images protocol][iip]          | ✅ Built-in                       |
+| [Konsole](https://invent.kde.org/utilities/konsole)                          | [Kitty old protocol][kgp-old]          | ✅ Built-in                       |
+| [foot](https://codeberg.org/dnkl/foot)                                       | [Sixel graphics format][sixel]         | ✅ Built-in                       |
+| [Ghostty](https://github.com/ghostty-org/ghostty)                            | [Kitty unicode placeholders][kgp]      | ✅ Built-in                       |
+| [Windows Terminal](https://github.com/microsoft/terminal) (>= v1.22.10352.0) | [Sixel graphics format][sixel]         | ✅ Built-in                       |
+| [st with Sixel patch](https://github.com/bakkeby/st-flexipatch)              | [Sixel graphics format][sixel]         | ✅ Built-in                       |
+| [Warp](https://www.warp.dev) (macOS/Linux only)                              | [Inline images protocol][iip]          | ✅ Built-in                       |
+| [Tabby](https://github.com/Eugeny/tabby)                                     | [Inline images protocol][iip]          | ✅ Built-in                       |
+| [VSCode](https://github.com/microsoft/vscode)                                | [Inline images protocol][iip]          | ✅ Built-in                       |
+| [Rio](https://github.com/raphamorim/rio)                                     | [Inline images protocol][iip]          | ✅ Built-in                       |
+| [Black Box](https://gitlab.gnome.org/raggesilver/blackbox)                   | [Sixel graphics format][sixel]         | ✅ Built-in                       |
+| [Hyper](https://github.com/vercel/hyper)                                     | [Inline images protocol][iip]          | ✅ Built-in                       |
+| [Bobcat](https://github.com/ismail-yilmaz/Bobcat)                            | [Inline images protocol][iip]          | ✅ Built-in                       |
+| X11 / Wayland                                                                | Window system protocol                 | ☑️ [Überzug++][ueberzug] required |
+| Fallback                                                                     | [ASCII art (Unicode block)][ascii-art] | ☑️ [Chafa][chafa] required        |
 
 See https://yazi-rs.github.io/docs/image-preview for details.
 

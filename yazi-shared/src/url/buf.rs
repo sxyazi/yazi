@@ -3,7 +3,7 @@ use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, hash::BuildHasher, p
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::{loc::LocBuf, pool::Pool, url::{Components, Display, Encode, EncodeTilded, Scheme, Uri, Url, UrlCow, Urn}};
+use crate::{loc::LocBuf, pool::Pool, scheme::{Scheme, SchemeRef}, url::{Components, Display, Encode, EncodeTilded, Uri, Url, UrlCow, Urn}};
 
 #[derive(Clone, Default, Eq, Ord, PartialOrd, PartialEq, Hash)]
 pub struct UrlBuf {
@@ -20,11 +20,11 @@ impl From<PathBuf> for UrlBuf {
 }
 
 impl From<&Url<'_>> for UrlBuf {
-	fn from(url: &Url<'_>) -> Self { Self { loc: url.loc.into(), scheme: url.scheme.clone() } }
+	fn from(url: &Url<'_>) -> Self { Self { loc: url.loc.into(), scheme: url.scheme.into() } }
 }
 
 impl From<Url<'_>> for UrlBuf {
-	fn from(url: Url<'_>) -> Self { Self { loc: url.loc.into(), scheme: url.scheme } }
+	fn from(url: Url<'_>) -> Self { Self { loc: url.loc.into(), scheme: url.scheme.into() } }
 }
 
 impl From<&UrlBuf> for UrlBuf {
@@ -107,34 +107,35 @@ impl UrlBuf {
 
 	pub fn strip_prefix<'a>(&self, base: impl Into<Url<'a>>) -> Option<&Urn> {
 		use Scheme as S;
+		use SchemeRef as T;
 
 		let base = base.into();
 		let prefix = self.loc.strip_prefix(base.loc).ok()?;
 
-		Some(Urn::new(match (&self.scheme, &base.scheme) {
+		Some(Urn::new(match (&self.scheme, base.scheme) {
 			// Same scheme
-			(S::Regular, S::Regular) => Some(prefix),
-			(S::Search(_), S::Search(_)) => Some(prefix),
-			(S::Archive(a), S::Archive(b)) => Some(prefix).filter(|_| a == b),
-			(S::Sftp(a), S::Sftp(b)) => Some(prefix).filter(|_| a == b),
+			(S::Regular, T::Regular) => Some(prefix),
+			(S::Search(_), T::Search(_)) => Some(prefix),
+			(S::Archive(a), T::Archive(b)) => Some(prefix).filter(|_| a == b),
+			(S::Sftp(a), T::Sftp(b)) => Some(prefix).filter(|_| a == b),
 
 			// Both are local files
-			(S::Regular, S::Search(_)) => Some(prefix),
-			(S::Search(_), S::Regular) => Some(prefix),
+			(S::Regular, T::Search(_)) => Some(prefix),
+			(S::Search(_), T::Regular) => Some(prefix),
 
 			// Only the entry of archives is a local file
-			(S::Regular, S::Archive(_)) => Some(prefix).filter(|_| base.uri().is_empty()),
-			(S::Search(_), S::Archive(_)) => Some(prefix).filter(|_| base.uri().is_empty()),
-			(S::Archive(_), S::Regular) => Some(prefix).filter(|_| self.uri().is_empty()),
-			(S::Archive(_), S::Search(_)) => Some(prefix).filter(|_| self.uri().is_empty()),
+			(S::Regular, T::Archive(_)) => Some(prefix).filter(|_| base.uri().is_empty()),
+			(S::Search(_), T::Archive(_)) => Some(prefix).filter(|_| base.uri().is_empty()),
+			(S::Archive(_), T::Regular) => Some(prefix).filter(|_| self.uri().is_empty()),
+			(S::Archive(_), T::Search(_)) => Some(prefix).filter(|_| self.uri().is_empty()),
 
 			// Independent virtual file space
-			(S::Regular, S::Sftp(_)) => None,
-			(S::Search(_), S::Sftp(_)) => None,
-			(S::Archive(_), S::Sftp(_)) => None,
-			(S::Sftp(_), S::Regular) => None,
-			(S::Sftp(_), S::Search(_)) => None,
-			(S::Sftp(_), S::Archive(_)) => None,
+			(S::Regular, T::Sftp(_)) => None,
+			(S::Search(_), T::Sftp(_)) => None,
+			(S::Archive(_), T::Sftp(_)) => None,
+			(S::Sftp(_), T::Regular) => None,
+			(S::Sftp(_), T::Search(_)) => None,
+			(S::Sftp(_), T::Archive(_)) => None,
 		}?))
 	}
 

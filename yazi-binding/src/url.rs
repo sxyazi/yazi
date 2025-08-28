@@ -38,7 +38,9 @@ impl<'a> From<&'a Url> for yazi_shared::url::Url<'a> {
 }
 
 impl<'a> From<&'a Url> for UrlCow<'a> {
-	fn from(value: &'a Url) -> Self { UrlCow::Borrowed(value.as_url()) }
+	fn from(value: &'a Url) -> Self {
+		UrlCow::Borrowed { loc: value.loc.as_loc(), scheme: value.scheme.as_ref().into() }
+	}
 }
 
 impl From<Url> for yazi_shared::url::UrlBufCov {

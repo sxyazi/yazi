@@ -172,7 +172,7 @@ pub fn max_common_root(urls: &[UrlBuf]) -> usize {
 			.components()
 			.zip(parent.components())
 			.take_while(|(a, b)| match (a, b) {
-				(Component::Scheme(a), Component::Scheme(b)) => a.covariant(b),
+				(Component::Scheme(a), Component::Scheme(b)) => a.covariant(*b),
 				(a, b) => a == b,
 			})
 			.count()

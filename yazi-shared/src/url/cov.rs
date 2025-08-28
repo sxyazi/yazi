@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::url::{Url, UrlBuf, UrlCow};
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct UrlCov<'a>(Url<'a>);
 
 impl<'a> Deref for UrlCov<'a> {

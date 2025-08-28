@@ -9,8 +9,8 @@ pub fn clean_url<'a>(url: impl Into<UrlCow<'a>>) -> UrlBuf {
 
 	let loc = LocBuf::with(path, uri, urn).expect("Failed to create Loc from cleaned path");
 	match cow {
-		UrlCow::Borrowed(u) => UrlBuf { loc, scheme: u.scheme.clone() },
-		UrlCow::Owned(u) => UrlBuf { loc, scheme: u.scheme },
+		UrlCow::Borrowed { scheme, .. } => UrlBuf { loc, scheme: scheme.into() },
+		UrlCow::Owned { scheme, .. } => UrlBuf { loc, scheme },
 	}
 }
 

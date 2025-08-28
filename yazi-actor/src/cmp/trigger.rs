@@ -79,8 +79,10 @@ impl Trigger {
 		const SEP: char = std::path::MAIN_SEPARATOR;
 
 		Some(match path.as_os_str().rsplit_once(SEP) {
-			Some((p, c)) if p.is_empty() => (UrlBuf { loc: MAIN_SEPARATOR_STR.into(), scheme }, c.into()),
-			Some((p, c)) => (expand_url(UrlBuf { loc: p.into(), scheme }), c.into()),
+			Some((p, c)) if p.is_empty() => {
+				(UrlBuf { loc: MAIN_SEPARATOR_STR.into(), scheme: scheme.into() }, c.into())
+			}
+			Some((p, c)) => (expand_url(UrlBuf { loc: p.into(), scheme: scheme.into() }), c.into()),
 			None => (CWD.load().as_ref().clone(), path.into()),
 		})
 	}
