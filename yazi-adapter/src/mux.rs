@@ -20,6 +20,37 @@ impl Mux {
 			Cow::Borrowed(s)
 		}
 	}
+	
+	pub fn tmux_has_csi_u() -> bool {
+	    let output = time!(
+	        "Querying tmux for CSI u support",
+	        std::process::Command::new("tmux")
+	            .args(["display-message", "-p", "#{extended-keys},#{extended-keys-format}"])
+	            .output()
+	    );
+
+	    match output {
+	        Ok(o) if o.status.success() => {
+	            // Success case: The command ran and exited with code 0.
+	            let stdout = String::from_utf8_lossy(&o.stdout);
+	            stdout.trim() == "on,csi-u"
+	        }
+	        Ok(o) => {
+	            // Execution Error: The command ran but failed.
+	            error!(
+	                "Querying tmux for CSI u support failed with status {:?}: {}",
+	                o.status,
+	                String::from_utf8_lossy(&o.stderr)
+	            );
+	            false
+	        }
+	        Err(e) => {
+	            // Spawn Error: The command could not be started.
+	            error!("Failed to spawn `tmux display-message` for CSI u query: {}", e);
+	            false
+	        }
+	    }
+	}
 
 	pub fn tmux_passthrough() {
 		let output = time!(

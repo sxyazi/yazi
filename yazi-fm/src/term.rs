@@ -30,23 +30,54 @@ impl Term {
 			yazi_adapter::Mux::tmux_passthrough();
 		}
 
-		execute!(
-			TTY.writer(),
-			yazi_term::If(!TMUX.get(), EnterAlternateScreen),
-			Print("\x1bP$q q\x1b\\"), // Request cursor shape (DECRQSS query for DECSCUSR)
-			Print(Mux::csi("\x1b[?12$p")), // Request cursor blink status (DECSET)
-			Print("\x1b[?u"),         // Request keyboard enhancement flags (CSI u)
-			Print(Mux::csi("\x1b[0c")), // Request device attributes
-			yazi_term::If(TMUX.get(), EnterAlternateScreen),
-			EnableBracketedPaste,
-			yazi_term::If(!YAZI.mgr.mouse_events.get().is_empty(), EnableMouseCapture),
-		)?;
+		let mut csi_u_supported = false; // This will hold the result of our detection.
 
-		let resp = Emulator::read_until_da1();
-		Mux::tmux_drain()?;
-		yazi_term::RestoreCursor::store(&resp);
+    if TMUX.get() {
+        // --- TMUX-SPECIFIC LOGIC ---
+        // 1. Reliably detect CSI u support by querying tmux's own options.
+        csi_u_supported = Mux::tmux_has_csi_u();
 
-		CSI_U.store(resp.contains("\x1b[?0u"), Ordering::Relaxed);
+        // 2. Send only the essential queries, skipping the problematic cursor ones.
+        execute!(
+					TTY.writer(),
+					Print(Mux::csi("\x1b[0c")), // Request device attributes
+					EnterAlternateScreen,
+					EnableBracketedPaste,
+					yazi_term::If(!YAZI.mgr.mouse_events.get().is_empty(), EnableMouseCapture),
+				)?;
+
+        // 3. Read the terminal's response, but do NOT call store().
+        //    This allows tmux's native alternate screen restoration to work.
+    		Emulator::read_until_da1();
+				Mux::tmux_drain()?;
+
+    } else {
+        // --- ORIGINAL LOGIC FOR NON-TMUX TERMINALS ---
+        // 1. Send all original queries, as they may be supported by other terminals.
+				execute!(
+					TTY.writer(),
+					yazi_term::If(!TMUX.get(), EnterAlternateScreen),
+					Print("\x1bP$q q\x1b\\"), // Request cursor shape (DECRQSS query for DECSCUSR)
+					Print(Mux::csi("\x1b[?12$p")), // Request cursor blink status (DECSET)
+					Print("\x1b[?u"),         // Request keyboard enhancement flags (CSI u)
+					Print(Mux::csi("\x1b[0c")), // Request device attributes
+					yazi_term::If(TMUX.get(), EnterAlternateScreen),
+					EnableBracketedPaste,
+					yazi_term::If(!YAZI.mgr.mouse_events.get().is_empty(), EnableMouseCapture),
+				)?;
+
+        // 2. Use the original logic to parse the response and store the cursor state.
+				let resp = Emulator::read_until_da1();
+				Mux::tmux_drain()?;
+				yazi_term::RestoreCursor::store(&resp);
+
+        // 3. Check the ANSI response for CSI u support, as before.
+        if resp.contains("\x1b[?0u") {
+            csi_u_supported = true;
+        }
+    }
+
+		CSI_U.store(csi_u_supported, Ordering::Relaxed);
 		if CSI_U.load(Ordering::Relaxed) {
 			PushKeyboardEnhancementFlags(
 				KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES
