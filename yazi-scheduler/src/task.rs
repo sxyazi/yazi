@@ -3,10 +3,11 @@ use yazi_shared::Id;
 
 #[derive(Debug, Default)]
 pub struct Task {
-	pub id:    Id,
-	pub kind:  TaskKind,
-	pub name:  String,
-	pub stage: TaskStage,
+	pub id:     Id,
+	pub kind:   TaskKind,
+	pub name:   String,
+	pub detail: Option<String>,
+	pub stage:  TaskStage,
 
 	pub total: u32,
 	pub succ:  u32,
@@ -34,7 +35,8 @@ pub enum TaskKind {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct TaskSummary {
-	pub name: String,
+	pub name:   String,
+	pub detail: Option<String>,
 
 	pub total: u32,
 	pub succ:  u32,
@@ -47,7 +49,8 @@ pub struct TaskSummary {
 impl From<&Task> for TaskSummary {
 	fn from(task: &Task) -> Self {
 		TaskSummary {
-			name: task.name.clone(),
+			name:   task.name.clone(),
+			detail: task.detail.clone(),
 
 			total: task.total,
 			succ:  task.succ,
@@ -63,7 +66,9 @@ impl From<&Task> for TaskSummary {
 pub enum TaskProg {
 	// id, size
 	New(Id, u64),
-	// id, processed, size
+	// id, detail
+	Update(Id, String),
+	// id, status, processed
 	Adv(Id, u32, u64),
 	// id
 	Succ(Id),

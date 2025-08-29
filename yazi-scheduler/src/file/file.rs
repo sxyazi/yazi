@@ -1,7 +1,7 @@
 use std::{borrow::Cow, collections::VecDeque};
 
 use anyhow::{Result, anyhow, bail};
-use tokio::{io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
+use tokio::{io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc, time};
 use tracing::warn;
 use yazi_config::YAZI;
 use yazi_fs::{SizeCalculator, cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path::{path_relative_to, skip_url}, provider::{self, DirEntry}};
@@ -27,21 +27,48 @@ impl File {
 		match r#in {
 			FileIn::Paste(mut task) => {
 				ok_or_not_found(provider::remove_file(&task.to).await)?;
-				let mut it = copy_with_progress(&task.from, &task.to, task.cha.unwrap());
+
+				let mut it = copy_with_progress(
+					&task.from,
+					&task.to,
+					task.cha.unwrap(),
+					Some(time::Duration::from_millis(1000)), /* Interval Check (Default is 3 seconds if
+					                                          * set
+					                                          * None) */
+				);
 
 				while let Some(res) = it.recv().await {
 					match res {
-						Ok(0) => {
-							if task.cut {
-								provider::remove_file(&task.from).await.ok();
+						// Progress update
+						Ok(p) => {
+							if p.delta > 0 {
+								self.prog.send(TaskProg::Adv(task.id, 0, p.delta))?;
+								if task.files_total > 1 {
+									let filename = task.from.name().unwrap();
+									let detail = format!(
+										"({}/{}) Copying \"{}\"",
+										task.file_idx,
+										task.files_total,
+										filename.to_string_lossy()
+									);
+									self.prog.send(TaskProg::Update(task.id, detail))?;
+								}
 							}
-							break;
+
+							// finalization and break
+							if p.done {
+								if task.cut {
+									provider::remove_file(&task.from).await.ok();
+								}
+								break;
+							}
 						}
-						Ok(n) => self.prog.send(TaskProg::Adv(task.id, 0, n))?,
 						Err(e) if e.kind() == NotFound => {
+							self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 							warn!("Paste task partially done: {task:?}");
 							break;
 						}
+
 						// Operation not permitted (os error 1)
 						// Attribute not found (os error 93)
 						Err(e)
@@ -53,9 +80,13 @@ impl File {
 							self.queue(FileIn::Paste(task), LOW).await?;
 							return Ok(());
 						}
-						Err(e) => Err(e)?,
+						Err(e) => {
+							self.prog.send(TaskProg::Adv(task.id, 1, 0))?; // Mark as done 
+							Err(e)?
+						}
 					}
 				}
+				// Copy Task Done
 				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 			}
 			FileIn::Link(task) => {
@@ -122,6 +153,7 @@ impl File {
 					self.fail(task.id, format!("Delete task failed: {task:?}, {e}"))?;
 					Err(e)?
 				}
+
 				self.prog.send(TaskProg::Adv(task.id, 1, task.length))?
 			}
 			FileIn::Trash(task) => {
@@ -134,6 +166,7 @@ impl File {
 
 	pub async fn paste(&self, mut task: FileInPaste) -> Result<()> {
 		if task.cut && ok_or_not_found(provider::rename(&task.from, &task.to).await).is_ok() {
+			self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
 			return self.succ(task.id);
 		}
 
@@ -141,63 +174,86 @@ impl File {
 			task.cha = Some(Self::cha(&task.from, task.follow).await?);
 		}
 
+		let mut files_to_copy: Vec<(UrlBuf, Cha)> = Vec::new();
+		let mut total_size: u64 = 0;
+
 		let cha = task.cha.unwrap();
+
 		if !cha.is_dir() {
-			let id = task.id;
-			self.prog.send(TaskProg::New(id, cha.len))?;
+			// Case 1: The source is a single file
+			files_to_copy.push((task.from.clone(), cha));
+		} else {
+			// Case 2: The source is a directory
+			let root = &task.to;
+			let skip = task.from.components().count();
+			let mut dirs = VecDeque::from([task.from.clone()]);
+			let mut dirs_to_create = Vec::new();
 
-			if cha.is_orphan() || (cha.is_link() && !task.follow) {
-				self.queue(FileIn::Link(task.into()), NORMAL).await?;
-			} else {
-				self.queue(FileIn::Paste(task), LOW).await?;
-			}
-			return self.succ(id);
-		}
+			while let Some(src) = dirs.pop_front() {
+				let dest = root.join(skip_url(&src, skip));
+				dirs_to_create.push(dest);
 
-		macro_rules! continue_unless_ok {
-			($result:expr) => {
-				match $result {
-					Ok(v) => v,
+				let mut it = match provider::read_dir(&src).await {
+					Ok(it) => it,
 					Err(e) => {
-						self.prog.send(TaskProg::New(task.id, 0))?;
-						self.fail(task.id, format!("An error occurred while pasting: {e}"))?;
+						self.fail(task.id, format!("Failed to read directory {src:?}: {e}"))?;
 						continue;
 					}
+				};
+
+				while let Ok(Some(entry)) = it.next_entry().await {
+					let from = entry.url();
+					let cha = match Self::cha_from(entry, &from, task.follow).await {
+						Ok(c) => c,
+						Err(e) => {
+							self.fail(task.id, format!("Failed to get metadata for {from:?}: {e}"))?;
+							continue;
+						}
+					};
+
+					if cha.is_dir() {
+						dirs.push_back(from);
+					} else {
+						total_size = total_size.saturating_add(cha.len);
+						files_to_copy.push((from, cha));
+					}
 				}
-			};
-		}
+			}
 
-		let root = &task.to;
-		let skip = task.from.components().count();
-		let mut dirs = VecDeque::from([task.from.clone()]);
-
-		while let Some(src) = dirs.pop_front() {
-			let dest = root.join(skip_url(&src, skip));
-			continue_unless_ok!(match provider::create_dir(&dest).await {
-				Err(e) if e.kind() != AlreadyExists => Err(e),
-				_ => Ok(()),
-			});
-
-			let mut it = continue_unless_ok!(provider::read_dir(&src).await);
-			while let Ok(Some(entry)) = it.next_entry().await {
-				let from = entry.url();
-				let cha = continue_unless_ok!(Self::cha_from(entry, &from, task.follow).await);
-
-				if cha.is_dir() {
-					dirs.push_back(from);
-					continue;
-				}
-
-				let to = dest.join(from.name().unwrap());
-				self.prog.send(TaskProg::New(task.id, cha.len))?;
-
-				if cha.is_orphan() || (cha.is_link() && !task.follow) {
-					self.queue(FileIn::Link(task.spawn(from, to, cha).into()), NORMAL).await?;
-				} else {
-					self.queue(FileIn::Paste(task.spawn(from, to, cha)), LOW).await?;
+			// Create all destination directories first
+			for dest in dirs_to_create {
+				if let Err(e) = provider::create_dir(&dest).await {
+					if e.kind() != AlreadyExists {
+						return self.fail(task.id, format!("Failed to create directory {dest:?}: {e}"));
+					}
 				}
 			}
 		}
+
+		// Queue all file copy operations
+		let files_total = files_to_copy.len();
+		for (i, (from, cha)) in files_to_copy.into_iter().enumerate() {
+			let to = if !task.cha.unwrap().is_dir() {
+				task.to.clone() // It's a single file copy
+			} else {
+				task.to.join(skip_url(&from, task.from.components().count()))
+			};
+
+			// add a new task progress for each file but dont include size as it already
+			// included in the main task
+			self.prog.send(TaskProg::New(task.id, cha.len))?;
+
+			let mut current_task = task.spawn(from, to, cha);
+			current_task.file_idx = i + 1;
+			current_task.files_total = files_total;
+
+			if cha.is_orphan() || (cha.is_link() && !task.follow) {
+				self.queue(FileIn::Link(current_task.into()), NORMAL).await?;
+			} else {
+				self.queue(FileIn::Paste(current_task), LOW).await?;
+			}
+		}
+
 		self.succ(task.id)
 	}
 

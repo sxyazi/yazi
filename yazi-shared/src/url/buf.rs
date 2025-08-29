@@ -339,7 +339,7 @@ mod tests {
 
 		for (path, expected) in cases {
 			let path: UrlBuf = path.parse()?;
-			assert_eq!(path.parent().map(|u| format!("{:?}", u)).as_deref(), expected);
+			assert_eq!(path.parent().map(|u| format!("{u:?}")).as_deref(), expected);
 		}
 
 		Ok(())
