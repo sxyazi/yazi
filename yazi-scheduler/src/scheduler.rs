@@ -100,7 +100,19 @@ impl Scheduler {
 			if !force {
 				to = unique_name(to, must_be_dir(&from)).await?;
 			}
-			file.paste(FileInPaste { id, from, to, cha: None, cut: true, follow: false, retry: 0 }).await
+			file
+				.paste(FileInPaste {
+					id,
+					from,
+					to,
+					cha: None,
+					cut: true,
+					follow: false,
+					retry: 0,
+					file_idx: 1,
+					files_total: 1,
+				})
+				.await
 		});
 	}
 
@@ -120,7 +132,19 @@ impl Scheduler {
 			if !force {
 				to = unique_name(to, must_be_dir(&from)).await?;
 			}
-			file.paste(FileInPaste { id, from, to, cha: None, cut: false, follow, retry: 0 }).await
+			file
+				.paste(FileInPaste {
+					id,
+					from,
+					to,
+					cha: None,
+					cut: false,
+					follow,
+					retry: 0,
+					file_idx: 1,
+					files_total: 1,
+				})
+				.await
 		});
 	}
 
@@ -369,12 +393,18 @@ impl Scheduler {
 							task.found += size;
 						}
 					}
+					TaskProg::Update(id, detail) => {
+						if let Some(task) = ongoing.lock().get_mut(id) {
+							task.detail = Some(detail);
+						}
+					}
 					TaskProg::Adv(id, succ, processed) => {
 						let mut ongoing = ongoing.lock();
 						if let Some(task) = ongoing.get_mut(id) {
 							task.succ += succ;
 							task.processed += processed;
 						}
+
 						if succ > 0
 							&& let Some(hook) = ongoing.try_remove(id, TaskStage::Pending)
 						{

@@ -1,4 +1,4 @@
-use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Rect}, text::{Line, Text}, widgets::{Block, BorderType, List, Padding, Widget}};
+use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Rect}, text::{Line, Span}, widgets::{Block, BorderType, List, Padding, Widget}};
 use yazi_config::THEME;
 use yazi_core::{Core, tasks::TASKS_PERCENT};
 
@@ -43,12 +43,60 @@ impl Widget for Tasks<'_> {
 
 		let tasks = &self.core.tasks;
 		let items = tasks.summaries.iter().take(inner.height as usize).enumerate().map(|(i, v)| {
-			let mut item =
-				Text::from_iter(textwrap::wrap(&v.name, inner.width as usize).into_iter().map(Line::from));
-			if i == tasks.cursor {
-				item = item.style(THEME.tasks.hovered);
+			let mut lines = vec![Line::from(v.name.as_str())];
+
+			if let Some(detail) = &v.detail {
+				lines.push(Line::from(vec![ratatui::text::Span::raw(detail)]));
 			}
-			item
+
+			// Show progress bar for copy tasks
+			if v.found > 0 && v.name.starts_with("Copy") {
+				// TODO: Add bandwidth speed and ETA for I/O Copy operation
+
+				let percent = (v.processed * 100 / v.found).min(100) as u16;
+				let stats = format!(
+					"{}% - {} / {}",
+					percent,
+					yazi_shared::human_bytes(v.processed),
+					yazi_shared::human_bytes(v.found)
+				);
+
+				// Bar width is 50% of the remaining space after accounting for stats and
+				// brackets
+				let bar_width = (inner.width.saturating_sub(stats.len() as u16 + 1) as f32 * 0.50) as u16;
+
+				if bar_width > 3 {
+					let filled = bar_width * percent / 100;
+					let bar = format!(
+						"[{}{}]",
+						"█".repeat(filled as usize),
+						" ".repeat((bar_width - filled) as usize)
+					);
+					lines.push(Line::from(vec![Span::raw(bar), Span::raw(" "), Span::raw(stats)]));
+				} else {
+					lines.push(Line::from(stats));
+				}
+			}
+
+			if i == tasks.cursor {
+				let hovered_style = THEME.tasks.hovered;
+
+				let mut style_no_underline = hovered_style;
+				style_no_underline.underline = false;
+
+				for line in &mut lines {
+					*line = line.clone().patch_style(style_no_underline);
+				}
+
+				// only add underline to the last line
+				// UI looks better this way
+				if let Some(last_line) = lines.last_mut() {
+					*last_line = last_line.clone().patch_style(hovered_style);
+				}
+			}
+
+			lines.push(Line::from(vec![ratatui::text::Span::raw("")]));
+			lines
 		});
 
 		List::new(items).render(inner, buf);

@@ -26,14 +26,24 @@ pub fn ok_or_not_found<T: Default>(result: io::Result<T>) -> io::Result<T> {
 	}
 }
 
+#[derive(Debug, Clone)]
+pub struct CopyProgress {
+	pub copied: u64,
+	pub total:  Option<u64>,
+	pub delta:  u64, // bytes copied since last update
+	pub done:   bool,
+}
+
 pub fn copy_with_progress(
 	from: &UrlBuf,
 	to: &UrlBuf,
 	cha: Cha,
-) -> mpsc::Receiver<Result<u64, io::Error>> {
-	let (tx, rx) = mpsc::channel(1);
-	let (tick_tx, mut tick_rx) = oneshot::channel();
+	interval: Option<time::Duration>,
+) -> mpsc::Receiver<Result<CopyProgress, io::Error>> {
+	let (tx, rx) = mpsc::channel(8);
+	let (tick_tx, mut tick_rx) = oneshot::channel::<io::Result<u64>>();
 
+	// Spawn a task to do the actual copy
 	tokio::spawn({
 		let (from, to) = (from.clone(), to.clone());
 		async move {
@@ -41,37 +51,62 @@ pub fn copy_with_progress(
 		}
 	});
 
+	// Progress reporting task
 	tokio::spawn({
-		let (tx, to) = (tx.clone(), to.clone());
+		let (tx, from, to) = (tx.clone(), from.clone(), to.clone());
 		async move {
-			let mut last = 0;
-			let mut exit = None;
+			let total_size = provider::symlink_metadata(&from).await.map(|m| m.len()).unwrap_or(0);
+			let total_size = if total_size > 0 { Some(total_size) } else { None };
+
+			let mut last_len: u64 = 0;
+			let mut copied: u64;
+
 			loop {
 				select! {
-					res = &mut tick_rx => exit = Some(res.unwrap()),
-					_ = tx.closed() => break,
-					_ = time::sleep(time::Duration::from_secs(3)) => (),
-				}
+					// copy finished
+					res = &mut tick_rx => {
+							match res {
+								// provider::copy returned success with final total written
+								Ok(Ok(len)) => {
+									copied = len;
+									let delta = copied.saturating_sub(last_len);
 
-				match exit {
-					Some(Ok(len)) => {
-						if len > last {
-							tx.send(Ok(len - last)).await.ok();
-						}
-						tx.send(Ok(0)).await.ok();
-						break;
-					}
-					Some(Err(e)) => {
-						tx.send(Err(e)).await.ok();
-						break;
-					}
-					None => {}
-				}
+									let _ = tx.send(Ok(CopyProgress {
+											copied,
+											total: total_size,
+											delta,
+											done: true,
+									})).await;
 
-				let len = provider::symlink_metadata(&to).await.map(|m| m.len()).unwrap_or(0);
-				if len > last {
-					tx.send(Ok(len - last)).await.ok();
-					last = len;
+									break;
+								}
+								Ok(Err(e)) => {
+									let _ = tx.send(Err(e)).await;
+									break;
+								}
+								Err(_) => {
+									tx.send(Err(io::Error::other("copy task cancelled"))).await.ok();
+									break;
+								}
+							}
+					}
+
+					// Periodic tick to check progress
+					_ = time::sleep(interval.unwrap_or(time::Duration::from_secs(3))) => {
+							let len = provider::symlink_metadata(&to).await.map(|m| m.len()).unwrap_or(0);
+							if len > last_len {
+									let delta = len - last_len;
+									last_len = len;
+									copied = len;
+
+									let _ = tx.send(Ok(CopyProgress {
+											copied,
+											total: total_size,
+											delta,
+											done: false,
+									})).await;
+							}
+					},
 				}
 			}
 		}

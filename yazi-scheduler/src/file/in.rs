@@ -25,13 +25,15 @@ impl FileIn {
 // --- Paste
 #[derive(Clone, Debug)]
 pub struct FileInPaste {
-	pub id:     Id,
-	pub from:   UrlBuf,
-	pub to:     UrlBuf,
-	pub cha:    Option<Cha>,
-	pub cut:    bool,
-	pub follow: bool,
-	pub retry:  u8,
+	pub id:          Id,
+	pub from:        UrlBuf,
+	pub to:          UrlBuf,
+	pub cha:         Option<Cha>,
+	pub cut:         bool,
+	pub follow:      bool,
+	pub retry:       u8,
+	pub file_idx:    usize,
+	pub files_total: usize,
 }
 
 impl FileInPaste {
@@ -44,6 +46,8 @@ impl FileInPaste {
 			cut: self.cut,
 			follow: self.follow,
 			retry: self.retry,
+			file_idx: self.file_idx,
+			files_total: self.files_total,
 		}
 	}
 }
