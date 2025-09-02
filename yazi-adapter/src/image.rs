@@ -85,7 +85,6 @@ impl Image {
 			.unwrap_or(rect)
 	}
 
-	#[inline]
 	fn filter() -> FilterType {
 		match YAZI.preview.image_filter.as_str() {
 			"nearest" => FilterType::Nearest,

@@ -17,7 +17,6 @@ impl Deref for Yanked {
 }
 
 impl Yanked {
-	#[inline]
 	pub(super) fn make(inner: &yazi_core::mgr::Yanked) -> mlua::Result<AnyUserData> {
 		let inner = PtrCell::from(inner);
 

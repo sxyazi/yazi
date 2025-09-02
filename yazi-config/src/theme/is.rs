@@ -19,7 +19,6 @@ pub enum Is {
 }
 
 impl Is {
-	#[inline]
 	pub fn check(&self, cha: &Cha) -> bool {
 		match self {
 			Self::None => true,

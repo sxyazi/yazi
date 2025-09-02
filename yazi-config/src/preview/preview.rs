@@ -29,15 +29,12 @@ pub struct Preview {
 }
 
 impl Preview {
-	#[inline]
 	pub fn tmpfile(&self, prefix: &str) -> PathBuf {
 		self.cache_dir.join(format!("{prefix}-{}", timestamp_us()))
 	}
 
-	#[inline]
 	pub fn indent(&self) -> SStr { Self::indent_with(self.tab_size as usize) }
 
-	#[inline]
 	pub fn indent_with(n: usize) -> SStr {
 		if let Some(s) = TABS.get(n) { Cow::Borrowed(s) } else { Cow::Owned(" ".repeat(n)) }
 	}

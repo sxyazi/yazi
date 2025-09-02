@@ -5,12 +5,12 @@ use tokio::process::{Child, Command};
 use yazi_fs::provider;
 use yazi_shared::url::UrlBuf;
 
-pub struct ShellOpt {
-	pub cwd:    UrlBuf,
-	pub cmd:    OsString,
-	pub args:   Vec<OsString>,
-	pub piped:  bool,
-	pub orphan: bool,
+pub(crate) struct ShellOpt {
+	pub(crate) cwd:    UrlBuf,
+	pub(crate) cmd:    OsString,
+	pub(crate) args:   Vec<OsString>,
+	pub(crate) piped:  bool,
+	pub(crate) orphan: bool,
 }
 
 impl ShellOpt {
@@ -26,7 +26,7 @@ impl ShellOpt {
 	}
 }
 
-pub async fn shell(opt: ShellOpt) -> Result<Child> {
+pub(crate) async fn shell(opt: ShellOpt) -> Result<Child> {
 	tokio::task::spawn_blocking(move || {
 		let cwd: Cow<_> = if let Some(path) = opt.cwd.as_path() {
 			path.into()

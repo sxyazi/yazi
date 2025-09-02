@@ -90,7 +90,6 @@ impl Ember<'static> {
 }
 
 impl<'a> Ember<'a> {
-	#[inline]
 	pub fn kind(&self) -> &str {
 		match self {
 			Self::Hi(_) => "hi",
@@ -111,12 +110,10 @@ impl<'a> Ember<'a> {
 		}
 	}
 
-	#[inline]
 	pub fn with_receiver(self, receiver: Id) -> Payload<'a> {
 		Payload::new(self).with_receiver(receiver)
 	}
 
-	#[inline]
 	pub fn with_sender(self, sender: Id) -> Payload<'a> { Payload::new(self).with_sender(sender) }
 }
 

@@ -78,7 +78,6 @@ impl Table {
 		table.render(rect, buf, &mut self.state);
 	}
 
-	#[inline]
 	pub fn len(&self) -> usize { self.rows.len() }
 
 	pub fn select(&mut self, idx: Option<usize>) {

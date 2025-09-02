@@ -42,7 +42,7 @@ impl Widget for Tasks<'_> {
 		block.render(area, buf);
 
 		let tasks = &self.core.tasks;
-		let items = tasks.summaries.iter().take(inner.height as usize).enumerate().map(|(i, v)| {
+		let items = tasks.snaps.iter().take(inner.height as usize).enumerate().map(|(i, v)| {
 			let mut item =
 				Text::from_iter(textwrap::wrap(&v.name, inner.width as usize).into_iter().map(Line::from));
 			if i == tasks.cursor {

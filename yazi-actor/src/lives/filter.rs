@@ -15,7 +15,6 @@ impl Deref for Filter {
 }
 
 impl Filter {
-	#[inline]
 	pub(super) fn make(inner: &yazi_fs::Filter) -> mlua::Result<AnyUserData> {
 		Lives::scoped_userdata(Self { inner: inner.into() })
 	}

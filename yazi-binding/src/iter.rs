@@ -13,7 +13,6 @@ where
 	I: Iterator<Item = T> + 'static,
 	T: IntoLua + 'static,
 {
-	#[inline]
 	pub fn new(iter: I, len: Option<usize>) -> Self { Self { iter, len, count: 0, cache: vec![] } }
 }
 
@@ -22,7 +21,6 @@ where
 	I: Iterator<Item = T> + 'static,
 	T: FromLua + 'static,
 {
-	#[inline]
 	pub fn into_iter(self, lua: &Lua) -> impl Iterator<Item = mlua::Result<T>> {
 		self
 			.cache

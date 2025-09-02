@@ -156,12 +156,10 @@ impl Client {
 		}
 	}
 
-	#[inline]
 	pub(super) fn push<'a>(payload: impl Into<Payload<'a>>) -> Result<()> {
 		Ok(QUEUE_TX.send(try_format!("{}\n", payload.into())?)?)
 	}
 
-	#[inline]
 	pub(super) fn able(&self, ability: &str) -> bool { self.abilities.contains(ability) }
 
 	async fn connect(server: &mut Option<JoinHandle<()>>) -> (ClientReader, ClientWriter) {
@@ -201,9 +199,7 @@ impl Client {
 }
 
 impl Peer {
-	#[inline]
 	pub(super) fn new(abilities: &HashSet<String>) -> Self { Self { abilities: abilities.clone() } }
 
-	#[inline]
 	pub(super) fn able(&self, ability: &str) -> bool { self.abilities.contains(ability) }
 }

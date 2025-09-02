@@ -136,7 +136,6 @@ impl Term {
 		})
 	}
 
-	#[inline]
 	pub(super) fn can_partial(&mut self) -> bool {
 		self.inner.autoresize().is_ok() && self.last_area == self.inner.get_frame().area()
 	}

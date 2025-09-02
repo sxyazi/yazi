@@ -1,20 +1,19 @@
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use scopeguard::defer;
 use tokio::{io::{AsyncBufReadExt, BufReader}, select, sync::mpsc};
 use yazi_proxy::{AppProxy, HIDER};
-use yazi_shared::Id;
 
 use super::{ProcessInBg, ProcessInBlock, ProcessInOrphan, ShellOpt};
-use crate::TaskProg;
+use crate::{TaskOp, TaskOps, process::{ProcessOutBg, ProcessOutBlock, ProcessOutOrphan}};
 
-pub struct Process {
-	prog: mpsc::UnboundedSender<TaskProg>,
+pub(crate) struct Process {
+	ops: TaskOps,
 }
 
 impl Process {
-	pub fn new(prog: mpsc::UnboundedSender<TaskProg>) -> Self { Self { prog } }
+	pub(crate) fn new(tx: &mpsc::UnboundedSender<TaskOp>) -> Self { Self { ops: tx.into() } }
 
-	pub async fn block(&self, task: ProcessInBlock) -> Result<()> {
+	pub(crate) async fn block(&self, task: ProcessInBlock) -> Result<(), ProcessOutBlock> {
 		let _permit = HIDER.acquire().await.unwrap();
 		defer!(AppProxy::resume());
 		AppProxy::stop().await;
@@ -23,37 +22,30 @@ impl Process {
 		let result = super::shell(task.into()).await;
 		if let Err(e) = result {
 			AppProxy::notify_warn(&cmd.to_string_lossy(), format!("Failed to start process: {e}"));
-			return self.succ(id);
+			return Ok(self.ops.out(id, ProcessOutBlock::Succ));
 		}
 
 		let status = result.unwrap().wait().await?;
 		if !status.success() {
 			let content = match status.code() {
-				Some(130) => return self.succ(id), // Ctrl-C pressed by user
+				Some(130) => return Ok(self.ops.out(id, ProcessOutBlock::Succ)), // Ctrl-C pressed by user
 				Some(code) => format!("Process exited with status code: {code}"),
 				None => "Process terminated by signal".to_string(),
 			};
 			AppProxy::notify_warn(&cmd.to_string_lossy(), &content);
 		}
 
-		self.succ(id)
+		Ok(self.ops.out(id, ProcessOutBlock::Succ))
 	}
 
-	pub async fn orphan(&self, task: ProcessInOrphan) -> Result<()> {
+	pub(crate) async fn orphan(&self, task: ProcessInOrphan) -> Result<(), ProcessOutOrphan> {
 		let id = task.id;
-		match super::shell(task.into()).await {
-			Ok(_) => self.succ(id)?,
-			Err(e) => {
-				self.prog.send(TaskProg::New(id, 0))?;
-				self.fail(id, format!("Failed to start process: {e}"))?;
-			}
-		}
 
-		Ok(())
+		super::shell(task.into()).await?;
+		Ok(self.ops.out(id, ProcessOutOrphan::Succ))
 	}
 
-	pub async fn bg(&self, task: ProcessInBg) -> Result<()> {
-		self.prog.send(TaskProg::New(task.id, 0))?;
+	pub(crate) async fn bg(&self, task: ProcessInBg) -> Result<(), ProcessOutBg> {
 		let mut child = super::shell(ShellOpt {
 			cwd:    task.cwd,
 			cmd:    task.cmd,
@@ -74,38 +66,24 @@ impl Process {
 					break;
 				}
 				Ok(Some(line)) = stdout.next_line() => {
-					self.log(task.id, line)?;
+					self.ops.out(task.id, ProcessOutBg::Log(line));
 				}
 				Ok(Some(line)) = stderr.next_line() => {
-					self.log(task.id, line)?;
+					self.ops.out(task.id, ProcessOutBg::Log(line));
 				}
 				Ok(status) = child.wait() => {
-					self.log(task.id, match status.code() {
+					self.ops.out(task.id, ProcessOutBg::Log(match status.code() {
 						Some(code) => format!("Exited with status code: {code}"),
 						None => "Process terminated by signal".to_string(),
-					})?;
+					}));
 					if !status.success() {
-						return self.fail(task.id, "Process failed".to_string());
+						Err(anyhow!("Process failed"))?;
 					}
 					break;
 				}
 			}
 		}
 
-		self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
-		self.succ(task.id)
+		Ok(self.ops.out(task.id, ProcessOutBg::Succ))
 	}
-}
-
-impl Process {
-	#[inline]
-	fn succ(&self, id: Id) -> Result<()> { Ok(self.prog.send(TaskProg::Succ(id))?) }
-
-	#[inline]
-	fn fail(&self, id: Id, reason: String) -> Result<()> {
-		Ok(self.prog.send(TaskProg::Fail(id, reason))?)
-	}
-
-	#[inline]
-	fn log(&self, id: Id, line: String) -> Result<()> { Ok(self.prog.send(TaskProg::Log(id, line))?) }
 }

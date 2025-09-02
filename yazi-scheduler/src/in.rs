@@ -1,32 +1,51 @@
 use yazi_shared::Id;
 
-use crate::{file::FileIn, plugin::PluginIn, prework::PreworkIn};
+use crate::{file::{FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash}, impl_from_in, plugin::PluginInEntry, prework::{PreworkInFetch, PreworkInLoad, PreworkInSize}};
 
 #[derive(Debug)]
-pub enum TaskOp {
-	File(Box<FileIn>),
-	Plugin(Box<PluginIn>),
-	Prework(Box<PreworkIn>),
+pub(crate) enum TaskIn {
+	// File
+	FilePaste(FileInPaste),
+	FileLink(FileInLink),
+	FileHardlink(FileInHardlink),
+	FileDelete(FileInDelete),
+	FileTrash(FileInTrash),
+
+	// Plugin
+	PluginEntry(PluginInEntry),
+
+	// Prework
+	PreworkFetch(PreworkInFetch),
+	PreworkLoad(PreworkInLoad),
+	PreworkSize(PreworkInSize),
 }
 
-impl TaskOp {
+impl_from_in! {
+	// File
+	FilePaste(FileInPaste), FileLink(FileInLink), FileHardlink(FileInHardlink), FileDelete(FileInDelete), FileTrash(FileInTrash),
+	// Plugin
+	PluginEntry(PluginInEntry),
+	// Prework
+	PreworkFetch(PreworkInFetch), PreworkLoad(PreworkInLoad), PreworkSize(PreworkInSize),
+}
+
+impl TaskIn {
 	pub fn id(&self) -> Id {
 		match self {
-			TaskOp::File(r#in) => r#in.id(),
-			TaskOp::Plugin(r#in) => r#in.id(),
-			TaskOp::Prework(r#in) => r#in.id(),
+			// File
+			Self::FilePaste(r#in) => r#in.id,
+			Self::FileLink(r#in) => r#in.id,
+			Self::FileHardlink(r#in) => r#in.id,
+			Self::FileDelete(r#in) => r#in.id,
+			Self::FileTrash(r#in) => r#in.id,
+
+			// Plugin
+			Self::PluginEntry(r#in) => r#in.id,
+
+			// Prework
+			Self::PreworkFetch(r#in) => r#in.id,
+			Self::PreworkLoad(r#in) => r#in.id,
+			Self::PreworkSize(r#in) => r#in.id,
 		}
 	}
-}
-
-impl From<FileIn> for TaskOp {
-	fn from(r#in: FileIn) -> Self { Self::File(Box::new(r#in)) }
-}
-
-impl From<PluginIn> for TaskOp {
-	fn from(r#in: PluginIn) -> Self { Self::Plugin(Box::new(r#in)) }
-}
-
-impl From<PreworkIn> for TaskOp {
-	fn from(r#in: PreworkIn) -> Self { Self::Prework(Box::new(r#in)) }
 }

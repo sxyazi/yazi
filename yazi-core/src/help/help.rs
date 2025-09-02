@@ -64,7 +64,6 @@ impl Help {
 
 impl Help {
 	// --- Keyword
-	#[inline]
 	pub fn keyword(&self) -> Option<String> {
 		self
 			.in_filter
@@ -75,14 +74,12 @@ impl Help {
 	}
 
 	// --- Bindings
-	#[inline]
 	pub fn window(&self) -> &[&Chord] {
 		let end = (self.offset + self.limit()).min(self.bindings.len());
 		&self.bindings[self.offset..end]
 	}
 
 	// --- Cursor
-	#[inline]
 	pub fn cursor(&self) -> Option<(u16, u16)> {
 		if !self.visible || self.in_filter.is_none() {
 			return None;
@@ -93,10 +90,8 @@ impl Help {
 		None
 	}
 
-	#[inline]
 	pub fn rel_cursor(&self) -> usize { self.cursor - self.offset }
 
-	#[inline]
 	pub fn cursor_shape(&self) -> SetCursorStyle {
 		if YAZI.input.cursor_blink {
 			SetCursorStyle::BlinkingBlock
@@ -107,15 +102,11 @@ impl Help {
 }
 
 impl Scrollable for Help {
-	#[inline]
 	fn total(&self) -> usize { self.bindings.len() }
 
-	#[inline]
 	fn limit(&self) -> usize { Dimension::available().rows.saturating_sub(HELP_MARGIN) as usize }
 
-	#[inline]
 	fn cursor_mut(&mut self) -> &mut usize { &mut self.cursor }
 
-	#[inline]
 	fn offset_mut(&mut self) -> &mut usize { &mut self.offset }
 }

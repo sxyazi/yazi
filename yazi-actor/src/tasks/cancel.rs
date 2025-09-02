@@ -20,7 +20,7 @@ impl Actor for Cancel {
 			succ!();
 		}
 
-		tasks.summaries = tasks.paginate();
+		tasks.snaps = tasks.paginate();
 		act!(tasks:arrow, cx)?;
 		succ!(render!());
 	}

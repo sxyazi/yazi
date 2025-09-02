@@ -69,12 +69,10 @@ impl Icon {
 		self.conds.iter().find(|(c, _)| c.eval(f) == Some(true)).map(|(_, i)| i)
 	}
 
-	#[inline]
 	fn match_by_glob(&self, file: &File) -> Option<&I> {
 		self.globs.iter().find(|(p, _)| p.match_url(&file.url, file.is_dir())).map(|(_, i)| i)
 	}
 
-	#[inline]
 	fn match_by_name(&self, file: &File) -> Option<&I> {
 		let name = file.name()?.to_str()?;
 		if file.is_dir() {
@@ -88,7 +86,6 @@ impl Icon {
 		}
 	}
 
-	#[inline]
 	fn match_by_ext(&self, file: &File) -> Option<&I> {
 		let ext = file.url.ext()?.to_str()?;
 		self.exts.get(ext).or_else(|| self.exts.get(&ext.to_ascii_lowercase()))

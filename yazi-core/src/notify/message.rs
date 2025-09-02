@@ -37,7 +37,6 @@ impl From<NotifyOpt> for Message {
 }
 
 impl Message {
-	#[inline]
 	pub fn height(&self, width: u16) -> usize {
 		let lines = ratatui::widgets::Paragraph::new(self.content.as_str())
 			.wrap(ratatui::widgets::Wrap { trim: false })

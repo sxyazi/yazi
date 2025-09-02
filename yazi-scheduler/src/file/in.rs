@@ -1,37 +1,16 @@
 use yazi_fs::cha::Cha;
 use yazi_shared::{Id, url::UrlBuf};
 
-#[derive(Debug)]
-pub enum FileIn {
-	Paste(FileInPaste),
-	Link(FileInLink),
-	Hardlink(FileInHardlink),
-	Delete(FileInDelete),
-	Trash(FileInTrash),
-}
-
-impl FileIn {
-	pub fn id(&self) -> Id {
-		match self {
-			Self::Paste(r#in) => r#in.id,
-			Self::Link(r#in) => r#in.id,
-			Self::Hardlink(r#in) => r#in.id,
-			Self::Delete(r#in) => r#in.id,
-			Self::Trash(r#in) => r#in.id,
-		}
-	}
-}
-
 // --- Paste
 #[derive(Clone, Debug)]
-pub struct FileInPaste {
-	pub id:     Id,
-	pub from:   UrlBuf,
-	pub to:     UrlBuf,
-	pub cha:    Option<Cha>,
-	pub cut:    bool,
-	pub follow: bool,
-	pub retry:  u8,
+pub(crate) struct FileInPaste {
+	pub(crate) id:     Id,
+	pub(crate) from:   UrlBuf,
+	pub(crate) to:     UrlBuf,
+	pub(crate) cha:    Option<Cha>,
+	pub(crate) cut:    bool,
+	pub(crate) follow: bool,
+	pub(crate) retry:  u8,
 }
 
 impl FileInPaste {
@@ -46,42 +25,40 @@ impl FileInPaste {
 			retry: self.retry,
 		}
 	}
-}
 
-// --- Link
-#[derive(Clone, Debug)]
-pub struct FileInLink {
-	pub id:       Id,
-	pub from:     UrlBuf,
-	pub to:       UrlBuf,
-	pub cha:      Option<Cha>,
-	pub resolve:  bool,
-	pub relative: bool,
-	pub delete:   bool,
-}
-
-impl From<FileInPaste> for FileInLink {
-	fn from(value: FileInPaste) -> Self {
-		Self {
-			id:       value.id,
-			from:     value.from,
-			to:       value.to,
-			cha:      value.cha,
+	pub(super) fn into_link(self) -> FileInLink {
+		FileInLink {
+			id:       self.id,
+			from:     self.from,
+			to:       self.to,
+			cha:      self.cha,
 			resolve:  true,
 			relative: false,
-			delete:   value.cut,
+			delete:   self.cut,
 		}
 	}
 }
 
+// --- Link
+#[derive(Clone, Debug)]
+pub(crate) struct FileInLink {
+	pub(crate) id:       Id,
+	pub(crate) from:     UrlBuf,
+	pub(crate) to:       UrlBuf,
+	pub(crate) cha:      Option<Cha>,
+	pub(crate) resolve:  bool,
+	pub(crate) relative: bool,
+	pub(crate) delete:   bool,
+}
+
 // --- Hardlink
 #[derive(Clone, Debug)]
-pub struct FileInHardlink {
-	pub id:     Id,
-	pub from:   UrlBuf,
-	pub to:     UrlBuf,
-	pub cha:    Option<Cha>,
-	pub follow: bool,
+pub(crate) struct FileInHardlink {
+	pub(crate) id:     Id,
+	pub(crate) from:   UrlBuf,
+	pub(crate) to:     UrlBuf,
+	pub(crate) cha:    Option<Cha>,
+	pub(crate) follow: bool,
 }
 
 impl FileInHardlink {
@@ -92,16 +69,15 @@ impl FileInHardlink {
 
 // --- Delete
 #[derive(Clone, Debug)]
-pub struct FileInDelete {
-	pub id:     Id,
-	pub target: UrlBuf,
-	pub length: u64,
+pub(crate) struct FileInDelete {
+	pub(crate) id:     Id,
+	pub(crate) target: UrlBuf,
+	pub(crate) length: u64,
 }
 
 // --- Trash
 #[derive(Clone, Debug)]
-pub struct FileInTrash {
-	pub id:     Id,
-	pub target: UrlBuf,
-	pub length: u64,
+pub(crate) struct FileInTrash {
+	pub(crate) id:     Id,
+	pub(crate) target: UrlBuf,
 }

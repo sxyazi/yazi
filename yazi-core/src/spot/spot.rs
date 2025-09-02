@@ -30,28 +30,22 @@ impl Spot {
 		self.ct = Some(isolate::spot(&spotter.run, file, mime, self.skip));
 	}
 
-	#[inline]
 	pub fn visible(&self) -> bool { self.lock.is_some() }
 
-	#[inline]
 	pub fn abort(&mut self) { self.ct.take().map(|ct| ct.cancel()); }
 
-	#[inline]
 	pub fn reset(&mut self) {
 		self.abort();
 		render!(self.lock.take().is_some());
 	}
 
-	#[inline]
 	pub fn same_url(&self, url: &UrlBuf) -> bool { self.lock.as_ref().is_some_and(|l| *url == l.url) }
 
-	#[inline]
 	pub fn same_file(&self, file: &File, mime: &str) -> bool {
 		self.same_url(&file.url)
 			&& self.lock.as_ref().is_some_and(|l| file.cha.hits(l.cha) && mime == l.mime)
 	}
 
-	#[inline]
 	pub fn same_lock(&self, file: &File, mime: &str) -> bool {
 		self.same_file(file, mime) && self.lock.as_ref().is_some_and(|l| self.skip == l.skip)
 	}

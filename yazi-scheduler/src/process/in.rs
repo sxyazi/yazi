@@ -7,11 +7,11 @@ use super::ShellOpt;
 
 // --- Block
 #[derive(Debug)]
-pub struct ProcessInBlock {
-	pub id:   Id,
-	pub cwd:  UrlBuf,
-	pub cmd:  OsString,
-	pub args: Vec<OsString>,
+pub(crate) struct ProcessInBlock {
+	pub(crate) id:   Id,
+	pub(crate) cwd:  UrlBuf,
+	pub(crate) cmd:  OsString,
+	pub(crate) args: Vec<OsString>,
 }
 
 impl From<ProcessInBlock> for ShellOpt {
@@ -22,11 +22,11 @@ impl From<ProcessInBlock> for ShellOpt {
 
 // --- Orphan
 #[derive(Debug)]
-pub struct ProcessInOrphan {
-	pub id:   Id,
-	pub cwd:  UrlBuf,
-	pub cmd:  OsString,
-	pub args: Vec<OsString>,
+pub(crate) struct ProcessInOrphan {
+	pub(crate) id:   Id,
+	pub(crate) cwd:  UrlBuf,
+	pub(crate) cmd:  OsString,
+	pub(crate) args: Vec<OsString>,
 }
 
 impl From<ProcessInOrphan> for ShellOpt {
@@ -37,12 +37,12 @@ impl From<ProcessInOrphan> for ShellOpt {
 
 // --- Bg
 #[derive(Debug)]
-pub struct ProcessInBg {
-	pub id:     Id,
-	pub cwd:    UrlBuf,
-	pub cmd:    OsString,
-	pub args:   Vec<OsString>,
-	pub cancel: mpsc::Receiver<()>,
+pub(crate) struct ProcessInBg {
+	pub(crate) id:     Id,
+	pub(crate) cwd:    UrlBuf,
+	pub(crate) cmd:    OsString,
+	pub(crate) args:   Vec<OsString>,
+	pub(crate) cancel: mpsc::Receiver<()>,
 }
 
 impl From<ProcessInBg> for ShellOpt {

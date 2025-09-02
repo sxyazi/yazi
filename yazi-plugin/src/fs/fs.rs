@@ -57,7 +57,7 @@ fn cha(lua: &Lua) -> mlua::Result<Function> {
 		};
 
 		match meta {
-			Ok(m) => Cha(yazi_fs::cha::Cha::new(&url, m)).into_lua_multi(&lua),
+			Ok(m) => Cha(yazi_fs::cha::Cha::new(&*url, m)).into_lua_multi(&lua),
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})

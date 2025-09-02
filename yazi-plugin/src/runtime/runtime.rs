@@ -3,7 +3,7 @@ use yazi_binding::{Composer, ComposerGet, ComposerSet, Url};
 use yazi_boot::ARGS;
 use yazi_config::YAZI;
 
-pub const OPTS: SerializeOptions =
+pub const SER_OPT: SerializeOptions =
 	SerializeOptions::new().serialize_none_to_null(false).serialize_unit_to_null(false);
 
 pub fn compose() -> Composer<ComposerGet, ComposerSet> {
@@ -44,20 +44,20 @@ fn mgr() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let m = &YAZI.mgr;
 		match key {
-			b"ratio" => lua.to_value_with(&m.ratio, OPTS)?,
+			b"ratio" => lua.to_value_with(&m.ratio, SER_OPT)?,
 
-			b"sort_by" => lua.to_value_with(&m.sort_by, OPTS)?,
-			b"sort_sensitive" => lua.to_value_with(&m.sort_sensitive, OPTS)?,
-			b"sort_reverse" => lua.to_value_with(&m.sort_reverse, OPTS)?,
-			b"sort_dir_first" => lua.to_value_with(&m.sort_dir_first, OPTS)?,
-			b"sort_translit" => lua.to_value_with(&m.sort_translit, OPTS)?,
+			b"sort_by" => lua.to_value_with(&m.sort_by, SER_OPT)?,
+			b"sort_sensitive" => lua.to_value_with(&m.sort_sensitive, SER_OPT)?,
+			b"sort_reverse" => lua.to_value_with(&m.sort_reverse, SER_OPT)?,
+			b"sort_dir_first" => lua.to_value_with(&m.sort_dir_first, SER_OPT)?,
+			b"sort_translit" => lua.to_value_with(&m.sort_translit, SER_OPT)?,
 
-			b"linemode" => lua.to_value_with(&m.linemode, OPTS)?,
-			b"show_hidden" => lua.to_value_with(&m.show_hidden, OPTS)?,
-			b"show_symlink" => lua.to_value_with(&m.show_symlink, OPTS)?,
-			b"scrolloff" => lua.to_value_with(&m.scrolloff, OPTS)?,
-			b"mouse_events" => lua.to_value_with(&m.mouse_events, OPTS)?,
-			b"title_format" => lua.to_value_with(&m.title_format, OPTS)?,
+			b"linemode" => lua.to_value_with(&m.linemode, SER_OPT)?,
+			b"show_hidden" => lua.to_value_with(&m.show_hidden, SER_OPT)?,
+			b"show_symlink" => lua.to_value_with(&m.show_symlink, SER_OPT)?,
+			b"scrolloff" => lua.to_value_with(&m.scrolloff, SER_OPT)?,
+			b"mouse_events" => lua.to_value_with(&m.mouse_events, SER_OPT)?,
+			b"title_format" => lua.to_value_with(&m.title_format, SER_OPT)?,
 			_ => return Ok(Value::Nil),
 		}
 		.into_lua(lua)
@@ -81,19 +81,19 @@ fn preview() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let p = &YAZI.preview;
 		match key {
-			b"wrap" => lua.to_value_with(&p.wrap, OPTS)?,
-			b"tab_size" => lua.to_value_with(&p.tab_size, OPTS)?,
-			b"max_width" => lua.to_value_with(&p.max_width, OPTS)?,
-			b"max_height" => lua.to_value_with(&p.max_height, OPTS)?,
+			b"wrap" => lua.to_value_with(&p.wrap, SER_OPT)?,
+			b"tab_size" => lua.to_value_with(&p.tab_size, SER_OPT)?,
+			b"max_width" => lua.to_value_with(&p.max_width, SER_OPT)?,
+			b"max_height" => lua.to_value_with(&p.max_height, SER_OPT)?,
 
-			b"cache_dir" => lua.to_value_with(&p.cache_dir, OPTS)?,
+			b"cache_dir" => lua.to_value_with(&p.cache_dir, SER_OPT)?,
 
-			b"image_delay" => lua.to_value_with(&p.image_delay, OPTS)?,
-			b"image_filter" => lua.to_value_with(&p.image_filter, OPTS)?,
-			b"image_quality" => lua.to_value_with(&p.image_quality, OPTS)?,
+			b"image_delay" => lua.to_value_with(&p.image_delay, SER_OPT)?,
+			b"image_filter" => lua.to_value_with(&p.image_filter, SER_OPT)?,
+			b"image_quality" => lua.to_value_with(&p.image_quality, SER_OPT)?,
 
-			b"ueberzug_scale" => lua.to_value_with(&p.ueberzug_scale, OPTS)?,
-			b"ueberzug_offset" => lua.to_value_with(&p.ueberzug_offset, OPTS)?,
+			b"ueberzug_scale" => lua.to_value_with(&p.ueberzug_scale, SER_OPT)?,
+			b"ueberzug_offset" => lua.to_value_with(&p.ueberzug_offset, SER_OPT)?,
 			_ => return Ok(Value::Nil),
 		}
 		.into_lua(lua)
@@ -108,14 +108,14 @@ fn tasks() -> Composer<ComposerGet, ComposerSet> {
 	fn get(lua: &Lua, key: &[u8]) -> mlua::Result<Value> {
 		let t = &YAZI.tasks;
 		match key {
-			b"micro_workers" => lua.to_value_with(&t.micro_workers, OPTS)?,
-			b"macro_workers" => lua.to_value_with(&t.macro_workers, OPTS)?,
-			b"bizarre_retry" => lua.to_value_with(&t.bizarre_retry, OPTS)?,
+			b"micro_workers" => lua.to_value_with(&t.micro_workers, SER_OPT)?,
+			b"macro_workers" => lua.to_value_with(&t.macro_workers, SER_OPT)?,
+			b"bizarre_retry" => lua.to_value_with(&t.bizarre_retry, SER_OPT)?,
 
-			b"image_alloc" => lua.to_value_with(&t.image_alloc, OPTS)?,
-			b"image_bound" => lua.to_value_with(&t.image_bound, OPTS)?,
+			b"image_alloc" => lua.to_value_with(&t.image_alloc, SER_OPT)?,
+			b"image_bound" => lua.to_value_with(&t.image_bound, SER_OPT)?,
 
-			b"suppress_preload" => lua.to_value_with(&t.suppress_preload, OPTS)?,
+			b"suppress_preload" => lua.to_value_with(&t.suppress_preload, SER_OPT)?,
 			_ => return Ok(Value::Nil),
 		}
 		.into_lua(lua)

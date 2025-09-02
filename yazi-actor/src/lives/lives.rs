@@ -38,7 +38,6 @@ impl Lives {
 		result
 	}
 
-	#[inline]
 	pub(crate) fn scoped_userdata<T>(data: T) -> mlua::Result<AnyUserData>
 	where
 		T: UserData + 'static,

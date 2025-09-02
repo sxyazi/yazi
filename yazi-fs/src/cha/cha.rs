@@ -1,7 +1,7 @@
 use std::{fs::{FileType, Metadata}, time::SystemTime};
 
 use yazi_macro::{unix_either, win_either};
-use yazi_shared::url::UrlBuf;
+use yazi_shared::url::{Url, UrlBuf};
 
 use super::ChaKind;
 use crate::provider;
@@ -53,17 +53,20 @@ impl Default for Cha {
 
 impl Cha {
 	#[inline]
-	pub fn new(url: &UrlBuf, meta: Metadata) -> Self {
+	pub fn new<'a>(url: impl Into<Url<'a>>, meta: Metadata) -> Self {
 		Self::from_just_meta(&meta).attach(ChaKind::hidden(url, &meta))
 	}
 
 	#[inline]
-	pub async fn from_url(url: &UrlBuf) -> std::io::Result<Self> {
+	pub async fn from_url<'a>(url: impl Into<Url<'a>>) -> std::io::Result<Self> {
+		let url = url.into();
 		Ok(Self::from_follow(url, provider::symlink_metadata(url).await?).await)
 	}
 
-	pub async fn from_follow(url: &UrlBuf, mut meta: Metadata) -> Self {
+	pub async fn from_follow<'a>(url: impl Into<Url<'a>>, mut meta: Metadata) -> Self {
+		let url = url.into();
 		let mut attached = ChaKind::hidden(url, &meta);
+
 		if meta.is_symlink() {
 			attached |= ChaKind::LINK;
 			meta = provider::metadata(url).await.unwrap_or(meta);

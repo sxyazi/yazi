@@ -54,7 +54,6 @@ impl UserData for Clear {
 	}
 }
 
-#[inline]
 const fn is_overlapping(a: ratatui::layout::Rect, b: ratatui::layout::Rect) -> bool {
 	a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y
 }

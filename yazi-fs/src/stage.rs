@@ -9,7 +9,6 @@ pub enum FolderStage {
 }
 
 impl FolderStage {
-	#[inline]
 	pub fn is_loading(self) -> bool { self == Self::Loading }
 }
 

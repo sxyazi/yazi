@@ -48,7 +48,6 @@ impl UserData for ImageFormat {
 				F::Farbfeld => "Farbfeld",
 				F::Avif => "AVIF",
 				F::Qoi => "QOI",
-				F::Pcx => "PCX",
 				_ => "Unknown",
 			})
 		});

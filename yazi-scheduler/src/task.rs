@@ -1,82 +1,38 @@
 use tokio::sync::mpsc;
 use yazi_shared::Id;
 
-#[derive(Debug, Default)]
+use crate::TaskProg;
+
+#[derive(Debug)]
 pub struct Task {
-	pub id:    Id,
-	pub kind:  TaskKind,
-	pub name:  String,
-	pub stage: TaskStage,
-
-	pub total: u32,
-	pub succ:  u32,
-	pub fail:  u32,
-
-	pub found:     u64,
-	pub processed: u64,
+	pub id:          Id,
+	pub name:        String,
+	pub(crate) prog: TaskProg,
 
 	pub logs:   String,
 	pub logger: Option<mpsc::UnboundedSender<String>>,
 }
 
 impl Task {
-	pub fn new(id: Id, kind: TaskKind, name: String) -> Self {
-		Self { id, kind, name, ..Default::default() }
-	}
-}
-
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
-pub enum TaskKind {
-	#[default]
-	User,
-	Preload,
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub struct TaskSummary {
-	pub name: String,
-
-	pub total: u32,
-	pub succ:  u32,
-	pub fail:  u32,
-
-	pub found:     u64,
-	pub processed: u64,
-}
-
-impl From<&Task> for TaskSummary {
-	fn from(task: &Task) -> Self {
-		TaskSummary {
-			name: task.name.clone(),
-
-			total: task.total,
-			succ:  task.succ,
-			fail:  task.fail,
-
-			found:     task.found,
-			processed: task.processed,
+	pub(super) fn new<T>(id: Id, name: String) -> Self
+	where
+		T: Into<TaskProg> + Default,
+	{
+		Self {
+			id,
+			name,
+			prog: T::default().into(),
+			logs: Default::default(),
+			logger: Default::default(),
 		}
 	}
-}
 
-#[derive(Debug)]
-pub enum TaskProg {
-	// id, size
-	New(Id, u64),
-	// id, processed, size
-	Adv(Id, u32, u64),
-	// id
-	Succ(Id),
-	// id
-	Fail(Id, String),
-	// id, line
-	Log(Id, String),
-}
+	pub(crate) fn log(&mut self, line: String) {
+		self.logs.push_str(&line);
+		self.logs.push('\n');
 
-#[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd)]
-pub enum TaskStage {
-	#[default]
-	Pending,
-	Dispatched,
-	Hooked,
+		if let Some(logger) = &self.logger {
+			logger.send(line).ok();
+		}
+	}
 }

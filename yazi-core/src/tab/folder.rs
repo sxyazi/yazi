@@ -119,7 +119,6 @@ impl Folder {
 		self.arrow(new - self.cursor as isize)
 	}
 
-	#[inline]
 	pub fn repos(&mut self, urn: Option<&Urn>) -> bool {
 		if let Some(u) = urn {
 			self.hover(u)
@@ -177,18 +176,13 @@ impl Folder {
 }
 
 impl Scrollable for Folder {
-	#[inline]
 	fn total(&self) -> usize { self.files.len() }
 
-	#[inline]
 	fn limit(&self) -> usize { LAYOUT.get().limit() }
 
-	#[inline]
 	fn scrolloff(&self) -> usize { (self.limit() / 2).min(YAZI.mgr.scrolloff.get() as usize) }
 
-	#[inline]
 	fn cursor_mut(&mut self) -> &mut usize { &mut self.cursor }
 
-	#[inline]
 	fn offset_mut(&mut self) -> &mut usize { &mut self.offset }
 }

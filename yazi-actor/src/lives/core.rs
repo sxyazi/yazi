@@ -22,7 +22,6 @@ impl Deref for Core {
 }
 
 impl Core {
-	#[inline]
 	pub(super) fn make(inner: &yazi_core::Core) -> mlua::Result<AnyUserData> {
 		Lives::scoped_userdata(Self {
 			inner: inner.into(),

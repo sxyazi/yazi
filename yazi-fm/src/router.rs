@@ -10,10 +10,8 @@ pub(super) struct Router<'a> {
 }
 
 impl<'a> Router<'a> {
-	#[inline]
 	pub(super) fn new(app: &'a mut App) -> Self { Self { app } }
 
-	#[inline]
 	pub(super) fn route(&mut self, key: Key) -> Result<bool> {
 		let core = &mut self.app.core;
 		let layer = core.layer();
@@ -36,7 +34,6 @@ impl<'a> Router<'a> {
 		})
 	}
 
-	#[inline]
 	fn matches(&mut self, layer: Layer, key: Key) -> bool {
 		for chord @ Chord { on, .. } in KEYMAP.get(layer) {
 			if on.is_empty() || on[0] != key {

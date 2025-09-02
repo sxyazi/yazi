@@ -12,21 +12,16 @@ pub struct Selected {
 }
 
 impl Selected {
-	#[inline]
 	pub fn len(&self) -> usize { self.inner.len() }
 
-	#[inline]
 	pub fn is_empty(&self) -> bool { self.inner.is_empty() }
 
-	#[inline]
 	pub fn values(&self) -> impl Iterator<Item = &UrlBuf> { self.inner.keys().map(Deref::deref) }
 
-	#[inline]
 	pub fn contains<'a>(&self, url: impl Into<Url<'a>>) -> bool {
 		self.inner.contains_key(&UrlCov::new(url))
 	}
 
-	#[inline]
 	pub fn add<'a>(&mut self, url: impl Into<Url<'a>>) -> bool { self.add_same([url]) == 1 }
 
 	pub fn add_many<'a, I, T>(&mut self, urls: I) -> usize

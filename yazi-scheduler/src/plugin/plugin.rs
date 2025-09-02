@@ -1,67 +1,42 @@
-use std::fmt::Display;
-
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use tokio::sync::mpsc;
 use yazi_plugin::isolate;
-use yazi_shared::Id;
 
-use super::{PluginIn, PluginInEntry};
-use crate::{HIGH, TaskOp, TaskProg};
+use super::PluginInEntry;
+use crate::{HIGH, TaskIn, TaskOp, TaskOps, plugin::PluginOutEntry};
 
-pub struct Plugin {
-	r#macro: async_priority_channel::Sender<TaskOp, u8>,
-	prog:    mpsc::UnboundedSender<TaskProg>,
+pub(crate) struct Plugin {
+	ops:     TaskOps,
+	r#macro: async_priority_channel::Sender<TaskIn, u8>,
 }
 
 impl Plugin {
-	pub fn new(
-		r#macro: async_priority_channel::Sender<TaskOp, u8>,
-		prog: mpsc::UnboundedSender<TaskProg>,
+	pub(crate) fn new(
+		tx: &mpsc::UnboundedSender<TaskOp>,
+		r#macro: &async_priority_channel::Sender<TaskIn, u8>,
 	) -> Self {
-		Self { r#macro, prog }
+		Self { ops: tx.into(), r#macro: r#macro.clone() }
 	}
 
-	pub async fn work(&self, r#in: PluginIn) -> Result<()> {
-		match r#in {
-			PluginIn::Entry(task) => {
-				isolate::entry(task.opt).await?;
-			}
-		}
+	pub(crate) async fn micro(&self, task: PluginInEntry) -> Result<(), PluginOutEntry> {
+		isolate::entry(task.opt).await?;
+		self.ops.out(task.id, PluginOutEntry::Succ);
 		Ok(())
 	}
 
-	pub async fn micro(&self, task: PluginInEntry) -> Result<()> {
-		self.prog.send(TaskProg::New(task.id, 0))?;
-
-		if let Err(e) = isolate::entry(task.opt).await {
-			self.fail(task.id, e)?;
-			return Ok(());
-		}
-
-		self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
-		self.succ(task.id)
+	pub(crate) fn r#macro(&self, task: PluginInEntry) -> Result<(), PluginOutEntry> {
+		Ok(self.queue(task, HIGH))
 	}
 
-	pub fn r#macro(&self, task: PluginInEntry) -> Result<()> {
-		let id = task.id;
-
-		self.prog.send(TaskProg::New(id, 0))?;
-		self.queue(PluginIn::Entry(task), HIGH)?;
-		self.succ(id)
+	pub(crate) async fn macro_do(&self, task: PluginInEntry) -> Result<(), PluginOutEntry> {
+		isolate::entry(task.opt).await?;
+		Ok(self.ops.out(task.id, PluginOutEntry::Succ))
 	}
 }
 
 impl Plugin {
 	#[inline]
-	fn succ(&self, id: Id) -> Result<()> { Ok(self.prog.send(TaskProg::Succ(id))?) }
-
-	#[inline]
-	fn fail(&self, id: Id, reason: impl Display) -> Result<()> {
-		Ok(self.prog.send(TaskProg::Fail(id, reason.to_string()))?)
-	}
-
-	#[inline]
-	fn queue(&self, r#in: impl Into<TaskOp>, priority: u8) -> Result<()> {
-		self.r#macro.try_send(r#in.into(), priority).map_err(|_| anyhow!("Failed to send task"))
+	fn queue(&self, r#in: impl Into<TaskIn>, priority: u8) {
+		_ = self.r#macro.try_send(r#in.into(), priority);
 	}
 }

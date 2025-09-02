@@ -19,7 +19,6 @@ impl Error {
 		lua.globals().raw_set("Error", lua.create_table_from([("custom", new)])?)
 	}
 
-	#[inline]
 	pub fn custom(msg: impl Into<SStr>) -> Self { Self::Custom(msg.into()) }
 
 	pub fn into_string(self) -> SStr {

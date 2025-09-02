@@ -15,7 +15,6 @@ impl Deref for Mode {
 }
 
 impl Mode {
-	#[inline]
 	pub(super) fn make(inner: &yazi_core::tab::Mode) -> mlua::Result<AnyUserData> {
 		Lives::scoped_userdata(Self { inner: inner.into() })
 	}
