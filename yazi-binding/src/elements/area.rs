@@ -17,7 +17,6 @@ impl Default for Area {
 }
 
 impl Area {
-	#[inline]
 	pub fn size(self) -> ratatui::layout::Size {
 		match self {
 			Self::Pos(pos) => {
@@ -27,7 +26,6 @@ impl Area {
 		}
 	}
 
-	#[inline]
 	pub fn inner(self, padding: ratatui::widgets::Padding) -> Self {
 		match self {
 			Self::Pos(mut pos) => {
@@ -38,7 +36,6 @@ impl Area {
 		}
 	}
 
-	#[inline]
 	pub fn transform(
 		self,
 		f: impl FnOnce(yazi_config::popup::Position) -> ratatui::layout::Rect,

@@ -22,25 +22,25 @@ end
 function Progress:reflow() return { self } end
 
 function Progress:redraw()
-	local progress = cx.tasks.progress
-	if progress.total == 0 then
+	local summary = cx.tasks.summary
+	if summary.total == 0 then
 		return {}
 	end
 
 	local gauge = ui.Gauge():area(self._area)
-	if progress.fail == 0 then
+	if summary.failed == 0 then
 		gauge = gauge:gauge_style(th.status.progress_normal)
 	else
 		gauge = gauge:gauge_style(th.status.progress_error)
 	end
 
-	local percent = 99
-	if progress.found ~= 0 then
-		percent = math.min(99, ya.round(progress.processed * 100 / progress.found))
+	local label, percent = "", summary.percent
+	if percent then
+		label = string.format("%3d%%, ", math.floor(percent))
+	else
+		percent = 99
 	end
 
-	local left = progress.total - progress.succ
-	return gauge
-		:percent(percent)
-		:label(ui.Span(string.format("%3d%%, %d left", percent, left)):style(th.status.progress_label))
+	label = label .. string.format("%d left", summary.total - summary.success)
+	return gauge:percent(percent):label(ui.Span(label):style(th.status.progress_label))
 end

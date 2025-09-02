@@ -41,7 +41,6 @@ impl Yanked {
 		self.revision += 1;
 	}
 
-	#[inline]
 	pub fn contains<'a>(&self, url: impl Into<Url<'a>>) -> bool {
 		self.urls.contains(&UrlCov::new(url))
 	}

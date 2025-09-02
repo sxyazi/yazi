@@ -15,7 +15,6 @@ impl Deref for Tabs {
 }
 
 impl Tabs {
-	#[inline]
 	pub(super) fn make(inner: &yazi_core::mgr::Tabs) -> mlua::Result<AnyUserData> {
 		Lives::scoped_userdata(Self { inner: inner.into() })
 	}

@@ -62,7 +62,6 @@ impl TryFrom<Table> for SpotLock {
 }
 
 impl SpotLock {
-	#[inline]
 	pub fn len(&self) -> Option<usize> { Some(self.table()?.len()) }
 
 	pub fn select(&mut self, idx: Option<usize>) {

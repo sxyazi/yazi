@@ -16,30 +16,23 @@ pub struct Cmp {
 
 impl Cmp {
 	// --- Cands
-	#[inline]
 	pub fn window(&self) -> &[CmpItem] {
 		let end = (self.offset + self.limit()).min(self.cands.len());
 		&self.cands[self.offset..end]
 	}
 
-	#[inline]
 	pub fn selected(&self) -> Option<&CmpItem> { self.cands.get(self.cursor) }
 
 	// --- Cursor
-	#[inline]
 	pub fn rel_cursor(&self) -> usize { self.cursor - self.offset }
 }
 
 impl Scrollable for Cmp {
-	#[inline]
 	fn total(&self) -> usize { self.cands.len() }
 
-	#[inline]
 	fn limit(&self) -> usize { self.cands.len().min(10) }
 
-	#[inline]
 	fn cursor_mut(&mut self) -> &mut usize { &mut self.cursor }
 
-	#[inline]
 	fn offset_mut(&mut self) -> &mut usize { &mut self.offset }
 }

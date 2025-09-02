@@ -176,7 +176,6 @@ impl ConfirmCfg {
 }
 
 impl PickCfg {
-	#[inline]
 	fn max_height(len: usize) -> u16 {
 		YAZI.pick.open_offset.height.min(YAZI.pick.border().saturating_add(len as u16))
 	}

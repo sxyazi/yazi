@@ -227,7 +227,6 @@ impl Sendable {
 		})
 	}
 
-	#[inline]
 	fn key_to_value(lua: &Lua, key: DataKey) -> mlua::Result<Value> {
 		match key {
 			DataKey::Url(u) => yazi_binding::Url::new(u).into_lua(lua),

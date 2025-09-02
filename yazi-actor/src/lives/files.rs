@@ -20,7 +20,6 @@ impl Deref for Files {
 }
 
 impl Files {
-	#[inline]
 	pub(super) fn make(
 		window: Range<usize>,
 		folder: &yazi_core::tab::Folder,

@@ -38,13 +38,11 @@ impl Partition {
 }
 
 impl Partition {
-	#[inline]
 	#[cfg(any(target_os = "linux", target_os = "macos"))]
 	pub(super) fn new(name: &std::ffi::OsStr) -> Self {
 		Self { src: std::path::Path::new("/dev/").join(name).into(), ..Default::default() }
 	}
 
-	#[inline]
 	#[cfg(target_os = "linux")]
 	pub(super) fn dev_name(&self, full: bool) -> Option<&std::ffi::OsStr> {
 		use std::os::unix::ffi::OsStrExt;

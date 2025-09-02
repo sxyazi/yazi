@@ -14,7 +14,6 @@ impl Deref for Cha {
 
 impl Cha {
 	pub fn install(lua: &Lua) -> mlua::Result<()> {
-		#[inline]
 		fn parse_time(f: Option<f64>) -> mlua::Result<Option<SystemTime>> {
 			Ok(match f {
 				Some(n) if n >= 0.0 => Some(SystemTime::UNIX_EPOCH + Duration::from_secs_f64(n)),

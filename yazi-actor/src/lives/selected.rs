@@ -7,7 +7,6 @@ use crate::lives::PtrCell;
 pub(super) struct Selected;
 
 impl Selected {
-	#[inline]
 	pub(super) fn make(inner: &yazi_core::tab::Selected) -> mlua::Result<AnyUserData> {
 		let inner = PtrCell::from(inner);
 

@@ -10,7 +10,6 @@ pub struct Position {
 }
 
 impl Position {
-	#[inline]
 	pub const fn new(origin: Origin, offset: Offset) -> Self { Self { origin, offset } }
 
 	pub fn rect(&self, WindowSize { columns, rows, .. }: WindowSize) -> Rect {

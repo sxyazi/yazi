@@ -19,7 +19,6 @@ impl Deref for Preview {
 }
 
 impl Preview {
-	#[inline]
 	pub(super) fn make(tab: &yazi_core::tab::Tab) -> mlua::Result<AnyUserData> {
 		Lives::scoped_userdata(Self { tab: tab.into(), v_folder: None })
 	}

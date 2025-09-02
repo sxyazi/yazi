@@ -30,7 +30,6 @@ impl AsRef<yazi_fs::File> for File {
 }
 
 impl File {
-	#[inline]
 	pub(super) fn make(
 		idx: usize,
 		folder: &yazi_core::tab::Folder,

@@ -3,9 +3,9 @@ use std::{sync::Arc, time::Duration};
 use parking_lot::Mutex;
 use tokio::{task::JoinHandle, time::sleep};
 use yazi_adapter::Dimension;
-use yazi_parser::app::TasksProgress;
+use yazi_parser::app::TaskSummary;
 use yazi_proxy::AppProxy;
-use yazi_scheduler::{Ongoing, Scheduler, TaskSummary};
+use yazi_scheduler::{Ongoing, Scheduler, TaskSnap};
 
 use super::{TASKS_BORDER, TASKS_PADDING, TASKS_PERCENT};
 
@@ -13,10 +13,10 @@ pub struct Tasks {
 	pub scheduler: Arc<Scheduler>,
 	handle:        JoinHandle<()>,
 
-	pub visible:   bool,
-	pub cursor:    usize,
-	pub progress:  TasksProgress,
-	pub summaries: Vec<TaskSummary>,
+	pub visible: bool,
+	pub cursor:  usize,
+	pub snaps:   Vec<TaskSnap>,
+	pub summary: TaskSummary,
 }
 
 impl Tasks {
@@ -25,14 +25,14 @@ impl Tasks {
 		let ongoing = scheduler.ongoing.clone();
 
 		let handle = tokio::spawn(async move {
-			let mut last = TasksProgress::default();
+			let mut last = TaskSummary::default();
 			loop {
 				sleep(Duration::from_millis(500)).await;
 
-				let new = ongoing.lock().progress();
+				let new = ongoing.lock().summary();
 				if last != new {
 					last = new;
-					AppProxy::update_progress(new);
+					AppProxy::update_summary(new);
 				}
 			}
 		});
@@ -43,8 +43,8 @@ impl Tasks {
 
 			visible: false,
 			cursor: 0,
-			progress: Default::default(),
-			summaries: Default::default(),
+			snaps: Default::default(),
+			summary: Default::default(),
 		}
 	}
 
@@ -53,16 +53,14 @@ impl Tasks {
 		self.handle.abort();
 	}
 
-	#[inline]
 	pub fn limit() -> usize {
 		(Dimension::available().rows * TASKS_PERCENT / 100).saturating_sub(TASKS_BORDER + TASKS_PADDING)
 			as usize
 	}
 
-	pub fn paginate(&self) -> Vec<TaskSummary> {
+	pub fn paginate(&self) -> Vec<TaskSnap> {
 		self.ongoing().lock().values().take(Self::limit()).map(Into::into).collect()
 	}
 
-	#[inline]
 	pub fn ongoing(&self) -> &Arc<Mutex<Ongoing>> { &self.scheduler.ongoing }
 }

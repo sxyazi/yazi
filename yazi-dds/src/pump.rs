@@ -17,21 +17,18 @@ static DELETE_TX: Mutex<Option<mpsc::UnboundedSender<UrlBuf>>> = Mutex::new(None
 pub struct Pump;
 
 impl Pump {
-	#[inline]
 	pub fn push_move(from: UrlBuf, to: UrlBuf) {
 		if let Some(tx) = &*MOVE_TX.lock() {
 			tx.send(BodyMoveItem { from, to }).ok();
 		}
 	}
 
-	#[inline]
 	pub fn push_trash(target: UrlBuf) {
 		if let Some(tx) = &*TRASH_TX.lock() {
 			tx.send(target).ok();
 		}
 	}
 
-	#[inline]
 	pub fn push_delete(target: UrlBuf) {
 		if let Some(tx) = &*DELETE_TX.lock() {
 			tx.send(target).ok();

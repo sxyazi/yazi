@@ -2,20 +2,7 @@ use yazi_parser::app::PluginOpt;
 use yazi_shared::Id;
 
 #[derive(Debug)]
-pub enum PluginIn {
-	Entry(PluginInEntry),
-}
-
-impl PluginIn {
-	pub fn id(&self) -> Id {
-		match self {
-			Self::Entry(r#in) => r#in.id,
-		}
-	}
-}
-
-#[derive(Debug)]
-pub struct PluginInEntry {
-	pub id:  Id,
-	pub opt: PluginOpt,
+pub(crate) struct PluginInEntry {
+	pub(crate) id:  Id,
+	pub(crate) opt: PluginOpt,
 }

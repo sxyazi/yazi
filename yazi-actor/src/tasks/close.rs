@@ -19,7 +19,7 @@ impl Actor for Close {
 		}
 
 		tasks.visible = false;
-		tasks.summaries = Vec::new();
+		tasks.snaps = Vec::new();
 
 		act!(tasks:arrow, cx)?;
 		succ!(render!());

@@ -76,7 +76,6 @@ impl Finder {
 }
 
 impl Finder {
-	#[inline]
 	pub fn matched_idx(&self, folder: &Folder, urn: &Urn) -> Option<u8> {
 		if self.lock == *folder { self.matched.get(urn).copied() } else { None }
 	}

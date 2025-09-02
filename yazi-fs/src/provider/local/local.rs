@@ -203,6 +203,25 @@ impl Local {
 	}
 
 	#[inline]
+	pub async fn symlink<P, Q, F>(original: P, link: Q, _is_dir: F) -> io::Result<()>
+	where
+		P: AsRef<Path>,
+		Q: AsRef<Path>,
+		F: AsyncFnOnce() -> io::Result<bool>,
+	{
+		#[cfg(unix)]
+		{
+			tokio::fs::symlink(original, link).await
+		}
+		#[cfg(windows)]
+		if _is_dir().await? {
+			Self::symlink_dir(original, link).await
+		} else {
+			Self::symlink_file(original, link).await
+		}
+	}
+
+	#[inline]
 	pub async fn symlink_dir<P, Q>(original: P, link: Q) -> io::Result<()>
 	where
 		P: AsRef<Path>,

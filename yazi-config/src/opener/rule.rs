@@ -16,7 +16,6 @@ pub struct OpenerRule {
 }
 
 impl OpenerRule {
-	#[inline]
 	pub fn desc(&self) -> String {
 		if !self.desc.is_empty() {
 			self.desc.clone()

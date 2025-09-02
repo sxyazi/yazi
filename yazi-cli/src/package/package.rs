@@ -138,10 +138,8 @@ impl Package {
 		Local::write(Self::toml(), s).await.context("Failed to write package.toml")
 	}
 
-	#[inline]
 	fn toml() -> PathBuf { Xdg::config_dir().join("package.toml") }
 
-	#[inline]
 	fn identical(&self, other: &Dependency) -> Option<&Dependency> {
 		self.plugins.iter().chain(&self.flavors).find(|d| d.identical(other))
 	}

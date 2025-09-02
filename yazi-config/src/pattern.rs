@@ -17,7 +17,6 @@ pub struct Pattern {
 }
 
 impl Pattern {
-	#[inline]
 	pub fn match_url(&self, url: impl AsRef<UrlBuf>, is_dir: bool) -> bool {
 		let url = url.as_ref();
 
@@ -42,7 +41,6 @@ impl Pattern {
 		self.inner.is_match(path)
 	}
 
-	#[inline]
 	pub fn match_mime(&self, mime: impl AsRef<str>) -> bool {
 		self.is_star || (!mime.as_ref().is_empty() && self.inner.is_match(mime.as_ref()))
 	}

@@ -31,38 +31,38 @@ pub fn copy_with_progress(
 	to: &UrlBuf,
 	cha: Cha,
 ) -> mpsc::Receiver<Result<u64, io::Error>> {
-	let (tx, rx) = mpsc::channel(1);
-	let (tick_tx, mut tick_rx) = oneshot::channel();
+	let (prog_tx, prog_rx) = mpsc::channel(1);
+	let (done_tx, mut done_rx) = oneshot::channel();
 
 	tokio::spawn({
 		let (from, to) = (from.clone(), to.clone());
 		async move {
-			tick_tx.send(provider::copy(&from, &to, cha).await).ok();
+			done_tx.send(provider::copy(&from, &to, cha).await).ok();
 		}
 	});
 
 	tokio::spawn({
-		let (tx, to) = (tx.clone(), to.clone());
+		let (prog_tx, to) = (prog_tx.clone(), to.clone());
 		async move {
 			let mut last = 0;
-			let mut exit = None;
+			let mut done = None;
 			loop {
 				select! {
-					res = &mut tick_rx => exit = Some(res.unwrap()),
-					_ = tx.closed() => break,
-					_ = time::sleep(time::Duration::from_secs(3)) => (),
+					res = &mut done_rx => done = Some(res.unwrap()),
+					_ = prog_tx.closed() => break,
+					_ = time::sleep(time::Duration::from_secs(3)) => {},
 				}
 
-				match exit {
+				match done {
 					Some(Ok(len)) => {
 						if len > last {
-							tx.send(Ok(len - last)).await.ok();
+							prog_tx.send(Ok(len - last)).await.ok();
 						}
-						tx.send(Ok(0)).await.ok();
+						prog_tx.send(Ok(0)).await.ok();
 						break;
 					}
 					Some(Err(e)) => {
-						tx.send(Err(e)).await.ok();
+						prog_tx.send(Err(e)).await.ok();
 						break;
 					}
 					None => {}
@@ -70,14 +70,14 @@ pub fn copy_with_progress(
 
 				let len = provider::symlink_metadata(&to).await.map(|m| m.len()).unwrap_or(0);
 				if len > last {
-					tx.send(Ok(len - last)).await.ok();
+					prog_tx.send(Ok(len - last)).await.ok();
 					last = len;
 				}
 			}
 		}
 	});
 
-	rx
+	prog_rx
 }
 
 pub async fn remove_dir_clean(dir: &UrlBuf) {

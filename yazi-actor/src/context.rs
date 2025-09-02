@@ -15,12 +15,10 @@ pub struct Ctx<'a> {
 impl Deref for Ctx<'_> {
 	type Target = Core;
 
-	#[inline]
 	fn deref(&self) -> &Self::Target { self.core }
 }
 
 impl DerefMut for Ctx<'_> {
-	#[inline]
 	fn deref_mut(&mut self) -> &mut Self::Target { self.core }
 }
 

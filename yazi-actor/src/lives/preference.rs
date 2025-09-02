@@ -19,7 +19,6 @@ impl Deref for Preference {
 }
 
 impl Preference {
-	#[inline]
 	pub(super) fn make(inner: &yazi_core::tab::Preference) -> mlua::Result<AnyUserData> {
 		Lives::scoped_userdata(Self { inner: inner.into(), v_sort_by: None, v_linemode: None })
 	}

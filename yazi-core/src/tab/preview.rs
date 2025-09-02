@@ -68,35 +68,29 @@ impl Preview {
 		}));
 	}
 
-	#[inline]
 	pub fn abort(&mut self) {
 		self.previewer_ct.take().map(|ct| ct.cancel());
 		Highlighter::abort();
 	}
 
-	#[inline]
 	pub fn reset(&mut self) {
 		self.abort();
 		ADAPTOR.get().image_hide().ok();
 		render!(self.lock.take().is_some())
 	}
 
-	#[inline]
 	pub fn reset_image(&mut self) {
 		self.abort();
 		ADAPTOR.get().image_hide().ok();
 	}
 
-	#[inline]
 	pub fn same_url(&self, url: &UrlBuf) -> bool { matches!(&self.lock, Some(l) if l.url == *url) }
 
-	#[inline]
 	pub fn same_file(&self, file: &File, mime: &str) -> bool {
 		self.same_url(&file.url)
 			&& matches!(&self.lock , Some(l) if l.cha.hits(file.cha) && l.mime == mime && *l.area == LAYOUT.get().preview)
 	}
 
-	#[inline]
 	pub fn same_lock(&self, file: &File, mime: &str) -> bool {
 		self.same_file(file, mime) && matches!(&self.lock, Some(l) if l.skip == self.skip)
 	}

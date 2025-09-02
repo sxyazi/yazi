@@ -25,7 +25,6 @@ impl KgpOld {
 		})
 	}
 
-	#[inline]
 	pub(crate) fn image_erase(_: Rect) -> Result<()> {
 		let mut w = TTY.lockout();
 		write!(w, "{START}_Gq=2,a=d,d=A{ESCAPE}\\{CLOSE}")?;

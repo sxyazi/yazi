@@ -11,35 +11,35 @@ use yazi_parser::{app::PluginOpt, tasks::ProcessExecOpt};
 use yazi_proxy::MgrProxy;
 use yazi_shared::{Id, Throttle, url::UrlBuf};
 
-use super::{Ongoing, TaskProg, TaskStage};
-use crate::{HIGH, LOW, NORMAL, TaskKind, TaskOp, file::{File, FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash}, plugin::{Plugin, PluginInEntry}, prework::{Prework, PreworkInFetch, PreworkInLoad, PreworkInSize}, process::{Process, ProcessInBg, ProcessInBlock, ProcessInOrphan}};
+use super::{Ongoing, TaskOp};
+use crate::{HIGH, LOW, NORMAL, TaskIn, TaskOps, TaskOut, file::{File, FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash, FileOutHardlink, FileOutPaste, FileProgDelete, FileProgHardlink, FileProgLink, FileProgPaste, FileProgTrash}, plugin::{Plugin, PluginInEntry, PluginProgEntry}, prework::{Prework, PreworkInFetch, PreworkInLoad, PreworkInSize, PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{Process, ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
 
 pub struct Scheduler {
-	pub file:    Arc<File>,
-	pub plugin:  Arc<Plugin>,
+	file:        Arc<File>,
+	plugin:      Arc<Plugin>,
 	pub prework: Arc<Prework>,
-	pub process: Arc<Process>,
+	process:     Arc<Process>,
 
+	ops:         TaskOps,
 	micro:       async_priority_channel::Sender<BoxFuture<'static, ()>, u8>,
-	prog:        mpsc::UnboundedSender<TaskProg>,
 	handles:     Vec<JoinHandle<()>>,
 	pub ongoing: Arc<Mutex<Ongoing>>,
 }
 
 impl Scheduler {
 	pub fn serve() -> Self {
+		let (op_tx, op_rx) = mpsc::unbounded_channel();
 		let (micro_tx, micro_rx) = async_priority_channel::unbounded();
 		let (macro_tx, macro_rx) = async_priority_channel::unbounded();
-		let (prog_tx, prog_rx) = mpsc::unbounded_channel();
 
 		let mut scheduler = Self {
-			file:    Arc::new(File::new(macro_tx.clone(), prog_tx.clone())),
-			plugin:  Arc::new(Plugin::new(macro_tx.clone(), prog_tx.clone())),
-			prework: Arc::new(Prework::new(macro_tx.clone(), prog_tx.clone())),
-			process: Arc::new(Process::new(prog_tx.clone())),
+			file:    Arc::new(File::new(&op_tx, &macro_tx)),
+			plugin:  Arc::new(Plugin::new(&op_tx, &macro_tx)),
+			prework: Arc::new(Prework::new(&op_tx, &macro_tx)),
+			process: Arc::new(Process::new(&op_tx)),
 
+			ops:     TaskOps(op_tx),
 			micro:   micro_tx,
-			prog:    prog_tx,
 			handles: Vec::with_capacity(
 				YAZI.tasks.micro_workers as usize + YAZI.tasks.macro_workers as usize + 1,
 			),
@@ -52,7 +52,7 @@ impl Scheduler {
 		for _ in 0..YAZI.tasks.macro_workers {
 			scheduler.handles.push(scheduler.schedule_macro(micro_rx.clone(), macro_rx.clone()));
 		}
-		scheduler.progress(prog_rx);
+		scheduler.handle_ops(op_rx);
 		scheduler
 	}
 
@@ -75,11 +75,10 @@ impl Scheduler {
 
 	pub fn file_cut(&self, from: UrlBuf, mut to: UrlBuf, force: bool) {
 		let mut ongoing = self.ongoing.lock();
-		let id = ongoing.add(TaskKind::User, format!("Cut {} to {}", from.display(), to.display()));
+		let id = ongoing.add::<FileProgPaste>(format!("Cut {} to {}", from.display(), to.display()));
 
 		if to.starts_with(&from) && !to.covariant(&from) {
-			self.new_and_fail(id, "Cannot cut directory into itself").ok();
-			return;
+			return self.ops.out(id, FileOutPaste::Deform("Cannot cut directory into itself".to_owned()));
 		}
 
 		ongoing.hooks.add_async(id, {
@@ -91,7 +90,7 @@ impl Scheduler {
 					remove_dir_clean(&from).await;
 					Pump::push_move(from, to);
 				}
-				ongoing.lock().try_remove(id, TaskStage::Hooked);
+				ongoing.lock().remove(id);
 			}
 		});
 
@@ -105,14 +104,16 @@ impl Scheduler {
 	}
 
 	pub fn file_copy(&self, from: UrlBuf, mut to: UrlBuf, force: bool, follow: bool) {
-		let id = self
-			.ongoing
-			.lock()
-			.add(TaskKind::User, format!("Copy {} to {}", from.display(), to.display()));
+		let id = self.ongoing.lock().add::<FileProgPaste>(format!(
+			"Copy {} to {}",
+			from.display(),
+			to.display()
+		));
 
 		if to.starts_with(&from) && !to.covariant(&from) {
-			self.new_and_fail(id, "Cannot copy directory into itself").ok();
-			return;
+			return self
+				.ops
+				.out(id, FileOutPaste::Deform("Cannot copy directory into itself".to_owned()));
 		}
 
 		let file = self.file.clone();
@@ -125,31 +126,32 @@ impl Scheduler {
 	}
 
 	pub fn file_link(&self, from: UrlBuf, mut to: UrlBuf, relative: bool, force: bool) {
-		let id = self
-			.ongoing
-			.lock()
-			.add(TaskKind::User, format!("Link {} to {}", from.display(), to.display()));
+		let id = self.ongoing.lock().add::<FileProgLink>(format!(
+			"Link {} to {}",
+			from.display(),
+			to.display()
+		));
 
 		let file = self.file.clone();
 		self.send_micro(id, LOW, async move {
 			if !force {
 				to = unique_name(to, must_be_dir(&from)).await?;
 			}
-			file
-				.link(FileInLink { id, from, to, cha: None, resolve: false, relative, delete: false })
-				.await
+			file.link(FileInLink { id, from, to, cha: None, resolve: false, relative, delete: false })
 		});
 	}
 
 	pub fn file_hardlink(&self, from: UrlBuf, mut to: UrlBuf, force: bool, follow: bool) {
-		let id = self
-			.ongoing
-			.lock()
-			.add(TaskKind::User, format!("Hardlink {} to {}", from.display(), to.display()));
+		let id = self.ongoing.lock().add::<FileProgHardlink>(format!(
+			"Hardlink {} to {}",
+			from.display(),
+			to.display()
+		));
 
 		if to.starts_with(&from) && !to.covariant(&from) {
-			self.new_and_fail(id, "Cannot hardlink directory into itself").ok();
-			return;
+			return self
+				.ops
+				.out(id, FileOutHardlink::Deform("Cannot hardlink directory into itself".to_owned()));
 		}
 
 		let file = self.file.clone();
@@ -163,7 +165,7 @@ impl Scheduler {
 
 	pub fn file_delete(&self, target: UrlBuf) {
 		let mut ongoing = self.ongoing.lock();
-		let id = ongoing.add(TaskKind::User, format!("Delete {}", target.display()));
+		let id = ongoing.add::<FileProgDelete>(format!("Delete {}", target.display()));
 
 		ongoing.hooks.add_async(id, {
 			let target = target.clone();
@@ -175,7 +177,7 @@ impl Scheduler {
 					MgrProxy::update_tasks(&target);
 					Pump::push_delete(target);
 				}
-				ongoing.lock().try_remove(id, TaskStage::Hooked);
+				ongoing.lock().remove(id);
 			}
 		});
 
@@ -189,7 +191,7 @@ impl Scheduler {
 
 	pub fn file_trash(&self, target: UrlBuf) {
 		let mut ongoing = self.ongoing.lock();
-		let id = ongoing.add(TaskKind::User, format!("Trash {}", target.display()));
+		let id = ongoing.add::<FileProgTrash>(format!("Trash {}", target.display()));
 
 		ongoing.hooks.add_async(id, {
 			let target = target.clone();
@@ -200,34 +202,33 @@ impl Scheduler {
 					MgrProxy::update_tasks(&target);
 					Pump::push_trash(target);
 				}
-				ongoing.lock().try_remove(id, TaskStage::Hooked);
+				ongoing.lock().remove(id);
 			}
 		});
 
 		let file = self.file.clone();
-		self.send_micro(id, LOW, async move {
-			file.trash(FileInTrash { id, target: target.clone(), length: 0 }).await
-		})
+		self.send_micro(id, LOW, async move { file.trash(FileInTrash { id, target: target.clone() }) })
 	}
 
 	pub fn plugin_micro(&self, opt: PluginOpt) {
-		let id = self.ongoing.lock().add(TaskKind::User, format!("Run micro plugin `{}`", opt.id));
+		let id = self.ongoing.lock().add::<PluginProgEntry>(format!("Run micro plugin `{}`", opt.id));
 
 		let plugin = self.plugin.clone();
 		self.send_micro(id, NORMAL, async move { plugin.micro(PluginInEntry { id, opt }).await });
 	}
 
 	pub fn plugin_macro(&self, opt: PluginOpt) {
-		let id = self.ongoing.lock().add(TaskKind::User, format!("Run macro plugin `{}`", opt.id));
+		let id = self.ongoing.lock().add::<PluginProgEntry>(format!("Run macro plugin `{}`", opt.id));
 
 		self.plugin.r#macro(PluginInEntry { id, opt }).ok();
 	}
 
 	pub fn fetch_paged(&self, fetcher: &'static Fetcher, targets: Vec<yazi_fs::File>) {
-		let id = self.ongoing.lock().add(
-			TaskKind::Preload,
-			format!("Run fetcher `{}` with {} target(s)", fetcher.run.name, targets.len()),
-		);
+		let id = self.ongoing.lock().add::<PreworkProgFetch>(format!(
+			"Run fetcher `{}` with {} target(s)",
+			fetcher.run.name,
+			targets.len()
+		));
 
 		let prework = self.prework.clone();
 		self.send_micro(id, NORMAL, async move {
@@ -237,7 +238,7 @@ impl Scheduler {
 
 	pub fn preload_paged(&self, preloader: &'static Preloader, target: &yazi_fs::File) {
 		let id =
-			self.ongoing.lock().add(TaskKind::Preload, format!("Run preloader `{}`", preloader.run.name));
+			self.ongoing.lock().add::<PreworkProgLoad>(format!("Run preloader `{}`", preloader.run.name));
 
 		let target = target.clone();
 		let prework = self.prework.clone();
@@ -252,7 +253,7 @@ impl Scheduler {
 
 		for target in targets {
 			let id =
-				ongoing.add(TaskKind::Preload, format!("Calculate the size of {}", target.display()));
+				ongoing.add::<PreworkProgSize>(format!("Calculate the size of {}", target.display()));
 			let target = target.clone();
 			let throttle = throttle.clone();
 
@@ -273,10 +274,16 @@ impl Scheduler {
 			}
 		};
 
-		let (cancel_tx, cancel_rx) = mpsc::channel(1);
 		let mut ongoing = self.ongoing.lock();
+		let id = if opener.block {
+			ongoing.add::<ProcessProgBlock>(name)
+		} else if opener.orphan {
+			ongoing.add::<ProcessProgOrphan>(name)
+		} else {
+			ongoing.add::<ProcessProgBg>(name)
+		};
 
-		let id = ongoing.add(TaskKind::User, name);
+		let (cancel_tx, cancel_rx) = mpsc::channel(1);
 		ongoing.hooks.add_async(id, {
 			let ongoing = self.ongoing.clone();
 			move |canceled: bool| async move {
@@ -287,20 +294,21 @@ impl Scheduler {
 				if let Some(tx) = done {
 					tx.send(()).ok();
 				}
-				ongoing.lock().try_remove(id, TaskStage::Hooked);
+				ongoing.lock().remove(id);
 			}
 		});
 
 		let cmd = OsString::from(&opener.run);
 		let process = self.process.clone();
-		self.send_micro(id, NORMAL, async move {
+		self.send_micro::<_, TaskOut>(id, NORMAL, async move {
 			if opener.block {
-				process.block(ProcessInBlock { id, cwd, cmd, args }).await
+				process.block(ProcessInBlock { id, cwd, cmd, args }).await?;
 			} else if opener.orphan {
-				process.orphan(ProcessInOrphan { id, cwd, cmd, args }).await
+				process.orphan(ProcessInOrphan { id, cwd, cmd, args }).await?;
 			} else {
-				process.bg(ProcessInBg { id, cwd, cmd, args, cancel: cancel_rx }).await
+				process.bg(ProcessInBg { id, cwd, cmd, args, cancel: cancel_rx }).await?;
 			}
+			Ok(())
 		});
 	}
 
@@ -320,13 +328,13 @@ impl Scheduler {
 	fn schedule_macro(
 		&self,
 		micro: async_priority_channel::Receiver<BoxFuture<'static, ()>, u8>,
-		r#macro: async_priority_channel::Receiver<TaskOp, u8>,
+		r#macro: async_priority_channel::Receiver<TaskIn, u8>,
 	) -> JoinHandle<()> {
 		let file = self.file.clone();
 		let plugin = self.plugin.clone();
 		let prework = self.prework.clone();
 
-		let prog = self.prog.clone();
+		let ops = self.ops.clone();
 		let ongoing = self.ongoing.clone();
 
 		tokio::spawn(async move {
@@ -341,14 +349,23 @@ impl Scheduler {
 							continue;
 						}
 
-						let result = match r#in {
-							TaskOp::File(r#in) => file.work(*r#in).await,
-							TaskOp::Plugin(r#in) => plugin.work(*r#in).await,
-							TaskOp::Prework(r#in) => prework.work(*r#in).await,
+						let result: Result<_, TaskOut> = match r#in {
+							// File
+							TaskIn::FilePaste(r#in) => file.paste_do(r#in).await.map_err(Into::into),
+							TaskIn::FileLink(r#in) => file.link_do(r#in).await.map_err(Into::into),
+							TaskIn::FileHardlink(r#in) => file.hardlink_do(r#in).await.map_err(Into::into),
+							TaskIn::FileDelete(r#in) => file.delete_do(r#in).await.map_err(Into::into),
+							TaskIn::FileTrash(r#in) => file.trash_do(r#in).await.map_err(Into::into),
+							// Plugin
+							TaskIn::PluginEntry(r#in) => plugin.macro_do(r#in).await.map_err(Into::into),
+							// Prework
+							TaskIn::PreworkFetch(r#in) => prework.fetch_do(r#in).await.map_err(Into::into),
+							TaskIn::PreworkLoad(r#in) => prework.load_do(r#in).await.map_err(Into::into),
+							TaskIn::PreworkSize(r#in) => prework.size_do(r#in).await.map_err(Into::into),
 						};
 
-						if let Err(e) = result {
-							prog.send(TaskProg::Fail(id, format!("Failed to work on this task: {e:?}"))).ok();
+						if let Err(out) = result {
+							ops.out(id, out);
 						}
 					}
 				}
@@ -356,82 +373,41 @@ impl Scheduler {
 		})
 	}
 
-	fn progress(&self, mut rx: UnboundedReceiver<TaskProg>) -> JoinHandle<()> {
+	fn handle_ops(&self, mut rx: UnboundedReceiver<TaskOp>) -> JoinHandle<()> {
 		let micro = self.micro.clone();
 		let ongoing = self.ongoing.clone();
 
 		tokio::spawn(async move {
-			while let Some(r#in) = rx.recv().await {
-				match r#in {
-					TaskProg::New(id, size) => {
-						if let Some(task) = ongoing.lock().get_mut(id) {
-							task.total += 1;
-							task.found += size;
-						}
-					}
-					TaskProg::Adv(id, succ, processed) => {
-						let mut ongoing = ongoing.lock();
-						if let Some(task) = ongoing.get_mut(id) {
-							task.succ += succ;
-							task.processed += processed;
-						}
-						if succ > 0
-							&& let Some(hook) = ongoing.try_remove(id, TaskStage::Pending)
-						{
-							micro.try_send(hook.call(false), LOW).ok();
-						}
-					}
-					TaskProg::Succ(id) => {
-						if let Some(hook) = ongoing.lock().try_remove(id, TaskStage::Dispatched) {
-							micro.try_send(hook.call(false), LOW).ok();
-						}
-					}
-					TaskProg::Fail(id, reason) => {
-						if let Some(task) = ongoing.lock().get_mut(id) {
-							task.fail += 1;
-							task.logs.push_str(&reason);
-							task.logs.push('\n');
+			while let Some(op) = rx.recv().await {
+				let mut ongoing = ongoing.lock();
+				let Some(task) = ongoing.get_mut(op.id) else { continue };
 
-							if let Some(logger) = &task.logger {
-								logger.send(reason).ok();
-							}
-						}
-					}
-					TaskProg::Log(id, line) => {
-						if let Some(task) = ongoing.lock().get_mut(id) {
-							task.logs.push_str(&line);
-							task.logs.push('\n');
-
-							if let Some(logger) = &task.logger {
-								logger.send(line).ok();
-							}
-						}
-					}
+				op.out.reduce(task);
+				if !task.prog.success() {
+					continue;
+				} else if let Some(hook) = ongoing.hooks.pop(op.id) {
+					micro.try_send(hook.call(false), LOW).ok();
+				} else {
+					ongoing.all.remove(&op.id);
 				}
 			}
 		})
 	}
 
-	fn send_micro<F>(&self, id: Id, priority: u8, f: F)
+	fn send_micro<F, E>(&self, id: Id, priority: u8, f: F)
 	where
-		F: Future<Output = Result<()>> + Send + 'static,
+		F: Future<Output = Result<(), E>> + Send + 'static,
+		E: Into<TaskOut>,
 	{
-		let prog = self.prog.clone();
+		let ops = self.ops.clone();
 		_ = self.micro.try_send(
 			async move {
-				if let Err(e) = f.await {
-					prog.send(TaskProg::New(id, 0)).ok();
-					prog.send(TaskProg::Fail(id, format!("Task initialization failed:\n{e:?}"))).ok();
+				if let Err(out) = f.await {
+					ops.out(id, out);
 				}
 			}
 			.boxed(),
 			priority,
 		);
-	}
-
-	fn new_and_fail(&self, id: Id, reason: &str) -> Result<()> {
-		self.prog.send(TaskProg::New(id, 0))?;
-		self.prog.send(TaskProg::Fail(id, reason.to_owned()))?;
-		Ok(())
 	}
 }

@@ -15,7 +15,6 @@ impl Deref for Finder {
 }
 
 impl Finder {
-	#[inline]
 	pub(super) fn make(inner: &yazi_core::tab::Finder) -> mlua::Result<AnyUserData> {
 		Lives::scoped_userdata(Self { inner: inner.into() })
 	}

@@ -137,7 +137,6 @@ impl Pubsub {
 		Ok(())
 	}
 
-	#[inline]
 	fn any_remote_own(kind: &str) -> bool {
 		REMOTE.read().contains_key(kind)  // Own remote abilities
 			|| PEERS.read().values().any(|p| p.able(kind))  // Remote peers' abilities

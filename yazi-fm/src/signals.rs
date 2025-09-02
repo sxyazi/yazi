@@ -24,7 +24,6 @@ impl Signals {
 	}
 
 	#[cfg(unix)]
-	#[inline]
 	fn handle_sys(n: libc::c_int) -> bool {
 		use libc::{SIGCONT, SIGHUP, SIGINT, SIGQUIT, SIGSTOP, SIGTERM, SIGTSTP};
 		use tracing::error;
@@ -55,7 +54,6 @@ impl Signals {
 	#[inline]
 	fn handle_sys(_: ()) -> bool { unreachable!() }
 
-	#[inline]
 	fn handle_term(event: CrosstermEvent) {
 		match event {
 			CrosstermEvent::Key(key @ KeyEvent { kind: KeyEventKind::Press, .. }) => {

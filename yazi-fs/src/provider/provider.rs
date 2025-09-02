@@ -230,6 +230,19 @@ where
 }
 
 #[inline]
+pub async fn symlink<'a, U, F>(original: &Path, link: U, is_dir: F) -> io::Result<()>
+where
+	U: Into<Url<'a>>,
+	F: AsyncFnOnce() -> io::Result<bool>,
+{
+	if let Some(link) = link.into().as_path() {
+		Local::symlink(original, link, is_dir).await
+	} else {
+		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
+	}
+}
+
+#[inline]
 pub async fn symlink_dir<'a, U>(original: &Path, link: U) -> io::Result<()>
 where
 	U: Into<Url<'a>>,

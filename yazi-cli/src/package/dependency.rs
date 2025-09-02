@@ -39,7 +39,6 @@ impl Dependency {
 		}
 	}
 
-	#[inline]
 	pub(super) fn identical(&self, other: &Self) -> bool {
 		self.parent == other.parent && self.child == other.child
 	}

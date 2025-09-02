@@ -3,17 +3,14 @@ use crate::{Yazi, keymap::Keymap, theme::Theme};
 pub(crate) struct Preset;
 
 impl Preset {
-	#[inline]
 	pub(super) fn yazi() -> Result<Yazi, toml::de::Error> {
 		toml::from_str(&yazi_macro::config_preset!("yazi"))
 	}
 
-	#[inline]
 	pub(super) fn keymap() -> Result<Keymap, toml::de::Error> {
 		toml::from_str(&yazi_macro::config_preset!("keymap"))
 	}
 
-	#[inline]
 	pub(super) fn theme(light: bool) -> Result<Theme, toml::de::Error> {
 		toml::from_str(&if light {
 			yazi_macro::theme_preset!("light")

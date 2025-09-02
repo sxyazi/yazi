@@ -1,10 +1,11 @@
 use hashbrown::HashMap;
+use ordered_float::OrderedFloat;
 use yazi_config::YAZI;
-use yazi_parser::app::TasksProgress;
+use yazi_parser::app::TaskSummary;
 use yazi_shared::{Id, Ids};
 
-use super::{Task, TaskStage};
-use crate::{Hook, Hooks, TaskKind};
+use super::Task;
+use crate::{Hooks, TaskProg};
 
 #[derive(Default)]
 pub struct Ongoing {
@@ -13,11 +14,14 @@ pub struct Ongoing {
 }
 
 impl Ongoing {
-	pub fn add(&mut self, kind: TaskKind, name: String) -> Id {
+	pub(super) fn add<T>(&mut self, name: String) -> Id
+	where
+		T: Into<TaskProg> + Default,
+	{
 		static IDS: Ids = Ids::new();
 
 		let id = IDS.next();
-		self.all.insert(id, Task::new(id, kind, name));
+		self.all.insert(id, Task::new::<T>(id, name));
 		id
 	}
 
@@ -33,7 +37,7 @@ impl Ongoing {
 	#[inline]
 	pub fn len(&self) -> usize {
 		if YAZI.tasks.suppress_preload {
-			self.all.values().filter(|t| t.kind != TaskKind::Preload).count()
+			self.all.values().filter(|&t| t.prog.is_user()).count()
 		} else {
 			self.all.len()
 		}
@@ -45,7 +49,7 @@ impl Ongoing {
 	#[inline]
 	pub fn values(&self) -> Box<dyn Iterator<Item = &Task> + '_> {
 		if YAZI.tasks.suppress_preload {
-			Box::new(self.all.values().filter(|t| t.kind != TaskKind::Preload))
+			Box::new(self.all.values().filter(|&t| t.prog.is_user()))
 		} else {
 			Box::new(self.all.values())
 		}
@@ -54,44 +58,42 @@ impl Ongoing {
 	#[inline]
 	pub fn is_empty(&self) -> bool { self.len() == 0 }
 
-	pub fn try_remove(&mut self, id: Id, stage: TaskStage) -> Option<Box<dyn Hook>> {
-		if let Some(task) = self.get_mut(id) {
-			if stage > task.stage {
-				task.stage = stage;
-			}
-
-			match task.stage {
-				TaskStage::Pending => return None,
-				TaskStage::Dispatched => {
-					if task.succ < task.total {
-						return None;
-					}
-					if let Some(hook) = self.hooks.pop(id) {
-						return Some(hook);
-					}
-				}
-				TaskStage::Hooked => {}
-			}
-
-			self.all.remove(&id);
-		}
-		None
+	pub fn remove(&mut self, id: Id) {
+		self.hooks.pop(id);
+		self.all.remove(&id);
 	}
 
-	pub fn progress(&self) -> TasksProgress {
-		let mut progress = TasksProgress::default();
-		if self.is_empty() {
-			return progress;
-		}
+	pub fn summary(&self) -> TaskSummary {
+		let mut summary = TaskSummary::default();
+		let mut percent_sum = 0.0f64;
+		let mut percent_count = 0;
 
 		for task in self.values() {
-			progress.total += task.total;
-			progress.succ += task.succ;
-			progress.fail += task.fail;
+			let s: TaskSummary = task.prog.into();
+			if s.total == 0 {
+				continue;
+			}
 
-			progress.found += task.found;
-			progress.processed += task.processed;
+			summary.total += 1;
+			if let Some(p) = s.percent {
+				percent_sum += p.0 as f64;
+				percent_count += 1;
+			}
+
+			if task.prog.running() {
+				continue;
+			} else if task.prog.success() {
+				summary.success += 1;
+			} else {
+				summary.failed += 1;
+			}
 		}
-		progress
+
+		summary.percent = if percent_count == 0 {
+			None
+		} else {
+			Some(OrderedFloat((percent_sum / percent_count as f64) as f32))
+		};
+		summary
 	}
 }

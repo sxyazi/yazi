@@ -31,7 +31,6 @@ impl Core {
 		}
 	}
 
-	#[inline]
 	pub fn cursor(&self) -> Option<(Position, SetCursorStyle)> {
 		if self.input.visible {
 			let Rect { x, y, .. } = self.mgr.area(self.input.position);
@@ -46,7 +45,6 @@ impl Core {
 		None
 	}
 
-	#[inline]
 	pub fn layer(&self) -> Layer {
 		if self.which.visible {
 			Layer::Which

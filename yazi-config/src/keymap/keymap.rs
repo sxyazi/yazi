@@ -19,7 +19,6 @@ pub struct Keymap {
 }
 
 impl Keymap {
-	#[inline]
 	pub fn get(&self, layer: Layer) -> &[Chord] {
 		match layer {
 			Layer::App => &[],

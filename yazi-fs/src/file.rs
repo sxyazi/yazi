@@ -15,7 +15,6 @@ pub struct File {
 impl Deref for File {
 	type Target = Cha;
 
-	#[inline]
 	fn deref(&self) -> &Self::Target { &self.cha }
 }
 

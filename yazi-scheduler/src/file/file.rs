@@ -1,140 +1,31 @@
 use std::{borrow::Cow, collections::VecDeque};
 
-use anyhow::{Result, anyhow, bail};
+use anyhow::{Result, anyhow};
 use tokio::{io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::YAZI;
-use yazi_fs::{SizeCalculator, cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path::{path_relative_to, skip_url}, provider::{self, DirEntry}};
-use yazi_shared::{Id, url::{UrlBuf, UrlCow}};
+use yazi_fs::{cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path::{path_relative_to, skip_url}, provider::{self, DirEntry}};
+use yazi_shared::url::{Url, UrlBuf, UrlCow};
 
-use super::{FileIn, FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash};
-use crate::{LOW, NORMAL, TaskOp, TaskProg};
+use super::{FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash};
+use crate::{LOW, NORMAL, TaskIn, TaskOp, TaskOps, file::{FileOutDelete, FileOutDeleteDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutPaste, FileOutPasteDo, FileOutTrash}};
 
-pub struct File {
-	r#macro: async_priority_channel::Sender<TaskOp, u8>,
-	prog:    mpsc::UnboundedSender<TaskProg>,
+pub(crate) struct File {
+	ops:     TaskOps,
+	r#macro: async_priority_channel::Sender<TaskIn, u8>,
 }
 
 impl File {
-	pub fn new(
-		r#macro: async_priority_channel::Sender<TaskOp, u8>,
-		prog: mpsc::UnboundedSender<TaskProg>,
+	pub(crate) fn new(
+		tx: &mpsc::UnboundedSender<TaskOp>,
+		r#macro: &async_priority_channel::Sender<TaskIn, u8>,
 	) -> Self {
-		Self { r#macro, prog }
+		Self { ops: tx.into(), r#macro: r#macro.clone() }
 	}
 
-	pub async fn work(&self, r#in: FileIn) -> Result<()> {
-		match r#in {
-			FileIn::Paste(mut task) => {
-				ok_or_not_found(provider::remove_file(&task.to).await)?;
-				let mut it = copy_with_progress(&task.from, &task.to, task.cha.unwrap());
-
-				while let Some(res) = it.recv().await {
-					match res {
-						Ok(0) => {
-							if task.cut {
-								provider::remove_file(&task.from).await.ok();
-							}
-							break;
-						}
-						Ok(n) => self.prog.send(TaskProg::Adv(task.id, 0, n))?,
-						Err(e) if e.kind() == NotFound => {
-							warn!("Paste task partially done: {task:?}");
-							break;
-						}
-						// Operation not permitted (os error 1)
-						// Attribute not found (os error 93)
-						Err(e)
-							if task.retry < YAZI.tasks.bizarre_retry
-								&& matches!(e.raw_os_error(), Some(1) | Some(93)) =>
-						{
-							task.retry += 1;
-							self.log(task.id, format!("Paste task retry: {task:?}"))?;
-							self.queue(FileIn::Paste(task), LOW).await?;
-							return Ok(());
-						}
-						Err(e) => Err(e)?,
-					}
-				}
-				self.prog.send(TaskProg::Adv(task.id, 1, 0))?;
-			}
-			FileIn::Link(task) => {
-				let cha = task.cha.unwrap();
-
-				let src: Cow<_> = if task.resolve {
-					match provider::read_link(&task.from).await {
-						Ok(p) => p.into(),
-						Err(e) if e.kind() == NotFound => {
-							warn!("Link task partially done: {task:?}");
-							return Ok(self.prog.send(TaskProg::Adv(task.id, 1, cha.len))?);
-						}
-						Err(e) => Err(e)?,
-					}
-				} else if task.from.scheme.covariant(&task.to.scheme) {
-					task.from.loc.as_path().into()
-				} else {
-					bail!("Source and target must be on the same filesystem: {task:?}")
-				};
-
-				let src = if task.relative {
-					path_relative_to(provider::canonicalize(task.to.parent().unwrap()).await?.loc, &src)?
-				} else {
-					src
-				};
-
-				ok_or_not_found(provider::remove_file(&task.to).await)?;
-				if cha.is_dir() {
-					provider::symlink_dir(&src, &task.to).await?;
-				} else {
-					provider::symlink_file(&src, &task.to).await?;
-				}
-
-				if task.delete {
-					provider::remove_file(&task.from).await.ok();
-				}
-				self.prog.send(TaskProg::Adv(task.id, 1, cha.len))?;
-			}
-			FileIn::Hardlink(task) => {
-				let cha = task.cha.unwrap();
-				let src = if !task.follow {
-					UrlCow::from(&task.from)
-				} else if let Ok(p) = provider::canonicalize(&task.from).await {
-					UrlCow::from(p)
-				} else {
-					UrlCow::from(&task.from)
-				};
-
-				ok_or_not_found(provider::remove_file(&task.to).await)?;
-				match provider::hard_link(&src, &task.to).await {
-					Err(e) if e.kind() == NotFound => {
-						warn!("Hardlink task partially done: {task:?}");
-					}
-					v => v?,
-				}
-
-				self.prog.send(TaskProg::Adv(task.id, 1, cha.len))?;
-			}
-			FileIn::Delete(task) => {
-				if let Err(e) = provider::remove_file(&task.target).await
-					&& e.kind() != NotFound
-					&& maybe_exists(&task.target).await
-				{
-					self.fail(task.id, format!("Delete task failed: {task:?}, {e}"))?;
-					Err(e)?
-				}
-				self.prog.send(TaskProg::Adv(task.id, 1, task.length))?
-			}
-			FileIn::Trash(task) => {
-				provider::trash(&task.target).await?;
-				self.prog.send(TaskProg::Adv(task.id, 1, task.length))?;
-			}
-		}
-		Ok(())
-	}
-
-	pub async fn paste(&self, mut task: FileInPaste) -> Result<()> {
+	pub(crate) async fn paste(&self, mut task: FileInPaste) -> Result<(), FileOutPaste> {
 		if task.cut && ok_or_not_found(provider::rename(&task.from, &task.to).await).is_ok() {
-			return self.succ(task.id);
+			return Ok(self.ops.out(task.id, FileOutPaste::Init));
 		}
 
 		if task.cha.is_none() {
@@ -144,14 +35,14 @@ impl File {
 		let cha = task.cha.unwrap();
 		if !cha.is_dir() {
 			let id = task.id;
-			self.prog.send(TaskProg::New(id, cha.len))?;
-
 			if cha.is_orphan() || (cha.is_link() && !task.follow) {
-				self.queue(FileIn::Link(task.into()), NORMAL).await?;
+				self.ops.out(id, FileOutPaste::New(0));
+				self.queue(task.into_link(), NORMAL);
 			} else {
-				self.queue(FileIn::Paste(task), LOW).await?;
+				self.ops.out(id, FileOutPaste::New(cha.len));
+				self.queue(task, LOW);
 			}
-			return self.succ(id);
+			return Ok(self.ops.out(id, FileOutPaste::Init));
 		}
 
 		macro_rules! continue_unless_ok {
@@ -159,8 +50,7 @@ impl File {
 				match $result {
 					Ok(v) => v,
 					Err(e) => {
-						self.prog.send(TaskProg::New(task.id, 0))?;
-						self.fail(task.id, format!("An error occurred while pasting: {e}"))?;
+						self.ops.out(task.id, FileOutPaste::Deform(e.to_string()));
 						continue;
 					}
 				}
@@ -189,30 +79,93 @@ impl File {
 				}
 
 				let to = dest.join(from.name().unwrap());
-				self.prog.send(TaskProg::New(task.id, cha.len))?;
-
 				if cha.is_orphan() || (cha.is_link() && !task.follow) {
-					self.queue(FileIn::Link(task.spawn(from, to, cha).into()), NORMAL).await?;
+					self.ops.out(task.id, FileOutPaste::New(0));
+					self.queue(task.spawn(from, to, cha).into_link(), NORMAL);
 				} else {
-					self.queue(FileIn::Paste(task.spawn(from, to, cha)), LOW).await?;
+					self.ops.out(task.id, FileOutPaste::New(cha.len));
+					self.queue(task.spawn(from, to, cha), LOW);
 				}
 			}
 		}
-		self.succ(task.id)
+
+		Ok(self.ops.out(task.id, FileOutPaste::Init))
 	}
 
-	pub async fn link(&self, mut task: FileInLink) -> Result<()> {
-		let id = task.id;
-		if task.cha.is_none() {
-			task.cha = Some(Self::cha(&task.from, false).await?);
+	pub(crate) async fn paste_do(&self, mut task: FileInPaste) -> Result<(), FileOutPasteDo> {
+		ok_or_not_found(provider::remove_file(&task.to).await)?;
+		let mut it = copy_with_progress(&task.from, &task.to, task.cha.unwrap());
+
+		while let Some(res) = it.recv().await {
+			match res {
+				Ok(0) => {
+					if task.cut {
+						provider::remove_file(&task.from).await.ok();
+					}
+					break;
+				}
+				Ok(n) => self.ops.out(task.id, FileOutPasteDo::Adv(n)),
+				Err(e) if e.kind() == NotFound => {
+					warn!("Paste task partially done: {task:?}");
+					break;
+				}
+				// Operation not permitted (os error 1)
+				// Attribute not found (os error 93)
+				Err(e)
+					if task.retry < YAZI.tasks.bizarre_retry
+						&& matches!(e.raw_os_error(), Some(1) | Some(93)) =>
+				{
+					task.retry += 1;
+					self.ops.out(task.id, FileOutPasteDo::Log(format!("Retrying due to error: {e}")));
+					return Ok(self.queue(task, LOW));
+				}
+				Err(e) => Err(e)?,
+			}
 		}
-
-		self.prog.send(TaskProg::New(id, task.cha.unwrap().len))?;
-		self.queue(FileIn::Link(task), NORMAL).await?;
-		self.succ(id)
+		Ok(self.ops.out(task.id, FileOutPasteDo::Succ))
 	}
 
-	pub async fn hardlink(&self, mut task: FileInHardlink) -> Result<()> {
+	pub(crate) fn link(&self, task: FileInLink) -> Result<(), FileOutLink> {
+		Ok(self.queue(task, NORMAL))
+	}
+
+	pub(crate) async fn link_do(&self, task: FileInLink) -> Result<(), FileOutLink> {
+		let src: Cow<_> = if task.resolve {
+			match provider::read_link(&task.from).await {
+				Ok(p) => p.into(),
+				Err(e) if e.kind() == NotFound => {
+					return Ok(self.ops.out(task.id, FileOutLink::Succ));
+				}
+				Err(e) => Err(e)?,
+			}
+		} else if task.from.scheme.covariant(&task.to.scheme) {
+			task.from.loc.as_path().into()
+		} else {
+			Err(anyhow!("Source and target must be on the same filesystem: {task:?}"))?
+		};
+
+		let src = if task.relative {
+			path_relative_to(provider::canonicalize(task.to.parent().unwrap()).await?.loc, &src)?
+		} else {
+			src
+		};
+
+		ok_or_not_found(provider::remove_file(&task.to).await)?;
+		provider::symlink(&src, &task.to, async || {
+			Ok(match task.cha {
+				Some(cha) => cha.is_dir(),
+				None => Self::cha(&task.from, task.resolve).await?.is_dir(),
+			})
+		})
+		.await?;
+
+		if task.delete {
+			provider::remove_file(&task.from).await.ok();
+		}
+		Ok(self.ops.out(task.id, FileOutLink::Succ))
+	}
+
+	pub(crate) async fn hardlink(&self, mut task: FileInHardlink) -> Result<(), FileOutHardlink> {
 		if task.cha.is_none() {
 			task.cha = Some(Self::cha(&task.from, task.follow).await?);
 		}
@@ -220,9 +173,10 @@ impl File {
 		let cha = task.cha.unwrap();
 		if !cha.is_dir() {
 			let id = task.id;
-			self.prog.send(TaskProg::New(id, cha.len))?;
-			self.queue(FileIn::Hardlink(task), NORMAL).await?;
-			return self.succ(id);
+			self.ops.out(id, FileOutHardlink::New);
+			self.queue(task, NORMAL);
+			self.ops.out(id, FileOutHardlink::Init);
+			return Ok(());
 		}
 
 		macro_rules! continue_unless_ok {
@@ -230,8 +184,7 @@ impl File {
 				match $result {
 					Ok(v) => v,
 					Err(e) => {
-						self.prog.send(TaskProg::New(task.id, 0))?;
-						self.fail(task.id, format!("An error occurred while hardlinking: {e}"))?;
+						self.ops.out(task.id, FileOutHardlink::Deform(e.to_string()));
 						continue;
 					}
 				}
@@ -260,21 +213,38 @@ impl File {
 				}
 
 				let to = dest.join(from.name().unwrap());
-				self.prog.send(TaskProg::New(task.id, cha.len))?;
-				self.queue(FileIn::Hardlink(task.spawn(from, to, cha)), NORMAL).await?;
+				self.ops.out(task.id, FileOutHardlink::New);
+				self.queue(task.spawn(from, to, cha), NORMAL);
 			}
 		}
-		self.succ(task.id)
+
+		Ok(self.ops.out(task.id, FileOutHardlink::Init))
 	}
 
-	pub async fn delete(&self, mut task: FileInDelete) -> Result<()> {
+	pub(crate) async fn hardlink_do(&self, task: FileInHardlink) -> Result<(), FileOutHardlinkDo> {
+		let src = if !task.follow {
+			UrlCow::from(&task.from)
+		} else if let Ok(p) = provider::canonicalize(&task.from).await {
+			UrlCow::from(p)
+		} else {
+			UrlCow::from(&task.from)
+		};
+
+		ok_or_not_found(provider::remove_file(&task.to).await)?;
+		ok_or_not_found(provider::hard_link(&src, &task.to).await)?;
+
+		Ok(self.ops.out(task.id, FileOutHardlinkDo::Succ))
+	}
+
+	pub(crate) async fn delete(&self, mut task: FileInDelete) -> Result<(), FileOutDelete> {
 		let meta = provider::symlink_metadata(&task.target).await?;
 		if !meta.is_dir() {
 			let id = task.id;
 			task.length = meta.len();
-			self.prog.send(TaskProg::New(id, meta.len()))?;
-			self.queue(FileIn::Delete(task), NORMAL).await?;
-			return self.succ(id);
+			self.ops.out(id, FileOutDelete::New(meta.len()));
+			self.queue(task, NORMAL);
+			self.ops.out(id, FileOutDelete::Init);
+			return Ok(());
 		}
 
 		let mut dirs = VecDeque::from([task.target]);
@@ -291,24 +261,36 @@ impl File {
 
 				task.target = entry.url();
 				task.length = meta.len();
-				self.prog.send(TaskProg::New(task.id, meta.len()))?;
-				self.queue(FileIn::Delete(task.clone()), NORMAL).await?;
+				self.ops.out(task.id, FileOutDelete::New(meta.len()));
+				self.queue(task.clone(), NORMAL);
 			}
 		}
-		self.succ(task.id)
+
+		Ok(self.ops.out(task.id, FileOutDelete::Init))
 	}
 
-	pub async fn trash(&self, mut task: FileInTrash) -> Result<()> {
-		let id = task.id;
-		task.length = SizeCalculator::total(&task.target).await?;
+	pub(crate) async fn delete_do(&self, task: FileInDelete) -> Result<(), FileOutDeleteDo> {
+		match provider::remove_file(&task.target).await {
+			Ok(()) => {}
+			Err(e) if e.kind() == NotFound => {}
+			Err(_) if !maybe_exists(&task.target).await => {}
+			Err(e) => Err(e)?,
+		}
+		Ok(self.ops.out(task.id, FileOutDeleteDo::Succ(task.length)))
+	}
 
-		self.prog.send(TaskProg::New(id, task.length))?;
-		self.queue(FileIn::Trash(task), LOW).await?;
-		self.succ(id)
+	pub(crate) fn trash(&self, task: FileInTrash) -> Result<(), FileOutTrash> {
+		Ok(self.queue(task, LOW))
+	}
+
+	pub(crate) async fn trash_do(&self, task: FileInTrash) -> Result<(), FileOutTrash> {
+		provider::trash(&task.target).await?;
+		Ok(self.ops.out(task.id, FileOutTrash::Succ))
 	}
 
 	#[inline]
-	async fn cha(url: &UrlBuf, follow: bool) -> io::Result<Cha> {
+	async fn cha<'a>(url: impl Into<Url<'a>>, follow: bool) -> io::Result<Cha> {
+		let url = url.into();
 		let meta = provider::symlink_metadata(url).await?;
 		Ok(if follow { Cha::from_follow(url, meta).await } else { Cha::new(url, meta) })
 	}
@@ -325,18 +307,7 @@ impl File {
 
 impl File {
 	#[inline]
-	fn succ(&self, id: Id) -> Result<()> { Ok(self.prog.send(TaskProg::Succ(id))?) }
-
-	#[inline]
-	fn fail(&self, id: Id, reason: String) -> Result<()> {
-		Ok(self.prog.send(TaskProg::Fail(id, reason))?)
-	}
-
-	#[inline]
-	fn log(&self, id: Id, line: String) -> Result<()> { Ok(self.prog.send(TaskProg::Log(id, line))?) }
-
-	#[inline]
-	async fn queue(&self, r#in: impl Into<TaskOp>, priority: u8) -> Result<()> {
-		self.r#macro.send(r#in.into(), priority).await.map_err(|_| anyhow!("Failed to send task"))
+	fn queue(&self, r#in: impl Into<TaskIn>, priority: u8) {
+		_ = self.r#macro.try_send(r#in.into(), priority);
 	}
 }

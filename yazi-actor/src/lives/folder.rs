@@ -25,7 +25,6 @@ impl Deref for Folder {
 }
 
 impl Folder {
-	#[inline]
 	pub(super) fn make(
 		window: Option<Range<usize>>,
 		inner: &yazi_core::tab::Folder,

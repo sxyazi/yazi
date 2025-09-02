@@ -76,7 +76,6 @@ impl From<Style> for ratatui::style::Modifier {
 }
 
 impl Style {
-	#[inline]
 	pub fn derive(self, other: ratatui::style::Style) -> ratatui::style::Style {
 		ratatui::style::Style::from(self).patch(other)
 	}
