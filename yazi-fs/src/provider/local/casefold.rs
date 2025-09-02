@@ -16,26 +16,36 @@ pub async fn must_case_match(path: impl AsRef<Path>) -> bool {
 	target_os = "macos",
 	target_os = "netbsd",
 	target_os = "openbsd",
-	target_os = "freebsd"
+	target_os = "freebsd",
+	target_os = "windows"
 ))]
 fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
-	use std::{ffi::{CStr, CString, OsString}, os::{fd::{AsRawFd, FromRawFd, OwnedFd}, unix::ffi::OsStringExt}};
-
-	use libc::{F_GETPATH, O_RDONLY, O_SYMLINK, PATH_MAX};
-
-	let cstr = CString::new(path.into_os_string().into_vec())?;
-	let fd = match unsafe { libc::open(cstr.as_ptr(), O_RDONLY | O_SYMLINK) } {
-		ret if ret < 0 => return Err(io::Error::last_os_error()),
-		ret => unsafe { OwnedFd::from_raw_fd(ret) },
-	};
-
-	let mut buf = [0u8; PATH_MAX as usize];
-	if unsafe { libc::fcntl(fd.as_raw_fd(), F_GETPATH, buf.as_mut_ptr()) } < 0 {
-		return Err(io::Error::last_os_error());
+	let mut it = path.components();
+	let mut parts = vec![];
+	loop {
+		let p = it.as_path();
+		let q = final_path(p)?;
+		if p != q {
+			parts.push(q);
+		} else if parts.is_empty() {
+			return Ok(q);
+		} else {
+			break;
+		}
+		if it.next_back().is_none() {
+			break;
+		}
 	}
 
-	let cstr = unsafe { CStr::from_ptr(buf.as_ptr() as *const i8) };
-	Ok(OsString::from_vec(cstr.to_bytes().to_vec()).into())
+	let mut buf = it.as_path().to_path_buf();
+	for p in parts.into_iter().rev() {
+		if let Some(name) = p.file_name() {
+			buf.push(name);
+		} else {
+			return Err(io::Error::other("Cannot get filename"));
+		}
+	}
+	Ok(buf)
 }
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
@@ -89,8 +99,34 @@ fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 	}
 }
 
+#[cfg(any(
+	target_os = "macos",
+	target_os = "netbsd",
+	target_os = "openbsd",
+	target_os = "freebsd"
+))]
+fn final_path(path: &Path) -> io::Result<PathBuf> {
+	use std::{ffi::{CStr, CString, OsString}, os::{fd::{AsRawFd, FromRawFd, OwnedFd}, unix::ffi::{OsStrExt, OsStringExt}}};
+
+	use libc::{F_GETPATH, O_RDONLY, O_SYMLINK, PATH_MAX};
+
+	let cstr = CString::new(path.as_os_str().as_bytes())?;
+	let fd = match unsafe { libc::open(cstr.as_ptr(), O_RDONLY | O_SYMLINK) } {
+		ret if ret < 0 => return Err(io::Error::last_os_error()),
+		ret => unsafe { OwnedFd::from_raw_fd(ret) },
+	};
+
+	let mut buf = [0u8; PATH_MAX as usize];
+	if unsafe { libc::fcntl(fd.as_raw_fd(), F_GETPATH, buf.as_mut_ptr()) } < 0 {
+		return Err(io::Error::last_os_error());
+	}
+
+	let cstr = unsafe { CStr::from_ptr(buf.as_ptr() as *const i8) };
+	Ok(OsString::from_vec(cstr.to_bytes().to_vec()).into())
+}
+
 #[cfg(target_os = "windows")]
-fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
+fn final_path(path: &Path) -> io::Result<PathBuf> {
 	use std::{ffi::OsString, os::windows::{ffi::OsStringExt, fs::OpenOptionsExt, io::AsRawHandle}};
 
 	use windows_sys::Win32::{Foundation::{HANDLE, MAX_PATH}, Storage::FileSystem::{FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, GetFinalPathNameByHandleW, VOLUME_NAME_DOS}};
@@ -98,7 +134,7 @@ fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 	let file = std::fs::OpenOptions::new()
 		.access_mode(0)
 		.custom_flags(FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT)
-		.open(&path)?;
+		.open(path)?;
 
 	let mut buf = [0u16; MAX_PATH as usize];
 	let len = unsafe {
@@ -112,6 +148,8 @@ fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 
 	if len == 0 {
 		Err(io::Error::last_os_error())
+	} else if buf.starts_with(&[92, 92, 63, 92]) {
+		Ok(PathBuf::from(OsString::from_wide(&buf[4..len as usize])))
 	} else {
 		Ok(PathBuf::from(OsString::from_wide(&buf[0..len as usize])))
 	}
