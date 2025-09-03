@@ -100,7 +100,7 @@ perm_exec  = { fg = "cyan" }
 # Progress
 progress_label  = { bold = true }
 progress_normal = { fg = "blue", bg = "black" }
-progress_error  = { fg = "red", bg = "black" }
+progress_error  = { fg = "blue", bg = "red" }
 
 # : }}}
 

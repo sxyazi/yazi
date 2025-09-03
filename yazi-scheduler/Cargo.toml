@@ -28,6 +28,7 @@ mlua                   = { workspace = true }
 ordered-float          = { workspace = true }
 parking_lot            = { workspace = true }
 scopeguard             = { workspace = true }
+serde                  = { workspace = true }
 tokio                  = { workspace = true }
 tokio-util             = { workspace = true }
 tracing                = { workspace = true }

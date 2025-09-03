@@ -12,5 +12,5 @@ impl Layout {
 		Self { current: Rect::ZERO, preview: Rect::ZERO, progress: Rect::ZERO }
 	}
 
-	pub const fn limit(&self) -> usize { self.current.height as _ }
+	pub const fn folder_limit(self) -> usize { self.current.height as _ }
 }

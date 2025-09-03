@@ -38,7 +38,7 @@ function Progress:redraw()
 	if percent then
 		label = string.format("%3d%%, ", math.floor(percent))
 	else
-		percent = 99
+		percent = 0
 	end
 
 	label = label .. string.format("%d left", summary.total - summary.success)

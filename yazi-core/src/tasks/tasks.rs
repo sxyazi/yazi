@@ -32,7 +32,7 @@ impl Tasks {
 				let new = ongoing.lock().summary();
 				if last != new {
 					last = new;
-					AppProxy::update_summary(new);
+					AppProxy::update_progress(new);
 				}
 			}
 		});

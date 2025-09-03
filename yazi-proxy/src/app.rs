@@ -51,7 +51,7 @@ impl AppProxy {
 		emit!(Call(relay!(app:plugin_do).with_any("opt", opt)));
 	}
 
-	pub fn update_summary(summary: TaskSummary) {
-		emit!(Call(relay!(app:update_summary).with_any("summary", summary)));
+	pub fn update_progress(summary: TaskSummary) {
+		emit!(Call(relay!(app:update_progress).with_any("summary", summary)));
 	}
 }

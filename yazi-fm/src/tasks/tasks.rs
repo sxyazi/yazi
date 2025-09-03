@@ -1,6 +1,8 @@
-use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Rect}, text::{Line, Text}, widgets::{Block, BorderType, List, Padding, Widget}};
+use ratatui::{buffer::Buffer, layout::{self, Alignment, Constraint, Rect}, text::Line, widgets::{Block, BorderType, Widget, WidgetRef}};
 use yazi_config::THEME;
 use yazi_core::{Core, tasks::TASKS_PERCENT};
+
+use crate::tasks::List;
 
 pub(crate) struct Tasks<'a> {
 	core: &'a Core,
@@ -31,26 +33,14 @@ impl Widget for Tasks<'_> {
 		let area = Self::area(area);
 
 		yazi_binding::elements::Clear::default().render(area, buf);
+
 		let block = Block::bordered()
 			.title(Line::styled("Tasks", THEME.tasks.title))
 			.title_alignment(Alignment::Center)
-			.padding(Padding::symmetric(1, 1))
 			.border_type(BorderType::Rounded)
 			.border_style(THEME.tasks.border);
+		block.render_ref(area, buf);
 
-		let inner = block.inner(area);
-		block.render(area, buf);
-
-		let tasks = &self.core.tasks;
-		let items = tasks.snaps.iter().take(inner.height as usize).enumerate().map(|(i, v)| {
-			let mut item =
-				Text::from_iter(textwrap::wrap(&v.name, inner.width as usize).into_iter().map(Line::from));
-			if i == tasks.cursor {
-				item = item.style(THEME.tasks.hovered);
-			}
-			item
-		});
-
-		List::new(items).render(inner, buf);
+		List::new(self.core).render(block.inner(area), buf);
 	}
 }

@@ -1,13 +1,13 @@
 use anyhow::Result;
 use yazi_actor::Ctx;
 use yazi_macro::{act, render, succ};
-use yazi_parser::app::UpdateSummaryOpt;
+use yazi_parser::app::UpdateProgressOpt;
 use yazi_shared::event::Data;
 
 use crate::app::App;
 
 impl App {
-	pub(crate) fn update_summary(&mut self, opt: UpdateSummaryOpt) -> Result<Data> {
+	pub(crate) fn update_progress(&mut self, opt: UpdateProgressOpt) -> Result<Data> {
 		// Update the progress of all tasks.
 		let tasks = &mut self.core.tasks;
 		let progressed = tasks.summary != opt.summary;

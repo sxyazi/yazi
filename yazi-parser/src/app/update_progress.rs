@@ -3,11 +3,11 @@ use ordered_float::OrderedFloat;
 use serde::Serialize;
 use yazi_shared::event::CmdCow;
 
-pub struct UpdateSummaryOpt {
+pub struct UpdateProgressOpt {
 	pub summary: TaskSummary,
 }
 
-impl TryFrom<CmdCow> for UpdateSummaryOpt {
+impl TryFrom<CmdCow> for UpdateProgressOpt {
 	type Error = anyhow::Error;
 
 	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {

@@ -1,14 +1,15 @@
+use serde::Serialize;
 use yazi_parser::app::TaskSummary;
 
 // --- Paste
-#[derive(Clone, Copy, Debug, Default)]
-pub(crate) struct FileProgPaste {
-	pub(crate) total_files:     u32,
-	pub(crate) success_files:   u32,
-	pub(crate) failed_files:    u32,
-	pub(crate) total_bytes:     u64,
-	pub(crate) processed_bytes: u64,
-	pub(crate) collected:       bool,
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
+pub struct FileProgPaste {
+	pub total_files:     u32,
+	pub success_files:   u32,
+	pub failed_files:    u32,
+	pub total_bytes:     u64,
+	pub processed_bytes: u64,
+	pub collected:       bool,
 }
 
 impl From<FileProgPaste> for TaskSummary {
@@ -23,13 +24,13 @@ impl From<FileProgPaste> for TaskSummary {
 }
 
 impl FileProgPaste {
-	pub(crate) fn running(self) -> bool {
+	pub fn running(self) -> bool {
 		!self.collected || self.success_files + self.failed_files != self.total_files
 	}
 
-	pub(crate) fn success(self) -> bool { self.collected && self.success_files == self.total_files }
+	pub fn success(self) -> bool { self.collected && self.success_files == self.total_files }
 
-	pub(crate) fn percent(self) -> Option<f32> {
+	pub fn percent(self) -> Option<f32> {
 		Some(if self.success() {
 			100.0
 		} else if self.total_bytes == 0 {
@@ -41,9 +42,9 @@ impl FileProgPaste {
 }
 
 // --- Link
-#[derive(Clone, Copy, Debug, Default)]
-pub(crate) struct FileProgLink {
-	pub(crate) state: Option<bool>,
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
+pub struct FileProgLink {
+	pub state: Option<bool>,
 }
 
 impl From<FileProgLink> for TaskSummary {
@@ -58,20 +59,20 @@ impl From<FileProgLink> for TaskSummary {
 }
 
 impl FileProgLink {
-	pub(crate) fn running(self) -> bool { self.state.is_none() }
+	pub fn running(self) -> bool { self.state.is_none() }
 
-	pub(crate) fn success(self) -> bool { self.state == Some(true) }
+	pub fn success(self) -> bool { self.state == Some(true) }
 
-	pub(crate) fn percent(self) -> Option<f32> { None }
+	pub fn percent(self) -> Option<f32> { None }
 }
 
 // --- Hardlink
-#[derive(Clone, Copy, Debug, Default)]
-pub(crate) struct FileProgHardlink {
-	pub(crate) total:     u32,
-	pub(crate) success:   u32,
-	pub(crate) failed:    u32,
-	pub(crate) collected: bool,
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
+pub struct FileProgHardlink {
+	pub total:     u32,
+	pub success:   u32,
+	pub failed:    u32,
+	pub collected: bool,
 }
 
 impl From<FileProgHardlink> for TaskSummary {
@@ -86,24 +87,22 @@ impl From<FileProgHardlink> for TaskSummary {
 }
 
 impl FileProgHardlink {
-	pub(crate) fn running(self) -> bool {
-		!self.collected || self.success + self.failed != self.total
-	}
+	pub fn running(self) -> bool { !self.collected || self.success + self.failed != self.total }
 
-	pub(crate) fn success(self) -> bool { self.collected && self.success == self.total }
+	pub fn success(self) -> bool { self.collected && self.success == self.total }
 
-	pub(crate) fn percent(self) -> Option<f32> { None }
+	pub fn percent(self) -> Option<f32> { None }
 }
 
 // --- Delete
-#[derive(Clone, Copy, Debug, Default)]
-pub(crate) struct FileProgDelete {
-	pub(crate) total_files:     u32,
-	pub(crate) success_files:   u32,
-	pub(crate) failed_files:    u32,
-	pub(crate) total_bytes:     u64,
-	pub(crate) processed_bytes: u64,
-	pub(crate) collected:       bool,
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
+pub struct FileProgDelete {
+	pub total_files:     u32,
+	pub success_files:   u32,
+	pub failed_files:    u32,
+	pub total_bytes:     u64,
+	pub processed_bytes: u64,
+	pub collected:       bool,
 }
 
 impl From<FileProgDelete> for TaskSummary {
@@ -118,13 +117,13 @@ impl From<FileProgDelete> for TaskSummary {
 }
 
 impl FileProgDelete {
-	pub(crate) fn running(self) -> bool {
+	pub fn running(self) -> bool {
 		!self.collected || self.success_files + self.failed_files != self.total_files
 	}
 
-	pub(crate) fn success(self) -> bool { self.collected && self.success_files == self.total_files }
+	pub fn success(self) -> bool { self.collected && self.success_files == self.total_files }
 
-	pub(crate) fn percent(self) -> Option<f32> {
+	pub fn percent(self) -> Option<f32> {
 		Some(if self.success() {
 			100.0
 		} else if self.total_bytes == 0 {
@@ -136,9 +135,9 @@ impl FileProgDelete {
 }
 
 // --- Trash
-#[derive(Clone, Copy, Debug, Default)]
-pub(crate) struct FileProgTrash {
-	pub(crate) state: Option<bool>,
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
+pub struct FileProgTrash {
+	pub state: Option<bool>,
 }
 
 impl From<FileProgTrash> for TaskSummary {
@@ -153,9 +152,9 @@ impl From<FileProgTrash> for TaskSummary {
 }
 
 impl FileProgTrash {
-	pub(crate) fn running(self) -> bool { self.state.is_none() }
+	pub fn running(self) -> bool { self.state.is_none() }
 
-	pub(crate) fn success(self) -> bool { self.state == Some(true) }
+	pub fn success(self) -> bool { self.state == Some(true) }
 
-	pub(crate) fn percent(self) -> Option<f32> { None }
+	pub fn percent(self) -> Option<f32> { None }
 }
