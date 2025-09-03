@@ -54,10 +54,6 @@ impl MgrProxy {
 		emit!(Call(relay!(mgr:update_spotted).with_any("opt", opt)));
 	}
 
-	pub fn update_tasks(url: &UrlBuf) {
-		emit!(Call(relay!(mgr:update_tasks).with_any("urls", vec![url.clone()])));
-	}
-
 	pub fn update_paged_by(page: usize, only_if: &UrlBuf) {
 		emit!(Call(relay!(mgr:update_paged, [page]).with_any("only-if", only_if.clone())));
 	}

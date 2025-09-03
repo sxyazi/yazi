@@ -1,9 +1,10 @@
+use serde::Serialize;
 use yazi_parser::app::TaskSummary;
 
 // --- Fetch
-#[derive(Clone, Copy, Debug, Default)]
-pub(crate) struct PreworkProgFetch {
-	pub(crate) state: Option<bool>,
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
+pub struct PreworkProgFetch {
+	pub state: Option<bool>,
 }
 
 impl From<PreworkProgFetch> for TaskSummary {
@@ -18,17 +19,17 @@ impl From<PreworkProgFetch> for TaskSummary {
 }
 
 impl PreworkProgFetch {
-	pub(crate) fn running(self) -> bool { self.state.is_none() }
+	pub fn running(self) -> bool { self.state.is_none() }
 
-	pub(crate) fn success(self) -> bool { self.state == Some(true) }
+	pub fn success(self) -> bool { self.state == Some(true) }
 
-	pub(crate) fn percent(self) -> Option<f32> { None }
+	pub fn percent(self) -> Option<f32> { None }
 }
 
 // --- Load
-#[derive(Clone, Copy, Debug, Default)]
-pub(crate) struct PreworkProgLoad {
-	pub(crate) state: Option<bool>,
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
+pub struct PreworkProgLoad {
+	pub state: Option<bool>,
 }
 
 impl From<PreworkProgLoad> for TaskSummary {
@@ -43,17 +44,17 @@ impl From<PreworkProgLoad> for TaskSummary {
 }
 
 impl PreworkProgLoad {
-	pub(crate) fn running(self) -> bool { self.state.is_none() }
+	pub fn running(self) -> bool { self.state.is_none() }
 
-	pub(crate) fn success(self) -> bool { self.state == Some(true) }
+	pub fn success(self) -> bool { self.state == Some(true) }
 
-	pub(crate) fn percent(self) -> Option<f32> { None }
+	pub fn percent(self) -> Option<f32> { None }
 }
 
 // --- Size
-#[derive(Clone, Copy, Debug, Default)]
-pub(crate) struct PreworkProgSize {
-	pub(crate) done: bool,
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
+pub struct PreworkProgSize {
+	pub done: bool,
 }
 
 impl From<PreworkProgSize> for TaskSummary {
@@ -68,9 +69,9 @@ impl From<PreworkProgSize> for TaskSummary {
 }
 
 impl PreworkProgSize {
-	pub(crate) fn running(self) -> bool { !self.done }
+	pub fn running(self) -> bool { !self.done }
 
-	pub(crate) fn success(self) -> bool { self.done }
+	pub fn success(self) -> bool { self.done }
 
-	pub(crate) fn percent(self) -> Option<f32> { None }
+	pub fn percent(self) -> Option<f32> { None }
 }

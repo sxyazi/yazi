@@ -12,5 +12,5 @@ yazi_macro::mod_flat!(
 	resume
 	stop
 	update_notify
-	update_summary
+	update_progress
 );

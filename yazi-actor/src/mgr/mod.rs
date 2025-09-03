@@ -47,7 +47,6 @@ yazi_macro::mod_flat!(
 	update_paged
 	update_peeked
 	update_spotted
-	update_tasks
 	update_yanked
 	visual_mode
 	watch

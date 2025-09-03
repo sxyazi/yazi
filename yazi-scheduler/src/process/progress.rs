@@ -1,9 +1,10 @@
+use serde::Serialize;
 use yazi_parser::app::TaskSummary;
 
 // --- Block
-#[derive(Clone, Copy, Debug, Default)]
-pub(crate) struct ProcessProgBlock {
-	pub(crate) state: Option<bool>,
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
+pub struct ProcessProgBlock {
+	pub state: Option<bool>,
 }
 
 impl From<ProcessProgBlock> for TaskSummary {
@@ -18,17 +19,17 @@ impl From<ProcessProgBlock> for TaskSummary {
 }
 
 impl ProcessProgBlock {
-	pub(crate) fn running(self) -> bool { self.state.is_none() }
+	pub fn running(self) -> bool { self.state.is_none() }
 
-	pub(crate) fn success(self) -> bool { self.state == Some(true) }
+	pub fn success(self) -> bool { self.state == Some(true) }
 
-	pub(crate) fn percent(self) -> Option<f32> { None }
+	pub fn percent(self) -> Option<f32> { None }
 }
 
 // --- Orphan
-#[derive(Clone, Copy, Debug, Default)]
-pub(crate) struct ProcessProgOrphan {
-	pub(crate) state: Option<bool>,
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
+pub struct ProcessProgOrphan {
+	pub state: Option<bool>,
 }
 
 impl From<ProcessProgOrphan> for TaskSummary {
@@ -43,17 +44,17 @@ impl From<ProcessProgOrphan> for TaskSummary {
 }
 
 impl ProcessProgOrphan {
-	pub(crate) fn running(self) -> bool { self.state.is_none() }
+	pub fn running(self) -> bool { self.state.is_none() }
 
-	pub(crate) fn success(self) -> bool { self.state == Some(true) }
+	pub fn success(self) -> bool { self.state == Some(true) }
 
-	pub(crate) fn percent(self) -> Option<f32> { None }
+	pub fn percent(self) -> Option<f32> { None }
 }
 
 // --- Bg
-#[derive(Clone, Copy, Debug, Default)]
-pub(crate) struct ProcessProgBg {
-	pub(crate) state: Option<bool>,
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
+pub struct ProcessProgBg {
+	pub state: Option<bool>,
 }
 
 impl From<ProcessProgBg> for TaskSummary {
@@ -68,9 +69,9 @@ impl From<ProcessProgBg> for TaskSummary {
 }
 
 impl ProcessProgBg {
-	pub(crate) fn running(self) -> bool { self.state.is_none() }
+	pub fn running(self) -> bool { self.state.is_none() }
 
-	pub(crate) fn success(self) -> bool { self.state == Some(true) }
+	pub fn success(self) -> bool { self.state == Some(true) }
 
-	pub(crate) fn percent(self) -> Option<f32> { None }
+	pub fn percent(self) -> Option<f32> { None }
 }

@@ -44,7 +44,7 @@ impl<'a> Executor<'a> {
 		on!(plugin);
 		on!(plugin_do);
 		on!(update_notify);
-		on!(update_summary);
+		on!(update_progress);
 		on!(resize);
 		on!(stop);
 		on!(resume);
@@ -65,7 +65,6 @@ impl<'a> Executor<'a> {
 		}
 
 		on!(cd);
-		on!(update_tasks);
 		on!(update_yanked);
 
 		on!(update_files);
@@ -154,6 +153,8 @@ impl<'a> Executor<'a> {
 				}
 			};
 		}
+
+		on!(update_succeed);
 
 		on!(show);
 		on!(close);

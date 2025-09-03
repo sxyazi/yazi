@@ -23,4 +23,8 @@ impl TasksProxy {
 		})));
 		rx.await.ok();
 	}
+
+	pub fn update_succeed(url: impl Into<UrlBuf>) {
+		emit!(Call(relay!(tasks:update_succeed).with_any("urls", vec![url.into()])));
+	}
 }

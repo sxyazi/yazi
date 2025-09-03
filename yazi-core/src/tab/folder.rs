@@ -130,7 +130,7 @@ impl Folder {
 	}
 
 	pub fn sync_page(&mut self, force: bool) {
-		let limit = LAYOUT.get().limit();
+		let limit = LAYOUT.get().folder_limit();
 		if limit == 0 {
 			return;
 		}
@@ -145,7 +145,7 @@ impl Folder {
 		let old = self.offset;
 		let len = self.files.len();
 
-		let limit = LAYOUT.get().limit();
+		let limit = LAYOUT.get().folder_limit();
 		let scrolloff = (limit / 2).min(YAZI.mgr.scrolloff.get() as usize);
 
 		self.offset = if self.cursor < (self.offset + limit).min(len).saturating_sub(scrolloff) {
@@ -167,7 +167,7 @@ impl Folder {
 
 	pub fn paginate(&self, page: usize) -> &[File] {
 		let len = self.files.len();
-		let limit = LAYOUT.get().limit();
+		let limit = LAYOUT.get().folder_limit();
 
 		let start = (page.saturating_sub(1) * limit).min(len.saturating_sub(1));
 		let end = ((page + 2) * limit).min(len);
@@ -178,7 +178,7 @@ impl Folder {
 impl Scrollable for Folder {
 	fn total(&self) -> usize { self.files.len() }
 
-	fn limit(&self) -> usize { LAYOUT.get().limit() }
+	fn limit(&self) -> usize { LAYOUT.get().folder_limit() }
 
 	fn scrolloff(&self) -> usize { (self.limit() / 2).min(YAZI.mgr.scrolloff.get() as usize) }
 

@@ -66,7 +66,6 @@ pub enum Spark<'a> {
 	UpdatePaged(yazi_parser::mgr::UpdatePagedOpt),
 	UpdatePeeked(yazi_parser::mgr::UpdatePeekedOpt),
 	UpdateSpotted(yazi_parser::mgr::UpdateSpottedOpt),
-	UpdateTasks(yazi_parser::mgr::UpdateTasksOpt),
 	UpdateYanked(yazi_parser::mgr::UpdateYankedOpt<'a>),
 	VisualMode(yazi_parser::mgr::VisualModeOpt),
 	Watch(yazi_parser::VoidOpt),
@@ -109,6 +108,7 @@ pub enum Spark<'a> {
 
 	// Tasks
 	TasksProcessExec(yazi_parser::tasks::ProcessExecOpt),
+	TasksUpdateSucceed(yazi_parser::tasks::UpdateSucceedOpt),
 
 	// Which
 	WhichCallback(yazi_parser::which::CallbackOpt),
@@ -188,7 +188,6 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::UpdatePaged(b) => b.into_lua(lua),
 			Self::UpdatePeeked(b) => b.into_lua(lua),
 			Self::UpdateSpotted(b) => b.into_lua(lua),
-			Self::UpdateTasks(b) => b.into_lua(lua),
 			Self::UpdateYanked(b) => b.into_lua(lua),
 			Self::VisualMode(b) => b.into_lua(lua),
 			Self::Watch(b) => b.into_lua(lua),
@@ -231,6 +230,7 @@ impl<'a> IntoLua for Spark<'a> {
 
 			// Tasks
 			Self::TasksProcessExec(b) => b.into_lua(lua),
+			Self::TasksUpdateSucceed(b) => b.into_lua(lua),
 
 			// Which
 			Self::WhichCallback(b) => b.into_lua(lua),
@@ -314,7 +314,6 @@ try_from_spark!(mgr::UpdateMimesOpt, mgr:update_mimes);
 try_from_spark!(mgr::UpdatePagedOpt, mgr:update_paged);
 try_from_spark!(mgr::UpdatePeekedOpt, mgr:update_peeked);
 try_from_spark!(mgr::UpdateSpottedOpt, mgr:update_spotted);
-try_from_spark!(mgr::UpdateTasksOpt, mgr:update_tasks);
 try_from_spark!(mgr::UpdateYankedOpt<'a>, mgr:update_yanked);
 try_from_spark!(mgr::VisualModeOpt, mgr:visual_mode);
 try_from_spark!(mgr::YankOpt, mgr:yank);
@@ -323,5 +322,6 @@ try_from_spark!(pick::CloseOpt, pick:close);
 try_from_spark!(pick::ShowOpt, pick:show);
 try_from_spark!(spot::CopyOpt, spot:copy);
 try_from_spark!(tasks::ProcessExecOpt, tasks:process_exec);
+try_from_spark!(tasks::UpdateSucceedOpt, tasks:update_succeed);
 try_from_spark!(which::CallbackOpt, which:callback);
 try_from_spark!(which::ShowOpt, which:show);

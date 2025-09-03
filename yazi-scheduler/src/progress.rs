@@ -1,9 +1,11 @@
+use serde::Serialize;
 use yazi_parser::app::TaskSummary;
 
 use crate::{file::{FileProgDelete, FileProgHardlink, FileProgLink, FileProgPaste, FileProgTrash}, impl_from_prog, plugin::PluginProgEntry, prework::{PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
 
-#[derive(Clone, Copy, Debug)]
-pub(crate) enum TaskProg {
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
+#[serde(tag = "kind")]
+pub enum TaskProg {
 	// File
 	FilePaste(FileProgPaste),
 	FileLink(FileProgLink),
@@ -57,7 +59,7 @@ impl From<TaskProg> for TaskSummary {
 }
 
 impl TaskProg {
-	pub(crate) fn running(self) -> bool {
+	pub fn running(self) -> bool {
 		match self {
 			// File
 			Self::FilePaste(p) => p.running(),
@@ -78,7 +80,7 @@ impl TaskProg {
 		}
 	}
 
-	pub(crate) fn success(self) -> bool {
+	pub fn success(self) -> bool {
 		match self {
 			// File
 			Self::FilePaste(p) => p.success(),
@@ -99,7 +101,7 @@ impl TaskProg {
 		}
 	}
 
-	pub(crate) fn percent(self) -> Option<f32> {
+	pub fn percent(self) -> Option<f32> {
 		match self {
 			// File
 			Self::FilePaste(p) => p.percent(),

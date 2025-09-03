@@ -25,8 +25,9 @@ pub struct Border {
 
 impl Border {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
-		let new = lua
-			.create_function(|_, (_, edge): (Table, Edge)| Ok(Border { edge, ..Default::default() }))?;
+		let new = lua.create_function(|_, (_, edge): (Table, Edge)| {
+			Ok(Border { edge, r#type: ratatui::widgets::BorderType::Rounded, ..Default::default() })
+		})?;
 
 		let border = lua.create_table_from([
 			// Type

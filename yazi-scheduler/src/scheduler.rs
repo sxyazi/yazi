@@ -8,7 +8,7 @@ use yazi_config::{YAZI, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
 use yazi_fs::{must_be_dir, path::unique_name, provider, remove_dir_clean};
 use yazi_parser::{app::PluginOpt, tasks::ProcessExecOpt};
-use yazi_proxy::MgrProxy;
+use yazi_proxy::TasksProxy;
 use yazi_shared::{Id, Throttle, url::UrlBuf};
 
 use super::{Ongoing, TaskOp};
@@ -174,7 +174,7 @@ impl Scheduler {
 			move |canceled: bool| async move {
 				if !canceled {
 					provider::remove_dir_all(&target).await.ok();
-					MgrProxy::update_tasks(&target);
+					TasksProxy::update_succeed(&target);
 					Pump::push_delete(target);
 				}
 				ongoing.lock().remove(id);
@@ -199,7 +199,7 @@ impl Scheduler {
 
 			move |canceled: bool| async move {
 				if !canceled {
-					MgrProxy::update_tasks(&target);
+					TasksProxy::update_succeed(&target);
 					Pump::push_trash(target);
 				}
 				ongoing.lock().remove(id);
