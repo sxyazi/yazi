@@ -54,4 +54,18 @@ impl<L, R> Either<L, R> {
 			_ => None,
 		}
 	}
+
+	pub fn left_or_err<E, F: FnOnce() -> E>(self, f: F) -> Result<L, E> {
+		match self {
+			Either::Left(l) => Ok(l),
+			_ => Err(f()),
+		}
+	}
+
+	pub fn right_or_err<E, F: FnOnce() -> E>(self, f: F) -> Result<R, E> {
+		match self {
+			Either::Right(r) => Ok(r),
+			_ => Err(f()),
+		}
+	}
 }

@@ -127,32 +127,44 @@ fn final_path(path: &Path) -> io::Result<PathBuf> {
 
 #[cfg(target_os = "windows")]
 fn final_path(path: &Path) -> io::Result<PathBuf> {
-	use std::{ffi::OsString, os::windows::{ffi::OsStringExt, fs::OpenOptionsExt, io::AsRawHandle}};
+	use std::{ffi::OsString, fs::File, os::windows::{ffi::OsStringExt, fs::OpenOptionsExt, io::AsRawHandle}};
 
 	use windows_sys::Win32::{Foundation::HANDLE, Storage::FileSystem::{FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, GetFinalPathNameByHandleW, VOLUME_NAME_DOS}};
+	use yazi_shared::Either;
 
 	let file = std::fs::OpenOptions::new()
 		.access_mode(0)
 		.custom_flags(FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT)
 		.open(path)?;
 
-	let mut buf = [0u16; 512];
-	let len = unsafe {
-		GetFinalPathNameByHandleW(
-			file.as_raw_handle() as HANDLE,
-			buf.as_mut_ptr(),
-			buf.len() as u32,
-			VOLUME_NAME_DOS,
-		)
-	};
+	fn inner(file: &File, buf: &mut [u16]) -> io::Result<Either<PathBuf, u32>> {
+		let len = unsafe {
+			GetFinalPathNameByHandleW(
+				file.as_raw_handle() as HANDLE,
+				buf.as_mut_ptr(),
+				buf.len() as u32,
+				VOLUME_NAME_DOS,
+			)
+		};
 
-	if len == 0 {
-		Err(io::Error::last_os_error())
-	} else if len as usize > buf.len() {
-		Err(io::Error::new(io::ErrorKind::Other, "Path too long"))
-	} else if buf.starts_with(&[92, 92, 63, 92]) {
-		Ok(PathBuf::from(OsString::from_wide(&buf[4..len as usize])))
-	} else {
-		Ok(PathBuf::from(OsString::from_wide(&buf[0..len as usize])))
+		Ok(if len == 0 {
+			Err(io::Error::last_os_error())?
+		} else if len as usize > buf.len() {
+			Either::Right(len)
+		} else if buf.starts_with(&[92, 92, 63, 92]) {
+			Either::Left(PathBuf::from(OsString::from_wide(&buf[4..len as usize])))
+		} else {
+			Either::Left(PathBuf::from(OsString::from_wide(&buf[0..len as usize])))
+		})
+	}
+
+	let mut buf = [0u16; 512];
+	match inner(&file, &mut buf)? {
+		Either::Left(path) => Ok(path),
+		Either::Right(len) => {
+			let mut buf = vec![0u16; len as usize];
+			inner(&file, &mut buf)?
+				.left_or_err(|| io::Error::new(io::ErrorKind::InvalidData, "path too long"))
+		}
 	}
 }
