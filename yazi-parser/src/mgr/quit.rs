@@ -19,7 +19,7 @@ impl From<CmdCow> for QuitOpt {
 
 impl From<QuitOpt> for EventQuit {
 	fn from(value: QuitOpt) -> Self {
-		EventQuit { code: value.code, no_cwd_file: value.no_cwd_file, ..Default::default() }
+		Self { code: value.code, no_cwd_file: value.no_cwd_file, ..Default::default() }
 	}
 }
 

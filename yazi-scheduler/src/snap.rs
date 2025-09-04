@@ -9,5 +9,5 @@ pub struct TaskSnap {
 }
 
 impl From<&Task> for TaskSnap {
-	fn from(task: &Task) -> Self { TaskSnap { name: task.name.clone(), prog: task.prog } }
+	fn from(task: &Task) -> Self { Self { name: task.name.clone(), prog: task.prog } }
 }

@@ -9,7 +9,7 @@ pub enum ReadDir {
 impl ReadDir {
 	pub async fn next_entry(&mut self) -> io::Result<Option<DirEntry>> {
 		match self {
-			ReadDir::Local(local) => local.next_entry().await.map(|entry| entry.map(Into::into)),
+			Self::Local(local) => local.next_entry().await.map(|entry| entry.map(Into::into)),
 		}
 	}
 }
@@ -24,7 +24,7 @@ impl Iterator for ReadDirSync {
 
 	fn next(&mut self) -> Option<io::Result<DirEntrySync>> {
 		match self {
-			ReadDirSync::Local(local) => local.next().map(|result| result.map(Into::into)),
+			Self::Local(local) => local.next().map(|result| result.map(Into::into)),
 		}
 	}
 }

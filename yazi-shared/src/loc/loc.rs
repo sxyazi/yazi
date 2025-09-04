@@ -128,7 +128,7 @@ impl<'a> Loc<'a> {
 	}
 
 	#[inline]
-	pub fn as_loc(self) -> Loc<'a> { self }
+	pub fn as_loc(self) -> Self { self }
 
 	#[inline]
 	pub fn as_path(self) -> &'a Path { self.inner }

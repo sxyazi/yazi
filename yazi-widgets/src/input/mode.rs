@@ -8,5 +8,5 @@ pub enum InputMode {
 
 impl InputMode {
 	#[inline]
-	pub(super) fn delta(&self) -> usize { (*self != InputMode::Insert) as usize }
+	pub(super) fn delta(&self) -> usize { (*self != Self::Insert) as usize }
 }

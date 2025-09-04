@@ -28,7 +28,7 @@ impl<T> Deref for SyncCell<T> {
 
 impl<T: Copy> Clone for SyncCell<T> {
 	#[inline]
-	fn clone(&self) -> SyncCell<T> { SyncCell::new(self.get()) }
+	fn clone(&self) -> Self { Self::new(self.get()) }
 }
 
 impl<T: Copy + Debug> Debug for SyncCell<T> {

@@ -50,7 +50,7 @@ impl Mux {
 
 	pub fn tmux_drain() -> Result<()> {
 		if TMUX.get() {
-			crossterm::execute!(TTY.writer(), crossterm::style::Print(Mux::csi("\x1b[5n")))?;
+			crossterm::execute!(TTY.writer(), crossterm::style::Print(Self::csi("\x1b[5n")))?;
 			_ = Emulator::read_until_dsr();
 		}
 		Ok(())

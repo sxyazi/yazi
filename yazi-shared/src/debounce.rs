@@ -18,7 +18,7 @@ impl<S> Debounce<S>
 where
 	S: Stream + Unpin,
 {
-	pub fn new(stream: S, interval: Duration) -> Debounce<S> {
+	pub fn new(stream: S, interval: Duration) -> Self {
 		Self { stream, interval, sleep: sleep(Duration::ZERO), last: None }
 	}
 }

@@ -215,7 +215,7 @@ impl FromStr for Cmd {
 		}
 
 		let mut me = Self::new(mem::take(&mut words[0]), Default::default(), Some(Default::default()))?;
-		me.args = Cmd::parse_args(words.into_iter().skip(1), last, true)?;
+		me.args = Self::parse_args(words.into_iter().skip(1), last, true)?;
 		Ok(me)
 	}
 }

@@ -26,8 +26,8 @@ impl TryFrom<CmdCow> for ShowOpt {
 	}
 }
 
-impl From<Box<ShowOpt>> for ShowOpt {
-	fn from(value: Box<ShowOpt>) -> Self { *value }
+impl From<Box<Self>> for ShowOpt {
+	fn from(value: Box<Self>) -> Self { *value }
 }
 
 impl FromLua for ShowOpt {

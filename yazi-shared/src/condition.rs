@@ -36,9 +36,9 @@ impl ConditionOp {
 	#[inline]
 	pub fn prec(&self) -> u8 {
 		match self {
-			ConditionOp::Or => 1,
-			ConditionOp::And => 2,
-			ConditionOp::Not => 3,
+			Self::Or => 1,
+			Self::And => 2,
+			Self::Not => 3,
 			_ => 0,
 		}
 	}

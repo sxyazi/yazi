@@ -14,7 +14,7 @@ pub struct Clear {
 
 impl Clear {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
-		let new = lua.create_function(|_, (_, area): (Table, Area)| Ok(Clear { area }))?;
+		let new = lua.create_function(|_, (_, area): (Table, Area)| Ok(Self { area }))?;
 
 		let clear = lua.create_table()?;
 		clear.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;

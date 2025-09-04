@@ -37,7 +37,7 @@ impl Event {
 	}
 
 	#[inline]
-	pub fn take() -> mpsc::UnboundedReceiver<Event> { RX.drop() }
+	pub fn take() -> mpsc::UnboundedReceiver<Self> { RX.drop() }
 
 	#[inline]
 	pub fn emit(self) { TX.send(self).ok(); }

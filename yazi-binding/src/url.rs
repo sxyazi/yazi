@@ -44,7 +44,7 @@ impl<'a> From<&'a Url> for UrlCow<'a> {
 }
 
 impl From<Url> for yazi_shared::url::UrlBufCov {
-	fn from(value: Url) -> Self { UrlBufCov(value.inner) }
+	fn from(value: Url) -> Self { Self(value.inner) }
 }
 
 impl TryFrom<&[u8]> for Url {

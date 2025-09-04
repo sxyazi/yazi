@@ -9,7 +9,7 @@ impl From<tokio::fs::ReadDir> for ReadDir {
 }
 
 impl From<ReadDir> for crate::provider::ReadDir {
-	fn from(value: ReadDir) -> Self { crate::provider::ReadDir::Local(value) }
+	fn from(value: ReadDir) -> Self { Self::Local(value) }
 }
 
 impl ReadDir {
@@ -26,7 +26,7 @@ impl From<std::fs::ReadDir> for ReadDirSync {
 }
 
 impl From<ReadDirSync> for crate::provider::ReadDirSync {
-	fn from(value: ReadDirSync) -> Self { crate::provider::ReadDirSync::Local(value) }
+	fn from(value: ReadDirSync) -> Self { Self::Local(value) }
 }
 
 impl Iterator for ReadDirSync {

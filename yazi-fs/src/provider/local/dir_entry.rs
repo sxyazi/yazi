@@ -15,7 +15,7 @@ impl From<tokio::fs::DirEntry> for DirEntry {
 }
 
 impl From<DirEntry> for crate::provider::DirEntry {
-	fn from(value: DirEntry) -> Self { crate::provider::DirEntry::Local(value) }
+	fn from(value: DirEntry) -> Self { Self::Local(value) }
 }
 
 impl DirEntry {
@@ -37,7 +37,7 @@ impl From<std::fs::DirEntry> for DirEntrySync {
 }
 
 impl From<DirEntrySync> for crate::provider::DirEntrySync {
-	fn from(value: DirEntrySync) -> Self { crate::provider::DirEntrySync::Local(value) }
+	fn from(value: DirEntrySync) -> Self { Self::Local(value) }
 }
 
 impl DirEntrySync {

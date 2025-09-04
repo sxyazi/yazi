@@ -57,7 +57,7 @@ impl Data {
 	}
 
 	#[inline]
-	pub fn into_dict(self) -> Option<HashMap<DataKey, Data>> {
+	pub fn into_dict(self) -> Option<HashMap<DataKey, Self>> {
 		match self {
 			Self::Dict(d) => Some(d),
 			_ => None,
