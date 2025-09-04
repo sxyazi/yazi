@@ -6,20 +6,9 @@ use base64::{Engine, engine::general_purpose};
 use crossterm::{cursor::MoveTo, queue};
 use image::DynamicImage;
 use ratatui::layout::Rect;
+use yazi_shared::SyncCell;
 
 use crate::{CLOSE, ESCAPE, Emulator, START, adapter::Adapter, image::Image};
-
-// Generate unique image ID per Yazi instance to prevent tmux overlap
-// This ID is encoded in the foreground color of Unicode placeholders
-static INSTANCE_ID: OnceLock<u32> = OnceLock::new();
-
-fn get_image_id() -> u32 {
-	*INSTANCE_ID.get_or_init(|| {
-		// Use PID to get unique ID per instance
-		// Limit to 24-bit RGB color space (0xFFFFFF)
-		(std::process::id() % 0xFFFFFE) + 1
-	})
-}
 
 static DIACRITICS: [char; 297] = [
 	'\u{0305}',
@@ -348,8 +337,7 @@ impl Kgp {
 				write!(w, "{s}")?;
 			}
 
-			// Delete only this instance's image by ID
-			write!(w, "{START}_Gq=2,a=d,d=i,i={}{ESCAPE}\\{CLOSE}", get_image_id())?;
+			write!(w, "{START}_Gq=2,a=d,d=i,i={}{ESCAPE}\\{CLOSE}", Self::image_id())?;
 			Ok(())
 		})
 	}
@@ -364,7 +352,7 @@ impl Kgp {
 				write!(
 					buf,
 					"{START}_Gq=2,a=T,i={},C=1,U=1,f={format},s={},v={},m={};{}{ESCAPE}\\{CLOSE}",
-					get_image_id(),
+					Kgp::image_id(),
 					size.0,
 					size.1,
 					it.peek().is_some() as u8,
@@ -393,12 +381,11 @@ impl Kgp {
 
 	fn place(area: &Rect) -> Result<Vec<u8>> {
 		let mut buf = Vec::with_capacity(area.width as usize * area.height as usize * 3 + 50);
-		// Encode the image ID in the foreground color (RGB values)
-		let id = get_image_id();
-		let r = (id >> 16) & 0xFF;
-		let g = (id >> 8) & 0xFF;
-		let b = id & 0xFF;
-		write!(buf, "\x1b[38;2;{};{};{}m", r, g, b)?;
+
+		let id = Self::image_id();
+		let (r, g, b) = ((id >> 16) & 0xff, (id >> 8) & 0xff, id & 0xff);
+		write!(buf, "\x1b[38;2;{r};{g};{b}m")?;
+
 		for y in 0..area.height {
 			write!(buf, "\x1b[{};{}H", area.y + y + 1, area.x + 1)?;
 			for x in 0..area.width {
@@ -408,5 +395,17 @@ impl Kgp {
 			}
 		}
 		Ok(buf)
+	}
+
+	fn image_id() -> u32 {
+		static CACHE: SyncCell<Option<u32>> = SyncCell::new(None);
+		match CACHE.get() {
+			Some(n) => n,
+			None => {
+				let n = std::process::id() % (0xffffff + 1);
+				CACHE.set(Some(n));
+				n
+			}
+		}
 	}
 }
