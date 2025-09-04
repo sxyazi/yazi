@@ -50,7 +50,6 @@ mlua         = { workspace = true }
 paste        = { workspace = true }
 ratatui      = { workspace = true }
 scopeguard   = { workspace = true }
-textwrap     = "0.16.2"
 tokio        = { workspace = true }
 tokio-stream = { workspace = true }
 

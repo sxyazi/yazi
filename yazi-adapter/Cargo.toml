@@ -20,7 +20,7 @@ ansi-to-tui = { workspace = true }
 anyhow      = { workspace = true }
 base64      = { workspace = true }
 crossterm   = { workspace = true }
-image       = { version = "0.25.7", default-features = false, features = [ "avif", "bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "tga", "webp" ] }
+image       = { version = "0.25.8", default-features = false, features = [ "avif", "bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "tga", "webp" ] }
 palette     = { version = "0.7.6", default-features = false }
 quantette   = { version = "0.3.0", default-features = false }
 ratatui     = { workspace = true }
