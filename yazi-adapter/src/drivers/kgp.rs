@@ -6,6 +6,7 @@ use base64::{Engine, engine::general_purpose};
 use crossterm::{cursor::MoveTo, queue};
 use image::DynamicImage;
 use ratatui::layout::Rect;
+use yazi_shared::SyncCell;
 
 use crate::{CLOSE, ESCAPE, Emulator, START, adapter::Adapter, image::Image};
 
@@ -350,9 +351,10 @@ impl Kgp {
 			if let Some(first) = it.next() {
 				write!(
 					buf,
-					"{START}_Gq=2,a=T,i=1,C=1,U=1,f={format},s={},v={},m={};{}{ESCAPE}\\{CLOSE}",
+					"{START}_Gq=2,a=T,C=1,U=1,f={format},s={},v={},i={},m={};{}{ESCAPE}\\{CLOSE}",
 					size.0,
 					size.1,
+					Kgp::image_id(),
 					it.peek().is_some() as u8,
 					unsafe { str::from_utf8_unchecked(first) },
 				)?;
@@ -379,7 +381,11 @@ impl Kgp {
 
 	fn place(area: &Rect) -> Result<Vec<u8>> {
 		let mut buf = Vec::with_capacity(area.width as usize * area.height as usize * 3 + 50);
-		write!(buf, "\x1b[38;2;0;0;1m")?;
+
+		let id = Self::image_id();
+		let (r, g, b) = ((id >> 16) & 0xff, (id >> 8) & 0xff, id & 0xff);
+		write!(buf, "\x1b[38;2;{r};{g};{b}m")?;
+
 		for y in 0..area.height {
 			write!(buf, "\x1b[{};{}H", area.y + y + 1, area.x + 1)?;
 			for x in 0..area.width {
@@ -389,5 +395,17 @@ impl Kgp {
 			}
 		}
 		Ok(buf)
+	}
+
+	fn image_id() -> u32 {
+		static CACHE: SyncCell<Option<u32>> = SyncCell::new(None);
+		match CACHE.get() {
+			Some(n) => n,
+			None => {
+				let n = std::process::id() % (0xffffff + 1);
+				CACHE.set(Some(n));
+				n
+			}
+		}
 	}
 }

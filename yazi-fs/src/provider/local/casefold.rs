@@ -160,10 +160,7 @@ fn final_path(path: &Path) -> io::Result<PathBuf> {
 
 	match inner(&file, &mut [0u16; 512])? {
 		Either::Left(path) => Ok(path),
-		Either::Right(len) => {
-			let mut buf = vec![0u16; len as usize];
-			inner(&file, &mut buf)?
-				.left_or_err(|| io::Error::new(io::ErrorKind::InvalidData, "path too long"))
-		}
+		Either::Right(len) => inner(&file, &mut vec![0u16; len as usize])?
+			.left_or_err(|| io::Error::new(io::ErrorKind::InvalidData, "path too long")),
 	}
 }
