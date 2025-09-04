@@ -148,6 +148,28 @@ fn final_path(path: &Path) -> io::Result<PathBuf> {
 
 	if len == 0 {
 		Err(io::Error::last_os_error())
+	} else if len as usize > buf.len() {
+		// Buffer too small, allocate a larger buffer and retry
+		let mut large_buf = vec![0u16; len as usize];
+		let new_len = unsafe {
+			GetFinalPathNameByHandleW(
+				file.as_raw_handle() as HANDLE,
+				large_buf.as_mut_ptr(),
+				large_buf.len() as u32,
+				VOLUME_NAME_DOS,
+			)
+		};
+		
+		if new_len == 0 {
+			Err(io::Error::last_os_error())
+		} else if new_len as usize > large_buf.len() {
+			// Still too large, give up
+			Err(io::Error::new(io::ErrorKind::InvalidInput, "Path too long"))
+		} else if large_buf.starts_with(&[92, 92, 63, 92]) {
+			Ok(PathBuf::from(OsString::from_wide(&large_buf[4..new_len as usize])))
+		} else {
+			Ok(PathBuf::from(OsString::from_wide(&large_buf[0..new_len as usize])))
+		}
 	} else if buf.starts_with(&[92, 92, 63, 92]) {
 		Ok(PathBuf::from(OsString::from_wide(&buf[4..len as usize])))
 	} else {
