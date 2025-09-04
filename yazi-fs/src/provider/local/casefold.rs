@@ -129,14 +129,14 @@ fn final_path(path: &Path) -> io::Result<PathBuf> {
 fn final_path(path: &Path) -> io::Result<PathBuf> {
 	use std::{ffi::OsString, os::windows::{ffi::OsStringExt, fs::OpenOptionsExt, io::AsRawHandle}};
 
-	use windows_sys::Win32::{Foundation::{HANDLE, MAX_PATH}, Storage::FileSystem::{FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, GetFinalPathNameByHandleW, VOLUME_NAME_DOS}};
+	use windows_sys::Win32::{Foundation::HANDLE, Storage::FileSystem::{FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, GetFinalPathNameByHandleW, VOLUME_NAME_DOS}};
 
 	let file = std::fs::OpenOptions::new()
 		.access_mode(0)
 		.custom_flags(FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT)
 		.open(path)?;
 
-	let mut buf = [0u16; MAX_PATH as usize];
+	let mut buf = [0u16; 512];
 	let len = unsafe {
 		GetFinalPathNameByHandleW(
 			file.as_raw_handle() as HANDLE,
@@ -148,6 +148,8 @@ fn final_path(path: &Path) -> io::Result<PathBuf> {
 
 	if len == 0 {
 		Err(io::Error::last_os_error())
+	} else if len as usize > buf.len() {
+		Err(io::Error::new(io::ErrorKind::Other, "Path too long"))
 	} else if buf.starts_with(&[92, 92, 63, 92]) {
 		Ok(PathBuf::from(OsString::from_wide(&buf[4..len as usize])))
 	} else {
