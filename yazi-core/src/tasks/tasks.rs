@@ -54,8 +54,9 @@ impl Tasks {
 	}
 
 	pub fn limit() -> usize {
-		(Dimension::available().rows * TASKS_PERCENT / 100).saturating_sub(TASKS_BORDER + TASKS_PADDING)
-			as usize
+		((Dimension::available().rows * TASKS_PERCENT / 100)
+			.saturating_sub(TASKS_BORDER + TASKS_PADDING) as usize)
+			/ 3
 	}
 
 	pub fn paginate(&self) -> Vec<TaskSnap> {
