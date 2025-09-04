@@ -158,8 +158,7 @@ fn final_path(path: &Path) -> io::Result<PathBuf> {
 		})
 	}
 
-	let mut buf = [0u16; 512];
-	match inner(&file, &mut buf)? {
+	match inner(&file, &mut [0u16; 512])? {
 		Either::Left(path) => Ok(path),
 		Either::Right(len) => {
 			let mut buf = vec![0u16; len as usize];
