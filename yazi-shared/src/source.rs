@@ -17,5 +17,5 @@ pub enum Source {
 
 impl Source {
 	#[inline]
-	pub fn is_key(self) -> bool { self == Source::Key }
+	pub fn is_key(self) -> bool { self == Self::Key }
 }

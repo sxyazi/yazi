@@ -7,28 +7,28 @@ pub enum Either<L, R> {
 impl<L, R> Either<L, R> {
 	pub fn left(&self) -> Option<&L> {
 		match self {
-			Either::Left(l) => Some(l),
+			Self::Left(l) => Some(l),
 			_ => None,
 		}
 	}
 
 	pub fn right(&self) -> Option<&R> {
 		match self {
-			Either::Right(r) => Some(r),
+			Self::Right(r) => Some(r),
 			_ => None,
 		}
 	}
 
 	pub fn left_mut(&mut self) -> Option<&mut L> {
 		match self {
-			Either::Left(l) => Some(l),
+			Self::Left(l) => Some(l),
 			_ => None,
 		}
 	}
 
 	pub fn right_mut(&mut self) -> Option<&mut R> {
 		match self {
-			Either::Right(r) => Some(r),
+			Self::Right(r) => Some(r),
 			_ => None,
 		}
 	}
@@ -43,28 +43,28 @@ impl<L, R> Either<L, R> {
 
 	pub fn into_left(self) -> Option<L> {
 		match self {
-			Either::Left(l) => Some(l),
+			Self::Left(l) => Some(l),
 			_ => None,
 		}
 	}
 
 	pub fn into_right(self) -> Option<R> {
 		match self {
-			Either::Right(r) => Some(r),
+			Self::Right(r) => Some(r),
 			_ => None,
 		}
 	}
 
 	pub fn left_or_err<E, F: FnOnce() -> E>(self, f: F) -> Result<L, E> {
 		match self {
-			Either::Left(l) => Ok(l),
+			Self::Left(l) => Ok(l),
 			_ => Err(f()),
 		}
 	}
 
 	pub fn right_or_err<E, F: FnOnce() -> E>(self, f: F) -> Result<R, E> {
 		match self {
-			Either::Right(r) => Ok(r),
+			Self::Right(r) => Ok(r),
 			_ => Err(f()),
 		}
 	}

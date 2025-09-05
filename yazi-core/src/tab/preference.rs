@@ -34,7 +34,7 @@ impl Default for Preference {
 
 impl From<&Preference> for FilesSorter {
 	fn from(value: &Preference) -> Self {
-		FilesSorter {
+		Self {
 			by:        value.sort_by,
 			sensitive: value.sort_sensitive,
 			reverse:   value.sort_reverse,

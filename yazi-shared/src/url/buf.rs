@@ -27,8 +27,8 @@ impl From<Url<'_>> for UrlBuf {
 	fn from(url: Url<'_>) -> Self { Self { loc: url.loc.into(), scheme: url.scheme.into() } }
 }
 
-impl From<&UrlBuf> for UrlBuf {
-	fn from(url: &UrlBuf) -> Self { url.clone() }
+impl From<&Self> for UrlBuf {
+	fn from(url: &Self) -> Self { url.clone() }
 }
 
 impl From<&PathBuf> for UrlBuf {
@@ -53,8 +53,8 @@ impl TryFrom<String> for UrlBuf {
 	}
 }
 
-impl AsRef<UrlBuf> for UrlBuf {
-	fn as_ref(&self) -> &UrlBuf { self }
+impl AsRef<Self> for UrlBuf {
+	fn as_ref(&self) -> &Self { self }
 }
 
 impl<'a> From<&'a UrlBuf> for Cow<'a, UrlBuf> {
@@ -65,8 +65,8 @@ impl From<UrlBuf> for Cow<'_, UrlBuf> {
 	fn from(url: UrlBuf) -> Self { Cow::Owned(url) }
 }
 
-impl From<Cow<'_, UrlBuf>> for UrlBuf {
-	fn from(url: Cow<'_, UrlBuf>) -> Self { url.into_owned() }
+impl From<Cow<'_, Self>> for UrlBuf {
+	fn from(url: Cow<'_, Self>) -> Self { url.into_owned() }
 }
 
 // --- Eq
@@ -253,7 +253,7 @@ impl Debug for UrlBuf {
 
 impl Serialize for UrlBuf {
 	fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-		let UrlBuf { scheme, loc } = self;
+		let Self { scheme, loc } = self;
 		match (scheme.is_virtual(), loc.to_str()) {
 			(false, Some(s)) => serializer.serialize_str(s),
 			(true, Some(s)) => serializer.serialize_str(&format!("{}{s}", Encode::from(self))),

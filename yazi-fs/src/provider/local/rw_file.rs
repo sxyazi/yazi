@@ -5,7 +5,7 @@ impl From<tokio::fs::File> for RwFile {
 }
 
 impl From<RwFile> for crate::provider::RwFile {
-	fn from(value: RwFile) -> Self { crate::provider::RwFile::Local(value) }
+	fn from(value: RwFile) -> Self { Self::Local(value) }
 }
 
 impl From<tokio::fs::File> for crate::provider::RwFile {

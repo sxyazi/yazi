@@ -31,7 +31,7 @@ pub struct Style {
 
 impl From<Style> for ratatui::style::Style {
 	fn from(value: Style) -> Self {
-		ratatui::style::Style {
+		Self {
 			fg:              value.fg.map(Into::into),
 			bg:              value.bg.map(Into::into),
 			underline_color: None,
@@ -43,33 +43,33 @@ impl From<Style> for ratatui::style::Style {
 
 impl From<Style> for ratatui::style::Modifier {
 	fn from(value: Style) -> Self {
-		let mut modifier = Modifier::empty();
+		let mut modifier = Self::empty();
 		if value.bold {
-			modifier |= Modifier::BOLD;
+			modifier |= Self::BOLD;
 		}
 		if value.dim {
-			modifier |= Modifier::DIM;
+			modifier |= Self::DIM;
 		}
 		if value.italic {
-			modifier |= Modifier::ITALIC;
+			modifier |= Self::ITALIC;
 		}
 		if value.underline {
-			modifier |= Modifier::UNDERLINED;
+			modifier |= Self::UNDERLINED;
 		}
 		if value.blink {
-			modifier |= Modifier::SLOW_BLINK;
+			modifier |= Self::SLOW_BLINK;
 		}
 		if value.blink_rapid {
-			modifier |= Modifier::RAPID_BLINK;
+			modifier |= Self::RAPID_BLINK;
 		}
 		if value.reversed {
-			modifier |= Modifier::REVERSED;
+			modifier |= Self::REVERSED;
 		}
 		if value.hidden {
-			modifier |= Modifier::HIDDEN;
+			modifier |= Self::HIDDEN;
 		}
 		if value.crossed {
-			modifier |= Modifier::CROSSED_OUT;
+			modifier |= Self::CROSSED_OUT;
 		}
 		modifier
 	}

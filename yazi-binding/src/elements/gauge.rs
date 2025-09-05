@@ -16,7 +16,7 @@ pub struct Gauge {
 
 impl Gauge {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
-		let new = lua.create_function(|_, _: Table| Ok(Gauge::default()))?;
+		let new = lua.create_function(|_, _: Table| Ok(Self::default()))?;
 
 		let gauge = lua.create_table()?;
 		gauge.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;

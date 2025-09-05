@@ -166,7 +166,7 @@ impl<'a> Url<'a> {
 	}
 
 	#[inline]
-	pub fn pair(self) -> Option<(Url<'a>, &'a Urn)> { Some((self.parent()?, self.loc.urn())) }
+	pub fn pair(self) -> Option<(Self, &'a Urn)> { Some((self.parent()?, self.loc.urn())) }
 
 	#[inline]
 	pub fn as_path(self) -> Option<&'a Path> {

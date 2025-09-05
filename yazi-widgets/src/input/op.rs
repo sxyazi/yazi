@@ -13,10 +13,10 @@ impl InputOp {
 	#[inline]
 	pub(super) fn start(&self) -> Option<usize> {
 		match self {
-			InputOp::None => None,
-			InputOp::Select(s) => Some(*s),
-			InputOp::Delete(.., s) => Some(*s),
-			InputOp::Yank(s) => Some(*s),
+			Self::None => None,
+			Self::Select(s) => Some(*s),
+			Self::Delete(.., s) => Some(*s),
+			Self::Yank(s) => Some(*s),
 		}
 	}
 

@@ -20,7 +20,7 @@ impl<T: ?Sized> Clone for Symbol<T> {
 			RawEntryMut::Occupied(mut oe) => *oe.get_mut() += 1,
 			RawEntryMut::Vacant(_) => unreachable!(),
 		}
-		Symbol::new(self.ptr.clone())
+		Self::new(self.ptr.clone())
 	}
 }
 

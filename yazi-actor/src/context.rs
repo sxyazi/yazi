@@ -40,7 +40,7 @@ impl<'a> Ctx<'a> {
 	}
 
 	#[inline]
-	pub fn renew<'b>(cx: &'a mut Ctx<'b>) -> Ctx<'a> {
+	pub fn renew<'b>(cx: &'a mut Ctx<'b>) -> Self {
 		let tab = cx.core.mgr.tabs.cursor;
 		Self { core: cx.core, tab, level: cx.level, source: cx.source }
 	}

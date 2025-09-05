@@ -20,7 +20,7 @@ impl Backend {
 		Self { local: backend::Local::serve(out_tx) }
 	}
 
-	pub(crate) async fn sync(mut self, to_unwatch: Vec<UrlBuf>, to_watch: Vec<UrlBuf>) -> Backend {
+	pub(crate) async fn sync(mut self, to_unwatch: Vec<UrlBuf>, to_watch: Vec<UrlBuf>) -> Self {
 		if to_unwatch.is_empty() && to_watch.is_empty() {
 			return self;
 		}

@@ -19,7 +19,7 @@ impl DerefMut for Span {
 
 impl Span {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
-		let new = lua.create_function(|_, (_, value): (Table, Value)| Span::try_from(value))?;
+		let new = lua.create_function(|_, (_, value): (Table, Value)| Self::try_from(value))?;
 
 		let span = lua.create_table()?;
 		span.set_metatable(Some(lua.create_table_from([(MetaMethod::Call.name(), new)])?))?;
@@ -65,7 +65,7 @@ impl TryFrom<Value> for Span {
 		Ok(Self(match value {
 			Value::String(s) => s.to_string_lossy().into(),
 			Value::UserData(ud) => {
-				if let Ok(Span(span)) = ud.take() {
+				if let Ok(Self(span)) = ud.take() {
 					span
 				} else {
 					Err(EXPECTED.into_lua_err())?
@@ -81,7 +81,7 @@ impl UserData for Span {
 		crate::impl_style_method!(methods, 0.style);
 		crate::impl_style_shorthands!(methods, 0.style);
 
-		methods.add_method("visible", |_, Span(me), ()| {
+		methods.add_method("visible", |_, Self(me), ()| {
 			Ok(me.content.chars().any(|c| c.width().unwrap_or(0) > 0))
 		});
 		methods.add_function_mut("truncate", |_, (ud, t): (AnyUserData, Table)| {

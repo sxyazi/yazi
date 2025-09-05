@@ -29,20 +29,20 @@ impl DerefMut for Line {
 
 impl Line {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
-		let new = lua.create_function(|_, (_, value): (Table, Value)| Line::try_from(value))?;
+		let new = lua.create_function(|_, (_, value): (Table, Value)| Self::try_from(value))?;
 
 		let parse = lua.create_function(|_, code: mlua::String| {
 			let code = code.as_bytes();
 			let Some(line) = code.split_inclusive(|&b| b == b'\n').next() else {
-				return Ok(Line::default());
+				return Ok(Self::default());
 			};
 
 			let mut lines = line.into_text().into_lua_err()?.lines;
 			if lines.is_empty() {
-				return Ok(Line::default());
+				return Ok(Self::default());
 			}
 
-			Ok(Line { inner: mem::take(&mut lines[0]), ..Default::default() })
+			Ok(Self { inner: mem::take(&mut lines[0]), ..Default::default() })
 		})?;
 
 		let line = lua.create_table_from([("parse", parse)])?;
@@ -90,7 +90,7 @@ impl TryFrom<Table> for Line {
 				Value::UserData(ud) => {
 					if let Ok(Span(span)) = ud.take() {
 						spans.push(span);
-					} else if let Ok(Line { inner: mut line, .. }) = ud.take() {
+					} else if let Ok(Self { inner: mut line, .. }) = ud.take() {
 						line.spans.iter_mut().for_each(|s| s.style = line.style.patch(s.style));
 						spans.extend(line.spans);
 					} else {

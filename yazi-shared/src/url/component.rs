@@ -43,7 +43,7 @@ impl<'a> FromIterator<Component<'a>> for UrlBuf {
 
 impl<'a> FromIterator<Component<'a>> for PathBuf {
 	fn from_iter<I: IntoIterator<Item = Component<'a>>>(iter: I) -> Self {
-		let mut buf = PathBuf::new();
+		let mut buf = Self::new();
 		iter.into_iter().for_each(|c| match c {
 			Component::Scheme(_) => {}
 			Component::Prefix(p) => buf.push(path::Component::Prefix(p)),

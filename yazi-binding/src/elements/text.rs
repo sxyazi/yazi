@@ -21,10 +21,10 @@ pub struct Text {
 
 impl Text {
 	pub fn compose(lua: &Lua) -> mlua::Result<Value> {
-		let new = lua.create_function(|_, (_, value): (Table, Value)| Text::try_from(value))?;
+		let new = lua.create_function(|_, (_, value): (Table, Value)| Self::try_from(value))?;
 
 		let parse = lua.create_function(|_, code: mlua::String| {
-			Ok(Text { inner: code.as_bytes().into_text().into_lua_err()?, ..Default::default() })
+			Ok(Self { inner: code.as_bytes().into_text().into_lua_err()?, ..Default::default() })
 		})?;
 
 		let text = lua.create_table_from([("parse", parse)])?;
@@ -51,7 +51,7 @@ impl TryFrom<Value> for Text {
 			Value::UserData(ud) => match ud.type_id() {
 				Some(t) if t == TypeId::of::<Line>() => ud.take::<Line>()?.inner.into(),
 				Some(t) if t == TypeId::of::<Span>() => ud.take::<Span>()?.0.into(),
-				Some(t) if t == TypeId::of::<Text>() => return ud.take(),
+				Some(t) if t == TypeId::of::<Self>() => return ud.take(),
 				Some(t) if t == TypeId::of::<Error>() => ud.take::<Error>()?.into_string().into(),
 				_ => Err(EXPECTED.into_lua_err())?,
 			},

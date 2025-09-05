@@ -75,7 +75,7 @@ impl OsStrSplit for OsStr {
 			let (a, b) = bytes.split_at(i);
 			// SAFETY: These substrings were separated by a UTF-8 string.
 			return Some(unsafe {
-				(OsStr::from_encoded_bytes_unchecked(a), OsStr::from_encoded_bytes_unchecked(&b[1..]))
+				(Self::from_encoded_bytes_unchecked(a), Self::from_encoded_bytes_unchecked(&b[1..]))
 			});
 		}
 		None
@@ -87,7 +87,7 @@ pub trait Pattern {
 }
 
 impl Pattern for char {
-	fn predicate(&self, byte: u8) -> bool { *self == byte as char }
+	fn predicate(&self, byte: u8) -> bool { *self == byte as Self }
 }
 
 impl Pattern for &[char] {
