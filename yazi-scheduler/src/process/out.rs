@@ -4,6 +4,7 @@ use crate::{Task, TaskProg};
 pub(crate) enum ProcessOutBlock {
 	Succ,
 	Fail(String),
+	Clean,
 }
 
 impl From<std::io::Error> for ProcessOutBlock {
@@ -21,6 +22,9 @@ impl ProcessOutBlock {
 				prog.state = Some(false);
 				task.log(reason);
 			}
+			Self::Clean => {
+				prog.cleaned = true;
+			}
 		}
 	}
 }
@@ -30,6 +34,7 @@ impl ProcessOutBlock {
 pub(crate) enum ProcessOutOrphan {
 	Succ,
 	Fail(String),
+	Clean,
 }
 
 impl From<anyhow::Error> for ProcessOutOrphan {
@@ -47,6 +52,9 @@ impl ProcessOutOrphan {
 				prog.state = Some(false);
 				task.log(reason);
 			}
+			Self::Clean => {
+				prog.cleaned = true;
+			}
 		}
 	}
 }
@@ -57,6 +65,7 @@ pub(crate) enum ProcessOutBg {
 	Log(String),
 	Succ,
 	Fail(String),
+	Clean,
 }
 
 impl From<anyhow::Error> for ProcessOutBg {
@@ -76,6 +85,9 @@ impl ProcessOutBg {
 			Self::Fail(reason) => {
 				prog.state = Some(false);
 				task.log(reason);
+			}
+			Self::Clean => {
+				prog.cleaned = true;
 			}
 		}
 	}

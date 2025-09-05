@@ -1,15 +1,14 @@
 use std::{borrow::Cow, iter};
 
 use anyhow::Result;
-use tracing::error;
+use tokio::sync::oneshot;
 use yazi_config::{YAZI, popup::PickCfg};
 use yazi_core::tab::Folder;
 use yazi_fs::File;
 use yazi_macro::{act, succ};
 use yazi_parser::mgr::{OpenDoOpt, OpenOpt};
-use yazi_plugin::isolate;
 use yazi_proxy::{MgrProxy, PickProxy, TasksProxy};
-use yazi_shared::{MIME_DIR, event::{CmdCow, Data}, url::UrlBuf};
+use yazi_shared::{MIME_DIR, event::Data, url::UrlBuf};
 
 use crate::{Actor, Ctx, mgr::Quit};
 
@@ -52,6 +51,7 @@ impl Actor for Open {
 			return act!(mgr:open_do, cx, OpenDoOpt { cwd, hovered, targets, interactive: opt.interactive });
 		}
 
+		let scheduler = cx.tasks.scheduler.clone();
 		tokio::spawn(async move {
 			let mut files = Vec::with_capacity(todo.len());
 			for i in todo {
@@ -60,9 +60,16 @@ impl Actor for Open {
 				}
 			}
 
+			let mut wg = vec![];
 			for (fetcher, files) in YAZI.plugin.mime_fetchers(files) {
-				if let Err(e) = isolate::fetch(CmdCow::from(&fetcher.run), files).await {
-					error!("Fetch mime failed on opening: {e}");
+				let (tx, rx) = oneshot::channel();
+				scheduler.fetch_paged(fetcher, files, Some(tx));
+				wg.push(rx);
+			}
+
+			for rx in wg {
+				if !rx.await.is_ok_and(|canceled| !canceled) {
+					return;
 				}
 			}
 

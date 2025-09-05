@@ -3,7 +3,7 @@ use std::{ffi::OsString, future::Future, sync::Arc, time::Duration};
 use anyhow::Result;
 use futures::{FutureExt, future::BoxFuture};
 use parking_lot::Mutex;
-use tokio::{select, sync::mpsc::{self, UnboundedReceiver}, task::JoinHandle};
+use tokio::{select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
 use yazi_config::{YAZI, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
 use yazi_fs::{must_be_dir, path::unique_name, provider, remove_dir_clean};
@@ -12,7 +12,7 @@ use yazi_proxy::TasksProxy;
 use yazi_shared::{Id, Throttle, url::UrlBuf};
 
 use super::{Ongoing, TaskOp};
-use crate::{HIGH, LOW, NORMAL, TaskIn, TaskOps, TaskOut, file::{File, FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash, FileOutHardlink, FileOutPaste, FileProgDelete, FileProgHardlink, FileProgLink, FileProgPaste, FileProgTrash}, plugin::{Plugin, PluginInEntry, PluginProgEntry}, prework::{Prework, PreworkInFetch, PreworkInLoad, PreworkInSize, PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{Process, ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
+use crate::{HIGH, LOW, NORMAL, TaskIn, TaskOps, TaskOut, file::{File, FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash, FileOutDelete, FileOutHardlink, FileOutPaste, FileProgDelete, FileProgHardlink, FileProgLink, FileProgPaste, FileProgTrash}, plugin::{Plugin, PluginInEntry, PluginProgEntry}, prework::{Prework, PreworkInFetch, PreworkInLoad, PreworkInSize, PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{Process, ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessOutBg, ProcessOutBlock, ProcessOutOrphan, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
 
 pub struct Scheduler {
 	file:        Arc<File>,
@@ -59,8 +59,10 @@ impl Scheduler {
 	pub fn cancel(&self, id: Id) -> bool {
 		let mut ongoing = self.ongoing.lock();
 
-		if let Some(hook) = ongoing.hooks.pop(id) {
-			self.micro.try_send(hook.call(true), HIGH).ok();
+		if let Some(hook) = ongoing.hooks.pop(id)
+			&& let Some(fut) = hook.call(true)
+		{
+			self.micro.try_send(fut, HIGH).ok();
 			return false;
 		}
 
@@ -82,15 +84,15 @@ impl Scheduler {
 		}
 
 		ongoing.hooks.add_async(id, {
-			let ongoing = self.ongoing.clone();
+			let ops = self.ops.clone();
 			let (from, to) = (from.clone(), to.clone());
 
-			move |canceled: bool| async move {
+			move |canceled| async move {
 				if !canceled {
 					remove_dir_clean(&from).await;
 					Pump::push_move(from, to);
 				}
-				ongoing.lock().remove(id);
+				ops.out(id, FileOutPaste::Clean);
 			}
 		});
 
@@ -168,16 +170,16 @@ impl Scheduler {
 		let id = ongoing.add::<FileProgDelete>(format!("Delete {}", target.display()));
 
 		ongoing.hooks.add_async(id, {
+			let ops = self.ops.clone();
 			let target = target.clone();
-			let ongoing = self.ongoing.clone();
 
-			move |canceled: bool| async move {
+			move |canceled| async move {
 				if !canceled {
 					provider::remove_dir_all(&target).await.ok();
 					TasksProxy::update_succeed(&target);
 					Pump::push_delete(target);
 				}
-				ongoing.lock().remove(id);
+				ops.out(id, FileOutDelete::Clean);
 			}
 		});
 
@@ -193,21 +195,18 @@ impl Scheduler {
 		let mut ongoing = self.ongoing.lock();
 		let id = ongoing.add::<FileProgTrash>(format!("Trash {}", target.display()));
 
-		ongoing.hooks.add_async(id, {
+		ongoing.hooks.add_sync(id, {
 			let target = target.clone();
-			let ongoing = self.ongoing.clone();
-
-			move |canceled: bool| async move {
+			move |canceled| {
 				if !canceled {
 					TasksProxy::update_succeed(&target);
 					Pump::push_trash(target);
 				}
-				ongoing.lock().remove(id);
 			}
 		});
 
 		let file = self.file.clone();
-		self.send_micro(id, LOW, async move { file.trash(FileInTrash { id, target: target.clone() }) })
+		self.send_micro(id, LOW, async move { file.trash(FileInTrash { id, target }) })
 	}
 
 	pub fn plugin_micro(&self, opt: PluginOpt) {
@@ -223,12 +222,22 @@ impl Scheduler {
 		self.plugin.r#macro(PluginInEntry { id, opt }).ok();
 	}
 
-	pub fn fetch_paged(&self, fetcher: &'static Fetcher, targets: Vec<yazi_fs::File>) {
-		let id = self.ongoing.lock().add::<PreworkProgFetch>(format!(
+	pub fn fetch_paged(
+		&self,
+		fetcher: &'static Fetcher,
+		targets: Vec<yazi_fs::File>,
+		done: Option<oneshot::Sender<bool>>,
+	) {
+		let mut ongoing = self.ongoing.lock();
+		let id = ongoing.add::<PreworkProgFetch>(format!(
 			"Run fetcher `{}` with {} target(s)",
 			fetcher.run.name,
 			targets.len()
 		));
+
+		if let Some(tx) = done {
+			ongoing.hooks.add_sync(id, move |canceled| _ = tx.send(canceled));
+		}
 
 		let prework = self.prework.clone();
 		self.send_micro(id, NORMAL, async move {
@@ -275,27 +284,25 @@ impl Scheduler {
 		};
 
 		let mut ongoing = self.ongoing.lock();
-		let id = if opener.block {
-			ongoing.add::<ProcessProgBlock>(name)
+		let (id, clean): (_, TaskOut) = if opener.block {
+			(ongoing.add::<ProcessProgBlock>(name), ProcessOutBlock::Clean.into())
 		} else if opener.orphan {
-			ongoing.add::<ProcessProgOrphan>(name)
+			(ongoing.add::<ProcessProgOrphan>(name), ProcessOutOrphan::Clean.into())
 		} else {
-			ongoing.add::<ProcessProgBg>(name)
+			(ongoing.add::<ProcessProgBg>(name), ProcessOutBg::Clean.into())
 		};
 
+		let ops = self.ops.clone();
 		let (cancel_tx, cancel_rx) = mpsc::channel(1);
-		ongoing.hooks.add_async(id, {
-			let ongoing = self.ongoing.clone();
-			move |canceled: bool| async move {
-				if canceled {
-					cancel_tx.send(()).await.ok();
-					cancel_tx.closed().await;
-				}
-				if let Some(tx) = done {
-					tx.send(()).ok();
-				}
-				ongoing.lock().remove(id);
+		ongoing.hooks.add_async(id, move |canceled| async move {
+			if canceled {
+				cancel_tx.send(()).await.ok();
+				cancel_tx.closed().await;
 			}
+			if let Some(tx) = done {
+				tx.send(()).ok();
+			}
+			ops.out(id, clean);
 		});
 
 		let cmd = OsString::from(&opener.run);
@@ -385,8 +392,10 @@ impl Scheduler {
 				op.out.reduce(task);
 				if !task.prog.success() {
 					continue;
-				} else if let Some(hook) = ongoing.hooks.pop(op.id) {
-					micro.try_send(hook.call(false), LOW).ok();
+				} else if let Some(hook) = ongoing.hooks.pop(op.id)
+					&& let Some(fut) = hook.call(false)
+				{
+					micro.try_send(fut, LOW).ok();
 				} else {
 					ongoing.all.remove(&op.id);
 				}

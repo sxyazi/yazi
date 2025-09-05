@@ -4,7 +4,8 @@ use yazi_parser::app::TaskSummary;
 // --- Block
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct ProcessProgBlock {
-	pub state: Option<bool>,
+	pub state:   Option<bool>,
+	pub cleaned: bool,
 }
 
 impl From<ProcessProgBlock> for TaskSummary {
@@ -23,13 +24,16 @@ impl ProcessProgBlock {
 
 	pub fn success(self) -> bool { self.state == Some(true) }
 
+	pub fn cleaning(self) -> bool { !self.cleaned && self.success() }
+
 	pub fn percent(self) -> Option<f32> { None }
 }
 
 // --- Orphan
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct ProcessProgOrphan {
-	pub state: Option<bool>,
+	pub state:   Option<bool>,
+	pub cleaned: bool,
 }
 
 impl From<ProcessProgOrphan> for TaskSummary {
@@ -48,13 +52,16 @@ impl ProcessProgOrphan {
 
 	pub fn success(self) -> bool { self.state == Some(true) }
 
+	pub fn cleaning(self) -> bool { !self.cleaned && self.success() }
+
 	pub fn percent(self) -> Option<f32> { None }
 }
 
 // --- Bg
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct ProcessProgBg {
-	pub state: Option<bool>,
+	pub state:   Option<bool>,
+	pub cleaned: bool,
 }
 
 impl From<ProcessProgBg> for TaskSummary {
@@ -72,6 +79,8 @@ impl ProcessProgBg {
 	pub fn running(self) -> bool { self.state.is_none() }
 
 	pub fn success(self) -> bool { self.state == Some(true) }
+
+	pub fn cleaning(self) -> bool { !self.cleaned && self.success() }
 
 	pub fn percent(self) -> Option<f32> { None }
 }
