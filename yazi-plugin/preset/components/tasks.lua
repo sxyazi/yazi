@@ -74,9 +74,16 @@ end
 function Tasks:progress_redraw(snap, y)
 	local kind = snap.prog.kind
 	if kind == "FilePaste" or kind == "FileDelete" then
+		local percent
+		if snap.cleaning then
+			percent = "Cleaning…"
+		else
+			percent = string.format("%3d%%", math.floor(snap.percent))
+		end
+
 		local label = string.format(
-			"%3d%% - %s / %s",
-			math.floor(snap.percent),
+			"%s - %s / %s",
+			percent,
 			ya.readable_size(snap.prog.processed_bytes),
 			ya.readable_size(snap.prog.total_bytes)
 		)
@@ -103,7 +110,7 @@ function Tasks:progress_redraw(snap, y)
 		if snap.running then
 			text = "Running…"
 		elseif snap.success then
-			text = "Completing…"
+			text = "Cleaning…"
 		else
 			text = "Failed, press Enter to view log…"
 		end

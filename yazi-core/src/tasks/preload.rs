@@ -23,7 +23,7 @@ impl Tasks {
 		drop(loaded);
 		for (i, tasks) in tasks.into_iter().enumerate() {
 			if !tasks.is_empty() {
-				self.scheduler.fetch_paged(&YAZI.plugin.fetchers[i], tasks);
+				self.scheduler.fetch_paged(&YAZI.plugin.fetchers[i], tasks, None);
 			}
 		}
 	}

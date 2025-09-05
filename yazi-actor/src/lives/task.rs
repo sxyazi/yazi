@@ -32,6 +32,7 @@ impl UserData for TaskSnap {
 
 		fields.add_field_method_get("running", |_, me| Ok(me.prog.running()));
 		fields.add_field_method_get("success", |_, me| Ok(me.prog.success()));
+		fields.add_field_method_get("cleaning", |_, me| Ok(me.prog.cleaning()));
 		fields.add_field_method_get("percent", |_, me| Ok(me.prog.percent()));
 	}
 }

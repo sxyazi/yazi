@@ -55,7 +55,7 @@ impl Actor for Inspect {
 						execute!(TTY.writer(), crossterm::style::Print(line), crossterm::style::Print("\r\n")).ok();
 					}
 					_ = time::sleep(time::Duration::from_millis(500)) => {
-						if ongoing.lock().get(id).is_none() {
+						if !ongoing.lock().exists(id) {
 							execute!(TTY.writer(), crossterm::style::Print("Task finished, press `q` to quit\r\n")).ok();
 							break;
 						}

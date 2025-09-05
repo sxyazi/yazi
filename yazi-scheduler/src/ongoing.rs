@@ -26,15 +26,10 @@ impl Ongoing {
 	}
 
 	#[inline]
-	pub fn get(&self, id: Id) -> Option<&Task> { self.all.get(&id) }
-
-	#[inline]
 	pub fn get_mut(&mut self, id: Id) -> Option<&mut Task> { self.all.get_mut(&id) }
 
-	#[inline]
 	pub fn get_id(&self, idx: usize) -> Option<Id> { self.values().nth(idx).map(|t| t.id) }
 
-	#[inline]
 	pub fn len(&self) -> usize {
 		if YAZI.tasks.suppress_preload {
 			self.all.values().filter(|&t| t.prog.is_user()).count()
@@ -46,7 +41,6 @@ impl Ongoing {
 	#[inline]
 	pub fn exists(&self, id: Id) -> bool { self.all.contains_key(&id) }
 
-	#[inline]
 	pub fn values(&self) -> Box<dyn Iterator<Item = &Task> + '_> {
 		if YAZI.tasks.suppress_preload {
 			Box::new(self.all.values().filter(|&t| t.prog.is_user()))
@@ -57,11 +51,6 @@ impl Ongoing {
 
 	#[inline]
 	pub fn is_empty(&self) -> bool { self.len() == 0 }
-
-	pub fn remove(&mut self, id: Id) {
-		self.hooks.pop(id);
-		self.all.remove(&id);
-	}
 
 	pub fn summary(&self) -> TaskSummary {
 		let mut summary = TaskSummary::default();

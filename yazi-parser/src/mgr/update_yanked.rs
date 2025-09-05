@@ -73,9 +73,9 @@ impl UserData for UpdateYankedIter {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_meta_method(MetaMethod::Len, |_, me, ()| Ok(me.len));
 
-		methods.add_meta_function(MetaMethod::Pairs, |lua, ud: AnyUserData| {
-			let me = ud.borrow::<Self>()?;
-			get_metatable(lua, &me.inner)?.call_function::<MultiValue>(MetaMethod::Pairs.name(), ud)
+		methods.add_meta_method(MetaMethod::Pairs, |lua, me, ()| {
+			get_metatable(lua, &me.inner)?
+				.call_function::<MultiValue>(MetaMethod::Pairs.name(), me.inner.clone())
 		});
 	}
 }

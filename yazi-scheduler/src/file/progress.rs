@@ -10,6 +10,7 @@ pub struct FileProgPaste {
 	pub total_bytes:     u64,
 	pub processed_bytes: u64,
 	pub collected:       bool,
+	pub cleaned:         bool,
 }
 
 impl From<FileProgPaste> for TaskSummary {
@@ -29,6 +30,8 @@ impl FileProgPaste {
 	}
 
 	pub fn success(self) -> bool { self.collected && self.success_files == self.total_files }
+
+	pub fn cleaning(self) -> bool { !self.cleaned && self.success() }
 
 	pub fn percent(self) -> Option<f32> {
 		Some(if self.success() {
@@ -63,6 +66,8 @@ impl FileProgLink {
 
 	pub fn success(self) -> bool { self.state == Some(true) }
 
+	pub fn cleaning(self) -> bool { self.success() }
+
 	pub fn percent(self) -> Option<f32> { None }
 }
 
@@ -91,6 +96,8 @@ impl FileProgHardlink {
 
 	pub fn success(self) -> bool { self.collected && self.success == self.total }
 
+	pub fn cleaning(self) -> bool { self.success() }
+
 	pub fn percent(self) -> Option<f32> { None }
 }
 
@@ -103,6 +110,7 @@ pub struct FileProgDelete {
 	pub total_bytes:     u64,
 	pub processed_bytes: u64,
 	pub collected:       bool,
+	pub cleaned:         bool,
 }
 
 impl From<FileProgDelete> for TaskSummary {
@@ -122,6 +130,8 @@ impl FileProgDelete {
 	}
 
 	pub fn success(self) -> bool { self.collected && self.success_files == self.total_files }
+
+	pub fn cleaning(self) -> bool { !self.cleaned && self.success() }
 
 	pub fn percent(self) -> Option<f32> {
 		Some(if self.success() {
@@ -155,6 +165,8 @@ impl FileProgTrash {
 	pub fn running(self) -> bool { self.state.is_none() }
 
 	pub fn success(self) -> bool { self.state == Some(true) }
+
+	pub fn cleaning(self) -> bool { self.success() }
 
 	pub fn percent(self) -> Option<f32> { None }
 }

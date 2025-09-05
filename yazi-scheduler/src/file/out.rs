@@ -4,8 +4,9 @@ use crate::{Task, TaskProg};
 #[derive(Debug)]
 pub(crate) enum FileOutPaste {
 	New(u64),
-	Init,
 	Deform(String),
+	Init,
+	Clean,
 }
 
 impl From<std::io::Error> for FileOutPaste {
@@ -20,13 +21,16 @@ impl FileOutPaste {
 				prog.total_files += 1;
 				prog.total_bytes += bytes;
 			}
-			Self::Init => {
-				prog.collected = true;
-			}
 			Self::Deform(reason) => {
 				prog.total_files += 1;
 				prog.failed_files += 1;
 				task.log(reason);
+			}
+			Self::Init => {
+				prog.collected = true;
+			}
+			Self::Clean => {
+				prog.cleaned = true;
 			}
 		}
 	}
@@ -111,8 +115,8 @@ impl FileOutLink {
 #[derive(Debug)]
 pub(crate) enum FileOutHardlink {
 	New,
-	Init,
 	Deform(String),
+	Init,
 }
 
 impl From<std::io::Error> for FileOutHardlink {
@@ -126,13 +130,13 @@ impl FileOutHardlink {
 			Self::New => {
 				prog.total += 1;
 			}
-			Self::Init => {
-				prog.collected = true;
-			}
 			Self::Deform(reason) => {
 				prog.total += 1;
 				prog.failed += 1;
 				task.log(reason);
+			}
+			Self::Init => {
+				prog.collected = true;
 			}
 		}
 	}
@@ -168,8 +172,9 @@ impl FileOutHardlinkDo {
 #[derive(Debug)]
 pub(crate) enum FileOutDelete {
 	New(u64),
-	Init,
 	Deform(String),
+	Init,
+	Clean,
 }
 
 impl From<std::io::Error> for FileOutDelete {
@@ -184,13 +189,16 @@ impl FileOutDelete {
 				prog.total_files += 1;
 				prog.total_bytes += size;
 			}
-			Self::Init => {
-				prog.collected = true;
-			}
 			Self::Deform(reason) => {
 				prog.total_files += 1;
 				prog.failed_files += 1;
 				task.log(reason);
+			}
+			Self::Init => {
+				prog.collected = true;
+			}
+			Self::Clean => {
+				prog.cleaned = true;
 			}
 		}
 	}
