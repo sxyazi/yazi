@@ -390,7 +390,7 @@ impl Scheduler {
 				let Some(task) = ongoing.get_mut(op.id) else { continue };
 
 				op.out.reduce(task);
-				if !task.prog.success() {
+				if !task.prog.success() && !task.prog.cleaned() {
 					continue;
 				} else if let Some(hook) = ongoing.hooks.pop(op.id)
 					&& let Some(fut) = hook.call(false)
