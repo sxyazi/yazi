@@ -1,0 +1,71 @@
+version: 2
+updates:
+  # Cargo dependencies
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "02:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "sxyazi"
+    assignees:
+      - "sxyazi"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    groups:
+      rust-dependencies:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "mlua"
+          - "ratatui"
+          - "syntect"
+          - "crossterm"
+          - "tokio"
+        update-types:
+          - "minor"
+          - "patch"
+      major-dependencies:
+        patterns:
+          - "mlua"
+          - "ratatui" 
+          - "syntect"
+          - "crossterm"
+          - "tokio"
+        update-types:
+          - "major"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "02:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "sxyazi"
+    assignees:
+      - "sxyazi"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+
+  # Nix dependencies
+  - package-ecosystem: "nix"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "02:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "sxyazi"
+    assignees:
+      - "sxyazi"
+    commit-message:
+      prefix: "nix"
+      include: "scope"
