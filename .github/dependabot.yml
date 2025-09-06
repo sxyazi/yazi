@@ -54,6 +54,22 @@ updates:
       prefix: "ci"
       include: "scope"
 
+  # NPM dependencies
+  - package-ecosystem: "npm"
+    directory: "/scripts/validate-form"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "02:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "sxyazi"
+    assignees:
+      - "sxyazi"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+
   # Nix dependencies
   - package-ecosystem: "nix"
     directory: "/"
