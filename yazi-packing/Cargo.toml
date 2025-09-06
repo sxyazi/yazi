@@ -11,7 +11,7 @@ repository  = "https://github.com/sxyazi/yazi"
 	[package.metadata.deb]
 	name                      = "yazi"
 	license-file              = [ "../LICENSE", "0" ]
-	depends                   = "file, ffmpeg, 7zip, jq, poppler-utils, fd-find, ripgrep, fzf, zoxide, imagemagick, xsel|xclip|wl-clipboard"
+	depends                   = "file, ffmpeg, 7zip, jq, poppler-utils, fd-find|fd, ripgrep, fzf, zoxide, imagemagick, xsel|xclip|wl-clipboard"
 	recommends                = "bash-completion"
 	extended-description-file = "README.md"
 	section                   = "utility"
