@@ -101,24 +101,24 @@ impl TaskProg {
 		}
 	}
 
-	pub fn cleaning(self) -> bool {
+	pub fn cleaned(self) -> bool {
 		match self {
 			// File
-			Self::FilePaste(p) => p.cleaning(),
-			Self::FileLink(p) => p.cleaning(),
-			Self::FileHardlink(p) => p.cleaning(),
-			Self::FileDelete(p) => p.cleaning(),
-			Self::FileTrash(p) => p.cleaning(),
+			Self::FilePaste(p) => p.cleaned(),
+			Self::FileLink(p) => p.cleaned(),
+			Self::FileHardlink(p) => p.cleaned(),
+			Self::FileDelete(p) => p.cleaned(),
+			Self::FileTrash(p) => p.cleaned(),
 			// Plugin
-			Self::PluginEntry(p) => p.cleaning(),
+			Self::PluginEntry(p) => p.cleaned(),
 			// Prework
-			Self::PreworkFetch(p) => p.cleaning(),
-			Self::PreworkLoad(p) => p.cleaning(),
-			Self::PreworkSize(p) => p.cleaning(),
+			Self::PreworkFetch(p) => p.cleaned(),
+			Self::PreworkLoad(p) => p.cleaned(),
+			Self::PreworkSize(p) => p.cleaned(),
 			// Process
-			Self::ProcessBlock(p) => p.cleaning(),
-			Self::ProcessOrphan(p) => p.cleaning(),
-			Self::ProcessBg(p) => p.cleaning(),
+			Self::ProcessBlock(p) => p.cleaned(),
+			Self::ProcessOrphan(p) => p.cleaned(),
+			Self::ProcessBg(p) => p.cleaned(),
 		}
 	}
 

@@ -24,7 +24,7 @@ impl ProcessProgBlock {
 
 	pub fn success(self) -> bool { self.state == Some(true) }
 
-	pub fn cleaning(self) -> bool { !self.cleaned && self.success() }
+	pub fn cleaned(self) -> bool { self.cleaned }
 
 	pub fn percent(self) -> Option<f32> { None }
 }
@@ -52,7 +52,7 @@ impl ProcessProgOrphan {
 
 	pub fn success(self) -> bool { self.state == Some(true) }
 
-	pub fn cleaning(self) -> bool { !self.cleaned && self.success() }
+	pub fn cleaned(self) -> bool { self.cleaned }
 
 	pub fn percent(self) -> Option<f32> { None }
 }
@@ -80,7 +80,7 @@ impl ProcessProgBg {
 
 	pub fn success(self) -> bool { self.state == Some(true) }
 
-	pub fn cleaning(self) -> bool { !self.cleaned && self.success() }
+	pub fn cleaned(self) -> bool { self.cleaned }
 
 	pub fn percent(self) -> Option<f32> { None }
 }

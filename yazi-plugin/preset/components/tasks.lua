@@ -75,7 +75,7 @@ function Tasks:progress_redraw(snap, y)
 	local kind = snap.prog.kind
 	if kind == "FilePaste" or kind == "FileDelete" then
 		local percent
-		if snap.cleaning then
+		if snap.success then
 			percent = "Cleaning…"
 		else
 			percent = string.format("%3d%%", math.floor(snap.percent))
