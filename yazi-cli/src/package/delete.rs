@@ -41,15 +41,12 @@ impl Dependency {
 
 	pub(super) async fn delete_sources(&self) -> Result<()> {
 		let dir = self.target();
-		let files = if self.is_flavor {
-			&["flavor.toml", "tmtheme.xml", "README.md", "preview.png", "LICENSE", "LICENSE-tmtheme"][..]
-		} else {
-			&["main.lua", "README.md", "LICENSE"][..]
-		};
+		let files =
+			if self.is_flavor { Self::flavor_files() } else { Self::plugin_files(&dir).await? };
 
-		for p in files.iter().map(|&f| dir.join(f)) {
-			ok_or_not_found(remove_sealed(&p).await)
-				.with_context(|| format!("failed to delete `{}`", p.display()))?;
+		for path in files.iter().map(|s| dir.join(s)) {
+			ok_or_not_found(remove_sealed(&path).await)
+				.with_context(|| format!("failed to delete `{}`", path.display()))?;
 		}
 
 		if ok_or_not_found(Local::remove_dir(&dir).await).is_ok() {

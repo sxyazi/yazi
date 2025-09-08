@@ -57,14 +57,9 @@ impl Dependency {
 	}
 
 	async fn deploy_sources(from: &Path, to: &Path, is_flavor: bool) -> Result<()> {
-		let files = if is_flavor {
-			&["flavor.toml", "tmtheme.xml", "README.md", "preview.png", "LICENSE", "LICENSE-tmtheme"][..]
-		} else {
-			&["main.lua", "README.md", "LICENSE"][..]
-		};
-
+		let files = if is_flavor { Self::flavor_files() } else { Self::plugin_files(from).await? };
 		for file in files {
-			let (from, to) = (from.join(file), to.join(file));
+			let (from, to) = (from.join(&file), to.join(&file));
 			copy_and_seal(&from, &to)
 				.await
 				.with_context(|| format!("failed to copy `{}` to `{}`", from.display(), to.display()))?;
