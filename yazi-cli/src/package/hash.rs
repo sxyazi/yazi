@@ -7,22 +7,11 @@ use super::Dependency;
 impl Dependency {
 	pub(crate) async fn hash(&self) -> Result<String> {
 		let dir = self.target();
-		let files = if self.is_flavor {
-			&[
-				"LICENSE",
-				"LICENSE-tmtheme",
-				"README.md",
-				"filestyle.toml",
-				"flavor.toml",
-				"preview.png",
-				"tmtheme.xml",
-			][..]
-		} else {
-			&["LICENSE", "README.md", "main.lua"][..]
-		};
+		let files =
+			if self.is_flavor { Self::flavor_files() } else { Self::plugin_files(&dir).await? };
 
 		let mut h = XxHash3_128::new();
-		for &file in files {
+		for file in files {
 			h.write(file.as_bytes());
 			h.write(b"VpvFw9Atb7cWGOdqhZCra634CcJJRlsRl72RbZeV0vpG1\0");
 			h.write(&ok_or_not_found(Local::read(dir.join(file)).await)?);

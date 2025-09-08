@@ -10,7 +10,7 @@ use yazi_proxy::AppProxy;
 use yazi_shared::{event::Cmd, pool::Symbol};
 
 use super::slim_lua;
-use crate::loader::LOADER;
+use crate::loader::{LOADER, Loader};
 
 pub fn peek(
 	cmd: &'static Cmd,
@@ -18,8 +18,10 @@ pub fn peek(
 	mime: Symbol<str>,
 	skip: usize,
 ) -> Option<CancellationToken> {
+	let (id, ..) = Loader::normalize_id(&cmd.name).ok()?;
+
 	let ct = CancellationToken::new();
-	if let Some(c) = LOADER.read().get(cmd.name.as_ref()) {
+	if let Some(c) = LOADER.read().get(id) {
 		if c.sync_peek {
 			peek_sync(cmd, file, mime, skip);
 		} else {
@@ -32,11 +34,11 @@ pub fn peek(
 	tokio::spawn(async move {
 		select! {
 			_ = ct_.cancelled() => {},
-			Ok(b) = LOADER.ensure(&cmd.name, |c| c.sync_peek) => {
+			Ok(b) = LOADER.ensure(id, |c| c.sync_peek) => {
 				if b {
-					peek_sync( cmd, file, mime, skip);
+					peek_sync(cmd, file, mime, skip);
 				} else {
-					peek_async( cmd, file, mime, skip, ct_);
+					peek_async(cmd, file, mime, skip, ct_);
 				}
 			},
 			else => {}

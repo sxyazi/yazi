@@ -19,7 +19,6 @@ pub fn compose(
 			b"render" => Utils::render(lua)?,
 			b"emit" => Utils::emit(lua)?,
 			b"mgr_emit" => Utils::mgr_emit(lua)?,
-			b"manager_emit" => Utils::mgr_emit(lua)?, // TODO: remove this in the future
 
 			// Image
 			b"image_info" => Utils::image_info(lua)?,

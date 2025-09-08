@@ -24,9 +24,6 @@ pub(super) enum Command {
 	/// Manage packages.
 	#[command(subcommand)]
 	Pkg(CommandPkg),
-	#[command(hide = true)]
-	/// Manage packages.
-	Pack(CommandPack), // TODO: remove
 	/// Publish a message to the current instance.
 	Pub(CommandPub),
 	/// Publish a message to the specified instance.
@@ -81,26 +78,6 @@ pub(super) enum CommandPkg {
 		#[arg(index = 1, num_args = 0..)]
 		ids: Vec<String>,
 	},
-}
-
-#[derive(clap::Args)]
-#[command(arg_required_else_help = true)]
-pub(super) struct CommandPack {
-	/// Add packages.
-	#[arg(short = 'a', long, num_args = 1..)]
-	pub(super) add:     Option<Vec<String>>,
-	/// Delete packages.
-	#[arg(short = 'd', long, num_args = 1..)]
-	pub(super) delete:  Option<Vec<String>>,
-	/// Install all packages.
-	#[arg(short = 'i', long)]
-	pub(super) install: bool,
-	/// List all packages.
-	#[arg(short = 'l', long)]
-	pub(super) list:    bool,
-	/// Upgrade all packages.
-	#[arg(short = 'u', long)]
-	pub(super) upgrade: bool,
 }
 
 #[derive(clap::Args)]

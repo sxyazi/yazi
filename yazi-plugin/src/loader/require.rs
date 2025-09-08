@@ -1,7 +1,7 @@
-use std::sync::Arc;
+use std::{borrow::Cow, sync::Arc};
 
 use mlua::{ExternalResult, Function, IntoLua, Lua, MetaMethod, MultiValue, ObjectLike, Table, Value};
-use yazi_binding::runtime_mut;
+use yazi_binding::{runtime, runtime_mut};
 
 use super::LOADER;
 
@@ -12,14 +12,15 @@ impl Require {
 		lua.globals().raw_set(
 			"require",
 			lua.create_function(|lua, id: mlua::String| {
-				let s = &id.to_str()?;
-				futures::executor::block_on(LOADER.ensure(s, |_| ())).into_lua_err()?;
+				let id = id.to_str()?;
+				let id = Self::absolute_id(lua, &id)?;
+				futures::executor::block_on(LOADER.ensure(&id, |_| ())).into_lua_err()?;
 
-				runtime_mut!(lua)?.push(s);
-				let mod_ = LOADER.load(lua, s);
+				runtime_mut!(lua)?.push(&id);
+				let mod_ = LOADER.load(lua, &id);
 				runtime_mut!(lua)?.pop();
 
-				Self::create_mt(lua, s, mod_?, true)
+				Self::create_mt(lua, id.into_owned(), mod_?, true)
 			})?,
 		)
 	}
@@ -28,19 +29,20 @@ impl Require {
 		lua.globals().raw_set(
 			"require",
 			lua.create_async_function(|lua, id: mlua::String| async move {
-				let s = &id.to_str()?;
-				LOADER.ensure(s, |_| ()).await.into_lua_err()?;
+				let id = id.to_str()?;
+				let id = Self::absolute_id(&lua, &id)?;
+				LOADER.ensure(&id, |_| ()).await.into_lua_err()?;
 
-				runtime_mut!(lua)?.push(s);
-				let mod_ = LOADER.load(&lua, s);
+				runtime_mut!(lua)?.push(&id);
+				let mod_ = LOADER.load(&lua, &id);
 				runtime_mut!(lua)?.pop();
 
-				Self::create_mt(&lua, s, mod_?, false)
+				Self::create_mt(&lua, id.into_owned(), mod_?, false)
 			})?,
 		)
 	}
 
-	fn create_mt(lua: &Lua, id: &str, r#mod: Table, sync: bool) -> mlua::Result<Table> {
+	fn create_mt(lua: &Lua, id: String, r#mod: Table, sync: bool) -> mlua::Result<Table> {
 		let id: Arc<str> = Arc::from(id);
 		let mt = lua.create_table_from([
 			(
@@ -110,6 +112,15 @@ impl Require {
 		} else {
 			args.push_front(Value::Table(tbl));
 			(LOADER.try_load(lua, id)?, args)
+		})
+	}
+
+	fn absolute_id<'a>(lua: &Lua, id: &'a str) -> mlua::Result<Cow<'a, str>> {
+		let Some(stripped) = id.strip_prefix('.') else { return Ok(id.into()) };
+		Ok(if let Some(cur) = runtime!(lua)?.current() {
+			format!("{cur}.{stripped}").into()
+		} else {
+			stripped.into()
 		})
 	}
 }

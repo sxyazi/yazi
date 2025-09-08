@@ -1,13 +1,13 @@
 use std::{borrow::Cow, ops::Deref};
 
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result, bail, ensure};
 use hashbrown::HashMap;
 use mlua::{ChunkMode, ExternalError, Lua, Table};
 use parking_lot::RwLock;
 use yazi_boot::BOOT;
 use yazi_fs::provider::local::Local;
 use yazi_macro::plugin_preset as preset;
-use yazi_shared::{LOG_LEVEL, RoCell};
+use yazi_shared::{BytesExt, LOG_LEVEL, RoCell};
 
 use super::Chunk;
 
@@ -20,7 +20,6 @@ pub struct Loader {
 impl Deref for Loader {
 	type Target = RwLock<HashMap<String, Chunk>>;
 
-	#[inline]
 	fn deref(&self) -> &Self::Target { &self.cache }
 }
 
@@ -52,26 +51,29 @@ impl Default for Loader {
 }
 
 impl Loader {
-	pub async fn ensure<F, T>(&self, name: &str, f: F) -> Result<T>
+	pub async fn ensure<F, T>(&self, id: &str, f: F) -> Result<T>
 	where
 		F: FnOnce(&Chunk) -> T,
 	{
-		if let Some(c) = self.cache.read().get(name) {
-			return Self::compatible_or_error(name, c).map(|_| f(c));
+		let (id, plugin, entry) = Self::normalize_id(id)?;
+		if let Some(c) = self.cache.read().get(id) {
+			return Self::compatible_or_error(id, c).map(|_| f(c));
 		}
 
-		let p = BOOT.plugin_dir.join(format!("{name}.yazi/main.lua"));
+		let p = BOOT.plugin_dir.join(format!("{plugin}.yazi/{entry}.lua"));
 		let chunk =
 			Local::read(&p).await.with_context(|| format!("Failed to load plugin from {p:?}"))?.into();
 
-		let result = Self::compatible_or_error(name, &chunk);
+		let result = Self::compatible_or_error(id, &chunk);
 		let inspect = f(&chunk);
 
-		self.cache.write().insert(name.to_owned(), chunk);
+		self.cache.write().insert(id.to_owned(), chunk);
 		result.map(|_| inspect)
 	}
 
 	pub fn load(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
+		let (id, ..) = Self::normalize_id(id)?;
+
 		let loaded: Table = lua.globals().raw_get::<Table>("package")?.raw_get("loaded")?;
 		if let Ok(t) = loaded.raw_get(id) {
 			return Ok(t);
@@ -85,18 +87,20 @@ impl Loader {
 	}
 
 	pub fn load_once(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
+		let (id, ..) = Self::normalize_id(id)?;
+
 		let mut mode = ChunkMode::Text;
-		let f = match self.read().get(id) {
+		let f = match self.cache.read().get(id) {
 			Some(c) => {
 				mode = c.mode;
 				lua.load(c).set_name(id).into_function()
 			}
-			None => Err(format!("plugin `{id}` not found").into_lua_err()),
+			None => Err(format!("Plugin `{id}` not found").into_lua_err()),
 		}?;
 
 		if mode != ChunkMode::Binary {
 			let b = f.dump(LOG_LEVEL.get().is_none());
-			if let Some(c) = self.write().get_mut(id) {
+			if let Some(c) = self.cache.write().get_mut(id) {
 				c.mode = ChunkMode::Binary;
 				c.bytes = Cow::Owned(b);
 			}
@@ -106,10 +110,13 @@ impl Loader {
 	}
 
 	pub fn try_load(&self, lua: &Lua, id: &str) -> mlua::Result<Table> {
+		let (id, ..) = Self::normalize_id(id)?;
 		lua.globals().raw_get::<Table>("package")?.raw_get::<Table>("loaded")?.raw_get(id)
 	}
 
 	pub fn load_with(&self, lua: &Lua, id: &str, chunk: &Chunk) -> mlua::Result<Table> {
+		let (id, ..) = Self::normalize_id(id)?;
+
 		let loaded: Table = lua.globals().raw_get::<Table>("package")?.raw_get("loaded")?;
 		if let Ok(t) = loaded.raw_get(id) {
 			return Ok(t);
@@ -122,15 +129,24 @@ impl Loader {
 		Ok(t)
 	}
 
-	pub fn compatible_or_error(name: &str, chunk: &Chunk) -> Result<()> {
+	pub fn compatible_or_error(id: &str, chunk: &Chunk) -> Result<()> {
 		if chunk.compatible() {
 			return Ok(());
 		}
 
 		bail!(
-			"Plugin `{name}` requires at least Yazi {}, but your current version is Yazi {}.",
+			"Plugin `{id}` requires at least Yazi {}, but your current version is Yazi {}.",
 			chunk.since,
 			yazi_boot::actions::Actions::version()
 		);
+	}
+
+	pub fn normalize_id(id: &str) -> anyhow::Result<(&str, &str, &str)> {
+		let id = id.trim_end_matches(".main");
+		let (plugin, entry) = if let Some((a, b)) = id.split_once(".") { (a, b) } else { (id, "main") };
+
+		ensure!(plugin.as_bytes().kebab_cased(), "Plugin name `{plugin}` must be in kebab-case");
+		ensure!(entry.as_bytes().kebab_cased(), "Entry name `{entry}` must be in kebab-case");
+		Ok((id, plugin, entry))
 	}
 }

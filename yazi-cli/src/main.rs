@@ -73,24 +73,6 @@ async fn run() -> anyhow::Result<()> {
 			}
 		}
 
-		Command::Pack(cmd) => {
-			package::init()?;
-			outln!(
-				"WARNING: `ya pack` is deprecated, use the new `ya pkg` instead. See https://github.com/sxyazi/yazi/pull/2770 for more details."
-			)?;
-			if cmd.install {
-				package::Package::load().await?.install().await?;
-			} else if cmd.list {
-				package::Package::load().await?.print()?;
-			} else if cmd.upgrade {
-				package::Package::load().await?.upgrade_many(&[]).await?;
-			} else if let Some(uses) = cmd.add {
-				package::Package::load().await?.add_many(&uses).await?;
-			} else if let Some(uses) = cmd.delete {
-				package::Package::load().await?.delete_many(&uses).await?;
-			}
-		}
-
 		Command::Pub(cmd) => {
 			yazi_boot::init_default();
 			yazi_dds::init();

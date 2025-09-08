@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{borrow::Cow, fmt::Debug};
 
 use anyhow::bail;
 use hashbrown::HashMap;
@@ -35,7 +35,7 @@ impl TryFrom<CmdCow> for PluginOpt {
 		};
 
 		let mode = c.str("mode").map(Into::into).unwrap_or_default();
-		Ok(Self { id, args, mode, cb: c.take_any("callback") })
+		Ok(Self { id: Self::normalize_id(id), args, mode, cb: c.take_any("callback") })
 	}
 }
 
@@ -52,7 +52,22 @@ impl Debug for PluginOpt {
 
 impl PluginOpt {
 	pub fn new_callback(id: impl Into<SStr>, cb: PluginCallback) -> Self {
-		Self { id: id.into(), mode: PluginMode::Sync, cb: Some(cb), ..Default::default() }
+		Self {
+			id: Self::normalize_id(id.into()),
+			mode: PluginMode::Sync,
+			cb: Some(cb),
+			..Default::default()
+		}
+	}
+
+	fn normalize_id(s: SStr) -> SStr {
+		match s {
+			Cow::Borrowed(s) => s.trim_end_matches(".main").into(),
+			Cow::Owned(mut s) => {
+				s.truncate(s.trim_end_matches(".main").len());
+				s.into()
+			}
+		}
 	}
 }
 

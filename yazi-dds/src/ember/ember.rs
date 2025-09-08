@@ -81,8 +81,8 @@ impl Ember<'static> {
 		if it.peek() == Some(&b'@') {
 			it.next(); // Skip `@` as it's a prefix for static messages
 		}
-		if !it.all(|b| b.is_ascii_alphanumeric() || b == b'-') {
-			bail!("Kind must be alphanumeric with dashes");
+		if !it.all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'z' | b'-')) {
+			bail!("Kind `{kind}` must be in kebab-case");
 		}
 
 		Ok(())
