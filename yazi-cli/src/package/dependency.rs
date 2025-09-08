@@ -67,11 +67,11 @@ impl FromStr for Dependency {
 	fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
 		let mut parts = s.splitn(2, ':');
 
-		let Some(parent) = parts.next() else { bail!("Package url cannot be empty") };
+		let Some(parent) = parts.next() else { bail!("Package URL cannot be empty") };
 		let child = parts.next().unwrap_or_default();
 
 		let Some((_, repo)) = parent.split_once('/') else {
-			bail!("Package url `{parent}` must be in the format `owner/repo`")
+			bail!("Package URL `{parent}` must be in the format `owner/repository`")
 		};
 
 		let name = if child.is_empty() { repo } else { child };
