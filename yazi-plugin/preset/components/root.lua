@@ -76,3 +76,5 @@ end
 function Root:move(event) end
 
 function Root:drag(event) end
+
+function Root:drop(data) end
