@@ -118,7 +118,7 @@ impl Require {
 	fn absolute_id<'a>(lua: &Lua, id: &'a str) -> mlua::Result<Cow<'a, str>> {
 		let Some(stripped) = id.strip_prefix('.') else { return Ok(id.into()) };
 		Ok(if let Some(cur) = runtime!(lua)?.current() {
-			format!("{cur}.{stripped}").into()
+			format!("{}.{stripped}", cur.split('.').next().unwrap_or(cur)).into()
 		} else {
 			stripped.into()
 		})
