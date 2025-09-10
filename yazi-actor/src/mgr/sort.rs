@@ -16,7 +16,7 @@ impl Actor for Sort {
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
 		let pref = &mut cx.tab_mut().pref;
-		pref.sort_by = opt.by.unwrap_or(pref.sort_by);
+		pref.sort_by = opt.by.unwrap_or_else(|| pref.sort_by.clone());
 		pref.sort_reverse = opt.reverse.unwrap_or(pref.sort_reverse);
 		pref.sort_dir_first = opt.dir_first.unwrap_or(pref.sort_dir_first);
 		pref.sort_sensitive = opt.sensitive.unwrap_or(pref.sort_sensitive);
@@ -29,7 +29,7 @@ impl Actor for Sort {
 				render!();
 				false
 			} else {
-				f.files.set_sorter(sorter);
+				f.files.set_sorter(sorter.clone());
 				render_and!(f.files.catchup_revision())
 			}
 		};
