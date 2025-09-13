@@ -11,6 +11,6 @@ pub struct Version {
 impl Version {
 	pub fn len(&self) -> usize {
 		size_of_val(&self.version)
-			+ self.extensions.iter().map(|(k, v)| 8 + k.len() + v.len()).sum::<usize>()
+			+ self.extensions.iter().map(|(k, v)| 4 + k.len() + 4 + v.len()).sum::<usize>()
 	}
 }
