@@ -34,7 +34,7 @@ impl Term {
 			TTY.writer(),
 			yazi_term::If(!TMUX.get(), EnterAlternateScreen),
 			Print("\x1bP$q q\x1b\\"), // Request cursor shape (DECRQSS query for DECSCUSR)
-			Print(Mux::csi("\x1b[?12$p")), // Request cursor blink status (DECSET)
+			Print(Mux::csi("\x1b[?12$p")), // Request cursor blink status (DECRQM query for DECSET 12)
 			Print("\x1b[?u"),         // Request keyboard enhancement flags (CSI u)
 			Print(Mux::csi("\x1b[0c")), // Request device attributes
 			yazi_term::If(TMUX.get(), EnterAlternateScreen),
