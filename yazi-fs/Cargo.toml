@@ -33,7 +33,7 @@ libc  = { workspace = true }
 uzers = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.60.2", features = [ "Win32_Storage_FileSystem" ] }
+windows-sys = { version = "0.61.0", features = [ "Win32_Storage_FileSystem" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation-sys = { workspace = true }
