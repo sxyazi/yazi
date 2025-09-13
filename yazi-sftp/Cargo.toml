@@ -1,0 +1,19 @@
+[package]
+name        = "yazi-sftp"
+version     = "0.1.0"
+edition     = "2024"
+license     = "MIT"
+authors     = [ "AspectUnk", "sxyazi <sxyazi@gmail.com>" ]
+description = "Yazi SFTP client"
+homepage    = "https://yazi-rs.github.io"
+repository  = "https://github.com/sxyazi/yazi"
+
+[dependencies]
+bitflags    = { workspace = true }
+parking_lot = { workspace = true }
+russh       = { workspace = true }
+serde       = { workspace = true }
+tokio       = { workspace = true }
+
+[target."cfg(windows)".dependencies]
+os_str_bytes = { version = "7.1.1", default-features = false, features = [ "conversions" ] }
