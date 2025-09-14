@@ -16,7 +16,7 @@ impl Git {
 	}
 
 	pub(super) async fn checkout(path: &Path, rev: &str) -> Result<()> {
-		Self::exec(|c| c.args(["checkout", rev]).current_dir(path)).await
+		Self::exec(|c| c.args(["checkout", rev, "--force"]).current_dir(path)).await
 	}
 
 	pub(super) async fn pull(path: &Path) -> Result<()> {
