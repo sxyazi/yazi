@@ -1,4 +1,4 @@
-## yazi-sftp
+# yazi-sftp
 
 A fork of [`russh-sftp`](https://github.com/AspectUnk/russh-sftp) used by Yazi, with some changes:
 
@@ -6,7 +6,7 @@ A fork of [`russh-sftp`](https://github.com/AspectUnk/russh-sftp) used by Yazi, 
 - Supports retrieving file nlink, username, and group
 - Uses generic return parameters for a more idiomatic API, e.g.:
   ```rust
-  let attrs: responses::Attrs = session.send(requests::Stat::new(path)).await?;
+  let attrs: responses::Attrs = session.send(requests::Stat::new(path)).await?
   ```
 - Reduced dependencies
 - Performance optimizations:
