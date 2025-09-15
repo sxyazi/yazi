@@ -147,8 +147,14 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 
 fn calc_size(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, url: UrlRef| async move {
-		match yazi_fs::SizeCalculator::new(&url).await {
-			Ok(it) => SizeCalculator(it).into_lua_multi(&lua),
+		let it = if let Some(path) = url.as_path() {
+			provider::local::SizeCalculator::new(path).await.map(SizeCalculator::Local)
+		} else {
+			provider::SizeCalculator::new(&*url).await.map(SizeCalculator::Remote)
+		};
+
+		match it {
+			Ok(it) => it.into_lua_multi(&lua),
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})

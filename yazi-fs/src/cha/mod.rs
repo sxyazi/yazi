@@ -1,1 +1,1 @@
-yazi_macro::mod_flat!(cha kind);
+yazi_macro::mod_flat!(cha kind mode);

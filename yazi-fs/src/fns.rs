@@ -94,59 +94,6 @@ pub async fn remove_dir_clean(dir: &UrlBuf) {
 	provider::remove_dir(dir).await.ok();
 }
 
-// Convert a file mode to a string representation
-#[cfg(unix)]
-#[allow(clippy::collapsible_else_if)]
-pub fn permissions(m: libc::mode_t, dummy: bool) -> String {
-	use libc::{S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFSOCK, S_IRGRP, S_IROTH, S_IRUSR, S_ISGID, S_ISUID, S_ISVTX, S_IWGRP, S_IWOTH, S_IWUSR, S_IXGRP, S_IXOTH, S_IXUSR};
-	let mut s = String::with_capacity(10);
-
-	// Filetype
-	s.push(match m & S_IFMT {
-		S_IFBLK => 'b',
-		S_IFCHR => 'c',
-		S_IFDIR => 'd',
-		S_IFIFO => 'p',
-		S_IFLNK => 'l',
-		S_IFSOCK => 's',
-		_ => '-',
-	});
-
-	if dummy {
-		s.push_str("?????????");
-		return s;
-	}
-
-	// Owner
-	s.push(if m & S_IRUSR != 0 { 'r' } else { '-' });
-	s.push(if m & S_IWUSR != 0 { 'w' } else { '-' });
-	s.push(if m & S_IXUSR != 0 {
-		if m & S_ISUID != 0 { 's' } else { 'x' }
-	} else {
-		if m & S_ISUID != 0 { 'S' } else { '-' }
-	});
-
-	// Group
-	s.push(if m & S_IRGRP != 0 { 'r' } else { '-' });
-	s.push(if m & S_IWGRP != 0 { 'w' } else { '-' });
-	s.push(if m & S_IXGRP != 0 {
-		if m & S_ISGID != 0 { 's' } else { 'x' }
-	} else {
-		if m & S_ISGID != 0 { 'S' } else { '-' }
-	});
-
-	// Other
-	s.push(if m & S_IROTH != 0 { 'r' } else { '-' });
-	s.push(if m & S_IWOTH != 0 { 'w' } else { '-' });
-	s.push(if m & S_IXOTH != 0 {
-		if m & S_ISVTX != 0 { 't' } else { 'x' }
-	} else {
-		if m & S_ISVTX != 0 { 'T' } else { '-' }
-	});
-
-	s
-}
-
 // Find the max common root in a list of urls
 // e.g. /a/b/c, /a/b/d       -> /a/b
 //      /aa/bb/cc, /aa/dd/ee -> /aa

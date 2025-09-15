@@ -1,6 +1,6 @@
 use std::{io, path::{Path, PathBuf}};
 
-use crate::{cha::Cha, provider::local::{Gate, ReadDir, ReadDirSync, RwFile}};
+use crate::{cha::Cha, provider::local::{Gate, ReadDir, RwFile}};
 
 pub struct Local;
 
@@ -54,14 +54,14 @@ impl Local {
 			tokio::task::spawn_blocking(move || {
 				let mut reader = std::fs::File::open(from)?;
 				let mut writer = std::fs::OpenOptions::new()
-				.mode(cha.mode as u32)  // Do not remove `as u32`, https://github.com/termux/termux-packages/pull/22481
-				.write(true)
-				.create(true)
-				.truncate(true)
-				.open(to)?;
+					.mode(cha.mode.bits() as _)
+					.write(true)
+					.create(true)
+					.truncate(true)
+					.open(to)?;
 
 				let written = std::io::copy(&mut reader, &mut writer)?;
-				unsafe { libc::fchmod(writer.as_raw_fd(), cha.mode) };
+				unsafe { libc::fchmod(writer.as_raw_fd(), cha.mode.bits() as _) };
 				writer.set_times(ft).ok();
 
 				Ok(written)
@@ -143,14 +143,6 @@ impl Local {
 		P: AsRef<Path>,
 	{
 		tokio::fs::read_dir(path).await.map(Into::into)
-	}
-
-	#[inline]
-	pub fn read_dir_sync<P>(path: P) -> io::Result<ReadDirSync>
-	where
-		P: AsRef<Path>,
-	{
-		std::fs::read_dir(path).map(Into::into)
 	}
 
 	#[inline]
@@ -259,14 +251,6 @@ impl Local {
 		P: AsRef<Path>,
 	{
 		tokio::fs::symlink_metadata(path).await
-	}
-
-	#[inline]
-	pub fn symlink_metadata_sync<P>(path: P) -> io::Result<std::fs::Metadata>
-	where
-		P: AsRef<Path>,
-	{
-		std::fs::symlink_metadata(path)
 	}
 
 	pub async fn trash<P>(path: P) -> io::Result<()>

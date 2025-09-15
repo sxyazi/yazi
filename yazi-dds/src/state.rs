@@ -3,7 +3,7 @@ use std::{mem, ops::Deref, sync::atomic::{AtomicU64, Ordering}, time::UNIX_EPOCH
 use anyhow::Result;
 use hashbrown::HashMap;
 use parking_lot::RwLock;
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufWriter};
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, BufWriter};
 use yazi_boot::BOOT;
 use yazi_fs::provider::local::{Gate, Local};
 use yazi_shared::{RoCell, timestamp_us};
@@ -79,7 +79,7 @@ impl State {
 	}
 
 	async fn load(&self) -> Result<()> {
-		let mut file = Local::open(BOOT.state_dir.join(".dds")).await?.reader();
+		let mut file = BufReader::new(Local::open(BOOT.state_dir.join(".dds")).await?);
 		let mut buf = String::new();
 
 		let mut inner = HashMap::new();
