@@ -1,6 +1,6 @@
 [package]
 name        = "yazi-packing"
-version     = "25.5.28"
+version     = "25.9.15"
 edition     = "2024"
 license     = "MIT"
 authors     = [ "sxyazi <sxyazi@gmail.com>" ]

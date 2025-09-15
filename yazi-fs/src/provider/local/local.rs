@@ -54,14 +54,14 @@ impl Local {
 			tokio::task::spawn_blocking(move || {
 				let mut reader = std::fs::File::open(from)?;
 				let mut writer = std::fs::OpenOptions::new()
-				.mode(cha.mode as u32)  // Do not remove `as u32`, https://github.com/termux/termux-packages/pull/22481
-				.write(true)
-				.create(true)
-				.truncate(true)
-				.open(to)?;
+					.mode(cha.mode.bits() as _)
+					.write(true)
+					.create(true)
+					.truncate(true)
+					.open(to)?;
 
 				let written = std::io::copy(&mut reader, &mut writer)?;
-				unsafe { libc::fchmod(writer.as_raw_fd(), cha.mode) };
+				unsafe { libc::fchmod(writer.as_raw_fd(), cha.mode.bits() as _) };
 				writer.set_times(ft).ok();
 
 				Ok(written)
