@@ -8,7 +8,7 @@ use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
 use tracing::error;
 use yazi_config::Priority;
-use yazi_fs::{FilesOp, SizeCalculator};
+use yazi_fs::{FilesOp, provider};
 use yazi_plugin::isolate;
 use yazi_shared::{event::CmdCow, url::UrlBuf};
 
@@ -93,7 +93,7 @@ impl Prework {
 	}
 
 	pub(crate) async fn size_do(&self, task: PreworkInSize) -> Result<(), PreworkOutSize> {
-		let length = SizeCalculator::total(&task.target).await.unwrap_or(0);
+		let length = provider::calculate(&task.target).await.unwrap_or(0);
 		task.throttle.done((task.target, length), |buf| {
 			{
 				let mut loading = self.sizing.write();

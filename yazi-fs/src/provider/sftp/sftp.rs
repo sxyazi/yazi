@@ -84,13 +84,6 @@ impl Sftp {
 		todo!()
 	}
 
-	pub fn read_dir_sync<P>(path: P) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-	{
-		todo!()
-	}
-
 	pub async fn read_link<P>(path: P) -> io::Result<PathBuf>
 	where
 		P: AsRef<Path>,
@@ -160,13 +153,6 @@ impl Sftp {
 	}
 
 	pub async fn symlink_metadata<P>(path: P) -> io::Result<std::fs::Metadata>
-	where
-		P: AsRef<Path>,
-	{
-		todo!()
-	}
-
-	pub fn symlink_metadata_sync<P>(path: P) -> io::Result<std::fs::Metadata>
 	where
 		P: AsRef<Path>,
 	{

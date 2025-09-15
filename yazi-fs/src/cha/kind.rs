@@ -6,15 +6,13 @@ use yazi_shared::url::Url;
 bitflags! {
 	#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 	pub struct ChaKind: u8 {
-		const DIR    = 0b00000001;
+		const HIDDEN = 0b0000_0001;
+		const SYSTEM = 0b0000_0010;
 
-		const HIDDEN = 0b00000010;
-		const LINK   = 0b00000100;
-		const ORPHAN = 0b00001000;
+		const LINK   = 0b0000_0100;
+		const ORPHAN = 0b0000_1000;
 
-		const DUMMY  = 0b00010000;
-		#[cfg(windows)]
-		const SYSTEM = 0b00100000;
+		const DUMMY  = 0b0001_0000;
 	}
 }
 

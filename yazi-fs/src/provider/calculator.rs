@@ -1,0 +1,81 @@
+use std::{collections::VecDeque, io, time::{Duration, Instant}};
+
+use yazi_shared::{Either, url::{Url, UrlBuf}};
+
+use crate::provider::{self, ReadDir};
+
+pub enum SizeCalculator {
+	File(Option<u64>),
+	Dir(VecDeque<Either<UrlBuf, ReadDir>>),
+}
+
+impl SizeCalculator {
+	pub async fn new<'a, U>(url: U) -> io::Result<Self>
+	where
+		U: Into<Url<'a>>,
+	{
+		let url: Url = url.into();
+		let meta = provider::symlink_metadata(url).await?;
+		Ok(if meta.is_dir() {
+			Self::Dir(VecDeque::from([Either::Left(url.to_owned())]))
+		} else {
+			Self::File(Some(meta.len()))
+		})
+	}
+
+	pub async fn total<'a, U>(url: U) -> io::Result<u64>
+	where
+		U: Into<Url<'a>>,
+	{
+		let mut it = Self::new(url).await?;
+		let mut total = 0;
+		while let Some(n) = it.next().await? {
+			total += n;
+		}
+		Ok(total)
+	}
+
+	pub async fn next(&mut self) -> io::Result<Option<u64>> {
+		Ok(match self {
+			Self::File(size) => size.take(),
+			Self::Dir(buf) => Self::next_chunk(buf).await,
+		})
+	}
+
+	async fn next_chunk(buf: &mut VecDeque<Either<UrlBuf, ReadDir>>) -> Option<u64> {
+		let (mut i, mut size, now) = (0, 0, Instant::now());
+		macro_rules! pop_and_continue {
+			() => {{
+				buf.pop_front();
+				if buf.is_empty() {
+					return Some(size);
+				}
+				continue;
+			}};
+		}
+
+		while i < 2000 && now.elapsed() < Duration::from_millis(100) {
+			i += 1;
+			let front = buf.front_mut()?;
+
+			if let Either::Left(p) = front {
+				*front = match provider::read_dir(p).await {
+					Ok(it) => Either::Right(it),
+					Err(_) => pop_and_continue!(),
+				};
+			}
+
+			let Ok(Some(ent)) = front.right_mut()?.next_entry().await else {
+				pop_and_continue!();
+			};
+
+			let Ok(ft) = ent.file_type().await else { continue };
+			if ft.is_dir() {
+				buf.push_back(Either::Left(ent.url()));
+			} else if let Ok(meta) = ent.metadata().await {
+				size += meta.len();
+			}
+		}
+		Some(size)
+	}
+}

@@ -1,6 +1,6 @@
 use std::{io, path::{Path, PathBuf}};
 
-use crate::{cha::Cha, provider::local::{Gate, ReadDir, ReadDirSync, RwFile}};
+use crate::{cha::Cha, provider::local::{Gate, ReadDir, RwFile}};
 
 pub struct Local;
 
@@ -146,14 +146,6 @@ impl Local {
 	}
 
 	#[inline]
-	pub fn read_dir_sync<P>(path: P) -> io::Result<ReadDirSync>
-	where
-		P: AsRef<Path>,
-	{
-		std::fs::read_dir(path).map(Into::into)
-	}
-
-	#[inline]
 	pub async fn read_link<P>(path: P) -> io::Result<PathBuf>
 	where
 		P: AsRef<Path>,
@@ -259,14 +251,6 @@ impl Local {
 		P: AsRef<Path>,
 	{
 		tokio::fs::symlink_metadata(path).await
-	}
-
-	#[inline]
-	pub fn symlink_metadata_sync<P>(path: P) -> io::Result<std::fs::Metadata>
-	where
-		P: AsRef<Path>,
-	{
-		std::fs::symlink_metadata(path)
 	}
 
 	pub async fn trash<P>(path: P) -> io::Result<()>

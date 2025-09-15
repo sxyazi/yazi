@@ -10,10 +10,13 @@ pub struct DirEntry<'a> {
 }
 
 impl<'a> DirEntry<'a> {
+	#[must_use]
 	pub fn path(&self) -> PathBuf { self.dir.join(&self.name) }
 
+	#[must_use]
 	pub fn name(&self) -> Cow<'_, OsStr> { self.name.to_os_str() }
 
+	#[must_use]
 	pub fn long_name(&self) -> Cow<'_, OsStr> { self.long_name.to_os_str() }
 
 	pub fn attrs(&self) -> &Attrs { &self.attrs }

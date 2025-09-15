@@ -2,7 +2,7 @@
 
 yazi_macro::mod_pub!(cha mounts provider path);
 
-yazi_macro::mod_flat!(calculator cwd file files filter fns op sorter sorting stage xdg);
+yazi_macro::mod_flat!(cwd file files filter fns op sorter sorting stage xdg);
 
 pub fn init() {
 	CWD.init(<_>::default());

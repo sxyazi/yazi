@@ -16,7 +16,7 @@ function M:peek(job)
 	for _, f in ipairs(files) do
 		local icon = File({
 			url = Url(f.path),
-			cha = Cha { kind = f.attr:sub(1, 1) == "D" and 1 or 0 },
+			cha = Cha { mode = tonumber(f.attr:sub(1, 1) == "D" and "40700" or "100644", 8) },
 		}):icon()
 
 		if f.size > 0 then
