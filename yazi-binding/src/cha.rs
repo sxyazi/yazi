@@ -101,7 +101,7 @@ impl UserData for Cha {
 				#[cfg(unix)]
 				lua.create_string(_me.mode.permissions(_me.is_dummy())),
 				#[cfg(windows)]
-				Ok(mlua::Value::Nil),
+				Ok::<_, mlua::Error>(mlua::Value::Nil),
 			)
 		});
 	}

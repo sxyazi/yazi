@@ -128,8 +128,7 @@ impl Cha {
 			}
 		};
 
-		let kind = ChaKind::DUMMY
-			| if mode.contains(ChaMode::T_LINK) { ChaKind::LINK } else { ChaKind::empty() };
+		let kind = ChaKind::DUMMY | if mode.is_link() { ChaKind::LINK } else { ChaKind::empty() };
 
 		Self { kind, mode, ..Default::default() }
 	}
