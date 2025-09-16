@@ -1,4 +1,4 @@
-use std::{ops::Deref, sync::Arc};
+use std::ops::Deref;
 
 use parking_lot::RwLock;
 use yazi_shared::RoCell;
@@ -6,7 +6,7 @@ use yazi_shared::RoCell;
 use super::Partition;
 use crate::cha::Cha;
 
-pub(super) type Locked = Arc<RwLock<Partitions>>;
+pub(super) type Locked = RwLock<Partitions>;
 
 pub static PARTITIONS: RoCell<Locked> = RoCell::new();
 

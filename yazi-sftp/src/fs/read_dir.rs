@@ -1,20 +1,28 @@
-use std::mem;
+use std::{mem, sync::Arc};
 
 use crate::{ByteStr, Error, Session, fs::DirEntry, requests, responses};
 
-pub struct ReadDir<'a> {
-	dir:     ByteStr<'a>,
+pub struct ReadDir {
+	session: Arc<Session>,
+	dir:     ByteStr<'static>,
 	handle:  String,
-	session: &'a Session,
 
-	name:   responses::Name<'a>,
+	name:   responses::Name<'static>,
 	cursor: usize,
 	done:   bool,
 }
 
-impl<'a> ReadDir<'a> {
-	pub(crate) fn new(session: &'a Session, dir: ByteStr<'a>, handle: String) -> Self {
-		Self { dir, handle, session, name: Default::default(), cursor: 0, done: false }
+impl ReadDir {
+	pub(crate) fn new(session: &Arc<Session>, dir: ByteStr, handle: String) -> Self {
+		Self {
+			session: session.clone(),
+			dir: dir.into_owned(),
+			handle,
+
+			name: Default::default(),
+			cursor: 0,
+			done: false,
+		}
 	}
 
 	pub async fn next(&mut self) -> Result<Option<DirEntry<'_>>, Error> {

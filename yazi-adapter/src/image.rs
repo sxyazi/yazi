@@ -4,7 +4,7 @@ use anyhow::Result;
 use image::{DynamicImage, ExtendedColorType, ImageDecoder, ImageEncoder, ImageError, ImageReader, ImageResult, Limits, codecs::{jpeg::JpegEncoder, png::PngEncoder}, imageops::FilterType, metadata::Orientation};
 use ratatui::layout::Rect;
 use yazi_config::YAZI;
-use yazi_fs::provider::local::Local;
+use yazi_fs::provider::{Provider, local::Local};
 
 use crate::Dimension;
 

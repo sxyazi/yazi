@@ -1,23 +1,29 @@
-use std::{ffi::OsString, io};
+use std::{borrow::Cow, ffi::OsStr, io};
 
 use yazi_shared::url::UrlBuf;
 
+use crate::provider::FileHolder;
+
 pub enum DirEntry {
 	Local(super::local::DirEntry),
+}
+
+impl From<super::local::DirEntry> for DirEntry {
+	fn from(value: super::local::DirEntry) -> Self { Self::Local(value) }
 }
 
 impl DirEntry {
 	#[must_use]
 	pub fn url(&self) -> UrlBuf {
 		match self {
-			Self::Local(local) => local.url(),
+			Self::Local(local) => local.path().into(),
 		}
 	}
 
 	#[must_use]
-	pub fn file_name(&self) -> OsString {
+	pub fn name(&self) -> Cow<'_, OsStr> {
 		match self {
-			Self::Local(local) => local.file_name(),
+			Self::Local(local) => local.name(),
 		}
 	}
 

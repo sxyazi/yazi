@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use yazi_fs::{ok_or_not_found, provider::local::Local, remove_dir_clean};
+use yazi_fs::{ok_or_not_found, provider::{DirReader, FileHolder, Provider, local::Local}, remove_dir_clean};
 use yazi_macro::outln;
 
 use super::Dependency;
@@ -25,7 +25,7 @@ impl Dependency {
 		let assets = self.target().join("assets");
 		match Local::read_dir(&assets).await {
 			Ok(mut it) => {
-				while let Some(entry) = it.next_entry().await? {
+				while let Some(entry) = it.next().await? {
 					remove_sealed(&entry.path())
 						.await
 						.with_context(|| format!("failed to remove `{}`", entry.path().display()))?;

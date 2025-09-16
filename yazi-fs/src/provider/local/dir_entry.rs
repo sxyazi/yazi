@@ -1,24 +1,15 @@
-use std::ops::Deref;
+use std::{borrow::Cow, ffi::OsStr, io, path::PathBuf};
 
-use yazi_shared::url::UrlBuf;
+use crate::provider::FileHolder;
 
-pub struct DirEntry(tokio::fs::DirEntry);
+pub struct DirEntry(pub(super) tokio::fs::DirEntry);
 
-impl Deref for DirEntry {
-	type Target = tokio::fs::DirEntry;
+impl FileHolder for DirEntry {
+	fn path(&self) -> PathBuf { self.0.path() }
 
-	fn deref(&self) -> &Self::Target { &self.0 }
-}
+	fn name(&self) -> Cow<'_, OsStr> { self.0.file_name().into() }
 
-impl From<tokio::fs::DirEntry> for DirEntry {
-	fn from(value: tokio::fs::DirEntry) -> Self { Self(value) }
-}
+	async fn metadata(&self) -> io::Result<std::fs::Metadata> { self.0.metadata().await }
 
-impl From<DirEntry> for crate::provider::DirEntry {
-	fn from(value: DirEntry) -> Self { Self::Local(value) }
-}
-
-impl DirEntry {
-	#[must_use]
-	pub fn url(&self) -> UrlBuf { self.0.path().into() }
+	async fn file_type(&self) -> io::Result<std::fs::FileType> { self.0.file_type().await }
 }

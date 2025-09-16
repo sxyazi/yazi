@@ -13,7 +13,7 @@ pub(crate) struct Backend {
 impl Backend {
 	pub(crate) fn serve(out_tx: mpsc::UnboundedSender<UrlBuf>) -> Self {
 		#[cfg(any(target_os = "linux", target_os = "macos"))]
-		yazi_fs::mounts::Partitions::monitor(yazi_fs::mounts::PARTITIONS.clone(), || {
+		yazi_fs::mounts::Partitions::monitor(&yazi_fs::mounts::PARTITIONS, || {
 			yazi_macro::err!(yazi_dds::Pubsub::pub_after_mount())
 		});
 

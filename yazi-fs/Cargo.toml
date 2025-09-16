@@ -11,12 +11,14 @@ repository  = "https://github.com/sxyazi/yazi"
 [dependencies]
 yazi-ffi    = { path = "../yazi-ffi", version = "25.9.15" }
 yazi-macro  = { path = "../yazi-macro", version = "25.9.15" }
+yazi-sftp   = { path = "../yazi-sftp", version = "0.1.0" }
 yazi-shared = { path = "../yazi-shared", version = "25.9.15" }
 
 # External dependencies
 anyhow      = { workspace = true }
 arc-swap    = "1.7.1"
 bitflags    = { workspace = true }
+deadpool    = { version = "0.12.3", default-features = false, features = [ "managed", "rt_tokio_1" ] }
 dirs        = { workspace = true }
 foldhash    = { workspace = true }
 futures     = { workspace = true }

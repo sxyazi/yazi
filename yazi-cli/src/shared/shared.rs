@@ -1,7 +1,7 @@
 use std::{io, path::Path};
 
 use tokio::io::AsyncWriteExt;
-use yazi_fs::{ok_or_not_found, provider::local::{Gate, Local}};
+use yazi_fs::{ok_or_not_found, provider::{FileBuilder, Provider, local::{Gate, Local}}};
 
 #[inline]
 pub async fn must_exists(path: impl AsRef<Path>) -> bool {

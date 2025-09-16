@@ -3,7 +3,16 @@ use std::pin::Pin;
 use tokio::io::{AsyncRead, AsyncWrite};
 
 pub enum RwFile {
-	Local(super::local::RwFile),
+	Tokio(tokio::fs::File),
+	SFTP(Box<yazi_sftp::fs::File>),
+}
+
+impl From<tokio::fs::File> for RwFile {
+	fn from(f: tokio::fs::File) -> Self { Self::Tokio(f) }
+}
+
+impl From<yazi_sftp::fs::File> for RwFile {
+	fn from(f: yazi_sftp::fs::File) -> Self { Self::SFTP(Box::new(f)) }
 }
 
 impl AsyncRead for RwFile {
@@ -14,7 +23,8 @@ impl AsyncRead for RwFile {
 		buf: &mut tokio::io::ReadBuf<'_>,
 	) -> std::task::Poll<std::io::Result<()>> {
 		match &mut *self {
-			Self::Local(f) => Pin::new(f).poll_read(cx, buf),
+			Self::Tokio(f) => Pin::new(f).poll_read(cx, buf),
+			Self::SFTP(f) => Pin::new(f).poll_read(cx, buf),
 		}
 	}
 }
@@ -27,7 +37,8 @@ impl AsyncWrite for RwFile {
 		buf: &[u8],
 	) -> std::task::Poll<Result<usize, std::io::Error>> {
 		match &mut *self {
-			Self::Local(f) => Pin::new(f).poll_write(cx, buf),
+			Self::Tokio(f) => Pin::new(f).poll_write(cx, buf),
+			Self::SFTP(f) => Pin::new(f).poll_write(cx, buf),
 		}
 	}
 
@@ -37,7 +48,8 @@ impl AsyncWrite for RwFile {
 		cx: &mut std::task::Context<'_>,
 	) -> std::task::Poll<Result<(), std::io::Error>> {
 		match &mut *self {
-			Self::Local(f) => Pin::new(f).poll_flush(cx),
+			Self::Tokio(f) => Pin::new(f).poll_flush(cx),
+			Self::SFTP(f) => Pin::new(f).poll_flush(cx),
 		}
 	}
 
@@ -47,7 +59,8 @@ impl AsyncWrite for RwFile {
 		cx: &mut std::task::Context<'_>,
 	) -> std::task::Poll<Result<(), std::io::Error>> {
 		match &mut *self {
-			Self::Local(f) => Pin::new(f).poll_shutdown(cx),
+			Self::Tokio(f) => Pin::new(f).poll_shutdown(cx),
+			Self::SFTP(f) => Pin::new(f).poll_shutdown(cx),
 		}
 	}
 
@@ -58,14 +71,16 @@ impl AsyncWrite for RwFile {
 		bufs: &[std::io::IoSlice<'_>],
 	) -> std::task::Poll<Result<usize, std::io::Error>> {
 		match &mut *self {
-			Self::Local(f) => Pin::new(f).poll_write_vectored(cx, bufs),
+			Self::Tokio(f) => Pin::new(f).poll_write_vectored(cx, bufs),
+			Self::SFTP(f) => Pin::new(f).poll_write_vectored(cx, bufs),
 		}
 	}
 
 	#[inline]
 	fn is_write_vectored(&self) -> bool {
 		match self {
-			Self::Local(f) => f.is_write_vectored(),
+			Self::Tokio(f) => f.is_write_vectored(),
+			Self::SFTP(f) => f.is_write_vectored(),
 		}
 	}
 }

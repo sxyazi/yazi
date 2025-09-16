@@ -7,7 +7,7 @@ use scopeguard::defer;
 use tokio::io::AsyncWriteExt;
 use yazi_config::{YAZI, opener::OpenerRule};
 use yazi_dds::Pubsub;
-use yazi_fs::{File, FilesOp, max_common_root, maybe_exists, path::skip_url, provider::{self, local::{Gate, Local}}};
+use yazi_fs::{File, FilesOp, max_common_root, maybe_exists, path::skip_url, provider::{self, FileBuilder, Provider, local::{Gate, Local}}};
 use yazi_macro::{err, succ};
 use yazi_parser::VoidOpt;
 use yazi_proxy::{AppProxy, HIDER, TasksProxy};

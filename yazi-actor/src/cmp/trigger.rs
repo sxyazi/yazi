@@ -47,7 +47,7 @@ impl Actor for Trigger {
 
 			while let Ok(Some(ent)) = dir.next_entry().await {
 				if let Ok(ft) = ent.file_type().await {
-					cache.push(CmpItem { name: ent.file_name(), is_dir: ft.is_dir() });
+					cache.push(CmpItem { name: ent.name().into_owned(), is_dir: ft.is_dir() });
 				}
 			}
 
