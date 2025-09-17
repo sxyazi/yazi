@@ -36,14 +36,8 @@ impl Provider for Sftp {
 			uid:      Some(cha.uid),
 			gid:      Some(cha.gid),
 			perm:     Some(cha.mode.bits() as _),
-			atime:    cha
-				.atime
-				.and_then(|t| t.duration_since(UNIX_EPOCH).ok())
-				.map(|d| d.as_secs() as u32),
-			mtime:    cha
-				.mtime
-				.and_then(|t| t.duration_since(UNIX_EPOCH).ok())
-				.map(|d| d.as_secs() as u32),
+			atime:    cha.atime_dur().ok().map(|d| d.as_secs() as u32),
+			mtime:    cha.mtime_dur().ok().map(|d| d.as_secs() as u32),
 			extended: Default::default(),
 		};
 

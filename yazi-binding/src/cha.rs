@@ -66,18 +66,10 @@ impl UserData for Cha {
 		fields.add_field_method_get("is_sticky", |_, me| Ok(me.is_sticky()));
 
 		fields.add_field_method_get("len", |_, me| Ok(me.len));
-		fields.add_field_method_get("atime", |_, me| {
-			Ok(me.atime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
-		});
-		fields.add_field_method_get("btime", |_, me| {
-			Ok(me.btime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
-		});
-		fields.add_field_method_get("ctime", |_, me| {
-			Ok(me.ctime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
-		});
-		fields.add_field_method_get("mtime", |_, me| {
-			Ok(me.mtime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
-		});
+		fields.add_field_method_get("atime", |_, me| Ok(me.atime_dur().ok().map(|d| d.as_secs_f64())));
+		fields.add_field_method_get("btime", |_, me| Ok(me.btime_dur().ok().map(|d| d.as_secs_f64())));
+		fields.add_field_method_get("ctime", |_, me| Ok(me.ctime_dur().ok().map(|d| d.as_secs_f64())));
+		fields.add_field_method_get("mtime", |_, me| Ok(me.mtime_dur().ok().map(|d| d.as_secs_f64())));
 		fields.add_field_method_get("dev", |_, me| Ok(me.dev));
 		fields.add_field_method_get("uid", |_, me| Ok(me.uid));
 		fields.add_field_method_get("gid", |_, me| Ok(me.gid));

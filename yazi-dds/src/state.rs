@@ -104,8 +104,7 @@ impl State {
 
 	async fn skip(&self) -> Result<bool> {
 		let cha = Local::symlink_metadata(BOOT.state_dir.join(".dds")).await?;
-		let modified =
-			cha.mtime.ok_or_else(|| anyhow!("invalid mtime"))?.duration_since(UNIX_EPOCH)?.as_micros();
+		let modified = cha.mtime_dur()?.as_micros();
 		Ok(modified >= self.last.load(Ordering::Relaxed) as u128)
 	}
 }

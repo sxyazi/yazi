@@ -1,5 +1,6 @@
-use std::{ffi::OsStr, fs::{FileType, Metadata}, ops::Deref, time::SystemTime};
+use std::{ffi::OsStr, fs::{FileType, Metadata}, ops::Deref, time::{Duration, SystemTime, UNIX_EPOCH}};
 
+use anyhow::bail;
 use yazi_macro::{unix_either, win_either};
 use yazi_shared::url::Url;
 
@@ -62,16 +63,16 @@ impl Cha {
 		U: Into<Url<'a>>,
 	{
 		let url: Url = url.into();
-		let mut attached = cha.kind & (ChaKind::HIDDEN | ChaKind::SYSTEM | ChaKind::LINK);
+		let mut retain = cha.kind & (ChaKind::HIDDEN | ChaKind::SYSTEM | ChaKind::LINK);
 
 		if cha.is_link() {
 			cha = provider::metadata(url).await.unwrap_or(cha);
 		}
 		if cha.is_link() {
-			attached |= ChaKind::ORPHAN;
+			retain |= ChaKind::ORPHAN;
 		}
 
-		cha.attach(attached)
+		cha.attach(retain)
 	}
 
 	pub fn from_dummy<'a, U>(_url: U, ft: Option<FileType>) -> Self
@@ -95,7 +96,7 @@ impl Cha {
 
 	fn from_bare(m: &Metadata) -> Self {
 		#[cfg(unix)]
-		use std::{os::unix::fs::MetadataExt, time::{Duration, UNIX_EPOCH}};
+		use std::os::unix::fs::MetadataExt;
 
 		#[cfg(unix)]
 		let mode = {
@@ -165,4 +166,36 @@ impl Cha {
 
 	#[inline]
 	pub const fn is_dummy(&self) -> bool { self.kind.contains(ChaKind::DUMMY) }
+
+	pub fn atime_dur(&self) -> anyhow::Result<Duration> {
+		if let Some(atime) = self.atime {
+			Ok(atime.duration_since(UNIX_EPOCH)?)
+		} else {
+			bail!("atime not supported on this platform");
+		}
+	}
+
+	pub fn mtime_dur(&self) -> anyhow::Result<Duration> {
+		if let Some(mtime) = self.mtime {
+			Ok(mtime.duration_since(UNIX_EPOCH)?)
+		} else {
+			bail!("mtime not supported on this platform");
+		}
+	}
+
+	pub fn btime_dur(&self) -> anyhow::Result<Duration> {
+		if let Some(btime) = self.btime {
+			Ok(btime.duration_since(UNIX_EPOCH)?)
+		} else {
+			bail!("btime not supported on this platform");
+		}
+	}
+
+	pub fn ctime_dur(&self) -> anyhow::Result<Duration> {
+		if let Some(ctime) = self.ctime {
+			Ok(ctime.duration_since(UNIX_EPOCH)?)
+		} else {
+			bail!("ctime not supported on this platform");
+		}
+	}
 }
