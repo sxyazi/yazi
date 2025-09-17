@@ -15,7 +15,7 @@ pub struct Cha {
 	pub btime: Option<SystemTime>,
 	pub ctime: Option<SystemTime>,
 	pub mtime: Option<SystemTime>,
-	pub dev:   libc::dev_t,
+	pub dev:   u64,
 	pub uid:   u32,
 	pub gid:   u32,
 	pub nlink: u64,

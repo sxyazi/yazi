@@ -5,7 +5,7 @@ pub struct Partition {
 	pub src:       OsString,
 	pub dist:      Option<PathBuf>,
 	#[cfg(unix)]
-	pub rdev:      Option<libc::dev_t>,
+	pub rdev:      Option<u64>,
 	pub label:     Option<OsString>,
 	pub fstype:    Option<OsString>,
 	pub capacity:  u64,

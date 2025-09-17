@@ -27,7 +27,7 @@ impl Deref for Partitions {
 
 impl Partitions {
 	#[cfg(unix)]
-	pub fn by_dev(&self, dev: libc::dev_t) -> Option<&Partition> {
+	pub fn by_dev(&self, dev: u64) -> Option<&Partition> {
 		self.inner.iter().find(|p| p.rdev == Some(dev))
 	}
 
