@@ -70,7 +70,7 @@ impl Provider for Sftp {
 		Ok(Self::op().await?.hardlink(&original, &link).await?)
 	}
 
-	async fn metadata<P>(path: P) -> io::Result<std::fs::Metadata>
+	async fn metadata<P>(path: P) -> io::Result<Cha>
 	where
 		P: AsRef<Path>,
 	{
@@ -122,7 +122,7 @@ impl Provider for Sftp {
 		Ok(Self::op().await?.symlink(&original, &link).await?)
 	}
 
-	async fn symlink_metadata<P>(path: P) -> io::Result<std::fs::Metadata>
+	async fn symlink_metadata<P>(path: P) -> io::Result<Cha>
 	where
 		P: AsRef<Path>,
 	{

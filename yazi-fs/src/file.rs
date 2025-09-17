@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, fs::{FileType, Metadata}, hash::{BuildHasher, Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
+use std::{ffi::OsStr, fs::FileType, hash::{BuildHasher, Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
 
 use anyhow::Result;
 use yazi_shared::url::{Uri, UrlBuf, UrlCow, Urn};
@@ -22,15 +22,15 @@ impl File {
 	#[inline]
 	pub async fn new(url: impl Into<UrlCow<'_>>) -> Result<Self> {
 		let url = url.into();
-		let meta = provider::symlink_metadata(&url).await?;
-		Ok(Self::from_follow(url.into_owned(), meta).await)
+		let cha = provider::symlink_metadata(&url).await?;
+		Ok(Self::from_follow(url.into_owned(), cha).await)
 	}
 
 	#[inline]
-	pub async fn from_follow(url: UrlBuf, meta: Metadata) -> Self {
-		let link_to = if meta.is_symlink() { provider::read_link(&url).await.ok() } else { None };
+	pub async fn from_follow(url: UrlBuf, cha: Cha) -> Self {
+		let link_to = if cha.is_link() { provider::read_link(&url).await.ok() } else { None };
 
-		let cha = Cha::from_follow(&url, meta).await;
+		let cha = Cha::from_follow(&url, cha).await;
 
 		Self { url, cha, link_to }
 	}

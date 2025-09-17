@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::OsStr, io};
 
 use yazi_shared::url::UrlBuf;
 
-use crate::provider::FileHolder;
+use crate::{cha::Cha, provider::FileHolder};
 
 pub enum DirEntry {
 	Local(super::local::DirEntry),
@@ -27,7 +27,7 @@ impl DirEntry {
 		}
 	}
 
-	pub async fn metadata(&self) -> io::Result<std::fs::Metadata> {
+	pub async fn metadata(&self) -> io::Result<Cha> {
 		match self {
 			Self::Local(local) => local.metadata().await,
 		}

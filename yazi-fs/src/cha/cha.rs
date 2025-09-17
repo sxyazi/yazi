@@ -1,4 +1,4 @@
-use std::{fs::{FileType, Metadata}, ops::Deref, time::SystemTime};
+use std::{ffi::OsStr, fs::{FileType, Metadata}, ops::Deref, time::SystemTime};
 
 use yazi_macro::{unix_either, win_either};
 use yazi_shared::url::Url;
@@ -47,11 +47,8 @@ impl Default for Cha {
 
 impl Cha {
 	#[inline]
-	pub fn new<'a, U>(url: U, meta: Metadata) -> Self
-	where
-		U: Into<Url<'a>>,
-	{
-		Self::from_bare(&meta).attach(ChaKind::hidden(url, &meta))
+	pub fn new(name: &OsStr, meta: Metadata) -> Self {
+		Self::from_bare(&meta).attach(ChaKind::hidden(name, &meta))
 	}
 
 	#[inline]
@@ -60,22 +57,21 @@ impl Cha {
 		Ok(Self::from_follow(url, provider::symlink_metadata(url).await?).await)
 	}
 
-	pub async fn from_follow<'a, U>(url: U, mut meta: Metadata) -> Self
+	pub async fn from_follow<'a, U>(url: U, mut cha: Self) -> Self
 	where
 		U: Into<Url<'a>>,
 	{
-		let url = url.into();
-		let mut attached = ChaKind::hidden(url, &meta);
+		let url: Url = url.into();
+		let mut attached = cha.kind & (ChaKind::HIDDEN | ChaKind::SYSTEM | ChaKind::LINK);
 
-		if meta.is_symlink() {
-			attached |= ChaKind::LINK;
-			meta = provider::metadata(url).await.unwrap_or(meta);
+		if cha.is_link() {
+			cha = provider::metadata(url).await.unwrap_or(cha);
 		}
-		if meta.is_symlink() {
+		if cha.is_link() {
 			attached |= ChaKind::ORPHAN;
 		}
 
-		Self::from_bare(&meta).attach(attached)
+		cha.attach(attached)
 	}
 
 	pub fn from_dummy<'a, U>(_url: U, ft: Option<FileType>) -> Self

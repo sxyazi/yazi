@@ -67,7 +67,7 @@ pub trait Provider {
 		P: AsRef<Path>,
 		Q: AsRef<Path>;
 
-	fn metadata<P>(path: P) -> impl Future<Output = io::Result<std::fs::Metadata>>
+	fn metadata<P>(path: P) -> impl Future<Output = io::Result<Cha>>
 	where
 		P: AsRef<Path>;
 
@@ -115,8 +115,8 @@ pub trait Provider {
 
 		async move {
 			let path = path.as_ref();
-			let ft = ok_or_not_found!(Self::symlink_metadata(path).await, return Ok(()));
-			if ft.is_symlink() {
+			let cha = ok_or_not_found!(Self::symlink_metadata(path).await, return Ok(()));
+			if cha.is_link() {
 				Self::remove_file(path).await
 			} else {
 				remove_dir_all_impl::<Self>(path).await
@@ -155,7 +155,7 @@ pub trait Provider {
 		Self::symlink(original, link, async || Ok(false))
 	}
 
-	fn symlink_metadata<P>(path: P) -> impl Future<Output = io::Result<std::fs::Metadata>>
+	fn symlink_metadata<P>(path: P) -> impl Future<Output = io::Result<Cha>>
 	where
 		P: AsRef<Path>;
 
@@ -187,7 +187,7 @@ pub trait FileHolder {
 
 	fn name(&self) -> Cow<'_, OsStr>;
 
-	fn metadata(&self) -> impl Future<Output = io::Result<std::fs::Metadata>>;
+	fn metadata(&self) -> impl Future<Output = io::Result<Cha>>;
 
 	fn file_type(&self) -> impl Future<Output = io::Result<std::fs::FileType>>;
 }
