@@ -143,8 +143,8 @@ impl ChaMode {
 impl ChaMode {
 	// TODO: deprecate
 	#[inline]
-	pub fn is_exec(self) -> bool { self.contains(Self::U_EXEC) }
+	pub const fn is_exec(self) -> bool { self.contains(Self::U_EXEC) }
 
 	#[inline]
-	pub fn is_sticky(self) -> bool { self.contains(Self::S_STICKY) }
+	pub const fn is_sticky(self) -> bool { self.contains(Self::S_STICKY) }
 }
