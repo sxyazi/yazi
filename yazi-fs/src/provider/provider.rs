@@ -2,7 +2,7 @@ use std::{io, path::{Path, PathBuf}};
 
 use yazi_shared::url::{Url, UrlBuf};
 
-use crate::{cha::Cha, provider::{ReadDir, RwFile, local::{self, Local}}};
+use crate::{cha::Cha, provider::{Provider, ReadDir, RwFile, local::{self, Local}}};
 
 #[inline]
 pub fn cache<'a, U>(url: U) -> Option<PathBuf>
@@ -143,18 +143,6 @@ where
 	V: Into<Url<'a>>,
 {
 	identical(a, b).await.unwrap_or(false)
-}
-
-#[inline]
-pub async fn open<'a, U>(url: U) -> io::Result<RwFile>
-where
-	U: Into<Url<'a>>,
-{
-	if let Some(path) = url.into().as_path() {
-		Local::open(path).await.map(Into::into)
-	} else {
-		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
-	}
 }
 
 #[inline]

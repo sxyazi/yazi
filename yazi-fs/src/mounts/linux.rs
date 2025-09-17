@@ -9,22 +9,22 @@ use yazi_shared::{natsort, replace_cow, replace_vec_cow};
 use super::{Locked, Partition, Partitions};
 
 impl Partitions {
-	pub fn monitor<F>(me: Locked, cb: F)
+	pub fn monitor<F>(me: &'static Locked, cb: F)
 	where
 		F: Fn() + Copy + Send + 'static,
 	{
-		async fn wait_mounts(me: Locked, cb: impl Fn()) -> Result<()> {
+		async fn wait_mounts(me: &'static Locked, cb: impl Fn()) -> Result<()> {
 			let f = std::fs::File::open("/proc/mounts")?;
 			let fd = AsyncFd::with_interest(f.as_fd(), Interest::READABLE)?;
 			loop {
 				let mut guard = fd.readable().await?;
 				guard.clear_ready();
-				Partitions::update(me.clone()).await;
+				Partitions::update(me).await;
 				cb();
 			}
 		}
 
-		async fn wait_partitions(me: Locked, cb: impl Fn()) -> Result<()> {
+		async fn wait_partitions(me: &'static Locked, cb: impl Fn()) -> Result<()> {
 			loop {
 				let partitions = Partitions::partitions()?;
 				if me.read().linux_cache == partitions {
@@ -33,17 +33,16 @@ impl Partitions {
 				}
 
 				me.write().linux_cache = partitions;
-				Partitions::update(me.clone()).await;
+				Partitions::update(me).await;
 
 				cb();
 				sleep(Duration::from_secs(3)).await;
 			}
 		}
 
-		let me_ = me.clone();
 		tokio::spawn(async move {
 			loop {
-				if let Err(e) = wait_mounts(me_.clone(), cb).await {
+				if let Err(e) = wait_mounts(me, cb).await {
 					error!("Error encountered while monitoring /proc/mounts: {e:?}");
 				}
 				sleep(Duration::from_secs(5)).await;
@@ -52,7 +51,7 @@ impl Partitions {
 
 		tokio::spawn(async move {
 			loop {
-				if let Err(e) = wait_partitions(me.clone(), cb).await {
+				if let Err(e) = wait_partitions(me, cb).await {
 					error!("Error encountered while monitoring /proc/partitions: {e:?}");
 				}
 				sleep(Duration::from_secs(5)).await;
@@ -75,7 +74,7 @@ impl Partitions {
 		Ok(set)
 	}
 
-	async fn update(me: Locked) {
+	async fn update(me: &'static Locked) {
 		_ = tokio::task::spawn_blocking(move || {
 			let mut guard = me.write();
 			match Self::all(&guard) {

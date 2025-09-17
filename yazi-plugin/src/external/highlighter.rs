@@ -5,7 +5,7 @@ use ratatui::{layout::Size, text::{Line, Span, Text}};
 use syntect::{LoadingError, dumps, easy::HighlightLines, highlighting::{self, Theme, ThemeSet}, parsing::{SyntaxReference, SyntaxSet}};
 use tokio::io::{AsyncBufReadExt, AsyncSeekExt, BufReader};
 use yazi_config::{THEME, YAZI, preview::PreviewWrap};
-use yazi_fs::provider::local::{self, Local};
+use yazi_fs::provider::{Provider, local::Local};
 use yazi_shared::{Ids, errors::PeekError, replace_to_printable};
 
 static INCR: Ids = Ids::new();
@@ -132,7 +132,7 @@ impl Highlighter {
 
 	async fn find_syntax(
 		path: &Path,
-		reader: &mut BufReader<local::RwFile>,
+		reader: &mut BufReader<tokio::fs::File>,
 	) -> Result<&'static SyntaxReference> {
 		let (_, syntaxes) = Self::init();
 		let name = path.file_name().map(|n| n.to_string_lossy()).unwrap_or_default();

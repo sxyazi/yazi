@@ -1,14 +1,47 @@
-use std::ops::{Deref, DerefMut};
+use std::{io, path::Path};
+
+use crate::provider::FileBuilder;
 
 #[derive(Default)]
 pub struct Gate(tokio::fs::OpenOptions);
 
-impl Deref for Gate {
-	type Target = tokio::fs::OpenOptions;
+impl FileBuilder for Gate {
+	type File = tokio::fs::File;
 
-	fn deref(&self) -> &Self::Target { &self.0 }
-}
+	fn append(&mut self, append: bool) -> &mut Self {
+		self.0.append(append);
+		self
+	}
 
-impl DerefMut for Gate {
-	fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+	fn create(&mut self, create: bool) -> &mut Self {
+		self.0.create(create);
+		self
+	}
+
+	fn create_new(&mut self, create_new: bool) -> &mut Self {
+		self.0.create_new(create_new);
+		self
+	}
+
+	async fn open<P>(&self, path: P) -> io::Result<Self::File>
+	where
+		P: AsRef<Path>,
+	{
+		self.0.open(path).await
+	}
+
+	fn read(&mut self, read: bool) -> &mut Self {
+		self.0.read(read);
+		self
+	}
+
+	fn truncate(&mut self, truncate: bool) -> &mut Self {
+		self.0.truncate(truncate);
+		self
+	}
+
+	fn write(&mut self, write: bool) -> &mut Self {
+		self.0.write(write);
+		self
+	}
 }

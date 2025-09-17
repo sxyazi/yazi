@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
-use yazi_fs::{provider::local::Local, remove_dir_clean};
+use yazi_fs::{provider::{DirReader, FileHolder, Provider, local::Local}, remove_dir_clean};
 use yazi_macro::outln;
 
 use super::Dependency;
@@ -43,8 +43,8 @@ impl Dependency {
 		match Local::read_dir(&from).await {
 			Ok(mut it) => {
 				Local::create_dir_all(&to).await?;
-				while let Some(entry) = it.next_entry().await? {
-					let (src, dist) = (entry.path(), to.join(entry.file_name()));
+				while let Some(entry) = it.next().await? {
+					let (src, dist) = (entry.path(), to.join(entry.name()));
 					copy_and_seal(&src, &dist).await.with_context(|| {
 						format!("failed to copy `{}` to `{}`", src.display(), dist.display())
 					})?;

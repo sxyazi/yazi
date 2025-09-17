@@ -5,7 +5,7 @@ use hashbrown::HashMap;
 use parking_lot::RwLock;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, BufWriter};
 use yazi_boot::BOOT;
-use yazi_fs::provider::local::{Gate, Local};
+use yazi_fs::provider::{FileBuilder, Provider, local::{Gate, Local}};
 use yazi_shared::{RoCell, timestamp_us};
 
 use crate::CLIENTS;

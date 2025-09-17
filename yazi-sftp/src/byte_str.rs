@@ -38,6 +38,13 @@ impl<'a> From<&'a Path> for ByteStr<'a> {
 	fn from(value: &'a Path) -> Self { ByteStr::from(value.as_os_str()) }
 }
 
+impl<'a, T> From<&'a T> for ByteStr<'a>
+where
+	T: AsRef<Path>,
+{
+	fn from(value: &'a T) -> Self { Self::from(value.as_ref()) }
+}
+
 impl PartialEq<&str> for ByteStr<'_> {
 	fn eq(&self, other: &&str) -> bool { self.0 == other.as_bytes() }
 }
@@ -93,6 +100,8 @@ impl<'a> ByteStr<'a> {
 			}
 		}
 	}
+
+	pub fn into_owned(self) -> ByteStr<'static> { ByteStr(Cow::Owned(self.0.into_owned())) }
 
 	pub(super) unsafe fn from_str_bytes_unchecked(bytes: &'a [u8]) -> Self {
 		Self(Cow::Borrowed(bytes))

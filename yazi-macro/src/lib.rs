@@ -3,6 +3,7 @@ mod asset;
 mod context;
 mod event;
 mod fmt;
+mod fs;
 mod log;
 mod module;
 mod platform;

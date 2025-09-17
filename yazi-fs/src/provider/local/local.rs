@@ -1,12 +1,16 @@
 use std::{io, path::{Path, PathBuf}};
 
-use crate::{cha::Cha, provider::local::{Gate, ReadDir, RwFile}};
+use crate::{cha::Cha, provider::Provider};
 
 pub struct Local;
 
-impl Local {
+impl Provider for Local {
+	type File = tokio::fs::File;
+	type Gate = super::Gate;
+	type ReadDir = super::ReadDir;
+
 	#[inline]
-	pub fn cache<P>(_: P) -> Option<PathBuf>
+	fn cache<P>(_: P) -> Option<PathBuf>
 	where
 		P: AsRef<Path>,
 	{
@@ -14,7 +18,7 @@ impl Local {
 	}
 
 	#[inline]
-	pub async fn canonicalize<P>(path: P) -> io::Result<PathBuf>
+	async fn canonicalize<P>(path: P) -> io::Result<PathBuf>
 	where
 		P: AsRef<Path>,
 	{
@@ -22,7 +26,7 @@ impl Local {
 	}
 
 	#[inline]
-	pub async fn copy<P, Q>(from: P, to: Q, cha: Cha) -> io::Result<u64>
+	async fn copy<P, Q>(from: P, to: Q, cha: Cha) -> io::Result<u64>
 	where
 		P: AsRef<Path>,
 		Q: AsRef<Path>,
@@ -32,6 +36,183 @@ impl Local {
 		Self::copy_impl(from, to, cha).await
 	}
 
+	#[inline]
+	async fn create_dir<P>(path: P) -> io::Result<()>
+	where
+		P: AsRef<Path>,
+	{
+		tokio::fs::create_dir(path).await
+	}
+
+	#[inline]
+	async fn create_dir_all<P>(path: P) -> io::Result<()>
+	where
+		P: AsRef<Path>,
+	{
+		tokio::fs::create_dir_all(path).await
+	}
+
+	#[inline]
+	async fn hard_link<P, Q>(original: P, link: Q) -> io::Result<()>
+	where
+		P: AsRef<Path>,
+		Q: AsRef<Path>,
+	{
+		tokio::fs::hard_link(original, link).await
+	}
+
+	#[inline]
+	async fn metadata<P>(path: P) -> io::Result<std::fs::Metadata>
+	where
+		P: AsRef<Path>,
+	{
+		tokio::fs::metadata(path).await
+	}
+
+	#[inline]
+	async fn read_dir<P>(path: P) -> io::Result<Self::ReadDir>
+	where
+		P: AsRef<Path>,
+	{
+		tokio::fs::read_dir(path).await.map(super::ReadDir)
+	}
+
+	#[inline]
+	async fn read_link<P>(path: P) -> io::Result<PathBuf>
+	where
+		P: AsRef<Path>,
+	{
+		tokio::fs::read_link(path).await
+	}
+
+	#[inline]
+	async fn remove_dir<P>(path: P) -> io::Result<()>
+	where
+		P: AsRef<Path>,
+	{
+		tokio::fs::remove_dir(path).await
+	}
+
+	#[inline]
+	async fn remove_dir_all<P>(path: P) -> io::Result<()>
+	where
+		P: AsRef<Path>,
+	{
+		tokio::fs::remove_dir_all(path).await
+	}
+
+	#[inline]
+	async fn remove_file<P>(path: P) -> io::Result<()>
+	where
+		P: AsRef<Path>,
+	{
+		tokio::fs::remove_file(path).await
+	}
+
+	#[inline]
+	async fn rename<P, Q>(from: P, to: Q) -> io::Result<()>
+	where
+		P: AsRef<Path>,
+		Q: AsRef<Path>,
+	{
+		tokio::fs::rename(from, to).await
+	}
+
+	#[inline]
+	async fn symlink<P, Q, F>(original: P, link: Q, _is_dir: F) -> io::Result<()>
+	where
+		P: AsRef<Path>,
+		Q: AsRef<Path>,
+		F: AsyncFnOnce() -> io::Result<bool>,
+	{
+		#[cfg(unix)]
+		{
+			tokio::fs::symlink(original, link).await
+		}
+		#[cfg(windows)]
+		if _is_dir().await? {
+			Self::symlink_dir(original, link).await
+		} else {
+			Self::symlink_file(original, link).await
+		}
+	}
+
+	#[inline]
+	async fn symlink_dir<P, Q>(original: P, link: Q) -> io::Result<()>
+	where
+		P: AsRef<Path>,
+		Q: AsRef<Path>,
+	{
+		#[cfg(unix)]
+		{
+			tokio::fs::symlink(original, link).await
+		}
+		#[cfg(windows)]
+		{
+			tokio::fs::symlink_dir(original, link).await
+		}
+	}
+
+	#[inline]
+	async fn symlink_file<P, Q>(original: P, link: Q) -> io::Result<()>
+	where
+		P: AsRef<Path>,
+		Q: AsRef<Path>,
+	{
+		#[cfg(unix)]
+		{
+			tokio::fs::symlink(original, link).await
+		}
+		#[cfg(windows)]
+		{
+			tokio::fs::symlink_file(original, link).await
+		}
+	}
+
+	#[inline]
+	async fn symlink_metadata<P>(path: P) -> io::Result<std::fs::Metadata>
+	where
+		P: AsRef<Path>,
+	{
+		tokio::fs::symlink_metadata(path).await
+	}
+
+	async fn trash<P>(path: P) -> io::Result<()>
+	where
+		P: AsRef<Path>,
+	{
+		let path = path.as_ref().to_owned();
+		tokio::task::spawn_blocking(move || {
+			#[cfg(target_os = "android")]
+			{
+				Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported OS for trash operation"))
+			}
+			#[cfg(target_os = "macos")]
+			{
+				use trash::{TrashContext, macos::{DeleteMethod, TrashContextExtMacos}};
+				let mut ctx = TrashContext::default();
+				ctx.set_delete_method(DeleteMethod::NsFileManager);
+				ctx.delete(path).map_err(io::Error::other)
+			}
+			#[cfg(all(not(target_os = "macos"), not(target_os = "android")))]
+			{
+				trash::delete(path).map_err(io::Error::other)
+			}
+		})
+		.await?
+	}
+
+	#[inline]
+	async fn write<P, C>(path: P, contents: C) -> io::Result<()>
+	where
+		P: AsRef<Path>,
+		C: AsRef<[u8]>,
+	{
+		tokio::fs::write(path, contents).await
+	}
+}
+
+impl Local {
 	async fn copy_impl(from: PathBuf, to: PathBuf, cha: Cha) -> io::Result<u64> {
 		let mut ft = std::fs::FileTimes::new();
 		cha.atime.map(|t| ft = ft.set_accessed(t));
@@ -81,55 +262,6 @@ impl Local {
 	}
 
 	#[inline]
-	pub async fn create<P>(path: P) -> io::Result<RwFile>
-	where
-		P: AsRef<Path>,
-	{
-		Gate::default().write(true).create(true).truncate(true).open(path).await.map(Into::into)
-	}
-
-	#[inline]
-	pub async fn create_dir<P>(path: P) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-	{
-		tokio::fs::create_dir(path).await
-	}
-
-	#[inline]
-	pub async fn create_dir_all<P>(path: P) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-	{
-		tokio::fs::create_dir_all(path).await
-	}
-
-	#[inline]
-	pub async fn hard_link<P, Q>(original: P, link: Q) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
-	{
-		tokio::fs::hard_link(original, link).await
-	}
-
-	#[inline]
-	pub async fn metadata<P>(path: P) -> io::Result<std::fs::Metadata>
-	where
-		P: AsRef<Path>,
-	{
-		tokio::fs::metadata(path).await
-	}
-
-	#[inline]
-	pub async fn open<P>(path: P) -> io::Result<RwFile>
-	where
-		P: AsRef<Path>,
-	{
-		Gate::default().read(true).open(path).await.map(Into::into)
-	}
-
-	#[inline]
 	pub async fn read<P>(path: P) -> io::Result<Vec<u8>>
 	where
 		P: AsRef<Path>,
@@ -138,152 +270,10 @@ impl Local {
 	}
 
 	#[inline]
-	pub async fn read_dir<P>(path: P) -> io::Result<ReadDir>
-	where
-		P: AsRef<Path>,
-	{
-		tokio::fs::read_dir(path).await.map(Into::into)
-	}
-
-	#[inline]
-	pub async fn read_link<P>(path: P) -> io::Result<PathBuf>
-	where
-		P: AsRef<Path>,
-	{
-		tokio::fs::read_link(path).await
-	}
-
-	#[inline]
 	pub async fn read_to_string<P>(path: P) -> io::Result<String>
 	where
 		P: AsRef<Path>,
 	{
 		tokio::fs::read_to_string(path).await
-	}
-
-	#[inline]
-	pub async fn remove_dir<P>(path: P) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-	{
-		tokio::fs::remove_dir(path).await
-	}
-
-	#[inline]
-	pub async fn remove_dir_all<P>(path: P) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-	{
-		tokio::fs::remove_dir_all(path).await
-	}
-
-	#[inline]
-	pub async fn remove_file<P>(path: P) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-	{
-		tokio::fs::remove_file(path).await
-	}
-
-	#[inline]
-	pub async fn rename<P, Q>(from: P, to: Q) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
-	{
-		tokio::fs::rename(from, to).await
-	}
-
-	#[inline]
-	pub async fn symlink<P, Q, F>(original: P, link: Q, _is_dir: F) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
-		F: AsyncFnOnce() -> io::Result<bool>,
-	{
-		#[cfg(unix)]
-		{
-			tokio::fs::symlink(original, link).await
-		}
-		#[cfg(windows)]
-		if _is_dir().await? {
-			Self::symlink_dir(original, link).await
-		} else {
-			Self::symlink_file(original, link).await
-		}
-	}
-
-	#[inline]
-	pub async fn symlink_dir<P, Q>(original: P, link: Q) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
-	{
-		#[cfg(unix)]
-		{
-			tokio::fs::symlink(original, link).await
-		}
-		#[cfg(windows)]
-		{
-			tokio::fs::symlink_dir(original, link).await
-		}
-	}
-
-	#[inline]
-	pub async fn symlink_file<P, Q>(original: P, link: Q) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-		Q: AsRef<Path>,
-	{
-		#[cfg(unix)]
-		{
-			tokio::fs::symlink(original, link).await
-		}
-		#[cfg(windows)]
-		{
-			tokio::fs::symlink_file(original, link).await
-		}
-	}
-
-	#[inline]
-	pub async fn symlink_metadata<P>(path: P) -> io::Result<std::fs::Metadata>
-	where
-		P: AsRef<Path>,
-	{
-		tokio::fs::symlink_metadata(path).await
-	}
-
-	pub async fn trash<P>(path: P) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-	{
-		let path = path.as_ref().to_owned();
-		tokio::task::spawn_blocking(move || {
-			#[cfg(target_os = "android")]
-			{
-				Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported OS for trash operation"))
-			}
-			#[cfg(target_os = "macos")]
-			{
-				use trash::{TrashContext, macos::{DeleteMethod, TrashContextExtMacos}};
-				let mut ctx = TrashContext::default();
-				ctx.set_delete_method(DeleteMethod::NsFileManager);
-				ctx.delete(path).map_err(io::Error::other)
-			}
-			#[cfg(all(not(target_os = "macos"), not(target_os = "android")))]
-			{
-				trash::delete(path).map_err(io::Error::other)
-			}
-		})
-		.await?
-	}
-
-	#[inline]
-	pub async fn write<P, C>(path: P, contents: C) -> io::Result<()>
-	where
-		P: AsRef<Path>,
-		C: AsRef<[u8]>,
-	{
-		tokio::fs::write(path, contents).await
 	}
 }

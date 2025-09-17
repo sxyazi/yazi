@@ -1,4 +1,4 @@
-use std::{ops::Deref, sync::Arc};
+use std::ops::Deref;
 
 use parking_lot::RwLock;
 use yazi_shared::RoCell;
@@ -6,7 +6,7 @@ use yazi_shared::RoCell;
 use super::Partition;
 use crate::cha::Cha;
 
-pub(super) type Locked = Arc<RwLock<Partitions>>;
+pub(super) type Locked = RwLock<Partitions>;
 
 pub static PARTITIONS: RoCell<Locked> = RoCell::new();
 
@@ -27,7 +27,7 @@ impl Deref for Partitions {
 
 impl Partitions {
 	#[cfg(unix)]
-	pub fn by_dev(&self, dev: libc::dev_t) -> Option<&Partition> {
+	pub fn by_dev(&self, dev: u64) -> Option<&Partition> {
 		self.inner.iter().find(|p| p.rdev == Some(dev))
 	}
 

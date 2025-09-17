@@ -53,9 +53,7 @@ impl<'a> TryFrom<&'a [u8]> for UrlCow<'a> {
 				Self::Borrowed { loc: Loc::with(p, uri, urn)?, scheme }
 			}
 			(Cow::Owned(p), None) => Self::Owned { loc: LocBuf::from(p), scheme },
-			(Cow::Owned(p), Some((uri, urn))) => {
-				Self::Owned { loc: LocBuf::with(p, uri, urn)?, scheme }
-			}
+			(Cow::Owned(p), Some((uri, urn))) => Self::Owned { loc: LocBuf::with(p, uri, urn)?, scheme },
 		})
 	}
 }

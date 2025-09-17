@@ -1,11 +1,11 @@
-use std::{io, pin::Pin, task::{Context, Poll, ready}, time::Duration};
+use std::{io, pin::Pin, sync::Arc, task::{Context, Poll, ready}, time::Duration};
 
 use tokio::{io::{AsyncRead, AsyncWrite, ReadBuf}, sync::oneshot, time::{Timeout, timeout}};
 
-use crate::{Error, Packet, Session, fs::Attrs};
+use crate::{Error, Operator, Packet, Session, fs::Attrs};
 
-pub struct File<'a> {
-	session: &'a Session,
+pub struct File {
+	session: Arc<Session>,
 	handle:  String,
 
 	closed:   bool,
@@ -16,39 +16,41 @@ pub struct File<'a> {
 	flush_rx: Option<Timeout<oneshot::Receiver<Packet<'static>>>>,
 }
 
-impl Unpin for File<'_> {}
+impl Unpin for File {}
 
-impl Drop for File<'_> {
+impl Drop for File {
 	fn drop(&mut self) {
 		if !self.closed {
-			self.session.close(&self.handle).ok();
+			Operator::from(&self.session).close(&self.handle).ok();
 		}
 	}
 }
 
-impl<'a> File<'a> {
-	pub(crate) fn new(session: &'a Session, handle: impl Into<String>) -> Self {
+impl File {
+	pub(crate) fn new(session: &Arc<Session>, handle: impl Into<String>) -> Self {
 		Self {
-			session,
-			handle: handle.into(),
+			session: session.clone(),
+			handle:  handle.into(),
 
-			closed: false,
-			cursor: 0,
+			closed:   false,
+			cursor:   0,
 			close_rx: None,
-			read_rx: None,
+			read_rx:  None,
 			write_rx: None,
 			flush_rx: None,
 		}
 	}
 
-	pub async fn fstat(&self) -> Result<Attrs, Error> { self.session.fstat(&self.handle).await }
+	pub async fn fstat(&self) -> Result<Attrs, Error> {
+		Operator::from(&self.session).fstat(&self.handle).await
+	}
 
 	pub async fn fsetstat(&self, attrs: Attrs) -> Result<(), Error> {
-		self.session.fsetstat(&self.handle, attrs).await
+		Operator::from(&self.session).fsetstat(&self.handle, attrs).await
 	}
 }
 
-impl AsyncRead for File<'_> {
+impl AsyncRead for File {
 	fn poll_read(
 		self: Pin<&mut Self>,
 		cx: &mut Context<'_>,
@@ -58,7 +60,7 @@ impl AsyncRead for File<'_> {
 
 		if me.read_rx.is_none() {
 			let max = buf.remaining().min(261120) as u32;
-			me.read_rx = Some(me.session.read(&me.handle, me.cursor, max)?);
+			me.read_rx = Some(Operator::from(&me.session).read(&me.handle, me.cursor, max)?);
 		}
 
 		let result = ready!(Pin::new(me.read_rx.as_mut().unwrap()).poll(cx));
@@ -79,7 +81,7 @@ impl AsyncRead for File<'_> {
 	}
 }
 
-impl AsyncWrite for File<'_> {
+impl AsyncWrite for File {
 	fn poll_write(
 		self: Pin<&mut Self>,
 		cx: &mut Context<'_>,
@@ -91,7 +93,7 @@ impl AsyncWrite for File<'_> {
 			Some((rx, len)) => (rx, *len),
 			None => {
 				let max = buf.len().min(261120);
-				let rx = me.session.write(&me.handle, me.cursor, &buf[..max])?;
+				let rx = Operator::from(&me.session).write(&me.handle, me.cursor, &buf[..max])?;
 				(&mut me.write_rx.get_or_insert((rx, max)).0, max)
 			}
 		};
@@ -114,7 +116,7 @@ impl AsyncWrite for File<'_> {
 		let me = unsafe { self.get_unchecked_mut() };
 
 		if me.flush_rx.is_none() {
-			match me.session.fsync(&me.handle) {
+			match Operator::from(&me.session).fsync(&me.handle) {
 				Ok(rx) => me.flush_rx = Some(timeout(Duration::from_secs(10), rx)),
 				Err(Error::Unsupported) => return Poll::Ready(Ok(())),
 				Err(e) => Err(e)?,
@@ -141,7 +143,8 @@ impl AsyncWrite for File<'_> {
 		let me = unsafe { self.get_unchecked_mut() };
 
 		if me.close_rx.is_none() {
-			me.close_rx = Some(timeout(Duration::from_secs(10), me.session.close(&me.handle)?));
+			me.close_rx =
+				Some(timeout(Duration::from_secs(10), Operator::from(&me.session).close(&me.handle)?));
 		}
 
 		let rx = unsafe { Pin::new_unchecked(me.close_rx.as_mut().unwrap()) };

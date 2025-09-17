@@ -12,7 +12,7 @@ use yazi_shared::natsort;
 use super::{Locked, Partition, Partitions};
 
 impl Partitions {
-	pub fn monitor<F>(me: Locked, cb: F)
+	pub fn monitor<F>(me: &'static Locked, cb: F)
 	where
 		F: Fn() + Copy + Send + 'static,
 	{
@@ -39,12 +39,11 @@ impl Partitions {
 			}
 
 			let create_context = || {
-				let me = me.clone();
 				let boxed: Box<dyn Fn()> = Box::new(move || {
 					if mem::replace(&mut me.write().need_update, true) {
 						return;
 					}
-					Self::update(me.clone(), cb);
+					Self::update(me, cb);
 				});
 				Box::into_raw(Box::new(boxed)) as *mut c_void
 			};
@@ -70,7 +69,7 @@ impl Partitions {
 		});
 	}
 
-	fn update(me: Locked, cb: impl Fn() + Send + 'static) {
+	fn update(me: &'static Locked, cb: impl Fn() + Send + 'static) {
 		_ = tokio::task::spawn_blocking(move || {
 			let result = Self::all_names().and_then(Self::all_partitions);
 			if let Err(ref e) = result {
