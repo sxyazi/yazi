@@ -28,8 +28,7 @@ impl Cha {
 				let kind = ChaKind::from_bits(t.raw_get("kind").unwrap_or_default())
 					.ok_or_else(|| "Invalid kind".into_lua_err())?;
 
-				let mode =
-					ChaMode::from_bits(t.raw_get("mode")?).ok_or_else(|| "Invalid mode".into_lua_err())?;
+				let mode = ChaMode::try_from(t.raw_get::<u16>("mode")?)?;
 
 				Self(yazi_fs::cha::Cha {
 					kind,

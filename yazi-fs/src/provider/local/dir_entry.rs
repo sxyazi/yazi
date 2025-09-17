@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ffi::OsStr, io, path::PathBuf};
 
-use crate::{cha::Cha, provider::FileHolder};
+use crate::{cha::{Cha, ChaType}, provider::FileHolder};
 
 pub struct DirEntry(pub(super) tokio::fs::DirEntry);
 
@@ -14,5 +14,5 @@ impl FileHolder for DirEntry {
 		Ok(Cha::new(&name, self.0.metadata().await?))
 	}
 
-	async fn file_type(&self) -> io::Result<std::fs::FileType> { self.0.file_type().await }
+	async fn file_type(&self) -> io::Result<ChaType> { self.0.file_type().await.map(Into::into) }
 }

@@ -1,11 +1,11 @@
-use std::{ffi::OsStr, fs::{FileType, Metadata}, ops::Deref, time::{Duration, SystemTime, UNIX_EPOCH}};
+use std::{ffi::OsStr, fs::Metadata, ops::Deref, time::{Duration, SystemTime, UNIX_EPOCH}};
 
 use anyhow::bail;
 use yazi_macro::{unix_either, win_either};
 use yazi_shared::url::Url;
 
 use super::ChaKind;
-use crate::{cha::ChaMode, provider};
+use crate::{cha::{ChaMode, ChaType}, provider};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Cha {
@@ -63,7 +63,7 @@ impl Cha {
 		U: Into<Url<'a>>,
 	{
 		let url: Url = url.into();
-		let mut retain = cha.kind & (ChaKind::HIDDEN | ChaKind::SYSTEM | ChaKind::LINK);
+		let mut retain = cha.kind & (ChaKind::HIDDEN | ChaKind::SYSTEM);
 
 		if cha.is_link() {
 			cha = provider::metadata(url).await.unwrap_or(cha);
@@ -75,16 +75,12 @@ impl Cha {
 		cha.attach(retain)
 	}
 
-	pub fn from_dummy<'a, U>(_url: U, ft: Option<FileType>) -> Self
+	pub fn from_dummy<'a, U>(_url: U, r#type: Option<ChaType>) -> Self
 	where
 		U: Into<Url<'a>>,
 	{
-		let mode = ft.map(ChaMode::from_bare).unwrap_or_default();
-
 		let mut kind = ChaKind::DUMMY;
-		if mode.is_link() {
-			kind |= ChaKind::LINK;
-		}
+		let mode = r#type.map(ChaMode::from_bare).unwrap_or_default();
 
 		#[cfg(unix)]
 		if _url.into().urn().is_hidden() {
@@ -171,7 +167,7 @@ impl Cha {
 		if let Some(atime) = self.atime {
 			Ok(atime.duration_since(UNIX_EPOCH)?)
 		} else {
-			bail!("atime not supported on this platform");
+			bail!("atime not available");
 		}
 	}
 
@@ -179,7 +175,7 @@ impl Cha {
 		if let Some(mtime) = self.mtime {
 			Ok(mtime.duration_since(UNIX_EPOCH)?)
 		} else {
-			bail!("mtime not supported on this platform");
+			bail!("mtime not available");
 		}
 	}
 
@@ -187,7 +183,7 @@ impl Cha {
 		if let Some(btime) = self.btime {
 			Ok(btime.duration_since(UNIX_EPOCH)?)
 		} else {
-			bail!("btime not supported on this platform");
+			bail!("btime not available");
 		}
 	}
 
@@ -195,7 +191,7 @@ impl Cha {
 		if let Some(ctime) = self.ctime {
 			Ok(ctime.duration_since(UNIX_EPOCH)?)
 		} else {
-			bail!("ctime not supported on this platform");
+			bail!("ctime not available");
 		}
 	}
 }

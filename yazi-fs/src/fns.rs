@@ -83,9 +83,9 @@ pub fn copy_with_progress(
 pub async fn remove_dir_clean(dir: &UrlBuf) {
 	let Ok(mut it) = provider::read_dir(dir).await else { return };
 
-	while let Ok(Some(entry)) = it.next_entry().await {
-		if entry.file_type().await.is_ok_and(|t| t.is_dir()) {
-			let url = entry.url();
+	while let Ok(Some(ent)) = it.next_entry().await {
+		if ent.file_type().await.is_ok_and(|t| t.is_dir()) {
+			let url = ent.url();
 			Box::pin(remove_dir_clean(&url)).await;
 			provider::remove_dir(&url).await.ok();
 		}

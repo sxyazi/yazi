@@ -1,4 +1,4 @@
-yazi_macro::mod_flat!(gate read_dir sftp);
+yazi_macro::mod_flat!(gate metadata read_dir sftp);
 
 pub(super) static CONN: yazi_shared::RoCell<deadpool::managed::Pool<Sftp>> =
 	yazi_shared::RoCell::new();

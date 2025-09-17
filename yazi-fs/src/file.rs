@@ -1,9 +1,9 @@
-use std::{ffi::OsStr, fs::FileType, hash::{BuildHasher, Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
+use std::{ffi::OsStr, hash::{BuildHasher, Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
 
 use anyhow::Result;
 use yazi_shared::url::{Uri, UrlBuf, UrlCow, Urn};
 
-use crate::{cha::Cha, provider};
+use crate::{cha::{Cha, ChaType}, provider};
 
 #[derive(Clone, Debug, Default)]
 pub struct File {
@@ -36,9 +36,9 @@ impl File {
 	}
 
 	#[inline]
-	pub fn from_dummy(url: impl Into<UrlBuf>, ft: Option<FileType>) -> Self {
+	pub fn from_dummy(url: impl Into<UrlBuf>, r#type: Option<ChaType>) -> Self {
 		let url = url.into();
-		let cha = Cha::from_dummy(&url, ft);
+		let cha = Cha::from_dummy(&url, r#type);
 		Self { url, cha, link_to: None }
 	}
 

@@ -7,11 +7,8 @@ bitflags! {
 	pub struct ChaKind: u8 {
 		const HIDDEN = 0b0000_0001;
 		const SYSTEM = 0b0000_0010;
-
-		const LINK   = 0b0000_0100;
-		const ORPHAN = 0b0000_1000;
-
-		const DUMMY  = 0b0001_0000;
+		const ORPHAN = 0b0000_0100;
+		const DUMMY  = 0b0000_1000;
 	}
 }
 

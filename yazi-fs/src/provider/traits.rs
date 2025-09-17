@@ -3,7 +3,7 @@ use std::{borrow::Cow, ffi::OsStr, io, path::{Path, PathBuf}};
 use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt};
 use yazi_macro::ok_or_not_found;
 
-use crate::cha::Cha;
+use crate::cha::{Cha, ChaType};
 
 pub trait Provider {
 	type File: AsyncRead + AsyncWrite + Unpin;
@@ -189,7 +189,7 @@ pub trait FileHolder {
 
 	fn metadata(&self) -> impl Future<Output = io::Result<Cha>>;
 
-	fn file_type(&self) -> impl Future<Output = io::Result<std::fs::FileType>>;
+	fn file_type(&self) -> impl Future<Output = io::Result<ChaType>>;
 }
 
 // --- FileOpener

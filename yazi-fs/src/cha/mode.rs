@@ -1,6 +1,9 @@
-use std::fs::FileType;
+use std::ops::Deref;
 
+use anyhow::{anyhow, bail};
 use bitflags::bitflags;
+
+use crate::cha::ChaType;
 
 bitflags! {
 	#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -36,10 +39,43 @@ bitflags! {
 	}
 }
 
-impl ChaMode {
-	#[inline]
-	pub fn r#type(self) -> Self { self & Self::T_MASK }
+impl Deref for ChaMode {
+	type Target = ChaType;
 
+	#[inline]
+	fn deref(&self) -> &Self::Target {
+		match *self & Self::T_MASK {
+			Self::T_FILE => &ChaType::File,
+			Self::T_DIR => &ChaType::Dir,
+			Self::T_LINK => &ChaType::Link,
+			Self::T_BLOCK => &ChaType::Block,
+			Self::T_CHAR => &ChaType::Char,
+			Self::T_SOCK => &ChaType::Sock,
+			Self::T_FIFO => &ChaType::FIFO,
+			_ => &ChaType::Unknown,
+		}
+	}
+}
+
+impl TryFrom<u16> for ChaMode {
+	type Error = anyhow::Error;
+
+	fn try_from(value: u16) -> Result<Self, Self::Error> {
+		let me = Self::from_bits(value).ok_or_else(|| anyhow!("invalid file mode: {value:04o}"))?;
+		match me & Self::T_MASK {
+			Self::T_FILE
+			| Self::T_DIR
+			| Self::T_LINK
+			| Self::T_BLOCK
+			| Self::T_CHAR
+			| Self::T_SOCK
+			| Self::T_FIFO => Ok(me),
+			_ => bail!("invalid file type: {value:04o}"),
+		}
+	}
+}
+
+impl ChaMode {
 	// Convert a file mode to a string representation
 	#[cfg(unix)]
 	#[allow(clippy::collapsible_else_if)]
@@ -47,13 +83,13 @@ impl ChaMode {
 		let mut s = *b"-?????????";
 
 		// File type
-		s[0] = match self.r#type() {
-			Self::T_DIR => b'd',
-			Self::T_LINK => b'l',
-			Self::T_BLOCK => b'b',
-			Self::T_CHAR => b'c',
-			Self::T_SOCK => b's',
-			Self::T_FIFO => b'p',
+		s[0] = match *self {
+			ChaType::Dir => b'd',
+			ChaType::Link => b'l',
+			ChaType::Block => b'b',
+			ChaType::Char => b'c',
+			ChaType::Sock => b's',
+			ChaType::FIFO => b'p',
 			_ => b'-',
 		};
 		if dummy {
@@ -90,69 +126,25 @@ impl ChaMode {
 		s
 	}
 
-	pub(super) fn from_bare(ft: FileType) -> Self {
-		#[cfg(unix)]
-		{
-			use std::os::unix::fs::FileTypeExt;
-			if ft.is_file() {
-				Self::T_FILE
-			} else if ft.is_dir() {
-				Self::T_DIR
-			} else if ft.is_symlink() {
-				Self::T_LINK
-			} else if ft.is_block_device() {
-				Self::T_BLOCK
-			} else if ft.is_char_device() {
-				Self::T_CHAR
-			} else if ft.is_socket() {
-				Self::T_SOCK
-			} else if ft.is_fifo() {
-				Self::T_FIFO
-			} else {
-				Self::empty()
-			}
-		}
-		#[cfg(windows)]
-		{
-			if ft.is_file() {
-				Self::T_FILE
-			} else if ft.is_dir() {
-				Self::T_DIR
-			} else if ft.is_symlink() {
-				Self::T_LINK
-			} else {
-				Self::empty()
-			}
+	pub(super) fn from_bare(r#type: ChaType) -> Self {
+		match r#type {
+			ChaType::File => Self::T_FILE,
+			ChaType::Dir => Self::T_DIR,
+			ChaType::Link => Self::T_LINK,
+			ChaType::Block => Self::T_BLOCK,
+			ChaType::Char => Self::T_CHAR,
+			ChaType::Sock => Self::T_SOCK,
+			ChaType::FIFO => Self::T_FIFO,
+			ChaType::Unknown => Self::empty(),
 		}
 	}
 }
 
 impl ChaMode {
-	#[inline]
-	pub const fn is_file(self) -> bool { self.contains(Self::T_FILE) }
-
-	#[inline]
-	pub const fn is_dir(self) -> bool { self.contains(Self::T_DIR) }
-
-	#[inline]
-	pub const fn is_link(&self) -> bool { self.contains(Self::T_LINK) }
-
-	#[inline]
-	pub const fn is_block(&self) -> bool { self.contains(Self::T_BLOCK) }
-
-	#[inline]
-	pub const fn is_char(&self) -> bool { self.contains(Self::T_CHAR) }
-
-	#[inline]
-	pub const fn is_sock(&self) -> bool { self.contains(Self::T_SOCK) }
-
-	#[inline]
-	pub const fn is_fifo(&self) -> bool { self.contains(Self::T_FIFO) }
-
 	// TODO: deprecate
 	#[inline]
-	pub const fn is_exec(&self) -> bool { self.contains(Self::U_EXEC) }
+	pub fn is_exec(self) -> bool { self.contains(Self::U_EXEC) }
 
 	#[inline]
-	pub const fn is_sticky(&self) -> bool { self.contains(Self::S_STICKY) }
+	pub fn is_sticky(self) -> bool { self.contains(Self::S_STICKY) }
 }
