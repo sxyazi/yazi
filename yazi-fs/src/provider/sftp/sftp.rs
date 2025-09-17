@@ -1,4 +1,4 @@
-use std::{io, path::{Path, PathBuf}, time::UNIX_EPOCH};
+use std::{io, path::{Path, PathBuf}};
 
 use yazi_sftp::fs::{Attrs, Flags};
 
@@ -36,14 +36,8 @@ impl Provider for Sftp {
 			uid:      Some(cha.uid),
 			gid:      Some(cha.gid),
 			perm:     Some(cha.mode.bits() as _),
-			atime:    cha
-				.atime
-				.and_then(|t| t.duration_since(UNIX_EPOCH).ok())
-				.map(|d| d.as_secs() as u32),
-			mtime:    cha
-				.mtime
-				.and_then(|t| t.duration_since(UNIX_EPOCH).ok())
-				.map(|d| d.as_secs() as u32),
+			atime:    cha.atime_dur().ok().map(|d| d.as_secs() as u32),
+			mtime:    cha.mtime_dur().ok().map(|d| d.as_secs() as u32),
 			extended: Default::default(),
 		};
 
@@ -70,7 +64,7 @@ impl Provider for Sftp {
 		Ok(Self::op().await?.hardlink(&original, &link).await?)
 	}
 
-	async fn metadata<P>(path: P) -> io::Result<std::fs::Metadata>
+	async fn metadata<P>(path: P) -> io::Result<Cha>
 	where
 		P: AsRef<Path>,
 	{
@@ -122,7 +116,7 @@ impl Provider for Sftp {
 		Ok(Self::op().await?.symlink(&original, &link).await?)
 	}
 
-	async fn symlink_metadata<P>(path: P) -> io::Result<std::fs::Metadata>
+	async fn symlink_metadata<P>(path: P) -> io::Result<Cha>
 	where
 		P: AsRef<Path>,
 	{

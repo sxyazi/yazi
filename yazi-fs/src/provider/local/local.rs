@@ -62,11 +62,12 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn metadata<P>(path: P) -> io::Result<std::fs::Metadata>
+	async fn metadata<P>(path: P) -> io::Result<Cha>
 	where
 		P: AsRef<Path>,
 	{
-		tokio::fs::metadata(path).await
+		let path = path.as_ref();
+		Ok(Cha::new(path.file_name().unwrap_or_default(), tokio::fs::metadata(path).await?))
 	}
 
 	#[inline]
@@ -170,11 +171,12 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn symlink_metadata<P>(path: P) -> io::Result<std::fs::Metadata>
+	async fn symlink_metadata<P>(path: P) -> io::Result<Cha>
 	where
 		P: AsRef<Path>,
 	{
-		tokio::fs::symlink_metadata(path).await
+		let path = path.as_ref();
+		Ok(Cha::new(path.file_name().unwrap_or_default(), tokio::fs::symlink_metadata(path).await?))
 	}
 
 	async fn trash<P>(path: P) -> io::Result<()>

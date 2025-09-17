@@ -1,5 +1,6 @@
-use std::{fs::{FileType, Metadata}, ops::Deref, time::SystemTime};
+use std::{ffi::OsStr, fs::{FileType, Metadata}, ops::Deref, time::{Duration, SystemTime, UNIX_EPOCH}};
 
+use anyhow::bail;
 use yazi_macro::{unix_either, win_either};
 use yazi_shared::url::Url;
 
@@ -47,11 +48,8 @@ impl Default for Cha {
 
 impl Cha {
 	#[inline]
-	pub fn new<'a, U>(url: U, meta: Metadata) -> Self
-	where
-		U: Into<Url<'a>>,
-	{
-		Self::from_bare(&meta).attach(ChaKind::hidden(url, &meta))
+	pub fn new(name: &OsStr, meta: Metadata) -> Self {
+		Self::from_bare(&meta).attach(ChaKind::hidden(name, &meta))
 	}
 
 	#[inline]
@@ -60,22 +58,21 @@ impl Cha {
 		Ok(Self::from_follow(url, provider::symlink_metadata(url).await?).await)
 	}
 
-	pub async fn from_follow<'a, U>(url: U, mut meta: Metadata) -> Self
+	pub async fn from_follow<'a, U>(url: U, mut cha: Self) -> Self
 	where
 		U: Into<Url<'a>>,
 	{
-		let url = url.into();
-		let mut attached = ChaKind::hidden(url, &meta);
+		let url: Url = url.into();
+		let mut retain = cha.kind & (ChaKind::HIDDEN | ChaKind::SYSTEM | ChaKind::LINK);
 
-		if meta.is_symlink() {
-			attached |= ChaKind::LINK;
-			meta = provider::metadata(url).await.unwrap_or(meta);
+		if cha.is_link() {
+			cha = provider::metadata(url).await.unwrap_or(cha);
 		}
-		if meta.is_symlink() {
-			attached |= ChaKind::ORPHAN;
+		if cha.is_link() {
+			retain |= ChaKind::ORPHAN;
 		}
 
-		Self::from_bare(&meta).attach(attached)
+		cha.attach(retain)
 	}
 
 	pub fn from_dummy<'a, U>(_url: U, ft: Option<FileType>) -> Self
@@ -99,7 +96,7 @@ impl Cha {
 
 	fn from_bare(m: &Metadata) -> Self {
 		#[cfg(unix)]
-		use std::{os::unix::fs::MetadataExt, time::{Duration, UNIX_EPOCH}};
+		use std::os::unix::fs::MetadataExt;
 
 		#[cfg(unix)]
 		let mode = {
@@ -169,4 +166,36 @@ impl Cha {
 
 	#[inline]
 	pub const fn is_dummy(&self) -> bool { self.kind.contains(ChaKind::DUMMY) }
+
+	pub fn atime_dur(&self) -> anyhow::Result<Duration> {
+		if let Some(atime) = self.atime {
+			Ok(atime.duration_since(UNIX_EPOCH)?)
+		} else {
+			bail!("atime not supported on this platform");
+		}
+	}
+
+	pub fn mtime_dur(&self) -> anyhow::Result<Duration> {
+		if let Some(mtime) = self.mtime {
+			Ok(mtime.duration_since(UNIX_EPOCH)?)
+		} else {
+			bail!("mtime not supported on this platform");
+		}
+	}
+
+	pub fn btime_dur(&self) -> anyhow::Result<Duration> {
+		if let Some(btime) = self.btime {
+			Ok(btime.duration_since(UNIX_EPOCH)?)
+		} else {
+			bail!("btime not supported on this platform");
+		}
+	}
+
+	pub fn ctime_dur(&self) -> anyhow::Result<Duration> {
+		if let Some(ctime) = self.ctime {
+			Ok(ctime.duration_since(UNIX_EPOCH)?)
+		} else {
+			bail!("ctime not supported on this platform");
+		}
+	}
 }

@@ -125,7 +125,7 @@ where
 }
 
 #[inline]
-pub async fn metadata<'a, U>(url: U) -> io::Result<std::fs::Metadata>
+pub async fn metadata<'a, U>(url: U) -> io::Result<Cha>
 where
 	U: Into<Url<'a>>,
 {
@@ -256,7 +256,7 @@ where
 }
 
 #[inline]
-pub async fn symlink_metadata<'a, U>(url: U) -> io::Result<std::fs::Metadata>
+pub async fn symlink_metadata<'a, U>(url: U) -> io::Result<Cha>
 where
 	U: Into<Url<'a>>,
 {

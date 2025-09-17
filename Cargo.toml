@@ -32,7 +32,7 @@ foldhash            = "0.2.0"
 futures             = "0.3.31"
 globset             = "0.4.16"
 hashbrown           = { version = "0.16.0", features = [ "serde" ] }
-indexmap            = { version = "2.11.1", features = [ "serde" ] }
+indexmap            = { version = "2.11.3", features = [ "serde" ] }
 libc                = "0.2.175"
 lru                 = "0.16.1"
 mlua                = { version = "0.11.3", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serde" ] }
@@ -44,13 +44,13 @@ ratatui             = { version = "0.29.0", features = [ "unstable-rendered-line
 regex               = "1.11.2"
 russh               = { version = "0.54.3", default-features = false, features = [ "ring", "rsa" ] }
 scopeguard          = "1.2.0"
-serde               = { version = "1.0.223", features = [ "derive" ] }
+serde               = { version = "1.0.225", features = [ "derive" ] }
 serde_json          = "1.0.145"
 syntect             = { version = "5.2.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
 tokio               = { version = "1.47.1", features = [ "full" ] }
 tokio-stream        = "0.1.17"
 tokio-util          = "0.7.16"
-toml                = { version = "0.9.5" }
+toml                = { version = "0.9.6" }
 tracing             = { version = "0.1.41", features = [ "max_level_debug", "release_max_level_debug" ] }
 unicode-width       = { version = "0.2.0", default-features = false }
 twox-hash           = { version = "2.1.2", default-features = false, features = [ "std", "random", "xxhash3_128" ] }

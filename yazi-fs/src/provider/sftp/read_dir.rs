@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ffi::OsStr, io, path::PathBuf};
 
-use crate::provider::{DirReader, FileHolder};
+use crate::{cha::Cha, provider::{DirReader, FileHolder}};
 
 pub struct ReadDir(pub(super) yazi_sftp::fs::ReadDir);
 
@@ -20,7 +20,7 @@ impl FileHolder for DirEntry<'_> {
 
 	fn name(&self) -> Cow<'_, OsStr> { self.0.name() }
 
-	async fn metadata(&self) -> io::Result<std::fs::Metadata> { todo!() }
+	async fn metadata(&self) -> io::Result<Cha> { todo!() }
 
 	async fn file_type(&self) -> io::Result<std::fs::FileType> { todo!() }
 }

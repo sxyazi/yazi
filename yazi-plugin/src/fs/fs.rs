@@ -50,14 +50,14 @@ fn cwd(lua: &Lua) -> mlua::Result<Function> {
 
 fn cha(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, (url, follow): (UrlRef, Option<bool>)| async move {
-		let meta = if follow.unwrap_or(false) {
+		let cha = if follow.unwrap_or(false) {
 			provider::metadata(&*url).await
 		} else {
 			provider::symlink_metadata(&*url).await
 		};
 
-		match meta {
-			Ok(m) => Cha(yazi_fs::cha::Cha::new(&*url, m)).into_lua_multi(&lua),
+		match cha {
+			Ok(c) => Cha(c).into_lua_multi(&lua),
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}
 	})
@@ -129,8 +129,8 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 
 			let file = if !resolve {
 				yazi_fs::File::from_dummy(url, next.file_type().await.ok())
-			} else if let Ok(meta) = next.metadata().await {
-				yazi_fs::File::from_follow(url, meta).await
+			} else if let Ok(cha) = next.metadata().await {
+				yazi_fs::File::from_follow(url, cha).await
 			} else {
 				yazi_fs::File::from_dummy(url, next.file_type().await.ok())
 			};

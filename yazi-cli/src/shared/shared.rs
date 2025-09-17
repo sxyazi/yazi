@@ -34,7 +34,7 @@ pub async fn copy_and_seal(from: &Path, to: &Path) -> io::Result<()> {
 pub async fn remove_sealed(p: &Path) -> io::Result<()> {
 	#[cfg(windows)]
 	{
-		let mut perm = Local::metadata(p).await?.permissions();
+		let mut perm = tokio::fs::metadata(p).await?.permissions();
 		perm.set_readonly(false);
 		tokio::fs::set_permissions(p, perm).await?;
 	}

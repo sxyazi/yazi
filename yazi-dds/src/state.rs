@@ -1,4 +1,4 @@
-use std::{mem, ops::Deref, sync::atomic::{AtomicU64, Ordering}, time::UNIX_EPOCH};
+use std::{mem, ops::Deref, sync::atomic::{AtomicU64, Ordering}};
 
 use anyhow::Result;
 use hashbrown::HashMap;
@@ -103,8 +103,8 @@ impl State {
 	}
 
 	async fn skip(&self) -> Result<bool> {
-		let meta = Local::symlink_metadata(BOOT.state_dir.join(".dds")).await?;
-		let modified = meta.modified()?.duration_since(UNIX_EPOCH)?.as_micros();
+		let cha = Local::symlink_metadata(BOOT.state_dir.join(".dds")).await?;
+		let modified = cha.mtime_dur()?.as_micros();
 		Ok(modified >= self.last.load(Ordering::Relaxed) as u128)
 	}
 }

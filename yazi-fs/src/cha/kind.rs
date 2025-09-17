@@ -1,7 +1,6 @@
-use std::fs::Metadata;
+use std::{ffi::OsStr, fs::Metadata};
 
 use bitflags::bitflags;
-use yazi_shared::url::Url;
 
 bitflags! {
 	#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -18,15 +17,15 @@ bitflags! {
 
 impl ChaKind {
 	#[inline]
-	pub(super) fn hidden<'a, U>(_url: U, _meta: &Metadata) -> Self
-	where
-		U: Into<Url<'a>>,
-	{
+	pub(super) fn hidden(_name: &OsStr, _meta: &Metadata) -> Self {
 		let mut me = Self::empty();
 
 		#[cfg(unix)]
-		if _url.into().urn().is_hidden() {
-			me |= Self::HIDDEN;
+		{
+			use std::os::unix::ffi::OsStrExt;
+			if _name.as_bytes().starts_with(b".") {
+				me |= Self::HIDDEN;
+			}
 		}
 		#[cfg(windows)]
 		{

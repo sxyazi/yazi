@@ -68,7 +68,7 @@ pub fn copy_with_progress(
 					None => {}
 				}
 
-				let len = provider::symlink_metadata(&to).await.map(|m| m.len()).unwrap_or(0);
+				let len = provider::symlink_metadata(&to).await.map(|m| m.len).unwrap_or(0);
 				if len > last {
 					prog_tx.send(Ok(len - last)).await.ok();
 					last = len;

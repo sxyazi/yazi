@@ -46,7 +46,7 @@ impl Files {
 					result = item.metadata() => {
 						let url = item.url();
 						_ = tx.send(match result {
-							Ok(meta) => File::from_follow(url, meta).await,
+							Ok(cha) => File::from_follow(url, cha).await,
 							Err(_) => File::from_dummy(url, item.file_type().await.ok())
 						});
 					}
@@ -70,7 +70,7 @@ impl Files {
 			for entry in entries {
 				let url = entry.url();
 				files.push(match entry.metadata().await {
-					Ok(meta) => File::from_follow(url, meta).await,
+					Ok(cha) => File::from_follow(url, cha).await,
 					Err(_) => File::from_dummy(url, entry.file_type().await.ok()),
 				});
 			}
