@@ -1,4 +1,4 @@
-use std::{io, path::{Path, PathBuf}, time::UNIX_EPOCH};
+use std::{io, path::{Path, PathBuf}};
 
 use yazi_sftp::fs::{Attrs, Flags};
 
