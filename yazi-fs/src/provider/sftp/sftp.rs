@@ -30,19 +30,9 @@ impl Provider for Sftp {
 		P: AsRef<Path>,
 		Q: AsRef<Path>,
 	{
-		// FIXME: pull this out to a From<Cha> for Attrs impl
-		let attrs = Attrs {
-			size:     Some(cha.len),
-			uid:      Some(cha.uid),
-			gid:      Some(cha.gid),
-			perm:     Some(cha.mode.bits() as _),
-			atime:    cha.atime_dur().ok().map(|d| d.as_secs() as u32),
-			mtime:    cha.mtime_dur().ok().map(|d| d.as_secs() as u32),
-			extended: Default::default(),
-		};
+		let attrs = Attrs::from(cha);
 
 		let op = Self::op().await?;
-
 		let mut from = op.open(&from, Flags::READ, Attrs::default()).await?;
 		let mut to = op.open(&to, Flags::WRITE | Flags::CREATE | Flags::TRUNCATE, attrs).await?;
 
@@ -68,7 +58,9 @@ impl Provider for Sftp {
 	where
 		P: AsRef<Path>,
 	{
-		todo!()
+		let path = path.as_ref();
+		let attrs = Self::op().await?.stat(path).await?;
+		(path.file_name().unwrap_or_default(), &attrs).try_into()
 	}
 
 	async fn read_dir<P>(path: P) -> io::Result<Self::ReadDir>
@@ -120,7 +112,9 @@ impl Provider for Sftp {
 	where
 		P: AsRef<Path>,
 	{
-		todo!()
+		let path = path.as_ref();
+		let attrs = Self::op().await?.lstat(path).await?;
+		(path.file_name().unwrap_or_default(), &attrs).try_into()
 	}
 
 	async fn trash<P>(_path: P) -> io::Result<()>

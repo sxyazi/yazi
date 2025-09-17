@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::OsStr, io};
 
 use yazi_shared::url::UrlBuf;
 
-use crate::{cha::Cha, provider::FileHolder};
+use crate::{cha::{Cha, ChaType}, provider::FileHolder};
 
 pub enum DirEntry {
 	Local(super::local::DirEntry),
@@ -33,7 +33,7 @@ impl DirEntry {
 		}
 	}
 
-	pub async fn file_type(&self) -> io::Result<std::fs::FileType> {
+	pub async fn file_type(&self) -> io::Result<ChaType> {
 		match self {
 			Self::Local(local) => local.file_type().await,
 		}

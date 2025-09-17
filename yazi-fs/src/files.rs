@@ -40,14 +40,14 @@ impl Files {
 		let (tx, rx) = mpsc::unbounded_channel();
 
 		tokio::spawn(async move {
-			while let Ok(Some(item)) = it.next_entry().await {
+			while let Ok(Some(ent)) = it.next_entry().await {
 				select! {
 					_ = tx.closed() => break,
-					result = item.metadata() => {
-						let url = item.url();
+					result = ent.metadata() => {
+						let url = ent.url();
 						_ = tx.send(match result {
 							Ok(cha) => File::from_follow(url, cha).await,
-							Err(_) => File::from_dummy(url, item.file_type().await.ok())
+							Err(_) => File::from_dummy(url, ent.file_type().await.ok())
 						});
 					}
 				}
@@ -67,11 +67,11 @@ impl Files {
 		let (second, third) = rest.split_at(entries.len() / 3);
 		async fn go(entries: &[DirEntry]) -> Vec<File> {
 			let mut files = Vec::with_capacity(entries.len());
-			for entry in entries {
-				let url = entry.url();
-				files.push(match entry.metadata().await {
+			for ent in entries {
+				let url = ent.url();
+				files.push(match ent.metadata().await {
 					Ok(cha) => File::from_follow(url, cha).await,
-					Err(_) => File::from_dummy(url, entry.file_type().await.ok()),
+					Err(_) => File::from_dummy(url, ent.file_type().await.ok()),
 				});
 			}
 			files

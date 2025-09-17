@@ -33,7 +33,7 @@ impl Actor for Rename {
 				.chars()
 				.rev()
 				.position(|c| c == '.')
-				.filter(|_| !hovered.is_dir())
+				.filter(|_| hovered.is_file())
 				.map(|i| name.chars().count() - i - 1)
 				.filter(|&i| i != 0),
 			_ => None,
