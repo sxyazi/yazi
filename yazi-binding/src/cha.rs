@@ -37,16 +37,11 @@ impl Cha {
 					len: t.raw_get("len").unwrap_or_default(),
 					atime: parse_time(t.raw_get("atime").ok())?,
 					btime: parse_time(t.raw_get("btime").ok())?,
-					#[cfg(unix)]
 					ctime: parse_time(t.raw_get("ctime").ok())?,
 					mtime: parse_time(t.raw_get("mtime").ok())?,
-					#[cfg(unix)]
 					dev: t.raw_get("dev").unwrap_or_default(),
-					#[cfg(unix)]
 					uid: t.raw_get("uid").unwrap_or_default(),
-					#[cfg(unix)]
 					gid: t.raw_get("gid").unwrap_or_default(),
-					#[cfg(unix)]
 					nlink: t.raw_get("nlink").unwrap_or_default(),
 				})
 				.into_lua(lua)
@@ -70,15 +65,6 @@ impl UserData for Cha {
 		fields.add_field_method_get("is_exec", |_, me| Ok(me.is_exec()));
 		fields.add_field_method_get("is_sticky", |_, me| Ok(me.is_sticky()));
 
-		#[cfg(unix)]
-		{
-			use std::ops::Not;
-			fields.add_field_method_get("dev", |_, me| Ok(me.is_dummy().not().then_some(me.dev)));
-			fields.add_field_method_get("uid", |_, me| Ok(me.is_dummy().not().then_some(me.uid)));
-			fields.add_field_method_get("gid", |_, me| Ok(me.is_dummy().not().then_some(me.gid)));
-			fields.add_field_method_get("nlink", |_, me| Ok(me.is_dummy().not().then_some(me.nlink)));
-		}
-
 		fields.add_field_method_get("len", |_, me| Ok(me.len));
 		fields.add_field_method_get("atime", |_, me| {
 			Ok(me.atime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
@@ -86,13 +72,16 @@ impl UserData for Cha {
 		fields.add_field_method_get("btime", |_, me| {
 			Ok(me.btime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
 		});
-		#[cfg(unix)]
 		fields.add_field_method_get("ctime", |_, me| {
 			Ok(me.ctime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
 		});
 		fields.add_field_method_get("mtime", |_, me| {
 			Ok(me.mtime.and_then(|t| t.duration_since(UNIX_EPOCH).map(|d| d.as_secs_f64()).ok()))
 		});
+		fields.add_field_method_get("dev", |_, me| Ok(me.dev));
+		fields.add_field_method_get("uid", |_, me| Ok(me.uid));
+		fields.add_field_method_get("gid", |_, me| Ok(me.gid));
+		fields.add_field_method_get("nlink", |_, me| Ok(me.nlink));
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {

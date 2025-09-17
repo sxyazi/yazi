@@ -13,16 +13,11 @@ pub struct Cha {
 	pub len:   u64,
 	pub atime: Option<SystemTime>,
 	pub btime: Option<SystemTime>,
-	#[cfg(unix)]
 	pub ctime: Option<SystemTime>,
 	pub mtime: Option<SystemTime>,
-	#[cfg(unix)]
 	pub dev:   libc::dev_t,
-	#[cfg(unix)]
 	pub uid:   u32,
-	#[cfg(unix)]
 	pub gid:   u32,
-	#[cfg(unix)]
 	pub nlink: u64,
 }
 
@@ -35,22 +30,17 @@ impl Deref for Cha {
 impl Default for Cha {
 	fn default() -> Self {
 		Self {
-			kind:               ChaKind::DUMMY,
-			mode:               ChaMode::empty(),
-			len:                0,
-			atime:              None,
-			btime:              None,
-			#[cfg(unix)]
-			ctime:              None,
-			mtime:              None,
-			#[cfg(unix)]
-			dev:                0,
-			#[cfg(unix)]
-			uid:                0,
-			#[cfg(unix)]
-			gid:                0,
-			#[cfg(unix)]
-			nlink:              0,
+			kind:  ChaKind::DUMMY,
+			mode:  ChaMode::empty(),
+			len:   0,
+			atime: None,
+			btime: None,
+			ctime: None,
+			mtime: None,
+			dev:   0,
+			uid:   0,
+			gid:   0,
+			nlink: 0,
 		}
 	}
 }
@@ -136,17 +126,15 @@ impl Cha {
 			len: m.len(),
 			atime: m.accessed().ok(),
 			btime: m.created().ok(),
-			#[cfg(unix)]
-			ctime: UNIX_EPOCH.checked_add(Duration::new(m.ctime() as u64, m.ctime_nsec() as u32)),
+			ctime: unix_either!(
+				UNIX_EPOCH.checked_add(Duration::new(m.ctime() as u64, m.ctime_nsec() as u32)),
+				None
+			),
 			mtime: m.modified().ok(),
-			#[cfg(unix)]
-			dev: m.dev() as _,
-			#[cfg(unix)]
-			uid: m.uid() as _,
-			#[cfg(unix)]
-			gid: m.gid() as _,
-			#[cfg(unix)]
-			nlink: m.nlink() as _,
+			dev: unix_either!(m.dev(), 0) as _,
+			uid: unix_either!(m.uid(), 0) as _,
+			gid: unix_either!(m.gid(), 0) as _,
+			nlink: unix_either!(m.nlink(), 0) as _,
 		}
 	}
 

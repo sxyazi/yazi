@@ -57,9 +57,9 @@ end
 function Linemode:permissions() return self._file.cha:perm() or "" end
 
 function Linemode:owner()
-	local user = self._file.cha.uid and ya.user_name(self._file.cha.uid) or self._file.cha.uid
-	local group = self._file.cha.gid and ya.group_name(self._file.cha.gid) or self._file.cha.gid
-	return string.format("%s:%s", user or "-", group or "-")
+	local user = ya.user_name and ya.user_name(self._file.cha.uid) or self._file.cha.uid
+	local group = ya.group_name and ya.group_name(self._file.cha.gid) or self._file.cha.gid
+	return string.format("%s:%s", user, group)
 end
 
 function Linemode:redraw()
