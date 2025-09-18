@@ -2,8 +2,12 @@ use std::sync::atomic::Ordering;
 
 use anyhow::Result;
 use crossterm::event::KeyEvent;
+use mlua::{ObjectLike, Table, Value};
+use tracing::error;
+use yazi_actor::lives::Lives;
 use yazi_config::keymap::Key;
 use yazi_macro::{act, emit, succ};
+use yazi_plugin::LUA;
 use yazi_shared::event::{CmdCow, Data, Event, NEED_RENDER};
 use yazi_widgets::input::InputMode;
 
@@ -59,6 +63,23 @@ impl<'a> Dispatcher<'a> {
 	}
 
 	#[inline]
+	fn dispatch_drop(&mut self, str: String) -> Result<Data> {
+		let Some(size) = self.app.term.as_ref().and_then(|t| t.size().ok()) else { succ!() };
+
+		let result = Lives::scope(&self.app.core, move || {
+			let area = yazi_binding::elements::Rect::from(size);
+			let root = LUA.globals().raw_get::<Table>("Root")?.call_method::<Table>("new", area)?;
+			root.call_method::<Value>("drop", str.to_string())?;
+			Ok(())
+		});
+
+		if let Err(ref e) = result {
+			error!("{e}");
+		}
+		succ!();
+	}
+
+	#[inline]
 	fn dispatch_paste(&mut self, str: String) -> Result<Data> {
 		if self.app.core.input.visible {
 			let input = &mut self.app.core.input;
@@ -67,6 +88,8 @@ impl<'a> Dispatcher<'a> {
 			} else if input.mode() == InputMode::Replace {
 				input.replace_str(&str)?;
 			}
+		} else {
+			self.dispatch_drop(str)?;
 		}
 		succ!();
 	}
