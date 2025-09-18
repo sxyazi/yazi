@@ -26,8 +26,12 @@ impl Actor for Seek {
 		let Some(previewer) = YAZI.plugin.previewer(&hovered.url, mime) else {
 			succ!(cx.tab_mut().preview.reset());
 		};
+		let run_idx = cx.tab().preview.run;
+		let Some(cmd) = previewer.cmd(run_idx) else {
+			succ!(cx.tab_mut().preview.reset());
+		};
 
-		isolate::seek_sync(&previewer.run, hovered.clone(), opt.units);
+		isolate::seek_sync(cmd, hovered.clone(), opt.units);
 		succ!();
 	}
 }

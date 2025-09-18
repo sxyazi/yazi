@@ -54,6 +54,8 @@ keymap = [
 	# Seeking
 	{ on = "K", run = "seek -5", desc = "Seek up 5 units in the preview" },
 	{ on = "J", run = "seek 5",  desc = "Seek down 5 units in the preview" },
+	{ on = [ "g", "p" ], run = "peek --cycle=next", desc = "Cycle to next previewer" },
+	{ on = [ "g", "P" ], run = "peek --cycle=prev", desc = "Cycle to previous previewer" },
 
 	# Spotting
 	{ on = "<Tab>", run = "spot", desc = "Spot hovered file" },

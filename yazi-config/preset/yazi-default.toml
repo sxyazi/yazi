@@ -124,8 +124,8 @@ preloaders = [
 previewers = [
 	{ url = "*/", run = "folder" },
 	# Code
-	{ mime = "text/*", run = "code" },
-	{ mime = "application/{mbox,javascript,wine-extension-ini}", run = "code" },
+	{ mime = "text/*", run = [ "code", "file" ] },
+	{ mime = "application/{mbox,javascript,wine-extension-ini}", run = [ "code", "file" ] },
 	# JSON
 	{ mime = "application/{json,ndjson}", run = "json" },
 	# Image

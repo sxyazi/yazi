@@ -98,15 +98,23 @@ impl UserData for Preloader {
 struct Previewer {
 	inner: &'static yazi_config::plugin::Previewer,
 
-	v_cmd: Option<Value>,
+	v_cmd:  Option<Value>,
+	v_cmds: Option<Value>,
 }
 
 impl Previewer {
-	pub fn new(inner: &'static yazi_config::plugin::Previewer) -> Self { Self { inner, v_cmd: None } }
+	pub fn new(inner: &'static yazi_config::plugin::Previewer) -> Self {
+		Self { inner, v_cmd: None, v_cmds: None }
+	}
 }
 
 impl UserData for Previewer {
 	fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
-		cached_field!(fields, cmd, |lua, me| lua.create_string(me.inner.run.name.as_ref()));
+		cached_field!(fields, cmd, |lua, me| {
+			lua.create_string(me.inner.cmd(0).map(|cmd| cmd.name.as_ref()).unwrap_or(""))
+		});
+		cached_field!(fields, cmds, |lua, me| {
+			lua.create_sequence_from(me.inner.run.iter().map(|cmd| cmd.name.as_ref()))
+		});
 	}
 }

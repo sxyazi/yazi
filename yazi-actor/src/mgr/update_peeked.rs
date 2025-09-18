@@ -18,7 +18,9 @@ impl Actor for UpdatePeeked {
 		};
 
 		if opt.lock.url == *hovered {
-			cx.tab_mut().preview.lock = Some(opt.lock);
+			let preview = &mut cx.tab_mut().preview;
+			preview.lock_run = preview.run;
+			preview.lock = Some(opt.lock);
 			render!();
 		}
 

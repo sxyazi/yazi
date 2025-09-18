@@ -15,9 +15,12 @@ use yazi_shared::{MIME_DIR, pool::{InternStr, Symbol}, url::UrlBuf};
 pub struct Preview {
 	pub lock: Option<PreviewLock>,
 	pub skip: usize,
+	pub run:  usize,
 
 	previewer_ct:  Option<CancellationToken>,
 	folder_loader: Option<JoinHandle<()>>,
+
+	pub lock_run: usize,
 }
 
 impl Preview {
@@ -32,8 +35,15 @@ impl Preview {
 			return self.reset();
 		};
 
+		if self.run >= previewer.len() {
+			self.run = 0;
+		}
+		let Some(cmd) = previewer.cmd(self.run) else {
+			return self.reset();
+		};
+
 		self.abort();
-		self.previewer_ct = isolate::peek(&previewer.run, file, mime, self.skip);
+		self.previewer_ct = isolate::peek(cmd, file, mime, self.skip);
 	}
 
 	pub fn go_folder(&mut self, file: File, dir: Option<Cha>, force: bool) {
@@ -76,6 +86,7 @@ impl Preview {
 	pub fn reset(&mut self) {
 		self.abort();
 		ADAPTOR.get().image_hide().ok();
+		self.lock_run = 0;
 		render!(self.lock.take().is_some())
 	}
 
@@ -92,6 +103,10 @@ impl Preview {
 	}
 
 	pub fn same_lock(&self, file: &File, mime: &str) -> bool {
-		self.same_file(file, mime) && matches!(&self.lock, Some(l) if l.skip == self.skip)
+		if let Some(lock) = &self.lock {
+			self.same_file(file, mime) && lock.skip == self.skip && self.lock_run == self.run
+		} else {
+			false
+		}
 	}
 }
