@@ -27,7 +27,7 @@ function M:entry(job)
 		end
 
 		local value, event = ya.input {
-			pos = { "center", w = 50 },
+			pos = { "top-center", y = 2, w = 50 },
 			title = string.format('Password for "%s":', from.name),
 			obscure = true,
 		}
