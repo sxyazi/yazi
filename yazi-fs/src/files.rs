@@ -143,7 +143,7 @@ impl Files {
 			return;
 		}
 
-		if self.sorter.by == SortBy::Size {
+		if self.sorter.by.0.contains(&SortBy::Size) {
 			self.revision += 1;
 		}
 		self.sizes.extend(sizes);
