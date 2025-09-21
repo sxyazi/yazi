@@ -2,6 +2,7 @@ use std::{io, path::{Path, PathBuf}};
 
 use crate::{cha::Cha, provider::Provider};
 
+#[derive(Clone, Copy)]
 pub struct Local;
 
 impl Provider for Local {
@@ -10,7 +11,7 @@ impl Provider for Local {
 	type ReadDir = super::ReadDir;
 
 	#[inline]
-	fn cache<P>(_: P) -> Option<PathBuf>
+	fn cache<P>(&self, _: P) -> Option<PathBuf>
 	where
 		P: AsRef<Path>,
 	{
@@ -18,7 +19,7 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn canonicalize<P>(path: P) -> io::Result<PathBuf>
+	async fn canonicalize<P>(&self, path: P) -> io::Result<PathBuf>
 	where
 		P: AsRef<Path>,
 	{
@@ -26,7 +27,7 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn copy<P, Q>(from: P, to: Q, cha: Cha) -> io::Result<u64>
+	async fn copy<P, Q>(&self, from: P, to: Q, cha: Cha) -> io::Result<u64>
 	where
 		P: AsRef<Path>,
 		Q: AsRef<Path>,
@@ -37,7 +38,7 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn create_dir<P>(path: P) -> io::Result<()>
+	async fn create_dir<P>(&self, path: P) -> io::Result<()>
 	where
 		P: AsRef<Path>,
 	{
@@ -45,7 +46,7 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn create_dir_all<P>(path: P) -> io::Result<()>
+	async fn create_dir_all<P>(&self, path: P) -> io::Result<()>
 	where
 		P: AsRef<Path>,
 	{
@@ -53,7 +54,10 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn hard_link<P, Q>(original: P, link: Q) -> io::Result<()>
+	async fn gate(&self) -> io::Result<Self::Gate> { Ok(Self::Gate::default()) }
+
+	#[inline]
+	async fn hard_link<P, Q>(&self, original: P, link: Q) -> io::Result<()>
 	where
 		P: AsRef<Path>,
 		Q: AsRef<Path>,
@@ -62,7 +66,7 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn metadata<P>(path: P) -> io::Result<Cha>
+	async fn metadata<P>(&self, path: P) -> io::Result<Cha>
 	where
 		P: AsRef<Path>,
 	{
@@ -71,7 +75,7 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn read_dir<P>(path: P) -> io::Result<Self::ReadDir>
+	async fn read_dir<P>(&self, path: P) -> io::Result<Self::ReadDir>
 	where
 		P: AsRef<Path>,
 	{
@@ -79,7 +83,7 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn read_link<P>(path: P) -> io::Result<PathBuf>
+	async fn read_link<P>(&self, path: P) -> io::Result<PathBuf>
 	where
 		P: AsRef<Path>,
 	{
@@ -87,7 +91,7 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn remove_dir<P>(path: P) -> io::Result<()>
+	async fn remove_dir<P>(&self, path: P) -> io::Result<()>
 	where
 		P: AsRef<Path>,
 	{
@@ -95,7 +99,7 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn remove_dir_all<P>(path: P) -> io::Result<()>
+	async fn remove_dir_all<P>(&self, path: P) -> io::Result<()>
 	where
 		P: AsRef<Path>,
 	{
@@ -103,7 +107,7 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn remove_file<P>(path: P) -> io::Result<()>
+	async fn remove_file<P>(&self, path: P) -> io::Result<()>
 	where
 		P: AsRef<Path>,
 	{
@@ -111,7 +115,7 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn rename<P, Q>(from: P, to: Q) -> io::Result<()>
+	async fn rename<P, Q>(&self, from: P, to: Q) -> io::Result<()>
 	where
 		P: AsRef<Path>,
 		Q: AsRef<Path>,
@@ -120,7 +124,7 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn symlink<P, Q, F>(original: P, link: Q, _is_dir: F) -> io::Result<()>
+	async fn symlink<P, Q, F>(&self, original: P, link: Q, _is_dir: F) -> io::Result<()>
 	where
 		P: AsRef<Path>,
 		Q: AsRef<Path>,
@@ -139,7 +143,7 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn symlink_dir<P, Q>(original: P, link: Q) -> io::Result<()>
+	async fn symlink_dir<P, Q>(&self, original: P, link: Q) -> io::Result<()>
 	where
 		P: AsRef<Path>,
 		Q: AsRef<Path>,
@@ -155,7 +159,7 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn symlink_file<P, Q>(original: P, link: Q) -> io::Result<()>
+	async fn symlink_file<P, Q>(&self, original: P, link: Q) -> io::Result<()>
 	where
 		P: AsRef<Path>,
 		Q: AsRef<Path>,
@@ -171,7 +175,7 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn symlink_metadata<P>(path: P) -> io::Result<Cha>
+	async fn symlink_metadata<P>(&self, path: P) -> io::Result<Cha>
 	where
 		P: AsRef<Path>,
 	{
@@ -179,7 +183,7 @@ impl Provider for Local {
 		Ok(Cha::new(path.file_name().unwrap_or_default(), tokio::fs::symlink_metadata(path).await?))
 	}
 
-	async fn trash<P>(path: P) -> io::Result<()>
+	async fn trash<P>(&self, path: P) -> io::Result<()>
 	where
 		P: AsRef<Path>,
 	{
@@ -205,7 +209,7 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn write<P, C>(path: P, contents: C) -> io::Result<()>
+	async fn write<P, C>(&self, path: P, contents: C) -> io::Result<()>
 	where
 		P: AsRef<Path>,
 		C: AsRef<[u8]>,
@@ -264,7 +268,7 @@ impl Local {
 	}
 
 	#[inline]
-	pub async fn read<P>(path: P) -> io::Result<Vec<u8>>
+	pub async fn read<P>(&self, path: P) -> io::Result<Vec<u8>>
 	where
 		P: AsRef<Path>,
 	{
@@ -272,7 +276,7 @@ impl Local {
 	}
 
 	#[inline]
-	pub async fn read_to_string<P>(path: P) -> io::Result<String>
+	pub async fn read_to_string<P>(&self, path: P) -> io::Result<String>
 	where
 		P: AsRef<Path>,
 	{

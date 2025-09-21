@@ -1,5 +1,6 @@
 use std::{ops::Deref, path::PathBuf, sync::Arc};
 
+use russh::{ChannelStream, client::Msg};
 use tokio::sync::oneshot;
 
 use crate::{ByteStr, Error, Packet, Session, fs::{Attrs, File, Flags, ReadDir}, requests, responses};
@@ -17,6 +18,8 @@ impl From<&Arc<Session>> for Operator {
 }
 
 impl Operator {
+	pub fn make(stream: ChannelStream<Msg>) -> Self { Self(Session::make(stream)) }
+
 	pub async fn init(&mut self) -> Result<(), Error> {
 		let version: responses::Version = self.send(requests::Init::default()).await?;
 		*self.extensions.lock() = version.extensions;

@@ -1,6 +1,6 @@
-use std::{io, path::{Path, PathBuf}};
+use std::{io, path::{Path, PathBuf}, sync::Arc};
 
-use yazi_shared::url::{Url, UrlBuf};
+use yazi_shared::{scheme::SchemeRef, url::{Url, UrlBuf}};
 
 use crate::{cha::Cha, provider::{Provider, ReadDir, RwFile, local::{self, Local}}};
 
@@ -9,7 +9,7 @@ pub fn cache<'a, U>(url: U) -> Option<PathBuf>
 where
 	U: Into<Url<'a>>,
 {
-	if let Some(path) = url.into().as_path() { Local::cache(path) } else { None }
+	if let Some(path) = url.into().as_path() { Local.cache(path) } else { None }
 }
 
 #[inline]
@@ -31,7 +31,7 @@ where
 	U: Into<Url<'a>>,
 {
 	if let Some(path) = url.into().as_path() {
-		Local::canonicalize(path).await.map(Into::into)
+		Local.canonicalize(path).await.map(Into::into)
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
@@ -56,7 +56,7 @@ where
 	V: Into<Url<'a>>,
 {
 	if let (Some(from), Some(to)) = (from.into().as_path(), to.into().as_path()) {
-		Local::copy(from, to, cha).await
+		Local.copy(from, to, cha).await
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
@@ -68,7 +68,7 @@ where
 	U: Into<Url<'a>>,
 {
 	if let Some(path) = url.into().as_path() {
-		Local::create(path).await.map(Into::into)
+		Local.create(path).await.map(Into::into)
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
@@ -80,7 +80,7 @@ where
 	U: Into<Url<'a>>,
 {
 	if let Some(path) = url.into().as_path() {
-		Local::create_dir(path).await
+		Local.create_dir(path).await
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
@@ -92,7 +92,7 @@ where
 	U: Into<Url<'a>>,
 {
 	if let Some(path) = url.into().as_path() {
-		Local::create_dir_all(path).await
+		Local.create_dir_all(path).await
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
@@ -105,7 +105,7 @@ where
 	V: Into<Url<'a>>,
 {
 	if let (Some(original), Some(link)) = (original.into().as_path(), link.into().as_path()) {
-		Local::hard_link(original, link).await
+		Local.hard_link(original, link).await
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
@@ -130,7 +130,7 @@ where
 	U: Into<Url<'a>>,
 {
 	if let Some(path) = url.into().as_path() {
-		Local::metadata(path).await
+		Local.metadata(path).await
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
@@ -150,11 +150,17 @@ pub async fn read_dir<'a, U>(url: U) -> io::Result<ReadDir>
 where
 	U: Into<Url<'a>>,
 {
-	if let Some(path) = url.into().as_path() {
-		Local::read_dir(path).await.map(Into::into)
-	} else {
-		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
-	}
+	let url: Url = url.into();
+	Ok(match url.scheme {
+		SchemeRef::Regular => ReadDir::Regular(Local.read_dir(url.loc).await?),
+		SchemeRef::Search(_) => {
+			ReadDir::Search((Arc::new(url.to_owned()), Local.read_dir(url.loc).await?))
+		}
+		SchemeRef::Archive(_) => {
+			Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))?
+		}
+		SchemeRef::Sftp(_) => todo!(),
+	})
 }
 
 #[inline]
@@ -163,7 +169,7 @@ where
 	U: Into<Url<'a>>,
 {
 	if let Some(path) = url.into().as_path() {
-		Local::read_link(path).await
+		Local.read_link(path).await
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
@@ -175,7 +181,7 @@ where
 	U: Into<Url<'a>>,
 {
 	if let Some(path) = url.into().as_path() {
-		Local::remove_dir(path).await
+		Local.remove_dir(path).await
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
@@ -187,7 +193,7 @@ where
 	U: Into<Url<'a>>,
 {
 	if let Some(path) = url.into().as_path() {
-		Local::remove_dir_all(path).await
+		Local.remove_dir_all(path).await
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
@@ -199,7 +205,7 @@ where
 	U: Into<Url<'a>>,
 {
 	if let Some(path) = url.into().as_path() {
-		Local::remove_file(path).await
+		Local.remove_file(path).await
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
@@ -212,7 +218,7 @@ where
 	V: Into<Url<'a>>,
 {
 	if let (Some(from), Some(to)) = (from.into().as_path(), to.into().as_path()) {
-		Local::rename(from, to).await
+		Local.rename(from, to).await
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
@@ -225,7 +231,7 @@ where
 	F: AsyncFnOnce() -> io::Result<bool>,
 {
 	if let Some(link) = link.into().as_path() {
-		Local::symlink(original, link, is_dir).await
+		Local.symlink(original, link, is_dir).await
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
@@ -237,7 +243,7 @@ where
 	U: Into<Url<'a>>,
 {
 	if let Some(link) = link.into().as_path() {
-		Local::symlink_dir(original, link).await
+		Local.symlink_dir(original, link).await
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
@@ -249,7 +255,7 @@ where
 	U: Into<Url<'a>>,
 {
 	if let Some(link) = link.into().as_path() {
-		Local::symlink_file(original, link).await
+		Local.symlink_file(original, link).await
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
@@ -261,7 +267,7 @@ where
 	U: Into<Url<'a>>,
 {
 	if let Some(path) = url.into().as_path() {
-		Local::symlink_metadata(path).await
+		Local.symlink_metadata(path).await
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
@@ -273,7 +279,7 @@ where
 	U: Into<Url<'a>>,
 {
 	if let Some(path) = url.into().as_path() {
-		Local::trash(path).await
+		Local.trash(path).await
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
@@ -286,7 +292,7 @@ where
 	C: AsRef<[u8]>,
 {
 	if let Some(path) = url.into().as_path() {
-		Local::write(path, contents).await
+		Local.write(path, contents).await
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}

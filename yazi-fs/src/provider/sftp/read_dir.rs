@@ -5,17 +5,17 @@ use crate::{cha::{Cha, ChaMode, ChaType}, provider::{DirReader, FileHolder}};
 pub struct ReadDir(pub(super) yazi_sftp::fs::ReadDir);
 
 impl DirReader for ReadDir {
-	type Entry<'a> = DirEntry<'a>;
+	type Entry = DirEntry;
 
-	async fn next(&mut self) -> io::Result<Option<Self::Entry<'_>>> {
+	async fn next(&mut self) -> io::Result<Option<Self::Entry>> {
 		Ok(self.0.next().await?.map(DirEntry))
 	}
 }
 
 // --- Entry
-pub struct DirEntry<'a>(yazi_sftp::fs::DirEntry<'a>);
+pub struct DirEntry(yazi_sftp::fs::DirEntry);
 
-impl FileHolder for DirEntry<'_> {
+impl FileHolder for DirEntry {
 	fn path(&self) -> PathBuf { self.0.path() }
 
 	fn name(&self) -> Cow<'_, OsStr> { self.0.name() }

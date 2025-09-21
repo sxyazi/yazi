@@ -8,6 +8,6 @@ macro_rules! ok_or_not_found {
 		}
 	};
 	($result:expr) => {
-		ok_or_not_found!($result, ())
+		ok_or_not_found!($result, Default::default())
 	};
 }

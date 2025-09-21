@@ -5,7 +5,7 @@ use tokio::{select, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_shared::{Id, url::{UrlBuf, Urn, UrnBuf}};
 
 use super::{FilesSorter, Filter};
-use crate::{FILES_TICKET, File, FilesOp, SortBy, cha::Cha, mounts::PARTITIONS, provider::{self, DirEntry}};
+use crate::{FILES_TICKET, File, FilesOp, SortBy, cha::Cha, mounts::PARTITIONS, provider::{self, DirEntry, DirReader, FileHolder}};
 
 #[derive(Default)]
 pub struct Files {
@@ -40,7 +40,7 @@ impl Files {
 		let (tx, rx) = mpsc::unbounded_channel();
 
 		tokio::spawn(async move {
-			while let Ok(Some(ent)) = it.next_entry().await {
+			while let Ok(Some(ent)) = it.next().await {
 				select! {
 					_ = tx.closed() => break,
 					result = ent.metadata() => {
@@ -59,7 +59,7 @@ impl Files {
 	pub async fn from_dir_bulk(dir: &UrlBuf) -> std::io::Result<Vec<File>> {
 		let mut it = provider::read_dir(dir).await?;
 		let mut entries = Vec::with_capacity(5000);
-		while let Ok(Some(entry)) = it.next_entry().await {
+		while let Ok(Some(entry)) = it.next().await {
 			entries.push(entry);
 		}
 

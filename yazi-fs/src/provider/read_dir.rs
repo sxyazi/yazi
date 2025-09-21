@@ -1,20 +1,27 @@
-use std::io;
+use std::{io, sync::Arc};
 
-use super::DirEntry;
+use yazi_shared::url::UrlBuf;
+
 use crate::provider::DirReader;
 
 pub enum ReadDir {
-	Local(super::local::ReadDir),
+	Regular(super::local::ReadDir),
+	Search((Arc<UrlBuf>, super::local::ReadDir)),
+	Sftp((Arc<UrlBuf>, super::sftp::ReadDir)),
 }
 
-impl From<super::local::ReadDir> for ReadDir {
-	fn from(value: super::local::ReadDir) -> Self { Self::Local(value) }
-}
+impl DirReader for ReadDir {
+	type Entry = super::DirEntry;
 
-impl ReadDir {
-	pub async fn next_entry(&mut self) -> io::Result<Option<DirEntry>> {
-		match self {
-			Self::Local(local) => local.next().await.map(|entry| entry.map(Into::into)),
-		}
+	async fn next(&mut self) -> io::Result<Option<Self::Entry>> {
+		Ok(match self {
+			Self::Regular(reader) => reader.next().await?.map(Self::Entry::Regular),
+			Self::Search((dir, reader)) => {
+				reader.next().await?.map(|ent| Self::Entry::Search((dir.clone(), ent)))
+			}
+			Self::Sftp((dir, reader)) => {
+				reader.next().await?.map(|ent| Self::Entry::Sftp((dir.clone(), ent)))
+			}
+		})
 	}
 }

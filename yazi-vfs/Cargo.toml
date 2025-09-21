@@ -1,0 +1,22 @@
+[package]
+name        = "yazi-vfs"
+version     = "25.9.15"
+edition     = "2024"
+license     = "MIT"
+authors     = [ "sxyazi <sxyazi@gmail.com>" ]
+description = "Yazi virtual file system"
+homepage    = "https://yazi-rs.github.io"
+repository  = "https://github.com/sxyazi/yazi"
+
+[dependencies]
+yazi-macro  = { path = "../yazi-macro", version = "25.9.15" }
+yazi-shared = { path = "../yazi-shared", version = "25.9.15" }
+
+# External dependencies
+anyhow    = { workspace = true }
+dirs      = { workspace = true }
+hashbrown = { workspace = true }
+serde     = { workspace = true }
+tokio     = { workspace = true }
+toml      = { workspace = true }
+uzers     = { workspace = true }

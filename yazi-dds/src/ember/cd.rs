@@ -6,7 +6,7 @@ use yazi_shared::{Id, url::UrlBuf};
 
 use super::Ember;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct EmberCd<'a> {
 	pub tab: Id,
 	pub url: Cow<'a, UrlBuf>,

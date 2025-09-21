@@ -8,7 +8,7 @@ use yazi_shared::url::UrlBufCov;
 
 use super::Ember;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct EmberYank<'a>(UpdateYankedOpt<'a>);
 
 impl<'a> EmberYank<'a> {

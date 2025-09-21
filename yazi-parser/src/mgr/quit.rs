@@ -2,7 +2,7 @@ use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
 use yazi_shared::event::{CmdCow, Data, EventQuit};
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct QuitOpt {
 	pub code:        i32,
 	pub no_cwd_file: bool,

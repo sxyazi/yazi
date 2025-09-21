@@ -6,7 +6,7 @@ use yazi_shared::url::UrlBuf;
 
 use super::Ember;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct EmberTrash<'a> {
 	pub urls: Cow<'a, Vec<UrlBuf>>,
 }

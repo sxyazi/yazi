@@ -2,7 +2,7 @@ use anyhow::Result;
 use tokio::{io, select, sync::{mpsc, oneshot}, time};
 use yazi_shared::url::{Component, Url, UrlBuf};
 
-use crate::{cha::Cha, provider};
+use crate::{cha::Cha, provider::{self, DirReader, FileHolder}};
 
 #[inline]
 pub async fn maybe_exists<'a>(url: impl Into<Url<'a>>) -> bool {
@@ -83,7 +83,7 @@ pub fn copy_with_progress(
 pub async fn remove_dir_clean(dir: &UrlBuf) {
 	let Ok(mut it) = provider::read_dir(dir).await else { return };
 
-	while let Ok(Some(ent)) = it.next_entry().await {
+	while let Ok(Some(ent)) = it.next().await {
 		if ent.file_type().await.is_ok_and(|t| t.is_dir()) {
 			let url = ent.url();
 			Box::pin(remove_dir_clean(&url)).await;

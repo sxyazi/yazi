@@ -39,7 +39,7 @@ impl Image {
 		})
 		.await??;
 
-		Ok(Local::write(cache, buf).await?)
+		Ok(Local.write(cache, buf).await?)
 	}
 
 	pub(super) async fn downscale(path: &Path, rect: Rect) -> Result<DynamicImage> {

@@ -15,7 +15,7 @@ pub struct Session {
 }
 
 impl Session {
-	pub fn make(stream: ChannelStream<Msg>) -> Arc<Self> {
+	pub(super) fn make(stream: ChannelStream<Msg>) -> Arc<Self> {
 		let (tx, mut rx) = mpsc::unbounded_channel();
 		let me = Arc::new(Self {
 			tx,

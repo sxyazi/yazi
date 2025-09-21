@@ -3,7 +3,7 @@
 yazi_macro::mod_flat!(add delete dependency deploy git hash install package upgrade);
 
 use anyhow::Context;
-use yazi_fs::Xdg;
+use yazi_vfs::local::Xdg;
 
 pub(super) fn init() -> anyhow::Result<()> {
 	let root = Xdg::state_dir().join("packages");

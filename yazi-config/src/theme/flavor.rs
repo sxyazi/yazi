@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use toml::Value;
 use yazi_codegen::DeserializeOver2;
-use yazi_fs::Xdg;
+use yazi_vfs::local::Xdg;
 
 #[derive(Default, Deserialize, DeserializeOver2, Serialize)]
 pub struct Flavor {

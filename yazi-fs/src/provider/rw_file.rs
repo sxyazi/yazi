@@ -4,7 +4,7 @@ use tokio::io::{AsyncRead, AsyncWrite};
 
 pub enum RwFile {
 	Tokio(tokio::fs::File),
-	SFTP(Box<yazi_sftp::fs::File>),
+	Sftp(Box<yazi_sftp::fs::File>),
 }
 
 impl From<tokio::fs::File> for RwFile {
@@ -12,7 +12,7 @@ impl From<tokio::fs::File> for RwFile {
 }
 
 impl From<yazi_sftp::fs::File> for RwFile {
-	fn from(f: yazi_sftp::fs::File) -> Self { Self::SFTP(Box::new(f)) }
+	fn from(f: yazi_sftp::fs::File) -> Self { Self::Sftp(Box::new(f)) }
 }
 
 impl AsyncRead for RwFile {
@@ -24,7 +24,7 @@ impl AsyncRead for RwFile {
 	) -> std::task::Poll<std::io::Result<()>> {
 		match &mut *self {
 			Self::Tokio(f) => Pin::new(f).poll_read(cx, buf),
-			Self::SFTP(f) => Pin::new(f).poll_read(cx, buf),
+			Self::Sftp(f) => Pin::new(f).poll_read(cx, buf),
 		}
 	}
 }
@@ -38,7 +38,7 @@ impl AsyncWrite for RwFile {
 	) -> std::task::Poll<Result<usize, std::io::Error>> {
 		match &mut *self {
 			Self::Tokio(f) => Pin::new(f).poll_write(cx, buf),
-			Self::SFTP(f) => Pin::new(f).poll_write(cx, buf),
+			Self::Sftp(f) => Pin::new(f).poll_write(cx, buf),
 		}
 	}
 
@@ -49,7 +49,7 @@ impl AsyncWrite for RwFile {
 	) -> std::task::Poll<Result<(), std::io::Error>> {
 		match &mut *self {
 			Self::Tokio(f) => Pin::new(f).poll_flush(cx),
-			Self::SFTP(f) => Pin::new(f).poll_flush(cx),
+			Self::Sftp(f) => Pin::new(f).poll_flush(cx),
 		}
 	}
 
@@ -60,7 +60,7 @@ impl AsyncWrite for RwFile {
 	) -> std::task::Poll<Result<(), std::io::Error>> {
 		match &mut *self {
 			Self::Tokio(f) => Pin::new(f).poll_shutdown(cx),
-			Self::SFTP(f) => Pin::new(f).poll_shutdown(cx),
+			Self::Sftp(f) => Pin::new(f).poll_shutdown(cx),
 		}
 	}
 
@@ -72,7 +72,7 @@ impl AsyncWrite for RwFile {
 	) -> std::task::Poll<Result<usize, std::io::Error>> {
 		match &mut *self {
 			Self::Tokio(f) => Pin::new(f).poll_write_vectored(cx, bufs),
-			Self::SFTP(f) => Pin::new(f).poll_write_vectored(cx, bufs),
+			Self::Sftp(f) => Pin::new(f).poll_write_vectored(cx, bufs),
 		}
 	}
 
@@ -80,7 +80,7 @@ impl AsyncWrite for RwFile {
 	fn is_write_vectored(&self) -> bool {
 		match self {
 			Self::Tokio(f) => f.is_write_vectored(),
-			Self::SFTP(f) => f.is_write_vectored(),
+			Self::Sftp(f) => f.is_write_vectored(),
 		}
 	}
 }

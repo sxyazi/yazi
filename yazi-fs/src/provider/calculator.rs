@@ -2,7 +2,7 @@ use std::{collections::VecDeque, io, time::{Duration, Instant}};
 
 use yazi_shared::{Either, url::{Url, UrlBuf}};
 
-use crate::provider::{self, ReadDir};
+use crate::provider::{self, DirReader, FileHolder, ReadDir};
 
 pub enum SizeCalculator {
 	File(Option<u64>),
@@ -65,7 +65,7 @@ impl SizeCalculator {
 				};
 			}
 
-			let Ok(Some(ent)) = front.right_mut()?.next_entry().await else {
+			let Ok(Some(ent)) = front.right_mut()?.next().await else {
 				pop_and_continue!();
 			};
 
