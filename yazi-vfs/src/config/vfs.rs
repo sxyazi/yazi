@@ -50,9 +50,9 @@ impl Vfs {
 	pub(crate) fn reshape(self) -> io::Result<Self> {
 		for name in self.providers.keys() {
 			if name.is_empty() || name.len() > 20 {
-				Err(io::Error::other("VFS name `{name}` must be between 1 and 20 characters"))?;
+				Err(io::Error::other(format!("VFS name `{name}` must be between 1 and 20 characters")))?;
 			} else if !name.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'z' | b'-')) {
-				Err(io::Error::other("VFS name `{name}` must be in kebab-case"))?;
+				Err(io::Error::other(format!("VFS name `{name}` must be in kebab-case")))?;
 			}
 		}
 

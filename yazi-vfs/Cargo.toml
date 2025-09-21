@@ -19,4 +19,6 @@ hashbrown = { workspace = true }
 serde     = { workspace = true }
 tokio     = { workspace = true }
 toml      = { workspace = true }
-uzers     = { workspace = true }
+
+[target."cfg(unix)".dependencies]
+uzers = { workspace = true }
