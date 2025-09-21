@@ -136,9 +136,9 @@ impl Provider for Local {
 		}
 		#[cfg(windows)]
 		if _is_dir().await? {
-			Self::symlink_dir(original, link).await
+			self.symlink_dir(original, link).await
 		} else {
-			Self::symlink_file(original, link).await
+			self.symlink_file(original, link).await
 		}
 	}
 
