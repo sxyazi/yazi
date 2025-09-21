@@ -4672,6 +4672,7 @@ dependencies = [
  "yazi-fs",
  "yazi-macro",
  "yazi-shared",
+ "yazi-vfs",
 ]
 
 [[package]]
@@ -4702,6 +4703,7 @@ dependencies = [
  "yazi-fs",
  "yazi-macro",
  "yazi-shared",
+ "yazi-vfs",
 ]
 
 [[package]]
@@ -4726,6 +4728,7 @@ dependencies = [
  "ratatui",
  "regex",
  "serde",
+ "tokio",
  "toml 0.9.6",
  "tracing",
  "yazi-codegen",
@@ -4733,6 +4736,7 @@ dependencies = [
  "yazi-macro",
  "yazi-shared",
  "yazi-term",
+ "yazi-vfs",
 ]
 
 [[package]]
@@ -4836,6 +4840,7 @@ dependencies = [
  "yazi-proxy",
  "yazi-shared",
  "yazi-term",
+ "yazi-vfs",
  "yazi-watcher",
  "yazi-widgets",
 ]
@@ -4857,6 +4862,7 @@ dependencies = [
  "objc",
  "parking_lot",
  "regex",
+ "russh",
  "scopeguard",
  "serde",
  "tokio",
@@ -4868,6 +4874,7 @@ dependencies = [
  "yazi-macro",
  "yazi-sftp",
  "yazi-shared",
+ "yazi-vfs",
 ]
 
 [[package]]
@@ -5023,6 +5030,21 @@ dependencies = [
  "parking_lot",
  "tracing",
  "windows-sys 0.61.0",
+ "yazi-macro",
+ "yazi-shared",
+]
+
+[[package]]
+name = "yazi-vfs"
+version = "25.9.15"
+dependencies = [
+ "anyhow",
+ "dirs",
+ "hashbrown 0.16.0",
+ "serde",
+ "tokio",
+ "toml 0.9.6",
+ "uzers",
  "yazi-macro",
  "yazi-shared",
 ]

@@ -23,7 +23,7 @@ impl Dependency {
 
 	pub(super) async fn delete_assets(&self) -> Result<()> {
 		let assets = self.target().join("assets");
-		match Local::read_dir(&assets).await {
+		match Local.read_dir(&assets).await {
 			Ok(mut it) => {
 				while let Some(entry) = it.next().await? {
 					remove_sealed(&entry.path())
@@ -49,7 +49,7 @@ impl Dependency {
 				.with_context(|| format!("failed to delete `{}`", path.display()))?;
 		}
 
-		if ok_or_not_found(Local::remove_dir(&dir).await).is_ok() {
+		if ok_or_not_found(Local.remove_dir(&dir).await).is_ok() {
 			outln!("Done!")?;
 		} else {
 			outln!(

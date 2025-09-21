@@ -4,7 +4,7 @@ use crate::{ByteStr, Error, Session, fs::DirEntry, requests, responses};
 
 pub struct ReadDir {
 	session: Arc<Session>,
-	dir:     ByteStr<'static>,
+	dir:     Arc<ByteStr<'static>>,
 	handle:  String,
 
 	name:   responses::Name<'static>,
@@ -16,7 +16,7 @@ impl ReadDir {
 	pub(crate) fn new(session: &Arc<Session>, dir: ByteStr, handle: String) -> Self {
 		Self {
 			session: session.clone(),
-			dir: dir.into_owned(),
+			dir: Arc::new(dir.into_owned()),
 			handle,
 
 			name: Default::default(),
@@ -25,7 +25,7 @@ impl ReadDir {
 		}
 	}
 
-	pub async fn next(&mut self) -> Result<Option<DirEntry<'_>>, Error> {
+	pub async fn next(&mut self) -> Result<Option<DirEntry>, Error> {
 		loop {
 			self.fetch().await?;
 			let Some(item) = self.name.items.get_mut(self.cursor).map(mem::take) else {
@@ -35,7 +35,7 @@ impl ReadDir {
 			self.cursor += 1;
 			if item.name != "." && item.name != ".." {
 				return Ok(Some(DirEntry {
-					dir:       ByteStr::from(&self.dir),
+					dir:       self.dir.clone(),
 					name:      item.name,
 					long_name: item.long_name,
 					attrs:     item.attrs,

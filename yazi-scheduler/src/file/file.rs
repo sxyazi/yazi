@@ -4,7 +4,7 @@ use anyhow::{Result, anyhow};
 use tokio::{io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::YAZI;
-use yazi_fs::{cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path::{path_relative_to, skip_url}, provider::{self, DirEntry}};
+use yazi_fs::{cha::Cha, copy_with_progress, maybe_exists, ok_or_not_found, path::{path_relative_to, skip_url}, provider::{self, DirEntry, DirReader, FileHolder}};
 use yazi_shared::url::{Url, UrlBuf, UrlCow};
 
 use super::{FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash};
@@ -69,7 +69,7 @@ impl File {
 			});
 
 			let mut it = continue_unless_ok!(provider::read_dir(&src).await);
-			while let Ok(Some(entry)) = it.next_entry().await {
+			while let Ok(Some(entry)) = it.next().await {
 				let from = entry.url();
 				let cha = continue_unless_ok!(Self::entry_cha(entry, &from, task.follow).await);
 
@@ -203,7 +203,7 @@ impl File {
 			});
 
 			let mut it = continue_unless_ok!(provider::read_dir(&src).await);
-			while let Ok(Some(entry)) = it.next_entry().await {
+			while let Ok(Some(entry)) = it.next().await {
 				let from = entry.url();
 				let cha = continue_unless_ok!(Self::entry_cha(entry, &from, task.follow).await);
 
@@ -251,7 +251,7 @@ impl File {
 		while let Some(target) = dirs.pop_front() {
 			let Ok(mut it) = provider::read_dir(&target).await else { continue };
 
-			while let Ok(Some(entry)) = it.next_entry().await {
+			while let Ok(Some(entry)) = it.next().await {
 				let Ok(cha) = entry.metadata().await else { continue };
 
 				if cha.is_dir() {

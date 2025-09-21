@@ -12,7 +12,7 @@ type Iter = yazi_binding::Iter<
 	yazi_binding::Url,
 >;
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct UpdateYankedOpt<'a> {
 	pub cut:  bool,
 	pub urls: Cow<'a, HashSet<UrlBufCov>>,

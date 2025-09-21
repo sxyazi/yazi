@@ -3,7 +3,7 @@ use std::{fmt::Display, str::FromStr, sync::atomic::{AtomicU64, Ordering}};
 use serde::{Deserialize, Serialize};
 
 #[derive(
-	Clone, Copy, Debug, Default, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize, Deserialize,
+	Clone, Copy, Debug, Default, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize,
 )]
 pub struct Id(pub u64);
 

@@ -1,15 +1,15 @@
-use std::{borrow::Cow, ffi::OsStr, path::PathBuf};
+use std::{borrow::Cow, ffi::OsStr, path::PathBuf, sync::Arc};
 
 use crate::{ByteStr, fs::Attrs};
 
-pub struct DirEntry<'a> {
-	pub(super) dir:       ByteStr<'a>,
-	pub(super) name:      ByteStr<'a>,
-	pub(super) long_name: ByteStr<'a>,
+pub struct DirEntry {
+	pub(super) dir:       Arc<ByteStr<'static>>,
+	pub(super) name:      ByteStr<'static>,
+	pub(super) long_name: ByteStr<'static>,
 	pub(super) attrs:     Attrs,
 }
 
-impl<'a> DirEntry<'a> {
+impl DirEntry {
 	#[must_use]
 	pub fn path(&self) -> PathBuf { self.dir.join(&self.name) }
 

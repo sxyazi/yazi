@@ -58,7 +58,7 @@ impl State {
 			return Ok(());
 		}
 
-		Local::create_dir_all(&BOOT.state_dir).await?;
+		Local.create_dir_all(&BOOT.state_dir).await?;
 		let mut buf = BufWriter::new(
 			Gate::default()
 				.write(true)
@@ -79,7 +79,7 @@ impl State {
 	}
 
 	async fn load(&self) -> Result<()> {
-		let mut file = BufReader::new(Local::open(BOOT.state_dir.join(".dds")).await?);
+		let mut file = BufReader::new(Local.open(BOOT.state_dir.join(".dds")).await?);
 		let mut buf = String::new();
 
 		let mut inner = HashMap::new();
@@ -103,7 +103,7 @@ impl State {
 	}
 
 	async fn skip(&self) -> Result<bool> {
-		let cha = Local::symlink_metadata(BOOT.state_dir.join(".dds")).await?;
+		let cha = Local.symlink_metadata(BOOT.state_dir.join(".dds")).await?;
 		let modified = cha.mtime_dur()?.as_micros();
 		Ok(modified >= self.last.load(Ordering::Relaxed) as u128)
 	}

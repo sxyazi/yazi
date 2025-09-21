@@ -1,5 +1,7 @@
 use std::{io, path::Path};
 
+use yazi_shared::scheme::SchemeRef;
+
 use crate::provider::FileBuilder;
 
 #[derive(Default)]
@@ -21,6 +23,14 @@ impl FileBuilder for Gate {
 	fn create_new(&mut self, create_new: bool) -> &mut Self {
 		self.0.create_new(create_new);
 		self
+	}
+
+	async fn new(scheme: SchemeRef<'_>) -> io::Result<Self> {
+		if scheme.is_virtual() {
+			Err(io::Error::new(io::ErrorKind::InvalidInput, "Not a local filesystem"))?
+		} else {
+			Ok(Self::default())
+		}
 	}
 
 	async fn open<P>(&self, path: P) -> io::Result<Self::File>

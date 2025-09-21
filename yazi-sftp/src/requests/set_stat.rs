@@ -19,7 +19,7 @@ impl<'a> SetStat<'a> {
 	pub fn len(&self) -> usize { size_of_val(&self.id) + 4 + self.path.len() + self.attrs.len() }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct FSetStat<'a> {
 	pub id:     u32,
 	pub handle: Cow<'a, str>,

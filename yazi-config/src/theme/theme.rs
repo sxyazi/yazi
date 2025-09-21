@@ -3,8 +3,9 @@ use std::path::PathBuf;
 use anyhow::{Context, Result, anyhow, bail};
 use serde::Deserialize;
 use yazi_codegen::{DeserializeOver1, DeserializeOver2};
-use yazi_fs::{Xdg, ok_or_not_found, path::expand_url};
+use yazi_fs::{ok_or_not_found, path::expand_url};
 use yazi_shared::url::UrlBuf;
+use yazi_vfs::local::Xdg;
 
 use super::{Filetype, Flavor, Icon};
 use crate::Style;

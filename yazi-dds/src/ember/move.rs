@@ -6,7 +6,7 @@ use yazi_shared::url::UrlBuf;
 
 use super::Ember;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct EmberMove<'a> {
 	pub items: Cow<'a, Vec<BodyMoveItem>>,
 }
@@ -34,7 +34,7 @@ impl IntoLua for EmberMove<'_> {
 }
 
 // --- Item
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct BodyMoveItem {
 	pub from: UrlBuf,
 	pub to:   UrlBuf,

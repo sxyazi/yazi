@@ -6,7 +6,7 @@ use yazi_shared::{Id, url::UrlBuf};
 
 use super::Ember;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct EmberHover<'a> {
 	pub tab: Id,
 	pub url: Option<Cow<'a, UrlBuf>>,

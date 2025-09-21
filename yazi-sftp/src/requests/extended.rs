@@ -42,7 +42,7 @@ impl ExtendedData for ExtendedFsync<'_> {
 }
 
 // --- Hardlink
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ExtendedHardlink<'a> {
 	pub original: ByteStr<'a>,
 	pub link:     ByteStr<'a>,

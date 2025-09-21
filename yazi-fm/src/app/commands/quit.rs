@@ -26,13 +26,13 @@ impl App {
 	async fn cwd_to_file(&self, no: bool) {
 		if let Some(p) = ARGS.cwd_file.as_ref().filter(|_| !no) {
 			let cwd = self.core.mgr.cwd().os_str();
-			Local::write(p, cwd.as_encoded_bytes()).await.ok();
+			Local.write(p, cwd.as_encoded_bytes()).await.ok();
 		}
 	}
 
 	async fn selected_to_file(&self, selected: Option<OsString>) {
 		if let (Some(s), Some(p)) = (selected, &ARGS.chooser_file) {
-			Local::write(p, s.as_encoded_bytes()).await.ok();
+			Local.write(p, s.as_encoded_bytes()).await.ok();
 		}
 	}
 }

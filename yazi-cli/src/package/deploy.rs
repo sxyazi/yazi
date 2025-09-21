@@ -20,7 +20,7 @@ impl Dependency {
 			self.hash_check().await?;
 		}
 
-		Local::create_dir_all(&to).await?;
+		Local.create_dir_all(&to).await?;
 		self.delete_assets().await?;
 
 		let res1 = Self::deploy_assets(from.join("assets"), to.join("assets")).await;
@@ -40,9 +40,9 @@ impl Dependency {
 	}
 
 	async fn deploy_assets(from: PathBuf, to: PathBuf) -> Result<()> {
-		match Local::read_dir(&from).await {
+		match Local.read_dir(&from).await {
 			Ok(mut it) => {
-				Local::create_dir_all(&to).await?;
+				Local.create_dir_all(&to).await?;
 				while let Some(entry) = it.next().await? {
 					let (src, dist) = (entry.path(), to.join(entry.name()));
 					copy_and_seal(&src, &dist).await.with_context(|| {

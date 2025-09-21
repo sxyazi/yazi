@@ -3,7 +3,7 @@ use std::str::FromStr;
 use mlua::{ExternalError, Function, IntoLua, IntoLuaMulti, Lua, Table, Value};
 use yazi_binding::{Cha, Composer, ComposerGet, ComposerSet, Error, File, Url, UrlRef};
 use yazi_config::Pattern;
-use yazi_fs::{mounts::PARTITIONS, provider, remove_dir_clean};
+use yazi_fs::{mounts::PARTITIONS, provider::{self, DirReader, FileHolder}, remove_dir_clean};
 use yazi_shared::url::UrlCow;
 
 use crate::bindings::SizeCalculator;
@@ -121,7 +121,7 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 		};
 
 		let mut files = vec![];
-		while let Ok(Some(next)) = it.next_entry().await {
+		while let Ok(Some(next)) = it.next().await {
 			let url = next.url();
 			if pat.as_ref().is_some_and(|p| !p.match_url(&url, p.is_dir)) {
 				continue;

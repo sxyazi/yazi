@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize, de};
 use crate::{Id, SStr, url::{UrlBuf, UrlCow, UrnBuf}};
 
 // --- Data
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum Data {
 	Nil,
@@ -154,7 +154,7 @@ impl PartialEq<bool> for Data {
 }
 
 // --- Key
-#[derive(Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 #[serde(untagged)]
 pub enum DataKey {
 	Nil,
