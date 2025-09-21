@@ -29,19 +29,25 @@ function M:preload(job)
 	local cmd = Command("resvg"):arg {
 		"-w", rt.preview.max_width, "-h", rt.preview.max_height,
 		"--image-rendering", "optimizeSpeed",
-		tostring(job.file.url), tostring(cache)
 	}
+	if job.args.bg then
+		cmd = cmd:arg { "--background", job.args.bg }
+	end
 	if rt.tasks.image_alloc > 0 then
 		cmd = cmd:memory(rt.tasks.image_alloc)
 	end
 
-	local child, err = cmd:spawn()
+	local child, err = cmd:arg({ tostring(job.file.url), tostring(cache) }):spawn()
 	if not child then
 		return true, Err("Failed to start `resvg`, error: %s", err)
 	end
 
 	local status, err
-	while true do
+	if rt.tasks.image_alloc == 0 then
+		status, err = child:wait()
+	end
+
+	while not status and not err do
 		ya.sleep(0.2)
 
 		status, err = child:try_wait()
@@ -56,7 +62,6 @@ function M:preload(job)
 		if mem and mem > rt.tasks.image_alloc then
 			child:start_kill()
 			err = Err("memory limit exceeded, pid: %s, memory: %s", id, mem)
-			break
 		end
 	end
 

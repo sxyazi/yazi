@@ -31,13 +31,16 @@ function M:preload(job)
 	end
 
 	-- stylua: ignore
-	local status, err = cmd:arg {
+	cmd = cmd:arg {
 		tostring(job.file.url), "-auto-orient", "-strip",
 		"-sample", string.format("%dx%d>", rt.preview.max_width, rt.preview.max_height),
 		"-quality", rt.preview.image_quality,
-		string.format("JPG:%s", cache),
-	}:status()
+	}
+	if job.args.bg then
+		cmd = cmd:arg { "-background", job.args.bg, "-alpha", "remove" }
+	end
 
+	local status, err = cmd:arg(string.format("JPG:%s", cache)):status()
 	if not status then
 		return true, Err("Failed to start `magick`, error: %s", err)
 	elseif not status.success then
