@@ -2,11 +2,11 @@ use mlua::{ExternalError, HookTriggers, IntoLua, ObjectLike, VmState};
 use tokio::{runtime::Handle, select};
 use tokio_util::sync::CancellationToken;
 use tracing::error;
-use yazi_binding::{File, elements::Rect};
+use yazi_binding::{Error, File, elements::{Rect, Renderable}};
 use yazi_config::LAYOUT;
 use yazi_dds::Sendable;
-use yazi_parser::app::{PluginCallback, PluginOpt};
-use yazi_proxy::AppProxy;
+use yazi_parser::{app::{PluginCallback, PluginOpt}, mgr::{PreviewLock, UpdatePeekedOpt}};
+use yazi_proxy::{AppProxy, MgrProxy};
 use yazi_shared::{event::Cmd, pool::Symbol};
 
 use super::slim_lua;
@@ -22,7 +22,10 @@ pub fn peek(
 
 	let ct = CancellationToken::new();
 	if let Some(c) = LOADER.read().get(id) {
-		if c.sync_peek {
+		if let Err(e) = Loader::compatible_or_error(id, c) {
+			peek_error(file, mime, skip, e);
+			return None;
+		} else if c.sync_peek {
 			peek_sync(cmd, file, mime, skip);
 		} else {
 			peek_async(cmd, file, mime, skip, ct.clone());
@@ -110,5 +113,22 @@ fn peek_async(
 		{
 			error!("{e}");
 		}
+	});
+}
+
+fn peek_error(file: yazi_fs::File, mime: Symbol<str>, skip: usize, error: anyhow::Error) {
+	let area = LAYOUT.get().preview;
+	MgrProxy::update_peeked(UpdatePeekedOpt {
+		lock: PreviewLock {
+			url: file.url,
+			cha: file.cha,
+			mime: mime.to_string(),
+			skip,
+			area: area.into(),
+			data: vec![
+				Renderable::Clear(yazi_binding::elements::Clear { area: area.into() }),
+				Renderable::from(Error::custom(error.to_string())).with_area(area),
+			],
+		},
 	});
 }

@@ -51,6 +51,10 @@ impl From<Rect> for Area {
 	fn from(rect: Rect) -> Self { Self::Rect(rect) }
 }
 
+impl From<ratatui::layout::Rect> for Area {
+	fn from(rect: ratatui::layout::Rect) -> Self { Self::Rect(rect.into()) }
+}
+
 impl TryFrom<AnyUserData> for Area {
 	type Error = mlua::Error;
 
