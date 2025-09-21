@@ -174,33 +174,35 @@ impl deadpool::managed::Manager for Sftp {
 
 	// FIXME: remove the hardcoded test values
 	async fn create(&self) -> Result<Self::Type, Self::Error> {
-		async fn inner(sftp: Sftp) -> anyhow::Result<yazi_sftp::Operator> {
-			let config = Arc::new(russh::client::Config::default());
-			let mut session = russh::client::connect(config, ("127.0.0.1", 22), sftp).await?;
+		todo!()
+		// async fn inner(sftp: Sftp) -> anyhow::Result<yazi_sftp::Operator> {
+		// 	let config = Arc::new(russh::client::Config::default());
+		// 	let mut session = russh::client::connect(config, ("127.0.0.1", 22),
+		// sftp).await?;
 
-			let mut agent = russh::keys::agent::client::AgentClient::connect_uds(
-				"/Users/ika/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock",
-			)
-			.await?;
+		// 	let mut agent = russh::keys::agent::client::AgentClient::connect_uds(
+		// 		"/Users/ika/Library/Group
+		// Containers/2BUA8C4S2C.com.1password/t/agent.sock", 	)
+		// 	.await?;
 
-			let mut keys = agent.request_identities().await?;
-			if !session
-				.authenticate_publickey_with("root", keys.remove(0), None, &mut agent)
-				.await?
-				.success()
-			{
-				panic!("auth failed");
-			}
+		// 	let mut keys = agent.request_identities().await?;
+		// 	if !session
+		// 		.authenticate_publickey_with("root", keys.remove(0), None, &mut agent)
+		// 		.await?
+		// 		.success()
+		// 	{
+		// 		panic!("auth failed");
+		// 	}
 
-			let channel = session.channel_open_session().await?;
-			channel.request_subsystem(true, "sftp").await?;
+		// 	let channel = session.channel_open_session().await?;
+		// 	channel.request_subsystem(true, "sftp").await?;
 
-			let mut op = yazi_sftp::Operator::make(channel.into_stream());
-			op.init().await?;
-			Ok(op)
-		}
+		// 	let mut op = yazi_sftp::Operator::make(channel.into_stream());
+		// 	op.init().await?;
+		// 	Ok(op)
+		// }
 
-		inner(*self).await.map_err(|e| io::Error::other(e.to_string()))
+		// inner(*self).await.map_err(|e| io::Error::other(e.to_string()))
 	}
 
 	async fn recycle(
