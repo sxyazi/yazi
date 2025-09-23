@@ -64,9 +64,6 @@ impl ChaType {
 	pub fn is_dir(self) -> bool { self == Self::Dir }
 
 	#[inline]
-	pub fn is_link(self) -> bool { self == Self::Link }
-
-	#[inline]
 	pub fn is_block(self) -> bool { self == Self::Block }
 
 	#[inline]

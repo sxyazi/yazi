@@ -5,9 +5,9 @@ use bitflags::bitflags;
 bitflags! {
 	#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 	pub struct ChaKind: u8 {
-		const HIDDEN = 0b0000_0001;
-		const SYSTEM = 0b0000_0010;
-		const ORPHAN = 0b0000_0100;
+		const FOLLOW = 0b0000_0001;
+		const HIDDEN = 0b0000_0010;
+		const SYSTEM = 0b0000_0100;
 		const DUMMY  = 0b0000_1000;
 	}
 }
