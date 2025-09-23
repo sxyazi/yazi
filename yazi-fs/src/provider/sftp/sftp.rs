@@ -1,4 +1,4 @@
-use std::{io, path::{Path, PathBuf}, sync::Arc};
+use std::{io, path::{Path, PathBuf}};
 
 use yazi_sftp::fs::{Attrs, Flags};
 use yazi_shared::scheme::SchemeRef;
@@ -207,8 +207,8 @@ impl deadpool::managed::Manager for Sftp {
 
 	async fn recycle(
 		&self,
-		obj: &mut Self::Type,
-		metrics: &deadpool::managed::Metrics,
+		_obj: &mut Self::Type,
+		_metrics: &deadpool::managed::Metrics,
 	) -> deadpool::managed::RecycleResult<Self::Error> {
 		// FIXME
 		Ok(())

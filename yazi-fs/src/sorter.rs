@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 use hashbrown::HashMap;
 use yazi_shared::{LcgRng, natsort, translit::Transliterator, url::UrnBuf};
 
-use crate::{File, SortBy, SortByMulti};
+use crate::{File, SortBy};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct FilesSorter {
@@ -65,6 +65,7 @@ impl FilesSorter {
 		}
 	}
 
+	#[allow(dead_code)]
 	pub(super) fn sort_multi(&self, items: &mut [File], sizes: &HashMap<UrnBuf, u64>, methods: &[SortBy]) {
 		if items.is_empty() || methods.is_empty() {
 			return;
@@ -90,6 +91,7 @@ impl FilesSorter {
 		});
 	}
 
+	#[allow(dead_code)]
 	fn compare_by_method(&self, a: &File, b: &File, method: SortBy, sizes: &HashMap<UrnBuf, u64>) -> std::cmp::Ordering {
 		let promote = self.promote(a, b);
 		if promote != std::cmp::Ordering::Equal {
@@ -149,6 +151,7 @@ impl FilesSorter {
 		if self.reverse { ordering.reverse() } else { ordering }
 	}
 
+	#[allow(dead_code)]
 	#[inline(always)]
 	fn cmp_insensitive_no_promote(&self, a: &[u8], b: &[u8]) -> std::cmp::Ordering {
 		let l = a.len().min(b.len());

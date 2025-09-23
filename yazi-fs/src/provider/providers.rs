@@ -6,8 +6,10 @@ use yazi_vfs::config::{ProviderSftp, Vfs};
 use super::local::Local;
 use crate::{cha::Cha, provider::Provider};
 
+#[allow(dead_code)]
 pub(super) struct Providers<'a>(Inner<'a>);
 
+#[allow(dead_code)]
 enum Inner<'a> {
 	Regular,
 	Search(Url<'a>),
@@ -15,6 +17,7 @@ enum Inner<'a> {
 }
 
 impl<'a> Providers<'a> {
+	#[allow(dead_code)]
 	pub(super) async fn new(url: Url<'a>) -> io::Result<Self> {
 		Ok(match url.scheme {
 			SchemeRef::Regular => Self(Inner::Regular),

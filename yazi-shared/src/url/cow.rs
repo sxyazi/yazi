@@ -5,6 +5,8 @@ use percent_encoding::percent_decode;
 
 use crate::{IntoOsStr, loc::{Loc, LocBuf}, scheme::{SchemeCow, SchemeRef}, url::{Components, Url, UrlBuf, Urn}};
 
+type ParseResult<'a> = (SchemeCow<'a>, Cow<'a, Path>, Option<(usize, usize)>);
+
 #[derive(Debug)]
 pub enum UrlCow<'a> {
 	Borrowed { loc: Loc<'a>, scheme: SchemeCow<'a> },
@@ -143,7 +145,7 @@ impl<'a> UrlCow<'a> {
 	#[inline]
 	pub fn pair(&self) -> Option<(Url<'_>, &Urn)> { self.as_url().pair() }
 
-	pub fn parse(bytes: &[u8]) -> Result<(SchemeCow<'_>, Cow<'_, Path>, Option<(usize, usize)>)> {
+	pub fn parse(bytes: &[u8]) -> Result<ParseResult<'_>> {
 		let mut skip = 0;
 		let (scheme, tilde, uri, urn) = SchemeCow::parse(bytes, &mut skip)?;
 
