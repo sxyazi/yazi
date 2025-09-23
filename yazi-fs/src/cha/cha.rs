@@ -66,10 +66,8 @@ impl Cha {
 		let mut retain = cha.kind & (ChaKind::HIDDEN | ChaKind::SYSTEM);
 
 		if cha.is_link() {
+			retain |= ChaKind::FOLLOW;
 			cha = provider::metadata(url).await.unwrap_or(cha);
-		}
-		if cha.is_link() {
-			retain |= ChaKind::ORPHAN;
 		}
 
 		cha.attach(retain)
@@ -150,7 +148,17 @@ impl Cha {
 
 impl Cha {
 	#[inline]
-	pub const fn is_hidden(&self) -> bool {
+	pub fn is_link(self) -> bool {
+		self.kind.contains(ChaKind::FOLLOW) || *self.mode == ChaType::Link
+	}
+
+	#[inline]
+	pub fn is_orphan(self) -> bool {
+		*self.mode == ChaType::Link && self.kind.contains(ChaKind::FOLLOW)
+	}
+
+	#[inline]
+	pub const fn is_hidden(self) -> bool {
 		win_either!(
 			self.kind.contains(ChaKind::HIDDEN) || self.kind.contains(ChaKind::SYSTEM),
 			self.kind.contains(ChaKind::HIDDEN)
@@ -158,12 +166,9 @@ impl Cha {
 	}
 
 	#[inline]
-	pub const fn is_orphan(&self) -> bool { self.kind.contains(ChaKind::ORPHAN) }
+	pub const fn is_dummy(self) -> bool { self.kind.contains(ChaKind::DUMMY) }
 
-	#[inline]
-	pub const fn is_dummy(&self) -> bool { self.kind.contains(ChaKind::DUMMY) }
-
-	pub fn atime_dur(&self) -> anyhow::Result<Duration> {
+	pub fn atime_dur(self) -> anyhow::Result<Duration> {
 		if let Some(atime) = self.atime {
 			Ok(atime.duration_since(UNIX_EPOCH)?)
 		} else {
@@ -171,7 +176,7 @@ impl Cha {
 		}
 	}
 
-	pub fn mtime_dur(&self) -> anyhow::Result<Duration> {
+	pub fn mtime_dur(self) -> anyhow::Result<Duration> {
 		if let Some(mtime) = self.mtime {
 			Ok(mtime.duration_since(UNIX_EPOCH)?)
 		} else {
@@ -179,7 +184,7 @@ impl Cha {
 		}
 	}
 
-	pub fn btime_dur(&self) -> anyhow::Result<Duration> {
+	pub fn btime_dur(self) -> anyhow::Result<Duration> {
 		if let Some(btime) = self.btime {
 			Ok(btime.duration_since(UNIX_EPOCH)?)
 		} else {
@@ -187,7 +192,7 @@ impl Cha {
 		}
 	}
 
-	pub fn ctime_dur(&self) -> anyhow::Result<Duration> {
+	pub fn ctime_dur(self) -> anyhow::Result<Duration> {
 		if let Some(ctime) = self.ctime {
 			Ok(ctime.duration_since(UNIX_EPOCH)?)
 		} else {
