@@ -62,11 +62,13 @@ fn expand_variables(p: &Path) -> Cow<'_, Path> {
 	}
 }
 
-fn absolute_url<'a>(url: Url<'a>) -> UrlCow<'a> {
-	let b = url.loc.as_os_str().as_encoded_bytes();
-	let local = !url.scheme.is_virtual();
+pub fn absolute_url<'a>(url: Url<'a>) -> UrlCow<'a> {
+	if url.scheme.is_virtual() {
+		return url.into();
+	}
 
-	if cfg!(windows) && local && b.len() == 2 && b[1] == b':' && b[0].is_ascii_alphabetic() {
+	let b = url.loc.as_os_str().as_encoded_bytes();
+	if cfg!(windows) && b.len() == 2 && b[1] == b':' && b[0].is_ascii_alphabetic() {
 		let loc = LocBuf::with(
 			format!(r"{}:\", b[0].to_ascii_uppercase() as char).into(),
 			if url.has_base() { 0 } else { 2 },
@@ -74,8 +76,7 @@ fn absolute_url<'a>(url: Url<'a>) -> UrlCow<'a> {
 		)
 		.expect("Failed to create Loc from drive letter");
 		UrlBuf { loc, scheme: url.scheme.into() }.into()
-	} else if local
-		&& let Ok(rest) = url.loc.strip_prefix("~/")
+	} else if let Ok(rest) = url.loc.strip_prefix("~/")
 		&& let Some(home) = dirs::home_dir()
 		&& home.is_absolute()
 	{
@@ -88,10 +89,10 @@ fn absolute_url<'a>(url: Url<'a>) -> UrlCow<'a> {
 		.expect("Failed to create Loc from home directory");
 		UrlBuf { loc, scheme: url.scheme.into() }.into()
 	} else if !url.is_absolute() {
-		let cwd = CWD.load();
-		let loc = LocBuf::with(cwd.loc.join(url.loc), url.uri().count(), url.urn().count())
+		let cwd = CWD.path();
+		let loc = LocBuf::with(cwd.join(url.loc), url.uri().count(), url.urn().count())
 			.expect("Failed to create Loc from relative path");
-		UrlBuf { loc, scheme: cwd.scheme.clone() }.into()
+		UrlBuf { loc, scheme: url.scheme.into() }.into()
 	} else {
 		url.into()
 	}

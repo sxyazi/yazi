@@ -45,7 +45,7 @@ impl File {
 		Operator::from(&self.session).fstat(&self.handle).await
 	}
 
-	pub async fn fsetstat(&self, attrs: Attrs) -> Result<(), Error> {
+	pub async fn fsetstat(&self, attrs: &Attrs) -> Result<(), Error> {
 		Operator::from(&self.session).fsetstat(&self.handle, attrs).await
 	}
 }

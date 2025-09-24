@@ -1,6 +1,8 @@
 use std::{io, path::{Path, PathBuf}};
 
-use crate::{cha::Cha, provider::Provider};
+use yazi_shared::url::{Url, UrlCow};
+
+use crate::{cha::Cha, path::absolute_url, provider::Provider};
 
 #[derive(Clone, Copy)]
 pub struct Local;
@@ -10,12 +12,16 @@ impl Provider for Local {
 	type Gate = super::Gate;
 	type ReadDir = super::ReadDir;
 
-	#[inline]
-	fn cache<P>(&self, _: P) -> Option<PathBuf>
+	async fn absolute<'a, U>(&self, url: U) -> io::Result<UrlCow<'a>>
 	where
-		P: AsRef<Path>,
+		U: Into<Url<'a>>,
 	{
-		None
+		let url: Url = url.into();
+		if url.scheme.is_virtual() {
+			Err(io::Error::new(io::ErrorKind::InvalidInput, "Not a local URL"))
+		} else {
+			Ok(absolute_url(url))
+		}
 	}
 
 	#[inline]
@@ -220,23 +226,9 @@ impl Provider for Local {
 
 impl Local {
 	async fn copy_impl(from: PathBuf, to: PathBuf, cha: Cha) -> io::Result<u64> {
-		let mut ft = std::fs::FileTimes::new();
-		cha.atime.map(|t| ft = ft.set_accessed(t));
-		cha.mtime.map(|t| ft = ft.set_modified(t));
-		#[cfg(target_os = "macos")]
-		{
-			use std::os::macos::fs::FileTimesExt;
-			cha.btime.map(|t| ft = ft.set_created(t));
-		}
-		#[cfg(windows)]
-		{
-			use std::os::windows::fs::FileTimesExt;
-			cha.btime.map(|t| ft = ft.set_created(t));
-		}
-
 		#[cfg(any(target_os = "linux", target_os = "android"))]
 		{
-			use std::os::{fd::AsRawFd, unix::fs::OpenOptionsExt};
+			use std::os::unix::fs::OpenOptionsExt;
 
 			tokio::task::spawn_blocking(move || {
 				let mut reader = std::fs::File::open(from)?;
@@ -248,8 +240,8 @@ impl Local {
 					.open(to)?;
 
 				let written = std::io::copy(&mut reader, &mut writer)?;
-				unsafe { libc::fchmod(writer.as_raw_fd(), cha.mode.bits() as _) };
-				writer.set_times(ft).ok();
+				writer.set_permissions(cha.into()).ok();
+				writer.set_times(cha.into()).ok();
 
 				Ok(written)
 			})
@@ -260,7 +252,11 @@ impl Local {
 		{
 			tokio::task::spawn_blocking(move || {
 				let written = std::fs::copy(from, &to)?;
-				std::fs::File::options().write(true).open(to).and_then(|f| f.set_times(ft)).ok();
+
+				if let Ok(file) = std::fs::File::options().write(true).open(to) {
+					file.set_times(cha.into()).ok();
+				}
+
 				Ok(written)
 			})
 			.await?

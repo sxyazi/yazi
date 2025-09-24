@@ -2,7 +2,7 @@ use std::{collections::HashMap, fmt};
 
 use serde::{Deserialize, Deserializer, Serialize, de::Visitor, ser::SerializeStruct};
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Attrs {
 	pub size:     Option<u64>,
 	pub uid:      Option<u32>,

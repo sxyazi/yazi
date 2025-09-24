@@ -205,5 +205,5 @@ impl<'a> Loc<'a> {
 	}
 
 	#[inline]
-	fn bytes(self) -> &'a [u8] { self.inner.as_os_str().as_encoded_bytes() }
+	pub fn bytes(self) -> &'a [u8] { self.inner.as_os_str().as_encoded_bytes() }
 }

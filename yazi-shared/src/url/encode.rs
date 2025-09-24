@@ -22,7 +22,7 @@ impl<'a> Encode<'a> {
 	pub(super) fn new(loc: Loc<'a>, scheme: SchemeRef<'a>) -> Self { Self { loc, scheme } }
 
 	#[inline]
-	fn domain<'s>(s: &'s str) -> PercentEncode<'s> {
+	pub fn domain<'s>(s: &'s str) -> PercentEncode<'s> {
 		const SET: &AsciiSet = &CONTROLS.add(b'/').add(b':');
 		percent_encode(s.as_bytes(), SET)
 	}

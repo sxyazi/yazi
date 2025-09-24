@@ -4,7 +4,7 @@ use futures::executor::block_on;
 use hashbrown::HashSet;
 use serde::Serialize;
 use yazi_fs::{CWD, path::expand_url, provider};
-use yazi_shared::url::{UrlBuf, UrnBuf};
+use yazi_shared::url::{UrlBuf, UrlCow, UrnBuf};
 use yazi_vfs::local::Xdg;
 
 #[derive(Debug, Default, Serialize)]
@@ -27,7 +27,12 @@ impl Boot {
 			return (vec![CWD.load().as_ref().clone()], vec![UrnBuf::default()]);
 		}
 
-		async fn go(entry: UrlBuf) -> (UrlBuf, UrnBuf) {
+		async fn go(entry: &UrlBuf) -> (UrlBuf, UrnBuf) {
+			let mut entry = expand_url(entry);
+			if let Ok(u @ UrlCow::Owned { .. }) = provider::absolute(&entry).await {
+				entry = u.into_owned();
+			}
+
 			let Some((parent, child)) = entry.pair() else {
 				return (entry, UrnBuf::default());
 			};
@@ -39,7 +44,7 @@ impl Boot {
 			}
 		}
 
-		futures::future::join_all(entries.iter().map(expand_url).map(go)).await.into_iter().unzip()
+		futures::future::join_all(entries.iter().map(go)).await.into_iter().unzip()
 	}
 }
 

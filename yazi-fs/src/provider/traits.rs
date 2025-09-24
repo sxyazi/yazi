@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::OsStr, io, path::{Path, PathBuf}};
 
 use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt};
 use yazi_macro::ok_or_not_found;
-use yazi_shared::scheme::SchemeRef;
+use yazi_shared::{scheme::SchemeRef, url::{Url, UrlCow}};
 
 use crate::cha::{Cha, ChaType};
 
@@ -11,9 +11,9 @@ pub trait Provider {
 	type Gate: FileBuilder<File = Self::File>;
 	type ReadDir: DirReader;
 
-	fn cache<P>(&self, path: P) -> Option<PathBuf>
+	fn absolute<'a, U>(&self, url: U) -> impl Future<Output = io::Result<UrlCow<'a>>>
 	where
-		P: AsRef<Path>;
+		U: Into<Url<'a>>;
 
 	fn canonicalize<P>(&self, path: P) -> impl Future<Output = io::Result<PathBuf>>
 	where
@@ -40,26 +40,37 @@ pub trait Provider {
 		P: AsRef<Path>,
 	{
 		async move {
-			let path = path.as_ref();
+			let mut path = path.as_ref();
 			if path == Path::new("") {
 				return Ok(());
 			}
 
-			match self.create_dir(path).await {
-				Ok(()) => return Ok(()),
-				Err(e) if e.kind() == io::ErrorKind::NotFound => {}
-				Err(_) if self.metadata(path).await.is_ok_and(|m| m.is_dir()) => return Ok(()),
-				Err(e) => return Err(e),
+			let mut stack = Vec::new();
+			loop {
+				match self.create_dir(path).await {
+					Ok(()) => break,
+					Err(e) if e.kind() == io::ErrorKind::NotFound => {
+						if let Some(parent) = path.parent() {
+							stack.push(path);
+							path = parent;
+						} else {
+							return Err(io::Error::other("failed to create whole tree"));
+						}
+					}
+					Err(_) if self.metadata(path).await.is_ok_and(|m| m.is_dir()) => break,
+					Err(e) => return Err(e),
+				}
 			}
-			match path.parent() {
-				Some(p) => self.create_dir_all(p).await?,
-				None => return Err(io::Error::other("failed to create whole tree")),
+
+			while let Some(p) = stack.pop() {
+				match self.create_dir(p).await {
+					Ok(()) => {}
+					Err(_) if self.metadata(p).await.is_ok_and(|m| m.is_dir()) => {}
+					Err(e) => return Err(e),
+				}
 			}
-			match self.create_dir(path).await {
-				Ok(()) => Ok(()),
-				Err(_) if self.metadata(path).await.is_ok_and(|m| m.is_dir()) => Ok(()),
-				Err(e) => Err(e),
-			}
+
+			Ok(())
 		}
 	}
 
@@ -105,7 +116,7 @@ pub trait Provider {
 			while let Some(child) = it.next().await? {
 				let ft = ok_or_not_found!(child.file_type().await, continue);
 				let result = if ft.is_dir() {
-					remove_dir_all_impl(me, &child.path()).await
+					Box::pin(remove_dir_all_impl(me, &child.path())).await
 				} else {
 					me.remove_file(&child.path()).await
 				};
@@ -205,6 +216,8 @@ pub trait FileBuilder {
 	type File: AsyncRead + AsyncWrite + Unpin;
 
 	fn append(&mut self, append: bool) -> &mut Self;
+
+	fn cha(&mut self, cha: Cha) -> &mut Self;
 
 	fn create(&mut self, create: bool) -> &mut Self;
 

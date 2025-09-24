@@ -23,12 +23,12 @@ impl<'a> SetStat<'a> {
 pub struct FSetStat<'a> {
 	pub id:     u32,
 	pub handle: Cow<'a, str>,
-	pub attrs:  Attrs,
+	pub attrs:  Cow<'a, Attrs>,
 }
 
 impl<'a> FSetStat<'a> {
-	pub fn new(handle: impl Into<Cow<'a, str>>, attrs: Attrs) -> Self {
-		Self { id: 0, handle: handle.into(), attrs }
+	pub fn new(handle: impl Into<Cow<'a, str>>, attrs: &'a Attrs) -> Self {
+		Self { id: 0, handle: handle.into(), attrs: Cow::Borrowed(attrs) }
 	}
 
 	pub fn len(&self) -> usize { size_of_val(&self.id) + 4 + self.handle.len() + self.attrs.len() }

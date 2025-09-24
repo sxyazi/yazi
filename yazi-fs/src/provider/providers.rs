@@ -1,6 +1,6 @@
 use std::{io, path::{Path, PathBuf}, sync::Arc};
 
-use yazi_shared::{scheme::SchemeRef, url::Url};
+use yazi_shared::{scheme::SchemeRef, url::{Url, UrlCow}};
 use yazi_vfs::config::{ProviderSftp, Vfs};
 
 use super::local::Local;
@@ -34,13 +34,13 @@ impl Provider for Providers<'_> {
 	type Gate = super::Gate;
 	type ReadDir = super::ReadDir;
 
-	fn cache<P>(&self, path: P) -> Option<PathBuf>
+	async fn absolute<'a, U>(&self, url: U) -> io::Result<UrlCow<'a>>
 	where
-		P: AsRef<Path>,
+		U: Into<Url<'a>>,
 	{
 		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.cache(path),
-			Inner::Sftp((p, _)) => p.cache(path),
+			Inner::Regular | Inner::Search(_) => Local.absolute(url).await,
+			Inner::Sftp((p, _)) => p.absolute(url).await,
 		}
 	}
 

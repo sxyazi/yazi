@@ -3,6 +3,8 @@ use std::{env::{current_dir, set_current_dir}, ops::Deref, path::PathBuf, sync::
 use arc_swap::ArcSwap;
 use yazi_shared::{RoCell, url::UrlBuf};
 
+use crate::provider;
+
 pub static CWD: RoCell<Cwd> = RoCell::new();
 
 pub struct Cwd(ArcSwap<UrlBuf>);
@@ -26,16 +28,20 @@ impl Default for Cwd {
 }
 
 impl Cwd {
+	pub fn path(&self) -> PathBuf {
+		let url = self.0.load();
+		provider::cache(url.as_ref()).unwrap_or_else(|| url.loc.to_path())
+	}
+
 	pub fn set(&self, url: &UrlBuf) -> bool {
-		if self.load().as_ref() == url {
+		if !url.is_absolute() {
+			return false;
+		} else if self.0.load().as_ref() == url {
 			return false;
 		}
 
-		self.store(Arc::new(url.clone()));
-		if let Some(p) = url.as_path() {
-			unsafe { std::env::set_var("PWD", p) };
-			Self::sync_cwd();
-		}
+		self.0.store(Arc::new(url.clone()));
+		Self::sync_cwd();
 
 		true
 	}
@@ -47,17 +53,20 @@ impl Cwd {
 		}
 
 		tokio::task::spawn_blocking(move || {
-			if let Some(p) = CWD.load().as_path() {
-				_ = set_current_dir(p);
-			}
+			let path = CWD.path();
+			std::fs::create_dir_all(&path).ok();
 
+			_ = set_current_dir(&path);
 			let cur = current_dir().unwrap_or_default();
+
+			unsafe { std::env::set_var("PWD", path) }
 			SYNCING.store(false, Ordering::Relaxed);
 
-			if let Some(p) = CWD.load().as_path()
-				&& cur != p
-			{
-				set_current_dir(p).ok();
+			let path = CWD.path();
+			if cur != path {
+				std::fs::create_dir_all(&path).ok();
+				set_current_dir(&path).ok();
+				unsafe { std::env::set_var("PWD", path) }
 			}
 		});
 	}

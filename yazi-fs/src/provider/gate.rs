@@ -2,7 +2,7 @@ use std::{io, path::Path};
 
 use yazi_shared::scheme::SchemeRef;
 
-use crate::provider::FileBuilder;
+use crate::{cha::Cha, provider::FileBuilder};
 
 pub enum Gate {
 	Local(super::local::Gate),
@@ -24,6 +24,14 @@ impl FileBuilder for Gate {
 		match self {
 			Self::Local(g) => _ = g.append(append),
 			Self::Sftp(g) => _ = g.append(append),
+		};
+		self
+	}
+
+	fn cha(&mut self, cha: Cha) -> &mut Self {
+		match self {
+			Self::Local(g) => _ = g.cha(cha),
+			Self::Sftp(g) => _ = g.cha(cha),
 		};
 		self
 	}

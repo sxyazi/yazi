@@ -1,9 +1,9 @@
-use std::{any::TypeId, collections::HashMap, io::ErrorKind, sync::Arc};
+use std::{any::TypeId, collections::HashMap, io::{self, ErrorKind}, sync::Arc};
 
 use parking_lot::Mutex;
 use russh::{ChannelStream, client::Msg};
 use serde::Serialize;
-use tokio::{io::{AsyncReadExt, AsyncWriteExt}, select, sync::{mpsc, oneshot}};
+use tokio::{io::{AsyncReadExt, AsyncWriteExt, ReadHalf, WriteHalf}, select, sync::{mpsc, oneshot}};
 
 use crate::{Error, Id, Packet, responses};
 
@@ -12,6 +12,10 @@ pub struct Session {
 	id:                    Id,
 	callback:              Mutex<HashMap<u32, oneshot::Sender<Packet<'static>>>>,
 	pub(super) extensions: Mutex<HashMap<String, String>>,
+}
+
+impl Drop for Session {
+	fn drop(&mut self) { self.tx.send(vec![]).ok(); }
 }
 
 impl Session {
@@ -24,15 +28,30 @@ impl Session {
 			extensions: Default::default(),
 		});
 
+		async fn read(reader: &mut ReadHalf<ChannelStream<Msg>>) -> io::Result<Vec<u8>> {
+			let len = reader.read_u32().await?;
+			let mut buf = vec![0; len as usize];
+			reader.read_exact(&mut buf).await?;
+			Ok(buf)
+		}
+
+		async fn write(writer: &mut WriteHalf<ChannelStream<Msg>>, buf: Vec<u8>) -> io::Result<()> {
+			if buf.is_empty() {
+				Err(io::Error::new(ErrorKind::BrokenPipe, "channel closed"))
+			} else {
+				writer.write_all(&buf).await
+			}
+		}
+
 		let (mut reader, mut writer) = tokio::io::split(stream);
 		tokio::spawn(async move {
 			while let Some(data) = rx.recv().await {
-				if data.is_empty() {
+				if let Err(e) = write(&mut writer, data).await
+					&& e.kind() == ErrorKind::BrokenPipe
+				{
 					rx.close();
 					writer.shutdown().await.ok();
 					break;
-				} else {
-					writer.write_all(&data).await.ok();
 				}
 			}
 		});
@@ -41,12 +60,16 @@ impl Session {
 		tokio::spawn(async move {
 			loop {
 				select! {
-					Ok(len) = reader.read_u32() => {
-						let mut buf = vec![0; len as usize];
-						if let Err(e) = reader.read_exact(&mut buf).await && e.kind() == ErrorKind::UnexpectedEof {
-							me_.tx.send(vec![]).ok();
-							break;
-						}
+					result = read(&mut reader) => {
+						let buf = match result {
+							Ok(b) => b,
+							Err(e) if e.kind() == ErrorKind::UnexpectedEof => {
+								me_.tx.send(vec![]).ok();
+								break;
+							},
+							Err(_) => continue,
+						};
+
 						if let Ok(packet) = crate::from_bytes(&buf)
 							&& let Some(cb) = me_.callback.lock().remove(&packet.id())
 						{
@@ -89,4 +112,6 @@ impl Session {
 
 		Ok(rx)
 	}
+
+	pub fn is_closed(&self) -> bool { self.tx.is_closed() }
 }

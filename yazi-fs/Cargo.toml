@@ -31,6 +31,7 @@ scopeguard  = { workspace = true }
 serde       = { workspace = true }
 tokio       = { workspace = true }
 tracing     = { workspace = true }
+twox-hash   = { workspace = true }
 
 [target."cfg(unix)".dependencies]
 libc  = { workspace = true }
