@@ -68,8 +68,8 @@ impl Provider for Sftp {
 				continue;
 			} else if s == name {
 				return Ok(entry.path());
-			} else {
-				similar = Some(name);
+			} else if similar.is_none() {
+				similar = Some(s.into_owned());
 			}
 		}
 
