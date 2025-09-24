@@ -33,7 +33,7 @@ futures             = "0.3.31"
 globset             = "0.4.16"
 hashbrown           = { version = "0.16.0", features = [ "serde" ] }
 indexmap            = { version = "2.11.4", features = [ "serde" ] }
-libc                = "0.2.175"
+libc                = "0.2.176"
 lru                 = "0.16.1"
 mlua                = { version = "0.11.3", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serde" ] }
 objc                = "0.2.7"

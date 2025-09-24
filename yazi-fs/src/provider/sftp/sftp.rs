@@ -203,7 +203,6 @@ impl deadpool::managed::Manager for Sftp {
 		_metrics: &deadpool::managed::Metrics,
 	) -> deadpool::managed::RecycleResult<Self::Error> {
 		if obj.is_closed() {
-			tracing::debug!("Reconnecting SFTP connection for `{}`", self.name);
 			Err(deadpool::managed::RecycleError::Message("Channel closed".into()))
 		} else {
 			Ok(())
