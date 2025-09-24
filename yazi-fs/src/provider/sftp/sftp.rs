@@ -6,7 +6,7 @@ use yazi_sftp::fs::{Attrs, Flags};
 use yazi_shared::{scheme::SchemeRef, url::{Url, UrlBuf, UrlCow}};
 use yazi_vfs::config::ProviderSftp;
 
-use crate::{cha::Cha, provider::{FileBuilder, Provider, local::Local}};
+use crate::{cha::Cha, provider::{DirReader, FileBuilder, FileHolder, Provider, local::Local}};
 
 #[derive(Clone, Copy)]
 pub struct Sftp {
@@ -42,6 +42,38 @@ impl Provider for Sftp {
 		P: AsRef<Path>,
 	{
 		Ok(self.op().await?.realpath(&path).await?)
+	}
+
+	async fn casefold<P>(&self, path: P) -> io::Result<PathBuf>
+	where
+		P: AsRef<Path>,
+	{
+		let path = path.as_ref();
+		let Some((parent, name)) = path.parent().zip(path.file_name()) else {
+			return Ok(path.to_owned());
+		};
+
+		if !self.symlink_metadata(path).await?.is_link() {
+			return match self.canonicalize(path).await?.file_name() {
+				Some(name) => Ok(parent.join(name)),
+				None => Err(io::Error::other("Cannot get filename")),
+			};
+		}
+
+		let mut it = self.read_dir(parent).await?;
+		let mut similar = None;
+		while let Some(entry) = it.next().await? {
+			let s = entry.name();
+			if !s.eq_ignore_ascii_case(name) {
+				continue;
+			} else if s == name {
+				return Ok(entry.path());
+			} else {
+				similar = Some(name);
+			}
+		}
+
+		similar.map(|n| parent.join(n)).ok_or_else(|| io::Error::from(io::ErrorKind::NotFound))
 	}
 
 	async fn copy<P, Q>(&self, from: P, to: Q, cha: Cha) -> io::Result<u64>

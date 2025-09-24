@@ -54,6 +54,16 @@ impl Provider for Providers<'_> {
 		}
 	}
 
+	async fn casefold<P>(&self, path: P) -> io::Result<PathBuf>
+	where
+		P: AsRef<Path>,
+	{
+		match self.0 {
+			Inner::Regular | Inner::Search(_) => Local.casefold(path).await,
+			Inner::Sftp((p, _)) => p.casefold(path).await,
+		}
+	}
+
 	async fn copy<P, Q>(&self, from: P, to: Q, cha: Cha) -> io::Result<u64>
 	where
 		P: AsRef<Path>,

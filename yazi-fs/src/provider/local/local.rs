@@ -32,6 +32,13 @@ impl Provider for Local {
 		tokio::fs::canonicalize(path).await
 	}
 
+	async fn casefold<P>(&self, path: P) -> io::Result<PathBuf>
+	where
+		P: AsRef<Path>,
+	{
+		super::casefold(path).await
+	}
+
 	#[inline]
 	async fn copy<P, Q>(&self, from: P, to: Q, cha: Cha) -> io::Result<u64>
 	where

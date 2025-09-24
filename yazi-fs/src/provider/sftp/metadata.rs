@@ -2,10 +2,10 @@ use std::{ffi::OsStr, io, time::{Duration, UNIX_EPOCH}};
 
 use crate::cha::{Cha, ChaKind, ChaMode};
 
-impl TryFrom<yazi_sftp::fs::DirEntry> for Cha {
+impl TryFrom<&yazi_sftp::fs::DirEntry> for Cha {
 	type Error = io::Error;
 
-	fn try_from(ent: yazi_sftp::fs::DirEntry) -> Result<Self, Self::Error> {
+	fn try_from(ent: &yazi_sftp::fs::DirEntry) -> Result<Self, Self::Error> {
 		let mut cha = Self::try_from((ent.name().as_ref(), ent.attrs()))?;
 		cha.nlink = ent.nlink().unwrap_or_default();
 		Ok(cha)

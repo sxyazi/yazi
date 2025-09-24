@@ -27,7 +27,7 @@ impl Watcher {
 	}
 
 	pub fn watch<'a>(&mut self, it: impl Iterator<Item = &'a UrlBuf>) {
-		self.in_tx.send(it.filter(|u| u.is_regular()).cloned().collect()).ok();
+		self.in_tx.send(it.cloned().collect()).ok();
 	}
 
 	pub fn push_files(&self, urls: Vec<UrlBuf>) { Backend::push_files(&self.out_tx, urls); }
