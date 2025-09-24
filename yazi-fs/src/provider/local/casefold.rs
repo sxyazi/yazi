@@ -1,15 +1,13 @@
 use std::{io, path::{Path, PathBuf}};
 
-#[inline]
-pub async fn casefold(path: impl AsRef<Path>) -> io::Result<PathBuf> {
-	let path = path.as_ref().to_owned();
-	tokio::task::spawn_blocking(move || casefold_impl(path)).await?
-}
-
-#[inline]
 pub async fn must_case_match(path: impl AsRef<Path>) -> bool {
 	let path = path.as_ref();
 	casefold(path).await.is_ok_and(|p| p == path)
+}
+
+pub(super) async fn casefold(path: impl AsRef<Path>) -> io::Result<PathBuf> {
+	let path = path.as_ref().to_owned();
+	tokio::task::spawn_blocking(move || casefold_impl(path)).await?
 }
 
 #[cfg(any(
@@ -95,7 +93,7 @@ fn casefold_impl(path: PathBuf) -> io::Result<PathBuf> {
 		// Case-insensitive match
 		Ok(entries.swap_remove(i))
 	} else {
-		Err(io::Error::new(io::ErrorKind::NotFound, "file not found"))
+		Err(io::Error::from(io::ErrorKind::NotFound))
 	}
 }
 

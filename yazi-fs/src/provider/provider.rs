@@ -67,11 +67,16 @@ pub async fn casefold<'a, U>(url: U) -> io::Result<UrlBuf>
 where
 	U: Into<Url<'a>>,
 {
-	if let Some(path) = url.into().as_path() {
-		local::casefold(path).await.map(Into::into)
-	} else {
-		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
-	}
+	let url: Url = url.into();
+	let fold = Providers::new(url).await?.casefold(url.loc).await?;
+
+	Ok(match url.scheme {
+		SchemeRef::Regular | SchemeRef::Search(_) => fold.into(),
+		SchemeRef::Archive(_) => {
+			Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem: archive"))?
+		}
+		SchemeRef::Sftp(_) => UrlBuf { loc: fold.into(), scheme: url.scheme.into() },
+	})
 }
 
 pub async fn copy<'a, U, V>(from: U, to: V, cha: Cha) -> io::Result<u64>
@@ -134,7 +139,7 @@ where
 	if original.scheme.covariant(link.scheme) {
 		Providers::new(original).await?.hard_link(original.loc, link.loc).await
 	} else {
-		Err(io::Error::new(io::ErrorKind::CrossesDevices, "Cross-filesystem hardlink"))
+		Err(io::Error::from(io::ErrorKind::CrossesDevices))
 	}
 }
 
@@ -215,7 +220,7 @@ where
 	if from.scheme.covariant(to.scheme) {
 		Providers::new(from).await?.rename(from.loc, to.loc).await
 	} else {
-		Err(io::Error::new(io::ErrorKind::CrossesDevices, "Cross-filesystem rename"))
+		Err(io::Error::from(io::ErrorKind::CrossesDevices))
 	}
 }
 

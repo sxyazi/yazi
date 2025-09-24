@@ -37,7 +37,7 @@ impl Session {
 
 		async fn write(writer: &mut WriteHalf<ChannelStream<Msg>>, buf: Vec<u8>) -> io::Result<()> {
 			if buf.is_empty() {
-				Err(io::Error::new(ErrorKind::BrokenPipe, "channel closed"))
+				Err(io::Error::from(ErrorKind::BrokenPipe))
 			} else {
 				writer.write_all(&buf).await
 			}

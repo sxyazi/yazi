@@ -19,6 +19,10 @@ pub trait Provider {
 	where
 		P: AsRef<Path>;
 
+	fn casefold<P>(&self, path: P) -> impl Future<Output = io::Result<PathBuf>>
+	where
+		P: AsRef<Path>;
+
 	fn copy<P, Q>(&self, from: P, to: Q, cha: Cha) -> impl Future<Output = io::Result<u64>>
 	where
 		P: AsRef<Path>,

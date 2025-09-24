@@ -31,11 +31,21 @@ impl From<Error> for std::io::Error {
 	fn from(err: Error) -> Self {
 		match err {
 			Error::IO(e) => e,
-			Error::Serde(_) => Self::new(std::io::ErrorKind::InvalidData, err),
-			Error::Status(_) => Self::other(err),
-			Error::Packet(_) => Self::new(std::io::ErrorKind::InvalidData, err),
-			Error::Timeout => Self::new(std::io::ErrorKind::TimedOut, err),
-			Error::Unsupported => Self::new(std::io::ErrorKind::Unsupported, err),
+			Error::Serde(e) => Self::new(std::io::ErrorKind::InvalidData, e),
+			Error::Status(status) => match status.code {
+				responses::StatusCode::Ok => Self::new(std::io::ErrorKind::Other, "unexpected OK"),
+				responses::StatusCode::Eof => Self::from(std::io::ErrorKind::UnexpectedEof),
+				responses::StatusCode::NoSuchFile => Self::from(std::io::ErrorKind::NotFound),
+				responses::StatusCode::PermissionDenied => Self::from(std::io::ErrorKind::PermissionDenied),
+				responses::StatusCode::Failure => Self::from(std::io::ErrorKind::Other),
+				responses::StatusCode::BadMessage => Self::from(std::io::ErrorKind::InvalidData),
+				responses::StatusCode::NoConnection => Self::from(std::io::ErrorKind::NotConnected),
+				responses::StatusCode::ConnectionLost => Self::from(std::io::ErrorKind::ConnectionReset),
+				responses::StatusCode::OpUnsupported => Self::from(std::io::ErrorKind::Unsupported),
+			},
+			Error::Packet(e) => Self::new(std::io::ErrorKind::InvalidData, e),
+			Error::Timeout => Self::from(std::io::ErrorKind::TimedOut),
+			Error::Unsupported => Self::from(std::io::ErrorKind::Unsupported),
 			Error::Custom(_) => Self::other(err),
 		}
 	}

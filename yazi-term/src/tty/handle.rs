@@ -120,7 +120,7 @@ impl Handle {
 		let mut b = 0;
 		match unsafe { libc::read(self.inner, &mut b as *mut _ as *mut _, 1) } {
 			-1 => Err(Error::last_os_error()),
-			0 => Err(Error::new(ErrorKind::UnexpectedEof, "unexpected EOF")),
+			0 => Err(Error::from(ErrorKind::UnexpectedEof)),
 			_ => Ok(b),
 		}
 	}
@@ -189,7 +189,7 @@ impl Handle {
 		if success == 0 {
 			return Err(Error::last_os_error());
 		} else if bytes == 0 {
-			return Err(Error::new(ErrorKind::UnexpectedEof, "unexpected EOF"));
+			return Err(Error::from(ErrorKind::UnexpectedEof));
 		}
 		Ok(buf)
 	}

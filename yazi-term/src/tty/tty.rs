@@ -38,7 +38,7 @@ impl Tty {
 			let mut stdin = self.stdin.lock();
 			loop {
 				if now.elapsed() > timeout {
-					return Err(Error::new(ErrorKind::TimedOut, "timed out"));
+					return Err(Error::from(ErrorKind::TimedOut));
 				} else if !stdin.poll(Duration::from_millis(30))? {
 					continue;
 				}

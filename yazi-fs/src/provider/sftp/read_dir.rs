@@ -20,10 +20,7 @@ impl FileHolder for DirEntry {
 
 	fn name(&self) -> Cow<'_, OsStr> { self.0.name() }
 
-	async fn metadata(&self) -> io::Result<Cha> {
-		let name = self.name();
-		(name.as_ref(), self.0.attrs()).try_into()
-	}
+	async fn metadata(&self) -> io::Result<Cha> { Cha::try_from(&self.0) }
 
 	async fn file_type(&self) -> io::Result<ChaType> {
 		ChaMode::try_from(self.0.attrs()).map(Into::into)
