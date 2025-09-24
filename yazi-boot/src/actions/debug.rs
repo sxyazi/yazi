@@ -46,13 +46,14 @@ impl Actions {
 		writeln!(s, "    WSL: {:?}", yazi_adapter::WSL)?;
 
 		writeln!(s, "\nVariables")?;
-		writeln!(s, "    SHELL           : {:?}", env::var_os("SHELL"))?;
-		writeln!(s, "    EDITOR          : {:?}", env::var_os("EDITOR"))?;
-		writeln!(s, "    VISUAL          : {:?}", env::var_os("VISUAL"))?;
-		writeln!(s, "    YAZI_FILE_ONE   : {:?}", env::var_os("YAZI_FILE_ONE"))?;
-		writeln!(s, "    YAZI_CONFIG_HOME: {:?}", env::var_os("YAZI_CONFIG_HOME"))?;
-		writeln!(s, "    YAZI_ZOXIDE_OPTS: {:?}", env::var_os("YAZI_ZOXIDE_OPTS"))?;
-		writeln!(s, "    FZF_DEFAULT_OPTS: {:?}", env::var_os("FZF_DEFAULT_OPTS"))?;
+		writeln!(s, "    SHELL              : {:?}", env::var_os("SHELL"))?;
+		writeln!(s, "    EDITOR             : {:?}", env::var_os("EDITOR"))?;
+		writeln!(s, "    VISUAL             : {:?}", env::var_os("VISUAL"))?;
+		writeln!(s, "    YAZI_FILE_ONE      : {:?}", env::var_os("YAZI_FILE_ONE"))?;
+		writeln!(s, "    YAZI_CONFIG_HOME   : {:?}", env::var_os("YAZI_CONFIG_HOME"))?;
+		writeln!(s, "    YAZI_ZOXIDE_OPTS   : {:?}", env::var_os("YAZI_ZOXIDE_OPTS"))?;
+		writeln!(s, "    FZF_DEFAULT_OPTS   : {:?}", env::var_os("FZF_DEFAULT_OPTS"))?;
+		writeln!(s, "    FZF_DEFAULT_COMMAND: {:?}", env::var_os("FZF_DEFAULT_COMMAND"))?;
 
 		writeln!(s, "\nText Opener")?;
 		writeln!(
