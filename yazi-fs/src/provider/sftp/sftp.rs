@@ -1,10 +1,12 @@
 use std::{io, path::{Path, PathBuf}, sync::Arc};
 
+use russh::keys::PrivateKeyWithHashAlg;
+use tokio::io::{BufReader, BufWriter};
 use yazi_sftp::fs::{Attrs, Flags};
-use yazi_shared::scheme::SchemeRef;
+use yazi_shared::{scheme::SchemeRef, url::{Url, UrlBuf, UrlCow}};
 use yazi_vfs::config::ProviderSftp;
 
-use crate::{cha::Cha, provider::{FileBuilder, Provider}};
+use crate::{cha::Cha, provider::{FileBuilder, Provider, local::Local}};
 
 #[derive(Clone, Copy)]
 pub struct Sftp {
@@ -21,11 +23,18 @@ impl Provider for Sftp {
 	type Gate = super::Gate;
 	type ReadDir = super::ReadDir;
 
-	fn cache<P>(&self, _: P) -> Option<PathBuf>
+	async fn absolute<'a, U>(&self, url: U) -> io::Result<UrlCow<'a>>
 	where
-		P: AsRef<Path>,
+		U: Into<Url<'a>>,
 	{
-		todo!()
+		let url: Url = url.into();
+		Ok(if url.is_absolute() {
+			url.into()
+		} else if let SchemeRef::Sftp(_) = url.scheme {
+			UrlBuf { loc: self.canonicalize(url.loc).await?.into(), scheme: url.scheme.into() }.into()
+		} else {
+			Err(io::Error::new(io::ErrorKind::InvalidInput, "Not an SFTP URL"))?
+		})
 	}
 
 	async fn canonicalize<P>(&self, path: P) -> io::Result<PathBuf>
@@ -43,10 +52,16 @@ impl Provider for Sftp {
 		let attrs = Attrs::from(cha);
 
 		let op = self.op().await?;
-		let mut from = op.open(&from, Flags::READ, Attrs::default()).await?;
-		let mut to = op.open(&to, Flags::WRITE | Flags::CREATE | Flags::TRUNCATE, attrs).await?;
+		let from = op.open(&from, Flags::READ, &Attrs::default()).await?;
+		let to = op.open(&to, Flags::WRITE | Flags::CREATE | Flags::TRUNCATE, &attrs).await?;
 
-		tokio::io::copy(&mut from, &mut to).await
+		let mut reader = BufReader::with_capacity(524288, from);
+		let mut writer = BufWriter::with_capacity(524288, to);
+
+		let written = tokio::io::copy(&mut reader, &mut writer).await?;
+		writer.into_inner().fsetstat(&attrs).await.ok();
+
+		Ok(written)
 	}
 
 	async fn create_dir<P>(&self, path: P) -> io::Result<()>
@@ -144,7 +159,7 @@ impl Sftp {
 		use deadpool::managed::PoolError;
 
 		let pool = *super::CONN.lock().entry(self.config).or_insert_with(|| {
-			Box::leak(Box::new(deadpool::managed::Pool::builder(self).build().unwrap()))
+			Box::leak(Box::new(deadpool::managed::Pool::builder(self).max_size(5).build().unwrap()))
 		});
 
 		pool.get().await.map_err(|e| match e {
@@ -172,45 +187,135 @@ impl deadpool::managed::Manager for Sftp {
 	type Error = io::Error;
 	type Type = yazi_sftp::Operator;
 
-	// FIXME: remove the hardcoded test values
 	async fn create(&self) -> Result<Self::Type, Self::Error> {
-		todo!()
-		// async fn inner(sftp: Sftp) -> anyhow::Result<yazi_sftp::Operator> {
-		// 	let config = Arc::new(russh::client::Config::default());
-		// 	let mut session = russh::client::connect(config, ("127.0.0.1", 22),
-		// sftp).await?;
+		let channel = self.connect().await.map_err(|e| {
+			io::Error::other(format!("Failed to connect to SFTP server `{}`: {e}", self.name))
+		})?;
 
-		// 	let mut agent = russh::keys::agent::client::AgentClient::connect_uds(
-		// 		"/Users/ika/Library/Group
-		// Containers/2BUA8C4S2C.com.1password/t/agent.sock", 	)
-		// 	.await?;
-
-		// 	let mut keys = agent.request_identities().await?;
-		// 	if !session
-		// 		.authenticate_publickey_with("root", keys.remove(0), None, &mut agent)
-		// 		.await?
-		// 		.success()
-		// 	{
-		// 		panic!("auth failed");
-		// 	}
-
-		// 	let channel = session.channel_open_session().await?;
-		// 	channel.request_subsystem(true, "sftp").await?;
-
-		// 	let mut op = yazi_sftp::Operator::make(channel.into_stream());
-		// 	op.init().await?;
-		// 	Ok(op)
-		// }
-
-		// inner(*self).await.map_err(|e| io::Error::other(e.to_string()))
+		let mut op = yazi_sftp::Operator::make(channel.into_stream());
+		op.init().await?;
+		Ok(op)
 	}
 
 	async fn recycle(
 		&self,
 		obj: &mut Self::Type,
-		metrics: &deadpool::managed::Metrics,
+		_metrics: &deadpool::managed::Metrics,
 	) -> deadpool::managed::RecycleResult<Self::Error> {
-		// FIXME
-		Ok(())
+		if obj.is_closed() {
+			tracing::debug!("Reconnecting SFTP connection for `{}`", self.name);
+			Err(deadpool::managed::RecycleError::Message("Channel closed".into()))
+		} else {
+			Ok(())
+		}
+	}
+}
+
+impl Sftp {
+	async fn connect(self) -> Result<russh::Channel<russh::client::Msg>, russh::Error> {
+		let pref = Arc::new(russh::client::Config {
+			inactivity_timeout: Some(std::time::Duration::from_secs(30)),
+			keepalive_interval: Some(std::time::Duration::from_secs(10)),
+			nodelay: true,
+			..Default::default()
+		});
+
+		let session = if self.config.password.is_some() {
+			self.connect_by_password(pref).await
+		} else if self.config.key_file.is_some() {
+			self.connect_by_key(pref).await
+		} else {
+			self.connect_by_agent(pref).await
+		}?;
+
+		let channel = session.channel_open_session().await?;
+		channel.request_subsystem(true, "sftp").await?;
+		Ok(channel)
+	}
+
+	async fn connect_by_password(
+		self,
+		pref: Arc<russh::client::Config>,
+	) -> Result<russh::client::Handle<Self>, russh::Error> {
+		let Some(password) = &self.config.password else {
+			return Err(russh::Error::InvalidConfig("Password not provided".to_owned()));
+		};
+
+		let mut session =
+			russh::client::connect(pref, (self.config.host.as_str(), self.config.port), self).await?;
+
+		if session.authenticate_password(&self.config.user, password).await?.success() {
+			Ok(session)
+		} else {
+			Err(russh::Error::InvalidConfig("Password authentication failed".to_owned()))
+		}
+	}
+
+	async fn connect_by_key(
+		self,
+		pref: Arc<russh::client::Config>,
+	) -> Result<russh::client::Handle<Self>, russh::Error> {
+		let Some(key_file) = &self.config.key_file else {
+			return Err(russh::Error::InvalidConfig("Key file not provided".to_owned()));
+		};
+
+		let key = Local
+			.read_to_string(key_file)
+			.await
+			.map_err(|e| russh::Error::InvalidConfig(format!("Failed to read key file: {e}")))?;
+
+		let key = russh::keys::decode_secret_key(&key, self.config.key_passphrase.as_deref())?;
+
+		let mut session =
+			russh::client::connect(pref, (self.config.host.as_str(), self.config.port), self).await?;
+
+		let result = session
+			.authenticate_publickey(
+				&self.config.user,
+				PrivateKeyWithHashAlg::new(
+					Arc::new(key),
+					session.best_supported_rsa_hash().await?.flatten(),
+				),
+			)
+			.await?;
+
+		if result.success() {
+			Ok(session)
+		} else {
+			Err(russh::Error::InvalidConfig("Public key authentication failed".to_owned()))
+		}
+	}
+
+	async fn connect_by_agent(
+		self,
+		pref: Arc<russh::client::Config>,
+	) -> Result<russh::client::Handle<Self>, russh::Error> {
+		let Some(identity_agent) = &self.config.identity_agent else {
+			return Err(russh::Error::InvalidConfig("Identity agent not provided".to_owned()));
+		};
+
+		#[cfg(unix)]
+		let mut agent = russh::keys::agent::client::AgentClient::connect_uds(identity_agent).await?;
+		#[cfg(windows)]
+		let mut agent =
+			russh::keys::agent::client::AgentClient::connect_named_pipe(identity_agent).await?;
+
+		let keys = agent.request_identities().await?;
+		if keys.is_empty() {
+			return Err(russh::Error::InvalidConfig("No keys found in SSH agent".to_owned()));
+		}
+
+		let mut session =
+			russh::client::connect(pref, (self.config.host.as_str(), self.config.port), self).await?;
+
+		for key in keys {
+			match session.authenticate_publickey_with(&self.config.user, key, None, &mut agent).await {
+				Ok(result) if result.success() => return Ok(session),
+				Ok(_) => {}
+				Err(e) => tracing::error!("Identity agent authentication error: {e}"),
+			}
+		}
+
+		Err(russh::Error::InvalidConfig("Public key authentication via agent failed".to_owned()))
 	}
 }

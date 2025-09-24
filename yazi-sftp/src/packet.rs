@@ -259,6 +259,7 @@ pub fn from_bytes(mut bytes: &[u8]) -> Result<Packet<'static>, Error> {
 		102 => Packet::Handle(Deserializer::once(bytes)?),
 		103 => Packet::Data(Deserializer::once(bytes)?),
 		104 => Packet::Name(Deserializer::once(bytes)?),
+		105 => Packet::Attrs(Deserializer::once(bytes)?),
 		201 => Packet::ExtendedReply(Deserializer::once(bytes)?),
 		_ => return Err(Error::Packet("unknown packet kind")),
 	})

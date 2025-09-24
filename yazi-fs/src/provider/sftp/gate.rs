@@ -4,12 +4,13 @@ use yazi_sftp::fs::{Attrs, Flags};
 use yazi_shared::scheme::SchemeRef;
 use yazi_vfs::config::{ProviderSftp, Vfs};
 
-use crate::provider::FileBuilder;
+use crate::{cha::Cha, provider::FileBuilder};
 
 pub struct Gate {
 	sftp: super::Sftp,
 
 	append:     bool,
+	cha:        Option<Cha>,
 	create:     bool,
 	create_new: bool,
 	read:       bool,
@@ -22,6 +23,11 @@ impl FileBuilder for Gate {
 
 	fn append(&mut self, append: bool) -> &mut Self {
 		self.append = append;
+		self
+	}
+
+	fn cha(&mut self, cha: Cha) -> &mut Self {
+		self.cha = Some(cha);
 		self
 	}
 
@@ -45,6 +51,7 @@ impl FileBuilder for Gate {
 			sftp,
 
 			append: false,
+			cha: None,
 			create: false,
 			create_new: false,
 			read: false,
@@ -77,7 +84,9 @@ impl FileBuilder for Gate {
 			flags |= Flags::WRITE;
 		}
 
-		Ok(self.sftp.op().await?.open(&path, flags, Attrs::default()).await?)
+		let attrs = self.cha.map_or(Attrs::default(), Attrs::from);
+
+		Ok(self.sftp.op().await?.open(&path, flags, &attrs).await?)
 	}
 
 	fn read(&mut self, read: bool) -> &mut Self {

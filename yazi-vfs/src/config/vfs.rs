@@ -40,14 +40,14 @@ impl Vfs {
 		}
 	}
 
-	pub(crate) fn read() -> io::Result<String> {
+	fn read() -> io::Result<String> {
 		let p = Xdg::config_dir().join("vfs.toml");
 		Ok(ok_or_not_found!(std::fs::read_to_string(&p).map_err(|e| {
 			std::io::Error::new(e.kind(), format!("Failed to read VFS config {p:?}: {e}"))
 		})))
 	}
 
-	pub(crate) fn reshape(self) -> io::Result<Self> {
+	fn reshape(self) -> io::Result<Self> {
 		for name in self.providers.keys() {
 			if name.is_empty() || name.len() > 20 {
 				Err(io::Error::other(format!("VFS name `{name}` must be between 1 and 20 characters")))?;

@@ -26,7 +26,7 @@ impl Operator {
 		Ok(())
 	}
 
-	pub async fn open<'a, P>(&self, path: P, flags: Flags, attrs: Attrs) -> Result<File, Error>
+	pub async fn open<'a, P>(&self, path: P, flags: Flags, attrs: &'a Attrs) -> Result<File, Error>
 	where
 		P: Into<ByteStr<'a>>,
 	{
@@ -78,7 +78,7 @@ impl Operator {
 		status.into()
 	}
 
-	pub async fn fsetstat(&self, handle: &str, attrs: Attrs) -> Result<(), Error> {
+	pub async fn fsetstat<'a>(&self, handle: &str, attrs: &'a Attrs) -> Result<(), Error> {
 		let status: responses::Status = self.send(requests::FSetStat::new(handle, attrs)).await?;
 		status.into()
 	}
