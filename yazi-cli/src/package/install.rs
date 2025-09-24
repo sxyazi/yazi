@@ -19,7 +19,10 @@ impl Dependency {
 		}
 
 		self.deploy().await?;
-		self.rev = Git::revision(&path).await?;
+		if self.rev.is_empty() {
+			self.rev = Git::revision(&path).await?;
+		}
+
 		Ok(())
 	}
 }
