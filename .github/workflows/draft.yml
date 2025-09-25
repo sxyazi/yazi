@@ -45,8 +45,9 @@ jobs:
         if: matrix.gcc != ''
         run: sudo apt update && sudo apt install -yq ${{ matrix.gcc }}
 
-      - name: Setup Rust toolchain
-        run: rustup toolchain install stable --profile minimal --target ${{ matrix.target }}
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
 
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@v0.0.9
@@ -79,8 +80,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Setup Rust toolchain
-        run: rustup toolchain install stable --profile minimal --target ${{ matrix.target }}
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
 
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@v0.0.9
