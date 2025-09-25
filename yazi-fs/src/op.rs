@@ -56,10 +56,12 @@ impl FilesOp {
 		for (o, n) in map {
 			let Some(o_p) = o.parent() else { continue };
 			let Some(n_p) = n.url.parent() else { continue };
-			if o_p != n_p {
+			if o_p == n_p {
+				parents.entry_ref(&o_p).or_default().1.insert(o.urn().to_owned(), n);
+			} else {
 				parents.entry_ref(&o_p).or_default().0.insert(o.urn().to_owned());
+				parents.entry_ref(&n_p).or_default().1.insert(n.urn().to_owned(), n);
 			}
-			parents.entry_ref(&n_p).or_default().1.insert(n.urn().to_owned(), n);
 		}
 		for (p, (o, n)) in parents {
 			match (o.is_empty(), n.is_empty()) {

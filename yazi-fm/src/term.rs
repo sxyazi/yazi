@@ -43,8 +43,9 @@ impl Term {
 		)?;
 
 		let resp = Emulator::read_until_da1();
-		yazi_term::RestoreCursor::store(&resp);
+		Mux::tmux_drain()?;
 
+		yazi_term::RestoreCursor::store(&resp);
 		CSI_U.store(resp.contains("\x1b[?0u"), Ordering::Relaxed);
 		if CSI_U.load(Ordering::Relaxed) {
 			PushKeyboardEnhancementFlags(
@@ -61,7 +62,6 @@ impl Term {
 		term.hide_cursor()?;
 		term.clear()?;
 		term.flush()?;
-		Mux::tmux_drain()?;
 		Ok(term)
 	}
 

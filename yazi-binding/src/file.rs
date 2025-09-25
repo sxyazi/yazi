@@ -12,7 +12,9 @@ pub struct File {
 	v_cha:     Option<Value>,
 	v_url:     Option<Value>,
 	v_link_to: Option<Value>,
-	v_name:    Option<Value>,
+
+	v_name:  Option<Value>,
+	v_cache: Option<Value>,
 }
 
 impl Deref for File {
@@ -27,7 +29,7 @@ impl From<File> for yazi_fs::File {
 
 impl File {
 	pub fn new(inner: yazi_fs::File) -> Self {
-		Self { inner, v_cha: None, v_url: None, v_link_to: None, v_name: None }
+		Self { inner, v_cha: None, v_url: None, v_link_to: None, v_name: None, v_cache: None }
 	}
 }
 

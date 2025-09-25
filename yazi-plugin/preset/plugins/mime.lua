@@ -3,11 +3,11 @@ local TYPE_PATS = { "text", "image", "video", "application", "audio", "font", "i
 
 local M = {}
 
-local function match_mimetype(s)
+local function match_mimetype(line)
 	for _, pat in ipairs(TYPE_PATS) do
-		local typ, sub = s:match(string.format("(%s/)([+-.a-z0-9]+)%%s+$", pat))
+		local typ, sub = line:match(string.format("(%s/)([+-.a-z0-9]+)%%s+$", pat))
 		if not sub then
-		elseif s:find(typ .. sub, 1, true) == 1 then
+		elseif line:find(typ .. sub, 1, true) == 1 then
 			return typ:gsub("^x%-", "", 1) .. sub:gsub("^x%-", "", 1):gsub("^vnd%.", "", 1)
 		else
 			return nil, true
@@ -15,14 +15,27 @@ local function match_mimetype(s)
 	end
 end
 
+local function miss_cache(cache, line)
+	if line:match("^cannot open `.+' %(No such file or directory%)%s+$") then
+		return true
+	else
+		local _, err = fs.cha(Url(cache))
+		return err and err.code == 2
+	end
+end
+
 function M:fetch(job)
-	local urls = {}
-	for _, file in ipairs(job.files) do
-		urls[#urls + 1] = tostring(file.url)
+	local paths, origins = {}, {}
+	for i, file in ipairs(job.files) do
+		if file.cache then
+			paths[i], origins[i] = tostring(file.cache), tostring(file.url)
+		else
+			paths[i] = tostring(file.url)
+		end
 	end
 
 	local cmd = os.getenv("YAZI_FILE_ONE") or "file"
-	local child, err = Command(cmd):arg({ "-bL", "--mime-type", "--" }):arg(urls):stdout(Command.PIPED):spawn()
+	local child, err = Command(cmd):arg({ "-bL", "--mime-type", "--" }):arg(paths):stdout(Command.PIPED):spawn()
 	if not child then
 		return true, Err("Failed to start `%s`, error: %s", cmd, err)
 	end
@@ -50,13 +63,18 @@ function M:fetch(job)
 
 		match, ignore = match_mimetype(line)
 		if match then
-			updates[urls[i]], state[i], i = match, true, i + 1
+			updates[paths[i]], state[i], i = match, true, i + 1
 			flush(false)
-		elseif not ignore then
+		elseif ignore then
+			goto continue
+		elseif origins[i] and miss_cache(paths[i], line) then
+			updates[origins[i]], state[i], i = "vfs/todo", true, i + 1
+			flush(false)
+		else
 			state[i], i = false, i + 1
 		end
 		::continue::
-	until i > #urls
+	until i > #paths
 
 	flush(true)
 	return state

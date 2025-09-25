@@ -105,6 +105,8 @@ spotters = [
 	{ mime = "image/*", run = "image" },
 	# Video
 	{ mime = "video/*", run = "video" },
+	# Virtual file system
+	{ mime = "vfs/*", run = "vfs" },
 	# Fallback
 	{ url = "*", run = "file" },
 ]
@@ -149,6 +151,8 @@ previewers = [
 	{ mime = "application/ms-opentype", run = "font" },
 	# Empty file
 	{ mime = "inode/empty", run = "empty" },
+	# Virtual file system
+	{ mime = "vfs/*", run = "vfs" },
 	# Fallback
 	{ url = "*", run = "file" },
 ]
