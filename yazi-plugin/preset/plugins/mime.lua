@@ -63,7 +63,7 @@ function M:fetch(job)
 
 		match, ignore = match_mimetype(line)
 		if match then
-			updates[paths[i]], state[i], i = match, true, i + 1
+			updates[origins[i] or paths[i]], state[i], i = match, true, i + 1
 			flush(false)
 		elseif ignore then
 			goto continue
