@@ -12,3 +12,5 @@ result-*
 .vscode/
 
 *.snap
+*.deb
+*.zip
