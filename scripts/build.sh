@@ -15,7 +15,7 @@ mv "target/$1/release" target/release
 # Package deb
 if [[ "$ARTIFACT_NAME" == *-linux-* ]] && { [[ "$ARTIFACT_NAME" == *-aarch64-* ]] || [[ "$ARTIFACT_NAME" == *-x86_64-* ]]; }; then
 	cargo install cargo-deb
-	cargo deb -p yazi-packing --no-build -o "$ARTIFACT_NAME.deb"
+	cargo deb -p yazi-packing --no-build --target "$1" -o "$ARTIFACT_NAME.deb"
 fi
 
 # Create the artifact
