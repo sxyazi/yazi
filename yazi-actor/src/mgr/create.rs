@@ -1,10 +1,11 @@
 use anyhow::{Result, bail};
 use yazi_config::popup::{ConfirmCfg, InputCfg};
-use yazi_fs::{File, FilesOp, maybe_exists, ok_or_not_found, provider};
+use yazi_fs::{File, FilesOp, ok_or_not_found};
 use yazi_macro::succ;
 use yazi_parser::mgr::CreateOpt;
 use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy};
 use yazi_shared::{event::Data, url::UrlBuf};
+use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
 
 use crate::{Actor, Ctx};

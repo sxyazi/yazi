@@ -1,10 +1,9 @@
 use std::{io, path::{Path, PathBuf}, sync::Arc};
 
+use yazi_fs::{cha::Cha, provider::{Provider, local::Local}};
 use yazi_shared::{scheme::SchemeRef, url::{Url, UrlCow}};
-use yazi_vfs::config::{ProviderSftp, Vfs};
 
-use super::local::Local;
-use crate::{cha::Cha, provider::Provider};
+use crate::config::{ProviderSftp, Vfs};
 
 pub(super) struct Providers<'a>(Inner<'a>);
 

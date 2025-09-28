@@ -1,11 +1,10 @@
 use std::{mem, ops::{Deref, DerefMut, Not}};
 
 use hashbrown::{HashMap, HashSet};
-use tokio::{select, sync::mpsc::{self, UnboundedReceiver}};
-use yazi_shared::{Id, url::{UrlBuf, Urn, UrnBuf}};
+use yazi_shared::{Id, url::{Urn, UrnBuf}};
 
 use super::{FilesSorter, Filter};
-use crate::{FILES_TICKET, File, FilesOp, SortBy, cha::Cha, mounts::PARTITIONS, provider::{self, DirEntry, DirReader, FileHolder}};
+use crate::{FILES_TICKET, File, SortBy};
 
 #[derive(Default)]
 pub struct Files {
@@ -35,70 +34,6 @@ impl DerefMut for Files {
 impl Files {
 	pub fn new(show_hidden: bool) -> Self { Self { show_hidden, ..Default::default() } }
 
-	pub async fn from_dir(dir: &UrlBuf) -> std::io::Result<UnboundedReceiver<File>> {
-		let mut it = provider::read_dir(dir).await?;
-		let (tx, rx) = mpsc::unbounded_channel();
-
-		tokio::spawn(async move {
-			while let Ok(Some(ent)) = it.next().await {
-				select! {
-					_ = tx.closed() => break,
-					result = ent.metadata() => {
-						let url = ent.url();
-						_ = tx.send(match result {
-							Ok(cha) => File::from_follow(url, cha).await,
-							Err(_) => File::from_dummy(url, ent.file_type().await.ok())
-						});
-					}
-				}
-			}
-		});
-		Ok(rx)
-	}
-
-	pub async fn from_dir_bulk(dir: &UrlBuf) -> std::io::Result<Vec<File>> {
-		let mut it = provider::read_dir(dir).await?;
-		let mut entries = Vec::with_capacity(5000);
-		while let Ok(Some(entry)) = it.next().await {
-			entries.push(entry);
-		}
-
-		let (first, rest) = entries.split_at(entries.len() / 3);
-		let (second, third) = rest.split_at(entries.len() / 3);
-		async fn go(entries: &[DirEntry]) -> Vec<File> {
-			let mut files = Vec::with_capacity(entries.len());
-			for ent in entries {
-				let url = ent.url();
-				files.push(match ent.metadata().await {
-					Ok(cha) => File::from_follow(url, cha).await,
-					Err(_) => File::from_dummy(url, ent.file_type().await.ok()),
-				});
-			}
-			files
-		}
-
-		Ok(
-			futures::future::join_all([go(first), go(second), go(third)])
-				.await
-				.into_iter()
-				.flatten()
-				.collect(),
-		)
-	}
-
-	pub async fn assert_stale(dir: &UrlBuf, cha: Cha) -> Option<Cha> {
-		use std::io::ErrorKind;
-		match Cha::from_url(dir).await {
-			Ok(c) if !c.is_dir() => FilesOp::issue_error(dir, ErrorKind::NotADirectory).await,
-			Ok(c) if c.hits(cha) && PARTITIONS.read().heuristic(cha) => {}
-			Ok(c) => return Some(c),
-			Err(e) => FilesOp::issue_error(dir, e.kind()).await,
-		}
-		None
-	}
-}
-
-impl Files {
 	pub fn update_full(&mut self, files: Vec<File>) {
 		self.ticket = FILES_TICKET.next();
 

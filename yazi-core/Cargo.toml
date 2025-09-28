@@ -19,6 +19,7 @@ yazi-plugin    = { path = "../yazi-plugin", version = "25.9.15" }
 yazi-proxy     = { path = "../yazi-proxy", version = "25.9.15" }
 yazi-scheduler = { path = "../yazi-scheduler", version = "25.9.15" }
 yazi-shared    = { path = "../yazi-shared", version = "25.9.15" }
+yazi-vfs       = { path = "../yazi-vfs", version = "25.9.15" }
 yazi-watcher   = { path = "../yazi-watcher", version = "25.9.15" }
 yazi-widgets   = { path = "../yazi-widgets", version = "25.9.15" }
 

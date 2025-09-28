@@ -1,21 +1,5 @@
-use anyhow::Result;
-use tokio::{io, select, sync::{mpsc, oneshot}, time};
-use yazi_shared::url::{Component, Url, UrlBuf};
-
-use crate::{cha::Cha, provider::{self, DirReader, FileHolder}};
-
-#[inline]
-pub async fn maybe_exists<'a>(url: impl Into<Url<'a>>) -> bool {
-	match provider::symlink_metadata(url).await {
-		Ok(_) => true,
-		Err(e) => e.kind() != io::ErrorKind::NotFound,
-	}
-}
-
-#[inline]
-pub async fn must_be_dir<'a>(url: impl Into<Url<'a>>) -> bool {
-	provider::metadata(url).await.is_ok_and(|m| m.is_dir())
-}
+use tokio::io;
+use yazi_shared::url::{Component, UrlBuf};
 
 #[inline]
 pub fn ok_or_not_found<T: Default>(result: io::Result<T>) -> io::Result<T> {
@@ -24,74 +8,6 @@ pub fn ok_or_not_found<T: Default>(result: io::Result<T>) -> io::Result<T> {
 		Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(T::default()),
 		Err(_) => result,
 	}
-}
-
-pub fn copy_with_progress(
-	from: &UrlBuf,
-	to: &UrlBuf,
-	cha: Cha,
-) -> mpsc::Receiver<Result<u64, io::Error>> {
-	let (prog_tx, prog_rx) = mpsc::channel(1);
-	let (done_tx, mut done_rx) = oneshot::channel();
-
-	tokio::spawn({
-		let (from, to) = (from.clone(), to.clone());
-		async move {
-			done_tx.send(provider::copy(&from, &to, cha).await).ok();
-		}
-	});
-
-	tokio::spawn({
-		let (prog_tx, to) = (prog_tx.clone(), to.clone());
-		async move {
-			let mut last = 0;
-			let mut done = None;
-			loop {
-				select! {
-					res = &mut done_rx => done = Some(res.unwrap()),
-					_ = prog_tx.closed() => break,
-					_ = time::sleep(time::Duration::from_secs(3)) => {},
-				}
-
-				match done {
-					Some(Ok(len)) => {
-						if len > last {
-							prog_tx.send(Ok(len - last)).await.ok();
-						}
-						prog_tx.send(Ok(0)).await.ok();
-						break;
-					}
-					Some(Err(e)) => {
-						prog_tx.send(Err(e)).await.ok();
-						break;
-					}
-					None => {}
-				}
-
-				let len = provider::symlink_metadata(&to).await.map(|m| m.len).unwrap_or(0);
-				if len > last {
-					prog_tx.send(Ok(len - last)).await.ok();
-					last = len;
-				}
-			}
-		}
-	});
-
-	prog_rx
-}
-
-pub async fn remove_dir_clean(dir: &UrlBuf) {
-	let Ok(mut it) = provider::read_dir(dir).await else { return };
-
-	while let Ok(Some(ent)) = it.next().await {
-		if ent.file_type().await.is_ok_and(|t| t.is_dir()) {
-			let url = ent.url();
-			Box::pin(remove_dir_clean(&url)).await;
-			provider::remove_dir(&url).await.ok();
-		}
-	}
-
-	provider::remove_dir(dir).await.ok();
 }
 
 // Find the max common root in a list of urls
@@ -138,7 +54,8 @@ pub fn max_common_root(urls: &[UrlBuf]) -> usize {
 fn test_max_common_root() {
 	fn assert(input: &[&str], expected: &str) {
 		use std::{ffi::OsStr, str::FromStr};
-		let urls: Vec<_> = input.iter().copied().map(UrlBuf::from_str).collect::<Result<_>>().unwrap();
+		let urls: Vec<_> =
+			input.iter().copied().map(UrlBuf::from_str).collect::<Result<_, _>>().unwrap();
 
 		let mut comp = urls[0].components();
 		for _ in 0..comp.clone().count() - max_common_root(&urls) {

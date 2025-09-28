@@ -5,7 +5,7 @@ local M = {}
 
 local function match_mimetype(line)
 	for _, pat in ipairs(TYPE_PATS) do
-		local typ, sub = line:match(string.format("(%s/)([+-.a-z0-9]+)%%s+$", pat))
+		local typ, sub = line:match(string.format("(%s/)([+-.a-zA-Z0-9]+)%%s+$", pat))
 		if not sub then
 		elseif line:find(typ .. sub, 1, true) == 1 then
 			return typ:gsub("^x%-", "", 1) .. sub:gsub("^x%-", "", 1):gsub("^vnd%.", "", 1)

@@ -1,16 +1,15 @@
 use std::{io, path::Path};
 
+use yazi_fs::{cha::Cha, provider::FileBuilder};
 use yazi_shared::scheme::SchemeRef;
 
-use crate::{cha::Cha, provider::FileBuilder};
-
 pub enum Gate {
-	Local(super::local::Gate),
+	Local(yazi_fs::provider::local::Gate),
 	Sftp(super::sftp::Gate),
 }
 
-impl From<super::local::Gate> for Gate {
-	fn from(value: super::local::Gate) -> Self { Self::Local(value) }
+impl From<yazi_fs::provider::local::Gate> for Gate {
+	fn from(value: yazi_fs::provider::local::Gate) -> Self { Self::Local(value) }
 }
 
 impl From<super::sftp::Gate> for Gate {
@@ -54,7 +53,9 @@ impl FileBuilder for Gate {
 
 	async fn new(scheme: SchemeRef<'_>) -> io::Result<Self> {
 		Ok(match scheme {
-			SchemeRef::Regular | SchemeRef::Search(_) => super::local::Gate::new(scheme).await?.into(),
+			SchemeRef::Regular | SchemeRef::Search(_) => {
+				yazi_fs::provider::local::Gate::new(scheme).await?.into()
+			}
 			SchemeRef::Archive(_) => {
 				Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem: archive"))?
 			}

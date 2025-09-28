@@ -1,11 +1,10 @@
 use std::{io, path::{Path, PathBuf}};
 
 use tokio::io::{BufReader, BufWriter};
-use twox_hash::XxHash3_128;
+use yazi_fs::{cha::Cha, provider::{Provider, local::Local}};
 use yazi_shared::{scheme::SchemeRef, url::{Url, UrlBuf, UrlCow}};
-use yazi_vfs::local::Xdg;
 
-use crate::{cha::Cha, provider::{Provider, Providers, ReadDir, RwFile, local::{self, Local}}};
+use super::{Providers, ReadDir, RwFile};
 
 pub async fn absolute<'a, U>(url: U) -> io::Result<UrlCow<'a>>
 where
@@ -15,33 +14,13 @@ where
 	Providers::new(url).await?.absolute(url).await
 }
 
-pub fn cache<'a, U>(url: U) -> Option<PathBuf>
-where
-	U: Into<Url<'a>>,
-{
-	let url: Url = url.into();
-	match url.scheme {
-		SchemeRef::Regular | SchemeRef::Search(_) => None,
-		SchemeRef::Archive(name) => Some(
-			Xdg::cache_dir()
-				.join(format!("archive-{}", yazi_shared::url::Encode::domain(name)))
-				.join(format!("{:x}", XxHash3_128::oneshot(url.loc.bytes()))),
-		),
-		SchemeRef::Sftp(name) => Some(
-			Xdg::cache_dir()
-				.join(format!("sftp-{}", yazi_shared::url::Encode::domain(name)))
-				.join(format!("{:x}", XxHash3_128::oneshot(url.loc.bytes()))),
-		),
-	}
-}
-
 pub async fn calculate<'a, U>(url: U) -> io::Result<u64>
 where
 	U: Into<Url<'a>>,
 {
 	let url: Url = url.into();
 	if let Some(path) = url.as_path() {
-		local::SizeCalculator::total(path).await
+		yazi_fs::provider::local::SizeCalculator::total(path).await
 	} else {
 		super::SizeCalculator::total(url).await
 	}
@@ -149,7 +128,7 @@ where
 	V: Into<Url<'a>>,
 {
 	if let (Some(a), Some(b)) = (a.into().as_path(), b.into().as_path()) {
-		local::identical(a, b).await
+		yazi_fs::provider::local::identical(a, b).await
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
@@ -201,6 +180,14 @@ where
 {
 	let url: Url = url.into();
 	Providers::new(url).await?.remove_dir_all(url.loc).await
+}
+
+pub async fn remove_dir_clean<'a, U>(url: U) -> io::Result<()>
+where
+	U: Into<Url<'a>>,
+{
+	let url: Url = url.into();
+	Ok(Providers::new(url).await?.remove_dir_clean(url.loc).await)
 }
 
 pub async fn remove_file<'a, U>(url: U) -> io::Result<()>

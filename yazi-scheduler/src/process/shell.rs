@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::OsString, process::Stdio};
 
 use anyhow::{Result, bail};
 use tokio::process::{Child, Command};
-use yazi_fs::provider;
+use yazi_fs::FsUrl;
 use yazi_shared::url::UrlBuf;
 
 pub(crate) struct ShellOpt {
@@ -30,7 +30,7 @@ pub(crate) async fn shell(opt: ShellOpt) -> Result<Child> {
 	tokio::task::spawn_blocking(move || {
 		let cwd: Cow<_> = if let Some(path) = opt.cwd.as_path() {
 			path.into()
-		} else if let Some(cache) = provider::cache(&opt.cwd) {
+		} else if let Some(cache) = opt.cwd.cache() {
 			std::fs::create_dir_all(&cache).ok();
 			cache.into()
 		} else {

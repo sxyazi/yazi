@@ -5,7 +5,7 @@ use yazi_macro::relay;
 use yazi_shared::{Id, Ids, url::{UrlBuf, UrnBuf}};
 
 use super::File;
-use crate::{cha::Cha, maybe_exists};
+use crate::cha::Cha;
 
 pub static FILES_TICKET: Ids = Ids::new();
 
@@ -118,17 +118,6 @@ impl FilesOp {
 			Self::Deleting(_, urns) => Self::Deleting(w, urns.clone()),
 			Self::Updating(_, map) => Self::Updating(w, map!(map)),
 			Self::Upserting(_, map) => Self::Upserting(w, map!(map)),
-		}
-	}
-
-	pub async fn issue_error(cwd: &UrlBuf, kind: std::io::ErrorKind) {
-		use std::io::ErrorKind;
-		if kind != ErrorKind::NotFound {
-			Self::IOErr(cwd.clone(), kind).emit();
-		} else if maybe_exists(cwd).await {
-			Self::IOErr(cwd.clone(), kind).emit();
-		} else if let Some((p, n)) = cwd.pair() {
-			Self::Deleting(p.into(), [n.into()].into()).emit();
 		}
 	}
 

@@ -4,6 +4,7 @@ use anyhow::{Result, bail};
 use tokio::{io::{AsyncBufReadExt, BufReader}, process::Command, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_fs::File;
 use yazi_shared::url::UrlBuf;
+use yazi_vfs::VfsFile;
 
 pub struct RgOpt {
 	pub cwd:     UrlBuf,

@@ -10,6 +10,7 @@ use yazi_macro::render;
 use yazi_parser::mgr::PreviewLock;
 use yazi_plugin::{external::Highlighter, isolate};
 use yazi_shared::{MIME_DIR, pool::{InternStr, Symbol}, url::UrlBuf};
+use yazi_vfs::{VfsFiles, VfsFilesOp};
 
 #[derive(Default)]
 pub struct Preview {

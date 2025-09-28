@@ -142,6 +142,30 @@ pub trait Provider {
 		}
 	}
 
+	fn remove_dir_clean<P>(&self, root: P) -> impl Future<Output = ()>
+	where
+		P: AsRef<Path>,
+	{
+		let root = root.as_ref().to_path_buf();
+
+		async move {
+			let mut stack = vec![(root, false)];
+
+			while let Some((dir, visited)) = stack.pop() {
+				if visited {
+					self.remove_dir(&dir).await.ok();
+				} else if let Ok(mut it) = self.read_dir(&dir).await {
+					stack.push((dir, true));
+					while let Ok(Some(ent)) = it.next().await {
+						if ent.file_type().await.is_ok_and(|t| t.is_dir()) {
+							stack.push((ent.path(), false));
+						}
+					}
+				}
+			}
+		}
+	}
+
 	fn remove_file<P>(&self, path: P) -> impl Future<Output = io::Result<()>>
 	where
 		P: AsRef<Path>;

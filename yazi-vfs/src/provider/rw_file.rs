@@ -1,8 +1,7 @@
 use std::{io, pin::Pin};
 
 use tokio::io::{AsyncRead, AsyncWrite};
-
-use crate::cha::Cha;
+use yazi_fs::cha::Cha;
 
 pub enum RwFile {
 	Tokio(tokio::fs::File),
@@ -30,7 +29,7 @@ impl RwFile {
 				.await?;
 			}
 			Self::Sftp(f) => {
-				f.fsetstat(&cha.into()).await?;
+				f.fsetstat(&super::sftp::Cha(cha).into()).await?;
 			}
 		}
 

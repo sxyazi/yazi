@@ -1,10 +1,10 @@
 use std::{io, path::Path};
 
+use yazi_fs::{cha::Cha, provider::FileBuilder};
 use yazi_sftp::fs::{Attrs, Flags};
 use yazi_shared::scheme::SchemeRef;
-use yazi_vfs::config::{ProviderSftp, Vfs};
 
-use crate::{cha::Cha, provider::FileBuilder};
+use crate::config::{ProviderSftp, Vfs};
 
 pub struct Gate {
 	sftp: super::Sftp,
@@ -84,7 +84,7 @@ impl FileBuilder for Gate {
 			flags |= Flags::WRITE;
 		}
 
-		let attrs = self.cha.map_or(Attrs::default(), Attrs::from);
+		let attrs = self.cha.map(super::Cha).map_or(Attrs::default(), Attrs::from);
 
 		Ok(self.sftp.op().await?.open(&path, flags, &attrs).await?)
 	}

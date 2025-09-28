@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
-use yazi_fs::{provider::{DirReader, FileHolder, Provider, local::Local}, remove_dir_clean};
+use yazi_fs::provider::{DirReader, FileHolder, Provider, local::Local};
 use yazi_macro::outln;
 
 use super::Dependency;
@@ -30,7 +30,7 @@ impl Dependency {
 			self.delete_sources().await?;
 		}
 
-		remove_dir_clean(&to.into()).await;
+		Local.remove_dir_clean(to).await;
 		self.hash = self.hash().await?;
 		res2?;
 		res1?;

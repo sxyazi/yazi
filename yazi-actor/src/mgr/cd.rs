@@ -10,6 +10,7 @@ use yazi_macro::{act, err, render, succ};
 use yazi_parser::mgr::CdOpt;
 use yazi_proxy::{CmpProxy, InputProxy, MgrProxy};
 use yazi_shared::{Debounce, errors::InputError, event::Data, url::UrlBuf};
+use yazi_vfs::VfsFile;
 
 use crate::{Actor, Ctx};
 
