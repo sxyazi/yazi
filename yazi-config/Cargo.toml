@@ -26,6 +26,7 @@ indexmap  = { workspace = true }
 ratatui   = { workspace = true }
 regex     = { workspace = true }
 serde     = { workspace = true }
+tokio     = { workspace = true }
 toml      = { workspace = true }
 tracing   = { workspace = true }
 

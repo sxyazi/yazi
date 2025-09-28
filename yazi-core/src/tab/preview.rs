@@ -54,7 +54,7 @@ impl Preview {
 
 			let rx = match Files::from_dir(&wd).await {
 				Ok(rx) => rx,
-				Err(e) => return FilesOp::issue_error(&wd, e.kind()).await,
+				Err(e) => return FilesOp::issue_error(&wd, e).await,
 			};
 
 			let stream =

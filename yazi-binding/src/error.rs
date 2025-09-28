@@ -7,7 +7,7 @@ const EXPECTED: &str = "expected a Error";
 
 pub enum Error {
 	Io(std::io::Error),
-	IoKind(std::io::ErrorKind),
+	Fs(yazi_fs::error::Error),
 	Serde(serde_json::Error),
 	Custom(SStr),
 }
@@ -24,7 +24,7 @@ impl Error {
 	pub fn into_string(self) -> SStr {
 		match self {
 			Self::Io(e) => Cow::Owned(e.to_string()),
-			Self::IoKind(e) => Cow::Owned(e.to_string()),
+			Self::Fs(e) => Cow::Owned(e.to_string()),
 			Self::Serde(e) => Cow::Owned(e.to_string()),
 			Self::Custom(s) => s,
 		}
@@ -35,7 +35,7 @@ impl Display for Error {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			Self::Io(e) => write!(f, "{e}"),
-			Self::IoKind(e) => write!(f, "{e}"),
+			Self::Fs(e) => write!(f, "{e}"),
 			Self::Serde(e) => write!(f, "{e}"),
 			Self::Custom(s) => write!(f, "{s}"),
 		}
@@ -56,6 +56,7 @@ impl UserData for Error {
 		fields.add_field_method_get("code", |_, me| {
 			Ok(match me {
 				Self::Io(e) => e.raw_os_error(),
+				Self::Fs(e) => e.raw_os_error(),
 				_ => None,
 			})
 		});
@@ -64,7 +65,7 @@ impl UserData for Error {
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
 		methods.add_meta_method(MetaMethod::ToString, |lua, me, ()| {
 			Ok(match me {
-				Self::Io(_) | Self::IoKind(_) | Self::Serde(_) => lua.create_string(me.to_string()),
+				Self::Io(_) | Self::Fs(_) | Self::Serde(_) => lua.create_string(me.to_string()),
 				Self::Custom(s) => lua.create_string(s.as_ref()),
 			})
 		});

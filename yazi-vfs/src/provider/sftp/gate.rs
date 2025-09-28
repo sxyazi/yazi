@@ -1,10 +1,9 @@
 use std::{io, path::Path};
 
+use yazi_config::vfs::{ProviderSftp, Vfs};
 use yazi_fs::{cha::Cha, provider::FileBuilder};
 use yazi_sftp::fs::{Attrs, Flags};
 use yazi_shared::scheme::SchemeRef;
-
-use crate::config::{ProviderSftp, Vfs};
 
 pub struct Gate {
 	sftp: super::Sftp,

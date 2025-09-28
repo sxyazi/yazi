@@ -2,12 +2,12 @@ use std::{io, path::{Path, PathBuf}, sync::Arc};
 
 use russh::keys::PrivateKeyWithHashAlg;
 use tokio::io::{BufReader, BufWriter};
+use yazi_config::vfs::ProviderSftp;
 use yazi_fs::provider::{DirReader, FileBuilder, FileHolder, Provider, local::Local};
 use yazi_sftp::fs::{Attrs, Flags};
 use yazi_shared::{scheme::SchemeRef, url::{Url, UrlBuf, UrlCow}};
 
 use super::Cha;
-use crate::config::ProviderSftp;
 
 #[derive(Clone, Copy)]
 pub struct Sftp {

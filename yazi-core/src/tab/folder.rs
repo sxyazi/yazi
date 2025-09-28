@@ -43,7 +43,7 @@ impl<T: Into<UrlBuf>> From<T> for Folder {
 
 impl Folder {
 	pub fn update(&mut self, op: FilesOp) -> bool {
-		let (stage, revision) = (self.stage, self.files.revision);
+		let (stage, revision) = (self.stage.clone(), self.files.revision);
 		match op {
 			FilesOp::Full(_, _, cha) => {
 				(self.cha, self.stage) = (cha, FolderStage::Loaded);
@@ -57,8 +57,8 @@ impl Folder {
 			FilesOp::Done(_, cha, ticket) if ticket == self.files.ticket() => {
 				(self.cha, self.stage) = (cha, FolderStage::Loaded);
 			}
-			FilesOp::IOErr(_, kind) => {
-				(self.cha, self.stage) = (Cha::default(), FolderStage::Failed(kind));
+			FilesOp::IOErr(_, ref err) => {
+				(self.cha, self.stage) = (Cha::default(), FolderStage::Failed(err.clone()));
 			}
 			_ => {}
 		}
@@ -83,17 +83,15 @@ impl Folder {
 		self.trace = self.trace.take_if(|_| !self.files.is_empty() || self.stage.is_loading());
 		self.repos(None);
 
-		(stage, revision) != (self.stage, self.files.revision)
+		(&stage, revision) != (&self.stage, self.files.revision)
 	}
 
 	pub fn update_pub(&mut self, tab: Id, op: FilesOp) -> bool {
-		let old = self.stage;
-		if !self.update(op) {
-			return false;
-		} else if self.stage != old {
-			err!(Pubsub::pub_after_load(tab, &self.url, self.stage));
+		if self.update(op) {
+			err!(Pubsub::pub_after_load(tab, &self.url, &self.stage));
+			return true;
 		}
-		true
+		false
 	}
 
 	pub fn arrow(&mut self, step: impl Into<Step>) -> bool {
