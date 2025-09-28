@@ -149,7 +149,7 @@ impl Pubsub {
 
 	pub_after!(cd(tab: Id, url: &UrlBuf), (tab, url));
 
-	pub_after!(load(tab: Id, url: &UrlBuf, stage: FolderStage), (tab, url, stage));
+	pub_after!(load(tab: Id, url: &UrlBuf, stage: &FolderStage), (tab, url, stage));
 
 	pub_after!(hover(tab: Id, url: Option<&UrlBuf>), (tab, url));
 

@@ -72,7 +72,7 @@ impl VfsFiles for Files {
 			Ok(c) if !c.is_dir() => FilesOp::issue_error(dir, ErrorKind::NotADirectory).await,
 			Ok(c) if c.hits(cha) && PARTITIONS.read().heuristic(cha) => {}
 			Ok(c) => return Some(c),
-			Err(e) => FilesOp::issue_error(dir, e.kind()).await,
+			Err(e) => FilesOp::issue_error(dir, e).await,
 		}
 		None
 	}

@@ -1,9 +1,8 @@
 use std::{io, path::{Path, PathBuf}, sync::Arc};
 
+use yazi_config::vfs::{ProviderSftp, Vfs};
 use yazi_fs::{cha::Cha, provider::{Provider, local::Local}};
 use yazi_shared::{scheme::SchemeRef, url::{Url, UrlCow}};
-
-use crate::config::{ProviderSftp, Vfs};
 
 pub(super) struct Providers<'a>(Inner<'a>);
 

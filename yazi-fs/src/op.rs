@@ -5,7 +5,7 @@ use yazi_macro::relay;
 use yazi_shared::{Id, Ids, url::{UrlBuf, UrnBuf}};
 
 use super::File;
-use crate::cha::Cha;
+use crate::{cha::Cha, error::Error};
 
 pub static FILES_TICKET: Ids = Ids::new();
 
@@ -15,7 +15,7 @@ pub enum FilesOp {
 	Part(UrlBuf, Vec<File>, Id),
 	Done(UrlBuf, Cha, Id),
 	Size(UrlBuf, HashMap<UrnBuf, u64>),
-	IOErr(UrlBuf, std::io::ErrorKind),
+	IOErr(UrlBuf, Error),
 
 	Creating(UrlBuf, Vec<File>),
 	Deleting(UrlBuf, HashSet<UrnBuf>),
@@ -112,7 +112,7 @@ impl FilesOp {
 			Self::Part(_, files, ticket) => Self::Part(w, files!(files), *ticket),
 			Self::Done(_, cha, ticket) => Self::Done(w, *cha, *ticket),
 			Self::Size(_, map) => Self::Size(w, map.iter().map(|(urn, &s)| (urn.clone(), s)).collect()),
-			Self::IOErr(_, err) => Self::IOErr(w, *err),
+			Self::IOErr(_, err) => Self::IOErr(w, err.clone()),
 
 			Self::Creating(_, files) => Self::Creating(w, files!(files)),
 			Self::Deleting(_, urns) => Self::Deleting(w, urns.clone()),

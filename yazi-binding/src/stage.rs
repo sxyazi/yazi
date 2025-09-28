@@ -11,10 +11,10 @@ impl UserData for FolderStage {
 		methods.add_meta_method(MetaMethod::Call, |lua, me, ()| {
 			use yazi_fs::FolderStage::*;
 
-			match me.0 {
+			match &me.0 {
 				Loading => false.into_lua_multi(lua),
 				Loaded => true.into_lua_multi(lua),
-				Failed(kind) => (true, crate::Error::IoKind(kind)).into_lua_multi(lua),
+				Failed(e) => (true, crate::Error::Fs(e.clone())).into_lua_multi(lua),
 			}
 		});
 	}

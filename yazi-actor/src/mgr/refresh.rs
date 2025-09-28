@@ -46,7 +46,7 @@ impl Refresh {
 
 			match Files::from_dir_bulk(&cwd).await {
 				Ok(files) => FilesOp::Full(cwd, files, cha).emit(),
-				Err(e) => FilesOp::issue_error(&cwd, e.kind()).await,
+				Err(e) => FilesOp::issue_error(&cwd, e).await,
 			}
 		}
 
