@@ -1,6 +1,8 @@
 use std::{borrow::Cow, ffi::OsStr, io, path::PathBuf};
 
-use crate::{cha::{Cha, ChaMode, ChaType}, provider::{DirReader, FileHolder}};
+use yazi_fs::provider::{DirReader, FileHolder};
+
+use super::{Cha, ChaMode};
 
 pub struct ReadDir(pub(super) yazi_sftp::fs::ReadDir);
 
@@ -20,9 +22,9 @@ impl FileHolder for DirEntry {
 
 	fn name(&self) -> Cow<'_, OsStr> { self.0.name() }
 
-	async fn metadata(&self) -> io::Result<Cha> { Cha::try_from(&self.0) }
+	async fn metadata(&self) -> io::Result<yazi_fs::cha::Cha> { Ok(Cha::try_from(&self.0)?.0) }
 
-	async fn file_type(&self) -> io::Result<ChaType> {
-		ChaMode::try_from(self.0.attrs()).map(Into::into)
+	async fn file_type(&self) -> io::Result<yazi_fs::cha::ChaType> {
+		Ok(ChaMode::try_from(self.0.attrs())?.0.into())
 	}
 }

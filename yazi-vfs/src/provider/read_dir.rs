@@ -1,12 +1,11 @@
 use std::{io, sync::Arc};
 
+use yazi_fs::provider::DirReader;
 use yazi_shared::url::UrlBuf;
 
-use crate::provider::DirReader;
-
 pub enum ReadDir {
-	Regular(super::local::ReadDir),
-	Search((Arc<UrlBuf>, super::local::ReadDir)),
+	Regular(yazi_fs::provider::local::ReadDir),
+	Search((Arc<UrlBuf>, yazi_fs::provider::local::ReadDir)),
 	Sftp((Arc<UrlBuf>, super::sftp::ReadDir)),
 }
 

@@ -3,9 +3,8 @@ use std::{borrow::Cow, path::PathBuf};
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use yazi_codegen::DeserializeOver2;
-use yazi_fs::path::expand_url;
+use yazi_fs::{Xdg, path::expand_url};
 use yazi_shared::{SStr, timestamp_us, url::Url};
-use yazi_vfs::local::Xdg;
 
 use super::PreviewWrap;
 

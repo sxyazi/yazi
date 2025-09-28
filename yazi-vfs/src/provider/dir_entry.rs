@@ -1,12 +1,11 @@
 use std::{borrow::Cow, ffi::OsStr, io, sync::Arc};
 
+use yazi_fs::{cha::{Cha, ChaType}, provider::FileHolder};
 use yazi_shared::url::UrlBuf;
 
-use crate::{cha::{Cha, ChaType}, provider::FileHolder};
-
 pub enum DirEntry {
-	Regular(super::local::DirEntry),
-	Search((Arc<UrlBuf>, super::local::DirEntry)),
+	Regular(yazi_fs::provider::local::DirEntry),
+	Search((Arc<UrlBuf>, yazi_fs::provider::local::DirEntry)),
 	Sftp((Arc<UrlBuf>, super::sftp::DirEntry)),
 }
 

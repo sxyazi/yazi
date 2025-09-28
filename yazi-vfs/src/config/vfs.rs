@@ -3,10 +3,10 @@ use std::io;
 use hashbrown::HashMap;
 use serde::{Deserialize, Serialize};
 use tokio::sync::OnceCell;
+use yazi_fs::Xdg;
 use yazi_macro::ok_or_not_found;
 
 use super::Provider;
-use crate::local::Xdg;
 
 #[derive(Deserialize, Serialize)]
 pub struct Vfs {

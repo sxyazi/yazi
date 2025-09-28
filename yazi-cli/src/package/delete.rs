@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use yazi_fs::{ok_or_not_found, provider::{DirReader, FileHolder, Provider, local::Local}, remove_dir_clean};
+use yazi_fs::{ok_or_not_found, provider::{DirReader, FileHolder, Provider, local::Local}};
 use yazi_macro::outln;
 
 use super::Dependency;
@@ -35,7 +35,7 @@ impl Dependency {
 			Err(e) => Err(e).context(format!("failed to read `{}`", assets.display()))?,
 		};
 
-		remove_dir_clean(&assets.into()).await;
+		Local.remove_dir_clean(assets).await;
 		Ok(())
 	}
 

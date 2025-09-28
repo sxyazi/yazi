@@ -9,6 +9,7 @@ use yazi_macro::{act, succ};
 use yazi_parser::mgr::{OpenDoOpt, OpenOpt};
 use yazi_proxy::{MgrProxy, PickProxy, TasksProxy};
 use yazi_shared::{MIME_DIR, event::Data, url::UrlBuf};
+use yazi_vfs::VfsFile;
 
 use crate::{Actor, Ctx, mgr::Quit};
 

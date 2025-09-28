@@ -3,9 +3,9 @@ use std::path::PathBuf;
 use futures::executor::block_on;
 use hashbrown::HashSet;
 use serde::Serialize;
-use yazi_fs::{CWD, path::expand_url, provider};
+use yazi_fs::{CWD, Xdg, path::expand_url};
 use yazi_shared::url::{UrlBuf, UrlCow, UrnBuf};
-use yazi_vfs::local::Xdg;
+use yazi_vfs::provider;
 
 #[derive(Debug, Default, Serialize)]
 pub struct Boot {

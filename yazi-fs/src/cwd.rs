@@ -3,7 +3,7 @@ use std::{env::{current_dir, set_current_dir}, ops::Deref, path::PathBuf, sync::
 use arc_swap::ArcSwap;
 use yazi_shared::{RoCell, url::UrlBuf};
 
-use crate::provider;
+use crate::FsUrl;
 
 pub static CWD: RoCell<Cwd> = RoCell::new();
 
@@ -30,7 +30,7 @@ impl Default for Cwd {
 impl Cwd {
 	pub fn path(&self) -> PathBuf {
 		let url = self.0.load();
-		provider::cache(url.as_ref()).unwrap_or_else(|| url.loc.to_path())
+		url.cache().unwrap_or_else(|| url.loc.to_path())
 	}
 
 	pub fn set(&self, url: &UrlBuf) -> bool {
@@ -71,7 +71,7 @@ impl Cwd {
 
 	fn ensure_cache(&self) -> PathBuf {
 		let url = self.0.load();
-		if let Some(p) = provider::cache(url.as_ref()) {
+		if let Some(p) = url.cache() {
 			std::fs::create_dir_all(&p).ok();
 			p
 		} else {

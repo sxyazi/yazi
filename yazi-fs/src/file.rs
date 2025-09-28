@@ -1,9 +1,8 @@
 use std::{ffi::OsStr, hash::{BuildHasher, Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
 
-use anyhow::Result;
-use yazi_shared::url::{Uri, UrlBuf, UrlCow, Urn};
+use yazi_shared::url::{Uri, UrlBuf, Urn};
 
-use crate::{cha::{Cha, ChaType}, provider};
+use crate::cha::{Cha, ChaType};
 
 #[derive(Clone, Debug, Default)]
 pub struct File {
@@ -19,22 +18,6 @@ impl Deref for File {
 }
 
 impl File {
-	#[inline]
-	pub async fn new(url: impl Into<UrlCow<'_>>) -> Result<Self> {
-		let url = url.into();
-		let cha = provider::symlink_metadata(&url).await?;
-		Ok(Self::from_follow(url.into_owned(), cha).await)
-	}
-
-	#[inline]
-	pub async fn from_follow(url: UrlBuf, cha: Cha) -> Self {
-		let link_to = if cha.is_link() { provider::read_link(&url).await.ok() } else { None };
-
-		let cha = Cha::from_follow(&url, cha).await;
-
-		Self { url, cha, link_to }
-	}
-
 	#[inline]
 	pub fn from_dummy(url: impl Into<UrlBuf>, r#type: Option<ChaType>) -> Self {
 		let url = url.into();

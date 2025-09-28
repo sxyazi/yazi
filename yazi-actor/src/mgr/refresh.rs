@@ -7,6 +7,7 @@ use yazi_macro::{act, succ};
 use yazi_parser::VoidOpt;
 use yazi_shared::{event::Data, url::UrlBuf};
 use yazi_term::tty::TTY;
+use yazi_vfs::{VfsFiles, VfsFilesOp};
 
 use crate::{Actor, Ctx};
 

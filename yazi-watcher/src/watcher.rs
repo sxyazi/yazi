@@ -5,6 +5,7 @@ use tokio::{pin, sync::{mpsc::{self, UnboundedReceiver}, watch}};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_fs::{File, FilesOp, provider::local};
 use yazi_shared::url::UrlBuf;
+use yazi_vfs::VfsFile;
 
 use crate::{LINKED, Linked, WATCHED, WATCHER, backend::Backend};
 

@@ -3,8 +3,9 @@ use std::str::FromStr;
 use mlua::{ExternalError, Function, IntoLua, IntoLuaMulti, Lua, Table, Value};
 use yazi_binding::{Cha, Composer, ComposerGet, ComposerSet, Error, File, Url, UrlRef};
 use yazi_config::Pattern;
-use yazi_fs::{mounts::PARTITIONS, provider::{self, DirReader, FileHolder}, remove_dir_clean};
+use yazi_fs::{mounts::PARTITIONS, provider::{DirReader, FileHolder}};
 use yazi_shared::url::UrlCow;
+use yazi_vfs::{VfsFile, provider};
 
 use crate::bindings::SizeCalculator;
 
@@ -93,7 +94,7 @@ fn remove(lua: &Lua) -> mlua::Result<Function> {
 			b"file" => provider::remove_file(&*url).await,
 			b"dir" => provider::remove_dir(&*url).await,
 			b"dir_all" => provider::remove_dir_all(&*url).await,
-			b"dir_clean" => Ok(remove_dir_clean(&url).await),
+			b"dir_clean" => provider::remove_dir_clean(&*url).await,
 			_ => Err("Removal type must be 'file', 'dir', 'dir_all', or 'dir_clean'".into_lua_err())?,
 		};
 
@@ -148,9 +149,9 @@ fn read_dir(lua: &Lua) -> mlua::Result<Function> {
 fn calc_size(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, url: UrlRef| async move {
 		let it = if let Some(path) = url.as_path() {
-			provider::local::SizeCalculator::new(path).await.map(SizeCalculator::Local)
+			yazi_fs::provider::local::SizeCalculator::new(path).await.map(SizeCalculator::Local)
 		} else {
-			provider::SizeCalculator::new(&*url).await.map(SizeCalculator::Remote)
+			yazi_vfs::provider::SizeCalculator::new(&*url).await.map(SizeCalculator::Remote)
 		};
 
 		match it {
@@ -173,7 +174,7 @@ fn expand_url(lua: &Lua) -> mlua::Result<Function> {
 
 fn unique_name(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_async_function(|lua, url: UrlRef| async move {
-		match yazi_fs::path::unique_name(url.clone(), async { false }).await {
+		match yazi_vfs::unique_name(url.clone(), async { false }).await {
 			Ok(u) => Url::new(u).into_lua_multi(&lua),
 			Err(e) => (Value::Nil, Error::Io(e)).into_lua_multi(&lua),
 		}

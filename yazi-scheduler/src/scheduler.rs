@@ -6,10 +6,10 @@ use parking_lot::Mutex;
 use tokio::{select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
 use yazi_config::{YAZI, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
-use yazi_fs::{must_be_dir, path::unique_name, provider, remove_dir_clean};
 use yazi_parser::{app::PluginOpt, tasks::ProcessExecOpt};
 use yazi_proxy::TasksProxy;
 use yazi_shared::{Id, Throttle, url::UrlBuf};
+use yazi_vfs::{provider, unique_name};
 
 use super::{Ongoing, TaskOp};
 use crate::{HIGH, LOW, NORMAL, TaskIn, TaskOps, TaskOut, file::{File, FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash, FileOutDelete, FileOutHardlink, FileOutPaste, FileProgDelete, FileProgHardlink, FileProgLink, FileProgPaste, FileProgTrash}, plugin::{Plugin, PluginInEntry, PluginProgEntry}, prework::{Prework, PreworkInFetch, PreworkInLoad, PreworkInSize, PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{Process, ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessOutBg, ProcessOutBlock, ProcessOutOrphan, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
@@ -89,7 +89,7 @@ impl Scheduler {
 
 			move |canceled| async move {
 				if !canceled {
-					remove_dir_clean(&from).await;
+					provider::remove_dir_clean(&from).await.ok();
 					Pump::push_move(from, to);
 				}
 				ops.out(id, FileOutPaste::Clean);
@@ -99,7 +99,7 @@ impl Scheduler {
 		let file = self.file.clone();
 		self.send_micro(id, LOW, async move {
 			if !force {
-				to = unique_name(to, must_be_dir(&from)).await?;
+				to = unique_name(to, yazi_vfs::must_be_dir(&from)).await?;
 			}
 			file.paste(FileInPaste { id, from, to, cha: None, cut: true, follow: false, retry: 0 }).await
 		});
@@ -121,7 +121,7 @@ impl Scheduler {
 		let file = self.file.clone();
 		self.send_micro(id, LOW, async move {
 			if !force {
-				to = unique_name(to, must_be_dir(&from)).await?;
+				to = unique_name(to, yazi_vfs::must_be_dir(&from)).await?;
 			}
 			file.paste(FileInPaste { id, from, to, cha: None, cut: false, follow, retry: 0 }).await
 		});
@@ -137,7 +137,7 @@ impl Scheduler {
 		let file = self.file.clone();
 		self.send_micro(id, LOW, async move {
 			if !force {
-				to = unique_name(to, must_be_dir(&from)).await?;
+				to = unique_name(to, yazi_vfs::must_be_dir(&from)).await?;
 			}
 			file.link(FileInLink { id, from, to, cha: None, resolve: false, relative, delete: false })
 		});
@@ -159,7 +159,7 @@ impl Scheduler {
 		let file = self.file.clone();
 		self.send_micro(id, LOW, async move {
 			if !force {
-				to = unique_name(to, must_be_dir(&from)).await?;
+				to = unique_name(to, yazi_vfs::must_be_dir(&from)).await?;
 			}
 			file.hardlink(FileInHardlink { id, from, to, cha: None, follow }).await
 		});

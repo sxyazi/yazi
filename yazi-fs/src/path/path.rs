@@ -1,8 +1,6 @@
-use std::{borrow::Cow, ffi::{OsStr, OsString}, future::Future, io};
+use std::{borrow::Cow, ffi::OsStr};
 
 use yazi_shared::url::UrlBuf;
-
-use crate::provider;
 
 pub fn skip_url(url: &UrlBuf, n: usize) -> Cow<'_, OsStr> {
 	let mut it = url.components();
@@ -12,54 +10,6 @@ pub fn skip_url(url: &UrlBuf, n: usize) -> Cow<'_, OsStr> {
 		}
 	}
 	it.os_str()
-}
-
-pub async fn unique_name<F>(u: UrlBuf, append: F) -> io::Result<UrlBuf>
-where
-	F: Future<Output = bool>,
-{
-	match provider::symlink_metadata(&u).await {
-		Ok(_) => _unique_name(u, append.await).await,
-		Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(u),
-		Err(e) => Err(e),
-	}
-}
-
-async fn _unique_name(mut url: UrlBuf, append: bool) -> io::Result<UrlBuf> {
-	let Some(stem) = url.stem().map(|s| s.to_owned()) else {
-		return Err(io::Error::new(io::ErrorKind::InvalidInput, "empty file stem"));
-	};
-
-	let dot_ext = url.ext().map_or_else(OsString::new, |e| {
-		let mut s = OsString::with_capacity(e.len() + 1);
-		s.push(".");
-		s.push(e);
-		s
-	});
-
-	let mut i = 1u64;
-	let mut name = OsString::with_capacity(stem.len() + dot_ext.len() + 5);
-	loop {
-		name.clear();
-		name.push(&stem);
-
-		if append {
-			name.push(&dot_ext);
-			name.push(format!("_{i}"));
-		} else {
-			name.push(format!("_{i}"));
-			name.push(&dot_ext);
-		}
-
-		url.set_name(&name);
-		match provider::symlink_metadata(&url).await {
-			Ok(_) => i += 1,
-			Err(e) if e.kind() == io::ErrorKind::NotFound => break,
-			Err(e) => return Err(e),
-		}
-	}
-
-	Ok(url)
 }
 
 #[cfg(windows)]

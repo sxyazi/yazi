@@ -3,7 +3,7 @@ use yazi_binding::Error;
 
 pub enum SizeCalculator {
 	Local(yazi_fs::provider::local::SizeCalculator),
-	Remote(yazi_fs::provider::SizeCalculator),
+	Remote(yazi_vfs::provider::SizeCalculator),
 }
 
 impl UserData for SizeCalculator {

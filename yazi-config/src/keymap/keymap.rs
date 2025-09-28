@@ -1,9 +1,8 @@
 use anyhow::{Context, Result};
 use serde::Deserialize;
 use yazi_codegen::DeserializeOver1;
-use yazi_fs::ok_or_not_found;
+use yazi_fs::{Xdg, ok_or_not_found};
 use yazi_shared::Layer;
-use yazi_vfs::local::Xdg;
 
 use super::{Chord, KeymapRules};
 

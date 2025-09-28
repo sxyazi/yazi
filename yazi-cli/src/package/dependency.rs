@@ -3,9 +3,8 @@ use std::{io::BufWriter, path::{Path, PathBuf}, str::FromStr};
 use anyhow::{Result, bail};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use twox_hash::XxHash3_128;
-use yazi_fs::provider::{DirReader, FileHolder, Provider, local::Local};
+use yazi_fs::{Xdg, provider::{DirReader, FileHolder, Provider, local::Local}};
 use yazi_shared::BytesExt;
-use yazi_vfs::local::Xdg;
 
 #[derive(Clone, Default)]
 pub(crate) struct Dependency {

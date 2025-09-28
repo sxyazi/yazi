@@ -5,7 +5,7 @@ use yazi_macro::{unix_either, win_either};
 use yazi_shared::url::Url;
 
 use super::ChaKind;
-use crate::{cha::{ChaMode, ChaType}, provider};
+use crate::cha::{ChaMode, ChaType};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Cha {
@@ -50,27 +50,6 @@ impl Cha {
 	#[inline]
 	pub fn new(name: &OsStr, meta: Metadata) -> Self {
 		Self::from_bare(&meta).attach(ChaKind::hidden(name, &meta))
-	}
-
-	#[inline]
-	pub async fn from_url<'a>(url: impl Into<Url<'a>>) -> std::io::Result<Self> {
-		let url = url.into();
-		Ok(Self::from_follow(url, provider::symlink_metadata(url).await?).await)
-	}
-
-	pub async fn from_follow<'a, U>(url: U, mut cha: Self) -> Self
-	where
-		U: Into<Url<'a>>,
-	{
-		let url: Url = url.into();
-		let mut retain = cha.kind & (ChaKind::HIDDEN | ChaKind::SYSTEM);
-
-		if cha.is_link() {
-			retain |= ChaKind::FOLLOW;
-			cha = provider::metadata(url).await.unwrap_or(cha);
-		}
-
-		cha.attach(retain)
 	}
 
 	pub fn from_dummy<'a, U>(_url: U, r#type: Option<ChaType>) -> Self
@@ -140,7 +119,7 @@ impl Cha {
 	}
 
 	#[inline]
-	fn attach(mut self, kind: ChaKind) -> Self {
+	pub fn attach(mut self, kind: ChaKind) -> Self {
 		self.kind |= kind;
 		self
 	}

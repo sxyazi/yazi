@@ -8,9 +8,10 @@ use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
 use tracing::error;
 use yazi_config::Priority;
-use yazi_fs::{FilesOp, provider};
+use yazi_fs::FilesOp;
 use yazi_plugin::isolate;
 use yazi_shared::{event::CmdCow, url::UrlBuf};
+use yazi_vfs::provider;
 
 use super::{PreworkInFetch, PreworkInLoad, PreworkInSize};
 use crate::{HIGH, NORMAL, TaskIn, TaskOp, TaskOps, prework::{PreworkOutFetch, PreworkOutLoad, PreworkOutSize}};

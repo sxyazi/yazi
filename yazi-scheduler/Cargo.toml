@@ -17,6 +17,7 @@ yazi-parser = { path = "../yazi-parser", version = "25.9.15" }
 yazi-plugin = { path = "../yazi-plugin", version = "25.9.15" }
 yazi-proxy  = { path = "../yazi-proxy", version = "25.9.15" }
 yazi-shared = { path = "../yazi-shared", version = "25.9.15" }
+yazi-vfs    = { path = "../yazi-vfs", version = "25.9.15" }
 
 # External dependencies
 anyhow                 = { workspace = true }
