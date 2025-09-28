@@ -15,9 +15,9 @@ impl FileBuilder for Gate {
 		self
 	}
 
-	fn cha(&mut self, cha: Cha) -> &mut Self {
+	fn cha(&mut self, _cha: Cha) -> &mut Self {
 		#[cfg(unix)]
-		self.0.mode(cha.mode.bits() as _);
+		self.0.mode(_cha.mode.bits() as _);
 		self
 	}
 

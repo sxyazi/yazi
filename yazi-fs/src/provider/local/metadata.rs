@@ -1,4 +1,4 @@
-use std::fs::{FileTimes, Permissions};
+use std::fs::FileTimes;
 
 use crate::cha::Cha;
 
@@ -31,10 +31,10 @@ impl From<Cha> for FileTimes {
 }
 
 #[cfg(unix)]
-impl From<Cha> for Permissions {
+impl From<Cha> for std::fs::Permissions {
 	fn from(cha: Cha) -> Self {
 		use std::os::unix::fs::PermissionsExt;
 
-		Permissions::from_mode(cha.mode.bits() as _)
+		std::fs::Permissions::from_mode(cha.mode.bits() as _)
 	}
 }

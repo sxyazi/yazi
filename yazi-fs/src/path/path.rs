@@ -14,6 +14,7 @@ pub fn skip_url(url: &UrlBuf, n: usize) -> Cow<'_, OsStr> {
 
 #[cfg(windows)]
 pub fn backslash_to_slash(p: &std::path::Path) -> Cow<'_, std::path::Path> {
+	use std::{ffi::OsString, path::PathBuf};
 	let bytes = p.as_os_str().as_encoded_bytes();
 
 	// Fast path to skip if there are no backslashes
@@ -30,7 +31,7 @@ pub fn backslash_to_slash(p: &std::path::Path) -> Cow<'_, std::path::Path> {
 	for &b in rest {
 		out.push(if b == b'\\' { b'/' } else { b });
 	}
-	Cow::Owned(std::path::PathBuf::from(unsafe { OsString::from_encoded_bytes_unchecked(out) }))
+	Cow::Owned(PathBuf::from(unsafe { OsString::from_encoded_bytes_unchecked(out) }))
 }
 
 #[cfg(test)]

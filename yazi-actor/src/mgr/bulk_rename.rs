@@ -13,7 +13,7 @@ use yazi_parser::VoidOpt;
 use yazi_proxy::{AppProxy, HIDER, TasksProxy};
 use yazi_shared::{OsStrJoin, event::Data, terminal_clear, url::{Component, UrlBuf}};
 use yazi_term::tty::TTY;
-use yazi_vfs::{VfsFile, maybe_exists, provider::{self, must_identical}};
+use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
 
 use crate::{Actor, Ctx};
@@ -122,7 +122,7 @@ impl BulkRename {
 				selected[n.0].components().take(root).chain([Component::Normal(&n)]).collect(),
 			);
 
-			if maybe_exists(&new).await && !must_identical(&old, &new).await {
+			if maybe_exists(&new).await && !provider::must_identical(&old, &new).await {
 				failed.push((o, n, anyhow!("Destination already exists")));
 			} else if let Err(e) = provider::rename(&old, &new).await {
 				failed.push((o, n, e.into()));
