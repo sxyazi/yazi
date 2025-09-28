@@ -141,12 +141,12 @@ impl<'de> Deserialize<'de> for Error {
 			Shadow::Kind { kind } => Error::Kind(kind_from_str(&kind)),
 			Shadow::Raw { code } => Error::Raw(code),
 			Shadow::Dyn { kind, code, message } => {
-				if let Some(code) = code {
-					Error::Raw(code)
-				} else if message.is_empty() {
-					Error::Kind(kind_from_str(&kind))
-				} else {
+				if !message.is_empty() {
 					Error::Custom { kind: kind_from_str(&kind), code, message: message.into() }
+				} else if let Some(code) = code {
+					Error::Raw(code)
+				} else {
+					Error::Kind(kind_from_str(&kind))
 				}
 			}
 		})
