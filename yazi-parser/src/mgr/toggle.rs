@@ -10,10 +10,10 @@ pub struct ToggleOpt {
 impl From<CmdCow> for ToggleOpt {
 	fn from(mut c: CmdCow) -> Self {
 		Self {
-			url:   c.take_first_url(),
-			state: match c.str("state") {
-				Some("on") => Some(true),
-				Some("off") => Some(false),
+			url:   c.take_first().ok(),
+			state: match c.get("state") {
+				Ok("on") => Some(true),
+				Ok("off") => Some(false),
 				_ => None,
 			},
 		}

@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_fs::path::clean_url;
 use yazi_macro::{act, succ};
 use yazi_parser::VoidOpt;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
 

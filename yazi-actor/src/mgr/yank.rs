@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_core::mgr::Yanked;
 use yazi_macro::{act, render};
 use yazi_parser::mgr::YankOpt;
-use yazi_shared::{event::Data, url::UrlBufCov};
+use yazi_shared::{data::Data, url::UrlBufCov};
 
 use crate::{Actor, Ctx};
 

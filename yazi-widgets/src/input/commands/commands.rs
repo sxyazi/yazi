@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_macro::{act, succ};
-use yazi_shared::event::{CmdCow, Data};
+use yazi_shared::{data::Data, event::CmdCow};
 
 use crate::input::{Input, InputMode};
 

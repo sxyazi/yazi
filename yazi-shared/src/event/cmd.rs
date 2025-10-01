@@ -4,8 +4,7 @@ use anyhow::{Result, anyhow, bail};
 use hashbrown::HashMap;
 use serde::{Deserialize, de};
 
-use super::{Data, DataKey};
-use crate::{Id, Layer, SStr, Source, url::UrlCow};
+use crate::{Layer, SStr, Source, data::{Data, DataKey}};
 
 #[derive(Debug, Default)]
 pub struct Cmd {
@@ -54,23 +53,18 @@ impl Cmd {
 		cmd
 	}
 
-	#[inline]
 	fn null() -> Self { Self { name: Cow::Borrowed("null"), ..Default::default() } }
 
-	#[inline]
 	pub fn len(&self) -> usize { self.args.len() }
 
-	#[inline]
 	pub fn is_empty(&self) -> bool { self.args.is_empty() }
 
 	// --- With
-	#[inline]
 	pub fn with(mut self, name: impl Into<DataKey>, value: impl Into<Data>) -> Self {
 		self.args.insert(name.into(), value.into());
 		self
 	}
 
-	#[inline]
 	pub fn with_opt(mut self, name: impl Into<DataKey>, value: Option<impl Into<Data>>) -> Self {
 		if let Some(v) = value {
 			self.args.insert(name.into(), v.into());
@@ -78,71 +72,103 @@ impl Cmd {
 		self
 	}
 
-	#[inline]
 	pub fn with_any(mut self, name: impl Into<DataKey>, data: impl Any + Send + Sync) -> Self {
 		self.args.insert(name.into(), Data::Any(Box::new(data)));
 		self
 	}
 
 	// --- Get
-	#[inline]
-	pub fn get(&self, name: impl Into<DataKey>) -> Option<&Data> { self.args.get(&name.into()) }
+	pub fn get<'a, T>(&'a self, name: impl Into<DataKey>) -> Result<T>
+	where
+		T: TryFrom<&'a Data>,
+		T::Error: Into<anyhow::Error>,
+	{
+		let name = name.into();
+		match self.args.get(&name) {
+			Some(data) => data.try_into().map_err(Into::into),
+			None => bail!("argument not found: {:?}", name),
+		}
+	}
 
-	#[inline]
-	pub fn str(&self, name: impl Into<DataKey>) -> Option<&str> { self.get(name)?.as_str() }
+	pub fn str(&self, name: impl Into<DataKey>) -> &str { self.get(name).unwrap_or_default() }
 
-	#[inline]
-	pub fn bool(&self, name: impl Into<DataKey>) -> bool { self.maybe_bool(name).unwrap_or(false) }
+	pub fn bool(&self, name: impl Into<DataKey>) -> bool { self.get(name).unwrap_or(false) }
 
-	#[inline]
-	pub fn maybe_bool(&self, name: impl Into<DataKey>) -> Option<bool> { self.get(name)?.as_bool() }
+	pub fn first<'a, T>(&'a self) -> Result<T>
+	where
+		T: TryFrom<&'a Data>,
+		T::Error: Into<anyhow::Error>,
+	{
+		self.get(0).map_err(Into::into)
+	}
 
-	#[inline]
-	pub fn id(&self, name: impl Into<DataKey>) -> Option<Id> { self.get(name)?.as_id() }
+	pub fn second<'a, T>(&'a self) -> Result<T>
+	where
+		T: TryFrom<&'a Data>,
+		T::Error: Into<anyhow::Error>,
+	{
+		self.get(1).map_err(Into::into)
+	}
 
-	#[inline]
-	pub fn url(&self, name: impl Into<DataKey>) -> Option<UrlCow<'_>> { self.get(name)?.to_url() }
-
-	#[inline]
-	pub fn first(&self) -> Option<&Data> { self.get(0) }
-
-	#[inline]
-	pub fn first_str(&self) -> Option<&str> { self.str(0) }
-
-	#[inline]
-	pub fn second(&self) -> Option<&Data> { self.get(1) }
-
-	#[inline]
-	pub fn second_str(&self) -> Option<&str> { self.str(1) }
+	pub fn seq<'a, T>(&'a self) -> Vec<T>
+	where
+		T: TryFrom<&'a Data>,
+	{
+		let mut seq = Vec::with_capacity(self.len());
+		for i in 0..self.len() {
+			if let Ok(data) = self.get::<&Data>(i)
+				&& let Ok(v) = data.try_into()
+			{
+				seq.push(v);
+			} else {
+				break;
+			}
+		}
+		seq
+	}
 
 	// --- Take
-	#[inline]
-	pub fn take(&mut self, name: impl Into<DataKey>) -> Option<Data> {
-		self.args.remove(&name.into())
+	pub fn take<'a, T>(&mut self, name: impl Into<DataKey>) -> Result<T>
+	where
+		T: TryFrom<Data>,
+		T::Error: Into<anyhow::Error>,
+	{
+		let name = name.into();
+		match self.args.remove(&name) {
+			Some(data) => data.try_into().map_err(Into::into),
+			None => bail!("argument not found: {:?}", name),
+		}
 	}
 
-	#[inline]
-	pub fn take_str(&mut self, name: impl Into<DataKey>) -> Option<SStr> {
-		if let Some(Data::String(s)) = self.take(name) { Some(s) } else { None }
+	pub fn take_first<'a, T>(&mut self) -> Result<T>
+	where
+		T: TryFrom<Data>,
+		T::Error: Into<anyhow::Error>,
+	{
+		self.take(0)
 	}
 
-	#[inline]
-	pub fn take_first(&mut self) -> Option<Data> { self.take(0) }
-
-	#[inline]
-	pub fn take_first_str(&mut self) -> Option<SStr> {
-		if let Some(Data::String(s)) = self.take_first() { Some(s) } else { None }
+	pub fn take_seq<T>(&mut self) -> Vec<T>
+	where
+		T: TryFrom<Data>,
+	{
+		let mut seq = Vec::with_capacity(self.len());
+		for i in 0..self.len() {
+			if let Ok(data) = self.take::<Data>(i)
+				&& let Ok(v) = data.try_into()
+			{
+				seq.push(v);
+			} else {
+				break;
+			}
+		}
+		seq
 	}
 
-	#[inline]
-	pub fn take_first_url(&mut self) -> Option<UrlCow<'static>> { self.take_first()?.into_url() }
-
-	#[inline]
 	pub fn take_any<T: 'static>(&mut self, name: impl Into<DataKey>) -> Option<T> {
 		self.args.remove(&name.into())?.into_any()
 	}
 
-	#[inline]
 	pub fn take_any2<T: 'static>(&mut self, name: impl Into<DataKey>) -> Option<Result<T>> {
 		self.args.remove(&name.into()).map(Data::into_any2)
 	}
@@ -192,7 +218,7 @@ impl Display for Cmd {
 					}
 				}
 				DataKey::String(k) => {
-					if v.as_bool().is_some_and(|b| b) {
+					if v.try_into().is_ok_and(|b| b) {
 						write!(f, " --{k}")?;
 					} else if let Some(s) = v.as_str() {
 						write!(f, " --{k}={s}")?;

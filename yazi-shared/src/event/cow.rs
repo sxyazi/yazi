@@ -1,9 +1,9 @@
-use std::{borrow::Cow, ops::Deref};
+use std::ops::Deref;
 
 use anyhow::Result;
 
-use super::{Cmd, Data, DataKey};
-use crate::{SStr, url::UrlCow};
+use super::Cmd;
+use crate::data::{Data, DataKey};
 
 #[derive(Debug)]
 pub enum CmdCow {
@@ -31,46 +31,42 @@ impl Deref for CmdCow {
 }
 
 impl CmdCow {
-	#[inline]
-	pub fn try_take(&mut self, name: impl Into<DataKey>) -> Option<Data> {
+	pub fn take<'a, T>(&mut self, name: impl Into<DataKey>) -> Result<T>
+	where
+		T: TryFrom<Data> + TryFrom<&'a Data>,
+		<T as TryFrom<Data>>::Error: Into<anyhow::Error>,
+		<T as TryFrom<&'a Data>>::Error: Into<anyhow::Error>,
+	{
 		match self {
 			Self::Owned(c) => c.take(name),
-			Self::Borrowed(_) => None,
+			Self::Borrowed(c) => c.get(name),
 		}
 	}
 
-	#[inline]
-	pub fn take_str(&mut self, name: impl Into<DataKey>) -> Option<SStr> {
+	pub fn take_first<'a, T>(&mut self) -> Result<T>
+	where
+		T: TryFrom<Data> + TryFrom<&'a Data>,
+		<T as TryFrom<Data>>::Error: Into<anyhow::Error>,
+		<T as TryFrom<&'a Data>>::Error: Into<anyhow::Error>,
+	{
 		match self {
-			Self::Owned(c) => c.take_str(name),
-			Self::Borrowed(c) => c.str(name).map(Cow::Borrowed),
+			Self::Owned(c) => c.take_first(),
+			Self::Borrowed(c) => c.first(),
 		}
 	}
 
-	#[inline]
-	pub fn take_url(&mut self, name: impl Into<DataKey>) -> Option<UrlCow<'static>> {
+	pub fn take_seq<'a, T>(&mut self) -> Vec<T>
+	where
+		T: TryFrom<Data> + TryFrom<&'a Data>,
+		<T as TryFrom<Data>>::Error: Into<anyhow::Error>,
+		<T as TryFrom<&'a Data>>::Error: Into<anyhow::Error>,
+	{
 		match self {
-			Self::Owned(c) => c.take(name).and_then(Data::into_url),
-			Self::Borrowed(c) => c.url(name),
+			Self::Owned(c) => c.take_seq(),
+			Self::Borrowed(c) => c.seq(),
 		}
 	}
 
-	#[inline]
-	pub fn take_first_str(&mut self) -> Option<SStr> {
-		match self {
-			Self::Owned(c) => c.take_first_str(),
-			Self::Borrowed(c) => c.first_str().map(Cow::Borrowed),
-		}
-	}
-
-	pub fn take_first_url(&mut self) -> Option<UrlCow<'static>> {
-		match self {
-			Self::Owned(c) => c.take_first_url(),
-			Self::Borrowed(c) => c.first().and_then(Data::to_url),
-		}
-	}
-
-	#[inline]
 	pub fn take_any<T: 'static>(&mut self, name: impl Into<DataKey>) -> Option<T> {
 		match self {
 			Self::Owned(c) => c.take_any(name),
@@ -78,7 +74,6 @@ impl CmdCow {
 		}
 	}
 
-	#[inline]
 	pub fn take_any2<T: 'static>(&mut self, name: impl Into<DataKey>) -> Option<Result<T>> {
 		match self {
 			Self::Owned(c) => c.take_any2(name),

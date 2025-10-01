@@ -5,7 +5,7 @@ use percent_encoding::percent_decode;
 
 use crate::{BytesExt, pool::InternStr, scheme::{Scheme, SchemeRef}};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum SchemeCow<'a> {
 	Borrowed(SchemeRef<'a>),
 	Owned(Scheme),

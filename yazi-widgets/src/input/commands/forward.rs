@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_macro::act;
 use yazi_parser::input::ForwardOpt;
-use yazi_shared::{CharKind, event::Data};
+use yazi_shared::{CharKind, data::Data};
 
 use crate::input::{Input, op::InputOp};
 

@@ -6,7 +6,7 @@ use yazi_binding::runtime_mut;
 use yazi_dds::{LOCAL, Payload, REMOTE};
 use yazi_macro::succ;
 use yazi_plugin::LUA;
-use yazi_shared::event::{CmdCow, Data};
+use yazi_shared::{data::Data, event::CmdCow};
 
 use crate::app::App;
 

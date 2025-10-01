@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_fs::{File, FilesOp};
 use yazi_macro::{act, render, succ};
 use yazi_parser::mgr::RevealOpt;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
 

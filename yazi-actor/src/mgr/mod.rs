@@ -6,6 +6,7 @@ yazi_macro::mod_flat!(
 	close
 	copy
 	create
+	download
 	enter
 	escape
 	filter
@@ -22,6 +23,7 @@ yazi_macro::mod_flat!(
 	linemode
 	link
 	open
+	open_do
 	paste
 	peek
 	quit

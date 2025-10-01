@@ -3,7 +3,7 @@ use yazi_core::tab::Folder;
 use yazi_fs::FolderStage;
 use yazi_macro::{act, render, render_and, succ};
 use yazi_parser::mgr::HiddenOpt;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
 

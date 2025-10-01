@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ffi::{OsStr, OsString}, hash::Hash, io::{Read, Write}, ops::Deref, path::Path};
+use std::{borrow::Cow, ffi::{OsStr, OsString}, hash::Hash, io::{Read, Write}, ops::Deref};
 
 use anyhow::{Result, anyhow};
 use crossterm::{execute, style::Print};
@@ -11,7 +11,7 @@ use yazi_fs::{File, FilesOp, max_common_root, path::skip_url, provider::{FileBui
 use yazi_macro::{err, succ};
 use yazi_parser::VoidOpt;
 use yazi_proxy::{AppProxy, HIDER, TasksProxy};
-use yazi_shared::{OsStrJoin, event::Data, terminal_clear, url::{Component, UrlBuf}};
+use yazi_shared::{OsStrJoin, data::Data, terminal_clear, url::{Component, Url, UrlBuf}};
 use yazi_term::tty::TTY;
 use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
@@ -52,8 +52,8 @@ impl Actor for BulkRename {
 
 			defer! { tokio::spawn(Local.remove_file(tmp.clone())); }
 			TasksProxy::process_exec(Cow::Borrowed(opener), cwd, vec![
-				OsString::new(),
-				tmp.to_owned().into(),
+				OsStr::new("").into(),
+				tmp.as_os_str().to_owned().into(),
 			])
 			.await;
 
@@ -147,7 +147,7 @@ impl BulkRename {
 	}
 
 	fn opener() -> Option<&'static OpenerRule> {
-		YAZI.opener.block(YAZI.open.all(UrlBuf::from(Path::new("bulk-rename.txt")), "text/plain"))
+		YAZI.opener.block(YAZI.open.all(Url::regular("bulk-rename.txt"), "text/plain"))
 	}
 
 	async fn output_failed(failed: Vec<(Tuple, Tuple, anyhow::Error)>) -> Result<()> {

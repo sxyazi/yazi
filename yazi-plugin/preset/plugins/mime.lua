@@ -1,83 +1,12 @@
--- stylua: ignore
-local TYPE_PATS = { "text", "image", "video", "application", "audio", "font", "inode", "message", "model", "vector", "biosig", "chemical", "rinex", "x%-epoc" }
+local function fetch(_, job)
+	ya.notify {
+		title = "Deprecated plugin",
+		content = "The `mime` fetcher is deprecated, use `mime.file` instead in your `yazi.toml`\n\nSee https://github.com/sxyazi/yazi/pull/3222 for more details.",
+		timeout = 15,
+		level = "warn",
+	}
 
-local M = {}
-
-local function match_mimetype(line)
-	for _, pat in ipairs(TYPE_PATS) do
-		local typ, sub = line:match(string.format("(%s/)([+-.a-zA-Z0-9]+)%%s+$", pat))
-		if not sub then
-		elseif line:find(typ .. sub, 1, true) == 1 then
-			return typ:gsub("^x%-", "", 1) .. sub:gsub("^x%-", "", 1):gsub("^vnd%.", "", 1)
-		else
-			return nil, true
-		end
-	end
+	return require("mime.file"):fetch(job)
 end
 
-local function miss_cache(cache, line)
-	if line:match("^cannot open `.+' %(No such file or directory%)%s+$") then
-		return true
-	else
-		local _, err = fs.cha(Url(cache))
-		return err and err.code == 2
-	end
-end
-
-function M:fetch(job)
-	local paths, origins = {}, {}
-	for i, file in ipairs(job.files) do
-		if file.cache then
-			paths[i], origins[i] = tostring(file.cache), tostring(file.url)
-		else
-			paths[i] = tostring(file.url)
-		end
-	end
-
-	local cmd = os.getenv("YAZI_FILE_ONE") or "file"
-	local child, err = Command(cmd):arg({ "-bL", "--mime-type", "--" }):arg(paths):stdout(Command.PIPED):spawn()
-	if not child then
-		return true, Err("Failed to start `%s`, error: %s", cmd, err)
-	end
-
-	local updates, last = {}, ya.time()
-	local flush = function(force)
-		if not force and ya.time() - last < 0.3 then
-			return
-		end
-		if next(updates) then
-			ya.emit("update_mimes", { updates = updates })
-			updates, last = {}, ya.time()
-		end
-	end
-
-	local i, state, match, ignore = 1, {}, nil, nil
-	repeat
-		local line, event = child:read_line_with { timeout = 300 }
-		if event == 3 then
-			flush(true)
-			goto continue
-		elseif event ~= 0 then
-			break
-		end
-
-		match, ignore = match_mimetype(line)
-		if match then
-			updates[origins[i] or paths[i]], state[i], i = match, true, i + 1
-			flush(false)
-		elseif ignore then
-			goto continue
-		elseif origins[i] and miss_cache(paths[i], line) then
-			updates[origins[i]], state[i], i = "vfs/todo", true, i + 1
-			flush(false)
-		else
-			state[i], i = false, i + 1
-		end
-		::continue::
-	until i > #paths
-
-	flush(true)
-	return state
-end
-
-return M
+return { fetch = fetch }

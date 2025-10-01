@@ -7,7 +7,7 @@ pub struct CopyOpt {
 }
 
 impl From<CmdCow> for CopyOpt {
-	fn from(mut c: CmdCow) -> Self { Self { r#type: c.take_first_str().unwrap_or_default() } }
+	fn from(mut c: CmdCow) -> Self { Self { r#type: c.take_first().unwrap_or_default() } }
 }
 
 impl FromLua for CopyOpt {

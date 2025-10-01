@@ -3,7 +3,7 @@ use std::ffi::OsString;
 use anyhow::{Result, bail};
 use yazi_macro::{act, succ};
 use yazi_parser::mgr::CopyOpt;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 use yazi_widgets::CLIPBOARD;
 
 use crate::{Actor, Ctx};

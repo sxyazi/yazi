@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_macro::succ;
 use yazi_parser::mgr::OpenWithOpt;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
 
@@ -16,7 +16,7 @@ impl Actor for OpenWith {
 		succ!(cx.tasks.process_from_opener(
 			opt.cwd,
 			opt.opener,
-			opt.targets.into_iter().map(|u| u.into_path2().into_os_string()).collect(),
+			opt.targets.into_iter().map(|u| u.into_os_str2()).collect(),
 		));
 	}
 }

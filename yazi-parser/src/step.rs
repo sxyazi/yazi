@@ -1,6 +1,6 @@
 use std::{num::ParseIntError, str::FromStr};
 
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 #[derive(Clone, Copy, Debug)]
 pub enum Step {

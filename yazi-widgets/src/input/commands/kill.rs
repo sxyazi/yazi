@@ -3,7 +3,7 @@ use std::ops::RangeBounds;
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
 use yazi_parser::input::KillOpt;
-use yazi_shared::{CharKind, event::Data};
+use yazi_shared::{CharKind, data::Data};
 
 use crate::input::Input;
 

@@ -254,7 +254,7 @@ impl Sftp {
 
 		let session = if self.config.password.is_some() {
 			self.connect_by_password(pref).await
-		} else if self.config.key_file.is_some() {
+		} else if !self.config.key_file.as_os_str().is_empty() {
 			self.connect_by_key(pref).await
 		} else {
 			self.connect_by_agent(pref).await
@@ -287,7 +287,8 @@ impl Sftp {
 		self,
 		pref: Arc<russh::client::Config>,
 	) -> Result<russh::client::Handle<Self>, russh::Error> {
-		let Some(key_file) = &self.config.key_file else {
+		let key_file = &self.config.key_file;
+		if key_file.as_os_str().is_empty() {
 			return Err(russh::Error::InvalidConfig("Key file not provided".to_owned()));
 		};
 
@@ -322,7 +323,8 @@ impl Sftp {
 		self,
 		pref: Arc<russh::client::Config>,
 	) -> Result<russh::client::Handle<Self>, russh::Error> {
-		let Some(identity_agent) = &self.config.identity_agent else {
+		let identity_agent = &self.config.identity_agent;
+		if identity_agent.as_os_str().is_empty() {
 			return Err(russh::Error::InvalidConfig("Identity agent not provided".to_owned()));
 		};
 

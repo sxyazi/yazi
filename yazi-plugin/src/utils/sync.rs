@@ -6,7 +6,7 @@ use yazi_binding::{runtime, runtime_mut};
 use yazi_dds::Sendable;
 use yazi_parser::app::{PluginCallback, PluginOpt};
 use yazi_proxy::AppProxy;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 use super::Utils;
 use crate::{bindings::{MpscRx, MpscTx, MpscUnboundedRx, MpscUnboundedTx, OneshotRx, OneshotTx}, loader::LOADER};

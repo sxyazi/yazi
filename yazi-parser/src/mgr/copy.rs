@@ -1,6 +1,7 @@
-use std::{borrow::Cow, ffi::OsStr, path::Path};
+use std::{borrow::Cow, ffi::OsStr, path::Path, str::FromStr};
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::{SStr, event::CmdCow};
 
 #[derive(Debug)]
@@ -13,8 +14,8 @@ pub struct CopyOpt {
 impl From<CmdCow> for CopyOpt {
 	fn from(mut c: CmdCow) -> Self {
 		Self {
-			r#type:    c.take_first_str().unwrap_or_default(),
-			separator: c.str("separator").unwrap_or_default().into(),
+			r#type:    c.take_first().unwrap_or_default(),
+			separator: c.str("separator").parse().unwrap_or_default(),
 			hovered:   c.bool("hovered"),
 		}
 	}
@@ -29,18 +30,19 @@ impl IntoLua for CopyOpt {
 }
 
 // --- Separator
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum CopySeparator {
+	#[default]
 	Auto,
 	Unix,
 }
 
-impl From<&str> for CopySeparator {
-	fn from(value: &str) -> Self {
-		match value {
-			"unix" => Self::Unix,
-			_ => Self::Auto,
-		}
+impl FromStr for CopySeparator {
+	type Err = serde::de::value::Error;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		Self::deserialize(serde::de::value::StrDeserializer::new(s))
 	}
 }
 

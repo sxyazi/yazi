@@ -4,7 +4,7 @@ use anyhow::Result;
 use indexmap::IndexSet;
 use serde::Deserialize;
 use yazi_codegen::DeserializeOver2;
-use yazi_shared::{MIME_DIR, url::UrlBuf};
+use yazi_shared::url::AsUrl;
 
 use crate::{Preset, open::OpenRule};
 
@@ -24,30 +24,31 @@ impl Deref for Open {
 }
 
 impl Open {
-	pub fn all<'a, 'b, P, M>(&'a self, url: P, mime: M) -> impl Iterator<Item = &'a str> + 'b
+	pub fn all<'a, 'b, U, M>(&'a self, url: U, mime: M) -> impl Iterator<Item = &'a str> + 'b
 	where
 		'a: 'b,
-		P: AsRef<UrlBuf> + 'b,
+		U: AsUrl + 'b,
 		M: AsRef<str> + 'b,
 	{
-		let is_dir = mime.as_ref() == MIME_DIR;
+		let is_dir = mime.as_ref().starts_with("folder/");
 		self
 			.rules
 			.iter()
 			.filter(move |&r| {
 				r.mime.as_ref().is_some_and(|p| p.match_mime(&mime))
-					|| r.url.as_ref().is_some_and(|p| p.match_url(&url, is_dir))
+					|| r.url.as_ref().is_some_and(|p| p.match_url(url.as_url(), is_dir))
 			})
 			.flat_map(|r| &r.r#use)
 			.map(String::as_str)
 	}
 
-	pub fn common<'a>(
-		&'a self,
-		targets: &[(impl AsRef<UrlBuf>, impl AsRef<str>)],
-	) -> IndexSet<&'a str> {
+	pub fn common<'a, 'b, U, M>(&'a self, targets: &'b [(U, M)]) -> IndexSet<&'a str>
+	where
+		&'b U: AsUrl,
+		M: AsRef<str>,
+	{
 		let each: Vec<IndexSet<&str>> = targets
-			.iter()
+			.into_iter()
 			.map(|(u, m)| self.all(u, m).collect::<IndexSet<_>>())
 			.filter(|s| !s.is_empty())
 			.collect();

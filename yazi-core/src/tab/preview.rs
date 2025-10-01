@@ -9,7 +9,7 @@ use yazi_fs::{File, Files, FilesOp, cha::Cha};
 use yazi_macro::render;
 use yazi_parser::mgr::PreviewLock;
 use yazi_plugin::{external::Highlighter, isolate};
-use yazi_shared::{MIME_DIR, pool::{InternStr, Symbol}, url::UrlBuf};
+use yazi_shared::{pool::{InternStr, Symbol}, url::UrlBuf};
 use yazi_vfs::{VfsFiles, VfsFilesOp};
 
 #[derive(Default)]
@@ -29,7 +29,7 @@ impl Preview {
 			return;
 		}
 
-		let Some(previewer) = YAZI.plugin.previewer(&file.url, &mime) else {
+		let Some(previewer) = YAZI.plugin.previewer(&file, &mime) else {
 			return self.reset();
 		};
 
@@ -38,16 +38,18 @@ impl Preview {
 	}
 
 	pub fn go_folder(&mut self, file: File, dir: Option<Cha>, force: bool) {
-		let same = self.same_file(&file, MIME_DIR);
+		const MIME: &str = "folder/lock";
+
+		let same = self.same_file(&file, MIME);
 		let (wd, cha, internal) = (file.url_owned(), file.cha, file.url.is_internal());
 
-		self.go(file, MIME_DIR.intern(), force);
+		self.go(file, MIME.intern(), force);
 		if same || !internal {
 			return;
 		}
 
 		self.lock =
-			Some(PreviewLock { url: wd.clone(), cha, mime: MIME_DIR.to_owned(), ..Default::default() });
+			Some(PreviewLock { url: wd.clone(), cha, mime: MIME.to_owned(), ..Default::default() });
 		self.folder_loader.take().map(|h| h.abort());
 		self.folder_loader = Some(tokio::spawn(async move {
 			let Some(new) = Files::assert_stale(&wd, dir.unwrap_or_default()).await else { return };

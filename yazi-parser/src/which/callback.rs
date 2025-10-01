@@ -1,7 +1,7 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use tokio::sync::mpsc;
-use yazi_shared::event::{CmdCow, Data};
+use yazi_shared::event::CmdCow;
 
 #[derive(Debug)]
 pub struct CallbackOpt {
@@ -17,7 +17,7 @@ impl TryFrom<CmdCow> for CallbackOpt {
 			bail!("Invalid 'tx' argument in CallbackOpt");
 		};
 
-		let Some(idx) = c.first().and_then(Data::as_usize) else {
+		let Ok(idx) = c.first() else {
 			bail!("Invalid 'idx' argument in CallbackOpt");
 		};
 

@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_core::mgr::Yanked;
 use yazi_macro::{render, succ};
 use yazi_parser::mgr::UpdateYankedOpt;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
 

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_macro::{render, succ};
 use yazi_parser::VoidOpt;
-use yazi_shared::{event::Data, replace_cow};
+use yazi_shared::{data::Data, replace_cow};
 
 use crate::input::{Input, InputMode, op::InputOp};
 

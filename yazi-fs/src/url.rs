@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use twox_hash::XxHash3_128;
-use yazi_shared::{scheme::SchemeRef, url::{Url, UrlBuf}};
+use yazi_shared::{scheme::SchemeRef, url::{Url, UrlBuf, UrlCow}};
 
 use crate::Xdg;
 
@@ -28,5 +28,9 @@ impl FsUrl for Url<'_> {
 }
 
 impl FsUrl for UrlBuf {
+	fn cache(&self) -> Option<PathBuf> { self.as_url().cache() }
+}
+
+impl FsUrl for UrlCow<'_> {
 	fn cache(&self) -> Option<PathBuf> { self.as_url().cache() }
 }

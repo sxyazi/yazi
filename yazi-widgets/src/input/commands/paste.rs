@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
 use yazi_parser::input::PasteOpt;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 use crate::{CLIPBOARD, input::{Input, op::InputOp}};
 

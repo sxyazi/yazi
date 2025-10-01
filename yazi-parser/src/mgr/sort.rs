@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_fs::SortBy;
 use yazi_shared::event::CmdCow;
@@ -18,11 +16,11 @@ impl TryFrom<CmdCow> for SortOpt {
 
 	fn try_from(c: CmdCow) -> Result<Self, Self::Error> {
 		Ok(Self {
-			by:        c.first_str().map(SortBy::from_str).transpose()?,
-			reverse:   c.maybe_bool("reverse"),
-			dir_first: c.maybe_bool("dir-first"),
-			sensitive: c.maybe_bool("sensitive"),
-			translit:  c.maybe_bool("translit"),
+			by:        c.first().ok().map(str::parse).transpose()?,
+			reverse:   c.get("reverse").ok(),
+			dir_first: c.get("dir-first").ok(),
+			sensitive: c.get("sensitive").ok(),
+			translit:  c.get("translit").ok(),
 		})
 	}
 }

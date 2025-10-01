@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_actor::Ctx;
 use yazi_macro::{act, succ};
-use yazi_shared::{Layer, event::{CmdCow, Data}};
+use yazi_shared::{Layer, data::Data, event::CmdCow};
 use yazi_widgets::input::InputMode;
 
 use crate::app::App;
@@ -133,6 +133,9 @@ impl<'a> Executor<'a> {
 		on!(tab_close);
 		on!(tab_switch);
 		on!(tab_swap);
+
+		// VFS
+		on!(download);
 
 		match cmd.name.as_ref() {
 			// Help

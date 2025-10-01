@@ -5,7 +5,7 @@ use yazi_core::tab::Folder;
 use yazi_fs::{CWD, Files, FilesOp, cha::Cha};
 use yazi_macro::{act, succ};
 use yazi_parser::VoidOpt;
-use yazi_shared::{event::Data, url::UrlBuf};
+use yazi_shared::{data::Data, url::UrlBuf};
 use yazi_term::tty::TTY;
 use yazi_vfs::{VfsFiles, VfsFilesOp};
 

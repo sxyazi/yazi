@@ -3,6 +3,7 @@ yazi_macro::mod_flat!(
 	close
 	copy
 	create
+	download
 	escape
 	filter
 	find

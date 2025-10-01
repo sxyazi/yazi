@@ -18,7 +18,7 @@ impl TryFrom<CmdCow> for CompleteOpt {
 			bail!("Invalid 'item' in CompleteOpt");
 		};
 
-		Ok(Self { item, _ticket: c.id("ticket").unwrap_or_default() })
+		Ok(Self { item, _ticket: c.get("ticket").unwrap_or_default() })
 	}
 }
 

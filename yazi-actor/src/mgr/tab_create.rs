@@ -3,7 +3,7 @@ use yazi_core::tab::Tab;
 use yazi_macro::{act, render, succ};
 use yazi_parser::mgr::{CdSource, TabCreateOpt};
 use yazi_proxy::AppProxy;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
 

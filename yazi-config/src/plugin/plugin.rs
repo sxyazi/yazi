@@ -4,7 +4,6 @@ use serde::Deserialize;
 use tracing::warn;
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::File;
-use yazi_shared::url::UrlBuf;
 
 use super::{Fetcher, Preloader, Previewer, Spotter};
 use crate::{Preset, plugin::MAX_PREWORKERS};
@@ -39,12 +38,12 @@ pub struct Plugin {
 impl Plugin {
 	pub fn fetchers<'a, 'b: 'a>(
 		&'b self,
-		url: &'a UrlBuf,
+		file: &'a File,
 		mime: &'a str,
 	) -> impl Iterator<Item = &'b Fetcher> + 'a {
 		let mut seen = HashSet::new();
 		self.fetchers.iter().filter(move |&f| {
-			if seen.contains(&f.id) || !f.matches(url, mime) {
+			if seen.contains(&f.id) || !f.matches(file, mime) {
 				return false;
 			}
 			seen.insert(&f.id);
@@ -55,7 +54,7 @@ impl Plugin {
 	pub fn mime_fetchers(&self, files: Vec<File>) -> impl Iterator<Item = (&Fetcher, Vec<File>)> {
 		let mut tasks: [Vec<_>; MAX_PREWORKERS as usize] = Default::default();
 		for f in files {
-			let found = self.fetchers.iter().find(|&g| g.id == "mime" && g.matches(&f.url, ""));
+			let found = self.fetchers.iter().find(|&g| g.id == "mime" && g.matches(&f, ""));
 			if let Some(g) = found {
 				tasks[g.idx as usize].push(f);
 			} else {
@@ -68,18 +67,18 @@ impl Plugin {
 		})
 	}
 
-	pub fn spotter(&self, url: &UrlBuf, mime: &str) -> Option<&Spotter> {
-		self.spotters.iter().find(|&p| p.matches(url, mime))
+	pub fn spotter(&self, file: &File, mime: &str) -> Option<&Spotter> {
+		self.spotters.iter().find(|&p| p.matches(file, mime))
 	}
 
 	pub fn preloaders<'a, 'b: 'a>(
 		&'b self,
-		url: &'a UrlBuf,
+		file: &'a File,
 		mime: &'a str,
 	) -> impl Iterator<Item = &'b Preloader> + 'a {
 		let mut next = true;
 		self.preloaders.iter().filter(move |&p| {
-			if !next || !p.matches(url, mime) {
+			if !next || !p.matches(file, mime) {
 				return false;
 			}
 			next = p.next;
@@ -87,8 +86,8 @@ impl Plugin {
 		})
 	}
 
-	pub fn previewer(&self, url: &UrlBuf, mime: &str) -> Option<&Previewer> {
-		self.previewers.iter().find(|&p| p.matches(url, mime))
+	pub fn previewer(&self, file: &File, mime: &str) -> Option<&Previewer> {
+		self.previewers.iter().find(|&p| p.matches(file, mime))
 	}
 }
 

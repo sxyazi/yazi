@@ -1,6 +1,6 @@
 use anyhow::Result;
 use yazi_dds::spark::SparkKind;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 use crate::Ctx;
 

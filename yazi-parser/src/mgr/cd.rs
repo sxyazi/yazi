@@ -11,7 +11,7 @@ pub struct CdOpt {
 
 impl From<CmdCow> for CdOpt {
 	fn from(mut c: CmdCow) -> Self {
-		let mut target = c.take_first_url().unwrap_or_default();
+		let mut target = c.take_first().unwrap_or_default();
 
 		if !c.bool("raw") {
 			target = expand_url(target).into();

@@ -9,7 +9,7 @@ use yazi_macro::succ;
 use yazi_parser::app::{PluginMode, PluginOpt};
 use yazi_plugin::{LUA, loader::{LOADER, Loader}};
 use yazi_proxy::AppProxy;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 use crate::app::App;
 

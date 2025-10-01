@@ -13,7 +13,7 @@ impl From<CmdCow> for TabCreateOpt {
 		if c.bool("current") {
 			return Self { wd: None };
 		}
-		let Some(mut wd) = c.take_first_url() else {
+		let Ok(mut wd) = c.take_first() else {
 			return Self { wd: Some(UrlCow::from(&BOOT.cwds[0])) };
 		};
 		if !c.bool("raw") {

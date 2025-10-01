@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_macro::{render_and, succ};
 use yazi_parser::mgr::ToggleOpt;
 use yazi_proxy::AppProxy;
-use yazi_shared::{event::Data, url::UrlCow};
+use yazi_shared::{data::Data, url::UrlCow};
 
 use crate::{Actor, Ctx};
 

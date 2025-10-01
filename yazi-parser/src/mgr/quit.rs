@@ -1,6 +1,6 @@
 use mlua::{FromLua, IntoLua, Lua, LuaSerdeExt, Value};
 use serde::{Deserialize, Serialize};
-use yazi_shared::event::{CmdCow, Data, EventQuit};
+use yazi_shared::event::{CmdCow, EventQuit};
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct QuitOpt {
@@ -10,10 +10,7 @@ pub struct QuitOpt {
 
 impl From<CmdCow> for QuitOpt {
 	fn from(c: CmdCow) -> Self {
-		Self {
-			code:        c.get("code").and_then(Data::as_i32).unwrap_or_default(),
-			no_cwd_file: c.bool("no-cwd-file"),
-		}
+		Self { code: c.get("code").unwrap_or_default(), no_cwd_file: c.bool("no-cwd-file") }
 	}
 }
 

@@ -9,7 +9,7 @@ pub struct TriggerOpt {
 
 impl From<CmdCow> for TriggerOpt {
 	fn from(mut c: CmdCow) -> Self {
-		Self { word: c.take_first_str().unwrap_or_default(), ticket: c.id("ticket") }
+		Self { word: c.take_first().unwrap_or_default(), ticket: c.get("ticket").ok() }
 	}
 }
 

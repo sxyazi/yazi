@@ -1,15 +1,20 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::CmdCow;
+use yazi_shared::{event::CmdCow, url::UrlCow};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct OpenOpt {
+	pub targets:     Vec<UrlCow<'static>>,
 	pub interactive: bool,
 	pub hovered:     bool,
 }
 
 impl From<CmdCow> for OpenOpt {
-	fn from(c: CmdCow) -> Self {
-		Self { interactive: c.bool("interactive"), hovered: c.bool("hovered") }
+	fn from(mut c: CmdCow) -> Self {
+		Self {
+			targets:     c.take_seq(),
+			interactive: c.bool("interactive"),
+			hovered:     c.bool("hovered"),
+		}
 	}
 }
 
