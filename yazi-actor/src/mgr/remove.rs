@@ -3,7 +3,7 @@ use yazi_config::popup::ConfirmCfg;
 use yazi_macro::{act, succ};
 use yazi_parser::mgr::RemoveOpt;
 use yazi_proxy::{ConfirmProxy, MgrProxy};
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
 

@@ -3,7 +3,7 @@ use yazi_core::tab::Folder;
 use yazi_fs::FilesOp;
 use yazi_macro::{act, render, succ};
 use yazi_parser::mgr::UpdateFilesOpt;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 use yazi_watcher::LINKED;
 
 use crate::{Actor, Ctx};

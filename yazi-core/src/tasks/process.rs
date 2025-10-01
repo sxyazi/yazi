@@ -1,14 +1,19 @@
-use std::{borrow::Cow, ffi::OsString, mem};
+use std::{borrow::Cow, ffi::OsStr, mem};
 
 use hashbrown::HashMap;
 use yazi_config::{YAZI, opener::OpenerRule};
 use yazi_parser::tasks::ProcessExecOpt;
-use yazi_shared::url::UrlBuf;
+use yazi_shared::url::{UrlBuf, UrlCow};
 
 use super::Tasks;
 
 impl Tasks {
-	pub fn process_from_files(&self, cwd: UrlBuf, hovered: UrlBuf, targets: Vec<(UrlBuf, &str)>) {
+	pub fn process_from_files(
+		&self,
+		cwd: UrlBuf,
+		hovered: UrlCow<'static>,
+		targets: Vec<(UrlCow<'static>, &str)>,
+	) {
 		let mut openers = HashMap::new();
 		for (url, mime) in targets {
 			if let Some(opener) = YAZI.opener.first(YAZI.open.all(&url, mime)) {
@@ -19,7 +24,7 @@ impl Tasks {
 			self.process_from_opener(
 				cwd.clone(),
 				Cow::Borrowed(opener),
-				args.into_iter().map(|u| u.into_path2().into_os_string()).collect(),
+				args.into_iter().map(|u| u.into_os_str2()).collect(),
 			);
 		}
 	}
@@ -28,7 +33,7 @@ impl Tasks {
 		&self,
 		cwd: UrlBuf,
 		opener: Cow<'static, OpenerRule>,
-		mut args: Vec<OsString>,
+		mut args: Vec<Cow<'static, OsStr>>,
 	) {
 		if opener.spread {
 			self.scheduler.process_open(ProcessExecOpt { cwd, opener, args, done: None });

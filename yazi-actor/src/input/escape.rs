@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
 use yazi_parser::VoidOpt;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 use yazi_widgets::input::InputOp;
 
 use crate::{Actor, Ctx};

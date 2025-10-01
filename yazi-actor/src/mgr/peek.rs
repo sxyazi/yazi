@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_macro::succ;
 use yazi_parser::mgr::PeekOpt;
 use yazi_proxy::HIDER;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
 
@@ -21,7 +21,7 @@ impl Actor for Peek {
 			succ!(cx.tab_mut().preview.reset_image());
 		}
 
-		let mime = cx.mgr.mimetype.by_file_owned(&hovered).unwrap_or_default();
+		let mime = cx.mgr.mimetype.owned(&hovered.url).unwrap_or_default();
 		let folder = cx.tab().hovered_folder().map(|f| (f.offset, f.cha));
 
 		if !cx.tab().preview.same_url(&hovered.url) {

@@ -7,7 +7,7 @@ use yazi_actor::{Ctx, lives::Lives};
 use yazi_binding::elements::COLLISION;
 use yazi_macro::{act, succ};
 use yazi_parser::VoidOpt;
-use yazi_shared::event::{Data, NEED_RENDER};
+use yazi_shared::{data::Data, event::NEED_RENDER};
 use yazi_term::tty::TTY;
 
 use crate::{app::App, root::Root};

@@ -1,6 +1,6 @@
 use mlua::{IntoLua, Lua, Value};
 use serde::Serialize;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 use super::Ember;
 use crate::Sendable;

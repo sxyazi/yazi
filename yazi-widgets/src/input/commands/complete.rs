@@ -3,7 +3,7 @@ use std::path::MAIN_SEPARATOR_STR;
 use anyhow::Result;
 use yazi_macro::{act, render, succ};
 use yazi_parser::input::CompleteOpt;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 use crate::input::Input;
 

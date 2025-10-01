@@ -1,5 +1,6 @@
 use serde::Deserialize;
-use yazi_shared::{MIME_DIR, event::Cmd, url::UrlBuf};
+use yazi_fs::File;
+use yazi_shared::event::Cmd;
 
 use crate::{Pattern, Priority};
 
@@ -18,8 +19,8 @@ pub struct Fetcher {
 
 impl Fetcher {
 	#[inline]
-	pub fn matches(&self, url: &UrlBuf, mime: &str) -> bool {
+	pub fn matches(&self, file: &File, mime: &str) -> bool {
 		self.mime.as_ref().is_some_and(|p| p.match_mime(mime))
-			|| self.url.as_ref().is_some_and(|p| p.match_url(url, mime == MIME_DIR))
+			|| self.url.as_ref().is_some_and(|p| p.match_url(&file.url, file.is_dir()))
 	}
 }

@@ -7,7 +7,7 @@ use tokio::{io::{AsyncReadExt, stdin}, select, sync::mpsc, time};
 use yazi_macro::succ;
 use yazi_parser::VoidOpt;
 use yazi_proxy::{AppProxy, HIDER};
-use yazi_shared::{event::Data, terminal_clear};
+use yazi_shared::{data::Data, terminal_clear};
 use yazi_term::tty::TTY;
 
 use crate::{Actor, Ctx};

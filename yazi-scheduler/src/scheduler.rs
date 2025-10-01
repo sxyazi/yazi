@@ -6,6 +6,7 @@ use parking_lot::Mutex;
 use tokio::{select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
 use yazi_config::{YAZI, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
+use yazi_fs::FsUrl;
 use yazi_parser::{app::PluginOpt, tasks::ProcessExecOpt};
 use yazi_proxy::TasksProxy;
 use yazi_shared::{Id, Throttle, url::UrlBuf};
@@ -209,6 +210,26 @@ impl Scheduler {
 		self.send_micro(id, LOW, async move { file.trash(FileInTrash { id, target }) })
 	}
 
+	pub fn file_download(&self, from: UrlBuf, done: Option<oneshot::Sender<bool>>) {
+		let mut ongoing = self.ongoing.lock();
+		let id = self.ongoing.lock().add::<FileProgPaste>(format!("Download {}", from.display()));
+
+		if let Some(tx) = done {
+			ongoing.hooks.add_sync(id, move |canceled| _ = tx.send(canceled));
+		}
+
+		let Some(to) = from.cache().map(UrlBuf::from) else {
+			return self
+				.ops
+				.out(id, FileOutPaste::Deform("Unable to download non-remote file".to_owned()));
+		};
+
+		let file = self.file.clone();
+		self.send_micro(id, LOW, async move {
+			file.paste(FileInPaste { id, from, to, cha: None, cut: false, follow: false, retry: 0 }).await
+		});
+	}
+
 	pub fn plugin_micro(&self, opt: PluginOpt) {
 		let id = self.ongoing.lock().add::<PluginProgEntry>(format!("Run micro plugin `{}`", opt.id));
 
@@ -243,6 +264,22 @@ impl Scheduler {
 		self.send_micro(id, NORMAL, async move {
 			prework.fetch(PreworkInFetch { id, plugin: fetcher, targets }).await
 		});
+	}
+
+	pub async fn fetch_mimetype(&self, targets: Vec<yazi_fs::File>) -> bool {
+		let mut wg = vec![];
+		for (fetcher, targets) in YAZI.plugin.mime_fetchers(targets) {
+			let (tx, rx) = oneshot::channel();
+			self.fetch_paged(fetcher, targets, Some(tx));
+			wg.push(rx);
+		}
+
+		for rx in wg {
+			if rx.await != Ok(true) {
+				return false;
+			}
+		}
+		true
 	}
 
 	pub fn preload_paged(&self, preloader: &'static Preloader, target: &yazi_fs::File) {

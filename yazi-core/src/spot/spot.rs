@@ -22,7 +22,7 @@ impl Spot {
 			return;
 		}
 
-		let Some(spotter) = YAZI.plugin.spotter(&file.url, &mime) else {
+		let Some(spotter) = YAZI.plugin.spotter(&file, &mime) else {
 			return self.reset();
 		};
 

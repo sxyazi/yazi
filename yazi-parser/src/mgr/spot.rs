@@ -1,5 +1,5 @@
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::{CmdCow, Data};
+use yazi_shared::event::CmdCow;
 
 #[derive(Debug, Default)]
 pub struct SpotOpt {
@@ -7,7 +7,7 @@ pub struct SpotOpt {
 }
 
 impl From<CmdCow> for SpotOpt {
-	fn from(c: CmdCow) -> Self { Self { skip: c.get("skip").and_then(Data::as_usize) } }
+	fn from(c: CmdCow) -> Self { Self { skip: c.get("skip").ok() } }
 }
 
 impl From<usize> for SpotOpt {

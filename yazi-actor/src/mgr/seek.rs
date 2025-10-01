@@ -3,7 +3,7 @@ use yazi_config::YAZI;
 use yazi_macro::succ;
 use yazi_parser::mgr::SeekOpt;
 use yazi_plugin::isolate;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
 
@@ -19,11 +19,11 @@ impl Actor for Seek {
 			succ!(cx.tab_mut().preview.reset());
 		};
 
-		let Some(mime) = cx.mgr.mimetype.by_file(hovered) else {
+		let Some(mime) = cx.mgr.mimetype.get(&hovered.url) else {
 			succ!(cx.tab_mut().preview.reset());
 		};
 
-		let Some(previewer) = YAZI.plugin.previewer(&hovered.url, mime) else {
+		let Some(previewer) = YAZI.plugin.previewer(hovered, mime) else {
 			succ!(cx.tab_mut().preview.reset());
 		};
 

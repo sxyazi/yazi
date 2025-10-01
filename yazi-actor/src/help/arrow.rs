@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_macro::{render, succ};
 use yazi_parser::ArrowOpt;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 use yazi_widgets::Scrollable;
 
 use crate::{Actor, Ctx};

@@ -30,9 +30,9 @@ macro_rules! relay {
 #[macro_export]
 macro_rules! succ {
 	($data:expr) => {
-		return Ok(yazi_shared::event::Data::from($data))
+		return Ok(yazi_shared::data::Data::from($data))
 	};
 	() => {
-		return Ok(yazi_shared::event::Data::Nil)
+		return Ok(yazi_shared::data::Data::Nil)
 	};
 }

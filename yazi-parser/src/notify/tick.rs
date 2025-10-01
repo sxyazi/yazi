@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::{CmdCow, Data};
+use yazi_shared::event::CmdCow;
 
 #[derive(Debug)]
 pub struct TickOpt {
@@ -13,7 +13,7 @@ impl TryFrom<CmdCow> for TickOpt {
 	type Error = anyhow::Error;
 
 	fn try_from(c: CmdCow) -> Result<Self, Self::Error> {
-		let Some(interval) = c.first().and_then(Data::as_f64) else {
+		let Ok(interval) = c.first() else {
 			bail!("Invalid 'interval' argument in TickOpt");
 		};
 

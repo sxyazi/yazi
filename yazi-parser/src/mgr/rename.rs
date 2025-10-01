@@ -14,8 +14,8 @@ impl From<CmdCow> for RenameOpt {
 		Self {
 			hovered: c.bool("hovered"),
 			force:   c.bool("force"),
-			empty:   c.take_str("empty").unwrap_or_default(),
-			cursor:  c.take_str("cursor").unwrap_or_default(),
+			empty:   c.take("empty").unwrap_or_default(),
+			cursor:  c.take("cursor").unwrap_or_default(),
 		}
 	}
 }

@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_dds::Pubsub;
 use yazi_macro::{err, render, succ};
 use yazi_parser::ArrowOpt;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
 

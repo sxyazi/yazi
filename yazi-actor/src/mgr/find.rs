@@ -7,7 +7,7 @@ use yazi_config::popup::InputCfg;
 use yazi_macro::succ;
 use yazi_parser::mgr::{FindDoOpt, FindOpt};
 use yazi_proxy::{InputProxy, MgrProxy};
-use yazi_shared::{Debounce, errors::InputError, event::Data};
+use yazi_shared::{Debounce, data::Data, errors::InputError};
 
 use crate::{Actor, Ctx};
 

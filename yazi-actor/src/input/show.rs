@@ -4,7 +4,7 @@ use anyhow::Result;
 use yazi_config::YAZI;
 use yazi_macro::{act, render, succ};
 use yazi_parser::input::ShowOpt;
-use yazi_shared::{errors::InputError, event::Data};
+use yazi_shared::{data::Data, errors::InputError};
 use yazi_widgets::input::InputCallback;
 
 use crate::{Actor, Ctx};

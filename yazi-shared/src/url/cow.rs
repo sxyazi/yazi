@@ -1,11 +1,11 @@
-use std::{borrow::Cow, path::{Path, PathBuf}};
+use std::{borrow::Cow, ffi::OsStr, path::{Path, PathBuf}};
 
 use anyhow::Result;
 use percent_encoding::percent_decode;
 
 use crate::{IntoOsStr, loc::{Loc, LocBuf}, scheme::{SchemeCow, SchemeRef}, url::{Components, Url, UrlBuf, Urn}};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum UrlCow<'a> {
 	Borrowed { loc: Loc<'a>, scheme: SchemeCow<'a> },
 	Owned { loc: LocBuf, scheme: SchemeCow<'a> },
@@ -23,6 +23,10 @@ impl<'a> From<&'a UrlBuf> for UrlCow<'a> {
 	fn from(value: &'a UrlBuf) -> Self {
 		Self::Borrowed { loc: value.loc.as_loc(), scheme: SchemeCow::from(&value.scheme) }
 	}
+}
+
+impl<'a> From<&'a UrlCow<'a>> for UrlCow<'a> {
+	fn from(value: &'a UrlCow<'a>) -> Self { value.as_url().into() }
 }
 
 impl From<UrlBuf> for UrlCow<'_> {
@@ -136,6 +140,18 @@ impl<'a> UrlCow<'a> {
 			UrlCow::Owned { scheme, .. } => scheme,
 		}
 	}
+
+	// FIXME: remove
+	#[inline]
+	pub fn into_os_str2(self) -> Cow<'a, OsStr> {
+		match self {
+			UrlCow::Borrowed { loc, .. } => loc.as_path().as_os_str().into(),
+			UrlCow::Owned { loc, .. } => loc.into_path().into_os_string().into(),
+		}
+	}
+
+	#[inline]
+	pub fn to_owned(&self) -> UrlBuf { self.as_url().into() }
 
 	#[inline]
 	pub fn parent(&self) -> Option<Url<'_>> { self.as_url().parent() }

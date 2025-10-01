@@ -11,7 +11,7 @@ impl TryFrom<CmdCow> for LinemodeOpt {
 	type Error = anyhow::Error;
 
 	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		let Some(new) = c.take_first_str() else {
+		let Ok(new) = c.take_first::<SStr>() else {
 			bail!("a string argument is required for LinemodeOpt");
 		};
 

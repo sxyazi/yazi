@@ -1,5 +1,5 @@
 use mlua::{Function, IntoLua, Lua, UserData, Value};
-use yazi_binding::{Composer, ComposerGet, ComposerSet, FileRef, UrlRef, cached_field};
+use yazi_binding::{Composer, ComposerGet, ComposerSet, FileRef, cached_field};
 use yazi_config::YAZI;
 
 pub(super) fn plugin() -> Composer<ComposerGet, ComposerSet> {
@@ -21,25 +21,25 @@ pub(super) fn plugin() -> Composer<ComposerGet, ComposerSet> {
 
 fn fetchers(lua: &Lua) -> mlua::Result<Function> {
 	lua.create_function(|lua, (file, mime): (FileRef, mlua::String)| {
-		lua.create_sequence_from(YAZI.plugin.fetchers(&file.url, &mime.to_str()?).map(Fetcher::new))
+		lua.create_sequence_from(YAZI.plugin.fetchers(&file, &mime.to_str()?).map(Fetcher::new))
 	})
 }
 
 fn spotter(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_function(|_, (url, mime): (UrlRef, mlua::String)| {
-		Ok(YAZI.plugin.spotter(&url, &mime.to_str()?).map(Spotter::new))
+	lua.create_function(|_, (file, mime): (FileRef, mlua::String)| {
+		Ok(YAZI.plugin.spotter(&file, &mime.to_str()?).map(Spotter::new))
 	})
 }
 
 fn preloaders(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_function(|lua, (url, mime): (UrlRef, mlua::String)| {
-		lua.create_sequence_from(YAZI.plugin.preloaders(&url, &mime.to_str()?).map(Preloader::new))
+	lua.create_function(|lua, (file, mime): (FileRef, mlua::String)| {
+		lua.create_sequence_from(YAZI.plugin.preloaders(&file, &mime.to_str()?).map(Preloader::new))
 	})
 }
 
 fn previewer(lua: &Lua) -> mlua::Result<Function> {
-	lua.create_function(|_, (url, mime): (UrlRef, mlua::String)| {
-		Ok(YAZI.plugin.previewer(&url, &mime.to_str()?).map(Previewer::new))
+	lua.create_function(|_, (file, mime): (FileRef, mlua::String)| {
+		Ok(YAZI.plugin.previewer(&file, &mime.to_str()?).map(Previewer::new))
 	})
 }
 

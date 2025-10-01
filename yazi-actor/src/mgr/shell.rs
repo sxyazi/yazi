@@ -5,7 +5,7 @@ use yazi_config::{opener::OpenerRule, popup::InputCfg};
 use yazi_macro::{act, succ};
 use yazi_parser::mgr::ShellOpt;
 use yazi_proxy::{InputProxy, TasksProxy};
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
 
@@ -20,7 +20,7 @@ impl Actor for Shell {
 		act!(mgr:escape_visual, cx)?;
 
 		let cwd = opt.cwd.take().unwrap_or(cx.cwd().into()).into_owned();
-		let selected = cx.tab().hovered_and_selected().cloned().collect();
+		let selected = cx.tab().hovered_and_selected().cloned().map(Into::into).collect();
 
 		let input = opt.interactive.then(|| {
 			InputProxy::show(InputCfg::shell(opt.block).with_value(&*opt.run).with_cursor(opt.cursor))

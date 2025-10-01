@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ffi::OsString};
+use std::{borrow::Cow, ffi::OsStr};
 
 use anyhow::anyhow;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
@@ -11,7 +11,7 @@ use yazi_shared::{event::CmdCow, url::UrlBuf};
 pub struct ProcessExecOpt {
 	pub cwd:    UrlBuf,
 	pub opener: Cow<'static, OpenerRule>,
-	pub args:   Vec<OsString>,
+	pub args:   Vec<Cow<'static, OsStr>>,
 	pub done:   Option<oneshot::Sender<()>>,
 }
 

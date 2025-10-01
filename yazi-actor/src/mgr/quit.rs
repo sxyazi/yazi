@@ -2,13 +2,12 @@ use std::{ffi::OsString, time::Duration};
 
 use anyhow::Result;
 use tokio::{select, time};
-use yazi_boot::ARGS;
 use yazi_config::popup::ConfirmCfg;
 use yazi_dds::spark::SparkKind;
 use yazi_macro::{emit, succ};
-use yazi_parser::mgr::{OpenOpt, QuitOpt};
+use yazi_parser::mgr::QuitOpt;
 use yazi_proxy::ConfirmProxy;
-use yazi_shared::{event::{Data, EventQuit}, url::UrlBuf};
+use yazi_shared::{data::Data, event::EventQuit, url::UrlCow};
 
 use crate::{Actor, Ctx};
 
@@ -67,21 +66,17 @@ impl Actor for Quit {
 }
 
 impl Quit {
-	pub(super) fn quit_with_selected<'a, I>(opt: OpenOpt, selected: I) -> bool
+	pub(super) fn with_selected<'a, I, T>(selected: I)
 	where
-		I: Iterator<Item = &'a UrlBuf>,
+		I: IntoIterator<Item = T>,
+		T: Into<UrlCow<'a>>,
 	{
-		if opt.interactive || ARGS.chooser_file.is_none() {
-			return false;
-		}
-
-		let paths = selected.fold(OsString::new(), |mut s, u| {
-			s.push(u.os_str());
+		let paths = selected.into_iter().fold(OsString::new(), |mut s, u| {
+			s.push(u.into().as_url().os_str());
 			s.push("\n");
 			s
 		});
 
 		emit!(Quit(EventQuit { selected: Some(paths), ..Default::default() }));
-		true
 	}
 }

@@ -1,6 +1,8 @@
 use std::{io, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
+use yazi_fs::path::expand_url;
+use yazi_shared::url::Url;
 
 #[derive(Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "kebab-case")]
@@ -19,9 +21,9 @@ impl TryFrom<&'static Provider> for &'static ProviderSftp {
 }
 
 impl Provider {
-	pub(super) fn reshape(self) -> io::Result<Self> {
+	pub(super) fn reshape(&mut self) -> io::Result<()> {
 		match self {
-			Self::Sftp(p) => p.reshape().map(Self::Sftp),
+			Self::Sftp(p) => p.reshape(),
 		}
 	}
 }
@@ -33,18 +35,32 @@ pub struct ProviderSftp {
 	pub user:           String,
 	pub port:           u16,
 	pub password:       Option<String>,
-	pub key_file:       Option<PathBuf>,
+	#[serde(default)]
+	pub key_file:       PathBuf,
 	pub key_passphrase: Option<String>,
-	// FIXME: set default: $SSH_AUTH_SOCK
-	pub identity_agent: Option<PathBuf>,
+	#[serde(default)]
+	pub identity_agent: PathBuf,
 }
 
 impl ProviderSftp {
-	fn reshape(self) -> io::Result<Self> {
-		// FIXME: expand the path
-		// if let Some(key_file) = self.key_file {}
-		// if let Some(identity_agent) = self.identity_agent {}
+	fn reshape(&mut self) -> io::Result<()> {
+		if !self.key_file.as_os_str().is_empty() {
+			self.key_file = expand_url(Url::regular(&self.key_file))
+				.into_path()
+				.ok_or_else(|| io::Error::other("key_file must be a path within local filesystem"))?;
+		}
 
-		Ok(self)
+		self.identity_agent = if self.identity_agent.as_os_str().is_empty() {
+			std::env::var_os("SSH_AUTH_SOCK")
+				.map(PathBuf::from)
+				.filter(|p| p.is_absolute())
+				.unwrap_or_default()
+		} else {
+			expand_url(Url::regular(&self.identity_agent))
+				.into_path()
+				.ok_or_else(|| io::Error::other("identity_agent must be a path within local filesystem"))?
+		};
+
+		Ok(())
 	}
 }

@@ -1,5 +1,8 @@
+use std::str::FromStr;
+
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
+use serde::Deserialize;
 use yazi_shared::{SStr, event::CmdCow};
 
 #[derive(Debug)]
@@ -15,13 +18,13 @@ impl TryFrom<CmdCow> for SearchOpt {
 
 	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
 		// TODO: remove this
-		let (via, subject) = if let Some(s) = c.take_str("via") {
-			(s.as_ref().into(), c.take_first_str().unwrap_or_default())
+		let (via, subject) = if let Ok(s) = c.get("via") {
+			(str::parse(s)?, c.take_first().unwrap_or_default())
 		} else {
-			(c.take_first_str().unwrap_or_default().as_ref().into(), "".into())
+			(c.str(0).parse()?, "".into())
 		};
 
-		let Ok(args) = yazi_shared::shell::split_unix(c.str("args").unwrap_or_default(), false) else {
+		let Ok(args) = yazi_shared::shell::split_unix(c.str("args"), false) else {
 			bail!("Invalid 'args' argument in SearchOpt");
 		};
 
@@ -30,7 +33,7 @@ impl TryFrom<CmdCow> for SearchOpt {
 			subject,
 			// TODO: use second positional argument instead of `args` parameter
 			args: args.0,
-			args_raw: c.take_str("args").unwrap_or_default(),
+			args_raw: c.take("args").unwrap_or_default(),
 		})
 	}
 }
@@ -44,20 +47,19 @@ impl IntoLua for SearchOpt {
 }
 
 // Via
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "kebab-case")]
 pub enum SearchOptVia {
 	Rg,
 	Rga,
 	Fd,
 }
 
-impl From<&str> for SearchOptVia {
-	fn from(value: &str) -> Self {
-		match value {
-			"rg" => Self::Rg,
-			"rga" => Self::Rga,
-			_ => Self::Fd,
-		}
+impl FromStr for SearchOptVia {
+	type Err = serde::de::value::Error;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		Self::deserialize(serde::de::value::StrDeserializer::new(s))
 	}
 }
 

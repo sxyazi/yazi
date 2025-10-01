@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_macro::succ;
 use yazi_parser::tasks::UpdateSucceedOpt;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 use crate::{Actor, Ctx};
 

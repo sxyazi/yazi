@@ -1,8 +1,6 @@
 use core::str;
 use std::{borrow::Cow, ffi::OsStr};
 
-pub const MIME_DIR: &str = "inode/directory";
-
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum CharKind {
 	Space,

@@ -13,7 +13,7 @@ impl TryFrom<CmdCow> for HiddenOpt {
 	type Error = anyhow::Error;
 
 	fn try_from(c: CmdCow) -> Result<Self, Self::Error> {
-		Ok(Self { state: c.first_str().map(FromStr::from_str).transpose()?.unwrap_or_default() })
+		Ok(Self { state: c.str(0).parse().unwrap_or_default() })
 	}
 }
 

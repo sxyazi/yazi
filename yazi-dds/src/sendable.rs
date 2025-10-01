@@ -3,7 +3,7 @@ use std::{any::TypeId, borrow::Cow};
 use hashbrown::HashMap;
 use mlua::{ExternalError, IntoLua, Lua, MultiValue, Table, Value};
 use ordered_float::OrderedFloat;
-use yazi_shared::{event::{Data, DataKey}, replace_cow};
+use yazi_shared::{data::{Data, DataKey}, replace_cow};
 
 pub struct Sendable;
 

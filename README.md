@@ -87,6 +87,14 @@ See https://yazi-rs.github.io/docs/image-preview for details.
 [ueberzug]: https://github.com/jstkdng/ueberzugpp
 [chafa]: https://hpjansson.org/chafa/
 
+## Special Thanks
+
+<img alt="RustRover logo" align="right" width="200" src="https://resources.jetbrains.com/storage/products/company/brand/logos/RustRover.svg">
+
+Thanks to RustRover team for providing open-source licenses to support the maintenance of Yazi.
+
+Active code contributors can contact @sxyazi to get a license (if any are still available).
+
 ## License
 
 Yazi is MIT-licensed. For more information check the [LICENSE](LICENSE) file.

@@ -5,7 +5,7 @@ use yazi_fs::{CWD, path::expand_url, provider::{DirReader, FileHolder}};
 use yazi_macro::{act, render, succ};
 use yazi_parser::cmp::{CmpItem, ShowOpt, TriggerOpt};
 use yazi_proxy::CmpProxy;
-use yazi_shared::{OsStrSplit, event::Data, natsort, url::{UrlBuf, UrlCow, UrnBuf}};
+use yazi_shared::{OsStrSplit, data::Data, natsort, url::{UrlBuf, UrlCow, UrnBuf}};
 use yazi_vfs::provider;
 
 use crate::{Actor, Ctx};

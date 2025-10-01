@@ -15,6 +15,7 @@ pub enum Spark<'a> {
 	Close(yazi_parser::mgr::CloseOpt),
 	Copy(yazi_parser::mgr::CopyOpt),
 	Create(yazi_parser::mgr::CreateOpt),
+	Download(yazi_parser::mgr::DownloadOpt),
 	Enter(yazi_parser::VoidOpt),
 	Escape(yazi_parser::mgr::EscapeOpt),
 	EscapeFilter(yazi_parser::VoidOpt),
@@ -137,6 +138,7 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::Close(b) => b.into_lua(lua),
 			Self::Copy(b) => b.into_lua(lua),
 			Self::Create(b) => b.into_lua(lua),
+			Self::Download(b) => b.into_lua(lua),
 			Self::Enter(b) => b.into_lua(lua),
 			Self::Escape(b) => b.into_lua(lua),
 			Self::EscapeFilter(b) => b.into_lua(lua),
@@ -280,6 +282,7 @@ try_from_spark!(mgr::CdOpt, mgr:cd);
 try_from_spark!(mgr::CloseOpt, mgr:close);
 try_from_spark!(mgr::CopyOpt, mgr:copy);
 try_from_spark!(mgr::CreateOpt, mgr:create);
+try_from_spark!(mgr::DownloadOpt, mgr:download);
 try_from_spark!(mgr::EscapeOpt, mgr:escape);
 try_from_spark!(mgr::FilterOpt, mgr:filter, mgr:filter_do);
 try_from_spark!(mgr::FindArrowOpt, mgr:find_arrow);

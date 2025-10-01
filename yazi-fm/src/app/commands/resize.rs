@@ -2,7 +2,7 @@ use anyhow::Result;
 use yazi_actor::Ctx;
 use yazi_macro::act;
 use yazi_parser::VoidOpt;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 use crate::app::App;
 

@@ -6,7 +6,7 @@ use yazi_actor::lives::Lives;
 use yazi_config::LAYOUT;
 use yazi_macro::{render, succ};
 use yazi_parser::VoidOpt;
-use yazi_shared::event::Data;
+use yazi_shared::data::Data;
 
 use crate::{Root, app::App};
 

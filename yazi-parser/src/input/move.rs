@@ -2,7 +2,7 @@ use std::{num::ParseIntError, str::FromStr};
 
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::event::{CmdCow, Data};
+use yazi_shared::{data::Data, event::CmdCow};
 
 #[derive(Debug, Default)]
 pub struct MoveOpt {
@@ -12,10 +12,7 @@ pub struct MoveOpt {
 
 impl From<CmdCow> for MoveOpt {
 	fn from(c: CmdCow) -> Self {
-		Self {
-			step:         c.first().and_then(|d| d.try_into().ok()).unwrap_or_default(),
-			in_operating: c.bool("in-operating"),
-		}
+		Self { step: c.first().ok().unwrap_or_default(), in_operating: c.bool("in-operating") }
 	}
 }
 

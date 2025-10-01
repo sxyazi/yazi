@@ -1,7 +1,8 @@
 use std::{io, path::Path};
 
 use tokio::io::AsyncWriteExt;
-use yazi_fs::{ok_or_not_found, provider::{FileBuilder, Provider, local::{Gate, Local}}};
+use yazi_fs::provider::{FileBuilder, Provider, local::{Gate, Local}};
+use yazi_macro::ok_or_not_found;
 
 #[inline]
 pub async fn must_exists(path: impl AsRef<Path>) -> bool {
@@ -18,7 +19,7 @@ pub async fn maybe_exists(path: impl AsRef<Path>) -> bool {
 
 pub async fn copy_and_seal(from: &Path, to: &Path) -> io::Result<()> {
 	let b = Local.read(from).await?;
-	ok_or_not_found(remove_sealed(to).await)?;
+	ok_or_not_found!(remove_sealed(to).await);
 
 	let mut file = Gate::default().create_new(true).write(true).truncate(true).open(to).await?;
 	file.write_all(&b).await?;

@@ -2,6 +2,7 @@ use std::{ffi::OsString, io};
 
 use tokio::{select, sync::{mpsc, oneshot}};
 use yazi_fs::cha::Cha;
+use yazi_macro::ok_or_not_found;
 use yazi_shared::url::{Url, UrlBuf};
 
 use crate::provider;
@@ -42,9 +43,8 @@ async fn _unique_name(mut url: UrlBuf, append: bool) -> io::Result<UrlBuf> {
 		s
 	});
 
-	let mut i = 1u64;
 	let mut name = OsString::with_capacity(stem.len() + dot_ext.len() + 5);
-	loop {
+	for i in 1u64.. {
 		name.clear();
 		name.push(&stem);
 
@@ -57,11 +57,7 @@ async fn _unique_name(mut url: UrlBuf, append: bool) -> io::Result<UrlBuf> {
 		}
 
 		url.set_name(&name);
-		match provider::symlink_metadata(&url).await {
-			Ok(_) => i += 1,
-			Err(e) if e.kind() == io::ErrorKind::NotFound => break,
-			Err(e) => return Err(e),
-		}
+		ok_or_not_found!(provider::symlink_metadata(&url).await, break);
 	}
 
 	Ok(url)

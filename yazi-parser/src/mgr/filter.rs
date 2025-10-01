@@ -18,7 +18,7 @@ impl TryFrom<CmdCow> for FilterOpt {
 		}
 
 		Ok(Self {
-			query: c.take_first_str().unwrap_or_default(),
+			query: c.take_first().unwrap_or_default(),
 			case:  FilterCase::from(&*c),
 			done:  c.bool("done"),
 		})

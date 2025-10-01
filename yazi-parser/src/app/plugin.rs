@@ -1,9 +1,10 @@
-use std::{borrow::Cow, fmt::Debug};
+use std::{borrow::Cow, fmt::Debug, str::FromStr};
 
 use anyhow::bail;
 use hashbrown::HashMap;
 use mlua::{Lua, Table};
-use yazi_shared::{SStr, event::{Cmd, CmdCow, Data, DataKey}};
+use serde::Deserialize;
+use yazi_shared::{SStr, data::{Data, DataKey}, event::{Cmd, CmdCow}};
 
 pub type PluginCallback = Box<dyn FnOnce(&Lua, Table) -> mlua::Result<()> + Send + Sync>;
 
@@ -23,18 +24,18 @@ impl TryFrom<CmdCow> for PluginOpt {
 			return Ok(opt);
 		}
 
-		let Some(id) = c.take_first_str().filter(|s| !s.is_empty()) else {
+		let Some(id) = c.take_first::<SStr>().ok().filter(|s| !s.is_empty()) else {
 			bail!("plugin id cannot be empty");
 		};
 
-		let args = if let Some(s) = c.second_str() {
+		let args = if let Ok(s) = c.second() {
 			let (words, last) = yazi_shared::shell::split_unix(s, true)?;
 			Cmd::parse_args(words.into_iter(), last, true)?
 		} else {
 			Default::default()
 		};
 
-		let mode = c.str("mode").map(Into::into).unwrap_or_default();
+		let mode = c.str("mode").parse().unwrap_or_default();
 		Ok(Self { id: Self::normalize_id(id), args, mode, cb: c.take_any("callback") })
 	}
 }
@@ -72,7 +73,8 @@ impl PluginOpt {
 }
 
 // --- Mode
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "kebab-case")]
 pub enum PluginMode {
 	#[default]
 	Auto,
@@ -80,13 +82,11 @@ pub enum PluginMode {
 	Async,
 }
 
-impl From<&str> for PluginMode {
-	fn from(s: &str) -> Self {
-		match s {
-			"sync" => Self::Sync,
-			"async" => Self::Async,
-			_ => Self::Auto,
-		}
+impl FromStr for PluginMode {
+	type Err = serde::de::value::Error;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		Self::deserialize(serde::de::value::StrDeserializer::new(s))
 	}
 }
 

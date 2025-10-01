@@ -18,7 +18,7 @@ impl TryFrom<CmdCow> for FindDoOpt {
 			return opt;
 		}
 
-		let Some(query) = c.take_first_str() else {
+		let Ok(query) = c.take_first() else {
 			bail!("'query' is required for FindDoOpt");
 		};
 

@@ -1,6 +1,6 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{SStr, event::{CmdCow, Data}, url::UrlCow};
+use yazi_shared::{SStr, event::CmdCow, url::UrlCow};
 
 #[derive(Debug)]
 pub struct ShellOpt {
@@ -19,14 +19,14 @@ impl TryFrom<CmdCow> for ShellOpt {
 
 	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
 		let me = Self {
-			run: c.take_first_str().unwrap_or_default(),
-			cwd: c.take_url("cwd"),
+			run: c.take_first().unwrap_or_default(),
+			cwd: c.take("cwd").ok(),
 
 			block:       c.bool("block"),
 			orphan:      c.bool("orphan"),
 			interactive: c.bool("interactive"),
 
-			cursor: c.get("cursor").and_then(Data::as_usize),
+			cursor: c.get("cursor").ok(),
 		};
 
 		if me.cursor.is_some_and(|c| c > me.run.chars().count()) {

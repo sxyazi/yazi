@@ -10,7 +10,7 @@ impl Tasks {
 		let mut tasks: [Vec<_>; MAX_PREWORKERS as usize] = Default::default();
 		for f in paged {
 			let hash = f.hash_u64();
-			for g in YAZI.plugin.fetchers(&f.url, mimetype.by_file(f).unwrap_or_default()) {
+			for g in YAZI.plugin.fetchers(f, mimetype.get(&f.url).unwrap_or_default()) {
 				match loaded.get_mut(&hash) {
 					Some(n) if *n & (1 << g.idx) != 0 => continue,
 					Some(n) => *n |= 1 << g.idx,
@@ -32,7 +32,7 @@ impl Tasks {
 		let mut loaded = self.scheduler.prework.loaded.lock();
 		for f in paged {
 			let hash = f.hash_u64();
-			for p in YAZI.plugin.preloaders(&f.url, mimetype.by_file(f).unwrap_or_default()) {
+			for p in YAZI.plugin.preloaders(f, mimetype.get(&f.url).unwrap_or_default()) {
 				match loaded.get_mut(&hash) {
 					Some(n) if *n & (1 << p.idx) != 0 => continue,
 					Some(n) => *n |= 1 << p.idx,

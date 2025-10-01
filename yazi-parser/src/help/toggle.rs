@@ -1,4 +1,3 @@
-use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use yazi_shared::{Layer, event::CmdCow};
 
@@ -10,13 +9,7 @@ pub struct ToggleOpt {
 impl TryFrom<CmdCow> for ToggleOpt {
 	type Error = anyhow::Error;
 
-	fn try_from(c: CmdCow) -> Result<Self, Self::Error> {
-		let Some(layer) = c.first_str() else {
-			bail!("Invalid 'layer' in Toggle");
-		};
-
-		Ok(Self { layer: layer.parse()? })
-	}
+	fn try_from(c: CmdCow) -> Result<Self, Self::Error> { Ok(Self { layer: c.str(0).parse()? }) }
 }
 
 impl From<Layer> for ToggleOpt {
