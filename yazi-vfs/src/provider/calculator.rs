@@ -1,7 +1,7 @@
 use std::{collections::VecDeque, io, time::{Duration, Instant}};
 
 use yazi_fs::provider::{DirReader, FileHolder};
-use yazi_shared::{Either, url::{Url, UrlBuf}};
+use yazi_shared::{Either, url::{AsUrl, UrlBuf}};
 
 use super::ReadDir;
 
@@ -11,11 +11,11 @@ pub enum SizeCalculator {
 }
 
 impl SizeCalculator {
-	pub async fn new<'a, U>(url: U) -> io::Result<Self>
+	pub async fn new<U>(url: U) -> io::Result<Self>
 	where
-		U: Into<Url<'a>>,
+		U: AsUrl,
 	{
-		let url: Url = url.into();
+		let url = url.as_url();
 		let cha = super::symlink_metadata(url).await?;
 		Ok(if cha.is_dir() {
 			Self::Dir(VecDeque::from([Either::Left(url.to_owned())]))
@@ -24,9 +24,9 @@ impl SizeCalculator {
 		})
 	}
 
-	pub async fn total<'a, U>(url: U) -> io::Result<u64>
+	pub async fn total<U>(url: U) -> io::Result<u64>
 	where
-		U: Into<Url<'a>>,
+		U: AsUrl,
 	{
 		let mut it = Self::new(url).await?;
 		let mut total = 0;

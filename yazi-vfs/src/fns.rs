@@ -3,12 +3,12 @@ use std::{ffi::OsString, io};
 use tokio::{select, sync::{mpsc, oneshot}};
 use yazi_fs::cha::Cha;
 use yazi_macro::ok_or_not_found;
-use yazi_shared::url::{Url, UrlBuf};
+use yazi_shared::url::{AsUrl, UrlBuf};
 
 use crate::provider;
 
 #[inline]
-pub async fn maybe_exists<'a>(url: impl Into<Url<'a>>) -> bool {
+pub async fn maybe_exists(url: impl AsUrl) -> bool {
 	match provider::symlink_metadata(url).await {
 		Ok(_) => true,
 		Err(e) => e.kind() != io::ErrorKind::NotFound,
@@ -16,7 +16,7 @@ pub async fn maybe_exists<'a>(url: impl Into<Url<'a>>) -> bool {
 }
 
 #[inline]
-pub async fn must_be_dir<'a>(url: impl Into<Url<'a>>) -> bool {
+pub async fn must_be_dir(url: impl AsUrl) -> bool {
 	provider::metadata(url).await.is_ok_and(|m| m.is_dir())
 }
 

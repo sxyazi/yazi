@@ -7,7 +7,7 @@ use tokio::{select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::Join
 use yazi_config::{YAZI, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
 use yazi_fs::FsUrl;
-use yazi_parser::{app::PluginOpt, tasks::ProcessExecOpt};
+use yazi_parser::{app::PluginOpt, tasks::ProcessOpenOpt};
 use yazi_proxy::TasksProxy;
 use yazi_shared::{Id, Throttle, url::UrlBuf};
 use yazi_vfs::{must_be_dir, provider, unique_name};
@@ -310,7 +310,7 @@ impl Scheduler {
 		}
 	}
 
-	pub fn process_open(&self, ProcessExecOpt { cwd, opener, args, done }: ProcessExecOpt) {
+	pub fn process_open(&self, ProcessOpenOpt { cwd, opener, args, done }: ProcessOpenOpt) {
 		let name = {
 			let args = args.iter().map(|a| a.to_string_lossy()).collect::<Vec<_>>().join(" ");
 			if args.is_empty() {

@@ -13,7 +13,7 @@ impl Actor for OpenWith {
 	const NAME: &str = "open_with";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		succ!(cx.tasks.process_from_opener(
+		succ!(cx.tasks.process_with_opener(
 			opt.cwd,
 			opt.opener,
 			opt.targets.into_iter().map(|u| u.into_os_str2()).collect(),

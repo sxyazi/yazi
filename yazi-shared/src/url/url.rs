@@ -2,22 +2,12 @@ use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, path::Path};
 
 use hashbrown::Equivalent;
 
-use crate::{loc::{Loc, LocBuf}, scheme::SchemeRef, url::{Components, Encode, Uri, UrlBuf, Urn}};
+use crate::{loc::{Loc, LocBuf}, scheme::SchemeRef, url::{AsUrl, Components, Encode, Uri, UrlBuf, Urn}};
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub struct Url<'a> {
 	pub loc:    Loc<'a>,
 	pub scheme: SchemeRef<'a>,
-}
-
-impl<'a> From<&'a UrlBuf> for Url<'a> {
-	fn from(value: &'a UrlBuf) -> Self {
-		Self { loc: value.loc.as_loc(), scheme: value.scheme.as_ref() }
-	}
-}
-
-impl<'a> From<&'a mut UrlBuf> for Url<'a> {
-	fn from(value: &'a mut UrlBuf) -> Self { Self::from(&*value) }
 }
 
 // --- Eq
@@ -142,14 +132,14 @@ impl<'a> Url<'a> {
 	}
 
 	#[inline]
-	pub fn starts_with<'b>(self, base: impl Into<Url<'b>>) -> bool {
-		let base: Url = base.into();
+	pub fn starts_with(self, base: impl AsUrl) -> bool {
+		let base = base.as_url();
 		self.scheme.covariant(base.scheme) && self.loc.starts_with(base.loc)
 	}
 
 	#[inline]
-	pub fn ends_with<'b>(self, child: impl Into<Url<'b>>) -> bool {
-		let child: Url = child.into();
+	pub fn ends_with(self, child: impl AsUrl) -> bool {
+		let child = child.as_url();
 		self.scheme.covariant(child.scheme) && self.loc.ends_with(child.loc)
 	}
 
@@ -160,8 +150,8 @@ impl<'a> Url<'a> {
 	pub fn os_str(self) -> Cow<'a, OsStr> { self.components().os_str() }
 
 	#[inline]
-	pub fn covariant(self, other: impl Into<Self>) -> bool {
-		let other = other.into();
+	pub fn covariant(self, other: impl AsUrl) -> bool {
+		let other = other.as_url();
 		self.scheme.covariant(other.scheme) && self.loc == other.loc
 	}
 

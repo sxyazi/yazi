@@ -2,7 +2,7 @@ use std::{ffi::OsStr, fs::Metadata, ops::Deref, time::{Duration, SystemTime, UNI
 
 use anyhow::bail;
 use yazi_macro::{unix_either, win_either};
-use yazi_shared::url::Url;
+use yazi_shared::url::AsUrl;
 
 use super::ChaKind;
 use crate::cha::{ChaMode, ChaType};
@@ -52,15 +52,15 @@ impl Cha {
 		Self::from_bare(&meta).attach(ChaKind::hidden(name, &meta))
 	}
 
-	pub fn from_dummy<'a, U>(_url: U, r#type: Option<ChaType>) -> Self
+	pub fn from_dummy<U>(_url: U, r#type: Option<ChaType>) -> Self
 	where
-		U: Into<Url<'a>>,
+		U: AsUrl,
 	{
 		let mut kind = ChaKind::DUMMY;
 		let mode = r#type.map(ChaMode::from_bare).unwrap_or_default();
 
 		#[cfg(unix)]
-		if _url.into().urn().is_hidden() {
+		if _url.as_url().urn().is_hidden() {
 			kind |= ChaKind::HIDDEN;
 		}
 

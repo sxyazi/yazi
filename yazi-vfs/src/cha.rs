@@ -1,30 +1,30 @@
 use std::io;
 
 use yazi_fs::cha::{Cha, ChaKind};
-use yazi_shared::url::Url;
+use yazi_shared::url::AsUrl;
 
 use crate::provider;
 
 pub trait VfsCha: Sized {
-	fn from_url<'a>(url: impl Into<Url<'a>>) -> impl Future<Output = io::Result<Self>>;
+	fn from_url(url: impl AsUrl) -> impl Future<Output = io::Result<Self>>;
 
-	fn from_follow<'a, U>(url: U, cha: Self) -> impl Future<Output = Self>
+	fn from_follow<U>(url: U, cha: Self) -> impl Future<Output = Self>
 	where
-		U: Into<Url<'a>>;
+		U: AsUrl;
 }
 
 impl VfsCha for Cha {
 	#[inline]
-	async fn from_url<'a>(url: impl Into<Url<'a>>) -> io::Result<Self> {
-		let url = url.into();
+	async fn from_url(url: impl AsUrl) -> io::Result<Self> {
+		let url = url.as_url();
 		Ok(Self::from_follow(url, provider::symlink_metadata(url).await?).await)
 	}
 
-	async fn from_follow<'a, U>(url: U, mut cha: Self) -> Self
+	async fn from_follow<U>(url: U, mut cha: Self) -> Self
 	where
-		U: Into<Url<'a>>,
+		U: AsUrl,
 	{
-		let url: Url = url.into();
+		let url = url.as_url();
 		let mut retain = cha.kind & (ChaKind::HIDDEN | ChaKind::SYSTEM);
 
 		if cha.is_link() {

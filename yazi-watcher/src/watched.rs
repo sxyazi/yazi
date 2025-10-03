@@ -1,16 +1,14 @@
 use std::path::Path;
 
 use hashbrown::HashSet;
-use yazi_shared::url::{Url, UrlBuf};
+use yazi_shared::url::{AsUrl, UrlBuf};
 
 #[derive(Default)]
 pub struct Watched(HashSet<UrlBuf>);
 
 impl Watched {
 	#[inline]
-	pub(crate) fn contains<'a>(&self, url: impl Into<Url<'a>>) -> bool {
-		self.0.contains(&url.into())
-	}
+	pub(crate) fn contains(&self, url: impl AsUrl) -> bool { self.0.contains(&url.as_url()) }
 
 	#[inline]
 	pub(crate) fn diff(&self, new: &HashSet<UrlBuf>) -> (Vec<UrlBuf>, Vec<UrlBuf>) {
@@ -26,5 +24,5 @@ impl Watched {
 	}
 
 	#[inline]
-	pub(crate) fn remove<'a>(&mut self, url: impl Into<Url<'a>>) { self.0.remove(&url.into()); }
+	pub(crate) fn remove(&mut self, url: impl AsUrl) { self.0.remove(&url.as_url()); }
 }

@@ -5,7 +5,7 @@ use tokio::io::{BufReader, BufWriter};
 use yazi_config::vfs::ProviderSftp;
 use yazi_fs::provider::{DirReader, FileBuilder, FileHolder, Provider, local::Local};
 use yazi_sftp::fs::{Attrs, Flags};
-use yazi_shared::{scheme::SchemeRef, url::{Url, UrlBuf, UrlCow}};
+use yazi_shared::{scheme::SchemeRef, url::{AsUrl, UrlBuf, UrlCow}};
 
 use super::Cha;
 
@@ -24,11 +24,11 @@ impl Provider for Sftp {
 	type Gate = super::Gate;
 	type ReadDir = super::ReadDir;
 
-	async fn absolute<'a, U>(&self, url: U) -> io::Result<UrlCow<'a>>
+	async fn absolute<'a, U>(&self, url: &'a U) -> io::Result<UrlCow<'a>>
 	where
-		U: Into<Url<'a>>,
+		U: AsUrl,
 	{
-		let url: Url = url.into();
+		let url = url.as_url();
 		Ok(if url.is_absolute() {
 			url.into()
 		} else if let SchemeRef::Sftp(_) = url.scheme {

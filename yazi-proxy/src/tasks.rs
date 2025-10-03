@@ -3,7 +3,7 @@ use std::{borrow::Cow, ffi::OsStr};
 use tokio::sync::oneshot;
 use yazi_config::opener::OpenerRule;
 use yazi_macro::{emit, relay};
-use yazi_parser::{mgr::OpenWithOpt, tasks::ProcessExecOpt};
+use yazi_parser::{mgr::OpenWithOpt, tasks::ProcessOpenOpt};
 use yazi_shared::url::{UrlBuf, UrlCow};
 
 pub struct TasksProxy;
@@ -19,7 +19,7 @@ impl TasksProxy {
 		args: Vec<Cow<'static, OsStr>>,
 	) {
 		let (tx, rx) = oneshot::channel();
-		emit!(Call(relay!(tasks:process_exec).with_any("option", ProcessExecOpt {
+		emit!(Call(relay!(tasks:process_open).with_any("option", ProcessOpenOpt {
 			cwd,
 			opener,
 			args,

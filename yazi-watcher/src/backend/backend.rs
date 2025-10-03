@@ -2,7 +2,7 @@ use anyhow::Result;
 use hashbrown::HashSet;
 use tokio::sync::mpsc;
 use tracing::error;
-use yazi_shared::url::{Url, UrlBuf};
+use yazi_shared::url::{AsUrl, Url, UrlBuf};
 
 use crate::{LINKED, WATCHED, backend};
 
@@ -64,11 +64,11 @@ impl Backend {
 		todo.into_iter().for_each(|u| _ = out_tx.send(u));
 	}
 
-	fn watch<'a>(&mut self, url: impl Into<Url<'a>>) -> Result<()> {
-		if let Some(path) = url.into().as_path() { self.local.watch(path) } else { Ok(()) }
+	fn watch(&mut self, url: impl AsUrl) -> Result<()> {
+		if let Some(path) = url.as_url().as_path() { self.local.watch(path) } else { Ok(()) }
 	}
 
-	fn unwatch<'a>(&mut self, url: impl Into<Url<'a>>) -> Result<()> {
-		if let Some(path) = url.into().as_path() { self.local.unwatch(path) } else { Ok(()) }
+	fn unwatch(&mut self, url: impl AsUrl) -> Result<()> {
+		if let Some(path) = url.as_url().as_path() { self.local.unwatch(path) } else { Ok(()) }
 	}
 }

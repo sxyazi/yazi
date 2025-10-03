@@ -22,9 +22,7 @@ futures     = { workspace = true }
 hashbrown   = { workspace = true }
 parking_lot = { workspace = true }
 russh       = { workspace = true }
-serde       = { workspace = true }
 tokio       = { workspace = true }
-toml        = { workspace = true }
 tracing     = { workspace = true }
 
 [target."cfg(unix)".dependencies]

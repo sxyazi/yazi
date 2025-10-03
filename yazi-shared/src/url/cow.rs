@@ -33,10 +33,6 @@ impl From<UrlBuf> for UrlCow<'_> {
 	fn from(value: UrlBuf) -> Self { Self::Owned { loc: value.loc, scheme: value.scheme.into() } }
 }
 
-impl<'a> From<&'a UrlCow<'a>> for Url<'a> {
-	fn from(value: &'a UrlCow<'a>) -> Self { value.as_url() }
-}
-
 impl From<UrlCow<'_>> for UrlBuf {
 	fn from(value: UrlCow<'_>) -> Self { value.into_owned() }
 }

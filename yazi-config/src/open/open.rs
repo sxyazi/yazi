@@ -48,7 +48,7 @@ impl Open {
 		M: AsRef<str>,
 	{
 		let each: Vec<IndexSet<&str>> = targets
-			.into_iter()
+			.iter()
 			.map(|(u, m)| self.all(u, m).collect::<IndexSet<_>>())
 			.filter(|s| !s.is_empty())
 			.collect();
