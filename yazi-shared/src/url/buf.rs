@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, hash::BuildHasher, path::{Path, PathBuf}, str::FromStr};
+use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, hash::BuildHasher, path::{Path, PathBuf}, str::FromStr, sync::OnceLock};
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -79,6 +79,16 @@ impl PartialEq<Url<'_>> for &UrlBuf {
 }
 
 impl UrlBuf {
+	#[inline]
+	pub fn new() -> &'static Self {
+		static U: OnceLock<UrlBuf> = OnceLock::new();
+		U.get_or_init(Self::default)
+
+		// FIXME: use `LocBuf::empty()` when Rust 1.91.0 released
+		// static U: UrlBuf = UrlBuf { loc: LocBuf::empty(), scheme: Scheme::Regular
+		// }; &U
+	}
+
 	#[inline]
 	pub fn join(&self, path: impl AsRef<Path>) -> Self { self.as_url().join(path) }
 
