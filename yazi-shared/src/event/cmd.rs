@@ -99,7 +99,7 @@ impl Cmd {
 		T: TryFrom<&'a Data>,
 		T::Error: Into<anyhow::Error>,
 	{
-		self.get(0).map_err(Into::into)
+		self.get(0)
 	}
 
 	pub fn second<'a, T>(&'a self) -> Result<T>
@@ -107,7 +107,7 @@ impl Cmd {
 		T: TryFrom<&'a Data>,
 		T::Error: Into<anyhow::Error>,
 	{
-		self.get(1).map_err(Into::into)
+		self.get(1)
 	}
 
 	pub fn seq<'a, T>(&'a self) -> Vec<T>
@@ -128,7 +128,7 @@ impl Cmd {
 	}
 
 	// --- Take
-	pub fn take<'a, T>(&mut self, name: impl Into<DataKey>) -> Result<T>
+	pub fn take<T>(&mut self, name: impl Into<DataKey>) -> Result<T>
 	where
 		T: TryFrom<Data>,
 		T::Error: Into<anyhow::Error>,
@@ -140,7 +140,7 @@ impl Cmd {
 		}
 	}
 
-	pub fn take_first<'a, T>(&mut self) -> Result<T>
+	pub fn take_first<T>(&mut self) -> Result<T>
 	where
 		T: TryFrom<Data>,
 		T::Error: Into<anyhow::Error>,

@@ -4,7 +4,6 @@ use yazi_shared::{event::CmdCow, url::{UrlBuf, UrlCow}};
 #[derive(Debug, Default)]
 pub struct OpenDoOpt {
 	pub cwd:         UrlBuf,
-	pub hovered:     UrlCow<'static>,
 	pub targets:     Vec<UrlCow<'static>>,
 	pub interactive: bool,
 }

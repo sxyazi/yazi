@@ -3,7 +3,7 @@ use std::str::FromStr;
 use anyhow::Result;
 use globset::GlobBuilder;
 use serde::Deserialize;
-use yazi_shared::{scheme::{SchemeCow, SchemeRef}, url::Url};
+use yazi_shared::{scheme::{SchemeCow, SchemeRef}, url::AsUrl};
 
 #[derive(Debug, Deserialize)]
 #[serde(try_from = "String")]
@@ -17,8 +17,8 @@ pub struct Pattern {
 }
 
 impl Pattern {
-	pub fn match_url<'a>(&self, url: impl Into<Url<'a>>, is_dir: bool) -> bool {
-		let url = url.into();
+	pub fn match_url(&self, url: impl AsUrl, is_dir: bool) -> bool {
+		let url = url.as_url();
 
 		if is_dir != self.is_dir {
 			return false;
@@ -126,7 +126,7 @@ mod tests {
 	use super::*;
 
 	fn matches(glob: &str, url: &str) -> bool {
-		Pattern::from_str(glob).unwrap().match_url(&UrlCow::try_from(url).unwrap(), false)
+		Pattern::from_str(glob).unwrap().match_url(UrlCow::try_from(url).unwrap(), false)
 	}
 
 	#[cfg(unix)]

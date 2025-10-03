@@ -1,6 +1,6 @@
 use std::{io, path::{Path, PathBuf}};
 
-use yazi_shared::url::{Url, UrlCow};
+use yazi_shared::url::{AsUrl, UrlCow};
 
 use crate::{cha::Cha, path::absolute_url, provider::Provider};
 
@@ -12,11 +12,11 @@ impl Provider for Local {
 	type Gate = super::Gate;
 	type ReadDir = super::ReadDir;
 
-	async fn absolute<'a, U>(&self, url: U) -> io::Result<UrlCow<'a>>
+	async fn absolute<'a, U>(&self, url: &'a U) -> io::Result<UrlCow<'a>>
 	where
-		U: Into<Url<'a>>,
+		U: AsUrl,
 	{
-		let url: Url = url.into();
+		let url = url.as_url();
 		if url.scheme.is_virtual() {
 			Err(io::Error::new(io::ErrorKind::InvalidInput, "Not a local URL"))
 		} else {

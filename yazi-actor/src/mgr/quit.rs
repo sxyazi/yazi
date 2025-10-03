@@ -77,6 +77,8 @@ impl Quit {
 			s
 		});
 
-		emit!(Quit(EventQuit { selected: Some(paths), ..Default::default() }));
+		if !paths.is_empty() {
+			emit!(Quit(EventQuit { selected: Some(paths), ..Default::default() }));
+		}
 	}
 }

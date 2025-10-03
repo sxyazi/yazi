@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::OsStr, io, path::{Path, PathBuf}};
 
 use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt};
 use yazi_macro::ok_or_not_found;
-use yazi_shared::{scheme::SchemeRef, url::{Url, UrlCow}};
+use yazi_shared::{scheme::SchemeRef, url::{AsUrl, UrlCow}};
 
 use crate::cha::{Cha, ChaType};
 
@@ -11,9 +11,9 @@ pub trait Provider {
 	type Gate: FileBuilder<File = Self::File>;
 	type ReadDir: DirReader;
 
-	fn absolute<'a, U>(&self, url: U) -> impl Future<Output = io::Result<UrlCow<'a>>>
+	fn absolute<'a, U>(&self, url: &'a U) -> impl Future<Output = io::Result<UrlCow<'a>>>
 	where
-		U: Into<Url<'a>>;
+		U: AsUrl;
 
 	fn canonicalize<P>(&self, path: P) -> impl Future<Output = io::Result<PathBuf>>
 	where

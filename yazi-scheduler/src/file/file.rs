@@ -6,7 +6,7 @@ use tracing::warn;
 use yazi_config::YAZI;
 use yazi_fs::{cha::Cha, ok_or_not_found, path::{path_relative_to, skip_url}, provider::{DirReader, FileHolder}};
 use yazi_macro::ok_or_not_found;
-use yazi_shared::url::{Url, UrlBuf, UrlCow};
+use yazi_shared::url::{AsUrl, UrlBuf, UrlCow};
 use yazi_vfs::{VfsCha, copy_with_progress, maybe_exists, provider::{self, DirEntry}};
 
 use super::{FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash};
@@ -289,8 +289,8 @@ impl File {
 	}
 
 	#[inline]
-	async fn cha<'a>(url: impl Into<Url<'a>>, follow: bool) -> io::Result<Cha> {
-		let url = url.into();
+	async fn cha(url: impl AsUrl, follow: bool) -> io::Result<Cha> {
+		let url = url.as_url();
 		let cha = provider::symlink_metadata(url).await?;
 		Ok(if follow { Cha::from_follow(url, cha).await } else { cha })
 	}

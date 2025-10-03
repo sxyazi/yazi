@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use mlua::{AnyUserData, ExternalError, FromLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
-use yazi_shared::{IntoOsStr, url::UrlCow};
+use yazi_shared::{IntoOsStr, url::{AsUrl, UrlCow}};
 
 use crate::{Urn, cached_field, deprecate};
 
@@ -29,12 +29,16 @@ impl AsRef<yazi_shared::url::UrlBuf> for Url {
 	fn as_ref(&self) -> &yazi_shared::url::UrlBuf { &self.inner }
 }
 
-impl From<Url> for yazi_shared::url::UrlBuf {
-	fn from(value: Url) -> Self { value.inner }
+impl AsUrl for Url {
+	fn as_url(&self) -> yazi_shared::url::Url<'_> { self.inner.as_url() }
 }
 
-impl<'a> From<&'a Url> for yazi_shared::url::Url<'a> {
-	fn from(value: &'a Url) -> Self { value.as_url() }
+impl AsUrl for &Url {
+	fn as_url(&self) -> yazi_shared::url::Url<'_> { self.inner.as_url() }
+}
+
+impl From<Url> for yazi_shared::url::UrlBuf {
+	fn from(value: Url) -> Self { value.inner }
 }
 
 impl<'a> From<&'a Url> for UrlCow<'a> {

@@ -5,7 +5,7 @@ use yazi_config::{YAZI, popup::PickCfg};
 use yazi_macro::succ;
 use yazi_parser::mgr::OpenDoOpt;
 use yazi_proxy::{PickProxy, TasksProxy};
-use yazi_shared::data::Data;
+use yazi_shared::{data::Data, url::UrlCow};
 
 use crate::{Actor, Ctx};
 
@@ -30,7 +30,7 @@ impl Actor for OpenDo {
 		if targets.is_empty() {
 			succ!();
 		} else if !opt.interactive {
-			succ!(cx.tasks.process_from_files(opt.cwd, opt.hovered, targets));
+			succ!(cx.tasks.process_with_selected(opt.cwd, targets));
 		}
 
 		let openers: Vec<_> = YAZI.opener.all(YAZI.open.common(&targets).into_iter());
@@ -39,10 +39,10 @@ impl Actor for OpenDo {
 		}
 
 		let pick = PickProxy::show(PickCfg::open(openers.iter().map(|o| o.desc()).collect()));
-		let urls = [opt.hovered].into_iter().chain(targets.into_iter().map(|(u, _)| u)).collect();
+		let urls = [UrlCow::default()].into_iter().chain(targets.into_iter().map(|(u, _)| u)).collect();
 		tokio::spawn(async move {
 			if let Ok(choice) = pick.await {
-				TasksProxy::open_with(Cow::Borrowed(openers[choice]), opt.cwd, urls);
+				TasksProxy::file_open(Cow::Borrowed(openers[choice]), opt.cwd, urls);
 			}
 		});
 		succ!();

@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
 use hashbrown::HashMap;
-use yazi_shared::url::{Url, UrlBuf};
+use yazi_shared::url::{AsUrl, UrlBuf};
 
 use super::Folder;
 
@@ -19,8 +19,8 @@ impl DerefMut for History {
 }
 
 impl History {
-	pub fn remove_or<'a>(&mut self, url: impl Into<Url<'a>>) -> Folder {
-		let url = url.into();
+	pub fn remove_or(&mut self, url: impl AsUrl) -> Folder {
+		let url = url.as_url();
 		self.0.remove(&url).unwrap_or_else(|| Folder::from(url))
 	}
 }

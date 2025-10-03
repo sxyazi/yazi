@@ -20,10 +20,10 @@ impl DerefMut for Linked {
 }
 
 impl Linked {
-	pub fn from_dir<'a, 'b, T>(&'a self, url: T) -> Box<dyn Iterator<Item = &'a Path> + 'b>
+	pub fn from_dir<'a, 'b, U>(&'a self, url: U) -> Box<dyn Iterator<Item = &'a Path> + 'b>
 	where
 		'a: 'b,
-		T: Into<Url<'b>>,
+		U: Into<Url<'b>>,
 	{
 		let url: Url = url.into();
 		let Some(path) = url.as_path() else {

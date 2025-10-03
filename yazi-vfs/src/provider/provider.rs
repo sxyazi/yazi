@@ -2,23 +2,22 @@ use std::{io, path::{Path, PathBuf}};
 
 use tokio::io::{BufReader, BufWriter};
 use yazi_fs::{cha::Cha, provider::{Provider, local::Local}};
-use yazi_shared::{scheme::SchemeRef, url::{Url, UrlBuf, UrlCow}};
+use yazi_shared::{scheme::SchemeRef, url::{AsUrl, UrlBuf, UrlCow}};
 
 use super::{Providers, ReadDir, RwFile};
 
-pub async fn absolute<'a, U>(url: U) -> io::Result<UrlCow<'a>>
+pub async fn absolute<'a, U>(url: &'a U) -> io::Result<UrlCow<'a>>
 where
-	U: Into<Url<'a>>,
+	U: AsUrl,
 {
-	let url: Url = url.into();
-	Providers::new(url).await?.absolute(url).await
+	Providers::new(url.as_url()).await?.absolute(url).await
 }
 
-pub async fn calculate<'a, U>(url: U) -> io::Result<u64>
+pub async fn calculate<U>(url: U) -> io::Result<u64>
 where
-	U: Into<Url<'a>>,
+	U: AsUrl,
 {
-	let url: Url = url.into();
+	let url = url.as_url();
 	if let Some(path) = url.as_path() {
 		yazi_fs::provider::local::SizeCalculator::total(path).await
 	} else {
@@ -26,11 +25,11 @@ where
 	}
 }
 
-pub async fn canonicalize<'a, U>(url: U) -> io::Result<UrlBuf>
+pub async fn canonicalize<U>(url: U) -> io::Result<UrlBuf>
 where
-	U: Into<Url<'a>>,
+	U: AsUrl,
 {
-	let url: Url = url.into();
+	let url = url.as_url();
 	let canon = Providers::new(url).await?.canonicalize(url.loc).await?;
 
 	Ok(match url.scheme {
@@ -42,11 +41,11 @@ where
 	})
 }
 
-pub async fn casefold<'a, U>(url: U) -> io::Result<UrlBuf>
+pub async fn casefold<U>(url: U) -> io::Result<UrlBuf>
 where
-	U: Into<Url<'a>>,
+	U: AsUrl,
 {
-	let url: Url = url.into();
+	let url = url.as_url();
 	let fold = Providers::new(url).await?.casefold(url.loc).await?;
 
 	Ok(match url.scheme {
@@ -58,12 +57,12 @@ where
 	})
 }
 
-pub async fn copy<'a, U, V>(from: U, to: V, cha: Cha) -> io::Result<u64>
+pub async fn copy<U, V>(from: U, to: V, cha: Cha) -> io::Result<u64>
 where
-	U: Into<Url<'a>>,
-	V: Into<Url<'a>>,
+	U: AsUrl,
+	V: AsUrl,
 {
-	let (from, to): (Url, Url) = (from.into(), to.into());
+	let (from, to) = (from.as_url(), to.as_url());
 
 	match (from.as_path(), to.as_path()) {
 		(Some(from), Some(to)) => Local.copy(from, to, cha).await,
@@ -85,36 +84,36 @@ where
 	}
 }
 
-pub async fn create<'a, U>(url: U) -> io::Result<RwFile>
+pub async fn create<U>(url: U) -> io::Result<RwFile>
 where
-	U: Into<Url<'a>>,
+	U: AsUrl,
 {
-	let url: Url = url.into();
+	let url = url.as_url();
 	Providers::new(url).await?.create(url.loc).await
 }
 
-pub async fn create_dir<'a, U>(url: U) -> io::Result<()>
+pub async fn create_dir<U>(url: U) -> io::Result<()>
 where
-	U: Into<Url<'a>>,
+	U: AsUrl,
 {
-	let url: Url = url.into();
+	let url = url.as_url();
 	Providers::new(url).await?.create_dir(url.loc).await
 }
 
-pub async fn create_dir_all<'a, U>(url: U) -> io::Result<()>
+pub async fn create_dir_all<U>(url: U) -> io::Result<()>
 where
-	U: Into<Url<'a>>,
+	U: AsUrl,
 {
-	let url: Url = url.into();
+	let url = url.as_url();
 	Providers::new(url).await?.create_dir_all(url.loc).await
 }
 
-pub async fn hard_link<'a, U, V>(original: U, link: V) -> io::Result<()>
+pub async fn hard_link<U, V>(original: U, link: V) -> io::Result<()>
 where
-	U: Into<Url<'a>>,
-	V: Into<Url<'a>>,
+	U: AsUrl,
+	V: AsUrl,
 {
-	let (original, link): (Url, Url) = (original.into(), link.into());
+	let (original, link) = (original.as_url(), link.as_url());
 	if original.scheme.covariant(link.scheme) {
 		Providers::new(original).await?.hard_link(original.loc, link.loc).await
 	} else {
@@ -122,88 +121,88 @@ where
 	}
 }
 
-pub async fn identical<'a, U, V>(a: U, b: V) -> io::Result<bool>
+pub async fn identical<U, V>(a: U, b: V) -> io::Result<bool>
 where
-	U: Into<Url<'a>>,
-	V: Into<Url<'a>>,
+	U: AsUrl,
+	V: AsUrl,
 {
-	if let (Some(a), Some(b)) = (a.into().as_path(), b.into().as_path()) {
+	if let (Some(a), Some(b)) = (a.as_url().as_path(), b.as_url().as_path()) {
 		yazi_fs::provider::local::identical(a, b).await
 	} else {
 		Err(io::Error::new(io::ErrorKind::Unsupported, "Unsupported filesystem"))
 	}
 }
 
-pub async fn metadata<'a, U>(url: U) -> io::Result<Cha>
+pub async fn metadata<U>(url: U) -> io::Result<Cha>
 where
-	U: Into<Url<'a>>,
+	U: AsUrl,
 {
-	let url: Url = url.into();
+	let url = url.as_url();
 	Providers::new(url).await?.metadata(url.loc).await
 }
 
-pub async fn must_identical<'a, U, V>(a: U, b: V) -> bool
+pub async fn must_identical<U, V>(a: U, b: V) -> bool
 where
-	U: Into<Url<'a>>,
-	V: Into<Url<'a>>,
+	U: AsUrl,
+	V: AsUrl,
 {
 	identical(a, b).await.unwrap_or(false)
 }
 
-pub async fn read_dir<'a, U>(url: U) -> io::Result<ReadDir>
+pub async fn read_dir<U>(url: U) -> io::Result<ReadDir>
 where
-	U: Into<Url<'a>>,
+	U: AsUrl,
 {
-	let url: Url = url.into();
+	let url = url.as_url();
 	Providers::new(url).await?.read_dir(url.loc).await
 }
 
-pub async fn read_link<'a, U>(url: U) -> io::Result<PathBuf>
+pub async fn read_link<U>(url: U) -> io::Result<PathBuf>
 where
-	U: Into<Url<'a>>,
+	U: AsUrl,
 {
-	let url: Url = url.into();
+	let url = url.as_url();
 	Providers::new(url).await?.read_link(url.loc).await
 }
 
-pub async fn remove_dir<'a, U>(url: U) -> io::Result<()>
+pub async fn remove_dir<U>(url: U) -> io::Result<()>
 where
-	U: Into<Url<'a>>,
+	U: AsUrl,
 {
-	let url: Url = url.into();
+	let url = url.as_url();
 	Providers::new(url).await?.remove_dir(url.loc).await
 }
 
-pub async fn remove_dir_all<'a, U>(url: U) -> io::Result<()>
+pub async fn remove_dir_all<U>(url: U) -> io::Result<()>
 where
-	U: Into<Url<'a>>,
+	U: AsUrl,
 {
-	let url: Url = url.into();
+	let url = url.as_url();
 	Providers::new(url).await?.remove_dir_all(url.loc).await
 }
 
-pub async fn remove_dir_clean<'a, U>(url: U) -> io::Result<()>
+pub async fn remove_dir_clean<U>(url: U) -> io::Result<()>
 where
-	U: Into<Url<'a>>,
+	U: AsUrl,
 {
-	let url: Url = url.into();
+	let url = url.as_url();
 	Ok(Providers::new(url).await?.remove_dir_clean(url.loc).await)
 }
 
-pub async fn remove_file<'a, U>(url: U) -> io::Result<()>
+pub async fn remove_file<U>(url: U) -> io::Result<()>
 where
-	U: Into<Url<'a>>,
+	U: AsUrl,
 {
-	let url: Url = url.into();
+	let url = url.as_url();
 	Providers::new(url).await?.remove_file(url.loc).await
 }
 
-pub async fn rename<'a, U, V>(from: U, to: V) -> io::Result<()>
+pub async fn rename<U, V>(from: U, to: V) -> io::Result<()>
 where
-	U: Into<Url<'a>>,
-	V: Into<Url<'a>>,
+	U: AsUrl,
+	V: AsUrl,
 {
-	let (from, to): (Url, Url) = (from.into(), to.into());
+	let (from, to) = (from.as_url(), to.as_url());
 	if from.scheme.covariant(to.scheme) {
 		Providers::new(from).await?.rename(from.loc, to.loc).await
 	} else {
@@ -211,52 +210,52 @@ where
 	}
 }
 
-pub async fn symlink<'a, U, F>(original: &Path, link: U, is_dir: F) -> io::Result<()>
+pub async fn symlink<U, F>(original: &Path, link: U, is_dir: F) -> io::Result<()>
 where
-	U: Into<Url<'a>>,
+	U: AsUrl,
 	F: AsyncFnOnce() -> io::Result<bool>,
 {
-	let link: Url = link.into();
+	let link = link.as_url();
 	Providers::new(link).await?.symlink(original, link.loc, is_dir).await
 }
 
-pub async fn symlink_dir<'a, U>(original: &Path, link: U) -> io::Result<()>
+pub async fn symlink_dir<U>(original: &Path, link: U) -> io::Result<()>
 where
-	U: Into<Url<'a>>,
+	U: AsUrl,
 {
-	let link: Url = link.into();
+	let link = link.as_url();
 	Providers::new(link).await?.symlink_dir(original, link.loc).await
 }
 
-pub async fn symlink_file<'a, U>(original: &Path, link: U) -> io::Result<()>
+pub async fn symlink_file<U>(original: &Path, link: U) -> io::Result<()>
 where
-	U: Into<Url<'a>>,
+	U: AsUrl,
 {
-	let link: Url = link.into();
+	let link = link.as_url();
 	Providers::new(link).await?.symlink_file(original, link.loc).await
 }
 
-pub async fn symlink_metadata<'a, U>(url: U) -> io::Result<Cha>
+pub async fn symlink_metadata<U>(url: U) -> io::Result<Cha>
 where
-	U: Into<Url<'a>>,
+	U: AsUrl,
 {
-	let url: Url = url.into();
+	let url = url.as_url();
 	Providers::new(url).await?.symlink_metadata(url.loc).await
 }
 
-pub async fn trash<'a, U>(url: U) -> io::Result<()>
+pub async fn trash<U>(url: U) -> io::Result<()>
 where
-	U: Into<Url<'a>>,
+	U: AsUrl,
 {
-	let url: Url = url.into();
+	let url = url.as_url();
 	Providers::new(url).await?.trash(url.loc).await
 }
 
-pub async fn write<'a, U, C>(url: U, contents: C) -> io::Result<()>
+pub async fn write<U, C>(url: U, contents: C) -> io::Result<()>
 where
-	U: Into<Url<'a>>,
+	U: AsUrl,
 	C: AsRef<[u8]>,
 {
-	let url: Url = url.into();
+	let url = url.as_url();
 	Providers::new(url).await?.write(url.loc, contents).await
 }

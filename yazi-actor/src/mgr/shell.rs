@@ -37,7 +37,7 @@ impl Actor for Shell {
 				return;
 			}
 
-			TasksProxy::open_with(
+			TasksProxy::file_open(
 				Cow::Owned(OpenerRule {
 					run:    opt.run.into_owned(),
 					block:  opt.block,

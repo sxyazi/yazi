@@ -115,9 +115,9 @@ dependencies = [
 
 [[package]]
 name = "anstyle"
-version = "1.0.11"
+version = "1.0.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "862ed96ca487e809f1c8e5a8447f6ee2cf102f846893800b20cebdf541fc6bbd"
+checksum = "5192cca8006f1fd4f7237516f40fa183bb07f8fbdfedaa0036de5ea9b0b45e78"
 
 [[package]]
 name = "anstyle-parse"
@@ -1917,9 +1917,9 @@ dependencies = [
 
 [[package]]
 name = "lua-src"
-version = "548.1.1"
+version = "548.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00bc4bd1f1d5c65b30717333cbec4fa7aa378978940a1bca62f404498d423233"
+checksum = "bdc4e1aff422ad5f08cffb4719603dcdbc2be2307f4c1510d7aab74b7fa88ca8"
 dependencies = [
  "cc",
 ]
@@ -2003,9 +2003,9 @@ dependencies = [
 
 [[package]]
 name = "mlua"
-version = "0.11.3"
+version = "0.11.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b3dd94c3c4dea0049b22296397040840a8f6b5b5229f438434ba82df402b42d"
+checksum = "9be1c2bfc684b8a228fbaebf954af7a47a98ec27721986654a4cc2c40a20cc7e"
 dependencies = [
  "anyhow",
  "bstr",
@@ -2341,9 +2341,9 @@ dependencies = [
 
 [[package]]
 name = "ordered-float"
-version = "5.0.0"
+version = "5.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2c1f9f56e534ac6a9b8a4600bdf0f530fb393b5f393e7b4d03489c3cf0c3f01"
+checksum = "7f4779c6901a562440c3786d08192c6fbda7c1c2060edd10006b05ee35d10f2d"
 dependencies = [
  "num-traits",
  "rand 0.8.5",
@@ -2732,9 +2732,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.40"
+version = "1.0.41"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1885c039570dc00dcb4ff087a89e185fd56bae234ddc7f056a945bf36467248d"
+checksum = "ce25767e7b499d1b604768e7cde645d14cc8584231ea6b295e9c9eb22c02e1d1"
 dependencies = [
  "proc-macro2",
 ]
@@ -2909,7 +2909,7 @@ checksum = "a4e608c6638b9c18977b00b475ac1f28d14e84b27d8d42f70e0bf1e3dec127ac"
 dependencies = [
  "getrandom 0.2.16",
  "libredox",
- "thiserror 2.0.16",
+ "thiserror 2.0.17",
 ]
 
 [[package]]
@@ -3517,7 +3517,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "thiserror 2.0.16",
+ "thiserror 2.0.17",
  "walkdir",
 ]
 
@@ -3557,11 +3557,11 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "2.0.16"
+version = "2.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3467d614147380f2e4e374161426ff399c91084acd2363eaf549172b3d5e60c0"
+checksum = "f63587ca0f12b72a0600bcba1d40081f830876000bb46dd2337a3051618f4fc8"
 dependencies = [
- "thiserror-impl 2.0.16",
+ "thiserror-impl 2.0.17",
 ]
 
 [[package]]
@@ -3577,9 +3577,9 @@ dependencies = [
 
 [[package]]
 name = "thiserror-impl"
-version = "2.0.16"
+version = "2.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c5e1be1c48b9172ee610da68fd9cd2770e7a4056cb3fc98710ee6906f0c7960"
+checksum = "3ff15c8ecd7de3849db632e14d18d2571fa09dfc5ed93479bc4485c7a517c913"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3884,9 +3884,9 @@ checksum = "bc7d623258602320d5c55d1bc22793b57daff0ec7efc270ea7d55ce1d5f5471c"
 
 [[package]]
 name = "typenum"
-version = "1.18.0"
+version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
+checksum = "562d481066bde0658276a35467c4af00bdc6ee726305698a55b86e61d7ad82bb"
 
 [[package]]
 name = "unicode-ident"
@@ -4764,7 +4764,7 @@ dependencies = [
  "anyhow",
  "hashbrown 0.16.0",
  "mlua",
- "ordered-float 5.0.0",
+ "ordered-float 5.1.0",
  "parking_lot",
  "paste",
  "serde",
@@ -4879,7 +4879,7 @@ dependencies = [
  "crossterm 0.29.0",
  "hashbrown 0.16.0",
  "mlua",
- "ordered-float 5.0.0",
+ "ordered-float 5.1.0",
  "serde",
  "tokio",
  "yazi-binding",
@@ -4957,7 +4957,7 @@ dependencies = [
  "libc",
  "lru 0.16.1",
  "mlua",
- "ordered-float 5.0.0",
+ "ordered-float 5.1.0",
  "parking_lot",
  "scopeguard",
  "serde",
@@ -4998,7 +4998,7 @@ dependencies = [
  "hashbrown 0.16.0",
  "libc",
  "memchr",
- "ordered-float 5.0.0",
+ "ordered-float 5.1.0",
  "parking_lot",
  "percent-encoding",
  "serde",
@@ -5031,9 +5031,7 @@ dependencies = [
  "hashbrown 0.16.0",
  "parking_lot",
  "russh",
- "serde",
  "tokio",
- "toml 0.9.7",
  "tracing",
  "uzers",
  "yazi-config",
@@ -5105,9 +5103,9 @@ dependencies = [
 
 [[package]]
 name = "zeroize"
-version = "1.8.1"
+version = "1.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ced3678a2879b30306d323f4542626697a464a97c0a07c9aebf7ebca65cd4dde"
+checksum = "b97154e67e32c85465826e8bcc1c59429aaaf107c1e4a9e53c8d8ccd5eff88d0"
 
 [[package]]
 name = "zune-core"

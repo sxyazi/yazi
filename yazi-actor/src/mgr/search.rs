@@ -111,7 +111,7 @@ impl Actor for SearchStop {
 			succ!();
 		}
 
-		let rep = tab.history.remove_or(&tab.cwd().to_regular());
+		let rep = tab.history.remove_or(tab.cwd().to_regular());
 		drop(mem::replace(&mut tab.current, rep));
 
 		act!(mgr:hidden, cx)?;

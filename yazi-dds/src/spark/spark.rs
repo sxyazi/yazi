@@ -108,7 +108,7 @@ pub enum Spark<'a> {
 	SpotCopy(yazi_parser::spot::CopyOpt),
 
 	// Tasks
-	TasksProcessExec(yazi_parser::tasks::ProcessExecOpt),
+	TasksProcessOpen(yazi_parser::tasks::ProcessOpenOpt),
 	TasksUpdateSucceed(yazi_parser::tasks::UpdateSucceedOpt),
 
 	// Which
@@ -231,7 +231,7 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::SpotCopy(b) => b.into_lua(lua),
 
 			// Tasks
-			Self::TasksProcessExec(b) => b.into_lua(lua),
+			Self::TasksProcessOpen(b) => b.into_lua(lua),
 			Self::TasksUpdateSucceed(b) => b.into_lua(lua),
 
 			// Which
@@ -324,7 +324,7 @@ try_from_spark!(notify::TickOpt, notify:tick);
 try_from_spark!(pick::CloseOpt, pick:close);
 try_from_spark!(pick::ShowOpt, pick:show);
 try_from_spark!(spot::CopyOpt, spot:copy);
-try_from_spark!(tasks::ProcessExecOpt, tasks:process_exec);
+try_from_spark!(tasks::ProcessOpenOpt, tasks:process_open);
 try_from_spark!(tasks::UpdateSucceedOpt, tasks:update_succeed);
 try_from_spark!(which::CallbackOpt, which:callback);
 try_from_spark!(which::ShowOpt, which:show);
