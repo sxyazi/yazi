@@ -1,5 +1,3 @@
-use std::iter;
-
 use anyhow::Result;
 use ratatui::layout::Rect;
 use tokio::task::JoinHandle;
@@ -96,7 +94,9 @@ impl Tab {
 	}
 
 	pub fn hovered_and_selected(&self) -> Box<dyn Iterator<Item = &UrlBuf> + '_> {
-		let Some(h) = self.hovered() else { return Box::new(iter::empty()) };
+		let Some(h) = self.hovered() else {
+			return Box::new([UrlBuf::new()].into_iter().chain(self.selected.values()));
+		};
 		if self.selected.is_empty() {
 			Box::new([&h.url, &h.url].into_iter())
 		} else {

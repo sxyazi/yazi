@@ -80,6 +80,12 @@ impl PartialEq<Url<'_>> for &UrlBuf {
 
 impl UrlBuf {
 	#[inline]
+	pub const fn new() -> &'static Self {
+		static U: UrlBuf = UrlBuf { loc: LocBuf::empty(), scheme: Scheme::Regular };
+		&U
+	}
+
+	#[inline]
 	pub fn join(&self, path: impl AsRef<Path>) -> Self { self.as_url().join(path) }
 
 	#[inline]

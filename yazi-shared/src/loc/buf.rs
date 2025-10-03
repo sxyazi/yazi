@@ -84,6 +84,8 @@ impl LocBuf {
 		Ok(Self { inner: loc.inner, uri, urn })
 	}
 
+	pub const fn empty() -> Self { Self { inner: PathBuf::new(), uri: 0, urn: 0 } }
+
 	pub fn zeroed(path: impl Into<PathBuf>) -> Self {
 		let loc = Self::from(path.into());
 		let Loc { inner, uri, urn } = Loc::zeroed(&loc.inner);
