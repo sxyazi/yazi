@@ -27,7 +27,7 @@ impl File {
 
 	pub(crate) async fn paste(&self, mut task: FileInPaste) -> Result<(), FileOutPaste> {
 		if task.cut && ok_or_not_found(provider::rename(&task.from, &task.to).await).is_ok() {
-			return Ok(self.ops.out(task.id, FileOutPaste::Init));
+			return Ok(self.ops.out(task.id, FileOutPaste::Succ));
 		}
 
 		if task.cha.is_none() {
@@ -44,7 +44,7 @@ impl File {
 				self.ops.out(id, FileOutPaste::New(cha.len));
 				self.queue(task, LOW);
 			}
-			return Ok(self.ops.out(id, FileOutPaste::Init));
+			return Ok(self.ops.out(id, FileOutPaste::Succ));
 		}
 
 		macro_rules! continue_unless_ok {
@@ -91,7 +91,7 @@ impl File {
 			}
 		}
 
-		Ok(self.ops.out(task.id, FileOutPaste::Init))
+		Ok(self.ops.out(task.id, FileOutPaste::Succ))
 	}
 
 	pub(crate) async fn paste_do(&self, mut task: FileInPaste) -> Result<(), FileOutPasteDo> {
@@ -175,7 +175,7 @@ impl File {
 			let id = task.id;
 			self.ops.out(id, FileOutHardlink::New);
 			self.queue(task, NORMAL);
-			self.ops.out(id, FileOutHardlink::Init);
+			self.ops.out(id, FileOutHardlink::Succ);
 			return Ok(());
 		}
 
@@ -218,7 +218,7 @@ impl File {
 			}
 		}
 
-		Ok(self.ops.out(task.id, FileOutHardlink::Init))
+		Ok(self.ops.out(task.id, FileOutHardlink::Succ))
 	}
 
 	pub(crate) async fn hardlink_do(&self, task: FileInHardlink) -> Result<(), FileOutHardlinkDo> {
@@ -243,7 +243,7 @@ impl File {
 			task.length = cha.len;
 			self.ops.out(id, FileOutDelete::New(cha.len));
 			self.queue(task, NORMAL);
-			self.ops.out(id, FileOutDelete::Init);
+			self.ops.out(id, FileOutDelete::Succ);
 			return Ok(());
 		}
 
@@ -266,7 +266,7 @@ impl File {
 			}
 		}
 
-		Ok(self.ops.out(task.id, FileOutDelete::Init))
+		Ok(self.ops.out(task.id, FileOutDelete::Succ))
 	}
 
 	pub(crate) async fn delete_do(&self, task: FileInDelete) -> Result<(), FileOutDeleteDo> {
