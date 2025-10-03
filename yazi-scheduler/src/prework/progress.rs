@@ -23,6 +23,8 @@ impl PreworkProgFetch {
 
 	pub fn success(self) -> bool { self.state == Some(true) }
 
+	pub fn failed(self) -> bool { self.state == Some(false) }
+
 	pub fn cleaned(self) -> bool { false }
 
 	pub fn percent(self) -> Option<f32> { None }
@@ -50,6 +52,8 @@ impl PreworkProgLoad {
 
 	pub fn success(self) -> bool { self.state == Some(true) }
 
+	pub fn failed(self) -> bool { self.state == Some(false) }
+
 	pub fn cleaned(self) -> bool { false }
 
 	pub fn percent(self) -> Option<f32> { None }
@@ -76,6 +80,8 @@ impl PreworkProgSize {
 	pub fn running(self) -> bool { !self.done }
 
 	pub fn success(self) -> bool { self.done }
+
+	pub fn failed(self) -> bool { false }
 
 	pub fn cleaned(self) -> bool { false }
 

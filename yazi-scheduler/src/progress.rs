@@ -101,6 +101,27 @@ impl TaskProg {
 		}
 	}
 
+	pub fn failed(self) -> bool {
+		match self {
+			// File
+			Self::FilePaste(p) => p.failed(),
+			Self::FileLink(p) => p.failed(),
+			Self::FileHardlink(p) => p.failed(),
+			Self::FileDelete(p) => p.failed(),
+			Self::FileTrash(p) => p.failed(),
+			// Plugin
+			Self::PluginEntry(p) => p.failed(),
+			// Prework
+			Self::PreworkFetch(p) => p.failed(),
+			Self::PreworkLoad(p) => p.failed(),
+			Self::PreworkSize(p) => p.failed(),
+			// Process
+			Self::ProcessBlock(p) => p.failed(),
+			Self::ProcessOrphan(p) => p.failed(),
+			Self::ProcessBg(p) => p.failed(),
+		}
+	}
+
 	pub fn cleaned(self) -> bool {
 		match self {
 			// File

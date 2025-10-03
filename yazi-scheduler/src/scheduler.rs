@@ -81,7 +81,7 @@ impl Scheduler {
 		let id = ongoing.add::<FileProgPaste>(format!("Cut {} to {}", from.display(), to.display()));
 
 		if to.starts_with(&from) && !to.covariant(&from) {
-			return self.ops.out(id, FileOutPaste::Deform("Cannot cut directory into itself".to_owned()));
+			return self.ops.out(id, FileOutPaste::Fail("Cannot cut directory into itself".to_owned()));
 		}
 
 		ongoing.hooks.add_async(id, {
@@ -114,9 +114,7 @@ impl Scheduler {
 		));
 
 		if to.starts_with(&from) && !to.covariant(&from) {
-			return self
-				.ops
-				.out(id, FileOutPaste::Deform("Cannot copy directory into itself".to_owned()));
+			return self.ops.out(id, FileOutPaste::Fail("Cannot copy directory into itself".to_owned()));
 		}
 
 		let file = self.file.clone();
@@ -154,7 +152,7 @@ impl Scheduler {
 		if to.starts_with(&from) && !to.covariant(&from) {
 			return self
 				.ops
-				.out(id, FileOutHardlink::Deform("Cannot hardlink directory into itself".to_owned()));
+				.out(id, FileOutHardlink::Fail("Cannot hardlink directory into itself".to_owned()));
 		}
 
 		let file = self.file.clone();
@@ -212,16 +210,14 @@ impl Scheduler {
 
 	pub fn file_download(&self, from: UrlBuf, done: Option<oneshot::Sender<bool>>) {
 		let mut ongoing = self.ongoing.lock();
-		let id = self.ongoing.lock().add::<FileProgPaste>(format!("Download {}", from.display()));
+		let id = ongoing.add::<FileProgPaste>(format!("Download {}", from.display()));
 
 		if let Some(tx) = done {
 			ongoing.hooks.add_sync(id, move |canceled| _ = tx.send(canceled));
 		}
 
 		let Some(to) = from.cache().map(UrlBuf::from) else {
-			return self
-				.ops
-				.out(id, FileOutPaste::Deform("Unable to download non-remote file".to_owned()));
+			return self.ops.out(id, FileOutPaste::Fail("Cannot download non-remote file".to_owned()));
 		};
 
 		let file = self.file.clone();

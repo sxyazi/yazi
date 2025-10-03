@@ -5,12 +5,13 @@ use crate::{Task, TaskProg};
 pub(crate) enum FileOutPaste {
 	New(u64),
 	Deform(String),
-	Init,
+	Succ,
+	Fail(String),
 	Clean,
 }
 
 impl From<std::io::Error> for FileOutPaste {
-	fn from(value: std::io::Error) -> Self { Self::Deform(value.to_string()) }
+	fn from(value: std::io::Error) -> Self { Self::Fail(value.to_string()) }
 }
 
 impl FileOutPaste {
@@ -26,8 +27,12 @@ impl FileOutPaste {
 				prog.failed_files += 1;
 				task.log(reason);
 			}
-			Self::Init => {
-				prog.collected = true;
+			Self::Succ => {
+				prog.collected = Some(true);
+			}
+			Self::Fail(reason) => {
+				prog.collected = Some(false);
+				task.log(reason);
 			}
 			Self::Clean => {
 				prog.cleaned = true;
@@ -116,11 +121,12 @@ impl FileOutLink {
 pub(crate) enum FileOutHardlink {
 	New,
 	Deform(String),
-	Init,
+	Succ,
+	Fail(String),
 }
 
 impl From<std::io::Error> for FileOutHardlink {
-	fn from(value: std::io::Error) -> Self { Self::Deform(value.to_string()) }
+	fn from(value: std::io::Error) -> Self { Self::Fail(value.to_string()) }
 }
 
 impl FileOutHardlink {
@@ -135,8 +141,12 @@ impl FileOutHardlink {
 				prog.failed += 1;
 				task.log(reason);
 			}
-			Self::Init => {
-				prog.collected = true;
+			Self::Succ => {
+				prog.collected = Some(true);
+			}
+			Self::Fail(reason) => {
+				prog.collected = Some(false);
+				task.log(reason);
 			}
 		}
 	}
@@ -172,13 +182,13 @@ impl FileOutHardlinkDo {
 #[derive(Debug)]
 pub(crate) enum FileOutDelete {
 	New(u64),
-	Deform(String),
-	Init,
+	Succ,
+	Fail(String),
 	Clean,
 }
 
 impl From<std::io::Error> for FileOutDelete {
-	fn from(value: std::io::Error) -> Self { Self::Deform(value.to_string()) }
+	fn from(value: std::io::Error) -> Self { Self::Fail(value.to_string()) }
 }
 
 impl FileOutDelete {
@@ -189,13 +199,12 @@ impl FileOutDelete {
 				prog.total_files += 1;
 				prog.total_bytes += size;
 			}
-			Self::Deform(reason) => {
-				prog.total_files += 1;
-				prog.failed_files += 1;
-				task.log(reason);
+			Self::Succ => {
+				prog.collected = Some(true);
 			}
-			Self::Init => {
-				prog.collected = true;
+			Self::Fail(reason) => {
+				prog.collected = Some(false);
+				task.log(reason);
 			}
 			Self::Clean => {
 				prog.cleaned = true;

@@ -59,7 +59,7 @@ impl Ongoing {
 
 		for task in self.values() {
 			let s: TaskSummary = task.prog.into();
-			if s.total == 0 {
+			if s.total == 0 && !task.prog.failed() {
 				continue;
 			}
 
