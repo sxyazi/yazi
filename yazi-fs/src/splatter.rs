@@ -1,8 +1,22 @@
-use std::{cell::Cell, ffi::{OsStr, OsString}, iter::{self, Peekable}, mem, os::unix::ffi::{OsStrExt, OsStringExt}, slice::Iter};
+#[cfg(unix)]
+use std::os::unix::ffi::{OsStrExt, OsStringExt};
+#[cfg(windows)]
+use std::os::windows::ffi::{OsStrExt, OsStringExt};
+use std::{cell::Cell, ffi::{OsStr, OsString}, iter::{self, Peekable}, mem};
 
 use yazi_shared::url::{AsUrl, Url, UrlCow};
 
 use crate::FsUrl;
+
+#[cfg(unix)]
+type Iter<'a> = Peekable<std::iter::Copied<std::slice::Iter<'a, u8>>>;
+#[cfg(windows)]
+type Iter<'a> = Peekable<std::os::windows::ffi::EncodeWide<'a>>;
+
+#[cfg(unix)]
+type Buf = Vec<u8>;
+#[cfg(windows)]
+type Buf = Vec<u16>;
 
 #[derive(Clone, Copy)]
 pub struct Splatter<T> {
@@ -20,10 +34,16 @@ pub trait Splatable {
 	fn yanked(&self) -> impl Iterator<Item = Url<'_>>;
 }
 
-fn b2c(b: &u8) -> Option<char> { Some(*b as char) }
+#[cfg(unix)]
+fn b2c(b: u8) -> Option<char> { Some(b as char) }
+#[cfg(windows)]
+fn b2c(b: u16) -> Option<char> { char::from_u32(b as u32) }
 
-fn cue(buf: &mut Vec<u8>, s: impl AsRef<OsStr>) {
+fn cue(buf: &mut Buf, s: impl AsRef<OsStr>) {
+	#[cfg(unix)]
 	buf.extend(yazi_shared::shell::escape_os_str(s.as_ref()).as_bytes());
+	#[cfg(windows)]
+	buf.extend(yazi_shared::shell::escape_os_str(s.as_ref()).encode_wide());
 }
 
 impl<T> Splatter<T>
@@ -33,21 +53,27 @@ where
 	pub fn new(src: T) -> Self { Self { tab: src.tab() + 1, src } }
 
 	pub fn splat(mut self, cmd: impl AsRef<OsStr>) -> OsString {
-		let mut it = cmd.as_ref().as_bytes().iter().peekable();
-		let mut buf = vec![];
+		#[cfg(unix)]
+		let mut it = cmd.as_ref().as_bytes().iter().copied().peekable();
+		#[cfg(windows)]
+		let mut it = cmd.as_ref().encode_wide().peekable();
 
+		let mut buf = vec![];
 		while let Some(cur) = it.next() {
 			if b2c(cur) == Some('%') && it.peek().is_some() {
 				self.visit(&mut it, &mut buf);
 			} else {
-				buf.push(*cur);
+				buf.push(cur);
 			}
 		}
 
-		OsString::from_vec(buf)
+		#[cfg(unix)]
+		return OsString::from_vec(buf);
+		#[cfg(windows)]
+		return OsString::from_wide(&buf);
 	}
 
-	fn visit(&mut self, it: &mut Peekable<Iter<u8>>, buf: &mut Vec<u8>) {
+	fn visit(&mut self, it: &mut Iter, buf: &mut Buf) {
 		let c = it.peek().copied().and_then(b2c);
 		match c {
 			Some('s') | Some('S') => self.visit_selected(it, buf),
@@ -62,14 +88,14 @@ where
 		}
 	}
 
-	fn visit_selected(&mut self, it: &mut Peekable<Iter<u8>>, buf: &mut Vec<u8>) {
+	fn visit_selected(&mut self, it: &mut Iter, buf: &mut Buf) {
 		let c = it.next().and_then(b2c);
 		let idx = self.consume_digit(it);
 
 		let mut first = true;
 		for url in self.src.selected(self.tab, idx) {
 			if !mem::replace(&mut first, false) {
-				buf.push(' ' as _);
+				buf.push(b' ' as _);
 			}
 
 			if c == Some('S') {
@@ -83,7 +109,7 @@ where
 		}
 	}
 
-	fn visit_hovered(&mut self, it: &mut Peekable<Iter<u8>>, buf: &mut Vec<u8>) {
+	fn visit_hovered(&mut self, it: &mut Iter, buf: &mut Buf) {
 		match it.next().and_then(b2c) {
 			Some('h') => {
 				cue(buf, self.src.hovered(self.tab).map(|u| u.unified_path_str()).unwrap_or_default());
@@ -95,14 +121,14 @@ where
 		}
 	}
 
-	fn visit_dirname(&mut self, it: &mut Peekable<Iter<u8>>, buf: &mut Vec<u8>) {
+	fn visit_dirname(&mut self, it: &mut Iter, buf: &mut Buf) {
 		let c = it.next().and_then(b2c);
 		let idx = self.consume_digit(it);
 
 		let mut first = true;
 		for url in self.src.selected(self.tab, idx) {
 			if !mem::replace(&mut first, false) {
-				buf.push(' ' as _);
+				buf.push(b' ' as _);
 			}
 
 			if c == Some('D') {
@@ -116,7 +142,7 @@ where
 		}
 	}
 
-	fn visit_tab(&mut self, it: &mut Peekable<Iter<u8>>, buf: &mut Vec<u8>) {
+	fn visit_tab(&mut self, it: &mut Iter, buf: &mut Buf) {
 		let old = self.tab;
 		match it.next().and_then(b2c) {
 			Some('t') => self.tab = self.tab.saturating_add(1),
@@ -128,7 +154,7 @@ where
 		self.tab = old;
 	}
 
-	fn visit_digit(&mut self, it: &mut Peekable<Iter<u8>>, buf: &mut Vec<u8>) {
+	fn visit_digit(&mut self, it: &mut Iter, buf: &mut Buf) {
 		// TODO: remove
 		match self.consume_digit(it) {
 			Some(0) => {
@@ -149,13 +175,13 @@ where
 		}
 	}
 
-	fn visit_yanked(&mut self, it: &mut Peekable<Iter<u8>>, buf: &mut Vec<u8>) {
+	fn visit_yanked(&mut self, it: &mut Iter, buf: &mut Buf) {
 		let c = it.next().and_then(b2c);
 
 		let mut first = true;
 		for url in self.src.yanked() {
 			if !mem::replace(&mut first, false) {
-				buf.push(' ' as _);
+				buf.push(b' ' as _);
 			}
 
 			if c == Some('Y') {
@@ -166,20 +192,18 @@ where
 		}
 	}
 
-	fn visit_escape(&mut self, it: &mut Peekable<Iter<u8>>, buf: &mut Vec<u8>) {
-		buf.push(*it.next().unwrap());
-	}
+	fn visit_escape(&mut self, it: &mut Iter, buf: &mut Buf) { buf.push(it.next().unwrap()); }
 
-	fn visit_unknown(&mut self, it: &mut Peekable<Iter<u8>>, buf: &mut Vec<u8>) {
-		buf.push(b'%');
-		if let Some(&b) = it.next() {
+	fn visit_unknown(&mut self, it: &mut Iter, buf: &mut Buf) {
+		buf.push(b'%' as _);
+		if let Some(b) = it.next() {
 			buf.push(b);
 		}
 	}
 
-	fn consume_digit(&mut self, it: &mut Peekable<Iter<u8>>) -> Option<usize> {
-		fn next(it: &mut Peekable<Iter<u8>>) -> Option<usize> {
-			let n = b2c(it.peek()?)?.to_digit(10)? as usize;
+	fn consume_digit(&mut self, it: &mut Iter) -> Option<usize> {
+		fn next(it: &mut Iter) -> Option<usize> {
+			let n = b2c(*it.peek()?)?.to_digit(10)? as usize;
 			it.next();
 			Some(n)
 		}
