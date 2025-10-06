@@ -1,9 +1,10 @@
 use std::borrow::Cow;
 
 use anyhow::Result;
-use yazi_config::{opener::OpenerRule, popup::InputCfg};
+use yazi_config::popup::InputCfg;
+use yazi_fs::Splatter;
 use yazi_macro::{act, succ};
-use yazi_parser::mgr::ShellOpt;
+use yazi_parser::{mgr::ShellOpt, tasks::ProcessOpenOpt};
 use yazi_proxy::{InputProxy, TasksProxy};
 use yazi_shared::data::Data;
 
@@ -20,7 +21,7 @@ impl Actor for Shell {
 		act!(mgr:escape_visual, cx)?;
 
 		let cwd = opt.cwd.take().unwrap_or(cx.cwd().into()).into_owned();
-		let selected = cx.tab().hovered_and_selected().cloned().map(Into::into).collect();
+		let selected: Vec<_> = cx.tab().hovered_and_selected().cloned().map(Into::into).collect();
 
 		let input = opt.interactive.then(|| {
 			InputProxy::show(InputCfg::shell(opt.block).with_value(&*opt.run).with_cursor(opt.cursor))
@@ -37,18 +38,15 @@ impl Actor for Shell {
 				return;
 			}
 
-			TasksProxy::file_open(
-				Cow::Owned(OpenerRule {
-					run:    opt.run.into_owned(),
-					block:  opt.block,
-					orphan: opt.orphan,
-					desc:   Default::default(),
-					r#for:  None,
-					spread: true,
-				}),
+			TasksProxy::open_shell_compat(ProcessOpenOpt {
 				cwd,
-				selected,
-			);
+				cmd: Splatter::new(&selected).splat(opt.run.as_ref()),
+				args: selected,
+				block: opt.block,
+				orphan: opt.orphan,
+				done: None,
+				spread: true,
+			});
 		});
 
 		succ!();

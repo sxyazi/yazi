@@ -1,6 +1,7 @@
 use mlua::{Function, IntoLuaMulti, Lua, Value};
 use yazi_adapter::{ADAPTOR, Image};
 use yazi_binding::{Error, UrlRef, elements::Rect};
+use yazi_shared::url::UrlLike;
 
 use super::Utils;
 use crate::bindings::ImageInfo;

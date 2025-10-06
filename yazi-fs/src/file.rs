@@ -1,6 +1,6 @@
 use std::{ffi::OsStr, hash::{BuildHasher, Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
 
-use yazi_shared::url::{Uri, UrlBuf, Urn};
+use yazi_shared::url::{Uri, UrlBuf, UrlLike, Urn};
 
 use crate::cha::{Cha, ChaType};
 

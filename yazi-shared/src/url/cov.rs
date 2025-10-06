@@ -3,7 +3,7 @@ use std::{hash::{Hash, Hasher}, ops::Deref, path::PathBuf};
 use hashbrown::Equivalent;
 use serde::{Deserialize, Serialize};
 
-use crate::url::{Url, UrlBuf, UrlCow};
+use crate::url::{AsUrl, Url, UrlBuf, UrlCow, UrlLike};
 
 #[derive(Clone, Copy)]
 pub struct UrlCov<'a>(Url<'a>);
@@ -19,7 +19,7 @@ impl<'a> From<&'a UrlBufCov> for UrlCov<'a> {
 }
 
 impl PartialEq<UrlBufCov> for UrlCov<'_> {
-	fn eq(&self, other: &UrlBufCov) -> bool { self.0.covariant(other.0.as_url()) }
+	fn eq(&self, other: &UrlBufCov) -> bool { self.0.covariant(&other.0) }
 }
 
 impl Hash for UrlCov<'_> {
@@ -79,21 +79,13 @@ impl<'a> From<&'a UrlBufCov> for Url<'a> {
 }
 
 impl Hash for UrlBufCov {
-	fn hash<H: Hasher>(&self, state: &mut H) { self.as_url().hash(state) }
+	fn hash<H: Hasher>(&self, state: &mut H) { UrlCov::from(self).hash(state) }
 }
 
 impl PartialEq for UrlBufCov {
-	fn eq(&self, other: &Self) -> bool { self.covariant(other) }
+	fn eq(&self, other: &Self) -> bool { self.covariant(&other.0) }
 }
 
 impl PartialEq<UrlBuf> for UrlBufCov {
 	fn eq(&self, other: &UrlBuf) -> bool { self.covariant(other) }
-}
-
-impl UrlBufCov {
-	#[inline]
-	pub fn as_url(&self) -> UrlCov<'_> { UrlCov::from(self) }
-
-	#[inline]
-	pub fn parent(&self) -> Option<Self> { self.0.parent().map(Into::into) }
 }

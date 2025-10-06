@@ -1,5 +1,5 @@
 use tokio::io;
-use yazi_shared::url::{Component, UrlBuf};
+use yazi_shared::url::{Component, UrlBuf, UrlLike};
 
 #[inline]
 pub fn ok_or_not_found<T: Default>(result: io::Result<T>) -> io::Result<T> {

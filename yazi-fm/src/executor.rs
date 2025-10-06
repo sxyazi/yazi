@@ -164,8 +164,8 @@ impl<'a> Executor<'a> {
 		on!(arrow);
 		on!(inspect);
 		on!(cancel);
-		on!(file_open);
 		on!(process_open);
+		on!(open_shell_compat);
 
 		match cmd.name.as_ref() {
 			// Help

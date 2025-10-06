@@ -5,7 +5,7 @@ use hashbrown::HashMap;
 use serde::{Deserialize, Deserializer};
 use yazi_codegen::DeserializeOver2;
 use yazi_fs::File;
-use yazi_shared::Condition;
+use yazi_shared::{Condition, url::UrlLike};
 
 use crate::{Color, Icon as I, Pattern, Style};
 

@@ -3,7 +3,7 @@ use std::process::Stdio;
 use anyhow::Result;
 use tokio::{io::{AsyncBufReadExt, BufReader}, process::{Child, Command}, sync::mpsc::{self, UnboundedReceiver}};
 use yazi_fs::File;
-use yazi_shared::url::UrlBuf;
+use yazi_shared::url::{UrlBuf, UrlLike};
 use yazi_vfs::VfsFile;
 
 pub struct FdOpt {

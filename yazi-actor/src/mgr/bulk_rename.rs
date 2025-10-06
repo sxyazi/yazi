@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ffi::{OsStr, OsString}, hash::Hash, io::{Read, Write}, ops::Deref};
+use std::{ffi::{OsStr, OsString}, hash::Hash, io::{Read, Write}, ops::Deref};
 
 use anyhow::{Result, anyhow};
 use crossterm::{execute, style::Print};
@@ -7,11 +7,11 @@ use scopeguard::defer;
 use tokio::io::AsyncWriteExt;
 use yazi_config::{YAZI, opener::OpenerRule};
 use yazi_dds::Pubsub;
-use yazi_fs::{File, FilesOp, max_common_root, path::skip_url, provider::{FileBuilder, Provider, local::{Gate, Local}}};
+use yazi_fs::{File, FilesOp, Splatter, max_common_root, path::skip_url, provider::{FileBuilder, Provider, local::{Gate, Local}}};
 use yazi_macro::{err, succ};
 use yazi_parser::VoidOpt;
 use yazi_proxy::{AppProxy, HIDER, TasksProxy};
-use yazi_shared::{OsStrJoin, data::Data, terminal_clear, url::{Component, Url, UrlBuf}};
+use yazi_shared::{OsStrJoin, data::Data, terminal_clear, url::{Component, Url, UrlBuf, UrlCow, UrlLike}};
 use yazi_term::tty::TTY;
 use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
@@ -51,10 +51,13 @@ impl Actor for BulkRename {
 				.await?;
 
 			defer! { tokio::spawn(Local.remove_file(tmp.clone())); }
-			TasksProxy::process_exec(Cow::Borrowed(opener), cwd, vec![
-				OsStr::new("").into(),
-				tmp.as_os_str().to_owned().into(),
-			])
+			TasksProxy::process_exec(
+				cwd,
+				Splatter::new(&[UrlCow::default(), Url::regular(&tmp).into()]).splat(&opener.run),
+				vec![UrlCow::default(), UrlBuf::from(&tmp).into()],
+				opener.block,
+				opener.orphan,
+			)
 			.await;
 
 			let _permit = HIDER.acquire().await.unwrap();

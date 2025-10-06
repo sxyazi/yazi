@@ -9,7 +9,7 @@ use yazi_fs::{File, FilesOp, path::expand_url};
 use yazi_macro::{act, err, render, succ};
 use yazi_parser::mgr::CdOpt;
 use yazi_proxy::{CmpProxy, InputProxy, MgrProxy};
-use yazi_shared::{Debounce, data::Data, errors::InputError, url::UrlBuf};
+use yazi_shared::{Debounce, data::Data, errors::InputError, url::{AsUrl, UrlBuf, UrlLike}};
 use yazi_vfs::VfsFile;
 
 use crate::{Actor, Ctx};

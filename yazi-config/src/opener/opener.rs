@@ -18,21 +18,21 @@ impl Deref for Opener {
 }
 
 impl Opener {
-	pub fn all<'a, I>(&'a self, uses: I) -> Vec<&'a OpenerRule>
+	pub fn all<'a, I>(&self, uses: I) -> impl Iterator<Item = &OpenerRule>
 	where
 		I: Iterator<Item = &'a str>,
 	{
-		uses.flat_map(|use_| self.get(use_)).flatten().collect()
+		uses.flat_map(|use_| self.get(use_)).flatten()
 	}
 
-	pub fn first<'a, 'b, I>(&'a self, uses: I) -> Option<&'a OpenerRule>
+	pub fn first<'a, I>(&self, uses: I) -> Option<&OpenerRule>
 	where
-		I: Iterator<Item = &'b str>,
+		I: Iterator<Item = &'a str>,
 	{
 		uses.flat_map(|use_| self.get(use_)).flatten().next()
 	}
 
-	pub fn block<'a, I>(&'a self, uses: I) -> Option<&'a OpenerRule>
+	pub fn block<'a, I>(&self, uses: I) -> Option<&OpenerRule>
 	where
 		I: Iterator<Item = &'a str>,
 	{

@@ -1,7 +1,7 @@
-use std::{borrow::Cow, ffi::{OsStr, OsString}};
+use std::ffi::OsString;
 
 use tokio::sync::mpsc;
-use yazi_shared::{Id, url::UrlBuf};
+use yazi_shared::{Id, url::{UrlBuf, UrlCow}};
 
 use super::ShellOpt;
 
@@ -11,7 +11,7 @@ pub(crate) struct ProcessInBlock {
 	pub(crate) id:   Id,
 	pub(crate) cwd:  UrlBuf,
 	pub(crate) cmd:  OsString,
-	pub(crate) args: Vec<Cow<'static, OsStr>>,
+	pub(crate) args: Vec<UrlCow<'static>>,
 }
 
 impl From<ProcessInBlock> for ShellOpt {
@@ -26,7 +26,7 @@ pub(crate) struct ProcessInOrphan {
 	pub(crate) id:   Id,
 	pub(crate) cwd:  UrlBuf,
 	pub(crate) cmd:  OsString,
-	pub(crate) args: Vec<Cow<'static, OsStr>>,
+	pub(crate) args: Vec<UrlCow<'static>>,
 }
 
 impl From<ProcessInOrphan> for ShellOpt {
@@ -41,7 +41,7 @@ pub(crate) struct ProcessInBg {
 	pub(crate) id:     Id,
 	pub(crate) cwd:    UrlBuf,
 	pub(crate) cmd:    OsString,
-	pub(crate) args:   Vec<Cow<'static, OsStr>>,
+	pub(crate) args:   Vec<UrlCow<'static>>,
 	pub(crate) cancel: mpsc::Receiver<()>,
 }
 

@@ -7,7 +7,7 @@ use yazi_dds::spark::SparkKind;
 use yazi_macro::{emit, succ};
 use yazi_parser::mgr::QuitOpt;
 use yazi_proxy::ConfirmProxy;
-use yazi_shared::{data::Data, event::EventQuit, url::UrlCow};
+use yazi_shared::{data::Data, event::EventQuit, url::{AsUrl, UrlCow}};
 
 use crate::{Actor, Ctx};
 

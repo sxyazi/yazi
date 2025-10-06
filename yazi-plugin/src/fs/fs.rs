@@ -4,7 +4,7 @@ use mlua::{ExternalError, Function, IntoLua, IntoLuaMulti, Lua, Table, Value};
 use yazi_binding::{Cha, Composer, ComposerGet, ComposerSet, Error, File, Url, UrlRef};
 use yazi_config::Pattern;
 use yazi_fs::{mounts::PARTITIONS, provider::{DirReader, FileHolder}};
-use yazi_shared::url::UrlCow;
+use yazi_shared::url::{UrlCow, UrlLike};
 use yazi_vfs::{VfsFile, provider};
 
 use crate::bindings::SizeCalculator;

@@ -205,5 +205,10 @@ impl<'a> Loc<'a> {
 	}
 
 	#[inline]
+	pub fn strip_prefix(self, base: impl AsRef<Path>) -> Option<&'a Path> {
+		self.inner.strip_prefix(base).ok()
+	}
+
+	#[inline]
 	pub fn bytes(self) -> &'a [u8] { self.inner.as_os_str().as_encoded_bytes() }
 }

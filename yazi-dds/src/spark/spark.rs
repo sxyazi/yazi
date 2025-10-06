@@ -37,7 +37,6 @@ pub enum Spark<'a> {
 	Linemode(yazi_parser::mgr::LinemodeOpt),
 	Link(yazi_parser::mgr::LinkOpt),
 	Open(yazi_parser::mgr::OpenOpt),
-	OpenWith(yazi_parser::mgr::OpenWithOpt),
 	OpenDo(yazi_parser::mgr::OpenDoOpt),
 	Paste(yazi_parser::mgr::PasteOpt),
 	Peek(yazi_parser::mgr::PeekOpt),
@@ -160,7 +159,6 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::Linemode(b) => b.into_lua(lua),
 			Self::Link(b) => b.into_lua(lua),
 			Self::Open(b) => b.into_lua(lua),
-			Self::OpenWith(b) => b.into_lua(lua),
 			Self::OpenDo(b) => b.into_lua(lua),
 			Self::Paste(b) => b.into_lua(lua),
 			Self::Peek(b) => b.into_lua(lua),
@@ -295,7 +293,6 @@ try_from_spark!(mgr::LinemodeOpt, mgr:linemode);
 try_from_spark!(mgr::LinkOpt, mgr:link);
 try_from_spark!(mgr::OpenDoOpt, mgr:open_do);
 try_from_spark!(mgr::OpenOpt, mgr:open);
-try_from_spark!(mgr::OpenWithOpt, mgr:open_with);
 try_from_spark!(mgr::PasteOpt, mgr:paste);
 try_from_spark!(mgr::PeekOpt, mgr:peek);
 try_from_spark!(mgr::QuitOpt, mgr:quit);

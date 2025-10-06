@@ -3,7 +3,7 @@ use std::{ffi::OsString, io};
 use tokio::{select, sync::{mpsc, oneshot}};
 use yazi_fs::cha::Cha;
 use yazi_macro::ok_or_not_found;
-use yazi_shared::url::{AsUrl, UrlBuf};
+use yazi_shared::url::{AsUrl, UrlBuf, UrlLike};
 
 use crate::provider;
 

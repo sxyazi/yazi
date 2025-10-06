@@ -1,7 +1,7 @@
 use std::{borrow::Cow, ffi::OsStr, io, sync::Arc};
 
 use yazi_fs::{cha::{Cha, ChaType}, provider::FileHolder};
-use yazi_shared::url::UrlBuf;
+use yazi_shared::url::{UrlBuf, UrlLike};
 
 pub enum DirEntry {
 	Regular(yazi_fs::provider::local::DirEntry),

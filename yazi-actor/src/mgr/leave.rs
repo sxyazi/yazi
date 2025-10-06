@@ -1,7 +1,7 @@
 use anyhow::Result;
 use yazi_macro::{act, succ};
 use yazi_parser::{VoidOpt, mgr::CdSource};
-use yazi_shared::data::Data;
+use yazi_shared::{data::Data, url::UrlLike};
 
 use crate::{Actor, Ctx};
 

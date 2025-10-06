@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ffi::OsStr};
 
-use yazi_shared::url::UrlBuf;
+use yazi_shared::url::{UrlBuf, UrlLike};
 
 pub fn skip_url(url: &UrlBuf, n: usize) -> Cow<'_, OsStr> {
 	let mut it = url.components();
@@ -36,7 +36,7 @@ pub fn backslash_to_slash(p: &std::path::Path) -> Cow<'_, std::path::Path> {
 
 #[cfg(test)]
 mod tests {
-	use yazi_shared::url::UrlCow;
+	use yazi_shared::url::{AsUrl, UrlCow};
 
 	use crate::path::url_relative_to;
 
