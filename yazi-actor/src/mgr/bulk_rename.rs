@@ -7,7 +7,7 @@ use scopeguard::defer;
 use tokio::io::AsyncWriteExt;
 use yazi_config::{YAZI, opener::OpenerRule};
 use yazi_dds::Pubsub;
-use yazi_fs::{File, FilesOp, max_common_root, path::skip_url, provider::{FileBuilder, Provider, local::{Gate, Local}}};
+use yazi_fs::{File, FilesOp, Splatter, max_common_root, path::skip_url, provider::{FileBuilder, Provider, local::{Gate, Local}}};
 use yazi_macro::{err, succ};
 use yazi_parser::VoidOpt;
 use yazi_proxy::{AppProxy, HIDER, TasksProxy};
@@ -51,8 +51,14 @@ impl Actor for BulkRename {
 				.await?;
 
 			defer! { tokio::spawn(Local.remove_file(tmp.clone())); }
-			TasksProxy::process_exec(opener, cwd, vec![UrlCow::default(), UrlBuf::from(&tmp).into()])
-				.await;
+			TasksProxy::process_exec(
+				cwd,
+				Splatter::new(&[UrlCow::default(), Url::regular(&tmp).into()]).splat(&opener.run),
+				vec![UrlCow::default(), UrlBuf::from(&tmp).into()],
+				opener.block,
+				opener.orphan,
+			)
+			.await;
 
 			let _permit = HIDER.acquire().await.unwrap();
 			defer!(AppProxy::resume());

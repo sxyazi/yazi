@@ -245,11 +245,15 @@ impl<T> Splatter<T> {
 }
 
 // TODO: remove
-impl<'a> Splatable for &'a [UrlCow<'a>] {
+impl<'a, T> Splatable for &'a T
+where
+	T: AsRef<[UrlCow<'a>]>,
+{
 	fn tab(&self) -> usize { 0 }
 
 	fn selected(&self, tab: usize, idx: Option<usize>) -> impl Iterator<Item = Url<'_>> {
 		self
+			.as_ref()
 			.iter()
 			.filter(move |_| tab == 1)
 			.map(|u| u.as_url())
@@ -258,7 +262,7 @@ impl<'a> Splatable for &'a [UrlCow<'a>] {
 	}
 
 	fn hovered(&self, tab: usize) -> Option<Url<'_>> {
-		self.first().filter(|_| tab == 1).map(|u| u.as_url())
+		self.as_ref().first().filter(|_| tab == 1).map(|u| u.as_url())
 	}
 
 	fn yanked(&self) -> impl Iterator<Item = Url<'_>> { iter::empty() }

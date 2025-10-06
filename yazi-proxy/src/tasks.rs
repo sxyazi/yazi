@@ -1,5 +1,6 @@
+use std::ffi::OsString;
+
 use tokio::sync::oneshot;
-use yazi_config::opener::OpenerRule;
 use yazi_macro::{emit, relay};
 use yazi_parser::tasks::ProcessOpenOpt;
 use yazi_shared::url::{UrlBuf, UrlCow};
@@ -12,14 +13,20 @@ impl TasksProxy {
 		emit!(Call(relay!(tasks:open_shell_compat).with_any("opt", opt)));
 	}
 
-	pub async fn process_exec(opener: &OpenerRule, cwd: UrlBuf, args: Vec<UrlCow<'static>>) {
+	pub async fn process_exec(
+		cwd: UrlBuf,
+		cmd: OsString,
+		args: Vec<UrlCow<'static>>,
+		block: bool,
+		orphan: bool,
+	) {
 		let (tx, rx) = oneshot::channel();
 		emit!(Call(relay!(tasks:process_open).with_any("opt", ProcessOpenOpt {
 			cwd,
-			cmd: opener.run.clone().into(),
+			cmd,
 			args,
-			block: opener.block,
-			orphan: opener.orphan,
+			block,
+			orphan,
 			done: Some(tx),
 			spread: false
 		})));

@@ -45,12 +45,12 @@ impl Actor for OpenDo {
 			if let Ok(choice) = pick.await {
 				TasksProxy::open_shell_compat(ProcessOpenOpt {
 					cwd:    opt.cwd,
-					cmd:    Splatter::new(&urls[..]).splat(&openers[choice].run),
+					cmd:    Splatter::new(&urls).splat(&openers[choice].run),
 					args:   urls,
 					block:  openers[choice].block,
 					orphan: openers[choice].orphan,
 					done:   None,
-					spread: false,
+					spread: openers[choice].spread,
 				});
 			}
 		});
@@ -70,7 +70,7 @@ impl OpenDo {
 		for (opener, args) in openers {
 			cx.tasks.open_shell_compat(ProcessOpenOpt {
 				cwd: cwd.clone(),
-				cmd: Splatter::new(&args[..]).splat(&opener.run),
+				cmd: Splatter::new(&args).splat(&opener.run),
 				args,
 				block: opener.block,
 				orphan: opener.orphan,
