@@ -4,7 +4,7 @@ use futures::executor::block_on;
 use hashbrown::HashSet;
 use serde::Serialize;
 use yazi_fs::{CWD, Xdg, path::expand_url};
-use yazi_shared::url::{UrlBuf, UrlCow, UrnBuf};
+use yazi_shared::url::{UrlBuf, UrlCow, UrlLike, UrnBuf};
 use yazi_vfs::provider;
 
 #[derive(Debug, Default, Serialize)]

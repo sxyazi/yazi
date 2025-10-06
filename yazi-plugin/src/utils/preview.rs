@@ -3,7 +3,7 @@ use yazi_binding::{Error, elements::{Area, Renderable, Text}};
 use yazi_config::YAZI;
 use yazi_parser::mgr::{PreviewLock, UpdatePeekedOpt};
 use yazi_proxy::MgrProxy;
-use yazi_shared::errors::PeekError;
+use yazi_shared::{errors::PeekError, url::UrlLike};
 
 use super::Utils;
 use crate::external::Highlighter;

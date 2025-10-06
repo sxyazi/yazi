@@ -1,7 +1,7 @@
 use std::{borrow::Cow, path::{Path, PathBuf}};
 
 use anyhow::{Result, bail};
-use yazi_shared::{loc::LocBuf, url::{Url, UrlBuf, UrlCow}};
+use yazi_shared::{loc::LocBuf, url::{Url, UrlBuf, UrlCow, UrlLike}};
 
 pub fn path_relative_to<'a>(
 	from: impl AsRef<Path>,

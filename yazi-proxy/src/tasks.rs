@@ -1,29 +1,27 @@
-use std::{borrow::Cow, ffi::OsStr};
-
 use tokio::sync::oneshot;
 use yazi_config::opener::OpenerRule;
 use yazi_macro::{emit, relay};
-use yazi_parser::{mgr::OpenWithOpt, tasks::ProcessOpenOpt};
+use yazi_parser::tasks::ProcessOpenOpt;
 use yazi_shared::url::{UrlBuf, UrlCow};
 
 pub struct TasksProxy;
 
 impl TasksProxy {
-	pub fn file_open(opener: Cow<'static, OpenerRule>, cwd: UrlBuf, targets: Vec<UrlCow<'static>>) {
-		emit!(Call(relay!(tasks:file_open).with_any("option", OpenWithOpt { opener, cwd, targets })));
+	// TODO: remove
+	pub fn open_shell_compat(opt: ProcessOpenOpt) {
+		emit!(Call(relay!(tasks:open_shell_compat).with_any("opt", opt)));
 	}
 
-	pub async fn process_exec(
-		opener: Cow<'static, OpenerRule>,
-		cwd: UrlBuf,
-		args: Vec<Cow<'static, OsStr>>,
-	) {
+	pub async fn process_exec(opener: &OpenerRule, cwd: UrlBuf, args: Vec<UrlCow<'static>>) {
 		let (tx, rx) = oneshot::channel();
-		emit!(Call(relay!(tasks:process_open).with_any("option", ProcessOpenOpt {
+		emit!(Call(relay!(tasks:process_open).with_any("opt", ProcessOpenOpt {
 			cwd,
-			opener,
+			cmd: opener.run.clone().into(),
 			args,
-			done: Some(tx)
+			block: opener.block,
+			orphan: opener.orphan,
+			done: Some(tx),
+			spread: false
 		})));
 		rx.await.ok();
 	}

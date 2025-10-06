@@ -189,7 +189,7 @@ impl LocBuf {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use crate::url::UrlBuf;
+	use crate::url::{UrlBuf, UrlLike};
 
 	#[test]
 	fn test_new() {

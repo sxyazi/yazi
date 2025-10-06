@@ -1,7 +1,7 @@
 use std::{env::{current_dir, set_current_dir}, ops::Deref, path::PathBuf, sync::{Arc, atomic::{AtomicBool, Ordering}}};
 
 use arc_swap::ArcSwap;
-use yazi_shared::{RoCell, url::UrlBuf};
+use yazi_shared::{RoCell, url::{UrlBuf, UrlLike}};
 
 use crate::FsUrl;
 

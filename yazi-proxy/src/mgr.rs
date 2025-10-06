@@ -20,7 +20,7 @@ impl MgrProxy {
 	}
 
 	pub fn open_do(opt: OpenDoOpt) {
-		emit!(Call(relay!(mgr:open_do).with_any("option", opt)));
+		emit!(Call(relay!(mgr:open_do).with_any("opt", opt)));
 	}
 
 	pub fn remove_do(targets: Vec<UrlBuf>, permanently: bool) {

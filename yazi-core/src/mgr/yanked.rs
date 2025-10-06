@@ -4,7 +4,7 @@ use hashbrown::HashSet;
 use yazi_dds::Pubsub;
 use yazi_fs::FilesOp;
 use yazi_macro::err;
-use yazi_shared::url::{Url, UrlBuf, UrlBufCov, UrlCov};
+use yazi_shared::url::{Url, UrlBuf, UrlBufCov, UrlCov, UrlLike};
 
 #[derive(Debug, Default)]
 pub struct Yanked {

@@ -1,4 +1,4 @@
-use std::{ffi::OsString, future::Future, sync::Arc, time::Duration};
+use std::{future::Future, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use futures::{FutureExt, future::BoxFuture};
@@ -9,7 +9,7 @@ use yazi_dds::Pump;
 use yazi_fs::FsUrl;
 use yazi_parser::{app::PluginOpt, tasks::ProcessOpenOpt};
 use yazi_proxy::TasksProxy;
-use yazi_shared::{Id, Throttle, url::UrlBuf};
+use yazi_shared::{Id, Throttle, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{must_be_dir, provider, unique_name};
 
 use super::{Ongoing, TaskOp};
@@ -306,20 +306,20 @@ impl Scheduler {
 		}
 	}
 
-	pub fn process_open(&self, ProcessOpenOpt { cwd, opener, args, done }: ProcessOpenOpt) {
+	pub fn process_open(&self, opt: ProcessOpenOpt) {
 		let name = {
-			let args = args.iter().map(|a| a.to_string_lossy()).collect::<Vec<_>>().join(" ");
+			let args = opt.args.iter().map(|a| a.display().to_string()).collect::<Vec<_>>().join(" ");
 			if args.is_empty() {
-				format!("Run {:?}", opener.run)
+				format!("Run {:?}", opt.cmd)
 			} else {
-				format!("Run {:?} with `{args}`", opener.run)
+				format!("Run {:?} with `{args}`", opt.cmd)
 			}
 		};
 
 		let mut ongoing = self.ongoing.lock();
-		let (id, clean): (_, TaskOut) = if opener.block {
+		let (id, clean): (_, TaskOut) = if opt.block {
 			(ongoing.add::<ProcessProgBlock>(name), ProcessOutBlock::Clean.into())
-		} else if opener.orphan {
+		} else if opt.orphan {
 			(ongoing.add::<ProcessProgOrphan>(name), ProcessOutOrphan::Clean.into())
 		} else {
 			(ongoing.add::<ProcessProgBg>(name), ProcessOutBg::Clean.into())
@@ -332,21 +332,22 @@ impl Scheduler {
 				cancel_tx.send(()).await.ok();
 				cancel_tx.closed().await;
 			}
-			if let Some(tx) = done {
+			if let Some(tx) = opt.done {
 				tx.send(()).ok();
 			}
 			ops.out(id, clean);
 		});
 
-		let cmd = OsString::from(&opener.run);
 		let process = self.process.clone();
 		self.send_micro::<_, TaskOut>(id, NORMAL, async move {
-			if opener.block {
-				process.block(ProcessInBlock { id, cwd, cmd, args }).await?;
-			} else if opener.orphan {
-				process.orphan(ProcessInOrphan { id, cwd, cmd, args }).await?;
+			if opt.block {
+				process.block(ProcessInBlock { id, cwd: opt.cwd, cmd: opt.cmd, args: opt.args }).await?;
+			} else if opt.orphan {
+				process.orphan(ProcessInOrphan { id, cwd: opt.cwd, cmd: opt.cmd, args: opt.args }).await?;
 			} else {
-				process.bg(ProcessInBg { id, cwd, cmd, args, cancel: cancel_rx }).await?;
+				process
+					.bg(ProcessInBg { id, cwd: opt.cwd, cmd: opt.cmd, args: opt.args, cancel: cancel_rx })
+					.await?;
 			}
 			Ok(())
 		});

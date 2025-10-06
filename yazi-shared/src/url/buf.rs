@@ -3,7 +3,7 @@ use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, hash::BuildHasher, p
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::{loc::LocBuf, pool::Pool, scheme::{Scheme, SchemeRef}, url::{AsUrl, Components, Display, Encode, EncodeTilded, Uri, Url, UrlCow, Urn}};
+use crate::{loc::LocBuf, pool::Pool, scheme::Scheme, url::{AsUrl, Encode, EncodeTilded, Url, UrlCow}};
 
 #[derive(Clone, Default, Eq, Hash, PartialEq)]
 pub struct UrlBuf {
@@ -90,67 +90,6 @@ impl UrlBuf {
 	}
 
 	#[inline]
-	pub fn join(&self, path: impl AsRef<Path>) -> Self { self.as_url().join(path) }
-
-	#[inline]
-	pub fn components(&self) -> Components<'_> { Components::from(self) }
-
-	#[inline]
-	pub fn os_str(&self) -> Cow<'_, OsStr> { self.components().os_str() }
-
-	#[inline]
-	pub fn display(&self) -> Display<'_> { Display::new(self) }
-
-	#[inline]
-	pub fn covariant(&self, other: &Self) -> bool { self.as_url().covariant(other) }
-
-	#[inline]
-	pub fn parent(&self) -> Option<Url<'_>> { self.as_url().parent() }
-
-	#[inline]
-	pub fn starts_with(&self, base: impl AsUrl) -> bool { self.as_url().starts_with(base) }
-
-	#[inline]
-	pub fn ends_with(&self, child: impl AsUrl) -> bool { self.as_url().ends_with(child) }
-
-	pub fn strip_prefix(&self, base: impl AsUrl) -> Option<&Urn> {
-		use Scheme as S;
-		use SchemeRef as T;
-
-		let base = base.as_url();
-		let prefix = self.loc.strip_prefix(base.loc).ok()?;
-
-		Some(Urn::new(match (&self.scheme, base.scheme) {
-			// Same scheme
-			(S::Regular, T::Regular) => Some(prefix),
-			(S::Search(_), T::Search(_)) => Some(prefix),
-			(S::Archive(a), T::Archive(b)) => Some(prefix).filter(|_| a == b),
-			(S::Sftp(a), T::Sftp(b)) => Some(prefix).filter(|_| a == b),
-
-			// Both are local files
-			(S::Regular, T::Search(_)) => Some(prefix),
-			(S::Search(_), T::Regular) => Some(prefix),
-
-			// Only the entry of archives is a local file
-			(S::Regular, T::Archive(_)) => Some(prefix).filter(|_| base.uri().is_empty()),
-			(S::Search(_), T::Archive(_)) => Some(prefix).filter(|_| base.uri().is_empty()),
-			(S::Archive(_), T::Regular) => Some(prefix).filter(|_| self.uri().is_empty()),
-			(S::Archive(_), T::Search(_)) => Some(prefix).filter(|_| self.uri().is_empty()),
-
-			// Independent virtual file space
-			(S::Regular, T::Sftp(_)) => None,
-			(S::Search(_), T::Sftp(_)) => None,
-			(S::Archive(_), T::Sftp(_)) => None,
-			(S::Sftp(_), T::Regular) => None,
-			(S::Sftp(_), T::Search(_)) => None,
-			(S::Sftp(_), T::Archive(_)) => None,
-		}?))
-	}
-
-	#[inline]
-	pub fn as_path(&self) -> Option<&Path> { self.as_url().as_path() }
-
-	#[inline]
 	pub fn into_path(self) -> Option<PathBuf> {
 		Some(self.loc.into_path()).filter(|_| !self.scheme.is_virtual())
 	}
@@ -164,18 +103,7 @@ impl UrlBuf {
 	}
 
 	#[inline]
-	pub fn pair(&self) -> Option<(Url<'_>, &Urn)> { self.as_url().pair() }
-
-	#[inline]
 	pub fn hash_u64(&self) -> u64 { foldhash::fast::FixedState::default().hash_one(self) }
-}
-
-impl UrlBuf {
-	#[inline]
-	pub fn as_url(&self) -> Url<'_> { Url { loc: self.loc.as_loc(), scheme: self.scheme.as_ref() } }
-
-	#[inline]
-	pub fn base(&self) -> Option<Url<'_>> { self.as_url().base() }
 }
 
 impl UrlBuf {
@@ -225,34 +153,6 @@ impl UrlBuf {
 			Scheme::Archive(_) => false,
 		}
 	}
-
-	// FIXME: remove
-	#[inline]
-	pub fn into_path2(self) -> PathBuf { self.loc.into_path() }
-
-	#[inline]
-	pub fn name(&self) -> Option<&OsStr> { self.as_url().name() }
-
-	#[inline]
-	pub fn stem(&self) -> Option<&OsStr> { self.as_url().stem() }
-
-	#[inline]
-	pub fn ext(&self) -> Option<&OsStr> { self.as_url().ext() }
-
-	#[inline]
-	pub fn uri(&self) -> &Uri { self.as_url().uri() }
-
-	#[inline]
-	pub fn urn(&self) -> &Urn { self.as_url().urn() }
-
-	#[inline]
-	pub fn is_absolute(&self) -> bool { self.as_url().is_absolute() }
-
-	#[inline]
-	pub fn has_root(&self) -> bool { self.as_url().has_root() }
-
-	#[inline]
-	pub fn has_trail(&self) -> bool { self.as_url().has_trail() }
 }
 
 impl Debug for UrlBuf {
@@ -286,6 +186,7 @@ mod tests {
 	use anyhow::Result;
 
 	use super::*;
+	use crate::url::UrlLike;
 
 	#[test]
 	fn test_join() -> anyhow::Result<()> {

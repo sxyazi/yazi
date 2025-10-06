@@ -91,7 +91,7 @@ impl Trigger {
 
 #[cfg(test)]
 mod tests {
-	use yazi_shared::url::Urn;
+	use yazi_shared::url::{UrlLike, Urn};
 
 	use super::*;
 

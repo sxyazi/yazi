@@ -1,5 +1,6 @@
 use anyhow::{Result, bail};
 use serde::Deserialize;
+use yazi_fs::Splatter;
 
 #[derive(Clone, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct OpenerRule {
@@ -35,11 +36,12 @@ impl OpenerRule {
 
 		#[cfg(unix)]
 		{
-			self.spread = self.run.contains("$@") || self.run.contains("$*");
+			self.spread =
+				Splatter::<()>::spread(&self.run) || self.run.contains("$@") || self.run.contains("$*");
 		}
 		#[cfg(windows)]
 		{
-			self.spread = self.run.contains("%*");
+			self.spread = Splatter::<()>::spread(&self.run) || self.run.contains("%*");
 		}
 
 		Ok(self)

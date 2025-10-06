@@ -3,6 +3,7 @@ use std::hash::Hash;
 use mlua::{Function, Lua, Table};
 use yazi_binding::{FileRef, Url};
 use yazi_config::YAZI;
+use yazi_shared::url::UrlLike;
 
 use super::Utils;
 use crate::Twox128;

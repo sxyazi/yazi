@@ -1,6 +1,6 @@
 use hashbrown::HashSet;
 use tracing::debug;
-use yazi_shared::url::{UrlBuf, UrlBufCov};
+use yazi_shared::url::{UrlBuf, UrlBufCov, UrlLike};
 
 use super::Tasks;
 use crate::mgr::Yanked;

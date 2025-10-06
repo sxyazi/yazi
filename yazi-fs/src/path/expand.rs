@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ffi::{OsStr, OsString}, path::{Path, PathBuf}};
 
-use yazi_shared::{loc::LocBuf, url::{Url, UrlBuf, UrlCow}};
+use yazi_shared::{loc::LocBuf, url::{AsUrl, Url, UrlBuf, UrlCow}};
 
 use crate::{CWD, path::clean_url};
 
@@ -76,7 +76,7 @@ pub fn absolute_url<'a>(url: Url<'a>) -> UrlCow<'a> {
 		)
 		.expect("Failed to create Loc from drive letter");
 		UrlBuf { loc, scheme: url.scheme.into() }.into()
-	} else if let Ok(rest) = url.loc.strip_prefix("~/")
+	} else if let Some(rest) = url.loc.strip_prefix("~/")
 		&& let Some(home) = dirs::home_dir()
 		&& home.is_absolute()
 	{

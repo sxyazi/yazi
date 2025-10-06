@@ -17,7 +17,7 @@ impl TryFrom<CmdCow> for NotifyOpt {
 	type Error = anyhow::Error;
 
 	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
-		c.take_any("option").ok_or_else(|| anyhow!("Invalid 'option' in NotifyOpt"))
+		c.take_any("opt").ok_or_else(|| anyhow!("Invalid 'opt' in NotifyOpt"))
 	}
 }
 

@@ -2,7 +2,7 @@ use anyhow::Result;
 use hashbrown::HashSet;
 use tokio::sync::mpsc;
 use tracing::error;
-use yazi_shared::url::{AsUrl, Url, UrlBuf};
+use yazi_shared::url::{AsUrl, Url, UrlBuf, UrlLike};
 
 use crate::{LINKED, WATCHED, backend};
 

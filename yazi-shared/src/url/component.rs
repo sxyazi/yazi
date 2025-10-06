@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ffi::{OsStr, OsString}, iter::FusedIterator, ops::Not, path::{self, PathBuf, PrefixComponent}};
 
-use crate::{loc::Loc, scheme::{Scheme, SchemeRef}, url::{Encode, Url, UrlBuf, UrlCow}};
+use crate::{scheme::{Scheme, SchemeRef}, url::{Encode, Url, UrlBuf}};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Component<'a> {
@@ -60,8 +60,7 @@ impl<'a> FromIterator<Component<'a>> for PathBuf {
 #[derive(Clone)]
 pub struct Components<'a> {
 	inner:          path::Components<'a>,
-	loc:            Loc<'a>,
-	scheme:         SchemeRef<'a>,
+	url:            Url<'a>,
 	scheme_yielded: bool,
 }
 
@@ -69,36 +68,20 @@ impl<'a> From<Url<'a>> for Components<'a> {
 	fn from(value: Url<'a>) -> Self {
 		Self {
 			inner:          value.loc.as_path().components(),
-			loc:            value.loc,
-			scheme:         value.scheme,
+			url:            value,
 			scheme_yielded: false,
 		}
 	}
-}
-
-impl<'a> From<&'a UrlBuf> for Components<'a> {
-	fn from(value: &'a UrlBuf) -> Self {
-		Self {
-			inner:          value.loc.components(),
-			loc:            value.loc.as_loc(),
-			scheme:         value.scheme.as_ref(),
-			scheme_yielded: false,
-		}
-	}
-}
-
-impl<'a> From<&'a UrlCow<'a>> for Components<'a> {
-	fn from(value: &'a UrlCow<'a>) -> Self { Self::from(value.as_url()) }
 }
 
 impl<'a> Components<'a> {
 	pub fn os_str(&self) -> Cow<'a, OsStr> {
 		let path = self.inner.as_path();
-		if !self.scheme.is_virtual() || self.scheme_yielded {
+		if !self.url.scheme.is_virtual() || self.scheme_yielded {
 			return path.as_os_str().into();
 		}
 
-		let mut s = OsString::from(Encode::new(self.loc, self.scheme).to_string());
+		let mut s = OsString::from(Encode::from(self.url).to_string());
 		s.reserve_exact(path.as_os_str().len());
 		s.push(path);
 		s.into()
@@ -107,7 +90,7 @@ impl<'a> Components<'a> {
 	pub fn covariant(&self, other: &Self) -> bool {
 		match (self.scheme_yielded, other.scheme_yielded) {
 			(false, false) => {}
-			(true, true) if self.scheme.covariant(other.scheme) => {}
+			(true, true) if self.url.scheme.covariant(other.url.scheme) => {}
 			_ => return false,
 		}
 		self.inner == other.inner
@@ -120,7 +103,7 @@ impl<'a> Iterator for Components<'a> {
 	fn next(&mut self) -> Option<Self::Item> {
 		if !self.scheme_yielded {
 			self.scheme_yielded = true;
-			Some(Component::Scheme(self.scheme))
+			Some(Component::Scheme(self.url.scheme))
 		} else {
 			self.inner.next().map(Into::into)
 		}
@@ -140,7 +123,7 @@ impl<'a> DoubleEndedIterator for Components<'a> {
 			Some(comp.into())
 		} else if !self.scheme_yielded {
 			self.scheme_yielded = true;
-			Some(Component::Scheme(self.scheme))
+			Some(Component::Scheme(self.url.scheme))
 		} else {
 			None
 		}
@@ -151,8 +134,8 @@ impl<'a> FusedIterator for Components<'a> {}
 
 impl<'a> PartialEq for Components<'a> {
 	fn eq(&self, other: &Self) -> bool {
-		Some(self.scheme).filter(|_| !self.scheme_yielded)
-			== Some(other.scheme).filter(|_| !other.scheme_yielded)
+		Some(self.url.scheme).filter(|_| !self.scheme_yielded)
+			== Some(other.url.scheme).filter(|_| !other.scheme_yielded)
 			&& self.inner == other.inner
 	}
 }
@@ -163,7 +146,7 @@ mod tests {
 	use std::path::Path;
 
 	use super::*;
-	use crate::pool::InternStr;
+	use crate::{pool::InternStr, url::UrlLike};
 
 	#[test]
 	fn test_collect() {

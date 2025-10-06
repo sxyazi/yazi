@@ -72,6 +72,39 @@ impl<'a> Url<'a> {
 		UrlBuf { loc, scheme: self.scheme.into() }
 	}
 
+	pub fn strip_prefix(self, base: impl AsUrl) -> Option<&'a Urn> {
+		use SchemeRef as S;
+
+		let base = base.as_url();
+		let prefix = self.loc.strip_prefix(base.loc)?;
+
+		Some(Urn::new(match (self.scheme, base.scheme) {
+			// Same scheme
+			(S::Regular, S::Regular) => Some(prefix),
+			(S::Search(_), S::Search(_)) => Some(prefix),
+			(S::Archive(a), S::Archive(b)) => Some(prefix).filter(|_| a == b),
+			(S::Sftp(a), S::Sftp(b)) => Some(prefix).filter(|_| a == b),
+
+			// Both are local files
+			(S::Regular, S::Search(_)) => Some(prefix),
+			(S::Search(_), S::Regular) => Some(prefix),
+
+			// Only the entry of archives is a local file
+			(S::Regular, S::Archive(_)) => Some(prefix).filter(|_| base.uri().is_empty()),
+			(S::Search(_), S::Archive(_)) => Some(prefix).filter(|_| base.uri().is_empty()),
+			(S::Archive(_), S::Regular) => Some(prefix).filter(|_| self.uri().is_empty()),
+			(S::Archive(_), S::Search(_)) => Some(prefix).filter(|_| self.uri().is_empty()),
+
+			// Independent virtual file space
+			(S::Regular, S::Sftp(_)) => None,
+			(S::Search(_), S::Sftp(_)) => None,
+			(S::Archive(_), S::Sftp(_)) => None,
+			(S::Sftp(_), S::Regular) => None,
+			(S::Sftp(_), S::Search(_)) => None,
+			(S::Sftp(_), S::Archive(_)) => None,
+		}?))
+	}
+
 	#[inline]
 	pub fn uri(self) -> &'a Uri { self.loc.uri() }
 

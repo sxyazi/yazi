@@ -4,7 +4,7 @@ use yazi_fs::{File, FilesOp};
 use yazi_macro::{ok_or_not_found, succ};
 use yazi_parser::mgr::CreateOpt;
 use yazi_proxy::{ConfirmProxy, InputProxy, MgrProxy};
-use yazi_shared::{data::Data, url::UrlBuf};
+use yazi_shared::{data::Data, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{VfsFile, maybe_exists, provider};
 use yazi_watcher::WATCHER;
 

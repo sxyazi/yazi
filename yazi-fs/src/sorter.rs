@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 
 use hashbrown::HashMap;
-use yazi_shared::{LcgRng, natsort, translit::Transliterator, url::UrnBuf};
+use yazi_shared::{LcgRng, natsort, translit::Transliterator, url::{UrlLike, UrnBuf}};
 
 use crate::{File, SortBy};
 

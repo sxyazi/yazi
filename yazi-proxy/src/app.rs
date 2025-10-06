@@ -18,7 +18,7 @@ impl AppProxy {
 	}
 
 	pub fn notify(opt: NotifyOpt) {
-		emit!(Call(relay!(app:notify).with_any("option", opt)));
+		emit!(Call(relay!(app:notify).with_any("opt", opt)));
 	}
 
 	pub fn update_notify(dur: Duration) {

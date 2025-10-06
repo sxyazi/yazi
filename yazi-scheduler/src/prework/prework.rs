@@ -10,7 +10,7 @@ use tracing::error;
 use yazi_config::Priority;
 use yazi_fs::FilesOp;
 use yazi_plugin::isolate;
-use yazi_shared::{event::CmdCow, url::UrlBuf};
+use yazi_shared::{event::CmdCow, url::{UrlBuf, UrlLike}};
 use yazi_vfs::provider;
 
 use super::{PreworkInFetch, PreworkInLoad, PreworkInSize};

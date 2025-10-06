@@ -2,7 +2,7 @@ use std::ffi::OsString;
 
 use yazi_boot::ARGS;
 use yazi_fs::provider::{Provider, local::Local};
-use yazi_shared::event::EventQuit;
+use yazi_shared::{event::EventQuit, url::UrlLike};
 
 use crate::{Term, app::App};
 

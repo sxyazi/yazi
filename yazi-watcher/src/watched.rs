@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use hashbrown::HashSet;
-use yazi_shared::url::{AsUrl, UrlBuf};
+use yazi_shared::url::{AsUrl, UrlBuf, UrlLike};
 
 #[derive(Default)]
 pub struct Watched(HashSet<UrlBuf>);

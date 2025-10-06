@@ -1,5 +1,5 @@
 use yazi_fs::FilesOp;
-use yazi_shared::url::UrlBuf;
+use yazi_shared::url::{UrlBuf, UrlLike};
 
 use crate::maybe_exists;
 

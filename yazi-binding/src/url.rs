@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use mlua::{AnyUserData, ExternalError, FromLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
-use yazi_shared::{IntoOsStr, url::{AsUrl, UrlCow}};
+use yazi_shared::{IntoOsStr, url::{AsUrl, UrlCow, UrlLike}};
 
 use crate::{Urn, cached_field, deprecate};
 
