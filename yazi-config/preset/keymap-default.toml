@@ -301,6 +301,10 @@ keymap = [
 	{ on = "p", run = "paste",                                             desc = "Paste copied characters after the cursor" },
 	{ on = "P", run = "paste --before",                                    desc = "Paste copied characters before the cursor" },
 
+    # Change case
+	{ on = "u", run = "lowercase",                                    desc = "Lowercase" },
+	{ on = "U", run = "uppercase",                                    desc = "Uppercase" },
+
 	# Undo/Redo
 	{ on = "u",     run = "undo", desc = "Undo the last operation" },
 	{ on = "<C-r>", run = "redo", desc = "Redo the last operation" },
