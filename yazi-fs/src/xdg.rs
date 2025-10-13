@@ -1,4 +1,4 @@
-use std::{env, path::PathBuf};
+use std::{env, path::PathBuf, sync::OnceLock};
 
 pub struct Xdg;
 
@@ -43,17 +43,22 @@ impl Xdg {
 		}
 	}
 
-	#[inline]
-	pub fn cache_dir() -> PathBuf {
-		#[cfg(unix)]
-		let s = {
-			use uzers::Users;
-			format!("yazi-{}", yazi_shared::USERS_CACHE.get_current_uid())
-		};
+	pub fn cache_dir() -> &'static PathBuf {
+		static CACHE: OnceLock<PathBuf> = OnceLock::new();
 
-		#[cfg(windows)]
-		let s = "yazi";
+		CACHE.get_or_init(|| {
+			let mut p = env::temp_dir();
+			assert!(p.is_absolute(), "Temp dir is not absolute");
 
-		env::temp_dir().join(s)
+			#[cfg(unix)]
+			{
+				use uzers::Users;
+				p.push(format!("yazi-{}", yazi_shared::USERS_CACHE.get_current_uid()))
+			}
+			#[cfg(not(unix))]
+			p.push("yazi");
+
+			p
+		})
 	}
 }

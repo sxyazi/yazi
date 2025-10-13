@@ -4,9 +4,9 @@ use mlua::{Function, Lua, Table};
 use yazi_binding::{FileRef, Url};
 use yazi_config::YAZI;
 use yazi_shared::url::UrlLike;
+use yazi_shim::Twox128;
 
 use super::Utils;
-use crate::Twox128;
 
 impl Utils {
 	pub(super) fn file_cache(lua: &Lua) -> mlua::Result<Function> {

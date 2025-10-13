@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, hash::BuildHasher, path::{Path, PathBuf}, str::FromStr, sync::OnceLock};
+use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, path::{Path, PathBuf}, str::FromStr, sync::OnceLock};
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -101,9 +101,6 @@ impl UrlBuf {
 	pub fn rebase(&self, base: &Path) -> Self {
 		Self { loc: self.loc.rebase(base), scheme: self.scheme.clone() }
 	}
-
-	#[inline]
-	pub fn hash_u64(&self) -> u64 { foldhash::fast::FixedState::default().hash_one(self) }
 }
 
 impl UrlBuf {

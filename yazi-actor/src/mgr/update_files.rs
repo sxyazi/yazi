@@ -4,7 +4,7 @@ use yazi_fs::FilesOp;
 use yazi_macro::{act, render, succ};
 use yazi_parser::mgr::UpdateFilesOpt;
 use yazi_shared::{data::Data, url::UrlLike};
-use yazi_watcher::LINKED;
+use yazi_watcher::local::LINKED;
 
 use crate::{Actor, Ctx};
 

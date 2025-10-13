@@ -166,7 +166,10 @@ macro_rules! impl_file_fields {
 #[macro_export]
 macro_rules! impl_file_methods {
 	($methods:ident) => {
-		$methods.add_method("hash", |_, me, ()| Ok(me.hash_u64()));
+		$methods.add_method("hash", |_, me, ()| {
+			use yazi_fs::FsHash64;
+			Ok(me.hash_u64())
+		});
 
 		$methods.add_method("icon", |_, me, ()| {
 			use $crate::Icon;

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::ByteStr;
+use crate::{ByteStr, Error, ToByteStr};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Symlink<'a> {
@@ -10,12 +10,12 @@ pub struct Symlink<'a> {
 }
 
 impl<'a> Symlink<'a> {
-	pub fn new<L, O>(link: L, original: O) -> Self
+	pub fn new<L, O>(link: L, original: O) -> Result<Self, Error>
 	where
-		L: Into<ByteStr<'a>>,
-		O: Into<ByteStr<'a>>,
+		L: ToByteStr<'a>,
+		O: ToByteStr<'a>,
 	{
-		Self { id: 0, link: link.into(), original: original.into() }
+		Ok(Self { id: 0, link: link.to_byte_str()?, original: original.to_byte_str()? })
 	}
 
 	pub fn len(&self) -> usize {

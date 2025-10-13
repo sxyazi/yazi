@@ -1,4 +1,4 @@
-use crate::{Task, file::{FileOutDelete, FileOutDeleteDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutPaste, FileOutPasteDo, FileOutTrash}, impl_from_out, plugin::PluginOutEntry, prework::{PreworkOutFetch, PreworkOutLoad, PreworkOutSize}, process::{ProcessOutBg, ProcessOutBlock, ProcessOutOrphan}};
+use crate::{Task, file::{FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutPaste, FileOutPasteDo, FileOutTrash, FileOutUpload, FileOutUploadDo}, impl_from_out, plugin::PluginOutEntry, prework::{PreworkOutFetch, PreworkOutLoad, PreworkOutSize}, process::{ProcessOutBg, ProcessOutBlock, ProcessOutOrphan}};
 
 #[derive(Debug)]
 pub(super) enum TaskOut {
@@ -11,6 +11,10 @@ pub(super) enum TaskOut {
 	FileDelete(FileOutDelete),
 	FileDeleteDo(FileOutDeleteDo),
 	FileTrash(FileOutTrash),
+	FileDownload(FileOutDownload),
+	FileDownloadDo(FileOutDownloadDo),
+	FileUpload(FileOutUpload),
+	FileUploadDo(FileOutUploadDo),
 
 	// Plugin
 	PluginEntry(PluginOutEntry),
@@ -28,7 +32,7 @@ pub(super) enum TaskOut {
 
 impl_from_out! {
 	// File
-	FilePaste(FileOutPaste), FilePasteDo(FileOutPasteDo), FileLink(FileOutLink), FileHardlink(FileOutHardlink), FileHardlinkDo(FileOutHardlinkDo), FileDelete(FileOutDelete), FileDeleteDo(FileOutDeleteDo), FileTrash(FileOutTrash),
+	FilePaste(FileOutPaste), FilePasteDo(FileOutPasteDo), FileLink(FileOutLink), FileHardlink(FileOutHardlink), FileHardlinkDo(FileOutHardlinkDo), FileDelete(FileOutDelete), FileDeleteDo(FileOutDeleteDo), FileTrash(FileOutTrash), FileDownload(FileOutDownload), FileDownloadDo(FileOutDownloadDo), FileUpload(FileOutUpload), FileUploadDo(FileOutUploadDo),
 	// Plugin
 	PluginEntry(PluginOutEntry),
 	// Prework
@@ -49,6 +53,10 @@ impl TaskOut {
 			Self::FileDelete(out) => out.reduce(task),
 			Self::FileDeleteDo(out) => out.reduce(task),
 			Self::FileTrash(out) => out.reduce(task),
+			Self::FileDownload(out) => out.reduce(task),
+			Self::FileDownloadDo(out) => out.reduce(task),
+			Self::FileUpload(out) => out.reduce(task),
+			Self::FileUploadDo(out) => out.reduce(task),
 			// Plugin
 			Self::PluginEntry(out) => out.reduce(task),
 			// Prework

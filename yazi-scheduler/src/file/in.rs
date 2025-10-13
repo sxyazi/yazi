@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use yazi_fs::cha::Cha;
 use yazi_shared::{Id, url::UrlBuf};
 
@@ -80,4 +82,33 @@ pub(crate) struct FileInDelete {
 pub(crate) struct FileInTrash {
 	pub(crate) id:     Id,
 	pub(crate) target: UrlBuf,
+}
+
+// --- Download
+#[derive(Clone, Debug)]
+pub(crate) struct FileInDownload {
+	pub(crate) id:    Id,
+	pub(crate) url:   UrlBuf,
+	pub(crate) cha:   Option<Cha>,
+	pub(crate) retry: u8,
+}
+
+impl FileInDownload {
+	pub(super) fn spawn(&self, url: UrlBuf, cha: Cha) -> Self {
+		Self { id: self.id, url, cha: Some(cha), retry: self.retry }
+	}
+}
+
+// --- Upload
+#[derive(Clone, Debug)]
+pub(crate) struct FileInUpload {
+	pub(crate) id:   Id,
+	pub(crate) path: PathBuf,
+	pub(crate) cha:  Option<Cha>,
+}
+
+impl FileInUpload {
+	pub(super) fn spawn(&self, path: PathBuf, cha: Cha) -> Self {
+		Self { id: self.id, path, cha: Some(cha) }
+	}
 }

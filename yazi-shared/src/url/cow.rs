@@ -12,7 +12,7 @@ pub enum UrlCow<'a> {
 }
 
 impl Default for UrlCow<'_> {
-	fn default() -> Self { Self::Owned { loc: Default::default(), scheme: Default::default() } }
+	fn default() -> Self { Self::Borrowed { loc: Default::default(), scheme: Default::default() } }
 }
 
 impl<'a> From<Url<'a>> for UrlCow<'a> {
@@ -20,9 +20,7 @@ impl<'a> From<Url<'a>> for UrlCow<'a> {
 }
 
 impl<'a> From<&'a UrlBuf> for UrlCow<'a> {
-	fn from(value: &'a UrlBuf) -> Self {
-		Self::Borrowed { loc: value.loc.as_loc(), scheme: SchemeCow::from(&value.scheme) }
-	}
+	fn from(value: &'a UrlBuf) -> Self { value.as_url().into() }
 }
 
 impl<'a> From<&'a UrlCow<'a>> for UrlCow<'a> {
@@ -31,6 +29,10 @@ impl<'a> From<&'a UrlCow<'a>> for UrlCow<'a> {
 
 impl From<UrlBuf> for UrlCow<'_> {
 	fn from(value: UrlBuf) -> Self { Self::Owned { loc: value.loc, scheme: value.scheme.into() } }
+}
+
+impl From<PathBuf> for UrlCow<'_> {
+	fn from(value: PathBuf) -> Self { UrlBuf::from(value).into() }
 }
 
 impl From<UrlCow<'_>> for UrlBuf {

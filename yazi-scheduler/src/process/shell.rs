@@ -1,9 +1,9 @@
-use std::{borrow::Cow, ffi::OsString, process::Stdio};
+use std::{ffi::OsString, process::Stdio};
 
-use anyhow::{Result, bail};
+use anyhow::Result;
 use tokio::process::{Child, Command};
-use yazi_fs::FsUrl;
-use yazi_shared::url::{UrlBuf, UrlCow, UrlLike};
+use yazi_fs::{Cwd, FsUrl};
+use yazi_shared::url::{AsUrl, UrlBuf, UrlCow};
 
 pub(crate) struct ShellOpt {
 	pub(crate) cwd:    UrlBuf,
@@ -28,14 +28,7 @@ impl ShellOpt {
 
 pub(crate) async fn shell(opt: ShellOpt) -> Result<Child> {
 	tokio::task::spawn_blocking(move || {
-		let cwd: Cow<_> = if let Some(path) = opt.cwd.as_path() {
-			path.into()
-		} else if let Some(cache) = opt.cwd.cache() {
-			std::fs::create_dir_all(&cache).ok();
-			cache.into()
-		} else {
-			bail!("failed to determine a working directory");
-		};
+		let cwd = Cwd::ensure(opt.cwd.as_url());
 
 		#[cfg(unix)]
 		return Ok(unsafe {

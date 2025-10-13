@@ -85,8 +85,8 @@ impl Provider for Sftp {
 		let attrs = Attrs::from(Cha(cha));
 
 		let op = self.op().await?;
-		let from = op.open(&from, Flags::READ, &Attrs::default()).await?;
-		let to = op.open(&to, Flags::WRITE | Flags::CREATE | Flags::TRUNCATE, &attrs).await?;
+		let from = op.open(from.as_ref(), Flags::READ, &Attrs::default()).await?;
+		let to = op.open(to.as_ref(), Flags::WRITE | Flags::CREATE | Flags::TRUNCATE, &attrs).await?;
 
 		let mut reader = BufReader::with_capacity(524288, from);
 		let mut writer = BufWriter::with_capacity(524288, to);
@@ -101,7 +101,7 @@ impl Provider for Sftp {
 	where
 		P: AsRef<Path>,
 	{
-		Ok(self.op().await?.mkdir(&path, Attrs::default()).await?)
+		Ok(self.op().await?.mkdir(path.as_ref(), Attrs::default()).await?)
 	}
 
 	async fn gate(&self) -> io::Result<Self::Gate> {

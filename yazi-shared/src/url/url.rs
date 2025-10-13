@@ -26,7 +26,7 @@ impl Debug for Url<'_> {
 		if self.scheme == SchemeRef::Regular {
 			write!(f, "{}", self.loc.display())
 		} else {
-			write!(f, "{}{}", Encode::from(*self), self.loc.display())
+			write!(f, "{}{}", Encode(*self), self.loc.display())
 		}
 	}
 }
@@ -49,7 +49,14 @@ impl<'a> Url<'a> {
 	pub fn is_search(self) -> bool { matches!(self.scheme, SchemeRef::Search(_)) }
 
 	#[inline]
-	pub fn is_absolute(self) -> bool { self.loc.is_absolute() }
+	pub fn is_absolute(self) -> bool {
+		use SchemeRef as S;
+
+		match self.scheme {
+			S::Regular | S::Search(_) => self.loc.is_absolute(),
+			S::Archive(_) | S::Sftp(_) => self.loc.has_root(),
+		}
+	}
 
 	#[inline]
 	pub fn has_root(self) -> bool { self.loc.has_root() }

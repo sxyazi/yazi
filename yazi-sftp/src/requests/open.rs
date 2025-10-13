@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{ByteStr, fs::{Attrs, Flags}};
+use crate::{ByteStr, Error, ToByteStr, fs::{Attrs, Flags}};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Open<'a> {
@@ -13,11 +13,11 @@ pub struct Open<'a> {
 }
 
 impl<'a> Open<'a> {
-	pub fn new<P>(path: P, flags: Flags, attrs: &'a Attrs) -> Self
+	pub fn new<P>(path: P, flags: Flags, attrs: &'a Attrs) -> Result<Self, Error>
 	where
-		P: Into<ByteStr<'a>>,
+		P: ToByteStr<'a>,
 	{
-		Self { id: 0, path: path.into(), flags, attrs: Cow::Borrowed(attrs) }
+		Ok(Self { id: 0, path: path.to_byte_str()?, flags, attrs: Cow::Borrowed(attrs) })
 	}
 
 	pub fn len(&self) -> usize {

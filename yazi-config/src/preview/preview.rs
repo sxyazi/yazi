@@ -49,7 +49,7 @@ impl Preview {
 		}
 
 		self.cache_dir = if self.cache_dir.as_os_str().is_empty() {
-			Xdg::cache_dir()
+			Xdg::cache_dir().to_owned()
 		} else if let Some(p) = expand_url(Url::regular(&self.cache_dir)).into_path() {
 			p
 		} else {

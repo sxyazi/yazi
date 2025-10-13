@@ -11,6 +11,10 @@ pub struct Loc<'a> {
 	pub(super) urn:   usize,
 }
 
+impl Default for Loc<'_> {
+	fn default() -> Self { Self { inner: Path::new(""), uri: 0, urn: 0 } }
+}
+
 impl Deref for Loc<'_> {
 	type Target = Path;
 

@@ -2,6 +2,8 @@ use std::{borrow::Cow, ffi::{OsStr, OsString}, ops::Deref, path::{Path, PathBuf}
 
 use serde::{Deserialize, Serialize};
 
+use crate::Error;
+
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct ByteStr<'a>(Cow<'a, [u8]>);
 
@@ -19,32 +21,6 @@ impl<'a> From<&'a ByteStr<'a>> for ByteStr<'a> {
 	fn from(value: &'a ByteStr) -> Self { ByteStr(Cow::Borrowed(&value.0)) }
 }
 
-impl<'a> From<&'a OsStr> for ByteStr<'a> {
-	fn from(value: &'a OsStr) -> Self {
-		#[cfg(unix)]
-		{
-			use std::os::unix::ffi::OsStrExt;
-			ByteStr(Cow::Borrowed(value.as_bytes()))
-		}
-		#[cfg(windows)]
-		{
-			use os_str_bytes::OsStrBytes;
-			ByteStr(value.to_raw_bytes())
-		}
-	}
-}
-
-impl<'a> From<&'a Path> for ByteStr<'a> {
-	fn from(value: &'a Path) -> Self { ByteStr::from(value.as_os_str()) }
-}
-
-impl<'a, T> From<&'a T> for ByteStr<'a>
-where
-	T: AsRef<Path>,
-{
-	fn from(value: &'a T) -> Self { Self::from(value.as_ref()) }
-}
-
 impl PartialEq<&str> for ByteStr<'_> {
 	fn eq(&self, other: &&str) -> bool { self.0 == other.as_bytes() }
 }
@@ -58,8 +34,7 @@ impl<'a> ByteStr<'a> {
 		}
 		#[cfg(windows)]
 		{
-			use os_str_bytes::OsStrBytes;
-			OsStr::assert_from_raw_bytes(self.0.as_ref())
+			super::wtf::bytes_to_wide(self.0.as_ref())
 		}
 	}
 
@@ -71,8 +46,10 @@ impl<'a> ByteStr<'a> {
 		}
 		#[cfg(windows)]
 		{
-			use os_str_bytes::OsStrBytes;
-			OsStr::assert_from_raw_bytes(self.0).into_owned()
+			match super::wtf::bytes_to_wide(self.0.as_ref()) {
+				Cow::Borrowed(_) => self.0.into_owned(),
+				Cow::Owned(s) => s,
+			}
 		}
 	}
 
@@ -106,4 +83,32 @@ impl<'a> ByteStr<'a> {
 	pub(super) unsafe fn from_str_bytes_unchecked(bytes: &'a [u8]) -> Self {
 		Self(Cow::Borrowed(bytes))
 	}
+}
+
+// --- Traits
+pub trait ToByteStr<'a> {
+	fn to_byte_str(self) -> Result<ByteStr<'a>, Error>;
+}
+
+impl<'a, T> ToByteStr<'a> for &'a T
+where
+	T: AsRef<Path> + ?Sized,
+{
+	fn to_byte_str(self) -> Result<ByteStr<'a>, Error> {
+		#[cfg(unix)]
+		{
+			use std::os::unix::ffi::OsStrExt;
+			Ok(ByteStr(Cow::Borrowed(self.as_ref().as_os_str().as_bytes())))
+		}
+		#[cfg(windows)]
+		{
+			super::wtf::wide_to_bytes(self.as_ref())
+				.ok_or(Error::custom("failed to convert wide path to bytes"))
+				.map(ByteStr)
+		}
+	}
+}
+
+impl<'a> ToByteStr<'a> for &'a ByteStr<'a> {
+	fn to_byte_str(self) -> Result<ByteStr<'a>, Error> { Ok(ByteStr(Cow::Borrowed(&self.0))) }
 }

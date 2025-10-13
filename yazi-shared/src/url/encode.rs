@@ -5,11 +5,7 @@ use percent_encoding::{AsciiSet, CONTROLS, PercentEncode, percent_encode};
 use crate::{scheme::SchemeRef, url::{AsUrl, Url, UrlBuf}};
 
 #[derive(Clone, Copy)]
-pub struct Encode<'a>(Url<'a>);
-
-impl<'a> From<Url<'a>> for Encode<'a> {
-	fn from(value: Url<'a>) -> Self { Self(value) }
-}
+pub struct Encode<'a>(pub Url<'a>);
 
 impl<'a> From<&'a UrlBuf> for Encode<'a> {
 	fn from(value: &'a UrlBuf) -> Self { Self(value.as_url()) }
@@ -69,11 +65,7 @@ impl Display for Encode<'_> {
 
 // --- Tilded
 #[derive(Clone, Copy)]
-pub struct EncodeTilded<'a>(Url<'a>);
-
-impl<'a> From<Url<'a>> for EncodeTilded<'a> {
-	fn from(value: Url<'a>) -> Self { Self(value) }
-}
+pub struct EncodeTilded<'a>(pub Url<'a>);
 
 impl<'a> From<&'a UrlBuf> for EncodeTilded<'a> {
 	fn from(value: &'a UrlBuf) -> Self { Self(value.as_url()) }

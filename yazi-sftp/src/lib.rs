@@ -13,6 +13,8 @@ mod operator;
 mod packet;
 mod ser;
 mod session;
+#[cfg(windows)]
+mod wtf;
 
 pub use byte_str::*;
 pub(crate) use de::*;

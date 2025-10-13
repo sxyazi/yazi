@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::ByteStr;
+use crate::{ByteStr, Error, ToByteStr};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Rename<'a> {
@@ -10,12 +10,12 @@ pub struct Rename<'a> {
 }
 
 impl<'a> Rename<'a> {
-	pub fn new<F, T>(from: F, to: T) -> Self
+	pub fn new<F, T>(from: F, to: T) -> Result<Self, Error>
 	where
-		F: Into<ByteStr<'a>>,
-		T: Into<ByteStr<'a>>,
+		F: ToByteStr<'a>,
+		T: ToByteStr<'a>,
 	{
-		Self { id: 0, from: from.into(), to: to.into() }
+		Ok(Self { id: 0, from: from.to_byte_str()?, to: to.to_byte_str()? })
 	}
 
 	pub fn len(&self) -> usize { size_of_val(&self.id) + 4 + self.from.len() + 4 + self.to.len() }

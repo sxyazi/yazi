@@ -8,7 +8,7 @@ use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
 use tracing::error;
 use yazi_config::Priority;
-use yazi_fs::FilesOp;
+use yazi_fs::{FilesOp, FsHash64};
 use yazi_plugin::isolate;
 use yazi_shared::{event::CmdCow, url::{UrlBuf, UrlLike}};
 use yazi_vfs::provider;

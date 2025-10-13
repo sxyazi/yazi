@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, hash::{BuildHasher, Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
+use std::{ffi::OsStr, hash::{Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
 
 use yazi_shared::url::{Uri, UrlBuf, UrlLike, Urn};
 
@@ -24,9 +24,6 @@ impl File {
 		let cha = Cha::from_dummy(&url, r#type);
 		Self { url, cha, link_to: None }
 	}
-
-	#[inline]
-	pub fn hash_u64(&self) -> u64 { foldhash::fast::FixedState::default().hash_one(self) }
 
 	#[inline]
 	pub fn chdir(&self, wd: &Path) -> Self {

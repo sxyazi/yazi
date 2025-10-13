@@ -14,6 +14,3 @@ parking_lot = { workspace = true }
 russh       = { workspace = true }
 serde       = { workspace = true }
 tokio       = { workspace = true }
-
-[target."cfg(windows)".dependencies]
-os_str_bytes = { version = "7.1.1", default-features = false, features = [ "conversions" ] }
