@@ -18,6 +18,10 @@ impl Hash for Scheme {
 	fn hash<H: Hasher>(&self, state: &mut H) { self.as_ref().hash(state); }
 }
 
+impl PartialEq<SchemeRef<'_>> for Scheme {
+	fn eq(&self, other: &SchemeRef<'_>) -> bool { self.as_ref() == *other }
+}
+
 impl Scheme {
 	#[inline]
 	pub fn as_ref(&self) -> SchemeRef<'_> { self.into() }

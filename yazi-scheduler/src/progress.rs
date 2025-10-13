@@ -1,7 +1,7 @@
 use serde::Serialize;
 use yazi_parser::app::TaskSummary;
 
-use crate::{file::{FileProgDelete, FileProgHardlink, FileProgLink, FileProgPaste, FileProgTrash}, impl_from_prog, plugin::PluginProgEntry, prework::{PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
+use crate::{file::{FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgPaste, FileProgTrash, FileProgUpload}, impl_from_prog, plugin::PluginProgEntry, prework::{PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
 #[serde(tag = "kind")]
@@ -12,6 +12,8 @@ pub enum TaskProg {
 	FileHardlink(FileProgHardlink),
 	FileDelete(FileProgDelete),
 	FileTrash(FileProgTrash),
+	FileDownload(FileProgDownload),
+	FileUpload(FileProgUpload),
 	// Plugin
 	PluginEntry(PluginProgEntry),
 	// Prework
@@ -26,7 +28,7 @@ pub enum TaskProg {
 
 impl_from_prog! {
 	// File
-	FilePaste(FileProgPaste), FileLink(FileProgLink), FileHardlink(FileProgHardlink), FileDelete(FileProgDelete), FileTrash(FileProgTrash),
+	FilePaste(FileProgPaste), FileLink(FileProgLink), FileHardlink(FileProgHardlink), FileDelete(FileProgDelete), FileTrash(FileProgTrash), FileDownload(FileProgDownload), FileUpload(FileProgUpload),
 	// Plugin
 	PluginEntry(PluginProgEntry),
 	// Prework
@@ -44,6 +46,8 @@ impl From<TaskProg> for TaskSummary {
 			TaskProg::FileHardlink(p) => p.into(),
 			TaskProg::FileDelete(p) => p.into(),
 			TaskProg::FileTrash(p) => p.into(),
+			TaskProg::FileDownload(p) => p.into(),
+			TaskProg::FileUpload(p) => p.into(),
 			// Plugin
 			TaskProg::PluginEntry(p) => p.into(),
 			// Prework
@@ -67,6 +71,8 @@ impl TaskProg {
 			Self::FileHardlink(p) => p.running(),
 			Self::FileDelete(p) => p.running(),
 			Self::FileTrash(p) => p.running(),
+			Self::FileDownload(p) => p.running(),
+			Self::FileUpload(p) => p.running(),
 			// Plugin
 			Self::PluginEntry(p) => p.running(),
 			// Prework
@@ -88,6 +94,8 @@ impl TaskProg {
 			Self::FileHardlink(p) => p.success(),
 			Self::FileDelete(p) => p.success(),
 			Self::FileTrash(p) => p.success(),
+			Self::FileDownload(p) => p.success(),
+			Self::FileUpload(p) => p.success(),
 			// Plugin
 			Self::PluginEntry(p) => p.success(),
 			// Prework
@@ -109,6 +117,8 @@ impl TaskProg {
 			Self::FileHardlink(p) => p.failed(),
 			Self::FileDelete(p) => p.failed(),
 			Self::FileTrash(p) => p.failed(),
+			Self::FileDownload(p) => p.failed(),
+			Self::FileUpload(p) => p.failed(),
 			// Plugin
 			Self::PluginEntry(p) => p.failed(),
 			// Prework
@@ -130,6 +140,8 @@ impl TaskProg {
 			Self::FileHardlink(p) => p.cleaned(),
 			Self::FileDelete(p) => p.cleaned(),
 			Self::FileTrash(p) => p.cleaned(),
+			Self::FileDownload(p) => p.cleaned(),
+			Self::FileUpload(p) => p.cleaned(),
 			// Plugin
 			Self::PluginEntry(p) => p.cleaned(),
 			// Prework
@@ -151,6 +163,8 @@ impl TaskProg {
 			Self::FileHardlink(p) => p.percent(),
 			Self::FileDelete(p) => p.percent(),
 			Self::FileTrash(p) => p.percent(),
+			Self::FileDownload(p) => p.percent(),
+			Self::FileUpload(p) => p.percent(),
 			// Plugin
 			Self::PluginEntry(p) => p.percent(),
 			// Prework
@@ -172,6 +186,8 @@ impl TaskProg {
 			Self::FileHardlink(_) => true,
 			Self::FileDelete(_) => true,
 			Self::FileTrash(_) => true,
+			Self::FileDownload(_) => true,
+			Self::FileUpload(_) => true,
 			// Plugin
 			Self::PluginEntry(_) => true,
 			// Prework

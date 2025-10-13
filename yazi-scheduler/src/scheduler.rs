@@ -13,7 +13,7 @@ use yazi_shared::{Id, Throttle, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{must_be_dir, provider, unique_name};
 
 use super::{Ongoing, TaskOp};
-use crate::{HIGH, LOW, NORMAL, TaskIn, TaskOps, TaskOut, file::{File, FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash, FileOutDelete, FileOutHardlink, FileOutPaste, FileProgDelete, FileProgHardlink, FileProgLink, FileProgPaste, FileProgTrash}, plugin::{Plugin, PluginInEntry, PluginProgEntry}, prework::{Prework, PreworkInFetch, PreworkInLoad, PreworkInSize, PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{Process, ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessOutBg, ProcessOutBlock, ProcessOutOrphan, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
+use crate::{HIGH, LOW, NORMAL, TaskIn, TaskOps, TaskOut, file::{File, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInPaste, FileInTrash, FileOutDelete, FileOutDownload, FileOutHardlink, FileOutPaste, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgPaste, FileProgTrash}, plugin::{Plugin, PluginInEntry, PluginProgEntry}, prework::{Prework, PreworkInFetch, PreworkInLoad, PreworkInSize, PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{Process, ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessOutBg, ProcessOutBlock, ProcessOutOrphan, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
 
 pub struct Scheduler {
 	file:        Arc<File>,
@@ -208,21 +208,21 @@ impl Scheduler {
 		self.send_micro(id, LOW, async move { file.trash(FileInTrash { id, target }) })
 	}
 
-	pub fn file_download(&self, from: UrlBuf, done: Option<oneshot::Sender<bool>>) {
+	pub fn file_download(&self, url: UrlBuf, done: Option<oneshot::Sender<bool>>) {
 		let mut ongoing = self.ongoing.lock();
-		let id = ongoing.add::<FileProgPaste>(format!("Download {}", from.display()));
+		let id = ongoing.add::<FileProgDownload>(format!("Download {}", url.display()));
 
 		if let Some(tx) = done {
 			ongoing.hooks.add_sync(id, move |canceled| _ = tx.send(canceled));
 		}
 
-		let Some(to) = from.cache().map(UrlBuf::from) else {
-			return self.ops.out(id, FileOutPaste::Fail("Cannot download non-remote file".to_owned()));
+		if !url.scheme.is_virtual() {
+			return self.ops.out(id, FileOutDownload::Fail("Cannot download non-remote file".to_owned()));
 		};
 
 		let file = self.file.clone();
 		self.send_micro(id, LOW, async move {
-			file.paste(FileInPaste { id, from, to, cha: None, cut: false, follow: false, retry: 0 }).await
+			file.download(FileInDownload { id, url, cha: None, retry: 0 }).await
 		});
 	}
 
@@ -397,6 +397,8 @@ impl Scheduler {
 							TaskIn::FileHardlink(r#in) => file.hardlink_do(r#in).await.map_err(Into::into),
 							TaskIn::FileDelete(r#in) => file.delete_do(r#in).await.map_err(Into::into),
 							TaskIn::FileTrash(r#in) => file.trash_do(r#in).await.map_err(Into::into),
+							TaskIn::FileDownload(r#in) => file.download_do(r#in).await.map_err(Into::into),
+							TaskIn::FileUpload(r#in) => file.upload_do(r#in).await.map_err(Into::into),
 							// Plugin
 							TaskIn::PluginEntry(r#in) => plugin.macro_do(r#in).await.map_err(Into::into),
 							// Prework

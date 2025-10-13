@@ -33,6 +33,5 @@ impl IntoStringLossy for Cow<'_, OsStr> {
 }
 
 impl IntoStringLossy for &UrlBuf {
-	// FIXME: remove
 	fn into_string_lossy(self) -> String { self.os_str().into_string_lossy() }
 }

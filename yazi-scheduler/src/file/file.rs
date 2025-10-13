@@ -1,16 +1,16 @@
-use std::{borrow::Cow, collections::VecDeque};
+use std::{borrow::Cow, collections::VecDeque, hash::{BuildHasher, Hash, Hasher}, path::{Path, PathBuf}};
 
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow};
 use tokio::{io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::YAZI;
-use yazi_fs::{cha::Cha, ok_or_not_found, path::{path_relative_to, skip_url}, provider::{DirReader, FileHolder}};
+use yazi_fs::{FsHash128, FsUrl, cha::Cha, ok_or_not_found, path::{path_relative_to, skip_url}, provider::{DirReader, FileHolder, Provider, local::Local}};
 use yazi_macro::ok_or_not_found;
-use yazi_shared::url::{AsUrl, UrlBuf, UrlCow, UrlLike};
-use yazi_vfs::{VfsCha, copy_with_progress, maybe_exists, provider::{self, DirEntry}};
+use yazi_shared::{timestamp_us, url::{AsUrl, Url, UrlCow, UrlLike}};
+use yazi_vfs::{VfsCha, copy_with_progress, maybe_exists, provider::{self, DirEntry}, unique_name};
 
 use super::{FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash};
-use crate::{LOW, NORMAL, TaskIn, TaskOp, TaskOps, file::{FileOutDelete, FileOutDeleteDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutPaste, FileOutPasteDo, FileOutTrash}};
+use crate::{LOW, NORMAL, TaskIn, TaskOp, TaskOps, file::{FileInDownload, FileInUpload, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutPaste, FileOutPasteDo, FileOutTrash, FileOutUpload, FileOutUploadDo}};
 
 pub(crate) struct File {
 	ops:     TaskOps,
@@ -31,7 +31,7 @@ impl File {
 		}
 
 		if task.cha.is_none() {
-			task.cha = Some(Self::cha(&task.from, task.follow).await?);
+			task.cha = Some(Self::cha(&task.from, task.follow, None).await?);
 		}
 
 		let cha = task.cha.unwrap();
@@ -73,7 +73,7 @@ impl File {
 			let mut it = continue_unless_ok!(provider::read_dir(&src).await);
 			while let Ok(Some(entry)) = it.next().await {
 				let from = entry.url();
-				let cha = continue_unless_ok!(Self::entry_cha(entry, &from, task.follow).await);
+				let cha = continue_unless_ok!(Self::cha(&from, task.follow, Some(entry)).await);
 
 				if cha.is_dir() {
 					dirs.push_back(from);
@@ -154,7 +154,7 @@ impl File {
 		provider::symlink(&src, &task.to, async || {
 			Ok(match task.cha {
 				Some(cha) => cha.is_dir(),
-				None => Self::cha(&task.from, task.resolve).await?.is_dir(),
+				None => Self::cha(&task.from, task.resolve, None).await?.is_dir(),
 			})
 		})
 		.await?;
@@ -167,7 +167,7 @@ impl File {
 
 	pub(crate) async fn hardlink(&self, mut task: FileInHardlink) -> Result<(), FileOutHardlink> {
 		if task.cha.is_none() {
-			task.cha = Some(Self::cha(&task.from, task.follow).await?);
+			task.cha = Some(Self::cha(&task.from, task.follow, None).await?);
 		}
 
 		let cha = task.cha.unwrap();
@@ -205,7 +205,7 @@ impl File {
 			let mut it = continue_unless_ok!(provider::read_dir(&src).await);
 			while let Ok(Some(entry)) = it.next().await {
 				let from = entry.url();
-				let cha = continue_unless_ok!(Self::entry_cha(entry, &from, task.follow).await);
+				let cha = continue_unless_ok!(Self::cha(&from, task.follow, Some(entry)).await);
 
 				if cha.is_dir() {
 					dirs.push_back(from);
@@ -288,20 +288,188 @@ impl File {
 		Ok(self.ops.out(task.id, FileOutTrash::Succ))
 	}
 
-	#[inline]
-	async fn cha(url: impl AsUrl, follow: bool) -> io::Result<Cha> {
-		let url = url.as_url();
-		let cha = provider::symlink_metadata(url).await?;
+	pub(crate) async fn download(&self, mut task: FileInDownload) -> Result<(), FileOutDownload> {
+		if task.cha.is_none() {
+			task.cha = Some(Self::cha(&task.url, true, None).await?);
+		}
+
+		let cha = task.cha.unwrap();
+		if cha.is_orphan() {
+			Err(io::Error::new(NotFound, "Source of symlink doesn't exist"))?;
+		}
+
+		if !cha.is_dir() {
+			let id = task.id;
+			self.ops.out(id, FileOutDownload::New(cha.len));
+			self.queue(task, LOW);
+			return Ok(self.ops.out(id, FileOutDownload::Succ));
+		}
+
+		macro_rules! continue_unless_ok {
+			($result:expr) => {
+				match $result {
+					Ok(v) => v,
+					Err(e) => {
+						self.ops.out(task.id, FileOutDownload::Deform(e.to_string()));
+						continue;
+					}
+				}
+			};
+		}
+
+		let mut dirs = VecDeque::from([task.url.clone()]);
+		while let Some(src) = dirs.pop_front() {
+			let cache = continue_unless_ok!(src.cache().ok_or("Cannot determine cache path"));
+			continue_unless_ok!(match Local.create_dir(&cache).await {
+				Err(e) if e.kind() != AlreadyExists => Err(e),
+				_ => Ok(()),
+			});
+
+			let mut it = continue_unless_ok!(provider::read_dir(&src).await);
+			while let Ok(Some(entry)) = it.next().await {
+				let from = entry.url();
+				let cha = continue_unless_ok!(Self::cha(&from, true, Some(entry)).await);
+
+				if cha.is_orphan() {
+					continue_unless_ok!(Err("Source of symlink doesn't exist"));
+				} else if cha.is_dir() {
+					dirs.push_back(from);
+				} else {
+					self.ops.out(task.id, FileOutDownload::New(cha.len));
+					self.queue(task.spawn(from, cha), LOW);
+				}
+			}
+		}
+
+		Ok(self.ops.out(task.id, FileOutDownload::Succ))
+	}
+
+	pub(crate) async fn download_do(
+		&self,
+		mut task: FileInDownload,
+	) -> Result<(), FileOutDownloadDo> {
+		let cha = task.cha.unwrap();
+
+		let cache = task.url.cache().context("Cannot determine cache path")?;
+		let cache_tmp = Self::tmp(&cache).await?;
+
+		let mut it = copy_with_progress(&task.url, Url::regular(&cache_tmp), cha);
+		while let Some(res) = it.recv().await {
+			match res {
+				Ok(0) => {
+					Local.rename(&cache_tmp, &cache).await?;
+
+					let lock = task.url.cache_lock().context("Cannot determine cache lock")?;
+					Local.write(lock, format!("{:x}", cha.hash_u128())).await?;
+
+					break;
+				}
+				Ok(n) => self.ops.out(task.id, FileOutDownloadDo::Adv(n)),
+				Err(e) if e.kind() == NotFound => {
+					warn!("Download task partially done: {task:?}");
+					break;
+				}
+				// Operation not permitted (os error 1)
+				// Attribute not found (os error 93)
+				Err(e)
+					if task.retry < YAZI.tasks.bizarre_retry
+						&& matches!(e.raw_os_error(), Some(1) | Some(93)) =>
+				{
+					task.retry += 1;
+					self.ops.out(task.id, FileOutDownloadDo::Log(format!("Retrying due to error: {e}")));
+					return Ok(self.queue(task, LOW));
+				}
+				Err(e) => Err(e)?,
+			}
+		}
+		Ok(self.ops.out(task.id, FileOutDownloadDo::Succ))
+	}
+
+	pub(crate) async fn upload(&self, mut task: FileInUpload) -> Result<(), FileOutUpload> {
+		todo!();
+		// if task.cha.is_none() {
+		// 	task.cha = Some(Self::cha(Url::regular(&task.path), true, None).await?);
+		// }
+
+		// let cha = task.cha.unwrap();
+		// if cha.is_orphan() {
+		// 	Err(io::Error::new(NotFound, "Source of symlink doesn't exist"))?;
+		// }
+
+		// if !cha.is_dir() {
+		// 	let id = task.id;
+		// 	self.ops.out(id, FileOutUpload::New(cha.len));
+		// 	self.queue(task, LOW);
+		// 	return Ok(self.ops.out(id, FileOutUpload::Succ));
+		// }
+
+		// macro_rules! continue_unless_ok {
+		// 	($result:expr) => {
+		// 		match $result {
+		// 			Ok(v) => v,
+		// 			Err(e) => {
+		// 				self.ops.out(task.id, FileOutUpload::Deform(e.to_string()));
+		// 				continue;
+		// 			}
+		// 		}
+		// 	};
+		// }
+
+		// let mut dirs = VecDeque::from([task.path.clone()]);
+		// while let Some(src) = dirs.pop_front() {
+		// 	let cache = continue_unless_ok!(src.cache().ok_or("Cannot determine
+		// cache path")); 	continue_unless_ok!(match
+		// Local.create_dir(&cache).await { 		Err(e) if e.kind() != AlreadyExists
+		// => Err(e), 		_ => Ok(()),
+		// 	});
+
+		// 	let mut it = continue_unless_ok!(provider::read_dir(&src).await);
+		// 	while let Ok(Some(entry)) = it.next().await {
+		// 		let from = entry.url();
+		// 		let cha = continue_unless_ok!(Self::cha(&from, true,
+		// Some(entry)).await);
+
+		// 		if cha.is_orphan() {
+		// 			continue_unless_ok!(Err("Source of symlink doesn't exist"));
+		// 		} else if cha.is_dir() {
+		// 			dirs.push_back(from);
+		// 		} else {
+		// 			self.ops.out(task.id, FileOutUpload::New(cha.len));
+		// 			self.queue(task.spawn(from, cha), LOW);
+		// 		}
+		// 	}
+		// }
+
+		// Ok(self.ops.out(task.id, FileOutUpload::Succ))
+	}
+
+	pub(crate) async fn upload_do(&self, mut task: FileInUpload) -> Result<(), FileOutUploadDo> {
+		todo!()
+	}
+
+	async fn cha<U>(url: U, follow: bool, entry: Option<DirEntry>) -> io::Result<Cha>
+	where
+		U: AsUrl,
+	{
+		let cha = if let Some(entry) = entry {
+			entry.metadata().await?
+		} else {
+			provider::symlink_metadata(url.as_url()).await?
+		};
 		Ok(if follow { Cha::from_follow(url, cha).await } else { cha })
 	}
 
-	#[inline]
-	async fn entry_cha(entry: DirEntry, url: &UrlBuf, follow: bool) -> io::Result<Cha> {
-		Ok(if follow {
-			Cha::from_follow(url, entry.metadata().await?).await
-		} else {
-			entry.metadata().await?
-		})
+	async fn tmp(path: &Path) -> io::Result<PathBuf> {
+		let Some(parent) = path.parent() else {
+			Err(io::Error::new(io::ErrorKind::InvalidInput, "Path has no parent"))?
+		};
+
+		let mut h = foldhash::fast::FixedState::default().build_hasher();
+		path.hash(&mut h);
+		timestamp_us().hash(&mut h);
+
+		let u = parent.join(format!(".{:x}.%tmp", h.finish())).into();
+		Ok(unique_name(u, async { false }).await?.into_path().expect("a path"))
 	}
 }
 

@@ -13,7 +13,7 @@ impl Actor for UpdateSucceed {
 	const NAME: &str = "update_succeed";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		cx.mgr.watcher.push_files(opt.urls);
+		cx.mgr.watcher.report(opt.urls);
 		succ!();
 	}
 }

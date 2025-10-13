@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::ByteStr;
+use crate::{ByteStr, Error, ToByteStr};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Lstat<'a> {
@@ -9,7 +9,12 @@ pub struct Lstat<'a> {
 }
 
 impl Lstat<'_> {
-	pub fn new<'a>(path: impl Into<ByteStr<'a>>) -> Lstat<'a> { Lstat { id: 0, path: path.into() } }
+	pub fn new<'a, P>(path: P) -> Result<Lstat<'a>, Error>
+	where
+		P: ToByteStr<'a>,
+	{
+		Ok(Lstat { id: 0, path: path.to_byte_str()? })
+	}
 
 	pub fn len(&self) -> usize { size_of_val(&self.id) + 4 + self.path.len() }
 }

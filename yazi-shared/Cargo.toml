@@ -21,7 +21,7 @@ hashbrown        = { workspace = true }
 memchr           = "2.7.6"
 ordered-float    = { workspace = true }
 parking_lot      = { workspace = true }
-percent-encoding = "2.3.2"
+percent-encoding = { workspace = true }
 serde            = { workspace = true }
 tokio            = { workspace = true }
 

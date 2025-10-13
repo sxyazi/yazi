@@ -13,5 +13,5 @@ impl Twox128 {
 impl Hasher for Twox128 {
 	fn write(&mut self, bytes: &[u8]) { self.0.write(bytes) }
 
-	fn finish(&self) -> u64 { unreachable!() }
+	fn finish(&self) -> u64 { unimplemented!() }
 }

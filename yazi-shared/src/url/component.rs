@@ -81,7 +81,7 @@ impl<'a> Components<'a> {
 			return path.as_os_str().into();
 		}
 
-		let mut s = OsString::from(Encode::from(self.url).to_string());
+		let mut s = OsString::from(Encode(self.url).to_string());
 		s.reserve_exact(path.as_os_str().len());
 		s.push(path);
 		s.into()

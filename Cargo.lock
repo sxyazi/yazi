@@ -2350,12 +2350,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "os_str_bytes"
-version = "7.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "63eceb7b5d757011a87d08eb2123db15d87fb0c281f65d101ce30a1e96c3ad5c"
-
-[[package]]
 name = "p256"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4798,6 +4792,7 @@ name = "yazi-fm"
 version = "25.9.15"
 dependencies = [
  "anyhow",
+ "base64",
  "better-panic",
  "crossterm 0.29.0",
  "fdlimit",
@@ -4839,6 +4834,7 @@ version = "25.9.15"
 dependencies = [
  "anyhow",
  "arc-swap",
+ "base64",
  "bitflags 2.9.4",
  "core-foundation-sys",
  "dirs",
@@ -4847,6 +4843,7 @@ dependencies = [
  "libc",
  "objc",
  "parking_lot",
+ "percent-encoding",
  "regex",
  "scopeguard",
  "serde",
@@ -4859,6 +4856,7 @@ dependencies = [
  "yazi-ffi",
  "yazi-macro",
  "yazi-shared",
+ "yazi-shim",
 ]
 
 [[package]]
@@ -4923,6 +4921,7 @@ dependencies = [
  "yazi-prebuilt",
  "yazi-proxy",
  "yazi-shared",
+ "yazi-shim",
  "yazi-vfs",
  "yazi-widgets",
 ]
@@ -4951,6 +4950,7 @@ version = "25.9.15"
 dependencies = [
  "anyhow",
  "async-priority-channel",
+ "foldhash 0.2.0",
  "futures",
  "hashbrown 0.16.0",
  "libc",
@@ -4979,7 +4979,6 @@ name = "yazi-sftp"
 version = "0.1.0"
 dependencies = [
  "bitflags 2.9.4",
- "os_str_bytes",
  "parking_lot",
  "russh",
  "serde",
@@ -5004,6 +5003,14 @@ dependencies = [
  "tokio",
  "uzers",
  "windows-sys 0.61.1",
+ "yazi-macro",
+]
+
+[[package]]
+name = "yazi-shim"
+version = "25.9.15"
+dependencies = [
+ "twox-hash",
  "yazi-macro",
 ]
 
@@ -5045,12 +5052,15 @@ name = "yazi-watcher"
 version = "25.9.15"
 dependencies = [
  "anyhow",
+ "base64",
  "hashbrown 0.16.0",
  "notify",
  "parking_lot",
+ "percent-encoding",
  "tokio",
  "tokio-stream",
  "tracing",
+ "twox-hash",
  "yazi-adapter",
  "yazi-dds",
  "yazi-fs",

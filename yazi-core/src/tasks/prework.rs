@@ -1,5 +1,5 @@
 use yazi_config::{YAZI, plugin::MAX_PREWORKERS};
-use yazi_fs::{File, Files, SortBy};
+use yazi_fs::{File, Files, FsHash64, SortBy};
 
 use super::Tasks;
 use crate::mgr::Mimetype;

@@ -2,7 +2,7 @@ use std::{borrow::Cow, fmt::Debug};
 
 use serde::{Deserialize, Serialize};
 
-use crate::ByteStr;
+use crate::{ByteStr, Error, ToByteStr};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Extended<'a, D> {
@@ -49,12 +49,12 @@ pub struct ExtendedHardlink<'a> {
 }
 
 impl<'a> ExtendedHardlink<'a> {
-	pub fn new<O, L>(original: O, link: L) -> Self
+	pub fn new<O, L>(original: O, link: L) -> Result<Self, Error>
 	where
-		O: Into<ByteStr<'a>>,
-		L: Into<ByteStr<'a>>,
+		O: ToByteStr<'a>,
+		L: ToByteStr<'a>,
 	{
-		Self { original: original.into(), link: link.into() }
+		Ok(Self { original: original.to_byte_str()?, link: link.to_byte_str()? })
 	}
 }
 

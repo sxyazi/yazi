@@ -3,7 +3,7 @@ use std::{ops::Deref, path::PathBuf, sync::Arc};
 use russh::{ChannelStream, client::Msg};
 use tokio::sync::oneshot;
 
-use crate::{ByteStr, Error, Packet, Session, fs::{Attrs, File, Flags, ReadDir}, requests, responses};
+use crate::{ByteStr, Error, Packet, Session, ToByteStr, fs::{Attrs, File, Flags, ReadDir}, requests, responses};
 
 pub struct Operator(Arc<Session>);
 
@@ -28,9 +28,9 @@ impl Operator {
 
 	pub async fn open<'a, P>(&self, path: P, flags: Flags, attrs: &'a Attrs) -> Result<File, Error>
 	where
-		P: Into<ByteStr<'a>>,
+		P: ToByteStr<'a>,
 	{
-		let handle: responses::Handle = self.send(requests::Open::new(path, flags, attrs)).await?;
+		let handle: responses::Handle = self.send(requests::Open::new(path, flags, attrs)?).await?;
 
 		Ok(File::new(&self.0, handle.handle))
 	}
@@ -59,9 +59,9 @@ impl Operator {
 
 	pub async fn lstat<'a, P>(&self, path: P) -> Result<Attrs, Error>
 	where
-		P: Into<ByteStr<'a>>,
+		P: ToByteStr<'a>,
 	{
-		let attrs: responses::Attrs = self.send(requests::Lstat::new(path)).await?;
+		let attrs: responses::Attrs = self.send(requests::Lstat::new(path)?).await?;
 		Ok(attrs.attrs)
 	}
 
@@ -72,9 +72,9 @@ impl Operator {
 
 	pub async fn setstat<'a, P>(&self, path: P, attrs: Attrs) -> Result<(), Error>
 	where
-		P: Into<ByteStr<'a>>,
+		P: ToByteStr<'a>,
 	{
-		let status: responses::Status = self.send(requests::SetStat::new(path, attrs)).await?;
+		let status: responses::Status = self.send(requests::SetStat::new(path, attrs)?).await?;
 		status.into()
 	}
 
@@ -83,42 +83,45 @@ impl Operator {
 		status.into()
 	}
 
-	pub async fn read_dir<'a>(&'a self, dir: impl Into<ByteStr<'a>>) -> Result<ReadDir, Error> {
-		let dir: ByteStr = dir.into();
-		let handle: responses::Handle = self.send(requests::OpenDir::new(&dir)).await?;
+	pub async fn read_dir<'a, P>(&'a self, dir: P) -> Result<ReadDir, Error>
+	where
+		P: ToByteStr<'a>,
+	{
+		let dir: ByteStr = dir.to_byte_str()?;
+		let handle: responses::Handle = self.send(requests::OpenDir::new(&dir)?).await?;
 
 		Ok(ReadDir::new(&self.0, dir, handle.handle))
 	}
 
 	pub async fn remove<'a, P>(&self, path: P) -> Result<(), Error>
 	where
-		P: Into<ByteStr<'a>>,
+		P: ToByteStr<'a>,
 	{
-		let status: responses::Status = self.send(requests::Remove::new(path)).await?;
+		let status: responses::Status = self.send(requests::Remove::new(path)?).await?;
 		status.into()
 	}
 
 	pub async fn mkdir<'a, P>(&self, path: P, attrs: Attrs) -> Result<(), Error>
 	where
-		P: Into<ByteStr<'a>>,
+		P: ToByteStr<'a>,
 	{
-		let status: responses::Status = self.send(requests::Mkdir::new(path, attrs)).await?;
+		let status: responses::Status = self.send(requests::Mkdir::new(path, attrs)?).await?;
 		status.into()
 	}
 
 	pub async fn rmdir<'a, P>(&self, path: P) -> Result<(), Error>
 	where
-		P: Into<ByteStr<'a>>,
+		P: ToByteStr<'a>,
 	{
-		let status: responses::Status = self.send(requests::Rmdir::new(path)).await?;
+		let status: responses::Status = self.send(requests::Rmdir::new(path)?).await?;
 		status.into()
 	}
 
 	pub async fn realpath<'a, P>(&self, path: P) -> Result<PathBuf, Error>
 	where
-		P: Into<ByteStr<'a>>,
+		P: ToByteStr<'a>,
 	{
-		let mut name: responses::Name = self.send(requests::Realpath::new(path)).await?;
+		let mut name: responses::Name = self.send(requests::Realpath::new(path)?).await?;
 		if name.items.is_empty() {
 			Err(Error::custom("realpath returned no names"))
 		} else {
@@ -128,26 +131,26 @@ impl Operator {
 
 	pub async fn stat<'a, P>(&self, path: P) -> Result<Attrs, Error>
 	where
-		P: Into<ByteStr<'a>>,
+		P: ToByteStr<'a>,
 	{
-		let attrs: responses::Attrs = self.send(requests::Stat::new(path)).await?;
+		let attrs: responses::Attrs = self.send(requests::Stat::new(path)?).await?;
 		Ok(attrs.attrs)
 	}
 
 	pub async fn rename<'a, F, T>(&self, from: F, to: T) -> Result<(), Error>
 	where
-		F: Into<ByteStr<'a>>,
-		T: Into<ByteStr<'a>>,
+		F: ToByteStr<'a>,
+		T: ToByteStr<'a>,
 	{
-		let status: responses::Status = self.send(requests::Rename::new(from, to)).await?;
+		let status: responses::Status = self.send(requests::Rename::new(from, to)?).await?;
 		status.into()
 	}
 
 	pub async fn readlink<'a, P>(&self, path: P) -> Result<PathBuf, Error>
 	where
-		P: Into<ByteStr<'a>>,
+		P: ToByteStr<'a>,
 	{
-		let mut name: responses::Name = self.send(requests::Readlink::new(path)).await?;
+		let mut name: responses::Name = self.send(requests::Readlink::new(path)?).await?;
 		if name.items.is_empty() {
 			Err(Error::custom("readlink returned no names"))
 		} else {
@@ -157,10 +160,10 @@ impl Operator {
 
 	pub async fn symlink<'a, L, O>(&self, original: O, link: L) -> Result<(), Error>
 	where
-		O: Into<ByteStr<'a>>,
-		L: Into<ByteStr<'a>>,
+		O: ToByteStr<'a>,
+		L: ToByteStr<'a>,
 	{
-		let status: responses::Status = self.send(requests::Symlink::new(original, link)).await?;
+		let status: responses::Status = self.send(requests::Symlink::new(original, link)?).await?;
 		status.into()
 	}
 
@@ -175,14 +178,14 @@ impl Operator {
 
 	pub async fn hardlink<'a, O, L>(&self, original: O, link: L) -> Result<(), Error>
 	where
-		O: Into<ByteStr<'a>>,
-		L: Into<ByteStr<'a>>,
+		O: ToByteStr<'a>,
+		L: ToByteStr<'a>,
 	{
 		if self.extensions.lock().get("hardlink@openssh.com").is_none_or(|s| s != "1") {
 			return Err(Error::Unsupported);
 		}
 
-		let data = requests::ExtendedHardlink::new(original, link);
+		let data = requests::ExtendedHardlink::new(original, link)?;
 		let status: responses::Status =
 			self.send(requests::Extended::new("hardlink@openssh.com", data)).await?;
 		status.into()

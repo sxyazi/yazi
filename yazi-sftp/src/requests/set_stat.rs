@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{ByteStr, fs::Attrs};
+use crate::{ByteStr, Error, ToByteStr, fs::Attrs};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SetStat<'a> {
@@ -12,8 +12,11 @@ pub struct SetStat<'a> {
 }
 
 impl<'a> SetStat<'a> {
-	pub fn new(path: impl Into<ByteStr<'a>>, attrs: Attrs) -> Self {
-		Self { id: 0, path: path.into(), attrs }
+	pub fn new<P>(path: P, attrs: Attrs) -> Result<Self, Error>
+	where
+		P: ToByteStr<'a>,
+	{
+		Ok(Self { id: 0, path: path.to_byte_str()?, attrs })
 	}
 
 	pub fn len(&self) -> usize { size_of_val(&self.id) + 4 + self.path.len() + self.attrs.len() }

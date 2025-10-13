@@ -265,3 +265,153 @@ impl FileOutTrash {
 		}
 	}
 }
+
+// --- Download
+#[derive(Debug)]
+pub(crate) enum FileOutDownload {
+	New(u64),
+	Deform(String),
+	Succ,
+	Fail(String),
+}
+
+impl From<std::io::Error> for FileOutDownload {
+	fn from(value: std::io::Error) -> Self { Self::Fail(value.to_string()) }
+}
+
+impl FileOutDownload {
+	pub(crate) fn reduce(self, task: &mut Task) {
+		let TaskProg::FileDownload(prog) = &mut task.prog else { return };
+		match self {
+			Self::New(bytes) => {
+				prog.total_files += 1;
+				prog.total_bytes += bytes;
+			}
+			Self::Deform(reason) => {
+				prog.total_files += 1;
+				prog.failed_files += 1;
+				task.log(reason);
+			}
+			Self::Succ => {
+				prog.collected = Some(true);
+			}
+			Self::Fail(reason) => {
+				prog.collected = Some(false);
+				task.log(reason);
+			}
+		}
+	}
+}
+
+// --- DownloadDo
+#[derive(Debug)]
+pub(crate) enum FileOutDownloadDo {
+	Adv(u64),
+	Log(String),
+	Succ,
+	Fail(String),
+}
+
+impl From<std::io::Error> for FileOutDownloadDo {
+	fn from(value: std::io::Error) -> Self { Self::Fail(value.to_string()) }
+}
+
+impl From<anyhow::Error> for FileOutDownloadDo {
+	fn from(value: anyhow::Error) -> Self { Self::Fail(value.to_string()) }
+}
+
+impl FileOutDownloadDo {
+	pub(crate) fn reduce(self, task: &mut Task) {
+		let TaskProg::FileDownload(prog) = &mut task.prog else { return };
+		match self {
+			Self::Adv(size) => {
+				prog.processed_bytes += size;
+			}
+			Self::Log(line) => {
+				task.log(line);
+			}
+			Self::Succ => {
+				prog.success_files += 1;
+			}
+			Self::Fail(reason) => {
+				prog.failed_files += 1;
+				task.log(reason);
+			}
+		}
+	}
+}
+
+// --- Upload
+#[derive(Debug)]
+pub(crate) enum FileOutUpload {
+	New(u64),
+	Deform(String),
+	Succ,
+	Fail(String),
+}
+
+impl From<std::io::Error> for FileOutUpload {
+	fn from(value: std::io::Error) -> Self { Self::Fail(value.to_string()) }
+}
+
+impl FileOutUpload {
+	pub(crate) fn reduce(self, task: &mut Task) {
+		let TaskProg::FileUpload(prog) = &mut task.prog else { return };
+		match self {
+			Self::New(bytes) => {
+				prog.total_files += 1;
+				prog.total_bytes += bytes;
+			}
+			Self::Deform(reason) => {
+				prog.total_files += 1;
+				prog.failed_files += 1;
+				task.log(reason);
+			}
+			Self::Succ => {
+				prog.collected = Some(true);
+			}
+			Self::Fail(reason) => {
+				prog.collected = Some(false);
+				task.log(reason);
+			}
+		}
+	}
+}
+
+// --- UploadDo
+#[derive(Debug)]
+pub(crate) enum FileOutUploadDo {
+	Adv(u64),
+	Log(String),
+	Succ,
+	Fail(String),
+}
+
+impl From<std::io::Error> for FileOutUploadDo {
+	fn from(value: std::io::Error) -> Self { Self::Fail(value.to_string()) }
+}
+
+impl From<anyhow::Error> for FileOutUploadDo {
+	fn from(value: anyhow::Error) -> Self { Self::Fail(value.to_string()) }
+}
+
+impl FileOutUploadDo {
+	pub(crate) fn reduce(self, task: &mut Task) {
+		let TaskProg::FileUpload(prog) = &mut task.prog else { return };
+		match self {
+			Self::Adv(size) => {
+				prog.processed_bytes += size;
+			}
+			Self::Log(line) => {
+				task.log(line);
+			}
+			Self::Succ => {
+				prog.success_files += 1;
+			}
+			Self::Fail(reason) => {
+				prog.failed_files += 1;
+				task.log(reason);
+			}
+		}
+	}
+}

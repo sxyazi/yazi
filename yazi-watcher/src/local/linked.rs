@@ -1,6 +1,6 @@
 use std::{iter, ops::{Deref, DerefMut}, path::{Path, PathBuf}};
 
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashMap;
 use parking_lot::RwLock;
 use yazi_shared::url::Url;
 
@@ -46,25 +46,22 @@ impl Linked {
 		}
 	}
 
-	pub(super) async fn sync(linked: &'static RwLock<Self>, watched: &'static RwLock<Watched>) {
+	pub(crate) async fn sync(linked: &'static RwLock<Self>, watched: &'static RwLock<Watched>) {
 		tokio::task::spawn_blocking(move || {
-			let mut new: HashSet<_> = watched.read().paths().map(ToOwned::to_owned).collect();
-			let mut linked = linked.write();
+			let watched = watched.read();
 
-			linked.retain(|k, _| new.remove(k));
-			for from in new {
-				linked.insert(from, PathBuf::new());
-			}
+			// Remove entries that are no longer watched
+			linked.write().retain(|from, _| watched.contains(Url::regular(from)));
 
-			for (from, to) in linked.iter_mut() {
+			// Update existing entries and remove broken links
+			for from in watched.paths() {
 				match std::fs::canonicalize(from) {
-					Ok(c) if c != *from && watched.read().contains(Url::regular(from)) => *to = c,
-					Ok(_) => *to = PathBuf::new(),
-					Err(e) if e.kind() == std::io::ErrorKind::NotFound => *to = PathBuf::new(),
+					Ok(to) if to != *from => _ = linked.write().entry_ref(from).insert(to),
+					Ok(_) => _ = linked.write().remove(from),
+					Err(e) if e.kind() == std::io::ErrorKind::NotFound => _ = linked.write().remove(from),
 					Err(_) => {}
 				}
 			}
-			linked.retain(|_, v| !v.as_os_str().is_empty());
 		})
 		.await
 		.ok();

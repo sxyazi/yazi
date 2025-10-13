@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{ByteStr, fs::Attrs};
+use crate::{ByteStr, Error, ToByteStr, fs::Attrs};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Mkdir<'a> {
@@ -10,11 +10,11 @@ pub struct Mkdir<'a> {
 }
 
 impl<'a> Mkdir<'a> {
-	pub fn new<P>(path: P, attrs: Attrs) -> Self
+	pub fn new<P>(path: P, attrs: Attrs) -> Result<Self, Error>
 	where
-		P: Into<ByteStr<'a>>,
+		P: ToByteStr<'a>,
 	{
-		Self { id: 0, path: path.into(), attrs }
+		Ok(Self { id: 0, path: path.to_byte_str()?, attrs })
 	}
 
 	pub fn len(&self) -> usize { size_of_val(&self.id) + 4 + self.path.len() + self.attrs.len() }

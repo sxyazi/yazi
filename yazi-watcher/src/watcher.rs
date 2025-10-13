@@ -1,45 +1,64 @@
-use std::time::Duration;
-
 use hashbrown::HashSet;
-use tokio::{pin, sync::{mpsc::{self, UnboundedReceiver}, watch}};
-use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
-use yazi_fs::{File, FilesOp, provider::local};
-use yazi_shared::url::{UrlBuf, UrlLike};
-use yazi_vfs::VfsFile;
+use tokio::sync::watch;
+use tracing::error;
+use yazi_fs::FsUrl;
+use yazi_shared::url::{UrlBuf, UrlCow, UrlLike};
 
-use crate::{LINKED, Linked, WATCHED, WATCHER, backend::Backend};
+use crate::{Reporter, WATCHED, backend::Backend};
 
 pub struct Watcher {
-	in_tx:  watch::Sender<HashSet<UrlBuf>>,
-	out_tx: mpsc::UnboundedSender<UrlBuf>,
+	tx:       watch::Sender<HashSet<UrlBuf>>,
+	reporter: Reporter,
 }
 
 impl Watcher {
 	pub fn serve() -> Self {
-		let (in_tx, in_rx) = watch::channel(Default::default());
-		let (out_tx, out_rx) = mpsc::unbounded_channel();
+		let (tx, rx) = watch::channel(Default::default());
 
-		let backend = Backend::serve(out_tx.clone());
+		let backend = Backend::serve();
+		let reporter = backend.reporter.clone();
 
-		tokio::spawn(Self::fan_in(in_rx, backend));
-		tokio::spawn(Self::fan_out(out_rx));
-
-		Self { in_tx, out_tx }
+		tokio::spawn(Self::watched(rx, backend));
+		Self { tx, reporter }
 	}
 
-	pub fn watch<'a>(&mut self, it: impl Iterator<Item = &'a UrlBuf>) {
-		self.in_tx.send(it.cloned().collect()).ok();
+	pub fn watch<'a, I>(&mut self, urls: I)
+	where
+		I: IntoIterator,
+		I::Item: Into<UrlCow<'a>>,
+	{
+		let it = urls.into_iter();
+		let mut set = HashSet::with_capacity(it.size_hint().0);
+
+		for url in it.map(Into::into) {
+			if !url.is_absolute() {
+				continue;
+			} else if let Some(cache) = url.cache() {
+				set.insert(cache.into());
+			}
+			set.insert(url.into_owned());
+		}
+
+		self.tx.send(set).ok();
 	}
 
-	pub fn push_files(&self, urls: Vec<UrlBuf>) { Backend::push_files(&self.out_tx, urls); }
+	pub fn report<'a, I>(&self, urls: I)
+	where
+		I: IntoIterator,
+		I::Item: Into<UrlCow<'a>>,
+	{
+		self.reporter.report(urls);
+	}
 
-	async fn fan_in(mut rx: watch::Receiver<HashSet<UrlBuf>>, mut backend: Backend) {
+	async fn watched(mut rx: watch::Receiver<HashSet<UrlBuf>>, mut backend: Backend) {
 		loop {
 			let (to_unwatch, to_watch) = WATCHED.read().diff(&rx.borrow_and_update());
-			backend = backend.sync(to_unwatch, to_watch).await;
 
-			if !rx.has_changed().unwrap_or(false) {
-				Linked::sync(&LINKED, &WATCHED).await;
+			if !to_unwatch.is_empty() || !to_watch.is_empty() {
+				backend = Self::sync(backend, to_unwatch, to_watch).await;
+				if !rx.has_changed().unwrap_or(false) {
+					backend = backend.sync().await;
+				}
 			}
 
 			if rx.changed().await.is_err() {
@@ -48,35 +67,23 @@ impl Watcher {
 		}
 	}
 
-	async fn fan_out(rx: UnboundedReceiver<UrlBuf>) {
-		// TODO: revert this once a new notification is implemented
-		let rx = UnboundedReceiverStream::new(rx).chunks_timeout(1000, Duration::from_millis(250));
-		pin!(rx);
-
-		while let Some(chunk) = rx.next().await {
-			let urls: HashSet<_> = chunk.into_iter().collect();
-
-			let _permit = WATCHER.acquire().await.unwrap();
-			let mut ops = Vec::with_capacity(urls.len());
-
-			for u in urls {
-				let Some((parent, urn)) = u.pair() else { continue };
-				let Ok(file) = File::new(&u).await else {
-					ops.push(FilesOp::Deleting(parent.into(), [urn.into()].into()));
-					continue;
-				};
-
-				if let Some(p) = file.url.as_path()
-					&& !local::must_case_match(p).await
-				{
-					ops.push(FilesOp::Deleting(parent.into(), [urn.into()].into()));
-					continue;
+	async fn sync(mut backend: Backend, to_unwatch: Vec<UrlBuf>, to_watch: Vec<UrlBuf>) -> Backend {
+		tokio::task::spawn_blocking(move || {
+			for u in to_unwatch {
+				match backend.unwatch(&u) {
+					Ok(()) => WATCHED.write().remove(&u),
+					Err(e) => error!("Unwatch failed: {e:?}"),
 				}
-
-				ops.push(FilesOp::Upserting(parent.into(), [(urn.into(), file)].into()));
 			}
-
-			FilesOp::mutate(ops);
-		}
+			for u in to_watch {
+				match backend.watch(&u) {
+					Ok(()) => WATCHED.write().insert(u),
+					Err(e) => error!("Watch failed: {e:?}"),
+				}
+			}
+			backend
+		})
+		.await
+		.unwrap()
 	}
 }

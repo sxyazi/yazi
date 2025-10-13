@@ -112,10 +112,10 @@ impl Cha {
 	pub fn hits(self, c: Self) -> bool {
 		self.len == c.len
 			&& self.mtime == c.mtime
-			&& unix_either!(self.ctime == c.ctime, true)
+			&& self.ctime == c.ctime
 			&& self.btime == c.btime
 			&& self.kind == c.kind
-			&& unix_either!(self.mode == c.mode, true)
+			&& self.mode == c.mode
 	}
 
 	#[inline]
