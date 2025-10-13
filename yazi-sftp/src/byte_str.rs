@@ -47,7 +47,7 @@ impl<'a> ByteStr<'a> {
 		#[cfg(windows)]
 		{
 			match super::wtf::bytes_to_wide(self.0.as_ref()) {
-				Cow::Borrowed(_) => self.0.into_owned(),
+				Cow::Borrowed(_) => unsafe { String::from_utf8_unchecked(self.0.into_owned()) }.into(),
 				Cow::Owned(s) => s,
 			}
 		}
@@ -102,7 +102,7 @@ where
 		}
 		#[cfg(windows)]
 		{
-			super::wtf::wide_to_bytes(self.as_ref())
+			super::wtf::wide_to_bytes(self.as_ref().as_os_str())
 				.ok_or(Error::custom("failed to convert wide path to bytes"))
 				.map(ByteStr)
 		}
