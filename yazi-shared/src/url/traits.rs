@@ -62,11 +62,17 @@ impl AsUrl for &UrlCow<'_> {
 	fn as_url(&self) -> Url<'_> { (**self).as_url() }
 }
 
-impl<'a, T: AsUrl> From<&'a T> for Url<'a> {
+impl<'a, T> From<&'a T> for Url<'a>
+where
+	T: AsUrl + ?Sized,
+{
 	fn from(value: &'a T) -> Self { value.as_url() }
 }
 
-impl<'a, T: AsUrl> From<&'a mut T> for Url<'a> {
+impl<'a, T> From<&'a mut T> for Url<'a>
+where
+	T: AsUrl + ?Sized,
+{
 	fn from(value: &'a mut T) -> Self { value.as_url() }
 }
 

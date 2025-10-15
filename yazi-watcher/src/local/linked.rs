@@ -40,7 +40,7 @@ impl Linked {
 	pub fn from_file(&self, url: Url) -> Vec<PathBuf> {
 		let Some(path) = url.as_path() else { return vec![] };
 		if let Some((parent, name)) = path.parent().zip(path.file_name()) {
-			self.from_dir(&parent).map(|p| p.join(name)).collect()
+			self.from_dir(parent).map(|p| p.join(name)).collect()
 		} else {
 			vec![]
 		}
