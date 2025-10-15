@@ -65,9 +65,13 @@ impl Cmd {
 		self
 	}
 
-	pub fn with_opt(mut self, name: impl Into<DataKey>, value: Option<impl Into<Data>>) -> Self {
-		if let Some(v) = value {
-			self.args.insert(name.into(), v.into());
+	pub fn with_seq<I>(mut self, values: I) -> Self
+	where
+		I: IntoIterator,
+		I::Item: Into<Data>,
+	{
+		for (i, v) in values.into_iter().enumerate() {
+			self.args.insert(DataKey::Integer(i as i64), v.into());
 		}
 		self
 	}

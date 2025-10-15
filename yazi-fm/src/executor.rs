@@ -136,6 +136,7 @@ impl<'a> Executor<'a> {
 
 		// VFS
 		on!(download);
+		on!(upload);
 
 		match cmd.name.as_ref() {
 			// Help

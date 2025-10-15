@@ -55,6 +55,13 @@ impl MgrProxy {
 	}
 
 	pub fn update_paged_by(page: usize, only_if: &UrlBuf) {
-		emit!(Call(relay!(mgr:update_paged, [page]).with_any("only-if", only_if.clone())));
+		emit!(Call(relay!(mgr:update_paged, [page]).with("only-if", only_if)));
+	}
+
+	pub fn upload<I>(urls: I)
+	where
+		I: IntoIterator<Item = UrlBuf>,
+	{
+		emit!(Call(relay!(mgr:upload).with_seq(urls)));
 	}
 }

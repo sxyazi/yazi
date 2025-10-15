@@ -98,6 +98,10 @@ impl From<Id> for Data {
 	fn from(value: Id) -> Self { Self::Id(value) }
 }
 
+impl From<UrlBuf> for Data {
+	fn from(value: UrlBuf) -> Self { Self::Url(value) }
+}
+
 impl From<&UrlBuf> for Data {
 	fn from(value: &UrlBuf) -> Self { Self::Url(value.clone()) }
 }

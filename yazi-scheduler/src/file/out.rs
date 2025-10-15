@@ -354,6 +354,10 @@ impl From<std::io::Error> for FileOutUpload {
 	fn from(value: std::io::Error) -> Self { Self::Fail(value.to_string()) }
 }
 
+impl From<anyhow::Error> for FileOutUpload {
+	fn from(value: anyhow::Error) -> Self { Self::Fail(value.to_string()) }
+}
+
 impl FileOutUpload {
 	pub(crate) fn reduce(self, task: &mut Task) {
 		let TaskProg::FileUpload(prog) = &mut task.prog else { return };
@@ -382,7 +386,6 @@ impl FileOutUpload {
 #[derive(Debug)]
 pub(crate) enum FileOutUploadDo {
 	Adv(u64),
-	Log(String),
 	Succ,
 	Fail(String),
 }
@@ -401,9 +404,6 @@ impl FileOutUploadDo {
 		match self {
 			Self::Adv(size) => {
 				prog.processed_bytes += size;
-			}
-			Self::Log(line) => {
-				task.log(line);
 			}
 			Self::Succ => {
 				prog.success_files += 1;

@@ -102,13 +102,15 @@ impl FileInDownload {
 // --- Upload
 #[derive(Clone, Debug)]
 pub(crate) struct FileInUpload {
-	pub(crate) id:   Id,
-	pub(crate) path: PathBuf,
-	pub(crate) cha:  Option<Cha>,
+	pub(crate) id:  Id,
+	pub(crate) url: UrlBuf,
 }
 
-impl FileInUpload {
-	pub(super) fn spawn(&self, path: PathBuf, cha: Cha) -> Self {
-		Self { id: self.id, path, cha: Some(cha) }
-	}
+// --- UploadDo
+#[derive(Clone, Debug)]
+pub(crate) struct FileInUploadDo {
+	pub(crate) id:    Id,
+	pub(crate) url:   UrlBuf,
+	pub(crate) cha:   Cha,
+	pub(crate) cache: PathBuf,
 }

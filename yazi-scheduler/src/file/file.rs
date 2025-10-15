@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::VecDeque, hash::{BuildHasher, Hash, Hasher}, path::{Path, PathBuf}};
+use std::{borrow::Cow, collections::VecDeque, hash::{BuildHasher, Hash, Hasher}};
 
 use anyhow::{Context, Result, anyhow};
 use tokio::{io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
@@ -6,11 +6,11 @@ use tracing::warn;
 use yazi_config::YAZI;
 use yazi_fs::{FsHash128, FsUrl, cha::Cha, ok_or_not_found, path::{path_relative_to, skip_url}, provider::{DirReader, FileHolder, Provider, local::Local}};
 use yazi_macro::ok_or_not_found;
-use yazi_shared::{timestamp_us, url::{AsUrl, Url, UrlCow, UrlLike}};
+use yazi_shared::{timestamp_us, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 use yazi_vfs::{VfsCha, copy_with_progress, maybe_exists, provider::{self, DirEntry}, unique_name};
 
 use super::{FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash};
-use crate::{LOW, NORMAL, TaskIn, TaskOp, TaskOps, file::{FileInDownload, FileInUpload, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutPaste, FileOutPasteDo, FileOutTrash, FileOutUpload, FileOutUploadDo}};
+use crate::{LOW, NORMAL, TaskIn, TaskOp, TaskOps, file::{FileInDownload, FileInUpload, FileInUploadDo, FileOutDelete, FileOutDeleteDo, FileOutDownload, FileOutDownloadDo, FileOutHardlink, FileOutHardlinkDo, FileOutLink, FileOutPaste, FileOutPasteDo, FileOutTrash, FileOutUpload, FileOutUploadDo}};
 
 pub(crate) struct File {
 	ops:     TaskOps,
@@ -353,11 +353,11 @@ impl File {
 		let cache = task.url.cache().context("Cannot determine cache path")?;
 		let cache_tmp = Self::tmp(&cache).await?;
 
-		let mut it = copy_with_progress(&task.url, Url::regular(&cache_tmp), cha);
+		let mut it = copy_with_progress(&task.url, &cache_tmp, cha);
 		while let Some(res) = it.recv().await {
 			match res {
 				Ok(0) => {
-					Local.rename(&cache_tmp, &cache).await?;
+					provider::rename(&cache_tmp, &cache).await?;
 
 					let lock = task.url.cache_lock().context("Cannot determine cache lock")?;
 					Local.write(lock, format!("{:x}", cha.hash_u128())).await?;
@@ -385,66 +385,98 @@ impl File {
 		Ok(self.ops.out(task.id, FileOutDownloadDo::Succ))
 	}
 
-	pub(crate) async fn upload(&self, mut task: FileInUpload) -> Result<(), FileOutUpload> {
-		todo!();
-		// if task.cha.is_none() {
-		// 	task.cha = Some(Self::cha(Url::regular(&task.path), true, None).await?);
-		// }
+	pub(crate) async fn upload(&self, task: FileInUpload) -> Result<(), FileOutUpload> {
+		let cha = Self::cha(&task.url, true, None).await?;
+		if cha.is_orphan() {
+			Err(io::Error::new(NotFound, "Source of symlink doesn't exist"))?;
+		}
 
-		// let cha = task.cha.unwrap();
-		// if cha.is_orphan() {
-		// 	Err(io::Error::new(NotFound, "Source of symlink doesn't exist"))?;
-		// }
+		if !cha.is_dir() {
+			let cache = task.url.cache().context("Cannot determine cache path")?;
+			match Self::cha(&cache, true, None).await {
+				Ok(c) if c.mtime == cha.mtime => {}
+				Ok(c) => {
+					self.ops.out(task.id, FileOutUpload::New(c.len));
+					self.queue(FileInUploadDo { id: task.id, url: task.url, cha, cache }, LOW);
+				}
+				Err(e) if e.kind() == NotFound => {}
+				Err(e) => Err(e)?,
+			};
+			return Ok(self.ops.out(task.id, FileOutUpload::Succ));
+		}
 
-		// if !cha.is_dir() {
-		// 	let id = task.id;
-		// 	self.ops.out(id, FileOutUpload::New(cha.len));
-		// 	self.queue(task, LOW);
-		// 	return Ok(self.ops.out(id, FileOutUpload::Succ));
-		// }
+		macro_rules! continue_unless_ok {
+			($result:expr) => {
+				match $result {
+					Ok(v) => v,
+					Err(e) => {
+						self.ops.out(task.id, FileOutUpload::Deform(e.to_string()));
+						continue;
+					}
+				}
+			};
+		}
 
-		// macro_rules! continue_unless_ok {
-		// 	($result:expr) => {
-		// 		match $result {
-		// 			Ok(v) => v,
-		// 			Err(e) => {
-		// 				self.ops.out(task.id, FileOutUpload::Deform(e.to_string()));
-		// 				continue;
-		// 			}
-		// 		}
-		// 	};
-		// }
+		let mut dirs = VecDeque::from([task.url]);
+		while let Some(src) = dirs.pop_front() {
+			let mut it = continue_unless_ok!(provider::read_dir(&src).await);
+			while let Ok(Some(entry)) = it.next().await {
+				let from = entry.url();
+				let cha = continue_unless_ok!(Self::cha(&from, true, Some(entry)).await);
 
-		// let mut dirs = VecDeque::from([task.path.clone()]);
-		// while let Some(src) = dirs.pop_front() {
-		// 	let cache = continue_unless_ok!(src.cache().ok_or("Cannot determine
-		// cache path")); 	continue_unless_ok!(match
-		// Local.create_dir(&cache).await { 		Err(e) if e.kind() != AlreadyExists
-		// => Err(e), 		_ => Ok(()),
-		// 	});
+				if cha.is_orphan() {
+					continue_unless_ok!(Err("Source of symlink doesn't exist"));
+				} else if cha.is_dir() {
+					dirs.push_back(from);
+					continue;
+				}
 
-		// 	let mut it = continue_unless_ok!(provider::read_dir(&src).await);
-		// 	while let Ok(Some(entry)) = it.next().await {
-		// 		let from = entry.url();
-		// 		let cha = continue_unless_ok!(Self::cha(&from, true,
-		// Some(entry)).await);
+				let cache = continue_unless_ok!(from.cache().ok_or("Cannot determine cache path"));
+				let cache_cha = continue_unless_ok!(match Self::cha(&cache, true, None).await {
+					Ok(c) if c.mtime == cha.mtime => continue,
+					Ok(c) => Ok(c),
+					Err(e) if e.kind() == NotFound => continue,
+					Err(e) => Err(e),
+				});
 
-		// 		if cha.is_orphan() {
-		// 			continue_unless_ok!(Err("Source of symlink doesn't exist"));
-		// 		} else if cha.is_dir() {
-		// 			dirs.push_back(from);
-		// 		} else {
-		// 			self.ops.out(task.id, FileOutUpload::New(cha.len));
-		// 			self.queue(task.spawn(from, cha), LOW);
-		// 		}
-		// 	}
-		// }
+				self.ops.out(task.id, FileOutUpload::New(cache_cha.len));
+				self.queue(FileInUploadDo { id: task.id, url: from, cha, cache }, LOW);
+			}
+		}
 
-		// Ok(self.ops.out(task.id, FileOutUpload::Succ))
+		Ok(self.ops.out(task.id, FileOutUpload::Succ))
 	}
 
-	pub(crate) async fn upload_do(&self, mut task: FileInUpload) -> Result<(), FileOutUploadDo> {
-		todo!()
+	pub(crate) async fn upload_do(&self, task: FileInUploadDo) -> Result<(), FileOutUploadDo> {
+		let lock = task.url.cache_lock().context("Cannot determine cache lock")?;
+
+		let hash = Local.read_to_string(&lock).await.context("Cannot read cache lock")?;
+		let hash = u128::from_str_radix(&hash, 16).context("Cannot parse hash from lock")?;
+		if hash != task.cha.hash_u128() {
+			Err(anyhow!("Remote file has changed since last download"))?;
+		}
+
+		let tmp = Self::tmp(&task.url).await?;
+		let mut it = copy_with_progress(&task.cache, &tmp, task.cha);
+
+		while let Some(res) = it.recv().await {
+			match res {
+				Ok(0) if hash != Self::cha(&task.url, true, None).await?.hash_u128() => {
+					Err(anyhow!("Remote file has changed during upload"))?
+				}
+				Ok(0) => {
+					provider::rename(&tmp, &task.url).await?;
+
+					let hash = format!("{:x}", Self::cha(&task.url, true, None).await?.hash_u128());
+					Local.write(lock, hash).await?;
+
+					break;
+				}
+				Ok(n) => self.ops.out(task.id, FileOutUploadDo::Adv(n)),
+				Err(e) => Err(e)?,
+			}
+		}
+		Ok(self.ops.out(task.id, FileOutUploadDo::Succ))
 	}
 
 	async fn cha<U>(url: U, follow: bool, entry: Option<DirEntry>) -> io::Result<Cha>
@@ -459,17 +491,20 @@ impl File {
 		Ok(if follow { Cha::from_follow(url, cha).await } else { cha })
 	}
 
-	async fn tmp(path: &Path) -> io::Result<PathBuf> {
-		let Some(parent) = path.parent() else {
-			Err(io::Error::new(io::ErrorKind::InvalidInput, "Path has no parent"))?
+	async fn tmp<U>(url: U) -> io::Result<UrlBuf>
+	where
+		U: AsUrl,
+	{
+		let url = url.as_url();
+		let Some(parent) = url.parent() else {
+			Err(io::Error::new(io::ErrorKind::InvalidInput, "Url has no parent"))?
 		};
 
 		let mut h = foldhash::fast::FixedState::default().build_hasher();
-		path.hash(&mut h);
+		url.hash(&mut h);
 		timestamp_us().hash(&mut h);
 
-		let u = parent.join(format!(".{:x}.%tmp", h.finish())).into();
-		Ok(unique_name(u, async { false }).await?.into_path().expect("a path"))
+		unique_name(parent.join(format!(".{:x}.%tmp", h.finish())), async { false }).await
 	}
 }
 
