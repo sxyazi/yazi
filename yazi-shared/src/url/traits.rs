@@ -1,10 +1,30 @@
-use std::{borrow::Cow, ffi::OsStr, path::Path};
+use std::{borrow::Cow, ffi::OsStr, path::{Path, PathBuf}};
 
-use crate::url::{Components, Display, Uri, Url, UrlBuf, UrlCow, Urn};
+use crate::{scheme::SchemeRef, url::{Components, Display, Uri, Url, UrlBuf, UrlCow, Urn}};
 
 // --- AsUrl
 pub trait AsUrl {
 	fn as_url(&self) -> Url<'_>;
+}
+
+impl AsUrl for Path {
+	#[inline]
+	fn as_url(&self) -> Url<'_> { Url { loc: self.into(), scheme: SchemeRef::Regular } }
+}
+
+impl AsUrl for &Path {
+	#[inline]
+	fn as_url(&self) -> Url<'_> { (*self).as_url() }
+}
+
+impl AsUrl for PathBuf {
+	#[inline]
+	fn as_url(&self) -> Url<'_> { self.as_path().as_url() }
+}
+
+impl AsUrl for &PathBuf {
+	#[inline]
+	fn as_url(&self) -> Url<'_> { (*self).as_path().as_url() }
 }
 
 impl AsUrl for Url<'_> {
@@ -96,4 +116,6 @@ where
 	fn urn(&self) -> &Urn { self.as_url().urn() }
 }
 
-impl<T: AsUrl> UrlLike for T {}
+impl UrlLike for Url<'_> {}
+impl UrlLike for UrlBuf {}
+impl UrlLike for UrlCow<'_> {}

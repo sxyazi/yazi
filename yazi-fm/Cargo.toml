@@ -42,7 +42,6 @@ yazi-watcher = { path = "../yazi-watcher", version = "25.9.15" }
 yazi-widgets = { path = "../yazi-widgets", version = "25.9.15" }
 
 # External dependencies
-base64       = { workspace = true }
 anyhow       = { workspace = true }
 better-panic = "0.3.0"
 crossterm    = { workspace = true }

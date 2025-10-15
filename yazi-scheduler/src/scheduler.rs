@@ -6,14 +6,13 @@ use parking_lot::Mutex;
 use tokio::{select, sync::{mpsc::{self, UnboundedReceiver}, oneshot}, task::JoinHandle};
 use yazi_config::{YAZI, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
-use yazi_fs::FsUrl;
 use yazi_parser::{app::PluginOpt, tasks::ProcessOpenOpt};
 use yazi_proxy::TasksProxy;
 use yazi_shared::{Id, Throttle, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{must_be_dir, provider, unique_name};
 
 use super::{Ongoing, TaskOp};
-use crate::{HIGH, LOW, NORMAL, TaskIn, TaskOps, TaskOut, file::{File, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInPaste, FileInTrash, FileOutDelete, FileOutDownload, FileOutHardlink, FileOutPaste, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgPaste, FileProgTrash}, plugin::{Plugin, PluginInEntry, PluginProgEntry}, prework::{Prework, PreworkInFetch, PreworkInLoad, PreworkInSize, PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{Process, ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessOutBg, ProcessOutBlock, ProcessOutOrphan, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
+use crate::{HIGH, LOW, NORMAL, TaskIn, TaskOps, TaskOut, file::{File, FileInDelete, FileInDownload, FileInHardlink, FileInLink, FileInPaste, FileInTrash, FileInUpload, FileOutDelete, FileOutDownload, FileOutHardlink, FileOutPaste, FileOutUpload, FileProgDelete, FileProgDownload, FileProgHardlink, FileProgLink, FileProgPaste, FileProgTrash, FileProgUpload}, plugin::{Plugin, PluginInEntry, PluginProgEntry}, prework::{Prework, PreworkInFetch, PreworkInLoad, PreworkInSize, PreworkProgFetch, PreworkProgLoad, PreworkProgSize}, process::{Process, ProcessInBg, ProcessInBlock, ProcessInOrphan, ProcessOutBg, ProcessOutBlock, ProcessOutOrphan, ProcessProgBg, ProcessProgBlock, ProcessProgOrphan}};
 
 pub struct Scheduler {
 	file:        Arc<File>,
@@ -226,6 +225,18 @@ impl Scheduler {
 		});
 	}
 
+	pub fn file_upload(&self, url: UrlBuf) {
+		let mut ongoing = self.ongoing.lock();
+		let id = ongoing.add::<FileProgUpload>(format!("Upload {}", url.display()));
+
+		if !url.scheme.is_virtual() {
+			return self.ops.out(id, FileOutUpload::Fail("Cannot upload non-remote file".to_owned()));
+		};
+
+		let file = self.file.clone();
+		self.send_micro(id, LOW, async move { file.upload(FileInUpload { id, url }).await });
+	}
+
 	pub fn plugin_micro(&self, opt: PluginOpt) {
 		let id = self.ongoing.lock().add::<PluginProgEntry>(format!("Run micro plugin `{}`", opt.id));
 
@@ -398,7 +409,8 @@ impl Scheduler {
 							TaskIn::FileDelete(r#in) => file.delete_do(r#in).await.map_err(Into::into),
 							TaskIn::FileTrash(r#in) => file.trash_do(r#in).await.map_err(Into::into),
 							TaskIn::FileDownload(r#in) => file.download_do(r#in).await.map_err(Into::into),
-							TaskIn::FileUpload(r#in) => file.upload_do(r#in).await.map_err(Into::into),
+							TaskIn::FileUpload(r#in) => file.upload(r#in).await.map_err(Into::into),
+							TaskIn::FileUploadDo(r#in) => file.upload_do(r#in).await.map_err(Into::into),
 							// Plugin
 							TaskIn::PluginEntry(r#in) => plugin.macro_do(r#in).await.map_err(Into::into),
 							// Prework

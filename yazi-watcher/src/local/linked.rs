@@ -40,7 +40,7 @@ impl Linked {
 	pub fn from_file(&self, url: Url) -> Vec<PathBuf> {
 		let Some(path) = url.as_path() else { return vec![] };
 		if let Some((parent, name)) = path.parent().zip(path.file_name()) {
-			self.from_dir(Url::regular(parent)).map(|p| p.join(name)).collect()
+			self.from_dir(&parent).map(|p| p.join(name)).collect()
 		} else {
 			vec![]
 		}
@@ -51,7 +51,7 @@ impl Linked {
 			let watched = watched.read();
 
 			// Remove entries that are no longer watched
-			linked.write().retain(|from, _| watched.contains(Url::regular(from)));
+			linked.write().retain(|from, _| watched.contains(from));
 
 			// Update existing entries and remove broken links
 			for from in watched.paths() {

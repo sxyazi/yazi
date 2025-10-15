@@ -2,7 +2,6 @@ use std::{io, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 use yazi_fs::path::expand_url;
-use yazi_shared::url::Url;
 
 #[derive(Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "kebab-case")]
@@ -45,7 +44,7 @@ pub struct ProviderSftp {
 impl ProviderSftp {
 	fn reshape(&mut self) -> io::Result<()> {
 		if !self.key_file.as_os_str().is_empty() {
-			self.key_file = expand_url(Url::regular(&self.key_file))
+			self.key_file = expand_url(&self.key_file)
 				.into_path()
 				.ok_or_else(|| io::Error::other("key_file must be a path within local filesystem"))?;
 		}
@@ -56,7 +55,7 @@ impl ProviderSftp {
 				.filter(|p| p.is_absolute())
 				.unwrap_or_default()
 		} else {
-			expand_url(Url::regular(&self.identity_agent))
+			expand_url(&self.identity_agent)
 				.into_path()
 				.ok_or_else(|| io::Error::other("identity_agent must be a path within local filesystem"))?
 		};

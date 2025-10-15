@@ -19,12 +19,11 @@ impl<'a> From<Url<'a>> for UrlCow<'a> {
 	fn from(value: Url<'a>) -> Self { Self::Borrowed { loc: value.loc, scheme: value.scheme.into() } }
 }
 
-impl<'a> From<&'a UrlBuf> for UrlCow<'a> {
-	fn from(value: &'a UrlBuf) -> Self { value.as_url().into() }
-}
-
-impl<'a> From<&'a UrlCow<'a>> for UrlCow<'a> {
-	fn from(value: &'a UrlCow<'a>) -> Self { value.as_url().into() }
+impl<'a, T> From<&'a T> for UrlCow<'a>
+where
+	T: AsUrl + ?Sized,
+{
+	fn from(value: &'a T) -> Self { value.as_url().into() }
 }
 
 impl From<UrlBuf> for UrlCow<'_> {

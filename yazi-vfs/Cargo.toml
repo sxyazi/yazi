@@ -24,6 +24,3 @@ parking_lot = { workspace = true }
 russh       = { workspace = true }
 tokio       = { workspace = true }
 tracing     = { workspace = true }
-
-[target."cfg(unix)".dependencies]
-uzers = { workspace = true }

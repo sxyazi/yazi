@@ -1,13 +1,13 @@
 use std::{borrow::Cow, path::{Path, PathBuf}};
 
 use anyhow::{Result, bail};
-use yazi_shared::{loc::LocBuf, url::{Url, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{loc::LocBuf, url::{UrlBuf, UrlCow, UrlLike}};
 
 pub fn path_relative_to<'a>(
 	from: impl AsRef<Path>,
 	to: &'a impl AsRef<Path>,
 ) -> Result<Cow<'a, Path>> {
-	Ok(match url_relative_to(Url::regular(&from).into(), Url::regular(to).into())? {
+	Ok(match url_relative_to(from.as_ref().into(), to.as_ref().into())? {
 		UrlCow::Borrowed { loc, .. } => Cow::Borrowed(loc.as_path()),
 		UrlCow::Owned { loc, .. } => Cow::Owned(loc.into_path()),
 	})

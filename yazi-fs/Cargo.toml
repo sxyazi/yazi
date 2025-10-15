@@ -17,7 +17,6 @@ yazi-shim   = { path = "../yazi-shim", version = "25.9.15" }
 # External dependencies
 anyhow           = { workspace = true }
 arc-swap         = "1.7.1"
-base64           = { workspace = true }
 bitflags         = { workspace = true }
 dirs             = { workspace = true }
 foldhash         = { workspace = true }
@@ -29,14 +28,13 @@ scopeguard       = { workspace = true }
 serde            = { workspace = true }
 tokio            = { workspace = true }
 tracing          = { workspace = true }
-twox-hash        = { workspace = true }
 
 [target."cfg(unix)".dependencies]
 libc  = { workspace = true }
 uzers = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.61.1", features = [ "Win32_Storage_FileSystem" ] }
+windows-sys = { version = "0.61.2", features = [ "Win32_Storage_FileSystem" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation-sys = { workspace = true }

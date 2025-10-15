@@ -41,12 +41,6 @@ impl From<Url> for yazi_shared::url::UrlBuf {
 	fn from(value: Url) -> Self { value.inner }
 }
 
-impl<'a> From<&'a Url> for UrlCow<'a> {
-	fn from(value: &'a Url) -> Self {
-		UrlCow::Borrowed { loc: value.loc.as_loc(), scheme: value.scheme.as_ref().into() }
-	}
-}
-
 impl From<Url> for yazi_shared::url::UrlBufCov {
 	fn from(value: Url) -> Self { Self(value.inner) }
 }

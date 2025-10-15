@@ -54,6 +54,7 @@ impl Hash for File {
 		self.url.hash(state);
 		self.cha.len.hash(state);
 		self.cha.btime.hash(state);
+		self.cha.ctime.hash(state);
 		self.cha.mtime.hash(state);
 	}
 }

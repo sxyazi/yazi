@@ -33,14 +33,17 @@ impl Reporter {
 
 		let watched = WATCHED.read();
 		for parent in [parent].into_iter().chain(linked) {
+			if watched.contains(parent) {
+				self.local_tx.send(url.to_owned()).ok();
+				self.local_tx.send(parent.to_owned()).ok();
+			}
+			if name.extension() == Some("%tmp".as_ref()) {
+				continue;
+			}
 			// SFTP caches
 			if let Some(dir) = watched.find_by_cache(&parent.loc) {
 				self.remote_tx.send(dir.join(name)).ok();
 				self.remote_tx.send(dir.to_owned()).ok();
-			}
-			if watched.contains(parent) {
-				self.local_tx.send(url.to_owned()).ok();
-				self.local_tx.send(parent.to_owned()).ok();
 			}
 		}
 	}
