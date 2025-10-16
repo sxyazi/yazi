@@ -102,6 +102,7 @@ pub enum Spark<'a> {
 	// Pick
 	PickClose(yazi_parser::pick::CloseOpt),
 	PickShow(yazi_parser::pick::ShowOpt),
+	PickSelect(yazi_parser::pick::SelectOpt),
 
 	// Spot
 	SpotCopy(yazi_parser::spot::CopyOpt),
@@ -224,6 +225,7 @@ impl<'a> IntoLua for Spark<'a> {
 			// Pick
 			Self::PickClose(b) => b.into_lua(lua),
 			Self::PickShow(b) => b.into_lua(lua),
+			Self::PickSelect(b) => b.into_lua(lua),
 
 			// Spot
 			Self::SpotCopy(b) => b.into_lua(lua),
@@ -320,6 +322,7 @@ try_from_spark!(mgr::YankOpt, mgr:yank);
 try_from_spark!(notify::TickOpt, notify:tick);
 try_from_spark!(pick::CloseOpt, pick:close);
 try_from_spark!(pick::ShowOpt, pick:show);
+try_from_spark!(pick::SelectOpt, pick:select);
 try_from_spark!(spot::CopyOpt, spot:copy);
 try_from_spark!(tasks::ProcessOpenOpt, tasks:process_open);
 try_from_spark!(tasks::UpdateSucceedOpt, tasks:update_succeed);

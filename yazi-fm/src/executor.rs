@@ -215,6 +215,7 @@ impl<'a> Executor<'a> {
 		on!(show);
 		on!(close);
 		on!(arrow);
+		on!(select);
 
 		match cmd.name.as_ref() {
 			// Help
