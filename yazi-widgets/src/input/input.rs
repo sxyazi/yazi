@@ -50,6 +50,20 @@ impl Input {
 				snap.op = InputOp::None;
 				futures::executor::block_on(CLIPBOARD.set(yanked));
 			}
+			InputOp::Case(upper, _) => {
+				let range = snap.op.range(cursor, include).unwrap();
+				let Range { start, end } = snap.idx(range.start)..snap.idx(range.end);
+
+				if let (Some(start), Some(end)) = (start, end) {
+					let selected = &snap.value[start..end];
+					let replaced = if upper { selected.to_uppercase() } else { selected.to_lowercase() };
+					snap.value.replace_range(start..end, &replaced);
+				}
+
+				snap.op = InputOp::None;
+				snap.mode = InputMode::Normal;
+				snap.cursor = range.start;
+			}
 		};
 
 		snap.cursor = snap.count().saturating_sub(snap.mode.delta()).min(snap.cursor);

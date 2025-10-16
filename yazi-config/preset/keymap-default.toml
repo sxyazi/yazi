@@ -305,6 +305,10 @@ keymap = [
 	{ on = "u",     run = "undo", desc = "Undo the last operation" },
 	{ on = "<C-r>", run = "redo", desc = "Redo the last operation" },
 
+    # Change case
+	{ on = [ "g" , "u" ], run = "lowercase", desc = "Lowercase selected characters" },
+	{ on = [ "g" , "U" ], run = "uppercase", desc = "Uppercase selected characters" },
+
 	# Help
 	{ on = "~",    run = "help", desc = "Open help" },
 	{ on = "<F1>", run = "help", desc = "Open help" },
