@@ -1,7 +1,7 @@
 use std::{io, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}};
 
 use anyhow::Result;
-use crossterm::{Command, event::{DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{EnterAlternateScreen, LeaveAlternateScreen, SetTitle, disable_raw_mode, enable_raw_mode}};
+use crossterm::{event::{DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags}, execute, queue, style::Print, terminal::{EnterAlternateScreen, LeaveAlternateScreen, SetTitle, disable_raw_mode, enable_raw_mode}};
 use ratatui::{CompletedFrame, Frame, Terminal, backend::CrosstermBackend, buffer::Buffer, layout::Rect};
 use yazi_adapter::{Emulator, Mux, TMUX};
 use yazi_config::YAZI;
@@ -48,11 +48,13 @@ impl Term {
 		yazi_term::RestoreCursor::store(&resp);
 		CSI_U.store(resp.contains("\x1b[?0u"), Ordering::Relaxed);
 		if CSI_U.load(Ordering::Relaxed) {
-			PushKeyboardEnhancementFlags(
-				KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES
-					| KeyboardEnhancementFlags::REPORT_ALTERNATE_KEYS,
-			)
-			.write_ansi(&mut TTY.writer())?;
+			_ = queue!(
+				TTY.writer(),
+				PushKeyboardEnhancementFlags(
+					KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES
+						| KeyboardEnhancementFlags::REPORT_ALTERNATE_KEYS,
+				)
+			);
 		}
 
 		if let Some(s) = YAZI.mgr.title() {
@@ -67,7 +69,7 @@ impl Term {
 
 	fn stop(&mut self) -> Result<()> {
 		if CSI_U.swap(false, Ordering::Relaxed) {
-			PopKeyboardEnhancementFlags.write_ansi(&mut TTY.writer())?;
+			queue!(TTY.writer(), PopKeyboardEnhancementFlags).ok();
 		}
 
 		if !YAZI.mgr.title_format.is_empty() {
@@ -88,7 +90,7 @@ impl Term {
 
 	pub(super) fn goodbye(f: impl FnOnce() -> i32) -> ! {
 		if CSI_U.swap(false, Ordering::Relaxed) {
-			PopKeyboardEnhancementFlags.write_ansi(&mut TTY.writer()).ok();
+			queue!(TTY.writer(), PopKeyboardEnhancementFlags).ok();
 		}
 
 		if !YAZI.mgr.title_format.is_empty() {
