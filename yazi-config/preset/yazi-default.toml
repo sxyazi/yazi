@@ -16,6 +16,14 @@ scrolloff      = 5
 mouse_events   = [ "click", "scroll" ]
 title_format   = "Yazi: {cwd}"
 
+# Git ignore integration
+# gitignore_enable = false
+# ignore_override = [
+#   "*.log",        # Hide all .log files
+#   "tmp/",         # Hide tmp directory
+#   "!target/",     # Show target/ even if gitignored (negation)
+# ]
+
 [preview]
 wrap            = "no"
 tab_size        = 2
