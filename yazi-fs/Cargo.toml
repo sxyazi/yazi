@@ -1,44 +1,46 @@
 [package]
-name        = "yazi-fs"
-version     = "25.9.15"
-edition     = "2024"
-license     = "MIT"
-authors     = [ "sxyazi <sxyazi@gmail.com>" ]
+name = "yazi-fs"
+version = "25.9.15"
+edition = "2024"
+license = "MIT"
+authors = ["sxyazi <sxyazi@gmail.com>"]
 description = "Yazi file system"
-homepage    = "https://yazi-rs.github.io"
-repository  = "https://github.com/sxyazi/yazi"
+homepage = "https://yazi-rs.github.io"
+repository = "https://github.com/sxyazi/yazi"
 
 [dependencies]
-yazi-ffi    = { path = "../yazi-ffi", version = "25.9.15" }
-yazi-macro  = { path = "../yazi-macro", version = "25.9.15" }
+yazi-ffi = { path = "../yazi-ffi", version = "25.9.15" }
+yazi-macro = { path = "../yazi-macro", version = "25.9.15" }
 yazi-shared = { path = "../yazi-shared", version = "25.9.15" }
-yazi-shim   = { path = "../yazi-shim", version = "25.9.15" }
+yazi-shim = { path = "../yazi-shim", version = "25.9.15" }
 
 # External dependencies
-anyhow           = { workspace = true }
-arc-swap         = "1.7.1"
-bitflags         = { workspace = true }
-dirs             = { workspace = true }
-foldhash         = { workspace = true }
-hashbrown        = { workspace = true }
-parking_lot      = { workspace = true }
+anyhow = { workspace = true }
+arc-swap = "1.7.1"
+bitflags = { workspace = true }
+dirs = { workspace = true }
+foldhash = { workspace = true }
+git2 = { workspace = true }
+hashbrown = { workspace = true }
+ignore = { workspace = true }
+parking_lot = { workspace = true }
 percent-encoding = { workspace = true }
-regex            = { workspace = true }
-scopeguard       = { workspace = true }
-serde            = { workspace = true }
-tokio            = { workspace = true }
-tracing          = { workspace = true }
+regex = { workspace = true }
+scopeguard = { workspace = true }
+serde = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
 
 [target."cfg(unix)".dependencies]
-libc  = { workspace = true }
+libc = { workspace = true }
 uzers = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.61.2", features = [ "Win32_Storage_FileSystem" ] }
+windows-sys = { version = "0.61.2", features = ["Win32_Storage_FileSystem"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation-sys = { workspace = true }
-objc                = { workspace = true }
+objc = { workspace = true }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
 trash = "5.2.3"

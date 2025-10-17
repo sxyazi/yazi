@@ -1,58 +1,86 @@
 [workspace]
-resolver        = "2"
-members         = [ "yazi-*" ]
-default-members = [ "yazi-fm", "yazi-cli" ]
+resolver = "2"
+members = ["yazi-*"]
+default-members = ["yazi-fm", "yazi-cli"]
 
 [profile.release]
 codegen-units = 1
-lto           = true
-panic         = "abort"
-strip         = true
+lto = true
+panic = "abort"
+strip = true
 
 [profile.release-windows]
 inherits = "release"
-panic    = "unwind"
+panic = "unwind"
 
 [profile.dev-opt]
-inherits      = "release"
+inherits = "release"
 codegen-units = 256
-incremental   = true
-lto           = false
+incremental = true
+lto = false
 
 [workspace.dependencies]
-ansi-to-tui         = "7.0.0"
-anyhow              = "1.0.100"
-base64              = "0.22.1"
-bitflags            = { version = "2.9.4", features = [ "serde" ] }
-clap                = { version = "4.5.48", features = [ "derive" ] }
+ansi-to-tui = "7.0.0"
+anyhow = "1.0.100"
+base64 = "0.22.1"
+bitflags = { version = "2.9.4", features = ["serde"] }
+clap = { version = "4.5.48", features = ["derive"] }
 core-foundation-sys = "0.8.7"
-crossterm           = { version = "0.29.0", features = [ "event-stream" ] }
-dirs                = "6.0.0"
-foldhash            = "0.2.0"
-futures             = "0.3.31"
-globset             = "0.4.16"
-hashbrown           = { version = "0.16.0", features = [ "serde" ] }
-indexmap            = { version = "2.11.4", features = [ "serde" ] }
-libc                = "0.2.177"
-lru                 = "0.16.1"
-mlua                = { version = "0.11.4", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serde" ] }
-objc                = "0.2.7"
-ordered-float       = { version = "5.1.0", features = [ "serde" ] }
-parking_lot         = "0.12.5"
-paste               = "1.0.15"
-percent-encoding    = "2.3.2"
-ratatui             = { version = "0.29.0", features = [ "unstable-rendered-line-info", "unstable-widget-ref" ] }
-regex               = "1.12.1"
-russh               = { version = "0.54.5", default-features = false, features = [ "ring", "rsa" ] }
-scopeguard          = "1.2.0"
-serde               = { version = "1.0.228", features = [ "derive" ] }
-serde_json          = "1.0.145"
-syntect             = { version = "5.3.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
-tokio               = { version = "1.47.1", features = [ "full" ] }
-tokio-stream        = "0.1.17"
-tokio-util          = "0.7.16"
-toml                = { version = "0.9.8" }
-tracing             = { version = "0.1.41", features = [ "max_level_debug", "release_max_level_debug" ] }
-twox-hash           = { version = "2.1.2", default-features = false, features = [ "std", "random", "xxhash3_128" ] }
-unicode-width       = { version = "0.2.0", default-features = false }
-uzers               = "0.12.1"
+crossterm = { version = "0.29.0", features = ["event-stream"] }
+dirs = "6.0.0"
+foldhash = "0.2.0"
+futures = "0.3.31"
+git2 = { version = "0.19.0", default-features = false, features = [
+  "vendored-libgit2",
+] }
+globset = "0.4.16"
+hashbrown = { version = "0.16.0", features = ["serde"] }
+ignore = "0.4.23"
+indexmap = { version = "2.11.4", features = ["serde"] }
+libc = "0.2.177"
+lru = "0.16.1"
+mlua = { version = "0.11.4", features = [
+  "anyhow",
+  "async",
+  "error-send",
+  "lua54",
+  "macros",
+  "serde",
+] }
+objc = "0.2.7"
+ordered-float = { version = "5.1.0", features = ["serde"] }
+parking_lot = "0.12.5"
+paste = "1.0.15"
+percent-encoding = "2.3.2"
+ratatui = { version = "0.29.0", features = [
+  "unstable-rendered-line-info",
+  "unstable-widget-ref",
+] }
+regex = "1.12.1"
+russh = { version = "0.54.5", default-features = false, features = [
+  "ring",
+  "rsa",
+] }
+scopeguard = "1.2.0"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+syntect = { version = "5.3.0", default-features = false, features = [
+  "parsing",
+  "plist-load",
+  "regex-onig",
+] }
+tokio = { version = "1.47.1", features = ["full"] }
+tokio-stream = "0.1.17"
+tokio-util = "0.7.16"
+toml = { version = "0.9.8" }
+tracing = { version = "0.1.41", features = [
+  "max_level_debug",
+  "release_max_level_debug",
+] }
+twox-hash = { version = "2.1.2", default-features = false, features = [
+  "std",
+  "random",
+  "xxhash3_128",
+] }
+unicode-width = { version = "0.2.0", default-features = false }
+uzers = "0.12.1"
