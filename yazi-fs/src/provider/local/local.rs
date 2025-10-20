@@ -2,7 +2,7 @@ use std::{io, path::{Path, PathBuf}};
 
 use yazi_shared::url::{AsUrl, UrlCow};
 
-use crate::{cha::Cha, path::absolute_url, provider::Provider};
+use crate::{cha::Cha, path::absolute_url, provider::{Attrs, Provider}};
 
 #[derive(Clone, Copy)]
 pub struct Local;
@@ -40,14 +40,14 @@ impl Provider for Local {
 	}
 
 	#[inline]
-	async fn copy<P, Q>(&self, from: P, to: Q, cha: Cha) -> io::Result<u64>
+	async fn copy<P, Q>(&self, from: P, to: Q, attrs: Attrs) -> io::Result<u64>
 	where
 		P: AsRef<Path>,
 		Q: AsRef<Path>,
 	{
 		let from = from.as_ref().to_owned();
 		let to = to.as_ref().to_owned();
-		Self::copy_impl(from, to, cha).await
+		Self::copy_impl(from, to, attrs).await
 	}
 
 	#[inline]
@@ -232,23 +232,25 @@ impl Provider for Local {
 }
 
 impl Local {
-	async fn copy_impl(from: PathBuf, to: PathBuf, cha: Cha) -> io::Result<u64> {
+	async fn copy_impl(from: PathBuf, to: PathBuf, attrs: Attrs) -> io::Result<u64> {
 		#[cfg(any(target_os = "linux", target_os = "android"))]
 		{
 			use std::os::unix::fs::OpenOptionsExt;
 
 			tokio::task::spawn_blocking(move || {
-				let mut reader = std::fs::File::open(from)?;
-				let mut writer = std::fs::OpenOptions::new()
-					.mode(cha.mode.bits() as _)
-					.write(true)
-					.create(true)
-					.truncate(true)
-					.open(to)?;
+				let mut opts = std::fs::OpenOptions::new();
+				if let Some(mode) = attrs.mode {
+					opts.mode(mode.bits() as _);
+				}
 
+				let mut reader = std::fs::File::open(from)?;
+				let mut writer = opts.write(true).create(true).truncate(true).open(to)?;
 				let written = std::io::copy(&mut reader, &mut writer)?;
-				writer.set_permissions(cha.into()).ok();
-				writer.set_times(cha.into()).ok();
+
+				if let Some(mode) = attrs.mode {
+					writer.set_permissions(mode.into()).ok();
+				}
+				writer.set_times(attrs.into()).ok();
 
 				Ok(written)
 			})
@@ -261,7 +263,7 @@ impl Local {
 				let written = std::fs::copy(from, &to)?;
 
 				if let Ok(file) = std::fs::File::options().write(true).open(to) {
-					file.set_times(cha.into()).ok();
+					file.set_times(attrs.into()).ok();
 				}
 
 				Ok(written)

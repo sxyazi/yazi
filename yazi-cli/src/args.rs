@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use anyhow::{Result, bail};
-use clap::{Parser, Subcommand, command};
+use clap::{Parser, Subcommand};
 use yazi_shared::{Id, event::Cmd};
 
 #[derive(Parser)]

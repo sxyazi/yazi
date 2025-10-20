@@ -1,4 +1,4 @@
-use std::{path::{Path, PathBuf}, process::Stdio};
+use std::{path::PathBuf, process::Stdio};
 
 use anyhow::{Result, bail};
 use image::ImageReader;
@@ -42,14 +42,13 @@ impl Ueberzug {
 		DEMON.init(Some(tx))
 	}
 
-	pub(crate) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+	pub(crate) async fn image_show(path: PathBuf, max: Rect) -> Result<Rect> {
 		let Some(tx) = &*DEMON else {
 			bail!("uninitialized ueberzugpp");
 		};
 
-		let p = path.to_owned();
-		let (w, h) = tokio::task::spawn_blocking(move || {
-			ImageReader::open(p)?.with_guessed_format()?.into_dimensions()
+		let (w, h, path) = tokio::task::spawn_blocking(move || {
+			ImageReader::open(&path)?.with_guessed_format()?.into_dimensions().map(|(w, h)| (w, h, path))
 		})
 		.await??;
 
@@ -62,7 +61,7 @@ impl Ueberzug {
 			})
 			.unwrap_or(max);
 
-		tx.send(Some((path.to_owned(), area)))?;
+		tx.send(Some((path, area)))?;
 		Adapter::shown_store(area);
 		Ok(area)
 	}

@@ -48,7 +48,7 @@ impl Actor for Open {
 			.map(|(i, _)| i)
 			.collect();
 
-		let cwd = cx.cwd().clone();
+		let cwd = opt.cwd.unwrap_or_else(|| cx.cwd().clone().into());
 		if todo.is_empty() {
 			return act!(mgr:open_do, cx, OpenDoOpt { cwd, targets: opt.targets, interactive: opt.interactive });
 		}

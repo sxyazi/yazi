@@ -4,7 +4,7 @@ use anyhow::{Context, Result, anyhow};
 use tokio::{io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::YAZI;
-use yazi_fs::{FsHash128, FsUrl, cha::Cha, ok_or_not_found, path::{path_relative_to, skip_url}, provider::{DirReader, FileHolder, Provider, local::Local}};
+use yazi_fs::{Cwd, FsHash128, FsUrl, cha::Cha, ok_or_not_found, path::{path_relative_to, skip_url}, provider::{DirReader, FileHolder, Provider, local::Local}};
 use yazi_macro::ok_or_not_found;
 use yazi_shared::{timestamp_us, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 use yazi_vfs::{VfsCha, copy_with_progress, maybe_exists, provider::{self, DirEntry}, unique_name};
@@ -319,13 +319,9 @@ impl File {
 
 		let mut dirs = VecDeque::from([task.url.clone()]);
 		while let Some(src) = dirs.pop_front() {
-			let cache = continue_unless_ok!(src.cache().ok_or("Cannot determine cache path"));
-			continue_unless_ok!(match Local.create_dir(&cache).await {
-				Err(e) if e.kind() != AlreadyExists => Err(e),
-				_ => Ok(()),
-			});
-
 			let mut it = continue_unless_ok!(provider::read_dir(&src).await);
+			tokio::task::spawn_blocking(move || _ = Cwd::ensure(src.as_url())).await.ok();
+
 			while let Ok(Some(entry)) = it.next().await {
 				let from = entry.url();
 				let cha = continue_unless_ok!(Self::cha(&from, true, Some(entry)).await);
@@ -351,16 +347,17 @@ impl File {
 		let cha = task.cha.unwrap();
 
 		let cache = task.url.cache().context("Cannot determine cache path")?;
-		let cache_tmp = Self::tmp(&cache).await?;
+		let cache_tmp = Self::tmp(&cache).await.context("Cannot determine temporary download cache")?;
 
 		let mut it = copy_with_progress(&task.url, &cache_tmp, cha);
 		while let Some(res) = it.recv().await {
 			match res {
 				Ok(0) => {
-					provider::rename(&cache_tmp, &cache).await?;
+					provider::rename(cache_tmp, cache).await.context("Cannot persist downloaded file")?;
 
 					let lock = task.url.cache_lock().context("Cannot determine cache lock")?;
-					Local.write(lock, format!("{:x}", cha.hash_u128())).await?;
+					let hash = format!("{:x}", cha.hash_u128());
+					Local.write(lock, hash).await.context("Cannot lock cache")?;
 
 					break;
 				}
@@ -388,7 +385,7 @@ impl File {
 	pub(crate) async fn upload(&self, task: FileInUpload) -> Result<(), FileOutUpload> {
 		let cha = Self::cha(&task.url, true, None).await?;
 		if cha.is_orphan() {
-			Err(io::Error::new(NotFound, "Source of symlink doesn't exist"))?;
+			Err(anyhow!("Source of symlink doesn't exist"))?;
 		}
 
 		if !cha.is_dir() {
@@ -456,19 +453,22 @@ impl File {
 			Err(anyhow!("Remote file has changed since last download"))?;
 		}
 
-		let tmp = Self::tmp(&task.url).await?;
+		let tmp = Self::tmp(&task.url).await.context("Cannot determine temporary upload path")?;
 		let mut it = copy_with_progress(&task.cache, &tmp, task.cha);
 
 		while let Some(res) = it.recv().await {
 			match res {
-				Ok(0) if hash != Self::cha(&task.url, true, None).await?.hash_u128() => {
-					Err(anyhow!("Remote file has changed during upload"))?
-				}
 				Ok(0) => {
-					provider::rename(&tmp, &task.url).await?;
+					let cha = Self::cha(&task.url, true, None).await.context("Cannot stat original file")?;
+					if hash != cha.hash_u128() {
+						Err(anyhow!("Remote file has changed during upload"))?;
+					}
 
-					let hash = format!("{:x}", Self::cha(&task.url, true, None).await?.hash_u128());
-					Local.write(lock, hash).await?;
+					provider::rename(&tmp, &task.url).await.context("Cannot persist uploaded file")?;
+
+					let cha = Self::cha(&task.url, true, None).await.context("Cannot stat uploaded file")?;
+					let hash = format!("{:x}", cha.hash_u128());
+					Local.write(lock, hash).await.context("Cannot lock cache")?;
 
 					break;
 				}

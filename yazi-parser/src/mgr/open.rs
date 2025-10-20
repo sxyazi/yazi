@@ -3,18 +3,26 @@ use yazi_shared::{event::CmdCow, url::UrlCow};
 
 #[derive(Debug)]
 pub struct OpenOpt {
+	pub cwd:         Option<UrlCow<'static>>,
 	pub targets:     Vec<UrlCow<'static>>,
 	pub interactive: bool,
 	pub hovered:     bool,
 }
 
-impl From<CmdCow> for OpenOpt {
-	fn from(mut c: CmdCow) -> Self {
-		Self {
+impl TryFrom<CmdCow> for OpenOpt {
+	type Error = anyhow::Error;
+
+	fn try_from(mut c: CmdCow) -> Result<Self, Self::Error> {
+		if let Some(opt) = c.take_any2("opt") {
+			return opt;
+		}
+
+		Ok(Self {
+			cwd:         c.take("cwd").ok(),
 			targets:     c.take_seq(),
 			interactive: c.bool("interactive"),
 			hovered:     c.bool("hovered"),
-		}
+		})
 	}
 }
 

@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::{Parser, command};
+use clap::Parser;
 use yazi_shared::{Id, url::UrlBuf};
 
 #[derive(Debug, Default, Parser)]

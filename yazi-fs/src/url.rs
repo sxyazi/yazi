@@ -65,14 +65,14 @@ impl<'a> FsUrl<'a> for Url<'a> {
 	}
 }
 
-impl<'a> FsUrl<'a> for UrlBuf {
+impl FsUrl<'_> for UrlBuf {
 	fn cache(&self) -> Option<PathBuf> { self.as_url().cache() }
 
 	fn cache_lock(&self) -> Option<PathBuf> { self.as_url().cache_lock() }
 
 	fn cache_root(&self) -> Option<PathBuf> { self.as_url().cache_root() }
 
-	fn unified_path(self) -> Cow<'a, Path> {
+	fn unified_path(self) -> Cow<'static, Path> {
 		self.cache().unwrap_or_else(|| self.loc.into_path()).into()
 	}
 }

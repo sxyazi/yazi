@@ -1,4 +1,4 @@
-use std::{io::Write, path::Path, process::Stdio};
+use std::{io::Write, path::PathBuf, process::Stdio};
 
 use ansi_to_tui::IntoText;
 use anyhow::{Result, bail};
@@ -11,7 +11,7 @@ use crate::{Adapter, Emulator};
 pub(crate) struct Chafa;
 
 impl Chafa {
-	pub(crate) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+	pub(crate) async fn image_show(path: PathBuf, max: Rect) -> Result<Rect> {
 		let child = Command::new("chafa")
 			.args([
 				"-f",

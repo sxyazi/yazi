@@ -131,7 +131,7 @@ impl<'de> Deserialize<'de> for PatIcons {
 	{
 		#[derive(Deserialize)]
 		struct Shadow {
-			name: Pattern,
+			url:  Pattern,
 			text: String,
 			fg:   Option<Color>,
 		}
@@ -139,7 +139,7 @@ impl<'de> Deserialize<'de> for PatIcons {
 		Ok(Self(
 			<Vec<Shadow>>::deserialize(deserializer)?
 				.into_iter()
-				.map(|s| (s.name, I { text: s.text, style: Style { fg: s.fg, ..Default::default() } }))
+				.map(|s| (s.url, I { text: s.text, style: Style { fg: s.fg, ..Default::default() } }))
 				.collect(),
 		))
 	}

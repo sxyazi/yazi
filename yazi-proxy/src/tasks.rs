@@ -14,7 +14,7 @@ impl TasksProxy {
 	}
 
 	pub async fn process_exec(
-		cwd: UrlBuf,
+		cwd: UrlCow<'static>,
 		cmd: OsString,
 		args: Vec<UrlCow<'static>>,
 		block: bool,

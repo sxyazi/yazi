@@ -1,4 +1,4 @@
-use std::{io::Write, path::Path};
+use std::{io::Write, path::PathBuf};
 
 use anyhow::{Result, bail};
 use crossterm::{cursor::MoveTo, queue};
@@ -12,7 +12,7 @@ use crate::{CLOSE, ESCAPE, Emulator, Image, START, adapter::Adapter};
 pub(crate) struct Sixel;
 
 impl Sixel {
-	pub(crate) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+	pub(crate) async fn image_show(path: PathBuf, max: Rect) -> Result<Rect> {
 		let img = Image::downscale(path, max).await?;
 		let area = Image::pixel_area((img.width(), img.height()), max);
 		let b = Self::encode(img).await?;

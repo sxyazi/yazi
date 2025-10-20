@@ -2,21 +2,25 @@ use std::{ffi::OsStr, io, time::{Duration, UNIX_EPOCH}};
 
 use yazi_fs::cha::ChaKind;
 
-pub(crate) struct Cha(pub(crate) yazi_fs::cha::Cha);
+// --- Attrs
+pub(crate) struct Attrs(pub(crate) yazi_fs::provider::Attrs);
 
-impl From<Cha> for yazi_sftp::fs::Attrs {
-	fn from(cha: Cha) -> Self {
+impl From<Attrs> for yazi_sftp::fs::Attrs {
+	fn from(attrs: Attrs) -> Self {
 		Self {
-			size:     Some(cha.0.len),
-			uid:      Some(cha.0.uid),
-			gid:      Some(cha.0.gid),
-			perm:     Some(cha.0.mode.bits() as u32),
-			atime:    cha.0.atime_dur().ok().map(|d| d.as_secs() as u32),
-			mtime:    cha.0.mtime_dur().ok().map(|d| d.as_secs() as u32),
+			size:     None,
+			uid:      None,
+			gid:      None,
+			perm:     attrs.0.mode.map(|m| m.bits() as u32),
+			atime:    attrs.0.atime_dur().map(|d| d.as_secs() as u32),
+			mtime:    attrs.0.mtime_dur().map(|d| d.as_secs() as u32),
 			extended: Default::default(),
 		}
 	}
 }
+
+// --- Cha
+pub(crate) struct Cha(pub(crate) yazi_fs::cha::Cha);
 
 impl TryFrom<&yazi_sftp::fs::DirEntry> for Cha {
 	type Error = io::Error;

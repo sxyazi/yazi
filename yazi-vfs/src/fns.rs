@@ -1,7 +1,7 @@
 use std::{ffi::OsString, io};
 
 use tokio::{select, sync::{mpsc, oneshot}};
-use yazi_fs::cha::Cha;
+use yazi_fs::provider::Attrs;
 use yazi_macro::ok_or_not_found;
 use yazi_shared::url::{AsUrl, Url, UrlBuf, UrlLike};
 
@@ -63,22 +63,27 @@ async fn _unique_name(mut url: UrlBuf, append: bool) -> io::Result<UrlBuf> {
 	Ok(url)
 }
 
-pub fn copy_with_progress<U, V>(from: U, to: V, cha: Cha) -> mpsc::Receiver<Result<u64, io::Error>>
+pub fn copy_with_progress<U, V, A>(
+	from: U,
+	to: V,
+	attrs: A,
+) -> mpsc::Receiver<Result<u64, io::Error>>
 where
 	U: AsUrl,
 	V: AsUrl,
+	A: Into<Attrs>,
 {
-	_copy_with_progress(from.as_url(), to.as_url(), cha)
+	_copy_with_progress(from.as_url(), to.as_url(), attrs.into())
 }
 
-fn _copy_with_progress(from: Url, to: Url, cha: Cha) -> mpsc::Receiver<Result<u64, io::Error>> {
+fn _copy_with_progress(from: Url, to: Url, attrs: Attrs) -> mpsc::Receiver<Result<u64, io::Error>> {
 	let (prog_tx, prog_rx) = mpsc::channel(1);
 	let (done_tx, mut done_rx) = oneshot::channel();
 
 	tokio::spawn({
 		let (from, to) = (from.to_owned(), to.to_owned());
 		async move {
-			done_tx.send(provider::copy(from, to, cha).await).ok();
+			done_tx.send(provider::copy(from, to, attrs).await).ok();
 		}
 	});
 

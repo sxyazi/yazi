@@ -47,7 +47,7 @@ impl Cwd {
 	}
 
 	pub fn ensure(url: Url) -> Cow<Path> {
-		use std::io::ErrorKind::{AlreadyExists, NotADirectory, NotFound};
+		use std::{io::ErrorKind::{AlreadyExists, NotADirectory, NotFound}, path::Component as C};
 
 		let Some(cache) = url.cache() else {
 			return url.loc.as_path().into();
@@ -58,7 +58,20 @@ impl Cwd {
 			return cache.into();
 		}
 
-		let count = cache.strip_prefix(Xdg::cache_dir()).expect("under cache dir").components().count();
+		let latter = cache.strip_prefix(Xdg::cache_dir()).expect("under cache dir");
+		let mut it = latter.components().peekable();
+		while it.peek() == Some(&C::CurDir) {
+			it.next().unwrap();
+		}
+
+		let mut count = 0;
+		for c in it {
+			match c {
+				C::Prefix(_) | C::RootDir | C::ParentDir => return cache.into(),
+				C::CurDir | C::Normal(_) => count += 1,
+			}
+		}
+
 		for n in (0..count).rev() {
 			let mut it = cache.components();
 			for _ in 0..n {

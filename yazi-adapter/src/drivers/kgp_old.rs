@@ -1,5 +1,5 @@
 use core::str;
-use std::{io::Write, path::Path};
+use std::{io::Write, path::PathBuf};
 
 use anyhow::Result;
 use base64::{Engine, engine::general_purpose};
@@ -12,7 +12,7 @@ use crate::{CLOSE, ESCAPE, Emulator, Image, START, adapter::Adapter};
 pub(crate) struct KgpOld;
 
 impl KgpOld {
-	pub(crate) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+	pub(crate) async fn image_show(path: PathBuf, max: Rect) -> Result<Rect> {
 		let img = Image::downscale(path, max).await?;
 		let area = Image::pixel_area((img.width(), img.height()), max);
 		let b = Self::encode(img).await?;

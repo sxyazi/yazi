@@ -1,4 +1,4 @@
-use std::{fmt::Write, io::Write as ioWrite, path::Path};
+use std::{fmt::Write, io::Write as ioWrite, path::PathBuf};
 
 use anyhow::Result;
 use base64::{Engine, engine::{Config, general_purpose::STANDARD}};
@@ -12,7 +12,7 @@ use crate::{CLOSE, Emulator, Image, START, adapter::Adapter};
 pub(crate) struct Iip;
 
 impl Iip {
-	pub(crate) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+	pub(crate) async fn image_show(path: PathBuf, max: Rect) -> Result<Rect> {
 		let img = Image::downscale(path, max).await?;
 		let area = Image::pixel_area((img.width(), img.height()), max);
 		let b = Self::encode(img).await?;

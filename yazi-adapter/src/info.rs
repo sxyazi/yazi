@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::PathBuf;
 
 use image::{ImageDecoder, ImageError};
 
@@ -16,8 +16,7 @@ pub struct ImageInfo {
 }
 
 impl ImageInfo {
-	pub async fn new(path: &Path) -> image::ImageResult<Self> {
-		let path = path.to_owned();
+	pub async fn new(path: PathBuf) -> image::ImageResult<Self> {
 		tokio::task::spawn_blocking(move || {
 			let reader = image::ImageReader::open(path)?.with_guessed_format()?;
 

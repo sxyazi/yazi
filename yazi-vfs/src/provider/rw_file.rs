@@ -1,7 +1,7 @@
 use std::{io, pin::Pin};
 
 use tokio::io::{AsyncRead, AsyncWrite};
-use yazi_fs::cha::Cha;
+use yazi_fs::provider::Attrs;
 
 pub enum RwFile {
 	Tokio(tokio::fs::File),
@@ -17,19 +17,21 @@ impl From<yazi_sftp::fs::File> for RwFile {
 }
 
 impl RwFile {
-	pub async fn set_cha(&self, cha: Cha) -> io::Result<()> {
+	pub async fn set_attrs(&self, attrs: Attrs) -> io::Result<()> {
 		match self {
 			Self::Tokio(f) => {
 				let std = f.try_clone().await?.into_std().await;
 				tokio::task::spawn_blocking(move || {
 					#[cfg(unix)]
-					std.set_permissions(cha.into()).ok();
-					std.set_times(cha.into()).ok();
+					if let Some(mode) = attrs.mode {
+						std.set_permissions(mode.into()).ok();
+					}
+					std.set_times(attrs.into()).ok();
 				})
 				.await?;
 			}
 			Self::Sftp(f) => {
-				f.fsetstat(&super::sftp::Cha(cha).into()).await?;
+				f.fsetstat(&super::sftp::Attrs(attrs).into()).await?;
 			}
 		}
 

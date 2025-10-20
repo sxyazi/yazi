@@ -27,6 +27,27 @@ pub trait ExtendedData: Debug + Serialize + for<'de> Deserialize<'de> {
 	fn len(&self) -> usize;
 }
 
+// --- POSIX Rename
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ExtendedRename<'a> {
+	pub from: ByteStr<'a>,
+	pub to:   ByteStr<'a>,
+}
+
+impl<'a> ExtendedRename<'a> {
+	pub fn new<F, T>(from: F, to: T) -> Result<Self, Error>
+	where
+		F: ToByteStr<'a>,
+		T: ToByteStr<'a>,
+	{
+		Ok(Self { from: from.to_byte_str()?, to: to.to_byte_str()? })
+	}
+}
+
+impl ExtendedData for ExtendedRename<'_> {
+	fn len(&self) -> usize { 4 + self.from.len() + 4 + self.to.len() }
+}
+
 // --- Fsync
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ExtendedFsync<'a> {

@@ -3,12 +3,12 @@ use std::ffi::OsString;
 use anyhow::anyhow;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
 use tokio::sync::oneshot;
-use yazi_shared::{event::CmdCow, url::{UrlBuf, UrlCow}};
+use yazi_shared::{event::CmdCow, url::UrlCow};
 
 // --- Exec
 #[derive(Debug)]
 pub struct ProcessOpenOpt {
-	pub cwd:    UrlBuf,
+	pub cwd:    UrlCow<'static>,
 	pub cmd:    OsString,
 	pub args:   Vec<UrlCow<'static>>,
 	pub block:  bool,

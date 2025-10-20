@@ -1,4 +1,4 @@
-use std::{env, fmt::Display, path::Path};
+use std::{env, fmt::Display, path::PathBuf};
 
 use anyhow::Result;
 use ratatui::layout::Rect;
@@ -35,11 +35,15 @@ impl Display for Adapter {
 }
 
 impl Adapter {
-	pub async fn image_show(self, path: &Path, max: Rect) -> Result<Rect> {
+	pub async fn image_show<P>(self, path: P, max: Rect) -> Result<Rect>
+	where
+		P: Into<PathBuf>,
+	{
 		if max.is_empty() {
 			return Ok(Rect::default());
 		}
 
+		let path = path.into();
 		match self {
 			Self::Kgp => drivers::Kgp::image_show(path, max).await,
 			Self::KgpOld => drivers::KgpOld::image_show(path, max).await,
