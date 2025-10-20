@@ -283,7 +283,7 @@ impl Scheduler {
 
 		for rx in wg {
 			if rx.await != Ok(false) {
-				return false; // Canceled
+				return false; // Canceled or error
 			}
 		}
 		true
