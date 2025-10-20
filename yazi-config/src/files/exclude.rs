@@ -14,8 +14,7 @@ pub struct Exclude {
 
 	/// Context where this exclude rule applies
 	/// Supports glob patterns like "/code/**", "sftp://**", "search://**", or "*" for all
-	#[serde(rename = "in")]
-	pub context: String,
+	pub r#in: String,
 
 	#[serde(skip)]
 	compiled: Option<CompiledPatterns>,
@@ -78,14 +77,39 @@ impl Exclude {
 	pub fn matches_path(&self, path: &Path) -> Option<bool> {
 		let compiled = self.compiled.as_ref()?;
 
+		// For absolute paths, try both the full path and relative components
+		// This helps patterns like **/.git/** match /home/user/project/.git
+		let paths_to_check: Vec<&Path> = if path.is_absolute() {
+			// Also check each component as if it's relative
+			// This allows **/.git/** to match /home/user/.git/config
+			let mut paths = vec![path];
+
+			// Check if any path component matches by checking relative sub-paths
+			// For /home/user/.git/config, we want to match against .git/config too
+			if let Some(components) = path.to_str() {
+				for (i, _) in components.match_indices('/').skip(1) {
+					if let Some(subpath) = components.get(i + 1..) {
+						paths.push(Path::new(subpath));
+					}
+				}
+			}
+			paths
+		} else {
+			vec![path]
+		};
+
 		// Check whitelist first (negation takes precedence)
-		if compiled.whitelists.is_match(path) {
-			return Some(false); // Explicitly NOT ignored
+		for p in &paths_to_check {
+			if compiled.whitelists.is_match(p) {
+				return Some(false); // Explicitly NOT ignored
+			}
 		}
 
 		// Check ignore patterns
-		if compiled.ignores.is_match(path) {
-			return Some(true); // Should be ignored
+		for p in &paths_to_check {
+			if compiled.ignores.is_match(p) {
+				return Some(true); // Should be ignored
+			}
 		}
 
 		None // No match
@@ -94,23 +118,49 @@ impl Exclude {
 	/// Check if this exclude rule applies to the given path context
 	pub fn matches_context(&self, path: &str) -> bool {
 		// Wildcard matches everything
-		if self.context == "*" {
+		if self.r#in == "*" {
 			return true;
 		}
 
+		// Handle patterns starting with **/ (e.g., **/target or **/target/**)
+		if self.r#in.starts_with("**/") {
+			let pattern = &self.r#in[3..]; // Remove leading "**/", e.g., "target" or "target/**"
+
+			// Strip trailing /** if present
+			let pattern = if let Some(p) = pattern.strip_suffix("/**") {
+				p
+			} else {
+				pattern
+			};
+
+			// Check if path ends with the pattern (e.g., /home/user/project/target matches **/target)
+			if path.ends_with(&format!("/{}", pattern)) || path.ends_with(pattern) {
+				return true;
+			}
+
+			// Check if path contains the pattern as a directory segment
+			if path.contains(&format!("/{}/", pattern)) {
+				return true;
+			}
+
+			return false;
+		}
+
 		// Handle glob patterns with wildcard
-		if self.context.ends_with("/**") {
-			let prefix = &self.context[..self.context.len() - 3];
+		if self.r#in.ends_with("/**") {
+			let prefix = &self.r#in[..self.r#in.len() - 3];
 
 			// Check if path starts with prefix (absolute path match)
 			if path.starts_with(prefix) {
 				return true;
 			}
 
-			// Check if path contains the pattern anywhere (for relative patterns like "/target/**")
-			// This allows "/target/**" to match "/home/user/project/target/debug"
+			// Check if path contains the pattern anywhere (for relative patterns like
+			// "/target/**") This allows "/target/**" to match
+			// "/home/user/project/target/debug"
 			if prefix.starts_with('/') && !prefix.starts_with("//") {
-				// Single leading slash means relative pattern - check if path contains this segment
+				// Single leading slash means relative pattern - check if path contains this
+				// segment
 				let pattern = &prefix[1..]; // Remove leading slash
 				if path.contains(&format!("/{}/", pattern)) || path.ends_with(&format!("/{}", pattern)) {
 					return true;
@@ -121,6 +171,6 @@ impl Exclude {
 		}
 
 		// Exact match or prefix match for non-wildcard patterns
-		path == self.context || path.starts_with(&format!("{}/", self.context))
+		path == self.r#in || path.starts_with(&format!("{}/", self.r#in))
 	}
 }

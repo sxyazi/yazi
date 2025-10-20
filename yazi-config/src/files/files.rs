@@ -8,10 +8,6 @@ use super::Exclude;
 /// Configuration for file filtering
 #[derive(Debug, Deserialize, DeserializeOver2, Default)]
 pub struct Files {
-	/// Enable git ignore integration
-	#[serde(default)]
-	pub gitignores: bool,
-
 	/// List of exclude rules with context-specific patterns
 	#[serde(default)]
 	pub excludes: Vec<Exclude>,
