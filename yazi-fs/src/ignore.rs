@@ -1,4 +1,4 @@
-use std::{collections::HashSet, path::{Path, PathBuf}};
+use std::{collections::HashSet, path::{Path, PathBuf}, sync::Arc};
 
 use yazi_shared::url::AsUrl;
 
@@ -9,12 +9,25 @@ use yazi_shared::url::AsUrl;
 /// patterns that follow gitignore syntax. Exclude patterns can be
 /// context-specific and take precedence over git's ignore rules using the `!`
 /// prefix for negation.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct IgnoreFilter {
 	/// Set of paths ignored by git (from git status)
-	ignored_paths: HashSet<PathBuf>,
+	ignored_paths:  HashSet<PathBuf>,
 	/// Custom gitignore matcher for exclude patterns
-	gitignore:     Option<ignore::gitignore::Gitignore>,
+	gitignore:      Option<ignore::gitignore::Gitignore>,
+	/// Custom glob-based matcher function for advanced pattern matching
+	/// Returns Some(true) if should be ignored, Some(false) if whitelisted, None if no match
+	glob_matcher:   Option<Arc<dyn Fn(&Path) -> Option<bool> + Send + Sync>>,
+}
+
+impl std::fmt::Debug for IgnoreFilter {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_struct("IgnoreFilter")
+			.field("ignored_paths", &self.ignored_paths)
+			.field("gitignore", &self.gitignore)
+			.field("glob_matcher", &self.glob_matcher.as_ref().map(|_| "Some(...)"))
+			.finish()
+	}
 }
 
 impl IgnoreFilter {
@@ -46,6 +59,7 @@ impl IgnoreFilter {
 		dir: impl AsRef<Path>,
 		exclude_patterns: &[String],
 		use_git: bool,
+		glob_matcher: Option<Arc<dyn Fn(&Path) -> Option<bool> + Send + Sync>>,
 	) -> Option<Self> {
 		let dir = dir.as_ref();
 
@@ -100,17 +114,17 @@ impl IgnoreFilter {
 		if ignored_paths.is_empty()
 			|| (ignored_paths.len() == 1 && ignored_paths.contains(&workdir.join(".git")))
 		{
-			// If we have no git-ignored paths but we have exclude patterns, still create
+			// If we have no git-ignored paths but we have exclude patterns or glob matcher, still create
 			// the filter
-			if gitignore.is_some() {
-				return Some(Self { ignored_paths, gitignore });
+			if gitignore.is_some() || glob_matcher.is_some() {
+				return Some(Self { ignored_paths, gitignore, glob_matcher });
 			}
 			return None;
 		}
 
 		// Store ALL ignored paths, not just the ones in the current directory
 		// This way, when files are loaded later, we can check them against the full set
-		Some(Self { ignored_paths, gitignore })
+		Some(Self { ignored_paths, gitignore, glob_matcher })
 	}
 
 	/// Creates a new `IgnoreFilter` from only exclude patterns without git
@@ -128,22 +142,30 @@ impl IgnoreFilter {
 	///
 	/// This is useful when `gitignores = false` but custom exclude patterns
 	/// are still desired.
-	pub fn from_patterns(dir: impl AsRef<Path>, patterns: &[String]) -> Option<Self> {
-		if patterns.is_empty() {
+	pub fn from_patterns(
+		dir: impl AsRef<Path>,
+		patterns: &[String],
+		glob_matcher: Option<Arc<dyn Fn(&Path) -> Option<bool> + Send + Sync>>,
+	) -> Option<Self> {
+		if patterns.is_empty() && glob_matcher.is_none() {
 			return None;
 		}
 
-		let dir = dir.as_ref();
-		let mut builder = ignore::gitignore::GitignoreBuilder::new(dir);
+		let gitignore = if !patterns.is_empty() {
+			let dir = dir.as_ref();
+			let mut builder = ignore::gitignore::GitignoreBuilder::new(dir);
 
-		// Add each pattern
-		for pattern in patterns {
-			let _ = builder.add_line(None, pattern);
-		}
+			// Add each pattern
+			for pattern in patterns {
+				let _ = builder.add_line(None, pattern);
+			}
 
-		let gitignore = builder.build().ok()?;
+			builder.build().ok()
+		} else {
+			None
+		};
 
-		Some(Self { ignored_paths: HashSet::new(), gitignore: Some(gitignore) })
+		Some(Self { ignored_paths: HashSet::new(), gitignore, glob_matcher })
 	}
 
 	/// Checks if a file should be ignored based on its URL.
@@ -172,7 +194,14 @@ impl IgnoreFilter {
 		let url = url.as_url();
 		let path = url.loc.as_path();
 
-		// First check if override patterns apply (they can negate ignores)
+		// First check glob matcher (highest priority)
+		if let Some(ref matcher) = self.glob_matcher {
+			if let Some(should_ignore) = matcher(path) {
+				return should_ignore;
+			}
+		}
+
+		// Then check if override patterns apply (they can negate ignores)
 		// Override patterns take absolute priority
 		if let Some(ref gitignore) = self.gitignore {
 			let matched = gitignore.matched(path, path.is_dir());
