@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use anyhow::Result;
 use yazi_config::YAZI;
 use yazi_core::tab::Folder;
@@ -18,16 +20,28 @@ impl Actor for Ignore {
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
 		let gitignores = YAZI.files.gitignores;
 
-		// Get exclude patterns for the current context
-		// Use path string for context matching
-		let cwd_str = cx.cwd().as_path().map(|p| p.display().to_string()).unwrap_or_default();
+		// Get the appropriate context string for matching exclude rules
+		// For search directories, use "search://**" as the context
+		let cwd = cx.cwd();
+		let cwd_str = if cwd.is_search() {
+			"search://**".to_string()
+		} else {
+			cwd.as_path().map(|p| p.display().to_string()).unwrap_or_default()
+		};
+		
 		let exclude_patterns = YAZI.files.excludes_for_context(&cwd_str);
+
+		// Create glob matcher function for compiled patterns
+		let glob_matcher = {
+			let context = cwd_str.clone();
+			Arc::new(move |path: &std::path::Path| YAZI.files.matches_path(path, &context))
+		};
 
 		// If gitignores is disabled but we have exclude patterns, apply them
 		if !gitignores && !exclude_patterns.is_empty() {
 			// Load ignore filter from exclude patterns only
 			let ignore_filter = if let Some(path) = cx.cwd().as_path() {
-				IgnoreFilter::from_patterns(path, &exclude_patterns)
+				IgnoreFilter::from_patterns(path, &exclude_patterns, Some(glob_matcher.clone()))
 			} else {
 				None
 			};
@@ -52,10 +66,18 @@ impl Actor for Ignore {
 
 			// Apply to hovered
 			if let Some(h) = cx.hovered_folder_mut() {
-				let hovered_str = h.url.as_path().map(|p| p.display().to_string()).unwrap_or_default();
+				let hovered_str = if h.url.is_search() {
+					"search://**".to_string()
+				} else {
+					h.url.as_path().map(|p| p.display().to_string()).unwrap_or_default()
+				};
 				let hovered_excludes = YAZI.files.excludes_for_context(&hovered_str);
+				let hovered_matcher = {
+					let context = hovered_str.clone();
+					Arc::new(move |path: &std::path::Path| YAZI.files.matches_path(path, &context))
+				};
 				let hovered_filter = if let Some(path) = h.url.as_path() {
-					IgnoreFilter::from_patterns(path, &hovered_excludes)
+					IgnoreFilter::from_patterns(path, &hovered_excludes, Some(hovered_matcher))
 				} else {
 					None
 				};
@@ -110,7 +132,7 @@ impl Actor for Ignore {
 
 		// Load ignore filter from the current directory
 		let ignore_filter = if let Some(path) = cx.cwd().as_path() {
-			IgnoreFilter::from_dir(path, &exclude_patterns, gitignores)
+			IgnoreFilter::from_dir(path, &exclude_patterns, gitignores, Some(glob_matcher.clone()))
 		} else {
 			None
 		};
@@ -141,10 +163,18 @@ impl Actor for Ignore {
 		// Apply to hovered
 		if let Some(h) = cx.hovered_folder_mut() {
 			// Load ignore filter for hovered directory if it's a directory
-			let hovered_str = h.url.as_path().map(|p| p.display().to_string()).unwrap_or_default();
+			let hovered_str = if h.url.is_search() {
+				"search://**".to_string()
+			} else {
+				h.url.as_path().map(|p| p.display().to_string()).unwrap_or_default()
+			};
 			let hovered_excludes = YAZI.files.excludes_for_context(&hovered_str);
+			let hovered_matcher = {
+				let context = hovered_str.clone();
+				Arc::new(move |path: &std::path::Path| YAZI.files.matches_path(path, &context))
+			};
 			let hovered_filter = if let Some(path) = h.url.as_path() {
-				IgnoreFilter::from_dir(path, &hovered_excludes, gitignores)
+				IgnoreFilter::from_dir(path, &hovered_excludes, gitignores, Some(hovered_matcher))
 			} else {
 				None
 			};

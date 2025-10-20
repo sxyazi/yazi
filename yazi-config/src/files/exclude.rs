@@ -101,12 +101,12 @@ impl Exclude {
 		// Handle glob patterns with wildcard
 		if self.context.ends_with("/**") {
 			let prefix = &self.context[..self.context.len() - 3];
-			
+
 			// Check if path starts with prefix (absolute path match)
 			if path.starts_with(prefix) {
 				return true;
 			}
-			
+
 			// Check if path contains the pattern anywhere (for relative patterns like "/target/**")
 			// This allows "/target/**" to match "/home/user/project/target/debug"
 			if prefix.starts_with('/') && !prefix.starts_with("//") {
@@ -116,10 +116,10 @@ impl Exclude {
 					return true;
 				}
 			}
-			
+
 			return false;
 		}
-		
+
 		// Exact match or prefix match for non-wildcard patterns
 		path == self.context || path.starts_with(&format!("{}/", self.context))
 	}
