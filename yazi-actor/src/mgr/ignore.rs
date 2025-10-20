@@ -28,7 +28,7 @@ impl Actor for Ignore {
 		} else {
 			cwd.as_path().map(|p| p.display().to_string()).unwrap_or_default()
 		};
-		
+
 		let exclude_patterns = YAZI.files.excludes_for_context(&cwd_str);
 
 		// Create glob matcher function for compiled patterns

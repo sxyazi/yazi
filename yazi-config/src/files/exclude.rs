@@ -107,10 +107,12 @@ impl Exclude {
 				return true;
 			}
 
-			// Check if path contains the pattern anywhere (for relative patterns like "/target/**")
-			// This allows "/target/**" to match "/home/user/project/target/debug"
+			// Check if path contains the pattern anywhere (for relative patterns like
+			// "/target/**") This allows "/target/**" to match
+			// "/home/user/project/target/debug"
 			if prefix.starts_with('/') && !prefix.starts_with("//") {
-				// Single leading slash means relative pattern - check if path contains this segment
+				// Single leading slash means relative pattern - check if path contains this
+				// segment
 				let pattern = &prefix[1..]; // Remove leading slash
 				if path.contains(&format!("/{}/", pattern)) || path.ends_with(&format!("/{}", pattern)) {
 					return true;

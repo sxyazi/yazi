@@ -12,12 +12,13 @@ use yazi_shared::url::AsUrl;
 #[derive(Clone)]
 pub struct IgnoreFilter {
 	/// Set of paths ignored by git (from git status)
-	ignored_paths:  HashSet<PathBuf>,
+	ignored_paths: HashSet<PathBuf>,
 	/// Custom gitignore matcher for exclude patterns
-	gitignore:      Option<ignore::gitignore::Gitignore>,
+	gitignore:     Option<ignore::gitignore::Gitignore>,
 	/// Custom glob-based matcher function for advanced pattern matching
-	/// Returns Some(true) if should be ignored, Some(false) if whitelisted, None if no match
-	glob_matcher:   Option<Arc<dyn Fn(&Path) -> Option<bool> + Send + Sync>>,
+	/// Returns Some(true) if should be ignored, Some(false) if whitelisted, None
+	/// if no match
+	glob_matcher:  Option<Arc<dyn Fn(&Path) -> Option<bool> + Send + Sync>>,
 }
 
 impl std::fmt::Debug for IgnoreFilter {
@@ -114,8 +115,8 @@ impl IgnoreFilter {
 		if ignored_paths.is_empty()
 			|| (ignored_paths.len() == 1 && ignored_paths.contains(&workdir.join(".git")))
 		{
-			// If we have no git-ignored paths but we have exclude patterns or glob matcher, still create
-			// the filter
+			// If we have no git-ignored paths but we have exclude patterns or glob matcher,
+			// still create the filter
 			if gitignore.is_some() || glob_matcher.is_some() {
 				return Some(Self { ignored_paths, gitignore, glob_matcher });
 			}
