@@ -52,7 +52,7 @@ impl Actor for BulkRename {
 
 			defer! { tokio::spawn(Local.remove_file(tmp.clone())); }
 			TasksProxy::process_exec(
-				cwd,
+				cwd.into(),
 				Splatter::new(&[UrlCow::default(), tmp.as_url().into()]).splat(&opener.run),
 				vec![UrlCow::default(), UrlBuf::from(&tmp).into()],
 				opener.block,

@@ -75,6 +75,15 @@ impl TryFrom<u16> for ChaMode {
 	}
 }
 
+#[cfg(unix)]
+impl From<ChaMode> for std::fs::Permissions {
+	fn from(value: ChaMode) -> Self {
+		use std::os::unix::fs::PermissionsExt;
+
+		std::fs::Permissions::from_mode(value.bits() as _)
+	}
+}
+
 impl ChaMode {
 	// Convert a file mode to a string representation
 	#[cfg(unix)]

@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use yazi_macro::{emit, relay};
-use yazi_parser::mgr::{FilterOpt, FindDoOpt, OpenDoOpt, SearchOpt, UpdatePeekedOpt, UpdateSpottedOpt};
+use yazi_parser::mgr::{FilterOpt, FindDoOpt, OpenDoOpt, OpenOpt, SearchOpt, UpdatePeekedOpt, UpdateSpottedOpt};
 use yazi_shared::{SStr, url::UrlBuf};
 
 pub struct MgrProxy;
@@ -17,6 +17,10 @@ impl MgrProxy {
 
 	pub fn arrow(step: impl Into<SStr>) {
 		emit!(Call(relay!(mgr:arrow, [step.into()])));
+	}
+
+	pub fn open(opt: OpenOpt) {
+		emit!(Call(relay!(mgr:open).with_any("opt", opt)));
 	}
 
 	pub fn open_do(opt: OpenDoOpt) {

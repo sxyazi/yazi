@@ -3,10 +3,10 @@ use std::{ffi::OsString, process::Stdio};
 use anyhow::Result;
 use tokio::process::{Child, Command};
 use yazi_fs::{Cwd, FsUrl};
-use yazi_shared::url::{AsUrl, UrlBuf, UrlCow};
+use yazi_shared::url::{AsUrl, UrlCow};
 
 pub(crate) struct ShellOpt {
-	pub(crate) cwd:    UrlBuf,
+	pub(crate) cwd:    UrlCow<'static>,
 	pub(crate) cmd:    OsString,
 	pub(crate) args:   Vec<UrlCow<'static>>,
 	pub(crate) piped:  bool,

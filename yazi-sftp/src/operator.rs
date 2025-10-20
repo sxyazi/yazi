@@ -142,7 +142,23 @@ impl Operator {
 		F: ToByteStr<'a>,
 		T: ToByteStr<'a>,
 	{
-		let status: responses::Status = self.send(requests::Rename::new(from, to)?).await?;
+		let req = requests::Rename::new(from, to)?;
+		let status: responses::Status = self.send(req).await?;
+		status.into()
+	}
+
+	pub async fn rename_posix<'a, F, T>(&self, from: F, to: T) -> Result<(), Error>
+	where
+		F: ToByteStr<'a>,
+		T: ToByteStr<'a>,
+	{
+		if self.extensions.lock().get("posix-rename@openssh.com").is_none_or(|s| s != "1") {
+			return Err(Error::Unsupported);
+		}
+
+		let data = requests::ExtendedRename::new(from, to)?;
+		let status: responses::Status =
+			self.send(requests::Extended::new("posix-rename@openssh.com", data)).await?;
 		status.into()
 	}
 

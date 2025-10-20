@@ -282,8 +282,8 @@ impl Scheduler {
 		}
 
 		for rx in wg {
-			if rx.await != Ok(true) {
-				return false;
+			if rx.await != Ok(false) {
+				return false; // Canceled
 			}
 		}
 		true
@@ -409,7 +409,6 @@ impl Scheduler {
 							TaskIn::FileDelete(r#in) => file.delete_do(r#in).await.map_err(Into::into),
 							TaskIn::FileTrash(r#in) => file.trash_do(r#in).await.map_err(Into::into),
 							TaskIn::FileDownload(r#in) => file.download_do(r#in).await.map_err(Into::into),
-							TaskIn::FileUpload(r#in) => file.upload(r#in).await.map_err(Into::into),
 							TaskIn::FileUploadDo(r#in) => file.upload_do(r#in).await.map_err(Into::into),
 							// Plugin
 							TaskIn::PluginEntry(r#in) => plugin.macro_do(r#in).await.map_err(Into::into),

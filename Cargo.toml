@@ -24,17 +24,17 @@ ansi-to-tui         = "7.0.0"
 anyhow              = "1.0.100"
 base64              = "0.22.1"
 bitflags            = { version = "2.9.4", features = [ "serde" ] }
-clap                = { version = "4.5.48", features = [ "derive" ] }
+clap                = { version = "4.5.49", features = [ "derive" ] }
 core-foundation-sys = "0.8.7"
 crossterm           = { version = "0.29.0", features = [ "event-stream" ] }
 dirs                = "6.0.0"
 foldhash            = "0.2.0"
 futures             = "0.3.31"
-globset             = "0.4.16"
+globset             = "0.4.17"
 hashbrown           = { version = "0.16.0", features = [ "serde" ] }
-indexmap            = { version = "2.11.4", features = [ "serde" ] }
+indexmap            = { version = "2.12.0", features = [ "serde" ] }
 libc                = "0.2.177"
-lru                 = "0.16.1"
+lru                 = "0.16.2"
 mlua                = { version = "0.11.4", features = [ "anyhow", "async", "error-send", "lua54", "macros", "serde" ] }
 objc                = "0.2.7"
 ordered-float       = { version = "5.1.0", features = [ "serde" ] }
@@ -42,13 +42,13 @@ parking_lot         = "0.12.5"
 paste               = "1.0.15"
 percent-encoding    = "2.3.2"
 ratatui             = { version = "0.29.0", features = [ "unstable-rendered-line-info", "unstable-widget-ref" ] }
-regex               = "1.12.1"
-russh               = { version = "0.54.5", default-features = false, features = [ "ring", "rsa" ] }
+regex               = "1.12.2"
+russh               = { version = "0.54.6", default-features = false, features = [ "ring", "rsa" ] }
 scopeguard          = "1.2.0"
 serde               = { version = "1.0.228", features = [ "derive" ] }
 serde_json          = "1.0.145"
 syntect             = { version = "5.3.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
-tokio               = { version = "1.47.1", features = [ "full" ] }
+tokio               = { version = "1.48.0", features = [ "full" ] }
 tokio-stream        = "0.1.17"
 tokio-util          = "0.7.16"
 toml                = { version = "0.9.8" }

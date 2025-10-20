@@ -2,11 +2,13 @@ use std::{mem, time::{Duration, Instant}};
 
 use anyhow::Result;
 use futures::{StreamExt, stream::FuturesUnordered};
+use hashbrown::HashSet;
 use tokio::sync::oneshot;
-use yazi_fs::File;
-use yazi_macro::{act, succ};
-use yazi_parser::mgr::DownloadOpt;
-use yazi_shared::data::Data;
+use yazi_fs::{File, FsUrl, provider::{Provider, local::Local}};
+use yazi_macro::succ;
+use yazi_parser::mgr::{DownloadOpt, OpenOpt};
+use yazi_proxy::MgrProxy;
+use yazi_shared::{data::Data, url::UrlCow};
 use yazi_vfs::VfsFile;
 
 use crate::{Actor, Ctx};
@@ -19,18 +21,21 @@ impl Actor for Download {
 	const NAME: &str = "download";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		act!(mgr:escape_visual, cx)?;
-
-		let mut wg1 = FuturesUnordered::new();
-		for url in opt.urls {
-			let (tx, rx) = oneshot::channel();
-			cx.tasks.scheduler.file_download(url.to_owned(), Some(tx));
-			wg1.push(async move { (rx.await == Ok(true), url) });
-		}
-
+		let cwd = cx.cwd().clone();
 		let scheduler = cx.tasks.scheduler.clone();
+
 		tokio::spawn(async move {
+			Self::prepare(&opt.urls).await;
+
+			let mut wg1 = FuturesUnordered::new();
+			for url in opt.urls {
+				let (tx, rx) = oneshot::channel();
+				scheduler.file_download(url.to_owned(), Some(tx));
+				wg1.push(async move { (rx.await == Ok(false), url) });
+			}
+
 			let mut wg2 = vec![];
+			let mut urls = Vec::with_capacity(wg1.len());
 			let mut files = Vec::with_capacity(wg1.len());
 			let mut instant = Instant::now();
 			while let Some((success, url)) = wg1.next().await {
@@ -38,7 +43,8 @@ impl Actor for Download {
 					continue;
 				}
 
-				let Ok(f) = File::new(url).await else { continue };
+				let Ok(f) = File::new(&url).await else { continue };
+				urls.push(url);
 				files.push(f);
 
 				if instant.elapsed() >= Duration::from_secs(1) {
@@ -50,9 +56,29 @@ impl Actor for Download {
 			if !files.is_empty() {
 				wg2.push(scheduler.fetch_mimetype(files));
 			}
-			futures::future::join_all(wg2).await;
+			if futures::future::join_all(wg2).await.into_iter().any(|b| !b) {
+				return;
+			}
+			if opt.open && !urls.is_empty() {
+				MgrProxy::open(OpenOpt {
+					cwd:         Some(cwd.into()),
+					targets:     urls,
+					interactive: false,
+					hovered:     false,
+				});
+			}
 		});
 
 		succ!();
+	}
+}
+
+impl Download {
+	async fn prepare(urls: &[UrlCow<'_>]) {
+		let roots: HashSet<_> = urls.iter().filter_map(|u| u.cache_root()).collect();
+		for mut root in roots {
+			root.push("%lock");
+			Local.create_dir_all(root).await.ok();
+		}
 	}
 }

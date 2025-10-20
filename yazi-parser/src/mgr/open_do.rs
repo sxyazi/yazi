@@ -1,10 +1,10 @@
 use anyhow::bail;
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::{event::CmdCow, url::{UrlBuf, UrlCow}};
+use yazi_shared::{event::CmdCow, url::UrlCow};
 
 #[derive(Debug, Default)]
 pub struct OpenDoOpt {
-	pub cwd:         UrlBuf,
+	pub cwd:         UrlCow<'static>,
 	pub targets:     Vec<UrlCow<'static>>,
 	pub interactive: bool,
 }

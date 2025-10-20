@@ -17,7 +17,12 @@ pub struct Highlighter {
 
 impl Highlighter {
 	#[inline]
-	pub fn new(path: &Path) -> Self { Self { path: path.to_owned() } }
+	pub fn new<P>(path: P) -> Self
+	where
+		P: Into<PathBuf>,
+	{
+		Self { path: path.into() }
+	}
 
 	pub fn init() -> (&'static Theme, &'static SyntaxSet) {
 		let f = || {

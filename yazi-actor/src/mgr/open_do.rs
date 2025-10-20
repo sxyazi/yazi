@@ -5,7 +5,7 @@ use yazi_fs::Splatter;
 use yazi_macro::succ;
 use yazi_parser::{mgr::OpenDoOpt, tasks::ProcessOpenOpt};
 use yazi_proxy::{PickProxy, TasksProxy};
-use yazi_shared::{data::Data, url::{UrlBuf, UrlCow}};
+use yazi_shared::{data::Data, url::UrlCow};
 
 use crate::{Actor, Ctx};
 
@@ -60,7 +60,7 @@ impl Actor for OpenDo {
 
 impl OpenDo {
 	// TODO: remove
-	fn match_and_open(cx: &Ctx, cwd: UrlBuf, targets: Vec<(UrlCow<'static>, &str)>) {
+	fn match_and_open(cx: &Ctx, cwd: UrlCow<'static>, targets: Vec<(UrlCow<'static>, &str)>) {
 		let mut openers = HashMap::new();
 		for (url, mime) in targets {
 			if let Some(opener) = YAZI.opener.first(YAZI.open.all(&url, mime)) {

@@ -1,6 +1,6 @@
 use std::{io, path::Path};
 
-use yazi_fs::{cha::Cha, provider::FileBuilder};
+use yazi_fs::provider::{Attrs, FileBuilder};
 use yazi_shared::scheme::SchemeRef;
 
 pub enum Gate {
@@ -27,10 +27,10 @@ impl FileBuilder for Gate {
 		self
 	}
 
-	fn cha(&mut self, cha: Cha) -> &mut Self {
+	fn attrs(&mut self, attrs: Attrs) -> &mut Self {
 		match self {
-			Self::Local(g) => _ = g.cha(cha),
-			Self::Sftp(g) => _ = g.cha(cha),
+			Self::Local(g) => _ = g.attrs(attrs),
+			Self::Sftp(g) => _ = g.attrs(attrs),
 		};
 		self
 	}

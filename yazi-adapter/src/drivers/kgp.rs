@@ -1,5 +1,5 @@
 use core::str;
-use std::{io::Write, path::Path};
+use std::{io::Write, path::PathBuf};
 
 use anyhow::Result;
 use base64::{Engine, engine::general_purpose};
@@ -313,7 +313,7 @@ static DIACRITICS: [char; 297] = [
 pub(crate) struct Kgp;
 
 impl Kgp {
-	pub(crate) async fn image_show(path: &Path, max: Rect) -> Result<Rect> {
+	pub(crate) async fn image_show(path: PathBuf, max: Rect) -> Result<Rect> {
 		let img = Image::downscale(path, max).await?;
 		let area = Image::pixel_area((img.width(), img.height()), max);
 

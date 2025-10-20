@@ -2,7 +2,7 @@ use std::{io, path::Path};
 
 use yazi_shared::scheme::SchemeRef;
 
-use crate::{cha::Cha, provider::FileBuilder};
+use crate::provider::{Attrs, FileBuilder};
 
 #[derive(Default)]
 pub struct Gate(tokio::fs::OpenOptions);
@@ -15,9 +15,11 @@ impl FileBuilder for Gate {
 		self
 	}
 
-	fn cha(&mut self, _cha: Cha) -> &mut Self {
+	fn attrs(&mut self, _attrs: Attrs) -> &mut Self {
 		#[cfg(unix)]
-		self.0.mode(_cha.mode.bits() as _);
+		if let Some(mode) = _attrs.mode {
+			self.0.mode(mode.bits() as _);
+		}
 		self
 	}
 

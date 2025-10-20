@@ -1,9 +1,10 @@
 use mlua::{AnyUserData, ExternalError, Function, IntoLuaMulti, Lua, Table, Value};
 use yazi_binding::{Error, elements::{Area, Renderable, Text}};
 use yazi_config::YAZI;
+use yazi_fs::FsUrl;
 use yazi_parser::mgr::{PreviewLock, UpdatePeekedOpt};
 use yazi_proxy::MgrProxy;
-use yazi_shared::{errors::PeekError, url::UrlLike};
+use yazi_shared::{errors::PeekError, url::AsUrl};
 
 use super::Utils;
 use crate::external::Highlighter;
@@ -14,10 +15,7 @@ impl Utils {
 			let area: Area = t.raw_get("area")?;
 			let mut lock = PreviewLock::try_from(t)?;
 
-			let Some(path) = lock.url.as_path() else {
-				return "Only local files are supported".into_lua_multi(&lua);
-			};
-
+			let path = lock.url.as_url().unified_path();
 			let inner = match Highlighter::new(path).highlight(lock.skip, area.size()).await {
 				Ok(text) => text,
 				Err(e @ PeekError::Exceed(max)) => return (e.to_string(), max).into_lua_multi(&lua),

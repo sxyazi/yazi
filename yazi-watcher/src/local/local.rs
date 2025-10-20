@@ -2,7 +2,7 @@ use std::{path::Path, time::Duration};
 
 use anyhow::Result;
 use hashbrown::HashSet;
-use notify::{ErrorKind::WatchNotFound, PollWatcher, RecommendedWatcher, RecursiveMode, Watcher};
+use notify::{PollWatcher, RecommendedWatcher, RecursiveMode, Watcher};
 use tokio::{pin, sync::mpsc::{self, UnboundedReceiver}};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use yazi_fs::{File, FilesOp, provider};
@@ -34,13 +34,17 @@ impl Local {
 	}
 
 	pub(crate) fn watch(&mut self, path: &Path) -> Result<()> {
-		Ok(self.0.watch(path, RecursiveMode::NonRecursive)?)
+		match self.0.watch(path, RecursiveMode::NonRecursive) {
+			Ok(()) => Ok(()),
+			Err(e) if matches!(e.kind, notify::ErrorKind::PathNotFound) => Ok(()),
+			Err(e) => Err(e)?,
+		}
 	}
 
 	pub(crate) fn unwatch(&mut self, path: &Path) -> Result<()> {
 		match self.0.unwatch(path) {
 			Ok(()) => Ok(()),
-			Err(e) if matches!(e.kind, WatchNotFound) => Ok(()),
+			Err(e) if matches!(e.kind, notify::ErrorKind::WatchNotFound) => Ok(()),
 			Err(e) => Err(e)?,
 		}
 	}

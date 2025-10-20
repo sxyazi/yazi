@@ -1,7 +1,7 @@
 use std::{io, path::{Path, PathBuf}, sync::Arc};
 
 use russh::keys::PrivateKeyWithHashAlg;
-use tokio::io::{BufReader, BufWriter};
+use tokio::io::{AsyncWriteExt, BufReader, BufWriter};
 use yazi_config::vfs::ProviderSftp;
 use yazi_fs::provider::{DirReader, FileBuilder, FileHolder, Provider, local::Local};
 use yazi_sftp::fs::{Attrs, Flags};
@@ -77,12 +77,12 @@ impl Provider for Sftp {
 		similar.map(|n| parent.join(n)).ok_or_else(|| io::Error::from(io::ErrorKind::NotFound))
 	}
 
-	async fn copy<P, Q>(&self, from: P, to: Q, cha: yazi_fs::cha::Cha) -> io::Result<u64>
+	async fn copy<P, Q>(&self, from: P, to: Q, attrs: yazi_fs::provider::Attrs) -> io::Result<u64>
 	where
 		P: AsRef<Path>,
 		Q: AsRef<Path>,
 	{
-		let attrs = Attrs::from(Cha(cha));
+		let attrs = Attrs::from(super::Attrs(attrs));
 
 		let op = self.op().await?;
 		let from = op.open(&from, Flags::READ, &Attrs::default()).await?;
@@ -90,10 +90,11 @@ impl Provider for Sftp {
 
 		let mut reader = BufReader::with_capacity(524288, from);
 		let mut writer = BufWriter::with_capacity(524288, to);
-
 		let written = tokio::io::copy(&mut reader, &mut writer).await?;
-		writer.into_inner().fsetstat(&attrs).await.ok();
 
+		writer.flush().await?;
+		writer.get_ref().fsetstat(&attrs).await.ok();
+		writer.shutdown().await.ok();
 		Ok(written)
 	}
 
@@ -158,7 +159,16 @@ impl Provider for Sftp {
 		P: AsRef<Path>,
 		Q: AsRef<Path>,
 	{
-		Ok(self.op().await?.rename(&from, &to).await?)
+		let op = self.op().await?;
+		match op.rename_posix(&from, &to).await {
+			Ok(()) => {}
+			Err(yazi_sftp::Error::Unsupported) => {
+				op.remove(&to).await?;
+				op.rename(&from, &to).await?;
+			}
+			Err(e) => Err(e)?,
+		}
+		Ok(())
 	}
 
 	async fn symlink<P, Q, F>(&self, original: P, link: Q, _is_dir: F) -> io::Result<()>

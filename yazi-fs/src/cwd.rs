@@ -47,7 +47,7 @@ impl Cwd {
 	}
 
 	pub fn ensure(url: Url) -> Cow<Path> {
-		use std::io::ErrorKind::{AlreadyExists, NotADirectory, NotFound};
+		use std::{io::ErrorKind::{AlreadyExists, NotADirectory, NotFound}, path::Component as C};
 
 		let Some(cache) = url.cache() else {
 			return url.loc.as_path().into();
@@ -59,10 +59,13 @@ impl Cwd {
 		}
 
 		let count = cache.strip_prefix(Xdg::cache_dir()).expect("under cache dir").components().count();
-		for n in (0..count).rev() {
+		'outer: for n in (0..count).rev() {
 			let mut it = cache.components();
 			for _ in 0..n {
-				it.next_back().unwrap();
+				match it.next_back().unwrap() {
+					C::Prefix(_) | C::RootDir | C::ParentDir => break 'outer,
+					C::CurDir | C::Normal(_) => {}
+				}
 			}
 			match std::fs::remove_file(it.as_path()) {
 				Ok(_) => break,

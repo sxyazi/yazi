@@ -155,14 +155,6 @@ impl Cha {
 		}
 	}
 
-	pub fn mtime_dur(self) -> anyhow::Result<Duration> {
-		if let Some(mtime) = self.mtime {
-			Ok(mtime.duration_since(UNIX_EPOCH)?)
-		} else {
-			bail!("mtime not available");
-		}
-	}
-
 	pub fn btime_dur(self) -> anyhow::Result<Duration> {
 		if let Some(btime) = self.btime {
 			Ok(btime.duration_since(UNIX_EPOCH)?)
@@ -176,6 +168,14 @@ impl Cha {
 			Ok(ctime.duration_since(UNIX_EPOCH)?)
 		} else {
 			bail!("ctime not available");
+		}
+	}
+
+	pub fn mtime_dur(self) -> anyhow::Result<Duration> {
+		if let Some(mtime) = self.mtime {
+			Ok(mtime.duration_since(UNIX_EPOCH)?)
+		} else {
+			bail!("mtime not available");
 		}
 	}
 }

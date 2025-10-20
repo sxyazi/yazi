@@ -1,7 +1,7 @@
 use std::{io, path::{Path, PathBuf}};
 
-use tokio::io::{BufReader, BufWriter};
-use yazi_fs::{cha::Cha, provider::{Provider, local::Local}};
+use tokio::io::{AsyncWriteExt, BufReader, BufWriter};
+use yazi_fs::{cha::Cha, provider::{Attrs, Provider, local::Local}};
 use yazi_shared::{scheme::SchemeRef, url::{AsUrl, UrlBuf, UrlCow}};
 
 use super::{Providers, ReadDir, RwFile};
@@ -57,7 +57,7 @@ where
 	})
 }
 
-pub async fn copy<U, V>(from: U, to: V, cha: Cha) -> io::Result<u64>
+pub async fn copy<U, V>(from: U, to: V, attrs: Attrs) -> io::Result<u64>
 where
 	U: AsUrl,
 	V: AsUrl,
@@ -65,9 +65,9 @@ where
 	let (from, to) = (from.as_url(), to.as_url());
 
 	match (from.as_path(), to.as_path()) {
-		(Some(from), Some(to)) => Local.copy(from, to, cha).await,
+		(Some(from), Some(to)) => Local.copy(from, to, attrs).await,
 		(None, None) if from.scheme.covariant(to.scheme) => {
-			Providers::new(from).await?.copy(from.loc, to.loc, cha).await
+			Providers::new(from).await?.copy(from.loc, to.loc, attrs).await
 		}
 		(Some(_), None) | (None, Some(_)) | (None, None) => {
 			let src = Providers::new(from).await?.open(from.loc).await?;
@@ -75,10 +75,11 @@ where
 
 			let mut reader = BufReader::with_capacity(524288, src);
 			let mut writer = BufWriter::with_capacity(524288, dist);
-
 			let written = tokio::io::copy(&mut reader, &mut writer).await?;
-			writer.into_inner().set_cha(cha).await.ok();
 
+			writer.flush().await?;
+			writer.get_ref().set_attrs(attrs).await.ok();
+			writer.shutdown().await.ok();
 			Ok(written)
 		}
 	}

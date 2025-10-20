@@ -4,7 +4,7 @@ use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt};
 use yazi_macro::ok_or_not_found;
 use yazi_shared::{scheme::SchemeRef, url::{AsUrl, UrlCow}};
 
-use crate::cha::{Cha, ChaType};
+use crate::{cha::{Cha, ChaType}, provider::Attrs};
 
 pub trait Provider {
 	type File: AsyncRead + AsyncWrite + Unpin;
@@ -23,7 +23,7 @@ pub trait Provider {
 	where
 		P: AsRef<Path>;
 
-	fn copy<P, Q>(&self, from: P, to: Q, cha: Cha) -> impl Future<Output = io::Result<u64>>
+	fn copy<P, Q>(&self, from: P, to: Q, attrs: Attrs) -> impl Future<Output = io::Result<u64>>
 	where
 		P: AsRef<Path>,
 		Q: AsRef<Path>;
@@ -245,7 +245,7 @@ pub trait FileBuilder {
 
 	fn append(&mut self, append: bool) -> &mut Self;
 
-	fn cha(&mut self, cha: Cha) -> &mut Self;
+	fn attrs(&mut self, attrs: Attrs) -> &mut Self;
 
 	fn create(&mut self, create: bool) -> &mut Self;
 

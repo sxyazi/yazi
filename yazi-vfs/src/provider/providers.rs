@@ -1,7 +1,7 @@
 use std::{io, path::{Path, PathBuf}, sync::Arc};
 
 use yazi_config::vfs::{ProviderSftp, Vfs};
-use yazi_fs::{cha::Cha, provider::{Provider, local::Local}};
+use yazi_fs::{cha::Cha, provider::{Attrs, Provider, local::Local}};
 use yazi_shared::{scheme::SchemeRef, url::{AsUrl, Url, UrlCow}};
 
 pub(super) struct Providers<'a>(Inner<'a>);
@@ -62,14 +62,14 @@ impl Provider for Providers<'_> {
 		}
 	}
 
-	async fn copy<P, Q>(&self, from: P, to: Q, cha: Cha) -> io::Result<u64>
+	async fn copy<P, Q>(&self, from: P, to: Q, attrs: Attrs) -> io::Result<u64>
 	where
 		P: AsRef<Path>,
 		Q: AsRef<Path>,
 	{
 		match self.0 {
-			Inner::Regular | Inner::Search(_) => Local.copy(from, to, cha).await,
-			Inner::Sftp((p, _)) => p.copy(from, to, cha).await,
+			Inner::Regular | Inner::Search(_) => Local.copy(from, to, attrs).await,
+			Inner::Sftp((p, _)) => p.copy(from, to, attrs).await,
 		}
 	}
 
