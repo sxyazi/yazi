@@ -142,8 +142,7 @@ impl Operator {
 		F: ToByteStr<'a>,
 		T: ToByteStr<'a>,
 	{
-		let req = requests::Rename::new(from, to)?;
-		let status: responses::Status = self.send(req).await?;
+		let status: responses::Status = self.send(requests::Rename::new(from, to)?).await?;
 		status.into()
 	}
 

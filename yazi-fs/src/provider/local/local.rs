@@ -238,17 +238,19 @@ impl Local {
 			use std::os::unix::fs::OpenOptionsExt;
 
 			tokio::task::spawn_blocking(move || {
-				let mut reader = std::fs::File::open(from)?;
-				let mut writer = std::fs::OpenOptions::new()
-					.mode(cha.mode.bits() as _)
-					.write(true)
-					.create(true)
-					.truncate(true)
-					.open(to)?;
+				let mut opts = std::fs::OpenOptions::new();
+				if let Some(mode) = attrs.mode {
+					opts.mode(mode.bits() as _);
+				}
 
+				let mut reader = std::fs::File::open(from)?;
+				let mut writer = opts.write(true).create(true).truncate(true).open(to)?;
 				let written = std::io::copy(&mut reader, &mut writer)?;
-				writer.set_permissions(cha.into()).ok();
-				writer.set_times(cha.into()).ok();
+
+				if let Some(mode) = attrs.mode {
+					writer.set_permissions(mode.into()).ok();
+				}
+				writer.set_times(attrs.into()).ok();
 
 				Ok(written)
 			})

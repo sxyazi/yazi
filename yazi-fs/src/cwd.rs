@@ -58,14 +58,24 @@ impl Cwd {
 			return cache.into();
 		}
 
-		let count = cache.strip_prefix(Xdg::cache_dir()).expect("under cache dir").components().count();
-		'outer: for n in (0..count).rev() {
+		let latter = cache.strip_prefix(Xdg::cache_dir()).expect("under cache dir");
+		let mut it = latter.components().peekable();
+		while it.peek() == Some(&C::CurDir) {
+			it.next().unwrap();
+		}
+
+		let mut count = 0;
+		for c in it {
+			match c {
+				C::Prefix(_) | C::RootDir | C::ParentDir => return cache.into(),
+				C::CurDir | C::Normal(_) => count += 1,
+			}
+		}
+
+		for n in (0..count).rev() {
 			let mut it = cache.components();
 			for _ in 0..n {
-				match it.next_back().unwrap() {
-					C::Prefix(_) | C::RootDir | C::ParentDir => break 'outer,
-					C::CurDir | C::Normal(_) => {}
-				}
+				it.next_back().unwrap();
 			}
 			match std::fs::remove_file(it.as_path()) {
 				Ok(_) => break,
