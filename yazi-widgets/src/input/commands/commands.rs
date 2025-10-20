@@ -36,8 +36,7 @@ impl Input {
 				on!(undo);
 				on!(redo);
 
-				on!(uppercase);
-				on!(lowercase);
+				on!(casefy);
 			}
 			InputMode::Insert => {
 				on!(visual);

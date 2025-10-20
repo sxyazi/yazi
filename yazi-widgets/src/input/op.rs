@@ -7,7 +7,6 @@ pub enum InputOp {
 	Select(usize),
 	Delete(bool, bool, usize), // cut, insert, start
 	Yank(usize),
-	Case(bool, usize), //  upper, start
 }
 
 impl InputOp {
@@ -18,7 +17,6 @@ impl InputOp {
 			Self::Select(s) => Some(*s),
 			Self::Delete(.., s) => Some(*s),
 			Self::Yank(s) => Some(*s),
-			Self::Case(.., s) => Some(*s),
 		}
 	}
 

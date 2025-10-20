@@ -7,7 +7,7 @@ use crate::input::{Input, InputMode, InputOp};
 
 impl Input {
 	pub fn undo(&mut self, _: VoidOpt) -> Result<Data> {
-		if let InputOp::Select(_) = self.snap().op {
+		if self.snap().op != InputOp::None {
 			succ!();
 		}
 
