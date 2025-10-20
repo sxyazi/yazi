@@ -1,20 +1,9 @@
-{
-  callPackage,
-  rust-bin,
-  nodePackages,
-}:
-let
-  mainPkg = callPackage ./yazi.nix { };
-in
-mainPkg.overrideAttrs (oa: {
+{ callPackage, rust-bin, nodePackages, }:
+let mainPkg = callPackage ./yazi.nix { };
+in mainPkg.overrideAttrs (oa: {
   nativeBuildInputs = [
-    (rust-bin.stable.latest.default.override {
-      extensions = [
-        "rust-src"
-        "rustfmt"
-        "rust-analyzer"
-        "clippy"
-      ];
+    (rust-bin.nightly.latest.default.override {
+      extensions = [ "rust-src" "rustfmt" "rust-analyzer" "clippy" ];
     })
 
     nodePackages.cspell
