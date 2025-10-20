@@ -16,14 +16,18 @@ impl Actor for Ignore {
 	const NAME: &str = "ignore";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
-		let gitignore_enabled = YAZI.mgr.gitignore_enable;
-		let override_patterns = &YAZI.mgr.ignore_override;
+		let gitignores = YAZI.files.gitignores;
 
-		// If gitignore is disabled but we have override patterns, apply them
-		if !gitignore_enabled && !override_patterns.is_empty() {
-			// Load ignore filter from override patterns only
+		// Get exclude patterns for the current context
+		// Use path string for context matching
+		let cwd_str = cx.cwd().as_path().map(|p| p.display().to_string()).unwrap_or_default();
+		let exclude_patterns = YAZI.files.excludes_for_context(&cwd_str);
+
+		// If gitignores is disabled but we have exclude patterns, apply them
+		if !gitignores && !exclude_patterns.is_empty() {
+			// Load ignore filter from exclude patterns only
 			let ignore_filter = if let Some(path) = cx.cwd().as_path() {
-				IgnoreFilter::from_patterns(path, override_patterns)
+				IgnoreFilter::from_patterns(path, &exclude_patterns)
 			} else {
 				None
 			};
@@ -48,8 +52,10 @@ impl Actor for Ignore {
 
 			// Apply to hovered
 			if let Some(h) = cx.hovered_folder_mut() {
+				let hovered_str = h.url.as_path().map(|p| p.display().to_string()).unwrap_or_default();
+				let hovered_excludes = YAZI.files.excludes_for_context(&hovered_str);
 				let hovered_filter = if let Some(path) = h.url.as_path() {
-					IgnoreFilter::from_patterns(path, override_patterns)
+					IgnoreFilter::from_patterns(path, &hovered_excludes)
 				} else {
 					None
 				};
@@ -66,8 +72,8 @@ impl Actor for Ignore {
 			succ!();
 		}
 
-		// If gitignore is disabled and no override patterns, remove any ignore filter
-		if !gitignore_enabled {
+		// If gitignores is disabled and no exclude patterns, remove any ignore filter
+		if !gitignores {
 			let hovered = cx.hovered().map(|f| f.urn().to_owned());
 			let apply = |f: &mut Folder| {
 				// Always clear the filter, even when loading
@@ -104,7 +110,7 @@ impl Actor for Ignore {
 
 		// Load ignore filter from the current directory
 		let ignore_filter = if let Some(path) = cx.cwd().as_path() {
-			IgnoreFilter::from_dir(path, override_patterns)
+			IgnoreFilter::from_dir(path, &exclude_patterns, gitignores)
 		} else {
 			None
 		};
@@ -135,8 +141,10 @@ impl Actor for Ignore {
 		// Apply to hovered
 		if let Some(h) = cx.hovered_folder_mut() {
 			// Load ignore filter for hovered directory if it's a directory
+			let hovered_str = h.url.as_path().map(|p| p.display().to_string()).unwrap_or_default();
+			let hovered_excludes = YAZI.files.excludes_for_context(&hovered_str);
 			let hovered_filter = if let Some(path) = h.url.as_path() {
-				IgnoreFilter::from_dir(path, override_patterns)
+				IgnoreFilter::from_dir(path, &hovered_excludes, gitignores)
 			} else {
 				None
 			};
