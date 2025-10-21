@@ -4,7 +4,7 @@ use anyhow::Result;
 use futures::{StreamExt, stream::FuturesUnordered};
 use hashbrown::HashSet;
 use tokio::sync::oneshot;
-use yazi_fs::{File, FsUrl, provider::{Provider, local::Local}};
+use yazi_fs::{File, FsScheme, provider::{Provider, local::Local}};
 use yazi_macro::succ;
 use yazi_parser::mgr::{DownloadOpt, OpenOpt};
 use yazi_proxy::MgrProxy;
@@ -75,7 +75,7 @@ impl Actor for Download {
 
 impl Download {
 	async fn prepare(urls: &[UrlCow<'_>]) {
-		let roots: HashSet<_> = urls.iter().filter_map(|u| u.cache_root()).collect();
+		let roots: HashSet<_> = urls.iter().filter_map(|u| u.scheme().cache()).collect();
 		for mut root in roots {
 			root.push("%lock");
 			Local.create_dir_all(root).await.ok();

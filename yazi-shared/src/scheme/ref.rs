@@ -1,4 +1,4 @@
-use crate::{pool::InternStr, scheme::Scheme};
+use crate::{pool::InternStr, scheme::{AsScheme, Scheme}};
 
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 pub enum SchemeRef<'a> {
@@ -10,17 +10,6 @@ pub enum SchemeRef<'a> {
 	Archive(&'a str),
 
 	Sftp(&'a str),
-}
-
-impl<'a> From<&'a Scheme> for SchemeRef<'a> {
-	fn from(value: &'a Scheme) -> Self {
-		match value {
-			Scheme::Regular => Self::Regular,
-			Scheme::Search(d) => Self::Search(d),
-			Scheme::Archive(d) => Self::Archive(d),
-			Scheme::Sftp(d) => Self::Sftp(d),
-		}
-	}
 }
 
 impl From<SchemeRef<'_>> for Scheme {
@@ -54,13 +43,29 @@ impl<'a> SchemeRef<'a> {
 	}
 
 	#[inline]
-	pub fn covariant(self, other: impl Into<Self>) -> bool {
-		let other = other.into();
+	pub fn covariant(self, other: impl AsScheme) -> bool {
+		let other = other.as_scheme();
 		if self.is_virtual() || other.is_virtual() { self == other } else { true }
 	}
 
 	#[inline]
-	pub fn is_virtual(&self) -> bool {
+	pub fn is_local(self) -> bool {
+		match self {
+			Self::Regular | Self::Search(_) => true,
+			Self::Archive(_) | Self::Sftp(_) => false,
+		}
+	}
+
+	#[inline]
+	pub fn is_remote(self) -> bool {
+		match self {
+			Self::Regular | Self::Search(_) | Self::Archive(_) => false,
+			Self::Sftp(_) => true,
+		}
+	}
+
+	#[inline]
+	pub fn is_virtual(self) -> bool {
 		match self {
 			Self::Regular | Self::Search(_) => false,
 			Self::Archive(_) | Self::Sftp(_) => true,

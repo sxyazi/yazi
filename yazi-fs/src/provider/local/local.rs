@@ -17,10 +17,10 @@ impl Provider for Local {
 		U: AsUrl,
 	{
 		let url = url.as_url();
-		if url.scheme.is_virtual() {
-			Err(io::Error::new(io::ErrorKind::InvalidInput, "Not a local URL"))
-		} else {
+		if url.scheme.is_local() {
 			Ok(absolute_url(url))
+		} else {
+			Err(io::Error::new(io::ErrorKind::InvalidInput, "Not a local URL"))
 		}
 	}
 

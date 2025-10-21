@@ -6,7 +6,7 @@ use tracing::warn;
 use yazi_config::YAZI;
 use yazi_fs::{Cwd, FsHash128, FsUrl, cha::Cha, ok_or_not_found, path::{path_relative_to, skip_url}, provider::{DirReader, FileHolder, Provider, local::Local}};
 use yazi_macro::ok_or_not_found;
-use yazi_shared::{timestamp_us, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
+use yazi_shared::{scheme::SchemeLike, timestamp_us, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 use yazi_vfs::{VfsCha, copy_with_progress, maybe_exists, provider::{self, DirEntry}, unique_name};
 
 use super::{FileInDelete, FileInHardlink, FileInLink, FileInPaste, FileInTrash};

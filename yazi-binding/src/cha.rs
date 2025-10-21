@@ -1,7 +1,7 @@
 use std::{ops::Deref, time::{Duration, SystemTime}};
 
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Table, UserData, UserDataFields, UserDataMethods};
-use yazi_fs::cha::{ChaKind, ChaMode};
+use yazi_fs::{FsHash128, cha::{ChaKind, ChaMode}};
 
 #[derive(Clone, Copy, FromLua)]
 pub struct Cha(pub yazi_fs::cha::Cha);
@@ -76,6 +76,13 @@ impl UserData for Cha {
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		methods.add_method("hash", |_, me, long: Option<bool>| {
+			Ok(if long.unwrap_or(false) {
+				format!("{:x}", me.hash_u128())
+			} else {
+				Err("Short hash not supported".into_lua_err())?
+			})
+		});
 		methods.add_method("perm", |lua, _me, ()| {
 			Ok(
 				#[cfg(unix)]

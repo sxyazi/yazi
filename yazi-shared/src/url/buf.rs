@@ -3,7 +3,7 @@ use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, path::{Path, PathBuf
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::{loc::LocBuf, pool::Pool, scheme::Scheme, url::{AsUrl, Encode, EncodeTilded, Url, UrlCow}};
+use crate::{loc::LocBuf, pool::Pool, scheme::{Scheme, SchemeLike}, url::{AsUrl, Encode, EncodeTilded, Url, UrlCow}};
 
 #[derive(Clone, Default, Eq, Hash, PartialEq)]
 pub struct UrlBuf {
@@ -91,7 +91,7 @@ impl UrlBuf {
 
 	#[inline]
 	pub fn into_path(self) -> Option<PathBuf> {
-		Some(self.loc.into_path()).filter(|_| !self.scheme.is_virtual())
+		Some(self.loc.into_path()).filter(|_| self.scheme.is_local())
 	}
 
 	#[inline]

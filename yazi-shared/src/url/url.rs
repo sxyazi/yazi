@@ -200,7 +200,7 @@ impl<'a> Url<'a> {
 
 	#[inline]
 	pub fn as_path(self) -> Option<&'a Path> {
-		Some(self.loc.as_path()).filter(|_| !self.scheme.is_virtual())
+		Some(self.loc.as_path()).filter(|_| self.scheme.is_local())
 	}
 
 	#[inline]

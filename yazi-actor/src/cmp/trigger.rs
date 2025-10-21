@@ -5,7 +5,7 @@ use yazi_fs::{CWD, path::expand_url, provider::{DirReader, FileHolder}};
 use yazi_macro::{act, render, succ};
 use yazi_parser::cmp::{CmpItem, ShowOpt, TriggerOpt};
 use yazi_proxy::CmpProxy;
-use yazi_shared::{OsStrSplit, data::Data, natsort, url::{UrlBuf, UrlCow, UrnBuf}};
+use yazi_shared::{OsStrSplit, data::Data, natsort, scheme::SchemeLike, url::{UrlBuf, UrlCow, UrnBuf}};
 use yazi_vfs::provider;
 
 use crate::{Actor, Ctx};
@@ -70,7 +70,7 @@ impl Trigger {
 	fn split_url(s: &str) -> Option<(UrlBuf, UrnBuf)> {
 		let (scheme, path, ..) = UrlCow::parse(s.as_bytes()).ok()?;
 
-		if !scheme.is_virtual() && path.as_os_str() == "~" {
+		if scheme.is_local() && path.as_os_str() == "~" {
 			return None; // We don't autocomplete a `~`, but `~/`
 		}
 

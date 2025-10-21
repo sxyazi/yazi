@@ -40,9 +40,12 @@ function M:spot_base(job)
 	for i, v in ipairs(fetchers) do
 		fetchers[i] = v.cmd
 	end
+	fetchers = #fetchers ~= 0 and fetchers or { "-" }
+
 	for i, v in ipairs(preloaders) do
 		preloaders[i] = v.cmd
 	end
+	preloaders = #preloaders ~= 0 and preloaders or { "-" }
 
 	return {
 		ui.Row({ "Base" }):style(ui.Style():fg("green")),
@@ -54,8 +57,8 @@ function M:spot_base(job)
 		ui.Row({ "Plugins" }):style(ui.Style():fg("green")),
 		ui.Row { "  Spotter:", spotter and spotter.cmd or "-" },
 		ui.Row { "  Previewer:", previewer and previewer.cmd or "-" },
-		ui.Row { "  Fetchers:", #fetchers ~= 0 and fetchers or "-" },
-		ui.Row { "  Preloaders:", #preloaders ~= 0 and preloaders or "-" },
+		ui.Row({ "  Fetchers:", fetchers }):height(#fetchers),
+		ui.Row({ "  Preloaders:", preloaders }):height(#preloaders),
 	}
 end
 

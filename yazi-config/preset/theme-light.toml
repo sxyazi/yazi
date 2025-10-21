@@ -232,7 +232,7 @@ rules = [
 	# Document
 	{ mime = "application/{pdf,doc,rtf}", fg = "cyan" },
 	# Virtual file system
-	{ mime = "vfs/*", fg = "darkgray" },
+	{ mime = "vfs/{absent,stale}", fg = "darkgray" },
 	# Special file
 	{ url = "*", is = "orphan", bg = "red" },
 	{ url = "*", is = "exec"  , fg = "green" },

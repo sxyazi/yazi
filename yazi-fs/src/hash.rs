@@ -30,9 +30,8 @@ impl FsHash128 for Cha {
 		self.mode.bits().hash(&mut h);
 		self.len.hash(&mut h);
 
-		self.mtime_dur().ok().map(|d| d.as_nanos()).hash(&mut h);
 		self.btime_dur().ok().map(|d| d.as_nanos()).hash(&mut h);
-		self.ctime_dur().ok().map(|d| d.as_nanos()).hash(&mut h);
+		self.mtime_dur().ok().map(|d| d.as_nanos()).hash(&mut h);
 
 		h.finish_128()
 	}

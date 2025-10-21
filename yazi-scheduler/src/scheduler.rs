@@ -8,7 +8,7 @@ use yazi_config::{YAZI, plugin::{Fetcher, Preloader}};
 use yazi_dds::Pump;
 use yazi_parser::{app::PluginOpt, tasks::ProcessOpenOpt};
 use yazi_proxy::TasksProxy;
-use yazi_shared::{Id, Throttle, url::{UrlBuf, UrlLike}};
+use yazi_shared::{Id, Throttle, scheme::SchemeLike, url::{UrlBuf, UrlLike}};
 use yazi_vfs::{must_be_dir, provider, unique_name};
 
 use super::{Ongoing, TaskOp};
@@ -215,7 +215,7 @@ impl Scheduler {
 			ongoing.hooks.add_sync(id, move |canceled| _ = tx.send(canceled));
 		}
 
-		if !url.scheme.is_virtual() {
+		if !url.scheme.is_remote() {
 			return self.ops.out(id, FileOutDownload::Fail("Cannot download non-remote file".to_owned()));
 		};
 
@@ -229,7 +229,7 @@ impl Scheduler {
 		let mut ongoing = self.ongoing.lock();
 		let id = ongoing.add::<FileProgUpload>(format!("Upload {}", url.display()));
 
-		if !url.scheme.is_virtual() {
+		if !url.scheme.is_remote() {
 			return self.ops.out(id, FileOutUpload::Fail("Cannot upload non-remote file".to_owned()));
 		};
 

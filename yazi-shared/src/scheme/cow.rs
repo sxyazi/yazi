@@ -3,7 +3,7 @@ use std::{borrow::Cow, ops::Not, path::Path};
 use anyhow::{Result, bail, ensure};
 use percent_encoding::percent_decode;
 
-use crate::{BytesExt, pool::InternStr, scheme::{Scheme, SchemeRef}};
+use crate::{BytesExt, pool::InternStr, scheme::{AsScheme, Scheme, SchemeRef}};
 
 #[derive(Clone, Debug)]
 pub enum SchemeCow<'a> {
@@ -15,16 +15,19 @@ impl Default for SchemeCow<'_> {
 	fn default() -> Self { Self::Borrowed(SchemeRef::Regular) }
 }
 
-impl From<Scheme> for SchemeCow<'_> {
-	fn from(value: Scheme) -> Self { Self::Owned(value) }
-}
-
-impl<'a> From<&'a Scheme> for SchemeCow<'a> {
-	fn from(value: &'a Scheme) -> Self { Self::Borrowed(value.as_ref()) }
-}
-
 impl<'a> From<SchemeRef<'a>> for SchemeCow<'a> {
 	fn from(value: SchemeRef<'a>) -> Self { Self::Borrowed(value) }
+}
+
+impl<'a, T> From<&'a T> for SchemeCow<'a>
+where
+	T: AsScheme + ?Sized,
+{
+	fn from(value: &'a T) -> Self { Self::Borrowed(value.as_scheme()) }
+}
+
+impl From<Scheme> for SchemeCow<'_> {
+	fn from(value: Scheme) -> Self { Self::Owned(value) }
 }
 
 impl From<SchemeCow<'_>> for Scheme {
@@ -55,14 +58,6 @@ impl<'a> SchemeCow<'a> {
 		match domain.into() {
 			Cow::Borrowed(s) => SchemeRef::Sftp(s).into(),
 			Cow::Owned(s) => Scheme::Sftp(s.intern()).into(),
-		}
-	}
-
-	#[inline]
-	pub fn as_ref(&self) -> SchemeRef<'_> {
-		match self {
-			Self::Borrowed(s) => *s,
-			Self::Owned(s) => s.into(),
 		}
 	}
 
@@ -101,17 +96,6 @@ impl<'a> SchemeCow<'a> {
 		};
 
 		Ok((scheme, tilde, uri, urn))
-	}
-
-	#[inline]
-	pub fn parse_kind(bytes: &[u8]) -> Result<&'static str> {
-		match bytes {
-			b"regular" => Ok("regular"),
-			b"search" => Ok("search"),
-			b"archive" => Ok("archive"),
-			b"sftp" => Ok("sftp"),
-			_ => bail!("Could not parse protocol from URL: {}", String::from_utf8_lossy(bytes)),
-		}
 	}
 
 	fn decode_param(
@@ -154,7 +138,7 @@ impl<'a> SchemeCow<'a> {
 		urn: Option<usize>,
 		path: &Path,
 	) -> Result<Option<(usize, usize)>> {
-		Ok(match self.as_ref() {
+		Ok(match self.as_scheme() {
 			SchemeRef::Regular => {
 				ensure!(uri.is_none() && urn.is_none(), "Regular scheme cannot have ports");
 				None
@@ -175,9 +159,6 @@ impl<'a> SchemeCow<'a> {
 }
 
 impl SchemeCow<'_> {
-	#[inline]
-	pub fn is_virtual(&self) -> bool { self.as_ref().is_virtual() }
-
 	#[inline]
 	pub fn into_owned(self) -> Scheme { self.into() }
 }
