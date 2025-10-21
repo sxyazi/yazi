@@ -77,7 +77,7 @@ impl<'a> From<Url<'a>> for Components<'a> {
 impl<'a> Components<'a> {
 	pub fn os_str(&self) -> Cow<'a, OsStr> {
 		let path = self.inner.as_path();
-		if !self.url.scheme.is_virtual() || self.scheme_yielded {
+		if self.url.scheme.is_local() || self.scheme_yielded {
 			return path.as_os_str().into();
 		}
 

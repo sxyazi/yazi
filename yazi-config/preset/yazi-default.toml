@@ -81,7 +81,7 @@ rules = [
 	# Empty file
 	{ mime = "inode/empty", use = [ "edit", "reveal" ] },
 	# Virtual file system
-	{ mime = "vfs/*", use = "download" },
+	{ mime = "vfs/{absent,stale}", use = "download" },
 	# Fallback
 	{ url = "*", use = [ "open", "reveal" ] },
 ]
@@ -97,8 +97,9 @@ suppress_preload = false
 [plugin]
 fetchers = [
 	# Mimetype
-	{ id = "mime", url = "*/", run = "mime.dir", prio = "high" },
-	{ id = "mime", url = "*", run = "mime.file", prio = "high" },
+	{ id = "mime", url = "*/",         run = "mime.dir", prio = "high" },
+	{ id = "mime", url = "local://*",  run = "mime.local", prio = "high" },
+	{ id = "mime", url = "remote://*", run = "mime.remote", prio = "high" },
 ]
 spotters = [
 	{ url = "*/", run = "folder" },

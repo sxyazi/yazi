@@ -3,7 +3,7 @@ use std::{borrow::Cow, path::{Path, PathBuf}};
 use anyhow::Result;
 use percent_encoding::percent_decode;
 
-use crate::{IntoOsStr, loc::{Loc, LocBuf}, scheme::{SchemeCow, SchemeRef}, url::{AsUrl, Url, UrlBuf}};
+use crate::{IntoOsStr, loc::{Loc, LocBuf}, scheme::{AsScheme, SchemeCow, SchemeRef}, url::{AsUrl, Url, UrlBuf}};
 
 #[derive(Clone, Debug)]
 pub enum UrlCow<'a> {
@@ -109,8 +109,8 @@ impl<'a> UrlCow<'a> {
 	#[inline]
 	pub fn scheme(&self) -> SchemeRef<'_> {
 		match self {
-			UrlCow::Borrowed { scheme, .. } => scheme.as_ref(),
-			UrlCow::Owned { scheme, .. } => scheme.as_ref(),
+			UrlCow::Borrowed { scheme, .. } => scheme.as_scheme(),
+			UrlCow::Owned { scheme, .. } => scheme.as_scheme(),
 		}
 	}
 

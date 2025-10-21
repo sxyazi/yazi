@@ -1,7 +1,8 @@
 use std::ops::Deref;
 
 use mlua::{AnyUserData, ExternalError, FromLua, Lua, MetaMethod, UserData, UserDataFields, UserDataMethods, UserDataRef, Value};
-use yazi_shared::{IntoOsStr, url::{AsUrl, UrlCow, UrlLike}};
+use yazi_fs::{FsHash64, FsHash128};
+use yazi_shared::{IntoOsStr, scheme::SchemeLike, url::{AsUrl, UrlCow, UrlLike}};
 
 use crate::{Scheme, Urn, cached_field, deprecate};
 
@@ -128,6 +129,13 @@ impl UserData for Url {
 	}
 
 	fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+		methods.add_method("hash", |_, me, long: Option<bool>| {
+			Ok(if long.unwrap_or(false) {
+				format!("{:x}", me.hash_u128())
+			} else {
+				format!("{:x}", me.hash_u64())
+			})
+		});
 		methods.add_method("join", |_, me, other: Value| {
 			Ok(Self::new(match other {
 				Value::String(s) => me.join(s.as_bytes().into_os_str()?),

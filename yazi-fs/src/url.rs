@@ -1,15 +1,13 @@
 use std::{borrow::Cow, ffi::OsStr, path::{Path, PathBuf}};
 
-use yazi_shared::{loc::Loc, scheme::SchemeRef, url::{AsUrl, Url, UrlBuf, UrlCow}};
+use yazi_shared::{loc::Loc, url::{AsUrl, Url, UrlBuf, UrlCow}};
 
-use crate::{FsHash128, Xdg, path::PercentEncoding};
+use crate::{FsHash128, FsScheme, path::PercentEncoding};
 
 pub trait FsUrl<'a> {
 	fn cache(&self) -> Option<PathBuf>;
 
 	fn cache_lock(&self) -> Option<PathBuf>;
-
-	fn cache_root(&self) -> Option<PathBuf>;
 
 	fn unified_path(self) -> Cow<'a, Path>;
 
@@ -37,27 +35,15 @@ impl<'a> FsUrl<'a> for Url<'a> {
 			path
 		}
 
-		self.cache_root().map(|root| with_loc(self.loc, root))
+		self.scheme.cache().map(|root| with_loc(self.loc, root))
 	}
 
 	fn cache_lock(&self) -> Option<PathBuf> {
-		self.cache_root().map(|mut root| {
+		self.scheme.cache().map(|mut root| {
 			root.push("%lock");
 			root.push(format!("{:x}", self.hash_u128()));
 			root
 		})
-	}
-
-	fn cache_root(&self) -> Option<PathBuf> {
-		match self.scheme {
-			SchemeRef::Regular | SchemeRef::Search(_) => None,
-			SchemeRef::Archive(name) => {
-				Some(Xdg::cache_dir().join(format!("archive-{}", yazi_shared::url::Encode::domain(name))))
-			}
-			SchemeRef::Sftp(name) => {
-				Some(Xdg::cache_dir().join(format!("sftp-{}", yazi_shared::url::Encode::domain(name))))
-			}
-		}
 	}
 
 	fn unified_path(self) -> Cow<'a, Path> {
@@ -70,8 +56,6 @@ impl FsUrl<'_> for UrlBuf {
 
 	fn cache_lock(&self) -> Option<PathBuf> { self.as_url().cache_lock() }
 
-	fn cache_root(&self) -> Option<PathBuf> { self.as_url().cache_root() }
-
 	fn unified_path(self) -> Cow<'static, Path> {
 		self.cache().unwrap_or_else(|| self.loc.into_path()).into()
 	}
@@ -81,8 +65,6 @@ impl<'a> FsUrl<'a> for UrlCow<'a> {
 	fn cache(&self) -> Option<PathBuf> { self.as_url().cache() }
 
 	fn cache_lock(&self) -> Option<PathBuf> { self.as_url().cache_lock() }
-
-	fn cache_root(&self) -> Option<PathBuf> { self.as_url().cache_root() }
 
 	fn unified_path(self) -> Cow<'a, Path> {
 		match (self.cache(), self) {

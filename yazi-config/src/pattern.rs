@@ -1,11 +1,11 @@
-use std::str::FromStr;
+use std::{fmt::Debug, str::FromStr};
 
-use anyhow::Result;
+use anyhow::{Result, bail};
 use globset::GlobBuilder;
 use serde::Deserialize;
-use yazi_shared::{scheme::{SchemeCow, SchemeRef}, url::AsUrl};
+use yazi_shared::{scheme::SchemeRef, url::AsUrl};
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 #[serde(try_from = "String")]
 pub struct Pattern {
 	inner:      globset::GlobMatcher,
@@ -16,16 +16,27 @@ pub struct Pattern {
 	sep_lit:    bool,
 }
 
+impl Debug for Pattern {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_struct("Pattern")
+			.field("regex", &self.inner.glob().regex())
+			.field("scheme", &self.scheme)
+			.field("is_dir", &self.is_dir)
+			.field("is_star", &self.is_star)
+			.finish()
+	}
+}
+
 impl Pattern {
 	pub fn match_url(&self, url: impl AsUrl, is_dir: bool) -> bool {
 		let url = url.as_url();
 
 		if is_dir != self.is_dir {
 			return false;
-		} else if self.is_star {
-			return true;
 		} else if !self.scheme.matches(url.scheme) {
 			return false;
+		} else if self.is_star {
+			return true;
 		}
 
 		#[cfg(unix)]
@@ -95,26 +106,59 @@ impl TryFrom<String> for Pattern {
 }
 
 // --- Scheme
-#[derive(Debug)]
-struct PatternScheme(Option<&'static str>);
+#[derive(Clone, Copy, Debug)]
+enum PatternScheme {
+	Any,
+	Local,
+	Remote,
+	Virtual,
+
+	Regular,
+	Search,
+	Archive,
+	Sftp,
+}
 
 impl PatternScheme {
 	fn parse(s: &str) -> Result<(Self, usize)> {
-		let mut me = Self(None);
 		let Some((protocol, _)) = s.split_once("://") else {
-			return Ok((me, 0));
+			return Ok((Self::Any, 0));
 		};
 
-		if protocol != "*" {
-			me.0 = Some(SchemeCow::parse_kind(protocol.as_bytes())?);
-		}
+		let scheme = match protocol {
+			"*" => Self::Any,
+			"local" => Self::Local,
+			"remote" => Self::Remote,
+			"virtual" => Self::Virtual,
 
-		Ok((me, protocol.len() + 3))
+			"regular" => Self::Regular,
+			"search" => Self::Search,
+			"archive" => Self::Archive,
+			"sftp" => Self::Sftp,
+
+			"" => bail!("Invalid URL pattern: protocol is empty"),
+			_ => bail!("Unknown protocol in URL pattern: {protocol}"),
+		};
+
+		Ok((scheme, protocol.len() + 3))
 	}
 
 	#[inline]
-	fn matches<'a>(&self, scheme: impl Into<SchemeRef<'a>>) -> bool {
-		self.0.is_none_or(|s| s == scheme.into().kind())
+	fn matches(self, scheme: SchemeRef) -> bool {
+		use SchemeRef as S;
+		match (self, scheme) {
+			(Self::Any, _) => true,
+			(Self::Local, s) => s.is_local(),
+			(Self::Remote, s) => s.is_remote(),
+			(Self::Virtual, s) => s.is_virtual(),
+
+			(Self::Regular, S::Regular) => true,
+			(Self::Search, S::Search(_)) => true,
+			(Self::Archive, S::Archive(_)) => true,
+			(Self::Sftp, S::Sftp(_)) => true,
+
+			_ => false,
+		}
 	}
 }
 

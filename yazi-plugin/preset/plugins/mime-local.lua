@@ -15,20 +15,11 @@ local function match_mimetype(line)
 	end
 end
 
-local function miss_cache(cache, line)
-	if line:match("^cannot open `.+' %(No such file or directory%)%s+$") then
-		return true
-	else
-		local _, err = fs.cha(Url(cache))
-		return err and err.code == 2
-	end
-end
-
 function M:fetch(job)
-	local paths, origins = {}, {}
+	local urls, paths = {}, {}
 	for i, file in ipairs(job.files) do
 		if file.cache then
-			paths[i], origins[i] = tostring(file.cache), tostring(file.url)
+			urls[i], paths[i] = tostring(file.url), tostring(file.cache)
 		else
 			paths[i] = tostring(file.url)
 		end
@@ -63,14 +54,9 @@ function M:fetch(job)
 
 		match, ignore = match_mimetype(line)
 		if match then
-			updates[origins[i] or paths[i]], state[i], i = match, true, i + 1
+			updates[urls[i] or paths[i]], state[i], i = match, true, i + 1
 			flush(false)
-		elseif ignore then
-			goto continue
-		elseif origins[i] and miss_cache(paths[i], line) then
-			updates[origins[i]], state[i], i = "vfs/todo", true, i + 1
-			flush(false)
-		else
+		elseif not ignore then
 			state[i], i = false, i + 1
 		end
 		::continue::

@@ -34,10 +34,10 @@ impl FileBuilder for Gate {
 	}
 
 	async fn new(scheme: SchemeRef<'_>) -> io::Result<Self> {
-		if scheme.is_virtual() {
-			Err(io::Error::new(io::ErrorKind::InvalidInput, "Not a local filesystem"))?
-		} else {
+		if scheme.is_local() {
 			Ok(Self::default())
+		} else {
+			Err(io::Error::new(io::ErrorKind::InvalidInput, "Not a local filesystem"))?
 		}
 	}
 
