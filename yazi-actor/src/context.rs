@@ -6,10 +6,12 @@ use yazi_fs::File;
 use yazi_shared::{Id, Source, event::Cmd, url::UrlBuf};
 
 pub struct Ctx<'a> {
-	pub core:   &'a mut Core,
-	pub tab:    usize,
-	pub level:  usize,
-	pub source: Source,
+	pub core:      &'a mut Core,
+	pub tab:       usize,
+	pub level:     usize,
+	pub source:    Source,
+	#[cfg(debug_assertions)]
+	pub backtrace: Vec<&'static str>,
 }
 
 impl Deref for Ctx<'_> {
@@ -36,19 +38,40 @@ impl<'a> Ctx<'a> {
 			core.mgr.tabs.cursor
 		};
 
-		Ok(Self { core, tab, level: 0, source: cmd.source })
+		Ok(Self {
+			core,
+			tab,
+			level: 0,
+			source: cmd.source,
+			#[cfg(debug_assertions)]
+			backtrace: vec![],
+		})
 	}
 
 	#[inline]
 	pub fn renew<'b>(cx: &'a mut Ctx<'b>) -> Self {
 		let tab = cx.core.mgr.tabs.cursor;
-		Self { core: cx.core, tab, level: cx.level, source: cx.source }
+		Self {
+			core: cx.core,
+			tab,
+			level: cx.level,
+			source: cx.source,
+			#[cfg(debug_assertions)]
+			backtrace: vec![],
+		}
 	}
 
 	#[inline]
 	pub fn active(core: &'a mut Core) -> Self {
 		let tab = core.mgr.tabs.cursor;
-		Self { core, tab, level: 0, source: Source::Unknown }
+		Self {
+			core,
+			tab,
+			level: 0,
+			source: Source::Unknown,
+			#[cfg(debug_assertions)]
+			backtrace: vec![],
+		}
 	}
 }
 

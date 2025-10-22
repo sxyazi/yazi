@@ -9,11 +9,18 @@ macro_rules! act {
 	};
 	(@impl $layer:ident : $name:ident, $cx:ident, $opt:ident) => {{
 		$cx.level += 1;
+		#[cfg(debug_assertions)]
+		$cx.backtrace.push(concat!(stringify!($layer), ":", stringify!($name)));
+
 		let result = match act!(@pre $layer:$name, $cx, $opt) {
 			Ok(opt) => <act!($layer:$name) as yazi_actor::Actor>::act($cx, opt),
 			Err(e) => Err(e),
 		};
+
 		$cx.level -= 1;
+		#[cfg(debug_assertions)]
+		$cx.backtrace.pop();
+
 		result
 	}};
 

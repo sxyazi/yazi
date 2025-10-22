@@ -109,6 +109,13 @@ impl PartialOrd for Symbol<str> {
 	fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> { Some(self.cmp(other)) }
 }
 
+// --- Display
+impl std::fmt::Display for Symbol<str> {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}", self.as_ref())
+	}
+}
+
 // --- Debug
 impl std::fmt::Debug for Symbol<[u8]> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
