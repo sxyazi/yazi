@@ -9,7 +9,7 @@ use yazi_fs::{File, Files, FilesOp, cha::Cha};
 use yazi_macro::render;
 use yazi_parser::mgr::PreviewLock;
 use yazi_plugin::{external::Highlighter, isolate};
-use yazi_shared::{pool::{InternStr, Symbol}, url::UrlBuf};
+use yazi_shared::{pool::Symbol, url::UrlBuf};
 use yazi_vfs::{VfsFiles, VfsFilesOp};
 
 #[derive(Default)]
@@ -17,8 +17,9 @@ pub struct Preview {
 	pub lock: Option<PreviewLock>,
 	pub skip: usize,
 
-	previewer_ct:  Option<CancellationToken>,
-	folder_loader: Option<JoinHandle<()>>,
+	previewer_ct:    Option<CancellationToken>,
+	pub folder_lock: Option<UrlBuf>,
+	folder_loader:   Option<JoinHandle<()>>,
 }
 
 impl Preview {
@@ -37,19 +38,17 @@ impl Preview {
 		self.previewer_ct = isolate::peek(&previewer.run, file, mime, self.skip);
 	}
 
-	pub fn go_folder(&mut self, file: File, dir: Option<Cha>, force: bool) {
-		const MIME: &str = "folder/lock";
-
-		let same = self.same_file(&file, MIME);
-		let (wd, cha, internal) = (file.url_owned(), file.cha, file.url.is_internal());
-
-		self.go(file, MIME.intern(), force);
-		if same || !internal {
-			return;
+	pub fn go_folder(&mut self, file: File, dir: Option<Cha>, mime: Symbol<str>, force: bool) {
+		if !file.url.is_internal() {
+			return self.go(file, mime, force);
+		} else if self.folder_lock.as_ref() == Some(&file.url) {
+			return self.go(file, mime, force);
 		}
 
-		self.lock =
-			Some(PreviewLock { url: wd.clone(), cha, mime: MIME.to_owned(), ..Default::default() });
+		let wd = file.url_owned();
+		self.go(file, mime, force);
+
+		self.folder_lock = Some(wd.clone());
 		self.folder_loader.take().map(|h| h.abort());
 		self.folder_loader = Some(tokio::spawn(async move {
 			let Some(new) = Files::assert_stale(&wd, dir.unwrap_or_default()).await else { return };
@@ -97,4 +96,6 @@ impl Preview {
 	pub fn same_lock(&self, file: &File, mime: &str) -> bool {
 		self.same_file(file, mime) && matches!(&self.lock, Some(l) if l.skip == self.skip)
 	}
+
+	pub fn same_folder(&self, url: &UrlBuf) -> bool { self.folder_lock.as_ref() == Some(url) }
 }

@@ -30,6 +30,9 @@ impl Actor for Peek {
 		if !cx.tab().preview.same_file(&hovered, &mime) {
 			cx.tab_mut().preview.reset();
 		}
+		if !cx.tab().preview.same_folder(&hovered.url) {
+			cx.tab_mut().preview.folder_lock = None;
+		}
 
 		if matches!(opt.only_if, Some(u) if u != hovered.url) {
 			succ!();
@@ -45,7 +48,7 @@ impl Actor for Peek {
 		}
 
 		if hovered.is_dir() {
-			cx.tab_mut().preview.go_folder(hovered, folder.map(|(_, cha)| cha), opt.force);
+			cx.tab_mut().preview.go_folder(hovered, folder.map(|(_, cha)| cha), mime, opt.force);
 		} else {
 			cx.tab_mut().preview.go(hovered, mime, opt.force);
 		}
