@@ -23,6 +23,9 @@ impl Actor for Refresh {
 			execute!(TTY.writer(), SetTitle(s)).ok();
 		}
 
+		// Apply ignore filter before triggering file loads
+		act!(mgr:ignore, cx)?;
+
 		if let Some(p) = cx.parent() {
 			Self::trigger_dirs(&[cx.current(), p]);
 		} else {

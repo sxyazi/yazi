@@ -3,11 +3,13 @@ use serde::Deserialize;
 use yazi_codegen::DeserializeOver1;
 use yazi_fs::{Xdg, ok_or_not_found};
 
-use crate::{mgr, open, opener, plugin, popup, preview, tasks, which};
+use crate::{files, mgr, open, opener, plugin, popup, preview, tasks, which};
 
 #[derive(Deserialize, DeserializeOver1)]
 pub struct Yazi {
 	pub mgr:     mgr::Mgr,
+	#[serde(default)]
+	pub files:   files::Files,
 	pub preview: preview::Preview,
 	pub opener:  opener::Opener,
 	pub open:    open::Open,
@@ -26,9 +28,13 @@ impl Yazi {
 			.with_context(|| format!("Failed to read config {p:?}"))
 	}
 
-	pub(super) fn reshape(self) -> Result<Self> {
+	pub(super) fn reshape(mut self) -> Result<Self> {
+		// Compile glob patterns in exclude rules
+		self.files.compile().map_err(|e| anyhow::anyhow!(e))?;
+
 		Ok(Self {
 			mgr:     self.mgr.reshape()?,
+			files:   self.files,
 			preview: self.preview.reshape()?,
 			opener:  self.opener.reshape()?,
 			open:    self.open.reshape()?,
