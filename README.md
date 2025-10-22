@@ -67,7 +67,6 @@ Yazi is currently in heavy development, expect breaking changes.
 | [VSCode](https://github.com/microsoft/vscode)                                | [Inline images protocol][iip]          | ✅ Built-in                              |
 | [Rio](https://github.com/raphamorim/rio)                                     | [Inline images protocol][iip]          | ❌ Rio renders images at incorrect sizes |
 | [Black Box](https://gitlab.gnome.org/raggesilver/blackbox)                   | [Sixel graphics format][sixel]         | ✅ Built-in                              |
-| [Hyper](https://github.com/vercel/hyper)                                     | [Inline images protocol][iip]          | ✅ Built-in                              |
 | [Bobcat](https://github.com/ismail-yilmaz/Bobcat)                            | [Inline images protocol][iip]          | ✅ Built-in                              |
 | X11 / Wayland                                                                | Window system protocol                 | ☑️ [Überzug++][ueberzug] required        |
 | Fallback                                                                     | [ASCII art (Unicode block)][ascii-art] | ☑️ [Chafa][chafa] required               |
