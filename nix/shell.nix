@@ -8,7 +8,7 @@ let
 in
 mainPkg.overrideAttrs (oa: {
   nativeBuildInputs = [
-    (rust-bin.stable.latest.default.override {
+    (rust-bin.nightly.latest.default.override {
       extensions = [
         "rust-src"
         "rustfmt"
@@ -18,7 +18,8 @@ mainPkg.overrideAttrs (oa: {
     })
 
     nodePackages.cspell
-  ] ++ (oa.nativeBuildInputs or [ ]);
+  ]
+  ++ (oa.nativeBuildInputs or [ ]);
 
   env.RUST_BACKTRACE = "1";
 })

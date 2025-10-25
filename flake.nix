@@ -45,7 +45,9 @@
               rustPlatform
               ;
           };
-          yazi = pkgs.callPackage ./nix/yazi.nix { inherit (self.packages.${system}) yazi-unwrapped; };
+          yazi = pkgs.callPackage ./nix/yazi.nix {
+            inherit (self.packages.${system}) yazi-unwrapped;
+          };
           default = self.packages.${system}.yazi;
         };
 
@@ -59,7 +61,9 @@
     // {
       overlays = {
         default = self.overlays.yazi;
-        yazi = _: prev: { inherit (self.packages.${prev.stdenv.system}) yazi yazi-unwrapped; };
+        yazi = _: prev: {
+          inherit (self.packages.${prev.stdenv.system}) yazi yazi-unwrapped;
+        };
       };
     };
 }
