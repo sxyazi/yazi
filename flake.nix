@@ -23,7 +23,7 @@
           inherit system;
           overlays = [ rust-overlay.overlays.default ];
         };
-        toolchain = pkgs.rust-bin.nightly.latest.default;
+        toolchain = pkgs.rust-bin.stable.latest.default;
         rustPlatform = pkgs.makeRustPlatform {
           cargo = toolchain;
           rustc = toolchain;
