@@ -5,6 +5,7 @@ use hashbrown::HashSet;
 use notify::{PollWatcher, RecommendedWatcher, RecursiveMode, Watcher};
 use tokio::{pin, sync::mpsc::{self, UnboundedReceiver}};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
+use tracing::error;
 use yazi_fs::{File, FilesOp, provider};
 use yazi_shared::url::{UrlBuf, UrlLike};
 use yazi_vfs::VfsFile;
@@ -26,10 +27,16 @@ impl Local {
 			}
 		};
 
-		Self(if yazi_adapter::WSL.get() || cfg!(target_os = "netbsd") {
-			Box::new(PollWatcher::new(handler, config).unwrap())
-		} else {
-			Box::new(RecommendedWatcher::new(handler, config).unwrap())
+		if cfg!(target_os = "netbsd") || yazi_adapter::WSL.get() {
+			return Self(Box::new(PollWatcher::new(handler, config).unwrap()));
+		}
+
+		Self(match RecommendedWatcher::new(handler.clone(), config) {
+			Ok(watcher) => Box::new(watcher),
+			Err(e) => {
+				error!("Falling back to PollWatcher due to RecommendedWatcher init failure: {e:?}");
+				Box::new(PollWatcher::new(handler, config).unwrap())
+			}
 		})
 	}
 
