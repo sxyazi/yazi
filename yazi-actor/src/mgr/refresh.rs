@@ -42,7 +42,6 @@ impl Actor for Refresh {
 impl Refresh {
 	fn cwd_changed() {
 		if CWD.load().scheme.is_virtual() {
-			tracing::debug!("CWD changed to virtual scheme, skipping watch update");
 			MgrProxy::watch();
 		}
 	}
