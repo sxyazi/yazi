@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Port several widespread GUI keys to the input component ([#2849])
 - Support invalid UTF-8 paths throughout the codebase ([#2884], [#2889], [#2890], [#2895], [#3023])
 - Allow upgrading only specific packages with `ya pkg` ([#2841])
+- Respect the user's `image_filter` setting for the preset `magick` previewer ([#3286])
 - Allow custom mouse click behavior for individual files ([#2925])
 - Display newlines in input as spaces to improve readability ([#2932])
 - Fill in error messages if preview fails ([#2917])
@@ -1530,3 +1531,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3264]: https://github.com/sxyazi/yazi/pull/3264
 [#3268]: https://github.com/sxyazi/yazi/pull/3268
 [#3271]: https://github.com/sxyazi/yazi/pull/3271
+[#3286]: https://github.com/sxyazi/yazi/pull/3286

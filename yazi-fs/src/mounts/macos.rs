@@ -3,7 +3,7 @@ use std::{ffi::{CStr, CString, OsString, c_void}, mem, os::unix::{ffi::OsStringE
 use anyhow::{Result, bail};
 use core_foundation_sys::{array::CFArrayRef, base::{CFRelease, kCFAllocatorDefault}, runloop::{CFRunLoopGetCurrent, CFRunLoopRun, kCFRunLoopDefaultMode}};
 use libc::{c_char, mach_port_t};
-use objc::{msg_send, runtime::Object, sel, sel_impl};
+use objc2::{msg_send, runtime::AnyObject};
 use scopeguard::defer;
 use tracing::error;
 use yazi_ffi::{CFDict, CFString, DADiskCopyDescription, DADiskCreateFromBSDName, DARegisterDiskAppearedCallback, DARegisterDiskDescriptionChangedCallback, DARegisterDiskDisappearedCallback, DASessionCreate, DASessionScheduleWithRunLoop, IOIteratorNext, IOObjectRelease, IORegistryEntryCreateCFProperty, IOServiceGetMatchingServices, IOServiceMatching};
@@ -161,7 +161,7 @@ impl Partitions {
 		defer! { unsafe { CFRelease(property) } };
 
 		#[allow(unexpected_cfgs)]
-		let cstr: *const c_char = unsafe { msg_send![property as *const Object, UTF8String] };
+		let cstr: *const c_char = unsafe { msg_send![property as *const AnyObject, UTF8String] };
 		Ok(if cstr.is_null() {
 			bail!("Invalid value for the name property");
 		} else {

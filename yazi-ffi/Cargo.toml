@@ -19,4 +19,4 @@ libc = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation-sys = { workspace = true }
-objc                = { workspace = true }
+objc2               = { workspace = true }

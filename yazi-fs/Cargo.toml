@@ -38,7 +38,7 @@ windows-sys = { version = "0.61.2", features = [ "Win32_Storage_FileSystem" ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation-sys = { workspace = true }
-objc                = { workspace = true }
+objc2               = { workspace = true }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
 trash = "5.2.5"

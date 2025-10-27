@@ -27,17 +27,26 @@ function M:preload(job)
 
 	local cmd = M.with_limit()
 	if job.args.flatten then
-		cmd = cmd:arg("-flatten")
+		cmd:arg("-flatten")
+	end
+	cmd:arg { tostring(job.file.url), "-auto-orient", "-strip" }
+
+	local size = string.format("%dx%d>", rt.preview.max_width, rt.preview.max_height)
+	if rt.preview.image_filter == "nearest" then
+		cmd:arg { "-sample", size }
+	elseif rt.preview.image_filter == "catmull-rom" then
+		cmd:arg { "-filter", "catrom", "-thumbnail", size }
+	elseif rt.preview.image_filter == "lanczos3" then
+		cmd:arg { "-filter", "lanczos", "-thumbnail", size }
+	elseif rt.preview.image_filter == "gaussian" then
+		cmd:arg { "-filter", "gaussian", "-thumbnail", size }
+	else
+		cmd:arg { "-filter", "triangle", "-thumbnail", size }
 	end
 
-	-- stylua: ignore
-	cmd = cmd:arg {
-		tostring(job.file.url), "-auto-orient", "-strip",
-		"-sample", string.format("%dx%d>", rt.preview.max_width, rt.preview.max_height),
-		"-quality", rt.preview.image_quality,
-	}
+	cmd:arg { "-quality", rt.preview.image_quality }
 	if job.args.bg then
-		cmd = cmd:arg { "-background", job.args.bg, "-alpha", "remove" }
+		cmd:arg { "-background", job.args.bg, "-alpha", "remove" }
 	end
 
 	local status, err = cmd:arg(string.format("JPG:%s", cache)):status()
