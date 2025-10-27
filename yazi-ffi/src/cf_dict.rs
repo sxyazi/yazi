@@ -2,7 +2,7 @@ use std::{ffi::{CStr, OsStr, OsString, c_char, c_void}, mem::ManuallyDrop, os::u
 
 use anyhow::{Result, bail};
 use core_foundation_sys::{base::{CFRelease, TCFTypeRef}, dictionary::{CFDictionaryGetValueIfPresent, CFDictionaryRef}, string::CFStringRef};
-use objc::{msg_send, runtime::Object, sel, sel_impl};
+use objc2::{msg_send, runtime::AnyObject};
 
 use super::cf_string::CFString;
 
@@ -30,13 +30,13 @@ impl CFDict {
 	pub fn bool(&self, key: &str) -> Result<bool> {
 		let value = self.value(key)?;
 		#[allow(unexpected_cfgs)]
-		Ok(unsafe { msg_send![value as *const Object, boolValue] })
+		Ok(unsafe { msg_send![value as *const AnyObject, boolValue] })
 	}
 
 	pub fn integer(&self, key: &str) -> Result<i64> {
 		let value = self.value(key)?;
 		#[allow(unexpected_cfgs)]
-		Ok(unsafe { msg_send![value as *const Object, longLongValue] })
+		Ok(unsafe { msg_send![value as *const AnyObject, longLongValue] })
 	}
 
 	pub fn os_string(&self, key: &str) -> Result<OsString> {
@@ -44,10 +44,10 @@ impl CFDict {
 	}
 
 	pub fn path_buf(&self, key: &str) -> Result<PathBuf> {
-		let url = self.value(key)? as *const Object;
+		let url = self.value(key)? as *const AnyObject;
 		#[allow(unexpected_cfgs)]
 		let cstr: *const c_char = unsafe {
-			let nss: *const Object = msg_send![url, path];
+			let nss: *const AnyObject = msg_send![url, path];
 			msg_send![nss, UTF8String]
 		};
 		Ok(OsStr::from_bytes(unsafe { CStr::from_ptr(cstr) }.to_bytes()).into())
