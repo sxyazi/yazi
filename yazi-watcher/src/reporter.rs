@@ -50,7 +50,7 @@ impl Reporter {
 
 	fn report_remote<'a>(&self, url: UrlCow<'a>) {
 		let Some(parent) = url.parent() else { return };
-		if !WATCHED.read().contains(&url) {
+		if !WATCHED.read().contains(parent) {
 			return;
 		}
 

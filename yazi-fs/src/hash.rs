@@ -26,10 +26,7 @@ impl FsHash128 for Cha {
 	fn hash_u128(&self) -> u128 {
 		let mut h = Twox128::default();
 
-		self.kind.bits().hash(&mut h);
-		self.mode.bits().hash(&mut h);
 		self.len.hash(&mut h);
-
 		self.btime_dur().ok().map(|d| d.as_nanos()).hash(&mut h);
 		self.mtime_dur().ok().map(|d| d.as_nanos()).hash(&mut h);
 

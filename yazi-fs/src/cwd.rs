@@ -33,7 +33,7 @@ impl Cwd {
 		url.cache().unwrap_or_else(|| url.loc.to_path())
 	}
 
-	pub fn set(&self, url: &UrlBuf) -> bool {
+	pub fn set(&self, url: &UrlBuf, callback: fn()) -> bool {
 		if !url.is_absolute() {
 			return false;
 		} else if self.0.load().as_ref() == url {
@@ -41,7 +41,7 @@ impl Cwd {
 		}
 
 		self.0.store(Arc::new(url.clone()));
-		Self::sync_cwd();
+		Self::sync_cwd(callback);
 
 		true
 	}
@@ -88,7 +88,7 @@ impl Cwd {
 		cache.into()
 	}
 
-	fn sync_cwd() {
+	fn sync_cwd(callback: fn()) {
 		static SYNCING: AtomicBool = AtomicBool::new(false);
 		if SYNCING.swap(true, Ordering::Relaxed) {
 			return;
@@ -98,7 +98,7 @@ impl Cwd {
 			let cwd = CWD.load();
 			let path = Self::ensure(cwd.as_url());
 
-			_ = set_current_dir(&path);
+			set_current_dir(&path).ok();
 			let cur = current_dir().unwrap_or_default();
 
 			unsafe { std::env::set_var("PWD", path.as_ref()) }
@@ -110,6 +110,8 @@ impl Cwd {
 				set_current_dir(&path).ok();
 				unsafe { std::env::set_var("PWD", path.as_ref()) }
 			}
+
+			callback();
 		});
 	}
 }
