@@ -5,7 +5,7 @@ use percent_encoding::percent_decode_str;
 use yazi_fs::{Xdg, path::PercentEncoding};
 use yazi_shared::{scheme::SchemeRef, url::{AsUrl, UrlBuf, UrlLike}};
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Watched(HashSet<UrlBuf>);
 
 impl Watched {

@@ -4,7 +4,7 @@ use anyhow::{Context, Result, anyhow};
 use tokio::{io::{self, ErrorKind::{AlreadyExists, NotFound}}, sync::mpsc};
 use tracing::warn;
 use yazi_config::YAZI;
-use yazi_fs::{Cwd, FsHash128, FsUrl, cha::Cha, ok_or_not_found, path::{path_relative_to, skip_url}, provider::{DirReader, FileHolder, Provider, local::Local}};
+use yazi_fs::{Cwd, FsHash128, FsUrl, cha::Cha, ok_or_not_found, path::{path_relative_to, skip_url}, provider::{Attrs, DirReader, FileHolder, Provider, local::Local}};
 use yazi_macro::ok_or_not_found;
 use yazi_shared::{scheme::SchemeLike, timestamp_us, url::{AsUrl, UrlBuf, UrlCow, UrlLike}};
 use yazi_vfs::{VfsCha, copy_with_progress, maybe_exists, provider::{self, DirEntry}, unique_name};
@@ -353,6 +353,7 @@ impl File {
 		while let Some(res) = it.recv().await {
 			match res {
 				Ok(0) => {
+					Local.remove_dir_all(&cache).await.ok();
 					provider::rename(cache_tmp, cache).await.context("Cannot persist downloaded file")?;
 
 					let lock = task.url.cache_lock().context("Cannot determine cache lock")?;
@@ -454,7 +455,12 @@ impl File {
 		}
 
 		let tmp = Self::tmp(&task.url).await.context("Cannot determine temporary upload path")?;
-		let mut it = copy_with_progress(&task.cache, &tmp, task.cha);
+		let mut it = copy_with_progress(&task.cache, &tmp, Attrs {
+			mode:  Some(task.cha.mode),
+			atime: None,
+			btime: None,
+			mtime: None,
+		});
 
 		while let Some(res) = it.recv().await {
 			match res {

@@ -50,6 +50,10 @@ impl MgrProxy {
 		));
 	}
 
+	pub fn watch() {
+		emit!(Call(relay!(mgr:watch)));
+	}
+
 	pub fn update_peeked(opt: UpdatePeekedOpt) {
 		emit!(Call(relay!(mgr:update_peeked).with_any("opt", opt)));
 	}

@@ -5,7 +5,8 @@ use yazi_core::tab::Folder;
 use yazi_fs::{CWD, Files, FilesOp, cha::Cha};
 use yazi_macro::{act, succ};
 use yazi_parser::VoidOpt;
-use yazi_shared::{data::Data, url::UrlBuf};
+use yazi_proxy::MgrProxy;
+use yazi_shared::{data::Data, scheme::SchemeLike, url::UrlBuf};
 use yazi_term::tty::TTY;
 use yazi_vfs::{VfsFiles, VfsFilesOp};
 
@@ -19,7 +20,7 @@ impl Actor for Refresh {
 	const NAME: &str = "refresh";
 
 	fn act(cx: &mut Ctx, _: Self::Options) -> Result<Data> {
-		if let (_, Some(s)) = (CWD.set(cx.cwd()), YAZI.mgr.title()) {
+		if let (_, Some(s)) = (CWD.set(cx.cwd(), Self::cwd_changed), YAZI.mgr.title()) {
 			execute!(TTY.writer(), SetTitle(s)).ok();
 		}
 
@@ -39,8 +40,14 @@ impl Actor for Refresh {
 }
 
 impl Refresh {
+	fn cwd_changed() {
+		if CWD.load().scheme.is_virtual() {
+			MgrProxy::watch();
+		}
+	}
+
 	// TODO: performance improvement
-	pub fn trigger_dirs(folders: &[&Folder]) {
+	fn trigger_dirs(folders: &[&Folder]) {
 		async fn go(cwd: UrlBuf, cha: Cha) {
 			let Some(cha) = Files::assert_stale(&cwd, cha).await else { return };
 
