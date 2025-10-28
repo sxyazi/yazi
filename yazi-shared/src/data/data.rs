@@ -102,12 +102,30 @@ impl From<UrlBuf> for Data {
 	fn from(value: UrlBuf) -> Self { Self::Url(value) }
 }
 
+impl From<Vec<u8>> for Data {
+	fn from(value: Vec<u8>) -> Self {
+		match String::from_utf8(value) {
+			Ok(s) => Self::String(Cow::Owned(s)),
+			Err(e) => Self::Bytes(e.into_bytes()),
+		}
+	}
+}
+
 impl From<&UrlBuf> for Data {
 	fn from(value: &UrlBuf) -> Self { Self::Url(value.clone()) }
 }
 
 impl From<&str> for Data {
 	fn from(value: &str) -> Self { Self::String(Cow::Owned(value.to_owned())) }
+}
+
+impl From<&[u8]> for Data {
+	fn from(value: &[u8]) -> Self {
+		match str::from_utf8(value) {
+			Ok(s) => Self::String(Cow::Owned(s.to_owned())),
+			Err(_) => Self::Bytes(value.to_owned()),
+		}
+	}
 }
 
 impl TryFrom<&Data> for bool {

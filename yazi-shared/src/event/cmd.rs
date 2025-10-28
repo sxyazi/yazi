@@ -1,4 +1,4 @@
-use std::{any::Any, borrow::Cow, fmt::{self, Display}, mem, str::FromStr};
+use std::{any::Any, borrow::Cow, ffi::OsString, fmt::{self, Display}, mem, str::FromStr};
 
 use anyhow::{Result, anyhow, bail};
 use hashbrown::HashMap;
@@ -178,34 +178,34 @@ impl Cmd {
 	}
 
 	// Parse
-	pub fn parse_args(
-		words: impl Iterator<Item = String>,
+	pub fn parse_args<I>(
+		words: I,
 		last: Option<String>,
 		obase: bool,
-	) -> Result<HashMap<DataKey, Data>> {
+	) -> Result<HashMap<DataKey, Data>>
+	where
+		I: Iterator,
+		I::Item: Into<OsString>,
+	{
 		let mut i = 0i64;
 		words
 			.into_iter()
-			.map(|s| (s, true))
-			.chain(last.into_iter().map(|s| (s, false)))
+			.map(|s| (s.into(), true))
+			.chain(last.into_iter().map(|s| (s.into(), false)))
 			.map(|(word, normal)| {
-				let Some(arg) = word.strip_prefix("--").filter(|_| normal) else {
+				let bytes = word.into_encoded_bytes();
+				let Some(arg) = bytes.strip_prefix(b"--").filter(|_| normal) else {
 					i += 1;
-					return Ok((DataKey::Integer(i - obase as i64), Data::String(word.into())));
+					return Ok((DataKey::Integer(i - obase as i64), bytes.into()));
 				};
 
-				let mut parts = arg.splitn(2, '=');
-				let Some(key) = parts.next().map(|s| s.to_owned()) else {
-					bail!("invalid argument: {arg}");
+				let mut parts = arg.splitn(2, |&b| b == b'=');
+				let Some(Ok(key)) = parts.next().map(str::from_utf8) else {
+					bail!("argument key must be valid UTF-8: {arg:?}");
 				};
 
-				let val = if let Some(val) = parts.next() {
-					Data::String(val.to_owned().into())
-				} else {
-					Data::Boolean(true)
-				};
-
-				Ok((DataKey::String(Cow::Owned(key)), val))
+				let val = parts.next().map_or(Data::Boolean(true), Data::from);
+				Ok((DataKey::from(key.to_owned()), val))
 			})
 			.collect()
 	}

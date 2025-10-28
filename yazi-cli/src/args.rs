@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, ffi::OsString};
 
 use anyhow::{Result, bail};
 use clap::{Parser, Subcommand};
@@ -38,7 +38,7 @@ pub(super) struct CommandEmit {
 	pub(super) name: String,
 	/// Arguments of the command.
 	#[arg(allow_hyphen_values = true, trailing_var_arg = true)]
-	pub(super) args: Vec<String>,
+	pub(super) args: Vec<OsString>,
 }
 
 #[derive(clap::Args)]
@@ -49,7 +49,7 @@ pub(super) struct CommandEmitTo {
 	pub(super) name:     String,
 	/// Arguments of the command.
 	#[arg(allow_hyphen_values = true, trailing_var_arg = true)]
-	pub(super) args:     Vec<String>,
+	pub(super) args:     Vec<OsString>,
 }
 
 #[derive(Subcommand)]
