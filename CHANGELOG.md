@@ -19,19 +19,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Shell formatting ([#3232])
 - Multi-entry support for plugin system ([#3154])
 - Zoom in or out of the preview image ([#2864])
-- Improve the UX of the pick and input component ([#2906], [#2935])
+- Improve the UX of the pick and input components ([#2906], [#2935])
 - Show progress of each task in task manager ([#3121], [#3131], [#3134])
 - New `bulk_rename` command always renames files with the editor ([#2984])
 - `key-*` DDS events to allow changing or canceling user key events ([#3005], [#3037])
-- New `--bg` specifying image background color for the preset `svg` and `magick` previewers ([#3189])
+- New `--bg` specifying image background color in the preset SVG and ImageMagick previewers ([#3189])
 - `filter` by full path (prefix + filename) in search view instead of just filename ([#2915])
 - New `casefy` command for case conversion of the input content ([#3235])
 - Allow dynamic adjustment of layout ratio via `rt.mgr.ratio` ([#2964])
 - Support `.deb` packages ([#2807], [#3128], [#3209])
 - Port several widespread GUI keys to the input component ([#2849])
-- Support invalid UTF-8 paths throughout the codebase ([#2884], [#2889], [#2890], [#2895], [#3023])
+- Support invalid UTF-8 paths throughout the codebase ([#2884], [#2889], [#2890], [#2895], [#3023], [#3290])
 - Allow upgrading only specific packages with `ya pkg` ([#2841])
-- Respect the user's `image_filter` setting for the preset `magick` previewer ([#3286])
+- Respect the user's `image_filter` setting in the preset ImageMagick previewer ([#3286])
 - Allow custom mouse click behavior for individual files ([#2925])
 - Display newlines in input as spaces to improve readability ([#2932])
 - Fill in error messages if preview fails ([#2917])
@@ -49,7 +49,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Deprecated
 
-- Deprecate `$n`, `$@` (Unix-like) and `%n`, `%*` (Windows) in `shell` command and opener rules in favor of new shell formatting ([#3232])
+- Deprecate `$n`, `$@` (\*nix) and `%n`, `%*` (Windows) in `shell` command and opener rules in favor of new shell formatting ([#3232])
 - Deprecate `ya.hide`, `ya.render`, and `ya.truncate` in favor of `ui.hide`, `ui.render`, and `ui.truncate` ([#2939])
 - Deprecate `position` property of `ya.input()` in favor of `pos` to align with `ya.confirm()` and its type `ui.Pos` ([#2921])
 - Deprecate `cx.tasks.progress` in favor of `cx.tasks.summary` ([#3131])
@@ -84,7 +84,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - Zero-copy `UrlBuf` to `Url` conversion ([#3117])
 - String interning to reduce memory usage of mimetype and URL domain ([#3084], [#3091])
 - Do not pre-allocate memory for Lua tables ([#2879])
-- Copy-on-write on command data & avoid converting primitive types to strings thereby allocating memory ([#2862])
+- Copy-on-write on command data, and avoid converting primitive types to strings thereby allocating memory ([#2862])
 - Use `AnyUserData::type_id()` to reduce stack pushes ([#2834])
 - App data instead of Lua registry to reduce stack pushes ([#2880])
 
@@ -140,7 +140,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ### Fixed
 
-- Respect the user's `max_width` setting for the built-in video previewer ([#2560])
+- Respect the user's `max_width` setting in the preset video previewer ([#2560])
 - Reverse the mixing order of theme and flavor configuration ([#2594])
 - No title is set when starts the first time ([#2700])
 - `ya pub-to 0` checks if any peer is able to receive the message ([#2697])
@@ -227,9 +227,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 - New `tbl_col` and `tbl_cell` in theme system for spotter table styling ([#2391])
 - Allow different separators to be applied individually to the left and right sides of the status bar ([#2313])
 - `ripgrep-all` support for the `search` command ([#2383])
-- Respect the user's `max_width` setting for the built-in PDF preloader ([#2331])
-- Respect the user's `wrap` setting for the built-in JSON previewer ([#2337])
-- Respect the user's `image_alloc` setting for the built-in ImageMagick previewer ([#2403])
+- Respect the user's `max_width` setting in the preset PDF preloader ([#2331])
+- Respect the user's `wrap` setting in the preset JSON previewer ([#2337])
+- Respect the user's `image_alloc` setting in the preset ImageMagick previewer ([#2403])
 - New `external` and `removable` fields in the `fs.partitions()` API ([#2343])
 - CSI-based Vim and Neovim built-in terminal detection for better accuracy ([#2327])
 
@@ -1532,3 +1532,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 [#3268]: https://github.com/sxyazi/yazi/pull/3268
 [#3271]: https://github.com/sxyazi/yazi/pull/3271
 [#3286]: https://github.com/sxyazi/yazi/pull/3286
+[#3290]: https://github.com/sxyazi/yazi/pull/3290

@@ -1,3 +1,5 @@
+use serde::Serialize;
+
 #[derive(Clone, Copy, Debug)]
 pub enum Either<L, R> {
 	Left(L),
@@ -66,6 +68,22 @@ impl<L, R> Either<L, R> {
 		match self {
 			Self::Right(r) => Ok(r),
 			_ => Err(f()),
+		}
+	}
+}
+
+impl<L, R> Serialize for Either<L, R>
+where
+	L: Serialize,
+	R: Serialize,
+{
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: serde::Serializer,
+	{
+		match self {
+			Self::Left(l) => l.serialize(serializer),
+			Self::Right(r) => r.serialize(serializer),
 		}
 	}
 }

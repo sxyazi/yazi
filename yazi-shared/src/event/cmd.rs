@@ -178,34 +178,26 @@ impl Cmd {
 	}
 
 	// Parse
-	pub fn parse_args(
-		words: impl Iterator<Item = String>,
-		last: Option<String>,
-		obase: bool,
-	) -> Result<HashMap<DataKey, Data>> {
+	pub fn parse_args<I>(words: I, last: Option<String>) -> Result<HashMap<DataKey, Data>>
+	where
+		I: IntoIterator<Item = String>,
+	{
 		let mut i = 0i64;
 		words
 			.into_iter()
 			.map(|s| (s, true))
 			.chain(last.into_iter().map(|s| (s, false)))
 			.map(|(word, normal)| {
-				let Some(arg) = word.strip_prefix("--").filter(|_| normal) else {
+				let Some(arg) = word.strip_prefix("--").filter(|&s| normal && !s.is_empty()) else {
 					i += 1;
-					return Ok((DataKey::Integer(i - obase as i64), Data::String(word.into())));
+					return Ok((DataKey::Integer(i - 1), word.into()));
 				};
 
 				let mut parts = arg.splitn(2, '=');
-				let Some(key) = parts.next().map(|s| s.to_owned()) else {
-					bail!("invalid argument: {arg}");
-				};
+				let key = parts.next().expect("at least one part");
+				let val = parts.next().map_or(Data::Boolean(true), Data::from);
 
-				let val = if let Some(val) = parts.next() {
-					Data::String(val.to_owned().into())
-				} else {
-					Data::Boolean(true)
-				};
-
-				Ok((DataKey::String(Cow::Owned(key)), val))
+				Ok((DataKey::from(key.to_owned()), val))
 			})
 			.collect()
 	}
@@ -245,7 +237,7 @@ impl FromStr for Cmd {
 		}
 
 		let mut me = Self::new(mem::take(&mut words[0]), Default::default(), Some(Default::default()))?;
-		me.args = Self::parse_args(words.into_iter().skip(1), last, true)?;
+		me.args = Self::parse_args(words.into_iter().skip(1), last)?;
 		Ok(me)
 	}
 }

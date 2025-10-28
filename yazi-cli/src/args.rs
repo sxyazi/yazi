@@ -1,8 +1,8 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, ffi::OsString};
 
 use anyhow::{Result, bail};
 use clap::{Parser, Subcommand};
-use yazi_shared::{Id, event::Cmd};
+use yazi_shared::{Either, Id};
 
 #[derive(Parser)]
 #[command(name = "Ya", about, long_about = None)]
@@ -38,7 +38,7 @@ pub(super) struct CommandEmit {
 	pub(super) name: String,
 	/// Arguments of the command.
 	#[arg(allow_hyphen_values = true, trailing_var_arg = true)]
-	pub(super) args: Vec<String>,
+	pub(super) args: Vec<OsString>,
 }
 
 #[derive(clap::Args)]
@@ -49,7 +49,7 @@ pub(super) struct CommandEmitTo {
 	pub(super) name:     String,
 	/// Arguments of the command.
 	#[arg(allow_hyphen_values = true, trailing_var_arg = true)]
-	pub(super) args:     Vec<String>,
+	pub(super) args:     Vec<OsString>,
 }
 
 #[derive(Subcommand)]
@@ -139,10 +139,11 @@ macro_rules! impl_emit_body {
 		impl $name {
 			#[allow(dead_code)]
 			pub(super) fn body(self) -> Result<String> {
-				Ok(serde_json::to_string(&(
-					self.name,
-					Cmd::parse_args(self.args.into_iter(), None, false)?,
-				))?)
+				let cmd: Vec<_> = [Either::Left(self.name)]
+					.into_iter()
+					.chain(self.args.into_iter().map(|s| Either::Right(s.into_encoded_bytes())))
+					.collect();
+				Ok(serde_json::to_string(&cmd)?)
 			}
 		}
 	};
