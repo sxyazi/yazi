@@ -70,18 +70,18 @@ impl Local {
 			for u in urls {
 				let Some((parent, urn)) = u.pair() else { continue };
 				let Ok(file) = File::new(&u).await else {
-					ops.push(FilesOp::Deleting(parent.into(), [urn.into()].into()));
+					ops.push(FilesOp::Deleting(parent.into(), [urn.to_owned()].into()));
 					continue;
 				};
 
 				if let Some(p) = file.url.as_path()
 					&& !provider::local::must_case_match(p).await
 				{
-					ops.push(FilesOp::Deleting(parent.into(), [urn.into()].into()));
+					ops.push(FilesOp::Deleting(parent.into(), [urn.to_owned()].into()));
 					continue;
 				}
 
-				ops.push(FilesOp::Upserting(parent.into(), [(urn.into(), file)].into()));
+				ops.push(FilesOp::Upserting(parent.into(), [(urn.to_owned(), file)].into()));
 			}
 
 			FilesOp::mutate(ops);

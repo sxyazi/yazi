@@ -28,7 +28,7 @@ yazi-shared = { path = "../yazi-shared", version = "25.9.15" }
 
 # External dependencies
 clap                  = { workspace = true }
-clap_complete         = "4.5.59"
+clap_complete         = "4.5.60"
 clap_complete_fig     = "4.5.2"
 clap_complete_nushell = "4.5.9"
 vergen-gitcl          = { version = "1.0.8", features = [ "build", "rustc" ] }

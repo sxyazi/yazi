@@ -51,7 +51,7 @@ impl Create {
 			&& let Some((parent, urn)) = real.pair()
 		{
 			ok_or_not_found!(provider::remove_file(&new).await);
-			FilesOp::Deleting(parent.into(), [urn.into()].into()).emit();
+			FilesOp::Deleting(parent.into(), [urn.to_owned()].into()).emit();
 			provider::create(&new).await?;
 		} else if let Some(parent) = new.parent() {
 			provider::create_dir_all(parent).await.ok();
@@ -65,7 +65,7 @@ impl Create {
 			&& let Some((parent, urn)) = real.pair()
 		{
 			let file = File::new(&real).await?;
-			FilesOp::Upserting(parent.into(), [(urn.into(), file)].into()).emit();
+			FilesOp::Upserting(parent.into(), [(urn.to_owned(), file)].into()).emit();
 			MgrProxy::reveal(&real);
 		}
 

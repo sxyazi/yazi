@@ -1,31 +1,39 @@
-use std::{ops::Deref, path::{Component, Path}};
+use std::{ops::Deref, path::Path};
+
+use crate::path::PathLike;
 
 #[derive(Debug, Eq, PartialEq, Hash)]
 #[repr(transparent)]
-pub struct Uri(Path);
+pub struct Uri<P: ?Sized + PathLike = Path>(P);
 
-impl Uri {
+impl<P> Uri<P>
+where
+	P: ?Sized + PathLike,
+{
 	#[inline]
-	pub fn new<T: AsRef<Path> + ?Sized>(p: &T) -> &Self {
-		unsafe { &*(p.as_ref() as *const Path as *const Self) }
+	pub fn new<T: AsRef<P> + ?Sized>(p: &T) -> &Self {
+		unsafe { &*(p.as_ref() as *const P as *const Self) }
 	}
 
 	#[inline]
 	pub fn count(&self) -> usize { self.0.components().count() }
 
 	#[inline]
-	pub fn nth(&self, n: usize) -> Option<Component<'_>> { self.0.components().nth(n) }
-
-	#[inline]
-	pub fn is_empty(&self) -> bool { self.0.as_os_str().is_empty() }
+	pub fn is_empty(&self) -> bool { self.0.len() == 0 }
 }
 
-impl Deref for Uri {
-	type Target = Path;
+impl<P> Deref for Uri<P>
+where
+	P: ?Sized + PathLike,
+{
+	type Target = P;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-impl AsRef<Path> for Uri {
-	fn as_ref(&self) -> &Path { &self.0 }
+impl<P> AsRef<P> for Uri<P>
+where
+	P: ?Sized + PathLike,
+{
+	fn as_ref(&self) -> &P { &self.0 }
 }

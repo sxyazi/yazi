@@ -15,7 +15,7 @@ impl VfsFilesOp for FilesOp {
 		} else if maybe_exists(cwd).await {
 			Self::IOErr(cwd.clone(), err).emit();
 		} else if let Some((p, n)) = cwd.pair() {
-			Self::Deleting(p.into(), [n.into()].into()).emit();
+			Self::Deleting(p.into(), [n.to_owned()].into()).emit();
 		}
 	}
 }

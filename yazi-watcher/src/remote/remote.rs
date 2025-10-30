@@ -39,14 +39,14 @@ impl Remote {
 			for u in urls {
 				let Some((parent, urn)) = u.pair() else { continue };
 				let Ok(mut file) = File::new(&u).await else {
-					ops.push(FilesOp::Deleting(parent.into(), [urn.into()].into()));
+					ops.push(FilesOp::Deleting(parent.into(), [urn.to_owned()].into()));
 					continue;
 				};
 
 				let is_file = file.is_file();
 				file.cha.ctime = Some(SystemTime::now());
 
-				ops.push(FilesOp::Upserting(parent.into(), [(urn.into(), file)].into()));
+				ops.push(FilesOp::Upserting(parent.into(), [(urn.to_owned(), file)].into()));
 				if is_file {
 					ups.push(u);
 				}
