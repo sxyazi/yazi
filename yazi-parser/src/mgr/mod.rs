@@ -5,6 +5,7 @@ yazi_macro::mod_flat!(
 	create
 	download
 	escape
+	exclude_add
 	filter
 	find
 	find_arrow

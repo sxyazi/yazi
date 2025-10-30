@@ -23,6 +23,7 @@ pub enum Spark<'a> {
 	EscapeSearch(yazi_parser::VoidOpt),
 	EscapeSelect(yazi_parser::VoidOpt),
 	EscapeVisual(yazi_parser::VoidOpt),
+	ExcludeAdd(yazi_parser::mgr::ExcludeAddOpt),
 	Filter(yazi_parser::mgr::FilterOpt),
 	FilterDo(yazi_parser::mgr::FilterOpt),
 	Find(yazi_parser::mgr::FindOpt),
@@ -147,6 +148,7 @@ impl<'a> IntoLua for Spark<'a> {
 			Self::EscapeSearch(b) => b.into_lua(lua),
 			Self::EscapeSelect(b) => b.into_lua(lua),
 			Self::EscapeVisual(b) => b.into_lua(lua),
+			Self::ExcludeAdd(b) => b.into_lua(lua),
 			Self::Filter(b) => b.into_lua(lua),
 			Self::FilterDo(b) => b.into_lua(lua),
 			Self::Find(b) => b.into_lua(lua),
@@ -287,6 +289,7 @@ try_from_spark!(mgr::CopyOpt, mgr:copy);
 try_from_spark!(mgr::CreateOpt, mgr:create);
 try_from_spark!(mgr::DownloadOpt, mgr:download);
 try_from_spark!(mgr::EscapeOpt, mgr:escape);
+try_from_spark!(mgr::ExcludeAddOpt, mgr:exclude_add);
 try_from_spark!(mgr::FilterOpt, mgr:filter, mgr:filter_do);
 try_from_spark!(mgr::FindArrowOpt, mgr:find_arrow);
 try_from_spark!(mgr::FindDoOpt, mgr:find_do);
