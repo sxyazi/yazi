@@ -161,7 +161,7 @@ impl<'a> Url<'a> {
 
 			// Archive
 			S::Archive(_) if uri.is_empty() => Self { loc: parent.into(), scheme: S::Regular },
-			S::Archive(_) if uri.nth(1).is_none() => {
+			S::Archive(_) if uri.components().nth(1).is_none() => {
 				Self { loc: Loc::zeroed(parent), scheme: self.scheme }
 			}
 			S::Archive(_) => Self { loc: Loc::floated(parent, self.loc.base()), scheme: self.scheme },

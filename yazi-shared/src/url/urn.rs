@@ -1,100 +1,124 @@
-use std::{borrow::{Borrow, Cow}, ffi::OsStr, ops::Deref, path::{Path, PathBuf}};
+use std::{borrow::Borrow, ops::Deref, path::{Path, PathBuf}};
 
 use serde::Serialize;
 
+use crate::path::{PathBufLike, PathLike};
+
 #[derive(Debug, Eq, PartialEq, Hash)]
 #[repr(transparent)]
-pub struct Urn(Path);
+pub struct Urn<P: ?Sized + PathLike = Path>(P);
 
-impl Urn {
+impl<P> Urn<P>
+where
+	P: ?Sized + PathLike,
+{
 	#[inline]
-	pub fn new<T: AsRef<Path> + ?Sized>(p: &T) -> &Self {
-		unsafe { &*(p.as_ref() as *const Path as *const Self) }
+	pub fn new<T: AsRef<P> + ?Sized>(p: &T) -> &Self {
+		unsafe { &*(p.as_ref() as *const P as *const Self) }
 	}
 
 	#[inline]
-	pub fn name(&self) -> Option<&OsStr> { self.0.file_name() }
+	pub fn name(&self) -> Option<&P::Inner> { self.0.file_name() }
 
 	#[inline]
 	pub fn count(&self) -> usize { self.0.components().count() }
 
 	#[inline]
-	pub fn encoded_bytes(&self) -> &[u8] { self.0.as_os_str().as_encoded_bytes() }
+	pub fn encoded_bytes(&self) -> &[u8] { self.0.encoded_bytes() }
 
 	#[cfg(unix)]
 	#[inline]
 	pub fn is_hidden(&self) -> bool {
-		use std::os::unix::ffi::OsStrExt;
-		self.name().is_some_and(|s| s.as_bytes().starts_with(b"."))
+		use crate::path::PathInner;
+		self.name().is_some_and(|s| s.encoded_bytes().starts_with(b"."))
 	}
 }
 
-impl Deref for Urn {
-	type Target = Path;
+impl<P> Deref for Urn<P>
+where
+	P: ?Sized + PathLike,
+{
+	type Target = P;
 
 	fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-impl AsRef<Path> for Urn {
-	fn as_ref(&self) -> &Path { &self.0 }
+impl<P> AsRef<P> for Urn<P>
+where
+	P: ?Sized + PathLike,
+{
+	fn as_ref(&self) -> &P { &self.0 }
 }
 
-impl AsRef<OsStr> for Urn {
-	fn as_ref(&self) -> &OsStr { self.0.as_os_str() }
+impl<P> From<&Urn<P>> for PathBuf
+where
+	P: ?Sized + PathLike + ToOwned<Owned = PathBuf>,
+{
+	fn from(value: &Urn<P>) -> Self { value.0.to_owned() }
 }
 
-impl ToOwned for Urn {
-	type Owned = UrnBuf;
+impl<P> ToOwned for Urn<P>
+where
+	P: ?Sized + PathLike + ToOwned<Owned = <P as PathLike>::Owned>,
+	UrnBuf<<P as PathLike>::Owned>: Borrow<Urn<P>>,
+{
+	type Owned = UrnBuf<<P as PathLike>::Owned>;
 
 	fn to_owned(&self) -> Self::Owned { UrnBuf(self.0.to_owned()) }
 }
 
-impl<T: AsRef<OsStr>> PartialEq<T> for Urn {
-	fn eq(&self, other: &T) -> bool { self.0 == other.as_ref() }
-}
-
-impl PartialEq<Cow<'_, OsStr>> for &Urn {
-	fn eq(&self, other: &Cow<OsStr>) -> bool { self.0 == other.as_ref() }
+impl<P> PartialEq<UrnBuf<P::Owned>> for &Urn<P>
+where
+	P: ?Sized + PathLike + PartialEq<P::Owned>,
+{
+	fn eq(&self, other: &UrnBuf<P::Owned>) -> bool { self.0 == other.0 }
 }
 
 // --- UrnBuf
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq, Serialize)]
-pub struct UrnBuf(PathBuf);
+pub struct UrnBuf<P: PathBufLike = PathBuf>(P);
 
-impl Deref for UrnBuf {
-	type Target = Urn;
-
-	fn deref(&self) -> &Self::Target { self.borrow() }
+impl<P> Borrow<Urn<P::Borrowed>> for UrnBuf<P>
+where
+	P: PathBufLike,
+{
+	fn borrow(&self) -> &Urn<P::Borrowed> { Urn::new(&self.0) }
 }
 
-impl Borrow<Urn> for UrnBuf {
-	fn borrow(&self) -> &Urn { Urn::new(&self.0) }
+impl<P> Deref for UrnBuf<P>
+where
+	P: PathBufLike,
+{
+	type Target = Urn<P::Borrowed>;
+
+	fn deref(&self) -> &Self::Target { Urn::new(&self.0) }
 }
 
-impl AsRef<Urn> for UrnBuf {
-	fn as_ref(&self) -> &Urn { self.borrow() }
+impl<P> AsRef<P::Borrowed> for UrnBuf<P>
+where
+	P: PathBufLike,
+{
+	fn as_ref(&self) -> &P::Borrowed { Urn::new(&self.0) }
 }
 
-impl AsRef<Path> for UrnBuf {
-	fn as_ref(&self) -> &Path { &self.0 }
+impl<P> PartialEq<Urn<P::Borrowed>> for UrnBuf<P>
+where
+	P: PathBufLike + PartialEq<P::Borrowed>,
+{
+	fn eq(&self, other: &Urn<P::Borrowed>) -> bool { self.0 == other.0 }
 }
 
-impl PartialEq<Urn> for UrnBuf {
-	fn eq(&self, other: &Urn) -> bool { self.0 == other.0 }
+impl<T> From<T> for UrnBuf<PathBuf>
+where
+	T: Into<PathBuf>,
+{
+	fn from(value: T) -> Self { Self(value.into()) }
 }
 
-impl PartialEq<UrnBuf> for Urn {
-	fn eq(&self, other: &UrnBuf) -> bool { self.0 == other.0 }
-}
-
-impl<T: Into<PathBuf>> From<T> for UrnBuf {
-	fn from(p: T) -> Self { Self(p.into()) }
-}
-
-impl UrnBuf {
+impl<P> UrnBuf<P>
+where
+	P: PathBufLike,
+{
 	#[inline]
-	pub fn as_urn(&self) -> &Urn { self.borrow() }
-
-	#[inline]
-	pub fn as_os_str(&self) -> &OsStr { self.0.as_os_str() }
+	pub fn as_urn(&self) -> &Urn<P::Borrowed> { self }
 }

@@ -31,7 +31,7 @@ impl Actor for Reveal {
 		}
 
 		// Now, we can safely hover on the target
-		act!(mgr:hover, cx, Some(child.into()))?;
+		act!(mgr:hover, cx, Some(child.to_owned()))?;
 
 		act!(mgr:peek, cx)?;
 		act!(mgr:watch, cx)?;

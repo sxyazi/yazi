@@ -121,7 +121,7 @@ impl Folder {
 		if let Some(u) = urn {
 			self.hover(u)
 		} else if let Some(u) = &self.trace {
-			self.hover(u.clone().as_ref())
+			self.hover(&u.clone())
 		} else {
 			self.arrow(0)
 		}

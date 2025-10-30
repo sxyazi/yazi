@@ -38,7 +38,7 @@ impl Boot {
 			};
 
 			if provider::metadata(&entry).await.is_ok_and(|m| m.is_file()) {
-				(parent.into(), child.into())
+				(parent.into(), child.to_owned())
 			} else {
 				(entry, UrnBuf::default())
 			}

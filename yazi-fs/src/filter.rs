@@ -2,7 +2,7 @@ use std::{ffi::OsStr, fmt::Display, ops::Range};
 
 use anyhow::Result;
 use regex::bytes::{Regex, RegexBuilder};
-use yazi_shared::event::Cmd;
+use yazi_shared::{event::Cmd, url::Urn};
 
 pub struct Filter {
 	raw:   String,
@@ -23,9 +23,8 @@ impl Filter {
 	}
 
 	#[inline]
-	pub fn matches(&self, name: impl AsRef<OsStr>) -> bool {
-		self.regex.is_match(name.as_ref().as_encoded_bytes())
-	}
+	#[allow(private_bounds)]
+	pub fn matches(&self, name: impl Needle) -> bool { self.regex.is_match(name.needle()) }
 
 	#[inline]
 	pub fn highlighted(&self, name: impl AsRef<OsStr>) -> Option<Vec<Range<usize>>> {
@@ -57,4 +56,17 @@ impl From<&Cmd> for FilterCase {
 			(_, true) => Self::Insensitive,
 		}
 	}
+}
+
+// --- Needle
+trait Needle {
+	fn needle(&self) -> &[u8];
+}
+
+impl Needle for &OsStr {
+	fn needle(&self) -> &[u8] { self.as_encoded_bytes() }
+}
+
+impl Needle for &Urn {
+	fn needle(&self) -> &[u8] { self.encoded_bytes() }
 }

@@ -26,7 +26,7 @@ impl Actor for Hover {
 
 		// Turn on tracing
 		if let (Some(h), Some(u)) = (tab.hovered(), opt.urn)
-			&& *h.urn() == u
+			&& h.urn() == u
 		{
 			// `hover(Some)` occurs after user actions, such as create, rename, reveal, etc.
 			// At this point, it's intuitive to track the location of the file regardless.
