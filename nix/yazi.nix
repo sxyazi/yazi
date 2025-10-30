@@ -12,7 +12,7 @@
 
   # default optional deps
   jq,
-  poppler_utils,
+  poppler-utils,
   _7zz,
   ffmpeg,
   fd,
@@ -39,7 +39,7 @@ let
 
   defaultDeps = [
     jq
-    poppler_utils
+    poppler-utils
     _7zz
     ffmpeg
     fd
