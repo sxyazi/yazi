@@ -7,29 +7,29 @@ pub trait PathLike: AsRef<Self> {
 	where
 		Self: 'a;
 
+	fn components(&self) -> Self::Components<'_>;
+
 	fn default() -> &'static Self;
 
-	fn strip_prefix<T>(&self, base: T) -> Option<&Self>
-	where
-		T: AsRef<Self>;
+	fn encoded_bytes(&self) -> &[u8];
 
-	fn len(&self) -> usize { self.encoded_bytes().len() }
-
-	fn components(&self) -> Self::Components<'_>;
+	fn extension(&self) -> Option<&Self::Inner>;
 
 	fn file_name(&self) -> Option<&Self::Inner>;
 
 	fn file_stem(&self) -> Option<&Self::Inner>;
 
-	fn extension(&self) -> Option<&Self::Inner>;
-
-	fn parent(&self) -> Option<&Self>;
-
-	fn encoded_bytes(&self) -> &[u8];
-
 	unsafe fn from_encoded_bytes(bytes: &[u8]) -> &Self;
 
 	fn join<T>(&self, base: T) -> Self::Owned
+	where
+		T: AsRef<Self>;
+
+	fn len(&self) -> usize { self.encoded_bytes().len() }
+
+	fn parent(&self) -> Option<&Self>;
+
+	fn strip_prefix<T>(&self, base: T) -> Option<&Self>
 	where
 		T: AsRef<Self>;
 }
@@ -39,13 +39,13 @@ pub trait PathBufLike: AsRef<Self::Borrowed> + Default + 'static {
 	type InnerRef: ?Sized + PathInner;
 	type Borrowed: ?Sized + PathLike + AsRef<Self::Borrowed>;
 
-	fn len(&self) -> usize { self.encoded_bytes().len() }
-
 	fn encoded_bytes(&self) -> &[u8];
+
+	unsafe fn from_encoded_bytes(bytes: Vec<u8>) -> Self;
 
 	fn into_encoded_bytes(self) -> Vec<u8>;
 
-	unsafe fn from_encoded_bytes(bytes: Vec<u8>) -> Self;
+	fn len(&self) -> usize { self.encoded_bytes().len() }
 
 	fn set_file_name<T>(&mut self, name: T)
 	where
@@ -63,26 +63,17 @@ impl PathLike for Path {
 	type Inner = OsStr;
 	type Owned = PathBuf;
 
+	fn components(&self) -> Self::Components<'_> { self.components() }
+
 	fn default() -> &'static Self { Path::new("") }
 
-	fn strip_prefix<T>(&self, base: T) -> Option<&Self>
-	where
-		T: AsRef<Self>,
-	{
-		self.strip_prefix(base).ok()
-	}
+	fn encoded_bytes(&self) -> &[u8] { self.as_os_str().as_encoded_bytes() }
 
-	fn components(&self) -> Self::Components<'_> { self.components() }
+	fn extension(&self) -> Option<&Self::Inner> { self.extension() }
 
 	fn file_name(&self) -> Option<&Self::Inner> { self.file_name() }
 
 	fn file_stem(&self) -> Option<&Self::Inner> { self.file_stem() }
-
-	fn extension(&self) -> Option<&Self::Inner> { self.extension() }
-
-	fn parent(&self) -> Option<&Self> { self.parent() }
-
-	fn encoded_bytes(&self) -> &[u8] { self.as_os_str().as_encoded_bytes() }
 
 	unsafe fn from_encoded_bytes(bytes: &[u8]) -> &Self {
 		Self::new(unsafe { Self::Inner::from_encoded_bytes_unchecked(bytes) })
@@ -94,6 +85,15 @@ impl PathLike for Path {
 	{
 		self.join(base)
 	}
+
+	fn parent(&self) -> Option<&Self> { self.parent() }
+
+	fn strip_prefix<T>(&self, base: T) -> Option<&Self>
+	where
+		T: AsRef<Self>,
+	{
+		self.strip_prefix(base).ok()
+	}
 }
 
 impl PathBufLike for PathBuf {
@@ -103,11 +103,11 @@ impl PathBufLike for PathBuf {
 
 	fn encoded_bytes(&self) -> &[u8] { self.as_os_str().as_encoded_bytes() }
 
-	fn into_encoded_bytes(self) -> Vec<u8> { self.into_os_string().into_encoded_bytes() }
-
 	unsafe fn from_encoded_bytes(bytes: Vec<u8>) -> Self {
 		Self::from(unsafe { Self::Inner::from_encoded_bytes_unchecked(bytes) })
 	}
+
+	fn into_encoded_bytes(self) -> Vec<u8> { self.into_os_string().into_encoded_bytes() }
 
 	fn set_file_name<T>(&mut self, name: T)
 	where

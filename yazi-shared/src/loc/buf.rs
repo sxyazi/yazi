@@ -145,7 +145,9 @@ where
 	}
 
 	#[inline]
-	pub fn as_loc<'a>(&'a self) -> Loc<'a, P::Borrowed> { Loc::from(self) }
+	pub fn as_loc<'a>(&'a self) -> Loc<'a, P::Borrowed> {
+		Loc { inner: self.inner.as_ref(), uri: self.uri, urn: self.urn }
+	}
 
 	#[inline]
 	pub fn to_path(&self) -> P
