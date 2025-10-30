@@ -72,4 +72,8 @@ impl MgrProxy {
 	{
 		emit!(Call(relay!(mgr:upload).with_seq(urls)));
 	}
+
+	pub fn exclude_add(patterns: Vec<String>) {
+		emit!(Call(relay!(mgr:exclude_add).with_seq(patterns)));
+	}
 }

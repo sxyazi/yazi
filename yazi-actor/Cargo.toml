@@ -34,6 +34,7 @@ yazi-widgets   = { path = "../yazi-widgets", version = "25.9.15" }
 anyhow       = { workspace = true }
 crossterm    = { workspace = true }
 futures      = { workspace = true }
+globset      = { workspace = true }
 hashbrown    = { workspace = true }
 mlua         = { workspace = true }
 paste        = { workspace = true }
