@@ -155,7 +155,7 @@ impl Files {
 	}
 
 	#[cfg(windows)]
-	pub fn update_deleting(&mut self, mut urns: HashSet<UrnBuf>) -> Vec<usize> {
+	pub fn update_deleting(&mut self, mut urns: HashSet<PathBuf>) -> Vec<usize> {
 		let mut deleted = Vec::with_capacity(urns.len());
 		if !urns.is_empty() {
 			let mut i = 0;
