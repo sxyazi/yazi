@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, path::Path};
 
 use hashbrown::Equivalent;
 
-use crate::{loc::{Loc, LocBuf}, scheme::SchemeRef, url::{AsUrl, Components, Encode, Uri, UrlBuf, Urn}};
+use crate::{loc::{Loc, LocBuf}, scheme::SchemeRef, url::{AsUrl, Components, Encode, UrlBuf}};
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub struct Url<'a> {
@@ -79,13 +79,13 @@ impl<'a> Url<'a> {
 		UrlBuf { loc, scheme: self.scheme.into() }
 	}
 
-	pub fn strip_prefix(self, base: impl AsUrl) -> Option<&'a Urn> {
+	pub fn strip_prefix(self, base: impl AsUrl) -> Option<&'a Path> {
 		use SchemeRef as S;
 
 		let base = base.as_url();
 		let prefix = self.loc.strip_prefix(base.loc)?;
 
-		Some(Urn::new(match (self.scheme, base.scheme) {
+		Some(match (self.scheme, base.scheme) {
 			// Same scheme
 			(S::Regular, S::Regular) => Some(prefix),
 			(S::Search(_), S::Search(_)) => Some(prefix),
@@ -97,10 +97,10 @@ impl<'a> Url<'a> {
 			(S::Search(_), S::Regular) => Some(prefix),
 
 			// Only the entry of archives is a local file
-			(S::Regular, S::Archive(_)) => Some(prefix).filter(|_| base.uri().is_empty()),
-			(S::Search(_), S::Archive(_)) => Some(prefix).filter(|_| base.uri().is_empty()),
-			(S::Archive(_), S::Regular) => Some(prefix).filter(|_| self.uri().is_empty()),
-			(S::Archive(_), S::Search(_)) => Some(prefix).filter(|_| self.uri().is_empty()),
+			(S::Regular, S::Archive(_)) => Some(prefix).filter(|_| base.uri().as_os_str().is_empty()),
+			(S::Search(_), S::Archive(_)) => Some(prefix).filter(|_| base.uri().as_os_str().is_empty()),
+			(S::Archive(_), S::Regular) => Some(prefix).filter(|_| self.uri().as_os_str().is_empty()),
+			(S::Archive(_), S::Search(_)) => Some(prefix).filter(|_| self.uri().as_os_str().is_empty()),
 
 			// Independent virtual file space
 			(S::Regular, S::Sftp(_)) => None,
@@ -109,14 +109,14 @@ impl<'a> Url<'a> {
 			(S::Sftp(_), S::Regular) => None,
 			(S::Sftp(_), S::Search(_)) => None,
 			(S::Sftp(_), S::Archive(_)) => None,
-		}?))
+		}?)
 	}
 
 	#[inline]
-	pub fn uri(self) -> &'a Uri { self.loc.uri() }
+	pub fn uri(self) -> &'a Path { self.loc.uri() }
 
 	#[inline]
-	pub fn urn(self) -> &'a Urn { self.loc.urn() }
+	pub fn urn(self) -> &'a Path { self.loc.urn() }
 
 	#[inline]
 	pub fn name(self) -> Option<&'a OsStr> { self.loc.name() }
@@ -154,13 +154,17 @@ impl<'a> Url<'a> {
 			S::Regular => Self { loc: parent.into(), scheme: S::Regular },
 
 			// Search
-			S::Search(_) if uri.is_empty() => Self { loc: parent.into(), scheme: S::Regular },
+			S::Search(_) if uri.as_os_str().is_empty() => {
+				Self { loc: parent.into(), scheme: S::Regular }
+			}
 			S::Search(_) => {
 				Self { loc: Loc::new(parent, self.loc.base(), self.loc.base()), scheme: self.scheme }
 			}
 
 			// Archive
-			S::Archive(_) if uri.is_empty() => Self { loc: parent.into(), scheme: S::Regular },
+			S::Archive(_) if uri.as_os_str().is_empty() => {
+				Self { loc: parent.into(), scheme: S::Regular }
+			}
 			S::Archive(_) if uri.components().nth(1).is_none() => {
 				Self { loc: Loc::zeroed(parent), scheme: self.scheme }
 			}
@@ -196,7 +200,7 @@ impl<'a> Url<'a> {
 	}
 
 	#[inline]
-	pub fn pair(self) -> Option<(Self, &'a Urn)> { Some((self.parent()?, self.loc.urn())) }
+	pub fn pair(self) -> Option<(Self, &'a Path)> { Some((self.parent()?, self.loc.urn())) }
 
 	#[inline]
 	pub fn as_path(self) -> Option<&'a Path> {

@@ -2,7 +2,7 @@ use std::{cmp, ffi::OsStr, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, 
 
 use anyhow::Result;
 
-use crate::{loc::Loc, path::{PathBufLike, PathLike}, url::{Uri, Urn}};
+use crate::{loc::Loc, path::{PathBufLike, PathLike}};
 
 #[derive(Clone, Default, Eq)]
 pub struct LocBuf<P: PathBufLike = PathBuf> {
@@ -215,19 +215,19 @@ where
 	P: PathBufLike,
 {
 	#[inline]
-	pub fn uri(&self) -> &Uri<P::Borrowed> { self.as_loc().uri() }
+	pub fn uri(&self) -> &P::Borrowed { self.as_loc().uri() }
 
 	#[inline]
-	pub fn urn(&self) -> &Urn<P::Borrowed> { self.as_loc().urn() }
+	pub fn urn(&self) -> &P::Borrowed { self.as_loc().urn() }
 
 	#[inline]
-	pub fn base(&self) -> &Urn<P::Borrowed> { self.as_loc().base() }
+	pub fn base(&self) -> &P::Borrowed { self.as_loc().base() }
 
 	#[inline]
 	pub fn has_base(&self) -> bool { self.as_loc().has_base() }
 
 	#[inline]
-	pub fn trail(&self) -> &Urn<P::Borrowed> { self.as_loc().trail() }
+	pub fn trail(&self) -> &P::Borrowed { self.as_loc().trail() }
 
 	#[inline]
 	pub fn has_trail(&self) -> bool { self.as_loc().has_trail() }

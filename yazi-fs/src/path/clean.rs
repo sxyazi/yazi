@@ -4,8 +4,11 @@ use yazi_shared::{loc::LocBuf, url::{UrlBuf, UrlCow}};
 
 pub fn clean_url<'a>(url: impl Into<UrlCow<'a>>) -> UrlBuf {
 	let cow: UrlCow = url.into();
-	let (path, uri, urn) =
-		clean_path_impl(&cow.loc(), cow.loc().base().count(), cow.loc().trail().count());
+	let (path, uri, urn) = clean_path_impl(
+		&cow.loc(),
+		cow.loc().base().components().count(),
+		cow.loc().trail().components().count(),
+	);
 
 	let loc = LocBuf::with(path, uri, urn).expect("Failed to create Loc from cleaned path");
 	UrlBuf { loc, scheme: cow.into_scheme().into() }

@@ -1,8 +1,8 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use hashbrown::{HashMap, HashSet};
 use yazi_macro::relay;
-use yazi_shared::{Id, Ids, url::{UrlBuf, UrlLike, UrnBuf}};
+use yazi_shared::{Id, Ids, url::{UrlBuf, UrlLike}};
 
 use super::File;
 use crate::{cha::Cha, error::Error};
@@ -14,13 +14,13 @@ pub enum FilesOp {
 	Full(UrlBuf, Vec<File>, Cha),
 	Part(UrlBuf, Vec<File>, Id),
 	Done(UrlBuf, Cha, Id),
-	Size(UrlBuf, HashMap<UrnBuf, u64>),
+	Size(UrlBuf, HashMap<PathBuf, u64>),
 	IOErr(UrlBuf, Error),
 
 	Creating(UrlBuf, Vec<File>),
-	Deleting(UrlBuf, HashSet<UrnBuf>),
-	Updating(UrlBuf, HashMap<UrnBuf, File>),
-	Upserting(UrlBuf, HashMap<UrnBuf, File>),
+	Deleting(UrlBuf, HashSet<PathBuf>),
+	Updating(UrlBuf, HashMap<PathBuf, File>),
+	Upserting(UrlBuf, HashMap<PathBuf, File>),
 }
 
 impl FilesOp {

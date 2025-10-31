@@ -1,5 +1,5 @@
 use mlua::{IntoLua, Lua, Table};
-use yazi_binding::{Cha, File, Id, Url, Urn};
+use yazi_binding::{Cha, File, Id, Path, Url};
 
 pub(super) struct FilesOp(yazi_fs::FilesOp);
 
@@ -34,8 +34,8 @@ impl FilesOp {
 		Ok(Self(yazi_fs::FilesOp::Size(
 			url.into(),
 			sizes
-				.pairs::<Urn, u64>()
-				.map(|r| r.map(|(urn, size)| (urn.into(), size)))
+				.pairs::<Path, u64>()
+				.map(|r| r.map(|(urn, size)| (urn.0, size)))
 				.collect::<mlua::Result<_>>()?,
 		)))
 	}

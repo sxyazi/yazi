@@ -1,7 +1,7 @@
-use std::{mem, ops::{Deref, DerefMut, Not}};
+use std::{mem, ops::{Deref, DerefMut, Not}, path::{Path, PathBuf}};
 
 use hashbrown::{HashMap, HashSet};
-use yazi_shared::{Id, url::{Urn, UrnBuf}};
+use yazi_shared::Id;
 
 use super::{FilesSorter, Filter};
 use crate::{FILES_TICKET, File, SortBy};
@@ -14,7 +14,7 @@ pub struct Files {
 	version:      u64,
 	pub revision: u64,
 
-	pub sizes: HashMap<UrnBuf, u64>,
+	pub sizes: HashMap<PathBuf, u64>,
 
 	sorter:      FilesSorter,
 	filter:      Option<Filter>,
@@ -69,7 +69,7 @@ impl Files {
 		}
 	}
 
-	pub fn update_size(&mut self, mut sizes: HashMap<UrnBuf, u64>) {
+	pub fn update_size(&mut self, mut sizes: HashMap<PathBuf, u64>) {
 		if sizes.len() <= 50 {
 			sizes.retain(|k, v| self.sizes.get(k) != Some(v));
 		}
@@ -120,19 +120,18 @@ impl Files {
 	}
 
 	#[cfg(unix)]
-	pub fn update_deleting(&mut self, urns: HashSet<UrnBuf>) -> Vec<usize> {
+	pub fn update_deleting(&mut self, urns: HashSet<PathBuf>) -> Vec<usize> {
+		use yazi_shared::path::PathLike;
 		if urns.is_empty() {
 			return vec![];
 		}
 
 		let (mut hidden, mut items) = if let Some(filter) = &self.filter {
-			urns
-				.into_iter()
-				.partition(|u| (!self.show_hidden && u.as_urn().is_hidden()) || !filter.matches(u.as_urn()))
+			urns.into_iter().partition(|u| (!self.show_hidden && u.is_hidden()) || !filter.matches(u))
 		} else if self.show_hidden {
 			(HashSet::new(), urns)
 		} else {
-			urns.into_iter().partition(|u| u.as_urn().is_hidden())
+			urns.into_iter().partition(|u| u.is_hidden())
 		};
 
 		let mut deleted = Vec::with_capacity(items.len());
@@ -156,7 +155,7 @@ impl Files {
 	}
 
 	#[cfg(windows)]
-	pub fn update_deleting(&mut self, mut urns: HashSet<UrnBuf>) -> Vec<usize> {
+	pub fn update_deleting(&mut self, mut urns: HashSet<PathBuf>) -> Vec<usize> {
 		let mut deleted = Vec::with_capacity(urns.len());
 		if !urns.is_empty() {
 			let mut i = 0;
@@ -179,8 +178,8 @@ impl Files {
 
 	pub fn update_updating(
 		&mut self,
-		files: HashMap<UrnBuf, File>,
-	) -> (HashMap<UrnBuf, File>, HashMap<UrnBuf, File>) {
+		files: HashMap<PathBuf, File>,
+	) -> (HashMap<PathBuf, File>, HashMap<PathBuf, File>) {
 		if files.is_empty() {
 			return Default::default();
 		}
@@ -222,7 +221,7 @@ impl Files {
 		(hidden, items)
 	}
 
-	pub fn update_upserting(&mut self, files: HashMap<UrnBuf, File>) {
+	pub fn update_upserting(&mut self, files: HashMap<PathBuf, File>) {
 		if files.is_empty() {
 			return;
 		}
@@ -271,7 +270,7 @@ impl Files {
 impl Files {
 	// --- Items
 	#[inline]
-	pub fn position(&self, urn: &Urn) -> Option<usize> { self.iter().position(|f| urn == f.urn()) }
+	pub fn position(&self, urn: &Path) -> Option<usize> { self.iter().position(|f| urn == f.urn()) }
 
 	// --- Ticket
 	#[inline]

@@ -1,6 +1,6 @@
 use std::{ffi::OsStr, hash::{Hash, Hasher}, ops::Deref, path::{Path, PathBuf}};
 
-use yazi_shared::url::{Uri, UrlBuf, UrlLike, Urn};
+use yazi_shared::url::{UrlBuf, UrlLike};
 
 use crate::cha::{Cha, ChaType};
 
@@ -37,10 +37,10 @@ impl File {
 	pub fn url_owned(&self) -> UrlBuf { self.url.to_owned() }
 
 	#[inline]
-	pub fn uri(&self) -> &Uri { self.url.uri() }
+	pub fn uri(&self) -> &Path { self.url.uri() }
 
 	#[inline]
-	pub fn urn(&self) -> &Urn { self.url.urn() }
+	pub fn urn(&self) -> &Path { self.url.urn() }
 
 	#[inline]
 	pub fn name(&self) -> Option<&OsStr> { self.url.name() }

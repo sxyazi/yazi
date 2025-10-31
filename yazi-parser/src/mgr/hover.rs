@@ -1,13 +1,14 @@
+use std::path::PathBuf;
+
 use mlua::{ExternalError, FromLua, IntoLua, Lua, Value};
-use yazi_shared::url::UrnBuf;
 
 #[derive(Debug, Default)]
 pub struct HoverOpt {
-	pub urn: Option<UrnBuf>,
+	pub urn: Option<PathBuf>,
 }
 
-impl From<Option<UrnBuf>> for HoverOpt {
-	fn from(urn: Option<UrnBuf>) -> Self { Self { urn } }
+impl From<Option<PathBuf>> for HoverOpt {
+	fn from(urn: Option<PathBuf>) -> Self { Self { urn } }
 }
 
 impl FromLua for HoverOpt {
