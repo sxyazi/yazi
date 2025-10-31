@@ -146,7 +146,7 @@ impl UrlBuf {
 	pub fn is_internal(&self) -> bool {
 		match self.scheme {
 			Scheme::Regular | Scheme::Sftp(_) => true,
-			Scheme::Search(_) => !self.loc.uri().is_empty(),
+			Scheme::Search(_) => !self.loc.uri().as_os_str().is_empty(),
 			Scheme::Archive(_) => false,
 		}
 	}

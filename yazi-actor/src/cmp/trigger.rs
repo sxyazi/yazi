@@ -1,11 +1,11 @@
-use std::{ffi::OsString, mem, path::MAIN_SEPARATOR_STR};
+use std::{ffi::OsString, mem, path::{MAIN_SEPARATOR_STR, PathBuf}};
 
 use anyhow::Result;
 use yazi_fs::{CWD, path::expand_url, provider::{DirReader, FileHolder}};
 use yazi_macro::{act, render, succ};
 use yazi_parser::cmp::{CmpItem, ShowOpt, TriggerOpt};
 use yazi_proxy::CmpProxy;
-use yazi_shared::{OsStrSplit, data::Data, natsort, scheme::SchemeLike, url::{UrlBuf, UrlCow, UrnBuf}};
+use yazi_shared::{OsStrSplit, data::Data, natsort, scheme::SchemeLike, url::{UrlBuf, UrlCow}};
 use yazi_vfs::provider;
 
 use crate::{Actor, Ctx};
@@ -67,7 +67,7 @@ impl Actor for Trigger {
 }
 
 impl Trigger {
-	fn split_url(s: &str) -> Option<(UrlBuf, UrnBuf)> {
+	fn split_url(s: &str) -> Option<(UrlBuf, PathBuf)> {
 		let (scheme, path, ..) = UrlCow::parse(s.as_bytes()).ok()?;
 
 		if scheme.is_local() && path.as_os_str() == "~" {
@@ -91,16 +91,16 @@ impl Trigger {
 
 #[cfg(test)]
 mod tests {
-	use yazi_shared::url::{UrlLike, Urn};
+	use yazi_shared::url::UrlLike;
 
 	use super::*;
 
 	fn compare(s: &str, parent: &str, child: &str) {
 		let (mut p, c) = Trigger::split_url(s).unwrap();
 		if let Some(u) = p.strip_prefix(yazi_fs::CWD.load().as_ref()) {
-			p = UrlBuf::from(&**u);
+			p = UrlBuf::from(u);
 		}
-		assert_eq!((p, c.as_urn()), (parent.parse().unwrap(), Urn::new(child)));
+		assert_eq!((p, c.to_str().unwrap()), (parent.parse().unwrap(), child));
 	}
 
 	#[cfg(unix)]

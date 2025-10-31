@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ffi::OsStr, path::{Path, PathBuf}};
 
-use crate::{scheme::{AsScheme, SchemeRef}, url::{Components, Display, Uri, Url, UrlBuf, UrlCow, Urn}};
+use crate::{scheme::{AsScheme, SchemeRef}, url::{Components, Display, Url, UrlBuf, UrlCow}};
 
 // --- AsUrl
 pub trait AsUrl {
@@ -107,7 +107,7 @@ where
 
 	fn os_str(&self) -> Cow<'_, OsStr> { self.components().os_str() }
 
-	fn pair(&self) -> Option<(Url<'_>, &Urn)> { self.as_url().pair() }
+	fn pair(&self) -> Option<(Url<'_>, &Path)> { self.as_url().pair() }
 
 	fn parent(&self) -> Option<Url<'_>> { self.as_url().parent() }
 
@@ -115,11 +115,11 @@ where
 
 	fn stem(&self) -> Option<&OsStr> { self.as_url().stem() }
 
-	fn strip_prefix(&self, base: impl AsUrl) -> Option<&Urn> { self.as_url().strip_prefix(base) }
+	fn strip_prefix(&self, base: impl AsUrl) -> Option<&Path> { self.as_url().strip_prefix(base) }
 
-	fn uri(&self) -> &Uri { self.as_url().uri() }
+	fn uri(&self) -> &Path { self.as_url().uri() }
 
-	fn urn(&self) -> &Urn { self.as_url().urn() }
+	fn urn(&self) -> &Path { self.as_url().urn() }
 }
 
 impl UrlLike for UrlBuf {}

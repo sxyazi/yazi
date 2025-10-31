@@ -1,13 +1,15 @@
+use std::path::{Path, PathBuf};
+
 use anyhow::Result;
 use hashbrown::HashMap;
 use yazi_fs::{Files, Filter, FilterCase};
-use yazi_shared::url::{UrlBuf, Urn, UrnBuf};
+use yazi_shared::url::UrlBuf;
 
 use crate::tab::Folder;
 
 pub struct Finder {
 	pub filter:  Filter,
-	pub matched: HashMap<UrnBuf, u8>,
+	pub matched: HashMap<PathBuf, u8>,
 	lock:        FinderLock,
 }
 
@@ -76,7 +78,7 @@ impl Finder {
 }
 
 impl Finder {
-	pub fn matched_idx(&self, folder: &Folder, urn: &Urn) -> Option<u8> {
+	pub fn matched_idx(&self, folder: &Folder, urn: &Path) -> Option<u8> {
 		if self.lock == *folder { self.matched.get(urn).copied() } else { None }
 	}
 }

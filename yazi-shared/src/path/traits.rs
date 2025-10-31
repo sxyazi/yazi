@@ -1,5 +1,9 @@
 use std::{ffi::{OsStr, OsString}, path::{Path, PathBuf}};
 
+pub trait AsPath {
+	fn as_path(&self) -> &(impl ?Sized + PathLike);
+}
+
 pub trait PathLike: AsRef<Self> {
 	type Inner: ?Sized + PathInner;
 	type Owned: PathBufLike + Into<Self::Owned>;
@@ -20,6 +24,11 @@ pub trait PathLike: AsRef<Self> {
 	fn file_stem(&self) -> Option<&Self::Inner>;
 
 	unsafe fn from_encoded_bytes(bytes: &[u8]) -> &Self;
+
+	#[cfg(unix)]
+	fn is_hidden(&self) -> bool {
+		self.file_name().map_or(false, |n| n.encoded_bytes().get(0) == Some(&b'.'))
+	}
 
 	fn join<T>(&self, base: T) -> Self::Owned
 	where
@@ -56,6 +65,22 @@ pub trait PathInner {
 	fn len(&self) -> usize { self.encoded_bytes().len() }
 
 	fn encoded_bytes(&self) -> &[u8];
+}
+
+impl AsPath for &OsStr {
+	fn as_path(&self) -> &(impl ?Sized + PathLike) { Path::new(self) }
+}
+
+impl AsPath for &Path {
+	fn as_path(&self) -> &(impl ?Sized + PathLike) { *self }
+}
+
+impl AsPath for PathBuf {
+	fn as_path(&self) -> &(impl ?Sized + PathLike) { self.as_path() }
+}
+
+impl AsPath for &PathBuf {
+	fn as_path(&self) -> &(impl ?Sized + PathLike) { (*self).as_path() }
 }
 
 impl PathLike for Path {

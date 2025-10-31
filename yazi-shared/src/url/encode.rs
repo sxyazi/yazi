@@ -25,8 +25,8 @@ impl<'a> Encode<'a> {
 			fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 				macro_rules! w {
 					($default_uri:expr, $default_urn:expr) => {{
-						let uri = self.0.0.loc.uri().count();
-						let urn = self.0.0.loc.urn().count();
+						let uri = self.0.0.loc.uri().components().count();
+						let urn = self.0.0.loc.urn().components().count();
 						match (uri != $default_uri, urn != $default_urn) {
 							(true, true) => write!(f, ":{uri}:{urn}"),
 							(true, false) => write!(f, ":{uri}"),

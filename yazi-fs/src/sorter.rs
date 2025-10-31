@@ -1,7 +1,7 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, path::PathBuf};
 
 use hashbrown::HashMap;
-use yazi_shared::{LcgRng, natsort, translit::Transliterator, url::{UrlLike, UrnBuf}};
+use yazi_shared::{LcgRng, natsort, path::PathLike, translit::Transliterator, url::UrlLike};
 
 use crate::{File, SortBy};
 
@@ -15,7 +15,7 @@ pub struct FilesSorter {
 }
 
 impl FilesSorter {
-	pub(super) fn sort(&self, items: &mut [File], sizes: &HashMap<UrnBuf, u64>) {
+	pub(super) fn sort(&self, items: &mut [File], sizes: &HashMap<PathBuf, u64>) {
 		if items.is_empty() {
 			return;
 		}

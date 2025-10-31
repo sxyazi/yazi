@@ -4,13 +4,13 @@ use futures::executor::block_on;
 use hashbrown::HashSet;
 use serde::Serialize;
 use yazi_fs::{CWD, Xdg, path::expand_url};
-use yazi_shared::url::{UrlBuf, UrlCow, UrlLike, UrnBuf};
+use yazi_shared::url::{UrlBuf, UrlCow, UrlLike};
 use yazi_vfs::provider;
 
 #[derive(Debug, Default, Serialize)]
 pub struct Boot {
 	pub cwds:  Vec<UrlBuf>,
-	pub files: Vec<UrnBuf>,
+	pub files: Vec<PathBuf>,
 
 	pub local_events:  HashSet<String>,
 	pub remote_events: HashSet<String>,
@@ -22,25 +22,25 @@ pub struct Boot {
 }
 
 impl Boot {
-	async fn parse_entries(entries: &[UrlBuf]) -> (Vec<UrlBuf>, Vec<UrnBuf>) {
+	async fn parse_entries(entries: &[UrlBuf]) -> (Vec<UrlBuf>, Vec<PathBuf>) {
 		if entries.is_empty() {
-			return (vec![CWD.load().as_ref().clone()], vec![UrnBuf::default()]);
+			return (vec![CWD.load().as_ref().clone()], vec![PathBuf::default()]);
 		}
 
-		async fn go(entry: &UrlBuf) -> (UrlBuf, UrnBuf) {
+		async fn go(entry: &UrlBuf) -> (UrlBuf, PathBuf) {
 			let mut entry = expand_url(entry);
 			if let Ok(u @ UrlCow::Owned { .. }) = provider::absolute(&entry).await {
 				entry = u.into_owned();
 			}
 
 			let Some((parent, child)) = entry.pair() else {
-				return (entry, UrnBuf::default());
+				return (entry, PathBuf::default());
 			};
 
 			if provider::metadata(&entry).await.is_ok_and(|m| m.is_file()) {
 				(parent.into(), child.to_owned())
 			} else {
-				(entry, UrnBuf::default())
+				(entry, PathBuf::default())
 			}
 		}
 

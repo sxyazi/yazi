@@ -2,7 +2,7 @@ use std::{hash::{Hash, Hasher}, ops::Deref, path::Path};
 
 use anyhow::{Result, bail};
 
-use crate::{loc::LocBuf, path::{PathInner, PathLike}, url::{Uri, Urn}};
+use crate::{loc::LocBuf, path::{PathInner, PathLike}};
 
 #[derive(Debug)]
 pub struct Loc<'a, P: ?Sized + PathLike = Path> {
@@ -169,34 +169,34 @@ where
 	pub fn as_path(self) -> &'a P { self.inner }
 
 	#[inline]
-	pub fn uri(self) -> &'a Uri<P> {
-		Uri::new(unsafe {
+	pub fn uri(self) -> &'a P {
+		unsafe {
 			P::from_encoded_bytes(self.inner.encoded_bytes().get_unchecked(self.inner.len() - self.uri..))
-		})
+		}
 	}
 
 	#[inline]
-	pub fn urn(self) -> &'a Urn<P> {
-		Urn::new(unsafe {
+	pub fn urn(self) -> &'a P {
+		unsafe {
 			P::from_encoded_bytes(self.inner.encoded_bytes().get_unchecked(self.inner.len() - self.urn..))
-		})
+		}
 	}
 
 	#[inline]
-	pub fn base(self) -> &'a Urn<P> {
-		Urn::new(unsafe {
+	pub fn base(self) -> &'a P {
+		unsafe {
 			P::from_encoded_bytes(self.inner.encoded_bytes().get_unchecked(..self.inner.len() - self.uri))
-		})
+		}
 	}
 
 	#[inline]
 	pub fn has_base(self) -> bool { self.inner.len() != self.uri }
 
 	#[inline]
-	pub fn trail(self) -> &'a Urn<P> {
-		Urn::new(unsafe {
+	pub fn trail(self) -> &'a P {
+		unsafe {
 			P::from_encoded_bytes(self.inner.encoded_bytes().get_unchecked(..self.inner.len() - self.urn))
-		})
+		}
 	}
 
 	#[inline]

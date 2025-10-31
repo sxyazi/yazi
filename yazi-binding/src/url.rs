@@ -4,7 +4,7 @@ use mlua::{AnyUserData, ExternalError, FromLua, Lua, MetaMethod, UserData, UserD
 use yazi_fs::{FsHash64, FsHash128};
 use yazi_shared::{IntoOsStr, scheme::SchemeLike, url::{AsUrl, UrlCow, UrlLike}};
 
-use crate::{Scheme, Urn, cached_field, deprecate};
+use crate::{Scheme, cached_field, deprecate};
 
 pub type UrlRef = UserDataRef<Url>;
 
@@ -108,7 +108,10 @@ impl UserData for Url {
 			me.ext().map(|s| lua.create_string(s.as_encoded_bytes())).transpose()
 		});
 		cached_field!(fields, parent, |_, me| Ok(me.parent().map(Self::new)));
-		cached_field!(fields, urn, |_, me| Ok(Urn::new(me.urn())));
+		cached_field!(fields, urn, |_, me| {
+			// FIXME: remove type inference
+			Ok(super::Path::<std::path::PathBuf>::new(me.urn()))
+		});
 		cached_field!(fields, base, |_, me| Ok(me.base().map(Self::new)));
 
 		cached_field!(fields, scheme, |_, me| Ok(Scheme::new(&me.scheme)));
