@@ -24,9 +24,6 @@ impl Actor for Refresh {
 			execute!(TTY.writer(), SetTitle(s)).ok();
 		}
 
-		// Apply ignore filter before triggering file loads
-		act!(mgr:ignore, cx)?;
-
 		if let Some(p) = cx.parent() {
 			Self::trigger_dirs(&[cx.current(), p]);
 		} else {
@@ -53,7 +50,6 @@ impl Refresh {
 	fn trigger_dirs(folders: &[&Folder]) {
 		async fn go(cwd: UrlBuf, cha: Cha) {
 			let Some(cha) = Files::assert_stale(&cwd, cha).await else { return };
-
 			match Files::from_dir_bulk(&cwd).await {
 				Ok(files) => FilesOp::Full(cwd, files, cha).emit(),
 				Err(e) => FilesOp::issue_error(&cwd, e).await,
@@ -65,7 +61,6 @@ impl Refresh {
 			.filter(|&f| f.url.is_internal())
 			.map(|&f| go(f.url.to_owned(), f.cha))
 			.collect();
-
 		if !futs.is_empty() {
 			tokio::spawn(futures::future::join_all(futs));
 		}

@@ -53,8 +53,32 @@ impl Actor for Ignore {
 			}
 		};
 
-		// Apply to CWD
-		if apply(cx.current_mut(), ignore_filter.clone()) {
+		// Apply to CWD and parent
+		let cwd_changed = apply(cx.current_mut(), ignore_filter.clone());
+
+		let parent_changed = if let Some(p) = cx.parent_mut() {
+			let parent_str = if p.url.is_search() {
+				"search://**".to_string()
+			} else {
+				p.url.as_path().map(|p| p.display().to_string()).unwrap_or_default()
+			};
+
+			let parent_excludes = YAZI.files.excludes_for_context(&parent_str);
+			let parent_filter = if !parent_excludes.is_empty() {
+				let context = parent_str.clone();
+				let matcher: Option<Arc<dyn Fn(&std::path::Path) -> Option<bool> + Send + Sync>> =
+					Some(Arc::new(move |path: &std::path::Path| YAZI.files.matches_path(path, &context)));
+				IgnoreFilter::from_patterns(matcher)
+			} else {
+				IgnoreFilter::from_patterns(None)
+			};
+
+			apply(p, parent_filter)
+		} else {
+			false
+		};
+
+		if cwd_changed || parent_changed {
 			act!(mgr:hover, cx)?;
 			act!(mgr:update_paged, cx)?;
 		}

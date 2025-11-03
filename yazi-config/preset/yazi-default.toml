@@ -29,7 +29,7 @@ ueberzug_scale  = 1
 ueberzug_offset = [ 0, 0, 0, 0 ]
 
 
-[files]
+# [files]
 # Context-specific exclude patterns
 # Patterns are compiled into glob matchers for efficient matching
 # Patterns starting with '!' negate (whitelist) previous matches
