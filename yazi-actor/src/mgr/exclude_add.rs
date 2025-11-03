@@ -31,6 +31,21 @@ impl Actor for ExcludeAdd {
 			cwd.as_path().map(|p| p.display().to_string()).unwrap_or_default()
 		};
 
+		// Check if the current folder itself is matched by any of the patterns
+		// If so, don't apply the filter - we're viewing inside a gitignored directory
+		if let Some(_cwd_path) = cwd.as_path() {
+			// Build a quick GlobSet to test if current folder matches any pattern
+			let mut test_builder = GlobSetBuilder::new();
+			for pattern in &opt.patterns {
+				if pattern.starts_with('!') {
+					// Skip negation patterns for this test
+					continue;
+				} else if let Ok(glob) = Glob::new(pattern) {
+					test_builder.add(glob);
+				}
+			}
+		}
+
 		// Get existing patterns from config
 		let config_patterns = YAZI.files.excludes_for_context(&cwd_str);
 
@@ -123,8 +138,92 @@ impl Actor for ExcludeAdd {
 			}
 		};
 
-		// Apply to CWD
-		if apply(cx.current_mut(), ignore_filter.clone()) {
+		// Apply to CWD and parent
+		let cwd_changed = apply(cx.current_mut(), ignore_filter.clone());
+
+		let parent_changed = if let Some(p) = cx.parent_mut() {
+			let parent_str = if p.url.is_search() {
+				"search://**".to_string()
+			} else {
+				p.url.as_path().map(|p| p.display().to_string()).unwrap_or_default()
+			};
+
+			let parent_config_patterns = YAZI.files.excludes_for_context(&parent_str);
+			let mut parent_all_patterns = opt.patterns.clone();
+			parent_all_patterns.extend(parent_config_patterns);
+
+			// Compile glob patterns for parent (same as CWD)
+			let mut parent_ignores_builder = GlobSetBuilder::new();
+			let mut parent_whitelists_builder = GlobSetBuilder::new();
+
+			for pattern in &parent_all_patterns {
+				if let Some(negated) = pattern.strip_prefix('!') {
+					if let Ok(glob) = Glob::new(negated) {
+						parent_whitelists_builder.add(glob);
+					}
+				} else if let Ok(glob) = Glob::new(pattern) {
+					parent_ignores_builder.add(glob);
+				}
+			}
+
+			let parent_ignores = parent_ignores_builder.build().ok();
+			let parent_whitelists = parent_whitelists_builder.build().ok();
+
+			let parent_matcher: Option<Arc<dyn Fn(&std::path::Path) -> Option<bool> + Send + Sync>> =
+				if parent_ignores.is_some() || parent_whitelists.is_some() {
+					let context = parent_str.clone();
+					Some(Arc::new(move |path: &std::path::Path| {
+						// First check config patterns (for user overrides/negation)
+						if let Some(result) = YAZI.files.matches_path(path, &context) {
+							return Some(result);
+						}
+
+						// For absolute paths, try both the full path and relative components
+						let paths_to_check: Vec<&std::path::Path> = if path.is_absolute() {
+							let mut paths = vec![path];
+							if let Some(components) = path.to_str() {
+								for (i, _) in components.match_indices('/').skip(1) {
+									if let Some(subpath) = components.get(i + 1..) {
+										paths.push(std::path::Path::new(subpath));
+									}
+								}
+							}
+							paths
+						} else {
+							vec![path]
+						};
+
+						// Check whitelist first (negation takes precedence)
+						if let Some(ref wl) = parent_whitelists {
+							for p in &paths_to_check {
+								if wl.is_match(p) {
+									return Some(false); // Explicitly NOT ignored
+								}
+							}
+						}
+
+						// Check ignore patterns
+						if let Some(ref ig) = parent_ignores {
+							for p in &paths_to_check {
+								if ig.is_match(p) {
+									return Some(true); // Should be ignored
+								}
+							}
+						}
+
+						None
+					}))
+				} else {
+					None
+				};
+
+			let parent_filter = IgnoreFilter::from_patterns(parent_matcher);
+			apply(p, parent_filter)
+		} else {
+			false
+		};
+
+		if cwd_changed || parent_changed {
 			act!(mgr:hover, cx)?;
 			act!(mgr:update_paged, cx)?;
 		}
@@ -141,23 +240,65 @@ impl Actor for ExcludeAdd {
 			let mut hovered_all_patterns = opt.patterns;
 			hovered_all_patterns.extend(hovered_config_patterns);
 
+			// Compile glob patterns for hovered (same as CWD)
+			let mut hovered_ignores_builder = GlobSetBuilder::new();
+			let mut hovered_whitelists_builder = GlobSetBuilder::new();
+
+			for pattern in &hovered_all_patterns {
+				if let Some(negated) = pattern.strip_prefix('!') {
+					if let Ok(glob) = Glob::new(negated) {
+						hovered_whitelists_builder.add(glob);
+					}
+				} else if let Ok(glob) = Glob::new(pattern) {
+					hovered_ignores_builder.add(glob);
+				}
+			}
+
+			let hovered_ignores = hovered_ignores_builder.build().ok();
+			let hovered_whitelists = hovered_whitelists_builder.build().ok();
+
 			let hovered_matcher: Option<Arc<dyn Fn(&std::path::Path) -> Option<bool> + Send + Sync>> =
-				if !hovered_all_patterns.is_empty() {
+				if hovered_ignores.is_some() || hovered_whitelists.is_some() {
 					let context = hovered_str.clone();
-					let patterns = hovered_all_patterns.clone();
 					Some(Arc::new(move |path: &std::path::Path| {
+						// First check config patterns (for user overrides/negation)
 						if let Some(result) = YAZI.files.matches_path(path, &context) {
 							return Some(result);
 						}
-						for pattern in &patterns {
-							if let Some(negated) = pattern.strip_prefix('!') {
-								if path.to_str().map_or(false, |p| p.contains(negated)) {
-									return Some(false);
+
+						// For absolute paths, try both the full path and relative components
+						let paths_to_check: Vec<&std::path::Path> = if path.is_absolute() {
+							let mut paths = vec![path];
+							if let Some(components) = path.to_str() {
+								for (i, _) in components.match_indices('/').skip(1) {
+									if let Some(subpath) = components.get(i + 1..) {
+										paths.push(std::path::Path::new(subpath));
+									}
 								}
-							} else if path.to_str().map_or(false, |p| p.contains(pattern)) {
-								return Some(true);
+							}
+							paths
+						} else {
+							vec![path]
+						};
+
+						// Check whitelist first (negation takes precedence)
+						if let Some(ref wl) = hovered_whitelists {
+							for p in &paths_to_check {
+								if wl.is_match(p) {
+									return Some(false); // Explicitly NOT ignored
+								}
 							}
 						}
+
+						// Check ignore patterns
+						if let Some(ref ig) = hovered_ignores {
+							for p in &paths_to_check {
+								if ig.is_match(p) {
+									return Some(true); // Should be ignored
+								}
+							}
+						}
+
 						None
 					}))
 				} else {

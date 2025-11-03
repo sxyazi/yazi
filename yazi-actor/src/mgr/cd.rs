@@ -48,19 +48,34 @@ impl Actor for Cd {
 		}
 
 		// Current
-		let rep = tab.history.remove_or(&opt.target);
+		let mut rep = tab.history.remove_or(&opt.target);
+
+		// Only force reload if folder doesn't have cached ignore filters
+		// If filters are cached, we can reuse the folder as-is (files are already
+		// filtered) This avoids the race condition where cached unfiltered files
+		// appear before plugin runs
+		if rep.files.ignore_filter().is_none() {
+			rep.cha = Default::default();
+			rep.files.update_ioerr();
+			rep.stage = Default::default();
+		}
 		let rep = mem::replace(&mut tab.current, rep);
 		tab.history.insert(rep.url.to_owned(), rep);
 
 		// Parent
 		if let Some(parent) = opt.target.parent() {
-			tab.parent = Some(tab.history.remove_or(parent));
+			let mut parent_folder = tab.history.remove_or(parent);
+			// Only force parent reload if it doesn't have cached filters
+			if parent_folder.files.ignore_filter().is_none() {
+				parent_folder.cha = Default::default();
+				parent_folder.files.update_ioerr();
+				parent_folder.stage = Default::default();
+			}
+			tab.parent = Some(parent_folder);
 		}
-
 		err!(Pubsub::pub_after_cd(tab.id, tab.cwd()));
 		act!(mgr:hidden, cx)?;
 		act!(mgr:sort, cx)?;
-		act!(mgr:ignore, cx)?;
 		act!(mgr:hover, cx)?;
 		act!(mgr:refresh, cx)?;
 		succ!(render!());
