@@ -1,147 +1,90 @@
-use std::{ffi::{OsStr, OsString}, path::{Path, PathBuf}};
+use crate::path::PathLike;
 
 pub trait AsPath {
-	fn as_path(&self) -> &(impl ?Sized + PathLike);
+	fn as_path(&self) -> impl PathLike<'_>;
 }
 
-pub trait PathLike: AsRef<Self> {
-	type Inner: ?Sized + PathInner;
-	type Owned: PathBufLike + Into<Self::Owned>;
-	type Components<'a>: AsRef<Self> + Clone + DoubleEndedIterator
-	where
-		Self: 'a;
-
-	fn components(&self) -> Self::Components<'_>;
-
-	fn default() -> &'static Self;
-
-	fn encoded_bytes(&self) -> &[u8];
-
-	fn extension(&self) -> Option<&Self::Inner>;
-
-	fn file_name(&self) -> Option<&Self::Inner>;
-
-	fn file_stem(&self) -> Option<&Self::Inner>;
-
-	unsafe fn from_encoded_bytes(bytes: &[u8]) -> &Self;
-
-	#[cfg(unix)]
-	fn is_hidden(&self) -> bool {
-		self.file_name().map_or(false, |n| n.encoded_bytes().get(0) == Some(&b'.'))
-	}
-
-	fn join<T>(&self, base: T) -> Self::Owned
-	where
-		T: AsRef<Self>;
-
-	fn len(&self) -> usize { self.encoded_bytes().len() }
-
-	fn parent(&self) -> Option<&Self>;
-
-	fn strip_prefix<T>(&self, base: T) -> Option<&Self>
-	where
-		T: AsRef<Self>;
+impl AsPath for &std::ffi::OsStr {
+	fn as_path(&self) -> impl PathLike<'_> { std::path::Path::new(self) }
 }
 
-pub trait PathBufLike: AsRef<Self::Borrowed> + Default + 'static {
-	type Inner: AsRef<Self::InnerRef>;
-	type InnerRef: ?Sized + PathInner;
-	type Borrowed: ?Sized + PathLike + AsRef<Self::Borrowed>;
-
-	fn encoded_bytes(&self) -> &[u8];
-
-	unsafe fn from_encoded_bytes(bytes: Vec<u8>) -> Self;
-
-	fn into_encoded_bytes(self) -> Vec<u8>;
-
-	fn len(&self) -> usize { self.encoded_bytes().len() }
-
-	fn set_file_name<T>(&mut self, name: T)
-	where
-		T: AsRef<Self::InnerRef>;
+impl AsPath for &std::path::Path {
+	fn as_path(&self) -> impl PathLike<'_> { *self }
 }
 
-pub trait PathInner {
-	fn len(&self) -> usize { self.encoded_bytes().len() }
-
-	fn encoded_bytes(&self) -> &[u8];
+impl AsPath for std::path::PathBuf {
+	fn as_path(&self) -> impl PathLike<'_> { self.as_path() }
 }
 
-impl AsPath for &OsStr {
-	fn as_path(&self) -> &(impl ?Sized + PathLike) { Path::new(self) }
+impl AsPath for &std::path::PathBuf {
+	fn as_path(&self) -> impl PathLike<'_> { (*self).as_path() }
 }
 
-impl AsPath for &Path {
-	fn as_path(&self) -> &(impl ?Sized + PathLike) { *self }
+// --- AsPathView
+pub trait AsPathView<'a, T> {
+	fn as_path_view(self) -> T;
 }
 
-impl AsPath for PathBuf {
-	fn as_path(&self) -> &(impl ?Sized + PathLike) { self.as_path() }
+impl<'a> AsPathView<'a, &'a std::path::Path> for &'a str {
+	fn as_path_view(self) -> &'a std::path::Path { std::path::Path::new(self) }
 }
 
-impl AsPath for &PathBuf {
-	fn as_path(&self) -> &(impl ?Sized + PathLike) { (*self).as_path() }
+impl<'a> AsPathView<'a, &'a std::path::Path> for &'a std::path::Path {
+	fn as_path_view(self) -> &'a std::path::Path { self }
 }
 
-impl PathLike for Path {
-	type Components<'a> = std::path::Components<'a>;
-	type Inner = OsStr;
-	type Owned = PathBuf;
+impl<'a> AsPathView<'a, &'a std::path::Path> for &'a std::path::PathBuf {
+	fn as_path_view(self) -> &'a std::path::Path { self }
+}
 
-	fn components(&self) -> Self::Components<'_> { self.components() }
+impl<'a> AsPathView<'a, &'a std::path::Path> for std::path::Components<'a> {
+	fn as_path_view(self) -> &'a std::path::Path { self.as_path() }
+}
 
-	fn default() -> &'static Self { Path::new("") }
-
-	fn encoded_bytes(&self) -> &[u8] { self.as_os_str().as_encoded_bytes() }
-
-	fn extension(&self) -> Option<&Self::Inner> { self.extension() }
-
-	fn file_name(&self) -> Option<&Self::Inner> { self.file_name() }
-
-	fn file_stem(&self) -> Option<&Self::Inner> { self.file_stem() }
-
-	unsafe fn from_encoded_bytes(bytes: &[u8]) -> &Self {
-		Self::new(unsafe { Self::Inner::from_encoded_bytes_unchecked(bytes) })
-	}
-
-	fn join<T>(&self, base: T) -> Self::Owned
-	where
-		T: AsRef<Self>,
-	{
-		self.join(base)
-	}
-
-	fn parent(&self) -> Option<&Self> { self.parent() }
-
-	fn strip_prefix<T>(&self, base: T) -> Option<&Self>
-	where
-		T: AsRef<Self>,
-	{
-		self.strip_prefix(base).ok()
+impl<'a> AsPathView<'a, super::PathDyn<'a>> for &'a super::PathBufDyn {
+	fn as_path_view(self) -> super::PathDyn<'a> {
+		match self {
+			super::PathBufDyn::Os(p) => super::PathDyn::Os(p.as_path()),
+		}
 	}
 }
 
-impl PathBufLike for PathBuf {
-	type Borrowed = Path;
-	type Inner = OsString;
-	type InnerRef = OsStr;
-
-	fn encoded_bytes(&self) -> &[u8] { self.as_os_str().as_encoded_bytes() }
-
-	unsafe fn from_encoded_bytes(bytes: Vec<u8>) -> Self {
-		Self::from(unsafe { Self::Inner::from_encoded_bytes_unchecked(bytes) })
-	}
-
-	fn into_encoded_bytes(self) -> Vec<u8> { self.into_os_string().into_encoded_bytes() }
-
-	fn set_file_name<T>(&mut self, name: T)
-	where
-		T: AsRef<Self::InnerRef>,
-	{
-		self.set_file_name(name);
-	}
+impl<'a> AsPathView<'a, &'a std::path::Path> for crate::loc::Loc<'a, &'a std::path::Path> {
+	fn as_path_view(self) -> &'a std::path::Path { *self }
 }
 
-impl PathInner for OsStr {
-	fn encoded_bytes(&self) -> &[u8] { self.as_encoded_bytes() }
+// --- ToPathOwned
+pub trait ToPathOwned<T> {
+	fn to_path_owned(&self) -> T;
+}
+
+impl ToPathOwned<std::path::PathBuf> for std::path::Path {
+	fn to_path_owned(&self) -> std::path::PathBuf { self.to_owned() }
+}
+
+impl<T, U> ToPathOwned<U> for &T
+where
+	T: ?Sized + ToPathOwned<U>,
+{
+	fn to_path_owned(&self) -> U { (*self).to_path_owned() }
+}
+
+// --- AsInnerView
+pub trait AsInnerView<'a, T> {
+	fn as_inner_view(&'a self) -> T;
+}
+
+impl<'a> AsInnerView<'a, &'a std::ffi::OsStr> for std::ffi::OsStr {
+	fn as_inner_view(&'a self) -> &'a std::ffi::OsStr { self }
+}
+
+impl<'a> AsInnerView<'a, &'a std::ffi::OsStr> for std::ffi::OsString {
+	fn as_inner_view(&'a self) -> &'a std::ffi::OsStr { self }
+}
+
+impl<'a, T, U> AsInnerView<'a, U> for &T
+where
+	T: ?Sized + AsInnerView<'a, U>,
+{
+	fn as_inner_view(&'a self) -> U { (*self).as_inner_view() }
 }

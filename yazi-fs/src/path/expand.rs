@@ -22,7 +22,7 @@ fn expand_url_impl<'a>(url: Url<'a>) -> UrlCow<'a> {
 	let uri_count = url.uri().components().count() as isize;
 	let urn_count = url.urn().components().count() as isize;
 
-	let loc = LocBuf::with(
+	let loc = LocBuf::<PathBuf>::with(
 		PathBuf::from_iter([n_base, n_rest, n_urn]),
 		(uri_count + rest_diff + urn_diff) as usize,
 		(urn_count + urn_diff) as usize,
@@ -69,7 +69,7 @@ pub fn absolute_url<'a>(url: Url<'a>) -> UrlCow<'a> {
 
 	let b = url.loc.as_os_str().as_encoded_bytes();
 	if cfg!(windows) && b.len() == 2 && b[1] == b':' && b[0].is_ascii_alphabetic() {
-		let loc = LocBuf::with(
+		let loc = LocBuf::<PathBuf>::with(
 			format!(r"{}:\", b[0].to_ascii_uppercase() as char).into(),
 			if url.has_base() { 0 } else { 2 },
 			if url.has_trail() { 0 } else { 2 },
@@ -81,7 +81,7 @@ pub fn absolute_url<'a>(url: Url<'a>) -> UrlCow<'a> {
 		&& home.is_absolute()
 	{
 		let add = home.components().count() - 1; // Home root ("~") has offset by the absolute root ("/")
-		let loc = LocBuf::with(
+		let loc = LocBuf::<PathBuf>::with(
 			home.join(rest),
 			url.uri().components().count() + if url.has_base() { 0 } else { add },
 			url.urn().components().count() + if url.has_trail() { 0 } else { add },
@@ -90,7 +90,7 @@ pub fn absolute_url<'a>(url: Url<'a>) -> UrlCow<'a> {
 		UrlBuf { loc, scheme: url.scheme.into() }.into()
 	} else if !url.is_absolute() {
 		let cwd = CWD.path();
-		let loc = LocBuf::with(
+		let loc = LocBuf::<PathBuf>::with(
 			cwd.join(url.loc),
 			url.uri().components().count(),
 			url.urn().components().count(),

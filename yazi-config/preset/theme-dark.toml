@@ -41,7 +41,7 @@ marker_selected = { fg = "lightyellow", bg = "lightyellow" }
 # Count
 count_copied   = { fg = "white", bg = "green" }
 count_cut      = { fg = "white", bg = "red" }
-count_selected = { fg = "white", bg = "yellow" }
+count_selected = { fg = "black", bg = "yellow" }
 
 # Border
 border_symbol = "│"

@@ -1,8 +1,8 @@
-use std::{cmp, ffi::OsStr, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, ops::Deref, path::PathBuf};
+use std::{cmp, ffi::OsStr, fmt::{self, Debug, Formatter}, hash::{Hash, Hasher}, marker::PhantomData, ops::Deref, path::PathBuf};
 
 use anyhow::Result;
 
-use crate::{loc::Loc, path::{PathBufLike, PathLike}};
+use crate::{loc::Loc, path::{AsInnerView, AsPathView, PathBufLike, PathLike}};
 
 #[derive(Clone, Default, Eq)]
 pub struct LocBuf<P: PathBufLike = PathBuf> {
@@ -20,11 +20,9 @@ where
 	fn deref(&self) -> &Self::Target { &self.inner }
 }
 
-impl<P> AsRef<P::Borrowed> for LocBuf<P>
-where
-	P: PathBufLike,
-{
-	fn as_ref(&self) -> &P::Borrowed { self.inner.as_ref() }
+// FIXME: remove
+impl AsRef<std::path::Path> for LocBuf<PathBuf> {
+	fn as_ref(&self) -> &std::path::Path { self.inner.as_ref() }
 }
 
 impl<P> PartialEq for LocBuf<P>
@@ -54,7 +52,7 @@ where
 impl<P> Hash for LocBuf<P>
 where
 	P: PathBufLike,
-	P::Borrowed: Hash,
+	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
 {
 	fn hash<H: Hasher>(&self, state: &mut H) { self.as_loc().hash(state) }
 }
@@ -62,7 +60,7 @@ where
 impl<P> Debug for LocBuf<P>
 where
 	P: PathBufLike + Debug,
-	P::Borrowed: Debug,
+	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
 {
 	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
 		f.debug_struct("LocBuf")
@@ -76,9 +74,10 @@ where
 impl<P> From<P> for LocBuf<P>
 where
 	P: PathBufLike,
+	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
 {
 	fn from(path: P) -> Self {
-		let Loc { inner, uri, urn } = Loc::from(&path);
+		let Loc { inner, uri, urn, _phantom } = Loc::bare(&path);
 		let len = inner.len();
 
 		let mut bytes = path.into_encoded_bytes();
@@ -94,13 +93,14 @@ impl<T: ?Sized + AsRef<OsStr>> From<&T> for LocBuf<PathBuf> {
 impl<P> LocBuf<P>
 where
 	P: PathBufLike,
+	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
 {
-	pub fn new<T>(path: P, base: &T, trail: &T) -> Self
+	pub fn new<'a, T>(path: P, base: T, trail: T) -> Self
 	where
-		T: AsRef<P::Borrowed> + ?Sized,
+		T: for<'b> AsPathView<'a, <P::Borrowed<'b> as PathLike<'b>>::View<'a>>,
 	{
 		let loc = Self::from(path);
-		let Loc { inner, uri, urn } = Loc::new(&loc.inner, base, trail);
+		let Loc { inner, uri, urn, _phantom } = Loc::new(&loc.inner, base, trail);
 
 		debug_assert!(inner.encoded_bytes() == loc.inner.encoded_bytes());
 		Self { inner: loc.inner, uri, urn }
@@ -108,10 +108,10 @@ where
 
 	pub fn with(path: P, uri: usize, urn: usize) -> Result<Self>
 	where
-		P::Borrowed: PathLike,
+		for<'a> P::Borrowed<'a>: PathLike<'a>,
 	{
 		let loc = Self::from(path);
-		let Loc { inner, uri, urn } = Loc::with(&loc.inner, uri, urn)?;
+		let Loc { inner, uri, urn, _phantom } = Loc::with(&loc.inner, uri, urn)?;
 
 		debug_assert!(inner.encoded_bytes() == loc.inner.encoded_bytes());
 		Ok(Self { inner: loc.inner, uri, urn })
@@ -126,27 +126,31 @@ where
 		T: Into<P>,
 	{
 		let loc = Self::from(path.into());
-		let Loc { inner, uri, urn } = Loc::zeroed(&loc.inner);
+		let Loc { inner, uri, urn, _phantom } = Loc::zeroed(&loc.inner);
 
 		debug_assert!(inner.encoded_bytes() == loc.inner.encoded_bytes());
 		Self { inner: loc.inner, uri, urn }
 	}
 
-	pub fn floated<T, U>(path: T, base: &U) -> Self
+	pub fn floated<'a, T>(path: P, base: T) -> Self
 	where
-		T: Into<P>,
-		U: AsRef<P::Borrowed> + ?Sized,
+		T: for<'b> AsPathView<'a, <P::Borrowed<'b> as PathLike<'b>>::View<'a>>,
 	{
-		let loc = Self::from(path.into());
-		let Loc { inner, uri, urn } = Loc::floated(&loc.inner, base);
+		let loc = Self::from(path);
+		let Loc { inner, uri, urn, _phantom } = Loc::floated(&loc.inner, base);
 
 		debug_assert!(inner.encoded_bytes() == loc.inner.encoded_bytes());
 		Self { inner: loc.inner, uri, urn }
 	}
 
 	#[inline]
-	pub fn as_loc<'a>(&'a self) -> Loc<'a, P::Borrowed> {
-		Loc { inner: self.inner.as_ref(), uri: self.uri, urn: self.urn }
+	pub fn as_loc<'a>(&'a self) -> Loc<'a, P::Borrowed<'a>> {
+		Loc {
+			inner:    self.inner.as_path_view(),
+			uri:      self.uri,
+			urn:      self.urn,
+			_phantom: PhantomData,
+		}
 	}
 
 	#[inline]
@@ -162,7 +166,7 @@ where
 
 	pub fn set_name<T>(&mut self, name: T)
 	where
-		T: AsRef<P::InnerRef>,
+		T: for<'a> AsInnerView<'a, P::InnerRef<'a>>,
 	{
 		let old = self.inner.len();
 		self.mutate(|path| path.set_file_name(name));
@@ -189,9 +193,10 @@ where
 	}
 
 	#[inline]
-	pub fn rebase(&self, base: &P::Borrowed) -> Self
+	pub fn rebase<'a, 'b>(&'a self, base: P::Borrowed<'b>) -> Self
 	where
-		<P::Borrowed as PathLike>::Owned: Into<Self>,
+		'a: 'b,
+		for<'c> <P::Borrowed<'c> as PathLike<'c>>::Owned: Into<Self>,
 	{
 		let mut loc: Self = base.join(self.uri()).into();
 		(loc.uri, loc.urn) = (self.uri, self.urn);
@@ -213,33 +218,34 @@ where
 impl<P> LocBuf<P>
 where
 	P: PathBufLike,
+	for<'a> &'a P: AsPathView<'a, P::Borrowed<'a>>,
 {
 	#[inline]
-	pub fn uri(&self) -> &P::Borrowed { self.as_loc().uri() }
+	pub fn uri(&self) -> P::Borrowed<'_> { self.as_loc().uri() }
 
 	#[inline]
-	pub fn urn(&self) -> &P::Borrowed { self.as_loc().urn() }
+	pub fn urn(&self) -> P::Borrowed<'_> { self.as_loc().urn() }
 
 	#[inline]
-	pub fn base(&self) -> &P::Borrowed { self.as_loc().base() }
+	pub fn base(&self) -> P::Borrowed<'_> { self.as_loc().base() }
 
 	#[inline]
 	pub fn has_base(&self) -> bool { self.as_loc().has_base() }
 
 	#[inline]
-	pub fn trail(&self) -> &P::Borrowed { self.as_loc().trail() }
+	pub fn trail(&self) -> P::Borrowed<'_> { self.as_loc().trail() }
 
 	#[inline]
 	pub fn has_trail(&self) -> bool { self.as_loc().has_trail() }
 
 	#[inline]
-	pub fn name(&self) -> Option<&<P::Borrowed as PathLike>::Inner> { self.as_loc().name() }
+	pub fn name(&self) -> Option<<P::Borrowed<'_> as PathLike<'_>>::Inner> { self.as_loc().name() }
 
 	#[inline]
-	pub fn stem(&self) -> Option<&<P::Borrowed as PathLike>::Inner> { self.as_loc().stem() }
+	pub fn stem(&self) -> Option<<P::Borrowed<'_> as PathLike<'_>>::Inner> { self.as_loc().stem() }
 
 	#[inline]
-	pub fn ext(&self) -> Option<&<P::Borrowed as PathLike>::Inner> { self.as_loc().ext() }
+	pub fn ext(&self) -> Option<<P::Borrowed<'_> as PathLike<'_>>::Inner> { self.as_loc().ext() }
 }
 
 #[cfg(test)]

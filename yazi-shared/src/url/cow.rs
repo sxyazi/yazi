@@ -49,12 +49,14 @@ impl<'a> TryFrom<&'a [u8]> for UrlCow<'a> {
 		let (scheme, path, port) = Self::parse(value)?;
 
 		Ok(match (path, port) {
-			(Cow::Borrowed(p), None) => Self::Borrowed { loc: Loc::from(p), scheme },
+			(Cow::Borrowed(p), None) => Self::Borrowed { loc: Loc::bare(p), scheme },
 			(Cow::Borrowed(p), Some((uri, urn))) => {
 				Self::Borrowed { loc: Loc::with(p, uri, urn)?, scheme }
 			}
 			(Cow::Owned(p), None) => Self::Owned { loc: LocBuf::from(p), scheme },
-			(Cow::Owned(p), Some((uri, urn))) => Self::Owned { loc: LocBuf::with(p, uri, urn)?, scheme },
+			(Cow::Owned(p), Some((uri, urn))) => {
+				Self::Owned { loc: LocBuf::<PathBuf>::with(p, uri, urn)?, scheme }
+			}
 		})
 	}
 }

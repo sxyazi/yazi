@@ -50,9 +50,15 @@ serde_json          = "1.0.145"
 syntect             = { version = "5.3.0", default-features = false, features = [ "parsing", "plist-load", "regex-onig" ] }
 tokio               = { version = "1.48.0", features = [ "full" ] }
 tokio-stream        = "0.1.17"
-tokio-util          = "0.7.16"
+tokio-util          = "0.7.17"
 toml                = { version = "0.9.8" }
 tracing             = { version = "0.1.41", features = [ "max_level_debug", "release_max_level_debug" ] }
 twox-hash           = { version = "2.1.2", default-features = false, features = [ "std", "random", "xxhash3_128" ] }
 unicode-width       = { version = "0.2.0", default-features = false }
 uzers               = "0.12.1"
+
+[workspace.lints.clippy]
+format_push_string = "warn"
+implicit_clone     = "warn"
+module_inception   = "allow"
+use_self           = "warn"
