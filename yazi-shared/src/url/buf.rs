@@ -95,7 +95,7 @@ impl UrlBuf {
 	}
 
 	#[inline]
-	pub fn set_name(&mut self, name: impl AsRef<OsStr>) { self.loc.set_name(name); }
+	pub fn set_name(&mut self, name: impl AsRef<OsStr>) { self.loc.set_name(name.as_ref()); }
 
 	#[inline]
 	pub fn rebase(&self, base: &Path) -> Self {
@@ -125,14 +125,14 @@ impl UrlBuf {
 	#[inline]
 	pub fn to_search(&self, domain: impl AsRef<str>) -> Self {
 		Self {
-			loc:    LocBuf::zeroed(self.loc.to_path()),
+			loc:    LocBuf::<PathBuf>::zeroed(self.loc.to_path()),
 			scheme: Scheme::Search(Pool::<str>::intern(domain)),
 		}
 	}
 
 	#[inline]
 	pub fn into_search(mut self, domain: impl AsRef<str>) -> Self {
-		self.loc = LocBuf::zeroed(self.loc.into_path());
+		self.loc = LocBuf::<PathBuf>::zeroed(self.loc.into_path());
 		self.scheme = Scheme::Search(Pool::<str>::intern(domain));
 		self
 	}

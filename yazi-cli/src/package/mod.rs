@@ -1,5 +1,3 @@
-#![allow(clippy::module_inception)]
-
 yazi_macro::mod_flat!(add delete dependency deploy git hash install package upgrade);
 
 use anyhow::Context;

@@ -25,7 +25,7 @@ pub(super) fn url_relative_to<'a>(from: UrlCow<'_>, to: UrlCow<'a>) -> Result<Ur
 	}
 
 	if from.covariant(&to) {
-		return Ok(UrlBuf { loc: LocBuf::zeroed("."), scheme: to.scheme().into() }.into());
+		return Ok(UrlBuf { loc: LocBuf::<PathBuf>::zeroed("."), scheme: to.scheme().into() }.into());
 	}
 
 	let (mut f_it, mut t_it) = (from.components(), to.components());
@@ -47,5 +47,5 @@ pub(super) fn url_relative_to<'a>(from: UrlCow<'_>, to: UrlCow<'a>) -> Result<Ur
 	let rest = t_head.into_iter().chain(t_it);
 
 	let buf: PathBuf = dots.chain(rest).collect();
-	Ok(UrlBuf { loc: LocBuf::zeroed(buf), scheme: to.scheme().into() }.into())
+	Ok(UrlBuf { loc: LocBuf::<PathBuf>::zeroed(buf), scheme: to.scheme().into() }.into())
 }

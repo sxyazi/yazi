@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, path::Path};
+use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, path::{Path, PathBuf}};
 
 use hashbrown::Equivalent;
 
@@ -34,7 +34,7 @@ impl Debug for Url<'_> {
 impl<'a> Url<'a> {
 	#[inline]
 	pub fn regular<T: AsRef<Path> + ?Sized>(path: &'a T) -> Self {
-		Self { loc: path.as_ref().into(), scheme: SchemeRef::Regular }
+		Self { loc: Loc::bare(path.as_ref()), scheme: SchemeRef::Regular }
 	}
 
 	#[inline]
@@ -42,7 +42,7 @@ impl<'a> Url<'a> {
 
 	#[inline]
 	pub fn into_regular(self) -> Self {
-		Self { loc: self.loc.as_path().into(), scheme: SchemeRef::Regular }
+		Self { loc: Loc::bare(self.loc.as_path()), scheme: SchemeRef::Regular }
 	}
 
 	#[inline]
@@ -71,8 +71,8 @@ impl<'a> Url<'a> {
 
 		let loc = match self.scheme {
 			S::Regular => join.into(),
-			S::Search(_) => LocBuf::new(join, self.loc.base(), self.loc.base()),
-			S::Archive(_) => LocBuf::floated(join, self.loc.base()),
+			S::Search(_) => LocBuf::<PathBuf>::new(join, self.loc.base(), self.loc.base()),
+			S::Archive(_) => LocBuf::<PathBuf>::floated(join, self.loc.base()),
 			S::Sftp(_) => join.into(),
 		};
 
@@ -134,7 +134,7 @@ impl<'a> Url<'a> {
 			return None;
 		}
 
-		let loc: Loc = self.loc.base().into();
+		let loc = Loc::bare(self.loc.base());
 		Some(match self.scheme {
 			S::Regular => Self { loc, scheme: S::Regular },
 			S::Search(_) => Self { loc, scheme: self.scheme },
@@ -151,11 +151,11 @@ impl<'a> Url<'a> {
 
 		Some(match self.scheme {
 			// Regular
-			S::Regular => Self { loc: parent.into(), scheme: S::Regular },
+			S::Regular => Self { loc: Loc::bare(parent), scheme: S::Regular },
 
 			// Search
 			S::Search(_) if uri.as_os_str().is_empty() => {
-				Self { loc: parent.into(), scheme: S::Regular }
+				Self { loc: Loc::bare(parent), scheme: S::Regular }
 			}
 			S::Search(_) => {
 				Self { loc: Loc::new(parent, self.loc.base(), self.loc.base()), scheme: self.scheme }
@@ -163,7 +163,7 @@ impl<'a> Url<'a> {
 
 			// Archive
 			S::Archive(_) if uri.as_os_str().is_empty() => {
-				Self { loc: parent.into(), scheme: S::Regular }
+				Self { loc: Loc::bare(parent), scheme: S::Regular }
 			}
 			S::Archive(_) if uri.components().nth(1).is_none() => {
 				Self { loc: Loc::zeroed(parent), scheme: self.scheme }
@@ -171,7 +171,7 @@ impl<'a> Url<'a> {
 			S::Archive(_) => Self { loc: Loc::floated(parent, self.loc.base()), scheme: self.scheme },
 
 			// SFTP
-			S::Sftp(_) => Self { loc: parent.into(), scheme: self.scheme },
+			S::Sftp(_) => Self { loc: Loc::bare(parent), scheme: self.scheme },
 		})
 	}
 

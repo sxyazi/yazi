@@ -10,7 +10,8 @@ pub fn clean_url<'a>(url: impl Into<UrlCow<'a>>) -> UrlBuf {
 		cow.loc().trail().components().count(),
 	);
 
-	let loc = LocBuf::with(path, uri, urn).expect("Failed to create Loc from cleaned path");
+	let loc =
+		LocBuf::<PathBuf>::with(path, uri, urn).expect("Failed to create Loc from cleaned path");
 	UrlBuf { loc, scheme: cow.into_scheme().into() }
 }
 

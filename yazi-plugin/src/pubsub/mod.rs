@@ -1,5 +1,3 @@
-#![allow(clippy::module_inception)]
-
 use mlua::{IntoLua, Lua, Value};
 use yazi_binding::{Composer, ComposerGet, ComposerSet};
 

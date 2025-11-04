@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ffi::OsStr, path::{Path, PathBuf}};
 
-use crate::{scheme::{AsScheme, SchemeRef}, url::{Components, Display, Url, UrlBuf, UrlCow}};
+use crate::{loc::Loc, scheme::{AsScheme, SchemeRef}, url::{Components, Display, Url, UrlBuf, UrlCow}};
 
 // --- AsUrl
 pub trait AsUrl {
@@ -9,7 +9,7 @@ pub trait AsUrl {
 
 impl AsUrl for Path {
 	#[inline]
-	fn as_url(&self) -> Url<'_> { Url { loc: self.into(), scheme: SchemeRef::Regular } }
+	fn as_url(&self) -> Url<'_> { Url { loc: Loc::bare(self), scheme: SchemeRef::Regular } }
 }
 
 impl AsUrl for &Path {
