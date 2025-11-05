@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ffi::{OsStr, OsString}, path::{Path, PathBuf}};
 
-use yazi_shared::{loc::LocBuf, url::{AsUrl, Url, UrlBuf, UrlCow}};
+use yazi_shared::{loc::LocBuf, path::PathLike, url::{AsUrl, Url, UrlBuf, UrlCow}};
 
 use crate::{CWD, path::clean_url};
 

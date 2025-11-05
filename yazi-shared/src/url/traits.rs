@@ -1,6 +1,6 @@
 use std::{borrow::Cow, ffi::OsStr, path::{Path, PathBuf}};
 
-use crate::{loc::Loc, scheme::{AsScheme, SchemeRef}, url::{Components, Display, Url, UrlBuf, UrlCow}};
+use crate::{loc::Loc, path::PathDyn, scheme::{AsScheme, SchemeRef}, url::{Components, Display, Url, UrlBuf, UrlCow}};
 
 // --- AsUrl
 pub trait AsUrl {
@@ -117,7 +117,7 @@ where
 
 	fn strip_prefix(&self, base: impl AsUrl) -> Option<&Path> { self.as_url().strip_prefix(base) }
 
-	fn uri(&self) -> &Path { self.as_url().uri() }
+	fn uri(&self) -> PathDyn<'_> { self.as_url().uri() }
 
 	fn urn(&self) -> &Path { self.as_url().urn() }
 }

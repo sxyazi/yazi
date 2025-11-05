@@ -15,8 +15,8 @@ const TABS: &[&str] = &["", " ", "  ", "   ", "    ", "     ", "      ", "      
 pub struct Preview {
 	pub wrap:       PreviewWrap,
 	pub tab_size:   u8,
-	pub max_width:  u32,
-	pub max_height: u32,
+	pub max_width:  u16,
+	pub max_height: u16,
 
 	pub cache_dir: PathBuf,
 

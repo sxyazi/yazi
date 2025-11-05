@@ -4,7 +4,7 @@ use crate::path::{AsInnerView, AsPathView, PathInner, PathLike};
 
 pub trait PathBufLike
 where
-	Self: Default + 'static,
+	Self: 'static,
 {
 	type Inner: for<'a> AsInnerView<'a, Self::InnerRef<'a>>;
 	type InnerRef<'a>: PathInner<'a>;
@@ -21,6 +21,8 @@ where
 	fn set_file_name<T>(&mut self, name: T)
 	where
 		T: for<'a> AsInnerView<'a, Self::InnerRef<'a>>;
+
+	fn take(&mut self) -> Self;
 }
 
 impl PathBufLike for std::path::PathBuf {
@@ -42,4 +44,6 @@ impl PathBufLike for std::path::PathBuf {
 	{
 		self.set_file_name(name.as_inner_view());
 	}
+
+	fn take(&mut self) -> Self { std::mem::take(self) }
 }

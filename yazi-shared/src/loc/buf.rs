@@ -204,11 +204,8 @@ where
 	}
 
 	#[inline]
-	fn mutate<F: FnOnce(&mut P)>(&mut self, f: F)
-	where
-		P: Default,
-	{
-		let mut inner = std::mem::take(&mut self.inner);
+	fn mutate<F: FnOnce(&mut P)>(&mut self, f: F) {
+		let mut inner = self.inner.take();
 		f(&mut inner);
 		self.inner = Self::from(inner).inner;
 	}
