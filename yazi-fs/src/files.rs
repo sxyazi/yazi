@@ -19,6 +19,7 @@ pub struct Files {
 	sorter:        FilesSorter,
 	filter:        Option<Filter>,
 	show_hidden:   bool,
+	show_excluded: bool,
 	ignore_filter: Option<IgnoreFilter>,
 }
 
@@ -261,12 +262,23 @@ impl Files {
 			files.into_iter().partition(|f| {
 				(f.is_hidden() && !self.show_hidden)
 					|| !filter.matches(f.urn())
-					|| self.ignore_filter.as_ref().is_some_and(|ig| ig.matches_url(&f.url))
+					|| (!self.show_excluded
+						&& self.ignore_filter.as_ref().is_some_and(|ig| ig.matches_url(&f.url)))
 			})
 		} else if let Some(ignore_filter) = &self.ignore_filter {
-			files
-				.into_iter()
-				.partition(|f| (f.is_hidden() && !self.show_hidden) || ignore_filter.matches_url(&f.url))
+			if self.show_excluded {
+				// Show excluded files - only hide based on hidden status
+				if self.show_hidden {
+					(vec![], files.into_iter().collect())
+				} else {
+					files.into_iter().partition(|f| f.is_hidden())
+				}
+			} else {
+				// Hide excluded files - apply ignore filter
+				files
+					.into_iter()
+					.partition(|f| (f.is_hidden() && !self.show_hidden) || ignore_filter.matches_url(&f.url))
+			}
 		} else if self.show_hidden {
 			(vec![], files.into_iter().collect())
 		} else {
@@ -338,6 +350,26 @@ impl Files {
 		let it = mem::take(&mut self.items).into_iter().chain(mem::take(&mut self.hidden));
 		(self.hidden, self.items) = self.split_files(it);
 		self.sorter.sort(&mut self.items, &self.sizes);
+		true
+	}
+
+	// --- Show excluded
+	#[inline]
+	pub fn show_excluded(&self) -> bool { self.show_excluded }
+
+	pub fn set_show_excluded(&mut self, state: bool) -> bool {
+		if self.show_excluded == state {
+			return false;
+		}
+
+		self.show_excluded = state;
+
+		// Re-split files with the new state
+		let it = mem::take(&mut self.items).into_iter().chain(mem::take(&mut self.hidden));
+		(self.hidden, self.items) = self.split_files(it);
+		self.sorter.sort(&mut self.items, &self.sizes);
+		self.revision += 1;
+
 		true
 	}
 
