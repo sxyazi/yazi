@@ -82,6 +82,14 @@ impl<'a> AsInnerView<'a, &'a std::ffi::OsStr> for std::ffi::OsString {
 	fn as_inner_view(&'a self) -> &'a std::ffi::OsStr { self }
 }
 
+impl<'a> AsInnerView<'a, &'a [u8]> for [u8] {
+	fn as_inner_view(&'a self) -> &'a [u8] { self }
+}
+
+impl<'a> AsInnerView<'a, &'a [u8]> for Vec<u8> {
+	fn as_inner_view(&'a self) -> &'a [u8] { self }
+}
+
 impl<'a, T, U> AsInnerView<'a, U> for &T
 where
 	T: ?Sized + AsInnerView<'a, U>,

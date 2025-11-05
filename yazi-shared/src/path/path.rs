@@ -23,6 +23,8 @@ where
 
 	unsafe fn from_encoded_bytes(bytes: &'p [u8]) -> Self;
 
+	fn is_empty(self) -> bool { self.encoded_bytes().is_empty() }
+
 	#[cfg(unix)]
 	fn is_hidden(self) -> bool {
 		self.file_name().map_or(false, |n| n.encoded_bytes().get(0) == Some(&b'.'))

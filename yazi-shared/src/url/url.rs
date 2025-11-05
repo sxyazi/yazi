@@ -2,7 +2,7 @@ use std::{borrow::Cow, ffi::OsStr, fmt::{Debug, Formatter}, path::{Path, PathBuf
 
 use hashbrown::Equivalent;
 
-use crate::{loc::{Loc, LocBuf}, scheme::SchemeRef, url::{AsUrl, Components, Encode, UrlBuf}};
+use crate::{loc::{Loc, LocBuf}, path::{PathDyn, PathLike}, scheme::SchemeRef, url::{AsUrl, Components, Encode, UrlBuf}};
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub struct Url<'a> {
@@ -97,10 +97,10 @@ impl<'a> Url<'a> {
 			(S::Search(_), S::Regular) => Some(prefix),
 
 			// Only the entry of archives is a local file
-			(S::Regular, S::Archive(_)) => Some(prefix).filter(|_| base.uri().as_os_str().is_empty()),
-			(S::Search(_), S::Archive(_)) => Some(prefix).filter(|_| base.uri().as_os_str().is_empty()),
-			(S::Archive(_), S::Regular) => Some(prefix).filter(|_| self.uri().as_os_str().is_empty()),
-			(S::Archive(_), S::Search(_)) => Some(prefix).filter(|_| self.uri().as_os_str().is_empty()),
+			(S::Regular, S::Archive(_)) => Some(prefix).filter(|_| base.uri().is_empty()),
+			(S::Search(_), S::Archive(_)) => Some(prefix).filter(|_| base.uri().is_empty()),
+			(S::Archive(_), S::Regular) => Some(prefix).filter(|_| self.uri().is_empty()),
+			(S::Archive(_), S::Search(_)) => Some(prefix).filter(|_| self.uri().is_empty()),
 
 			// Independent virtual file space
 			(S::Regular, S::Sftp(_)) => None,
@@ -113,7 +113,7 @@ impl<'a> Url<'a> {
 	}
 
 	#[inline]
-	pub fn uri(self) -> &'a Path { self.loc.uri() }
+	pub fn uri(self) -> PathDyn<'a> { self.loc.uri().into() }
 
 	#[inline]
 	pub fn urn(self) -> &'a Path { self.loc.urn() }
