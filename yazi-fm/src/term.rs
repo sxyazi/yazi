@@ -23,6 +23,7 @@ impl Term {
 			last_area:   Default::default(),
 			last_buffer: Default::default(),
 		};
+		let background = &THEME.app.background;
 
 		enable_raw_mode()?;
 		static FIRST: SyncCell<bool> = SyncCell::new(false);
@@ -37,6 +38,8 @@ impl Term {
 			Print("\x1b[?12$p"),      // Request cursor blink status (DECRQM query for DECSET 12)
 			Print("\x1b[?u"),         // Request keyboard enhancement flags (CSI u)
 			Print("\x1b[0c"),         // Request device attributes
+			// Set terminal background color
+			yazi_term::If(!background.is_empty(), Print(format!("\x1b]11;{}\x1b\\", background))),
 			yazi_term::If(TMUX.get(), EnterAlternateScreen),
 			yazi_term::SetBackground(true, THEME.app.bg_color()), // Set app background
 			EnableBracketedPaste,
