@@ -76,6 +76,7 @@ impl Actor for Cd {
 		err!(Pubsub::pub_after_cd(tab.id, tab.cwd()));
 		act!(mgr:hidden, cx)?;
 		act!(mgr:sort, cx)?;
+		act!(mgr:ignore, cx)?;
 		act!(mgr:hover, cx)?;
 		act!(mgr:refresh, cx)?;
 		succ!(render!());

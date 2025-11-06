@@ -15,9 +15,10 @@ impl Actor for Excluded {
 	const NAME: &str = "excluded";
 
 	fn act(cx: &mut Ctx, opt: Self::Options) -> Result<Data> {
-		let state = opt.state.bool(cx.tab().current.files.show_excluded());
-		let hovered = cx.hovered().map(|f| f.urn().to_owned());
+		let current_state = cx.tab().current.files.show_excluded();
+		let state = opt.state.bool(current_state);
 
+		let hovered = cx.hovered().map(|f| f.urn().to_owned());
 		let apply = |f: &mut Folder| {
 			if f.stage == FolderStage::Loading {
 				render!();
@@ -42,7 +43,7 @@ impl Actor for Excluded {
 		{
 			render!(h.repos(None));
 			act!(mgr:peek, cx, true)?;
-		} else if hovered.as_deref() != cx.hovered().map(|f| f.urn()) {
+		} else if hovered != cx.hovered().map(|f| f.urn().to_owned()) {
 			act!(mgr:peek, cx)?;
 			act!(mgr:watch, cx)?;
 		}
