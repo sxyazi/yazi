@@ -223,8 +223,13 @@ impl Actor for ExcludeAdd {
 			false
 		};
 
-		if cwd_changed || parent_changed {
+		// Always reposition parent cursor on CWD, even if folders are still loading
+		// The hover action ensures parent panel tracks the current working directory
+		if parent_changed || cx.parent().is_some() {
 			act!(mgr:hover, cx)?;
+		}
+
+		if cwd_changed || parent_changed {
 			act!(mgr:update_paged, cx)?;
 		}
 
